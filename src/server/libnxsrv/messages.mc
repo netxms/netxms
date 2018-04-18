@@ -1112,4 +1112,10 @@ Language=English
 Cannot create Java VM (%1)
 .
 
+MessageId=
+SymbolicName=MSG_UCC_INITIALIZATION_FAILED
+Language=English
+User communication channels initialization failed (%1)
+.
+
 ;#endif

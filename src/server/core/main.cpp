@@ -74,6 +74,7 @@ extern ThreadPool *g_syncerThreadPool;
 void InitClientListeners();
 void InitMobileDeviceListeners();
 void InitCertificates();
+bool InitializeUserCommunicationChannels();
 bool LoadServerCertificate(RSA **serverKey);
 void InitUsers();
 void CleanupUsers();
@@ -958,6 +959,7 @@ retry_db_lock:
 	// Initialize mailer and SMS sender
 	InitMailer();
 	InitSMSSender();
+	InitializeUserCommunicationChannels();
 
 	// Load users from database
 	InitUsers();

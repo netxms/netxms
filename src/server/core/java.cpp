@@ -50,6 +50,61 @@ TCHAR *g_userClasspath = NULL;
 static jclass s_bridgeClass = NULL;
 
 /**
+ * Register native methods for given class
+ */
+static bool RegisterNatives(JNIEnv *env, const char *className, JNINativeMethod *methods, jint length)
+{
+   jclass classRef = CreateJavaClassGlobalRef(env, className);
+   if (classRef == NULL)
+      return false;
+
+   return env->RegisterNatives(classRef, methods, length) == 0;
+}
+
+/**
+ * Class:     org.netxms.server.ServerConfiguration
+ * Method:    read
+ * Signature: (Ljava/lang/String;)Ljava/lang/String;
+ */
+static jstring JNICALL J_ServerConfiguration_read(JNIEnv *jenv, jclass jcls, jstring jname)
+{
+   if (jname == NULL)
+      return NULL;
+
+   TCHAR *name = CStringFromJavaString(jenv, jname);
+   TCHAR buffer[MAX_DB_STRING];
+   bool success = ConfigReadStr(name, buffer, MAX_DB_STRING, NULL);
+   free(name);
+   return success ? JavaStringFromCString(jenv, buffer) : NULL;
+}
+
+/**
+ * Class:     org.netxms.server.ServerConfiguration
+ * Method:    write
+ * Signature: (Ljava/lang/String;Ljava/lang/String;)V
+ */
+static void JNICALL J_ServerConfiguration_write(JNIEnv *jenv, jclass jcls, jstring jname, jstring jvalue)
+{
+   if ((jname == NULL) || (jvalue == NULL))
+      return;
+
+   TCHAR *name = CStringFromJavaString(jenv, jname);
+   TCHAR *value = CStringFromJavaString(jenv, jvalue);
+   ConfigWriteStr(name, value, true, true, false);
+   free(name);
+   free(value);
+}
+
+/**
+ * Native methods for ServerConfiguration class
+ */
+static JNINativeMethod s_serverConfigurationNatives[] =
+{
+   { (char *)"read", (char *)"(Ljava/lang/String;)Ljava/lang/String;", (void *)J_ServerConfiguration_read },
+   { (char *)"write", (char *)"(Ljava/lang/String;Ljava/lang/String;)V", (void *)J_ServerConfiguration_write }
+};
+
+/**
  * Initialize server Java components
  */
 bool JavaCoreStart()
@@ -82,6 +137,12 @@ bool JavaCoreStart()
    if (!success)
    {
       nxlog_write(MSG_JVM_CREATION_FAILED, NXLOG_ERROR, "s", _T("Java side initialization failure"));
+      return false;
+   }
+
+   if (!RegisterNatives(env, "org/netxms/server/ServerConfiguration", s_serverConfigurationNatives, sizeof(s_serverConfigurationNatives) / sizeof(JNINativeMethod)))
+   {
+      nxlog_write(MSG_JVM_CREATION_FAILED, NXLOG_ERROR, "s", _T("Cannot register native methods for ServerConfiguration class"));
       return false;
    }
 
