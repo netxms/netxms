@@ -49,6 +49,24 @@ enum JavaBridgeError
 };
 
 /**
+ * Delete local reference
+ */
+inline void DeleteJavaLocalRef(JNIEnv *env, jstring object)
+{
+   if (object != NULL)
+      env->DeleteLocalRef(object);
+}
+
+/**
+ * Delete local reference
+ */
+inline void DeleteJavaLocalRef(JNIEnv *env, jobjectArray object)
+{
+   if (object != NULL)
+      env->DeleteLocalRef(object);
+}
+
+/**
  * Get error message from error code
  */
 const TCHAR LIBNXJAVA_EXPORTABLE *GetJavaBridgeErrorMessage(JavaBridgeError error);

@@ -18,11 +18,18 @@ public final class ChannelManager
    
    private static Map<String, Class<? extends UserCommunicationChannel>> builtinDrivers;
    private static Map<String, UserCommunicationChannel> channels = new HashMap<String, UserCommunicationChannel>();
+   private static ChannelListener channelListener;
    
    static
    {
       builtinDrivers = new HashMap<String, Class<? extends UserCommunicationChannel>>();
       builtinDrivers.put("builtin.file", FileChannel.class);
+      channelListener = new ChannelListener() {
+         @Override
+         public void messageReceived(String sender, String text)
+         {
+         }
+      };
    }
    
    /**
@@ -62,6 +69,7 @@ public final class ChannelManager
       {
          UserCommunicationChannel channel = driverClass.getDeclaredConstructor(String.class).newInstance(id);
          channel.initialize();
+         channel.addListener(channelListener);
          channels.put(id, channel);
          Platform.writeDebugLog(DEBUG_TAG, 5, "Channel " + id + " initialized successfully");
       }
@@ -105,5 +113,37 @@ public final class ChannelManager
          Platform.writeDebugLog(DEBUG_TAG, 1, "   ", e);
          return false;
       }
+   }
+   
+   /**
+    * Send message via given channel
+    * 
+    * @param channelId channel ID
+    * @param recipient recipient address
+    * @param subject message subject
+    * @param text message text
+    * @return true on success
+    */
+   public static boolean send(String channelId, String recipient, String subject, String text)
+   {
+      UserCommunicationChannel channel = channels.get(channelId);
+      if (channel == null)
+      {
+         Platform.writeDebugLog(DEBUG_TAG, 2, "Cannot send message to " + recipient + " on channel " + channelId + ": channel does not exist");
+         return false;
+      }
+      
+      try
+      {
+         channel.send(recipient, subject, text);
+      }
+      catch(Exception e)
+      {
+         Platform.writeDebugLog(DEBUG_TAG, 1, "Exception in channel " + channelId + " (" + e.getClass().getName() + "):");
+         Platform.writeDebugLog(DEBUG_TAG, 1, "   ", e);
+         return false;
+      }
+      Platform.writeDebugLog(DEBUG_TAG, 5, "Sent message to " + recipient + " on channel " + channelId);
+      return true;
    }
 }

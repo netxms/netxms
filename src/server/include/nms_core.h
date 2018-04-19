@@ -1293,6 +1293,11 @@ public:
 ObjectArray<ObjectsDistance> *FindNearestObjects(UINT32 currObjectId, int maxDistance, bool (* filter)(NetObj *object, void *data), void *sortData, int (* calculateRealDistance)(GeoLocation &loc1, GeoLocation &loc2));
 
 /**
+ * Communication channel API
+ */
+bool SendMessageToUserCommunicationChannel(const TCHAR *channel, const TCHAR *recipient, const TCHAR *subject, const TCHAR *message);
+
+/**
  * Global variables
  */
 extern TCHAR NXCORE_EXPORTABLE g_szConfigFile[];

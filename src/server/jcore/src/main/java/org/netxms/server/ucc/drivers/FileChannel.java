@@ -6,6 +6,7 @@ package org.netxms.server.ucc.drivers;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
+import org.netxms.bridge.Platform;
 import org.netxms.server.ucc.UserCommunicationChannel;
 
 /**
@@ -13,6 +14,8 @@ import org.netxms.server.ucc.UserCommunicationChannel;
  */
 public class FileChannel extends UserCommunicationChannel
 {
+   private static final String DEBUG_TAG = "ucc.channel.file";
+   
    private File file;
    
    /**
@@ -64,6 +67,11 @@ public class FileChannel extends UserCommunicationChannel
          sb.append(text);
          out.write(sb.toString());
          out.newLine();
+      }
+      catch(Exception e)
+      {
+         Platform.writeDebugLog(DEBUG_TAG, 4, "Exception in file channel " + getId() + " (" + e.getClass().getName() + ")");
+         Platform.writeDebugLog(DEBUG_TAG, 4, "   ", e);
       }
       finally
       {

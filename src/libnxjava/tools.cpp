@@ -58,6 +58,8 @@ jclass LIBNXJAVA_EXPORTABLE CreateJavaClassGlobalRef(JNIEnv *env, const char *cl
  */
 TCHAR LIBNXJAVA_EXPORTABLE *CStringFromJavaString(JNIEnv *env, jstring jstr)
 {
+   if (jstr == NULL)
+      return NULL;
    const jchar *chars = env->GetStringChars(jstr, NULL);
    jsize len = env->GetStringLength(jstr);
    TCHAR *str = (TCHAR *)malloc((len + 1) * sizeof(TCHAR));
@@ -81,6 +83,8 @@ TCHAR LIBNXJAVA_EXPORTABLE *CStringFromJavaString(JNIEnv *env, jstring jstr)
  */
 TCHAR LIBNXJAVA_EXPORTABLE *CStringFromJavaString(JNIEnv *env, jstring jstr, TCHAR *buffer, size_t bufferLen)
 {
+   if (jstr == NULL)
+      return NULL;
    const jchar *chars = env->GetStringChars(jstr, NULL);
    jsize len = env->GetStringLength(jstr);
 #ifdef UNICODE
@@ -102,6 +106,8 @@ TCHAR LIBNXJAVA_EXPORTABLE *CStringFromJavaString(JNIEnv *env, jstring jstr, TCH
  */
 jstring LIBNXJAVA_EXPORTABLE JavaStringFromCStringW(JNIEnv *env, const WCHAR *str)
 {
+   if (str == NULL)
+      return NULL;
    jsize len = (jsize)wcslen(str);
 #if UNICODE_UCS4
    jchar *tmp = (jchar *)UCS2StringFromUCS4String(str);
@@ -118,6 +124,8 @@ jstring LIBNXJAVA_EXPORTABLE JavaStringFromCStringW(JNIEnv *env, const WCHAR *st
  */
 jstring LIBNXJAVA_EXPORTABLE JavaStringFromCStringA(JNIEnv *env, const char *str)
 {
+   if (str == NULL)
+      return NULL;
    jsize len = (jsize)strlen(str);
    jchar *tmp = (jchar *)UCS2StringFromMBString(str);
    jstring js = env->NewString(tmp, len);
@@ -130,6 +138,8 @@ jstring LIBNXJAVA_EXPORTABLE JavaStringFromCStringA(JNIEnv *env, const char *str
  */
 jstring LIBNXJAVA_EXPORTABLE JavaStringFromCStringSysLocale(JNIEnv *env, const char *str)
 {
+   if (str == NULL)
+      return NULL;
    jsize len = (jsize)strlen(str);
 #if UNICODE_UCS4
    WCHAR *wtmp = WideStringFromMBStringSysLocale(str);

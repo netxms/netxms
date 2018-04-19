@@ -30,6 +30,11 @@
 static jclass s_channelManagerClass = NULL;
 
 /**
+ * Method ChannelManager.send
+ */
+static jmethodID s_channelManagerSend = NULL;
+
+/**
  * Initialize user communication channels
  */
 bool InitializeUserCommunicationChannels()
@@ -44,7 +49,8 @@ bool InitializeUserCommunicationChannels()
    }
 
    jmethodID initialize = env->GetStaticMethodID(s_channelManagerClass, "initialize", "()Z");
-   if (initialize == NULL)
+   s_channelManagerSend = env->GetStaticMethodID(s_channelManagerClass, "send", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Z");
+   if ((initialize == NULL) || (s_channelManagerSend == NULL))
    {
       nxlog_write(MSG_UCC_INITIALIZATION_FAILED, NXLOG_ERROR, "s", _T("Cannot find required entry points in channel manager class"));
       return false;
@@ -59,4 +65,38 @@ bool InitializeUserCommunicationChannels()
 
    nxlog_debug_tag(DEBUG_TAG, 1, _T("User communication channel manager initialized"));
    return true;
+}
+
+/**
+ * Send message to user communication channel
+ */
+bool SendMessageToUserCommunicationChannel(const TCHAR *channel, const TCHAR *recipient, const TCHAR *subject, const TCHAR *message)
+{
+   bool success = false;
+
+   JNIEnv *env = AttachThreadToJavaVM();
+
+   jstring jchannel = JavaStringFromCString(env, channel);
+   jstring jrecipient = JavaStringFromCString(env, recipient);
+   jstring jsubject = JavaStringFromCString(env, subject);
+   jstring jmessage = JavaStringFromCString(env, message);
+   if ((jchannel != NULL) && (jrecipient != NULL) && (jmessage != NULL))  // subject can be NULL
+   {
+      success = env->CallStaticBooleanMethod(s_channelManagerClass, s_channelManagerSend, jchannel, jrecipient, jsubject, jmessage) ? true : false;
+      if (success)
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("Message to %s sent via channel %s"), recipient, channel);
+      else
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("Cannot send message to %s via channel %s (channel error)"), recipient, channel);
+   }
+   else
+   {
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("Cannot call communication channel (at least one required argument missing)"));
+   }
+   DeleteJavaLocalRef(env, jchannel);
+   DeleteJavaLocalRef(env, jrecipient);
+   DeleteJavaLocalRef(env, jsubject);
+   DeleteJavaLocalRef(env, jmessage);
+
+   DetachThreadFromJavaVM();
+   return success;
 }

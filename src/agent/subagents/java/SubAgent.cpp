@@ -334,10 +334,8 @@ LONG SubAgent::parameterHandler(const TCHAR *param, const TCHAR *id, TCHAR *valu
       AgentWriteLog(NXLOG_ERROR, _T("JAVA: SubAgent::parameterHandler: Could not convert C string to Java string"));
    }
 
-   if (jparam != NULL)
-      curEnv->DeleteLocalRef(jparam);
-   if (jid != NULL)
-      curEnv->DeleteLocalRef(jid);
+   DeleteJavaLocalRef(curEnv, jparam);
+   DeleteJavaLocalRef(curEnv, jid);
    return rc;
 }
 
@@ -389,10 +387,8 @@ LONG SubAgent::listHandler(const TCHAR *param, const TCHAR *id, StringList *valu
       AgentWriteLog(NXLOG_ERROR, _T("JAVA: SubAgent::listHandler: Could not convert C string to Java string"));
    }
 
-   if (jparam != NULL)
-      curEnv->DeleteLocalRef(jparam);
-   if (jid != NULL)
-      curEnv->DeleteLocalRef(jid);
+   DeleteJavaLocalRef(curEnv, jparam);
+   DeleteJavaLocalRef(curEnv, jid);
    return rc;
 }
 
@@ -457,10 +453,8 @@ LONG SubAgent::tableHandler(const TCHAR *param, const TCHAR *id, Table *value)
       AgentWriteLog(NXLOG_ERROR, _T("JAVA: SubAgent::tableHandler: Could not convert C string to Java string"));
    }
 
-   if (jparam != NULL)
-      curEnv->DeleteLocalRef(jparam);
-   if (jid != NULL)
-      curEnv->DeleteLocalRef(jid);
+   DeleteJavaLocalRef(curEnv, jparam);
+   DeleteJavaLocalRef(curEnv, jid);
    return rc;
 }
 
@@ -515,12 +509,9 @@ LONG SubAgent::actionHandler(const TCHAR *action, StringList *args, const TCHAR 
    }
 
 cleanup:
-   if (jaction != NULL)
-      curEnv->DeleteLocalRef(jaction);
-   if (jid != NULL)
-      curEnv->DeleteLocalRef(jid);
-   if (jargs != NULL)
-      curEnv->DeleteLocalRef(jargs);
+   DeleteJavaLocalRef(curEnv, jaction);
+   DeleteJavaLocalRef(curEnv, jid);
+   DeleteJavaLocalRef(curEnv, jargs);
    return rc;
 }
 
@@ -541,12 +532,12 @@ StringList *SubAgent::getContributionItems(jmethodID method, const TCHAR *method
    if (!curEnv->ExceptionCheck())
    {
       list = StringListFromJavaArray(curEnv, a);
-      curEnv->DeleteLocalRef(a);
    }
    else
    {
       AgentWriteDebugLog(5, _T("JAVA: SubAgent::%s(): exception in Java code"), methodName);
       curEnv->ExceptionClear();
    }
+   DeleteJavaLocalRef(curEnv, a);
    return list;
 }
