@@ -146,4 +146,16 @@ public abstract class UserCommunicationChannel
    {
       return ServerConfiguration.readAsInteger("UCC." + id + "." + name, defaultValue);
    }
+   
+   /**
+    * Helper for reading configuration value as boolean
+    * 
+    * @param name configuration variable name (without prefix)
+    * @param defaultValue default value
+    * @return configuration value
+    */
+   protected boolean readConfigurationAsBoolean(String name, boolean defaultValue)
+   {
+      return ServerConfiguration.readAsBoolean("UCC." + id + "." + name, defaultValue);
+   }
 }

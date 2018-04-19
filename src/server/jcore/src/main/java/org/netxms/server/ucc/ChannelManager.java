@@ -8,6 +8,7 @@ import java.util.Map;
 import org.netxms.bridge.Platform;
 import org.netxms.server.ServerConfiguration;
 import org.netxms.server.ucc.drivers.FileChannel;
+import org.netxms.server.ucc.drivers.SmtpChannel;
 
 /**
  * User communication channel manager
@@ -24,6 +25,7 @@ public final class ChannelManager
    {
       builtinDrivers = new HashMap<String, Class<? extends UserCommunicationChannel>>();
       builtinDrivers.put("builtin.file", FileChannel.class);
+      builtinDrivers.put("builtin.smtp", SmtpChannel.class);
       channelListener = new ChannelListener() {
          @Override
          public void messageReceived(String sender, String text)
