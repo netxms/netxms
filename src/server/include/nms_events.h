@@ -152,32 +152,29 @@ class EPRule
 private:
    UINT32 m_id;
    uuid m_guid;
-   UINT32 m_dwFlags;
-   UINT32 m_dwNumSources;
-   UINT32 *m_pdwSourceList;
-   UINT32 m_dwNumEvents;
-   UINT32 *m_pdwEventList;
-   UINT32 m_dwNumActions;
-   UINT32 *m_pdwActionList;
-   TCHAR *m_pszComment;
-   TCHAR *m_pszScript;
-   NXSL_VM *m_pScript;
+   UINT32 m_flags;
+   IntegerArray<UINT32> m_sources;
+   IntegerArray<UINT32> m_events;
+   IntegerArray<UINT32> m_actions;
+   TCHAR *m_comments;
+   TCHAR *m_scriptSource;
+   NXSL_VM *m_script;
 
-   TCHAR m_szAlarmMessage[MAX_EVENT_MSG_LENGTH];
-   int m_iAlarmSeverity;
-   TCHAR m_szAlarmKey[MAX_DB_STRING];
-	UINT32 m_dwAlarmTimeout;
-	UINT32 m_dwAlarmTimeoutEvent;
-	IntegerArray<UINT32> *m_alarmCategoryList;
+   TCHAR m_alarmMessage[MAX_EVENT_MSG_LENGTH];
+   int m_alarmSeverity;
+   TCHAR m_alarmKey[MAX_DB_STRING];
+	UINT32 m_alarmTimeout;
+	UINT32 m_alarmTimeoutEvent;
+	IntegerArray<UINT32> m_alarmCategoryList;
 	StringMap m_pstorageSetActions;
 	StringList m_pstorageDeleteActions;
 
-   bool matchSource(UINT32 dwObjectId);
+   bool matchSource(UINT32 objectId);
    bool matchEvent(UINT32 eventCode);
-   bool matchSeverity(UINT32 dwSeverity);
-   bool matchScript(Event *pEvent);
+   bool matchSeverity(UINT32 severity);
+   bool matchScript(Event *event);
 
-   void generateAlarm(Event *pEvent);
+   void generateAlarm(Event *event);
 
 public:
    EPRule(UINT32 id);
@@ -188,7 +185,7 @@ public:
 
    UINT32 getId() const { return m_id; }
    const uuid& getGuid() const { return m_guid; }
-   void setId(UINT32 dwNewId) { m_id = dwNewId; }
+   void setId(UINT32 newId) { m_id = newId; }
    bool loadFromDB(DB_HANDLE hdb);
 	bool saveToDB(DB_HANDLE hdb);
    bool processEvent(Event *pEvent);
@@ -196,8 +193,8 @@ public:
    void createNXMPRecord(String &str);
    json_t *toJson() const;
 
-   bool isActionInUse(UINT32 dwActionId);
-   bool isCategoryInUse(UINT32 categoryId) const { return m_alarmCategoryList->contains(categoryId); }
+   bool isActionInUse(UINT32 actionId) const { return m_actions.contains(actionId); }
+   bool isCategoryInUse(UINT32 categoryId) const { return m_alarmCategoryList.contains(categoryId); }
 };
 
 /**
