@@ -336,112 +336,152 @@ UINT32 AuthenticateUser(const TCHAR *login, const TCHAR *password, size_t sigLen
 							   bool *pbChangePasswd, bool *pbIntruderLockout, bool *closeOtherSessions,
 							   bool ssoAuth, UINT32 *graceLogins)
 {
+   RWLockReadLock(s_userDatabaseLock, INFINITE);
+   User *user = s_users.get(login);
+   if ((user == NULL) || user->isDeleted())
+   {
+      // no such user
+      RWLockUnlock(s_userDatabaseLock);
+      return RCC_ACCESS_DENIED;
+   }
+   user = new User(user);  // create copy for authentication
+   RWLockUnlock(s_userDatabaseLock);
+
    UINT32 dwResult = RCC_ACCESS_DENIED;
    BOOL bPasswordValid = FALSE;
 
    *closeOtherSessions = false;
-   RWLockWriteLock(s_userDatabaseLock, INFINITE);
-   User *user = s_users.get(login);
-   if ((user != NULL) && !user->isDeleted())
-   {
-      *pdwId = user->getId(); // always set user ID for caller so audit log will contain correct user ID on failures as well
+   *pdwId = user->getId(); // always set user ID for caller so audit log will contain correct user ID on failures as well
 
-      if (user->isLDAPUser())
+   if (user->isLDAPUser())
+   {
+      if (user->isDisabled())
       {
-         if (user->isDisabled())
-         {
-            dwResult = RCC_ACCOUNT_DISABLED;
-            goto result;
-         }
-         LDAPConnection conn;
-         dwResult = conn.ldapUserLogin(user->getDn(), password);
-         if (dwResult == RCC_SUCCESS)
-            bPasswordValid = TRUE;
+         dwResult = RCC_ACCOUNT_DISABLED;
          goto result;
       }
+      LDAPConnection conn;
+      dwResult = conn.ldapUserLogin(user->getDn(), password);
+      if (dwResult == RCC_SUCCESS)
+         bPasswordValid = TRUE;
+      goto result;
+   }
 
-      // Determine authentication method to use
-      if (!ssoAuth)
+   // Determine authentication method to use
+   if (!ssoAuth)
+   {
+      int method = user->getAuthMethod();
+      if ((method == AUTH_CERT_OR_PASSWD) || (method == AUTH_CERT_OR_RADIUS))
       {
-         int method = user->getAuthMethod();
-         if ((method == AUTH_CERT_OR_PASSWD) || (method == AUTH_CERT_OR_RADIUS))
+         if (sigLen > 0)
          {
-            if (sigLen > 0)
+            // certificate auth
+            method = AUTH_CERTIFICATE;
+         }
+         else
+         {
+            method = (method == AUTH_CERT_OR_PASSWD) ? AUTH_NETXMS_PASSWORD : AUTH_RADIUS;
+         }
+      }
+
+      switch(method)
+      {
+         case AUTH_NETXMS_PASSWORD:
+            if (sigLen == 0)
             {
-               // certificate auth
-               method = AUTH_CERTIFICATE;
+               bPasswordValid = user->validatePassword(password);
             }
             else
             {
-               method = (method == AUTH_CERT_OR_PASSWD) ? AUTH_NETXMS_PASSWORD : AUTH_RADIUS;
-            }
-         }
-
-         switch(method)
-         {
-            case AUTH_NETXMS_PASSWORD:
-               if (sigLen == 0)
-               {
-                  bPasswordValid = user->validatePassword(password);
-               }
-               else
-               {
-                  // We got certificate instead of password
-                  bPasswordValid = FALSE;
-               }
-               break;
-            case AUTH_RADIUS:
-               if (sigLen == 0)
-               {
-                  bPasswordValid = RadiusAuth(login, password);
-               }
-               else
-               {
-                  // We got certificate instead of password
-                  bPasswordValid = FALSE;
-               }
-               break;
-            case AUTH_CERTIFICATE:
-               if ((sigLen != 0) && (pCert != NULL))
-               {
-#ifdef _WITH_ENCRYPTION
-                  bPasswordValid = ValidateUserCertificate(static_cast<X509*>(pCert), login, pChallenge,
-                                                           reinterpret_cast<const BYTE*>(password), sigLen,
-                                                           user->getCertMappingMethod(),
-                                                           user->getCertMappingData());
-#else
-                  bPasswordValid = FALSE;
-#endif
-               }
-               else
-               {
-                  // We got password instead of certificate
-                  bPasswordValid = FALSE;
-               }
-               break;
-            default:
-               nxlog_write(MSG_UNKNOWN_AUTH_METHOD, NXLOG_WARNING, "ds", user->getAuthMethod(), login);
+               // We got certificate instead of password
                bPasswordValid = FALSE;
-               break;
-         }
+            }
+            break;
+         case AUTH_RADIUS:
+            if (sigLen == 0)
+            {
+               bPasswordValid = RadiusAuth(login, password);
+            }
+            else
+            {
+               // We got certificate instead of password
+               bPasswordValid = FALSE;
+            }
+            break;
+         case AUTH_CERTIFICATE:
+            if ((sigLen != 0) && (pCert != NULL))
+            {
+#ifdef _WITH_ENCRYPTION
+               bPasswordValid = ValidateUserCertificate(static_cast<X509*>(pCert), login, pChallenge,
+                                                        reinterpret_cast<const BYTE*>(password), sigLen,
+                                                        user->getCertMappingMethod(),
+                                                        user->getCertMappingData());
+#else
+               bPasswordValid = FALSE;
+#endif
+            }
+            else
+            {
+               // We got password instead of certificate
+               bPasswordValid = FALSE;
+            }
+            break;
+         default:
+            nxlog_write(MSG_UNKNOWN_AUTH_METHOD, NXLOG_WARNING, "ds", user->getAuthMethod(), login);
+            bPasswordValid = FALSE;
+            break;
       }
-      else
-      {
-         DbgPrintf(4, _T("User \"%s\" already authenticated by SSO server"), user->getName());
-         bPasswordValid = TRUE;
-      }
+   }
+   else
+   {
+      DbgPrintf(4, _T("User \"%s\" already authenticated by SSO server"), user->getName());
+      bPasswordValid = TRUE;
+   }
 
 result:
-      if (bPasswordValid)
+   delete user;   // delete copy
+   RWLockWriteLock(s_userDatabaseLock, INFINITE);
+   user = s_users.get(login);
+   if ((user == NULL) || user->isDeleted() || (user->getId() != *pdwId))
+   {
+      // User was deleted while authenticating
+      RWLockUnlock(s_userDatabaseLock);
+      return RCC_ACCESS_DENIED;
+   }
+   if (bPasswordValid)
+   {
+      if (!user->isDisabled())
       {
-         if (!user->isDisabled())
+         user->resetAuthFailures();
+         if (!ssoAuth)
          {
-            user->resetAuthFailures();
-            if (!ssoAuth)
+            if (user->getFlags() & UF_CHANGE_PASSWORD)
             {
-               if (user->getFlags() & UF_CHANGE_PASSWORD)
+               DbgPrintf(4, _T("Password for user \"%s\" need to be changed"), user->getName());
+               if (user->getId() != 0)	// Do not check grace logins for built-in system user
                {
-                  DbgPrintf(4, _T("Password for user \"%s\" need to be changed"), user->getName());
+                  if (user->getGraceLogins() <= 0)
+                  {
+                     DbgPrintf(4, _T("User \"%s\" has no grace logins left"), user->getName());
+                     dwResult = RCC_NO_GRACE_LOGINS;
+                  }
+                  else
+                  {
+                     user->decreaseGraceLogins();
+                  }
+               }
+               *pbChangePasswd = true;
+            }
+            else
+            {
+               // Check if password was expired
+               int passwordExpirationTime = ConfigReadInt(_T("PasswordExpiration"), 0);
+               if ((user->getAuthMethod() == AUTH_NETXMS_PASSWORD) &&
+                   (passwordExpirationTime > 0) &&
+                   ((user->getFlags() & UF_PASSWORD_NEVER_EXPIRES) == 0) &&
+                   (time(NULL) > user->getPasswordChangeTime() + passwordExpirationTime * 86400))
+               {
+                  DbgPrintf(4, _T("Password for user \"%s\" has expired"), user->getName());
                   if (user->getId() != 0)	// Do not check grace logins for built-in system user
                   {
                      if (user->getGraceLogins() <= 0)
@@ -458,59 +498,34 @@ result:
                }
                else
                {
-                  // Check if password was expired
-                  int passwordExpirationTime = ConfigReadInt(_T("PasswordExpiration"), 0);
-                  if ((user->getAuthMethod() == AUTH_NETXMS_PASSWORD) &&
-                      (passwordExpirationTime > 0) &&
-                      ((user->getFlags() & UF_PASSWORD_NEVER_EXPIRES) == 0) &&
-                      (time(NULL) > user->getPasswordChangeTime() + passwordExpirationTime * 86400))
-                  {
-                     DbgPrintf(4, _T("Password for user \"%s\" has expired"), user->getName());
-                     if (user->getId() != 0)	// Do not check grace logins for built-in system user
-                     {
-                        if (user->getGraceLogins() <= 0)
-                        {
-                           DbgPrintf(4, _T("User \"%s\" has no grace logins left"), user->getName());
-                           dwResult = RCC_NO_GRACE_LOGINS;
-                        }
-                        else
-                        {
-                           user->decreaseGraceLogins();
-                        }
-                     }
-                     *pbChangePasswd = true;
-                  }
-                  else
-                  {
-                     *pbChangePasswd = false;
-                  }
+                  *pbChangePasswd = false;
                }
-            }
-            else
-            {
-               *pbChangePasswd = false;
-            }
-
-            if (dwResult != RCC_NO_GRACE_LOGINS)
-            {
-               *pdwSystemRights = GetEffectiveSystemRights(user);
-               *closeOtherSessions = (user->getFlags() & UF_CLOSE_OTHER_SESSIONS) != 0;
-               *graceLogins = user->getGraceLogins();
-               user->updateLastLogin();
-               dwResult = RCC_SUCCESS;
             }
          }
          else
          {
-            dwResult = RCC_ACCOUNT_DISABLED;
+            *pbChangePasswd = false;
          }
-         *pbIntruderLockout = false;
+
+         if (dwResult != RCC_NO_GRACE_LOGINS)
+         {
+            *pdwSystemRights = GetEffectiveSystemRights(user);
+            *closeOtherSessions = (user->getFlags() & UF_CLOSE_OTHER_SESSIONS) != 0;
+            *graceLogins = user->getGraceLogins();
+            user->updateLastLogin();
+            dwResult = RCC_SUCCESS;
+         }
       }
       else
       {
-         user->increaseAuthFailures();
-         *pbIntruderLockout = user->isIntruderLockoutActive();
+         dwResult = RCC_ACCOUNT_DISABLED;
       }
+      *pbIntruderLockout = false;
+   }
+   else
+   {
+      user->increaseAuthFailures();
+      *pbIntruderLockout = user->isIntruderLockoutActive();
    }
    RWLockUnlock(s_userDatabaseLock);
    return dwResult;

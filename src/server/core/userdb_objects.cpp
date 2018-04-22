@@ -134,8 +134,8 @@ UserDatabaseObject::UserDatabaseObject(const UserDatabaseObject *src)
    _tcsncpy(m_description, src->m_description, MAX_USER_DESCR);
    m_flags = src->m_flags;
    m_attributes.addAll(&src->m_attributes);
-   m_ldapDn = _tcsdup(src->m_ldapDn);
-   m_ldapId = _tcsdup(src->m_ldapId);
+   m_ldapDn = _tcsdup_ex(src->m_ldapDn);
+   m_ldapId = _tcsdup_ex(src->m_ldapId);
    m_created = src->m_created;
 }
 
@@ -559,7 +559,7 @@ User::User(const User *src) : UserDatabaseObject(src)
    m_graceLogins = src->m_graceLogins;
    m_authMethod = src->m_authMethod;
    m_certMappingMethod = src->m_certMappingMethod;
-   m_certMappingData = _tcsdup(src->m_certMappingData);
+   m_certMappingData = _tcsdup_ex(src->m_certMappingData);
    m_disabledUntil = src->m_disabledUntil;
    m_lastPasswordChange = src->m_lastPasswordChange;
    m_lastLogin = src->m_lastLogin;
@@ -573,7 +573,7 @@ User::User(const User *src) : UserDatabaseObject(src)
  */
 User::~User()
 {
-	safe_free(m_certMappingData);
+	free(m_certMappingData);
 }
 
 /**
@@ -919,8 +919,15 @@ Group::Group(UINT32 id, const TCHAR *name) : UserDatabaseObject(id, name)
 Group::Group(const Group *src) : UserDatabaseObject(src)
 {
    m_memberCount = src->m_memberCount;
-   m_members = static_cast<UINT32 *>(malloc(src->m_memberCount * sizeof(UINT32)));
-   memcpy(m_members, src->m_members, src->m_memberCount * sizeof(UINT32));
+   if (m_memberCount > 0)
+   {
+      m_members = static_cast<UINT32 *>(malloc(src->m_memberCount * sizeof(UINT32)));
+      memcpy(m_members, src->m_members, src->m_memberCount * sizeof(UINT32));
+   }
+   else
+   {
+      m_members = NULL;
+   }
 }
 
 /**
@@ -928,7 +935,7 @@ Group::Group(const Group *src) : UserDatabaseObject(src)
  */
 Group::~Group()
 {
-	safe_free(m_members);
+	free(m_members);
 }
 
 /**
