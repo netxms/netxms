@@ -15,6 +15,10 @@ db.cpool	DB connection pool
 db.query	SQL query trace
 db.writer	DB background writers
 
+event.*		Event related messages
+event.policy	Event processing policy
+event.proc	Event processor
+
 housekeeper	Housekeeper messages
 
 logwatch.*	Messages from log monitoring library

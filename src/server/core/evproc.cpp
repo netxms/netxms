@@ -22,6 +22,8 @@
 
 #include "nxcore.h"
 
+#define DEBUG_TAG _T("event.proc")
+
 #if WITH_ZMQ
 #include "zeromq.h"
 #endif
@@ -60,7 +62,7 @@ static THREAD_RESULT THREAD_CALL EventStormDetector(void *arg)
 	if (!ConfigReadBoolean(_T("EnableEventStormDetection"), false))
 	{
 		// Event storm detection is off
-	   DbgPrintf(1, _T("Event storm detector thread stopped because event storm detection is off"));
+	   nxlog_debug_tag(DEBUG_TAG, 1, _T("Event storm detector thread stopped because event storm detection is off"));
 		return THREAD_OK;
 	}
 
@@ -79,7 +81,7 @@ static THREAD_RESULT THREAD_CALL EventStormDetector(void *arg)
 			if (actualDuration >= duration)
 			{
 				g_flags |= AF_EVENT_STORM_DETECTED;
-				DbgPrintf(2, _T("Event storm detected: threshold=") INT64_FMT _T(" eventsPerSecond=") INT64_FMT, eventsPerSecond, numEvents);
+				nxlog_debug_tag(DEBUG_TAG, 2, _T("Event storm detected: threshold=") INT64_FMT _T(" eventsPerSecond=") INT64_FMT, eventsPerSecond, numEvents);
 				PostEvent(EVENT_EVENT_STORM_DETECTED, g_dwMgmtNode, "DdD", numEvents, duration, eventsPerSecond);
 			}
 		}
@@ -87,11 +89,11 @@ static THREAD_RESULT THREAD_CALL EventStormDetector(void *arg)
 		{
 			actualDuration = 0;
 			g_flags &= ~AF_EVENT_STORM_DETECTED;
-		   DbgPrintf(2, _T("Event storm condition cleared"));
+		   nxlog_debug_tag(DEBUG_TAG, 2, _T("Event storm condition cleared"));
 			PostEvent(EVENT_EVENT_STORM_ENDED, g_dwMgmtNode, "DdD", numEvents, duration, eventsPerSecond);
 		}
 	}
-   DbgPrintf(1, _T("Event storm detector thread stopped"));
+   nxlog_debug_tag(DEBUG_TAG, 1, _T("Event storm detector thread stopped"));
 	return THREAD_OK;
 }
 
@@ -121,7 +123,7 @@ static THREAD_RESULT THREAD_CALL EventLogger(void *arg)
 											  (const TCHAR *)DBPrepareString(hdb, pEvent->getMessage(), MAX_EVENT_MSG_LENGTH),
 											  pEvent->getRootId(), (const TCHAR *)DBPrepareString(hdb, pEvent->getUserTag(), 63));
 			DBQuery(hdb, szQuery);
-			DbgPrintf(8, _T("EventLogger: DBQuery: id=%d,code=%d"), (int)pEvent->getId(), (int)pEvent->getCode());
+			nxlog_debug_tag(DEBUG_TAG, 8, _T("EventLogger: DBQuery: id=%d,code=%d"), (int)pEvent->getId(), (int)pEvent->getCode());
 			delete pEvent;
 		}
 		else
@@ -144,7 +146,7 @@ static THREAD_RESULT THREAD_CALL EventLogger(void *arg)
 					DBBind(hStmt, 9, DB_SQLTYPE_BIGINT, pEvent->getRootId());
                DBBind(hStmt, 10, DB_SQLTYPE_VARCHAR, pEvent->getUserTag(), DB_BIND_STATIC, 63);
 					DBExecute(hStmt);
-					DbgPrintf(8, _T("EventLogger: DBExecute: id=%d,code=%d"), (int)pEvent->getId(), (int)pEvent->getCode());
+					nxlog_debug_tag(DEBUG_TAG, 8, _T("EventLogger: DBExecute: id=%d,code=%d"), (int)pEvent->getId(), (int)pEvent->getCode());
 					delete pEvent;
 					pEvent = (Event *)s_loggerQueue->getOrBlock(500);
 				} while((pEvent != NULL) && (pEvent != INVALID_POINTER_VALUE));
@@ -157,7 +159,6 @@ static THREAD_RESULT THREAD_CALL EventLogger(void *arg)
 		}
 
 		DBConnectionPoolReleaseConnection(hdb);
-
 		if (pEvent == INVALID_POINTER_VALUE)
          break;   // Shutdown indicator (need second check if got it in inner loop)
 	}
@@ -207,11 +208,11 @@ THREAD_RESULT THREAD_CALL EventProcessor(void *arg)
          NetObj *pObject = FindObjectById(pEvent->getSourceId());
          if (pObject == NULL)
             pObject = g_pEntireNet;
-			nxlog_debug(5, _T("EVENT %s [%d] (ID:") UINT64_FMT _T(" F:0x%04X S:%d TAG:\"%s\"%s) FROM %s: %s"),
-                     pEvent->getName(), pEvent->getCode(), pEvent->getId(), pEvent->getFlags(), pEvent->getSeverity(),
-						   CHECK_NULL_EX(pEvent->getUserTag()),
-                     (pEvent->getRootId() == 0) ? _T("") : _T(" CORRELATED"),
-                     pObject->getName(), pEvent->getMessage());
+			nxlog_debug_tag(DEBUG_TAG, 5, _T("EVENT %s [%d] (ID:") UINT64_FMT _T(" F:0x%04X S:%d TAG:\"%s\"%s) FROM %s: %s"),
+                         pEvent->getName(), pEvent->getCode(), pEvent->getId(), pEvent->getFlags(), pEvent->getSeverity(),
+						       CHECK_NULL_EX(pEvent->getUserTag()),
+                         (pEvent->getRootId() == 0) ? _T("") : _T(" CORRELATED"),
+                         pObject->getName(), pEvent->getMessage());
       }
 
       // Pass event through event processing policy if it is not correlated
@@ -222,7 +223,7 @@ THREAD_RESULT THREAD_CALL EventProcessor(void *arg)
 #endif
 
          g_pEventPolicy->processEvent(pEvent);
-         nxlog_debug(7, _T("Event ") UINT64_FMT _T(" with code %d passed event processing policy"), pEvent->getId(), pEvent->getCode());
+         nxlog_debug_tag(DEBUG_TAG, 7, _T("Event ") UINT64_FMT _T(" with code %d passed event processing policy"), pEvent->getId(), pEvent->getCode());
 		}
 
       // Write event to log if required, otherwise destroy it
@@ -236,7 +237,7 @@ THREAD_RESULT THREAD_CALL EventProcessor(void *arg)
 		else
       {
 			delete pEvent;
-			DbgPrintf(7, _T("Event object destroyed"));
+			nxlog_debug_tag(DEBUG_TAG, 7, _T("Event object destroyed"));
 		}
       
       g_totalEventsProcessed++;
@@ -246,7 +247,7 @@ THREAD_RESULT THREAD_CALL EventProcessor(void *arg)
 	ThreadJoin(s_threadStormDetector);
 	ThreadJoin(s_threadLogger);
 	delete s_loggerQueue;
-   DbgPrintf(1, _T("Event processing thread stopped"));
+   nxlog_debug_tag(DEBUG_TAG, 1, _T("Event processing thread stopped"));
    return THREAD_OK;
 }
 
