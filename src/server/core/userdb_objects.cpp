@@ -120,6 +120,22 @@ UserDatabaseObject::UserDatabaseObject(UINT32 id, const TCHAR *name)
 }
 
 /**
+ * Copy constructor for generic object
+ */
+UserDatabaseObject::UserDatabaseObject(const UserDatabaseObject *src)
+{
+   m_id = src->m_id;
+   m_guid = src->m_guid;
+   _tcsncpy(m_name, src->m_name, MAX_USER_NAME);
+   m_systemRights = src->m_systemRights;
+   _tcsncpy(m_description, src->m_description, MAX_USER_DESCR);
+   m_flags = src->m_flags;
+   m_attributes.addAll(&src->m_attributes);
+   m_ldapDn = _tcsdup_ex(src->m_ldapDn);
+   m_ldapId = _tcsdup_ex(src->m_ldapId);
+}
+
+/**
  * Destructor for generic user database object
  */
 UserDatabaseObject::~UserDatabaseObject()
@@ -489,11 +505,33 @@ User::User(UINT32 id, const TCHAR *name) : UserDatabaseObject(id, name)
 }
 
 /**
+ * Copy constructor for user object
+ */
+User::User(const User *src) : UserDatabaseObject(src)
+{
+   m_password.hashType = src->m_password.hashType;
+   memcpy(m_password.hash, src->m_password.hash, SHA256_DIGEST_SIZE);
+   memcpy(m_password.salt, src->m_password.salt, PASSWORD_SALT_LENGTH);
+
+   _tcsncpy(m_fullName, src->m_fullName, MAX_USER_FULLNAME);
+   m_graceLogins = src->m_graceLogins;
+   m_authMethod = src->m_authMethod;
+   m_certMappingMethod = src->m_certMappingMethod;
+   m_certMappingData = _tcsdup_ex(src->m_certMappingData);
+   m_disabledUntil = src->m_disabledUntil;
+   m_lastPasswordChange = src->m_lastPasswordChange;
+   m_lastLogin = src->m_lastLogin;
+   m_minPasswordLength = src->m_minPasswordLength;
+   m_authFailures = src->m_authFailures;
+   _tcsncpy(m_xmppId, src->m_xmppId, MAX_XMPP_ID_LEN);
+}
+
+/**
  * Destructor for user object
  */
 User::~User()
 {
-	safe_free(m_certMappingData);
+	free(m_certMappingData);
 }
 
 /**
@@ -825,11 +863,28 @@ Group::Group(UINT32 id, const TCHAR *name) : UserDatabaseObject(id, name)
 }
 
 /**
+ * Copy constructor for group object
+ */
+Group::Group(const Group *src) : UserDatabaseObject(src)
+{
+   m_memberCount = src->m_memberCount;
+   if (m_memberCount > 0)
+   {
+      m_members = static_cast<UINT32 *>(malloc(src->m_memberCount * sizeof(UINT32)));
+      memcpy(m_members, src->m_members, src->m_memberCount * sizeof(UINT32));
+   }
+   else
+   {
+      m_members = NULL;
+   }
+}
+
+/**
  * Destructor for group object
  */
 Group::~Group()
 {
-	safe_free(m_members);
+	free(m_members);
 }
 
 /**
