@@ -96,6 +96,7 @@ private:
    TCHAR m_debugId[64];
    RefCountHashMap<UINT32, TunnelCommChannel> m_channels;
    MUTEX m_channelLock;
+   int m_tlsHandshakeFailures;
    bool m_ignoreClientCertificate;
 
    Tunnel(const TCHAR *hostname, UINT16 port);
@@ -151,6 +152,7 @@ Tunnel::Tunnel(const TCHAR *hostname, UINT16 port) : m_channels(true)
    m_queue = NULL;
    _sntprintf(m_debugId, 64, _T("TUN-%s"), m_hostname);
    m_channelLock = MutexCreate();
+   m_tlsHandshakeFailures = 0;
    m_ignoreClientCertificate = false;
 }
 
@@ -535,14 +537,21 @@ bool Tunnel::connectToServer()
             debugPrintf(4, _T("TLS handshake failed (%hs)"), ERR_error_string(sslErr, buffer));
             if (certificateLoaded)
             {
-               m_ignoreClientCertificate = true;
-               debugPrintf(4, _T("Next connection attempt will ignore agent certificate"));
+               m_tlsHandshakeFailures++;
+               if (m_tlsHandshakeFailures >= 10)
+               {
+                  m_ignoreClientCertificate = true;
+                  m_tlsHandshakeFailures = 0;
+                  debugPrintf(4, _T("Next connection attempt will ignore agent certificate"));
+               }
             }
             return false;
          }
       }
       break;
    }
+
+   m_tlsHandshakeFailures = 0;
 
    // Check server certificate
    X509 *cert = SSL_get_peer_certificate(m_ssl);
