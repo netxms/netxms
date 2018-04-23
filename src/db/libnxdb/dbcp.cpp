@@ -60,12 +60,14 @@ static bool DBConnectionPoolPopulate()
       if (conn->handle != NULL)
       {
          conn->inUse = false;
+         conn->resetOnRelease = false;
          conn->connectTime = time(NULL);
          conn->lastAccessTime = conn->connectTime;
          conn->usageCount = 0;
          conn->srcFile[0] = 0;
          conn->srcLine = 0;
          m_connections.add(conn);
+         nxlog_debug_tag(DEBUG_TAG, 3, _T("Connection %p created"), conn);
          success = true;
       }
       else
@@ -92,6 +94,7 @@ static void DBConnectionPoolShrink()
 		if (!conn->inUse && (now - conn->lastAccessTime > m_cooldownTime))
 		{
 			DBDisconnect(conn->handle);
+	      nxlog_debug_tag(DEBUG_TAG, 3, _T("Connection %p terminated"), conn);
          m_connections.remove(i);
          i--;
 		}
@@ -116,12 +119,12 @@ static bool ResetConnection(PoolConnectionInfo *conn)
 		conn->lastAccessTime = now;
 		conn->usageCount = 0;
 
-		nxlog_debug_tag(DEBUG_TAG, 3, _T("Connection %p reconnected"), conn->handle);
+		nxlog_debug_tag(DEBUG_TAG, 3, _T("Connection %p reconnected"), conn);
 		return true;
 	}
    else
    {
-		nxlog_debug_tag(DEBUG_TAG, 3, _T("Connection %p reconnect failure (%s)"), conn->handle, errorText);
+		nxlog_debug_tag(DEBUG_TAG, 3, _T("Connection %p reconnect failure (%s)"), conn, errorText);
 		return false;
 	}
    conn->resetOnRelease = false;
@@ -364,6 +367,7 @@ retry:
          conn->srcLine = srcLine;
          m_connections.add(conn);
          handle = conn->handle;
+         nxlog_debug_tag(DEBUG_TAG, 3, _T("Connection %p created"), conn);
       }
       else
       {
