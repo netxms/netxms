@@ -43,6 +43,7 @@ NXSL_Compiler::NXSL_Compiler()
 	m_breakStack = new NXSL_Stack;
    m_selectStack = new NXSL_Stack;
 	m_idOpCode = 0;
+	m_foreachLevel = 0;
 }
 
 /**
