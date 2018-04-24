@@ -1731,9 +1731,9 @@ private:
    time_t m_lastConnect;
 
 public:
-   ProxyAgentConnection() : ObjectLock() { m_lastConnect = 0; }
-   ProxyAgentConnection(AgentConnectionEx *object) : ObjectLock(object) { m_lastConnect = 0; }
-   ProxyAgentConnection(const ProxyAgentConnection &src) : ObjectLock(src) { m_lastConnect = src.m_lastConnect; }
+   ProxyAgentConnection() : ObjectLock<AgentConnectionEx>() { m_lastConnect = 0; }
+   ProxyAgentConnection(AgentConnectionEx *object) : ObjectLock<AgentConnectionEx>(object) { m_lastConnect = 0; }
+   ProxyAgentConnection(const ProxyAgentConnection &src) : ObjectLock<AgentConnectionEx>(src) { m_lastConnect = src.m_lastConnect; }
 
    void setLastConnectTime(time_t t) { m_lastConnect = t; }
    time_t getLastConnectTime() const { return m_lastConnect; }
