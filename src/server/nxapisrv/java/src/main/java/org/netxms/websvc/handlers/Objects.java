@@ -18,8 +18,8 @@
  */
 package org.netxms.websvc.handlers;
 
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -95,17 +95,12 @@ public class Objects extends AbstractObjectHandler
             classes = classFilter.split(",");
          }
          
-         Iterator<AbstractObject> it = objects.iterator();
-         while(it.hasNext())
+         List<AbstractObject> filteredObjects = new ArrayList<AbstractObject>();
+         for(AbstractObject o : objects)
          {
-            AbstractObject o = it.next();
-            
             // Filter by name
             if ((nameFilter != null) && !nameFilter.isEmpty() && !Glob.matchIgnoreCase(nameFilter, o.getObjectName()))
-            {
-               it.remove();
                continue;
-            }
 
             // Filter by class
             if (classes != null)
@@ -120,25 +115,21 @@ public class Objects extends AbstractObjectHandler
                   }
                }
                if (!match)
-               {
-                  it.remove();
                   continue;
-               }
             }
             
             // Filter by geographical area
             if (area != null)
             {
                if (!o.getGeolocation().isWithinArea(area[0], area[1], area[2], area[3]))
-               {
-                  it.remove();
                   continue;
-               }
             }
             
             // Filter by custom attribute
             if (customAttributes != null)
             {
+               if (o.getCustomAttributes().isEmpty())
+                  continue;
                boolean match = true;
                for(Entry<String, String> e : customAttributes.entrySet())
                {
@@ -150,12 +141,11 @@ public class Objects extends AbstractObjectHandler
                   }
                }
                if (!match)
-               {
-                  it.remove();
                   continue;
-               }
             }
+            filteredObjects.add(o);
          }
+         objects = filteredObjects;
       }
 
       return new ResponseContainer("objects", objects);
