@@ -419,6 +419,12 @@ bool LogParser::monitorFile(bool readFromCurrPos)
    }
 #endif
 
+   if (!m_keepFileOpen)
+   {
+	   nxlog_debug_tag(DEBUG_TAG, 0, _T("LogParser: \"keep open\" option disabled for file \"%s\""), m_fileName);
+      return monitorFile2(readFromCurrPos);
+   }
+
 	nxlog_debug_tag(DEBUG_TAG, 0, _T("Parser thread for file \"%s\" started"), m_fileName);
 	bool exclusionPeriod = false;
 	while(true)
@@ -592,6 +598,123 @@ stop_parser:
 	return true;
 }
 
+/**
+ * File parser thread (do not keep it open)
+ */
+bool LogParser::monitorFile2(bool readFromCurrPos)
+{
+   size_t size = 0;
+   time_t mtime = 0;
+   time_t ctime = 0;
+   off_t lastPos = 0;
+   bool readFromStart = !readFromCurrPos;
+   bool firstRead = true;
+
+   nxlog_debug_tag(DEBUG_TAG, 0, _T("Parser thread for file \"%s\" started (\"keep open\" option disabled)"), m_fileName);
+   bool exclusionPeriod = false;
+   while(true)
+   {
+      if (isExclusionPeriod())
+      {
+         if (!exclusionPeriod)
+         {
+            exclusionPeriod = true;
+            nxlog_debug_tag(DEBUG_TAG, 6, _T("Will not open file \"%s\" because of exclusion period"), getFileName());
+            setStatus(LPS_SUSPENDED);
+         }
+         if (ConditionWait(m_stopCondition, 30000))
+            break;
+         continue;
+      }
+
+      if (exclusionPeriod)
+      {
+         exclusionPeriod = false;
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("Exclusion period for file \"%s\" ended"), getFileName());
+      }
+
+      TCHAR fname[MAX_PATH];
+      ExpandFileName(getFileName(), fname, MAX_PATH, true);
+      
+      NX_STAT_STRUCT st;
+      if (CALL_STAT(fname, &st) != 0)
+      {
+         setStatus(LPS_NO_FILE);
+         if (ConditionWait(m_stopCondition, 10000))
+            break;
+         continue;
+      }
+
+      if (firstRead)
+         ctime = st.st_ctime; // prevent incorrect rotation detection on first read
+
+      if ((size == st.st_size) && (mtime == st.st_mtime) && (ctime == st.st_ctime) && !readFromStart)
+      {
+         if (ConditionWait(m_stopCondition, 10000))
+            break;
+         continue;
+      }
+
+#ifdef _WIN32
+      int fh = _tsopen(fname, O_RDONLY, _SH_DENYNO);
+#else
+      int fh = _topen(fname, O_RDONLY);
+#endif
+      if (fh == -1)
+      {
+         setStatus(LPS_OPEN_ERROR);
+         if (ConditionWait(m_stopCondition, 10000))  // retry in 10 seconds
+            break;
+         continue;
+      }
+
+      setStatus(LPS_RUNNING);
+      nxlog_debug_tag(DEBUG_TAG, 7, _T("File \"%s\" (pattern \"%s\") successfully opened"), fname, m_fileName);
+
+      if ((size > static_cast<size_t>(st.st_size)) || (ctime != st.st_ctime))
+      {
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("File \"%s\" rotation detected (size=%llu/%llu, ctime=%llu/%llu)"),  fname,
+            static_cast<UINT64>(size), static_cast<UINT64>(st.st_size), static_cast<UINT64>(ctime), static_cast<UINT64>(st.st_ctime));
+         readFromStart = true;   // Assume file rotation
+         ctime = st.st_ctime;
+      }
+
+      if (m_fileEncoding == -1)
+      {
+         m_fileEncoding = ScanFileEncoding(fh);
+         lseek(fh, 0, SEEK_SET);
+      }
+
+      if (!readFromStart)
+      {
+         if (firstRead)
+         {
+            if (m_preallocatedFile)
+               SeekToZero(fh, getCharSize());
+            else
+               lseek(fh, 0, SEEK_END);
+            firstRead = false;
+         }
+         else
+         {
+            lseek(fh, lastPos, SEEK_SET);
+         }
+      }
+      readFromStart = false;
+
+      lastPos = ParseNewRecords(this, fh);
+      _close(fh);
+      size = static_cast<size_t>(st.st_size);
+      mtime = st.st_mtime;
+
+      if (ConditionWait(m_stopCondition, 10000))
+         break;
+   }
+
+   nxlog_debug_tag(DEBUG_TAG, 0, _T("Parser thread for file \"%s\" stopped"), m_fileName);
+   return true;
+}
+
 #ifdef _WIN32
 
 /**
@@ -679,7 +802,7 @@ bool LogParser::monitorFileWithSnapshot(bool readFromCurrPos)
       }
 
       setStatus(LPS_RUNNING);
-      nxlog_debug_tag(DEBUG_TAG, 3, _T("File \"%s\" (pattern \"%s\", snapshot \"%s\") successfully opened"), fname, m_fileName, snapshot->name);
+      nxlog_debug_tag(DEBUG_TAG, 7, _T("File \"%s\" (pattern \"%s\", snapshot \"%s\") successfully opened"), fname, m_fileName, snapshot->name);
 
       if ((size > static_cast<size_t>(st.st_size)) || (ctime != st.st_ctime))
       {
@@ -710,6 +833,7 @@ bool LogParser::monitorFileWithSnapshot(bool readFromCurrPos)
             lseek(fh, lastPos, SEEK_SET);
          }
       }
+      readFromStart = false;
 
       lastPos = ParseNewRecords(this, fh);
       _close(fh);
