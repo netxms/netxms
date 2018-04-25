@@ -657,7 +657,11 @@ bool LogParser::monitorFile2(CONDITION stopCondition, bool readFromCurrPos)
          continue;
       }
 
+#ifdef _WIN32
       int fh = _tsopen(fname, O_RDONLY, _SH_DENYNO);
+#else
+      int fh = _topen(fname, O_RDONLY);
+#endif
       if (fh == -1)
       {
          setStatus(LPS_OPEN_ERROR);
@@ -683,7 +687,6 @@ bool LogParser::monitorFile2(CONDITION stopCondition, bool readFromCurrPos)
          lseek(fh, 0, SEEK_SET);
       }
 
-printf(">>> from start=%d first=%d\n", readFromStart, firstRead);
       if (!readFromStart)
       {
          if (firstRead)
@@ -710,7 +713,6 @@ printf(">>> from start=%d first=%d\n", readFromStart, firstRead);
          break;
    }
 
-   CoUninitialize();
    LogParserTrace(0, _T("LogParser: parser thread for file \"%s\" stopped"), m_fileName);
    return true;
 }
