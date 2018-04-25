@@ -34,6 +34,7 @@ import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.graphics.Font;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -57,6 +58,7 @@ public class ObjectStatusMap extends AbstractObjectStatusMap
 	private Map<Long, ObjectStatusWidget> statusWidgets = new HashMap<Long, ObjectStatusWidget>();
 	private Font titleFont;
 	private boolean groupObjects = true;
+   protected Composite dataArea;
 	
 	/**
 	 * @param parent
@@ -80,10 +82,24 @@ public class ObjectStatusMap extends AbstractObjectStatusMap
 		else
 		{
 			titleFont = JFaceResources.getFontRegistry().getBold(JFaceResources.BANNER_FONT);
-		}
+		}     
 	}
 
 	/* (non-Javadoc)
+    * @see org.netxms.ui.eclipse.objectview.widgets.AbstractObjectStatusMap#createContent(org.eclipse.swt.widgets.Composite)
+    */
+   @Override
+   protected Composite createContent(Composite parent)
+   {
+      dataArea = new Composite(parent, SWT.NONE);
+      GridLayout layout = new GridLayout();
+      layout.verticalSpacing = 10;
+      dataArea.setLayout(layout);
+      dataArea.setBackground(getBackground());
+      return dataArea;
+   }
+
+   /* (non-Javadoc)
 	 * @see org.netxms.ui.eclipse.objectview.widgets.AbstractObjectStatusMap#refresh()
 	 */
 	@Override
@@ -103,9 +119,7 @@ public class ObjectStatusMap extends AbstractObjectStatusMap
 		else
 			buildFlatView();
 		dataArea.layout(true, true);
-		
-		Rectangle r = getClientArea();
-		scroller.setMinSize(dataArea.computeSize(r.width, SWT.DEFAULT));
+		updateScrollBars();
 		
 		for(Runnable l : refreshListeners)
 		   l.run();
@@ -328,8 +342,7 @@ public class ObjectStatusMap extends AbstractObjectStatusMap
 		                  w.dispose();
 		                  statusWidgets.remove(object.getObjectId());
 		                  dataArea.layout(true, true);
-		                  Rectangle r = getClientArea();
-		                  scroller.setMinSize(dataArea.computeSize(r.width, SWT.DEFAULT));
+		                  updateScrollBars();
 		               }
 		            }
 					}
@@ -366,12 +379,18 @@ public class ObjectStatusMap extends AbstractObjectStatusMap
                      w.dispose();
                      statusWidgets.remove(objectId);
                      dataArea.layout(true, true);
-                     Rectangle r = getClientArea();
-                     scroller.setMinSize(dataArea.computeSize(r.width, SWT.DEFAULT));
+                     updateScrollBars();
                   }
                }
             });
          }
 		}
 	}
+
+   @Override
+   protected Point computeSize()
+   {
+      Rectangle r = getClientArea();
+      return dataArea.computeSize(r.width, SWT.DEFAULT);
+   }
 }

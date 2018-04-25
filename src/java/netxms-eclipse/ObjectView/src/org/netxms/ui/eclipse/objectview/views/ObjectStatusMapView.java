@@ -49,17 +49,20 @@ public class ObjectStatusMapView extends ViewPart
 	
 	private static final String SETTINGS_DISPLAY_MODE = ID + ".DisplayMode"; 
    private static final String SETTINGS_SHOW_FILTER = ID + ".ShowFilter"; 
+   private static final String SETTINGS_FIT_TO_SCREEN = ID + ".FitToScreen"; 
 
 	private long rootObjectId;
 	private AbstractObjectStatusMap map;
 	private Composite clientArea;
 	private int displayOption = 1;
    private boolean showFilter = true;
+   private boolean fitToScreen = true;
 	private Action actionRefresh;
    private Action actionFlatView;
    private Action actionGroupView;
    private Action actionRadialView;
 	private Action actionShowFilter;
+   private Action actionFitToScreen;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
@@ -86,6 +89,7 @@ public class ObjectStatusMapView extends ViewPart
       final IDialogSettings settings = Activator.getDefault().getDialogSettings();
       displayOption = (settings.get(SETTINGS_DISPLAY_MODE) != null) ? settings.getInt(SETTINGS_DISPLAY_MODE) : 1;
       showFilter = (settings.get(SETTINGS_SHOW_FILTER) != null) ? settings.getBoolean(SETTINGS_SHOW_FILTER) : true;
+      fitToScreen = (settings.get(SETTINGS_FIT_TO_SCREEN) != null) ? settings.getBoolean(SETTINGS_FIT_TO_SCREEN) : true;
       
       if (displayOption == 2)
       {
@@ -99,6 +103,7 @@ public class ObjectStatusMapView extends ViewPart
       
 		map.setRootObject(rootObjectId);
 		map.enableFilter(showFilter);
+      map.setFitToScreen(fitToScreen);
 				
 		map.setFilterCloseAction(new Action() {
          @Override
@@ -134,6 +139,7 @@ public class ObjectStatusMapView extends ViewPart
          settings.put(SETTINGS_DISPLAY_MODE, 2);
       
       settings.put(SETTINGS_SHOW_FILTER, showFilter);
+      settings.put(SETTINGS_FIT_TO_SCREEN, actionFitToScreen.isChecked());
       
       super.dispose();
    }
@@ -192,6 +198,17 @@ public class ObjectStatusMapView extends ViewPart
          }
       };
       actionShowFilter.setChecked(showFilter);
+      
+      actionFitToScreen = new Action("Fit to screen", Action.AS_CHECK_BOX) {
+         @Override
+         public void run()
+         {
+            fitToScreen = actionFitToScreen.isChecked();
+            map.setFitToScreen(fitToScreen);
+            map.refresh();
+         }
+      };
+      actionFitToScreen.setChecked(fitToScreen);
 	}
 
 	/**
@@ -244,6 +261,7 @@ public class ObjectStatusMapView extends ViewPart
 	private void fillLocalPullDown(IMenuManager manager)
 	{
       manager.add(actionShowFilter);
+      manager.add(actionFitToScreen);
       manager.add(new Separator());
       manager.add(actionFlatView);
 		manager.add(actionGroupView);
