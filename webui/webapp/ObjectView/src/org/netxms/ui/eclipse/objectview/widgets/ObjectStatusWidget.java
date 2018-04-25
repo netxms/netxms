@@ -78,6 +78,7 @@ public class ObjectStatusWidget extends Canvas implements PaintListener
 		rect.y += 4;
 		rect.width -= 8;
 		rect.height -= 8;
+		e.gc.setClipping(rect);
 		int h = e.gc.textExtent(text).y;
 		e.gc.drawText(text, rect.x, rect.y + (rect.height - h) / 2, SWT.DRAW_TRANSPARENT | SWT.DRAW_DELIMITER);
 	}

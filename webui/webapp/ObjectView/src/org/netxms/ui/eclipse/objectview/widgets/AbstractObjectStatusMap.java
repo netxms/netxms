@@ -24,6 +24,7 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
+
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtensionRegistry;
@@ -44,12 +45,13 @@ import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
-import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.ScrollBar;
 import org.eclipse.ui.IViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
@@ -77,8 +79,6 @@ public abstract class AbstractObjectStatusMap extends Composite implements ISele
    protected long rootObjectId;
    protected NXCSession session;
    protected FilterText filterTextControl;
-   protected ScrolledComposite scroller;
-   protected Composite dataArea;
    protected ISelection selection = null;
    protected Set<ISelectionChangedListener> selectionListeners = new HashSet<ISelectionChangedListener>();
    protected MenuManager menuManager;
@@ -88,7 +88,11 @@ public abstract class AbstractObjectStatusMap extends Composite implements ISele
    protected SortedMap<Integer, ObjectDetailsProvider> detailsProviders = new TreeMap<Integer, ObjectDetailsProvider>();
    protected Set<Runnable> refreshListeners = new HashSet<Runnable>();
    protected RefreshTimer refreshTimer;
+   protected boolean fitToScreen;
 
+   private Composite content;
+   private ScrolledComposite scroller;
+   
    /**
     * @param parent
     * @param style
@@ -142,24 +146,17 @@ public abstract class AbstractObjectStatusMap extends Composite implements ISele
          }
       });
       
-      scroller = new ScrolledComposite(this, SWT.V_SCROLL);
+      scroller = new ScrolledComposite(this, SWT.V_SCROLL | SWT.H_SCROLL);
       scroller.setBackground(getBackground());
       scroller.setExpandHorizontal(true);
       scroller.setExpandVertical(true);
       addControlListener(new ControlAdapter() {
          public void controlResized(ControlEvent e)
          {
-            Rectangle r = getClientArea();
-            scroller.setMinSize(dataArea.computeSize(r.width, SWT.DEFAULT));
+            updateScrollBars();
          }
       });
-      
-      dataArea = new Composite(scroller, SWT.NONE);
-      scroller.setContent(dataArea);
-      GridLayout layout = new GridLayout();
-      layout.verticalSpacing = 10;
-      dataArea.setLayout(layout);
-      dataArea.setBackground(getBackground());
+      //scroller.getVerticalBar().setIncrement(30);
       
       menuManager = new MenuManager();
       menuManager.setRemoveAllWhenShown(true);
@@ -189,6 +186,9 @@ public abstract class AbstractObjectStatusMap extends Composite implements ISele
          filterTextControl.setFocus();
       else
          enableFilter(false); // Will hide filter area correctly
+
+      content = createContent(scroller); 
+      scroller.setContent(content);
       
       refreshTimer = new RefreshTimer(10000, this, new Runnable() {
          @Override
@@ -198,7 +198,15 @@ public abstract class AbstractObjectStatusMap extends Composite implements ISele
          }
       });
    }
-
+   
+   /**
+    * Create status widget content
+    * 
+    * @param parent parent composite
+    * @return content for scroller
+    */
+   protected abstract Composite createContent(Composite parent);
+   
    /**
     * Fill context menu
     * @param mgr Menu manager
@@ -474,6 +482,12 @@ public abstract class AbstractObjectStatusMap extends Composite implements ISele
    abstract protected void onObjectDelete(final long objectId);
 
    /**
+    * Handler for widget size calculation
+    * @return widget size as a Point
+    */
+   abstract protected Point computeSize();
+
+   /**
     * Check if given object is a container
     * 
     * @param object
@@ -493,5 +507,42 @@ public abstract class AbstractObjectStatusMap extends Composite implements ISele
    protected static boolean isLeafObject(AbstractObject object)
    {
       return (object instanceof Node) || (object instanceof MobileDevice);
+   }
+
+   /**
+    * Sets fit to screen parameter 
+    * 
+    * @param fitToScreen
+    */
+   public void setFitToScreen(boolean fitToScreen)
+   {
+      this.fitToScreen = fitToScreen;      
+      refresh();
+      updateScrollBars();
+   }
+
+   /**
+    * Update scrollbars after content change 
+    */
+   protected void updateScrollBars()
+   {
+      scroller.setMinSize(computeSize());
+   }
+   
+   /**
+    * Get available client area (without scroll bars)
+    * 
+    * @return
+    */
+   protected Rectangle getAvailableClientArea()
+   {
+      Rectangle rect = scroller.getClientArea();
+      ScrollBar sb = scroller.getVerticalBar();
+      if (sb != null)
+         rect.width -= sb.getSize().x;
+      sb = scroller.getHorizontalBar();
+      if (sb != null)
+         rect.height -= sb.getSize().y;
+      return rect;
    }
 }

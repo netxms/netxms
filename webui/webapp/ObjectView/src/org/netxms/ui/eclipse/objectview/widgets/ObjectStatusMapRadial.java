@@ -21,14 +21,13 @@ package org.netxms.ui.eclipse.objectview.widgets;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.events.MouseTrackListener;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
-import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IViewPart;
@@ -70,6 +69,98 @@ public class ObjectStatusMapRadial extends AbstractObjectStatusMap
    }
 	
    /* (non-Javadoc)
+    * @see org.netxms.ui.eclipse.objectview.widgets.AbstractObjectStatusMap#createContent(org.eclipse.swt.widgets.Composite)
+    */
+   @Override
+   protected Composite createContent(Composite parent)
+   {
+      widget = new ObjectStatusRadialWidget(parent, null, null);
+
+      widget.addMouseListener(new MouseListener() {
+         @Override
+         public void mouseUp(MouseEvent e)
+         {
+         }
+         
+         @Override
+         public void mouseDown(MouseEvent e)
+         {
+            if ((tooltipDialog != null) && (tooltipDialog.getShell() != null) && !tooltipDialog.getShell().isDisposed() && (e.display.getActiveShell() != tooltipDialog.getShell()))
+            {
+               tooltipDialog.close();
+               tooltipDialog = null;
+            }
+            tooltipObject = null;
+            
+            AbstractObject object = widget.getObjectFromPoint(e.x, e.y);
+            if (object != null)
+            {
+               setSelection(new StructuredSelection(object));
+               if (e.button == 1)
+                  callDetailsProvider(object);
+            }
+            else
+            {
+               setSelection(new StructuredSelection());
+            }
+         }
+         
+         @Override
+         public void mouseDoubleClick(MouseEvent e)
+         {
+         }
+      });
+      
+      WidgetHelper.attachMouseTrackListener(widget, new MouseTrackListener() {
+         @Override
+         public void mouseHover(MouseEvent e)
+         {
+            AbstractObject object = widget.getObjectFromPoint(e.x, e.y);
+            if ((object != null) && ((object != tooltipObject) || (tooltipDialog == null) || (tooltipDialog.getShell() == null) || tooltipDialog.getShell().isDisposed()))
+            {
+               if ((tooltipDialog != null) && (tooltipDialog.getShell() != null) && !tooltipDialog.getShell().isDisposed())
+                  tooltipDialog.close();
+            
+               tooltipObject = object;
+               tooltipDialog = new ObjectPopupDialog(getShell(), object, widget.toDisplay(e.x, e.y));
+               tooltipDialog.open();
+            }
+            else if ((object == null) && (tooltipDialog != null) && (tooltipDialog.getShell() != null) && !tooltipDialog.getShell().isDisposed())
+            {
+               tooltipDialog.close();
+               tooltipDialog = null;
+            }
+         }
+         
+         @Override
+         public void mouseExit(MouseEvent e)
+         {
+            if ((tooltipDialog != null) && (tooltipDialog.getShell() != null) && !tooltipDialog.getShell().isDisposed() && (e.display.getActiveShell() != tooltipDialog.getShell()))
+            {
+               tooltipDialog.close();
+               tooltipDialog = null;
+            }
+            tooltipObject = null;
+         }
+         
+         @Override
+         public void mouseEnter(MouseEvent e)
+         {
+         }
+      });
+
+      // Create popup menu
+      Menu menu = menuManager.createContextMenu(widget);
+      widget.setMenu(menu);
+
+      // Register menu for extension.
+      if (viewPart != null)
+         viewPart.getSite().registerContextMenu(menuManager, this);
+      
+      return widget;
+   }
+
+   /* (non-Javadoc)
     * @see org.netxms.ui.eclipse.objectview.widgets.AbstractObjectStatusMap#refresh()
     */
    @Override
@@ -77,104 +168,8 @@ public class ObjectStatusMapRadial extends AbstractObjectStatusMap
 	{
       AbstractObject root = session.findObjectById(rootObjectId);
       Collection<AbstractObject> objects = createFilteredList(root);
-      
-      if (widget == null)
-      {
-         widget = new ObjectStatusRadialWidget(dataArea, root, objects);
-         widget.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-
-         widget.addMouseListener(new MouseListener() {
-            @Override
-            public void mouseUp(MouseEvent e)
-            {
-            }
-            
-            @Override
-            public void mouseDown(MouseEvent e)
-            {
-               if ((tooltipDialog != null) && (tooltipDialog.getShell() != null) && !tooltipDialog.getShell().isDisposed() && (e.display.getActiveShell() != tooltipDialog.getShell()))
-               {
-                  tooltipDialog.close();
-                  tooltipDialog = null;
-               }
-               tooltipObject = null;
-               
-               AbstractObject object = widget.getObjectFromPoint(e.x, e.y);
-               if (object != null)
-               {
-                  setSelection(new StructuredSelection(object));
-                  if (e.button == 1)
-                     callDetailsProvider(object);
-               }
-               else
-               {
-                  setSelection(new StructuredSelection());
-               }
-            }
-            
-            @Override
-            public void mouseDoubleClick(MouseEvent e)
-            {
-            }
-         });
-         
-         WidgetHelper.attachMouseTrackListener(widget, new MouseTrackListener() {
-            @Override
-            public void mouseHover(MouseEvent e)
-            {
-               AbstractObject object = widget.getObjectFromPoint(e.x, e.y);
-               if ((object != null) && ((object != tooltipObject) || (tooltipDialog == null) || (tooltipDialog.getShell() == null) || tooltipDialog.getShell().isDisposed()))
-               {
-                  if ((tooltipDialog != null) && (tooltipDialog.getShell() != null) && !tooltipDialog.getShell().isDisposed())
-                     tooltipDialog.close();
-               
-                  tooltipObject = object;
-                  tooltipDialog = new ObjectPopupDialog(getShell(), object, widget.toDisplay(e.x, e.y));
-                  tooltipDialog.open();
-               }
-               else if ((object == null) && (tooltipDialog != null) && (tooltipDialog.getShell() != null) && !tooltipDialog.getShell().isDisposed())
-               {
-                  tooltipDialog.close();
-                  tooltipDialog = null;
-               }
-            }
-            
-            @Override
-            public void mouseExit(MouseEvent e)
-            {
-               if ((tooltipDialog != null) && (tooltipDialog.getShell() != null) && !tooltipDialog.getShell().isDisposed() && (e.display.getActiveShell() != tooltipDialog.getShell()))
-               {
-                  tooltipDialog.close();
-                  tooltipDialog = null;
-               }
-               tooltipObject = null;
-            }
-            
-            @Override
-            public void mouseEnter(MouseEvent e)
-            {
-            }
-         });
-
-         // Create popup menu
-         Menu menu = menuManager.createContextMenu(widget);
-         widget.setMenu(menu);
-
-         // Register menu for extension.
-         if (viewPart != null)
-            viewPart.getSite().registerContextMenu(menuManager, this);
-      }
-      else
-      {
-         widget.updateObjects(root, objects);
-         widget.redraw();
-      }
-		
-		dataArea.layout(true, true);
-		
-		Rectangle r = getClientArea();
-		scroller.setMinSize(dataArea.computeSize(r.width, SWT.DEFAULT));
-		
+      widget.updateObjects(root, objects);
+      widget.refresh();
 		for(Runnable l : refreshListeners)
 		   l.run();
 	}
@@ -197,5 +192,15 @@ public class ObjectStatusMapRadial extends AbstractObjectStatusMap
    {
       if (widget.containsObject(objectId))
          refreshTimer.execute();
+   }
+
+   @Override
+   protected Point computeSize()
+   {      
+      if (!fitToScreen)
+         return widget.computeSize(SWT.DEFAULT, SWT.DEFAULT);
+      
+      Rectangle rect = getAvailableClientArea();
+      return widget.computeSize(rect.width, rect.height);
    }
 }

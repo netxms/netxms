@@ -779,7 +779,7 @@ public class WidgetHelper
       
       return new SplitedString(name.toString(), fit);    
    }
-	
+		
 	/**
 	 * Get best fitting font from given font list for given string and bounding rectangle.
 	 * Fonts in the list must be ordered from smaller to larger.

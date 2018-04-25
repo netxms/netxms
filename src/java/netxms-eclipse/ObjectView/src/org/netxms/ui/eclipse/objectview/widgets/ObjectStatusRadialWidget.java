@@ -113,14 +113,6 @@ public class ObjectStatusRadialWidget extends Canvas implements PaintListener, D
       });
 	}
 	
-	@Override
-	public void dispose()
-	{
-	   if(chartImage != null)
-	      chartImage.dispose();
-	   super.dispose();
-	}
-	
 	/**
 	 * Refresh objects
 	 */
