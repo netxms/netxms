@@ -1311,7 +1311,7 @@ AC_CHECK_HEADERS([sys/int_types.h time.h sys/time.h sys/utsname.h sys/wait.h])
 AC_CHECK_HEADERS([arpa/inet.h netdb.h netinet/in.h netinet/tcp.h net/nh.h sys/socket.h])
 AC_CHECK_HEADERS([fcntl.h dirent.h sys/ioctl.h sys/sockio.h poll.h termios.h])
 AC_CHECK_HEADERS([inttypes.h memory.h stdint.h stdlib.h strings.h string.h])
-AC_CHECK_HEADERS([readline/readline.h byteswap.h sys/select.h dlfcn.h locale.h])
+AC_CHECK_HEADERS([byteswap.h sys/select.h dlfcn.h locale.h])
 AC_CHECK_HEADERS([sys/sysctl.h sys/param.h sys/user.h vm/vm_param.h syslog.h])
 AC_CHECK_HEADERS([net/if.h net/if_arp.h net/if_dl.h net/if_types.h],,,
 [[#ifdef HAVE_SYS_TYPES_H
@@ -1338,17 +1338,19 @@ AC_CHECK_LIB(kstat, kstat_open)
 if test "x$BUILD_SERVER" = "xyes" ; then
    AC_CHECK_LIB(termcap, tgetstr, [SERVER_LIBS="$SERVER_LIBS -ltermcap"], [AC_CHECK_LIB(ncurses, tgetstr, [SERVER_LIBS="$SERVER_LIBS -lncurses"], AC_CHECK_LIB(curses, tgetstr, [SERVER_LIBS="$SERVER_LIBS -lcurses"]))])
    if test "x$DISABLE_READLINE" = "xno"; then
+      AC_CHECK_HEADERS([readline/readline.h])
       AC_CHECK_LIB(readline, readline, [SERVER_LIBS="$SERVER_LIBS -lreadline"], [AC_CHECK_LIB(edit, readline, [SERVER_LIBS="$SERVER_LIBS -ledit"])])
+      AC_CHECK_FUNCS([readline])
    fi
    AC_CHECK_LIB(rt, timer_create, [SERVER_LIBS="$SERVER_LIBS -lrt"])
    SAVED_LDFLAGS="$LDFLAGS"
    LDFLAGS="$LDFLAGS $SERVER_LIBS"
 
-   AC_CHECK_FUNCS([readline timer_create])
+   AC_CHECK_FUNCS([timer_create])
    AC_CHECK_TYPES([timer_t])
 
    # Check if passing rl_insert to rl_bind_key needs cast
-   if test "$ac_cv_func_readline" = "yes"; then
+   if test "x$ac_cv_func_readline" = "xyes"; then
       AC_LANG_PUSH([C++])
 
       AC_MSG_CHECKING(for rl_insert cast)
