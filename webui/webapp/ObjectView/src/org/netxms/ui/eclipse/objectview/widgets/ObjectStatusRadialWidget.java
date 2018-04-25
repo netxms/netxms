@@ -21,15 +21,22 @@ package org.netxms.ui.eclipse.objectview.widgets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.ControlEvent;
+import org.eclipse.swt.events.ControlListener;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
+import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.GC;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.graphics.Transform;
@@ -42,6 +49,8 @@ import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.tools.ColorCache;
 import org.netxms.ui.eclipse.tools.ColorConverter;
+import org.netxms.ui.eclipse.tools.FontTools;
+import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
  * Widget representing object status
@@ -58,6 +67,14 @@ public class ObjectStatusRadialWidget extends Canvas implements PaintListener
 	private int centerY;
 	private ColorCache cCache;
 	private Map<Long, ObjectData> objects;
+   private List<Integer> fontSize;
+   private static final String[] FONT_NAMES = { "Segoe UI", "Liberation Sans", "DejaVu Sans", "Verdana", "Arial" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+   private Font[] valueFonts;
+   private static final int FONT_BASE_SIZE = 8;
+   private static final int PADDING = 6;
+   private static final int MARGIN = 6;
+   private static final int SHIFT = 3;
+   private boolean fitToScreen = true;
 	
 	private List<ObjectPosition> objectMap = new ArrayList<ObjectPosition>();
 	
@@ -68,68 +85,40 @@ public class ObjectStatusRadialWidget extends Canvas implements PaintListener
 	public ObjectStatusRadialWidget(Composite parent, AbstractObject rootObject, Collection<AbstractObject> objects)
 	{
 		super(parent, SWT.FILL);
-		this.rootObject = rootObject;
+		this.rootObject = rootObject;    
+      cCache = new ColorCache(this);
+      valueFonts = FontTools.getFonts(FONT_NAMES, FONT_BASE_SIZE, SWT.BOLD, 16);
 		
 		this.objects = new HashMap<Long, ObjectData>();
-		for(AbstractObject o : objects)
-		   this.objects.put(o.getObjectId(), new ObjectData(o));
-      
-		cCache = new ColorCache(this);
-
+		if (objects != null)
+		{
+   		for(AbstractObject o : objects)
+   		   this.objects.put(o.getObjectId(), new ObjectData(o));
+		}
+		
       setBackground(getDisplay().getSystemColor(SWT.COLOR_WHITE));
       addPaintListener(this);
+      addControlListener(new ControlListener() {
+         @Override
+         public void controlResized(ControlEvent e)
+         {
+            refresh();
+         }
+
+         @Override
+         public void controlMoved(ControlEvent e)
+         {
+         }
+      });
 	}
 	
 	/**
-	 * Calculate substring for string to fit in the sector
-	 * 
-	 * @param text object name
-	 * @param gc gc object
-	 * @param lineNum number of lines that can be used to display object name
-	 * @return  formated string
+	 * Refresh objects
 	 */
-	private String substring(String text, GC gc, int lineNum)
-	{
-      StringBuilder name = new StringBuilder("");
-      int start = 0;
-      for(int i = 0; i < lineNum; i++)
-      {
-         int end = text.length();
-         String substr = text.substring(start);
-         int nameL = gc.textExtent(substr).x;
-         int numOfCharToLeave = (int)((diameter / 2 - 6)/(nameL/substr.length())); //make best guess
-         if(numOfCharToLeave >= substr.length())
-            numOfCharToLeave = substr.length() - 1;
-         String tmp;
-         for(int j = 0; nameL > diameter / 2 - 6; j++)
-         {
-            if(i+1 == lineNum)
-            {
-               tmp = substr.substring(0, numOfCharToLeave-j).toString(); 
-               tmp += "...";
-            }
-            else
-            {
-               tmp = substr.substring(0, numOfCharToLeave-j).toString();
-            }
-            nameL = gc.textExtent(tmp).x;      
-            end = numOfCharToLeave - j + start;
-         }         
-         
-         name.append(text.substring(start, end));
-         if(end == text.length())
-         {
-            break;
-         }
-         else
-         {
-            name.append((i+1 == lineNum) ? "..." : "\n" );
-         }
-         start = end;
-      }	   
-	   
-	   return name.toString();	   
-	}
+   public void refresh()
+   {
+      redraw();
+   }
 	
 	/**
 	 * Draw sectors for all objects
@@ -167,8 +156,8 @@ public class ObjectStatusRadialWidget extends Canvas implements PaintListener
          
          // white circle before each level
          gc.setBackground(getDisplay().getSystemColor(SWT.COLOR_WHITE));
-         gc.fillArc(centerX - (diameter * lvl) / 2 - 3, centerY - (diameter * lvl) / 2 - 3, 
-               diameter * lvl + 6, diameter * lvl + 6, Math.round(degree), Math.round(currObjsize) + compensation);
+         gc.fillArc(centerX - (diameter * lvl) / 2 - SHIFT, centerY - (diameter * lvl) / 2 - SHIFT, 
+               diameter * lvl + MARGIN, diameter * lvl + MARGIN, Math.round(degree), Math.round(currObjsize) + compensation);
          
          gc.setBackground(StatusDisplayInfo.getStatusColor(obj.getStatus()));
          gc.fillArc(centerX - (diameter * lvl) / 2, centerY - (diameter * lvl) / 2, 
@@ -201,17 +190,15 @@ public class ObjectStatusRadialWidget extends Canvas implements PaintListener
          gc.setTransform(tr);
          
          // cut text function
+         gc.setFont(valueFonts[fontSize.get(lvl-1)]);
          int l = gc.textExtent(text).x;
          int h = gc.textExtent(text).y;
          //high of sector
-         int high = (int)((Math.tan(currObjsize/2))*((diameter * lvl) / 2)*2)-6;
-         int lineNum = high/(h+13);
+         int height = (int)(Math.tan(Math.toRadians(currObjsize/2))*(diameter / 2 * lvl)*2)-PADDING;
+         int lineNum = height/h;
          if(lineNum < 0 || lineNum > 3)
             lineNum = 3;
-         if (l > diameter / 2 - 6)
-         {
-            text = substring(text, gc, lineNum);
-         }
+         text = WidgetHelper.splitStringToLines(gc, text, diameter/2 - PADDING, lineNum).getResult();
          h = gc.textExtent(text).y;
          
          gc.setForeground(ColorConverter.selectTextColorByBackgroundColor(StatusDisplayInfo.getStatusColor(obj.getStatus()), cCache));
@@ -219,10 +206,10 @@ public class ObjectStatusRadialWidget extends Canvas implements PaintListener
          if(middle>=90 && middle <=180 || middle>180 && middle < 270)
          {
             l = gc.textExtent(text).x;
-            gc.drawText(text, -(diameter*(lvl-1))/2-6-l, -h/2, SWT.DRAW_TRANSPARENT | SWT.DRAW_DELIMITER);
+            gc.drawText(text, -(diameter*(lvl-1))/2-PADDING-l, -h/2, SWT.DRAW_TRANSPARENT | SWT.DRAW_DELIMITER);
          }
          else
-            gc.drawText(text, (diameter*(lvl-1))/2+5, -h/2, SWT.DRAW_TRANSPARENT | SWT.DRAW_DELIMITER);
+            gc.drawText(text, (diameter*(lvl-1))/2+PADDING, -h/2, SWT.DRAW_TRANSPARENT | SWT.DRAW_DELIMITER);
 
          gc.setTransform(oldTransform);    
          tr.dispose();
@@ -235,10 +222,11 @@ public class ObjectStatusRadialWidget extends Canvas implements PaintListener
 	}
 	
 	/**
+    * Max level and object count calculation
     * 
     * @param object
     * @param lvl
-    * @return
+    * @return object count
     */
    private int calculateMaxLVLAndObjCount(AbstractObject object, int lvl)
    {     
@@ -290,6 +278,143 @@ public class ObjectStatusRadialWidget extends Canvas implements PaintListener
       return objcoutn;
    }
    
+
+   
+   /**
+    * Calculate optimal font size
+    * 
+    * @param object 
+    * @param lvl 
+    * @param gc 
+    * @return object count inside of current object
+    */
+   private int calculateLayerSize(AbstractObject object, int lvl, GC gc)
+   {
+      int objCount = 0;
+      AbstractObject[] objSet = object.getChildsAsArray();
+      gc.setFont(valueFonts[0]);//set minimal font
+      for(AbstractObject obj : objSet )
+      {
+         int contSize; 
+         if (AbstractObjectStatusMap.isContainerObject(obj))
+         {
+            contSize = calculateLayerSize(obj, lvl+1, gc);            
+            objCount += contSize;            
+         }
+         else
+         {
+            contSize = 1;            
+            objCount++;
+         }
+         
+         calculateOptimalDiameter(obj, lvl, contSize, gc);
+            
+      }
+      if(objSet.length == 0)
+         objCount++;
+      
+      return objCount;
+   }
+
+   /**
+    * Calculates optimal diameter to display objects with fully seen name
+    * 
+    * @param obj
+    * @param lvl
+    * @param objCount
+    * @param gc
+    */
+   private void calculateOptimalDiameter(AbstractObject obj, int lvl, int objCount, GC gc)
+   {
+      String text = obj.getObjectName();
+      int height = (int)((Math.tan(Math.toRadians(leafObjectSize*objCount/2)))*((diameter * lvl) / 2)*2)-PADDING;
+      if(height < 0)
+         height = 1286;
+
+      while(!WidgetHelper.fitToRect(gc, text, diameter/2 - PADDING, height, 3))
+      {
+         diameter = (int)(diameter + diameter*0.05);
+
+         height = (int)((Math.tan(Math.toRadians(leafObjectSize*objCount/2)))*((diameter * lvl) / 2)*2)-PADDING;
+         if(height < 0)
+            height = 1286;
+
+      }
+   }
+   
+   /**
+    * Calculate optimal font size and sets it to the global list fontSize
+    * 
+    * @param object
+    * @param lvl
+    * @param gc
+    * @return object count inside of current object
+    */
+   private int calculateLayerFontSize(AbstractObject object, int lvl, GC gc)
+   {     
+      int objCount = 0;
+      AbstractObject[] objSet = object.getChildsAsArray();
+      for(AbstractObject obj : objSet )
+      {
+         int contSize; 
+         if (AbstractObjectStatusMap.isContainerObject(obj))
+         {
+            contSize = calculateLayerFontSize(obj, lvl+1, gc);            
+            objCount += contSize;            
+         }
+         else
+         {
+            contSize = 1;            
+            objCount++;
+         }
+         
+         Integer optimalFontSie = calculateOptimalFontsie(obj, lvl, contSize, gc);
+         if(fontSize.get(lvl) > optimalFontSie)
+            fontSize.set(lvl, optimalFontSie);
+            
+      }
+      if(objSet.length == 0)
+         objCount++;
+      
+      return objCount;
+   }
+
+   /**
+    * Calcualtes optimal font size for each separate object 
+    * 
+    * @param obj
+    * @param lvl
+    * @param objCount
+    * @param gc
+    * @return ordinal number of the font in the array
+    */
+   private Integer calculateOptimalFontsie(AbstractObject obj, int lvl, int objCount, GC gc)
+   {
+      String text = obj.getObjectName();
+      int height = (int)((Math.tan(Math.toRadians(leafObjectSize*objCount/2)))*((diameter * lvl) / 2)*2)-PADDING;
+      if(height < 0)
+         height = 1286;
+
+      final int font = WidgetHelper.getBestFittingFontMultiline(gc, valueFonts, text, diameter/2 - PADDING, height, 3); //$NON-NLS-1$
+
+      return new Integer(font);
+   }
+   
+   /**
+    * Makes all required recalculations in case of object change or view resize
+    * 
+    * @param gc
+    */
+   public void recalculateData(GC gc)
+   {
+      leafObjectCount = calculateMaxLVLAndObjCount(rootObject, 1);      
+      diameter = 200; 
+      leafObjectSize = 360 / (float)leafObjectCount;  
+      if(!fitToScreen)
+         calculateLayerSize(rootObject, 1, gc);   
+   }
+
+   
 	/* (non-Javadoc)
 	 * @see org.eclipse.swt.events.PaintListener#paintControl(org.eclipse.swt.events.PaintEvent)
 	 */
@@ -303,24 +428,42 @@ public class ObjectStatusRadialWidget extends Canvas implements PaintListener
         gc.drawText("Advanced graphics not supported", 30, 30, true);
         return;
       } 
-	   
-	   objectMap.clear();
-	   leafObjectCount = calculateMaxLVLAndObjCount(rootObject, 1);
-      leafObjectSize = 360 / (float)leafObjectCount;
       
+      gc.setAntialias(SWT.ON);
+      gc.setTextAntialias(SWT.ON);
+      gc.setForeground(SharedColors.getColor(SharedColors.TEXT_NORMAL, getDisplay()));
+      gc.setLineWidth(1);
+      
+	   objectMap.clear();
+	   recalculateData(gc);
+	       
 		Rectangle rect = getClientArea();
 		rect.width--;
 		rect.height--;
-		
-		gc.setAntialias(SWT.ON);
-		gc.setTextAntialias(SWT.ON);
-		gc.setForeground(SharedColors.getColor(SharedColors.TEXT_NORMAL, getDisplay()));
-		gc.setLineWidth(1);
 		//calculate values
       int rectSide = Math.min(rect.width, rect.height);
-      diameter = rectSide / (maxLvl + 1);
+      diameter = Math.max(diameter, rectSide / (maxLvl + 1));
       centerX = rect.x+(rectSide/2);
       centerY = rect.y+(rectSide/2);
+      
+      
+      //calculate optimal font size
+      fontSize = new ArrayList<Integer>(Collections.nCopies(maxLvl+1, new Integer(100))); 
+      //font calculation for general container      
+      final int squareSide = (int)(diameter/Math.sqrt(2)); 
+      fontSize.set(0, new Integer(WidgetHelper.getBestFittingFontMultiline(gc, valueFonts, rootObject.getObjectName(), squareSide, squareSide, 3)));
+      //font calculation for sectors
+      calculateLayerFontSize(rootObject, 1, gc);
+      Integer prevLVL = 100;
+      for(int i = 0; i < fontSize.size(); i++)
+      {
+         if(prevLVL < fontSize.get(i))
+         {
+            fontSize.set(i, prevLVL);
+         }
+         
+         prevLVL = fontSize.get(i);
+      }
 
 		//draw objects
 		drawParts(gc, rootObject, 2, 0);		
@@ -329,34 +472,47 @@ public class ObjectStatusRadialWidget extends Canvas implements PaintListener
 		//draw white oval
       gc.setBackground(getDisplay().getSystemColor(SWT.COLOR_WHITE));
       gc.setAlpha(255);
-      gc.fillOval(centerX-diameter/2-3, centerY-diameter/2-3, diameter+6, diameter+6);
+      gc.fillOval(centerX-diameter/2-SHIFT, centerY-diameter/2-SHIFT, diameter+MARGIN, diameter+MARGIN);
       
 		gc.setBackground(StatusDisplayInfo.getStatusColor(rootObject.getStatus()));
 		gc.setAlpha(255);
       gc.fillOval(centerX-diameter/2, centerY-diameter/2, diameter, diameter);
 
-		final String text = (rootObject instanceof AbstractNode) ?
+		String text = (rootObject instanceof AbstractNode) ?
 		      (rootObject.getObjectName() + "\n" + ((AbstractNode)rootObject).getPrimaryIP().getHostAddress()) : //$NON-NLS-1$
 		      rootObject.getObjectName();
-		      
+
+	   gc.setFont(valueFonts[fontSize.get(0)]);
+
 		gc.setClipping(rect);
 		int h = gc.textExtent(text).y;
       int l = gc.textExtent(text).x;
+      if(l+PADDING >= diameter)
+      {
+         text = WidgetHelper.splitStringToLines(gc, text, squareSide, squareSide/h).getResult();
+         h = gc.textExtent(text).y;
+         l = gc.textExtent(text).x;
+      }
       gc.setForeground(ColorConverter.selectTextColorByBackgroundColor(StatusDisplayInfo.getStatusColor(rootObject.getStatus()), cCache));
-		gc.drawText(text, rect.x+(rectSide/2) - l/2, rect.y+(rectSide/2)-h/2, SWT.DRAW_TRANSPARENT | SWT.DRAW_DELIMITER);
+		gc.drawText(text, centerX - l/2, centerY-h/2, SWT.DRAW_TRANSPARENT | SWT.DRAW_DELIMITER);
 
       objectMap.add(new ObjectPosition(0, 360, 1, rootObject));           
 	}
 
-	/* (non-Javadoc)
+   /* (non-Javadoc)
 	 * @see org.eclipse.swt.widgets.Composite#computeSize(int, int, boolean)
 	 */
 	@Override
 	public Point computeSize(int wHint, int hHint, boolean changed)
 	{
-	   if (maxLvl == 0)
-	      calculateMaxLVLAndObjCount(rootObject, 1);
-		return new Point(240 * maxLvl, 240 * maxLvl);
+	   GC gc = new GC(getDisplay());	   
+	   fitToScreen = !(wHint == SWT.DEFAULT && hHint == SWT.DEFAULT);
+      recalculateData(gc);
+      gc.dispose();
+
+      return fitToScreen ?
+            new Point(Math.max(wHint, 240 * maxLvl), Math.max(hHint, 240 * maxLvl)) :
+            new Point(diameter * (maxLvl+1), diameter*(maxLvl+1));
 	}
 	
 	/**

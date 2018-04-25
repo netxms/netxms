@@ -553,6 +553,124 @@ public class WidgetHelper
          executor.execute(js.toString());
       }
    }
+   
+   /**
+    * Get best fitting font from given font list for given string and bounding rectangle.
+    * String should fit using multiline.
+    * Fonts in the list must be ordered from smaller to larger.
+    * 
+    * @param gc GC
+    * @param fonts list of available fonts
+    * @param text text to fit
+    * @param width width of bounding rectangle
+    * @param height height of bounding rectangle
+    * @param maxLineCount maximum line count that should be used
+    * @return best font by position in array
+    */
+   public static int getBestFittingFontMultiline(GC gc, Font[] fonts, String text, int width, int height, int maxLineCount)
+   {
+      int first = 0;
+      int last = fonts.length - 1;
+      int curr = last / 2;
+      int font = 0;
+      while(last > first)
+      {
+         gc.setFont(fonts[curr]);
+         if (fitToRect(gc, text, width, height, maxLineCount))
+         {
+            font = curr;
+            first = curr + 1;
+            curr = first + (last - first) / 2;
+         }
+         else
+         {
+            last = curr - 1;
+            curr = first + (last - first) / 2;
+         }
+      }
+      
+      return font;
+   }
+   
+   /**
+    * Checks if string fits to given rectangle using font set already set in GC
+    * 
+    * @param gc GC
+    * @param text text to fit
+    * @param width width of bounding rectangle
+    * @param height height of bounding rectangle
+    * @param maxLineCount maximum line count that should be used
+    * @return if string fits in the field
+    */
+   public static boolean fitToRect(GC gc, String text, int width, int height, int maxLineCount)
+   {
+      Point ext = gc.textExtent(text);
+      if (ext.y > height)
+         return false;
+      if (ext.x <= width)
+      {
+         return true;
+      }
+      
+      SplitedString newString = splitStringToLines(gc, text, width, maxLineCount > 0 ? Math.min(maxLineCount, (int)(height / ext.y)) : (int)(height / ext.y));
+      return newString.fits(); 
+   }
+   
+
+   
+   /**
+    * Calculate substring for string to fit in the sector
+    * 
+    * @param gc gc object
+    * @param text object name
+    * @param lineNum number of lines that can be used to display object name
+    * @return  formated string
+    */
+   public static SplitedString splitStringToLines(GC gc, String text, int width, int lineNum)
+   {
+      StringBuilder name = new StringBuilder("");
+      int start = 0;
+      boolean fit = false;
+      for(int i = 0; i < lineNum; i++)
+      {
+         int end = text.length();
+         String substr = text.substring(start);
+         int nameL = gc.textExtent(substr).x;
+         int numOfCharToLeave = (int)((width - 6)/(nameL/substr.length())); //make best guess
+         if(numOfCharToLeave >= substr.length())
+            numOfCharToLeave = substr.length() - 1;
+         String tmp;
+         for(int j = 0; nameL > width - 6; j++)
+         {
+            if(i+1 == lineNum)
+            {
+               tmp = substr.substring(0, numOfCharToLeave-j).toString(); 
+               tmp += "...";
+            }
+            else
+            {
+               tmp = substr.substring(0, numOfCharToLeave-j).toString();
+            }
+            nameL = gc.textExtent(tmp).x;      
+            end = numOfCharToLeave - j + start;
+         }         
+         
+         name.append(text.substring(start, end));
+         if(end == text.length())
+         {
+            fit = true;
+            break;
+         }
+         else
+         {
+            name.append((i+1 == lineNum) ? "..." : "\n" );
+            fit = (i+1 != lineNum);
+         }
+         start = end;
+      }     
+      
+      return new SplitedString(name.toString(), fit);    
+   }
 		
 	/**
 	 * Get best fitting font from given font list for given string and bounding rectangle.
