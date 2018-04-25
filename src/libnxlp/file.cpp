@@ -421,6 +421,12 @@ bool LogParser::monitorFile(CONDITION stopCondition, bool readFromCurrPos)
    }
 #endif
 
+   if (!m_keepFileOpen)
+   {
+	   LogParserTrace(0, _T("LogParser: \"keep open\" option disabled for file \"%s\""), m_fileName);
+      return monitorFile2(stopCondition, readFromCurrPos);
+   }
+
 	LogParserTrace(0, _T("LogParser: parser thread for file \"%s\" started"), m_fileName);
 	bool exclusionPeriod = false;
 	while(true)
@@ -594,6 +600,121 @@ stop_parser:
 	return true;
 }
 
+/**
+ * File parser thread (do not keep it open)
+ */
+bool LogParser::monitorFile2(CONDITION stopCondition, bool readFromCurrPos)
+{
+   size_t size = 0;
+   time_t mtime = 0;
+   time_t ctime = 0;
+   off_t lastPos = 0;
+   bool readFromStart = !readFromCurrPos;
+   bool firstRead = true;
+
+   LogParserTrace(0, _T("LogParser: parser thread for file \"%s\" started (\"keep open\" option disabled)"), m_fileName);
+   bool exclusionPeriod = false;
+   while(true)
+   {
+      if (isExclusionPeriod())
+      {
+         if (!exclusionPeriod)
+         {
+            exclusionPeriod = true;
+            LogParserTrace(6, _T("LogParser: will not open file \"%s\" because of exclusion period"), getFileName());
+            setStatus(LPS_SUSPENDED);
+         }
+         if (ConditionWait(stopCondition, 30000))
+            break;
+         continue;
+      }
+
+      if (exclusionPeriod)
+      {
+         exclusionPeriod = false;
+         LogParserTrace(6, _T("LogParser: exclusion period for file \"%s\" ended"), getFileName());
+      }
+
+      TCHAR fname[MAX_PATH];
+      ExpandFileName(getFileName(), fname, MAX_PATH, true);
+      
+      NX_STAT_STRUCT st;
+      if (CALL_STAT(fname, &st) != 0)
+      {
+         setStatus(LPS_NO_FILE);
+         if (ConditionWait(stopCondition, 10000))
+            break;
+         continue;
+      }
+
+      if (firstRead)
+         ctime = st.st_ctime; // prevent incorrect rotation detection on first read
+
+      if ((size == st.st_size) && (mtime == st.st_mtime) && (ctime == st.st_ctime) && !readFromStart)
+      {
+         if (ConditionWait(stopCondition, 10000))
+            break;
+         continue;
+      }
+
+      int fh = _tsopen(fname, O_RDONLY, _SH_DENYNO);
+      if (fh == -1)
+      {
+         setStatus(LPS_OPEN_ERROR);
+         if (ConditionWait(stopCondition, 10000))  // retry in 10 seconds
+            break;
+         continue;
+      }
+
+      setStatus(LPS_RUNNING);
+      LogParserTrace(7, _T("LogParser: file \"%s\" (pattern \"%s\") successfully opened"), fname, m_fileName);
+
+      if ((size > static_cast<size_t>(st.st_size)) || (ctime != st.st_ctime))
+      {
+         nxlog_debug(5, _T("LogParser: file \"%s\" rotation detected (size=%llu/%llu, ctime=%llu/%llu)"),  fname,
+            static_cast<UINT64>(size), static_cast<UINT64>(st.st_size), static_cast<UINT64>(ctime), static_cast<UINT64>(st.st_ctime));
+         readFromStart = true;   // Assume file rotation
+         ctime = st.st_ctime;
+      }
+
+      if (m_fileEncoding == -1)
+      {
+         m_fileEncoding = ScanFileEncoding(fh);
+         lseek(fh, 0, SEEK_SET);
+      }
+
+printf(">>> from start=%d first=%d\n", readFromStart, firstRead);
+      if (!readFromStart)
+      {
+         if (firstRead)
+         {
+            if (m_preallocatedFile)
+               SeekToZero(fh, getCharSize());
+            else
+               lseek(fh, 0, SEEK_END);
+            firstRead = false;
+         }
+         else
+         {
+            lseek(fh, lastPos, SEEK_SET);
+         }
+      }
+      readFromStart = false;
+
+      lastPos = ParseNewRecords(this, fh);
+      _close(fh);
+      size = static_cast<size_t>(st.st_size);
+      mtime = st.st_mtime;
+
+      if (ConditionWait(stopCondition, 10000))
+         break;
+   }
+
+   CoUninitialize();
+   LogParserTrace(0, _T("LogParser: parser thread for file \"%s\" stopped"), m_fileName);
+   return true;
+}
+
 #ifdef _WIN32
 
 /**
@@ -681,7 +802,7 @@ bool LogParser::monitorFileWithSnapshot(CONDITION stopCondition, bool readFromCu
       }
 
       setStatus(LPS_RUNNING);
-      LogParserTrace(3, _T("LogParser: file \"%s\" (pattern \"%s\", snapshot \"%s\") successfully opened"), fname, m_fileName, snapshot->name);
+      LogParserTrace(7, _T("LogParser: file \"%s\" (pattern \"%s\", snapshot \"%s\") successfully opened"), fname, m_fileName, snapshot->name);
 
       if ((size > static_cast<size_t>(st.st_size)) || (ctime != st.st_ctime))
       {
@@ -712,6 +833,7 @@ bool LogParser::monitorFileWithSnapshot(CONDITION stopCondition, bool readFromCu
             lseek(fh, lastPos, SEEK_SET);
          }
       }
+      readFromStart = false;
 
       lastPos = ParseNewRecords(this, fh);
       _close(fh);

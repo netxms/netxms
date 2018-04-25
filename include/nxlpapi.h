@@ -243,6 +243,7 @@ private:
 	int m_recordsMatched;
 	bool m_processAllRules;
    bool m_suspended;
+   bool m_keepFileOpen;
 	int m_traceLevel;
 	void (*m_traceCallback)(int, const TCHAR *, va_list);
 	LogParserStatus m_status;
@@ -262,6 +263,8 @@ private:
    int getCharSize() const;
 
    void setStatus(LogParserStatus status) { m_status = status; }
+
+   bool monitorFile2(CONDITION stopCondition, bool readFromCurrPos);
 
 #ifdef _WIN32
    void parseEvent(EVENTLOGRECORD *rec);
@@ -295,7 +298,10 @@ public:
 	THREAD getThread() { return m_thread; }
 
 	void setProcessAllFlag(bool flag) { m_processAllRules = flag; }
-	bool getProcessAllFlag() { return m_processAllRules; }
+	bool getProcessAllFlag() const { return m_processAllRules; }
+
+   void setKeepFileOpenFlag(bool flag) { m_keepFileOpen = flag; }
+   bool getKeepFileOpenFlag() const { return m_keepFileOpen; }
 
 #ifdef _WIN32
    void setSnapshotMode(bool enable) { m_useSnapshot = enable;  }
