@@ -21,6 +21,7 @@
 **/
 
 #include "nxagentd.h"
+#include <nxstat.h>
 
 /**
  * Check if server address is valid
@@ -755,6 +756,33 @@ X509_REQ *Tunnel::createCertificateRequest(const char *country, const char *org,
 }
 
 /**
+ * Creates certificate and key copy if files exist. Files are copied as NAME.DATE.
+ */
+void BackupFileIfEsixt(TCHAR *name)
+{
+   NX_STAT_STRUCT st;
+   if (CALL_STAT(name, &st) != 0)
+   {
+     return;
+   }
+
+   TCHAR formatedTime[256];
+   time_t t = time(NULL);
+#if HAVE_LOCALTIME_R
+   struct tm tmbuffer;
+   struct tm *ltm = localtime_r(&t, &tmbuffer);
+#else
+   struct tm *ltm = localtime(&t);
+#endif
+   _tcsftime(formatedTime, 256, _T("%Y.%m.%d.%H.%M.%S"), ltm);
+
+   TCHAR newName[MAX_PATH];
+   _sntprintf(newName, MAX_PATH, _T("%s.%s"), name, formatedTime);
+
+   _trename(name, newName);
+}
+
+/**
  * Save certificate
  */
 bool Tunnel::saveCertificate(X509 *cert, EVP_PKEY *key)
@@ -773,6 +801,7 @@ bool Tunnel::saveCertificate(X509 *cert, EVP_PKEY *key)
 
    TCHAR name[MAX_PATH];
    _sntprintf(name, MAX_PATH, _T("%s%s.crt"), g_certificateDirectory, prefix);
+   BackupFileIfEsixt(name);
    FILE *f = _tfopen(name, _T("w"));
    if (f == NULL)
    {
@@ -788,6 +817,7 @@ bool Tunnel::saveCertificate(X509 *cert, EVP_PKEY *key)
    }
 
    _sntprintf(name, MAX_PATH, _T("%s%s.key"), g_certificateDirectory, prefix);
+   BackupFileIfEsixt(name);
    f = _tfopen(name, _T("w"));
    if (f == NULL)
    {
