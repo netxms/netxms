@@ -360,6 +360,7 @@ retry:
       if (conn->handle != NULL)
       {
          conn->inUse = true;
+         conn->resetOnRelease = false;
          conn->connectTime = time(NULL);
          conn->lastAccessTime = conn->connectTime;
          conn->usageCount = 0;
