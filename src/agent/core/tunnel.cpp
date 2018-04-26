@@ -758,12 +758,11 @@ X509_REQ *Tunnel::createCertificateRequest(const char *country, const char *org,
 }
 
 /**
- * Creates certificate and key copy if files exist. Files are copied as NAME.DATE.
+ * Creates certificate and key copy if files exist. Files are copied as NAME.DATE
  */
-void BackupFileIfEsixt(TCHAR *name)
+static void BackupFileIfExist(const TCHAR *name)
 {
-   NX_STAT_STRUCT st;
-   if (CALL_STAT(name, &st) != 0)
+   if (_taccess(name, 0) != 0)
    {
      return;
    }
@@ -803,7 +802,7 @@ bool Tunnel::saveCertificate(X509 *cert, EVP_PKEY *key)
 
    TCHAR name[MAX_PATH];
    _sntprintf(name, MAX_PATH, _T("%s%s.crt"), g_certificateDirectory, prefix);
-   BackupFileIfEsixt(name);
+   BackupFileIfExist(name);
    FILE *f = _tfopen(name, _T("w"));
    if (f == NULL)
    {
@@ -819,7 +818,7 @@ bool Tunnel::saveCertificate(X509 *cert, EVP_PKEY *key)
    }
 
    _sntprintf(name, MAX_PATH, _T("%s%s.key"), g_certificateDirectory, prefix);
-   BackupFileIfEsixt(name);
+   BackupFileIfExist(name);
    f = _tfopen(name, _T("w"));
    if (f == NULL)
    {
