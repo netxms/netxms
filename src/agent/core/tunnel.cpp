@@ -93,6 +93,7 @@ private:
    SSL_CTX *m_context;
    SSL *m_ssl;
    MUTEX m_sslLock;
+   MUTEX m_writeLock;
    bool m_connected;
    bool m_reset;
    VolatileCounter m_requestId;
@@ -149,6 +150,7 @@ Tunnel::Tunnel(const TCHAR *hostname, UINT16 port) : m_channels(true)
    m_context = NULL;
    m_ssl = NULL;
    m_sslLock = MutexCreate();
+   m_writeLock = MutexCreate();
    m_connected = false;
    m_reset = false;
    m_requestId = 0;
@@ -172,6 +174,7 @@ Tunnel::~Tunnel()
    if (m_context != NULL)
       SSL_CTX_free(m_context);
    MutexDestroy(m_sslLock);
+   MutexDestroy(m_writeLock);
    MutexDestroy(m_channelLock);
    free(m_hostname);
 }
@@ -306,20 +309,23 @@ int Tunnel::sslWrite(const void *data, size_t size)
 
    bool canRetry;
    int bytes;
-   MutexLock(m_sslLock);
+   MutexLock(m_writeLock);
    do
    {
       canRetry = false;
+      MutexLock(m_sslLock);
       bytes = SSL_write(m_ssl, data, (int)size);
       if (bytes <= 0)
       {
          int err = SSL_get_error(m_ssl, bytes);
          if ((err == SSL_ERROR_WANT_READ) || (err == SSL_ERROR_WANT_WRITE))
          {
+            MutexUnlock(m_sslLock);
             SocketPoller sp(err == SSL_ERROR_WANT_WRITE);
             sp.add(m_socket);
             if (sp.poll(5000) > 0)
                canRetry = true;
+            MutexLock(m_sslLock);
          }
          else
          {
@@ -328,9 +334,10 @@ int Tunnel::sslWrite(const void *data, size_t size)
                LogOpenSSLErrorStack(7);
          }
       }
+      MutexUnlock(m_sslLock);
    }
    while(canRetry);
-   MutexUnlock(m_sslLock);
+   MutexUnlock(m_writeLock);
    return bytes;
 }
 
