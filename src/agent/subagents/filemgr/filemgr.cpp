@@ -702,6 +702,7 @@ static BOOL MoveFileOrDirectory(TCHAR* oldName, TCHAR* newName)
       FollowData *flData = new FollowData(data->fileName, data->fileNameCode, 0, data->session->getServerAddress());
       ThreadCreateEx(SendFileUpdatesOverNXCP, 0, flData);
    }
+   data->session->decRefCount();
    free(data->fileName);
    free(data->fileNameCode);
    g_downloadFileStopMarkers->remove(data->id);
@@ -995,6 +996,7 @@ static bool ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *r
             data->id = request->getId();
             data->offset = request->getFieldAsUInt32(VID_FILE_OFFSET);
             data->session = session;
+            session->incRefCount();
             g_downloadFileStopMarkers->set(request->getId(), new VolatileCounter(0));
 
             ThreadCreateEx(SendFile, 0, data);
@@ -1010,13 +1012,15 @@ static bool ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *r
       case CMD_CANCEL_FILE_DOWNLOAD:
       {
          VolatileCounter *counter = g_downloadFileStopMarkers->get(request->getFieldAsUInt32(VID_REQUEST_ID));
-         if(counter != NULL)
+         if (counter != NULL)
          {
             InterlockedIncrement(counter);
             response->setField(VID_RCC, ERR_SUCCESS);
          }
          else
+         {
             response->setField(VID_RCC, ERR_INTERNAL_ERROR);
+         }
          return true;
       }
       case CMD_CANCEL_FILE_MONITORING:
