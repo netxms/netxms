@@ -217,6 +217,7 @@ AgentTunnel::AgentTunnel(SSL_CTX *context, SSL *ssl, SOCKET sock, const InetAddr
    m_context = context;
    m_ssl = ssl;
    m_sslLock = MutexCreate();
+   m_writeLock = MutexCreate();
    m_requestId = 0;
    m_nodeId = nodeId;
    m_zoneUIN = zoneUIN;
@@ -241,6 +242,7 @@ AgentTunnel::~AgentTunnel()
    SSL_CTX_free(m_context);
    SSL_free(m_ssl);
    MutexDestroy(m_sslLock);
+   MutexDestroy(m_writeLock);
    closesocket(m_socket);
    free(m_systemName);
    free(m_platformName);
@@ -361,20 +363,23 @@ int AgentTunnel::sslWrite(const void *data, size_t size)
 {
    bool canRetry;
    int bytes;
-   MutexLock(m_sslLock);
+   MutexLock(m_writeLock);
    do
    {
       canRetry = false;
+      MutexLock(m_sslLock);
       bytes = SSL_write(m_ssl, data, (int)size);
       if (bytes <= 0)
       {
          int err = SSL_get_error(m_ssl, bytes);
          if ((err == SSL_ERROR_WANT_READ) || (err == SSL_ERROR_WANT_WRITE))
          {
+            MutexUnlock(m_sslLock);
             SocketPoller sp(err == SSL_ERROR_WANT_WRITE);
             sp.add(m_socket);
             if (sp.poll(5000) > 0)
                canRetry = true;
+            MutexLock(m_sslLock);
          }
          else
          {
@@ -383,9 +388,10 @@ int AgentTunnel::sslWrite(const void *data, size_t size)
                LogOpenSSLErrorStack(7);
          }
       }
+      MutexUnlock(m_sslLock);
    }
    while(canRetry);
-   MutexUnlock(m_sslLock);
+   MutexUnlock(m_writeLock);
    return bytes;
 }
 

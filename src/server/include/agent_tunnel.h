@@ -89,6 +89,7 @@ protected:
    SSL_CTX *m_context;
    SSL *m_ssl;
    MUTEX m_sslLock;
+   MUTEX m_writeLock;
    MsgWaitQueue m_queue;
    VolatileCounter m_requestId;
    UINT32 m_nodeId;
