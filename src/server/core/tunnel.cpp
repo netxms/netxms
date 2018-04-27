@@ -25,6 +25,8 @@
 
 #define MAX_MSG_SIZE    268435456
 
+#define REQUEST_TIMEOUT 10000
+
 #define DEBUG_TAG       _T("agent.tunnel")
 
 /**
@@ -282,7 +284,7 @@ void AgentTunnel::recvThread()
          break;
       }
 
-      if (nxlog_get_debug_level() >= 6)
+      if (nxlog_get_debug_level_tag(DEBUG_TAG) >= 6)
       {
          TCHAR buffer[64];
          debugPrintf(6, _T("Received message %s"), NXCPMessageCodeName(msg->getCode(), buffer));
@@ -377,7 +379,7 @@ int AgentTunnel::sslWrite(const void *data, size_t size)
             MutexUnlock(m_sslLock);
             SocketPoller sp(err == SSL_ERROR_WANT_WRITE);
             sp.add(m_socket);
-            if (sp.poll(5000) > 0)
+            if (sp.poll(REQUEST_TIMEOUT) > 0)
                canRetry = true;
             MutexLock(m_sslLock);
          }
@@ -991,7 +993,7 @@ retry:
       {
          SocketPoller poller;
          poller.add(request->sock);
-         if (poller.poll(5000) > 0)
+         if (poller.poll(REQUEST_TIMEOUT) > 0)
             goto retry;
          nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): TLS handshake failed (timeout)"), (const TCHAR *)request->addr.toString());
       }
