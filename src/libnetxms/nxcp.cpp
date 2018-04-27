@@ -764,6 +764,10 @@ bool LIBNETXMS_EXPORTABLE SendFileOverNXCP(AbstractCommChannel *channel, UINT32 
 			pMsg->code = htons(CMD_FILE_DATA);
          pMsg->flags = htons(MF_BINARY | MF_STREAM | ((compressionMethod != NXCP_STREAM_COMPRESSION_NONE) ? MF_COMPRESSED : 0));
 
+			long bufferSize = FILE_BUFFER_SIZE;
+			UINT32 delay = 0;
+         int successCount = 0;
+
 			while(true)
 			{
 			   if ((cancellationFlag != NULL) && (*cancellationFlag > 0))
@@ -771,7 +775,7 @@ bool LIBNETXMS_EXPORTABLE SendFileOverNXCP(AbstractCommChannel *channel, UINT32 
 
             if (compressor != NULL)
             {
-				   iBytes = _read(hFile, compBuffer, MIN(FILE_BUFFER_SIZE, bytesToRead));
+				   iBytes = _read(hFile, compBuffer, std::min(bufferSize, bytesToRead));
 				   if (iBytes < 0)
 					   break;
                bytesToRead -= iBytes;
@@ -785,7 +789,7 @@ bool LIBNETXMS_EXPORTABLE SendFileOverNXCP(AbstractCommChannel *channel, UINT32 
             }
             else
             {
-				   iBytes = _read(hFile, pMsg->fields, MIN(FILE_BUFFER_SIZE, bytesToRead));
+				   iBytes = _read(hFile, pMsg->fields, std::min(bufferSize, bytesToRead));
 				   if (iBytes < 0)
 					   break;
                bytesToRead -= iBytes;
@@ -798,6 +802,7 @@ bool LIBNETXMS_EXPORTABLE SendFileOverNXCP(AbstractCommChannel *channel, UINT32 
 				if (bytesToRead <= 0)
 					pMsg->flags |= htons(MF_END_OF_FILE);
 
+            INT64 startTime = GetCurrentTimeMs();
 				if (pCtx != NULL)
 				{
                pEnMsg = pCtx->encryptMessage(pMsg);
@@ -812,6 +817,28 @@ bool LIBNETXMS_EXPORTABLE SendFileOverNXCP(AbstractCommChannel *channel, UINT32 
 					if (channel->send(pMsg, (UINT32)iBytes + NXCP_HEADER_SIZE + dwPadding, mutex) <= 0)
 						break;	// Send error
 				}
+
+            // Throttling
+            UINT32 elapsedTime = static_cast<UINT32>(GetCurrentTimeMs() - startTime);
+            if ((elapsedTime > 200) && ((bufferSize > 1024) || (delay < 1000)))
+            {
+               bufferSize = MAX(bufferSize / (elapsedTime / 200), 1024);
+               delay = MIN(delay + 50 * (elapsedTime / 200), 1000);
+            }
+            else if ((elapsedTime < 50) && ((bufferSize < FILE_BUFFER_SIZE) || (delay > 0)))
+            {
+               successCount++;
+               if (successCount > 10)
+               {
+                  successCount = 0;
+                  bufferSize = MIN(bufferSize + bufferSize / 16, FILE_BUFFER_SIZE);
+                  if (delay >= 5)
+                     delay -= 5;
+                  else
+                     delay = 0;
+               }
+            }
+
 				if (progressCallback != NULL)
 				{
 					bytesTransferred += iBytes;
@@ -824,6 +851,9 @@ bool LIBNETXMS_EXPORTABLE SendFileOverNXCP(AbstractCommChannel *channel, UINT32 
 				   success = true;
 					break;
 				}
+
+            if (delay > 0)
+               ThreadSleepMs(delay);
 			}
 
 			free(pMsg);
