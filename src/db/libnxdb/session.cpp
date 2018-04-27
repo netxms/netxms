@@ -212,6 +212,14 @@ static void DBReconnect(DB_HANDLE hConn)
 }
 
 /**
+ * Get connection's driver
+ */
+DB_DRIVER LIBNXDB_EXPORTABLE DBGetDriver(DB_HANDLE hConn)
+{
+   return hConn->m_driver;
+}
+
+/**
  * Set default prefetch limit
  */
 void LIBNXDB_EXPORTABLE DBSetDefaultPrefetchLimit(DB_DRIVER driver, int limit)
