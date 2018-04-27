@@ -25,6 +25,8 @@
 
 #define DEBUG_TAG _T("tunnel")
 
+#define REQUEST_TIMEOUT	10000
+
 #ifdef _WITH_ENCRYPTION
 
 /**
@@ -109,7 +111,7 @@ private:
    bool connectToServer();
    int sslWrite(const void *data, size_t size);
    bool sendMessage(const NXCPMessage *msg);
-   NXCPMessage *waitForMessage(UINT16 code, UINT32 id) { return (m_queue != NULL) ? m_queue->waitForMessage(code, id, 5000) : NULL; }
+   NXCPMessage *waitForMessage(UINT16 code, UINT32 id) { return (m_queue != NULL) ? m_queue->waitForMessage(code, id, REQUEST_TIMEOUT) : NULL; }
 
    void processBindRequest(NXCPMessage *request);
    void processChannelCloseRequest(NXCPMessage *request);
@@ -323,7 +325,7 @@ int Tunnel::sslWrite(const void *data, size_t size)
             MutexUnlock(m_sslLock);
             SocketPoller sp(err == SSL_ERROR_WANT_WRITE);
             sp.add(m_socket);
-            if (sp.poll(5000) > 0)
+            if (sp.poll(REQUEST_TIMEOUT) > 0)
                canRetry = true;
             MutexLock(m_sslLock);
          }
@@ -488,7 +490,7 @@ bool Tunnel::connectToServer()
 
    SockAddrBuffer sa;
    m_address.fillSockAddr(&sa, m_port);
-   if (ConnectEx(m_socket, (struct sockaddr *)&sa, SA_LEN((struct sockaddr *)&sa), 5000) == -1)
+   if (ConnectEx(m_socket, (struct sockaddr *)&sa, SA_LEN((struct sockaddr *)&sa), REQUEST_TIMEOUT) == -1)
    {
       debugPrintf(4, _T("Cannot establish connection (%s)"), _tcserror(WSAGetLastError()));
       return false;
@@ -536,7 +538,7 @@ bool Tunnel::connectToServer()
          {
             SocketPoller poller;
             poller.add(m_socket);
-            if (poller.poll(5000) > 0)
+            if (poller.poll(REQUEST_TIMEOUT) > 0)
                continue;
             debugPrintf(4, _T("TLS handshake failed (timeout)"));
             return false;
@@ -660,10 +662,10 @@ void Tunnel::checkConnection()
          NXCPMessage *response = waitForMessage(CMD_KEEPALIVE, msg.getId());
          if (response == NULL)
          {
+            debugPrintf(3, _T("Connection test failed"));
             disconnect();
             closesocket(m_socket);
             m_socket = INVALID_SOCKET;
-            debugPrintf(3, _T("Connection test failed"));
          }
          else
          {
@@ -672,10 +674,10 @@ void Tunnel::checkConnection()
       }
       else
       {
+         debugPrintf(3, _T("Connection test failed"));
          disconnect();
          closesocket(m_socket);
          m_socket = INVALID_SOCKET;
-         debugPrintf(3, _T("Connection test failed"));
       }
    }
 }
