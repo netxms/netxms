@@ -624,7 +624,8 @@ static void LogConsoleWriter(const TCHAR *format, ...)
  */
 static void OracleSessionInitCallback(DB_HANDLE hdb)
 {
-   DBQuery(hdb, _T("ALTER SESSION SET DDL_LOCK_TIMEOUT = 60"));
+   if (!strcmp(DBGetDriverName(DBGetDriver(hdb)), "ORACLE"))
+      DBQuery(hdb, _T("ALTER SESSION SET DDL_LOCK_TIMEOUT = 60"));
 }
 
 /**
