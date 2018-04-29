@@ -1009,6 +1009,7 @@ struct ThreadPoolInfo
    int maxThreads;         // max threads
    int curThreads;         // current threads
    int activeRequests;     // number of active requests
+   int scheduledRequests;  // number of scheduled requests
    int usage;              // Pool usage in %
    int load;               // Pool current load in % (can be more than 100% if there are more requests then threads available)
    double loadAvg[3];      // Pool load average
@@ -1020,7 +1021,7 @@ struct ThreadPoolInfo
 typedef void (* ThreadPoolWorkerFunction)(void *);
 
 /* Thread pool functions */
-ThreadPool LIBNETXMS_EXPORTABLE *ThreadPoolCreate(int minThreads, int maxThreads, const TCHAR *name);
+ThreadPool LIBNETXMS_EXPORTABLE *ThreadPoolCreate(const TCHAR *name, int minThreads, int maxThreads, int stackSize = 0);
 void LIBNETXMS_EXPORTABLE ThreadPoolDestroy(ThreadPool *p);
 void LIBNETXMS_EXPORTABLE ThreadPoolExecute(ThreadPool *p, ThreadPoolWorkerFunction f, void *arg);
 void LIBNETXMS_EXPORTABLE ThreadPoolExecuteSerialized(ThreadPool *p, const TCHAR *key, ThreadPoolWorkerFunction f, void *arg);
