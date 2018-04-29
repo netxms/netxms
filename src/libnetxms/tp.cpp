@@ -79,7 +79,7 @@ struct ThreadPool
    MUTEX schedulerLock;
    TCHAR *name;
    bool shutdownMode;
-   INT32 loadAverage[3];
+   INT64 loadAverage[3];
 };
 
 /**
@@ -178,7 +178,7 @@ static THREAD_RESULT THREAD_CALL MaintenanceThread(void *arg)
       {
          cycleTime = 0;
 
-         INT32 requestCount = (INT32)p->activeRequests << FP_SHIFT;
+         INT64 requestCount = static_cast<INT64>(p->activeRequests) << FP_SHIFT;
          CALC_LOAD(p->loadAverage[0], EXP_1, requestCount);
          CALC_LOAD(p->loadAverage[1], EXP_5, requestCount);
          CALC_LOAD(p->loadAverage[2], EXP_15, requestCount);
@@ -189,7 +189,7 @@ static THREAD_RESULT THREAD_CALL MaintenanceThread(void *arg)
             MutexLock(p->mutex);
             INT32 threadCount = p->threads->size();
             MutexUnlock(p->mutex);
-            if ((threadCount > p->minThreads) && (p->loadAverage[1] < 1024 * threadCount)) // 5 minutes load average < 0.5 * thread count
+            if ((threadCount > p->minThreads) && (p->activeRequests < threadCount) && (p->loadAverage[1] < 1024 * threadCount)) // 5 minutes load average < 0.5 * thread count
             {
                WorkRequest *rq = (WorkRequest *)malloc(sizeof(WorkRequest));
                rq->func = NULL;
