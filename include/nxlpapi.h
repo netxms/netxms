@@ -234,6 +234,7 @@ private:
 	bool m_processAllRules;
    bool m_suspended;
    bool m_keepFileOpen;
+   bool m_ignoreMTime;
 	int m_traceLevel;
 	LogParserStatus m_status;
 #ifdef _WIN32
@@ -296,6 +297,9 @@ public:
 
    void setKeepFileOpenFlag(bool flag) { m_keepFileOpen = flag; }
    bool getKeepFileOpenFlag() const { return m_keepFileOpen; }
+
+   void setIgnoreMTimeFlag(bool flag) { m_ignoreMTime = flag; }
+   bool getIgnoreMTimeFlag() const { return m_ignoreMTime; }
 
 #ifdef _WIN32
    void setSnapshotMode(bool enable) { m_useSnapshot = enable;  }

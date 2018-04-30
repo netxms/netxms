@@ -69,6 +69,7 @@ struct LogParser_XmlParserState
    IntegerArray<INT32> preallocFlags;
    IntegerArray<INT32> snapshotFlags;
    IntegerArray<INT32> keepOpenFlags;
+   IntegerArray<INT32> ignoreMTimeFlags;
    String id;
 	String level;
 	String source;
@@ -87,7 +88,7 @@ struct LogParser_XmlParserState
 	int repeatInterval;
 	bool resetRepeat;
 
-	LogParser_XmlParserState() : encodings(4, 4), preallocFlags(4, 4), snapshotFlags(4, 4)
+	LogParser_XmlParserState() : encodings(4, 4), preallocFlags(4, 4), snapshotFlags(4, 4), keepOpenFlags(4, 4), ignoreMTimeFlags(4, 4)
 	{
       state = XML_STATE_INIT;
       parser = NULL;
@@ -121,6 +122,7 @@ LogParser::LogParser()
 	m_processAllRules = false;
    m_suspended = false;
    m_keepFileOpen = true;
+   m_ignoreMTime = false;
 	m_traceLevel = 0;
 	m_status = LPS_INIT;
 #ifdef _WIN32
@@ -168,6 +170,7 @@ LogParser::LogParser(const LogParser *src)
 	m_processAllRules = src->m_processAllRules;
    m_suspended = src->m_suspended;
    m_keepFileOpen = src->m_keepFileOpen;
+   m_ignoreMTime = src->m_ignoreMTime;
 	m_traceLevel = src->m_traceLevel;
 	m_status = LPS_INIT;
 #ifdef _WIN32
@@ -463,6 +466,7 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 		ps->preallocFlags.add(XMLGetAttrBoolean(attrs, "preallocated", false) ? 1 : 0);
       ps->snapshotFlags.add(XMLGetAttrBoolean(attrs, "snapshot", false) ? 1 : 0);
       ps->keepOpenFlags.add(XMLGetAttrBoolean(attrs, "keepOpen", true) ? 1 : 0);
+      ps->ignoreMTimeFlags.add(XMLGetAttrBoolean(attrs, "ignoreModificationTime", false) ? 1 : 0);
    }
 	else if (!strcmp(name, "macros"))
 	{
@@ -819,6 +823,7 @@ ObjectArray<LogParser> *LogParser::createFromXml(const char *xml, int xmlLen, TC
 				p->m_fileEncoding = state.encodings.get(i);
 				p->m_preallocatedFile = (state.preallocFlags.get(i) != 0);
 				p->m_keepFileOpen = (state.keepOpenFlags.get(i) != 0);
+				p->m_ignoreMTime = (state.ignoreMTimeFlags.get(i) != 0);
 #ifdef _WIN32
             p->m_useSnapshot = (state.snapshotFlags.get(i) != 0);
 #endif
