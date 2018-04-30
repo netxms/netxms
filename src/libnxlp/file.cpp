@@ -650,11 +650,15 @@ bool LogParser::monitorFile2(CONDITION stopCondition, bool readFromCurrPos)
       if (firstRead)
          ctime = st.st_ctime; // prevent incorrect rotation detection on first read
 
-      if ((size == st.st_size) && (mtime == st.st_mtime) && (ctime == st.st_ctime) && !readFromStart)
+      if (!readFromStart)
       {
-         if (ConditionWait(stopCondition, 10000))
-            break;
-         continue;
+         if ((m_ignoreMTime && !m_preallocatedFile && (size == st.st_size) && (ctime == st.st_ctime)) ||
+             (!m_ignoreMTime && (size == st.st_size) && (mtime == st.st_mtime) && (ctime == st.st_ctime)))
+         {
+            if (ConditionWait(stopCondition, 10000))
+               break;
+            continue;
+         }
       }
 
 #ifdef _WIN32
