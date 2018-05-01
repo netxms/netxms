@@ -1,5 +1,5 @@
 #ifndef __build_h
 #define __build_h
-#define NETXMS_VERSION_BUILD 9017
-#define NETXMS_VERSION_BUILD_STRING _T("9017")
+#define NETXMS_VERSION_BUILD 9018
+#define NETXMS_VERSION_BUILD_STRING _T("9018")
 #endif
