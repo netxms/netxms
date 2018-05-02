@@ -528,17 +528,9 @@ static BOOL Delete(const TCHAR *name)
          _tclosedir(dir);
       }
       //remove directory
-#ifdef _WIN32
-      return RemoveDirectory(name);
-#else
       return _trmdir(name) == 0;
-#endif
    }
-#ifdef _WIN32
-   return DeleteFile(name);
-#else
    return _tremove(name) == 0;
-#endif
 }
 
 /**
