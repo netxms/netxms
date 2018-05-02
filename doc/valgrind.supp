@@ -34,6 +34,20 @@
 }
 
 {
+	JVM/Condition
+	Memcheck:Cond
+	...
+	obj:*/libjvm.so
+}
+
+{
+	JVM/Memory
+	Memcheck:Addr4
+	...
+	obj:*/libjvm.so
+}
+
+{
 	OpenSSL/condition
 	Memcheck:Cond
 	...
