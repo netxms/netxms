@@ -147,7 +147,7 @@
 #define SHA1_DIGEST_SIZE      20
 #define SHA256_DIGEST_SIZE    32
 
-#define FILE_BUFFER_SIZE      32768
+#define FILE_BUFFER_SIZE      ((size_t)32768)
 
 /**
  * Compatibility defines for C sources

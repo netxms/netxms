@@ -736,35 +736,31 @@ bool LIBNETXMS_EXPORTABLE SendFileOverNXCP(AbstractCommChannel *channel, UINT32 
 														 MUTEX mutex, NXCPStreamCompressionMethod compressionMethod,
 														 VolatileCounter *cancellationFlag)
 {
-   int hFile, iBytes;
-	INT64 bytesTransferred = 0;
-   UINT32 dwPadding;
    bool success = false;
-   NXCP_MESSAGE *pMsg;
-   NXCP_ENCRYPTED_MESSAGE *pEnMsg;
 
-   StreamCompressor *compressor = (compressionMethod != NXCP_STREAM_COMPRESSION_NONE) ? StreamCompressor::create(compressionMethod, true, FILE_BUFFER_SIZE) : NULL;
-   BYTE *compBuffer = (compressor != NULL) ? (BYTE *)malloc(FILE_BUFFER_SIZE) : NULL;
-
-   hFile = _topen(pszFile, O_RDONLY | O_BINARY);
+   int hFile = _topen(pszFile, O_RDONLY | O_BINARY);
    if (hFile != -1)
    {
       NX_STAT_STRUCT st;
       NX_FSTAT(hFile, &st);
-      long fileSize = (long)st.st_size;
+      size_t fileSize = st.st_size;
       if (labs(offset) > fileSize)
          offset = 0;
-      long bytesToRead = (offset < 0) ? (0 - offset) : (fileSize - offset);
+      size_t bytesToRead = (offset < 0) ? (0 - offset) : (fileSize - offset);
+      INT64 bytesTransferred = 0;
 
 		if (lseek(hFile, offset, (offset < 0) ? SEEK_END : SEEK_SET) != -1)
 		{
-			// Allocate message and prepare it's header
-         pMsg = (NXCP_MESSAGE *)malloc(NXCP_HEADER_SIZE + 8 + ((compressor != NULL) ? compressor->compressBufferSize(FILE_BUFFER_SIZE) + 4 : FILE_BUFFER_SIZE));
-			pMsg->id = htonl(id);
-			pMsg->code = htons(CMD_FILE_DATA);
-         pMsg->flags = htons(MF_BINARY | MF_STREAM | ((compressionMethod != NXCP_STREAM_COMPRESSION_NONE) ? MF_COMPRESSED : 0));
+         StreamCompressor *compressor = (compressionMethod != NXCP_STREAM_COMPRESSION_NONE) ? StreamCompressor::create(compressionMethod, true, FILE_BUFFER_SIZE) : NULL;
+         BYTE *compBuffer = (compressor != NULL) ? (BYTE *)malloc(FILE_BUFFER_SIZE) : NULL;
 
-			long bufferSize = FILE_BUFFER_SIZE;
+			// Allocate message and prepare it's header
+         NXCP_MESSAGE *msg = (NXCP_MESSAGE *)malloc(NXCP_HEADER_SIZE + 8 + ((compressor != NULL) ? compressor->compressBufferSize(FILE_BUFFER_SIZE) + 4 : FILE_BUFFER_SIZE));
+			msg->id = htonl(id);
+			msg->code = htons(CMD_FILE_DATA);
+         msg->flags = htons(MF_BINARY | MF_STREAM | ((compressionMethod != NXCP_STREAM_COMPRESSION_NONE) ? MF_COMPRESSED : 0));
+
+         size_t bufferSize = FILE_BUFFER_SIZE;
 			UINT32 delay = 0;
          int successCount = 0;
 
@@ -773,48 +769,49 @@ bool LIBNETXMS_EXPORTABLE SendFileOverNXCP(AbstractCommChannel *channel, UINT32 
 			   if ((cancellationFlag != NULL) && (*cancellationFlag > 0))
 			      break;
 
+			   int bytes;
             if (compressor != NULL)
             {
-				   iBytes = _read(hFile, compBuffer, std::min(bufferSize, bytesToRead));
-				   if (iBytes < 0)
+               bytes = _read(hFile, compBuffer, std::min(bufferSize, bytesToRead));
+				   if (bytes < 0)
 					   break;
-               bytesToRead -= iBytes;
+               bytesToRead -= bytes;
                // Each compressed data block prepended with 4 bytes header
                // First byte contains compression method, second is always 0,
                // third and fourth contains uncompressed block size in network byte order
-               *((BYTE *)pMsg->fields) = (BYTE)compressionMethod;
-               *((BYTE *)pMsg->fields + 1) = 0;
-               *((UINT16 *)((BYTE *)pMsg->fields + 2)) = htons((UINT16)iBytes);
-               iBytes = (int)compressor->compress(compBuffer, iBytes, (BYTE *)pMsg->fields + 4, compressor->compressBufferSize(FILE_BUFFER_SIZE)) + 4;
+               *((BYTE *)msg->fields) = (BYTE)compressionMethod;
+               *((BYTE *)msg->fields + 1) = 0;
+               *((UINT16 *)((BYTE *)msg->fields + 2)) = htons((UINT16)bytes);
+               bytes = (int)compressor->compress(compBuffer, bytes, (BYTE *)msg->fields + 4, compressor->compressBufferSize(FILE_BUFFER_SIZE)) + 4;
             }
             else
             {
-				   iBytes = _read(hFile, pMsg->fields, std::min(bufferSize, bytesToRead));
-				   if (iBytes < 0)
+               bytes = _read(hFile, msg->fields, std::min(bufferSize, bytesToRead));
+				   if (bytes < 0)
 					   break;
-               bytesToRead -= iBytes;
+               bytesToRead -= bytes;
             }
 
 				// Message should be aligned to 8 bytes boundary
-				dwPadding = (8 - (((UINT32)iBytes + NXCP_HEADER_SIZE) % 8)) & 7;
-				pMsg->size = htonl((UINT32)iBytes + NXCP_HEADER_SIZE + dwPadding);
-				pMsg->numFields = htonl((UINT32)iBytes);   // numFields contains actual data size for binary message
+				UINT32 padding = (8 - (((UINT32)bytes + NXCP_HEADER_SIZE) % 8)) & 7;
+				msg->size = htonl(static_cast<UINT32>(bytes) + NXCP_HEADER_SIZE + padding);
+				msg->numFields = htonl((UINT32)bytes);   // numFields contains actual data size for binary message
 				if (bytesToRead <= 0)
-					pMsg->flags |= htons(MF_END_OF_FILE);
+					msg->flags |= htons(MF_END_OF_FILE);
 
             INT64 startTime = GetCurrentTimeMs();
 				if (pCtx != NULL)
 				{
-               pEnMsg = pCtx->encryptMessage(pMsg);
-					if (pEnMsg != NULL)
+               NXCP_ENCRYPTED_MESSAGE *emsg = pCtx->encryptMessage(msg);
+					if (emsg != NULL)
 					{
-					   channel->send(pEnMsg, ntohl(pEnMsg->size), mutex);
-						free(pEnMsg);
+					   channel->send(emsg, ntohl(emsg->size), mutex);
+						free(emsg);
 					}
 				}
 				else
 				{
-					if (channel->send(pMsg, (UINT32)iBytes + NXCP_HEADER_SIZE + dwPadding, mutex) <= 0)
+					if (channel->send(msg, static_cast<UINT32>(bytes) + NXCP_HEADER_SIZE + padding, mutex) <= 0)
 						break;	// Send error
 				}
 
@@ -831,7 +828,7 @@ bool LIBNETXMS_EXPORTABLE SendFileOverNXCP(AbstractCommChannel *channel, UINT32 
                if (successCount > 10)
                {
                   successCount = 0;
-                  bufferSize = MIN(bufferSize + bufferSize / 16, FILE_BUFFER_SIZE);
+                  bufferSize = std::min(bufferSize + bufferSize / 16, FILE_BUFFER_SIZE);
                   if (delay >= 5)
                      delay -= 5;
                   else
@@ -841,7 +838,7 @@ bool LIBNETXMS_EXPORTABLE SendFileOverNXCP(AbstractCommChannel *channel, UINT32 
 
 				if (progressCallback != NULL)
 				{
-					bytesTransferred += iBytes;
+					bytesTransferred += bytes;
 					progressCallback(bytesTransferred, cbArg);
 				}
 
@@ -856,19 +853,18 @@ bool LIBNETXMS_EXPORTABLE SendFileOverNXCP(AbstractCommChannel *channel, UINT32 
                ThreadSleepMs(delay);
 			}
 
-			free(pMsg);
+		   free(compBuffer);
+		   delete compressor;
+
+			free(msg);
 		}
 		_close(hFile);
 	}
-
-   free(compBuffer);
-   delete compressor;
 
    // If file upload failed, send CMD_ABORT_FILE_TRANSFER
    if (!success)
    {
       NXCP_MESSAGE msg;
-
       msg.id = htonl(id);
       msg.code = htons(CMD_ABORT_FILE_TRANSFER);
       msg.flags = htons(MF_BINARY);
@@ -876,11 +872,11 @@ bool LIBNETXMS_EXPORTABLE SendFileOverNXCP(AbstractCommChannel *channel, UINT32 
       msg.size = htonl(NXCP_HEADER_SIZE);
       if (pCtx != NULL)
       {
-         pEnMsg = pCtx->encryptMessage(&msg);
-         if (pEnMsg != NULL)
+         NXCP_ENCRYPTED_MESSAGE *emsg = pCtx->encryptMessage(&msg);
+         if (emsg != NULL)
          {
-            channel->send(pEnMsg, ntohl(pEnMsg->size), mutex);
-            free(pEnMsg);
+            channel->send(emsg, ntohl(emsg->size), mutex);
+            free(emsg);
          }
       }
       else
