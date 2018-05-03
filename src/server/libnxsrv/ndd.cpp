@@ -370,54 +370,47 @@ static UINT32 HandlerIpAddressPrefixTable(SNMP_Variable *var, SNMP_Transport *sn
  */
 InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, int useAliases, bool useIfXTable)
 {
-   LONG i, iNumIf;
-   TCHAR szOid[128], szBuffer[256];
-   InterfaceList *pIfList = NULL;
-   BOOL bSuccess = FALSE;
+   bool success = false;
 
 	nxlog_debug(6, _T("NetworkDeviceDriver::getInterfaces(%p,%d,%s)"), snmp, useAliases, useIfXTable ? _T("true") : _T("false"));
 
    // Get number of interfaces
-	UINT32 error = SnmpGet(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.2.1.2.1.0"), NULL, 0, &iNumIf, sizeof(LONG), 0);
-	if (error != SNMP_ERR_SUCCESS)
-	{
-	   nxlog_debug(6, _T("NetworkDeviceDriver::getInterfaces(%p): SNMP GET .1.3.6.1.2.1.2.1.0 failed (%s)"), snmp, SNMPGetErrorText(error));
-      return NULL;
-	}
-
-	// Some devices may return completely insane values here
-	// (for example, DLink DGS-3612 can return negative value)
-	// Anyway it's just a hint for initial array size
-	if ((iNumIf <= 0) || (iNumIf > 4096))
-		iNumIf = 64;
+	// Some devices may not return ifNumber at all or return completely insane values
+   // (for example, DLink DGS-3612 can return negative value)
+   // Anyway it's just a hint for initial array size
+	UINT32 interfaceCount = 0;
+	SnmpGet(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.2.1.2.1.0"), NULL, 0, &interfaceCount, sizeof(LONG), 0);
+	if ((interfaceCount <= 0) || (interfaceCount > 4096))
+		interfaceCount = 64;
       
    // Create empty list
-   pIfList = new InterfaceList(iNumIf);
+	InterfaceList *ifList = new InterfaceList(interfaceCount);
 
    // Gather interface indexes
-   if (SnmpWalk(snmp, _T(".1.3.6.1.2.1.2.2.1.1"), HandlerIndex, pIfList) == SNMP_ERR_SUCCESS)
+   if (SnmpWalk(snmp, _T(".1.3.6.1.2.1.2.2.1.1"), HandlerIndex, ifList) == SNMP_ERR_SUCCESS)
    {
       // Gather additional interfaces from ifXTable
-      SnmpWalk(snmp, _T(".1.3.6.1.2.1.31.1.1.1.1"), HandlerIndexIfXTable, pIfList);
+      SnmpWalk(snmp, _T(".1.3.6.1.2.1.31.1.1.1.1"), HandlerIndexIfXTable, ifList);
 
       // Enumerate interfaces
-		for(i = 0; i < pIfList->size(); i++)
+		for(int i = 0; i < ifList->size(); i++)
       {
-			InterfaceInfo *iface = pIfList->get(i);
+			InterfaceInfo *iface = ifList->get(i);
 
 			// Get interface description
-	      _sntprintf(szOid, 128, _T(".1.3.6.1.2.1.2.2.1.2.%d"), iface->index);
-	      if (SnmpGet(snmp->getSnmpVersion(), snmp, szOid, NULL, 0, iface->description, MAX_DB_STRING * sizeof(TCHAR), 0) != SNMP_ERR_SUCCESS)
+		   TCHAR oid[128];
+	      _sntprintf(oid, 128, _T(".1.3.6.1.2.1.2.2.1.2.%d"), iface->index);
+	      if (SnmpGet(snmp->getSnmpVersion(), snmp, oid, NULL, 0, iface->description, MAX_DB_STRING * sizeof(TCHAR), 0) != SNMP_ERR_SUCCESS)
          {
             // Try to get name from ifXTable
-	         _sntprintf(szOid, 128, _T(".1.3.6.1.2.1.31.1.1.1.1.%d"), iface->index);
-	         if (SnmpGet(snmp->getSnmpVersion(), snmp, szOid, NULL, 0, iface->description, MAX_DB_STRING * sizeof(TCHAR), 0) != SNMP_ERR_SUCCESS)
+	         _sntprintf(oid, 128, _T(".1.3.6.1.2.1.31.1.1.1.1.%d"), iface->index);
+	         if (SnmpGet(snmp->getSnmpVersion(), snmp, oid, NULL, 0, iface->description, MAX_DB_STRING * sizeof(TCHAR), 0) != SNMP_ERR_SUCCESS)
    	         break;
          }
 
          // Get interface alias
-	      _sntprintf(szOid, 128, _T(".1.3.6.1.2.1.31.1.1.1.18.%d"), iface->index);
-			if (SnmpGet(snmp->getSnmpVersion(), snmp, szOid, NULL, 0,
+	      _sntprintf(oid, 128, _T(".1.3.6.1.2.1.31.1.1.1.18.%d"), iface->index);
+			if (SnmpGet(snmp->getSnmpVersion(), snmp, oid, NULL, 0,
 	                  iface->alias, MAX_DB_STRING * sizeof(TCHAR), 0) == SNMP_ERR_SUCCESS)
          {
             StrStrip(iface->alias);
@@ -434,11 +427,12 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, StringMa
          }
 
 			// Try to get interface name from ifXTable, if unsuccessful or disabled, use ifDescr from ifTable
-         _sntprintf(szOid, 128, _T(".1.3.6.1.2.1.31.1.1.1.1.%d"), iface->index);
+         TCHAR buffer[256];
+         _sntprintf(oid, 128, _T(".1.3.6.1.2.1.31.1.1.1.1.%d"), iface->index);
          if (!useIfXTable ||
-				 (SnmpGet(snmp->getSnmpVersion(), snmp, szOid, NULL, 0, szBuffer, sizeof(szBuffer), 0) != SNMP_ERR_SUCCESS))
+				 (SnmpGet(snmp->getSnmpVersion(), snmp, oid, NULL, 0, buffer, sizeof(buffer), 0) != SNMP_ERR_SUCCESS))
          {
-		      nx_strncpy(szBuffer, iface->description, 256);
+		      nx_strncpy(buffer, iface->description, 256);
 		   }
 
 			// Build full interface object name
@@ -446,7 +440,7 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, StringMa
          {
          	case 1:	// Use only alias if available, otherwise name
          		if (iface->name[0] == 0)
-	         		nx_strncpy(iface->name, szBuffer, MAX_DB_STRING);	// Alias is empty or not available
+	         		nx_strncpy(iface->name, buffer, MAX_DB_STRING);	// Alias is empty or not available
          		break;
          	case 2:	// Concatenate alias with name
          	case 3:	// Concatenate name with alias
@@ -456,7 +450,7 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, StringMa
 						{
          				if  (_tcslen(iface->name) < (MAX_DB_STRING - 3))
          				{
-		      				_sntprintf(&iface->name[_tcslen(iface->name)], MAX_DB_STRING - _tcslen(iface->name), _T(" (%s)"), szBuffer);
+		      				_sntprintf(&iface->name[_tcslen(iface->name)], MAX_DB_STRING - _tcslen(iface->name), _T(" (%s)"), buffer);
 		      				iface->name[MAX_DB_STRING - 1] = 0;
 		      			}
 						}
@@ -465,7 +459,7 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, StringMa
 							TCHAR temp[MAX_DB_STRING];
 
 							_tcscpy(temp, iface->name);
-		         		nx_strncpy(iface->name, szBuffer, MAX_DB_STRING);
+		         		nx_strncpy(iface->name, buffer, MAX_DB_STRING);
          				if  (_tcslen(iface->name) < (MAX_DB_STRING - 3))
          				{
 		      				_sntprintf(&iface->name[_tcslen(iface->name)], MAX_DB_STRING - _tcslen(iface->name), _T(" (%s)"), temp);
@@ -475,39 +469,39 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, StringMa
          		}
          		else
          		{
-	         		nx_strncpy(iface->name, szBuffer, MAX_DB_STRING);	// Alias is empty or not available
+	         		nx_strncpy(iface->name, buffer, MAX_DB_STRING);	// Alias is empty or not available
 					}
          		break;
          	default:	// Use only name
-         		nx_strncpy(iface->name, szBuffer, MAX_DB_STRING);
+         		nx_strncpy(iface->name, buffer, MAX_DB_STRING);
          		break;
          }
 
          // Interface type
-         _sntprintf(szOid, 128, _T(".1.3.6.1.2.1.2.2.1.3.%d"), iface->index);
-         if (SnmpGet(snmp->getSnmpVersion(), snmp, szOid, NULL, 0, &iface->type, sizeof(UINT32), 0) != SNMP_ERR_SUCCESS)
+         _sntprintf(oid, 128, _T(".1.3.6.1.2.1.2.2.1.3.%d"), iface->index);
+         if (SnmpGet(snmp->getSnmpVersion(), snmp, oid, NULL, 0, &iface->type, sizeof(UINT32), 0) != SNMP_ERR_SUCCESS)
 			{
 				iface->type = IFTYPE_OTHER;
 			}
 
          // Interface MTU
-         _sntprintf(szOid, 128, _T(".1.3.6.1.2.1.2.2.1.4.%d"), iface->index);
-         if (SnmpGet(snmp->getSnmpVersion(), snmp, szOid, NULL, 0, &iface->mtu, sizeof(UINT32), 0) != SNMP_ERR_SUCCESS)
+         _sntprintf(oid, 128, _T(".1.3.6.1.2.1.2.2.1.4.%d"), iface->index);
+         if (SnmpGet(snmp->getSnmpVersion(), snmp, oid, NULL, 0, &iface->mtu, sizeof(UINT32), 0) != SNMP_ERR_SUCCESS)
 			{
 				iface->mtu = 0;
 			}
 
          // Interface speed
-         _sntprintf(szOid, 128, _T(".1.3.6.1.2.1.31.1.1.1.15.%d"), iface->index);  // try ifHighSpeed first
+         _sntprintf(oid, 128, _T(".1.3.6.1.2.1.31.1.1.1.15.%d"), iface->index);  // try ifHighSpeed first
          UINT32 speed;
-         if (SnmpGet(snmp->getSnmpVersion(), snmp, szOid, NULL, 0, &speed, sizeof(UINT32), 0) != SNMP_ERR_SUCCESS)
+         if (SnmpGet(snmp->getSnmpVersion(), snmp, oid, NULL, 0, &speed, sizeof(UINT32), 0) != SNMP_ERR_SUCCESS)
 			{
 				speed = 0;
 			}
          if (speed < 2000)  // ifHighSpeed not supported or slow interface
          {
-            _sntprintf(szOid, 128, _T(".1.3.6.1.2.1.2.2.1.5.%d"), iface->index);  // ifSpeed
-            if (SnmpGet(snmp->getSnmpVersion(), snmp, szOid, NULL, 0, &speed, sizeof(UINT32), 0) == SNMP_ERR_SUCCESS)
+            _sntprintf(oid, 128, _T(".1.3.6.1.2.1.2.2.1.5.%d"), iface->index);  // ifSpeed
+            if (SnmpGet(snmp->getSnmpVersion(), snmp, oid, NULL, 0, &speed, sizeof(UINT32), 0) == SNMP_ERR_SUCCESS)
             {
                iface->speed = (UINT64)speed;
             }
@@ -522,11 +516,11 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, StringMa
          }
 
          // MAC address
-         _sntprintf(szOid, 128, _T(".1.3.6.1.2.1.2.2.1.6.%d"), iface->index);
-         memset(szBuffer, 0, MAC_ADDR_LENGTH);
-         if (SnmpGet(snmp->getSnmpVersion(), snmp, szOid, NULL, 0, szBuffer, 256, SG_RAW_RESULT) == SNMP_ERR_SUCCESS)
+         _sntprintf(oid, 128, _T(".1.3.6.1.2.1.2.2.1.6.%d"), iface->index);
+         memset(buffer, 0, MAC_ADDR_LENGTH);
+         if (SnmpGet(snmp->getSnmpVersion(), snmp, oid, NULL, 0, buffer, 256, SG_RAW_RESULT) == SNMP_ERR_SUCCESS)
 			{
-	         memcpy(iface->macAddr, szBuffer, MAC_ADDR_LENGTH);
+	         memcpy(iface->macAddr, buffer, MAC_ADDR_LENGTH);
 			}
 			else
 			{
@@ -536,10 +530,10 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, StringMa
       }
 
       // Interface IP address'es and netmasks
-		error = SnmpWalk(snmp, _T(".1.3.6.1.2.1.4.20.1.1"), HandlerIpAddr, pIfList);
+		UINT32 error = SnmpWalk(snmp, _T(".1.3.6.1.2.1.4.20.1.1"), HandlerIpAddr, ifList);
       if (error == SNMP_ERR_SUCCESS)
       {
-         bSuccess = TRUE;
+         success = true;
       }
 		else
 		{
@@ -547,10 +541,10 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, StringMa
 		}
 
       // Get IP addresses from ipAddressTable if available
-		SnmpWalk(snmp, _T(".1.3.6.1.2.1.4.34.1.3"), HandlerIpAddressTable, pIfList);
-      if (pIfList->isPrefixWalkNeeded())
+		SnmpWalk(snmp, _T(".1.3.6.1.2.1.4.34.1.3"), HandlerIpAddressTable, ifList);
+      if (ifList->isPrefixWalkNeeded())
       {
-   		SnmpWalk(snmp, _T(".1.3.6.1.2.1.4.32.1.5"), HandlerIpAddressPrefixTable, pIfList);
+   		SnmpWalk(snmp, _T(".1.3.6.1.2.1.4.32.1.5"), HandlerIpAddressPrefixTable, ifList);
       }
    }
 	else
@@ -558,13 +552,13 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, StringMa
 		DbgPrintf(6, _T("NetworkDeviceDriver::getInterfaces(%p): SNMP WALK .1.3.6.1.2.1.2.2.1.1 failed"), snmp);
 	}
 
-   if (!bSuccess)
+   if (!success)
    {
-      delete_and_null(pIfList);
+      delete_and_null(ifList);
    }
 
-	DbgPrintf(6, _T("NetworkDeviceDriver::getInterfaces(%p): completed, ifList=%p"), snmp, pIfList);
-   return pIfList;
+	DbgPrintf(6, _T("NetworkDeviceDriver::getInterfaces(%p): completed, ifList=%p"), snmp, ifList);
+   return ifList;
 }
 
 /**
