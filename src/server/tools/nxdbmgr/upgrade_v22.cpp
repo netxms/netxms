@@ -24,11 +24,23 @@
 #include <nxevent.h>
 
 /**
- * Upgrade from 22.24 to 30.0
+ * Upgrade from 22.25 to 30.0
+ */
+static bool H_UpgradeFromV25()
+{
+   CHK_EXEC(SetMajorSchemaVersion(30, 0));
+   return true;
+}
+
+/**
+ * Upgrade from 22.24 to 22.25
  */
 static bool H_UpgradeFromV24()
 {
-   CHK_EXEC(SetMajorSchemaVersion(30, 0));
+   CHK_EXEC(SQLQuery(_T("ALTER TABLE actions ADD guid varchar(36)")));
+   CHK_EXEC(GenerateGUID(_T("actions"), _T("action_id"), _T("guid"), NULL));
+   DBSetNotNullConstraint(g_hCoreDB, _T("actions"), _T("guid"));
+   CHK_EXEC(SetMinorSchemaVersion(25));
    return true;
 }
 
@@ -38,7 +50,6 @@ static bool H_UpgradeFromV24()
 static bool H_UpgradeFromV23()
 {
    CHK_EXEC(DBRenameColumn(g_hCoreDB, _T("dct_threshold_instances"), _T("row"), _T("row_number")));
-
    CHK_EXEC(SetMinorSchemaVersion(24));
    return true;
 }
@@ -444,7 +455,8 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
-   { 24, 30, 0,  H_UpgradeFromV24 },
+   { 25, 30, 0,  H_UpgradeFromV25 },
+   { 24, 22, 25, H_UpgradeFromV24 },
    { 23, 22, 24, H_UpgradeFromV23 },
    { 22, 22, 24, H_UpgradeFromV22 },
    { 21, 22, 22, H_UpgradeFromV21 },

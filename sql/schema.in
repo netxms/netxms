@@ -869,6 +869,7 @@ CREATE INDEX idx_event_log_root_id ON event_log(root_event_id);
 CREATE TABLE actions
 (
   action_id integer not null,
+  guid varchar(36) not null,
   action_name varchar(63) not null,
   action_type integer not null,
   is_disabled integer not null,

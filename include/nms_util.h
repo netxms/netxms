@@ -651,6 +651,11 @@ public:
 };
 
 /**
+ * uuid_t wrapper class
+ */
+class uuid;
+
+/**
  * Dynamic string class
  */
 class LIBNETXMS_EXPORTABLE String
@@ -695,6 +700,7 @@ public:
    void append(UINT32 n);
    void append(INT64 n);
    void append(UINT64 n);
+   void append(const uuid& guid);
 
 	void appendPreallocated(TCHAR *str) { if (str != NULL) { append(str); free(str); } }
 
@@ -851,7 +857,7 @@ template <class T> class ObjectArray : public Array
    DISABLE_COPY_CTOR(ObjectArray)
 
 private:
-	static void destructor(void *object) { delete (T*)object; }
+	static void destructor(void *object) { delete static_cast<T*>(object); }
 
 public:
 	ObjectArray(int initial = 0, int grow = 16, bool owner = false) : Array(initial, grow, owner) { m_objectDestructor = destructor; }

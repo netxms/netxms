@@ -6086,16 +6086,15 @@ void ClientSession::createAction(NXCPMessage *pRequest)
    // Check user rights
    if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_ACTIONS)
    {
-      UINT32 dwResult, dwActionId;
-      TCHAR szActionName[MAX_OBJECT_NAME];
-
-      pRequest->getFieldAsString(VID_ACTION_NAME, szActionName, MAX_OBJECT_NAME);
-      if (IsValidObjectName(szActionName, TRUE))
+      TCHAR actionName[MAX_OBJECT_NAME];
+      pRequest->getFieldAsString(VID_ACTION_NAME, actionName, MAX_OBJECT_NAME);
+      if (IsValidObjectName(actionName, TRUE))
       {
-         dwResult = CreateNewAction(szActionName, &dwActionId);
-         msg.setField(VID_RCC, dwResult);
-         if (dwResult == RCC_SUCCESS)
-            msg.setField(VID_ACTION_ID, dwActionId);   // Send id of new action to client
+         UINT32 actionId;
+         UINT32 rcc = CreateAction(actionName, &actionId);
+         msg.setField(VID_RCC, rcc);
+         if (rcc == RCC_SUCCESS)
+            msg.setField(VID_ACTION_ID, actionId);   // Send id of new action to client
       }
       else
       {
@@ -6141,21 +6140,16 @@ void ClientSession::updateAction(NXCPMessage *pRequest)
  */
 void ClientSession::deleteAction(NXCPMessage *pRequest)
 {
-   NXCPMessage msg;
-   UINT32 dwActionId;
-
-   // Prepare response message
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(pRequest->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, pRequest->getId());
 
    // Check user rights
    if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_ACTIONS)
    {
       // Get Id of action to be deleted
-      dwActionId = pRequest->getFieldAsUInt32(VID_ACTION_ID);
-      if (!g_pEventPolicy->isActionInUse(dwActionId))
+      UINT32 actionId = pRequest->getFieldAsUInt32(VID_ACTION_ID);
+      if (!g_pEventPolicy->isActionInUse(actionId))
       {
-         msg.setField(VID_RCC, DeleteActionFromDB(dwActionId));
+         msg.setField(VID_RCC, DeleteAction(actionId));
       }
       else
       {
@@ -6185,15 +6179,15 @@ void ClientSession::sendActionDBUpdateMessage(NXCP_MESSAGE *msg)
 /**
  * Process changes in actions
  */
-void ClientSession::onActionDBUpdate(UINT32 dwCode, NXC_ACTION *pAction)
+void ClientSession::onActionDBUpdate(UINT32 dwCode, const Action *action)
 {
    if (isAuthenticated() && (checkSysAccessRights(SYSTEM_ACCESS_MANAGE_ACTIONS) || checkSysAccessRights(SYSTEM_ACCESS_EPP)))
    {
       NXCPMessage msg(CMD_ACTION_DB_UPDATE, 0);
       msg.setField(VID_NOTIFICATION_CODE, dwCode);
-      msg.setField(VID_ACTION_ID, pAction->dwId);
+      msg.setField(VID_ACTION_ID, action->id);
       if (dwCode != NX_NOTIFY_ACTION_DELETED)
-         FillActionInfoMessage(&msg, pAction);
+         action->fillMessage(&msg);
       ThreadPoolExecute(g_mainThreadPool, this, &ClientSession::sendActionDBUpdateMessage,
                msg.serialize((m_dwFlags & CSF_COMPRESSION_ENABLED) != 0));
    }

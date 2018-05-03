@@ -66,20 +66,21 @@ EPRule::EPRule(ConfigEntry *config)
             o->decRefCount();
          }
       }
+      delete events;
    }
 
    m_comments = _tcsdup(config->getSubEntryValue(_T("comments"), 0, _T("")));
    m_alarmSeverity = config->getSubEntryValueAsInt(_T("alarmSeverity"));
 	m_alarmTimeout = config->getSubEntryValueAsUInt(_T("alarmTimeout"));
 	m_alarmTimeoutEvent = config->getSubEntryValueAsUInt(_T("alarmTimeoutEvent"), 0, EVENT_ALARM_TIMEOUT);
-   nx_strncpy(m_alarmKey, config->getSubEntryValue(_T("alarmKey"), 0, _T("")), MAX_DB_STRING);
-   nx_strncpy(m_alarmMessage, config->getSubEntryValue(_T("alarmMessage"), 0, _T("")), MAX_DB_STRING);
+   _tcslcpy(m_alarmKey, config->getSubEntryValue(_T("alarmKey"), 0, _T("")), MAX_DB_STRING);
+   _tcslcpy(m_alarmMessage, config->getSubEntryValue(_T("alarmMessage"), 0, _T("")), MAX_DB_STRING);
 
    ConfigEntry *pStorageEntry = config->findEntry(_T("pStorageActions"));
    if (pStorageEntry != NULL)
    {
       ObjectArray<ConfigEntry> *tmp = pStorageEntry->getSubEntries(_T("setValue"));
-      if(tmp->size() > 0)
+      if (tmp->size() > 0)
       {
          tmp = tmp->get(0)->getSubEntries(_T("value"));
          for(int i = 0; i < tmp->size(); i++)
@@ -87,16 +88,18 @@ EPRule::EPRule(ConfigEntry *config)
             m_pstorageSetActions.set(tmp->get(i)->getAttribute(_T("key")), tmp->get(i)->getValue());
          }
       }
+      delete tmp;
+
       tmp = pStorageEntry->getSubEntries(_T("deleteValue"));
-      if(tmp->size() > 0)
+      if (tmp->size() > 0)
       {
          tmp = tmp->get(0)->getSubEntries(_T("value"));
          for(int i = 0; i < tmp->size(); i++)
          {
             m_pstorageDeleteActions.add(tmp->get(i)->getAttribute(_T("key")));
          }
-
       }
+      delete tmp;
    }
 
    m_scriptSource = _tcsdup(config->getSubEntryValue(_T("script"), 0, _T("")));
@@ -117,6 +120,29 @@ EPRule::EPRule(ConfigEntry *config)
    else
    {
       m_script = NULL;
+   }
+
+   ConfigEntry *actionsRoot = config->findEntry(_T("actions"));
+   if (actionsRoot != NULL)
+   {
+      ObjectArray<ConfigEntry> *actions = actionsRoot->getSubEntries(_T("action#*"));
+      for(int i = 0; i < actions->size(); i++)
+      {
+         uuid guid = actions->get(i)->getSubEntryValueAsUUID(_T("guid"));
+         if (!guid.isNull())
+         {
+            UINT32 actionId = FindActionByGUID(guid);
+            if (actionId != 0)
+               m_actions.add(actionId);
+         }
+         else
+         {
+            UINT32 actionId = actions->get(i)->getId();
+            if (IsValidActionId(actionId))
+               m_actions.add(actionId);
+         }
+      }
+      delete actions;
    }
 }
 
@@ -296,9 +322,12 @@ void EPRule::createNXMPRecord(String &str)
 
    for(int i = 0; i < m_actions.size(); i++)
    {
-      str.appendFormattedString(_T("\t\t\t\t<action id=\"%d\">\n")
-                             _T("\t\t\t\t</action>\n"),
-                             m_actions.get(i));
+      str.append(_T("\t\t\t\t<action id=\""));
+      UINT32 id = m_actions.get(i);
+      str.append(id);
+      str.append(_T("\">\n\t\t\t\t\t<guid>"));
+      str.append(GetActionGUID(id));
+      str.append(_T("</guid>\n\t\t\t\t</action>\n"));
    }
 
    str += _T("\t\t\t</actions>\n\t\t\t<pStorageActions>\n\t\t\t\t<setValue>\n");

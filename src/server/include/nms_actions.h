@@ -23,20 +23,42 @@
 #ifndef _nms_actions_h_
 #define _nms_actions_h_
 
+/**
+ * Action configuration
+ */
+struct Action
+{
+   UINT32 id;
+   uuid guid;
+   int type;
+   bool isDisabled;
+   TCHAR name[MAX_OBJECT_NAME];
+   TCHAR rcptAddr[MAX_RCPT_ADDR_LEN];
+   TCHAR emailSubject[MAX_EMAIL_SUBJECT_LEN];
+   TCHAR *data;
+
+   Action(const TCHAR *name);
+   Action(DB_RESULT hResult, int row);
+   ~Action();
+
+   void fillMessage(NXCPMessage *msg) const;
+   void saveToDatabase() const;
+};
 
 //
 // Functions
 //
-
 BOOL InitActions();
 void CleanupActions();
 BOOL ExecuteAction(UINT32 dwActionId, Event *pEvent, const Alarm *alarm);
-UINT32 CreateNewAction(const TCHAR *pszName, UINT32 *pdwId);
-UINT32 DeleteActionFromDB(UINT32 dwActionId);
+UINT32 CreateAction(const TCHAR *pszName, UINT32 *pdwId);
+UINT32 DeleteAction(UINT32 dwActionId);
 UINT32 ModifyActionFromMessage(NXCPMessage *pMsg);
-void FillActionInfoMessage(NXCPMessage *pMsg, NXC_ACTION *pAction);
 void SendActionsToClient(ClientSession *pSession, UINT32 dwRqId);
 void CreateActionExportRecord(String &xml, UINT32 id);
 bool ImportAction(ConfigEntry *config);
+bool IsValidActionId(UINT32 id);
+uuid GetActionGUID(UINT32 id);
+UINT32 FindActionByGUID(const uuid& guid);
 
 #endif   /* _nms_actions_ */

@@ -823,7 +823,7 @@ public:
    void onNewSNMPTrap(NXCPMessage *pMsg);
    void onObjectChange(NetObj *pObject);
    void onAlarmUpdate(UINT32 dwCode, const Alarm *alarm);
-   void onActionDBUpdate(UINT32 dwCode, NXC_ACTION *pAction);
+   void onActionDBUpdate(UINT32 dwCode, const Action *action);
    void onLibraryImageChange(const uuid& guid, bool removed = false);
 };
 

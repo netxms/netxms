@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -25,19 +25,26 @@
 /**
  * Constructor for object index
  */
-ObjectIndex::ObjectIndex()
+AbstractIndexBase::AbstractIndexBase(bool owner)
 {
 	m_size = 0;
 	m_allocated = 0;
 	m_elements = NULL;
 	m_lock = RWLockCreate();
+	m_owner = owner;
+	m_objectDestructor = free;
 }
 
 /**
  * Destructor
  */
-ObjectIndex::~ObjectIndex()
+AbstractIndexBase::~AbstractIndexBase()
 {
+   if (m_owner)
+   {
+      for(int i = 0; i < m_size; i++)
+         destroyObject(m_elements[i].object);
+   }
 	free(m_elements);
 	RWLockDestroy(m_lock);
 }
@@ -58,7 +65,7 @@ static int IndexCompare(const void *pArg1, const void *pArg2)
  * @param object object
  * @return true if existing object was replaced
  */
-bool ObjectIndex::put(QWORD key, NetObj *object)
+bool AbstractIndexBase::put(UINT64 key, void *object)
 {
 	bool replace = false;
 
@@ -68,6 +75,8 @@ bool ObjectIndex::put(QWORD key, NetObj *object)
 	if (pos != -1)
 	{
 		// Element already exist
+      if (m_owner)
+         destroyObject(m_elements[pos].object);
 		m_elements[pos].object = object;
 		replace = true;
 	}
@@ -94,13 +103,15 @@ bool ObjectIndex::put(QWORD key, NetObj *object)
  *
  * @param key object's key
  */
-void ObjectIndex::remove(QWORD key)
+void AbstractIndexBase::remove(UINT64 key)
 {
 	RWLockWriteLock(m_lock, INFINITE);
 
 	int pos = findElement(key);
 	if (pos != -1)
 	{
+	   if (m_owner)
+	      destroyObject(m_elements[pos].object);
 		m_size--;
 		memmove(&m_elements[pos], &m_elements[pos + 1], sizeof(INDEX_ELEMENT) * (m_size - pos));
 	}
@@ -109,12 +120,30 @@ void ObjectIndex::remove(QWORD key)
 }
 
 /**
+ * Clear index
+ */
+void AbstractIndexBase::clear()
+{
+   RWLockWriteLock(m_lock, INFINITE);
+
+   if (m_owner)
+   {
+      for(int i = 0; i < m_size; i++)
+         destroyObject(m_elements[i].object);
+   }
+
+   m_size = 0;
+
+   RWLockUnlock(m_lock);
+}
+
+/**
  * Find element in index
  *
  * @param key object's key
  * @return element index or -1 if not found
  */
-int ObjectIndex::findElement(QWORD key)
+int AbstractIndexBase::findElement(UINT64 key)
 {
    int first, last, mid;
 
@@ -150,11 +179,11 @@ int ObjectIndex::findElement(QWORD key)
  * @param key key
  * @return object with given key or NULL
  */
-NetObj *ObjectIndex::get(QWORD key)
+void *AbstractIndexBase::get(UINT64 key)
 {
 	RWLockReadLock(m_lock, INFINITE);
 	int pos = findElement(key);
-	NetObj *object = (pos == -1) ? NULL : m_elements[pos].object;
+	void *object = (pos == -1) ? NULL : m_elements[pos].object;
 	RWLockUnlock(m_lock);
 	return object;
 }
@@ -162,7 +191,7 @@ NetObj *ObjectIndex::get(QWORD key)
 /**
  * Get index size
  */
-int ObjectIndex::size()
+int AbstractIndexBase::size()
 {
 	RWLockReadLock(m_lock, INFINITE);
 	int s = m_size;
@@ -171,38 +200,14 @@ int ObjectIndex::size()
 }
 
 /**
- * Get all objects in index. Result array created dynamically and
- * must be destroyed by the caller. Changes in result array will
- * not affect content of the index.
- *
- * @param updateRefCount if set to true, reference count for each object will be increased
- */
-ObjectArray<NetObj> *ObjectIndex::getObjects(bool updateRefCount, bool (*filter)(NetObj *, void *), void *userData)
-{
-	RWLockReadLock(m_lock, INFINITE);
-	ObjectArray<NetObj> *result = new ObjectArray<NetObj>(m_size);
-	for(int i = 0; i < m_size; i++)
-   {
-      if ((filter == NULL) || filter(m_elements[i].object, userData))
-      {
-         if (updateRefCount)
-            m_elements[i].object->incRefCount();
-		   result->add(m_elements[i].object);
-      }
-   }
-	RWLockUnlock(m_lock);
-	return result;
-}
-
-/**
  * Find object by comparing it with given data using external comparator
  *
  * @param comparator comparing function (must return true for object to be found)
  * @param data user data passed to comparator
  */
-NetObj *ObjectIndex::find(bool (*comparator)(NetObj *, void *), void *data)
+void *AbstractIndexBase::find(bool (*comparator)(void *, void *), void *data)
 {
-	NetObj *result = NULL;
+	void *result = NULL;
 
 	RWLockReadLock(m_lock, INFINITE);
 	for(int i = 0; i < m_size; i++)
@@ -222,19 +227,15 @@ NetObj *ObjectIndex::find(bool (*comparator)(NetObj *, void *), void *data)
  * @param comparator comparing function (must return true for object to be found)
  * @param data user data passed to comparator
  */
-ObjectArray<NetObj> *ObjectIndex::findObjects(bool (*comparator)(NetObj *, void *), void *data)
+void AbstractIndexBase::findObjects(Array *resultSet, bool (*comparator)(void *, void *), void *data)
 {
-   ObjectArray<NetObj> *result = new ObjectArray<NetObj>();
-
    RWLockReadLock(m_lock, INFINITE);
    for(int i = 0; i < m_size; i++)
    {
       if (comparator(m_elements[i].object, data))
-         result->add(m_elements[i].object);
+         resultSet->add(m_elements[i].object);
    }
    RWLockUnlock(m_lock);
-
-   return result;
 }
 
 /**
@@ -243,10 +244,34 @@ ObjectArray<NetObj> *ObjectIndex::findObjects(bool (*comparator)(NetObj *, void 
  * @param callback
  * @param data user data passed to callback
  */
-void ObjectIndex::forEach(void (*callback)(NetObj *, void *), void *data)
+void AbstractIndexBase::forEach(void (*callback)(void *, void *), void *data)
 {
 	RWLockReadLock(m_lock, INFINITE);
 	for(int i = 0; i < m_size; i++)
 		callback(m_elements[i].object, data);
 	RWLockUnlock(m_lock);
+}
+
+/**
+ * Get all objects in index. Result array created dynamically and
+ * must be destroyed by the caller. Changes in result array will
+ * not affect content of the index.
+ *
+ * @param updateRefCount if set to true, reference count for each object will be increased
+ */
+ObjectArray<NetObj> *ObjectIndex::getObjects(bool updateRefCount, bool (*filter)(NetObj *, void *), void *userData)
+{
+   RWLockReadLock(m_lock, INFINITE);
+   ObjectArray<NetObj> *result = new ObjectArray<NetObj>(m_size);
+   for(int i = 0; i < m_size; i++)
+   {
+      if ((filter == NULL) || filter(static_cast<NetObj*>(m_elements[i].object), userData))
+      {
+         if (updateRefCount)
+            static_cast<NetObj*>(m_elements[i].object)->incRefCount();
+         result->add(static_cast<NetObj*>(m_elements[i].object));
+      }
+   }
+   RWLockUnlock(m_lock);
+   return result;
 }

@@ -508,6 +508,18 @@ UINT32 ImportConfig(Config *config, UINT32 flags)
 		DbgPrintf(5, _T("ImportConfig(): templates imported"));
 	}
 
+   // Import actions
+   actionsRoot = config->getEntry(_T("/actions"));
+   if (actionsRoot != NULL)
+   {
+      actions = actionsRoot->getSubEntries(_T("action#*"));
+      for(i = 0; i < actions->size(); i++)
+      {
+         ImportAction(actions->get(i));
+      }
+      DbgPrintf(5, _T("ImportConfig(): Actions imported"));
+   }
+
 	// Import rules
 	rulesRoot = config->getEntry(_T("/rules"));
 	if (rulesRoot != NULL)
@@ -565,18 +577,6 @@ UINT32 ImportConfig(Config *config, UINT32 flags)
 		}
 		DbgPrintf(5, _T("ImportConfig(): DCI summary tables imported"));
 	}
-
-   // Import summary tables
-   actionsRoot = config->getEntry(_T("/actions"));
-   if (actionsRoot != NULL)
-   {
-      actions = actionsRoot->getSubEntries(_T("action#*"));
-      for(i = 0; i < actions->size(); i++)
-      {
-         ImportAction(actions->get(i));
-      }
-      DbgPrintf(5, _T("ImportConfig(): Actions imported"));
-   }
 
 stop_processing:
 	delete events;
