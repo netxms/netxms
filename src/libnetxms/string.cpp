@@ -288,6 +288,15 @@ void String::append(UINT64 n)
    append(buffer);
 }
 
+/**
+ * Append GUID
+ */
+void String::append(const uuid& guid)
+{
+   TCHAR buffer[36];
+   guid.toString(buffer);
+   append(buffer, _tcslen(buffer));
+}
 
 /**
  * Append multibyte string to the end of buffer

@@ -1056,20 +1056,6 @@ typedef struct
 } NXC_AGENT_PARAM;
 
 /**
- * Server action definition structure
- */
-typedef struct
-{
-   UINT32 dwId;
-   int iType;
-   BOOL bIsDisabled;
-   TCHAR szName[MAX_OBJECT_NAME];
-   TCHAR szRcptAddr[MAX_RCPT_ADDR_LEN];
-   TCHAR szEmailSubject[MAX_EMAIL_SUBJECT_LEN];
-   TCHAR *pszData;
-} NXC_ACTION;
-
-/**
  * Alarm structure
  */
 typedef struct

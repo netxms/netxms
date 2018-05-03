@@ -243,37 +243,117 @@ struct TEMPLATE_UPDATE_INFO
  */
 struct INDEX_ELEMENT
 {
-   QWORD key;
-   NetObj *object;
+   UINT64 key;
+   void *object;
+};
+
+/**
+ * Generic index implementation
+ */
+class NXCORE_EXPORTABLE AbstractIndexBase
+{
+   DISABLE_COPY_CTOR(AbstractIndexBase)
+
+protected:
+	int m_size;
+	int m_allocated;
+	INDEX_ELEMENT *m_elements;
+	RWLOCK m_lock;
+	bool m_owner;
+   void (*m_objectDestructor)(void *);
+
+   void destroyObject(void *object)
+   {
+      if (object != NULL)
+         m_objectDestructor(object);
+   }
+
+	int findElement(UINT64 key);
+   void findObjects(Array *resultSet, bool (*comparator)(void *, void *), void *data);
+
+public:
+	AbstractIndexBase(bool owner);
+	~AbstractIndexBase();
+
+   int size();
+	bool put(UINT64 key, void *object);
+	void remove(UINT64 key);
+	void clear();
+	void *get(UINT64 key);
+
+	void *find(bool (*comparator)(void *, void *), void *data);
+
+	void forEach(void (*callback)(void *, void *), void *data);
+
+   bool isOwner()
+   {
+      return m_owner;
+   }
+
+   void setOwner(bool owner)
+   {
+      m_owner = owner;
+   }
+};
+
+/**
+ * Abstract index template
+ */
+template<typename T> class AbstractIndex : public AbstractIndexBase
+{
+   DISABLE_COPY_CTOR(AbstractIndex)
+
+private:
+   static void destructor(void *object)
+   {
+      delete static_cast<T*>(object);
+   }
+
+public:
+   AbstractIndex<T>(bool owner) : AbstractIndexBase(owner)
+   {
+      m_objectDestructor = destructor;
+   }
+
+   bool put(UINT64 key, T *object)
+   {
+      return AbstractIndexBase::put(key, object);
+   }
+
+   T *get(UINT64 key)
+   {
+      return static_cast<T*>(AbstractIndexBase::get(key));
+   }
+
+   T *find(bool (*comparator)(T *, void *), void *data)
+   {
+      return static_cast<T*>(AbstractIndexBase::find(reinterpret_cast<bool (*)(void*, void*)>(comparator), data));
+   }
+
+   ObjectArray<T> *findObjects(bool (*comparator)(T *, void *), void *data)
+   {
+      ObjectArray<T> *resultSet = new ObjectArray<T>(64, 64, false);
+      AbstractIndexBase::findObjects(resultSet, reinterpret_cast<bool (*)(void*, void*)>(comparator), data);
+      return resultSet;
+   }
+
+   void forEach(void (*callback)(T *, void *), void *data)
+   {
+      AbstractIndexBase::forEach(reinterpret_cast<void (*)(void*, void*)>(callback), data);
+   }
 };
 
 /**
  * Object index
  */
-class NXCORE_EXPORTABLE ObjectIndex
+class NXCORE_EXPORTABLE ObjectIndex : public AbstractIndex<NetObj>
 {
-private:
-	int m_size;
-	int m_allocated;
-	INDEX_ELEMENT *m_elements;
-	RWLOCK m_lock;
-
-	int findElement(QWORD key);
+   DISABLE_COPY_CTOR(ObjectIndex)
 
 public:
-	ObjectIndex();
-	~ObjectIndex();
+   ObjectIndex() : AbstractIndex<NetObj>(false) { }
 
-	bool put(QWORD key, NetObj *object);
-	void remove(QWORD key);
-	NetObj *get(QWORD key);
-	NetObj *find(bool (*comparator)(NetObj *, void *), void *data);
-	ObjectArray<NetObj> *findObjects(bool (*comparator)(NetObj *, void *), void *data);
-
-	int size();
-	ObjectArray<NetObj> *getObjects(bool updateRefCount, bool (*filter)(NetObj *, void *) = NULL, void *userData = NULL);
-
-	void forEach(void (*callback)(NetObj *, void *), void *data);
+   ObjectArray<NetObj> *getObjects(bool updateRefCount, bool (*filter)(NetObj *, void *) = NULL, void *userData = NULL);
 };
 
 struct InetAddressIndexEntry;
