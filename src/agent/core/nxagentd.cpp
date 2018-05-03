@@ -759,13 +759,13 @@ BOOL Initialize()
 	if (_tcscmp(g_masterAgent, _T("not_set")))
 	{
 		g_dwFlags |= AF_SUBAGENT_LOADER;
-		DebugPrintf(1, _T("Switched to external subagent loader mode, master agent address is %s"), g_masterAgent);
+		nxlog_write_generic(NXLOG_INFO, _T("Switched to external subagent loader mode, master agent address is %s"), g_masterAgent);
 	}
 
-   DebugPrintf(1, _T("Data directory: %s"), g_szDataDirectory);
+	nxlog_write_generic(NXLOG_INFO, _T("Data directory: %s"), g_szDataDirectory);
    CreateFolder(g_szDataDirectory);
 
-   DebugPrintf(1, _T("File store: %s"), g_szFileStore);
+   nxlog_write_generic(NXLOG_INFO, _T("File store: %s"), g_szFileStore);
    CreateFolder(g_szFileStore);
 
 #ifndef _WIN32
@@ -778,16 +778,16 @@ BOOL Initialize()
 	_sntprintf(g_szLogParserDirectory, MAX_PATH, _T("%s%s%s"), g_szDataDirectory,
 	           ((tail != '\\') && (tail != '/')) ? FS_PATH_SEPARATOR : _T(""),
               LOGPARSER_AP_FOLDER FS_PATH_SEPARATOR);
-   nxlog_debug(6, _T("Log parser policy directory: %s"), g_szLogParserDirectory);
+	nxlog_debug(2, _T("Log parser policy directory: %s"), g_szLogParserDirectory);
 	CreateFolder(g_szLogParserDirectory);
 
    // Initialize certificate directory
    _sntprintf(g_certificateDirectory, MAX_PATH, _T("%s%scertificates") FS_PATH_SEPARATOR, g_szDataDirectory,
               ((tail != '\\') && (tail != '/')) ? FS_PATH_SEPARATOR : _T(""));
-   nxlog_debug(6, _T("Certificate directory: %s"), g_certificateDirectory);
+   nxlog_debug(2, _T("Certificate directory: %s"), g_certificateDirectory);
    CreateFolder(g_certificateDirectory);
 
-   nxlog_debug(6, _T("Configuration policy directory: %s"), g_szConfigPolicyDir);
+   nxlog_debug(2, _T("Configuration policy directory: %s"), g_szConfigPolicyDir);
 
 #ifdef _WIN32
    WSADATA wsaData;
@@ -827,10 +827,14 @@ BOOL Initialize()
       nxlog_write(MSG_LOCAL_DB_OPEN_FAILED, NXLOG_ERROR, NULL);
    }
 
+   TCHAR hostname[256];
+   GetLocalHostName(hostname, 256, true);
+   nxlog_write_generic(NXLOG_INFO, _T("Local host name is \"%s\""), hostname);
+
    // Set system name to host name if not set in config
    if (g_systemName[0] == 0)
       GetLocalHostName(g_systemName, MAX_OBJECT_NAME, false);
-   nxlog_debug(2, _T("Using system name \"%s\""), g_systemName);
+   nxlog_write_generic(NXLOG_INFO, _T("Using system name \"%s\""), g_systemName);
 
 	if (!(g_dwFlags & AF_SUBAGENT_LOADER))
 	{
