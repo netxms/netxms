@@ -133,6 +133,7 @@ private:
 	THREAD m_workerThreadHandle;
    CallHandlerMap *m_callHandlers;
    MUTEX m_callHandlerAccess;
+   CONDITION m_startCondition;
    CONDITION m_stopCondition;
 
 	void workerThread();
