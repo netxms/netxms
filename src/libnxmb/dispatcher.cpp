@@ -46,6 +46,7 @@ NXMBDispatcher::NXMBDispatcher()
 	m_workerThreadHandle = INVALID_THREAD_HANDLE;
    m_callHandlers = new CallHandlerMap();
    m_callHandlerAccess = MutexCreate();
+   m_startCondition = ConditionCreate(TRUE);
    m_stopCondition = ConditionCreate(TRUE);
 }
 
@@ -84,6 +85,7 @@ NXMBDispatcher::~NXMBDispatcher()
    MutexDestroy(m_callHandlerAccess);
    delete m_callHandlers;
 
+   ConditionDestroy(m_startCondition);
    ConditionDestroy(m_stopCondition);
 }
 
@@ -93,6 +95,7 @@ NXMBDispatcher::~NXMBDispatcher()
 void NXMBDispatcher::workerThread()
 {
    nxlog_debug(3, _T("NXMB: dispatcher thread started"));
+   ConditionSet(m_startCondition);
 	while(true)
 	{
 		NXMBMessage *msg = (NXMBMessage *)m_queue->getOrBlock();
@@ -250,7 +253,10 @@ NXMBDispatcher *NXMBDispatcher::getInstance()
 {
    s_instanceLock.lock();
    if (s_instance.m_workerThreadHandle == INVALID_THREAD_HANDLE)
+   {
       s_instance.m_workerThreadHandle = ThreadCreateEx(NXMBDispatcher::workerThreadStarter, 0, &s_instance);
+      ConditionWait(s_instance.m_startCondition, INFINITE);
+   }
    s_instanceLock.unlock();
 	return &s_instance;
 }
