@@ -19,7 +19,10 @@
 package org.netxms.websvc;
 
 import java.util.UUID;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 import org.netxms.client.NXCSession;
+import org.netxms.client.SessionNotification;
 
 /**
  * Session token
@@ -29,6 +32,7 @@ public class SessionToken
    private UUID guid;
    private NXCSession session;
    private long activityTimestamp;
+   private LinkedBlockingQueue<SessionNotification> notificationQueue = new LinkedBlockingQueue<SessionNotification>(8192);
    
    /**
     * Create new session object
@@ -72,5 +76,27 @@ public class SessionToken
    public long getActivityTimestamp()
    {
       return activityTimestamp;
-   }  
+   }
+   
+   /**
+    * Add notification to queue
+    * 
+    * @param notification to add
+    */
+   public void addNotificationToQueue(SessionNotification notification)
+   {
+      notificationQueue.offer(notification);
+   }
+   
+   /**
+    * Take notification from queue
+    * 
+    * @param timeout timeout to wait in seconds
+    * @return notification
+    * @throws InterruptedException 
+    */
+   public SessionNotification pollNotificationQueue(long timeout) throws InterruptedException
+   {
+      return notificationQueue.poll(timeout, TimeUnit.SECONDS);
+   }
 }
