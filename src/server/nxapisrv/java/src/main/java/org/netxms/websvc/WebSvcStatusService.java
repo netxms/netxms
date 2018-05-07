@@ -103,6 +103,8 @@ public class WebSvcStatusService extends StatusService
             return Status.CLIENT_ERROR_NOT_FOUND;
          case RCC.NOT_IMPLEMENTED:
             return Status.SERVER_ERROR_NOT_IMPLEMENTED;
+         case RCC.TIMEOUT:
+            return Status.CLIENT_ERROR_REQUEST_TIMEOUT;
          default:
             return Status.CLIENT_ERROR_BAD_REQUEST;
       }

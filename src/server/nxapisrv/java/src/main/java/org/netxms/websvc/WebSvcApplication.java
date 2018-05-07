@@ -25,6 +25,7 @@ import org.netxms.websvc.handlers.Alarms;
 import org.netxms.websvc.handlers.GrafanaAlarms;
 import org.netxms.websvc.handlers.GrafanaDataCollection;
 import org.netxms.websvc.handlers.HistoricalData;
+import org.netxms.websvc.handlers.NotificationHandler;
 import org.netxms.websvc.handlers.Objects;
 import org.netxms.websvc.handlers.Sessions;
 import org.netxms.websvc.handlers.SummaryTableAdHoc;
@@ -76,6 +77,7 @@ public class WebSvcApplication extends Application
       router.attach("/sessions", Sessions.class);
       router.attach("/sessions/{id}", Sessions.class);
       router.attach("/summaryTable/adHoc", SummaryTableAdHoc.class);
+      router.attach("/notifications", NotificationHandler.class);
       return router;
    }
 }

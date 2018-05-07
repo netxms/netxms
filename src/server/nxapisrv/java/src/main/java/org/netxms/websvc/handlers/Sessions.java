@@ -19,6 +19,8 @@
 package org.netxms.websvc.handlers;
 
 import org.json.JSONObject;
+import org.netxms.client.SessionListener;
+import org.netxms.client.SessionNotification;
 import org.netxms.client.constants.RCC;
 import org.netxms.websvc.SessionStore;
 import org.netxms.websvc.SessionToken;
@@ -48,13 +50,19 @@ public class Sessions extends AbstractHandler
    {
       String login = null;
       String password = null;
+      boolean attachNotificationHandler = false;
       if (entity != null)
       {
          JSONObject request = new JsonRepresentation(entity).getJsonObject();
-         login = request.getString("login");
-         password = request.getString("password");
+         if (request.has("login"))
+            login = request.getString("login");
+         if (request.has("password"))
+            password = request.getString("password");
+         if (request.has("attachNotificationHandler"))
+            attachNotificationHandler = request.getBoolean("attachNotificationHandler");
       }
-      else
+      
+      if (entity == null || (login == null && password == null))
       {
          log.warn("No POST data in login call, looking for authentication data instead...");
          String authHeader = getHeader("Authorization");
@@ -76,6 +84,8 @@ public class Sessions extends AbstractHandler
       }
       
       SessionToken token = login(login, password);
+      if (attachNotificationHandler)
+         attachNotificationHandler(token);
 
       log.info("Logged in to NetXMS server, assigned session id " + token.getGuid());
       getCookieSettings().add(new CookieSetting(0, "session_handle", token.getGuid().toString(), "/", null));
@@ -105,5 +115,31 @@ public class Sessions extends AbstractHandler
          log.warn("Logout request for different session (" + getSessionToken().getGuid() + " -- " + id);
          return createErrorResponse(RCC.ACCESS_DENIED);
       }
+   }
+   
+   /**
+    * Atatch notification handler to session
+    */
+   private void attachNotificationHandler(final SessionToken token)
+   {
+      log.debug("Listener added");
+      SessionListener listener = new SessionListener() {
+         @Override
+         public void notificationHandler(SessionNotification n)
+         {
+            log.debug("Notification received");
+            switch(n.getCode())
+            {
+               case SessionNotification.ALARM_CHANGED:
+               case SessionNotification.ALARM_DELETED:
+               case SessionNotification.ALARM_TERMINATED:
+               case SessionNotification.MULTIPLE_ALARMS_RESOLVED:
+               case SessionNotification.MULTIPLE_ALARMS_TERMINATED:
+               case SessionNotification.NEW_ALARM:
+                  token.addNotificationToQueue(n);
+            }
+         }
+      };
+      token.getSession().addListener(listener);
    }
 }
