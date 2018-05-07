@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2015 Raden Solutions
+** Copyright (C) 2015-2018 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -46,7 +46,7 @@ static MUTEX m_dataSubscriptionLock = MutexCreate();
  *****************************************************************************/
 
 /**
- *
+ * Subscription object constructor
  */
 Subscription::Subscription(UINT32 objectId, UINT32 dciId)
 {
@@ -60,18 +60,16 @@ Subscription::Subscription(UINT32 objectId, UINT32 dciId)
    }
 }
 
-
 /**
- *
+ * Subscription object destructor
  */
 Subscription::~Subscription()
 {
    delete this->items;
 }
 
-
 /**
- *
+ * Add item to subscription
  */
 void Subscription::addItem(UINT32 dciId)
 {
@@ -85,9 +83,8 @@ void Subscription::addItem(UINT32 dciId)
    }
 }
 
-
 /**
- *
+ * Remove item from subscription
  */
 bool Subscription::removeItem(UINT32 dciId)
 {
@@ -193,9 +190,8 @@ static void LoadSubscriptions()
    DBConnectionPoolReleaseConnection(db);
 }
 
-
 /**
- *
+ * Save subscription
  */
 static bool SaveSubscriptionInternal(DB_STATEMENT statement, HashMap<UINT32, Subscription> *subscriptions, const TCHAR *type)
 {
@@ -268,16 +264,6 @@ static bool SaveSubscriptions()
 }
 
 /**
- * Add dynamic string to JSON
- */
-inline json_t *json_string_dynamic(char *s)
-{
-   json_t *json = json_string(s);
-   free(s);
-   return json;
-}
-
-/**
  * Convert event object to JSON representation
  */
 static char *EventToJson(const Event *event, const NetObj *object)
@@ -293,16 +279,17 @@ static char *EventToJson(const Event *event, const NetObj *object)
    json_object_set_new(root, "time", json_integer(event->getTimeStamp()));
    json_object_set_new(root, "code", json_integer(event->getCode()));
    json_object_set_new(root, "severity", json_integer(event->getSeverity()));
-   json_object_set_new(root, "message", json_string_dynamic(UTF8StringFromTString(event->getMessage())));
+   json_object_set_new(root, "message", json_string_t(event->getMessage()));
 
    json_object_set_new(source, "id", json_integer(event->getSourceId()));
    int objectType = object->getObjectClass();
    json_object_set_new(source, "type", json_integer(objectType));
-   json_object_set_new(source, "name", json_string_dynamic(UTF8StringFromTString(object->getName())));
+   json_object_set_new(source, "name", json_string_t(object->getName()));
    if (objectType == OBJECT_NODE)
    {
       InetAddress ip = ((Node *)object)->getIpAddress();
-      json_object_set_new(source, "primary-ip", json_string(ip.toStringA(NULL)));
+      char buffer[128];
+      json_object_set_new(source, "primary-ip", json_string(ip.toStringA(buffer)));
    }
 
    int count = event->getParametersCount();
@@ -311,7 +298,7 @@ static char *EventToJson(const Event *event, const NetObj *object)
    {
       char name[16];
       sprintf(name, "p%d", i+1);
-      json_object_set_new(args, name, json_string_dynamic(UTF8StringFromTString(event->getParameter(i))));
+      json_object_set_new(args, name, json_string_t(event->getParameter(i)));
    }
 
    char *message = json_dumps(root, 0);
@@ -325,18 +312,17 @@ static char *EventToJson(const Event *event, const NetObj *object)
 static char *DataToJson(const NetObj *object, UINT32 dciId, const TCHAR *dciName, const TCHAR *value)
 {
    json_t *root = json_object();
-   json_t *data = json_array();
-
-   json_object_set_new(root, "data", data);
-
    json_object_set_new(root, "id", json_integer(object->getId()));
+
+   json_t *data = json_array();
+   json_object_set_new(root, "data", data);
 
    json_t *record = json_object();
    json_object_set_new(record, "id", json_integer(dciId));
    char *utf8name = UTF8StringFromTString(dciName);
-   json_object_set_new(record, utf8name, json_string_dynamic(UTF8StringFromTString(value)));
+   json_object_set_new(record, utf8name, json_string_t(value));
    free(utf8name);
-   json_array_append(data, record);
+   json_array_append_new(data, record);
 
    char *message = json_dumps(root, 0);
    json_decref(root);
@@ -365,9 +351,8 @@ static bool Subscribe(HashMap<UINT32, Subscription> *map, MUTEX mutex, UINT32 ob
    return true;
 }
 
-
 /**
- *
+ * Unsubscribe
  */
 static bool Unsubscribe(HashMap<UINT32, Subscription> *map, MUTEX mutex, UINT32 objectId, UINT32 dciId)
 {
@@ -399,7 +384,7 @@ static bool Unsubscribe(HashMap<UINT32, Subscription> *map, MUTEX mutex, UINT32 
  *****************************************************************************/
 
 /**
- *
+ * Start ZMQ connector
  */
 void StartZMQConnector()
 {
@@ -446,9 +431,8 @@ void StartZMQConnector()
    }
 }
 
-
 /**
- *
+ * Stop ZMQ connector
  */
 void StopZMQConnector()
 {
@@ -469,9 +453,8 @@ void StopZMQConnector()
    DbgPrintf(6, _T("ZeroMQ: context destroyed"));
 }
 
-
 /**
- *
+ * Publish event
  */
 void ZmqPublishEvent(const Event *event)
 {
@@ -514,9 +497,8 @@ void ZmqPublishEvent(const Event *event)
    }
 }
 
-
 /**
- *
+ * Publish DCI data
  */
 void ZmqPublishData(UINT32 objectId, UINT32 dciId, const TCHAR *dciName, const TCHAR *value)
 {
@@ -558,9 +540,8 @@ void ZmqPublishData(UINT32 objectId, UINT32 dciId, const TCHAR *dciName, const T
    }
 }
 
-
 /**
- *
+ * Subscribe to event updates
  */
 bool ZmqSubscribeEvent(UINT32 objectId, UINT32 eventCode, UINT32 dciId)
 {
@@ -568,9 +549,8 @@ bool ZmqSubscribeEvent(UINT32 objectId, UINT32 eventCode, UINT32 dciId)
    return Subscribe(&m_eventSubscription, m_eventSubscriptionLock, objectId, dciId);
 }
 
-
 /**
- *
+ * Unsubscribe from event updates
  */
 bool ZmqUnsubscribeEvent(UINT32 objectId, UINT32 eventCode, UINT32 dciId)
 {
@@ -578,9 +558,8 @@ bool ZmqUnsubscribeEvent(UINT32 objectId, UINT32 eventCode, UINT32 dciId)
    return Unsubscribe(&m_eventSubscription, m_eventSubscriptionLock, objectId, dciId);
 }
 
-
 /**
- *
+ * Subscribe to data updates
  */
 bool ZmqSubscribeData(UINT32 objectId, UINT32 dciId)
 {
@@ -588,9 +567,8 @@ bool ZmqSubscribeData(UINT32 objectId, UINT32 dciId)
    return Subscribe(&m_dataSubscription, m_dataSubscriptionLock, objectId, dciId);
 }
 
-
 /**
- *
+ * Unsubscribe from data updates
  */
 bool ZmqUnsubscribeData(UINT32 objectId, UINT32 dciId)
 {
@@ -598,9 +576,8 @@ bool ZmqUnsubscribeData(UINT32 objectId, UINT32 dciId)
    return Unsubscribe(&m_dataSubscription, m_dataSubscriptionLock, objectId, dciId);
 }
 
-
 /**
- *
+ * Fill subscription list
  */
 void ZmqFillSubscriptionListMessage(NXCPMessage *msg, zmq::SubscriptionType type)
 {
