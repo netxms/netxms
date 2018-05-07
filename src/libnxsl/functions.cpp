@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -1253,6 +1253,7 @@ int F_md5(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 #ifdef UNICODE
    char *utf8Str = UTF8StringFromWideString(argv[0]->getValueAsCString());
    CalculateMD5Hash((BYTE *)utf8Str, strlen(utf8Str), hash);
+   free(utf8Str);
 #else
    const char *str = argv[0]->getValueAsCString();
    CalculateMD5Hash((BYTE *)str, strlen(str), hash);
@@ -1277,6 +1278,7 @@ int F_sha1(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 #ifdef UNICODE
    char *utf8Str = UTF8StringFromWideString(argv[0]->getValueAsCString());
    CalculateSHA1Hash((BYTE *)utf8Str, strlen(utf8Str), hash);
+   free(utf8Str);
 #else
    const char *str = argv[0]->getValueAsCString();
    CalculateSHA1Hash((BYTE *)str, strlen(str), hash);
@@ -1301,6 +1303,7 @@ int F_sha256(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 #ifdef UNICODE
    char *utf8Str = UTF8StringFromWideString(argv[0]->getValueAsCString());
    CalculateSHA256Hash((BYTE *)utf8Str, strlen(utf8Str), hash);
+   free(utf8Str);
 #else
    const char *str = argv[0]->getValueAsCString();
    CalculateSHA256Hash((BYTE *)str, strlen(str), hash);
