@@ -33,7 +33,7 @@ NXSL_Program LIBNXSL_EXPORTABLE *NXSLCompile(const TCHAR *pszSource, TCHAR *pszE
    if (pResult == NULL)
    {
       if (pszError != NULL)
-         nx_strncpy(pszError, compiler.getErrorText(), nBufSize);
+         _tcslcpy(pszError, compiler.getErrorText(), nBufSize);
       if (errorLine != NULL)
          *errorLine = compiler.getErrorLineNumber();
    }
@@ -57,7 +57,7 @@ NXSL_VM LIBNXSL_EXPORTABLE *NXSLCompileAndCreateVM(const TCHAR *pszSource, TCHAR
    {
       if (pszError != NULL)
       {
-         nx_strncpy(pszError, vm->getErrorText(), nBufSize);
+         _tcslcpy(pszError, vm->getErrorText(), nBufSize);
       }
       delete vm;
       vm = NULL;

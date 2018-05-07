@@ -63,9 +63,10 @@ SlmCheck::SlmCheck(const TCHAR *name, bool isTemplate) : NetObj()
 SlmCheck::SlmCheck(SlmCheck *tmpl) : NetObj()
 {
    m_isHidden = true;
-	nx_strncpy(m_name, tmpl->m_name, MAX_OBJECT_NAME);
+	_tcslcpy(m_name, tmpl->m_name, MAX_OBJECT_NAME);
 	m_type = tmpl->m_type;
 	m_script = ((m_type == check_script) && (tmpl->m_script != NULL)) ? _tcsdup(tmpl->m_script) : NULL;
+	m_pCompiledScript = NULL;
 	m_threshold = NULL;
 	m_reason[0] = 0;
 	m_isTemplate = false;
@@ -74,11 +75,9 @@ SlmCheck::SlmCheck(SlmCheck *tmpl) : NetObj()
 	compileScript();
 }
 
-
-//
-// Service class destructor
-//
-
+/**
+ * Service class destructor
+ */
 SlmCheck::~SlmCheck()
 {
 	delete m_threshold;
@@ -118,18 +117,22 @@ void SlmCheck::updateFromTemplate(SlmCheck *tmpl)
  */
 void SlmCheck::compileScript()
 {
-	if (m_type == check_script && m_script != NULL)
-	{
-		const int errorMsgLen = 512;
-		TCHAR errorMsg[errorMsgLen];
+	if (m_type != check_script || m_script == NULL)
+	   return;
 
-		m_pCompiledScript = NXSLCompileAndCreateVM(m_script, errorMsg, errorMsgLen, new NXSL_ServerEnv);
-		if (m_pCompiledScript == NULL)
-			nxlog_write(MSG_SLMCHECK_SCRIPT_COMPILATION_ERROR, NXLOG_WARNING, "dss", m_id, m_name, errorMsg);
+   const int errorMsgLen = 512;
+   TCHAR errorMsg[errorMsgLen];
 
-		m_pCompiledScript->addConstant("OK", m_pCompiledScript->createValue((LONG)0));
+   m_pCompiledScript = NXSLCompileAndCreateVM(m_script, errorMsg, errorMsgLen, new NXSL_ServerEnv);
+   if (m_pCompiledScript != NULL)
+   {
+      m_pCompiledScript->addConstant("OK", m_pCompiledScript->createValue((LONG)0));
       m_pCompiledScript->addConstant("FAIL", m_pCompiledScript->createValue((LONG)1));
-	}
+   }
+   else
+   {
+      nxlog_write(MSG_SLMCHECK_SCRIPT_COMPILATION_ERROR, NXLOG_WARNING, "dss", m_id, m_name, errorMsg);
+   }
 }
 
 /**
@@ -167,7 +170,7 @@ bool SlmCheck::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
 		return false;
 	}
 
-	m_type = SlmCheck::CheckType(DBGetFieldLong(hResult, 0, 0));
+	m_type = static_cast<SlmCheck::CheckType>(DBGetFieldLong(hResult, 0, 0));
 	m_script = DBGetField(hResult, 0, 1, NULL, 0);
 	thresholdId = DBGetFieldULong(hResult, 0, 2);
 	m_templateId = DBGetFieldULong(hResult, 0, 3);
@@ -188,7 +191,7 @@ bool SlmCheck::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
 	// Load access list
 	loadACLFromDB(hdb);
 
-	return TRUE;
+	return true;
 }
 
 /**
@@ -278,7 +281,7 @@ UINT32 SlmCheck::modifyFromMessageInternal(NXCPMessage *pRequest)
 	{
 		TCHAR *script = pRequest->getFieldAsString(VID_SCRIPT);
 		setScript(script);
-		safe_free(script);
+		free(script);
 	}
 
 	if (pRequest->isFieldExist(VID_THRESHOLD_BASE))
