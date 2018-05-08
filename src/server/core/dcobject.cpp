@@ -1436,10 +1436,10 @@ DCObjectInfo::DCObjectInfo(DCObject *object)
    m_templateId = object->getTemplateId();
    m_templateItemId = object->getTemplateItemId();
    m_type = object->getType();
-   nx_strncpy(m_name, object->getName(), MAX_ITEM_NAME);
-   nx_strncpy(m_description, object->getDescription(), MAX_DB_STRING);
-   nx_strncpy(m_systemTag, object->getSystemTag(), MAX_DB_STRING);
-   nx_strncpy(m_instance, object->getInstance(), MAX_DB_STRING);
+   _tcslcpy(m_name, object->getName(), MAX_ITEM_NAME);
+   _tcslcpy(m_description, object->getDescription(), MAX_DB_STRING);
+   _tcslcpy(m_systemTag, object->getSystemTag(), MAX_DB_STRING);
+   _tcslcpy(m_instance, object->getInstance(), MAX_DB_STRING);
    m_comments = _tcsdup_ex(object->getComments());
    m_dataType = (m_type == DCO_TYPE_ITEM) ? ((DCItem *)object)->getDataType() : -1;
    m_origin = object->getDataSource();

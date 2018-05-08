@@ -366,7 +366,7 @@ protected:
 	TCHAR *m_vendor;
 	TCHAR *m_firmware;
 	UINT32 m_parentIndex;
-	ObjectArray<Component> m_childs;
+	ObjectArray<Component> m_children;
 
 public:
 	Component(UINT32 index, const TCHAR *name);
