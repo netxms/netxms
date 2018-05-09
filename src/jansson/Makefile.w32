@@ -13,7 +13,7 @@ SOURCES = \
 	utf.c \
 	value.c
 
-CPPFLAGS = /I ..
+CPPFLAGS = /DJANSSON_EXPORTS /DHAVE_CONFIG_H /I ..
 LDFLAGS = /DEF:..\jansson.def
 
 include ..\..\Makefile.inc.w32

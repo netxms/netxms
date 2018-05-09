@@ -7,4 +7,4 @@ $(GENERATED): tag
 .PHONY: tag
 
 tag:
-	$(PERL) updatetag.pl $(GENERATED)
+	$(PERL) updatetag.pl
