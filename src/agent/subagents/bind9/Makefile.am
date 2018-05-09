@@ -9,4 +9,4 @@ bind9.jar: pom.xml
 clean-local:
 	rm -rf target $(javalib_DATA)
 
-EXTRA_DIST = pom.xml bind9.jar
+EXTRA_DIST = Makefile.w32 pom.xml bind9.jar

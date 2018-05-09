@@ -1,0 +1,7 @@
+TARGET = ssh.nsm
+TYPE = nsm
+SOURCES = handlers.cpp main.cpp session.cpp sp.cpp
+
+LIBS = libnxagent.lib libnetxms.lib libssh.lib
+	  
+include ..\..\..\..\Makefile.inc.w32
