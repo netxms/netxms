@@ -1,6 +1,6 @@
 /* 
 ** DB2 Database Driver
-** Copyright (C) 2010-2017 Raden Solutinos
+** Copyright (C) 2010-2018 Raden Solutinos
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -239,6 +239,9 @@ extern "C" DBDRV_CONNECTION __EXPORT DrvConnect(char *pszHost, char *pszLogin,
 		GetSQLErrorInfo(SQL_HANDLE_DBC, pConn->sqlConn, errorText);
 		goto connect_failure_2;
 	}
+
+   // Explicitly set autocommit mode
+   SQLSetConnectAttr(pConn->sqlConn, SQL_ATTR_AUTOCOMMIT, (SQLPOINTER)SQL_AUTOCOMMIT_ON, 0);
 
 	// Set current schema
 	if ((schema != NULL) && (schema[0] != 0))
