@@ -34,7 +34,7 @@ SOURCES =  accesspoint.cpp acl.cpp actions.cpp addrlist.cpp \
 	winperf.cpp xmpp.cpp zeromq.cpp zone.cpp
 
 CPPFLAGS = /DNXCORE_EXPORTS
-LIBS = libnxsrv.lib libnxsnmp.lib libnxlp.lib libnxsl.lib libnxmap.lib \
+LIBS = libnxsrv.lib libnxsnmp.lib libnxlp.lib libnxsl.lib \
    libnxdb.lib libnxagent.lib libnetxms.lib libstrophe.lib libtre.lib \
    jansson.lib ws2_32.lib iphlpapi.lib psapi.lib wldap32.lib
 	  

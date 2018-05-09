@@ -7,9 +7,9 @@ SOURCES = array.cpp base64.cpp bytestream.cpp cc_mb.cpp cc_ucs2.cpp \
 	hashmapbase.cpp ice.c icmp.cpp inetaddr.cpp log.cpp \
 	lz4.c macaddr.cpp main.cpp md5.cpp message.cpp \
 	msgrecv.cpp msgwq.cpp net.cpp nxcp.cpp npipe.cpp \
-	npipe_win32.cpp pa.cpp procexec.cpp \
-	qsort.c queue.cpp rbuffer.cpp rwlock.cpp scandir.c seh.cpp \
-	serial.cpp sha1.cpp sha2.cpp spoll.cpp StackWalker.cpp \
+	npipe_win32.cpp pa.cpp procexec.cpp qsort.c queue.cpp \
+	rbuffer.cpp rwlock.cpp scandir.c seh.cpp serial.cpp sha1.cpp \
+	sha2.cpp socket_listener.cpp spoll.cpp StackWalker.cpp \
 	streamcomp.cpp string.cpp stringlist.cpp strlcat.c strlcpy.c \
 	strmap.cpp strmapbase.cpp strptime.c strset.cpp \
 	strtoll.c strtoull.c table.cpp threads.cpp timegm.c tools.cpp \
