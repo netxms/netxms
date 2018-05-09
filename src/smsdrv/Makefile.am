@@ -9,3 +9,5 @@
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 SUBDIRS = dbemu dummy generic portech ${SMSDRV_DIRS}
+
+EXTRA_DIST = Makefile.w32

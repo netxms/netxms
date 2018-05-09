@@ -1,6 +1,5 @@
-SUBDIRS = lib airespace at baystack cat2900xl catalyst cisco-esw cisco-sb \
-	dell-pwc dlink ers8000 extreme h3c hpsw ignitenet juniper mikrotik \
-	net-snmp netscreen ntws ping3 procurve qtech-olt rittal symbol-ws \
-	tb ubnt
+SUBDIRS = airespace at avaya cisco dell-pwc dlink extreme \
+          hpe huawei ignitenet juniper mikrotik net-snmp \
+          netonix ping3 qtech-olt rittal symbol-ws tb ubnt
 
 include ..\..\..\Makefile.inc.w32

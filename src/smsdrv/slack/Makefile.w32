@@ -1,0 +1,7 @@
+TARGET = slack.sms
+TYPE = sms
+SOURCES = main.cpp
+
+LIBS = libnetxms.lib libcurl.lib jansson.lib
+	  
+include ..\..\..\Makefile.inc.w32

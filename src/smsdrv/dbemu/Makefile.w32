@@ -1,0 +1,7 @@
+TARGET = dbemu.sms
+TYPE = sms
+SOURCES = main.cpp
+
+LIBS = libnxdb.lib libnetxms.lib
+	  
+include ..\..\..\Makefile.inc.w32

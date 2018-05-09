@@ -7,6 +7,7 @@ text2reach_la_LDFLAGS = -module -avoid-version
 text2reach_la_LIBADD = ../../libnetxms/libnetxms.la -lcurl
 
 EXTRA_DIST = \
+	Makefile.w32 \
 	text2reach.vcxproj text2reach.vcxproj.filters
 
 install-exec-hook:

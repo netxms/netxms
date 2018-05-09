@@ -7,6 +7,7 @@ portech_la_LDFLAGS = -module -avoid-version
 portech_la_LIBADD = ../../libnetxms/libnetxms.la
 
 EXTRA_DIST = \
+	Makefile.w32 \
 	portech.h \
 	portech.vcxproj portech.vcxproj.filters \
 	README.txt

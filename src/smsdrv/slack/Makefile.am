@@ -12,6 +12,7 @@ slack_la_LIBADD += -ljansson
 endif
 
 EXTRA_DIST = \
+	Makefile.w32 \
 	slack.vcxproj slack.vcxproj.filters
 
 install-exec-hook:

@@ -7,6 +7,7 @@ dbemu_la_LDFLAGS = -module -avoid-version
 dbemu_la_LIBADD = ../../db/libnxdb/libnxdb.la ../../libnetxms/libnetxms.la
 
 EXTRA_DIST = \
+	Makefile.w32 \
 	dbemu.h dbemu.vcxproj dbemu.vcxproj.filters
 
 install-exec-hook:

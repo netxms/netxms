@@ -1,0 +1,7 @@
+TARGET = anysms.sms
+TYPE = sms
+SOURCES = main.cpp
+
+LIBS = libnetxms.lib libcurl.lib
+	  
+include ..\..\..\Makefile.inc.w32

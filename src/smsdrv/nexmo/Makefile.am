@@ -12,6 +12,7 @@ nexmo_la_LIBADD += -ljansson
 endif
 
 EXTRA_DIST = \
+	Makefile.w32 \
 	nexmo.vcxproj nexmo.vcxproj.filters
 
 install-exec-hook:

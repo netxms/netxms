@@ -13,4 +13,4 @@ LIBS = libnxdb.lib libnetxms.lib nxsqlite.lib
 include ..\..\..\..\Makefile.inc.w32
 
 tables.cpp: $(NETXMS_BASE)\sql\schema.in
-	$(NETXMS_BASE)\tools\create_table_list.pl $(NETXMS_BASE)\sql\schema.in > tables.cpp
+	perl $(NETXMS_BASE)\tools\create_table_list.pl $(NETXMS_BASE)\sql\schema.in > tables.cpp

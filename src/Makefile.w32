@@ -1,5 +1,5 @@
 SUBDIRS = jansson libexpat libtre sqlite zlib libnetxms libnxlp libnxmb \
           libnxjava libnxsl libpng libstrophe nxscript db snmp appagent agent \
-          client server tools
+          client server smsdrv tools
 
 include ..\Makefile.inc.w32

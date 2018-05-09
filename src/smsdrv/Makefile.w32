@@ -1,0 +1,5 @@
+SUBDIRS = anysms dbemu dummy generic kannel mymobile \
+          nexmo nxagent portech slack smseagle \
+          text2reach websms
+
+include ..\..\Makefile.inc.w32

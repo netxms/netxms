@@ -12,6 +12,7 @@ mymobile_la_LIBADD += -ljansson
 endif
 
 EXTRA_DIST = \
+	Makefile.w32 \
 	mymobile.vcxproj mymobile.vcxproj.filters
 
 install-exec-hook:

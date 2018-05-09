@@ -1,0 +1,7 @@
+TARGET = dummy.sms
+TYPE = sms
+SOURCES = main.cpp
+
+LIBS = libnetxms.lib
+	  
+include ..\..\..\Makefile.inc.w32

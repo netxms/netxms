@@ -7,6 +7,7 @@ dummy_la_LDFLAGS = -module -avoid-version
 dummy_la_LIBADD = ../../libnetxms/libnetxms.la
 
 EXTRA_DIST = \
+	Makefile.w32 \
 	dummy.vcxproj dummy.vcxproj.filters
 
 install-exec-hook:

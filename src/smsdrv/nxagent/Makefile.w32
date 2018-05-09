@@ -1,0 +1,8 @@
+TARGET = nxagent.sms
+TYPE = sms
+SOURCES = main.cpp
+COMPONENT = server
+
+LIBS = libnxsrv.lib libnetxms.lib
+	  
+include ..\..\..\Makefile.inc.w32

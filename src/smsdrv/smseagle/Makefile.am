@@ -7,6 +7,7 @@ smseagle_la_LDFLAGS = -module -avoid-version
 smseagle_la_LIBADD = ../../libnetxms/libnetxms.la -lcurl
 
 EXTRA_DIST = \
+	Makefile.w32 \
 	smseagle.vcxproj smseagle.vcxproj.filters
 
 install-exec-hook:

@@ -7,6 +7,7 @@ websms_la_LDFLAGS = -module -avoid-version
 websms_la_LIBADD = ../../libnetxms/libnetxms.la -lcurl
 
 EXTRA_DIST = \
+	Makefile.w32 \
 	websms.vcxproj websms.vcxproj.filters
 
 install-exec-hook:

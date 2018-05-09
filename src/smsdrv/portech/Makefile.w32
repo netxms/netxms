@@ -1,0 +1,7 @@
+TARGET = portech.sms
+TYPE = sms
+SOURCES = main.cpp pdumode.cpp
+
+LIBS = libnetxms.lib
+	  
+include ..\..\..\Makefile.inc.w32

@@ -7,6 +7,7 @@ nxagent_la_LDFLAGS = -module -avoid-version
 nxagent_la_LIBADD = ../../libnetxms/libnetxms.la ../../server/libnxsrv/libnxsrv.la
 
 EXTRA_DIST = \
+	Makefile.w32 \
 	nxagent.vcxproj nxagent.vcxproj.filters
 
 install-exec-hook:

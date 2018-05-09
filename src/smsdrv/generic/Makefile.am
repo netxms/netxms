@@ -7,6 +7,7 @@ generic_la_LDFLAGS = -module -avoid-version
 generic_la_LIBADD = ../../libnetxms/libnetxms.la
 
 EXTRA_DIST = \
+	Makefile.w32 \
 	generic.vcxproj generic.vcxproj.filters \
 	generic_smsdrv.h
 
