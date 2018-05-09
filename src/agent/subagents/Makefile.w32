@@ -1,4 +1,4 @@
-SUBDIRS = bind9 db2 dbquery devemu ecs filemgr gps informix java jmx logwatch \
+SUBDIRS = java bind9 db2 dbquery devemu ecs filemgr gps informix jmx logwatch \
           lorawan mqtt mysql netsvc odbcquery oracle ping portCheck sms ssh \
           ubntlw ups winnt winperf wmi
 

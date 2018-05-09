@@ -79,6 +79,10 @@ LDFLAGS = $(LDFLAGS) /DLL
 CPPFLAGS = $(CPPFLAGS) /D_USRDLL
 LDFLAGS = $(LDFLAGS) /DLL
 !endif
+!if "$(TYPE)" == "nxm"
+CPPFLAGS = $(CPPFLAGS) /D_USRDLL
+LDFLAGS = $(LDFLAGS) /DLL
+!endif
 
 # Common C/C++ compiler flags
 CPPFLAGS = $(CPPFLAGS) /MD /O2 /Gd /EHs- /GR- \

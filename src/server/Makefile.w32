@@ -1,3 +1,3 @@
-SUBDIRS = libnxsrv core drivers hdlink netxmsd tools
+SUBDIRS = libnxsrv core jcore drivers hdlink netxmsd spe tools
 
 include ..\..\Makefile.inc.w32

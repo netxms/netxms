@@ -1,0 +1,8 @@
+TARGET = spe.nxm
+TYPE = nxm
+COMPONENT = server
+SOURCES = main.cpp nn.cpp tsre.cpp
+
+LIBS = nxcore.lib libnxsrv.lib libnetxms.lib
+	  
+include ..\..\..\Makefile.inc.w32
