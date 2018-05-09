@@ -2945,7 +2945,7 @@ TCHAR LIBNETXMS_EXPORTABLE *GetLocalHostName(TCHAR *buffer, size_t size, bool fq
       bool found = false;
       for(struct addrinfo *p = info; p != NULL; p = p->ai_next)
       {
-         if (strchr(p->ai_canonname, '.') != NULL)
+         if (p->ai_canonname != NULL && strchr(p->ai_canonname, '.') != NULL)
          {
 #ifdef UNICODE
             MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, p->ai_canonname, -1, buffer, size);
