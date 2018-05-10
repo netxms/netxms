@@ -233,47 +233,6 @@ void InitConfig(const TCHAR *configSection)
 #ifdef _WIN32
 
 /**
-* Copy file/folder
-*/
-static BOOL CopyFileOrDirectory(const TCHAR *oldName, const TCHAR *newName)
-{
-   NX_STAT_STRUCT st;
-   if (CALL_STAT(oldName, &st) != 0)
-      return FALSE;
-
-   if (!S_ISDIR(st.st_mode))
-      return CopyFile(oldName, newName, FALSE);
-
-   if (!CreateDirectory(newName, NULL))
-      return FALSE;
-
-   _TDIR *dir = _topendir(oldName);
-   if (dir == NULL)
-      return FALSE;
-
-   struct _tdirent *d;
-   while ((d = _treaddir(dir)) != NULL)
-   {
-      if (!_tcscmp(d->d_name, _T(".")) || !_tcscmp(d->d_name, _T("..")))
-         continue;
-
-      TCHAR nextNewName[MAX_PATH];
-      _tcscpy(nextNewName, newName);
-      _tcscat(nextNewName, FS_PATH_SEPARATOR);
-      _tcscat(nextNewName, d->d_name);
-
-      TCHAR nextOldaName[MAX_PATH];
-      _tcscpy(nextOldaName, oldName);
-      _tcscat(nextOldaName, FS_PATH_SEPARATOR);
-      _tcscat(nextOldaName, d->d_name);
-
-      CopyFileOrDirectory(nextOldaName, nextNewName);
-   }
-   _tclosedir(dir);
-   return TRUE;
-}
-
-/**
 * Recover agent's data directory.
 * During Windows 10 upgrades local service application data directory
 * can be moved to Windows.old.
@@ -305,6 +264,27 @@ static void RecoverDataDirectory()
 
 #endif
 
+void RecoverConfigPolicyDirectory()
+{
+   TCHAR legacyConfigPolicyDir[MAX_PATH] = AGENT_DEFAULT_DATA_DIR;
+   if (!_tcscmp(legacyConfigPolicyDir, _T("{default}")))
+   {
+      GetNetXMSDirectory(nxDirData, legacyConfigPolicyDir);
+   }
+
+   if (legacyConfigPolicyDir[_tcslen(legacyConfigPolicyDir) - 1] != FS_PATH_SEPARATOR_CHAR)
+      _tcscat(legacyConfigPolicyDir, FS_PATH_SEPARATOR);
+   _tcscat(legacyConfigPolicyDir, CONFIG_AP_FOLDER);
+
+   if (!_tcsicmp(legacyConfigPolicyDir, g_szConfigPolicyDir))
+      return;
+
+   if (_taccess(legacyConfigPolicyDir, 0) != 0)
+      return;
+
+   MoveFileOrDirectory(legacyConfigPolicyDir, g_szConfigPolicyDir);
+}
+
 /**
  * Load config
  */
@@ -313,7 +293,11 @@ bool LoadConfig()
    bool validConfig = g_config->loadConfig(g_szConfigFile, DEFAULT_CONFIG_SECTION, false);
    if (validConfig)
    {
-      const TCHAR *dir = g_config->getValue(_T("/%agent/ConfigIncludeDir"));
+      const TCHAR *dir = g_config->getValue(_T("/%agent/DataDirectory"));
+      if (dir != NULL)
+         _tcslcpy(g_szDataDirectory, dir, MAX_PATH);
+
+      dir = g_config->getValue(_T("/%agent/ConfigIncludeDir"));
       if (dir != NULL)
       {
          validConfig = g_config->loadConfigDirectory(dir, DEFAULT_CONFIG_SECTION, false);
@@ -323,10 +307,6 @@ bool LoadConfig()
          }
       }
 
-      dir = g_config->getValue(_T("/%agent/DataDirectory"));
-      if (dir != NULL)
-         _tcslcpy(g_szDataDirectory, dir, MAX_PATH);
-
 #ifdef _WIN32
       RecoverDataDirectory();
 #endif
@@ -334,8 +314,14 @@ bool LoadConfig()
       _tcslcpy(g_szConfigPolicyDir, g_szDataDirectory, MAX_PATH - 16);
       if (g_szConfigPolicyDir[_tcslen(g_szConfigPolicyDir) - 1] != FS_PATH_SEPARATOR_CHAR)
          _tcscat(g_szConfigPolicyDir, FS_PATH_SEPARATOR);
-      _tcscat(g_szConfigPolicyDir, CONFIG_AP_FOLDER FS_PATH_SEPARATOR);
-      CreateFolder(g_szConfigPolicyDir);
+      _tcscat(g_szConfigPolicyDir, CONFIG_AP_FOLDER);
+      if (_taccess(g_szConfigPolicyDir, 0) != 0)
+      {
+         // Check if configuration policies stored at old location
+         RecoverConfigPolicyDirectory();
+         CreateFolder(g_szConfigPolicyDir);
+      }
+      _tcscat(g_szConfigPolicyDir, FS_PATH_SEPARATOR);
 
       validConfig = g_config->loadConfigDirectory(g_szConfigPolicyDir, DEFAULT_CONFIG_SECTION);
       if (!validConfig)
