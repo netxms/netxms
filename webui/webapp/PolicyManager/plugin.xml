@@ -92,12 +92,14 @@
    <extension
          point="org.eclipse.ui.views">
       <view
+            allowMultiple="true"
             class="org.netxms.ui.eclipse.policymanager.views.ConfigPolicyEditor"
             id="org.netxms.ui.eclipse.policymanager.views.ConfigPolicyEditor"
             name="Agent Policy Config Editor"
             restorable="true">
       </view>
       <view
+            allowMultiple="true"
             class="org.netxms.ui.eclipse.policymanager.views.LogParserPolicyEditor"
             id="org.netxms.ui.eclipse.policymanager.views.LogParserPolicyEditor"
             name="Agent Policy Log Parser Editor"

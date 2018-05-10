@@ -22,6 +22,7 @@ import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.TreeSelection;
 import org.eclipse.ui.IObjectActionDelegate;
+import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
@@ -63,9 +64,9 @@ public class EditPolicy implements IObjectActionDelegate
 	      {
 	         AbstractPolicyEditor view = null;
 	         if (currentSelection instanceof AgentPolicyConfig)
-	            view = (AbstractPolicyEditor)window.getActivePage().showView(ConfigPolicyEditor.ID);
+	            view = (AbstractPolicyEditor)window.getActivePage().showView(ConfigPolicyEditor.ID, Long.toString(currentSelection.getObjectId()), IWorkbenchPage.VIEW_ACTIVATE);
 	         else if (currentSelection instanceof AgentPolicyLogParser)
-               view = (AbstractPolicyEditor)window.getActivePage().showView(LogParserPolicyEditor.ID);
+               view = (AbstractPolicyEditor)window.getActivePage().showView(LogParserPolicyEditor.ID, Long.toString(currentSelection.getObjectId()), IWorkbenchPage.VIEW_ACTIVATE);
 	         if (view != null)
    	         view.setPolicy((AgentPolicy)currentSelection);
 	      }
