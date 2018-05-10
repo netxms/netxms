@@ -644,3 +644,21 @@ StringList *String::split(const TCHAR *separator) const
 
    return result;
 }
+
+/**
+ * COnvert string to uppercase
+ */
+void String::toUppercase()
+{
+   for (size_t i = 0; i < m_length; i++)
+      m_buffer[i] = _totupper(m_buffer[i]);
+}
+
+/**
+* COnvert string to lowercase
+*/
+void String::toLowercase()
+{
+   for (size_t i = 0; i < m_length; i++)
+      m_buffer[i] = _totlower(m_buffer[i]);
+}

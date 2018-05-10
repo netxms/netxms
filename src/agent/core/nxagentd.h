@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -84,6 +84,8 @@
 #else
 #define NXAGENTD_SYSLOG_NAME          _T("nxagentd")
 #endif
+
+#define DEFAULT_CONFIG_SECTION   _T("CORE")
 
 #define MAX_PSUFFIX_LENGTH 32
 #define MAX_SERVERS        32

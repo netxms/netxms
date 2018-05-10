@@ -737,6 +737,9 @@ public:
    void replace(const TCHAR *pszSrc, const TCHAR *pszDst);
 	void trim();
 	void shrink(size_t chars = 1);
+
+   void toUppercase();
+   void toLowercase();
 };
 
 /**

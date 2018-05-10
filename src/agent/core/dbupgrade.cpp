@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2016 Raden Solutions
+** Copyright (C) 2016-2018 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -100,7 +100,6 @@ static BOOL H_UpgradeFromV2(int currVersion, int newVersion)
 
          //check that file exists and move it to other folder
          NX_STAT_STRUCT st;
-
          if (CALL_STAT(oldPath, &st) != 0)
          {
             continue;
