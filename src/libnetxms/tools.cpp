@@ -3064,3 +3064,159 @@ int LIBNETXMS_EXPORTABLE _statw32(const TCHAR *file, struct _stati64 *st)
 }
 
 #endif   /* _WIN32 */
+
+#ifndef _WIN32
+
+/**
+ * Copy file
+ */
+static BOOL CopyFileInternal(const TCHAR *src, const TCHAR *dst, int mode)
+{
+   int oldFile = _topen(src, O_RDONLY | O_BINARY);
+   if (oldFile == -1)
+      return FALSE;
+
+   int newFile = _topen(dst, O_CREAT | O_WRONLY | O_BINARY, mode); // should be copied with the same access rights
+   if (newFile == -1)
+   {
+      _close(oldFile);
+      return FALSE;
+   }
+
+   int in, out;
+   BYTE buffer[16384];
+   while ((in = _read(oldFile, buffer, sizeof(buffer))) > 0)
+   {
+      out = _write(newFile, buffer, in);
+      if (out != in)
+      {
+         _close(oldFile);
+         _close(newFile);
+         return FALSE;
+      }
+   }
+
+   _close(oldFile);
+   _close(newFile);
+   return TRUE;
+}
+
+#endif
+
+/**
+ * Copy file/folder
+ */
+BOOL LIBNETXMS_EXPORTABLE CopyFileOrDirectory(const TCHAR *oldName, const TCHAR *newName)
+{
+   NX_STAT_STRUCT st;
+   if (CALL_STAT(oldName, &st) != 0)
+      return FALSE;
+
+   if (!S_ISDIR(st.st_mode))
+   {
+#ifdef _WIN32
+      return CopyFile(oldName, newName, FALSE);
+#else
+      return CopyFileInternal(oldName, newName, st.st_mode);
+#endif
+   }
+
+#ifdef _WIN32
+   if (!CreateDirectory(newName, NULL))
+      return FALSE;
+#else
+   if (_tmkdir(newName, st.st_mode) != 0)
+      return FALSE;
+#endif
+
+   _TDIR *dir = _topendir(oldName);
+   if (dir == NULL)
+      return FALSE;
+
+   struct _tdirent *d;
+   while ((d = _treaddir(dir)) != NULL)
+   {
+      if (!_tcscmp(d->d_name, _T(".")) || !_tcscmp(d->d_name, _T("..")))
+         continue;
+
+      TCHAR nextNewName[MAX_PATH];
+      _tcscpy(nextNewName, newName);
+      _tcscat(nextNewName, FS_PATH_SEPARATOR);
+      _tcscat(nextNewName, d->d_name);
+
+      TCHAR nextOldaName[MAX_PATH];
+      _tcscpy(nextOldaName, oldName);
+      _tcscat(nextOldaName, FS_PATH_SEPARATOR);
+      _tcscat(nextOldaName, d->d_name);
+
+      CopyFileOrDirectory(nextOldaName, nextNewName);
+   }
+
+   _tclosedir(dir);
+   return TRUE;
+}
+
+/**
+ * Move file/folder
+ */
+BOOL LIBNETXMS_EXPORTABLE MoveFileOrDirectory(const TCHAR *oldName, const TCHAR *newName)
+{
+#ifdef _WIN32
+   if (MoveFileEx(oldName, newName, MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING))
+      return TRUE;
+#else
+   if (_trename(oldName, newName) == 0)
+      return TRUE;
+#endif
+
+   NX_STAT_STRUCT st;
+   if (CALL_STAT(oldName, &st) != 0)
+      return FALSE;
+
+   if (S_ISDIR(st.st_mode))
+   {
+#ifdef _WIN32
+      CreateDirectory(newName, NULL);
+#else
+      _tmkdir(newName, st.st_mode);
+#endif
+      _TDIR *dir = _topendir(oldName);
+      if (dir != NULL)
+      {
+         struct _tdirent *d;
+         while((d = _treaddir(dir)) != NULL)
+         {
+            if (!_tcscmp(d->d_name, _T(".")) || !_tcscmp(d->d_name, _T("..")))
+            {
+               continue;
+            }
+            
+            TCHAR nextNewName[MAX_PATH];
+            _tcscpy(nextNewName, newName);
+            _tcscat(nextNewName, FS_PATH_SEPARATOR);
+            _tcscat(nextNewName, d->d_name);
+
+            TCHAR nextOldaName[MAX_PATH];
+            _tcscpy(nextOldaName, oldName);
+            _tcscat(nextOldaName, FS_PATH_SEPARATOR);
+            _tcscat(nextOldaName, d->d_name);
+
+            MoveFileOrDirectory(nextOldaName, nextNewName);
+         }
+         _tclosedir(dir);
+      }
+      _trmdir(oldName);
+   }
+   else
+   {
+#ifdef _WIN32
+      if (!CopyFile(oldName, newName, FALSE))
+         return FALSE;
+#else
+      if (!CopyFileInternal(oldName, newName, st.st_mode))
+         return FALSE;
+#endif
+      _tremove(oldName);
+   }
+   return TRUE;
+}
