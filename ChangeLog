@@ -15,6 +15,7 @@
 	NX-1097 (Configuration option to ignore alarm's helpdesk state when doing resolve or terminate)
 	NX-1157 (configure --with-dist fails if OpenSSL is not installed)
 	NX-1397 (Implement Windows Update information parameters for Windows 10 and Windows Server 2016)
+	NX-1415 (Windows 10 upgrades break agent tunnels)
 	NX-1417 (File.Size parameter not working for Windows pagefile.sys)
 	NX-1418 (Sort scripts in Execute Server Script dropdown)
 	NX-1419 (AgentTunnels.ProcessUnbound scheduled task should be hidden)
@@ -25,7 +26,7 @@
 	NX-1434 (Return from function from within foreach loop in NXSL can cause unexpected runtime error)
 	NX-1436 (Write hostname to agent log on startup)
 	NX-1442 (Generic device driver cannot read interface list if device does not support ifNumber MIB object)
-   NX-1446 ( Only one agent policy editor can be opened, if another policy is opened for editing, previous is closed without saving)
+	NX-1446 ( Only one agent policy editor can be opened, if another policy is opened for editing, previous is closed without saving)
 
 
 *
