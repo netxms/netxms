@@ -145,6 +145,35 @@ void LIBNETXMS_EXPORTABLE bswap_array_32(UINT32 *v, int len);
 }
 #endif
 
+/*** toupper/tolower ***/
+#if !HAVE_TOLOWER
+inline char tolower(char c)
+{
+   return ((c >= 'A') && (c <= 'Z')) ? c + ('a' - 'A') : c;
+}
+#endif
+
+#if !HAVE_TOWLOWER
+inline WCHAR towlower(WCHAR c)
+{
+   return ((c >= L'A') && (c <= L'Z')) ? c + (L'a' - L'A') : c;
+}
+#endif
+
+#if !HAVE_TOUPPER
+inline char toupper(char c)
+{
+   return ((c >= 'a') && (c <= 'z')) ? c - ('a' - 'A') : c;
+}
+#endif
+
+#if !HAVE_TOWUPPER
+inline WCHAR towupper(WCHAR c)
+{
+   return ((c >= L'a') && (c <= L'z')) ? c - (L'a' - L'A') : c;
+}
+#endif
+
 
 /*** Serial communications ***/
 #ifdef _WIN32

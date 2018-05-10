@@ -172,6 +172,8 @@
 #define _tcslcat  wcslcat
 #define _tcspbrk  wcspbrk
 #define _tcstok_r wcstok
+#define _totupper towupper
+#define _totlower towlower
 #define _topen    wopen
 #define _taccess  waccess
 #define _tstat    wstat
@@ -264,6 +266,8 @@
 #define _tcslcat  strlcat
 #define _tcspbrk  strpbrk
 #define _tcstok_r strtok_r
+#define _totupper toupper
+#define _totlower tolower
 #define _topen    _open
 #define _taccess  _access
 #define _tstat    stat

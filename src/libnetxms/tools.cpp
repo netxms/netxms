@@ -2316,12 +2316,7 @@ char LIBNETXMS_EXPORTABLE *strlwr(char *str)
 {
    for(char *p = str; *p != 0; p++)
    {
-#if HAVE_TOLOWER
       *p = tolower(*p);
-#else
-      if ((*p >= 'a') && (*p <= 'z'))
-         *p = *p - ('a' - 'A');
-#endif
    }
    return str;
 }
@@ -2337,12 +2332,7 @@ WCHAR LIBNETXMS_EXPORTABLE *wcslwr(WCHAR *str)
 {
    for(WCHAR *p = str; *p != 0; p++)
    {
-#if HAVE_TOWLOWER
       *p = towlower(*p);
-#else
-      if ((*p >= 'a') && (*p <= 'z'))
-         *p = *p - ('a' - 'A');
-#endif
    }
    return str;
 }
