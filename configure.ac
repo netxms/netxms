@@ -531,8 +531,14 @@ AC_ARG_WITH(db2,
 			LD_RUN_PATH="${withval}/${DB2_LIB_DIR}${LD_RUN_PATH:+:}${LD_RUN_PATH}"   
 			LDFLAGS="$LDFLAGS -L${withval}/${DB2_LIB_DIR}"
 		else
-			LD_RUN_PATH="${withval}${LD_RUN_PATH:+:}${LD_RUN_PATH}"   
-			LDFLAGS="$LDFLAGS -L${withval}"
+			DB2_LIB_DIR=lib
+			if test -x "$withval/${DB2_LIB_DIR}" ; then
+				LD_RUN_PATH="${withval}/${DB2_LIB_DIR}${LD_RUN_PATH:+:}${LD_RUN_PATH}"   
+				LDFLAGS="$LDFLAGS -L${withval}/${DB2_LIB_DIR}"
+			else
+				LD_RUN_PATH="${withval}${LD_RUN_PATH:+:}${LD_RUN_PATH}"   
+				LDFLAGS="$LDFLAGS -L${withval}"
+			fi
 		fi
 		if test -x "$withval/include" ; then
 			CPPFLAGS="$CPPFLAGS -I${withval}/include"
