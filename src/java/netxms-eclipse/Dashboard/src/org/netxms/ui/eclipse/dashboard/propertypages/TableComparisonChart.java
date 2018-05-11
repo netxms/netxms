@@ -196,6 +196,9 @@ public class TableComparisonChart extends PropertyPage
 		
 		if(!(config instanceof TablePieChartConfig))
       {
+	      if (!yAxisRange.validate(true))
+	         return false;
+	      
          config.setAutoScale(yAxisRange.isAuto());
          config.setMinYScaleValue(yAxisRange.getMinY());
          config.setMaxYScaleValue(yAxisRange.getMaxY());

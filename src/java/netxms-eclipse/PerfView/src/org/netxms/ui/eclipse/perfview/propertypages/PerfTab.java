@@ -283,7 +283,8 @@ public class PerfTab extends DCIPropertyPageDialog
 	@Override
 	protected void performApply()
 	{
-		applyChanges(true);
+      if (yAxisRange.validate(true))
+         applyChanges(true);
 	}
 
 	/* (non-Javadoc)
@@ -292,6 +293,8 @@ public class PerfTab extends DCIPropertyPageDialog
 	@Override
 	public boolean performOk()
 	{
+      if (!yAxisRange.validate(true))
+         return false;
 		applyChanges(false);
 		return true;
 	}

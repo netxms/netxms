@@ -53,10 +53,10 @@ public class PerfTabGraphSettings
    private boolean extendedLegend = true;
    
    @Element(required = false)
-   private int minYScaleValue = 1;
+   private double minYScaleValue = 0;
    
    @Element(required = false)
-   private int maxYScaleValue = 100;
+   private double maxYScaleValue = 100;
    
    @Element(required = false)
    private int timeRange = 1;
@@ -355,7 +355,7 @@ public class PerfTabGraphSettings
    /**
     * @return
     */
-   public int getMinYScaleValue()
+   public double getMinYScaleValue()
    {
       return minYScaleValue;
    }
@@ -363,7 +363,7 @@ public class PerfTabGraphSettings
    /**
     * @param minYScaleValue
     */
-   public void setMinYScaleValue(int minYScaleValue)
+   public void setMinYScaleValue(double minYScaleValue)
    {
       this.minYScaleValue = minYScaleValue;
    }
@@ -371,7 +371,7 @@ public class PerfTabGraphSettings
    /**
     * @return
     */
-   public int getMaxYScaleValue()
+   public double getMaxYScaleValue()
    {
       return maxYScaleValue;
    }
@@ -379,7 +379,7 @@ public class PerfTabGraphSettings
    /**
     * @param maxYScaleValue
     */
-   public void setMaxYScaleValue(int maxYScaleValue)
+   public void setMaxYScaleValue(double maxYScaleValue)
    {
       this.maxYScaleValue = maxYScaleValue;
    }

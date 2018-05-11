@@ -752,7 +752,7 @@ public abstract class GaugeWidget extends GenericChart implements Gauge, PaintLi
     * @see org.netxms.ui.eclipse.charts.api.DataChart#setYAxisRange(int, int)
     */
    @Override
-   public void setYAxisRange(int from, int to)
+   public void setYAxisRange(double from, double to)
    {
    }
 

@@ -34,7 +34,7 @@ public interface DataChart
     * @param from minimal y axis number
     * @param to maximal y axis number
     */
-   public abstract void setYAxisRange(int from, int to);
+   public abstract void setYAxisRange(double from, double to);
 	
 	/**
 	 * Marks end of initialization stage and causes first render of a chart.
