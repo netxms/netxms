@@ -47,6 +47,7 @@ AgentPolicy::AgentPolicy(int type) : NetObj()
 	m_policyType = type;
    m_deployFilter = NULL;
    m_deployFilterSource = NULL;
+   m_status = STATUS_NORMAL;
 }
 
 /**
@@ -59,6 +60,7 @@ AgentPolicy::AgentPolicy(const TCHAR *name, int type) : NetObj()
 	m_policyType = type;
    m_deployFilter = NULL;
    m_deployFilterSource = NULL;
+   m_status = STATUS_NORMAL;
 }
 
 /**
