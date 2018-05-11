@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: NetXMS Base Library
 Bundle-SymbolicName: org.netxms.ui.base;singleton:=true
-Bundle-Version: 2.2.4
+Bundle-Version: 2.2.5
 Bundle-Activator: org.netxms.ui.base.Activator
 Bundle-Vendor: Raden Solutions
 Require-Bundle: org.eclipse.core.runtime;bundle-version="3.8.0"

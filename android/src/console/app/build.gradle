@@ -30,12 +30,12 @@ android {
 
 dependencies {
     implementation 'com.android.support:support-v4:27.1.0'
-    implementation('org.netxms:netxms-client:2.2.4') {
+    implementation('org.netxms:netxms-client:2.2.5') {
         exclude module: 'stax'
         exclude module: 'stax-api'
         exclude module: 'xpp3'
     }
-    implementation('org.netxms:netxms-base:2.2.4') {
+    implementation('org.netxms:netxms-base:2.2.5') {
         exclude module: 'stax'
         exclude module: 'stax-api'
         exclude module: 'xpp3'
