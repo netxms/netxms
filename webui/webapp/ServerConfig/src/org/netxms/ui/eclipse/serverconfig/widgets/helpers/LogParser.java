@@ -67,6 +67,8 @@ public class LogParser
 	 */
 	public static LogParser createFromXml(final String xml) throws Exception
 	{
+	   if ((xml == null) || xml.isEmpty())
+	      return new LogParser();
 		Serializer serializer = new Persister();
 		return serializer.read(LogParser.class, xml);
 	}
@@ -166,7 +168,7 @@ public class LogParser
    {
       return stringToBoolean(processALL);
    }
-
+   
    /**
     * @param processALL the processALL to set
     */
@@ -174,7 +176,7 @@ public class LogParser
    {
       this.processALL = booleanToString(processALL);
    }
-
+   
 	/**
 	 * @return
 	 */

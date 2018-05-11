@@ -297,6 +297,9 @@ public abstract class AbstractPolicyEditor extends ViewPart implements ISaveable
       this.policy = policy;
       setPartName("Edit Policy \""+ policy.getObjectName() +"\"");
       doRefresh();
+      modified = false;
+      firePropertyChange(PROP_DIRTY);
+      actionSave.setEnabled(false);
    }
    
    /**
@@ -315,6 +318,7 @@ public abstract class AbstractPolicyEditor extends ViewPart implements ISaveable
       doRefresh();
       modified = false;
       firePropertyChange(PROP_DIRTY);
+      actionSave.setEnabled(false);
    }
    
    /**
