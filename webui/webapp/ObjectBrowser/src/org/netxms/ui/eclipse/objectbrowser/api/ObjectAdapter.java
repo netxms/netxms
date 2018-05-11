@@ -54,69 +54,73 @@ public class ObjectAdapter implements IWorkbenchAdapter
 		
 		switch(((AbstractObject)object).getObjectClass())
 		{
+         case AbstractObject.OBJECT_ACCESSPOINT:
+            return Activator.getImageDescriptor("icons/access_point.png"); //$NON-NLS-1$
+         case AbstractObject.OBJECT_AGENTPOLICY:
+            return Activator.getImageDescriptor("icons/policy.png"); //$NON-NLS-1$
+         case AbstractObject.OBJECT_AGENTPOLICY_CONFIG:
+            return Activator.getImageDescriptor("icons/config_policy.gif"); //$NON-NLS-1$
+         case AbstractObject.OBJECT_AGENTPOLICY_LOGPARSER:
+            return Activator.getImageDescriptor("icons/log_parser_policy.gif"); //$NON-NLS-1$
+         case AbstractObject.OBJECT_BUSINESSSERVICE:
+         case AbstractObject.OBJECT_BUSINESSSERVICEROOT:
+            return Activator.getImageDescriptor("icons/business_service.png"); //$NON-NLS-1$
+         case AbstractObject.OBJECT_CHASSIS:
+            return Activator.getImageDescriptor("icons/chassis.png"); //$NON-NLS-1$
+         case AbstractObject.OBJECT_CLUSTER:
+            return Activator.getImageDescriptor("icons/cluster.png"); //$NON-NLS-1$
+         case AbstractObject.OBJECT_CONDITION:
+            return Activator.getImageDescriptor("icons/condition.gif"); //$NON-NLS-1$
+         case AbstractObject.OBJECT_CONTAINER:
+            return Activator.getImageDescriptor("icons/container.png"); //$NON-NLS-1$
+         case AbstractObject.OBJECT_DASHBOARD:
+            return Activator.getImageDescriptor("icons/dashboard.gif"); //$NON-NLS-1$
+         case AbstractObject.OBJECT_DASHBOARDGROUP:
+            return Activator.getImageDescriptor("icons/dashboard_group.png"); //$NON-NLS-1$
+         case AbstractObject.OBJECT_DASHBOARDROOT:
+            return Activator.getImageDescriptor("icons/dashboard_root.gif"); //$NON-NLS-1$
+         case AbstractObject.OBJECT_INTERFACE:
+            return Activator.getImageDescriptor("icons/interface.png"); //$NON-NLS-1$
+         case AbstractObject.OBJECT_MOBILEDEVICE:
+            return Activator.getImageDescriptor("icons/mobile_device.png"); //$NON-NLS-1$
 			case AbstractObject.OBJECT_NETWORK:
 				return Activator.getImageDescriptor("icons/network.png"); //$NON-NLS-1$
+         case AbstractObject.OBJECT_NETWORKMAP:
+            return Activator.getImageDescriptor("icons/netmap.png"); //$NON-NLS-1$
+         case AbstractObject.OBJECT_NETWORKMAPGROUP:
+            return Activator.getImageDescriptor("icons/netmap_group.png"); //$NON-NLS-1$
+         case AbstractObject.OBJECT_NETWORKMAPROOT:
+            return Activator.getImageDescriptor("icons/netmap_root.gif"); //$NON-NLS-1$
+         case AbstractObject.OBJECT_NETWORKSERVICE:
+            return Activator.getImageDescriptor("icons/network_service.png"); //$NON-NLS-1$
+         case AbstractObject.OBJECT_NODE:
+            return Activator.getImageDescriptor("icons/node.png"); //$NON-NLS-1$
+         case AbstractObject.OBJECT_NODELINK:
+            return Activator.getImageDescriptor("icons/node_link.png"); //$NON-NLS-1$
+         case AbstractObject.OBJECT_POLICYGROUP:
+            return Activator.getImageDescriptor("icons/policy_group.png"); //$NON-NLS-1$
+         case AbstractObject.OBJECT_POLICYROOT:
+            return Activator.getImageDescriptor("icons/policy_root.gif"); //$NON-NLS-1$
+         case AbstractObject.OBJECT_RACK:
+            return Activator.getImageDescriptor("icons/rack.gif"); //$NON-NLS-1$
+         case AbstractObject.OBJECT_SENSOR:
+            return Activator.getImageDescriptor("icons/sensor.gif"); //$NON-NLS-1$
 			case AbstractObject.OBJECT_SERVICEROOT:
 				return Activator.getImageDescriptor("icons/service_root.png"); //$NON-NLS-1$
-			case AbstractObject.OBJECT_CONTAINER:
-				return Activator.getImageDescriptor("icons/container.png"); //$NON-NLS-1$
-			case AbstractObject.OBJECT_RACK:
-				return Activator.getImageDescriptor("icons/rack.gif"); //$NON-NLS-1$
-			case AbstractObject.OBJECT_SENSOR:
-			    	return Activator.getImageDescriptor("icons/sensor.gif"); //$NON-NLS-1$
-			case AbstractObject.OBJECT_ZONE:
-				return Activator.getImageDescriptor("icons/zone.gif"); //$NON-NLS-1$
-			case AbstractObject.OBJECT_SUBNET:
-				return Activator.getImageDescriptor("icons/subnet.png"); //$NON-NLS-1$
-			case AbstractObject.OBJECT_CLUSTER:
-				return Activator.getImageDescriptor("icons/cluster.png"); //$NON-NLS-1$
-			case AbstractObject.OBJECT_NODE:
-				return Activator.getImageDescriptor("icons/node.png"); //$NON-NLS-1$
-			case AbstractObject.OBJECT_ACCESSPOINT:
-				return Activator.getImageDescriptor("icons/access_point.png"); //$NON-NLS-1$
-			case AbstractObject.OBJECT_INTERFACE:
-				return Activator.getImageDescriptor("icons/interface.png"); //$NON-NLS-1$
-			case AbstractObject.OBJECT_NETWORKSERVICE:
-				return Activator.getImageDescriptor("icons/network_service.png"); //$NON-NLS-1$
-			case AbstractObject.OBJECT_MOBILEDEVICE:
-				return Activator.getImageDescriptor("icons/mobile_device.png"); //$NON-NLS-1$
-			case AbstractObject.OBJECT_CONDITION:
-				return Activator.getImageDescriptor("icons/condition.gif"); //$NON-NLS-1$
+         case AbstractObject.OBJECT_SLMCHECK:
+            return Activator.getImageDescriptor(((ServiceCheck)object).isTemplate() ? "icons/service_check_template.gif" : "icons/service_check.gif"); //$NON-NLS-1$ //$NON-NLS-2$
+         case AbstractObject.OBJECT_SUBNET:
+            return Activator.getImageDescriptor("icons/subnet.png"); //$NON-NLS-1$
+         case AbstractObject.OBJECT_TEMPLATE:
+            return Activator.getImageDescriptor("icons/template.png"); //$NON-NLS-1$
+         case AbstractObject.OBJECT_TEMPLATEGROUP:
+            return Activator.getImageDescriptor("icons/template_group.png"); //$NON-NLS-1$
 			case AbstractObject.OBJECT_TEMPLATEROOT:
 				return Activator.getImageDescriptor("icons/template_root.png"); //$NON-NLS-1$
-			case AbstractObject.OBJECT_TEMPLATEGROUP:
-				return Activator.getImageDescriptor("icons/template_group.png"); //$NON-NLS-1$
-			case AbstractObject.OBJECT_TEMPLATE:
-				return Activator.getImageDescriptor("icons/template.png"); //$NON-NLS-1$
-			case AbstractObject.OBJECT_POLICYROOT:
-				return Activator.getImageDescriptor("icons/policy_root.gif"); //$NON-NLS-1$
-			case AbstractObject.OBJECT_POLICYGROUP:
-				return Activator.getImageDescriptor("icons/policy_group.png"); //$NON-NLS-1$
-			case AbstractObject.OBJECT_AGENTPOLICY:
-			case AbstractObject.OBJECT_AGENTPOLICY_CONFIG:
-			case AbstractObject.OBJECT_AGENTPOLICY_LOGPARSER:
-				return Activator.getImageDescriptor("icons/policy.png"); //$NON-NLS-1$
-			case AbstractObject.OBJECT_NETWORKMAP:
-				return Activator.getImageDescriptor("icons/netmap.png"); //$NON-NLS-1$
-			case AbstractObject.OBJECT_NETWORKMAPGROUP:
-				return Activator.getImageDescriptor("icons/netmap_group.png"); //$NON-NLS-1$
-			case AbstractObject.OBJECT_NETWORKMAPROOT:
-				return Activator.getImageDescriptor("icons/netmap_root.gif"); //$NON-NLS-1$
-			case AbstractObject.OBJECT_DASHBOARD:
-				return Activator.getImageDescriptor("icons/dashboard.gif"); //$NON-NLS-1$
-		        case AbstractObject.OBJECT_DASHBOARDGROUP:
-            			return Activator.getImageDescriptor("icons/dashboard_group.png"); //$NON-NLS-1$
-			case AbstractObject.OBJECT_DASHBOARDROOT:
-				return Activator.getImageDescriptor("icons/dashboard_root.gif"); //$NON-NLS-1$
-			case AbstractObject.OBJECT_BUSINESSSERVICEROOT:
-			case AbstractObject.OBJECT_BUSINESSSERVICE:
-				return Activator.getImageDescriptor("icons/business_service.png"); //$NON-NLS-1$
-			case AbstractObject.OBJECT_NODELINK:
-				return Activator.getImageDescriptor("icons/node_link.png"); //$NON-NLS-1$
-			case AbstractObject.OBJECT_SLMCHECK:
-				return Activator.getImageDescriptor(((ServiceCheck)object).isTemplate() ? "icons/service_check_template.gif" : "icons/service_check.gif"); //$NON-NLS-1$ //$NON-NLS-2$
          case AbstractObject.OBJECT_VPNCONNECTOR:
             return Activator.getImageDescriptor("icons/vpn.png"); //$NON-NLS-1$
+         case AbstractObject.OBJECT_ZONE:
+            return Activator.getImageDescriptor("icons/zone.gif"); //$NON-NLS-1$
 			default:
 				return SharedIcons.UNKNOWN_OBJECT;
 		}

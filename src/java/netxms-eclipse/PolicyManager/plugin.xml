@@ -94,6 +94,7 @@
       <view
             allowMultiple="true"
             class="org.netxms.ui.eclipse.policymanager.views.ConfigPolicyEditor"
+            icon="icons/config_policy.gif"
             id="org.netxms.ui.eclipse.policymanager.views.ConfigPolicyEditor"
             name="Agent Policy Config Editor"
             restorable="true">
@@ -101,10 +102,18 @@
       <view
             allowMultiple="true"
             class="org.netxms.ui.eclipse.policymanager.views.LogParserPolicyEditor"
+            icon="icons/log_parser_policy.gif"
             id="org.netxms.ui.eclipse.policymanager.views.LogParserPolicyEditor"
             name="Agent Policy Log Parser Editor"
             restorable="true">
       </view>
+   </extension>
+   <extension
+         point="org.netxms.ui.eclipse.objectbrowser.objectOpenHandlers">
+      <handler
+            class="org.netxms.ui.eclipse.policymanager.PolicyOpenHandler"
+            enabledFor="org.netxms.client.objects.AgentPolicy">
+      </handler>
    </extension>
 
 </plugin>
