@@ -232,6 +232,11 @@ typedef int bool;
 #define HAVE_WCSTOULL           1
 #endif
 
+#define HAVE_TOUPPER            1
+#define HAVE_TOWUPPER           1
+#define HAVE_TOLOWER            1
+#define HAVE_TOWLOWER           1
+
 #define HAVE_SNPRINTF           1
 #define HAVE_VSNPRINTF          1
 
