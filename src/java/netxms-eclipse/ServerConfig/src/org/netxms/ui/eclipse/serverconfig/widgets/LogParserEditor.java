@@ -118,7 +118,7 @@ public class LogParserEditor extends Composite
 				switch(currentTab)
 				{
 					case TAB_BUILDER:
-						xml = buildParserXml();
+						xml = (parser != null) ? buildParserXml() : "";
 						break;
 					case TAB_XML:
 						xml = xmlEditor.getText();
@@ -137,7 +137,8 @@ public class LogParserEditor extends Composite
 							updateBuilderFromXml(xmlEditor.getText());
 							break;
 						case TAB_XML:
-							xmlEditor.setText(buildParserXml());
+						   if (parser != null)
+						      xmlEditor.setText(buildParserXml());
 							break;
 						default:
 							break;
@@ -154,6 +155,26 @@ public class LogParserEditor extends Composite
 
 		createForm();
 		createTextEditor();
+	}
+	
+	/**
+	 * Select XML editor
+	 */
+	private void selectXmlEditor()
+	{
+	   CTabItem tab = tabFolder.getSelection();
+	   if ((Integer)tab.getData() == TAB_XML)
+	      return;
+	   
+	   for(CTabItem t : tabFolder.getItems())
+	   {
+	      if ((Integer)t.getData() == TAB_XML)
+	      {
+	         tabFolder.setSelection(t);
+	         currentTab = TAB_XML;
+	         break;
+	      }
+	   }
 	}
 	
 	/**
@@ -485,8 +506,8 @@ public class LogParserEditor extends Composite
 	 */
 	public void setParserXml(String xml)
 	{
+      xmlEditor.setText(xml);
 		updateBuilderFromXml(xml);
-		xmlEditor.setText(xml);
 	}
 	
 	/**
@@ -510,7 +531,9 @@ public class LogParserEditor extends Composite
 		{
 			e.printStackTrace();
 			MessageDialogHelper.openError(getShell(), Messages.get().LogParserEditor_Error, Messages.get().LogParserEditor_InvalidDefinition);
-			parser = new LogParser();
+			parser = null;
+			selectXmlEditor();
+			return;
 		}
 		parser.setSyslogParser(isSyslogParser);
 		
