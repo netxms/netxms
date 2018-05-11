@@ -146,6 +146,8 @@ void LIBNETXMS_EXPORTABLE bswap_array_32(UINT32 *v, int len);
 #endif
 
 /*** toupper/tolower ***/
+#ifdef __cplusplus
+
 #if !HAVE_TOLOWER
 inline char tolower(char c)
 {
@@ -174,6 +176,7 @@ inline WCHAR towupper(WCHAR c)
 }
 #endif
 
+#endif /* __cplusplus */
 
 /*** Serial communications ***/
 #ifdef _WIN32
