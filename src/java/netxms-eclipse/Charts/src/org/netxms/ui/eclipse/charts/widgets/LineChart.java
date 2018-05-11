@@ -1053,10 +1053,10 @@ public class LineChart extends Chart implements HistoricalDataChart
    }
 
    /* (non-Javadoc)
-    * @see org.netxms.ui.eclipse.charts.api.DataChart#setYAxisRange(int, int)
+    * @see org.netxms.ui.eclipse.charts.api.DataChart#setYAxisRange(double, double)
     */
    @Override
-   public void setYAxisRange(int from, int to)
+   public void setYAxisRange(double from, double to)
    {
       getAxisSet().getYAxis(0).setRange(new Range(from, to));
       adjustYAxis = false;

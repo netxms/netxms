@@ -21,6 +21,7 @@
 	NX-1419 (AgentTunnels.ProcessUnbound scheduled task should be hidden)
 	NX-1420 (Do not use unmanaged devices with SNMP for MAC resolving)
 	NX-1421 (Configuration poll for node without SNMP and agent always read ARP cache from all SNMP devices in subnet)
+	NX-1427 (Max manual Y values for graphs limited to 2147483647)
 	NX-1431 ("Don't Fragment" option for ping sub-agent)
 	NX-1433 (LDAP timeout blocks internal user database)
 	NX-1434 (Return from function from within foreach loop in NXSL can cause unexpected runtime error)

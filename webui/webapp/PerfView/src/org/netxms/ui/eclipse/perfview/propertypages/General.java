@@ -387,7 +387,8 @@ public class General extends PropertyPage
 	@Override
 	protected void performApply()
 	{
-		applyChanges(true);
+      if (yAxisRange.validate(true))
+         applyChanges(true);
 	}
 
 	/* (non-Javadoc)
@@ -396,6 +397,9 @@ public class General extends PropertyPage
 	@Override
 	public boolean performOk()
 	{
+	   if (!yAxisRange.validate(true))
+	      return false;
+	   
 		applyChanges(false);
 		return true;
 	}

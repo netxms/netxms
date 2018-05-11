@@ -85,10 +85,10 @@ public class ChartConfig
    protected boolean autoScale = true;
    
    @Element(required = false)
-   protected int minYScaleValue = 0;
+   protected double minYScaleValue = 0;
 
    @Element(required = false)
-   protected int maxYScaleValue = 100;
+   protected double maxYScaleValue = 100;
 
 	@Element(required = false)
 	protected int refreshRate = 30;
@@ -503,7 +503,7 @@ public class ChartConfig
    /**
     * @return Minimal Y scale
     */
-   public int getMinYScaleValue()
+   public double getMinYScaleValue()
    {
       return minYScaleValue;
    }
@@ -511,7 +511,7 @@ public class ChartConfig
    /**
     * @param minYScaleValue The scale value to set
     */
-   public void setMinYScaleValue(int minYScaleValue)
+   public void setMinYScaleValue(double minYScaleValue)
    {
       this.minYScaleValue = minYScaleValue;
    }
@@ -519,7 +519,7 @@ public class ChartConfig
    /**
     * @return Max Y scale
     */
-   public int getMaxYScaleValue()
+   public double getMaxYScaleValue()
    {
       return maxYScaleValue;
    }
@@ -527,7 +527,7 @@ public class ChartConfig
    /**
     * @param maxYScaleValue max Y scale
     */
-   public void setMaxYScaleValue(int maxYScaleValue)
+   public void setMaxYScaleValue(double maxYScaleValue)
    {
       this.maxYScaleValue = maxYScaleValue;
    }

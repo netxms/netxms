@@ -310,6 +310,9 @@ public class AbstractChart extends PropertyPage
       config.setTranslucent(checkTranslucent.getSelection());
 		if(!(config instanceof PieChartConfig))
       {
+	      if (!yAxisRange.validate(true))
+	         return false;
+	      
    		config.setAutoScale(yAxisRange.isAuto());
    		config.setMinYScaleValue(yAxisRange.getMinY());
          config.setMaxYScaleValue(yAxisRange.getMaxY());

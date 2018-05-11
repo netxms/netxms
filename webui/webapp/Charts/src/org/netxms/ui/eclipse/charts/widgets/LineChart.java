@@ -1039,10 +1039,10 @@ public class LineChart extends Chart implements HistoricalDataChart
    }
 
    /* (non-Javadoc)
-    * @see org.netxms.ui.eclipse.charts.api.DataChart#setYAxisRange(int, int)
+    * @see org.netxms.ui.eclipse.charts.api.DataChart#setYAxisRange(double, double)
     */
    @Override
-   public void setYAxisRange(int from, int to)
+   public void setYAxisRange(double from, double to)
    {
       getAxisSet().getYAxis(0).setRange(new Range(from, to));
       adjustYAxis = false;
@@ -1165,11 +1165,10 @@ public class LineChart extends Chart implements HistoricalDataChart
       double dist = Math.sqrt(dx * dx + dy * dy);
       return area2 / dist;
    }
-
-   /**
-    * @param modifyYBase
+   
+   /* (non-Javadoc)
+    * @see org.netxms.ui.eclipse.charts.api.HistoricalDataChart#modifyYBase(boolean)
     */
-   @Override
    public void modifyYBase(boolean modifyYBase)
    {
       this.modifyYBase = modifyYBase;

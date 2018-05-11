@@ -77,10 +77,10 @@ public abstract class TableComparisonChartConfig extends DashboardElementConfig
    private boolean autoScale = true;
    
    @Element(required = false)
-   private int minYScaleValue = 0;
+   private double minYScaleValue = 0;
 
    @Element(required = false)
-   private int maxYScaleValue = 100;
+   private double maxYScaleValue = 100;
 
    @Element(required = false)
    private boolean modifyYBase = false;
@@ -280,7 +280,7 @@ public abstract class TableComparisonChartConfig extends DashboardElementConfig
 	/**
     * @return the minYScaleValue
     */
-   public int getMinYScaleValue()
+   public double getMinYScaleValue()
    {
       return minYScaleValue;
    }
@@ -288,7 +288,7 @@ public abstract class TableComparisonChartConfig extends DashboardElementConfig
    /**
     * @param minYScaleValue the minYScaleValue to set
     */
-   public void setMinYScaleValue(int minYScaleValue)
+   public void setMinYScaleValue(double minYScaleValue)
    {
       this.minYScaleValue = minYScaleValue;
    }
@@ -296,7 +296,7 @@ public abstract class TableComparisonChartConfig extends DashboardElementConfig
    /**
     * @return the maxYScaleValue
     */
-   public int getMaxYScaleValue()
+   public double getMaxYScaleValue()
    {
       return maxYScaleValue;
    }
@@ -304,16 +304,22 @@ public abstract class TableComparisonChartConfig extends DashboardElementConfig
    /**
     * @param maxYScaleValue the maxYScaleValue to set
     */
-   public void setMaxYScaleValue(int maxYScaleValue)
+   public void setMaxYScaleValue(double maxYScaleValue)
    {
       this.maxYScaleValue = maxYScaleValue;
    }
    
+   /**
+    * @return
+    */
    public boolean isAutoScale()
    {
       return autoScale;
    }
 
+   /**
+    * @param autoScale
+    */
    public void setAutoScale(boolean autoScale)
    {
       this.autoScale = autoScale;

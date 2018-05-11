@@ -19,16 +19,23 @@
 package org.netxms.ui.eclipse.perfview.widgets;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Group;
+import org.eclipse.swt.widgets.Text;
 import org.netxms.ui.eclipse.perfview.Messages;
-import org.netxms.ui.eclipse.widgets.LabeledSpinner;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
+import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
  * Control group to edit Y axis range settings in chart
@@ -38,8 +45,9 @@ public class YAxisRangeEditor extends Composite
    private Button radioAuto;
    private Button radioManual;
    private Button checkYBase;
-   private LabeledSpinner from;
-   private LabeledSpinner to;
+   private LabeledText from;
+   private LabeledText to;
+   private Color errorBackground;
    
    /**
     * @param parent
@@ -71,20 +79,18 @@ public class YAxisRangeEditor extends Composite
       radioManual = new Button(group, SWT.RADIO);
       radioManual.setText(Messages.get().YAxisRangeEditor_Manual);
       
-      from = new LabeledSpinner(group, SWT.NONE);
-      from.setRange(Integer.MIN_VALUE, Integer.MAX_VALUE);
+      from = new LabeledText(group, SWT.NONE);
       from.setLabel(Messages.get().YAxisRangeEditor_From);
-      from.setSelection(0);
+      from.setText("0");
       gd = new GridData();
       gd.verticalAlignment = SWT.BOTTOM;
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       from.setLayoutData(gd);
 
-      to = new LabeledSpinner(group, SWT.NONE);
-      to.setRange(Integer.MIN_VALUE, Integer.MAX_VALUE);
+      to = new LabeledText(group, SWT.NONE);
       to.setLabel(Messages.get().YAxisRangeEditor_To);
-      to.setSelection(100);
+      to.setText("100");
       gd = new GridData();
       gd.verticalAlignment = SWT.BOTTOM;
       gd.horizontalAlignment = SWT.FILL;
@@ -101,6 +107,33 @@ public class YAxisRangeEditor extends Composite
       radioAuto.addSelectionListener(s);
       radioManual.addSelectionListener(s);
       
+      errorBackground = new Color(getDisplay(), 255, 64, 64);
+      addDisposeListener(new DisposeListener() {
+         @Override
+         public void widgetDisposed(DisposeEvent e)
+         {
+            errorBackground.dispose();
+         }
+      });
+      
+      final ModifyListener inputValidator = new ModifyListener() {
+         @Override
+         public void modifyText(ModifyEvent e)
+         {
+            try
+            {
+               Double.parseDouble(((Text)e.widget).getText().trim());
+               ((Text)e.widget).setBackground(null);
+            }
+            catch(NumberFormatException ex)
+            {
+               ((Text)e.widget).setBackground(errorBackground);
+            }
+         }
+      };
+      from.getTextControl().addModifyListener(inputValidator);
+      to.getTextControl().addModifyListener(inputValidator);
+      
       onModeChange();
    }
 
@@ -110,9 +143,33 @@ public class YAxisRangeEditor extends Composite
    private void onModeChange()
    {
       boolean auto = radioAuto.getSelection();
+      checkYBase.setEnabled(auto);
       from.setEnabled(!auto);
       to.setEnabled(!auto);
-      checkYBase.setEnabled(auto);
+      if (auto)
+      {
+         from.getTextControl().setBackground(null);
+         to.getTextControl().setBackground(null);
+      }
+      else
+      {
+         try
+         {
+            Double.parseDouble(from.getText().trim());
+         }
+         catch(NumberFormatException ex)
+         {
+            from.getTextControl().setBackground(errorBackground);
+         }
+         try
+         {
+            Double.parseDouble(to.getText().trim());
+         }
+         catch(NumberFormatException ex)
+         {
+            to.getTextControl().setBackground(errorBackground);
+         }
+      }
    }
    
    /**
@@ -122,13 +179,13 @@ public class YAxisRangeEditor extends Composite
     * @param minY
     * @param maxY
     */
-   public void setSelection(boolean auto, boolean modifyYBase, int minY, int maxY)
+   public void setSelection(boolean auto, boolean modifyYBase, double minY, double maxY)
    {
       radioAuto.setSelection(auto);
       checkYBase.setSelection((auto && modifyYBase));
       radioManual.setSelection(!auto);
-      from.setSelection(minY);
-      to.setSelection(maxY);
+      from.setText(Double.toString(minY));
+      to.setText(Double.toString(maxY));
       onModeChange();
    }
    
@@ -151,16 +208,55 @@ public class YAxisRangeEditor extends Composite
    /**
     * @return
     */
-   public int getMinY()
+   public double getMinY()
    {
-      return from.getSelection();
+      try
+      {
+         return Double.parseDouble(from.getText().trim());
+      }
+      catch(NumberFormatException e)
+      {
+         return 0;
+      }
    }
    
    /**
     * @return
     */
-   public int getMaxY()
+   public double getMaxY()
    {
-      return to.getSelection();
+      try
+      {
+         return Double.parseDouble(to.getText().trim());
+      }
+      catch(NumberFormatException e)
+      {
+         return 100;
+      }
+   }
+   
+   /**
+    * Validate entered values
+    * 
+    * @param showErrorMessage if true error message will be shown to the user
+    * @return true if values are valid
+    */
+   public boolean validate(boolean showErrorMessage)
+   {
+      if (isAuto())
+         return true;
+      
+      try
+      {
+         Double.parseDouble(from.getText().trim());
+         Double.parseDouble(to.getText().trim());
+         return true;
+      }
+      catch(NumberFormatException e)
+      {
+         if (showErrorMessage)
+            MessageDialogHelper.openWarning(getShell(), "Warning", "Y axis range is invalid. Please enter correct values.");
+         return false;
+      }
    }
 }

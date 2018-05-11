@@ -71,8 +71,8 @@ public abstract class GenericBirtChart extends GenericChart implements PaintList
 	private Set<String> errors = new HashSet<String>(0);
 	private Image errorImage = null;
 	protected boolean autoscale = true;
-	protected int from;
-	protected int to;
+	protected double from;
+	protected double to;
 	
 	/**
 	 * Create chart widget
@@ -418,20 +418,24 @@ public abstract class GenericBirtChart extends GenericChart implements PaintList
 			y += h + 5;
 		}
 	}
-	
-	  @Override
-	   public void setYAxisRange(int from, int to)
-	   {
-	     if(from == to)
-	         return;
-	      if(from > to)
-	      {
-	         int tmp = to;
-	         to = from;
-	         from = tmp;
-	      }
-	     autoscale = false;
-	     this.from = from;
-	     this.to = to;
-	   }
+
+   /* (non-Javadoc)
+    * @see org.netxms.ui.eclipse.charts.api.DataChart#setYAxisRange(double, double)
+    */
+   @Override
+   public void setYAxisRange(double from, double to)
+   {
+      if (from == to)
+         return;
+      
+      if (from > to)
+      {
+         double tmp = to;
+         to = from;
+         from = tmp;
+      }
+      autoscale = false;
+      this.from = from;
+      this.to = to;
+   }
 }
