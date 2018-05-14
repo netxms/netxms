@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2018 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -2413,4 +2413,93 @@ bool NXCORE_EXPORTABLE CreateObjectAccessSnapshot(UINT32 userId, int objClass)
    }
    DBConnectionPoolReleaseConnection(hdb);
    return success;
+}
+
+/**
+ * Filter object
+ */
+static int FilterObject(NXSL_VM *vm, NetObj *object)
+{
+   vm->setGlobalVariable(_T("$object"), object->createNXSLObject());
+   vm->setContextObject(object->createNXSLObject());
+   if (!vm->run())
+      return -1;
+   return vm->getResult()->getValueAsBoolean() ? 1 : 0;
+}
+
+/**
+ * Query objects
+ */
+ObjectArray<NetObj> *QueryObjects(const TCHAR *query, UINT32 userId, TCHAR *errorMessage, size_t errorMessageLen)
+{
+   NXSL_VM *vm = NXSLCompileAndCreateVM(query, errorMessage, errorMessageLen, new NXSL_ServerEnv());
+   if (vm == NULL)
+      return NULL;
+
+   // Set class constants
+   vm->addConstant(_T("ACCESSPOINT"), new NXSL_Value(OBJECT_ACCESSPOINT));
+   vm->addConstant(_T("AGENTPOLICY"), new NXSL_Value(OBJECT_AGENTPOLICY));
+   vm->addConstant(_T("AGENTPOLICY_CONFIG"), new NXSL_Value(OBJECT_AGENTPOLICY_CONFIG));
+   vm->addConstant(_T("AGENTPOLICY_LOGPARSER"), new NXSL_Value(OBJECT_AGENTPOLICY_LOGPARSER));
+   vm->addConstant(_T("BUSINESSSERVICE"), new NXSL_Value(OBJECT_BUSINESSSERVICE));
+   vm->addConstant(_T("BUSINESSSERVICEROOT"), new NXSL_Value(OBJECT_BUSINESSSERVICEROOT));
+   vm->addConstant(_T("CHASSIS"), new NXSL_Value(OBJECT_CHASSIS));
+   vm->addConstant(_T("CLUSTER"), new NXSL_Value(OBJECT_CLUSTER));
+   vm->addConstant(_T("CONDITION"), new NXSL_Value(OBJECT_CONDITION));
+   vm->addConstant(_T("CONTAINER"), new NXSL_Value(OBJECT_CONTAINER));
+   vm->addConstant(_T("DASHBOARD"), new NXSL_Value(OBJECT_DASHBOARD));
+   vm->addConstant(_T("DASHBOARDGROUP"), new NXSL_Value(OBJECT_DASHBOARDGROUP));
+   vm->addConstant(_T("DASHBOARDROOT"), new NXSL_Value(OBJECT_DASHBOARDROOT));
+   vm->addConstant(_T("INTERFACE"), new NXSL_Value(OBJECT_INTERFACE));
+   vm->addConstant(_T("MOBILEDEVICE"), new NXSL_Value(OBJECT_MOBILEDEVICE));
+   vm->addConstant(_T("NETWORK"), new NXSL_Value(OBJECT_NETWORK));
+   vm->addConstant(_T("NETWORKMAP"), new NXSL_Value(OBJECT_NETWORKMAP));
+   vm->addConstant(_T("NETWORKMAPGROUP"), new NXSL_Value(OBJECT_NETWORKMAPGROUP));
+   vm->addConstant(_T("NETWORKMAPROOT"), new NXSL_Value(OBJECT_NETWORKMAPROOT));
+   vm->addConstant(_T("NETWORKSERVICE"), new NXSL_Value(OBJECT_NETWORKSERVICE));
+   vm->addConstant(_T("NODE"), new NXSL_Value(OBJECT_NODE));
+   vm->addConstant(_T("NODELINK"), new NXSL_Value(OBJECT_NODELINK));
+   vm->addConstant(_T("POLICYGROUP"), new NXSL_Value(OBJECT_POLICYGROUP));
+   vm->addConstant(_T("POLICYROOT"), new NXSL_Value(OBJECT_POLICYROOT));
+   vm->addConstant(_T("RACK"), new NXSL_Value(OBJECT_RACK));
+   vm->addConstant(_T("SERVICEROOT"), new NXSL_Value(OBJECT_SERVICEROOT));
+   vm->addConstant(_T("SLMCHECK"), new NXSL_Value(OBJECT_SLMCHECK));
+   vm->addConstant(_T("SUBNET"), new NXSL_Value(OBJECT_SUBNET));
+   vm->addConstant(_T("TEMPLATE"), new NXSL_Value(OBJECT_TEMPLATE));
+   vm->addConstant(_T("TEMPLATEGROUP"), new NXSL_Value(OBJECT_TEMPLATEGROUP));
+   vm->addConstant(_T("TEMPLATEROOT"), new NXSL_Value(OBJECT_TEMPLATEROOT));
+   vm->addConstant(_T("VPNCONNECTOR"), new NXSL_Value(OBJECT_VPNCONNECTOR));
+   vm->addConstant(_T("ZONE"), new NXSL_Value(OBJECT_ZONE));
+
+   ObjectArray<NetObj> *objects = g_idxObjectById.getObjects(true);
+   ObjectArray<NetObj> *resultSet = new ObjectArray<NetObj>(64, 64, false);
+   for(int i = 0; i < objects->size(); i++)
+   {
+      NetObj *curr = objects->get(i);
+      if (!curr->checkAccessRights(userId, OBJECT_ACCESS_READ))
+         continue;
+
+      int rc = FilterObject(vm, curr);
+      if (rc < 0)
+      {
+         _tcslcpy(errorMessage, vm->getErrorText(), errorMessageLen);
+         for(i = 0; i < resultSet->size(); i++)
+            resultSet->get(i)->decRefCount();
+         delete_and_null(resultSet);
+         break;
+      }
+
+      if (rc > 0)
+      {
+         curr->incRefCount();
+         resultSet->add(curr);
+      }
+   }
+
+   delete vm;
+   for(int i = 0; i < objects->size(); i++)
+      objects->get(i)->decRefCount();
+   delete objects;
+
+   return resultSet;
 }

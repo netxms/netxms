@@ -168,6 +168,7 @@ DEFINE_THREAD_STARTER(openHelpdeskIssue)
 DEFINE_THREAD_STARTER(processConsoleCommand)
 DEFINE_THREAD_STARTER(queryAgentTable)
 DEFINE_THREAD_STARTER(queryL2Topology)
+DEFINE_THREAD_STARTER(queryObjects)
 DEFINE_THREAD_STARTER(queryParameter)
 DEFINE_THREAD_STARTER(queryServerLog)
 DEFINE_THREAD_STARTER(sendMib)
@@ -647,10 +648,13 @@ void ClientSession::processingThread()
             sendConfigForAgent(pMsg);
             break;
          case CMD_GET_OBJECTS:
-            sendAllObjects(pMsg);
+            getObjects(pMsg);
             break;
          case CMD_GET_SELECTED_OBJECTS:
-            sendSelectedObjects(pMsg);
+            getSelectedObjects(pMsg);
+            break;
+         case CMD_QUERY_OBJECTS:
+            CALL_IN_NEW_THREAD(queryObjects, pMsg);
             break;
          case CMD_GET_CONFIG_VARLIST:
             getConfigurationVariables(pMsg->getId());
@@ -2243,19 +2247,19 @@ static bool SessionObjectFilter(NetObj *object, void *data)
 /**
  * Send all objects to client
  */
-void ClientSession::sendAllObjects(NXCPMessage *pRequest)
+void ClientSession::getObjects(NXCPMessage *request)
 {
    NXCPMessage msg;
 
    // Send confirmation message
    msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(pRequest->getId());
+   msg.setId(request->getId());
    msg.setField(VID_RCC, RCC_SUCCESS);
    sendMessage(&msg);
    msg.deleteAllFields();
 
    // Change "sync comments" flag
-   if (pRequest->getFieldAsUInt16(VID_SYNC_COMMENTS))
+   if (request->getFieldAsUInt16(VID_SYNC_COMMENTS))
       m_dwFlags |= CSF_SYNC_OBJECT_COMMENTS;
    else
       m_dwFlags &= ~CSF_SYNC_OBJECT_COMMENTS;
@@ -2266,7 +2270,7 @@ void ClientSession::sendAllObjects(NXCPMessage *pRequest)
    // Send objects, one per message
    SessionObjectFilterData data;
    data.session = this;
-   data.baseTimeStamp = pRequest->getFieldAsTime(VID_TIMESTAMP);
+   data.baseTimeStamp = request->getFieldAsTime(VID_TIMESTAMP);
 	ObjectArray<NetObj> *objects = g_idxObjectById.getObjects(true, SessionObjectFilter, &data);
    MutexLock(m_mutexSendObjects);
 	for(int i = 0; i < objects->size(); i++)
@@ -2298,28 +2302,28 @@ void ClientSession::sendAllObjects(NXCPMessage *pRequest)
 /**
  * Send selected objects to client
  */
-void ClientSession::sendSelectedObjects(NXCPMessage *pRequest)
+void ClientSession::getSelectedObjects(NXCPMessage *request)
 {
    NXCPMessage msg;
 
    // Send confirmation message
    msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(pRequest->getId());
+   msg.setId(request->getId());
    msg.setField(VID_RCC, RCC_SUCCESS);
    sendMessage(&msg);
    msg.deleteAllFields();
 
    // Change "sync comments" flag
-   if (pRequest->getFieldAsBoolean(VID_SYNC_COMMENTS))
+   if (request->getFieldAsBoolean(VID_SYNC_COMMENTS))
       m_dwFlags |= CSF_SYNC_OBJECT_COMMENTS;
    else
       m_dwFlags &= ~CSF_SYNC_OBJECT_COMMENTS;
 
-   UINT32 dwTimeStamp = pRequest->getFieldAsUInt32(VID_TIMESTAMP);
-	UINT32 numObjects = pRequest->getFieldAsUInt32(VID_NUM_OBJECTS);
+   UINT32 dwTimeStamp = request->getFieldAsUInt32(VID_TIMESTAMP);
+	UINT32 numObjects = request->getFieldAsUInt32(VID_NUM_OBJECTS);
 	UINT32 *objects = (UINT32 *)malloc(sizeof(UINT32) * numObjects);
-	pRequest->getFieldAsInt32Array(VID_OBJECT_LIST, numObjects, objects);
-	UINT32 options = pRequest->getFieldAsUInt16(VID_FLAGS);
+	request->getFieldAsInt32Array(VID_OBJECT_LIST, numObjects, objects);
+	UINT32 options = request->getFieldAsUInt16(VID_FLAGS);
 
    MutexLock(m_mutexSendObjects);
 
@@ -2351,7 +2355,7 @@ void ClientSession::sendSelectedObjects(NXCPMessage *pRequest)
 	}
 
    MutexUnlock(m_mutexSendObjects);
-	safe_free(objects);
+	free(objects);
 
 	if (options & OBJECT_SYNC_DUAL_CONFIRM)
 	{
@@ -2359,6 +2363,37 @@ void ClientSession::sendSelectedObjects(NXCPMessage *pRequest)
 		msg.setField(VID_RCC, RCC_SUCCESS);
       sendMessage(&msg);
 	}
+}
+
+/**
+ * Query objects
+ */
+void ClientSession::queryObjects(NXCPMessage *request)
+{
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+
+   TCHAR *query = request->getFieldAsString(VID_QUERY);
+   TCHAR errorMessage[1024];
+   ObjectArray<NetObj> *objects = QueryObjects(query, m_dwUserId, errorMessage, 1024);
+   if (objects != NULL)
+   {
+      UINT32 *idList = new UINT32[objects->size()];
+      for(int i = 0; i < objects->size(); i++)
+      {
+         idList[i] = objects->get(i)->getId();
+         objects->get(i)->decRefCount();
+      }
+      msg.setFieldFromInt32Array(VID_OBJECT_LIST, objects->size(), idList);
+      delete idList;
+      delete objects;
+   }
+   else
+   {
+      msg.setField(VID_RCC, RCC_NXSL_EXECUTION_ERROR);
+      msg.setField(VID_ERROR_TEXT, errorMessage);
+   }
+
+   sendMessage(&msg);
 }
 
 /**

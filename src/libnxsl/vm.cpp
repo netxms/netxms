@@ -146,6 +146,7 @@ NXSL_VM::NXSL_VM(NXSL_Environment *env, NXSL_Storage *storage)
    m_constants = new NXSL_VariableSystem(true);
    m_globals = new NXSL_VariableSystem(false);
    m_locals = NULL;
+   m_context = NULL;
    m_functions = NULL;
    m_modules = new ObjectArray<NXSL_Module>(4, 4, true);
    m_dwSubLevel = 0;    // Level of current subroutine
@@ -179,6 +180,7 @@ NXSL_VM::~NXSL_VM()
    delete m_constants;
    delete m_globals;
    delete m_locals;
+   delete m_context;
 
    delete m_localStorage;
 
@@ -264,10 +266,9 @@ bool NXSL_VM::run(int argc, NXSL_Value **argv,
  * Returns true on success and false on error
  */
 bool NXSL_VM::run(ObjectArray<NXSL_Value> *args,
-                  NXSL_VariableSystem *pUserLocals, NXSL_VariableSystem **ppGlobals,
-                  NXSL_VariableSystem *pConstants, const TCHAR *entryPoint)
+                  NXSL_VariableSystem *pUserLocals, NXSL_VariableSystem **globals,
+                  NXSL_VariableSystem *constants, const TCHAR *entryPoint)
 {
-   NXSL_VariableSystem *pSavedGlobals, *pSavedConstants = NULL;
    NXSL_Value *pValue;
    TCHAR szBuffer[32];
 
@@ -290,10 +291,10 @@ bool NXSL_VM::run(ObjectArray<NXSL_Value> *args,
    }
 
    // Preserve original global variables and constants
-   pSavedGlobals = new NXSL_VariableSystem(m_globals);
-   pSavedConstants = new NXSL_VariableSystem(m_constants);
-   if (pConstants != NULL)
-      m_constants->merge(pConstants);
+   NXSL_VariableSystem *savedGlobals = new NXSL_VariableSystem(m_globals);
+   NXSL_VariableSystem *savedConstants = new NXSL_VariableSystem(m_constants);
+   if (constants != NULL)
+      m_constants->merge(constants);
 
 	m_env->configureVM(this);
 
@@ -342,17 +343,17 @@ resume:
    }
 
    // Restore global variables
-   if (ppGlobals == NULL)
+   if (globals == NULL)
 	   delete m_globals;
 	else
-		*ppGlobals = m_globals;
-   m_globals = pSavedGlobals;
+		*globals = m_globals;
+   m_globals = savedGlobals;
 
 	// Restore constants
-	if (pSavedConstants != NULL)
+	if (savedConstants != NULL)
 	{
 		delete m_constants;
-		m_constants = pSavedConstants;
+		m_constants = savedConstants;
 	}
 
    // Cleanup
@@ -434,20 +435,29 @@ void NXSL_VM::setGlobalVariable(const TCHAR *pszName, NXSL_Value *pValue)
 /**
  * Find variable
  */
-NXSL_Variable *NXSL_VM::findVariable(const TCHAR *pszName)
+NXSL_Variable *NXSL_VM::findVariable(const TCHAR *name)
 {
-   NXSL_Variable *pVar;
+   NXSL_Variable *var = m_constants->find(name);
+   if (var != NULL)
+      return var;
 
-   pVar = m_constants->find(pszName);
-   if (pVar == NULL)
+   var = m_globals->find(name);
+   if (var != NULL)
+      return var;
+
+   if (m_context != NULL)
    {
-      pVar = m_globals->find(pszName);
-      if (pVar == NULL)
+      NXSL_Object *object = m_context->getValueAsObject();
+      NXSL_Value *value = object->getClass()->getAttr(object, name);
+      if (value != NULL)
       {
-         pVar = m_locals->find(pszName);
+         var = m_globals->create(name, value);
+         return var;
       }
    }
-   return pVar;
+
+   var = m_locals->find(name);
+   return var;
 }
 
 /**
@@ -992,6 +1002,18 @@ void NXSL_VM::execute()
             error(NXSL_ERR_DATA_STACK_UNDERFLOW);
          }
          break;
+      case OPCODE_CBLOCK:
+         if (m_dwSubLevel < CONTROL_STACK_LIMIT)
+         {
+            m_dwSubLevel++;
+            m_codeStack->push(CAST_TO_POINTER(cp->m_operand.m_dwAddr, void *));
+            m_codeStack->push(NULL);
+         }
+         else
+         {
+            error(NXSL_ERR_CONTROL_STACK_OVERFLOW);
+         }
+         break;
       case OPCODE_RET_NULL:
          m_dataStack->push(new NXSL_Value);
          /* no break */
@@ -999,8 +1021,12 @@ void NXSL_VM::execute()
          if (m_dwSubLevel > 0)
          {
             m_dwSubLevel--;
-            delete m_locals;
-            m_locals = (NXSL_VariableSystem *)m_codeStack->pop();
+            NXSL_VariableSystem *savedLocals = static_cast<NXSL_VariableSystem*>(m_codeStack->pop());
+            if (savedLocals != NULL)
+            {
+               delete m_locals;
+               m_locals = savedLocals;
+            }
             dwNext = CAST_FROM_POINTER(m_codeStack->pop(), UINT32);
          }
          else
@@ -2308,5 +2334,22 @@ void NXSL_VM::getHashMapAttribute(NXSL_HashMap *m, const TCHAR *attribute, bool 
          m_dataStack->push(new NXSL_Value());
       else
          error(NXSL_ERR_NO_SUCH_ATTRIBUTE);
+   }
+}
+
+/**
+ * Set context object
+ */
+void NXSL_VM::setContextObject(NXSL_Value *value)
+{
+   delete m_context;
+   if (value->isObject())
+   {
+      m_context = value;
+   }
+   else
+   {
+      m_context = NULL;
+      delete value;
    }
 }

@@ -498,6 +498,7 @@ private:
    DECLARE_THREAD_STARTER(processConsoleCommand)
    DECLARE_THREAD_STARTER(queryAgentTable)
    DECLARE_THREAD_STARTER(queryL2Topology)
+   DECLARE_THREAD_STARTER(queryObjects)
    DECLARE_THREAD_STARTER(queryParameter)
    DECLARE_THREAD_STARTER(queryServerLog)
    DECLARE_THREAD_STARTER(sendMib)
@@ -519,8 +520,9 @@ private:
    void onFileUpload(BOOL bSuccess);
    void sendServerInfo(UINT32 dwRqId);
    void login(NXCPMessage *pRequest);
-   void sendAllObjects(NXCPMessage *pRequest);
-   void sendSelectedObjects(NXCPMessage *pRequest);
+   void getObjects(NXCPMessage *request);
+   void getSelectedObjects(NXCPMessage *request);
+   void queryObjects(NXCPMessage *request);
    void getConfigurationVariables(UINT32 dwRqId);
    void getPublicConfigurationVariable(NXCPMessage *request);
    void setDefaultConfigurationVariableValues(NXCPMessage *pRequest);

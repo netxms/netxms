@@ -88,6 +88,7 @@ public class NXSLProposalProcessor implements IContentAssistProcessor
 		addProposals(list, prefix, offset, CONSTANT, BUILTIN_CONSTANTS);
 		addProposals(list, prefix, offset, GLOBAL_VARIABLE, scriptEditor.getVariables());
 		addProposals(list, prefix, offset, FUNCTION, scriptEditor.getFunctions());
+      addProposals(list, prefix, offset, CONSTANT, scriptEditor.getConstants());
 		
 		return list.toArray(new ICompletionProposal[list.size()]);
 	}

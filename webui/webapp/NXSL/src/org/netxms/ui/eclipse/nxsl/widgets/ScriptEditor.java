@@ -225,6 +225,22 @@ public class ScriptEditor extends Composite
 	{
 	}
 
+   /**
+    * @param constants new constant set
+    */
+   public void setConstants(Set<String> constants)
+   {
+   }
+
+   /**
+    * Add constants
+    * 
+    * @param cc constants to add
+    */
+   public void addConstants(Collection<String> cc)
+   {
+   }
+
 	/**
 	 * @return the functionsCache
 	 */
@@ -238,8 +254,16 @@ public class ScriptEditor extends Composite
 	 */
 	public String[] getVariables()
 	{
-		return new String[0];
+      return new String[0];
 	}
+
+   /**
+    * @return constants cache
+    */
+   public String[] getConstants()
+   {
+      return new String[0];
+   }
 
 	/**
 	 * Get icon for given autocompletion proposal type. Proposal types defined in NXSLProposalProcessor.

@@ -131,9 +131,9 @@ struct NXSL_Program;
 extern "C" {
 #endif
 
-NXSL_Program LIBNXSL_EXPORTABLE *NXSLCompile(const TCHAR *pszSource, TCHAR *pszError, int nBufSize, int *errorLineNumber);
-NXSL_VM LIBNXSL_EXPORTABLE *NXSLCompileAndCreateVM(const TCHAR *pszSource, TCHAR *pszError, int nBufSize, NXSL_Environment *env);
-TCHAR LIBNXSL_EXPORTABLE *NXSLLoadFile(const TCHAR *pszFileName, UINT32 *pdwFileSize);
+NXSL_Program LIBNXSL_EXPORTABLE *NXSLCompile(const TCHAR *source, TCHAR *errorMessage, size_t errorMessageLen, int *errorLineNumber);
+NXSL_VM LIBNXSL_EXPORTABLE *NXSLCompileAndCreateVM(const TCHAR *source, TCHAR *errorMessage, size_t errorMessageLen, NXSL_Environment *env);
+TCHAR LIBNXSL_EXPORTABLE *NXSLLoadFile(const TCHAR *fileName, UINT32 *fileSize);
 
 #ifdef __cplusplus
 }

@@ -21,6 +21,7 @@ package org.netxms.ui.eclipse.objectbrowser.views;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Pattern;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -35,6 +36,8 @@ import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.CheckboxTableViewer;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.CTabFolder;
+import org.eclipse.swt.custom.CTabItem;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -61,8 +64,10 @@ import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.base.Glob;
 import org.netxms.base.InetAddressEx;
+import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.ObjectFilter;
+import org.netxms.client.constants.RCC;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.AccessPoint;
@@ -73,7 +78,9 @@ import org.netxms.client.objects.VPNConnector;
 import org.netxms.client.objects.Zone;
 import org.netxms.client.objects.ZoneMember;
 import org.netxms.ui.eclipse.console.resources.GroupMarkers;
+import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
+import org.netxms.ui.eclipse.nxsl.widgets.ScriptEditor;
 import org.netxms.ui.eclipse.objectbrowser.Activator;
 import org.netxms.ui.eclipse.objectbrowser.api.ObjectContextMenu;
 import org.netxms.ui.eclipse.objectbrowser.views.helpers.ObjectSearchResultComparator;
@@ -84,6 +91,7 @@ import org.netxms.ui.eclipse.tools.ComparatorHelper;
 import org.netxms.ui.eclipse.tools.FilteringMenuManager;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.ui.eclipse.widgets.CompositeWithMessageBar;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
@@ -104,6 +112,119 @@ public class ObjectFinder extends ViewPart
    private static final int SEARCH_MODE_NORMAL = 0;
    private static final int SEARCH_MODE_PATTERN = 1;
    private static final int SEARCH_MODE_REGEXP = 2;
+   
+   private static final String[] OBJECT_ATTRIBUTES = 
+      {
+         "adminState",
+         "agentVersion",
+         "alarms", 
+         "alias",
+         "bootTime",
+         "bridgeBaseAddress",
+         "bridgePortNumber",
+         "city",
+         "comments",
+         "components",
+         "country",
+         "customAttributes",
+         "description",
+         "dot1xBackendAuthState",
+         "dot1xPaeAuthState",
+         "driver",
+         "expectedState",
+         "flags",
+         "geolocation",
+         "guid",
+         "id",
+         "ifIndex",
+         "ifType",
+         "ipAddr",
+         "ipAddressList",
+         "ipNetMask",
+         "isAgent",
+         "isBridge",
+         "isCDP",
+         "isExcludedFromTopology",
+         "isLLDP",
+         "isLocalManagement",
+         "isLoopback",
+         "isManuallyCreated",
+         "isPAE",
+         "isPhysicalPort",
+         "isPrinter",
+         "isRouter",
+         "isSMCLP",
+         "isSNMP",
+         "isSONMP",
+         "isSTP",
+         "macAddr",
+         "mapImage",
+         "mtu",
+         "name",
+         "node",
+         "nodes",
+         "operState",
+         "peerInterface",
+         "peerNode",
+         "platformName",
+         "port",
+         "postcode",
+         "proxyNode",
+         "proxyNodeId",
+         "responsibleUsers",
+         "runtimeFlags",
+         "snmpOID",
+         "snmpSysContact",
+         "snmpSysLocation",
+         "snmpSysName",
+         "snmpVersion",
+         "slot",
+         "speed",
+         "status",
+         "streetAddress",
+         "sysDescription",
+         "type",
+         "uin",
+         "zone",
+         "zoneUIN",
+      };
+   private static final String[] OBJECT_CONSTANTS =
+      {
+         "ACCESSPOINT",
+         "AGENTPOLICY",
+         "AGENTPOLICY_CONFIG",
+         "AGENTPOLICY_LOGPARSER",
+         "BUSINESSSERVICE",
+         "BUSINESSSERVICEROOT",
+         "CHASSIS",
+         "CLUSTER",
+         "CONDITION",
+         "CONTAINER",
+         "DASHBOARD",
+         "DASHBOARDGROUP",
+         "DASHBOARDROOT",
+         "INTERFACE",
+         "MOBILEDEVICE",
+         "NETWORK",
+         "NETWORKMAP",
+         "NETWORKMAPGROUP",
+         "NETWORKMAPROOT",
+         "NETWORKSERVICE",
+         "NODE",
+         "NODELINK",
+         "POLICYGROUP",
+         "POLICYROOT",
+         "RACK",
+         "SENSOR",
+         "SERVICEROOT",
+         "SLMCHECK",
+         "SUBNET",
+         "TEMPLATE",
+         "TEMPLATEGROUP",
+         "TEMPLATEROOT",
+         "VPNCONNECTOR",
+         "ZONE"
+      };
    
    private static final List<ObjectClass> OBJECT_CLASSES;
    
@@ -144,6 +265,7 @@ public class ObjectFinder extends ViewPart
    }
    
    private SortableTableViewer results;
+   private CTabFolder tabFolder;
    private LabeledText text;
    private Button radioPlainText;
    private Button radioPattern;
@@ -152,6 +274,8 @@ public class ObjectFinder extends ViewPart
    private CheckboxTableViewer zoneList;
    private Text ipRangeStart;
    private Text ipRangeEnd;
+   private CompositeWithMessageBar queryEditorMessage;
+   private ScriptEditor queryEditor;
    private Action actionStartSearch;
    private Action actionShowObjectDetails;
    private NXCSession session;
@@ -169,11 +293,17 @@ public class ObjectFinder extends ViewPart
       layout.marginHeight = 0;
       parent.setLayout(layout);
 
-      Composite conditionGroup = new Composite(parent, SWT.NONE);
-      conditionGroup.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
+      tabFolder = new CTabFolder(parent, SWT.TOP | SWT.FLAT | SWT.MULTI);
+      tabFolder.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
+      CTabItem filterTab = new CTabItem(tabFolder, SWT.NONE);
+      filterTab.setText("Filter");
+      filterTab.setImage(SharedIcons.IMG_FILTER);
+      
+      Composite conditionGroup = new Composite(tabFolder, SWT.NONE);
       layout = new GridLayout();
       layout.numColumns = session.isZoningEnabled() ? 3 : 2;
       conditionGroup.setLayout(layout);
+      filterTab.setControl(conditionGroup);
       
       /*** Full text search ***/
       Composite fullTextSearchGroup = new Composite(conditionGroup, SWT.NONE);
@@ -333,12 +463,12 @@ public class ObjectFinder extends ViewPart
       ipRangeEnd.addTraverseListener(traverseListener);
       
       /*** Search button ***/
-      Button searchButton = new Button(conditionGroup, SWT.PUSH);
-      searchButton.setText("&Search");
+      Button searchButtonFilter = new Button(conditionGroup, SWT.PUSH);
+      searchButtonFilter.setText("&Search");
       gd = new GridData(SWT.LEFT, SWT.BOTTOM, true, false);
       gd.widthHint = WidgetHelper.BUTTON_WIDTH_HINT;
-      searchButton.setLayoutData(gd);
-      searchButton.addSelectionListener(new SelectionListener() {
+      searchButtonFilter.setLayoutData(gd);
+      searchButtonFilter.addSelectionListener(new SelectionListener() {
          @Override
          public void widgetSelected(SelectionEvent e)
          {
@@ -352,6 +482,45 @@ public class ObjectFinder extends ViewPart
          }
       });
       
+      /*** Query ***/
+      CTabItem queryTab = new CTabItem(tabFolder, SWT.NONE);
+      queryTab.setText("Query");
+      queryTab.setImage(SharedIcons.IMG_FIND);
+      
+      Composite queryArea = new Composite(tabFolder, SWT.NONE);
+      layout = new GridLayout();
+      queryArea.setLayout(layout);
+      queryTab.setControl(queryArea);
+      
+      queryEditorMessage = new CompositeWithMessageBar(queryArea, SWT.BORDER);
+      queryEditorMessage.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+      
+      queryEditor = new ScriptEditor(queryEditorMessage, SWT.NONE, SWT.MULTI, true);
+      queryEditorMessage.setContent(queryEditor);
+      
+      queryEditor.addVariables(Arrays.asList(OBJECT_ATTRIBUTES));
+      queryEditor.addConstants(Arrays.asList(OBJECT_CONSTANTS));
+      
+      Button searchButtonQuery = new Button(queryArea, SWT.PUSH);
+      searchButtonQuery.setText("&Search");
+      gd = new GridData(SWT.LEFT, SWT.BOTTOM, true, false);
+      gd.widthHint = WidgetHelper.BUTTON_WIDTH_HINT;
+      searchButtonQuery.setLayoutData(gd);
+      searchButtonQuery.addSelectionListener(new SelectionListener() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            startQuery();
+         }
+         
+         @Override
+         public void widgetDefaultSelected(SelectionEvent e)
+         {
+            widgetSelected(e);
+         }
+      });
+
+      /*** Result view ***/
       final String[] names = { "ID", "Class", "Name", "IP Address", "Parent", "Zone" };
       final int[] widths = { 90, 120, 300, 250, 300, 200 };
       results = new SortableTableViewer(parent, names, widths, 0, SWT.UP, SWT.MULTI | SWT.FULL_SELECTION);
@@ -377,6 +546,39 @@ public class ObjectFinder extends ViewPart
       activateContext();
       createActions();
       contributeToActionBars();
+      
+      tabFolder.addSelectionListener(new SelectionListener() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            int index = tabFolder.getSelectionIndex();
+            switch(index)
+            {
+               case 0:
+                  text.setFocus();
+                  break;
+               case 1:
+                  queryEditor.setFocus();
+                  break;
+            }
+            settings.put("ObjectFinder.selectedTab", index);
+         }
+         
+         @Override
+         public void widgetDefaultSelected(SelectionEvent e)
+         {
+            widgetSelected(e);
+         }
+      });
+
+      try
+      {
+         tabFolder.setSelection(settings.getInt("ObjectFinder.selectedTab"));
+      }
+      catch(NumberFormatException e)
+      {
+         tabFolder.setSelection(0);
+      }
    }
    
    /**
@@ -402,7 +604,11 @@ public class ObjectFinder extends ViewPart
          @Override
          public void run()
          {
-            startSearch();
+            int i = tabFolder.getSelectionIndex();
+            if (i == 0)
+               startSearch();
+            else if (i == 1)
+               startQuery();
          }
       };
       actionStartSearch.setId("org.netxms.ui.eclipse.objectbrowser.actions.startSearch"); //$NON-NLS-1$
@@ -480,7 +686,64 @@ public class ObjectFinder extends ViewPart
    @Override
    public void setFocus()
    {
-      text.setFocus();
+      switch(tabFolder.getSelectionIndex())
+      {
+         case 0:
+            text.setFocus();
+            break;
+         case 1:
+            queryEditor.setFocus();
+            break;
+      }
+   }
+
+   /**
+    * Start object query
+    */
+   private void startQuery()
+   {
+      final NXCSession session = ConsoleSharedData.getSession();
+      final String query = queryEditor.getText();
+      new ConsoleJob("Query objects", this, Activator.PLUGIN_ID, null) {
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            try
+            {
+               final List<AbstractObject> objects = session.queryObjects(query);
+               runInUIThread(new Runnable() {
+                  @Override
+                  public void run()
+                  {
+                     queryEditorMessage.hideMessage();
+                     results.setInput(objects);
+                     queryEditor.setFocus();
+                  }
+               });
+            }
+            catch(NXCException e)
+            {
+               if ((e.getErrorCode() == RCC.NXSL_COMPILATION_ERROR) || (e.getErrorCode() == RCC.NXSL_EXECUTION_ERROR))
+               {
+                  final String errorMessage = e.getAdditionalInfo();
+                  runInUIThread(new Runnable() {
+                     @Override
+                     public void run()
+                     {
+                        queryEditorMessage.showMessage(CompositeWithMessageBar.WARNING, errorMessage);
+                     }
+                  });
+               }
+               throw e;
+            }
+         }
+         
+         @Override
+         protected String getErrorMessage()
+         {
+            return "Object query failed";
+         }
+      }.start();
    }
    
    /**

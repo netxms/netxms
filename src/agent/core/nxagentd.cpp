@@ -365,7 +365,7 @@ static TCHAR m_szHelpText[] =
    _T("   -S         : Stop Windows service\n")
 #endif
 #if !defined(_WIN32)
-   _T("   -u <uid>   : Chhange user ID to <uid> after start\n")
+   _T("   -u <uid>   : Change user ID to <uid> after start\n")
 #endif
    _T("   -v         : Display version and exit\n")
    _T("\n");

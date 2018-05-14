@@ -126,6 +126,15 @@ typedef void *yyscan_t;
 #define OPCODE_STORAGE_DEC    80
 #define OPCODE_STORAGE_DECP   81
 #define OPCODE_PEEK_ELEMENT   82
+#define OPCODE_PUSH_VARPTR    83
+#define OPCODE_SET_VARPTR     84
+#define OPCODE_CALL_EXTPTR    85
+#define OPCODE_INC_VARPTR     86
+#define OPCODE_DEC_VARPTR     87
+#define OPCODE_INCP_VARPTR    88
+#define OPCODE_DECP_VARPTR    89
+#define OPCODE_IN             90
+#define OPCODE_CBLOCK         91
 
 class NXSL_Compiler;
 

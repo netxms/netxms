@@ -89,6 +89,7 @@ static void LexerError(const char *pszMsg, yyscan_t scanner);
 <INITIAL>"use"      return T_USE;
 <INITIAL>"when"     return T_WHEN;
 <INITIAL>"while"    return T_WHILE;
+<INITIAL>"with"     return T_WITH;
 
 <INITIAL>{identifier}	{ yylval->valStr = strdup(yytext); return T_IDENTIFIER; }
 <INITIAL>{compound_ident} { yylval->valStr = strdup(yytext); return T_COMPOUND_IDENTIFIER; }

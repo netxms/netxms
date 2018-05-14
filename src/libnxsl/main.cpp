@@ -26,14 +26,14 @@
 /**
  * Interface to compiler
  */
-NXSL_Program LIBNXSL_EXPORTABLE *NXSLCompile(const TCHAR *pszSource, TCHAR *pszError, int nBufSize, int *errorLine)
+NXSL_Program LIBNXSL_EXPORTABLE *NXSLCompile(const TCHAR *source, TCHAR *errorMessage, size_t errorMessageLen, int *errorLine)
 {
    NXSL_Compiler compiler;
-   NXSL_Program *pResult = compiler.compile(pszSource);
+   NXSL_Program *pResult = compiler.compile(source);
    if (pResult == NULL)
    {
-      if (pszError != NULL)
-         _tcslcpy(pszError, compiler.getErrorText(), nBufSize);
+      if (errorMessage != NULL)
+         _tcslcpy(errorMessage, compiler.getErrorText(), errorMessageLen);
       if (errorLine != NULL)
          *errorLine = compiler.getErrorLineNumber();
    }
@@ -43,9 +43,9 @@ NXSL_Program LIBNXSL_EXPORTABLE *NXSLCompile(const TCHAR *pszSource, TCHAR *pszE
 /**
  * Compile script and create VM
  */
-NXSL_VM LIBNXSL_EXPORTABLE *NXSLCompileAndCreateVM(const TCHAR *pszSource, TCHAR *pszError, int nBufSize, NXSL_Environment *env)
+NXSL_VM LIBNXSL_EXPORTABLE *NXSLCompileAndCreateVM(const TCHAR *source, TCHAR *errorMessage, size_t errorMessageLen, NXSL_Environment *env)
 {
-   NXSL_Program *p = NXSLCompile(pszSource, pszError, nBufSize, NULL);
+   NXSL_Program *p = NXSLCompile(source, errorMessage, errorMessageLen, NULL);
    if (p == NULL)
    {
       delete env;
@@ -55,9 +55,9 @@ NXSL_VM LIBNXSL_EXPORTABLE *NXSLCompileAndCreateVM(const TCHAR *pszSource, TCHAR
    NXSL_VM *vm = new NXSL_VM(env);
    if (!vm->load(p))
    {
-      if (pszError != NULL)
+      if (errorMessage != NULL)
       {
-         _tcslcpy(pszError, vm->getErrorText(), nBufSize);
+         _tcslcpy(errorMessage, vm->getErrorText(), errorMessageLen);
       }
       delete vm;
       vm = NULL;

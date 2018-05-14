@@ -792,6 +792,7 @@ protected:
    NXSL_VariableSystem *m_constants;
    NXSL_VariableSystem *m_globals;
    NXSL_VariableSystem *m_locals;
+   NXSL_Value *m_context;
 
    NXSL_Storage *m_storage;
    NXSL_Storage *m_localStorage;
@@ -847,6 +848,8 @@ public:
    void storageWrite(const TCHAR *name, UINT64 value) { m_storage->write(name, new NXSL_Value(value)); }
    void storageWrite(const TCHAR *name, double value) { m_storage->write(name, new NXSL_Value(value)); }
 	NXSL_Value *storageRead(const TCHAR *name) { return m_storage->read(name); }
+
+	void setContextObject(NXSL_Value *value);
 
    bool load(NXSL_Program *program);
    bool run(ObjectArray<NXSL_Value> *args, NXSL_VariableSystem *pUserLocals = NULL,

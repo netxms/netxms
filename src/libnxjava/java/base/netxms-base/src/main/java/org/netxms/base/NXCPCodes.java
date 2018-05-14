@@ -378,6 +378,7 @@ public class NXCPCodes
    public static final int CMD_HOST_BY_IP = 0x0167;
    public static final int CMD_CANCEL_FILE_DOWNLOAD = 0x0168;
    public static final int CMD_FILEMGR_COPY_FILE = 0x0169;
+   public static final int CMD_QUERY_OBJECTS = 0x016A;
    public static final int CMD_DELETE_DCI_ENTRY = 0x0170;
    public static final int CMD_GET_ACTIVE_THRESHOLDS = 0x0171;
 
@@ -1010,6 +1011,7 @@ public class NXCPCodes
    public static final long VID_INCLUDE_THRESHOLDS = 614;
    public static final long VID_RESPONSIBLE_USERS = 615;
    public static final long VID_AGENT_ID = 616;
+   public static final long VID_QUERY = 617;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;
