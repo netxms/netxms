@@ -989,147 +989,155 @@ bool NXSL_Value::isNonZero() const
    return bVal;
 }
 
-
-//
-// Compare value
-// All these functions assumes that both values have same type
-//
-
-BOOL NXSL_Value::EQ(NXSL_Value *pVal)
+/**
+ * Binary operation - EQ
+ */
+bool NXSL_Value::EQ(const NXSL_Value *value) const
 {
-   BOOL bVal = FALSE;
+   bool result = FALSE;
 
    switch(m_dataType)
    {
       case NXSL_DT_INT32:
-         bVal = (m_value.int32 == pVal->m_value.int32);
+         result = (m_value.int32 == value->m_value.int32);
          break;
       case NXSL_DT_UINT32:
-         bVal = (m_value.uint32 == pVal->m_value.uint32);
+         result = (m_value.uint32 == value->m_value.uint32);
          break;
       case NXSL_DT_INT64:
-         bVal = (m_value.int64 == pVal->m_value.int64);
+         result = (m_value.int64 == value->m_value.int64);
          break;
       case NXSL_DT_UINT64:
-         bVal = (m_value.uint64 == pVal->m_value.uint64);
+         result = (m_value.uint64 == value->m_value.uint64);
          break;
       case NXSL_DT_REAL:
-         bVal = (m_value.real == pVal->m_value.real);
+         result = (m_value.real == value->m_value.real);
          break;
       default:
          break;
    }
-   return bVal;
+   return result;
 }
 
-BOOL NXSL_Value::LT(NXSL_Value *pVal)
+/**
+ * Binary operation - LT
+ */
+bool NXSL_Value::LT(const NXSL_Value *value) const
 {
-   BOOL bVal = FALSE;
+   bool result = FALSE;
 
    switch(m_dataType)
    {
       case NXSL_DT_INT32:
-         bVal = (m_value.int32 < pVal->m_value.int32);
+         result = (m_value.int32 < value->m_value.int32);
          break;
       case NXSL_DT_UINT32:
-         bVal = (m_value.uint32 < pVal->m_value.uint32);
+         result = (m_value.uint32 < value->m_value.uint32);
          break;
       case NXSL_DT_INT64:
-         bVal = (m_value.int64 < pVal->m_value.int64);
+         result = (m_value.int64 < value->m_value.int64);
          break;
       case NXSL_DT_UINT64:
-         bVal = (m_value.uint64 < pVal->m_value.uint64);
+         result = (m_value.uint64 < value->m_value.uint64);
          break;
       case NXSL_DT_REAL:
-         bVal = (m_value.real < pVal->m_value.real);
+         result = (m_value.real < value->m_value.real);
          break;
       default:
          break;
    }
-   return bVal;
+   return result;
 }
 
-BOOL NXSL_Value::LE(NXSL_Value *pVal)
+/**
+ * Binary operation - LE
+ */
+bool NXSL_Value::LE(const NXSL_Value *value) const
 {
-   BOOL bVal = FALSE;
+   bool result = FALSE;
 
    switch(m_dataType)
    {
       case NXSL_DT_INT32:
-         bVal = (m_value.int32 <= pVal->m_value.int32);
+         result = (m_value.int32 <= value->m_value.int32);
          break;
       case NXSL_DT_UINT32:
-         bVal = (m_value.uint32 <= pVal->m_value.uint32);
+         result = (m_value.uint32 <= value->m_value.uint32);
          break;
       case NXSL_DT_INT64:
-         bVal = (m_value.int64 <= pVal->m_value.int64);
+         result = (m_value.int64 <= value->m_value.int64);
          break;
       case NXSL_DT_UINT64:
-         bVal = (m_value.uint64 <= pVal->m_value.uint64);
+         result = (m_value.uint64 <= value->m_value.uint64);
          break;
       case NXSL_DT_REAL:
-         bVal = (m_value.real <= pVal->m_value.real);
+         result = (m_value.real <= value->m_value.real);
          break;
       default:
          break;
    }
-   return bVal;
+   return result;
 }
 
-BOOL NXSL_Value::GT(NXSL_Value *pVal)
+/**
+ * Binary operation - GT
+ */
+bool NXSL_Value::GT(const NXSL_Value *value) const
 {
-   BOOL bVal = FALSE;
+   bool result = FALSE;
 
    switch(m_dataType)
    {
       case NXSL_DT_INT32:
-         bVal = (m_value.int32 > pVal->m_value.int32);
+         result = (m_value.int32 > value->m_value.int32);
          break;
       case NXSL_DT_UINT32:
-         bVal = (m_value.uint32 > pVal->m_value.uint32);
+         result = (m_value.uint32 > value->m_value.uint32);
          break;
       case NXSL_DT_INT64:
-         bVal = (m_value.int64 > pVal->m_value.int64);
+         result = (m_value.int64 > value->m_value.int64);
          break;
       case NXSL_DT_UINT64:
-         bVal = (m_value.uint64 > pVal->m_value.uint64);
+         result = (m_value.uint64 > value->m_value.uint64);
          break;
       case NXSL_DT_REAL:
-         bVal = (m_value.real > pVal->m_value.real);
+         result = (m_value.real > value->m_value.real);
          break;
       default:
          break;
    }
-   return bVal;
+   return result;
 }
 
-BOOL NXSL_Value::GE(NXSL_Value *pVal)
+/**
+ * Binary operation - GE
+ */
+bool NXSL_Value::GE(const NXSL_Value *value) const
 {
-   BOOL bVal = FALSE;
+   bool result = FALSE;
 
    switch(m_dataType)
    {
       case NXSL_DT_INT32:
-         bVal = (m_value.int32 >= pVal->m_value.int32);
+         result = (m_value.int32 >= value->m_value.int32);
          break;
       case NXSL_DT_UINT32:
-         bVal = (m_value.uint32 >= pVal->m_value.uint32);
+         result = (m_value.uint32 >= value->m_value.uint32);
          break;
       case NXSL_DT_INT64:
-         bVal = (m_value.int64 >= pVal->m_value.int64);
+         result = (m_value.int64 >= value->m_value.int64);
          break;
       case NXSL_DT_UINT64:
-         bVal = (m_value.uint64 >= pVal->m_value.uint64);
+         result = (m_value.uint64 >= value->m_value.uint64);
          break;
       case NXSL_DT_REAL:
-         bVal = (m_value.real >= pVal->m_value.real);
+         result = (m_value.real >= value->m_value.real);
          break;
       default:
          break;
    }
-   return bVal;
+   return result;
 }
-
 
 //
 // Arithmetic and bit operations

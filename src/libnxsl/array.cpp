@@ -258,3 +258,42 @@ int NXSL_Array::callMethod(const NXSL_Identifier& name, int argc, NXSL_Value **a
    }
    return 0;
 }
+
+/**
+ * Check if given value is in array
+ */
+bool NXSL_Array::contains(NXSL_Value *value)
+{
+   for(int i = 0; i < m_size; i++)
+   {
+      NXSL_Value *curr = m_data[i].value;
+      if ((curr->getDataType() == value->getDataType()) && curr->isNumeric())
+      {
+         if (curr->EQ(value))
+            return true;
+      }
+      else if (value->isInteger() && curr->isInteger())
+      {
+         if (value->getValueAsInt64() == curr->getValueAsInt64())
+            return true;
+      }
+      else if (value->isNumeric() && curr->isNumeric())
+      {
+         if (value->getValueAsReal() == curr->getValueAsReal())
+            return true;
+      }
+      else if (value->isString() && curr->isString())
+      {
+         UINT32 l1, l2;
+         const TCHAR *s1 = value->getValueAsString(&l1);
+         const TCHAR *s2 = curr->getValueAsString(&l2);
+         if ((l1 == l2) && !memcmp(s1, s2, l1 * sizeof(TCHAR)))
+            return true;
+      }
+      else if (value->isNull() && curr->isNull())
+      {
+         return true;
+      }
+   }
+   return false;
+}

@@ -269,6 +269,8 @@ public:
    NXSL_Value *get(int index) const;
    NXSL_Value *getByPosition(int position) const;
 
+   bool contains(NXSL_Value *value);
+
    void set(int index, NXSL_Value *value);
 	void append(NXSL_Value *value) { if (m_size == 0) { set(0, value); } else { set(getMaxIndex() + 1, value); } }
    void insert(int index, NXSL_Value *value);
@@ -537,11 +539,11 @@ public:
    void lshift(int nBits);
    void rshift(int nBits);
 
-   BOOL EQ(NXSL_Value *pVal);
-   BOOL LT(NXSL_Value *pVal);
-   BOOL LE(NXSL_Value *pVal);
-   BOOL GT(NXSL_Value *pVal);
-   BOOL GE(NXSL_Value *pVal);
+   bool EQ(const NXSL_Value *value) const;
+   bool LT(const NXSL_Value *value) const;
+   bool LE(const NXSL_Value *value) const;
+   bool GT(const NXSL_Value *value) const;
+   bool GE(const NXSL_Value *value) const;
 
    void copyOnWrite();
    void onVariableSet();

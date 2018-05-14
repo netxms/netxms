@@ -54,7 +54,7 @@ const char *g_nxslCommandMnemonic[] =
    "SREAD", "SWRITE", "SELECT", "PUSHCP",
    "SINC", "SINCP", "SDEC", "SDECP", "EPEEK",
    "PUSH", "SET", "CALL", "INC", "DEC",
-   "INCP", "DECP"
+   "INCP", "DECP", "IN"
 };
 
 /**

@@ -132,6 +132,7 @@ typedef void *yyscan_t;
 #define OPCODE_DEC_VARPTR     87
 #define OPCODE_INCP_VARPTR    88
 #define OPCODE_DECP_VARPTR    89
+#define OPCODE_IN             90
 
 class NXSL_Compiler;
 

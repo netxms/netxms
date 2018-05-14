@@ -93,12 +93,12 @@ int yylex(YYSTYPE *lvalp, yyscan_t scanner);
 %left '|'
 %left '^'
 %left '&'
-%left T_NE T_EQ T_LIKE T_ILIKE T_MATCH T_IMATCH
+%left T_NE T_EQ T_LIKE T_ILIKE T_MATCH T_IMATCH T_IN
 %left '<' T_LE '>' T_GE
 %left T_LSHIFT T_RSHIFT
 %left '+' '-'
 %left '*' '/' '%'
-%right T_INC T_DEC '!' '~' NEGATE
+%right T_INC T_DEC T_NOT '~' NEGATE
 %left T_REF '@'
 %left T_POST_INC T_POST_DEC '[' ']'
 
@@ -469,7 +469,7 @@ Expression:
 {
 	pScript->addInstruction(new NXSL_Instruction(pScript, pLexer->getCurrLine(), OPCODE_NEG));
 }
-|	'!' Expression
+|	T_NOT Expression
 {
 	pScript->addInstruction(new NXSL_Instruction(pScript, pLexer->getCurrLine(), OPCODE_NOT));
 }
@@ -560,6 +560,10 @@ Expression:
 |	Expression T_IMATCH Expression
 {
 	pScript->addInstruction(new NXSL_Instruction(pScript, pLexer->getCurrLine(), OPCODE_IMATCH));
+}
+|	Expression T_IN Expression
+{
+	pScript->addInstruction(new NXSL_Instruction(pScript, pLexer->getCurrLine(), OPCODE_IN));
 }
 |	Expression T_EQ Expression
 {
