@@ -175,11 +175,12 @@ OperandType NXSL_Instruction::getOperandType()
          return OP_TYPE_VARIABLE;
       case OPCODE_JMP:
       case OPCODE_CALL:
+      case OPCODE_CATCH:
+      case OPCODE_CBLOCK:
       case OPCODE_JZ:
       case OPCODE_JNZ:
       case OPCODE_JZ_PEEK:
       case OPCODE_JNZ_PEEK:
-      case OPCODE_CATCH:
          return OP_TYPE_ADDR;
       case OPCODE_CALL_EXTPTR:
          return OP_TYPE_EXT_FUNCTION;

@@ -2936,6 +2936,23 @@ public class NXCSession
       AbstractObject object = findObjectById(objectId);
       return (object != null) ? object.getObjectName() : ("[" + Long.toString(objectId) + "]");
    }
+   
+   /**
+    * Query objects on server side
+    * 
+    * @param query query to execute
+    * @return list of matching objects
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public List<AbstractObject> queryObjects(String query) throws IOException, NXCException
+   {
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_QUERY_OBJECTS);
+      msg.setField(NXCPCodes.VID_QUERY, query);
+      sendMessage(msg);
+      NXCPMessage response = waitForRCC(msg.getMessageId());
+      return findMultipleObjects(response.getFieldAsUInt32Array(NXCPCodes.VID_OBJECT_LIST), false);
+   }
 
    /**
     * Get list of active alarms. For accessing terminated alarms log view API should be used.

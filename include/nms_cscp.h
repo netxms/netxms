@@ -594,6 +594,7 @@ typedef struct
 #define CMD_HOST_BY_IP                    0x0167
 #define CMD_CANCEL_FILE_DOWNLOAD          0x0168
 #define CMD_FILEMGR_COPY_FILE             0x0169
+#define CMD_QUERY_OBJECTS                 0x016A
 #define CMD_DELETE_DCI_ENTRY              0x0170
 #define CMD_GET_ACTIVE_THRESHOLDS         0x0171
 #define CMD_QUERY_INTERNAL_TOPOLOGY       0x0172
@@ -1228,6 +1229,7 @@ typedef struct
 #define VID_INCLUDE_THRESHOLDS      ((UINT32)614)
 #define VID_RESPONSIBLE_USERS       ((UINT32)615)
 #define VID_AGENT_ID                ((UINT32)616)
+#define VID_QUERY                   ((UINT32)617)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

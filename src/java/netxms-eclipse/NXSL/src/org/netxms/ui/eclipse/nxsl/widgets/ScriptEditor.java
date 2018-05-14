@@ -61,8 +61,10 @@ public class ScriptEditor extends Composite
 	private CompositeRuler ruler;
 	private Set<String> functions = new HashSet<String>(0);
 	private Set<String> variables = new HashSet<String>(0);
+   private Set<String> constants = new HashSet<String>(0);
 	private String[] functionsCache = new String[0];
 	private String[] variablesCache = new String[0];
+   private String[] constantsCache = new String[0];
 	private Image[] proposalIcons = new Image[4];
 	private String hintText;
 	private Composite hintArea;
@@ -334,6 +336,26 @@ public class ScriptEditor extends Composite
 		variablesCache = variables.toArray(new String[variables.size()]);
 	}
 
+   /**
+    * @param constants new constant set
+    */
+   public void setConstants(Set<String> constants)
+   {
+      this.constants = constants;
+      constantsCache = constants.toArray(new String[constants.size()]);
+   }
+
+   /**
+    * Add constants
+    * 
+    * @param cc constants to add
+    */
+   public void addConstants(Collection<String> cc)
+   {
+      constants.addAll(cc);
+      constantsCache = constants.toArray(new String[constants.size()]);
+   }
+
 	/**
 	 * @return the functionsCache
 	 */
@@ -349,6 +371,14 @@ public class ScriptEditor extends Composite
 	{
 		return variablesCache;
 	}
+
+   /**
+    * @return constants cache
+    */
+   public String[] getConstants()
+   {
+      return constantsCache;
+   }
 
 	/**
 	 * Get icon for given autocompletion proposal type. Proposal types defined in NXSLProposalProcessor.

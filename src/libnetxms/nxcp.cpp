@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -398,10 +398,20 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD code, TCHAR *pszBuffer)
       _T("CMD_EXPAND_MACROS"),
       _T("CMD_EXECUTE_ACTION_WITH_EXPANSION"),
       _T("CMD_HOST_BY_IP"),
-      _T("CMD_CANCEL_FILE_DOWNLOAD")
+      _T("CMD_CANCEL_FILE_DOWNLOAD"),
+      _T("CMD_FILEMGR_COPY_FILE"),
+      _T("CMD_FIND_OBJECTS"),
+      _T("0x016B"),
+      _T("0x016C"),
+      _T("0x016D"),
+      _T("0x016E"),
+      _T("0x016F"),
+      _T("CMD_DELETE_DCI_ENTRY"),
+      _T("CMD_GET_ACTIVE_THRESHOLDS"),
+      _T("CMD_QUERY_INTERNAL_TOPOLOGY")
    };
 
-   if ((code >= CMD_LOGIN) && (code <= CMD_CANCEL_FILE_DOWNLOAD))
+   if ((code >= CMD_LOGIN) && (code <= CMD_QUERY_INTERNAL_TOPOLOGY))
    {
       _tcscpy(pszBuffer, pszMsgNames[code - CMD_LOGIN]);
    }

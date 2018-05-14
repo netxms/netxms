@@ -1473,7 +1473,7 @@ UINT32 NetObj::getUserRights(UINT32 userId)
 {
    UINT32 dwRights;
 
-   // Admin always has all rights to any object
+   // System always has all rights to any object
    if (userId == 0)
       return 0xFFFFFFFF;
 

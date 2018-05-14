@@ -74,6 +74,7 @@ int yylex(YYSTYPE *lvalp, yyscan_t scanner);
 %token T_USE
 %token T_WHEN
 %token T_WHILE
+%token T_WITH
 
 %token <valIdentifier> T_COMPOUND_IDENTIFIER
 %token <valIdentifier> T_IDENTIFIER
@@ -134,7 +135,7 @@ Script:
 	// Implicit return
 	pScript->addInstruction(new NXSL_Instruction(pScript, pLexer->getCurrLine(), OPCODE_RET_NULL));
 }
-|	Expression
+|	ExpressionStatement
 {
 	char szErrorText[256];
 
@@ -282,7 +283,7 @@ TryCatchBlock:
 ;
 
 Statement:
-	Expression ';'
+	ExpressionStatement ';'
 {
 	pScript->addInstruction(new NXSL_Instruction(pScript, pLexer->getCurrLine(), OPCODE_POP, (short)1));
 }
@@ -290,6 +291,37 @@ Statement:
 |	';'
 {
 	pScript->addInstruction(new NXSL_Instruction(pScript, pLexer->getCurrLine(), OPCODE_NOP));
+}
+;
+
+ExpressionStatement:
+	T_WITH WithAssignmentList Expression
+|	Expression
+;
+
+WithAssignmentList:
+	WithAssignment ',' WithAssignmentList
+|	WithAssignment
+;
+
+WithAssignment:
+	T_IDENTIFIER '='
+{
+	pScript->addInstruction(new NXSL_Instruction(pScript, pLexer->getCurrLine(), OPCODE_CBLOCK, INVALID_ADDRESS));
+} 
+	WithCalculationBlock
+{
+	pScript->resolveLastJump(OPCODE_CBLOCK);
+	pScript->addInstruction(new NXSL_Instruction(pScript, pLexer->getCurrLine(), OPCODE_SET, $1));
+	pScript->addInstruction(new NXSL_Instruction(pScript, pLexer->getCurrLine(), OPCODE_POP, (short)1));
+}
+;
+
+WithCalculationBlock:
+	'{' StatementList '}'
+|	'{' Expression '}'
+{
+	pScript->addInstruction(new NXSL_Instruction(pScript, pLexer->getCurrLine(), OPCODE_RETURN));
 }
 ;
 

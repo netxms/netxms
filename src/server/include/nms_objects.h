@@ -3185,6 +3185,7 @@ Zone NXCORE_EXPORTABLE *FindZoneByUIN(UINT32 zoneUIN);
 UINT32 FindUnusedZoneUIN();
 bool NXCORE_EXPORTABLE IsClusterIP(UINT32 zoneUIN, const InetAddress& ipAddr);
 bool NXCORE_EXPORTABLE IsParentObject(UINT32 object1, UINT32 object2);
+ObjectArray<NetObj> *QueryObjects(const TCHAR *query, UINT32 userId, TCHAR *errorMessage, size_t errorMessageLen);
 
 BOOL LoadObjects();
 void DumpObjects(CONSOLE_CTX pCtx, const TCHAR *filter);

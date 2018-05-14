@@ -54,7 +54,7 @@ const char *g_nxslCommandMnemonic[] =
    "SREAD", "SWRITE", "SELECT", "PUSHCP",
    "SINC", "SINCP", "SDEC", "SDECP", "EPEEK",
    "PUSH", "SET", "CALL", "INC", "DEC",
-   "INCP", "DECP", "IN"
+   "INCP", "DECP", "IN", "CBLOCK"
 };
 
 /**
@@ -211,6 +211,7 @@ void NXSL_Program::dump(FILE *pFile)
             _ftprintf(pFile, _T("%hs, %d\n"), instr->m_operand.m_function->m_name, instr->m_nStackItems);
             break;
          case OPCODE_CATCH:
+         case OPCODE_CBLOCK:
          case OPCODE_JMP:
          case OPCODE_JZ:
          case OPCODE_JNZ:

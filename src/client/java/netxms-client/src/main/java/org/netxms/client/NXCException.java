@@ -80,6 +80,16 @@ public class NXCException extends Exception
    {
       return errorCode;
    }
+   
+   /**
+    * Get additional information associated with exception (for example, NXSL error message)
+    * 
+    * @return additional information associated with exception
+    */
+   public String getAdditionalInfo()
+   {
+      return additionalInfo;
+   }
 
    /* (non-Javadoc)
     * @see java.lang.Throwable#getMessage()
