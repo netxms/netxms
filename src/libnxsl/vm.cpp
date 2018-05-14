@@ -1100,6 +1100,7 @@ void NXSL_VM::execute()
       case OPCODE_ILIKE:
       case OPCODE_MATCH:
       case OPCODE_IMATCH:
+      case OPCODE_IN:
       case OPCODE_EQ:
       case OPCODE_NE:
       case OPCODE_LT:
@@ -1652,10 +1653,11 @@ void NXSL_VM::doBinaryOperation(int nOpCode)
    if ((pVal1 != NULL) && (pVal2 != NULL))
    {
       if ((!pVal1->isNull() && !pVal2->isNull()) ||
+          (!pVal2->isNull() && (nOpCode == OPCODE_IN)) ||
           (nOpCode == OPCODE_EQ) || (nOpCode == OPCODE_NE) || (nOpCode == OPCODE_CASE) || (nOpCode == OPCODE_CASE_CONST) || (nOpCode == OPCODE_CONCAT))
       {
          if (pVal1->isNumeric() && pVal2->isNumeric() &&
-             (nOpCode != OPCODE_CONCAT) && 
+             (nOpCode != OPCODE_CONCAT) && (nOpCode != OPCODE_IN) &&
              (nOpCode != OPCODE_LIKE) && (nOpCode != OPCODE_ILIKE) &&
              (nOpCode != OPCODE_MATCH) && (nOpCode != OPCODE_IMATCH))
          {
@@ -1826,6 +1828,16 @@ void NXSL_VM::doBinaryOperation(int nOpCode)
                   else
                   {
                      error(NXSL_ERR_NOT_STRING);
+                  }
+                  break;
+               case OPCODE_IN:
+                  if (pVal2->isArray())
+                  {
+                     pRes = new NXSL_Value(pVal2->getValueAsArray()->contains(pVal1));
+                  }
+                  else
+                  {
+                     error(NXSL_ERR_NOT_ARRAY);
                   }
                   break;
                case OPCODE_ADD:
