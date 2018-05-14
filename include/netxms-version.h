@@ -31,8 +31,8 @@
  */
 #define NETXMS_VERSION_MAJOR        2
 #define NETXMS_VERSION_MINOR        2
-#define NETXMS_VERSION_STRING       _T("2.2.4")
-#define NETXMS_VERSION_STRING_A     "2.2.4"
+#define NETXMS_VERSION_STRING       _T("2.2.5")
+#define NETXMS_VERSION_STRING_A     "2.2.5"
 
 #ifdef UNICODE
 #define IS_UNICODE_BUILD_STRING     _T(" (UNICODE)")
