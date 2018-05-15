@@ -727,8 +727,6 @@ bool LIBNXDB_EXPORTABLE DBResizeColumn(DB_HANDLE hdb, const TCHAR *table, const 
    if (query[0] == 0)
       return true;
 
-
-
    return (query[0] != 0) ? ExecuteQuery(hdb, query) : true;
 }
 
