@@ -200,7 +200,6 @@ target
 /src/nxcproxy/messages.h
 /src/nxcproxy/MSG00001.bin
 /src/nxcproxy/nxcproxy
-/src/nxlptest/nxlptest
 /src/nxscript/nxscript
 /src/server/jcore/.classpath
 /src/server/jcore/.project
@@ -244,6 +243,7 @@ target
 /src/tools/nxdevcfg/nxdevcfg
 /src/tools/nxencpasswd/nxencpasswd
 /src/tools/nxgenguid/nxgenguid
+/src/tools/nxlptest/nxlptest
 /stamp-h1
 /status
 /tests/test-libnetxms/test-libnetxms
