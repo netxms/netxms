@@ -79,6 +79,7 @@ bool IsDatabaseRecordExist(const TCHAR *table, const TCHAR *idColumn, UINT32 id)
 
 BOOL MetaDataReadStr(const TCHAR *pszVar, TCHAR *pszBuffer, int iBufSize, const TCHAR *pszDefault);
 int MetaDataReadInt(const TCHAR *pszVar, int iDefault);
+bool MetaDataWriteStr(const TCHAR *variable, const TCHAR *value);
 BOOL ConfigReadStr(const TCHAR *pszVar, TCHAR *pszBuffer, int iBufSize, const TCHAR *pszDefault);
 int ConfigReadInt(const TCHAR *pszVar, int iDefault);
 DWORD ConfigReadULong(const TCHAR *pszVar, DWORD dwDefault);
@@ -93,6 +94,11 @@ bool SetMajorSchemaVersion(INT32 nextMajor, INT32 nextMinor);
 bool SetMinorSchemaVersion(INT32 nextMinor);
 INT32 GetSchemaLevelForMajorVersion(INT32 major);
 bool SetSchemaLevelForMajorVersion(INT32 major, INT32 level);
+
+void RegisterOnlineUpgrade(int major, int minor);
+void UnregisterOnlineUpgrade(int major, int minor);
+bool IsOnlineUpgradePending();
+void RunPendingOnlineUpgrades();
 
 bool IsEventPairInUse(UINT32 code1, UINT32 code2);
 int NextFreeEPPruleID();
@@ -166,5 +172,6 @@ inline void RollbackToSavePoint(INT64 id)
  * Execute with error check
  */
 #define CHK_EXEC(x) do { INT64 s = CreateSavePoint(); if (!(x)) { RollbackToSavePoint(s); if (!g_bIgnoreErrors) return false; } ReleaseSavePoint(s); } while (0)
+#define CHK_EXEC_NO_SP(x) do { if (!(x)) { if (!g_bIgnoreErrors) return false; } } while (0)
 
 #endif

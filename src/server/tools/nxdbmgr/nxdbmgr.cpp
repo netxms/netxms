@@ -400,14 +400,56 @@ BOOL MetaDataReadStr(const TCHAR *pszVar, TCHAR *pszBuffer, int iBufSize, const 
 /**
  * Read integer value from configuration table
  */
-int MetaDataReadInt(const TCHAR *pszVar, int iDefault)
+int MetaDataReadInt(const TCHAR *variable, int defaultValue)
 {
    TCHAR szBuffer[64];
-
-   if (MetaDataReadStr(pszVar, szBuffer, 64, _T("")))
+   if (MetaDataReadStr(variable, szBuffer, 64, _T("")))
       return _tcstol(szBuffer, NULL, 0);
    else
-      return iDefault;
+      return defaultValue;
+}
+
+/**
+ * Write string value to metadata table
+ */
+bool MetaDataWriteStr(const TCHAR *variable, const TCHAR *value)
+{
+   // Check for variable existence
+   DB_STATEMENT hStmt = DBPrepare(g_hCoreDB, _T("SELECT var_value FROM metadata WHERE var_name=?"));
+   if (hStmt == NULL)
+      return false;
+
+   DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, variable, DB_BIND_STATIC);
+   DB_RESULT hResult = DBSelectPrepared(hStmt);
+   bool bVarExist = false;
+   if (hResult != NULL)
+   {
+      if (DBGetNumRows(hResult) > 0)
+         bVarExist = true;
+      DBFreeResult(hResult);
+   }
+   DBFreeStatement(hStmt);
+
+   // Create or update variable value
+   if (bVarExist)
+   {
+      hStmt = DBPrepare(g_hCoreDB, _T("UPDATE metadata SET var_value=? WHERE var_name=?"));
+      if (hStmt == NULL)
+         return false;
+      DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, value, DB_BIND_STATIC);
+      DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, variable, DB_BIND_STATIC);
+   }
+   else
+   {
+      hStmt = DBPrepare(g_hCoreDB, _T("INSERT INTO metadata (var_name,var_value) VALUES (?,?)"));
+      if (hStmt == NULL)
+         return false;
+      DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, variable, DB_BIND_STATIC);
+      DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, value, DB_BIND_STATIC);
+   }
+   bool success = DBExecute(hStmt);
+   DBFreeStatement(hStmt);
+   return success;
 }
 
 /**
@@ -663,6 +705,7 @@ stop_search:
                      _T("   import <file>        : Import database from file\n")
                      _T("   init <file>          : Initialize database\n")
 				         _T("   migrate <source>     : Migrate database from given source\n")
+                     _T("   online-upgrade       : Run pending online upgrade procedures\n")
                      _T("   reset-system-account : Unlock user \"system\" and reset it's password to default\n")
                      _T("   set <name> <value>   : Set value of server configuration variable\n")
                      _T("   unlock               : Forced database unlock\n")
@@ -794,6 +837,7 @@ stop_search:
        strcmp(argv[optind], "import") &&
        strcmp(argv[optind], "init") &&
        strcmp(argv[optind], "migrate") &&
+       strcmp(argv[optind], "online-upgrade") &&
        strcmp(argv[optind], "reset-system-account") &&
        strcmp(argv[optind], "set") &&
        strcmp(argv[optind], "unlock") &&
@@ -890,6 +934,10 @@ stop_search:
       {
          UpgradeDatabase();
       }
+      else if (!strcmp(argv[optind], "online-upgrade"))
+      {
+         RunPendingOnlineUpgrades();
+      }
       else if (!strcmp(argv[optind], "unlock"))
       {
          UnlockDatabase();
@@ -949,6 +997,9 @@ stop_search:
       {
          ResetSystemAccount();
       }
+
+      if (IsOnlineUpgradePending())
+         WriteToTerminal(_T("\n\x1b[31;1mWARNING:\x1b[0m Online upgrades pending. Please run \x1b[1mnxdbmgr online-upgrade\x1b[0m when possible.\n"));
    }
 
    // Shutdown
