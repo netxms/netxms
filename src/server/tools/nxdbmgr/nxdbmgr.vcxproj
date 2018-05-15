@@ -177,6 +177,7 @@
     <ClCompile Include="tdata_convert.cpp" />
     <ClCompile Include="unlock.cpp" />
     <ClCompile Include="upgrade.cpp" />
+    <ClCompile Include="upgrade_online.cpp" />
     <ClCompile Include="upgrade_v0.cpp" />
     <ClCompile Include="upgrade_v21.cpp" />
     <ClCompile Include="upgrade_v22.cpp" />
