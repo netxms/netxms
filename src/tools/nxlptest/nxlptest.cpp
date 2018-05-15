@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Log Parser Testing Utility
-** Copyright (C) 2009-2017 Victor Kirhenshtein
+** Copyright (C) 2009-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -68,7 +68,7 @@ static void DebugWriter(const TCHAR *tag, const TCHAR *message)
  */
 static THREAD_RESULT THREAD_CALL ParserThread(void *arg)
 {
-	((LogParser *)arg)->monitorFile(m_stopCondition);
+	((LogParser *)arg)->monitorFile();
 	return THREAD_OK;
 }
 
@@ -172,6 +172,7 @@ int main(int argc, char *argv[])
 #endif
 
 			m_stopCondition = ConditionCreate(true);
+         parser->setStopCondition(m_stopCondition);
 			thread = ThreadCreateEx(ParserThread, 0, parser);
 #ifdef _WIN32
 			_tprintf(_T("Parser started. Press ESC to stop.\nFile: %s\nTrace level: %d\n\n"),

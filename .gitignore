@@ -200,7 +200,6 @@ target
 /src/nxcproxy/messages.h
 /src/nxcproxy/MSG00001.bin
 /src/nxcproxy/nxcproxy
-/src/nxlptest/nxlptest
 /src/nxscript/nxscript
 /src/server/core/lex.nxmp_parser.cpp
 /src/server/core/netxmsd
@@ -241,6 +240,7 @@ target
 /src/tools/nxdevcfg/nxdevcfg
 /src/tools/nxencpasswd/nxencpasswd
 /src/tools/nxgenguid/nxgenguid
+/src/tools/nxlptest/nxlptest
 /stamp-h1
 /status
 /tests/test-libnetxms/test-libnetxms

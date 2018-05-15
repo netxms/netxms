@@ -62,7 +62,8 @@ BUILD_AGENT="no"
 BUILD_CLIENT="no"
 BUILD_STATIC_AGENT="no"
 BUILD_SDK="no"
-MODULES="libnetxms tools install"
+MODULES="libnetxms install"
+TOOLS=""
 STATIC_SUBAGENT_LIST=""
 PROPOSED_STATIC_SUBAGENTS="default"
 SUBAGENT_DIRS=""
@@ -711,7 +712,8 @@ AC_ARG_ENABLE(64bit,
 AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
 	DB_DRIVERS="mysql mariadb pgsql odbc mssql sqlite oracle db2 informix"
-	MODULES="appagent jansson libexpat libstrophe libtre zlib libnetxms libnxjava install sqlite snmp libnxsl libnxmb libnxlp libnxcc db server smsdrv agent client nxscript nxcproxy nxlptest tools"
+	MODULES="appagent jansson libexpat libstrophe libtre zlib libnetxms libnxjava install sqlite snmp libnxsl libnxmb libnxlp libnxcc db server smsdrv agent client nxscript nxcproxy"
+	TOOLS="nxlptest"
 	SUBAGENT_DIRS="linux ds18x20 freebsd openbsd minix mqtt mysql netbsd sunos aix ipso hpux odbcquery informix oracle lmsensors darwin rpi java jmx bind9 ubntlw netsvc db2 tuxedo mongodb ssh vmgr xen"
 	AGENT_DIRS="libnxtux"
 	SMSDRV_DIRS="anysms kannel mymobile nexmo nxagent slack smseagle text2reach websms"
@@ -872,6 +874,7 @@ if test $? = 0; then
 	DISABLE_ICONV="yes"
 	USE_PTH="yes"
 	MODULES="$MODULES appagent libnxlp db agent"
+	TOOLS="$TOOLS nxlptest"
 	CPPFLAGS="$CPPFLAGS -D_STATIC_AGENT -D_IPSO -DSQLITE_THREADSAFE=0 -I/usr/local/include"
 	LDFLAGS="$LDFLAGS -all-static"
 	STATIC_SUBAGENT_LIST="ecs ipso logwatch ping portcheck ups"
@@ -883,6 +886,7 @@ check_substr "$COMPONENTS" "agent"
 if test $? = 0; then
 	BUILD_AGENT="yes"
 	MODULES="$MODULES appagent libnxlp db agent"
+	TOOLS="$TOOLS nxlptest"
 
 	case "$PLATFORM" in
 		Linux)
@@ -1029,8 +1033,11 @@ if test $? = 0; then
 		MODULES="$MODULES appagent client libnxmb"
 	else
 		MODULES="$MODULES appagent client libnxsl libnxmb libnxlp libnxcc db nxscript smsdrv snmp"
+		TOOLS="$TOOLS nxlptest"
 	fi
 fi
+
+MODULES="$MODULES tools"
 
 
 #--------------------------------------------------------------------
@@ -3689,6 +3696,7 @@ AS_IF([test "x$with_dist" = "xyes"],
 #--------------------------------------------------------------------
 
 AC_SUBST(MODULES)
+AC_SUBST(TOOLS)
 AC_SUBST(AGENT_DIRS)
 AC_SUBST(AGENT_LIBS)
 AC_SUBST(CUSTOM_INCLUDE)
@@ -3913,7 +3921,6 @@ AC_CONFIG_FILES([
 	src/libtre/Makefile
 	src/libtre/win32/Makefile
 	src/nxcproxy/Makefile
-	src/nxlptest/Makefile
 	src/nxscript/Makefile
 	src/server/Makefile
 	src/server/core/Makefile
@@ -3981,6 +3988,7 @@ AC_CONFIG_FILES([
 	src/tools/nxdevcfg/Makefile
 	src/tools/nxencpasswd/Makefile
 	src/tools/nxgenguid/Makefile
+	src/tools/nxlptest/Makefile
 	src/zlib/Makefile
 	sql/Makefile
 	tests/Makefile
