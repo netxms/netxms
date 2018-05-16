@@ -289,7 +289,7 @@ void EPRule::createNXMPRecord(String &str)
    str.append(EscapeStringForXML2(m_comments));
    str.append(_T("</comments>\n\t\t\t<sources>\n"));
 
-   for(int i = 0; i < m_sources.get(i); i++)
+   for(int i = 0; i < m_sources.size(); i++)
    {
       NetObj *object = FindObjectById(m_sources.get(i));
       if (object != NULL)

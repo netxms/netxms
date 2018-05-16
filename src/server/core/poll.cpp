@@ -416,7 +416,7 @@ static void DiscoveryPoller(void *arg)
    ArpCache *pArpCache = node->getArpCache(true);
    if (pArpCache != NULL)
    {
-      for(UINT32 i = 0; i < pArpCache->size(); i++)
+      for(int i = 0; i < pArpCache->size(); i++)
       {
          const ArpEntry *e = pArpCache->get(i);
 			if (!e->macAddr.isBroadcast())	// Ignore broadcast addresses
