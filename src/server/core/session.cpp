@@ -4664,7 +4664,7 @@ void ClientSession::getActiveThresholds(NXCPMessage *pRequest)
    msg.setId(pRequest->getId());
 
    UINT32 base = VID_DCI_VALUES_BASE;
-   UINT32 numItems = pRequest->getFieldAsUInt32(VID_NUM_ITEMS);
+   int numItems = pRequest->getFieldAsInt32(VID_NUM_ITEMS);
 
    for(int i = 0; i < numItems; i++, base+=2)
    {
