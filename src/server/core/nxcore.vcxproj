@@ -324,6 +324,7 @@
     <ClCompile Include="tools.cpp" />
     <ClCompile Include="tracert.cpp" />
     <ClCompile Include="tunnel.cpp" />
+    <ClCompile Include="ucc.cpp" />
     <ClCompile Include="uniroot.cpp" />
     <ClCompile Include="upload_job.cpp" />
     <ClCompile Include="uptimecalc.cpp" />

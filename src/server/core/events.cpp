@@ -776,7 +776,7 @@ static bool LoadEvents()
       hResult = DBSelect(hdb, _T("SELECT id,description,name,guid FROM event_groups"));
       if (hResult != NULL)
       {
-         UINT32 numRows = DBGetNumRows(hResult);
+         int numRows = DBGetNumRows(hResult);
          for(int i = 0; i < numRows; i++)
          {
             EventGroup *g = new EventGroup(hResult, i, &memberCache);
