@@ -13680,6 +13680,9 @@ void ClientSession::getScreenshot(NXCPMessage *request)
             AgentConnection *conn = node->createAgentConnection();
             if (conn != NULL)
             {
+               // Screenshot transfer can take significant amount of time on slow links
+               conn->setCommandTimeout(60000);
+
                BYTE *data = NULL;
                size_t size;
                UINT32 dwError = conn->takeScreenshot(sessionName, &data, &size);
