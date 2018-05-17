@@ -106,7 +106,7 @@ static LONG H_ParserStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, Abst
    }
 
    s_parserLock.unlock();
-   return SYSINFO_RC_SUCCESS;
+   return rc;
 }
 
 /**
