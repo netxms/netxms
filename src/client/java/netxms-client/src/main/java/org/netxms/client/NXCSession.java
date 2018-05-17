@@ -9909,7 +9909,7 @@ public class NXCSession
          msg.setField(NXCPCodes.VID_NAME, sessionName);
       sendMessage(msg);
       
-      NXCPMessage response = waitForRCC(msg.getMessageId());
+      NXCPMessage response = waitForRCC(msg.getMessageId(), msgWaitQueue.getDefaultTimeout() + 60000);
       return response.getFieldAsBinary(NXCPCodes.VID_FILE_DATA);
    }
    
