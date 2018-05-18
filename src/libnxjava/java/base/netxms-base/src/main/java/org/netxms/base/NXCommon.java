@@ -26,7 +26,7 @@ import java.util.UUID;
 public final class NXCommon
 {
 	// Version information
-	public static final String VERSION = "2.2.5";
+	public static final String VERSION = "2.2.6";
 	
 	public static final UUID EMPTY_GUID = UUID.fromString("00000000-0000-0000-0000-000000000000");
 }
