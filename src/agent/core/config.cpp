@@ -299,12 +299,12 @@ bool LoadConfig()
 
       dir = g_config->getValue(_T("/%agent/ConfigIncludeDir"));
       if (dir != NULL)
+         _tcslcpy(g_szConfigIncludeDir, dir, MAX_PATH);
+
+      validConfig = g_config->loadConfigDirectory(g_szConfigIncludeDir, DEFAULT_CONFIG_SECTION, false);
+      if (!validConfig)
       {
-         validConfig = g_config->loadConfigDirectory(dir, DEFAULT_CONFIG_SECTION, false);
-         if (!validConfig)
-         {
-            ConsolePrintf(_T("Error reading additional configuration files from \"%s\"\n"), dir);
-         }
+         ConsolePrintf(_T("Error reading additional configuration files from \"%s\"\n"), dir);
       }
 
 #ifdef _WIN32
