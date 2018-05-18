@@ -17,6 +17,14 @@
 
 
 *
+* 2.2.6
+*
+
+- Fixed issues:
+	NX-1451 (Additional configs not loaded on agent startup)
+
+
+*
 * 2.2.5
 *
 
