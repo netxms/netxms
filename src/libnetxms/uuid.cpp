@@ -24,6 +24,10 @@
 #include "libnetxms.h"
 #include <uuid.h>
 
+#if _WITH_ENCRYPTION
+#include <openssl/rand.h>
+#endif
+
 #if HAVE_SYS_IOCTL_H
 #include <sys/ioctl.h>
 #endif
@@ -282,17 +286,19 @@ static int get_random_fd()
 	return fd;
 }
 
-#endif
-
 /*
  * Generate a series of random bytes.  Use /dev/urandom if possible,
  * and if not, use srandom/random.
  */
 static void get_random_bytes(void *buf, int nbytes)
 {
+#if _WITH_ENCRYPTION
+   if (RAND_bytes(static_cast<unsigned char*>(buf), nbytes))
+      return;
+#endif
+
 	int i;
 	char *cp = (char *)buf;
-#ifndef _WIN32
    int fd = get_random_fd();
 	int lose_counter = 0;
 
@@ -315,7 +321,6 @@ static void get_random_bytes(void *buf, int nbytes)
 		}
 		close(fd);
 	}
-#endif
 	if (nbytes == 0)
 		return;
 
@@ -323,7 +328,6 @@ static void get_random_bytes(void *buf, int nbytes)
    srand((unsigned int)time(NULL) ^ GetCurrentProcessId());
 	for (i = 0; i < nbytes; i++)
 		*cp++ = rand() & 0xFF;
-	return;
 }
 
 /*
@@ -424,24 +428,9 @@ static int get_clock(DWORD *clock_high, DWORD *clock_low, WORD *ret_clock_seq)
 	static unsigned short clock_seq;
 	struct timeval tv;
 	QWORD clock_reg;
-#ifdef _WIN32
-   FILETIME ft;
-   ULARGE_INTEGER li;
-   unsigned __int64 t;
-#endif
 	
 try_again:
-#ifdef _WIN32
-   GetSystemTimeAsFileTime(&ft);
-   li.LowPart  = ft.dwLowDateTime;
-   li.HighPart = ft.dwHighDateTime;
-   t = li.QuadPart;       // In 100-nanosecond intervals
-   t /= 10;    // To microseconds
-   tv.tv_sec = (long)(t / 1000000);
-   tv.tv_usec = (long)(t % 1000000);
-#else
 	gettimeofday(&tv, NULL);
-#endif
 	if ((last.tv_sec == 0) && (last.tv_usec == 0))
    {
 		get_random_bytes(&clock_seq, sizeof(clock_seq));
@@ -521,6 +510,8 @@ static void uuid_generate_random(uuid_t out)
 	uu.time_hi_and_version = (uu.time_hi_and_version & 0x0FFF) | 0x4000;
 	uuid_pack(&uu, out);
 }
+
+#endif  /* _WIN32 */
 
 /*
  * This is the generic front-end to uuid_generate_random and
