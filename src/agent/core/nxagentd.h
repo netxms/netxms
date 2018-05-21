@@ -640,6 +640,7 @@ TCHAR *GetPdhErrorText(UINT32 dwError, TCHAR *pszBuffer, int iBufSize);
 /**
  * Global variables
  */
+extern uuid g_agentId;
 extern UINT32 g_dwFlags;
 extern UINT32 g_failFlags;
 extern TCHAR g_szLogFile[];

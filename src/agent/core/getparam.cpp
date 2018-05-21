@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -97,6 +97,15 @@ static LONG H_StringConstant(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, A
 static LONG H_UIntPtr(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    ret_uint(value, *((UINT32 *)arg));
+   return SYSINFO_RC_SUCCESS;
+}
+
+/**
+ * Handler for Agent ID
+ */
+static LONG H_AgentID(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   g_agentId.toString(value);
    return SYSINFO_RC_SUCCESS;
 }
 
@@ -299,6 +308,7 @@ static NETXMS_SUBAGENT_PARAM m_stdParams[] =
    { _T("Agent.DataCollectorQueueSize"), H_DataCollectorQueueSize, NULL, DCI_DT_UINT, DCIDESC_AGENT_DATACOLLQUEUESIZE },
    { _T("Agent.FailedRequests"), H_UIntPtr, (TCHAR *)&m_dwFailedRequests, DCI_DT_COUNTER32, DCIDESC_AGENT_FAILEDREQUESTS },
    { _T("Agent.GeneratedTraps"), H_AgentTraps, _T("G"), DCI_DT_COUNTER64, DCIDESC_AGENT_GENERATED_TRAPS },
+   { _T("Agent.ID"), H_AgentID, NULL, DCI_DT_STRING, DCIDESC_AGENT_ID },
    { _T("Agent.IsSubagentLoaded(*)"), H_IsSubagentLoaded, NULL, DCI_DT_INT, DCIDESC_AGENT_IS_SUBAGENT_LOADED },
    { _T("Agent.IsExternalSubagentConnected(*)"), H_IsExtSubagentConnected, NULL, DCI_DT_INT, DCIDESC_AGENT_IS_EXT_SUBAGENT_CONNECTED },
    { _T("Agent.LastTrapTime"), H_AgentTraps, _T("T"), DCI_DT_UINT64, DCIDESC_AGENT_LAST_TRAP_TIME },
