@@ -1225,6 +1225,8 @@ typedef struct
 #define VID_PASSIVE_ELEMENTS        ((UINT32)612)
 #define VID_RACK_IMAGE_REAR         ((UINT32)613)
 #define VID_INCLUDE_THRESHOLDS      ((UINT32)614)
+#define VID_RESPONSIBLE_USERS       ((UINT32)615)
+#define VID_AGENT_ID                ((UINT32)616)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

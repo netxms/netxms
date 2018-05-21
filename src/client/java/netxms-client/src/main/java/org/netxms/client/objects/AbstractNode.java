@@ -105,6 +105,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements RackE
    protected long icmpProxyId;
 	protected int agentPort;
 	protected int agentAuthMethod;
+	protected UUID agentId;
 	protected AgentCacheMode agentCacheMode;
 	protected AgentCompressionMode agentCompressionMode;
 	protected String agentSharedSecret;
@@ -182,6 +183,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements RackE
       agentCacheMode = AgentCacheMode.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_AGENT_CACHE_MODE));
       agentCompressionMode = AgentCompressionMode.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_AGENT_COMPRESSION_MODE));
 		agentVersion = msg.getFieldAsString(NXCPCodes.VID_AGENT_VERSION);
+		agentId = msg.getFieldAsUUID(NXCPCodes.VID_AGENT_ID);
 		platformName = msg.getFieldAsString(NXCPCodes.VID_PLATFORM_NAME);
 		snmpAuthName = msg.getFieldAsString(NXCPCodes.VID_SNMP_AUTH_OBJECT);
 		snmpAuthPassword = msg.getFieldAsString(NXCPCodes.VID_SNMP_AUTH_PASSWORD);
@@ -345,6 +347,14 @@ public abstract class AbstractNode extends DataCollectionTarget implements RackE
 	}
 
 	/**
+    * @return the agentId
+    */
+   public UUID getAgentId()
+   {
+      return agentId;
+   }
+
+   /**
 	 * @return the platformName
 	 */
 	public String getPlatformName()

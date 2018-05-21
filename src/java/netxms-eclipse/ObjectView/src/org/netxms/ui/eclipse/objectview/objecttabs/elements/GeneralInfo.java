@@ -143,7 +143,11 @@ public class GeneralInfo extends TableElement
 				addPair(Messages.get().GeneralInfo_PrimaryHostName, node.getPrimaryName());
 				addPair(Messages.get().GeneralInfo_PrimaryIP, node.getPrimaryIP().getHostAddress());
 				if (node.hasAgent())
+				{
 					addPair(Messages.get().GeneralInfo_AgentVersion, node.getAgentVersion());
+					if (node.getAgentId() != null)
+					   addPair(Messages.get().GeneralInfo_AgentId, node.getAgentId().toString());
+				}
 				addPair(Messages.get().GeneralInfo_SysDescr, node.getSystemDescription(), false);
 				addPair(Messages.get().GeneralInfo_PlatformName, node.getPlatformName(), false);
 				addPair(Messages.get().GeneralInfo_SysName, node.getSnmpSysName(), false);

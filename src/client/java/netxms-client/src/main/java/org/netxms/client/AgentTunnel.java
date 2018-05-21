@@ -21,6 +21,7 @@ package org.netxms.client;
 import java.net.InetAddress;
 import java.util.UUID;
 import org.netxms.base.NXCPMessage;
+import org.netxms.base.NXCommon;
 
 /**
  * Agent tunnel information
@@ -31,6 +32,7 @@ public class AgentTunnel
    private UUID guid;
    private InetAddress address;
    private long nodeId;
+   private UUID agentId;
    private String systemName;
    private String systemInformation;
    private String platformName;
@@ -58,6 +60,7 @@ public class AgentTunnel
       activeChannelCount = msg.getFieldAsInt32(baseId + 8);
       zoneUIN = msg.getFieldAsInt64(baseId + 9);
       hostname = msg.getFieldAsString(baseId + 10);
+      agentId = msg.getFieldAsUUID(baseId + 11);
    }
    
    /**
@@ -100,6 +103,14 @@ public class AgentTunnel
    public long getNodeId()
    {
       return nodeId;
+   }
+
+   /**
+    * @return the agentId
+    */
+   public UUID getAgentId()
+   {
+      return (agentId != null) ? agentId : NXCommon.EMPTY_GUID;
    }
 
    /**

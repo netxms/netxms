@@ -74,8 +74,8 @@ void GetPredictionEngines(NXCPMessage *msg);
 bool GetPredictedData(ClientSession *session, const NXCPMessage *request, NXCPMessage *response, DataCollectionTarget *dcTarget);
 
 void GetAgentTunnels(NXCPMessage *msg);
-UINT32 BindAgentTunnel(UINT32 tunnelId, UINT32 nodeId);
-UINT32 UnbindAgentTunnel(UINT32 nodeId);
+UINT32 BindAgentTunnel(UINT32 tunnelId, UINT32 nodeId, UINT32 userId);
+UINT32 UnbindAgentTunnel(UINT32 nodeId, UINT32 userId);
 
 
 /**
@@ -13993,7 +13993,7 @@ void ClientSession::bindAgentTunnel(NXCPMessage *request)
    {
       UINT32 nodeId = request->getFieldAsUInt32(VID_NODE_ID);
       UINT32 tunnelId = request->getFieldAsUInt32(VID_TUNNEL_ID);
-      UINT32 rcc = BindAgentTunnel(tunnelId, nodeId);
+      UINT32 rcc = BindAgentTunnel(tunnelId, nodeId, m_dwUserId);
       msg.setField(VID_RCC, rcc);
       if (rcc == RCC_SUCCESS)
       {
@@ -14017,7 +14017,7 @@ void ClientSession::unbindAgentTunnel(NXCPMessage *request)
    if (m_dwSystemAccess & SYSTEM_ACCESS_REGISTER_AGENTS)
    {
       UINT32 nodeId = request->getFieldAsUInt32(VID_NODE_ID);
-      UINT32 rcc = UnbindAgentTunnel(nodeId);
+      UINT32 rcc = UnbindAgentTunnel(nodeId, m_dwUserId);
       msg.setField(VID_RCC, rcc);
       if (rcc == RCC_SUCCESS)
       {

@@ -242,6 +242,11 @@ Event::Event(const EventTemplate *eventTemplate, UINT32 sourceId, UINT32 dciId, 
                MACToStr(va_arg(args, BYTE *), buffer);
 					m_parameters.add(buffer);
                break;
+            case 'G':   // uuid object (GUID)
+               buffer = (TCHAR *)malloc(48 * sizeof(TCHAR));
+               (va_arg(args, uuid *))->toString(buffer);
+               m_parameters.add(buffer);
+               break;
             default:
                buffer = (TCHAR *)malloc(64 * sizeof(TCHAR));
                _sntprintf(buffer, 64, _T("BAD FORMAT \"%c\" [value = 0x%08X]"), szFormat[i], va_arg(args, UINT32));
@@ -907,6 +912,7 @@ void DeleteEventTemplateFromList(UINT32 eventCode)
  *        a - IPv4 address
  *        A - InetAddress object
  *        h - MAC (hardware) address
+ *        G - uuid object (GUID)
  *        i - Object ID
  * @param names names for parameters (NULL if parameters are unnamed)
  * @param args event parameters
@@ -959,6 +965,7 @@ static bool RealPostEvent(Queue *queue, UINT64 *eventId, UINT32 eventCode, UINT3
  *        a - IPv4 address
  *        A - InetAddress object
  *        h - MAC (hardware) address
+ *        G - uuid object (GUID)
  *        i - Object ID
  *        t - timestamp (time_t) as raw value (seconds since epoch)
  */
@@ -988,6 +995,7 @@ bool NXCORE_EXPORTABLE PostEvent(UINT32 eventCode, UINT32 sourceId, const char *
  *        a - IPv4 address
  *        A - InetAddress object
  *        h - MAC (hardware) address
+ *        G - uuid object (GUID)
  *        i - Object ID
  *        t - timestamp (time_t) as raw value (seconds since epoch)
  */
@@ -1016,6 +1024,7 @@ bool NXCORE_EXPORTABLE PostDciEvent(UINT32 eventCode, UINT32 sourceId, UINT32 dc
  *        a - IPv4 address
  *        A - InetAddress object
  *        h - MAC (hardware) address
+ *        G - uuid object (GUID)
  *        i - Object ID
  *        t - timestamp (time_t) as raw value (seconds since epoch)
  */
@@ -1045,6 +1054,7 @@ UINT64 NXCORE_EXPORTABLE PostEvent2(UINT32 eventCode, UINT32 sourceId, const cha
  *        a - IPv4 address
  *        A - InetAddress object
  *        h - MAC (hardware) address
+ *        G - uuid object (GUID)
  *        i - Object ID
  * @param names names for parameters (NULL if parameters are unnamed)
  */
@@ -1074,6 +1084,7 @@ bool NXCORE_EXPORTABLE PostEventWithNames(UINT32 eventCode, UINT32 sourceId, con
  *        a - IPv4 address
  *        A - InetAddress object
  *        h - MAC (hardware) address
+ *        G - uuid object (GUID)
  *        i - Object ID
  * @param names names for parameters (NULL if parameters are unnamed)
  */
@@ -1102,6 +1113,7 @@ bool NXCORE_EXPORTABLE PostDciEventWithNames(UINT32 eventCode, UINT32 sourceId, 
  *        a - IPv4 address
  *        A - InetAddress object
  *        h - MAC (hardware) address
+ *        G - uuid object (GUID)
  *        i - Object ID
  * @param names names for parameters (NULL if parameters are unnamed)
  */
@@ -1194,6 +1206,7 @@ bool NXCORE_EXPORTABLE PostDciEventWithNames(UINT32 eventCode, UINT32 sourceId, 
  *        a - IPv4 address
  *        A - InetAddress object
  *        h - MAC (hardware) address
+ *        G - uuid object (GUID)
  *        i - Object ID
  * @param names names for parameters (NULL if parameters are unnamed)
  * @param args event parameters
@@ -1224,6 +1237,7 @@ bool NXCORE_EXPORTABLE PostEventWithTag(UINT32 eventCode, UINT32 sourceId, const
  *        a - IPv4 address
  *        A - InetAddress object
  *        h - MAC (hardware) address
+ *        G - uuid object (GUID)
  *        i - Object ID
  */
 bool NXCORE_EXPORTABLE PostEventEx(Queue *queue, UINT32 eventCode, UINT32 sourceId, const char *format, ...)

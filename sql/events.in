@@ -1096,6 +1096,18 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'   8) Configured idle timeout (idleTimeout)'
 	);
 
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
+		EVENT_AGENT_ID_CHANGED, 'SYS_AGENT_ID_CHANGED', '741f0abc-1e69-46e4-adbc-bf1c4ed8549a',
+		EVENT_SEVERITY_WARNING, 1,
+		'Agent ID changed from %1 to %2',
+		'Generated when agent ID change detected.' CONCAT CRLF CONCAT
+		'Parameters:' CONCAT CRLF CONCAT
+		'   1) Old agent ID' CONCAT CRLF CONCAT
+		'   2) New agent ID'
+	);
+
+
 /*
 ** SNMP traps
 */

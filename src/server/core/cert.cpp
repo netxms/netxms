@@ -78,6 +78,11 @@ static X509_STORE *s_trustedCertificateStore = NULL;
 static Mutex s_certificateStoreLock;
 
 /**
+ * Log record ID
+ */
+static VolatileCounter s_logRecordId = 0;
+
+/**
  * Issue certificate signed with server's certificate
  */
 X509 *IssueCertificate(X509_REQ *request, const char *ou, const char *cn, int days)
@@ -609,6 +614,16 @@ void ReloadCertificates()
  */
 void InitCertificates()
 {
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   DB_RESULT hResult = DBSelect(hdb, _T("SELECT max(record_id) FROM certificate_action_log"));
+   if (hResult != NULL)
+   {
+      if (DBGetNumRows(hResult) > 0)
+         s_logRecordId = DBGetFieldLong(hResult, 0, 0);
+      DBFreeResult(hResult);
+   }
+   DBConnectionPoolReleaseConnection(hdb);
+
    ReloadCertificates();
 }
 
@@ -754,6 +769,15 @@ bool SetupServerTlsContext(SSL_CTX *context)
    return true;
 }
 
+/**
+ * Log certificate action
+ */
+void LogCertificateAction(CertificateOperation operation, UINT32 userId, UINT32 nodeId, const uuid& nodeGuid, CertificateType type, X509 *cert)
+{
+   ASN1_INTEGER *serial = X509_get_serialNumber(cert);
+   LogCertificateAction(operation, userId, nodeId, nodeGuid, type, GetCertificateSubjectString(cert), ASN1_INTEGER_get(serial));
+}
+
 #else		/* _WITH_ENCRYPTION */
 
 /**
@@ -761,6 +785,39 @@ bool SetupServerTlsContext(SSL_CTX *context)
  */
 void InitCertificates()
 {
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   DB_RESULT hResult = DBSelect(hdb, _T("SELECT max(record_id) FROM certificate_action_log"));
+   if (hResult != NULL)
+   {
+      if (DBGetNumRows(hResult) > 0)
+         s_logRecordId = DBGetFieldLong(hResult, 0, 0);
+      DBFreeResult(hResult);
+   }
+   DBConnectionPoolReleaseConnection(hdb);
 }
 
 #endif	/* _WITH_ENCRYPTION */
+
+/**
+ * Log certificate action
+ */
+void LogCertificateAction(CertificateOperation operation, UINT32 userId, UINT32 nodeId, const uuid& nodeGuid, CertificateType type, const TCHAR *subject, INT32 serial)
+{
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO certificate_action_log (record_id,timestamp,operation,user_id,node_id,node_guid,cert_type,subject,serial) VALUES (?,?,?,?,?,?,?,?,?)"));
+   if (hStmt != NULL)
+   {
+      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, InterlockedIncrement(&s_logRecordId));
+      DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, static_cast<UINT32>(time(NULL)));
+      DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, static_cast<INT32>(operation));
+      DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, userId);
+      DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, nodeId);
+      DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, nodeGuid);
+      DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, static_cast<INT32>(type));
+      DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, subject, DB_BIND_STATIC);
+      DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, serial);
+      DBExecute(hStmt);
+      DBFreeStatement(hStmt);
+   }
+   DBConnectionPoolReleaseConnection(hdb);
+}
