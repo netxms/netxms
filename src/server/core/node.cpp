@@ -2807,7 +2807,7 @@ bool Node::confPollAgent(UINT32 dwRqId)
             PostEvent(EVENT_AGENT_ID_CHANGED, m_id, "GG", &m_agentId, &agentId);
             m_agentId = agentId;
             hasChanges = true;
-            sendPollerMsg(rqId, _T("   NetXMS agent ID changed to %s\r\n"), m_agentId.toString(buffer));
+            sendPollerMsg(dwRqId, _T("   NetXMS agent ID changed to %s\r\n"), m_agentId.toString(buffer));
          }
          unlockProperties();
       }
