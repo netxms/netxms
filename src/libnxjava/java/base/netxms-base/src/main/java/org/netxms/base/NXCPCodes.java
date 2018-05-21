@@ -1010,6 +1010,7 @@ public class NXCPCodes
    public static final long VID_RACK_IMAGE_REAR = 613;
    public static final long VID_INCLUDE_THRESHOLDS = 614;
    public static final long VID_RESPONSIBLE_USERS = 615;
+   public static final long VID_AGENT_ID = 616;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;

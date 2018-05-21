@@ -290,6 +290,7 @@ CREATE TABLE nodes
   primary_name varchar(255) null,
   primary_ip varchar(48) not null,
   tunnel_id varchar(36) null,
+  agent_cert_subject varchar(500) null,
   snmp_version integer not null,
   snmp_port integer not null,
   community varchar(127) null,
@@ -302,6 +303,7 @@ CREATE TABLE nodes
   agent_port integer not null,
   status_poll_type integer not null,
   agent_version varchar(63) null,
+  agent_id varchar(36) null,
   platform_name varchar(63) null,
   poller_node_id integer not null,
   zone_guid integer not null,
@@ -1280,9 +1282,26 @@ CREATE TABLE certificates
   PRIMARY KEY(cert_id)
 ) TABLE_TYPE;
 
-/*
-** Audit log
-*/
+/**
+ * Certificate action log
+ */
+CREATE TABLE certificate_action_log
+(
+  record_id integer not null,
+  timestamp integer not null,
+  operation integer not null,
+  user_id integer not null,
+  node_id integer not null,
+  node_guid varchar(36) null,
+  cert_type integer not null,
+  subject varchar(255) null,
+  serial integer null,
+  PRIMARY KEY(record_id)
+) TABLE_TYPE;
+
+/**
+ * Audit log
+ */
 CREATE TABLE audit_log
 (
   record_id integer not null,
@@ -1300,9 +1319,9 @@ CREATE TABLE audit_log
   PRIMARY KEY(record_id)
 ) TABLE_TYPE;
 
-/*
-** Persistent storage
-*/
+/**
+ * Persistent storage
+ */
 CREATE TABLE persistent_storage
 (
   entry_key varchar(255) not null,

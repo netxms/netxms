@@ -69,6 +69,7 @@ Node::Node() : DataCollectionTarget()
    m_lastSNMPTrapId = 0;
    m_lastSyslogMessageId = 0;
    m_lastAgentPushRequestId = 0;
+   m_agentCertSubject = NULL;
    m_agentVersion[0] = 0;
    m_platformName[0] = 0;
    m_sysDescription = NULL;
@@ -180,6 +181,7 @@ Node::Node(const NewNodeData *newNodeData, UINT32 flags)  : DataCollectionTarget
    m_lastSNMPTrapId = 0;
    m_lastSyslogMessageId = 0;
    m_lastAgentPushRequestId = 0;
+   m_agentCertSubject = NULL;
    m_agentVersion[0] = 0;
    m_platformName[0] = 0;
    m_sysDescription = NULL;
@@ -286,6 +288,7 @@ Node::~Node()
    free(m_sysContact);
    free(m_sysLocation);
    delete m_routingLoopEvents;
+   free(m_agentCertSubject);
 }
 
 /**
@@ -321,7 +324,7 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
       _T("node_type,node_subtype,ssh_login,ssh_password,ssh_proxy,")
       _T("port_rows,port_numbering_scheme,agent_comp_mode,")
       _T("tunnel_id,lldp_id,capabilities,fail_time_snmp,fail_time_agent,")
-      _T("rack_orientation,rack_image_rear")
+      _T("rack_orientation,rack_image_rear,agent_id,agent_cert_subject")
       _T(" FROM nodes WHERE id=?"));
    if (hStmt == NULL)
       return false;
@@ -432,6 +435,13 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    m_failTimeAgent = DBGetFieldLong(hResult, 0, 50);
    m_rackOrientation = static_cast<RackOrientation>(DBGetFieldLong(hResult, 0, 51));
    m_rackImageRear = DBGetFieldGUID(hResult, 0, 52);
+   m_agentId = DBGetFieldGUID(hResult, 0, 53);
+   m_agentCertSubject = DBGetField(hResult, 0, 54, NULL, 0);
+   if ((m_agentCertSubject != NULL) && (m_agentCertSubject[0] == 0))
+   {
+      free(m_agentCertSubject);
+      m_agentCertSubject = NULL;
+   }
 
    DBFreeResult(hResult);
    DBFreeStatement(hStmt);
@@ -524,7 +534,8 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
          _T("snmp_sys_contact"), _T("snmp_sys_location"), _T("last_agent_comm_time"), _T("syslog_msg_count"),
          _T("snmp_trap_count"), _T("node_type"), _T("node_subtype"), _T("ssh_login"), _T("ssh_password"), _T("ssh_proxy"),
          _T("chassis_id"), _T("port_rows"), _T("port_numbering_scheme"), _T("agent_comp_mode"), _T("tunnel_id"), _T("lldp_id"),
-         _T("fail_time_snmp"), _T("fail_time_agent"), _T("rack_orientation"), _T("rack_image_rear"),
+         _T("fail_time_snmp"), _T("fail_time_agent"), _T("rack_orientation"), _T("rack_image_rear"), _T("agent_id"),
+         _T("agent_cert_subject"),
          NULL
       };
 
@@ -596,8 +607,10 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
          DBBind(hStmt, 51, DB_SQLTYPE_INTEGER, (LONG)m_failTimeSNMP);
          DBBind(hStmt, 52, DB_SQLTYPE_INTEGER, (LONG)m_failTimeAgent);
          DBBind(hStmt, 53, DB_SQLTYPE_INTEGER, m_rackOrientation);
-         DBBind(hStmt, 54, DB_SQLTYPE_VARCHAR, m_rackImageRear);   // rack image rear
-         DBBind(hStmt, 55, DB_SQLTYPE_INTEGER, m_id);
+         DBBind(hStmt, 54, DB_SQLTYPE_VARCHAR, m_rackImageRear);
+         DBBind(hStmt, 55, DB_SQLTYPE_VARCHAR, m_agentId);
+         DBBind(hStmt, 56, DB_SQLTYPE_VARCHAR, m_agentCertSubject, DB_BIND_STATIC);
+         DBBind(hStmt, 57, DB_SQLTYPE_INTEGER, m_id);
 
          success = DBExecute(hStmt);
          DBFreeStatement(hStmt);
@@ -2759,6 +2772,20 @@ bool Node::confPollAgent(UINT32 rqId)
          unlockProperties();
       }
 
+      if (pAgentConn->getParameter(_T("Agent.ID"), MAX_RESULT_LENGTH, buffer) == ERR_SUCCESS)
+      {
+         uuid agentId = uuid::parse(buffer);
+         lockProperties();
+         if (!m_agentId.equals(agentId))
+         {
+            PostEvent(EVENT_AGENT_ID_CHANGED, m_id, "GG", &m_agentId, &agentId);
+            m_agentId = agentId;
+            hasChanges = true;
+            sendPollerMsg(rqId, _T("   NetXMS agent ID changed to %s\r\n"), m_agentId.toString(buffer));
+         }
+         unlockProperties();
+      }
+
       if (pAgentConn->getParameter(_T("System.PlatformName"), MAX_PLATFORM_NAME_LEN, buffer) == ERR_SUCCESS)
       {
          lockProperties();
@@ -4893,6 +4920,7 @@ void Node::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
    pMsg->setField(VID_SNMP_PORT, m_snmpPort);
    pMsg->setField(VID_SNMP_VERSION, (WORD)m_snmpVersion);
    pMsg->setField(VID_AGENT_VERSION, m_agentVersion);
+   pMsg->setField(VID_AGENT_ID, m_agentId);
    pMsg->setField(VID_PLATFORM_NAME, m_platformName);
    pMsg->setField(VID_POLLER_NODE_ID, m_pollerNode);
    pMsg->setField(VID_ZONE_UIN, m_zoneUIN);
@@ -8030,10 +8058,12 @@ void Node::setRoutingLoopEvent(const InetAddress& address, UINT32 nodeId, UINT64
 /**
  * Set tunnel ID
  */
-void Node::setTunnelId(const uuid& tunnelId)
+void Node::setTunnelId(const uuid& tunnelId, const TCHAR *certSubject)
 {
    lockProperties();
    m_tunnelId = tunnelId;
+   free(m_agentCertSubject);
+   m_agentCertSubject = _tcsdup_ex(certSubject);
    setModified(MODIFY_NODE_PROPERTIES, false);
    unlockProperties();
 

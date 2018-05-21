@@ -458,7 +458,16 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const char *attr)
 
    NXSL_VM *vm = object->vm();
    Node *node = (Node *)object->getData();
-   if (!strcmp(attr, "agentVersion"))
+   if (!strcmp(attr, "agentCertificateSubject"))
+   {
+      value = vm->createValue(node->getAgentCertificateSubject());
+   }
+   else if (!strcmp(attr, "agentId"))
+   {
+      TCHAR buffer[64];
+      value = vm->createValue(node->getAgentId().toString(buffer));
+   }
+   else if (!strcmp(attr, "agentVersion"))
    {
       value = vm->createValue(node->getAgentVersion());
    }

@@ -122,8 +122,6 @@ typedef __console_ctx * CONSOLE_CTX;
 
 #define PING_TIME_TIMEOUT     10000
 
-typedef void * HSNMPSESSION;
-
 /**
  * Prefixes for poller messages
  */
@@ -211,6 +209,15 @@ enum CertificateType
    CERT_TYPE_USER = 1,
    CERT_TYPE_AGENT = 2,
    CERT_TYPE_SERVER = 3
+};
+
+/**
+ * Certificate operations
+ */
+enum CertificateOperation
+{
+   ISSUE_CERTIFICATE = 1,
+   REVOKE_CERTIFICATE = 2
 };
 
 /**
@@ -1151,7 +1158,9 @@ String GetCertificateSubjectString(X509 *cert);
 bool GetServerCertificateCountry(TCHAR *buffer, size_t size);
 bool GetServerCertificateOrganization(TCHAR *buffer, size_t size);
 X509 *IssueCertificate(X509_REQ *request, const char *ou, const char *cn, int days);
+void LogCertificateAction(CertificateOperation operation, UINT32 userId, UINT32 nodeId, const uuid& nodeGuid, CertificateType type, X509 *cert);
 #endif
+void LogCertificateAction(CertificateOperation operation, UINT32 userId, UINT32 nodeId, const uuid& nodeGuid, CertificateType type, const TCHAR *subject, INT32 serial);
 
 #ifndef _WIN32
 THREAD_RESULT NXCORE_EXPORTABLE THREAD_CALL SignalHandler(void *);

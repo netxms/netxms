@@ -55,6 +55,8 @@ public class TunnelListLabelProvider extends LabelProvider implements ITableLabe
       AgentTunnel t = (AgentTunnel)element;
       switch(columnIndex)
       {
+         case TunnelManager.COL_AGENT_ID:
+            return t.getAgentId().toString();
          case TunnelManager.COL_AGENT_VERSION:
             return t.getAgentVersion();
          case TunnelManager.COL_CHANNELS:

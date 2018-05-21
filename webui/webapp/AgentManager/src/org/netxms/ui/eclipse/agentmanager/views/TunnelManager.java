@@ -80,6 +80,7 @@ public class TunnelManager extends ViewPart
    public static final int COL_PLATFORM = 7;
    public static final int COL_SYSINFO = 8;
    public static final int COL_AGENT_VERSION = 9;
+   public static final int COL_AGENT_ID = 10;
    
    private SortableTableViewer viewer;
    private TunnelManagerFilter filter;
@@ -117,8 +118,8 @@ public class TunnelManager extends ViewPart
          }
       });
       
-      final String[] names = { "ID", "State", "Node", "IP address", "Channels", "System name", "Hostname", "Platform", "System information", "Agent version" };
-      final int[] widths = { 80, 80, 140, 150, 80, 150, 150, 250, 300, 150 };
+      final String[] names = { "ID", "State", "Node", "IP address", "Channels", "System name", "Hostname", "Platform", "System information", "Agent version", "Agent ID" };
+      final int[] widths = { 80, 80, 140, 150, 80, 150, 150, 250, 300, 150, 150 };
       viewer = new SortableTableViewer(parent, names, widths, 0, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setLabelProvider(new TunnelListLabelProvider());

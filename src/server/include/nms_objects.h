@@ -1867,6 +1867,8 @@ protected:
    UINT16 m_snmpPort;
 	UINT16 m_nUseIfXTable;
 	SNMP_SecurityContext *m_snmpSecurity;
+	uuid m_agentId;
+	TCHAR *m_agentCertSubject;
    TCHAR m_agentVersion[MAX_AGENT_VERSION_LEN];
    TCHAR m_platformName[MAX_PLATFORM_NAME_LEN];
    TCHAR m_snmpObjectId[MAX_OID_LEN * 4];
@@ -2057,6 +2059,7 @@ public:
 	bool isPerVlanFdbSupported() const { return (m_driver != NULL) ? m_driver->isPerVlanFdbSupported() : false; }
 	bool isWirelessController() const { return m_capabilities & NC_IS_WIFI_CONTROLLER ? true : false; }
 
+   const uuid& getAgentId() const { return m_agentId; }
 	const TCHAR *getAgentVersion() const { return m_agentVersion; }
 	const TCHAR *getPlatformName() const { return m_platformName; }
    INT16 getSNMPVersion() const { return m_snmpVersion; }
@@ -2085,6 +2088,7 @@ public:
    time_t getLastAgentCommTime() const { return m_lastAgentCommTime; }
    const TCHAR *getPrimaryName() const { return m_primaryName; }
    const uuid& getTunnelId() const { return m_tunnelId; }
+   const TCHAR *getAgentCertificateSubject() const { return m_agentCertSubject; }
    UINT32 getRequiredPollCount() const { return m_requiredPollCount; }
 
    bool isDown() { return (m_state & DCSF_UNREACHABLE) ? true : false; }
@@ -2104,7 +2108,7 @@ public:
    void setSshCredentials(const TCHAR *login, const TCHAR *password);
    void changeIPAddress(const InetAddress& ipAddr);
 	void changeZone(UINT32 newZone);
-	void setTunnelId(const uuid& tunnelId);
+	void setTunnelId(const uuid& tunnelId, const TCHAR *certSubject);
 	void setFileUpdateConnection(AgentConnection *conn);
    void clearDataCollectionConfigFromAgent(AgentConnectionEx *conn);
    void forceSyncDataCollectionConfig();

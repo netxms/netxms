@@ -92,7 +92,7 @@ AgentTunnel *GetTunnelForNode(UINT32 nodeId)
 /**
  * Bind agent tunnel
  */
-UINT32 BindAgentTunnel(UINT32 tunnelId, UINT32 nodeId)
+UINT32 BindAgentTunnel(UINT32 tunnelId, UINT32 nodeId, UINT32 userId)
 {
    AgentTunnel *tunnel = NULL;
    s_tunnelListLock.lock();
@@ -113,15 +113,15 @@ UINT32 BindAgentTunnel(UINT32 tunnelId, UINT32 nodeId)
       return RCC_INVALID_TUNNEL_ID;
    }
 
-   UINT32 rcc = tunnel->bind(nodeId);
+   UINT32 rcc = tunnel->bind(nodeId, userId);
    tunnel->decRefCount();
    return rcc;
 }
 
 /**
- * Bind agent tunnel from node
+ * Unbind agent tunnel from node
  */
-UINT32 UnbindAgentTunnel(UINT32 nodeId)
+UINT32 UnbindAgentTunnel(UINT32 nodeId, UINT32 userId)
 {
    Node *node = (Node *)FindObjectById(nodeId, OBJECT_NODE);
    if (node == NULL)
@@ -130,7 +130,12 @@ UINT32 UnbindAgentTunnel(UINT32 nodeId)
    if (node->getTunnelId().isNull())
       return RCC_SUCCESS;  // tunnel is not set
 
-   node->setTunnelId(uuid::NULL_UUID);
+   TCHAR subject[256];
+   _sntprintf(subject, 256, _T("OU=%s,CN=%s"), (const TCHAR *)node->getGuid().toString(), (const TCHAR *)node->getTunnelId().toString());
+   LogCertificateAction(REVOKE_CERTIFICATE, userId, nodeId, node->getGuid(), CERT_TYPE_AGENT,
+            (node->getAgentCertificateSubject() != NULL) ? node->getAgentCertificateSubject() : subject, 0);
+
+   node->setTunnelId(uuid::NULL_UUID, NULL);
 
    AgentTunnel *tunnel = GetTunnelForNode(nodeId);
    if (tunnel != NULL)
@@ -229,6 +234,7 @@ AgentTunnel::AgentTunnel(SSL_CTX *context, SSL *ssl, SOCKET sock, const InetAddr
    m_systemInfo = NULL;
    m_agentVersion = NULL;
    m_bindRequestId = 0;
+   m_bindUserId = 0;
    m_channelLock = MutexCreate();
    m_hostname[0] = 0;
    m_startTime = time(NULL);
@@ -452,6 +458,7 @@ void AgentTunnel::setup(const NXCPMessage *request)
       m_systemName = request->getFieldAsString(VID_SYS_NAME);
       m_systemInfo = request->getFieldAsString(VID_SYS_DESCRIPTION);
       m_platformName = request->getFieldAsString(VID_PLATFORM_NAME);
+      m_agentId = request->getFieldAsGUID(VID_AGENT_ID);
       m_agentVersion = request->getFieldAsString(VID_AGENT_VERSION);
       request->getFieldAsString(VID_HOSTNAME, m_hostname, MAX_DNS_NAME);
 
@@ -468,6 +475,7 @@ void AgentTunnel::setup(const NXCPMessage *request)
       debugPrintf(5, _T("   Hostname:           %s"), m_hostname);
       debugPrintf(5, _T("   System information: %s"), m_systemInfo);
       debugPrintf(5, _T("   Platform name:      %s"), m_platformName);
+      debugPrintf(5, _T("   Agent ID:           %s"), (const TCHAR *)m_agentId.toString());
       debugPrintf(5, _T("   Agent version:      %s"), m_agentVersion);
       debugPrintf(5, _T("   Zone UIN:           %u"), m_zoneUIN);
    }
@@ -482,7 +490,7 @@ void AgentTunnel::setup(const NXCPMessage *request)
 /**
  * Bind tunnel to node
  */
-UINT32 AgentTunnel::bind(UINT32 nodeId)
+UINT32 AgentTunnel::bind(UINT32 nodeId, UINT32 userId)
 {
    if ((m_state != AGENT_TUNNEL_UNBOUND) || (m_bindRequestId != 0))
       return RCC_OUT_OF_STATE_REQUEST;
@@ -507,6 +515,7 @@ UINT32 AgentTunnel::bind(UINT32 nodeId)
 
    m_bindRequestId = msg.getId();
    m_bindGuid = node->getGuid();
+   m_bindUserId = userId;
    sendMessage(&msg);
 
    NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, msg.getId());
@@ -553,6 +562,8 @@ void AgentTunnel::processCertificateRequest(NXCPMessage *request)
             free(cn);
             if (cert != NULL)
             {
+               LogCertificateAction(ISSUE_CERTIFICATE, m_bindUserId, m_nodeId, m_bindGuid, CERT_TYPE_AGENT, cert);
+
                BYTE *buffer = NULL;
                int len = i2d_X509(cert, &buffer);
                if (len > 0)
@@ -565,7 +576,7 @@ void AgentTunnel::processCertificateRequest(NXCPMessage *request)
                   Node *node = (Node *)FindObjectByGUID(m_bindGuid, OBJECT_NODE);
                   if (node != NULL)
                   {
-                     node->setTunnelId(m_guid);
+                     node->setTunnelId(m_guid, GetCertificateSubjectString(cert));
                   }
                }
                else
@@ -700,6 +711,7 @@ void AgentTunnel::fillMessage(NXCPMessage *msg, UINT32 baseId) const
    MutexUnlock(m_channelLock);
    msg->setField(baseId + 9, m_zoneUIN);
    msg->setField(baseId + 10, m_hostname);
+   msg->setField(baseId + 11, m_agentId);
 }
 
 /**
@@ -1345,7 +1357,7 @@ void ProcessUnboundTunnels(const ScheduledTaskParameters *p)
             {
                nxlog_debug_tag(DEBUG_TAG, 4, _T("Binding tunnel from %s (%s) to existing node %s [%d]"),
                         t->getHostname(), (const TCHAR *)t->getAddress().toString(), node->getName(), node->getId());
-               BindAgentTunnel(t->getId(), node->getId());
+               BindAgentTunnel(t->getId(), node->getId(), 0);
             }
             else if (action == BIND_OR_CREATE_NODE)
             {
@@ -1378,7 +1390,7 @@ void ProcessUnboundTunnels(const ScheduledTaskParameters *p)
                      }
                   }
 
-                  if (BindAgentTunnel(t->getId(), node->getId()) == RCC_SUCCESS)
+                  if (BindAgentTunnel(t->getId(), node->getId(), 0) == RCC_SUCCESS)
                   {
                      node->incRefCount();
                      ThreadPoolScheduleRelative(g_mainThreadPool, 60000, FinishNodeCreation, node);

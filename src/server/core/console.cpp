@@ -38,8 +38,8 @@ extern ThreadPool *g_syncerThreadPool;
 
 void ShowPredictionEngines(CONSOLE_CTX console);
 void ShowAgentTunnels(CONSOLE_CTX console);
-UINT32 BindAgentTunnel(UINT32 tunnelId, UINT32 nodeId);
-UINT32 UnbindAgentTunnel(UINT32 nodeId);
+UINT32 BindAgentTunnel(UINT32 tunnelId, UINT32 nodeId, UINT32 userId);
+UINT32 UnbindAgentTunnel(UINT32 nodeId, UINT32 userId);
 int GetEventLogWriterQueueSize();
 
 /**
@@ -1307,7 +1307,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 
          if ((tunnelId != 0) && (nodeId != 0))
          {
-            UINT32 rcc = BindAgentTunnel(tunnelId, nodeId);
+            UINT32 rcc = BindAgentTunnel(tunnelId, nodeId, 0);
             ConsolePrintf(pCtx, _T("Bind tunnel %d to node %d: RCC = %d\n\n"), tunnelId, nodeId, rcc);
          }
          else
@@ -1322,7 +1322,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 
          if (nodeId != 0)
          {
-            UINT32 rcc = UnbindAgentTunnel(nodeId);
+            UINT32 rcc = UnbindAgentTunnel(nodeId, 0);
             ConsolePrintf(pCtx, _T("Unbind tunnel from node %d: RCC = %d\n\n"), nodeId, rcc);
          }
          else

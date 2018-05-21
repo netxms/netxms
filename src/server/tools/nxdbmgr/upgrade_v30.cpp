@@ -24,6 +24,44 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 30.36 to 30.37 (changes also included into 22.26)
+ */
+static bool H_UpgradeFromV36()
+{
+   if (GetSchemaLevelForMajorVersion(22) < 26)
+   {
+      CHK_EXEC(CreateTable(
+         _T("CREATE TABLE certificate_action_log (")
+         _T("   record_id integer not null,")
+         _T("   timestamp integer not null,")
+         _T("   operation integer not null,")
+         _T("   user_id integer not null,")
+         _T("   node_id integer not null,")
+         _T("   node_guid varchar(36) null,")
+         _T("   cert_type integer not null,")
+         _T("   subject varchar(255) null,")
+         _T("   serial integer null,")
+         _T("   PRIMARY KEY(record_id))")));
+
+      CHK_EXEC(_T("ALTER TABLE nodes ADD agent_id varchar(36)"));
+      CHK_EXEC(_T("ALTER TABLE nodes ADD agent_cert_subject varchar(500)"));
+
+      CHK_EXEC(CreateEventTemplate(EVENT_AGENT_ID_CHANGED, _T("SYS_AGENT_ID_CHANGED"), SEVERITY_WARNING, EF_LOG,
+               _T("741f0abc-1e69-46e4-adbc-bf1c4ed8549a"),
+               _T("Agent ID changed from %1 to %2"),
+               _T("Generated when agent ID change detected.\r\n")
+               _T("Parameters:\r\n")
+               _T("   1) Old agent ID\r\n")
+               _T("   2) New agent ID")
+               ));
+
+      CHK_EXEC(SetSchemaLevelForMajorVersion(22, 26));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(37));
+   return true;
+}
+
+/**
  * Upgrade from 30.35 to 30.36 (changes also included into 22.25)
  */
 static bool H_UpgradeFromV35()
@@ -1090,6 +1128,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 36, 30, 37, H_UpgradeFromV36 },
    { 35, 30, 36, H_UpgradeFromV35 },
    { 34, 30, 35, H_UpgradeFromV34 },
    { 33, 30, 35, H_UpgradeFromV33 },

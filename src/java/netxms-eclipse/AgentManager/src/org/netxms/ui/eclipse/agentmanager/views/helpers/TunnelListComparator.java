@@ -44,6 +44,9 @@ public class TunnelListComparator extends ViewerComparator
       int result;
       switch((Integer)((SortableTableViewer)viewer).getTable().getSortColumn().getData("ID")) //$NON-NLS-1$
       {
+         case TunnelManager.COL_AGENT_ID:
+            result = t1.getAgentId().compareTo(t2.getAgentId());
+            break;
          case TunnelManager.COL_AGENT_VERSION:
             result = t1.getAgentVersion().compareToIgnoreCase(t2.getAgentVersion());
             break;

@@ -101,8 +101,10 @@ protected:
    TCHAR *m_platformName;
    TCHAR *m_systemInfo;
    TCHAR *m_agentVersion;
+   uuid m_agentId;
    UINT32 m_bindRequestId;
    uuid m_bindGuid;
+   UINT32 m_bindUserId;
    RefCountHashMap<UINT32, AgentTunnelCommChannel> m_channels;
    MUTEX m_channelLock;
    
@@ -125,7 +127,7 @@ public:
    
    void start();
    void shutdown();
-   UINT32 bind(UINT32 nodeId);
+   UINT32 bind(UINT32 nodeId, UINT32 userId);
    AgentTunnelCommChannel *createChannel();
    void closeChannel(AgentTunnelCommChannel *channel);
    int sendChannelData(UINT32 id, const void *data, size_t len);

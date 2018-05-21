@@ -84,6 +84,7 @@ public class Messages extends NLS
    public String GeneralInfo_8021xBackend;
    public String GeneralInfo_8021xPAE;
    public String GeneralInfo_AdmState;
+   public String GeneralInfo_AgentId;
    public String GeneralInfo_AgentStatus;
    public String GeneralInfo_AgentVersion;
    public String GeneralInfo_Alias;
