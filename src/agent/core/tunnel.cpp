@@ -497,7 +497,11 @@ bool Tunnel::connectToServer()
    }
 
    // Setup secure connection
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+   const SSL_METHOD *method = TLS_method();
+#else
    const SSL_METHOD *method = SSLv23_method();
+#endif
    if (method == NULL)
    {
       debugPrintf(4, _T("Cannot obtain TLS method"));

@@ -943,7 +943,11 @@ static void SetupTunnel(void *arg)
    X509 *cert = NULL;
 
    // Setup secure connection
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+   const SSL_METHOD *method = TLS_method();
+#else
    const SSL_METHOD *method = SSLv23_method();
+#endif
    if (method == NULL)
    {
       nxlog_debug(4, _T("SetupTunnel(%s): cannot obtain TLS method"), (const TCHAR *)request->addr.toString());
