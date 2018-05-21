@@ -37,13 +37,17 @@ static DB_HANDLE s_db = NULL;
  */
 TCHAR *ReadMetadata(const TCHAR *attr, TCHAR *buffer)
 {
+   if (s_db == NULL)
+      return NULL;
+
    TCHAR query[256], *value = NULL;
    _sntprintf(query, 256, _T("SELECT value FROM metadata WHERE attribute='%s'"), attr);
 
    DB_RESULT hResult = DBSelect(s_db, query);
    if (hResult != NULL)
    {
-      value = DBGetField(hResult, 0, 0, buffer, MAX_DB_STRING);
+      if (DBGetNumRows(hResult) > 0)
+         value = DBGetField(hResult, 0, 0, buffer, MAX_DB_STRING);
       DBFreeResult(hResult);
    }
    return value;
@@ -65,14 +69,9 @@ INT32 ReadMetadataAsInt(const TCHAR *attr)
  */
 bool WriteMetadata(const TCHAR *name, const TCHAR *value)
 {
-   String prepValue = DBPrepareString(s_db, value, 255);
-
    TCHAR query[1024];
-   _sntprintf(query, 1024, _T("UPDATE OR IGNORE metadata SET value=%s WHERE attribute='%s'"), (const TCHAR *)prepValue, name);
-   if (!DBQuery(s_db, query))
-      return false;
-
-   _sntprintf(query, 1024, _T("INSERT OR IGNORE INTO metadata (attribute,value) VALUES ('%s',%s)"), name, (const TCHAR *)prepValue);
+   _sntprintf(query, 1024, _T("INSERT OR REPLACE INTO metadata (attribute,value) VALUES ('%s',%s)"), 
+      name, (const TCHAR *)DBPrepareString(s_db, value, 255));
    return DBQuery(s_db, query);
 }
 
