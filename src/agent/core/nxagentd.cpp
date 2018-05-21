@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -153,6 +153,7 @@ extern const TCHAR *g_szMessages[];
 /**
  * Global variables
  */
+uuid g_agentId;
 UINT32 g_dwFlags = AF_ENABLE_ACTIONS | AF_ENABLE_AUTOLOAD | AF_WRITE_FULL_DUMP;
 UINT32 g_failFlags = 0;
 TCHAR g_szLogFile[MAX_PATH] = AGENT_DEFAULT_LOG;
@@ -826,6 +827,17 @@ BOOL Initialize()
    {
       nxlog_write(MSG_LOCAL_DB_OPEN_FAILED, NXLOG_ERROR, NULL);
    }
+
+   TCHAR agentIdText[MAX_DB_STRING];
+   if (ReadMetadata(_T("AgentId"), agentIdText) != NULL)
+      g_agentId = uuid::parse(agentIdText);
+   if (g_agentId.isNull())
+   {
+      g_agentId = uuid::generate();
+      WriteMetadata(_T("AgentId"), g_agentId.toString(agentIdText));
+      nxlog_debug(1, _T("New agent ID generated"));
+   }
+   nxlog_write_generic(NXLOG_INFO, _T("Agent ID is %s"), g_agentId.toString(agentIdText));
 
    TCHAR hostname[256];
    GetLocalHostName(hostname, 256, true);
