@@ -599,6 +599,7 @@ bool Tunnel::connectToServer()
    msg.setCode(CMD_SETUP_AGENT_TUNNEL);
    msg.setId(InterlockedIncrement(&m_requestId));
    msg.setField(VID_AGENT_VERSION, NETXMS_BUILD_TAG);
+   msg.setField(VID_AGENT_ID, g_agentId);
    msg.setField(VID_SYS_NAME, g_systemName);
    msg.setField(VID_ZONE_UIN, g_zoneUIN);
 
