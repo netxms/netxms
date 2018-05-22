@@ -73,7 +73,7 @@ struct IDataWriter
 /**
  * Maximum possible number of IData writers
  */
-#define MAX_IDATA_WRITERS  16
+#define MAX_IDATA_WRITERS  64
 
 /**
  * Configured number of IData writers
