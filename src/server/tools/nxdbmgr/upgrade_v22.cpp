@@ -41,7 +41,6 @@ static bool H_UpgradeFromV26()
    CHK_EXEC(CreateConfigParam(_T("Client.ObjectBrowser.AutoApplyFilter"), _T("1"), _T("Enable or disable object browser's filter applying as user types (if disabled, user has to press ENTER to apply filter)."), NULL, 'B', true, false, false, false));
    CHK_EXEC(CreateConfigParam(_T("Client.ObjectBrowser.FilterDelay"), _T("300"), _T("Delay between typing in object browser''s filter and applying it to object tree."), _T("milliseconds"), 'I', true, false, false, false));
    CHK_EXEC(CreateConfigParam(_T("Client.ObjectBrowser.MinFilterStringLength"), _T("1"), _T("Minimal length of filter string in object browser required for automatic apply."), _T("characters"), 'I', true, false, false, false));
-   CHK_EXEC(SetSchemaLevelForMajorVersion(22, 27));
    CHK_EXEC(SetMinorSchemaVersion(27));
    return true;
 }
