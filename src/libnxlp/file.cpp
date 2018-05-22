@@ -607,7 +607,9 @@ bool LogParser::monitorFile2(CONDITION stopCondition, bool readFromCurrPos)
 {
    size_t size = 0;
    time_t mtime = 0;
-   time_t ctime = 0;
+#ifdef _WIN32
+   time_t ctime = 0; // creation time on Windows
+#endif
    off_t lastPos = 0;
    bool readFromStart = !readFromCurrPos;
    bool firstRead = true;
@@ -647,13 +649,20 @@ bool LogParser::monitorFile2(CONDITION stopCondition, bool readFromCurrPos)
          continue;
       }
 
+#ifdef _WIN32
       if (firstRead)
          ctime = st.st_ctime; // prevent incorrect rotation detection on first read
+#endif
 
       if (!readFromStart)
       {
+#ifdef _WIN32
          if ((m_ignoreMTime && !m_preallocatedFile && (size == st.st_size) && (ctime == st.st_ctime)) ||
              (!m_ignoreMTime && (size == st.st_size) && (mtime == st.st_mtime) && (ctime == st.st_ctime)))
+#else
+         if ((m_ignoreMTime && !m_preallocatedFile && (size == st.st_size)) ||
+             (!m_ignoreMTime && (size == st.st_size) && (mtime == st.st_mtime)))
+#endif
          {
             if (ConditionWait(stopCondition, 10000))
                break;
@@ -677,12 +686,21 @@ bool LogParser::monitorFile2(CONDITION stopCondition, bool readFromCurrPos)
       setStatus(LPS_RUNNING);
       LogParserTrace(7, _T("LogParser: file \"%s\" (pattern \"%s\") successfully opened"), fname, m_fileName);
 
+#ifdef _WIN32
       if ((size > static_cast<size_t>(st.st_size)) || (ctime != st.st_ctime))
+#else
+      if (size > static_cast<size_t>(st.st_size))
+#endif
       {
+#ifdef _WIN32
          nxlog_debug(5, _T("LogParser: file \"%s\" rotation detected (size=%llu/%llu, ctime=%llu/%llu)"),  fname,
             static_cast<UINT64>(size), static_cast<UINT64>(st.st_size), static_cast<UINT64>(ctime), static_cast<UINT64>(st.st_ctime));
-         readFromStart = true;   // Assume file rotation
          ctime = st.st_ctime;
+#else
+         nxlog_debug_tag(5, _T("LogParser: file \"%s\" rotation detected (size=%llu/%llu)"),  fname,
+            static_cast<UINT64>(size), static_cast<UINT64>(st.st_size));
+#endif
+         readFromStart = true;   // Assume file rotation
       }
 
       if (m_fileEncoding == -1)
