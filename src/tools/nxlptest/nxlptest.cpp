@@ -28,11 +28,6 @@
 #endif
 
 /**
- * Stop condition
- */
-static CONDITION m_stopCondition = INVALID_CONDITION_HANDLE;
-
-/**
  * Help text
  */
 static TCHAR m_helpText[] =
@@ -162,6 +157,8 @@ int main(int argc, char *argv[])
 		if ((parsers != NULL) && (parsers->size() > 0))
 		{
          LogParser *parser = parsers->get(0);
+         for(int i = 1; i < parsers->size(); i++)
+            delete parsers->get(i);
 			if (traceLevel != -1)
 				parser->setTraceLevel(traceLevel);
 			if (inputFile != NULL)
@@ -171,8 +168,6 @@ int main(int argc, char *argv[])
             parser->setSnapshotMode(true);
 #endif
 
-			m_stopCondition = ConditionCreate(true);
-         parser->setStopCondition(m_stopCondition);
 			thread = ThreadCreateEx(ParserThread, 0, parser);
 #ifdef _WIN32
 			_tprintf(_T("Parser started. Press ESC to stop.\nFile: %s\nTrace level: %d\n\n"),
@@ -197,9 +192,8 @@ int main(int argc, char *argv[])
 			while(!s_stop)
             ThreadSleepMs(500);
 #endif
-			ConditionSet(m_stopCondition);
-			ThreadJoin(thread);
-			ConditionDestroy(m_stopCondition);
+			parser->stop();
+         delete parser;
 		}
 		else
 		{
@@ -207,6 +201,7 @@ int main(int argc, char *argv[])
 			rc = 1;
 		}
 		free(xml);
+      delete parsers;
 	}
 	else
 	{

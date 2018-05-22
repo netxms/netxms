@@ -289,9 +289,6 @@ public:
 	void setThread(THREAD th) { m_thread = th; }
 	THREAD getThread() { return m_thread; }
 
-   void setStopCondition(CONDITION c) { m_stopCondition = c;  }
-   CONDITION getStopCondition() { return m_stopCondition; }
-
 	void setProcessAllFlag(bool flag) { m_processAllRules = flag; }
 	bool getProcessAllFlag() const { return m_processAllRules; }
 
@@ -339,6 +336,7 @@ public:
 
    void restoreCounters(const LogParser *parser);
 
+   void stop();
    void suspend();
    void resume();
 
