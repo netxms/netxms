@@ -2,6 +2,7 @@
 * 2.2.6
 *
 
+- NXSL based queries in object finder
 - Fixed issues:
 	NX-1451 (Additional configs not loaded on agent startup)
 
