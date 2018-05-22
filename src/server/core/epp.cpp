@@ -348,7 +348,7 @@ void EPRule::createNXMPRecord(String &str)
 bool EPRule::matchSource(UINT32 objectId)
 {
    if (m_sources.isEmpty())
-      return (m_flags & RF_NEGATED_EVENTS) ? false : true;
+      return (m_flags & RF_NEGATED_SOURCE) ? false : true;
 
    bool match = false;
    for(int i = 0; i < m_sources.size(); i++)
