@@ -309,11 +309,13 @@ public class NXCSession
    private int minViewRefreshInterval;
    private long serverTime = System.currentTimeMillis();
    private long serverTimeRecvTime = System.currentTimeMillis();
-   private int alarmListDisplayLimit;
    private Set<String> serverComponents = new HashSet<String>(0);
    private String serverName;
    private String serverColor;
 
+   // Configuration hints
+   private Map<String, String> clientConfigurationHints = new HashMap<String, String>();
+   
    // Objects
    private Map<Long, AbstractObject> objectList = new HashMap<Long, AbstractObject>();
    private Map<UUID, AbstractObject> objectListGUID = new HashMap<UUID, AbstractObject>();
@@ -2008,14 +2010,28 @@ public class NXCSession
       if ((serverName == null) || serverName.isEmpty())
          serverName = connAddress;
 
-      alarmListDisplayLimit = response.getFieldAsInt32(NXCPCodes.VID_ALARM_LIST_DISP_LIMIT);
-      Logger.info("NXCSession.connect", "alarmListDisplayLimit = " + alarmListDisplayLimit);
+      // compatibility with 2.2.x before 2.2.6
+      int count = response.getFieldAsInt32(NXCPCodes.VID_ALARM_LIST_DISP_LIMIT);
+      clientConfigurationHints.put("AlarmList.DisplayLimit", Integer.toString(count));
+      
+      count = response.getFieldAsInt32(NXCPCodes.VID_CONFIG_HINT_COUNT);
+      if (count > 0)
+      {
+         long fieldId = NXCPCodes.VID_CONFIG_HINT_LIST_BASE;
+         for(int i = 0; i < count; i++)
+         {
+            String key = response.getFieldAsString(fieldId++);
+            String value = response.getFieldAsString(fieldId++);
+            clientConfigurationHints.put(key, value);
+            Logger.info("NXCSession.login", "configuration hint: " + key + " = " + value);
+         }
+      }
 
       messageOfTheDay = response.getFieldAsString(NXCPCodes.VID_MESSAGE_OF_THE_DAY);
 
       allowCompression = response.getFieldAsBoolean(NXCPCodes.VID_ENABLE_COMPRESSION);
       
-      Logger.info("NXCSession.connect", "succesfully logged in, userId=" + userId);
+      Logger.info("NXCSession.login", "succesfully logged in, userId=" + userId);
    }
    
    /**
@@ -2468,9 +2484,81 @@ public class NXCSession
     */
    public int getAlarmListDisplayLimit()
    {
-		return alarmListDisplayLimit;
+		return getClientConfigurationHintAsInt("AlarmList.DisplayLimit", 4096);
+   }
+   
+   /**
+    * Get client configuration hint as string
+    * 
+    * @param name hint name
+    * @param defaultValue default value (returned if given hint was not provided by server)
+    * @return hint value as provided by server or default value
+    */
+   public String getClientConfigurationHint(String name, String defaultValue)
+   {
+      String v = clientConfigurationHints.get(name);
+      return (v != null) ? v : defaultValue;
    }
 
+   /**
+    * Get client configuration hint as string
+    * 
+    * @param name hint name
+    * @return hint value as provided by server or null
+    */
+   public String getClientConfigurationHint(String name)
+   {
+      return getClientConfigurationHint(name, null);
+   }
+   
+   /**
+    * Get client configuration hint as integer
+    * 
+    * @param name hint name
+    * @param defaultValue default value (returned if given hint was not provided by server or is not valid integer)
+    * @return hint value as provided by server or default value
+    */
+   public int getClientConfigurationHintAsInt(String name, int defaultValue)
+   {
+      String v = clientConfigurationHints.get(name);
+      if (v == null)
+         return defaultValue;
+      try
+      {
+         return Integer.parseInt(v);
+      }
+      catch(NumberFormatException e)
+      {
+         return defaultValue;
+      }
+   }
+   
+   /**
+    * Get client configuration hint as boolean
+    * 
+    * @param name hint name
+    * @param defaultValue default value (returned if given hint was not provided by server or is not valid boolean)
+    * @return hint value as provided by server or default value
+    */
+   public boolean getClientConfigurationHintAsBoolean(String name, boolean defaultValue)
+   {
+      String v = clientConfigurationHints.get(name);
+      if (v == null)
+         return defaultValue;
+      if (v.equalsIgnoreCase("true"))
+         return true;
+      if (v.equalsIgnoreCase("false"))
+         return false;
+      try
+      {
+         return Integer.parseInt(v) != 0;
+      }
+      catch(NumberFormatException e)
+      {
+         return defaultValue;
+      }
+   }
+   
    /**
     * Synchronizes NetXMS objects between server and client. After successful
     * sync, subscribe client to object change notifications.
