@@ -41,8 +41,8 @@ static bool H_UpgradeFromV25()
       _T("   serial integer null,")
       _T("   PRIMARY KEY(record_id))")));
 
-   CHK_EXEC(_T("ALTER TABLE nodes ADD agent_id varchar(36)"));
-   CHK_EXEC(_T("ALTER TABLE nodes ADD agent_cert_subject varchar(500)"));
+   CHK_EXEC(SQLQuery(_T("ALTER TABLE nodes ADD agent_id varchar(36)")));
+   CHK_EXEC(SQLQuery(_T("ALTER TABLE nodes ADD agent_cert_subject varchar(500)")));
 
    CHK_EXEC(CreateEventTemplate(EVENT_AGENT_ID_CHANGED, _T("SYS_AGENT_ID_CHANGED"), SEVERITY_WARNING, EF_LOG,
             _T("741f0abc-1e69-46e4-adbc-bf1c4ed8549a"),
