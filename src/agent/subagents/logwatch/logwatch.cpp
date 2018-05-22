@@ -127,14 +127,7 @@ static LONG H_ParserList(const TCHAR *cmd, const TCHAR *arg, StringList *value, 
 static void SubagentShutdown()
 {
    for(int i = 0; i < s_parsers.size(); i++)
-      ConditionSet(s_parsers.get(i)->getStopCondition());
-
-   for(int i = 0; i < s_parsers.size(); i++)
-	{
-      LogParser *p = s_parsers.get(i);
-      ThreadJoin(p->getThread());
-      ConditionDestroy(p->getStopCondition());
-	}
+      s_parsers.get(i)->stop();
 
    CleanupLogParserLibrary();
 }
@@ -202,7 +195,6 @@ static void AddParserFromConfig(const TCHAR *file, const uuid& guid)
 				{
 					parser->setCallback(LogParserMatch);
                parser->setGuid(guid);
-               parser->setStopCondition(ConditionCreate(true));
                s_parsers.add(parser);
                nxlog_debug_tag(DEBUG_TAG, 1, _T("Registered parser for file \"%s\", GUID %s, trace level %d"),
 						parser->getFileName(), (const TCHAR *)guid.toString(), parser->getTraceLevel());
@@ -348,8 +340,7 @@ static void OnAgentNotify(UINT32 code, void *data)
          continue;
 
       nxlog_debug_tag(DEBUG_TAG, 3, _T("Reloading parser for file %s"), p->getFileName());
-      ConditionSet(p->getStopCondition());
-      ThreadJoin(p->getThread());
+      p->stop();
       s_parsers.remove(i);
       i--;
    }
