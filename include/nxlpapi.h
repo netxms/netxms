@@ -346,6 +346,7 @@ public:
 
    void restoreCounters(const LogParser *parser);
 
+   void stop();
    void suspend();
    void resume();
 };

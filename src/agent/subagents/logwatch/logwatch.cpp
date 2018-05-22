@@ -118,13 +118,8 @@ static LONG H_ParserList(const TCHAR *cmd, const TCHAR *arg, StringList *value, 
  */
 static void SubagentShutdown()
 {
-	if (s_shutdownCondition != INVALID_CONDITION_HANDLE)
-		ConditionSet(s_shutdownCondition);
-
-	for(int i = 0; i < s_parsers.size(); i++)
-	{
-		ThreadJoin(s_parsers.get(i)->getThread());
-	}
+   for(int i = 0; i < s_parsers.size(); i++)
+      s_parsers.get(i)->stop();
 
    CleanupLogParserLibrary();
 }
@@ -295,6 +290,67 @@ static BOOL SubagentInit(Config *config)
 	}
 
 	return TRUE;
+}
+
+/**
+ * Agent notification handler
+ */
+static void OnAgentNotify(UINT32 code, void *data)
+{
+   if (code != AGENT_NOTIFY_POLICY_INSTALLED)
+      return;
+
+   // data points to uuid object
+   uuid policyId = *static_cast<uuid*>(data);
+
+   s_parserLock.lock();
+   for (int i = 0; i < s_parsers.size(); i++)
+   {
+      LogParser *p = s_parsers.get(i);
+      if (!p->getGuid().equals(policyId))
+         continue;
+
+      nxlog_debug_tag(DEBUG_TAG, 3, _T("Reloading parser for file %s"), p->getFileName());
+      p->stop();
+      s_parsers.remove(i);
+      i--;
+   }
+
+   const TCHAR *dataDir = AgentGetDataDirectory();
+   TCHAR tail = dataDir[_tcslen(dataDir) - 1];
+
+   TCHAR policyFile[MAX_PATH];
+   _sntprintf(policyFile, MAX_PATH, _T("%s%s%s%s.xml"), dataDir,
+      ((tail != '\\') && (tail != '/')) ? FS_PATH_SEPARATOR : _T(""),
+      LOGPARSER_AP_FOLDER FS_PATH_SEPARATOR, (const TCHAR *)policyId.toString());
+   AddParserFromConfig(policyFile, policyId);
+
+   // Start parsing threads
+   for (int i = 0; i < s_parsers.size(); i++)
+   {
+      LogParser *p = s_parsers.get(i);
+      if (!p->getGuid().equals(policyId))
+         continue;
+
+#ifdef _WIN32
+      if (p->getFileName()[0] == _T('*'))	// event log
+      {
+         p->setThread(ThreadCreateEx(ParserThreadEventLog, 0, p));
+         // Seems that simultaneous calls to OpenEventLog() from two or more threads may
+         // cause entire process to hang
+         ThreadSleepMs(200);
+      }
+      else	// regular file
+      {
+         p->setThread(ThreadCreateEx(ParserThreadFile, 0, p));
+      }
+#else
+      p->setThread(ThreadCreateEx(ParserThreadFile, 0, p));
+#endif
+   }
+
+   s_parserLock.unlock();
+>>>>>>> 9429ae1... fixed log parser stop conditions
 }
 
 /**
