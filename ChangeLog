@@ -22,6 +22,7 @@
 
 - NXSL based queries in object finder
 - Fixed issues:
+	NX-1395 (Change Object Filter to only search if at least 3 characters have been entered)
 	NX-1451 (Additional configs not loaded on agent startup)
 
 

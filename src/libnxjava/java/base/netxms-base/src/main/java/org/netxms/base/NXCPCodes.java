@@ -1013,6 +1013,7 @@ public class NXCPCodes
    public static final long VID_RESPONSIBLE_USERS = 615;
    public static final long VID_AGENT_ID = 616;
    public static final long VID_QUERY = 617;
+   public static final long VID_CONFIG_HINT_COUNT = 618;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;
@@ -1109,4 +1110,5 @@ public class NXCPCodes
    public static final long VID_COMMUNITY_STRING_LIST_BASE= 0x10000000L;
    public static final long VID_COMMUNITY_STRING_ZONE_LIST_BASE= 0x20000000L;
    public static final long VID_ZONE_SNMP_PORT_LIST_BASE= 0x10000000L;
+   public static final long VID_CONFIG_HINT_LIST_BASE= 0x10000000L;
 }

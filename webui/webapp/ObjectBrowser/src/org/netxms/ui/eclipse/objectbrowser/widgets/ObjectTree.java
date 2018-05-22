@@ -23,7 +23,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import org.eclipse.jface.action.Action;
+import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.LocalSelectionTransfer;
+import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -60,6 +63,7 @@ import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.DashboardGroup;
+import org.netxms.ui.eclipse.objectbrowser.Activator;
 import org.netxms.ui.eclipse.objectbrowser.api.ObjectOpenListener;
 import org.netxms.ui.eclipse.objectbrowser.api.SubtreeType;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
@@ -127,6 +131,7 @@ public class ObjectTree extends Composite
 		   tooltip = " > - Search by IP \n # - Search by ID \n / - Search by comment \n @ - Search by Zone ID";
 		// Create filter area
 		filterText = new FilterText(this, SWT.NONE, tooltip, showFilterCloseButton);
+		setupFilterText(true);
 		filterText.addModifyListener(new ModifyListener() {
 			@Override
 			public void modifyText(ModifyEvent e)
@@ -306,6 +311,42 @@ public class ObjectTree extends Composite
 				event.data = LocalSelectionTransfer.getTransfer().getSelection();
 			}
 		});
+	}
+	
+	/**
+	 * Setup filter text control
+	 */
+	private void setupFilterText(boolean addListener)
+	{
+	   IPreferenceStore ps = Activator.getDefault().getPreferenceStore();
+	   if (ps.getBoolean("ObjectBrowser.useServerFilterSettings"))
+	   {
+         filterText.setAutoApply(session.getClientConfigurationHintAsBoolean("ObjectBrowser.AutoApplyFilter", true));
+         filterText.setDelay(session.getClientConfigurationHintAsInt("ObjectBrowser.FilterDelay", 300));
+         filterText.setMinLength(session.getClientConfigurationHintAsInt("ObjectBrowser.MinFilterStringLength", 1));
+	   }
+	   else
+	   {
+         filterText.setAutoApply(ps.getBoolean("ObjectBrowser.filterAutoApply"));
+         filterText.setDelay(ps.getInt("ObjectBrowser.filterDelay"));
+         filterText.setMinLength(ps.getInt("ObjectBrowser.filterMinLength"));
+	   }
+	   if (addListener)
+	   {
+   	   ps.addPropertyChangeListener(new IPropertyChangeListener() {
+            @Override
+            public void propertyChange(PropertyChangeEvent event)
+            {
+               if (event.getProperty().equals("ObjectBrowser.useServerFilterSettings") ||
+                   event.getProperty().equals("ObjectBrowser.filterAutoApply") ||
+                   event.getProperty().equals("ObjectBrowser.filterDelay") ||
+                   event.getProperty().equals("ObjectBrowser.filterMinLength"))
+               {
+                  setupFilterText(false);
+               }
+            }
+         });
+	   }
 	}
 	
 	/**

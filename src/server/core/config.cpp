@@ -887,3 +887,45 @@ bool NXCORE_EXPORTABLE ConfigWriteCLOB(const TCHAR *variable, const TCHAR *value
 		OnConfigVariableChange(true, variable, value);
 	return success;
 }
+
+/**
+ * Enumeration callback data for GetClientConfigurationHints
+ */
+struct GetClientConfigurationHints_CallbackData
+{
+   UINT32 count;
+   UINT32 fieldId;
+   NXCPMessage *msg;
+};
+
+/**
+ * Enumeration callback for GetClientConfigurationHints
+ */
+static EnumerationCallbackResult GetClientConfigurationHints_Callback(const TCHAR *key, const void *value, void *userArg)
+{
+   if (_tcsncmp(key, _T("Client."), 7))
+      return _CONTINUE;
+
+   GetClientConfigurationHints_CallbackData *data = static_cast<GetClientConfigurationHints_CallbackData*>(userArg);
+   data->msg->setField(data->fieldId++, &key[7]);
+   data->msg->setField(data->fieldId++, static_cast<const TCHAR*>(value));
+   data->count++;
+   return _CONTINUE;
+}
+
+/**
+ * Get client configuration hints
+ */
+void GetClientConfigurationHints(NXCPMessage *msg)
+{
+   GetClientConfigurationHints_CallbackData data;
+   data.count = 0;
+   data.fieldId = VID_CONFIG_HINT_LIST_BASE;
+   data.msg = msg;
+
+   RWLockReadLock(s_configCacheLock, INFINITE);
+   s_configCache.forEach(GetClientConfigurationHints_Callback, &data);
+   RWLockUnlock(s_configCacheLock);
+
+   msg->setField(VID_CONFIG_HINT_COUNT, data.count);
+}

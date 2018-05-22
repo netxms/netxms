@@ -1230,6 +1230,7 @@ typedef struct
 #define VID_RESPONSIBLE_USERS       ((UINT32)615)
 #define VID_AGENT_ID                ((UINT32)616)
 #define VID_QUERY                   ((UINT32)617)
+#define VID_CONFIG_HINT_COUNT       ((UINT32)618)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)
@@ -1433,6 +1434,8 @@ typedef struct
 #define VID_IN_FIELD_BASE           ((UINT32)0x20000000)
 
 #define VID_ZMQ_SUBSCRIPTION_BASE   ((UINT32)0x10000000)
+
+#define VID_CONFIG_HINT_LIST_BASE   ((UINT32)0x10000000)
 
 // base value for SNMP community strings
 #define VID_COMMUNITY_STRING_LIST_BASE       ((UINT32)0x10000000)

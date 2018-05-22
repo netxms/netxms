@@ -69,6 +69,7 @@ NXCPMessage *ForwardMessageToReportingServer(NXCPMessage *request, ClientSession
 void RemovePendingFileTransferRequests(ClientSession *session);
 bool UpdateAddressListFromMessage(NXCPMessage *msg);
 void FillComponentsMessage(NXCPMessage *msg);
+void GetClientConfigurationHints(NXCPMessage *msg);
 
 void GetPredictionEngines(NXCPMessage *msg);
 bool GetPredictedData(ClientSession *session, const NXCPMessage *request, NXCPMessage *response, DataCollectionTarget *dcTarget);
@@ -1846,9 +1847,12 @@ void ClientSession::login(NXCPMessage *pRequest)
 			msg.setField(VID_TIMED_ALARM_ACK_ENABLED, ConfigReadBoolean(_T("EnableTimedAlarmAck"), false));
 			msg.setField(VID_VIEW_REFRESH_INTERVAL, (UINT16)ConfigReadInt(_T("MinViewRefreshInterval"), 200));
 			msg.setField(VID_HELPDESK_LINK_ACTIVE, (UINT16)((g_flags & AF_HELPDESK_LINK_ACTIVE) ? 1 : 0));
-			msg.setField(VID_ALARM_LIST_DISP_LIMIT, ConfigReadULong(_T("AlarmListDisplayLimit"), 4096));
+			msg.setField(VID_ALARM_LIST_DISP_LIMIT, ConfigReadULong(_T("Client.AlarmList.DisplayLimit"), 4096));
          msg.setField(VID_SERVER_COMMAND_TIMEOUT, ConfigReadULong(_T("ServerCommandOutputTimeout"), 60));
          msg.setField(VID_GRACE_LOGINS, graceLogins);
+
+         // Client configuration hints
+         GetClientConfigurationHints(&msg);
 
          if (pRequest->getFieldAsBoolean(VID_ENABLE_COMPRESSION))
          {

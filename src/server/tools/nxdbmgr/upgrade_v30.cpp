@@ -24,6 +24,31 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 30.37 to 30.38 (changes also included into 22.27)
+ */
+static bool H_UpgradeFromV37()
+{
+   if (GetSchemaLevelForMajorVersion(22) < 27)
+   {
+      CHK_EXEC(SQLQuery(_T("UPDATE config SET var_name='Client.AlarmList.DisplayLimit' WHERE var_name='AlarmListDisplayLimit'")));
+      CHK_EXEC(CreateConfigParam(_T("Client.ObjectBrowser.AutoApplyFilter"), _T("1"), _T("Enable or disable object browser's filter applying as user types (if disabled, user has to press ENTER to apply filter)."), NULL, 'B', true, false, false, false));
+      CHK_EXEC(CreateConfigParam(_T("Client.ObjectBrowser.FilterDelay"), _T("300"), _T("Delay between typing in object browser''s filter and applying it to object tree."), _T("milliseconds"), 'I', true, false, false, false));
+      CHK_EXEC(CreateConfigParam(_T("Client.ObjectBrowser.MinFilterStringLength"), _T("1"), _T("Minimal length of filter string in object browser required for automatic apply."), _T("characters"), 'I', true, false, false, false));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(22, 27));
+   }
+   else
+   {
+      static const TCHAR *batch =
+         _T("UPDATE config SET units='milliseconds' WHERE var_name='Client.ObjectBrowser.FilterDelay'\n")
+         _T("UPDATE config SET units='characters' WHERE var_name='Client.ObjectBrowser.MinFilterStringLength'\n")
+         _T("<END>");
+      CHK_EXEC(SQLBatch(batch));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(38));
+   return true;
+}
+
+/**
  * Upgrade from 30.36 to 30.37 (changes also included into 22.26)
  */
 static bool H_UpgradeFromV36()
@@ -43,8 +68,8 @@ static bool H_UpgradeFromV36()
          _T("   serial integer null,")
          _T("   PRIMARY KEY(record_id))")));
 
-      CHK_EXEC(_T("ALTER TABLE nodes ADD agent_id varchar(36)"));
-      CHK_EXEC(_T("ALTER TABLE nodes ADD agent_cert_subject varchar(500)"));
+      CHK_EXEC(SQLQuery(_T("ALTER TABLE nodes ADD agent_id varchar(36)")));
+      CHK_EXEC(SQLQuery(_T("ALTER TABLE nodes ADD agent_cert_subject varchar(500)")));
 
       CHK_EXEC(CreateEventTemplate(EVENT_AGENT_ID_CHANGED, _T("SYS_AGENT_ID_CHANGED"), SEVERITY_WARNING, EF_LOG,
                _T("741f0abc-1e69-46e4-adbc-bf1c4ed8549a"),
@@ -1128,6 +1153,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 37, 30, 38, H_UpgradeFromV37 },
    { 36, 30, 37, H_UpgradeFromV36 },
    { 35, 30, 36, H_UpgradeFromV35 },
    { 34, 30, 35, H_UpgradeFromV34 },

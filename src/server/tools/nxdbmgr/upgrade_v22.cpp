@@ -24,11 +24,25 @@
 #include <nxevent.h>
 
 /**
- * Upgrade from 22.26 to 30.0
+ * Upgrade from 22.27 to 30.0
+ */
+static bool H_UpgradeFromV27()
+{
+   CHK_EXEC(SetMajorSchemaVersion(30, 0));
+   return true;
+}
+
+/**
+ * Upgrade from 22.26 to 22.27
  */
 static bool H_UpgradeFromV26()
 {
-   CHK_EXEC(SetMajorSchemaVersion(30, 0));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET var_name='Client.AlarmList.DisplayLimit' WHERE var_name='AlarmListDisplayLimit'")));
+   CHK_EXEC(CreateConfigParam(_T("Client.ObjectBrowser.AutoApplyFilter"), _T("1"), _T("Enable or disable object browser's filter applying as user types (if disabled, user has to press ENTER to apply filter)."), NULL, 'B', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(_T("Client.ObjectBrowser.FilterDelay"), _T("300"), _T("Delay between typing in object browser''s filter and applying it to object tree."), _T("milliseconds"), 'I', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(_T("Client.ObjectBrowser.MinFilterStringLength"), _T("1"), _T("Minimal length of filter string in object browser required for automatic apply."), _T("characters"), 'I', true, false, false, false));
+   CHK_EXEC(SetSchemaLevelForMajorVersion(22, 27));
+   CHK_EXEC(SetMinorSchemaVersion(27));
    return true;
 }
 
@@ -50,8 +64,8 @@ static bool H_UpgradeFromV25()
       _T("   serial integer null,")
       _T("   PRIMARY KEY(record_id))")));
 
-   CHK_EXEC(_T("ALTER TABLE nodes ADD agent_id varchar(36)"));
-   CHK_EXEC(_T("ALTER TABLE nodes ADD agent_cert_subject varchar(500)"));
+   CHK_EXEC(SQLQuery(_T("ALTER TABLE nodes ADD agent_id varchar(36)")));
+   CHK_EXEC(SQLQuery(_T("ALTER TABLE nodes ADD agent_cert_subject varchar(500)")));
 
    CHK_EXEC(CreateEventTemplate(EVENT_AGENT_ID_CHANGED, _T("SYS_AGENT_ID_CHANGED"), SEVERITY_WARNING, EF_LOG,
             _T("741f0abc-1e69-46e4-adbc-bf1c4ed8549a"),
@@ -476,7 +490,8 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
-   { 26, 30, 0,  H_UpgradeFromV26 },
+   { 27, 30, 0,  H_UpgradeFromV27 },
+   { 26, 22, 27, H_UpgradeFromV26 },
    { 25, 22, 26, H_UpgradeFromV25 },
    { 24, 22, 25, H_UpgradeFromV24 },
    { 23, 22, 24, H_UpgradeFromV23 },

@@ -24,6 +24,8 @@ import java.util.List;
 import java.util.Set;
 import org.eclipse.jface.action.Action;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.KeyEvent;
+import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.MouseEvent;
@@ -54,7 +56,9 @@ public class FilterText extends Composite
 	private Label closeButton;
 	private Label clearButton;
 	private Action closeAction = null;
+   private boolean autoApply = true;
 	private int delay = 300;
+	private int minLength = 1;
 	private Set<ModifyListener> modifyListeners = new HashSet<ModifyListener>();
 	private ModifyEvent lastModifyEvent = null;
 	
@@ -108,9 +112,17 @@ public class FilterText extends Composite
          @Override
          public void modifyText(final ModifyEvent e)
          {
+            lastModifyEvent = e;
+            if (!autoApply)
+               return;
+            if (minLength > 1)
+            {
+               int l = text.getText().length();
+               if ((l < minLength) && (l > 0))
+                  return;
+            }
             if (delay > 0)
             {
-               lastModifyEvent = e;
                getDisplay().timerExec(delay, new Runnable() {
                   @Override
                   public void run()
@@ -128,8 +140,22 @@ public class FilterText extends Composite
             }
          }
       });
+		text.addKeyListener(new KeyListener() {
+         @Override
+         public void keyReleased(KeyEvent e)
+         {
+            if (e.keyCode == '\r')
+               callModifyListeners(lastModifyEvent);
+         }
+         
+         @Override
+         public void keyPressed(KeyEvent e)
+         {
+         }
+      });
 		
-		if (tooltip != null) {
+		if (tooltip != null) 
+		{
    		final Label icon = new Label(textArea, SWT.NONE);
    		icon.setImage(SharedIcons.IMG_INFORMATION);
          gd = new GridData();
@@ -227,10 +253,15 @@ public class FilterText extends Composite
 		}
 	}
 	
+	/**
+	 * Clear filter
+	 */
 	private void clearFilter()
    {
-	   if (text.getText().equals("") != true) //$NON-NLS-1$
+	   if (!text.getText().equals("")) //$NON-NLS-1$
 	      text.setText(""); //$NON-NLS-1$
+	   if (!autoApply)
+	      callModifyListeners(lastModifyEvent);
    }
 	
 	/**
@@ -375,5 +406,37 @@ public class FilterText extends Composite
    public void setDelay(int delay)
    {
       this.delay = delay;
+   }
+
+   /**
+    * @return the autoApply
+    */
+   public boolean isAutoApply()
+   {
+      return autoApply;
+   }
+
+   /**
+    * @param autoApply the autoApply to set
+    */
+   public void setAutoApply(boolean autoApply)
+   {
+      this.autoApply = autoApply;
+   }
+
+   /**
+    * @return the minLength
+    */
+   public int getMinLength()
+   {
+      return minLength;
+   }
+
+   /**
+    * @param minLength the minLength to set
+    */
+   public void setMinLength(int minLength)
+   {
+      this.minLength = minLength;
    }
 }

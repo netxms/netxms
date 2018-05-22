@@ -36,8 +36,12 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer
 		final IPreferenceStore ps = Activator.getDefault().getPreferenceStore();
 		ps.setDefault("SHOW_COMMENTS", false); //$NON-NLS-1$
 		
+      ps.setDefault("ObjectBrowser.filterAutoApply", true); //$NON-NLS-1$
+      ps.setDefault("ObjectBrowser.filterDelay", 300); //$NON-NLS-1$
+      ps.setDefault("ObjectBrowser.filterMinLength", 1); //$NON-NLS-1$
 		ps.setDefault("ObjectBrowser.showFilter", true); //$NON-NLS-1$
 		ps.setDefault("ObjectBrowser.showStatusIndicator", false); //$NON-NLS-1$
+      ps.setDefault("ObjectBrowser.useServerFilterSettings", true); //$NON-NLS-1$
 		
 		ps.setDefault("ObjectStatusIndicator.showIcons", false); //$NON-NLS-1$
 		ps.setDefault("ObjectStatusIndicator.hideNormal", true); //$NON-NLS-1$
