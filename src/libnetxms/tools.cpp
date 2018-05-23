@@ -3010,9 +3010,17 @@ static time_t FileTimeToUnixTime(FILETIME *ft)
  */
 int LIBNETXMS_EXPORTABLE _statw32(const TCHAR *file, struct _stati64 *st)
 {
-   TCHAR *fn;
    size_t l = _tcslen(file);
-   if (file[l - 1] == _T('\\'))
+
+   // Special handling for root directory
+   if (((l == 2) && (file[1] == _T(':'))) ||
+       ((l == 3) && (file[1] == _T(':')) && (file[2] == _T('\\'))))
+   {
+      return _tstati64(file, st);
+   }
+
+   TCHAR *fn;
+   if ((l > 1) && (file[l - 1] == _T('\\')))
    {
       fn = (TCHAR *)alloca(l * sizeof(TCHAR));
       memcpy(fn, file, (l - 1) * sizeof(TCHAR));
