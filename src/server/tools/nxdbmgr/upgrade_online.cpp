@@ -101,18 +101,18 @@ static bool SetZoneUIN(const TCHAR *table, const TCHAR *idColumn, const TCHAR *o
    switch(g_dbSyntax)
    {
       case DB_SYNTAX_DB2:
-         queryTemplate = _T("SELECT %s,%s FROM %s WHERE zone_uin IS NULL FETCH FIRST 1000 ROWS ONLY");
+         queryTemplate = _T("SELECT %s,%s FROM %s WHERE zone_uin IS NULL FETCH FIRST 2000 ROWS ONLY");
          break;
       case DB_SYNTAX_MSSQL:
-         queryTemplate = _T("SELECT TOP 1000 %s,%s FROM %s WHERE zone_uin IS NULL");
+         queryTemplate = _T("SELECT TOP 2000 %s,%s FROM %s WHERE zone_uin IS NULL");
          break;
       case DB_SYNTAX_MYSQL:
       case DB_SYNTAX_PGSQL:
       case DB_SYNTAX_SQLITE:
-         queryTemplate = _T("SELECT %s,%s FROM %s WHERE zone_uin IS NULL LIMIT 1000");
+         queryTemplate = _T("SELECT %s,%s FROM %s WHERE zone_uin IS NULL LIMIT 2000");
          break;
       case DB_SYNTAX_ORACLE:
-         queryTemplate = _T("SELECT * FROM (SELECT %s,%s FROM %s WHERE zone_uin IS NULL) WHERE ROWNUM<=1000");
+         queryTemplate = _T("SELECT * FROM (SELECT %s,%s FROM %s WHERE zone_uin IS NULL) WHERE ROWNUM<=2000");
          break;
       default:
          _tprintf(_T("Internal error\n"));
@@ -162,7 +162,7 @@ static bool SetZoneUIN(const TCHAR *table, const TCHAR *idColumn, const TCHAR *o
          return false;
       }
 
-      ThreadSleep(1);
+      ThreadSleepMs(1000);
    }
 
    DBFreeStatement(hStmt);
