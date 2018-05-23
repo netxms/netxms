@@ -2,19 +2,19 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Performance View Plug-in for NXMC
 Bundle-SymbolicName: org.netxms.ui.eclipse.perfview;singleton:=true
-Bundle-Version: 2.2.1
+Bundle-Version: 2.2.6
 Bundle-Activator: org.netxms.ui.eclipse.perfview.Activator
 Bundle-Vendor: netxms.org
 Require-Bundle: org.eclipse.ui;bundle-version="3.8.2",
  org.eclipse.core.runtime;bundle-version="3.8.0",
- org.netxms.ui.eclipse.clientlibrary;bundle-version="2.2.2",
- org.netxms.ui.eclipse.console;bundle-version="2.2.2",
- org.netxms.ui.eclipse.charts;bundle-version="2.1.0",
- org.netxms.ui.eclipse.objectview;bundle-version="2.2.1",
- org.netxms.ui.eclipse.datacollection;bundle-version="2.1.0",
- org.netxms.ui.eclipse.usermanager;bundle-version="2.0.8",
+ org.netxms.ui.eclipse.clientlibrary;bundle-version="2.2.6",
+ org.netxms.ui.eclipse.console;bundle-version="2.2.6",
+ org.netxms.ui.eclipse.charts;bundle-version="2.2.6",
+ org.netxms.ui.eclipse.objectview;bundle-version="2.2.6",
+ org.netxms.ui.eclipse.datacollection;bundle-version="2.2.6",
+ org.netxms.ui.eclipse.usermanager;bundle-version="2.2.6",
  org.eclipse.core.expressions;bundle-version="3.4.400",
- org.netxms.ui.base;bundle-version="2.2.2"
+ org.netxms.ui.base;bundle-version="2.2.6"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy
 Export-Package: org.netxms.ui.eclipse.perfview.views,
