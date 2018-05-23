@@ -69,6 +69,9 @@ INT32 ReadMetadataAsInt(const TCHAR *attr)
  */
 bool WriteMetadata(const TCHAR *name, const TCHAR *value)
 {
+   if (s_db == NULL)
+      return false;
+
    TCHAR query[1024];
    _sntprintf(query, 1024, _T("INSERT OR REPLACE INTO metadata (attribute,value) VALUES ('%s',%s)"), 
       name, (const TCHAR *)DBPrepareString(s_db, value, 255));
