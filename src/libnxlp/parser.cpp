@@ -118,7 +118,6 @@ LogParser::LogParser()
 	m_eventNameList = NULL;
 	m_eventResolver = NULL;
 	m_thread = INVALID_THREAD_HANDLE;
-   m_stopCondition = ConditionCreate(true);
 	m_recordsProcessed = 0;
 	m_recordsMatched = 0;
 	m_processAllRules = false;
@@ -167,8 +166,7 @@ LogParser::LogParser(const LogParser *src)
 
 	m_eventResolver = src->m_eventResolver;
 	m_thread = INVALID_THREAD_HANDLE;
-   m_stopCondition = ConditionCreate(true);
-   m_recordsProcessed = 0;
+	m_recordsProcessed = 0;
 	m_recordsMatched = 0;
 	m_processAllRules = src->m_processAllRules;
    m_suspended = src->m_suspended;
@@ -193,7 +191,6 @@ LogParser::~LogParser()
 #ifdef _WIN32
    free(m_marker);
 #endif
-   ConditionDestroy(m_stopCondition);
 }
 
 /**
@@ -936,16 +933,6 @@ bool LogParser::isExclusionPeriod()
          return true;
    }
    return false;
-}
-
-/**
- * Stop parser
- */
-void LogParser::stop()
-{
-   ConditionSet(m_stopCondition);
-   ThreadJoin(m_thread);
-   m_thread = INVALID_THREAD_HANDLE;
 }
 
 /**
