@@ -50,7 +50,7 @@
 #endif
 
 #define __BOOL // disable BOOL typedef
-#include <db2ApiDf.h>
+//#include <db2ApiDf.h>
 #include <sqlcli1.h>
 
 /**
