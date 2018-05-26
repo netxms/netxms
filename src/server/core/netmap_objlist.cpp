@@ -102,8 +102,7 @@ void NetworkMapObjectList::merge(const NetworkMapObjectList *src)
 
    for(int i = 0; i < src->m_objectList->size(); i++)
    {
-      if (!isObjectExist(src->m_objectList->get(i)))
-         m_objectList->add(src->m_objectList->get(i));
+      addObject(src->m_objectList->get(i));
    }
    for(int i = 0; i < src->m_linkList->size(); i++)
    {
@@ -149,7 +148,7 @@ void NetworkMapObjectList::addObject(UINT32 id)
  */
 void NetworkMapObjectList::removeObject(UINT32 id)
 {
-   m_objectList->remove(id);
+   m_objectList->remove(m_objectList->indexOf(id));
 
    for(int i = 0; i < m_linkList->size(); i++)
    {
