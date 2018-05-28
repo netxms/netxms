@@ -596,6 +596,9 @@ typedef struct
 #define CMD_FILEMGR_COPY_FILE             0x0169
 #define CMD_QUERY_OBJECTS                 0x016A
 #define CMD_QUERY_OBJECT_DETAILS          0x016B
+#define CMD_SETUP_TCP_PROXY               0x016C
+#define CMD_TCP_PROXY_DATA                0x016D
+#define CMD_CLOSE_TCP_PROXY               0x016E
 #define CMD_DELETE_DCI_ENTRY              0x0170
 #define CMD_GET_ACTIVE_THRESHOLDS         0x0171
 #define CMD_QUERY_INTERNAL_TOPOLOGY       0x0172

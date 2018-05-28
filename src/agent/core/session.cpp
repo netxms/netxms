@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -74,46 +74,55 @@ LONG H_AgentProxyStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, Abstrac
 /**
  * Client communication read thread
  */
-THREAD_RESULT THREAD_CALL CommSession::readThreadStarter(void *pArg)
+THREAD_RESULT THREAD_CALL CommSession::readThreadStarter(void *arg)
 {
-   ((CommSession *)pArg)->readThread();
-   UnregisterSession(((CommSession *)pArg)->getIndex(), ((CommSession *)pArg)->getId());
-   ((CommSession *)pArg)->debugPrintf(6, _T("Receiver thread stopped"));
-   ((CommSession *)pArg)->decRefCount();
+   static_cast<CommSession *>(arg)->readThread();
+   UnregisterSession(static_cast<CommSession *>(arg)->getIndex(), static_cast<CommSession *>(arg)->getId());
+   static_cast<CommSession *>(arg)->debugPrintf(6, _T("Receiver thread stopped"));
+   static_cast<CommSession *>(arg)->decRefCount();
    return THREAD_OK;
 }
 
 /**
  * Client communication write thread
  */
-THREAD_RESULT THREAD_CALL CommSession::writeThreadStarter(void *pArg)
+THREAD_RESULT THREAD_CALL CommSession::writeThreadStarter(void *arg)
 {
-   ((CommSession *)pArg)->writeThread();
+   static_cast<CommSession *>(arg)->writeThread();
    return THREAD_OK;
 }
 
 /**
  * Received message processing thread
  */
-THREAD_RESULT THREAD_CALL CommSession::processingThreadStarter(void *pArg)
+THREAD_RESULT THREAD_CALL CommSession::processingThreadStarter(void *arg)
 {
-   ((CommSession *)pArg)->processingThread();
+   static_cast<CommSession *>(arg)->processingThread();
    return THREAD_OK;
 }
 
 /**
- * Client communication write thread
+ * Proxy read thread
  */
-THREAD_RESULT THREAD_CALL CommSession::proxyReadThreadStarter(void *pArg)
+THREAD_RESULT THREAD_CALL CommSession::proxyReadThreadStarter(void *arg)
 {
-   ((CommSession *)pArg)->proxyReadThread();
+   static_cast<CommSession *>(arg)->proxyReadThread();
+   return THREAD_OK;
+}
+
+/**
+ * TCP proxy read thread
+ */
+THREAD_RESULT THREAD_CALL CommSession::tcpProxyReadThreadStarter(void *arg)
+{
+   static_cast<CommSession *>(arg)->tcpProxyReadThread();
    return THREAD_OK;
 }
 
 /**
  * Client session class constructor
  */
-CommSession::CommSession(AbstractCommChannel *channel, const InetAddress &serverAddr, bool masterServer, bool controlServer) : m_downloadFileMap(true)
+CommSession::CommSession(AbstractCommChannel *channel, const InetAddress &serverAddr, bool masterServer, bool controlServer) : m_downloadFileMap(true), m_tcpProxies(0, 16, true)
 {
    m_id = InterlockedIncrement(&s_sessionId);
    m_index = INVALID_INDEX;
@@ -122,9 +131,10 @@ CommSession::CommSession(AbstractCommChannel *channel, const InetAddress &server
    m_channel = channel;
    m_channel->incRefCount();
    m_hProxySocket = INVALID_SOCKET;
-   m_hWriteThread = INVALID_THREAD_HANDLE;
-   m_hProcessingThread = INVALID_THREAD_HANDLE;
-   m_hProxyReadThread = INVALID_THREAD_HANDLE;
+   m_writeThread = INVALID_THREAD_HANDLE;
+   m_processingThread = INVALID_THREAD_HANDLE;
+   m_proxyReadThread = INVALID_THREAD_HANDLE;
+   m_tcpProxyReadThread = INVALID_THREAD_HANDLE;
    m_serverId = 0;
    m_serverAddr = serverAddr;
    m_authenticated = (g_dwFlags & AF_REQUIRE_AUTH) ? false : true;
@@ -143,6 +153,7 @@ CommSession::CommSession(AbstractCommChannel *channel, const InetAddress &server
    m_socketWriteMutex = MutexCreate();
    m_responseQueue = new MsgWaitQueue();
    m_requestId = 0;
+   m_tcpProxyLock = MutexCreate();
 }
 
 /**
@@ -158,6 +169,7 @@ CommSession::~CommSession()
    m_channel->decRefCount();
    if (m_hProxySocket != INVALID_SOCKET)
       closesocket(m_hProxySocket);
+   m_disconnected = true;
 
    void *p;
    while((p = m_sendQueue->get()) != NULL)
@@ -173,6 +185,7 @@ CommSession::~CommSession()
 		m_pCtx->decRefCount();
 	MutexDestroy(m_socketWriteMutex);
    delete m_responseQueue;
+   MutexDestroy(m_tcpProxyLock);
 }
 
 /**
@@ -198,8 +211,8 @@ void CommSession::debugPrintf(int level, const TCHAR *format, ...)
  */
 void CommSession::run()
 {
-   m_hWriteThread = ThreadCreateEx(writeThreadStarter, 0, this);
-   m_hProcessingThread = ThreadCreateEx(processingThreadStarter, 0, this);
+   m_writeThread = ThreadCreateEx(writeThreadStarter, 0, this);
+   m_processingThread = ThreadCreateEx(processingThreadStarter, 0, this);
    ThreadCreate(readThreadStarter, 0, this);
 }
 
@@ -209,6 +222,7 @@ void CommSession::run()
 void CommSession::disconnect()
 {
 	debugPrintf(5, _T("CommSession::disconnect()"));
+	m_tcpProxies.clear();
    m_channel->shutdown();
    if (m_hProxySocket != -1)
       shutdown(m_hProxySocket, SHUT_RDWR);
@@ -304,6 +318,21 @@ void CommSession::readThread()
                      sendMessage(&response);
                   }
                }
+            }
+            else if (msg->getCode() == CMD_TCP_PROXY_DATA)
+            {
+               UINT32 proxyId = msg->getId();
+               MutexLock(m_tcpProxyLock);
+               for(int i = 0; i < m_tcpProxies.size(); i++)
+               {
+                  TcpProxy *p = m_tcpProxies.get(i);
+                  if (p->getId() == proxyId)
+                  {
+                     p->writeSocket(msg->getBinaryData(), msg->getBinaryDataSize());
+                     break;
+                  }
+               }
+               MutexUnlock(m_tcpProxyLock);
             }
          }
          else if (msg->isControl())
@@ -414,10 +443,13 @@ void CommSession::readThread()
       shutdown(m_hProxySocket, SHUT_RDWR);
 
    // Wait for other threads to finish
-   ThreadJoin(m_hWriteThread);
-   ThreadJoin(m_hProcessingThread);
+   ThreadJoin(m_writeThread);
+   ThreadJoin(m_processingThread);
    if (m_proxyConnection)
-      ThreadJoin(m_hProxyReadThread);
+      ThreadJoin(m_proxyReadThread);
+
+   m_tcpProxies.clear();
+   ThreadJoin(m_tcpProxyReadThread);
 
    debugPrintf(5, _T("Session with %s closed"), (const TCHAR *)m_serverAddr.toString());
 }
@@ -698,6 +730,26 @@ void CommSession::processingThread()
                {
                   ClearDataCollectionConfiguration();
                   response.setField(VID_RCC, ERR_SUCCESS);
+               }
+               else
+               {
+                  response.setField(VID_RCC, ERR_ACCESS_DENIED);
+               }
+               break;
+            case CMD_SETUP_TCP_PROXY:
+               if (m_masterServer && (g_dwFlags & AF_ENABLE_TCP_PROXY))
+               {
+                  setupTcpProxy(request, &response);
+               }
+               else
+               {
+                  response.setField(VID_RCC, ERR_ACCESS_DENIED);
+               }
+               break;
+            case CMD_CLOSE_TCP_PROXY:
+               if (m_masterServer && (g_dwFlags & AF_ENABLE_TCP_PROXY))
+               {
+                  response.setField(VID_RCC, closeTcpProxy(request));
                }
                else
                {
@@ -1081,7 +1133,7 @@ UINT32 CommSession::setupProxyConnection(NXCPMessage *pRequest)
             m_pCtx = PROXY_ENCRYPTION_CTX;
             m_proxyConnection = true;
             dwResult = ERR_SUCCESS;
-            m_hProxyReadThread = ThreadCreateEx(proxyReadThreadStarter, 0, this);
+            m_proxyReadThread = ThreadCreateEx(proxyReadThreadStarter, 0, this);
 
             // Send confirmation message
             // We cannot use sendMessage() and writing thread, because
@@ -1177,6 +1229,118 @@ NXCPMessage *CommSession::doRequestEx(NXCPMessage *msg, UINT32 timeout)
 UINT32 CommSession::generateRequestId()
 {
    return (UINT32)InterlockedIncrement(&m_requestId);
+}
+
+/**
+ * Setup TCP proxy
+ */
+void CommSession::setupTcpProxy(NXCPMessage *request, NXCPMessage *response)
+{
+   UINT32 rcc = ERR_CONNECT_FAILED;
+   InetAddress addr = request->getFieldAsInetAddress(VID_IP_ADDRESS);
+   SOCKET s = socket(addr.getFamily(), SOCK_STREAM, 0);
+   if (s != INVALID_SOCKET)
+   {
+      SockAddrBuffer sb;
+      UINT16 port = request->getFieldAsUInt16(VID_PORT);
+      addr.fillSockAddr(&sb, port);
+      if (ConnectEx(s, reinterpret_cast<struct sockaddr*>(&sb), SA_LEN(reinterpret_cast<struct sockaddr*>(&sb)), 5000) == 0)
+      {
+         TcpProxy *proxy = new TcpProxy(this, s);
+         response->setField(VID_CHANNEL_ID, proxy->getId());
+         MutexLock(m_tcpProxyLock);
+         m_tcpProxies.add(proxy);
+         if (m_tcpProxyReadThread == INVALID_THREAD_HANDLE)
+            m_tcpProxyReadThread = ThreadCreateEx(CommSession::tcpProxyReadThreadStarter, 0, this);
+         MutexUnlock(m_tcpProxyLock);
+         debugPrintf(5, _T("TCP proxy %d created (destination address %s port %d)"),
+                  proxy->getId(), (const TCHAR *)addr.toString(), (int)port);
+         rcc = ERR_SUCCESS;
+      }
+      else
+      {
+         debugPrintf(5, _T("Cannot setup TCP proxy (cannot connect to %s port %d - %hs)"),
+                  (const TCHAR *)addr.toString(), (int)port, strerror(errno));
+         closesocket(s);
+      }
+   }
+   else
+   {
+      debugPrintf(5, _T("Cannot setup TCP proxy (cannot create socket)"));
+   }
+   response->setField(VID_RCC, rcc);
+}
+
+/**
+ * Close TCP proxy
+ */
+UINT32 CommSession::closeTcpProxy(NXCPMessage *request)
+{
+   UINT32 rcc = ERR_INVALID_OBJECT;
+   UINT32 id = request->getFieldAsUInt32(VID_CHANNEL_ID);
+   MutexLock(m_tcpProxyLock);
+   for(int i = 0; i < m_tcpProxies.size(); i++)
+   {
+      if (m_tcpProxies.get(i)->getId() == id)
+      {
+         m_tcpProxies.remove(i);
+         rcc = ERR_SUCCESS;
+         break;
+      }
+   }
+   MutexUnlock(m_tcpProxyLock);
+   return rcc;
+}
+
+/**
+ * TCP proxy read thread
+ */
+void CommSession::tcpProxyReadThread()
+{
+   debugPrintf(2, _T("TCP proxy read thread started"));
+
+   SocketPoller sp;
+   while(!m_disconnected)
+   {
+      sp.reset();
+
+      MutexLock(m_tcpProxyLock);
+      if (m_tcpProxies.isEmpty())
+      {
+         MutexUnlock(m_tcpProxyLock);
+         ThreadSleepMs(500);
+         continue;
+      }
+      for(int i = 0; i < m_tcpProxies.size(); i++)
+         sp.add(m_tcpProxies.get(i)->getSocket());
+      MutexUnlock(m_tcpProxyLock);
+
+      int rc = sp.poll(500);
+      if (rc < 0)
+         break;
+
+      if (rc > 0)
+      {
+         MutexLock(m_tcpProxyLock);
+         for(int i = 0; i < m_tcpProxies.size(); i++)
+         {
+            TcpProxy *p = m_tcpProxies.get(i);
+            if (sp.isSet(p->getSocket()))
+            {
+               if (!p->readSocket())
+               {
+                  // Socket read error, close proxy
+                  debugPrintf(5, _T("TCP proxy %d closed because of socket read error"), p->getId());
+                  m_tcpProxies.remove(i);
+                  i--;
+               }
+            }
+         }
+         MutexUnlock(m_tcpProxyLock);
+      }
+   }
+
+   debugPrintf(2, _T("TCP proxy read thread stopped"));
 }
 
 /**

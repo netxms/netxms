@@ -303,7 +303,7 @@ INSERT INTO user_groups (id,name,system_access,flags,description,guid,created)
 ** Default "Admins" group
 */
 INSERT INTO user_groups (id,name,system_access,flags,description,guid,created)
-   VALUES (-2147483647, 'Admins', 549755813887, 0, 'Default administrative group',
+   VALUES (-2147483647, 'Admins', 2199023255551, 0, 'Default administrative group',
            '00000000-0000-0000-0000-000000000000',0
           );
 

@@ -312,8 +312,7 @@ void AgentConnection::receiverThread()
                }
             }
          }
-
-         if ((rawMsg->code == CMD_ABORT_FILE_TRANSFER) && (rawMsg->id == m_dwDownloadRequestId))
+         else if ((rawMsg->code == CMD_ABORT_FILE_TRANSFER) && (rawMsg->id == m_dwDownloadRequestId))
          {
             if (m_sendToClientMessageCallback != NULL)
             {
@@ -332,6 +331,10 @@ void AgentConnection::receiverThread()
 
                onFileDownload(false);
             }
+         }
+         else if (rawMsg->code == CMD_TCP_PROXY_DATA)
+         {
+            processTcpProxyData(rawMsg->id, rawMsg->fields, rawMsg->numFields);
          }
       }
       else if (ntohs(rawMsg->flags) & MF_CONTROL)
@@ -430,6 +433,10 @@ void AgentConnection::receiverThread()
                   {
                      delete msg;
                   }
+                  break;
+               case CMD_CLOSE_TCP_PROXY:
+                  processTcpProxyData(msg->getFieldAsUInt32(VID_CHANNEL_ID), NULL, 0);
+                  delete msg;
                   break;
                default:
                   if (processCustomMessage(msg))
@@ -1134,6 +1141,25 @@ bool AgentConnection::sendRawMessage(NXCP_MESSAGE *pMsg)
    }
    channel->decRefCount();
    return success;
+}
+
+/**
+ * Callback for sending raw NXCP message in background
+ */
+void AgentConnection::postRawMessageCallback(NXCP_MESSAGE *msg)
+{
+   sendRawMessage(msg);
+   free(msg);
+   decInternalRefCount();
+}
+
+/**
+ * Send raw NXCP message in background. Provided message will be destroyed after sending.
+ */
+void AgentConnection::postRawMessage(NXCP_MESSAGE *msg)
+{
+   incInternalRefCount();
+   ThreadPoolExecuteSerialized(g_agentConnectionThreadPool, _T("TcpProxy"), this, &AgentConnection::postRawMessageCallback, msg);
 }
 
 /**
@@ -2311,6 +2337,77 @@ UINT32 AgentConnection::processCollectedData(NXCPMessage *msg)
 UINT32 AgentConnection::processBulkCollectedData(NXCPMessage *request, NXCPMessage *response)
 {
    return ERR_NOT_IMPLEMENTED;
+}
+
+/**
+ * Setup TCP proxy
+ */
+UINT32 AgentConnection::setupTcpProxy(const InetAddress& ipAddr, UINT16 port, UINT32 *channelId)
+{
+   UINT32 requestId = generateRequestId();
+   NXCPMessage msg(CMD_SETUP_TCP_PROXY, requestId, m_nProtocolVersion);
+   msg.setField(VID_IP_ADDRESS, ipAddr);
+   msg.setField(VID_PORT, port);
+
+   UINT32 rcc;
+   if (sendMessage(&msg))
+   {
+      NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, requestId, m_dwCommandTimeout);
+      if (response != NULL)
+      {
+         rcc = response->getFieldAsUInt32(VID_RCC);
+         if (rcc == ERR_SUCCESS)
+         {
+            *channelId = response->getFieldAsUInt32(VID_CHANNEL_ID);
+         }
+         delete response;
+      }
+      else
+      {
+         rcc = ERR_REQUEST_TIMEOUT;
+      }
+   }
+   else
+   {
+      rcc = ERR_CONNECTION_BROKEN;
+   }
+   return rcc;
+}
+
+/**
+ * Close TCP proxy
+ */
+UINT32 AgentConnection::closeTcpProxy(UINT32 channelId)
+{
+   UINT32 requestId = generateRequestId();
+   NXCPMessage msg(CMD_CLOSE_TCP_PROXY, requestId, m_nProtocolVersion);
+   msg.setField(VID_CHANNEL_ID, channelId);
+   UINT32 rcc;
+   if (sendMessage(&msg))
+   {
+      NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, requestId, m_dwCommandTimeout);
+      if (response != NULL)
+      {
+         rcc = response->getFieldAsUInt32(VID_RCC);
+         delete response;
+      }
+      else
+      {
+         rcc = ERR_REQUEST_TIMEOUT;
+      }
+   }
+   else
+   {
+      rcc = ERR_CONNECTION_BROKEN;
+   }
+   return rcc;
+}
+
+/**
+ * Process data received from TCP proxy
+ */
+void AgentConnection::processTcpProxyData(UINT32 channelId, const void *data, size_t size)
+{
 }
 
 /**

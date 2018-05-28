@@ -1216,7 +1216,7 @@ int LIBNETXMS_EXPORTABLE ConnectEx(SOCKET s, struct sockaddr *addr, int len, UIN
 		   struct pollfd fds;
 			fds.fd = s;
 			fds.events = POLLOUT;
-			fds.revents = POLLOUT;
+			fds.revents = 0;
 			do
 			{
 				INT64 startTime = GetCurrentTimeMs();
@@ -1229,7 +1229,7 @@ int LIBNETXMS_EXPORTABLE ConnectEx(SOCKET s, struct sockaddr *addr, int len, UIN
 
 			if (rc > 0)
 			{
-            if (fds.revents == POLLOUT)
+            if (fds.revents & POLLOUT)
             {
                rc = 0;
             }

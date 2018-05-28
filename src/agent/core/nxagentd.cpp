@@ -278,6 +278,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("EnableSNMPTrapProxy"), CT_BOOLEAN, 0, 0, AF_ENABLE_SNMP_TRAP_PROXY, 0, &g_dwFlags, NULL },
    { _T("EnableSyslogProxy"), CT_BOOLEAN, 0, 0, AF_ENABLE_SYSLOG_PROXY, 0, &g_dwFlags, NULL },
    { _T("EnableSubagentAutoload"), CT_BOOLEAN, 0, 0, AF_ENABLE_AUTOLOAD, 0, &g_dwFlags, NULL },
+   { _T("EnableTCPProxy"), CT_BOOLEAN, 0, 0, AF_ENABLE_TCP_PROXY, 0, &g_dwFlags, NULL },
    { _T("EnableWatchdog"), CT_BOOLEAN, 0, 0, AF_ENABLE_WATCHDOG, 0, &g_dwFlags, NULL },
    { _T("EncryptedSharedSecret"), CT_STRING, 0, 0, MAX_SECRET_LENGTH, 0, g_szSharedSecret, NULL },
    { _T("ExecTimeout"), CT_LONG, 0, 0, 0, 0, &g_execTimeout, NULL },

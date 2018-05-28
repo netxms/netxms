@@ -1064,6 +1064,14 @@ template <typename T, typename B, typename R> inline void ThreadPoolExecute(Thre
 }
 
 /**
+ * Execute serialized task as soon as possible (use class member with one argument)
+ */
+template <typename T, typename B, typename R> inline void ThreadPoolExecuteSerialized(ThreadPool *p, const TCHAR *key, T *object, void (B::*f)(R), R arg)
+{
+   ThreadPoolExecuteSerialized(p, key, __ThreadPoolExecute_Wrapper<B, R>, new __ThreadPoolExecute_WrapperData<B, R>(object, f, arg));
+}
+
+/**
  * Wrapper data for ThreadPoolExecute (two arguments)
  */
 template <typename T, typename R1, typename R2> class __ThreadPoolExecute_WrapperData2

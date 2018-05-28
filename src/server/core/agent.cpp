@@ -38,6 +38,7 @@ AgentConnectionEx::AgentConnectionEx(UINT32 nodeId, const InetAddress& ipAddr, W
    m_nodeId = nodeId;
    m_tunnel = NULL;
    m_proxyTunnel = NULL;
+   m_tcpProxySession = NULL;
 }
 
 /**
@@ -50,6 +51,7 @@ AgentConnectionEx::AgentConnectionEx(UINT32 nodeId, AgentTunnel *tunnel, int aut
    m_tunnel = tunnel;
    m_tunnel->incRefCount();
    m_proxyTunnel = NULL;
+   m_tcpProxySession = NULL;
 }
 
 /**
@@ -876,4 +878,21 @@ UINT32 AgentConnectionEx::processBulkCollectedData(NXCPMessage *request, NXCPMes
 
    response->setField(VID_STATUS, status, count);
    return ERR_SUCCESS;
+}
+
+/**
+ * Set client session for receiving TCP proxy packets
+ */
+void AgentConnectionEx::setTcpProxySession(ClientSession *session)
+{
+   m_tcpProxySession = session;
+}
+
+/**
+ * Process TCP proxy message
+ */
+void AgentConnectionEx::processTcpProxyData(UINT32 channelId, const void *data, size_t size)
+{
+   if (m_tcpProxySession != NULL)
+      m_tcpProxySession->processTcpProxyData(this, channelId, data, size);
 }

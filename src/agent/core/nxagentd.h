@@ -116,6 +116,7 @@
 #define AF_ENABLE_SNMP_TRAP_PROXY   0x00200000
 #define AF_BACKGROUND_LOG_WRITER    0x00400000
 #define AF_ENABLE_SYSLOG_PROXY      0x00800000
+#define AF_ENABLE_TCP_PROXY         0x01000000
 
 // Flags for component failures
 #define FAIL_OPEN_LOG               0x00000001
@@ -294,6 +295,8 @@ struct PendingRequest
    }
 };
 
+class TcpProxy;
+
 /**
  * Communication session
  */
@@ -305,9 +308,10 @@ private:
    AbstractCommChannel *m_channel;
    Queue *m_sendQueue;
    Queue *m_processingQueue;
-   THREAD m_hWriteThread;
-   THREAD m_hProcessingThread;
-   THREAD m_hProxyReadThread;
+   THREAD m_writeThread;
+   THREAD m_processingThread;
+   THREAD m_proxyReadThread;
+   THREAD m_tcpProxyReadThread;
    UINT64 m_serverId;
    InetAddress m_serverAddr;        // IP address of connected host
    bool m_disconnected;
@@ -328,6 +332,8 @@ private:
 	MUTEX m_socketWriteMutex;
    VolatileCounter m_requestId;
    MsgWaitQueue *m_responseQueue;
+   MUTEX m_tcpProxyLock;
+   ObjectArray<TcpProxy> m_tcpProxies;
 
 	bool sendRawMessage(NXCP_MESSAGE *msg, NXCPEncryptionContext *ctx);
    void authenticate(NXCPMessage *pRequest, NXCPMessage *pMsg);
@@ -342,17 +348,21 @@ private:
    void cancelFileMonitoring(NXCPMessage *pRequest, NXCPMessage *pMsg);
    UINT32 upgrade(NXCPMessage *request);
    UINT32 setupProxyConnection(NXCPMessage *pRequest);
+   void setupTcpProxy(NXCPMessage *request, NXCPMessage *response);
+   UINT32 closeTcpProxy(NXCPMessage *request);
 
    void readThread();
    void writeThread();
    void processingThread();
    void proxyReadThread();
+   void tcpProxyReadThread();
    void proxySnmpRequest(NXCPMessage *request);
 
    static THREAD_RESULT THREAD_CALL readThreadStarter(void *);
    static THREAD_RESULT THREAD_CALL writeThreadStarter(void *);
    static THREAD_RESULT THREAD_CALL processingThreadStarter(void *);
    static THREAD_RESULT THREAD_CALL proxyReadThreadStarter(void *);
+   static THREAD_RESULT THREAD_CALL tcpProxyReadThreadStarter(void *);
 
 public:
    CommSession(AbstractCommChannel *channel, const InetAddress &serverAddr, bool masterServer, bool controlServer);
@@ -509,6 +519,27 @@ public:
    SNMP_Transport *getTransport(UINT16 port);
 
    bool saveToDatabase();
+};
+
+/**
+ * TCP proxy
+ */
+class TcpProxy
+{
+private:
+   UINT32 m_id;
+   CommSession *m_session;
+   SOCKET m_socket;
+
+public:
+   TcpProxy(CommSession *session, SOCKET s);
+   ~TcpProxy();
+
+   UINT32 getId() const { return m_id; }
+   SOCKET getSocket() const { return m_socket; }
+
+   bool readSocket();
+   void writeSocket(const BYTE *data, size_t size);
 };
 
 /**
