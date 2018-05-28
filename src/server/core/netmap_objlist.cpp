@@ -64,7 +64,6 @@ NetworkMapObjectList::NetworkMapObjectList()
 {
    m_objectList = new IntegerArray<UINT32>(16, 16);
    m_linkList = new ObjectArray<ObjLink>(16, 16, true);
-   m_allowDuplicateLinks = false;
 }
 
 /**
@@ -72,8 +71,6 @@ NetworkMapObjectList::NetworkMapObjectList()
  */
 NetworkMapObjectList::NetworkMapObjectList(NetworkMapObjectList *src)
 {
-   m_allowDuplicateLinks = src->m_allowDuplicateLinks;
-
    m_objectList = new IntegerArray<UINT32>(src->m_objectList->size(), 16);
    for(int i = 0; i < src->m_objectList->size(); i++)
       m_objectList->add(src->m_objectList->get(i));
