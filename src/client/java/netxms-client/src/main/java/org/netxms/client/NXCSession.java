@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2017 Victor Kirhenshtein
+ * Copyright (C) 2003-2018 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -336,6 +336,9 @@ public class NXCSession
    // Message of the day
    private String messageOfTheDay;
    
+   // TCP proxies
+   private Map<Integer, TcpProxy> tcpProxies = new HashMap<Integer, TcpProxy>();
+   
    /**
     * Message subscription class
     */
@@ -555,6 +558,12 @@ public class NXCSession
                      break;
                   case NXCPCodes.CMD_ALARM_CATEGORY_UPDATE:
                      processAlarmCategoryConfigChange(msg);
+                     break;
+                  case NXCPCodes.CMD_TCP_PROXY_DATA:
+                     processTcpProxyData((int)msg.getMessageId(), msg.getBinaryData());
+                     break;
+                  case NXCPCodes.CMD_CLOSE_TCP_PROXY:
+                     processTcpProxyClosure(msg.getFieldAsInt32(NXCPCodes.VID_CHANNEL_ID));
                      break;
                   default:
                      // Check subscriptions
@@ -911,6 +920,39 @@ public class NXCSession
             }
          }
          sendNotification(new SessionNotification(code, categoryId, ac));
+      }
+      
+      /**
+       * Process TCP proxy data
+       * 
+       * @param channelId proxy channel ID
+       * @param data received data block
+       */
+      private void processTcpProxyData(int channelId, byte[] data)
+      {
+         TcpProxy proxy;
+         synchronized(tcpProxies)
+         {
+            proxy = tcpProxies.get(channelId);
+         }
+         if (proxy != null)
+            proxy.processRemoteData(data);
+      }
+      
+      /**
+       * Process TCP proxy closure.
+       * 
+       * @param channelId proxy channel ID
+       */
+      private void processTcpProxyClosure(int channelId)
+      {
+         TcpProxy proxy;
+         synchronized(tcpProxies)
+         {
+            proxy = tcpProxies.remove(channelId);
+         }
+         if (proxy != null)
+            proxy.localClose();
       }
    }
 
@@ -2140,6 +2182,7 @@ public class NXCSession
       eventTemplates.clear();
       userDB.clear();
       alarmCategories.clear();
+      tcpProxies.clear();
    }
    
    /**
@@ -10028,5 +10071,54 @@ public class NXCSession
       msg.setFieldInt32(NXCPCodes.VID_NODE_ID, (int)nodeId);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
+   }
+   
+   /**
+    * Setup new TCP proxy channel. Proxy object should be disposed with TcpProxy.close() call when no longer needed.
+    * 
+    * @param nodeId proxy node ID (node that will initiate TCP connection to target)
+    * @param address target IP address
+    * @param port target TCP port
+    * @return TCP proxy object
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public TcpProxy setupTcpProxy(long nodeId, InetAddress address, int port) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_SETUP_TCP_PROXY);
+      msg.setFieldInt32(NXCPCodes.VID_NODE_ID, (int)nodeId);
+      msg.setField(NXCPCodes.VID_IP_ADDRESS, address);
+      msg.setFieldInt16(NXCPCodes.VID_PORT, port);
+      sendMessage(msg);
+      final NXCPMessage response = waitForRCC(msg.getMessageId());
+      TcpProxy proxy = new TcpProxy(this, response.getFieldAsInt32(NXCPCodes.VID_CHANNEL_ID));
+      synchronized(tcpProxies)
+      {
+         tcpProxies.put(proxy.getChannelId(), proxy);
+      }
+      return proxy;
+   }
+   
+   /**
+    * Close TCP proxy channel.
+    * 
+    * @param channelId proxy channel ID
+    */
+   protected void closeTcpProxy(int channelId)
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_CLOSE_TCP_PROXY);
+      msg.setFieldInt32(NXCPCodes.VID_CHANNEL_ID, channelId);
+      try
+      {
+         sendMessage(msg);
+         waitForRCC(msg.getMessageId());
+      }
+      catch(Exception e)
+      {
+      }
+      synchronized(tcpProxies)
+      {
+         tcpProxies.remove(channelId);
+      }
    }
 }

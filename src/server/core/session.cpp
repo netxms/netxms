@@ -78,7 +78,6 @@ void GetAgentTunnels(NXCPMessage *msg);
 UINT32 BindAgentTunnel(UINT32 tunnelId, UINT32 nodeId, UINT32 userId);
 UINT32 UnbindAgentTunnel(UINT32 nodeId, UINT32 userId);
 
-
 /**
  * Node poller start data
  */
@@ -140,6 +139,7 @@ void ClientSession::ThreadStarter_##func(void *pArg) \
 
 DEFINE_THREAD_STARTER(cancelFileMonitoring)
 DEFINE_THREAD_STARTER(clearDCIData)
+DEFINE_THREAD_STARTER(closeTcpProxy)
 DEFINE_THREAD_STARTER(createObject)
 DEFINE_THREAD_STARTER(deleteDCIEntry)
 DEFINE_THREAD_STARTER(executeAction)
@@ -174,6 +174,7 @@ DEFINE_THREAD_STARTER(queryObjectDetails)
 DEFINE_THREAD_STARTER(queryParameter)
 DEFINE_THREAD_STARTER(queryServerLog)
 DEFINE_THREAD_STARTER(sendMib)
+DEFINE_THREAD_STARTER(setupTcpProxy)
 DEFINE_THREAD_STARTER(uploadUserFileToAgent)
 DEFINE_THREAD_STARTER(getRepositories)
 DEFINE_THREAD_STARTER(addRepository)
@@ -263,6 +264,9 @@ ClientSession::ClientSession(SOCKET hSocket, const InetAddress& addr)
    _tcscpy(m_language, _T("en"));
    m_serverCommands = new HashMap<UINT32, ProcessExecutor>(true);
    m_downloadFileMap = new HashMap<UINT32, ServerDownloadFileInfo>(true);
+   m_tcpProxyConnections = new ObjectArray<TcpProxy>(0, 16, true);
+   m_tcpProxyLock = MutexCreate();
+   m_tcpProxyChannelId = 0;
 }
 
 /**
@@ -310,6 +314,8 @@ ClientSession::~ClientSession()
 
    delete m_serverCommands;
    delete m_downloadFileMap;
+   delete m_tcpProxyConnections;
+   MutexDestroy(m_tcpProxyLock);
 }
 
 /**
@@ -515,6 +521,40 @@ void ClientSession::readThread()
                {
                   debugPrintf(4, _T("Out of state message (ID: %d)"), msg->getId());
                }
+            }
+         }
+         else if (msg->getCode() == CMD_TCP_PROXY_DATA)
+         {
+            AgentConnectionEx *conn = NULL;
+            UINT32 agentChannelId = 0;
+            MutexLock(m_tcpProxyLock);
+            for(int i = 0; i < m_tcpProxyConnections->size(); i++)
+            {
+               TcpProxy *p = m_tcpProxyConnections->get(i);
+               if (p->clientChannelId == msg->getId())
+               {
+                  conn = p->agentConnection;
+                  conn->incRefCount();
+                  agentChannelId = p->agentChannelId;
+                  break;
+               }
+            }
+            MutexUnlock(m_tcpProxyLock);
+            if (conn != NULL)
+            {
+               size_t size = msg->getBinaryDataSize();
+               size_t msgSize = size + NXCP_HEADER_SIZE;
+               if (msgSize % 8 != 0)
+                  msgSize += 8 - msgSize % 8;
+               NXCP_MESSAGE *fwmsg = (NXCP_MESSAGE *)malloc(msgSize);
+               fwmsg->code = htons(CMD_TCP_PROXY_DATA);
+               fwmsg->flags = htons(MF_BINARY);
+               fwmsg->id = htonl(agentChannelId);
+               fwmsg->numFields = htonl(static_cast<UINT32>(size));
+               fwmsg->size = htonl(static_cast<UINT32>(msgSize));
+               memcpy(fwmsg->fields, msg->getBinaryData(), size);
+               conn->postRawMessage(fwmsg);
+               conn->decRefCount();
             }
          }
          delete msg;
@@ -1355,6 +1395,12 @@ void ClientSession::processingThread()
             break;
          case CMD_GET_PREDICTED_DATA:
             CALL_IN_NEW_THREAD(getPredictedData, pMsg);
+            break;
+         case CMD_SETUP_TCP_PROXY:
+            CALL_IN_NEW_THREAD(setupTcpProxy, pMsg);
+            break;
+         case CMD_CLOSE_TCP_PROXY:
+            CALL_IN_NEW_THREAD(closeTcpProxy, pMsg);
             break;
 #ifdef WITH_ZMQ
          case CMD_ZMQ_SUBSCRIBE_EVENT:
@@ -14017,6 +14063,155 @@ void ClientSession::unbindAgentTunnel(NXCPMessage *request)
       writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on unbinding agent tunnel"));
    }
    sendMessage(&msg);
+}
+
+/**
+ * Setup TCP proxy via agent
+ */
+void ClientSession::setupTcpProxy(NXCPMessage *request)
+{
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   if (m_dwSystemAccess & SYSTEM_ACCESS_SETUP_TCP_PROXY)
+   {
+      Node *node = static_cast<Node*>(FindObjectById(request->getFieldAsUInt32(VID_NODE_ID), OBJECT_NODE));
+      if (node != NULL)
+      {
+         if (node->checkAccessRights(m_dwUserId, OBJECT_ACCESS_CONTROL))
+         {
+            AgentConnectionEx *conn = node->createAgentConnection();
+            if (conn != NULL)
+            {
+               conn->setTcpProxySession(this);
+               InetAddress ipAddr = request->getFieldAsInetAddress(VID_IP_ADDRESS);
+               UINT16 port = request->getFieldAsUInt16(VID_PORT);
+               UINT32 agentChannelId;
+               UINT32 rcc = conn->setupTcpProxy(ipAddr, port, &agentChannelId);
+               if (rcc == ERR_SUCCESS)
+               {
+                  UINT32 clientChannelId = InterlockedIncrement(&m_tcpProxyChannelId);
+                  MutexLock(m_tcpProxyLock);
+                  m_tcpProxyConnections->add(new TcpProxy(conn, agentChannelId, clientChannelId, node->getId()));
+                  MutexUnlock(m_tcpProxyLock);
+                  msg.setField(VID_RCC, RCC_SUCCESS);
+                  msg.setField(VID_CHANNEL_ID, clientChannelId);
+                  writeAuditLog(AUDIT_SYSCFG, true, node->getId(), _T("Created TCP proxy to %s port %d via %s [%u] (client channel %u)"),
+                           (const TCHAR *)ipAddr.toString(), (int)port, node->getName(), node->getId(), clientChannelId);
+                  debugPrintf(3, _T("Created TCP proxy to %s port %d via %s [%d]"),
+                           (const TCHAR *)ipAddr.toString(), (int)port, node->getName(), node->getId());
+               }
+               else
+               {
+                  msg.setField(VID_RCC, AgentErrorToRCC(rcc));
+               }
+               conn->decRefCount();
+            }
+            else
+            {
+               msg.setField(VID_RCC, RCC_COMM_FAILURE);
+            }
+         }
+         else
+         {
+            msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+            writeAuditLog(AUDIT_SYSCFG, false, node->getId(), _T("Access denied on setting up TCP proxy"));
+         }
+      }
+      else
+      {
+         msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+      }
+   }
+   else
+   {
+      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on setting up TCP proxy"));
+   }
+   sendMessage(&msg);
+}
+
+/**
+ * Close TCP proxy session
+ */
+void ClientSession::closeTcpProxy(NXCPMessage *request)
+{
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+
+   UINT32 clientChannelId = request->getFieldAsUInt32(VID_CHANNEL_ID);
+
+   AgentConnection *conn = NULL;
+   UINT32 agentChannelId, nodeId;
+   MutexLock(m_tcpProxyLock);
+   for(int i = 0; i < m_tcpProxyConnections->size(); i++)
+   {
+      TcpProxy *p = m_tcpProxyConnections->get(i);
+      if (p->clientChannelId == clientChannelId)
+      {
+         agentChannelId = p->agentChannelId;
+         nodeId = p->nodeId;
+         conn = p->agentConnection;
+         conn->incRefCount();
+         m_tcpProxyConnections->remove(i);
+         break;
+      }
+   }
+   MutexUnlock(m_tcpProxyLock);
+
+   if (conn != NULL)
+   {
+      conn->closeTcpProxy(agentChannelId);
+      conn->decRefCount();
+      writeAuditLog(AUDIT_SYSCFG, true, nodeId, _T("Closed TCP proxy channel %u"), clientChannelId);
+   }
+
+   sendMessage(&msg);
+}
+
+/**
+ * Process TCP proxy data (in direction from from agent to client)
+ */
+void ClientSession::processTcpProxyData(AgentConnectionEx *conn, UINT32 agentChannelId, const void *data, size_t size)
+{
+   UINT32 clientChannelId = 0;
+   MutexLock(m_tcpProxyLock);
+   for(int i = 0; i < m_tcpProxyConnections->size(); i++)
+   {
+      TcpProxy *p = m_tcpProxyConnections->get(i);
+      if ((p->agentConnection == conn) && (p->agentChannelId == agentChannelId))
+      {
+         clientChannelId = p->clientChannelId;
+         if (size == 0) // close indicator
+         {
+            debugPrintf(5, _T("Received TCP proxy channel %u close notification"), clientChannelId);
+            m_tcpProxyConnections->remove(i);
+         }
+         break;
+      }
+   }
+   MutexUnlock(m_tcpProxyLock);
+
+   if (clientChannelId != 0)
+   {
+      if (size > 0)
+      {
+         size_t msgSize = size + NXCP_HEADER_SIZE;
+         if (msgSize % 8 != 0)
+            msgSize += 8 - msgSize % 8;
+         NXCP_MESSAGE *msg = (NXCP_MESSAGE *)malloc(msgSize);
+         msg->code = htons(CMD_TCP_PROXY_DATA);
+         msg->flags = htons(MF_BINARY);
+         msg->id = htonl(clientChannelId);
+         msg->numFields = htonl(static_cast<UINT32>(size));
+         msg->size = htonl(static_cast<UINT32>(msgSize));
+         memcpy(msg->fields, data, size);
+         m_sendQueue->put(msg);
+      }
+      else
+      {
+         NXCPMessage msg(CMD_CLOSE_TCP_PROXY, 0);
+         msg.setField(VID_CHANNEL_ID, clientChannelId);
+         postMessage(&msg);
+      }
+   }
 }
 
 #ifdef WITH_ZMQ

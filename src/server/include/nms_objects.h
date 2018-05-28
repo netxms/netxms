@@ -132,6 +132,7 @@ protected:
    UINT32 m_nodeId;
    AgentTunnel *m_tunnel;
    AgentTunnel *m_proxyTunnel;
+   ClientSession *m_tcpProxySession;
 
    virtual AbstractCommChannel *createChannel();
    virtual void onTrap(NXCPMessage *msg);
@@ -142,6 +143,7 @@ protected:
    virtual UINT32 processCollectedData(NXCPMessage *msg);
    virtual UINT32 processBulkCollectedData(NXCPMessage *request, NXCPMessage *response);
    virtual bool processCustomMessage(NXCPMessage *msg);
+   virtual void processTcpProxyData(UINT32 channelId, const void *data, size_t size);
 
    virtual ~AgentConnectionEx();
 
@@ -156,6 +158,8 @@ public:
 
    using AgentConnection::setProxy;
    void setProxy(AgentTunnel *tunnel, int authMethod, const TCHAR *secret);
+
+   void setTcpProxySession(ClientSession *session);
 };
 
 /**

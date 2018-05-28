@@ -411,6 +411,31 @@ public:
 };
 
 /**
+ * TCP proxy information
+ */
+struct TcpProxy
+{
+   AgentConnectionEx *agentConnection;
+   UINT32 agentChannelId;
+   UINT32 clientChannelId;
+   UINT32 nodeId;
+
+   TcpProxy(AgentConnectionEx *c, UINT32 aid, UINT32 cid, UINT32 nid)
+   {
+      agentConnection = c;
+      agentChannelId = aid;
+      clientChannelId = cid;
+      nodeId = nid;
+      agentConnection->incRefCount();
+   }
+
+   ~TcpProxy()
+   {
+      agentConnection->decRefCount();
+   }
+};
+
+/**
  * Client (user) session
  */
 class NXCORE_EXPORTABLE ClientSession
@@ -460,6 +485,9 @@ private:
 	StringObjectMap<UINT32> *m_subscriptions;
 	MUTEX m_subscriptionLock;
 	HashMap<UINT32, ProcessExecutor> *m_serverCommands;
+	ObjectArray<TcpProxy> *m_tcpProxyConnections;
+	MUTEX m_tcpProxyLock;
+	VolatileCounter m_tcpProxyChannelId;
 
    static THREAD_RESULT THREAD_CALL readThreadStarter(void *);
    static THREAD_RESULT THREAD_CALL writeThreadStarter(void *);
@@ -468,6 +496,7 @@ private:
 
    DECLARE_THREAD_STARTER(cancelFileMonitoring)
    DECLARE_THREAD_STARTER(clearDCIData)
+   DECLARE_THREAD_STARTER(closeTcpProxy)
    DECLARE_THREAD_STARTER(createObject)
    DECLARE_THREAD_STARTER(deleteDCIEntry)
    DECLARE_THREAD_STARTER(executeAction)
@@ -502,6 +531,7 @@ private:
    DECLARE_THREAD_STARTER(queryParameter)
    DECLARE_THREAD_STARTER(queryServerLog)
    DECLARE_THREAD_STARTER(sendMib)
+   DECLARE_THREAD_STARTER(setupTcpProxy)
    DECLARE_THREAD_STARTER(uploadUserFileToAgent)
    DECLARE_THREAD_STARTER(getRepositories)
    DECLARE_THREAD_STARTER(addRepository)
@@ -747,6 +777,8 @@ private:
    void getAgentTunnels(NXCPMessage *request);
    void bindAgentTunnel(NXCPMessage *request);
    void unbindAgentTunnel(NXCPMessage *request);
+   void setupTcpProxy(NXCPMessage *request);
+   void closeTcpProxy(NXCPMessage *request);
    void getPredictionEngines(NXCPMessage *request);
    void getPredictedData(NXCPMessage *request);
 #ifdef WITH_ZMQ
@@ -824,6 +856,7 @@ public:
    void onAlarmUpdate(UINT32 dwCode, const Alarm *alarm);
    void onActionDBUpdate(UINT32 dwCode, const Action *action);
    void onLibraryImageChange(const uuid& guid, bool removed = false);
+   void processTcpProxyData(AgentConnectionEx *conn, UINT32 agentChannelId, const void *data, size_t size);
 };
 
 /**

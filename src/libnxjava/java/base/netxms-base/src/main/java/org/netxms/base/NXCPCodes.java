@@ -380,6 +380,9 @@ public class NXCPCodes
    public static final int CMD_FILEMGR_COPY_FILE = 0x0169;
    public static final int CMD_QUERY_OBJECTS = 0x016A;
    public static final int CMD_QUERY_OBJECT_DETAILS = 0x016B;
+   public static final int CMD_SETUP_TCP_PROXY = 0x016C;
+   public static final int CMD_TCP_PROXY_DATA = 0x016D;
+   public static final int CMD_CLOSE_TCP_PROXY = 0x016E;
    public static final int CMD_DELETE_DCI_ENTRY = 0x0170;
    public static final int CMD_GET_ACTIVE_THRESHOLDS = 0x0171;
 

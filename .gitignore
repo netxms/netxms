@@ -159,6 +159,9 @@ target
 /src/client/nxshell/java/.classpath
 /src/client/nxshell/java/.project
 /src/client/nxshell/java/.settings
+/src/client/nxtcpproxy/.classpath
+/src/client/nxtcpproxy/.project
+/src/client/nxtcpproxy/.settings
 /src/client/nxsms/nxsms
 /src/flow_analyzer/nxflowd/MSG00001.bin
 /src/flow_analyzer/nxflowd/messages.h

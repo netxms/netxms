@@ -548,6 +548,7 @@ private:
    void onSnmpTrapCallback(NXCPMessage *msg);
    void onTrapCallback(NXCPMessage *msg);
    void onSyslogMessageCallback(NXCPMessage *msg);
+   void postRawMessageCallback(NXCP_MESSAGE *msg);
 
 protected:
    virtual ~AgentConnection();
@@ -562,6 +563,7 @@ protected:
    virtual UINT32 processCollectedData(NXCPMessage *msg);
    virtual UINT32 processBulkCollectedData(NXCPMessage *request, NXCPMessage *response);
    virtual bool processCustomMessage(NXCPMessage *pMsg);
+   virtual void processTcpProxyData(UINT32 channelId, const void *data, size_t size);
 
    const InetAddress& getIpAddr() const { return m_addr; }
 
@@ -590,9 +592,10 @@ public:
 	int getProtocolVersion() const { return m_nProtocolVersion; }
 	bool isCompressionAllowed() const { return m_allowCompression && (m_nProtocolVersion >= 4); }
 
-   bool sendMessage(NXCPMessage *pMsg);
-   bool sendRawMessage(NXCP_MESSAGE *pMsg);
-   NXCPMessage *waitForMessage(WORD wCode, UINT32 dwId, UINT32 dwTimeOut) { return m_pMsgWaitQueue->waitForMessage(wCode, dwId, dwTimeOut); }
+   bool sendMessage(NXCPMessage *msg);
+   bool sendRawMessage(NXCP_MESSAGE *msg);
+   void postRawMessage(NXCP_MESSAGE *msg);
+   NXCPMessage *waitForMessage(WORD code, UINT32 id, UINT32 timeout) { return m_pMsgWaitQueue->waitForMessage(code, id, timeout); }
 
    ArpCache *getArpCache();
    InterfaceList *getInterfaceList();
@@ -620,6 +623,8 @@ public:
 	UINT32 uninstallPolicy(const uuid& guid);
    UINT32 takeScreenshot(const TCHAR *sessionName, BYTE **data, size_t *size);
    TCHAR *getHostByAddr(const InetAddress& ipAddr, TCHAR *buf, size_t bufLen);
+   UINT32 setupTcpProxy(const InetAddress& ipAddr, UINT16 port, UINT32 *channelId);
+   UINT32 closeTcpProxy(UINT32 channelId);
 
 	UINT32 generateRequestId() { return (UINT32)InterlockedIncrement(&m_requestId); }
 	NXCPMessage *customRequest(NXCPMessage *pRequest, const TCHAR *recvFile = NULL, bool append = false,
