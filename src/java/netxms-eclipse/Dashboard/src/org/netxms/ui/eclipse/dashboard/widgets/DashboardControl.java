@@ -219,6 +219,9 @@ public class DashboardControl extends Composite
         case DashboardElement.RACK_DIAGRAM:
            w = new RackDiagramElement(this, e, viewPart);
            break;
+        case DashboardElement.OBJECT_TOOLS:
+           w = new ObjectTools(this, e, viewPart);
+           break;
 			default:
 				w = new ElementWidget(this, e, viewPart);
 				break;

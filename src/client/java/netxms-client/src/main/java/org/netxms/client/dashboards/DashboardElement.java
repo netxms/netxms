@@ -52,8 +52,8 @@ public class DashboardElement
    public static final int EVENT_MONITOR = 24;
    public static final int SERVICE_COMPONENTS = 25;
    public static final int RACK_DIAGRAM = 26;
+   public static final int OBJECT_TOOLS = 27;
    
-	
 	public static final int FILL = 0;
 	public static final int CENTER = 1;
 	public static final int LEFT = 2;

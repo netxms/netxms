@@ -52,7 +52,6 @@ public class DciSummaryTableConfig extends DashboardElementConfig
 
    @Element(required=false)
    private boolean enableSortingAndLineLimit = false;
-
    
    /**
 	 * Create line chart settings object from XML document

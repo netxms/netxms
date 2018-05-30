@@ -48,7 +48,6 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
  * Event selection dialog
- *
  */
 public class EventSelectionDialog extends Dialog
 {

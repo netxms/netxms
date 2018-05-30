@@ -30,10 +30,11 @@
                enablesFor="1"
                id="org.netxms.ui.eclipse.dashboard.popupActions.CreateDashboard#DashboardRoot"
                label="&amp;Dashboard..."
-               menubarPath="objectcreation">
+               menubarPath="CreateObjectSubmenu/additions">
          </action>
          <action
                class="org.netxms.ui.eclipse.dashboard.actions.CreateDashboardGroup"
+               enablesFor="1"
                id="org.netxms.ui.eclipse.dashboard.popupActions.CreateDashboardGroup#DashboardRoot"
                label="Dashboard &amp;group..."
                menubarPath="CreateObjectSubmenu/additions">
@@ -76,16 +77,17 @@
             id="org.netxms.ui.eclipse.dashboard.actions.popup.object.DashboardGroup"
             objectClass="org.netxms.client.objects.DashboardGroup">
          <action
-               class="org.netxms.ui.eclipse.dashboard.actions.CreateDashboard"
-               id="org.netxms.ui.eclipse.dashboard.popupActions.CreateDashboard#DashboardGroup"
-               label="&amp;Dashboard..."
-               menubarPath="CreateObjectSubmenu/additions">
-         </action>
-         <action
                class="org.netxms.ui.eclipse.dashboard.actions.CreateDashboardGroup"
                enablesFor="1"
                id="org.netxms.ui.eclipse.dashboard.popupActions.CreateDashboardGroup#DashboardGroup"
                label="Dashboard &amp;group..."
+               menubarPath="CreateObjectSubmenu/additions">
+         </action>
+         <action
+               class="org.netxms.ui.eclipse.dashboard.actions.CreateDashboard"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.dashboard.popupActions.CreateDashboard#DashboardGroup"
+               label="&amp;Dashboard..."
                menubarPath="CreateObjectSubmenu/additions">
          </action>
       </objectContribution>
@@ -376,6 +378,16 @@
          <enabledWhen>
             <instanceof
                   value="org.netxms.ui.eclipse.dashboard.widgets.internal.RackDiagramConfig">
+            </instanceof>
+         </enabledWhen>
+      </page>
+      <page
+            class="org.netxms.ui.eclipse.dashboard.propertypages.ObjectTools"
+            id="org.netxms.ui.eclipse.dashboard.propertypages.ObjectTools"
+            name="Object Tools">
+         <enabledWhen>
+            <instanceof
+                  value="org.netxms.ui.eclipse.dashboard.widgets.internal.ObjectToolsConfig">
             </instanceof>
          </enabledWhen>
       </page>
