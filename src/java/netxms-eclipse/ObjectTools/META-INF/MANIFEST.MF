@@ -17,4 +17,5 @@ Require-Bundle: org.eclipse.ui;bundle-version="3.8.2",
  org.netxms.ui.eclipse.filemanager;bundle-version="2.0.6"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy
-Export-Package: org.netxms.ui.eclipse.objecttools.api
+Export-Package: org.netxms.ui.eclipse.objecttools.api,
+ org.netxms.ui.eclipse.objecttools.widgets

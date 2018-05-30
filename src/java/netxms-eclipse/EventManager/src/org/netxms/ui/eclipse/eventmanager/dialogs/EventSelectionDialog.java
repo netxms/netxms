@@ -38,11 +38,10 @@ import org.netxms.ui.eclipse.eventmanager.widgets.EventObjectList;
 
 /**
  * Event selection dialog
- *
  */
 public class EventSelectionDialog extends Dialog
 {
-   private static final String TABLE_CONFIG_PREFIX = "SelectEvent"; //$NON-NLS-1$
+   private static final String CONFIG_PREFIX = "SelectEvent"; //$NON-NLS-1$
    
 	private boolean multiSelection;
    private boolean showGroups;
@@ -71,7 +70,7 @@ public class EventSelectionDialog extends Dialog
 		IDialogSettings settings = Activator.getDefault().getDialogSettings();
 		try
 		{
-			newShell.setSize(settings.getInt(TABLE_CONFIG_PREFIX + ".cx"), settings.getInt(TABLE_CONFIG_PREFIX + ".cy")); //$NON-NLS-1$ //$NON-NLS-2$
+			newShell.setSize(settings.getInt(CONFIG_PREFIX + ".cx"), settings.getInt(CONFIG_PREFIX + ".cy")); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		catch(NumberFormatException e)
 		{
@@ -88,7 +87,7 @@ public class EventSelectionDialog extends Dialog
 		
 		dialogArea.setLayout(new FormLayout());
 		
-		eventObjectList = new EventObjectList(dialogArea, SWT.NONE, TABLE_CONFIG_PREFIX, true, showGroups);
+		eventObjectList = new EventObjectList(dialogArea, SWT.NONE, CONFIG_PREFIX, true, showGroups);
 		FormData fd = new FormData();
       fd.left = new FormAttachment(0, 0);
       fd.top = new FormAttachment(100, 0);

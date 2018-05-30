@@ -58,7 +58,8 @@ public class DashboardElementsLabelProvider extends LabelProvider implements ITa
 		"SNMP trap monitor",
 		"Event monitor",
       "Service component map",
-      "Rack diagram"
+      "Rack diagram",
+      "Object tools"
 	};
 	
 	/* (non-Javadoc)
