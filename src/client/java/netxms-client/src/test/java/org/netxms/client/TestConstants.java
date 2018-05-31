@@ -44,7 +44,10 @@ public class TestConstants
    {
       try
       {
-         InputStream stream = new FileInputStream("/etc/test.properties");
+         String propFile = "/etc/test.properties";
+         if(System.getProperty("ConfigFile") != null && !System.getProperty("ConfigFile").isEmpty())
+            propFile = System.getProperty("ConfigFile");
+         InputStream stream = new FileInputStream(propFile);
          Properties properties = new Properties();
          properties.load(stream);
          serverAddress = properties.getProperty("server.address", "127.0.0.1");
@@ -62,7 +65,7 @@ public class TestConstants
       }
       catch (Exception e)
       {
-         System.out.println("No properties file found." + e.getMessage());
+         System.out.println("No properties file found: " + e.getMessage());
       }
    }
 }
