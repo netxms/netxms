@@ -1,6 +1,6 @@
 package org.netxms.samples;
 
-import org.netxms.api.client.NetXMSClientException;
+import org.netxms.api.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DciValue;
 
@@ -12,9 +12,10 @@ public class Sample {
     private static final String LOGIN = "admin";
     private static final String PASSWORD = "netxms";
 
-    public static void main(final String[] args) throws NetXMSClientException, IOException {
-        final NXCSession session = new NXCSession(SERVER, LOGIN, PASSWORD);
+    public static void main(final String[] args) throws NXCException, IOException {
+        final NXCSession session = new NXCSession(SERVER);
         session.connect();
+        session.login(LOGIN, PASSWORD);
         final DciValue[] lastValues = session.getLastValues(NODE_ID);
         for (final DciValue lastValue : lastValues) {
             System.out.printf("%s == %s%n", lastValue.getName(), lastValue.getValue());
