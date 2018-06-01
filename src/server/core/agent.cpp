@@ -482,6 +482,8 @@ void AgentConnectionEx::onSnmpTrap(NXCPMessage *msg)
                      SNMP_SecurityContext *context = snmpTransport->getSecurityContext();
                      context->setAuthoritativeEngine(localEngine);
                   }
+                  if (snmpTransport != NULL)
+                     snmpTransport->setWaitForResponse(false);
                   ProcessTrap(pdu, originSenderIP, zoneUIN, msg->getFieldAsUInt16(VID_PORT), snmpTransport, &localEngine, isInformRequest);
                   delete snmpTransport;
                }
