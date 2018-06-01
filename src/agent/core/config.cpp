@@ -252,9 +252,14 @@ static void RecoverDataDirectory()
 
    String oldAppDataDir(appDataDir);
    oldAppDataDir.toUppercase();
-   oldAppDataDir.replace(_T("\\WINDOWS\\"), _T("\\WINDOWS.OLD\\"));
+   oldAppDataDir.replace(_T("\\WINDOWS\\"), _T("\\WINDOWS.OLD\\WINDOWS\\"));
    if (_taccess(oldAppDataDir, 0) != 0)
-      return;  // Old directory missing
+   {
+      // Try another option (without Windows inside Windows.Old)
+      oldAppDataDir.replace(_T("\\WINDOWS.OLD\\WINDOWS\\"), _T("\\WINDOWS.OLD\\"));
+      if (_taccess(oldAppDataDir, 0) != 0)
+         return;  // Old directory missing
+   }
 
    if (CopyFileOrDirectory(oldAppDataDir, g_szDataDirectory))
    {
