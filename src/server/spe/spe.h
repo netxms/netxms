@@ -30,12 +30,6 @@
 #include <nxconfig.h>
 #include <npe.h>
 
-#ifdef _WIN32
-#define EXPORT __declspec(dllexport)
-#else
-#define EXPORT
-#endif   /* _WIN32 */
-
 /**
  * Neural network node
  */
