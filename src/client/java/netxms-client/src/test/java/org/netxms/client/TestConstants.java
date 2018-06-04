@@ -3,6 +3,7 @@ package org.netxms.client;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.Properties;
+import org.netxms.mobile.agent.Session;
 
 /******************************************************************
  *Documentation about test server configuration
@@ -51,6 +52,7 @@ public class TestConstants
          Properties properties = new Properties();
          properties.load(stream);
          serverAddress = properties.getProperty("server.address", "127.0.0.1");
+         serverPort = Integer.parseInt(properties.getProperty("server.port", Integer.toString(NXCSession.DEFAULT_CONN_PORT)));
          loginName = properties.getProperty("login.name", "admin");
          password = properties.getProperty("password", "");
          NODE_ID = Integer.parseInt(properties.getProperty("node.id", "100"));
