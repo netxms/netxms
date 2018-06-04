@@ -3,6 +3,7 @@
 
 [Setup]
 #include "setup.iss"
+VersionInfoDescription=NPI(name=nxagent;platform=windows-i386)
 OutputBaseFilename=nxagent-2.1.3
 
 [Files]
