@@ -31,6 +31,7 @@ public class TestConstants
          loginName = properties.getProperty("login.name", "admin");
          password = properties.getProperty("password", "");
          DEVICE_ID = properties.getProperty("device.id", "0000000000");
+         serverPort = Integer.parseInt(properties.getProperty("mobile.server.port", Integer.toString(Session.DEFAULT_CONN_PORT)));
       }
       catch (Exception e)
       {
