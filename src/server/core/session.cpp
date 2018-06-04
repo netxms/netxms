@@ -901,26 +901,20 @@ void ClientSession::processingThread()
          case CMD_QUERY_TABLE:
             CALL_IN_NEW_THREAD(queryAgentTable, pMsg);
             break;
-         case CMD_LOCK_PACKAGE_DB:
-            LockPackageDB(pMsg->getId(), TRUE);
-            break;
-         case CMD_UNLOCK_PACKAGE_DB:
-            LockPackageDB(pMsg->getId(), FALSE);
-            break;
          case CMD_GET_PACKAGE_LIST:
-            SendAllPackages(pMsg->getId());
+            getInstalledPackages(pMsg->getId());
             break;
          case CMD_INSTALL_PACKAGE:
-            InstallPackage(pMsg);
+            installPackage(pMsg);
             break;
          case CMD_REMOVE_PACKAGE:
-            RemovePackage(pMsg);
+            removePackage(pMsg);
             break;
          case CMD_GET_PARAMETER_LIST:
             getParametersList(pMsg);
             break;
          case CMD_DEPLOY_PACKAGE:
-            DeployPackage(pMsg);
+            deployPackage(pMsg);
             break;
          case CMD_GET_LAST_VALUES:
             getLastValues(pMsg);
@@ -6728,112 +6722,53 @@ void ClientSession::sendAllTraps2(UINT32 dwRqId)
    sendMessage(&msg);
 }
 
-
-//
-// Lock/unlock package database
-//
-
-void ClientSession::LockPackageDB(UINT32 dwRqId, BOOL bLock)
-{
-   NXCPMessage msg;
-   TCHAR szBuffer[256];
-
-   // Prepare response message
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(dwRqId);
-
-   if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_PACKAGES)
-   {
-      if (bLock)
-      {
-         if (!LockComponent(CID_PACKAGE_DB, m_id, m_sessionName, NULL, szBuffer))
-         {
-            msg.setField(VID_RCC, RCC_COMPONENT_LOCKED);
-            msg.setField(VID_LOCKED_BY, szBuffer);
-         }
-         else
-         {
-            m_dwFlags |= CSF_PACKAGE_DB_LOCKED;
-            msg.setField(VID_RCC, RCC_SUCCESS);
-         }
-      }
-      else
-      {
-         if (m_dwFlags & CSF_PACKAGE_DB_LOCKED)
-         {
-            UnlockComponent(CID_PACKAGE_DB);
-            m_dwFlags &= ~CSF_PACKAGE_DB_LOCKED;
-         }
-         msg.setField(VID_RCC, RCC_SUCCESS);
-      }
-   }
-   else
-   {
-      // Current user has no rights for trap management
-      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
-   }
-
-   // Send response
-   sendMessage(&msg);
-}
-
 /**
  * Send list of all installed packages to client
  */
-void ClientSession::SendAllPackages(UINT32 dwRqId)
+void ClientSession::getInstalledPackages(UINT32 requestId)
 {
-   NXCPMessage msg;
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, requestId);
+
    BOOL bSuccess = FALSE;
    TCHAR szBuffer[MAX_DB_STRING];
 
-   // Prepare response message
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(dwRqId);
-
    if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_PACKAGES)
    {
-      if (m_dwFlags & CSF_PACKAGE_DB_LOCKED)
+      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+      DB_UNBUFFERED_RESULT hResult = DBSelectUnbuffered(hdb, _T("SELECT pkg_id,version,platform,pkg_file,pkg_name,description FROM agent_pkg"));
+      if (hResult != NULL)
       {
-         DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-         DB_UNBUFFERED_RESULT hResult = DBSelectUnbuffered(hdb, _T("SELECT pkg_id,version,platform,pkg_file,pkg_name,description FROM agent_pkg"));
-         if (hResult != NULL)
-         {
-            msg.setField(VID_RCC, RCC_SUCCESS);
-            sendMessage(&msg);
-            bSuccess = TRUE;
+         msg.setField(VID_RCC, RCC_SUCCESS);
+         sendMessage(&msg);
+         bSuccess = TRUE;
 
-            msg.setCode(CMD_PACKAGE_INFO);
+         msg.setCode(CMD_PACKAGE_INFO);
+         msg.deleteAllFields();
+
+         while(DBFetch(hResult))
+         {
+            msg.setField(VID_PACKAGE_ID, DBGetFieldULong(hResult, 0));
+            msg.setField(VID_PACKAGE_VERSION, DBGetField(hResult, 1, szBuffer, MAX_DB_STRING));
+            msg.setField(VID_PLATFORM_NAME, DBGetField(hResult, 2, szBuffer, MAX_DB_STRING));
+            msg.setField(VID_FILE_NAME, DBGetField(hResult, 3, szBuffer, MAX_DB_STRING));
+            msg.setField(VID_PACKAGE_NAME, DBGetField(hResult, 4, szBuffer, MAX_DB_STRING));
+            DBGetField(hResult, 5, szBuffer, MAX_DB_STRING);
+            DecodeSQLString(szBuffer);
+            msg.setField(VID_DESCRIPTION, szBuffer);
+            sendMessage(&msg);
             msg.deleteAllFields();
-
-            while(DBFetch(hResult))
-            {
-               msg.setField(VID_PACKAGE_ID, DBGetFieldULong(hResult, 0));
-               msg.setField(VID_PACKAGE_VERSION, DBGetField(hResult, 1, szBuffer, MAX_DB_STRING));
-               msg.setField(VID_PLATFORM_NAME, DBGetField(hResult, 2, szBuffer, MAX_DB_STRING));
-               msg.setField(VID_FILE_NAME, DBGetField(hResult, 3, szBuffer, MAX_DB_STRING));
-               msg.setField(VID_PACKAGE_NAME, DBGetField(hResult, 4, szBuffer, MAX_DB_STRING));
-               DBGetField(hResult, 5, szBuffer, MAX_DB_STRING);
-               DecodeSQLString(szBuffer);
-               msg.setField(VID_DESCRIPTION, szBuffer);
-               sendMessage(&msg);
-               msg.deleteAllFields();
-            }
-
-            msg.setField(VID_PACKAGE_ID, (UINT32)0);
-            sendMessage(&msg);
-
-            DBFreeResult(hResult);
          }
-         else
-         {
-            msg.setField(VID_RCC, RCC_DB_FAILURE);
-         }
-         DBConnectionPoolReleaseConnection(hdb);
+
+         msg.setField(VID_PACKAGE_ID, (UINT32)0);
+         sendMessage(&msg);
+
+         DBFreeResult(hResult);
       }
       else
       {
-         msg.setField(VID_RCC, RCC_OUT_OF_STATE_REQUEST);
+         msg.setField(VID_RCC, RCC_DB_FAILURE);
       }
+      DBConnectionPoolReleaseConnection(hdb);
    }
    else
    {
@@ -6849,84 +6784,73 @@ void ClientSession::SendAllPackages(UINT32 dwRqId)
 /**
  * Install package to server
  */
-void ClientSession::InstallPackage(NXCPMessage *pRequest)
+void ClientSession::installPackage(NXCPMessage *request)
 {
-   NXCPMessage msg;
-   TCHAR szPkgName[MAX_PACKAGE_NAME_LEN], szDescription[MAX_DB_STRING];
-   TCHAR szPkgVersion[MAX_AGENT_VERSION_LEN], szFileName[MAX_DB_STRING];
-   TCHAR szPlatform[MAX_PLATFORM_NAME_LEN];
-
-   // Prepare response message
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(pRequest->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
 
    if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_PACKAGES)
    {
-      if (m_dwFlags & CSF_PACKAGE_DB_LOCKED)
+      TCHAR szPkgName[MAX_PACKAGE_NAME_LEN], szDescription[MAX_DB_STRING];
+      TCHAR szPkgVersion[MAX_AGENT_VERSION_LEN], szFileName[MAX_DB_STRING];
+      TCHAR szPlatform[MAX_PLATFORM_NAME_LEN];
+
+      request->getFieldAsString(VID_PACKAGE_NAME, szPkgName, MAX_PACKAGE_NAME_LEN);
+      request->getFieldAsString(VID_DESCRIPTION, szDescription, MAX_DB_STRING);
+      request->getFieldAsString(VID_FILE_NAME, szFileName, MAX_DB_STRING);
+      request->getFieldAsString(VID_PACKAGE_VERSION, szPkgVersion, MAX_AGENT_VERSION_LEN);
+      request->getFieldAsString(VID_PLATFORM_NAME, szPlatform, MAX_PLATFORM_NAME_LEN);
+
+      // Remove possible path specification from file name
+      const TCHAR *pszCleanFileName = GetCleanFileName(szFileName);
+
+      if (IsValidObjectName(pszCleanFileName) &&
+          IsValidObjectName(szPkgName) &&
+          IsValidObjectName(szPkgVersion) &&
+          IsValidObjectName(szPlatform))
       {
-         pRequest->getFieldAsString(VID_PACKAGE_NAME, szPkgName, MAX_PACKAGE_NAME_LEN);
-         pRequest->getFieldAsString(VID_DESCRIPTION, szDescription, MAX_DB_STRING);
-         pRequest->getFieldAsString(VID_FILE_NAME, szFileName, MAX_DB_STRING);
-         pRequest->getFieldAsString(VID_PACKAGE_VERSION, szPkgVersion, MAX_AGENT_VERSION_LEN);
-         pRequest->getFieldAsString(VID_PLATFORM_NAME, szPlatform, MAX_PLATFORM_NAME_LEN);
-
-         // Remove possible path specification from file name
-         const TCHAR *pszCleanFileName = GetCleanFileName(szFileName);
-
-         if (IsValidObjectName(pszCleanFileName) &&
-             IsValidObjectName(szPkgName) &&
-             IsValidObjectName(szPkgVersion) &&
-             IsValidObjectName(szPlatform))
+         // Check if same package already exist
+         if (!IsPackageInstalled(szPkgName, szPkgVersion, szPlatform))
          {
-            // Check if same package already exist
-            if (!IsPackageInstalled(szPkgName, szPkgVersion, szPlatform))
+            // Check for duplicate file name
+            if (!IsPackageFileExist(pszCleanFileName))
             {
-               // Check for duplicate file name
-               if (!IsPackageFileExist(pszCleanFileName))
+               TCHAR fullFileName[MAX_PATH];
+               _tcscpy(fullFileName, g_netxmsdDataDir);
+               _tcscat(fullFileName, DDIR_PACKAGES);
+               _tcscat(fullFileName, FS_PATH_SEPARATOR);
+               _tcscat(fullFileName, pszCleanFileName);
+
+               ServerDownloadFileInfo *fInfo = new ServerDownloadFileInfo(fullFileName, CMD_INSTALL_PACKAGE);
+               if (fInfo->open())
                {
-                  TCHAR fullFileName[MAX_PATH];
-                  _tcscpy(fullFileName, g_netxmsdDataDir);
-                  _tcscat(fullFileName, DDIR_PACKAGES);
-                  _tcscat(fullFileName, FS_PATH_SEPARATOR);
-                  _tcscat(fullFileName, pszCleanFileName);
+                  UINT32 uploadData = CreateUniqueId(IDG_PACKAGE);
+                  fInfo->setUploadData(uploadData);
+                  m_downloadFileMap->set(request->getId(), fInfo);
+                  msg.setField(VID_RCC, RCC_SUCCESS);
+                  msg.setField(VID_PACKAGE_ID, uploadData);
 
-                  ServerDownloadFileInfo *fInfo = new ServerDownloadFileInfo(fullFileName, CMD_INSTALL_PACKAGE);
-
-                  if (fInfo->open())
-                  {
-                     UINT32 uploadData = CreateUniqueId(IDG_PACKAGE);
-                     fInfo->setUploadData(uploadData);
-                     m_downloadFileMap->set(pRequest->getId(), fInfo);
-                     msg.setField(VID_RCC, RCC_SUCCESS);
-                     msg.setField(VID_PACKAGE_ID, uploadData);
-
-                     // Create record in database
-                     fInfo->updateAgentPkgDBInfo(szDescription, szPkgName, szPkgVersion, szPlatform, pszCleanFileName);
-                  }
-                  else
-                  {
-                     delete fInfo;
-                     msg.setField(VID_RCC, RCC_IO_ERROR);
-                  }
+                  // Create record in database
+                  fInfo->updateAgentPkgDBInfo(szDescription, szPkgName, szPkgVersion, szPlatform, pszCleanFileName);
                }
                else
                {
-                  msg.setField(VID_RCC, RCC_PACKAGE_FILE_EXIST);
+                  delete fInfo;
+                  msg.setField(VID_RCC, RCC_IO_ERROR);
                }
             }
             else
             {
-               msg.setField(VID_RCC, RCC_DUPLICATE_PACKAGE);
+               msg.setField(VID_RCC, RCC_PACKAGE_FILE_EXIST);
             }
          }
          else
          {
-            msg.setField(VID_RCC, RCC_INVALID_OBJECT_NAME);
+            msg.setField(VID_RCC, RCC_DUPLICATE_PACKAGE);
          }
       }
       else
       {
-         msg.setField(VID_RCC, RCC_OUT_OF_STATE_REQUEST);
+         msg.setField(VID_RCC, RCC_INVALID_OBJECT_NAME);
       }
    }
    else
@@ -6939,31 +6863,17 @@ void ClientSession::InstallPackage(NXCPMessage *pRequest)
    sendMessage(&msg);
 }
 
-
-//
-// Remove package from server
-//
-
-void ClientSession::RemovePackage(NXCPMessage *pRequest)
+/**
+ * Remove package from server
+ */
+void ClientSession::removePackage(NXCPMessage *request)
 {
-   NXCPMessage msg;
-   UINT32 dwPkgId;
-
-   // Prepare response message
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(pRequest->getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
 
    if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_PACKAGES)
    {
-      if (m_dwFlags & CSF_PACKAGE_DB_LOCKED)
-      {
-         dwPkgId = pRequest->getFieldAsUInt32(VID_PACKAGE_ID);
-         msg.setField(VID_RCC, UninstallPackage(dwPkgId));
-      }
-      else
-      {
-         msg.setField(VID_RCC, RCC_OUT_OF_STATE_REQUEST);
-      }
+      UINT32 pkgId = request->getFieldAsUInt32(VID_PACKAGE_ID);
+      msg.setField(VID_RCC, UninstallPackage(pkgId));
    }
    else
    {
@@ -7022,9 +6932,9 @@ void ClientSession::getParametersList(NXCPMessage *request)
 /**
  * Deplay package to node(s)
  */
-void ClientSession::DeployPackage(NXCPMessage *pRequest)
+void ClientSession::deployPackage(NXCPMessage *request)
 {
-   NXCPMessage msg;
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
    UINT32 i, dwNumObjects, *pdwObjectList, dwPkgId;
    NetObj *object;
    TCHAR szQuery[256], szPkgFile[MAX_PATH];
@@ -7033,16 +6943,12 @@ void ClientSession::DeployPackage(NXCPMessage *pRequest)
    BOOL bSuccess = TRUE;
    MUTEX hMutex;
 
-   // Prepare response message
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(pRequest->getId());
-
    if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_PACKAGES)
    {
 		ObjectArray<Node> *nodeList = NULL;
 
       // Get package ID
-      dwPkgId = pRequest->getFieldAsUInt32(VID_PACKAGE_ID);
+      dwPkgId = request->getFieldAsUInt32(VID_PACKAGE_ID);
       if (IsValidPackageId(dwPkgId))
       {
          DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
@@ -7059,9 +6965,9 @@ void ClientSession::DeployPackage(NXCPMessage *pRequest)
                DBGetField(hResult, 0, 2, szVersion, MAX_AGENT_VERSION_LEN);
 
                // Create list of nodes to be upgraded
-               dwNumObjects = pRequest->getFieldAsUInt32(VID_NUM_OBJECTS);
+               dwNumObjects = request->getFieldAsUInt32(VID_NUM_OBJECTS);
                pdwObjectList = (UINT32 *)malloc(sizeof(UINT32) * dwNumObjects);
-               pRequest->getFieldAsInt32Array(VID_OBJECT_LIST, dwNumObjects, pdwObjectList);
+               request->getFieldAsInt32Array(VID_OBJECT_LIST, dwNumObjects, pdwObjectList);
 					nodeList = new ObjectArray<Node>((int)dwNumObjects);
                for(i = 0; i < dwNumObjects; i++)
                {
@@ -7102,7 +7008,7 @@ void ClientSession::DeployPackage(NXCPMessage *pRequest)
                      break;
                   }
                }
-               safe_free(pdwObjectList);
+               free(pdwObjectList);
             }
             else
             {
@@ -7136,7 +7042,7 @@ void ClientSession::DeployPackage(NXCPMessage *pRequest)
          pInfo->nodeList = nodeList;
          pInfo->pSession = this;
          pInfo->mutex = hMutex;
-         pInfo->dwRqId = pRequest->getId();
+         pInfo->dwRqId = request->getId();
          pInfo->dwPackageId = dwPkgId;
          _tcscpy(pInfo->szPkgFile, szPkgFile);
          _tcscpy(pInfo->szPlatform, szPlatform);
