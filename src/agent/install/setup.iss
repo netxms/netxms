@@ -1,8 +1,11 @@
 AppName=NetXMS Agent
 AppVerName=NetXMS Agent 3.0-M0
 AppVersion=3.0-M0
+VersionInfoVersion=3.0.0
+VersionInfoTextVersion=3.0-M0
 AppPublisher=Raden Solutions
 AppPublisherURL=http://www.radensolutions.com
+AppCopyright=© 2003-2018 Raden Solutions
 AppSupportURL=http://www.netxms.org
 AppUpdatesURL=http://www.netxms.org
 DefaultDirName=C:\NetXMS

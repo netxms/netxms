@@ -3,6 +3,7 @@
 
 [Setup]
 #include "setup.iss"
+VersionInfoDescription=NPI(name=nxagent;platform=windows-x64)
 OutputBaseFilename=nxagent-3.0-M0-x64
 ArchitecturesInstallIn64BitMode=x64
 ArchitecturesAllowed=x64
