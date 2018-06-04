@@ -463,15 +463,16 @@ public:
    DCTableColumn(ConfigEntry *e);
 	~DCTableColumn();
 
-	const TCHAR *getName() { return m_name; }
-   const TCHAR *getDisplayName() { return (m_displayName != NULL) ? m_displayName : m_name; }
-   UINT16 getFlags() { return m_flags; }
-   int getDataType() { return TCF_GET_DATA_TYPE(m_flags); }
-   int getAggregationFunction() { return TCF_GET_AGGREGATION_FUNCTION(m_flags); }
-	SNMP_ObjectId *getSnmpOid() { return m_snmpOid; }
-   bool isInstanceColumn() { return (m_flags & TCF_INSTANCE_COLUMN) != 0; }
+	const TCHAR *getName() const { return m_name; }
+   const TCHAR *getDisplayName() const { return (m_displayName != NULL) ? m_displayName : m_name; }
+   UINT16 getFlags() const { return m_flags; }
+   int getDataType() const { return TCF_GET_DATA_TYPE(m_flags); }
+   int getAggregationFunction() const { return TCF_GET_AGGREGATION_FUNCTION(m_flags); }
+	const SNMP_ObjectId *getSnmpOid() const { return m_snmpOid; }
+   bool isInstanceColumn() const { return (m_flags & TCF_INSTANCE_COLUMN) != 0; }
+   bool isConvertSnmpStringToHex() const { return (m_flags & TCF_SNMP_HEX_STRING) != 0; }
 
-   void createNXMPRecord(String &str, int id);
+   void createNXMPRecord(String &str, int id) const;
    json_t *toJson() const;
 };
 

@@ -4081,9 +4081,20 @@ static UINT32 ReadSNMPTableRow(SNMP_Transport *snmp, const SNMP_ObjectId *rowOid
             SNMP_Variable *v = response->getVariable(i);
             if ((v != NULL) && (v->getType() != ASN_NO_SUCH_OBJECT) && (v->getType() != ASN_NO_SUCH_INSTANCE))
             {
-               bool convert = false;
-               TCHAR buffer[256];
-               table->set((int)i, v->getValueAsPrintableString(buffer, 256, &convert));
+               DCTableColumn *c = columns->get(i);
+               if ((c != NULL) && c->isConvertSnmpStringToHex())
+               {
+                  size_t size = v->getValueLength();
+                  TCHAR *buffer = (TCHAR *)malloc((size * 2 + 1) * sizeof(TCHAR));
+                  BinToStr(v->getValue(), size, buffer);
+                  table->set(i, buffer);
+               }
+               else
+               {
+                  bool convert = false;
+                  TCHAR buffer[256];
+                  table->set(i, v->getValueAsPrintableString(buffer, 256, &convert));
+               }
             }
          }
       }

@@ -129,14 +129,14 @@ DCTableColumn::DCTableColumn(ConfigEntry *e)
  */
 DCTableColumn::~DCTableColumn()
 {
-	delete m_snmpOid;
-   safe_free(m_displayName);
+   delete m_snmpOid;
+   free(m_displayName);
 }
 
 /**
  * Create NXMP record
  */
-void DCTableColumn::createNXMPRecord(String &str, int id)
+void DCTableColumn::createNXMPRecord(String &str, int id) const
 {
    str.appendFormattedString(_T("\t\t\t\t\t\t<column id=\"%d\">\n")
                           _T("\t\t\t\t\t\t\t<name>%s</name>\n")

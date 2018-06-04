@@ -600,7 +600,7 @@ bool DCTable::saveToDatabase(DB_HANDLE hdb)
 					DCTableColumn *column = m_columns->get(i);
                DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (INT32)(i + 1));
 					DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, column->getName(), DB_BIND_STATIC);
-					SNMP_ObjectId *oid = column->getSnmpOid();
+					const SNMP_ObjectId *oid = column->getSnmpOid();
 					DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, (oid != NULL) ? (const TCHAR *)oid->toString() : NULL, DB_BIND_TRANSIENT);
 					DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, (INT32)column->getFlags());
 					DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, column->getDisplayName(), DB_BIND_STATIC);
@@ -729,9 +729,9 @@ void DCTable::createMessage(NXCPMessage *pMsg)
 		DCTableColumn *column = m_columns->get(i);
 		pMsg->setField(varId++, column->getName());
 		pMsg->setField(varId++, column->getFlags());
-		SNMP_ObjectId *oid = column->getSnmpOid();
+		const SNMP_ObjectId *oid = column->getSnmpOid();
 		if (oid != NULL)
-			pMsg->setFieldFromInt32Array(varId++, (UINT32)oid->length(), oid->value());
+			pMsg->setFieldFromInt32Array(varId++, oid->length(), oid->value());
 		else
 			varId++;
 		pMsg->setField(varId++, column->getDisplayName());
