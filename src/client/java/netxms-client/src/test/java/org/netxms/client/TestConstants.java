@@ -3,7 +3,6 @@ package org.netxms.client;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.Properties;
-import org.netxms.mobile.agent.Session;
 
 /******************************************************************
  *Documentation about test server configuration
