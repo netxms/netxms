@@ -348,8 +348,8 @@ typedef struct
 #define CMD_PACKAGE_INFO                  0x006D
 #define CMD_REMOVE_PACKAGE                0x006E
 #define CMD_INSTALL_PACKAGE               0x006F
-#define CMD_LOCK_PACKAGE_DB               0x0070
-#define CMD_UNLOCK_PACKAGE_DB             0x0071
+/*UNUSED:#define CMD_LOCK_PACKAGE_DB               0x0070*/
+/*UNUSED:#define CMD_UNLOCK_PACKAGE_DB             0x0071*/
 #define CMD_ABORT_FILE_TRANSFER           0x0072
 #define CMD_CHECK_NETWORK_SERVICE         0x0073
 #define CMD_GET_AGENT_CONFIG              0x0074

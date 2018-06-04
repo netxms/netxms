@@ -176,7 +176,6 @@ typedef __console_ctx * CONSOLE_CTX;
  */
 #define CSF_TERMINATED           ((UINT32)0x00000001)
 #define CSF_EPP_LOCKED           ((UINT32)0x00000002)
-#define CSF_PACKAGE_DB_LOCKED    ((UINT32)0x00000004)
 #define CSF_USER_DB_LOCKED       ((UINT32)0x00000008)
 #define CSF_EPP_UPLOAD           ((UINT32)0x00000010)
 #define CSF_CONSOLE_OPEN         ((UINT32)0x00000020)
@@ -600,11 +599,10 @@ private:
    void LockTrapCfg(UINT32 dwRqId, BOOL bLock);
    void sendAllTraps(UINT32 dwRqId);
    void sendAllTraps2(UINT32 dwRqId);
-   void LockPackageDB(UINT32 dwRqId, BOOL bLock);
-   void SendAllPackages(UINT32 dwRqId);
-   void InstallPackage(NXCPMessage *pRequest);
-   void RemovePackage(NXCPMessage *pRequest);
-   void DeployPackage(NXCPMessage *pRequest);
+   void getInstalledPackages(UINT32 requestId);
+   void installPackage(NXCPMessage *request);
+   void removePackage(NXCPMessage *request);
+   void deployPackage(NXCPMessage *request);
    void getParametersList(NXCPMessage *pRequest);
    void getUserVariable(NXCPMessage *pRequest);
    void setUserVariable(NXCPMessage *pRequest);
