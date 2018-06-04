@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2018 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,6 +30,7 @@ public class ColumnDefinition
 	public static final int TCF_AGGREGATE_FUNCTION_MASK = 0x0070;
 	public static final int TCF_INSTANCE_COLUMN         = 0x0100;
 	public static final int TCF_INSTANCE_LABEL_COLUMN   = 0x0200;
+   public static final int TCF_SNMP_HEX_STRING         = 0x0400;
 
 	private String name;
 	private String displayName;
@@ -184,11 +185,21 @@ public class ColumnDefinition
 		this.flags = flags;
 	}
 	
+	/**
+	 * Get "instance column" flag
+	 * 
+	 * @return "instance column" flag
+	 */
 	public boolean isInstanceColumn()
 	{
 		return (flags & TCF_INSTANCE_COLUMN) != 0;
 	}
 	
+	/**
+	 * Set "instance column" flag
+	 * 
+	 * @param isInstance true to set flag
+	 */
 	public void setInstanceColumn(boolean isInstance)
 	{
 		if (isInstance)
@@ -197,11 +208,21 @@ public class ColumnDefinition
 			flags &= ~TCF_INSTANCE_COLUMN;
 	}
 	
+	/**
+    * Get "instance label column" flag
+    * 
+	 * @return "instance label column" flag
+	 */
 	public boolean isInstanceLabelColumn()
 	{
 		return (flags & TCF_INSTANCE_LABEL_COLUMN) != 0;
 	}
 	
+	/**
+    * Set "instance label column" flag
+    * 
+	 * @param isInstanceLabel true to set flag
+	 */
 	public void setInstanceLabelColumn(boolean isInstanceLabel)
 	{
 		if (isInstanceLabel)
@@ -210,8 +231,33 @@ public class ColumnDefinition
 			flags &= ~TCF_INSTANCE_LABEL_COLUMN;
 	}
 
+   /**
+    * Get SNMP string to hexadecimal string conversion flag
+    * 
+    * @return SNMP string to hexadecimal string conversion flag
+    */
+   public boolean isConvertSnmpStringToHex()
+   {
+      return (flags & TCF_SNMP_HEX_STRING) != 0;
+   }
+   
+   /**
+    * Set SNMP string to hexadecimal string conversion flag
+    * 
+    * @param convert true to set flag
+    */
+   public void setConvertSnmpStringToHex(boolean convert)
+   {
+      if (convert)
+         flags |= TCF_SNMP_HEX_STRING;
+      else
+         flags &= ~TCF_SNMP_HEX_STRING;
+   }
+
 	/**
-	 * @param name the name to set
+	 * Set column name
+	 * 
+	 * @param new column name
 	 */
 	public void setName(String name)
 	{

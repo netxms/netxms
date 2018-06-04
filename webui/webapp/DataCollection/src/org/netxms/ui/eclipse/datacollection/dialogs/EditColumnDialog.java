@@ -47,6 +47,7 @@ public class EditColumnDialog extends Dialog
 	private Combo aggregationFunction;
 	private Button checkInstanceColumn;
 	private Button checkInstanceLabelColumn;
+   private Button checkSnmpHexString;
 	private LabeledText snmpOid;
 	
 	/**
@@ -119,6 +120,11 @@ public class EditColumnDialog extends Dialog
 		checkInstanceLabelColumn.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
 		checkInstanceLabelColumn.setSelection(column.isInstanceLabelColumn());
 		
+      checkSnmpHexString = new Button(dialogArea, SWT.CHECK);
+      checkSnmpHexString.setText("Convert SNMP value to &hexadecimal string");
+      checkSnmpHexString.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
+      checkSnmpHexString.setSelection(column.isConvertSnmpStringToHex());
+      
 		snmpOid = new LabeledText(dialogArea, SWT.NONE);
 		snmpOid.setLabel(Messages.get().EditColumnDialog_SNMP_OID);
 		snmpOid.setText((column.getSnmpObjectId() != null) ? column.getSnmpObjectId().toString() : "");  //$NON-NLS-1$
@@ -156,6 +162,7 @@ public class EditColumnDialog extends Dialog
 		column.setDisplayName(displayName.getText().trim());
 		column.setInstanceColumn(checkInstanceColumn.getSelection());
 		column.setInstanceLabelColumn(checkInstanceLabelColumn.getSelection());
+		column.setConvertSnmpStringToHex(checkSnmpHexString.getSelection());
 		column.setDataType(dataType.getSelectionIndex());
 		column.setAggregationFunction(aggregationFunction.getSelectionIndex());
 		

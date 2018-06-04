@@ -2388,7 +2388,7 @@ void ClientSession::queryObjects(NXCPMessage *request)
          objects->get(i)->decRefCount();
       }
       msg.setFieldFromInt32Array(VID_OBJECT_LIST, objects->size(), idList);
-      delete idList;
+      delete[] idList;
       delete objects;
    }
    else
