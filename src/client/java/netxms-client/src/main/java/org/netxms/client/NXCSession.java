@@ -9135,32 +9135,6 @@ public class NXCSession
    }
 
    /**
-    * Lock package database
-    *
-    * @throws IOException  if socket I/O error occurs
-    * @throws NXCException if NetXMS server returns an error or operation was timed out
-    */
-   public void lockPackageDatabase() throws IOException, NXCException
-   {
-      final NXCPMessage msg = newMessage(NXCPCodes.CMD_LOCK_PACKAGE_DB);
-      sendMessage(msg);
-      waitForRCC(msg.getMessageId());
-   }
-
-   /**
-    * Unlock package database
-    *
-    * @throws IOException  if socket I/O error occurs
-    * @throws NXCException if NetXMS server returns an error or operation was timed out
-    */
-   public void unlockPackageDatabase() throws IOException, NXCException
-   {
-      final NXCPMessage msg = newMessage(NXCPCodes.CMD_UNLOCK_PACKAGE_DB);
-      sendMessage(msg);
-      waitForRCC(msg.getMessageId());
-   }
-
-   /**
     * Send SMS via server. User should have appropriate rights to execute this command.
     *
     * @param phoneNumber target phone number

@@ -135,8 +135,8 @@ public class NXCPCodes
 	public static final int CMD_PACKAGE_INFO = 0x006D;
 	public static final int CMD_REMOVE_PACKAGE = 0x006E;
 	public static final int CMD_INSTALL_PACKAGE = 0x006F;
-	public static final int CMD_LOCK_PACKAGE_DB = 0x0070;
-	public static final int CMD_UNLOCK_PACKAGE_DB = 0x0071;
+//	public static final int CMD_LOCK_PACKAGE_DB = 0x0070;
+//	public static final int CMD_UNLOCK_PACKAGE_DB = 0x0071;
 	public static final int CMD_ABORT_FILE_TRANSFER = 0x0072;
 	public static final int CMD_CHECK_NETWORK_SERVICE = 0x0073;
 	public static final int CMD_GET_AGENT_CONFIG = 0x0074;

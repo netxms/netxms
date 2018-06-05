@@ -47,10 +47,8 @@ import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.ViewPart;
-import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.ProgressListener;
-import org.netxms.client.constants.RCC;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.packages.PackageDeploymentListener;
 import org.netxms.client.packages.PackageInfo;
@@ -114,36 +112,7 @@ public class PackageManager extends ViewPart
 			}
 		});
 		
-		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob(Messages.get().PackageManager_OpenDatabase, this, Activator.PLUGIN_ID, null) {
-			@Override
-			protected void runInternal(IProgressMonitor monitor) throws Exception
-			{
-				try
-				{
-					session.lockPackageDatabase();
-				}
-				catch(NXCException e)
-				{
-					// New versions may not require package DB lock
-					if (e.getErrorCode() != RCC.NOT_IMPLEMENTED)
-						throw e;
-				}
-				runInUIThread(new Runnable() {
-					@Override
-					public void run()
-					{
-						refresh();
-					}
-				});
-			}
-			
-			@Override
-			protected String getErrorMessage()
-			{
-				return Messages.get().PackageManager_OpenError;
-			}
-		}.start();
+		refresh();
 	}
 
 	/* (non-Javadoc)
@@ -486,37 +455,5 @@ public class PackageManager extends ViewPart
 		};
 		job.setUser(false);
 		job.start();
-	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#dispose()
-	 */
-	@Override
-	public void dispose()
-	{
-		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob(Messages.get().PackageManager_UnlockDatabase, null, Activator.PLUGIN_ID, null) {
-			@Override
-			protected void runInternal(IProgressMonitor monitor) throws Exception
-			{
-				try
-				{
-					session.unlockPackageDatabase();
-				}
-				catch(NXCException e)
-				{
-					// New versions may not require package DB lock
-					if (e.getErrorCode() != RCC.NOT_IMPLEMENTED)
-						throw e;
-				}
-			}
-			
-			@Override
-			protected String getErrorMessage()
-			{
-				return Messages.get().PackageManager_DBUnlockError;
-			}
-		}.start();
-		super.dispose();
 	}
 }
