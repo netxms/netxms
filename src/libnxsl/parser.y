@@ -312,8 +312,7 @@ WithAssignment:
 	WithCalculationBlock
 {
 	pScript->resolveLastJump(OPCODE_CBLOCK);
-	pScript->addInstruction(new NXSL_Instruction(pScript, pLexer->getCurrLine(), OPCODE_SET, $1));
-	pScript->addInstruction(new NXSL_Instruction(pScript, pLexer->getCurrLine(), OPCODE_POP, (short)1));
+	pScript->addInstruction(new NXSL_Instruction(pScript, pLexer->getCurrLine(), OPCODE_GLOBAL, $1, 1));
 }
 ;
 
