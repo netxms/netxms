@@ -571,16 +571,20 @@ static int F_PostEvent(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_
 /**
  * Create node object
  * Syntax:
- *    CreateNode(parent, name, primaryHostName)
+ *    CreateNode(parent, name, primaryHostName, zoneUIN)
  * where:
  *     parent          - parent object
  *     name            - name for new node
- *     primaryHostName - primary host name for new node
+ *     primaryHostName - primary host name for new node (optional)
+ *     zoneUIN         - zone UIN (optional)
  * Return value:
  *     new node object or null on failure
  */
 static int F_CreateNode(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
+   if ((argc < 2) || (argc > 4))
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
 	if (!argv[0]->isObject())
 		return NXSL_ERR_NOT_OBJECT;
 
@@ -592,14 +596,26 @@ static int F_CreateNode(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL
 	if (parent->getObjectClass() != OBJECT_CONTAINER && parent->getObjectClass() != OBJECT_SERVICEROOT)
 		return NXSL_ERR_BAD_CLASS;
 
-	if (!argv[1]->isString() || !argv[2]->isString())
+	if (!argv[1]->isString() || ((argc > 2) && !argv[2]->isString()))
 		return NXSL_ERR_NOT_STRING;
 
-	const TCHAR *pname = argv[2]->getValueAsCString();
-	if (*pname == 0)
-		pname = argv[1]->getValueAsCString();
+	if ((argc > 3) && !argv[3]->isInteger())
+	   return NXSL_ERR_NOT_INTEGER;
+
+	const TCHAR *pname;
+	if (argc > 2)
+	{
+	   pname = argv[2]->getValueAsCString();
+	   if (*pname == 0)
+	      pname = argv[1]->getValueAsCString();
+	}
+	else
+	{
+      pname = argv[1]->getValueAsCString();
+	}
 	NewNodeData newNodeData(InetAddress::resolveHostName(pname));
 	_tcslcpy(newNodeData.name, argv[1]->getValueAsCString(), MAX_OBJECT_NAME);
+	newNodeData.zoneUIN = (argc > 3) ? argv[3]->getValueAsUInt32() : 0;
 	newNodeData.doConfPoll = true;
 
    Node *node = PollNewNode(&newNodeData);
@@ -1569,7 +1585,7 @@ static NXSL_ExtFunction m_nxslServerFunctionsForContainers[] =
 {
 	{ "BindObject", F_BindObject, 2 },
 	{ "CreateContainer", F_CreateContainer, 2 },
-	{ "CreateNode", F_CreateNode, 3 },
+	{ "CreateNode", F_CreateNode, -1 },
 	{ "DeleteObject", F_DeleteObject, 1 },
 	{ "UnbindObject", F_UnbindObject, 2 }
 };
