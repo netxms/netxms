@@ -1582,11 +1582,11 @@ static NXSL_ExtFunction m_nxslServerFunctions[] =
  */
 static NXSL_ExtFunction m_nxslServerFunctionsForContainers[] =
 {
-	{ "BindObject", F_BindObject, 2 },
-	{ "CreateContainer", F_CreateContainer, 2 },
-	{ "CreateNode", F_CreateNode, -1 },
-	{ "DeleteObject", F_DeleteObject, 1 },
-	{ "UnbindObject", F_UnbindObject, 2 }
+   { _T("BindObject"), F_BindObject, 2 },
+   { _T("CreateContainer"), F_CreateContainer, 2 },
+   { _T("CreateNode"), F_CreateNode, -1 },
+   { _T("DeleteObject"), F_DeleteObject, 1 },
+   { _T("UnbindObject"), F_UnbindObject, 2 }
 };
 
 /*** NXSL_ServerEnv class implementation ***/
