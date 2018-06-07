@@ -3,6 +3,8 @@
 *
 
 - "Convert to hexadecimal string" option for SNMP table columns
+- Fixed issues:
+	NX-1455 (Zone UIN in NXSL function CreateNode)
 
 
 *
