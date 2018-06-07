@@ -128,7 +128,7 @@ static THREAD_RESULT THREAD_CALL WorkerThread(void *arg)
             p->threads->remove(CAST_FROM_POINTER(arg, UINT64));
             MutexUnlock(p->mutex);
 
-            nxlog_debug(3, _T("Stopping worker thread in thread pool %s due to inactivity"), p->name);
+            nxlog_debug(5, _T("Stopping worker thread in thread pool %s due to inactivity"), p->name);
 
             free(rq);
             rq = (WorkRequest *)malloc(sizeof(WorkRequest));
