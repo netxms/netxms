@@ -22,6 +22,7 @@
 
 - "Convert to hexadecimal string" option for SNMP table columns
 - Fixed issues:
+	NX-1438 (Increase debug level for thread pool messages)
 	NX-1455 (Zone UIN in NXSL function CreateNode)
 
 
