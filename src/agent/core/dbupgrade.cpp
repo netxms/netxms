@@ -263,7 +263,7 @@ static BOOL H_UpgradeFromV1(int currVersion, int newVersion)
 
    // Move upgrade file url variable to database
    const TCHAR *fullPath = registry->getValue(_T("/upgrade/file"));
-   if (fullPath != NULL)
+   if (fullPath != NULL && fullPath[0] != 0)
    {
       TCHAR upgradeFileInsert[256];
       _sntprintf(upgradeFileInsert, 256, _T("INSERT INTO registry (attribute,value) VALUES ('upgrade.file','%s')"), fullPath);
