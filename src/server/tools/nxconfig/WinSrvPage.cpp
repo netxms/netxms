@@ -46,11 +46,9 @@ END_MESSAGE_MAP()
 /////////////////////////////////////////////////////////////////////////////
 // CWinSrvPage message handlers
 
-
-//
-// WM_INITDIALOG message handler
-//
-
+/**
+ * WM_INITDIALOG message handler
+ */
 BOOL CWinSrvPage::OnInitDialog() 
 {
    WIZARD_CFG_INFO *pc = &((CConfigWizard *)GetParent())->m_cfg;
@@ -72,11 +70,9 @@ BOOL CWinSrvPage::OnInitDialog()
 	return TRUE;
 }
 
-
-//
-// Handler for "Next" button
-//
-
+/**
+ * Handler for "Next" button
+ */
 LRESULT CWinSrvPage::OnWizardNext() 
 {
    WIZARD_CFG_INFO *pc = &((CConfigWizard *)GetParent())->m_cfg;
@@ -104,10 +100,11 @@ LRESULT CWinSrvPage::OnWizardNext()
          return -1;
       }
    }
+
+   pc->m_manualServiceStart = (SendDlgItemMessage(IDC_CHECK_MANUAL_START, BM_GETCHECK) == BST_CHECKED);
 	
 	return CPropertyPage::OnWizardNext();
 }
-
 
 //
 // Handlers for radio buttons
@@ -139,19 +136,18 @@ void CWinSrvPage::OnRadioUser()
    ::ShowWindow(::GetDlgItem(m_hWnd, IDC_STATIC_WARNING), SW_HIDE);
 }
 
-
-//
-// Page activation handler
-//
-
+/**
+ * Page activation handler
+ */
 BOOL CWinSrvPage::OnSetActive() 
 {
    WIZARD_CFG_INFO *pc = &((CConfigWizard *)GetParent())->m_cfg;
-   BOOL bShow;
+   
+   bool show = ((!_tcscmp(pc->m_szDBLogin, _T("*"))) && (pc->m_iDBEngine == DB_ENGINE_MSSQL));
+   ::ShowWindow(::GetDlgItem(m_hWnd, IDC_ICON_WARNING), show ? SW_SHOW : SW_HIDE);
+   ::ShowWindow(::GetDlgItem(m_hWnd, IDC_STATIC_WARNING), show ? SW_SHOW : SW_HIDE);
 
-   bShow = ((!_tcscmp(pc->m_szDBLogin, _T("*"))) && (pc->m_iDBEngine == DB_ENGINE_MSSQL));
-   ::ShowWindow(::GetDlgItem(m_hWnd, IDC_ICON_WARNING), bShow ? SW_SHOW : SW_HIDE);
-   ::ShowWindow(::GetDlgItem(m_hWnd, IDC_STATIC_WARNING), bShow ? SW_SHOW : SW_HIDE);
+   SendDlgItemMessage(IDC_CHECK_MANUAL_START, BM_SETCHECK, pc->m_manualServiceStart ? BST_CHECKED : BST_UNCHECKED);
 	
 	return CPropertyPage::OnSetActive();
 }

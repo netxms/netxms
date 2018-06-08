@@ -56,46 +56,47 @@ LRESULT CPollCfgPage::OnWizardBack()
    return !_tcsicmp(pc->m_szDBDriver, _T("odbc.ddr")) ? IDD_ODBC : IDD_SELECT_DB;
 }
 
-
-//
-// WM_INITDIALOG message handler
-//
-
+/**
+ * WM_INITDIALOG message handler
+ */
 BOOL CPollCfgPage::OnInitDialog() 
 {
-   TCHAR szBuffer[32];
    WIZARD_CFG_INFO *pc = &((CConfigWizard *)GetParent())->m_cfg;	
 
 	CPropertyPage::OnInitDialog();
 
    // Discovery
-   _sntprintf(szBuffer, 32, _T("%d"), pc->m_dwDiscoveryPI);
-   SetDlgItemText(IDC_EDIT_INT_DP, szBuffer);
+   SetDlgItemText(IDC_EDIT_INT_DP, pc->m_discoveryPollingInterval);
    SendDlgItemMessage(IDC_CHECK_RUN_DISCOVERY, BM_SETCHECK, pc->m_bRunAutoDiscovery);
    EnableDlgItem(this, IDC_STATIC_DI, pc->m_bRunAutoDiscovery);
    EnableDlgItem(this, IDC_STATIC_SEC, pc->m_bRunAutoDiscovery);
    EnableDlgItem(this, IDC_EDIT_INT_DP, pc->m_bRunAutoDiscovery);
 
-   // Status poll
-   _sntprintf(szBuffer, 32, _T("%d"), pc->m_dwNumStatusPollers);
-   SetDlgItemText(IDC_EDIT_NUM_SP, szBuffer);
-   _sntprintf(szBuffer, 32, _T("%d"), pc->m_dwStatusPI);
-   SetDlgItemText(IDC_EDIT_INT_SP, szBuffer);
-	
-   // Configuration poll
-   _sntprintf(szBuffer, 32, _T("%d"), pc->m_dwNumConfigPollers);
-   SetDlgItemText(IDC_EDIT_NUM_CP, szBuffer);
-   _sntprintf(szBuffer, 32, _T("%d"), pc->m_dwConfigurationPI);
-   SetDlgItemText(IDC_EDIT_INT_CP, szBuffer);
+   // Poll intervals
+   SetDlgItemText(IDC_EDIT_INT_SP, pc->m_statusPollingInterval);
+   SetDlgItemText(IDC_EDIT_INT_CP, pc->m_configurationPollingInterval);
+   SetDlgItemText(IDC_EDIT_INT_TP, pc->m_topologyPollingInterval);
+
+   // Poller thread pool
+   SetDlgItemText(IDC_EDIT_POLLER_TP_BASE, pc->m_pollerPoolBaseSize);
+   SetDlgItemText(IDC_EDIT_POLLER_TP_MAX, pc->m_pollerPoolMaxSize);
 	
 	return TRUE;
 }
 
+/**
+ * Set dialog item text from numeric value
+ */
+void CPollCfgPage::SetDlgItemText(int nIDDlgItem, DWORD value)
+{
+   TCHAR buffer[32];
+   _sntprintf(buffer, 32, _T("%u"), value);
+   SetDlgItemText(nIDDlgItem, buffer);
+}
 
-//
-// Handler for "Run autodiscovery" check box
-//
-
+/**
+ * Handler for "Run autodiscovery" check box
+ */
 void CPollCfgPage::OnCheckRunDiscovery() 
 {
    WIZARD_CFG_INFO *pc = &((CConfigWizard *)GetParent())->m_cfg;	
@@ -106,17 +107,15 @@ void CPollCfgPage::OnCheckRunDiscovery()
    EnableDlgItem(this, IDC_EDIT_INT_DP, pc->m_bRunAutoDiscovery);
 }
 
-
-//
-// Handler for "Next" button
-//
-
+/**
+ * Handler for "Next" button
+ */
 LRESULT CPollCfgPage::OnWizardNext() 
 {
    WIZARD_CFG_INFO *pc = &((CConfigWizard *)GetParent())->m_cfg;
 
    // Discovery poll
-   if (!GetEditBoxValueULong(this, IDC_EDIT_INT_DP, &pc->m_dwDiscoveryPI, 5))
+   if (!GetEditBoxValueULong(this, IDC_EDIT_INT_DP, &pc->m_discoveryPollingInterval, 5))
    {
       MessageBox(_T("Invalid value entered as discovery polling interval"),
                  _T("Warning"), MB_OK | MB_ICONEXCLAMATION);
@@ -124,35 +123,42 @@ LRESULT CPollCfgPage::OnWizardNext()
       return -1;
    }
 
-   // Status poll
-   if (!GetEditBoxValueULong(this, IDC_EDIT_NUM_SP, &pc->m_dwNumStatusPollers, 1, 100000))
-   {
-      MessageBox(_T("Invalid value entered as number of status pollers"),
-                 _T("Warning"), MB_OK | MB_ICONEXCLAMATION);
-      GetDlgItem(IDC_EDIT_NUM_SP)->SetFocus();
-      return -1;
-   }
-   if (!GetEditBoxValueULong(this, IDC_EDIT_INT_SP, &pc->m_dwStatusPI, 5))
+   // Poller intervals
+   if (!GetEditBoxValueULong(this, IDC_EDIT_INT_SP, &pc->m_statusPollingInterval, 5))
    {
       MessageBox(_T("Invalid value entered as status polling interval"),
                  _T("Warning"), MB_OK | MB_ICONEXCLAMATION);
       GetDlgItem(IDC_EDIT_INT_SP)->SetFocus();
       return -1;
    }
-
-   // Configuration poll
-   if (!GetEditBoxValueULong(this, IDC_EDIT_NUM_CP, &pc->m_dwNumConfigPollers, 1, 1000))
-   {
-      MessageBox(_T("Invalid value entered as number of configuration pollers"),
-                 _T("Warning"), MB_OK | MB_ICONEXCLAMATION);
-      GetDlgItem(IDC_EDIT_NUM_CP)->SetFocus();
-      return -1;
-   }
-   if (!GetEditBoxValueULong(this, IDC_EDIT_INT_CP, &pc->m_dwConfigurationPI, 30))
+   if (!GetEditBoxValueULong(this, IDC_EDIT_INT_CP, &pc->m_configurationPollingInterval, 30))
    {
       MessageBox(_T("Invalid value entered as configuration polling interval"),
-                 _T("Warning"), MB_OK | MB_ICONEXCLAMATION);
+         _T("Warning"), MB_OK | MB_ICONEXCLAMATION);
       GetDlgItem(IDC_EDIT_INT_CP)->SetFocus();
+      return -1;
+   }
+   if (!GetEditBoxValueULong(this, IDC_EDIT_INT_TP, &pc->m_topologyPollingInterval, 10))
+   {
+      MessageBox(_T("Invalid value entered as topology polling interval"),
+         _T("Warning"), MB_OK | MB_ICONEXCLAMATION);
+      GetDlgItem(IDC_EDIT_INT_TP)->SetFocus();
+      return -1;
+   }
+
+   // Poller thread pool
+   if (!GetEditBoxValueULong(this, IDC_EDIT_POLLER_TP_BASE, &pc->m_pollerPoolBaseSize, 1, 1000))
+   {
+      MessageBox(_T("Invalid value entered as base size of poller thread pool"),
+                 _T("Warning"), MB_OK | MB_ICONEXCLAMATION);
+      GetDlgItem(IDC_EDIT_POLLER_TP_BASE)->SetFocus();
+      return -1;
+   }
+   if (!GetEditBoxValueULong(this, IDC_EDIT_POLLER_TP_MAX, &pc->m_pollerPoolMaxSize, pc->m_pollerPoolBaseSize, 4096))
+   {
+      MessageBox(_T("Invalid value entered as maximum size of poller thread pool"),
+         _T("Warning"), MB_OK | MB_ICONEXCLAMATION);
+      GetDlgItem(IDC_EDIT_POLLER_TP_MAX)->SetFocus();
       return -1;
    }
 

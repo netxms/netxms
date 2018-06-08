@@ -69,26 +69,33 @@ BOOL CNxconfigApp::InitInstance()
 	}
 
    // Read installation data from registry
-   if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("Software\\NetXMS\\Server"), 0,
-                    KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
+   if (_tcscmp(m_lpCmdLine, _T("--test-mode")))
    {
-      dwSize = sizeof(DWORD);
-      RegQueryValueEx(hKey, _T("ServerIsConfigured"), NULL, NULL, (BYTE *)&dwData, &dwSize);
+      if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("Software\\NetXMS\\Server"), 0,
+         KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
+      {
+         dwSize = sizeof(DWORD);
+         RegQueryValueEx(hKey, _T("ServerIsConfigured"), NULL, NULL, (BYTE *)&dwData, &dwSize);
 
-      dwSize = (MAX_PATH - 16) * sizeof(TCHAR);
-      if (RegQueryValueEx(hKey, _T("InstallPath"), NULL, NULL, 
-                          (BYTE *)m_szInstallDir, &dwSize) != ERROR_SUCCESS)
+         dwSize = (MAX_PATH - 16) * sizeof(TCHAR);
+         if (RegQueryValueEx(hKey, _T("InstallPath"), NULL, NULL,
+            (BYTE *)m_szInstallDir, &dwSize) != ERROR_SUCCESS)
+         {
+            AfxMessageBox(_T("Unable to determine NetXMS installation directory"));
+            m_szInstallDir[0] = 0;
+         }
+
+         RegCloseKey(hKey);
+      }
+      else
       {
          AfxMessageBox(_T("Unable to determine NetXMS installation directory"));
          m_szInstallDir[0] = 0;
       }
-
-      RegCloseKey(hKey);
    }
    else
    {
-      AfxMessageBox(_T("Unable to determine NetXMS installation directory"));
-      m_szInstallDir[0] = 0;
+      _tcscpy(m_szInstallDir, _T("C:\\NetXMS"));
    }
 
    // Parse command line
@@ -123,9 +130,7 @@ BOOL CNxconfigApp::InitInstance()
 	m_pMainWnd = pFrame;
 
 	// create and load the frame with its resources
-	pFrame->LoadFrame(IDR_MAINFRAME,
-		WS_OVERLAPPEDWINDOW | FWS_ADDTOTITLE, NULL,
-		NULL);
+	pFrame->LoadFrame(IDR_MAINFRAME, WS_OVERLAPPEDWINDOW | FWS_ADDTOTITLE, NULL, NULL);
 
 	// The one and only window has been initialized, so show and update it.
 	//pFrame->ShowWindow(SW_SHOW);
@@ -141,7 +146,7 @@ BOOL CNxconfigApp::InitInstance()
 
 void CNxconfigApp::OnFileCfgWizard() 
 {
-   CConfigWizard dlg(_T("Configure NetXMS Server"), m_pMainWnd, 0);
+   CConfigWizard dlg(_T("Configure NetXMS Server"), m_pMainWnd, 0, m_szInstallDir);
    CIntroPage pgIntro;
    CConfigFilePage pgConfigFile;
    CDBSelectPage pgSelectDB;

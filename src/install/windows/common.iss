@@ -48,7 +48,7 @@ Filename: "{app}\bin\nxagentd.exe"; Parameters: "-s"; WorkingDir: "{app}\bin"; S
 Filename: "{app}\bin\nxconfig.exe"; Parameters: "--configure-if-needed"; WorkingDir: "{app}\bin"; StatusMsg: "Running server configuration wizard..."; Components: server
 Filename: "{app}\bin\nxdbmgr.exe"; Parameters: "-c ""{app}\etc\netxmsd.conf"" upgrade"; WorkingDir: "{app}\bin"; StatusMsg: "Upgrading database..."; Flags: runhidden; Components: server
 Filename: "{app}\bin\netxmsd.exe"; Parameters: "--check-service"; WorkingDir: "{app}\bin"; StatusMsg: "Checking core service configuration..."; Flags: runhidden; Components: server
-Filename: "{app}\bin\netxmsd.exe"; Parameters: "-s"; WorkingDir: "{app}\bin"; StatusMsg: "Starting core service..."; Flags: runhidden; Components: server
+Filename: "{app}\bin\netxmsd.exe"; Parameters: "-s -m"; WorkingDir: "{app}\bin"; StatusMsg: "Starting core service..."; Flags: runhidden; Components: server
 
 [UninstallRun]
 Filename: "{app}\bin\netxmsd.exe"; Parameters: "-S"; StatusMsg: "Stopping core service..."; RunOnceId: "StopCoreService"; Flags: runhidden; Components: server
@@ -59,44 +59,8 @@ Filename: "{app}\bin\nxagentd.exe"; Parameters: "-R"; StatusMsg: "Uninstalling a
 [Code]
 Var
   HttpdSettingsPage: TInputQueryWizardPage;
-  flagStartConsole: Boolean;
 
 #include "firewall.iss"
-
-Function InitializeSetup(): Boolean;
-Var
-  i, nCount : Integer;
-  param : String;
-Begin
-  // Set default values for flags
-  flagStartConsole := FALSE;
-
-  // Parse command line parameters
-  nCount := ParamCount;
-  For i := 1 To nCount Do Begin
-    param := ParamStr(i);
-
-    If Pos('/RUNCONSOLE', param) = 1 Then Begin
-      flagStartConsole := TRUE;
-    End;
-  End;
-  
-  Result := TRUE;
-End;
-
-Procedure DeinitializeSetup;
-Var
-  strExecName: String;
-  iResult: Integer;
-Begin
-  If flagStartConsole Then Begin
-    strExecName := ExpandConstant('{app}\bin\nxcon.exe');
-    If FileExists(strExecName) Then
-    Begin
-      Exec(strExecName, '', ExpandConstant('{app}\bin'), SW_SHOW, ewNoWait, iResult);
-    End;
-  End;
-End;
 
 Procedure StopAllServices;
 Var

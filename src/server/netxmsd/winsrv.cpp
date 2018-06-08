@@ -126,23 +126,21 @@ void InitService()
 /**
  * Create service
  */
-void InstallService(const TCHAR *execName, const TCHAR *dllName, const TCHAR *login, const TCHAR *password)
+void InstallService(const TCHAR *execName, const TCHAR *dllName, const TCHAR *login, const TCHAR *password, bool manualStart)
 {
-   SC_HANDLE hMgr, hService;
-   TCHAR szCmdLine[MAX_PATH * 2], errorText[1024];
-
-   hMgr = OpenSCManager(NULL, NULL, GENERIC_WRITE);
+   SC_HANDLE hMgr = OpenSCManager(NULL, NULL, GENERIC_WRITE);
    if (hMgr == NULL)
    {
-      _tprintf(_T("ERROR: Cannot connect to Service Manager (%s)\n"),
-             GetSystemErrorText(GetLastError(), errorText, 1024));
+      TCHAR errorText[1024];
+      _tprintf(_T("ERROR: Cannot connect to Service Manager (%s)\n"), GetSystemErrorText(GetLastError(), errorText, 1024));
       return;
    }
 
+   TCHAR szCmdLine[MAX_PATH * 2];
    _sntprintf(szCmdLine, MAX_PATH * 2, _T("\"%s\" -d --config \"%s\"%s"), execName, g_szConfigFile, g_bCheckDB ? _T(" --check-db") : _T(""));
-   hService = CreateService(hMgr, CORE_SERVICE_NAME, _T("NetXMS Core"),
+   SC_HANDLE hService = CreateService(hMgr, CORE_SERVICE_NAME, _T("NetXMS Core"),
                             GENERIC_READ | SERVICE_CHANGE_CONFIG, SERVICE_WIN32_OWN_PROCESS,
-                            SERVICE_AUTO_START, SERVICE_ERROR_NORMAL,
+                            manualStart ? SERVICE_DEMAND_START : SERVICE_AUTO_START, SERVICE_ERROR_NORMAL,
                             szCmdLine, NULL, NULL, NULL, login, password);
    if (hService == NULL)
    {
@@ -162,11 +160,20 @@ void InstallService(const TCHAR *execName, const TCHAR *dllName, const TCHAR *lo
                TCHAR errorText[1024];
                _tprintf(_T("WARNING: cannot set service description (%s)\n"), GetSystemErrorText(GetLastError(), errorText, 1024));
             }
+
+            if (!ChangeServiceConfig(hService, SERVICE_NO_CHANGE, manualStart ? SERVICE_DEMAND_START : SERVICE_AUTO_START,
+                  SERVICE_NO_CHANGE, NULL, NULL, NULL, NULL, NULL, NULL, NULL))
+            {
+               TCHAR errorText[1024];
+               _tprintf(_T("WARNING: cannot set service start type (%s)\n"), GetSystemErrorText(GetLastError(), errorText, 1024));
+            }
+
             CloseServiceHandle(hService);
          }
       }
       else
       {
+         TCHAR errorText[1024];
          _tprintf(_T("ERROR: Cannot create service (%s)\n"), GetSystemErrorText(code, errorText, 1024));
       }
    }
@@ -348,37 +355,80 @@ void CheckServiceConfig()
 }
 
 /**
+ * Check if service configured for manual startup 
+ */
+static bool IsManualStartup(SC_HANDLE service)
+{
+   bool result = false;
+
+   DWORD bytes;
+   QueryServiceConfig(service, NULL, 0, &bytes);
+   DWORD error = GetLastError();
+   if (error == ERROR_INSUFFICIENT_BUFFER)
+   {
+      QUERY_SERVICE_CONFIG *cfg = (QUERY_SERVICE_CONFIG *)malloc(bytes);
+      if (QueryServiceConfig(service, cfg, bytes, &bytes))
+      {
+         result = (cfg->dwStartType == SERVICE_DEMAND_START);
+      }
+      else
+      {
+         TCHAR errorText[1024];
+         _tprintf(_T("ERROR: Cannot query configuration for service '") CORE_SERVICE_NAME _T("' (%s)\n"),
+            GetSystemErrorText(GetLastError(), errorText, 1024));
+      }
+      free(cfg);
+   }
+   else
+   {
+      TCHAR errorText[1024];
+      _tprintf(_T("ERROR: Cannot query configuration for service '") CORE_SERVICE_NAME _T("' (%s)\n"),
+         GetSystemErrorText(error, errorText, 1024));
+   }
+   return result;
+}
+
+/**
  * Start service
  */
-void StartCoreService()
+void StartCoreService(bool ignoreManualStartService)
 {
-   SC_HANDLE mgr,service;
-	TCHAR errorText[1024];
-
-   mgr = OpenSCManager(NULL,NULL,GENERIC_WRITE);
+   SC_HANDLE mgr = OpenSCManager(NULL, NULL, GENERIC_WRITE);
    if (mgr == NULL)
    {
+      TCHAR errorText[1024];
       _tprintf(_T("ERROR: Cannot connect to Service Manager (%s)\n"), GetSystemErrorText(GetLastError(), errorText, 1024));
       return;
    }
 
-   service = OpenService(mgr, CORE_SERVICE_NAME, SERVICE_START);
-   if (service == NULL)
+   SC_HANDLE service = OpenService(mgr, CORE_SERVICE_NAME, SERVICE_START | SERVICE_QUERY_CONFIG);
+   if (service != NULL)
    {
-      _tprintf(_T("ERROR: Cannot open service named '") CORE_SERVICE_NAME _T("' (%s)\n"),
-             GetSystemErrorText(GetLastError(), errorText, 1024));
+      if (!ignoreManualStartService || !IsManualStartup(service))
+      {
+         if (StartService(service, 0, NULL))
+         {
+            _tprintf(_T("NetXMS Core service started successfully\n"));
+         }
+         else
+         {
+            TCHAR errorText[1024];
+            _tprintf(_T("ERROR: Cannot start service named '") CORE_SERVICE_NAME _T("' (%s)\n"),
+               GetSystemErrorText(GetLastError(), errorText, 1024));
+         }
+      }
+      else
+      {
+         _tprintf(_T("NetXMS Core service configured for manual startup - not starting\n"));
+      }
+      CloseServiceHandle(service);
    }
    else
    {
-      if (StartService(service, 0, NULL))
-         _tprintf(_T("NetXMS Core service started successfully\n"));
-      else
-         _tprintf(_T("ERROR: Cannot start service named '") CORE_SERVICE_NAME _T("' (%s)\n"),
-                GetSystemErrorText(GetLastError(), errorText, 1024));
-
-      CloseServiceHandle(service);
+      TCHAR errorText[1024];
+      _tprintf(_T("ERROR: Cannot open service named '") CORE_SERVICE_NAME _T("' (%s)\n"),
+         GetSystemErrorText(GetLastError(), errorText, 1024));
    }
-
    CloseServiceHandle(mgr);
 }
 

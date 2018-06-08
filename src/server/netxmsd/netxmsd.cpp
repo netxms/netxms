@@ -61,6 +61,8 @@ static TCHAR help_text[] = _T("NetXMS Server Version ") NETXMS_VERSION_STRING _T
 #ifdef _WIN32
                            _T("   -I          : Install Windows service\n")
                            _T("   -L <user>   : Login name for service account.\n")
+                           _T("   -m          : Ignore service start command if service is configured for manual start\n")
+                           _T("   -M          : Create service with manual start\n")
                            _T("   -P <passwd> : Password for service account.\n")
 #else
                            _T("   -p <file>   : Specify pid file.\n")
@@ -172,7 +174,7 @@ static void CreateMiniDump(DWORD pid)
 #endif
 
 #ifdef _WIN32
-#define VALID_OPTIONS   "c:CdD:ehIL:P:qRsSv"
+#define VALID_OPTIONS   "c:CdD:ehIL:mMP:qRsSv"
 #else
 #define VALID_OPTIONS   "c:CdD:ehp:qv"
 #endif
@@ -189,6 +191,10 @@ static BOOL ParseCommandLine(int argc, char *argv[])
 	TCHAR login[256] = _T(""), password[256] = _T("");
 	char exePath[MAX_PATH], dllPath[MAX_PATH], *ptr;
 	BOOL useLogin = FALSE;
+   bool installService = false;
+   bool manualStart = false;
+   bool startService = false;
+   bool ignoreManualStartService = false;
 #endif
 #if defined(_WIN32) || HAVE_DECL_GETOPT_LONG
 	static struct option longOptions[] =
@@ -203,9 +209,11 @@ static BOOL ParseCommandLine(int argc, char *argv[])
 		{ (char *)"check-service", 0, NULL, '!' },
 		{ (char *)"dump", 1, NULL, '~' },
 		{ (char *)"dump-dir", 1, NULL, '@' },
+		{ (char *)"ignore-manual-start", 0, NULL, 'm' },
 		{ (char *)"install", 0, NULL, 'I' },
 		{ (char *)"login", 1, NULL, 'L' },
-		{ (char *)"password", 1, NULL, 'P' },
+      { (char *)"manual-start", 0, NULL, 'M' },
+      { (char *)"password", 1, NULL, 'P' },
 		{ (char *)"remove", 0, NULL, 'R' },
 		{ (char *)"start", 0, NULL, 's' },
 		{ (char *)"stop", 0, NULL, 'S' },
@@ -277,17 +285,13 @@ static BOOL ParseCommandLine(int argc, char *argv[])
 #endif
 				useLogin = TRUE;
 				break;
-#ifndef _WIN32
-			case 'p':   // PID file
-#ifdef UNICODE
-				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, g_szPIDFile, MAX_PATH);
-				g_szPIDFile[MAX_PATH - 1] = 0;
-#else
-				nx_strncpy(g_szPIDFile, optarg, MAX_PATH);
-#endif
-				break;
-#endif
-			case 'P':
+         case 'm':
+            ignoreManualStartService = true;
+            break;
+         case 'M':
+            manualStart = true;
+            break;
+         case 'P':
 #ifdef UNICODE
 				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, password, 256);
 				password[255] = 0;
@@ -296,40 +300,14 @@ static BOOL ParseCommandLine(int argc, char *argv[])
 #endif
 				break;
 			case 'I':	// Install service
-				ptr = strrchr(argv[0], '\\');
-				if (ptr != NULL)
-					ptr++;
-				else
-					ptr = argv[0];
-
-				_fullpath(exePath, ptr, 255);
-
-				if (stricmp(&exePath[strlen(exePath)-4], ".exe"))
-					strcat(exePath, ".exe");
-				strcpy(dllPath, exePath);
-				ptr = strrchr(dllPath, '\\');
-				if (ptr != NULL)  // Shouldn't be NULL
-				{
-					ptr++;
-					strcpy(ptr, "libnxsrv.dll");
-				}
-#ifdef UNICODE
-				WCHAR wexePath[MAX_PATH], wdllPath[MAX_PATH];
-				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, exePath, -1, wexePath, MAX_PATH);
-				wexePath[MAX_PATH - 1] = 0;
-				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, dllPath, -1, wdllPath, MAX_PATH);
-				wdllPath[MAX_PATH - 1] = 0;
-				InstallService(wexePath, wdllPath, useLogin ? login : NULL, useLogin ? password : NULL);
-#else
-				InstallService(exePath, dllPath, useLogin ? login : NULL, useLogin ? password : NULL);
-#endif
-				return FALSE;
+            installService = true;
+            break;
 			case 'R':	// Remove service
 				RemoveService();
 				return FALSE;
 			case 's':	// Start service
-				StartCoreService();
-				return FALSE;
+            startService = true;
+            break;
 			case 'S':	// Stop service
 				StopCoreService();
 				return FALSE;
@@ -350,11 +328,61 @@ static BOOL ParseCommandLine(int argc, char *argv[])
 			case '~':
 				CreateMiniDump(strtoul(optarg, NULL, 0));
 				return FALSE;
+#else /* _WIN32 */
+         case 'p':   // PID file
+#ifdef UNICODE
+            MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, g_szPIDFile, MAX_PATH);
+            g_szPIDFile[MAX_PATH - 1] = 0;
+#else
+            strlcpy(g_szPIDFile, optarg, MAX_PATH);
 #endif
-   		default:
+            break;
+#endif   /* _WIN32 */
+         default:
    			break;
    	}
    }
+
+#ifdef _WIN32
+   if (installService)
+   {
+      ptr = strrchr(argv[0], '\\');
+      if (ptr != NULL)
+         ptr++;
+      else
+         ptr = argv[0];
+
+      _fullpath(exePath, ptr, 255);
+
+      if (stricmp(&exePath[strlen(exePath) - 4], ".exe"))
+         strcat(exePath, ".exe");
+      strcpy(dllPath, exePath);
+      ptr = strrchr(dllPath, '\\');
+      if (ptr != NULL)  // Shouldn't be NULL
+      {
+         ptr++;
+         strcpy(ptr, "libnxsrv.dll");
+      }
+#ifdef UNICODE
+      WCHAR wexePath[MAX_PATH], wdllPath[MAX_PATH];
+      MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, exePath, -1, wexePath, MAX_PATH);
+      wexePath[MAX_PATH - 1] = 0;
+      MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, dllPath, -1, wdllPath, MAX_PATH);
+      wdllPath[MAX_PATH - 1] = 0;
+      InstallService(wexePath, wdllPath, useLogin ? login : NULL, useLogin ? password : NULL, manualStart);
+#else
+      InstallService(exePath, dllPath, useLogin ? login : NULL, useLogin ? password : NULL, manualStart);
+#endif
+      return FALSE;
+   }
+
+   if (startService)
+   {
+      StartCoreService(ignoreManualStartService);
+      return FALSE;
+   }
+#endif
+
    return TRUE;
 }
 

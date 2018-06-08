@@ -17,8 +17,7 @@ class CConfigWizard : public CPropertySheet
 
 // Construction
 public:
-	CConfigWizard(UINT nIDCaption, CWnd* pParentWnd = NULL, UINT iSelectPage = 0);
-	CConfigWizard(LPCTSTR pszCaption, CWnd* pParentWnd = NULL, UINT iSelectPage = 0);
+	CConfigWizard(LPCTSTR pszCaption, CWnd* pParentWnd = NULL, UINT iSelectPage = 0, const TCHAR *installDir = NULL);
 
 // Attributes
 public:
@@ -38,7 +37,7 @@ public:
 
 	// Generated message map functions
 protected:
-	void DefaultConfig(void);
+	void DefaultConfig(const TCHAR *installDir);
 	//{{AFX_MSG(CConfigWizard)
 		// NOTE - the ClassWizard will add and remove member functions here.
 	//}}AFX_MSG

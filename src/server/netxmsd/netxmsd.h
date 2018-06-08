@@ -31,10 +31,10 @@
 #ifdef _WIN32
 
 void InitService();
-void InstallService(const TCHAR *execName, const TCHAR *dllName, const TCHAR *login, const TCHAR *password);
+void InstallService(const TCHAR *execName, const TCHAR *dllName, const TCHAR *login, const TCHAR *password, bool manualStart);
 void RemoveService();
 void CheckServiceConfig();
-void StartCoreService();
+void StartCoreService(bool ignoreManualStartService);
 void StopCoreService();
 void InstallEventSource(const TCHAR *pszPath);
 void RemoveEventSource();

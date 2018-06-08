@@ -140,4 +140,24 @@
       <Filter>Resource Files</Filter>
     </ResourceCompile>
   </ItemGroup>
+  <ItemGroup>
+    <Image Include="res\nxconfig.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="res\ok.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="res\failed.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="res\running.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="res\warning.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="res\wizard.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+  </ItemGroup>
 </Project>

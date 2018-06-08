@@ -14,6 +14,8 @@ class CPollCfgPage : public CPropertyPage
 {
 	DECLARE_DYNCREATE(CPollCfgPage)
 
+   using CPropertyPage::SetDlgItemText;
+
 // Construction
 public:
 	CPollCfgPage();
@@ -46,6 +48,7 @@ protected:
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 
+   void SetDlgItemText(int nIDDlgItem, DWORD value);
 };
 
 //{{AFX_INSERT_LOCATION}}
