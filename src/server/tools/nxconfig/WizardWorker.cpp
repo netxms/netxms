@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Server Configurator for Windows
-** Copyright (C) 2005-2010 Victor Kirhenshtein
+** Copyright (C) 2005-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -67,11 +67,9 @@ static BOOL InstallEventSource(TCHAR *pszPath)
    return TRUE;
 }
 
-
-//
-// Install Windows service
-//
-
+/**
+ * Install Windows service
+ */
 static BOOL InstallService(WIZARD_CFG_INFO *pc)
 {
    SC_HANDLE hMgr, hService;
@@ -81,8 +79,7 @@ static BOOL InstallService(WIZARD_CFG_INFO *pc)
    hMgr = OpenSCManager(NULL, NULL, GENERIC_WRITE);
    if (hMgr == NULL)
    {
-      _sntprintf(g_szWizardErrorText, MAX_ERROR_TEXT, 
-                 _T("Cannot connect to Service Manager: %s"),
+      _sntprintf(g_szWizardErrorText, MAX_ERROR_TEXT, _T("Cannot connect to Service Manager: %s"),
                  GetSystemErrorText(GetLastError(), szBuffer, 256));
       return FALSE;
    }
@@ -97,17 +94,15 @@ static BOOL InstallService(WIZARD_CFG_INFO *pc)
       pszLogin = pc->m_szServiceLogin;
       pszPassword = pc->m_szServicePassword;
    }
-   _sntprintf(szCmdLine, MAX_PATH * 2, _T("\"%s\\bin\\netxmsd.exe\" --config \"%s\""), 
-              pc->m_szInstallDir, pc->m_szConfigFile);
+   _sntprintf(szCmdLine, MAX_PATH * 2, _T("\"%s\\bin\\netxmsd.exe\" -d --config \"%s\""), pc->m_szInstallDir, pc->m_szConfigFile);
    hService = CreateService(hMgr, CORE_SERVICE_NAME, _T("NetXMS Core"),
-                            GENERIC_READ, SERVICE_WIN32_OWN_PROCESS,
-                            SERVICE_AUTO_START, SERVICE_ERROR_NORMAL,
-                            szCmdLine, NULL, NULL, pc->m_pszDependencyList,
-                            pszLogin, pszPassword);
+         GENERIC_READ, SERVICE_WIN32_OWN_PROCESS,
+         pc->m_manualServiceStart ? SERVICE_DEMAND_START : SERVICE_AUTO_START, 
+         SERVICE_ERROR_NORMAL, szCmdLine, NULL, NULL, pc->m_pszDependencyList,
+         pszLogin, pszPassword);
    if (hService == NULL)
    {
       DWORD dwCode = GetLastError();
-
       if (dwCode == ERROR_SERVICE_EXISTS)
       {
          _sntprintf(g_szWizardErrorText, MAX_ERROR_TEXT,
@@ -122,6 +117,13 @@ static BOOL InstallService(WIZARD_CFG_INFO *pc)
    }
    else
    {
+      SERVICE_DESCRIPTION sd;
+      sd.lpDescription = _T("This service provides core functionality of NetXMS management server");
+      if (!ChangeServiceConfig2(hService, SERVICE_CONFIG_DESCRIPTION, &sd))
+      {
+         _sntprintf(g_szWizardErrorText, MAX_ERROR_TEXT, _T("WARNING: cannot set service description (%s)\n"), GetSystemErrorText(GetLastError(), szBuffer, 256));
+      }
+
       CloseServiceHandle(hService);
       bResult = TRUE;
       _sntprintf(szCmdLine, MAX_PATH, _T("%s\\bin\\libnxsrv.dll"), pc->m_szInstallDir);
@@ -132,11 +134,9 @@ static BOOL InstallService(WIZARD_CFG_INFO *pc)
    return bResult ? InstallEventSource(szCmdLine) : FALSE;
 }
 
-
-//
-// Execute query and set error text
-//
-
+/**
+ * Execute query and set error text
+ */
 static BOOL DBQueryEx(DB_HANDLE hConn, TCHAR *pszQuery)
 {
    BOOL bResult;
@@ -147,7 +147,6 @@ static BOOL DBQueryEx(DB_HANDLE hConn, TCHAR *pszQuery)
                  _T("SQL query failed:\n%s"), pszQuery);
    return bResult;
 }
-
 
 /**
  * Write string value to configuration table
@@ -219,11 +218,9 @@ static BOOL WriteConfigULong(DB_HANDLE hConn, TCHAR *pszVar, DWORD dwValue,
    return WriteConfigStr(hConn, pszVar, szBuffer, bIsVisible, bNeedRestart);
 }
 
-
-//
-// Create configuration file
-//
-
+/**
+ * Create configuration file
+ */
 static BOOL CreateConfigFile(WIZARD_CFG_INFO *pc)
 {
    BOOL bResult = FALSE;
@@ -271,11 +268,9 @@ static BOOL CreateConfigFile(WIZARD_CFG_INFO *pc)
    return bResult;
 }
 
-
-//
-// Create database in MySQL
-//
-
+/**
+ * Create database in MySQL
+ */
 static BOOL CreateDBMySQL(WIZARD_CFG_INFO *pc, DB_HANDLE hConn)
 {
    TCHAR szQuery[256];
@@ -300,11 +295,9 @@ static BOOL CreateDBMySQL(WIZARD_CFG_INFO *pc, DB_HANDLE hConn)
    return bResult;
 }
 
-
-//
-// Create database in PostgreSQL
-//
-
+/**
+ * Create database in PostgreSQL
+ */
 static BOOL CreateDBPostgreSQL(WIZARD_CFG_INFO *pc, DB_HANDLE hConn)
 {
    TCHAR szQuery[256];
@@ -330,11 +323,9 @@ static BOOL CreateDBPostgreSQL(WIZARD_CFG_INFO *pc, DB_HANDLE hConn)
    return bResult;
 }
 
-
-//
-// Create database in Microsoft SQL
-//
-
+/**
+ * Create database in Microsoft SQL
+ */
 static BOOL CreateDBMSSQL(WIZARD_CFG_INFO *pc, DB_HANDLE hConn)
 {
    TCHAR szQuery[512], *pszLogin;
@@ -384,11 +375,9 @@ static BOOL CreateDBMSSQL(WIZARD_CFG_INFO *pc, DB_HANDLE hConn)
    return bResult;
 }
 
-
-//
-// Create SQLite embedded database
-//
-
+/**
+ * Create SQLite embedded database
+ */
 static BOOL CreateSQLiteDB(WIZARD_CFG_INFO *pc)
 {
    TCHAR szBaseDir[MAX_PATH], dbErrorText[DBDRV_MAX_ERROR_TEXT];
@@ -411,11 +400,9 @@ static BOOL CreateSQLiteDB(WIZARD_CFG_INFO *pc)
    return bResult;
 }
 
-
-//
-// Create database
-//
-
+/**
+ * Create database
+ */
 static BOOL CreateDatabase(WIZARD_CFG_INFO *pc)
 {
    DB_HANDLE hConn;
@@ -468,11 +455,9 @@ static BOOL CreateDatabase(WIZARD_CFG_INFO *pc)
    return bResult;
 }
 
-
-//
-// Worker thread
-//
-
+/**
+ * Worker thread
+ */
 static DWORD __stdcall WorkerThread(void *pArg)
 {
    WIZARD_CFG_INFO *pc = (WIZARD_CFG_INFO *)pArg;
@@ -557,11 +542,13 @@ static DWORD __stdcall WorkerThread(void *pArg)
 #define __CHK(x) if (bResult) bResult = x;
 
       __CHK(WriteConfigInt(hConn, _T("RunNetworkDiscovery"), pc->m_bRunAutoDiscovery, TRUE, TRUE));
-      __CHK(WriteConfigULong(hConn, _T("DiscoveryPollingInterval"), pc->m_dwDiscoveryPI, TRUE, TRUE));
-      __CHK(WriteConfigULong(hConn, _T("NumberOfStatusPollers"), pc->m_dwNumStatusPollers, TRUE, TRUE));
-      __CHK(WriteConfigULong(hConn, _T("StatusPollingInterval"), pc->m_dwStatusPI, TRUE, TRUE));
-      __CHK(WriteConfigULong(hConn, _T("NumberOfConfigurationPollers"), pc->m_dwNumConfigPollers, TRUE, TRUE));
-      __CHK(WriteConfigULong(hConn, _T("ConfigurationPollingInterval"), pc->m_dwConfigurationPI, TRUE, TRUE));
+      __CHK(WriteConfigULong(hConn, _T("DiscoveryPollingInterval"), pc->m_discoveryPollingInterval, TRUE, TRUE));
+      __CHK(WriteConfigULong(hConn, _T("StatusPollingInterval"), pc->m_statusPollingInterval, TRUE, TRUE));
+      __CHK(WriteConfigULong(hConn, _T("ConfigurationPollingInterval"), pc->m_configurationPollingInterval, TRUE, TRUE));
+      __CHK(WriteConfigULong(hConn, _T("TopologyPollingInterval"), pc->m_topologyPollingInterval, TRUE, TRUE));
+
+      __CHK(WriteConfigULong(hConn, _T("ThreadPool.Poller.BaseSize"), pc->m_pollerPoolBaseSize, TRUE, TRUE));
+      __CHK(WriteConfigULong(hConn, _T("ThreadPool.Poller.MaxSize"), pc->m_pollerPoolMaxSize, TRUE, TRUE));
 
       __CHK(WriteConfigStr(hConn, _T("SMTPServer"), pc->m_szSMTPServer, TRUE, FALSE));
       __CHK(WriteConfigStr(hConn, _T("SMTPFromAddr"), pc->m_szSMTPMailFrom, TRUE, FALSE));

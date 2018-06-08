@@ -1,5 +1,5 @@
 //{{NO_DEPENDENCIES}}
-// Microsoft Developer Studio generated include file.
+// Microsoft Visual C++ generated include file.
 // Used by nxconfig.rc
 //
 #define IDD_ABOUTBOX                    100
@@ -46,10 +46,12 @@
 #define IDC_EDIT_SUMMARY                1019
 #define IDC_EDIT_NUM_CP                 1020
 #define IDC_STATIC_STATUS               1020
-#define IDC_EDIT_INT_CP                 1021
+#define IDC_EDIT_POLLER_TP_MAX          1020
 #define IDC_LIST_STATUS                 1021
 #define IDC_EDIT_FILE                   1022
 #define IDC_BUTTON_BROWSE               1023
+#define IDC_EDIT_NUM_CP2                1023
+#define IDC_EDIT_POLLER_TP_BASE         1023
 #define IDC_RADIO_SYSLOG                1024
 #define IDC_RADIO_FILE                  1025
 #define IDC_STATIC_SERVER               1028
@@ -65,6 +67,9 @@
 #define IDC_ICON_WARNING                1038
 #define IDC_STATIC_WARNING              1039
 #define IDC_LIST_SERVICES               1040
+#define IDC_CHECK_MANUAL_START          1042
+#define IDC_EDIT_INT_CP                 1043
+#define IDC_EDIT_INT_TP                 1044
 #define ID_FILE_CFG_WIZARD              32771
 
 // Next default values for new objects
@@ -72,9 +77,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        148
+#define _APS_NEXT_RESOURCE_VALUE        160
 #define _APS_NEXT_COMMAND_VALUE         32772
-#define _APS_NEXT_CONTROL_VALUE         1041
+#define _APS_NEXT_CONTROL_VALUE         1045
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

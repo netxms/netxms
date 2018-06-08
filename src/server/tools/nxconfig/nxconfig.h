@@ -39,11 +39,9 @@
 #define DB_ENGINE_ORACLE   3
 #define DB_ENGINE_SQLITE   4
 
-
-//
-// Server configuration collected by wizard
-//
-
+/**
+ * Server configuration collected by wizard
+ */
 struct WIZARD_CFG_INFO
 {
    TCHAR m_szInstallDir[MAX_PATH];
@@ -62,11 +60,12 @@ struct WIZARD_CFG_INFO
    BOOL m_bInitDB;
    BOOL m_bLogFailedSQLQueries;
    BOOL m_bRunAutoDiscovery;
-   DWORD m_dwDiscoveryPI;        // Discovery polling interval
-   DWORD m_dwStatusPI;           // Status polling interval
-   DWORD m_dwConfigurationPI;    // Configuration polling interval
-   DWORD m_dwNumStatusPollers;
-   DWORD m_dwNumConfigPollers;
+   DWORD m_discoveryPollingInterval;
+   DWORD m_statusPollingInterval;
+   DWORD m_configurationPollingInterval;
+   DWORD m_topologyPollingInterval;
+   DWORD m_pollerPoolBaseSize;
+   DWORD m_pollerPoolMaxSize;
    BOOL m_bEnableAdminInterface;
    TCHAR m_szSMTPServer[MAX_DB_STRING];
    TCHAR m_szSMTPMailFrom[MAX_DB_STRING];
@@ -76,11 +75,11 @@ struct WIZARD_CFG_INFO
    TCHAR m_szSMSDrvParam[MAX_DB_STRING];
    TCHAR m_szServiceLogin[MAX_DB_STRING];
    TCHAR m_szServicePassword[MAX_DB_STRING];
+   bool m_manualServiceStart;
    DWORD m_dwDependencyListSize;
    TCHAR *m_pszDependencyList;
 	DB_DRIVER m_dbDriver;
 };
-
 
 //
 // Local includes

@@ -47,11 +47,9 @@ END_MESSAGE_MAP()
 /////////////////////////////////////////////////////////////////////////////
 // CLoggingPage message handlers
 
-
-//
-// WM_INITDIALOG message handler
-//
-
+/**
+ * WM_INITDIALOG message handler
+ */
 BOOL CLoggingPage::OnInitDialog() 
 {
    WIZARD_CFG_INFO *pc = &((CConfigWizard *)GetParent())->m_cfg;
@@ -60,6 +58,7 @@ BOOL CLoggingPage::OnInitDialog()
 	
    if (pc->m_bLogToSyslog)
    {
+      SendDlgItemMessage(IDC_RADIO_FILE, BM_SETCHECK, BST_UNCHECKED);
       SendDlgItemMessage(IDC_RADIO_SYSLOG, BM_SETCHECK, BST_CHECKED);
       EnableDlgItem(this, IDC_EDIT_FILE, FALSE);
       EnableDlgItem(this, IDC_BUTTON_BROWSE, FALSE);
@@ -67,17 +66,18 @@ BOOL CLoggingPage::OnInitDialog()
    else
    {
       SendDlgItemMessage(IDC_RADIO_FILE, BM_SETCHECK, BST_CHECKED);
+      SendDlgItemMessage(IDC_RADIO_SYSLOG, BM_SETCHECK, BST_UNCHECKED);
       SetDlgItemText(IDC_EDIT_FILE, pc->m_szLogFile);
+      EnableDlgItem(this, IDC_EDIT_FILE, TRUE);
+      EnableDlgItem(this, IDC_BUTTON_BROWSE, TRUE);
    }
 	
 	return TRUE;
 }
 
-
 //
 // Radio butons handlers
 //
-
 void CLoggingPage::OnRadioSyslog() 
 {
    EnableDlgItem(this, IDC_EDIT_FILE, FALSE);
@@ -90,11 +90,9 @@ void CLoggingPage::OnRadioFile()
    EnableDlgItem(this, IDC_BUTTON_BROWSE, TRUE);
 }
 
-
-//
-// "Next" button handler
-//
-
+/**
+ * "Next" button handler
+ */
 LRESULT CLoggingPage::OnWizardNext() 
 {
    WIZARD_CFG_INFO *pc = &((CConfigWizard *)GetParent())->m_cfg;
@@ -104,11 +102,9 @@ LRESULT CLoggingPage::OnWizardNext()
 	return CPropertyPage::OnWizardNext();
 }
 
-
-//
-// Handler for "Browse..." button
-//
-
+/**
+ * Handler for "Browse..." button
+ */
 void CLoggingPage::OnButtonBrowse() 
 {
    CFileDialog dlg(TRUE, _T(".log"), NULL, OFN_PATHMUSTEXIST,

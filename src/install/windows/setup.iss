@@ -15,3 +15,4 @@ SolidCompression=yes
 LanguageDetectionMethod=none
 CloseApplications=no
 SignTool=signtool
+WizardSmallImageFile=logo_small.bmp

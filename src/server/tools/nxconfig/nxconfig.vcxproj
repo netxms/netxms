@@ -235,6 +235,14 @@
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <Image Include="res\failed.ico" />
+    <Image Include="res\nxconfig.ico" />
+    <Image Include="res\ok.ico" />
+    <Image Include="res\running.ico" />
+    <Image Include="res\warning.ico" />
+    <Image Include="res\wizard.bmp" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
