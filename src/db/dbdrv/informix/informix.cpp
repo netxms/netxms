@@ -1,6 +1,6 @@
 /* 
 ** Informix Database Driver
-** Copyright (C) 2010-2017 Raden Solutinos
+** Copyright (C) 2010-2018 Raden Solutinos
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -223,7 +223,7 @@ extern "C" DBDRV_CONNECTION __EXPORT DrvConnect(char *host, char *login, char *p
 	SQLSMALLINT outLen;
 	char connectString[1024];
 	snprintf(connectString, 1024, "DSN=%s;UID=%s;PWD=%s", database, login, password);
-	iResult = SQLDriverConnectA(pConn->sqlConn, NULL, (SQLCHAR *)connectString, SQL_NTS, NULL, 0, &outLen, SQL_DRIVER_NOPROMPT);
+	iResult = SQLDriverConnect(pConn->sqlConn, NULL, (SQLCHAR *)connectString, SQL_NTS, NULL, 0, &outLen, SQL_DRIVER_NOPROMPT);
 	if ((iResult != SQL_SUCCESS) && (iResult != SQL_SUCCESS_WITH_INFO))
 	{
 		GetSQLErrorInfo(SQL_HANDLE_DBC, pConn->sqlConn, errorText);

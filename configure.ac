@@ -510,20 +510,20 @@ AC_ARG_WITH(db2,
 			DB2_LIB_DIR=lib64
 		fi
 		if test -x "$withval/${DB2_LIB_DIR}" ; then
-			LD_RUN_PATH="${withval}/${DB2_LIB_DIR}${LD_RUN_PATH:+:}${LD_RUN_PATH}"   
-			LDFLAGS="$LDFLAGS -L${withval}/${DB2_LIB_DIR}"
+			DB2_LD_RUN_PATH="${withval}/${DB2_LIB_DIR}"   
+			DB2_LDFLAGS="-L${withval}/${DB2_LIB_DIR}"
 		else
 			DB2_LIB_DIR=lib
 			if test -x "$withval/${DB2_LIB_DIR}" ; then
-				LD_RUN_PATH="${withval}/${DB2_LIB_DIR}${LD_RUN_PATH:+:}${LD_RUN_PATH}"   
-				LDFLAGS="$LDFLAGS -L${withval}/${DB2_LIB_DIR}"
+				DB2_LD_RUN_PATH="${withval}/${DB2_LIB_DIR}"   
+				DB2_LDFLAGS="-L${withval}/${DB2_LIB_DIR}"
 			else
-				LD_RUN_PATH="${withval}${LD_RUN_PATH:+:}${LD_RUN_PATH}"   
-				LDFLAGS="$LDFLAGS -L${withval}"
+				DB2_LD_RUN_PATH="${withval}"   
+				DB2_LDFLAGS="-L${withval}"
 			fi
 		fi
 		if test -x "$withval/include" ; then
-			CPPFLAGS="$CPPFLAGS -I${withval}/include"
+			DB2_CPPFLAGS="-I${withval}/include"
 		fi
 
 		unset DB2_LIB_DIR
@@ -537,18 +537,18 @@ AC_ARG_WITH(informix,
 [ if test "x$withval" != "xno" ; then
 	if test "x$withval" != "x" && test "x$withval" != "xyes" ; then
 		if test -x "$withval/lib/cli" ; then
-			LD_RUN_PATH="${withval}/lib/cli${LD_RUN_PATH:+:}${LD_RUN_PATH}"   
-			LDFLAGS="$LDFLAGS -L${withval}/lib/cli"
+			INFORMIX_LD_RUN_PATH="${withval}/lib/cli"   
+			INFORMIX_LDFLAGS="-L${withval}/lib/cli"
 			if test -x "$withval/lib/esql" ; then
-				LD_RUN_PATH="${withval}/lib/esql${LD_RUN_PATH:+:}${LD_RUN_PATH}"   
-				LDFLAGS="$LDFLAGS -L${withval}/lib/esql"
+				INFORMIX_LD_RUN_PATH="${withval}/lib/esql:${INFORMIX_LD_RUN_PATH}"   
+				INFORMIX_LDFLAGS="$INFORMIX_LDFLAGS -L${withval}/lib/esql"
 			fi
 		else
-			LD_RUN_PATH="${withval}${LD_RUN_PATH:+:}${LD_RUN_PATH}"   
-			LDFLAGS="$LDFLAGS -L${withval}"
+			INFORMIX_LD_RUN_PATH="${withval}"   
+			INFORMIX_LDFLAGS="-L${withval}"
 		fi
 		if test -x "$withval/incl/cli" ; then
-			CPPFLAGS="$CPPFLAGS -I${withval}/incl/cli"
+			INFORMIX_CPPFLAGS="-I${withval}/incl/cli"
 		fi
 	fi
 	COMPONENTS="$COMPONENTS informix"
@@ -3326,12 +3326,26 @@ fi
 
 check_substr "$COMPONENTS" "db2"
 if test $? = 0; then
+	OLD_CPPFLAGS="$CPPFLAGS"
+	OLD_LDFLAGS="$LDFLAGS"
+	OLD_LD_RUN_PATH="$LD_RUN_PATH"
+
+	CPPFLAGS="$CPPFLAGS $DB2_CPPFLAGS"
+	LDFLAGS="$LDFLAGS $DB2_LDFLAGS"
+	if test "x$DB2_LD_RUN_PATH" != "x"; then
+		LD_RUN_PATH="${DB2_LD_RUN_PATH}${LD_RUN_PATH:+:}${LD_RUN_PATH}"
+	fi
+
 	AC_CHECK_HEADER(sql.h,,AC_MSG_ERROR([*** Cannot find sql.h - check your DB2 client installation ***]))
 	AC_CHECK_LIB(db2, SQLAllocHandle, [DB2_LIBS="-ldb2"],
 		[AC_MSG_ERROR(libdb2 is required for DB2 support)])
-    if test "x$BUILD_STATIC_AGENT" = "xyes"; then
-        SUBAGENT_LIBS="$SUBAGENT_LIBS $DB2_LIBS"
-    fi
+	if test "x$BUILD_STATIC_AGENT" = "xyes"; then
+		SUBAGENT_LIBS="$SUBAGENT_LIBS $DB2_LIBS"
+	fi
+
+	CPPFLAGS="$OLD_CPPFLAGS"
+	LDFLAGS="$OLD_LDFLAGS"
+	LD_RUN_PATH="$OLD_LD_RUN_PATH"
 fi
 
 #--------------------------------------------------------------------
@@ -3340,12 +3354,26 @@ fi
 
 check_substr "$COMPONENTS" "informix"
 if test $? = 0; then
+	OLD_CPPFLAGS="$CPPFLAGS"
+	OLD_LDFLAGS="$LDFLAGS"
+	OLD_LD_RUN_PATH="$LD_RUN_PATH"
+
+	CPPFLAGS="$CPPFLAGS $INFORMIX_CPPFLAGS"
+	LDFLAGS="$LDFLAGS $INFORMIX_LDFLAGS"
+	if test "x$INFORMIX_LD_RUN_PATH" != "x"; then
+		LD_RUN_PATH="${INFORMIX_LD_RUN_PATH}${LD_RUN_PATH:+:}${LD_RUN_PATH}"
+	fi
+
 	AC_CHECK_HEADER(infxcli.h,,AC_MSG_ERROR([*** Cannot find infxcli.h - check your Informix client installation ***]))
 	AC_CHECK_LIB(thcli, SQLAllocHandle, [INFORMIX_LIBS="-lthcli"],
 		[AC_MSG_ERROR(libthcli is required for Informix support)])
 	if test "x$BUILD_STATIC_AGENT" = "xyes"; then
 		SUBAGENT_LIBS="$SUBAGENT_LIBS $INFORMIX_LIBS"
 	fi
+
+	CPPFLAGS="$OLD_CPPFLAGS"
+	LDFLAGS="$OLD_LDFLAGS"
+	LD_RUN_PATH="$OLD_LD_RUN_PATH"
 fi
 
 
