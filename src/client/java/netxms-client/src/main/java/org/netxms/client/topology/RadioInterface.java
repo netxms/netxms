@@ -20,6 +20,7 @@ package org.netxms.client.topology;
 
 import org.netxms.base.MacAddress;
 import org.netxms.base.NXCPMessage;
+import org.netxms.base.annotations.Internal;
 import org.netxms.client.objects.AccessPoint;
 
 /**
@@ -27,7 +28,9 @@ import org.netxms.client.objects.AccessPoint;
  */
 public class RadioInterface
 {
+	@Internal
 	private AccessPoint accessPoint;
+	
 	private int index;
 	private String name;
 	private MacAddress macAddress;
