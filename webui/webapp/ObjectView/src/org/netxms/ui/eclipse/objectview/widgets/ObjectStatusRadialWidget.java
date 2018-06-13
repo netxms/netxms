@@ -66,7 +66,8 @@ public class ObjectStatusRadialWidget extends Canvas implements PaintListener
    private static final String[] FONT_NAMES = { "Segoe UI", "Liberation Sans", "DejaVu Sans", "Verdana", "Arial" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
    private Font[] valueFonts;
    private static final int FONT_BASE_SIZE = 8;
-   private static final int PADDING = 6;
+   private static final int PADDING_HORIZONTAL = 6;
+   private static final int PADDING_VERTICAL = 6;
    private static final int MARGIN = 6;
    private static final int SHIFT = 3;
    private boolean fitToScreen = true;
@@ -150,13 +151,25 @@ public class ObjectStatusRadialWidget extends Canvas implements PaintListener
          int compensation = Integer.signum(Math.round(degree + currObjsize) - (Math.round(degree) + Math.round(currObjsize)));
          
          // white circle before each level
-         gc.setBackground(getDisplay().getSystemColor(SWT.COLOR_WHITE));
-         gc.fillArc(centerX - (diameter * lvl) / 2 - SHIFT, centerY - (diameter * lvl) / 2 - SHIFT, 
-               diameter * lvl + MARGIN, diameter * lvl + MARGIN, Math.round(degree), Math.round(currObjsize) + compensation);
-         
-         gc.setBackground(StatusDisplayInfo.getStatusColor(obj.getStatus()));
-         gc.fillArc(centerX - (diameter * lvl) / 2, centerY - (diameter * lvl) / 2, 
-               diameter * lvl, diameter * lvl, Math.round(degree), Math.round(currObjsize) - 1 + compensation); 
+         if((int)degree == 0 && (int)currObjsize == 360)         
+         {
+            gc.setBackground(getDisplay().getSystemColor(SWT.COLOR_WHITE));            
+            gc.fillOval(centerX - (diameter * lvl) / 2 - SHIFT, centerY - (diameter * lvl) / 2 - SHIFT, 
+                  diameter * lvl + MARGIN, diameter * lvl + MARGIN);
+            
+            gc.setBackground(StatusDisplayInfo.getStatusColor(obj.getStatus()));
+            gc.fillOval(centerX - (diameter * lvl) / 2, centerY - (diameter * lvl) / 2, diameter * lvl, diameter * lvl);
+         }
+         else
+         {
+            gc.setBackground(getDisplay().getSystemColor(SWT.COLOR_WHITE));
+            gc.fillArc(centerX - (diameter * lvl) / 2 - SHIFT, centerY - (diameter * lvl) / 2 - SHIFT, 
+                  diameter * lvl + MARGIN, diameter * lvl + MARGIN, Math.round(degree), Math.round(currObjsize) + compensation);
+            
+            gc.setBackground(StatusDisplayInfo.getStatusColor(obj.getStatus()));
+            gc.fillArc(centerX - (diameter * lvl) / 2, centerY - (diameter * lvl) / 2, 
+                  diameter * lvl, diameter * lvl, Math.round(degree), Math.round(currObjsize) - 1 + compensation); 
+         }
         
          objectMap.add(new ObjectPosition(degree, degree + currObjsize, lvl, obj));
 	      
@@ -178,9 +191,9 @@ public class ObjectStatusRadialWidget extends Canvas implements PaintListener
             rotate = 90 - (middle - 270);
          if (middle >= 0 && middle < 90)
             rotate = -middle;
-         if (middle >= 180 && middle < 270)
+         if (middle > 180 && middle < 270)
             rotate = -(middle - 180);
-         
+
          tr.rotate(rotate);
          gc.setTransform(tr);
          
@@ -188,12 +201,20 @@ public class ObjectStatusRadialWidget extends Canvas implements PaintListener
          gc.setFont(valueFonts[fontSize.get(lvl-1)]);
          int l = gc.textExtent(text).x;
          int h = gc.textExtent(text).y;
-         //high of sector
-         int height = (int)(Math.tan(Math.toRadians(currObjsize/2))*(diameter / 2 * lvl)*2)-PADDING;
-         int lineNum = height/h;
-         if(lineNum < 0 || lineNum > 3)
+         //height of sector
+         int lineNum;
+         if (currObjsize < 360)
+         {
+            int sectorHeight = (int)(Math.tan(Math.toRadians(currObjsize/2))*(diameter / 2 * (lvl-1))*2)-PADDING_VERTICAL*2;
+            lineNum = sectorHeight / h;
+            if(lineNum < 0 || lineNum > 3)
+               lineNum = 3;
+         }
+         else
+         {
             lineNum = 3;
-         text = WidgetHelper.splitStringToLines(gc, text, diameter/2 - PADDING, lineNum).getResult();
+         }
+         text = WidgetHelper.splitStringToLines(gc, text, diameter/2 - PADDING_HORIZONTAL*2, lineNum).getResult();
          h = gc.textExtent(text).y;
          
          gc.setForeground(ColorConverter.selectTextColorByBackgroundColor(StatusDisplayInfo.getStatusColor(obj.getStatus()), cCache));
@@ -201,10 +222,12 @@ public class ObjectStatusRadialWidget extends Canvas implements PaintListener
          if(middle>=90 && middle <=180 || middle>180 && middle < 270)
          {
             l = gc.textExtent(text).x;
-            gc.drawText(text, -(diameter*(lvl-1))/2-PADDING-l, -h/2, SWT.DRAW_TRANSPARENT | SWT.DRAW_DELIMITER);
+            gc.drawText(text, -(diameter*(lvl-1))/2-PADDING_HORIZONTAL-l-SHIFT, -h/2, SWT.DRAW_TRANSPARENT | SWT.DRAW_DELIMITER);
          }
          else
-            gc.drawText(text, (diameter*(lvl-1))/2+PADDING, -h/2, SWT.DRAW_TRANSPARENT | SWT.DRAW_DELIMITER);
+         {
+            gc.drawText(text, (diameter*(lvl-1))/2+PADDING_HORIZONTAL+SHIFT, -h/2, SWT.DRAW_TRANSPARENT | SWT.DRAW_DELIMITER);
+         }
 
          gc.setTransform(oldTransform);    
          tr.dispose();
@@ -322,18 +345,17 @@ public class ObjectStatusRadialWidget extends Canvas implements PaintListener
    private void calculateOptimalDiameter(AbstractObject obj, int lvl, int objCount, GC gc)
    {
       String text = obj.getObjectName();
-      int height = (int)((Math.tan(Math.toRadians(leafObjectSize*objCount/2)))*((diameter * lvl) / 2)*2)-PADDING;
-      if(height < 0)
-         height = 1286;
+      int sectorHeight = (int)((Math.tan(Math.toRadians(leafObjectSize*objCount/2)))*((diameter * lvl) / 2)*2)-PADDING_VERTICAL*2;
+      if(sectorHeight <= 0)
+         sectorHeight = 1286;
 
-      while(!WidgetHelper.fitToRect(gc, text, diameter/2 - PADDING, height, 3))
+      while(!WidgetHelper.fitToRect(gc, text, diameter/2 - PADDING_HORIZONTAL*2, sectorHeight, 3))
       {
-         diameter = (int)(diameter + diameter*0.05);
+         diameter = (int)(diameter + diameter*0.01);
 
-         height = (int)((Math.tan(Math.toRadians(leafObjectSize*objCount/2)))*((diameter * lvl) / 2)*2)-PADDING;
-         if(height < 0)
-            height = 1286;
-
+         sectorHeight = (int)((Math.tan(Math.toRadians(leafObjectSize*objCount/2)))*((diameter * lvl) / 2)*2)-PADDING_VERTICAL*2;
+         if(sectorHeight < 0)
+            sectorHeight = 1286;
       }
    }
    
@@ -386,11 +408,11 @@ public class ObjectStatusRadialWidget extends Canvas implements PaintListener
    private Integer calculateOptimalFontsie(AbstractObject obj, int lvl, int objCount, GC gc)
    {
       String text = obj.getObjectName();
-      int height = (int)((Math.tan(Math.toRadians(leafObjectSize*objCount/2)))*((diameter * lvl) / 2)*2)-PADDING;
-      if(height < 0)
-         height = 1286;
+      int sectorHeight = (int)((Math.tan(Math.toRadians(leafObjectSize*objCount/2)))*((diameter * lvl) / 2)*2)-PADDING_VERTICAL*2;
+      if(sectorHeight < 0)
+         sectorHeight = 1286;
 
-      final int font = WidgetHelper.getBestFittingFontMultiline(gc, valueFonts, text, diameter/2 - PADDING, height, 3); //$NON-NLS-1$
+      final int font = WidgetHelper.getBestFittingFontMultiline(gc, valueFonts, text, diameter/2 - PADDING_HORIZONTAL*2, sectorHeight, 3); //$NON-NLS-1$
 
       return new Integer(font);
    }
@@ -482,7 +504,7 @@ public class ObjectStatusRadialWidget extends Canvas implements PaintListener
 		gc.setClipping(rect);
 		int h = gc.textExtent(text).y;
       int l = gc.textExtent(text).x;
-      if(l+PADDING >= diameter)
+      if(l+PADDING_HORIZONTAL >= diameter)
       {
          text = WidgetHelper.splitStringToLines(gc, text, squareSide, squareSide/h).getResult();
          h = gc.textExtent(text).y;
