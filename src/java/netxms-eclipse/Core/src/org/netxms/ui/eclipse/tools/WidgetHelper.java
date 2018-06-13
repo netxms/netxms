@@ -18,6 +18,9 @@
  */
 package org.netxms.ui.eclipse.tools;
 
+import java.util.regex.MatchResult;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.Separator;
@@ -69,6 +72,11 @@ public class WidgetHelper
 	public static final int BUTTON_WIDTH_HINT = 90;
 	public static final int WIDE_BUTTON_WIDTH_HINT = 120;
 	public static final String DEFAULT_LAYOUT_DATA = "WidgetHelper::default_layout_data"; //$NON-NLS-1$
+	
+	private static final Pattern patternOnlyCharNum = Pattern.compile("[a-zA-Z0-9]+");
+	private static final Pattern patternAllDotsAtEnd = Pattern.compile("[.]*$");
+	private static final Pattern patternCharsAndNumbersAtEnd = Pattern.compile("[a-zA-Z0-9]*$");
+	private static final Pattern patternCharsAndNumbersAtStart = Pattern.compile("^[a-zA-Z0-9]*");
 		
 	/**
     * Create pair of label and input field, with label above
@@ -724,8 +732,6 @@ public class WidgetHelper
       return newString.fits(); 
    }
    
-
-   
    /**
     * Calculate substring for string to fit in the sector
     * 
@@ -738,44 +744,52 @@ public class WidgetHelper
    {
       StringBuilder name = new StringBuilder("");
       int start = 0;
-      boolean fit = false;
-      for(int i = 0; i < lineNum; i++)
-      {
-         int end = text.length();
+      boolean fit = true;
+      for(int i = 0; start < text.length(); i++)
+      {         
+         if(i >= lineNum)
+         {
+            fit = false;
+            break;
+         }
+         
          String substr = text.substring(start);
          int nameL = gc.textExtent(substr, SWT.DRAW_TRANSPARENT | SWT.DRAW_DELIMITER).x;
          int numOfCharToLeave = (int)((width - 6)/(nameL/substr.length())); //make best guess
          if(numOfCharToLeave >= substr.length())
-            numOfCharToLeave = substr.length() - 1;
-         String tmp;
-         for(int j = 0; nameL > width - 6; j++)
-         {
-            if(i+1 == lineNum)
-            {
-               tmp = substr.substring(0, numOfCharToLeave-j).toString(); 
-               tmp += "...";
+            numOfCharToLeave = substr.length();
+         String tmp = substr;
+         
+         while(gc.textExtent(tmp, SWT.DRAW_TRANSPARENT | SWT.DRAW_DELIMITER).x > width) {
+            numOfCharToLeave--;
+            tmp = substr.substring(0, numOfCharToLeave);
+            Matcher matcher = patternOnlyCharNum.matcher(tmp);
+            if(matcher.matches() || (i+1 == lineNum && numOfCharToLeave != substr.length()))
+            {               
+               Matcher matcherReplaceDot = patternAllDotsAtEnd.matcher(tmp);
+               tmp = matcherReplaceDot.replaceAll("");
+               tmp += "...";     
+               fit = false;
             }
             else
             {
-               tmp = substr.substring(0, numOfCharToLeave-j).toString();
-            }
-            nameL = gc.textExtent(tmp, SWT.DRAW_TRANSPARENT | SWT.DRAW_DELIMITER).x;      
-            end = numOfCharToLeave - j + start;
-         }         
+               Matcher matcherRemoveCharsAfterSeparator = patternCharsAndNumbersAtEnd.matcher(tmp);
+               tmp = matcherRemoveCharsAfterSeparator.replaceAll("");
+               numOfCharToLeave = tmp.length();
+            }               
+         } 
          
-         name.append(text.substring(start, end));
-         if(end == text.length())
+         name.append(tmp);
+         if(i+1 < lineNum && numOfCharToLeave != substr.length())
          {
-            fit = true;
-            break;
+            name.append("\n");
          }
-         else
-         {
-            name.append((i+1 == lineNum) ? "..." : "\n" );
-            fit = (i+1 != lineNum);
-         }
-         start = end;
-      }     
+         System.out.println(name);
+         
+         Matcher matcherRemoveLineEnd = patternCharsAndNumbersAtStart.matcher(substr.substring(numOfCharToLeave-1));
+         numOfCharToLeave = substr.length() - matcherRemoveLineEnd.replaceAll("").length(); //remove if something left after last word
+         start = start+numOfCharToLeave+1;
+      }           
       
       return new SplitedString(name.toString(), fit);    
    }
