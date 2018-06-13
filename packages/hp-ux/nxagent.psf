@@ -54,6 +54,7 @@ product
       file              libnxagent.so
       file              libnxagent.so.2
       file              libnxagent.so.2.0
+      file		libnxcrypto.so.1.1
       file              libnxdb.so
       file              libnxdb.so.2
       file              libnxdb.so.2.0
@@ -70,6 +71,7 @@ product
       file              libnxsqlite.so
       file              libnxsqlite.so.2
       file              libnxsqlite.so.2.0
+      file		libnxssl.so.1.1
       file              libnxtre.so
       file              libnxtre.so.5
       file              libnxtre.so.5.0
@@ -80,6 +82,7 @@ product
       file              dbquery.nsm
       file              ecs.nsm
       file              hpux.nsm
+      file              informix.nsm
       file              logwatch.nsm
       file              oracle.nsm
       file              ping.nsm
@@ -88,6 +91,7 @@ product
       file              tuxedo.nsm
       file              ups.nsm
       directory         build/lib/netxms/dbdrv=/opt/netxms/lib/netxms/dbdrv
+      file		informix.ddr
       file		oracle.ddr
       file              sqlite.ddr
    end
