@@ -122,6 +122,18 @@ void LIBNETXMS_EXPORTABLE nxlog_set_debug_level_tag(const TCHAR *tag, int level)
 /**
  * Get current debug level
  */
+void LIBNETXMS_EXPORTABLE nxlog_reset_debug_level_tags()
+{
+   s_mutexDebugTagTreeWrite.lock();
+   tagTreeSecondary->clear();
+   SwapAndWait();
+   tagTreeSecondary->clear();
+   s_mutexDebugTagTreeWrite.unlock();
+}
+
+/**
+ * Get current debug level
+ */
 int LIBNETXMS_EXPORTABLE nxlog_get_debug_level()
 {
    return tagTreeActive->getRootDebugLevel();

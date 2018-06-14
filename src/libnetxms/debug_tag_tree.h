@@ -76,6 +76,7 @@ public:
    void add(const TCHAR *tag, int level) { m_root->add(tag, level); }
    void remove(const TCHAR *tag) { m_root->remove(tag); }
    void setRootDebugLevel(int level) { m_root->setWildcardDebugLevel(level); }
+   void clear() { delete m_root; m_root = new DebugTagTreeNode(); }
 };
 
 #endif
