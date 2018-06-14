@@ -108,7 +108,7 @@ void LIBNXAGENT_EXPORTABLE InitSubAgentAPI(void (* writeLog)(int, int, const TCH
                                            CONDITION shutdownCondition, const TCHAR *dataDirectory);
 
 int CreateConfig(const char *pszServer, const char *pszLogFile, const char *pszFileStore,
-   const char *configIncludeDir, int iNumSubAgents, char **ppszSubAgentList);
+   const char *configIncludeDir, int iNumSubAgents, char **ppszSubAgentList, const char *extraValues);
 void InitConfig(const TCHAR *configSection);
 bool LoadConfig();
 
@@ -131,9 +131,9 @@ extern const TCHAR *g_szMessages[];
  * Valid options for getopt()
  */
 #if defined(_WIN32)
-#define VALID_OPTIONS   "c:CdD:e:EfG:hHiIKM:n:N:P:r:RsSUvW:X:Z:"
+#define VALID_OPTIONS   "c:CdD:e:EfG:hHiIKM:n:N:P:r:RsSUvW:X:Z:z:"
 #else
-#define VALID_OPTIONS   "c:CdD:fg:G:hKM:p:P:r:u:vW:X:Z:"
+#define VALID_OPTIONS   "c:CdD:fg:G:hKM:p:P:r:u:vW:X:Z:z:"
 #endif
 
 /**
@@ -1449,6 +1449,7 @@ int main(int argc, char *argv[])
    UINT32 dwOldPID, dwMainPID;
 	char *eptr;
    TCHAR configSection[MAX_DB_STRING] = DEFAULT_CONFIG_SECTION;
+   const char *extraConfigValues = NULL;
 #ifdef _WIN32
    TCHAR szModuleName[MAX_PATH];
    HKEY hKey;
@@ -1599,6 +1600,9 @@ int main(int argc, char *argv[])
 #else
             nx_strncpy(g_szConfigFile, optarg, MAX_PATH);
 #endif
+            break;
+         case 'z':   // Extra config parameters
+            extraConfigValues = optarg;
             break;
 #ifdef _WIN32
          case 'i':
@@ -1983,7 +1987,7 @@ int main(int argc, char *argv[])
       case ACTION_CREATE_CONFIG:
          iExitCode = CreateConfig(CHECK_NULL_A(argv[optind]), CHECK_NULL_A(argv[optind + 1]),
                                   CHECK_NULL_A(argv[optind + 2]), CHECK_NULL_A(argv[optind + 3]),
-			                         argc - optind - 4, &argv[optind + 4]);
+			                         argc - optind - 4, &argv[optind + 4], extraConfigValues);
          break;
       case ACTION_SHUTDOWN_EXT_AGENTS:
          InitiateExtSubagentShutdown();

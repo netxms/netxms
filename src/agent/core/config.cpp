@@ -152,10 +152,10 @@ BOOL DownloadConfig(TCHAR *pszServer)
 }
 
 /**
-* Create configuration file
-*/
+ * Create configuration file
+ */
 int CreateConfig(const char *pszServer, const char *pszLogFile, const char *pszFileStore,
-      const char *configIncludeDir, int iNumSubAgents, char **ppszSubAgentList)
+      const char *configIncludeDir, int iNumSubAgents, char **ppszSubAgentList, const char *extraValues)
 {
    FILE *fp;
    time_t currTime;
@@ -196,6 +196,30 @@ int CreateConfig(const char *pszServer, const char *pszLogFile, const char *pszF
          strupr(section);
          _ftprintf(fp, _T("\n[EXT:%hs]\n"), section);
          _ftprintf(fp, _T("SubAgent = %hs\n"), (const char *)extSubAgents.get(i));
+      }
+
+      if (extraValues != NULL)
+      {
+         char *temp = strdup(extraValues);
+         char *curr = temp;
+         while (*curr == '~')
+            curr++;
+
+         char *next;
+         do
+         {
+            next = strstr(curr, "~~");
+            if (next != NULL)
+               *next = 0;
+            StrStripA(curr);
+            if ((*curr == '[') || (*curr == '*') || (strchr(curr, '=') != NULL))
+            {
+               _ftprintf(fp, _T("%hs\n"), curr);
+            }
+            curr = next + 2;
+         } while (next != NULL);
+
+         free(temp);
       }
 
       fclose(fp);
