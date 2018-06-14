@@ -171,27 +171,6 @@ extern "C" char __EXPORT *DrvPrepareStringA(const char *str)
  */
 extern "C" bool __EXPORT DrvInit(const char *cmdLine)
 {
-   // Allocate environment
-   SQLHENV sqlEnv;
-   long rc = SQLAllocHandle(SQL_HANDLE_ENV, SQL_NULL_HANDLE, &sqlEnv);
-   if ((rc != SQL_SUCCESS) && (rc != SQL_SUCCESS_WITH_INFO))
-      return false;
-
-   rc = SQLSetEnvAttr(sqlEnv, SQL_ATTR_ODBC_VERSION, (void *)SQL_OV_ODBC3, 0);
-   if ((rc != SQL_SUCCESS) && (rc != SQL_SUCCESS_WITH_INFO))
-      return false;
-
-   // Find correct driver
-   char name[SQL_MAX_DSN_LENGTH + 1], attrs[1024];
-   SQLSMALLINT l1, l2;
-   rc = SQLDrivers(sqlEnv, SQL_FETCH_FIRST, (SQLCHAR *)name, SQL_MAX_DSN_LENGTH + 1, &l1, (SQLCHAR *)attrs, 1024, &l2);
-   while((rc == SQL_SUCCESS) || (rc == SQL_SUCCESS_WITH_INFO))
-   {
-      nxlog_debug(1, _T("INFORMIX: driver %hs"), name);
-      rc = SQLDrivers(sqlEnv, SQL_FETCH_NEXT, (SQLCHAR *)name, SQL_MAX_DSN_LENGTH + 1, &l1, (SQLCHAR *)attrs, 1024, &l2);
-   }
-
-   SQLFreeHandle(SQL_HANDLE_ENV, sqlEnv);
    return true;
 }
 
