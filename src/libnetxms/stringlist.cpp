@@ -74,6 +74,19 @@ StringList::StringList(const TCHAR *src, const TCHAR *separator)
 }
 
 /**
+ * Constructor: create string list from NXCP message
+ */
+StringList::StringList(const NXCPMessage *msg, UINT32 baseId, UINT32 countId)
+{
+   m_count = msg->getFieldAsInt32(countId);
+   m_allocated = m_count;
+   m_values = (TCHAR **)malloc(sizeof(TCHAR *) * m_allocated);
+   UINT32 fieldId = baseId;
+   for(int i = 0; i < m_count; i++)
+      m_values[i] = msg->getFieldAsString(fieldId++);
+}
+
+/**
  * Destructor
  */
 StringList::~StringList()

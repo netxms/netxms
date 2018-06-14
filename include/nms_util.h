@@ -1136,6 +1136,7 @@ public:
 	StringList(const StringList *src);
    StringList(const StringList &src);
 	StringList(const TCHAR *src, const TCHAR *separator);
+   StringList(const NXCPMessage *msg, UINT32 baseId, UINT32 countId);
 	~StringList();
 
 	void add(const TCHAR *value);
@@ -2688,6 +2689,7 @@ void LIBNETXMS_EXPORTABLE nxlog_set_debug_level_tag(const TCHAR *tags, int level
 int LIBNETXMS_EXPORTABLE nxlog_get_debug_level();
 int LIBNETXMS_EXPORTABLE nxlog_get_debug_level_tag(const TCHAR *tag);
 int LIBNETXMS_EXPORTABLE nxlog_get_debug_level_tag_object(const TCHAR *tag, UINT32 objectId);
+void LIBNETXMS_EXPORTABLE nxlog_reset_debug_level_tags();
 
 #ifdef __cplusplus
 

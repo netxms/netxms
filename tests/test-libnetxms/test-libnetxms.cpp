@@ -97,6 +97,56 @@ static void TestStringConversion()
 }
 
 /**
+ * Test string list
+ */
+static void TestStringList()
+{
+   StartTest(_T("String list - add"));
+   StringList *s1 = new StringList();
+   s1->add(1);
+   s1->add(_LL(12345000000001));
+   s1->add(_T("text1"));
+   s1->addPreallocated(_tcsdup(_T("text2")));
+   s1->add(3.1415);
+
+   AssertEquals(s1->size(), 5);
+   AssertTrue(!_tcscmp(s1->get(0), _T("1")));
+   AssertTrue(!_tcscmp(s1->get(1), _T("12345000000001")));
+   AssertTrue(!_tcscmp(s1->get(2), _T("text1")));
+   AssertTrue(!_tcscmp(s1->get(3), _T("text2")));
+   AssertTrue(!_tcsncmp(s1->get(4), _T("3.1415"), 6));
+   EndTest();
+
+   StartTest(_T("String list - copy constructor"));
+   StringList *s2 = new StringList(s1);
+   delete s1;
+
+   AssertEquals(s2->size(), 5);
+   AssertTrue(!_tcscmp(s2->get(0), _T("1")));
+   AssertTrue(!_tcscmp(s2->get(1), _T("12345000000001")));
+   AssertTrue(!_tcscmp(s2->get(2), _T("text1")));
+   AssertTrue(!_tcscmp(s2->get(3), _T("text2")));
+   AssertTrue(!_tcsncmp(s2->get(4), _T("3.1415"), 6));
+   EndTest();
+
+   StartTest(_T("String list - fill message"));
+
+   NXCPMessage msg;
+   s2->fillMessage(&msg, 100, 1);
+   delete s2;
+
+   StringList *s3 = new StringList(&msg, 100, 1);
+   AssertEquals(s3->size(), 5);
+   AssertTrue(!_tcscmp(s3->get(0), _T("1")));
+   AssertTrue(!_tcscmp(s3->get(1), _T("12345000000001")));
+   AssertTrue(!_tcscmp(s3->get(2), _T("text1")));
+   AssertTrue(!_tcscmp(s3->get(3), _T("text2")));
+   AssertTrue(!_tcsncmp(s3->get(4), _T("3.1415"), 6));
+   delete s3;
+   EndTest();
+}
+
+/**
  * Test string map
  */
 static void TestStringMap()
@@ -1256,6 +1306,11 @@ static void TestDebugTags()
    for(int i = 0; i < 1000000; i++)
       nxlog_get_debug_level();
    EndTest(GetCurrentTimeMs() - startTime);
+
+   StartTest(_T("Debug tags: reset"));
+   nxlog_reset_debug_level_tags();
+   AssertEquals(nxlog_get_debug_level_tag(_T("test.tag1.subtag1")), nxlog_get_debug_level());
+   EndTest();
 }
 
 /**
@@ -1373,6 +1428,7 @@ int main(int argc, char *argv[])
    TestObjectMemoryPool();
    TestString();
    TestStringConversion();
+   TestStringList();
    TestStringMap();
    TestStringSet();
    TestStringFunctionsA();
