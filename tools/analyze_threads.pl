@@ -8,7 +8,8 @@
         "SleepAndCheckForShutdown",
 	"poll",
 	"select",
-	"accept"
+	"accept",
+	"AgentTunnelCommChannel::recv"
 );
 
 my %skiplist;

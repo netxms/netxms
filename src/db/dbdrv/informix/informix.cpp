@@ -171,7 +171,28 @@ extern "C" char __EXPORT *DrvPrepareStringA(const char *str)
  */
 extern "C" bool __EXPORT DrvInit(const char *cmdLine)
 {
-	return true;
+   // Allocate environment
+   SQLHENV sqlEnv;
+   long rc = SQLAllocHandle(SQL_HANDLE_ENV, SQL_NULL_HANDLE, &sqlEnv);
+   if ((rc != SQL_SUCCESS) && (rc != SQL_SUCCESS_WITH_INFO))
+      return false;
+
+   rc = SQLSetEnvAttr(sqlEnv, SQL_ATTR_ODBC_VERSION, (void *)SQL_OV_ODBC3, 0);
+   if ((rc != SQL_SUCCESS) && (rc != SQL_SUCCESS_WITH_INFO))
+      return false;
+
+   // Find correct driver
+   char name[SQL_MAX_DSN_LENGTH + 1], attrs[1024];
+   SQLSMALLINT l1, l2;
+   rc = SQLDrivers(sqlEnv, SQL_FETCH_FIRST, (SQLCHAR *)name, SQL_MAX_DSN_LENGTH + 1, &l1, (SQLCHAR *)attrs, 1024, &l2);
+   while((rc == SQL_SUCCESS) || (rc == SQL_SUCCESS_WITH_INFO))
+   {
+      nxlog_debug(1, _T("INFORMIX: driver %hs"), name);
+      rc = SQLDrivers(sqlEnv, SQL_FETCH_NEXT, (SQLCHAR *)name, SQL_MAX_DSN_LENGTH + 1, &l1, (SQLCHAR *)attrs, 1024, &l2);
+   }
+
+   SQLFreeHandle(SQL_HANDLE_ENV, sqlEnv);
+   return true;
 }
 
 /**
@@ -220,16 +241,63 @@ extern "C" DBDRV_CONNECTION __EXPORT DrvConnect(char *host, char *login, char *p
 	SQLSetConnectAttr(pConn->sqlConn, SQL_ATTR_CONNECTION_TIMEOUT, (SQLPOINTER *)30, 0);
 
 	// Connect to the database 
-	SQLSMALLINT outLen;
+	// Server name could be in form host[:port][@proto][/service] or * to indicate ODBC DSN
+	if ((host != NULL) && (*host != 0) && strcmp(host, "*"))
+	{
+      char hostName[256];
+      strlcpy(hostName, host, 256);
+
+      char *serverName = strchr(hostName, '/');
+      if (serverName != NULL)
+      {
+         *serverName = 0;
+         serverName++;
+      }
+      else
+      {
+         serverName = hostName;
+      }
+
+      char *proto = strchr(hostName, '@');
+      if (proto != NULL)
+      {
+         *proto = 0;
+         proto++;
+      }
+
+      char *port = strchr(hostName, ':');
+      if (port != NULL)
+      {
+         *port = 0;
+         port++;
+      }
+
+      SQLSMALLINT outLen;
 #ifdef _WIN32
-	WCHAR connectString[1024];
-	snwprintf(connectString, 1024, L"DSN=%hs;UID=%hs;PWD=%hs", database, login, password);
-	iResult = SQLDriverConnectW(pConn->sqlConn, NULL, (SQLWCHAR *)connectString, SQL_NTS, NULL, 0, &outLen, SQL_DRIVER_NOPROMPT);
+      WCHAR connectString[1024];
+      snwprintf(connectString, 1024, L"Host=%hs;Server=%hs;Protocol=%hs;Service=%hs;DB=%hs;UID=%hs;PWD=%hs", hostName, serverName,
+               (proto != NULL) ? proto : "onsoctcp", (port != NULL) ? port : "9088", database, login, password);
+      iResult = SQLDriverConnectW(pConn->sqlConn, NULL, (SQLWCHAR *)connectString, SQL_NTS, NULL, 0, &outLen, SQL_DRIVER_NOPROMPT);
 #else
-	char connectString[1024];
-	snprintf(connectString, 1024, "DSN=%s;UID=%s;PWD=%s", database, login, password);
-	iResult = SQLDriverConnect(pConn->sqlConn, NULL, (SQLCHAR *)connectString, SQL_NTS, NULL, 0, &outLen, SQL_DRIVER_NOPROMPT);
+      char connectString[1024];
+      snprintf(connectString, 1024, "Host=%s;Server=%s;Protocol=%s;Service=%s;DB=%s;UID=%s;PWD=%s", hostName, serverName,
+               (proto != NULL) ? proto : "onsoctcp", (port != NULL) ? port : "9088", database, login, password);
+      iResult = SQLDriverConnect(pConn->sqlConn, NULL, (SQLCHAR *)connectString, SQL_NTS, NULL, 0, &outLen, SQL_DRIVER_NOPROMPT);
 #endif
+	}
+	else
+	{
+      SQLSMALLINT outLen;
+#ifdef _WIN32
+      WCHAR connectString[1024];
+      snwprintf(connectString, 1024, L"DSN=%hs;UID=%hs;PWD=%hs", database, login, password);
+      iResult = SQLDriverConnectW(pConn->sqlConn, NULL, (SQLWCHAR *)connectString, SQL_NTS, NULL, 0, &outLen, SQL_DRIVER_NOPROMPT);
+#else
+      char connectString[1024];
+      snprintf(connectString, 1024, "DSN=%s;UID=%s;PWD=%s", database, login, password);
+      iResult = SQLDriverConnect(pConn->sqlConn, NULL, (SQLCHAR *)connectString, SQL_NTS, NULL, 0, &outLen, SQL_DRIVER_NOPROMPT);
+#endif
+	}
 	if ((iResult != SQL_SUCCESS) && (iResult != SQL_SUCCESS_WITH_INFO))
 	{
 		GetSQLErrorInfo(SQL_HANDLE_DBC, pConn->sqlConn, errorText);

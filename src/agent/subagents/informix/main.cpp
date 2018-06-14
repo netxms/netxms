@@ -117,6 +117,7 @@ static bool SubAgentInit(Config *config)
    static NX_CFG_TEMPLATE configTemplate[] =
    {
       { _T("Id"),                CT_STRING, 0, 0, MAX_STR,       0, info.id },
+      { _T("DBServer"),          CT_STRING, 0, 0, MAX_STR,       0, info.server },
       { _T("DBName"),            CT_STRING, 0, 0, MAX_STR,       0, info.dsn },
       { _T("DBLogin"),           CT_STRING, 0, 0, MAX_USERNAME,  0, info.username },
       { _T("DBPassword"),        CT_STRING, 0, 0, MAX_PASSWORD,  0, info.password },
@@ -250,7 +251,7 @@ THREAD_RESULT THREAD_CALL queryThread(void *arg)
 
 	while(true)
 	{
-		db.handle = DBConnect(g_driverHandle, NULL, db.dsn, db.username, db.password, NULL, errorText);
+		db.handle = DBConnect(g_driverHandle, db.server, db.dsn, db.username, db.password, NULL, errorText);
 		if (db.handle != NULL)
 		{
 			AgentWriteLog(EVENTLOG_INFORMATION_TYPE, _T("%s: connected to DB"), MYNAMESTR);
