@@ -3425,6 +3425,7 @@ if test $? = 0; then
 	AC_CHECK_HEADER(infxcli.h,,AC_MSG_ERROR([*** Cannot find infxcli.h - check your Informix client installation ***]))
 	AC_CHECK_LIB(thcli, SQLAllocHandle, [INFORMIX_LIBS="-lthcli"],
 		[AC_MSG_ERROR(libthcli is required for Informix support)])
+	AC_CHECK_LIB(ifdmr, SQLDrivers, [INFORMIX_LIBS="$INFORMIX_LIBS -lifdmr"], [], [-lthcli])
 	if test "x$BUILD_STATIC_AGENT" = "xyes"; then
 		SUBAGENT_LIBS="$SUBAGENT_LIBS $INFORMIX_LIBS"
 	fi

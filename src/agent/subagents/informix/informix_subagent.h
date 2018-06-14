@@ -34,6 +34,7 @@
 typedef struct
 {
 	TCHAR id[MAX_STR];				// this is how client addresses the database
+	TCHAR server[MAX_STR];
 	TCHAR dsn[MAX_STR];
 	TCHAR username[MAX_USERNAME];
 	TCHAR password[MAX_PASSWORD];

@@ -46,10 +46,14 @@
 #include <nms_util.h>
 
 #ifndef _WIN32
+
 #undef WCHAR
 #undef TCHAR
 #define WCHAR _I_hate_Informix_WCHAR
 #define TCHAR _I_hate_Informix_TCHAR
+
+#define SQL_NOUNICODEMAP
+
 #endif
 
 #include <infxcli.h>
