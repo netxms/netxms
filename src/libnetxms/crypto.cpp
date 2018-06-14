@@ -118,7 +118,7 @@ static void CryptoLockingCallback(int nMode, int nLock, const char *pszFile, int
 /**
  * ID callback for CRYPTO library
  */
-#ifndef _WIN32
+#if (OPENSSL_VERSION_NUMBER < 0x10100000L) && !defined(_WIN32)
 
 #if defined(__SUNPRO_CC)
 extern "C"
@@ -218,6 +218,10 @@ bool LIBNETXMS_EXPORTABLE InitCryptoLib(UINT32 dwEnabledCiphers)
    OpenSSL_add_all_algorithms();
 #endif
 
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+   OPENSSL_init_crypto(OPENSSL_INIT_LOAD_CRYPTO_STRINGS | OPENSSL_INIT_ADD_ALL_CIPHERS | OPENSSL_INIT_ADD_ALL_DIGESTS | OPENSSL_INIT_NO_LOAD_CONFIG | OPENSSL_INIT_ASYNC, NULL);
+#endif
+
    ERR_load_CRYPTO_strings();
    RAND_seed(random, 8192);
 
@@ -226,11 +230,10 @@ bool LIBNETXMS_EXPORTABLE InitCryptoLib(UINT32 dwEnabledCiphers)
    for(i = 0; i < CRYPTO_num_locks(); i++)
       s_cryptoMutexList[i] = MutexCreate();
    CRYPTO_set_locking_callback(CryptoLockingCallback);
-#endif
-
 #ifndef _WIN32
    CRYPTO_set_id_callback(CryptoIdCallback);
 #endif   /* _WIN32 */
+#endif
 
    // validate supported ciphers
    nxlog_debug(1, _T("Validating ciphers"));
