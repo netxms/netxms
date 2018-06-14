@@ -784,7 +784,6 @@ public class WidgetHelper
          {
             name.append("\n");
          }
-         System.out.println(name);
          
          Matcher matcherRemoveLineEnd = patternCharsAndNumbersAtStart.matcher(substr.substring(numOfCharToLeave-1));
          numOfCharToLeave = substr.length() - matcherRemoveLineEnd.replaceAll("").length(); //remove if something left after last word

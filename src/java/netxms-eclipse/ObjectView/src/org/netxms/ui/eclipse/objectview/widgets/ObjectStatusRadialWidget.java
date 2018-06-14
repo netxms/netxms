@@ -119,6 +119,8 @@ public class ObjectStatusRadialWidget extends Canvas implements PaintListener, D
 	 */
    public void refresh()
    {
+      if(rootObject == null)
+         return;
       needRender = true;
       redraw();
    }
@@ -276,10 +278,10 @@ public class ObjectStatusRadialWidget extends Canvas implements PaintListener, D
     */
    private int calculateMaxLVLAndObjCount(AbstractObject object, int lvl)
    {     
-      int objcoutn = 0;
-      int contFound = 0;
+      int objectCount = 0;
+      int foundObjectsCount = 0;
       AbstractObject[] objSet = object.getChildsAsArray();
-      for(AbstractObject obj : objSet )
+      for(AbstractObject obj : objSet)
       {
          if (objects != null)            
          {
@@ -288,40 +290,40 @@ public class ObjectStatusRadialWidget extends Canvas implements PaintListener, D
                int tmp = calculateMaxLVLAndObjCount(obj, lvl+1);    
                if(tmp > 0)
                {
-                  contFound++;
-                  objcoutn+=tmp;
+                  foundObjectsCount++;
+                  objectCount+=tmp;
                }
             }
             else
             {
                if (objects.containsKey(obj.getObjectId()))
-                  objcoutn++;
+                  objectCount++;
             }
          }
          else
          {
             if (AbstractObjectStatusMap.isContainerObject(obj))
             {
-               objcoutn += calculateMaxLVLAndObjCount(obj, lvl+1);    
-               contFound++;
+               objectCount += calculateMaxLVLAndObjCount(obj, lvl+1);    
+               foundObjectsCount++;
             }
             else
-               objcoutn++;
+               objectCount++;
          }
       }
       
-      if ((objects == null) && AbstractObjectStatusMap.isContainerObject(object) && (objcoutn == 0))            
+      if ((objects == null) && AbstractObjectStatusMap.isContainerObject(object) && (objectCount == 0))            
       {
-         objcoutn++;
+         objectCount++;
       }
          
-      if (contFound == 0)
+      if (foundObjectsCount == 0)
       {
          if (maxLvl < lvl)
             maxLvl = lvl;
       }
       
-      return objcoutn;
+      return objectCount;
    }
    
 
@@ -564,6 +566,9 @@ public class ObjectStatusRadialWidget extends Canvas implements PaintListener, D
 	@Override
 	public Point computeSize(int wHint, int hHint, boolean changed)
 	{
+      if(rootObject == null)
+         return super.computeSize(wHint, hHint, changed);
+      
 	   GC gc = new GC(getDisplay());	   
 	   fitToScreen = !(wHint == SWT.DEFAULT && hHint == SWT.DEFAULT);
       recalculateData(gc);
