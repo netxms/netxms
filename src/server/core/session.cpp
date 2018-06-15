@@ -171,6 +171,7 @@ DEFINE_THREAD_STARTER(queryAgentTable)
 DEFINE_THREAD_STARTER(queryL2Topology)
 DEFINE_THREAD_STARTER(queryInternalCommunicationTopology)
 DEFINE_THREAD_STARTER(queryObjects)
+DEFINE_THREAD_STARTER(queryObjectDetails)
 DEFINE_THREAD_STARTER(queryParameter)
 DEFINE_THREAD_STARTER(queryServerLog)
 DEFINE_THREAD_STARTER(recalculateDCIValues)
@@ -658,6 +659,9 @@ void ClientSession::processingThread()
             break;
          case CMD_QUERY_OBJECTS:
             CALL_IN_NEW_THREAD(queryObjects, pMsg);
+            break;
+         case CMD_QUERY_OBJECT_DETAILS:
+            CALL_IN_NEW_THREAD(queryObjectDetails, pMsg);
             break;
          case CMD_GET_CONFIG_VARLIST:
             getConfigurationVariables(pMsg->getId());
@@ -2262,6 +2266,46 @@ void ClientSession::queryObjects(NXCPMessage *request)
       msg.setField(VID_RCC, RCC_NXSL_EXECUTION_ERROR);
       msg.setField(VID_ERROR_TEXT, errorMessage);
    }
+   free(query);
+
+   sendMessage(&msg);
+}
+
+/**
+ * Query object details
+ */
+void ClientSession::queryObjectDetails(NXCPMessage *request)
+{
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+
+   TCHAR *query = request->getFieldAsString(VID_QUERY);
+   StringList *fields = new StringList(request, VID_FIELD_LIST_BASE, VID_FIELDS);
+   TCHAR errorMessage[1024];
+   ObjectArray<StringList> values(128, 128, true);
+   ObjectArray<NetObj> *objects = QueryObjects(query, m_dwUserId, errorMessage, 1024, fields, &values);
+   if (objects != NULL)
+   {
+      UINT32 *idList = new UINT32[objects->size()];
+      UINT32 fieldId = VID_ELEMENT_LIST_BASE;
+      for(int i = 0; i < objects->size(); i++)
+      {
+         idList[i] = objects->get(i)->getId();
+         objects->get(i)->decRefCount();
+         StringList *v = values.get(i);
+         v->fillMessage(&msg, fieldId + 1, fieldId);
+         fieldId += v->size() + 1;
+      }
+      msg.setFieldFromInt32Array(VID_OBJECT_LIST, objects->size(), idList);
+      delete[] idList;
+      delete objects;
+   }
+   else
+   {
+      msg.setField(VID_RCC, RCC_NXSL_EXECUTION_ERROR);
+      msg.setField(VID_ERROR_TEXT, errorMessage);
+   }
+   delete fields;
+   free(query);
 
    sendMessage(&msg);
 }

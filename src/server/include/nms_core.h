@@ -504,6 +504,7 @@ private:
    DECLARE_THREAD_STARTER(queryL2Topology)
    DECLARE_THREAD_STARTER(queryInternalCommunicationTopology)
    DECLARE_THREAD_STARTER(queryObjects)
+   DECLARE_THREAD_STARTER(queryObjectDetails)
    DECLARE_THREAD_STARTER(queryParameter)
    DECLARE_THREAD_STARTER(queryServerLog)
    DECLARE_THREAD_STARTER(recalculateDCIValues)
@@ -529,6 +530,7 @@ private:
    void getObjects(NXCPMessage *request);
    void getSelectedObjects(NXCPMessage *request);
    void queryObjects(NXCPMessage *request);
+   void queryObjectDetails(NXCPMessage *request);
    void getConfigurationVariables(UINT32 dwRqId);
    void getPublicConfigurationVariable(NXCPMessage *request);
    void setDefaultConfigurationVariableValues(NXCPMessage *pRequest);

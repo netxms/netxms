@@ -2459,11 +2459,12 @@ bool NXCORE_EXPORTABLE CreateObjectAccessSnapshot(UINT32 userId, int objClass)
 /**
  * Filter object
  */
-static int FilterObject(NXSL_VM *vm, NetObj *object)
+static int FilterObject(NXSL_VM *vm, NetObj *object, NXSL_VariableSystem **globals)
 {
    vm->setGlobalVariable("$object", object->createNXSLObject(vm));
    vm->setContextObject(object->createNXSLObject(vm));
-   if (!vm->run())
+   ObjectRefArray<NXSL_Value> args(0);
+   if (!vm->run(&args, globals))
       return -1;
    return vm->getResult()->getValueAsBoolean() ? 1 : 0;
 }
@@ -2471,11 +2472,14 @@ static int FilterObject(NXSL_VM *vm, NetObj *object)
 /**
  * Query objects
  */
-ObjectArray<NetObj> *QueryObjects(const TCHAR *query, UINT32 userId, TCHAR *errorMessage, size_t errorMessageLen)
+ObjectArray<NetObj> *QueryObjects(const TCHAR *query, UINT32 userId, TCHAR *errorMessage,
+         size_t errorMessageLen, StringList *fields, ObjectArray<StringList> *values)
 {
    NXSL_VM *vm = NXSLCompileAndCreateVM(query, errorMessage, errorMessageLen, new NXSL_ServerEnv());
    if (vm == NULL)
       return NULL;
+
+   bool readFields = (fields != NULL) && (values != NULL);
 
    // Set class constants
    vm->addConstant("ACCESSPOINT", vm->createValue(OBJECT_ACCESSPOINT));
@@ -2521,13 +2525,15 @@ ObjectArray<NetObj> *QueryObjects(const TCHAR *query, UINT32 userId, TCHAR *erro
       if (!curr->checkAccessRights(userId, OBJECT_ACCESS_READ))
          continue;
 
-      int rc = FilterObject(vm, curr);
+      NXSL_VariableSystem *globals = NULL;
+      int rc = FilterObject(vm, curr, readFields ? &globals : NULL);
       if (rc < 0)
       {
          _tcslcpy(errorMessage, vm->getErrorText(), errorMessageLen);
-         for(i = 0; i < resultSet->size(); i++)
-            resultSet->get(i)->decRefCount();
+         for(int j = 0; j < resultSet->size(); j++)
+            resultSet->get(j)->decRefCount();
          delete_and_null(resultSet);
+         delete globals;
          break;
       }
 
@@ -2535,7 +2541,44 @@ ObjectArray<NetObj> *QueryObjects(const TCHAR *query, UINT32 userId, TCHAR *erro
       {
          curr->incRefCount();
          resultSet->add(curr);
+         if (readFields)
+         {
+            StringList *objectData = new StringList();
+            NXSL_Value *objectValue = curr->createNXSLObject(vm);
+            NXSL_Object *object = objectValue->getValueAsObject();
+            for(int j = 0; j < fields->size(); j++)
+            {
+               NXSL_Variable *v = globals->find(fields->get(j));
+               if (v != NULL)
+               {
+                  objectData->add(v->getValue()->getValueAsCString());
+               }
+               else
+               {
+#ifdef UNICODE
+                  char attr[MAX_IDENTIFIER_LENGTH];
+                  WideCharToMultiByte(CP_UTF8, 0, fields->get(j), -1, attr, MAX_IDENTIFIER_LENGTH - 1, NULL, NULL);
+                  attr[MAX_IDENTIFIER_LENGTH - 1] = 0;
+                  NXSL_Value *av = object->getClass()->getAttr(object, attr);
+#else
+                  NXSL_Value *av = object->getClass()->getAttr(object, fields->get(j));
+#endif
+                  if (av != NULL)
+                  {
+                     objectData->add(av->getValueAsCString());
+                     vm->destroyValue(av);
+                  }
+                  else
+                  {
+                     objectData->add(_T(""));
+                  }
+               }
+            }
+            vm->destroyValue(objectValue);
+            values->add(objectData);
+         }
       }
+      delete globals;
    }
 
    delete vm;
