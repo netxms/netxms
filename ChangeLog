@@ -8,6 +8,7 @@
 - Fixed issues:
 	NX-993 (Windows installer should honor current state of services during upgrade)
 	NX-1438 (Increase debug level for thread pool messages)
+	NX-1453 (Windows installer option to disable database upgrade)
 	NX-1455 (Zone UIN in NXSL function CreateNode)
 
 
