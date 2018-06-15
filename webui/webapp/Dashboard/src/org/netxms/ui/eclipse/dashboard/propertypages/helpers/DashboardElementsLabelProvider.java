@@ -59,7 +59,8 @@ public class DashboardElementsLabelProvider extends LabelProvider implements ITa
 		"Event monitor",
       "Service component map",
       "Rack diagram",
-      "Object tools"
+      "Object tools",
+      "Object details"
 	};
 	
 	/* (non-Javadoc)

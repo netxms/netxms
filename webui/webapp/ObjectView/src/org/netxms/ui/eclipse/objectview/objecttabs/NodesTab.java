@@ -26,6 +26,7 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.viewers.ArrayContentProvider;
+import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
@@ -113,7 +114,7 @@ public class NodesTab extends ObjectTab
 	private void createPopupMenu()
 	{
 		// Create menu manager.
-		MenuManager menuMgr = new MenuManager();
+		MenuManager menuMgr = new MenuManager(getViewPart().getSite().getId() + ".NodesTab");
 		menuMgr.setRemoveAllWhenShown(true);
 		menuMgr.addMenuListener(new IMenuListener() {
 			public void menuAboutToShow(IMenuManager manager)
@@ -128,7 +129,7 @@ public class NodesTab extends ObjectTab
 
 		// Register menu for extension.
 		if (getViewPart() != null)
-			getViewPart().getSite().registerContextMenu(menuMgr, viewer);
+			getViewPart().getSite().registerContextMenu(menuMgr.getId(), menuMgr, viewer);
 	}
 
 	/**
@@ -209,4 +210,13 @@ public class NodesTab extends ObjectTab
 	   if (getObject() != null)
 	      refresh();
 	}
+
+   /* (non-Javadoc)
+    * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#getSelectionProvider()
+    */
+   @Override
+   public ISelectionProvider getSelectionProvider()
+   {
+      return viewer;
+   }
 }

@@ -58,6 +58,7 @@ public class SortableTableViewer extends TableViewer
 		super(new Table(parent, (style == DEFAULT_STYLE) ? (SWT.MULTI | SWT.FULL_SELECTION) : style));
 		getTable().setLinesVisible(true);
 		getTable().setHeaderVisible(true);
+      sortingListener = new TableSortingListener(this);
 		createColumns(names, widths, defaultSortingColumn, defaultSortDir);
 	}
 
@@ -72,6 +73,7 @@ public class SortableTableViewer extends TableViewer
 		super(new Table(parent, (style == DEFAULT_STYLE) ? (SWT.MULTI | SWT.FULL_SELECTION) : style));
 		getTable().setLinesVisible(true);
 		getTable().setHeaderVisible(true);
+      sortingListener = new TableSortingListener(this);
 	}
 
 	/**
@@ -88,8 +90,6 @@ public class SortableTableViewer extends TableViewer
 			return;
 		initialized = true;
 		
-		sortingListener = new TableSortingListener(this);
-		
 		for(int i = 0; i < names.length; i++)
 		{
 			TableColumn c = new TableColumn(getTable(), SWT.LEFT);
@@ -104,6 +104,26 @@ public class SortableTableViewer extends TableViewer
 		if ((defaultSortingColumn >= 0) && (defaultSortingColumn < names.length))
 			getTable().setSortColumn(columns.get(defaultSortingColumn));
 		getTable().setSortDirection(defaultSortDir);
+	}
+	
+	/**
+	 * Add column to viewer
+	 * 
+	 * @param name column name
+	 * @param width column width
+	 * @return created column object
+	 */
+	public TableColumn addColumn(String name, int width)
+	{
+	   int index = getTable().getColumnCount();
+      TableColumn c = new TableColumn(getTable(), SWT.LEFT);
+      columns.add(c);
+      c.setText(name);
+      if (width > 0)
+         c.setWidth(width);
+      c.setData("ID", Integer.valueOf(index)); //$NON-NLS-1$
+      c.addSelectionListener(sortingListener);
+      return c;
 	}
 	
 	/**
@@ -157,6 +177,17 @@ public class SortableTableViewer extends TableViewer
       for(TableColumn c : columns)
 			c.removeSelectionListener(sortingListener);
 		getTable().setSortColumn(null);
+	}
+	
+	/**
+	 * Pack columns
+	 */
+	public void packColumns()
+	{
+	   Table table = getTable();
+	   int count = table.getColumnCount();
+	   for(int i = 0; i < count; i++)
+	      table.getColumn(i).pack();
 	}
 
    /**

@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.datacollection.views.helpers;
+package org.netxms.ui.eclipse.dashboard.widgets.helpers;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,10 +24,8 @@ import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.StructuredSelection;
-import org.netxms.client.NXCSession;
-import org.netxms.client.TableRow;
+import org.netxms.client.ObjectQueryResult;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.TransformationSelectionProvider;
 
 /**
@@ -35,19 +33,16 @@ import org.netxms.ui.eclipse.tools.TransformationSelectionProvider;
  */
 public class ObjectSelectionProvider extends TransformationSelectionProvider
 {
-   private NXCSession session;
-   
    /**
     * @param parent
     */
    public ObjectSelectionProvider(ISelectionProvider parent)
    {
       super(parent);
-      session = ConsoleSharedData.getSession();
    }
 
    /* (non-Javadoc)
-    * @see org.netxms.ui.eclipse.tools.TransformationSelectionProvider#transformSelection(org.eclipse.jface.viewers.ISelection)
+    * @see org.netxms.ui.eclipse.dashboard.widgets.helpers.ProxySelectionProvider#transformSelection(org.eclipse.jface.viewers.ISelection)
     */
    @Override
    protected ISelection transformSelection(ISelection selection)
@@ -58,12 +53,8 @@ public class ObjectSelectionProvider extends TransformationSelectionProvider
       List<AbstractObject> objects = new ArrayList<AbstractObject>(((IStructuredSelection)selection).size());
       for(Object o : ((IStructuredSelection)selection).toList())
       {
-         if (!(o instanceof TableRow))
-            continue;
-         
-         AbstractObject object = session.findObjectById(((TableRow)o).getObjectId());
-         if (object != null)
-            objects.add(object);
+         if (o instanceof ObjectQueryResult)
+            objects.add(((ObjectQueryResult)o).getObject());
       }
       
       return new StructuredSelection(objects);

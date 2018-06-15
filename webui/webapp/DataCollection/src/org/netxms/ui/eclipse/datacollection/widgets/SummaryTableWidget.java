@@ -197,7 +197,7 @@ public class SummaryTableWidget extends Composite
    private void createPopupMenu()
    {
       // Create menu manager for underlying node object
-      final MenuManager nodeMenuManager = new MenuManager() {
+      final MenuManager nodeMenuManager = new MenuManager(viewPart.getSite().getId() + ".SummaryTableNodeMenu." + this.hashCode()) {
          @Override
          public String getMenuText()
          {
@@ -214,7 +214,7 @@ public class SummaryTableWidget extends Composite
       });
       
       // Create menu manager for rows
-      MenuManager rowMenuManager = new MenuManager();
+      MenuManager rowMenuManager = new MenuManager(viewPart.getSite().getId() + ".SummaryTableRowMenu." + this.hashCode());
       rowMenuManager.setRemoveAllWhenShown(true);
       rowMenuManager.addMenuListener(new IMenuListener() {
          public void menuAboutToShow(IMenuManager mgr)
@@ -230,8 +230,8 @@ public class SummaryTableWidget extends Composite
       // Register menu for extension.
       if (viewPart != null)
       {
-         viewPart.getSite().registerContextMenu(viewPart.getSite().getId() + ".data", rowMenuManager, viewer); //$NON-NLS-1$
-         viewPart.getSite().registerContextMenu(viewPart.getSite().getId() + ".node", nodeMenuManager, objectSelectionProvider); //$NON-NLS-1$
+         viewPart.getSite().registerContextMenu(rowMenuManager.getId(), rowMenuManager, viewer); //$NON-NLS-1$
+         viewPart.getSite().registerContextMenu(nodeMenuManager.getId(), nodeMenuManager, objectSelectionProvider); //$NON-NLS-1$
       }
    }
 
