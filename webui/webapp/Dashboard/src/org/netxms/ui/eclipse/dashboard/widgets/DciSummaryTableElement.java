@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2018 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,6 +19,8 @@
 package org.netxms.ui.eclipse.dashboard.widgets;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.FocusEvent;
+import org.eclipse.swt.events.FocusListener;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.ui.IViewPart;
 import org.netxms.client.dashboards.DashboardElement;
@@ -31,6 +33,7 @@ import org.netxms.ui.eclipse.datacollection.widgets.SummaryTableWidget;
 public class DciSummaryTableElement extends ElementWidget
 {
 	private DciSummaryTableConfig config;
+	private SummaryTableWidget viewer;
 	
 	/**
 	 * @param parent
@@ -55,13 +58,25 @@ public class DciSummaryTableElement extends ElementWidget
 		layout.marginWidth = 0;
 		setLayout(layout);
 
-		SummaryTableWidget viewer = new SummaryTableWidget(this, SWT.NONE, viewPart, config.getTableId(), config.getBaseObjectId());
+		viewer = new SummaryTableWidget(this, SWT.NONE, viewPart, config.getTableId(), config.getBaseObjectId());
 		viewer.setShowNumLine(config.getNumRowShown());
-		if(config.isEnableSortingAndLineLimit())
+		if (config.isEnableSortingAndLineLimit())
 		{
    		viewer.setSortColumns(config.getSortingColumnList());
    		viewer.setAutoRefresh(config.getRefreshInterval());
 		}
+      viewer.getViewer().getControl().addFocusListener(new FocusListener() {
+         @Override
+         public void focusLost(FocusEvent e)
+         {
+         }
+         
+         @Override
+         public void focusGained(FocusEvent e)
+         {
+            setSelectionProviderDelegate(viewer.getObjectSelectionProvider());
+         }
+      });
 		viewer.refresh();
 	}
 }

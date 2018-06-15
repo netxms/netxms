@@ -74,4 +74,13 @@ public class ObjectQueryResult
    {
       return properties.get(name);
    }
+
+   /* (non-Javadoc)
+    * @see java.lang.Object#toString()
+    */
+   @Override
+   public String toString()
+   {
+      return "ObjectQueryResult [object=" + object + ", properties=" + properties + "]";
+   }
 }

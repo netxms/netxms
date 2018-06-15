@@ -26,13 +26,14 @@ import org.netxms.ui.eclipse.dashboard.widgets.internal.BarChartConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.CustomWidgetConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.DciSummaryTableConfig;
+import org.netxms.ui.eclipse.dashboard.widgets.internal.EmbeddedDashboardConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.EventMonitorConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.GaugeConfig;
-import org.netxms.ui.eclipse.dashboard.widgets.internal.EmbeddedDashboardConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.GeoMapConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.LabelConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.LineChartConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.NetworkMapConfig;
+import org.netxms.ui.eclipse.dashboard.widgets.internal.ObjectDetailsConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.ObjectStatusChartConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.ObjectToolsConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.PieChartConfig;
@@ -114,6 +115,8 @@ public class DashboardElementAdapterFactory implements IAdapterFactory
 						return LineChartConfig.createFromXml(element.getData());
 					case DashboardElement.NETWORK_MAP:
 						return NetworkMapConfig.createFromXml(element.getData());
+               case DashboardElement.OBJECT_DETAILS:
+                  return ObjectDetailsConfig.createFromXml(element.getData());
                case DashboardElement.OBJECT_TOOLS:
                   return ObjectToolsConfig.createFromXml(element.getData());
 					case DashboardElement.PIE_CHART:
