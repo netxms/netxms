@@ -82,6 +82,15 @@ struct LIBNXSL_EXPORTABLE NXSL_Identifier
       length = (BYTE)strlen(value);
    }
 
+#ifdef UNICODE
+   NXSL_Identifier(const WCHAR *s)
+   {
+      memset(value, 0, sizeof(value));
+      WideCharToMultiByte(CP_UTF8, 0, s, -1, value, MAX_IDENTIFIER_LENGTH - 1);
+      length = (BYTE)strlen(value);
+   }
+#endif
+
    NXSL_Identifier(const identifier_t& s)
    {
       strcpy(value, s.v);
