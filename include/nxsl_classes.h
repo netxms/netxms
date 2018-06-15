@@ -451,12 +451,12 @@ public:
 class NXSL_Function
 {
 public:
-   TCHAR m_name[MAX_FUNCTION_NAME];
+   TCHAR m_name[MAX_IDENTIFIER_LENGTH];
    UINT32 m_dwAddr;
 
    NXSL_Function() { m_name[0] = 0; m_dwAddr = INVALID_ADDRESS; }
-   NXSL_Function(NXSL_Function *src) { nx_strncpy(m_name, src->m_name, MAX_FUNCTION_NAME); m_dwAddr = src->m_dwAddr; }
-   NXSL_Function(const TCHAR *name, UINT32 addr) { nx_strncpy(m_name, name, MAX_FUNCTION_NAME); m_dwAddr = addr; }
+   NXSL_Function(NXSL_Function *src) { _tcslcpy(m_name, src->m_name, MAX_IDENTIFIER_LENGTH); m_dwAddr = src->m_dwAddr; }
+   NXSL_Function(const TCHAR *name, UINT32 addr) { _tcslcpy(m_name, name, MAX_IDENTIFIER_LENGTH); m_dwAddr = addr; }
 };
 
 /**
@@ -464,7 +464,7 @@ public:
  */
 struct NXSL_ExtFunction
 {
-   TCHAR m_name[MAX_FUNCTION_NAME];
+   TCHAR m_name[MAX_IDENTIFIER_LENGTH];
    int (* m_pfHandler)(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
    int m_iNumArgs;   // Number of arguments or -1 for variable number
 };
@@ -474,7 +474,7 @@ struct NXSL_ExtFunction
  */
 struct NXSL_ExtSelector
 {
-   TCHAR m_name[MAX_FUNCTION_NAME];
+   TCHAR m_name[MAX_IDENTIFIER_LENGTH];
    int (* m_handler)(const TCHAR *name, NXSL_Value *options, int argc, NXSL_Value **argv, int *selection, NXSL_VM *vm);
 };
 

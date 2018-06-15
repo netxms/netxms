@@ -30,9 +30,9 @@
 #endif
 
 /**
- * Various defines
+ * Maximum identifier name length
  */
-#define MAX_FUNCTION_NAME  64
+#define MAX_IDENTIFIER_LENGTH 63
 
 /**
  * Script execution errors

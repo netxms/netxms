@@ -3035,6 +3035,40 @@ public class NXCSession
    }
 
    /**
+    * Query objects on server side and read certain object properties. Available properties are the same as
+    * in corresponding NXSL objects or calculated properties set using "with" statement in query.
+    * 
+    * @param query query to execute
+    * @param properties object properties to read
+    * @return list of matching objects
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public List<ObjectQueryResult> queryObjectDetails(String query, List<String> properties) throws IOException, NXCException
+   {
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_QUERY_OBJECT_DETAILS);
+      msg.setField(NXCPCodes.VID_QUERY, query);
+      msg.setFieldsFromStringCollection(properties, NXCPCodes.VID_FIELD_LIST_BASE, NXCPCodes.VID_FIELDS);
+      sendMessage(msg);
+      
+      NXCPMessage response = waitForRCC(msg.getMessageId());
+      long[] objects = response.getFieldAsUInt32Array(NXCPCodes.VID_OBJECT_LIST);
+      List<ObjectQueryResult> results = new ArrayList<ObjectQueryResult>(objects.length);
+      long fieldId = NXCPCodes.VID_ELEMENT_LIST_BASE;
+      for(int i = 0; i < objects.length; i++)
+      {
+         List<String> values = response.getStringListFromFields(fieldId + 1, fieldId);
+         AbstractObject object = findObjectById(objects[i]);
+         if ((object != null) && (properties.size() == values.size()))
+         {
+            results.add(new ObjectQueryResult(object, properties, values));
+         }
+         fieldId += values.size() + 1;
+      }
+      return results;
+   }
+
+   /**
     * Get list of active alarms. For accessing terminated alarms log view API should be used.
     *
     * @return Hash map containing alarms

@@ -158,10 +158,10 @@ bool NXSL_Program::addFunction(const char *pszName, UINT32 dwAddr, char *pszErro
       }
    NXSL_Function *f = new NXSL_Function;
 #ifdef UNICODE
-   nx_strncpy(f->m_name, pwszName, MAX_FUNCTION_NAME);
+   wcslcpy(f->m_name, pwszName, MAX_IDENTIFIER_LENGTH);
 	free(pwszName);
 #else
-   nx_strncpy(f->m_name, pszName, MAX_FUNCTION_NAME);
+   strlcpy(f->m_name, pszName, MAX_IDENTIFIER_LENGTH);
 #endif
    f->m_dwAddr = (dwAddr == INVALID_ADDRESS) ? m_instructionSet->size() : dwAddr;
    m_functions->add(f);

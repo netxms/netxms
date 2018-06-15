@@ -24,9 +24,12 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.security.GeneralSecurityException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.zip.CRC32;
@@ -925,6 +928,37 @@ public class NXCPMessage
       {
          messageFlags &= ~(MF_COMPRESSED | MF_STREAM);
       }
+   }
+   
+   /**
+    * Set fields in message from string collection
+    *  
+    * @param strings strings collection
+    * @param baseId base (first element) field ID
+    * @param countId ID of field containing number of elements
+    */
+   public void setFieldsFromStringCollection(Collection<String> strings, long baseId, long countId)
+   {
+      setFieldInt32(countId, strings.size());
+      long fieldId = baseId;
+      for(String s : strings)
+         setField(fieldId++, s);
+   }
+   
+   /**
+    * Get string list from fields
+    * 
+    * @param baseId base (first element) field ID
+    * @param countId ID of field containing number of elements
+    * @return list of strings
+    */
+   public List<String> getStringListFromFields(long baseId, long countId)
+   {
+      int count = getFieldAsInt32(countId);
+      List<String> list = new ArrayList<String>(count);
+      for(int i = 0; i < count; i++)
+         list.add(getFieldAsString(baseId + i));
+      return list;
    }
    
 	/* (non-Javadoc)
