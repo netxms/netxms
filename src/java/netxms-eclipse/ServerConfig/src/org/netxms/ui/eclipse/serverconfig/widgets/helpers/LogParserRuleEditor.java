@@ -76,7 +76,6 @@ public class LogParserRuleEditor extends DashboardComposite
 	private LabeledText activeContext;
 	private LabeledText description;
 	private EventSelector event;
-	private Spinner eventParamCount;
 	private LabeledText context;
 	private Combo contextAction;
 	private Combo contextResetMode;
@@ -86,7 +85,7 @@ public class LogParserRuleEditor extends DashboardComposite
 	 * @param parent
 	 * @param style
 	 */
-	public LogParserRuleEditor(Composite parent, FormToolkit toolkit, LogParserRule rule, LogParserEditor editor)
+	public LogParserRuleEditor(Composite parent, FormToolkit toolkit, LogParserRule rule, final LogParserEditor editor)
 	{
 		super(parent, SWT.BORDER);
 		
@@ -115,6 +114,13 @@ public class LogParserRuleEditor extends DashboardComposite
       gd.grabExcessHorizontalSpace = true;
       name.setLayoutData(gd);
       name.setText((rule.getName() != null) ? rule.getName() : "");
+      name.getTextControl().addModifyListener(new ModifyListener() {
+         @Override
+         public void modifyText(ModifyEvent e)
+         {
+            editor.fireModifyListeners();
+         }
+      });
 		
 		final CGroup condition = new CGroup(this, Messages.get().LogParserRuleEditor_Condition) {
 			@Override
@@ -425,37 +431,6 @@ public class LogParserRuleEditor extends DashboardComposite
 			@Override
 			public void modifyText(ModifyEvent e)
 			{
-				eventParamCount.setEnabled(event.getEventCode() != 0);
-				editor.fireModifyListeners();
-			}
-		});
-		
-		final WidgetFactory factory = new WidgetFactory() {
-			@Override
-			public Control createControl(Composite parent, int style)
-			{
-				return new Spinner(parent, style);
-			}
-		};
-		gd = new GridData();
-		gd.horizontalAlignment = SWT.FILL;
-		eventParamCount = (Spinner)WidgetHelper.createLabeledControl(area, SWT.BORDER, factory, Messages.get().LogParserRuleEditor_Parameters, gd);
-		toolkit.adapt(eventParamCount);
-		eventParamCount.setMinimum(0);
-		eventParamCount.setMaximum(32);
-		if (rule.getEvent() != null)
-		{
-			eventParamCount.setSelection(rule.getEvent().getParameterCount());
-		}
-		else
-		{
-			eventParamCount.setSelection(0);
-			eventParamCount.setEnabled(false);
-		}
-		eventParamCount.addModifyListener(new ModifyListener() {
-			@Override
-			public void modifyText(ModifyEvent e)
-			{
 				editor.fireModifyListeners();
 			}
 		});
@@ -581,7 +556,7 @@ public class LogParserRuleEditor extends DashboardComposite
 		rule.setDescription(description.getText());
 		if (event.getEventCode() != 0)
 		{
-			rule.setEvent(new LogParserEvent(Long.toString(event.getEventCode()), eventParamCount.getSelection()));
+			rule.setEvent(new LogParserEvent(event.getEventName(), null));
 		}
 		else
 		{

@@ -25,7 +25,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.simpleframework.xml.Attribute;
-import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.ElementMap;
 import org.simpleframework.xml.Root;
@@ -45,10 +44,13 @@ public class LogParser
 	private String processALL = null;
 	
 	@Attribute(required=false)
-	private Integer trace = null;
+	private Integer trace = null;	
+   
+   @Attribute(required=false)
+   private String name = null;
 	
-	@Element(required=false)
-	private LogParserFile file = new LogParserFile();
+   @ElementList(required=false, entry="file", inline=true)
+	private ArrayList<LogParserFile> file = new ArrayList<LogParserFile>(0);
    
 	@ElementList(required=false)
 	private ArrayList<LogParserRule> rules = new ArrayList<LogParserRule>(0);
@@ -103,8 +105,7 @@ public class LogParser
       this.isSyslogParser = isSyslogParser;
       if(isSyslogParser)
       {
-         file.setFile(null);
-         file.setEncoding(null);
+         file.clear();
       }
 
       for(LogParserRule rule : rules)
@@ -116,33 +117,17 @@ public class LogParser
    /**
     * @return filename
     */
-   public String getFile()
+   public ArrayList<LogParserFile> getFiles()
    {
-      return file.getFile();
+      return file;
    }
    
    /**
     * @param filename
     */
-   public void setFile(String file)
+   public void setFiles(ArrayList<LogParserFile> files)
    {
-      this.file.setFile(file);
-   }
-   
-   /**
-    * @return file encoding
-    */
-   public String getEncoding()
-   {
-      return file.getEncoding();
-   }
-   
-   /**
-    * @param encoding
-    */
-   public void setEncoding(String encoding)
-   {
-      file.setEncoding(encoding);
+      this.file = files;
    }
 
    /**
@@ -193,7 +178,23 @@ public class LogParser
 		return macros;
 	}
 	
-	public static boolean stringToBoolean(final String value)
+	/**
+    * @return the name
+    */
+   public String getName()
+   {
+      return name;
+   }
+
+   /**
+    * @param name the name to set
+    */
+   public void setName(String name)
+   {
+      this.name = name;
+   }
+
+   public static boolean stringToBoolean(final String value)
 	{
 	   if(value != null)
       {
