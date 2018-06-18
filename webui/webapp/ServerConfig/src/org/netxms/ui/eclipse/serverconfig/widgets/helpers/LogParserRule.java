@@ -233,13 +233,13 @@ public class LogParserRule
 	{
       if(editor.isSyslogParser())
       {
-         this.tag = tag;
+         this.tag = tag != null && !tag.isEmpty() ? tag : null;
          this.source = null;
       }
       else
       {
          this.tag = null;
-         this.source = tag;
+         this.source = tag != null && !tag.isEmpty() ? tag : null;
       }
 	}
 

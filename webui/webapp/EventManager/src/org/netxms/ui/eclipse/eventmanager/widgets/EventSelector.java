@@ -35,6 +35,7 @@ import org.netxms.ui.eclipse.widgets.AbstractSelector;
 public class EventSelector extends AbstractSelector
 {
 	private long eventCode = 0;
+   private String eventName = null;
 	
 	/**
 	 * @param parent
@@ -71,6 +72,7 @@ public class EventSelector extends AbstractSelector
 			if (events.length > 0)
 			{
 				eventCode = events[0].getCode();
+				eventName = events[0].getName();
 				setText(events[0].getName());
 				setImage(StatusDisplayInfo.getStatusImage(events[0].getSeverity()));
 				getTextControl().setToolTipText(generateToolTipText(events[0]));
@@ -78,6 +80,7 @@ public class EventSelector extends AbstractSelector
 			else
 			{
 				eventCode = 0;
+				eventName = null;
 				setText(Messages.get().EventSelector_None);
 				setImage(null);
 				getTextControl().setToolTipText(null);
@@ -97,6 +100,7 @@ public class EventSelector extends AbstractSelector
 			return;
 		
 		eventCode = 0;
+		eventName = null;
 		setText(Messages.get().EventSelector_None);
 		setImage(null);
 		getTextControl().setToolTipText(null);
@@ -113,6 +117,16 @@ public class EventSelector extends AbstractSelector
 		return eventCode;
 	}
 
+   /**
+    * Get name of selected event
+    * 
+    * @return Selected event's name
+    */
+   public String getEventName()
+   {
+      return eventName;
+   }
+
 	/**
 	 * Set event code
 	 * @param eventCode
@@ -128,7 +142,8 @@ public class EventSelector extends AbstractSelector
 			EventTemplate event = ((NXCSession)ConsoleSharedData.getSession()).findEventTemplateByCode(eventCode);
 			if (event != null)
 			{
-				setText(event.getName());
+			    eventName = event.getName();
+				setText(eventName);
 				setImage(StatusDisplayInfo.getStatusImage(event.getSeverity()));
 				getTextControl().setToolTipText(generateToolTipText(event));
 			}

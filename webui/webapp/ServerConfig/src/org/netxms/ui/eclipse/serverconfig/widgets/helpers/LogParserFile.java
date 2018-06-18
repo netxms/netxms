@@ -31,13 +31,27 @@ public class LogParserFile
    
    @Attribute(required=false)
    private String encoding = null;
+   
+   @Attribute(required=false)
+   private String preallocated = null;
+   
+   @Attribute(required=false)
+   private String snapshot = null;
+   
+   @Attribute(required=false)
+   private String keepOpen = null;
+   
+   @Attribute(required=false)
+   private String ignoreModificationTime = null;
+   
+   private LogParserFileEditor editor;
 
    /**
     * @return
     */
    public String getFile()
    {
-      return file;
+      return file != null ? file : "";
    }
    
    /**
@@ -62,5 +76,85 @@ public class LogParserFile
    public void setEncoding(String encoding)
    {
       this.encoding = encoding;
+   }
+
+   /**
+    * @return the preallocated
+    */
+   public boolean getPreallocated()
+   {
+      return LogParser.stringToBoolean(preallocated);
+   }
+
+   /**
+    * @param preallocated the preallocated to set
+    */
+   public void setPreallocated(boolean preallocated)
+   {
+      this.preallocated = LogParser.booleanToString(preallocated);
+   }
+
+   /**
+    * @return the snapshot
+    */
+   public boolean getSnapshot()
+   {
+      return LogParser.stringToBoolean(snapshot);
+   }
+
+   /**
+    * @param snapshot the snapshot to set
+    */
+   public void setSnapshot(boolean snapshot)
+   {
+      this.snapshot = LogParser.booleanToString(snapshot);
+   }
+
+   /**
+    * @return the keepOpen
+    */
+   public boolean getKeepOpen()
+   {
+      return keepOpen == null || keepOpen.isEmpty() ? true : LogParser.stringToBoolean(keepOpen);
+   }
+
+   /**
+    * @param keepOpen the keepOpen to set
+    */
+   public void setKeepOpen(boolean keepOpen)
+   {
+      this.keepOpen = keepOpen ? null : "false";
+   }
+
+   /**
+    * @return the ignoreModificationTime
+    */
+   public boolean getIgnoreModificationTime()
+   {
+      return LogParser.stringToBoolean(ignoreModificationTime);
+   }
+
+   /**
+    * @param ignoreModificationTime the ignoreModificationTime to set
+    */
+   public void setIgnoreModificationTime(boolean ignoreModificationTime)
+   {
+      this.ignoreModificationTime = LogParser.booleanToString(ignoreModificationTime);
+   }
+
+   /**
+    * @return the editor
+    */
+   public LogParserFileEditor getEditor()
+   {
+      return editor;
+   }
+
+   /**
+    * @param editor the editor to set
+    */
+   public void setEditor(LogParserFileEditor editor)
+   {
+      this.editor = editor;
    }
 }

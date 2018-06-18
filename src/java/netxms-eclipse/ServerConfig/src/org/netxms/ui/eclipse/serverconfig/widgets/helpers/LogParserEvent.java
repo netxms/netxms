@@ -32,7 +32,7 @@ public class LogParserEvent
 	private String event = "0"; //$NON-NLS-1$
 
 	@Attribute(name="params", required=false)
-	private int parameterCount = 0;
+	private Integer parameterCount = null;
 	
 	/**
 	 * Protected constructor for XML parser
@@ -45,7 +45,7 @@ public class LogParserEvent
 	 * @param event
 	 * @param parameterCount
 	 */
-	public LogParserEvent(String event, int parameterCount)
+	public LogParserEvent(String event, Integer parameterCount)
 	{
 		this.event = event;
 		this.parameterCount = parameterCount;
@@ -62,7 +62,7 @@ public class LogParserEvent
 	/**
 	 * @param parameterCount the parameterCount to set
 	 */
-	public void setParameterCount(int parameterCount)
+	public void setParameterCount(Integer parameterCount)
 	{
 		this.parameterCount = parameterCount;
 	}
