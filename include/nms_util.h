@@ -919,6 +919,8 @@ public:
       return (result != NULL) ? *result : NULL;
    }
 
+   T *const *const getBuffer() const { return (T *const *const)__getBuffer(); }
+
    Iterator<T> *iterator() { return new Iterator<T>(new ArrayIterator(this)); }
 };
 

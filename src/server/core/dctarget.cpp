@@ -1092,9 +1092,9 @@ int DataCollectionTarget::getMostCriticalDCIStatus()
           curr->hasValue() && (curr->getStatus() == ITEM_STATUS_ACTIVE))
       {
          if (getObjectClass() == OBJECT_CLUSTER && !curr->isAggregateOnCluster())
-            continue; // Calculated only on those that are agregated on cluster
+            continue; // Calculated only on those that are aggregated on cluster
 
-         ItemValue *value = ((DCItem *)curr)->getInternalLastValue();
+         ItemValue *value = static_cast<DCItem*>(curr)->getInternalLastValue();
          if (value != NULL && (INT32)*value >= STATUS_NORMAL && (INT32)*value <= STATUS_CRITICAL)
             status = std::max(status, (INT32)*value);
          delete value;

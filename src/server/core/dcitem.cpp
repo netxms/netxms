@@ -1358,7 +1358,7 @@ NXSL_Value *DCItem::getValueForNXSL(NXSL_VM *vm, int nFunction, int nPolls)
          if (m_bCacheLoaded && (m_cacheSize > 0))
          {
             ItemValue result;
-            CalculateItemValueAverage(result, m_dataType, std::min(m_cacheSize, (UINT32)nPolls), m_ppValueCache);
+            CalculateItemValueAverage(result, m_dataType, m_ppValueCache, std::min(m_cacheSize, (UINT32)nPolls));
             pValue = vm->createValue(result.getString());
          }
          else
@@ -1370,7 +1370,7 @@ NXSL_Value *DCItem::getValueForNXSL(NXSL_VM *vm, int nFunction, int nPolls)
          if (m_bCacheLoaded && (m_cacheSize > 0))
          {
             ItemValue result;
-            CalculateItemValueMD(result, m_dataType, std::min(m_cacheSize, (UINT32)nPolls), m_ppValueCache);
+            CalculateItemValueMD(result, m_dataType, m_ppValueCache, std::min(m_cacheSize, (UINT32)nPolls));
             pValue = vm->createValue(result.getString());
          }
          else

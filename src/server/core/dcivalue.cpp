@@ -203,25 +203,26 @@ void CalculateItemValueDiff(ItemValue &result, int nDataType, const ItemValue &c
 /**
  * Calculate average value for set of values
  */
-void CalculateItemValueAverage(ItemValue &result, int nDataType, int nNumValues, ItemValue **ppValueList)
+void CalculateItemValueAverage(ItemValue &result, int nDataType, ItemValue *const *const valueList, size_t numValues)
 {
 #define CALC_AVG_VALUE(vtype) \
 { \
    vtype var; \
    var = 0; \
-   for(i = 0, nValueCount = 0; i < nNumValues; i++) \
+   for(i = 0, valueCount = 0; i < numValues; i++) \
    { \
-      if (ppValueList[i]->getTimeStamp() != 1) \
+      if (valueList[i]->getTimeStamp() != 1) \
       { \
-         var += (vtype)(*ppValueList[i]); \
-         nValueCount++; \
+         var += (vtype)(*valueList[i]); \
+         valueCount++; \
       } \
    } \
-   if (nValueCount == 0) { nValueCount = 1; } \
-   result = var / (vtype)nValueCount; \
+   if (valueCount == 0) { valueCount = 1; } \
+   result = var / (vtype)valueCount; \
 }
 
-   int i, nValueCount;
+   size_t i;
+   int valueCount;
 
    switch(nDataType)
    {
@@ -253,23 +254,23 @@ void CalculateItemValueAverage(ItemValue &result, int nDataType, int nNumValues,
 /**
  * Calculate total value for set of values
  */
-void CalculateItemValueTotal(ItemValue &result, int nDataType, int nNumValues, ItemValue **ppValueList)
+void CalculateItemValueTotal(ItemValue &result, int nDataType, ItemValue *const *const valueList, size_t numValues)
 {
 #define CALC_TOTAL_VALUE(vtype) \
 { \
    vtype var; \
    var = 0; \
-   for(i = 0; i < nNumValues; i++) \
+   for(i = 0; i < numValues; i++) \
    { \
-      if (ppValueList[i]->getTimeStamp() != 1) \
+      if (valueList[i]->getTimeStamp() != 1) \
       { \
-         var += (vtype)(*ppValueList[i]); \
+         var += (vtype)(*valueList[i]); \
       } \
    } \
    result = var; \
 }
 
-   int i;
+   size_t i;
 
    switch(nDataType)
    {
@@ -301,34 +302,35 @@ void CalculateItemValueTotal(ItemValue &result, int nDataType, int nNumValues, I
 /**
  * Calculate mean absolute deviation for set of values
  */
-void CalculateItemValueMD(ItemValue &result, int nDataType, int nNumValues, ItemValue **ppValueList)
+void CalculateItemValueMD(ItemValue &result, int nDataType, ItemValue *const *const valueList, size_t numValues)
 {
 #define CALC_MD_VALUE(vtype) \
 { \
    vtype mean, dev; \
    mean = 0; \
-   for(i = 0, nValueCount = 0; i < nNumValues; i++) \
+   for(i = 0, valueCount = 0; i < numValues; i++) \
    { \
-      if (ppValueList[i]->getTimeStamp() != 1) \
+      if (valueList[i]->getTimeStamp() != 1) \
       { \
-         mean += (vtype)(*ppValueList[i]); \
-         nValueCount++; \
+         mean += (vtype)(*valueList[i]); \
+         valueCount++; \
       } \
    } \
-   mean /= (vtype)nValueCount; \
+   mean /= (vtype)valueCount; \
    dev = 0; \
-   for(i = 0, nValueCount = 0; i < nNumValues; i++) \
+   for(i = 0, valueCount = 0; i < numValues; i++) \
    { \
-      if (ppValueList[i]->getTimeStamp() != 1) \
+      if (valueList[i]->getTimeStamp() != 1) \
       { \
-         dev += ABS((vtype)(*ppValueList[i]) - mean); \
-         nValueCount++; \
+         dev += ABS((vtype)(*valueList[i]) - mean); \
+         valueCount++; \
       } \
    } \
-   result = dev / (vtype)nValueCount; \
+   result = dev / (vtype)valueCount; \
 }
 
-   int i, nValueCount;
+   size_t i;
+   int valueCount;
 
    switch(nDataType)
    {
@@ -363,24 +365,24 @@ void CalculateItemValueMD(ItemValue &result, int nDataType, int nNumValues, Item
 /**
  * Calculate min value for set of values
  */
-void CalculateItemValueMin(ItemValue &result, int nDataType, int nNumValues, ItemValue **ppValueList)
+void CalculateItemValueMin(ItemValue &result, int nDataType, ItemValue *const *const valueList, size_t numValues)
 {
 #define CALC_MIN_VALUE(vtype) \
 { \
    bool first = true; \
    vtype var = 0; \
-   for(i = 0; i < nNumValues; i++) \
+   for(i = 0; i < numValues; i++) \
    { \
-      if (ppValueList[i]->getTimeStamp() != 1) \
+      if (valueList[i]->getTimeStamp() != 1) \
       { \
-         vtype curr = (vtype)(*ppValueList[i]); \
+         vtype curr = (vtype)(*valueList[i]); \
          if (first || (curr < var)) { var = curr; first = false; } \
       } \
    } \
    result = var; \
 }
 
-   int i;
+   size_t i;
 
    switch(nDataType)
    {
@@ -409,28 +411,27 @@ void CalculateItemValueMin(ItemValue &result, int nDataType, int nNumValues, Ite
    }
 }
 
-
 /**
  * Calculate max value for set of values
  */
-void CalculateItemValueMax(ItemValue &result, int nDataType, int nNumValues, ItemValue **ppValueList)
+void CalculateItemValueMax(ItemValue &result, int nDataType, ItemValue *const *const valueList, size_t numValues)
 {
 #define CALC_MAX_VALUE(vtype) \
 { \
    bool first = true; \
    vtype var = 0; \
-   for(i = 0; i < nNumValues; i++) \
+   for(i = 0; i < numValues; i++) \
    { \
-      if (ppValueList[i]->getTimeStamp() != 1) \
+      if (valueList[i]->getTimeStamp() != 1) \
       { \
-         vtype curr = (vtype)(*ppValueList[i]); \
+         vtype curr = (vtype)(*valueList[i]); \
          if (first || (curr > var)) { var = curr; first = false; } \
       } \
    } \
    result = var; \
 }
 
-   int i;
+   size_t i;
 
    switch(nDataType)
    {

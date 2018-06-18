@@ -4104,7 +4104,7 @@ bool ClientSession::getCollectedDataFromDB(NXCPMessage *request, NXCPMessage *re
 
 	   if (dciType == DCO_TYPE_ITEM)
 	   {
-	      ItemValue *v = ((DCItem *)dci)->getInternalLastValue();
+	      ItemValue *v = static_cast<DCItem*>(dci)->getInternalLastValue();
 	      if (v == NULL)
 	         goto read_from_db;
 	      value = *v;
@@ -4113,7 +4113,7 @@ bool ClientSession::getCollectedDataFromDB(NXCPMessage *request, NXCPMessage *re
 	   else
 	   {
          request->getFieldAsString(VID_DATA_COLUMN, dataColumn, MAX_COLUMN_NAME);
-         Table *t = ((DCTable *)dci)->getLastValue();
+         Table *t = static_cast<DCTable*>(dci)->getLastValue();
          if (t == NULL)
             goto read_from_db;
 

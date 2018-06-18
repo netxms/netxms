@@ -788,14 +788,13 @@ UINT32 Cluster::getResourceOwnerInternal(UINT32 id, const TCHAR *name)
 UINT32 Cluster::collectAggregatedData(DCItem *item, TCHAR *buffer)
 {
    lockChildList(false);
-   ItemValue **values = (ItemValue **)malloc(sizeof(ItemValue *) * m_childList->size());
-   int valueCount = 0;
+   ObjectArray<ItemValue> values(m_childList->size(), 32, true);
    for(int i = 0; i < m_childList->size(); i++)
    {
       if (m_childList->get(i)->getObjectClass() != OBJECT_NODE)
          continue;
 
-      Node *node = (Node *)m_childList->get(i);
+      Node *node = static_cast<Node*>(m_childList->get(i));
       DCObject *dco = node->getDCObjectByTemplateId(item->getId(), 0);
       if ((dco != NULL) &&
           (dco->getType() == DCO_TYPE_ITEM) &&
@@ -803,45 +802,48 @@ UINT32 Cluster::collectAggregatedData(DCItem *item, TCHAR *buffer)
           ((dco->getErrorCount() == 0) || dco->isAggregateWithErrors()) &&
           dco->matchClusterResource())
       {
-         ItemValue *v = ((DCItem *)dco)->getInternalLastValue();
+         ItemValue *v = static_cast<DCItem*>(dco)->getInternalLastValue();
          if (v != NULL)
-            values[valueCount++] = v;
+         {
+            // Immediately after server startup cache may be filled with placeholder values
+            // They can be identified by timestamp equals 1
+            if (v->getTimeStamp() > 1)
+               values.add(v);
+            else
+               delete v;
+         }
       }
    }
    unlockChildList();
 
    UINT32 rcc = DCE_SUCCESS;
-   if (valueCount > 0)
+   if (!values.isEmpty())
    {
       ItemValue result;
       switch(item->getAggregationFunction())
       {
          case DCF_FUNCTION_AVG:
-            CalculateItemValueAverage(result, item->getDataType(), valueCount, values);
+            CalculateItemValueAverage(result, item->getDataType(), values.getBuffer(), values.size());
             break;
          case DCF_FUNCTION_MAX:
-            CalculateItemValueMax(result, item->getDataType(), valueCount, values);
+            CalculateItemValueMax(result, item->getDataType(), values.getBuffer(), values.size());
             break;
          case DCF_FUNCTION_MIN:
-            CalculateItemValueMin(result, item->getDataType(), valueCount, values);
+            CalculateItemValueMin(result, item->getDataType(), values.getBuffer(), values.size());
             break;
          case DCF_FUNCTION_SUM:
-            CalculateItemValueTotal(result, item->getDataType(), valueCount, values);
+            CalculateItemValueTotal(result, item->getDataType(), values.getBuffer(), values.size());
             break;
          default:
             rcc = DCE_NOT_SUPPORTED;
             break;
       }
-      nx_strncpy(buffer, result.getString(), MAX_RESULT_LENGTH);
+      _tcslcpy(buffer, result.getString(), MAX_RESULT_LENGTH);
    }
    else
    {
       rcc = DCE_COLLECTION_ERROR;
    }
-
-   for(int i = 0; i < valueCount; i++)
-      delete values[i];
-   safe_free(values);
 
    return rcc;
 }
@@ -859,7 +861,7 @@ UINT32 Cluster::collectAggregatedData(DCTable *table, Table **result)
       if (m_childList->get(i)->getObjectClass() != OBJECT_NODE)
          continue;
 
-      Node *node = (Node *)m_childList->get(i);
+      Node *node = static_cast<Node*>(m_childList->get(i));
       DCObject *dco = node->getDCObjectByTemplateId(table->getId(), 0);
       if ((dco != NULL) &&
           (dco->getType() == DCO_TYPE_TABLE) &&
