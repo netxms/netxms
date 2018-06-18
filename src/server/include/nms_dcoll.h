@@ -730,11 +730,11 @@ void WriteFullParamListToMessage(NXCPMessage *pMsg, int origin, WORD flags);
 int GetDCObjectType(UINT32 nodeId, UINT32 dciId);
 
 void CalculateItemValueDiff(ItemValue &result, int nDataType, const ItemValue &value1, const ItemValue &value2);
-void CalculateItemValueAverage(ItemValue &result, int nDataType, int nNumValues, ItemValue **ppValueList);
-void CalculateItemValueMD(ItemValue &result, int nDataType, int nNumValues, ItemValue **ppValueList);
-void CalculateItemValueTotal(ItemValue &result, int nDataType, int nNumValues, ItemValue **ppValueList);
-void CalculateItemValueMin(ItemValue &result, int nDataType, int nNumValues, ItemValue **ppValueList);
-void CalculateItemValueMax(ItemValue &result, int nDataType, int nNumValues, ItemValue **ppValueList);
+void CalculateItemValueAverage(ItemValue &result, int nDataType, ItemValue *const *const valueList, size_t numValues);
+void CalculateItemValueMD(ItemValue &result, int nDataType, ItemValue *const *const valueList, size_t numValues);
+void CalculateItemValueTotal(ItemValue &result, int nDataType, ItemValue *const *const valueList, size_t numValues);
+void CalculateItemValueMin(ItemValue &result, int nDataType, ItemValue *const *const valueList, size_t numValues);
+void CalculateItemValueMax(ItemValue &result, int nDataType, ItemValue *const *const valueList, size_t numValues);
 
 /**
  * Global variables

@@ -65,7 +65,7 @@ static void *GetItemData(DataCollectionTarget *dcTarget, DCItem *pItem, TCHAR *p
    {
       if (pItem->isAggregateOnCluster())
       {
-         *error = ((Cluster *)dcTarget)->collectAggregatedData(pItem, pBuffer);
+         *error = static_cast<Cluster*>(dcTarget)->collectAggregatedData(pItem, pBuffer);
       }
       else
       {

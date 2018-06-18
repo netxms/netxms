@@ -145,7 +145,7 @@ static void UpdateDataCollectionCache(ObjectIndex *idx)
 	ObjectArray<NetObj> *objects = idx->getObjects(true);
    for(int i = 0; i < objects->size(); i++)
    {
-      DataCollectionTarget *t = (DataCollectionTarget *)objects->get(i);
+      DataCollectionTarget *t = static_cast<DataCollectionTarget*>(objects->get(i));
       t->updateDciCache();
       t->decRefCount();
    }
