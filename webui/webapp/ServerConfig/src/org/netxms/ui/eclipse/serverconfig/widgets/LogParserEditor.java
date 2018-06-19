@@ -407,6 +407,7 @@ public class LogParserEditor extends Composite
          /* (non-Javadoc)
           * @see org.eclipse.jface.viewers.ViewerComparator#compare(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
           */
+         @SuppressWarnings("unchecked")
          @Override
          public int compare(Viewer viewer, Object e1, Object e2)
          {
