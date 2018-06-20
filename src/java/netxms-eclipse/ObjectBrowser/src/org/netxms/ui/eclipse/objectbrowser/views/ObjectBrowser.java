@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2018 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -102,7 +102,7 @@ import org.netxms.ui.eclipse.objectbrowser.Activator;
 import org.netxms.ui.eclipse.objectbrowser.Messages;
 import org.netxms.ui.eclipse.objectbrowser.api.ObjectActionValidator;
 import org.netxms.ui.eclipse.objectbrowser.api.ObjectContextMenu;
-import org.netxms.ui.eclipse.objectbrowser.api.ObjectOpenHandler;
+import org.netxms.ui.eclipse.objectbrowser.api.ObjectOpenHandlerRegistry;
 import org.netxms.ui.eclipse.objectbrowser.api.ObjectOpenListener;
 import org.netxms.ui.eclipse.objectbrowser.api.SubtreeType;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
@@ -138,7 +138,7 @@ public class ObjectBrowser extends ViewPart
 	private boolean initShowFilter = true;
 	private boolean initShowStatus = false;
 	private String initialObjectSelection = null;
-	private List<OpenHandlerData> openHandlers = new ArrayList<OpenHandlerData>(0);
+	private ObjectOpenHandlerRegistry openHandlers;
 	private ObjectActionValidator[] actionValidators;
 	
 	/* (non-Javadoc)
@@ -156,7 +156,7 @@ public class ObjectBrowser extends ViewPart
 			initShowStatus = safeCast(memento.getBoolean("ObjectBrowser.showStatusIndicator"), false); //$NON-NLS-1$
 			initialObjectSelection = memento.getString("ObjectBrowser.selectedObject"); //$NON-NLS-1$
 		}
-		registerOpenHandlers();
+		openHandlers = new ObjectOpenHandlerRegistry();
 		registerActionValidators();
 		
 		IDialogSettings settings = Activator.getDefault().getDialogSettings();
@@ -227,7 +227,7 @@ public class ObjectBrowser extends ViewPart
 			@Override
 			public boolean openObject(AbstractObject object)
 			{
-				return callOpenObjectHandler(object);
+				return openHandlers.callOpenObjectHandler(object);
 			}
 		});
 		
@@ -804,48 +804,6 @@ public class ObjectBrowser extends ViewPart
 	}
 	
 	/**
-	 * Register object open handlers
-	 */
-	private void registerOpenHandlers()
-	{
-		// Read all registered extensions and create handlers
-		final IExtensionRegistry reg = Platform.getExtensionRegistry();
-		IConfigurationElement[] elements = reg.getConfigurationElementsFor("org.netxms.ui.eclipse.objectbrowser.objectOpenHandlers"); //$NON-NLS-1$
-		for(int i = 0; i < elements.length; i++)
-		{
-			try
-			{
-				final OpenHandlerData h = new OpenHandlerData();
-				h.handler = (ObjectOpenHandler)elements[i].createExecutableExtension("class"); //$NON-NLS-1$
-				h.priority = safeParseInt(elements[i].getAttribute("priority")); //$NON-NLS-1$
-				final String className = elements[i].getAttribute("enabledFor"); //$NON-NLS-1$
-				try
-				{
-					h.enabledFor = (className != null) ? Class.forName(className) : null;
-				}
-				catch(Exception e)
-				{
-					h.enabledFor = null;
-				}
-				openHandlers.add(h);
-			}
-			catch(CoreException e)
-			{
-				e.printStackTrace();
-			}
-		}
-		
-		// Sort handlers by priority
-		Collections.sort(openHandlers, new Comparator<OpenHandlerData>() {
-			@Override
-			public int compare(OpenHandlerData arg0, OpenHandlerData arg1)
-			{
-				return arg0.priority - arg1.priority;
-			}
-		});
-	}
-	
-	/**
 	 * Register object action validators
 	 */
 	private void registerActionValidators()
@@ -952,34 +910,6 @@ public class ObjectBrowser extends ViewPart
 		}
 	}
 	
-	/**
-	 * Call object open handler
-	 * 
-	 * @return
-	 */
-	private boolean callOpenObjectHandler(AbstractObject object)
-	{
-		for(OpenHandlerData h : openHandlers)
-		{
-			if ((h.enabledFor == null) || (h.enabledFor.isInstance(object)))
-			{
-				if (h.handler.openObject(object))
-					return true;
-			}
-		}
-		return false;
-	}
-
-	/**
-	 * Internal data for object open handlers
-	 */
-	private class OpenHandlerData
-	{
-		ObjectOpenHandler handler;
-		int priority;
-		Class<?> enabledFor;
-	}
-
 	/**
 	 * Internal data for object action validators
 	 */

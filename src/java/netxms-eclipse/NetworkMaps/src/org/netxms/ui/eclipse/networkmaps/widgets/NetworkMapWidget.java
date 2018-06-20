@@ -18,16 +18,9 @@
  */
 package org.netxms.ui.eclipse.networkmaps.widgets;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Stack;
-import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IConfigurationElement;
-import org.eclipse.core.runtime.IExtensionRegistry;
-import org.eclipse.core.runtime.Platform;
 import org.eclipse.draw2d.ManhattanConnectionRouter;
 import org.eclipse.gef4.zest.layouts.LayoutAlgorithm;
 import org.eclipse.gef4.zest.layouts.algorithms.CompositeLayoutAlgorithm;
@@ -72,7 +65,7 @@ import org.netxms.ui.eclipse.networkmaps.Activator;
 import org.netxms.ui.eclipse.networkmaps.Messages;
 import org.netxms.ui.eclipse.networkmaps.algorithms.ManualLayout;
 import org.netxms.ui.eclipse.networkmaps.algorithms.SparseTree;
-import org.netxms.ui.eclipse.networkmaps.api.ObjectDoubleClickHandler;
+import org.netxms.ui.eclipse.networkmaps.api.ObjectDoubleClickHandlerRegistry;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.ExtendedGraphViewer;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.LinkDciValueProvider;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.MapContentProvider;
@@ -94,7 +87,7 @@ public class NetworkMapWidget extends Composite
    private NXCSession session = (NXCSession)ConsoleSharedData.getSession();
    private SessionListener sessionListener;
    private NetworkMapPage mapPage = null;
-   private List<DoubleClickHandlerData> doubleClickHandlers = new ArrayList<DoubleClickHandlerData>(0);
+   private ObjectDoubleClickHandlerRegistry doubleClickHandlers;
    private Stack<Long> history = new Stack<Long>();
    private long currentMapId = 0;
    private LinkDciValueProvider dciValueProvider;
@@ -149,9 +142,13 @@ public class NetworkMapWidget extends Composite
       session.addListener(sessionListener);
 	}
 	
+	/**
+	 * Enable double click on objects 
+	 */
 	public void enableObjectDoubleClick()
 	{
-	   registerDoubleClickHandlers();
+	   doubleClickHandlers = new ObjectDoubleClickHandlerRegistry(viewPart);
+	   doubleClickHandlers.setDefaultHandlerEnabled(false);
       viewer.addDoubleClickListener(new IDoubleClickListener() {
          @Override
          public void doubleClick(DoubleClickEvent event)
@@ -164,18 +161,10 @@ public class NetworkMapWidget extends Composite
             if (object == null)
                return;
             
-            for(DoubleClickHandlerData h : doubleClickHandlers)
-            {
-               if ((h.enabledFor == null) || (h.enabledFor.isInstance(object)))
-               {
-                  if (h.handler.onDoubleClick(object))
-                  {
-                     return;
-                  }
-               }
-            }
+            if (doubleClickHandlers.handleDoubleClick(object))
+               return;
 
-            // Default behaviour
+            // Default behavior
             openDrillDownObject(object);
          }
       });
@@ -424,77 +413,6 @@ public class NetworkMapWidget extends Composite
 	   viewer.refresh();
 	}
 
-   /**
-    * Register double click handlers
-    */
-   private void registerDoubleClickHandlers()
-   {
-      // Read all registered extensions and create handlers
-      final IExtensionRegistry reg = Platform.getExtensionRegistry();
-      IConfigurationElement[] elements = reg
-            .getConfigurationElementsFor("org.netxms.ui.eclipse.networkmaps.objectDoubleClickHandlers"); //$NON-NLS-1$
-      for(int i = 0; i < elements.length; i++)
-      {
-         try
-         {
-            final DoubleClickHandlerData h = new DoubleClickHandlerData();
-            h.handler = (ObjectDoubleClickHandler)elements[i].createExecutableExtension("class"); //$NON-NLS-1$
-            h.priority = safeParseInt(elements[i].getAttribute("priority")); //$NON-NLS-1$
-            final String className = elements[i].getAttribute("enabledFor"); //$NON-NLS-1$
-            try
-            {
-               h.enabledFor = (className != null) ? Class.forName(className) : null;
-            }
-            catch(Exception e)
-            {
-               h.enabledFor = null;
-            }
-            doubleClickHandlers.add(h);
-         }
-         catch(CoreException e)
-         {
-            e.printStackTrace();
-         }
-      }
-
-      // Sort handlers by priority
-      Collections.sort(doubleClickHandlers, new Comparator<DoubleClickHandlerData>() {
-         @Override
-         public int compare(DoubleClickHandlerData arg0, DoubleClickHandlerData arg1)
-         {
-            return arg0.priority - arg1.priority;
-         }
-      });
-   }
-
-   /**
-    * @param string
-    * @return
-    */
-   private static int safeParseInt(String string)
-   {
-      if (string == null)
-         return 65535;
-      try
-      {
-         return Integer.parseInt(string);
-      }
-      catch(NumberFormatException e)
-      {
-         return 65535;
-      }
-   }
-
-   /**
-    * Internal data for object double click handlers
-    */
-   private class DoubleClickHandlerData
-   {
-      ObjectDoubleClickHandler handler;
-      int priority;
-      Class<?> enabledFor;
-   }
-   
    /**
     * Goes thought all links and trys to add to request list required DCIs.
     */

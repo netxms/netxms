@@ -18,9 +18,10 @@ Require-Bundle: org.eclipse.ui;bundle-version="3.8.2",
  org.netxms.gef4.zest.core;bundle-version="2.0.6",
  org.netxms.gef4.zest.jface;bundle-version="2.0.6",
  org.netxms.gef4.zest.layouts;bundle-version="2.0.6",
- org.netxms.ui.eclipse.objectview;bundle-version="3.0.0",
  org.netxms.ui.eclipse.datacollection;bundle-version="3.0.0",
- org.netxms.ui.base;bundle-version="3.0.0"
+ org.netxms.ui.base;bundle-version="3.0.0",
+ org.netxms.ui.eclipse.perfview;bundle-version="3.0.0",
+ org.netxms.ui.eclipse.objectview;bundle-version="3.0.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy
 Export-Package: org.netxms.ui.eclipse.networkmaps.algorithms,
@@ -28,4 +29,3 @@ Export-Package: org.netxms.ui.eclipse.networkmaps.algorithms,
  org.netxms.ui.eclipse.networkmaps.views,
  org.netxms.ui.eclipse.networkmaps.views.helpers,
  org.netxms.ui.eclipse.networkmaps.widgets
-Import-Package: org.netxms.ui.eclipse.perfview.views
