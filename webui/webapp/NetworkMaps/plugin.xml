@@ -496,5 +496,13 @@
             parentId="org.eclipse.ui.contexts.window">
       </context>
    </extension>
+   <extension
+         point="org.netxms.ui.eclipse.networkmaps.objectDoubleClickHandlers">
+      <handler
+            class="org.netxms.ui.eclipse.networkmaps.actions.RackDoubleClickHandler"
+            enabledFor="org.netxms.client.objects.Rack"
+            priority="1">
+      </handler>
+   </extension>
 
 </plugin>

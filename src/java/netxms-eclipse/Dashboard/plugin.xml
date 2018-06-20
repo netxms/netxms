@@ -383,7 +383,7 @@
       </page>
       <page
             class="org.netxms.ui.eclipse.dashboard.propertypages.ObjectTools"
-            id="org.netxms.ui.eclipse.dashboard.propertypages.ObjectTools"
+            id="org.netxms.ui.eclipse.dashboard.propertypages.ObjectTools#0"
             name="Object Tools">
          <enabledWhen>
             <instanceof
@@ -392,9 +392,19 @@
          </enabledWhen>
       </page>
       <page
-            class="org.netxms.ui.eclipse.dashboard.propertypages.ObjectDetails"
-            id="org.netxms.ui.eclipse.dashboard.propertypages.ObjectDetails"
-            name="Object Details">
+            class="org.netxms.ui.eclipse.dashboard.propertypages.ObjectDetailsPropertyList"
+            id="org.netxms.ui.eclipse.dashboard.propertypages.ObjectDetailsPropertyList#1"
+            name="Object Properties">
+         <enabledWhen>
+            <instanceof
+                  value="org.netxms.ui.eclipse.dashboard.widgets.internal.ObjectDetailsConfig">
+            </instanceof>
+         </enabledWhen>
+      </page>
+      <page
+            class="org.netxms.ui.eclipse.dashboard.propertypages.ObjectDetailsQuery"
+            id="org.netxms.ui.eclipse.dashboard.propertypages.ObjectDetailsQuery#0"
+            name="Query">
          <enabledWhen>
             <instanceof
                   value="org.netxms.ui.eclipse.dashboard.widgets.internal.ObjectDetailsConfig">

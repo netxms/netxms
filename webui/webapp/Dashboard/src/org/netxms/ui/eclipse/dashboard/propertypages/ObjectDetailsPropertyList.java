@@ -44,22 +44,18 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.ui.eclipse.dashboard.Messages;
 import org.netxms.ui.eclipse.dashboard.dialogs.EditObjectPropertyDialog;
-import org.netxms.ui.eclipse.dashboard.layout.DashboardLayout;
-import org.netxms.ui.eclipse.dashboard.layout.DashboardLayoutData;
 import org.netxms.ui.eclipse.dashboard.propertypages.helpers.ObjectPropertiesLabelProvider;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.ObjectDetailsConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.ObjectDetailsConfig.ObjectProperty;
-import org.netxms.ui.eclipse.nxsl.widgets.ScriptEditor;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
  * Properties for "Object details" dashboard element
  */
-public class ObjectDetails extends PropertyPage
+public class ObjectDetailsPropertyList extends PropertyPage
 {
    private ObjectDetailsConfig config;
-   private ScriptEditor query;
    private List<ObjectProperty> properties;
    private TableViewer viewer;
    private Button addButton;
@@ -77,49 +73,31 @@ public class ObjectDetails extends PropertyPage
       config = (ObjectDetailsConfig)getElement().getAdapter(ObjectDetailsConfig.class);
       
       Composite dialogArea = new Composite(parent, SWT.NONE);
-      
-      DashboardLayout layout = new DashboardLayout();
+      GridLayout layout = new GridLayout();
       layout.numColumns = 2;
-      layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
+      layout.horizontalSpacing = WidgetHelper.BUTTON_WIDTH_HINT / 2;
       dialogArea.setLayout(layout);
-     
-      Composite queryArea = new Composite(dialogArea, SWT.NONE);
-      GridLayout areaLayout = new GridLayout();
-      areaLayout.marginHeight = 0;
-      areaLayout.marginWidth = 0;
-      areaLayout.verticalSpacing = WidgetHelper.INNER_SPACING;
-      queryArea.setLayout(areaLayout);
-      DashboardLayoutData d = new DashboardLayoutData();
-      d.horizontalSpan = 2;
-      queryArea.setLayoutData(d);
       
-      Label label = new Label(queryArea, SWT.NONE);
-      label.setText("Query");
-      
-      query = new ScriptEditor(queryArea, SWT.BORDER, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL, true);
-      query.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-      query.setText(config.getQuery());
-      
-      Composite propertiesArea = new Composite(dialogArea, SWT.NONE);
-      areaLayout = new GridLayout();
-      areaLayout.marginHeight = 0;
-      areaLayout.marginWidth = 0;
-      areaLayout.verticalSpacing = WidgetHelper.INNER_SPACING;
-      propertiesArea.setLayout(areaLayout);
-      d = new DashboardLayoutData();
-      d.horizontalSpan = 2;
-      propertiesArea.setLayoutData(d);
-      
-      label = new Label(propertiesArea, SWT.NONE);
+      Label label = new Label(dialogArea, SWT.NONE);
       label.setText("Properties to display");
       
       final String[] names = { "Name", "Display name", "Type" };
-      final int[] widths = { 150, 300, 100 };
-      viewer = new SortableTableViewer(propertiesArea, names, widths, 0, SWT.UP, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
+      final int[] widths = { 150, 250, 90 };
+      viewer = new SortableTableViewer(dialogArea, names, widths, 0, SWT.UP, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
       viewer.getTable().setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setLabelProvider(new ObjectPropertiesLabelProvider());
 
+      GridData gd = new GridData();
+      gd.grabExcessHorizontalSpace = true;
+      gd.grabExcessVerticalSpace = true;
+      gd.horizontalAlignment = SWT.FILL;
+      gd.verticalAlignment = SWT.FILL;
+      gd.horizontalSpan = 2;
+      gd.widthHint = 300;
+      gd.heightHint = 300;
+      viewer.getControl().setLayoutData(gd);
+      
       properties = new ArrayList<ObjectProperty>();
       if (config.getProperties() != null)
       {
@@ -128,7 +106,7 @@ public class ObjectDetails extends PropertyPage
                properties.add(new ObjectProperty(p));
       }
       viewer.setInput(properties.toArray());
-
+      
       /* buttons on left side */
       Composite leftButtons = new Composite(dialogArea, SWT.NONE);
       RowLayout buttonLayout = new RowLayout();
@@ -137,10 +115,7 @@ public class ObjectDetails extends PropertyPage
       buttonLayout.marginWidth = 0;
       buttonLayout.marginLeft = 0;
       leftButtons.setLayout(buttonLayout);
-      d = new DashboardLayoutData();
-      d.horizontalSpan = 1;
-      d.fill = false;
-      leftButtons.setLayoutData(d);
+      leftButtons.setLayoutData(new GridData(SWT.LEFT, SWT.FILL, false, false));
       
       upButton = new Button(leftButtons, SWT.PUSH);
       upButton.setText(Messages.get().EmbeddedDashboard_Up);
@@ -190,10 +165,7 @@ public class ObjectDetails extends PropertyPage
       buttonLayout.marginWidth = 0;
       buttonLayout.marginRight = 0;
       rightButtons.setLayout(buttonLayout);
-      d = new DashboardLayoutData();
-      d.horizontalSpan = 1;
-      d.fill = false;
-      rightButtons.setLayoutData(d);
+      rightButtons.setLayoutData(new GridData(SWT.RIGHT, SWT.FILL, false, false));
 
       addButton = new Button(rightButtons, SWT.PUSH);
       addButton.setText(Messages.get().EmbeddedDashboard_Add);
@@ -360,7 +332,6 @@ public class ObjectDetails extends PropertyPage
    @Override
    public boolean performOk()
    {
-      config.setQuery(query.getText());
       config.setProperties(properties);
       return true;
    }

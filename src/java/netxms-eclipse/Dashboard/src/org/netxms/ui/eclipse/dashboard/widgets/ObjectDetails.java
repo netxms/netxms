@@ -25,6 +25,9 @@ import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.viewers.ArrayContentProvider;
+import org.eclipse.jface.viewers.DoubleClickEvent;
+import org.eclipse.jface.viewers.IDoubleClickListener;
+import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
@@ -45,6 +48,7 @@ import org.netxms.ui.eclipse.dashboard.widgets.helpers.ObjectSelectionProvider;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.ObjectDetailsConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.ObjectDetailsConfig.ObjectProperty;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
+import org.netxms.ui.eclipse.networkmaps.api.ObjectDoubleClickHandlerRegistry;
 import org.netxms.ui.eclipse.objectbrowser.api.ObjectContextMenu;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.ViewRefreshController;
@@ -61,6 +65,7 @@ public class ObjectDetails extends ElementWidget
    private boolean updateInProgress = false;
    private SortableTableViewer viewer;
    private ObjectSelectionProvider objectSelectionProvider;
+   private ObjectDoubleClickHandlerRegistry doubleClickHandlers;
    
    /**
     * @param parent
@@ -134,6 +139,17 @@ public class ObjectDetails extends ElementWidget
          public void focusGained(FocusEvent e)
          {
             setSelectionProviderDelegate(objectSelectionProvider);
+         }
+      });
+      
+      doubleClickHandlers = new ObjectDoubleClickHandlerRegistry(viewPart);
+      viewer.addDoubleClickListener(new IDoubleClickListener() {
+         @Override
+         public void doubleClick(DoubleClickEvent event)
+         {
+            Object o = ((IStructuredSelection)viewer.getSelection()).getFirstElement();
+            if ((o != null) && (o instanceof ObjectQueryResult))
+               doubleClickHandlers.handleDoubleClick(((ObjectQueryResult)o).getObject());
          }
       });
       
@@ -240,6 +256,8 @@ public class ObjectDetails extends ElementWidget
                @Override
                public void run()
                {
+                  if (viewer.getControl().isDisposed())
+                     return;
                   viewer.setInput(objects);
                   viewer.packColumns();
                   updateInProgress = false;

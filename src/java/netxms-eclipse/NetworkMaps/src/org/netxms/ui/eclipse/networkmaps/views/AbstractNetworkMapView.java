@@ -21,17 +21,11 @@ package org.netxms.ui.eclipse.networkmaps.views;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IConfigurationElement;
-import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.Platform;
 import org.eclipse.draw2d.ManhattanConnectionRouter;
 import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.draw2d.geometry.Point;
@@ -105,7 +99,6 @@ import org.netxms.client.maps.elements.NetworkMapTextBox;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Dashboard;
 import org.netxms.client.objects.NetworkMap;
-import org.netxms.client.objects.Rack;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.console.resources.GroupMarkers;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
@@ -114,19 +107,18 @@ import org.netxms.ui.eclipse.networkmaps.Activator;
 import org.netxms.ui.eclipse.networkmaps.Messages;
 import org.netxms.ui.eclipse.networkmaps.algorithms.ExpansionAlgorithm;
 import org.netxms.ui.eclipse.networkmaps.algorithms.ManualLayout;
-import org.netxms.ui.eclipse.networkmaps.api.ObjectDoubleClickHandler;
+import org.netxms.ui.eclipse.networkmaps.api.ObjectDoubleClickHandlerRegistry;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.BendpointEditor;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.ExtendedGraphViewer;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.LinkDciValueProvider;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.MapContentProvider;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.MapLabelProvider;
 import org.netxms.ui.eclipse.objectbrowser.api.ObjectContextMenu;
-import org.netxms.ui.eclipse.objectview.views.RackView;
+import org.netxms.ui.eclipse.perfview.views.HistoricalGraphView;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.CommandBridge;
 import org.netxms.ui.eclipse.tools.FilteringMenuManager;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
-import org.netxms.ui.eclipse.perfview.views.HistoricalGraphView;
 
 /**
  * Base class for network map views
@@ -200,8 +192,8 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 	private Set<ISelectionChangedListener> selectionListeners = new HashSet<ISelectionChangedListener>();
 	private BendpointEditor bendpointEditor = null;
 	private SessionListener sessionListener;
-	private List<DoubleClickHandlerData> doubleClickHandlers = new ArrayList<DoubleClickHandlerData>(0);
-   private LinkDciValueProvider dciValueProvider;
+	private ObjectDoubleClickHandlerRegistry doubleClickHandlers;
+	private LinkDciValueProvider dciValueProvider;
 
 	/*
 	 * (non-Javadoc)
@@ -352,31 +344,12 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 				
 				if (selectionType == SELECTION_OBJECTS)
 				{
-					AbstractObject object = (AbstractObject)currentSelection.getFirstElement();
-					if (object instanceof Rack)
-					{
-					   openRackView(Long.toString(object.getObjectId()));
-					   return;
-					}
-
-					for(DoubleClickHandlerData h : doubleClickHandlers)
-					{
-						if ((h.enabledFor == null) || (h.enabledFor.isInstance(object)))
-						{
-							if (h.handler.onDoubleClick(object))
-							{
-								return;
-							}
-						}
-					}
+					doubleClickHandlers.handleDoubleClick((AbstractObject)currentSelection.getFirstElement());
 				}
 				else if (((NetworkMapLink)currentSelection.getFirstElement()).isLocked() && selectionType == SELECTION_LINKS)
 				{
 				   openLinkDci();
 				}
-
-				// Default behavior
-				actionOpenDrillDownObject.run();
 			}
 		});
 
@@ -412,7 +385,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		}
 
 		activateContext();
-		registerDoubleClickHandlers();
+		doubleClickHandlers = new ObjectDoubleClickHandlerRegistry(this);
 		setupMapControl();
 		refreshMap();
 	}
@@ -437,49 +410,6 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
       }
    }
 	
-	/**
-	 * Register double click handlers
-	 */
-	private void registerDoubleClickHandlers()
-	{
-		// Read all registered extensions and create handlers
-		final IExtensionRegistry reg = Platform.getExtensionRegistry();
-		IConfigurationElement[] elements = reg
-				.getConfigurationElementsFor("org.netxms.ui.eclipse.networkmaps.objectDoubleClickHandlers"); //$NON-NLS-1$
-		for(int i = 0; i < elements.length; i++)
-		{
-			try
-			{
-				final DoubleClickHandlerData h = new DoubleClickHandlerData();
-				h.handler = (ObjectDoubleClickHandler)elements[i].createExecutableExtension("class"); //$NON-NLS-1$
-				h.priority = safeParseInt(elements[i].getAttribute("priority")); //$NON-NLS-1$
-				final String className = elements[i].getAttribute("enabledFor"); //$NON-NLS-1$
-				try
-				{
-					h.enabledFor = (className != null) ? Class.forName(className) : null;
-				}
-				catch(Exception e)
-				{
-					h.enabledFor = null;
-				}
-				doubleClickHandlers.add(h);
-			}
-			catch(CoreException e)
-			{
-				e.printStackTrace();
-			}
-		}
-
-		// Sort handlers by priority
-		Collections.sort(doubleClickHandlers, new Comparator<DoubleClickHandlerData>() {
-			@Override
-			public int compare(DoubleClickHandlerData arg0, DoubleClickHandlerData arg1)
-			{
-				return arg0.priority - arg1.priority;
-			}
-		});
-	}
-
 	/**
 	 * Do full map refresh
 	 */
@@ -1531,34 +1461,6 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 	}
 
 	/**
-	 * @param string
-	 * @return
-	 */
-	private static int safeParseInt(String string)
-	{
-		if (string == null)
-			return 65535;
-		try
-		{
-			return Integer.parseInt(string);
-		}
-		catch(NumberFormatException e)
-		{
-			return 65535;
-		}
-	}
-
-	/**
-	 * Internal data for object double click handlers
-	 */
-	private class DoubleClickHandlerData
-	{
-		ObjectDoubleClickHandler handler;
-		int priority;
-		Class<?> enabledFor;
-	}
-	
-	/**
 	 * Goes thought all links and trys to add to request list required DCIs.
 	 */
 	protected void addDciToRequestList()
@@ -1656,25 +1558,6 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
       actionFiguresLargeLabels.setChecked(labelProvider.getObjectFigureType() == MapObjectDisplayMode.LARGE_LABEL);
       actionFiguresStatusIcons.setChecked(labelProvider.getObjectFigureType() == MapObjectDisplayMode.STATUS);
       actionFiguresFloorPlan.setChecked(labelProvider.getObjectFigureType() == MapObjectDisplayMode.FLOOR_PLAN);
-   }
-   
-   /**
-    * Open rack view handler
-    * 
-    * @param rackId of rack to view
-    */
-   private void openRackView(String rackId)
-   {
-      IWorkbenchPage page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
-      try
-      {
-         page.showView(RackView.ID, rackId, IWorkbenchPage.VIEW_ACTIVATE);
-      }
-      catch(PartInitException e)
-      {
-         MessageDialogHelper.openError(getSite().getShell(), "Error",
-               "Could not open rack view " + e.getLocalizedMessage());
-      }
    }
    
    /**
