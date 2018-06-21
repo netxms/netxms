@@ -417,16 +417,25 @@ public class Table
       this.extendedFormat = extendedFormat;
    }
    
-   public Table getFirstRows(int numOfRows)
+   /**
+    * Get first N rows from table. New table is backed by data from original table, so any changes 
+    * to rows or column definitions will affect original table as well.
+    * 
+    * @param count number of rows to retrieve
+    * @return new table containing only requested rows 
+    */
+   public Table getFirstRows(int count)
    {
       Table t = new Table();
       t.title = title;
       t.source = source;
-      t.columns = new ArrayList<TableColumnDefinition>(columns);
-      t.data = new ArrayList<TableRow>();
-      for (int i = 0; i < numOfRows; i++)
-         t.data.add(data.get(i));
       t.extendedFormat = extendedFormat;
+      t.columns = new ArrayList<TableColumnDefinition>(columns);
+
+      t.data = new ArrayList<TableRow>(count);
+      int realCount = Math.min(count, data.size());
+      for(int i = 0; i < realCount; i++)
+         t.data.add(data.get(i));
       return t;      
    }
 }
