@@ -1,3 +1,21 @@
+/**
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2018 Raden Solutions
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
 package org.netxms.ui.eclipse.dashboard.dialogs;
 
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -17,20 +35,29 @@ import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.widgets.AbstractSelector;
 
+/**
+ * Dialog for selecting sorting column in DCI summary table widget
+ */
 public class DCISummaryTableSortColumnSelectionDialog extends Dialog
 {
-   String sortingColumn = "";
-   DCISummaryTableColumnSelector selector;
-   DciSummaryTable sourceSummaryTable;
-   Button descSorting;
-   boolean isDescSorting;
-   int summaryTableId;
+   private DCISummaryTableColumnSelector columnSelector;
+   private Button checkDescending;
+   private DciSummaryTable sourceSummaryTable;
+   private int summaryTableId;
+   private String columnName = "";
+   private boolean descending;
    
-   public DCISummaryTableSortColumnSelectionDialog(Shell parentShell, String sortingColumn, boolean descSorting, int summaryTableId)
+   /**
+    * @param parentShell
+    * @param columnName
+    * @param descending
+    * @param summaryTableId
+    */
+   public DCISummaryTableSortColumnSelectionDialog(Shell parentShell, String columnName, boolean descending, int summaryTableId)
    {
       super(parentShell);
-      this.sortingColumn = sortingColumn;
-      this.isDescSorting = descSorting;   
+      this.columnName = columnName;
+      this.descending = descending;   
       this.summaryTableId = summaryTableId;
    }
 
@@ -41,7 +68,7 @@ public class DCISummaryTableSortColumnSelectionDialog extends Dialog
    protected void configureShell(Shell newShell)
    {
       super.configureShell(newShell);
-      newShell.setText("Edit sorting column");
+      newShell.setText("Edit Sorting Column");
    }
 
    /* (non-Javadoc)
@@ -80,28 +107,27 @@ public class DCISummaryTableSortColumnSelectionDialog extends Dialog
       GridLayout layout = new GridLayout(); 
       dialogArea.setLayout(layout);
       
-      selector = new DCISummaryTableColumnSelector(dialogArea, SWT.NONE, AbstractSelector.SHOW_CLEAR_BUTTON, sortingColumn, null, sourceSummaryTable);
-      selector.setLabel("Filter column name");
+      columnSelector = new DCISummaryTableColumnSelector(dialogArea, SWT.NONE, AbstractSelector.SHOW_CLEAR_BUTTON, columnName, null, sourceSummaryTable);
+      columnSelector.setLabel("Column");
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
-      gd.horizontalSpan = 520;
-      selector.setLayoutData(gd);
+      gd.widthHint = 500;
+      columnSelector.setLayoutData(gd);
       
-      descSorting = new Button(dialogArea, SWT.CHECK);
-      gd = new GridData();
-      //gd.horizontalAlignment = SWT.FILL;
-      //gd.grabExcessHorizontalSpace = true;
-      descSorting.setText("Use descending sorting");
-      descSorting.setLayoutData(gd);
-      descSorting.setSelection(isDescSorting);
+      checkDescending = new Button(dialogArea, SWT.CHECK);
+      checkDescending.setText("Descending order");
+      checkDescending.setSelection(descending);
       
       return dialogArea;
    }
    
+   /**
+    * 
+    */
    private void refresh()
    {
-      selector.setSummaryTbale(sourceSummaryTable);
+      columnSelector.setSummaryTbale(sourceSummaryTable);
    }
 
    /* (non-Javadoc)
@@ -111,15 +137,15 @@ public class DCISummaryTableSortColumnSelectionDialog extends Dialog
    protected void okPressed()
    {
       // TODO Auto-generated method stub
-      sortingColumn = (descSorting.getSelection() ? ">" : "<") + selector.getColumnName();
+      columnName = (checkDescending.getSelection() ? ">" : "<") + columnSelector.getColumnName();
       super.okPressed();
    }
 
    /**
     * @return the sortingColumn
     */
-   public String getSortingColumn()
+   public String getColumnName()
    {
-      return sortingColumn;
+      return columnName;
    }
 }

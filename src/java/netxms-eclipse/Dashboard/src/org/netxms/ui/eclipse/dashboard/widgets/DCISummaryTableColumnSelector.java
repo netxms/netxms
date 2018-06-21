@@ -33,11 +33,11 @@ public class DCISummaryTableColumnSelector extends AbstractSelector
    protected void selectionButtonHandler()
    {
       String valuesArray[] = null;
-      if(sourceTable != null)
+      if (sourceTable != null)
       {
          valuesArray = sourceTable.getColumnDisplayNames();         
       }
-      if(sourceSummaryTable != null)
+      if (sourceSummaryTable != null)
       {
          List<DciSummaryTableColumn> column = sourceSummaryTable.getColumns();
          List<String> tmp = new ArrayList<String>();

@@ -64,7 +64,6 @@ public class DciSummaryTable extends PropertyPage
 	private ObjectSelector objectSelector;
 	private SummaryTableSelector tableSelector;
 	private Spinner refreshInterval;
-   private Button checkShowSortAndLimitFields;
    private Spinner numRowsShow;
 	private SortableTableViewer sortTables;
 	private Button buttonAdd;
@@ -85,6 +84,8 @@ public class DciSummaryTable extends PropertyPage
 		currSortingList = config.getSortingColumnList();
 		
 		GridLayout layout = new GridLayout();
+		layout.numColumns = 2;
+		layout.makeColumnsEqualWidth = true;
 		dialogArea.setLayout(layout);
 		
 		objectSelector = new ObjectSelector(dialogArea, SWT.NONE, true);
@@ -94,6 +95,7 @@ public class DciSummaryTable extends PropertyPage
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
+		gd.horizontalSpan = 2;
 		objectSelector.setLayoutData(gd);
 		
 		tableSelector = new SummaryTableSelector(dialogArea, SWT.NONE, AbstractSelector.SHOW_CLEAR_BUTTON);
@@ -102,6 +104,7 @@ public class DciSummaryTable extends PropertyPage
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
+      gd.horizontalSpan = 2;
       tableSelector.setLayoutData(gd);
       
       gd = new GridData();
@@ -111,93 +114,40 @@ public class DciSummaryTable extends PropertyPage
       refreshInterval = WidgetHelper.createLabeledSpinner(dialogArea, SWT.BORDER, Messages.get().DciSummaryTable_RefreshInterval, 0, 10000, gd);
       refreshInterval.setSelection(config.getRefreshInterval());
 
-      
       gd = new GridData();
       gd.verticalAlignment = SWT.TOP;
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
-      checkShowSortAndLimitFields  = new Button(dialogArea, SWT.CHECK);
-      checkShowSortAndLimitFields.setText("Show top N nodes");
-      checkShowSortAndLimitFields.setSelection(config.isEnableSortingAndLineLimit());
-      checkShowSortAndLimitFields.setLayoutData(gd);
-      checkShowSortAndLimitFields.addSelectionListener(new SelectionListener() {
-         
-         @Override
-         public void widgetSelected(SelectionEvent e)
-         {
-            if(checkShowSortAndLimitFields.getSelection())
-            {
-               sortTables.setSelection(null);
-               buttonAdd.setEnabled(true);
-               numRowsShow.setEnabled(true);
-            }
-            else
-            {
-               buttonUp.setEnabled(false);
-               buttonDown.setEnabled(false);
-               buttonEdit.setEnabled(false);
-               buttonRemove.setEnabled(false);   
-               buttonAdd.setEnabled(false);  
-               numRowsShow.setEnabled(false);          
-            }            
-         }
-         
-         @Override
-         public void widgetDefaultSelected(SelectionEvent e)
-         {
-         }
-      });
-      
-      Composite showTopNNodes = new Composite(dialogArea, SWT.BORDER);      
-      layout = new GridLayout();
-      showTopNNodes.setLayout(layout);
-      
-      gd = new GridData();
-      gd.verticalAlignment = SWT.TOP;
-      gd.horizontalAlignment = SWT.FILL;
-      gd.grabExcessHorizontalSpace = true;
-      numRowsShow = WidgetHelper.createLabeledSpinner(showTopNNodes, SWT.BORDER, "Number of lines to show", 0, 10000, gd);
+      numRowsShow = WidgetHelper.createLabeledSpinner(dialogArea, SWT.BORDER, "Display limit (0 for unlimited)", 0, 10000, gd);
       numRowsShow.setSelection(config.getNumRowShown());
-      numRowsShow.setEnabled(config.isEnableSortingAndLineLimit());
       
-      Label label = new Label(showTopNNodes, SWT.NONE);
-      label.setText("Sort by columns");
+      Label label = new Label(dialogArea, SWT.NONE);
+      label.setText("Ordering");
 
-      final String[] columnNames = { "Name", "Sort order" };
-      final int[] columnWidths = { 320, 120 };
-      sortTables  = new SortableTableViewer(showTopNNodes, columnNames, columnWidths, 0, 0, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
+      final String[] columnNames = { "Column", "Direction" };
+      final int[] columnWidths = { 300, 100 };
+      sortTables  = new SortableTableViewer(dialogArea, columnNames, columnWidths, 0, 0, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       gd.verticalAlignment = SWT.FILL;
       gd.grabExcessVerticalSpace = true;
-      gd.verticalSpan = 2;
+      gd.horizontalSpan = 2;
       gd.heightHint = 150;
       sortTables.getTable().setLayoutData(gd);
       sortTables.setContentProvider(new ArrayContentProvider());
       sortTables.setLabelProvider(new SortColumnTableLabelProvider());
       sortTables.setInput(currSortingList);
       sortTables.addSelectionChangedListener(new ISelectionChangedListener() {
-         
          @Override
          public void selectionChanged(SelectionChangedEvent event)
          {
-            if(checkShowSortAndLimitFields.getSelection())
-            {
-               IStructuredSelection selection = (IStructuredSelection)event.getSelection();
-               int index = currSortingList.indexOf(selection.getFirstElement());
-               buttonUp.setEnabled((selection.size() == 1) && (index > 0));
-               buttonDown.setEnabled((selection.size() == 1) && (index >= 0) && (index < currSortingList.size() - 1));
-               buttonEdit.setEnabled(selection.size() == 1);
-               buttonRemove.setEnabled(selection.size() > 0);      
-            }
-            else
-            {
-               buttonUp.setEnabled(false);
-               buttonDown.setEnabled(false);
-               buttonEdit.setEnabled(false);
-               buttonRemove.setEnabled(false);               
-            }
+            IStructuredSelection selection = (IStructuredSelection)event.getSelection();
+            int index = currSortingList.indexOf(selection.getFirstElement());
+            buttonUp.setEnabled((selection.size() == 1) && (index > 0));
+            buttonDown.setEnabled((selection.size() == 1) && (index >= 0) && (index < currSortingList.size() - 1));
+            buttonEdit.setEnabled(selection.size() == 1);
+            buttonRemove.setEnabled(selection.size() > 0);      
          }
       });
       
@@ -209,20 +159,36 @@ public class DciSummaryTable extends PropertyPage
          }
       });
       
-      Composite buttons = new Composite(showTopNNodes, SWT.NONE);
+      Composite buttons = new Composite(dialogArea, SWT.NONE);
+      layout = new GridLayout();
+      layout.numColumns = 2;
+      layout.marginWidth = 0;
+      layout.marginHeight = 0;
+      layout.horizontalSpacing = WidgetHelper.BUTTON_WIDTH_HINT / 2;
+      buttons.setLayout(layout);
       
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
+      gd.horizontalSpan = 2;
       buttons.setLayoutData(gd);
-      
+
+      /* left buttons block */
+      Composite leftButtons = new Composite(buttons, SWT.NONE);
       RowLayout buttonLayout = new RowLayout();
       buttonLayout.type = SWT.HORIZONTAL;
       buttonLayout.pack = false;
-      buttonLayout.marginWidth = 0;
-      buttons.setLayout(buttonLayout);
+      buttonLayout.marginLeft = 0;
+      buttonLayout.marginRight = 0;
+      buttonLayout.marginTop = 0;
+      buttonLayout.marginBottom = 0;
+      leftButtons.setLayout(buttonLayout);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.LEFT;
+      gd.grabExcessHorizontalSpace = true;
+      leftButtons.setLayoutData(gd);
       
-      buttonUp = new Button(buttons, SWT.PUSH);
+      buttonUp = new Button(leftButtons, SWT.PUSH);
       buttonUp.setText("UP");
       buttonUp.addSelectionListener(new SelectionListener() {
          @Override
@@ -242,7 +208,7 @@ public class DciSummaryTable extends PropertyPage
       buttonUp.setLayoutData(rd);
       buttonUp.setEnabled(false);
       
-      buttonDown = new Button(buttons, SWT.PUSH);
+      buttonDown = new Button(leftButtons, SWT.PUSH);
       buttonDown.setText("Down");
       buttonDown.addSelectionListener(new SelectionListener() {
          @Override
@@ -261,13 +227,23 @@ public class DciSummaryTable extends PropertyPage
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       buttonDown.setLayoutData(rd);
       buttonDown.setEnabled(false);
-      
+
+      /* right buttons block */
+      Composite rightButtons = new Composite(buttons, SWT.NONE);
+      buttonLayout = new RowLayout();
+      buttonLayout.type = SWT.HORIZONTAL;
+      buttonLayout.pack = false;
+      buttonLayout.marginLeft = 0;
+      buttonLayout.marginRight = 0;
+      buttonLayout.marginTop = 0;
+      buttonLayout.marginBottom = 0;
+      rightButtons.setLayout(buttonLayout);
       gd = new GridData();
       gd.horizontalAlignment = SWT.RIGHT;
-      gd.verticalIndent = WidgetHelper.OUTER_SPACING - WidgetHelper.INNER_SPACING;
-      buttons.setLayoutData(gd);
-
-      buttonAdd = new Button(buttons, SWT.PUSH);
+      gd.grabExcessHorizontalSpace = true;
+      rightButtons.setLayoutData(gd);
+      
+      buttonAdd = new Button(rightButtons, SWT.PUSH);
       buttonAdd.setText("Add");
       buttonAdd.addSelectionListener(new SelectionListener() {
          @Override
@@ -285,9 +261,8 @@ public class DciSummaryTable extends PropertyPage
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       buttonAdd.setLayoutData(rd);
-      buttonAdd.setEnabled(config.isEnableSortingAndLineLimit());
       
-      buttonEdit = new Button(buttons, SWT.PUSH);
+      buttonEdit = new Button(rightButtons, SWT.PUSH);
       buttonEdit.setText("Edit");
       buttonEdit.addSelectionListener(new SelectionListener() {
          @Override
@@ -307,7 +282,7 @@ public class DciSummaryTable extends PropertyPage
       buttonEdit.setLayoutData(rd);
       buttonEdit.setEnabled(false);
 
-      buttonRemove = new Button(buttons, SWT.PUSH);
+      buttonRemove = new Button(rightButtons, SWT.PUSH);
       buttonRemove.setText("Delete");
       buttonRemove.addSelectionListener(new SelectionListener() {
          @Override
@@ -380,7 +355,7 @@ public class DciSummaryTable extends PropertyPage
       DCISummaryTableSortColumnSelectionDialog dlg = new DCISummaryTableSortColumnSelectionDialog(getShell(), null, false, tableSelector.getTableId());
       if (dlg.open() == Window.OK)
       {
-         String s = dlg.getSortingColumn();
+         String s = dlg.getColumnName();
          if (!currSortingList.contains(s))
          {
             currSortingList.add(s);
@@ -402,7 +377,7 @@ public class DciSummaryTable extends PropertyPage
       DCISummaryTableSortColumnSelectionDialog dlg = new DCISummaryTableSortColumnSelectionDialog(getShell(), element.substring(1), element.charAt(0) == '>' ? true : false, tableSelector.getTableId());
       if (dlg.open() == Window.OK)
       {
-         String s = dlg.getSortingColumn();
+         String s = dlg.getColumnName();
          int index = currSortingList.indexOf(element);
          if (index < currSortingList.size() && index >= 0)
          {
@@ -437,7 +412,6 @@ public class DciSummaryTable extends PropertyPage
 		config.setRefreshInterval(refreshInterval.getSelection());
       config.setNumRowShown(numRowsShow.getSelection());
       config.setSortingColumnList(currSortingList);
-      config.setEnableSortingAndLineLimit(checkShowSortAndLimitFields.getSelection());
 		return true;
 	}
 }
