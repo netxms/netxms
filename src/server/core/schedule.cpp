@@ -93,10 +93,10 @@ ScheduledTask::ScheduledTask(DB_RESULT hResult, int row)
  */
 ScheduledTask::~ScheduledTask()
 {
-   safe_free(m_taskHandlerId);
-   safe_free(m_schedule);
-   safe_free(m_params);
-   safe_free(m_comments);
+   free(m_taskHandlerId);
+   free(m_schedule);
+   free(m_params);
+   free(m_comments);
 }
 
 /**
@@ -104,13 +104,13 @@ ScheduledTask::~ScheduledTask()
  */
 void ScheduledTask::update(const TCHAR *taskHandlerId, const TCHAR *schedule, const TCHAR *params, const TCHAR *comments, UINT32 owner, UINT32 objectId, UINT32 flags)
 {
-   safe_free(m_taskHandlerId);
+   free(m_taskHandlerId);
    m_taskHandlerId = _tcsdup(CHECK_NULL_EX(taskHandlerId));
-   safe_free(m_schedule);
+   free(m_schedule);
    m_schedule = _tcsdup(CHECK_NULL_EX(schedule));
-   safe_free(m_params);
+   free(m_params);
    m_params = _tcsdup(CHECK_NULL_EX(params));
-   safe_free(m_comments);
+   free(m_comments);
    m_comments = _tcsdup(CHECK_NULL_EX(comments));
    m_owner = owner;
    m_objectId = objectId;
@@ -175,7 +175,7 @@ void ScheduledTask::saveToDatabase(bool newObject) const
       DBFreeStatement(hStmt);
    }
 	DBConnectionPoolReleaseConnection(db);
-	NotifyClientSessions(NX_NOTIFY_SCHEDULE_UPDATE,0);
+	NotifyClientSessions(NX_NOTIFY_SCHEDULE_UPDATE, 0);
 }
 
 /**
@@ -208,8 +208,7 @@ void ScheduledTask::run(SchedulerCallback *callback)
 {
    bool oneTimeSchedule = !_tcscmp(m_schedule, _T(""));
 
-   setFlag(SCHEDULED_TASK_RUNNING);
-	NotifyClientSessions(NX_NOTIFY_SCHEDULE_UPDATE,0);
+	NotifyClientSessions(NX_NOTIFY_SCHEDULE_UPDATE, 0);
    ScheduledTaskParameters param(m_params, m_owner, m_objectId);
    callback->m_func(&param);
    setLastExecutionTime(time(NULL));
@@ -315,7 +314,7 @@ UINT32 AddOneTimeScheduledTask(const TCHAR *task, time_t nextExecutionTime, cons
 {
    if ((systemRights & (SYSTEM_ACCESS_ALL_SCHEDULED_TASKS | SYSTEM_ACCESS_USER_SCHEDULED_TASKS | SYSTEM_ACCESS_OWN_SCHEDULED_TASKS)) == 0)
       return RCC_ACCESS_DENIED;
-   DbgPrintf(7, _T("AddOneTimeAction: Add one time schedule %s, %d, %s"), task, nextExecutionTime, params);
+   DbgPrintf(5, _T("AddOneTimeAction: Add one time schedule %s, %d, %s"), task, nextExecutionTime, params);
    s_oneTimeScheduleLock.lock();
    ScheduledTask *sh = new ScheduledTask(CreateUniqueId(IDG_SCHEDULED_TASK), task, nextExecutionTime, params, comments, owner, objectId, flags);
    sh->saveToDatabase(true);
@@ -331,7 +330,7 @@ UINT32 AddOneTimeScheduledTask(const TCHAR *task, time_t nextExecutionTime, cons
  */
 UINT32 UpdateScheduledTask(int id, const TCHAR *task, const TCHAR *schedule, const TCHAR *params, const TCHAR *comments, UINT32 owner, UINT32 objectId, UINT64 systemAccessRights, UINT32 flags)
 {
-   DbgPrintf(7, _T("UpdateSchedule: update cron schedule %d, %s, %s, %s"), id, task, schedule, params);
+   DbgPrintf(5, _T("UpdateSchedule: update cron schedule %d, %s, %s, %s"), id, task, schedule, params);
    s_cronScheduleLock.lock();
    UINT32 rcc = RCC_SUCCESS;
    bool found = false;
@@ -745,6 +744,7 @@ static THREAD_RESULT THREAD_CALL AdHocScheduler(void *arg)
          SchedulerCallback *callback = s_callbacks.get(sh->getTaskHandlerId());
          if (callback == NULL)
          {
+            // FIXME: mark task as failed?
             DbgPrintf(3, _T("AdHocScheduler: One time execution function with taskId=\'%s\' not found"), sh->getTaskHandlerId());
             continue;
          }
@@ -752,6 +752,7 @@ static THREAD_RESULT THREAD_CALL AdHocScheduler(void *arg)
          // execute all tasks that is expected to execute now
          if ((sh->getExecutionTime() != 0) && (now >= sh->getExecutionTime()))
          {
+            sh->setFlag(SCHEDULED_TASK_RUNNING);
             nxlog_debug(6, _T("AdHocScheduler: run scheduled task with id = %d, execution time = %d"), sh->getId(), sh->getExecutionTime());
             ThreadPoolExecute(g_schedulerThreadPool, sh, &ScheduledTask::run, callback);
          }
@@ -763,11 +764,15 @@ static THREAD_RESULT THREAD_CALL AdHocScheduler(void *arg)
 
       sleepTime = 3600;
 
+      // FIXME: could we just take first not yet running task?
       for(int i = 0; i < s_oneTimeSchedules.size(); i++)
       {
          ScheduledTask *sh = s_oneTimeSchedules.get(i);
+         if (sh->isRunning())
+            continue;
+
          if (sh->getExecutionTime() == NEVER)
-            break;
+            break;   // FIXME: why?
 
          if (now < sh->getExecutionTime())
          {
@@ -819,6 +824,7 @@ static THREAD_RESULT THREAD_CALL RecurrentScheduler(void *arg)
          if (MatchSchedule(sh->getSchedule(), &currLocal, now))
          {
             DbgPrintf(7, _T("RecurrentScheduler: run schedule id=\'%d\', schedule=\'%s\'"), sh->getId(), sh->getSchedule());
+            sh->setFlag(SCHEDULED_TASK_RUNNING);
             ThreadPoolExecute(g_schedulerThreadPool, sh, &ScheduledTask::run, callback);
          }
       }
@@ -836,7 +842,7 @@ static THREAD s_oneTimeEventThread = INVALID_THREAD_HANDLE;
 static THREAD s_cronSchedulerThread = INVALID_THREAD_HANDLE;
 
 /**
- * Initialize task scheduler - read all schedules form database and start threads for one time and crom schedules
+ * Initialize task scheduler - read all schedules form database and start threads for one time and cron schedules
  */
 void InitializeTaskScheduler()
 {
