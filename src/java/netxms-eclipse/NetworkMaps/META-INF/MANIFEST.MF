@@ -19,7 +19,7 @@ Require-Bundle: org.eclipse.ui;bundle-version="3.8.2",
  org.netxms.gef4.zest.jface;bundle-version="2.0.6",
  org.netxms.gef4.zest.layouts;bundle-version="2.0.6",
  org.netxms.ui.eclipse.datacollection;bundle-version="2.2.6",
- org.netxms.ui.base;bundle-version="2.2.6"
+ org.netxms.ui.base;bundle-version="2.2.6",
  org.netxms.ui.eclipse.perfview;bundle-version="2.2.6",
  org.netxms.ui.eclipse.objectview;bundle-version="2.2.6"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
