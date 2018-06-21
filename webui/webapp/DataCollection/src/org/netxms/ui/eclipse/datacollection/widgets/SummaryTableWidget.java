@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2017 Raden Solutions
+ * Copyright (C) 2003-2018 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -86,7 +86,7 @@ public class SummaryTableWidget extends Composite
    private boolean useMultipliers = true;
    private TreeColumn currentColumn = null;
    private ObjectSelectionProvider objectSelectionProvider;
-   private int showLineCount;
+   private int showLineCount = 0;
    private List<String> sortingColumnList = null;
 
    /**
@@ -321,8 +321,9 @@ public class SummaryTableWidget extends Composite
          });
          viewer.setComparator(new SummaryTableItemComparator(table));
       }
+      
       labelProvider.setColumnDataTypes(table.getColumnDataTypes());
-      if(sortingColumnList != null && sortingColumnList.size() > 0)
+      if ((sortingColumnList != null) && !sortingColumnList.isEmpty())
       {
          List<SortItem> sortItem = new ArrayList<SortItem>();
          for(int i = 0; i < sortingColumnList.size() ; i++)
@@ -335,7 +336,7 @@ public class SummaryTableWidget extends Composite
             }
          }
          
-         //find index of columns to compare and desc or asc
+         // find index of columns to compare and desc or asc
          final List<SortItem> sortItemFin = sortItem;
          table.sort(new Comparator<TableRow>() {
             public int compare(TableRow row1, TableRow row2)
@@ -345,7 +346,7 @@ public class SummaryTableWidget extends Composite
                int i = 0;
                while(result == 0 && i < sortItemFin.size())
                {
-                  result = compareItem(row1, row2, sortItemFin.get(i).colIndex, sortItemFin.get(i).isDesc);
+                  result = compareItem(row1, row2, sortItemFin.get(i).columnIndex, sortItemFin.get(i).descending);
                   i++;
                }
                return result;
@@ -375,7 +376,8 @@ public class SummaryTableWidget extends Composite
          });
          viewer.setComparator(null);
       }
-      if(showLineCount > 0)
+
+      if (showLineCount > 0)
          viewer.setInput(table.getFirstRows(showLineCount));
       else
          viewer.setInput(table);
@@ -387,13 +389,13 @@ public class SummaryTableWidget extends Composite
     */
    class SortItem
    {
-      public int colIndex;
-      public boolean isDesc;
+      public int columnIndex;
+      public boolean descending;
       
-      public SortItem(int colIndex, boolean isDesc)
+      public SortItem(int columnIndex, boolean descending)
       {
-         this.colIndex = colIndex;
-         this.isDesc = isDesc;
+         this.columnIndex = columnIndex;
+         this.descending = descending;
       }
    };
 
