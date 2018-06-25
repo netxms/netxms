@@ -203,7 +203,7 @@ THREAD_RESULT THREAD_CALL EventProcessor(void *arg)
       EnumerateClientSessions(BroadcastEvent, pEvent);
 
       // Write event information to debug
-      if (nxlog_get_debug_level() >= 5)
+      if (nxlog_get_debug_level_tag(DEBUG_TAG) >= 5)
       {
          NetObj *pObject = FindObjectById(pEvent->getSourceId());
          if (pObject == NULL)

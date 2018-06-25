@@ -24,11 +24,44 @@
 #include <nxevent.h>
 
 /**
- * Upgrade from 22.27 to 30.0
+ * Upgrade from 22.28 to 30.0
+ */
+static bool H_UpgradeFromV28()
+{
+   CHK_EXEC(SetMajorSchemaVersion(30, 0));
+   return true;
+}
+
+/**
+ * Upgrade from 22.27 to 22.28
  */
 static bool H_UpgradeFromV27()
 {
-   CHK_EXEC(SetMajorSchemaVersion(30, 0));
+   CHK_EXEC(CreateEventTemplate(EVENT_TUNNEL_OPEN, _T("SYS_TUNNEL_OPEN"), SEVERITY_NORMAL, EF_LOG, _T("2569c729-1f8c-4a13-9e75-a1d0c1995bc2"),
+            _T("Agent tunnel from %<systemName> (%<ipAddress>) is open"),
+            _T("Generated when agent tunnel is open and bound.\r\n")
+            _T("Parameters:\r\n")
+            _T("   1) Tunnel ID (tunnelId)\r\n")
+            _T("   2) Remote system IP address (ipAddress)\r\n")
+            _T("   3) Remote system name (systemName)\r\n")
+            _T("   4) Remote system FQDN (hostName)\r\n")
+            _T("   5) Remote system platform (platformName)\r\n")
+            _T("   6) Remote system information (systemInfo)\r\n")
+            _T("   7) Agent version (agentVersion)")
+            ));
+   CHK_EXEC(CreateEventTemplate(EVENT_TUNNEL_CLOSED, _T("SYS_TUNNEL_CLOSED"), SEVERITY_WARNING, EF_LOG, _T("50a61266-710d-48d7-b620-9eaa0f85a94f"),
+            _T("Agent tunnel from %<systemName> (%<ipAddress>) is closed"),
+            _T("Generated when agent tunnel is closed.\r\n")
+            _T("Parameters:\r\n")
+            _T("   1) Tunnel ID (tunnelId)\r\n")
+            _T("   2) Remote system IP address (ipAddress)\r\n")
+            _T("   3) Remote system name (systemName)\r\n")
+            _T("   4) Remote system FQDN (hostName)\r\n")
+            _T("   5) Remote system platform (platformName)\r\n")
+            _T("   6) Remote system information (systemInfo)\r\n")
+            _T("   7) Agent version (agentVersion)")
+            ));
+   CHK_EXEC(SetMinorSchemaVersion(28));
    return true;
 }
 
@@ -489,7 +522,8 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
-   { 27, 30, 0,  H_UpgradeFromV27 },
+   { 28, 30, 0,  H_UpgradeFromV28 },
+   { 27, 22, 28, H_UpgradeFromV27 },
    { 26, 22, 27, H_UpgradeFromV26 },
    { 25, 22, 26, H_UpgradeFromV25 },
    { 24, 22, 25, H_UpgradeFromV24 },

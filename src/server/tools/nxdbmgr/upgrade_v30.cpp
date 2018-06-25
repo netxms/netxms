@@ -24,6 +24,43 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 30.38 to 30.39 (changes also included into 22.28)
+ */
+static bool H_UpgradeFromV38()
+{
+   if (GetSchemaLevelForMajorVersion(22) < 28)
+   {
+      CHK_EXEC(CreateEventTemplate(EVENT_TUNNEL_OPEN, _T("SYS_TUNNEL_OPEN"), SEVERITY_NORMAL, EF_LOG, _T("2569c729-1f8c-4a13-9e75-a1d0c1995bc2"),
+               _T("Agent tunnel from %<systemName> (%<ipAddress>) is open"),
+               _T("Generated when agent tunnel is open and bound.\r\n")
+               _T("Parameters:\r\n")
+               _T("   1) Tunnel ID (tunnelId)\r\n")
+               _T("   2) Remote system IP address (ipAddress)\r\n")
+               _T("   3) Remote system name (systemName)\r\n")
+               _T("   4) Remote system FQDN (hostName)\r\n")
+               _T("   5) Remote system platform (platformName)\r\n")
+               _T("   6) Remote system information (systemInfo)\r\n")
+               _T("   7) Agent version (agentVersion)")
+               ));
+      CHK_EXEC(CreateEventTemplate(EVENT_TUNNEL_CLOSED, _T("SYS_TUNNEL_CLOSED"), SEVERITY_WARNING, EF_LOG, _T("50a61266-710d-48d7-b620-9eaa0f85a94f"),
+               _T("Agent tunnel from %<systemName> (%<ipAddress>) is closed"),
+               _T("Generated when agent tunnel is closed.\r\n")
+               _T("Parameters:\r\n")
+               _T("   1) Tunnel ID (tunnelId)\r\n")
+               _T("   2) Remote system IP address (ipAddress)\r\n")
+               _T("   3) Remote system name (systemName)\r\n")
+               _T("   4) Remote system FQDN (hostName)\r\n")
+               _T("   5) Remote system platform (platformName)\r\n")
+               _T("   6) Remote system information (systemInfo)\r\n")
+               _T("   7) Agent version (agentVersion)")
+               ));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(22, 28));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(39));
+   return true;
+}
+
+/**
  * Upgrade from 30.37 to 30.38 (changes also included into 22.27)
  */
 static bool H_UpgradeFromV37()
@@ -1153,6 +1190,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 38, 30, 39, H_UpgradeFromV38 },
    { 37, 30, 38, H_UpgradeFromV37 },
    { 36, 30, 37, H_UpgradeFromV36 },
    { 35, 30, 36, H_UpgradeFromV35 },

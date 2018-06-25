@@ -30,6 +30,15 @@
 #define DEBUG_TAG       _T("agent.tunnel")
 
 /**
+ * Event parameter names for SYS_UNBOUND_TUNNEL, SYS_TUNNEL_OPEN, and SYS_TUNNEL_CLOSED events
+ */
+static const TCHAR *s_eventParamNames[] =
+   {
+      _T("tunnelId"), _T("ipAddress"), _T("systemName"), _T("hostName"),
+      _T("platformName"), _T("systemInfo"), _T("agentVersion"), _T("idleTimeout")
+   };
+
+/**
  * Tunnel registration
  */
 static RefCountHashMap<UINT32, AgentTunnel> s_boundTunnels(true);
@@ -64,6 +73,10 @@ static void UnregisterTunnel(AgentTunnel *tunnel)
    s_tunnelListLock.lock();
    if (tunnel->isBound())
    {
+      PostEventWithNames(EVENT_TUNNEL_CLOSED, tunnel->getNodeId(), "dAsssss", s_eventParamNames,
+               tunnel->getId(), &tunnel->getAddress(), tunnel->getSystemName(), tunnel->getHostname(),
+               tunnel->getPlatformName(), tunnel->getSystemInfo(), tunnel->getAgentVersion());
+
       // Check that current tunnel for node is tunnel being unregistered
       // New tunnel could be established while old one still finishing
       // outstanding requests
@@ -478,6 +491,12 @@ void AgentTunnel::setup(const NXCPMessage *request)
       debugPrintf(5, _T("   Agent ID:           %s"), (const TCHAR *)m_agentId.toString());
       debugPrintf(5, _T("   Agent version:      %s"), m_agentVersion);
       debugPrintf(5, _T("   Zone UIN:           %u"), m_zoneUIN);
+
+      if (m_state == AGENT_TUNNEL_BOUND)
+      {
+         PostEventWithNames(EVENT_TUNNEL_OPEN, m_nodeId, "dAsssss", s_eventParamNames,
+                  m_id, &m_address, m_systemName, m_hostname, m_platformName, m_systemInfo, m_agentVersion);
+      }
    }
    else
    {
@@ -1298,15 +1317,6 @@ enum TimeoutAction
    BIND_NODE = 2,
    BIND_OR_CREATE_NODE = 3
 };
-
-/**
- * Event parameter names for SYS_UNBOUND_TUNNEL event
- */
-static const TCHAR *s_eventParamNames[] =
-   {
-      _T("tunnelId"), _T("ipAddress"), _T("systemName"), _T("hostName"),
-      _T("platformName"), _T("systemInfo"), _T("agentVersion"), _T("idleTimeout")
-   };
 
 /**
  * Scheduled task for automatic binding of unbound tunnels
