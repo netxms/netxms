@@ -1098,6 +1098,38 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
+		EVENT_TUNNEL_OPEN, 'SYS_TUNNEL_OPEN', '2569c729-1f8c-4a13-9e75-a1d0c1995bc2',
+		EVENT_SEVERITY_NORMAL, 1,
+		'Agent tunnel from %<systemName> (%<ipAddress>) is open',
+		'Generated when agent tunnel is open and bound.' CONCAT CRLF CONCAT
+		'Parameters:' CONCAT CRLF CONCAT
+		'   1) Tunnel ID (tunnelId)' CONCAT CRLF CONCAT
+		'   2) Remote system IP address (ipAddress)' CONCAT CRLF CONCAT
+		'   3) Remote system name (systemName)' CONCAT CRLF CONCAT
+		'   4) Remote system FQDN (hostName)' CONCAT CRLF CONCAT
+		'   5) Remote system platform (platformName)' CONCAT CRLF CONCAT
+		'   6) Remote system information (systemInfo)' CONCAT CRLF CONCAT
+		'   7) Agent version (agentVersion)'
+	);
+
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
+		EVENT_TUNNEL_CLOSED, 'SYS_TUNNEL_CLOSED', '50a61266-710d-48d7-b620-9eaa0f85a94f',
+		EVENT_SEVERITY_WARNING, 1,
+		'Agent tunnel from %<systemName> (%<ipAddress>) is closed',
+		'Generated when agent tunnel is closed.' CONCAT CRLF CONCAT
+		'Parameters:' CONCAT CRLF CONCAT
+		'   1) Tunnel ID (tunnelId)' CONCAT CRLF CONCAT
+		'   2) Remote system IP address (ipAddress)' CONCAT CRLF CONCAT
+		'   3) Remote system name (systemName)' CONCAT CRLF CONCAT
+		'   4) Remote system FQDN (hostName)' CONCAT CRLF CONCAT
+		'   5) Remote system platform (platformName)' CONCAT CRLF CONCAT
+		'   6) Remote system information (systemInfo)' CONCAT CRLF CONCAT
+		'   7) Agent version (agentVersion)'
+	);
+
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
 		EVENT_AGENT_ID_CHANGED, 'SYS_AGENT_ID_CHANGED', '741f0abc-1e69-46e4-adbc-bf1c4ed8549a',
 		EVENT_SEVERITY_WARNING, 1,
 		'Agent ID changed from %1 to %2',
