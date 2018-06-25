@@ -38,6 +38,18 @@ static Mutex s_oneTimeScheduleLock;
 ThreadPool *g_schedulerThreadPool = NULL;
 
 /**
+ * Task handler replacement for missing handlers
+ */
+static void MissingTaskHandler(const ScheduledTaskParameters *params)
+{
+}
+
+/**
+ * Callback definition for missing task handlers
+ */
+static SchedulerCallback s_missingTaskHandler(MissingTaskHandler, 0);
+
+/**
  * Create recurrent task object
  */
 ScheduledTask::ScheduledTask(int id, const TCHAR *taskId, const TCHAR *schedule, const TCHAR *params, const TCHAR *comments, UINT32 owner, UINT32 objectId, UINT32 flags)
@@ -733,6 +745,8 @@ static THREAD_RESULT THREAD_CALL AdHocScheduler(void *arg)
       if (g_flags & AF_SHUTDOWN)
          break;
 
+      sleepTime = 3600;
+
       s_oneTimeScheduleLock.lock();
       time_t now = time(NULL);
       for(int i = 0; i < s_oneTimeSchedules.size(); i++)
@@ -741,40 +755,25 @@ static THREAD_RESULT THREAD_CALL AdHocScheduler(void *arg)
          if (sh->isDisabled() || sh->isRunning() || sh->isCompleted())
             continue;
 
-         SchedulerCallback *callback = s_callbacks.get(sh->getTaskHandlerId());
-         if (callback == NULL)
-         {
-            // FIXME: mark task as failed?
-            DbgPrintf(3, _T("AdHocScheduler: One time execution function with taskId=\'%s\' not found"), sh->getTaskHandlerId());
-            continue;
-         }
+         if (sh->getExecutionTime() == NEVER)
+            break;   // there won't be any more schedulable tasks
 
          // execute all tasks that is expected to execute now
-         if ((sh->getExecutionTime() != 0) && (now >= sh->getExecutionTime()))
+         if (now >= sh->getExecutionTime())
          {
             sh->setFlag(SCHEDULED_TASK_RUNNING);
             nxlog_debug(6, _T("AdHocScheduler: run scheduled task with id = %d, execution time = %d"), sh->getId(), sh->getExecutionTime());
+
+            SchedulerCallback *callback = s_callbacks.get(sh->getTaskHandlerId());
+            if (callback == NULL)
+            {
+               DbgPrintf(3, _T("AdHocScheduler: One time execution function with taskId=\'%s\' not found"), sh->getTaskHandlerId());
+               callback = &s_missingTaskHandler;
+            }
+
             ThreadPoolExecute(g_schedulerThreadPool, sh, &ScheduledTask::run, callback);
          }
          else
-         {
-            break;
-         }
-      }
-
-      sleepTime = 3600;
-
-      // FIXME: could we just take first not yet running task?
-      for(int i = 0; i < s_oneTimeSchedules.size(); i++)
-      {
-         ScheduledTask *sh = s_oneTimeSchedules.get(i);
-         if (sh->isRunning())
-            continue;
-
-         if (sh->getExecutionTime() == NEVER)
-            break;   // FIXME: why?
-
-         if (now < sh->getExecutionTime())
          {
             time_t diff = sh->getExecutionTime() - now;
             if (diff < (time_t)3600)
@@ -782,7 +781,6 @@ static THREAD_RESULT THREAD_CALL AdHocScheduler(void *arg)
             break;
          }
       }
-
       s_oneTimeScheduleLock.unlock();
       nxlog_debug(6, _T("AdHocScheduler: sleeping for %d seconds"), sleepTime);
    }
@@ -815,14 +813,15 @@ static THREAD_RESULT THREAD_CALL RecurrentScheduler(void *arg)
          ScheduledTask *sh = s_cronSchedules.get(i);
          if (sh->checkFlag(SCHEDULED_TASK_DISABLED))
             continue;
-         SchedulerCallback *callback = s_callbacks.get(sh->getTaskHandlerId());
-         if (callback == NULL)
-         {
-            DbgPrintf(3, _T("RecurrentScheduler: Cron execution function with taskId=\'%s\' not found"), sh->getTaskHandlerId());
-            continue;
-         }
          if (MatchSchedule(sh->getSchedule(), &currLocal, now))
          {
+            SchedulerCallback *callback = s_callbacks.get(sh->getTaskHandlerId());
+            if (callback == NULL)
+            {
+               DbgPrintf(3, _T("RecurrentScheduler: Cron execution function with taskId=\'%s\' not found"), sh->getTaskHandlerId());
+               callback = &s_missingTaskHandler;
+            }
+
             DbgPrintf(7, _T("RecurrentScheduler: run schedule id=\'%d\', schedule=\'%s\'"), sh->getId(), sh->getSchedule());
             sh->setFlag(SCHEDULED_TASK_RUNNING);
             ThreadPoolExecute(g_schedulerThreadPool, sh, &ScheduledTask::run, callback);
