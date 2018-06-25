@@ -1,6 +1,6 @@
 /* 
 ** NetXMS subagent for GNU/Linux
-** Copyright (C) 2004-2015 Raden Solutions
+** Copyright (C) 2004-2018 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -209,9 +209,24 @@ static int ProcRead(ObjectArray<Process> *plist, const char *procNameFilter, con
       char *pProcStat = NULL;
       unsigned long nPid = 0;
 
-      char fileName[MAX_PATH];
-      snprintf(fileName, MAX_PATH, "/proc/%s/stat", nameList[count]->d_name);
+      char fileName[MAX_PATH], procNameBuffer[1024];
+
+      snprintf(fileName, MAX_PATH, "/proc/%s/comm", nameList[count]->d_name);
       FILE *hFile = fopen(fileName, "r");
+      if (hFile != NULL)
+      {
+         if (fgets(procNameBuffer, sizeof(procNameBuffer), hFile) != NULL)
+         {
+            char *p = strrchr(procNameBuffer, '\n');
+            if (p != NULL)
+               *p = 0;
+            pProcName = procNameBuffer;
+         }
+         fclose(hFile);
+      }
+
+      snprintf(fileName, MAX_PATH, "/proc/%s/stat", nameList[count]->d_name);
+      hFile = fopen(fileName, "r");
       if (hFile != NULL)
       {
          char szProcStat[1024] = {0}; 
@@ -219,15 +234,26 @@ static int ProcRead(ObjectArray<Process> *plist, const char *procNameFilter, con
          {
             if (sscanf(szProcStat, "%lu ", &nPid) == 1)
             {
-               pProcName = strchr(szProcStat, ')');
-               if (pProcName != NULL)
+               char *procNamePos = strchr(szProcStat, '(');
+               if (procNamePos != NULL)
                {
-                  pProcStat = pProcName + 1;
-                  *pProcName = 0;							
-                  pProcName =  strchr(szProcStat, '(');
                   if (pProcName != NULL)
                   {
-                     pProcName++;
+                     // Already got process name from comm file
+                     pProcStat = procNamePos + strlen(pProcName) + 2;   // process name plus 2 brackets
+                  }
+                  else
+                  {
+                     pProcStat = strchr(procNamePos, ')');
+                     if (pProcStat != NULL)
+                     {
+                        pProcName = procNamePos + 1;
+                        *pProcStat = 0;
+                        pProcStat++;
+                     }
+                  }
+                  if (pProcName != NULL)
+                  {
                      if ((procNameFilter != NULL) && (*procNameFilter != 0))
                      {
                         if (cmdLineFilter == NULL) // use old style compare
