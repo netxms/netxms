@@ -224,23 +224,14 @@ void NXCORE_EXPORTABLE WriteAuditLogWithValues2(const TCHAR *subsys, bool isSucc
 
 	if (m_auditServerAddr.isValidUnicast())
 	{
-		String extText;
-		TCHAR buffer[256];
-
-		extText = _T("[");
-		if (ResolveUserId(userId, buffer, 256))
-		{
-			extText += buffer;
-		}
-		else
-		{
-			extText.appendFormattedString(_T("{%d}"), userId);
-		}
-
-		extText.appendFormattedString(_T("@%s] "), workstation);
-
-		extText += (const TCHAR *)text;
-		SendSyslogRecord((const TCHAR *)extText);
+		String extText = _T("[");
+		TCHAR buffer[MAX_USER_NAME];
+      extText.append(ResolveUserId(userId, buffer, true));
+		extText.append(_T('@'));
+      extText.append(workstation);
+      extText.append(_T("] "));
+		extText.append(text);
+		SendSyslogRecord(extText);
 	}
 }
 

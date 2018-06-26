@@ -421,7 +421,7 @@ void NXCORE_EXPORTABLE CloseUserDatabase(Iterator<UserDatabaseObject> *it);
 const TCHAR NXCORE_EXPORTABLE *GetUserDbObjectAttr(UINT32 id, const TCHAR *name);
 UINT32 NXCORE_EXPORTABLE GetUserDbObjectAttrAsULong(UINT32 id, const TCHAR *name);
 void NXCORE_EXPORTABLE SetUserDbObjectAttr(UINT32 id, const TCHAR *name, const TCHAR *value);
-bool NXCORE_EXPORTABLE ResolveUserId(UINT32 id, TCHAR *buffer, int bufSize);
+TCHAR NXCORE_EXPORTABLE *ResolveUserId(UINT32 id, TCHAR *buffer, bool noFail = false);
 void UpdateLDAPUser(const TCHAR* dn, Entry *obj);
 void RemoveDeletedLDAPEntries(StringObjectMap<Entry> *entryListDn, StringObjectMap<Entry> *entryListId, UINT32 m_action, bool isUser);
 void UpdateLDAPGroup(const TCHAR* dn, Entry *obj);

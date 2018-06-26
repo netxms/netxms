@@ -35,7 +35,18 @@
 static const TCHAR *s_eventParamNames[] =
    {
       _T("tunnelId"), _T("ipAddress"), _T("systemName"), _T("hostName"),
-      _T("platformName"), _T("systemInfo"), _T("agentVersion"), _T("idleTimeout")
+      _T("platformName"), _T("systemInfo"), _T("agentVersion"),
+      _T("agentId"), _T("idleTimeout")
+   };
+
+/**
+ * Event parameter names for SYS_TUNNEL_AGENT_ID_MISMATCH event
+ */
+static const TCHAR *s_eventParamNamesAgentIdMismatch[] =
+   {
+      _T("tunnelId"), _T("ipAddress"), _T("systemName"), _T("hostName"),
+      _T("platformName"), _T("systemInfo"), _T("agentVersion"),
+      _T("tunnelAgentId"), _T("nodeAgentId")
    };
 
 /**
@@ -73,9 +84,10 @@ static void UnregisterTunnel(AgentTunnel *tunnel)
    s_tunnelListLock.lock();
    if (tunnel->isBound())
    {
-      PostEventWithNames(EVENT_TUNNEL_CLOSED, tunnel->getNodeId(), "dAsssss", s_eventParamNames,
+      PostEventWithNames(EVENT_TUNNEL_CLOSED, tunnel->getNodeId(), "dAsssssG", s_eventParamNames,
                tunnel->getId(), &tunnel->getAddress(), tunnel->getSystemName(), tunnel->getHostname(),
-               tunnel->getPlatformName(), tunnel->getSystemInfo(), tunnel->getAgentVersion());
+               tunnel->getPlatformName(), tunnel->getSystemInfo(), tunnel->getAgentVersion(),
+               &tunnel->getAgentId());
 
       // Check that current tunnel for node is tunnel being unregistered
       // New tunnel could be established while old one still finishing
@@ -122,10 +134,13 @@ UINT32 BindAgentTunnel(UINT32 tunnelId, UINT32 nodeId, UINT32 userId)
 
    if (tunnel == NULL)
    {
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("BindAgentTunnel: unbound tunnel with ID %d not found"), tunnelId);
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("BindAgentTunnel: unbound tunnel with ID %u not found"), tunnelId);
       return RCC_INVALID_TUNNEL_ID;
    }
 
+   TCHAR userName[MAX_USER_NAME];
+   nxlog_debug_tag(DEBUG_TAG, 4, _T("BindAgentTunnel: processing bind request %u -> %u by user %s"),
+            tunnelId, nodeId, ResolveUserId(userId, userName, true));
    UINT32 rcc = tunnel->bind(nodeId, userId);
    tunnel->decRefCount();
    return rcc;
@@ -142,6 +157,10 @@ UINT32 UnbindAgentTunnel(UINT32 nodeId, UINT32 userId)
 
    if (node->getTunnelId().isNull())
       return RCC_SUCCESS;  // tunnel is not set
+
+   TCHAR userName[MAX_USER_NAME];
+   nxlog_debug_tag(DEBUG_TAG, 4, _T("UnbindAgentTunnel: processing unbind request for node %u by user %s"),
+            nodeId, ResolveUserId(userId, userName, true));
 
    TCHAR subject[256];
    _sntprintf(subject, 256, _T("OU=%s,CN=%s"), (const TCHAR *)node->getGuid().toString(), (const TCHAR *)node->getTunnelId().toString());
@@ -484,18 +503,19 @@ void AgentTunnel::setup(const NXCPMessage *request)
          m_zoneUIN = request->getFieldAsUInt32(VID_ZONE_UIN);
 
       debugPrintf(3, _T("%s tunnel initialized"), (m_state == AGENT_TUNNEL_BOUND) ? _T("Bound") : _T("Unbound"));
-      debugPrintf(5, _T("   System name:        %s"), m_systemName);
-      debugPrintf(5, _T("   Hostname:           %s"), m_hostname);
-      debugPrintf(5, _T("   System information: %s"), m_systemInfo);
-      debugPrintf(5, _T("   Platform name:      %s"), m_platformName);
-      debugPrintf(5, _T("   Agent ID:           %s"), (const TCHAR *)m_agentId.toString());
-      debugPrintf(5, _T("   Agent version:      %s"), m_agentVersion);
-      debugPrintf(5, _T("   Zone UIN:           %u"), m_zoneUIN);
+      debugPrintf(4, _T("   System name:        %s"), m_systemName);
+      debugPrintf(4, _T("   Hostname:           %s"), m_hostname);
+      debugPrintf(4, _T("   System information: %s"), m_systemInfo);
+      debugPrintf(4, _T("   Platform name:      %s"), m_platformName);
+      debugPrintf(4, _T("   Agent ID:           %s"), (const TCHAR *)m_agentId.toString());
+      debugPrintf(4, _T("   Agent version:      %s"), m_agentVersion);
+      debugPrintf(4, _T("   Zone UIN:           %u"), m_zoneUIN);
 
       if (m_state == AGENT_TUNNEL_BOUND)
       {
-         PostEventWithNames(EVENT_TUNNEL_OPEN, m_nodeId, "dAsssss", s_eventParamNames,
-                  m_id, &m_address, m_systemName, m_hostname, m_platformName, m_systemInfo, m_agentVersion);
+         PostEventWithNames(EVENT_TUNNEL_OPEN, m_nodeId, "dAsssssG", s_eventParamNames,
+                  m_id, &m_address, m_systemName, m_hostname, m_platformName, m_systemInfo,
+                  m_agentVersion, &m_agentId);
       }
    }
    else
@@ -517,6 +537,15 @@ UINT32 AgentTunnel::bind(UINT32 nodeId, UINT32 userId)
    Node *node = (Node *)FindObjectById(nodeId, OBJECT_NODE);
    if (node == NULL)
       return RCC_INVALID_OBJECT_ID;
+
+   if (!node->getAgentId().equals(m_agentId))
+   {
+      debugPrintf(3, _T("Node agent ID (%s) do not match tunnel agent ID (%s) on bind"),
+               (const TCHAR *)node->getAgentId().toString(), (const TCHAR *)m_agentId.toString());
+      PostEventWithNames(EVENT_TUNNEL_AGENT_ID_MISMATCH, nodeId, "dAsssssGG", s_eventParamNamesAgentIdMismatch,
+               m_id, &m_address, m_systemName, m_hostname, m_platformName, m_systemInfo,
+               m_agentVersion, &node->getAgentId(), &m_agentId);
+   }
 
    NXCPMessage msg;
    msg.setCode(CMD_BIND_AGENT_TUNNEL);
@@ -1356,8 +1385,9 @@ void ProcessUnboundTunnels(const ScheduledTaskParameters *p)
             t->shutdown();
             break;
          case GENERATE_EVENT:
-            PostEventWithNames(EVENT_UNBOUND_TUNNEL, g_dwMgmtNode, "dAsssssd", s_eventParamNames,
-                     t->getId(), &t->getAddress(), t->getSystemName(), t->getHostname(), t->getPlatformName(), t->getSystemInfo(), t->getAgentVersion(), timeout);
+            PostEventWithNames(EVENT_UNBOUND_TUNNEL, g_dwMgmtNode, "dAsssssGd", s_eventParamNames,
+                     t->getId(), &t->getAddress(), t->getSystemName(), t->getHostname(), t->getPlatformName(),
+                     t->getSystemInfo(), t->getAgentVersion(), &t->getAgentId(), timeout);
             t->resetStartTime();
             break;
          case BIND_NODE:

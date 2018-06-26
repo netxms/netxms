@@ -150,6 +150,7 @@
 #define EVENT_AGENT_ID_CHANGED             93
 #define EVENT_TUNNEL_OPEN                  94
 #define EVENT_TUNNEL_CLOSED                95
+#define EVENT_TUNNEL_AGENT_ID_MISMATCH     96
 
 #define EVENT_SNMP_UNMATCHED_TRAP          500
 #define EVENT_SNMP_COLD_START              501

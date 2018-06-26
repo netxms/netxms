@@ -140,6 +140,7 @@ public:
    const TCHAR *getSystemInfo() const { return m_systemInfo; }
    const TCHAR *getPlatformName() const { return m_platformName; }
    const TCHAR *getAgentVersion() const { return m_agentVersion; }
+   const uuid& getAgentId() const { return m_agentId; }
    UINT32 getZoneUIN() const { return m_zoneUIN; }
    bool isBound() const { return m_nodeId != 0; }
    UINT32 getNodeId() const { return m_nodeId; }
