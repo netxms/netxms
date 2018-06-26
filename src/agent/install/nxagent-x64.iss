@@ -16,7 +16,7 @@ Source: "..\..\..\x64\release\libnxjava.dll"; DestDir: "{app}\bin"; Flags: ignor
 Source: "..\..\..\x64\release\libnxlp.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\x64\release\libnxsnmp.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\x64\release\appagent.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
-Source: "..\..\..\x64\release\nxagentd.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\..\..\x64\release\nxagentd.exe"; DestDir: "{app}\bin"; BeforeInstall: RenameOldFile; Flags: ignoreversion signonce
 Source: "..\..\..\x64\Release\nxsagent.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\x64\release\db2.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\x64\release\dbquery.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
