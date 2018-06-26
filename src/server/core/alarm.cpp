@@ -1694,7 +1694,7 @@ UINT32 GetAlarmComments(UINT32 alarmId, NXCPMessage *msg)
 				safe_free(text);
 
             TCHAR userName[MAX_USER_NAME];
-            if (ResolveUserId(userId, userName, MAX_USER_NAME))
+            if (ResolveUserId(userId, userName) != NULL)
             {
    				msg->setField(varId++, userName);
             }

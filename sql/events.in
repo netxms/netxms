@@ -1093,7 +1093,8 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'   5) Remote system platform (platformName)' CONCAT CRLF CONCAT
 		'   6) Remote system information (systemInfo)' CONCAT CRLF CONCAT
 		'   7) Agent version (agentVersion)' CONCAT CRLF CONCAT
-		'   8) Configured idle timeout (idleTimeout)'
+		'   8) Agent ID (agentId)' CONCAT CRLF CONCAT
+		'   9) Configured idle timeout (idleTimeout)'
 	);
 
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
@@ -1109,7 +1110,8 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'   4) Remote system FQDN (hostName)' CONCAT CRLF CONCAT
 		'   5) Remote system platform (platformName)' CONCAT CRLF CONCAT
 		'   6) Remote system information (systemInfo)' CONCAT CRLF CONCAT
-		'   7) Agent version (agentVersion)'
+		'   7) Agent version (agentVersion)' CONCAT CRLF CONCAT
+		'   8) Agent ID (agentId)'
 	);
 
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
@@ -1125,7 +1127,26 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'   4) Remote system FQDN (hostName)' CONCAT CRLF CONCAT
 		'   5) Remote system platform (platformName)' CONCAT CRLF CONCAT
 		'   6) Remote system information (systemInfo)' CONCAT CRLF CONCAT
-		'   7) Agent version (agentVersion)'
+		'   7) Agent version (agentVersion)' CONCAT CRLF CONCAT
+		'   8) Agent ID (agentId)'
+	);
+
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
+		EVENT_TUNNEL_AGENT_ID_MISMATCH, 'SYS_TUNNEL_AGENT_ID_MISMATCH', '30792e3d-f94a-4866-9616-457ba3ac276a',
+		EVENT_SEVERITY_WARNING, 1,
+		'Agent ID %<nodeAgentId> on node do not match agent ID %<tunnelAgentId> on tunnel from %<systemName> (%<ipAddress>) at bind',
+		'Generated when agent ID mismatch detected during tunnel bind.' CONCAT CRLF CONCAT
+		'Parameters:' CONCAT CRLF CONCAT
+		'   1) Tunnel ID (tunnelId)' CONCAT CRLF CONCAT
+		'   2) Remote system IP address (ipAddress)' CONCAT CRLF CONCAT
+		'   3) Remote system name (systemName)' CONCAT CRLF CONCAT
+		'   4) Remote system FQDN (hostName)' CONCAT CRLF CONCAT
+		'   5) Remote system platform (platformName)' CONCAT CRLF CONCAT
+		'   6) Remote system information (systemInfo)' CONCAT CRLF CONCAT
+		'   7) Agent version (agentVersion)' CONCAT CRLF CONCAT
+		'   8) Tunnel agent ID (tunnelAgentId)' CONCAT CRLF CONCAT
+		'   9) Node agent ID (nodeAgentId)'
 	);
 
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES

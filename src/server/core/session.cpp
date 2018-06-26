@@ -2926,11 +2926,10 @@ void ClientSession::updateUser(NXCPMessage *pRequest)
       UINT32 result = ModifyUserDatabaseObject(pRequest, &oldData, &newData);
       if (result == RCC_SUCCESS)
       {
-         TCHAR name[MAX_DB_STRING];
+         TCHAR name[MAX_USER_NAME];
          UINT32 id = pRequest->getFieldAsUInt32(VID_USER_ID);
-         ResolveUserId(id, name, MAX_DB_STRING);
          writeAuditLogWithValues(AUDIT_SECURITY, true, 0, oldData, newData,
-            _T("%s %s modified"), (id & GROUP_FLAG) ? _T("Group") : _T("User"), name);
+            _T("%s %s modified"), (id & GROUP_FLAG) ? _T("Group") : _T("User"), ResolveUserId(id, name, true));
       }
       msg.setField(VID_RCC, result);
       json_decref(oldData);
@@ -2970,9 +2969,8 @@ void ClientSession::detachLdapUser(NXCPMessage *pRequest)
       if (result == RCC_SUCCESS)
       {
          TCHAR name[MAX_DB_STRING];
-         ResolveUserId(id, name, MAX_DB_STRING);
          writeAuditLog(AUDIT_SECURITY, true, 0,
-            _T("%s %s detached from LDAP account"), (id & GROUP_FLAG) ? _T("Group") : _T("User"), name);
+            _T("%s %s detached from LDAP account"), (id & GROUP_FLAG) ? _T("Group") : _T("User"), ResolveUserId(id, name, true));
       }
       msg.setField(VID_RCC, result);
    }
@@ -3013,8 +3011,8 @@ void ClientSession::deleteUser(NXCPMessage *pRequest)
       {
          if (!IsLoggedIn(dwUserId))
          {
-            TCHAR name[MAX_DB_STRING];
-            ResolveUserId(dwUserId, name, MAX_DB_STRING);
+            TCHAR name[MAX_USER_NAME];
+            ResolveUserId(dwUserId, name, true);
             UINT32 rcc =  DeleteUserDatabaseObject(dwUserId);
             msg.setField(VID_RCC, rcc);
             if(rcc == RCC_SUCCESS)
@@ -3294,9 +3292,9 @@ void ClientSession::setPassword(NXCPMessage *request)
 
       if (rcc == RCC_SUCCESS)
       {
-         TCHAR userName[MAX_DB_STRING];
-         ResolveUserId(userId, userName, MAX_DB_STRING);
-         WriteAuditLog(AUDIT_SECURITY, TRUE, m_dwUserId, m_workstation, m_id, 0, _T("Changed password for user %s"), userName);
+         TCHAR userName[MAX_USER_NAME];
+         WriteAuditLog(AUDIT_SECURITY, TRUE, m_dwUserId, m_workstation, m_id, 0,
+                  _T("Changed password for user %s"), ResolveUserId(userId, userName, true));
       }
    }
    else

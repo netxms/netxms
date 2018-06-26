@@ -623,16 +623,20 @@ void UpdateGroupMembership(UINT32 userId, int numGroups, UINT32 *groups)
 }
 
 /**
- * Resolve user's ID to login name
+ * Resolve user's ID to login name. Returns pointer to buffer on success and NULL on failure.
+ * Buffer must be at least MAX_USER_NAME characters long.
+ * If "noFail" flag is set, return string in form {id} if user cannot be found.
  */
-bool NXCORE_EXPORTABLE ResolveUserId(UINT32 id, TCHAR *buffer, int bufSize)
+TCHAR NXCORE_EXPORTABLE *ResolveUserId(UINT32 id, TCHAR *buffer, bool noFail)
 {
    RWLockReadLock(s_userDatabaseLock, INFINITE);
    UserDatabaseObject *object = s_userDatabase.get(id);
    if (object != NULL)
-      nx_strncpy(buffer, object->getName(), bufSize);
+      _tcslcpy(buffer, object->getName(), MAX_USER_NAME);
+   else if (noFail)
+      _sntprintf(buffer, MAX_USER_NAME, _T("{%u}"), id);
    RWLockUnlock(s_userDatabaseLock);
-	return object != NULL;
+	return ((object != NULL) || noFail) ? buffer : NULL;
 }
 
 /**
@@ -1474,7 +1478,6 @@ ObjectArray<UserDatabaseObject> *FindUserDBObjects(IntegerArray<UINT32> *ids)
       }
    }
    RWLockUnlock(s_userDatabaseLock);
-
    return userDB;
 }
 

@@ -24,11 +24,107 @@
 #include <nxevent.h>
 
 /**
- * Upgrade from 22.28 to 30.0
+ * Upgrade from 22.29 to 30.0
+ */
+static bool H_UpgradeFromV29()
+{
+   CHK_EXEC(SetMajorSchemaVersion(30, 0));
+   return true;
+}
+
+/**
+ * Upgrade from 22.28 to 22.29
  */
 static bool H_UpgradeFromV28()
 {
-   CHK_EXEC(SetMajorSchemaVersion(30, 0));
+   DB_STATEMENT hStmt = DBPrepare(g_hCoreDB, _T("UPDATE event_cfg SET description=? WHERE event_code=?"));
+   if (hStmt != NULL)
+   {
+      DBBind(hStmt, 1, DB_SQLTYPE_TEXT,
+               _T("Generated when agent tunnel is open and bound.\r\n")
+               _T("Parameters:\r\n")
+               _T("   1) Tunnel ID (tunnelId)\r\n")
+               _T("   2) Remote system IP address (ipAddress)\r\n")
+               _T("   3) Remote system name (systemName)\r\n")
+               _T("   4) Remote system FQDN (hostName)\r\n")
+               _T("   5) Remote system platform (platformName)\r\n")
+               _T("   6) Remote system information (systemInfo)\r\n")
+               _T("   7) Agent version (agentVersion)\r\n")
+               _T("   8) Agent ID (agentId)"),
+               DB_BIND_STATIC);
+      DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, EVENT_TUNNEL_OPEN);
+      bool success = DBExecute(hStmt);
+      if (!success && !g_bIgnoreErrors)
+      {
+         DBFreeStatement(hStmt);
+         return false;
+      }
+
+      DBBind(hStmt, 1, DB_SQLTYPE_TEXT,
+               _T("Generated when agent tunnel is closed.\r\n")
+               _T("Parameters:\r\n")
+               _T("   1) Tunnel ID (tunnelId)\r\n")
+               _T("   2) Remote system IP address (ipAddress)\r\n")
+               _T("   3) Remote system name (systemName)\r\n")
+               _T("   4) Remote system FQDN (hostName)\r\n")
+               _T("   5) Remote system platform (platformName)\r\n")
+               _T("   6) Remote system information (systemInfo)\r\n")
+               _T("   7) Agent version (agentVersion)\r\n")
+               _T("   8) Agent ID (agentId)"),
+               DB_BIND_STATIC);
+      DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, EVENT_TUNNEL_CLOSED);
+      success = DBExecute(hStmt);
+      if (!success && !g_bIgnoreErrors)
+      {
+         DBFreeStatement(hStmt);
+         return false;
+      }
+
+      DBBind(hStmt, 1, DB_SQLTYPE_TEXT,
+               _T("Generated when unbound agent tunnel is not bound or closed for more than configured threshold.\r\n")
+               _T("Parameters:\r\n")
+               _T("   1) Tunnel ID (tunnelId)\r\n")
+               _T("   2) Remote system IP address (ipAddress)\r\n")
+               _T("   3) Remote system name (systemName)\r\n")
+               _T("   4) Remote system FQDN (hostName)\r\n")
+               _T("   5) Remote system platform (platformName)\r\n")
+               _T("   6) Remote system information (systemInfo)\r\n")
+               _T("   7) Agent version (agentVersion)\r\n")
+               _T("   8) Agent ID (agentId)\r\n")
+               _T("   9) Configured idle timeout (idleTimeout)"),
+               DB_BIND_STATIC);
+      DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, EVENT_UNBOUND_TUNNEL);
+      success = DBExecute(hStmt);
+      if (!success && !g_bIgnoreErrors)
+      {
+         DBFreeStatement(hStmt);
+         return false;
+      }
+
+      DBFreeStatement(hStmt);
+   }
+   else
+   {
+      if (!g_bIgnoreErrors)
+         return false;
+   }
+
+   CHK_EXEC(CreateEventTemplate(EVENT_TUNNEL_AGENT_ID_MISMATCH, _T("SYS_TUNNEL_AGENT_ID_MISMATCH"), SEVERITY_WARNING, EF_LOG, _T("30792e3d-f94a-4866-9616-457ba3ac276a"),
+            _T("Agent ID %<nodeAgentId> on node do not match agent ID %<tunnelAgentId> on tunnel from %<systemName> (%<ipAddress>) at bind"),
+            _T("Generated when agent ID mismatch detected during tunnel bind.\r\n")
+            _T("Parameters:\r\n")
+            _T("   1) Tunnel ID (tunnelId)\r\n")
+            _T("   2) Remote system IP address (ipAddress)\r\n")
+            _T("   3) Remote system name (systemName)\r\n")
+            _T("   4) Remote system FQDN (hostName)\r\n")
+            _T("   5) Remote system platform (platformName)\r\n")
+            _T("   6) Remote system information (systemInfo)\r\n")
+            _T("   7) Agent version (agentVersion)\r\n")
+            _T("   8) Tunnel agent ID (tunnelAgentId)\r\n")
+            _T("   9) Node agent ID (nodeAgentId)")
+            ));
+
+   CHK_EXEC(SetMinorSchemaVersion(29));
    return true;
 }
 
@@ -522,7 +618,8 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
-   { 28, 30, 0,  H_UpgradeFromV28 },
+   { 29, 30, 0,  H_UpgradeFromV29 },
+   { 28, 22, 29, H_UpgradeFromV28 },
    { 27, 22, 28, H_UpgradeFromV27 },
    { 26, 22, 27, H_UpgradeFromV26 },
    { 25, 22, 26, H_UpgradeFromV25 },
