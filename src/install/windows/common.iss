@@ -64,6 +64,7 @@ Filename: "{app}\bin\nxagentd.exe"; Parameters: "-R"; StatusMsg: "Uninstalling a
 [Code]
 Var
   HttpdSettingsPage: TInputQueryWizardPage;
+  backupFileSuffix: String;
 
 #include "firewall.iss"
 
@@ -73,6 +74,13 @@ Var
 Begin
   Exec('net.exe', 'stop NetXMSCore', ExpandConstant('{app}\bin'), 0, ewWaitUntilTerminated, iResult);
   Exec('net.exe', 'stop NetXMSAgentdW32', ExpandConstant('{app}\bin'), 0, ewWaitUntilTerminated, iResult);
+End;
+
+Function InitializeSetup(): Boolean;
+Begin
+  // Common suffix for backup files
+  backupFileSuffix := '.bak.' + GetDateTimeString('yyyymmddhhnnss', #0, #0);
+  Result := TRUE
 End;
 
 Procedure InitializeWizard;
@@ -102,18 +110,42 @@ Begin
   Result := HttpdSettingsPage.Values[0];
 End;
 
+Procedure RenameOldFile;
+Begin
+  RenameFile(ExpandConstant(CurrentFileName), ExpandConstant(CurrentFileName) + backupFileSuffix);
+End;
+
+Procedure DeleteBackupFiles;
+Var
+  fd: TFindRec;
+  basePath: String;
+Begin
+  basePath := ExpandConstant('{app}\bin\');
+  If FindFirst(basePath + '*.bak.*', fd) Then
+  Begin
+    Try
+      Repeat
+        DeleteFile(basePath + fd.Name);
+      Until Not FindNext(fd);
+    Finally
+      FindClose(fd);
+    End;
+  End;
+End;
+
 Procedure CurStepChanged(CurStep: TSetupStep);
 Begin
   If CurStep=ssPostInstall Then Begin
-     SetFirewallException('NetXMS Server', ExpandConstant('{app}')+'\bin\netxmsd.exe');
-     SetFirewallException('NetXMS Agent', ExpandConstant('{app}')+'\bin\nxagentd.exe');
+    SetFirewallException('NetXMS Server', ExpandConstant('{app}')+'\bin\netxmsd.exe');
+    SetFirewallException('NetXMS Agent', ExpandConstant('{app}')+'\bin\nxagentd.exe');
+    DeleteBackupFiles;
   End;
 End;
 
 Procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
 Begin
   If CurUninstallStep=usPostUninstall Then Begin
-     RemoveFirewallException(ExpandConstant('{app}')+'\bin\netxmsd.exe');
-     RemoveFirewallException(ExpandConstant('{app}')+'\bin\nxagentd.exe');
+    RemoveFirewallException(ExpandConstant('{app}')+'\bin\netxmsd.exe');
+    RemoveFirewallException(ExpandConstant('{app}')+'\bin\nxagentd.exe');
   End;
 End;

@@ -36,6 +36,7 @@ Var
   SubagentSelectionPage: TInputOptionWizardPage;
   serverName, sbECS, sbFileMgr, sbLogWatch, sbPing, sbPortCheck, 
     sbWinPerf, sbWMI, sbUPS, sbDownloadConfig, extraConfigValues: String;
+  backupFileSuffix: String;
 
 #include "..\..\install\windows\firewall.iss"
 
@@ -91,6 +92,9 @@ Var
   i, nCount : Integer;
   param : String;
 Begin
+  // Common suffix for backup files
+  backupFileSuffix := '.bak.' + GetDateTimeString('yyyymmddhhnnss', #0, #0);
+
   // Check if we are running on 64-bit Windows
   If (NOT Is64BitInstallMode) AND (ProcessorArchitecture = paX64) Then Begin
     If MsgBox('You are trying to install 32-bit version of NetXMS agent on 64-bit Windows. It is recommended to install 64-bit version instead. Do you really wish to continue installation?', mbConfirmation, MB_YESNO) = IDYES Then
@@ -295,16 +299,40 @@ Begin
     Result := '';
 End;
 
+Procedure RenameOldFile;
+Begin
+  RenameFile(ExpandConstant(CurrentFileName), ExpandConstant(CurrentFileName) + backupFileSuffix);
+End;
+
+Procedure DeleteBackupFiles;
+Var
+  fd: TFindRec;
+  basePath: String;
+Begin
+  basePath := ExpandConstant('{app}\bin\');
+  If FindFirst(basePath + '*.bak.*', fd) Then
+  Begin
+    Try
+      Repeat
+        DeleteFile(basePath + fd.Name);
+      Until Not FindNext(fd);
+    Finally
+      FindClose(fd);
+    End;
+  End;
+End;
+
 Procedure CurStepChanged(CurStep: TSetupStep);
 Begin
-  If CurStep=ssPostInstall Then Begin
-     SetFirewallException('NetXMS Agent', ExpandConstant('{app}')+'\bin\nxagentd.exe');
+  If CurStep = ssPostInstall Then Begin
+    SetFirewallException('NetXMS Agent', ExpandConstant('{app}')+'\bin\nxagentd.exe');
+    DeleteBackupFiles;
   End;
 End;
 
 Procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
 Begin
-  If CurUninstallStep=usPostUninstall Then Begin
+  If CurUninstallStep = usPostUninstall Then Begin
      RemoveFirewallException(ExpandConstant('{app}')+'\bin\nxagentd.exe');
   End;
 End;
