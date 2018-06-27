@@ -811,8 +811,9 @@ static THREAD_RESULT THREAD_CALL RecurrentScheduler(void *arg)
       for(int i = 0; i < s_cronSchedules.size(); i++)
       {
          ScheduledTask *sh = s_cronSchedules.get(i);
-         if (sh->checkFlag(SCHEDULED_TASK_DISABLED))
+         if (sh->isDisabled() || sh->isRunning())
             continue;
+
          if (MatchSchedule(sh->getSchedule(), &currLocal, now))
          {
             SchedulerCallback *callback = s_callbacks.get(sh->getTaskHandlerId());
