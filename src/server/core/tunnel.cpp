@@ -1283,28 +1283,28 @@ static bool MatchTunnelToNode(NetObj *object, void *data)
             {
                nxlog_debug_tag(DEBUG_TAG, 4, _T("Agent version mismatch (%s != %s) for node %s [%d] and unbound tunnel from %s (%s)"),
                         agentVersion, tunnel->getAgentVersion(), node->getName(), node->getId(),
-                        tunnel->getHostname(), (const TCHAR *)tunnel->getAddress().toString());
+                        tunnel->getDisplayName(), (const TCHAR *)tunnel->getAddress().toString());
                return false;
             }
             if (_tcscmp(hostName, tunnel->getSystemName()))
             {
                nxlog_debug_tag(DEBUG_TAG, 4, _T("System name mismatch (%s != %s) for node %s [%d] and unbound tunnel from %s (%s)"),
                         hostName, tunnel->getSystemName(), node->getName(), node->getId(),
-                        tunnel->getHostname(), (const TCHAR *)tunnel->getAddress().toString());
+                        tunnel->getDisplayName(), (const TCHAR *)tunnel->getAddress().toString());
                return false;
             }
             if (_tcscmp(fqdn, tunnel->getHostname()))
             {
                nxlog_debug_tag(DEBUG_TAG, 4, _T("Host name mismatch (%s != %s) for node %s [%d] and unbound tunnel from %s (%s)"),
                         fqdn, tunnel->getHostname(), node->getName(), node->getId(),
-                        tunnel->getHostname(), (const TCHAR *)tunnel->getAddress().toString());
+                        tunnel->getDisplayName(), (const TCHAR *)tunnel->getAddress().toString());
                return false;
             }
          }
       }
 
       nxlog_debug_tag(DEBUG_TAG, 4, _T("Found matching node %s [%d] for unbound tunnel from %s (%s)"),
-               node->getName(), node->getId(), tunnel->getHostname(), (const TCHAR *)tunnel->getAddress().toString());
+               node->getName(), node->getId(), tunnel->getDisplayName(), (const TCHAR *)tunnel->getAddress().toString());
       return true;   // Match by IP address or name
    }
 
@@ -1364,7 +1364,7 @@ void ProcessUnboundTunnels(const ScheduledTaskParameters *p)
    {
       AgentTunnel *t = s_unboundTunnels.get(i);
       nxlog_debug_tag(DEBUG_TAG, 9, _T("Checking tunnel from %s (%s): state=%d, startTime=%ld"),
-               t->getHostname(), (const TCHAR *)t->getAddress().toString(), t->getState(), (long)t->getStartTime());
+               t->getDisplayName(), (const TCHAR *)t->getAddress().toString(), t->getState(), (long)t->getStartTime());
       if ((t->getState() == AGENT_TUNNEL_UNBOUND) && (t->getStartTime() + timeout <= now))
       {
          t->incRefCount();
@@ -1378,7 +1378,7 @@ void ProcessUnboundTunnels(const ScheduledTaskParameters *p)
    for(int i = 0; i < processingList.size(); i++)
    {
       AgentTunnel *t = processingList.get(i);
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("Processing timeout for unbound tunnel from %s (%s) - action=%d"), t->getHostname(), (const TCHAR *)t->getAddress().toString(), action);
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Processing timeout for unbound tunnel from %s (%s) - action=%d"), t->getDisplayName(), (const TCHAR *)t->getAddress().toString(), action);
       switch(action)
       {
          case RESET:
@@ -1396,13 +1396,13 @@ void ProcessUnboundTunnels(const ScheduledTaskParameters *p)
             if (node != NULL)
             {
                nxlog_debug_tag(DEBUG_TAG, 4, _T("Binding tunnel from %s (%s) to existing node %s [%d]"),
-                        t->getHostname(), (const TCHAR *)t->getAddress().toString(), node->getName(), node->getId());
+                        t->getDisplayName(), (const TCHAR *)t->getAddress().toString(), node->getName(), node->getId());
                BindAgentTunnel(t->getId(), node->getId(), 0);
             }
             else if (action == BIND_OR_CREATE_NODE)
             {
                nxlog_debug_tag(DEBUG_TAG, 4, _T("Creating new node for tunnel from %s (%s)"),
-                        t->getHostname(), (const TCHAR *)t->getAddress().toString());
+                        t->getDisplayName(), (const TCHAR *)t->getAddress().toString());
 
                NewNodeData nd(InetAddress::NONE);  // use 0.0.0.0 to avoid direct communications by default
                _tcslcpy(nd.name, t->getSystemName(), MAX_OBJECT_NAME);

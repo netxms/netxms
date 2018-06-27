@@ -137,6 +137,7 @@ public:
    const InetAddress& getAddress() const { return m_address; }
    const TCHAR *getSystemName() const { return m_systemName; }
    const TCHAR *getHostname() const { return m_hostname; }
+   const TCHAR *getDisplayName() const { return m_hostname[0] != 0 ? m_hostname : m_systemName; }
    const TCHAR *getSystemInfo() const { return m_systemInfo; }
    const TCHAR *getPlatformName() const { return m_platformName; }
    const TCHAR *getAgentVersion() const { return m_agentVersion; }
