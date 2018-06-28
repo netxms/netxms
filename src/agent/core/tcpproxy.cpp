@@ -57,7 +57,7 @@ TcpProxy::~TcpProxy()
 bool TcpProxy::readSocket()
 {
    BYTE buffer[65536];
-   int bytes = recv(m_socket, buffer + NXCP_HEADER_SIZE, 65536 - NXCP_HEADER_SIZE, 0);
+   int bytes = recv(m_socket, (char *)buffer + NXCP_HEADER_SIZE, 65536 - NXCP_HEADER_SIZE, 0);
    if (bytes <= 0)
       return false;
 
