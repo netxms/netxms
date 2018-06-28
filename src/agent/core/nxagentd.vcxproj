@@ -207,6 +207,7 @@
     <ClCompile Include="subagent.cpp" />
     <ClCompile Include="sysinfo.cpp" />
     <ClCompile Include="syslog.cpp" />
+    <ClCompile Include="tcpproxy.cpp" />
     <ClCompile Include="tools.cpp" />
     <ClCompile Include="trap.cpp" />
     <ClCompile Include="tunnel.cpp" />
