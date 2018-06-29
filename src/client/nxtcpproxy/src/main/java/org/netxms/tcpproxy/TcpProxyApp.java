@@ -6,7 +6,10 @@ package org.netxms.tcpproxy;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import org.netxms.base.Logger;
+import org.netxms.base.LoggingFacility;
 import org.netxms.client.NXCSession;
+import org.netxms.client.ProtocolVersion;
 import org.netxms.client.TcpProxy;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
@@ -43,7 +46,7 @@ public class TcpProxyApp
    {
       print("Connecting to NetXMS server " + server + " as user " + login);
       NXCSession session = new NXCSession(server);
-      session.connect();
+      session.connect(new int[] { ProtocolVersion.INDEX_TCPPROXY });
       session.login(login, password);
 
       print("Synchronizing objects");
@@ -89,6 +92,16 @@ public class TcpProxyApp
          print("Required arguments: server login password proxy_node remote_address remote_port local_port");
          return;
       }
+      
+      Logger.setLoggingFacility(new LoggingFacility() {
+         @Override
+         public void writeLog(int level, String tag, String message, Throwable t)
+         {
+            System.out.println(tag + ": " + message);
+            if (t != null)
+               t.printStackTrace();
+         }
+      });
       
       try
       {
