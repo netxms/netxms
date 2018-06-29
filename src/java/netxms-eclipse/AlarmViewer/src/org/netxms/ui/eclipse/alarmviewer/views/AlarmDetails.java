@@ -128,6 +128,7 @@ public class AlarmDetails extends ViewPart
 	private SortableTreeViewer eventViewer;
 	private Action actionRefresh;
 	private CLabel labelAccessDenied = null;
+	private boolean dataSectionCreated = false;
 	private Section dataSection;
 	private HistoricalDataChart chart;
 	private long nodeId;
@@ -167,14 +168,10 @@ public class AlarmDetails extends ViewPart
 		
 		toolkit = new FormToolkit(parent.getDisplay());
 		form = toolkit.createForm(parent);
-		GridData gd = new GridData();
-		gd.horizontalAlignment = SWT.FILL;
-		gd.verticalAlignment = SWT.FILL;
-		gd.grabExcessHorizontalSpace = true;
-		gd.grabExcessVerticalSpace = true;
-		form.setLayoutData(gd);
 
 		DashboardLayout layout = new DashboardLayout();
+		layout.marginWidth = WidgetHelper.OUTER_SPACING;
+      layout.marginHeight = WidgetHelper.OUTER_SPACING;
 		form.getBody().setLayout(layout);
 		
 		createAlarmDetailsSection();
@@ -503,68 +500,75 @@ public class AlarmDetails extends ViewPart
                      labelAccessDenied.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
                   }
 						
-						if (alarm.getDciId() != 0)
+						if (!dataSectionCreated)
 						{
-						   DciValue dci = null;
-						   for(DciValue d : lastValues)
-						   {
-						      if (d.getId() == alarm.getDciId())
-						      {
-						         dci = d;
-						         break;
-						      }
-						   }
-						   if (dci != null)
-						   {
-						      nodeId = alarm.getSourceObjectId();
-						      dciId = alarm.getDciId();
-						      
-   					      chart = ChartFactory.createLineChart(dataArea, SWT.BORDER);
-   					      chart.setZoomEnabled(true);
-   					      chart.setTitleVisible(true);
-   					      chart.setChartTitle(dci.getDescription());
-   					      chart.setLegendVisible(true);
-   					      chart.setLegendPosition(GraphSettings.POSITION_BOTTOM);
-   					      chart.setExtendedLegend(true);
-   					      chart.setGridVisible(true);
-   					      chart.setTranslucent(true);
-   				         chart.addParameter(new GraphItem(nodeId, dciId, 0, dci.getDataType(), dci.getName(), dci.getDescription(), "%s"));
-   				         
-   				         List<GraphItemStyle> itemStyles = chart.getItemStyles();
-   				         itemStyles.get(0).setType(GraphItemStyle.AREA);
-   				         itemStyles.get(0).setColor(ColorConverter.rgbToInt(new RGB(127, 154, 72)));
-   				         chart.setItemStyles(itemStyles);
-
-   				         refreshController = new ViewRefreshController(AlarmDetails.this, 30, new Runnable() {
-   				            @Override
-   				            public void run()
-   				            {
-   				               if (((Control)chart).isDisposed())
-   				                  return;
-   				               
-   				               refreshData();
-   				            }
-   				         });
-   				         refreshData();
-						   }
-						   else
-						   {
-	                     Label label = new Label(dataArea, SWT.NONE);
-	                     label.setText(String.format("DCI with ID %d is not accessible", alarm.getDciId()));
-	                     dataSection.setExpanded(false);
-	                     DashboardLayoutData dd = (DashboardLayoutData)dataSection.getLayoutData();
-	                     dd.fill = false;
-						   }
-						}
-						else
+   						if (alarm.getDciId() != 0)
+   						{
+   						   DciValue dci = null;
+   						   for(DciValue d : lastValues)
+   						   {
+   						      if (d.getId() == alarm.getDciId())
+   						      {
+   						         dci = d;
+   						         break;
+   						      }
+   						   }
+   						   if (dci != null)
+   						   {
+   						      nodeId = alarm.getSourceObjectId();
+   						      dciId = alarm.getDciId();
+   						      
+      					      chart = ChartFactory.createLineChart(dataArea, SWT.BORDER);
+      					      chart.setZoomEnabled(true);
+      					      chart.setTitleVisible(true);
+      					      chart.setChartTitle(dci.getDescription());
+      					      chart.setLegendVisible(true);
+      					      chart.setLegendPosition(GraphSettings.POSITION_BOTTOM);
+      					      chart.setExtendedLegend(true);
+      					      chart.setGridVisible(true);
+      					      chart.setTranslucent(true);
+      				         chart.addParameter(new GraphItem(nodeId, dciId, 0, dci.getDataType(), dci.getName(), dci.getDescription(), "%s"));
+      				         
+      				         List<GraphItemStyle> itemStyles = chart.getItemStyles();
+      				         itemStyles.get(0).setType(GraphItemStyle.AREA);
+      				         itemStyles.get(0).setColor(ColorConverter.rgbToInt(new RGB(127, 154, 72)));
+      				         chart.setItemStyles(itemStyles);
+   
+      				         refreshController = new ViewRefreshController(AlarmDetails.this, 30, new Runnable() {
+      				            @Override
+      				            public void run()
+      				            {
+      				               if (((Control)chart).isDisposed())
+      				                  return;
+      				               
+      				               refreshData();
+      				            }
+      				         });
+      				         refreshData();
+   						   }
+   						   else
+   						   {
+   	                     Label label = new Label(dataArea, SWT.NONE);
+   	                     label.setText(String.format("DCI with ID %d is not accessible", alarm.getDciId()));
+   	                     dataSection.setExpanded(false);
+   	                     DashboardLayoutData dd = (DashboardLayoutData)dataSection.getLayoutData();
+   	                     dd.fill = false;
+   						   }
+   						}
+   						else
+   						{
+   						   Label label = new Label(dataArea, SWT.NONE);
+   						   label.setText("No DCI associated with this alarm");
+   						   dataSection.setExpanded(false);
+   						   DashboardLayoutData dd = (DashboardLayoutData)dataSection.getLayoutData();
+   						   dd.fill = false;
+   						}
+   						dataSectionCreated = true;
+						}						
+						else if (chart != null)
 						{
-						   Label label = new Label(dataArea, SWT.NONE);
-						   label.setText("No DCI associated with this alarm");
-						   dataSection.setExpanded(false);
-						   DashboardLayoutData dd = (DashboardLayoutData)dataSection.getLayoutData();
-						   dd.fill = false;
+						   refreshData();
 						}
-						
 						updateLayout();
 					}
 				});
