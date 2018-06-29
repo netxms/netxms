@@ -1265,7 +1265,7 @@ static bool MatchTunnelToNode(NetObj *object, void *data)
        !_tcsicmp(tunnel->getHostname(), node->getPrimaryName()) ||
        !_tcsicmp(tunnel->getHostname(), node->getName()) ||
        !_tcsicmp(tunnel->getSystemName(), node->getPrimaryName()) ||
-       !_tcsicmp(tunnel->getHostname(), node->getName()))
+       !_tcsicmp(tunnel->getSystemName(), node->getName()))
    {
       if (node->isNativeAgent())
       {
