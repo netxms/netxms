@@ -76,20 +76,31 @@ public class AlarmCommentsEditor extends Composite
 		gd.grabExcessHorizontalSpace = true;
 		time.setLayoutData(gd);
 		
-		final ImageHyperlink linkEdit = toolkit.createImageHyperlink(this, SWT.NONE);
+		final Composite controlArea = toolkit.createComposite(this);
+		layout = new GridLayout();
+		layout.marginWidth = 0;
+		layout.marginHeight = 0;
+		controlArea.setLayout(layout);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.RIGHT;
+      gd.verticalAlignment = SWT.TOP;
+      gd.verticalSpan = 2;
+      controlArea.setLayoutData(gd);
+		
+		final ImageHyperlink linkEdit = toolkit.createImageHyperlink(controlArea, SWT.NONE);
 		linkEdit.setText(Messages.get().AlarmCommentsEditor_Edit);
 		linkEdit.setImage(SharedIcons.IMG_EDIT);
 		linkEdit.addHyperlinkListener(editAction);
 		gd = new GridData();
-		gd.horizontalAlignment = SWT.RIGHT;
+		gd.horizontalAlignment = SWT.LEFT;
 		linkEdit.setLayoutData(gd);
 		
-		final ImageHyperlink linkDelete = toolkit.createImageHyperlink(this, SWT.NONE);
+		final ImageHyperlink linkDelete = toolkit.createImageHyperlink(controlArea, SWT.NONE);
 		linkDelete.setText(Messages.get().AlarmCommentsEditor_DeleteLabel);
 		linkDelete.setImage(SharedIcons.IMG_DELETE_OBJECT);
 		linkDelete.addHyperlinkListener(deleteAction);
       gd = new GridData();
-      gd.horizontalAlignment = SWT.RIGHT;
+      gd.horizontalAlignment = SWT.LEFT;
       linkDelete.setLayoutData(gd);
 		
 		text = new Text(this, SWT.MULTI | SWT.WRAP | SWT.READ_ONLY);
@@ -97,7 +108,7 @@ public class AlarmCommentsEditor extends Composite
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
-		gd.horizontalSpan = 3;
+		gd.horizontalSpan = 2;
 		text.setLayoutData(gd);
 	}
 }
