@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -262,13 +262,17 @@ static THREAD_RESULT THREAD_CALL XMPPConnectionManager(void *arg)
 #ifdef UNICODE
    ConfigReadStrA(_T("XMPPLogin"), login, 64, "netxms@localhost");
    char *_tmpPassword = UTF8StringFromWideString(tmpPassword);
-   strncpy(password, _tmpPassword, MAX_PASSWORD);
-   safe_free(_tmpPassword);
+   strlcpy(password, _tmpPassword, MAX_PASSWORD);
+   free(_tmpPassword);
 #else
-   strncpy(password, tmpPassword, MAX_PASSWORD);
-   strncpy(login, tmpPassword, 64);
+   strlcpy(password, tmpPassword, MAX_PASSWORD);
+   strlcpy(login, tmpPassword, 64);
 #endif // UNICODE
    DbgPrintf(1, _T("XMPP connection manager started"));
+
+   char server[256];
+   ConfigReadStrA(_T("XMPPServer"), server, 256, "");
+   UINT16 port = static_cast<UINT16>(ConfigReadInt(_T("XMPPPort"), 5222));
 
    // outer loop - try to reconnect after disconnect
    do
@@ -277,7 +281,7 @@ static THREAD_RESULT THREAD_CALL XMPPConnectionManager(void *arg)
       s_xmppConnection = xmpp_conn_new(s_xmppContext);
       xmpp_conn_set_jid(s_xmppConnection, login);
       xmpp_conn_set_pass(s_xmppConnection, password);
-      xmpp_connect_client(s_xmppConnection, NULL, 0, ConnectionHandler, s_xmppContext);
+      xmpp_connect_client(s_xmppConnection, (server[0] != 0) ? server : NULL, (server[0] != 0) ? port : 0, ConnectionHandler, s_xmppContext);
       MutexUnlock(s_xmppMutex);
 
       xmpp_set_loop_status(s_xmppContext, XMPP_LOOP_RUNNING);
