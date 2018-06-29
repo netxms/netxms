@@ -1592,7 +1592,8 @@ void ClientSession::sendServerInfo(UINT32 dwRqId)
       CLIENT_PROTOCOL_VERSION_PUSH,
       CLIENT_PROTOCOL_VERSION_TRAP,
       CLIENT_PROTOCOL_VERSION_MOBILE,
-      CLIENT_PROTOCOL_VERSION_FULL
+      CLIENT_PROTOCOL_VERSION_FULL,
+      CLIENT_PROTOCOL_VERSION_TCPPROXY
    };
    NXCPMessage msg;
 	TCHAR szBuffer[MAX_CONFIG_VALUE];
@@ -1616,7 +1617,7 @@ void ClientSession::sendServerInfo(UINT32 dwRqId)
    msg.setField(VID_SUPPORTED_ENCRYPTION, (UINT32)0);
    msg.setField(VID_PROTOCOL_VERSION, (UINT32)CLIENT_PROTOCOL_VERSION_BASE);
    msg.setFieldFromInt32Array(VID_PROTOCOL_VERSION_EX, sizeof(protocolVersions) / sizeof(UINT32), protocolVersions);
-	msg.setField(VID_CHALLENGE, m_challenge, CLIENT_CHALLENGE_SIZE);
+   msg.setField(VID_CHALLENGE, m_challenge, CLIENT_CHALLENGE_SIZE);
    msg.setField(VID_TIMESTAMP, (UINT32)time(NULL));
 
 #if defined(_WIN32)
