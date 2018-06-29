@@ -18,10 +18,13 @@
  */
 package org.netxms.ui.eclipse.alarmviewer.views;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
@@ -35,11 +38,12 @@ import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.graphics.Point;
-import org.eclipse.swt.graphics.Rectangle;
+import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.IActionBars;
@@ -59,6 +63,11 @@ import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.RCC;
 import org.netxms.client.constants.Severity;
+import org.netxms.client.datacollection.DciData;
+import org.netxms.client.datacollection.DciValue;
+import org.netxms.client.datacollection.GraphItem;
+import org.netxms.client.datacollection.GraphItemStyle;
+import org.netxms.client.datacollection.GraphSettings;
 import org.netxms.client.events.Alarm;
 import org.netxms.client.events.AlarmComment;
 import org.netxms.client.events.EventInfo;
@@ -71,13 +80,18 @@ import org.netxms.ui.eclipse.alarmviewer.views.helpers.EventTreeComparator;
 import org.netxms.ui.eclipse.alarmviewer.views.helpers.EventTreeContentProvider;
 import org.netxms.ui.eclipse.alarmviewer.views.helpers.EventTreeLabelProvider;
 import org.netxms.ui.eclipse.alarmviewer.widgets.AlarmCommentsEditor;
+import org.netxms.ui.eclipse.charts.api.ChartFactory;
+import org.netxms.ui.eclipse.charts.api.HistoricalDataChart;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
-import org.netxms.ui.eclipse.datacollection.widgets.LastValuesWidget;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
+import org.netxms.ui.eclipse.layout.DashboardLayout;
+import org.netxms.ui.eclipse.layout.DashboardLayoutData;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.ColorConverter;
 import org.netxms.ui.eclipse.tools.ImageCache;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
+import org.netxms.ui.eclipse.tools.ViewRefreshController;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.SortableTreeViewer;
 
@@ -101,8 +115,6 @@ public class AlarmDetails extends ViewPart
 	private long alarmId;
 	private ImageCache imageCache;
 	private WorkbenchLabelProvider wbLabelProvider;
-	private ScrolledComposite scroller;
-	private Composite formContainer;
 	private FormToolkit toolkit;
 	private Form form;
 	private CLabel alarmSeverity;
@@ -113,10 +125,15 @@ public class AlarmDetails extends ViewPart
 	private ImageHyperlink linkAddComment;
 	private Map<Long, AlarmCommentsEditor> editors = new HashMap<Long, AlarmCommentsEditor>();
 	private Composite dataArea;
-	private LastValuesWidget lastValuesWidget = null;
 	private SortableTreeViewer eventViewer;
 	private Action actionRefresh;
 	private CLabel labelAccessDenied = null;
+	private Section dataSection;
+	private HistoricalDataChart chart;
+	private long nodeId;
+	private long dciId;
+	private ViewRefreshController refreshController = null;
+	private boolean updateInProgress = false;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
@@ -148,28 +165,8 @@ public class AlarmDetails extends ViewPart
 	{
 		imageCache = new ImageCache();
 		
-		scroller = new ScrolledComposite(parent, SWT.V_SCROLL);
-		scroller.setExpandVertical(true);
-		
-		formContainer = new Composite(scroller, SWT.NONE);
-		GridLayout containerLayout = new GridLayout();
-		containerLayout.marginHeight = 0;
-		containerLayout.marginWidth = 0;
-		formContainer.setLayout(containerLayout);
-		scroller.setContent(formContainer);
-		scroller.addControlListener(new ControlAdapter() {
-			@Override
-			public void controlResized(ControlEvent e)
-			{
-				Rectangle r = scroller.getClientArea();
-				Point formSize = formContainer.computeSize(r.width, SWT.DEFAULT);
-				formContainer.setSize(r.width, formSize.y);
-				scroller.setMinHeight(formSize.y);
-			}
-		});
-		
 		toolkit = new FormToolkit(parent.getDisplay());
-		form = toolkit.createForm(formContainer);
+		form = toolkit.createForm(parent);
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.verticalAlignment = SWT.FILL;
@@ -177,8 +174,7 @@ public class AlarmDetails extends ViewPart
 		gd.grabExcessVerticalSpace = true;
 		form.setLayoutData(gd);
 
-		GridLayout layout = new GridLayout();
-		layout.numColumns = 2;
+		DashboardLayout layout = new DashboardLayout();
 		form.getBody().setLayout(layout);
 		
 		createAlarmDetailsSection();
@@ -246,12 +242,9 @@ public class AlarmDetails extends ViewPart
 	{
 		final Section section = toolkit.createSection(form.getBody(), Section.TITLE_BAR | Section.EXPANDED | Section.TWISTIE | Section.COMPACT);
 		section.setText(Messages.get().AlarmDetails_Overview);
-		GridData gd = new GridData();
-		gd.horizontalAlignment = SWT.FILL;
-		gd.grabExcessHorizontalSpace = true;
-		gd.horizontalSpan = 2;
-		gd.verticalAlignment = SWT.FILL;
-		section.setLayoutData(gd);
+		DashboardLayoutData dd = new DashboardLayoutData();
+		dd.fill = false;
+		section.setLayoutData(dd);
 
 		final Composite clientArea = toolkit.createComposite(section);
 		GridLayout layout = new GridLayout();
@@ -261,7 +254,7 @@ public class AlarmDetails extends ViewPart
 
 		alarmSeverity = new CLabel(clientArea, SWT.NONE);
 		toolkit.adapt(alarmSeverity);
-		gd = new GridData();
+		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.verticalAlignment = SWT.TOP;
 		alarmSeverity.setLayoutData(gd);
@@ -284,7 +277,9 @@ public class AlarmDetails extends ViewPart
 			}
 		};
 		textContainer.setExpandHorizontal(true);
+		textContainer.getHorizontalBar().setIncrement(20);
 		textContainer.setExpandVertical(true);
+		textContainer.getVerticalBar().setIncrement(20);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -331,12 +326,21 @@ public class AlarmDetails extends ViewPart
 	{
 		final Section section = toolkit.createSection(form.getBody(), Section.TITLE_BAR | Section.EXPANDED | Section.TWISTIE | Section.COMPACT);
 		section.setText(Messages.get().AlarmComments_Comments);
-		GridData gd = new GridData();
-		gd.horizontalAlignment = SWT.FILL;
-		gd.verticalAlignment = SWT.FILL;
-		gd.grabExcessVerticalSpace = true;
-		gd.verticalSpan = 2;
-		section.setLayoutData(gd);
+      final DashboardLayoutData dd = new DashboardLayoutData();
+      dd.fill = true;
+      section.setLayoutData(dd);
+      section.addExpansionListener(new IExpansionListener() {
+         @Override
+         public void expansionStateChanging(ExpansionEvent e)
+         {
+            dd.fill = e.getState();
+         }
+         
+         @Override
+         public void expansionStateChanged(ExpansionEvent e)
+         {
+         }
+      });
 
 		editorsArea = toolkit.createComposite(section);
 		GridLayout layout = new GridLayout();
@@ -363,17 +367,14 @@ public class AlarmDetails extends ViewPart
 		final Section section = toolkit.createSection(form.getBody(), Section.TITLE_BAR | Section.EXPANDED | Section.TWISTIE | Section.COMPACT);
 		section.setText(Messages.get().AlarmDetails_RelatedEvents);
 		
-		final GridData gd = new GridData();
-		gd.horizontalAlignment = SWT.FILL;
-		gd.grabExcessHorizontalSpace = true;
-		gd.verticalAlignment = SWT.FILL;
-		gd.grabExcessVerticalSpace = true;
-		section.setLayoutData(gd);
+		final DashboardLayoutData dd = new DashboardLayoutData();
+		dd.fill = true;
+		section.setLayoutData(dd);
 		section.addExpansionListener(new IExpansionListener() {
 			@Override
 			public void expansionStateChanging(ExpansionEvent e)
 			{
-				gd.grabExcessVerticalSpace = e.getState();
+				dd.fill = e.getState();
 			}
 			
 			@Override
@@ -413,19 +414,16 @@ public class AlarmDetails extends ViewPart
 	 */
 	private void createDataSection()
 	{
-		final Section section = toolkit.createSection(form.getBody(), Section.TITLE_BAR | Section.EXPANDED | Section.TWISTIE | Section.COMPACT);
-		section.setText(Messages.get().AlarmDetails_LastValues);
-		final GridData gd = new GridData();
-		gd.horizontalAlignment = SWT.FILL;
-		gd.grabExcessHorizontalSpace = true;
-		gd.verticalAlignment = SWT.FILL;
-		gd.grabExcessVerticalSpace = true;
-		section.setLayoutData(gd);
-		section.addExpansionListener(new IExpansionListener() {
+		dataSection = toolkit.createSection(form.getBody(), Section.TITLE_BAR | Section.EXPANDED | Section.TWISTIE | Section.COMPACT);
+		dataSection.setText(Messages.get().AlarmDetails_LastValues);
+      final DashboardLayoutData dd = new DashboardLayoutData();
+      dd.fill = true;
+      dataSection.setLayoutData(dd);
+      dataSection.addExpansionListener(new IExpansionListener() {
 			@Override
 			public void expansionStateChanging(ExpansionEvent e)
 			{
-				gd.grabExcessVerticalSpace = e.getState();
+				dd.fill = e.getState();
 			}
 			
 			@Override
@@ -434,8 +432,8 @@ public class AlarmDetails extends ViewPart
 			}
 		});
 		
-		dataArea = toolkit.createComposite(section);
-		section.setClient(dataArea);
+		dataArea = toolkit.createComposite(dataSection);
+		dataSection.setClient(dataArea);
 		dataArea.setLayout(new FillLayout());
 	}
 
@@ -460,6 +458,8 @@ public class AlarmDetails extends ViewPart
 				final Alarm alarm = session.getAlarm(alarmId);
 				final List<AlarmComment> comments = session.getAlarmComments(alarmId);
 				
+				final DciValue[] lastValues = session.getLastValues(alarm.getSourceObjectId());
+				
             List<EventInfo> _events = null;
             try
             {
@@ -483,16 +483,6 @@ public class AlarmDetails extends ViewPart
 						for(AlarmComment n : comments)
 							editors.put(n.getId(), createEditor(n));
 						
-						if (lastValuesWidget == null)
-						{
-							AbstractObject object = session.findObjectById(alarm.getSourceObjectId());
-							if (object != null)
-							{
-								lastValuesWidget = new LastValuesWidget(AlarmDetails.this, dataArea, SWT.BORDER, object, "AlarmDetails.LastValues", null); //$NON-NLS-1$
-								lastValuesWidget.refresh();
-							}
-						}
-						
 						if (events != null)
 						{
    						eventViewer.setInput(events);
@@ -513,6 +503,68 @@ public class AlarmDetails extends ViewPart
                      labelAccessDenied.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
                   }
 						
+						if (alarm.getDciId() != 0)
+						{
+						   DciValue dci = null;
+						   for(DciValue d : lastValues)
+						   {
+						      if (d.getId() == alarm.getDciId())
+						      {
+						         dci = d;
+						         break;
+						      }
+						   }
+						   if (dci != null)
+						   {
+						      nodeId = alarm.getSourceObjectId();
+						      dciId = alarm.getDciId();
+						      
+   					      chart = ChartFactory.createLineChart(dataArea, SWT.BORDER);
+   					      chart.setZoomEnabled(true);
+   					      chart.setTitleVisible(true);
+   					      chart.setChartTitle(dci.getDescription());
+   					      chart.setLegendVisible(true);
+   					      chart.setLegendPosition(GraphSettings.POSITION_BOTTOM);
+   					      chart.setExtendedLegend(true);
+   					      chart.setGridVisible(true);
+   					      chart.setTranslucent(true);
+   				         chart.addParameter(new GraphItem(nodeId, dciId, 0, dci.getDataType(), dci.getName(), dci.getDescription(), "%s"));
+   				         
+   				         List<GraphItemStyle> itemStyles = chart.getItemStyles();
+   				         itemStyles.get(0).setType(GraphItemStyle.AREA);
+   				         itemStyles.get(0).setColor(ColorConverter.rgbToInt(new RGB(127, 154, 72)));
+   				         chart.setItemStyles(itemStyles);
+
+   				         refreshController = new ViewRefreshController(AlarmDetails.this, 30, new Runnable() {
+   				            @Override
+   				            public void run()
+   				            {
+   				               if (((Control)chart).isDisposed())
+   				                  return;
+   				               
+   				               refreshData();
+   				            }
+   				         });
+   				         refreshData();
+						   }
+						   else
+						   {
+	                     Label label = new Label(dataArea, SWT.NONE);
+	                     label.setText(String.format("DCI with ID %d is not accessible", alarm.getDciId()));
+	                     dataSection.setExpanded(false);
+	                     DashboardLayoutData dd = (DashboardLayoutData)dataSection.getLayoutData();
+	                     dd.fill = false;
+						   }
+						}
+						else
+						{
+						   Label label = new Label(dataArea, SWT.NONE);
+						   label.setText("No DCI associated with this alarm");
+						   dataSection.setExpanded(false);
+						   DashboardLayoutData dd = (DashboardLayoutData)dataSection.getLayoutData();
+						   dd.fill = false;
+						}
+						
 						updateLayout();
 					}
 				});
@@ -531,11 +583,7 @@ public class AlarmDetails extends ViewPart
 	 */
 	private void updateLayout()
 	{
-		formContainer.layout(true, true);
-		Rectangle r = scroller.getClientArea();
-		Point formSize = formContainer.computeSize(r.width, SWT.DEFAULT);
-		formContainer.setSize(r.width, formSize.y);
-		scroller.setMinHeight(formSize.y);
+		form.layout(true, true);
 	}
 	
 	/**
@@ -577,7 +625,6 @@ public class AlarmDetails extends ViewPart
     */
    private void addComment()
    {
-
       editComment(0, "");//$NON-NLS-1$
    }
    
@@ -662,7 +709,7 @@ public class AlarmDetails extends ViewPart
 		alarmSource.setImage((object != null) ? wbLabelProvider.getImage(object) : SharedIcons.IMG_UNKNOWN_OBJECT);
 		alarmSource.setText((object != null) ? object.getObjectName() : ("[" + Long.toString(alarm.getSourceObjectId()) + "]")); //$NON-NLS-1$ //$NON-NLS-2$
 		
-      alarmText.setText(alarm.getMessage());
+		alarmText.setText(alarm.getMessage());
 	}
 
 	/* (non-Javadoc)
@@ -671,8 +718,72 @@ public class AlarmDetails extends ViewPart
 	@Override
 	public void dispose()
 	{
+	   if (refreshController != null)
+	      refreshController.dispose();
 		imageCache.dispose();
 		wbLabelProvider.dispose();
 		super.dispose();
 	}
+
+   /**
+    * Refresh graph's data
+    */
+   private void refreshData()
+   {
+      if (updateInProgress)
+         return;
+      
+      updateInProgress = true;
+      
+      ConsoleJob job = new ConsoleJob("Update line chart", this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            final Date from = new Date(System.currentTimeMillis() - 86400000);
+            final Date to = new Date(System.currentTimeMillis());
+            final DciData data = session.getCollectedData(nodeId, dciId, from, to, 0, false);
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  if (!((Control)chart).isDisposed())
+                  {
+                     chart.setTimeRange(from, to);
+                     chart.updateParameter(0, data, true);
+                     chart.clearErrors();
+                  }
+                  updateInProgress = false;
+               }
+            });
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return "Cannot read DCI data from server";
+         }
+
+         @Override
+         protected void jobFailureHandler()
+         {
+            updateInProgress = false;
+            super.jobFailureHandler();
+         }
+
+         @Override
+         protected IStatus createFailureStatus(final Exception e)
+         {
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  chart.addError(getErrorMessage() + " (" + e.getLocalizedMessage() + ")"); //$NON-NLS-1$ //$NON-NLS-2$
+               }
+            });
+            return Status.OK_STATUS;
+         }
+      };
+      job.setUser(false);
+      job.start();
+   }
 }

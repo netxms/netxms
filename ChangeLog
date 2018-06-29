@@ -7,6 +7,7 @@
 - New command line option /CONFIGENTRY in Windows agent installer
 - New dashboard element "Object Details" (based on object queries)
 - TCP proxy functionality
+- Improved "Alarm Details" view in management console
 - Fixed issues:
 	NX-993 (Windows installer should honor current state of services during upgrade)
 	NX-1438 (Increase debug level for thread pool messages)
