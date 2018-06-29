@@ -28,12 +28,13 @@ import org.netxms.base.NXCPMessage;
 public final class ProtocolVersion
 {
    // Versions
-   public static final int BASE = 51;
    public static final int ALARMS = 3;
-   public static final int PUSH = 1;
-   public static final int TRAP = 1;
-   public static final int MOBILE = 1;
+   public static final int BASE = 51;
    public static final int FULL = 20;
+   public static final int MOBILE = 1;
+   public static final int PUSH = 1;
+   public static final int TCPPROXY = 1;
+   public static final int TRAP = 1;
    
    // Indexes
    public static final int INDEX_BASE = 0;
@@ -42,8 +43,9 @@ public final class ProtocolVersion
    public static final int INDEX_TRAP = 3;
    public static final int INDEX_MOBILE = 4;
    public static final int INDEX_FULL = 5;
+   public static final int INDEX_TCPPROXY = 6;
    
-   private static final int[] CURRENT_VERSION = { BASE, ALARMS, PUSH, TRAP, MOBILE, FULL };
+   private static final int[] CURRENT_VERSION = { BASE, ALARMS, PUSH, TRAP, MOBILE, FULL, TCPPROXY };
    
    private long versions[];
    

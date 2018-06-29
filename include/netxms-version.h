@@ -48,6 +48,7 @@
 #define CLIENT_PROTOCOL_VERSION_PUSH      1     /* Data push API */
 #define CLIENT_PROTOCOL_VERSION_TRAP      1     /* Event (trap) sending API */
 #define CLIENT_PROTOCOL_VERSION_MOBILE    1     /* All functionality relevant for mobile client */
+#define CLIENT_PROTOCOL_VERSION_TCPPROXY  1     /* All functionality relevant for TCP proxy sessions */
 #define CLIENT_PROTOCOL_VERSION_FULL      20    /* All functionality */
 
 /**
@@ -59,6 +60,7 @@
 #define CPV_INDEX_TRAP     3
 #define CPV_INDEX_MOBILE   4
 #define CPV_INDEX_FULL     5
+#define CPV_INDEX_TCPPROXY 6
 
 /**
  * Current mobile device protocol version
