@@ -92,7 +92,7 @@ public class AlarmCommentsEditor extends Composite
       gd.horizontalAlignment = SWT.RIGHT;
       linkDelete.setLayoutData(gd);
 		
-		text = new Text(this, SWT.MULTI | SWT.READ_ONLY);
+		text = new Text(this, SWT.MULTI | SWT.WRAP | SWT.READ_ONLY);
 		text.setText(comment.getText());
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;

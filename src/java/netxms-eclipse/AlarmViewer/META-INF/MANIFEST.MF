@@ -14,7 +14,8 @@ Require-Bundle: org.eclipse.ui;bundle-version="3.8.2",
  org.netxms.ui.eclipse.clientlibrary;bundle-version="3.0.0",
  org.netxms.ui.eclipse.usermanager;bundle-version="3.0.0",
  org.eclipse.core.expressions;bundle-version="3.4.400",
- org.netxms.ui.base;bundle-version="3.0.0"
+ org.netxms.ui.base;bundle-version="3.0.0",
+ org.netxms.ui.eclipse.charts;bundle-version="3.0.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy
 Bundle-ClassPath: .

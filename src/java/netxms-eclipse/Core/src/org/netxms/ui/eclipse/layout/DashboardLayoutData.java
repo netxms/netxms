@@ -1,7 +1,7 @@
 /**
  * 
  */
-package org.netxms.ui.eclipse.dashboard.layout;
+package org.netxms.ui.eclipse.layout;
 
 /**
  * Control's data for dashboard layout

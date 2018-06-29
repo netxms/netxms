@@ -100,7 +100,7 @@ static void SubAgentShutdown()
       s_subAgent->shutdown();
    }
    DestroyJavaVM();
-   AgentWriteDebugLog(1, _T("JAVA: subagent shutdown completed"));
+   AgentWriteDebugLog(1, _T("JAVA: Java VM destroyed"));
 }
 
 /**
