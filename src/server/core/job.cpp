@@ -39,7 +39,7 @@ ServerJob::ServerJob(const TCHAR *type, const TCHAR *description, UINT32 nodeId,
 	m_description = _tcsdup(CHECK_NULL(description));
 	m_status = createOnHold ? JOB_ON_HOLD : JOB_PENDING;
 	m_lastStatusChange = time(NULL);
-	m_autoCancelDelay = 0;
+	m_autoCancelDelay = 600;
 	m_nodeId = nodeId;
 	m_node = (Node *)FindObjectById(m_nodeId, OBJECT_NODE);
 	m_progress = 0;
@@ -69,7 +69,7 @@ ServerJob::ServerJob(const TCHAR *params, UINT32 nodeId, UINT32 userId)
 	m_status = JOB_PENDING;
 	m_description = _tcsdup(_T(""));
 	m_lastStatusChange = time(NULL);
-	m_autoCancelDelay = 0;
+	m_autoCancelDelay = 600;
    m_nodeId = nodeId;
    m_node = (Node *)FindObjectById(m_nodeId, OBJECT_NODE);
 	m_progress = 0;
@@ -409,5 +409,5 @@ void ServerJob::rescheduleExecution()
  */
 int ServerJob::getRetryDelay()
 {
-   return (int)(pow(2.0f, (4 - m_retryCount)) * JOB_RESCHEDULE_OFSET);
+   return (int)(pow(2.0f, (4 - m_retryCount)) * JOB_RESCHEDULE_OFFSET);
 }

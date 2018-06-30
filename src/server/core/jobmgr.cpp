@@ -22,6 +22,8 @@
 
 #include "nxcore.h"
 
+#define DEBUG_TAG _T("job.manager")
+
 /**
  * Job operation codes
  */
@@ -122,6 +124,8 @@ static UINT32 ChangeJobStatus(UINT32 userId, NXCPMessage *msg, int operation)
 						rcc = RCC_INTERNAL_ERROR;
 						break;
 				}
+				nxlog_debug_tag(DEBUG_TAG, 4, _T("Processed job status change request (userId=%u, operation=%d, jobId=%u, rcc=%u)"),
+				         userId, operation, jobId, rcc);
 			}
 			else
 			{
@@ -131,6 +135,7 @@ static UINT32 ChangeJobStatus(UINT32 userId, NXCPMessage *msg, int operation)
 		else
 		{
 			// Remove stalled record in job_id -> node mapping
+		   nxlog_debug_tag(DEBUG_TAG, 5, _T("Removing stalled job to node mapping for job ID %u"), jobId);
 			s_jobNodes.remove(jobId);
 		}
 	}
@@ -176,14 +181,14 @@ static void CleanupJobQueue(NetObj *object, void *data)
 THREAD_RESULT THREAD_CALL JobManagerThread(void *arg)
 {
    ThreadSetName("JobManager");
-	DbgPrintf(2, _T("Job Manager worker thread started"));
+	nxlog_debug_tag(DEBUG_TAG, 2, _T("Worker thread started"));
 
 	while(!SleepAndCheckForShutdown(10))
 	{
-		DbgPrintf(7, _T("Job Manager: checking queues"));
+	   nxlog_debug_tag(DEBUG_TAG, 7, _T("Checking queues"));
 		g_idxNodeById.forEach(CleanupJobQueue, NULL);
 	}
 
-	DbgPrintf(2, _T("Job Manager worker thread stopped"));
+	nxlog_debug_tag(DEBUG_TAG, 2, _T("Worker thread stopped"));
 	return THREAD_OK;
 }

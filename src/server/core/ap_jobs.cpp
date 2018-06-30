@@ -40,10 +40,14 @@ void ScheduleDeployPolicy(const ScheduledTaskParameters *params)
          }
       }
       else
+      {
          DbgPrintf(4, _T("ScheduleDeployPolicy: Access to node %s denied"), object->getName());
+      }
    }
    else
+   {
       DbgPrintf(4, _T("ScheduleDeployPolicy: Node with id=\'%d\' not found"), params->m_userId);
+   }
 }
 
 /**
@@ -58,6 +62,8 @@ PolicyInstallJob::PolicyInstallJob(Node *node, AgentPolicy *policy, UINT32 userI
 	TCHAR buffer[1024];
 	_sntprintf(buffer, 1024, _T("Deploy policy %s"), policy->getName());
 	setDescription(buffer);
+
+   setAutoCancelDelay(getRetryDelay() + 30);
 }
 
 /**
@@ -93,6 +99,8 @@ PolicyInstallJob::PolicyInstallJob(const TCHAR *params, UINT32 nodeId, UINT32 us
    TCHAR buffer[1024];
    _sntprintf(buffer, 1024, _T("Deploy policy %s"), m_policy->getName());
    setDescription(buffer);
+
+   setAutoCancelDelay(getRetryDelay() + 30);
 }
 
 /**
@@ -162,7 +170,7 @@ const String PolicyInstallJob::serializeParameters()
  */
 void PolicyInstallJob::rescheduleExecution()
 {
-   AddOneTimeScheduledTask(_T("Policy.Deploy"), time(NULL) + getRetryDelay(), serializeParameters(), 0, getNodeId(), SYSTEM_ACCESS_FULL, _T(""), SCHEDULED_TASK_SYSTEM);//TODO: change to correct user
+   AddOneTimeScheduledTask(_T("Policy.Deploy"), time(NULL) + getRetryDelay(), serializeParameters(), getUserId(), getNodeId(), SYSTEM_ACCESS_FULL, _T(""), SCHEDULED_TASK_SYSTEM);
 }
 
 /**
@@ -183,10 +191,14 @@ void ScheduleUninstallPolicy(const ScheduledTaskParameters *params)
          }
       }
       else
+      {
          DbgPrintf(4, _T("ScheduleUninstallPolicy: Access to node %s denied"), object->getName());
+      }
    }
    else
+   {
       DbgPrintf(4, _T("ScheduleUninstallPolicy: Node with id=\'%d\' not found"), params->m_userId);
+   }
 }
 
 /**
@@ -201,6 +213,8 @@ PolicyUninstallJob::PolicyUninstallJob(Node *node, AgentPolicy *policy, UINT32 u
 	TCHAR buffer[1024];
 	_sntprintf(buffer, 1024, _T("Uninstall policy %s"), policy->getName());
 	setDescription(buffer);
+
+   setAutoCancelDelay(getRetryDelay() + 30);
 }
 
 /**
@@ -236,6 +250,8 @@ PolicyUninstallJob::PolicyUninstallJob(const TCHAR* params, UINT32 node, UINT32 
    TCHAR buffer[1024];
    _sntprintf(buffer, 1024, _T("Uninstall policy %s"), m_policy->getName());
    setDescription(buffer);
+
+   setAutoCancelDelay(getRetryDelay() + 30);
 }
 
 /**

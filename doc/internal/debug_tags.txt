@@ -19,6 +19,9 @@ event.*		Event related messages
 event.policy	Event processing policy
 event.proc	Event processor
 
+job.*		Server jobs related
+job.manager	Job manager
+
 housekeeper	Housekeeper messages
 
 logwatch.*	Messages from log monitoring library
