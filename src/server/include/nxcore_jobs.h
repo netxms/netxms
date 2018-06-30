@@ -25,7 +25,7 @@
 
 #include "nxcore_schedule.h"
 
-#define JOB_RESCHEDULE_OFSET 600
+#define JOB_RESCHEDULE_OFFSET 600
 
 /**
  * Job status

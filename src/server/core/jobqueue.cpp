@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2016 Raden Solutions
+** Copyright (C) 2003-2018 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -44,7 +44,7 @@ ServerJobQueue::~ServerJobQueue()
 		m_jobList[i]->cancel();
 		delete m_jobList[i];
 	}
-	safe_free(m_jobList);
+	free(m_jobList);
 
 	MutexDestroy(m_accessMutex);
 }
