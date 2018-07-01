@@ -35,6 +35,7 @@
 #include <nxconfig.h>
 #include <nxdbapi.h>
 #include <nxcpapi.h>
+#include <nxproc.h>
 
 /**
  * Initialization function declaration macro
@@ -709,6 +710,31 @@ inline void ret_uint64(TCHAR *rbuf, QWORD value)
    _sntprintf(rbuf, MAX_RESULT_LENGTH, UINT64_FMT, value);
 #endif   /* _WIN32 */
 }
+
+/**
+ * Process executor that collect key-value pairs from output
+ */
+class LIBNXAGENT_EXPORTABLE KeyValueOutputProcessExecutor : public ProcessExecutor
+{
+private:
+   StringMap m_data;
+   String m_buffer;
+   TCHAR m_separator;
+
+protected:
+   virtual void onOutput(const char *text);
+   virtual void endOfOutput();
+
+public:
+   KeyValueOutputProcessExecutor(const TCHAR *command);
+
+   virtual bool execute() { m_data.clear(); return ProcessExecutor::execute(); }
+
+   const StringMap *getData() const { return &m_data; }
+
+   TCHAR getSeparator() const { return m_separator; }
+   void setSeparator(TCHAR s) { m_separator = s; }
+};
 
 /**
  * API for subagents

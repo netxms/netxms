@@ -23,114 +23,6 @@
 #include "nxagentd.h"
 
 /**
- * Provider executor
- */
-class ParameterProviderExecutor : public ProcessExecutor
-{
-private:
-   StringMap m_parameters;
-   String m_buffer;
-
-public:
-   ParameterProviderExecutor(const TCHAR *command);
-
-   const StringMap *getParameters() const { return &m_parameters; }
-
-   virtual bool execute() { m_parameters.clear(); return ProcessExecutor::execute(); }
-
-   virtual void onOutput(const char *text);
-   virtual void endOfOutput();
-};
-
-/**
- * Create new parameter executor object
- */
-ParameterProviderExecutor::ParameterProviderExecutor(const TCHAR *command) : ProcessExecutor(command)
-{
-   m_sendOutput = true;
-}
-
-/**
- * Parameter executor output handler
- */
-void ParameterProviderExecutor::onOutput(const char *text)
-{
-   if (text != NULL)
-   {
-      TCHAR *buffer;
-#ifdef UNICODE
-      buffer = WideStringFromMBStringSysLocale(text);
-#else
-      buffer = _tcsdup(text);
-#endif
-      TCHAR *newLinePtr = NULL, *lineStartPtr = buffer, *eqPtr = NULL;
-      do
-      {
-         newLinePtr = _tcschr(lineStartPtr, _T('\r'));
-         if (newLinePtr == NULL)
-            newLinePtr = _tcschr(lineStartPtr, _T('\n'));
-         if (newLinePtr != NULL)
-         {
-            *newLinePtr = 0;
-            m_buffer.append(lineStartPtr);
-            if (m_buffer.length() > MAX_RESULT_LENGTH * 3)
-            {
-               nxlog_debug(4, _T("ParamExec::onOutput(): result too long - %s"), (const TCHAR *)m_buffer);
-               stop();
-               m_buffer.clear();
-               break;
-            }
-         }
-         else
-         {
-            m_buffer.append(lineStartPtr);
-            if (m_buffer.length() > MAX_RESULT_LENGTH * 3)
-            {
-               nxlog_debug(4, _T("ParamExec::onOutput(): result too long - %s"), (const TCHAR *)m_buffer);
-               stop();
-               m_buffer.clear();
-            }
-            break;
-         }
-
-         if (m_buffer.length() > 1)
-         {
-            eqPtr = _tcschr(m_buffer.getBuffer(), _T('='));
-            if (eqPtr != NULL)
-            {
-               *eqPtr = 0;
-               eqPtr++;
-               m_parameters.set(m_buffer.getBuffer(), eqPtr);
-            }
-         }
-         m_buffer.clear();
-         lineStartPtr = newLinePtr + 1;
-      } while (*lineStartPtr != 0);
-
-      free(buffer);
-   }
-}
-
-/**
- * End of output callback
- */
-void ParameterProviderExecutor::endOfOutput()
-{
-   if (m_buffer.length() > 0)
-   {
-      TCHAR *ptr = _tcschr(m_buffer.getBuffer(), _T('='));
-      if (ptr != NULL)
-      {
-         *ptr = 0;
-         ptr++;
-         m_parameters.set((const TCHAR *)m_buffer, ptr);
-      }
-      m_buffer.clear();
-   }
-}
-
-
-/**
  * External parameter provider
  */
 class ParameterProvider
@@ -138,7 +30,7 @@ class ParameterProvider
 private:
 	int m_pollInterval;
 	time_t m_lastPollTime;
-	ParameterProviderExecutor *m_executor;
+	KeyValueOutputProcessExecutor *m_executor;
    StringMap *m_parameters;
    MUTEX m_mutex;
 
@@ -164,7 +56,7 @@ ParameterProvider::ParameterProvider(const TCHAR *command, int pollInterval)
 {
 	m_pollInterval = pollInterval;
 	m_lastPollTime = 0;
-	m_executor = new ParameterProviderExecutor(command);
+	m_executor = new KeyValueOutputProcessExecutor(command);
 	m_parameters = new StringMap();
    m_mutex = MutexCreate();
 }
@@ -211,7 +103,7 @@ void ParameterProvider::poll()
 	   {
          lock();
          delete m_parameters;
-         m_parameters = new StringMap(*m_executor->getParameters());
+         m_parameters = new StringMap(*m_executor->getData());
          unlock();
          nxlog_debug(4, _T("ParamProvider::poll(): command \"%s\" execution completed, %d values read"), m_executor->getCommand(), (int)m_parameters->size());
 	   }
