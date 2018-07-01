@@ -32,7 +32,6 @@
 #include <nxlog.h>
 #include <nxcldefs.h>
 #include <nxdbapi.h>
-#include <nxproc.h>
 #include "messages.h"
 #include "nxsnmp.h"
 #include "localdb.h"
