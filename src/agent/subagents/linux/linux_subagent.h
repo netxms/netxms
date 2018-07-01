@@ -1,6 +1,6 @@
 /* 
 ** NetXMS subagent for GNU/Linux
-** Copyright (C) 2004-2013 Raden Solutions
+** Copyright (C) 2004-2018 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -206,6 +206,9 @@ LONG H_DiskInfo(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 LONG H_FileSystems(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *session);
 LONG H_FileSystemType(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 LONG H_MountPoints(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
+
+LONG H_HypervisorType(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
+LONG H_HypervisorVersion(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 
 LONG H_IoDevices(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
 LONG H_IoStats(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);

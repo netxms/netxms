@@ -2011,6 +2011,14 @@ static BYTE *LoadFileContent(int fd, UINT32 *pdwFileSize)
                pBuffer = NULL;
                break;
             }
+            // On Linux stat() for /proc files may report size larger than actual
+            // so we check here for premature end of file
+            if (iBytesRead == 0)
+            {
+               pBuffer[iBufPos] = 0;
+               *pdwFileSize = (UINT32)iBufPos;
+               break;
+            }
          }
          if (pBuffer != NULL)
             pBuffer[fs.st_size] = 0;

@@ -165,6 +165,8 @@
 #define DCIDESC_FS_TYPE                           _T("Type of file system {instance}")
 #define DCIDESC_FS_USED                           _T("Used space on file system {instance}")
 #define DCIDESC_FS_USEDPERC                       _T("Percentage of used space on file system {instance}")
+#define DCIDESC_HYPERVISOR_TYPE                   _T("Hypervisor type")
+#define DCIDESC_HYPERVISOR_VERSION                _T("Hypervisor version")
 #define DCIDESC_LVM_LV_SIZE                       _T("Size of logical volume {instance}")
 #define DCIDESC_LVM_LV_STATUS                     _T("Status of logical volume {instance}")
 #define DCIDESC_LVM_PV_FREE                       _T("Free space on physical volume {instance}")
