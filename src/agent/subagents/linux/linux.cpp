@@ -183,6 +183,9 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 	{ _T("DRBD.Version.Protocol"),        H_DRBDVersion,     _T("p"),
 		DCI_DT_STRING, _T("DRBD protocol version") },
 
+   { _T("Hypervisor.Type"), H_HypervisorType, NULL, DCI_DT_STRING, DCIDESC_HYPERVISOR_TYPE },
+   { _T("Hypervisor.Version"), H_HypervisorVersion, NULL, DCI_DT_STRING, DCIDESC_HYPERVISOR_VERSION },
+
 	{ _T("Net.Interface.AdminStatus(*)"), H_NetIfInfoFromIOCTL, (TCHAR *)IF_INFO_ADMIN_STATUS, DCI_DT_INT, DCIDESC_NET_INTERFACE_ADMINSTATUS },
 	{ _T("Net.Interface.BytesIn(*)"), H_NetIfInfoFromProc, (TCHAR *)IF_INFO_BYTES_IN, DCI_DT_COUNTER32,	DCIDESC_NET_INTERFACE_BYTESIN },
 	{ _T("Net.Interface.BytesOut(*)"), H_NetIfInfoFromProc, (TCHAR *)IF_INFO_BYTES_OUT,	DCI_DT_COUNTER32, DCIDESC_NET_INTERFACE_BYTESOUT },
