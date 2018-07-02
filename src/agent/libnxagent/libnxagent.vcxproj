@@ -170,6 +170,7 @@
     <ClCompile Include="bridge.cpp" />
     <ClCompile Include="dfile_info.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="procexec.cpp" />
     <ClCompile Include="registry.cpp" />
     <ClCompile Include="tools.cpp" />
   </ItemGroup>
