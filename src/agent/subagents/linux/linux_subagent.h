@@ -207,6 +207,7 @@ LONG H_FileSystems(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCom
 LONG H_FileSystemType(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 LONG H_MountPoints(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
 
+LONG H_IsVirtual(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 LONG H_HypervisorType(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 LONG H_HypervisorVersion(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 
