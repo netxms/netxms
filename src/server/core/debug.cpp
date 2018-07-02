@@ -157,21 +157,27 @@ void ConsoleWrite(CONSOLE_CTX console, const TCHAR *text)
 }
 
 /**
- * Show server statistics
+ * Callback for counting DCIs
  */
 static void DciCountCallback(NetObj *object, void *data)
 {
-	*((int *)data) += (int)((Node *)object)->getItemCount();
+   if (object->isDataCollectionTarget())
+      *static_cast<int*>(data) += static_cast<DataCollectionTarget*>(object)->getItemCount();
 }
 
+/**
+ * Show server statistics
+ */
 void ShowServerStats(CONSOLE_CTX console)
 {
 	int dciCount = 0;
-	g_idxNodeById.forEach(DciCountCallback, &dciCount);
-   ConsolePrintf(console, _T("Total number of objects:     %d\n")
-                          _T("Number of monitored nodes:   %d\n")
-                          _T("Number of collectable DCIs:  %d\n\n"),
-	              g_idxObjectById.size(), g_idxNodeById.size(), dciCount);
+	g_idxObjectById.forEach(DciCountCallback, &dciCount);
+   ConsolePrintf(console, _T("Objects............ %d\n")
+                          _T("Monitored nodes.... %d\n")
+                          _T("Collectible DCIs... %d\n")
+                          _T("Active alarms...... %d\n")
+                          _T("\n"),
+	              g_idxObjectById.size(), g_idxNodeById.size(), dciCount, GetAlarmCount());
 }
 
 /**

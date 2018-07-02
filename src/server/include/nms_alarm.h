@@ -132,6 +132,7 @@ NetObj NXCORE_EXPORTABLE *GetAlarmSourceObject(UINT32 dwAlarmId, bool alreadyLoc
 NetObj NXCORE_EXPORTABLE *GetAlarmSourceObject(const TCHAR *hdref);
 int GetMostCriticalStatusForObject(UINT32 dwObjectId);
 void GetAlarmStats(NXCPMessage *pMsg);
+int GetAlarmCount();
 
 void NXCORE_EXPORTABLE CreateNewAlarm(TCHAR *message, TCHAR *key, int state, int severity, UINT32 timeout,
 									           UINT32 timeoutEvent, Event *event, UINT32 ackTimeout, IntegerArray<UINT32> *alarmCategoryList, bool openHelpdeskIssue);
