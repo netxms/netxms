@@ -486,6 +486,7 @@ struct NXCORE_EXPORTABLE NewNodeData
    bool doConfPoll;
    NodeOrigin origin;
    SNMP_SecurityContext *snmpSecurity;
+   uuid agentId;
 
    NewNodeData(const InetAddress& ipAddr);
    NewNodeData(const NXCPMessage *msg, const InetAddress& ipAddr);

@@ -1256,7 +1256,11 @@ static bool MatchTunnelToNode(NetObj *object, void *data)
    AgentTunnel *tunnel = static_cast<AgentTunnel*>(data);
 
    if (!node->getTunnelId().isNull())
-      return false;  // Already have bound tunnel
+   {
+      // Already have bound tunnel
+      // Assume that node is the same if agent ID match
+      return node->getAgentId().equals(tunnel->getAgentId());
+   }
 
    if (IsZoningEnabled() && (tunnel->getZoneUIN() != node->getZoneUIN()))
       return false;  // Wrong zone
@@ -1409,6 +1413,7 @@ void ProcessUnboundTunnels(const ScheduledTaskParameters *p)
                nd.zoneUIN = t->getZoneUIN();
                nd.creationFlags = NXC_NCF_CREATE_UNMANAGED;
                nd.origin = NODE_ORIGIN_TUNNEL_AUTOBIND;
+               nd.agentId = t->getAgentId();
                node = PollNewNode(&nd);
                if (node != NULL)
                {
