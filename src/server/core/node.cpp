@@ -241,6 +241,7 @@ Node::Node(const NewNodeData *newNodeData, UINT32 flags)  : DataCollectionTarget
    m_portRowCount = 0;
    m_agentCompressionMode = NODE_AGENT_COMPRESSION_DEFAULT;
    m_rackOrientation = FILL;
+   m_agentId = newNodeData->agentId;
 }
 
 /**
