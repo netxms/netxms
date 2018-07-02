@@ -1418,6 +1418,17 @@ void GetAlarmStats(NXCPMessage *pMsg)
 }
 
 /**
+ * Get number of active alarms
+ */
+int GetAlarmCount()
+{
+   MutexLock(m_mutex);
+   int count = m_alarmList->size();
+   MutexUnlock(m_mutex);
+   return count;
+}
+
+/**
  * Watchdog thread
  */
 static THREAD_RESULT THREAD_CALL WatchdogThread(void *arg)
