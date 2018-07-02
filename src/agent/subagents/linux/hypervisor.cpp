@@ -20,6 +20,57 @@
 
 #include "linux_subagent.h"
 
+#if HAVE_CPUID_H
+#include <cpuid.h>
+#endif
+
+/**
+ * Check if /proc/1/sched reports PID different from 1
+ */
+static bool CheckPid1Sched()
+{
+   FILE *f = fopen("/proc/1/sched", "r");
+   if (f == NULL)
+      return false;
+
+   bool result = false;
+
+   char line[1024] = "";
+   fgets(line, 1024, f);
+   char *p1 = strrchr(line, '(');
+   if (p1 != NULL)
+   {
+      p1++;
+      char *p2 = strchr(p1, ',');
+      if (p2 != NULL)
+      {
+         *p2 = 0;
+         result = (strtol(p1, NULL, 10) != 1);
+      }
+   }
+   
+   fclose(f);
+   return result;
+}
+
+/**
+ * Check if running in virtual environment
+ */
+static VirtualizationType IsVirtual()
+{
+   // Check for container virtualization
+   if (CheckPid1Sched())
+      return VTYPE_CONTAINER;
+
+   // Check for hardware virtualization
+#if HAVE_GET_CPUID
+   unsigned int eax, ebx, ecx, edx;
+   if (__get_cpuid(0x1, &eax, &ebx, &ecx, &edx) == 1)
+      return ((ecx & 0x80000000) != 0) ? VTYPE_FULL : VTYPE_NONE;
+#endif
+   return VTYPE_NONE;
+}
+
 /**
  * Check for VMWare host
  */
@@ -149,4 +200,13 @@ LONG H_HypervisorVersion(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abs
    if (IsVMWare() && GetVMWareVersionString(value))
       return SYSINFO_RC_SUCCESS;
    return SYSINFO_RC_UNSUPPORTED;
+}
+
+/**
+ * Handler for System.IsVirtual parameter
+ */
+LONG H_IsVirtual(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   ret_int(value, IsVirtual());
+   return SYSINFO_RC_SUCCESS;
 }

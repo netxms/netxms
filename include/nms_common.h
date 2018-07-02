@@ -1227,6 +1227,16 @@ enum EnumerationCallbackResult
 };
 
 /**
+ * Virtualization types
+ */
+enum VirtualizationType
+{
+   VTYPE_NONE = 0,
+   VTYPE_FULL = 1,
+   VTYPE_CONTAINER = 2
+};
+
+/**
  * Disable copy constructor if compiler supports it
  */
 #if CAN_DELETE_COPY_CTOR
