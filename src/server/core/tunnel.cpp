@@ -639,6 +639,7 @@ void AgentTunnel::processCertificateRequest(NXCPMessage *request)
                debugPrintf(4, _T("Cannot issue certificate"));
                response.setField(VID_RCC, ERR_ENCRYPTION_ERROR);
             }
+            X509_REQ_free(certRequest);
          }
          else
          {
