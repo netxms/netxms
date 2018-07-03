@@ -36,16 +36,18 @@ static bool CheckPid1Sched()
    bool result = false;
 
    char line[1024] = "";
-   fgets(line, 1024, f);
-   char *p1 = strrchr(line, '(');
-   if (p1 != NULL)
+   if (fgets(line, 1024, f) != NULL)
    {
-      p1++;
-      char *p2 = strchr(p1, ',');
-      if (p2 != NULL)
+      char *p1 = strrchr(line, '(');
+      if (p1 != NULL)
       {
-         *p2 = 0;
-         result = (strtol(p1, NULL, 10) != 1);
+         p1++;
+         char *p2 = strchr(p1, ',');
+         if (p2 != NULL)
+         {
+            *p2 = 0;
+            result = (strtol(p1, NULL, 10) != 1);
+         }
       }
    }
    
@@ -54,12 +56,111 @@ static bool CheckPid1Sched()
 }
 
 /**
+ * Check cgroup
+ */
+static bool DetectContainerByCGroup(char *detectedType)
+{
+   FILE *f = fopen("/proc/1/cgroup", "r");
+   if (f == NULL)
+      return false;
+
+   bool result = false;
+   char line[1024];
+   while(!feof(f))
+   {
+      if (fgets(line, 1024, f) == NULL)
+         break;
+
+      char *p = strchr(line, ':');
+      if (p == NULL)
+         continue;
+
+      p++;
+      p = strchr(p, ':');
+      if (p == NULL)
+         continue;
+
+      p++;
+      if (!strncmp(p, "/docker/", 8) || !strncmp(p, "/ecs/", 5))
+      {
+         result = true;
+         if (detectedType != NULL)
+            strcpy(detectedType, "Docker");
+         break;
+      }
+
+      if (!strncmp(p, "/lxc/", 5))
+      {
+         result = true;
+         if (detectedType != NULL)
+            strcpy(detectedType, "LXC");
+         break;
+      }
+   }
+
+   fclose(f);
+   return result;
+}
+
+/**
+ * Check for OpenVZ container
+ */
+static bool IsOpenVZ()
+{
+   return (access("/proc/vz/vzaquota", R_OK) == 0) ||
+          (access("/proc/user_beancounters", R_OK) == 0);
+}
+
+/**
+ * Check Linux-VServer container
+ */
+static bool IsLinuxVServer()
+{
+   FILE *f = fopen("/proc/self/status", "r");
+   if (f == NULL)
+      return false;
+
+   bool result = false;
+   char line[1024];
+   while(!feof(f))
+   {
+      if (fgets(line, 1024, f) == NULL)
+         break;
+
+      if (strncmp(line, "VxID:", 5) && strncmp(line, "s_context:", 10))
+         continue;
+
+      char *p = strchr(line, ':');
+      if (p == NULL)
+         continue;
+
+      p++;
+      while(isspace(*p))
+         p++;
+      if (strtol(p, NULL, 10) != 0) // ID 0 is for host
+         result = true;
+      break;
+   }
+
+   fclose(f);
+   return result;
+}
+
+/**
+ * Check if running within container
+ */
+static bool IsContainer()
+{
+   return CheckPid1Sched() || DetectContainerByCGroup(NULL) || IsOpenVZ() || IsLinuxVServer();
+}
+
+/**
  * Check if running in virtual environment
  */
 static VirtualizationType IsVirtual()
 {
    // Check for container virtualization
-   if (CheckPid1Sched())
+   if (IsContainer())
       return VTYPE_CONTAINER;
 
    // Check for hardware virtualization
@@ -177,11 +278,38 @@ static bool GetXENVersionString(TCHAR *value)
  */
 LONG H_HypervisorType(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
+   if (IsContainer())
+   {
+      if (IsOpenVZ())
+      {
+         ret_mbstring(value, "OpenVZ");
+         return SYSINFO_RC_SUCCESS;
+      }
+
+      if (IsLinuxVServer())
+      {
+         ret_mbstring(value, "Linux-VServer");
+         return SYSINFO_RC_SUCCESS;
+      }
+
+      char ctype[64];
+      if (DetectContainerByCGroup(ctype))
+      {
+         ret_mbstring(value, ctype);
+         return SYSINFO_RC_SUCCESS;
+      }
+
+      // Unknown container type, assume LXC
+      ret_mbstring(value, "LXC");
+      return SYSINFO_RC_SUCCESS;
+   }
+
    if (IsXEN())
    {
       ret_mbstring(value, "XEN");
       return SYSINFO_RC_SUCCESS;
    }
+
    if (IsVMWare())
    {
       ret_mbstring(value, "VMWare");
@@ -195,6 +323,10 @@ LONG H_HypervisorType(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abstra
  */
 LONG H_HypervisorVersion(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
+   // Currently host details cannot be determined for any container
+   if (IsContainer())
+      return SYSINFO_RC_UNSUPPORTED;
+
    if (IsXEN() && GetXENVersionString(value))
       return SYSINFO_RC_SUCCESS;
    if (IsVMWare() && GetVMWareVersionString(value))
