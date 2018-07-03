@@ -1985,12 +1985,10 @@ bool LIBNETXMS_EXPORTABLE DecryptPasswordA(const char *login, const char *encryp
    return true;
 }
 
-#ifndef UNDER_CE
-
 /**
  * Load file content into memory
  */
-static BYTE *LoadFileContent(int fd, UINT32 *pdwFileSize)
+static BYTE *LoadFileContent(int fd, UINT32 *pdwFileSize, bool kernelFS)
 {
    int iBufPos, iNumBytes, iBytesRead;
    BYTE *pBuffer = NULL;
@@ -1998,13 +1996,20 @@ static BYTE *LoadFileContent(int fd, UINT32 *pdwFileSize)
 
    if (NX_FSTAT(fd, &fs) != -1)
    {
-      pBuffer = (BYTE *)malloc((size_t)fs.st_size + 1);
+      size_t size = (size_t)fs.st_size;
+#ifndef _WIN32
+      if (kernelFS && (size == 0))
+      {
+          size = 16384;
+      }
+#endif
+      pBuffer = (BYTE *)malloc(size + 1);
       if (pBuffer != NULL)
       {
-         *pdwFileSize = (UINT32)fs.st_size;
-         for(iBufPos = 0; iBufPos < fs.st_size; iBufPos += iBytesRead)
+         *pdwFileSize = (UINT32)size;
+         for(iBufPos = 0; iBufPos < size; iBufPos += iBytesRead)
          {
-            iNumBytes = std::min(16384, (int)fs.st_size - iBufPos);
+            iNumBytes = std::min(16384, (int)size - iBufPos);
             if ((iBytesRead = _read(fd, &pBuffer[iBufPos], iNumBytes)) < 0)
             {
                free(pBuffer);
@@ -2019,9 +2024,17 @@ static BYTE *LoadFileContent(int fd, UINT32 *pdwFileSize)
                *pdwFileSize = (UINT32)iBufPos;
                break;
             }
+#ifndef _WIN32
+            if (kernelFS && (iBufPos + iBytesRead == size))
+            {
+               // Assume that file is larger than expected
+               size += 16384;
+               pBuffer = (BYTE *)realloc(pBuffer, size + 1);
+            }
+#endif
          }
          if (pBuffer != NULL)
-            pBuffer[fs.st_size] = 0;
+            pBuffer[size] = 0;
       }
    }
    _close(fd);
@@ -2031,14 +2044,18 @@ static BYTE *LoadFileContent(int fd, UINT32 *pdwFileSize)
 BYTE LIBNETXMS_EXPORTABLE *LoadFile(const TCHAR *pszFileName, UINT32 *pdwFileSize)
 {
    int fd;
-   BYTE *pBuffer = NULL;
+   BYTE *buffer = NULL;
 
    fd = _topen(pszFileName, O_RDONLY | O_BINARY);
    if (fd != -1)
    {
-		pBuffer = LoadFileContent(fd, pdwFileSize);
+#ifdef _WIN32
+      buffer = LoadFileContent(fd, pdwFileSize, false);
+#else
+      buffer = LoadFileContent(fd, pdwFileSize, !_tcsncmp(pszFileName, _T("/proc/"), 6));
+#endif
    }
-   return pBuffer;
+   return buffer;
 }
 
 #ifdef UNICODE
@@ -2046,7 +2063,7 @@ BYTE LIBNETXMS_EXPORTABLE *LoadFile(const TCHAR *pszFileName, UINT32 *pdwFileSiz
 BYTE LIBNETXMS_EXPORTABLE *LoadFileA(const char *pszFileName, UINT32 *pdwFileSize)
 {
    int fd;
-   BYTE *pBuffer = NULL;
+   BYTE *buffer = NULL;
 
 #ifdef _WIN32
    fd = _open(pszFileName, O_RDONLY | O_BINARY);
@@ -2055,12 +2072,14 @@ BYTE LIBNETXMS_EXPORTABLE *LoadFileA(const char *pszFileName, UINT32 *pdwFileSiz
 #endif
    if (fd != -1)
    {
-      pBuffer = LoadFileContent(fd, pdwFileSize);
-   }
-   return pBuffer;
-}
-
+#ifdef _WIN32
+      buffer = LoadFileContent(fd, pdwFileSize, false);
+#else
+      buffer = LoadFileContent(fd, pdwFileSize, !strncmp(pszFileName, "/proc/", 6));
 #endif
+   }
+   return buffer;
+}
 
 #endif
 

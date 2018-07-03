@@ -25,7 +25,7 @@
 #endif
 
 /**
- * Check if /proc/1/sched reports PID different from 1
+ * Check if /proc/1/sched reports PID different from 1 (won't work on kernel 4.15 or higher)
  */
 static bool CheckPid1Sched()
 {
@@ -147,11 +147,48 @@ static bool IsLinuxVServer()
 }
 
 /**
+ * Detect container from /proc/1/environ (requires root or CAP_SYS_PTRACE)
+ */
+static bool DetectContainerByInitEnv(char *detectedType)
+{
+   UINT32 size;
+   char *env = reinterpret_cast<char*>(LoadFileA("/proc/1/environ", &size));
+   if (env == NULL)
+      return false;
+
+   bool result = false;
+   char *curr = env;
+   while(curr < env + size)
+   {
+      if (!strncmp(curr, "container=", 10))
+      {
+         result = true;
+         if (detectedType != NULL)
+         {
+            if (!strcmp(&curr[10], "lxc"))
+               strcpy(detectedType, "LXC");
+            else
+               strcpy(detectedType, &curr[10]);
+         }
+         break;
+      }
+      curr += strlen(curr) + 1;
+   }
+   free(env);
+   return result;
+}
+
+/**
  * Check if running within container
  */
 static bool IsContainer()
 {
-   return CheckPid1Sched() || DetectContainerByCGroup(NULL) || IsOpenVZ() || IsLinuxVServer();
+   return 
+      CheckPid1Sched() || 
+      DetectContainerByCGroup(NULL) || 
+      IsOpenVZ() || 
+      IsLinuxVServer() ||
+      DetectContainerByInitEnv(NULL);
 }
 
 /**
@@ -293,7 +330,7 @@ LONG H_HypervisorType(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abstra
       }
 
       char ctype[64];
-      if (DetectContainerByCGroup(ctype))
+      if (DetectContainerByCGroup(ctype) || DetectContainerByInitEnv(ctype))
       {
          ret_mbstring(value, ctype);
          return SYSINFO_RC_SUCCESS;
