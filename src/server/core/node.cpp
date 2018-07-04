@@ -5568,7 +5568,6 @@ AgentConnectionEx *Node::createAgentConnection(bool sendServerId)
    }
    else
    {
-      AgentTunnel *tunnel = GetTunnelForNode(m_id);
       if (!m_ipAddress.isValidUnicast() || (m_flags & NF_AGENT_OVER_TUNNEL_ONLY))
       {
          nxlog_debug(7, _T("Node::createAgentConnection(%s [%d]): %s and there are no active tunnels"), m_name, m_id,
