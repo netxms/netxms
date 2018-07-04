@@ -461,7 +461,6 @@ void AgentTunnel::start()
 {
    debugPrintf(4, _T("Tunnel started"));
    incRefCount();
-   SetSocketNonBlocking(m_socket);
    ThreadCreate(AgentTunnel::recvThreadStarter, 0, this);
 }
 
@@ -1048,15 +1047,16 @@ static void SetupTunnel(void *arg)
 
    SSL_set_accept_state(ssl);
    SSL_set_fd(ssl, (int)request->sock);
+   SetSocketNonBlocking(request->sock);
 
 retry:
    rc = SSL_do_handshake(ssl);
    if (rc != 1)
    {
       int sslErr = SSL_get_error(ssl, rc);
-      if (sslErr == SSL_ERROR_WANT_READ)
+      if ((sslErr == SSL_ERROR_WANT_READ) || (sslErr == SSL_ERROR_WANT_WRITE))
       {
-         SocketPoller poller;
+         SocketPoller poller(sslErr == SSL_ERROR_WANT_WRITE);
          poller.add(request->sock);
          if (poller.poll(REQUEST_TIMEOUT) > 0)
             goto retry;
