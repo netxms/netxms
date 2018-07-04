@@ -328,7 +328,7 @@ bool LoadConfig()
       validConfig = g_config->loadConfigDirectory(g_szConfigIncludeDir, DEFAULT_CONFIG_SECTION, false);
       if (!validConfig)
       {
-         ConsolePrintf(_T("Error reading additional configuration files from \"%s\"\n"), dir);
+         ConsolePrintf(_T("Error reading additional configuration files from \"%s\"\n"), g_szConfigIncludeDir);
       }
 
 #ifdef _WIN32
