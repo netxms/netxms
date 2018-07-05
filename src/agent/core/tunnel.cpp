@@ -96,6 +96,7 @@ private:
    SSL *m_ssl;
    MUTEX m_sslLock;
    MUTEX m_writeLock;
+   MUTEX m_stateLock;
    bool m_connected;
    bool m_reset;
    VolatileCounter m_requestId;
@@ -153,6 +154,7 @@ Tunnel::Tunnel(const TCHAR *hostname, UINT16 port) : m_channels(true)
    m_ssl = NULL;
    m_sslLock = MutexCreate();
    m_writeLock = MutexCreate();
+   m_stateLock = MutexCreate();
    m_connected = false;
    m_reset = false;
    m_requestId = 0;
@@ -177,6 +179,7 @@ Tunnel::~Tunnel()
       SSL_CTX_free(m_context);
    MutexDestroy(m_sslLock);
    MutexDestroy(m_writeLock);
+   MutexDestroy(m_stateLock);
    MutexDestroy(m_channelLock);
    free(m_hostname);
 }
@@ -199,11 +202,14 @@ void Tunnel::debugPrintf(int level, const TCHAR *format, ...)
  */
 void Tunnel::disconnect()
 {
+   MutexLock(m_stateLock);
    if (m_socket != INVALID_SOCKET)
       shutdown(m_socket, SHUT_RDWR);
    m_connected = false;
    ThreadJoin(m_recvThread);
+   m_recvThread = INVALID_THREAD_HANDLE;
    delete_and_null(m_queue);
+   MutexUnlock(m_stateLock);
 
    Array channels(g_dwMaxSessions, 16, false);
    MutexLock(m_channelLock);
@@ -461,6 +467,8 @@ bool Tunnel::loadCertificate()
  */
 bool Tunnel::connectToServer()
 {
+   MutexLock(m_stateLock);
+
    // Cleanup from previous connection attempt
    if (m_socket != INVALID_SOCKET)
       closesocket(m_socket);
@@ -477,6 +485,7 @@ bool Tunnel::connectToServer()
    if (!m_address.isValidUnicast())
    {
       debugPrintf(4, _T("Server address cannot be resolved or is not valid"));
+      MutexUnlock(m_stateLock);
       return false;
    }
 
@@ -485,6 +494,7 @@ bool Tunnel::connectToServer()
    if (m_socket == INVALID_SOCKET)
    {
       debugPrintf(4, _T("Cannot create socket (%s)"), _tcserror(WSAGetLastError()));
+      MutexUnlock(m_stateLock);
       return false;
    }
 
@@ -493,6 +503,7 @@ bool Tunnel::connectToServer()
    if (ConnectEx(m_socket, (struct sockaddr *)&sa, SA_LEN((struct sockaddr *)&sa), REQUEST_TIMEOUT) == -1)
    {
       debugPrintf(4, _T("Cannot establish connection (%s)"), _tcserror(WSAGetLastError()));
+      MutexUnlock(m_stateLock);
       return false;
    }
 
@@ -505,6 +516,7 @@ bool Tunnel::connectToServer()
    if (method == NULL)
    {
       debugPrintf(4, _T("Cannot obtain TLS method"));
+      MutexUnlock(m_stateLock);
       return false;
    }
 
@@ -512,6 +524,7 @@ bool Tunnel::connectToServer()
    if (m_context == NULL)
    {
       debugPrintf(4, _T("Cannot create TLS context"));
+      MutexUnlock(m_stateLock);
       return false;
    }
 #ifdef SSL_OP_NO_COMPRESSION
@@ -526,6 +539,7 @@ bool Tunnel::connectToServer()
    if (m_ssl == NULL)
    {
       debugPrintf(4, _T("Cannot create SSL object"));
+      MutexUnlock(m_stateLock);
       return false;
    }
 
@@ -545,6 +559,7 @@ bool Tunnel::connectToServer()
             if (poller.poll(REQUEST_TIMEOUT) > 0)
                continue;
             debugPrintf(4, _T("TLS handshake failed (timeout)"));
+            MutexUnlock(m_stateLock);
             return false;
          }
          else
@@ -561,6 +576,7 @@ bool Tunnel::connectToServer()
                   debugPrintf(4, _T("Next connection attempt will ignore agent certificate"));
                }
             }
+            MutexUnlock(m_stateLock);
             return false;
          }
       }
@@ -574,6 +590,7 @@ bool Tunnel::connectToServer()
    if (cert == NULL)
    {
       debugPrintf(4, _T("Server certificate not provided"));
+      MutexUnlock(m_stateLock);
       return false;
    }
 
@@ -591,6 +608,8 @@ bool Tunnel::connectToServer()
    m_queue = new MsgWaitQueue();
    m_connected = true;
    m_recvThread = ThreadCreateEx(Tunnel::recvThreadStarter, 0, this);
+
+   MutexUnlock(m_stateLock);
 
    m_requestId = 0;
 
@@ -646,8 +665,6 @@ void Tunnel::checkConnection()
    {
       m_reset = false;
       disconnect();
-      closesocket(m_socket);
-      m_socket = INVALID_SOCKET;
       debugPrintf(3, _T("Resetting tunnel"));
       if (connectToServer())
          debugPrintf(3, _T("Tunnel is active"));
@@ -669,8 +686,6 @@ void Tunnel::checkConnection()
          {
             debugPrintf(3, _T("Connection test failed"));
             disconnect();
-            closesocket(m_socket);
-            m_socket = INVALID_SOCKET;
          }
          else
          {
@@ -681,8 +696,6 @@ void Tunnel::checkConnection()
       {
          debugPrintf(3, _T("Connection test failed"));
          disconnect();
-         closesocket(m_socket);
-         m_socket = INVALID_SOCKET;
       }
    }
 }
