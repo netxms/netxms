@@ -374,4 +374,10 @@ Language=English
 Tunnel with %1 closed
 .
 
+MessageId=
+SymbolicName=MSG_DEBUG_PSESSION
+Language=English
+[PS-%1] %2
+.
+
 ;#endif
