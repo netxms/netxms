@@ -225,9 +225,9 @@ public class AlarmList extends CompositeWithMessageBar
 
       // Get filter settings
       initShowfilter = Activator.getDefault().getPreferenceStore().getBoolean("INIT_SHOW_FILTER");
-
-      createActions();
-      createPopupMenu();
+		
+		createActions();
+		createPopupMenu();
 
       addListener(SWT.Resize, new Listener() {
          public void handleEvent(Event e)
@@ -247,7 +247,7 @@ public class AlarmList extends CompositeWithMessageBar
          {
             synchronized(alarmList)
             {
-               alarmViewer.refresh();
+               filterAndLimit();
             }
          }
       });
@@ -264,7 +264,6 @@ public class AlarmList extends CompositeWithMessageBar
 						synchronized(alarmList)
 						{
 							alarmList.put(((Alarm)n.getObject()).getId(), (Alarm)n.getObject());
-                     filterAndLimit();
 						}
 						refreshTimer.execute();
 						break;
@@ -273,7 +272,6 @@ public class AlarmList extends CompositeWithMessageBar
                   synchronized(alarmList)
                   {
                      alarmList.remove(((Alarm)n.getObject()).getId());
-                     filterAndLimit();
                   }
                   refreshTimer.execute();
                   break;
@@ -289,7 +287,6 @@ public class AlarmList extends CompositeWithMessageBar
                            a.setResolved(d.getUserId(), d.getChangeTime());
                         }
                      }
-                     filterAndLimit();
                   }
                   refreshTimer.execute();
                   break;
@@ -300,7 +297,6 @@ public class AlarmList extends CompositeWithMessageBar
 						   {
 						      alarmList.remove(id);
 						   }
-						   filterAndLimit();
 						}
                   refreshTimer.execute();
                   break;
@@ -329,7 +325,7 @@ public class AlarmList extends CompositeWithMessageBar
                   alarmViewer.refresh();
                }
             }
-         }
+			}
       };
       ps.addPropertyChangeListener(propertyChangeListener);
 
@@ -365,7 +361,7 @@ public class AlarmList extends CompositeWithMessageBar
       else
          enableFilter(false); // Will hide filter area correctly*/
 	}
-
+	
    /**
 	 * Get selection provider of alarm list
 	 * 
@@ -797,23 +793,26 @@ public class AlarmList extends CompositeWithMessageBar
          filteredAlarmList = filteredAlarmList.subList(0, session.getAlarmListDisplayLimit());
       }
 
+      if ((visibilityValidator != null) && !visibilityValidator.isVisible())
+         return;
+      
       alarmViewer.getControl().getDisplay().asyncExec(new Runnable() {
          @Override
          public void run()
          {
-            if (!alarmViewer.getControl().isDisposed())
+            if (alarmViewer.getControl().isDisposed())
+               return;
+            
+            synchronized(alarmList)
             {
-               synchronized(alarmList)
+               alarmViewer.setInput(filteredAlarmList);
+               if ((session.getAlarmListDisplayLimit() > 0) && (filteredAlarmList.size() >= session.getAlarmListDisplayLimit()))
                {
-                  alarmViewer.setInput(filteredAlarmList);
-                  if ((session.getAlarmListDisplayLimit() > 0) && (filteredAlarmList.size() >= session.getAlarmListDisplayLimit()))
-                  {
-                     showMessage(INFORMATION, String.format(Messages.get().AlarmList_CountLimitWarning, filteredAlarmList.size()));
-                  }
-                  else
-                  {
-                     hideMessage();
-                  }
+                  showMessage(INFORMATION, String.format(Messages.get().AlarmList_CountLimitWarning, filteredAlarmList.size()));
+               }
+               else
+               {
+                  hideMessage();
                }
             }
          }
