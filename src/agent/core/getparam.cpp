@@ -977,16 +977,18 @@ void GetParameterList(NXCPMessage *pMsg)
 void GetTableList(NXCPMessage *pMsg)
 {
    int i;
-   UINT32 dwId, count;
+   UINT32 dwId;
 
-   pMsg->setField(VID_NUM_TABLES, (UINT32)m_iNumTables);
    for(i = 0, dwId = VID_TABLE_LIST_BASE; i < m_iNumTables; i++)
    {
       pMsg->setField(dwId++, m_pTableList[i].name);
 		pMsg->setField(dwId++, m_pTableList[i].instanceColumns);
 		pMsg->setField(dwId++, m_pTableList[i].description);
    }
+
+   UINT32 count = (UINT32)m_iNumTables;
 	ListTablesFromExtSubagents(pMsg, &dwId, &count);
+   pMsg->setField(VID_NUM_TABLES, count);
 }
 
 /**
@@ -995,12 +997,14 @@ void GetTableList(NXCPMessage *pMsg)
 void GetEnumList(NXCPMessage *pMsg)
 {
    int i;
-   UINT32 dwId, count;
+   UINT32 dwId;
 
-   pMsg->setField(VID_NUM_ENUMS, (UINT32)m_iNumEnums);
    for(i = 0, dwId = VID_ENUM_LIST_BASE; i < m_iNumEnums; i++)
    {
       pMsg->setField(dwId++, m_pEnumList[i].name);
    }
+
+   UINT32 count = (UINT32)m_iNumEnums;
 	ListListsFromExtSubagents(pMsg, &dwId, &count);
+   pMsg->setField(VID_NUM_ENUMS, count);
 }

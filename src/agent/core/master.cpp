@@ -80,6 +80,37 @@ static void H_GetList(NXCPMessage *pRequest, NXCPMessage *pMsg)
 }
 
 /**
+ * Execute action
+ */
+static void ExecuteAction(NXCPMessage *request, NXCPMessage *response)
+{
+   StringList *args = new StringList();
+   UINT32 count = request->getFieldAsUInt32(VID_NUM_ARGS);
+   UINT32 fieldId = VID_ACTION_ARG_BASE;
+   for(UINT32 i = 0; i < count; i++)
+   {
+      args->addPreallocated(request->getFieldAsString(fieldId++));
+   }
+
+   TCHAR name[MAX_OBJECT_NAME];
+   request->getFieldAsString(VID_NAME, name, MAX_OBJECT_NAME);
+
+   ProxySession session(request);
+
+   if (request->getFieldAsBoolean(VID_RECEIVE_OUTPUT))
+   {
+      UINT32 rcc = ExecActionWithOutput(&session, request->getId(), name, args);
+      response->setField(VID_RCC, rcc);
+   }
+   else
+   {
+      UINT32 rcc = ExecAction(name, args, &session);
+      response->setField(VID_RCC, rcc);
+      delete args;
+   }
+}
+
+/**
  * Pipe to master agent
  */
 static NamedPipe *s_pipe = NULL;
@@ -127,6 +158,9 @@ THREAD_RESULT THREAD_CALL MasterAgentListener(void *arg)
 					case CMD_GET_LIST:
 						H_GetList(msg, &response);
 						break;
+               case CMD_EXECUTE_ACTION:
+                  ExecuteAction(msg, &response);
+                  break;
 					case CMD_GET_PARAMETER_LIST:
 						response.setField(VID_RCC, ERR_SUCCESS);
 						GetParameterList(&response);
@@ -138,6 +172,10 @@ THREAD_RESULT THREAD_CALL MasterAgentListener(void *arg)
 					case CMD_GET_TABLE_LIST:
 						response.setField(VID_RCC, ERR_SUCCESS);
 						GetTableList(&response);
+						break;
+					case CMD_GET_ACTION_LIST:
+						response.setField(VID_RCC, ERR_SUCCESS);
+						GetActionList(&response);
 						break;
                case CMD_SHUTDOWN:
                   Shutdown();

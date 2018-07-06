@@ -1180,6 +1180,31 @@ UINT32 CommSession::generateRequestId()
 }
 
 /**
+ * Prepare setup message for proxy session on external subagent side
+ */
+void CommSession::prepareProxySessionSetupMsg(NXCPMessage *msg)
+{
+   msg->setField(VID_SESSION_ID, m_id);
+   msg->setField(VID_SERVER_ID, m_serverId);
+   msg->setField(VID_IP_ADDRESS, m_serverAddr);
+
+   UINT32 flags = 0;
+   if (m_masterServer)
+      flags |= 0x01;
+   if (m_controlServer)
+      flags |= 0x02;
+   if (m_acceptData)
+      flags |= 0x04;
+   if (m_acceptTraps)
+      flags |= 0x08;
+   if (m_acceptFileUpdates)
+      flags |= 0x10;
+   if (m_ipv6Aware)
+      flags |= 0x20;
+   msg->setField(VID_FLAGS, flags);
+}
+
+/**
  * Virtual session constructor
  */
 VirtualSession::VirtualSession(UINT64 serverId)
@@ -1204,4 +1229,40 @@ void VirtualSession::debugPrintf(int level, const TCHAR *format, ...)
    va_end(args);
 
    nxlog_write(MSG_DEBUG_VSESSION, EVENTLOG_DEBUG_TYPE, "ds", m_id, buffer);
+}
+
+/**
+ * Proxy session constructor
+ */
+ProxySession::ProxySession(NXCPMessage *msg)
+{
+   m_id = msg->getFieldAsUInt32(VID_SESSION_ID);
+   m_serverId = msg->getFieldAsUInt64(VID_SERVER_ID);
+   m_serverAddress = msg->getFieldAsInetAddress(VID_IP_ADDRESS);
+   
+   UINT32 flags = msg->getFieldAsUInt32(VID_FLAGS);
+   m_masterServer = ((flags & 0x01) != 0);
+   m_controlServer = ((flags & 0x02) != 0);
+   m_canAcceptData = ((flags & 0x04) != 0);
+   m_canAcceptTraps = ((flags & 0x08) != 0);
+   m_canAcceptFileUpdates = ((flags & 0x10) != 0);
+   m_ipv6Aware = ((flags & 0x20) != 0);
+}
+
+/**
+ * Debug print in proxy session context
+ */
+void ProxySession::debugPrintf(int level, const TCHAR *format, ...)
+{
+   if (level > nxlog_get_debug_level())
+      return;
+
+   va_list args;
+   TCHAR buffer[8192];
+
+   va_start(args, format);
+   _vsntprintf(buffer, 8192, format, args);
+   va_end(args);
+
+   nxlog_write(MSG_DEBUG_PSESSION, EVENTLOG_DEBUG_TYPE, "ds", m_id, buffer);
 }
