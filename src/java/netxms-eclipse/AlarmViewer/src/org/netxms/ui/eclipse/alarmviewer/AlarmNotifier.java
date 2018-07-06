@@ -27,6 +27,7 @@ import java.nio.channels.FileChannel;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicInteger;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
 import javax.sound.sampled.Line;
@@ -69,6 +70,7 @@ public class AlarmNotifier
    private static IPreferenceStore ps;
    private static URL workspaceUrl;
    private static LinkedBlockingQueue<String> soundQueue = new LinkedBlockingQueue<String>(4);
+   private static AtomicInteger trayPopupCount = new AtomicInteger(0);
 
    /**
     * Initialize alarm notifier
@@ -92,9 +94,11 @@ public class AlarmNotifier
             if (a.getState() == Alarm.STATE_OUTSTANDING)
                outstandingAlarms++;
          }
+         Activator.logInfo(String.format("Received %d alarms from server (%d outstanding)", alarms.size(), outstandingAlarms));
       }
       catch(Exception e)
       {
+         Activator.logError("Exception while initialize alarm notifier", e);
       }
 
       listener = new SessionListener() {
@@ -108,13 +112,9 @@ public class AlarmNotifier
             else if ((n.getCode() == SessionNotification.ALARM_TERMINATED) || (n.getCode() == SessionNotification.ALARM_DELETED))
             {               
                Alarm a = (Alarm)n.getObject();
-               Integer state = alarmStates.get(a.getId());
-               if (state != null)
-               {
-                  if (state == Alarm.STATE_OUTSTANDING)
-                     outstandingAlarms--;
-                  alarmStates.remove(a.getId());
-               }
+               Integer state = alarmStates.remove(a.getId());
+               if (state == Alarm.STATE_OUTSTANDING)
+                  outstandingAlarms--;
             }
             else if (n.getCode() == SessionNotification.MULTIPLE_ALARMS_RESOLVED)
             {               
@@ -122,13 +122,8 @@ public class AlarmNotifier
                for(Long id : d.getAlarms())
                {
                   Integer state = alarmStates.get(id);
-                  if (state != null)
-                  {
-                     if (state == Alarm.STATE_OUTSTANDING)
-                     {
-                        outstandingAlarms--;
-                     }
-                  }
+                  if (state == Alarm.STATE_OUTSTANDING)
+                     outstandingAlarms--;
                   alarmStates.put(id, Alarm.STATE_RESOLVED);
                }
             }
@@ -137,13 +132,9 @@ public class AlarmNotifier
                BulkAlarmStateChangeData d = (BulkAlarmStateChangeData)n.getObject();
                for(Long id : d.getAlarms())
                {
-                  Integer state = alarmStates.get(id);
-                  if (state != null)
-                  {
-                     if (state == Alarm.STATE_OUTSTANDING)
-                        outstandingAlarms--;
-                     alarmStates.remove(id);
-                  }
+                  Integer state = alarmStates.remove(id);
+                  if (state == Alarm.STATE_OUTSTANDING)
+                     outstandingAlarms--;
                }
             }
          }
@@ -378,47 +369,56 @@ public class AlarmNotifier
       final TrayItem trayIcon = ConsoleSharedData.getTrayIcon();
       if (trayIcon != null)
       {
-         new UIJob("Create alarm popup") { //$NON-NLS-1$
-            @Override
-            public IStatus runInUIThread(IProgressMonitor monitor)
-            {
-               final AbstractObject object = session.findObjectById(alarm.getSourceObjectId());
-
-               int severityFlag;
-               if (alarm.getCurrentSeverity() == Severity.NORMAL)
+         if (trayPopupCount.incrementAndGet() < 2)
+         {
+            new UIJob("Create alarm popup") { //$NON-NLS-1$
+               @Override
+               public IStatus runInUIThread(IProgressMonitor monitor)
                {
-                  severityFlag = SWT.ICON_INFORMATION;
+                  final AbstractObject object = session.findObjectById(alarm.getSourceObjectId());
+   
+                  int severityFlag;
+                  if (alarm.getCurrentSeverity() == Severity.NORMAL)
+                  {
+                     severityFlag = SWT.ICON_INFORMATION;
+                  }
+                  else if (alarm.getCurrentSeverity() == Severity.CRITICAL)
+                  {
+                     severityFlag = SWT.ICON_ERROR;
+                  }
+                  else
+                  {
+                     severityFlag = SWT.ICON_WARNING;
+                  }
+   
+                  IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+                  if (window == null)
+                  {
+                     IWorkbenchWindow[] wl = PlatformUI.getWorkbench().getWorkbenchWindows();
+                     if (wl.length > 0)
+                        window = wl[0];
+                  }
+                  if (window != null)
+                  {
+                     final ToolTip tip = new ToolTip(window.getShell(), SWT.BALLOON | severityFlag);
+                     tip.setText(Messages.get().AlarmNotifier_ToolTip_Header
+                           + StatusDisplayInfo.getStatusText(alarm.getCurrentSeverity()) + ")"); //$NON-NLS-1$ //$NON-NLS-1$
+                     tip.setMessage(((object != null) ? object.getObjectName() : Long.toString(alarm.getSourceObjectId()))
+                           + ": " + alarm.getMessage()); //$NON-NLS-1$
+                     tip.setAutoHide(true);
+                     trayIcon.setToolTip(tip);
+                     tip.setVisible(true);
+                  }
+                  return Status.OK_STATUS;
                }
-               else if (alarm.getCurrentSeverity() == Severity.CRITICAL)
-               {
-                  severityFlag = SWT.ICON_ERROR;
-               }
-               else
-               {
-                  severityFlag = SWT.ICON_WARNING;
-               }
-
-               IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
-               if (window == null)
-               {
-                  IWorkbenchWindow[] wl = PlatformUI.getWorkbench().getWorkbenchWindows();
-                  if (wl.length > 0)
-                     window = wl[0];
-               }
-               if (window != null)
-               {
-                  final ToolTip tip = new ToolTip(window.getShell(), SWT.BALLOON | severityFlag);
-                  tip.setText(Messages.get().AlarmNotifier_ToolTip_Header
-                        + StatusDisplayInfo.getStatusText(alarm.getCurrentSeverity()) + ")"); //$NON-NLS-1$ //$NON-NLS-1$
-                  tip.setMessage(((object != null) ? object.getObjectName() : Long.toString(alarm.getSourceObjectId()))
-                        + ": " + alarm.getMessage()); //$NON-NLS-1$
-                  tip.setAutoHide(true);
-                  trayIcon.setToolTip(tip);
-                  tip.setVisible(true);
-               }
-               return Status.OK_STATUS;
-            }
-         }.schedule();
+            }.schedule();
+         }
+         else
+         {
+            // Too many notifications to show
+            trayPopupCount.decrementAndGet();
+            Activator.logInfo("Skipping alarm tray popup creation - too many consecutive alarms");
+         }
       }
    }
 }
