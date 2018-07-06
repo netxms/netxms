@@ -138,6 +138,10 @@ UINT32 ExecAction(const TCHAR *action, StringList *args, AbstractCommSession *se
          }
          break;
       }
+
+   if (rcc == ERR_UNKNOWN_PARAMETER)
+      rcc = ExecuteActionByExtSubagent(action, args, session, false);
+
    return rcc;
 }
 
@@ -149,10 +153,10 @@ class ActionExecutorData
 public:
    TCHAR *m_cmdLine;
    StringList *m_args;
-   CommSession *m_session;
+   AbstractCommSession *m_session;
    UINT32 m_requestId;
 
-   ActionExecutorData(const TCHAR *cmd, StringList *args, CommSession *session, UINT32 requestId)
+   ActionExecutorData(const TCHAR *cmd, StringList *args, AbstractCommSession *session, UINT32 requestId)
    {
       m_cmdLine = _tcsdup(cmd);
       m_args = args;
@@ -255,7 +259,7 @@ static THREAD_RESULT THREAD_CALL ActionExecutionThread(void *arg)
 /**
  * Execute action and send output to server
  */
-UINT32 ExecActionWithOutput(CommSession *session, UINT32 requestId, const TCHAR *action, StringList *args)
+UINT32 ExecActionWithOutput(AbstractCommSession *session, UINT32 requestId, const TCHAR *action, StringList *args)
 {
    UINT32 rcc = ERR_UNKNOWN_PARAMETER;
 
@@ -281,8 +285,16 @@ UINT32 ExecActionWithOutput(CommSession *session, UINT32 requestId, const TCHAR 
          break;
       }
    }
-   if (rcc != ERR_SUCCESS)
+
+   if (rcc == ERR_UNKNOWN_PARAMETER)
+   {
+      rcc = ExecuteActionByExtSubagent(action, args, session, true);
       delete args;
+   }
+   else if (rcc != ERR_SUCCESS)
+   {
+      delete args;
+   }
    return rcc;
 }
 
@@ -291,16 +303,34 @@ UINT32 ExecActionWithOutput(CommSession *session, UINT32 requestId, const TCHAR 
  */
 LONG H_ActionList(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session)
 {
-   UINT32 i;
    TCHAR szBuffer[1024];
-
-   for(i = 0; i < m_dwNumActions; i++)
+   for(UINT32 i = 0; i < m_dwNumActions; i++)
    {
       _sntprintf(szBuffer, 1024, _T("%s %d \"%s\""), m_pActionList[i].szName, m_pActionList[i].iType,
-                 m_pActionList[i].iType == AGENT_ACTION_EXEC ?
-                     m_pActionList[i].handler.pszCmdLine :
-                     m_pActionList[i].handler.sa.szSubagentName);
+                 m_pActionList[i].iType == AGENT_ACTION_SUBAGENT ?
+                    m_pActionList[i].handler.sa.szSubagentName :    
+                    m_pActionList[i].handler.pszCmdLine);
 		value->add(szBuffer);
    }
+   ListActionsFromExtSubagents(value);
    return SYSINFO_RC_SUCCESS;
+}
+
+/**
+ * Put list of supported actions into NXCP message
+ */
+void GetActionList(NXCPMessage *msg)
+{
+   UINT32 fieldId = VID_ACTION_LIST_BASE;
+   for(UINT32 i = 0; i < m_dwNumActions; i++)
+   {
+      msg->setField(fieldId++, m_pActionList[i].szName);
+      msg->setField(fieldId++, m_pActionList[i].szDescription);
+      msg->setField(fieldId++, (INT16)m_pActionList[i].iType);
+      msg->setField(fieldId++, (m_pActionList[i].iType == AGENT_ACTION_SUBAGENT) ? m_pActionList[i].handler.sa.szSubagentName : m_pActionList[i].handler.pszCmdLine);
+   }
+
+   UINT32 count = m_dwNumActions;
+	ListActionsFromExtSubagents(msg, &fieldId, &count);
+   msg->setField(VID_NUM_ACTIONS, count);
 }

@@ -602,6 +602,7 @@ typedef struct
 #define CMD_DELETE_DCI_ENTRY              0x0170
 #define CMD_GET_ACTIVE_THRESHOLDS         0x0171
 #define CMD_QUERY_INTERNAL_TOPOLOGY       0x0172
+#define CMD_GET_ACTION_LIST               0x0173
 
 #define CMD_RS_LIST_REPORTS            0x1100
 #define CMD_RS_GET_REPORT              0x1101
@@ -1311,6 +1312,7 @@ typedef struct
 #define VID_ENUM_LIST_BASE          ((UINT32)0x20000000)
 #define VID_PUSHPARAM_LIST_BASE     ((UINT32)0x30000000)
 #define VID_TABLE_LIST_BASE         ((UINT32)0x40000000)
+#define VID_ACTION_LIST_BASE        ((UINT32)0x50000000)
 
 // Base value for DCI last values
 #define VID_DCI_VALUES_BASE         ((UINT32)0x10000000)

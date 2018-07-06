@@ -225,6 +225,7 @@ private:
 	NETXMS_SUBAGENT_PARAM *getSupportedParameters(UINT32 *count);
 	NETXMS_SUBAGENT_LIST *getSupportedLists(UINT32 *count);
 	NETXMS_SUBAGENT_TABLE *getSupportedTables(UINT32 *count);
+	ACTION *getSupportedActions(UINT32 *count);
 
 public:
 	ExternalSubagent(const TCHAR *name, const TCHAR *user);
@@ -241,12 +242,15 @@ public:
 	UINT32 getParameter(const TCHAR *name, TCHAR *buffer);
 	UINT32 getTable(const TCHAR *name, Table *value);
 	UINT32 getList(const TCHAR *name, StringList *value);
+	UINT32 executeAction(const TCHAR *name, StringList *args, AbstractCommSession *session, bool sendOutput);
 	void listParameters(NXCPMessage *msg, UINT32 *baseId, UINT32 *count);
 	void listParameters(StringList *list);
 	void listLists(NXCPMessage *msg, UINT32 *baseId, UINT32 *count);
 	void listLists(StringList *list);
 	void listTables(NXCPMessage *msg, UINT32 *baseId, UINT32 *count);
 	void listTables(StringList *list);
+	void listActions(NXCPMessage *msg, UINT32 *baseId, UINT32 *count);
+	void listActions(StringList *list);
    void shutdown();
    void restart();
 };
@@ -401,6 +405,8 @@ public:
 
    time_t getTimeStamp() { return m_ts; }
 	void updateTimeStamp() { m_ts = time(NULL); }
+
+   void prepareProxySessionSetupMsg(NXCPMessage *msg);
 };
 
 /**
@@ -427,6 +433,50 @@ public:
    virtual bool canAcceptFileUpdates() { return false; }
    virtual bool isBulkReconciliationSupported() { return false; }
    virtual bool isIPv6Aware() { return true; }
+
+   virtual bool sendMessage(NXCPMessage *pMsg) { return false; }
+   virtual void postMessage(NXCPMessage *pMsg) { }
+   virtual bool sendRawMessage(NXCP_MESSAGE *pMsg) { return false; }
+   virtual void postRawMessage(NXCP_MESSAGE *pMsg) { }
+   virtual bool sendFile(UINT32 requestId, const TCHAR *file, long offset, bool allowCompression, VolatileCounter *cancelationFlag) { return false; }
+   virtual UINT32 doRequest(NXCPMessage *msg, UINT32 timeout) { return RCC_NOT_IMPLEMENTED; }
+   virtual NXCPMessage *doRequestEx(NXCPMessage *msg, UINT32 timeout) { return NULL; }
+   virtual UINT32 generateRequestId() { return 0; }
+   virtual UINT32 openFile(TCHAR *fileName, UINT32 requestId, time_t fileModTime = 0) { return ERR_INTERNAL_ERROR; }
+   virtual void debugPrintf(int level, const TCHAR *format, ...);
+};
+
+/**
+ * Pseudo-session for external sub-agents
+ */
+class ProxySession : public AbstractCommSession
+{
+private:
+   UINT32 m_id;
+   UINT64 m_serverId;
+   InetAddress m_serverAddress;
+   bool m_masterServer;
+   bool m_controlServer;
+   bool m_canAcceptData;
+   bool m_canAcceptTraps;
+   bool m_canAcceptFileUpdates;
+   bool m_ipv6Aware;
+
+public:
+   ProxySession(NXCPMessage *msg);
+
+   virtual UINT32 getId() { return m_id; }
+
+   virtual UINT64 getServerId() { return m_serverId; };
+   virtual const InetAddress& getServerAddress() { return m_serverAddress; }
+
+   virtual bool isMasterServer() { return m_masterServer; }
+   virtual bool isControlServer() { return m_controlServer; }
+   virtual bool canAcceptData() { return m_canAcceptData; }
+   virtual bool canAcceptTraps() { return m_canAcceptTraps; }
+   virtual bool canAcceptFileUpdates() { return m_canAcceptFileUpdates; }
+   virtual bool isBulkReconciliationSupported() { return false; }
+   virtual bool isIPv6Aware() { return m_ipv6Aware; }
 
    virtual bool sendMessage(NXCPMessage *pMsg) { return false; }
    virtual void postMessage(NXCPMessage *pMsg) { }
@@ -581,6 +631,7 @@ UINT32 GetTableValue(const TCHAR *param, Table *value, AbstractCommSession *sess
 void GetParameterList(NXCPMessage *pMsg);
 void GetEnumList(NXCPMessage *pMsg);
 void GetTableList(NXCPMessage *pMsg);
+void GetActionList(NXCPMessage *msg);
 bool LoadSubAgent(const TCHAR *moduleName);
 void UnloadAllSubAgents();
 bool ProcessCommandBySubAgent(UINT32 command, NXCPMessage *request, NXCPMessage *response, AbstractCommSession *session);
@@ -590,7 +641,7 @@ BOOL AddAction(const TCHAR *pszName, int iType, const TCHAR *pArg,
                const TCHAR *pszSubAgent, const TCHAR *pszDescription);
 BOOL AddActionFromConfig(TCHAR *pszLine, BOOL bShellExec);
 UINT32 ExecAction(const TCHAR *action, StringList *args, AbstractCommSession *session);
-UINT32 ExecActionWithOutput(CommSession *session, UINT32 requestId, const TCHAR *action, StringList *args);
+UINT32 ExecActionWithOutput(AbstractCommSession *session, UINT32 requestId, const TCHAR *action, StringList *args);
 UINT32 ExecuteCommand(TCHAR *pszCommand, StringList *pArgs, pid_t *pid);
 UINT32 ExecuteShellCommand(TCHAR *pszCommand, StringList *pArgs);
 
@@ -605,12 +656,15 @@ void StopExternalSubagentConnectors();
 UINT32 GetParameterValueFromExtSubagent(const TCHAR *name, TCHAR *buffer);
 UINT32 GetTableValueFromExtSubagent(const TCHAR *name, Table *value);
 UINT32 GetListValueFromExtSubagent(const TCHAR *name, StringList *value);
+UINT32 ExecuteActionByExtSubagent(const TCHAR *name, StringList *args, AbstractCommSession *session, bool sendOutput);
 void ListParametersFromExtSubagents(NXCPMessage *msg, UINT32 *baseId, UINT32 *count);
 void ListParametersFromExtSubagents(StringList *list);
 void ListListsFromExtSubagents(NXCPMessage *msg, UINT32 *baseId, UINT32 *count);
 void ListListsFromExtSubagents(StringList *list);
 void ListTablesFromExtSubagents(NXCPMessage *msg, UINT32 *baseId, UINT32 *count);
 void ListTablesFromExtSubagents(StringList *list);
+void ListActionsFromExtSubagents(NXCPMessage *msg, UINT32 *baseId, UINT32 *count);
+void ListActionsFromExtSubagents(StringList *list);
 bool SendMessageToMasterAgent(NXCPMessage *msg);
 bool SendRawMessageToMasterAgent(NXCP_MESSAGE *msg);
 void ShutdownExtSubagents();

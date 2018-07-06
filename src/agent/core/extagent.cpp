@@ -268,6 +268,47 @@ NETXMS_SUBAGENT_TABLE *ExternalSubagent::getSupportedTables(UINT32 *count)
 }
 
 /**
+ * Get list of supported tables
+ */
+ACTION *ExternalSubagent::getSupportedActions(UINT32 *count)
+{
+	NXCPMessage msg;
+	ACTION *result = NULL;
+
+	msg.setCode(CMD_GET_ACTION_LIST);
+	msg.setId(m_requestId++);
+	if (sendMessage(&msg))
+	{
+		NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, msg.getId());
+		if (response != NULL)
+		{
+			if (response->getFieldAsUInt32(VID_RCC) == ERR_SUCCESS)
+			{
+				*count = response->getFieldAsUInt32(VID_NUM_ACTIONS);
+				result = (ACTION *)calloc(*count, sizeof(ACTION));
+				UINT32 varId = VID_ACTION_LIST_BASE;
+				for(UINT32 i = 0; i < *count; i++)
+				{
+               response->getFieldAsString(varId++, result[i].szName, MAX_PARAM_NAME);
+               response->getFieldAsString(varId++, result[i].szDescription, MAX_DB_STRING);
+               result[i].iType = response->getFieldAsInt16(varId++);
+               if (result[i].iType == AGENT_ACTION_SUBAGENT)
+               {
+                  response->getFieldAsString(varId++, result[i].handler.sa.szSubagentName, MAX_PATH);
+               }
+               else
+               {
+                  result[i].handler.pszCmdLine = response->getFieldAsString(varId++);
+               }
+				}
+			}
+			delete response;
+		}
+	}
+	return result;
+}
+
+/**
  * List supported parameters
  */
 void ExternalSubagent::listParameters(NXCPMessage *msg, UINT32 *baseId, UINT32 *count)
@@ -380,6 +421,52 @@ void ExternalSubagent::listTables(StringList *list)
 }
 
 /**
+ * List supported actions
+ */
+void ExternalSubagent::listActions(NXCPMessage *msg, UINT32 *baseId, UINT32 *count)
+{
+	UINT32 actionCount = 0;
+	ACTION *list = getSupportedActions(&actionCount);
+	if (list != NULL)
+	{
+		UINT32 id = *baseId;
+
+		for(UINT32 i = 0; i < actionCount; i++)
+		{
+         msg->setField(id++, list[i].szName);
+         msg->setField(id++, list[i].szDescription);
+         msg->setField(id++, (INT16)list[i].iType);
+         msg->setField(id++, (list[i].iType == AGENT_ACTION_SUBAGENT) ? list[i].handler.sa.szSubagentName : list[i].handler.pszCmdLine);
+		}
+		*baseId = id;
+		*count += actionCount;
+		free(list);
+	}
+}
+
+/**
+ * List supported actions
+ */
+void ExternalSubagent::listActions(StringList *list)
+{
+	UINT32 actionCount = 0;
+	ACTION *plist = getSupportedActions(&actionCount);
+	if (plist != NULL)
+	{
+      TCHAR buffer[1024];
+		for(UINT32 i = 0; i < actionCount; i++)
+      {
+         _sntprintf(buffer, 1024, _T("%s %d \"%s\""), plist[i].szName, plist[i].iType,
+                    plist[i].iType == AGENT_ACTION_SUBAGENT ?
+                       plist[i].handler.sa.szSubagentName :    
+                       plist[i].handler.pszCmdLine);
+			list->add(buffer);
+      }
+		free(plist);
+	}
+}
+
+/**
  * Get parameter value from external subagent
  */
 UINT32 ExternalSubagent::getParameter(const TCHAR *name, TCHAR *buffer)
@@ -468,6 +555,36 @@ UINT32 ExternalSubagent::getList(const TCHAR *name, StringList *value)
             for(UINT32 i = 0; i < count; i++)
 					value->addPreallocated(response->getFieldAsString(VID_ENUM_VALUE_BASE + i));
 			}
+			delete response;
+		}
+		else
+		{
+			rcc = ERR_INTERNAL_ERROR;
+		}
+	}
+	else
+	{
+		rcc = ERR_CONNECTION_BROKEN;
+	}
+	return rcc;
+}
+
+/**
+ * Execute action by remote subagent
+ */
+UINT32 ExternalSubagent::executeAction(const TCHAR *name, StringList *args, AbstractCommSession *session, bool sendOutput)
+{
+	NXCPMessage msg(CMD_EXECUTE_ACTION, m_requestId++);
+	msg.setField(VID_NAME, name);
+   args->fillMessage(&msg, VID_ACTION_ARG_BASE, VID_NUM_ARGS);
+   msg.setField(VID_RECEIVE_OUTPUT, sendOutput);
+   UINT32 rcc;
+	if (sendMessage(&msg))
+	{
+		NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, msg.getId());
+		if (response != NULL)
+		{
+			rcc = response->getFieldAsUInt32(VID_RCC);
 			delete response;
 		}
 		else
@@ -600,6 +717,33 @@ void ListTablesFromExtSubagents(StringList *list)
 		}
 	}
 }
+/**
+ * Add actions from external providers to NXCP message
+ */
+void ListActionsFromExtSubagents(NXCPMessage *msg, UINT32 *baseId, UINT32 *count)
+{
+	for(int i = 0; i < s_subagents.size(); i++)
+	{
+		if (s_subagents.get(i)->isConnected())
+		{
+			s_subagents.get(i)->listActions(msg, baseId, count);
+		}
+	}
+}
+
+/**
+ * Add actions from external subagents to string list
+ */
+void ListActionsFromExtSubagents(StringList *list)
+{
+	for(int i = 0; i < s_subagents.size(); i++)
+	{
+		if (s_subagents.get(i)->isConnected())
+		{
+			s_subagents.get(i)->listActions(list);
+		}
+	}
+}
 
 /**
  * Get value from external subagent
@@ -614,7 +758,7 @@ UINT32 GetParameterValueFromExtSubagent(const TCHAR *name, TCHAR *buffer)
 		if (s_subagents.get(i)->isConnected())
 		{
 			rc = s_subagents.get(i)->getParameter(name, buffer);
-			if (rc == ERR_SUCCESS)
+			if (rc != ERR_UNKNOWN_PARAMETER)
 				break;
 		}
 	}
@@ -634,7 +778,7 @@ UINT32 GetTableValueFromExtSubagent(const TCHAR *name, Table *value)
 		if (s_subagents.get(i)->isConnected())
 		{
 			rc = s_subagents.get(i)->getTable(name, value);
-			if (rc == ERR_SUCCESS)
+			if (rc != ERR_UNKNOWN_PARAMETER)
 				break;
 		}
 	}
@@ -654,7 +798,27 @@ UINT32 GetListValueFromExtSubagent(const TCHAR *name, StringList *value)
 		if (s_subagents.get(i)->isConnected())
 		{
 			rc = s_subagents.get(i)->getList(name, value);
-			if (rc == ERR_SUCCESS)
+			if (rc != ERR_UNKNOWN_PARAMETER)
+				break;
+		}
+	}
+	return rc;
+}
+
+/**
+ * Execute action by external subagent
+ *
+ * @return agent error code
+ */
+UINT32 ExecuteActionByExtSubagent(const TCHAR *name, StringList *args, AbstractCommSession *session, bool sendOutput)
+{
+	UINT32 rc = ERR_UNKNOWN_PARAMETER;
+	for(int i = 0; i < s_subagents.size(); i++)
+	{
+		if (s_subagents.get(i)->isConnected())
+		{
+			rc = s_subagents.get(i)->executeAction(name, args, session, sendOutput);
+			if (rc != ERR_UNKNOWN_PARAMETER)
 				break;
 		}
 	}
@@ -704,7 +868,6 @@ LONG H_IsExtSubagentConnected(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, 
    {
       if (!_tcsicmp(s_subagents.get(i)->getName(), name))
       {
-_tprintf(_T(">>> subagent %s connected %d\n"), s_subagents.get(i)->getName(), s_subagents.get(i)->isConnected());
          ret_int(value, s_subagents.get(i)->isConnected() ? 1 : 0);
          rc = SYSINFO_RC_SUCCESS;
          break;
