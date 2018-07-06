@@ -1131,19 +1131,19 @@ BOOL Initialize()
 	{
 		if (g_dwFlags & AF_ENABLE_WATCHDOG)
 			StartWatchdog();
-	}
 
-	// Delete file used for upgrade if exists
-   TCHAR upgradeFileName[MAX_PATH];
-	ReadRegistryAsString(_T("upgrade.file"), upgradeFileName, MAX_PATH, _T(""));
-	if(upgradeFileName[0] != 0)
-	{
-      _tremove(upgradeFileName);
-      DeleteRegistryEntry(_T("upgrade.file"));
-	}
+	   // Delete file used for upgrade if exists
+      TCHAR upgradeFileName[MAX_PATH];
+	   ReadRegistryAsString(_T("upgrade.file"), upgradeFileName, MAX_PATH, _T(""));
+	   if(upgradeFileName[0] != 0)
+	   {
+         _tremove(upgradeFileName);
+         DeleteRegistryEntry(_T("upgrade.file"));
+	   }
 
-	//Update policy inventory according to files that exist on file system
-   UpdatePolicyInventory();
+	   //Update policy inventory according to files that exist on file system
+      UpdatePolicyInventory();
+	}
 
    return TRUE;
 }
