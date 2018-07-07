@@ -802,7 +802,7 @@ BOOL Initialize()
 
    // Initialize API for subagents
    s_subAgentsStopCondition = ConditionCreate(TRUE);
-   InitSubAgentAPI(WriteSubAgentMsg, SendTrap, SendTrap, EnumerateSessions, FindServerSession,
+   InitSubAgentAPI(WriteSubAgentMsg, SendTrap, SendTrap, EnumerateSessions, FindServerSessionByServerId,
       SendFileToServer, PushData, GetLocalDatabaseHandle, s_subAgentsStopCondition, g_szDataDirectory);
    nxlog_debug(1, _T("Subagent API initialized"));
 

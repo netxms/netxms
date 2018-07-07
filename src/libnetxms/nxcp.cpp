@@ -398,10 +398,22 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD code, TCHAR *pszBuffer)
       _T("CMD_EXPAND_MACROS"),
       _T("CMD_EXECUTE_ACTION_WITH_EXPANSION"),
       _T("CMD_HOST_BY_IP"),
-      _T("CMD_CANCEL_FILE_DOWNLOAD")
+      _T("CMD_CANCEL_FILE_DOWNLOAD"),
+      _T("CMD_FILEMGR_COPY_FILE"),
+      _T("CMD_QUERY_OBJECTS"),
+      _T("CMD_QUERY_OBJECT_DETAILS"),
+      _T("CMD_SETUP_TCP_PROXY"),
+      _T("CMD_TCP_PROXY_DATA"),
+      _T("CMD_CLOSE_TCP_PROXY"),
+      _T("0x016F"),
+      _T("CMD_DELETE_DCI_ENTRY"),
+      _T("CMD_GET_ACTIVE_THRESHOLDS"),
+      _T("CMD_QUERY_INTERNAL_TOPOLOGY"),
+      _T("CMD_GET_ACTION_LIST"),
+      _T("CMD_PROXY_MESSAGE")
    };
 
-   if ((code >= CMD_LOGIN) && (code <= CMD_CANCEL_FILE_DOWNLOAD))
+   if ((code >= CMD_LOGIN) && (code <= CMD_PROXY_MESSAGE))
    {
       _tcscpy(pszBuffer, pszMsgNames[code - CMD_LOGIN]);
    }

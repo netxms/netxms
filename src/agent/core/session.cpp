@@ -481,7 +481,7 @@ bool CommSession::sendRawMessage(NXCP_MESSAGE *msg, NXCPEncryptionContext *ctx)
 /**
  * Send message directly to socket
  */
-bool CommSession::sendMessage(NXCPMessage *msg)
+bool CommSession::sendMessage(const NXCPMessage *msg)
 {
    if (m_disconnected)
       return false;
@@ -492,7 +492,7 @@ bool CommSession::sendMessage(NXCPMessage *msg)
 /**
  * Send raw message directly to socket
  */
-bool CommSession::sendRawMessage(NXCP_MESSAGE *msg)
+bool CommSession::sendRawMessage(const NXCP_MESSAGE *msg)
 {
    return sendRawMessage((NXCP_MESSAGE *)nx_memdup(msg, ntohl(msg->size)), m_pCtx);
 }
@@ -1214,6 +1214,13 @@ VirtualSession::VirtualSession(UINT64 serverId)
 }
 
 /**
+ * Virtual session destructor
+ */
+VirtualSession::~VirtualSession()
+{
+}
+
+/**
  * Debug print in virtual session context
  */
 void VirtualSession::debugPrintf(int level, const TCHAR *format, ...)
@@ -1250,6 +1257,13 @@ ProxySession::ProxySession(NXCPMessage *msg)
 }
 
 /**
+ * Proxy session destructor
+ */
+ProxySession::~ProxySession()
+{
+}
+
+/**
  * Debug print in proxy session context
  */
 void ProxySession::debugPrintf(int level, const TCHAR *format, ...)
@@ -1265,4 +1279,49 @@ void ProxySession::debugPrintf(int level, const TCHAR *format, ...)
    va_end(args);
 
    nxlog_write(MSG_DEBUG_PSESSION, EVENTLOG_DEBUG_TYPE, "ds", m_id, buffer);
+}
+
+/**
+ * Send message to client via master agent
+ */
+bool ProxySession::sendMessage(const NXCPMessage *msg)
+{
+   NXCP_MESSAGE *rawMsg = msg->serialize();
+   bool success = sendRawMessage(rawMsg);
+   free(rawMsg);
+   return success;
+}
+
+/**
+ * Post message to client via master agent
+ */
+void ProxySession::postMessage(const NXCPMessage *msg)
+{
+   sendMessage(msg);
+}
+
+/**
+ * Send raw message to client via master agent
+ */
+bool ProxySession::sendRawMessage(const NXCP_MESSAGE *msg)
+{
+   UINT32 msgSize = ntohl(msg->size);
+   NXCP_MESSAGE *pmsg = (NXCP_MESSAGE *)malloc(msgSize + NXCP_HEADER_SIZE);
+   pmsg->code = htons(CMD_PROXY_MESSAGE);
+   pmsg->id = htonl(m_id);
+   pmsg->flags = htons(MF_BINARY);
+   pmsg->size = htonl(msgSize + NXCP_HEADER_SIZE);
+   pmsg->numFields = msg->size;
+   memcpy(pmsg->fields, msg, msgSize);
+   bool success = SendRawMessageToMasterAgent(pmsg);
+   free(pmsg);
+   return success;
+}
+
+/**
+ * Post raw message to client via master agent
+ */
+void ProxySession::postRawMessage(const NXCP_MESSAGE *msg)
+{
+   sendRawMessage(msg);
 }

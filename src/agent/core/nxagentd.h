@@ -231,7 +231,7 @@ private:
 	MsgWaitQueue *m_msgQueue;
 	UINT32 m_requestId;
 
-	bool sendMessage(NXCPMessage *msg);
+	bool sendMessage(const NXCPMessage *msg);
 	NXCPMessage *waitForMessage(WORD code, UINT32 id);
 	UINT32 waitForRCC(UINT32 id);
 	NETXMS_SUBAGENT_PARAM *getSupportedParameters(UINT32 *count);
@@ -254,7 +254,7 @@ public:
 	UINT32 getParameter(const TCHAR *name, TCHAR *buffer);
 	UINT32 getTable(const TCHAR *name, Table *value);
 	UINT32 getList(const TCHAR *name, StringList *value);
-	UINT32 executeAction(const TCHAR *name, StringList *args, AbstractCommSession *session, bool sendOutput);
+	UINT32 executeAction(const TCHAR *name, StringList *args, AbstractCommSession *session, UINT32 requestId, bool sendOutput);
 	void listParameters(NXCPMessage *msg, UINT32 *baseId, UINT32 *count);
 	void listParameters(StringList *list);
 	void listLists(NXCPMessage *msg, UINT32 *baseId, UINT32 *count);
@@ -377,10 +377,10 @@ public:
    void run();
    void disconnect();
 
-   virtual bool sendMessage(NXCPMessage *msg);
-   virtual void postMessage(NXCPMessage *msg) { if (!m_disconnected) m_sendQueue->put(msg->serialize(m_allowCompression)); }
-   virtual bool sendRawMessage(NXCP_MESSAGE *msg);
-   virtual void postRawMessage(NXCP_MESSAGE *msg) { if (!m_disconnected) m_sendQueue->put(nx_memdup(msg, ntohl(msg->size))); }
+   virtual bool sendMessage(const NXCPMessage *msg);
+   virtual void postMessage(const NXCPMessage *msg) { if (!m_disconnected) m_sendQueue->put(msg->serialize(m_allowCompression)); }
+   virtual bool sendRawMessage(const NXCP_MESSAGE *msg);
+   virtual void postRawMessage(const NXCP_MESSAGE *msg) { if (!m_disconnected) m_sendQueue->put(nx_memdup(msg, ntohl(msg->size))); }
 	virtual bool sendFile(UINT32 requestId, const TCHAR *file, long offset, bool allowCompression, VolatileCounter *cancellationFlag);
    virtual UINT32 doRequest(NXCPMessage *msg, UINT32 timeout);
    virtual NXCPMessage *doRequestEx(NXCPMessage *msg, UINT32 timeout);
@@ -403,13 +403,13 @@ public:
 
    virtual void debugPrintf(int level, const TCHAR *format, ...);
 
+   virtual void prepareProxySessionSetupMsg(NXCPMessage *msg);
+
    UINT32 getIndex() { return m_index; }
    void setIndex(UINT32 index) { if (m_index == INVALID_INDEX) m_index = index; }
 
    time_t getTimeStamp() { return m_ts; }
 	void updateTimeStamp() { m_ts = time(NULL); }
-
-   void prepareProxySessionSetupMsg(NXCPMessage *msg);
 };
 
 /**
@@ -423,6 +423,7 @@ private:
 
 public:
    VirtualSession(UINT64 serverId);
+   virtual ~VirtualSession();
 
    virtual UINT32 getId() { return m_id; }
 
@@ -437,16 +438,17 @@ public:
    virtual bool isBulkReconciliationSupported() { return false; }
    virtual bool isIPv6Aware() { return true; }
 
-   virtual bool sendMessage(NXCPMessage *pMsg) { return false; }
-   virtual void postMessage(NXCPMessage *pMsg) { }
-   virtual bool sendRawMessage(NXCP_MESSAGE *pMsg) { return false; }
-   virtual void postRawMessage(NXCP_MESSAGE *pMsg) { }
+   virtual bool sendMessage(const NXCPMessage *pMsg) { return false; }
+   virtual void postMessage(const NXCPMessage *pMsg) { }
+   virtual bool sendRawMessage(const NXCP_MESSAGE *pMsg) { return false; }
+   virtual void postRawMessage(const NXCP_MESSAGE *pMsg) { }
    virtual bool sendFile(UINT32 requestId, const TCHAR *file, long offset, bool allowCompression, VolatileCounter *cancelationFlag) { return false; }
    virtual UINT32 doRequest(NXCPMessage *msg, UINT32 timeout) { return RCC_NOT_IMPLEMENTED; }
    virtual NXCPMessage *doRequestEx(NXCPMessage *msg, UINT32 timeout) { return NULL; }
    virtual UINT32 generateRequestId() { return 0; }
    virtual UINT32 openFile(TCHAR *fileName, UINT32 requestId, time_t fileModTime = 0) { return ERR_INTERNAL_ERROR; }
    virtual void debugPrintf(int level, const TCHAR *format, ...);
+   virtual void prepareProxySessionSetupMsg(NXCPMessage *msg) { }
 };
 
 /**
@@ -467,6 +469,7 @@ private:
 
 public:
    ProxySession(NXCPMessage *msg);
+   virtual ~ProxySession();
 
    virtual UINT32 getId() { return m_id; }
 
@@ -481,16 +484,17 @@ public:
    virtual bool isBulkReconciliationSupported() { return false; }
    virtual bool isIPv6Aware() { return m_ipv6Aware; }
 
-   virtual bool sendMessage(NXCPMessage *pMsg) { return false; }
-   virtual void postMessage(NXCPMessage *pMsg) { }
-   virtual bool sendRawMessage(NXCP_MESSAGE *pMsg) { return false; }
-   virtual void postRawMessage(NXCP_MESSAGE *pMsg) { }
+   virtual bool sendMessage(const NXCPMessage *pMsg);
+   virtual void postMessage(const NXCPMessage *pMsg);
+   virtual bool sendRawMessage(const NXCP_MESSAGE *pMsg);
+   virtual void postRawMessage(const NXCP_MESSAGE *pMsg);
    virtual bool sendFile(UINT32 requestId, const TCHAR *file, long offset, bool allowCompression, VolatileCounter *cancelationFlag) { return false; }
    virtual UINT32 doRequest(NXCPMessage *msg, UINT32 timeout) { return RCC_NOT_IMPLEMENTED; }
    virtual NXCPMessage *doRequestEx(NXCPMessage *msg, UINT32 timeout) { return NULL; }
    virtual UINT32 generateRequestId() { return 0; }
    virtual UINT32 openFile(TCHAR *fileName, UINT32 requestId, time_t fileModTime = 0) { return ERR_INTERNAL_ERROR; }
    virtual void debugPrintf(int level, const TCHAR *format, ...);
+   virtual void prepareProxySessionSetupMsg(NXCPMessage *msg) { }
 };
 
 /**
@@ -511,7 +515,7 @@ private:
    VolatileCounter m_requestId;
 
    void readThread();
-   bool sendMessage(NXCPMessage *msg);
+   bool sendMessage(const NXCPMessage *msg);
    UINT32 nextRequestId() { return InterlockedIncrement(&m_requestId); }
 
    static THREAD_RESULT THREAD_CALL readThreadStarter(void *);
@@ -640,7 +644,7 @@ void StopExternalSubagentConnectors();
 UINT32 GetParameterValueFromExtSubagent(const TCHAR *name, TCHAR *buffer);
 UINT32 GetTableValueFromExtSubagent(const TCHAR *name, Table *value);
 UINT32 GetListValueFromExtSubagent(const TCHAR *name, StringList *value);
-UINT32 ExecuteActionByExtSubagent(const TCHAR *name, StringList *args, AbstractCommSession *session, bool sendOutput);
+UINT32 ExecuteActionByExtSubagent(const TCHAR *name, StringList *args, AbstractCommSession *session, UINT32 requestId, bool sendOutput);
 void ListParametersFromExtSubagents(NXCPMessage *msg, UINT32 *baseId, UINT32 *count);
 void ListParametersFromExtSubagents(StringList *list);
 void ListListsFromExtSubagents(NXCPMessage *msg, UINT32 *baseId, UINT32 *count);
@@ -680,7 +684,8 @@ UINT32 GenerateMessageId();
 void ConfigureDataCollection(UINT64 serverId, NXCPMessage *msg);
 
 bool EnumerateSessions(EnumerationCallbackResult (* callback)(AbstractCommSession *, void* ), void *data);
-AbstractCommSession *FindServerSession(UINT64 serverId);
+AbstractCommSession *FindServerSessionById(UINT32 id);
+AbstractCommSession *FindServerSessionByServerId(UINT64 serverId);
 AbstractCommSession *FindServerSession(bool (*comparator)(AbstractCommSession *, void *), void *userData);
 
 #ifdef _WIN32

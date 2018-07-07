@@ -533,16 +533,17 @@ public:
    virtual bool isBulkReconciliationSupported() = 0;
    virtual bool isIPv6Aware() = 0;
 
-   virtual bool sendMessage(NXCPMessage *msg) = 0;
-   virtual void postMessage(NXCPMessage *msg) = 0;
-   virtual bool sendRawMessage(NXCP_MESSAGE *msg) = 0;
-   virtual void postRawMessage(NXCP_MESSAGE *msg) = 0;
+   virtual bool sendMessage(const NXCPMessage *msg) = 0;
+   virtual void postMessage(const NXCPMessage *msg) = 0;
+   virtual bool sendRawMessage(const NXCP_MESSAGE *msg) = 0;
+   virtual void postRawMessage(const NXCP_MESSAGE *msg) = 0;
 	virtual bool sendFile(UINT32 requestId, const TCHAR *file, long offset, bool allowCompression, VolatileCounter *cancelationFlag) = 0;
    virtual UINT32 doRequest(NXCPMessage *msg, UINT32 timeout) = 0;
    virtual NXCPMessage *doRequestEx(NXCPMessage *msg, UINT32 timeout) = 0;
    virtual UINT32 generateRequestId() = 0;
    virtual UINT32 openFile(TCHAR* nameOfFile, UINT32 requestId, time_t fileModTime = 0) = 0;
    virtual void debugPrintf(int level, const TCHAR *format, ...) = 0;
+   virtual void prepareProxySessionSetupMsg(NXCPMessage *msg) = 0;
 };
 
 /**
@@ -657,7 +658,7 @@ typedef struct
    TCHAR description[MAX_DB_STRING];
 } NETXMS_SUBAGENT_ACTION;
 
-#define NETXMS_SUBAGENT_INFO_MAGIC     ((UINT32)0x20161127)
+#define NETXMS_SUBAGENT_INFO_MAGIC     ((UINT32)0x20180707)
 
 class NXCPMessage;
 

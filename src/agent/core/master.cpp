@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -95,19 +95,19 @@ static void ExecuteAction(NXCPMessage *request, NXCPMessage *response)
    TCHAR name[MAX_OBJECT_NAME];
    request->getFieldAsString(VID_NAME, name, MAX_OBJECT_NAME);
 
-   ProxySession session(request);
-
+   ProxySession *session = new ProxySession(request);
    if (request->getFieldAsBoolean(VID_RECEIVE_OUTPUT))
    {
-      UINT32 rcc = ExecActionWithOutput(&session, request->getId(), name, args);
+      UINT32 rcc = ExecActionWithOutput(session, request->getFieldAsUInt32(VID_REQUEST_ID), name, args);
       response->setField(VID_RCC, rcc);
    }
    else
    {
-      UINT32 rcc = ExecAction(name, args, &session);
+      UINT32 rcc = ExecAction(name, args, session);
       response->setField(VID_RCC, rcc);
       delete args;
    }
+   session->decRefCount();
 }
 
 /**
