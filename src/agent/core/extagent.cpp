@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -82,7 +82,7 @@ void ExternalSubagent::stopListener()
 /*
  * Send message to external subagent
  */
-bool ExternalSubagent::sendMessage(NXCPMessage *msg)
+bool ExternalSubagent::sendMessage(const NXCPMessage *msg)
 {
 	TCHAR buffer[256];
 	AgentWriteDebugLog(6, _T("ExternalSubagent::sendMessage(%s): sending message %s"), m_name, NXCPMessageCodeName(msg->getCode(), buffer));
@@ -99,6 +99,19 @@ bool ExternalSubagent::sendMessage(NXCPMessage *msg)
 NXCPMessage *ExternalSubagent::waitForMessage(WORD code, UINT32 id)
 {
 	return m_msgQueue->waitForMessage(code, id, 5000);	// 5 sec timeout
+}
+
+/**
+ * Forward session message
+ */
+static void ForwardSessionMessage(NXCPMessage *msg)
+{
+   AbstractCommSession *session = FindServerSessionById(msg->getId());
+   if (session != NULL)
+   {
+      session->postRawMessage(reinterpret_cast<const NXCP_MESSAGE*>(msg->getBinaryData()));
+      session->decRefCount();
+   }
 }
 
 /**
@@ -138,6 +151,10 @@ void ExternalSubagent::connect(NamedPipe *pipe)
             break;
          case CMD_TRAP:
             ForwardTrap(msg);
+            delete msg;
+            break;
+         case CMD_PROXY_MESSAGE:
+            ForwardSessionMessage(msg);
             delete msg;
             break;
          default:
@@ -572,12 +589,15 @@ UINT32 ExternalSubagent::getList(const TCHAR *name, StringList *value)
 /**
  * Execute action by remote subagent
  */
-UINT32 ExternalSubagent::executeAction(const TCHAR *name, StringList *args, AbstractCommSession *session, bool sendOutput)
+UINT32 ExternalSubagent::executeAction(const TCHAR *name, StringList *args, AbstractCommSession *session, UINT32 requestId, bool sendOutput)
 {
 	NXCPMessage msg(CMD_EXECUTE_ACTION, m_requestId++);
 	msg.setField(VID_NAME, name);
    args->fillMessage(&msg, VID_ACTION_ARG_BASE, VID_NUM_ARGS);
+   msg.setField(VID_REQUEST_ID, requestId);
    msg.setField(VID_RECEIVE_OUTPUT, sendOutput);
+   session->prepareProxySessionSetupMsg(&msg);
+
    UINT32 rcc;
 	if (sendMessage(&msg))
 	{
@@ -810,14 +830,14 @@ UINT32 GetListValueFromExtSubagent(const TCHAR *name, StringList *value)
  *
  * @return agent error code
  */
-UINT32 ExecuteActionByExtSubagent(const TCHAR *name, StringList *args, AbstractCommSession *session, bool sendOutput)
+UINT32 ExecuteActionByExtSubagent(const TCHAR *name, StringList *args, AbstractCommSession *session, UINT32 requestId, bool sendOutput)
 {
 	UINT32 rc = ERR_UNKNOWN_PARAMETER;
 	for(int i = 0; i < s_subagents.size(); i++)
 	{
 		if (s_subagents.get(i)->isConnected())
 		{
-			rc = s_subagents.get(i)->executeAction(name, args, session, sendOutput);
+			rc = s_subagents.get(i)->executeAction(name, args, session, requestId, sendOutput);
 			if (rc != ERR_UNKNOWN_PARAMETER)
 				break;
 		}
