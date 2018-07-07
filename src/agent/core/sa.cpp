@@ -115,7 +115,7 @@ void SessionAgentConnector::disconnect()
 /**
  * Send message
  */
-bool SessionAgentConnector::sendMessage(NXCPMessage *msg)
+bool SessionAgentConnector::sendMessage(const NXCPMessage *msg)
 {
    NXCP_MESSAGE *rawMsg = msg->serialize();
    bool success = (SendEx(m_socket, rawMsg, ntohl(rawMsg->size), 0, m_mutex) == ntohl(rawMsg->size));

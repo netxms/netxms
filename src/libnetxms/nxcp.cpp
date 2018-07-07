@@ -408,10 +408,12 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD code, TCHAR *pszBuffer)
       _T("0x016F"),
       _T("CMD_DELETE_DCI_ENTRY"),
       _T("CMD_GET_ACTIVE_THRESHOLDS"),
-      _T("CMD_QUERY_INTERNAL_TOPOLOGY")
+      _T("CMD_QUERY_INTERNAL_TOPOLOGY"),
+      _T("CMD_GET_ACTION_LIST"),
+      _T("CMD_PROXY_MESSAGE")
    };
 
-   if ((code >= CMD_LOGIN) && (code <= CMD_QUERY_INTERNAL_TOPOLOGY))
+   if ((code >= CMD_LOGIN) && (code <= CMD_PROXY_MESSAGE))
    {
       _tcscpy(pszBuffer, pszMsgNames[code - CMD_LOGIN]);
    }

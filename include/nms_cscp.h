@@ -603,6 +603,7 @@ typedef struct
 #define CMD_GET_ACTIVE_THRESHOLDS         0x0171
 #define CMD_QUERY_INTERNAL_TOPOLOGY       0x0172
 #define CMD_GET_ACTION_LIST               0x0173
+#define CMD_PROXY_MESSAGE                 0x0174
 
 #define CMD_RS_LIST_REPORTS            0x1100
 #define CMD_RS_GET_REPORT              0x1101

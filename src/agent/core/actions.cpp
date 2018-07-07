@@ -140,7 +140,7 @@ UINT32 ExecAction(const TCHAR *action, StringList *args, AbstractCommSession *se
       }
 
    if (rcc == ERR_UNKNOWN_PARAMETER)
-      rcc = ExecuteActionByExtSubagent(action, args, session, false);
+      rcc = ExecuteActionByExtSubagent(action, args, session, 0, false);
 
    return rcc;
 }
@@ -222,7 +222,7 @@ static THREAD_RESULT THREAD_CALL ActionExecutionThread(void *arg)
       data->m_cmdLine = _tcsdup(cmdLine.getBuffer());
    }
 
-   DebugPrintf(4, _T("ActionExecutionThread: Executing \"%s\""), data->m_cmdLine);
+   data->m_session->debugPrintf(4, _T("ActionExecutionThread: Executing \"%s\""), data->m_cmdLine);
    FILE *pipe = _tpopen(data->m_cmdLine, _T("r"));
    if (pipe != NULL)
    {
@@ -239,6 +239,7 @@ static THREAD_RESULT THREAD_CALL ActionExecutionThread(void *arg)
          msg.deleteAllFields();
       }
       pclose(pipe);
+      data->m_session->debugPrintf(4, _T("ActionExecutionThread: command completed"));
    }
    else
    {
@@ -251,6 +252,7 @@ static THREAD_RESULT THREAD_CALL ActionExecutionThread(void *arg)
 
    msg.setEndOfSequence();
    data->m_session->sendMessage(&msg);
+   data->m_session->decRefCount();
 
    delete data;
    return THREAD_OK;
@@ -272,6 +274,7 @@ UINT32 ExecActionWithOutput(AbstractCommSession *session, UINT32 requestId, cons
          {
             case AGENT_ACTION_EXEC:
             case AGENT_ACTION_SHELLEXEC:
+               session->incRefCount();
                ThreadCreate(ActionExecutionThread, 0, new ActionExecutorData(m_pActionList[i].handler.pszCmdLine, args, session, requestId));
                rcc = ERR_SUCCESS;
                break;
@@ -288,7 +291,7 @@ UINT32 ExecActionWithOutput(AbstractCommSession *session, UINT32 requestId, cons
 
    if (rcc == ERR_UNKNOWN_PARAMETER)
    {
-      rcc = ExecuteActionByExtSubagent(action, args, session, true);
+      rcc = ExecuteActionByExtSubagent(action, args, session, requestId, true);
       delete args;
    }
    else if (rcc != ERR_SUCCESS)
