@@ -8,6 +8,7 @@
 - New dashboard element "Object Details" (based on object queries)
 - TCP proxy functionality
 - Improved "Alarm Details" view in management console
+- Added support for agent actions defined in external subagents
 - Fixed issues:
 	NX-993 (Windows installer should honor current state of services during upgrade)
 	NX-1438 (Increase debug level for thread pool messages)
