@@ -15,6 +15,7 @@
 	NX-1453 (Windows installer option to disable database upgrade)
 	NX-1455 (Zone UIN in NXSL function CreateNode)
 	NX-1456 (DCI values aggregated on cluster may be incorrect on first few polls after server startup)
+	NX-1460 (Configure does not detect pthread_setname_np on macOS)
 
 
 *

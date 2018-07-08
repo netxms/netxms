@@ -741,7 +741,12 @@ inline bool ThreadCreate(ThreadFunction start_address, int stack_size, void *arg
 inline void ThreadSetName(THREAD thread, const char *name)
 {
 #if HAVE_PTHREAD_SETNAME_NP
+#if PTHREAD_SETNAME_NP_2ARGS
    pthread_setname_np((thread != INVALID_THREAD_HANDLE) ? thread : pthread_self(), name);
+#else
+   if ((thread == INVALID_THREAD_HANDLE) || (thread == pthread_self()))
+      pthread_setname_np(name);
+#endif
 #endif
 }
 
