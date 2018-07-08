@@ -1831,6 +1831,29 @@ else
 	])
 	AC_CHECK_FUNCS([pthread_cond_reltimedwait_np pthread_setname_np])
 
+	# Check if pthread_setname_np accepts two arguments
+	if test "$ac_cv_func_pthread_setname_np" = "yes"; then
+		AC_LANG_PUSH([C++])
+		AC_MSG_CHECKING(if pthread_setname_np accepts two arguments)
+		AC_COMPILE_IFELSE([
+			AC_LANG_PROGRAM([
+#include <pthread.h>
+#if HAVE_PTHREAD_NP_H
+#include <pthread_np.h>
+#endif
+					],
+					[ pthread_setname_np(pthread_self(), "test"); ])],
+			[
+				AC_MSG_RESULT(yes)
+				AC_DEFINE(PTHREAD_SETNAME_NP_2ARGS, 1, Define to 1 if ptread_setname_np accepts two arguments)
+			],
+			[
+				AC_MSG_RESULT(no)
+			]
+		)
+		AC_LANG_POP([C++])
+	fi
+
 	# Check for recursive mutexes
 	AC_CHECK_FUNCS([pthread_mutexattr_settype __pthread_mutexattr_settype pthread_mutexattr_setkind_np])
 	AC_CHECK_DECLS([pthread_mutexattr_settype, PTHREAD_MUTEX_RECURSIVE, PTHREAD_MUTEX_RECURSIVE_NP, MUTEX_TYPE_COUNTING_FAST],,,[
