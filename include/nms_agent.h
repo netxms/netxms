@@ -690,13 +690,13 @@ typedef struct
  */
 inline void ret_string(TCHAR *rbuf, const TCHAR *value)
 {
-	nx_strncpy(rbuf, value, MAX_RESULT_LENGTH);
+	_tcslcpy(rbuf, value, MAX_RESULT_LENGTH);
 }
 
 inline void ret_wstring(TCHAR *rbuf, const WCHAR *value)
 {
 #ifdef UNICODE
-	nx_strncpy(rbuf, value, MAX_RESULT_LENGTH);
+	wcslcpy(rbuf, value, MAX_RESULT_LENGTH);
 #else
 	WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, value, -1, rbuf, MAX_RESULT_LENGTH, NULL, NULL);
 	rbuf[MAX_RESULT_LENGTH - 1] = 0;
@@ -709,7 +709,7 @@ inline void ret_mbstring(TCHAR *rbuf, const char *value)
 	MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, value, -1, rbuf, MAX_RESULT_LENGTH);
 	rbuf[MAX_RESULT_LENGTH - 1] = 0;
 #else
-	nx_strncpy(rbuf, value, MAX_RESULT_LENGTH);
+	strlcpy(rbuf, value, MAX_RESULT_LENGTH);
 #endif
 }
 
