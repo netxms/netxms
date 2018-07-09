@@ -493,26 +493,17 @@ void AgentConnection::receiverThread()
  */
 AbstractCommChannel *AgentConnection::createChannel()
 {
-   // Create socket
-   SOCKET s = socket(m_useProxy ? m_proxyAddr.getFamily() : m_addr.getFamily(), SOCK_STREAM, 0);
-   if (s == INVALID_SOCKET)
-   {
-      debugPrintf(6, _T("Call to socket() failed"));
-      return NULL;
-   }
-
-   // Fill in address structure
-   SockAddrBuffer sb;
-   struct sockaddr *sa = m_useProxy ? m_proxyAddr.fillSockAddr(&sb, m_wProxyPort) : m_addr.fillSockAddr(&sb, m_wPort);
+   SOCKET s = m_useProxy ?
+            ConnectToHost(m_proxyAddr, m_wProxyPort, m_connectionTimeout) :
+            ConnectToHost(m_addr, m_wPort, m_connectionTimeout);
 
    // Connect to server
-   if ((sa == NULL) || (ConnectEx(s, sa, SA_LEN(sa), m_connectionTimeout) == -1))
+   if (s == INVALID_SOCKET)
    {
       TCHAR buffer[64];
       debugPrintf(5, _T("Cannot establish connection with agent at %s:%d"),
                m_useProxy ? m_proxyAddr.toString(buffer) : m_addr.toString(buffer),
                (int)(m_useProxy ? m_wProxyPort : m_wPort));
-      closesocket(s);
       return NULL;
    }
 

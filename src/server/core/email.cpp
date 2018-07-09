@@ -196,201 +196,184 @@ static UINT32 SendMail(const char *pszRcpt, const char *pszSubject, const char *
    if (!addr.isValid() || addr.isBroadcast() || addr.isMulticast())
       return SMTP_ERR_BAD_SERVER_NAME;
 
-   // Create socket
-   SOCKET hSocket = socket(addr.getFamily(), SOCK_STREAM, 0);
+   // Create socket and connect to server
+   SOCKET hSocket = ConnectToHost(addr, smtpPort, 3000);
    if (hSocket == INVALID_SOCKET)
       return SMTP_ERR_COMM_FAILURE;
 
-   UINT32 dwRetCode;
-
-   // Connect to server
-   SockAddrBuffer sa;
-   addr.fillSockAddr(&sa, smtpPort);
-   if (ConnectEx(hSocket, (struct sockaddr *)&sa, SA_LEN((struct sockaddr *)&sa), 3000) == 0)
+   char szBuffer[SMTP_BUFFER_SIZE];
+   int nBufPos = 0;
+   int iState = STATE_INITIAL;
+   while((iState != STATE_FINISHED) && (iState != STATE_ERROR))
    {
-      char szBuffer[SMTP_BUFFER_SIZE];
-      int nBufPos = 0;
-      int iState = STATE_INITIAL;
-      while((iState != STATE_FINISHED) && (iState != STATE_ERROR))
+      int iResp = GetSMTPResponse(hSocket, szBuffer, &nBufPos);
+      DbgPrintf(8, _T("SMTP RESPONSE: %03d (state=%d)"), iResp, iState);
+      if (iResp > 0)
       {
-         int iResp = GetSMTPResponse(hSocket, szBuffer, &nBufPos);
-			DbgPrintf(8, _T("SMTP RESPONSE: %03d (state=%d)"), iResp, iState);
-         if (iResp > 0)
+         switch(iState)
          {
-            switch(iState)
-            {
-               case STATE_INITIAL:
-                  // Server should send 220 text after connect
-                  if (iResp == 220)
-                  {
-                     iState = STATE_HELLO;
-                     SendEx(hSocket, "HELO netxms\r\n", 13, 0, NULL);
-                  }
-                  else
-                  {
-                     iState = STATE_ERROR;
-                  }
-                  break;
-               case STATE_HELLO:
-                  // Server should respond with 250 text to our HELO command
-                  if (iResp == 250)
-                  {
-                     iState = STATE_FROM;
-                     snprintf(szBuffer, SMTP_BUFFER_SIZE, "MAIL FROM: <%s>\r\n", fromAddr);
-                     SendEx(hSocket, szBuffer, strlen(szBuffer), 0, NULL);
-                  }
-                  else
-                  {
-                     iState = STATE_ERROR;
-                  }
-                  break;
-               case STATE_FROM:
-                  // Server should respond with 250 text to our MAIL FROM command
-                  if (iResp == 250)
-                  {
-                     iState = STATE_RCPT;
-                     snprintf(szBuffer, SMTP_BUFFER_SIZE, "RCPT TO: <%s>\r\n", pszRcpt);
-                     SendEx(hSocket, szBuffer, strlen(szBuffer), 0, NULL);
-                  }
-                  else
-                  {
-                     iState = STATE_ERROR;
-                  }
-                  break;
-               case STATE_RCPT:
-                  // Server should respond with 250 text to our RCPT TO command
-                  if (iResp == 250)
-                  {
-                     iState = STATE_DATA;
-                     SendEx(hSocket, "DATA\r\n", 6, 0, NULL);
-                  }
-                  else
-                  {
-                     iState = STATE_ERROR;
-                  }
-                  break;
-               case STATE_DATA:
-                  // Server should respond with 354 text to our DATA command
-                  if (iResp == 354)
-                  {
-                     iState = STATE_MAIL_BODY;
+            case STATE_INITIAL:
+               // Server should send 220 text after connect
+               if (iResp == 220)
+               {
+                  iState = STATE_HELLO;
+                  SendEx(hSocket, "HELO netxms\r\n", 13, 0, NULL);
+               }
+               else
+               {
+                  iState = STATE_ERROR;
+               }
+               break;
+            case STATE_HELLO:
+               // Server should respond with 250 text to our HELO command
+               if (iResp == 250)
+               {
+                  iState = STATE_FROM;
+                  snprintf(szBuffer, SMTP_BUFFER_SIZE, "MAIL FROM: <%s>\r\n", fromAddr);
+                  SendEx(hSocket, szBuffer, strlen(szBuffer), 0, NULL);
+               }
+               else
+               {
+                  iState = STATE_ERROR;
+               }
+               break;
+            case STATE_FROM:
+               // Server should respond with 250 text to our MAIL FROM command
+               if (iResp == 250)
+               {
+                  iState = STATE_RCPT;
+                  snprintf(szBuffer, SMTP_BUFFER_SIZE, "RCPT TO: <%s>\r\n", pszRcpt);
+                  SendEx(hSocket, szBuffer, strlen(szBuffer), 0, NULL);
+               }
+               else
+               {
+                  iState = STATE_ERROR;
+               }
+               break;
+            case STATE_RCPT:
+               // Server should respond with 250 text to our RCPT TO command
+               if (iResp == 250)
+               {
+                  iState = STATE_DATA;
+                  SendEx(hSocket, "DATA\r\n", 6, 0, NULL);
+               }
+               else
+               {
+                  iState = STATE_ERROR;
+               }
+               break;
+            case STATE_DATA:
+               // Server should respond with 354 text to our DATA command
+               if (iResp == 354)
+               {
+                  iState = STATE_MAIL_BODY;
 
-                     // Mail headers
-                     // from
-                     char from[512];
-                     snprintf(szBuffer, SMTP_BUFFER_SIZE, "From: \"%s\" <%s>\r\n", EncodeHeader(NULL, encoding, fromName, from, 512), fromAddr);
-                     SendEx(hSocket, szBuffer, strlen(szBuffer), 0, NULL);
-                     // to
-                     snprintf(szBuffer, SMTP_BUFFER_SIZE, "To: <%s>\r\n", pszRcpt);
-                     SendEx(hSocket, szBuffer, strlen(szBuffer), 0, NULL);
-                     // subject
-                     EncodeHeader("Subject", encoding, pszSubject, szBuffer, SMTP_BUFFER_SIZE);
-                     SendEx(hSocket, szBuffer, strlen(szBuffer), 0, NULL);
-                     
-							// date
-                     time_t currentTime;
-							struct tm *pCurrentTM;
-                     time(&currentTime);
+                  // Mail headers
+                  // from
+                  char from[512];
+                  snprintf(szBuffer, SMTP_BUFFER_SIZE, "From: \"%s\" <%s>\r\n", EncodeHeader(NULL, encoding, fromName, from, 512), fromAddr);
+                  SendEx(hSocket, szBuffer, strlen(szBuffer), 0, NULL);
+                  // to
+                  snprintf(szBuffer, SMTP_BUFFER_SIZE, "To: <%s>\r\n", pszRcpt);
+                  SendEx(hSocket, szBuffer, strlen(szBuffer), 0, NULL);
+                  // subject
+                  EncodeHeader("Subject", encoding, pszSubject, szBuffer, SMTP_BUFFER_SIZE);
+                  SendEx(hSocket, szBuffer, strlen(szBuffer), 0, NULL);
+
+                  // date
+                  time_t currentTime;
+                  struct tm *pCurrentTM;
+                  time(&currentTime);
 #ifdef HAVE_LOCALTIME_R
-                     struct tm currentTM;
-                     localtime_r(&currentTime, &currentTM);
-                     pCurrentTM = &currentTM;
+                  struct tm currentTM;
+                  localtime_r(&currentTime, &currentTM);
+                  pCurrentTM = &currentTM;
 #else
-                     pCurrentTM = localtime(&currentTime);
+                  pCurrentTM = localtime(&currentTime);
 #endif
 #ifdef _WIN32
-                     strftime(szBuffer, sizeof(szBuffer), "Date: %a, %d %b %Y %H:%M:%S ", pCurrentTM);
+                  strftime(szBuffer, sizeof(szBuffer), "Date: %a, %d %b %Y %H:%M:%S ", pCurrentTM);
 
-							TIME_ZONE_INFORMATION tzi;
-							UINT32 tzType = GetTimeZoneInformation(&tzi);
-							LONG effectiveBias;
-							switch(tzType)
-							{
-								case TIME_ZONE_ID_STANDARD:
-									effectiveBias = tzi.Bias + tzi.StandardBias;
-									break;
-								case TIME_ZONE_ID_DAYLIGHT:
-									effectiveBias = tzi.Bias + tzi.DaylightBias;
-									break;
-								case TIME_ZONE_ID_UNKNOWN:
-									effectiveBias = tzi.Bias;
-									break;
-								default:		// error
-									effectiveBias = 0;
-									DbgPrintf(4, _T("GetTimeZoneInformation() call failed"));
-									break;
-							}
-							int offset = abs(effectiveBias);
-							sprintf(&szBuffer[strlen(szBuffer)], "%c%02d%02d\r\n", effectiveBias <= 0 ? '+' : '-', offset / 60, offset % 60);
+                  TIME_ZONE_INFORMATION tzi;
+                  UINT32 tzType = GetTimeZoneInformation(&tzi);
+                  LONG effectiveBias;
+                  switch(tzType)
+                  {
+                     case TIME_ZONE_ID_STANDARD:
+                        effectiveBias = tzi.Bias + tzi.StandardBias;
+                        break;
+                     case TIME_ZONE_ID_DAYLIGHT:
+                        effectiveBias = tzi.Bias + tzi.DaylightBias;
+                        break;
+                     case TIME_ZONE_ID_UNKNOWN:
+                        effectiveBias = tzi.Bias;
+                        break;
+                     default:		// error
+                        effectiveBias = 0;
+                        DbgPrintf(4, _T("GetTimeZoneInformation() call failed"));
+                        break;
+                  }
+                  int offset = abs(effectiveBias);
+                  sprintf(&szBuffer[strlen(szBuffer)], "%c%02d%02d\r\n", effectiveBias <= 0 ? '+' : '-', offset / 60, offset % 60);
 #else
-                     strftime(szBuffer, sizeof(szBuffer), "Date: %a, %d %b %Y %H:%M:%S %z\r\n", pCurrentTM);
+                  strftime(szBuffer, sizeof(szBuffer), "Date: %a, %d %b %Y %H:%M:%S %z\r\n", pCurrentTM);
 #endif
 
-                     SendEx(hSocket, szBuffer, strlen(szBuffer), 0, NULL);
-                     // content-type
-                     snprintf(szBuffer, SMTP_BUFFER_SIZE,
-                                       "Content-Type: text/%s; charset=%s\r\n"
-                                       "Content-Transfer-Encoding: 8bit\r\n\r\n", isHtml ? "html" : "plain", encoding);
-                     SendEx(hSocket, szBuffer, strlen(szBuffer), 0, NULL);
+                  SendEx(hSocket, szBuffer, strlen(szBuffer), 0, NULL);
+                  // content-type
+                  snprintf(szBuffer, SMTP_BUFFER_SIZE,
+                                    "Content-Type: text/%s; charset=%s\r\n"
+                                    "Content-Transfer-Encoding: 8bit\r\n\r\n", isHtml ? "html" : "plain", encoding);
+                  SendEx(hSocket, szBuffer, strlen(szBuffer), 0, NULL);
 
-                     // Mail body
-                     SendEx(hSocket, pszText, strlen(pszText), 0, NULL);
-                     SendEx(hSocket, "\r\n.\r\n", 5, 0, NULL);
-                  }
-                  else
-                  {
-                     iState = STATE_ERROR;
-                  }
-                  break;
-               case STATE_MAIL_BODY:
-                  // Server should respond with 250 to our mail body
-                  if (iResp == 250)
-                  {
-                     iState = STATE_QUIT;
-                     SendEx(hSocket, "QUIT\r\n", 6, 0, NULL);
-                  }
-                  else
-                  {
-                     iState = STATE_ERROR;
-                  }
-                  break;
-               case STATE_QUIT:
-                  // Server should respond with 221 text to our QUIT command
-                  if (iResp == 221)
-                  {
-                     iState = STATE_FINISHED;
-                  }
-                  else
-                  {
-                     iState = STATE_ERROR;
-                  }
-                  break;
-               default:
+                  // Mail body
+                  SendEx(hSocket, pszText, strlen(pszText), 0, NULL);
+                  SendEx(hSocket, "\r\n.\r\n", 5, 0, NULL);
+               }
+               else
+               {
                   iState = STATE_ERROR;
-                  break;
-            }
-         }
-         else
-         {
-            iState = STATE_ERROR;
+               }
+               break;
+            case STATE_MAIL_BODY:
+               // Server should respond with 250 to our mail body
+               if (iResp == 250)
+               {
+                  iState = STATE_QUIT;
+                  SendEx(hSocket, "QUIT\r\n", 6, 0, NULL);
+               }
+               else
+               {
+                  iState = STATE_ERROR;
+               }
+               break;
+            case STATE_QUIT:
+               // Server should respond with 221 text to our QUIT command
+               if (iResp == 221)
+               {
+                  iState = STATE_FINISHED;
+               }
+               else
+               {
+                  iState = STATE_ERROR;
+               }
+               break;
+            default:
+               iState = STATE_ERROR;
+               break;
          }
       }
-      // Shutdown communication channel
-      shutdown(hSocket, SHUT_RDWR);
-
-      dwRetCode = (iState == STATE_FINISHED) ? SMTP_ERR_SUCCESS : SMTP_ERR_PROTOCOL_FAILURE;
-   }
-   else
-   {
-      dwRetCode = SMTP_ERR_COMM_FAILURE;
+      else
+      {
+         iState = STATE_ERROR;
+      }
    }
 
-   if (hSocket != -1)
-   {
-      closesocket(hSocket);
-   }
+   // Shutdown communication channel
+   shutdown(hSocket, SHUT_RDWR);
+   closesocket(hSocket);
 
-   return dwRetCode;
+   return (iState == STATE_FINISHED) ? SMTP_ERR_SUCCESS : SMTP_ERR_PROTOCOL_FAILURE;
 }
 
 /**

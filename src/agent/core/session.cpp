@@ -1238,35 +1238,25 @@ void CommSession::setupTcpProxy(NXCPMessage *request, NXCPMessage *response)
 {
    UINT32 rcc = ERR_CONNECT_FAILED;
    InetAddress addr = request->getFieldAsInetAddress(VID_IP_ADDRESS);
-   SOCKET s = socket(addr.getFamily(), SOCK_STREAM, 0);
+   UINT16 port = request->getFieldAsUInt16(VID_PORT);
+   SOCKET s = ConnectToHost(addr, port, 5000);
    if (s != INVALID_SOCKET)
    {
-      SockAddrBuffer sb;
-      UINT16 port = request->getFieldAsUInt16(VID_PORT);
-      addr.fillSockAddr(&sb, port);
-      if (ConnectEx(s, reinterpret_cast<struct sockaddr*>(&sb), SA_LEN(reinterpret_cast<struct sockaddr*>(&sb)), 5000) == 0)
-      {
-         TcpProxy *proxy = new TcpProxy(this, s);
-         response->setField(VID_CHANNEL_ID, proxy->getId());
-         MutexLock(m_tcpProxyLock);
-         m_tcpProxies.add(proxy);
-         if (m_tcpProxyReadThread == INVALID_THREAD_HANDLE)
-            m_tcpProxyReadThread = ThreadCreateEx(CommSession::tcpProxyReadThreadStarter, 0, this);
-         MutexUnlock(m_tcpProxyLock);
-         debugPrintf(5, _T("TCP proxy %d created (destination address %s port %d)"),
-                  proxy->getId(), (const TCHAR *)addr.toString(), (int)port);
-         rcc = ERR_SUCCESS;
-      }
-      else
-      {
-         debugPrintf(5, _T("Cannot setup TCP proxy (cannot connect to %s port %d - %hs)"),
-                  (const TCHAR *)addr.toString(), (int)port, strerror(errno));
-         closesocket(s);
-      }
+      TcpProxy *proxy = new TcpProxy(this, s);
+      response->setField(VID_CHANNEL_ID, proxy->getId());
+      MutexLock(m_tcpProxyLock);
+      m_tcpProxies.add(proxy);
+      if (m_tcpProxyReadThread == INVALID_THREAD_HANDLE)
+         m_tcpProxyReadThread = ThreadCreateEx(CommSession::tcpProxyReadThreadStarter, 0, this);
+      MutexUnlock(m_tcpProxyLock);
+      debugPrintf(5, _T("TCP proxy %d created (destination address %s port %d)"),
+               proxy->getId(), (const TCHAR *)addr.toString(), (int)port);
+      rcc = ERR_SUCCESS;
    }
    else
    {
-      debugPrintf(5, _T("Cannot setup TCP proxy (cannot create socket)"));
+      debugPrintf(5, _T("Cannot setup TCP proxy (cannot connect to %s port %d - %hs)"),
+               (const TCHAR *)addr.toString(), (int)port, strerror(errno));
    }
    response->setField(VID_RCC, rcc);
 }
