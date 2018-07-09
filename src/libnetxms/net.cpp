@@ -93,19 +93,7 @@ bool SocketConnection::connectTCP(const TCHAR *hostName, WORD port, UINT32 timeo
  */
 bool SocketConnection::connectTCP(const InetAddress& ip, WORD port, UINT32 timeout)
 {
-	m_socket = socket(ip.getFamily(), SOCK_STREAM, 0);
-	if (m_socket != INVALID_SOCKET)
-	{
-		SockAddrBuffer sa;
-		ip.fillSockAddr(&sa, port);
-		if (ConnectEx(m_socket, (struct sockaddr *)&sa, SA_LEN((struct sockaddr *)&sa), (timeout != 0) ? timeout : 30000) < 0)
-		{
-			closesocket(m_socket);
-			m_socket = INVALID_SOCKET;
-		}
-      SetSocketNonBlocking(m_socket);
-	}
-
+	m_socket = ConnectToHost(ip, port, (timeout != 0) ? timeout : 30000);
 	return m_socket != INVALID_SOCKET;
 }
 

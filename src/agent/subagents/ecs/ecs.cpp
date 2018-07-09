@@ -65,47 +65,42 @@ static unsigned char *GetHttpUrl(char *url, int *size)
 	InetAddress hostAddr = InetAddress::resolveHostName(host);
 	if (hostAddr.isValidUnicast() || hostAddr.isLoopback())
 	{
-		SOCKET sd = socket(hostAddr.getFamily(), SOCK_STREAM, 0);
+		SOCKET sd = ConnectToHost(hostAddr, port, 5000);
 		if (sd != INVALID_SOCKET)
 		{
-			SockAddrBuffer sa;
-			hostAddr.fillSockAddr(&sa, port);
-			if (ConnectEx(sd, (struct sockaddr *)&sa, SA_LEN((struct sockaddr *)&sa), 5000) == 0)
-			{
-				char req[1024];
+         char req[1024];
 
-				int len = sprintf(req, "GET /%s HTTP/1.0\r\nHost: %s:%u\r\nConnection: close\r\n\r\n", uri, host, port);
-				if (SendEx(sd, req, len, 0, NULL) == len)
-				{
-					char buff[10240];
-					int err;
-					// ok, request sent, read content;
-					while ((err = RecvEx(sd, buff, 10240, 0, 30000)) > 0)
-					{
-						if (*size + err > MAX_REMOTE_SIZE)
-						{
-							free(ret);
-							ret = NULL;
-							break;
-						}
-						p = (char *)realloc(ret, *size + err + 1);
-						if (p != NULL)
-						{
-							ret = p;
-							memcpy(ret + *size, buff, err);
-							*size += err;
-						}
-						else
-						{
-							free(ret);
-							ret = NULL;
-							break;
-						}
-					}
-				}
-			}
-			closesocket(sd);
-		}
+         int len = sprintf(req, "GET /%s HTTP/1.0\r\nHost: %s:%u\r\nConnection: close\r\n\r\n", uri, host, port);
+         if (SendEx(sd, req, len, 0, NULL) == len)
+         {
+            char buff[10240];
+            int err;
+            // ok, request sent, read content;
+            while ((err = RecvEx(sd, buff, 10240, 0, 30000)) > 0)
+            {
+               if (*size + err > MAX_REMOTE_SIZE)
+               {
+                  free(ret);
+                  ret = NULL;
+                  break;
+               }
+               p = (char *)realloc(ret, *size + err + 1);
+               if (p != NULL)
+               {
+                  ret = p;
+                  memcpy(ret + *size, buff, err);
+                  *size += err;
+               }
+               else
+               {
+                  free(ret);
+                  ret = NULL;
+                  break;
+               }
+            }
+         }
+      }
+      closesocket(sd);
 	}
 
 	if (ret != NULL)

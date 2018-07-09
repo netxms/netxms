@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -31,19 +31,7 @@ SOCKET NetConnectTCP(const char *szHost, const InetAddress& addr, unsigned short
    if (!hostAddr.isValidUnicast() && !hostAddr.isLoopback())
       return INVALID_SOCKET;
 
-	SOCKET nSocket = socket(hostAddr.getFamily(), SOCK_STREAM, 0);
-	if (nSocket != INVALID_SOCKET)
-	{
-		SockAddrBuffer sa;
-		hostAddr.fillSockAddr(&sa, nPort);
-		if (ConnectEx(nSocket, (struct sockaddr *)&sa, SA_LEN((struct sockaddr *)&sa), (dwTimeout != 0) ? dwTimeout : m_dwDefaultTimeout) < 0)
-		{
-			closesocket(nSocket);
-			nSocket = INVALID_SOCKET;
-		}
-	}
-
-	return nSocket;
+	return ConnectToHost(hostAddr, nPort, (dwTimeout != 0) ? dwTimeout : m_dwDefaultTimeout);
 }
 
 bool NetCanRead(SOCKET nSocket, int nTimeout /* ms */)

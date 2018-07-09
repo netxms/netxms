@@ -481,16 +481,8 @@ bool Tunnel::connectToServer()
    }
 
    // Create socket and connect
-   m_socket = socket(m_address.getFamily(), SOCK_STREAM, 0);
+   m_socket = ConnectToHost(m_address, m_port, REQUEST_TIMEOUT);
    if (m_socket == INVALID_SOCKET)
-   {
-      debugPrintf(4, _T("Cannot create socket (%s)"), _tcserror(WSAGetLastError()));
-      return false;
-   }
-
-   SockAddrBuffer sa;
-   m_address.fillSockAddr(&sa, m_port);
-   if (ConnectEx(m_socket, (struct sockaddr *)&sa, SA_LEN((struct sockaddr *)&sa), REQUEST_TIMEOUT) == -1)
    {
       debugPrintf(4, _T("Cannot establish connection (%s)"), _tcserror(WSAGetLastError()));
       return false;
