@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -162,6 +162,7 @@
 #define ASN_UINTEGER32              0x47
 #define ASN_NO_SUCH_OBJECT          0x80
 #define ASN_NO_SUCH_INSTANCE        0x81
+#define ASN_END_OF_MIBVIEW          0x82
 #define ASN_GET_REQUEST_PDU         0xA0
 #define ASN_GET_NEXT_REQUEST_PDU    0xA1
 #define ASN_RESPONSE_PDU            0xA2

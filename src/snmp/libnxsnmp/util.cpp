@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -289,7 +289,8 @@ UINT32 LIBNXSNMP_EXPORTABLE SnmpWalk(SNMP_Transport *transport, const UINT32 *ro
             SNMP_Variable *pVar = pRespPDU->getVariable(0);
 
             if ((pVar->getType() != ASN_NO_SUCH_OBJECT) &&
-                (pVar->getType() != ASN_NO_SUCH_INSTANCE))
+                (pVar->getType() != ASN_NO_SUCH_INSTANCE) &&
+                (pVar->getType() != ASN_END_OF_MIBVIEW))
             {
                // Should we stop walking?
 					// Some buggy SNMP agents may return first value after last one
