@@ -24,12 +24,14 @@ import org.netxms.client.SessionNotification;
 import org.netxms.client.constants.RCC;
 import org.netxms.websvc.SessionStore;
 import org.netxms.websvc.SessionToken;
+import org.netxms.websvc.json.JsonTools;
 import org.restlet.data.CookieSetting;
 import org.restlet.data.Header;
 import org.restlet.data.MediaType;
 import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.Representation;
 import org.restlet.representation.StringRepresentation;
+import org.restlet.resource.Get;
 import org.restlet.resource.Post;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,6 +43,31 @@ public class Sessions extends AbstractHandler
 {
    private Logger log = LoggerFactory.getLogger(Sessions.class);
    
+   /* (non-Javadoc)
+    * @see org.netxms.websvc.handlers.AbstractHandler#onGet()
+    */
+   @Override
+   @Get
+   public Representation onGet() throws Exception
+   {
+      String id = getEntityId();
+      if (attachToSession())
+      {
+         if ("self".equals(id))
+         {
+            return new StringRepresentation(JsonTools.jsonFromObject(getSession(), null), MediaType.APPLICATION_JSON);
+         }
+         else
+         {
+            return new StringRepresentation(createErrorResponse(RCC.NOT_IMPLEMENTED).toString(), MediaType.APPLICATION_JSON);
+         }
+      }
+      else
+      {
+         return new StringRepresentation(createErrorResponse("self".equals(id) ? RCC.INVALID_SESSION_HANDLE : RCC.ACCESS_DENIED).toString(), MediaType.APPLICATION_JSON);
+      }
+   }
+
    /* (non-Javadoc)
     * @see org.netxms.websvc.handlers.AbstractHandler#onPost(org.restlet.representation.Representation)
     */
@@ -87,14 +114,11 @@ public class Sessions extends AbstractHandler
       if (attachNotificationHandler)
          attachNotificationHandler(token);
 
-      log.info("Logged in to NetXMS server, assigned session id " + token.getGuid());
-      getCookieSettings().add(new CookieSetting(0, "session_handle", token.getGuid().toString(), "/", null));
-      getResponse().getHeaders().add(new Header("Session-Id", token.getGuid().toString()));
+      log.info("Logged in to NetXMS server, assigned session id " + token.getSessionHandle());
+      getCookieSettings().add(new CookieSetting(0, "session_handle", token.getSessionHandle().toString(), "/", null));
+      getResponse().getHeaders().add(new Header("Session-Id", token.getSessionHandle().toString()));
       
-      JSONObject response = new JSONObject();
-      response.put("session", token.getGuid().toString());
-      response.put("serverVersion", getSession().getServerVersion());
-      return new StringRepresentation(response.toString(), MediaType.APPLICATION_JSON);
+      return new StringRepresentation(JsonTools.jsonFromObject(token, null), MediaType.APPLICATION_JSON);
    }
 
    /* (non-Javadoc)
@@ -103,16 +127,16 @@ public class Sessions extends AbstractHandler
    @Override
    protected Object delete(String id) throws Exception
    {
-      if (getSessionToken().getGuid().toString().equals(id))
+      if (getSessionToken().getSessionHandle().toString().equals(id) || "self".equals(id))
       {
          log.info("Logout request for session " + id);
          getSession().disconnect();
-         SessionStore.getInstance(getServletContext()).unregisterSession(getSessionToken().getGuid());
+         SessionStore.getInstance(getServletContext()).unregisterSession(getSessionToken().getSessionHandle());
          return new JSONObject();
       }
       else
       {
-         log.warn("Logout request for different session (" + getSessionToken().getGuid() + " -- " + id);
+         log.warn("Logout request for different session (" + getSessionToken().getSessionHandle() + " -- " + id);
          return createErrorResponse(RCC.ACCESS_DENIED);
       }
    }

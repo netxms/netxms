@@ -212,12 +212,12 @@ public abstract class AbstractHandler extends ServerResource
          String password = value.substring(value.indexOf(':') + 1, value.length());
          log.debug("Cannot find session token - re-authenticating (login=" + login + ")");
          token = login(login, password);
-         getCookieSettings().add(new CookieSetting(0, "session_handle", token.getGuid().toString(), "/", null));
-         getResponse().getHeaders().add(new Header("Session-Id", token.getGuid().toString()));
+         getCookieSettings().add(new CookieSetting(0, "session_handle", token.getSessionHandle().toString(), "/", null));
+         getResponse().getHeaders().add(new Header("Session-Id", token.getSessionHandle().toString()));
       }
       else if (token != null)
       {
-         log.debug("Handler attached to session " + token.getGuid());
+         log.debug("Handler attached to session " + token.getSessionHandle());
          sessionToken = token;
          session = token.getSession();
       }
