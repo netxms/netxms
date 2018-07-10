@@ -3632,6 +3632,8 @@ void ClientSession::modifyNodeDCI(NXCPMessage *request)
                DCObject *dcObject;
                BOOL bSuccess = FALSE;
 
+               json_t *oldValue = object->toJson();
+
 					int dcObjectType = (int)request->getFieldAsUInt16(VID_DCOBJECT_TYPE);
                switch(request->getCode())
                {
@@ -3691,8 +3693,8 @@ void ClientSession::modifyNodeDCI(NXCPMessage *request)
 									}
 									msg.setField(VID_DCI_MAP_IDS, (BYTE *)pdwMapId, sizeof(UINT32) * dwNumMaps);
 									msg.setField(VID_DCI_MAP_INDEXES, (BYTE *)pdwMapIndex, sizeof(UINT32) * dwNumMaps);
-									safe_free(pdwMapId);
-									safe_free(pdwMapIndex);
+									free(pdwMapId);
+									free(pdwMapIndex);
 								}
                      }
                      else
@@ -3707,11 +3709,18 @@ void ClientSession::modifyNodeDCI(NXCPMessage *request)
                      break;
                }
                if (bSuccess)
-                  ((Template *)object)->setDCIModificationFlag();
+               {
+                  static_cast<Template*>(object)->setDCIModificationFlag();
+                  json_t *newValue = object->toJson();
+                  writeAuditLogWithValues(AUDIT_OBJECTS, true, dwObjectId, oldValue, newValue, _T("Data collection configuration changed for object %s"), object->getName());
+                  json_decref(newValue);
+               }
+               json_decref(oldValue);
             }
             else  // User doesn't have MODIFY rights on object
             {
                msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+               writeAuditLog(AUDIT_OBJECTS, false, dwObjectId, _T("Access denied on changing data collection configuration for object %s"), object->getName());
             }
          }
          else  // Nodes DCI list not locked by this session
