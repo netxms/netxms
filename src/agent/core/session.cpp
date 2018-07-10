@@ -84,15 +84,6 @@ THREAD_RESULT THREAD_CALL CommSession::readThreadStarter(void *arg)
 }
 
 /**
- * Client communication write thread
- */
-THREAD_RESULT THREAD_CALL CommSession::writeThreadStarter(void *arg)
-{
-   static_cast<CommSession *>(arg)->writeThread();
-   return THREAD_OK;
-}
-
-/**
  * Received message processing thread
  */
 THREAD_RESULT THREAD_CALL CommSession::processingThreadStarter(void *arg)
@@ -126,12 +117,11 @@ CommSession::CommSession(AbstractCommChannel *channel, const InetAddress &server
 {
    m_id = InterlockedIncrement(&s_sessionId);
    m_index = INVALID_INDEX;
-   m_sendQueue = new Queue;
+   _sntprintf(m_key, 32, _T("CommSession-%u"), m_id);
    m_processingQueue = new Queue;
    m_channel = channel;
    m_channel->incRefCount();
    m_hProxySocket = INVALID_SOCKET;
-   m_writeThread = INVALID_THREAD_HANDLE;
    m_processingThread = INVALID_THREAD_HANDLE;
    m_proxyReadThread = INVALID_THREAD_HANDLE;
    m_tcpProxyReadThread = INVALID_THREAD_HANDLE;
@@ -172,11 +162,6 @@ CommSession::~CommSession()
    m_disconnected = true;
 
    void *p;
-   while((p = m_sendQueue->get()) != NULL)
-      if (p != INVALID_POINTER_VALUE)
-         free(p);
-   delete m_sendQueue;
-
    while((p = m_processingQueue->get()) != NULL)
       if (p != INVALID_POINTER_VALUE)
          delete (NXCPMessage *)p;
@@ -211,7 +196,6 @@ void CommSession::debugPrintf(int level, const TCHAR *format, ...)
  */
 void CommSession::run()
 {
-   m_writeThread = ThreadCreateEx(writeThreadStarter, 0, this);
    m_processingThread = ThreadCreateEx(processingThreadStarter, 0, this);
    ThreadCreate(readThreadStarter, 0, this);
 }
@@ -437,13 +421,11 @@ void CommSession::readThread()
    }
 
    // Notify other threads to exit
-   m_sendQueue->put(INVALID_POINTER_VALUE);
    m_processingQueue->put(INVALID_POINTER_VALUE);
    if (m_hProxySocket != INVALID_SOCKET)
       shutdown(m_hProxySocket, SHUT_RDWR);
 
    // Wait for other threads to finish
-   ThreadJoin(m_writeThread);
    ThreadJoin(m_processingThread);
    if (m_proxyConnection)
       ThreadJoin(m_proxyReadThread);
@@ -530,20 +512,34 @@ bool CommSession::sendRawMessage(const NXCP_MESSAGE *msg)
 }
 
 /**
- * Writing thread
+ * Post message
  */
-void CommSession::writeThread()
+void CommSession::postMessage(const NXCPMessage *msg)
 {
-   while(true)
-   {
-      NXCP_MESSAGE *msg = (NXCP_MESSAGE *)m_sendQueue->getOrBlock();
-      if (msg == INVALID_POINTER_VALUE)    // Session termination indicator
-         break;
+   if (m_disconnected)
+      return;
+   incRefCount();
+   ThreadPoolExecuteSerialized(g_commThreadPool, m_key, this, &CommSession::sendMessageInBackground, msg->serialize(m_allowCompression));
+}
 
-      if (!sendRawMessage(msg, m_pCtx))
-         break;
-   }
-   debugPrintf(6, _T("writer thread stopped"));
+/**
+ * Post raw message
+ */
+void CommSession::postRawMessage(const NXCP_MESSAGE *msg)
+{
+   if (m_disconnected)
+      return;
+   incRefCount();
+   ThreadPoolExecuteSerialized(g_commThreadPool, m_key, this, &CommSession::sendMessageInBackground, static_cast<NXCP_MESSAGE*>(nx_memdup(msg, ntohl(msg->size))));
+}
+
+/**
+ * Send message on background thread
+ */
+void CommSession::sendMessageInBackground(NXCP_MESSAGE *msg)
+{
+   sendRawMessage(msg, m_pCtx);
+   decRefCount();
 }
 
 /**
@@ -1096,74 +1092,39 @@ void CommSession::updateConfig(NXCPMessage *pRequest, NXCPMessage *pMsg)
 /**
  * Setup proxy connection
  */
-UINT32 CommSession::setupProxyConnection(NXCPMessage *pRequest)
+UINT32 CommSession::setupProxyConnection(NXCPMessage *request)
 {
-   UINT32 dwResult, dwAddr;
-   WORD wPort;
-   struct sockaddr_in sa;
-   NXCPEncryptionContext *pSavedCtx;
-   TCHAR szBuffer[32];
+   if (!m_masterServer || !(g_dwFlags & AF_ENABLE_PROXY))
+      return ERR_ACCESS_DENIED;
 
-   if (m_masterServer && (g_dwFlags & AF_ENABLE_PROXY))
+   InetAddress addr = request->isFieldExist(VID_DESTINATION_ADDRESS) ?
+            request->getFieldAsInetAddress(VID_DESTINATION_ADDRESS) :
+            request->getFieldAsInetAddress(VID_IP_ADDRESS);
+   UINT16 port = request->getFieldAsUInt16(VID_AGENT_PORT);
+   m_hProxySocket = ConnectToHost(addr, port, 10000);
+   if (m_hProxySocket == INVALID_SOCKET)
    {
-      dwAddr = pRequest->getFieldAsUInt32(VID_IP_ADDRESS);
-      wPort = pRequest->getFieldAsUInt16(VID_AGENT_PORT);
-      m_hProxySocket = socket(AF_INET, SOCK_STREAM, 0);
-      if (m_hProxySocket != INVALID_SOCKET)
-      {
-         // Fill in address structure
-         memset(&sa, 0, sizeof(sa));
-         sa.sin_addr.s_addr = htonl(dwAddr);
-         sa.sin_family = AF_INET;
-         sa.sin_port = htons(wPort);
-         if (connect(m_hProxySocket, (struct sockaddr *)&sa, sizeof(sa)) != -1)
-         {
-            NXCPMessage msg;
-            NXCP_MESSAGE *pRawMsg;
-
-            // Stop writing thread
-            m_sendQueue->put(INVALID_POINTER_VALUE);
-
-            // Wait while all queued messages will be sent
-            while(m_sendQueue->size() > 0)
-               ThreadSleepMs(100);
-
-            // Finish proxy connection setup
-            pSavedCtx = m_pCtx;
-            m_pCtx = PROXY_ENCRYPTION_CTX;
-            m_proxyConnection = true;
-            dwResult = ERR_SUCCESS;
-            m_proxyReadThread = ThreadCreateEx(proxyReadThreadStarter, 0, this);
-
-            // Send confirmation message
-            // We cannot use sendMessage() and writing thread, because
-            // encryption context already overriden, and writing thread
-            // already stopped
-            msg.setCode(CMD_REQUEST_COMPLETED);
-            msg.setId(pRequest->getId());
-            msg.setField(VID_RCC, RCC_SUCCESS);
-            pRawMsg = msg.serialize();
-            sendRawMessage(pRawMsg, pSavedCtx);
-				if (pSavedCtx != NULL)
-					pSavedCtx->decRefCount();
-
-            debugPrintf(5, _T("Established proxy connection to %s:%d"), IpToStr(dwAddr, szBuffer), wPort);
-         }
-         else
-         {
-            dwResult = ERR_CONNECT_FAILED;
-         }
-      }
-      else
-      {
-         dwResult = ERR_SOCKET_ERROR;
-      }
+      debugPrintf(5, _T("Failed to setup proxy connection to %s:%d"), (const TCHAR *)addr.toString(), port);
+      return ERR_CONNECT_FAILED;
    }
-   else
-   {
-      dwResult = ERR_ACCESS_DENIED;
-   }
-   return dwResult;
+
+   // Finish proxy connection setup
+   NXCPEncryptionContext *pSavedCtx = m_pCtx;
+   m_pCtx = PROXY_ENCRYPTION_CTX;
+   m_proxyConnection = true;
+   m_proxyReadThread = ThreadCreateEx(proxyReadThreadStarter, 0, this);
+
+   // Send confirmation message
+   // We cannot use sendMessage() because encryption context already overridden
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+   msg.setField(VID_RCC, RCC_SUCCESS);
+   NXCP_MESSAGE *pRawMsg = msg.serialize();
+   sendRawMessage(pRawMsg, pSavedCtx);
+   if (pSavedCtx != NULL)
+      pSavedCtx->decRefCount();
+
+   debugPrintf(5, _T("Established proxy connection to %s:%d"), (const TCHAR *)addr.toString(), port);
+   return ERR_SUCCESS;
 }
 
 /**
