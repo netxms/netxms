@@ -27,16 +27,12 @@ import org.netxms.client.datacollection.DciData;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.DataCollectionTarget;
 import org.netxms.websvc.json.ResponseContainer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Objects request handler
  */
 public class HistoricalData extends AbstractObjectHandler
 {
-   private Logger log = LoggerFactory.getLogger(AbstractHandler.class);
-
    /* (non-Javadoc)
     * @see org.netxms.websvc.handlers.AbstractHandler#get(java.lang.String)
     */

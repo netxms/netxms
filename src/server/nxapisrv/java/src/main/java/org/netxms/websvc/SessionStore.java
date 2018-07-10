@@ -73,7 +73,7 @@ public class SessionStore
       }
       
       final SessionToken token = new SessionToken(session);
-      sessions.put(token.getGuid(), token);
+      sessions.put(token.getSessionHandle(), token);
       session.addListener(new SessionListener() {
          @Override
          public void notificationHandler(SessionNotification n)
@@ -82,13 +82,13 @@ public class SessionStore
                 (n.getCode() == SessionNotification.SERVER_SHUTDOWN) ||
                 (n.getCode() == SessionNotification.SESSION_KILLED))
             {
-               log.info("Received disconnect notification for session " + token.getGuid());
+               log.info("Received disconnect notification for session " + token.getSessionHandle());
                session.disconnect();
-               unregisterSession(token.getGuid());
+               unregisterSession(token.getSessionHandle());
             }
          }
       });
-      log.info("Session " + token.getGuid() + " registered");
+      log.info("Session " + token.getSessionHandle() + " registered");
       return token;
    }
    
@@ -130,15 +130,15 @@ public class SessionStore
       {
          if (now - s.getActivityTimestamp() > 300000) // 5 minutes inactivity timeout
          {
-            log.info("Session " + s.getGuid() + " disconnected by inactivity timeout");
+            log.info("Session " + s.getSessionHandle() + " disconnected by inactivity timeout");
             s.getSession().disconnect();
-            disconnectedSessions.add(s.getGuid());
+            disconnectedSessions.add(s.getSessionHandle());
          }
          else if (!s.getSession().checkConnection())
          {
-            log.info("Session " + s.getGuid() + " removed due to communication failure");
+            log.info("Session " + s.getSessionHandle() + " removed due to communication failure");
             s.getSession().disconnect();
-            disconnectedSessions.add(s.getGuid());
+            disconnectedSessions.add(s.getSessionHandle());
          }
       }
       

@@ -21,6 +21,7 @@ package org.netxms.websvc;
 import java.util.UUID;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
+import org.netxms.base.annotations.Internal;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionNotification;
 
@@ -29,10 +30,10 @@ import org.netxms.client.SessionNotification;
  */
 public class SessionToken
 {
-   private UUID guid;
+   private UUID sessionHandle;
    private NXCSession session;
-   private long activityTimestamp;
-   private LinkedBlockingQueue<SessionNotification> notificationQueue = new LinkedBlockingQueue<SessionNotification>(8192);
+   @Internal private long activityTimestamp;
+   @Internal private LinkedBlockingQueue<SessionNotification> notificationQueue = new LinkedBlockingQueue<SessionNotification>(8192);
    
    /**
     * Create new session object
@@ -41,7 +42,7 @@ public class SessionToken
     */
    public SessionToken(NXCSession session)
    {
-      guid = UUID.randomUUID();
+      sessionHandle = UUID.randomUUID();
       activityTimestamp = System.currentTimeMillis();
       this.session = session;
    }
@@ -57,9 +58,9 @@ public class SessionToken
    /**
     * @return
     */
-   public UUID getGuid()
+   public UUID getSessionHandle()
    {
-      return guid;
+      return sessionHandle;
    }
 
    /**

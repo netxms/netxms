@@ -95,6 +95,7 @@ public class WebSvcStatusService extends StatusService
          case RCC.INVALID_PACKAGE_ID:
          case RCC.INVALID_POLICY_ID:
          case RCC.INVALID_SCRIPT_ID:
+         case RCC.INVALID_SESSION_HANDLE:
          case RCC.INVALID_SUMMARY_TABLE_ID:
          case RCC.INVALID_TOOL_ID:
          case RCC.INVALID_TRAP_ID:

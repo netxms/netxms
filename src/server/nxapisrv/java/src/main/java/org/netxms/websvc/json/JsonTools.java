@@ -27,10 +27,12 @@ import org.json.JSONObject;
 import org.netxms.base.InetAddressEx;
 import org.netxms.base.MacAddress;
 import org.netxms.base.annotations.Internal;
+import org.netxms.client.NXCSession;
 import org.netxms.websvc.json.adapters.DateAdapter;
 import org.netxms.websvc.json.adapters.InetAddressAdapter;
 import org.netxms.websvc.json.adapters.InetAddressExAdapter;
 import org.netxms.websvc.json.adapters.MacAddressAdapter;
+import org.netxms.websvc.json.adapters.NXCSessionAdapter;
 import com.google.gson.ExclusionStrategy;
 import com.google.gson.FieldAttributes;
 import com.google.gson.GsonBuilder;
@@ -65,6 +67,7 @@ public class JsonTools
       builder.registerTypeAdapter(InetAddress.class, new InetAddressAdapter());
       builder.registerTypeAdapter(InetAddressEx.class, new InetAddressExAdapter());
       builder.registerTypeAdapter(MacAddress.class, new MacAddressAdapter());
+      builder.registerTypeAdapter(NXCSession.class, new NXCSessionAdapter());
       builder.setExclusionStrategies(new ExclusionStrategy() {
          @Override
          public boolean shouldSkipField(FieldAttributes f)
