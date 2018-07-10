@@ -1942,7 +1942,8 @@ UINT32 AgentConnection::setupProxyConnection()
    dwRqId = generateRequestId();
    msg.setCode(CMD_SETUP_PROXY_CONNECTION);
    msg.setId(dwRqId);
-   msg.setField(VID_IP_ADDRESS, m_addr.getAddressV4());  // FIXME: V6 support in proxy
+   msg.setField(VID_IP_ADDRESS, m_addr.getAddressV4());  // For compatibility with agents < 2.2.7
+   msg.setField(VID_DESTINATION_ADDRESS, m_addr);
    msg.setField(VID_AGENT_PORT, m_wPort);
    if (sendMessage(&msg))
       return waitForRCC(dwRqId, 60000);   // Wait 60 seconds for remote connect

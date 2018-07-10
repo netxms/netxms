@@ -1237,6 +1237,7 @@ typedef struct
 #define VID_AGENT_ID                ((UINT32)616)
 #define VID_QUERY                   ((UINT32)617)
 #define VID_CONFIG_HINT_COUNT       ((UINT32)618)
+#define VID_DESTINATION_ADDRESS     ((UINT32)619)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

@@ -308,10 +308,9 @@ class CommSession : public AbstractCommSession
 private:
    UINT32 m_id;
    UINT32 m_index;
+   TCHAR m_key[32];  // key for serialized background tasks
    AbstractCommChannel *m_channel;
-   Queue *m_sendQueue;
    Queue *m_processingQueue;
-   THREAD m_writeThread;
    THREAD m_processingThread;
    THREAD m_proxyReadThread;
    THREAD m_tcpProxyReadThread;
@@ -353,16 +352,15 @@ private:
    UINT32 setupProxyConnection(NXCPMessage *pRequest);
    void setupTcpProxy(NXCPMessage *request, NXCPMessage *response);
    UINT32 closeTcpProxy(NXCPMessage *request);
+   void proxySnmpRequest(NXCPMessage *request);
+   void sendMessageInBackground(NXCP_MESSAGE *msg);
 
    void readThread();
-   void writeThread();
    void processingThread();
    void proxyReadThread();
    void tcpProxyReadThread();
-   void proxySnmpRequest(NXCPMessage *request);
 
    static THREAD_RESULT THREAD_CALL readThreadStarter(void *);
-   static THREAD_RESULT THREAD_CALL writeThreadStarter(void *);
    static THREAD_RESULT THREAD_CALL processingThreadStarter(void *);
    static THREAD_RESULT THREAD_CALL proxyReadThreadStarter(void *);
    static THREAD_RESULT THREAD_CALL tcpProxyReadThreadStarter(void *);
@@ -375,9 +373,9 @@ public:
    void disconnect();
 
    virtual bool sendMessage(const NXCPMessage *msg);
-   virtual void postMessage(const NXCPMessage *msg) { if (!m_disconnected) m_sendQueue->put(msg->serialize(m_allowCompression)); }
+   virtual void postMessage(const NXCPMessage *msg);
    virtual bool sendRawMessage(const NXCP_MESSAGE *msg);
-   virtual void postRawMessage(const NXCP_MESSAGE *msg) { if (!m_disconnected) m_sendQueue->put(nx_memdup(msg, ntohl(msg->size))); }
+   virtual void postRawMessage(const NXCP_MESSAGE *msg);
 	virtual bool sendFile(UINT32 requestId, const TCHAR *file, long offset, bool allowCompression, VolatileCounter *cancellationFlag);
    virtual UINT32 doRequest(NXCPMessage *msg, UINT32 timeout);
    virtual NXCPMessage *doRequestEx(NXCPMessage *msg, UINT32 timeout);

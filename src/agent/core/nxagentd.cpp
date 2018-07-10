@@ -888,10 +888,10 @@ BOOL Initialize()
 
 	if (!(g_dwFlags & AF_SUBAGENT_LOADER))
 	{
-	   g_commThreadPool = ThreadPoolCreate(_T("COMM"), 2, 32);
+	   g_commThreadPool = ThreadPoolCreate(_T("COMM"), 1, 32);
 	   if (g_dwFlags & AF_ENABLE_SNMP_PROXY)
 	   {
-	      g_snmpProxyThreadPool = ThreadPoolCreate(_T("SNMPPROXY"), 2, 128);
+	      g_snmpProxyThreadPool = ThreadPoolCreate(_T("SNMPPROXY"), 1, 128);
 	   }
 	   InitSessionList();
 
