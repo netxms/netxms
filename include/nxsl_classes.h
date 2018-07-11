@@ -309,27 +309,6 @@ public:
 };
 
 /**
- * Hash map template for holding NXSL_Value objects
- */
-template <class K> class NXSL_ValueHashMap : public HashMapBase
-{
-private:
-   NXSL_ValueManager *m_vm;
-
-   static void destructor(void *object, HashMapBase *map) { static_cast<NXSL_ValueHashMap*>(map)->m_vm->destroyValue((NXSL_Value*)object); }
-
-public:
-   NXSL_ValueHashMap(NXSL_ValueManager *vm, bool objectOwner = false) : HashMapBase(objectOwner, sizeof(K)) { m_vm = vm; m_objectDestructor = destructor; }
-
-   NXSL_Value *get(const K& key) { return (NXSL_Value*)_get(&key); }
-   void set(const K& key, NXSL_Value *value) { _set(&key, (void *)value); }
-   void remove(const K& key) { _remove(&key); }
-   bool contains(const K& key) { return _contains(&key); }
-
-   Iterator<NXSL_Value> *iterator() { return new Iterator<NXSL_Value>(new HashMapIterator(this)); }
-};
-
-/**
  * NXSL hash map
  */
 class LIBNXSL_EXPORTABLE NXSL_HashMap : public NXSL_HandleCountObject
@@ -592,6 +571,27 @@ public:
    NXSL_Value *createValue(const char *s) { return new(m_values->allocate()) NXSL_Value(s); }
 #endif
    void destroyValue(NXSL_Value *v) { m_values->destroy(v); }
+};
+
+/**
+ * Hash map template for holding NXSL_Value objects
+ */
+template <class K> class NXSL_ValueHashMap : public HashMapBase
+{
+private:
+   NXSL_ValueManager *m_vm;
+
+   static void destructor(void *object, HashMapBase *map) { static_cast<NXSL_ValueHashMap*>(map)->m_vm->destroyValue((NXSL_Value*)object); }
+
+public:
+   NXSL_ValueHashMap(NXSL_ValueManager *vm, bool objectOwner = false) : HashMapBase(objectOwner, sizeof(K)) { m_vm = vm; m_objectDestructor = destructor; }
+
+   NXSL_Value *get(const K& key) { return (NXSL_Value*)_get(&key); }
+   void set(const K& key, NXSL_Value *value) { _set(&key, (void *)value); }
+   void remove(const K& key) { _remove(&key); }
+   bool contains(const K& key) { return _contains(&key); }
+
+   Iterator<NXSL_Value> *iterator() { return new Iterator<NXSL_Value>(new HashMapIterator(this)); }
 };
 
 /**
