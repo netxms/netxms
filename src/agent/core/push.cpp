@@ -109,6 +109,12 @@ static NamedPipeListener *s_listener;
  */
 void StartPushConnector()
 {
+   if (!(g_dwFlags & AF_ENABLE_PUSH_CONNECTOR))
+   {
+      nxlog_write_generic(NXLOG_INFO, _T("Push connector is disabled"));
+      return;
+   }
+
    const TCHAR *user = g_config->getValue(_T("/%agent/PushUser"), _T("*"));
    s_listener = NamedPipeListener::create(_T("nxagentd.push"), ProcessPushRequest, NULL,
             (user != NULL) && (user[0] != 0) && _tcscmp(user, _T("*")) ? user : NULL);

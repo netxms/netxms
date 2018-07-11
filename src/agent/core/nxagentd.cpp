@@ -157,7 +157,7 @@ extern const TCHAR *g_szMessages[];
  * Global variables
  */
 uuid g_agentId;
-UINT32 g_dwFlags = AF_ENABLE_ACTIONS | AF_ENABLE_AUTOLOAD | AF_WRITE_FULL_DUMP;
+UINT32 g_dwFlags = AF_ENABLE_ACTIONS | AF_ENABLE_AUTOLOAD | AF_WRITE_FULL_DUMP | AF_ENABLE_PUSH_CONNECTOR;
 UINT32 g_failFlags = 0;
 TCHAR g_szLogFile[MAX_PATH] = AGENT_DEFAULT_LOG;
 TCHAR g_szSharedSecret[MAX_SECRET_LENGTH] = _T("admin");
@@ -274,6 +274,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("EnabledCiphers"), CT_LONG, 0, 0, 0, 0, &s_enabledCiphers, NULL },
    { _T("EnableControlConnector"), CT_BOOLEAN, 0, 0, AF_ENABLE_CONTROL_CONNECTOR, 0, &g_dwFlags, NULL },
    { _T("EnableProxy"), CT_BOOLEAN, 0, 0, AF_ENABLE_PROXY, 0, &g_dwFlags, NULL },
+   { _T("EnablePushConnector"), CT_BOOLEAN, 0, 0, AF_ENABLE_PUSH_CONNECTOR, 0, &g_dwFlags, NULL },
    { _T("EnableSNMPProxy"), CT_BOOLEAN, 0, 0, AF_ENABLE_SNMP_PROXY, 0, &g_dwFlags, NULL },
    { _T("EnableSNMPTrapProxy"), CT_BOOLEAN, 0, 0, AF_ENABLE_SNMP_TRAP_PROXY, 0, &g_dwFlags, NULL },
    { _T("EnableSyslogProxy"), CT_BOOLEAN, 0, 0, AF_ENABLE_SYSLOG_PROXY, 0, &g_dwFlags, NULL },
@@ -1142,8 +1143,15 @@ BOOL Initialize()
 	{
 		// Start network listener and session watchdog
       StartLocalDataCollector();
-		s_listenerThread = ThreadCreateEx(ListenerThread, 0, NULL);
-		s_sessionWatchdogThread = ThreadCreateEx(SessionWatchdog, 0, NULL);
+      if (g_wListenPort != 0)
+      {
+         s_listenerThread = ThreadCreateEx(ListenerThread, 0, NULL);
+         s_sessionWatchdogThread = ThreadCreateEx(SessionWatchdog, 0, NULL);
+      }
+      else
+      {
+         nxlog_write_generic(NXLOG_INFO, _T("TCP listener is disabled"));
+      }
 		StartPushConnector();
       StartSessionAgentConnector();
       if (g_dwFlags & AF_ENABLE_CONTROL_CONNECTOR)
