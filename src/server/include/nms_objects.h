@@ -1557,7 +1557,8 @@ enum NodeType
    NODE_TYPE_UNKNOWN = 0,
    NODE_TYPE_PHYSICAL = 1,
    NODE_TYPE_VIRTUAL = 2,
-   NODE_TYPE_CONTROLLER = 3
+   NODE_TYPE_CONTROLLER = 3,
+   NODE_TYPE_CONTAINER = 4
 };
 
 /**
@@ -1648,6 +1649,8 @@ protected:
    UINT32 m_dwDynamicFlags;       // Flags used at runtime by server
    NodeType m_type;
    TCHAR m_subType[MAX_NODE_SUBTYPE_LENGTH];
+   TCHAR m_hypervisorType[MAX_HYPERVISOR_TYPE_LENGTH];
+   TCHAR *m_hypervisorInfo;
 	int m_pendingState;
 	UINT32 m_pollCountAgent;
 	UINT32 m_pollCountSNMP;
@@ -1771,7 +1774,7 @@ protected:
 	void updatePrimaryIpAddr();
 	bool confPollAgent(UINT32 dwRqId);
 	bool confPollSnmp(UINT32 dwRqId);
-	NodeType detectNodeType();
+	NodeType detectNodeType(TCHAR *hypervisorType, TCHAR *hypervisorInfo);
 	bool updateSoftwarePackages(PollerInfo *poller, UINT32 requestId);
 	bool querySnmpSysProperty(SNMP_Transport *snmp, const TCHAR *oid, const TCHAR *propName, UINT32 pollRqId, TCHAR **value);
 	void checkBridgeMib(SNMP_Transport *pTransport);
@@ -1832,7 +1835,10 @@ public:
    const InetAddress& getIpAddress() const { return m_ipAddress; }
    UINT32 getZoneUIN() const { return m_zoneUIN; }
    NodeType getType() const { return m_type; }
+   bool isVirtual() const { return (m_type == NODE_TYPE_VIRTUAL) || (m_type == NODE_TYPE_CONTAINER); }
    const TCHAR *getSubType() const { return m_subType; }
+   const TCHAR *getHypervisorType() const { return m_hypervisorType; }
+   const TCHAR *getHypervisorInfo() const { return CHECK_NULL_EX(m_hypervisorInfo); }
    UINT32 getRuntimeFlags() const { return m_dwDynamicFlags; }
    virtual UINT32 getState();
    virtual void setState(UINT32 state);
@@ -1842,7 +1848,7 @@ public:
    void setLocalMgmtFlag() { setFlag(NF_IS_LOCAL_MGMT); }
    void clearLocalMgmtFlag() { clearFlag(NF_IS_LOCAL_MGMT); }
 
-   void setType(NodeType type, const TCHAR *subType) { lockProperties(); m_type = type; nx_strncpy(m_subType, subType, MAX_NODE_SUBTYPE_LENGTH); unlockProperties(); }
+   void setType(NodeType type, const TCHAR *subType) { lockProperties(); m_type = type; _tcslcpy(m_subType, subType, MAX_NODE_SUBTYPE_LENGTH); unlockProperties(); }
 
    bool isSNMPSupported() const { return m_flags & NF_IS_SNMP ? true : false; }
    bool isNativeAgent() const { return m_flags & NF_IS_NATIVE_AGENT ? true : false; }

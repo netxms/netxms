@@ -462,7 +462,15 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const TCHAR *attr)
    }
    else if (!_tcscmp(attr, _T("flags")))
    {
-		value = new NXSL_Value(node->getFlags());
+      value = new NXSL_Value(node->getFlags());
+   }
+   else if (!_tcscmp(attr, _T("hypervisorInfo")))
+   {
+      value = new NXSL_Value(node->getHypervisorInfo());
+   }
+   else if (!_tcscmp(attr, _T("hypervisorType")))
+   {
+      value = new NXSL_Value(node->getHypervisorType());
    }
    else if (!_tcscmp(attr, _T("isAgent")))
    {
@@ -515,6 +523,10 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const TCHAR *attr)
    else if (!_tcscmp(attr, _T("isSTP")))
    {
       value = new NXSL_Value((LONG)((node->getFlags() & NF_IS_STP) ? 1 : 0));
+   }
+   else if (!_tcscmp(attr, _T("isVirtual")))
+   {
+      value = new NXSL_Value((LONG)(node->isVirtual() ? 1 : 0));
    }
    else if (!_tcscmp(attr, _T("lastAgentCommTime")))
    {
