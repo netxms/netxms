@@ -100,6 +100,8 @@ public class Messages extends NLS
    public String GeneralInfo_Driver;
    public String GeneralInfo_ExpectedState;
    public String GeneralInfo_GUID;
+   public String GeneralInfo_HypervisorInformation;
+   public String GeneralInfo_HypervisorType;
    public String GeneralInfo_ID;
    public String GeneralInfo_IfIndex;
    public String GeneralInfo_IfType;
