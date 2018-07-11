@@ -116,6 +116,7 @@
 #define AF_BACKGROUND_LOG_WRITER    0x00400000
 #define AF_ENABLE_SYSLOG_PROXY      0x00800000
 #define AF_ENABLE_TCP_PROXY         0x01000000
+#define AF_ENABLE_PUSH_CONNECTOR    0x02000000
 
 // Flags for component failures
 #define FAIL_OPEN_LOG               0x00000001
