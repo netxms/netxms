@@ -24,6 +24,21 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 30.40 to 30.41 (changes also included into 22.30)
+ */
+static bool H_UpgradeFromV40()
+{
+   if (GetSchemaLevelForMajorVersion(22) < 30)
+   {
+      CHK_EXEC(SQLQuery(_T("ALTER TABLE nodes ADD hypervisor_type varchar(31)")));
+      CHK_EXEC(SQLQuery(_T("ALTER TABLE nodes ADD hypervisor_info varchar(255)")));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(22, 30));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(41));
+   return true;
+}
+
+/**
  * Upgrade from 30.39 to 30.40 (changes also included into 22.29)
  */
 static bool H_UpgradeFromV39()
@@ -1290,6 +1305,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 40, 30, 41, H_UpgradeFromV40 },
    { 39, 30, 40, H_UpgradeFromV39 },
    { 38, 30, 39, H_UpgradeFromV38 },
    { 37, 30, 38, H_UpgradeFromV37 },

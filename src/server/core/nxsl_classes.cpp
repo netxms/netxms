@@ -492,6 +492,14 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const char *attr)
    {
 		value = vm->createValue(node->getFlags());
    }
+   else if (!strcmp(attr, "hypervisorInfo"))
+   {
+      value = vm->createValue(node->getHypervisorInfo());
+   }
+   else if (!strcmp(attr, "hypervisorType"))
+   {
+      value = vm->createValue(node->getHypervisorType());
+   }
    else if (!strcmp(attr, "isAgent"))
    {
       value = vm->createValue((LONG)((node->getCapabilities() & NC_IS_NATIVE_AGENT) ? 1 : 0));
@@ -543,6 +551,10 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const char *attr)
    else if (!strcmp(attr, "isSTP"))
    {
       value = vm->createValue((LONG)((node->getCapabilities() & NC_IS_STP) ? 1 : 0));
+   }
+   else if (!strcmp(attr, "isVirtual"))
+   {
+      value = vm->createValue((LONG)(node->isVirtual() ? 1 : 0));
    }
    else if (!strcmp(attr, "lastAgentCommTime"))
    {

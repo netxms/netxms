@@ -24,11 +24,22 @@
 #include <nxevent.h>
 
 /**
- * Upgrade from 22.29 to 30.0
+ * Upgrade from 22.30 to 30.0
+ */
+static bool H_UpgradeFromV30()
+{
+   CHK_EXEC(SetMajorSchemaVersion(30, 0));
+   return true;
+}
+
+/**
+ * Upgrade from 22.29 to 22.30
  */
 static bool H_UpgradeFromV29()
 {
-   CHK_EXEC(SetMajorSchemaVersion(30, 0));
+   CHK_EXEC(SQLQuery(_T("ALTER TABLE nodes ADD hypervisor_type varchar(31)")));
+   CHK_EXEC(SQLQuery(_T("ALTER TABLE nodes ADD hypervisor_info varchar(255)")));
+   CHK_EXEC(SetMinorSchemaVersion(30));
    return true;
 }
 
@@ -618,7 +629,8 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
-   { 29, 30, 0,  H_UpgradeFromV29 },
+   { 30, 30, 0,  H_UpgradeFromV30 },
+   { 29, 22, 30, H_UpgradeFromV29 },
    { 28, 22, 29, H_UpgradeFromV28 },
    { 27, 22, 28, H_UpgradeFromV27 },
    { 26, 22, 27, H_UpgradeFromV26 },

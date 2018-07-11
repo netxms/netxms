@@ -30,32 +30,34 @@
 /**
  * Some constants
  */
-#define MAX_COMMUNITY_LENGTH     128
-#define MAX_OID_LENGTH           1024
-#define MAX_EVENT_MSG_LENGTH     2000
-#define MAX_EVENT_NAME           64
-#define MAX_USERTAG_LENGTH       64
-#define MAX_SESSION_NAME         256
-#define MAX_USER_NAME            64
-#define MAX_USER_FULLNAME        128
-#define MAX_USER_DESCR           256
-#define MAX_ITEM_NAME            1024
-#define MAX_STRING_VALUE         256
-#define MAX_USERVAR_NAME_LENGTH  64
-#define MAX_AGENT_VERSION_LEN    64
-#define MAX_PLATFORM_NAME_LEN    64
-#define MAX_PACKAGE_NAME_LEN     64
-#define MAX_NODE_SUBTYPE_LENGTH  128
-#define GROUP_EVERYONE           ((UINT32)0x80000000)
-#define INVALID_UID              ((UINT32)0xFFFFFFFF)
-#define OBJECT_STATUS_COUNT      9
-#define MAX_RCPT_ADDR_LEN        256
-#define MAX_EMAIL_SUBJECT_LEN    256
-#define MAC_ADDR_LENGTH          6
-#define CURRENT_USER             ((UINT32)0xFFFFFFFF)
-#define MAX_DCI_DATA_RECORDS     200000
-#define MAX_POLICY_CONFIG_NAME   64
-#define MAX_INT32                0x7FFFFFFF
+#define MAX_COMMUNITY_LENGTH        128
+#define MAX_OID_LENGTH              1024
+#define MAX_EVENT_MSG_LENGTH        2000
+#define MAX_EVENT_NAME              64
+#define MAX_USERTAG_LENGTH          64
+#define MAX_SESSION_NAME            256
+#define MAX_USER_NAME               64
+#define MAX_USER_FULLNAME           128
+#define MAX_USER_DESCR              256
+#define MAX_ITEM_NAME               1024
+#define MAX_STRING_VALUE            256
+#define MAX_USERVAR_NAME_LENGTH     64
+#define MAX_AGENT_VERSION_LEN       64
+#define MAX_PLATFORM_NAME_LEN       64
+#define MAX_PACKAGE_NAME_LEN        64
+#define MAX_NODE_SUBTYPE_LENGTH     128
+#define MAX_HYPERVISOR_TYPE_LENGTH  32
+#define MAX_HYPERVISOR_INFO_LENGTH  32
+#define GROUP_EVERYONE              ((UINT32)0x80000000)
+#define INVALID_UID                 ((UINT32)0xFFFFFFFF)
+#define OBJECT_STATUS_COUNT         9
+#define MAX_RCPT_ADDR_LEN           256
+#define MAX_EMAIL_SUBJECT_LEN       256
+#define MAC_ADDR_LENGTH             6
+#define CURRENT_USER                ((UINT32)0xFFFFFFFF)
+#define MAX_DCI_DATA_RECORDS        200000
+#define MAX_POLICY_CONFIG_NAME      64
+#define MAX_INT32                   0x7FFFFFFF
 
 /**
  * NetXMS agent authentication methods

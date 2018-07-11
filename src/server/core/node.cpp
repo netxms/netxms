@@ -38,6 +38,8 @@ Node::Node() : DataCollectionTarget()
    m_status = STATUS_UNKNOWN;
    m_type = NODE_TYPE_UNKNOWN;
    m_subType[0] = 0;
+   m_hypervisorType[0] = 0;
+   m_hypervisorInfo = NULL;
    m_capabilities = 0;
    m_zoneUIN = 0;
    m_agentPort = AGENT_LISTEN_PORT;
@@ -141,6 +143,8 @@ Node::Node(const NewNodeData *newNodeData, UINT32 flags)  : DataCollectionTarget
    m_status = STATUS_UNKNOWN;
    m_type = NODE_TYPE_UNKNOWN;
    m_subType[0] = 0;
+   m_hypervisorType[0] = 0;
+   m_hypervisorInfo = NULL;
    m_ipAddress = newNodeData->ipAddr;
    m_capabilities = 0;
    m_flags = flags;
@@ -290,6 +294,7 @@ Node::~Node()
    free(m_sysLocation);
    delete m_routingLoopEvents;
    free(m_agentCertSubject);
+   free(m_hypervisorInfo);
 }
 
 /**
@@ -325,7 +330,8 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
       _T("node_type,node_subtype,ssh_login,ssh_password,ssh_proxy,")
       _T("port_rows,port_numbering_scheme,agent_comp_mode,")
       _T("tunnel_id,lldp_id,capabilities,fail_time_snmp,fail_time_agent,")
-      _T("rack_orientation,rack_image_rear,agent_id,agent_cert_subject")
+      _T("rack_orientation,rack_image_rear,agent_id,agent_cert_subject,")
+      _T("hypervisor_type,hypervisor_info")
       _T(" FROM nodes WHERE id=?"));
    if (hStmt == NULL)
       return false;
@@ -443,6 +449,8 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
       free(m_agentCertSubject);
       m_agentCertSubject = NULL;
    }
+   DBGetField(hResult, 0, 55, m_hypervisorType, MAX_HYPERVISOR_TYPE_LENGTH);
+   m_hypervisorInfo = DBGetField(hResult, 0, 56, NULL, 0);
 
    DBFreeResult(hResult);
    DBFreeStatement(hStmt);
@@ -536,7 +544,7 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
          _T("snmp_trap_count"), _T("node_type"), _T("node_subtype"), _T("ssh_login"), _T("ssh_password"), _T("ssh_proxy"),
          _T("chassis_id"), _T("port_rows"), _T("port_numbering_scheme"), _T("agent_comp_mode"), _T("tunnel_id"), _T("lldp_id"),
          _T("fail_time_snmp"), _T("fail_time_agent"), _T("rack_orientation"), _T("rack_image_rear"), _T("agent_id"),
-         _T("agent_cert_subject"),
+         _T("agent_cert_subject"), _T("hypervisor_type"), _T("hypervisor_info"),
          NULL
       };
 
@@ -611,7 +619,9 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
          DBBind(hStmt, 54, DB_SQLTYPE_VARCHAR, m_rackImageRear);
          DBBind(hStmt, 55, DB_SQLTYPE_VARCHAR, m_agentId);
          DBBind(hStmt, 56, DB_SQLTYPE_VARCHAR, m_agentCertSubject, DB_BIND_STATIC);
-         DBBind(hStmt, 57, DB_SQLTYPE_INTEGER, m_id);
+         DBBind(hStmt, 57, DB_SQLTYPE_VARCHAR, m_hypervisorType, DB_BIND_STATIC);
+         DBBind(hStmt, 58, DB_SQLTYPE_VARCHAR, m_hypervisorInfo, DB_BIND_STATIC);
+         DBBind(hStmt, 59, DB_SQLTYPE_INTEGER, m_id);
 
          success = DBExecute(hStmt);
          DBFreeStatement(hStmt);
@@ -2622,15 +2632,30 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
       }
 
       // Update node type
-      NodeType type = detectNodeType();
+      TCHAR hypervisorType[MAX_HYPERVISOR_TYPE_LENGTH], hypervisorInfo[MAX_HYPERVISOR_INFO_LENGTH];
+      NodeType type = detectNodeType(hypervisorType, hypervisorInfo);
       nxlog_debug(5, _T("ConfPoll(%s): detected node type: %d (%s)"), m_name, type, typeName(type));
+      if ((type == NODE_TYPE_VIRTUAL) || (type == NODE_TYPE_CONTAINER))
+      {
+         nxlog_debug(5, _T("ConfPoll(%s): hypervisor: %s (%s)"), m_name, hypervisorType, hypervisorInfo);
+      }
       lockProperties();
-      if ((type != NODE_TYPE_UNKNOWN) && (type != m_type))
+      if ((type != NODE_TYPE_UNKNOWN) &&
+               ((type != m_type) || _tcscmp(hypervisorType, m_hypervisorType) || _tcscmp(hypervisorInfo, CHECK_NULL_EX(m_hypervisorInfo))))
       {
          m_type = type;
          modified |= MODIFY_NODE_PROPERTIES;
          nxlog_debug(5, _T("ConfPoll(%s): node type set to %d (%s)"), m_name, type, typeName(type));
          sendPollerMsg(rqId, _T("   Node type changed to %s\r\n"), typeName(type));
+
+         if (*hypervisorType != 0)
+            sendPollerMsg(rqId, _T("   Hypervisor type set to %s\r\n"), hypervisorType);
+         _tcslcpy(m_hypervisorType, hypervisorType, MAX_HYPERVISOR_TYPE_LENGTH);
+
+         if (*hypervisorInfo != 0)
+            sendPollerMsg(rqId, _T("   Hypervisor information set to %s\r\n"), hypervisorInfo);
+         free(m_hypervisorInfo);
+         m_hypervisorInfo = _tcsdup(hypervisorInfo);
       }
       unlockProperties();
 
@@ -2664,9 +2689,12 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
 /**
  * Detect node type
  */
-NodeType Node::detectNodeType()
+NodeType Node::detectNodeType(TCHAR *hypervisorType, TCHAR *hypervisorInfo)
 {
    NodeType type = NODE_TYPE_UNKNOWN;
+   *hypervisorType = 0;
+   *hypervisorInfo = 0;
+
    if (m_capabilities & NC_IS_SNMP)
    {
       nxlog_debug(6, _T("Node::detectNodeType(%s [%d]): SNMP node, driver name is %s"),
@@ -2685,6 +2713,37 @@ NodeType Node::detectNodeType()
             // Assume that printers are physical devices
             type = NODE_TYPE_PHYSICAL;
          }
+      }
+   }
+   if (m_capabilities & NC_IS_NATIVE_AGENT)
+   {
+      nxlog_debug(6, _T("Node::detectNodeType(%s [%d]): NetXMS agent node"), m_name, m_id);
+
+      AgentConnection *conn = getAgentConnection();
+      if (conn != NULL)
+      {
+         TCHAR buffer[MAX_RESULT_LENGTH];
+         if (conn->getParameter(_T("System.IsVirtual"), MAX_RESULT_LENGTH, buffer) == ERR_SUCCESS)
+         {
+            VirtualizationType vt = static_cast<VirtualizationType>(_tcstol(buffer, NULL, 10));
+            if (vt != VTYPE_NONE)
+            {
+               type = (vt == VTYPE_FULL) ? NODE_TYPE_VIRTUAL : NODE_TYPE_CONTAINER;
+               if (conn->getParameter(_T("Hypervisor.Type"), MAX_RESULT_LENGTH, buffer) == ERR_SUCCESS)
+               {
+                  _tcslcpy(hypervisorType, buffer, MAX_HYPERVISOR_TYPE_LENGTH);
+                  if (conn->getParameter(_T("Hypervisor.Version"), MAX_RESULT_LENGTH, buffer) == ERR_SUCCESS)
+                  {
+                     _tcslcpy(hypervisorInfo, buffer, MAX_HYPERVISOR_INFO_LENGTH);
+                  }
+               }
+            }
+            else
+            {
+               type = NODE_TYPE_PHYSICAL;
+            }
+         }
+         conn->decRefCount();
       }
    }
    return type;
@@ -4918,6 +4977,8 @@ void Node::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
    pMsg->setField(VID_PRIMARY_NAME, m_primaryName);
    pMsg->setField(VID_NODE_TYPE, (INT16)m_type);
    pMsg->setField(VID_NODE_SUBTYPE, m_subType);
+   pMsg->setField(VID_HYPERVISOR_TYPE, m_hypervisorType);
+   pMsg->setField(VID_HYPERVISOR_INFO, CHECK_NULL_EX(m_hypervisorInfo));
    pMsg->setField(VID_STATE_FLAGS, m_state);
    pMsg->setField(VID_CAPABILITIES, m_capabilities);
    pMsg->setField(VID_AGENT_PORT, m_agentPort);
@@ -8003,7 +8064,7 @@ void Node::collectProxyInfo(ProxyInfo *info)
  */
 const TCHAR *Node::typeName(NodeType type)
 {
-   static const TCHAR *names[] = { _T("Unknown"), _T("Physical"), _T("Virtual"), _T("Controller") };
+   static const TCHAR *names[] = { _T("Unknown"), _T("Physical"), _T("Virtual"), _T("Controller"), _T("Container") };
    return (((int)type >= 0) && ((int)type < sizeof(names) / sizeof(const TCHAR *))) ? names[type] : names[0];
 }
 

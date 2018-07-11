@@ -334,6 +334,8 @@ CREATE TABLE nodes
   snmp_trap_count SQL_INT64 not null,
   node_type integer not null,
   node_subtype varchar(127) null,
+  hypervisor_type varchar(31) null,
+  hypervisor_info varchar(255) null,
   ssh_login varchar(63) null,
   ssh_password varchar(63) null,
   ssh_proxy integer not null,
