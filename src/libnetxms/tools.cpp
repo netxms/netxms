@@ -391,6 +391,8 @@ static bool MatchStringEngine(const TCHAR *pattern, const TCHAR *string)
                MPtr++;     // Find the end of text block
             // Try to find rightmost matching block
 				bsize = (size_t)(MPtr - BPtr);
+				if (bsize == 0)
+				   break;   // * immediately after ?
             EPtr = NULL;
             finishScan = false;
             do
