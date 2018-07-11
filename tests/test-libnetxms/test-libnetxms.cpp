@@ -354,6 +354,24 @@ static void TestStringFunctionsW()
 }
 
 /**
+ * Test pattern matching functions
+ */
+static void TestPatternMatching()
+{
+   StartTest(_T("MatchString"));
+   AssertTrue(MatchString(_T("*"), _T("whatever"), true));
+   AssertTrue(MatchString(_T("??*"), _T("whatever"), true));
+   AssertTrue(MatchString(_T("??*"), _T("zz"), true));
+   AssertFalse(MatchString(_T("??*"), _T("X"), true));
+   AssertFalse(MatchString(_T("A*B*"), _T("Alphabet"), true));
+   AssertTrue(MatchString(_T("A*B*"), _T("Alphabet"), false));
+   AssertTrue(MatchString(_T("*t"), _T("Alphabet"), true));
+   AssertTrue(MatchString(_T("*?*"), _T("some text"), true));
+   AssertTrue(MatchString(_T("*?*t"), _T("some text"), true));
+   EndTest();
+}
+
+/**
  * Test string class
  */
 static void TestString()
@@ -1433,6 +1451,7 @@ int main(int argc, char *argv[])
    TestStringSet();
    TestStringFunctionsA();
    TestStringFunctionsW();
+   TestPatternMatching();
    TestMessageClass();
    TestMsgWaitQueue();
    TestMacAddress();
