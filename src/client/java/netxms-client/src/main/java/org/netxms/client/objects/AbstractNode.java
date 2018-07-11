@@ -98,6 +98,8 @@ public abstract class AbstractNode extends DataCollectionTarget implements RackE
 	protected int runtimeFlags;
 	protected NodeType nodeType;
 	protected String nodeSubType;
+	protected String hypervisorType;
+	protected String hypervisorInformation;
 	protected int requredPollCount;
 	protected long pollerNodeId;
 	protected long agentProxyId;
@@ -172,6 +174,8 @@ public abstract class AbstractNode extends DataCollectionTarget implements RackE
 		runtimeFlags = msg.getFieldAsInt32(NXCPCodes.VID_RUNTIME_FLAGS);
 		nodeType = NodeType.getByValue(msg.getFieldAsInt16(NXCPCodes.VID_NODE_TYPE));
 		nodeSubType = msg.getFieldAsString(NXCPCodes.VID_NODE_SUBTYPE);
+      hypervisorType = msg.getFieldAsString(NXCPCodes.VID_HYPERVISOR_TYPE);
+      hypervisorInformation = msg.getFieldAsString(NXCPCodes.VID_HYPERVISOR_INFO);
 		requredPollCount = msg.getFieldAsInt32(NXCPCodes.VID_REQUIRED_POLLS);
 		pollerNodeId = msg.getFieldAsInt64(NXCPCodes.VID_POLLER_NODE_ID);
 		agentProxyId = msg.getFieldAsInt64(NXCPCodes.VID_AGENT_PROXY);
@@ -256,6 +260,36 @@ public abstract class AbstractNode extends DataCollectionTarget implements RackE
    public String getNodeSubType()
    {
       return nodeSubType;
+   }
+   
+   /**
+    * Check if this node is a virtual node (either virtual machine or container)
+    * 
+    * @return true if this node is a virtual node
+    */
+   public boolean isVirtual()
+   {
+      return (nodeType == NodeType.VIRTUAL) || (nodeType == NodeType.CONTAINER);
+   }
+
+   /**
+    * Get hypervisor type.
+    * 
+    * @return hypervisor type string or empty string if unknown or not applicable 
+    */
+   public String getHypervisorType()
+   {
+      return (hypervisorType != null) ? hypervisorType : "";
+   }
+
+   /**
+    * Get additional hypervisor information (product, version, etc.).
+    * 
+    * @return hypervisor information string or empty string if unknown or not applicable 
+    */
+   public String getHypervisorInformation()
+   {
+      return (hypervisorInformation != null) ? hypervisorInformation : "";
    }
 
    /**

@@ -1017,6 +1017,9 @@ public class NXCPCodes
    public static final long VID_AGENT_ID = 616;
    public static final long VID_QUERY = 617;
    public static final long VID_CONFIG_HINT_COUNT = 618;
+   public static final long VID_DESTINATION_ADDRESS = 619;
+   public static final long VID_HYPERVISOR_TYPE = 620;
+   public static final long VID_HYPERVISOR_INFO = 621;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;

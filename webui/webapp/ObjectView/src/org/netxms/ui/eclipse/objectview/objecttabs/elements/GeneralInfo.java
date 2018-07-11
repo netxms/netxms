@@ -158,6 +158,8 @@ public class GeneralInfo extends TableElement
 					addPair(Messages.get().GeneralInfo_BridgeBaseAddress, node.getBridgeBaseAddress().toString());
 				addPair(Messages.get().GeneralInfo_Driver, node.getDriverName(), false);
             addPair(Messages.get().GeneralInfo_NodeType, node.getNodeType().toString(), false);
+            addPair(Messages.get().GeneralInfo_HypervisorType, node.getHypervisorType(), false);
+            addPair(Messages.get().GeneralInfo_HypervisorInformation, node.getHypervisorInformation(), false);
             if (node.getBootTime() != null)
                addPair(Messages.get().GeneralInfo_BootTime, RegionalSettings.getDateTimeFormat().format(node.getBootTime()), false);
             if (node.hasAgent())

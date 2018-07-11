@@ -30,7 +30,8 @@ public enum NodeType
    UNKNOWN(0),
    PHYSICAL(1),
    VIRTUAL(2),
-   CONTROLLER(3);
+   CONTROLLER(3),
+   CONTAINER(4);
 
    private int value;
    private static Map<Integer, NodeType> lookupTable = new HashMap<Integer, NodeType>();
