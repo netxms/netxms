@@ -76,7 +76,7 @@ bool RestartService(UINT32 pid)
    r = sd_bus_open_system(&bus);
    if (r < 0)
    {
-      _ftprintf(stderr, _T("Failed to connect to system bus: %s\n"), strerror(-r));
+      _ftprintf(stderr, _T("Failed to connect to system bus: %hs\n"), strerror(-r));
       sd_bus_message_unref(m);
       sd_bus_unref(bus);
       goto finish;
@@ -95,7 +95,7 @@ bool RestartService(UINT32 pid)
                           "replace");                           /* second argument */
    if (r < 0)
    {
-      _ftprintf(stderr, _T("Failed to issue method call: %s\n"), error.message);
+      _ftprintf(stderr, _T("Failed to issue method call: %hs\n"), error.message);
       goto finish;
    }
 
@@ -103,19 +103,20 @@ bool RestartService(UINT32 pid)
    r = sd_bus_message_read(m, "o", &path);
    if (r < 0)
    {
-      _ftprintf(stderr, _T("Failed to parse response message: %s\n"), strerror(-r));
+      _ftprintf(stderr, _T("Failed to parse response message: %hs\n"), strerror(-r));
       goto finish;
    }
 
-   _tprintf(_T("Queued service job as %s\n"), path);
+   _tprintf(_T("Queued service job as %hs\n"), path);
    result = true;
 
-   finish:
-           sd_bus_error_free(&error);
-           sd_bus_message_unref(m);
-           sd_bus_unref(bus);
-           free(serviceName);
+finish:
+   sd_bus_error_free(&error);
+   sd_bus_message_unref(m);
+   sd_bus_unref(bus);
+   free(serviceName);
 
    return result;
 }
+
 #endif
