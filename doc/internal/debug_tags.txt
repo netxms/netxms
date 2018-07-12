@@ -28,19 +28,21 @@ logwatch.*	Messages from log monitoring library
 
 ndd.*		Network device drivers
 
+node.agent	Node agent (connections, etc.)
 node.poller	Node poller
 
 obj.*		Object related trace
 obj.dc.*	Data collection related
 obj.locks.*	Locks
 obj.netmap	Network maps
-obj.poll.*	Polling
-obj.poll.conf	Configuration poll
-obj.poll.node	New node poll
-obj.poll.route	Routing table poll
-obj.poll.status	Status poll
-obj.poll.topo	Topology poll
 obj.sync	Object synchronization
+
+poll.*		Polling
+poll.conf	Configuration poll
+poll.node	New node poll
+poll.route	Routing table poll
+poll.status	Status poll
+poll.topo	Topology poll
 
 proc.*          Process related trace
 proc.spexec     Sub-process executor

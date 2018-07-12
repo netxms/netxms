@@ -23,6 +23,10 @@
 #include "nxcore.h"
 #include <agent_tunnel.h>
 
+#define DEBUG_TAG_CONF_POLL   _T("poll.conf")
+#define DEBUG_TAG_AGENT       _T("node.agent")
+#define DEBUG_TAG_STATUS_POLL _T("poll.status")
+
 /**
  * Externals
  */
@@ -1410,7 +1414,7 @@ void Node::statusPoll(PollerInfo *poller, ClientSession *pSession, UINT32 rqId)
    poller->setStatus(_T("preparing"));
    m_pollRequestor = pSession;
    sendPollerMsg(rqId, _T("Starting status poll for node %s\r\n"), m_name);
-   nxlog_debug(5, _T("Starting status poll for node %s (ID: %d)"), m_name, m_id);
+   nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("Starting status poll for node %s (ID: %d)"), m_name, m_id);
 
    // Read capability expiration time and current time
    tExpire = (time_t)ConfigReadULong(_T("CapabilityExpirationTime"), 604800);
@@ -1435,7 +1439,7 @@ restart_agent_check:
       TCHAR szBuffer[256];
       UINT32 dwResult;
 
-      nxlog_debug(6, _T("StatusPoll(%s): check SNMP"), m_name);
+      nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): check SNMP"), m_name);
       pTransport = createSnmpTransport();
       if (pTransport != NULL)
       {
@@ -1501,7 +1505,7 @@ restart_agent_check:
                }
             }
 
-            nxlog_debug(6, _T("StatusPoll(%s): got communication error on proxy transport, checking connection to proxy. Poll count: %d of %d"), m_name, m_pollCountSNMP, m_requiredPollCount);
+            nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): got communication error on proxy transport, checking connection to proxy. Poll count: %d of %d"), m_name, m_pollCountSNMP, m_requiredPollCount);
             sendPollerMsg(rqId, POLLER_ERROR _T("SNMP agent unreachable\r\n"));
             if (m_state & NSF_SNMP_UNREACHABLE)
             {
@@ -1529,15 +1533,15 @@ restart_agent_check:
       }
       else
       {
-         nxlog_debug(6, _T("StatusPoll(%s): cannot create SNMP transport"), m_name);
+         nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): cannot create SNMP transport"), m_name);
       }
-      nxlog_debug(6, _T("StatusPoll(%s): SNMP check finished"), m_name);
+      nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): SNMP check finished"), m_name);
    }
 
    // Check native agent connectivity
    if ((m_capabilities & NC_IS_NATIVE_AGENT) && (!(m_flags & NF_DISABLE_NXCP)))
    {
-      nxlog_debug(6, _T("StatusPoll(%s): checking agent"), m_name);
+      nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): checking agent"), m_name);
       poller->setStatus(_T("check agent"));
       sendPollerMsg(rqId, _T("Checking NetXMS agent connectivity\r\n"));
 
@@ -1546,7 +1550,7 @@ restart_agent_check:
       agentLock();
       if (connectToAgent(&error, &socketError, &newConnection, true))
       {
-         nxlog_debug(7, _T("StatusPoll(%s): connected to agent"), m_name);
+         nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 7, _T("StatusPoll(%s): connected to agent"), m_name);
          if (m_state & NSF_AGENT_UNREACHABLE)
          {
             m_pollCountAgent++;
@@ -1564,7 +1568,7 @@ restart_agent_check:
       }
       else
       {
-         nxlog_debug(6, _T("StatusPoll(%s): agent unreachable, error=%d, socketError=%d. Poll count %d of %d"), m_name, (int)error, (int)socketError, m_pollCountAgent, m_requiredPollCount);
+         nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): agent unreachable, error=%d, socketError=%d. Poll count %d of %d"), m_name, (int)error, (int)socketError, m_pollCountAgent, m_requiredPollCount);
          sendPollerMsg(rqId, POLLER_ERROR _T("NetXMS agent unreachable\r\n"));
          if (m_state & NSF_AGENT_UNREACHABLE)
          {
@@ -1592,7 +1596,7 @@ restart_agent_check:
          }
       }
       agentUnlock();
-      nxlog_debug(7, _T("StatusPoll(%s): agent check finished"), m_name);
+      nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 7, _T("StatusPoll(%s): agent check finished"), m_name);
 
       // If file update connection is active, send NOP command to prevent disconnection by idle timeout
       AgentConnection *fileUpdateConnection;
@@ -1603,7 +1607,7 @@ restart_agent_check:
       unlockProperties();
       if (fileUpdateConnection != NULL)
       {
-         nxlog_debug(6, _T("StatusPoll(%s): sending keepalive command on file monitoring connection"), m_name);
+         nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): sending keepalive command on file monitoring connection"), m_name);
          fileUpdateConnection->nop();
          fileUpdateConnection->decRefCount();
       }
@@ -1868,7 +1872,7 @@ restart_agent_check:
       }
       else
       {
-         nxlog_debug(5, _T("StatusPoll(%s [%d]): unable to get agent log status"), m_name, m_id);
+         nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("StatusPoll(%s [%d]): unable to get agent log status"), m_name, m_id);
       }
 
       if (getItemFromAgent(_T("Agent.LocalDatabase.Status"), MAX_RESULT_LENGTH, buffer) == DCE_SUCCESS)
@@ -1884,7 +1888,7 @@ restart_agent_check:
       }
       else
       {
-         nxlog_debug(5, _T("StatusPoll(%s [%d]): unable to get agent local database status"), m_name, m_id);
+         nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("StatusPoll(%s [%d]): unable to get agent local database status"), m_name, m_id);
       }
    }
 
@@ -1954,7 +1958,7 @@ bool Node::checkNetworkPathElement(UINT32 nodeId, const TCHAR *nodeType, bool is
    if (node == NULL)
       return false;
 
-   nxlog_debug(6, _T("Node::checkNetworkPathElement(%s [%d]): found %s: %s [%d]"), m_name, m_id, nodeType, node->getName(), node->getId());
+   nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("Node::checkNetworkPathElement(%s [%d]): found %s: %s [%d]"), m_name, m_id, nodeType, node->getName(), node->getId());
 
    if (secondPass && (node->m_lastStatusPoll < time(NULL) - 1))
    {
@@ -2010,7 +2014,7 @@ bool Node::checkNetworkPathLayer2(UINT32 requestId, bool secondPass)
    {
       if  (iface->getPeerNodeId() != 0)
       {
-         nxlog_debug(6, _T("Node::checkNetworkPath(%s [%d]): found interface object for primary IP: %s [%d]"), m_name, m_id, iface->getName(), iface->getId());
+         nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("Node::checkNetworkPath(%s [%d]): found interface object for primary IP: %s [%d]"), m_name, m_id, iface->getName(), iface->getId());
          if (checkNetworkPathElement(iface->getPeerNodeId(), _T("upstream switch"), false, requestId, secondPass))
             return true;
 
@@ -2020,7 +2024,7 @@ bool Node::checkNetworkPathLayer2(UINT32 requestId, bool secondPass)
              ((switchIface->getAdminState() == IF_ADMIN_STATE_DOWN) || (switchIface->getAdminState() == IF_ADMIN_STATE_TESTING) ||
               (switchIface->getOperState() == IF_OPER_STATE_DOWN) || (switchIface->getOperState() == IF_OPER_STATE_TESTING)))
          {
-            nxlog_debug(5, _T("Node::checkNetworkPath(%s [%d]): upstream interface %s [%d] on switch %s [%d] is down"),
+            nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("Node::checkNetworkPath(%s [%d]): upstream interface %s [%d] on switch %s [%d] is down"),
                         m_name, m_id, switchIface->getName(), switchIface->getId(), switchNode->getName(), switchNode->getId());
             sendPollerMsg(requestId, POLLER_WARNING _T("   Upstream interface %s on node %s is down\r\n"), switchIface->getName(), switchNode->getName());
             return true;
@@ -2034,13 +2038,13 @@ bool Node::checkNetworkPathLayer2(UINT32 requestId, bool secondPass)
          NetObj *cp = FindInterfaceConnectionPoint(localMacAddr, &type);
          if (cp != NULL)
          {
-            nxlog_debug(6, _T("Node::checkNetworkPath(%s [%d]): found connection point: %s [%d]"), m_name, m_id, cp->getName(), cp->getId());
+            nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("Node::checkNetworkPath(%s [%d]): found connection point: %s [%d]"), m_name, m_id, cp->getName(), cp->getId());
             if (secondPass)
             {
                Node *node = (cp->getObjectClass() == OBJECT_INTERFACE) ? ((Interface *)cp)->getParentNode() : ((AccessPoint *)cp)->getParentNode();
                if ((node != NULL) && !node->isDown() && (node->m_lastStatusPoll < now - 1))
                {
-                  nxlog_debug(6, _T("Node::checkNetworkPath(%s [%d]): forced status poll on node %s [%d]"),
+                  nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("Node::checkNetworkPath(%s [%d]): forced status poll on node %s [%d]"),
                               m_name, m_id, node->getName(), node->getId());
                   node->statusPollWorkerEntry(RegisterPoller(POLLER_TYPE_STATUS, node), NULL, 0);
                }
@@ -2053,7 +2057,7 @@ bool Node::checkNetworkPathLayer2(UINT32 requestId, bool secondPass)
                    ((iface->getAdminState() == IF_ADMIN_STATE_DOWN) || (iface->getAdminState() == IF_ADMIN_STATE_TESTING) ||
                     (iface->getOperState() == IF_OPER_STATE_DOWN) || (iface->getOperState() == IF_OPER_STATE_TESTING)))
                {
-                  nxlog_debug(5, _T("Node::checkNetworkPath(%s [%d]): upstream interface %s [%d] on switch %s [%d] is down"),
+                  nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("Node::checkNetworkPath(%s [%d]): upstream interface %s [%d] on switch %s [%d] is down"),
                               m_name, m_id, iface->getName(), iface->getId(), iface->getParentNode()->getName(), iface->getParentNode()->getId());
                   sendPollerMsg(requestId, POLLER_WARNING _T("   Upstream interface %s on node %s is down\r\n"),
                                 iface->getName(), iface->getParentNode()->getName());
@@ -2065,7 +2069,7 @@ bool Node::checkNetworkPathLayer2(UINT32 requestId, bool secondPass)
                AccessPoint *ap = (AccessPoint *)cp;
                if (ap->getStatus() == STATUS_CRITICAL)   // FIXME: how to correctly determine if AP is down?
                {
-                  nxlog_debug(5, _T("Node::checkNetworkPath(%s [%d]): wireless access point %s [%d] is down"),
+                  nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("Node::checkNetworkPath(%s [%d]): wireless access point %s [%d] is down"),
                               m_name, m_id, ap->getName(), ap->getId());
                   sendPollerMsg(requestId, POLLER_WARNING _T("   Wireless access point %s is down\r\n"), ap->getName());
                   return true;
@@ -2125,7 +2129,7 @@ bool Node::checkNetworkPathLayer3(UINT32 requestId, bool secondPass)
             if (prevHop->object == hop->object)
             {
                prevHop = trace->getHopInfo(i - 1);
-               nxlog_debug(5, _T("Node::checkNetworkPath(%s [%d]): routing loop detected on upstream node %s [%d]"),
+               nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("Node::checkNetworkPath(%s [%d]): routing loop detected on upstream node %s [%d]"),
                            m_name, m_id, prevHop->object->getName(), prevHop->object->getId());
                sendPollerMsg(requestId, POLLER_WARNING _T("   Routing loop detected on upstream node %s\r\n"), prevHop->object->getName());
 
@@ -2147,7 +2151,7 @@ bool Node::checkNetworkPathLayer3(UINT32 requestId, bool secondPass)
             break;
       }
 
-      nxlog_debug(6, _T("Node::checkNetworkPath(%s [%d]): checking upstream router %s [%d]"),
+      nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("Node::checkNetworkPath(%s [%d]): checking upstream router %s [%d]"),
                   m_name, m_id, hop->object->getName(), hop->object->getId());
       if (checkNetworkPathElement(hop->object->getId(), _T("upstream router"), false, requestId, secondPass))
       {
@@ -2171,7 +2175,7 @@ bool Node::checkNetworkPathLayer3(UINT32 requestId, bool secondPass)
              ((iface->getAdminState() == IF_ADMIN_STATE_DOWN) || (iface->getAdminState() == IF_ADMIN_STATE_TESTING) ||
               (iface->getOperState() == IF_OPER_STATE_DOWN) || (iface->getOperState() == IF_OPER_STATE_TESTING)))
          {
-            nxlog_debug(5, _T("Node::checkNetworkPath(%s [%d]): upstream interface %s [%d] on node %s [%d] is down"),
+            nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("Node::checkNetworkPath(%s [%d]): upstream interface %s [%d] on node %s [%d] is down"),
                         m_name, m_id, iface->getName(), iface->getId(), hop->object->getName(), hop->object->getId());
             sendPollerMsg(requestId, POLLER_WARNING _T("   Upstream interface %s on node %s is down\r\n"), iface->getName(), hop->object->getName());
             break;
@@ -2196,7 +2200,7 @@ bool Node::checkNetworkPath(UINT32 requestId)
    if (checkNetworkPathLayer3(requestId, false))
       return true;
 
-   nxlog_debug(5, _T("Node::checkNetworkPath(%s [%d]): will do second pass"), m_name, m_id);
+   nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("Node::checkNetworkPath(%s [%d]): will do second pass"), m_name, m_id);
 
    if (checkNetworkPathLayer2(requestId, true))
       return true;
@@ -2439,18 +2443,18 @@ bool Node::updateSoftwarePackages(PollerInfo *poller, UINT32 requestId)
             case SWPKG_NONE:
                break;
             case SWPKG_ADDED:
-               nxlog_debug(5, _T("ConfPoll(%s): new package %s version %s"), m_name, p->getName(), p->getVersion());
+               nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): new package %s version %s"), m_name, p->getName(), p->getVersion());
                sendPollerMsg(requestId, _T("   New package %s version %s\r\n"), p->getName(), p->getVersion());
                PostEventWithNames(EVENT_PACKAGE_INSTALLED, m_id, "ss", eventParamNames, p->getName(), p->getVersion());
                break;
             case SWPKG_REMOVED:
-               nxlog_debug(5, _T("ConfPoll(%s): package %s version %s removed"), m_name, p->getName(), p->getVersion());
+               nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): package %s version %s removed"), m_name, p->getName(), p->getVersion());
                sendPollerMsg(requestId, _T("   Package %s version %s removed\r\n"), p->getName(), p->getVersion());
                PostEventWithNames(EVENT_PACKAGE_REMOVED, m_id, "ss", eventParamNames, p->getName(), p->getVersion());
                break;
             case SWPKG_UPDATED:
                SoftwarePackage *prev = changes->get(++i);   // next entry contains previous package version
-               nxlog_debug(5, _T("ConfPoll(%s): package %s updated (%s -> %s)"), m_name, p->getName(), prev->getVersion(), p->getVersion());
+               nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): package %s updated (%s -> %s)"), m_name, p->getName(), prev->getVersion(), p->getVersion());
                sendPollerMsg(requestId, _T("   Package %s updated (%s -> %s)\r\n"), p->getName(), prev->getVersion(), p->getVersion());
                PostEventWithNames(EVENT_PACKAGE_UPDATED, m_id, "sss", eventParamNames, p->getName(), p->getVersion(), prev->getVersion());
                break;
@@ -2494,7 +2498,7 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
 
    m_pollRequestor = session;
    sendPollerMsg(rqId, _T("Starting configuration poll for node %s\r\n"), m_name);
-   nxlog_debug(4, _T("Starting configuration poll for node %s (ID: %d)"), m_name, m_id);
+   nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("Starting configuration poll for node %s (ID: %d)"), m_name, m_id);
 
    // Check for forced capabilities recheck
    if (m_runtimeFlags & NDF_RECHECK_CAPABILITIES)
@@ -2534,7 +2538,7 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
       // Check for CheckPoint SNMP agent on port 260
       if (ConfigReadBoolean(_T("EnableCheckPointSNMP"), false))
       {
-         nxlog_debug(5, _T("ConfPoll(%s): checking for CheckPoint SNMP on port 260"), m_name);
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): checking for CheckPoint SNMP on port 260"), m_name);
          if (!((m_capabilities & NC_IS_CPSNMP) && (m_state & NSF_CPSNMP_UNREACHABLE)) && m_ipAddress.isValidUnicast())
          {
             SNMP_Transport *pTransport = new SNMP_UDPTransport;
@@ -2634,10 +2638,10 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
       // Update node type
       TCHAR hypervisorType[MAX_HYPERVISOR_TYPE_LENGTH], hypervisorInfo[MAX_HYPERVISOR_INFO_LENGTH];
       NodeType type = detectNodeType(hypervisorType, hypervisorInfo);
-      nxlog_debug(5, _T("ConfPoll(%s): detected node type: %d (%s)"), m_name, type, typeName(type));
+      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): detected node type: %d (%s)"), m_name, type, typeName(type));
       if ((type == NODE_TYPE_VIRTUAL) || (type == NODE_TYPE_CONTAINER))
       {
-         nxlog_debug(5, _T("ConfPoll(%s): hypervisor: %s (%s)"), m_name, hypervisorType, hypervisorInfo);
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): hypervisor: %s (%s)"), m_name, hypervisorType, hypervisorInfo);
       }
       lockProperties();
       if ((type != NODE_TYPE_UNKNOWN) &&
@@ -2645,7 +2649,7 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
       {
          m_type = type;
          modified |= MODIFY_NODE_PROPERTIES;
-         nxlog_debug(5, _T("ConfPoll(%s): node type set to %d (%s)"), m_name, type, typeName(type));
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): node type set to %d (%s)"), m_name, type, typeName(type));
          sendPollerMsg(rqId, _T("   Node type changed to %s\r\n"), typeName(type));
 
          if (*hypervisorType != 0)
@@ -2697,7 +2701,7 @@ NodeType Node::detectNodeType(TCHAR *hypervisorType, TCHAR *hypervisorInfo)
 
    if (m_capabilities & NC_IS_SNMP)
    {
-      nxlog_debug(6, _T("Node::detectNodeType(%s [%d]): SNMP node, driver name is %s"),
+      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("Node::detectNodeType(%s [%d]): SNMP node, driver name is %s"),
                m_name, m_id, (m_driver != NULL) ? m_driver->getName() : _T("(not set)"));
 
       // Assume physical device if it supports SNMP and driver is not "GENERIC" nor "NET-SNMP"
@@ -2717,7 +2721,7 @@ NodeType Node::detectNodeType(TCHAR *hypervisorType, TCHAR *hypervisorInfo)
    }
    if (m_capabilities & NC_IS_NATIVE_AGENT)
    {
-      nxlog_debug(6, _T("Node::detectNodeType(%s [%d]): NetXMS agent node"), m_name, m_id);
+      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("Node::detectNodeType(%s [%d]): NetXMS agent node"), m_name, m_id);
 
       AgentConnection *conn = getAgentConnection();
       if (conn != NULL)
@@ -2754,7 +2758,7 @@ NodeType Node::detectNodeType(TCHAR *hypervisorType, TCHAR *hypervisorInfo)
  */
 bool Node::confPollAgent(UINT32 rqId)
 {
-   nxlog_debug(5, _T("ConfPoll(%s): checking for NetXMS agent Flags={%08X} StateFlags={%08X} RuntimeFlags={%08X}"), m_name, m_flags, m_state, m_runtimeFlags);
+   nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): checking for NetXMS agent Flags={%08X} StateFlags={%08X} RuntimeFlags={%08X}"), m_name, m_flags, m_state, m_runtimeFlags);
    if (((m_capabilities & NC_IS_NATIVE_AGENT) && (m_state & NSF_AGENT_UNREACHABLE)) || (m_flags & NF_DISABLE_NXCP))
       return false;
 
@@ -2773,14 +2777,14 @@ bool Node::confPollAgent(UINT32 rqId)
       if (!m_ipAddress.isValidUnicast())
       {
          sendPollerMsg(rqId, POLLER_ERROR _T("   Node primary IP is invalid and there are no active tunnels\r\n"));
-         nxlog_debug(5, _T("ConfPoll(%s): node primary IP is invalid and there are no active tunnels"), m_name);
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): node primary IP is invalid and there are no active tunnels"), m_name);
          return false;
       }
       pAgentConn = new AgentConnectionEx(m_id, m_ipAddress, m_agentPort, m_agentAuthMethod, m_szSharedSecret, isAgentCompressionAllowed());
       setAgentProxy(pAgentConn);
    }
    pAgentConn->setCommandTimeout(g_agentCommandTimeout);
-   nxlog_debug(5, _T("ConfPoll(%s): checking for NetXMS agent - connecting"), m_name);
+   nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): checking for NetXMS agent - connecting"), m_name);
 
    // Try to connect to agent
    UINT32 rcc;
@@ -2797,14 +2801,14 @@ bool Node::confPollAgent(UINT32 rqId)
          {
             m_agentAuthMethod = AUTH_SHA1_HASH;
             nx_strncpy(m_szSharedSecret, secret, MAX_SECRET_LENGTH);
-            nxlog_debug(5, _T("ConfPoll(%s): checking for NetXMS agent - shared secret changed to system default"), m_name);
+            nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): checking for NetXMS agent - shared secret changed to system default"), m_name);
          }
       }
    }
 
    if (rcc == ERR_SUCCESS)
    {
-      nxlog_debug(5, _T("ConfPoll(%s): checking for NetXMS agent - connected"), m_name);
+      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): checking for NetXMS agent - connected"), m_name);
       lockProperties();
       m_capabilities |= NC_IS_NATIVE_AGENT;
       if (m_state & NSF_AGENT_UNREACHABLE)
@@ -2960,10 +2964,10 @@ bool Node::confPollAgent(UINT32 rqId)
    }
    else
    {
-      nxlog_debug(5, _T("ConfPoll(%s): checking for NetXMS agent - failed to connect (error %d)"), m_name, rcc);
+      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): checking for NetXMS agent - failed to connect (error %d)"), m_name, rcc);
    }
    pAgentConn->decRefCount();
-   nxlog_debug(5, _T("ConfPoll(%s): checking for NetXMS agent - finished"), m_name);
+   nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): checking for NetXMS agent - finished"), m_name);
    return hasChanges;
 }
 
@@ -3493,7 +3497,7 @@ bool Node::updateInterfaceConfiguration(UINT32 rqid, int maskBits)
    InterfaceList *ifList = getInterfaceList();
    if (ifList != NULL)
    {
-      nxlog_debug(6, _T("Node::updateInterfaceConfiguration(%s [%u]): got %d interfaces"), m_name, m_id, ifList->size());
+      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("Node::updateInterfaceConfiguration(%s [%u]): got %d interfaces"), m_name, m_id, ifList->size());
 
       // Find non-existing interfaces
       lockChildList(false);
@@ -3691,7 +3695,7 @@ bool Node::updateInterfaceConfiguration(UINT32 rqid, int maskBits)
                if (iface != NULL)
                {
                   iface->setParentInterface(parent->getId());
-                  nxlog_debug(6, _T("Node::updateInterfaceConfiguration(%s [%u]): set sub-interface: %s [%d] -> %s [%d]"),
+                  nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("Node::updateInterfaceConfiguration(%s [%u]): set sub-interface: %s [%d] -> %s [%d]"),
                            m_name, m_id, parent->getName(), parent->getId(), iface->getName(), iface->getId());
                }
             }
@@ -3702,7 +3706,7 @@ bool Node::updateInterfaceConfiguration(UINT32 rqid, int maskBits)
             if ((iface != NULL) && (iface->getParentInterfaceId() != 0))
             {
                iface->setParentInterface(0);
-               nxlog_debug(6, _T("Node::updateInterfaceConfiguration(%s [%u]): removed reference to parent interface from %s [%d]"),
+               nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("Node::updateInterfaceConfiguration(%s [%u]): removed reference to parent interface from %s [%d]"),
                         m_name, m_id, iface->getName(), iface->getId());
             }
          }
@@ -3714,7 +3718,7 @@ bool Node::updateInterfaceConfiguration(UINT32 rqid, int maskBits)
       UINT32 dwCount;
 
       sendPollerMsg(rqid, POLLER_ERROR _T("Unable to get interface list from node\r\n"));
-      nxlog_debug(6, _T("Node::updateInterfaceConfiguration(%s [%u]): Unable to get interface list from node"), m_name, m_id);
+      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("Node::updateInterfaceConfiguration(%s [%u]): Unable to get interface list from node"), m_name, m_id);
 
       // Delete all existing interfaces in case of forced capability recheck
       if (m_runtimeFlags & NDF_RECHECK_CAPABILITIES)
@@ -3925,7 +3929,7 @@ bool Node::connectToAgent(UINT32 *error, UINT32 *socketError, bool *newConnectio
 
    if (!forceConnect && (m_agentConnection == NULL) && (time(NULL) - m_lastAgentConnectAttempt < 30))
    {
-      nxlog_debug(7, _T("Node::connectToAgent(%s [%d]): agent is unreachable, will not retry connection"), m_name, m_id);
+      nxlog_debug_tag(DEBUG_TAG_AGENT, 7, _T("Node::connectToAgent(%s [%d]): agent is unreachable, will not retry connection"), m_name, m_id);
       if (error != NULL)
          *error = ERR_CONNECT_FAILED;
       if (socketError != NULL)
@@ -3937,7 +3941,7 @@ bool Node::connectToAgent(UINT32 *error, UINT32 *socketError, bool *newConnectio
    AgentTunnel *tunnel = GetTunnelForNode(m_id);
    if ((tunnel == NULL) && (!m_ipAddress.isValidUnicast() || (m_flags & NF_AGENT_OVER_TUNNEL_ONLY)))
    {
-      nxlog_debug(7, _T("Node::connectToAgent(%s [%d]): %s and there are no active tunnels"), m_name, m_id,
+      nxlog_debug_tag(DEBUG_TAG_AGENT, 7, _T("Node::connectToAgent(%s [%d]): %s and there are no active tunnels"), m_name, m_id,
                (m_flags & NF_AGENT_OVER_TUNNEL_ONLY) ? _T("direct agent connections are disabled") : _T("node primary IP is invalid"));
       return false;
    }
@@ -3948,7 +3952,7 @@ bool Node::connectToAgent(UINT32 *error, UINT32 *socketError, bool *newConnectio
       m_agentConnection = (tunnel != NULL) ?
                new AgentConnectionEx(m_id, tunnel, m_agentAuthMethod, m_szSharedSecret, isAgentCompressionAllowed()) :
                new AgentConnectionEx(m_id, m_ipAddress, m_agentPort, m_agentAuthMethod, m_szSharedSecret, isAgentCompressionAllowed());
-      nxlog_debug(7, _T("Node::connectToAgent(%s [%d]): new agent connection created"), m_name, m_id);
+      nxlog_debug_tag(DEBUG_TAG_AGENT, 7, _T("Node::connectToAgent(%s [%d]): new agent connection created"), m_name, m_id);
    }
    else
    {
@@ -3967,7 +3971,7 @@ bool Node::connectToAgent(UINT32 *error, UINT32 *socketError, bool *newConnectio
       // Close current connection or clean up after broken connection
       m_agentConnection->disconnect();
       m_agentConnection->setTunnel(tunnel);
-      nxlog_debug(7, _T("Node::connectToAgent(%s [%d]): existing connection reset"), m_name, m_id);
+      nxlog_debug_tag(DEBUG_TAG_AGENT, 7, _T("Node::connectToAgent(%s [%d]): existing connection reset"), m_name, m_id);
    }
    if (newConnection != NULL)
       *newConnection = true;
@@ -5623,7 +5627,7 @@ AgentConnectionEx *Node::createAgentConnection(bool sendServerId)
    AgentConnectionEx *conn;
    if (tunnel != NULL)
    {
-      nxlog_debug(6, _T("Node::createAgentConnection(%s [%d]): using agent tunnel"), m_name, (int)m_id);
+      nxlog_debug_tag(DEBUG_TAG_AGENT, 6, _T("Node::createAgentConnection(%s [%d]): using agent tunnel"), m_name, (int)m_id);
       conn = new AgentConnectionEx(m_id, tunnel, m_agentAuthMethod, m_szSharedSecret, isAgentCompressionAllowed());
       tunnel->decRefCount();
    }
@@ -5631,7 +5635,7 @@ AgentConnectionEx *Node::createAgentConnection(bool sendServerId)
    {
       if (!m_ipAddress.isValidUnicast() || (m_flags & NF_AGENT_OVER_TUNNEL_ONLY))
       {
-         nxlog_debug(7, _T("Node::createAgentConnection(%s [%d]): %s and there are no active tunnels"), m_name, m_id,
+         nxlog_debug_tag(DEBUG_TAG_AGENT, 7, _T("Node::createAgentConnection(%s [%d]): %s and there are no active tunnels"), m_name, m_id,
                   (m_flags & NF_AGENT_OVER_TUNNEL_ONLY) ? _T("direct agent connections are disabled") : _T("node primary IP is invalid"));
          return NULL;
       }
@@ -5652,7 +5656,7 @@ AgentConnectionEx *Node::createAgentConnection(bool sendServerId)
    {
       setLastAgentCommTime();
    }
-   nxlog_debug(6, _T("Node::createAgentConnection(%s [%d]): conn=%p"), m_name, (int)m_id, conn);
+   nxlog_debug_tag(DEBUG_TAG_AGENT, 6, _T("Node::createAgentConnection(%s [%d]): conn=%p"), m_name, (int)m_id, conn);
    return conn;
 }
 
@@ -5689,7 +5693,7 @@ AgentConnectionEx *Node::getAgentConnection()
    if (!success)
    {
       // was unable to obtain lock on primary connection
-      nxlog_debug(6, _T("Node::getAgentConnection(%s [%d]): cannot obtain lock on primary connection"), m_name, (int)m_id);
+      nxlog_debug_tag(DEBUG_TAG_AGENT, 6, _T("Node::getAgentConnection(%s [%d]): cannot obtain lock on primary connection"), m_name, (int)m_id);
       conn = createAgentConnection(false);
    }
 
@@ -5709,7 +5713,7 @@ AgentConnectionEx *Node::acquireProxyConnection(ProxyType type, bool validate)
       conn->decRefCount();
       conn = NULL;
       m_proxyConnections[type].set(NULL);
-      nxlog_debug(4, _T("Node::acquireProxyConnection(%s [%d] type=%d): existing agent connection dropped"), m_name, (int)m_id, (int)type);
+      nxlog_debug_tag(DEBUG_TAG_AGENT, 4, _T("Node::acquireProxyConnection(%s [%d] type=%d): existing agent connection dropped"), m_name, (int)m_id, (int)type);
    }
 
    if ((conn != NULL) && validate)
@@ -5720,7 +5724,7 @@ AgentConnectionEx *Node::acquireProxyConnection(ProxyType type, bool validate)
          conn->decRefCount();
          conn = NULL;
          m_proxyConnections[type].set(NULL);
-         nxlog_debug(4, _T("Node::acquireProxyConnection(%s [%d] type=%d): existing agent connection failed validation (RCC=%u) and dropped"), m_name, (int)m_id, (int)type, rcc);
+         nxlog_debug_tag(DEBUG_TAG_AGENT, 4, _T("Node::acquireProxyConnection(%s [%d] type=%d): existing agent connection failed validation (RCC=%u) and dropped"), m_name, (int)m_id, (int)type, rcc);
       }
    }
 
@@ -5730,7 +5734,7 @@ AgentConnectionEx *Node::acquireProxyConnection(ProxyType type, bool validate)
       m_proxyConnections[type].set(conn);
       m_proxyConnections[type].setLastConnectTime(time(NULL));
       if (conn != NULL)
-         nxlog_debug(4, _T("Node::acquireProxyConnection(%s [%d] type=%d): new agent connection created"), m_name, (int)m_id, (int)type);
+         nxlog_debug_tag(DEBUG_TAG_AGENT, 4, _T("Node::acquireProxyConnection(%s [%d] type=%d): new agent connection created"), m_name, (int)m_id, (int)type);
    }
 
    if (conn != NULL)
@@ -6194,7 +6198,7 @@ bool Node::setAgentProxy(AgentConnectionEx *conn)
    Node *node = (Node *)g_idxNodeById.get(proxyNode);
    if (node == NULL)
    {
-      nxlog_debug(4, _T("Node::setAgentProxy(%s [%d]): cannot find proxy node [%d]"), m_name, m_id, proxyNode);
+      nxlog_debug_tag(DEBUG_TAG_AGENT, 4, _T("Node::setAgentProxy(%s [%d]): cannot find proxy node [%d]"), m_name, m_id, proxyNode);
       return false;
    }
 
@@ -8140,7 +8144,7 @@ void Node::setTunnelId(const uuid& tunnelId, const TCHAR *certSubject)
    unlockProperties();
 
    TCHAR buffer[128];
-   nxlog_debug(4, _T("Tunnel ID for node %s [%d] set to %s"), m_name, m_id, tunnelId.toString(buffer));
+   nxlog_debug_tag(DEBUG_TAG_AGENT, 4, _T("Tunnel ID for node %s [%d] set to %s"), m_name, m_id, tunnelId.toString(buffer));
 }
 
 /**
