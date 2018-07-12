@@ -52,17 +52,14 @@ import org.netxms.ui.eclipse.dashboard.propertypages.helpers.RackView;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.RackDiagramConfig;
 import org.netxms.ui.eclipse.objectbrowser.api.ObjectContextMenu;
 import org.netxms.ui.eclipse.objectview.widgets.RackWidget;
-import org.netxms.ui.eclipse.shared.ConsoleSharedData;
-import org.netxms.ui.eclipse.tools.FontTools;
 import org.netxms.ui.eclipse.objectview.widgets.helpers.RackSelectionListener;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
  *Rack diagram element for dashboard
  */
 public class RackDiagramElement extends ElementWidget implements ISelectionProvider
 {
-   private static final String[] TITLE_FONTS = { "Segoe UI", "Liberation Sans", "DejaVu Sans", "Verdana", "Arial" };
-   
    private RackWidget rackFrontWidget = null;
    private RackWidget rackRearWidget = null;
    private NXCSession session;
@@ -110,11 +107,8 @@ public class RackDiagramElement extends ElementWidget implements ISelectionProvi
       {
          if (config.isShowTitle())
          {
-            title = new Label(this, SWT.CENTER);
-            font = FontTools.createFont(TITLE_FONTS, 2, SWT.BOLD);
-            title.setFont(font);
+            title = createTitleLabel(this, rack.getObjectName());
             title.setBackground(SharedColors.getColor(SharedColors.RACK_BACKGROUND, parent.getDisplay()));
-            title.setText(rack.getObjectName());
             title.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
          }
                   
