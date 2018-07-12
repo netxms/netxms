@@ -278,7 +278,8 @@ public class SummaryTableWidget extends Composite
                @Override
                public void run()
                {
-                  update(table);
+                  if (!viewer.getControl().isDisposed())
+                     update(table);
                }
             });
          }

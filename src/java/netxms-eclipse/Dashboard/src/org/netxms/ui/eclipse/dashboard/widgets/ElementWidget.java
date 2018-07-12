@@ -22,9 +22,15 @@ import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.ControlListener;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.graphics.Font;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.IViewPart;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementLayout;
+import org.netxms.ui.eclipse.tools.FontTools;
 import org.netxms.ui.eclipse.tools.IntermediateSelectionProvider;
 import org.netxms.ui.eclipse.widgets.DashboardComposite;
 
@@ -33,6 +39,8 @@ import org.netxms.ui.eclipse.widgets.DashboardComposite;
  */
 public class ElementWidget extends DashboardComposite implements ControlListener
 {
+   private static final String[] TITLE_FONTS = { "Segoe UI", "Liberation Sans", "DejaVu Sans", "Verdana", "Arial" };
+   
 	protected DashboardElement element;
 	protected IViewPart viewPart;
 	
@@ -173,4 +181,28 @@ public class ElementWidget extends DashboardComposite implements ControlListener
 	{
 	   dbc.layout(true, true);
 	}
+
+   /**
+    * Create title lable
+    * 
+    * @param parent parent composite
+    * @param text title text
+    * @return label widget
+    */
+   protected Label createTitleLabel(Composite parent, String text)
+   {
+      Label title = new Label(this, SWT.CENTER);
+      final Font font = FontTools.createFont(TITLE_FONTS, 2, SWT.BOLD);
+      title.setFont(font);
+      title.setBackground(parent.getBackground());
+      title.setText(text);
+      title.addDisposeListener(new DisposeListener() {
+         @Override
+         public void widgetDisposed(DisposeEvent e)
+         {
+            font.dispose();
+         }
+      });
+      return title;
+   }
 }

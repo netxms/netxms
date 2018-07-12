@@ -1,5 +1,20 @@
 /**
- * 
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2018 Victor Kirhenshtein
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 package org.netxms.ui.eclipse.dashboard.propertypages;
 
@@ -31,6 +46,7 @@ import org.netxms.ui.eclipse.dashboard.propertypages.helpers.ToolListLabelProvid
 import org.netxms.ui.eclipse.dashboard.widgets.internal.ObjectToolsConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.ObjectToolsConfig.Tool;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.ui.eclipse.widgets.LabeledSpinner;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
@@ -40,6 +56,7 @@ public class ObjectTools extends PropertyPage
 {
    private ObjectToolsConfig config;
    private LabeledText title;
+   private LabeledSpinner columns;
    private List<Tool> tools;
    private TableViewer viewer;
    private Button addButton;
@@ -68,8 +85,12 @@ public class ObjectTools extends PropertyPage
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
-      gd.horizontalSpan = 2;
       title.setLayoutData(gd);
+      
+      columns = new LabeledSpinner(dialogArea, SWT.NONE);
+      columns.setLabel("Columns");
+      columns.setRange(1, 32);
+      columns.setSelection(config.getNumColumns());
       
       Label label = new Label(dialogArea, SWT.NONE);
       label.setText("Tools");
@@ -100,9 +121,21 @@ public class ObjectTools extends PropertyPage
                tools.add(new Tool(t));
       }
       viewer.setInput(tools.toArray());
+      
+      Composite buttonsArea = new Composite(dialogArea, SWT.NONE);
+      layout = new GridLayout();
+      layout.numColumns = 2;
+      layout.marginWidth = 0;
+      layout.marginHeight = 0;
+      buttonsArea.setLayout(layout);
+      gd = new GridData();
+      gd.horizontalSpan = 2;
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalAlignment = SWT.FILL;
+      buttonsArea.setLayoutData(gd);
 
       /* buttons on left side */
-      Composite leftButtons = new Composite(dialogArea, SWT.NONE);
+      Composite leftButtons = new Composite(buttonsArea, SWT.NONE);
       RowLayout buttonLayout = new RowLayout();
       buttonLayout.type = SWT.HORIZONTAL;
       buttonLayout.pack = false;
@@ -111,6 +144,7 @@ public class ObjectTools extends PropertyPage
       leftButtons.setLayout(buttonLayout);
       gd = new GridData();
       gd.horizontalAlignment = SWT.LEFT;
+      gd.grabExcessHorizontalSpace = true;
       leftButtons.setLayoutData(gd);
       
       upButton = new Button(leftButtons, SWT.PUSH);
@@ -154,7 +188,7 @@ public class ObjectTools extends PropertyPage
       downButton.setEnabled(false);
 
       /* buttons on right side */
-      Composite rightButtons = new Composite(dialogArea, SWT.NONE);
+      Composite rightButtons = new Composite(buttonsArea, SWT.NONE);
       buttonLayout = new RowLayout();
       buttonLayout.type = SWT.HORIZONTAL;
       buttonLayout.pack = false;
@@ -286,6 +320,8 @@ public class ObjectTools extends PropertyPage
    @Override
    public boolean performOk()
    {
+      config.setTitle(title.getText().trim());
+      config.setNumColumns(columns.getSelection());
       config.setTools(tools.toArray(new Tool[tools.size()]));
       return true;
    }

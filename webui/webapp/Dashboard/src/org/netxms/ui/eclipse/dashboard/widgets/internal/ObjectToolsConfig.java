@@ -70,7 +70,7 @@ public class ObjectToolsConfig extends DashboardElementConfig
     */
    public String getTitle()
    {
-      return title;
+      return (title != null) ? title : "";
    }
 
    /**
@@ -127,6 +127,9 @@ public class ObjectToolsConfig extends DashboardElementConfig
       
       @Element(required=false)
       public String name;
+      
+      @Element(required=false)
+      public int color = 0;
       
       public Tool()
       {
