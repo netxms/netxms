@@ -126,6 +126,21 @@ struct WINDOW_LIST
 };
 
 /**
+ * Get hardware manufacturer
+ */
+const char *GetHardwareManufacturer();
+
+/**
+ * Get hardware product name
+ */
+const char *GetHardwareProduct();
+
+/**
+* Get OEM strings
+*/
+const char * const *GetOEMStrings();
+
+/**
  * Optional imports
  */
 extern DWORD (__stdcall *imp_GetIfEntry2)(PMIB_IF_ROW2);

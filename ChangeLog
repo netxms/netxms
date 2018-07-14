@@ -12,6 +12,7 @@
 - TCP listener can be disabled in agent configuration file
 - Push connector can be disabled in agent configuration file
 - Virtual nodes detection via agent
+- Basic BIOS and hardware platform information provided by Windows agent
 - Fixed issues:
 	NX-993 (Windows installer should honor current state of services during upgrade)
 	NX-1438 (Increase debug level for thread pool messages)
