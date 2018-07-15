@@ -9,8 +9,10 @@
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 EXTRA_DIST = \
+	bios.cpp \
 	cpu.cpp \
 	fs.cpp \
+	hypervisor.cpp \
 	main.cpp \
 	net.cpp \
 	procinfo.cpp \
