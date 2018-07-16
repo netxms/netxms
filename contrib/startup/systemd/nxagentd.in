@@ -3,7 +3,9 @@ Description=NetXMS Agent
 
 [Service]
 Type=forking
-ExecStart=~BINDIR~/nxagentd -d
+Environment="NXAGENTD_CONFIG=/etc/nxagentd.conf"
+EnvironmentFile=-/etc/default/nxagentd
+ExecStart=~BINDIR~/nxagentd -d $NXAGENTD_OPTIONS -c $NXAGENTD_CONFIG 
 PIDFile=/var/run/nxagentd.pid
 
 [Install]
