@@ -39,23 +39,6 @@ static float *m_cpuUsageIdle;
 static int m_currentSlot = 0;
 static int m_cpuCount = 0;
 
-static int ExecSysctl(const char *param, void *buffer, size_t buffSize)
-{
-   int ret = SYSINFO_RC_ERROR;
-   int mib[2];
-   size_t nSize = sizeof(mib);
-
-   if (sysctlnametomib(param, mib, &nSize) == 0)
-   {
-      if (sysctl(mib, nSize, buffer, &buffSize, NULL, 0) == 0)
-      {
-         ret = SYSINFO_RC_SUCCESS;
-      }
-   }
-
-   return ret;
-}
-
 /**
  * CPU usage collector
  */
