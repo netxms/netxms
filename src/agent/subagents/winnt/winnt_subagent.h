@@ -126,19 +126,9 @@ struct WINDOW_LIST
 };
 
 /**
- * Get hardware manufacturer
+ * Read CPU vendor ID
  */
-const char *GetHardwareManufacturer();
-
-/**
- * Get hardware product name
- */
-const char *GetHardwareProduct();
-
-/**
-* Get OEM strings
-*/
-const char * const *GetOEMStrings();
+void ReadCPUVendorId();
 
 /**
  * Optional imports
