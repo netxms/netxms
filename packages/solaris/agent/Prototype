@@ -16,14 +16,14 @@ f none /opt/netxms/bin/nxdevcfg 0755 root root
 f none /opt/netxms/lib/libappagent.so.2.0.0 0755 root root
 f none /opt/netxms/lib/libnetxms.so.2.0.0 0755 root root
 f none /opt/netxms/lib/libnxagent.so.2.0.0 0755 root root
-f none /opt/netxms/lib/libnxcrypto.so.1.0.0 0555 root other
+f none /opt/netxms/lib/libnxcrypto.so.1.1 0555 root other
 f none /opt/netxms/lib/libnxdb.so.2.0.0 0755 root root
 f none /opt/netxms/lib/libnxexpat.so.2.0.0 0755 root root
 f none /opt/netxms/lib/libnxjansson.so.4.6.0 0755 root root
 f none /opt/netxms/lib/libnxlp.so.2.0.0 0755 root root
 f none /opt/netxms/lib/libnxsnmp.so.2.0.0 0755 root root
 f none /opt/netxms/lib/libnxsqlite.so.2.0.0 0755 root root
-f none /opt/netxms/lib/libnxssl.so.1.0.0 0555 root other
+f none /opt/netxms/lib/libnxssl.so.1.1 0555 root other
 f none /opt/netxms/lib/libnxtre.so.5.0.0 0755 root root
 f none /opt/netxms/lib/netxms/dbquery.nsm 0755 root root
 f none /opt/netxms/lib/netxms/devemu.nsm 0755 root root
