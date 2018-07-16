@@ -106,19 +106,6 @@ LONG LIBNXAGENT_EXPORTABLE SMBIOS_ParameterHandler(const TCHAR *cmd, const TCHAR
 #endif
 
 /**
- * BIOS header
- */
-struct BiosHeader
-{
-   BYTE used20CallingMethod;
-   BYTE majorVersion;
-   BYTE minorVersion;
-   BYTE dmiRevision;
-   DWORD length;
-   BYTE tables[1];
-};
-
-/**
  * BIOS table header
  */
 struct TableHeader
@@ -232,22 +219,22 @@ static void ParseOEMStrings(TableHeader *t)
 /**
  * Parse SMBIOS data
  */
-bool SMBIOS_Parse(BYTE *(*reader)())
+bool LIBNXAGENT_EXPORTABLE SMBIOS_Parse(BYTE *(*reader)(size_t *size))
 {
    memset(s_oemStrings, 0, sizeof(s_oemStrings));
 
-   BYTE *buffer = reader();
-   if (buffer == NULL)
+   size_t size;
+   BYTE *bios = reader(&size);
+   if (bios == NULL)
    {
       nxlog_debug_tag(DEBUG_TAG, 2, _T("BIOS read failed"));
       return false;
    }
 
-   BiosHeader *bios = (BiosHeader*)buffer;
-   TableHeader *curr = (TableHeader *)bios->tables;
-   while ((BYTE *)curr - bios->tables < bios->length)
+   TableHeader *curr = reinterpret_cast<TableHeader*>(bios);
+   while((BYTE *)curr - bios < size)
    {
-      switch (curr->type)
+      switch(curr->type)
       {
          case 0:
             ParseBIOSInformation(curr);
@@ -263,7 +250,7 @@ bool SMBIOS_Parse(BYTE *(*reader)())
       }
       // Scan for 0x00 0x00 after fixed part
       BYTE *p = (BYTE *)curr + curr->fixedLength;
-      while (*((WORD*)p) != 0)
+      while(*((WORD*)p) != 0)
          p++;
       curr = (TableHeader *)(p + 2);
    }
@@ -274,6 +261,6 @@ bool SMBIOS_Parse(BYTE *(*reader)())
    nxlog_debug_tag(DEBUG_TAG, 5, _T("BIOS version: %hs"), s_biosVersion);
    nxlog_debug_tag(DEBUG_TAG, 5, _T("BIOS address: %04X"), s_biosAddress);
 
-   free(buffer);
+   free(bios);
    return true;
 }

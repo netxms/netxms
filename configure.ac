@@ -2057,6 +2057,9 @@ if test "x$DISABLE_IPV6" != "xyes"; then
 #if HAVE_NETINET_IN_H
 #include <netinet/in.h>
 #endif
+#if HAVE_SYS_SOCKET_H
+#include <sys/socket.h>
+#endif
 	])
 	if test "x$ac_cv_have_decl_AF_INET6" = "xyes"; then
 		AC_CHECK_TYPE(struct sockaddr_in6, [ 
@@ -2065,6 +2068,9 @@ if test "x$DISABLE_IPV6" != "xyes"; then
 		],,[
 #if HAVE_NETINET_IN_H
 #include <netinet/in.h>
+#endif
+#if HAVE_SYS_SOCKET_H
+#include <sys/socket.h>
 #endif
 		])
 	fi
@@ -2649,7 +2655,8 @@ fi
 #--------------------------------------------------------------------
 
 if test "x$PLATFORM" = "xSunOS"; then
-	AC_CHECK_FUNCS([atomic_inc_32_nv atomic_dec_32_nv atomic_swap_ptr],,,[
+	AC_CHECK_HEADERS([zone.h])
+	AC_CHECK_FUNCS([atomic_inc_32_nv atomic_dec_32_nv atomic_swap_ptr getzoneid],,,[
 #include <sys/atomic.h>
 	])
 fi
