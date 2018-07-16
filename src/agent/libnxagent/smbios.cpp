@@ -16,11 +16,13 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** File: bios.cpp
+** File: smbios.cpp
 **
 **/
 
-#include "winnt_subagent.h"
+#include "libnxagent.h"
+
+#define DEBUG_TAG _T("smbios")
 
 /**
  * BIOS and system information
@@ -39,7 +41,7 @@ char *s_oemStrings[64];
 /**
  * Get hardware manufacturer
  */
-const char *GetHardwareManufacturer()
+const char LIBNXAGENT_EXPORTABLE *SMBIOS_GetHardwareManufacturer()
 {
    return s_hardwareManufacturer;
 }
@@ -47,7 +49,7 @@ const char *GetHardwareManufacturer()
 /**
  * Get hardware product name
  */
-const char *GetHardwareProduct()
+const char LIBNXAGENT_EXPORTABLE *SMBIOS_GetHardwareProduct()
 {
    return s_hardwareProduct;
 }
@@ -55,7 +57,7 @@ const char *GetHardwareProduct()
 /**
  * Get OEM strings
  */
-const char * const *GetOEMStrings()
+LIBNXAGENT_EXPORTABLE const char * const *SMBIOS_GetOEMStrings()
 {
    return s_oemStrings;
 }
@@ -65,9 +67,9 @@ const char * const *GetOEMStrings()
 /**
  * Handler for BIOS-related parameters
  */
-LONG H_BIOSInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+LONG LIBNXAGENT_EXPORTABLE SMBIOS_ParameterHandler(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
-   switch (*arg)
+   switch(*arg)
    {
       case 'D':
          RETURN_BIOS_DATA(s_biosDate);
@@ -97,7 +99,11 @@ LONG H_BIOSInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSe
    return SYSINFO_RC_SUCCESS;
 }
 
+#ifdef __HP_aCC
+#pragma pack 1
+#else
 #pragma pack(1)
+#endif
 
 /**
  * BIOS header
@@ -122,8 +128,17 @@ struct TableHeader
    WORD handle;
 };
 
+#if defined(__HP_aCC)
+#pragma pack
+#elif defined(_AIX) && !defined(__GNUC__)
+#pragma pack(pop)
+#else
 #pragma pack()
+#endif
 
+/**
+ * Get BIOS string by index
+ */
 static const char *GetStringByIndex(TableHeader *t, int index, char *buffer, size_t size)
 {
    if (index < 1)
@@ -215,25 +230,17 @@ static void ParseOEMStrings(TableHeader *t)
 }
 
 /**
- * Scan BIOS
+ * Parse SMBIOS data
  */
-void ScanBIOS()
+bool SMBIOS_Parse(BYTE *(*reader)())
 {
    memset(s_oemStrings, 0, sizeof(s_oemStrings));
 
-   BYTE *buffer = (BYTE *)malloc(32768);
-   UINT rc = GetSystemFirmwareTable('RSMB', 0, buffer, 32768);
-   if (rc > 32768)
+   BYTE *buffer = reader();
+   if (buffer == NULL)
    {
-      buffer = (BYTE *)realloc(buffer, rc);
-      rc = GetSystemFirmwareTable('RSMB', 0, buffer, rc);
-   }
-   if (rc == 0)
-   {
-      TCHAR errorText[1024];
-      AgentWriteDebugLog(3, _T("Call to GetSystemFirmwareTable failed (%s)"), GetSystemErrorText(GetLastError(), errorText, 1024));
-      free(buffer);
-      return;
+      nxlog_debug_tag(DEBUG_TAG, 2, _T("BIOS read failed"));
+      return false;
    }
 
    BiosHeader *bios = (BiosHeader*)buffer;
@@ -261,11 +268,12 @@ void ScanBIOS()
       curr = (TableHeader *)(p + 2);
    }
 
-   AgentWriteDebugLog(5, _T("System manufacturer: %hs"), s_hardwareManufacturer);
-   AgentWriteDebugLog(5, _T("System product name: %hs"), s_hardwareProduct);
-   AgentWriteDebugLog(5, _T("BIOS vendor: %hs"), s_biosVendor);
-   AgentWriteDebugLog(5, _T("BIOS version: %hs"), s_biosVersion);
-   AgentWriteDebugLog(5, _T("BIOS address: %04X"), s_biosAddress);
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("System manufacturer: %hs"), s_hardwareManufacturer);
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("System product name: %hs"), s_hardwareProduct);
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("BIOS vendor: %hs"), s_biosVendor);
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("BIOS version: %hs"), s_biosVersion);
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("BIOS address: %04X"), s_biosAddress);
 
    free(buffer);
+   return true;
 }

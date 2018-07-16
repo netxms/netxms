@@ -801,4 +801,10 @@ bool LIBNXAGENT_EXPORTABLE WriteRegistry(const TCHAR *attr, INT32 value);
 bool LIBNXAGENT_EXPORTABLE WriteRegistry(const TCHAR *attr, INT64 value);
 bool LIBNXAGENT_EXPORTABLE DeleteRegistryEntry(const TCHAR *attr);
 
+const char LIBNXAGENT_EXPORTABLE *SMBIOS_GetHardwareManufacturer();
+const char LIBNXAGENT_EXPORTABLE *SMBIOS_GetHardwareProduct();
+LIBNXAGENT_EXPORTABLE const char * const *SMBIOS_GetOEMStrings();
+bool SMBIOS_Parse(BYTE *(*reader)());
+LONG LIBNXAGENT_EXPORTABLE SMBIOS_ParameterHandler(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+
 #endif   /* _nms_agent_h_ */

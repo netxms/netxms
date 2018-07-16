@@ -70,8 +70,6 @@ LONG H_WindowStations(const TCHAR *cmd, const TCHAR *arg, StringList *value, Abs
 void StartCPUStatCollector();
 void StopCPUStatCollector();
 
-void ScanBIOS();
-
 /**
  * Optional imports
  */
@@ -173,11 +171,33 @@ static LONG H_ChangeUserPassword(const TCHAR *action, StringList *args, const TC
 }
 
 /**
+ * BIOS reader
+ */
+static BYTE *BIOSReader()
+{
+   BYTE *buffer = (BYTE *)malloc(16384);
+   UINT rc = GetSystemFirmwareTable('RSMB', 0, buffer, 16384);
+   if (rc > 16384)
+   {
+      buffer = (BYTE *)realloc(buffer, rc);
+      rc = GetSystemFirmwareTable('RSMB', 0, buffer, rc);
+   }
+   if (rc == 0)
+   {
+      TCHAR errorText[1024];
+      nxlog_debug_tag(_T("smbios"), 3, _T("Call to GetSystemFirmwareTable failed (%s)"), GetSystemErrorText(GetLastError(), errorText, 1024));
+      free(buffer);
+      return NULL;
+   }
+   return buffer;
+}
+
+/**
  * Subagent initialization
  */
 static bool SubAgentInit(Config *config)
 {
-   ScanBIOS();
+   SMBIOS_Parse(BIOSReader);
    StartCPUStatCollector();
    return true;
 }
@@ -255,9 +275,9 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 	{ _T("Process.WkSet(*)"), H_ProcInfo, (TCHAR *)PROCINFO_WKSET, DCI_DT_UINT64, DCIDESC_PROCESS_WKSET },
 
 	{ _T("System.AppAddressSpace"), H_AppAddressSpace, NULL, DCI_DT_UINT, DCIDESC_SYSTEM_APPADDRESSSPACE },
-   { _T("System.BIOS.Date"), H_BIOSInfo, _T("D"), DCI_DT_STRING, DCIDESC_SYSTEM_BIOS_DATE },
-   { _T("System.BIOS.Vendor"), H_BIOSInfo, _T("v"), DCI_DT_STRING, DCIDESC_SYSTEM_BIOS_VENDOR },
-   { _T("System.BIOS.Version"), H_BIOSInfo, _T("V"), DCI_DT_STRING, DCIDESC_SYSTEM_BIOS_VERSION },
+   { _T("System.BIOS.Date"), SMBIOS_ParameterHandler, _T("D"), DCI_DT_STRING, DCIDESC_SYSTEM_BIOS_DATE },
+   { _T("System.BIOS.Vendor"), SMBIOS_ParameterHandler, _T("v"), DCI_DT_STRING, DCIDESC_SYSTEM_BIOS_VENDOR },
+   { _T("System.BIOS.Version"), SMBIOS_ParameterHandler, _T("V"), DCI_DT_STRING, DCIDESC_SYSTEM_BIOS_VERSION },
    { _T("System.ConnectedUsers"), H_ConnectedUsers, NULL, DCI_DT_INT, DCIDESC_SYSTEM_CONNECTEDUSERS },
 
 	{ _T("System.CPU.Interrupts"), H_CpuInterrupts, _T("T"), DCI_DT_UINT, DCIDESC_SYSTEM_CPU_INTERRUPTS },
@@ -315,11 +335,11 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("System.CPU.Usage15.User(*)"), H_CpuUsage, _T("C3u"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE15_USER_EX },
 	
    { _T("System.HandleCount"), H_HandleCount, NULL, DCI_DT_UINT, DCIDESC_SYSTEM_HANDLECOUNT },
-   { _T("System.Hardware.Manufacturer"), H_BIOSInfo, _T("M"), DCI_DT_STRING, DCIDESC_SYSTEM_HARDWARE_MANUFACTURER },
-   { _T("System.Hardware.Product"), H_BIOSInfo, _T("P"), DCI_DT_STRING, DCIDESC_SYSTEM_HARDWARE_PRODUCT },
-   { _T("System.Hardware.SerialNumber"), H_BIOSInfo, _T("S"), DCI_DT_STRING, DCIDESC_SYSTEM_HARDWARE_SERIALNUMBER },
-   { _T("System.Hardware.Version"), H_BIOSInfo, _T("w"), DCI_DT_STRING, DCIDESC_SYSTEM_HARDWARE_VERSION },
-   { _T("System.Hardware.WakeUpEvent"), H_BIOSInfo, _T("W"), DCI_DT_STRING, DCIDESC_SYSTEM_HARDWARE_WAKEUPEVENT },
+   { _T("System.Hardware.Manufacturer"), SMBIOS_ParameterHandler, _T("M"), DCI_DT_STRING, DCIDESC_SYSTEM_HARDWARE_MANUFACTURER },
+   { _T("System.Hardware.Product"), SMBIOS_ParameterHandler, _T("P"), DCI_DT_STRING, DCIDESC_SYSTEM_HARDWARE_PRODUCT },
+   { _T("System.Hardware.SerialNumber"), SMBIOS_ParameterHandler, _T("S"), DCI_DT_STRING, DCIDESC_SYSTEM_HARDWARE_SERIALNUMBER },
+   { _T("System.Hardware.Version"), SMBIOS_ParameterHandler, _T("w"), DCI_DT_STRING, DCIDESC_SYSTEM_HARDWARE_VERSION },
+   { _T("System.Hardware.WakeUpEvent"), SMBIOS_ParameterHandler, _T("W"), DCI_DT_STRING, DCIDESC_SYSTEM_HARDWARE_WAKEUPEVENT },
 
    { _T("System.Memory.Physical.Available"), H_MemoryInfo, (TCHAR *)MEMINFO_PHYSICAL_AVAIL, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_PHYSICAL_AVAILABLE },
    { _T("System.Memory.Physical.AvailablePerc"), H_MemoryInfo, (TCHAR *)MEMINFO_PHYSICAL_AVAIL_PCT, DCI_DT_FLOAT, DCIDESC_SYSTEM_MEMORY_PHYSICAL_AVAILABLE_PCT },

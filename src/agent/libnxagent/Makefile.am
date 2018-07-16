@@ -1,4 +1,5 @@
-SOURCES = bridge.cpp dfile_info.cpp main.cpp procexec.cpp registry.cpp tools.cpp
+SOURCES = bridge.cpp dfile_info.cpp main.cpp \
+          procexec.cpp registry.cpp smbios.cpp tools.cpp
 
 lib_LTLIBRARIES = libnxagent.la
 
