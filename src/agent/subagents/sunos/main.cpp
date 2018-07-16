@@ -22,6 +22,10 @@
 
 #include "sunos_subagent.h"
 
+#if HAVE_ZONE_H
+#include <zone.h>
+#endif
+
 
 //
 // Hanlder functions
@@ -32,8 +36,11 @@ LONG H_CPUUsage(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abstrac
 LONG H_DiskInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
 LONG H_FileSystems(const TCHAR *cmd, const TCHAR *arg, Table *table, AbstractCommSession *session);
 LONG H_Hostname(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
+LONG H_HypervisorType(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_HypervisorVersion(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_IOStats(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
 LONG H_IOStatsTotal(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
+LONG H_IsVirtual(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_KStat(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
 LONG H_LoadAvg(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
 LONG H_MemoryInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
@@ -95,6 +102,41 @@ static LONG H_SourcePkg(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue,
 }
 
 /**
+ * BIOS reader
+ */
+static BYTE *BIOSReader(size_t *biosSize)
+{
+   UINT32 fileSize;
+   BYTE *data = LoadFileA("/dev/smbios", &fileSize);
+   if (data == NULL)
+      return NULL;
+
+   // Check SMBIOS header
+   if (memcmp(data, "_SM_", 4))
+   {
+      nxlog_debug_tag(_T("smbios"), 3, _T("Invalid SMBIOS header (anchor string not found)"));
+      free(data);
+      return NULL;  // not a valid SMBIOS signature
+   }
+
+   UINT32 offset = *reinterpret_cast<UINT32*>(data + 0x18);
+   UINT32 dataSize = *reinterpret_cast<UINT16*>(data + 0x16);
+   if (dataSize + offset > fileSize)
+   {
+      nxlog_debug_tag(_T("smbios"), 3, _T("Invalid SMBIOS header (offset=%08X data_size=%04X file_size=%04X)"),
+            offset, dataSize, fileSize);
+      free(data);
+      return NULL;
+   }
+
+   BYTE *biosData = (BYTE *)malloc(dataSize);
+   memcpy(biosData, data + offset, dataSize);
+   free(data);
+   *biosSize = dataSize;
+   return biosData;
+}
+
+/**
  * Configuration file template
  */
 static NX_CFG_TEMPLATE s_cfgTemplate[] =
@@ -112,7 +154,11 @@ static bool SubAgentInit(Config *config)
       return false;
 
    // try to determine if we are running in global zone
-   if (access("/dev/dump", F_OK) == 0)
+   if ((access("/dev/dump", F_OK) == 0)
+#if HAVE_GETZONEID
+       || (getzoneid() == 0)
+#endif
+      )
    {
       g_flags |= SF_GLOBAL_ZONE;
       AgentWriteDebugLog(2, _T("SunOS: running in global zone"));
@@ -122,6 +168,9 @@ static bool SubAgentInit(Config *config)
       g_flags &= ~SF_GLOBAL_ZONE;
       AgentWriteDebugLog(2, _T("SunOS: running in zone"));
    }
+
+   ReadCPUVendorId();
+   SMBIOS_Parse(BIOSReader);
 
    s_cpuStatThread = ThreadCreateEx(CPUStatCollector, 0, NULL);
    s_ioStatThread = ThreadCreateEx(IOStatCollector, 0, NULL);
@@ -165,6 +214,9 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("FileSystem.Used(*)"), H_DiskInfo, (TCHAR *)DISK_USED, DCI_DT_UINT64, DCIDESC_FS_USED },
    { _T("FileSystem.UsedPerc(*)"), H_DiskInfo, (TCHAR *)DISK_USED_PERC, DCI_DT_FLOAT, DCIDESC_FS_USEDPERC },
 
+   { _T("Hypervisor.Type"), H_HypervisorType, NULL, DCI_DT_STRING, DCIDESC_HYPERVISOR_TYPE },
+   { _T("Hypervisor.Version"), H_HypervisorVersion, NULL, DCI_DT_STRING, DCIDESC_HYPERVISOR_VERSION },
+
    { _T("Net.Interface.AdminStatus(*)"), H_NetIfAdminStatus, NULL, DCI_DT_INT, DCIDESC_NET_INTERFACE_ADMINSTATUS },
    { _T("Net.Interface.BytesIn(*)"), H_NetInterfaceStats, (const TCHAR *)"rbytes", DCI_DT_UINT, DCIDESC_NET_INTERFACE_BYTESIN },
    { _T("Net.Interface.BytesOut(*)"), H_NetInterfaceStats, (const TCHAR *)"obytes", DCI_DT_UINT, DCIDESC_NET_INTERFACE_BYTESOUT },
@@ -189,6 +241,10 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("Process.VMSize(*)"), H_ProcessInfo, CAST_TO_POINTER(PROCINFO_VMSIZE, const TCHAR *), DCI_DT_UINT64, DCIDESC_PROCESS_VMSIZE },
    { _T("Process.WkSet(*)"), H_ProcessInfo, CAST_TO_POINTER(PROCINFO_WKSET, const TCHAR *), DCI_DT_UINT64, DCIDESC_PROCESS_WKSET },
 
+   { _T("System.BIOS.Date"), SMBIOS_ParameterHandler, _T("D"), DCI_DT_STRING, DCIDESC_SYSTEM_BIOS_DATE },
+   { _T("System.BIOS.Vendor"), SMBIOS_ParameterHandler, _T("v"), DCI_DT_STRING, DCIDESC_SYSTEM_BIOS_VENDOR },
+   { _T("System.BIOS.Version"), SMBIOS_ParameterHandler, _T("V"), DCI_DT_STRING, DCIDESC_SYSTEM_BIOS_VERSION },
+
    { _T("System.CPU.Count"), H_CPUCount, NULL, DCI_DT_UINT, DCIDESC_SYSTEM_CPU_COUNT },
    { _T("System.CPU.LoadAvg"), H_LoadAvg, (TCHAR *)0, DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_LOADAVG },
    { _T("System.CPU.LoadAvg5"), H_LoadAvg, (TCHAR *)1, DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_LOADAVG5 },
@@ -199,8 +255,16 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("System.CPU.Usage(*)"), H_CPUUsage, _T("C0"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE_EX },
    { _T("System.CPU.Usage5(*)"), H_CPUUsage, _T("C1"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE5_EX },
    { _T("System.CPU.Usage15(*)"), H_CPUUsage, _T("C2"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE15_EX },
+
+   { _T("System.Hardware.Manufacturer"), SMBIOS_ParameterHandler, _T("M"), DCI_DT_STRING, DCIDESC_SYSTEM_HARDWARE_MANUFACTURER },
+   { _T("System.Hardware.Product"), SMBIOS_ParameterHandler, _T("P"), DCI_DT_STRING, DCIDESC_SYSTEM_HARDWARE_PRODUCT },
+   { _T("System.Hardware.SerialNumber"), SMBIOS_ParameterHandler, _T("S"), DCI_DT_STRING, DCIDESC_SYSTEM_HARDWARE_SERIALNUMBER },
+   { _T("System.Hardware.Version"), SMBIOS_ParameterHandler, _T("w"), DCI_DT_STRING, DCIDESC_SYSTEM_HARDWARE_VERSION },
+   { _T("System.Hardware.WakeUpEvent"), SMBIOS_ParameterHandler, _T("W"), DCI_DT_STRING, DCIDESC_SYSTEM_HARDWARE_WAKEUPEVENT },
+
    { _T("System.Hostname"), H_Hostname, NULL, DCI_DT_STRING, DCIDESC_SYSTEM_HOSTNAME },
    { _T("System.KStat(*)"), H_KStat, NULL, DCI_DT_STRING, _T("") },
+
    { _T("System.IO.ReadRate"), H_IOStatsTotal, (const TCHAR *)IOSTAT_NUM_READS, DCI_DT_FLOAT, DCIDESC_SYSTEM_IO_READS },
    { _T("System.IO.ReadRate.Min"), H_IOStatsTotal, (const TCHAR *)IOSTAT_NUM_READS_MIN, DCI_DT_UINT, DCIDESC_SYSTEM_IO_READS_MIN },
    { _T("System.IO.ReadRate.Max"), H_IOStatsTotal, (const TCHAR *)IOSTAT_NUM_READS_MAX, DCI_DT_UINT, DCIDESC_SYSTEM_IO_READS_MAX },
@@ -231,6 +295,9 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("System.IO.DiskQueue(*)"), H_IOStats, (const TCHAR *)IOSTAT_QUEUE, DCI_DT_FLOAT, DCIDESC_SYSTEM_IO_DISKQUEUE_EX },
    { _T("System.IO.DiskQueue.Min(*)"), H_IOStats, (const TCHAR *)IOSTAT_QUEUE_MIN, DCI_DT_UINT, DCIDESC_SYSTEM_IO_DISKQUEUE_EX_MIN },
    { _T("System.IO.DiskQueue.Max(*)"), H_IOStats, (const TCHAR *)IOSTAT_QUEUE_MAX, DCI_DT_UINT, DCIDESC_SYSTEM_IO_DISKQUEUE_EX_MAX },
+
+   { _T("System.IsVirtual"), H_IsVirtual, NULL, DCI_DT_INT, DCIDESC_SYSTEM_IS_VIRTUAL },
+
    //        { _T("System.IO.DiskTime"), H_IoStatsTotal, (const TCHAR *)IOSTAT_IO_TIME, DCI_DT_FLOAT, DCIDESC_SYSTEM_IO_DISKTIME },
    //        { _T("System.IO.DiskTime(*)"), H_IoStats, (const TCHAR *)IOSTAT_IO_TIME, DCI_DT_FLOAT, DCIDESC_SYSTEM_IO_DISKTIME_EX },
    { _T("System.Memory.Physical.Free"), H_MemoryInfo, (const TCHAR *)MEMINFO_PHYSICAL_FREE, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_PHYSICAL_FREE },

@@ -17,7 +17,7 @@
 SUBAGENT = sunos
 
 pkglib_LTLIBRARIES = sunos.la
-sunos_la_SOURCES = cpu.cpp disk.cpp iostat.cpp mac_dlpi.cpp main.cpp net.cpp process.cpp system.cpp
+sunos_la_SOURCES = cpu.cpp disk.cpp hypervisor.cpp iostat.cpp mac_dlpi.cpp main.cpp net.cpp process.cpp system.cpp
 sunos_la_CPPFLAGS=-I@top_srcdir@/include
 sunos_la_LDFLAGS = -module -avoid-version -export-symbols ../platform-subagent.sym
 sunos_la_LIBADD = ../../libnxagent/libnxagent.la ../../../libnetxms/libnetxms.la

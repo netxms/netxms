@@ -140,6 +140,8 @@ THREAD_RESULT THREAD_CALL IOStatCollector(void *arg);
 void kstat_lock();
 void kstat_unlock();
 
+void ReadCPUVendorId();
+
 //
 // Global variables
 //
