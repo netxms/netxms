@@ -232,7 +232,7 @@ bool LIBNXAGENT_EXPORTABLE SMBIOS_Parse(BYTE *(*reader)(size_t *size))
    }
 
    TableHeader *curr = reinterpret_cast<TableHeader*>(bios);
-   while((BYTE *)curr - bios < size)
+   while(static_cast<size_t>(reinterpret_cast<BYTE*>(curr) - bios) < size)
    {
       switch(curr->type)
       {

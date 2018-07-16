@@ -172,6 +172,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="procexec.cpp" />
     <ClCompile Include="registry.cpp" />
+    <ClCompile Include="smbios.cpp" />
     <ClCompile Include="tools.cpp" />
   </ItemGroup>
   <ItemGroup>

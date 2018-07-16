@@ -36,9 +36,6 @@
     <ClCompile Include="fs.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="bios.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="hypervisor.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

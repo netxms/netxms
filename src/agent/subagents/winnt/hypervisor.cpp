@@ -21,13 +21,34 @@
 **/
 
 #include "winnt_subagent.h"
+#include <intrin.h>
+
+/**
+* CPU vendor ID
+*/
+static char s_cpuVendorId[16] = "UNKNOWN";
+
+/**
+* Read CPU vendor ID
+*/
+void ReadCPUVendorId()
+{
+   int cpuInfo[4];
+   __cpuid(cpuInfo, 0);
+
+   memcpy(s_cpuVendorId, &cpuInfo[1], 4);
+   memcpy(&s_cpuVendorId[4], &cpuInfo[3], 4);
+   memcpy(&s_cpuVendorId[8], &cpuInfo[2], 4);
+   s_cpuVendorId[12] = 0;
+}
 
 /**
  * Check for VMware host
  */
 static bool IsVMware()
 {
-   return !strcmp(GetHardwareProduct(), "VMware Virtual Platform");
+   return !strcmp(SMBIOS_GetHardwareProduct(), "VMware Virtual Platform") ||
+          !strncmp(s_cpuVendorId, "VMware", 6);
 }
 
 /**
@@ -55,7 +76,7 @@ static bool GetVMwareVersionString(TCHAR *value)
  */
 static bool IsVirtualBox()
 {
-   return !strcmp(GetHardwareProduct(), "VirtualBox");
+   return !strcmp(SMBIOS_GetHardwareProduct(), "VirtualBox");
 }
 
 /**
@@ -63,7 +84,7 @@ static bool IsVirtualBox()
  */
 static bool GetVirtualBoxVersionString(TCHAR *value)
 {
-   const char * const *oemStrings = GetOEMStrings();
+   const char * const *oemStrings = SMBIOS_GetOEMStrings();
    for(int i = 0; oemStrings[i] != NULL; i++)
    {
       if (!strncmp(oemStrings[i], "vboxVer_", 8))
@@ -80,10 +101,11 @@ static bool GetVirtualBoxVersionString(TCHAR *value)
  */
 LONG H_HypervisorType(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
-   const char *mf = GetHardwareManufacturer();
-   const char *prod = GetHardwareProduct();
+   const char *mf = SMBIOS_GetHardwareManufacturer();
+   const char *prod = SMBIOS_GetHardwareProduct();
 
-   if (!strcmp(mf, "Xen") && !strcmp(prod, "HVM domU"))
+   if ((!strcmp(mf, "Xen") && !strcmp(prod, "HVM domU")) ||
+       !strncmp(s_cpuVendorId, "XenVMM", 6))
    {
       ret_mbstring(value, "XEN");
       return SYSINFO_RC_SUCCESS;
@@ -95,13 +117,15 @@ LONG H_HypervisorType(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abstra
       return SYSINFO_RC_SUCCESS;
    }
 
-   if (!strcmp(mf, "Microsoft Corporation") && !strcmp(prod, "Virtual Machine"))
+   if ((!strcmp(mf, "Microsoft Corporation") && !strcmp(prod, "Virtual Machine")) ||
+       !strcmp(s_cpuVendorId, "Microsoft Hv"))
    {
       ret_mbstring(value, "Hyper-V");
       return SYSINFO_RC_SUCCESS;
    }
 
-   if (!strcmp(mf, "Red Hat") && !strcmp(prod, "KVM"))
+   if ((!strcmp(mf, "Red Hat") && !strcmp(prod, "KVM")) ||
+       !strncmp(s_cpuVendorId, "KVM", 3))
    {
       ret_mbstring(value, "KVM");
       return SYSINFO_RC_SUCCESS;
@@ -110,6 +134,18 @@ LONG H_HypervisorType(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abstra
    if (IsVirtualBox())
    {
       ret_mbstring(value, "VirtualBox");
+      return SYSINFO_RC_SUCCESS;
+   }
+
+   if (!strncmp(s_cpuVendorId, "bhyve", 5))
+   {
+      ret_mbstring(value, "bhyve");
+      return SYSINFO_RC_SUCCESS;
+   }
+
+   if (!strcmp(s_cpuVendorId, " lrpepyh vr"))
+   {
+      ret_mbstring(value, "Parallels");
       return SYSINFO_RC_SUCCESS;
    }
 

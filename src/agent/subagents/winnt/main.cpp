@@ -171,9 +171,22 @@ static LONG H_ChangeUserPassword(const TCHAR *action, StringList *args, const TC
 }
 
 /**
+ * BIOS header
+ */
+struct BiosHeader
+{
+   BYTE used20CallingMethod;
+   BYTE majorVersion;
+   BYTE minorVersion;
+   BYTE dmiRevision;
+   DWORD length;
+   BYTE tables[1];
+};
+
+/**
  * BIOS reader
  */
-static BYTE *BIOSReader()
+static BYTE *BIOSReader(size_t *size)
 {
    BYTE *buffer = (BYTE *)malloc(16384);
    UINT rc = GetSystemFirmwareTable('RSMB', 0, buffer, 16384);
@@ -189,7 +202,14 @@ static BYTE *BIOSReader()
       free(buffer);
       return NULL;
    }
-   return buffer;
+
+   BiosHeader *header = reinterpret_cast<BiosHeader*>(buffer);
+   BYTE *bios = (BYTE *)malloc(header->length);
+   memcpy(bios, header->tables, header->length);
+   *size = header->length;
+   free(buffer);
+
+   return bios;
 }
 
 /**
@@ -197,6 +217,7 @@ static BYTE *BIOSReader()
  */
 static bool SubAgentInit(Config *config)
 {
+   ReadCPUVendorId();
    SMBIOS_Parse(BIOSReader);
    StartCPUStatCollector();
    return true;
@@ -333,7 +354,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("System.CPU.Usage15.Irq(*)"), H_CpuUsage, _T("C3q"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE15_IRQ_EX },
    { _T("System.CPU.Usage15.System(*)"), H_CpuUsage, _T("C3s"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE15_SYSTEM_EX },
    { _T("System.CPU.Usage15.User(*)"), H_CpuUsage, _T("C3u"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE15_USER_EX },
-	
+
    { _T("System.HandleCount"), H_HandleCount, NULL, DCI_DT_UINT, DCIDESC_SYSTEM_HANDLECOUNT },
    { _T("System.Hardware.Manufacturer"), SMBIOS_ParameterHandler, _T("M"), DCI_DT_STRING, DCIDESC_SYSTEM_HARDWARE_MANUFACTURER },
    { _T("System.Hardware.Product"), SMBIOS_ParameterHandler, _T("P"), DCI_DT_STRING, DCIDESC_SYSTEM_HARDWARE_PRODUCT },

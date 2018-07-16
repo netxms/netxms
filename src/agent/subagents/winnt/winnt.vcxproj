@@ -175,7 +175,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="bios.cpp" />
     <ClCompile Include="cpu.cpp" />
     <ClCompile Include="fs.cpp" />
     <ClCompile Include="hypervisor.cpp" />
