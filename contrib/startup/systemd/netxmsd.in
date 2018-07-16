@@ -3,7 +3,9 @@ Description=NetXMS Server
 
 [Service]
 Type=forking
-ExecStart=~BINDIR~/netxmsd -d
+Environment="NETXMSD_CONFIG=/etc/netxmsd.conf"
+EnvironmentFile=-/etc/default/netxmsd
+ExecStart=~BINDIR~/netxmsd -d $NETXMSD_OPTIONS --config $NETXMSD_CONFIG 
 PIDFile=/var/run/netxmsd.pid
 
 [Install]
