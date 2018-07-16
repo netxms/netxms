@@ -310,13 +310,13 @@ static void TestStringFunctionsW()
 
    StartTest(_T("wcslcpy"));
 
-   wcslcpy(buffer, _T("short text"), 32);
+   wcslcpy(buffer, L"short text", 32);
    AssertEquals(buffer[32], L'$');
-   AssertTrue(!wcscmp(buffer, _T("short text")));
+   AssertTrue(!wcscmp(buffer,L"short text"));
 
-   wcslcpy(buffer, _T("long text: 1234567890 1234567890 1234567890 1234567890"), 32);
+   wcslcpy(buffer, L"long text: 1234567890 1234567890 1234567890 1234567890", 32);
    AssertEquals(buffer[32], L'$');
-   AssertTrue(!wcscmp(buffer, _T("long text: 1234567890 123456789")));
+   AssertTrue(!wcscmp(buffer, L"long text: 1234567890 123456789"));
 
    EndTest();
 
@@ -324,17 +324,17 @@ static void TestStringFunctionsW()
 
    memset(buffer, 0, sizeof(buffer));
    buffer[32] = L'$';
-   wcslcat(buffer, _T("part1"), 32);
+   wcslcat(buffer, L"part1", 32);
    AssertEquals(buffer[32], L'$');
-   AssertTrue(!wcscmp(buffer, _T("part1")));
+   AssertTrue(!wcscmp(buffer, L"part1"));
 
-   wcslcat(buffer, _T("part2"), 32);
+   wcslcat(buffer, L"part2", 32);
    AssertEquals(buffer[32], L'$');
-   AssertTrue(!wcscmp(buffer, _T("part1part2")));
+   AssertTrue(!wcscmp(buffer, L"part1part2"));
 
-   wcslcat(buffer, _T("long text: 1234567890 1234567890 1234567890 1234567890"), 32);
+   wcslcat(buffer, L"long text: 1234567890 1234567890 1234567890 1234567890", 32);
    AssertEquals(buffer[32], L'$');
-   AssertTrue(!wcscmp(buffer, _T("part1part2long text: 1234567890")));
+   AssertTrue(!wcscmp(buffer, L"part1part2long text: 1234567890"));
 
    EndTest();
 
