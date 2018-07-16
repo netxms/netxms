@@ -108,7 +108,7 @@ enum
 #define INFOTYPE_AVG             2
 #define INFOTYPE_SUM             3
 
-int ExecSysctl(TCHAR *param, void *buffer, size_t buffSize);
+int ExecSysctl(const char *param, void *buffer, size_t buffSize);
 void StartCpuUsageCollector();
 void ShutdownCpuUsageCollector();
 
@@ -123,6 +123,7 @@ LONG H_CpuUsage(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 LONG H_CpuUsageEx(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 LONG H_CpuCswitch(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_CpuInterrupts(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_HypervisorType(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_ProcessCount(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 LONG H_ProcessInfo(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 LONG H_MemoryInfo(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);

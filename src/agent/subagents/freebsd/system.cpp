@@ -1,6 +1,6 @@
 /*
 ** NetXMS subagent for FreeBSD
-** Copyright (C) 2004 Alex Kirhenshtein
+** Copyright (C) 2004-2018 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -18,10 +18,11 @@
 **
 **/
 
-#undef _XOPEN_SOURCE
-
 #include "freebsd_subagent.h"
 
+/**
+ * Handler for System.Uptime parameter
+ */
 LONG H_Uptime(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	int mib[2] = { CTL_KERN, KERN_BOOTTIME };
@@ -50,6 +51,9 @@ LONG H_Uptime(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractC
    return nUptime > 0 ? SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR;
 }
 
+/**
+ * Handler for System.Uname parameter
+ */
 LONG H_Uname(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	struct utsname utsName;
@@ -211,11 +215,37 @@ LONG H_MemoryInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abstr
 	return nRet;
 }
 
-//
-// stub
-//
+/**
+ * Handler for Agent.SourcePackageSupport parameter
+ */
 LONG H_SourcePkgSupport(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	ret_int(pValue, 1);
 	return SYSINFO_RC_SUCCESS;
+}
+
+/**
+ * Handler for Hypervisor.Type parameter
+ */
+LONG H_HypervisorType(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   char name[128];
+   LONG rc = ExecSysctl("kern.vm_guest", name, 128);
+   if (rc != SYSINFO_RC_SUCCESS)
+      return rc;
+
+   if (!strcmp(name, "none") || !strcmp(name, "generic"))
+      return SYSINFO_RC_UNSUPPORTED;
+
+   if (!strcmp(name, "vmware"))
+      ret_mbstring(value, "VMware");
+   else if (!strcmp(name, "hv"))
+      ret_mbstring(value, "Hyper-V");
+   else if (!strcmp(name, "kvm"))
+      ret_mbstring(value, "KVM");
+   else if (!strcmp(name, "xen"))
+      ret_mbstring(value, "XEN");
+   else
+      ret_mbstring(value, name);
+   return SYSINFO_RC_SUCCESS;
 }

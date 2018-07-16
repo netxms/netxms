@@ -23,17 +23,17 @@
 #include "winnt_subagent.h"
 
 /**
- * Check for VMWare host
+ * Check for VMware host
  */
-static bool IsVMWare()
+static bool IsVMware()
 {
    return !strcmp(GetHardwareProduct(), "VMware Virtual Platform");
 }
 
 /**
- * Get VMWare host version
+ * Get VMware host version
  */
-static bool GetVMWareVersionString(TCHAR *value)
+static bool GetVMwareVersionString(TCHAR *value)
 {
    KeyValueOutputProcessExecutor pe(_T("\"C:\\Program Files\\VMware\\VMware Tools\\VMwareToolboxCmd.exe\" stat raw text session"));
    if (!pe.execute())
@@ -89,9 +89,9 @@ LONG H_HypervisorType(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abstra
       return SYSINFO_RC_SUCCESS;
    }
 
-   if (IsVMWare())
+   if (IsVMware())
    {
-      ret_mbstring(value, "VMWare");
+      ret_mbstring(value, "VMware");
       return SYSINFO_RC_SUCCESS;
    }
 
@@ -121,7 +121,7 @@ LONG H_HypervisorType(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abstra
  */
 LONG H_HypervisorVersion(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
-   if (IsVMWare() && GetVMWareVersionString(value))
+   if (IsVMware() && GetVMwareVersionString(value))
       return SYSINFO_RC_SUCCESS;
    if (IsVirtualBox() && GetVirtualBoxVersionString(value))
       return SYSINFO_RC_SUCCESS;

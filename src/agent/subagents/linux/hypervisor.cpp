@@ -210,9 +210,9 @@ static VirtualizationType IsVirtual()
 }
 
 /**
- * Check for VMWare host
+ * Check for VMware host
  */
-static bool IsVMWare()
+static bool IsVMware()
 {
    DIR *d = opendir("/sys/bus/pci/devices");
    if (d == NULL)
@@ -244,9 +244,9 @@ static bool IsVMWare()
 }
 
 /**
- * Get VMWare host version
+ * Get VMware host version
  */
-static bool GetVMWareVersionString(TCHAR *value)
+static bool GetVMwareVersionString(TCHAR *value)
 {
    KeyValueOutputProcessExecutor pe(_T("vmware-toolbox-cmd stat raw text session"));
    if (!pe.execute())
@@ -347,9 +347,9 @@ LONG H_HypervisorType(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abstra
       return SYSINFO_RC_SUCCESS;
    }
 
-   if (IsVMWare())
+   if (IsVMware())
    {
-      ret_mbstring(value, "VMWare");
+      ret_mbstring(value, "VMware");
       return SYSINFO_RC_SUCCESS;
    }
    return SYSINFO_RC_UNSUPPORTED;
@@ -366,7 +366,7 @@ LONG H_HypervisorVersion(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abs
 
    if (IsXEN() && GetXENVersionString(value))
       return SYSINFO_RC_SUCCESS;
-   if (IsVMWare() && GetVMWareVersionString(value))
+   if (IsVMware() && GetVMwareVersionString(value))
       return SYSINFO_RC_SUCCESS;
    return SYSINFO_RC_UNSUPPORTED;
 }

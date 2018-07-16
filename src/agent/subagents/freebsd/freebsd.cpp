@@ -26,6 +26,26 @@
 #include "disk.h"
 
 /**
+ * Execute sysctl on named parameter
+ */
+int ExecSysctl(const char *param, void *buffer, size_t buffSize)
+{
+   int ret = SYSINFO_RC_ERROR;
+   int mib[2];
+   size_t nSize = sizeof(mib);
+
+   if (sysctlnametomib(param, mib, &nSize) == 0)
+   {
+      if (sysctl(mib, nSize, buffer, &buffSize, NULL, 0) == 0)
+      {
+         ret = SYSINFO_RC_SUCCESS;
+      }
+   }
+
+   return ret;
+}
+
+/**
  * Initalization callback
  */
 static bool SubAgentInit(Config *config)
@@ -62,6 +82,8 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 	{ _T("FileSystem.Total(*)"),          H_DiskInfo,        (const TCHAR *)DISK_TOTAL,        DCI_DT_UINT64,	DCIDESC_FS_TOTAL },
 	{ _T("FileSystem.Used(*)"),           H_DiskInfo,        (const TCHAR *)DISK_USED,         DCI_DT_UINT64,	DCIDESC_FS_USED },
 	{ _T("FileSystem.UsedPerc(*)"),       H_DiskInfo,        (const TCHAR *)DISK_USED_PERC,    DCI_DT_FLOAT,	DCIDESC_FS_USEDPERC },
+
+	{ _T("Hypervisor.Type"), H_HypervisorType, NULL, DCI_DT_STRING, DCIDESC_HYPERVISOR_TYPE },
 
 	{ _T("Net.Interface.64BitCounters"), H_NetInterface64bitSupport, NULL, DCI_DT_INT, DCIDESC_NET_INTERFACE_64BITCOUNTERS },
 
