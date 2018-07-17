@@ -1563,7 +1563,9 @@ restart_agent_check:
             }
          }
          else
+         {
             m_pollCountAgent = 0;
+         }
          agentConnected = true;
       }
       else
@@ -1712,13 +1714,15 @@ restart_agent_check:
       }
       unlockChildList();
       if (allDown && (m_capabilities & NC_IS_NATIVE_AGENT) &&
-          (!(m_flags & NF_DISABLE_NXCP)))
-         if (!(m_state & NSF_AGENT_UNREACHABLE))
-            allDown = false;
+          !(m_flags & NF_DISABLE_NXCP) && !(m_state & NSF_AGENT_UNREACHABLE))
+      {
+         allDown = false;
+      }
       if (allDown && (m_capabilities & NC_IS_SNMP) &&
-          (!(m_flags & NF_DISABLE_SNMP)))
-         if (!(m_state & NSF_SNMP_UNREACHABLE))
-            allDown = false;
+          !(m_flags & NF_DISABLE_SNMP) && !(m_state & NSF_SNMP_UNREACHABLE))
+      {
+         allDown = false;
+      }
 
       DbgPrintf(6, _T("StatusPoll(%s): allDown=%s, statFlags=0x%08X"), m_name, allDown ? _T("true") : _T("false"), m_state);
       if (allDown)
@@ -1779,7 +1783,7 @@ restart_agent_check:
          if (m_state & DCSF_UNREACHABLE)
          {
             int reason = (m_state & DCSF_NETWORK_PATH_PROBLEM) ? 1 : 0;
-            m_state &= ~(DCSF_UNREACHABLE | NSF_SNMP_UNREACHABLE | NSF_AGENT_UNREACHABLE | DCSF_NETWORK_PATH_PROBLEM);
+            m_state &= ~(DCSF_UNREACHABLE | DCSF_NETWORK_PATH_PROBLEM);
             PostEvent(EVENT_NODE_UP, m_id, "d", reason);
             sendPollerMsg(rqId, POLLER_INFO _T("Node recovered from unreachable state\r\n"));
             goto restart_agent_check;
