@@ -1488,7 +1488,9 @@ restart_agent_check:
                }
             }
             else
+            {
                m_pollCountSNMP = 0;
+            }
 
             // Update authoritative engine data for SNMPv3
             if ((pTransport->getSnmpVersion() == SNMP_VERSION_3) && (pTransport->getAuthoritativeEngine() != NULL))
@@ -1584,7 +1586,9 @@ restart_agent_check:
             }
          }
          else
+         {
             m_pollCountAgent = 0;
+         }
          agentConnected = true;
       }
       else
@@ -1733,13 +1737,15 @@ restart_agent_check:
       }
       unlockChildList();
       if (allDown && (m_flags & NF_IS_NATIVE_AGENT) &&
-          (!(m_flags & NF_DISABLE_NXCP)))
-         if (!(m_dwDynamicFlags & NDF_AGENT_UNREACHABLE))
-            allDown = false;
+          !(m_flags & NF_DISABLE_NXCP) && !(m_dwDynamicFlags & NDF_AGENT_UNREACHABLE))
+      {
+         allDown = false;
+      }
       if (allDown && (m_flags & NF_IS_SNMP) &&
-          (!(m_flags & NF_DISABLE_SNMP)))
-         if (!(m_dwDynamicFlags & NDF_SNMP_UNREACHABLE))
-            allDown = false;
+          !(m_flags & NF_DISABLE_SNMP) && !(m_dwDynamicFlags & NDF_SNMP_UNREACHABLE))
+      {
+         allDown = false;
+      }
 
       DbgPrintf(6, _T("StatusPoll(%s): allDown=%s, dynFlags=0x%08X"), m_name, allDown ? _T("true") : _T("false"), m_dwDynamicFlags);
       if (allDown)
@@ -1800,7 +1806,7 @@ restart_agent_check:
          if (m_dwDynamicFlags & NDF_UNREACHABLE)
          {
             int reason = (m_dwDynamicFlags & NDF_NETWORK_PATH_PROBLEM) ? 1 : 0;
-            m_dwDynamicFlags &= ~(NDF_UNREACHABLE | NDF_SNMP_UNREACHABLE | NDF_AGENT_UNREACHABLE | NDF_NETWORK_PATH_PROBLEM);
+            m_dwDynamicFlags &= ~(NDF_UNREACHABLE | NDF_NETWORK_PATH_PROBLEM);
             PostEvent(EVENT_NODE_UP, m_id, "d", reason);
             sendPollerMsg(dwRqId, POLLER_INFO _T("Node recovered from unreachable state\r\n"));
             goto restart_agent_check;
