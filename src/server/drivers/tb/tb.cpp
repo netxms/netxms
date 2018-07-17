@@ -166,7 +166,7 @@ InterfaceList *TelcoBridgesDriver::getInterfaces(SNMP_Transport *snmp, StringMap
 	      _sntprintf(oid, 128, _T(".1.3.6.1.2.1.2.2.1.2%s"), suffix);
 	      if (SnmpGet(snmp->getSnmpVersion(), snmp, oid, NULL, 0, iface->description, MAX_DB_STRING * sizeof(TCHAR), 0) != SNMP_ERR_SUCCESS)
 	         break;
-	      nx_strncpy(iface->name, iface->description, MAX_DB_STRING);
+	      _tcslcpy(iface->name, iface->description, MAX_DB_STRING);
 
          DbgPrintf(6, _T("TelcoBridgesDriver::getInterfaces(%p): processing interface %s (%s)"), snmp, iface->name, suffix);
 
