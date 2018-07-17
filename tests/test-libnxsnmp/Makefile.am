@@ -11,7 +11,8 @@
 bin_PROGRAMS = test-libnxsnmp
 test_libnxsnmp_SOURCES = test-libnxsnmp.cpp
 test_libnxsnmp_CPPFLAGS = -I@top_srcdir@/include -I../include
-test_libnxsnmp_LDADD = @top_srcdir@/src/libnetxms/libnetxms.la @top_srcdir@/src/snmp/libnxsnmp/libnxsnmp.la
+test_libnxsnmp_LDFLAGS = @EXEC_LDFLAGS@
+test_libnxsnmp_LDADD = @top_srcdir@/src/libnetxms/libnetxms.la @top_srcdir@/src/snmp/libnxsnmp/libnxsnmp.la @EXEC_LIBS@
 
 if USE_INTERNAL_LIBTRE
 test_libnxsnmp_LDADD += @top_srcdir@/src/libtre/libnxtre.la

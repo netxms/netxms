@@ -2757,6 +2757,55 @@ TCHAR LIBNETXMS_EXPORTABLE *GetHeapInfo()
 #endif
 }
 
+#ifdef WITH_JEMALLOC
+
+/**
+ * Get jemalloc stat
+ */
+static INT64 GetJemallocStat(const char *name)
+{
+   size_t value;
+   size_t size = sizeof(value);
+   if (mallctl(name, &value, &size, NULL, 0) == 0)
+      return value;
+   return -1;
+}
+
+#endif
+
+/**
+ * Get amount of memory allocated by process on heap
+ */
+INT64 LIBNETXMS_EXPORTABLE GetAllocatedHeapMemory()
+{
+#ifdef WITH_JEMALLOC
+   return GetJemallocStat("stats.allocated");
+#endif
+   return -1;
+}
+
+/**
+ * Get amount of memory in active heap pages
+ */
+INT64 LIBNETXMS_EXPORTABLE GetActiveHeapMemory()
+{
+#ifdef WITH_JEMALLOC
+   return GetJemallocStat("stats.active");
+#endif
+   return -1;
+}
+
+/**
+ * Get amount of memory mapped for heap
+ */
+INT64 LIBNETXMS_EXPORTABLE GetMappedHeapMemory()
+{
+#ifdef WITH_JEMALLOC
+   return GetJemallocStat("stats.mapped");
+#endif
+   return -1;
+}
+
 /**
  * Constructor for abstract iterator
  */

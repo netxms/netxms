@@ -68,6 +68,7 @@ STATIC_SUBAGENT_LIST=""
 PROPOSED_STATIC_SUBAGENTS="default"
 SUBAGENT_DIRS=""
 SUBAGENT_LIBS=""
+AGENT_LIBS=""
 AGENT_DIRS=""
 SERVER_LIBS=""
 SERVER_TOOLS=""
@@ -127,6 +128,8 @@ DISABLE_COMMONCRYPTO="no"
 OPENSSL_LIBSSL="ssl"
 OPENSSL_LIBCRYPTO="crypto"
 SYSTEMD_SUPPORT="yes"
+EXEC_LDFLAGS=""
+EXEC_LIBS=""
 
 
 #--------------------------------------------------------------------
@@ -2306,7 +2309,7 @@ if test "x$SYSTEMD_SUPPORT" = "xyes"; then
 	AC_CHECK_HEADER(systemd/sd-bus.h,HAVE_SYSTEMD=yes,HAVE_SYSTEMD=no)
 	if test "x$HAVE_SYSTEMD" = "xyes"; then
 		AC_DEFINE(WITH_SYSTEMD, 1, Define to 1 if you have Systemd libraries and headers)
-		SUBAGENT_LIBS="-lsystemd $SUBAGENT_LIBS"
+		AGENT_LIBS="-lsystemd $AGENT_LIBS"
 	fi
 	SYSTEMD_SUPPORT="$HAVE_SYSTEMD"
 fi
@@ -2582,7 +2585,7 @@ if test "x$PLATFORM" = "xLinux"; then
 
 	AC_CHECK_HEADERS([jemalloc/jemalloc.h],
 		[
-			AC_CHECK_LIB(jemalloc, malloc,
+			AC_CHECK_LIB(jemalloc_pic, malloc,
 				[ 
 					WITH_JEMALLOC="yes"
 					AC_DEFINE(WITH_JEMALLOC,1,Define to 1 if libjemalloc is used)
@@ -3712,7 +3715,9 @@ if test "x$ENABLE_DEBUG" = "xno"; then
 fi
 
 if test "x$WITH_JEMALLOC" = "xyes"; then
-	LIBS="$LIBS -ljemalloc"
+	rootdir=`pwd`
+	EXEC_LDFLAGS="$EXEC_LDFLAGS -export-symbols $rootdir/jemalloc.sym"
+	EXEC_LIBS="$EXEC_LIBS -ljemalloc_pic"
 fi
 
 AM_CONDITIONAL([USE_INTERNAL_EXPAT], [test "x$HAVE_LIBEXPAT" = "xno"])
@@ -3777,6 +3782,8 @@ AC_SUBST(AGENT_DIRS)
 AC_SUBST(AGENT_LIBS)
 AC_SUBST(CUSTOM_INCLUDE)
 AC_SUBST(DB_DRIVERS)
+AC_SUBST(EXEC_LDFLAGS)
+AC_SUBST(EXEC_LIBS)
 AC_SUBST(SUBAGENT_DIRS)
 AC_SUBST(SERVER_INCLUDE)
 AC_SUBST(SERVER_LIBS)
@@ -4168,6 +4175,7 @@ else
 fi
 if test "x${BUILD_AGENT}" = "xyes"; then
 	echo "Build Agent             : YES"
+        echo "Agent libs              :${AGENT_LIBS}"
 	echo "Agent extra components  :${AGENT_DIRS}"
 	echo "Subagents list          :${SUBAGENT_DIRS}"
 	if test "x${SYSTEMD_SUPPORT}" = "xyes"; then
@@ -4231,6 +4239,8 @@ echo "CXXFLAGS                : ${CXXFLAGS}"
 echo "CFLAGS                  : ${CFLAGS}"
 echo "LDFLAGS                 : ${LDFLAGS}"
 echo "LIBS                    : ${LIBS}"
+echo "Executable LDFLAGS      : ${EXEC_LDFLAGS}"
+echo "Executable LIBS         : ${EXEC_LIBS}"
 
 if test "x${MYSQL_CPPFLAGS}" != "x"; then
 	echo "MySQL CPPFLAGS          : ${MYSQL_CPPFLAGS}"

@@ -665,16 +665,36 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
       }
       else if (IsCommand(_T("HEAP"), szBuffer, 1))
       {
-         TCHAR *text = GetHeapInfo();
-         if (text != NULL)
+         pArg = ExtractWord(pArg, szBuffer);
+         if (IsCommand(_T("DETAILS"), szBuffer, 1))
          {
-            ConsoleWrite(pCtx, text);
-            ConsoleWrite(pCtx, _T("\n"));
-            free(text);
+            TCHAR *text = GetHeapInfo();
+            if (text != NULL)
+            {
+               ConsoleWrite(pCtx, text);
+               ConsoleWrite(pCtx, _T("\n"));
+               free(text);
+            }
+            else
+            {
+               ConsoleWrite(pCtx, _T("Error reading heap information\n"));
+            }
          }
-         else
+         else if (IsCommand(_T("SUMMARY"), szBuffer, 1))
          {
-            ConsoleWrite(pCtx, _T("Error reading heap information\n"));
+            INT64 allocated = GetAllocatedHeapMemory();
+            INT64 active = GetActiveHeapMemory();
+            INT64 mapped = GetMappedHeapMemory();
+            if ((allocated != -1) && (active != -1) && (mapped != -1))
+            {
+               ConsolePrintf(pCtx, _T("Allocated ... : %0.1f MB\n"), (double)allocated / 1024.0 / 1024.0);
+               ConsolePrintf(pCtx, _T("Active ...... : %0.1f MB\n"), (double)active / 1024.0 / 1024.0);
+               ConsolePrintf(pCtx, _T("Mapped ...... : %0.1f MB\n"), (double)mapped / 1024.0 / 1024.0);
+            }
+            else
+            {
+               ConsoleWrite(pCtx, _T("Heap summary information unavailable\n"));
+            }
          }
       }
       else if (IsCommand(_T("INDEX"), szBuffer, 1))
@@ -1290,7 +1310,8 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
             _T("   show dbstats                      - Show DB library statistics\n")
             _T("   show fdb <node>                   - Show forwarding database for node\n")
             _T("   show flags                        - Show internal server flags\n")
-            _T("   show heap                         - Show heap information\n")
+            _T("   show heap details                 - Show detailed heap information\n")
+            _T("   show heap summary                 - Show heap usage summary\n")
             _T("   show index <index>                - Show internal index\n")
             _T("   show modules                      - Show loaded server modules\n")
             _T("   show msgwq                        - Show message wait queues information\n")

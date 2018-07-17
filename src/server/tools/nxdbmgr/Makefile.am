@@ -5,10 +5,12 @@ nxdbmgr_SOURCES = nxdbmgr.cpp check.cpp clear.cpp export.cpp import.cpp \
 		  upgrade_online.cpp upgrade_v0.cpp upgrade_v21.cpp \
                   upgrade_v22.cpp
 nxdbmgr_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include
+nxdbmgr_LDFLAGS = @EXEC_LDFLAGS@
 nxdbmgr_LDADD = ../../../libnetxms/libnetxms.la \
                 ../../../db/libnxdb/libnxdb.la \
                 ../../libnxsrv/libnxsrv.la \
-                ../../../snmp/libnxsnmp/libnxsnmp.la
+                ../../../snmp/libnxsnmp/libnxsnmp.la \
+		@EXEC_LIBS@
 
 if USE_INTERNAL_SQLITE
 nxdbmgr_CPPFLAGS += -I@top_srcdir@/src/sqlite

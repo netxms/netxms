@@ -11,7 +11,8 @@
 bin_PROGRAMS = test-libnetxms
 test_libnetxms_SOURCES = nxcp.cpp test-libnetxms.cpp proc.cpp threads.cpp
 test_libnetxms_CPPFLAGS = -I@top_srcdir@/include -I../include
-test_libnetxms_LDADD = @top_srcdir@/src/libnetxms/libnetxms.la
+test_libnetxms_LDFLAGS = @EXEC_LDFLAGS@
+test_libnetxms_LDADD = @top_srcdir@/src/libnetxms/libnetxms.la @EXEC_LIBS@
 
 if USE_INTERNAL_LIBTRE
 test_libnetxms_LDADD += @top_srcdir@/src/libtre/libnxtre.la

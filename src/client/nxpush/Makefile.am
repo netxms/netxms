@@ -10,7 +10,8 @@
 
 bin_PROGRAMS = nxpush
 nxpush_SOURCES = nxpush.cpp
-nxpush_CPPFLAGS=-I@top_srcdir@/include
-nxpush_LDADD = ../../libnetxms/libnetxms.la ../libnxclient/libnxclient.la
+nxpush_CPPFLAGS = -I@top_srcdir@/include
+nxpush_LDFLAGS = @EXEC_LDFLAGS@
+nxpush_LDADD = ../../libnetxms/libnetxms.la ../libnxclient/libnxclient.la @EXEC_LIBS@
 
 EXTRA_DIST = Makefile.w32 nxpush.vcxproj nxpush.vcxproj.filters

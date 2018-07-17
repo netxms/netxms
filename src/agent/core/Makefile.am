@@ -1,4 +1,3 @@
-AM_CPPFLAGS=-I@top_srcdir@/include
 bin_PROGRAMS = nxagentd
 nxagentd_SOURCES = messages.c actions.cpp appagent.cpp comm.cpp config.cpp \
                    ctrl.cpp datacoll.cpp dcsnmp.cpp dbupgrade.cpp epp.cpp \
@@ -8,18 +7,24 @@ nxagentd_SOURCES = messages.c actions.cpp appagent.cpp comm.cpp config.cpp \
                    static_subagents.cpp subagent.cpp sysinfo.cpp syslog.cpp \
                    systemd.cpp tcpproxy.cpp tools.cpp trap.cpp tunnel.cpp \
                    upgrade.cpp watchdog.cpp
-if USE_INTERNAL_EXPAT
-nxagentd_LDADD = ../../appagent/libappagent.la ../libnxagent/libnxagent.la @top_srcdir@/src/db/libnxdb/libnxdb.la @top_srcdir@/src/libnetxms/libnetxms.la @top_srcdir@/src/snmp/libnxsnmp/libnxsnmp.la @top_srcdir@/src/libexpat/libexpat/libnxexpat.la @SUBAGENT_LIBS@
-else
-nxagentd_LDADD = ../../appagent/libappagent.la ../libnxagent/libnxagent.la @top_srcdir@/src/db/libnxdb/libnxdb.la @top_srcdir@/src/libnetxms/libnetxms.la @top_srcdir@/src/snmp/libnxsnmp/libnxsnmp.la @SUBAGENT_LIBS@ 
-endif
+
+nxagentd_CPPFLAGS = -I@top_srcdir@/include
+
+nxagentd_LDFLAGS = @EXEC_LDFLAGS@
 if STATIC_BUILD
 if ALL_STATIC
-nxagentd_LDFLAGS = -all-static
+nxagentd_LDFLAGS += -all-static
 else
-nxagentd_LDFLAGS = -static
+nxagentd_LDFLAGS += -static
 endif
 endif
+
+if USE_INTERNAL_EXPAT
+nxagentd_LDADD = ../../appagent/libappagent.la ../libnxagent/libnxagent.la @top_srcdir@/src/db/libnxdb/libnxdb.la @top_srcdir@/src/libnetxms/libnetxms.la @top_srcdir@/src/snmp/libnxsnmp/libnxsnmp.la @top_srcdir@/src/libexpat/libexpat/libnxexpat.la @AGENT_LIBS@ @SUBAGENT_LIBS@ @EXEC_LIBS@
+else
+nxagentd_LDADD = ../../appagent/libappagent.la ../libnxagent/libnxagent.la @top_srcdir@/src/db/libnxdb/libnxdb.la @top_srcdir@/src/libnetxms/libnetxms.la @top_srcdir@/src/snmp/libnxsnmp/libnxsnmp.la @AGENT_LIBS@ @SUBAGENT_LIBS@ @EXEC_LIBS@
+endif
+
 BUILT_SOURCES = messages.h
 CLEANFILES = messages.c messages.h static_subagents.cpp
 
