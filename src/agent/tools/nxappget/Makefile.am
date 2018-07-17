@@ -5,9 +5,9 @@ nxappget_LDFLAGS = @EXEC_LDFLAGS@
 nxappget_LDADD = @top_srcdir@/src/libnetxms/libnetxms.la @top_srcdir@/src/appagent/libappagent.la @EXEC_LIBS@
 if STATIC_BUILD
 if ALL_STATIC
-nxappget_LDFLAGS = -all-static
+nxappget_LDFLAGS += -all-static
 else
-nxappget_LDFLAGS = -static
+nxappget_LDFLAGS += -static
 endif
 endif
 

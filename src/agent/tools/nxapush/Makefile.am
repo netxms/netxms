@@ -5,9 +5,9 @@ nxapush_LDFLAGS = @EXEC_LDFLAGS@
 nxapush_LDADD = @top_srcdir@/src/libnetxms/libnetxms.la @EXEC_LIBS@
 if STATIC_BUILD
 if ALL_STATIC
-nxapush_LDFLAGS = -all-static
+nxapush_LDFLAGS += -all-static
 else
-nxapush_LDFLAGS = -static
+nxapush_LDFLAGS += -static
 endif
 endif
 
