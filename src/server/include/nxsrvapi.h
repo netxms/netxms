@@ -245,8 +245,6 @@ private:
       memset(macAddr, 0, sizeof(macAddr));
       isPhysicalPort = false;
       isSystem = false;
-      memset(ifTableSuffix, 0, sizeof(ifTableSuffix));
-      ifTableSuffixLength = 0;
       parentIndex = 0;
    }
 
