@@ -1,0 +1,13 @@
+__malloc_hook
+aligned_alloc
+calloc
+free
+mallctl
+malloc
+malloc_conf
+malloc_message
+malloc_stats_print
+memalign
+posix_memalign
+realloc
+valloc

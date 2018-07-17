@@ -10,8 +10,9 @@
 
 bin_PROGRAMS = nxmibc
 nxmibc_SOURCES = lex.parser.cpp mibparse.cpp nxmibc.cpp parser.tab.cpp
-nxmibc_CPPFLAGS=-I@top_srcdir@/include
-nxmibc_LDADD = ../../libnetxms/libnetxms.la ../libnxsnmp/libnxsnmp.la
+nxmibc_CPPFLAGS = -I@top_srcdir@/include
+nxmibc_LDFLAGS = @EXEC_LDFLAGS@
+nxmibc_LDADD = ../../libnetxms/libnetxms.la ../libnxsnmp/libnxsnmp.la @EXEC_LIBS@
 
 EXTRA_DIST = Makefile.w32 nxmibc.vcxproj nxmibc.vcxproj.filters nxmibc.h mibparse.h parser.l parser.y parser.tab.hpp
 

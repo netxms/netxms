@@ -2783,6 +2783,9 @@ enum nxDirectoryType
 };
 
 TCHAR LIBNETXMS_EXPORTABLE *GetHeapInfo();
+INT64 LIBNETXMS_EXPORTABLE GetAllocatedHeapMemory();
+INT64 LIBNETXMS_EXPORTABLE GetActiveHeapMemory();
+INT64 LIBNETXMS_EXPORTABLE GetMappedHeapMemory();
 
 void LIBNETXMS_EXPORTABLE GetNetXMSDirectory(nxDirectoryType type, TCHAR *dir);
 

@@ -10,8 +10,9 @@
 
 bin_PROGRAMS = nxdevcfg
 nxdevcfg_SOURCES = flags.cpp nxdevcfg.cpp
-nxdevcfg_CPPFLAGS=-I@top_srcdir@/include
-nxdevcfg_LDADD = ../../libnetxms/libnetxms.la
+nxdevcfg_CPPFLAGS = -I@top_srcdir@/include
+nxdevcfg_LDFLAGS = -I@top_srcdir@/include @EXEC_LDFLAGS@
+nxdevcfg_LDADD = ../../libnetxms/libnetxms.la @EXEC_LIBS@
 
 if USE_INTERNAL_LIBTRE
 nxdevcfg_LDADD += ../../libtre/libnxtre.la

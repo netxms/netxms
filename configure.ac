@@ -132,6 +132,8 @@ DISABLE_COMMONCRYPTO="no"
 OPENSSL_LIBSSL="ssl"
 OPENSSL_LIBCRYPTO="crypto"
 SYSTEMD_SUPPORT="yes"
+EXEC_LDFLAGS=""
+EXEC_LIBS=""
 
 
 #--------------------------------------------------------------------
@@ -2622,7 +2624,7 @@ if test "x$PLATFORM" = "xLinux"; then
 
 	AC_CHECK_HEADERS([jemalloc/jemalloc.h],
 		[
-			AC_CHECK_LIB(jemalloc, malloc,
+			AC_CHECK_LIB(jemalloc_pic, malloc,
 				[ 
 					WITH_JEMALLOC="yes"
 					AC_DEFINE(WITH_JEMALLOC,1,Define to 1 if libjemalloc is used)
@@ -3816,7 +3818,9 @@ if test "x$ENABLE_DEBUG" = "xno"; then
 fi
 
 if test "x$WITH_JEMALLOC" = "xyes"; then
-	LIBS="$LIBS -ljemalloc"
+	rootdir=`pwd`
+	EXEC_LDFLAGS="$EXEC_LDFLAGS -export-symbols $rootdir/jemalloc.sym"
+	EXEC_LIBS="$EXEC_LIBS -ljemalloc_pic"
 fi
 
 AM_CONDITIONAL([USE_INTERNAL_EXPAT], [test "x$HAVE_LIBEXPAT" = "xno"])
@@ -3882,6 +3886,8 @@ AC_SUBST(AGENT_DIRS)
 AC_SUBST(AGENT_LIBS)
 AC_SUBST(CUSTOM_INCLUDE)
 AC_SUBST(DB_DRIVERS)
+AC_SUBST(EXEC_LDFLAGS)
+AC_SUBST(EXEC_LIBS)
 AC_SUBST(SUBAGENT_DIRS)
 AC_SUBST(SERVER_INCLUDE)
 AC_SUBST(SERVER_LIBS)
@@ -4334,6 +4340,8 @@ echo "CXXFLAGS                : ${CXXFLAGS}"
 echo "CFLAGS                  : ${CFLAGS}"
 echo "LDFLAGS                 : ${LDFLAGS}"
 echo "LIBS                    : ${LIBS}"
+echo "Executable LDFLAGS      : ${EXEC_LDFLAGS}"
+echo "Executable LIBS         : ${EXEC_LIBS}"
 
 if test "x${MYSQL_CPPFLAGS}" != "x"; then
 	echo "MySQL CPPFLAGS          : ${MYSQL_CPPFLAGS}"

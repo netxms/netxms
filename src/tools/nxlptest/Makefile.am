@@ -10,7 +10,8 @@
 
 bin_PROGRAMS = nxlptest
 nxlptest_SOURCES = nxlptest.cpp
-nxlptest_CPPFLAGS=-I@top_srcdir@/include
-nxlptest_LDADD = ../../libnxlp/libnxlp.la ../../libnetxms/libnetxms.la
+nxlptest_CPPFLAGS = -I@top_srcdir@/include
+nxlptest_LDFLAGS = @EXEC_LDFLAGS@
+nxlptest_LDADD = ../../libnxlp/libnxlp.la ../../libnetxms/libnetxms.la @EXEC_LIBS@
 
 EXTRA_DIST = nxlptest.h nxlptest.vcxproj nxlptest.vcxproj.filters

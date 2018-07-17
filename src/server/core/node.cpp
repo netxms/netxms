@@ -4837,6 +4837,30 @@ DataCollectionError Node::getInternalItem(const TCHAR *param, size_t bufSize, TC
       {
          _sntprintf(buffer, bufSize, UINT64_FMT, g_rawDataWriteRequests);
       }
+      else if (!_tcsicmp(param, _T("Server.Heap.Active")))
+      {
+         INT64 bytes = GetActiveHeapMemory();
+         if (bytes != -1)
+            _sntprintf(buffer, bufSize, UINT64_FMT, bytes);
+         else
+            rc = DCE_NOT_SUPPORTED;
+      }
+      else if (!_tcsicmp(param, _T("Server.Heap.Allocated")))
+      {
+         INT64 bytes = GetAllocatedHeapMemory();
+         if (bytes != -1)
+            _sntprintf(buffer, bufSize, UINT64_FMT, bytes);
+         else
+            rc = DCE_NOT_SUPPORTED;
+      }
+      else if (!_tcsicmp(param, _T("Server.Heap.Mapped")))
+      {
+         INT64 bytes = GetMappedHeapMemory();
+         if (bytes != -1)
+            _sntprintf(buffer, bufSize, UINT64_FMT, bytes);
+         else
+            rc = DCE_NOT_SUPPORTED;
+      }
       else if (!_tcsicmp(param, _T("Server.ReceivedSNMPTraps")))
       {
          _sntprintf(buffer, bufSize, UINT64_FMT, g_snmpTrapsReceived);

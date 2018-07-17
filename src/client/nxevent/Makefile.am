@@ -10,7 +10,8 @@
 
 bin_PROGRAMS = nxevent
 nxevent_SOURCES = nxevent.cpp
-nxevent_CPPFLAGS=-I@top_srcdir@/include
-nxevent_LDADD = ../../libnetxms/libnetxms.la ../libnxclient/libnxclient.la
+nxevent_CPPFLAGS = -I@top_srcdir@/include
+nxevent_LDFLAGS = @EXEC_LDFLAGS@
+nxevent_LDADD = ../../libnetxms/libnetxms.la ../libnxclient/libnxclient.la @EXEC_LIBS@
 
 EXTRA_DIST = Makefile.w32 nxevent.vcxproj nxevent.vcxproj.filters nxevent.h
