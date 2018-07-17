@@ -2624,6 +2624,7 @@ if test "x$PLATFORM" = "xLinux"; then
 
 	AC_CHECK_HEADERS([jemalloc/jemalloc.h],
 		[
+		 	AC_CHECK_LIB(rt, clock_gettime)
 			AC_CHECK_LIB(jemalloc_pic, malloc,
 				[ 
 					WITH_JEMALLOC="yes"
