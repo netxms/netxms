@@ -35,7 +35,7 @@ dependencies {
         exclude module: 'stax-api'
         exclude module: 'xpp3'
     }
-    implementation('org.netxms:netxms-base:2.2.6') {
+    implementation('org.netxms:netxms-base:2.2.7') {
         exclude module: 'stax'
         exclude module: 'stax-api'
         exclude module: 'xpp3'

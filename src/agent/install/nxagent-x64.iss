@@ -4,7 +4,7 @@
 [Setup]
 #include "setup.iss"
 VersionInfoDescription=NPI(name=nxagent;platform=windows-x64)
-OutputBaseFilename=nxagent-2.2.6-x64
+OutputBaseFilename=nxagent-2.2.7-x64
 ArchitecturesInstallIn64BitMode=x64
 ArchitecturesAllowed=x64
 
