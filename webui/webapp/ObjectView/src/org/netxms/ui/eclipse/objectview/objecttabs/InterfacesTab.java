@@ -74,16 +74,17 @@ public class InterfacesTab extends ObjectTab
 	public static final int COLUMN_DESCRIPTION = 9;
 	public static final int COLUMN_MAC_ADDRESS = 10;
 	public static final int COLUMN_IP_ADDRESS = 11;
-	public static final int COLUMN_PEER_NAME = 12;
-	public static final int COLUMN_PEER_MAC_ADDRESS = 13;
-	public static final int COLUMN_PEER_IP_ADDRESS = 14;
-   public static final int COLUMN_PEER_PROTOCOL = 15;
-	public static final int COLUMN_ADMIN_STATE = 16;
-	public static final int COLUMN_OPER_STATE = 17;
-	public static final int COLUMN_EXPECTED_STATE = 18;
-	public static final int COLUMN_STATUS = 19;
-	public static final int COLUMN_8021X_PAE_STATE = 20;
-	public static final int COLUMN_8021X_BACKEND_STATE = 21;
+   public static final int COLUMN_VLAN = 12;
+	public static final int COLUMN_PEER_NAME = 13;
+	public static final int COLUMN_PEER_MAC_ADDRESS = 14;
+	public static final int COLUMN_PEER_IP_ADDRESS = 15;
+   public static final int COLUMN_PEER_PROTOCOL = 16;
+	public static final int COLUMN_ADMIN_STATE = 17;
+	public static final int COLUMN_OPER_STATE = 18;
+	public static final int COLUMN_EXPECTED_STATE = 19;
+	public static final int COLUMN_STATUS = 20;
+	public static final int COLUMN_8021X_PAE_STATE = 21;
+	public static final int COLUMN_8021X_BACKEND_STATE = 22;
 
 	private SortableTableViewer viewer;
 	private InterfaceListLabelProvider labelProvider;
@@ -176,6 +177,7 @@ public class InterfacesTab extends ObjectTab
 	      Messages.get().InterfacesTab_ColDescription, 
 	      Messages.get().InterfacesTab_ColMacAddr,
 	      Messages.get().InterfacesTab_ColIpAddr, 
+	      "VLAN",
 	      Messages.get().InterfacesTab_ColPeerNode, 
 	      Messages.get().InterfacesTab_ColPeerMAC, 
 	      Messages.get().InterfacesTab_ColPeerIP,
@@ -188,7 +190,7 @@ public class InterfacesTab extends ObjectTab
 	      Messages.get().InterfacesTab_Col8021xBackend 
 		};
 		
-		final int[] widths = { 60, 150, 150, 150, 70, 70, 70, 70, 90, 150, 100, 90, 150, 100, 90, 80, 80, 80, 80, 80, 80, 80 };
+		final int[] widths = { 60, 150, 150, 150, 70, 70, 70, 70, 90, 150, 100, 90, 80, 150, 100, 90, 80, 80, 80, 80, 80, 80, 80 };
 		viewer = new SortableTableViewer(interfacesArea, names, widths, COLUMN_NAME, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
 		labelProvider = new InterfaceListLabelProvider();
 		viewer.setLabelProvider(labelProvider);
@@ -199,12 +201,12 @@ public class InterfacesTab extends ObjectTab
 		filter = new InterfacesTabFilter();
 		filter.setHideSubInterfaces(hideSubInterfaces);
 		viewer.addFilter(filter);
-		WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), "InterfaceTable.V4"); //$NON-NLS-1$
+		WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), "InterfaceTable.V5"); //$NON-NLS-1$
 		viewer.getTable().addDisposeListener(new DisposeListener() {
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{
-				WidgetHelper.saveColumnSettings(viewer.getTable(), Activator.getDefault().getDialogSettings(), "InterfaceTable.V4"); //$NON-NLS-1$
+				WidgetHelper.saveColumnSettings(viewer.getTable(), Activator.getDefault().getDialogSettings(), "InterfaceTable.V5"); //$NON-NLS-1$
 			}
 		});
 		

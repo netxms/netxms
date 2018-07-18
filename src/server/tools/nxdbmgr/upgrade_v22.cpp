@@ -24,6 +24,20 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 22.30 to 22.31
+ */
+static bool H_UpgradeFromV30()
+{
+   CHK_EXEC(CreateTable(
+      _T("CREATE TABLE interface_vlan_list (")
+      _T("   iface_id integer not null,")
+      _T("   vlan_id integer not null,")
+      _T("   PRIMARY KEY(iface_id,vlan_id))")));
+   CHK_EXEC(SetMinorSchemaVersion(31));
+   return true;
+}
+
+/**
  * Upgrade from 22.29 to 22.30
  */
 static bool H_UpgradeFromV29()
@@ -620,6 +634,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 30, 22, 31, H_UpgradeFromV30 },
    { 29, 22, 30, H_UpgradeFromV29 },
    { 28, 22, 29, H_UpgradeFromV28 },
    { 27, 22, 28, H_UpgradeFromV27 },

@@ -1227,7 +1227,7 @@ BOOL LoadObjects()
                                            _T("check_function"), _T("check_operation"), _T("sample_count"), _T("event_code"), _T("rearm_event_code"),
                                            _T("repeat_interval"), _T("current_state"), _T("current_severity"), _T("match_count"),
                                            _T("last_event_timestamp"), _T("table_id"), _T("flags"), _T("id"), _T("activation_event"),
-                                           _T("deactivation_event"), _T("group_id"), NULL };
+                                           _T("deactivation_event"), _T("group_id"), _T("iface_id"), _T("vlan_id"), NULL };
 
       nxlog_debug(1, _T("Caching object configuration tables"));
       bool success =
@@ -1244,8 +1244,9 @@ BOOL LoadObjects()
                DBCacheTable(cachedb, mainDB, _T("chassis"), _T("id"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("mobile_devices"), _T("id"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("access_points"), _T("id"), _T("*")) &&
-               DBCacheTable(cachedb, mainDB, _T("interfaces"), _T("id"), _T("*")) &&
-               DBCacheTable(cachedb, mainDB, _T("interface_address_list"), _T("iface_id,ip_addr"), _T("*")) &&
+               DBCacheTable(cachedb, mainDB, _T("interfaces"), _T("id"), _T("*"), intColumns) &&
+               DBCacheTable(cachedb, mainDB, _T("interface_address_list"), _T("iface_id,ip_addr"), _T("*"), intColumns) &&
+               DBCacheTable(cachedb, mainDB, _T("interface_vlan_list"), _T("iface_id,vlan_id"), _T("*"), intColumns) &&
                DBCacheTable(cachedb, mainDB, _T("network_services"), _T("id"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("vpn_connectors"), _T("id"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("vpn_connector_networks"), _T("vpn_id,ip_addr"), _T("*")) &&

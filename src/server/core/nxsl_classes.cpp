@@ -863,6 +863,10 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *object, const TCHAR *attr)
    {
       value = new NXSL_Value(iface->getSpeed());
    }
+   else if (!_tcscmp(attr, _T("vlans")))
+   {
+      value = iface->getVlanListForNXSL();
+   }
    else if (!_tcscmp(attr, _T("zone")))
 	{
       if (g_flags & AF_ENABLE_ZONING)

@@ -1240,6 +1240,7 @@ typedef struct
 #define VID_DESTINATION_ADDRESS     ((UINT32)619)
 #define VID_HYPERVISOR_TYPE         ((UINT32)620)
 #define VID_HYPERVISOR_INFO         ((UINT32)621)
+#define VID_VLAN_LIST               ((UINT32)622)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

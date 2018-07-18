@@ -1050,21 +1050,17 @@ bool NetObj::saveACLToDB(DB_HANDLE hdb)
    if (!(m_modified & MODIFY_ACCESS_LIST))
       return true;
 
-   TCHAR szQuery[256];
-   bool success = false;
-   SAVE_PARAM sp;
-
-   // Save access list
-   lockACL();
-   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM acl WHERE object_id=%d"), m_id);
-   if (DBQuery(hdb, szQuery))
+   bool success = executeQueryOnObject(hdb, _T("DELETE FROM acl WHERE object_id=?"));
+   if (success)
    {
+      SAVE_PARAM sp;
       sp.dwObjectId = m_id;
       sp.hdb = hdb;
+
+      lockACL();
       m_accessList->enumerateElements(EnumerationHandler, &sp);
-      success = true;
+      unlockACL();
    }
-   unlockACL();
    return success;
 }
 
