@@ -1043,12 +1043,20 @@ void NXCPMessage::setFieldFromInt32Array(UINT32 fieldId, size_t numElements, con
  */
 void NXCPMessage::setFieldFromInt32Array(UINT32 fieldId, const IntegerArray<UINT32> *data)
 {
-   UINT32 *pdwBuffer = (UINT32 *)set(fieldId, NXCP_DT_BINARY, data->getBuffer(), false, data->size() * sizeof(UINT32));
-   if (pdwBuffer != NULL)
+   if (data != NULL)
    {
-      pdwBuffer++;   // First UINT32 is a length field
-      for(int i = 0; i < data->size(); i++)  // Convert UINT32s to network byte order
-         pdwBuffer[i] = htonl(pdwBuffer[i]);
+      UINT32 *pdwBuffer = (UINT32 *)set(fieldId, NXCP_DT_BINARY, data->getBuffer(), false, data->size() * sizeof(UINT32));
+      if (pdwBuffer != NULL)
+      {
+         pdwBuffer++;   // First UINT32 is a length field
+         for (int i = 0; i < data->size(); i++)  // Convert UINT32s to network byte order
+            pdwBuffer[i] = htonl(pdwBuffer[i]);
+      }
+   }
+   else
+   {
+      // Encode empty array
+      set(fieldId, NXCP_DT_BINARY, NULL, false, 0);
    }
 }
 
