@@ -22,6 +22,8 @@
 #include "libnxsrv.h"
 #include <nddrv.h>
 
+#define DEBUG_TAG _T("ndd.common")
+
 /**
  * Serialize radio interface information to JSON
  */
@@ -59,10 +61,10 @@ AccessPointInfo::AccessPointInfo(UINT32 index, const BYTE *macAddr, const InetAd
  */
 AccessPointInfo::~AccessPointInfo()
 {
-   safe_free(m_name);
-   safe_free(m_vendor);
-	safe_free(m_model);
-	safe_free(m_serial);
+   free(m_name);
+   free(m_vendor);
+	free(m_model);
+	free(m_serial);
 	delete m_radioInterfaces;
 }
 
@@ -101,7 +103,7 @@ void DriverData::attachToNode(UINT32 nodeId, const uuid& nodeGuid, const TCHAR *
    m_nodeId = nodeId;
    m_nodeGuid = nodeGuid;
    _tcslcpy(m_nodeName, nodeName, MAX_OBJECT_NAME);
-   nxlog_debug_tag(_T("ndd.common"), 5, _T("Driver data attached to node %s [%u]"), nodeName, nodeId);
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("Driver data attached to node %s [%u]"), nodeName, nodeId);
 }
 
 /**
@@ -372,7 +374,7 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, StringMa
 {
    bool success = false;
 
-	nxlog_debug(6, _T("NetworkDeviceDriver::getInterfaces(%p,%d,%s)"), snmp, useAliases, useIfXTable ? _T("true") : _T("false"));
+	nxlog_debug_tag(DEBUG_TAG, 6, _T("NetworkDeviceDriver::getInterfaces(%p,%d,%s)"), snmp, useAliases, useIfXTable ? _T("true") : _T("false"));
 
    // Get number of interfaces
 	// Some devices may not return ifNumber at all or return completely insane values
@@ -381,7 +383,10 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, StringMa
 	UINT32 interfaceCount = 0;
 	SnmpGet(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.2.1.2.1.0"), NULL, 0, &interfaceCount, sizeof(LONG), 0);
 	if ((interfaceCount <= 0) || (interfaceCount > 4096))
+	{
+	   nxlog_debug_tag(DEBUG_TAG, 6, _T("NetworkDeviceDriver::getInterfaces(%p): invalid interface count %d received from device"), snmp, interfaceCount);
 		interfaceCount = 64;
+	}
       
    // Create empty list
 	InterfaceList *ifList = new InterfaceList(interfaceCount);
@@ -405,7 +410,10 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, StringMa
             // Try to get name from ifXTable
 	         _sntprintf(oid, 128, _T(".1.3.6.1.2.1.31.1.1.1.1.%d"), iface->index);
 	         if (SnmpGet(snmp->getSnmpVersion(), snmp, oid, NULL, 0, iface->description, MAX_DB_STRING * sizeof(TCHAR), 0) != SNMP_ERR_SUCCESS)
-   	         break;
+	         {
+	            nxlog_debug_tag(DEBUG_TAG, 6, _T("NetworkDeviceDriver::getInterfaces(%p): cannot read interface description for interface %u"), snmp, iface->index);
+   	         continue;
+	         }
          }
 
          // Get interface alias
@@ -432,7 +440,7 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, StringMa
          if (!useIfXTable ||
 				 (SnmpGet(snmp->getSnmpVersion(), snmp, oid, NULL, 0, buffer, sizeof(buffer), 0) != SNMP_ERR_SUCCESS))
          {
-		      nx_strncpy(buffer, iface->description, 256);
+		      _tcslcpy(buffer, iface->description, 256);
 		   }
 
 			// Build full interface object name
@@ -440,7 +448,7 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, StringMa
          {
          	case 1:	// Use only alias if available, otherwise name
          		if (iface->name[0] == 0)
-	         		nx_strncpy(iface->name, buffer, MAX_DB_STRING);	// Alias is empty or not available
+         		   _tcslcpy(iface->name, buffer, MAX_DB_STRING);	// Alias is empty or not available
          		break;
          	case 2:	// Concatenate alias with name
          	case 3:	// Concatenate name with alias
@@ -459,7 +467,7 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, StringMa
 							TCHAR temp[MAX_DB_STRING];
 
 							_tcscpy(temp, iface->name);
-		         		nx_strncpy(iface->name, buffer, MAX_DB_STRING);
+							_tcslcpy(iface->name, buffer, MAX_DB_STRING);
          				if  (_tcslen(iface->name) < (MAX_DB_STRING - 3))
          				{
 		      				_sntprintf(&iface->name[_tcslen(iface->name)], MAX_DB_STRING - _tcslen(iface->name), _T(" (%s)"), temp);
@@ -469,11 +477,11 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, StringMa
          		}
          		else
          		{
-	         		nx_strncpy(iface->name, buffer, MAX_DB_STRING);	// Alias is empty or not available
+         		   _tcslcpy(iface->name, buffer, MAX_DB_STRING);	// Alias is empty or not available
 					}
          		break;
          	default:	// Use only name
-         		nx_strncpy(iface->name, buffer, MAX_DB_STRING);
+         	   _tcslcpy(iface->name, buffer, MAX_DB_STRING);
          		break;
          }
 
@@ -537,7 +545,7 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, StringMa
       }
 		else
 		{
-			DbgPrintf(6, _T("NetworkDeviceDriver::getInterfaces(%p): SNMP WALK .1.3.6.1.2.1.4.20.1.1 failed (%s)"), snmp, SNMPGetErrorText(error));
+		   nxlog_debug_tag(DEBUG_TAG, 6, _T("NetworkDeviceDriver::getInterfaces(%p): SNMP WALK .1.3.6.1.2.1.4.20.1.1 failed (%s)"), snmp, SNMPGetErrorText(error));
 		}
 
       // Get IP addresses from ipAddressTable if available
@@ -549,7 +557,7 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, StringMa
    }
 	else
 	{
-		DbgPrintf(6, _T("NetworkDeviceDriver::getInterfaces(%p): SNMP WALK .1.3.6.1.2.1.2.2.1.1 failed"), snmp);
+		nxlog_debug_tag(DEBUG_TAG, 6, _T("NetworkDeviceDriver::getInterfaces(%p): SNMP WALK .1.3.6.1.2.1.2.2.1.1 failed"), snmp);
 	}
 
    if (!success)
@@ -557,7 +565,7 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, StringMa
       delete_and_null(ifList);
    }
 
-	DbgPrintf(6, _T("NetworkDeviceDriver::getInterfaces(%p): completed, ifList=%p"), snmp, ifList);
+   nxlog_debug_tag(DEBUG_TAG, 6, _T("NetworkDeviceDriver::getInterfaces(%p): completed, ifList=%p"), snmp, ifList);
    return ifList;
 }
 

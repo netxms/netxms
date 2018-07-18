@@ -70,12 +70,17 @@ InterfaceList *JuniperDriver::getInterfaces(SNMP_Transport *snmp, StringMap *att
 	// Get interface list from standard MIB
 	InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(snmp, attributes, driverData, useAliases, useIfXTable);
 	if (ifList == NULL)
+	{
+	   nxlog_debug_tag(JUNIPER_DEBUG_TAG, 5, _T("getInterfaces: call to NetworkDeviceDriver::getInterfaces failed"));
 		return NULL;
+	}
 
 	// Update physical port locations
 	SNMP_Snapshot *chassisTable = SNMP_Snapshot::create(snmp, _T(".1.3.6.1.4.1.2636.3.3.2.1"));
 	if (chassisTable != NULL)
 	{
+      nxlog_debug_tag(JUNIPER_DEBUG_TAG, 5, _T("getInterfaces: cannot create snapshot of chassis table"));
+
 	   // Update slot/port for physical interfaces
       for(int i = 0; i < ifList->size(); i++)
       {
@@ -138,12 +143,16 @@ VlanList *JuniperDriver::getVlans(SNMP_Transport *snmp, StringMap *attributes, D
 {
    SNMP_Snapshot *vlanTable = SNMP_Snapshot::create(snmp, _T(".1.3.6.1.4.1.2636.3.40.1.5.1.5.1"));
    if (vlanTable == NULL)
+   {
+      nxlog_debug_tag(JUNIPER_DEBUG_TAG, 5, _T("getVlans: cannot create snapshot of VLAN table, fallback to NetworkDeviceDriver::getVlans"));
       return NetworkDeviceDriver::getVlans(snmp, attributes, driverData);
+   }
 
    SNMP_Snapshot *portTable = SNMP_Snapshot::create(snmp, _T(".1.3.6.1.4.1.2636.3.40.1.5.1.7.1"));
    if (portTable == NULL)
    {
       delete vlanTable;
+      nxlog_debug_tag(JUNIPER_DEBUG_TAG, 5, _T("getVlans: cannot create snapshot of port table, fallback to NetworkDeviceDriver::getVlans"));
       return NetworkDeviceDriver::getVlans(snmp, attributes, driverData);
    }
 

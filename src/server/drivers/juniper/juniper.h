@@ -26,6 +26,8 @@
 
 #include <nddrv.h>
 
+#define JUNIPER_DEBUG_TAG   _T("ndd.juniper")
+
 /**
  * Driver's class
  */
