@@ -59,6 +59,7 @@ Interface::Interface() : NetObj()
    m_pingLastTimeStamp = 0;
    m_ifTableSuffixLen = 0;
    m_ifTableSuffix = NULL;
+   m_vlans = NULL;
 }
 
 /**
@@ -103,6 +104,7 @@ Interface::Interface(const InetAddressList& addrList, UINT32 zoneUIN, bool bSynt
 	m_pingLastTimeStamp = 0;
    m_ifTableSuffixLen = 0;
    m_ifTableSuffix = NULL;
+   m_vlans = NULL;
 }
 
 /**
@@ -149,6 +151,7 @@ Interface::Interface(const TCHAR *name, const TCHAR *descr, UINT32 index, const 
 	m_pingLastTimeStamp = 0;
    m_ifTableSuffixLen = 0;
    m_ifTableSuffix = NULL;
+   m_vlans = NULL;
 }
 
 /**
@@ -157,6 +160,7 @@ Interface::Interface(const TCHAR *name, const TCHAR *descr, UINT32 index, const 
 Interface::~Interface()
 {
    free(m_ifTableSuffix);
+   delete m_vlans;
 }
 
 /**
@@ -282,9 +286,13 @@ bool Interface::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
       if (hResult != NULL)
       {
          int count = DBGetNumRows(hResult);
-         for(int i = 0; i < count; i++)
+         if (count > 0)
          {
-            m_vlans.add(DBGetFieldULong(hResult, i, 0));
+            m_vlans = new IntegerArray<UINT32>(count);
+            for (int i = 0; i < count; i++)
+            {
+               m_vlans->add(DBGetFieldULong(hResult, i, 0));
+            }
          }
          DBFreeResult(hResult);
       }
@@ -420,15 +428,15 @@ bool Interface::saveToDatabase(DB_HANDLE hdb)
          success = executeQueryOnObject(hdb, _T("DELETE FROM interface_vlan_list WHERE iface_id = ?"));
       }
 
-      if (success && !m_vlans.isEmpty())
+      if (success && (m_vlans != NULL) && !m_vlans->isEmpty())
       {
-         hStmt = DBPrepare(hdb, _T("INSERT INTO interface_vlan_list (iface_id,vlan_id) VALUES (?,?)"), m_vlans.size() > 1);
+         hStmt = DBPrepare(hdb, _T("INSERT INTO interface_vlan_list (iface_id,vlan_id) VALUES (?,?)"), m_vlans->size() > 1);
          if (hStmt != NULL)
          {
             DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
-            for(int i = 0; (i < m_vlans.size()) && success; i++)
+            for(int i = 0; (i < m_vlans->size()) && success; i++)
             {
-               DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_vlans.get(i));
+               DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_vlans->get(i));
                success = DBExecute(hStmt);
             }
             DBFreeStatement(hStmt);
@@ -1070,7 +1078,7 @@ void Interface::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
 	msg->setField(VID_ZONE_UIN, m_zoneUIN);
    msg->setFieldFromInt32Array(VID_IFTABLE_SUFFIX, m_ifTableSuffixLen, m_ifTableSuffix);
    msg->setField(VID_PARENT_INTERFACE, m_parentInterfaceId);
-   msg->setFieldFromInt32Array(VID_VLAN_LIST, &m_vlans);
+   msg->setFieldFromInt32Array(VID_VLAN_LIST, m_vlans);
 }
 
 /**
@@ -1375,9 +1383,13 @@ void Interface::setNetMask(const InetAddress& addr)
 void Interface::addVlan(UINT32 id)
 {
    lockProperties();
-   if (!m_vlans.contains(id))
+   if (m_vlans == NULL)
    {
-      m_vlans.add(id);
+      m_vlans = new IntegerArray<UINT32>();
+   }
+   if (!m_vlans->contains(id))
+   {
+      m_vlans->add(id);
       setModified(MODIFY_INTERFACE_PROPERTIES);
    }
    unlockProperties();
@@ -1398,9 +1410,12 @@ NXSL_Value *Interface::getVlanListForNXSL()
 {
    NXSL_Array *a = new NXSL_Array();
    lockProperties();
-   for(int i = 0; i < m_vlans.size(); i++)
+   if (m_vlans != NULL)
    {
-      a->append(new NXSL_Value(m_vlans.get(i)));
+      for (int i = 0; i < m_vlans->size(); i++)
+      {
+         a->append(new NXSL_Value(m_vlans->get(i)));
+      }
    }
    unlockProperties();
    return new NXSL_Value(a);
