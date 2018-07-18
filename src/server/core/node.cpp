@@ -794,6 +794,8 @@ InterfaceList *Node::getInterfaceList()
          }
 
          int useAliases = ConfigReadInt(_T("UseInterfaceAliases"), 0);
+         DbgPrintf(6, _T("Node::getInterfaceList(node=%s [%d]): calling driver (useAliases=%d, useIfXTable=%d)"),
+                  m_name, (int)m_id, useAliases, useIfXTable);
          pIfList = m_driver->getInterfaces(pTransport, &m_customAttributes, m_driverData, useAliases, useIfXTable);
 
          if ((pIfList != NULL) && (m_flags & NF_IS_BRIDGE))
@@ -801,6 +803,10 @@ InterfaceList *Node::getInterfaceList()
             BridgeMapPorts(pTransport, pIfList);
          }
          delete pTransport;
+      }
+      else
+      {
+         DbgPrintf(6, _T("Node::getInterfaceList(node=%s [%d]): cannot create SNMP transport"), m_name, (int)m_id);
       }
    }
 
