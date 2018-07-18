@@ -6780,6 +6780,20 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, UINT32 rqId
          VlanList *vlanList = m_driver->getVlans(snmp, &m_customAttributes, m_driverData);
          delete snmp;
 
+         if (vlanList != NULL)
+         {
+            lockChildList(false);
+            for(int i = 0; i < m_childList->size(); i++)
+            {
+               NetObj *object = m_childList->get(i);
+               if (object->getObjectClass() == OBJECT_INTERFACE)
+               {
+                  static_cast<Interface*>(object)->clearVlanList();
+               }
+            }
+            unlockChildList();
+         }
+
          MutexLock(m_mutexTopoAccess);
          if (vlanList != NULL)
          {
@@ -7135,7 +7149,10 @@ void Node::resolveVlanPorts(VlanList *vlanList)
                break;
          }
          if (iface != NULL)
+         {
             vlan->resolvePort(j, (iface->getSlotNumber() << 16) | iface->getPortNumber(), iface->getIfIndex(), iface->getId());
+            iface->addVlan(vlan->getVlanId());
+         }
       }
    }
 }

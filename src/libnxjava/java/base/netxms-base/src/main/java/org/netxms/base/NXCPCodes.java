@@ -1021,6 +1021,7 @@ public class NXCPCodes
    public static final long VID_DESTINATION_ADDRESS = 619;
    public static final long VID_HYPERVISOR_TYPE = 620;
    public static final long VID_HYPERVISOR_INFO = 621;
+   public static final long VID_VLAN_LIST = 622;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;

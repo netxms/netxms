@@ -1018,6 +1018,7 @@ protected:
    time_t m_pingLastTimeStamp;
    int m_ifTableSuffixLen;
    UINT32 *m_ifTableSuffix;
+   IntegerArray<UINT32> m_vlans;
 
    void icmpStatusPoll(UINT32 rqId, UINT32 nodeIcmpProxy, Cluster *cluster, InterfaceAdminState *adminState, InterfaceOperState *operState);
 	void paeStatusPoll(UINT32 rqId, SNMP_Transport *pTransport, Node *node);
@@ -1025,8 +1026,8 @@ protected:
 protected:
    virtual void onObjectDelete(UINT32 objectId);
 
-	virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId);
-   virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
+	virtual void fillMessageInternal(NXCPMessage *msg, UINT32 userId);
+   virtual UINT32 modifyFromMessageInternal(NXCPMessage *request);
 
    void setExpectedStateInternal(int state);
 
@@ -1083,6 +1084,7 @@ public:
                                 (m_type == IFTYPE_OTHER) &&
                                 !_tcscmp(m_name, _T("unknown")); }
    bool isSubInterface() const { return m_parentInterfaceId != 0; }
+   NXSL_Value *getVlanListForNXSL(NXSL_VM *vm);
 
    UINT64 getLastDownEventId() const { return m_lastDownEventId; }
    void setLastDownEventId(UINT64 id) { m_lastDownEventId = id; }
@@ -1105,6 +1107,8 @@ public:
 	void setSpeed(UINT64 speed) { m_speed = speed; setModified(MODIFY_INTERFACE_PROPERTIES); }
    void setIfTableSuffix(int len, const UINT32 *suffix) { lockProperties(); free(m_ifTableSuffix); m_ifTableSuffixLen = len; m_ifTableSuffix = (len > 0) ? (UINT32 *)nx_memdup(suffix, len * sizeof(UINT32)) : NULL; setModified(MODIFY_INTERFACE_PROPERTIES); unlockProperties(); }
    void setParentInterface(UINT32 parentInterfaceId) { m_parentInterfaceId = parentInterfaceId; setModified(MODIFY_INTERFACE_PROPERTIES); }
+   void addVlan(UINT32 id);
+   void clearVlanList() { lockProperties(); m_vlans.clear(); unlockProperties(); }
 
 	void updateZoneUIN();
 

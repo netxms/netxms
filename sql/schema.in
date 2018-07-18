@@ -440,9 +440,19 @@ CREATE TABLE interfaces
   PRIMARY KEY(id)
 ) TABLE_TYPE;
 
-/*
-** Interface IP addresses
-*/
+/**
+ * Interface VLANs
+ */
+CREATE TABLE interface_vlan_list
+(
+  iface_id integer not null,
+  vlan_id integer not null,
+  PRIMARY KEY(iface_id,vlan_id)
+) TABLE_TYPE;
+
+/**
+ * Interface IP addresses
+ */
 CREATE TABLE interface_address_list
 (
   iface_id integer not null,

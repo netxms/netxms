@@ -20,6 +20,7 @@ package org.netxms.client.objects;
 
 import java.net.InetAddress;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -420,6 +421,7 @@ public class Interface extends GenericObject implements ZoneMember
 	private int dot1xBackendState;
 	private SnmpObjectId ifTableSuffix;
    private long parentInterfaceId;
+   private long[] vlans;
 	
 	/**
 	 * @param msg
@@ -449,6 +451,8 @@ public class Interface extends GenericObject implements ZoneMember
 		dot1xBackendState = msg.getFieldAsInt32(NXCPCodes.VID_DOT1X_BACKEND_STATE);
 		ifTableSuffix = new SnmpObjectId(msg.getFieldAsUInt32Array(NXCPCodes.VID_IFTABLE_SUFFIX));
 		parentInterfaceId = msg.getFieldAsInt64(NXCPCodes.VID_PARENT_INTERFACE);
+		vlans = msg.getFieldAsUInt32Array(NXCPCodes.VID_VLAN_LIST);
+		Arrays.sort(vlans);
 		
 		int count = msg.getFieldAsInt32(NXCPCodes.VID_IP_ADDRESS_COUNT);
 		ipAddressList = new ArrayList<InetAddressEx>(count);
@@ -902,6 +906,14 @@ public class Interface extends GenericObject implements ZoneMember
    public Interface getParentInterface()
    {
       return session.findObjectById(parentInterfaceId, Interface.class);
+   }
+
+   /**
+    * @return the vlans
+    */
+   public long[] getVlans()
+   {
+      return vlans;
    }
 
    /* (non-Javadoc)

@@ -116,6 +116,8 @@ public class InterfaceListLabelProvider extends LabelProvider implements ITableL
             return getPeerProtocol(iface);
          case InterfacesTab.COLUMN_SPEED:
             return (iface.getSpeed() > 0) ? ifSpeedTotext(iface.getSpeed()) : ""; //$NON-NLS-1$
+         case InterfacesTab.COLUMN_VLAN:
+            return getVlanList(iface);
 		}
 		return null;
 	}
@@ -266,5 +268,26 @@ public class InterfaceListLabelProvider extends LabelProvider implements ITableL
          return divideSpeed(speed, 9) + Messages.get().InterfaceListLabelProvider_Gbps;
       
       return divideSpeed(speed, 12) + Messages.get().InterfaceListLabelProvider_Tbps;
+   }
+   
+   /**
+    * Get VLAN list from interface as string
+    * 
+    * @param iface interface object
+    * @return VLAN list as string
+    */
+   private static String getVlanList(Interface iface)
+   {
+      long[] vlans = iface.getVlans();
+      if (vlans.length == 0)
+         return "";
+      StringBuilder sb = new StringBuilder();
+      sb.append(vlans[0]);
+      for(int i = 1; i < vlans.length; i++)
+      {
+         sb.append(", ");
+         sb.append(vlans[i]);
+      }
+      return sb.toString();
    }
 }

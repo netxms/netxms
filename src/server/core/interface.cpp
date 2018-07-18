@@ -271,6 +271,24 @@ bool Interface::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    DBFreeResult(hResult);
 	DBFreeStatement(hStmt);
 
+	// Read VLANs
+   hStmt = DBPrepare(hdb, _T("SELECT vlan_id FROM interface_vlan_list WHERE iface_id = ?"));
+   if (hStmt != NULL)
+   {
+      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+      hResult = DBSelectPrepared(hStmt);
+      if (hResult != NULL)
+      {
+         int count = DBGetNumRows(hResult);
+         for(int i = 0; i < count; i++)
+         {
+            m_vlans.add(DBGetFieldULong(hResult, i, 0));
+         }
+         DBFreeResult(hResult);
+      }
+      DBFreeStatement(hStmt);
+   }
+
    // Read IP addresses
    hStmt = DBPrepare(hdb, _T("SELECT ip_addr,ip_netmask FROM interface_address_list WHERE iface_id = ?"));
    if (hStmt != NULL)
@@ -393,18 +411,35 @@ bool Interface::saveToDatabase(DB_HANDLE hdb)
       success = DBExecute(hStmt);
       DBFreeStatement(hStmt);
 
-      // Save IP addresses
+      // Save VLAN list
       if (success)
       {
-         success = false;
+         success = executeQueryOnObject(hdb, _T("DELETE FROM interface_vlan_list WHERE iface_id = ?"));
+      }
 
-         hStmt = DBPrepare(hdb, _T("DELETE FROM interface_address_list WHERE iface_id = ?"));
+      if (success && !m_vlans.isEmpty())
+      {
+         hStmt = DBPrepare(hdb, _T("INSERT INTO interface_vlan_list (iface_id,vlan_id) VALUES (?,?)"), m_vlans.size() > 1);
          if (hStmt != NULL)
          {
             DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
-            success = DBExecute(hStmt);
+            for(int i = 0; (i < m_vlans.size()) && success; i++)
+            {
+               DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_vlans.get(i));
+               success = DBExecute(hStmt);
+            }
             DBFreeStatement(hStmt);
          }
+         else
+         {
+            success = false;
+         }
+      }
+
+      // Save IP addresses
+      if (success)
+      {
+         success = executeQueryOnObject(hdb, _T("DELETE FROM interface_address_list WHERE iface_id = ?"));
       }
 
       if (success && (m_ipAddressList.size() > 0))
@@ -457,6 +492,8 @@ bool Interface::deleteFromDatabase(DB_HANDLE hdb)
       success = executeQueryOnObject(hdb, _T("DELETE FROM interfaces WHERE id=?"));
    if (success)
       success = executeQueryOnObject(hdb, _T("DELETE FROM interface_address_list WHERE iface_id=?"));
+   if (success)
+      success = executeQueryOnObject(hdb, _T("DELETE FROM interface_vlan_list WHERE iface_id=?"));
    return success;
 }
 
@@ -1004,57 +1041,58 @@ void Interface::paeStatusPoll(UINT32 rqId, SNMP_Transport *pTransport, Node *nod
 /**
  * Create NXCP message with object's data
  */
-void Interface::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
+void Interface::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
 {
-   NetObj::fillMessageInternal(pMsg, userId);
+   NetObj::fillMessageInternal(msg, userId);
 
-   m_ipAddressList.fillMessage(pMsg, VID_IP_ADDRESS_COUNT, VID_IP_ADDRESS_LIST_BASE);
-   pMsg->setField(VID_IF_INDEX, m_index);
-   pMsg->setField(VID_IF_TYPE, m_type);
-   pMsg->setField(VID_MTU, m_mtu);
-   pMsg->setField(VID_SPEED, m_speed);
-   pMsg->setField(VID_IF_SLOT, m_slotNumber);
-   pMsg->setField(VID_IF_PORT, m_portNumber);
-   pMsg->setField(VID_MAC_ADDR, m_macAddr, MAC_ADDR_LENGTH);
-	pMsg->setField(VID_REQUIRED_POLLS, (WORD)m_requiredPollCount);
-	pMsg->setField(VID_PEER_NODE_ID, m_peerNodeId);
-	pMsg->setField(VID_PEER_INTERFACE_ID, m_peerInterfaceId);
-	pMsg->setField(VID_PEER_PROTOCOL, (INT16)m_peerDiscoveryProtocol);
-	pMsg->setField(VID_DESCRIPTION, m_description);
-   pMsg->setField(VID_ALIAS, m_alias);
-	pMsg->setField(VID_ADMIN_STATE, m_adminState);
-	pMsg->setField(VID_OPER_STATE, m_operState);
-	pMsg->setField(VID_DOT1X_PAE_STATE, m_dot1xPaeAuthState);
-	pMsg->setField(VID_DOT1X_BACKEND_STATE, m_dot1xBackendAuthState);
-	pMsg->setField(VID_ZONE_UIN, m_zoneUIN);
-   pMsg->setFieldFromInt32Array(VID_IFTABLE_SUFFIX, m_ifTableSuffixLen, m_ifTableSuffix);
-   pMsg->setField(VID_PARENT_INTERFACE, m_parentInterfaceId);
+   m_ipAddressList.fillMessage(msg, VID_IP_ADDRESS_COUNT, VID_IP_ADDRESS_LIST_BASE);
+   msg->setField(VID_IF_INDEX, m_index);
+   msg->setField(VID_IF_TYPE, m_type);
+   msg->setField(VID_MTU, m_mtu);
+   msg->setField(VID_SPEED, m_speed);
+   msg->setField(VID_IF_SLOT, m_slotNumber);
+   msg->setField(VID_IF_PORT, m_portNumber);
+   msg->setField(VID_MAC_ADDR, m_macAddr, MAC_ADDR_LENGTH);
+	msg->setField(VID_REQUIRED_POLLS, (WORD)m_requiredPollCount);
+	msg->setField(VID_PEER_NODE_ID, m_peerNodeId);
+	msg->setField(VID_PEER_INTERFACE_ID, m_peerInterfaceId);
+	msg->setField(VID_PEER_PROTOCOL, (INT16)m_peerDiscoveryProtocol);
+	msg->setField(VID_DESCRIPTION, m_description);
+   msg->setField(VID_ALIAS, m_alias);
+	msg->setField(VID_ADMIN_STATE, m_adminState);
+	msg->setField(VID_OPER_STATE, m_operState);
+	msg->setField(VID_DOT1X_PAE_STATE, m_dot1xPaeAuthState);
+	msg->setField(VID_DOT1X_BACKEND_STATE, m_dot1xBackendAuthState);
+	msg->setField(VID_ZONE_UIN, m_zoneUIN);
+   msg->setFieldFromInt32Array(VID_IFTABLE_SUFFIX, m_ifTableSuffixLen, m_ifTableSuffix);
+   msg->setField(VID_PARENT_INTERFACE, m_parentInterfaceId);
+   msg->setFieldFromInt32Array(VID_VLAN_LIST, &m_vlans);
 }
 
 /**
  * Modify object from message
  */
-UINT32 Interface::modifyFromMessageInternal(NXCPMessage *pRequest)
+UINT32 Interface::modifyFromMessageInternal(NXCPMessage *request)
 {
    // Flags
-   if (pRequest->isFieldExist(VID_FLAGS))
+   if (request->isFieldExist(VID_FLAGS))
    {
-      UINT32 mask = pRequest->isFieldExist(VID_FLAGS_MASK) ? (pRequest->getFieldAsUInt32(VID_FLAGS_MASK) & IF_USER_FLAGS_MASK) : IF_USER_FLAGS_MASK;
+      UINT32 mask = request->isFieldExist(VID_FLAGS_MASK) ? (request->getFieldAsUInt32(VID_FLAGS_MASK) & IF_USER_FLAGS_MASK) : IF_USER_FLAGS_MASK;
       m_flags &= ~mask;
-      m_flags |= pRequest->getFieldAsUInt32(VID_FLAGS) & mask;
+      m_flags |= request->getFieldAsUInt32(VID_FLAGS) & mask;
    }
 
    // Number of required polls
-   if (pRequest->isFieldExist(VID_REQUIRED_POLLS))
-      m_requiredPollCount = (int)pRequest->getFieldAsUInt16(VID_REQUIRED_POLLS);
+   if (request->isFieldExist(VID_REQUIRED_POLLS))
+      m_requiredPollCount = (int)request->getFieldAsUInt16(VID_REQUIRED_POLLS);
 
 	// Expected interface state
-	if (pRequest->isFieldExist(VID_EXPECTED_STATE))
+	if (request->isFieldExist(VID_EXPECTED_STATE))
 	{
-		setExpectedStateInternal(pRequest->getFieldAsInt16(VID_EXPECTED_STATE));
+		setExpectedStateInternal(request->getFieldAsInt16(VID_EXPECTED_STATE));
 	}
 
-   return NetObj::modifyFromMessageInternal(pRequest);
+   return NetObj::modifyFromMessageInternal(request);
 }
 
 /**
@@ -1328,11 +1366,40 @@ void Interface::setNetMask(const InetAddress& addr)
 }
 
 /**
+ * Add VLAN
+ */
+void Interface::addVlan(UINT32 id)
+{
+   lockProperties();
+   if (!m_vlans.contains(id))
+   {
+      m_vlans.add(id);
+      setModified(MODIFY_INTERFACE_PROPERTIES);
+   }
+   unlockProperties();
+}
+
+/**
  * Create NXSL object for this object
  */
 NXSL_Value *Interface::createNXSLObject(NXSL_VM *vm)
 {
    return vm->createValue(new NXSL_Object(vm, &g_nxslInterfaceClass, this));
+}
+
+/**
+ * Get VLAN list as NXSL array
+ */
+NXSL_Value *Interface::getVlanListForNXSL(NXSL_VM *vm)
+{
+   NXSL_Array *a = new NXSL_Array(vm);
+   lockProperties();
+   for(int i = 0; i < m_vlans.size(); i++)
+   {
+      a->append(vm->createValue(m_vlans.get(i)));
+   }
+   unlockProperties();
+   return vm->createValue(a);
 }
 
 /**
