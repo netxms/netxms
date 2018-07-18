@@ -452,7 +452,10 @@ public class Interface extends GenericObject implements ZoneMember
 		ifTableSuffix = new SnmpObjectId(msg.getFieldAsUInt32Array(NXCPCodes.VID_IFTABLE_SUFFIX));
 		parentInterfaceId = msg.getFieldAsInt64(NXCPCodes.VID_PARENT_INTERFACE);
 		vlans = msg.getFieldAsUInt32Array(NXCPCodes.VID_VLAN_LIST);
-		Arrays.sort(vlans);
+		if (vlans != null)
+		{
+		   Arrays.sort(vlans);
+		}
 		
 		int count = msg.getFieldAsInt32(NXCPCodes.VID_IP_ADDRESS_COUNT);
 		ipAddressList = new ArrayList<InetAddressEx>(count);
@@ -913,7 +916,7 @@ public class Interface extends GenericObject implements ZoneMember
     */
    public long[] getVlans()
    {
-      return vlans;
+      return (vlans != null) ? vlans : new long[0];
    }
 
    /* (non-Javadoc)
