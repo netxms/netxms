@@ -318,11 +318,10 @@ static THREAD_RESULT THREAD_CALL POpenWorker(void *arg)
 	{
       data->status = SYSINFO_RC_SUCCESS;
 
+      TCHAR value[32768];
       while(true)
       {
-         TCHAR value[MAX_RESULT_LENGTH];
-
-         TCHAR *ret = safe_fgetts(value, MAX_RESULT_LENGTH, hPipe);
+         TCHAR *ret = safe_fgetts(value, 32768, hPipe);
          if (ret == NULL)
          {
             if (!feof(hPipe))
