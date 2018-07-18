@@ -21,6 +21,8 @@
 	NX-1456 (DCI values aggregated on cluster may be incorrect on first few polls after server startup)
 	NX-1460 (Configure does not detect pthread_setname_np on macOS)
 	NX-1464 (Agent connection via proxy is not working for IPv6 destinations)
+	NX-1466 (Line length in agent's external table script limited to 255 characters)
+	NX-1467 (Agent cannot process requests for parameters longer than 255 characters)
 
 
 *

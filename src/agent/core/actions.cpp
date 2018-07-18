@@ -49,7 +49,7 @@ BOOL AddAction(const TCHAR *pszName, int iType, const TCHAR *pArg,
       // Create new entry in action list
       m_dwNumActions++;
       m_pActionList = (ACTION *)realloc(m_pActionList, sizeof(ACTION) * m_dwNumActions);
-      nx_strncpy(m_pActionList[i].szName, pszName, MAX_PARAM_NAME);
+      _tcslcpy(m_pActionList[i].szName, pszName, MAX_PARAM_NAME);
       m_pActionList[i].iType = iType;
       nx_strncpy(m_pActionList[i].szDescription, pszDescription, MAX_DB_STRING);
       switch(iType)
