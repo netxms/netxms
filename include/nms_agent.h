@@ -60,6 +60,7 @@
 #define AGENT_LISTEN_PORT        4700
 #define AGENT_TUNNEL_PORT        4703
 #define AGENT_PROTOCOL_VERSION   2
+#define MAX_RUNTIME_PARAM_NAME   1024  /* maximum possible parameter name in runtime (i.e. with arguments) */
 #define MAX_RESULT_LENGTH        256
 #define MAX_CMD_LEN              256
 #define COMMAND_TIMEOUT          60

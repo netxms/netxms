@@ -88,8 +88,8 @@ static void ProcessPushRequest(NamedPipe *pipe, void *arg)
 			UINT32 varId = VID_PUSH_DCI_DATA_BASE;
 			for(DWORD i = 0; i < count; i++)
 			{
-				TCHAR name[MAX_PARAM_NAME], value[MAX_RESULT_LENGTH];
-				msg->getFieldAsString(varId++, name, MAX_PARAM_NAME);
+				TCHAR name[MAX_RUNTIME_PARAM_NAME], value[MAX_RESULT_LENGTH];
+				msg->getFieldAsString(varId++, name, MAX_RUNTIME_PARAM_NAME);
 				msg->getFieldAsString(varId++, value, MAX_RESULT_LENGTH);
 				PushData(name, value, objectId, timestamp);
 			}

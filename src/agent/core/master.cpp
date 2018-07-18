@@ -32,8 +32,8 @@ LONG RestartAgent();
  */
 static void H_GetParameter(NXCPMessage *pRequest, NXCPMessage *pMsg)
 {
-   TCHAR name[MAX_PARAM_NAME];
-   pRequest->getFieldAsString(VID_PARAMETER, name, MAX_PARAM_NAME);
+   TCHAR name[MAX_RUNTIME_PARAM_NAME];
+   pRequest->getFieldAsString(VID_PARAMETER, name, MAX_RUNTIME_PARAM_NAME);
 
    TCHAR value[MAX_RESULT_LENGTH];
    VirtualSession session(0);
@@ -48,8 +48,8 @@ static void H_GetParameter(NXCPMessage *pRequest, NXCPMessage *pMsg)
  */
 static void H_GetTable(NXCPMessage *pRequest, NXCPMessage *pMsg)
 {
-   TCHAR name[MAX_PARAM_NAME];
-   pRequest->getFieldAsString(VID_PARAMETER, name, MAX_PARAM_NAME);
+   TCHAR name[MAX_RUNTIME_PARAM_NAME];
+   pRequest->getFieldAsString(VID_PARAMETER, name, MAX_RUNTIME_PARAM_NAME);
 
    Table value;
    VirtualSession session(0);
@@ -64,8 +64,8 @@ static void H_GetTable(NXCPMessage *pRequest, NXCPMessage *pMsg)
  */
 static void H_GetList(NXCPMessage *pRequest, NXCPMessage *pMsg)
 {
-   TCHAR name[MAX_PARAM_NAME];
-   pRequest->getFieldAsString(VID_PARAMETER, name, MAX_PARAM_NAME);
+   TCHAR name[MAX_RUNTIME_PARAM_NAME];
+   pRequest->getFieldAsString(VID_PARAMETER, name, MAX_RUNTIME_PARAM_NAME);
 
    StringList value;
    VirtualSession session(0);
