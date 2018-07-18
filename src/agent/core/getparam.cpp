@@ -449,9 +449,9 @@ void AddPushParameter(const TCHAR *name, int dataType, const TCHAR *description)
    {
       // Add new parameter
       m_pPushParamList = (NETXMS_SUBAGENT_PUSHPARAM *)realloc(m_pPushParamList, sizeof(NETXMS_SUBAGENT_PUSHPARAM) * (m_iNumPushParams + 1));
-      nx_strncpy(m_pPushParamList[m_iNumPushParams].name, name, MAX_PARAM_NAME - 1);
+      _tcslcpy(m_pPushParamList[m_iNumPushParams].name, name, MAX_PARAM_NAME - 1);
       m_pPushParamList[m_iNumPushParams].dataType = dataType;
-      nx_strncpy(m_pPushParamList[m_iNumPushParams].description, description, MAX_DB_STRING);
+      _tcslcpy(m_pPushParamList[m_iNumPushParams].description, description, MAX_DB_STRING);
       m_iNumPushParams++;
    }
 }
@@ -520,7 +520,7 @@ void AddList(const TCHAR *name, LONG (* handler)(const TCHAR *, const TCHAR *, S
    {
       // Add new enum
       m_pEnumList = (NETXMS_SUBAGENT_LIST *)realloc(m_pEnumList, sizeof(NETXMS_SUBAGENT_LIST) * (m_iNumEnums + 1));
-      nx_strncpy(m_pEnumList[m_iNumEnums].name, name, MAX_PARAM_NAME - 1);
+      _tcslcpy(m_pEnumList[m_iNumEnums].name, name, MAX_PARAM_NAME - 1);
       m_pEnumList[m_iNumEnums].handler = handler;
       m_pEnumList[m_iNumEnums].arg = arg;
       m_iNumEnums++;
@@ -544,8 +544,8 @@ void AddTable(const TCHAR *name, LONG (* handler)(const TCHAR *, const TCHAR *, 
       // Replace existing handler and arg
       m_pTableList[i].handler = handler;
       m_pTableList[i].arg = arg;
-      nx_strncpy(m_pTableList[m_iNumTables].instanceColumns, instanceColumns, MAX_COLUMN_NAME * MAX_INSTANCE_COLUMNS);
-		nx_strncpy(m_pTableList[m_iNumTables].description, description, MAX_DB_STRING);
+      _tcslcpy(m_pTableList[m_iNumTables].instanceColumns, instanceColumns, MAX_COLUMN_NAME * MAX_INSTANCE_COLUMNS);
+		_tcslcpy(m_pTableList[m_iNumTables].description, description, MAX_DB_STRING);
       m_pTableList[i].numColumns = numColumns;
       m_pTableList[i].columns = columns;
    }
@@ -553,11 +553,11 @@ void AddTable(const TCHAR *name, LONG (* handler)(const TCHAR *, const TCHAR *, 
    {
       // Add new table
       m_pTableList = (NETXMS_SUBAGENT_TABLE *)realloc(m_pTableList, sizeof(NETXMS_SUBAGENT_TABLE) * (m_iNumTables + 1));
-      nx_strncpy(m_pTableList[m_iNumTables].name, name, MAX_PARAM_NAME);
+      _tcslcpy(m_pTableList[m_iNumTables].name, name, MAX_PARAM_NAME);
       m_pTableList[m_iNumTables].handler = handler;
       m_pTableList[m_iNumTables].arg = arg;
-      nx_strncpy(m_pTableList[m_iNumTables].instanceColumns, instanceColumns, MAX_COLUMN_NAME * MAX_INSTANCE_COLUMNS);
-		nx_strncpy(m_pTableList[m_iNumTables].description, description, MAX_DB_STRING);
+      _tcslcpy(m_pTableList[m_iNumTables].instanceColumns, instanceColumns, MAX_COLUMN_NAME * MAX_INSTANCE_COLUMNS);
+		_tcslcpy(m_pTableList[m_iNumTables].description, description, MAX_DB_STRING);
       m_pTableList[m_iNumTables].numColumns = numColumns;
       m_pTableList[m_iNumTables].columns = columns;
       m_iNumTables++;

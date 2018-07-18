@@ -857,10 +857,10 @@ void CommSession::authenticate(NXCPMessage *pRequest, NXCPMessage *pMsg)
  */
 void CommSession::getParameter(NXCPMessage *pRequest, NXCPMessage *pMsg)
 {
-   TCHAR szParameter[MAX_PARAM_NAME], szValue[MAX_RESULT_LENGTH];
+   TCHAR szParameter[MAX_RUNTIME_PARAM_NAME], szValue[MAX_RESULT_LENGTH];
    UINT32 dwErrorCode;
 
-   pRequest->getFieldAsString(VID_PARAMETER, szParameter, MAX_PARAM_NAME);
+   pRequest->getFieldAsString(VID_PARAMETER, szParameter, MAX_RUNTIME_PARAM_NAME);
    dwErrorCode = GetParameterValue(szParameter, szValue, this);
    pMsg->setField(VID_RCC, dwErrorCode);
    if (dwErrorCode == ERR_SUCCESS)
@@ -872,8 +872,8 @@ void CommSession::getParameter(NXCPMessage *pRequest, NXCPMessage *pMsg)
  */
 void CommSession::getList(NXCPMessage *pRequest, NXCPMessage *pMsg)
 {
-   TCHAR szParameter[MAX_PARAM_NAME];
-   pRequest->getFieldAsString(VID_PARAMETER, szParameter, MAX_PARAM_NAME);
+   TCHAR szParameter[MAX_RUNTIME_PARAM_NAME];
+   pRequest->getFieldAsString(VID_PARAMETER, szParameter, MAX_RUNTIME_PARAM_NAME);
 
    StringList value;
    UINT32 dwErrorCode = GetListValue(szParameter, &value, this);
@@ -889,9 +889,9 @@ void CommSession::getList(NXCPMessage *pRequest, NXCPMessage *pMsg)
  */
 void CommSession::getTable(NXCPMessage *pRequest, NXCPMessage *pMsg)
 {
-   TCHAR szParameter[MAX_PARAM_NAME];
+   TCHAR szParameter[MAX_RUNTIME_PARAM_NAME];
 
-   pRequest->getFieldAsString(VID_PARAMETER, szParameter, MAX_PARAM_NAME);
+   pRequest->getFieldAsString(VID_PARAMETER, szParameter, MAX_RUNTIME_PARAM_NAME);
 
    Table value;
    UINT32 dwErrorCode = GetTableValue(szParameter, &value, this);
@@ -910,8 +910,8 @@ void CommSession::action(NXCPMessage *pRequest, NXCPMessage *pMsg)
    if ((g_dwFlags & AF_ENABLE_ACTIONS) && m_controlServer)
    {
       // Get action name and arguments
-      TCHAR action[MAX_PARAM_NAME];
-      pRequest->getFieldAsString(VID_ACTION_NAME, action, MAX_PARAM_NAME);
+      TCHAR action[MAX_RUNTIME_PARAM_NAME];
+      pRequest->getFieldAsString(VID_ACTION_NAME, action, MAX_RUNTIME_PARAM_NAME);
 
       int numArgs = pRequest->getFieldAsInt32(VID_NUM_ARGS);
       StringList *args = new StringList;
