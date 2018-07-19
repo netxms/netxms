@@ -130,6 +130,7 @@ OPENSSL_LIBCRYPTO="crypto"
 SYSTEMD_SUPPORT="yes"
 EXEC_LDFLAGS=""
 EXEC_LIBS=""
+DIST_BUILD="no"
 
 
 #--------------------------------------------------------------------
@@ -729,9 +730,7 @@ AC_ARG_WITH(dist,
 	CONTRIB_MODULES="mibs backgrounds music templates"
 	CLIENT_COMPONENTS="java nxalarm nxevent nxpush nxshell nxsms"
 	SERVER_TOOLS="nxconfig"
-	# disable unnecessary checks
-	DISABLE_ENCRYPTION="yes"
-	DISABLE_ICONV="yes"
+	DIST_BUILD="yes"
 )
 
 AC_ARG_WITH(tests,
@@ -1877,7 +1876,7 @@ fi
 # Checks for OpenSSL/CommonCrypto
 #--------------------------------------------------------------------
 
-if test "x$DISABLE_ENCRYPTION" != "xyes" ; then
+if test "x$DISABLE_ENCRYPTION" != "xyes" -a "x$DIST_BUILD" != "xyes"; then
 	USE_COMMONCRYPTO="no"
 	if test "x$PLATFORM" = "xDarwin" -a "x$DISABLE_COMMONCRYPTO" != "xyes"; then
 		AC_CHECK_FUNC(CC_MD5_Init, [ 
@@ -2216,7 +2215,7 @@ if test "x$HAVE_JANSSON" = "xno"; then
 	MODULES="jansson $MODULES"
 fi
 
-if test "x$DISABLE_LMSENSORS" = "xno"; then
+if test "x$DISABLE_LMSENSORS" = "xno" -a "x$DIST_BUILD" != "xyes"; then
 	HAVE_LMSENSORS=yes
 	AC_CHECK_HEADER(sensors/sensors.h,,HAVE_LMSENSORS=no)
 	if test "x$HAVE_LMSENSORS" = "xyes"; then
@@ -2227,7 +2226,7 @@ if test "x$DISABLE_LMSENSORS" = "xno"; then
 	fi
 fi
 
-if test "x$DISABLE_CURL" = "xno"; then
+if test "x$DISABLE_CURL" = "xno" -a "x$DIST_BUILD" != "xyes"; then
 	AC_CHECK_HEADER(curl/curl.h,HAVE_LIBCURL=yes,HAVE_LIBCURL=no)
 	if test "x$HAVE_LIBCURL" = "xyes"; then
 		AC_CHECK_LIB(curl, curl_global_init, [ HAVE_LIBCURL=yes ], [ HAVE_LIBCURL=no ])
@@ -2248,7 +2247,7 @@ if test "x$DISABLE_CURL" = "xno"; then
 	AC_DEFINE(HAVE_LIBCURL, 1, Define to 1 if libcurl is available)
 fi
 
-if test "x$DISABLE_SSH" != "xyes"; then
+if test "x$DISABLE_SSH" != "xyes" -a "x$DIST_BUILD" != "xyes"; then
 	AC_CHECK_HEADER(libssh/libssh.h,HAVE_LIBSSH=yes,HAVE_LIBSSH=no)
 	if test "x$HAVE_LIBSSH" = "xyes"; then
 		AC_CHECK_LIB(ssh, ssh_version, [ HAVE_LIBSSH=yes ], [ HAVE_LIBSSH=no ])
@@ -2264,7 +2263,7 @@ else
 	HAVE_LIBSSH=no
 fi
 
-if test "x$LDAP_SUPPORT" = "xyes"; then
+if test "x$LDAP_SUPPORT" = "xyes" -a "x$DIST_BUILD" != "xyes"; then
 	AC_CHECK_HEADER(ldap.h,HAVE_LDAP=yes,HAVE_LDAP=no)
 	if test "x$HAVE_LDAP" = "xyes"; then
 		AC_CHECK_LIB(ldap, ldap_init, [ HAVE_LDAP=yes ], [ HAVE_LDAP=no ])
@@ -2825,7 +2824,7 @@ if test "x$ac_cv_func_wcsftime" = "xyes"; then
 	)
 fi
 
-if test "x$DISABLE_ICONV" != "xyes"; then
+if test "x$DISABLE_ICONV" != "xyes" -a "x$DIST_BUILD" != "xyes"; then
 	AC_CHECK_LIB(iconv, libiconv_open,
 		[ ac_found_iconv=yes
 		  LIBS="$LIBS -liconv"
@@ -3559,7 +3558,7 @@ fi
 # MQTT
 #--------------------------------------------------------------------
 
-if test "x$DISABLE_MQTT" != "xyes"; then
+if test "x$DISABLE_MQTT" != "xyes" -a "x$DIST_BUILD" != "xyes"; then
 	OLD_CPPFLAGS="$CPPFLAGS"
 	OLD_LDFLAGS="$LDFLAGS"
 	OLD_LIBS="$LIBS"
