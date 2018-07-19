@@ -24,6 +24,23 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 30.42 to 30.43 (changes also included into 22.32)
+ */
+static bool H_UpgradeFromV42()
+{
+   if (GetSchemaLevelForMajorVersion(22) < 32)
+   {
+      CHK_EXEC(CreateLibraryScript(17, _T("ee6dd107-982b-4ad1-980b-fc0cc7a03911"), _T("Hook::DiscoveryPoll"),
+               _T("/* Available global variables:\r\n *  $node - current node, object of 'Node' type\r\n *\r\n * Expected return value:\r\n *  none - returned value is ignored\r\n */\r\n")));
+      CHK_EXEC(CreateLibraryScript(18, _T("a02ea666-e1e9-4f98-a746-1c3ce19428e9"), _T("Hook::PostObjectCreate"),
+               _T("/* Available global variables:\r\n *  $object - current object, one of 'NetObj' subclasses\r\n *  $node - current object if it is 'Node' class\r\n *\r\n * Expected return value:\r\n *  none - returned value is ignored\r\n */\r\n")));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(22, 32));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(43));
+   return true;
+}
+
+/**
  * Upgrade from 30.41 to 30.42 (changes also included into 22.31)
  */
 static bool H_UpgradeFromV41()
@@ -1323,6 +1340,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 42, 30, 43, H_UpgradeFromV42 },
    { 41, 30, 42, H_UpgradeFromV41 },
    { 40, 30, 41, H_UpgradeFromV40 },
    { 39, 30, 40, H_UpgradeFromV39 },

@@ -104,6 +104,8 @@ bool IsEventPairInUse(UINT32 code1, UINT32 code2);
 int NextFreeEPPruleID();
 bool AddEventToEPPRule(const TCHAR *guid, UINT32 eventCode);
 
+bool CreateLibraryScript(UINT32 id, const TCHAR *guid, const TCHAR *name, const TCHAR *code);
+
 IntegerArray<UINT32> *GetDataCollectionTargets();
 bool IsDataTableExist(const TCHAR *format, UINT32 id);
 

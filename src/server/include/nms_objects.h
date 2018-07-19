@@ -821,6 +821,8 @@ public:
 
    virtual NXSL_Value *createNXSLObject(NXSL_VM *vm);
 
+   void executeHookScript(const TCHAR *hookName);
+
    ModuleData *getModuleData(const TCHAR *module);
    void setModuleData(const TCHAR *module, ModuleData *data);
 
@@ -1328,8 +1330,6 @@ public:
    virtual bool isReadyForInstancePoll();
    void lockForInstancePoll();
    void unlockForInstancePoll();
-
-   void executeHookScript(const TCHAR *hookName);
 };
 
 inline bool DataCollectionTarget::isReadyForInstancePoll()

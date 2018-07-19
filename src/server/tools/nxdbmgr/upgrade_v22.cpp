@@ -24,11 +24,24 @@
 #include <nxevent.h>
 
 /**
- * Upgrade from 22.31 to 30.0
+ * Upgrade from 22.32 to 30.0
+ */
+static bool H_UpgradeFromV32()
+{
+   CHK_EXEC(SetMajorSchemaVersion(30, 0));
+   return true;
+}
+
+/**
+ * Upgrade from 22.31 to 22.32
  */
 static bool H_UpgradeFromV31()
 {
-   CHK_EXEC(SetMajorSchemaVersion(30, 0));
+   CHK_EXEC(CreateLibraryScript(17, _T("ee6dd107-982b-4ad1-980b-fc0cc7a03911"), _T("Hook::DiscoveryPoll"),
+            _T("/* Available global variables:\r\n *  $node - current node, object of 'Node' type\r\n *\r\n * Expected return value:\r\n *  none - returned value is ignored\r\n */\r\n")));
+   CHK_EXEC(CreateLibraryScript(18, _T("a02ea666-e1e9-4f98-a746-1c3ce19428e9"), _T("Hook::PostObjectCreate"),
+            _T("/* Available global variables:\r\n *  $object - current object, one of 'NetObj' subclasses\r\n *  $node - current object if it is 'Node' class\r\n *\r\n * Expected return value:\r\n *  none - returned value is ignored\r\n */\r\n")));
+   CHK_EXEC(SetMinorSchemaVersion(32));
    return true;
 }
 
@@ -643,7 +656,8 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
-   { 31, 30, 0,  H_UpgradeFromV31 },
+   { 32, 30, 0,  H_UpgradeFromV32 },
+   { 31, 22, 32, H_UpgradeFromV31 },
    { 30, 22, 31, H_UpgradeFromV30 },
    { 29, 22, 30, H_UpgradeFromV29 },
    { 28, 22, 29, H_UpgradeFromV28 },

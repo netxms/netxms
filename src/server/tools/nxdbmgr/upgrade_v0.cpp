@@ -238,36 +238,6 @@ static bool ConvertObjectToolMacros(UINT32 id, const TCHAR *text, const TCHAR *c
 }
 
 /**
- * Create library script
- */
-static bool CreateLibraryScript(UINT32 id, const TCHAR *name, const TCHAR *code)
-{
-   // Check if script exists
-   TCHAR query[256];
-   _sntprintf(query, 256, _T("SELECT script_id FROM script_library WHERE script_id=%d OR script_name=%s"),
-              id, (const TCHAR *)DBPrepareString(g_hCoreDB, name));
-   DB_RESULT hResult = SQLSelect(query);
-   if (hResult == NULL)
-      return false;
-   bool exist = (DBGetNumRows(hResult) > 0);
-   DBFreeResult(hResult);
-   if (exist)
-      return true;
-
-   DB_STATEMENT hStmt = DBPrepare(g_hCoreDB, _T("INSERT INTO script_library (script_id,script_name,script_code) VALUES (?,?,?)"));
-   if (hStmt == NULL)
-      return false;
-
-   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, id);
-   DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, name, DB_BIND_STATIC);
-   DBBind(hStmt, 3, DB_SQLTYPE_TEXT, code, DB_BIND_STATIC);
-
-   bool success = SQLExecute(hStmt);
-   DBFreeStatement(hStmt);
-   return success;
-}
-
-/**
  * Set schema version
  */
 static bool SetSchemaVersion(int version)
@@ -3141,12 +3111,12 @@ static BOOL H_UpgradeFromV382(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV381(int currVersion, int newVersion)
 {
-   CHK_EXEC(CreateLibraryScript(11, _T("Hook::StatusPoll"), _T("/* Available global variables:\r\n *  $node - current node, object of 'Node' type\r\n *\r\n * Expected return value:\r\n *  none - returned value is ignored\r\n */\r\n")));
-   CHK_EXEC(CreateLibraryScript(12, _T("Hook::ConfigurationPoll"), _T("/* Available global variables:\r\n *  $node - current node, object of 'Node' type\r\n *\r\n * Expected return value:\r\n *  none - returned value is ignored\r\n */\r\n")));
-   CHK_EXEC(CreateLibraryScript(13, _T("Hook::InstancePoll"), _T("/* Available global variables:\r\n *  $node - current node, object of 'Node' type\r\n *\r\n * Expected return value:\r\n *  none - returned value is ignored\r\n */\r\n")));
-   CHK_EXEC(CreateLibraryScript(14, _T("Hook::TopologyPoll"), _T("/* Available global variables:\r\n *  $node - current node, object of 'Node' type\r\n *\r\n * Expected return value:\r\n *  none - returned value is ignored\r\n */\r\n")));
-   CHK_EXEC(CreateLibraryScript(15, _T("Hook::CreateInterface"), _T("/* Available global variables:\r\n *  $node - current node, object of 'Node' type\r\n *  $1 - current interface, object of 'Interface' type\r\n *\r\n * Expected return value:\r\n *  true/false - boolean - whether interface should be created\r\n */\r\nreturn true;\r\n")));
-   CHK_EXEC(CreateLibraryScript(16, _T("Hook::AcceptNewNode"), _T("/* Available global variables:\r\n *  $ipAddr - IP address of the node being processed\r\n *  $ipNetMask - netmask of the node being processed\r\n *  $macAddr - MAC address of the node being processed\r\n *  $zoneId - zone ID of the node being processed\r\n *\r\n * Expected return value:\r\n *  true/false - boolean - whether node should be created\r\n */\r\nreturn true;\r\n")));
+   CHK_EXEC(CreateLibraryScript(11, NULL, _T("Hook::StatusPoll"), _T("/* Available global variables:\r\n *  $node - current node, object of 'Node' type\r\n *\r\n * Expected return value:\r\n *  none - returned value is ignored\r\n */\r\n")));
+   CHK_EXEC(CreateLibraryScript(12, NULL, _T("Hook::ConfigurationPoll"), _T("/* Available global variables:\r\n *  $node - current node, object of 'Node' type\r\n *\r\n * Expected return value:\r\n *  none - returned value is ignored\r\n */\r\n")));
+   CHK_EXEC(CreateLibraryScript(13, NULL, _T("Hook::InstancePoll"), _T("/* Available global variables:\r\n *  $node - current node, object of 'Node' type\r\n *\r\n * Expected return value:\r\n *  none - returned value is ignored\r\n */\r\n")));
+   CHK_EXEC(CreateLibraryScript(14, NULL, _T("Hook::TopologyPoll"), _T("/* Available global variables:\r\n *  $node - current node, object of 'Node' type\r\n *\r\n * Expected return value:\r\n *  none - returned value is ignored\r\n */\r\n")));
+   CHK_EXEC(CreateLibraryScript(15, NULL, _T("Hook::CreateInterface"), _T("/* Available global variables:\r\n *  $node - current node, object of 'Node' type\r\n *  $1 - current interface, object of 'Interface' type\r\n *\r\n * Expected return value:\r\n *  true/false - boolean - whether interface should be created\r\n */\r\nreturn true;\r\n")));
+   CHK_EXEC(CreateLibraryScript(16, NULL, _T("Hook::AcceptNewNode"), _T("/* Available global variables:\r\n *  $ipAddr - IP address of the node being processed\r\n *  $ipNetMask - netmask of the node being processed\r\n *  $macAddr - MAC address of the node being processed\r\n *  $zoneId - zone ID of the node being processed\r\n *\r\n * Expected return value:\r\n *  true/false - boolean - whether node should be created\r\n */\r\nreturn true;\r\n")));
    CHK_EXEC(SetSchemaVersion(382));
    return TRUE;
 }

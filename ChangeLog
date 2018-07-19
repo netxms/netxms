@@ -17,6 +17,13 @@
 
 
 *
+* 2.2.8
+*
+
+- New hook scripts: PostObjectCreate and DiscoveryPoll
+
+
+*
 * 2.2.7
 *
 

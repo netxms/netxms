@@ -1735,27 +1735,3 @@ bool DataCollectionTarget::updateInstances(DCObject *root, StringMap *instances,
    unlockDciAccess();
    return changed;
 }
-
-/**
- * Execute hook script
- *
- * @param hookName hook name. Will find and excute script named Hook::hookName
- */
-void DataCollectionTarget::executeHookScript(const TCHAR *hookName)
-{
-   TCHAR scriptName[MAX_PATH] = _T("Hook::");
-   nx_strncpy(&scriptName[6], hookName, MAX_PATH - 6);
-   NXSL_VM *vm = CreateServerScriptVM(scriptName, this);
-   if (vm == NULL)
-   {
-      DbgPrintf(7, _T("DataCollectionTarget::executeHookScript(%s [%u]): hook script \"%s\" not found"), m_name, m_id, scriptName);
-      return;
-   }
-
-   if (!vm->run())
-   {
-      DbgPrintf(4, _T("DataCollectionTarget::executeHookScript(%s [%u]): hook script \"%s\" execution error: %s"),
-                m_name, m_id, scriptName, vm->getErrorText());
-   }
-   delete vm;
-}

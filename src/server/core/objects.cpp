@@ -456,6 +456,7 @@ void NetObjInsert(NetObj *pObject, bool newObject, bool importedObject)
 	if (newObject)
 	{
       CALL_ALL_MODULES(pfPostObjectCreate, (pObject));
+      pObject->executeHookScript(_T("PostObjectCreate"));
 	}
    else
    {

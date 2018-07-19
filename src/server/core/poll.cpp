@@ -440,6 +440,8 @@ static void DiscoveryPoller(void *arg)
 		DestroyRoutingTable(rt);
 	}
 
+	node->executeHookScript(_T("DiscoveryPoll"));
+
    DbgPrintf(4, _T("Finished discovery poll for node %s (%s)"),
              node->getName(), (const TCHAR *)node->getIpAddress().toString());
    node->setDiscoveryPollTimeStamp();
