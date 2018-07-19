@@ -7,6 +7,7 @@ mysql_la_LDFLAGS = -module -avoid-version @MYSQL_LDFLAGS@
 mysql_la_LIBADD = ../../../libnetxms/libnetxms.la @MYSQL_LIBS@
 
 EXTRA_DIST = \
+	Makefile.w32 \
 	mysql.vcxproj mysql.vcxproj.filters \
 	mysqldrv.h
 

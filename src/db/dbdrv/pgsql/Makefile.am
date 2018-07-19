@@ -7,6 +7,7 @@ pgsql_la_LDFLAGS = -module -avoid-version @PGSQL_LDFLAGS@
 pgsql_la_LIBADD = ../../../libnetxms/libnetxms.la @PGSQL_LIBS@
 
 EXTRA_DIST = \
+	Makefile.w32 \
 	pgsql.vcxproj pgsql.vcxproj.filters \
 	pgsqldrv.h
 

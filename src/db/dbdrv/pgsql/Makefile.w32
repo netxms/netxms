@@ -1,0 +1,9 @@
+TARGET = pgsql.ddr
+TYPE = ddr
+SOURCES = pgsql.cpp
+
+CPPFLAGS = /I "$(PGSQL_BASE)\$(ARCH)\include"
+LDFLAGS = /LIBPATH:"$(PGSQL_BASE)\$(ARCH)\lib"
+LIBS = libnetxms.lib libpq.lib
+	  
+include ..\..\..\..\Makefile.inc.w32

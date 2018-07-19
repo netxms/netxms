@@ -1,0 +1,9 @@
+TARGET = oracle.ddr
+TYPE = ddr
+SOURCES = oracle.cpp
+
+CPPFLAGS = /I "$(ORACLE_BASE)\instantclient_12_1.$(ARCH)\sdk\include"
+LDFLAGS = /LIBPATH:"$(ORACLE_BASE)\instantclient_12_1.$(ARCH)\sdk\lib\msvc"
+LIBS = libnetxms.lib oci.lib
+	  
+include ..\..\..\..\Makefile.inc.w32

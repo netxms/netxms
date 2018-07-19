@@ -1,0 +1,9 @@
+TARGET = db2.ddr
+TYPE = ddr
+SOURCES = db2.cpp
+
+CPPFLAGS = /I "$(DB2_BASE)\$(ARCH)\include"
+LDFLAGS = /LIBPATH:"$(DB2_BASE)\$(ARCH)\lib"
+LIBS = libnetxms.lib db2cli64.lib
+	  
+include ..\..\..\..\Makefile.inc.w32
