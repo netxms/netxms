@@ -2374,6 +2374,30 @@ NXSL_Value *NetObj::createNXSLObject()
 }
 
 /**
+ * Execute hook script
+ *
+ * @param hookName hook name. Will find and execute script named Hook::hookName
+ */
+void NetObj::executeHookScript(const TCHAR *hookName)
+{
+   TCHAR scriptName[MAX_PATH] = _T("Hook::");
+   _tcslcpy(&scriptName[6], hookName, MAX_PATH - 6);
+   NXSL_VM *vm = CreateServerScriptVM(scriptName, this);
+   if (vm == NULL)
+   {
+      DbgPrintf(7, _T("NetObj::executeHookScript(%s [%u]): hook script \"%s\" not found"), m_name, m_id, scriptName);
+      return;
+   }
+
+   if (!vm->run())
+   {
+      DbgPrintf(4, _T("NetObj::executeHookScript(%s [%u]): hook script \"%s\" execution error: %s"),
+                m_name, m_id, scriptName, vm->getErrorText());
+   }
+   delete vm;
+}
+
+/**
  * Serialize object to JSON
  */
 json_t *NetObj::toJson()

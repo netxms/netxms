@@ -836,6 +836,8 @@ public:
 
    virtual NXSL_Value *createNXSLObject();
 
+   void executeHookScript(const TCHAR *hookName);
+
    ModuleData *getModuleData(const TCHAR *module);
    void setModuleData(const TCHAR *module, ModuleData *data);
 
@@ -1783,7 +1785,6 @@ protected:
 	bool querySnmpSysProperty(SNMP_Transport *snmp, const TCHAR *oid, const TCHAR *propName, UINT32 pollRqId, TCHAR **value);
 	void checkBridgeMib(SNMP_Transport *pTransport);
 	void checkIfXTable(SNMP_Transport *pTransport);
-	void executeHookScript(const TCHAR *hookName);
 	bool checkNetworkPath(UINT32 requestId);
    bool checkNetworkPathLayer2(UINT32 requestId, bool secondPass);
    bool checkNetworkPathLayer3(UINT32 requestId, bool secondPass);

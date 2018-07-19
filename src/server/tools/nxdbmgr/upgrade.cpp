@@ -350,6 +350,50 @@ bool AddEventToEPPRule(const TCHAR *guid, UINT32 eventCode)
 }
 
 /**
+ * Create library script
+ */
+bool CreateLibraryScript(UINT32 id, const TCHAR *guid, const TCHAR *name, const TCHAR *code)
+{
+   // Check if script exists
+   TCHAR query[256];
+   _sntprintf(query, 256, _T("SELECT script_id FROM script_library WHERE script_id=%d OR script_name=%s"),
+              id, (const TCHAR *)DBPrepareString(g_hCoreDB, name));
+   DB_RESULT hResult = SQLSelect(query);
+   if (hResult == NULL)
+      return false;
+   bool exist = (DBGetNumRows(hResult) > 0);
+   DBFreeResult(hResult);
+   if (exist)
+      return true;
+
+   DB_STATEMENT hStmt;
+   if (guid != NULL)
+   {
+      hStmt = DBPrepare(g_hCoreDB, _T("INSERT INTO script_library (script_id,guid,script_name,script_code) VALUES (?,?,?,?)"));
+      if (hStmt == NULL)
+         return false;
+
+      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, id);
+      DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, guid, DB_BIND_STATIC);
+      DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, name, DB_BIND_STATIC);
+      DBBind(hStmt, 4, DB_SQLTYPE_TEXT, code, DB_BIND_STATIC);
+   }
+   else
+   {
+      hStmt = DBPrepare(g_hCoreDB, _T("INSERT INTO script_library (script_id,script_name,script_code) VALUES (?,?,?)"));
+      if (hStmt == NULL)
+         return false;
+
+      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, id);
+      DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, name, DB_BIND_STATIC);
+      DBBind(hStmt, 3, DB_SQLTYPE_TEXT, code, DB_BIND_STATIC);
+   }
+   bool success = SQLExecute(hStmt);
+   DBFreeStatement(hStmt);
+   return success;
+}
+
+/**
  * Move to next major version of DB schema
  */
 bool SetMajorSchemaVersion(INT32 nextMajor, INT32 nextMinor)
