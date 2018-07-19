@@ -2382,12 +2382,17 @@ void NetObj::executeHookScript(const TCHAR *hookName)
 {
    TCHAR scriptName[MAX_PATH] = _T("Hook::");
    _tcslcpy(&scriptName[6], hookName, MAX_PATH - 6);
-   NXSL_VM *vm = CreateServerScriptVM(scriptName, this);
+   NXSL_VM *vm = CreateServerScriptVM(scriptName);
    if (vm == NULL)
    {
       DbgPrintf(7, _T("NetObj::executeHookScript(%s [%u]): hook script \"%s\" not found"), m_name, m_id, scriptName);
       return;
    }
+
+   vm->setGlobalVariable(_T("$object"), createNXSLObject());
+   if (getObjectClass() == OBJECT_NODE)
+      vm->setGlobalVariable(_T("$node"), createNXSLObject());
+   vm->setGlobalVariable(_T("$isCluster"), new NXSL_Value((getObjectClass() == OBJECT_CLUSTER) ? 1 : 0));   
 
    if (!vm->run())
    {
