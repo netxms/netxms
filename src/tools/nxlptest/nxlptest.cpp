@@ -103,7 +103,7 @@ int main(int argc, char *argv[])
             nxlog_set_debug_level(strtol(optarg, NULL, 0));
             break;
 			case 'h':
-				_tprintf(m_helpText);
+				_tprintf(_T("%s"), m_helpText);
             return 0;
          case 'v':
 				_tprintf(_T("NetXMS Log Parsing Tester  Version ") NETXMS_VERSION_STRING _T("\n")
