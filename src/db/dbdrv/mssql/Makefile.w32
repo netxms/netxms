@@ -2,6 +2,7 @@ TARGET = mssql.ddr
 TYPE = ddr
 SOURCES = mssql.cpp
 
+CPPFLAGS = /I "$(MSSQL_BASE)\110\SDK\Include"
 LIBS = libnetxms.lib odbc32.lib
 	  
 include ..\..\..\..\Makefile.inc.w32

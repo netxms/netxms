@@ -46,6 +46,27 @@ JDK_BASE = C:\Program Files\Java\jdk1.8.0_121
 !ifndef LIBMOSQUITTO_BASE
 LIBMOSQUITTO_BASE = C:\SDK\libmosquitto
 !endif
+!ifndef MYSQL_BASE
+MYSQL_BASE = C:\SDK\MySQL
+!endif
+!ifndef MARIADB_BASE
+MARIADB_BASE = C:\SDK\MariaDB
+!endif
+!ifndef PGSQL_BASE
+PGSQL_BASE = C:\SDK\PostgreSQL
+!endif
+!ifndef DB2_BASE
+DB2_BASE = C:\SDK\DB2
+!endif
+!ifndef INFORMIX_BASE
+INFORMIX_BASE = C:\SDK\Informix
+!endif
+!ifndef ORACLE_BASE
+ORACLE_BASE = C:\SDK\Oracle
+!endif
+!ifndef MSSQL_BASE
+MSSQL_BASE = C:\Program Files\Microsoft SQL Server
+!endif
 
 # Binaries directory
 NETXMS_LIBDIR = $(NETXMS_BASE)\bin\$(OBJDIR)

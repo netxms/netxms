@@ -1,0 +1,9 @@
+TARGET = mysql.ddr
+TYPE = ddr
+SOURCES = mysql.cpp
+
+CPPFLAGS = /I "$(MYSQL_BASE)\$(ARCH)\include"
+LDFLAGS = /LIBPATH:"$(MYSQL_BASE)\$(ARCH)\lib"
+LIBS = libnetxms.lib libmysql.lib
+	  
+include ..\..\..\..\Makefile.inc.w32

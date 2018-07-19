@@ -1,0 +1,9 @@
+TARGET = informix.ddr
+TYPE = ddr
+SOURCES = informix.cpp
+
+CPPFLAGS = /I "$(INFORMIX_BASE)\$(ARCH)\incl\cli"
+LDFLAGS = /LIBPATH:"$(INFORMIX_BASE)\$(ARCH)\lib"
+LIBS = libnetxms.lib iclit09b.lib
+	  
+include ..\..\..\..\Makefile.inc.w32
