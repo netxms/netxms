@@ -131,6 +131,7 @@ SYSTEMD_SUPPORT="yes"
 EXEC_LDFLAGS=""
 EXEC_LIBS=""
 DIST_BUILD="no"
+FORCE_NULL_SAFE_FREE="no"
 
 
 #--------------------------------------------------------------------
@@ -744,6 +745,14 @@ AC_ARG_ENABLE(systemd,
 [
 	if test "x$$enableval" = "xno"; then
 		SYSTEMD_SUPPORT="no"
+	fi
+])
+
+AC_ARG_ENABLE(null-free-check,
+[AS_HELP_STRING(--disable-null-free-check,[disable NULL checking in free() calls (only use for cross-compiling)])],
+[
+	if test "x$enableval" = "xno"; then
+		FORCE_NULL_SAFE_FREE="yes"
 	fi
 ])
 
@@ -2453,21 +2462,26 @@ AC_RUN_IFELSE(
   [ AC_MSG_RESULT(no) ]
 )
 
-AC_MSG_CHECKING(whether free correctly handles NULL pointer)
-AC_RUN_IFELSE(
-  [AC_LANG_PROGRAM([ 
+if test "x$FORCE_NULL_SAFE_FREE" = "xyes"; then
+	AC_DEFINE(FREE_IS_NULL_SAFE, 1, Define to 1 if free corectly handles NULL pointer)
+else
+	AC_MSG_CHECKING(whether free correctly handles NULL pointer)
+	AC_RUN_IFELSE(
+		[AC_LANG_PROGRAM([ 
 #include <stdlib.h>
-     ], [
-     free(NULL);
-     return 0;
-     ])
-  ],
-  [ AC_MSG_RESULT(yes)
-    AC_DEFINE(FREE_IS_NULL_SAFE, 1, Define to 1 if free corectly handles NULL pointer)
-  ],
-  [ AC_MSG_RESULT(no) ],
-  [ AC_MSG_RESULT(no) ]
-)
+			], [
+				free(NULL);
+				return 0;
+			])
+		],
+		[
+			AC_MSG_RESULT(yes)
+			AC_DEFINE(FREE_IS_NULL_SAFE, 1, Define to 1 if free corectly handles NULL pointer)
+		],
+		[ AC_MSG_RESULT(no) ],
+		[ AC_MSG_RESULT(no) ]
+	)
+fi
 
 
 #--------------------------------------------------------------------
