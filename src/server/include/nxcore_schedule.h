@@ -59,9 +59,9 @@ public:
    UINT32 m_userId;
    UINT32 m_objectId;
 
-   ScheduledTaskParameters(const TCHAR *param, UINT32 userId, UINT32 objectId) { m_params = _tcsdup(param); m_userId = userId; m_objectId = objectId; }
+   ScheduledTaskParameters(const TCHAR *param, UINT32 userId, UINT32 objectId) { m_params = _tcsdup_ex(param); m_userId = userId; m_objectId = objectId; }
    ScheduledTaskParameters() { m_params = NULL; }
-   ~ScheduledTaskParameters() { safe_free(m_params); }
+   ~ScheduledTaskParameters() { MemFree(m_params); }
 };
 
 /**

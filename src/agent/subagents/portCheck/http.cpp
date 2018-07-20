@@ -145,7 +145,7 @@ int CheckHTTP(char *szAddr, const InetAddress& addr, short nPort, char *szURI, c
 						}
 						else 
                   {
-							safe_free_and_null(buff);
+							MemFreeAndNull(buff);
                      break;
 						}
 					}
@@ -170,7 +170,7 @@ int CheckHTTP(char *szAddr, const InetAddress& addr, short nPort, char *szURI, c
             }
 			}
 
-         free(buff);
+         MemFree(buff);
 		}
 		NetClose(nSd);
 	}
@@ -321,7 +321,7 @@ int CheckHTTPS(char *szAddr, const InetAddress& addr, short nPort, char *szURI, 
                         }
                      }
 
-                     free(buffer);
+                     MemFree(buffer);
                   }
                }
                BIO_free_all(out);

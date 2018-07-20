@@ -119,7 +119,7 @@ static void ImageLibraryDeleteCallback(ClientSession *pSession, void *pArg)
  */
 #define CALL_IN_NEW_THREAD(func, msg) \
 { \
-	PROCTHREAD_START_DATA *pData = (PROCTHREAD_START_DATA *)malloc(sizeof(PROCTHREAD_START_DATA)); \
+	PROCTHREAD_START_DATA *pData = MemAllocStruct<PROCTHREAD_START_DATA>(); \
 	pData->pSession = this; \
 	pData->pMsg = msg; \
 	msg = NULL; /* prevent deletion by main processing thread*/ \
@@ -548,7 +548,7 @@ void ClientSession::readThread()
                size_t msgSize = size + NXCP_HEADER_SIZE;
                if (msgSize % 8 != 0)
                   msgSize += 8 - msgSize % 8;
-               NXCP_MESSAGE *fwmsg = (NXCP_MESSAGE *)malloc(msgSize);
+               NXCP_MESSAGE *fwmsg = (NXCP_MESSAGE *)MemAlloc(msgSize);
                fwmsg->code = htons(CMD_TCP_PROXY_DATA);
                fwmsg->flags = htons(MF_BINARY);
                fwmsg->id = htonl(agentChannelId);
@@ -2242,7 +2242,7 @@ void ClientSession::getSelectedObjects(NXCPMessage *request)
 
    UINT32 dwTimeStamp = request->getFieldAsUInt32(VID_TIMESTAMP);
 	UINT32 numObjects = request->getFieldAsUInt32(VID_NUM_OBJECTS);
-	UINT32 *objects = (UINT32 *)malloc(sizeof(UINT32) * numObjects);
+	UINT32 *objects = MemAllocArray<UINT32>(numObjects);
 	request->getFieldAsInt32Array(VID_OBJECT_LIST, numObjects, objects);
 	UINT32 options = request->getFieldAsUInt16(VID_FLAGS);
 
@@ -3644,7 +3644,7 @@ void ClientSession::changeDCIStatus(NXCPMessage *request)
 
                iStatus = request->getFieldAsUInt16(VID_DCI_STATUS);
                dwNumItems = request->getFieldAsUInt32(VID_NUM_ITEMS);
-               pdwItemList = (UINT32 *)malloc(sizeof(UINT32) * dwNumItems);
+               pdwItemList = MemAllocArray<UINT32>(dwNumItems);
                request->getFieldAsInt32Array(VID_ITEM_LIST, dwNumItems, pdwItemList);
                if (((Template *)object)->setItemStatus(dwNumItems, pdwItemList, iStatus))
                   msg.setField(VID_RCC, RCC_SUCCESS);
@@ -3937,7 +3937,7 @@ void ClientSession::copyDCI(NXCPMessage *pRequest)
 
                   // Get list of items to be copied/moved
                   dwNumItems = pRequest->getFieldAsUInt32(VID_NUM_ITEMS);
-                  pdwItemList = (UINT32 *)malloc(sizeof(UINT32) * dwNumItems);
+                  pdwItemList = MemAllocArray<UINT32>(dwNumItems);
                   pRequest->getFieldAsInt32Array(VID_ITEM_LIST, dwNumItems, pdwItemList);
 
                   // Copy items
@@ -4229,7 +4229,7 @@ bool ClientSession::getCollectedDataFromDB(NXCPMessage *request, NXCPMessage *re
       }
 
       // Allocate memory for data and prepare data header
-      pData = (DCI_DATA_HEADER *)malloc(s_rowSize[dataType] + sizeof(DCI_DATA_HEADER));
+      pData = (DCI_DATA_HEADER *)MemAlloc(s_rowSize[dataType] + sizeof(DCI_DATA_HEADER));
       pData->dataType = htonl((UINT32)dataType);
       pData->dciId = htonl(dci->getId());
 
@@ -4337,7 +4337,7 @@ read_from_db:
 			// Allocate memory for data and prepare data header
 			int allocated = 8192;
 			int rows = 0;
-			pData = (DCI_DATA_HEADER *)malloc(allocated * s_rowSize[dataType] + sizeof(DCI_DATA_HEADER));
+			pData = (DCI_DATA_HEADER *)MemAlloc(allocated * s_rowSize[dataType] + sizeof(DCI_DATA_HEADER));
 			pData->dataType = htonl((UINT32)dataType);
 			pData->dciId = htonl(dci->getId());
 
@@ -4701,8 +4701,8 @@ void ClientSession::getLastValuesByDciId(NXCPMessage *pRequest)
                   value = _tcsdup_ex(t->getAsString(rowIndex, columnIndex));
                   t->decRefCount();
 
-                  safe_free(column);
-                  safe_free(instance);
+                  MemFree(column);
+                  MemFree(instance);
                }
                else
                {
@@ -4726,7 +4726,7 @@ void ClientSession::getLastValuesByDciId(NXCPMessage *pRequest)
                msg.setField(outgoingIndex + 6, dcoObj->getDataSource());
                msg.setField(outgoingIndex + 7, dcoObj->getName());
                msg.setField(outgoingIndex + 8, dcoObj->getDescription());
-               safe_free(value);
+               MemFree(value);
                outgoingIndex += 10;
             }
          }
@@ -4923,8 +4923,7 @@ void ClientSession::saveEPP(NXCPMessage *pRequest)
          else
          {
             m_dwFlags |= CSF_EPP_UPLOAD;
-            m_ppEPPRuleList = (EPRule **)malloc(sizeof(EPRule *) * m_dwNumRecordsToUpload);
-            memset(m_ppEPPRuleList, 0, sizeof(EPRule *) * m_dwNumRecordsToUpload);
+            m_ppEPPRuleList = MemAllocArray<EPRule*>(m_dwNumRecordsToUpload);
          }
          debugPrintf(5, _T("Accepted EPP upload request for %d rules"), m_dwNumRecordsToUpload);
       }
@@ -6128,7 +6127,7 @@ void ClientSession::updateAlarmComment(NXCPMessage *request)
             byHelpdeskRef ?
             AddAlarmComment(hdref, CHECK_NULL(text), m_dwUserId) :
             UpdateAlarmComment(alarmId, commentId, CHECK_NULL(text), m_dwUserId));
-			safe_free(text);
+			MemFree(text);
       }
       else
       {
@@ -6358,10 +6357,8 @@ void ClientSession::sendAllActions(UINT32 dwRqId)
 void ClientSession::forcedNodePoll(NXCPMessage *pRequest)
 {
    NXCPMessage msg;
-   POLLER_START_DATA *pData;
-   NetObj *object;
 
-   pData = (POLLER_START_DATA *)malloc(sizeof(POLLER_START_DATA));
+   POLLER_START_DATA *pData = MemAllocStruct<POLLER_START_DATA>();
    pData->pSession = this;
    MutexLock(m_mutexPollerInit);
 
@@ -6374,7 +6371,7 @@ void ClientSession::forcedNodePoll(NXCPMessage *pRequest)
    pData->iPollType = pRequest->getFieldAsUInt16(VID_POLL_TYPE);
 
    // Find object to be polled
-   object = FindObjectById(pRequest->getFieldAsUInt32(VID_OBJECT_ID));
+   NetObj *object = FindObjectById(pRequest->getFieldAsUInt32(VID_OBJECT_ID));
    if (object != NULL)
    {
       // We can do polls for node, sensor, cluster objects
@@ -6417,7 +6414,7 @@ void ClientSession::forcedNodePoll(NXCPMessage *pRequest)
    // Send response
    sendMessage(&msg);
    MutexUnlock(m_mutexPollerInit);
-	safe_free(pData);
+	MemFree(pData);
 }
 
 /**
@@ -6563,7 +6560,7 @@ void ClientSession::onTrap(NXCPMessage *pRequest)
 
          // Cleanup
          for(i = 0; i < iNumArgs; i++)
-            safe_free(pszArgList[i]);
+            MemFree(pszArgList[i]);
 
          msg.setField(VID_RCC, bSuccess ? RCC_SUCCESS : RCC_INVALID_EVENT_CODE);
       }
@@ -7064,7 +7061,7 @@ void ClientSession::deployPackage(NXCPMessage *request)
 
                // Create list of nodes to be upgraded
                dwNumObjects = request->getFieldAsUInt32(VID_NUM_OBJECTS);
-               pdwObjectList = (UINT32 *)malloc(sizeof(UINT32) * dwNumObjects);
+               pdwObjectList = MemAllocArray<UINT32>(dwNumObjects);
                request->getFieldAsInt32Array(VID_OBJECT_LIST, dwNumObjects, pdwObjectList);
 					nodeList = new ObjectArray<Node>((int)dwNumObjects);
                for(i = 0; i < dwNumObjects; i++)
@@ -7136,7 +7133,7 @@ void ClientSession::deployPackage(NXCPMessage *request)
          hMutex = MutexCreate();
          MutexLock(hMutex);
 
-         pInfo = (DT_STARTUP_INFO *)malloc(sizeof(DT_STARTUP_INFO));
+         pInfo = MemAllocStruct<DT_STARTUP_INFO>();
          pInfo->nodeList = nodeList;
          pInfo->pSession = this;
          pInfo->mutex = hMutex;
@@ -8718,7 +8715,7 @@ void ClientSession::StartSnmpWalk(NXCPMessage *pRequest)
             object->incRefCount();
             InterlockedIncrement(&m_refCount);
 
-            pArg = (WALKER_THREAD_ARGS *)malloc(sizeof(WALKER_THREAD_ARGS));
+            pArg = MemAllocStruct<WALKER_THREAD_ARGS>();
             pArg->pSession = this;
             pArg->object = object;
             pArg->dwRqId = pRequest->getId();
@@ -8799,8 +8796,8 @@ void ClientSession::resolveDCINames(NXCPMessage *pRequest)
    msg.setId(pRequest->getId());
 
    dwNumDCI = pRequest->getFieldAsUInt32(VID_NUM_ITEMS);
-   pdwNodeList = (UINT32 *)malloc(sizeof(UINT32) * dwNumDCI);
-   pdwDCIList = (UINT32 *)malloc(sizeof(UINT32) * dwNumDCI);
+   pdwNodeList = MemAllocArray<UINT32>(dwNumDCI);
+   pdwDCIList = MemAllocArray<UINT32>(dwNumDCI);
    pRequest->getFieldAsInt32Array(VID_NODE_LIST, dwNumDCI, pdwNodeList);
    pRequest->getFieldAsInt32Array(VID_DCI_LIST, dwNumDCI, pdwDCIList);
 
@@ -8960,7 +8957,7 @@ void ClientSession::SaveAgentConfig(NXCPMessage *pRequest)
          free(pszText);
 
 			size_t qlen = _tcslen(pszEscText) + _tcslen(pszEscFilter) + _tcslen(pszEscName) + 256;
-         pszQuery = (TCHAR *)malloc(qlen * sizeof(TCHAR));
+         pszQuery = (TCHAR *)MemAlloc(qlen * sizeof(TCHAR));
          if (bCreate)
          {
             if (dwCfgId == 0)
@@ -9339,10 +9336,9 @@ void ClientSession::pushDCIData(NXCPMessage *pRequest)
    dwNumItems = pRequest->getFieldAsUInt32(VID_NUM_ITEMS);
    if (dwNumItems > 0)
    {
-      dcTargetList = (DataCollectionTarget **)malloc(sizeof(DataCollectionTarget *) * dwNumItems);
-      ppItemList = (DCItem **)malloc(sizeof(DCItem *) * dwNumItems);
-      ppValueList = (TCHAR **)malloc(sizeof(TCHAR *) * dwNumItems);
-      memset(ppValueList, 0, sizeof(TCHAR *) * dwNumItems);
+      dcTargetList = MemAllocArray<DataCollectionTarget*>(dwNumItems);
+      ppItemList = MemAllocArray<DCItem*>(dwNumItems);
+      ppValueList = MemAllocArray<TCHAR*>(dwNumItems);
 
       for(i = 0, dwId = VID_PUSH_DCI_DATA_BASE, bOK = TRUE; (i < dwNumItems) && bOK; i++)
       {
@@ -9447,8 +9443,8 @@ void ClientSession::pushDCIData(NXCPMessage *pRequest)
 
       // Cleanup
       for(i = 0; i < dwNumItems; i++)
-         safe_free(ppValueList[i]);
-      safe_free(ppValueList);
+         MemFree(ppValueList[i]);
+      MemFree(ppValueList);
       free(ppItemList);
       free(dcTargetList);
    }
@@ -9690,7 +9686,7 @@ void ClientSession::exportConfiguration(NXCPMessage *pRequest)
       dwNumTemplates = pRequest->getFieldAsUInt32(VID_NUM_OBJECTS);
       if (dwNumTemplates > 0)
       {
-         pdwTemplateList = (UINT32 *)malloc(sizeof(UINT32) * dwNumTemplates);
+         pdwTemplateList = MemAllocArray<UINT32>(dwNumTemplates);
          pRequest->getFieldAsInt32Array(VID_OBJECT_LIST, dwNumTemplates, pdwTemplateList);
       }
       else
@@ -9738,7 +9734,7 @@ void ClientSession::exportConfiguration(NXCPMessage *pRequest)
          // Write events
          str += _T("\t<events>\n");
          UINT32 count = pRequest->getFieldAsUInt32(VID_NUM_EVENTS);
-         pdwList = (UINT32 *)malloc(sizeof(UINT32) * count);
+         pdwList = MemAllocArray<UINT32>(count);
          pRequest->getFieldAsInt32Array(VID_EVENT_LIST, count, pdwList);
          for(i = 0; i < count; i++)
             CreateNXMPEventRecord(str, pdwList[i]);
@@ -9760,11 +9756,11 @@ void ClientSession::exportConfiguration(NXCPMessage *pRequest)
          // Write traps
          str += _T("\t<traps>\n");
          count = pRequest->getFieldAsUInt32(VID_NUM_TRAPS);
-         pdwList = (UINT32 *)malloc(sizeof(UINT32) * count);
+         pdwList = MemAllocArray<UINT32>(count);
          pRequest->getFieldAsInt32Array(VID_TRAP_LIST, count, pdwList);
          for(i = 0; i < count; i++)
             CreateTrapExportRecord(str, pdwList[i]);
-         safe_free(pdwList);
+         MemFree(pdwList);
          str += _T("\t</traps>\n");
 
          // Write rules
@@ -9782,41 +9778,41 @@ void ClientSession::exportConfiguration(NXCPMessage *pRequest)
          // Write scripts
          str.append(_T("\t<scripts>\n"));
          count = pRequest->getFieldAsUInt32(VID_NUM_SCRIPTS);
-         pdwList = (UINT32 *)malloc(sizeof(UINT32) * count);
+         pdwList = MemAllocArray<UINT32>(count);
          pRequest->getFieldAsInt32Array(VID_SCRIPT_LIST, count, pdwList);
          for(i = 0; i < count; i++)
             CreateScriptExportRecord(str, pdwList[i]);
-         safe_free(pdwList);
+         MemFree(pdwList);
          str.append(_T("\t</scripts>\n"));
 
          // Write object tools
          str.append(_T("\t<objectTools>\n"));
          count = pRequest->getFieldAsUInt32(VID_NUM_TOOLS);
-         pdwList = (UINT32 *)malloc(sizeof(UINT32) * count);
+         pdwList = MemAllocArray<UINT32>(count);
          pRequest->getFieldAsInt32Array(VID_TOOL_LIST, count, pdwList);
          for(i = 0; i < count; i++)
             CreateObjectToolExportRecord(str, pdwList[i]);
-         safe_free(pdwList);
+         MemFree(pdwList);
          str.append(_T("\t</objectTools>\n"));
 
          // Write DCI summary tables
          str.append(_T("\t<dciSummaryTables>\n"));
          count = pRequest->getFieldAsUInt32(VID_NUM_SUMMARY_TABLES);
-         pdwList = (UINT32 *)malloc(sizeof(UINT32) * count);
+         pdwList = MemAllocArray<UINT32>(count);
          pRequest->getFieldAsInt32Array(VID_SUMMARY_TABLE_LIST, count, pdwList);
          for(i = 0; i < count; i++)
             CreateSummaryTableExportRecord(pdwList[i], str);
-         safe_free(pdwList);
+         MemFree(pdwList);
          str.append(_T("\t</dciSummaryTables>\n"));
 
          // Write actions
          str.append(_T("\t<actions>\n"));
          count = pRequest->getFieldAsUInt32(VID_NUM_ACTIONS);
-         pdwList = (UINT32 *)malloc(sizeof(UINT32) * count);
+         pdwList = MemAllocArray<UINT32>(count);
          pRequest->getFieldAsInt32Array(VID_ACTION_LIST, count, pdwList);
          for(i = 0; i < count; i++)
             CreateActionExportRecord(str, pdwList[i]);
-         safe_free(pdwList);
+         MemFree(pdwList);
          str.append(_T("\t</actions>\n"));
 
 
@@ -9828,7 +9824,7 @@ void ClientSession::exportConfiguration(NXCPMessage *pRequest)
          msg.setField(VID_NXMP_CONTENT, (const TCHAR *)str);
       }
 
-      safe_free(pdwTemplateList);
+      MemFree(pdwTemplateList);
    }
    else
    {
@@ -10055,7 +10051,7 @@ void ClientSession::addCACertificate(NXCPMessage *pRequest)
 		size_t len = pRequest->getFieldAsBinary(VID_CERTIFICATE, NULL, 0);
 		if (len > 0)
 		{
-			pData = (BYTE *)malloc(len);
+			pData = (BYTE *)MemAlloc(len);
 			pRequest->getFieldAsBinary(VID_CERTIFICATE, pData, len);
 
 			// Validate certificate
@@ -10078,7 +10074,7 @@ void ClientSession::addCACertificate(NXCPMessage *pRequest)
 				free(pszComments);
 				dwCertId = CreateUniqueId(IDG_CERTIFICATE);
 				size_t qlen = len * 2 + _tcslen(pszEscComments) + _tcslen(pszEscSubject) + 256;
-				pszQuery = (TCHAR *)malloc(qlen * sizeof(TCHAR));
+				pszQuery = (TCHAR *)MemAlloc(qlen * sizeof(TCHAR));
 				_sntprintf(pszQuery, qlen, _T("INSERT INTO certificates (cert_id,cert_type,subject,comments,cert_data) VALUES (%d,%d,'%s','%s','"),
 				           dwCertId, CERT_TYPE_TRUSTED_CA, pszEscSubject, pszEscComments);
 				free(pszEscSubject);
@@ -10187,7 +10183,7 @@ void ClientSession::updateCertificateComments(NXCPMessage *pRequest)
 			pszEscComments = EncodeSQLString(pszComments);
 			free(pszComments);
 			qlen = (UINT32)_tcslen(pszEscComments) + 256;
-			pszQuery = (TCHAR *)malloc(qlen * sizeof(TCHAR));
+			pszQuery = (TCHAR *)MemAlloc(qlen * sizeof(TCHAR));
 			_sntprintf(pszQuery, qlen, _T("SELECT subject FROM certificates WHERE cert_id=%d"), dwCertId);
 			hResult = DBSelect(hdb, pszQuery);
 			if (hResult != NULL)
@@ -10633,7 +10629,7 @@ void ClientSession::registerAgent(NXCPMessage *pRequest)
       }
       else
       {
-         NEW_NODE *info = (NEW_NODE *)malloc(sizeof(NEW_NODE));
+         NEW_NODE *info = MemAllocStruct<NEW_NODE>();
          info->ipAddr = m_clientAddr;
          info->zoneUIN = 0;	// Add to default zone
          info->ignoreFilter = TRUE;		// Ignore discovery filters and add node anyway
@@ -10954,7 +10950,7 @@ void ClientSession::executeScript(NXCPMessage *request)
                   msg.setField(VID_RCC, RCC_NXSL_COMPILATION_ERROR);
                   msg.setField(VID_ERROR_TEXT, errorMessage);
                }
-					safe_free(script);
+					MemFree(script);
 				}
 				else
 				{
@@ -11340,7 +11336,7 @@ void ClientSession::getUserCustomAttribute(NXCPMessage *request)
 	{
 		msg.setField(VID_RCC, RCC_ACCESS_DENIED);
 	}
-	safe_free(name);
+	MemFree(name);
 
 	sendMessage(&msg);
 }
@@ -11361,13 +11357,13 @@ void ClientSession::setUserCustomAttribute(NXCPMessage *request)
 		TCHAR *value = request->getFieldAsString(VID_VALUE);
 		SetUserDbObjectAttr(m_dwUserId, name, CHECK_NULL_EX(value));
 		msg.setField(VID_RCC, RCC_SUCCESS);
-		safe_free(value);
+		MemFree(value);
 	}
 	else
 	{
 		msg.setField(VID_RCC, RCC_ACCESS_DENIED);
 	}
-	safe_free(name);
+	MemFree(name);
 
 	sendMessage(&msg);
 }
@@ -12403,8 +12399,8 @@ void ClientSession::uploadFileToAgent(NXCPMessage *request)
 				{
 					msg.setField(VID_RCC, RCC_INVALID_ARGUMENT);
 				}
-				safe_free(localFile);
-				safe_free(remoteFile);
+				MemFree(localFile);
+				MemFree(remoteFile);
 			}
 			else
 			{
@@ -12538,7 +12534,7 @@ void ClientSession::openConsole(UINT32 rqId)
 	if (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONSOLE)
 	{
 		m_dwFlags |= CSF_CONSOLE_OPEN;
-		m_console = (CONSOLE_CTX)malloc(sizeof(struct __console_ctx));
+		m_console = (CONSOLE_CTX)MemAlloc(sizeof(struct __console_ctx));
 		m_console->hSocket = -1;
 		m_console->socketMutex = INVALID_MUTEX_HANDLE;
 		m_console->pMsg = new NXCPMessage;
@@ -12571,7 +12567,7 @@ void ClientSession::closeConsole(UINT32 rqId)
 		{
 			m_dwFlags &= ~CSF_CONSOLE_OPEN;
 			delete m_console->pMsg;
-			safe_free_and_null(m_console);
+			MemFreeAndNull(m_console);
 			msg.setField(VID_RCC, RCC_SUCCESS);
 		}
 		else
@@ -13933,7 +13929,7 @@ void ClientSession::getScreenshot(NXCPMessage *request)
 	{
 		msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
 	}
-   safe_free(sessionName);
+   MemFree(sessionName);
    // Send response
    sendMessage(&msg);
 }
@@ -14379,7 +14375,7 @@ void ClientSession::processTcpProxyData(AgentConnectionEx *conn, UINT32 agentCha
          size_t msgSize = size + NXCP_HEADER_SIZE;
          if (msgSize % 8 != 0)
             msgSize += 8 - msgSize % 8;
-         NXCP_MESSAGE *msg = (NXCP_MESSAGE *)malloc(msgSize);
+         NXCP_MESSAGE *msg = (NXCP_MESSAGE *)MemAlloc(msgSize);
          msg->code = htons(CMD_TCP_PROXY_DATA);
          msg->flags = htons(MF_BINARY);
          msg->id = htonl(clientChannelId);

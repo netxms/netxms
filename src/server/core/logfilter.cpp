@@ -55,8 +55,8 @@ LogFilter::~LogFilter()
 {
 	for(int i = 0; i < m_numColumnFilters; i++)
 		delete m_columnFilters[i];
-	safe_free(m_columnFilters);
-	safe_free(m_orderingColumns);
+	MemFree(m_columnFilters);
+	MemFree(m_orderingColumns);
 }
 
 /**

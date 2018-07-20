@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -116,7 +116,7 @@ void MsgWaitQueue::clear()
 
       if (m_elements[i].isBinary)
       {
-         free(m_elements[i].msg);
+         MemFree(m_elements[i].msg);
       }
       else
       {
@@ -125,7 +125,7 @@ void MsgWaitQueue::clear()
    }
    m_size = 0;
    m_allocated = 0;
-   safe_free_and_null(m_elements);
+   MemFreeAndNull(m_elements);
    unlock();
 }
 
@@ -141,7 +141,7 @@ void MsgWaitQueue::put(NXCPMessage *pMsg)
    {
       pos = m_allocated;
       m_allocated += ALLOCATION_STEP;
-      m_elements = (WAIT_QUEUE_ELEMENT *)realloc(m_elements, sizeof(WAIT_QUEUE_ELEMENT) * m_allocated);
+      m_elements = MemRealloc(m_elements, sizeof(WAIT_QUEUE_ELEMENT) * m_allocated);
       memset(&m_elements[pos], 0, sizeof(WAIT_QUEUE_ELEMENT) * ALLOCATION_STEP);
    }
    else
@@ -182,7 +182,7 @@ void MsgWaitQueue::put(NXCP_MESSAGE *pMsg)
    {
       pos = m_allocated;
       m_allocated += ALLOCATION_STEP;
-      m_elements = (WAIT_QUEUE_ELEMENT *)realloc(m_elements, sizeof(WAIT_QUEUE_ELEMENT) * m_allocated);
+      m_elements = MemRealloc(m_elements, sizeof(WAIT_QUEUE_ELEMENT) * m_allocated);
       memset(&m_elements[pos], 0, sizeof(WAIT_QUEUE_ELEMENT) * ALLOCATION_STEP);
    }
    else
@@ -341,7 +341,7 @@ void MsgWaitQueue::housekeeperRun()
          {
             if (m_elements[i].isBinary)
             {
-               free(m_elements[i].msg);
+               MemFree(m_elements[i].msg);
             }
             else
             {
@@ -360,8 +360,8 @@ void MsgWaitQueue::housekeeperRun()
       if ((m_allocated > ALLOCATION_STEP) && (m_size == 0))
       {
          m_allocated = ALLOCATION_STEP;
-         free(m_elements);
-         m_elements = (WAIT_QUEUE_ELEMENT *)calloc(m_allocated, sizeof(WAIT_QUEUE_ELEMENT));
+         MemFree(m_elements);
+         m_elements = MemAllocArray<WAIT_QUEUE_ELEMENT>(m_allocated);
       }
    }
    unlock();

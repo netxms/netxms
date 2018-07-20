@@ -60,8 +60,8 @@ public:
 
    ~MP_SYNTAX()
    {
-      safe_free(pszStr);
-      safe_free(pszDescription);
+      MemFree(pszStr);
+      MemFree(pszDescription);
    }
 };
 
@@ -104,7 +104,7 @@ public:
 
    ~MP_SUBID()
    {
-      safe_free(pszName);
+      MemFree(pszName);
    }
 };
 
@@ -139,10 +139,10 @@ public:
 
    ~MP_OBJECT()
    {
-      safe_free(pszName);
-      safe_free(pszDescription);
-      safe_free(pszTextualConvention);
-      safe_free(pszDataType);
+      MemFree(pszName);
+      MemFree(pszDescription);
+      MemFree(pszTextualConvention);
+      MemFree(pszDataType);
       delete pOID;
    }
 };
@@ -170,7 +170,7 @@ public:
 
    ~MP_IMPORT_MODULE()
    {
-      safe_free(pszName);
+      MemFree(pszName);
       delete pSymbols;
       delete pObjects;
    }
@@ -195,7 +195,7 @@ public:
 
    ~MP_MODULE()
    {
-      safe_free(pszName);
+      MemFree(pszName);
       delete pImportList;
       delete pObjectList;
    }

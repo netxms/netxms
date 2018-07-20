@@ -77,16 +77,16 @@ ColumnFilter::ColumnFilter(NXCPMessage *msg, const TCHAR *column, UINT32 baseId)
  */
 ColumnFilter::~ColumnFilter()
 {
-	safe_free(m_column);
+	MemFree(m_column);
 	switch(m_type)
 	{
 		case FILTER_LIKE:
-			safe_free(m_value.like);
+			MemFree(m_value.like);
 			break;
 		case FILTER_SET:
 			for(int i = 0; i < m_value.set.count; i++)
 				delete m_value.set.filters[i];
-			safe_free(m_value.set.filters);
+			MemFree(m_value.set.filters);
 			break;
 	}
 }

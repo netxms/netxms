@@ -47,7 +47,7 @@ NXSL_Lexer::NXSL_Lexer(NXSL_Compiler *pCompiler, const TCHAR *pszCode)
  */
 NXSL_Lexer::~NXSL_Lexer()
 {
-   safe_free(m_pszSourceCode);
+   MemFree(m_pszSourceCode);
 }
 
 /**

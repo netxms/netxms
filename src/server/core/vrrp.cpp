@@ -57,7 +57,7 @@ VrrpRouter::VrrpRouter(UINT32 id, UINT32 ifIndex, int state, BYTE *macAddr)
  */
 VrrpRouter::~VrrpRouter()
 {
-	safe_free(m_ipAddrList);
+	MemFree(m_ipAddrList);
 }
 
 /**

@@ -1113,27 +1113,41 @@ typedef struct tagICMPHDR
 #define CHECK_NULL_EX_A(x) ((x) == NULL ? "" : (x))
 
 /**
- * Free memory block if it isn't NULL
+ * Heap functions
  */
+#ifdef __cplusplus
+
+inline void * MemAlloc(size_t size) { return malloc(size); }
+template <typename T> T *MemAllocStruct() { return (T*)calloc(1, sizeof(T)); }
+template <typename T> T *MemAllocArray(size_t count) { return (T*)calloc(count, sizeof(T)); }
+template <typename T> T *MemRealloc(T *p, size_t size) { return (T*)realloc(p, size); }
+template <typename T> T *MemReallocArray(T *p, size_t count) { return (T*)realloc(p, count * sizeof(T)); }
 #if FREE_IS_NULL_SAFE
-#define safe_free(x) free(x);
-#define safe_free_and_null(x) { free(x); x = NULL; }
+inline void MemFree(void *p) { free(p); }
+template <typename T> void MemFreeAndNull(T* &p) { free(p); p = NULL; }
 #else
-#define safe_free(x) { if ((x) != NULL) free(x); }
-#define safe_free_and_null(x) { if ((x) != NULL) { free(x); x = NULL; } }
+inline void MemFree(void *p) { if (p != NULL) free(p); }
+template <typename T> void MemFreeAndNull(T* &p) { if (p != NULL) { free(p); p = NULL; } }
 #endif
 
-/**
- * free() wrapper if it isn't NULL safe
- */
-#if defined(__cplusplus) && !FREE_IS_NULL_SAFE
-inline void nx_free(void *p)
-{
-   if (p != NULL)
-      free(p);
-}
-#define free nx_free
+#else /* __cplusplus */
+
+#define MemAlloc(size) malloc(size)
+#define MemAllocArray(count, size) calloc(count, size)
+#define MemRealloc(p, size) realloc(p, size)
+#if FREE_IS_NULL_SAFE
+#define MemFree(p) free(p);
+#define MemFreeAndNull(p) { free(p); p = NULL; }
+#else
+#define MemFree(p) { if ((p) != NULL) free(p); }
+#define MemFreeAndNull(p) { if ((p) != NULL) { free(p); p = NULL; } }
 #endif
+
+#endif /* __cplusplus */
+
+// malloc/free for uthash
+#define uthash_malloc(sz) MemAlloc(sz)
+#define uthash_free(ptr,sz) MemFree(ptr)
 
 /**
  * delete object and nullify pointer

@@ -323,13 +323,13 @@ void SlmCheck::setScript(const TCHAR *script)
    delete_and_null(m_pCompiledScript);
 	if (script != NULL)
 	{
-		free(m_script);
+		MemFree(m_script);
 		m_script = _tcsdup(script);
 		compileScript();
 	}
 	else
 	{
-		safe_free_and_null(m_script);
+		MemFreeAndNull(m_script);
 	}
 	setModified(MODIFY_OTHER);
 }

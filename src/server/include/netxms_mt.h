@@ -39,7 +39,7 @@ private:
 
 public:
 	MappingTableElement(TCHAR *value, TCHAR *description) { m_value = value; m_description = description; }
-	~MappingTableElement() { safe_free(m_value); safe_free(m_description); }
+	~MappingTableElement() { MemFree(m_value); MemFree(m_description); }
 
 	const TCHAR *getValue() { return CHECK_NULL_EX(m_value); }
 	const TCHAR *getDescription() { return CHECK_NULL_EX(m_description); }

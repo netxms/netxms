@@ -858,7 +858,7 @@ extern "C" void __EXPORT DrvFreeResult(DB2DRV_QUERY_RESULT *pResult)
 	{
 		free(pResult->values[i]);
 	}
-	safe_free(pResult->values);
+	MemFree(pResult->values);
 
 	for(i = 0; i < pResult->numColumns; i++)
 	{

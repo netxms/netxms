@@ -774,8 +774,8 @@ void MobileDeviceSession::pushData(NXCPMessage *request)
 
          // Cleanup
          for(i = 0; i < count; i++)
-            safe_free(valueList[i]);
-         safe_free(valueList);
+            MemFree(valueList[i]);
+         MemFree(valueList);
          free(dciList);
       }
       else

@@ -325,9 +325,9 @@ static void BuildMIBTree(SNMP_MIBObject *pRoot, MP_MODULE *pModule)
                                                pObject->iStatus,
                                                pObject->iAccess,
                                                wdescr, wtc);
-						safe_free(wname);
-						safe_free(wdescr);
-						safe_free(wtc);
+						MemFree(wname);
+						MemFree(wdescr);
+						MemFree(wtc);
 #else
                   pNewObj = new SNMP_MIBObject(pSubId->dwValue, pObject->pszName,
                                                pObject->iSyntax,
@@ -342,7 +342,7 @@ static void BuildMIBTree(SNMP_MIBObject *pRoot, MP_MODULE *pModule)
 #ifdef UNICODE
 						WCHAR *wname = (pSubId->pszName != NULL) ? WideStringFromMBString(pSubId->pszName) : NULL;
                   pNewObj = new SNMP_MIBObject(pSubId->dwValue, wname);
-						safe_free(wname);
+						MemFree(wname);
 #else
                   pNewObj = new SNMP_MIBObject(pSubId->dwValue, pSubId->pszName);
 #endif
@@ -358,8 +358,8 @@ static void BuildMIBTree(SNMP_MIBObject *pRoot, MP_MODULE *pModule)
 						WCHAR *wdescr = (pObject->pszDescription != NULL) ? WideStringFromMBString(pObject->pszDescription) : NULL;
 						WCHAR *wtc = (pObject->pszTextualConvention != NULL) ? WideStringFromMBString(pObject->pszTextualConvention) : NULL;
                   pNewObj->setInfo(pObject->iSyntax, pObject->iStatus, pObject->iAccess, wdescr, wtc);
-						safe_free(wdescr);
-						safe_free(wtc);
+						MemFree(wdescr);
+						MemFree(wtc);
 #else
                   pNewObj->setInfo(pObject->iSyntax, pObject->iStatus, pObject->iAccess, pObject->pszDescription, pObject->pszTextualConvention);
 #endif
@@ -368,7 +368,7 @@ static void BuildMIBTree(SNMP_MIBObject *pRoot, MP_MODULE *pModule)
 #ifdef UNICODE
 							WCHAR *wname = (pObject->pszName != NULL) ? WideStringFromMBString(pObject->pszName) : NULL;
                      pNewObj->setName(wname);
-							safe_free(wname);
+							MemFree(wname);
 #else
                      pNewObj->setName(pObject->pszName);
 #endif

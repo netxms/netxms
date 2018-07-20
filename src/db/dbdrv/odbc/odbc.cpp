@@ -962,12 +962,12 @@ extern "C" void __EXPORT DrvFreeResult(ODBCDRV_QUERY_RESULT *pResult)
 
       iNumValues = pResult->numColumns * pResult->numRows;
       for(i = 0; i < iNumValues; i++)
-         safe_free(pResult->pValues[i]);
-      safe_free(pResult->pValues);
+         MemFree(pResult->pValues[i]);
+      MemFree(pResult->pValues);
 
 		for(i = 0; i < pResult->numColumns; i++)
-			safe_free(pResult->columnNames[i]);
-		safe_free(pResult->columnNames);
+			MemFree(pResult->columnNames[i]);
+		MemFree(pResult->columnNames);
 
       free(pResult);
    }
@@ -1213,8 +1213,8 @@ extern "C" void __EXPORT DrvFreeUnbufferedResult(ODBCDRV_UNBUFFERED_QUERY_RESULT
       SQLFreeHandle(SQL_HANDLE_STMT, pResult->sqlStatement);
    for(int i = 0; i < pResult->numColumns; i++)
    {
-      safe_free(pResult->columnNames[i]);
-      safe_free(pResult->values[i]);
+      MemFree(pResult->columnNames[i]);
+      MemFree(pResult->values[i]);
    }
    free(pResult->columnNames);
    free(pResult->values);

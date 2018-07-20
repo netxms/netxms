@@ -277,7 +277,7 @@ static int cas_validate(const char *ticket, const char *service, char *outbuf, i
    /* cleanup and return */
 
 end:
-   safe_free(full_request);
+   MemFree(full_request);
    if (ssl) SSL_shutdown(ssl);
    if (s != INVALID_SOCKET) closesocket(s);
    if (ssl) SSL_free(ssl);

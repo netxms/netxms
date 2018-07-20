@@ -288,7 +288,7 @@ extern "C" bool __EXPORT SMSDriverInit(const TCHAR *pszInitArgs, Config *config)
 	}
 
 cleanup:
-	safe_free(portName);
+	MemFree(portName);
    s_serial.close();
 	return true;   // return TRUE always to keep driver in memory
 }

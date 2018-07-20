@@ -366,7 +366,7 @@ NXSL_Value::NXSL_Value(const char *value)
 		if (m_length < NXSL_SHORT_STRING_LENGTH)
 		{
 		   _tcscpy(m_stringValue, m_stringPtr);
-		   free(m_stringPtr);
+		   MemFree(m_stringPtr);
 		   m_stringPtr = NULL;
 		}
 	}
@@ -406,7 +406,7 @@ NXSL_Value::NXSL_Value(const TCHAR *value, UINT32 dwLen)
    }
    else
    {
-      m_stringPtr = (TCHAR *)malloc((dwLen + 1) * sizeof(TCHAR));
+      m_stringPtr = (TCHAR *)MemAlloc((dwLen + 1) * sizeof(TCHAR));
       if (value != NULL)
       {
          memcpy(m_stringPtr, value, dwLen * sizeof(TCHAR));
@@ -430,10 +430,10 @@ NXSL_Value::NXSL_Value(const TCHAR *value, UINT32 dwLen)
  */
 NXSL_Value::~NXSL_Value()
 {
-	free(m_name);
-   free(m_stringPtr);
+	MemFree(m_name);
+   MemFree(m_stringPtr);
 #ifdef UNICODE
-	free(m_mbString);
+	MemFree(m_mbString);
 #endif
    switch(m_dataType)
 	{
@@ -464,9 +464,9 @@ NXSL_Value::~NXSL_Value()
 void NXSL_Value::set(INT32 nValue)
 {
    m_dataType = NXSL_DT_INT32;
-	safe_free_and_null(m_stringPtr);
+	MemFreeAndNull(m_stringPtr);
 #ifdef UNICODE
-	safe_free_and_null(m_mbString);
+	MemFreeAndNull(m_mbString);
 #endif
    m_stringIsValid = FALSE;
    m_value.int32 = nValue;
@@ -514,9 +514,9 @@ void NXSL_Value::updateString()
 {
    TCHAR szBuffer[64];
 
-   free(m_stringPtr);
+   MemFree(m_stringPtr);
 #ifdef UNICODE
-	safe_free_and_null(m_mbString);
+	MemFreeAndNull(m_mbString);
 #endif
    switch(m_dataType)
    {
@@ -775,7 +775,7 @@ void NXSL_Value::concatenate(const TCHAR *pszString, UINT32 dwLen)
 #ifdef UNICODE
 	else
 	{
-		safe_free_and_null(m_mbString);
+		MemFreeAndNull(m_mbString);
 	}
 #endif
    if (m_length < NXSL_SHORT_STRING_LENGTH)
@@ -788,7 +788,7 @@ void NXSL_Value::concatenate(const TCHAR *pszString, UINT32 dwLen)
       }
       else
       {
-         m_stringPtr = (TCHAR *)malloc((m_length + dwLen + 1) * sizeof(TCHAR));
+         m_stringPtr = (TCHAR *)MemAlloc((m_length + dwLen + 1) * sizeof(TCHAR));
          memcpy(m_stringPtr, m_stringValue, m_length * sizeof(TCHAR));
          memcpy(&m_stringPtr[m_length], pszString, dwLen * sizeof(TCHAR));
          m_length += dwLen;
@@ -797,7 +797,7 @@ void NXSL_Value::concatenate(const TCHAR *pszString, UINT32 dwLen)
    }
    else
    {
-      m_stringPtr = (TCHAR *)realloc(m_stringPtr, (m_length + dwLen + 1) * sizeof(TCHAR));
+      m_stringPtr = MemRealloc(m_stringPtr, (m_length + dwLen + 1) * sizeof(TCHAR));
       memcpy(&m_stringPtr[m_length], pszString, dwLen * sizeof(TCHAR));
       m_length += dwLen;
       m_stringPtr[m_length] = 0;
@@ -1553,7 +1553,7 @@ NXSL_Value *NXSL_Value::load(NXSL_ValueManager *vm, ByteStream &s)
          if (v->m_length < NXSL_SHORT_STRING_LENGTH)
          {
             _tcscpy(v->m_stringValue, v->m_stringPtr);
-            free(v->m_stringPtr);
+            MemFree(v->m_stringPtr);
             v->m_stringPtr = NULL;
          }
          v->m_stringIsValid = TRUE;

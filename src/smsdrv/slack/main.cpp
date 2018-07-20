@@ -164,8 +164,8 @@ extern "C" bool __EXPORT SMSDriverSend(const TCHAR *channel, const TCHAR *text)
       curl_easy_setopt(curl, CURLOPT_POSTFIELDS, request);
       json_decref(root);
 
-      free(_channel);
-      free(_text);
+      MemFree(_channel);
+      MemFree(_text);
 
       if (curl_easy_setopt(curl, CURLOPT_URL, s_url) == CURLE_OK)
       {
@@ -196,8 +196,8 @@ extern "C" bool __EXPORT SMSDriverSend(const TCHAR *channel, const TCHAR *text)
       {
          nxlog_debug(4, _T("Slack: call to curl_easy_setopt(CURLOPT_URL) failed"));
       }
-      safe_free(data->data);
-      free(data);
+      MemFree(data->data);
+      MemFree(data);
       curl_easy_cleanup(curl);
    }
    else

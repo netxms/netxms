@@ -611,10 +611,10 @@ OracleBatchBind::~OracleBatchBind()
    if (m_strings != NULL)
    {
       for(int i = 0; i < m_size; i++)
-         safe_free(m_strings[i]);
+         MemFree(m_strings[i]);
       free(m_strings);
    }
-   safe_free(m_data);
+   MemFree(m_data);
 }
 
 /**
@@ -659,7 +659,7 @@ void OracleBatchBind::set(void *value)
 {
    if (m_string)
    {
-      safe_free(m_strings[m_size - 1]);
+      MemFree(m_strings[m_size - 1]);
       m_strings[m_size - 1] = (UCS2CHAR *)value;
       if (value != NULL)
       {
@@ -682,7 +682,7 @@ void *OracleBatchBind::getData()
    if (!m_string)
       return m_data;
 
-   safe_free(m_data);
+   MemFree(m_data);
    m_data = calloc(m_size, m_elementSize);
    char *p = (char *)m_data;
    for(int i = 0; i < m_size; i++)

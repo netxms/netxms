@@ -111,10 +111,10 @@ SNMP_SecurityContext::SNMP_SecurityContext(const char *user, const char *authPas
  */
 SNMP_SecurityContext::~SNMP_SecurityContext()
 {
-	safe_free(m_authName);
-	safe_free(m_authPassword);
-	safe_free(m_privPassword);
-	safe_free(m_contextName);
+	MemFree(m_authName);
+	MemFree(m_authPassword);
+	MemFree(m_privPassword);
+	MemFree(m_contextName);
 }
 
 /**
@@ -122,7 +122,7 @@ SNMP_SecurityContext::~SNMP_SecurityContext()
  */
 void SNMP_SecurityContext::setContextName(const TCHAR *name)
 {
-	safe_free(m_contextName);
+	MemFree(m_contextName);
 	if (name != NULL)
 	{
 #ifdef UNICODE

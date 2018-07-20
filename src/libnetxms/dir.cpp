@@ -65,7 +65,7 @@ DIR LIBNETXMS_EXPORTABLE *opendir(const char *path)
    if (handle == INVALID_HANDLE_VALUE)
       return NULL;
 
-   DIR *p = (DIR *)malloc(sizeof(DIR));
+   DIR *p = (DIR *)MemAlloc(sizeof(DIR));
    if (p == NULL)
       return NULL;
 
@@ -111,7 +111,7 @@ int LIBNETXMS_EXPORTABLE closedir(DIR *p)
    if (p == NULL)
       return -1;
    FindClose(p->handle);
-   free(p);
+   MemFree(p);
    return 0;
 }
 

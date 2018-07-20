@@ -52,7 +52,7 @@ ByteStream::ByteStream(const void *data, size_t size)
  */
 ByteStream::~ByteStream()
 {
-   safe_free(m_data);
+   MemFree(m_data);
 }
 
 /**

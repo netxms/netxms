@@ -268,7 +268,7 @@ void LIBNETXMS_EXPORTABLE *nx_memdup(const void *data, size_t size)
 {
    void *newData;
 
-   newData = malloc(size);
+   newData = MemAlloc(size);
    memcpy(newData, data, size);
    return newData;
 }
@@ -280,11 +280,11 @@ void LIBNETXMS_EXPORTABLE nx_memswap(void *block1, void *block2, size_t size)
 {
    void *temp;
 
-   temp = malloc(size);
+   temp = MemAlloc(size);
    memcpy(temp, block1, size);
    memcpy(block1, block2, size);
    memcpy(block2, temp, size);
-   free(temp);
+   MemFree(temp);
 }
 
 #if defined(_WIN32) && defined(USE_WIN32_HEAP)
@@ -466,8 +466,8 @@ bool LIBNETXMS_EXPORTABLE MatchString(const TCHAR *pattern, const TCHAR *str, bo
    _tcsupr(tp);
    _tcsupr(ts);
    bResult = MatchStringEngine(tp, ts);
-   free(tp);
-   free(ts);
+   MemFree(tp);
+   MemFree(ts);
    return bResult;
 }
 
@@ -682,7 +682,7 @@ BOOL LIBNETXMS_EXPORTABLE CreateFolder(const TCHAR *directory)
       result = true;
       st.st_mode = 0700;
    }
-   safe_free(previous);
+   MemFree(previous);
 
    if (result)
    {
@@ -1727,14 +1727,14 @@ TCHAR LIBNETXMS_EXPORTABLE **SplitString(const TCHAR *source, TCHAR sep, int *nu
 	TCHAR **strings;
 
 	*numStrings = NumChars(source, sep) + 1;
-	strings = (TCHAR **)malloc(sizeof(TCHAR *) * (*numStrings));
+	strings = (TCHAR **)MemAlloc(sizeof(TCHAR *) * (*numStrings));
 	for(int n = 0, i = 0; n < *numStrings; n++, i++)
 	{
 		int start = i;
 		while((source[i] != sep) && (source[i] != 0))
 			i++;
 		int len = i - start;
-		strings[n] = (TCHAR *)malloc(sizeof(TCHAR) * (len + 1));
+		strings[n] = (TCHAR *)MemAlloc(sizeof(TCHAR) * (len + 1));
 		memcpy(strings[n], &source[start], len * sizeof(TCHAR));
 		strings[n][len] = 0;
 	}
@@ -1941,8 +1941,8 @@ bool LIBNETXMS_EXPORTABLE DecryptPasswordW(const WCHAR *login, const WCHAR *encr
 
 	MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (char *)decrypted, -1, decryptedPasswd, (int)bufferLenght);
 	decryptedPasswd[bufferLenght - 1] = 0;
-	free(mbencrypted);
-	free(mblogin);
+	MemFree(mbencrypted);
+	MemFree(mblogin);
 
 	return true;
 }
@@ -2005,7 +2005,7 @@ static BYTE *LoadFileContent(int fd, UINT32 *pdwFileSize, bool kernelFS)
           size = 16384;
       }
 #endif
-      pBuffer = (BYTE *)malloc(size + 1);
+      pBuffer = (BYTE *)MemAlloc(size + 1);
       if (pBuffer != NULL)
       {
          *pdwFileSize = (UINT32)size;
@@ -2014,7 +2014,7 @@ static BYTE *LoadFileContent(int fd, UINT32 *pdwFileSize, bool kernelFS)
             iNumBytes = std::min(16384, (int)size - iBufPos);
             if ((iBytesRead = _read(fd, &pBuffer[iBufPos], iNumBytes)) < 0)
             {
-               free(pBuffer);
+               MemFree(pBuffer);
                pBuffer = NULL;
                break;
             }
@@ -2031,7 +2031,7 @@ static BYTE *LoadFileContent(int fd, UINT32 *pdwFileSize, bool kernelFS)
             {
                // Assume that file is larger than expected
                size += 16384;
-               pBuffer = (BYTE *)realloc(pBuffer, size + 1);
+               pBuffer = (BYTE *)MemRealloc(pBuffer, size + 1);
             }
 #endif
          }
@@ -2208,7 +2208,7 @@ void LIBNETXMS_EXPORTABLE WriteToTerminal(const TCHAR *text)
 #ifdef UNICODE
       char *mbText = MBStringFromWideString(text);
       WriteFile(out, mbText, (UINT32)strlen(mbText), &mode, NULL);
-      free(mbText);
+      MemFree(mbText);
 #else
       WriteFile(out, text, (UINT32)strlen(text), &mode, NULL);
 #endif
@@ -2278,7 +2278,7 @@ void LIBNETXMS_EXPORTABLE WriteToTerminal(const TCHAR *text)
 #else
 	char *mbtext = MBStringFromWideStringSysLocale(text);
 	fputs(mbtext, stdout);
-	free(mbtext);
+	MemFree(mbtext);
 #endif
 #else
 	fputs(text, stdout);
@@ -2398,7 +2398,7 @@ size_t LIBNETXMS_EXPORTABLE nx_wcsftime(WCHAR *buffer, size_t bufsize, const WCH
    char *mfmt = (char *)alloca(flen);
    WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, format, -1, mfmt, flen, NULL, NULL);
 #else
-   char *mbuf = (char *)malloc(bufsize);
+   char *mbuf = (char *)MemAlloc(bufsize);
    char *mfmt = MBStringFromWideString(format);
 #endif
    size_t rc = strftime(mbuf, bufsize, mfmt, t);
@@ -2412,8 +2412,8 @@ size_t LIBNETXMS_EXPORTABLE nx_wcsftime(WCHAR *buffer, size_t bufsize, const WCH
       buffer[0] = 0;
    }
 #if !HAVE_ALLOCA
-   free(mbuf);
-   free(mfmt);
+   MemFree(mbuf);
+   MemFree(mfmt);
 #endif
    return rc;
 }
@@ -2764,7 +2764,7 @@ TCHAR LIBNETXMS_EXPORTABLE *GetHeapInfo()
    fclose(f);
 #ifdef UNICODE
    WCHAR *wtext = WideStringFromMBString(buffer);
-   free(buffer);
+   MemFree(buffer);
    return wtext;
 #else
    return buffer;
@@ -2938,7 +2938,7 @@ StringList LIBNETXMS_EXPORTABLE *ParseCommandLine(const TCHAR *cmdline)
       if (*curr != 0)
          args->add(curr);
    }
-   free(temp);
+   MemFree(temp);
    return args;
 }
 

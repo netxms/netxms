@@ -63,11 +63,11 @@ EventSource::~EventSource()
 {
 	int i;
 
-	safe_free(m_logName);
-	safe_free(m_name);
+	MemFree(m_logName);
+	MemFree(m_name);
 	for(i = 0; i < m_numModules; i++)
 		FreeLibrary(m_modules[i]);
-	safe_free(m_modules);
+	MemFree(m_modules);
 }
 
 /**
@@ -414,6 +414,6 @@ void CleanupEventLogParsers()
 
 	for(i = 0; i < m_numEventSources; i++)
 		delete m_eventSourceList[i];
-	safe_free(m_eventSourceList);
+	MemFree(m_eventSourceList);
 	DeleteCriticalSection(&m_csEventSourceAccess);
 }

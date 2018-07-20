@@ -41,8 +41,8 @@ LogParserRule::LogParserRule(LogParser *parser, const TCHAR *name, const TCHAR *
 	m_isValid = (_tregcomp(&m_preg, expandedRegexp, REG_EXTENDED | REG_ICASE) == 0);
 	m_eventCode = eventCode;
 	m_eventName = (eventName != NULL) ? _tcsdup(eventName) : NULL;
-	m_pmatch = (regmatch_t *)malloc(sizeof(regmatch_t) * MAX_PARAM_COUNT);
-	m_source = (source != NULL) ? _tcsdup(source) : NULL;
+	m_pmatch = MemAllocArray<regmatch_t>(MAX_PARAM_COUNT);
+	m_source = _tcsdup_ex(source);
 	m_level = level;
 	m_idStart = idStart;
 	m_idEnd = idEnd;
@@ -72,7 +72,7 @@ LogParserRule::LogParserRule(LogParserRule *src, LogParser *parser)
 	m_isValid = (_tregcomp(&m_preg, m_regexp, REG_EXTENDED | REG_ICASE) == 0);
 	m_eventCode = src->m_eventCode;
 	m_eventName = (src->m_eventName != NULL) ? _tcsdup(src->m_eventName) : NULL;
-   m_pmatch = (regmatch_t *)malloc(sizeof(regmatch_t) * MAX_PARAM_COUNT);
+   m_pmatch = MemAllocArray<regmatch_t>(MAX_PARAM_COUNT);
    m_source = (src->m_source != NULL) ? _tcsdup(src->m_source) : NULL;
 	m_level = src->m_level;
 	m_idStart = src->m_idStart;
@@ -105,16 +105,16 @@ LogParserRule::LogParserRule(LogParserRule *src, LogParser *parser)
  */
 LogParserRule::~LogParserRule()
 {
-   free(m_name);
+   MemFree(m_name);
 	if (m_isValid)
 		regfree(&m_preg);
-	free(m_pmatch);
-	free(m_description);
-	free(m_source);
-	free(m_regexp);
-	free(m_eventName);
-	free(m_context);
-	free(m_contextToChange);
+	MemFree(m_pmatch);
+	MemFree(m_description);
+	MemFree(m_source);
+	MemFree(m_regexp);
+	MemFree(m_eventName);
+	MemFree(m_context);
+	MemFree(m_contextToChange);
 	delete m_matchArray;
 	delete m_objectCounters;
 }
@@ -185,7 +185,7 @@ bool LogParserRule::matchInternal(bool extMode, const TCHAR *source, UINT32 even
                   break;
 
 					int len = m_pmatch[i + 1].rm_eo - m_pmatch[i + 1].rm_so;
-					TCHAR *s = (TCHAR *)malloc((len + 1) * sizeof(TCHAR));
+					TCHAR *s = (TCHAR *)MemAlloc((len + 1) * sizeof(TCHAR));
 					memcpy(s, &line[m_pmatch[i + 1].rm_so], len * sizeof(TCHAR));
 					s[len] = 0;
                captureGroups.addPreallocated(s);

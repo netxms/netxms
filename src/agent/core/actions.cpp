@@ -72,7 +72,7 @@ BOOL AddAction(const TCHAR *pszName, int iType, const TCHAR *pArg,
       // Update existing entry in action list
       nx_strncpy(m_pActionList[i].szDescription, pszDescription, MAX_DB_STRING);
       if ((m_pActionList[i].iType == AGENT_ACTION_EXEC) || (m_pActionList[i].iType == AGENT_ACTION_SHELLEXEC))
-         safe_free(m_pActionList[i].handler.pszCmdLine);
+         MemFree(m_pActionList[i].handler.pszCmdLine);
       m_pActionList[i].iType = iType;
       switch(iType)
       {

@@ -155,7 +155,7 @@ DataCollectionItem::DataCollectionItem(DB_RESULT hResult, int row)
  */
 DataCollectionItem::~DataCollectionItem()
 {
-   safe_free(m_name);
+   MemFree(m_name);
 }
 
 /**

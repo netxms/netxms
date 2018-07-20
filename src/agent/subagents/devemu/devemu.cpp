@@ -1,6 +1,6 @@
-/*
+/**
  ** Device Emulation subagent
- ** Copyright (C) 2014 Raden Solutions
+ ** Copyright (C) 2014-2018 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -132,7 +132,7 @@ static bool SubagentInit(Config *config)
 static void SubagentShutdown()
 {
    delete s_values;
-   safe_free(m_info.parameters);
+   MemFree(m_info.parameters);
    s_shutdown = true;
 }
 

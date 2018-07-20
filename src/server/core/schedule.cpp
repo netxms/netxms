@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2016 Raden Solutions
+** Copyright (C) 2003-2018 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -105,10 +105,10 @@ ScheduledTask::ScheduledTask(DB_RESULT hResult, int row)
  */
 ScheduledTask::~ScheduledTask()
 {
-   free(m_taskHandlerId);
-   free(m_schedule);
-   free(m_params);
-   free(m_comments);
+   MemFree(m_taskHandlerId);
+   MemFree(m_schedule);
+   MemFree(m_params);
+   MemFree(m_comments);
 }
 
 /**
@@ -116,13 +116,13 @@ ScheduledTask::~ScheduledTask()
  */
 void ScheduledTask::update(const TCHAR *taskHandlerId, const TCHAR *schedule, const TCHAR *params, const TCHAR *comments, UINT32 owner, UINT32 objectId, UINT32 flags)
 {
-   free(m_taskHandlerId);
+   MemFree(m_taskHandlerId);
    m_taskHandlerId = _tcsdup(CHECK_NULL_EX(taskHandlerId));
-   free(m_schedule);
+   MemFree(m_schedule);
    m_schedule = _tcsdup(CHECK_NULL_EX(schedule));
-   free(m_params);
+   MemFree(m_params);
    m_params = _tcsdup(CHECK_NULL_EX(params));
-   free(m_comments);
+   MemFree(m_comments);
    m_comments = _tcsdup(CHECK_NULL_EX(comments));
    m_owner = owner;
    m_objectId = objectId;
@@ -134,13 +134,13 @@ void ScheduledTask::update(const TCHAR *taskHandlerId, const TCHAR *schedule, co
  */
 void ScheduledTask::update(const TCHAR *taskHandlerId, time_t nextExecution, const TCHAR *params, const TCHAR *comments, UINT32 owner, UINT32 objectId, UINT32 flags)
 {
-   free(m_taskHandlerId);
+   MemFree(m_taskHandlerId);
    m_taskHandlerId = _tcsdup(CHECK_NULL_EX(taskHandlerId));
-   free(m_schedule);
+   MemFree(m_schedule);
    m_schedule = _tcsdup(_T(""));
-   free(m_params);
+   MemFree(m_params);
    m_params = _tcsdup(CHECK_NULL_EX(params));
-   free(m_comments);
+   MemFree(m_comments);
    m_comments = _tcsdup(CHECK_NULL_EX(comments));
    m_executionTime = nextExecution;
    m_owner  = owner;
@@ -691,9 +691,9 @@ UINT32 CreateScehduledTaskFromMsg(NXCPMessage *request, UINT32 owner, UINT64 sys
       nextExecutionTime = request->getFieldAsTime(VID_EXECUTION_TIME);
       result = AddOneTimeScheduledTask(taskId, nextExecutionTime, params, owner, objectId, systemAccessRights, comments, flags);
    }
-   free(taskId);
-   free(schedule);
-   free(params);
+   MemFree(taskId);
+   MemFree(schedule);
+   MemFree(params);
    return result;
 }
 
@@ -721,9 +721,9 @@ UINT32 UpdateScheduledTaskFromMsg(NXCPMessage *request,  UINT32 owner, UINT64 sy
       nextExecutionTime = request->getFieldAsTime(VID_EXECUTION_TIME);
       rcc = UpdateOneTimeScheduledTask(id, taskId, nextExecutionTime, params, comments, owner, objectId, systemAccessRights, flags);
    }
-   free(taskId);
-   free(schedule);
-   free(params);
+   MemFree(taskId);
+   MemFree(schedule);
+   MemFree(params);
    return rcc;
 }
 

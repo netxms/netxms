@@ -111,7 +111,7 @@ int yylex(YYSTYPE *lvalp, yyscan_t scanner);
 %type <valInt32> SelectList
 %type <pInstruction> SimpleStatementKeyword
 
-%destructor { free($$); } <valStr>
+%destructor { MemFree($$); } <valStr>
 %destructor { pScript->destroyValue($$); } <pConstant>
 %destructor { delete $$; } <pInstruction>
 
@@ -1182,7 +1182,7 @@ Constant:
 	T_STRING
 {
 	$$ = pScript->createValue($1);
-	safe_free_and_null($1);
+	MemFreeAndNull($1);
 }
 |	T_INT32
 {

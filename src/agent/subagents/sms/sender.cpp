@@ -236,7 +236,7 @@ bool InitSender(const TCHAR *pszInitArgs)
 	}
 
 cleanup:
-	safe_free(portName);
+	MemFree(portName);
    s_serial.close();
 	return TRUE;   // return TRUE always to keep subagent in memory
 }

@@ -443,9 +443,9 @@ protected:
 
    void invalidateString()
    {
-      safe_free_and_null(m_stringPtr);
+      MemFreeAndNull(m_stringPtr);
 #ifdef UNICODE
-		safe_free_and_null(m_mbString);
+      MemFreeAndNull(m_mbString);
 #endif
       m_stringIsValid = FALSE;
    }

@@ -466,7 +466,7 @@ static void GetSNMPTable(void *pArg)
 
             // Cleanup
             for(i = 0; i < dwNumCols; i++)
-               safe_free(args.ppszOidList[i]);
+               MemFree(args.ppszOidList[i]);
             free(args.ppszOidList);
             free(args.pnFormatList);
          }
@@ -491,7 +491,7 @@ static void GetSNMPTable(void *pArg)
    // Send response to client
    ((TOOL_STARTUP_INFO *)pArg)->pSession->sendMessage(&msg);
    ((TOOL_STARTUP_INFO *)pArg)->pSession->decRefCount();
-   safe_free(((TOOL_STARTUP_INFO *)pArg)->pszToolData);
+   MemFree(((TOOL_STARTUP_INFO *)pArg)->pszToolData);
    free(pArg);
 }
 

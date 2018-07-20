@@ -82,7 +82,7 @@ bool Serial::open(const TCHAR *pszPort)
 	bool bRet = false;
 	
 	close();    // In case if port already open
-	safe_free(m_pszPort);
+	MemFree(m_pszPort);
 	m_pszPort = _tcsdup(pszPort);
 	
 #ifdef _WIN32

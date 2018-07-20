@@ -218,12 +218,12 @@ Query *Query::createConfigurableFromConfig(const TCHAR *src)
 
    // Rest is SQL query
    query->m_query = _tcsdup(curr);
-   safe_free(config);
+   MemFree(config);
    query->m_pollRequired = false;
    return query;
 
 fail:
-   safe_free(config);
+   MemFree(config);
    delete query;
    return NULL;
 }

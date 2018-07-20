@@ -30,7 +30,7 @@
  */
 static void ObjectDestructor(void *element)
 {
-	free(element);
+	MemFree(element);
 }
 
 /**
@@ -46,7 +46,7 @@ Array::Array(int initial, int grow, bool owner)
 	m_grow = (grow > 0) ? grow : 16;
 	m_allocated = (initial >= 0) ? initial : 16;
    m_elementSize = sizeof(void *);
-	m_data = (m_allocated > 0) ? (void **)malloc(m_elementSize * m_allocated) : NULL;
+	m_data = (m_allocated > 0) ? (void **)MemAlloc(m_elementSize * m_allocated) : NULL;
 	m_objectOwner = owner;
 	m_objectDestructor = ObjectDestructor;
    m_storePointers = true;
@@ -61,7 +61,7 @@ Array::Array(void *data, int initial, int grow, size_t elementSize)
 	m_grow = (grow > 0) ? grow : 16;
 	m_allocated = (initial >= 0) ? initial : 16;
    m_elementSize = elementSize;
-	m_data = (void **)malloc(m_elementSize * m_allocated);
+	m_data = (void **)MemAlloc(m_elementSize * m_allocated);
    if (data != NULL)
    {
       memcpy(m_data, data, initial * m_elementSize);
@@ -96,7 +96,7 @@ Array::~Array()
 		for(int i = 0; i < m_size; i++)
 			destroyObject(m_data[i]);
 	}
-	safe_free(m_data);
+	MemFree(m_data);
 }
 
 /**
@@ -107,7 +107,7 @@ int Array::add(void *element)
 	if (m_size == m_allocated)
 	{
 		m_allocated += m_grow;
-		m_data = (void **)realloc(m_data, m_elementSize * m_allocated);
+		m_data = MemRealloc(m_data, m_elementSize * m_allocated);
 	}
    if (m_storePointers)
    {
@@ -142,7 +142,7 @@ void Array::set(int index, void *element)
 		if (index >= m_allocated)
 		{
 			m_allocated += m_grow * ((index - m_allocated) / m_grow + 1);
-			m_data = (void **)realloc(m_data, m_elementSize * m_allocated);
+			m_data = MemRealloc(m_data, m_elementSize * m_allocated);
 		}
 		memset(ADDR(m_size), 0, m_elementSize * (index - m_size));
 		m_size = index + 1;
@@ -186,7 +186,7 @@ void Array::insert(int index, void *element)
       if (m_size == m_allocated)
       {
          m_allocated += m_grow;
-         m_data = (void **)realloc(m_data, m_elementSize * m_allocated);
+         m_data = MemRealloc(m_data, m_elementSize * m_allocated);
       }
       memmove(ADDR(index + 1), ADDR(index), m_elementSize * (m_size - index));
       m_size++;
@@ -197,7 +197,7 @@ void Array::insert(int index, void *element)
       if (index >= m_allocated)
       {
          m_allocated += m_grow * ((index - m_allocated) / m_grow + 1);
-         m_data = (void **)realloc(m_data, m_elementSize * m_allocated);
+         m_data = MemRealloc(m_data, m_elementSize * m_allocated);
       }
       memset(ADDR(m_size), 0, m_elementSize * (index - m_size));
       m_size = index + 1;
@@ -237,7 +237,7 @@ void Array::clear()
 	m_size = 0;
 	if (m_allocated > m_grow)
 	{
-		m_data = (void **)realloc(m_data, m_elementSize * m_grow);
+		m_data = MemRealloc(m_data, m_elementSize * m_grow);
 		m_allocated = m_grow;
 	}
 }

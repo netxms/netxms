@@ -1702,7 +1702,7 @@ UINT32 GetAlarmComments(UINT32 alarmId, NXCPMessage *msg)
 
             TCHAR *text = DBGetField(hResult, i, 3, NULL, 0);
 				msg->setField(varId++, CHECK_NULL_EX(text));
-				safe_free(text);
+				MemFree(text);
 
             TCHAR userName[MAX_USER_NAME];
             if (ResolveUserId(userId, userName) != NULL)

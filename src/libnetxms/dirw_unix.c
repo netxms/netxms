@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Utility Library
-** Copyright (C) 2003-2017 Raden Solutions
+** Copyright (C) 2003-2018 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -34,7 +34,7 @@ DIRW *wopendir(const WCHAR *name)
 	free(utf8name);
 	if (dir == NULL)
 		return NULL;
-	DIRW *d = (DIRW *)malloc(sizeof(DIRW));
+	DIRW *d = (DIRW *)MemAlloc(sizeof(DIRW));
 	d->dir = dir;
 	return d;
 }
@@ -62,7 +62,7 @@ struct dirent_w *wreaddir(DIRW *dirp)
 int wclosedir(DIRW *dirp)
 {
 	closedir(dirp->dir);
-	free(dirp);
+	MemFree(dirp);
 	return 0;
 }
 

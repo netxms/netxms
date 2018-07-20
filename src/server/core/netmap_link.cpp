@@ -71,7 +71,7 @@ NetworkMapLink::~NetworkMapLink()
  */
 void NetworkMapLink::setName(const TCHAR *name)
 {
-	safe_free(m_name);
+	MemFree(m_name);
 	m_name = (name != NULL) ? _tcsdup(name) : NULL;
 }
 
@@ -81,7 +81,7 @@ void NetworkMapLink::setName(const TCHAR *name)
  */
 void NetworkMapLink::setConnector1Name(const TCHAR *name)
 {
-	safe_free(m_connectorName1);
+	MemFree(m_connectorName1);
 	m_connectorName1 = (name != NULL) ? _tcsdup(name) : NULL;
 }
 
@@ -90,7 +90,7 @@ void NetworkMapLink::setConnector1Name(const TCHAR *name)
  */
 void NetworkMapLink::setConfig(const TCHAR *name)
 {
-	safe_free(m_config);
+	MemFree(m_config);
 	m_config = (name != NULL) ? _tcsdup(name) : NULL;
 }
 
@@ -99,7 +99,7 @@ void NetworkMapLink::setConfig(const TCHAR *name)
  */
 void NetworkMapLink::setConnector2Name(const TCHAR *name)
 {
-	safe_free(m_connectorName2);
+	MemFree(m_connectorName2);
 	m_connectorName2 = (name != NULL) ? _tcsdup(name) : NULL;
 }
 

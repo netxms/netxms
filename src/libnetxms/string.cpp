@@ -371,7 +371,7 @@ void String::escapeCharacter(int ch, int esc)
  */
 void String::setBuffer(TCHAR *buffer)
 {
-   safe_free(m_buffer);
+   MemFree(m_buffer);
    m_buffer = buffer;
    if (m_buffer != NULL)
    {

@@ -45,8 +45,8 @@
 #endif
 */
 
-#define YYMALLOC	malloc
-#define YYFREE		free
+#define YYMALLOC	MemAlloc
+#define YYFREE		MemFree
 
 #include <nms_common.h>
 #include <nms_util.h>
@@ -414,12 +414,12 @@ NumericValue:
     NumberOrMinMax
 |   DefinedValue
 {
-   safe_free($1);
+   MemFree($1);
 }
 |   NumberOrMinMax DOT_SYM DOT_SYM NumberOrMinMax 
 |   Identifier LEFT_PAREN_SYM NumberOrMinMax RIGHT_PAREN_SYM
 {
-   safe_free($1);
+   MemFree($1);
 }
 ;
 
@@ -432,10 +432,10 @@ NumberOrMinMax:
 DefinedValue:
     UCidentifier DOT_SYM LCidentifier
 {
-   $$ = (char *)malloc(strlen($1) + strlen($3) + 2);
+   $$ = (char *)MemAlloc(strlen($1) + strlen($3) + 2);
    sprintf($$, "%s.%s", $1, $3);
-   free($1);
-   free($3);
+   MemFree($1);
+   MemFree($3);
 }
 |   LCidentifier
 {
@@ -542,8 +542,8 @@ SnmpRevisionObject:
     REVISION_SYM CharString
     SnmpDescriptionPart
 {
-   safe_free($2);
-   safe_free($3);
+   MemFree($2);
+   MemFree($3);
 }
 ;
 
@@ -557,21 +557,21 @@ SnmpIdentityPart:
 SnmpOrganisationPart:
     ORGANIZATION_SYM CharString
 {
-   safe_free($2);
+   MemFree($2);
 }
 ;
 
 SnmpContactInfoPart:
     CONTACT_SYM CharString
 {
-   safe_free($2);
+   MemFree($2);
 }
 ;
 
 SnmpUpdatePart:
     UPDATE_SYM CharString
 {
-   safe_free($2);
+   MemFree($2);
 }
 ;
 
@@ -609,14 +609,14 @@ SnmpKeywordAssignment:
 SnmpKeywordName:
     KEYWORD_SYM ASSIGNMENT_SYM CharString
 {
-   safe_free($3);
+   MemFree($3);
 }
 ;
 
 SnmpKeywordValue:
     KEYWORD_VALUE_SYM ASSIGNMENT_SYM CharString
 {
-   safe_free($3);
+   MemFree($3);
 }
 ;
 
@@ -649,7 +649,7 @@ SnmpSyntaxPart:
 SnmpUnitsPart:
     UNITS_SYM CharString
 {
-   safe_free($2);
+   MemFree($2);
 }
 |
 ;
@@ -950,7 +950,7 @@ SnmpNotificationTypeAssignment:
    $$->pOID->add(pSubId);
 
    pSubId = new MP_SUBID;
-   pSubId->pszName = (char *)malloc(strlen($4) + 3);
+   pSubId->pszName = (char *)MemAlloc(strlen($4) + 3);
    sprintf(pSubId->pszName, "%s#0", $4);
    pSubId->bResolved = TRUE;
    $$->pOID->add(pSubId);
@@ -1008,14 +1008,14 @@ SnmpComplianceObject:
     SnmpAccessPart
     SnmpDescriptionPart
 {
-   safe_free($2);
+   MemFree($2);
    delete $3;
-   safe_free($6);
+   MemFree($6);
 }
 |   GROUP_SYM LCidentifier SnmpDescriptionPart
 {
-   safe_free($2);
-   safe_free($3);
+   MemFree($2);
+   MemFree($3);
 }
 ;
 
@@ -1078,8 +1078,8 @@ ModuleComplianceAssignment:
     SnmpModuleComplianceList
     AssignedIdentifier
 {
-   free($1);
-   safe_free($4);
+   MemFree($1);
+   MemFree($4);
    delete $7;
 }
 ;
@@ -1098,7 +1098,7 @@ SnmpModuleComplianceObject:
 OptionalModuleName:
 	UCidentifier
 {
-   free($1);
+   MemFree($1);
 }
 |
 ;
@@ -1122,9 +1122,9 @@ SnmpVariationPart:
     SnmpDefValPart
     SnmpDescriptionPart
 {
-   safe_free($2);
+   MemFree($2);
    delete $3;
-   safe_free($8);
+   MemFree($8);
 }
 ;
 
@@ -1136,12 +1136,12 @@ ModuleCapabilitiesList:
 ModuleCapabilitiesAssignment:
     SUPPORTS_SYM UCidentifier INCLUDES_SYM LEFT_BRACE_SYM SymbolList RIGHT_BRACE_SYM SnmpVariationsListPart
 {
-   safe_free($2);
+   MemFree($2);
    delete $5;
 }
 |    ModuleIdentifier INCLUDES_SYM SymbolList SnmpVariationsListPart
 {
-   safe_free($1);
+   MemFree($1);
    delete $3;
 }
 ;
@@ -1163,7 +1163,7 @@ AgentCapabilitiesAssignment:
    $$->pszDescription = $6;
    delete $$->pOID;
    $$->pOID = $9;
-   safe_free($4);
+   MemFree($4);
 }
 ;
 
@@ -1171,17 +1171,17 @@ SnmpAccessPart:
     ACCESS_SYM LCidentifier
 {
    $$ = AccessFromText($2);
-   free($2);
+   MemFree($2);
 }
 |   MAX_ACCESS_SYM LCidentifier
 {
    $$ = AccessFromText($2);
-   free($2);
+   MemFree($2);
 }
 |   MIN_ACCESS_SYM LCidentifier
 {
    $$ = AccessFromText($2);
-   free($2);
+   MemFree($2);
 }
 |
 {
@@ -1208,14 +1208,14 @@ SnmpStatusPart:
       sprintf(szBuffer, "Invalid STATUS value \"%s\"", $2);
       mperror(szBuffer);
    }
-   free($2);
+   MemFree($2);
 }
 ;
 
 SnmpReferencePart:
     REFERENCE_SYM CharString
 {
-   safe_free($2);
+   MemFree($2);
 }
 |
 ;
@@ -1223,7 +1223,7 @@ SnmpReferencePart:
 SnmpDisplayHintPart:
     DISPLAY_HINT_SYM CharString
 {
-   free($2);
+   MemFree($2);
 }
 |
 ;
@@ -1235,7 +1235,7 @@ SnmpIndexPart:
 }
 |   AUGMENTS_SYM LEFT_BRACE_SYM DefinedValue RIGHT_BRACE_SYM
 {
-   free($3);
+   MemFree($3);
 }
 |
 ;
@@ -1245,11 +1245,11 @@ SnmpDefValPart:
 |   DEFVAL_SYM LEFT_BRACE_SYM HexString RIGHT_BRACE_SYM
 |   DEFVAL_SYM LEFT_BRACE_SYM CharString RIGHT_BRACE_SYM
 {
-   free($3);
+   MemFree($3);
 }
 |   DEFVAL_SYM LEFT_BRACE_SYM Identifier RIGHT_BRACE_SYM
 {
-   free($3);
+   MemFree($3);
 }
 |   DEFVAL_SYM LEFT_BRACE_SYM DefValList RIGHT_BRACE_SYM
 |   DEFVAL_SYM AssignedIdentifierList
@@ -1275,14 +1275,14 @@ DefValListElement:
 BinaryString:
     BSTRING_SYM
 {
-   safe_free($1);
+   MemFree($1);
 }
 ;
 
 HexString:
     HSTRING_SYM
 {
-   safe_free($1);
+   MemFree($1);
 }
 ;
 
@@ -1345,7 +1345,7 @@ Symbol:
 SequenceItem:
     Identifier Type
 {
-   safe_free($1);
+   MemFree($1);
    delete $2;
 }
 ;
@@ -1372,7 +1372,7 @@ SnmpTypeTagList:
 SnmpTypeTagItem:
     LEFT_BRACKET_SYM UCidentifier Number RIGHT_BRACKET_SYM
 {
-   safe_free($2);
+   MemFree($2);
 }
 ;
 
@@ -1392,7 +1392,7 @@ Value:
 |   BinaryString
 |   CharString
 {
-   safe_free($1);
+   MemFree($1);
 }
 ;
 
@@ -1454,7 +1454,7 @@ MP_MODULE *ParseMIB(const TCHAR *fileName)
 #ifdef UNICODE
       char *name = MBStringFromWideString(fileName);
       Error(ERR_CANNOT_OPEN_FILE, name, strerror(errno));
-      free(name);
+      MemFree(name);
 #else
       Error(ERR_CANNOT_OPEN_FILE, fileName, strerror(errno));
 #endif

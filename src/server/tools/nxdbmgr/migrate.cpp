@@ -171,7 +171,7 @@ static bool MigrateTable(const TCHAR *table)
                DBGetColumnName(hResult, i, buffer, 256);
                TCHAR *value = DBGetField(hResult, i, NULL, 0);
                _tprintf(_T("   %s = \"%s\"\n"), buffer, CHECK_NULL(value));
-               safe_free(value);
+               MemFree(value);
             }
             success = false;
             break;

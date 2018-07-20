@@ -437,7 +437,7 @@ bool NetworkMap::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 
       TCHAR *filter = DBGetField(hResult, 0, 12, NULL, 0);
       setFilter(filter);
-      safe_free(filter);
+      MemFree(filter);
 
       DBFreeResult(hResult);
 
@@ -631,7 +631,7 @@ UINT32 NetworkMap::modifyFromMessageInternal(NXCPMessage *request)
       if (filter != NULL)
          StrStrip(filter);
       setFilter(filter);
-      safe_free(filter);
+      MemFree(filter);
    }
 
 	if (request->isFieldExist(VID_NUM_ELEMENTS))
@@ -978,7 +978,7 @@ UINT32 NetworkMap::elementIdFromObjectId(UINT32 oid)
  */
 void NetworkMap::setFilter(const TCHAR *filter)
 {
-	safe_free(m_filterSource);
+	MemFree(m_filterSource);
 	delete m_filter;
 	if ((filter != NULL) && (*filter != 0))
 	{

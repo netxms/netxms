@@ -414,7 +414,7 @@ ServerInfo::ServerInfo(const TCHAR *name, bool control, bool master)
  */
 ServerInfo::~ServerInfo()
 {
-   safe_free(m_name);
+   MemFree(m_name);
    MutexDestroy(m_mutex);
 }
 

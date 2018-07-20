@@ -325,7 +325,7 @@ public:
    INT32 getInstanceRetentionTime() const { return m_instanceRetentionTime; }
    void filterInstanceList(StringMap *instances);
    void setInstanceDiscoveryMethod(WORD method) { m_instanceDiscoveryMethod = method; }
-   void setInstanceDiscoveryData(const TCHAR *data) { safe_free(m_instanceDiscoveryData); m_instanceDiscoveryData = _tcsdup_ex(data); }
+   void setInstanceDiscoveryData(const TCHAR *data) { MemFree(m_instanceDiscoveryData); m_instanceDiscoveryData = _tcsdup_ex(data); }
    void setInstanceFilter(const TCHAR *pszScript);
    void setInstance(const TCHAR *instance) { nx_strncpy(m_instance, instance, MAX_DB_STRING); }
    const TCHAR *getInstance() const { return m_instance; }

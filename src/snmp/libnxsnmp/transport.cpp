@@ -355,7 +355,7 @@ UINT32 SNMP_UDPTransport::createUDPTransport(const InetAddress& hostAddr, UINT16
  */
 SNMP_UDPTransport::~SNMP_UDPTransport()
 {
-   safe_free(m_pBuffer);
+   MemFree(m_pBuffer);
    if (m_hSocket != -1)
       closesocket(m_hSocket);
 }

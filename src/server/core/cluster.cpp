@@ -52,7 +52,7 @@ Cluster::Cluster(const TCHAR *pszName, UINT32 zoneUIN) : DataCollectionTarget(ps
 Cluster::~Cluster()
 {
    delete m_syncNetworks;
-	safe_free(m_pResourceList);
+	MemFree(m_pResourceList);
 }
 
 /**
@@ -460,12 +460,12 @@ UINT32 Cluster::modifyFromMessageInternal(NXCPMessage *pRequest)
 			}
 
 			// Replace list
-			safe_free(m_pResourceList);
+			MemFree(m_pResourceList);
 			m_pResourceList = pList;
 		}
 		else
 		{
-			safe_free_and_null(m_pResourceList);
+			MemFreeAndNull(m_pResourceList);
 		}
 		m_dwNumResources = dwCount;
 	}
@@ -890,7 +890,7 @@ UINT32 Cluster::collectAggregatedData(DCTable *table, Table **result)
 
    for(int i = 0; i < valueCount; i++)
       values[i]->decRefCount();
-   safe_free(values);
+   MemFree(values);
 
    return rcc;
 }

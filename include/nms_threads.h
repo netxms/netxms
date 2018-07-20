@@ -119,7 +119,7 @@ inline bool ThreadCreate(ThreadFunction start_address, int stack_size, void *arg
 #ifdef UNDER_CE
 	hThread = CreateThread(NULL, (UINT32)stack_size, start_address, args, 0, &dwThreadId);
 #else
-	THREAD_START_DATA *data = (THREAD_START_DATA *)malloc(sizeof(THREAD_START_DATA));
+	THREAD_START_DATA *data = (THREAD_START_DATA *)MemAlloc(sizeof(THREAD_START_DATA));
 	data->start_address = start_address;
 	data->args = args;
    hThread = (HANDLE)_beginthreadex(NULL, stack_size, SEHThreadStarter, data, 0, &dwThreadId);
@@ -133,21 +133,21 @@ inline THREAD ThreadCreateEx(ThreadFunction start_address, int stack_size, void 
 {
    THREAD thread;
 
-	thread = (THREAD)malloc(sizeof(struct netxms_thread_t));
+	thread = (THREAD)MemAlloc(sizeof(struct netxms_thread_t));
 #ifdef UNDER_CE
 	thread->handle = CreateThread(NULL, (UINT32)stack_size, start_address, args, 0, &thread->id);
 	if (thread->handle == NULL)
 	{
 #else
-	THREAD_START_DATA *data = (THREAD_START_DATA *)malloc(sizeof(THREAD_START_DATA));
+	THREAD_START_DATA *data = (THREAD_START_DATA *)MemAlloc(sizeof(THREAD_START_DATA));
 	data->start_address = start_address;
 	data->args = args;
    thread->handle = (HANDLE)_beginthreadex(NULL, stack_size, SEHThreadStarter, data, 0, &thread->id);
 	if ((thread->handle == (HANDLE)-1) || (thread->handle == 0))
 	{
-		free(data);
+		MemFree(data);
 #endif
-		free(thread);
+		MemFree(thread);
 		thread = INVALID_THREAD_HANDLE;
 	}
 	return thread;
@@ -211,7 +211,7 @@ inline void ThreadJoin(THREAD thread)
    {
       WaitForSingleObject(thread->handle, INFINITE);
       CloseHandle(thread->handle);
-		free(thread);
+		MemFree(thread);
    }
 }
 
@@ -220,7 +220,7 @@ inline void ThreadDetach(THREAD thread)
    if (thread != INVALID_THREAD_HANDLE)
    {
       CloseHandle(thread->handle);
-      free(thread);
+      MemFree(thread);
    }
 }
 
@@ -231,7 +231,7 @@ inline THREAD_ID ThreadId(THREAD thread)
 
 inline MUTEX MutexCreate()
 {
-	MUTEX mutex = (MUTEX)malloc(sizeof(CRITICAL_SECTION));
+	MUTEX mutex = (MUTEX)MemAlloc(sizeof(CRITICAL_SECTION));
 	InitializeCriticalSectionAndSpinCount(mutex, 4000);
    return mutex;
 }
@@ -244,7 +244,7 @@ inline MUTEX MutexCreateRecursive()
 inline void MutexDestroy(MUTEX mutex)
 {
 	DeleteCriticalSection(mutex);
-   free(mutex);
+   MemFree(mutex);
 }
 
 inline bool MutexLock(MUTEX mutex)
@@ -427,7 +427,7 @@ inline MUTEX MutexCreate(void)
 {
    MUTEX mutex;
 
-   mutex = (MUTEX)malloc(sizeof(pth_mutex_t));
+   mutex = (MUTEX)MemAlloc(sizeof(pth_mutex_t));
    if (mutex != NULL)
    {
       pth_mutex_init(mutex);
@@ -441,7 +441,7 @@ inline MUTEX MutexCreateRecursive()
 
    // In libpth, recursive locking is explicitly supported,
    // so we just create mutex
-   mutex = (MUTEX)malloc(sizeof(pth_mutex_t));
+   mutex = (MUTEX)MemAlloc(sizeof(pth_mutex_t));
    if (mutex != NULL)
    {
       pth_mutex_init(mutex);
@@ -452,7 +452,7 @@ inline MUTEX MutexCreateRecursive()
 inline void MutexDestroy(MUTEX mutex)
 {
    if (mutex != NULL)
-      free(mutex);
+      MemFree(mutex);
 }
 
 inline bool MutexLock(MUTEX mutex)
@@ -475,7 +475,7 @@ inline CONDITION ConditionCreate(bool bBroadcast)
 {
 	CONDITION cond;
 
-	cond = (CONDITION)malloc(sizeof(struct netxms_condition_t));
+	cond = (CONDITION)MemAlloc(sizeof(struct netxms_condition_t));
 	if (cond != NULL) 
 	{
 		pth_cond_init(&cond->cond);
@@ -491,7 +491,7 @@ inline void ConditionDestroy(CONDITION cond)
 {
 	if (cond != INVALID_CONDITION_HANDLE)
 	{
-		free(cond);
+		MemFree(cond);
 	}
 }
 
@@ -782,7 +782,7 @@ inline MUTEX MutexCreate()
 {
    MUTEX mutex;
 
-   mutex = (MUTEX)malloc(sizeof(netxms_mutex_t));
+   mutex = (MUTEX)MemAlloc(sizeof(netxms_mutex_t));
    if (mutex != NULL)
    {
       pthread_mutex_init(&mutex->mutex, NULL);
@@ -797,7 +797,7 @@ inline MUTEX MutexCreateRecursive()
 {
    MUTEX mutex;
 
-   mutex = (MUTEX)malloc(sizeof(netxms_mutex_t));
+   mutex = (MUTEX)MemAlloc(sizeof(netxms_mutex_t));
    if (mutex != NULL)
    {
 #ifdef HAVE_RECURSIVE_MUTEXES
@@ -820,7 +820,7 @@ inline void MutexDestroy(MUTEX mutex)
    if (mutex != NULL)
    {
       pthread_mutex_destroy(&mutex->mutex);
-      free(mutex);
+      MemFree(mutex);
    }
 }
 
@@ -844,7 +844,7 @@ inline CONDITION ConditionCreate(bool bBroadcast)
 {
 	CONDITION cond;
 
-   cond = (CONDITION)malloc(sizeof(struct netxms_condition_t));
+   cond = (CONDITION)MemAlloc(sizeof(struct netxms_condition_t));
    if (cond != NULL) 
    {
       pthread_cond_init(&cond->cond, NULL);
@@ -862,7 +862,7 @@ inline void ConditionDestroy(CONDITION cond)
 	{
 		pthread_cond_destroy(&cond->cond);
 		pthread_mutex_destroy(&cond->mutex);
-		free(cond);
+		MemFree(cond);
 	}
 }
 

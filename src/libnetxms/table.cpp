@@ -107,7 +107,7 @@ void Table::destroy()
 {
    m_columns->clear();
    m_data->clear();
-   safe_free(m_title);
+   MemFree(m_title);
 }
 
 /**
@@ -184,8 +184,8 @@ static void StartElement(void *userData, const char *name, const char **attrs)
          ps->table->addColumn(name, XMLGetAttrInt(attrs, "dataType", 0), displayName, XMLGetAttrBoolean(attrs, "isInstance", false));
 		   ps->state = XML_STATE_COLUMN;
 #ifdef UNICODE
-         safe_free(name);
-         safe_free(displayName);
+         MemFree(name);
+         MemFree(displayName);
 #endif
       }
       else

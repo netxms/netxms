@@ -47,7 +47,7 @@ AgentPolicyLogParser::AgentPolicyLogParser(const TCHAR *name)
  */
 AgentPolicyLogParser::~AgentPolicyLogParser()
 {
-	safe_free(m_fileContent);
+	MemFree(m_fileContent);
 }
 
 
@@ -146,7 +146,7 @@ UINT32 AgentPolicyLogParser::modifyFromMessageInternal(NXCPMessage *pRequest)
 {
 	if (pRequest->isFieldExist(VID_CONFIG_FILE_DATA))
 	{
-		safe_free(m_fileContent);
+		MemFree(m_fileContent);
 		m_fileContent = pRequest->getFieldAsString(VID_CONFIG_FILE_DATA);
 	}
 

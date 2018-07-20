@@ -83,7 +83,7 @@ bool LogParser::monitorEventLog(const TCHAR *markerPrefix)
    if (markerPrefix != NULL)
    {
       size_t len = _tcslen(markerPrefix) + _tcslen(m_fileName) + 2;
-      m_marker = (TCHAR *)malloc(len * sizeof(TCHAR));
+      m_marker = (TCHAR *)MemAlloc(len * sizeof(TCHAR));
       _sntprintf(m_marker, len, _T("%s.%s"), markerPrefix, &m_fileName[1]);
    }
    return s_eventLogV6 ? monitorEventLogV6() : monitorEventLogV4();

@@ -2437,8 +2437,8 @@ AgentParameterDefinition::AgentParameterDefinition(const TCHAR *name, const TCHA
  */
 AgentParameterDefinition::~AgentParameterDefinition()
 {
-   safe_free(m_name);
-   safe_free(m_description);
+   MemFree(m_name);
+   MemFree(m_description);
 }
 
 /**
@@ -2493,8 +2493,8 @@ AgentTableDefinition::AgentTableDefinition(AgentTableDefinition *src)
  */
 AgentTableDefinition::~AgentTableDefinition()
 {
-   safe_free(m_name);
-   safe_free(m_description);
+   MemFree(m_name);
+   MemFree(m_description);
    delete m_instanceColumns;
    delete m_columns;
 }
