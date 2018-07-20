@@ -168,7 +168,7 @@ static int ProcRead(PROC_ENT **pEnt, char *pszProcName, char *pszCmdLine, int lw
 
    if ((nFound < 0) && (pEnt != NULL))
    {
-      safe_free(*pEnt);
+      MemFree(*pEnt);
       *pEnt = NULL;
    }
    return nFound;
@@ -197,7 +197,7 @@ LONG H_ProcessList(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue,
    {
       nRet = SYSINFO_RC_ERROR;
    }
-   safe_free(pList);
+   MemFree(pList);
 
    return nRet;
 }
@@ -455,7 +455,7 @@ LONG H_ProcessInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractC
          nRet = SYSINFO_RC_SUCCESS;
       }
    }
-   safe_free(pList);
+   MemFree(pList);
 
    return nRet;
 }
