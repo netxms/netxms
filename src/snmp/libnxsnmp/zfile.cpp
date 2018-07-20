@@ -65,8 +65,8 @@ ZFile::ZFile(FILE *pFile, BOOL bCompress, BOOL bWrite)
  */
 ZFile::~ZFile()
 {
-   safe_free(m_pDataBuffer);
-   safe_free(m_pCompBuffer);
+   MemFree(m_pDataBuffer);
+   MemFree(m_pCompBuffer);
 }
 
 /**

@@ -78,8 +78,8 @@ bool SMCLP_Connection::connect(const TCHAR *login, const TCHAR *password)
       }
 
 #ifdef UNICODE
-      safe_free(_login);
-      safe_free(_password);
+      MemFree(_login);
+      MemFree(_password);
 #endif
    }
 

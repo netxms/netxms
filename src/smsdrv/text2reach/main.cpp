@@ -201,7 +201,7 @@ extern "C" bool __EXPORT SMSDriverSend(const TCHAR *phoneNumber, const TCHAR *te
       {
       	nxlog_debug(4, _T("Text2Reach: call to curl_easy_setopt(CURLOPT_URL) failed: %s"), errorBuffer);
       }
-      safe_free(data->data);
+      MemFree(data->data);
       free(data);
       curl_easy_cleanup(curl);
    }

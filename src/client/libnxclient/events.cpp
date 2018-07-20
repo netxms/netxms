@@ -163,6 +163,6 @@ EventTemplate::EventTemplate(NXCPMessage *msg)
  */
 EventTemplate::~EventTemplate()
 {
-   safe_free(m_messageTemplate);
-   safe_free(m_description);
+   MemFree(m_messageTemplate);
+   MemFree(m_description);
 }

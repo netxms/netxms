@@ -86,7 +86,7 @@ NXSL_Array::~NXSL_Array()
 
 	for(i = 0; i < m_size; i++)
 		delete m_data[i].value;
-	safe_free(m_data);
+	MemFree(m_data);
 }
 
 /**

@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Log Parsing Library
-** Copyright (C) 2003-2017 Raden Solutions
+** Copyright (C) 2003-2018 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -184,10 +184,10 @@ LogParser::LogParser(const LogParser *src)
 LogParser::~LogParser()
 {
    delete m_rules;
-	free(m_name);
-	free(m_fileName);
+	MemFree(m_name);
+	MemFree(m_fileName);
 #ifdef _WIN32
-   free(m_marker);
+   MemFree(m_marker);
 #endif
    ConditionDestroy(m_stopCondition);
 }
@@ -345,7 +345,7 @@ bool LogParser::matchEvent(const TCHAR *source, UINT32 eventId, UINT32 level, co
  */
 void LogParser::setFileName(const TCHAR *name)
 {
-	free(m_fileName);
+	MemFree(m_fileName);
 	m_fileName = (name != NULL) ? _tcsdup(name) : NULL;
 	if (m_name == NULL)
 		m_name = _tcsdup(name);	// Set parser name to file name
@@ -356,7 +356,7 @@ void LogParser::setFileName(const TCHAR *name)
  */
 void LogParser::setName(const TCHAR *name)
 {
-	free(m_name);
+	MemFree(m_name);
 	m_name = _tcsdup((name != NULL) ? name : CHECK_NULL(m_fileName));
 }
 
@@ -405,7 +405,7 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 #ifdef UNICODE
 			WCHAR *wname = WideStringFromUTF8String(name);
 			ps->parser->setName(wname);
-			free(wname);
+			MemFree(wname);
 #else
 			ps->parser->setName(name);
 #endif

@@ -97,9 +97,9 @@ SNMP_MIBObject::~SNMP_MIBObject()
       pNext = pCurr->getNext();
       delete pCurr;
    }
-   safe_free(m_pszName);
-   safe_free(m_pszDescription);
-	safe_free(m_pszTextualConvention);
+   MemFree(m_pszName);
+   MemFree(m_pszDescription);
+	MemFree(m_pszTextualConvention);
 }
 
 /**
@@ -139,8 +139,8 @@ SNMP_MIBObject *SNMP_MIBObject::findChildByID(UINT32 dwOID)
  */
 void SNMP_MIBObject::setInfo(int iType, int iStatus, int iAccess, const TCHAR *pszDescription, const TCHAR *pszTextualConvention)
 {
-   safe_free(m_pszDescription);
-	safe_free(m_pszTextualConvention);
+   MemFree(m_pszDescription);
+	MemFree(m_pszTextualConvention);
    m_iType = iType;
    m_iStatus = iStatus;
    m_iAccess = iAccess;
@@ -178,11 +178,11 @@ static void WriteStringToFile(ZFile *pFile, const TCHAR *pszStr)
    wTemp = htons(wLen);
    pFile->write(&wTemp, 2);
 #ifdef UNICODE
-   pszBuffer = (char *)malloc(wLen + 1);
+   pszBuffer = (char *)MemAlloc(wLen + 1);
 	WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, 
 		                 pszStr, -1, pszBuffer, wLen + 1, NULL, NULL);
    pFile->write(pszBuffer, wLen);
-   free(pszBuffer);
+   MemFree(pszBuffer);
 #else
    pFile->write(pszStr, wLen);
 #endif
@@ -312,12 +312,12 @@ static TCHAR *ReadStringFromFile(ZFile *pFile)
    wLen = ntohs(wLen);
    if (wLen > 0)
    {
-      pszStr = (TCHAR *)malloc(sizeof(TCHAR) * (wLen + 1));
+      pszStr = (TCHAR *)MemAlloc(sizeof(TCHAR) * (wLen + 1));
 #ifdef UNICODE
-      pszBuffer = (char *)malloc(wLen + 1);
+      pszBuffer = (char *)MemAlloc(wLen + 1);
       pFile->read(pszBuffer, wLen);
       MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, pszBuffer, wLen, pszStr, wLen + 1);
-      free(pszBuffer);
+      MemFree(pszBuffer);
 #else
       pFile->read(pszStr, wLen);
 #endif
@@ -365,17 +365,17 @@ BOOL SNMP_MIBObject::readFromFile(ZFile *pFile)
             CHECK_NEXT_TAG(MIB_TAG_UINT32_OID | MIB_END_OF_TAG);
             break;
          case MIB_TAG_NAME:
-            safe_free(m_pszName);
+            MemFree(m_pszName);
             m_pszName = ReadStringFromFile(pFile);
             CHECK_NEXT_TAG(MIB_TAG_NAME | MIB_END_OF_TAG);
             break;
          case MIB_TAG_DESCRIPTION:
-            safe_free(m_pszDescription);
+            MemFree(m_pszDescription);
             m_pszDescription = ReadStringFromFile(pFile);
             CHECK_NEXT_TAG(MIB_TAG_DESCRIPTION | MIB_END_OF_TAG);
             break;
 			case MIB_TAG_TEXTUAL_CONVENTION:
-				safe_free(m_pszTextualConvention);
+				MemFree(m_pszTextualConvention);
             m_pszTextualConvention = ReadStringFromFile(pFile);
             CHECK_NEXT_TAG(MIB_TAG_TEXTUAL_CONVENTION | MIB_END_OF_TAG);
             break;

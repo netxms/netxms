@@ -720,7 +720,7 @@ void User::modifyFromMessage(NXCPMessage *msg)
 	if (fields & USER_MODIFY_CERT_MAPPING)
 	{
 		m_certMappingMethod = msg->getFieldAsUInt16(VID_CERT_MAPPING_METHOD);
-		safe_free(m_certMappingData);
+		MemFree(m_certMappingData);
 		m_certMappingData = msg->getFieldAsString(VID_CERT_MAPPING_DATA);
 	}
 	if (fields & USER_MODIFY_XMPP_ID)
@@ -735,7 +735,7 @@ void User::modifyFromMessage(NXCPMessage *msg)
          msg->getFieldAsInt32Array(VID_GROUPS, (UINT32)count, groups);
       }
       UpdateGroupMembership(m_id, count, groups);
-      safe_free(groups);
+      MemFree(groups);
    }
 
    // Clear intruder lockout flag if user is not disabled anymore

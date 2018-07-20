@@ -227,7 +227,7 @@ int main(int argc, char *argv[])
 			         WriteToTerminalEx(_T("%s\n"), vm->getErrorText());
                            rc = 1;
 		         }
-		         safe_free(ppArgs);
+		         MemFree(ppArgs);
             }
          }
          else

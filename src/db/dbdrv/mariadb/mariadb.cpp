@@ -448,8 +448,8 @@ extern "C" void __EXPORT DrvFreeStatement(MARIADB_STATEMENT *hStmt)
 	mysql_stmt_close(hStmt->statement);
 	MutexUnlock(hStmt->connection->mutexQueryLock);
 	delete hStmt->buffers;
-	safe_free(hStmt->bindings);
-	safe_free(hStmt->lengthFields);
+	MemFree(hStmt->bindings);
+	MemFree(hStmt->lengthFields);
 	free(hStmt);
 }
 
@@ -810,8 +810,8 @@ extern "C" void __EXPORT DrvFreeResult(MARIADB_RESULT *hResult)
 
 	if (hResult->isPreparedStatement)
 	{
-		safe_free(hResult->bindings);
-		safe_free(hResult->lengthFields);
+		MemFree(hResult->bindings);
+		MemFree(hResult->lengthFields);
 	}
 
 	mysql_free_result(hResult->resultSet);

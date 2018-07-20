@@ -40,7 +40,7 @@ VlanList::~VlanList()
 {
 	for(int i = 0; i < m_size; i++)
 		delete m_vlans[i];
-	safe_free(m_vlans);
+	MemFree(m_vlans);
 }
 
 /**
@@ -136,10 +136,10 @@ VlanInfo::VlanInfo(int vlanId, int prm)
  */
 VlanInfo::~VlanInfo()
 {
-	safe_free(m_ports);
-	safe_free(m_name);
-	safe_free(m_indexes);
-	safe_free(m_ids);
+	MemFree(m_ports);
+	MemFree(m_name);
+	MemFree(m_indexes);
+	MemFree(m_ids);
 }
 
 /**
@@ -170,7 +170,7 @@ void VlanInfo::add(UINT32 slot, UINT32 port)
  */
 void VlanInfo::setName(const TCHAR *name)
 {
-	safe_free(m_name);
+	MemFree(m_name);
 	m_name = _tcsdup(name);
 }
 

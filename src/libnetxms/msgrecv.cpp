@@ -34,7 +34,7 @@ AbstractMessageReceiver::AbstractMessageReceiver(size_t initialSize, size_t maxS
    m_maxSize = maxSize;
    m_dataSize = 0;
    m_bytesToSkip = 0;
-   m_buffer = (BYTE *)malloc(initialSize);
+   m_buffer = (BYTE *)MemAlloc(initialSize);
    m_decryptionBuffer = NULL;
    m_encryptionContext = NULL;
 }
@@ -44,8 +44,8 @@ AbstractMessageReceiver::AbstractMessageReceiver(size_t initialSize, size_t maxS
  */
 AbstractMessageReceiver::~AbstractMessageReceiver()
 {
-   free(m_buffer);
-   safe_free(m_decryptionBuffer);
+   MemFree(m_buffer);
+   MemFree(m_decryptionBuffer);
 }
 
 /**
@@ -70,7 +70,7 @@ NXCPMessage *AbstractMessageReceiver::getMessageFromBuffer(bool *protocolError)
             if ((m_encryptionContext != NULL) && (m_encryptionContext != PROXY_ENCRYPTION_CTX))
             {
                if (m_decryptionBuffer == NULL)
-                  m_decryptionBuffer = (BYTE *)malloc(m_size);
+                  m_decryptionBuffer = (BYTE *)MemAlloc(m_size);
                if (m_encryptionContext->decryptMessage((NXCP_ENCRYPTED_MESSAGE *)m_buffer, m_decryptionBuffer))
                {
                   msg = NXCPMessage::deserialize(reinterpret_cast<NXCP_MESSAGE*>(m_buffer));
@@ -96,8 +96,8 @@ NXCPMessage *AbstractMessageReceiver::getMessageFromBuffer(bool *protocolError)
          if (msgSize <= m_maxSize)
          {
             m_size = msgSize;
-            m_buffer = (BYTE *)realloc(m_buffer, m_size);
-            safe_free_and_null(m_decryptionBuffer);
+            m_buffer = (BYTE *)MemRealloc(m_buffer, m_size);
+            MemFreeAndNull(m_decryptionBuffer);
          }
          else if (msgSize > (size_t)0x3FFFFFFF)
          {

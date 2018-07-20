@@ -329,7 +329,7 @@ public:
    void setParent(SNMP_MIBObject *pObject) { m_pParent = pObject; }
    void addChild(SNMP_MIBObject *pObject);
    void setInfo(int iType, int iStatus, int iAccess, const TCHAR *pszDescription, const TCHAR *pszTextualConvention);
-   void setName(const TCHAR *pszName) { safe_free(m_pszName); m_pszName = _tcsdup(pszName); }
+   void setName(const TCHAR *pszName) { MemFree(m_pszName); m_pszName = _tcsdup(pszName); }
 
    SNMP_MIBObject *getParent() { return m_pParent; }
    SNMP_MIBObject *getNext() { return m_pNext; }

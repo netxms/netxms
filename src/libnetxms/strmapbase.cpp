@@ -61,7 +61,7 @@ void StringMapBase::clear()
    {
       HASH_DEL(m_data, entry);
       free(entry->key);
-      safe_free(entry->originalKey);
+      MemFree(entry->originalKey);
       if (m_objectOwner)
          destroyObject(entry->value);
       free(entry);
@@ -242,7 +242,7 @@ void StringMapBase::filterElements(bool (*filter)(const TCHAR *, const void *, v
       {
          HASH_DEL(m_data, entry);
          free(entry->key);
-         safe_free(entry->originalKey);
+         MemFree(entry->originalKey);
          if (m_objectOwner)
             destroyObject(entry->value);
          free(entry);

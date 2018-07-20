@@ -129,7 +129,7 @@ void LIBNXSRV_EXPORTABLE DestroyRoutingTable(ROUTING_TABLE *pRT)
 {
    if (pRT != NULL)
    {
-      safe_free(pRT->pRoutes);
+      MemFree(pRT->pRoutes);
       free(pRT);
    }
 }

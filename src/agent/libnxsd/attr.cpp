@@ -46,10 +46,10 @@ void LIBNXSD_EXPORTABLE DeleteAttributeSet(ATTRIBUTE_SET *set)
 		return;
 	for(int i = 0; i < set->count; i++)
 	{
-		safe_free(set->names[i]);
-		safe_free(set->values[i]);
+		MemFree(set->names[i]);
+		MemFree(set->values[i]);
 	}
-	safe_free(set->names);
-	safe_free(set->values);
-	free(set);
+	MemFree(set->names);
+	MemFree(set->values);
+	MemFree(set);
 }

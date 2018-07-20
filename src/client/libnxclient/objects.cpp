@@ -202,7 +202,7 @@ AbstractObject::AbstractObject(NXCPMessage *msg)
  */
 AbstractObject::~AbstractObject()
 {
-   safe_free(m_comments);
+   MemFree(m_comments);
    delete m_parents;
    delete m_children;
 }
@@ -220,5 +220,5 @@ Node::Node(NXCPMessage *msg) : AbstractObject(msg)
  */
 Node::~Node()
 {
-   safe_free(m_primaryHostname);
+   MemFree(m_primaryHostname);
 }

@@ -278,7 +278,7 @@ UINT32 ConditionObject::modifyFromMessageInternal(NXCPMessage *pRequest)
    {
       TCHAR szError[1024];
 
-      safe_free(m_scriptSource);
+      MemFree(m_scriptSource);
       delete m_script;
       m_scriptSource = pRequest->getFieldAsString(VID_SCRIPT);
       NXSL_Program *p = (NXSL_Program *)NXSLCompile(m_scriptSource, szError, 1024, NULL);
@@ -322,7 +322,7 @@ UINT32 ConditionObject::modifyFromMessageInternal(NXCPMessage *pRequest)
    // Change DCI list
    if (pRequest->isFieldExist(VID_NUM_ITEMS))
    {
-      safe_free(m_dciList);
+      MemFree(m_dciList);
       m_dciCount = pRequest->getFieldAsUInt32(VID_NUM_ITEMS);
       if (m_dciCount > 0)
       {

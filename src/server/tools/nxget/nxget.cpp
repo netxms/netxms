@@ -252,7 +252,7 @@ static int GetScreenshot(AgentConnection *pConn, const char *sessionName, const 
             fwrite(data, 1, size, f);
          fclose(f);
       }
-      safe_free(data);
+      MemFree(data);
    }
    else
    {

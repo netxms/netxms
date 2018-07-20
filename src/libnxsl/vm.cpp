@@ -190,7 +190,7 @@ NXSL_VM::~NXSL_VM()
    delete m_functions;
    delete m_modules;
 
-   safe_free(m_errorText);
+   MemFree(m_errorText);
 }
 
 /**
@@ -2274,7 +2274,7 @@ void NXSL_VM::error(int errorCode, int sourceLine)
 
    m_errorCode = errorCode;
    m_errorLine = (sourceLine == -1) ? ((m_cp == INVALID_ADDRESS) ? 0 : m_instructionSet->get(m_cp)->m_nSourceLine) : sourceLine;
-   safe_free(m_errorText);
+   MemFree(m_errorText);
    _sntprintf(szBuffer, 1024, _T("Error %d in line %d: %s"), errorCode, m_errorLine, GetErrorMessage(errorCode));
    m_errorText = _tcsdup(szBuffer);
    m_cp = INVALID_ADDRESS;

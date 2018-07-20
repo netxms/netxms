@@ -1122,7 +1122,7 @@ public:
    void setNetMask(const InetAddress& addr);
 	void setMTU(int mtu) { m_mtu = mtu; setModified(MODIFY_INTERFACE_PROPERTIES); }
 	void setSpeed(UINT64 speed) { m_speed = speed; setModified(MODIFY_INTERFACE_PROPERTIES); }
-   void setIfTableSuffix(int len, const UINT32 *suffix) { lockProperties(); free(m_ifTableSuffix); m_ifTableSuffixLen = len; m_ifTableSuffix = (len > 0) ? (UINT32 *)nx_memdup(suffix, len * sizeof(UINT32)) : NULL; setModified(MODIFY_INTERFACE_PROPERTIES); unlockProperties(); }
+   void setIfTableSuffix(int len, const UINT32 *suffix) { lockProperties(); MemFree(m_ifTableSuffix); m_ifTableSuffixLen = len; m_ifTableSuffix = (len > 0) ? (UINT32 *)nx_memdup(suffix, len * sizeof(UINT32)) : NULL; setModified(MODIFY_INTERFACE_PROPERTIES); unlockProperties(); }
    void setParentInterface(UINT32 parentInterfaceId) { m_parentInterfaceId = parentInterfaceId; setModified(MODIFY_INTERFACE_PROPERTIES); }
    void addVlan(UINT32 id);
    void clearVlanList() { lockProperties(); if (m_vlans != NULL) m_vlans->clear(); unlockProperties(); }
@@ -2741,7 +2741,7 @@ public:
 	TCHAR *m_layout;
 
 	DashboardElement() { m_data = NULL; m_layout = NULL; }
-	~DashboardElement() { free(m_data); free(m_layout); }
+	~DashboardElement() { MemFree(m_data); MemFree(m_layout); }
 
 	json_t *toJson()
 	{

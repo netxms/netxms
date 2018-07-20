@@ -123,11 +123,11 @@ DB_HANDLE LIBNXDB_EXPORTABLE DBConnect(DB_DRIVER driver, const TCHAR *server, co
 #ifdef UNICODE
 	if (hConn == NULL)
 	{
-		safe_free(mbServer);
-		safe_free(mbDatabase);
-		safe_free(mbLogin);
-		safe_free(mbPassword);
-		safe_free(mbSchema);
+		MemFree(mbServer);
+		MemFree(mbDatabase);
+		MemFree(mbLogin);
+		MemFree(mbPassword);
+		MemFree(mbSchema);
 	}
 #endif
    return hConn;
@@ -147,11 +147,11 @@ void LIBNXDB_EXPORTABLE DBDisconnect(DB_HANDLE hConn)
 
 	hConn->m_driver->m_fpDrvDisconnect(hConn->m_connection);
    MutexDestroy(hConn->m_mutexTransLock);
-   safe_free(hConn->m_dbName);
-   safe_free(hConn->m_login);
-   safe_free(hConn->m_password);
-   safe_free(hConn->m_server);
-   safe_free(hConn->m_schema);
+   MemFree(hConn->m_dbName);
+   MemFree(hConn->m_login);
+   MemFree(hConn->m_password);
+   MemFree(hConn->m_server);
+   MemFree(hConn->m_schema);
    delete hConn->m_preparedStatements;
    free(hConn);
 }
@@ -588,7 +588,7 @@ TCHAR LIBNXDB_EXPORTABLE *DBGetFieldForXML(DB_RESULT hResult, int row, int col)
 {
    TCHAR *value = DBGetField(hResult, row, col, NULL, 0);
    TCHAR *xmlString = EscapeStringForXML(value, -1);
-   safe_free(value);
+   MemFree(value);
    return xmlString;
 }
 

@@ -639,8 +639,8 @@ void DCItem::updateFromMessage(NXCPMessage *pMsg, UINT32 *pdwNumMaps, UINT32 **p
    for(int i = 0; i < getThresholdCount(); i++)
       m_thresholds->get(i)->setDataType(m_dataType);
 
-	safe_free(ppNewList);
-   safe_free(newThresholds);
+   MemFree(ppNewList);
+   MemFree(newThresholds);
    updateCacheSizeInternal();
    unlock();
 }
@@ -1529,7 +1529,7 @@ void DCItem::updateFromTemplate(DCObject *src)
 
 	m_nBaseUnits = item->m_nBaseUnits;
 	m_nMultiplier = item->m_nMultiplier;
-	safe_free(m_customUnitName);
+	MemFree(m_customUnitName);
 	m_customUnitName = (item->m_customUnitName != NULL) ? _tcsdup(item->m_customUnitName) : NULL;
 
    // Copy thresholds

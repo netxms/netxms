@@ -148,7 +148,7 @@ UINT32 GetGraphAccessCheckResult(UINT32 graphId, UINT32 graphUserId)
             {
                rcc = RCC_ACCESS_DENIED;
             }
-            safe_free(pACL);
+            MemFree(pACL);
          }
          else
          {
@@ -240,15 +240,15 @@ void FillGraphListMsg(NXCPMessage *msg, UINT32 userId, bool templageGraphs)
 
 					pszStr = DBGetField(hResult, i, 3, NULL, 0);
                msg->setField(dwId++, CHECK_NULL_EX(pszStr));
-               safe_free(pszStr);
+               MemFree(pszStr);
 
 					pszStr = DBGetField(hResult, i, 4, NULL, 0);
                msg->setField(dwId++, CHECK_NULL_EX(pszStr));
-               safe_free(pszStr);
+               MemFree(pszStr);
 
 					pszStr = DBGetField(hResult, i, 5, NULL, 0);
                msg->setField(dwId++, CHECK_NULL_EX(pszStr));
-               safe_free(pszStr);
+               MemFree(pszStr);
 
 					// ACL for graph
                UINT32 graphACLSize;
@@ -281,7 +281,7 @@ void FillGraphListMsg(NXCPMessage *msg, UINT32 userId, bool templageGraphs)
 		{
 			msg->setField(VID_RCC, RCC_DB_FAILURE);
 		}
-		safe_free(pACL);
+		MemFree(pACL);
 	}
 	else
 	{
@@ -507,7 +507,7 @@ UINT32 DeleteGraph(UINT32 graphId, UINT32 userId)
 				{
 					result = RCC_ACCESS_DENIED;
 				}
-				safe_free(acl);
+				MemFree(acl);
 			}
 		}
 		else

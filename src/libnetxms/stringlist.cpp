@@ -92,8 +92,8 @@ StringList::StringList(const NXCPMessage *msg, UINT32 baseId, UINT32 countId)
 StringList::~StringList()
 {
 	for(int i = 0; i < m_count; i++)
-		safe_free(m_values[i]);
-	safe_free(m_values);
+		MemFree(m_values[i]);
+	MemFree(m_values);
 }
 
 /**
@@ -102,7 +102,7 @@ StringList::~StringList()
 void StringList::clear()
 {
 	for(int i = 0; i < m_count; i++)
-		safe_free(m_values[i]);
+		MemFree(m_values[i]);
 	m_count = 0;
 	memset(m_values, 0, sizeof(TCHAR *) * m_allocated);
 }
@@ -191,7 +191,7 @@ void StringList::replace(int index, const TCHAR *value)
 	if ((index < 0) || (index >= m_count))
 		return;
 
-	safe_free(m_values[index]);
+	MemFree(m_values[index]);
 	m_values[index] = _tcsdup_ex(value);
 }
 
@@ -205,7 +205,7 @@ void StringList::addOrReplace(int index, const TCHAR *value)
 
    if (index < m_count)
    {
-	   safe_free(m_values[index]);
+	   MemFree(m_values[index]);
       m_values[index] = _tcsdup_ex(value);
    }
    else
@@ -226,7 +226,7 @@ void StringList::addOrReplacePreallocated(int index, TCHAR *value)
 
    if (index < m_count)
    {
-	   safe_free(m_values[index]);
+	   MemFree(m_values[index]);
       m_values[index] = value;
    }
    else
@@ -271,7 +271,7 @@ void StringList::remove(int index)
 	if ((index < 0) || (index >= m_count))
 		return;
 
-	safe_free(m_values[index]);
+	MemFree(m_values[index]);
 	m_count--;
 	memmove(&m_values[index], &m_values[index + 1], (m_count - index) * sizeof(TCHAR *));
 }

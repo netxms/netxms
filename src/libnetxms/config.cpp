@@ -162,7 +162,7 @@ ConfigEntry::~ConfigEntry()
    free(m_file);
 
    for(int i = 0; i < m_valueCount; i++)
-      safe_free(m_values[i]);
+      MemFree(m_values[i]);
    free(m_values);
 }
 
@@ -171,7 +171,7 @@ ConfigEntry::~ConfigEntry()
  */
 void ConfigEntry::setName(const TCHAR *name)
 {
-   safe_free(m_name);
+   MemFree(m_name);
    m_name = _tcsdup(CHECK_NULL(name));
 }
 
@@ -379,7 +379,7 @@ uuid ConfigEntry::getValueAsUUID(int index)
 void ConfigEntry::setValue(const TCHAR *value)
 {
    for(int i = 0; i < m_valueCount; i++)
-      safe_free(m_values[i]);
+      MemFree(m_values[i]);
    m_valueCount = 1;
    m_values = (TCHAR **) realloc(m_values, sizeof(TCHAR *));
    m_values[0] = _tcsdup(value);

@@ -129,7 +129,7 @@ NXSL_Instruction::~NXSL_Instruction()
    switch(getOperandType())
    {
       case OP_TYPE_STRING:
-         safe_free(m_operand.m_pszString);
+         MemFree(m_operand.m_pszString);
          break;
       case OP_TYPE_CONST:
          delete m_operand.m_pConstant;

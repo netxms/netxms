@@ -346,9 +346,9 @@ protected:
 
    void invalidateString()
    {
-      safe_free_and_null(m_pszValStr);
+      MemFreeAndNull(m_pszValStr);
 #ifdef UNICODE
-		safe_free_and_null(m_valueMBStr);
+		MemFreeAndNull(m_valueMBStr);
 #endif
       m_bStringIsValid = FALSE;
    }
@@ -374,7 +374,7 @@ public:
 
    void set(INT32 value);
 
-	void setName(const TCHAR *name) { safe_free(m_name); m_name = _tcsdup_ex(name); }
+	void setName(const TCHAR *name) { MemFree(m_name); m_name = _tcsdup_ex(name); }
 	const TCHAR *getName() const { return m_name; }
 
    bool convert(int nDataType);

@@ -243,7 +243,7 @@ void LDAPConnection::initLDAP()
    {
       TCHAR *error = getErrorString(errorCode);
       DbgPrintf(4, _T("LDAPConnection::initLDAP(): LDAP session initialization failed (%s)"), error);
-      safe_free(error);
+      MemFree(error);
       return;
    }
    //set all LDAP options
@@ -275,11 +275,11 @@ void LDAPConnection::getAllSyncParameters()
 #ifdef UNICODE
    char *utf8Password = UTF8StringFromWideString(tmpPwd);
    strcpy(m_userPassword, utf8Password);
-   safe_free(utf8Password);
+   MemFree(utf8Password);
 #else
    char *utf8Password = UTF8StringFromMBString(tmpPwd);
    strcpy(m_userPassword, utf8Password);
-   safe_free(utf8Password);
+   MemFree(utf8Password);
 #endif // UNICODE
 
 #endif //win32
@@ -374,7 +374,7 @@ void LDAPConnection::syncUsers()
          {
             TCHAR* error = getErrorString(rc);
             DbgPrintf(1, _T("LDAPConnection::syncUsers(): LDAP could not get search results. Error code: %s"), error);
-            safe_free(error);
+            MemFree(error);
          }
       }
       else
@@ -394,7 +394,7 @@ void LDAPConnection::syncUsers()
       }
    }
 
-   safe_free(tmp);
+   MemFree(tmp);
    closeLDAPConnection();
    if(rc == LDAP_SUCCESS)
    {
@@ -536,16 +536,16 @@ void LDAPConnection::fillLists(LDAPMessage *searchResult)
          if(_tcscmp(value, m_userClass) == 0)
          {
             newObj->m_type = LDAP_USER;
-            safe_free(value);
+            MemFree(value);
             break;
          }
          if(_tcscmp(value, m_groupClass) == 0)
          {
             newObj->m_type = LDAP_GROUP;
-            safe_free(value);
+            MemFree(value);
             break;
          }
-         safe_free(value);
+         MemFree(value);
       }
 
       if (newObj->m_type == LDAP_DEFAULT)
@@ -762,7 +762,7 @@ void LDAPConnection::updateMembers(StringSet *memberList, const char *firstAttr,
       {
          TCHAR* error = getErrorString(rc);
          DbgPrintf(1, _T("LDAPConnection::syncUsers(): LDAP could not get search results. Error code: %s"), error);
-         safe_free(error);
+         MemFree(error);
          break;
       }
 
@@ -859,10 +859,10 @@ UINT32 LDAPConnection::ldapUserLogin(const TCHAR *name, const TCHAR *password)
 #else
    char *utf8Name = UTF8StringFromWideString(name);
    strcpy(m_userDN, utf8Name);
-   safe_free(utf8Name);
+   MemFree(utf8Name);
    char *utf8Password = UTF8StringFromWideString(password);
    strcpy(m_userPassword, utf8Password);
-   safe_free(utf8Password);
+   MemFree(utf8Password);
 #endif
 #else
    strcpy(m_userDN, name);

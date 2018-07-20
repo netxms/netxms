@@ -66,7 +66,7 @@ Queue::~Queue()
 {
    MutexDestroy(m_mutexQueueAccess);
    ConditionDestroy(m_condWakeup);
-   safe_free(m_elements);
+   MemFree(m_elements);
 }
 
 /**

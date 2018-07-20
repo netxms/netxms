@@ -284,7 +284,7 @@ bool NetObj::loadCommonProperties(DB_HANDLE hdb)
 				DBGetFieldByteArray(hResult, 0, 9, m_statusTranslation, 4, STATUS_WARNING);
 				m_statusSingleThreshold = DBGetFieldLong(hResult, 0, 10);
 				DBGetFieldByteArray(hResult, 0, 11, m_statusThresholds, 4, 50);
-				safe_free(m_comments);
+				MemFree(m_comments);
 				m_comments = DBGetField(hResult, 0, 12, NULL, 0);
 				m_isSystem = DBGetFieldLong(hResult, 0, 13) ? true : false;
 

@@ -374,10 +374,10 @@ NXSL_Value::NXSL_Value(const TCHAR *value, UINT32 dwLen)
  */
 NXSL_Value::~NXSL_Value()
 {
-	free(m_name);
-   free(m_pszValStr);
+   MemFree(m_name);
+   MemFree(m_pszValStr);
 #ifdef UNICODE
-	free(m_valueMBStr);
+   MemFree(m_valueMBStr);
 #endif
    switch(m_nDataType)
 	{
@@ -408,9 +408,9 @@ NXSL_Value::~NXSL_Value()
 void NXSL_Value::set(INT32 nValue)
 {
    m_nDataType = NXSL_DT_INT32;
-	safe_free_and_null(m_pszValStr);
+	MemFreeAndNull(m_pszValStr);
 #ifdef UNICODE
-	safe_free_and_null(m_valueMBStr);
+	MemFreeAndNull(m_valueMBStr);
 #endif
    m_bStringIsValid = FALSE;
    m_value.nInt32 = nValue;
@@ -457,9 +457,9 @@ void NXSL_Value::updateString()
 {
    TCHAR szBuffer[64];
 
-   safe_free(m_pszValStr);
+   MemFree(m_pszValStr);
 #ifdef UNICODE
-	safe_free_and_null(m_valueMBStr);
+	MemFreeAndNull(m_valueMBStr);
 #endif
    switch(m_nDataType)
    {
@@ -711,7 +711,7 @@ void NXSL_Value::concatenate(const TCHAR *pszString, UINT32 dwLen)
 #ifdef UNICODE
 	else
 	{
-		safe_free_and_null(m_valueMBStr);
+		MemFreeAndNull(m_valueMBStr);
 	}
 #endif
    m_pszValStr = (TCHAR *)realloc(m_pszValStr, (m_dwStrLen + dwLen + 1) * sizeof(TCHAR));

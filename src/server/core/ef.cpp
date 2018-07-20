@@ -114,7 +114,7 @@ BOOL EF_ProcessMessage(ISCSession *session, NXCPMessage *request, NXCPMessage *r
       
 			// Cleanup
 			for(i = 0; i < numArgs; i++)
-				safe_free(argList[i]);
+				MemFree(argList[i]);
 		}
 		else
 		{

@@ -152,8 +152,8 @@ extern "C" bool __EXPORT SMSDriverSend(const TCHAR *phoneNumber, const TCHAR *te
       char *mbmsg = MBStringFromWideString(text);
       char *phone = curl_easy_escape(curl, mbphone, 0);
       char *msg = curl_easy_escape(curl, mbmsg, 0);
-      free(mbphone);
-      free(mbmsg);
+      MemFree(mbphone);
+      MemFree(mbmsg);
 #else
       char *phone = curl_easy_escape(curl, phoneNumber, 0);
       char *msg = curl_easy_escape(curl, text, 0);
@@ -203,8 +203,8 @@ extern "C" bool __EXPORT SMSDriverSend(const TCHAR *phoneNumber, const TCHAR *te
       {
       	nxlog_debug(4, _T("AnySMS: call to curl_easy_setopt(CURLOPT_URL) failed"));
       }
-      safe_free(data->data);
-      free(data);
+      MemFree(data->data);
+      MemFree(data);
       curl_easy_cleanup(curl);
    }
    else

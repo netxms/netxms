@@ -442,7 +442,7 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    m_tunnelId = DBGetFieldGUID(hResult, 0, 48);
    m_lldpNodeId = DBGetField(hResult, 0, 49, NULL, 0);
    if ((m_lldpNodeId != NULL) && (*m_lldpNodeId == 0))
-      safe_free_and_null(m_lldpNodeId);
+      MemFreeAndNull(m_lldpNodeId);
    m_failTimeSNMP = DBGetFieldLong(hResult, 0, 50);
    m_failTimeAgent = DBGetFieldLong(hResult, 0, 51);
    m_rackOrientation = static_cast<RackOrientation>(DBGetFieldLong(hResult, 0, 52));
@@ -2297,7 +2297,7 @@ void Node::checkAgentPolicyBinding(AgentConnection *conn)
          deleteParent(unbindList[i]);
          DbgPrintf(5, _T("ConfPoll(%s): unbound from policy object %s [%d]"), m_name, unbindList[i]->getName(), unbindList[i]->getId());
       }
-      safe_free(unbindList);
+      MemFree(unbindList);
 
       delete ap;
    }
@@ -2548,11 +2548,11 @@ void Node::configurationPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo 
       m_snmpObjectId[0] = 0;
       m_platformName[0] = 0;
       m_agentVersion[0] = 0;
-      safe_free_and_null(m_sysDescription);
-      safe_free_and_null(m_sysName);
-      safe_free_and_null(m_sysContact);
-      safe_free_and_null(m_sysLocation);
-      safe_free_and_null(m_lldpNodeId);
+      MemFreeAndNull(m_sysDescription);
+      MemFreeAndNull(m_sysName);
+      MemFreeAndNull(m_sysContact);
+      MemFreeAndNull(m_sysLocation);
+      MemFreeAndNull(m_lldpNodeId);
    }
 
    // Check if node is marked as unreachable
@@ -3412,7 +3412,7 @@ bool Node::querySnmpSysProperty(SNMP_Transport *snmp, const TCHAR *oid, const TC
       lockProperties();
       if ((*value == NULL) || _tcscmp(*value, buffer))
       {
-         safe_free(*value);
+         MemFree(*value);
          *value = _tcsdup(buffer);
          hasChanges = true;
          sendPollerMsg(pollRqId, _T("   System %s changed to %s\r\n"), propName, *value);
@@ -3780,7 +3780,7 @@ bool Node::updateInterfaceConfiguration(UINT32 rqid, int maskBits)
                       ppDeleteList[j]->getName(), &addr, addr.getMaskBits());
             deleteInterface(ppDeleteList[j]);
          }
-         safe_free(ppDeleteList);
+         MemFree(ppDeleteList);
       }
 
       // Check if we have pseudo-interface object

@@ -97,7 +97,7 @@ SlmCheck::SlmCheck(SlmCheck *tmpl) : NetObj()
 SlmCheck::~SlmCheck()
 {
 	delete m_threshold;
-	safe_free(m_script);
+	MemFree(m_script);
 	delete m_pCompiledScript;
 }
 
@@ -338,7 +338,7 @@ void SlmCheck::setScript(const TCHAR *script)
 {
 	if (script != NULL)
 	{
-		free(m_script);
+		MemFree(m_script);
 		delete m_pCompiledScript;
 		m_script = _tcsdup(script);
 		if (m_script != NULL)
@@ -357,7 +357,7 @@ void SlmCheck::setScript(const TCHAR *script)
 	else
 	{
 		delete_and_null(m_pCompiledScript);
-		safe_free_and_null(m_script);
+		MemFreeAndNull(m_script);
 	}
 	setModified(MODIFY_OTHER);
 }

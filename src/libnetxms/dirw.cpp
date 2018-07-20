@@ -65,7 +65,7 @@ DIRW LIBNETXMS_EXPORTABLE *wopendir(const WCHAR *path)
    if (handle == INVALID_HANDLE_VALUE)
       return NULL;
 
-   DIRW *p = (DIRW *)malloc(sizeof(DIRW));
+   DIRW *p = (DIRW *)MemAlloc(sizeof(DIRW));
    if (p == NULL)
       return NULL;
 
@@ -111,7 +111,7 @@ int LIBNETXMS_EXPORTABLE wclosedir(DIRW *p)
    if (p == NULL)
       return -1;
    FindClose(p->handle);
-   free(p);
+   MemFree(p);
    return 0;
 }
 

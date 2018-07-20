@@ -109,7 +109,7 @@ bool SNMP_Variable::parse(const BYTE *data, size_t varLength)
       pbCurrPos += length;
       bResult = TRUE;
    }
-   safe_free(oid->value);
+   MemFree(oid->value);
    free(oid);
 
    if (bResult)
@@ -130,7 +130,7 @@ bool SNMP_Variable::parse(const BYTE *data, size_t varLength)
                }
                else
                {
-                  safe_free(oid->value);
+                  MemFree(oid->value);
                }
                free(oid);
                break;
@@ -485,7 +485,7 @@ void SNMP_Variable::setValueFromString(UINT32 type, const TCHAR *value)
          if (length > 0)
          {
             m_valueLength = length * sizeof(UINT32);
-            safe_free(m_value);
+            MemFree(m_value);
             m_value = (BYTE *)nx_memdup(pdwBuffer, m_valueLength);
          }
          else
@@ -504,7 +504,7 @@ void SNMP_Variable::setValueFromString(UINT32 type, const TCHAR *value)
                              value, (int)m_valueLength, (char *)m_value,
                              (int)m_valueLength, NULL, NULL);
 #else
-         safe_free(m_value);
+         MemFree(m_value);
          m_value = (BYTE *)nx_memdup(value, m_valueLength);
 #endif
          break;

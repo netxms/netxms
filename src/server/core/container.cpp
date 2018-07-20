@@ -53,8 +53,8 @@ Container::Container(const TCHAR *pszName, UINT32 dwCategory) : NetObj()
  */
 Container::~Container()
 {
-   safe_free(m_pdwChildIdList);
-	safe_free(m_bindFilterSource);
+   MemFree(m_pdwChildIdList);
+	MemFree(m_bindFilterSource);
 	delete m_bindFilter;
 }
 
@@ -298,7 +298,7 @@ void Container::setAutoBindFilterInternal(const TCHAR *script)
 	else
 	{
 		delete_and_null(m_bindFilter);
-		safe_free_and_null(m_bindFilterSource);
+		MemFreeAndNull(m_bindFilterSource);
 	}
 	setModified(MODIFY_OTHER);
 }

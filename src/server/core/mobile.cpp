@@ -58,13 +58,13 @@ MobileDevice::MobileDevice(const TCHAR *name, const TCHAR *deviceId) : DataColle
  */
 MobileDevice::~MobileDevice()
 {
-	safe_free(m_deviceId);
-	safe_free(m_vendor);
-	safe_free(m_model);
-	safe_free(m_serialNumber);
-	safe_free(m_osName);
-	safe_free(m_osVersion);
-	safe_free(m_userId);
+	MemFree(m_deviceId);
+	MemFree(m_vendor);
+	MemFree(m_model);
+	MemFree(m_serialNumber);
+	MemFree(m_osName);
+	MemFree(m_osVersion);
+	MemFree(m_userId);
 }
 
 /**

@@ -110,7 +110,7 @@ int yylex(YYSTYPE *lvalp, yyscan_t scanner);
 %type <valInt32> SelectList
 %type <pInstruction> SimpleStatementKeyword
 
-%destructor { free($$); } <valStr>
+%destructor { MemFree($$); } <valStr>
 %destructor { delete $$; } <pConstant>
 %destructor { delete $$; } <pInstruction>
 
@@ -194,7 +194,7 @@ ConstDefinition:
 		delete_and_null($3);
 		YYERROR;
 	}
-	safe_free_and_null($1);
+	MemFree($1);
 	$3 = NULL;
 }
 ;
@@ -203,7 +203,7 @@ UseStatement:
 	T_USE AnyIdentifier ';'
 {
 	pScript->addRequiredModule($2, pLexer->getCurrLine());
-	safe_free_and_null($2);
+	MemFree($2);
 }
 ;
 
@@ -224,7 +224,7 @@ Function:
 			pCompiler->error(szErrorText);
 			YYERROR;
 		}
-		safe_free_and_null($2);
+		MemFree($2);
 		pCompiler->setIdentifierOperation(OPCODE_BIND);
 	}
 	ParameterDeclaration Block
@@ -952,13 +952,13 @@ ForEach:
 	T_FOREACH '(' T_IDENTIFIER ':'
 {
 	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_PUSH_CONSTANT, new NXSL_Value($3)));
-	safe_free_and_null($3);
+	MemFree($3);
 }
 |
 	T_FOR '(' T_IDENTIFIER ':'
 {
 	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_PUSH_CONSTANT, new NXSL_Value($3)));
-	safe_free_and_null($3);
+	MemFree($3);
 }
 ;
 
@@ -1212,7 +1212,7 @@ StorageItem:
 	'#' T_IDENTIFIER
 {
 	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_PUSH_CONSTANT, new NXSL_Value($2)));
-	safe_free_and_null($2);
+	MemFree($2);
 }
 |	'#' '(' Expression ')'
 ;	
@@ -1221,7 +1221,7 @@ Constant:
 	T_STRING
 {
 	$$ = new NXSL_Value($1);
-	safe_free_and_null($1);
+	MemFreeAndNull($1);
 }
 |	T_INT32
 {

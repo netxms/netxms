@@ -92,8 +92,8 @@ SessionAgentConnector::~SessionAgentConnector()
 {
    MutexDestroy(m_mutex);
    closesocket(m_socket);
-   safe_free(m_sessionName);
-   safe_free(m_userName);
+   MemFree(m_sessionName);
+   MemFree(m_userName);
 }
 
 /**
@@ -178,10 +178,10 @@ void SessionAgentConnector::readThread()
                m_sessionId = msg->getFieldAsUInt32(VID_SESSION_ID);
                m_sessionState = msg->getFieldAsInt16(VID_SESSION_STATE);
 
-               safe_free(m_sessionName);
+               MemFree(m_sessionName);
                m_sessionName = msg->getFieldAsString(VID_NAME);
 
-               safe_free(m_userName);
+               MemFree(m_userName);
                m_userName = msg->getFieldAsString(VID_USER_NAME);
 
                delete msg;

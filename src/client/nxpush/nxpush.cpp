@@ -340,9 +340,9 @@ static BOOL Teardown()
 	for(int i = 0; i < s_data.size(); i++)
 	{
       NXCPushData *d = s_data.get(i);
-		safe_free(d->dciName);
-		safe_free(d->nodeName);
-		safe_free(d->value);
+		MemFree(d->dciName);
+		MemFree(d->nodeName);
+		MemFree(d->value);
 	}
 
 	return TRUE;

@@ -42,7 +42,7 @@ public:
 
    ~ApplicationAgent()
    {
-      safe_free(m_name);
+      MemFree(m_name);
       MutexDestroy(m_mutex);
    }
 

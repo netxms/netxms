@@ -48,7 +48,7 @@ AgentPolicyConfig::AgentPolicyConfig(const TCHAR *name)
  */
 AgentPolicyConfig::~AgentPolicyConfig()
 {
-	safe_free(m_fileContent);
+	MemFree(m_fileContent);
 }
 
 /**
@@ -146,7 +146,7 @@ UINT32 AgentPolicyConfig::modifyFromMessageInternal(NXCPMessage *pRequest)
 {
 	if (pRequest->isFieldExist(VID_CONFIG_FILE_DATA))
 	{
-		safe_free(m_fileContent);
+		MemFree(m_fileContent);
 		m_fileContent = pRequest->getFieldAsString(VID_CONFIG_FILE_DATA);
 	}
 

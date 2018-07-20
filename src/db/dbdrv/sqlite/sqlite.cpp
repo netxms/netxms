@@ -222,7 +222,7 @@ extern "C" void __EXPORT DrvBind(sqlite3_stmt *stmt, int pos, int sqlType, int c
 				char *utf8String = UTF8StringFromWideString((WCHAR *)buffer);
 				sqlite3_bind_text(stmt, pos, utf8String, strlen(utf8String), free);
 				if (allocType == DB_BIND_DYNAMIC)
-					safe_free(buffer);
+					MemFree(buffer);
 			}
 #endif
 			break;
@@ -234,22 +234,22 @@ extern "C" void __EXPORT DrvBind(sqlite3_stmt *stmt, int pos, int sqlType, int c
 		case DB_CTYPE_UINT32:
 			sqlite3_bind_int(stmt, pos, *((int *)buffer));
 			if (allocType == DB_BIND_DYNAMIC)
-				safe_free(buffer);
+				MemFree(buffer);
 			break;
 		case DB_CTYPE_INT64:
 		case DB_CTYPE_UINT64:
 			sqlite3_bind_int64(stmt, pos, *((sqlite3_int64 *)buffer));
 			if (allocType == DB_BIND_DYNAMIC)
-				safe_free(buffer);
+				MemFree(buffer);
 			break;
 		case DB_CTYPE_DOUBLE:
 			sqlite3_bind_double(stmt, pos, *((double *)buffer));
 			if (allocType == DB_BIND_DYNAMIC)
-				safe_free(buffer);
+				MemFree(buffer);
 			break;
 		default:
 			if (allocType == DB_BIND_DYNAMIC)
-				safe_free(buffer);
+				MemFree(buffer);
 			break;
 	}
 }
@@ -396,11 +396,11 @@ extern "C" void __EXPORT DrvFreeResult(SQLITE_RESULT *hResult)
       {
          nCount = hResult->nRows * hResult->nCols;
          for(i = 0; i < nCount; i++)
-            safe_free(hResult->ppszData[i]);
+            MemFree(hResult->ppszData[i]);
          free(hResult->ppszData);
 
          for(i = 0; i < hResult->nCols; i++)
-            safe_free(hResult->ppszNames[i]);
+            MemFree(hResult->ppszNames[i]);
          free(hResult->ppszNames);
       }
       free(hResult);
@@ -490,7 +490,7 @@ extern "C" DBDRV_RESULT __EXPORT DrvSelectPrepared(SQLITE_CONN *hConn, sqlite3_s
 			break;
 		}
 	}
-   safe_free(cnames);
+   MemFree(cnames);
 
 	if (*pdwError == DBERR_SUCCESS)
    {

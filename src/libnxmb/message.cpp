@@ -46,6 +46,6 @@ NXMBMessage::NXMBMessage(const TCHAR *type, const TCHAR *senderId)
  */
 NXMBMessage::~NXMBMessage()
 {
-	safe_free(m_type);
-	safe_free(m_senderId);
+   MemFree(m_type);
+   MemFree(m_senderId);
 }

@@ -311,14 +311,14 @@ UINT32 NetworkService::modifyFromMessageInternal(NXCPMessage *pRequest)
    // Check request
    if (pRequest->isFieldExist(VID_SERVICE_REQUEST))
    {
-      safe_free(m_request);
+      MemFree(m_request);
       m_request = pRequest->getFieldAsString(VID_SERVICE_REQUEST);
    }
 
    // Check response
    if (pRequest->isFieldExist(VID_SERVICE_RESPONSE))
    {
-      safe_free(m_response);
+      MemFree(m_response);
       m_response = pRequest->getFieldAsString(VID_SERVICE_RESPONSE);
    }
 

@@ -71,9 +71,9 @@ SNMPTarget::SNMPTarget(DB_RESULT hResult, int row) : RefCountObject()
  */
 SNMPTarget::~SNMPTarget()
 {
-   safe_free(m_authName);
-   safe_free(m_authPassword);
-   safe_free(m_encPassword);
+   MemFree(m_authName);
+   MemFree(m_authPassword);
+   MemFree(m_encPassword);
    delete m_transport;
 }
 

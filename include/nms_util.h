@@ -1497,7 +1497,7 @@ public:
 
    void setDataType(INT32 type) { m_dataType = type; }
    void setInstanceColumn(bool isInstance) { m_instanceColumn = isInstance; }
-   void setDisplayName(const TCHAR *name) { safe_free(m_displayName); m_displayName = _tcsdup(CHECK_NULL_EX(name)); }
+   void setDisplayName(const TCHAR *name) { MemFree(m_displayName); m_displayName = _tcsdup(CHECK_NULL_EX(name)); }
 };
 
 /**
@@ -1517,13 +1517,13 @@ public:
    TableCell(const TCHAR *value) { m_value = _tcsdup_ex(value); m_status = -1; m_objectId = 0; }
    TableCell(const TCHAR *value, int status) { m_value = _tcsdup_ex(value); m_status = status; m_objectId = 0; }
    TableCell(TableCell *src) { m_value = _tcsdup_ex(src->m_value); m_status = src->m_status; m_objectId = src->m_objectId; }
-   ~TableCell() { safe_free(m_value); }
+   ~TableCell() { MemFree(m_value); }
 
-   void set(const TCHAR *value, int status, UINT32 objectId) { safe_free(m_value); m_value = _tcsdup_ex(value); m_status = status; m_objectId = objectId; }
-   void setPreallocated(TCHAR *value, int status, UINT32 objectId) { safe_free(m_value); m_value = value; m_status = status; m_objectId = objectId; }
+   void set(const TCHAR *value, int status, UINT32 objectId) { MemFree(m_value); m_value = _tcsdup_ex(value); m_status = status; m_objectId = objectId; }
+   void setPreallocated(TCHAR *value, int status, UINT32 objectId) { MemFree(m_value); m_value = value; m_status = status; m_objectId = objectId; }
 
    const TCHAR *getValue() const { return m_value; }
-   void setValue(const TCHAR *value) { safe_free(m_value); m_value = _tcsdup_ex(value); }
+   void setValue(const TCHAR *value) { MemFree(m_value); m_value = _tcsdup_ex(value); }
    void setPreallocatedValue(TCHAR *value) { free(m_value); m_value = value; }
 
    int getStatus() const { return m_status; }
@@ -1618,7 +1618,7 @@ public:
 	int getColumnIndex(const TCHAR *name) const;
    ObjectArray<TableColumnDefinition> *getColumnDefinitions() { return m_columns; }
 
-	void setTitle(const TCHAR *title) { safe_free(m_title); m_title = _tcsdup_ex(title); }
+	void setTitle(const TCHAR *title) { MemFree(m_title); m_title = _tcsdup_ex(title); }
    void setSource(int source) { m_source = source; }
    int addColumn(const TCHAR *name, INT32 dataType = 0, const TCHAR *displayName = NULL, bool isInstance = false);
    int addColumn(const TableColumnDefinition *d);

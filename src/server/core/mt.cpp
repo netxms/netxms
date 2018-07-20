@@ -126,8 +126,8 @@ MappingTable::MappingTable(LONG id, TCHAR *name, UINT32 flags, TCHAR *descriptio
  */
 MappingTable::~MappingTable()
 {
-	safe_free(m_name);
-	safe_free(m_description);
+	MemFree(m_name);
+	MemFree(m_description);
 	delete m_data;
 }
 

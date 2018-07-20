@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -136,12 +136,12 @@ DCObject::DCObject(UINT32 dwId, const TCHAR *szName, int iSource,
    m_guid = uuid::generate();
    m_dwTemplateId = 0;
    m_dwTemplateItemId = 0;
-   nx_strncpy(m_name, szName, MAX_ITEM_NAME);
+   _tcslcpy(m_name, szName, MAX_ITEM_NAME);
    if (pszDescription != NULL)
-      nx_strncpy(m_description, pszDescription, MAX_DB_STRING);
+      _tcslcpy(m_description, pszDescription, MAX_DB_STRING);
    else
       _tcscpy(m_description, m_name);
-	nx_strncpy(m_systemTag, CHECK_NULL_EX(systemTag), MAX_DB_STRING);
+   _tcslcpy(m_systemTag, CHECK_NULL_EX(systemTag), MAX_DB_STRING);
    m_source = iSource;
    m_iPollingInterval = iPollingInterval;
    m_iRetentionTime = iRetentionTime;
@@ -185,9 +185,9 @@ DCObject::DCObject(ConfigEntry *config, Template *owner)
       m_guid = uuid::generate();
    m_dwTemplateId = 0;
    m_dwTemplateItemId = 0;
-	nx_strncpy(m_name, config->getSubEntryValue(_T("name"), 0, _T("unnamed")), MAX_ITEM_NAME);
-   nx_strncpy(m_description, config->getSubEntryValue(_T("description"), 0, m_name), MAX_DB_STRING);
-	nx_strncpy(m_systemTag, config->getSubEntryValue(_T("systemTag"), 0, _T("")), MAX_DB_STRING);
+   _tcslcpy(m_name, config->getSubEntryValue(_T("name"), 0, _T("unnamed")), MAX_ITEM_NAME);
+   _tcslcpy(m_description, config->getSubEntryValue(_T("description"), 0, m_name), MAX_DB_STRING);
+   _tcslcpy(m_systemTag, config->getSubEntryValue(_T("systemTag"), 0, _T("")), MAX_DB_STRING);
 	m_source = (BYTE)config->getSubEntryValueAsInt(_T("origin"));
    m_iPollingInterval = config->getSubEntryValueAsInt(_T("interval"));
    m_iRetentionTime = config->getSubEntryValueAsInt(_T("retention"));
@@ -944,7 +944,7 @@ void DCObject::updateFromTemplate(DCObject *src)
 	m_dwResourceId = src->m_dwResourceId;
 	m_snmpPort = src->m_snmpPort;
 
-	free(m_pszPerfTabSettings);
+	MemFree(m_pszPerfTabSettings);
 	m_pszPerfTabSettings = _tcsdup_ex(src->m_pszPerfTabSettings);
 
    setTransformationScript(src->m_transformationScriptSource);
@@ -961,9 +961,9 @@ void DCObject::updateFromTemplate(DCObject *src)
    {
       expandMacros(src->m_instance, m_instance, MAX_DB_STRING);
       m_instanceDiscoveryMethod = src->m_instanceDiscoveryMethod;
-      free(m_instanceDiscoveryData);
+      MemFree(m_instanceDiscoveryData);
       m_instanceDiscoveryData = _tcsdup_ex(src->m_instanceDiscoveryData);
-      safe_free_and_null(m_instanceFilterSource);
+      MemFreeAndNull(m_instanceFilterSource);
       delete_and_null(m_instanceFilter);
       setInstanceFilter(src->m_instanceFilterSource);
    }
@@ -1108,7 +1108,7 @@ void DCObject::updateFromImport(ConfigEntry *config)
    m_iRetentionTime = config->getSubEntryValueAsInt(_T("retention"));
    m_flags = (UINT16)config->getSubEntryValueAsInt(_T("flags"));
    const TCHAR *perfTabSettings = config->getSubEntryValue(_T("perfTabSettings"));
-   safe_free(m_pszPerfTabSettings);
+   MemFree(m_pszPerfTabSettings);
    m_pszPerfTabSettings = _tcsdup_ex(perfTabSettings);
    m_snmpPort = (WORD)config->getSubEntryValueAsInt(_T("snmpPort"));
 
@@ -1137,7 +1137,7 @@ void DCObject::updateFromImport(ConfigEntry *config)
 
    m_instanceDiscoveryMethod = (WORD)config->getSubEntryValueAsInt(_T("instanceDiscoveryMethod"));
    const TCHAR *value = config->getSubEntryValue(_T("instanceDiscoveryData"));
-   safe_free(m_instanceDiscoveryData);
+   MemFree(m_instanceDiscoveryData);
    m_instanceDiscoveryData = _tcsdup_ex(value);
    setInstanceFilter(config->getSubEntryValue(_T("instanceFilter")));
    nx_strncpy(m_instance, config->getSubEntryValue(_T("instance"), 0, _T("")), MAX_DB_STRING);

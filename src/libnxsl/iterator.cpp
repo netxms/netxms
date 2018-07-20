@@ -83,7 +83,7 @@ NXSL_Iterator::~NXSL_Iterator()
 	m_array->decHandleCount();
 	if (m_array->isUnused())
 		delete m_array;
-	safe_free(m_variable);
+	MemFree(m_variable);
 }
 
 /**

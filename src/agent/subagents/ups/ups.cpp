@@ -47,8 +47,8 @@ UPSInterface::~UPSInterface()
 {
    ConditionSet(m_condStop);
    ThreadJoin(m_thCommThread);
-   safe_free(m_device);
-   safe_free(m_pszName);
+   MemFree(m_device);
+   MemFree(m_pszName);
    MutexDestroy(m_mutex);
    ConditionDestroy(m_condStop);
 }
@@ -58,7 +58,7 @@ UPSInterface::~UPSInterface()
  */
 void UPSInterface::setName(const char *pszName)
 {
-   safe_free(m_pszName);
+   MemFree(m_pszName);
    if (pszName[0] == 0)
    {
       TCHAR szBuffer[MAX_DB_STRING];
@@ -91,7 +91,7 @@ void UPSInterface::setName(const WCHAR *pszName)
    }
    else
    {
-	   safe_free(m_pszName);
+	   MemFree(m_pszName);
       m_pszName = _tcsdup(pszName);
    }
 }
