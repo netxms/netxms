@@ -59,7 +59,7 @@ static UINT32 s_supportedCiphers =
 static WORD s_noEncryptionFlag = 0;
 static const TCHAR *s_cipherNames[NETXMS_MAX_CIPHERS] = { _T("AES-256"), _T("Blowfish-256"), _T("IDEA"), _T("3DES"), _T("AES-128"), _T("Blowfish-128") };
 
-#if defined(_WITH_ENCRYPTION) && WITH_OPENSSL
+#ifdef _WITH_ENCRYPTION
 
 extern "C" typedef OPENSSL_CONST EVP_CIPHER * (*CIPHER_FUNC)();
 static CIPHER_FUNC s_ciphers[NETXMS_MAX_CIPHERS] =
@@ -181,27 +181,6 @@ RSA LIBNETXMS_EXPORTABLE *RSAGenerateKey(int bits)
 
 #endif   /* _WITH_ENCRYPTION */
 
-#if defined(_WITH_ENCRYPTION) && WITH_COMMONCRYPTO
-
-/**
- * Create RSA key from binary representation
- */
-RSA LIBNETXMS_EXPORTABLE *RSAKeyFromData(const BYTE *data, size_t size, bool withPrivate)
-{
-   SecKeyCreateWithData(keyData, keyAttr);
-	return NULL;
-}
-
-/**
- * Destroy RSA key
- */
-void LIBNETXMS_EXPORTABLE RSAFree(RSA *key)
-{
-   free(key);
-}
-
-#endif
-
 /**
  * Initialize OpenSSL library
  */
@@ -209,7 +188,7 @@ bool LIBNETXMS_EXPORTABLE InitCryptoLib(UINT32 dwEnabledCiphers)
 {
    s_noEncryptionFlag = htons(MF_DONT_ENCRYPT);
 
-#if _WITH_ENCRYPTION && WITH_OPENSSL
+#if _WITH_ENCRYPTION
    BYTE random[8192];
    int i;
 
@@ -259,8 +238,6 @@ bool LIBNETXMS_EXPORTABLE InitCryptoLib(UINT32 dwEnabledCiphers)
       }
    }
 
-   nxlog_debug(1, _T("Crypto library initialized"));
-#elif _WITH_ENCRYPTION && WITH_COMMONCRYPTO
    nxlog_debug(1, _T("Crypto library initialized"));
 #else
    nxlog_debug(1, _T("Crypto library will not be initialized because libnetxms was built without encryption support"));

@@ -1882,43 +1882,46 @@ fi
 
 
 #--------------------------------------------------------------------
+# Checks for CommonCrypto
+#--------------------------------------------------------------------
+
+if test "x$PLATFORM" = "xDarwin" -a "x$DIST_BUILD" != "xyes"; then
+	AC_CHECK_FUNC(CC_MD5_Init, [ 
+		AC_DEFINE(WITH_COMMONCRYPTO, 1, Define to 1 if you have CommonCrypto library and headers)
+	])
+fi
+
+
+#--------------------------------------------------------------------
 # Checks for OpenSSL/CommonCrypto
 #--------------------------------------------------------------------
 
 if test "x$DISABLE_ENCRYPTION" != "xyes" -a "x$DIST_BUILD" != "xyes"; then
-	USE_COMMONCRYPTO="no"
-	if test "x$PLATFORM" = "xDarwin" -a "x$DISABLE_COMMONCRYPTO" != "xyes"; then
-		AC_CHECK_FUNC(CC_MD5_Init, [ 
-			AC_DEFINE(WITH_COMMONCRYPTO, 1, Define to 1 if you have CommonCrypto library and headers)
-			USE_COMMONCRYPTO="yes"
-			WITH_ENCRYPTION="yes"
-		])
-	fi
-	if test "x$USE_COMMONCRYPTO" != "xyes"; then
-		AC_CHECK_LIB($OPENSSL_LIBCRYPTO, RSA_new,
-			[
-				AC_DEFINE(WITH_OPENSSL, 1, Define to 1 if you have OpenSSL library and headers)
-				AC_CHECK_LIB($OPENSSL_LIBCRYPTO, EVP_aes_256_cbc,
-								 [HAVE_LIBCRYPTO="yes"], [AC_DEFINE(NETXMS_NO_AES,,[desc])])
-				AC_CHECK_LIB($OPENSSL_LIBCRYPTO, EVP_bf_cbc,
-								 [HAVE_LIBCRYPTO="yes"], [AC_DEFINE(NETXMS_NO_BF,,[desc])])
-				AC_CHECK_LIB($OPENSSL_LIBCRYPTO, EVP_idea_cbc,
-								 [HAVE_LIBCRYPTO="yes"], [AC_DEFINE(NETXMS_NO_IDEA,,[desc])])
-				AC_CHECK_LIB($OPENSSL_LIBCRYPTO, EVP_des_ede3_cbc,
-								 [HAVE_LIBCRYPTO="yes"], [AC_DEFINE(NETXMS_NO_DES,,[desc])])
-				if test "x$HAVE_LIBCRYPTO" = "xyes"; then
-					WITH_ENCRYPTION="yes"
-					LIBS="$LIBS -l$OPENSSL_LIBSSL -l$OPENSSL_LIBCRYPTO"
-				else
-					AC_MSG_ERROR(lib$OPENSSL_LIBCRYPTO does not provide any suitable encryption algorithm)
-				fi
+	AC_CHECK_HEADER(openssl/crypto.h,,AC_MSG_ERROR([OpenSSL is required for encryption support]))
+	
+	AC_CHECK_LIB($OPENSSL_LIBCRYPTO, RSA_new,
+		[
+			AC_DEFINE(WITH_OPENSSL, 1, Define to 1 if you have OpenSSL library and headers)
+			AC_CHECK_LIB($OPENSSL_LIBCRYPTO, EVP_aes_256_cbc,
+							 [HAVE_LIBCRYPTO="yes"], [AC_DEFINE(NETXMS_NO_AES,,[desc])])
+			AC_CHECK_LIB($OPENSSL_LIBCRYPTO, EVP_bf_cbc,
+							 [HAVE_LIBCRYPTO="yes"], [AC_DEFINE(NETXMS_NO_BF,,[desc])])
+			AC_CHECK_LIB($OPENSSL_LIBCRYPTO, EVP_idea_cbc,
+							 [HAVE_LIBCRYPTO="yes"], [AC_DEFINE(NETXMS_NO_IDEA,,[desc])])
+			AC_CHECK_LIB($OPENSSL_LIBCRYPTO, EVP_des_ede3_cbc,
+							 [HAVE_LIBCRYPTO="yes"], [AC_DEFINE(NETXMS_NO_DES,,[desc])])
+			if test "x$HAVE_LIBCRYPTO" = "xyes"; then
+				WITH_ENCRYPTION="yes"
+				LIBS="$LIBS -l$OPENSSL_LIBSSL -l$OPENSSL_LIBCRYPTO"
+			else
+				AC_MSG_ERROR(lib$OPENSSL_LIBCRYPTO does not provide any suitable encryption algorithm)
+			fi
 
-				AC_CHECK_FUNCS([X509_STORE_set_verify_cb])
-			],
-			[
-				AC_MSG_ERROR(lib$OPENSSL_LIBCRYPTO is required for encryption support)
-			])
-	fi
+			AC_CHECK_FUNCS([X509_STORE_set_verify_cb])
+		],
+		[
+			AC_MSG_ERROR(lib$OPENSSL_LIBCRYPTO is required for encryption support)
+		])
 fi
 
 
