@@ -315,7 +315,7 @@ bool getParametersFromDB( int dbIndex )
 		// Release previously allocated array of values for this group
 		for (int j = 0; j < g_paramGroup[i].valueCount[dbIndex]; j++)
 			delete (g_paramGroup[i].values[dbIndex])[j].attrs;
-		safe_free((void*)g_paramGroup[i].values[dbIndex]);
+		MemFree((void*)g_paramGroup[i].values[dbIndex]);
       g_paramGroup[i].valueCount[dbIndex] = 0;
 
 		DB_RESULT queryResult = DBSelect(info.handle, g_paramGroup[i].query);

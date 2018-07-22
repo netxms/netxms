@@ -706,12 +706,12 @@ extern "C" void __EXPORT DrvFreeResult(MSSQL_QUERY_RESULT *pResult)
 
       iNumValues = pResult->numColumns * pResult->numRows;
       for(i = 0; i < iNumValues; i++)
-         safe_free(pResult->pValues[i]);
-      safe_free(pResult->pValues);
+         MemFree(pResult->pValues[i]);
+      MemFree(pResult->pValues);
 
 		for(i = 0; i < pResult->numColumns; i++)
-			safe_free(pResult->columnNames[i]);
-		safe_free(pResult->columnNames);
+			MemFree(pResult->columnNames[i]);
+		MemFree(pResult->columnNames);
 
       free(pResult);
    }

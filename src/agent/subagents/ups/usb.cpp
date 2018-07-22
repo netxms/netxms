@@ -178,7 +178,7 @@ BOOL USBInterface::open()
                {
                   AgentWriteDebugLog(7, _T("UPS: HidP_GetValueCaps failed (%s)"), GetSystemErrorText(GetLastError(), errorText, 256));
                }
-               safe_free_and_null(m_pFeatureValueCaps);
+               MemFreeAndNull(m_pFeatureValueCaps);
             }
             else
             {
@@ -219,7 +219,7 @@ void USBInterface::close()
       HidD_FreePreparsedData(m_pPreparsedData);
       m_pPreparsedData = NULL;
    }
-   safe_free_and_null(m_pFeatureValueCaps);
+   MemFreeAndNull(m_pFeatureValueCaps);
    UPSInterface::close();
 }
 

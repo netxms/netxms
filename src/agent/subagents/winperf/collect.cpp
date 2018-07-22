@@ -299,7 +299,7 @@ WINPERF_COUNTER *AddCounter(TCHAR *pszName, int iClass, int iNumSamples, int iDa
    iType = CheckCounter(pszName, &pszNewName);
    if (iType == -1)
 	{
-		safe_free(pszNewName);
+		MemFree(pszNewName);
       return NULL;
 	}
 
@@ -308,7 +308,7 @@ WINPERF_COUNTER *AddCounter(TCHAR *pszName, int iClass, int iNumSamples, int iDa
    memset(pCnt, 0, sizeof(WINPERF_COUNTER));
 	if (pszNewName != NULL)
 	{
-		pCnt->pszName = (TCHAR *)realloc(pszNewName, (_tcslen(pszNewName) + 1) * sizeof(TCHAR));
+		pCnt->pszName = (TCHAR *)MemRealloc(pszNewName, (_tcslen(pszNewName) + 1) * sizeof(TCHAR));
 	}
 	else
 	{
@@ -316,8 +316,7 @@ WINPERF_COUNTER *AddCounter(TCHAR *pszName, int iClass, int iNumSamples, int iDa
 	}
    pCnt->wType = (iDataType == COUNTER_TYPE_AUTO) ? iType : iDataType;
    pCnt->wNumSamples = iNumSamples;
-   pCnt->pRawValues = (PDH_RAW_COUNTER *)malloc(sizeof(PDH_RAW_COUNTER) * iNumSamples);
-   memset(pCnt->pRawValues, 0, sizeof(PDH_RAW_COUNTER) * iNumSamples);
+   pCnt->pRawValues = MemAllocArray<PDH_RAW_COUNTER>(iNumSamples);
    switch(pCnt->wType)
    {
       case COUNTER_TYPE_INT32:
@@ -351,7 +350,7 @@ BOOL AddCounterFromConfig(TCHAR *pszStr)
    WINPERF_COUNTER *pCnt;
 
    // Parse line
-   pszCurrField = (TCHAR *)malloc(sizeof(TCHAR) * (_tcslen(pszStr) + 1));
+   pszCurrField = (TCHAR *)MemAlloc(sizeof(TCHAR) * (_tcslen(pszStr) + 1));
    for(ptr = pszStr, iState = 0, iField = 0, iPos = 0; (iState != -1) && (iState != 255); ptr++)
    {
       switch(iState)
