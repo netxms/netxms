@@ -138,7 +138,7 @@ int main(int argc, char *argv[])
 			}
 			delete pScript;
          delete vm;
-			safe_free(ppArgs);
+			MemFree(ppArgs);
 		}
 		else
 		{

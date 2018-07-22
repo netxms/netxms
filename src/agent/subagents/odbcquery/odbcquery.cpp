@@ -254,7 +254,7 @@ static BOOL AddQueryFromConfig(const TCHAR *pszCfg)
 	AgentWriteDebugLog(1, _T("ODBC: query \"%s\" successfully registered"), pszQuery);
 
 finish_add_query:
-   safe_free(pszLine);
+   MemFree(pszLine);
    return bResult;
 }
 
@@ -291,11 +291,9 @@ static bool SubAgentInit(Config *config)
    return true;
 }
 
-
-//
-// Called by master agent at unload
-//
-
+/**
+ * Called by master agent at unload
+ */
 static void SubAgentShutdown()
 {
    DWORD i;
@@ -306,7 +304,7 @@ static void SubAgentShutdown()
 
    for(i = 0; i < m_dwNumQueries; i++)
       ThreadJoin(m_pQueryList[i].hThread);
-   safe_free(m_pQueryList);
+   MemFree(m_pQueryList);
 }
 
 

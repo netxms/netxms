@@ -32,8 +32,8 @@ CSrvDepsPage::~CSrvDepsPage()
    DWORD i;
 
    for(i = 0; i < m_dwNumServices; i++)
-      free(m_ppszServiceNames[i]);
-   safe_free(m_ppszServiceNames);
+      MemFree(m_ppszServiceNames[i]);
+   MemFree(m_ppszServiceNames);
 }
 
 void CSrvDepsPage::DoDataExchange(CDataExchange* pDX)
@@ -103,18 +103,16 @@ BOOL CSrvDepsPage::OnInitDialog()
 	return TRUE;
 }
 
-
-//
-// "Next" button handler
-//
-
+/**
+ * "Next" button handler
+ */
 LRESULT CSrvDepsPage::OnWizardNext() 
 {
    WIZARD_CFG_INFO *pc = &((CConfigWizard *)GetParent())->m_cfg;
    int i, nNumItems, nLen;
    DWORD dwIndex;
 
-   safe_free(pc->m_pszDependencyList);
+   MemFree(pc->m_pszDependencyList);
    pc->m_pszDependencyList = NULL;
    pc->m_dwDependencyListSize = 0;
 
