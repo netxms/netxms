@@ -266,13 +266,8 @@ private:
 	BYTE m_iv[EVP_MAX_IV_LENGTH];
 #ifdef _WITH_ENCRYPTION
    MUTEX m_encryptorLock;
-#if WITH_OPENSSL
    EVP_CIPHER_CTX *m_encryptor;
    EVP_CIPHER_CTX *m_decryptor;
-#elif WITH_COMMONCRYPTO
-   CCCryptorRef m_encryptor;
-   CCCryptorRef m_decryptor;
-#endif
 #endif
 
 	NXCPEncryptionContext();

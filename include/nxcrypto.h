@@ -3,8 +3,6 @@
 
 #if defined(_WITH_ENCRYPTION) && !defined(ORA_PROC)
 
-#if WITH_OPENSSL
-
 #include <openssl/crypto.h>
 #include <openssl/rsa.h>
 #include <openssl/pem.h>
@@ -42,20 +40,6 @@
 #define OPENSSL_CONST const
 #else
 #define OPENSSL_CONST
-#endif
-
-#elif WITH_COMMONCRYPTO
-
-#include <CommonCrypto/CommonCrypto.h>
-#include <Security/SecBase.h>
-#include <Security/SecKey.h>
-
-struct RSA
-{
-	SecKeyRef pubkey;
-	SecKeyRef privkey;
-};
-
 #endif
 
 #else /* no encryption */
