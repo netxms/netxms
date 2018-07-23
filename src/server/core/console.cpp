@@ -696,6 +696,10 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
                ConsoleWrite(pCtx, _T("Heap summary information unavailable\n"));
             }
          }
+         else
+         {
+            ConsoleWrite(pCtx, _T("Invalid subcommand\n"));
+         }
       }
       else if (IsCommand(_T("INDEX"), szBuffer, 1))
       {
