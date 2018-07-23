@@ -637,6 +637,15 @@ typedef UINT64 QWORD;   // for compatibility
 #define FALSE  0
 #endif
 
+// on AIX open_memstream only declared if _XOPEN_SOURCE >= 700
+// which is incompatible with other parts of code
+#if defined(__IBMC__) || defined(__IBMCPP__)
+#ifdef __cplusplus
+extern "C"
+#endif
+FILE *open_memstream(char **, size_t *);
+#endif
+
 // Some systems may define true and false which may break overloaded functions
 #ifdef __cplusplus
 #undef true

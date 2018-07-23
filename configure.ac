@@ -132,10 +132,12 @@ DISABLE_COMMONCRYPTO="no"
 OPENSSL_LIBSSL="ssl"
 OPENSSL_LIBCRYPTO="crypto"
 SYSTEMD_SUPPORT="yes"
+SHLIB_LDFLAGS=""
 EXEC_LDFLAGS=""
 EXEC_LIBS=""
 DIST_BUILD="no"
 FORCE_NULL_SAFE_FREE="no"
+JEMALLOC_REQUIRED="no"
 
 
 #--------------------------------------------------------------------
@@ -621,6 +623,7 @@ AC_ARG_WITH(jemalloc,
 [AS_HELP_STRING(--with-jemalloc,specify libjemalloc location)],
 [
 	if test "x$withval" != "xno" ; then
+		JEMALLOC_REQUIRED="yes"
 		if test "x$withval" != "x" && test "x$withval" != "xyes" ; then
 			LD_RUN_PATH="${withval}/lib${LD_RUN_PATH:+:}${LD_RUN_PATH}"   
 			LDFLAGS="$LDFLAGS -L${withval}/lib"
@@ -1192,6 +1195,17 @@ fi
 case "$PLATFORM" in
    AIX)
       LDFLAGS_PREFIX="-no-undefined -Wl,-brtl $LDFLAGS"
+
+      AC_MSG_CHECKING(whether C compiler accepts qsuppess=1540-1401)
+      OLD_CPPFLAGS="$CPPFLAGS"
+      CPPFLAGS="$CPPFLAGS -qsuppress=1540-1401"
+      AC_RUN_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
+         [ AC_MSG_RESULT(yes) ],
+         [
+            CPPFLAGS="$OLD_CPPFLAGS"
+            AC_MSG_RESULT(no)
+         ])
+
       ;;
    HP-UX)
       CPPFLAGS="$CPPFLAGS -D_HPUX -D_HPUX_SOURCE -D_POSIX_PTHREAD_SEMANTICS -D_XOPEN_SOURCE=500 -D_XOPEN_SOURCE_EXTENDED=1 -D_REENTRANT -D_INCLUDE_LONGLONG -D_LARGEFILE64_SOURCE"
@@ -2637,16 +2651,6 @@ if test "x$PLATFORM" = "xLinux"; then
 #include <sys/reboot.h>
 #endif
 	])
-
-	AC_CHECK_HEADERS([jemalloc/jemalloc.h],
-		[
-		 	AC_CHECK_LIB(rt, clock_gettime)
-			AC_CHECK_LIB(jemalloc_pic, malloc,
-				[ 
-					WITH_JEMALLOC="yes"
-					AC_DEFINE(WITH_JEMALLOC,1,Define to 1 if libjemalloc is used)
-				])
-		])
 fi
 
 
@@ -3794,6 +3798,38 @@ if test $? = 0; then
 	fi
 fi
 
+
+#--------------------------------------------------------------------
+# jemalloc
+#--------------------------------------------------------------------
+
+if test "x$JEMALLOC_REQUIRED" = "xyes"; then
+	AC_CHECK_HEADERS([jemalloc/jemalloc.h],
+		[
+			rootdir=`pwd`
+			if test "x$PLATFORM" = "xAIX"; then
+				EXEC_LDFLAGS="$EXEC_LDFLAGS -Wl,-bexport:$rootdir/jemalloc.sym"
+				SHLIB_LDFLAGS="$SHLIB_LDFLAGS -Wl,-bimport:$rootdir/jemalloc.sym"
+			else
+				EXEC_LDFLAGS="$EXEC_LDFLAGS -export-symbols $rootdir/jemalloc.sym"
+			fi
+
+		 	AC_CHECK_LIB(rt, clock_gettime)
+			AC_CHECK_LIB(jemalloc_pic, malloc,
+				[ 
+					EXEC_LIBS="$EXEC_LIBS -ljemalloc_pic"
+					AC_DEFINE(WITH_JEMALLOC,1,Define to 1 if libjemalloc is used)
+				],
+				[
+					AC_MSG_ERROR(Cannot find usable libjemalloc)
+				])
+		],
+		[
+			AC_MSG_ERROR(jemalloc.h not found)
+		])
+fi
+
+
 #--------------------------------------------------------------------
 # Other settings
 #--------------------------------------------------------------------
@@ -3832,12 +3868,6 @@ AC_DEFINE_UNQUOTED([SHLIB_SUFFIX], _T("$SHLIB_SUFFIX"), [Define to platform's sh
 
 if test "x$ENABLE_DEBUG" = "xno"; then
 	CPPFLAGS="$CPPFLAGS -DNDEBUG"
-fi
-
-if test "x$WITH_JEMALLOC" = "xyes"; then
-	rootdir=`pwd`
-	EXEC_LDFLAGS="$EXEC_LDFLAGS -export-symbols $rootdir/jemalloc.sym"
-	EXEC_LIBS="$EXEC_LIBS -ljemalloc_pic"
 fi
 
 AM_CONDITIONAL([USE_INTERNAL_EXPAT], [test "x$HAVE_LIBEXPAT" = "xno"])
@@ -3915,6 +3945,7 @@ AC_SUBST(PDSDRV_DIRS)
 AC_SUBST(TOP_LEVEL_MODULES)
 AC_SUBST(CONTRIB_MODULES)
 AC_SUBST(CLIENT_COMPONENTS)
+AC_SUBST(SHLIB_LDFLAGS)
 AC_SUBST(STATIC_SUBAGENT_LIST)
 AC_SUBST(SUBAGENT_LIBS)
 AC_SUBST(BUILD_SERVER)
