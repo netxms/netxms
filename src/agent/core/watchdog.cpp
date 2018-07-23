@@ -121,7 +121,7 @@ void StopWatchdog()
 	TerminateProcess(m_hWatchdogProcess, 0);
    WaitForSingleObject(m_hWatchdogProcess, 10000);
 #else
-	kill(m_pidWatchdogProcess, SIGTERM);
+	kill(m_pidWatchdogProcess, SIGKILL);
 #endif
    nxlog_write(MSG_WATCHDOG_STOPPED, EVENTLOG_INFORMATION_TYPE, NULL);
 }

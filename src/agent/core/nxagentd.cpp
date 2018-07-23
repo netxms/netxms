@@ -1160,15 +1160,14 @@ void Shutdown()
    g_dwFlags |= AF_SHUTDOWN;
    ConditionSet(s_subAgentsStopCondition);
 
+   ShutdownTrapSender();
 	if (g_dwFlags & AF_SUBAGENT_LOADER)
 	{
-		// TODO: shall we inform master agent listener about shutdown?
-		//ThreadJoin(s_masterAgentListenerThread);
+		ThreadJoin(s_masterAgentListenerThread);
 	}
 	else
 	{
       ShutdownLocalDataCollector();
-		ShutdownTrapSender();
 		ThreadJoin(s_sessionWatchdogThread);
 		ThreadJoin(s_listenerThread);
 		ThreadJoin(s_tunnelManagerThread);
@@ -1191,11 +1190,14 @@ void Shutdown()
 	DestroySessionList();
 	MsgWaitQueue::shutdown();
 
-   if (g_dwFlags & AF_ENABLE_SNMP_PROXY)
+   if (!(g_dwFlags & AF_SUBAGENT_LOADER))
    {
-      ThreadPoolDestroy(g_snmpProxyThreadPool);
+      if (g_dwFlags & AF_ENABLE_SNMP_PROXY)
+      {
+         ThreadPoolDestroy(g_snmpProxyThreadPool);
+      }
+      ThreadPoolDestroy(g_commThreadPool);
    }
-   ThreadPoolDestroy(g_commThreadPool);
 
    UnloadAllSubAgents();
    CloseLocalDatabase();
