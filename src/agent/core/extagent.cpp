@@ -32,8 +32,8 @@ static ObjectArray<ExternalSubagent> s_subagents;
  */
 ExternalSubagent::ExternalSubagent(const TCHAR *name, const TCHAR *user)
 {
-	nx_strncpy(m_name, name, MAX_SUBAGENT_NAME);
-	nx_strncpy(m_user, user, MAX_ESA_USER_NAME);
+	_tcslcpy(m_name, name, MAX_SUBAGENT_NAME);
+	_tcslcpy(m_user, user, MAX_ESA_USER_NAME);
 	m_connected = false;
 	m_listener = NULL;
 	m_pipe = NULL;
@@ -126,12 +126,14 @@ void ExternalSubagent::connect(NamedPipe *pipe)
 	m_connected = true;
 	AgentWriteDebugLog(2, _T("ExternalSubagent(%s): connection established"), m_name);
    PipeMessageReceiver receiver(pipe->handle(), 8192, 1048576);  // 8K initial, 1M max
-	while(true)
+	while(!(g_dwFlags & AF_SHUTDOWN))
 	{
       MessageReceiverResult result;
-      NXCPMessage *msg = receiver.readMessage(INFINITE, &result);
+      NXCPMessage *msg = receiver.readMessage(5000, &result);
 		if (msg == NULL)
       {
+		   if (result == MSGRECV_TIMEOUT)
+		      continue;
          AgentWriteDebugLog(6, _T("ExternalSubagent(%s): receiver failure (%s)"), m_name, AbstractMessageReceiver::resultToText(result));
 			break;
       }
