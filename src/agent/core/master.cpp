@@ -134,12 +134,20 @@ THREAD_RESULT THREAD_CALL MasterAgentListener(void *arg)
 			while(!(g_dwFlags & AF_SHUTDOWN))
 			{
             MessageReceiverResult result;
-				NXCPMessage *msg = receiver.readMessage(INFINITE, &result);
-				if ((msg == NULL) || (g_dwFlags & AF_SHUTDOWN))
+				NXCPMessage *msg = receiver.readMessage(5000, &result);
+				if (msg == NULL)
             {
+				   if (result == MSGRECV_TIMEOUT)
+				      continue;
                AgentWriteDebugLog(6, _T("MasterAgentListener: receiver failure (%s)"), AbstractMessageReceiver::resultToText(result));
 					break;
             }
+
+				if  (g_dwFlags & AF_SHUTDOWN)
+				{
+				   delete msg;
+				   break;
+				}
 
             TCHAR buffer[256];
 				AgentWriteDebugLog(6, _T("Received message %s from master agent"), NXCPMessageCodeName(msg->getCode(), buffer));
