@@ -3,6 +3,7 @@
 *
 
 - New hook scripts: PostObjectCreate and DiscoveryPoll
+- Implemented watchdog functionality for external subagents
 
 
 *

@@ -77,7 +77,7 @@ void ShutdownLocalDataCollector();
 
 void StartWatchdog();
 void StopWatchdog();
-int WatchdogMain(DWORD pid);
+int WatchdogMain(DWORD pid, const TCHAR *configSection);
 
 void InitSessionList();
 void DestroySessionList();
@@ -1173,11 +1173,11 @@ BOOL Initialize()
    ThreadSleep(1);
 
 	// Start watchdog process
+   if (g_dwFlags & AF_ENABLE_WATCHDOG)
+      StartWatchdog();
+
 	if (!(g_dwFlags & AF_SUBAGENT_LOADER))
 	{
-		if (g_dwFlags & AF_ENABLE_WATCHDOG)
-			StartWatchdog();
-
 	   // Delete file used for upgrade if exists
       TCHAR upgradeFileName[MAX_PATH];
 	   ReadRegistryAsString(_T("upgrade.file"), upgradeFileName, MAX_PATH, _T(""));
@@ -1540,7 +1540,7 @@ int main(int argc, char *argv[])
 				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, configSection, MAX_DB_STRING);
 				configSection[MAX_DB_STRING - 1] = 0;
 #else
-            nx_strncpy(configSection, optarg, MAX_DB_STRING);
+            strncpy(configSection, optarg, MAX_DB_STRING);
 #endif
             break;
          case 'h':   // Display help and exit
@@ -1811,7 +1811,7 @@ int main(int argc, char *argv[])
             // If yes, switch to external subagent mode
             if (!_tcsnicmp(configSection, _T("EXT:"), 4))
             {
-               nx_strncpy(g_masterAgent, &configSection[4], MAX_PATH);
+               _tcslcpy(g_masterAgent, &configSection[4], MAX_PATH);
             }
 
 				if (g_config->parseTemplate(configSection, m_cfgTemplate))
@@ -1833,13 +1833,13 @@ int main(int argc, char *argv[])
                   TCHAR *path = _tgetenv(_T("NETXMS_HOME"));
                   if (path != NULL)
                   {
-                     nx_strncpy(s_executableName, path, sizeof(s_executableName) / sizeof(s_executableName[0]));
+                     _tcslcpy(s_executableName, path, sizeof(s_executableName) / sizeof(s_executableName[0]));
                   }
                   else
                   {
-                     nx_strncpy(s_executableName, PREFIX, sizeof(s_executableName) / sizeof(s_executableName[0]));
+                     _tcslcpy(s_executableName, PREFIX, sizeof(s_executableName) / sizeof(s_executableName[0]));
                   }
-                  _tcsncat(s_executableName, _T("/bin/nxagentd"), sizeof(s_executableName) / sizeof(s_executableName[0]));
+                  _tcslcat(s_executableName, _T("/bin/nxagentd"), sizeof(s_executableName) / sizeof(s_executableName[0]));
                }
                else
                {
@@ -1997,7 +1997,10 @@ int main(int argc, char *argv[])
          }
          break;
 		case ACTION_RUN_WATCHDOG:
-			iExitCode = WatchdogMain(dwMainPID);
+		   if (s_debugLevel == (UINT32)NXCONFIG_UNINITIALIZED_VALUE)
+		      s_debugLevel = 0;
+		   nxlog_set_debug_level(s_debugLevel);
+			iExitCode = WatchdogMain(dwMainPID, _tcscmp(configSection, DEFAULT_CONFIG_SECTION) ? configSection : NULL);
 			break;
       case ACTION_CREATE_CONFIG:
          iExitCode = CreateConfig(CHECK_NULL_A(argv[optind]), CHECK_NULL_A(argv[optind + 1]),
