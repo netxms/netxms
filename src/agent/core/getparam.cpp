@@ -282,6 +282,42 @@ static LONG H_SystemIsVirtual(const TCHAR *param, const TCHAR *arg, TCHAR *value
 #endif /* HAVE_GET_CPUID || _WIN32 */
 
 /**
+ * Handler for Agent.Heap.Active
+ */
+static LONG H_AgentHeapActive(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   INT64 bytes = GetActiveHeapMemory();
+   if (bytes == -1)
+      return SYSINFO_RC_UNSUPPORTED;
+   ret_int64(value, bytes);
+   return SYSINFO_RC_SUCCESS;
+}
+
+/**
+ * Handler for Agent.Heap.Allocated
+ */
+static LONG H_AgentHeapAllocated(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   INT64 bytes = GetAllocatedHeapMemory();
+   if (bytes == -1)
+      return SYSINFO_RC_UNSUPPORTED;
+   ret_int64(value, bytes);
+   return SYSINFO_RC_SUCCESS;
+}
+
+/**
+ * Handler for Agent.Heap.Mapped
+ */
+static LONG H_AgentHeapMapped(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   INT64 bytes = GetMappedHeapMemory();
+   if (bytes == -1)
+      return SYSINFO_RC_UNSUPPORTED;
+   ret_int64(value, bytes);
+   return SYSINFO_RC_SUCCESS;
+}
+
+/**
  * Standard agent's parameters
  */
 static NETXMS_SUBAGENT_PARAM m_stdParams[] =
@@ -308,6 +344,9 @@ static NETXMS_SUBAGENT_PARAM m_stdParams[] =
    { _T("Agent.DataCollectorQueueSize"), H_DataCollectorQueueSize, NULL, DCI_DT_UINT, DCIDESC_AGENT_DATACOLLQUEUESIZE },
    { _T("Agent.FailedRequests"), H_UIntPtr, (TCHAR *)&m_dwFailedRequests, DCI_DT_COUNTER32, DCIDESC_AGENT_FAILEDREQUESTS },
    { _T("Agent.GeneratedTraps"), H_AgentTraps, _T("G"), DCI_DT_COUNTER64, DCIDESC_AGENT_GENERATED_TRAPS },
+   { _T("Agent.Heap.Active"), H_AgentHeapActive, NULL, DCI_DT_UINT64, DCIDESC_AGENT_HEAP_ACTIVE },
+   { _T("Agent.Heap.Allocated"), H_AgentHeapAllocated, NULL, DCI_DT_UINT64, DCIDESC_AGENT_HEAP_ALLOCATED },
+   { _T("Agent.Heap.Mapped"), H_AgentHeapMapped, NULL, DCI_DT_UINT64, DCIDESC_AGENT_HEAP_MAPPED },
    { _T("Agent.ID"), H_AgentID, NULL, DCI_DT_STRING, DCIDESC_AGENT_ID },
    { _T("Agent.IsSubagentLoaded(*)"), H_IsSubagentLoaded, NULL, DCI_DT_INT, DCIDESC_AGENT_IS_SUBAGENT_LOADED },
    { _T("Agent.IsExternalSubagentConnected(*)"), H_IsExtSubagentConnected, NULL, DCI_DT_INT, DCIDESC_AGENT_IS_EXT_SUBAGENT_CONNECTED },
