@@ -63,9 +63,21 @@ void StartWatchdog()
 		szPlatformSuffixOption[0] = 0;
 	}
 
+   const TCHAR *configSection = g_config->getAlias(_T("agent"));
+   TCHAR configSectionOption[256];
+   if ((configSection != NULL) && (*configSection != 0))
+   {
+      _sntprintf(configSectionOption, 256, _T("-G %s "), configSection);
+   }
+   else
+   {
+      configSectionOption[0] = 0;
+   }
+
 #ifdef _WIN32
-   _sntprintf(szCmdLine, 4096, _T("\"%s\" -c \"%s\" %s%s%s%s%s-D %d %s-W %u"), szExecName,
-              g_szConfigFile, (g_dwFlags & AF_DAEMON) ? _T("-d ") : _T(""),
+   _sntprintf(szCmdLine, 4096, _T("\"%s\" -c \"%s\" %s%s%s%s%s%s-D %d %s-W %u"), szExecName,
+              g_szConfigFile, configSectionOption,
+              (g_dwFlags & AF_DAEMON) ? _T("-d ") : _T(""),
               (g_dwFlags & AF_HIDE_WINDOW) ? _T("-H ") : _T(""),
 				  (g_dwFlags & AF_CENTRAL_CONFIG) ? _T("-M ") : _T(""),
 				  (g_dwFlags & AF_CENTRAL_CONFIG) ? g_szConfigServer : _T(""),
@@ -93,8 +105,9 @@ void StartWatchdog()
       nxlog_write(MSG_WATCHDOG_STARTED, EVENTLOG_INFORMATION_TYPE, NULL);
    }
 #else
-   _sntprintf(szCmdLine, 4096, _T("\"%s\" -c \"%s\" %s%s%s%s-D %d %s-W %lu"), szExecName,
-              g_szConfigFile, (g_dwFlags & AF_DAEMON) ? _T("-d ") : _T(""),
+   _sntprintf(szCmdLine, 4096, _T("\"%s\" -c \"%s\" %s%s%s%s%s-D %d %s-W %lu"), szExecName,
+              g_szConfigFile, configSectionOption,
+              (g_dwFlags & AF_DAEMON) ? _T("-d ") : _T(""),
 				  (g_dwFlags & AF_CENTRAL_CONFIG) ? _T("-M ") : _T(""),
 				  (g_dwFlags & AF_CENTRAL_CONFIG) ? g_szConfigServer : _T(""),
 				  (g_dwFlags & AF_CENTRAL_CONFIG) ? _T(" ") : _T(""),
@@ -129,7 +142,7 @@ void StopWatchdog()
 /**
  * Watchdog process main
  */
-int WatchdogMain(DWORD pid)
+int WatchdogMain(DWORD pid, const TCHAR *configSection)
 {
 	TCHAR szPlatformSuffixOption[MAX_PSUFFIX_LENGTH + 16];
 	if (g_szPlatformSuffix[0] != 0)
@@ -140,6 +153,16 @@ int WatchdogMain(DWORD pid)
 	{
 		szPlatformSuffixOption[0] = 0;
 	}
+
+	TCHAR configSectionOption[256];
+   if ((configSection != NULL) && (*configSection != 0))
+   {
+      _sntprintf(configSectionOption, 256, _T("-G %s "), configSection);
+   }
+   else
+   {
+      configSectionOption[0] = 0;
+   }
 
 #if defined(_WIN32)
    if (pid == 0)
@@ -173,8 +196,9 @@ int WatchdogMain(DWORD pid)
 	syslog(LOG_WARNING, "restarting agent");
 	
    TCHAR cmdLine[4096];
-   _sntprintf(cmdLine, 4096, _T("\"") PREFIX _T("/bin/nxagentd\" -c \"%s\" %s%s%s%s-D %d %s"),
-              g_szConfigFile, (g_dwFlags & AF_DAEMON) ? _T("-d ") : _T(""),
+   _sntprintf(cmdLine, 4096, _T("\"") PREFIX _T("/bin/nxagentd\" -c \"%s\" %s%s%s%s%s-D %d %s"),
+              g_szConfigFile, configSectionOption,
+              (g_dwFlags & AF_DAEMON) ? _T("-d ") : _T(""),
 	           (g_dwFlags & AF_CENTRAL_CONFIG) ? _T("-M ") : _T(""),
 				  (g_dwFlags & AF_CENTRAL_CONFIG) ? g_szConfigServer : _T(""),
 				  (g_dwFlags & AF_CENTRAL_CONFIG) ? _T(" ") : _T(""),
