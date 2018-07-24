@@ -23,14 +23,33 @@
 #include "nxcore.h"
 
 /**
+ * Object index element
+ */
+struct INDEX_ELEMENT
+{
+   UINT64 key;
+   void *object;
+};
+
+/**
+ * Index head
+ */
+struct INDEX_HEAD
+{
+   INDEX_ELEMENT *elements;
+   size_t size;
+   size_t allocated;
+   VolatileCounter readers;
+};
+
+/**
  * Constructor for object index
  */
 AbstractIndexBase::AbstractIndexBase(bool owner)
 {
-	m_size = 0;
-	m_allocated = 0;
-	m_elements = NULL;
-	m_lock = RWLockCreate();
+	m_primary = MemAllocStruct<INDEX_HEAD>();
+   m_secondary = MemAllocStruct<INDEX_HEAD>();
+	m_writerLock = MutexCreate();
 	m_owner = owner;
 	m_objectDestructor = free;
 }
@@ -42,11 +61,45 @@ AbstractIndexBase::~AbstractIndexBase()
 {
    if (m_owner)
    {
-      for(int i = 0; i < m_size; i++)
-         destroyObject(m_elements[i].object);
+      for(int i = 0; i < m_primary->size; i++)
+         destroyObject(m_primary->elements[i].object);
    }
-	free(m_elements);
-	RWLockDestroy(m_lock);
+	MemFree(m_primary->elements);
+   MemFree(m_primary);
+   MemFree(m_secondary->elements);
+   MemFree(m_secondary);
+	MutexDestroy(m_writerLock);
+}
+
+/**
+ * Swap indexes and wait for new secondary copy to became writable
+ */
+void AbstractIndexBase::swapAndWait()
+{
+   m_secondary = InterlockedExchangeObjectPointer(&m_primary, m_secondary);
+   do
+   {
+      ThreadSleepMs(10);
+   }
+   while(m_secondary->readers > 0);
+}
+
+/**
+ * Acquire index
+ */
+INDEX_HEAD *AbstractIndexBase::acquireIndex()
+{
+   INDEX_HEAD *h = m_primary;
+   InterlockedIncrement(&m_primary->readers);
+   return h;
+}
+
+/**
+ * Release index
+ */
+inline void ReleaseIndex(INDEX_HEAD *h)
+{
+   InterlockedDecrement(&h->readers);
 }
 
 /**
@@ -68,33 +121,52 @@ static int IndexCompare(const void *pArg1, const void *pArg2)
 bool AbstractIndexBase::put(UINT64 key, void *object)
 {
 	bool replace = false;
+	void *oldObject = NULL;
 
-	RWLockWriteLock(m_lock, INFINITE);
+	MutexLock(m_writerLock);
 
-	int pos = findElement(key);
+	int pos = findElement(m_secondary, key);
 	if (pos != -1)
 	{
 		// Element already exist
-      if (m_owner)
-         destroyObject(m_elements[pos].object);
-		m_elements[pos].object = object;
+      oldObject = m_secondary->elements[pos].object;
+      m_secondary->elements[pos].object = object;
 		replace = true;
 	}
 	else
 	{
-		if (m_size == m_allocated)
+		if (m_secondary->size == m_secondary->allocated)
 		{
-			m_allocated += 256;
-			m_elements = (INDEX_ELEMENT *)realloc(m_elements, sizeof(INDEX_ELEMENT) * m_allocated);
+		   m_secondary->allocated += 256;
+		   m_secondary->elements = MemReallocArray<INDEX_ELEMENT>(m_secondary->elements, m_secondary->allocated);
 		}
 
-		m_elements[m_size].key = key;
-		m_elements[m_size].object = object;
-		m_size++;
-	   qsort(m_elements, m_size, sizeof(INDEX_ELEMENT), IndexCompare);
+		m_secondary->elements[m_secondary->size].key = key;
+		m_secondary->elements[m_secondary->size].object = object;
+		m_secondary->size++;
+	   qsort(m_secondary->elements, m_secondary->size, sizeof(INDEX_ELEMENT), IndexCompare);
 	}
 
-	RWLockUnlock(m_lock);
+	swapAndWait();
+
+	if (replace)
+	{
+      m_secondary->elements[pos].object = object;
+	   if (m_owner)
+	      destroyObject(oldObject);
+	}
+	else
+	{
+	   if (m_primary->allocated > m_secondary->allocated)
+	   {
+	      m_secondary->allocated = m_primary->allocated;
+         m_secondary->elements = MemReallocArray<INDEX_ELEMENT>(m_secondary->elements, m_secondary->allocated);
+	   }
+	   m_secondary->size = m_primary->size;
+	   memcpy(m_secondary->elements, m_primary->elements, m_secondary->size * sizeof(INDEX_ELEMENT));
+	}
+
+	MutexUnlock(m_writerLock);
 	return replace;
 }
 
@@ -105,18 +177,23 @@ bool AbstractIndexBase::put(UINT64 key, void *object)
  */
 void AbstractIndexBase::remove(UINT64 key)
 {
-	RWLockWriteLock(m_lock, INFINITE);
+   MutexLock(m_writerLock);
 
-	int pos = findElement(key);
+	int pos = findElement(m_secondary, key);
 	if (pos != -1)
 	{
-	   if (m_owner)
-	      destroyObject(m_elements[pos].object);
-		m_size--;
-		memmove(&m_elements[pos], &m_elements[pos + 1], sizeof(INDEX_ELEMENT) * (m_size - pos));
+      m_secondary->size--;
+      memmove(&m_secondary->elements[pos], &m_secondary->elements[pos + 1], sizeof(INDEX_ELEMENT) * (m_secondary->size - pos));
 	}
 
-	RWLockUnlock(m_lock);
+	swapAndWait();
+
+   if (m_owner)
+      destroyObject(m_secondary->elements[pos].object);
+   m_secondary->size--;
+   memmove(&m_secondary->elements[pos], &m_secondary->elements[pos + 1], sizeof(INDEX_ELEMENT) * (m_secondary->size - pos));
+
+   MutexUnlock(m_writerLock);
 }
 
 /**
@@ -124,17 +201,25 @@ void AbstractIndexBase::remove(UINT64 key)
  */
 void AbstractIndexBase::clear()
 {
-   RWLockWriteLock(m_lock, INFINITE);
+   MutexLock(m_writerLock);
+
+   m_secondary->size = 0;
+   m_secondary->allocated = 0;
+   MemFreeAndNull(m_secondary->elements);
+
+   swapAndWait();
 
    if (m_owner)
    {
-      for(int i = 0; i < m_size; i++)
-         destroyObject(m_elements[i].object);
+      for(int i = 0; i < m_secondary->size; i++)
+         destroyObject(m_secondary->elements[i].object);
    }
 
-   m_size = 0;
+   m_secondary->size = 0;
+   m_secondary->allocated = 0;
+   MemFreeAndNull(m_secondary->elements);
 
-   RWLockUnlock(m_lock);
+   MutexUnlock(m_writerLock);
 }
 
 /**
@@ -143,31 +228,31 @@ void AbstractIndexBase::clear()
  * @param key object's key
  * @return element index or -1 if not found
  */
-int AbstractIndexBase::findElement(UINT64 key)
+int AbstractIndexBase::findElement(INDEX_HEAD *index, UINT64 key)
 {
    int first, last, mid;
 
-	if (m_size == 0)
+	if (index->size == 0)
       return -1;
 
    first = 0;
-   last = m_size - 1;
+   last = index->size - 1;
 
-   if ((key < m_elements[0].key) || (key > m_elements[last].key))
+   if ((key < index->elements[0].key) || (key > index->elements[last].key))
       return -1;
 
    while(first < last)
    {
       mid = (first + last) / 2;
-      if (key == m_elements[mid].key)
+      if (key == index->elements[mid].key)
          return mid;
-      if (key < m_elements[mid].key)
+      if (key < index->elements[mid].key)
          last = mid - 1;
       else
          first = mid + 1;
    }
 
-   if (key == m_elements[last].key)
+   if (key == index->elements[last].key)
       return last;
 
    return -1;
@@ -181,10 +266,10 @@ int AbstractIndexBase::findElement(UINT64 key)
  */
 void *AbstractIndexBase::get(UINT64 key)
 {
-	RWLockReadLock(m_lock, INFINITE);
-	int pos = findElement(key);
-	void *object = (pos == -1) ? NULL : m_elements[pos].object;
-	RWLockUnlock(m_lock);
+   INDEX_HEAD *index = acquireIndex();
+	int pos = findElement(index, key);
+	void *object = (pos == -1) ? NULL : index->elements[pos].object;
+   ReleaseIndex(index);
 	return object;
 }
 
@@ -193,9 +278,9 @@ void *AbstractIndexBase::get(UINT64 key)
  */
 int AbstractIndexBase::size()
 {
-	RWLockReadLock(m_lock, INFINITE);
-	int s = m_size;
-	RWLockUnlock(m_lock);
+   INDEX_HEAD *index = acquireIndex();
+	int s = index->size;
+   ReleaseIndex(index);
 	return s;
 }
 
@@ -209,14 +294,14 @@ void *AbstractIndexBase::find(bool (*comparator)(void *, void *), void *data)
 {
 	void *result = NULL;
 
-	RWLockReadLock(m_lock, INFINITE);
-	for(int i = 0; i < m_size; i++)
-		if (comparator(m_elements[i].object, data))
+   INDEX_HEAD *index = acquireIndex();
+	for(int i = 0; i < index->size; i++)
+		if (comparator(index->elements[i].object, data))
 		{
-			result = m_elements[i].object;
+			result = index->elements[i].object;
 			break;
 		}
-	RWLockUnlock(m_lock);
+   ReleaseIndex(index);
 
 	return result;
 }
@@ -229,13 +314,13 @@ void *AbstractIndexBase::find(bool (*comparator)(void *, void *), void *data)
  */
 void AbstractIndexBase::findObjects(Array *resultSet, bool (*comparator)(void *, void *), void *data)
 {
-   RWLockReadLock(m_lock, INFINITE);
-   for(int i = 0; i < m_size; i++)
+   INDEX_HEAD *index = acquireIndex();
+   for(int i = 0; i < index->size; i++)
    {
-      if (comparator(m_elements[i].object, data))
-         resultSet->add(m_elements[i].object);
+      if (comparator(index->elements[i].object, data))
+         resultSet->add(index->elements[i].object);
    }
-   RWLockUnlock(m_lock);
+   ReleaseIndex(index);
 }
 
 /**
@@ -246,10 +331,10 @@ void AbstractIndexBase::findObjects(Array *resultSet, bool (*comparator)(void *,
  */
 void AbstractIndexBase::forEach(void (*callback)(void *, void *), void *data)
 {
-	RWLockReadLock(m_lock, INFINITE);
-	for(int i = 0; i < m_size; i++)
-		callback(m_elements[i].object, data);
-	RWLockUnlock(m_lock);
+   INDEX_HEAD *index = acquireIndex();
+	for(int i = 0; i < index->size; i++)
+		callback(index->elements[i].object, data);
+   ReleaseIndex(index);
 }
 
 /**
@@ -261,17 +346,17 @@ void AbstractIndexBase::forEach(void (*callback)(void *, void *), void *data)
  */
 ObjectArray<NetObj> *ObjectIndex::getObjects(bool updateRefCount, bool (*filter)(NetObj *, void *), void *userData)
 {
-   RWLockReadLock(m_lock, INFINITE);
-   ObjectArray<NetObj> *result = new ObjectArray<NetObj>(m_size);
-   for(int i = 0; i < m_size; i++)
+   INDEX_HEAD *index = acquireIndex();
+   ObjectArray<NetObj> *result = new ObjectArray<NetObj>(index->size);
+   for(int i = 0; i < index->size; i++)
    {
-      if ((filter == NULL) || filter(static_cast<NetObj*>(m_elements[i].object), userData))
+      if ((filter == NULL) || filter(static_cast<NetObj*>(index->elements[i].object), userData))
       {
          if (updateRefCount)
-            static_cast<NetObj*>(m_elements[i].object)->incRefCount();
-         result->add(static_cast<NetObj*>(m_elements[i].object));
+            static_cast<NetObj*>(index->elements[i].object)->incRefCount();
+         result->add(static_cast<NetObj*>(index->elements[i].object));
       }
    }
-   RWLockUnlock(m_lock);
+   ReleaseIndex(index);
    return result;
 }
