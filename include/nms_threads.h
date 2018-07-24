@@ -576,9 +576,9 @@ inline UINT32 GetCurrentProcessId()
    return getpid();
 }
 
-inline THREAD GetCurrentThreadId()
+inline UINT32 GetCurrentThreadId()
 {
-   return pth_self();
+   return (UINT32)pth_self();
 }
 
 #else    /* not _WIN32 && not _USE_GNU_PTH */
@@ -590,6 +590,10 @@ inline THREAD GetCurrentThreadId()
 #include <pthread.h>
 #include <errno.h>
 #include <sys/time.h>
+
+#if HAVE_SYS_SYSCALL_H
+#include <sys/syscall.h>
+#endif
 
 #if HAVE_PTHREAD_NP_H && !defined(_IPSO)
 #include <pthread_np.h>
@@ -980,14 +984,26 @@ inline bool ConditionWait(CONDITION cond, UINT32 dwTimeOut)
 	return ret;
 }
 
+/**
+ * Get ID of current process
+ */
 inline UINT32 GetCurrentProcessId()
 {
    return getpid();
 }
 
-inline THREAD GetCurrentThreadId()
+/**
+ *  Get ID of current thread
+ */
+inline UINT32 GetCurrentThreadId()
 {
-   return pthread_self();
+#if HAVE_GETTID_SYSCALL
+   return (UINT32)syscall(SYS_gettid);
+#elif HAVE_PTHREAD_GETTHREADID_NP
+   return (UINT32)pthread_getthreadid_np();
+#else
+   return (UINT32)pthread_self();
+#endif
 }
 
 #endif   /* _WIN32 */

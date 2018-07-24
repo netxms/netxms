@@ -26,15 +26,14 @@
 
 #if !HAVE_PTHREAD_RWLOCK && !defined(_USE_GNU_PTH)
 
-//
-// Create read/write lock
-//
-
+/**
+ * Create read/write lock
+ */
 RWLOCK LIBNETXMS_EXPORTABLE RWLockCreate(void)
 {
    RWLOCK hLock;
 
-   hLock = (RWLOCK)malloc(sizeof(struct __rwlock_data));
+   hLock = (RWLOCK)MemAlloc(sizeof(struct __rwlock_data));
    if (hLock != NULL)
    {
 #ifdef _WIN32
@@ -49,16 +48,15 @@ RWLOCK LIBNETXMS_EXPORTABLE RWLockCreate(void)
       hLock->m_dwWaitReaders = 0;
       hLock->m_dwWaitWriters = 0;
       hLock->m_iRefCount = 0;
+      hLock->m_writerThreadId = 0;
    }
 
    return hLock;
 }
 
-
-//
-// Destroy read/write lock
-//
-
+/**
+ * Destroy read/write lock
+ */
 void LIBNETXMS_EXPORTABLE RWLockDestroy(RWLOCK hLock)
 {
    if (hLock != NULL)
@@ -74,7 +72,7 @@ void LIBNETXMS_EXPORTABLE RWLockDestroy(RWLOCK hLock)
          pthread_cond_destroy(&hLock->m_condRead);
          pthread_cond_destroy(&hLock->m_condWrite);
 #endif
-         free(hLock);
+         MemFree(hLock);
       }
    }
 }
@@ -183,11 +181,9 @@ BOOL LIBNETXMS_EXPORTABLE RWLockReadLock(RWLOCK hLock, UINT32 dwTimeOut)
    return bResult;
 }
 
-
-//
-// Lock read/write lock for writing
-//
-
+/**
+ * Lock read/write lock for writing
+ */
 BOOL LIBNETXMS_EXPORTABLE RWLockWriteLock(RWLOCK hLock, UINT32 dwTimeOut)
 {
    BOOL bResult = FALSE;
@@ -234,6 +230,9 @@ BOOL LIBNETXMS_EXPORTABLE RWLockWriteLock(RWLOCK hLock, UINT32 dwTimeOut)
          bResult = TRUE;
       }
    } while((!bResult) && (!bTimeOut));
+
+   if (bResult)
+      hLock->m_writerThreadId = GetCurentTharedId();
 
    ReleaseMutex(hLock->m_mutex);
 #else
@@ -282,17 +281,18 @@ BOOL LIBNETXMS_EXPORTABLE RWLockWriteLock(RWLOCK hLock, UINT32 dwTimeOut)
       bResult = TRUE;
    }
 
+   if (bResult)
+      hLock->m_writerThreadId = GetCurentTharedId();
+
    pthread_mutex_unlock(&hLock->m_mutex);
 #endif
 
    return bResult;
 }
 
-
-//
-// Unlock read/write lock
-//
-
+/**
+ * Unlock read/write lock
+ */
 void LIBNETXMS_EXPORTABLE RWLockUnlock(RWLOCK hLock)
 {
    // Check if handle is valid
@@ -309,9 +309,14 @@ void LIBNETXMS_EXPORTABLE RWLockUnlock(RWLOCK hLock)
 
    // Remove lock
    if (hLock->m_iRefCount > 0)
+   {
       hLock->m_iRefCount--;
+   }
    else if (hLock->m_iRefCount == -1)
+   {
       hLock->m_iRefCount = 0;
+      hLock->m_writerThreadId = 0;
+   }
 
    // Notify waiting threads
    if (hLock->m_dwWaitWriters > 0)
