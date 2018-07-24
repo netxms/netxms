@@ -243,13 +243,9 @@ struct TEMPLATE_UPDATE_INFO
 };
 
 /**
- * Object index element
+ * Index head
  */
-struct INDEX_ELEMENT
-{
-   UINT64 key;
-   void *object;
-};
+struct INDEX_HEAD;
 
 /**
  * Generic index implementation
@@ -259,10 +255,9 @@ class NXCORE_EXPORTABLE AbstractIndexBase
    DISABLE_COPY_CTOR(AbstractIndexBase)
 
 protected:
-	int m_size;
-	int m_allocated;
-	INDEX_ELEMENT *m_elements;
-	RWLOCK m_lock;
+	INDEX_HEAD* volatile m_primary;
+	INDEX_HEAD* volatile m_secondary;
+	MUTEX m_writerLock;
 	bool m_owner;
    void (*m_objectDestructor)(void *);
 
@@ -272,7 +267,10 @@ protected:
          m_objectDestructor(object);
    }
 
-	int findElement(UINT64 key);
+   INDEX_HEAD *acquireIndex();
+   void swapAndWait();
+
+	static int findElement(INDEX_HEAD *index, UINT64 key);
    void findObjects(Array *resultSet, bool (*comparator)(void *, void *), void *data);
 
 public:
@@ -289,7 +287,7 @@ public:
 
 	void forEach(void (*callback)(void *, void *), void *data);
 
-   bool isOwner()
+   bool isOwner() const
    {
       return m_owner;
    }
