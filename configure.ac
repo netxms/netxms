@@ -1853,7 +1853,7 @@ else
 	AC_CHECK_HEADERS([pthread_np.h],,,[
 #include <pthread.h>
 	])
-	AC_CHECK_FUNCS([pthread_cond_reltimedwait_np pthread_setname_np])
+	AC_CHECK_FUNCS([pthread_cond_reltimedwait_np pthread_setname_np pthread_getthreadid_np])
 
 	# Check if pthread_setname_np accepts two arguments
 	if test "$ac_cv_func_pthread_setname_np" = "yes"; then
@@ -1975,7 +1975,7 @@ AC_CHECK_HEADERS([fcntl.h dirent.h sys/ioctl.h sys/sockio.h poll.h termios.h])
 AC_CHECK_HEADERS([inttypes.h memory.h stdint.h stdlib.h strings.h string.h])
 AC_CHECK_HEADERS([readline/readline.h byteswap.h sys/select.h dlfcn.h locale.h])
 AC_CHECK_HEADERS([sys/sysctl.h sys/param.h sys/user.h vm/vm_param.h syslog.h])
-AC_CHECK_HEADERS([grp.h pwd.h malloc.h stdbool.h utime.h endian.h])
+AC_CHECK_HEADERS([grp.h pwd.h malloc.h stdbool.h utime.h endian.h sys/syscall.h])
 AC_CHECK_HEADERS([net/if.h net/if_arp.h net/if_dl.h net/if_types.h],,,
 [[#ifdef HAVE_SYS_TYPES_H
 # include <sys/types.h>
@@ -2651,6 +2651,27 @@ if test "x$PLATFORM" = "xLinux"; then
 #include <sys/reboot.h>
 #endif
 	])
+
+	AC_MSG_CHECKING(for gettid syscall)
+	AC_LANG_PUSH([C++])
+	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ 
+#if HAVE_UNISTD_H
+#include <unistd.h>
+#endif
+#if HAVE_SYS_SYSCALL_H
+#include <sys/syscall.h>
+#endif
+			]], [[ 
+syscall(SYS_gettid);
+			]])],
+		[ 
+			AC_DEFINE([HAVE_GETTID_SYSCALL],[1],[Define to 1 if gettid syscall is available])
+			AC_MSG_RESULT(yes) 
+		], 
+		[ 
+			AC_MSG_RESULT(no)
+		])
+	AC_LANG_POP([C++])
 fi
 
 

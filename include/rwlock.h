@@ -32,10 +32,10 @@ inline RWLOCK RWLockCreate(void)
 {
    RWLOCK hLock;
 
-   hLock = (RWLOCK)malloc(sizeof(pthread_rwlock_t));
+   hLock = (RWLOCK)MemAlloc(sizeof(pthread_rwlock_t));
    if (pthread_rwlock_init(hLock, NULL) != 0)
    {
-      free(hLock);
+      MemFree(hLock);
       hLock = NULL;
    }
    return hLock;
@@ -46,7 +46,7 @@ inline void RWLockDestroy(RWLOCK hLock)
    if (hLock != NULL)
    {
       pthread_rwlock_destroy(hLock);
-      free(hLock);
+      MemFree(hLock);
    }
 }
 
@@ -152,10 +152,10 @@ inline RWLOCK RWLockCreate(void)
 {
    RWLOCK hLock;
 
-   hLock = (RWLOCK)malloc(sizeof(pth_rwlock_t));
+   hLock = (RWLOCK)MemAlloc(sizeof(pth_rwlock_t));
    if (!pth_rwlock_init(hLock))
    {
-      free(hLock);
+      MemFree(hLock);
       hLock = NULL;
    }
    return hLock;
@@ -165,7 +165,7 @@ inline void RWLockDestroy(RWLOCK hLock)
 {
    if (hLock != NULL)
    {
-      free(hLock);
+      MemFree(hLock);
    }
 }
 
@@ -247,6 +247,7 @@ struct __rwlock_data
    UINT32 m_dwWaitReaders;
    UINT32 m_dwWaitWriters;
    int m_iRefCount;  // -1 for write lock, otherwise number of read locks
+   UINT32 m_writerThreadId;
 };
 
 typedef struct __rwlock_data * RWLOCK;
