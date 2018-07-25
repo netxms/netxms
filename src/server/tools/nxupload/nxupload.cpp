@@ -29,6 +29,8 @@
 #include <netdb.h>
 #endif
 
+NETXMS_EXECUTABLE_HEADER(nxupload)
+
 /**
  * Do agent upgrade
  */

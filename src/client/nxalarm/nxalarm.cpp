@@ -23,6 +23,8 @@
 
 #include "nxalarm.h"
 
+NETXMS_EXECUTABLE_HEADER(nxalarm)
+
 /**
  * Alarm list output format
  */

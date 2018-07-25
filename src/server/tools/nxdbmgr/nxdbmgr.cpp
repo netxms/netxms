@@ -27,6 +27,8 @@
 #include <conio.h>
 #endif
 
+NETXMS_EXECUTABLE_HEADER(nxdbmgr)
+
 /**
  * Global variables
  */

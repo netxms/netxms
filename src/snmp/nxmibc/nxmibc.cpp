@@ -29,6 +29,8 @@
 #include <nxstat.h>
 #endif
 
+NETXMS_EXECUTABLE_HEADER(nxmibc)
+
 /**
  * Severity codes
  */

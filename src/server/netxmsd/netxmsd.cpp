@@ -39,6 +39,8 @@
 #include <Python.h>
 #endif
 
+NETXMS_EXECUTABLE_HEADER(netxmsd)
+
 /**
  * Global data
  */

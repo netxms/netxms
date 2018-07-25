@@ -3,6 +3,8 @@
 #include <nxcc.h>
 #include <testtools.h>
 
+NETXMS_EXECUTABLE_HEADER(test-libnxcc)
+
 static MUTEX cbLock = MutexCreate();
 static UINT32 s_nodeId;
 

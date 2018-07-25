@@ -24,6 +24,8 @@
 #include <nms_core.h>
 #include <nxmodule.h>
 
+NETXMS_EXECUTABLE_HEADER(nxminfo)
+
 /**
  * Module metadata version 1
  */

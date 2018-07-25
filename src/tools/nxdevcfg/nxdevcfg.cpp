@@ -27,6 +27,8 @@
 #include <getopt.h>
 #endif
 
+NETXMS_EXECUTABLE_HEADER(nxdevcfg)
+
 #define VALID_OPTIONS "bcCdDilLoOpPStTuUX"
 
 /**

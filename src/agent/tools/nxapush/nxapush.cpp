@@ -29,6 +29,8 @@
 #include <getopt.h>
 #endif
 
+NETXMS_EXECUTABLE_HEADER(nxapush)
+
 /**
  * Pipe handle
  */

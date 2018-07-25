@@ -3,6 +3,8 @@
 #include <nxsnmp.h>
 #include <testtools.h>
 
+NETXMS_EXECUTABLE_HEADER(test-libnxsnmp)
+
 static UINT32 s_sysDescription[] = { 1, 3, 6, 1, 2, 1, 1, 1, 0 };
 static SNMP_ObjectId s_oidSysDescription(s_sysDescription, sizeof(s_sysDescription) / sizeof(UINT32));
 static UINT32 s_unsignedTest[] = { 1, 3, 6, 1, 2, 1, 1, 2164260864, 0 };

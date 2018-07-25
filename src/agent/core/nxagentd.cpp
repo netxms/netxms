@@ -54,6 +54,8 @@
 #include <pwd.h>
 #endif
 
+NETXMS_EXECUTABLE_HEADER(nxagentd)
+
 /**
  * Externals
  */

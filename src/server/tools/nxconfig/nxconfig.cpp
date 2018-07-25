@@ -25,6 +25,8 @@
 #include <iprtrmib.h>
 #include <rtinfo.h>
 
+NETXMS_EXECUTABLE_HEADER(nxconfig)
+
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #undef THIS_FILE

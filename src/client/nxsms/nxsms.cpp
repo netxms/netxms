@@ -23,6 +23,8 @@
 
 #include "nxsms.h"
 
+NETXMS_EXECUTABLE_HEADER(nxsms)
+
 /**
  * Callback function for debug printing
  */

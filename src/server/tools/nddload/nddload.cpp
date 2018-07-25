@@ -25,6 +25,8 @@
 #include <nxsrvapi.h>
 #include <nddrv.h>
 
+NETXMS_EXECUTABLE_HEADER(nddload)
+
 /**
  * Driver data
  */

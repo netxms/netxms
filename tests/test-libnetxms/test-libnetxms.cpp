@@ -5,6 +5,8 @@
 #include <nxproc.h>
 #include <testtools.h>
 
+NETXMS_EXECUTABLE_HEADER(test-libnetxms)
+
 void TestMsgWaitQueue();
 void TestMessageClass();
 void TestMutexWrapper();

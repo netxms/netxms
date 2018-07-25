@@ -23,6 +23,8 @@
 
 #include "nxevent.h"
 
+NETXMS_EXECUTABLE_HEADER(nxevent)
+
 /**
  * Static data
  */
