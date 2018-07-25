@@ -232,7 +232,7 @@ BOOL LIBNETXMS_EXPORTABLE RWLockWriteLock(RWLOCK hLock, UINT32 dwTimeOut)
    } while((!bResult) && (!bTimeOut));
 
    if (bResult)
-      hLock->m_writerThreadId = GetCurentTharedId();
+      hLock->m_writerThreadId = GetCurrentThreadId();
 
    ReleaseMutex(hLock->m_mutex);
 #else
