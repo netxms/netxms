@@ -1024,6 +1024,8 @@ public class NXCPCodes
    public static final long VID_VLAN_LIST = 622;
    public static final long VID_TASK_KEY = 623;
    public static final long VID_TIMER_COUNT = 624;
+   public static final long VID_AUTOBIND_FLAG = 625;
+   public static final long VID_AUTOUNBIND_FLAG = 626;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;

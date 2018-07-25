@@ -41,35 +41,20 @@ bool PolicyGroup::showThresholdSummary()
 /**
  * Agent policy default constructor
  */
-AgentPolicy::AgentPolicy(int type) : NetObj()
+AgentPolicy::AgentPolicy(int type) : NetObj(), AutoBindTarget(this), VersionableObject(this)
 {
-	m_version = 0x00010000;
 	m_policyType = type;
-   m_deployFilter = NULL;
-   m_deployFilterSource = NULL;
    m_status = STATUS_NORMAL;
 }
 
 /**
  * Constructor for user-initiated object creation
  */
-AgentPolicy::AgentPolicy(const TCHAR *name, int type) : NetObj()
+AgentPolicy::AgentPolicy(const TCHAR *name, int type) : NetObj(), AutoBindTarget(this), VersionableObject(this)
 {
 	nx_strncpy(m_name, name, MAX_OBJECT_NAME);
-	m_version = 0x00010000;
 	m_policyType = type;
-   m_deployFilter = NULL;
-   m_deployFilterSource = NULL;
    m_status = STATUS_NORMAL;
-}
-
-/**
- * Destrutor
- */
-AgentPolicy::~AgentPolicy()
-{
-   free(m_deployFilterSource);
-   delete m_deployFilter;
 }
 
 /**
@@ -88,20 +73,22 @@ bool AgentPolicy::savePolicyCommonProperties(DB_HANDLE hdb)
 	if (!saveCommonProperties(hdb))
       return false;
 
-   DB_STATEMENT hStmt;
-   if (!IsDatabaseRecordExist(hdb, _T("ap_common"), _T("id"), m_id))
-      hStmt = DBPrepare(hdb, _T("INSERT INTO ap_common (policy_type,version,deploy_filter,id) VALUES (?,?,?,?)"));
-   else
-      hStmt = DBPrepare(hdb, _T("UPDATE ap_common SET policy_type=?,version=?,deploy_filter=? WHERE id=?"));
-   if (hStmt == NULL)
-      return false;
+	bool success = false;
+   if (!IsDatabaseRecordExist(hdb, _T("ap_common"), _T("id"), m_id)) //Policy can be only created. Policy type can't be changed.
+   {
+      DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO ap_common (policy_type,id) VALUES (?,?)"));
+      if (hStmt == NULL)
+         return false;
 
-   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_policyType);
-   DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_version);
-   DBBind(hStmt, 3, DB_SQLTYPE_TEXT, m_deployFilterSource, DB_BIND_STATIC);
-   DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, m_id);
-   bool success = DBExecute(hStmt);
-   DBFreeStatement(hStmt);
+      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_policyType);
+      DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_id);
+      success = DBExecute(hStmt);
+      DBFreeStatement(hStmt);
+   }
+   else
+   {
+      success = true;
+   }
 
    // Save access list
    if (success)
@@ -111,10 +98,11 @@ bool AgentPolicy::savePolicyCommonProperties(DB_HANDLE hdb)
    if (success)
       success = executeQueryOnObject(hdb, _T("DELETE FROM ap_bindings WHERE policy_id=?"));
 
+
    lockChildList(false);
    if (success && (m_childList->size() > 0))
    {
-      hStmt = DBPrepare(hdb, _T("INSERT INTO ap_bindings (policy_id,node_id) VALUES (?,?)"), m_childList->size() > 1);
+      DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO ap_bindings (policy_id,node_id) VALUES (?,?)"), m_childList->size() > 1);
       if (hStmt != NULL)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -131,6 +119,12 @@ bool AgentPolicy::savePolicyCommonProperties(DB_HANDLE hdb)
       }
    }
    unlockChildList();
+
+   if (success)
+      success = AutoBindTarget::saveToDatabase(hdb);
+   if (success)
+      success = VersionableObject::saveToDatabase(hdb);
+
 	return success;
 }
 
@@ -140,14 +134,11 @@ bool AgentPolicy::savePolicyCommonProperties(DB_HANDLE hdb)
 bool AgentPolicy::saveToDatabase(DB_HANDLE hdb)
 {
 	lockProperties();
-
-	bool success = savePolicyCommonProperties(hdb);
-
+   bool success = savePolicyCommonProperties(hdb);
 	// Clear modifications flag and unlock object
 	if (success)
 		m_modified = 0;
    unlockProperties();
-
    return success;
 }
 
@@ -158,24 +149,26 @@ bool AgentPolicy::deleteFromDatabase(DB_HANDLE hdb)
 {
    bool success = NetObj::deleteFromDatabase(hdb);
    if (success)
-   {
       success = executeQueryOnObject(hdb, _T("DELETE FROM ap_common WHERE id=?"));
-      if (success)
-         success = executeQueryOnObject(hdb, _T("DELETE FROM ap_bindings WHERE policy_id=?"));
-   }
+   if (success)
+      success = executeQueryOnObject(hdb, _T("DELETE FROM ap_bindings WHERE policy_id=?"));
+   if(success)
+      success = AutoBindTarget::deleteFromDatabase(hdb);
+   if(success)
+      success = VersionableObject::deleteFromDatabase(hdb);
    return success;
 }
 
 /**
  * Load from database
  */
-bool AgentPolicy::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
+bool AgentPolicy::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
 {
-	m_id = dwId;
+	m_id = id;
 
 	if (!loadCommonProperties(hdb))
    {
-      DbgPrintf(2, _T("Cannot load common properties for agent policy object %d"), dwId);
+      DbgPrintf(2, _T("Cannot load common properties for agent policy object %d"), id);
       return false;
    }
 
@@ -184,58 +177,47 @@ bool AgentPolicy::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 
    TCHAR query[256];
 
-   loadACLFromDB(hdb);
-
-   _sntprintf(query, 256, _T("SELECT version,deploy_filter FROM ap_common WHERE id=%d"), dwId);
-   DB_RESULT hResult = DBSelect(hdb, query);
-   if (hResult == NULL)
-      return false;
-
-   m_version = DBGetFieldULong(hResult, 0, 0);
-   m_deployFilterSource = DBGetField(hResult, 0, 1, NULL, 0);
-   if ((m_deployFilterSource != NULL) && (*m_deployFilterSource != 0))
-   {
-      TCHAR error[256];
-      m_deployFilter = NXSLCompile(m_deployFilterSource, error, 256, NULL);
-      if (m_deployFilter == NULL)
-      {
-         TCHAR buffer[1024];
-         _sntprintf(buffer, 1024, _T("AgentPolicy::%s::%d"), m_name, m_id);
-         PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, error, m_id);
-         nxlog_write(MSG_POLICY_SCRIPT_COMPILATION_ERROR, EVENTLOG_WARNING_TYPE, "dss", m_id, m_name, error);
-      }
-   }
-   DBFreeResult(hResult);
+   bool success = loadACLFromDB(hdb);
 
    // Load related nodes list
-   _sntprintf(query, 256, _T("SELECT node_id FROM ap_bindings WHERE policy_id=%d"), m_id);
-   hResult = DBSelect(hdb, query);
-   if (hResult != NULL)
+   if(success)
    {
-      int numNodes = DBGetNumRows(hResult);
-      for(int i = 0; i < numNodes; i++)
+      _sntprintf(query, 256, _T("SELECT node_id FROM ap_bindings WHERE policy_id=%d"), m_id);
+      DB_RESULT hResult = DBSelect(hdb, query);
+      if (hResult != NULL)
       {
-         UINT32 nodeId = DBGetFieldULong(hResult, i, 0);
-         NetObj *object = FindObjectById(nodeId);
-         if (object != NULL)
+         int numNodes = DBGetNumRows(hResult);
+         for(int i = 0; i < numNodes; i++)
          {
-            if (object->getObjectClass() == OBJECT_NODE)
+            UINT32 nodeId = DBGetFieldULong(hResult, i, 0);
+            NetObj *object = FindObjectById(nodeId);
+            if (object != NULL)
             {
-               addChild(object);
-               object->addParent(this);
+               if (object->getObjectClass() == OBJECT_NODE)
+               {
+                  addChild(object);
+                  object->addParent(this);
+               }
+               else
+               {
+                  nxlog_write(MSG_AP_BINDING_NOT_NODE, EVENTLOG_ERROR_TYPE, "dd", m_id, nodeId);
+               }
             }
             else
             {
-               nxlog_write(MSG_AP_BINDING_NOT_NODE, EVENTLOG_ERROR_TYPE, "dd", m_id, nodeId);
+               nxlog_write(MSG_INVALID_AP_BINDING, EVENTLOG_ERROR_TYPE, "dd", m_id, nodeId);
             }
          }
-         else
-         {
-            nxlog_write(MSG_INVALID_AP_BINDING, EVENTLOG_ERROR_TYPE, "dd", m_id, nodeId);
-         }
+         DBFreeResult(hResult);
       }
-      DBFreeResult(hResult);
+      else
+         success = false;
    }
+
+   if(success)
+      success = AutoBindTarget::loadFromDatabase(hdb, id);
+   if(success)
+      success = VersionableObject::loadFromDatabase(hdb, id);
 	return true;
 }
 
@@ -245,9 +227,8 @@ bool AgentPolicy::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 void AgentPolicy::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
 {
 	NetObj::fillMessageInternal(msg, userId);
-	msg->setField(VID_POLICY_TYPE, (WORD)m_policyType);
-	msg->setField(VID_VERSION, m_version);
-   msg->setField(VID_AUTOBIND_FILTER, CHECK_NULL_EX(m_deployFilterSource));
+   AutoBindTarget::fillMessageInternal(msg, userId);
+   VersionableObject::fillMessageInternal(msg, userId);
 }
 
 /**
@@ -255,34 +236,8 @@ void AgentPolicy::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
  */
 UINT32 AgentPolicy::modifyFromMessageInternal(NXCPMessage *request)
 {
-   // Change flags
-   if (request->isFieldExist(VID_FLAGS))
-      m_flags = request->getFieldAsUInt32(VID_FLAGS);
-
-   // Change apply filter
-   if (request->isFieldExist(VID_AUTOBIND_FILTER))
-   {
-      free(m_deployFilterSource);
-      delete m_deployFilter;
-      m_deployFilterSource = request->getFieldAsString(VID_AUTOBIND_FILTER);
-      if ((m_deployFilterSource != NULL) && (*m_deployFilterSource != 0))
-      {
-         TCHAR error[256];
-         m_deployFilter = NXSLCompile(m_deployFilterSource, error, 256, NULL);
-         if (m_deployFilter == NULL)
-         {
-            TCHAR buffer[1024];
-            _sntprintf(buffer, 1024, _T("AgentPolicy::%s::%d"), m_name, m_id);
-            PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, error, m_id);
-            nxlog_write(MSG_POLICY_SCRIPT_COMPILATION_ERROR, EVENTLOG_WARNING_TYPE, "dss", m_id, m_name, error);
-         }
-      }
-      else
-      {
-         m_deployFilter = NULL;
-      }
-   }
-
+   updateVersion();
+   AutoBindTarget::modifyFromMessageInternal(request);
    return NetObj::modifyFromMessageInternal(request);
 }
 
@@ -312,54 +267,8 @@ bool AgentPolicy::createUninstallMessage(NXCPMessage *msg)
 json_t *AgentPolicy::toJson()
 {
    json_t *root = NetObj::toJson();
-   json_object_set_new(root, "version", json_integer(m_version));
    json_object_set_new(root, "policyType", json_integer(m_policyType));
-   json_object_set_new(root, "deployFilter", json_string_t(m_deployFilterSource));
+   AutoBindTarget::toJson(root);
+   VersionableObject::toJson(root);
    return root;
-}
-
-/**
- * Check if policy should be automatically deployed to given node
- * Returns AutoBindDecision_Bind if applicable, AutoBindDecision_Unbind if not,
- * AutoBindDecision_Ignore if no change required (script error or no auto deploy)
- */
-AutoBindDecision AgentPolicy::isApplicable(Node *node)
-{
-   AutoBindDecision result = AutoBindDecision_Ignore;
-
-   NXSL_VM *filter = NULL;
-   lockProperties();
-   if ((m_flags & PF_AUTO_DEPLOY) && (m_deployFilter != NULL))
-   {
-      filter = CreateServerScriptVM(m_deployFilter, node);
-      if (filter == NULL)
-      {
-         TCHAR buffer[1024];
-         _sntprintf(buffer, 1024, _T("AgentPolicy::%s::%d"), m_name, m_id);
-         PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, _T("Script load error"), m_id);
-         nxlog_write(MSG_POLICY_SCRIPT_EXECUTION_ERROR, EVENTLOG_WARNING_TYPE, "dss", m_id, m_name, _T("Script load error"));
-      }
-   }
-   unlockProperties();
-
-   if (filter == NULL)
-      return result;
-
-   if (filter->run())
-   {
-      NXSL_Value *value = filter->getResult();
-      if (!value->isNull())
-         result = ((value != NULL) && (value->getValueAsInt32() != 0)) ? AutoBindDecision_Bind : AutoBindDecision_Unbind;
-   }
-   else
-   {
-      lockProperties();
-      TCHAR buffer[1024];
-      _sntprintf(buffer, 1024, _T("AgentPolicy::%s::%d"), m_name, m_id);
-      PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, filter->getErrorText(), m_id);
-      nxlog_write(MSG_POLICY_SCRIPT_EXECUTION_ERROR, EVENTLOG_WARNING_TYPE, "dss", m_id, m_name, filter->getErrorText());
-      unlockProperties();
-   }
-   delete filter;
-   return result;
 }

@@ -146,7 +146,7 @@ DCTable::DCTable(const DCTable *src, bool shadowCopy) : DCObject(src, shadowCopy
  * Constructor for creating new DCTable from scratch
  */
 DCTable::DCTable(UINT32 id, const TCHAR *name, int source, int pollingInterval, int retentionTime,
-	              Template *node, const TCHAR *description, const TCHAR *systemTag)
+                 DataCollectionOwner *node, const TCHAR *description, const TCHAR *systemTag)
         : DCObject(id, name, source, pollingInterval, retentionTime, node, description, systemTag)
 {
 	m_columns = new ObjectArray<DCTableColumn>(8, 8, true);
@@ -163,7 +163,7 @@ DCTable::DCTable(UINT32 id, const TCHAR *name, int source, int pollingInterval, 
  *    transformation_script,comments,guid,instd_method,instd_data,
  *    instd_filter,instance
  */
-DCTable::DCTable(DB_HANDLE hdb, DB_RESULT hResult, int iRow, Template *pNode) : DCObject()
+DCTable::DCTable(DB_HANDLE hdb, DB_RESULT hResult, int iRow, DataCollectionOwner *pNode) : DCObject()
 {
    m_id = DBGetFieldULong(hResult, iRow, 0);
    m_dwTemplateId = DBGetFieldULong(hResult, iRow, 1);
@@ -224,7 +224,7 @@ DCTable::DCTable(DB_HANDLE hdb, DB_RESULT hResult, int iRow, Template *pNode) : 
 /**
  * Create DCTable from import file
  */
-DCTable::DCTable(ConfigEntry *config, Template *owner) : DCObject(config, owner)
+DCTable::DCTable(ConfigEntry *config, DataCollectionOwner *owner) : DCObject(config, owner)
 {
 	ConfigEntry *columnsRoot = config->findEntry(_T("columns"));
 	if (columnsRoot != NULL)

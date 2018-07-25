@@ -53,7 +53,7 @@
 		<template id="6793">
 			<guid>8d955f5e-1baa-4b0f-a1f8-3746c0346ed9</guid>
 			<name>Windows</name>
-			<flags>1</flags>
+			<flags>0</flags>
 			<path>
 				<element id="1">Operating Systems</element>
 			</path>
@@ -306,7 +306,7 @@
 					<instanceFilter></instanceFilter>
 				</dci>
 			</dataCollection>
-			<filter>return $node-&gt;isAgent &amp;&amp; $node-&gt;platformName like &quot;windows-*&quot;;</filter>
+			<filter autoBind="true" autoRemove="false">return $node-&gt;isAgent &amp;&amp; $node-&gt;platformName like &quot;windows-*&quot;;</filter>
 		</template>
 	</templates>
 	<traps>

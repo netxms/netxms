@@ -277,27 +277,16 @@
 #define SSF_CONF_UPDATE_PENDING        0x00080000
 
 /**
- * Template flags
+ * Auto apply flags
+ * Depricated flags for Container, Template and Policy
  */
-#define TF_AUTO_APPLY            0x00000001
-#define TF_AUTO_REMOVE           0x00000002
-
-/**
- * Container flags
- */
-#define CF_AUTO_BIND             0x00000001
-#define CF_AUTO_UNBIND           0x00000002
+#define AAF_AUTO_APPLY            0x00000001
+#define AAF_AUTO_REMOVE           0x00000002
 
 /**
  * Chassis flags
  */
 #define CHF_BIND_UNDER_CONTROLLER   0x00000001
-
-/**
- * Policy flags
- */
-#define PF_AUTO_DEPLOY           0x00000001
-#define PF_AUTO_UNINSTALL        0x00000002
 
 /**
  * Interface flags

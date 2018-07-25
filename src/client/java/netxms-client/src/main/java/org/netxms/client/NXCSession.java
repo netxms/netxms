@@ -4958,6 +4958,12 @@ public class NXCSession
          msg.setField(NXCPCodes.VID_AUTOBIND_FILTER, data.getAutoBindFilter());
       }
 
+      if (data.isFieldSet(NXCObjectModificationData.AUTOBIND_REMOVE_FLAGS))
+      {
+         msg.setField(NXCPCodes.VID_AUTOBIND_FLAG, data.isAutoBindEnabled());
+         msg.setField(NXCPCodes.VID_AUTOUNBIND_FLAG, data.isAutoUnbindEnabled());
+      }
+
       if (data.isFieldSet(NXCObjectModificationData.FILTER))
       {
          msg.setField(NXCPCodes.VID_FILTER, data.getFilter());

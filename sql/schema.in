@@ -510,7 +510,6 @@ CREATE TABLE object_containers
 (
   id integer not null,
   object_class integer not null,
-  auto_bind_filter SQL_TEXT null,
   PRIMARY KEY(id)
 ) TABLE_TYPE;
 
@@ -549,8 +548,6 @@ CREATE TABLE cond_dci_map
 CREATE TABLE templates
 (
   id integer not null,
-  version integer not null,
-  apply_filter SQL_TEXT null,
   PRIMARY KEY(id)
 ) TABLE_TYPE;
 
@@ -1371,8 +1368,6 @@ CREATE TABLE ap_common
 (
   id integer not null,
   policy_type integer not null,
-  version integer not null,
-  deploy_filter SQL_TEXT null,
   PRIMARY KEY(id)
 ) TABLE_TYPE;
 
@@ -1832,3 +1827,26 @@ CREATE TABLE responsible_users
    user_id integer not null,
    PRIMARY KEY(object_id,user_id)
 ) TABLE_TYPE;
+
+/**
+ * Auto bind information for objects
+ */
+CREATE TABLE auto_bind_target 
+(
+   object_id integer not null,
+   bind_filter SQL_TEXT null,
+   bind_flag char(1) not null,
+   unbind_flag char(1) not null,
+   PRIMARY KEY(object_id)
+) TABLE_TYPE;
+
+/**
+ * Versionning table for objects
+ */
+CREATE TABLE versionable_object 
+(
+   object_id integer not null,
+   version integer not null,
+   PRIMARY KEY(object_id)
+) TABLE_TYPE;
+

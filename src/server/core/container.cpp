@@ -23,47 +23,111 @@
 #include "nxcore.h"
 
 /**
- * Default container class constructor
+ * Default abstract container class constructor
  */
-Container::Container() : NetObj()
+AbstractContainer::AbstractContainer() : NetObj()
 {
    m_pdwChildIdList = NULL;
    m_dwChildIdListSize = 0;
-	m_flags = 0;
-	m_bindFilter = NULL;
-	m_bindFilterSource = NULL;
 }
 
 /**
- * "Normal" container class constructor
+ * "Normal" abstract container class constructor
  */
-Container::Container(const TCHAR *pszName, UINT32 dwCategory) : NetObj()
+AbstractContainer::AbstractContainer(const TCHAR *pszName, UINT32 dwCategory) : NetObj()
 {
-   nx_strncpy(m_name, pszName, MAX_OBJECT_NAME);
+   _tcslcpy(m_name, pszName, MAX_OBJECT_NAME);
    m_pdwChildIdList = NULL;
    m_dwChildIdListSize = 0;
-	m_flags = 0;
-	m_bindFilter = NULL;
-	m_bindFilterSource = NULL;
    m_isHidden = true;
 }
 
 /**
- * Container class destructor
+ * Abstract container class destructor
  */
-Container::~Container()
+AbstractContainer::~AbstractContainer()
 {
    MemFree(m_pdwChildIdList);
-	MemFree(m_bindFilterSource);
-	delete m_bindFilter;
 }
 
 /**
- * Create container object from database data.
+ * Link child objects after loading from database
+ * This method is expected to be called only at startup, so we don't lock
+ */
+void AbstractContainer::linkObjects()
+{
+   NetObj::linkObjects();
+   if (m_dwChildIdListSize > 0)
+   {
+      // Find and link child objects
+      for(UINT32 i = 0; i < m_dwChildIdListSize; i++)
+      {
+         NetObj *pObject = FindObjectById(m_pdwChildIdList[i]);
+         if (pObject != NULL)
+            linkObject(pObject);
+         else
+            nxlog_write(MSG_INVALID_CONTAINER_MEMBER, EVENTLOG_ERROR_TYPE, "dd", m_id, m_pdwChildIdList[i]);
+      }
+
+      // Cleanup
+      free(m_pdwChildIdList);
+      m_pdwChildIdList = NULL;
+      m_dwChildIdListSize = 0;
+   }
+}
+
+/**
+ * Calculate status for compound object based on childs' status
+ */
+void AbstractContainer::calculateCompoundStatus(BOOL bForcedRecalc)
+{
+	NetObj::calculateCompoundStatus(bForcedRecalc);
+
+	if ((m_status == STATUS_UNKNOWN) && (m_dwChildIdListSize == 0))
+   {
+		lockProperties();
+		m_status = STATUS_NORMAL;
+		setModified(MODIFY_RUNTIME);
+		unlockProperties();
+	}
+}
+
+/**
+ * Create NXCP message with object's data
+ */
+void AbstractContainer::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
+{
+   NetObj::fillMessageInternal(msg, userId);
+}
+
+/**
+ * Modify object from message
+ */
+UINT32 AbstractContainer::modifyFromMessageInternal(NXCPMessage *request)
+{
+   // Change flags
+   if (request->isFieldExist(VID_FLAGS))
+		m_flags = request->getFieldAsUInt32(VID_FLAGS);
+
+   return NetObj::modifyFromMessageInternal(request);
+}
+
+/**
+ * Serialize object to JSON
+ */
+json_t *AbstractContainer::toJson()
+{
+   json_t *root = NetObj::toJson();
+   json_object_set_new(root, "flags", json_integer(m_flags));
+   return root;
+}
+
+/**
+ * Create abstract container object from database data.
  *
  * @param dwId object ID
  */
-bool Container::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
+bool AbstractContainer::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 {
    TCHAR szQuery[256];
    DB_RESULT hResult;
@@ -73,33 +137,6 @@ bool Container::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 
    if (!loadCommonProperties(hdb))
       return false;
-
-   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT auto_bind_filter FROM object_containers WHERE id=%d"), dwId);
-   hResult = DBSelect(hdb, szQuery);
-   if (hResult == NULL)
-      return false;     // Query failed
-
-   if (DBGetNumRows(hResult) == 0)
-   {
-      // No object with given ID in database
-      DBFreeResult(hResult);
-      return false;
-   }
-
-   m_bindFilterSource = DBGetField(hResult, 0, 0, NULL, 0);
-   if (m_bindFilterSource != NULL)
-   {
-      TCHAR error[256];
-      m_bindFilter = NXSLCompile(m_bindFilterSource, error, 256, NULL);
-      if (m_bindFilter == NULL)
-      {
-         TCHAR buffer[1024];
-         _sntprintf(buffer, 1024, _T("Container::%s::%d"), m_name, m_id);
-         PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, error, m_id);
-         nxlog_write(MSG_CONTAINER_SCRIPT_COMPILATION_ERROR, NXLOG_WARNING, "dss", m_id, m_name, error);
-      }
-   }
-   DBFreeResult(hResult);
 
    // Load access list
    loadACLFromDB(hdb);
@@ -130,7 +167,7 @@ bool Container::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
  *
  * @param hdb database connection handle
  */
-bool Container::saveToDatabase(DB_HANDLE hdb)
+bool AbstractContainer::saveToDatabase(DB_HANDLE hdb)
 {
    // Lock object's access
    lockProperties();
@@ -139,7 +176,7 @@ bool Container::saveToDatabase(DB_HANDLE hdb)
 
    if (success && (m_modified & MODIFY_OTHER))
    {
-      static const TCHAR *columns[] = { _T("object_class"), _T("auto_bind_filter"), NULL };
+      static const TCHAR *columns[] = { _T("object_class"), NULL };
       DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("object_containers"), _T("id"), m_id, columns);
       if (hStmt == NULL)
       {
@@ -148,34 +185,31 @@ bool Container::saveToDatabase(DB_HANDLE hdb)
       }
 
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (LONG)getObjectClass());
-      DBBind(hStmt, 2, DB_SQLTYPE_TEXT, m_bindFilterSource, DB_BIND_STATIC);
-      DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_id);
+      DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_id);
       success = DBExecute(hStmt);
       DBFreeStatement(hStmt);
    }
 
-	if (success && (m_modified & MODIFY_RELATIONS))
-	{
-		TCHAR query[256];
+   if (success && (m_modified & MODIFY_RELATIONS))
+   {
+      TCHAR query[256];
 
-		// Update members list
-		_sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("DELETE FROM container_members WHERE container_id=%d"), m_id);
-		DBQuery(hdb, query);
-		lockChildList(false);
-		for(int i = 0; i < m_childList->size(); i++)
-		{
-			_sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("INSERT INTO container_members (container_id,object_id) VALUES (%d,%d)"), m_id, m_childList->get(i)->getId());
-			DBQuery(hdb, query);
-		}
-		unlockChildList();
-	}
+      // Update members list
+      _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("DELETE FROM container_members WHERE container_id=%d"), m_id);
+      DBQuery(hdb, query);
+      lockChildList(false);
+      for(int i = 0; i < m_childList->size(); i++)
+      {
+         _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("INSERT INTO container_members (container_id,object_id) VALUES (%d,%d)"), m_id, m_childList->get(i)->getId());
+         DBQuery(hdb, query);
+      }
+      unlockChildList();
+   }
 
    // Save access list
-	if (success)
-		success = saveACLToDB(hdb);
+   if (success)
+      success = saveACLToDB(hdb);
 
-   // Clear modifications flag and unlock object
-   m_modified = 0;
    unlockProperties();
    return success;
 }
@@ -183,7 +217,7 @@ bool Container::saveToDatabase(DB_HANDLE hdb)
 /**
  * Delete object from database
  */
-bool Container::deleteFromDatabase(DB_HANDLE hdb)
+bool AbstractContainer::deleteFromDatabase(DB_HANDLE hdb)
 {
    bool success = NetObj::deleteFromDatabase(hdb);
    if (success)
@@ -194,175 +228,65 @@ bool Container::deleteFromDatabase(DB_HANDLE hdb)
 }
 
 /**
- * Link child objects after loading from database
- * This method is expected to be called only at startup, so we don't lock
+ * Create container object from database data.
+ *
+ * @param dwId object ID
  */
-void Container::linkObjects()
+bool Container::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 {
-   NetObj::linkObjects();
-   if (m_dwChildIdListSize > 0)
+   bool success = AbstractContainer::loadFromDatabase(hdb, dwId);
+
+   if(success)
+      success = AutoBindTarget::loadFromDatabase(hdb, m_id);
+   return success;
+}
+
+/**
+ * Save object to database
+ *
+ * @param hdb database connection handle
+ */
+bool Container::saveToDatabase(DB_HANDLE hdb)
+{
+   bool success = AbstractContainer::saveToDatabase(hdb);
+   if(success)
    {
-      // Find and link child objects
-      for(UINT32 i = 0; i < m_dwChildIdListSize; i++)
+      if (!IsDatabaseRecordExist(hdb, _T("object_containers"), _T("id"), m_id))
       {
-         NetObj *pObject = FindObjectById(m_pdwChildIdList[i]);
-         if (pObject != NULL)
-            linkObject(pObject);
-         else
-            nxlog_write(MSG_INVALID_CONTAINER_MEMBER, EVENTLOG_ERROR_TYPE, "dd", m_id, m_pdwChildIdList[i]);
+         DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO object_containers (id) VALUES (?)"));
+         if (hStmt != NULL)
+         {
+            DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_id);
+            success = DBExecute(hStmt);
+            DBFreeStatement(hStmt);
+         }
       }
-
-      // Cleanup
-      free(m_pdwChildIdList);
-      m_pdwChildIdList = NULL;
-      m_dwChildIdListSize = 0;
    }
-}
 
-/**
- * Calculate status for compound object based on childs' status
- */
-void Container::calculateCompoundStatus(BOOL bForcedRecalc)
-{
-	NetObj::calculateCompoundStatus(bForcedRecalc);
+   if(success && (m_modified & MODIFY_OTHER))
+      success = AutoBindTarget::saveToDatabase(hdb);
 
-	if ((m_status == STATUS_UNKNOWN) && (m_dwChildIdListSize == 0))
-   {
-		lockProperties();
-		m_status = STATUS_NORMAL;
-		setModified(MODIFY_RUNTIME);
-		unlockProperties();
-	}
-}
-
-/**
- * Create NXCP message with object's data
- */
-void Container::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
-{
-   NetObj::fillMessageInternal(msg, userId);
-	msg->setField(VID_AUTOBIND_FILTER, CHECK_NULL_EX(m_bindFilterSource));
-}
-
-/**
- * Modify object from message
- */
-UINT32 Container::modifyFromMessageInternal(NXCPMessage *request)
-{
-   // Change flags
-   if (request->isFieldExist(VID_FLAGS))
-		m_flags = request->getFieldAsUInt32(VID_FLAGS);
-
-   // Change auto-bind filter
-	if (request->isFieldExist(VID_AUTOBIND_FILTER))
-	{
-		TCHAR *script = request->getFieldAsString(VID_AUTOBIND_FILTER);
-		setAutoBindFilterInternal(script);
-		free(script);
-	}
-
-   return NetObj::modifyFromMessageInternal(request);
-}
-
-/**
- * Set container's autobind script
- */
-void Container::setAutoBindFilterInternal(const TCHAR *script)
-{
-	if (script != NULL)
-	{
-		free(m_bindFilterSource);
-		delete m_bindFilter;
-		m_bindFilterSource = _tcsdup(script);
-		if (m_bindFilterSource != NULL)
-		{
-			TCHAR error[256];
-
-			m_bindFilter = NXSLCompile(m_bindFilterSource, error, 256, NULL);
-			if (m_bindFilter == NULL)
-			{
-	         TCHAR buffer[1024];
-	         _sntprintf(buffer, 1024, _T("Container::%s::%d"), m_name, m_id);
-	         PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, error, m_id);
-				nxlog_write(MSG_CONTAINER_SCRIPT_COMPILATION_ERROR, EVENTLOG_WARNING_TYPE, "dss", m_id, m_name, error);
-			}
-		}
-		else
-		{
-			m_bindFilter = NULL;
-		}
-	}
-	else
-	{
-		delete_and_null(m_bindFilter);
-		MemFreeAndNull(m_bindFilterSource);
-	}
-	setModified(MODIFY_OTHER);
-}
-
-/**
- * Set auito bind mode for container
- */
-void Container::setAutoBindMode(bool doBind, bool doUnbind)
-{
    lockProperties();
-
-   if (doBind)
-      m_flags |= CF_AUTO_BIND;
-   else
-      m_flags &= ~CF_AUTO_BIND;
-
-   if (doUnbind)
-      m_flags |= CF_AUTO_UNBIND;
-   else
-      m_flags &= ~CF_AUTO_UNBIND;
-
-   setModified(MODIFY_COMMON_PROPERTIES);
+   // Clear modifications flag and unlock object
+   m_modified = 0;
    unlockProperties();
+
+   return success;
 }
 
 /**
- * Check if object should be placed into container
+ * Delete object from database
  */
-AutoBindDecision Container::isSuitableForObject(NetObj *object)
+bool Container::deleteFromDatabase(DB_HANDLE hdb)
 {
-   AutoBindDecision result = AutoBindDecision_Ignore;
-
-   NXSL_VM *filter = NULL;
-	lockProperties();
-	if ((m_flags & CF_AUTO_BIND) && (m_bindFilter != NULL))
-	{
-	   filter = CreateServerScriptVM(m_bindFilter, object);
-	   if (filter == NULL)
-	   {
-	      TCHAR buffer[1024];
-	      _sntprintf(buffer, 1024, _T("Container::%s::%d"), m_name, m_id);
-	      PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, _T("Script load error"), m_id);
-	      nxlog_write(MSG_CONTAINER_SCRIPT_EXECUTION_ERROR, NXLOG_WARNING, "dss", m_id, m_name, _T("Script load error"));
-	   }
-	}
-   unlockProperties();
-
-   if (filter == NULL)
-      return result;
-
-   if (filter->run())
-   {
-      NXSL_Value *value = filter->getResult();
-      if ((value != NULL) && !value->isNull())
-         result = (value->getValueAsInt32() != 0) ? AutoBindDecision_Bind : AutoBindDecision_Unbind;
-   }
-   else
-   {
-      lockProperties();
-      TCHAR buffer[1024];
-      _sntprintf(buffer, 1024, _T("Container::%s::%d"), m_name, m_id);
-      PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, filter->getErrorText(), m_id);
-      nxlog_write(MSG_CONTAINER_SCRIPT_EXECUTION_ERROR, NXLOG_WARNING, "dss", m_id, m_name, filter->getErrorText());
-      unlockProperties();
-   }
-   delete filter;
-	return result;
+   bool success = AbstractContainer::deleteFromDatabase(hdb);
+   if(success)
+      success = executeQueryOnObject(hdb, _T("DELETE FROM object_containers WHERE id=?"));
+   if (success)
+      success = executeQueryOnObject(hdb, _T("DELETE FROM container_members WHERE container_id=?"));
+   if(success)
+      success = AutoBindTarget::deleteFromDatabase(hdb);
+   return success;
 }
 
 /**
@@ -370,7 +294,25 @@ AutoBindDecision Container::isSuitableForObject(NetObj *object)
  */
 bool Container::showThresholdSummary()
 {
-	return true;
+   return true;
+}
+
+/**
+ * Modify object from message
+ */
+UINT32 Container::modifyFromMessageInternal(NXCPMessage *request)
+{
+   AutoBindTarget::modifyFromMessageInternal(request);
+   return AbstractContainer::modifyFromMessageInternal(request);
+}
+
+/**
+ * Fill message with object fields
+ */
+void Container::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
+{
+   AbstractContainer::fillMessageInternal(msg, userId);
+   AutoBindTarget::fillMessageInternal(msg, userId);
 }
 
 /**
@@ -381,13 +323,4 @@ NXSL_Value *Container::createNXSLObject(NXSL_VM *vm)
    return vm->createValue(new NXSL_Object(vm, &g_nxslContainerClass, this));
 }
 
-/**
- * Serialize object to JSON
- */
-json_t *Container::toJson()
-{
-   json_t *root = NetObj::toJson();
-   json_object_set_new(root, "flags", json_integer(m_flags));
-   json_object_set_new(root, "bindFilter", json_string_t(m_bindFilterSource));
-   return root;
-}
+

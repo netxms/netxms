@@ -17,7 +17,7 @@
 		<template id="102">
 			<guid>989f562b-f3c6-452c-b3de-55107456d784</guid>
 			<name>Thread pools</name>
-			<flags>3</flags>
+			<flags>0</flags>
 			<path>
 				<element id="1">System</element>
 				<element id="2">NetXMS Server</element>
@@ -408,12 +408,12 @@
 					<instanceFilter></instanceFilter>
 				</dci>
 			</dataCollection>
-			<filter>return $node-&gt;isLocalMgmt;</filter>
+			<filter autoBind="true" autoRemove="true">return $node-&gt;isLocalMgmt;</filter>
 		</template>
 		<template id="103">
 			<guid>3677cb73-d121-4d48-b529-37a276f592be</guid>
 			<name>Database writer</name>
-			<flags>3</flags>
+			<flags>0</flags>
 			<path>
 				<element id="1">System</element>
 				<element id="2">NetXMS Server</element>
@@ -483,12 +483,12 @@
 					<instanceFilter></instanceFilter>
 				</dci>
 			</dataCollection>
-			<filter>return $node-&gt;isLocalMgmt;</filter>
+			<filter autoBind="true" autoRemove="true">return $node-&gt;isLocalMgmt;</filter>
 		</template>
 		<template id="106">
 			<guid>d00799c6-4dc3-4f4e-8d67-b7e0714ff4f5</guid>
 			<name>Windows</name>
-			<flags>3</flags>
+			<flags>0</flags>
 			<path>
 				<element id="1">System</element>
 				<element id="2">NetXMS Server</element>
@@ -517,12 +517,12 @@
 					<instanceFilter></instanceFilter>
 				</dci>
 			</dataCollection>
-			<filter>return $node-&gt;isLocalMgmt &amp;&amp; ($node-&gt;platformName like &quot;windows-*&quot;);</filter>
+			<filter autoBind="true" autoRemove="true">return $node-&gt;isLocalMgmt &amp;&amp; ($node-&gt;platformName like &quot;windows-*&quot;);</filter>
 		</template>
 		<template id="107">
 			<guid>2b34394a-bef7-4cec-9cb6-70de8c6b7ed6</guid>
 			<name>UNIX</name>
-			<flags>3</flags>
+			<flags>0</flags>
 			<path>
 				<element id="1">System</element>
 				<element id="2">NetXMS Server</element>
@@ -551,12 +551,12 @@
 					<instanceFilter></instanceFilter>
 				</dci>
 			</dataCollection>
-			<filter>return $node-&gt;isLocalMgmt &amp;&amp; !($node-&gt;platformName like &quot;windows-*&quot;);</filter>
+			<filter autoBind="true" autoRemove="true">return $node-&gt;isLocalMgmt &amp;&amp; !($node-&gt;platformName like &quot;windows-*&quot;);</filter>
 		</template>
 		<template id="104">
 			<guid>22a93d86-a72b-47e7-8178-0040548a3a47</guid>
 			<name>Server Performance</name>
-			<flags>3</flags>
+			<flags>0</flags>
 			<path>
 				<element id="1">System</element>
 				<element id="2">NetXMS Server</element>
@@ -731,7 +731,7 @@
 					<instanceFilter></instanceFilter>
 				</dci>
 			</dataCollection>
-			<filter>return $node-&gt;isLocalMgmt;</filter>
+			<filter autoBind="true" autoRemove="true">return $node-&gt;isLocalMgmt;</filter>
 		</template>
 	</templates>
 	<traps>

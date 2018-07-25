@@ -111,7 +111,7 @@ DCItem::DCItem(const DCItem *src, bool shadowCopy) : DCObject(src, shadowCopy)
  *    custom_units_name,perftab_settings,system_tag,snmp_port,snmp_raw_value_type,
  *    instd_method,instd_data,instd_filter,samples,comments,guid,npe_name
  */
-DCItem::DCItem(DB_HANDLE hdb, DB_RESULT hResult, int iRow, Template *pNode) : DCObject()
+DCItem::DCItem(DB_HANDLE hdb, DB_RESULT hResult, int iRow, DataCollectionOwner *pNode) : DCObject()
 {
    m_id = DBGetFieldULong(hResult, iRow, 0);
    DBGetField(hResult, iRow, 1, m_name, MAX_ITEM_NAME);
@@ -182,7 +182,7 @@ DCItem::DCItem(DB_HANDLE hdb, DB_RESULT hResult, int iRow, Template *pNode) : DC
  * Constructor for creating new DCItem from scratch
  */
 DCItem::DCItem(UINT32 dwId, const TCHAR *szName, int iSource, int iDataType,
-               int iPollingInterval, int iRetentionTime, Template *pNode,
+               int iPollingInterval, int iRetentionTime, DataCollectionOwner *pNode,
                const TCHAR *pszDescription, const TCHAR *systemTag)
 	: DCObject(dwId, szName, iSource, iPollingInterval, iRetentionTime, pNode, pszDescription, systemTag)
 {
@@ -207,7 +207,7 @@ DCItem::DCItem(UINT32 dwId, const TCHAR *szName, int iSource, int iDataType,
 /**
  * Create DCItem from import file
  */
-DCItem::DCItem(ConfigEntry *config, Template *owner) : DCObject(config, owner)
+DCItem::DCItem(ConfigEntry *config, DataCollectionOwner *owner) : DCObject(config, owner)
 {
    m_dataType = (BYTE)config->getSubEntryValueAsInt(_T("dataType"));
    m_deltaCalculation = (BYTE)config->getSubEntryValueAsInt(_T("delta"));
@@ -1066,7 +1066,7 @@ int DCItem::getNXSLDataType() const
 /**
  * Set new ID and node/template association
  */
-void DCItem::changeBinding(UINT32 dwNewId, Template *pNewNode, BOOL doMacroExpansion)
+void DCItem::changeBinding(UINT32 dwNewId, DataCollectionOwner *pNewNode, BOOL doMacroExpansion)
 {
 	DCObject::changeBinding(dwNewId, pNewNode, doMacroExpansion);
 

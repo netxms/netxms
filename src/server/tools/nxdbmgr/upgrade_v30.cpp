@@ -23,6 +23,275 @@
 #include "nxdbmgr.h"
 #include <nxevent.h>
 
+/*
+ * Upgrade from 30.45 to 30.46
+ */
+static bool H_UpgradeFromV45()
+{
+   CHK_EXEC(CreateTable(
+      _T("CREATE TABLE auto_bind_target (")
+      _T("   object_id integer not null,")
+      _T("   bind_filter $SQL:TEXT null,")
+      _T("   bind_flag char(1) null,")
+      _T("   unbind_flag char(1) null,")
+      _T("   PRIMARY KEY(object_id))")));
+
+   CHK_EXEC(CreateTable(
+      _T("CREATE TABLE versionable_object (")
+      _T("   object_id integer not null,")
+      _T("   version integer not null,")
+      _T("   PRIMARY KEY(object_id))")));
+
+
+   DB_STATEMENT stmtAutoBind = DBPrepare(g_hCoreDB, _T("INSERT INTO auto_bind_target (object_id,bind_filter,bind_flag,unbind_flag) VALUES (?,?,?,?)"));
+   DB_STATEMENT stmtVersion = DBPrepare(g_hCoreDB, _T("INSERT INTO versionable_object (object_id,version) VALUES (?,?)"));
+   DB_STATEMENT stmtFlags = DBPrepare(g_hCoreDB, _T("UPDATE object_properties SET flags=? WHERE object_id=?"));
+   //Template table upgrade
+   bool success = true;
+   DB_RESULT result = SQLSelect(_T("SELECT id,version,apply_filter FROM templates"));
+   if (result != NULL)
+   {
+      if (stmtAutoBind != NULL && stmtVersion != NULL && stmtFlags != NULL)
+      {
+         int nRows = DBGetNumRows(result);
+         for(int i = 0; i < nRows; i++)
+         {
+            UINT32 id = DBGetFieldULong(result, i, 0);
+            //version
+            DBBind(stmtVersion, 1, DB_SQLTYPE_INTEGER, id);
+            DBBind(stmtVersion, 2, DB_SQLTYPE_INTEGER, DBGetFieldULong(result, i, 1));
+            if (!(SQLExecute(stmtVersion)))
+            {
+               if (!g_bIgnoreErrors)
+               {
+                  success = false;
+                  break;
+               }
+            }
+
+            //flags
+            UINT32 flags = 0;
+            if(success)
+            {
+               TCHAR query[512];
+               _sntprintf(query, 512, _T("SELECT flags FROM object_properties WHERE object_id=%d"), id);
+               DB_RESULT flagResult = SQLSelect(query);
+               if (flagResult != NULL)
+               {
+                  flags = DBGetFieldULong(flagResult, 0, 0);
+                  DBBind(stmtFlags, 1, DB_SQLTYPE_INTEGER, (flags & ~3)); //remove auto apply flags
+                  DBBind(stmtFlags, 2, DB_SQLTYPE_INTEGER, id);
+                  if (!(SQLExecute(stmtFlags)))
+                  {
+                     if (!g_bIgnoreErrors)
+                     {
+                        DBFreeResult(flagResult);
+                        success = false;
+                        break;
+                     }
+                  }
+                  DBFreeResult(flagResult);
+               }
+               else if (!g_bIgnoreErrors)
+               {
+                  success = false;
+                  break;
+               }
+            }
+
+            //autobind
+            if(success)
+            {
+               DBBind(stmtAutoBind, 1, DB_SQLTYPE_INTEGER, id);
+               DBBind(stmtAutoBind, 2, DB_SQLTYPE_TEXT, DBGetField(result, i, 2, NULL, 0), DB_BIND_DYNAMIC);
+               DBBind(stmtAutoBind, 3, DB_SQLTYPE_VARCHAR, ((flags & 1) ? _T("1") : _T("0")), DB_BIND_STATIC);
+               DBBind(stmtAutoBind, 4, DB_SQLTYPE_VARCHAR, ((flags & 2) ? _T("1") : _T("0")), DB_BIND_STATIC);
+               if (!(SQLExecute(stmtAutoBind)))
+               {
+                  if (!g_bIgnoreErrors)
+                  {
+                     success = false;
+                     break;
+                  }
+               }
+            }
+         }
+      }
+      else if (!g_bIgnoreErrors)
+      {
+         success = false;
+      }
+      DBFreeResult(result);
+   }
+   else if (!g_bIgnoreErrors)
+      success = false;
+
+   //Template table upgrade
+   if(success)
+   {
+      result = SQLSelect(_T("SELECT id,auto_bind_filter FROM object_containers WHERE object_class=5"));
+      if (result != NULL)
+      {
+         if (stmtAutoBind != NULL && stmtFlags != NULL)
+         {
+            int nRows = DBGetNumRows(result);
+            for(int i = 0; i < nRows; i++)
+            {
+               UINT32 id = DBGetFieldULong(result, i, 0);
+               //flags
+               UINT32 flags = 0;
+               TCHAR query[512];
+               _sntprintf(query, 512, _T("SELECT flags FROM object_properties WHERE object_id=%d"), id);
+               DB_RESULT flagResult = DBSelect(g_hCoreDB, query);
+               if (flagResult != NULL)
+               {
+                  flags = DBGetFieldULong(flagResult, 0, 0);
+                  DBBind(stmtFlags, 1, DB_SQLTYPE_INTEGER, (flags & !3)); //remove auto apply flags
+                  DBBind(stmtFlags, 2, DB_SQLTYPE_INTEGER, id);
+                  if (!(SQLExecute(stmtFlags)))
+                  {
+                     if (!g_bIgnoreErrors)
+                     {
+                        DBFreeResult(flagResult);
+                        success = false;
+                        break;
+                     }
+                  }
+                  DBFreeResult(flagResult);
+               }
+               else if (!g_bIgnoreErrors)
+               {
+                  success = false;
+                  break;
+               }
+
+               //autobind
+               if(success)
+               {
+                  DBBind(stmtAutoBind, 1, DB_SQLTYPE_INTEGER, id);
+                  DBBind(stmtAutoBind, 2, DB_SQLTYPE_TEXT, DBGetField(result, i, 1, NULL, 0), DB_BIND_DYNAMIC);
+                  DBBind(stmtAutoBind, 3, DB_SQLTYPE_VARCHAR, ((flags & 1) ? _T("1") : _T("0")), DB_BIND_STATIC);
+                  DBBind(stmtAutoBind, 4, DB_SQLTYPE_VARCHAR, ((flags & 2) ? _T("1") : _T("0")), DB_BIND_STATIC);
+                  if (!(SQLExecute(stmtAutoBind)))
+                  {
+                     if (!g_bIgnoreErrors)
+                     {
+                        success = false;
+                        break;
+                     }
+                  }
+               }
+            }
+         }
+         DBFreeResult(result);
+      }
+      else if (!g_bIgnoreErrors)
+         success = false;
+   }
+
+   //Policy table upgrade
+   if(success)
+   {
+      result = SQLSelect(_T("SELECT id,version,deploy_filter FROM ap_common"));
+      if (result != NULL)
+      {
+         if (stmtAutoBind != NULL && stmtVersion != NULL && stmtFlags != NULL)
+         {
+            int nRows = DBGetNumRows(result);
+            for(int i = 0; i < nRows; i++)
+            {
+               UINT32 id = DBGetFieldULong(result, i, 0);
+               //version
+               DBBind(stmtVersion, 1, DB_SQLTYPE_INTEGER, id);
+               DBBind(stmtVersion, 2, DB_SQLTYPE_INTEGER, DBGetFieldULong(result, i, 1));
+               if (!(SQLExecute(stmtVersion)))
+               {
+                  if (!g_bIgnoreErrors)
+                  {
+                     success = false;
+                     break;
+                  }
+               }
+
+               //flags
+               UINT32 flags = 0;
+               if(success)
+               {
+                  TCHAR query[512];
+                  _sntprintf(query, 512, _T("SELECT flags FROM object_properties WHERE object_id=%d"), id);
+                  DB_RESULT flagResult = SQLSelect(query);
+                  if (flagResult != NULL)
+                  {
+                     flags = DBGetFieldULong(flagResult, 0, 0);
+                     DBBind(stmtFlags, 1, DB_SQLTYPE_INTEGER, (flags & ~3)); //remove auto apply flags
+                     DBBind(stmtFlags, 2, DB_SQLTYPE_INTEGER, id);
+                     if (!(SQLExecute(stmtFlags)))
+                     {
+                        if (!g_bIgnoreErrors)
+                        {
+                           DBFreeResult(flagResult);
+                           success = false;
+                           break;
+                        }
+                     }
+                     DBFreeResult(flagResult);
+                  }
+                  else if (!g_bIgnoreErrors)
+                  {
+                     success = false;
+                     break;
+                  }
+               }
+
+               //autobind
+               if(success)
+               {
+                  DBBind(stmtAutoBind, 1, DB_SQLTYPE_INTEGER, id);
+                  DBBind(stmtAutoBind, 2, DB_SQLTYPE_TEXT, DBGetField(result, i, 2, NULL, 0), DB_BIND_DYNAMIC);
+                  DBBind(stmtAutoBind, 3, DB_SQLTYPE_VARCHAR, ((flags & 1) ? _T("1") : _T("0")), DB_BIND_STATIC);
+                  DBBind(stmtAutoBind, 4, DB_SQLTYPE_VARCHAR, ((flags & 2) ? _T("1") : _T("0")), DB_BIND_STATIC);
+                  if (!(SQLExecute(stmtAutoBind)))
+                  {
+                     if (!g_bIgnoreErrors)
+                     {
+                        success = false;
+                        break;
+                     }
+                  }
+               }
+            }
+         }
+         else if (!g_bIgnoreErrors)
+         {
+            success = false;
+         }
+         DBFreeResult(result);
+      }
+      else if (!g_bIgnoreErrors)
+         success = false;
+   }
+
+   if(stmtAutoBind != NULL)
+      DBFreeStatement(stmtAutoBind);
+   if(stmtVersion != NULL)
+      DBFreeStatement(stmtVersion);
+   if(stmtFlags != NULL)
+      DBFreeStatement(stmtFlags);
+
+   if(!success)
+      return false;
+
+   CHK_EXEC(DBDropColumn(g_hCoreDB, _T("templates"), _T("version")));
+   CHK_EXEC(DBDropColumn(g_hCoreDB, _T("templates"), _T("apply_filter")));
+   CHK_EXEC(DBDropColumn(g_hCoreDB, _T("ap_common"), _T("version")));
+   CHK_EXEC(DBDropColumn(g_hCoreDB, _T("ap_common"), _T("deploy_filter")));
+   CHK_EXEC(DBDropColumn(g_hCoreDB, _T("object_containers"), _T("auto_bind_filter")));
+
+   CHK_EXEC(SetMinorSchemaVersion(46));
+   return true;
+}
+
+
 /**
  * Upgrade from 30.44 to 30.45 (changes also included into 22.34)
  */
@@ -65,6 +334,7 @@ static bool H_UpgradeFromV43()
 
       CHK_EXEC(SetSchemaLevelForMajorVersion(22, 33));
    }
+
    CHK_EXEC(SetMinorSchemaVersion(44));
    return true;
 }
@@ -100,6 +370,7 @@ static bool H_UpgradeFromV41()
          _T("   PRIMARY KEY(iface_id,vlan_id))")));
       CHK_EXEC(SetSchemaLevelForMajorVersion(22, 31));
    }
+
    CHK_EXEC(SetMinorSchemaVersion(42));
    return true;
 }
@@ -1386,6 +1657,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 45, 30, 46, H_UpgradeFromV45 },
    { 44, 30, 45, H_UpgradeFromV44 },
    { 43, 30, 44, H_UpgradeFromV43 },
    { 42, 30, 43, H_UpgradeFromV42 },

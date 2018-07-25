@@ -3379,7 +3379,7 @@ void ClientSession::openNodeDCIList(NXCPMessage *request)
          if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
          {
             // Try to lock DCI list
-            if (((Template *)object)->lockDCIList(m_id, m_sessionName, szLockInfo))
+            if (((DataCollectionOwner *)object)->lockDCIList(m_id, m_sessionName, szLockInfo))
             {
                bSuccess = TRUE;
                msg.setField(VID_RCC, RCC_SUCCESS);
@@ -3415,7 +3415,7 @@ void ClientSession::openNodeDCIList(NXCPMessage *request)
 
    // If DCI list was successfully locked, send it to client
    if (bSuccess)
-      ((Template *)object)->sendItemsToClient(this, request->getId());
+      ((DataCollectionOwner *)object)->sendItemsToClient(this, request->getId());
 }
 
 /**
@@ -3443,7 +3443,7 @@ void ClientSession::closeNodeDCIList(NXCPMessage *request)
             BOOL bSuccess;
 
             // Try to unlock DCI list
-            bSuccess = ((Template *)object)->unlockDCIList(m_id);
+            bSuccess = ((DataCollectionOwner *)object)->unlockDCIList(m_id);
             msg.setField(VID_RCC, bSuccess ? RCC_SUCCESS : RCC_OUT_OF_STATE_REQUEST);
 
             // modify list of open nodes DCI lists
@@ -3499,7 +3499,7 @@ void ClientSession::modifyNodeDCI(NXCPMessage *request)
    {
       if (object->isDataCollectionTarget() || (object->getObjectClass() == OBJECT_TEMPLATE))
       {
-         if (((Template *)object)->isLockedBySession(m_id))
+         if (((DataCollectionOwner *)object)->isLockedBySession(m_id))
          {
             if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
             {
@@ -3533,7 +3533,7 @@ void ClientSession::modifyNodeDCI(NXCPMessage *request)
 							if (dcObject != NULL)
 							{
 								dcObject->setStatus(ITEM_STATUS_DISABLED, false);
-								if ((bSuccess = ((Template *)object)->addDCObject(dcObject)))
+								if ((bSuccess = ((DataCollectionOwner *)object)->addDCObject(dcObject)))
 								{
 									msg.setField(VID_RCC, RCC_SUCCESS);
 									// Return new item id to client
@@ -3552,7 +3552,7 @@ void ClientSession::modifyNodeDCI(NXCPMessage *request)
                      break;
                   case CMD_MODIFY_NODE_DCI:
                      dwItemId = request->getFieldAsUInt32(VID_DCI_ID);
-							bSuccess = ((Template *)object)->updateDCObject(dwItemId, request, &dwNumMaps, &pdwMapIndex, &pdwMapId, m_dwUserId);
+							bSuccess = ((DataCollectionOwner *)object)->updateDCObject(dwItemId, request, &dwNumMaps, &pdwMapIndex, &pdwMapId, m_dwUserId);
                      if (bSuccess)
                      {
                         msg.setField(VID_RCC, RCC_SUCCESS);
@@ -3579,13 +3579,13 @@ void ClientSession::modifyNodeDCI(NXCPMessage *request)
                      break;
                   case CMD_DELETE_NODE_DCI:
                      dwItemId = request->getFieldAsUInt32(VID_DCI_ID);
-                     bSuccess = ((Template *)object)->deleteDCObject(dwItemId, true, m_dwUserId);
+                     bSuccess = ((DataCollectionOwner *)object)->deleteDCObject(dwItemId, true, m_dwUserId);
                      msg.setField(VID_RCC, bSuccess ? RCC_SUCCESS : RCC_INVALID_DCI_ID);
                      break;
                }
                if (bSuccess)
                {
-                  static_cast<Template*>(object)->setDCIModificationFlag();
+                  static_cast<DataCollectionOwner*>(object)->setDCIModificationFlag();
                   json_t *newValue = object->toJson();
                   writeAuditLogWithValues(AUDIT_OBJECTS, true, dwObjectId, oldValue, newValue, _T("Data collection configuration changed for object %s"), object->getName());
                   json_decref(newValue);
@@ -3635,7 +3635,7 @@ void ClientSession::changeDCIStatus(NXCPMessage *request)
    {
       if (object->isDataCollectionTarget() || (object->getObjectClass() == OBJECT_TEMPLATE))
       {
-         if (((Template *)object)->isLockedBySession(m_id))
+         if (((DataCollectionOwner *)object)->isLockedBySession(m_id))
          {
             if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
             {
@@ -3646,7 +3646,7 @@ void ClientSession::changeDCIStatus(NXCPMessage *request)
                dwNumItems = request->getFieldAsUInt32(VID_NUM_ITEMS);
                pdwItemList = MemAllocArray<UINT32>(dwNumItems);
                request->getFieldAsInt32Array(VID_ITEM_LIST, dwNumItems, pdwItemList);
-               if (((Template *)object)->setItemStatus(dwNumItems, pdwItemList, iStatus))
+               if (((DataCollectionOwner *)object)->setItemStatus(dwNumItems, pdwItemList, iStatus))
                   msg.setField(VID_RCC, RCC_SUCCESS);
                else
                   msg.setField(VID_RCC, RCC_INVALID_DCI_ID);
@@ -3759,7 +3759,7 @@ void ClientSession::clearDCIData(NXCPMessage *request)
          {
 				UINT32 dciId = request->getFieldAsUInt32(VID_DCI_ID);
 				debugPrintf(4, _T("ClearDCIData: request for DCI %d at node %d"), dciId, object->getId());
-            DCObject *dci = ((Template *)object)->getDCObjectById(dciId, m_dwUserId);
+            DCObject *dci = ((DataCollectionOwner *)object)->getDCObjectById(dciId, m_dwUserId);
 				if (dci != NULL)
 				{
 					msg.setField(VID_RCC, dci->deleteAllData() ? RCC_SUCCESS : RCC_DB_FAILURE);
@@ -3807,7 +3807,7 @@ void ClientSession::deleteDCIEntry(NXCPMessage *request)
          {
             UINT32 dciId = request->getFieldAsUInt32(VID_DCI_ID);
             debugPrintf(4, _T("DeleteDCIEntry: request for DCI %d at node %d"), dciId, object->getId());
-            DCObject *dci = ((Template *)object)->getDCObjectById(dciId, m_dwUserId);
+            DCObject *dci = ((DataCollectionOwner *)object)->getDCObjectById(dciId, m_dwUserId);
             if (dci != NULL)
             {
                msg.setField(VID_RCC, dci->deleteEntry(request->getFieldAsUInt32(VID_TIMESTAMP)) ? RCC_SUCCESS : RCC_DB_FAILURE);
@@ -3864,7 +3864,7 @@ void ClientSession::forceDCIPoll(NXCPMessage *request)
          {
 				dwItemId = request->getFieldAsUInt32(VID_DCI_ID);
 				debugPrintf(4, _T("ForceDCIPoll: request for DCI %d at node %d"), dwItemId, object->getId());
-            DCObject *dci = ((Template *)object)->getDCObjectById(dwItemId, m_dwUserId);
+            DCObject *dci = ((DataCollectionOwner *)object)->getDCObjectById(dwItemId, m_dwUserId);
 				if (dci != NULL)
 				{
 				   dci->requestForcePoll(this);
@@ -3919,7 +3919,7 @@ void ClientSession::copyDCI(NXCPMessage *pRequest)
       if ((pSource->isDataCollectionTarget() || (pSource->getObjectClass() == OBJECT_TEMPLATE)) &&
 		    (pDestination->isDataCollectionTarget() || (pDestination->getObjectClass() == OBJECT_TEMPLATE)))
       {
-         if (((Template *)pSource)->isLockedBySession(m_id))
+         if (((DataCollectionOwner *)pSource)->isLockedBySession(m_id))
          {
             bMove = pRequest->getFieldAsUInt16(VID_MOVE_FLAG);
             // Check access rights
@@ -3928,7 +3928,7 @@ void ClientSession::copyDCI(NXCPMessage *pRequest)
             {
                // Attempt to lock destination's DCI list
                if ((pDestination->getId() == pSource->getId()) ||
-                   (((Template *)pDestination)->lockDCIList(m_id, m_sessionName, szLockInfo)))
+                   (((DataCollectionOwner *)pDestination)->lockDCIList(m_id, m_sessionName, szLockInfo)))
                {
                   UINT32 i, *pdwItemList, dwNumItems;
                   const DCObject *pSrcItem;
@@ -3943,19 +3943,19 @@ void ClientSession::copyDCI(NXCPMessage *pRequest)
                   // Copy items
                   for(i = 0; i < dwNumItems; i++)
                   {
-                     pSrcItem = ((Template *)pSource)->getDCObjectById(pdwItemList[i], m_dwUserId);
+                     pSrcItem = ((DataCollectionOwner *)pSource)->getDCObjectById(pdwItemList[i], m_dwUserId);
                      if (pSrcItem != NULL)
                      {
                         pDstItem = pSrcItem->clone();
                         pDstItem->setTemplateId(0, 0);
                         pDstItem->changeBinding(CreateUniqueId(IDG_ITEM),
-                                                (Template *)pDestination, FALSE);
-                        if (((Template *)pDestination)->addDCObject(pDstItem))
+                                                (DataCollectionOwner *)pDestination, FALSE);
+                        if (((DataCollectionOwner *)pDestination)->addDCObject(pDstItem))
                         {
                            if (bMove)
                            {
                               // Delete original item
-                              if (!((Template *)pSource)->deleteDCObject(pdwItemList[i], true, m_dwUserId))
+                              if (!((DataCollectionOwner *)pSource)->deleteDCObject(pdwItemList[i], true, m_dwUserId))
                               {
                                  iErrors++;
                               }
@@ -3976,12 +3976,12 @@ void ClientSession::copyDCI(NXCPMessage *pRequest)
                   // Cleanup
                   free(pdwItemList);
                   if (pDestination->getId() != pSource->getId())
-                     ((Template *)pDestination)->unlockDCIList(m_id);
+                     ((DataCollectionOwner *)pDestination)->unlockDCIList(m_id);
                   msg.setField(VID_RCC, (iErrors == 0) ? RCC_SUCCESS : RCC_DCI_COPY_ERRORS);
 
                   // Queue template update
                   if (pDestination->getObjectClass() == OBJECT_TEMPLATE)
-                     ((Template *)pDestination)->queueUpdate();
+                     ((DataCollectionOwner *)pDestination)->queueUpdate();
                }
                else  // Destination's DCI list already locked by someone else
                {
@@ -4621,11 +4621,10 @@ void ClientSession::getLastValues(NXCPMessage *pRequest)
    {
       if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
       {
-         // Templates allowed here to allow simplified creation of DCI selection dialog in management console.
-         if (object->isDataCollectionTarget() || (object->getObjectClass() == OBJECT_TEMPLATE))
+         if (object->isDataCollectionTarget())
          {
             msg.setField(VID_RCC,
-               ((Template *)object)->getLastValues(&msg,
+               ((DataCollectionTarget *)object)->getLastValues(&msg,
                   pRequest->getFieldAsBoolean(VID_OBJECT_TOOLTIP_ONLY),
                   pRequest->getFieldAsBoolean(VID_OVERVIEW_ONLY),
                   pRequest->getFieldAsBoolean(VID_INCLUDE_NOVALUE_OBJECTS),
@@ -8755,7 +8754,7 @@ UINT32 ClientSession::resolveDCIName(UINT32 dwNode, UINT32 dwItem, TCHAR *ppszNa
 		{
 			if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
 			{
-				pItem = ((Template *)object)->getDCObjectById(dwItem, m_dwUserId);
+				pItem = ((DataCollectionOwner *)object)->getDCObjectById(dwItem, m_dwUserId);
 				if (pItem != NULL)
 				{
                _tcsncpy(ppszName, pItem->getDescription(), MAX_DB_STRING);
@@ -9580,7 +9579,7 @@ void ClientSession::getDCIEventList(NXCPMessage *request)
       {
          if (object->isDataCollectionTarget() || (object->getObjectClass() == OBJECT_TEMPLATE))
          {
-            IntegerArray<UINT32> *eventList = ((Template *)object)->getDCIEventsList();
+            IntegerArray<UINT32> *eventList = ((DataCollectionOwner *)object)->getDCIEventsList();
             msg.setField(VID_NUM_EVENTS, (UINT32)eventList->size());
             msg.setFieldFromInt32Array(VID_EVENT_LIST, eventList);
             delete eventList;
@@ -9641,7 +9640,7 @@ void ClientSession::getDCIScriptList(NXCPMessage *request)
       {
          if (object->isDataCollectionTarget() || (object->getObjectClass() == OBJECT_TEMPLATE))
          {
-            StringSet *scripts = ((Template *)object)->getDCIScriptList();
+            StringSet *scripts = ((DataCollectionOwner *)object)->getDCIScriptList();
             msg.setField(VID_NUM_SCRIPTS, (INT32)scripts->size());
             ScriptNamesCallbackData data;
             data.msg = &msg;
@@ -9918,7 +9917,7 @@ void ClientSession::SendDCIInfo(NXCPMessage *pRequest)
       {
          if (object->isDataCollectionTarget() || (object->getObjectClass() == OBJECT_TEMPLATE))
          {
-				DCObject *pItem = ((Template *)object)->getDCObjectById(pRequest->getFieldAsUInt32(VID_DCI_ID), m_dwUserId);
+				DCObject *pItem = ((DataCollectionOwner *)object)->getDCObjectById(pRequest->getFieldAsUInt32(VID_DCI_ID), m_dwUserId);
 				if ((pItem != NULL) && (pItem->getType() == DCO_TYPE_ITEM))
 				{
 					msg.setField(VID_TEMPLATE_ID, pItem->getTemplateId());

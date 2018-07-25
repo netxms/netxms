@@ -164,7 +164,7 @@ public:
 	void reconcile(const Threshold *src);
 };
 
-class Template;
+class DataCollectionOwner;
 
 /**
  * Generic data collection object
@@ -187,7 +187,7 @@ protected:
 	UINT16 m_flags;
    UINT32 m_dwTemplateId;         // Related template's id
    UINT32 m_dwTemplateItemId;     // Related template item's id
-   Template *m_owner;             // Pointer to node or template object this item related to
+   DataCollectionOwner *m_owner;             // Pointer to node or template object this item related to
    MUTEX m_hMutex;
    StringList *m_schedules;
    time_t m_tLastCheck;          // Last schedule checking time
@@ -224,9 +224,9 @@ protected:
 
 	// --- constructors ---
    DCObject();
-   DCObject(UINT32 dwId, const TCHAR *szName, int iSource, int iPollingInterval, int iRetentionTime, Template *pNode,
+   DCObject(UINT32 dwId, const TCHAR *szName, int iSource, int iPollingInterval, int iRetentionTime, DataCollectionOwner *pNode,
             const TCHAR *pszDescription = NULL, const TCHAR *systemTag = NULL);
-	DCObject(ConfigEntry *config, Template *owner);
+	DCObject(ConfigEntry *config, DataCollectionOwner *owner);
    DCObject(const DCObject *src, bool shadowCopy);
 
 public:
@@ -260,7 +260,7 @@ public:
 	const TCHAR *getPerfTabSettings() const { return m_pszPerfTabSettings; }
    int getPollingInterval() const { return m_iPollingInterval; }
    int getEffectivePollingInterval() const { return (m_iPollingInterval > 0) ? m_iPollingInterval : m_defaultPollingInterval; }
-   Template *getOwner() const { return m_owner; }
+   DataCollectionOwner *getOwner() const { return m_owner; }
    UINT32 getOwnerId() const;
    const TCHAR *getOwnerName() const;
    UINT32 getTemplateId() const { return m_dwTemplateId; }
@@ -293,7 +293,7 @@ public:
    virtual void createMessage(NXCPMessage *pMsg);
    virtual void updateFromMessage(NXCPMessage *pMsg);
 
-   virtual void changeBinding(UINT32 dwNewId, Template *newOwner, BOOL doMacroExpansion);
+   virtual void changeBinding(UINT32 dwNewId, DataCollectionOwner *newOwner, BOOL doMacroExpansion);
 
 	virtual bool deleteAllData();
 	virtual bool deleteEntry(time_t timestamp);
@@ -373,11 +373,11 @@ protected:
 public:
    DCItem();
    DCItem(const DCItem *src, bool shadowCopy);
-   DCItem(DB_HANDLE hdb, DB_RESULT hResult, int iRow, Template *pNode);
+   DCItem(DB_HANDLE hdb, DB_RESULT hResult, int iRow, DataCollectionOwner *pNode);
    DCItem(UINT32 dwId, const TCHAR *szName, int iSource, int iDataType,
-          int iPollingInterval, int iRetentionTime, Template *pNode,
+          int iPollingInterval, int iRetentionTime, DataCollectionOwner *pNode,
           const TCHAR *pszDescription = NULL, const TCHAR *systemTag = NULL);
-	DCItem(ConfigEntry *config, Template *owner);
+	DCItem(ConfigEntry *config, DataCollectionOwner *owner);
    virtual ~DCItem();
 
    virtual DCObject *clone() const;
@@ -419,7 +419,7 @@ public:
    void updateFromMessage(NXCPMessage *pMsg, UINT32 *pdwNumMaps, UINT32 **ppdwMapIndex, UINT32 **ppdwMapId);
    void fillMessageWithThresholds(NXCPMessage *msg, bool activeOnly);
 
-   virtual void changeBinding(UINT32 dwNewId, Template *pNode, BOOL doMacroExpansion);
+   virtual void changeBinding(UINT32 dwNewId, DataCollectionOwner *pNode, BOOL doMacroExpansion);
 
 	virtual bool deleteAllData();
    virtual bool deleteEntry(time_t timestamp);
@@ -626,9 +626,9 @@ public:
 	DCTable();
    DCTable(const DCTable *src, bool shadowCopy);
    DCTable(UINT32 id, const TCHAR *name, int source, int pollingInterval, int retentionTime,
-	        Template *node, const TCHAR *description = NULL, const TCHAR *systemTag = NULL);
-   DCTable(DB_HANDLE hdb, DB_RESULT hResult, int iRow, Template *pNode);
-   DCTable(ConfigEntry *config, Template *owner);
+         DataCollectionOwner *node, const TCHAR *description = NULL, const TCHAR *systemTag = NULL);
+   DCTable(DB_HANDLE hdb, DB_RESULT hResult, int iRow, DataCollectionOwner *pNode);
+   DCTable(ConfigEntry *config, DataCollectionOwner *owner);
 	virtual ~DCTable();
 
 	virtual DCObject *clone() const;

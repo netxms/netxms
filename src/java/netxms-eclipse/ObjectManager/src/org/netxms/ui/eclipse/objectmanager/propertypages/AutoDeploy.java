@@ -32,7 +32,6 @@ import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AgentPolicy;
-import org.netxms.client.objects.Container;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.nxsl.widgets.ScriptEditor;
 import org.netxms.ui.eclipse.objectmanager.Activator;
@@ -50,7 +49,8 @@ public class AutoDeploy extends PropertyPage
 	private Button checkboxEnableDeploy;
 	private Button checkboxEnableUninstall;
 	private ScriptEditor filterSource;
-	private int initialFlags;
+   private boolean initialBind;
+   private boolean initialUnbind;
 	private String initialAutoDeployFilter;
 
 	/* (non-Javadoc)
@@ -64,8 +64,9 @@ public class AutoDeploy extends PropertyPage
 		object = (AgentPolicy)getElement().getAdapter(AgentPolicy.class);
 		if (object == null)	// Paranoid check
 			return dialogArea;
-		
-		initialFlags = object.getFlags();
+
+      initialBind = object.isAutoDeployEnabled();
+      initialUnbind = object.isAutoUninstallEnabled();
 		initialAutoDeployFilter = object.getAutoDeployFilter();
 		
 		GridLayout layout = new GridLayout();
@@ -138,17 +139,10 @@ public class AutoDeploy extends PropertyPage
 	 */
 	protected void applyChanges(final boolean isApply)
 	{
-		int flags = object.getFlags();
-		if (checkboxEnableDeploy.getSelection())
-			flags |= AgentPolicy.PF_AUTO_DEPLOY;
-		else
-			flags &= ~AgentPolicy.PF_AUTO_DEPLOY;
-		if (checkboxEnableUninstall.getSelection())
-			flags |= AgentPolicy.PF_AUTO_UNINSTALL;
-		else
-			flags &= ~Container.CF_AUTO_UNBIND;
+	   boolean apply = checkboxEnableDeploy.getSelection();
+      boolean remove = checkboxEnableUninstall.getSelection();
 			
-		if ((flags == initialFlags) && initialAutoDeployFilter.equals(filterSource.getText()))
+		if ((apply == initialBind) && (remove == initialUnbind) && initialAutoDeployFilter.equals(filterSource.getText()))
 			return;		// Nothing to apply
 
 		if (isApply)
@@ -156,15 +150,16 @@ public class AutoDeploy extends PropertyPage
 		
 		final NXCSession session = ConsoleSharedData.getSession();
 		final NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
-		md.setObjectFlags(flags);
 		md.setAutoBindFilter(filterSource.getText());
+      md.setAutoBindFlags(apply, remove);
 		
 		new ConsoleJob("Updating autodeploy configuration", null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				session.modifyObject(md);
-				initialFlags = md.getObjectFlags();
+            initialBind = md.isAutoBindEnabled();
+            initialUnbind = md.isAutoUnbindEnabled();
 				initialAutoDeployFilter = md.getAutoBindFilter();
 			}
 

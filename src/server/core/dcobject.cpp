@@ -129,7 +129,7 @@ DCObject::DCObject(const DCObject *src, bool shadowCopy)
  * Constructor for creating new DCObject from scratch
  */
 DCObject::DCObject(UINT32 dwId, const TCHAR *szName, int iSource,
-               int iPollingInterval, int iRetentionTime, Template *pNode,
+               int iPollingInterval, int iRetentionTime, DataCollectionOwner *pNode,
                const TCHAR *pszDescription, const TCHAR *systemTag)
 {
    m_id = dwId;
@@ -177,7 +177,7 @@ DCObject::DCObject(UINT32 dwId, const TCHAR *szName, int iSource,
 /**
  * Create DCObject from import file
  */
-DCObject::DCObject(ConfigEntry *config, Template *owner)
+DCObject::DCObject(ConfigEntry *config, DataCollectionOwner *owner)
 {
    m_id = CreateUniqueId(IDG_ITEM);
    m_guid = config->getSubEntryValueAsUUID(_T("guid"));
@@ -448,7 +448,7 @@ void DCObject::addSchedule(const TCHAR *pszSchedule)
 /**
  * Set new ID and node/template association
  */
-void DCObject::changeBinding(UINT32 dwNewId, Template *newOwner, BOOL doMacroExpansion)
+void DCObject::changeBinding(UINT32 dwNewId, DataCollectionOwner *newOwner, BOOL doMacroExpansion)
 {
    lock();
    m_owner = newOwner;

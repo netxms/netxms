@@ -8203,7 +8203,7 @@ void Node::setTunnelId(const uuid& tunnelId, const TCHAR *certSubject)
  */
 static bool PolicySelectionFilter(NetObj *object, void *userData)
 {
-   return object->isAgentPolicy() && !object->isDeleted() && static_cast<AgentPolicy*>(object)->isAutoDeployEnabled();
+   return object->isAgentPolicy() && !object->isDeleted() && static_cast<AgentPolicy*>(object)->isAutoBindEnabled();
 }
 
 /**
@@ -8238,7 +8238,7 @@ void Node::deployAgentPolicies()
       }
       else if (decision == AutoBindDecision_Unbind)
       {
-         if (policy->isAutoUninstallEnabled() && policy->isChild(m_id))
+         if (policy->isAutoUnbindEnabled() && policy->isChild(m_id))
          {
             DbgPrintf(4, _T("Node::deployAgentPolicies(): uninstalling policy %d \"%s\" from node %d \"%s\""),
                       policy->getId(), policy->getName(), m_id, m_name);

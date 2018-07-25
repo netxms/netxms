@@ -27,13 +27,12 @@ import org.netxms.client.NXCSession;
  *
  */
 public class AgentPolicy extends GenericObject
-{
-   public static final int PF_AUTO_DEPLOY = 0x000001;
-   public static final int PF_AUTO_UNINSTALL = 0x000002;
-   
+{   
 	private int version;
 	private int policyType;
 	private int flags;
+   private boolean autoBind;
+   private boolean autoUnbind;
 	private String autoDeployFilter;
 	
 	/**
@@ -48,6 +47,8 @@ public class AgentPolicy extends GenericObject
 		version = msg.getFieldAsInt32(NXCPCodes.VID_VERSION);
 		flags = msg.getFieldAsInt32(NXCPCodes.VID_FLAGS);
 		autoDeployFilter = msg.getFieldAsString(NXCPCodes.VID_AUTOBIND_FILTER);
+      autoBind = msg.getFieldAsBoolean(NXCPCodes.VID_AUTOBIND_FLAG);
+      autoUnbind = msg.getFieldAsBoolean(NXCPCodes.VID_AUTOUNBIND_FLAG);
 	}
 
 	/* (non-Javadoc)
@@ -88,7 +89,7 @@ public class AgentPolicy extends GenericObject
     */
    public boolean isAutoDeployEnabled()
    {
-      return (flags & PF_AUTO_DEPLOY) != 0;
+      return autoBind;
    }
 
    /**
@@ -96,7 +97,7 @@ public class AgentPolicy extends GenericObject
     */
    public boolean isAutoUninstallEnabled()
    {
-      return (flags & PF_AUTO_UNINSTALL) != 0;
+      return autoUnbind;
    }
 
    /**

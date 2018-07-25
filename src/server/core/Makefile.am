@@ -4,7 +4,7 @@ radiusdir=$(pkgdatadir)
 radius_DATA = radius.dict
 
 lib_LTLIBRARIES = libnxcore.la
-libnxcore_la_SOURCES =  accesspoint.cpp acl.cpp actions.cpp addrlist.cpp \
+libnxcore_la_SOURCES = abind_target.cpp accesspoint.cpp acl.cpp actions.cpp addrlist.cpp \
 			admin.cpp agent.cpp agent_policy.cpp alarm.cpp alarm_category.cpp audit.cpp \
 			ap_config.cpp ap_jobs.cpp ap_logparser.cpp beacon.cpp bizservice.cpp \
 			bizsvcroot.cpp bridge.cpp cas_validator.cpp ccy.cpp cdp.cpp \
@@ -12,7 +12,7 @@ libnxcore_la_SOURCES =  accesspoint.cpp acl.cpp actions.cpp addrlist.cpp \
 			components.cpp condition.cpp config.cpp console.cpp \
 			container.cpp correlate.cpp dashboard.cpp datacoll.cpp dbwrite.cpp \
 			dc_nxsl.cpp dci_recalc.cpp dcitem.cpp dcithreshold.cpp dcivalue.cpp \
-			dcobject.cpp dcst.cpp dctable.cpp dctarget.cpp \
+			dcobject.cpp dcowner.cpp dcst.cpp dctable.cpp dctarget.cpp \
 			dctcolumn.cpp dctthreshold.cpp debug.cpp devdb.cpp dfile_info.cpp \
 			download_job.cpp ef.cpp email.cpp entirenet.cpp \
 			epp.cpp events.cpp evproc.cpp fdb.cpp \
@@ -34,7 +34,7 @@ libnxcore_la_SOURCES =  accesspoint.cpp acl.cpp actions.cpp addrlist.cpp \
 			svccontainer.cpp swpkg.cpp syncer.cpp syslogd.cpp \
 			template.cpp tools.cpp tracert.cpp tunnel.cpp ucc.cpp \
 			uniroot.cpp upload_job.cpp uptimecalc.cpp userdb.cpp \
-			userdb_objects.cpp vpnconn.cpp vrrp.cpp watchdog.cpp \
+			userdb_objects.cpp vobject.cpp vpnconn.cpp vrrp.cpp watchdog.cpp \
 			winperf.cpp xmpp.cpp zeromq.cpp zone.cpp
 libnxcore_la_CPPFLAGS = -I@top_srcdir@/include -I@top_srcdir@/src/server/include -DNXCORE_EXPORTS \
 	@MQTT_CPPFLAGS@ @ZEROMQ_CPPFLAGS@ @PYTHON_CPPFLAGS@

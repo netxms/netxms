@@ -203,7 +203,7 @@ enum AutoBindDecision
 struct TEMPLATE_UPDATE_INFO
 {
    int updateType;
-   Template *pTemplate;
+   DataCollectionOwner *pTemplate;
    UINT32 targetId;
    bool removeDCI;
 };
@@ -894,19 +894,80 @@ inline void NetObj::decRefCount()
    MutexUnlock(m_mutexRefCount);
 }
 
+class NXCORE_EXPORTABLE VersionableObject
+{
+protected:
+   UINT32 m_version;
+   MUTEX m_mutexProperties;
+   NetObj *m_parent;
+
+   void internalLock() const { MutexLock(m_mutexProperties); }
+   void internalUnlock() const { MutexUnlock(m_mutexProperties); }
+
+   void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId);
+
+public:
+   VersionableObject(NetObj *parent);
+   VersionableObject(NetObj *parent, ConfigEntry *config);
+   ~VersionableObject();
+   void updateVersion() { internalLock(); m_version++; internalUnlock(); }
+   UINT32 getVersion() { internalLock(); return m_version; internalUnlock(); }
+   virtual void updateFromImport(ConfigEntry *config);
+
+   virtual bool saveToDatabase(DB_HANDLE hdb);
+   virtual bool deleteFromDatabase(DB_HANDLE hdb);
+   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
+   virtual void toJson(json_t *root);
+};
+
+class NXCORE_EXPORTABLE AutoBindTarget
+{
+protected:
+   TCHAR *m_bindFilterSource;
+   NXSL_Program *m_bindFilter;
+   bool m_autoBindFlag;
+   bool m_autoUnbindFlag;
+   NetObj *m_parent;
+   MUTEX m_mutexProperties;
+
+   void internalLock() const { MutexLock(m_mutexProperties); }
+   void internalUnlock() const { MutexUnlock(m_mutexProperties); }
+
+   UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
+   void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId);
+
+public:
+   AutoBindTarget(NetObj *parent);
+   AutoBindTarget(NetObj *parent, ConfigEntry *config);
+   virtual ~AutoBindTarget();
+
+   virtual bool saveToDatabase(DB_HANDLE hdb);
+   virtual bool deleteFromDatabase(DB_HANDLE hdb);
+   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
+   virtual void updateFromImport(ConfigEntry *config);
+
+   AutoBindDecision isApplicable(DataCollectionTarget *object);
+   bool isAutoBindEnabled() { return m_autoBindFlag; }
+   bool isAutoUnbindEnabled() { return m_autoBindFlag && m_autoUnbindFlag; }
+   void setAutoBindFilter(const TCHAR *filter);
+   void setAutoBindMode(bool doBind, bool doUnbind);
+
+   const TCHAR *getAutoBindScriptSource() const { return m_bindFilterSource; }
+
+   void toJson(json_t *root);
+   void createExportRecord(String &str);
+};
+
 /**
- * Data collection template class
+ * Data collection owner class
  */
-class NXCORE_EXPORTABLE Template : public NetObj
+class NXCORE_EXPORTABLE DataCollectionOwner : public NetObj
 {
 protected:
 	ObjectArray<DCObject> *m_dcObjects;
    int m_dciLockStatus;
-   UINT32 m_dwVersion;
    bool m_dciListModified;
    TCHAR m_szCurrDCIOwner[MAX_SESSION_NAME];
-	TCHAR *m_applyFilterSource;
-	NXSL_Program *m_applyFilter;
 	RWLOCK m_dciAccessLock;
 
    virtual void prepareForDeletion();
@@ -914,7 +975,7 @@ protected:
    virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId);
    virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
 
-   virtual void onDataCollectionChange();
+   virtual void onDataCollectionChange() {}
 
    void loadItemsFromDB(DB_HANDLE hdb);
    void destroyItems();
@@ -927,23 +988,14 @@ protected:
    void destroyItem(DCObject *object, int index);
 
 public:
-   Template();
-   Template(const TCHAR *pszName);
-	Template(ConfigEntry *config);
-   virtual ~Template();
-
-   virtual int getObjectClass() const { return OBJECT_TEMPLATE; }
-
-   virtual bool saveToDatabase(DB_HANDLE hdb);
-   virtual bool deleteFromDatabase(DB_HANDLE hdb);
-   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
+   DataCollectionOwner();
+   DataCollectionOwner(const TCHAR *pszName);
+   DataCollectionOwner(ConfigEntry *config);
+   virtual ~DataCollectionOwner();
 
    virtual json_t *toJson();
 
    virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
-
-   int getVersionMajor() { return m_dwVersion >> 16; }
-   int getVersionMinor() { return m_dwVersion & 0xFFFF; }
 
    int getItemCount() { return m_dcObjects->size(); }
    bool addDCObject(DCObject *object, bool alreadyLocked = false);
@@ -957,18 +1009,18 @@ public:
    DCObject *getDCObjectByDescription(const TCHAR *description, UINT32 userId);
    NXSL_Value *getAllDCObjectsForNXSL(NXSL_VM *vm, const TCHAR *name, const TCHAR *description, UINT32 userId);
    bool lockDCIList(int sessionId, const TCHAR *pszNewOwner, TCHAR *pszCurrOwner);
-   bool unlockDCIList(int sessionId);
+   virtual bool unlockDCIList(int sessionId);
    void setDCIModificationFlag() { m_dciListModified = true; }
    void sendItemsToClient(ClientSession *pSession, UINT32 dwRqId);
    bool isLockedBySession(int sessionId) { return m_dciLockStatus == sessionId; }
    IntegerArray<UINT32> *getDCIEventsList();
    StringSet *getDCIScriptList();
-
    BOOL applyToTarget(DataCollectionTarget *pNode);
-	AutoBindDecision isApplicable(DataCollectionTarget *object);
-	bool isAutoApplyEnabled() { return (m_flags & TF_AUTO_APPLY) ? true : false; }
-	bool isAutoRemoveEnabled() { return ((m_flags & (TF_AUTO_APPLY | TF_AUTO_REMOVE)) == (TF_AUTO_APPLY | TF_AUTO_REMOVE)) ? true : false; }
-	void setAutoApplyFilter(const TCHAR *filter);
+
+   virtual bool saveToDatabase(DB_HANDLE hdb);
+   virtual bool deleteFromDatabase(DB_HANDLE hdb);
+   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
+
    void queueUpdate();
    void queueRemoveFromTarget(UINT32 targetId, bool removeDCI);
 
@@ -977,8 +1029,36 @@ public:
 
 	bool enumDCObjects(bool (* pfCallback)(DCObject *, UINT32, void *), void *pArg);
 	void associateItems();
+};
 
-   UINT32 getLastValues(NXCPMessage *msg, bool objectTooltipOnly, bool overviewOnly, bool includeNoValueObjects, UINT32 userId);
+/**
+ * Data collection template class
+ */
+class NXCORE_EXPORTABLE Template: public DataCollectionOwner, public AutoBindTarget, public VersionableObject
+{
+protected:
+   virtual void prepareForDeletion();
+   virtual void onDataCollectionChange();
+
+   virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId);
+   virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
+
+public:
+   Template() : DataCollectionOwner(), AutoBindTarget(this), VersionableObject(this) { }
+   Template(ConfigEntry *config);
+   Template(const TCHAR *pszName) : DataCollectionOwner(pszName), AutoBindTarget(this), VersionableObject(this) { }
+
+   virtual int getObjectClass() const { return OBJECT_TEMPLATE; }
+
+   virtual bool saveToDatabase(DB_HANDLE hdb);
+   virtual bool deleteFromDatabase(DB_HANDLE hdb);
+   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
+   virtual bool unlockDCIList(int sessionId);
+
+   virtual void updateFromImport(ConfigEntry *config);
+   virtual json_t *toJson();
+
+   void createExportRecord(String &str);
 };
 
 /**
@@ -1215,7 +1295,7 @@ struct ProxyInfo
 /**
  * Common base class for all objects capable of collecting data
  */
-class NXCORE_EXPORTABLE DataCollectionTarget : public Template
+class NXCORE_EXPORTABLE DataCollectionTarget : public DataCollectionOwner
 {
 protected:
    IntegerArray<UINT32> *m_deletedItems;
@@ -1328,6 +1408,8 @@ public:
    virtual bool isReadyForInstancePoll();
    void lockForInstancePoll();
    void unlockForInstancePoll();
+
+   UINT32 getLastValues(NXCPMessage *msg, bool objectTooltipOnly, bool overviewOnly, bool includeNoValueObjects, UINT32 userId);
 };
 
 inline bool DataCollectionTarget::isReadyForInstancePoll()
@@ -2438,60 +2520,63 @@ public:
 /**
  * Generic container object
  */
-class NXCORE_EXPORTABLE Container : public NetObj
+class NXCORE_EXPORTABLE AbstractContainer : public NetObj
 {
 private:
    UINT32 *m_pdwChildIdList;
    UINT32 m_dwChildIdListSize;
 
 protected:
-	NXSL_Program *m_bindFilter;
-	TCHAR *m_bindFilterSource;
-
    virtual void fillMessageInternal(NXCPMessage *msg, UINT32 userId);
    virtual UINT32 modifyFromMessageInternal(NXCPMessage *request);
 
-   void setAutoBindFilterInternal(const TCHAR *script);
-
 public:
-   Container();
-   Container(const TCHAR *pszName, UINT32 dwCategory);
-   virtual ~Container();
-
-   virtual int getObjectClass() const { return OBJECT_CONTAINER; }
+   AbstractContainer();
+   AbstractContainer(const TCHAR *pszName, UINT32 dwCategory);
+   virtual ~AbstractContainer();
 
    virtual bool saveToDatabase(DB_HANDLE hdb);
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
    virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
    virtual void linkObjects();
 
-	virtual bool showThresholdSummary();
-
    virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 
    virtual json_t *toJson();
 
+   void linkObject(NetObj *pObject) { addChild(pObject); pObject->addParent(this); }
+};
+
+class NXCORE_EXPORTABLE Container : public AbstractContainer, public AutoBindTarget
+{
+protected:
+   UINT32 modifyFromMessageInternal(NXCPMessage *request);
+   virtual void fillMessageInternal(NXCPMessage *msg, UINT32 userId);
+
+public:
+   Container() : AbstractContainer(), AutoBindTarget(this) {}
+   Container(const TCHAR *pszName, UINT32 dwCategory) : AbstractContainer(pszName, dwCategory), AutoBindTarget(this) {}
+   virtual ~Container() {}
+
+   virtual int getObjectClass() const { return OBJECT_CONTAINER; }
+
+   virtual bool saveToDatabase(DB_HANDLE hdb);
+   virtual bool deleteFromDatabase(DB_HANDLE hdb);
+   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
+   virtual bool showThresholdSummary();
+
    virtual NXSL_Value *createNXSLObject(NXSL_VM *vm);
 
-   void linkObject(NetObj *pObject) { addChild(pObject); pObject->addParent(this); }
-
-   AutoBindDecision isSuitableForObject(NetObj *object);
-	bool isAutoBindEnabled() const { return (m_flags & CF_AUTO_BIND) ? true : false; }
-	bool isAutoUnbindEnabled() const { return ((m_flags & (CF_AUTO_BIND | CF_AUTO_UNBIND)) == (CF_AUTO_BIND | CF_AUTO_UNBIND)) ? true : false; }
-	const TCHAR *getAutoBindScriptSource() const { return m_bindFilterSource; }
-
-	void setAutoBindFilter(const TCHAR *script) { lockProperties(); setAutoBindFilterInternal(script); unlockProperties(); }
-	void setAutoBindMode(bool doBind, bool doUnbind);
 };
 
 /**
  * Template group object
  */
-class NXCORE_EXPORTABLE TemplateGroup : public Container
+class NXCORE_EXPORTABLE TemplateGroup : public AbstractContainer
 {
 public:
-   TemplateGroup() : Container() { }
-   TemplateGroup(const TCHAR *pszName) : Container(pszName, 0) { m_status = STATUS_NORMAL; }
+   TemplateGroup() : AbstractContainer() { }
+   TemplateGroup(const TCHAR *pszName) : AbstractContainer(pszName, 0) { m_status = STATUS_NORMAL; }
    virtual ~TemplateGroup() { }
 
    virtual int getObjectClass() const { return OBJECT_TEMPLATEGROUP; }
@@ -2503,7 +2588,7 @@ public:
 /**
  * Rack object
  */
-class NXCORE_EXPORTABLE Rack : public Container
+class NXCORE_EXPORTABLE Rack : public AbstractContainer
 {
 protected:
 	int m_height;	// Rack height in units
@@ -2662,13 +2747,10 @@ public:
 /**
  * Generic agent policy object
  */
-class NXCORE_EXPORTABLE AgentPolicy : public NetObj
+class NXCORE_EXPORTABLE AgentPolicy : public NetObj, public AutoBindTarget, public VersionableObject
 {
 protected:
-	UINT32 m_version;
 	int m_policyType;
-   TCHAR *m_deployFilterSource;
-   NXSL_Program *m_deployFilter;
 
 	bool savePolicyCommonProperties(DB_HANDLE hdb);
 
@@ -2678,7 +2760,6 @@ protected:
 public:
    AgentPolicy(int type);
    AgentPolicy(const TCHAR *name, int type);
-   virtual ~AgentPolicy();
 
    virtual int getObjectClass() const { return OBJECT_AGENTPOLICY; }
 
@@ -2692,10 +2773,6 @@ public:
 
 	virtual bool createDeploymentMessage(NXCPMessage *msg);
 	virtual bool createUninstallMessage(NXCPMessage *msg);
-
-	AutoBindDecision isApplicable(Node *node);
-   bool isAutoDeployEnabled() { return (m_flags & PF_AUTO_DEPLOY) ? true : false; }
-   bool isAutoUninstallEnabled() { return ((m_flags & (PF_AUTO_DEPLOY | PF_AUTO_UNINSTALL)) == (PF_AUTO_DEPLOY | PF_AUTO_UNINSTALL)) ? true : false; }
 
 	void linkNode(Node *node) { addChild(node); node->addParent(this); }
 	void unlinkNode(Node *node) { deleteChild(node); node->deleteParent(this); }
@@ -2759,11 +2836,11 @@ class NXCORE_EXPORTABLE AgentPolicyLogParser : public AgentPolicy
 /**
  * Policy group object
  */
-class NXCORE_EXPORTABLE PolicyGroup : public Container
+class NXCORE_EXPORTABLE PolicyGroup : public AbstractContainer
 {
 public:
-   PolicyGroup() : Container() { }
-   PolicyGroup(const TCHAR *pszName) : Container(pszName, 0) { }
+   PolicyGroup() : AbstractContainer() { }
+   PolicyGroup(const TCHAR *pszName) : AbstractContainer(pszName, 0) { }
    virtual ~PolicyGroup() { }
 
    virtual int getObjectClass() const { return OBJECT_POLICYGROUP; }
@@ -2801,11 +2878,11 @@ public:
 /**
  * Network map group object
  */
-class NXCORE_EXPORTABLE NetworkMapGroup : public Container
+class NXCORE_EXPORTABLE NetworkMapGroup : public AbstractContainer
 {
 public:
-   NetworkMapGroup() : Container() { }
-   NetworkMapGroup(const TCHAR *pszName) : Container(pszName, 0) { }
+   NetworkMapGroup() : AbstractContainer() { }
+   NetworkMapGroup(const TCHAR *pszName) : AbstractContainer(pszName, 0) { }
    virtual ~NetworkMapGroup() { }
 
    virtual int getObjectClass() const { return OBJECT_NETWORKMAPGROUP; }
@@ -2910,7 +2987,7 @@ public:
 /**
  * Dashboard object
  */
-class NXCORE_EXPORTABLE Dashboard : public Container
+class NXCORE_EXPORTABLE Dashboard : public AbstractContainer
 {
 protected:
 	int m_numColumns;
@@ -2940,11 +3017,11 @@ public:
 /**
  * Dashboard group object
  */
-class NXCORE_EXPORTABLE DashboardGroup : public Container
+class NXCORE_EXPORTABLE DashboardGroup : public AbstractContainer
 {
 public:
-   DashboardGroup() : Container() { }
-   DashboardGroup(const TCHAR *pszName) : Container(pszName, 0) { }
+   DashboardGroup() : AbstractContainer() { }
+   DashboardGroup(const TCHAR *pszName) : AbstractContainer(pszName, 0) { }
    virtual ~DashboardGroup() { }
 
    virtual int getObjectClass() const { return OBJECT_DASHBOARDGROUP; }
@@ -3006,7 +3083,7 @@ public:
 /**
  * Service container - common logic for BusinessService, NodeLink and BusinessServiceRoot
  */
-class NXCORE_EXPORTABLE ServiceContainer : public Container
+class NXCORE_EXPORTABLE ServiceContainer : public AbstractContainer
 {
 	enum Period { DAY, WEEK, MONTH };
 

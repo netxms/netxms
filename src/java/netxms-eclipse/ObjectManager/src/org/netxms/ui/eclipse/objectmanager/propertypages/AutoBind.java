@@ -49,7 +49,8 @@ public class AutoBind extends PropertyPage
 	private Button checkboxEnableBind;
 	private Button checkboxEnableUnbind;
 	private ScriptEditor filterSource;
-	private int initialFlags;
+   private boolean initialBind;
+   private boolean initialUnbind;
 	private String initialAutoBindFilter;
 
 	/* (non-Javadoc)
@@ -63,8 +64,9 @@ public class AutoBind extends PropertyPage
 		object = (Container)getElement().getAdapter(Container.class);
 		if (object == null)	// Paranoid check
 			return dialogArea;
-		
-		initialFlags = object.getFlags();
+
+      initialBind = object.isAutoBindEnabled();
+      initialUnbind = object.isAutoUnbindEnabled();
 		initialAutoBindFilter = object.getAutoBindFilter();
 		
 		GridLayout layout = new GridLayout();
@@ -137,17 +139,10 @@ public class AutoBind extends PropertyPage
 	 */
 	protected void applyChanges(final boolean isApply)
 	{
-		int flags = object.getFlags();
-		if (checkboxEnableBind.getSelection())
-			flags |= Container.CF_AUTO_BIND;
-		else
-			flags &= ~Container.CF_AUTO_BIND;
-		if (checkboxEnableUnbind.getSelection())
-			flags |= Container.CF_AUTO_UNBIND;
-		else
-			flags &= ~Container.CF_AUTO_UNBIND;
+      boolean apply = checkboxEnableBind.getSelection();
+      boolean remove = checkboxEnableUnbind.getSelection();
 			
-		if ((flags == initialFlags) && initialAutoBindFilter.equals(filterSource.getText()))
+		if ((apply == initialBind) && (remove == initialUnbind) && initialAutoBindFilter.equals(filterSource.getText()))
 			return;		// Nothing to apply
 
 		if (isApply)
@@ -155,15 +150,16 @@ public class AutoBind extends PropertyPage
 		
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		final NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
-		md.setObjectFlags(flags);
 		md.setAutoBindFilter(filterSource.getText());
+      md.setAutoBindFlags(apply, remove);
 		
 		new ConsoleJob(Messages.get().AutoBind_JobName, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				session.modifyObject(md);
-				initialFlags = md.getObjectFlags();
+		      initialBind = md.isAutoBindEnabled();
+		      initialUnbind = md.isAutoUnbindEnabled();
 				initialAutoBindFilter = md.getAutoBindFilter();
 			}
 

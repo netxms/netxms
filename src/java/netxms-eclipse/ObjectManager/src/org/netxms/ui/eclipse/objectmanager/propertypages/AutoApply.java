@@ -49,7 +49,8 @@ public class AutoApply extends PropertyPage
 	private Button checkboxEnableApply;
 	private Button checkboxEnableRemove;
 	private ScriptEditor filterSource;
-	private int initialFlags;
+	private boolean initialBind;
+   private boolean initialUnbind;
 	private String initialApplyFilter;
 
 	/* (non-Javadoc)
@@ -64,7 +65,8 @@ public class AutoApply extends PropertyPage
 		if (object == null)	// Paranoid check
 			return dialogArea;
 		
-		initialFlags = object.getFlags();
+		initialBind = object.isAutoApplyEnabled();
+		initialUnbind = object.isAutoRemoveEnabled();
 		initialApplyFilter = object.getAutoApplyFilter();
 		
 		GridLayout layout = new GridLayout();
@@ -138,17 +140,10 @@ public class AutoApply extends PropertyPage
 	 */
 	protected void applyChanges(final boolean isApply)
 	{
-		int flags = object.getFlags();
-		if (checkboxEnableApply.getSelection())
-			flags |= Template.TF_AUTO_APPLY;
-		else
-			flags &= ~Template.TF_AUTO_APPLY;
-		if (checkboxEnableRemove.getSelection())
-			flags |= Template.TF_AUTO_REMOVE;
-		else
-			flags &= ~Template.TF_AUTO_REMOVE;
+	   boolean apply = checkboxEnableApply.getSelection();
+      boolean remove = checkboxEnableRemove.getSelection();
 			
-		if ((flags == initialFlags) && initialApplyFilter.equals(filterSource.getText()))
+		if ((apply == initialBind) && (remove == initialUnbind) && initialApplyFilter.equals(filterSource.getText()))
 			return;		// Nothing to apply
 		
 		if (isApply)
@@ -157,14 +152,15 @@ public class AutoApply extends PropertyPage
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		final NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
 		md.setAutoBindFilter(filterSource.getText());
-		md.setObjectFlags(flags);
+		md.setAutoBindFlags(apply, remove);
 		
 		new ConsoleJob(Messages.get().AutoApply_JobName, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				session.modifyObject(md);
-				initialFlags = md.getObjectFlags();
+		      initialBind = md.isAutoBindEnabled();
+		      initialUnbind = md.isAutoUnbindEnabled();
 				initialApplyFilter = md.getAutoBindFilter();
 			}
 

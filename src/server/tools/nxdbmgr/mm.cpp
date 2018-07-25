@@ -66,7 +66,7 @@ static DWORD CreateMapObject(const TCHAR *name, const TCHAR *description)
               _T("last_modified,status_calc_alg,status_prop_alg,")
               _T("status_fixed_val,status_shift,status_translation,")
               _T("status_single_threshold,status_thresholds,location_type,")
-				  _T("latitude,longitude,location_accuracy,location_timestamp,submap_id,image,comments,maint_mode,maint_event_id) VALUES ")
+				  _T("latitude,longitude,location_accuracy,location_timestamp,submap_id,image,comments,state_before_maint,maint_event_id) VALUES ")
               _T("(%d,'%s',%s,0,0,0,1,") TIME_T_FMT _T(",0,0,0,0,0,0,'00000000',0,")
 				  _T("'0.000000','0.000000','00000000-0000-0000-0000-000000000000',%s,'0',0)"),
               (int)id, (const TCHAR *)uuid::generate().toString(),

@@ -370,7 +370,7 @@ void DataCollector(void *arg)
    }
    else     /* target == NULL */
    {
-      Template *n = pItem->getOwner();
+      DataCollectionOwner *n = pItem->getOwner();
       nxlog_debug(5, _T("DataCollector: attempt to collect information for non-existing or inaccessible node (DCI=%d \"%s\" target=%d sourceNode=%d)"),
                   pItem->getId(), pItem->getName(), (n != NULL) ? (int)n->getId() : -1, sourceNodeId);
    }

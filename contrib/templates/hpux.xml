@@ -17,7 +17,7 @@
 		<template id="156">
 			<guid>5bf05838-aad4-4dc5-a4da-86422761936d</guid>
 			<name>HP-UX</name>
-			<flags>1</flags>
+			<flags>0</flags>
 			<path>
 				<element id="1">Operating Systems</element>
 			</path>
@@ -308,7 +308,7 @@
 					<instanceFilter></instanceFilter>
 				</dci>
 			</dataCollection>
-			<filter>return $node-&gt;isAgent &amp;&amp; $node-&gt;platformName like &quot;HP-UX-*&quot;;</filter>
+			<filter autoBind="true" autoRemove="false">return $node-&gt;isAgent &amp;&amp; $node-&gt;platformName like &quot;HP-UX-*&quot;;</filter>
 		</template>
 	</templates>
 	<traps>

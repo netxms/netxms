@@ -40,7 +40,7 @@ bool ThrottleHousekeeper();
 /**
  * Default constructor
  */
-DataCollectionTarget::DataCollectionTarget() : Template()
+DataCollectionTarget::DataCollectionTarget() : DataCollectionOwner()
 {
    m_deletedItems = new IntegerArray<UINT32>(32, 32);
    m_deletedTables = new IntegerArray<UINT32>(32, 32);
@@ -56,7 +56,7 @@ DataCollectionTarget::DataCollectionTarget() : Template()
 /**
  * Constructor for creating new data collection capable objects
  */
-DataCollectionTarget::DataCollectionTarget(const TCHAR *name) : Template(name)
+DataCollectionTarget::DataCollectionTarget(const TCHAR *name) : DataCollectionOwner(name)
 {
    m_deletedItems = new IntegerArray<UINT32>(32, 32);
    m_deletedTables = new IntegerArray<UINT32>(32, 32);
@@ -85,7 +85,9 @@ DataCollectionTarget::~DataCollectionTarget()
  */
 bool DataCollectionTarget::deleteFromDatabase(DB_HANDLE hdb)
 {
-   bool success = Template::deleteFromDatabase(hdb);
+   bool success = DataCollectionOwner::deleteFromDatabase(hdb);
+   if(success)
+      success = executeQueryOnObject(hdb, _T("DELETE FROM dct_node_map WHERE node_id=?"));
    if (success)
    {
       TCHAR query[256];
@@ -103,7 +105,7 @@ bool DataCollectionTarget::deleteFromDatabase(DB_HANDLE hdb)
  */
 void DataCollectionTarget::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
 {
-   Template::fillMessageInternal(msg, userId);
+   DataCollectionOwner::fillMessageInternal(msg, userId);
 }
 
 /**
@@ -111,7 +113,7 @@ void DataCollectionTarget::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
  */
 void DataCollectionTarget::fillMessageInternalStage2(NXCPMessage *msg, UINT32 userId)
 {
-   Template::fillMessageInternalStage2(msg, userId);
+   DataCollectionOwner::fillMessageInternalStage2(msg, userId);
 
    // Sent all DCIs marked for display on overview page or in tooltips
    UINT32 fieldIdOverview = VID_OVERVIEW_DCI_LIST_BASE;
@@ -151,7 +153,7 @@ void DataCollectionTarget::fillMessageInternalStage2(NXCPMessage *msg, UINT32 us
  */
 UINT32 DataCollectionTarget::modifyFromMessageInternal(NXCPMessage *pRequest)
 {
-   return Template::modifyFromMessageInternal(pRequest);
+   return DataCollectionOwner::modifyFromMessageInternal(pRequest);
 }
 
 /**
@@ -1314,7 +1316,7 @@ UINT32 DataCollectionTarget::getEffectiveSourceNode(DCObject *dco)
  */
 static bool TemplateSelectionFilter(NetObj *object, void *userData)
 {
-   return (object->getObjectClass() == OBJECT_TEMPLATE) && !object->isDeleted() && static_cast<Template*>(object)->isAutoApplyEnabled();
+   return (object->getObjectClass() == OBJECT_TEMPLATE) && !object->isDeleted() && static_cast<Template*>(object)->isAutoBindEnabled();
 }
 
 /**
@@ -1342,7 +1344,7 @@ void DataCollectionTarget::applyUserTemplates()
       }
       else if (decision == AutoBindDecision_Unbind)
       {
-         if (pTemplate->isAutoRemoveEnabled() && pTemplate->isChild(m_id))
+         if (pTemplate->isAutoUnbindEnabled() && pTemplate->isChild(m_id))
          {
             DbgPrintf(4, _T("DataCollectionTarget::applyUserTemplates(): removing template %d \"%s\" from object %d \"%s\""),
                       pTemplate->getId(), pTemplate->getName(), m_id, m_name);
@@ -1377,7 +1379,7 @@ void DataCollectionTarget::updateContainerMembership()
    for(int i = 0; i < containers->size(); i++)
    {
       Container *pContainer = (Container *)containers->get(i);
-      AutoBindDecision decision = pContainer->isSuitableForObject(this);
+      AutoBindDecision decision = pContainer->isApplicable(this);
       if (decision == AutoBindDecision_Bind)
       {
          if (!pContainer->isChild(m_id))
@@ -1412,7 +1414,7 @@ void DataCollectionTarget::updateContainerMembership()
  */
 json_t *DataCollectionTarget::toJson()
 {
-   json_t *root = Template::toJson();
+   json_t *root = DataCollectionOwner::toJson();
    json_object_set_new(root, "pingTime", json_integer(m_pingTime));
    json_object_set_new(root, "pingLastTimeStamp", json_integer(m_pingLastTimeStamp));
    return root;
@@ -1734,4 +1736,40 @@ bool DataCollectionTarget::updateInstances(DCObject *root, StringMap *instances,
 
    unlockDciAccess();
    return changed;
+}
+
+/**
+ * Get last (current) DCI values.
+ */
+UINT32 DataCollectionTarget::getLastValues(NXCPMessage *msg, bool objectTooltipOnly, bool overviewOnly, bool includeNoValueObjects, UINT32 userId)
+{
+   lockDciAccess(false);
+
+   UINT32 dwId = VID_DCI_VALUES_BASE, dwCount = 0;
+   for(int i = 0; i < m_dcObjects->size(); i++)
+   {
+      DCObject *object = m_dcObjects->get(i);
+      if ((object->hasValue() || includeNoValueObjects) &&
+          (!objectTooltipOnly || object->isShowOnObjectTooltip()) &&
+          (!overviewOnly || object->isShowInObjectOverview()) &&
+          object->hasAccess(userId))
+      {
+         if (object->getType() == DCO_TYPE_ITEM)
+         {
+            ((DCItem *)object)->fillLastValueMessage(msg, dwId);
+            dwId += 50;
+            dwCount++;
+         }
+         else if (object->getType() == DCO_TYPE_TABLE)
+         {
+            ((DCTable *)object)->fillLastValueSummaryMessage(msg, dwId);
+            dwId += 50;
+            dwCount++;
+         }
+      }
+   }
+   msg->setField(VID_NUM_ITEMS, dwCount);
+
+   unlockDciAccess();
+   return RCC_SUCCESS;
 }

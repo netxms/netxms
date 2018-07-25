@@ -27,12 +27,11 @@ import org.netxms.client.NXCSession;
  * This class represents NetXMS TEMPLATE objects.
  */
 public class Template extends GenericObject
-{
-	public static final int TF_AUTO_APPLY = 0x000001;
-	public static final int TF_AUTO_REMOVE = 0x000002;
-	
+{	
 	private int version;
 	private int flags;
+	private boolean autoBind;
+	private boolean autoUnbind;
 	private String autoApplyFilter;
 
 	/**
@@ -46,6 +45,8 @@ public class Template extends GenericObject
 		version = msg.getFieldAsInt32(NXCPCodes.VID_VERSION);
 		flags = msg.getFieldAsInt32(NXCPCodes.VID_FLAGS);
 		autoApplyFilter = msg.getFieldAsString(NXCPCodes.VID_AUTOBIND_FILTER);
+		autoBind = msg.getFieldAsBoolean(NXCPCodes.VID_AUTOBIND_FLAG);
+		autoUnbind = msg.getFieldAsBoolean(NXCPCodes.VID_AUTOUNBIND_FLAG);
 	}
 
 	/**
@@ -57,11 +58,11 @@ public class Template extends GenericObject
 	}
 
 	/**
-	 * @return template version as string in form major.minor
+	 * @return template version as string in form
 	 */
 	public String getVersionAsString()
 	{
-		return Integer.toString(version >> 16) + "." + Integer.toString(version & 0xFFFF);
+		return Integer.toString(version);
 	}
 
 	/**
@@ -69,7 +70,7 @@ public class Template extends GenericObject
 	 */
 	public boolean isAutoApplyEnabled()
 	{
-		return (flags & TF_AUTO_APPLY) != 0;
+		return autoBind;
 	}
 
 	/**
@@ -77,7 +78,7 @@ public class Template extends GenericObject
 	 */
 	public boolean isAutoRemoveEnabled()
 	{
-		return (flags & TF_AUTO_REMOVE) != 0;
+		return autoUnbind;
 	}
 
 	/**

@@ -148,6 +148,7 @@ UINT32 AgentPolicyConfig::modifyFromMessageInternal(NXCPMessage *pRequest)
 	{
 		MemFree(m_fileContent);
 		m_fileContent = pRequest->getFieldAsString(VID_CONFIG_FILE_DATA);
+	   updateVersion();
 	}
 
    return AgentPolicy::modifyFromMessageInternal(pRequest);

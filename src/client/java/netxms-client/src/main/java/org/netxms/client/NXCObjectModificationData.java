@@ -132,6 +132,7 @@ public class NXCObjectModificationData
    public static final int SNMP_PORT_LIST         = 79;
    public static final int PASSIVE_ELEMENTS       = 80;
    public static final int RESPONSIBLE_USERS      = 81;
+   public static final int AUTOBIND_REMOVE_FLAGS  = 82;
 	
 	private Set<Integer> fieldSet;
 	private long objectId;
@@ -239,6 +240,8 @@ public class NXCObjectModificationData
    private List<String> snmpPorts;
    private String passiveElements;
    private List<Long> responsibleUsers;
+   private boolean isAutoBindEnabled;
+   private boolean isAutoUnbindEnabled;
 
    /**
 	 * Constructor for creating modification data for given object
@@ -2017,5 +2020,34 @@ public class NXCObjectModificationData
    {
       this.responsibleUsers = responsibleUsers;
       fieldSet.add(RESPONSIBLE_USERS);
+   }
+   
+   /**
+    * Set abuto bind/remove options
+    * 
+    * @param autoApply
+    * @param autoUnbind
+    */
+   public void setAutoBindFlags(boolean autoApply, boolean autoUnbind)
+   {
+      isAutoBindEnabled = autoApply;
+      isAutoUnbindEnabled = autoUnbind;
+      fieldSet.add(AUTOBIND_REMOVE_FLAGS);
+   }
+
+   /**
+    * @return if auto bind is enabled
+    */
+   public boolean isAutoBindEnabled()
+   {
+      return isAutoBindEnabled;
+   }
+
+   /**
+    * @return if auto remove is enabled
+    */
+   public boolean isAutoUnbindEnabled()
+   {
+      return isAutoUnbindEnabled;
    }
 }
