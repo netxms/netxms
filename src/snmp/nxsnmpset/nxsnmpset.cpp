@@ -25,6 +25,8 @@
 #include <nms_util.h>
 #include <nxsnmp.h>
 
+NETXMS_EXECUTABLE_HEADER(nxsnmpset)
+
 
 //
 // Static data

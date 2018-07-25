@@ -26,6 +26,8 @@
 #include <getopt.h>
 #endif
 
+NETXMS_EXECUTABLE_HEADER(nxreportd)
+
 /**
  * Options
  */

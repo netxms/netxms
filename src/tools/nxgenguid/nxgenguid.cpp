@@ -23,6 +23,8 @@
 #include <nms_util.h>
 #include <uuid.h>
 
+NETXMS_EXECUTABLE_HEADER(nxgenguid)
+
 /**
  * main
  */

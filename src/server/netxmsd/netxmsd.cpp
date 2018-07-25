@@ -35,6 +35,8 @@
 #include <openssl/applink.c>
 #endif
 
+NETXMS_EXECUTABLE_HEADER(netxmsd)
+
 /**
  * Global data
  */

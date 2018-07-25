@@ -3,6 +3,8 @@
 #include <nxdbapi.h>
 #include <testtools.h>
 
+NETXMS_EXECUTABLE_HEADER(test-libnxdb)
+
 void TestOracleBatch();
 
 /**

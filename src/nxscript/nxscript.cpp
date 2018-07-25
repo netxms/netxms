@@ -25,6 +25,8 @@
 
 #include "nxscript.h"
 
+NETXMS_EXECUTABLE_HEADER(nxscript)
+
 
 static NXSL_TestClass m_testClass;
 

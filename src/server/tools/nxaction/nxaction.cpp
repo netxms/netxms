@@ -30,6 +30,8 @@
 #include <netdb.h>
 #endif
 
+NETXMS_EXECUTABLE_HEADER(nxaction)
+
 /**
  * Output callback
  */

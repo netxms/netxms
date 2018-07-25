@@ -23,6 +23,8 @@
 
 #include "nxinstall.h"
 
+NETXMS_EXECUTABLE_HEADER(nxinstall)
+
 /**
  * Trace level
  */

@@ -1270,4 +1270,25 @@ enum VirtualizationType
 
 #endif
 
+/**
+ * Header tags
+ */
+#define __NX_BINARY_VERSION_TAG static const char __netxms_tag_version[] = "$nxtag.version${" NETXMS_VERSION_STRING_A "}$";
+#define __NX_BINARY_BUILD_TAG static const char __netxms_tag_build[] = "$nxtag.build${" NETXMS_BUILD_TAG_A "}$";
+#define __NX_BINARY_APP_NAME(name) static const char __netxms_tag_name[] = "$nxtag.name${" #name "}$";
+
+#define __NX_BINARY_ALL_TAGS(name) \
+         __NX_BINARY_APP_NAME(name) \
+         __NX_BINARY_VERSION_TAG \
+         __NX_BINARY_BUILD_TAG
+
+/**
+ * Executable header
+ */
+#if WITH_JEMALLOC && defined(JEMALLOC_LOAD_WRAPPER)
+#define NETXMS_EXECUTABLE_HEADER(name) __NX_BINARY_ALL_TAGS(name) JEMALLOC_LOAD_WRAPPER
+#else
+#define NETXMS_EXECUTABLE_HEADER(name) __NX_BINARY_ALL_TAGS(name)
+#endif
+
 #endif   /* _nms_common_h_ */

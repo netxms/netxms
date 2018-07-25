@@ -29,6 +29,8 @@
 #define USE_READLINE 1
 #endif
 
+NETXMS_EXECUTABLE_HEADER(nxadm)
+
 /**
  * Display help
  */

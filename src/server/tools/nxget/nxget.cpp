@@ -30,6 +30,8 @@
 #include <netdb.h>
 #endif
 
+NETXMS_EXECUTABLE_HEADER(nxget)
+
 #define MAX_LINE_SIZE      4096
 
 /**

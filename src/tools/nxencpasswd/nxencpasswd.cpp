@@ -23,6 +23,8 @@
 #include <nms_common.h>
 #include <nms_util.h>
 
+NETXMS_EXECUTABLE_HEADER(nxencpasswd)
+
 
 //
 // main

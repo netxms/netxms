@@ -27,6 +27,8 @@
 #include <signal.h>
 #endif
 
+NETXMS_EXECUTABLE_HEADER(nxlptest)
+
 /**
  * Help text
  */
