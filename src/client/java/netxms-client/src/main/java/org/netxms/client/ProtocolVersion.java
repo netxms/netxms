@@ -30,9 +30,10 @@ public final class ProtocolVersion
    // Versions
    public static final int ALARMS = 3;
    public static final int BASE = 51;
-   public static final int FULL = 20;
+   public static final int FULL = 21;
    public static final int MOBILE = 1;
    public static final int PUSH = 1;
+   public static final int SCHEDULER = 2;
    public static final int TCPPROXY = 1;
    public static final int TRAP = 1;
    
@@ -44,8 +45,9 @@ public final class ProtocolVersion
    public static final int INDEX_MOBILE = 4;
    public static final int INDEX_FULL = 5;
    public static final int INDEX_TCPPROXY = 6;
+   public static final int INDEX_SCHEDULER = 7;
    
-   private static final int[] CURRENT_VERSION = { BASE, ALARMS, PUSH, TRAP, MOBILE, FULL, TCPPROXY };
+   private static final int[] CURRENT_VERSION = { BASE, ALARMS, PUSH, TRAP, MOBILE, FULL, TCPPROXY, SCHEDULER };
    
    private long versions[];
    

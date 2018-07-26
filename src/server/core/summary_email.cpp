@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2016 Raden Solutions
+** Copyright (C) 2003-2018 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -133,11 +133,11 @@ void EnableAlarmSummaryEmails()
    if (task != NULL)
    {
       if (_tcscmp(task->getSchedule(), schedule))
-         UpdateScheduledTask(task->getId(), ALARM_SUMMARY_EMAIL_TASK_ID, schedule, _T(""), _T(""), 0, 0, SYSTEM_ACCESS_FULL, task->getFlags());
+         UpdateRecurrentScheduledTask(task->getId(), ALARM_SUMMARY_EMAIL_TASK_ID, schedule, _T(""), NULL, _T(""), 0, 0, SYSTEM_ACCESS_FULL, task->getFlags());
    }
    else
    {
-      AddScheduledTask(ALARM_SUMMARY_EMAIL_TASK_ID, schedule, _T(""), 0, 0, SYSTEM_ACCESS_FULL, _T(""), 0);
+      AddRecurrentScheduledTask(ALARM_SUMMARY_EMAIL_TASK_ID, schedule, _T(""), NULL, 0, 0, SYSTEM_ACCESS_FULL, _T(""), SCHEDULED_TASK_SYSTEM);
    }
 }
 

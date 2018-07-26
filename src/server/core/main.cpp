@@ -90,12 +90,13 @@ bool JavaCoreStart();
 void JavaCoreStop();
 void JavaCoreWaitForShutdown();
 
-void ExecuteScheduledScript(const ScheduledTaskParameters *param);
-void MaintenanceModeEnter(const ScheduledTaskParameters *params);
-void MaintenanceModeLeave(const ScheduledTaskParameters *params);
-void ProcessUnboundTunnels(const ScheduledTaskParameters *p);
-void ScheduleDeployPolicy(const ScheduledTaskParameters *params);
-void ScheduleUninstallPolicy(const ScheduledTaskParameters * params);
+void ExecuteScheduledAction(const ScheduledTaskParameters *parameters);
+void ExecuteScheduledScript(const ScheduledTaskParameters *parameters);
+void MaintenanceModeEnter(const ScheduledTaskParameters *parameters);
+void MaintenanceModeLeave(const ScheduledTaskParameters *parameters);
+void ProcessUnboundTunnels(const ScheduledTaskParameters *parameters);
+void ScheduleDeployPolicy(const ScheduledTaskParameters *parameters);
+void ScheduleUninstallPolicy(const ScheduledTaskParameters *parameters);
 
 void InitCountryList();
 void InitCurrencyList();
@@ -1070,6 +1071,7 @@ retry_db_lock:
    ConditionDestroy(pollManagerInitialized);
    nxlog_debug(2, _T("Poll manager initialized"));
 
+   RegisterSchedulerTaskHandler(_T("Execute.Action"), ExecuteScheduledAction, SYSTEM_ACCESS_SCHEDULE_SCRIPT);
    RegisterSchedulerTaskHandler(_T("Execute.Script"), ExecuteScheduledScript, SYSTEM_ACCESS_SCHEDULE_SCRIPT);
    RegisterSchedulerTaskHandler(_T("Maintenance.Enter"), MaintenanceModeEnter, SYSTEM_ACCESS_SCHEDULE_MAINTENANCE);
    RegisterSchedulerTaskHandler(_T("Maintenance.Leave"), MaintenanceModeLeave, SYSTEM_ACCESS_SCHEDULE_MAINTENANCE);
@@ -1092,14 +1094,14 @@ retry_db_lock:
    }
    else
    {
-      AddScheduledTask(UNBOUND_TUNNEL_PROCESSOR_TASK_ID, _T("*/5 * * * *"), _T(""), 0, 0, SYSTEM_ACCESS_FULL, _T(""), SCHEDULED_TASK_SYSTEM);
+      AddRecurrentScheduledTask(UNBOUND_TUNNEL_PROCESSOR_TASK_ID, _T("*/5 * * * *"), _T(""), NULL, 0, 0, SYSTEM_ACCESS_FULL, _T(""), SCHEDULED_TASK_SYSTEM);
    }
 
    // Send summary emails
    if (ConfigReadBoolean(_T("EnableAlarmSummaryEmails"), false))
       EnableAlarmSummaryEmails();
    else
-      RemoveScheduledTaskByHandlerId(ALARM_SUMMARY_EMAIL_TASK_ID);
+      DeleteScheduledTaskByHandlerId(ALARM_SUMMARY_EMAIL_TASK_ID);
 
 	// Allow clients to connect
 	ThreadCreate(ClientListenerThread, 0, NULL);

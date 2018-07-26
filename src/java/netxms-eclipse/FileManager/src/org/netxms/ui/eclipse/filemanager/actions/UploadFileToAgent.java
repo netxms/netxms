@@ -114,7 +114,7 @@ public class UploadFileToAgent implements IObjectActionDelegate
    					      String parameters = sf.getName() + "," + remoteFileName; // $NON-NLS-1$
    					      task.setParameters(parameters);
    					      task.setObjectId(nodeIdList[i]);
-   					      session.addSchedule(task);
+   					      session.addScheduledTask(task);
    					   }
    					   else
    					   {

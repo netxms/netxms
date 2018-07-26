@@ -65,6 +65,7 @@ import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.client.NXCSession;
 import org.netxms.client.ServerAction;
 import org.netxms.client.constants.Severity;
+import org.netxms.client.events.ActionExecutionConfiguration;
 import org.netxms.client.events.AlarmCategory;
 import org.netxms.client.events.EventObject;
 import org.netxms.client.events.EventProcessingPolicyRule;
@@ -792,15 +793,15 @@ public class RuleEditor extends Composite
       }
 
       /* actions */
-      if (rule.getActions().size() > 0)
+      if (!rule.getActions().isEmpty())
       {
          final MouseListener listener = createMouseListener("org.netxms.ui.eclipse.epp.propertypages.RuleServerActions#30"); //$NON-NLS-1$
          addActionGroupLabel(clientArea, Messages.get().RuleEditor_ExecuteActions, editor.getImageExecute(), listener);
-         for(Long id : rule.getActions())
+         for(ActionExecutionConfiguration c : rule.getActions())
          {
             CLabel clabel = createCLabel(clientArea, 1, false);
             clabel.addMouseListener(listener);
-            ServerAction action = editor.findActionById(id);
+            ServerAction action = editor.findActionById(c.getActionId());
             if (action != null)
             {
                clabel.setText(action.getName());
@@ -808,8 +809,34 @@ public class RuleEditor extends Composite
             }
             else
             {
-               clabel.setText("<" + id.toString() + ">"); //$NON-NLS-1$ //$NON-NLS-2$
+               clabel.setText("<" + Long.toString(c.getActionId()) + ">"); //$NON-NLS-1$ //$NON-NLS-2$
             }
+            if (c.getTimerDelay() > 0)
+            {
+               clabel = createCLabel(clientArea, 2, false);
+               clabel.addMouseListener(listener);
+               if (c.getTimerKey().isEmpty())
+               {
+                  clabel.setText(String.format("Delayed by %d seconds", c.getTimerDelay()));
+               }
+               else
+               {
+                  clabel.setText(String.format("Delayed by %d seconds with timer key set to \"%s\"", c.getTimerDelay(), c.getTimerKey()));
+               }
+            }
+         }
+      }
+      
+      /* timer cancellations */
+      if (!rule.getTimerCancellations().isEmpty())
+      {
+         final MouseListener listener = createMouseListener("org.netxms.ui.eclipse.epp.propertypages.RuleTimerCancellations#40"); //$NON-NLS-1$
+         addActionGroupLabel(clientArea, "Cancel the following timers:", editor.getImageCancelTimer(), listener);
+         for(String tc : rule.getTimerCancellations())
+         {
+            CLabel clabel = createCLabel(clientArea, 1, false);
+            clabel.addMouseListener(listener);
+            clabel.setText(tc);
          }
       }
 

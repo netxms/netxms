@@ -92,7 +92,7 @@ public class ScheduledTaskEditor extends Dialog
       scheduleType = new Combo(dialogArea, SWT.READ_ONLY);
       for(String type : scheduleTypeList)
          scheduleType.add(type);
-      int taskId = scheduleTypeList.indexOf(scheduledTask.getScheduledTaskId());
+      int taskId = scheduleTypeList.indexOf(scheduledTask.getTaskHandlerId());
       scheduleType.select(taskId == -1 ? 0 : taskId);
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
@@ -136,7 +136,7 @@ public class ScheduledTaskEditor extends Dialog
       
       if((scheduledTask.getFlags() & ScheduledTask.SYSTEM) != 0)
       {
-         scheduleType.add(scheduledTask.getScheduledTaskId());
+         scheduleType.add(scheduledTask.getTaskHandlerId());
          scheduleType.select(scheduleTypeList.size());
          scheduleType.setEnabled(false);
          selector.setEnabled(false);
@@ -162,7 +162,7 @@ public class ScheduledTaskEditor extends Dialog
       
       if((scheduledTask.getFlags() & ScheduledTask.SYSTEM) == 0)
       {
-         scheduledTask.setScheduledTaskId(scheduleTypeList.get(scheduleType.getSelectionIndex()));
+         scheduledTask.setTaskHandlerId(scheduleTypeList.get(scheduleType.getSelectionIndex()));
          scheduledTask.setParameters(textParameters.getText());
          scheduledTask.setObjectId(selector.getObjectId());
       }

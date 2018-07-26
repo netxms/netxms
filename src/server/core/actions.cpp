@@ -290,7 +290,7 @@ static void RunCommand(void *arg)
 /**
  * Forward event to other server
  */
-static bool ForwardEvent(const TCHAR *server, Event *event)
+static bool ForwardEvent(const TCHAR *server, const Event *event)
 {
    InetAddress addr = InetAddress::resolveHostName(server);
 	if (!addr.isValidUnicast())
@@ -347,13 +347,13 @@ static bool ForwardEvent(const TCHAR *server, Event *event)
 /**
  * Execute NXSL script
  */
-static BOOL ExecuteActionScript(const TCHAR *scriptName, Event *event)
+static bool ExecuteActionScript(const TCHAR *scriptName, const Event *event)
 {
-	BOOL success = FALSE;
+   bool success = false;
 	NXSL_VM *vm = CreateServerScriptVM(scriptName, FindObjectById(event->getSourceId()));
 	if (vm != NULL)
 	{
-		vm->setGlobalVariable("$event", vm->createValue(new NXSL_Object(vm, &g_nxslEventClass, event)));
+		vm->setGlobalVariable("$event", vm->createValue(new NXSL_Object(vm, &g_nxslEventClass, event, true)));
 
 		// Pass event's parameters as arguments
 		NXSL_Value **ppValueList = (NXSL_Value **)malloc(sizeof(NXSL_Value *) * event->getParametersCount());
@@ -364,7 +364,7 @@ static BOOL ExecuteActionScript(const TCHAR *scriptName, Event *event)
 		if (vm->run(event->getParametersCount(), ppValueList))
 		{
 			nxlog_debug_tag(DEBUG_TAG, 4, _T("ExecuteActionScript: script %s successfully executed"), scriptName);
-			success = TRUE;
+			success = true;
 		}
 		else
 		{
@@ -384,7 +384,7 @@ static BOOL ExecuteActionScript(const TCHAR *scriptName, Event *event)
 /**
  * Execute action on specific event
  */
-BOOL ExecuteAction(UINT32 actionId, Event *pEvent, const Alarm *alarm)
+BOOL ExecuteAction(UINT32 actionId, const Event *event, const Alarm *alarm)
 {
    static const TCHAR *actionType[] = { _T("EXEC"), _T("REMOTE"), _T("SEND EMAIL"), _T("SEND SMS"), _T("FORWARD EVENT"), _T("NXSL SCRIPT"), _T("XMPP MESSAGE") };
 
@@ -406,10 +406,10 @@ BOOL ExecuteAction(UINT32 actionId, Event *pEvent, const Alarm *alarm)
 
          TCHAR *pszExpandedData, *pszExpandedSubject, *pszExpandedRcpt, *curr, *next;
 
-         pszExpandedData = pEvent->expandText(CHECK_NULL_EX(action->data), alarm);
+         pszExpandedData = event->expandText(CHECK_NULL_EX(action->data), alarm);
          StrStrip(pszExpandedData);
 
-         pszExpandedRcpt = pEvent->expandText(action->rcptAddr, alarm);
+         pszExpandedRcpt = event->expandText(action->rcptAddr, alarm);
          StrStrip(pszExpandedRcpt);
 
          switch(action->type)
@@ -429,7 +429,7 @@ BOOL ExecuteAction(UINT32 actionId, Event *pEvent, const Alarm *alarm)
                if (pszExpandedRcpt[0] != 0)
                {
                   nxlog_debug_tag(DEBUG_TAG, 3, _T("Sending mail to %s: \"%s\""), pszExpandedRcpt, pszExpandedData);
-                  pszExpandedSubject = pEvent->expandText(action->emailSubject, alarm);
+                  pszExpandedSubject = event->expandText(action->emailSubject, alarm);
 					   curr = pszExpandedRcpt;
 					   do
 					   {
@@ -510,7 +510,7 @@ BOOL ExecuteAction(UINT32 actionId, Event *pEvent, const Alarm *alarm)
                if (pszExpandedRcpt[0] != 0)
                {
                   nxlog_debug_tag(DEBUG_TAG, 3, _T("Forwarding event to \"%s\""), pszExpandedRcpt);
-                  bSuccess = ForwardEvent(pszExpandedRcpt, pEvent);
+                  bSuccess = ForwardEvent(pszExpandedRcpt, event);
                }
                else
                {
@@ -522,7 +522,7 @@ BOOL ExecuteAction(UINT32 actionId, Event *pEvent, const Alarm *alarm)
                if (pszExpandedRcpt[0] != 0)
                {
                   nxlog_debug_tag(DEBUG_TAG, 3, _T("Executing NXSL script \"%s\""), pszExpandedRcpt);
-                  bSuccess = ExecuteActionScript(pszExpandedRcpt, pEvent);
+                  bSuccess = ExecuteActionScript(pszExpandedRcpt, event);
                }
                else
                {
@@ -820,4 +820,48 @@ bool ImportAction(ConfigEntry *config)
 
    RWLockUnlock(s_actionsLock);
    return true;
+}
+
+/**
+ * Task handler for scheduled action execution
+ */
+void ExecuteScheduledAction(const ScheduledTaskParameters *parameter)
+{
+   UINT32 actionId = ExtractNamedOptionValueAsUInt(parameter->m_persistentData, _T("action"), 0);
+   const Event *event;
+   const Alarm *alarm;
+   if (parameter->m_transientData != NULL)
+   {
+      event = static_cast<ActionExecutionTransientData*>(parameter->m_transientData)->getEvent();
+      alarm = static_cast<ActionExecutionTransientData*>(parameter->m_transientData)->getAlarm();
+   }
+   else
+   {
+      UINT64 eventId = ExtractNamedOptionValueAsUInt64(parameter->m_persistentData, _T("event"), 0);
+      UINT32 alarmId = ExtractNamedOptionValueAsUInt(parameter->m_persistentData, _T("alarm"), 0);
+      /* TODO: implement restoring event and alarm from database */
+      event = NULL;
+      alarm = NULL;
+   }
+   nxlog_debug_tag(DEBUG_TAG, 4, _T("Executing scheduled action [%u] for event %s on node [%u]"),
+            actionId, (event != NULL) ? event->getName() : _T("(null)"), parameter->m_objectId);
+   ExecuteAction(actionId, event, alarm);
+}
+
+/**
+ * Constructor for scheduled action execution transient data
+ */
+ActionExecutionTransientData::ActionExecutionTransientData(const Event *e, const Alarm *a)
+{
+   m_event = new Event(e);
+   m_alarm = (a != NULL) ? new Alarm(a, false) : NULL;
+}
+
+/**
+ * Destructor for scheduled action execution transient data
+ */
+ActionExecutionTransientData::~ActionExecutionTransientData()
+{
+   delete m_event;
+   delete m_alarm;
 }

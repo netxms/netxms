@@ -460,7 +460,7 @@ static void OnConfigVariableChange(bool isCLOB, const TCHAR *name, const TCHAR *
       if (_tcstol(value, NULL, 0))
          EnableAlarmSummaryEmails();
       else
-         RemoveScheduledTaskByHandlerId(ALARM_SUMMARY_EMAIL_TASK_ID);
+         DeleteScheduledTaskByHandlerId(ALARM_SUMMARY_EMAIL_TASK_ID);
    }
    else if (!_tcscmp(name, _T("StrictAlarmStatusFlow")))
    {

@@ -2791,10 +2791,10 @@ TCHAR *NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, const E
                      if (vm != NULL)
                      {
                         if (event != NULL)
-                           vm->setGlobalVariable("$event", (event != NULL) ? vm->createValue(new NXSL_Object(vm, &g_nxslEventClass, const_cast<Event *>(event))) : vm->createValue());
+                           vm->setGlobalVariable("$event", (event != NULL) ? vm->createValue(new NXSL_Object(vm, &g_nxslEventClass, event, true)) : vm->createValue());
                         if (alarm != NULL)
                         {
-                           vm->setGlobalVariable("$alarm", (event != NULL) ? vm->createValue(new NXSL_Object(vm, &g_nxslAlarmClass, const_cast<Alarm *>(alarm))) : vm->createValue());
+                           vm->setGlobalVariable("$alarm", (event != NULL) ? vm->createValue(new NXSL_Object(vm, &g_nxslAlarmClass, alarm, true)) : vm->createValue());
                            vm->setGlobalVariable("$alarmMessage", vm->createValue(alarm->getMessage()));
                            vm->setGlobalVariable("$alarmKey", vm->createValue(alarm->getKey()));
                         }

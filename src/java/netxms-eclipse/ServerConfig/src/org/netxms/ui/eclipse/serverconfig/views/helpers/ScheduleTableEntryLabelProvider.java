@@ -83,7 +83,7 @@ public class ScheduleTableEntryLabelProvider extends LabelProvider implements IT
          case ScheduledTaskView.SCHEDULE_ID:
             return Long.toString(task.getId());
          case ScheduledTaskView.CALLBACK_ID:
-            return task.getScheduledTaskId();
+            return task.getTaskHandlerId();
          case ScheduledTaskView.OBJECT:
             if (task.getObjectId() == 0)
                return "";

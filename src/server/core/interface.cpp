@@ -412,7 +412,7 @@ bool Interface::saveToDatabase(DB_HANDLE hdb)
       }
       else
       {
-         DBBind(hStmt, 21, DB_SQLTYPE_VARCHAR, NULL, DB_BIND_STATIC);
+         DBBind(hStmt, 21, DB_SQLTYPE_VARCHAR, _T(""), DB_BIND_STATIC);
       }
       DBBind(hStmt, 22, DB_SQLTYPE_INTEGER, m_id);
 
@@ -1296,7 +1296,7 @@ void Interface::setIpAddress(const InetAddress& addr)
 /**
  * Get first usable IP address
  */
-const InetAddress& Interface::getFirstIpAddress()
+const InetAddress& Interface::getFirstIpAddress() const
 {
    const InetAddress& a = m_ipAddressList.getFirstUnicastAddress();
    return a.isValid() ? a : m_ipAddressList.get(0);

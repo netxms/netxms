@@ -62,7 +62,8 @@ public class EventProcessingPolicyRule
 	private int alarmTimeout;
 	private long alarmTimeoutEvent;
 	private List<Long>  alarmCategoryIds;
-	private List<Long> actions;
+	private List<ActionExecutionConfiguration> actions;
+	private List<String> timerCancellations;
 	private Map<String, String> persistentStorageSet;
 	private List<String> persistentStorageDelete;
 	private String comments;
@@ -84,7 +85,8 @@ public class EventProcessingPolicyRule
 		alarmTimeout = 0;
 		alarmTimeoutEvent = 43;
 		alarmCategoryIds = new ArrayList<Long>(0);
-		actions = new ArrayList<Long>(0);
+		actions = new ArrayList<ActionExecutionConfiguration>(0);
+		timerCancellations = new ArrayList<String>(0);
 		persistentStorageSet = new HashMap<String, String>(0);
 		persistentStorageDelete = new ArrayList<String>(0);
 		comments = "";
@@ -107,7 +109,10 @@ public class EventProcessingPolicyRule
 		alarmTimeout = src.alarmTimeout;
 		alarmTimeoutEvent = src.alarmTimeoutEvent;
 		alarmCategoryIds = src.alarmCategoryIds;
-		actions = new ArrayList<Long>(src.actions);
+		actions = new ArrayList<ActionExecutionConfiguration>(src.actions.size());
+		for(ActionExecutionConfiguration d : src.actions)
+		   actions.add(new ActionExecutionConfiguration(d));
+		timerCancellations = new ArrayList<String>(src.timerCancellations);
 		persistentStorageSet = new HashMap<String, String>(src.persistentStorageSet);
 		persistentStorageDelete = new ArrayList<String>(src.persistentStorageDelete);
 		comments = src.comments;
@@ -132,25 +137,34 @@ public class EventProcessingPolicyRule
 		alarmTimeout = msg.getFieldAsInt32(NXCPCodes.VID_ALARM_TIMEOUT);
 		alarmTimeoutEvent = msg.getFieldAsInt64(NXCPCodes.VID_ALARM_TIMEOUT_EVENT);
 		alarmCategoryIds = Arrays.asList(msg.getFieldAsUInt32ArrayEx(NXCPCodes.VID_ALARM_CATEGORY_ID));
-		actions = Arrays.asList(msg.getFieldAsUInt32ArrayEx(NXCPCodes.VID_RULE_ACTIONS));
 		comments = msg.getFieldAsString(NXCPCodes.VID_COMMENTS);
+
+		int actionCount = msg.getFieldAsInt32(NXCPCodes.VID_NUM_ACTIONS);
+      actions = new ArrayList<ActionExecutionConfiguration>(actionCount);
+      long fieldId = NXCPCodes.VID_ACTION_LIST_BASE;
+      for(int i = 0; i < actionCount; i++)
+      {
+         actions.add(new ActionExecutionConfiguration(msg, fieldId));
+         fieldId += 10;
+      }
+      timerCancellations = msg.getStringListFromFields(NXCPCodes.VID_TIMER_LIST_BASE, NXCPCodes.VID_TIMER_COUNT);
 		
 		int numSetVar = msg.getFieldAsInt32(NXCPCodes.VID_NUM_SET_PSTORAGE);
 		persistentStorageSet = new HashMap<String, String>(numSetVar);
-      long varId = NXCPCodes.VID_PSTORAGE_SET_LIST_BASE;
+      fieldId = NXCPCodes.VID_PSTORAGE_SET_LIST_BASE;
       for(int i = 0; i < numSetVar; i++)
       {
-         final String key = msg.getFieldAsString(varId++); 
-         final String value = msg.getFieldAsString(varId++);
+         final String key = msg.getFieldAsString(fieldId++); 
+         final String value = msg.getFieldAsString(fieldId++);
          persistentStorageSet.put(key, value);
       }
 		
 		int numDeleteVar = msg.getFieldAsInt32(NXCPCodes.VID_NUM_DELETE_PSTORAGE);
 		persistentStorageDelete = new ArrayList<String>(numDeleteVar);
-      varId = NXCPCodes.VID_PSTORAGE_DELETE_LIST_BASE;
+      fieldId = NXCPCodes.VID_PSTORAGE_DELETE_LIST_BASE;
       for(int i = 0; i < numDeleteVar; i++)
       {
-         final String key = msg.getFieldAsString(varId++); 
+         final String key = msg.getFieldAsString(fieldId++); 
          persistentStorageDelete.add(key);
       }
       this.ruleNumber = ruleNumber;
@@ -169,7 +183,13 @@ public class EventProcessingPolicyRule
 		msg.setField(NXCPCodes.VID_SCRIPT, script);
 		
 		msg.setFieldInt32(NXCPCodes.VID_NUM_ACTIONS, actions.size());
-		msg.setField(NXCPCodes.VID_RULE_ACTIONS, actions.toArray(new Long[actions.size()]));
+      long fieldId = NXCPCodes.VID_ACTION_LIST_BASE;
+		for(ActionExecutionConfiguration d : actions)
+		{
+		   d.fillMessage(msg, fieldId);
+		   fieldId += 10;
+		}
+		msg.setFieldsFromStringCollection(timerCancellations, NXCPCodes.VID_TIMER_LIST_BASE, NXCPCodes.VID_TIMER_COUNT);
 		
 		msg.setFieldInt32(NXCPCodes.VID_NUM_EVENTS, events.size());
 		msg.setField(NXCPCodes.VID_RULE_EVENTS, events.toArray(new Long[events.size()]));
@@ -186,18 +206,18 @@ public class EventProcessingPolicyRule
 		msg.setField(NXCPCodes.VID_ALARM_CATEGORY_ID, alarmCategoryIds.toArray(new Long[alarmCategoryIds.size()]));
 
 		msg.setFieldInt32(NXCPCodes.VID_NUM_SET_PSTORAGE, persistentStorageSet.size());
-		long varId = NXCPCodes.VID_PSTORAGE_SET_LIST_BASE;
+		fieldId = NXCPCodes.VID_PSTORAGE_SET_LIST_BASE;
 		for(Entry<String, String> e : persistentStorageSet.entrySet())
 		{
-			msg.setField(varId++, e.getKey());
-			msg.setField(varId++, e.getValue());
+			msg.setField(fieldId++, e.getKey());
+			msg.setField(fieldId++, e.getValue());
 		}
 
       msg.setFieldInt32(NXCPCodes.VID_NUM_DELETE_PSTORAGE, persistentStorageDelete.size());
-      varId = NXCPCodes.VID_PSTORAGE_DELETE_LIST_BASE;
+      fieldId = NXCPCodes.VID_PSTORAGE_DELETE_LIST_BASE;
       for(int i = 0; i < persistentStorageDelete.size(); i++)
       {
-         msg.setField(varId++, persistentStorageDelete.get(i));
+         msg.setField(fieldId++, persistentStorageDelete.get(i));
       }
 	}
 
@@ -381,7 +401,7 @@ public class EventProcessingPolicyRule
 	/**
 	 * @return the actions
 	 */
-	public List<Long> getActions()
+	public List<ActionExecutionConfiguration> getActions()
 	{
 		return actions;
 	}
@@ -421,12 +441,28 @@ public class EventProcessingPolicyRule
 	/**
 	 * @param actions the actions to set
 	 */
-	public void setActions(List<Long> actions)
+	public void setActions(List<ActionExecutionConfiguration> actions)
 	{
 		this.actions = actions;
 	}
 
 	/**
+    * @return the timerCancellations
+    */
+   public List<String> getTimerCancellations()
+   {
+      return timerCancellations;
+   }
+
+   /**
+    * @param timerCancellations the timerCancellations to set
+    */
+   public void setTimerCancellations(List<String> timerCancellations)
+   {
+      this.timerCancellations = timerCancellations;
+   }
+
+   /**
 	 * @param persistentStorageSet the persistentStorageSet to set
 	 */
 	public void setPStorageSet(Map<String, String> persistentStorageSet)

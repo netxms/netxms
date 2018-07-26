@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -101,13 +101,14 @@ void NXSL_Class::onObjectDelete(NXSL_Object *object)
 /**
  * Create new NXSL object of given class
  */
-NXSL_Object::NXSL_Object(NXSL_VM *vm, NXSL_Class *nxslClass, void *data) : NXSL_RuntimeObject(vm)
+NXSL_Object::NXSL_Object(NXSL_VM *vm, NXSL_Class *nxslClass, const void *data, bool constant) : NXSL_RuntimeObject(vm)
 {
    m_class = nxslClass;
-	m_data = (__nxsl_class_data *)malloc(sizeof(__nxsl_class_data));
-	m_data->refCount = 1;
-	m_data->data = data;
-	m_class->onObjectCreate(this);
+   m_data = MemAllocStruct<__nxsl_class_data>();
+   m_data->refCount = 1;
+   m_data->data = (void *)data;
+   m_data->constant = constant;
+   m_class->onObjectCreate(this);
 }
 
 /**
@@ -129,6 +130,6 @@ NXSL_Object::~NXSL_Object()
 	if (m_data->refCount == 0)
 	{
 		m_class->onObjectDelete(this);
-		free(m_data);
+		MemFree(m_data);
 	}
 }

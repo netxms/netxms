@@ -24,11 +24,49 @@
 #include <nxevent.h>
 
 /**
- * Upgrade from 22.32 to 30.0
+ * Upgrade from 22.34 to 30.0
+ */
+static bool H_UpgradeFromV34()
+{
+   CHK_EXEC(SetMajorSchemaVersion(30, 0));
+   return true;
+}
+
+/**
+ * Upgrade from 22.33 to 22.34
+ */
+static bool H_UpgradeFromV33()
+{
+   static const TCHAR *batch =
+      _T("ALTER TABLE event_log ADD raw_data $SQL:TEXT\n")
+      _T("ALTER TABLE scheduled_tasks ADD task_key varchar(255)\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+
+   CHK_EXEC(SetMinorSchemaVersion(34));
+   return true;
+}
+
+/**
+ * Upgrade from 22.32 to 22.33
  */
 static bool H_UpgradeFromV32()
 {
-   CHK_EXEC(SetMajorSchemaVersion(30, 0));
+   static const TCHAR *batch =
+      _T("ALTER TABLE policy_action_list ADD timer_delay integer\n")
+      _T("ALTER TABLE policy_action_list ADD timer_key varchar(255)\n")
+      _T("UPDATE policy_action_list SET timer_delay=0\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(DBSetNotNullConstraint(g_hCoreDB, _T("policy_action_list"), _T("timer_delay")));
+
+   CHK_EXEC(CreateTable(
+      _T("CREATE TABLE policy_timer_cancellation_list (")
+      _T("   rule_id integer not null,")
+      _T("   timer_key varchar(255) not null,")
+      _T("   PRIMARY KEY(rule_id,timer_key))")));
+
+   CHK_EXEC(SetMinorSchemaVersion(33));
    return true;
 }
 
@@ -656,7 +694,9 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
-   { 32, 30, 0,  H_UpgradeFromV32 },
+   { 34, 30, 0,  H_UpgradeFromV34 },
+   { 33, 22, 34, H_UpgradeFromV33 },
+   { 32, 22, 33, H_UpgradeFromV32 },
    { 31, 22, 32, H_UpgradeFromV31 },
    { 30, 22, 31, H_UpgradeFromV30 },
    { 29, 22, 30, H_UpgradeFromV29 },

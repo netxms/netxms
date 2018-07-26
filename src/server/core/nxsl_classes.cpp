@@ -1230,8 +1230,12 @@ NXSL_METHOD_DEFINITION(Event, setUserTag)
  */
 NXSL_METHOD_DEFINITION(Event, toJson)
 {
-   Event *event = (Event *)object->getData();
-   *result = vm->createValue(event->createJson());
+   Event *event = static_cast<Event*>(object->getData());
+   json_t *json = event->toJson();
+   char *text = json_dumps(json, JSON_INDENT(3) | JSON_EMBED);
+   *result = vm->createValue(text);
+   MemFree(text);
+   json_decref(json);
    return 0;
 }
 
@@ -1256,7 +1260,7 @@ NXSL_Value *NXSL_EventClass::getAttr(NXSL_Object *pObject, const char *attr)
    NXSL_Value *value = NULL;
 
    NXSL_VM *vm = pObject->vm();
-   Event *event = (Event *)pObject->getData();
+   const Event *event = static_cast<const Event*>(pObject->getData());
    if (!strcmp(attr, "code"))
    {
       value = vm->createValue(event->getCode());

@@ -111,6 +111,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
    private Image imageAlarm;
    private Image imageSituation;
    private Image imageExecute;
+   private Image imageCancelTimer;
    private Image imageTerminate;
    private Image imageStop;
    private Image imageCollapse;
@@ -161,6 +162,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
       imageAlarm = Activator.getImageDescriptor("icons/alarm.png").createImage(); //$NON-NLS-1$
       imageSituation = Activator.getImageDescriptor("icons/situation.gif").createImage(); //$NON-NLS-1$
       imageExecute = Activator.getImageDescriptor("icons/execute.png").createImage(); //$NON-NLS-1$
+      imageCancelTimer = Activator.getImageDescriptor("icons/cancel_timer.png").createImage(); //$NON-NLS-1$
       imageTerminate = Activator.getImageDescriptor("icons/terminate.png").createImage(); //$NON-NLS-1$
       imageCollapse = SharedIcons.COLLAPSE.createImage();
       imageExpand = SharedIcons.EXPAND.createImage();
@@ -702,6 +704,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
       imageStop.dispose();
       imageAlarm.dispose();
       imageExecute.dispose();
+      imageCancelTimer.dispose();
       imageTerminate.dispose();
       imageCollapse.dispose();
       imageExpand.dispose();
@@ -796,6 +799,16 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
    public Image getImageExecute()
    {
       return imageExecute;
+   }
+
+   /**
+    * Get "cancel timer" image
+    * 
+    * @return "cancel timer" image
+    */
+   public Image getImageCancelTimer()
+   {
+      return imageCancelTimer;
    }
 
    /**

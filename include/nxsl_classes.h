@@ -201,10 +201,13 @@ struct __nxsl_class_data
 {
 	void *data;
 	int refCount;
+	bool constant;
 };
 
 /**
  * Object instance
+ * Accept const void * in constructor to allow for both const and non-const pointers. Actual
+ * constant state determined by optional "constant" parameter.
  */
 class LIBNXSL_EXPORTABLE NXSL_Object : public NXSL_RuntimeObject
 {
@@ -214,11 +217,12 @@ private:
 
 public:
    NXSL_Object(NXSL_Object *object);
-   NXSL_Object(NXSL_VM *vm, NXSL_Class *nxslClass, void *data);
+   NXSL_Object(NXSL_VM *vm, NXSL_Class *nxslClass, const void *data, bool constant = false);
    virtual ~NXSL_Object();
 
    NXSL_Class *getClass() { return m_class; }
 	void *getData() { return m_data->data; }
+	bool isConstant() { return m_data->constant; }
 };
 
 /**

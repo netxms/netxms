@@ -70,9 +70,9 @@ class SetObjectMaintenanceState extends AbstractHandler
             for(Object o : objects)
             {
                if (o instanceof AbstractObject)
-                  session.setObjectMaintenance(((AbstractObject)o).getObjectId(), maintained);
+                  session.setObjectMaintenanceMode(((AbstractObject)o).getObjectId(), maintained);
                else if (o instanceof ObjectWrapper)
-                  session.setObjectMaintenance(((ObjectWrapper)o).getObjectId(), maintained);
+                  session.setObjectMaintenanceMode(((ObjectWrapper)o).getObjectId(), maintained);
             }
          }
          

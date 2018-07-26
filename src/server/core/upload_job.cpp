@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Copyright (C) 2003-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -32,14 +32,14 @@ MUTEX FileUploadJob::m_sharedDataMutex = INVALID_MUTEX_HANDLE;
 /**
  * Scheduled file upload
  */
-void ScheduledFileUpload(const ScheduledTaskParameters *params)
+void ScheduledFileUpload(const ScheduledTaskParameters *parameters)
 {
-   Node *object = (Node *)FindObjectById(params->m_objectId, OBJECT_NODE);
+   Node *object = (Node *)FindObjectById(parameters->m_objectId, OBJECT_NODE);
    if (object != NULL)
    {
-      if (object->checkAccessRights(params->m_userId, OBJECT_ACCESS_CONTROL))
+      if (object->checkAccessRights(parameters->m_userId, OBJECT_ACCESS_CONTROL))
       {
-         ServerJob *job = new FileUploadJob(params->m_params, params->m_objectId, params->m_userId);
+         ServerJob *job = new FileUploadJob(parameters->m_persistentData, parameters->m_objectId, parameters->m_userId);
          if (!AddJob(job))
          {
             delete job;
@@ -50,7 +50,7 @@ void ScheduledFileUpload(const ScheduledTaskParameters *params)
          DbgPrintf(4, _T("ScheduledUploadFile: Access to node %s denied"), object->getName());
    }
    else
-      DbgPrintf(4, _T("ScheduledUploadFile: Node with id=\'%d\' not found"), params->m_userId);
+      DbgPrintf(4, _T("ScheduledUploadFile: Node with id=\'%d\' not found"), parameters->m_userId);
 }
 
 /**
@@ -246,5 +246,5 @@ const String FileUploadJob::serializeParameters()
  */
 void FileUploadJob::rescheduleExecution()
 {
-   AddOneTimeScheduledTask(_T("Policy.Uninstall"), time(NULL) + getRetryDelay(), serializeParameters(), 0, getNodeId(), SYSTEM_ACCESS_FULL, _T(""), SCHEDULED_TASK_SYSTEM);//TODO: change to correct user
+   AddOneTimeScheduledTask(_T("Policy.Uninstall"), time(NULL) + getRetryDelay(), serializeParameters(), NULL, 0, getNodeId(), SYSTEM_ACCESS_FULL, _T(""), SCHEDULED_TASK_SYSTEM);//TODO: change to correct user
 }

@@ -1050,8 +1050,8 @@ public:
    UINT32 getParentNodeId();
    UINT32 getParentInterfaceId() const { return m_parentInterfaceId; }
 
-   const InetAddressList *getIpAddressList() { return &m_ipAddressList; }
-   const InetAddress& getFirstIpAddress();
+   const InetAddressList *getIpAddressList() const { return &m_ipAddressList; }
+   const InetAddress& getFirstIpAddress() const;
    UINT32 getZoneUIN() const { return m_zoneUIN; }
    UINT32 getIfIndex() const { return m_index; }
    UINT32 getIfType() const { return m_type; }
@@ -1511,13 +1511,13 @@ public:
 
    void statusPollFromController(ClientSession *session, UINT32 rqId, Queue *eventQueue, Node *controller, SNMP_Transport *snmpTransport);
 
-   UINT32 getIndex() { return m_index; }
-	const BYTE *getMacAddr() { return m_macAddr; }
-   const InetAddress& getIpAddress() { return m_ipAddress; }
+   UINT32 getIndex() const { return m_index; }
+	const BYTE *getMacAddr() const { return m_macAddr; }
+   const InetAddress& getIpAddress() const { return m_ipAddress; }
 	bool isMyRadio(int rfIndex);
 	bool isMyRadio(const BYTE *macAddr);
 	void getRadioName(int rfIndex, TCHAR *buffer, size_t bufSize);
-   AccessPointState getApState() { return m_apState; }
+   AccessPointState getApState() const { return m_apState; }
    Node *getParentNode();
 
 	void attachToNode(UINT32 nodeId);
@@ -1719,6 +1719,7 @@ public:
    virtual void prepareForDeletion();
 
    virtual NXSL_Value *createNXSLObject(NXSL_VM *vm);
+
    virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 
    const TCHAR *getXmlConfig() const { return m_xmlConfig; }
@@ -3142,16 +3143,16 @@ public:
 /**
  * Get IP address for object
  */
-inline const InetAddress& GetObjectIpAddress(NetObj *object)
+inline const InetAddress& GetObjectIpAddress(const NetObj *object)
 {
    if (object->getObjectClass() == OBJECT_NODE)
-      return ((Node *)object)->getIpAddress();
+      return static_cast<const Node*>(object)->getIpAddress();
    if (object->getObjectClass() == OBJECT_SUBNET)
-      return ((Subnet *)object)->getIpAddress();
+      return static_cast<const Subnet*>(object)->getIpAddress();
    if (object->getObjectClass() == OBJECT_ACCESSPOINT)
-      return ((AccessPoint *)object)->getIpAddress();
+      return static_cast<const AccessPoint*>(object)->getIpAddress();
    if (object->getObjectClass() == OBJECT_INTERFACE)
-      return ((Interface *)object)->getIpAddressList()->getFirstUnicastAddress();
+      return static_cast<const Interface*>(object)->getIpAddressList()->getFirstUnicastAddress();
    return InetAddress::INVALID;
 }
 

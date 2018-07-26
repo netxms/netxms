@@ -14115,7 +14115,7 @@ void ClientSession::updateScheduledTask(NXCPMessage *request)
 void ClientSession::removeScheduledTask(NXCPMessage *request)
 {
    NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
-   UINT32 result = RemoveScheduledTask(request->getFieldAsUInt32(VID_SCHEDULED_TASK_ID), m_dwUserId, m_dwSystemAccess);
+   UINT32 result = DeleteScheduledTask(request->getFieldAsUInt32(VID_SCHEDULED_TASK_ID), m_dwUserId, m_dwSystemAccess);
    msg.setField(VID_RCC, result);
    sendMessage(&msg);
 }

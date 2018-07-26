@@ -28,7 +28,7 @@ public class ScheduleTableEntryComparator extends ViewerComparator
             result = (int)(task1.getId() - task2.getId());
             break;
          case ScheduledTaskView.CALLBACK_ID:
-            result = task1.getScheduledTaskId().compareToIgnoreCase(task2.getScheduledTaskId());
+            result = task1.getTaskHandlerId().compareToIgnoreCase(task2.getTaskHandlerId());
             break;
          case ScheduledTaskView.OBJECT:
             AbstractObject obj1 = ((NXCSession)ConsoleSharedData.getSession()).findObjectById(task1.getObjectId());
