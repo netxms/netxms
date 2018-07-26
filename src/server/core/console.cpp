@@ -139,11 +139,11 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
       if (szBuffer[0] == _T('+'))
       {
          int offset = _tcstoul(&szBuffer[1], NULL, 0);
-         AddOneTimeScheduledTask(_T("Execute.Script"), time(NULL) + offset, pArg, 0, 0, SYSTEM_ACCESS_FULL);//TODO: change to correct user
+         AddOneTimeScheduledTask(_T("Execute.Script"), time(NULL) + offset, pArg, NULL, 0, 0, SYSTEM_ACCESS_FULL);//TODO: change to correct user
       }
       else
       {
-         AddScheduledTask(_T("Execute.Script"), szBuffer, pArg, 0, 0, SYSTEM_ACCESS_FULL); //TODO: change to correct user
+         AddRecurrentScheduledTask(_T("Execute.Script"), szBuffer, pArg, NULL, 0, 0, SYSTEM_ACCESS_FULL); //TODO: change to correct user
       }
    }
    else if (IsCommand(_T("DBCP"), szBuffer, 3))

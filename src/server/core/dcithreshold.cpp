@@ -210,7 +210,7 @@ BOOL Threshold::saveToDB(DB_HANDLE hdb, UINT32 dwIndex)
 
 	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_itemId);
 	DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_value.getString(), DB_BIND_STATIC);
-	DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, NULL, DB_BIND_STATIC);
+	DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, _T(""), DB_BIND_STATIC);
 	DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (INT32)m_function);
 	DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, (INT32)m_operation);
 	DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, (INT32)m_sampleCount);

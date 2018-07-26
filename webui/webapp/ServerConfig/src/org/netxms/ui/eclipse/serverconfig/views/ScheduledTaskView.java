@@ -327,7 +327,7 @@ public class ScheduledTaskView extends ViewPart
          {
             origin.setExecutionTime(dialog.getRerunDate());
             origin.setFlags(origin.getFlags() & ~ScheduledTask.EXECUTED);
-            session.updateSchedule(origin);            
+            session.updateScheduledTask(origin);            
          }
 
          @Override
@@ -357,7 +357,7 @@ public class ScheduledTaskView extends ViewPart
          {
             for(Object o : selection.toList())
             {
-               session.removeSchedule(((ScheduledTask)o).getId());
+               session.deleteScheduledTask(((ScheduledTask)o).getId());
             }
          }
 
@@ -386,7 +386,7 @@ public class ScheduledTaskView extends ViewPart
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            final List<String> taskList = session.listScheduleCallbacks();
+            final List<String> taskList = session.getScheudledTaskHandlers();
             getDisplay().syncExec(new Runnable() {
                @Override
                public void run()
@@ -399,7 +399,7 @@ public class ScheduledTaskView extends ViewPart
                }
             });
             if (task != null)
-               session.updateSchedule(task);
+               session.updateScheduledTask(task);
          }
 
          @Override
@@ -427,7 +427,7 @@ public class ScheduledTaskView extends ViewPart
             {  
                ScheduledTask task = (ScheduledTask)o;
                task.setEnabed(enabled);
-               session.updateSchedule(task);
+               session.updateScheduledTask(task);
             }
          }
 
@@ -450,7 +450,7 @@ public class ScheduledTaskView extends ViewPart
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            final List<String> taskList = session.listScheduleCallbacks();
+            final List<String> taskList = session.getScheudledTaskHandlers();
             getDisplay().syncExec(new Runnable() {
                @Override
                public void run()
@@ -463,7 +463,7 @@ public class ScheduledTaskView extends ViewPart
                }
             });
             if(task != null)
-               session.addSchedule(task);
+               session.addScheduledTask(task);
          }
 
          @Override
@@ -579,7 +579,7 @@ public class ScheduledTaskView extends ViewPart
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            final List<ScheduledTask> schedules = session.listScheduleTasks();
+            final List<ScheduledTask> schedules = session.getScheduledTasks();
             runInUIThread(new Runnable() {
                @Override
                public void run()

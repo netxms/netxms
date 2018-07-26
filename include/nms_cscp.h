@@ -1241,6 +1241,8 @@ typedef struct
 #define VID_HYPERVISOR_TYPE         ((UINT32)620)
 #define VID_HYPERVISOR_INFO         ((UINT32)621)
 #define VID_VLAN_LIST               ((UINT32)622)
+#define VID_TASK_KEY                ((UINT32)623)
+#define VID_TIMER_COUNT             ((UINT32)624)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)
@@ -1318,6 +1320,9 @@ typedef struct
 #define VID_PUSHPARAM_LIST_BASE     ((UINT32)0x30000000)
 #define VID_TABLE_LIST_BASE         ((UINT32)0x40000000)
 #define VID_ACTION_LIST_BASE        ((UINT32)0x50000000)
+
+// Base value for timer list
+#define VID_TIMER_LIST_BASE         ((UINT32)0x60000000)
 
 // Base value for DCI last values
 #define VID_DCI_VALUES_BASE         ((UINT32)0x10000000)

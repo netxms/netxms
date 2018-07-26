@@ -7,7 +7,8 @@ import org.netxms.base.NXCPMessage;
 public class ScheduledTask
 {
    private long id;
-   private String scheduledTaskId;
+   private String taskHandlerId;
+   private String key;
    private String schedule;
    private String parameters;
    private String comments;
@@ -23,10 +24,14 @@ public class ScheduledTask
    final static public int SYSTEM = 8;
    final static private String statusDescription[] = { "Disabled", "Completed", "Running" };
    
+   /**
+    * Create empty task object
+    */
    public ScheduledTask()
    {
       id = 0;
-      scheduledTaskId = "";
+      taskHandlerId = "";
+      key = "";
       schedule = "";
       parameters = "";
       executionTime = new Date();
@@ -37,40 +42,64 @@ public class ScheduledTask
       comments = "";
    }
    
+   /**
+    * Create task object from NXCP message
+    * 
+    * @param msg NXCP message
+    * @param base base field ID
+    */
    public ScheduledTask(final NXCPMessage msg, long base)
    {
       id = msg.getFieldAsInt64(base);
-      scheduledTaskId = msg.getFieldAsString(base+1);
-      schedule = msg.getFieldAsString(base+2);
-      parameters = msg.getFieldAsString(base+3);
-      executionTime = msg.getFieldAsDate(base+4);
-      lastExecutionTime = msg.getFieldAsDate(base+5);
-      flags = msg.getFieldAsInt32(base+6);
-      owner = msg.getFieldAsInt64(base+7);
-      objectId = msg.getFieldAsInt64(base+8);
-      comments = msg.getFieldAsString(base+9);
+      taskHandlerId = msg.getFieldAsString(base + 1);
+      schedule = msg.getFieldAsString(base + 2);
+      parameters = msg.getFieldAsString(base + 3);
+      executionTime = msg.getFieldAsDate(base + 4);
+      lastExecutionTime = msg.getFieldAsDate(base + 5);
+      flags = msg.getFieldAsInt32(base + 6);
+      owner = msg.getFieldAsInt64(base + 7);
+      objectId = msg.getFieldAsInt64(base + 8);
+      comments = msg.getFieldAsString(base + 9);
+      key = msg.getFieldAsString(base + 10);
    }
    
-   public ScheduledTask(String scheduledTaskId, String schedule, String parameters,
+   /**
+    * Create new scheduled task object
+    * 
+    * @param taskHandlerId scheduled task handler ID
+    * @param schedule schedule for recurrent task
+    * @param parameters handler-specific parameters
+    * @param comments task comments
+    * @param executionTime execution time for "run once" tasks
+    * @param flags task flags
+    * @param objectId ID of NetXMS object associated with this task
+    */
+   public ScheduledTask(String taskHandlerId, String schedule, String parameters,
          String comments, Date executionTime, int flags, long objectId)
    {
-      id = 0;
-      this.scheduledTaskId = scheduledTaskId;
+      this.id = 0;
+      this.taskHandlerId = taskHandlerId;
+      this.key = "";
       this.schedule = schedule;
       this.parameters = parameters;
       this.executionTime = executionTime;
-      lastExecutionTime = new Date(0);
+      this.lastExecutionTime = new Date(0);
       this.flags = flags;
-      owner = 0;
+      this.owner = 0;
       this.objectId = objectId;
       this.comments = comments;
    }
    
+   /**
+    * Fill NXCP message with task data
+    * 
+    * @param msg NXCP message
+    */
    public void fillMessage(NXCPMessage msg)
    {
       msg.setFieldInt32(NXCPCodes.VID_SCHEDULED_TASK_ID, (int)id);
-      msg.setField(NXCPCodes.VID_TASK_HANDLER, scheduledTaskId);
-      if(schedule.isEmpty())
+      msg.setField(NXCPCodes.VID_TASK_HANDLER, taskHandlerId);
+      if (schedule.isEmpty())
          msg.setField(NXCPCodes.VID_EXECUTION_TIME, executionTime);
       else
          msg.setField(NXCPCodes.VID_SCHEDULE, schedule);
@@ -79,6 +108,7 @@ public class ScheduledTask
       msg.setFieldInt32(NXCPCodes.VID_FLAGS, flags);
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)objectId);  
       msg.setField(NXCPCodes.VID_COMMENTS, comments);
+      msg.setField(NXCPCodes.VID_TASK_KEY, key);
    }
 
    /**
@@ -98,23 +128,29 @@ public class ScheduledTask
    }
 
    /**
-    * @return the scheduledTaskId
+    * Get ID of scheduled task handler.
+    * 
+    * @return scheduled task handler ID
     */
-   public String getScheduledTaskId()
+   public String getTaskHandlerId()
    {
-      return scheduledTaskId;
+      return taskHandlerId;
    }
 
    /**
-    * @param scheduledTaskId the scheduledTaskId to set
+    * Set ID of scheduled task handler.
+    * 
+    * @param taskHandlerId new scheduled task handler ID
     */
-   public void setScheduledTaskId(String scheduledTaskId)
+   public void setTaskHandlerId(String taskHandlerId)
    {
-      this.scheduledTaskId = scheduledTaskId;
+      this.taskHandlerId = taskHandlerId;
    }
 
    /**
-    * @return the schedule
+    * Get recurring task schedule
+    * 
+    * @return recurring task schedule
     */
    public String getSchedule()
    {
@@ -122,7 +158,9 @@ public class ScheduledTask
    }
 
    /**
-    * @param schedule the schedule to set
+    * Set recurring task schedule
+    * 
+    * @param schedule new recurring task schedule
     */
    public void setSchedule(String schedule)
    {
@@ -225,6 +263,26 @@ public class ScheduledTask
       this.objectId = objectId;
    } 
    
+   /**
+    * Get task key
+    * 
+    * @return task key
+    */
+   public String getKey()
+   {
+      return key;
+   }
+
+   /**
+    * Set task key
+    * 
+    * @param key new task key
+    */
+   public void setKey(String key)
+   {
+      this.key = key;
+   }
+
    /**
     * @return
     */

@@ -26,6 +26,8 @@
 #include <nxevent.h>
 #include <jansson.h>
 
+#include <nxcore_schedule.h>
+
 
 //
 // Constants
@@ -92,6 +94,7 @@ public:
    Event();
    Event(const Event *src);
    Event(const EventTemplate *eventTemplate, UINT32 sourceId, UINT32 dciId, const TCHAR *userTag, const char *format, const TCHAR **names, va_list args);
+   Event(json_t *json);
    ~Event();
 
    UINT64 getId() const { return m_id; }
@@ -114,15 +117,15 @@ public:
    void prepareMessage(NXCPMessage *msg) const;
 
    void expandMessageText();
-   TCHAR *expandText(const TCHAR *textTemplate, const TCHAR *alarmMsg = NULL, const TCHAR *alarmKey = NULL);
-   static TCHAR *expandText(Event *event, UINT32 sourceObject, const TCHAR *textTemplate, const TCHAR *alarmMsg, const TCHAR *alarmKey);
+   TCHAR *expandText(const TCHAR *textTemplate, const TCHAR *alarmMsg = NULL, const TCHAR *alarmKey = NULL) const;
+   static TCHAR *expandText(const Event *event, UINT32 sourceObject, const TCHAR *textTemplate, const TCHAR *alarmMsg, const TCHAR *alarmKey);
    void setMessage(const TCHAR *text) { free(m_messageText); m_messageText = _tcsdup_ex(text); }
    void setUserTag(const TCHAR *text) { free(m_userTag); m_userTag = _tcsdup_ex(text); }
 
    int getParametersCount() const { return m_parameters.size(); }
-   const TCHAR *getParameter(int index) const { return (TCHAR *)m_parameters.get(index); }
-   UINT32 getParameterAsULong(int index) const { const TCHAR *v = (TCHAR *)m_parameters.get(index); return (v != NULL) ? _tcstoul(v, NULL, 0) : 0; }
-   UINT64 getParameterAsUInt64(int index) const { const TCHAR *v = (TCHAR *)m_parameters.get(index); return (v != NULL) ? _tcstoull(v, NULL, 0) : 0; }
+   const TCHAR *getParameter(int index) const { return static_cast<TCHAR*>(m_parameters.get(index)); }
+   UINT32 getParameterAsULong(int index) const { const TCHAR *v = static_cast<TCHAR*>(m_parameters.get(index)); return (v != NULL) ? _tcstoul(v, NULL, 0) : 0; }
+   UINT64 getParameterAsUInt64(int index) const { const TCHAR *v = static_cast<TCHAR*>(m_parameters.get(index)); return (v != NULL) ? _tcstoull(v, NULL, 0) : 0; }
 
 	const TCHAR *getNamedParameter(const TCHAR *name) const { return getParameter(m_parameterNames.indexOfIgnoreCase(name)); }
    UINT32 getNamedParameterAsULong(const TCHAR *name) const { return getParameterAsULong(m_parameterNames.indexOfIgnoreCase(name)); }
@@ -135,7 +138,24 @@ public:
    const TCHAR *getCustomMessage() const { return CHECK_NULL_EX(m_customMessage); }
    void setCustomMessage(const TCHAR *message) { free(m_customMessage); m_customMessage = _tcsdup_ex(message); }
 
-   String createJson();
+   json_t *toJson();
+};
+
+/**
+ * Transient data for scheduled action execution
+ */
+class ActionExecutionTransientData : public ScheduledTaskTransientData
+{
+private:
+   Event *m_event;
+   Alarm *m_alarm;
+
+public:
+   ActionExecutionTransientData(const Event *e, const Alarm *a);
+   virtual ~ActionExecutionTransientData();
+
+   const Event *getEvent() const { return m_event; }
+   const Alarm *getAlarm() const { return m_alarm; }
 };
 
 /**
@@ -143,6 +163,28 @@ public:
  */
  #define PSTORAGE_SET      1
  #define PSTORAGE_DELETE   2
+
+/**
+ * Action execution
+ */
+struct ActionExecutionConfiguration
+{
+   UINT32 actionId;
+   UINT32 timerDelay;
+   TCHAR *timerKey;
+
+   ActionExecutionConfiguration(UINT32 i, UINT32 d, TCHAR *k)
+   {
+      actionId = i;
+      timerDelay = d;
+      timerKey = k;
+   }
+
+   ~ActionExecutionConfiguration()
+   {
+      MemFree(timerKey);
+   }
+};
 
 /**
  * Event policy rule
@@ -155,7 +197,8 @@ private:
    UINT32 m_flags;
    IntegerArray<UINT32> m_sources;
    IntegerArray<UINT32> m_events;
-   IntegerArray<UINT32> m_actions;
+   ObjectArray<ActionExecutionConfiguration> m_actions;
+   StringList m_timerCancellations;
    TCHAR *m_comments;
    TCHAR *m_scriptSource;
    NXSL_VM *m_script;
@@ -174,7 +217,7 @@ private:
    bool matchSeverity(UINT32 severity);
    bool matchScript(Event *event);
 
-   void generateAlarm(Event *event);
+   UINT32 generateAlarm(Event *event);
 
 public:
    EPRule(UINT32 id);
@@ -193,7 +236,7 @@ public:
    void createNXMPRecord(String &str);
    json_t *toJson() const;
 
-   bool isActionInUse(UINT32 actionId) const { return m_actions.contains(actionId); }
+   bool isActionInUse(UINT32 actionId) const;
    bool isCategoryInUse(UINT32 categoryId) const { return m_alarmCategoryList.contains(categoryId); }
 };
 

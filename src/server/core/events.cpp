@@ -287,15 +287,15 @@ void Event::expandMessageText()
 /**
  * Substitute % macros in given text with actual values
  */
-TCHAR *Event::expandText(const TCHAR *textTemplate, const TCHAR *alarmMsg, const TCHAR *alarmKey)
+TCHAR *Event::expandText(const TCHAR *textTemplate, const TCHAR *alarmMsg, const TCHAR *alarmKey) const
 {
-	return Event::expandText(this, m_sourceId, textTemplate, alarmMsg, alarmKey);
+   return Event::expandText(this, m_sourceId, textTemplate, alarmMsg, alarmKey);
 }
 
 /**
  * Substitute % macros in given text with actual values
  */
-TCHAR *Event::expandText(Event *event, UINT32 sourceObject, const TCHAR *textTemplate, const TCHAR *alarmMsg, const TCHAR *alarmKey)
+TCHAR *Event::expandText(const Event *event, UINT32 sourceObject, const TCHAR *textTemplate, const TCHAR *alarmMsg, const TCHAR *alarmKey)
 {
    const TCHAR *pCurr;
    UINT32 dwPos, dwSize, dwParam;
@@ -759,53 +759,38 @@ void Event::prepareMessage(NXCPMessage *msg) const
 }
 
 /**
- * Create JSON object
+ * Convert event to JSON representation
  */
-String Event::createJson()
+json_t *Event::toJson()
 {
-   TCHAR buffer[64];
+   json_t *root = json_object();
+   json_object_set_new(root, "id", json_integer(m_id));
+   json_object_set_new(root, "code", json_integer(m_code));
+   json_object_set_new(root, "name", json_string_t(m_name));
+   json_object_set_new(root, "timestamp", json_integer(m_timeStamp));
+   json_object_set_new(root, "source", json_integer(m_sourceId));
+   json_object_set_new(root, "dci", json_integer(m_dciId));
+   json_object_set_new(root, "severity", json_integer(m_severity));
+   json_object_set_new(root, "tag", json_string_t(m_userTag));
+   json_object_set_new(root, "message", json_string_t(m_messageText));
 
-   String json = _T("{ \"id\":");
-   json.append(m_id);
-   json.append(_T(", \"code\":"));
-   json.append(m_code);
-   if (EventNameFromCode(m_code, buffer))
-   {
-      json.append(_T(", \"name\":\""));
-      json.append(EscapeStringForJSON(buffer));
-      json.append(_T('"'));
-   }
-   json.append(_T(", \"timestamp\":"));
-   json.append((INT64)m_timeStamp);
-   json.append(_T(", \"source\":"));
-   json.append(m_sourceId);
-   json.append(_T(", \"dci\":"));
-   json.append(m_dciId);
-   json.append(_T(", \"severity\":"));
-   json.append(m_severity);
-   json.append(_T(", \"tag\":\""));
-   json.append(EscapeStringForJSON(m_userTag));
-   json.append(_T("\", \"message\":\""));
-   json.append(EscapeStringForJSON(m_messageText));
-   json.append(_T("\", \"parameters\":["));
+   json_t *parameters = json_array();
    for(int i = 0; i < m_parameters.size(); i++)
    {
-      if (i > 0)
-         json.append(_T(','));
-      json.append(_T(" { \"name\":\""));
-      json.append(EscapeStringForJSON(m_parameterNames.get(i)));
-      json.append(_T("\", \"value\":\""));
-      json.append(EscapeStringForJSON((TCHAR *)m_parameters.get(i)));
-      json.append(_T("\" }"));
+      json_t *p = json_object();
+      json_object_set_new(p, "name", json_string_t(m_parameterNames.get(i)));
+      json_object_set_new(p, "value", json_string_t(static_cast<TCHAR*>(m_parameters.get(i))));
+      json_array_append_new(parameters, p);
    }
-   json.append(_T(" ] }"));
-   return json;
+   json_object_set_new(root, "parameters", parameters);
+
+   return root;
 }
 
 /**
  * Load event configuration from database
  */
-static bool LoadEvents()
+static bool LoadEventConfiguration()
 {
    bool success = false;
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
@@ -846,7 +831,7 @@ BOOL InitEventSubsystem()
    g_pEventQueue = new Queue;
 
    // Load events from database
-   bSuccess = LoadEvents();
+   bSuccess = LoadEventConfiguration();
 
    // Create and initialize event processing policy
    if (bSuccess)
@@ -880,7 +865,7 @@ void ReloadEvents()
 {
    RWLockWriteLock(m_rwlockTemplateAccess, INFINITE);
    m_eventTemplates.clear();
-   LoadEvents();
+   LoadEventConfiguration();
    RWLockUnlock(m_rwlockTemplateAccess);
 }
 

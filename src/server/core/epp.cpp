@@ -27,7 +27,7 @@
 /**
  * Default event policy rule constructor
  */
-EPRule::EPRule(UINT32 id)
+EPRule::EPRule(UINT32 id) : m_actions(0, 16, true)
 {
    m_id = id;
    m_guid = uuid::generate();
@@ -45,7 +45,7 @@ EPRule::EPRule(UINT32 id)
 /**
  * Create rule from config entry
  */
-EPRule::EPRule(ConfigEntry *config)
+EPRule::EPRule(ConfigEntry *config) : m_actions(0, 16, true)
 {
    m_id = 0;
    m_guid = config->getSubEntryValueAsUUID(_T("guid"));
@@ -129,20 +129,37 @@ EPRule::EPRule(ConfigEntry *config)
       for(int i = 0; i < actions->size(); i++)
       {
          uuid guid = actions->get(i)->getSubEntryValueAsUUID(_T("guid"));
+         UINT32 timerDelay = actions->get(i)->getSubEntryValueAsUInt(_T("timerDelay"));
+         const TCHAR *timerKey = actions->get(i)->getSubEntryValue(_T("timerKey"));
          if (!guid.isNull())
          {
             UINT32 actionId = FindActionByGUID(guid);
             if (actionId != 0)
-               m_actions.add(actionId);
+               m_actions.add(new ActionExecutionConfiguration(actionId, timerDelay, _tcsdup_ex(timerKey)));
          }
          else
          {
             UINT32 actionId = actions->get(i)->getId();
             if (IsValidActionId(actionId))
-               m_actions.add(actionId);
+               m_actions.add(new ActionExecutionConfiguration(actionId, timerDelay, _tcsdup_ex(timerKey)));
          }
       }
       delete actions;
+   }
+
+   ConfigEntry *timerCancellationsRoot = config->findEntry(_T("timerCancellations"));
+   if (timerCancellationsRoot != NULL)
+   {
+      ConfigEntry *keys = timerCancellationsRoot->findEntry(_T("timerKey"));
+      if (keys != NULL)
+      {
+         for(int i = 0; i < keys->getValueCount(); i++)
+         {
+            const TCHAR *v = keys->getValue(i);
+            if ((v != NULL) && (*v != 0))
+               m_timerCancellations.add(v);
+         }
+      }
    }
 }
 
@@ -152,7 +169,7 @@ EPRule::EPRule(ConfigEntry *config)
  * rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,
  * alarm_timeout,alarm_timeout_event
  */
-EPRule::EPRule(DB_RESULT hResult, int row)
+EPRule::EPRule(DB_RESULT hResult, int row) : m_actions(0, 16, true)
 {
    m_id = DBGetFieldULong(hResult, row, 0);
    m_guid = DBGetFieldGUID(hResult, row, 1);
@@ -188,14 +205,41 @@ EPRule::EPRule(DB_RESULT hResult, int row)
 /**
  * Construct event policy rule from NXCP message
  */
-EPRule::EPRule(NXCPMessage *msg)
+EPRule::EPRule(NXCPMessage *msg) : m_actions(0, 16, true)
 {
    m_flags = msg->getFieldAsUInt32(VID_FLAGS);
    m_id = msg->getFieldAsUInt32(VID_RULE_ID);
    m_guid = msg->getFieldAsGUID(VID_GUID);
    m_comments = msg->getFieldAsString(VID_COMMENTS);
 
-   msg->getFieldAsInt32Array(VID_RULE_ACTIONS, &m_actions);
+   if (msg->isFieldExist(VID_RULE_ACTIONS))
+   {
+      IntegerArray<UINT32> actions;
+      msg->getFieldAsInt32Array(VID_RULE_ACTIONS, &actions);
+      for(int i = 0; i < actions.size(); i++)
+      {
+         m_actions.add(new ActionExecutionConfiguration(actions.get(i), 0, NULL));
+      }
+   }
+   else
+   {
+      int count = msg->getFieldAsInt32(VID_NUM_ACTIONS);
+      UINT32 fieldId = VID_ACTION_LIST_BASE;
+      for(int i = 0; i < count; i++)
+      {
+         UINT32 actionId = msg->getFieldAsUInt32(fieldId++);
+         UINT32 timerDelay = msg->getFieldAsUInt32(fieldId++);
+         TCHAR *timerKey = msg->getFieldAsString(fieldId++);
+         fieldId += 7;
+         m_actions.add(new ActionExecutionConfiguration(actionId, timerDelay, timerKey));
+      }
+   }
+   if (msg->isFieldExist(VID_TIMER_COUNT))
+   {
+      StringList list(msg, VID_TIMER_LIST_BASE, VID_TIMER_COUNT);
+      m_timerCancellations.addAll(&list);
+   }
+
    msg->getFieldAsInt32Array(VID_RULE_EVENTS, &m_events);
    msg->getFieldAsInt32Array(VID_RULE_SOURCES, &m_sources);
 
@@ -247,8 +291,8 @@ EPRule::EPRule(NXCPMessage *msg)
  */
 EPRule::~EPRule()
 {
-   free(m_comments);
-   free(m_scriptSource);
+   MemFree(m_comments);
+   MemFree(m_scriptSource);
    delete m_script;
 }
 
@@ -318,19 +362,30 @@ void EPRule::createNXMPRecord(String &str)
                              m_events.get(i), (const TCHAR *)EscapeStringForXML2(eventName));
    }
 
-   str += _T("\t\t\t</events>\n\t\t\t<actions>\n");
-
+   str.append(_T("\t\t\t</events>\n\t\t\t<actions>\n"));
    for(int i = 0; i < m_actions.size(); i++)
    {
       str.append(_T("\t\t\t\t<action id=\""));
-      UINT32 id = m_actions.get(i);
-      str.append(id);
+      const ActionExecutionConfiguration *a = m_actions.get(i);
+      str.append(a->actionId);
       str.append(_T("\">\n\t\t\t\t\t<guid>"));
-      str.append(GetActionGUID(id));
-      str.append(_T("</guid>\n\t\t\t\t</action>\n"));
+      str.append(GetActionGUID(a->actionId));
+      str.append(_T("</guid>\n\t\t\t\t\t<timerDelay>\n"));
+      str.append(a->timerDelay);
+      str.append(_T("</timerDelay>\n\t\t\t\t\t<timerKey>\n"));
+      str.append(a->timerKey);
+      str.append(_T("</timerKey>\n\t\t\t\t</action>\n"));
    }
 
-   str += _T("\t\t\t</actions>\n\t\t\t<pStorageActions>\n\t\t\t\t<setValue>\n");
+   str.append(_T("\t\t\t</actions>\n\t\t\t<timerCancellations>\n"));
+   for(int i = 0; i < m_timerCancellations.size(); i++)
+   {
+      str.append(_T("\t\t\t\t<timerKey>"));
+      str.append(m_timerCancellations.get(i));
+      str.append(_T("</timerKey>\n"));
+   }
+
+   str.append(_T("\t\t\t</timerCancellations>\n\t\t\t<pStorageActions>\n\t\t\t\t<setValue>\n"));
    m_pstorageSetActions.forEach(AddPSSetActionsToSML, &str);
    str += _T("\t\t\t\t</setValue>\n\t\t\t\t<deleteValue>\n");
    for(int i = 0; i < m_pstorageDeleteActions.size(); i++)
@@ -501,54 +556,89 @@ static EnumerationCallbackResult ExecutePstorageSetAction(const TCHAR *key, cons
  */
 bool EPRule::processEvent(Event *event)
 {
-   bool bStopProcessing = false;
+   if (m_flags & RF_DISABLED)
+      return false;
 
-   // Check disable flag
-   if (!(m_flags & RF_DISABLED))
+   // Check if event match
+   if (!matchSource(event->getSourceId()) || !matchEvent(event->getCode()) ||
+       !matchSeverity(event->getSeverity()) || !matchScript(event))
+      return false;
+
+   nxlog_debug_tag(DEBUG_TAG, 6, _T("Event ") UINT64_FMT _T(" match EPP rule %d"), event->getId(), (int)m_id);
+
+   // Generate alarm if requested
+   UINT32 alarmId = 0;
+   if (m_flags & RF_GENERATE_ALARM)
+      alarmId = generateAlarm(event);
+
+   // Execute actions
+   if (!m_actions.isEmpty())
    {
-      // Check if event match
-      if (matchSource(event->getSourceId()) && matchEvent(event->getCode()) &&
-          matchSeverity(event->getSeverity()) && matchScript(event))
+      Alarm *alarm = FindAlarmById(alarmId);
+      for(int i = 0; i < m_actions.size(); i++)
       {
-			nxlog_debug_tag(DEBUG_TAG, 6, _T("Event ") UINT64_FMT _T(" match EPP rule %d"), event->getId(), (int)m_id);
-
-         // Generate alarm if requested
-         if (m_flags & RF_GENERATE_ALARM)
-            generateAlarm(event);
-
-         // Event matched, perform actions
-         if (!m_actions.isEmpty())
+         const ActionExecutionConfiguration *a = m_actions.get(i);
+         if (a->timerDelay == 0)
          {
-            TCHAR *alarmMessage = event->expandText(m_alarmMessage);
-            TCHAR *alarmKey = event->expandText(m_alarmKey);
-            for(int i = 0; i < m_actions.size(); i++)
-               ExecuteAction(m_actions.get(i), event, alarmMessage, alarmKey);
-            free(alarmMessage);
-            free(alarmKey);
+            ExecuteAction(a->actionId, event, 
+                  (alarm != NULL) ? alarm->getMessage() : _T(""),
+                  (alarm != NULL) ? alarm->getKey() : _T(""));
          }
-
-			// Update persistent storage if needed
-			if (m_pstorageSetActions.size() > 0)
-            m_pstorageSetActions.forEach(ExecutePstorageSetAction, event);
-			for(int i = 0; i < m_pstorageDeleteActions.size(); i++)
+         else
          {
-            TCHAR *psKey = event->expandText(m_pstorageDeleteActions.get(i));
-            DeletePersistentStorageValue(psKey);
-            free(psKey);
+            TCHAR parameters[64], comments[256];
+            _sntprintf(parameters, 64, _T("action=%u;event=") UINT64_FMT _T(";alarm=%u"), a->actionId, event->getId(), (alarm != NULL) ? alarm->getAlarmId() : 0);
+            _sntprintf(comments, 256, _T("Delayed action execution for event %s"), event->getName());
+            TCHAR *key = ((a->timerKey != NULL) && (*a->timerKey != 0)) ? 
+                  event->expandText(a->timerKey, 
+                        (alarm != NULL) ? alarm->getMessage() : _T(""),
+                        (alarm != NULL) ? alarm->getKey() : _T("")) : NULL;
+            AddOneTimeScheduledTask(_T("Execute.Action"), time(NULL) + a->timerDelay, parameters,
+                     new ActionExecutionTransientData(event, alarm), 0, event->getSourceId(), SYSTEM_ACCESS_FULL,
+                     comments, SCHEDULED_TASK_SYSTEM, key);
+            MemFree(key);
          }
-
-			bStopProcessing = (m_flags & RF_STOP_PROCESSING) ? true : false;
       }
+      delete alarm;
    }
 
-   return bStopProcessing;
+   // Cancel action timers
+   if (!m_timerCancellations.isEmpty())
+   {
+      Alarm *alarm = FindAlarmById(alarmId);
+      for(int i = 0; i < m_timerCancellations.size(); i++)
+      {
+         TCHAR *key = event->expandText(m_timerCancellations.get(i),
+               (alarm != NULL) ? alarm->getMessage() : _T(""),
+               (alarm != NULL) ? alarm->getKey() : _T(""));
+         if (DeleteScheduledTaskByKey(key))
+         {
+            nxlog_debug_tag(DEBUG_TAG, 6, _T("Delayed action execution with key \"%s\" cancelled"), key);
+         }
+         MemFree(key);
+      }
+      delete alarm;
+   }
+
+   // Update persistent storage if needed
+   if (m_pstorageSetActions.size() > 0)
+      m_pstorageSetActions.forEach(ExecutePstorageSetAction, event);
+   for(int i = 0; i < m_pstorageDeleteActions.size(); i++)
+   {
+      TCHAR *psKey = event->expandText(m_pstorageDeleteActions.get(i));
+      DeletePersistentStorageValue(psKey);
+      free(psKey);
+   }
+
+   return (m_flags & RF_STOP_PROCESSING) ? true : false;
 }
 
 /**
  * Generate alarm from event
  */
-void EPRule::generateAlarm(Event *event)
+UINT32 EPRule::generateAlarm(Event *event)
 {
+   UINT32 alarmId = 0;
    // Terminate alarms with key == our ack_key
 	if ((m_alarmSeverity == SEVERITY_RESOLVE) || (m_alarmSeverity == SEVERITY_TERMINATE))
 	{
@@ -559,11 +649,12 @@ void EPRule::generateAlarm(Event *event)
 	}
 	else	// Generate new alarm
 	{
-		CreateNewAlarm(m_alarmMessage, m_alarmKey, ALARM_STATE_OUTSTANDING,
+		alarmId = CreateNewAlarm(m_alarmMessage, m_alarmKey, ALARM_STATE_OUTSTANDING,
                      (m_alarmSeverity == SEVERITY_FROM_EVENT) ? event->getSeverity() : m_alarmSeverity,
                      m_alarmTimeout, m_alarmTimeoutEvent, event, 0, &m_alarmCategoryList,
                      ((m_flags & RF_CREATE_TICKET) != 0) ? true : false);
 	}
+   return alarmId;
 }
 
 /**
@@ -606,13 +697,35 @@ bool EPRule::loadFromDB(DB_HANDLE hdb)
    }
 
    // Load rule's actions
-   _sntprintf(szQuery, 256, _T("SELECT action_id FROM policy_action_list WHERE rule_id=%d"), m_id);
+   _sntprintf(szQuery, 256, _T("SELECT action_id,timer_delay,timer_key FROM policy_action_list WHERE rule_id=%d"), m_id);
    hResult = DBSelect(hdb, szQuery);
    if (hResult != NULL)
    {
       int count = DBGetNumRows(hResult);
       for(int i = 0; i < count; i++)
-         m_actions.add(DBGetFieldULong(hResult, i, 0));
+      {
+         UINT32 actionId = DBGetFieldULong(hResult, i, 0);
+         UINT32 timerDelay = DBGetFieldULong(hResult, i, 1);
+         TCHAR *timerKey = DBGetField(hResult, i, 2, NULL, 0);
+         m_actions.add(new ActionExecutionConfiguration(actionId, timerDelay, timerKey));
+      }
+      DBFreeResult(hResult);
+   }
+   else
+   {
+      bSuccess = false;
+   }
+
+   // Load timer cancellations
+   _sntprintf(szQuery, 256, _T("SELECT timer_key FROM policy_timer_cancellation_list WHERE rule_id=%d"), m_id);
+   hResult = DBSelect(hdb, szQuery);
+   if (hResult != NULL)
+   {
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
+      {
+         m_timerCancellations.addPreallocated(DBGetField(hResult, i, 0, NULL, 0));
+      }
       DBFreeResult(hResult);
    }
    else
@@ -713,10 +826,43 @@ bool EPRule::saveToDB(DB_HANDLE hdb)
    // Actions
    if (success && !m_actions.isEmpty())
    {
-      for(i = 0; i < m_actions.size() && success; i++)
+      DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO policy_action_list (rule_id,action_id,timer_delay,timer_key) VALUES (?,?,?,?)"), m_actions.size() > 1);
+      if (hStmt != NULL)
       {
-         _sntprintf(pszQuery, 1024, _T("INSERT INTO policy_action_list (rule_id,action_id) VALUES (%d,%d)"), m_id, m_actions.get(i));
-         success = DBQuery(hdb, pszQuery);
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+         for(i = 0; i < m_actions.size() && success; i++)
+         {
+            const ActionExecutionConfiguration *a = m_actions.get(i);
+            DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, a->actionId);
+            DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, a->timerDelay);
+            DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, a->timerKey, DB_BIND_STATIC);
+            success = DBExecute(hStmt);
+         }
+         DBFreeStatement(hStmt);
+      }
+      else
+      {
+         success = false;
+      }
+   }
+
+   // Timer cancellations
+   if (success && !m_timerCancellations.isEmpty())
+   {
+      DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO policy_timer_cancellation_list (rule_id,timer_key) VALUES (?,?)"), m_timerCancellations.size() > 1);
+      if (hStmt != NULL)
+      {
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+         for(i = 0; i < m_timerCancellations.size() && success; i++)
+         {
+            DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_timerCancellations.get(i), DB_BIND_STATIC);
+            success = DBExecute(hStmt);
+         }
+         DBFreeStatement(hStmt);
+      }
+      else
+      {
+         success = false;
       }
    }
 
@@ -802,7 +948,16 @@ void EPRule::createMessage(NXCPMessage *msg)
    msg->setFieldFromInt32Array(VID_ALARM_CATEGORY_ID, &m_alarmCategoryList);
    msg->setField(VID_COMMENTS, CHECK_NULL_EX(m_comments));
    msg->setField(VID_NUM_ACTIONS, (UINT32)m_actions.size());
-   msg->setFieldFromInt32Array(VID_RULE_ACTIONS, &m_actions);
+   UINT32 fieldId = VID_ACTION_LIST_BASE;
+   for(int i = 0; i < m_actions.size(); i++)
+   {
+      const ActionExecutionConfiguration *a = m_actions.get(i);
+      msg->setField(fieldId++, a->actionId);
+      msg->setField(fieldId++, a->timerDelay);
+      msg->setField(fieldId++, a->timerKey);
+      fieldId += 7;
+   }
+   m_timerCancellations.fillMessage(msg, VID_TIMER_LIST_BASE, VID_TIMER_COUNT);
    msg->setField(VID_NUM_EVENTS, (UINT32)m_events.size());
    msg->setFieldFromInt32Array(VID_RULE_EVENTS, &m_events);
    msg->setField(VID_NUM_SOURCES, (UINT32)m_sources.size());
@@ -822,7 +977,23 @@ json_t *EPRule::toJson() const
    json_object_set_new(root, "flags", json_integer(m_flags));
    json_object_set_new(root, "sources", m_sources.toJson());
    json_object_set_new(root, "events", m_events.toJson());
-   json_object_set_new(root, "actions", m_actions.toJson());
+   json_t *actions = json_array();
+   for(int i = 0; i < m_actions.size(); i++)
+   {
+      const ActionExecutionConfiguration *d = m_actions.get(i);
+      json_t *action = json_object();
+      json_object_set_new(action, "id", json_integer(d->actionId));
+      json_object_set_new(action, "timerDelay", json_integer(d->timerDelay));
+      json_object_set_new(action, "timerKey", json_string_t(d->timerKey));
+      json_array_append_new(actions, action);
+   }
+   json_object_set_new(root, "actions", actions);
+   json_t *timerCancellations = json_array();
+   for(int i = 0; i < m_timerCancellations.size(); i++)
+   {
+      json_array_append_new(timerCancellations, json_string_t(m_timerCancellations.get(i)));
+   }
+   json_object_set_new(root, "timerCancellations", timerCancellations);
    json_object_set_new(root, "comments", json_string_t(m_comments));
    json_object_set_new(root, "script", json_string_t(m_scriptSource));
    json_object_set_new(root, "alarmMessage", json_string_t(m_alarmMessage));
@@ -835,6 +1006,17 @@ json_t *EPRule::toJson() const
    json_object_set_new(root, "pstorageDeleteActions", m_pstorageDeleteActions.toJson());
 
    return root;
+}
+
+/**
+ * Check if given action is in use by this rule
+ */
+bool EPRule::isActionInUse(UINT32 actionId) const
+{
+   for(int i = 0; i < m_actions.size(); i++)
+      if (m_actions.get(i)->actionId == actionId)
+         return true;
+   return false;
 }
 
 /**

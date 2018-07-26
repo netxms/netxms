@@ -2,6 +2,8 @@
 * 2.2.8
 *
 
+- Delayed actions in event processing policy
+- Raw event data stored in event log
 - New hook scripts: PostObjectCreate and DiscoveryPoll
 - Implemented watchdog functionality for external subagents
 

@@ -49,18 +49,20 @@
 #define CLIENT_PROTOCOL_VERSION_TRAP      1     /* Event (trap) sending API */
 #define CLIENT_PROTOCOL_VERSION_MOBILE    1     /* All functionality relevant for mobile client */
 #define CLIENT_PROTOCOL_VERSION_TCPPROXY  1     /* All functionality relevant for TCP proxy sessions */
-#define CLIENT_PROTOCOL_VERSION_FULL      13    /* All functionality */
+#define CLIENT_PROTOCOL_VERSION_SCHEDULER 2     /* All functionality relevant for scheduler configuration */
+#define CLIENT_PROTOCOL_VERSION_FULL      14    /* All functionality */
 
 /**
  * Protocol version positions
  */
-#define CPV_INDEX_BASE     0
-#define CPV_INDEX_ALARMS   1
-#define CPV_INDEX_PUSH     2
-#define CPV_INDEX_TRAP     3
-#define CPV_INDEX_MOBILE   4
-#define CPV_INDEX_FULL     5
-#define CPV_INDEX_TCPPROXY 6
+#define CPV_INDEX_BASE      0
+#define CPV_INDEX_ALARMS    1
+#define CPV_INDEX_PUSH      2
+#define CPV_INDEX_TRAP      3
+#define CPV_INDEX_MOBILE    4
+#define CPV_INDEX_FULL      5
+#define CPV_INDEX_TCPPROXY  6
+#define CPV_INDEX_SCHEDULER 7
 
 /**
  * Current mobile device protocol version

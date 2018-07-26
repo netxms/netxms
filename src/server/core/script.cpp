@@ -409,24 +409,24 @@ void ImportScript(ConfigEntry *config)
 /**
  * Execute library script from scheduler
  */
-void ExecuteScheduledScript(const ScheduledTaskParameters *param)
+void ExecuteScheduledScript(const ScheduledTaskParameters *parameters)
 {
    TCHAR name[256];
-   nx_strncpy(name, param->m_params, 256);
+   _tcslcpy(name, parameters->m_persistentData, 256);
    Trim(name);
 
-   ObjectArray<NXSL_Value> args(16, 16, false);
-
-   Node *object = (Node *)FindObjectById(param->m_objectId, OBJECT_NODE);
+   Node *object = (Node *)FindObjectById(parameters->m_objectId, OBJECT_NODE);
    if (object != NULL)
    {
-      if (!object->checkAccessRights(param->m_userId, OBJECT_ACCESS_CONTROL))
+      if (!object->checkAccessRights(parameters->m_userId, OBJECT_ACCESS_CONTROL))
       {
-			nxlog_debug(4, _T("ExecuteScheduledScript(%s): access denied for userId %d object \"%s\" [%d]"),
-			            param->m_params, param->m_userId, object->getName(), object->getId());
+         nxlog_debug(4, _T("ExecuteScheduledScript(%s): access denied for userId %d object \"%s\" [%d]"),
+                  name, parameters->m_userId, object->getName(), object->getId());
          return;
       }
    }
+
+   ObjectArray<NXSL_Value> args(16, 16);
 
    // Can be in form parameter(arg1, arg2, ... argN)
    TCHAR *p = _tcschr(name, _T('('));
@@ -441,9 +441,9 @@ void ExecuteScheduledScript(const ScheduledTaskParameters *param)
          // argument parsing error
          if (object != NULL)
             nxlog_debug(4, _T("ExecuteScheduledScript(%s): argument parsing error (object \"%s\" [%d])"),
-                        param->m_params, object->getName(), object->getId());
+                     name, object->getName(), object->getId());
          else
-            nxlog_debug(4, _T("ExecuteScheduledScript(%s): argument parsing error (not attached to object)"), param->m_params);
+            nxlog_debug(4, _T("ExecuteScheduledScript(%s): argument parsing error (not attached to object)"), name);
          args.setOwner(true);
          return;
       }
@@ -462,18 +462,18 @@ void ExecuteScheduledScript(const ScheduledTaskParameters *param)
       {
          if (object != NULL)
             nxlog_debug(4, _T("ExecuteScheduledScript(%s): Script executed successfully on object \"%s\" [%d]"),
-                        param->m_params, object->getName(), object->getId());
+                        name, object->getName(), object->getId());
          else
-            nxlog_debug(4, _T("ExecuteScheduledScript(%s): Script executed successfully (not attached to object)"), param->m_params);
+            nxlog_debug(4, _T("ExecuteScheduledScript(%s): Script executed successfully (not attached to object)"), name);
       }
       else
       {
          if (object != NULL)
             nxlog_debug(4, _T("ExecuteScheduledScript(%s): Script execution error on object \"%s\" [%d]: %s"),
-                        param->m_params, object->getName(), object->getId(), vm->getErrorText());
+                        name, object->getName(), object->getId(), vm->getErrorText());
          else
             nxlog_debug(4, _T("ExecuteScheduledScript(%s): Script execution error (not attached to object): %s"),
-                        param->m_params, vm->getErrorText());
+                        name, vm->getErrorText());
       }
       delete vm;
    }

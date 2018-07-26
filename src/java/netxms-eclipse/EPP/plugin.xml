@@ -163,6 +163,17 @@
             </instanceof>
          </enabledWhen>
       </page>
+      <page
+            category="org.netxms.ui.eclipse.epp.propertypages.RuleAction#1"
+            class="org.netxms.ui.eclipse.epp.propertypages.RuleTimerCancellations"
+            id="org.netxms.ui.eclipse.epp.propertypages.RuleTimerCancellations#40"
+            name="Timer Cancellations">
+         <enabledWhen>
+            <instanceof
+                  value="org.netxms.ui.eclipse.epp.widgets.RuleEditor">
+            </instanceof>
+         </enabledWhen>
+      </page>
    </extension>
    <extension
          point="org.eclipse.ui.contexts">

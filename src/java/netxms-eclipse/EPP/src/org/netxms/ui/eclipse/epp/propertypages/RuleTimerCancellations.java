@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2018 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,16 +19,18 @@
 package org.netxms.ui.eclipse.epp.propertypages;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Map;
+import java.util.Set;
+import org.eclipse.jface.dialogs.IInputValidator;
+import org.eclipse.jface.dialogs.InputDialog;
 import org.eclipse.jface.viewers.ArrayContentProvider;
-import org.eclipse.jface.viewers.DoubleClickEvent;
-import org.eclipse.jface.viewers.IDoubleClickListener;
-import org.eclipse.jface.viewers.ILabelProvider;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
+import org.eclipse.jface.viewers.TableViewer;
+import org.eclipse.jface.viewers.Viewer;
+import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
@@ -41,29 +43,21 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.dialogs.PropertyPage;
-import org.netxms.client.ServerAction;
-import org.netxms.client.events.ActionExecutionConfiguration;
 import org.netxms.client.events.EventProcessingPolicyRule;
 import org.netxms.ui.eclipse.epp.Messages;
-import org.netxms.ui.eclipse.epp.dialogs.ActionExecutionConfigurationDialog;
-import org.netxms.ui.eclipse.epp.dialogs.ActionSelectionDialog;
-import org.netxms.ui.eclipse.epp.propertypages.helpers.ActionListLabelProvider;
 import org.netxms.ui.eclipse.epp.widgets.RuleEditor;
-import org.netxms.ui.eclipse.tools.ObjectLabelComparator;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
-import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
- * "Actions" property page for EPP rule
+ * "Timer Cancellations" property page for EPP rule
  */
-public class RuleServerActions extends PropertyPage
+public class RuleTimerCancellations extends PropertyPage
 {
 	private RuleEditor editor;
 	private EventProcessingPolicyRule rule;
-	private SortableTableViewer viewer;
-	private Map<Long, ActionExecutionConfiguration> actions = new HashMap<Long, ActionExecutionConfiguration>();
-   private Button addButton;
-	private Button editButton;
+	private TableViewer viewer;
+	private Set<String> timerKeys = new HashSet<String>();
+	private Button addButton;
 	private Button deleteButton;
 	
 	/* (non-Javadoc)
@@ -82,12 +76,15 @@ public class RuleServerActions extends PropertyPage
 		layout.marginHeight = 0;
       dialogArea.setLayout(layout);
       
-      final String[] columnNames = { Messages.get().RuleServerActions_Action, "Delay", "Timer key" };
-      final int[] columnWidths = { 300, 90, 200 };
-      viewer = new SortableTableViewer(dialogArea, columnNames, columnWidths, 0, SWT.UP, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
+      viewer = new TableViewer(dialogArea, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
       viewer.setContentProvider(new ArrayContentProvider());
-      viewer.setLabelProvider(new ActionListLabelProvider(editor.getEditorView()));
-      viewer.setComparator(new ObjectLabelComparator((ILabelProvider)viewer.getLabelProvider()));
+      viewer.setComparator(new ViewerComparator() {
+         @Override
+         public int compare(Viewer viewer, Object e1, Object e2)
+         {
+            return ((String)e1).compareToIgnoreCase((String)e2);
+         }
+      });
       viewer.addSelectionChangedListener(new ISelectionChangedListener() {
 			@Override
 			public void selectionChanged(SelectionChangedEvent event)
@@ -96,17 +93,9 @@ public class RuleServerActions extends PropertyPage
 				deleteButton.setEnabled(size > 0);
 			}
       });
-      viewer.addDoubleClickListener(new IDoubleClickListener() {
-         @Override
-         public void doubleClick(DoubleClickEvent event)
-         {
-            editAction();
-         }
-      });
 
-      for(ActionExecutionConfiguration c : rule.getActions())
-         actions.put(c.getActionId(), new ActionExecutionConfiguration(c));
-      viewer.setInput(actions.values().toArray());
+      timerKeys.addAll(rule.getTimerCancellations());
+      viewer.setInput(timerKeys.toArray());
       
       GridData gridData = new GridData();
       gridData.verticalAlignment = GridData.FILL;
@@ -128,7 +117,7 @@ public class RuleServerActions extends PropertyPage
       buttons.setLayoutData(gridData);
 
       addButton = new Button(buttons, SWT.PUSH);
-      addButton.setText(Messages.get().RuleServerActions_Add);
+      addButton.setText(Messages.get().RuleEvents_Add);
       addButton.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
@@ -139,34 +128,15 @@ public class RuleServerActions extends PropertyPage
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
-				addAction();
+				addTimerKey();
 			}
       });
       RowData rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       addButton.setLayoutData(rd);
 		
-      editButton = new Button(buttons, SWT.PUSH);
-      editButton.setText("&Edit...");
-      editButton.addSelectionListener(new SelectionListener() {
-         @Override
-         public void widgetDefaultSelected(SelectionEvent e)
-         {
-            widgetSelected(e);
-         }
-
-         @Override
-         public void widgetSelected(SelectionEvent e)
-         {
-            editAction();
-         }
-      });
-      rd = new RowData();
-      rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
-      editButton.setLayoutData(rd);
-      
       deleteButton = new Button(buttons, SWT.PUSH);
-      deleteButton.setText(Messages.get().RuleServerActions_Delete);
+      deleteButton.setText(Messages.get().RuleEvents_Delete);
       deleteButton.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
@@ -177,7 +147,7 @@ public class RuleServerActions extends PropertyPage
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
-				deleteAction();
+				deleteTimerKey();
 			}
       });
       rd = new RowData();
@@ -189,40 +159,28 @@ public class RuleServerActions extends PropertyPage
 	}
 
 	/**
-	 * Add new event
+	 * Add new timer key
 	 */
-	private void addAction()
+	private void addTimerKey()
 	{
-		ActionSelectionDialog dlg = new ActionSelectionDialog(getShell(), editor.getEditorView().getActions());
-		dlg.enableMultiSelection(true);
+	   InputDialog dlg = new InputDialog(getShell(), "Add Timer Key", "Timer key", "", new IInputValidator() {
+         @Override
+         public String isValid(String newText)
+         {
+            return newText.trim().isEmpty() ? "Timer key must not be empty" : null;
+         }
+      });
 		if (dlg.open() == Window.OK)
 		{
-			for(ServerAction a : dlg.getSelectedActions())
-				actions.put(a.getId(), new ActionExecutionConfiguration(a.getId(), 0, null));
+		   timerKeys.add(dlg.getValue().trim());
 		}
-      viewer.setInput(actions.values().toArray());
+      viewer.setInput(timerKeys.toArray());
 	}
 	
 	/**
-	 * Edit current action
+	 * Delete timer key from list
 	 */
-	private void editAction()
-	{
-      IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-      if (selection.size() != 1)
-         return;
-      
-      ActionExecutionConfigurationDialog dlg = new ActionExecutionConfigurationDialog(getShell(), (ActionExecutionConfiguration)selection.getFirstElement());
-      if (dlg.open() == Window.OK)
-      {
-         viewer.update(selection.getFirstElement(), null);
-      }
-	}
-	
-	/**
-	 * Delete event from list
-	 */
-	private void deleteAction()
+	private void deleteTimerKey()
 	{
 		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
 		Iterator<?> it = selection.iterator();
@@ -230,10 +188,10 @@ public class RuleServerActions extends PropertyPage
 		{
 			while(it.hasNext())
 			{
-			   ActionExecutionConfiguration a = (ActionExecutionConfiguration)it.next();
-				actions.remove(a.getActionId());
+			   String key = (String)it.next();
+				timerKeys.remove(key);
 			}
-	      viewer.setInput(actions.values().toArray());
+	      viewer.setInput(timerKeys.toArray());
 		}
 	}
 	
@@ -242,7 +200,7 @@ public class RuleServerActions extends PropertyPage
 	 */
 	private void doApply()
 	{
-		rule.setActions(new ArrayList<ActionExecutionConfiguration>(actions.values()));
+      rule.setTimerCancellations(new ArrayList<String>(timerKeys));
 		editor.setModified(true);
 	}
 

@@ -129,8 +129,8 @@ static THREAD_RESULT THREAD_CALL EventLogger(void *arg)
 		else
 		{
 			DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO event_log (event_id,event_code,event_timestamp,")
-				_T("event_source,zone_uin,dci_id,event_severity,event_message,root_event_id,user_tag) ")
-				_T("VALUES (?,?,?,?,?,?,?,?,?,?)"), true);
+				_T("event_source,zone_uin,dci_id,event_severity,event_message,root_event_id,user_tag,raw_data) ")
+				_T("VALUES (?,?,?,?,?,?,?,?,?,?,?)"), true);
 			if (hStmt != NULL)
 			{
 				do
@@ -145,6 +145,7 @@ static THREAD_RESULT THREAD_CALL EventLogger(void *arg)
                DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, pEvent->getMessage(), DB_BIND_STATIC, MAX_EVENT_MSG_LENGTH);
 					DBBind(hStmt, 9, DB_SQLTYPE_BIGINT, pEvent->getRootId());
                DBBind(hStmt, 10, DB_SQLTYPE_VARCHAR, pEvent->getUserTag(), DB_BIND_STATIC, 63);
+               DBBind(hStmt, 11, DB_SQLTYPE_TEXT, pEvent->toJson(), DB_BIND_DYNAMIC);
 					DBExecute(hStmt);
 					nxlog_debug_tag(DEBUG_TAG, 8, _T("EventLogger: DBExecute: id=%d,code=%d"), (int)pEvent->getId(), (int)pEvent->getCode());
 					delete pEvent;

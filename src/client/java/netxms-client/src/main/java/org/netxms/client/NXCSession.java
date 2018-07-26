@@ -9708,29 +9708,28 @@ public class NXCSession
    }
    
    /**
-    * Lists possible scheduled callbacks. 
+    * Get list of available scheduled task handlers.
     * 
-    * @return List of callbacks dtring id
+    * @return list of available scheduled task handlers.
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public List<String> listScheduleCallbacks() throws NXCException, IOException
+   public List<String> getScheudledTaskHandlers() throws NXCException, IOException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_LIST_SCHEDULE_CALLBACKS);
       sendMessage(msg);
       NXCPMessage response = waitForRCC(msg.getMessageId()); 
-      
-      int size = response.getFieldAsInt32(NXCPCodes.VID_CALLBACK_COUNT);
-      long i, base;
-      ArrayList<String> list = new ArrayList<String>(size);
-      for(i = 0, base = NXCPCodes.VID_CALLBACK_BASE; i < size; i++, base++)
-      {
-         list.add(response.getFieldAsString(base));
-      }
-      return list;
+      return response.getStringListFromFields(NXCPCodes.VID_CALLBACK_BASE, NXCPCodes.VID_CALLBACK_COUNT);
    }
    
-   public List<ScheduledTask> listScheduleTasks() throws IOException, NXCException
+   /**
+    * Get list of scheduled tasks.
+    * 
+    * @return list of scheduled tasks
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public List<ScheduledTask> getScheduledTasks() throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_LIST_SCHEDULES);
       sendMessage(msg);
@@ -9739,7 +9738,7 @@ public class NXCSession
       int size = response.getFieldAsInt32(NXCPCodes.VID_SCHEDULE_COUNT);
       long i, base;
       ArrayList<ScheduledTask> list = new ArrayList<ScheduledTask>(size);
-      for(i = 0, base = NXCPCodes.VID_SCHEDULE_LIST_BASE; i < size; i++, base+=10)
+      for(i = 0, base = NXCPCodes.VID_SCHEDULE_LIST_BASE; i < size; i++, base += 100)
       {
          list.add(new ScheduledTask(response, base));
       }
@@ -9747,7 +9746,14 @@ public class NXCSession
       return list;
    }
    
-   public void addSchedule(ScheduledTask task) throws NXCException, IOException
+   /**
+    * Add new scheduled task
+    * 
+    * @param task new scheduled task
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void addScheduledTask(ScheduledTask task) throws NXCException, IOException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_ADD_SCHEDULE);
       task.fillMessage(msg);
@@ -9755,7 +9761,14 @@ public class NXCSession
       waitForRCC(msg.getMessageId());      
    }
    
-   public void updateSchedule(ScheduledTask task) throws IOException, NXCException
+   /**
+    * Update existing scheduled task.
+    * 
+    * @param task updated scheduled task
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void updateScheduledTask(ScheduledTask task) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_UPDATE_SCHEDULE);
       task.fillMessage(msg);
@@ -9763,21 +9776,32 @@ public class NXCSession
       waitForRCC(msg.getMessageId());
    }
    
-   public void removeSchedule(long scheduleId) throws NXCException, IOException
+   /**
+    * Delete scheduled task.
+    * 
+    * @param taskId scheduled task ID
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void deleteScheduledTask(long taskId) throws NXCException, IOException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_REMOVE_SCHEDULE);
-      msg.setFieldInt32(NXCPCodes.VID_SCHEDULED_TASK_ID, (int)scheduleId);
+      msg.setFieldInt32(NXCPCodes.VID_SCHEDULED_TASK_ID, (int)taskId);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
    
-   public void setObjectMaintenance(long objectId, boolean maintenance) throws NXCException, IOException
+   /**
+    * Set maintenance mode for object
+    * 
+    * @param objectId object ID
+    * @param inMaintenance new maintenance mode setting (true = on, false = off)
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void setObjectMaintenanceMode(long objectId, boolean inMaintenance) throws NXCException, IOException
    {
-      NXCPMessage msg;
-      if(maintenance)
-         msg = newMessage(NXCPCodes.CMD_ENTER_MAINT_MODE);
-      else
-         msg = newMessage(NXCPCodes.CMD_LEAVE_MAINT_MODE);
+      final NXCPMessage msg = newMessage(inMaintenance ? NXCPCodes.CMD_ENTER_MAINT_MODE : NXCPCodes.CMD_LEAVE_MAINT_MODE); 
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)objectId);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());

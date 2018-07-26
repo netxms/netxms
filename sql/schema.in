@@ -850,6 +850,7 @@ CREATE TABLE event_log
   event_message varchar(2000) null,
   root_event_id SQL_INT64 not null, /* Non-zero if current event correlates to some other event */
   user_tag varchar(63) null,
+  raw_data SQL_TEXT null, /* Raw event data in JSON format */
   PRIMARY KEY(event_id)
 ) TABLE_TYPE;
 
@@ -940,7 +941,7 @@ CREATE TABLE event_policy
 ) TABLE_TYPE;
 
 /**
- *
+ * Event processing policy source objects
  */
 CREATE TABLE policy_source_list
 (
@@ -950,7 +951,7 @@ CREATE TABLE policy_source_list
 ) TABLE_TYPE;
 
 /**
- *
+ * Event processing policy events
  */
 CREATE TABLE policy_event_list
 (
@@ -960,17 +961,29 @@ CREATE TABLE policy_event_list
 ) TABLE_TYPE;
 
 /**
- *
+ * Event processing policy actions
  */
 CREATE TABLE policy_action_list
 (
   rule_id integer not null,
   action_id integer not null,
+  timer_delay integer not null,
+  timer_key varchar(255) null,
   PRIMARY KEY(rule_id,action_id)
 ) TABLE_TYPE;
 
 /**
- *
+ * Event processing policy timer cancellation actions
+ */
+CREATE TABLE policy_timer_cancellation_list
+(
+  rule_id integer not null,
+  timer_key varchar(255) not null,
+  PRIMARY KEY(rule_id,timer_key)
+) TABLE_TYPE;
+
+/**
+ * Event processing policy persistent storage operations
  */
 CREATE TABLE policy_pstorage_actions
 (
@@ -1710,6 +1723,7 @@ CREATE TABLE scheduled_tasks
   owner integer not null,
   object_id integer not null,
   comments varchar(255) null,
+  task_key varchar(255) null,
   PRIMARY KEY(id)
 ) TABLE_TYPE;
 

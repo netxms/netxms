@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2016 Raden Solutions
+** Copyright (C) 2003-2018 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -25,14 +25,14 @@
 /**
  * Scheduled file upload
  */
-void ScheduleDeployPolicy(const ScheduledTaskParameters *params)
+void ScheduleDeployPolicy(const ScheduledTaskParameters *parameters)
 {
-   Node *object = (Node *)FindObjectById(params->m_objectId, OBJECT_NODE);
+   Node *object = (Node *)FindObjectById(parameters->m_objectId, OBJECT_NODE);
    if (object != NULL)
    {
-      if (object->checkAccessRights(params->m_userId, OBJECT_ACCESS_CONTROL))
+      if (object->checkAccessRights(parameters->m_userId, OBJECT_ACCESS_CONTROL))
       {
-         ServerJob *job = new PolicyInstallJob(params->m_params, params->m_objectId, params->m_userId);
+         ServerJob *job = new PolicyInstallJob(parameters->m_persistentData, parameters->m_objectId, parameters->m_userId);
          if (!AddJob(job))
          {
             delete job;
@@ -46,7 +46,7 @@ void ScheduleDeployPolicy(const ScheduledTaskParameters *params)
    }
    else
    {
-      DbgPrintf(4, _T("ScheduleDeployPolicy: Node with id=\'%d\' not found"), params->m_userId);
+      DbgPrintf(4, _T("ScheduleDeployPolicy: Node with id=\'%d\' not found"), parameters->m_userId);
    }
 }
 
@@ -170,20 +170,20 @@ const String PolicyInstallJob::serializeParameters()
  */
 void PolicyInstallJob::rescheduleExecution()
 {
-   AddOneTimeScheduledTask(_T("Policy.Deploy"), time(NULL) + getRetryDelay(), serializeParameters(), getUserId(), getNodeId(), SYSTEM_ACCESS_FULL, _T(""), SCHEDULED_TASK_SYSTEM);
+   AddOneTimeScheduledTask(_T("Policy.Deploy"), time(NULL) + getRetryDelay(), serializeParameters(), NULL, getUserId(), getNodeId(), SYSTEM_ACCESS_FULL, _T(""), SCHEDULED_TASK_SYSTEM);
 }
 
 /**
  * Scheduled policy uninstall
  */
-void ScheduleUninstallPolicy(const ScheduledTaskParameters *params)
+void ScheduleUninstallPolicy(const ScheduledTaskParameters *parameters)
 {
-   Node *object = (Node *)FindObjectById(params->m_objectId, OBJECT_NODE);
+   Node *object = (Node *)FindObjectById(parameters->m_objectId, OBJECT_NODE);
    if (object != NULL)
    {
-      if (object->checkAccessRights(params->m_userId, OBJECT_ACCESS_CONTROL))
+      if (object->checkAccessRights(parameters->m_userId, OBJECT_ACCESS_CONTROL))
       {
-         ServerJob *job = new PolicyUninstallJob(params->m_params, params->m_objectId, params->m_userId);
+         ServerJob *job = new PolicyUninstallJob(parameters->m_persistentData, parameters->m_objectId, parameters->m_userId);
          if (!AddJob(job))
          {
             delete job;
@@ -197,7 +197,7 @@ void ScheduleUninstallPolicy(const ScheduledTaskParameters *params)
    }
    else
    {
-      DbgPrintf(4, _T("ScheduleUninstallPolicy: Node with id=\'%d\' not found"), params->m_userId);
+      DbgPrintf(4, _T("ScheduleUninstallPolicy: Node with id=\'%d\' not found"), parameters->m_userId);
    }
 }
 
@@ -318,5 +318,5 @@ const String PolicyUninstallJob::serializeParameters()
  */
 void PolicyUninstallJob::rescheduleExecution()
 {
-   AddOneTimeScheduledTask(_T("Policy.Uninstall"), time(NULL) + getRetryDelay(), serializeParameters(), 0, getNodeId(), SYSTEM_ACCESS_FULL, _T(""), SCHEDULED_TASK_SYSTEM);//TODO: change to correct user
+   AddOneTimeScheduledTask(_T("Policy.Uninstall"), time(NULL) + getRetryDelay(), serializeParameters(), NULL, 0, getNodeId(), SYSTEM_ACCESS_FULL, _T(""), SCHEDULED_TASK_SYSTEM);//TODO: change to correct user
 }

@@ -1021,11 +1021,14 @@ public class NXCPCodes
    public static final long VID_HYPERVISOR_TYPE = 620;
    public static final long VID_HYPERVISOR_INFO = 621;
    public static final long VID_VLAN_LIST = 622;
+   public static final long VID_TASK_KEY = 623;
+   public static final long VID_TIMER_COUNT = 624;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;
 	public static final long VID_ACL_RIGHTS_BASE = 0x00002000L;
 	public static final long VID_ACL_RIGHTS_LAST = 0x00002FFFL;
+   public static final long VID_ACTION_LIST_BASE = 0x50000000L;
 	public static final long VID_GROUP_MEMBER_BASE = 0x00004000L;
 	public static final long VID_GROUP_MEMBER_LAST = 0x00004FFFL;
 	public static final long VID_THRESHOLD_BASE = 0x00800000L;
@@ -1110,7 +1113,13 @@ public class NXCPCodes
 	public static final long VID_DCI_ID_LIST_BASE = 0x10000000L;
    public static final long VID_LOC_LIST_BASE = 0x10000000L;
    public static final long VID_SCHEDULE_LIST_BASE = 0x10000000L;
-   public static final long VID_CALLBACK_BASE= 0x10000000L;
-   public static final long VID_ZMQ_SUBSCRIPTION_BASE= 0x10000000L;
+   public static final long VID_CALLBACK_BASE = 0x10000000L;
+   public static final long VID_EXP_STRING_BASE = 0x10000000L;
+   public static final long VID_IN_FIELD_BASE = 0x20000000L;
+   public static final long VID_ZMQ_SUBSCRIPTION_BASE = 0x10000000L;
+   public static final long VID_COMMUNITY_STRING_LIST_BASE = 0x10000000L;
+   public static final long VID_COMMUNITY_STRING_ZONE_LIST_BASE = 0x20000000L;
+   public static final long VID_ZONE_SNMP_PORT_LIST_BASE = 0x10000000L;
    public static final long VID_CONFIG_HINT_LIST_BASE= 0x10000000L;
+   public static final long VID_TIMER_LIST_BASE= 0x60000000L;
 }

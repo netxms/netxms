@@ -50,7 +50,7 @@ struct Action
 //
 BOOL InitActions();
 void CleanupActions();
-BOOL ExecuteAction(UINT32 dwActionId, Event *pEvent, const TCHAR *alarmMsg, const TCHAR *alarmKey);
+BOOL ExecuteAction(UINT32 actionId, const Event *event, const TCHAR *alarmMsg, const TCHAR *alarmKey);
 UINT32 CreateAction(const TCHAR *pszName, UINT32 *pdwId);
 UINT32 DeleteAction(UINT32 dwActionId);
 UINT32 ModifyActionFromMessage(NXCPMessage *pMsg);

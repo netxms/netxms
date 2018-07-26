@@ -22,8 +22,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-
 import org.eclipse.jface.viewers.ArrayContentProvider;
+import org.eclipse.jface.viewers.DoubleClickEvent;
+import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ILabelProvider;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -40,11 +41,13 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.dialogs.PropertyPage;
-import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.client.ServerAction;
+import org.netxms.client.events.ActionExecutionConfiguration;
 import org.netxms.client.events.EventProcessingPolicyRule;
 import org.netxms.ui.eclipse.epp.Messages;
+import org.netxms.ui.eclipse.epp.dialogs.ActionExecutionConfigurationDialog;
 import org.netxms.ui.eclipse.epp.dialogs.ActionSelectionDialog;
+import org.netxms.ui.eclipse.epp.propertypages.helpers.ActionListLabelProvider;
 import org.netxms.ui.eclipse.epp.widgets.RuleEditor;
 import org.netxms.ui.eclipse.tools.ObjectLabelComparator;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -58,8 +61,9 @@ public class RuleServerActions extends PropertyPage
 	private RuleEditor editor;
 	private EventProcessingPolicyRule rule;
 	private SortableTableViewer viewer;
-	private Map<Long, ServerAction> actions = new HashMap<Long, ServerAction>();
-	private Button addButton;
+	private Map<Long, ActionExecutionConfiguration> actions = new HashMap<Long, ActionExecutionConfiguration>();
+   private Button addButton;
+	private Button editButton;
 	private Button deleteButton;
 	
 	/* (non-Javadoc)
@@ -78,11 +82,11 @@ public class RuleServerActions extends PropertyPage
 		layout.marginHeight = 0;
       dialogArea.setLayout(layout);
       
-      final String[] columnNames = { Messages.get().RuleServerActions_Action };
-      final int[] columnWidths = { 300 };
+      final String[] columnNames = { Messages.get().RuleServerActions_Action, "Delay", "Timer key" };
+      final int[] columnWidths = { 300, 90, 200 };
       viewer = new SortableTableViewer(dialogArea, columnNames, columnWidths, 0, SWT.UP, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
       viewer.setContentProvider(new ArrayContentProvider());
-      viewer.setLabelProvider(new WorkbenchLabelProvider());
+      viewer.setLabelProvider(new ActionListLabelProvider(editor.getEditorView()));
       viewer.setComparator(new ObjectLabelComparator((ILabelProvider)viewer.getLabelProvider()));
       viewer.addSelectionChangedListener(new ISelectionChangedListener() {
 			@Override
@@ -92,8 +96,16 @@ public class RuleServerActions extends PropertyPage
 				deleteButton.setEnabled(size > 0);
 			}
       });
+      viewer.addDoubleClickListener(new IDoubleClickListener() {
+         @Override
+         public void doubleClick(DoubleClickEvent event)
+         {
+            editAction();
+         }
+      });
 
-		actions.putAll(editor.getEditorView().findServerActions(rule.getActions()));
+      for(ActionExecutionConfiguration c : rule.getActions())
+         actions.put(c.getActionId(), new ActionExecutionConfiguration(c));
       viewer.setInput(actions.values().toArray());
       
       GridData gridData = new GridData();
@@ -134,6 +146,25 @@ public class RuleServerActions extends PropertyPage
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       addButton.setLayoutData(rd);
 		
+      editButton = new Button(buttons, SWT.PUSH);
+      editButton.setText("&Edit...");
+      editButton.addSelectionListener(new SelectionListener() {
+         @Override
+         public void widgetDefaultSelected(SelectionEvent e)
+         {
+            widgetSelected(e);
+         }
+
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            editAction();
+         }
+      });
+      rd = new RowData();
+      rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
+      editButton.setLayoutData(rd);
+      
       deleteButton = new Button(buttons, SWT.PUSH);
       deleteButton.setText(Messages.get().RuleServerActions_Delete);
       deleteButton.addSelectionListener(new SelectionListener() {
@@ -167,9 +198,25 @@ public class RuleServerActions extends PropertyPage
 		if (dlg.open() == Window.OK)
 		{
 			for(ServerAction a : dlg.getSelectedActions())
-				actions.put(a.getId(), a);
+				actions.put(a.getId(), new ActionExecutionConfiguration(a.getId(), 0, null));
 		}
       viewer.setInput(actions.values().toArray());
+	}
+	
+	/**
+	 * Edit current action
+	 */
+	private void editAction()
+	{
+      IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      if (selection.size() != 1)
+         return;
+      
+      ActionExecutionConfigurationDialog dlg = new ActionExecutionConfigurationDialog(getShell(), (ActionExecutionConfiguration)selection.getFirstElement());
+      if (dlg.open() == Window.OK)
+      {
+         viewer.update(selection.getFirstElement(), null);
+      }
 	}
 	
 	/**
@@ -183,8 +230,8 @@ public class RuleServerActions extends PropertyPage
 		{
 			while(it.hasNext())
 			{
-				ServerAction a = (ServerAction)it.next();
-				actions.remove(a.getId());
+			   ActionExecutionConfiguration a = (ActionExecutionConfiguration)it.next();
+				actions.remove(a.getActionId());
 			}
 	      viewer.setInput(actions.values().toArray());
 		}
@@ -195,7 +242,7 @@ public class RuleServerActions extends PropertyPage
 	 */
 	private void doApply()
 	{
-		rule.setActions(new ArrayList<Long>(actions.keySet()));
+		rule.setActions(new ArrayList<ActionExecutionConfiguration>(actions.values()));
 		editor.setModified(true);
 	}
 
