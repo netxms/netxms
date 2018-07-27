@@ -1078,6 +1078,7 @@ bool EventPolicy::saveToDB() const
    {
       success = DBQuery(hdb, _T("DELETE FROM event_policy")) &&
                 DBQuery(hdb, _T("DELETE FROM policy_action_list")) &&
+                DBQuery(hdb, _T("DELETE FROM policy_timer_cancellation_list")) &&
                 DBQuery(hdb, _T("DELETE FROM policy_event_list")) &&
                 DBQuery(hdb, _T("DELETE FROM policy_source_list")) &&
                 DBQuery(hdb, _T("DELETE FROM policy_pstorage_actions")) &&
