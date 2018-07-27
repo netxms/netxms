@@ -184,6 +184,9 @@
     <ClInclude Include="libnxdb.h" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\jansson\jansson.vcxproj">
+      <Project>{12d6e037-84d8-406a-8a9b-3e00d3e0d426}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\..\libnetxms\libnetxms.vcxproj">
       <Project>{b1745870-f3ed-4acb-b813-0c4f47ef0793}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>

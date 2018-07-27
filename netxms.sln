@@ -114,6 +114,9 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libnxmb", "src\libnxmb\libnxmb.vcxproj", "{DAA82F5C-1144-4DC0-A2E8-5253068565F1}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libnxdb", "src\db\libnxdb\libnxdb.vcxproj", "{F3E29541-3A0E-45EC-8BEC-E193F2401622}"
+	ProjectSection(ProjectDependencies) = postProject
+		{12D6E037-84D8-406A-8A9B-3E00D3E0D426} = {12D6E037-84D8-406A-8A9B-3E00D3E0D426}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mssql", "src\db\dbdrv\mssql\mssql.vcxproj", "{A429ACFD-1E61-4EE4-8391-15DBA65B0EF0}"
 EndProject

@@ -3,6 +3,6 @@ TYPE = dll
 SOURCES = cache.cpp dbcp.cpp drivers.cpp main.cpp session.cpp util.cpp
 
 CPPFLAGS = /DLIBNXDB_EXPORTS
-LIBS = libnetxms.lib ws2_32.lib
+LIBS = libnetxms.lib jansson.lib ws2_32.lib
 	  
 include ..\..\..\Makefile.inc.w32
