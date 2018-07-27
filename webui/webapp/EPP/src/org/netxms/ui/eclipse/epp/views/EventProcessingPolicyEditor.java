@@ -111,6 +111,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
    private Image imageAlarm;
    private Image imageSituation;
    private Image imageExecute;
+   private Image imageCancelTimer;
    private Image imageTerminate;
    private Image imageStop;
    private Image imageCollapse;
@@ -161,6 +162,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
       imageAlarm = Activator.getImageDescriptor("icons/alarm.png").createImage(); //$NON-NLS-1$
       imageSituation = Activator.getImageDescriptor("icons/situation.gif").createImage(); //$NON-NLS-1$
       imageExecute = Activator.getImageDescriptor("icons/execute.png").createImage(); //$NON-NLS-1$
+      imageCancelTimer = Activator.getImageDescriptor("icons/cancel_timer.png").createImage(); //$NON-NLS-1$
       imageTerminate = Activator.getImageDescriptor("icons/terminate.png").createImage(); //$NON-NLS-1$
       imageCollapse = SharedIcons.COLLAPSE.createImage();
       imageExpand = SharedIcons.EXPAND.createImage();
@@ -185,15 +187,15 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
          }
       });
 
-		scroller = new ScrolledComposite(parent, SWT.V_SCROLL);
+      scroller = new ScrolledComposite(parent, SWT.V_SCROLL);
 
-		dataArea = new Composite(scroller, SWT.NONE);
-		GridLayout layout = new GridLayout();
-		layout.marginHeight = 0;
-		layout.marginWidth = 0;
-		layout.verticalSpacing = 0;
-		dataArea.setLayout(layout);
-		dataArea.setBackground(BACKGROUND_COLOR);
+      dataArea = new Composite(scroller, SWT.NONE);
+      GridLayout layout = new GridLayout();
+      layout.marginHeight = 0;
+      layout.marginWidth = 0;
+      layout.verticalSpacing = 0;
+      dataArea.setLayout(layout);
+      dataArea.setBackground(BACKGROUND_COLOR);
 
 		scroller.setContent(dataArea);
 		scroller.setExpandVertical(true);
@@ -213,7 +215,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
       fd.right = new FormAttachment(100, 0);
       fd.bottom = new FormAttachment(100, 0);
       scroller.setLayoutData(fd);
-      
+
       fd = new FormData();
       fd.left = new FormAttachment(0, 0);
       fd.top = new FormAttachment(0, 0);
@@ -239,11 +241,11 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
             return arg0.getRuleNumber() - arg1.getRuleNumber();
          }
       });
-
-		createActions();
-		contributeToActionBars();
       
-      openEventProcessingPolicy();      
+      createActions();
+      contributeToActionBars();
+
+      openEventProcessingPolicy();
       activateContext();
 
       // Set initial focus to filter input line
@@ -251,9 +253,9 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
          filterControl.setFocus();
       else
          enableFilter(false); // Will hide filter area correctly
-	}
-   
-	/**
+   }
+
+   /**
     * Activate context
     */
    private void activateContext()
@@ -264,135 +266,135 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
          contextService.activateContext("org.netxms.ui.eclipse.epp.context.PolicyEditor"); //$NON-NLS-1$
       }
    }
-	
-	/**
-	 * Create actions
-	 */
-	private void createActions()
-	{
+
+   /**
+    * Create actions
+    */
+   private void createActions()
+   {
       final IHandlerService handlerService = (IHandlerService)getSite().getService(IHandlerService.class);
-      
-		actionHorizontal = new Action(Messages.get().EventProcessingPolicyEditor_LayoutH, Action.AS_RADIO_BUTTON) {
-			@Override
-			public void run()
-			{
-				verticalLayout = false;
-				updateLayout();
-			}
-		};
-		actionHorizontal.setChecked(!verticalLayout);
-		actionHorizontal.setImageDescriptor(Activator.getImageDescriptor("icons/h_layout.gif")); //$NON-NLS-1$
 
-		actionVertical = new Action(Messages.get().EventProcessingPolicyEditor_LayoutV, Action.AS_RADIO_BUTTON) {
-			@Override
-			public void run()
-			{
-				verticalLayout = true;
-				updateLayout();
-			}
-		};
-		actionVertical.setChecked(verticalLayout);
-		actionVertical.setImageDescriptor(Activator.getImageDescriptor("icons/v_layout.gif")); //$NON-NLS-1$
+      actionHorizontal = new Action(Messages.get().EventProcessingPolicyEditor_LayoutH, Action.AS_RADIO_BUTTON) {
+         @Override
+         public void run()
+         {
+            verticalLayout = false;
+            updateLayout();
+         }
+      };
+      actionHorizontal.setChecked(!verticalLayout);
+      actionHorizontal.setImageDescriptor(Activator.getImageDescriptor("icons/h_layout.gif")); //$NON-NLS-1$
 
-		actionSave = new Action(Messages.get().EventProcessingPolicyEditor_Save) {
-			@Override
-			public void run()
-			{
-				savePolicy();
-			}
-		};
-		actionSave.setImageDescriptor(SharedIcons.SAVE);
-		actionSave.setEnabled(false);
+      actionVertical = new Action(Messages.get().EventProcessingPolicyEditor_LayoutV, Action.AS_RADIO_BUTTON) {
+         @Override
+         public void run()
+         {
+            verticalLayout = true;
+            updateLayout();
+         }
+      };
+      actionVertical.setChecked(verticalLayout);
+      actionVertical.setImageDescriptor(Activator.getImageDescriptor("icons/v_layout.gif")); //$NON-NLS-1$
 
-		actionCollapseAll = new Action(Messages.get().EventProcessingPolicyEditor_CollapseAll) {
-			@Override
-			public void run()
-			{
-				setAllRulesCollapsed(true);
-			}
-		};
-		actionCollapseAll.setImageDescriptor(SharedIcons.COLLAPSE_ALL);
+      actionSave = new Action(Messages.get().EventProcessingPolicyEditor_Save) {
+         @Override
+         public void run()
+         {
+            savePolicy();
+         }
+      };
+      actionSave.setImageDescriptor(SharedIcons.SAVE);
+      actionSave.setEnabled(false);
 
-		actionExpandAll = new Action(Messages.get().EventProcessingPolicyEditor_ExpandAll) {
-			@Override
-			public void run()
-			{
-				setAllRulesCollapsed(false);
-			}
-		};
-		actionExpandAll.setImageDescriptor(SharedIcons.EXPAND_ALL);
+      actionCollapseAll = new Action(Messages.get().EventProcessingPolicyEditor_CollapseAll) {
+         @Override
+         public void run()
+         {
+            setAllRulesCollapsed(true);
+         }
+      };
+      actionCollapseAll.setImageDescriptor(SharedIcons.COLLAPSE_ALL);
 
-		actionDelete = new Action(Messages.get().EventProcessingPolicyEditor_Delete) {
-			@Override
-			public void run()
-			{
-				deleteSelectedRules();
-			}
-		};
-		actionDelete.setImageDescriptor(SharedIcons.DELETE_OBJECT);
-		actionDelete.setEnabled(false);
+      actionExpandAll = new Action(Messages.get().EventProcessingPolicyEditor_ExpandAll) {
+         @Override
+         public void run()
+         {
+            setAllRulesCollapsed(false);
+         }
+      };
+      actionExpandAll.setImageDescriptor(SharedIcons.EXPAND_ALL);
 
-		actionInsertBefore = new Action(Messages.get().EventProcessingPolicyEditor_InsertBefore) {
-			@Override
-			public void run()
-			{
-				insertRule(lastSelectedRule - 1);
-			}
-		};
+      actionDelete = new Action(Messages.get().EventProcessingPolicyEditor_Delete) {
+         @Override
+         public void run()
+         {
+            deleteSelectedRules();
+         }
+      };
+      actionDelete.setImageDescriptor(SharedIcons.DELETE_OBJECT);
+      actionDelete.setEnabled(false);
 
-		actionInsertAfter = new Action(Messages.get().EventProcessingPolicyEditor_InsertAfter) {
-			@Override
-			public void run()
-			{
-				insertRule(lastSelectedRule);
-			}
-		};
+      actionInsertBefore = new Action(Messages.get().EventProcessingPolicyEditor_InsertBefore) {
+         @Override
+         public void run()
+         {
+            insertRule(lastSelectedRule - 1);
+         }
+      };
 
-		actionCut = new Action(Messages.get().EventProcessingPolicyEditor_Cut) {
-			@Override
-			public void run()
-			{
-				cutRules();
-			}
-		};
-		actionCut.setImageDescriptor(SharedIcons.CUT);
-		actionCut.setEnabled(false);
+      actionInsertAfter = new Action(Messages.get().EventProcessingPolicyEditor_InsertAfter) {
+         @Override
+         public void run()
+         {
+            insertRule(lastSelectedRule);
+         }
+      };
 
-		actionCopy = new Action(Messages.get().EventProcessingPolicyEditor_Copy) {
-			@Override
-			public void run()
-			{
-				copyRules();
-			}
-		};
-		actionCopy.setImageDescriptor(SharedIcons.COPY);
-		actionCopy.setEnabled(false);
+      actionCut = new Action(Messages.get().EventProcessingPolicyEditor_Cut) {
+         @Override
+         public void run()
+         {
+            cutRules();
+         }
+      };
+      actionCut.setImageDescriptor(SharedIcons.CUT);
+      actionCut.setEnabled(false);
 
-		actionPaste = new Action(Messages.get().EventProcessingPolicyEditor_Paste) {
-			@Override
-			public void run()
-			{
-				pasteRules();
-			}
-		};
-		actionPaste.setImageDescriptor(SharedIcons.PASTE);
-		actionPaste.setEnabled(false);
+      actionCopy = new Action(Messages.get().EventProcessingPolicyEditor_Copy) {
+         @Override
+         public void run()
+         {
+            copyRules();
+         }
+      };
+      actionCopy.setImageDescriptor(SharedIcons.COPY);
+      actionCopy.setEnabled(false);
 
-		actionEnableRule = new Action(Messages.get().EventProcessingPolicyEditor_Enable) {
-			@Override
-			public void run()
-			{
-				enableRules(true);
-			}
-		};
+      actionPaste = new Action(Messages.get().EventProcessingPolicyEditor_Paste) {
+         @Override
+         public void run()
+         {
+            pasteRules();
+         }
+      };
+      actionPaste.setImageDescriptor(SharedIcons.PASTE);
+      actionPaste.setEnabled(false);
 
-		actionDisableRule = new Action(Messages.get().EventProcessingPolicyEditor_Disable) {
-			@Override
-			public void run()
-			{
-				enableRules(false);
-			}
-		};
+      actionEnableRule = new Action(Messages.get().EventProcessingPolicyEditor_Enable) {
+         @Override
+         public void run()
+         {
+            enableRules(true);
+         }
+      };
+
+      actionDisableRule = new Action(Messages.get().EventProcessingPolicyEditor_Disable) {
+         @Override
+         public void run()
+         {
+            enableRules(false);
+         }
+      };
 
       actionShowFilter = new Action(Messages.get().EventProcessingPolicyEditor_ShowFilter, Action.AS_CHECK_BOX) {
          @Override
@@ -415,57 +417,57 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
       actionShowFilter.setActionDefinitionId("org.netxms.ui.eclipse.epp.commands.show_rule_filter"); //$NON-NLS-1$
       final ActionHandler showFilterHandler = new ActionHandler(actionShowFilter);
       handlerService.activateHandler(actionShowFilter.getActionDefinitionId(), showFilterHandler);
-	}
+   }
 
-	/**
-	 * Contribute actions to action bar
-	 */
-	private void contributeToActionBars()
-	{
-		IActionBars bars = getViewSite().getActionBars();
-		fillLocalPullDown(bars.getMenuManager());
-		fillLocalToolBar(bars.getToolBarManager());
-	}
+   /**
+    * Contribute actions to action bar
+    */
+   private void contributeToActionBars()
+   {
+      IActionBars bars = getViewSite().getActionBars();
+      fillLocalPullDown(bars.getMenuManager());
+      fillLocalToolBar(bars.getToolBarManager());
+   }
 
-	/**
-	 * Fill local pull-down menu
-	 * 
-	 * @param manager Menu manager for pull-down menu
-	 */
-	private void fillLocalPullDown(IMenuManager manager)
-	{
-		manager.add(actionSave);
-		manager.add(new Separator());
-		manager.add(actionExpandAll);
-		manager.add(actionCollapseAll);
-		manager.add(new Separator());
-		manager.add(actionHorizontal);
-		manager.add(actionVertical);
+   /**
+    * Fill local pull-down menu
+    * 
+    * @param manager Menu manager for pull-down menu
+    */
+   private void fillLocalPullDown(IMenuManager manager)
+   {
+      manager.add(actionSave);
+      manager.add(new Separator());
+      manager.add(actionExpandAll);
+      manager.add(actionCollapseAll);
+      manager.add(new Separator());
+      manager.add(actionHorizontal);
+      manager.add(actionVertical);
       manager.add(new Separator());
       manager.add(actionShowFilter);
-	}
+   }
 
-	/**
-	 * Fill local tool bar
-	 * 
-	 * @param manager Menu manager for local toolbar
-	 */
-	private void fillLocalToolBar(IToolBarManager manager)
-	{
-		manager.add(actionAddRule);
-		manager.add(actionSave);
-		manager.add(new Separator());
-		manager.add(actionExpandAll);
-		manager.add(actionCollapseAll);
-		manager.add(new Separator());
-		manager.add(actionHorizontal);
-		manager.add(actionVertical);
-		manager.add(new Separator());
-		manager.add(actionCut);
-		manager.add(actionCopy);
-		manager.add(actionPaste);
-		manager.add(actionDelete);
-	}
+   /**
+    * Fill local tool bar
+    * 
+    * @param manager Menu manager for local toolbar
+    */
+   private void fillLocalToolBar(IToolBarManager manager)
+   {
+      manager.add(actionAddRule);
+      manager.add(actionSave);
+      manager.add(new Separator());
+      manager.add(actionExpandAll);
+      manager.add(actionCollapseAll);
+      manager.add(new Separator());
+      manager.add(actionHorizontal);
+      manager.add(actionVertical);
+      manager.add(new Separator());
+      manager.add(actionCut);
+      manager.add(actionCopy);
+      manager.add(actionPaste);
+      manager.add(actionDelete);
+   }
 
 	/**
 	 * Open event processing policy
@@ -504,20 +506,20 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 				});
 			}
 
-			@Override
-			protected void jobFailureHandler()
-			{
-				runInUIThread(new Runnable() {
-					@Override
-					public void run()
-					{
-						EventProcessingPolicyEditor.this.getViewSite().getPage().hideView(EventProcessingPolicyEditor.this);
-					}
-				});
-			}
-		};
-		job.start();
-	}
+         @Override
+         protected void jobFailureHandler()
+         {
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  EventProcessingPolicyEditor.this.getViewSite().getPage().hideView(EventProcessingPolicyEditor.this);
+               }
+            });
+         }
+      };
+      job.start();
+   }
 
    /**
     * Init policy editor
@@ -542,72 +544,74 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
       scroller.setMinSize(dataArea.computeSize(r.width, SWT.DEFAULT));
    }
 
-	/**
-	 * Update editor's layout
-	 */
-	private void updateLayout()
-	{
-		for(RuleEditor editor : ruleEditors)
-		{
-		   if (!editor.isDisposed())
+   /**
+    * Update editor's layout
+    */
+   private void updateLayout()
+   {
+      for(RuleEditor editor : ruleEditors)
+      {
+         if (!editor.isDisposed())
             editor.setVerticalLayout(verticalLayout, false);
-		}
-		updateEditorAreaLayout();
-	}
+      }
+      updateEditorAreaLayout();
+   }
 
-	/**
-	 * Process session notifications
-	 * 
-	 * @param n notification
-	 */
-	private void processSessionNotification(SessionNotification n)
-	{
-		switch(n.getCode())
-		{
-			case SessionNotification.ACTION_CREATED:
-				synchronized(actions)
-				{
-					actions.put(n.getSubCode(), (ServerAction)n.getObject());
-				}
-				break;
-			case SessionNotification.ACTION_MODIFIED:
-				synchronized(actions)
-				{
-					actions.put(n.getSubCode(), (ServerAction)n.getObject());
-				}
-				break;
-			case SessionNotification.ACTION_DELETED:
-				synchronized(actions)
-				{
-					actions.remove(n.getSubCode());
-				}
-				break;
-		}
-	}
+   /**
+    * Process session notifications
+    * 
+    * @param n notification
+    */
+   private void processSessionNotification(SessionNotification n)
+   {
+      switch(n.getCode())
+      {
+         case SessionNotification.ACTION_CREATED:
+            synchronized(actions)
+            {
+               actions.put(n.getSubCode(), (ServerAction)n.getObject());
+            }
+            break;
+         case SessionNotification.ACTION_MODIFIED:
+            synchronized(actions)
+            {
+               actions.put(n.getSubCode(), (ServerAction)n.getObject());
+            }
+            break;
+         case SessionNotification.ACTION_DELETED:
+            synchronized(actions)
+            {
+               actions.remove(n.getSubCode());
+            }
+            break;
+      }
+   }
 
-	/**
-	 * Set all rules to collapsed or expanded state
-	 * 
-	 * @param collapsed true to collapse all, false to expand
-	 */
-	private void setAllRulesCollapsed(boolean collapsed)
-	{
-		for(RuleEditor editor : ruleEditors)
-		{
-		   if (!editor.isDisposed())
+   /**
+    * Set all rules to collapsed or expanded state
+    * 
+    * @param collapsed true to collapse all, false to expand
+    */
+   private void setAllRulesCollapsed(boolean collapsed)
+   {
+      for(RuleEditor editor : ruleEditors)
+      {
+         if (!editor.isDisposed())
             editor.setCollapsed(collapsed, false);
-		}
-		updateEditorAreaLayout();
-	}
+      }
+      updateEditorAreaLayout();
+   }
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
-	 */
-	@Override
-	public void setFocus()
-	{
-		dataArea.setFocus();
-	}
+   /*
+    * (non-Javadoc)
+    * 
+    * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
+    */
+   @Override
+   public void setFocus()
+   {
+      dataArea.setFocus();
+   }
 
 	/**
 	 * Save policy to server
@@ -633,105 +637,108 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 				});
 			}
 
-			@Override
-			protected void jobFinalize()
-			{
-				runInUIThread(new Runnable() {
-					@Override
-					public void run()
-					{
-						actionSave.setEnabled(modified);
-					}
-				});
-			}
+         @Override
+         protected void jobFinalize()
+         {
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  actionSave.setEnabled(modified);
+               }
+            });
+         }
 
-			@Override
-			protected String getErrorMessage()
-			{
-				return Messages.get().EventProcessingPolicyEditor_SaveJob_Error;
-			}
-		}.start();
-	}
+         @Override
+         protected String getErrorMessage()
+         {
+            return Messages.get().EventProcessingPolicyEditor_SaveJob_Error;
+         }
+      }.start();
+   }
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#dispose()
-	 */
-	@Override
-	public void dispose()
-	{
-	   IDialogSettings settings = Activator.getDefault().getDialogSettings();
+   /*
+    * (non-Javadoc)
+    * 
+    * @see org.eclipse.ui.part.WorkbenchPart#dispose()
+    */
+   @Override
+   public void dispose()
+   {
+      IDialogSettings settings = Activator.getDefault().getDialogSettings();
       settings.put("EventProcessingPolicyEditor.filterEnabled", filterEnabled); //$NON-NLS-1$
-	   
-		if (sessionListener != null)
-			session.removeListener(sessionListener);
 
-		if (policyLocked)
-		{
-			new ConsoleJob(Messages.get().EventProcessingPolicyEditor_CloseJob_Title, null, Activator.PLUGIN_ID, JOB_FAMILY) {
-				@Override
-				protected void runInternal(IProgressMonitor monitor) throws Exception
-				{
-					session.closeEventProcessingPolicy();
-				}
+      if (sessionListener != null)
+         session.removeListener(sessionListener);
 
-				@Override
-				protected String getErrorMessage()
-				{
-					return Messages.get().EventProcessingPolicyEditor_CloseJob_Error;
-				}
-			}.start();
-		}
-		
-		imageStop.dispose();
-		imageAlarm.dispose();
-		imageExecute.dispose();
-		imageTerminate.dispose();
-		imageCollapse.dispose();
-		imageExpand.dispose();
-		imageEdit.dispose();
+      if (policyLocked)
+      {
+         new ConsoleJob(Messages.get().EventProcessingPolicyEditor_CloseJob_Title, null, Activator.PLUGIN_ID, JOB_FAMILY) {
+            @Override
+            protected void runInternal(IProgressMonitor monitor) throws Exception
+            {
+               session.closeEventProcessingPolicy();
+            }
 
-		super.dispose();
-		ImageFactory.clearCache();
-	}
+            @Override
+            protected String getErrorMessage()
+            {
+               return Messages.get().EventProcessingPolicyEditor_CloseJob_Error;
+            }
+         }.start();
+      }
 
-	/**
-	 * Update entire editor area layout after change in rule editor windget's size
-	 */
-	public void updateEditorAreaLayout()
-	{
-		dataArea.layout();
-		Rectangle r = scroller.getClientArea();
-		scroller.setMinSize(dataArea.computeSize(r.width, SWT.DEFAULT));
-	}
+      imageStop.dispose();
+      imageAlarm.dispose();
+      imageExecute.dispose();
+      imageCancelTimer.dispose();
+      imageTerminate.dispose();
+      imageCollapse.dispose();
+      imageExpand.dispose();
+      imageEdit.dispose();
 
-	/**
-	 * Find server action by ID
-	 * 
-	 * @param id action id
-	 * @return server action object or null
-	 */
-	public ServerAction findActionById(Long id)
-	{
-		return actions.get(id);
-	}
+      super.dispose();
+      ImageFactory.clearCache();
+   }
 
-	/**
-	 * Find server actions for list of Ids
-	 * 
-	 * @param idList list of action identifiers
-	 * @return list of server actions
-	 */
-	public Map<Long, ServerAction> findServerActions(List<Long> idList)
-	{
-		Map<Long, ServerAction> resultSet = new HashMap<Long, ServerAction>();
-		for(Long id : idList)
-		{
-			ServerAction action = actions.get(id);
-			if (action != null)
-				resultSet.put(id, action);
-		}
-		return resultSet;
-	}
+   /**
+    * Update entire editor area layout after change in rule editor windget's size
+    */
+   public void updateEditorAreaLayout()
+   {
+      dataArea.layout();
+      Rectangle r = scroller.getClientArea();
+      scroller.setMinSize(dataArea.computeSize(r.width, SWT.DEFAULT));
+   }
+
+   /**
+    * Find server action by ID
+    * 
+    * @param id action id
+    * @return server action object or null
+    */
+   public ServerAction findActionById(Long id)
+   {
+      return actions.get(id);
+   }
+
+   /**
+    * Find server actions for list of Ids
+    * 
+    * @param idList list of action identifiers
+    * @return list of server actions
+    */
+   public Map<Long, ServerAction> findServerActions(List<Long> idList)
+   {
+      Map<Long, ServerAction> resultSet = new HashMap<Long, ServerAction>();
+      for(Long id : idList)
+      {
+         ServerAction action = actions.get(id);
+         if (action != null)
+            resultSet.put(id, action);
+      }
+      return resultSet;
+   }
 
 	/**
 	 * Return complete actions list
@@ -769,79 +776,89 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 		return boldFont;
 	}
 
-	/**
-	 * @return the imageAlarm
-	 */
-	public Image getImageAlarm()
-	{
-		return imageAlarm;
-	}
+   /**
+    * @return the imageAlarm
+    */
+   public Image getImageAlarm()
+   {
+      return imageAlarm;
+   }
 
-	/**
-	 * @return the imageExecute
-	 */
-	public Image getImageExecute()
-	{
-		return imageExecute;
-	}
+   /**
+    * @return the imageExecute
+    */
+   public Image getImageExecute()
+   {
+      return imageExecute;
+   }
 
-	/**
-	 * @return the imageTerminate
-	 */
-	public Image getImageTerminate()
-	{
-		return imageTerminate;
-	}
+   /**
+    * Get "cancel timer" image
+    * 
+    * @return "cancel timer" image
+    */
+   public Image getImageCancelTimer()
+   {
+      return imageCancelTimer;
+   }
 
-	/**
-	 * @return the imageStop
-	 */
-	public Image getImageStop()
-	{
-		return imageStop;
-	}
+   /**
+    * @return the imageTerminate
+    */
+   public Image getImageTerminate()
+   {
+      return imageTerminate;
+   }
 
-	/**
-	 * @return the imageCollapse
-	 */
-	public Image getImageCollapse()
-	{
-		return imageCollapse;
-	}
+   /**
+    * @return the imageStop
+    */
+   public Image getImageStop()
+   {
+      return imageStop;
+   }
 
-	/**
-	 * @return the imageExpand
-	 */
-	public Image getImageExpand()
-	{
-		return imageExpand;
-	}
+   /**
+    * @return the imageCollapse
+    */
+   public Image getImageCollapse()
+   {
+      return imageCollapse;
+   }
 
-	/**
-	 * @return the imageEdit
-	 */
-	public Image getImageEdit()
-	{
-		return imageEdit;
-	}
+   /**
+    * @return the imageExpand
+    */
+   public Image getImageExpand()
+   {
+      return imageExpand;
+   }
 
-	/**
-	 * @return the modified
-	 */
-	public boolean isModified()
-	{
-		return modified;
-	}
+   /**
+    * @return the imageEdit
+    */
+   public Image getImageEdit()
+   {
+      return imageEdit;
+   }
 
-	/**
-	 * @param modified the modified to set
-	 */
-	public void setModified(boolean modified)
-	{
-		this.modified = modified;
-		actionSave.setEnabled(modified);
-		firePropertyChange(PROP_DIRTY);
-	}
+   /**
+    * @return the modified
+    */
+   public boolean isModified()
+   {
+      return modified;
+   }
+
+   /**
+    * @param modified the modified to set
+    */
+   public void setModified(boolean modified)
+   {
+      this.modified = modified;
+      actionSave.setEnabled(modified);
+      firePropertyChange(PROP_DIRTY);
+   }
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.ISaveablePart#doSave(org.eclipse.core.runtime.IProgressMonitor)
@@ -859,13 +876,15 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.ISaveablePart#doSaveAs()
-	 */
-	@Override
-	public void doSaveAs()
-	{
-	}
+   /*
+    * (non-Javadoc)
+    * 
+    * @see org.eclipse.ui.ISaveablePart#doSaveAs()
+    */
+   @Override
+   public void doSaveAs()
+   {
+   }
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.ISaveablePart#isDirty()
@@ -1075,31 +1094,31 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
       }
 
       for(EventProcessingPolicyRule rule : clipboard.paste())
-		{
+      {
          rule.setRuleNumber(position + 1);
-			policy.insertRule(rule, position);
+         policy.insertRule(rule, position);
 
-			RuleEditor editor = new RuleEditor(dataArea, rule, this);
-			ruleEditors.add(position, editor);
-			GridData gd = new GridData();
-			gd.horizontalAlignment = SWT.FILL;
-			gd.grabExcessHorizontalSpace = true;
-			editor.setLayoutData(gd);
+         RuleEditor editor = new RuleEditor(dataArea, rule, this);
+         ruleEditors.add(position, editor);
+         GridData gd = new GridData();
+         gd.horizontalAlignment = SWT.FILL;
+         gd.grabExcessHorizontalSpace = true;
+         editor.setLayoutData(gd);
 
-			if (anchor != null)
+         if (anchor != null)
             editor.moveAbove(anchor);
 
-			position++;
-		}
+         position++;
+      }
 
-		for(int i = position; i < ruleEditors.size(); i++)
-			ruleEditors.get(i).setRuleNumber(i + 1);
+      for(int i = position; i < ruleEditors.size(); i++)
+         ruleEditors.get(i).setRuleNumber(i + 1);
 
-		updateEditorAreaLayout();
-		setModified(true);
-	}
-
-	/**
+      updateEditorAreaLayout();
+      setModified(true);
+   }
+   
+   /**
     * Moves rule selection
     * 
     * @param anchor - where the selection is being moved
@@ -1147,43 +1166,43 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
       updateEditorAreaLayout();
       setModified(true);
    }
-	
-	/**
-	 * Enable selected rules
-	 */
-	private void enableRules(boolean enabled)
-	{
-		for(RuleEditor e : selection)
-			e.enableRule(enabled);
-	}
 
-	/**
-	 * Fill context menu for rule
-	 * 
-	 * @param manager menu manager
-	 */
-	public void fillRuleContextMenu(IMenuManager manager)
-	{
-		manager.add(actionEnableRule);
-		manager.add(actionDisableRule);
-		manager.add(new Separator());
-		manager.add(actionInsertBefore);
-		manager.add(actionInsertAfter);
-		manager.add(new Separator());
-		manager.add(actionCut);
-		manager.add(actionCopy);
-		manager.add(actionPaste);
-		manager.add(new Separator());
-		manager.add(actionDelete);
-	}
+   /**
+    * Enable selected rules
+    */
+   private void enableRules(boolean enabled)
+   {
+      for(RuleEditor e : selection)
+         e.enableRule(enabled);
+   }
 
-	/**
-	 * @return the imageSituation
-	 */
-	public Image getImageSituation()
-	{
-		return imageSituation;
-	}
+   /**
+    * Fill context menu for rule
+    * 
+    * @param manager menu manager
+    */
+   public void fillRuleContextMenu(IMenuManager manager)
+   {
+      manager.add(actionEnableRule);
+      manager.add(actionDisableRule);
+      manager.add(new Separator());
+      manager.add(actionInsertBefore);
+      manager.add(actionInsertAfter);
+      manager.add(new Separator());
+      manager.add(actionCut);
+      manager.add(actionCopy);
+      manager.add(actionPaste);
+      manager.add(new Separator());
+      manager.add(actionDelete);
+   }
+
+   /**
+    * @return the imageSituation
+    */
+   public Image getImageSituation()
+   {
+      return imageSituation;
+   }
 
    /**
     * Enable or disable filter
@@ -1257,7 +1276,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
    {
       if ((filterText == null) || filterText.isEmpty())
          return true;
-      
+
       if (rule.getComments().toLowerCase().contains(filterText))
          return true;
 
@@ -1268,7 +1287,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
          if ((evo != null) && evo.getName().toLowerCase().contains(filterText))
             return true;
       }
-      
+
       // check object names
       for(Long id : rule.getSources())
       {
@@ -1276,7 +1295,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
          if ((name != null) && name.toLowerCase().contains(filterText))
             return true;
       }
-      
+
       return false;
    }
 }
