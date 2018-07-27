@@ -594,6 +594,7 @@ bool EPRule::processEvent(Event *event)
             MemFree(key);
          }
       }
+      delete alarm;
    }
 
    // Cancel action timers
@@ -609,6 +610,7 @@ bool EPRule::processEvent(Event *event)
          }
          MemFree(key);
       }
+      delete alarm;
    }
 
    // Update persistent storage if needed
