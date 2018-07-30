@@ -39,13 +39,13 @@ bool AddMongoDBFromConfig(const TCHAR *config)
    DatabaseInfo info;
    TCHAR *tmp = ReadAttribute(config, _T("id"));
    _tcsncpy(info.id, CHECK_NULL_EX(tmp), MAX_STR);
-   safe_free(tmp);
+   MemFree(tmp);
    tmp = ReadAttribute(config, _T("server"));
    _tcsncpy(info.server, CHECK_NULL_EX(tmp), MAX_STR);
-   safe_free(tmp);
+   MemFree(tmp);
    tmp = ReadAttribute(config, _T("login"));
    _tcsncpy(info.username, CHECK_NULL_EX(tmp), MAX_STR);
-   safe_free(tmp);
+   MemFree(tmp);
 
    TCHAR *password = ReadAttribute(config, _T("password"));
    if (password == NULL)
@@ -56,7 +56,7 @@ bool AddMongoDBFromConfig(const TCHAR *config)
    if(password != NULL)
    {
       DecryptPassword(CHECK_NULL_EX(info.username), password, info.password, MAX_PASSWORD);
-      safe_free(password);
+      MemFree(password);
    }
 
    bool sucess = false;
@@ -94,11 +94,11 @@ static LONG H_GetParameter(const TCHAR *param, const TCHAR *arg, TCHAR *value, A
 #ifdef UNICODE
          char *_paramName = UTF8StringFromWideString(paramName);
          result = g_instances->get(i)->getStatusParam(_paramName, value);
-         safe_free(_paramName);
+         MemFree(_paramName);
 #else
          result = g_instances->get(i)->getStatusParam(paramName, value);
 #endif // UNICODE
-         safe_free(paramName);
+         MemFree(paramName);
       }
    }
 
@@ -142,7 +142,7 @@ DatabaseInstance::DatabaseInstance(DatabaseInfo *info)
 #ifdef UNICODE
    char *_connectionString = UTF8StringFromWideString(connectionString);
 	m_dbConn = mongoc_client_new (_connectionString);
-	free(_connectionString);
+	MemFree(_connectionString);
 #else
 	m_dbConn = mongoc_client_new(connectionString);
 #endif
@@ -209,7 +209,7 @@ void DatabaseInstance::getDatabases()
 #ifdef UNICODE
       TCHAR *_error = WideStringFromUTF8String(error.message);
       AgentWriteDebugLog(NXLOG_INFO, _T("MONGODB: Failed to run command: %s\n"), _error);
-      free(_error);
+      MemFree(_error);
 #else
       AgentWriteDebugLog(NXLOG_INFO, _T("MONGODB: Failed to run command: %s\n"), error.message);
 #endif
@@ -247,7 +247,7 @@ bool DatabaseInstance::getServerStatus()
 #ifdef UNICODE
       TCHAR *_error = WideStringFromUTF8String(error.message);
       AgentWriteDebugLog(NXLOG_INFO, _T("MONGODB: Failed to run command: %s\n"), _error);
-      safe_free(_error);
+      MemFree(_error);
 #else
       AgentWriteDebugLog(NXLOG_INFO, _T("MONGODB: Failed to run command: %s\n"), error.message);
 #endif
@@ -289,7 +289,7 @@ LONG DatabaseInstance::getParam(bson_t *bsonDoc, const char *paramName, TCHAR *v
 #ifdef UNICODE
       TCHAR *_json = WideStringFromUTF8String(json);
       AgentWriteDebugLog(NXLOG_DEBUG, _T("MONGODB: trying to get param from %s \n<<<<<<<"), _json);
-      safe_free(_json);
+      MemFree(_json);
 #else
       AgentWriteDebugLog(NXLOG_INFO, _T("MONGODB: trying to get param from %s \n<<<<<<<"), json);
 #endif // UNICODE
@@ -322,11 +322,11 @@ LONG DatabaseInstance::getParam(bson_t *bsonDoc, const char *paramName, TCHAR *v
 #ifdef UNICODE
       TCHAR *v = WideStringFromUTF8String(val);
       ret_string(value, v);
-      free(v);
+      MemFree(v);
 #else
       ret_string(value, val);
 #endif // UNICODE
-      free(val);
+      MemFree(val);
       result = SYSINFO_RC_SUCCESS;
    }
 
@@ -359,7 +359,7 @@ NETXMS_SUBAGENT_PARAM *DatabaseInstance::getParameters(int *paramCount)
 #ifdef UNICODE
          TCHAR *_name = WideStringFromUTF8String(bson_iter_key (&iter));
          _tcscat(name, _name);
-         safe_free(_name);
+         MemFree(_name);
 #else
          _tcscat(name, bson_iter_key (&iter));
 #endif // UNICODE
@@ -409,7 +409,7 @@ LONG DatabaseInstance::setDbNames(StringList *value)
 #ifdef UNICODE
       TCHAR *_name = WideStringFromUTF8String(m_databaseList[i]);
       value->add(_name);
-      safe_free(_name);
+      MemFree(_name);
 #else
       value->add(m_databaseList[i]);
 #endif
@@ -463,7 +463,7 @@ LONG DatabaseInstance::getOtherParam(const TCHAR *param, const TCHAR *arg, const
 #ifdef UNICODE
       char *_arg = UTF8StringFromWideString(arg);
       result = getParam(&(commandData->m_result), _arg, value);
-      safe_free(_arg);
+      MemFree(_arg);
 #else
       result = getParam(&(commandData->m_result), arg, value);
 #endif
@@ -504,7 +504,7 @@ bool MongoDBCommand::getData(mongoc_client_t *m_dbConn, const TCHAR *dbName, con
 #ifdef UNICODE
    char *_dbName = UTF8StringFromWideString(dbName);
    mongoc_database_t *database = mongoc_client_get_database (m_dbConn, _dbName);
-   safe_free(_dbName);
+   MemFree(_dbName);
 #else
    mongoc_database_t *database = mongoc_client_get_database(m_dbConn, dbName);
 #endif // UNICODE
@@ -516,7 +516,7 @@ bool MongoDBCommand::getData(mongoc_client_t *m_dbConn, const TCHAR *dbName, con
 #ifdef UNICODE
       char *_command = UTF8StringFromWideString(command);
       bson_append_int32(&cmd, _command, strlen(_command), 1);
-      safe_free(_command);
+      MemFree(_command);
 #else
       bson_append_int32(&cmd, command, strlen(command), 1);
 #endif // UNICODE
@@ -528,7 +528,7 @@ bool MongoDBCommand::getData(mongoc_client_t *m_dbConn, const TCHAR *dbName, con
 #ifdef UNICODE
          TCHAR *_error = WideStringFromUTF8String(error.message);
          AgentWriteDebugLog(NXLOG_INFO, _T("MONGODB: Failed to run command(%s): %s\n"), command, _error);
-         safe_free(_error);
+         MemFree(_error);
 #else
          AgentWriteDebugLog(NXLOG_INFO, _T("MONGODB: Failed to run command(%s): %s\n"), command, error.message);
 #endif
