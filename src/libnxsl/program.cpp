@@ -377,7 +377,9 @@ void NXSL_Program::removeInstructions(UINT32 start, int count)
 		     (instr->m_nOpCode == OPCODE_JNZ) ||
 		     (instr->m_nOpCode == OPCODE_JZ_PEEK) ||
 		     (instr->m_nOpCode == OPCODE_JNZ_PEEK) ||
-		     (instr->m_nOpCode == OPCODE_CALL)) &&
+           (instr->m_nOpCode == OPCODE_CATCH) ||
+		     (instr->m_nOpCode == OPCODE_CALL) ||
+		     (instr->m_nOpCode == OPCODE_CBLOCK)) &&
 		    (instr->m_operand.m_dwAddr > start))
 		{
          instr->m_operand.m_dwAddr -= count;
