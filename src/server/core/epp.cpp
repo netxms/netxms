@@ -79,25 +79,17 @@ EPRule::EPRule(ConfigEntry *config) : m_actions(0, 16, true)
    ConfigEntry *pStorageEntry = config->findEntry(_T("pStorageActions"));
    if (pStorageEntry != NULL)
    {
-      ObjectArray<ConfigEntry> *tmp = pStorageEntry->getSubEntries(_T("setValue"));
-      if (tmp->size() > 0)
+      ObjectArray<ConfigEntry> *tmp = pStorageEntry->getSubEntries(_T("set#*"));
+      for(int i = 0; i < tmp->size(); i++)
       {
-         tmp = tmp->get(0)->getSubEntries(_T("value"));
-         for(int i = 0; i < tmp->size(); i++)
-         {
-            m_pstorageSetActions.set(tmp->get(i)->getAttribute(_T("key")), tmp->get(i)->getValue());
-         }
+         m_pstorageSetActions.set(tmp->get(i)->getAttribute(_T("key")), tmp->get(i)->getValue());
       }
       delete tmp;
 
-      tmp = pStorageEntry->getSubEntries(_T("deleteValue"));
-      if (tmp->size() > 0)
+      tmp = pStorageEntry->getSubEntries(_T("delete#*"));
+      for(int i = 0; i < tmp->size(); i++)
       {
-         tmp = tmp->get(0)->getSubEntries(_T("value"));
-         for(int i = 0; i < tmp->size(); i++)
-         {
-            m_pstorageDeleteActions.add(tmp->get(i)->getAttribute(_T("key")));
-         }
+         m_pstorageDeleteActions.add(tmp->get(i)->getAttribute(_T("key")));
       }
       delete tmp;
    }
@@ -299,10 +291,9 @@ EPRule::~EPRule()
 /**
  * Callback for filling export XML with set persistent storage actions
  */
-static EnumerationCallbackResult AddPSSetActionsToSML(const TCHAR *key, const void *value, void *data)
+static EnumerationCallbackResult AddPSSetActionsToXML(const TCHAR *key, const void *value, void *data)
 {
    String *str = (String *)data;
-   str->appendFormattedString(_T("\t\t\t\t\t<value key=\"%d\">%s</value>\n"), key, value);
    return _CONTINUE;
 }
 
@@ -385,16 +376,17 @@ void EPRule::createNXMPRecord(String &str)
       str.append(_T("</timerKey>\n"));
    }
 
-   str.append(_T("\t\t\t</timerCancellations>\n\t\t\t<pStorageActions>\n\t\t\t\t<setValue>\n"));
-   m_pstorageSetActions.forEach(AddPSSetActionsToSML, &str);
-   str += _T("\t\t\t\t</setValue>\n\t\t\t\t<deleteValue>\n");
+   str.append(_T("\t\t\t</timerCancellations>\n\t\t\t<pStorageActions>\n"));
+   StructArray<KeyValuePair> *arr = m_pstorageSetActions.toArray();
+   for(int i = 0; i < arr->size(); i++)
+   {
+      str.appendFormattedString(_T("\t\t\t\t<set id=\"%d\" key=\"%s\">%s</set>\n"), i+1, arr->get(i)->key, arr->get(i)->value);
+   }
    for(int i = 0; i < m_pstorageDeleteActions.size(); i++)
    {
-      str.append(_T("\t\t\t\t\t<value key=\""));
-      str.append(m_pstorageDeleteActions.get(i));
-      str.append(_T("\" />\n"));
+      str.appendFormattedString(_T("\t\t\t\t<delete id=\"%d\" key=\"%s\"/>\n"), i+1, m_pstorageDeleteActions.get(i));
    }
-   str += _T("\t\t\t\t</deleteValue>\n\t\t\t</pStorageActions>\n\t\t</rule>\n");
+   str += _T("\t\t\t</pStorageActions>\n\t\t</rule>\n");
 }
 
 /**
