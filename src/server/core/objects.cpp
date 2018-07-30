@@ -2423,6 +2423,9 @@ bool NXCORE_EXPORTABLE CreateObjectAccessSnapshot(UINT32 userId, int objClass)
 static int FilterObject(NXSL_VM *vm, NetObj *object, NXSL_VariableSystem **globals)
 {
    vm->setGlobalVariable(_T("$object"), object->createNXSLObject());
+   if (object->getObjectClass() == OBJECT_NODE)
+      vm->setGlobalVariable(_T("$node"), object->createNXSLObject());
+   vm->setGlobalVariable(_T("$isCluster"), new NXSL_Value((object->getObjectClass() == OBJECT_CLUSTER) ? 1 : 0));
    vm->setContextObject(object->createNXSLObject());
    ObjectArray<NXSL_Value> args(0);
    if (!vm->run(&args, NULL, globals))
