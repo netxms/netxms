@@ -140,6 +140,9 @@ ServerJobResult FileDownloadJob::run()
 			notify.setCode(CMD_REQUEST_COMPLETED);
 			notify.setId(m_requestId);
 			notify.setField(VID_FILE_SIZE, m_fileSize);
+			notify.setField(VID_NAME, m_localFile);
+			notify.setField(VID_REQUEST_ID, getId());
+			notify.setField(VID_FILE_NAME, m_remoteFile);
 			m_session->sendMessage(&notify);
 
 			rcc = response->getFieldAsUInt32(VID_RCC);

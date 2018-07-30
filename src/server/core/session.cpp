@@ -10559,6 +10559,7 @@ void ClientSession::getAgentFile(NXCPMessage *request)
 {
    NXCPMessage msg;
 	TCHAR remoteFile[MAX_PATH];
+	bool success = false;
 
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(request->getId());
@@ -10574,10 +10575,9 @@ void ClientSession::getAgentFile(NXCPMessage *request)
             bool follow = request->getFieldAsBoolean(VID_FILE_FOLLOW);
 				FileDownloadJob *job = new FileDownloadJob((Node *)object, remoteFile,
 				         request->getFieldAsUInt32(VID_FILE_SIZE_LIMIT), follow, this, request->getId());
-				msg.setField(VID_NAME, job->getLocalFileName());
-            msg.setField(VID_REQUEST_ID, job->getId());
 				if (AddJob(job))
 				{
+				   success = true;
 	            msg.setField(VID_RCC, RCC_SUCCESS);
 				}
 				else
@@ -10601,7 +10601,8 @@ void ClientSession::getAgentFile(NXCPMessage *request)
 		msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
 	}
 
-   sendMessage(&msg);
+	if(!success) //In case of success job will send response message with all required information
+	   sendMessage(&msg);
 }
 
 /**
