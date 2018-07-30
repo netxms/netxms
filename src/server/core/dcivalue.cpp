@@ -203,7 +203,7 @@ void CalculateItemValueDiff(ItemValue &result, int nDataType, const ItemValue &c
 /**
  * Calculate average value for set of values
  */
-void CalculateItemValueAverage(ItemValue &result, int nDataType, ItemValue *const *const valueList, size_t numValues)
+void CalculateItemValueAverage(ItemValue &result, int nDataType, const ItemValue * const *valueList, size_t numValues)
 {
 #define CALC_AVG_VALUE(vtype) \
 { \
@@ -254,7 +254,7 @@ void CalculateItemValueAverage(ItemValue &result, int nDataType, ItemValue *cons
 /**
  * Calculate total value for set of values
  */
-void CalculateItemValueTotal(ItemValue &result, int nDataType, ItemValue *const *const valueList, size_t numValues)
+void CalculateItemValueTotal(ItemValue &result, int nDataType, const ItemValue * const *valueList, size_t numValues)
 {
 #define CALC_TOTAL_VALUE(vtype) \
 { \
@@ -302,7 +302,7 @@ void CalculateItemValueTotal(ItemValue &result, int nDataType, ItemValue *const 
 /**
  * Calculate mean absolute deviation for set of values
  */
-void CalculateItemValueMD(ItemValue &result, int nDataType, ItemValue *const *const valueList, size_t numValues)
+void CalculateItemValueMD(ItemValue &result, int nDataType, const ItemValue * const *valueList, size_t numValues)
 {
 #define CALC_MD_VALUE(vtype) \
 { \
@@ -365,7 +365,7 @@ void CalculateItemValueMD(ItemValue &result, int nDataType, ItemValue *const *co
 /**
  * Calculate min value for set of values
  */
-void CalculateItemValueMin(ItemValue &result, int nDataType, ItemValue *const *const valueList, size_t numValues)
+void CalculateItemValueMin(ItemValue &result, int nDataType, const ItemValue * const *valueList, size_t numValues)
 {
 #define CALC_MIN_VALUE(vtype) \
 { \
@@ -414,7 +414,7 @@ void CalculateItemValueMin(ItemValue &result, int nDataType, ItemValue *const *c
 /**
  * Calculate max value for set of values
  */
-void CalculateItemValueMax(ItemValue &result, int nDataType, ItemValue *const *const valueList, size_t numValues)
+void CalculateItemValueMax(ItemValue &result, int nDataType, const ItemValue * const *valueList, size_t numValues)
 {
 #define CALC_MAX_VALUE(vtype) \
 { \
