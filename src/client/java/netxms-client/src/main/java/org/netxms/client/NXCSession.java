@@ -8667,7 +8667,7 @@ public class NXCSession
          updateServerJobId.setJobIdCallback(response.getFieldAsInt32(NXCPCodes.VID_REQUEST_ID));
       if (listener != null)
       {
-         final long fileSize = waitForRCC(msg.getMessageId()).getFieldAsInt64(NXCPCodes.VID_FILE_SIZE);
+         final long fileSize = response.getFieldAsInt64(NXCPCodes.VID_FILE_SIZE);
          listener.setTotalWorkAmount(fileSize);
          synchronized(progressListeners)
          {
