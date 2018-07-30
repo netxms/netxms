@@ -289,15 +289,6 @@ EPRule::~EPRule()
 }
 
 /**
- * Callback for filling export XML with set persistent storage actions
- */
-static EnumerationCallbackResult AddPSSetActionsToXML(const TCHAR *key, const void *value, void *data)
-{
-   String *str = (String *)data;
-   return _CONTINUE;
-}
-
-/**
  * Create management pack record
  */
 void EPRule::createNXMPRecord(String &str)
