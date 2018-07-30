@@ -322,6 +322,10 @@ resume:
       if (m_cp != INVALID_ADDRESS)
       {
          m_pRetValue = (NXSL_Value *)m_dataStack->pop();
+         if (m_pRetValue == NULL)
+         {
+            error(NXSL_ERR_DATA_STACK_UNDERFLOW);
+         }
       }
       else if (m_catchStack->getSize() > 0)
       {
@@ -2396,13 +2400,14 @@ void NXSL_VM::dump(FILE *pFile)
  */
 void NXSL_VM::error(int errorCode, int sourceLine)
 {
-   TCHAR szBuffer[1024];
-
    m_errorCode = errorCode;
-   m_errorLine = (sourceLine == -1) ? ((m_cp == INVALID_ADDRESS) ? 0 : m_instructionSet->get(m_cp)->m_nSourceLine) : sourceLine;
-   MemFree(m_errorText);
+   m_errorLine = (sourceLine == -1) ? (((m_cp == INVALID_ADDRESS) || (m_cp >= m_instructionSet->size())) ? 0 : m_instructionSet->get(m_cp)->m_nSourceLine) : sourceLine;
+
+   TCHAR szBuffer[1024];
    _sntprintf(szBuffer, 1024, _T("Error %d in line %d: %s"), errorCode, m_errorLine, GetErrorMessage(errorCode));
+   MemFree(m_errorText);
    m_errorText = _tcsdup(szBuffer);
+
    m_cp = INVALID_ADDRESS;
 }
 
