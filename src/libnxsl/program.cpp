@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2015 Victor Kirhenshtein
+** Copyright (C) 2003-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -33,7 +33,7 @@
 /**
  * Command mnemonics
  */
-const char *g_nxslCommandMnemonic[] =
+static const char *s_nxslCommandMnemonic[] =
 {
    "NOP", "RET", "JMP", "CALL", "CALL",
    "PUSH", "PUSH", "EXIT", "POP", "SET",
@@ -54,7 +54,8 @@ const char *g_nxslCommandMnemonic[] =
    "SREAD", "SWRITE", "SELECT", "PUSHCP",
    "SINC", "SINCP", "SDEC", "SDECP", "EPEEK",
    "PUSH", "SET", "CALL", "INC", "DEC",
-   "INCP", "DECP", "IN", "CBLOCK"
+   "INCP", "DECP", "IN", "PUSH", "SET",
+   "UPDATE", "CLREXPR"
 };
 
 /**
@@ -66,6 +67,7 @@ NXSL_Program::NXSL_Program()
    m_constants = new StringObjectMap<NXSL_Value>(true);
    m_functions = new ObjectArray<NXSL_Function>(16, 16, true);
    m_requiredModules = new ObjectArray<NXSL_ModuleImport>(4, 4, true);
+   m_expressionVariables = NULL;
 }
 
 /**
@@ -77,6 +79,7 @@ NXSL_Program::~NXSL_Program()
    delete m_constants;
    delete m_functions;
    delete m_requiredModules;
+   delete m_expressionVariables;
 }
 
 /**
@@ -103,6 +106,77 @@ bool NXSL_Program::addConstant(const char *name, NXSL_Value *value)
 }
 
 /**
+ * Enable expression variables
+ */
+void NXSL_Program::enableExpressionVariables()
+{
+   m_expressionVariables = new ObjectArray<NXSL_IdentifierLocation>(16, 16, true);
+}
+
+/**
+ * Disable expression variables
+ */
+void NXSL_Program::disableExpressionVariables(int line)
+{
+   addInstruction(new NXSL_Instruction(line, OPCODE_JZ_PEEK, INVALID_ADDRESS));
+   for(int i = 0; i < m_expressionVariables->size(); i++)
+   {
+      const NXSL_IdentifierLocation *l = m_expressionVariables->get(i);
+      addInstruction(new NXSL_Instruction(line, OPCODE_UPDATE_EXPRVAR, strdup(l->m_identifier), 0, l->m_addr));
+      addInstruction(new NXSL_Instruction(line, OPCODE_SET_EXPRVAR, strdup(l->m_identifier), 1));
+   }
+   delete_and_null(m_expressionVariables);
+   resolveLastJump(OPCODE_JZ_PEEK);
+   addInstruction(new NXSL_Instruction(line, OPCODE_CLEAR_EXPRVARS));
+}
+
+/**
+ * Register expression variable
+ */
+void NXSL_Program::registerExpressionVariable(const char *identifier)
+{
+   if (m_expressionVariables != NULL)
+      m_expressionVariables->add(new NXSL_IdentifierLocation(identifier, m_instructionSet->size()));
+}
+
+/**
+ * Get address of expression variable code block. Will return
+ * INVALID_ADDRESS if given variable is not registered as expression variable.
+ */
+UINT32 NXSL_Program::getExpressionVariableCodeBlock(const char *identifier)
+{
+   if (m_expressionVariables == NULL)
+      return INVALID_ADDRESS;
+
+   for(int i = 0; i < m_expressionVariables->size(); i++)
+   {
+      const NXSL_IdentifierLocation *l = m_expressionVariables->get(i);
+      if (!strcmp(l->m_identifier, identifier))
+      {
+         return l->m_addr;
+      }
+   }
+   return INVALID_ADDRESS;
+}
+
+/**
+ * Add "push variable" instruction
+ */
+void NXSL_Program::addPushVariableInstruction(const char *name, int line)
+{
+   UINT32 addr = getExpressionVariableCodeBlock(name);
+   if (addr == INVALID_ADDRESS)
+   {
+      addInstruction(new NXSL_Instruction(line, OPCODE_PUSH_VARIABLE, strdup(name)));
+   }
+   else
+   {
+      addInstruction(new NXSL_Instruction(line, OPCODE_PUSH_EXPRVAR, strdup(name), 0, addr));
+      addInstruction(new NXSL_Instruction(line, OPCODE_SET_EXPRVAR, strdup(name)));
+   }
+}
+
+/**
  * Resolve last jump with INVALID_ADDRESS to current address
  */
 void NXSL_Program::resolveLastJump(int opcode, int offset)
@@ -111,10 +185,10 @@ void NXSL_Program::resolveLastJump(int opcode, int offset)
    {
       i--;
       NXSL_Instruction *instr = m_instructionSet->get(i);
-      if ((instr->m_nOpCode == opcode) &&
-          (instr->m_operand.m_dwAddr == INVALID_ADDRESS))
+      if ((instr->m_opCode == opcode) &&
+          (instr->m_operand.m_addr == INVALID_ADDRESS))
       {
-         instr->m_operand.m_dwAddr = m_instructionSet->size() + offset;
+         instr->m_operand.m_addr = m_instructionSet->size() + offset;
          break;
       }
    }
@@ -128,7 +202,7 @@ void NXSL_Program::createJumpAt(UINT32 dwOpAddr, UINT32 dwJumpAddr)
 	if (dwOpAddr >= (UINT32)m_instructionSet->size())
 		return;
 
-	int nLine = m_instructionSet->get(dwOpAddr)->m_nSourceLine;
+	int nLine = m_instructionSet->get(dwOpAddr)->m_sourceLine;
    m_instructionSet->set(dwOpAddr, new NXSL_Instruction(nLine, OPCODE_JMP, dwJumpAddr));
 }
 
@@ -191,7 +265,7 @@ void NXSL_Program::resolveFunctions()
    for(int i = 0; i < m_instructionSet->size(); i++)
    {
       NXSL_Instruction *instr = m_instructionSet->get(i);
-      if (instr->m_nOpCode == OPCODE_CALL_EXTERNAL)
+      if (instr->m_opCode == OPCODE_CALL_EXTERNAL)
       {
          for(int j = 0; j < m_functions->size(); j++)
          {
@@ -199,8 +273,8 @@ void NXSL_Program::resolveFunctions()
             if (!_tcscmp(f->m_name, instr->m_operand.m_pszString))
             {
                free(instr->m_operand.m_pszString);
-               instr->m_operand.m_dwAddr = f->m_dwAddr;
-               instr->m_nOpCode = OPCODE_CALL;
+               instr->m_operand.m_addr = f->m_dwAddr;
+               instr->m_opCode = OPCODE_CALL;
                break;
             }
          }
@@ -211,33 +285,32 @@ void NXSL_Program::resolveFunctions()
 /**
  * Dump program to file (as text)
  */
-void NXSL_Program::dump(FILE *pFile)
+void NXSL_Program::dump(FILE *fp, const ObjectArray<NXSL_Instruction> *instructionSet)
 {
-   for(int i = 0; i < m_instructionSet->size(); i++)
+   for(int i = 0; i < instructionSet->size(); i++)
    {
-      NXSL_Instruction *instr = m_instructionSet->get(i);
-      _ftprintf(pFile, _T("%04X  %04X  %-6hs  "), i, instr->m_nOpCode, g_nxslCommandMnemonic[instr->m_nOpCode]);
-      switch(instr->m_nOpCode)
+      const NXSL_Instruction *instr = instructionSet->get(i);
+      _ftprintf(fp, _T("%04X  %04X  %-6hs  "), i, instr->m_opCode, s_nxslCommandMnemonic[instr->m_opCode]);
+      switch(instr->m_opCode)
       {
          case OPCODE_CALL_EXTERNAL:
          case OPCODE_GLOBAL:
          case OPCODE_SELECT:
-            _ftprintf(pFile, _T("%s, %d\n"), instr->m_operand.m_pszString, instr->m_nStackItems);
+            _ftprintf(fp, _T("%s, %d\n"), instr->m_operand.m_pszString, instr->m_stackItems);
             break;
          case OPCODE_CALL:
-            _ftprintf(pFile, _T("%04X, %d\n"), instr->m_operand.m_dwAddr, instr->m_nStackItems);
+            _ftprintf(fp, _T("%04X, %d\n"), instr->m_operand.m_addr, instr->m_stackItems);
             break;
          case OPCODE_CALL_METHOD:
-            _ftprintf(pFile, _T("@%s, %d\n"), instr->m_operand.m_pszString, instr->m_nStackItems);
+            _ftprintf(fp, _T("@%s, %d\n"), instr->m_operand.m_pszString, instr->m_stackItems);
             break;
          case OPCODE_CATCH:
-         case OPCODE_CBLOCK:
          case OPCODE_JMP:
          case OPCODE_JZ:
          case OPCODE_JNZ:
          case OPCODE_JZ_PEEK:
          case OPCODE_JNZ_PEEK:
-            _ftprintf(pFile, _T("%04X\n"), instr->m_operand.m_dwAddr);
+            _ftprintf(fp, _T("%04X\n"), instr->m_operand.m_addr);
             break;
          case OPCODE_PUSH_CONSTREF:
          case OPCODE_PUSH_VARIABLE:
@@ -254,29 +327,38 @@ void NXSL_Program::dump(FILE *pFile)
          case OPCODE_SET_ATTRIBUTE:
 			case OPCODE_NAME:
          case OPCODE_CASE_CONST:
-            _ftprintf(pFile, _T("%s\n"), instr->m_operand.m_pszString);
+            _ftprintf(fp, _T("%s\n"), instr->m_operand.m_pszString);
+            break;
+         case OPCODE_SET_EXPRVAR:
+            _ftprintf(fp, _T("(%s), %d\n"), instr->m_operand.m_pszString, instr->m_stackItems);
+            break;
+         case OPCODE_PUSH_EXPRVAR:
+            _ftprintf(fp, _T("(%s), %04X\n"), instr->m_operand.m_pszString, instr->m_addr2);
+            break;
+         case OPCODE_UPDATE_EXPRVAR:
+            _ftprintf(fp, _T("(%hs)\n"), instr->m_operand.m_pszString);
             break;
          case OPCODE_PUSH_CONSTANT:
 			case OPCODE_CASE:
-            if (instr->m_operand.m_pConstant->isNull())
-               _ftprintf(pFile, _T("<null>\n"));
-            else if (instr->m_operand.m_pConstant->isArray())
-               _ftprintf(pFile, _T("<array>\n"));
-            else if (instr->m_operand.m_pConstant->isHashMap())
-               _ftprintf(pFile, _T("<hash map>\n"));
+            if (instr->m_operand.m_constant->isNull())
+               _ftprintf(fp, _T("<null>\n"));
+            else if (instr->m_operand.m_constant->isArray())
+               _ftprintf(fp, _T("<array>\n"));
+            else if (instr->m_operand.m_constant->isHashMap())
+               _ftprintf(fp, _T("<hash map>\n"));
             else
-               _ftprintf(pFile, _T("\"%s\"\n"), instr->m_operand.m_pConstant->getValueAsCString());
+               _ftprintf(fp, _T("\"%s\"\n"), instr->m_operand.m_constant->getValueAsCString());
             break;
          case OPCODE_POP:
          case OPCODE_PUSHCP:
          case OPCODE_STORAGE_READ:
-            _ftprintf(pFile, _T("%d\n"), instr->m_nStackItems);
+            _ftprintf(fp, _T("%d\n"), instr->m_stackItems);
             break;
          case OPCODE_CAST:
-            _ftprintf(pFile, _T("[%s]\n"), g_szTypeNames[instr->m_nStackItems]);
+            _ftprintf(fp, _T("[%s]\n"), g_szTypeNames[instr->m_stackItems]);
             break;
          default:
-            _ftprintf(pFile, _T("\n"));
+            _ftprintf(fp, _T("\n"));
             break;
       }
    }
@@ -288,8 +370,8 @@ void NXSL_Program::dump(FILE *pFile)
 UINT32 NXSL_Program::getFinalJumpDestination(UINT32 dwAddr, int srcJump)
 {
    NXSL_Instruction *instr = m_instructionSet->get(dwAddr);
-	if ((instr->m_nOpCode == OPCODE_JMP) || (instr->m_nOpCode == srcJump))
-		return getFinalJumpDestination(instr->m_operand.m_dwAddr, srcJump);
+	if ((instr->m_opCode == OPCODE_JMP) || (instr->m_opCode == srcJump))
+		return getFinalJumpDestination(instr->m_operand.m_addr, srcJump);
 	return dwAddr;
 }
 
@@ -304,12 +386,12 @@ void NXSL_Program::optimize()
 	for(i = 0; (m_instructionSet->size() > 1) && (i < m_instructionSet->size() - 1); i++)
 	{
       NXSL_Instruction *instr = m_instructionSet->get(i);
-		if ((instr->m_nOpCode == OPCODE_PUSH_CONSTANT) &&
-		    (m_instructionSet->get(i + 1)->m_nOpCode == OPCODE_NEG) &&
-			 instr->m_operand.m_pConstant->isNumeric() &&
-			 !instr->m_operand.m_pConstant->isUnsigned())
+		if ((instr->m_opCode == OPCODE_PUSH_CONSTANT) &&
+		    (m_instructionSet->get(i + 1)->m_opCode == OPCODE_NEG) &&
+			 instr->m_operand.m_constant->isNumeric() &&
+			 !instr->m_operand.m_constant->isUnsigned())
 		{
-			instr->m_operand.m_pConstant->negate();
+			instr->m_operand.m_constant->negate();
 			removeInstructions(i + 1, 1);
 		}
 	}
@@ -318,9 +400,9 @@ void NXSL_Program::optimize()
 	for(i = 0; i < m_instructionSet->size(); i++)
 	{
       NXSL_Instruction *instr = m_instructionSet->get(i);
-		if ((instr->m_nOpCode == OPCODE_JMP) && (instr->m_operand.m_dwAddr >= (UINT32)m_instructionSet->size()))
+		if ((instr->m_opCode == OPCODE_JMP) && (instr->m_operand.m_addr >= (UINT32)m_instructionSet->size()))
 		{
-			instr->m_nOpCode = OPCODE_RET_NULL;
+			instr->m_opCode = OPCODE_RET_NULL;
 		}
 	}
 
@@ -328,12 +410,12 @@ void NXSL_Program::optimize()
 	for(i = 0; i < m_instructionSet->size(); i++)
 	{
       NXSL_Instruction *instr = m_instructionSet->get(i);
-		if (((instr->m_nOpCode == OPCODE_JZ_PEEK) && 
-			  (m_instructionSet->get(instr->m_operand.m_dwAddr)->m_nOpCode == OPCODE_JNZ_PEEK)) ||
-		    ((instr->m_nOpCode == OPCODE_JNZ_PEEK) && 
-			  (m_instructionSet->get(instr->m_operand.m_dwAddr)->m_nOpCode == OPCODE_JZ_PEEK)))
+		if (((instr->m_opCode == OPCODE_JZ_PEEK) &&
+			  (m_instructionSet->get(instr->m_operand.m_addr)->m_opCode == OPCODE_JNZ_PEEK)) ||
+		    ((instr->m_opCode == OPCODE_JNZ_PEEK) &&
+			  (m_instructionSet->get(instr->m_operand.m_addr)->m_opCode == OPCODE_JZ_PEEK)))
 		{
-			instr->m_operand.m_dwAddr++;
+			instr->m_operand.m_addr++;
 		}
 	}
 
@@ -341,16 +423,16 @@ void NXSL_Program::optimize()
 	for(i = 0; i < m_instructionSet->size(); i++)
 	{
       NXSL_Instruction *instr = m_instructionSet->get(i);
-		if ((instr->m_nOpCode == OPCODE_JMP) ||
-			 (instr->m_nOpCode == OPCODE_JZ) ||
-			 (instr->m_nOpCode == OPCODE_JNZ))
+		if ((instr->m_opCode == OPCODE_JMP) ||
+			 (instr->m_opCode == OPCODE_JZ) ||
+			 (instr->m_opCode == OPCODE_JNZ))
 		{
-			instr->m_operand.m_dwAddr = getFinalJumpDestination(instr->m_operand.m_dwAddr, -1);
+			instr->m_operand.m_addr = getFinalJumpDestination(instr->m_operand.m_addr, -1);
 		}
-		else if ((instr->m_nOpCode == OPCODE_JZ_PEEK) ||
-			      (instr->m_nOpCode == OPCODE_JNZ_PEEK))
+		else if ((instr->m_opCode == OPCODE_JZ_PEEK) ||
+			      (instr->m_opCode == OPCODE_JNZ_PEEK))
 		{
-			instr->m_operand.m_dwAddr = getFinalJumpDestination(instr->m_operand.m_dwAddr, instr->m_nOpCode);
+			instr->m_operand.m_addr = getFinalJumpDestination(instr->m_operand.m_addr, instr->m_opCode);
 		}
 	}
 
@@ -358,10 +440,10 @@ void NXSL_Program::optimize()
 	for(i = 0; i < m_instructionSet->size(); i++)
 	{
       NXSL_Instruction *instr = m_instructionSet->get(i);
-		if (((instr->m_nOpCode == OPCODE_JMP) ||
-			  (instr->m_nOpCode == OPCODE_JZ_PEEK) ||
-			  (instr->m_nOpCode == OPCODE_JNZ_PEEK)) &&
-			 (instr->m_operand.m_dwAddr == i + 1))
+		if (((instr->m_opCode == OPCODE_JMP) ||
+			  (instr->m_opCode == OPCODE_JZ_PEEK) ||
+			  (instr->m_opCode == OPCODE_JNZ_PEEK)) &&
+			 (instr->m_operand.m_addr == i + 1))
 		{
 			removeInstructions(i, 1);
 			i--;
@@ -388,17 +470,20 @@ void NXSL_Program::removeInstructions(UINT32 start, int count)
 	for(i = 0; i < m_instructionSet->size(); i++)
 	{
       NXSL_Instruction *instr = m_instructionSet->get(i);
-		if (((instr->m_nOpCode == OPCODE_JMP) ||
-		     (instr->m_nOpCode == OPCODE_JZ) ||
-		     (instr->m_nOpCode == OPCODE_JNZ) ||
-		     (instr->m_nOpCode == OPCODE_JZ_PEEK) ||
-		     (instr->m_nOpCode == OPCODE_JNZ_PEEK) ||
-           (instr->m_nOpCode == OPCODE_CATCH) ||
-		     (instr->m_nOpCode == OPCODE_CALL) ||
-		     (instr->m_nOpCode == OPCODE_CBLOCK)) &&
-		    (instr->m_operand.m_dwAddr > start))
+		if (((instr->m_opCode == OPCODE_JMP) ||
+		     (instr->m_opCode == OPCODE_JZ) ||
+		     (instr->m_opCode == OPCODE_JNZ) ||
+		     (instr->m_opCode == OPCODE_JZ_PEEK) ||
+		     (instr->m_opCode == OPCODE_JNZ_PEEK) ||
+           (instr->m_opCode == OPCODE_CATCH) ||
+		     (instr->m_opCode == OPCODE_CALL)) &&
+		    (instr->m_operand.m_addr > start))
 		{
-         instr->m_operand.m_dwAddr -= count;
+         instr->m_operand.m_addr -= count;
+		}
+		if ((instr->m_addr2 != INVALID_ADDRESS) && (instr->m_addr2 > start))
+		{
+         instr->m_addr2 -= count;
 		}
 	}
 }
@@ -423,13 +508,13 @@ void NXSL_Program::serialize(ByteStream& s)
    for(i = 0; i < m_instructionSet->size(); i++)
    {
       NXSL_Instruction *instr = m_instructionSet->get(i);
-      s.write(instr->m_nOpCode);
-      s.write(instr->m_nStackItems);
-      s.write(instr->m_nSourceLine);
+      s.write(instr->m_opCode);
+      s.write(instr->m_stackItems);
+      s.write(instr->m_sourceLine);
       switch(instr->getOperandType())
       {
          case OP_TYPE_ADDR:
-            s.write(instr->m_operand.m_dwAddr);
+            s.write(instr->m_operand.m_addr);
             break;
          case OP_TYPE_STRING:
             {
@@ -447,7 +532,7 @@ void NXSL_Program::serialize(ByteStream& s)
                INT32 idx = -1;
                for(int i = 0; i < constants.size(); i++)
                {
-                  if (constants.get(i)->equals(instr->m_operand.m_pConstant))
+                  if (constants.get(i)->equals(instr->m_operand.m_constant))
                   {
                      idx = i;
                      break;
@@ -457,7 +542,7 @@ void NXSL_Program::serialize(ByteStream& s)
                if (idx == -1)
                {
                   idx = constants.size();
-                  constants.add(instr->m_operand.m_pConstant);
+                  constants.add(instr->m_operand.m_constant);
                }
 
                s.write(idx);
@@ -569,7 +654,7 @@ NXSL_Program *NXSL_Program::load(ByteStream& s, TCHAR *errMsg, size_t errMsgSize
       switch(instr->getOperandType())
       {
          case OP_TYPE_ADDR:
-            instr->m_operand.m_dwAddr = s.readUInt32();
+            instr->m_operand.m_addr = s.readUInt32();
             break;
          case OP_TYPE_STRING:
             {
@@ -594,7 +679,7 @@ NXSL_Program *NXSL_Program::load(ByteStream& s, TCHAR *errMsg, size_t errMsgSize
                   delete instr;
                   goto failure;
                }
-               instr->m_operand.m_pConstant = new NXSL_Value(v);
+               instr->m_operand.m_constant = new NXSL_Value(v);
             }
             break;
          default:

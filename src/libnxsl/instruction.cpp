@@ -26,99 +26,104 @@
 /**
  * Create instruction without operand
  */
-NXSL_Instruction::NXSL_Instruction(int nLine, short nOpCode)
+NXSL_Instruction::NXSL_Instruction(int line, INT16 opCode)
 {
-   m_nOpCode = nOpCode;
-   m_nSourceLine = nLine;
-   m_nStackItems = 0;
+   m_opCode = opCode;
+   m_sourceLine = line;
+   m_stackItems = 0;
+   m_addr2 = INVALID_ADDRESS;
 }
 
 /**
  * Create instruction with constant operand
  */
-NXSL_Instruction::NXSL_Instruction(int nLine, short nOpCode, NXSL_Value *pValue)
+NXSL_Instruction::NXSL_Instruction(int line, INT16 opCode, NXSL_Value *value)
 {
-   m_nOpCode = nOpCode;
-   m_nSourceLine = nLine;
-   m_operand.m_pConstant = pValue;
-   m_nStackItems = 0;
+   m_opCode = opCode;
+   m_sourceLine = line;
+   m_operand.m_constant = value;
+   m_stackItems = 0;
+   m_addr2 = INVALID_ADDRESS;
 }
 
 /**
- * Create instruction with string operand.
- * String must be dynamically allocated.
+ * Create instruction with identifier operand.
  */
-NXSL_Instruction::NXSL_Instruction(int nLine, short nOpCode, char *pszString)
+NXSL_Instruction::NXSL_Instruction(int line, INT16 opCode, char *identifier)
 {
-   m_nOpCode = nOpCode;
-   m_nSourceLine = nLine;
+   m_opCode = opCode;
+   m_sourceLine = line;
 #ifdef UNICODE
-	m_operand.m_pszString = WideStringFromUTF8String(pszString);
-	free(pszString);
+	m_operand.m_pszString = WideStringFromUTF8String(identifier);
+	free(identifier);
 #else
-   m_operand.m_pszString = pszString;
+   m_operand.m_pszString = identifier;
 #endif
-   m_nStackItems = 0;
+   m_stackItems = 0;
+   m_addr2 = INVALID_ADDRESS;
 }
 
 /**
- * Create instruction with string operand and non-zero stack item count.
- * String must be dynamically allocated.
+ * Create instruction with identifier operand, specific stack item count, and secondary address.
  */
-NXSL_Instruction::NXSL_Instruction(int nLine, short nOpCode, char *pszString, short nStackItems)
+NXSL_Instruction::NXSL_Instruction(int line, INT16 opCode, char *identifier, INT16 stackItems, UINT32 addr2)
 {
-   m_nOpCode = nOpCode;
-   m_nSourceLine = nLine;
+   m_opCode = opCode;
+   m_sourceLine = line;
 #ifdef UNICODE
-	m_operand.m_pszString = WideStringFromUTF8String(pszString);
-	free(pszString);
+   m_operand.m_pszString = WideStringFromUTF8String(identifier);
+   free(identifier);
 #else
-   m_operand.m_pszString = pszString;
+   m_operand.m_pszString = identifier;
 #endif
-   m_nStackItems = nStackItems;
+   m_stackItems = stackItems;
+   m_addr2 = addr2;
 }
 
 /**
  * Create instruction with address operand
  */
-NXSL_Instruction::NXSL_Instruction(int nLine, short nOpCode, UINT32 dwAddr)
+NXSL_Instruction::NXSL_Instruction(int line, INT16 opCode, UINT32 addr)
 {
-   m_nOpCode = nOpCode;
-   m_nSourceLine = nLine;
-   m_operand.m_dwAddr = dwAddr;
-   m_nStackItems = 0;
+   m_opCode = opCode;
+   m_sourceLine = line;
+   m_operand.m_addr = addr;
+   m_stackItems = 0;
+   m_addr2 = INVALID_ADDRESS;
 }
 
 /**
  * Create instruction without operand and non-zero stack item count
  */
-NXSL_Instruction::NXSL_Instruction(int nLine, short nOpCode, short nStackItems)
+NXSL_Instruction::NXSL_Instruction(int line, INT16 opCode, INT16 stackItems)
 {
-   m_nOpCode = nOpCode;
-   m_nSourceLine = nLine;
-   m_nStackItems = nStackItems;
+   m_opCode = opCode;
+   m_sourceLine = line;
+   m_stackItems = stackItems;
+   m_addr2 = INVALID_ADDRESS;
 }
 
 /**
  * Copy constructor
  */
-NXSL_Instruction::NXSL_Instruction(NXSL_Instruction *pSrc)
+NXSL_Instruction::NXSL_Instruction(NXSL_Instruction *src)
 {
-   m_nOpCode = pSrc->m_nOpCode;
-   m_nSourceLine = pSrc->m_nSourceLine;
-   m_nStackItems = pSrc->m_nStackItems;
+   m_opCode = src->m_opCode;
+   m_sourceLine = src->m_sourceLine;
+   m_stackItems = src->m_stackItems;
    switch(getOperandType())
    {
-		case OP_TYPE_CONST:
-         m_operand.m_pConstant = new NXSL_Value(pSrc->m_operand.m_pConstant);
+      case OP_TYPE_CONST:
+         m_operand.m_constant = new NXSL_Value(src->m_operand.m_constant);
          break;
       case OP_TYPE_STRING:
-         m_operand.m_pszString = _tcsdup(pSrc->m_operand.m_pszString);
+         m_operand.m_pszString = _tcsdup(src->m_operand.m_pszString);
          break;
       default:
-         m_operand.m_dwAddr = pSrc->m_operand.m_dwAddr;
+         m_operand.m_addr = src->m_operand.m_addr;
          break;
    }
+   m_addr2 = src->m_addr2;
 }
 
 /**
@@ -132,7 +137,7 @@ NXSL_Instruction::~NXSL_Instruction()
          MemFree(m_operand.m_pszString);
          break;
       case OP_TYPE_CONST:
-         delete m_operand.m_pConstant;
+         delete m_operand.m_constant;
          break;
       default:
          break;
@@ -144,7 +149,7 @@ NXSL_Instruction::~NXSL_Instruction()
  */
 OperandType NXSL_Instruction::getOperandType()
 {
-   switch(m_nOpCode)
+   switch(m_opCode)
    {
       case OPCODE_ARRAY:
       case OPCODE_BIND:
@@ -160,11 +165,14 @@ OperandType NXSL_Instruction::getOperandType()
       case OPCODE_INCP:
 		case OPCODE_NAME:
       case OPCODE_PUSH_CONSTREF:
+      case OPCODE_PUSH_EXPRVAR:
       case OPCODE_PUSH_VARIABLE:
       case OPCODE_SAFE_GET_ATTR:
       case OPCODE_SELECT:
       case OPCODE_SET:
       case OPCODE_SET_ATTRIBUTE:
+      case OPCODE_SET_EXPRVAR:
+      case OPCODE_UPDATE_EXPRVAR:
          return OP_TYPE_STRING;
 		case OPCODE_CASE:
       case OPCODE_PUSH_CONSTANT:
@@ -172,7 +180,6 @@ OperandType NXSL_Instruction::getOperandType()
       case OPCODE_JMP:
       case OPCODE_CALL:
       case OPCODE_CATCH:
-      case OPCODE_CBLOCK:
       case OPCODE_JZ:
       case OPCODE_JNZ:
       case OPCODE_JZ_PEEK:

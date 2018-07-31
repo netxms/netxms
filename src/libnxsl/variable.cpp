@@ -106,15 +106,20 @@ NXSL_VariableSystem::~NXSL_VariableSystem()
 /**
  * Merge with another variable system
  */
-void NXSL_VariableSystem::merge(NXSL_VariableSystem *src)
+void NXSL_VariableSystem::merge(NXSL_VariableSystem *src, bool overwrite)
 {
 	for(int i = 0; i < src->m_variables->size(); i++)
 	{
-      NXSL_Variable *v = src->m_variables->get(i);
-      if (find(v->getName()) == NULL)
+      NXSL_Variable *var = src->m_variables->get(i);
+      NXSL_Variable *targetVar = find(var->getName());
+      if (targetVar == NULL)
 		{
-         create(v->getName(), new NXSL_Value(v->getValue()));
+         create(var->getName(), new NXSL_Value(var->getValue()));
 		}
+      else if (overwrite)
+      {
+         targetVar->setValue(new NXSL_Value(var->getValue()));
+      }
 	}
 }
 
@@ -158,4 +163,16 @@ NXSL_Variable *NXSL_VariableSystem::create(const TCHAR *pszName, NXSL_Value *pVa
    NXSL_Variable *v = new NXSL_Variable(pszName, (pValue != NULL) ? pValue : new NXSL_Value, m_isConstant);
 	m_variables->add(v);
    return v;
+}
+
+/**
+ * Dump all variables
+ */
+void NXSL_VariableSystem::dump(FILE *fp)
+{
+   for(int i = 0; i < m_variables->size(); i++)
+   {
+      NXSL_Variable *var = m_variables->get(i);
+      _ftprintf(fp, _T("   %-16s = \"%s\"\n"), var->getName(), var->getValue()->getValueAsCString());
+   }
 }

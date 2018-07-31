@@ -63,7 +63,7 @@ int main(int argc, char *argv[])
    NXSL_Value **ppArgs;
    NXSL_ExtFunction func;
    int i, ch;
-   bool dump = false, printResult = false, compileOnly = false, binary = false;
+   bool dump = false, printResult = false, compileOnly = false, binary = false, showExprVars = false;
    int runCount = 1, rc = 0;
 
    InitNetXMSProcess(true);
@@ -77,7 +77,7 @@ int main(int argc, char *argv[])
 
    // Parse command line
    opterr = 1;
-   while((ch = getopt(argc, argv, "bcC:de:o:r")) != -1)
+   while((ch = getopt(argc, argv, "bcC:de:Eo:r")) != -1)
    {
       switch(ch)
       {
@@ -100,6 +100,8 @@ int main(int argc, char *argv[])
 #else
 				nx_strncpy(entryPoint, optarg, 256);
 #endif
+			case 'E':
+				showExprVars = true;
 				break;
          case 'o':
 				strncpy(outFile, optarg, MAX_PATH - 1);
@@ -124,6 +126,7 @@ int main(int argc, char *argv[])
                _T("   -C <count> Run script multiple times\n")
                _T("   -d         Dump compiled script code\n")
 				   _T("   -e <name>  Entry point\n")
+               _T("   -E         Show expression variables on exit\n")
                _T("   -o <file>  Write compiled script\n")
                _T("   -r         Print script return value\n")
                _T("\n"));
@@ -209,7 +212,7 @@ int main(int argc, char *argv[])
 		         // Prepare arguments
 		         if (argc - optind > 1)
 		         {
-			         ppArgs = (NXSL_Value **)malloc(sizeof(NXSL_Value *) * (argc - optind - 1));
+			         ppArgs = MemAllocArray<NXSL_Value*>(argc - optind - 1);
 			         for(i = optind + 1; i < argc; i++)
 				         ppArgs[i - optind - 1] = new NXSL_Value(argv[i]);
 		         }
@@ -218,18 +221,29 @@ int main(int argc, char *argv[])
 			         ppArgs = NULL;
 		         }
 
-               if (vm->run(argc - optind - 1, ppArgs, NULL, NULL, (entryPoint[0] != 0) ? entryPoint : NULL))
+		         NXSL_VariableSystem *globalVariables = NULL;
+               NXSL_VariableSystem *expressionVariables = NULL;
+               if (vm->run(argc - optind - 1, ppArgs, &globalVariables, 
+					         showExprVars ? &expressionVariables : NULL, NULL,
+								(entryPoint[0] != 0) ? entryPoint : NULL))
 		         {
 			         NXSL_Value *result = vm->getResult();
 			         if (printResult)
                      WriteToTerminalEx(_T("Result = %s\n"), (result != NULL) ? result->getValueAsCString() : _T("(null)"));
+			         if (showExprVars)
+			         {
+			            WriteToTerminal(_T("Expression variables:\n"));
+			            expressionVariables->dump(stdout);
+			         }
 		         }
 		         else
 		         {
 			         WriteToTerminalEx(_T("%s\n"), vm->getErrorText());
-                           rc = 1;
+			         rc = 1;
 		         }
 		         MemFree(ppArgs);
+		         delete globalVariables;
+		         delete expressionVariables;
             }
          }
          else

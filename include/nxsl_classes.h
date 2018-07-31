@@ -568,10 +568,12 @@ public:
 
    NXSL_Variable *find(const TCHAR *pszName);
    NXSL_Variable *create(const TCHAR *pszName, NXSL_Value *pValue = NULL);
-	void merge(NXSL_VariableSystem *src);
-	void addAll(StringObjectMap<NXSL_Value> *src);
+   void merge(NXSL_VariableSystem *src, bool overwrite = false);
+   void addAll(StringObjectMap<NXSL_Value> *src);
    void clear() { m_variables->clear(); }
-	bool isConstant() { return m_isConstant; }
+   bool isConstant() { return m_isConstant; }
+
+   void dump(FILE *fp);
 };
 
 /**
@@ -594,24 +596,25 @@ class LIBNXSL_EXPORTABLE NXSL_Instruction
    friend class NXSL_VM;
 
 protected:
-   INT16 m_nOpCode;
-   INT16 m_nStackItems;
+   INT16 m_opCode;
+   INT16 m_stackItems;
    union
    {
-      NXSL_Value *m_pConstant;
+      NXSL_Value *m_constant;
       TCHAR *m_pszString;
-      UINT32 m_dwAddr;
+      UINT32 m_addr;
    } m_operand;
-   INT32 m_nSourceLine;
+   UINT32 m_addr2;   // Second address
+   INT32 m_sourceLine;
 
 public:
-   NXSL_Instruction(int nLine, short nOpCode);
-   NXSL_Instruction(int nLine, short nOpCode, NXSL_Value *pValue);
-   NXSL_Instruction(int nLine, short nOpCode, char *pszString);
-   NXSL_Instruction(int nLine, short nOpCode, char *pszString, short nStackItems);
-   NXSL_Instruction(int nLine, short nOpCode, UINT32 dwAddr);
-   NXSL_Instruction(int nLine, short nOpCode, short nStackItems);
-   NXSL_Instruction(NXSL_Instruction *pSrc);
+   NXSL_Instruction(int line, INT16 opCode);
+   NXSL_Instruction(int line, INT16 opCode, NXSL_Value *value);
+   NXSL_Instruction(int line, INT16 opCode, char *identifier);
+   NXSL_Instruction(int line, INT16 opCode, char *identifier, INT16 stackItems, UINT32 addr2 = INVALID_ADDRESS);
+   NXSL_Instruction(int line, INT16 opCode, UINT32 addr);
+   NXSL_Instruction(int line, INT16 opCode, INT16 stackItems);
+   NXSL_Instruction(NXSL_Instruction *src);
    ~NXSL_Instruction();
 
    OperandType getOperandType();
@@ -630,6 +633,21 @@ struct NXSL_Module
 };
 
 /**
+ * Identifier location
+ */
+struct NXSL_IdentifierLocation
+{
+   char m_identifier[64];
+   UINT32 m_addr;
+
+   NXSL_IdentifierLocation(const char *identifier, UINT32 addr)
+   {
+      strlcpy(m_identifier, identifier, 64);
+      m_addr = addr;
+   }
+};
+
+/**
  * Compiled NXSL program
  */
 class LIBNXSL_EXPORTABLE NXSL_Program
@@ -641,8 +659,10 @@ protected:
    ObjectArray<NXSL_ModuleImport> *m_requiredModules;
    StringObjectMap<NXSL_Value> *m_constants;
    ObjectArray<NXSL_Function> *m_functions;
+   ObjectArray<NXSL_IdentifierLocation> *m_expressionVariables;
 
-	UINT32 getFinalJumpDestination(UINT32 dwAddr, int srcJump);
+   UINT32 getFinalJumpDestination(UINT32 dwAddr, int srcJump);
+   UINT32 getExpressionVariableCodeBlock(const char *identifier);
 
 public:
    NXSL_Program();
@@ -651,18 +671,23 @@ public:
    bool addFunction(const char *pszName, UINT32 dwAddr, char *pszError);
    void resolveFunctions();
    void addInstruction(NXSL_Instruction *pInstruction) { m_instructionSet->add(pInstruction); }
+   void addPushVariableInstruction(const char *name, int line);
    void resolveLastJump(int opcode, int offset = 0);
 	void createJumpAt(UINT32 dwOpAddr, UINT32 dwJumpAddr);
    void addRequiredModule(const char *name, int lineNumber);
 	void optimize();
 	void removeInstructions(UINT32 start, int count);
    bool addConstant(const char *name, NXSL_Value *value);
+   void enableExpressionVariables();
+   void disableExpressionVariables(int line);
+   void registerExpressionVariable(const char *name);
 
    UINT32 getCodeSize() { return m_instructionSet->size(); }
 
-   void dump(FILE *pFile);
-   void serialize(ByteStream& s);
+   void dump(FILE *fp) { dump(fp, m_instructionSet); }
+   static void dump(FILE *fp, const ObjectArray<NXSL_Instruction> *instructionSet);
 
+   void serialize(ByteStream& s);
    static NXSL_Program *load(ByteStream& s, TCHAR *errMsg, size_t errMsgSize);
 };
 
@@ -796,8 +821,10 @@ protected:
    int m_nBindPos;
 
    NXSL_VariableSystem *m_constants;
-   NXSL_VariableSystem *m_globals;
-   NXSL_VariableSystem *m_locals;
+   NXSL_VariableSystem *m_globalVariables;
+   NXSL_VariableSystem *m_localVariables;
+   NXSL_VariableSystem *m_expressionVariables;
+   NXSL_VariableSystem **m_exportedExpressionVariables;
    NXSL_Value *m_context;
 
    NXSL_Storage *m_storage;
@@ -839,8 +866,8 @@ public:
 
    void loadModule(NXSL_Program *module, const NXSL_ModuleImport *importInfo);
 
-	void setGlobalVariable(const TCHAR *pszName, NXSL_Value *pValue);
-	NXSL_Variable *findGlobalVariable(const TCHAR *pszName) { return m_globals->find(pszName); }
+	void setGlobalVariable(const TCHAR *name, NXSL_Value *pValue);
+	NXSL_Variable *findGlobalVariable(const TCHAR *name) { return m_globalVariables->find(name); }
 
 	bool addConstant(const TCHAR *name, NXSL_Value *value);
 
@@ -857,17 +884,19 @@ public:
 
 	void setContextObject(NXSL_Value *value);
 
-   bool load(NXSL_Program *program);
-   bool run(ObjectArray<NXSL_Value> *args, NXSL_VariableSystem **ppGlobals = NULL,
-				NXSL_VariableSystem *pConstants = NULL, const TCHAR *entryPoint = NULL);
-   bool run(int argc, NXSL_Value **argv, NXSL_VariableSystem **ppGlobals = NULL,
-				NXSL_VariableSystem *pConstants = NULL, const TCHAR *entryPoint = NULL);
+   bool load(const NXSL_Program *program);
+   bool run(ObjectArray<NXSL_Value> *args, NXSL_VariableSystem **globals = NULL,
+            NXSL_VariableSystem **expressionVariables = NULL,
+            NXSL_VariableSystem *constants = NULL, const TCHAR *entryPoint = NULL);
+   bool run(int argc, NXSL_Value **argv, NXSL_VariableSystem **globals = NULL,
+            NXSL_VariableSystem **expressionVariables = NULL,
+            NXSL_VariableSystem *pConstants = NULL, const TCHAR *entryPoint = NULL);
    bool run() { ObjectArray<NXSL_Value> args(1, 1, false); return run(&args); }
 
    UINT32 getCodeSize() { return m_instructionSet->size(); }
 
 	void trace(int level, const TCHAR *text);
-   void dump(FILE *pFile);
+   void dump(FILE *fp) { NXSL_Program::dump(fp, m_instructionSet); }
    int getErrorCode() { return m_errorCode; }
    int getErrorLine() { return m_errorLine; }
    const TCHAR *getErrorText() { return CHECK_NULL_EX(m_errorText); }
