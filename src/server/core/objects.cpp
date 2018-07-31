@@ -2462,13 +2462,22 @@ bool NXCORE_EXPORTABLE CreateObjectAccessSnapshot(UINT32 userId, int objClass)
 /**
  * Filter object
  */
-static int FilterObject(NXSL_VM *vm, NetObj *object, NXSL_VariableSystem **globals)
+static int FilterObject(NXSL_VM *vm, NetObj *object, NXSL_VariableSystem **globalVariables)
 {
    SetupServerScriptVM(vm, object, NULL);
    vm->setContextObject(object->createNXSLObject(vm));
+   NXSL_VariableSystem *expressionVariables = NULL;
    ObjectRefArray<NXSL_Value> args(0);
-   if (!vm->run(&args, globals))
+   if (!vm->run(&args, globalVariables, &expressionVariables))
+   {
+      delete expressionVariables;
       return -1;
+   }
+   if ((globalVariables != NULL) && (expressionVariables != NULL))
+   {
+      (*globalVariables)->merge(expressionVariables);
+      delete expressionVariables;
+   }
    return vm->getResult()->getValueAsBoolean() ? 1 : 0;
 }
 

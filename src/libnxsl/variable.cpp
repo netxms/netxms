@@ -125,14 +125,19 @@ void NXSL_VariableSystem::clear()
 /**
  * Merge with another variable system
  */
-void NXSL_VariableSystem::merge(NXSL_VariableSystem *src)
+void NXSL_VariableSystem::merge(NXSL_VariableSystem *src, bool overwrite)
 {
    NXSL_VariablePtr *var, *tmp;
    HASH_ITER(hh, src->m_variables, var, tmp)
    {
-      if (find(var->v.getName()) == NULL)
+      NXSL_Variable *targetVar = find(var->v.getName());
+      if (targetVar == NULL)
       {
          create(var->v.getName(), m_vm->createValue(var->v.getValue()));
+      }
+      else if (overwrite)
+      {
+         targetVar->setValue(m_vm->createValue(var->v.getValue()));
       }
    }
 }
@@ -201,4 +206,16 @@ void NXSL_VariableSystem::restoreVariableReferences(ObjectArray<NXSL_Instruction
    for(int i = 0; i < m_restorePointCount; i++)
       instructions->get(m_restorePoints[i].addr)->restoreVariableReference(m_restorePoints[i].identifier);
    m_restorePointCount = 0;
+}
+
+/**
+ * Dump all variables
+ */
+void NXSL_VariableSystem::dump(FILE *fp)
+{
+   NXSL_VariablePtr *var, *tmp;
+   HASH_ITER(hh, m_variables, var, tmp)
+   {
+      _ftprintf(fp, _T("   %-16hs = \"%s\"\n"), var->v.getName().value, var->v.getValue()->getValueAsCString());
+   }
 }

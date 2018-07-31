@@ -26,96 +26,101 @@
 /**
  * Create instruction without operand
  */
-NXSL_Instruction::NXSL_Instruction(NXSL_ValueManager *vm, int nLine, short nOpCode)
+NXSL_Instruction::NXSL_Instruction(NXSL_ValueManager *vm, int line, INT16 opCode)
 {
    m_vm = vm;
-   m_nOpCode = nOpCode;
-   m_nSourceLine = nLine;
-   m_nStackItems = 0;
+   m_opCode = opCode;
+   m_sourceLine = line;
+   m_stackItems = 0;
+   m_addr2 = INVALID_ADDRESS;
 }
 
 /**
  * Create instruction with constant operand
  */
-NXSL_Instruction::NXSL_Instruction(NXSL_ValueManager *vm, int nLine, short nOpCode, NXSL_Value *pValue)
+NXSL_Instruction::NXSL_Instruction(NXSL_ValueManager *vm, int line, INT16 opCode, NXSL_Value *value)
 {
    m_vm = vm;
-   m_nOpCode = nOpCode;
-   m_nSourceLine = nLine;
-   m_operand.m_pConstant = pValue;
-   m_nStackItems = 0;
+   m_opCode = opCode;
+   m_sourceLine = line;
+   m_operand.m_constant = value;
+   m_stackItems = 0;
+   m_addr2 = INVALID_ADDRESS;
 }
 
 /**
- * Create instruction with string operand.
- * String must be dynamically allocated.
+ * Create instruction with identifier operand.
  */
-NXSL_Instruction::NXSL_Instruction(NXSL_ValueManager *vm, int nLine, short nOpCode, const NXSL_Identifier& identifier)
+NXSL_Instruction::NXSL_Instruction(NXSL_ValueManager *vm, int line, INT16 opCode, const NXSL_Identifier& identifier)
 {
    m_vm = vm;
-   m_nOpCode = nOpCode;
-   m_nSourceLine = nLine;
+   m_opCode = opCode;
+   m_sourceLine = line;
    m_operand.m_identifier = new NXSL_Identifier(identifier);
-   m_nStackItems = 0;
+   m_stackItems = 0;
+   m_addr2 = INVALID_ADDRESS;
 }
 
 /**
- * Create instruction with string operand and non-zero stack item count.
- * String must be dynamically allocated.
+ * Create instruction with identifier operand, specific stack item count, and secondary address.
  */
-NXSL_Instruction::NXSL_Instruction(NXSL_ValueManager *vm, int nLine, short nOpCode, const NXSL_Identifier& identifier, short nStackItems)
+NXSL_Instruction::NXSL_Instruction(NXSL_ValueManager *vm, int line, INT16 opCode, const NXSL_Identifier& identifier, INT16 stackItems, UINT32 addr2)
 {
    m_vm = vm;
-   m_nOpCode = nOpCode;
-   m_nSourceLine = nLine;
+   m_opCode = opCode;
+   m_sourceLine = line;
    m_operand.m_identifier = new NXSL_Identifier(identifier);
-   m_nStackItems = nStackItems;
+   m_stackItems = stackItems;
+   m_addr2 = addr2;
 }
 
 /**
  * Create instruction with address operand
  */
-NXSL_Instruction::NXSL_Instruction(NXSL_ValueManager *vm, int nLine, short nOpCode, UINT32 dwAddr)
+NXSL_Instruction::NXSL_Instruction(NXSL_ValueManager *vm, int line, INT16 opCode, UINT32 addr)
 {
    m_vm = vm;
-   m_nOpCode = nOpCode;
-   m_nSourceLine = nLine;
-   m_operand.m_dwAddr = dwAddr;
-   m_nStackItems = 0;
+   m_opCode = opCode;
+   m_sourceLine = line;
+   m_operand.m_addr = addr;
+   m_stackItems = 0;
+   m_addr2 = INVALID_ADDRESS;
 }
 
 /**
  * Create instruction without operand and non-zero stack item count
  */
-NXSL_Instruction::NXSL_Instruction(NXSL_ValueManager *vm, int nLine, short nOpCode, short nStackItems)
+NXSL_Instruction::NXSL_Instruction(NXSL_ValueManager *vm, int line, INT16 opCode, INT16 stackItems)
 {
    m_vm = vm;
-   m_nOpCode = nOpCode;
-   m_nSourceLine = nLine;
-   m_nStackItems = nStackItems;
+   m_opCode = opCode;
+   m_sourceLine = line;
+   m_stackItems = stackItems;
+   m_addr2 = INVALID_ADDRESS;
 }
 
 /**
  * Copy constructor
  */
-NXSL_Instruction::NXSL_Instruction(NXSL_ValueManager *vm, NXSL_Instruction *pSrc)
+NXSL_Instruction::NXSL_Instruction(NXSL_ValueManager *vm, NXSL_Instruction *src)
 {
    m_vm = vm;
-   m_nOpCode = pSrc->m_nOpCode;
-   m_nSourceLine = pSrc->m_nSourceLine;
-   m_nStackItems = pSrc->m_nStackItems;
+   m_opCode = src->m_opCode;
+   m_sourceLine = src->m_sourceLine;
+   m_stackItems = src->m_stackItems;
    switch(getOperandType())
    {
 		case OP_TYPE_CONST:
-         m_operand.m_pConstant = m_vm->createValue(pSrc->m_operand.m_pConstant);
+         m_operand.m_constant = m_vm->createValue(src->m_operand.m_constant);
          break;
       case OP_TYPE_IDENTIFIER:
-         m_operand.m_identifier = new NXSL_Identifier(*pSrc->m_operand.m_identifier);
+         m_operand.m_identifier = new NXSL_Identifier(*src->m_operand.m_identifier);
          break;
       default:
-         m_operand.m_dwAddr = pSrc->m_operand.m_dwAddr;
+         m_operand.m_addr = src->m_operand.m_addr;
          break;
    }
+   m_addr2 = src->m_addr2;
 }
 
 /**
@@ -129,7 +134,7 @@ NXSL_Instruction::~NXSL_Instruction()
          delete m_operand.m_identifier;
          break;
       case OP_TYPE_CONST:
-         m_vm->destroyValue(m_operand.m_pConstant);
+         m_vm->destroyValue(m_operand.m_constant);
          break;
       default:
          break;
@@ -141,7 +146,7 @@ NXSL_Instruction::~NXSL_Instruction()
  */
 OperandType NXSL_Instruction::getOperandType()
 {
-   switch(m_nOpCode)
+   switch(m_opCode)
    {
       case OPCODE_ARRAY:
       case OPCODE_BIND:
@@ -157,11 +162,14 @@ OperandType NXSL_Instruction::getOperandType()
       case OPCODE_INCP:
 		case OPCODE_NAME:
       case OPCODE_PUSH_CONSTREF:
+      case OPCODE_PUSH_EXPRVAR:
       case OPCODE_PUSH_VARIABLE:
       case OPCODE_SAFE_GET_ATTR:
       case OPCODE_SELECT:
       case OPCODE_SET:
       case OPCODE_SET_ATTRIBUTE:
+      case OPCODE_SET_EXPRVAR:
+      case OPCODE_UPDATE_EXPRVAR:
          return OP_TYPE_IDENTIFIER;
 		case OPCODE_CASE:
       case OPCODE_PUSH_CONSTANT:
@@ -176,7 +184,6 @@ OperandType NXSL_Instruction::getOperandType()
       case OPCODE_JMP:
       case OPCODE_CALL:
       case OPCODE_CATCH:
-      case OPCODE_CBLOCK:
       case OPCODE_JZ:
       case OPCODE_JNZ:
       case OPCODE_JZ_PEEK:
@@ -194,25 +201,25 @@ OperandType NXSL_Instruction::getOperandType()
  */
 void NXSL_Instruction::restoreVariableReference(NXSL_Identifier *identifier)
 {
-   switch(m_nOpCode)
+   switch(m_opCode)
    {
       case OPCODE_PUSH_VARPTR:
-         m_nOpCode = OPCODE_PUSH_VARIABLE;
+         m_opCode = (m_addr2 == INVALID_ADDRESS) ? OPCODE_PUSH_VARIABLE : OPCODE_PUSH_EXPRVAR;
          break;
       case OPCODE_SET_VARPTR:
-         m_nOpCode = OPCODE_SET;
+         m_opCode = OPCODE_SET;
          break;
       case OPCODE_INC_VARPTR:
-         m_nOpCode = OPCODE_INC;
+         m_opCode = OPCODE_INC;
          break;
       case OPCODE_DEC_VARPTR:
-         m_nOpCode = OPCODE_DEC;
+         m_opCode = OPCODE_DEC;
          break;
       case OPCODE_INCP_VARPTR:
-         m_nOpCode = OPCODE_INCP;
+         m_opCode = OPCODE_INCP;
          break;
       case OPCODE_DECP_VARPTR:
-         m_nOpCode = OPCODE_DECP;
+         m_opCode = OPCODE_DECP;
          break;
       default:
          break;
