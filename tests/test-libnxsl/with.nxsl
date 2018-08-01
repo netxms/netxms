@@ -1,0 +1,33 @@
+/* Test "with" statement */
+
+a = 1;
+b = 2;
+
+for(i = 0; i < 5; i++)
+{
+	with
+		x = { 10 },
+		y = { 
+			if (i > 0)
+				return -1;
+			else
+				return a + b;
+		},
+		z = { i * 10 }
+	r = x + y + z;
+	assert(r == (i * 10) + ((i > 0) ? -1 : a + b) + 10);
+	assert(x == null);
+	assert(y == null);
+	assert(z == null);
+}
+
+// check short-circuit evaluation
+counter = 0;
+with
+	_unused = { counter++; return 1; },
+	_used = { return -1; }
+	r = _used * 10;
+assert(r == -10);
+assert(counter == 0);
+
+return 0;

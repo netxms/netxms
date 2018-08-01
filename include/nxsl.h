@@ -76,6 +76,7 @@
 #define NXSL_ERR_NO_SELECTOR              36
 #define NXSL_ERR_NO_OBJECT_CONSTRUCTOR    37
 #define NXSL_ERR_INVALID_OC_ARG_COUNT     38
+#define NXSL_ERR_ASSERTION_FAILED         39
 
 /**
  * Special return codes for external functions

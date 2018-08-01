@@ -1,0 +1,24 @@
+/* Test global variables */
+
+global x;
+
+x = 1;
+y = 2;
+
+test();
+
+assert(x == 10);
+assert(y == 2);
+
+global z = 123;
+assert(z == 123);
+
+sub test()
+{
+	assert(x == 1);
+	assert(y == null);
+	x = 10;
+	y = 20;
+}
+
+return 0;

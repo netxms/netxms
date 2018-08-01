@@ -1,0 +1,74 @@
+/* Test string operations */
+
+s1 = "Hello";
+s2 = "world";
+
+s3 = s1 . s2;
+assert(s3 == "Helloworld");
+
+s3 = s1 . ", " . s2;
+assert(s3 == "Hello, world");
+
+assert(upper(s1) == "HELLO");
+assert(lower(s1) == "hello");
+assert(length(s3) == 12);
+
+assert(substr(s3, 2) == "ello, world");
+assert(substr(s3, 2, 2) == "el");
+assert(substr(s3, null, 5) == "Hello");
+
+assert(chr(0x20) == " ");
+assert(ord(" ") == 0x20);
+
+assert(left(s1, 3) == "Hel");
+assert(left(s1, 10) == "Hello     ");
+assert(left(s1, 10, ".") == "Hello.....");
+
+assert(right(s1, 3) == "llo");
+assert(right(s1, 10) == "     Hello");
+assert(right(s1, 10, ".") == ".....Hello");
+
+assert(trim(s1) == "Hello");
+assert(rtrim(s1) == "Hello");
+assert(ltrim(s1) == "Hello");
+assert(trim("    Hello     world    ") == "Hello     world");
+assert(rtrim("    Hello     world    ") == "    Hello     world");
+assert(ltrim("    Hello     world    ") == "Hello     world    ");
+
+assert(index(s3, "error") == 0);
+assert(index(s3, "world") == 8);
+assert(index(s3, "world", 5) == 8);
+assert(index(s3, "world", 9) == 0);
+assert(index("alpha beta gamma beta gamma", "beta") == 7);
+
+assert(rindex(s3, "error") == 0);
+assert(rindex(s3, "world") == 8);
+assert(rindex(s3, "world", 5) == 0);
+assert(rindex(s3, "world", 9) == 8);
+assert(rindex("alpha beta gamma beta gamma", "beta") == 18);
+
+n = 3.1415;
+assert(format(n, 1) == "3");
+assert(format(n, 1, 2) == "3.14");
+assert(format(n, 8) == "       3");
+assert(format(n, 8, 3) == "   3.142");
+
+list1 = "alpha,beta,gamma";
+list2 = "ab|cd|ef";
+assert(inList(list1, ",", "beta"));
+assert(inList(list1, ",", "gamma"));
+assert(!inList(list1, ",", "omega"));
+assert(inList(list2, "|", "ab"));
+assert(!inList(list2, ",", "ab"));
+
+a = %("dog", "cat", "fox");
+assert(ArrayToString(a, ", ") == "dog, cat, fox");
+
+z = SplitString("alpha|beta|gamma", "|");
+assert(typeof(z) == "array");
+assert(z->size == 3);
+assert(z[0] == "alpha");
+assert(z[1] == "beta");
+assert(z[2] == "gamma");
+
+return 0;

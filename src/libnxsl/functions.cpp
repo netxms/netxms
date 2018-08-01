@@ -52,6 +52,21 @@ int F_classof(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 }
 
 /**
+ * NXSL function: assert
+ */
+int F_assert(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   if (!argv[0]->isInteger())
+      return NXSL_ERR_NOT_INTEGER;
+
+   if (!argv[0]->getValueAsInt32())
+      return NXSL_ERR_ASSERTION_FAILED;
+
+   *result = vm->createValue();
+   return 0;
+}
+
+/**
  * NXSL function: Absolute value
  */
 int F_abs(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
