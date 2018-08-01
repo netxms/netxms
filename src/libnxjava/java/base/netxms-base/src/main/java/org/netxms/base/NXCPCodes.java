@@ -71,7 +71,7 @@ public class NXCPCodes
 	public static final int CMD_MODIFY_NODE_DCI = 0x002D;
 	public static final int CMD_UNLOCK_NODE_DCI_LIST = 0x002E;
 	public static final int CMD_SET_OBJECT_MGMT_STATUS = 0x002F;
-	public static final int CMD_CREATE_NEW_DCI = 0x0030;
+//	public static final int CMD_CREATE_NEW_DCI = 0x0030;
 	public static final int CMD_GET_DCI_DATA = 0x0031;
 	public static final int CMD_DCI_DATA = 0x0032;
 	public static final int CMD_GET_MIB_TIMESTAMP = 0x0033;

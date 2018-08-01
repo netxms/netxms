@@ -156,7 +156,7 @@ void Template::createExportRecord(String &str)
 /**
  * Unlock data collection items list
  */
-bool Template::unlockDCIList(int sessionId)
+void Template::applyDCIChanges()
 {
    if (m_dciListModified)
    {
@@ -164,7 +164,7 @@ bool Template::unlockDCIList(int sessionId)
          updateVersion();
       setModified(MODIFY_OTHER);
    }
-   return DataCollectionOwner::unlockDCIList(sessionId);
+   DataCollectionOwner::applyDCIChanges();
 }
 
 /**

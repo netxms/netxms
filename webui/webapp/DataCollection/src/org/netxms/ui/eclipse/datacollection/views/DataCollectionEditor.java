@@ -56,7 +56,10 @@ import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
+import org.netxms.client.SessionListener;
+import org.netxms.client.SessionNotification;
 import org.netxms.client.constants.RCC;
+import org.netxms.client.datacollection.DCOStatusHolder;
 import org.netxms.client.datacollection.DataCollectionConfiguration;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.DataCollectionObject;
@@ -132,6 +135,7 @@ public class DataCollectionEditor extends ViewPart
 	private Action actionExportToCsv;
 	private Action actionExportAllToCsv;
 	private boolean hideModificationWarnings;
+	private SessionListener listener;
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
@@ -146,6 +150,53 @@ public class DataCollectionEditor extends ViewPart
 		settings = Activator.getDefault().getDialogSettings();
 		object = ((obj != null) && ((obj instanceof DataCollectionTarget) || (obj instanceof Template))) ? obj : null;
 		setPartName(Messages.get().DataCollectionEditor_PartNamePrefix + ((object != null) ? object.getObjectName() : Messages.get().DataCollectionEditor_Error));
+
+       listener = new SessionListener() {
+            @Override
+            public void notificationHandler(SessionNotification n)
+            {
+               if(n.getSubCode() != object.getObjectId())
+                  return;
+               
+               if (n.getCode() == SessionNotification.DCI_UPDATE)
+               {
+                  final DataCollectionObject dco = (DataCollectionObject)n.getObject();
+                  dciConfig.updateItemFromList(dco);
+                  getSite().getShell().getDisplay().asyncExec(new Runnable() {
+                     @Override
+                     public void run()
+                     {
+                        viewer.setInput(dciConfig.getItems());
+                     }
+                  });
+               }
+               else if (n.getCode() == SessionNotification.DCI_DELETE)
+               {
+                  final long id = (Long)n.getObject();
+                  dciConfig.removeItemFromList(id);
+                  getSite().getShell().getDisplay().asyncExec(new Runnable() {
+                     @Override
+                     public void run()
+                     {
+                        viewer.setInput(dciConfig.getItems());
+                     }
+                  }); 
+               }
+               else if (n.getCode() == SessionNotification.DCI_STATE_CHANGE)
+               {
+                  DCOStatusHolder stHolder = (DCOStatusHolder)n.getObject();
+                  dciConfig.updateItemStatusFromList(stHolder.getDciIdArray(), stHolder.getStatus());
+                  getSite().getShell().getDisplay().asyncExec(new Runnable() {
+                     @Override
+                     public void run()
+                     {
+                        viewer.setInput(dciConfig.getItems());
+                     }
+                  }); 
+               }
+            }
+         };
+         session.addListener(listener);
 	}
 
 	/**
@@ -562,6 +613,7 @@ public class DataCollectionEditor extends ViewPart
 	@Override
 	public void dispose()
 	{
+	   session.removeListener(listener);
 		if (dciConfig != null)
 		{
 			new ConsoleJob(Messages.get().DataCollectionEditor_UnlockJob_Title + object.getObjectName(), null, Activator.PLUGIN_ID, null) {

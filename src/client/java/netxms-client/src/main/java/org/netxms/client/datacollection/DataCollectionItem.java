@@ -75,7 +75,7 @@ public class DataCollectionItem extends DataCollectionObject
 	 * @param owner Owning configuration object
 	 * @param msg NXCP message
 	 */
-	protected DataCollectionItem(final DataCollectionConfiguration owner, final NXCPMessage msg)
+	public DataCollectionItem(final DataCollectionConfiguration owner, final NXCPMessage msg)
 	{
 		super(owner, msg);
 		

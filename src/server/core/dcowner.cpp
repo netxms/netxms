@@ -28,7 +28,6 @@
 DataCollectionOwner::DataCollectionOwner() : NetObj()
 {
 	m_dcObjects = new ObjectArray<DCObject>(8, 16, true);
-   m_dciLockStatus = -1;
    m_status = STATUS_NORMAL;
    m_dciAccessLock = RWLockCreate();
    m_dciListModified = false;
@@ -41,7 +40,6 @@ DataCollectionOwner::DataCollectionOwner(const TCHAR *pszName) : NetObj()
 {
    nx_strncpy(m_name, pszName, MAX_OBJECT_NAME);
 	m_dcObjects = new ObjectArray<DCObject>(8, 16, true);
-   m_dciLockStatus = -1;
    m_status = STATUS_NORMAL;
    m_isHidden = true;
    m_dciAccessLock = RWLockCreate();
@@ -54,7 +52,6 @@ DataCollectionOwner::DataCollectionOwner(const TCHAR *pszName) : NetObj()
 DataCollectionOwner::DataCollectionOwner(ConfigEntry *config)
 {
    m_isHidden = true;
-   m_dciLockStatus = -1;
    m_status = STATUS_NORMAL;
    m_dciAccessLock = RWLockCreate();
    m_dciListModified = false;
@@ -367,7 +364,7 @@ void DataCollectionOwner::loadItemsFromDB(DB_HANDLE hdb)
 /**
  * Add data collection object to node
  */
-bool DataCollectionOwner::addDCObject(DCObject *object, bool alreadyLocked)
+bool DataCollectionOwner::addDCObject(DCObject *object, bool alreadyLocked, bool notify)
 {
    int i;
    bool success = false;
@@ -396,6 +393,8 @@ bool DataCollectionOwner::addDCObject(DCObject *object, bool alreadyLocked)
 		lockProperties();
       setModified(MODIFY_DATA_COLLECTION);
 		unlockProperties();
+		if(notify)
+		   NotifyClientDCIUpdate(this, object);
 	}
    return success;
 }
@@ -431,6 +430,7 @@ bool DataCollectionOwner::deleteDCObject(UINT32 dcObjectId, bool needLock, UINT3
             nxlog_debug_tag(_T("obj.dc"), 7, _T("DataCollectionOwner::DeleteDCObject: deleting DCObject [%u] from object %s [%u]"), dcObjectId, m_name, m_id);
             destroyItem(object, i);
             success = true;
+            NotifyClientDCIDelete(this, dcObjectId);
             nxlog_debug_tag(_T("obj.dc"), 7, _T("DataCollectionOwner::DeleteDCObject: DCObject deleted from object %s [%u]"), m_name, m_id);
          }
          else
@@ -588,56 +588,23 @@ bool DataCollectionOwner::setItemStatus(UINT32 dwNumItems, UINT32 *pdwItemList, 
 }
 
 /**
- * Lock data collection items list
- */
-bool DataCollectionOwner::lockDCIList(int sessionId, const TCHAR *pszNewOwner, TCHAR *pszCurrOwner)
-{
-   bool success;
-
-   lockProperties();
-   if (m_dciLockStatus == -1)
-   {
-      m_dciLockStatus = sessionId;
-      m_dciListModified = false;
-      nx_strncpy(m_szCurrDCIOwner, pszNewOwner, MAX_SESSION_NAME);
-      success = true;
-   }
-   else
-   {
-      if (pszCurrOwner != NULL)
-         _tcscpy(pszCurrOwner, m_szCurrDCIOwner);
-      success = false;
-   }
-   unlockProperties();
-   return success;
-}
-
-/**
  * Unlock data collection items list
  */
-bool DataCollectionOwner::unlockDCIList(int sessionId)
+void DataCollectionOwner::applyDCIChanges()
 {
-   bool success = false;
    bool callChangeHook = false;
 
    lockProperties();
-   if (m_dciLockStatus == sessionId)
+   if (m_dciListModified)
    {
-      m_dciLockStatus = -1;
-      if (m_dciListModified)
-      {
-         setModified(MODIFY_DATA_COLLECTION);
-         callChangeHook = true;
-      }
-      m_dciListModified = false;
-      success = true;
+      setModified(MODIFY_DATA_COLLECTION);
+      callChangeHook = true;
    }
+   m_dciListModified = false;
    unlockProperties();
 
    if (callChangeHook)
       onDataCollectionChange();
-
-   return success;
 }
 
 /**

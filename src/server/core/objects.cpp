@@ -93,25 +93,14 @@ static THREAD_RESULT THREAD_CALL ApplyTemplateThread(void *pArg)
             switch(pInfo->updateType)
             {
                case APPLY_TEMPLATE:
-                  lock1 = pInfo->pTemplate->lockDCIList(0x7FFFFFFF, _T("SYSTEM"), NULL);
-                  lock2 = ((DataCollectionTarget *)dcTarget)->lockDCIList(0x7FFFFFFF, _T("SYSTEM"), NULL);
-                  if (lock1 && lock2)
-                  {
-                     pInfo->pTemplate->applyToTarget((DataCollectionTarget *)dcTarget);
-                     bSuccess = TRUE;
-                  }
-                  if (lock1)
-                     pInfo->pTemplate->unlockDCIList(0x7FFFFFFF);
-                  if (lock2)
-                     ((DataCollectionTarget *)dcTarget)->unlockDCIList(0x7FFFFFFF);
+                  pInfo->pTemplate->applyToTarget((DataCollectionTarget *)dcTarget);
+                  ((DataCollectionTarget *)dcTarget)->applyDCIChanges();
+                  bSuccess = TRUE;
                   break;
                case REMOVE_TEMPLATE:
-                  if (((DataCollectionTarget *)dcTarget)->lockDCIList(0x7FFFFFFF, _T("SYSTEM"), NULL))
-                  {
-                     ((DataCollectionTarget *)dcTarget)->unbindFromTemplate(pInfo->pTemplate->getId(), pInfo->removeDCI);
-                     ((DataCollectionTarget *)dcTarget)->unlockDCIList(0x7FFFFFFF);
-                     bSuccess = TRUE;
-                  }
+                  ((DataCollectionTarget *)dcTarget)->unbindFromTemplate(pInfo->pTemplate->getId(), pInfo->removeDCI);
+                  ((DataCollectionTarget *)dcTarget)->applyDCIChanges();
+                  bSuccess = TRUE;
                   break;
                default:
                   bSuccess = TRUE;

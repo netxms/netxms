@@ -78,8 +78,11 @@ import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.constants.RCC;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.ConditionDciInfo;
+import org.netxms.client.datacollection.DCOStatusHolder;
 import org.netxms.client.datacollection.DataCollectionConfiguration;
+import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.DataCollectionObject;
+import org.netxms.client.datacollection.DataCollectionTable;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.DciDataRow;
 import org.netxms.client.datacollection.DciPushData;
@@ -569,6 +572,37 @@ public class NXCSession
                      break;
                   case NXCPCodes.CMD_CLOSE_TCP_PROXY:
                      processTcpProxyClosure(msg.getFieldAsInt32(NXCPCodes.VID_CHANNEL_ID));
+                     break;
+                  case NXCPCodes.CMD_MODIFY_NODE_DCI:
+                     DataCollectionObject dco;
+                     int type = msg.getFieldAsInt32(NXCPCodes.VID_DCOBJECT_TYPE);
+                     switch(type)
+                     {
+                        case DataCollectionObject.DCO_TYPE_ITEM:
+                           dco = new DataCollectionItem(null, msg);
+                           break;
+                        case DataCollectionObject.DCO_TYPE_TABLE:
+                           dco = new DataCollectionTable(null, msg);
+                           break;
+                        default:
+                           dco = null;
+                           break;
+                     }
+                     sendNotification(new SessionNotification(SessionNotification.DCI_UPDATE, msg.getFieldAsInt64(NXCPCodes.VID_OBJECT_ID), dco));
+                     break;
+                  case NXCPCodes.CMD_DELETE_NODE_DCI:
+                     sendNotification(new SessionNotification(SessionNotification.DCI_DELETE, msg.getFieldAsInt64(NXCPCodes.VID_OBJECT_ID), (Long)msg.getFieldAsInt64(NXCPCodes.VID_DCI_ID)));
+                     break;
+                  case NXCPCodes.CMD_SET_DCI_STATUS:
+                     int itemCount = msg.getFieldAsInt32(NXCPCodes.VID_NUM_ITEMS);
+                     final long[] itemList = new long[itemCount];
+                     int pos = 0;
+                     for(int i= 0; i < itemCount; i++)
+                     {
+                        itemList[pos++] = msg.getFieldAsInt32(NXCPCodes.VID_ITEM_LIST+i);
+                     }
+                     sendNotification(new SessionNotification(SessionNotification.DCI_STATE_CHANGE, msg.getFieldAsInt64(NXCPCodes.VID_OBJECT_ID), 
+                                      new DCOStatusHolder(itemList, msg.getFieldAsInt32(NXCPCodes.VID_DCI_STATUS))));
                      break;
                   default:
                      // Check subscriptions

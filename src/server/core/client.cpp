@@ -281,6 +281,61 @@ void NXCORE_EXPORTABLE NotifyClientGraphUpdate(NXCPMessage *update, UINT32 graph
 }
 
 /**
+ * Send graph update to all active sessions
+ */
+void NXCORE_EXPORTABLE NotifyClientDCIUpdate(DataCollectionOwner *object, DCObject *dco)
+{
+   NXCPMessage msg;
+   msg.setCode(CMD_MODIFY_NODE_DCI);
+   msg.setField(VID_OBJECT_ID, object->getId());
+   dco->createMessage(&msg);
+   NotifyClientDCIUpdate(&msg, object);
+}
+
+/**
+ * Send graph update to all active sessions
+ */
+void NXCORE_EXPORTABLE NotifyClientDCIDelete(DataCollectionOwner *object, UINT32 dcoId)
+{
+   NXCPMessage msg;
+   msg.setCode(CMD_DELETE_NODE_DCI);
+   msg.setField(VID_OBJECT_ID, object->getId());
+   msg.setField(VID_DCI_ID, dcoId);
+   NotifyClientDCIUpdate(&msg, object);
+}
+
+/**
+ * Send graph update to all active sessions
+ */
+void NXCORE_EXPORTABLE NotifyClientDCIStatusChange(DataCollectionOwner *object, UINT32 dcoId, int status)
+{
+   NXCPMessage msg;
+   msg.setCode(CMD_SET_DCI_STATUS);
+   msg.setField(VID_OBJECT_ID, object->getId());
+   msg.setField(VID_DCI_STATUS, status);
+   msg.setField(VID_NUM_ITEMS, 1);
+   msg.setField(VID_ITEM_LIST, dcoId);
+   NotifyClientDCIUpdate(&msg, object);
+}
+
+
+/**
+ * Send graph update to all active sessions
+ */
+void NXCORE_EXPORTABLE NotifyClientDCIUpdate(NXCPMessage *update, NetObj *object)
+{
+   RWLockReadLock(s_sessionListLock, INFINITE);
+   for(int i = 0; i < MAX_CLIENT_SESSIONS; i++)
+      if ((s_sessionList[i] != NULL) &&
+          s_sessionList[i]->isAuthenticated() &&
+          !s_sessionList[i]->isTerminated() &&
+          object->checkAccessRights(s_sessionList[i]->getUserId(), OBJECT_ACCESS_MODIFY) &&
+          s_sessionList[i]->isDCOpened(object->getId()))
+         s_sessionList[i]->postMessage(update);
+   RWLockUnlock(s_sessionListLock);
+}
+
+/**
  * Send notification to all active user sessions
  */
 void NXCORE_EXPORTABLE NotifyClientSessions(UINT32 dwCode, UINT32 dwData)

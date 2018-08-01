@@ -750,4 +750,9 @@ public abstract class DataCollectionObject
    {
       this.instanceRetentionTime = instanceRetentionTime;
    }
+
+   public void setOwner(DataCollectionConfiguration dataCollectionConfiguration)
+   {
+      owner = dataCollectionConfiguration;      
+   }
 }

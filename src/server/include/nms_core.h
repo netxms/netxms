@@ -474,6 +474,7 @@ private:
    TCHAR m_clientInfo[96];  // Client app info string
    TCHAR m_language[8];       // Client's desired language
    time_t m_loginTime;
+   MUTEX m_openDCIListLock;
    UINT32 m_dwOpenDCIListSize; // Number of open DCI lists
    UINT32 *m_pOpenDCIList;     // List of nodes with DCI lists open
    UINT32 m_dwNumRecordsToUpload; // Number of records to be uploaded
@@ -841,6 +842,7 @@ public:
 	int getClientType() const { return m_clientType; }
    time_t getLoginTime() const { return m_loginTime; }
    bool isSubscribedTo(const TCHAR *channel) const;
+   bool isDCOpened(UINT32 dcId) const;
 
 	bool checkSysAccessRights(UINT64 requiredAccess) const
    {
@@ -1093,6 +1095,10 @@ void NXCORE_EXPORTABLE EnumerateClientSessions(void (*pHandler)(ClientSession *,
 void NXCORE_EXPORTABLE NotifyClientSessions(UINT32 dwCode, UINT32 dwData);
 void NXCORE_EXPORTABLE NotifyClientSession(UINT32 sessionId, UINT32 dwCode, UINT32 dwData);
 void NXCORE_EXPORTABLE NotifyClientGraphUpdate(NXCPMessage *update, UINT32 graphId);
+void NXCORE_EXPORTABLE NotifyClientDCIUpdate(DataCollectionOwner *object, DCObject *dco);
+void NXCORE_EXPORTABLE NotifyClientDCIDelete(DataCollectionOwner *object, UINT32 dcoId);
+void NXCORE_EXPORTABLE NotifyClientDCIStatusChange(DataCollectionOwner *object, UINT32 dcoId, int status);
+void NXCORE_EXPORTABLE NotifyClientDCIUpdate(NXCPMessage *update, NetObj *object);
 int GetSessionCount(bool includeSystemAccount);
 bool IsLoggedIn(UINT32 dwUserId);
 bool NXCORE_EXPORTABLE KillClientSession(int id);

@@ -965,7 +965,6 @@ class NXCORE_EXPORTABLE DataCollectionOwner : public NetObj
 {
 protected:
 	ObjectArray<DCObject> *m_dcObjects;
-   int m_dciLockStatus;
    bool m_dciListModified;
    TCHAR m_szCurrDCIOwner[MAX_SESSION_NAME];
 	RWLOCK m_dciAccessLock;
@@ -998,7 +997,7 @@ public:
    virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 
    int getItemCount() { return m_dcObjects->size(); }
-   bool addDCObject(DCObject *object, bool alreadyLocked = false);
+   bool addDCObject(DCObject *object, bool alreadyLocked = false, bool notify = true);
    bool updateDCObject(UINT32 dwItemId, NXCPMessage *pMsg, UINT32 *pdwNumMaps, UINT32 **ppdwMapIndex, UINT32 **ppdwMapId, UINT32 userId);
    bool deleteDCObject(UINT32 dcObjectId, bool needLock, UINT32 userId);
    bool setItemStatus(UINT32 dwNumItems, UINT32 *pdwItemList, int iStatus);
@@ -1008,11 +1007,9 @@ public:
    DCObject *getDCObjectByName(const TCHAR *name, UINT32 userId);
    DCObject *getDCObjectByDescription(const TCHAR *description, UINT32 userId);
    NXSL_Value *getAllDCObjectsForNXSL(NXSL_VM *vm, const TCHAR *name, const TCHAR *description, UINT32 userId);
-   bool lockDCIList(int sessionId, const TCHAR *pszNewOwner, TCHAR *pszCurrOwner);
-   virtual bool unlockDCIList(int sessionId);
+   virtual void applyDCIChanges();
    void setDCIModificationFlag() { m_dciListModified = true; }
    void sendItemsToClient(ClientSession *pSession, UINT32 dwRqId);
-   bool isLockedBySession(int sessionId) { return m_dciLockStatus == sessionId; }
    IntegerArray<UINT32> *getDCIEventsList();
    StringSet *getDCIScriptList();
    BOOL applyToTarget(DataCollectionTarget *pNode);
@@ -1053,7 +1050,7 @@ public:
    virtual bool saveToDatabase(DB_HANDLE hdb);
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
    virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
-   virtual bool unlockDCIList(int sessionId);
+   virtual void applyDCIChanges();
 
    virtual void updateFromImport(ConfigEntry *config);
    virtual json_t *toJson();

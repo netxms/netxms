@@ -124,6 +124,42 @@ public class DataCollectionConfiguration
 	{
 		return items.get(id);
 	}
+   
+   /**
+    * Remove data collection item from the list by ID from notification
+    *  
+    * @param id DCI ID
+    */
+   public void removeItemFromList(long id)
+   {
+      items.remove(id);
+   }
+   
+   /**
+    * Add or update data collection item from the list by ID from notification
+    *  
+    * @param id DCI ID
+    */
+   public void updateItemFromList(DataCollectionObject dco)
+   {
+      dco.setOwner(this);
+      items.put(dco.getId(), dco);
+   }
+   
+   /**
+    * Update data collection item status from the list by ID from notification
+    *  
+    * @param id DCI ID
+    */
+   public void updateItemStatusFromList(long[] idArr, int status)
+   {
+      for(int i=0; i < idArr.length; i++)
+      {
+         DataCollectionObject o = items.get(idArr[i]);
+         if (o != null)
+            o.setStatus(status);
+      }
+   }
 	
 	/**
 	 * Find data collection object by ID.
@@ -147,25 +183,11 @@ public class DataCollectionConfiguration
 	 * @return Identifier assigned to created item
 	 * @throws IOException if socket I/O error occurs
 	 * @throws NXCException if NetXMS server returns an error or operation was timed out
-	 */
+    */
+	@Deprecated
 	public long createItem(DataCollectionObject object) throws IOException, NXCException
 	{
-		NXCPMessage msg = session.newMessage(NXCPCodes.CMD_CREATE_NEW_DCI);
-		msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
-		msg.setFieldInt16(NXCPCodes.VID_DCOBJECT_TYPE, DataCollectionObject.DCO_TYPE_ITEM);
-		session.sendMessage(msg);
-		final NXCPMessage response = session.waitForRCC(msg.getMessageId());
-		long id = response.getFieldAsInt64(NXCPCodes.VID_DCI_ID);
-		if(object == null)
-		{
-		   items.put(id, new DataCollectionItem(this, id));
-		}
-		else
-		{		   
-	      object.setId(id);
-		   items.put(id, object);
-		}
-		return id;
+      return modifyObject(object);
 	}
 	
 	/**
@@ -175,25 +197,11 @@ public class DataCollectionConfiguration
 	 * @return Identifier assigned to created item
 	 * @throws IOException if socket I/O error occurs
 	 * @throws NXCException if NetXMS server returns an error or operation was timed out
-	 */
+    */
+	@Deprecated
 	public long createTable(DataCollectionObject object) throws IOException, NXCException
 	{
-		NXCPMessage msg = session.newMessage(NXCPCodes.CMD_CREATE_NEW_DCI);
-		msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
-		msg.setFieldInt16(NXCPCodes.VID_DCOBJECT_TYPE, DataCollectionObject.DCO_TYPE_TABLE);
-		session.sendMessage(msg);
-		final NXCPMessage response = session.waitForRCC(msg.getMessageId());
-		long id = response.getFieldAsInt64(NXCPCodes.VID_DCI_ID);
-      if(object == null)
-      {
-         items.put(id, new DataCollectionTable(this, id));
-      }
-      else
-      {        
-         object.setId(id);
-         items.put(id, object);
-      }
-		return id;
+		return modifyObject(object);
 	}
 	
 	/**
@@ -218,13 +226,15 @@ public class DataCollectionConfiguration
 	 * @throws IOException if socket I/O error occurs
 	 * @throws NXCException if NetXMS server returns an error or operation was timed out
 	 */
-	public void modifyObject(DataCollectionObject dco) throws IOException, NXCException
+	public long modifyObject(DataCollectionObject dco) throws IOException, NXCException
 	{
 		NXCPMessage msg = session.newMessage(NXCPCodes.CMD_MODIFY_NODE_DCI);
 		msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
 		dco.fillMessage(msg);
 		session.sendMessage(msg);
-		session.waitForRCC(msg.getMessageId());
+		final NXCPMessage response = session.waitForRCC(msg.getMessageId());
+      long id = response.getFieldAsInt64(NXCPCodes.VID_DCI_ID);
+      return id;
 	}
 	
 	/**

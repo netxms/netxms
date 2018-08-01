@@ -284,7 +284,7 @@ typedef struct
 #define CMD_MODIFY_NODE_DCI               0x002D
 #define CMD_UNLOCK_NODE_DCI_LIST          0x002E
 #define CMD_SET_OBJECT_MGMT_STATUS        0x002F
-#define CMD_CREATE_NEW_DCI                0x0030
+//#define CMD_CREATE_NEW_DCI                0x0030
 #define CMD_GET_DCI_DATA                  0x0031
 #define CMD_DCI_DATA                      0x0032
 #define CMD_GET_MIB_TIMESTAMP             0x0033

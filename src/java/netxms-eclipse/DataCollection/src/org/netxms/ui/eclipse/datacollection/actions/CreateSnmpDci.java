@@ -163,7 +163,7 @@ public class CreateSnmpDci implements IObjectActionDelegate
 			dcc = new DataCollectionConfiguration(session, node.getObjectId());
 		}
 
-		final DataCollectionItem dci = (DataCollectionItem)dcc.findItem(dcc.createItem(null), DataCollectionItem.class);
+		final DataCollectionItem dci = new DataCollectionItem(dcc, 0);
 		dci.setPollingInterval(pollingInterval);
 		dci.setRetentionTime(retentionTime);
 		dci.setOrigin(DataCollectionItem.SNMP);

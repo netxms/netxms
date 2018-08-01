@@ -72,13 +72,6 @@ public class DataCollectionObjectEditor
 				final boolean isNewObj = object.isNewItem();
 				synchronized(DataCollectionObjectEditor.this)
 				{
-				   if (isNewObj)
-				   {
-				      if (object instanceof DataCollectionItem)
-				         object.getOwner().createItem(object);
-				      else if (object instanceof DataCollectionTable)
-				         object.getOwner().createTable(object);
-				   }
 					object.getOwner().modifyObject(object);
 				}
 				runInUIThread(new Runnable() {
