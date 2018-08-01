@@ -27,6 +27,7 @@
  * Externals
  */
 int F_abs(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
+int F_assert(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_ceil(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_chr(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_classof(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
@@ -106,6 +107,7 @@ static NXSL_ExtFunction s_builtinFunctions[] =
    { _T("__new@TIME"), F_TIME, 0 },
 	{ _T("_exit"), F_exit, -1 },
    { _T("abs"), F_abs, 1 },
+   { _T("assert"), F_assert, 1 },
    { _T("ceil"), F_ceil, 1 },
    { _T("chr"), F_chr, 1 },
    { _T("classof"), F_classof, 1 },

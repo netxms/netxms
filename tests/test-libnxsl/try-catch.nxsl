@@ -1,0 +1,75 @@
+/* Check try/catch statements */
+
+try
+{
+	r = x * y;	// should cause runtime error
+	assert(false);	// should not get there
+}
+catch
+{
+	assert($errorcode == 5);
+	assert($errorline == 5);
+	assert($errormsg == "Invalid operation with NULL value");
+	assert($errortext == "Error 5 in line 5: Invalid operation with NULL value");
+}
+
+// Embedded try/catch
+try
+{
+	_val = "checkpoint1";
+	try
+	{
+		r = x * y;	// should cause runtime error
+		assert(false);	// should not get there
+	}
+	catch
+	{
+		assert(_val == "checkpoint1");
+		_val = "checkpoint2";
+	}
+	assert(_val == "checkpoint2");
+	_val = "checkpoint3";
+}
+catch
+{
+	assert(false);
+}
+
+assert(_val == "checkpoint3");
+
+// try/catch and functions
+global marker = 1;
+try
+{
+	level1();
+	marker++;
+}
+catch
+{
+	assert(false);
+}
+assert(marker == 5);
+
+sub level1()
+{
+	try
+	{
+		level2();
+		assert(false);
+	}
+	catch
+	{
+		marker++;
+	}
+	marker++;
+}
+
+sub level2()
+{
+	marker++;
+	x = Y * z;
+	assert(false);
+}
+
+
+return 0;

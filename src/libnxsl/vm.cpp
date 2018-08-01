@@ -26,7 +26,7 @@
 /**
  * Constants
  */
-#define MAX_ERROR_NUMBER         38
+#define MAX_ERROR_NUMBER         39
 #define CONTROL_STACK_LIMIT      32768
 
 /**
@@ -76,7 +76,8 @@ static const TCHAR *s_runtimeErrorMessage[MAX_ERROR_NUMBER] =
    _T("Hash map key is not a string"),
    _T("Selector not found"),
    _T("Object constructor not found"),
-   _T("Invalid number of object constructor's arguments")
+   _T("Invalid number of object constructor's arguments"),
+   _T("Assertion failed")
 };
 
 /**

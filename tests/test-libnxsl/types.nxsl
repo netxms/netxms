@@ -1,0 +1,25 @@
+/* Check data types */
+
+i32 = 17;
+i64 = 5000000000;
+r = 0.25;
+s = "string";
+n = null;
+o = new TIME();
+a = %(1, 2, 3);
+
+assert(typeof(i32) == "int32");
+assert(typeof(i64) == "int64");
+assert(typeof(r) == "real");
+assert(typeof(s) == "string");
+assert(typeof(n) == "null");
+assert(typeof(o) == "object");
+assert(classof(o) == "TIME");
+assert(typeof(a) == "array");
+
+assert(typeof(i32 . s) == "string");
+assert(typeof(string(n)) == "string");
+assert(typeof(int64(i32)) == "int64");
+assert(typeof(r * i32) == "real");
+
+return 0;

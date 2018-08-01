@@ -250,6 +250,7 @@ target
 /tests/test-libnetxms/test-libnetxms
 /tests/test-libnxcc/test-libnxcc
 /tests/test-libnxdb/test-libnxdb
+/tests/test-libnxsl/test-libnxsl
 /tests/test-libnxsnmp/test-libnxsnmp
 /tools/inst.tar.gz
 /tools/fixprop

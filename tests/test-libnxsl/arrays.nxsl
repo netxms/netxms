@@ -1,0 +1,57 @@
+/* Check array functionality */
+
+array a1;
+a1[1] = "test";
+a1[2] = 42;
+a1[100] = 101;
+assert(a1->size == 3);
+assert(a1->minIndex == 1);
+assert(a1->maxIndex == 100);
+
+a2 = %(1, 2, 3, 4);
+assert(a2->size == 4);
+assert(a2->minIndex == 0);
+assert(a2->maxIndex == 3);
+
+a2->append(99);
+assert(a2->size == 5);
+assert(a2->maxIndex == 4);
+assert(a2[4] == 99);
+
+a2->insert(1, 500);
+assert(a2->size == 6);
+assert(a2->maxIndex == 5);
+assert(a2[0] == 1);
+assert(a2[1] == 500);
+assert(a2[2] == 2);
+
+x = a1->pop();
+assert(x == 101);
+assert(a1->size == 2);
+assert(a1->minIndex == 1);
+assert(a1->maxIndex == 2);
+
+a2->remove(0);
+assert(a2->size == 5);
+assert(a2->maxIndex == 4);
+assert(a2[0] == 500);
+assert(a2[1] == 2);
+
+a3 = a2;
+assert(a3->size == 5);
+assert(a3->maxIndex == 4);
+assert(a3[0] == 500);
+assert(a3[1] == 2);
+
+a2->pop();
+assert(a3->size == a2->size);
+
+a5 = %(1, 2, 3, 4, 5, 6, 7);
+i = 1;
+for(n : a5)
+{
+	assert(n == i);
+	i++;
+}
+
+return 0;

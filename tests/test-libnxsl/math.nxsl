@@ -1,0 +1,35 @@
+/* Math functions testing */
+x = -5;
+y = 22;
+assert(x + y == 17);
+assert(x - 1 == -6);
+assert(x * y == -110);
+assert(-y == -22);
+assert(y / 2 == 11);
+
+assert(pow(y, 2) == y * y);
+assert(pow(y, 4) == y * y * y * y);
+assert(pow(x, -1) == -0.2);
+
+assert(abs(x) == 5);
+assert(abs(y) == 22);
+
+assert(log(1) == 0);
+assert(ceil(log(100)) == 5);
+
+assert(log10(1) == 0);
+assert(log10(100) == 2);
+
+assert(round(0.2) == 0);
+assert(round(0.7) == 1);
+
+assert(floor(0.345) == 0);
+assert(floor(0.7) == 0);
+
+assert(ceil(0.0001) == 1);
+assert(ceil(0.75) == 1);
+
+assert(min(x, y, x * y, 1000, 254, -100000) == -100000);
+assert(max(x, y, x * y, 1000, 254, -100000) == 1000);
+
+return 0;
