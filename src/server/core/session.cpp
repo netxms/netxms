@@ -613,7 +613,7 @@ void ClientSession::readThread()
       object = FindObjectById(m_pOpenDCIList[i]);
       if (object != NULL)
          if (object->isDataCollectionTarget() || (object->getObjectClass() == OBJECT_TEMPLATE))
-            ((Template *)object)->unlockDCIList(m_id);
+            ((DataCollectionOwner *)object)->unlockDCIList(m_id);
    }
 
    // Waiting while reference count becomes 0
@@ -4033,7 +4033,7 @@ void ClientSession::sendDCIThresholds(NXCPMessage *request)
       {
 			if (object->isDataCollectionTarget())
 			{
-				DCObject *dci = ((Template *)object)->getDCObjectById(request->getFieldAsUInt32(VID_DCI_ID), m_dwUserId);
+				DCObject *dci = ((DataCollectionTarget *)object)->getDCObjectById(request->getFieldAsUInt32(VID_DCI_ID), m_dwUserId);
 				if ((dci != NULL) && (dci->getType() == DCO_TYPE_ITEM))
 				{
 					((DCItem *)dci)->fillMessageWithThresholds(&msg, false);
@@ -7217,7 +7217,7 @@ void ClientSession::applyTemplate(NXCPMessage *pRequest)
                   ObjectTransactionStart();
                   bErrors = ((Template *)pSource)->applyToTarget((DataCollectionTarget *)pDestination);
                   ObjectTransactionEnd();
-                  ((Template *)pDestination)->unlockDCIList(m_id);
+                  ((DataCollectionOwner *)pDestination)->unlockDCIList(m_id);
                   msg.setField(VID_RCC, bErrors ? RCC_DCI_COPY_ERRORS : RCC_SUCCESS);
                }
                else  // Destination's DCI list already locked by someone else
