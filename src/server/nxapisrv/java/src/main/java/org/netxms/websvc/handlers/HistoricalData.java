@@ -29,16 +29,12 @@ import org.netxms.client.datacollection.GraphSettings;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.DataCollectionTarget;
 import org.netxms.websvc.json.ResponseContainer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Objects request handler
  */
 public class HistoricalData extends AbstractObjectHandler
 {
-   private Logger log = LoggerFactory.getLogger(HistoricalData.class);
-
    /* (non-Javadoc)
     * @see org.netxms.websvc.handlers.AbstractHandler#get(java.lang.String)
     */
@@ -99,7 +95,6 @@ public class HistoricalData extends AbstractObjectHandler
       NXCSession session = getSession();
 
       String dciQuery = query.get("dciList");
-      log.debug(dciQuery);
       String[] requestPairs = dciQuery.split(";");
       if (requestPairs == null)
          throw new NXCException(RCC.INVALID_DCI_ID);
@@ -138,9 +133,7 @@ public class HistoricalData extends AbstractObjectHandler
                from = now.getTime() - parseLong(timeInterval, 0) * 3600000 * 24;
             else
                from = now.getTime() - parseLong(timeInterval, 0) * 60000;
-            log.debug("interval: " + Long.toString(parseLong(timeInterval, 0)) + " from: " + Long.toString(from) + " now: " + Long.toString(now.getTime()) + " minus: " + Long.toString(parseLong(timeInterval, 0) * 1000));
             collectedData = session.getCollectedData(parseInt(nodeId, 0), parseInt(dciId, 0), new Date(from), new Date(), 0, false);
-            log.debug(collectedData.toString());
          }
          else
          {
