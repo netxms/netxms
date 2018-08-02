@@ -19,10 +19,13 @@
 package org.netxms.websvc.handlers;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import org.netxms.base.Glob;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
@@ -47,7 +50,22 @@ public class Objects extends AbstractObjectHandler
       if (!session.isObjectsSynchronized())
          session.syncObjects();
       
-      List<AbstractObject> objects = session.getAllObjects();
+      List<AbstractObject> objects;
+      boolean getRootObjectsOnly = false;
+      
+      if (query.get("rootObjectsOnly") != null)
+         getRootObjectsOnly = Boolean.parseBoolean(query.get("rootObjectsOnly"));
+      
+      if (getRootObjectsOnly)
+      {
+         final Set<Integer> classFilter = new HashSet<Integer>(3);
+         classFilter.add(AbstractObject.OBJECT_NODE);
+         classFilter.add(AbstractObject.OBJECT_CLUSTER);
+         classFilter.add(AbstractObject.OBJECT_CONTAINER);
+         objects = new ArrayList<AbstractObject>(Arrays.asList(session.getTopLevelObjects(classFilter)));
+      }
+      else
+         objects = session.getAllObjects();
       
       String areaFilter = query.get("area");
       String classFilter = query.get("class");
@@ -147,7 +165,7 @@ public class Objects extends AbstractObjectHandler
          }
          objects = filteredObjects;
       }
-
+      
       return new ResponseContainer("objects", objects);
    }
 
