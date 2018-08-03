@@ -950,16 +950,27 @@ static int F_SetInterfaceExpectedState(int argc, NXSL_Value **argv, NXSL_Value *
 /**
  * Create new SNMP transport object
  * Syntax:
- *    CreateSNMPTransport(node)
+ *    CreateSNMPTransport(node, [port], [context])
  * where:
- *     node - node to create SNMP transport for
+ *     node    - node to create SNMP transport for
+ *     port    - SNMP port (optional)
+ *     context - SNMP context (optional)
  * Return value:
  *     new SNMP_Transport object
  */
 static int F_CreateSNMPTransport(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
+   if ((argc < 1) || (argc > 3))
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
 	if (!argv[0]->isObject())
 		return NXSL_ERR_NOT_OBJECT;
+
+	if ((argc > 1) && !argv[1]->isInteger())
+      return NXSL_ERR_NOT_INTEGER;
+
+   if ((argc > 2) && !argv[1]->isString())
+      return NXSL_ERR_NOT_STRING;
 
 	NXSL_Object *obj = argv[0]->getValueAsObject();
 	if (!obj->getClass()->instanceOf(g_nxslNodeClass.getName()))
@@ -968,7 +979,9 @@ static int F_CreateSNMPTransport(int argc, NXSL_Value **argv, NXSL_Value **ppRes
 	Node *node = (Node*)obj->getData();
 	if (node != NULL)
 	{
-		SNMP_Transport *t = node->createSnmpTransport();
+	   UINT16 port = (argc > 1) ? (UINT16)argv[1]->getValueAsInt32() : 0;
+	   const TCHAR *context = (argc > 2) ? argv[2]->getValueAsCString() : NULL;
+		SNMP_Transport *t = node->createSnmpTransport(port, context);
       *ppResult = (t != NULL) ? new NXSL_Value(new NXSL_Object(&g_nxslSnmpTransportClass, t)) : new NXSL_Value;
 	}
 	else
@@ -1536,7 +1549,7 @@ static NXSL_ExtFunction m_nxslServerFunctions[] =
 	{ _T("AgentReadList"), F_AgentReadList, 2 },
 	{ _T("AgentReadParameter"), F_AgentReadParameter, 2 },
 	{ _T("AgentReadTable"), F_AgentReadTable, 2 },
-	{ _T("CreateSNMPTransport"), F_CreateSNMPTransport, 1 },
+	{ _T("CreateSNMPTransport"), F_CreateSNMPTransport, -1 },
    { _T("CountryAlphaCode"), F_CountryAlphaCode, 1 },
    { _T("CountryName"), F_CountryName, 1 },
    { _T("CurrencyAlphaCode"), F_CurrencyAlphaCode, 1 },

@@ -6,6 +6,7 @@
 - Raw event data stored in event log
 - New hook scripts: PostObjectCreate and DiscoveryPoll
 - Implemented watchdog functionality for external subagents
+- SNMP port and context can be specified in NXSL function CreateSNMPTransport
 
 
 *
