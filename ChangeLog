@@ -25,6 +25,8 @@
 - New hook scripts: PostObjectCreate and DiscoveryPoll
 - Implemented watchdog functionality for external subagents
 - SNMP port and context can be specified in NXSL function CreateSNMPTransport
+- Fixed issues:
+	NX-1472 (Physical Hyper-V Hosts are reporting as Node Type "Virtual" in 2.2.7)
 
 
 *
