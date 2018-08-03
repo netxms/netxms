@@ -275,7 +275,35 @@ static LONG H_SystemIsVirtual(const TCHAR *param, const TCHAR *arg, TCHAR *value
 {
    int data[4];
    __cpuid(data, 0x01);
-   ret_int(value, (data[2] & 0x80000000) != 0 ? 1 : 0);
+   if ((data[2] & 0x80000000) != 0)
+   {
+      // Check if running on Hyper-V
+      __cpuid(data, 0x40000000);
+      if (!memcmp((char *)&data[1], "Microsoft Hv", 12))
+      {
+         // Hyper-V, check if this OS running in root patition
+         __cpuid(data, 0x40000003);
+         if (data[1] & 0x01)
+         {
+            // Root partition
+            ret_int(value, 0);
+         }
+         else
+         {
+            // Guest partition
+            ret_int(value, 1);
+         }
+      }
+      else
+      {
+         // Other virtualization product, assume guest OS
+         ret_int(value, 1);
+      }
+   }
+   else
+   {
+      ret_int(value, 0);
+   }
    return SYSINFO_RC_SUCCESS;
 }
 
