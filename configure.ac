@@ -132,7 +132,6 @@ DISABLE_COMMONCRYPTO="no"
 OPENSSL_LIBSSL="ssl"
 OPENSSL_LIBCRYPTO="crypto"
 SYSTEMD_SUPPORT="yes"
-SHLIB_LDFLAGS=""
 EXEC_LDFLAGS=""
 EXEC_LIBS=""
 DIST_BUILD="no"
@@ -3829,21 +3828,28 @@ if test "x$JEMALLOC_REQUIRED" = "xyes"; then
 		[
 			rootdir=`pwd`
 			if test "x$PLATFORM" = "xAIX"; then
-				EXEC_LDFLAGS="$EXEC_LDFLAGS -Wl,-bexport:$rootdir/jemalloc.sym"
-				SHLIB_LDFLAGS="$SHLIB_LDFLAGS -Wl,-bimport:$rootdir/jemalloc.sym"
+				EXEC_LDFLAGS=""
+				AC_CHECK_LIB(jemalloc, je_malloc,
+					[ 
+						LIBS="$LIBS -ljemalloc"
+						AC_DEFINE(WITH_JEMALLOC,1,Define to 1 if libjemalloc is used)
+					],
+					[
+						AC_MSG_ERROR(Cannot find usable libjemalloc)
+					])
 			else
-				EXEC_LDFLAGS="$EXEC_LDFLAGS -export-symbols $rootdir/jemalloc.sym"
+		 		AC_CHECK_LIB(rt, clock_gettime)
+				AC_CHECK_LIB(jemalloc_pic, malloc,
+					[ 
+						EXEC_LDFLAGS="$EXEC_LDFLAGS -export-symbols $rootdir/jemalloc.sym"
+						EXEC_LIBS="$EXEC_LIBS -ljemalloc_pic"
+						AC_DEFINE(WITH_JEMALLOC,1,Define to 1 if libjemalloc is used)
+					],
+					[
+						AC_MSG_ERROR(Cannot find usable libjemalloc)
+					])
 			fi
 
-		 	AC_CHECK_LIB(rt, clock_gettime)
-			AC_CHECK_LIB(jemalloc_pic, malloc,
-				[ 
-					EXEC_LIBS="$EXEC_LIBS -ljemalloc_pic"
-					AC_DEFINE(WITH_JEMALLOC,1,Define to 1 if libjemalloc is used)
-				],
-				[
-					AC_MSG_ERROR(Cannot find usable libjemalloc)
-				])
 		],
 		[
 			AC_MSG_ERROR(jemalloc.h not found)
@@ -3966,7 +3972,6 @@ AC_SUBST(PDSDRV_DIRS)
 AC_SUBST(TOP_LEVEL_MODULES)
 AC_SUBST(CONTRIB_MODULES)
 AC_SUBST(CLIENT_COMPONENTS)
-AC_SUBST(SHLIB_LDFLAGS)
 AC_SUBST(STATIC_SUBAGENT_LIST)
 AC_SUBST(SUBAGENT_LIBS)
 AC_SUBST(BUILD_SERVER)

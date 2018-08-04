@@ -29,7 +29,7 @@ if USE_INTERNAL_ZLIB
 libnetxms_la_CPPFLAGS += -I../zlib
 endif
 
-libnetxms_la_LDFLAGS = -release $(NETXMS_LIBRARY_VERSION) @SHLIB_LDFLAGS@
+libnetxms_la_LDFLAGS = -release $(NETXMS_LIBRARY_VERSION)
 
 libnetxms_la_LIBADD =
 if USE_INTERNAL_EXPAT
