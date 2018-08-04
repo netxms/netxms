@@ -54,8 +54,8 @@ SNMPTrapConfiguration::SNMPTrapConfiguration() : m_objectId(), m_mappings(8, 8, 
    m_guid = uuid::generate();
    m_id = CreateUniqueId(IDG_SNMP_TRAP);
    m_eventCode = EVENT_SNMP_UNMATCHED_TRAP;
-   nx_strncpy(m_description, _T(""), 1);
-   nx_strncpy(m_userTag, _T(""), 1);
+   _tcslcpy(m_description, _T(""), 1);
+   _tcslcpy(m_userTag, _T(""), 1);
 }
 
 /**
@@ -110,8 +110,8 @@ SNMPTrapConfiguration::SNMPTrapConfiguration(ConfigEntry *entry, const uuid& gui
    m_guid = guid;
    m_objectId = SNMP_ObjectId::parse(entry->getSubEntryValue(_T("oid"), 0, _T("")));
    m_eventCode = eventCode;
-   nx_strncpy(m_description, entry->getSubEntryValue(_T("description"), 0, _T("")), MAX_DB_STRING);
-   nx_strncpy(m_userTag, entry->getSubEntryValue(_T("userTag"), 0, _T("")), MAX_USERTAG_LENGTH);
+   _tcslcpy(m_description, entry->getSubEntryValue(_T("description"), 0, _T("")), MAX_DB_STRING);
+   _tcslcpy(m_userTag, entry->getSubEntryValue(_T("userTag"), 0, _T("")), MAX_USERTAG_LENGTH);
 
    ConfigEntry *parametersRoot = entry->findEntry(_T("parameters"));
    if (parametersRoot != NULL)
@@ -222,7 +222,7 @@ SNMPTrapParameterMapping::SNMPTrapParameterMapping()
    m_objectId = new SNMP_ObjectId();
    m_position = 0;
    m_flags = 0;
-   nx_strncpy(m_description, _T(""), 1);
+   _tcslcpy(m_description, _T(""), 1);
 }
 
 /**
@@ -265,7 +265,7 @@ SNMPTrapParameterMapping::SNMPTrapParameterMapping(ConfigEntry *entry)
       m_position = 0;
    }
 
-   nx_strncpy(m_description, entry->getSubEntryValue(_T("description"), 0, _T("")), MAX_DB_STRING);
+   _tcslcpy(m_description, entry->getSubEntryValue(_T("description"), 0, _T("")), MAX_DB_STRING);
    m_flags = entry->getSubEntryValueAsUInt(_T("flags"), 0, 0);
 }
 
@@ -376,13 +376,12 @@ void InitTraps()
  */
 static void GenerateTrapEvent(UINT32 dwObjectId, UINT32 dwIndex, SNMP_PDU *pdu, int sourcePort)
 {
-   TCHAR *argList[32], szBuffer[256];
-   TCHAR *names[33];
-   char szFormat[] = "sssssssssssssssssssssssssssssssss";
    SNMPTrapConfiguration *trapCfg = m_trapCfgList.get(dwIndex);
-   int iResult;
 
+   TCHAR *argList[32];
    memset(argList, 0, sizeof(argList));
+
+   TCHAR *names[33];
    memset(names, 0, sizeof(names));
    names[0] = (TCHAR *)_T("oid");
 
@@ -402,10 +401,11 @@ static void GenerateTrapEvent(UINT32 dwObjectId, UINT32 dwIndex, SNMP_PDU *pdu, 
          if (varbind != NULL)
          {
 				bool convertToHex = true;
+            TCHAR buffer[3072];
 				argList[i] = _tcsdup(
                (s_allowVarbindConversion && !(pm->getFlags() & TRAP_VARBIND_FORCE_TEXT)) ?
-                  varbind->getValueAsPrintableString(szBuffer, 256, &convertToHex) :
-                  varbind->getValueAsString(szBuffer, 256));
+                  varbind->getValueAsPrintableString(buffer, 3072, &convertToHex) :
+                  varbind->getValueAsString(buffer, 3072));
 				names[i + 1] = _tcsdup(varbind->getName().toString());
          }
       }
@@ -415,14 +415,15 @@ static void GenerateTrapEvent(UINT32 dwObjectId, UINT32 dwIndex, SNMP_PDU *pdu, 
          for(int j = 0; j < pdu->getNumVariables(); j++)
          {
             SNMP_Variable *varbind = pdu->getVariable(j);
-            iResult = varbind->getName().compare(*(pm->getOid()));
-            if ((iResult == OID_EQUAL) || (iResult == OID_LONGER))
+            int result = varbind->getName().compare(*(pm->getOid()));
+            if ((result == OID_EQUAL) || (result == OID_LONGER))
             {
 					bool convertToHex = true;
+					TCHAR buffer[3072];
 					argList[i] = _tcsdup(
                   (s_allowVarbindConversion && !(pm->getFlags() & TRAP_VARBIND_FORCE_TEXT)) ?
-                     varbind->getValueAsPrintableString(szBuffer, 256, &convertToHex) :
-                     varbind->getValueAsString(szBuffer, 256));
+                     varbind->getValueAsPrintableString(buffer, 3072, &convertToHex) :
+                     varbind->getValueAsString(buffer, 3072));
 	            names[i + 1] = _tcsdup(varbind->getName().toString());
                break;
             }
@@ -433,10 +434,11 @@ static void GenerateTrapEvent(UINT32 dwObjectId, UINT32 dwIndex, SNMP_PDU *pdu, 
    argList[numMaps] = (TCHAR *)malloc(16 * sizeof(TCHAR));
    _sntprintf(argList[numMaps], 16, _T("%d"), sourcePort);
    names[numMaps + 1] = (TCHAR *)_T("sourcePort");
-   szFormat[numMaps + 2] = 0;
+   char format[] = "sssssssssssssssssssssssssssssssss";
+   format[numMaps + 2] = 0;
    PostEventWithTagAndNames(
             trapCfg->getEventCode(), dwObjectId,
-            trapCfg->getUserTag(), szFormat, (const TCHAR **)names,
+            trapCfg->getUserTag(), format, (const TCHAR **)names,
             (const TCHAR *)pdu->getTrapId()->toString(),
             argList[0], argList[1], argList[2], argList[3],
             argList[4], argList[5], argList[6], argList[7],

@@ -27,6 +27,7 @@
 - SNMP port and context can be specified in NXSL function CreateSNMPTransport
 - Fixed issues:
 	NX-1472 (Physical Hyper-V Hosts are reporting as Node Type "Virtual" in 2.2.7)
+	NX-1480 (Varbinds in SNMP Traps restricted to 255 characters)
 
 
 *
