@@ -353,7 +353,7 @@ UINT32 LIBNETXMS_EXPORTABLE SetupEncryptionContext(NXCPMessage *msg,
                (*ppResponse)->setField(VID_IV_LENGTH, (WORD)ivLength);
 
                (*ppResponse)->setField(VID_CIPHER, (WORD)(*ppCtx)->getCipher());
-               RSA_free(pServerKey);
+               RSAFree(pServerKey);
                dwResult = RCC_SUCCESS;
             }
             else
