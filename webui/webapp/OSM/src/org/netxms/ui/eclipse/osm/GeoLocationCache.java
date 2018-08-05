@@ -299,7 +299,10 @@ public class GeoLocationCache implements SessionListener
    {
       GeoLocationCache instance = (GeoLocationCache)ConsoleSharedData.getProperty(display, "GeoLocationCache");
       if (instance == null)
+      {
          instance = new GeoLocationCache();
+         ConsoleSharedData.setProperty("GeoLocationCache", instance);
+      }
       return instance;
    }
 }
