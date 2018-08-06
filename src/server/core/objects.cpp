@@ -2428,7 +2428,7 @@ static int FilterObject(NXSL_VM *vm, NetObj *object, NXSL_VariableSystem **globa
    vm->setGlobalVariable(_T("$isCluster"), new NXSL_Value((object->getObjectClass() == OBJECT_CLUSTER) ? 1 : 0));
    vm->setContextObject(object->createNXSLObject());
    ObjectArray<NXSL_Value> args(0);
-   if (!vm->run(&args, NULL, globals))
+   if (!vm->run(&args, globals))
       return -1;
    return vm->getResult()->getValueAsBoolean() ? 1 : 0;
 }

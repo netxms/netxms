@@ -471,12 +471,6 @@ bool EPRule::matchScript(Event *pEvent)
       ppValueList[i] = new NXSL_Value(pEvent->getParameter(i));
 
    NXSL_VariableSystem *pLocals = new NXSL_VariableSystem;
-   pLocals->create(_T("EVENT_CODE"), new NXSL_Value(pEvent->getCode()));
-   pLocals->create(_T("SEVERITY"), new NXSL_Value(pEvent->getSeverity()));
-   pLocals->create(_T("SEVERITY_TEXT"), new NXSL_Value(GetStatusAsText(pEvent->getSeverity(), true)));
-   pLocals->create(_T("OBJECT_ID"), new NXSL_Value(pEvent->getSourceId()));
-   pLocals->create(_T("EVENT_TEXT"), new NXSL_Value((TCHAR *)pEvent->getMessage()));
-   pLocals->create(_T("USER_TAG"), new NXSL_Value((TCHAR *)pEvent->getUserTag()));
 	NetObj *pObject = FindObjectById(pEvent->getSourceId());
 	if (pObject != NULL)
 	{
@@ -486,10 +480,16 @@ bool EPRule::matchScript(Event *pEvent)
 	}
 	m_script->setGlobalVariable(_T("$event"), new NXSL_Value(new NXSL_Object(&g_nxslEventClass, pEvent)));
 	m_script->setGlobalVariable(_T("CUSTOM_MESSAGE"), new NXSL_Value);
+   m_script->setGlobalVariable(_T("EVENT_CODE"), new NXSL_Value(pEvent->getCode()));
+   m_script->setGlobalVariable(_T("SEVERITY"), new NXSL_Value(pEvent->getSeverity()));
+   m_script->setGlobalVariable(_T("SEVERITY_TEXT"), new NXSL_Value(GetStatusAsText(pEvent->getSeverity(), true)));
+   m_script->setGlobalVariable(_T("OBJECT_ID"), new NXSL_Value(pEvent->getSourceId()));
+   m_script->setGlobalVariable(_T("EVENT_TEXT"), new NXSL_Value((TCHAR *)pEvent->getMessage()));
+   m_script->setGlobalVariable(_T("USER_TAG"), new NXSL_Value((TCHAR *)pEvent->getUserTag()));
 
    // Run script
    NXSL_VariableSystem *globals = NULL;
-   if (m_script->run(pEvent->getParametersCount(), ppValueList, pLocals, &globals))
+   if (m_script->run(pEvent->getParametersCount(), ppValueList, &globals))
    {
       NXSL_Value *value = m_script->getResult();
       if (value != NULL)

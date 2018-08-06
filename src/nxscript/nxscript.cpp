@@ -218,7 +218,7 @@ int main(int argc, char *argv[])
 			         ppArgs = NULL;
 		         }
 
-               if (vm->run(argc - optind - 1, ppArgs, NULL, NULL, NULL, (entryPoint[0] != 0) ? entryPoint : NULL))
+               if (vm->run(argc - optind - 1, ppArgs, NULL, NULL, (entryPoint[0] != 0) ? entryPoint : NULL))
 		         {
 			         NXSL_Value *result = vm->getResult();
 			         if (printResult)

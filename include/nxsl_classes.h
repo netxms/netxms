@@ -858,12 +858,10 @@ public:
 	void setContextObject(NXSL_Value *value);
 
    bool load(NXSL_Program *program);
-   bool run(ObjectArray<NXSL_Value> *args, NXSL_VariableSystem *pUserLocals = NULL,
-            NXSL_VariableSystem **ppGlobals = NULL, NXSL_VariableSystem *pConstants = NULL,
-            const TCHAR *entryPoint = NULL);
-   bool run(int argc, NXSL_Value **argv, NXSL_VariableSystem *pUserLocals = NULL,
-            NXSL_VariableSystem **ppGlobals = NULL, NXSL_VariableSystem *pConstants = NULL,
-            const TCHAR *entryPoint = NULL);
+   bool run(ObjectArray<NXSL_Value> *args, NXSL_VariableSystem **ppGlobals = NULL,
+				NXSL_VariableSystem *pConstants = NULL, const TCHAR *entryPoint = NULL);
+   bool run(int argc, NXSL_Value **argv, NXSL_VariableSystem **ppGlobals = NULL,
+				NXSL_VariableSystem *pConstants = NULL, const TCHAR *entryPoint = NULL);
    bool run() { ObjectArray<NXSL_Value> args(1, 1, false); return run(&args); }
 
    UINT32 getCodeSize() { return m_instructionSet->size(); }
@@ -877,6 +875,24 @@ public:
 
 	void *getUserData() { return m_userData; }
 	void setUserData(void *data) { m_userData = data; }
+
+	// Compatibility methods for 3.0 backports
+   NXSL_Value *createValue() { return new NXSL_Value(); }
+   NXSL_Value *createValue(const NXSL_Value *src) { return new NXSL_Value(src); }
+   NXSL_Value *createValue(NXSL_Object *object) { return new NXSL_Value(object); }
+   NXSL_Value *createValue(NXSL_Array *array) { return new NXSL_Value(array); }
+   NXSL_Value *createValue(NXSL_Iterator *iterator) { return new NXSL_Value(iterator); }
+   NXSL_Value *createValue(NXSL_HashMap *hashMap) { return new NXSL_Value(hashMap); }
+   NXSL_Value *createValue(INT32 n) { return new NXSL_Value(n); }
+   NXSL_Value *createValue(UINT32 n) { return new NXSL_Value(n); }
+   NXSL_Value *createValue(INT64 n) { return new NXSL_Value(n); }
+   NXSL_Value *createValue(UINT64 n) { return new NXSL_Value(n); }
+   NXSL_Value *createValue(double d) { return new NXSL_Value(d); }
+   NXSL_Value *createValue(const TCHAR *s) { return new NXSL_Value(s); }
+   NXSL_Value *createValue(const TCHAR *s, UINT32 l) { return new NXSL_Value(s, l); }
+#ifdef UNICODE
+   NXSL_Value *createValue(const char *s) { return new NXSL_Value(s); }
+#endif
 };
 
 /**
