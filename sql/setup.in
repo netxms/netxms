@@ -85,6 +85,7 @@ INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_rest
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('EnableZoning','0','0',1,1,'B','Enable/disable zoning support','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('EscapeLocalCommands','0','0',1,0,'B','','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('EventLogRetentionTime','90','90',1,0,'I','','days');
+INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('Events.Correlation.TopologyBased','1','1',1,0,'B','Enable/disable topology based event correlation.','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('EventStormDuration','15','15',1,1,'I','','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('EventStormEventsPerSecond','100','100',1,1,'I','Event storm events per second','events/second');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('ExtendedLogQueryAccessControl','0','0',1,0,'B','Enable/disable extended access control in log queries.','');
