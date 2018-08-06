@@ -1195,7 +1195,7 @@ THREAD_RESULT THREAD_CALL TunnelListenerThread(void *arg)
 {
    ThreadSetName("TunnelListener");
    s_tunnelListenerLock.lock();
-   UINT16 listenPort = (UINT16)ConfigReadULong(_T("AgentTunnelListenPort"), 4703);
+   UINT16 listenPort = (UINT16)ConfigReadULong(_T("AgentTunnels.ListenPort"), 4703);
    TunnelListener listener(listenPort);
    listener.setListenAddress(g_szListenAddress);
    if (!listener.initialize())

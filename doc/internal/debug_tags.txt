@@ -16,6 +16,7 @@ db.query	SQL query trace
 db.writer	DB background writers
 
 event.*		Event related messages
+event.corr      Event correlation
 event.policy	Event processing policy
 event.proc	Event processor
 

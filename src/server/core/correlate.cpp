@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,6 +22,8 @@
 
 #include "nxcore.h"
 
+#define DEBUG_TAG _T("event.corr")
+
 /**
  * Static data
  */
@@ -36,7 +38,7 @@ static bool CheckNodeDown(Node *currNode, Event *pEvent, UINT32 nodeId, const TC
 	if ((node != NULL) && node->isDown())
 	{
 		pEvent->setRootId(node->getLastEventId(LAST_EVENT_NODE_DOWN));
-		DbgPrintf(5, _T("C_SysNodeDown: %s %s [%d] for current node %s [%d] is down"),
+		nxlog_debug_tag(DEBUG_TAG, 5, _T("C_SysNodeDown: %s %s [%d] for current node %s [%d] is down"),
 		          nodeType, node->getName(), node->getId(), currNode->getName(), currNode->getId());
 		return true;
 	}
@@ -52,7 +54,7 @@ static bool CheckAgentDown(Node *currNode, Event *pEvent, UINT32 nodeId, const T
 	if ((node != NULL) && node->isNativeAgent() && (node->getRuntimeFlags() & NDF_AGENT_UNREACHABLE))
 	{
 		pEvent->setRootId(node->getLastEventId(LAST_EVENT_AGENT_DOWN));
-		DbgPrintf(5, _T("C_SysNodeDown: agent on %s %s [%d] for current node %s [%d] is down"),
+		nxlog_debug_tag(DEBUG_TAG, 5, _T("C_SysNodeDown: agent on %s %s [%d] for current node %s [%d] is down"),
 		          nodeType, node->getName(), node->getId(), currNode->getName(), currNode->getId());
 		return true;
 	}
@@ -64,7 +66,13 @@ static bool CheckAgentDown(Node *currNode, Event *pEvent, UINT32 nodeId, const T
  */
 static void C_SysNodeDown(Node *pNode, Event *pEvent)
 {
-	// Check for NetXMS server netwok connectivity
+   if (!ConfigReadBoolean(_T("Events.Correlation.TopologyBased"), true))
+   {
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("C_SysNodeDown: topology based event correlation disabled"));
+      return;
+   }
+
+	// Check for NetXMS server network connectivity
 	if (g_flags & AF_NO_NETWORK_CONNECTIVITY)
 	{
 		pEvent->setRootId(m_networkLostEventId);
@@ -143,14 +151,14 @@ static void C_SysNodeDown(Node *pNode, Event *pEvent)
    Node *pMgmtNode = (Node *)FindObjectById(g_dwMgmtNode);
    if (pMgmtNode == NULL)
 	{
-		DbgPrintf(5, _T("C_SysNodeDown: cannot find management node"));
+		nxlog_debug_tag(DEBUG_TAG, 5, _T("C_SysNodeDown: cannot find management node"));
 		return;
 	}
 
 	NetworkPath *trace = TraceRoute(pMgmtNode, pNode);
 	if (trace == NULL)
 	{
-		DbgPrintf(5, _T("C_SysNodeDown: trace to node %s [%d] not available"), pNode->getName(), pNode->getId());
+		nxlog_debug_tag(DEBUG_TAG, 5, _T("C_SysNodeDown: trace to node %s [%d] not available"), pNode->getName(), pNode->getId());
 		return;
 	}
 
@@ -163,7 +171,7 @@ static void C_SysNodeDown(Node *pNode, Event *pEvent)
       if (((Node *)hop->object)->isDown())
       {
          pEvent->setRootId(((Node *)hop->object)->getLastEventId(LAST_EVENT_NODE_DOWN));
-			DbgPrintf(5, _T("C_SysNodeDown: upstream node %s [%d] for current node %s [%d] is down"),
+			nxlog_debug_tag(DEBUG_TAG, 5, _T("C_SysNodeDown: upstream node %s [%d] for current node %s [%d] is down"),
 			          hop->object->getName(), hop->object->getId(), pNode->getName(), pNode->getId());
 			break;
       }
@@ -203,20 +211,20 @@ void CorrelateEvent(Event *pEvent)
    if (node == NULL)
 		return;
 
-	DbgPrintf(6, _T("CorrelateEvent: event %s id ") UINT64_FMT _T(" source %s [%d]"),
+	nxlog_debug_tag(DEBUG_TAG, 6, _T("CorrelateEvent: event %s id ") UINT64_FMT _T(" source %s [%d]"),
 	          pEvent->getName(), pEvent->getId(), node->getName(), node->getId());
 
    UINT32 eventCode = pEvent->getCode();
    if (eventCode == EVENT_MAINTENANCE_MODE_ENTERED || eventCode == EVENT_MAINTENANCE_MODE_LEFT)
    {
-      DbgPrintf(6, _T("CorrelateEvent: finished, maintenance events ignored"));
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("CorrelateEvent: finished, maintenance events ignored"));
       return;
    }
 
    if (node->isInMaintenanceMode())
    {
       pEvent->setRootId(node->getMaintenanceEventId());
-      DbgPrintf(6, _T("CorrelateEvent: finished, rootId=") UINT64_FMT, pEvent->getRootId());
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("CorrelateEvent: finished, rootId=") UINT64_FMT, pEvent->getRootId());
       return;
    }
 
@@ -276,5 +284,5 @@ void CorrelateEvent(Event *pEvent)
          break;
    }
 
-	DbgPrintf(6, _T("CorrelateEvent: finished, rootId=") UINT64_FMT, pEvent->getRootId());
+	nxlog_debug_tag(DEBUG_TAG, 6, _T("CorrelateEvent: finished, rootId=") UINT64_FMT, pEvent->getRootId());
 }

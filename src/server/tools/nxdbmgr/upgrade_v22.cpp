@@ -24,6 +24,18 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 22.34 to 22.35
+ */
+static bool H_UpgradeFromV34()
+{
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET var_name='AgentTunnels.ListenPort',default_value='4703',description='TCP port number to listen on for incoming agent tunnel connections.' WHERE var_name='AgentTunnelListenPort'")));
+   CHK_EXEC(CreateConfigParam(_T("AgentTunnels.ListenPort"), _T("4703"), _T("TCP port number to listen on for incoming agent tunnel connections."), 'I', true, true, false, false));
+   CHK_EXEC(CreateConfigParam(_T("Events.Correlation.TopologyBased"), _T("1"), _T("Enable/disable topology based event correlation."), 'B', true, false, false, false));
+   CHK_EXEC(SetMinorSchemaVersion(35));
+   return true;
+}
+
+/**
  * Upgrade from 22.33 to 22.34
  */
 static bool H_UpgradeFromV33()
@@ -685,6 +697,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 34, 22, 35, H_UpgradeFromV34 },
    { 33, 22, 34, H_UpgradeFromV33 },
    { 32, 22, 33, H_UpgradeFromV32 },
    { 31, 22, 32, H_UpgradeFromV31 },
