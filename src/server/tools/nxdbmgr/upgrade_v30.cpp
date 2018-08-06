@@ -23,6 +23,22 @@
 #include "nxdbmgr.h"
 #include <nxevent.h>
 
+/**
+ * Upgrade from 30.46 to 30.47 (changes also included into 22.35)
+ */
+static bool H_UpgradeFromV46()
+{
+   if (GetSchemaLevelForMajorVersion(22) < 35)
+   {
+      CHK_EXEC(SQLQuery(_T("UPDATE config SET var_name='AgentTunnels.ListenPort',default_value='4703',description='TCP port number to listen on for incoming agent tunnel connections.' WHERE var_name='AgentTunnelListenPort'")));
+      CHK_EXEC(CreateConfigParam(_T("AgentTunnels.ListenPort"), _T("4703"), _T("TCP port number to listen on for incoming agent tunnel connections."), NULL, 'I', true, true, false, false));
+      CHK_EXEC(CreateConfigParam(_T("Events.Correlation.TopologyBased"), _T("1"), _T("Enable/disable topology based event correlation."), NULL, 'B', true, false, false, false));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(22, 35));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(47));
+   return true;
+}
+
 /*
  * Upgrade from 30.45 to 30.46
  */
@@ -1657,6 +1673,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 46, 30, 47, H_UpgradeFromV46 },
    { 45, 30, 46, H_UpgradeFromV45 },
    { 44, 30, 45, H_UpgradeFromV44 },
    { 43, 30, 44, H_UpgradeFromV43 },
