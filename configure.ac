@@ -3985,7 +3985,6 @@ AC_CONFIG_FILES([
 	src/agent/install/Makefile
 	src/agent/libnxagent/Makefile
 	src/agent/libnxappc/Makefile
-	src/agent/libnxsd/Makefile
 	src/agent/libnxtux/Makefile
 	src/agent/subagents/Makefile
 	src/agent/subagents/aix/Makefile
