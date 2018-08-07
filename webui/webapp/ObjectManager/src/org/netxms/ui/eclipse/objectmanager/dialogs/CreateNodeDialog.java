@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2018 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -55,6 +55,7 @@ public class CreateNodeDialog extends Dialog
 	private LabeledText sshLoginField;
    private LabeledText sshPasswordField;
 	private Button checkUnmanaged;
+   private Button checkMaintenanceMode;
 	private Button checkDisableAgent;
 	private Button checkDisableSNMP;
 	private Button checkDisablePing;
@@ -191,6 +192,10 @@ public class CreateNodeDialog extends Dialog
 		checkUnmanaged.setText(Messages.get().CreateNodeDialog_CreateUnmanaged);
 		checkUnmanaged.setSelection((creationFlags & NXCObjectCreationData.CF_CREATE_UNMANAGED) != 0);
 
+      checkMaintenanceMode = new Button(optionsGroup, SWT.CHECK);
+      checkMaintenanceMode.setText("Enter &maintenance mode immediately");
+      checkMaintenanceMode.setSelection((creationFlags & NXCObjectCreationData.CF_ENTER_MAINTENANCE) != 0);
+
 		checkDisableAgent = new Button(optionsGroup, SWT.CHECK);
 		checkDisableAgent.setText(Messages.get().CreateNodeDialog_DisableAgent);
 		checkDisableAgent.setSelection((creationFlags & NXCObjectCreationData.CF_DISABLE_NXCP) != 0);
@@ -286,6 +291,8 @@ public class CreateNodeDialog extends Dialog
 		creationFlags = 0;
 		if (checkUnmanaged.getSelection())
 			creationFlags |= NXCObjectCreationData.CF_CREATE_UNMANAGED;
+      if (checkMaintenanceMode.getSelection())
+         creationFlags |= NXCObjectCreationData.CF_ENTER_MAINTENANCE;
 		if (checkDisableAgent.getSelection())
 			creationFlags |= NXCObjectCreationData.CF_DISABLE_NXCP;
 		if (checkDisablePing.getSelection())

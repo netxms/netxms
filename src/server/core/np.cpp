@@ -220,6 +220,9 @@ Node NXCORE_EXPORTABLE *PollNewNode(NewNodeData *newNodeData)
    pNode = new Node(newNodeData, dwFlags);
    NetObjInsert(pNode, true, false);
 
+   if (newNodeData->creationFlags & NXC_NCF_ENTER_MAINTENANCE)
+      pNode->enterMaintenanceMode();
+
 	// Use DNS name as primary name if required
 	if ((newNodeData->origin == NODE_ORIGIN_NETWORK_DISCOVERY) && ConfigReadBoolean(_T("UseDNSNameForDiscoveredNodes"), false))
 	{

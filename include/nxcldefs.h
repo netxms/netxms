@@ -990,10 +990,11 @@ enum AggregationFunction
 /**
  * Node creation flags
  */
-#define NXC_NCF_DISABLE_ICMP     0x0001
-#define NXC_NCF_DISABLE_NXCP     0x0002
-#define NXC_NCF_DISABLE_SNMP     0x0004
-#define NXC_NCF_CREATE_UNMANAGED 0x0008
+#define NXC_NCF_DISABLE_ICMP      0x0001
+#define NXC_NCF_DISABLE_NXCP      0x0002
+#define NXC_NCF_DISABLE_SNMP      0x0004
+#define NXC_NCF_CREATE_UNMANAGED  0x0008
+#define NXC_NCF_ENTER_MAINTENANCE 0x0010
 
 /**
  * Agent data cache modes
