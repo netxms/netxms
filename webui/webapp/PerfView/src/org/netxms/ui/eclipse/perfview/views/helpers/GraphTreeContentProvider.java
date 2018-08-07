@@ -125,7 +125,7 @@ public class GraphTreeContentProvider implements ITreeContentProvider
             GraphFolder root = null;
             for(int j = 0; j < path.length - 1; j++)
             {
-               String key = path[j].replace("&", ""); //$NON-NLS-1$ //$NON-NLS-2$
+               String key = (root == null ? "" : root.hashCode() + "@" ) + path[j].replace("&", ""); //$NON-NLS-1$ //$NON-NLS-2$
                GraphFolder curr = folders.get(key);
                if (curr == null)
                {
