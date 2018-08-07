@@ -38,6 +38,7 @@ public class NXCObjectCreationData
 	public static int CF_DISABLE_NXCP = 0x0002;
 	public static int CF_DISABLE_SNMP = 0x0004;
 	public static int CF_CREATE_UNMANAGED = 0x0008;
+   public static int CF_ENTER_MAINTENANCE = 0x0010;
 	
 	private int objectClass;
 	private String name;

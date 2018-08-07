@@ -27,6 +27,7 @@
 - SNMP port and context can be specified in NXSL function CreateSNMPTransport
 - Fixed issues:
 	NX-1435 (AgentTunnelListenPort configuration parameter is missing from config table)
+	NX-1471 (Add option to create node in maintenance mode)
 	NX-1472 (Physical Hyper-V Hosts are reporting as Node Type "Virtual" in 2.2.7)
 	NX-1480 (Varbinds in SNMP Traps restricted to 255 characters)
 	NX-1481 (Configuration option to disable topology based event correlation)

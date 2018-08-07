@@ -221,7 +221,7 @@ void CorrelateEvent(Event *pEvent)
       return;
    }
 
-   if (node->isInMaintenanceMode())
+   if (node->isInMaintenanceMode() && (eventCode != EVENT_NODE_ADDED))
    {
       pEvent->setRootId(node->getMaintenanceEventId());
       nxlog_debug_tag(DEBUG_TAG, 6, _T("CorrelateEvent: finished, rootId=") UINT64_FMT, pEvent->getRootId());
