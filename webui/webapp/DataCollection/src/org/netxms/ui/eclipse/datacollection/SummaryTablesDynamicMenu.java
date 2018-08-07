@@ -130,7 +130,7 @@ public class SummaryTablesDynamicMenu extends ContributionItem implements IWorkb
 			Menu rootMenu = tablesMenu;
 			for(int j = 0; j < path.length - 1; j++)
 			{
-				String key = path[j].replace("&", ""); //$NON-NLS-1$ //$NON-NLS-2$
+				String key = rootMenu.hashCode() + "@" + path[j].replace("&", ""); //$NON-NLS-1$ //$NON-NLS-2$
 				Menu currMenu = menus.get(key);
 				if (currMenu == null)
 				{
