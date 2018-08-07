@@ -881,7 +881,11 @@ BOOL Initialize()
    nxlog_write_generic(NXLOG_INFO, _T("Agent ID is %s"), g_agentId.toString(agentIdText));
 
    TCHAR hostname[256];
-   GetLocalHostName(hostname, 256, true);
+   if (GetLocalHostName(hostname, 256, true) == NULL)
+   {
+      // Fallback to non-FQDN host name
+      GetLocalHostName(hostname, 256, false);
+   }
    nxlog_write_generic(NXLOG_INFO, _T("Local host name is \"%s\""), hostname);
 
    // Set system name to host name if not set in config
@@ -1251,8 +1255,6 @@ void Shutdown()
    CloseLocalDatabase();
    nxlog_write(MSG_AGENT_STOPPED, EVENTLOG_INFORMATION_TYPE, NULL);
    nxlog_close();
-
-   delete g_config;
 
    // Notify main thread about shutdown
 #ifdef _WIN32
@@ -2044,5 +2046,6 @@ int main(int argc, char *argv[])
          break;
    }
 
+   delete g_config;
    return iExitCode;
 }
