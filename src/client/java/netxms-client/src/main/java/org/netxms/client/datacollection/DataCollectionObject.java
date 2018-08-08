@@ -175,6 +175,41 @@ public abstract class DataCollectionObject
 	}
 	
 	/**
+	 * Object copy constructor
+	 * 
+	 * @param owner object owner
+	 * @param dco object to copy
+	 */
+	public DataCollectionObject(DataCollectionConfiguration owner, DataCollectionObject dco)
+   {
+	   this.owner = owner;
+	   id = dco.id;
+	   templateId = dco.templateId;
+	   resourceId = dco.resourceId;
+	   sourceNode = dco.sourceNode;
+	   pollingInterval = dco.pollingInterval;
+	   retentionTime = dco.retentionTime;
+	   origin = dco.origin;
+	   status = dco.status;
+	   flags = dco.flags;
+	   transformationScript = dco.transformationScript;
+	   name = dco.name;
+	   description = dco.description;
+	   systemTag = dco.systemTag;
+	   perfTabSettings = dco.perfTabSettings;
+	   snmpPort = dco.snmpPort;
+	   schedules = new ArrayList<String>(dco.schedules);
+	   userData = dco.userData;
+	   comments = dco.comments;
+	   instance = dco.instance;
+	   instanceDiscoveryMethod = dco.instanceDiscoveryMethod;
+	   instanceDiscoveryData = dco.instanceDiscoveryData;
+	   instanceDiscoveryFilter = dco.instanceDiscoveryFilter;
+	   accessList = new ArrayList<Long>(dco.accessList);
+	   instanceRetentionTime = dco.instanceRetentionTime;
+   }
+
+   /**
 	 * Fill NXCP message with item's data.
 	 * 
 	 * @param msg NXCP message
@@ -749,10 +784,5 @@ public abstract class DataCollectionObject
    public void setInstanceRetentionTime(int instanceRetentionTime)
    {
       this.instanceRetentionTime = instanceRetentionTime;
-   }
-
-   public void setOwner(DataCollectionConfiguration dataCollectionConfiguration)
-   {
-      owner = dataCollectionConfiguration;      
    }
 }

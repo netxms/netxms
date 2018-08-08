@@ -161,7 +161,7 @@ public class DataCollectionEditor extends ViewPart
                if (n.getCode() == SessionNotification.DCI_UPDATE)
                {
                   final DataCollectionObject dco = (DataCollectionObject)n.getObject();
-                  dciConfig.updateItemFromList(dco);
+                  dciConfig.updateItemFromNotification(dco);
                   getSite().getShell().getDisplay().asyncExec(new Runnable() {
                      @Override
                      public void run()
@@ -173,7 +173,7 @@ public class DataCollectionEditor extends ViewPart
                else if (n.getCode() == SessionNotification.DCI_DELETE)
                {
                   final long id = (Long)n.getObject();
-                  dciConfig.removeItemFromList(id);
+                  dciConfig.removeItemFromNotification(id);
                   getSite().getShell().getDisplay().asyncExec(new Runnable() {
                      @Override
                      public void run()
@@ -185,7 +185,7 @@ public class DataCollectionEditor extends ViewPart
                else if (n.getCode() == SessionNotification.DCI_STATE_CHANGE)
                {
                   DCOStatusHolder stHolder = (DCOStatusHolder)n.getObject();
-                  dciConfig.updateItemStatusFromList(stHolder.getDciIdArray(), stHolder.getStatus());
+                  dciConfig.updateItemStatusFromNotification(stHolder.getDciIdArray(), stHolder.getStatus());
                   getSite().getShell().getDisplay().asyncExec(new Runnable() {
                      @Override
                      public void run()

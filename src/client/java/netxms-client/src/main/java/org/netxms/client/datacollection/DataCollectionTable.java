@@ -84,8 +84,22 @@ public class DataCollectionTable extends DataCollectionObject
 		columns = new ArrayList<ColumnDefinition>(0);
 		thresholds = new ArrayList<TableThreshold>(0);
 	}
+   
+   /**
+    * Object copy constructor
+    * 
+    * @param owner object owner
+    * @param dco object to copy
+    */
+	protected DataCollectionTable(DataCollectionConfiguration owner, DataCollectionTable dco)
+   {
+      super(owner, dco);  
+      instanceColumn = dco.instanceColumn;
+      columns = new ArrayList<ColumnDefinition>(dco.columns);
+      thresholds = new ArrayList<TableThreshold>(dco.thresholds);
+   }
 
-	/**
+   /**
 	 * Fill NXCP message with item's data.
 	 * 
 	 * @param msg NXCP message

@@ -1095,10 +1095,10 @@ void NXCORE_EXPORTABLE EnumerateClientSessions(void (*pHandler)(ClientSession *,
 void NXCORE_EXPORTABLE NotifyClientSessions(UINT32 dwCode, UINT32 dwData);
 void NXCORE_EXPORTABLE NotifyClientSession(UINT32 sessionId, UINT32 dwCode, UINT32 dwData);
 void NXCORE_EXPORTABLE NotifyClientGraphUpdate(NXCPMessage *update, UINT32 graphId);
-void NXCORE_EXPORTABLE NotifyClientDCIUpdate(DataCollectionOwner *object, DCObject *dco);
-void NXCORE_EXPORTABLE NotifyClientDCIDelete(DataCollectionOwner *object, UINT32 dcoId);
-void NXCORE_EXPORTABLE NotifyClientDCIStatusChange(DataCollectionOwner *object, UINT32 dcoId, int status);
-void NXCORE_EXPORTABLE NotifyClientDCIUpdate(NXCPMessage *update, NetObj *object);
+void NotifyClientDCIUpdate(DataCollectionOwner *object, DCObject *dco);
+void NotifyClientDCIDelete(DataCollectionOwner *object, UINT32 dcoId);
+void NotifyClientDCIStatusChange(DataCollectionOwner *object, UINT32 dcoId, int status);
+void NotifyClientDCIUpdate(NXCPMessage *update, NetObj *object);
 int GetSessionCount(bool includeSystemAccount);
 bool IsLoggedIn(UINT32 dwUserId);
 bool NXCORE_EXPORTABLE KillClientSession(int id);

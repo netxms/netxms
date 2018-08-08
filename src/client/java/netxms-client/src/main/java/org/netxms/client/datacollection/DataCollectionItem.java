@@ -117,8 +117,28 @@ public class DataCollectionItem extends DataCollectionObject
 		predictionEngine = "";
 		thresholds = new ArrayList<Threshold>(0);
 	}
-	
-	/**
+   
+   /**
+    * Object copy constructor
+    * 
+    * @param owner object owner
+    * @param dco object to copy
+    */
+	protected DataCollectionItem(DataCollectionConfiguration owner, DataCollectionItem dco)
+   {
+      super(owner, dco);   
+      dataType = dco.dataType;
+      deltaCalculation = dco.deltaCalculation;
+      sampleCount = dco.sampleCount;
+      baseUnits = dco.baseUnits;
+      multiplier = dco.multiplier;
+      customUnitName = dco.customUnitName;
+      snmpRawValueType = dco.snmpRawValueType;
+      thresholds = new ArrayList<Threshold>(dco.thresholds);
+      predictionEngine = dco.predictionEngine;
+   }
+
+   /**
 	 * Fill NXCP message with item's data.
 	 * 
 	 * @param msg NXCP message

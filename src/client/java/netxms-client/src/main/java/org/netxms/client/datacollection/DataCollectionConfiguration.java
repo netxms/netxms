@@ -130,7 +130,7 @@ public class DataCollectionConfiguration
     *  
     * @param id DCI ID
     */
-   public void removeItemFromList(long id)
+   public void removeItemFromNotification(long id)
    {
       items.remove(id);
    }
@@ -140,10 +140,15 @@ public class DataCollectionConfiguration
     *  
     * @param id DCI ID
     */
-   public void updateItemFromList(DataCollectionObject dco)
+   public void updateItemFromNotification(DataCollectionObject dco)
    {
-      dco.setOwner(this);
-      items.put(dco.getId(), dco);
+      DataCollectionObject newDco = null;
+      if (dco instanceof DataCollectionItem)
+         newDco = new DataCollectionItem(this, (DataCollectionItem)dco);
+      else if (dco instanceof DataCollectionTable)
+         newDco =  new DataCollectionTable(this, (DataCollectionTable)dco);
+      
+      items.put(newDco.getId(), newDco);
    }
    
    /**
@@ -151,7 +156,7 @@ public class DataCollectionConfiguration
     *  
     * @param id DCI ID
     */
-   public void updateItemStatusFromList(long[] idArr, int status)
+   public void updateItemStatusFromNotification(long[] idArr, int status)
    {
       for(int i=0; i < idArr.length; i++)
       {
@@ -223,6 +228,7 @@ public class DataCollectionConfiguration
 	 * Modify data collection object.
 	 * 
 	 * @param dco Data collection object
+    * @return Identifier assigned to created item 
 	 * @throws IOException if socket I/O error occurs
 	 * @throws NXCException if NetXMS server returns an error or operation was timed out
 	 */

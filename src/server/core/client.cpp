@@ -283,7 +283,7 @@ void NXCORE_EXPORTABLE NotifyClientGraphUpdate(NXCPMessage *update, UINT32 graph
 /**
  * Send graph update to all active sessions
  */
-void NXCORE_EXPORTABLE NotifyClientDCIUpdate(DataCollectionOwner *object, DCObject *dco)
+void NotifyClientDCIUpdate(DataCollectionOwner *object, DCObject *dco)
 {
    NXCPMessage msg;
    msg.setCode(CMD_MODIFY_NODE_DCI);
@@ -295,7 +295,7 @@ void NXCORE_EXPORTABLE NotifyClientDCIUpdate(DataCollectionOwner *object, DCObje
 /**
  * Send graph update to all active sessions
  */
-void NXCORE_EXPORTABLE NotifyClientDCIDelete(DataCollectionOwner *object, UINT32 dcoId)
+void NotifyClientDCIDelete(DataCollectionOwner *object, UINT32 dcoId)
 {
    NXCPMessage msg;
    msg.setCode(CMD_DELETE_NODE_DCI);
@@ -307,7 +307,7 @@ void NXCORE_EXPORTABLE NotifyClientDCIDelete(DataCollectionOwner *object, UINT32
 /**
  * Send graph update to all active sessions
  */
-void NXCORE_EXPORTABLE NotifyClientDCIStatusChange(DataCollectionOwner *object, UINT32 dcoId, int status)
+void NotifyClientDCIStatusChange(DataCollectionOwner *object, UINT32 dcoId, int status)
 {
    NXCPMessage msg;
    msg.setCode(CMD_SET_DCI_STATUS);
@@ -322,7 +322,7 @@ void NXCORE_EXPORTABLE NotifyClientDCIStatusChange(DataCollectionOwner *object, 
 /**
  * Send graph update to all active sessions
  */
-void NXCORE_EXPORTABLE NotifyClientDCIUpdate(NXCPMessage *update, NetObj *object)
+void NotifyClientDCIUpdate(NXCPMessage *update, NetObj *object)
 {
    RWLockReadLock(s_sessionListLock, INFINITE);
    for(int i = 0; i < MAX_CLIENT_SESSIONS; i++)
