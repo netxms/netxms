@@ -15,6 +15,7 @@
 	NX-1472 (Physical Hyper-V Hosts are reporting as Node Type "Virtual" in 2.2.7)
 	NX-1480 (Varbinds in SNMP Traps restricted to 255 characters)
 	NX-1481 (Configuration option to disable topology based event correlation)
+	NX-1482 (NetXMS server ignoring Syslog and Traps from devices in a Zone which are sending directly to NetXMS server)
 	NX-1484 (Corrupted event messages if MySQL is used as backend database)
 
 

@@ -496,7 +496,7 @@ void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, UINT32 zoneUIN, int 
 	}
 
    // Match IP address to object
-   Node *node = FindNodeByIP((g_flags & AF_TRAP_SOURCES_IN_ALL_ZONES) ? ALL_ZONES : zoneUIN, srcAddr);
+   Node *node = FindNodeByIP(zoneUIN, (g_flags & AF_TRAP_SOURCES_IN_ALL_ZONES) != 0, srcAddr);
 
    // Write trap to log if required
    if (s_logAllTraps || (node != NULL))
