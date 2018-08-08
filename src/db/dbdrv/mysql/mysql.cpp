@@ -698,8 +698,7 @@ static void *GetFieldInternal(MYSQL_RESULT *hResult, int iRow, int iColumn, void
 			   ((char *)b.buffer)[l] = 0;
             if (utf8)
             {
-			      strncpy((char *)pBuffer, (char *)b.buffer, nBufSize);
-   			   ((char *)pBuffer)[nBufSize - 1] = 0;
+			      strlcpy((char *)pBuffer, (char *)b.buffer, nBufSize);
             }
             else
             {
@@ -731,8 +730,7 @@ static void *GetFieldInternal(MYSQL_RESULT *hResult, int iRow, int iColumn, void
 			{
             if (utf8)
             {
-   				strncpy((char *)pBuffer, row[iColumn], nBufSize);
-   			   ((char *)pBuffer)[nBufSize - 1] = 0;
+   				strlcpy((char *)pBuffer, row[iColumn], nBufSize);
             }
             else
             {
@@ -1062,8 +1060,7 @@ static void *GetFieldUnbufferedInternal(MYSQL_UNBUFFERED_RESULT *hResult, int iC
             ((char *)b.buffer)[l] = 0;
             if (utf8)
             {
-               strncpy((char *)pBuffer, (char *)b.buffer, iBufSize);
-               ((char *)pBuffer)[iBufSize - 1] = 0;
+               strlcpy((char *)pBuffer, (char *)b.buffer, iBufSize);
             }
             else
             {
@@ -1096,8 +1093,8 @@ static void *GetFieldUnbufferedInternal(MYSQL_UNBUFFERED_RESULT *hResult, int iC
          }
          else
          {
-            MultiByteToWideChar(CP_UTF8, 0, hResult->pCurrRow[iColumn], iLen, (WCHAR *)pBuffer, iBufSize);
-            ((WCHAR *)pBuffer)[iLen] = 0;
+            int cch = MultiByteToWideChar(CP_UTF8, 0, hResult->pCurrRow[iColumn], iLen, (WCHAR *)pBuffer, iBufSize);
+            ((WCHAR *)pBuffer)[cch] = 0;
          }
       }
       else
