@@ -292,7 +292,7 @@ static Node *FindNodeByHostname(const char *hostName, UINT32 zoneUIN)
    InetAddress ipAddr = InetAddress::resolveHostName(hostName);
 	if (ipAddr.isValidUnicast())
    {
-      node = FindNodeByIP((g_flags & AF_TRAP_SOURCES_IN_ALL_ZONES) ? ALL_ZONES : zoneUIN, ipAddr);
+      node = FindNodeByIP(zoneUIN, (g_flags & AF_TRAP_SOURCES_IN_ALL_ZONES) != 0, ipAddr);
    }
 
    if (node == NULL)
@@ -330,7 +330,7 @@ static Node *BindMsgToNode(NX_SYSLOG_RECORD *pRec, const InetAddress& sourceAddr
    }
    else if (s_nodeMatchingPolicy == SOURCE_IP_THEN_HOSTNAME)
    {
-      node = FindNodeByIP((g_flags & AF_TRAP_SOURCES_IN_ALL_ZONES) ? ALL_ZONES : zoneUIN, sourceAddr);
+      node = FindNodeByIP(zoneUIN, (g_flags & AF_TRAP_SOURCES_IN_ALL_ZONES) != 0, sourceAddr);
       if (node == NULL)
       {
          node = FindNodeByHostname(pRec->szHostName, zoneUIN);
@@ -341,7 +341,7 @@ static Node *BindMsgToNode(NX_SYSLOG_RECORD *pRec, const InetAddress& sourceAddr
       node = FindNodeByHostname(pRec->szHostName, zoneUIN);
       if (node == NULL)
       {
-         node = FindNodeByIP((g_flags & AF_TRAP_SOURCES_IN_ALL_ZONES) ? ALL_ZONES : zoneUIN, sourceAddr);
+         node = FindNodeByIP(zoneUIN, (g_flags & AF_TRAP_SOURCES_IN_ALL_ZONES) != 0, sourceAddr);
       }
    }
 

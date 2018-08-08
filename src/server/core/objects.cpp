@@ -728,6 +728,20 @@ Node NXCORE_EXPORTABLE *FindNodeByIP(UINT32 zoneUIN, const InetAddress& ipAddr)
 }
 
 /**
+ * Find node by IP address
+ */
+Node NXCORE_EXPORTABLE *FindNodeByIP(UINT32 zoneUIN, bool allZones, const InetAddress& ipAddr)
+{
+   if (!ipAddr.isValidUnicast())
+      return NULL;
+
+   Node *node = FindNodeByIPInternal(zoneUIN, ipAddr);
+   if (node != NULL)
+      return node;
+   return allZones ? FindNodeByIP(ALL_ZONES, ipAddr) : NULL;
+}
+
+/**
  * Find node by IP address using first match from IP address list
  */
 Node NXCORE_EXPORTABLE *FindNodeByIP(UINT32 zoneUIN, const InetAddressList *ipAddrList)
