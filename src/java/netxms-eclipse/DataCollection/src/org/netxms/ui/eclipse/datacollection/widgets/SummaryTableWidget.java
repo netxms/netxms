@@ -269,7 +269,7 @@ public class SummaryTableWidget extends Composite
    {
       viewer.setInput(null);
       final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-      new ConsoleJob(Messages.get().SummaryTable_JobName, viewPart, Activator.PLUGIN_ID, null) {
+      ConsoleJob job = new ConsoleJob(Messages.get().SummaryTable_JobName, viewPart, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
@@ -289,7 +289,9 @@ public class SummaryTableWidget extends Composite
          {
             return Messages.get().SummaryTable_JobError;
          }
-      }.start();
+      };
+      job.setUser(false);
+      job.start();
    }
    
    /**

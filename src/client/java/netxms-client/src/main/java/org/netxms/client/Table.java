@@ -437,7 +437,7 @@ public class Table
       t.source = source;
       t.columns = new ArrayList<TableColumnDefinition>(columns);
       t.data = new ArrayList<TableRow>();
-      for (int i = 0; i < numOfRows; i++)
+      for (int i = 0; i < numOfRows && i < data.size(); i++)
          t.data.add(data.get(i));
       t.extendedFormat = extendedFormat;
       return t;      
