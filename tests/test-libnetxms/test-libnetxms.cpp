@@ -853,6 +853,41 @@ static void TestHashMap()
    EndTest();
 
    delete hashMap;
+
+   StartTest(_T("HashMap: InetAddress as key"));
+
+   InetAddress addr1 = InetAddress::parse("127.0.0.1");
+   InetAddress addr2 = InetAddress::parse("10.0.0.76");
+   InetAddress addr3 = InetAddress::parse("172.17.11.2");
+   InetAddress addr4 = InetAddress::parse("fe80::250:56ff:fec0:8");
+
+   HashMap<InetAddress, String> *ipAddrMap = new HashMap<InetAddress, String>(true);
+   ipAddrMap->set(addr1, new String(_T("addr1")));
+   ipAddrMap->set(addr2, new String(_T("addr2")));
+   ipAddrMap->set(addr3, new String(_T("addr3")));
+   ipAddrMap->set(addr4, new String(_T("addr4")));
+
+   s = ipAddrMap->get(addr2);
+   AssertNotNull(s);
+   AssertTrue(!_tcscmp(s->getBuffer(), _T("addr2")));
+
+   s = ipAddrMap->get(addr3);
+   AssertNotNull(s);
+   AssertTrue(!_tcscmp(s->getBuffer(), _T("addr3")));
+
+   s = ipAddrMap->get(addr4);
+   AssertNotNull(s);
+   AssertTrue(!_tcscmp(s->getBuffer(), _T("addr4")));
+
+   ipAddrMap->set(addr3, new String(_T("addr3_replaced")));
+   s = ipAddrMap->get(addr3);
+   AssertNotNull(s);
+   AssertTrue(!_tcscmp(s->getBuffer(), _T("addr3_replaced")));
+
+   AssertEquals(ipAddrMap->size(), 4);
+
+   delete ipAddrMap;
+   EndTest();
 }
 
 /**

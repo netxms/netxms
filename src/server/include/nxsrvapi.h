@@ -101,6 +101,11 @@
 #endif   /* _WIN32 */
 
 /**
+ * Debug tags
+ */
+#define DEBUG_TAG_TOPO_ARP    _T("topology.arp")
+
+/**
  * Application flags
  */
 #define AF_DAEMON                              _ULL(0x0000000000000001)
@@ -223,7 +228,9 @@ public:
    int size() const { return m_entries->size(); }
    time_t timestamp() const { return m_timestamp; }
    const ArpEntry *get(int index) const { return m_entries->get(index); }
-   const ArpEntry *findByIP(const InetAddress& addr) { return m_ipIndex->get(addr); }
+   const ArpEntry *findByIP(const InetAddress& addr);
+
+   void dumpToLog() const;
 };
 
 /**

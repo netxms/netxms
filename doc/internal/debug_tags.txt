@@ -54,3 +54,5 @@ sa.ping		Ping subagent
 sync		Syncer messages
 
 threads.*	Thread related
+
+topology.*	Topology related
