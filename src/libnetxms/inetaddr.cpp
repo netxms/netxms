@@ -55,6 +55,7 @@ static const InetAddress IPV6_LINK_LOCAL = InetAddress((const BYTE *)"\xfe\x80\x
 InetAddress::InetAddress(UINT32 addr)
 {
    m_family = AF_INET;
+   memset(&m_addr, 0, sizeof(m_addr));
    m_addr.v4 = addr;
    m_maskBits = 32;
 }
@@ -65,6 +66,7 @@ InetAddress::InetAddress(UINT32 addr)
 InetAddress::InetAddress(UINT32 addr, UINT32 mask)
 {
    m_family = AF_INET;
+   memset(&m_addr, 0, sizeof(m_addr));
    m_addr.v4 = addr;
    m_maskBits = BitsInMask(mask);
 }
@@ -86,6 +88,7 @@ InetAddress::InetAddress()
 {
    m_family = AF_UNSPEC;
    m_maskBits = 0;
+   memset(&m_addr, 0, sizeof(m_addr));
 }
 
 /**

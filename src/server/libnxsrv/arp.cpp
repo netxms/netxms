@@ -46,6 +46,33 @@ ArpCache::~ArpCache()
  */
 void ArpCache::addEntry(ArpEntry *entry)
 {
+   entry->ipAddr.setMaskBits(0); // always use 0 bits to avoid hash map issues on lookup
    m_entries->add(entry);
    m_ipIndex->set(entry->ipAddr, entry);
+}
+
+/**
+ * Find ARP entry by IP address
+ */
+const ArpEntry *ArpCache::findByIP(const InetAddress& addr)
+{
+   InetAddress key = addr;
+   key.setMaskBits(0);
+   return m_ipIndex->get(key);
+}
+
+/**
+ * Dump to log
+ */
+void ArpCache::dumpToLog() const
+{
+   if (nxlog_get_debug_level_tag(DEBUG_TAG_TOPO_ARP) < 7)
+      return;
+
+   TCHAR buffer1[64], buffer2[64];
+   for(int i = 0; i < m_entries->size(); i++)
+   {
+      const ArpEntry *e = m_entries->get(i);
+      nxlog_debug_tag(DEBUG_TAG_TOPO_ARP, 7, _T("   %-15s = %s"), e->ipAddr.toString(buffer1), e->macAddr.toString(buffer2));
+   }
 }

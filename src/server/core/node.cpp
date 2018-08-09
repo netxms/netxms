@@ -747,6 +747,9 @@ ArpCache *Node::getArpCache(bool forceRead)
 
    if (arpCache != NULL)
    {
+      nxlog_debug_tag(DEBUG_TAG_TOPO_ARP, 6, _T("Read ARP cache from node %s [%u] (%d entries)"), m_name, m_id, arpCache->size());
+      arpCache->dumpToLog();
+
       lockProperties();
       if (m_arpCache != NULL)
          m_arpCache->decRefCount();
@@ -3804,7 +3807,7 @@ bool Node::updateInterfaceConfiguration(UINT32 rqid, int maskBits)
                   pMacAddr = !memcmp(macAddr, "\x00\x00\x00\x00\x00\x00", MAC_ADDR_LENGTH) ? NULL : macAddr;
                   TCHAR szMac[20];
                   MACToStr(macAddr, szMac);
-                  DbgPrintf(5, _T("Node::updateInterfaceConfiguration(%s [%u]): got MAC for unknown interface: %s"), m_name, m_id, szMac);
+                  nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("Node::updateInterfaceConfiguration(%s [%u]): got MAC for unknown interface: %s"), m_name, m_id, szMac);
                   InetAddress ifaceAddr = m_ipAddress;
                   ifaceAddr.setMaskBits(maskBits);
                   createNewInterface(ifaceAddr, pMacAddr, true);
@@ -3816,14 +3819,18 @@ bool Node::updateInterfaceConfiguration(UINT32 rqid, int maskBits)
                memset(macAddr, 0, MAC_ADDR_LENGTH);
                Subnet *pSubnet = FindSubnetForNode(m_zoneUIN, m_ipAddress);
                if (pSubnet != NULL)
+               {
+                  nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("Node::updateInterfaceConfiguration(%s [%u]): found subnet %s [%u]"),
+                            m_name, m_id, pSubnet->getName(), pSubnet->getId());
                   pSubnet->findMacAddress(m_ipAddress, macAddr);
+               }
                if (memcmp(macAddr, "\x00\x00\x00\x00\x00\x00", MAC_ADDR_LENGTH) && memcmp(macAddr, pInterface->getMacAddr(), MAC_ADDR_LENGTH))
                {
                   TCHAR szOldMac[16], szNewMac[16];
 
                   BinToStr((BYTE *)pInterface->getMacAddr(), MAC_ADDR_LENGTH, szOldMac);
                   BinToStr(macAddr, MAC_ADDR_LENGTH, szNewMac);
-                  DbgPrintf(5, _T("Node::updateInterfaceConfiguration(%s [%u]): MAC change for unknown interface: %s to %s"),
+                  nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("Node::updateInterfaceConfiguration(%s [%u]): MAC change for unknown interface: %s to %s"),
                             m_name, m_id, szOldMac, szNewMac);
                   PostEvent(EVENT_MAC_ADDR_CHANGED, m_id, "idsss",
                             pInterface->getId(), pInterface->getIfIndex(),
@@ -3841,17 +3848,21 @@ bool Node::updateInterfaceConfiguration(UINT32 rqid, int maskBits)
             memset(macAddr, 0, MAC_ADDR_LENGTH);
             Subnet *pSubnet = FindSubnetForNode(m_zoneUIN, m_ipAddress);
             if (pSubnet != NULL)
+            {
+               nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("Node::updateInterfaceConfiguration(%s [%u]): found subnet %s [%u]"),
+                         m_name, m_id, pSubnet->getName(), pSubnet->getId());
                pSubnet->findMacAddress(m_ipAddress, macAddr);
+            }
             pMacAddr = !memcmp(macAddr, "\x00\x00\x00\x00\x00\x00", MAC_ADDR_LENGTH) ? NULL : macAddr;
             TCHAR szMac[20];
             MACToStr(macAddr, szMac);
-            DbgPrintf(5, _T("Node::updateInterfaceConfiguration(%s [%u]): got MAC for unknown interface: %s"), m_name, m_id, szMac);
+            nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("Node::updateInterfaceConfiguration(%s [%u]): got MAC for unknown interface: %s"), m_name, m_id, szMac);
             InetAddress ifaceAddr = m_ipAddress;
             ifaceAddr.setMaskBits(maskBits);
             createNewInterface(ifaceAddr, pMacAddr, true);
          }
       }
-      DbgPrintf(6, _T("Node::updateInterfaceConfiguration(%s [%u]): pIfList == NULL, dwCount = %u"), m_name, m_id, dwCount);
+      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("Node::updateInterfaceConfiguration(%s [%u]): pIfList == NULL, dwCount = %u"), m_name, m_id, dwCount);
    }
 
    delete ifList;
