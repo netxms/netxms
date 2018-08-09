@@ -25,7 +25,7 @@ void InitStaticSubagents()
 EOT
 
 for sa in $LIST; do
-   echo "   InitSubAgent(NULL, \"static:$sa\", NxSubAgentRegister_$sa);"
+   echo "   InitSubAgent(NULL, _T(\"static:$sa\"), NxSubAgentRegister_$sa);"
 done
 
 echo "}"
