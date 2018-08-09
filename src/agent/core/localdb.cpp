@@ -233,7 +233,11 @@ static bool CheckDatabaseStructure()
  */
 bool OpenLocalDatabase()
 {
+#ifdef _STATIC_AGENT
+   s_driver = DBLoadDriver(_T(":self:"), _T(""), nxlog_get_debug_level() == 9, NULL, NULL);
+#else
    s_driver = DBLoadDriver(_T("sqlite.ddr"), _T(""), nxlog_get_debug_level() == 9, NULL, NULL);
+#endif
    if (s_driver == NULL)
    {
       return false;
