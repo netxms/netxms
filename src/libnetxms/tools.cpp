@@ -116,11 +116,11 @@ int LIBNETXMS_EXPORTABLE BitsInMask(UINT32 dwMask)
  */
 TCHAR LIBNETXMS_EXPORTABLE *IpToStr(UINT32 dwAddr, TCHAR *szBuffer)
 {
-   static TCHAR szInternalBuffer[32];
+   static TCHAR szInternalBuffer[16];
    TCHAR *szBufPtr;
 
    szBufPtr = (szBuffer == NULL) ? szInternalBuffer : szBuffer;
-   _sntprintf(szBufPtr, 32, _T("%d.%d.%d.%d"), (int)(dwAddr >> 24), (int)((dwAddr >> 16) & 255),
+   _sntprintf(szBufPtr, 16, _T("%d.%d.%d.%d"), (int)(dwAddr >> 24), (int)((dwAddr >> 16) & 255),
               (int)((dwAddr >> 8) & 255), (int)(dwAddr & 255));
    return szBufPtr;
 }
@@ -129,11 +129,11 @@ TCHAR LIBNETXMS_EXPORTABLE *IpToStr(UINT32 dwAddr, TCHAR *szBuffer)
 
 char LIBNETXMS_EXPORTABLE *IpToStrA(UINT32 dwAddr, char *szBuffer)
 {
-   static char szInternalBuffer[32];
+   static char szInternalBuffer[16];
    char *szBufPtr;
 
    szBufPtr = (szBuffer == NULL) ? szInternalBuffer : szBuffer;
-   snprintf(szBufPtr, 32, "%d.%d.%d.%d", (int)(dwAddr >> 24), (int)((dwAddr >> 16) & 255),
+   snprintf(szBufPtr, 16, "%d.%d.%d.%d", (int)(dwAddr >> 24), (int)((dwAddr >> 16) & 255),
             (int)((dwAddr >> 8) & 255), (int)(dwAddr & 255));
    return szBufPtr;
 }
