@@ -15,6 +15,8 @@ db.cpool	DB connection pool
 db.query	SQL query trace
 db.writer	DB background writers
 
+dload		Debug output of dynamic library loading functions
+
 event.*		Event related messages
 event.corr      Event correlation
 event.policy	Event processing policy
