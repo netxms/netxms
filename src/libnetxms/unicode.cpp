@@ -389,7 +389,7 @@ WCHAR LIBNETXMS_EXPORTABLE *WideStringFromMBStringSysLocale(const char *pszStrin
    if (pszString == NULL)
       return NULL;
    int nLen = (int)strlen(pszString) + 1;
-   WCHAR *pwszOut = (WCHAR *) malloc(nLen * sizeof(WCHAR));
+   WCHAR *pwszOut = MemAllocArray<WCHAR>(nLen);
 #if HAVE_MBSTOWCS
    mbstowcs(pwszOut, pszString, nLen);
 #else
@@ -408,7 +408,7 @@ WCHAR LIBNETXMS_EXPORTABLE *WideStringFromMBString(const char *src)
    if (src == NULL)
       return NULL;
    int len = (int)strlen(src) + 1;
-   WCHAR *out = (WCHAR *)malloc(len * sizeof(WCHAR));
+   WCHAR *out = MemAllocArray<WCHAR>(len);
    MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, src, -1, out, len);
    return out;
 }
@@ -421,7 +421,7 @@ WCHAR LIBNETXMS_EXPORTABLE *WideStringFromUTF8String(const char *pszString)
    if (pszString == NULL)
       return NULL;
    int nLen = (int)strlen(pszString) + 1;
-   WCHAR *pwszOut = (WCHAR *) malloc(nLen * sizeof(WCHAR));
+   WCHAR *pwszOut = MemAllocArray<WCHAR>(nLen);
    MultiByteToWideChar(CP_UTF8, 0, pszString, -1, pwszOut, nLen);
    return pwszOut;
 }
@@ -435,7 +435,7 @@ char LIBNETXMS_EXPORTABLE *MBStringFromWideString(const WCHAR *pwszString)
    if (pwszString == NULL)
       return NULL;
    int nLen = (int)wcslen(pwszString) + 1;
-   char *pszOut = (char *)malloc(nLen);
+   char *pszOut = (char *)MemAlloc(nLen);
    WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, pwszString, -1, pszOut, nLen, NULL, NULL);
    return pszOut;
 }
@@ -452,7 +452,7 @@ char LIBNETXMS_EXPORTABLE *MBStringFromWideStringSysLocale(const WCHAR *pwszStri
    if (pwszString == NULL)
       return NULL;
    size_t len = wcslen(pwszString) * 3 + 1;  // add extra bytes in case of UTF-8 as target encoding
-   char *out = (char *)malloc(len);
+   char *out = (char *)MemAlloc(len);
 #if HAVE_WCSTOMBS
    wcstombs(out, pwszString, len);
 #else
@@ -468,7 +468,7 @@ char LIBNETXMS_EXPORTABLE *MBStringFromWideStringSysLocale(const WCHAR *pwszStri
 char LIBNETXMS_EXPORTABLE *UTF8StringFromWideString(const WCHAR *src)
 {
    int len = WideCharToMultiByte(CP_UTF8, 0, src, -1, NULL, 0, NULL, NULL);
-   char *out = (char *)malloc(len);
+   char *out = (char *)MemAlloc(len);
    WideCharToMultiByte(CP_UTF8, 0, src, -1, out, len, NULL, NULL);
    return out;
 }
@@ -480,7 +480,7 @@ char LIBNETXMS_EXPORTABLE *UTF8StringFromWideString(const WCHAR *src)
 char LIBNETXMS_EXPORTABLE *MBStringFromUTF8String(const char *s)
 {
    int len = (int)strlen(s) + 1;
-   char *out = (char *)malloc(len);
+   char *out = (char *)MemAlloc(len);
    utf8_to_mb(s, -1, out, len);
    return out;
 }
@@ -491,7 +491,7 @@ char LIBNETXMS_EXPORTABLE *MBStringFromUTF8String(const char *s)
 char LIBNETXMS_EXPORTABLE *UTF8StringFromMBString(const char *s)
 {
    int len = (int)strlen(s) * 3 + 1;   // assume worst case - 3 bytes per character
-   char *out = (char *)malloc(len);
+   char *out = (char *)MemAlloc(len);
    mb_to_utf8(s, -1, out, len);
    return out;
 }
@@ -505,7 +505,7 @@ UCS2CHAR LIBNETXMS_EXPORTABLE *UCS2StringFromUCS4String(const UCS4CHAR *src)
    int nLen;
 
    nLen = (int)ucs4_strlen(src) + 1;
-   pszOut = (UCS2CHAR *)malloc(nLen * sizeof(UCS2CHAR));
+   pszOut = MemAllocArray<UCS2CHAR>(nLen);
    ucs4_to_ucs2(src, -1, pszOut, nLen);
    return pszOut;
 }
@@ -516,7 +516,7 @@ UCS2CHAR LIBNETXMS_EXPORTABLE *UCS2StringFromUCS4String(const UCS4CHAR *src)
 UCS4CHAR LIBNETXMS_EXPORTABLE *UCS4StringFromUCS2String(const UCS2CHAR *src)
 {
    int len = (int)ucs2_strlen(src) + 1;
-   UCS4CHAR *out = (UCS4CHAR *)malloc(len * sizeof(UCS4CHAR));
+   UCS4CHAR *out = MemAllocArray<UCS4CHAR>(len);
    ucs2_to_ucs4(src, -1, out, len);
    return out;
 }
@@ -531,7 +531,7 @@ UCS2CHAR LIBNETXMS_EXPORTABLE *UCS2StringFromUTF8String(const char *utf8String)
    if (utf8String == NULL)
       return NULL;
    int nLen = (int)strlen(utf8String) + 1;
-   UCS2CHAR *out = (UCS2CHAR *)malloc(nLen * sizeof(UCS2CHAR));
+   UCS2CHAR *out = MemAllocArray<UCS2CHAR>(nLen);
    utf8_to_ucs2(utf8String, -1, out, nLen);
    return out;
 }
@@ -542,7 +542,7 @@ UCS2CHAR LIBNETXMS_EXPORTABLE *UCS2StringFromUTF8String(const char *utf8String)
 char LIBNETXMS_EXPORTABLE *UTF8StringFromUCS2String(const UCS2CHAR *src)
 {
    int len = (int)ucs2_strlen(src) + 1;
-   char *out = (char *)malloc(len * 2);
+   char *out = (char *)MemAlloc(len * 2);
    ucs2_to_utf8(src, -1, out, len);
    return out;
 }
@@ -553,7 +553,7 @@ char LIBNETXMS_EXPORTABLE *UTF8StringFromUCS2String(const UCS2CHAR *src)
 UCS2CHAR LIBNETXMS_EXPORTABLE *UCS2StringFromMBString(const char *src)
 {
    int len = (int)strlen(src) + 1;
-   UCS2CHAR *out = (UCS2CHAR *)malloc(len * sizeof(UCS2CHAR));
+   UCS2CHAR *out = MemAllocArray<UCS2CHAR>(len);
    mb_to_ucs2(src, -1, out, len);
    return out;
 }
@@ -564,7 +564,7 @@ UCS2CHAR LIBNETXMS_EXPORTABLE *UCS2StringFromMBString(const char *src)
 char LIBNETXMS_EXPORTABLE *MBStringFromUCS2String(const UCS2CHAR *src)
 {
    int len = (int)ucs2_strlen(src) + 1;
-   char *out = (char *)malloc(len);
+   char *out = (char *)MemAlloc(len);
    ucs2_to_mb(src, -1, out, len);
    return out;
 }
@@ -579,7 +579,7 @@ char LIBNETXMS_EXPORTABLE *MBStringFromUCS2String(const UCS2CHAR *src)
 UCS4CHAR LIBNETXMS_EXPORTABLE *UCS4StringFromMBString(const char *src)
 {
    int len = (int)strlen(src) + 1;
-   UCS4CHAR *out = (UCS4CHAR *)malloc(len * sizeof(UCS4CHAR));
+   UCS4CHAR *out = MemAllocArray<UCS4CHAR>(len);
    mb_to_ucs4(src, -1, out, len);
    return out;
 }
@@ -590,7 +590,7 @@ UCS4CHAR LIBNETXMS_EXPORTABLE *UCS4StringFromMBString(const char *src)
 char LIBNETXMS_EXPORTABLE *MBStringFromUCS4String(const UCS4CHAR *src)
 {
    int len = (int)ucs4_strlen(src) + 1;
-   char *out = (char *)malloc(len);
+   char *out = (char *)MemAlloc(len);
    ucs4_to_mb(src, -1, out, len);
    return out;
 }
@@ -671,8 +671,8 @@ FILE LIBNETXMS_EXPORTABLE *wpopen(const WCHAR *_command, const WCHAR *_type)
    command = MBStringFromWideString(_command);
    type = MBStringFromWideString(_type);
    f = popen(command, type);
-   free(command);
-   free(type);
+   MemFree(command);
+   MemFree(type);
    return f;
 }
 
@@ -688,8 +688,8 @@ FILE LIBNETXMS_EXPORTABLE *wfopen(const WCHAR *_name, const WCHAR *_type)
    name = MBStringFromWideString(_name);
    type = MBStringFromWideString(_type);
    f = fopen(name, type);
-   free(name);
-   free(type);
+   MemFree(name);
+   MemFree(type);
    return f;
 }
 
@@ -705,8 +705,8 @@ FILE LIBNETXMS_EXPORTABLE *wfopen64(const WCHAR *_name, const WCHAR *_type)
    name = MBStringFromWideString(_name);
    type = MBStringFromWideString(_type);
    f = fopen64(name, type);
-   free(name);
-   free(type);
+   MemFree(name);
+   MemFree(type);
    return f;
 }
 
@@ -732,7 +732,7 @@ int LIBNETXMS_EXPORTABLE wopen(const WCHAR *_name, int flags, ...)
    {
       rc = open(name, flags);
    }
-   free(name);
+   MemFree(name);
    return rc;
 }
 
@@ -747,7 +747,7 @@ int LIBNETXMS_EXPORTABLE wchmod(const WCHAR *_name, int mode)
 
    name = MBStringFromWideString(_name);
    rc = chmod(name, mode);
-   free(name);
+   MemFree(name);
    return rc;
 }
 
@@ -774,7 +774,7 @@ int LIBNETXMS_EXPORTABLE wsystem(const WCHAR *_cmd)
 {
    char *cmd = MBStringFromWideStringSysLocale(_cmd);
    int rc = system(cmd);
-   free(cmd);
+   MemFree(cmd);
    return rc;
 }
 
@@ -889,7 +889,7 @@ WCHAR LIBNETXMS_EXPORTABLE *wcserror_r(int errnum, WCHAR *strerrbuf, size_t bufl
    int err = 0;
 #endif /* HAVE_POSIX_STRERROR_R */
 
-   mbbuf = (char *)malloc(buflen);
+   mbbuf = (char *)MemAlloc(buflen);
    if (mbbuf != NULL)
    {
 #if HAVE_POSIX_STRERROR_R
@@ -898,7 +898,7 @@ WCHAR LIBNETXMS_EXPORTABLE *wcserror_r(int errnum, WCHAR *strerrbuf, size_t bufl
 #else
       MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, strerror_r(errnum, mbbuf, buflen), -1, strerrbuf, buflen);
 #endif
-      free(mbbuf);
+      MemFree(mbbuf);
    }
    else
    {
@@ -1042,24 +1042,24 @@ static WCHAR *ReplaceFormatSpecs(const WCHAR *oldFormat)
                case L'.':	// All this characters could be part of format specifier
                case L'*':	// and has no interest for us
                case L'+':
-                  case L'-':
-                  case L' ':
-                  case L'#':
-                  case L'0':
-                  case L'1':
-                  case L'2':
-                  case L'3':
-                  case L'4':
-                  case L'5':
-                  case L'6':
-                  case L'7':
-                  case L'8':
-                  case L'9':
-                  case L'l':
-                  case L'L':
-                  case L'F':
-                  case L'N':
-                  case L'w':
+               case L'-':
+               case L' ':
+               case L'#':
+               case L'0':
+               case L'1':
+               case L'2':
+               case L'3':
+               case L'4':
+               case L'5':
+               case L'6':
+               case L'7':
+               case L'8':
+               case L'9':
+               case L'l':
+               case L'L':
+               case L'F':
+               case L'N':
+               case L'w':
                   break;
                case L'h':	// check for %hs
                   hmod = true;
@@ -1082,7 +1082,7 @@ int LIBNETXMS_EXPORTABLE nx_vwprintf(const WCHAR *format, va_list args)
 
    fmt = ReplaceFormatSpecs(format);
    rc = vwprintf(fmt, args);
-   free(fmt);
+   MemFree(fmt);
    return rc;
 }
 
@@ -1093,7 +1093,7 @@ int LIBNETXMS_EXPORTABLE nx_vfwprintf(FILE *fp, const WCHAR *format, va_list arg
 
    fmt = ReplaceFormatSpecs(format);
    rc = vfwprintf(fp, fmt, args);
-   free(fmt);
+   MemFree(fmt);
    return rc;
 }
 
@@ -1104,7 +1104,7 @@ int LIBNETXMS_EXPORTABLE nx_vswprintf(WCHAR *buffer, size_t size, const WCHAR *f
 
    fmt = ReplaceFormatSpecs(format);
    rc = vswprintf(buffer, size, fmt, args);
-   free(fmt);
+   MemFree(fmt);
    return rc;
 }
 
@@ -1119,7 +1119,7 @@ int LIBNETXMS_EXPORTABLE nx_vwscanf(const WCHAR *format, va_list args)
 #else
    rc = -1; // FIXME: add workaround implementation
 #endif
-   free(fmt);
+   MemFree(fmt);
    return rc;
 }
 
@@ -1134,7 +1134,7 @@ int LIBNETXMS_EXPORTABLE nx_vfwscanf(FILE *fp, const WCHAR *format, va_list args
 #else
    rc = -1; // FIXME: add workaround implementation
 #endif
-   free(fmt);
+   MemFree(fmt);
    return rc;
 }
 
@@ -1149,7 +1149,7 @@ int LIBNETXMS_EXPORTABLE nx_vswscanf(const WCHAR *str, const WCHAR *format, va_l
 #else
    rc = -1; // FIXME: add workaround implementation
 #endif
-   free(fmt);
+   MemFree(fmt);
    return rc;
 }
 
