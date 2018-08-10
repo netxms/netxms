@@ -165,10 +165,20 @@ static LONG H_IcmpPing(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, 
 	   dontFragment = (_tcstol(dontFragmentFlag, NULL, 0) != 0);
 	}
 
-	if (IcmpPing(addr, 1, dwTimeOut, &dwRTT, dwPacketSize, dontFragment) != ICMP_SUCCESS)
+	UINT32 result = IcmpPing(addr, 1, dwTimeOut, &dwRTT, dwPacketSize, dontFragment);
+	nxlog_debug_tag(DEBUG_TAG, 7, _T("IcmpPing: hostName=%s timeout=%d packetSize=%d dontFragment=%s result=%d time=%d"),
+	      szHostName, dwTimeOut, dwPacketSize, dontFragment ? _T("true") : _T("false"), result, dwRTT);
+
+	if (result == ICMP_TIMEOUT || result == ICMP_UNREACHEABLE)
 		dwRTT = 10000;
-	ret_uint(pValue, dwRTT);
-	return SYSINFO_RC_SUCCESS;
+
+	if(result == ICMP_TIMEOUT || result == ICMP_UNREACHEABLE || result == ICMP_SUCCESS)
+	{
+	   ret_uint(pValue, dwRTT);
+	   return SYSINFO_RC_SUCCESS;
+	}
+	else
+	   return SYSINFO_RC_ERROR;
 }
 
 /**
