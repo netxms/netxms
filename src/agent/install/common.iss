@@ -17,7 +17,7 @@ Root: HKLM; Subkey: "Software\NetXMS\Agent"; ValueType: string; ValueName: "Conf
 Root: HKLM; Subkey: "SOFTWARE\Microsoft\Windows\CurrentVersion\Run"; ValueType: string; ValueName: "NetXMSSessionAgent"; ValueData: """{app}\bin\nxsagent.exe"" -c ""{app}\etc\nxagentd.conf"" -H"; Flags: uninsdeletevalue; Tasks: sessionagent
 
 [Run]
-Filename: "{app}\bin\nxagentd.exe"; Parameters: "-Z ""{app}\etc\nxagentd.conf"" ""{code:GetMasterServer}"" {{syslog} ""{app}\var"" ""{app}\etc\nxagentd.conf.d"" {code:GetSubagentList} {code:GetExtraConfigValues}"; WorkingDir: "{app}\bin"; StatusMsg: "Creating agent's config..."; Flags: runhidden
+Filename: "{app}\bin\nxagentd.exe"; Parameters: "-Z ""{app}\etc\nxagentd.conf"" {code:GetForceCreateConfigFlag} ""{code:GetMasterServer}"" ""{code:GetLogFile}"" ""{code:GetFileStore}"" ""{code:GetConfigIncludeDir}"" {code:GetSubagentList} {code:GetExtraConfigValues}"; WorkingDir: "{app}\bin"; StatusMsg: "Creating agent's config..."; Flags: runhidden
 Filename: "{app}\bin\nxagentd.exe"; Parameters: "-c ""{app}\etc\nxagentd.conf"" {code:GetCentralConfigOption} {code:GetCustomCmdLine} -I"; WorkingDir: "{app}\bin"; StatusMsg: "Installing service..."; Flags: runhidden
 Filename: "{app}\bin\nxagentd.exe"; Parameters: "-s"; WorkingDir: "{app}\bin"; StatusMsg: "Starting service..."; Flags: runhidden
 
@@ -28,6 +28,11 @@ Filename: "taskkill.exe"; Parameters: "/F /IM nxagentd.exe /T"; StatusMsg: "Kill
 Filename: "taskkill.exe"; Parameters: "/F /IM nxsagent.exe /T"; StatusMsg: "Killing session agent processes..."; RunOnceId: "KillSessionAgentProcess"; Flags: runhidden
 Filename: "{app}\bin\nxagentd.exe"; Parameters: "-R"; StatusMsg: "Uninstalling service..."; RunOnceId: "DelService"; Flags: runhidden
 
+[UninstallDelete]
+Type: filesandordirs; Name: "{app}\etc\*"
+Type: filesandordirs; Name: "{app}\log\*"
+Type: filesandordirs; Name: "{app}\var\*"
+
 [Code]
 Var
   ServerSelectionPage: TWizardPage;
@@ -37,6 +42,10 @@ Var
   serverName, sbECS, sbFileMgr, sbLogWatch, sbPing, sbPortCheck, 
     sbWinPerf, sbWMI, sbUPS, sbDownloadConfig, extraConfigValues: String;
   backupFileSuffix: String;
+  logFile: String;
+  fileSTore: String;
+  configIncludeDir: String;
+  forceCreateConfig: Boolean;
 
 #include "..\..\install\windows\firewall.iss"
 
@@ -117,6 +126,10 @@ Begin
   sbUPS := 'FALSE';
   sbDownloadConfig := 'FALSE';
   extraConfigValues := '';
+  logFile := '';
+  fileStore := '';
+  configIncludeDir := '';
+  forceCreateConfig := FALSE;
   
   // Parse command line parameters
   nCount := ParamCount;
@@ -176,6 +189,25 @@ Begin
         sbWMI := 'FALSE';
       If param = 'UPS' Then
         sbUPS := 'FALSE';
+    End;
+
+    If param = '/FORCECREATECONFIG' Then Begin
+      forceCreateConfig := TRUE;
+    End;
+
+    If Pos('/LOGFILE=', param) = 1 Then Begin
+      Delete(param, 1, 9);
+      logFile := param;
+    End;
+
+    If Pos('/FILESTORE=', param) = 1 Then Begin
+      Delete(param, 1, 11);
+      fileStore := param;
+    End;
+
+    If Pos('/CONFIGINCLUDEDIR=', param) = 1 Then Begin
+      Delete(param, 1, 18);
+      configIncludeDir := param;
     End;
 
     If Pos('/CONFIGENTRY=', param) = 1 Then Begin
@@ -278,6 +310,38 @@ Function GetExtraConfigValues(Param: String): String;
 Begin
   If extraConfigValues <> '' Then
     Result := '-z ' + extraConfigValues
+  Else
+    Result := ''
+End;
+
+Function GetLogFile(Param: String): String;
+Begin
+  If logFile <> '' Then
+    Result := logFile
+  Else
+    Result := '{syslog}'
+End;
+
+Function GetConfigIncludeDir(Param: String): String;
+Begin
+  If configIncludeDir <> '' Then
+    Result := configIncludeDir
+  Else
+    Result := ExpandConstant('{app}\etc\nxagentd.conf.d')
+End;
+
+Function GetFileStore(Param: String): String;
+Begin
+  If fileStore <> '' Then
+    Result := fileStore
+  Else
+    Result := ExpandConstant('{app}\var')
+End;
+
+Function GetForceCreateConfigFlag(Param: String): String;
+Begin
+  If forceCreateConfig Then
+    Result := '-F'
   Else
     Result := ''
 End;

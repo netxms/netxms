@@ -27,6 +27,7 @@
 - SNMP port and context can be specified in NXSL function CreateSNMPTransport
 - Fixed Summary DCI table fail when row limit set
 - Fixed menu path creation for Summary DCI Table and folder creation for graph view
+- New command line options for Windows agent installer: /FORCECREATECONFIG, /LOGFILE=, /FILESTORE=, /CONFIGINCLUDEDIR=
 - Fixed issues:
 	NX-1435 (AgentTunnelListenPort configuration parameter is missing from config table)
 	NX-1471 (Add option to create node in maintenance mode)
