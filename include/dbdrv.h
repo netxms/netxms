@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -31,9 +31,19 @@
 #define DBDRV_API_VERSION           21
 
 
-//
-// Driver header
-//
+/**
+ * Driver header
+ */
+
+#ifdef __IBMCPP__
+
+#define DECLARE_DRIVER_HEADER(name) \
+extern "C" int __EXPORT drvAPIVersion; \
+extern "C" const char* __EXPORT drvName; \
+int __EXPORT drvAPIVersion = DBDRV_API_VERSION; \
+const char* __EXPORT drvName = name;
+
+#else
 
 #define DECLARE_DRIVER_HEADER(name) \
 extern "C" int __EXPORT drvAPIVersion; \
@@ -41,11 +51,12 @@ extern "C" const char __EXPORT *drvName; \
 int __EXPORT drvAPIVersion = DBDRV_API_VERSION; \
 const char __EXPORT *drvName = name;
 
+#endif
 
-//
-// Constants
-//
 
+/**
+ * Max error text length
+ */
 #define DBDRV_MAX_ERROR_TEXT        1024
 
 
