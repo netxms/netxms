@@ -109,7 +109,7 @@ void LIBNXAGENT_EXPORTABLE InitSubAgentAPI(void (* writeLog)(int, int, const TCH
                                            DB_HANDLE (* getLocalDatabaseHandle)(),
                                            CONDITION shutdownCondition, const TCHAR *dataDirectory);
 
-int CreateConfig(const char *pszServer, const char *pszLogFile, const char *pszFileStore,
+int CreateConfig(bool forceCreate, const char *pszServer, const char *pszLogFile, const char *pszFileStore,
    const char *configIncludeDir, int iNumSubAgents, char **ppszSubAgentList, const char *extraValues);
 void InitConfig(const TCHAR *configSection);
 bool LoadConfig();
@@ -133,9 +133,9 @@ extern const TCHAR *g_szMessages[];
  * Valid options for getopt()
  */
 #if defined(_WIN32)
-#define VALID_OPTIONS   "c:CdD:e:EfG:hHiIKM:n:N:P:r:RsSUvW:X:Z:z:"
+#define VALID_OPTIONS   "c:CdD:e:EfFG:hHiIKM:n:N:P:r:RsSUvW:X:Z:z:"
 #else
-#define VALID_OPTIONS   "c:CdD:fg:G:hKM:p:P:r:u:vW:X:Z:z:"
+#define VALID_OPTIONS   "c:CdD:fFg:G:hKM:p:P:r:u:vW:X:Z:z:"
 #endif
 
 /**
@@ -1471,6 +1471,7 @@ int main(int argc, char *argv[])
 	char *eptr;
    TCHAR configSection[MAX_DB_STRING] = DEFAULT_CONFIG_SECTION;
    const char *extraConfigValues = NULL;
+   bool forceCreateConfig = false;
 #ifdef _WIN32
    TCHAR szModuleName[MAX_PATH];
    HKEY hKey;
@@ -1536,6 +1537,9 @@ int main(int argc, char *argv[])
 			case 'f':	// Run in foreground
             g_dwFlags &= ~AF_DAEMON;
 				break;
+         case 'F':   // Force create config
+            forceCreateConfig = true;
+            break;
 #ifndef _WIN32
 			case 'g':	// set group ID
 				gid = GetGroupId(optarg);
@@ -2009,7 +2013,7 @@ int main(int argc, char *argv[])
 			iExitCode = WatchdogMain(dwMainPID, _tcscmp(configSection, DEFAULT_CONFIG_SECTION) ? configSection : NULL);
 			break;
       case ACTION_CREATE_CONFIG:
-         iExitCode = CreateConfig(CHECK_NULL_A(argv[optind]), CHECK_NULL_A(argv[optind + 1]),
+         iExitCode = CreateConfig(forceCreateConfig, CHECK_NULL_A(argv[optind]), CHECK_NULL_A(argv[optind + 1]),
                                   CHECK_NULL_A(argv[optind + 2]), CHECK_NULL_A(argv[optind + 3]),
 			                         argc - optind - 4, &argv[optind + 4], extraConfigValues);
          break;

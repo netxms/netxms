@@ -154,14 +154,14 @@ BOOL DownloadConfig(TCHAR *pszServer)
 /**
  * Create configuration file
  */
-int CreateConfig(const char *pszServer, const char *pszLogFile, const char *pszFileStore,
+int CreateConfig(bool forceCreate, const char *pszServer, const char *pszLogFile, const char *pszFileStore,
       const char *configIncludeDir, int iNumSubAgents, char **ppszSubAgentList, const char *extraValues)
 {
    FILE *fp;
    time_t currTime;
    int i;
 
-   if (_taccess(g_szConfigFile, 0) == 0)
+   if ((_taccess(g_szConfigFile, 0) == 0) && !forceCreate)
       return 0;  // File already exist, we shouldn't overwrite it
 
    fp = _tfopen(g_szConfigFile, _T("w"));
