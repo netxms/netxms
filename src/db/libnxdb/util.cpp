@@ -379,6 +379,187 @@ bool LIBNXDB_EXPORTABLE DBRenameTable(DB_HANDLE hdb, const TCHAR *oldName, const
 }
 
 /**
+ * SQLite ALTER TABLE operation
+ */
+enum SQLileAlterOp
+{
+   ALTER_COLUMN,
+   DROP_COLUMN,
+   SET_NOT_NULL,
+   REMOVE_NOT_NULL,
+   SET_PRIMARY_KEY,
+   DROP_PRIMARY_KEY
+};
+
+/**
+ * Do SQLite schema change operation
+ */
+static bool SQLiteAlterTable(DB_HANDLE hdb, SQLileAlterOp operation, const TCHAR *table, const TCHAR *column, const TCHAR *operationData)
+{
+   String query = _T("PRAGMA TABLE_INFO('");
+   query.append(table);
+   query.append(_T("')"));
+   DB_RESULT hResult = DBSelect(hdb, query);
+   if (hResult == NULL)
+      return false;
+
+   int numColumns = DBGetNumRows(hResult);
+
+   // Intermediate buffers for SQLs
+   String columnList;
+   String createList;
+
+   // TABLE_INFO() columns
+   TCHAR tabColName[128], tabColType[64], tabColNull[10], tabColDefault[128];
+   for(int i = 0; i < numColumns; i++)
+   {
+      DBGetField(hResult, i, 1, tabColName, 128);
+      DBGetField(hResult, i, 2, tabColType, 64);
+      DBGetField(hResult, i, 3, tabColNull, 10);
+      DBGetField(hResult, i, 4, tabColDefault, 128);
+      if ((operation != DROP_COLUMN) || _tcsicmp(tabColName, column))
+      {
+         if (!columnList.isEmpty())
+            columnList.append(_T(','));
+         columnList.append(tabColName);
+
+         if (!createList.isEmpty())
+            createList.append(_T(','));
+         createList.append(tabColName);
+         createList.append(_T(' '));
+         if (!_tcsicmp(tabColName, column) && (operation == ALTER_COLUMN))
+         {
+            createList.append(operationData);
+         }
+         else
+         {
+            createList.append(tabColType);
+         }
+
+         if (!_tcsicmp(tabColName, column))
+         {
+            if ((operation == SET_NOT_NULL) ||
+                ((tabColNull[0] == _T('1')) && (operation != REMOVE_NOT_NULL)))
+               createList.append(_T(" NOT NULL"));
+         }
+         else if (tabColNull[0] == _T('1'))
+         {
+            createList.append(_T(" NOT NULL"));
+         }
+
+         if (tabColDefault[0] != 0)
+         {
+            createList.append(_T(" DEFAULT "));
+            createList.append(tabColDefault);
+         }
+      }
+   }
+   DBFreeResult(hResult);
+
+   if (columnList.isEmpty())
+      return false;
+
+   // Primary key
+   if (operation == SET_PRIMARY_KEY)
+   {
+      createList.append(_T(",PRIMARY KEY("));
+      createList.append(operationData);
+      createList.append(_T(')'));
+   }
+   else if (operation != DROP_PRIMARY_KEY)
+   {
+      query = _T("SELECT sql FROM sqlite_master WHERE tbl_name='");
+      query.append(table);
+      query.append(_T("' AND type='table'"));
+      hResult = DBSelect(hdb, query);
+      if (hResult != NULL)
+      {
+         TCHAR *sql = DBGetField(hResult, 0, 0, NULL, 0);
+         if (sql != NULL)
+         {
+            _tcsupr(sql);
+            TCHAR *p = _tcsstr(sql, _T("PRIMARY KEY"));
+            if (p != NULL)
+            {
+               TCHAR *s = _tcschr(p, _T(')'));
+               if (s != NULL)
+               {
+                  s++;
+                  *s = 0;
+                  createList.append(_T(','));
+                  createList.append(p);
+               }
+            }
+            MemFree(sql);
+         }
+         DBFreeResult(hResult);
+      }
+   }
+
+   // Save indexes and constraints
+   StringList constraints;
+   query = _T("SELECT sql FROM sqlite_master WHERE tbl_name='");
+   query.append(table);
+   query.append(_T("' AND type<>'table' AND sql<>''"));
+   hResult = DBSelect(hdb, query);
+   if (hResult != NULL)
+   {
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
+      {
+         constraints.addPreallocated(DBGetField(hResult, i, 0, NULL, 0));
+      }
+      DBFreeResult(hResult);
+   }
+
+   bool success = false;
+
+   query = _T("CREATE TABLE ");
+   query.append(table);
+   query.append(_T("__backup__ ("));
+   query.append(createList);
+   query.append(_T(')'));
+   success = ExecuteQuery(hdb, query);
+   if (success)
+   {
+      query = _T("INSERT INTO ");
+      query.append(table);
+      query.append(_T("__backup__ ("));
+      query.append(columnList);
+      query.append(_T(") SELECT "));
+      query.append(columnList);
+      query.append(_T(" FROM "));
+      query.append(table);
+      success = ExecuteQuery(hdb, query);
+   }
+
+   if (success)
+   {
+      query = _T("DROP TABLE ");
+      query.append(table);
+      success = ExecuteQuery(hdb, query);
+   }
+
+   if (success)
+   {
+      query = _T("ALTER TABLE ");
+      query.append(table);
+      query.append(_T("__backup__ RENAME TO "));
+      query.append(table);
+      success = ExecuteQuery(hdb, query);
+   }
+
+   // Restore indexes and constraints
+   if (success)
+   {
+      for(int i = 0; (i < constraints.size()) && success; i++)
+         success = ExecuteQuery(hdb, constraints.get(i));
+   }
+
+   return success;
+}
+
+/**
  * Get column data type for given column (MS SQL and PostgreSQL version)
  */
 static bool GetColumnDataType_MSSQL_PGSQL(DB_HANDLE hdb, const TCHAR *table, const TCHAR *column, TCHAR *definition, size_t len)
@@ -462,6 +643,33 @@ static bool GetColumnDataType_MYSQL(DB_HANDLE hdb, const TCHAR *table, const TCH
 }
 
 /**
+ * Get column data type for given column (SQLite version)
+ */
+static bool GetColumnDataType_SQLite(DB_HANDLE hdb, const TCHAR *table, const TCHAR *column, TCHAR *definition, size_t len)
+{
+   bool success = false;
+   TCHAR query[1024];
+   _sntprintf(query, 1024, _T("PRAGMA TABLE_INFO('%s')"), table);
+   DB_RESULT hResult = DBSelect(hdb, query);
+   if (hResult != NULL)
+   {
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; (i < count) && !success; i++)
+      {
+         TCHAR curr[256];
+         DBGetField(hResult, i, 1, curr, 256);
+         if (!_tcsicmp(curr, column))
+         {
+            DBGetField(hResult, i, 2, definition, len);
+            success = true;
+         }
+      }
+      DBFreeResult(hResult);
+   }
+   return success;
+}
+
+/**
  * Get column data type for given column
  */
 bool LIBNXDB_EXPORTABLE DBGetColumnDataType(DB_HANDLE hdb, const TCHAR *table, const TCHAR *column, TCHAR *definition, size_t len)
@@ -475,6 +683,9 @@ bool LIBNXDB_EXPORTABLE DBGetColumnDataType(DB_HANDLE hdb, const TCHAR *table, c
          break;
       case DB_SYNTAX_MYSQL:
          success = GetColumnDataType_MYSQL(hdb, table, column, definition, len);
+         break;
+      case DB_SYNTAX_SQLITE:
+         success = GetColumnDataType_SQLite(hdb, table, column, definition, len);
          break;
       default:
          success = false;
@@ -528,6 +739,9 @@ bool LIBNXDB_EXPORTABLE DBDropPrimaryKey(DB_HANDLE hdb, const TCHAR *table)
             DBFreeResult(hResult);
          }
          break;
+      case DB_SYNTAX_SQLITE:
+         success = SQLiteAlterTable(hdb, DROP_PRIMARY_KEY, table, _T(""), _T(""));
+         break;
       default:    // Unsupported DB engine
          success = false;
          break;
@@ -566,6 +780,9 @@ bool LIBNXDB_EXPORTABLE DBAddPrimaryKey(DB_HANDLE hdb, const TCHAR *table, const
       case DB_SYNTAX_PGSQL:
          _sntprintf(query, 1024, _T("ALTER TABLE %s ADD PRIMARY KEY (%s)"), table, columns);
          success = ExecuteQuery(hdb, query);
+         break;
+      case DB_SYNTAX_SQLITE:
+         success = SQLiteAlterTable(hdb, SET_PRIMARY_KEY, table, _T(""), columns);
          break;
       default:    // Unsupported DB engine
          success = false;
@@ -626,8 +843,10 @@ bool LIBNXDB_EXPORTABLE DBRemoveNotNullConstraint(DB_HANDLE hdb, const TCHAR *ta
          _sntprintf(query, 1024, _T("ALTER TABLE %s ALTER COLUMN %s DROP NOT NULL"), table, column);
          success = DBQuery(hdb, query);
          break;
+      case DB_SYNTAX_SQLITE:
+         success = SQLiteAlterTable(hdb, REMOVE_NOT_NULL, table, column, _T(""));
+         break;
       default:
-         _tprintf(_T("Unable to remove not null constraint.\n"));
          success = false;
          break;
    }
@@ -681,8 +900,10 @@ bool LIBNXDB_EXPORTABLE DBSetNotNullConstraint(DB_HANDLE hdb, const TCHAR *table
          _sntprintf(query, 1024, _T("ALTER TABLE %s ALTER COLUMN %s SET NOT NULL"), table, column);
          success = DBQuery(hdb, query);
          break;
+      case DB_SYNTAX_SQLITE:
+         success = SQLiteAlterTable(hdb, SET_NOT_NULL, table, column, _T(""));
+         break;
       default:
-         _tprintf(_T("Unable to set not null constraint.\n"));
          success = false;
          break;
    }
@@ -696,6 +917,13 @@ bool LIBNXDB_EXPORTABLE DBSetNotNullConstraint(DB_HANDLE hdb, const TCHAR *table
 bool LIBNXDB_EXPORTABLE DBResizeColumn(DB_HANDLE hdb, const TCHAR *table, const TCHAR *column, int newSize, bool nullable)
 {
    int syntax = DBGetSyntax(hdb);
+
+   if (syntax == DB_SYNTAX_SQLITE)
+   {
+      TCHAR newType[64];
+      _sntprintf(newType, 64, _T("varchar(%d)"), newSize);
+      return SQLiteAlterTable(hdb, ALTER_COLUMN, table, column, newType);
+   }
 
    TCHAR query[1024];
    switch(syntax)
@@ -715,17 +943,10 @@ bool LIBNXDB_EXPORTABLE DBResizeColumn(DB_HANDLE hdb, const TCHAR *table, const 
       case DB_SYNTAX_PGSQL:
          _sntprintf(query, 1024, _T("ALTER TABLE %s ALTER COLUMN %s TYPE varchar(%d)"), table, column, newSize);
          break;
-      case DB_SYNTAX_SQLITE:
-         /* TODO: add SQLite support */
-         query[0] = 0;
-         break;
       default:
          query[0] = 0;
          break;
    }
-
-   if (query[0] == 0)
-      return true;
 
    return (query[0] != 0) ? ExecuteQuery(hdb, query) : true;
 }
@@ -751,74 +972,7 @@ bool LIBNXDB_EXPORTABLE DBDropColumn(DB_HANDLE hdb, const TCHAR *table, const TC
    }
    else
    {
-      _sntprintf(query, 1024, _T("PRAGMA TABLE_INFO('%s')"), table);
-      DB_RESULT hResult = DBSelect(hdb, query);
-      if (hResult != NULL)
-      {
-         int rows = DBGetNumRows(hResult);
-         const int blen = 2048;
-         TCHAR buffer[blen];
-
-         // Intermediate buffers for SQLs
-         TCHAR *columnList = (TCHAR *)malloc(rows * 96 * sizeof(TCHAR));
-         TCHAR *createList = (TCHAR *)malloc(rows * 96 * sizeof(TCHAR));
-
-         // TABLE_INFO() columns
-         TCHAR tabColName[128], tabColType[64], tabColNull[10], tabColDefault[128];
-         columnList[0] = createList[0] = _T('\0');
-         for (int i = 0; i < rows; i++)
-         {
-            DBGetField(hResult, i, 1, tabColName, 128);
-            DBGetField(hResult, i, 2, tabColType, 64);
-            DBGetField(hResult, i, 3, tabColNull, 10);
-            DBGetField(hResult, i, 4, tabColDefault, 128);
-            if (_tcsnicmp(tabColName, column, 128))
-            {
-               _tcscat(columnList, tabColName);
-               if (columnList[0] != _T('\0'))
-                  _tcscat(columnList, _T(","));
-               _tcscat(createList, tabColName);
-               _tcscat(createList, tabColType);
-               if (tabColDefault[0] != _T('\0'))
-               {
-                  _tcscat(createList, _T("DEFAULT "));
-                  _tcscat(createList, tabColDefault);
-               }
-               if (tabColNull[0] == _T('1'))
-                  _tcscat(createList, _T(" NOT NULL"));
-               _tcscat(createList, _T(","));
-            }
-         }
-         DBFreeResult(hResult);
-         if (rows > 0)
-         {
-            int cllen = (int)_tcslen(columnList);
-            if (cllen > 0 && columnList[cllen - 1] == _T(','))
-               columnList[cllen - 1] = _T('\0');
-            // TODO: figure out if SQLite transactions will work here
-            _sntprintf(buffer, blen, _T("CREATE TABLE %s__backup__ (%s)"), table, columnList);
-            success = ExecuteQuery(hdb, buffer);
-            if (success)
-            {
-               _sntprintf(buffer, blen, _T("INSERT INTO %s__backup__  (%s) SELECT %s FROM %s"),
-                  table, columnList, columnList, table);
-               success = ExecuteQuery(hdb, buffer);
-            }
-            if (success)
-            {
-               _sntprintf(buffer, blen, _T("DROP TABLE %s"), table);
-               success = ExecuteQuery(hdb, buffer);
-            }
-            if (success)
-            {
-               _sntprintf(buffer, blen, _T("ALTER TABLE %s__backup__ RENAME TO %s"), table, table);
-               success = ExecuteQuery(hdb, buffer);
-            }
-         }
-         free(columnList);
-         free(createList);
-      }
-      // TODO: preserve indices and constraints??
+      success = SQLiteAlterTable(hdb, DROP_COLUMN, table, column, _T(""));
    }
 
    return success;
@@ -865,7 +1019,6 @@ bool LIBNXDB_EXPORTABLE DBRenameColumn(DB_HANDLE hdb, const TCHAR *tableName, co
          // TODO add SQLite support
          break;
       default:
-         _tprintf(_T("Unable to rename column.\n"));
          success = false;
          break;
    }
