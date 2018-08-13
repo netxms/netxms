@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -23,6 +23,8 @@
 
 #include "libnetxms.h"
 #include <nxqueue.h>
+
+#define DEBUG_TAG _T("threads.pool")
 
 /**
  * Load average calculation
@@ -128,7 +130,7 @@ static THREAD_RESULT THREAD_CALL WorkerThread(void *arg)
             p->threads->remove(CAST_FROM_POINTER(arg, UINT64));
             MutexUnlock(p->mutex);
 
-            nxlog_debug(5, _T("Stopping worker thread in thread pool %s due to inactivity"), p->name);
+            nxlog_debug_tag(DEBUG_TAG, 5, _T("Stopping worker thread in thread pool %s due to inactivity"), p->name);
 
             free(rq);
             rq = (WorkRequest *)malloc(sizeof(WorkRequest));
@@ -225,7 +227,7 @@ static THREAD_RESULT THREAD_CALL MaintenanceThread(void *arg)
       }
       MutexUnlock(p->schedulerLock);
    }
-   nxlog_debug(3, _T("Maintenance thread for thread pool %s stopped"), p->name);
+   nxlog_debug_tag(DEBUG_TAG, 3, _T("Maintenance thread for thread pool %s stopped"), p->name);
    return THREAD_OK;
 }
 
@@ -254,21 +256,31 @@ ThreadPool LIBNETXMS_EXPORTABLE *ThreadPoolCreate(const TCHAR *name, int minThre
    p->loadAverage[1] = 0;
    p->loadAverage[2] = 0;
 
+   p->maintThread = ThreadCreateEx(MaintenanceThread, 256 * 1024, p);
+
+   MutexLock(p->mutex);
    for(int i = 0; i < p->minThreads; i++)
    {
       WorkerThreadInfo *wt = new WorkerThreadInfo;
       wt->pool = p;
       wt->handle = ThreadCreateEx(WorkerThread, stackSize, wt);
-      p->threads->set(CAST_FROM_POINTER(wt, UINT64), wt);
+      if (wt->handle != INVALID_THREAD_HANDLE)
+      {
+         p->threads->set(CAST_FROM_POINTER(wt, UINT64), wt);
+      }
+      else
+      {
+         nxlog_debug_tag(DEBUG_TAG, 1, _T("Cannot create worker thread in pool %s"), p->name);
+         delete wt;
+      }
    }
-
-   p->maintThread = ThreadCreateEx(MaintenanceThread, 256 * 1024, p);
+   MutexUnlock(p->mutex);
 
    s_registryLock.lock();
    s_registry.set(p->name, p);
    s_registryLock.unlock();
 
-   nxlog_debug(1, _T("Thread pool %s initialized (min=%d, max=%d)"), p->name, p->minThreads, p->maxThreads);
+   nxlog_debug_tag(DEBUG_TAG, 1, _T("Thread pool %s initialized (min=%d, max=%d)"), p->name, p->minThreads, p->maxThreads);
    return p;
 }
 
@@ -286,7 +298,7 @@ static EnumerationCallbackResult ThreadPoolDestroyCallback(const void *key, cons
  */
 void LIBNETXMS_EXPORTABLE ThreadPoolDestroy(ThreadPool *p)
 {
-   nxlog_debug(3, _T("Stopping threads in thread pool %s"), p->name);
+   nxlog_debug_tag(DEBUG_TAG, 3, _T("Stopping threads in thread pool %s"), p->name);
 
    s_registryLock.lock();
    s_registry.remove(p->name);
@@ -307,7 +319,7 @@ void LIBNETXMS_EXPORTABLE ThreadPoolDestroy(ThreadPool *p)
       p->queue->put(&rq);
    p->threads->forEach(ThreadPoolDestroyCallback, NULL);
 
-   nxlog_debug(1, _T("Thread pool %s destroyed"), p->name);
+   nxlog_debug_tag(DEBUG_TAG, 1, _T("Thread pool %s destroyed"), p->name);
    p->threads->setOwner(true);
    delete p->threads;
    delete p->queue;
@@ -334,12 +346,20 @@ void LIBNETXMS_EXPORTABLE ThreadPoolExecute(ThreadPool *p, ThreadPoolWorkerFunct
          WorkerThreadInfo *wt = new WorkerThreadInfo;
          wt->pool = p;
          wt->handle = ThreadCreateEx(WorkerThread, p->stackSize, wt);
-         p->threads->set(CAST_FROM_POINTER(wt, UINT64), wt);
-         started = true;
+         if (wt->handle != INVALID_THREAD_HANDLE)
+         {
+            p->threads->set(CAST_FROM_POINTER(wt, UINT64), wt);
+            started = true;
+         }
+         else
+         {
+            delete wt;
+            nxlog_debug_tag(DEBUG_TAG, 1, _T("Cannot create worker thread in pool %s"), p->name);
+         }
       }
       MutexUnlock(p->mutex);
       if (started)
-         nxlog_debug(3, _T("New thread started in thread pool %s"), p->name);
+         nxlog_debug_tag(DEBUG_TAG, 3, _T("New thread started in thread pool %s"), p->name);
    }
 
    WorkRequest *rq = (WorkRequest *)malloc(sizeof(WorkRequest));
