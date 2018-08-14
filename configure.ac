@@ -1177,6 +1177,16 @@ public:
 
 AC_LANG_POP([C++])
 
+AC_MSG_CHECKING(whether C compiler supports "unused" attribute)
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ static int __attribute__ ((unused)) z = 0; ]], [[ ]])],
+	[
+		AC_DEFINE(UNUSED_ATTRIBUTE_SUPPORTED, 1, Define to 1 if compiler supports "unused" attribute)
+		AC_MSG_RESULT(yes)
+	],
+	[
+		AC_MSG_RESULT(no)
+])
+
 
 #--------------------------------------------------------------------
 # Private extensions
