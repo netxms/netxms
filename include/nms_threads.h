@@ -1030,10 +1030,14 @@ struct ThreadPoolInfo
    int maxThreads;         // max threads
    int curThreads;         // current threads
    int activeRequests;     // number of active requests
-   int scheduledRequests;  // number of scheduled requests
+   int scheduledRequests;  // number of requests scheduled for execution
+   UINT64 totalRequests;   // Total requests executed (cumulative count)
+   UINT64 threadStarts;    // Number of thread starts
+   UINT64 threadStops;     // Number of thread stops
    int usage;              // Pool usage in %
    int load;               // Pool current load in % (can be more than 100% if there are more requests then threads available)
    double loadAvg[3];      // Pool load average
+   UINT32 averageWaitTime; // Average task wait time
 };
 
 /**
