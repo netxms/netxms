@@ -1271,11 +1271,20 @@ enum VirtualizationType
 #endif
 
 /**
+ * "unused" attribute
+ */
+#if UNUSED_ATTRIBUTE_SUPPORTED
+#define __UNUSED__ __attribute__((unused))
+#else
+#define __UNUSED__
+#endif
+
+/**
  * Header tags
  */
-#define __NX_BINARY_VERSION_TAG static const char __netxms_tag_version[] = "$nxtag.version${" NETXMS_VERSION_STRING_A "}$";
-#define __NX_BINARY_BUILD_TAG static const char __netxms_tag_build[] = "$nxtag.build${" NETXMS_BUILD_TAG_A "}$";
-#define __NX_BINARY_APP_NAME(name) static const char __netxms_tag_name[] = "$nxtag.name${" #name "}$";
+#define __NX_BINARY_VERSION_TAG static const char __UNUSED__ __netxms_tag_version[] = "$nxtag.version${" NETXMS_VERSION_STRING_A "}$";
+#define __NX_BINARY_BUILD_TAG static const char __UNUSED__ __netxms_tag_build[] = "$nxtag.build${" NETXMS_BUILD_TAG_A "}$";
+#define __NX_BINARY_APP_NAME(name) static const char __UNUSED__ __netxms_tag_name[] = "$nxtag.name${" #name "}$";
 
 #define __NX_BINARY_ALL_TAGS(name) \
          __NX_BINARY_APP_NAME(name) \
