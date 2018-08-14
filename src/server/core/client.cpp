@@ -34,10 +34,8 @@ static RWLOCK s_sessionListLock;
  */
 static BOOL RegisterClientSession(ClientSession *pSession)
 {
-   UINT32 i;
-
    RWLockWriteLock(s_sessionListLock, INFINITE);
-   for(i = 0; i < MAX_CLIENT_SESSIONS; i++)
+   for(int i = 0; i < MAX_CLIENT_SESSIONS; i++)
       if (s_sessionList[i] == NULL)
       {
          s_sessionList[i] = pSession;
@@ -45,7 +43,6 @@ static BOOL RegisterClientSession(ClientSession *pSession)
          RWLockUnlock(s_sessionListLock);
          return TRUE;
       }
-
    RWLockUnlock(s_sessionListLock);
    nxlog_write(MSG_TOO_MANY_SESSIONS, EVENTLOG_WARNING_TYPE, NULL);
    return FALSE;

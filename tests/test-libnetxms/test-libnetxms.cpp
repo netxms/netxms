@@ -6,6 +6,7 @@
 
 NETXMS_EXECUTABLE_HEADER(test-libnetxms)
 
+void TestThreadPool();
 void TestMsgWaitQueue();
 void TestMessageClass();
 void TestMutexWrapper();
@@ -1362,6 +1363,7 @@ int main(int argc, char *argv[])
    TestDebugLevel();
    TestDebugTags();
    TestProcessExecutor(argv[0]);
+   TestThreadPool();
 
    MsgWaitQueue::shutdown();
    return 0;
