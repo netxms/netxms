@@ -2670,7 +2670,7 @@ fi
 
 if test "x$PLATFORM" = "xSunOS"; then
 	AC_CHECK_HEADERS([zone.h])
-	AC_CHECK_FUNCS([atomic_inc_32_nv atomic_dec_32_nv atomic_swap_ptr getzoneid],,,[
+	AC_CHECK_FUNCS([atomic_inc_32_nv atomic_inc_64_nv atomic_dec_32_nv atomic_dec_64_nv atomic_swap_ptr getzoneid],,,[
 #include <sys/atomic.h>
 	])
 fi
