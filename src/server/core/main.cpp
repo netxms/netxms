@@ -878,6 +878,12 @@ retry_db_lock:
    CASReadSettings();
    nxlog_debug(1, _T("Global configuration loaded"));
 
+   // Setup thread pool resize parameters
+   ThreadPoolSetResizeParameters(
+            ConfigReadInt(_T("ThreadPool.Global.Responsiveness"), 12),
+            ConfigReadInt(_T("ThreadPool.Global.WaitTimeHighWatermark"), 200),
+            ConfigReadInt(_T("ThreadPool.Global.WaitTimeLowWatermark"), 100));
+
 	// Check data directory
 	if (!CheckDataDir())
 		return FALSE;

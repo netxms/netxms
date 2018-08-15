@@ -39,8 +39,13 @@
 /**
  * Wait time watermarks (milliseconds)
  */
-#define WAIT_TIME_HIGH_WATERMARK    200
-#define WAIT_TIME_LOW_WATERMARK     100
+static UINT32 s_waitTimeHighWatermark = 200;
+static UINT32 s_waitTimeLowWatermark = 100;
+
+/**
+ * Thread pool maintenance thread responsiveness
+ */
+static int s_maintThreadResponsiveness = 12;
 
 /**
  * Worker thread idle timeout (milliseconds)
@@ -136,7 +141,7 @@ static THREAD_RESULT THREAD_CALL WorkerThread(void *arg)
       if (rq == NULL)
       {
          MutexLock(p->mutex);
-         if ((p->threads->size() <= p->minThreads) || (p->averageWaitTime / FP_1 > WAIT_TIME_LOW_WATERMARK))
+         if ((p->threads->size() <= p->minThreads) || (p->averageWaitTime / FP_1 > s_waitTimeLowWatermark))
          {
             MutexUnlock(p->mutex);
             continue;
@@ -209,7 +214,7 @@ static THREAD_RESULT THREAD_CALL MaintenanceThread(void *arg)
          CALC_EMA(p->loadAverage[2], EXP_15, requestCount);
 
          count++;
-         if (count == 12)  // do pool check every 60 seconds
+         if (count == s_maintThreadResponsiveness)
          {
             TCHAR debugMessage[1024] = _T("");
             int started = 0;
@@ -218,7 +223,7 @@ static THREAD_RESULT THREAD_CALL MaintenanceThread(void *arg)
             MutexLock(p->mutex);
             INT32 threadCount = p->threads->size();
             INT64 averageWaitTime = p->averageWaitTime / FP_1;
-            if ((averageWaitTime > WAIT_TIME_HIGH_WATERMARK) && (threadCount < p->maxThreads))
+            if ((averageWaitTime > s_waitTimeHighWatermark) && (threadCount < p->maxThreads))
             {
                int delta = std::min(p->maxThreads - threadCount, std::max((p->activeRequests - threadCount) / 2, 1));
                for(int i = 0; i < delta; i++)
@@ -245,7 +250,7 @@ static THREAD_RESULT THREAD_CALL MaintenanceThread(void *arg)
                   _sntprintf(debugMessage, 1024, _T("Worker idle timeout increased to %d milliseconds for thread pool %s"), p->workerIdleTimeout, p->name);
                }
             }
-            else if ((averageWaitTime < WAIT_TIME_LOW_WATERMARK) && (threadCount > p->minThreads) && (p->workerIdleTimeout > MIN_WORKER_IDLE_TIMEOUT))
+            else if ((averageWaitTime < s_waitTimeLowWatermark) && (threadCount > p->minThreads) && (p->workerIdleTimeout > MIN_WORKER_IDLE_TIMEOUT))
             {
                p->workerIdleTimeout /= 2;
                _sntprintf(debugMessage, 1024, _T("Worker idle timeout decreased to %d milliseconds for thread pool %s"), p->workerIdleTimeout, p->name);
@@ -565,4 +570,17 @@ StringList LIBNETXMS_EXPORTABLE *ThreadPoolGetAllPools()
    StringList *list = s_registry.keys();
    s_registryLock.unlock();
    return list;
+}
+
+/**
+ * Set thread pool resize parameters - responsiveness and wait time high/low watermarks
+ */
+void LIBNETXMS_EXPORTABLE ThreadPoolSetResizeParameters(int responsiveness, UINT32 waitTimeHWM, UINT32 waitTimeLWM)
+{
+   if ((responsiveness > 0) && (responsiveness <= 24))
+      s_maintThreadResponsiveness = responsiveness;
+   if (waitTimeHWM > 0)
+      s_waitTimeHighWatermark = waitTimeHWM;
+   if (waitTimeLWM > 0)
+      s_waitTimeLowWatermark = waitTimeLWM;
 }
