@@ -45,7 +45,7 @@ typedef volatile LONGLONG VolatileCounter64;
 #if defined(__sun)
 
 typedef volatile uint32_t VolatileCounter;
-typedef volatile uint64_t VolatileCounter;
+typedef volatile uint64_t VolatileCounter64;
 
 #if !HAVE_ATOMIC_INC_32_NV
 extern "C" volatile uint32_t solaris9_atomic_inc32(volatile uint32_t *v);
