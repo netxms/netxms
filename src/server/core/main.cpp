@@ -408,7 +408,7 @@ static void LoadGlobalConfig()
 /**
  * Initialize cryptografic functions
  */
-static bool InitCryptografy()
+static bool InitCryptography()
 {
 #ifdef _WITH_ENCRYPTION
 	bool success = false;
@@ -898,8 +898,8 @@ retry_db_lock:
 	if (!CheckDataDir())
 		return FALSE;
 
-	// Initialize cryptografy
-	if (!InitCryptografy())
+	// Initialize cryptography
+	if (!InitCryptography())
 	{
 		nxlog_write(MSG_INIT_CRYPTO_FAILED, EVENTLOG_ERROR_TYPE, NULL);
 		return FALSE;
