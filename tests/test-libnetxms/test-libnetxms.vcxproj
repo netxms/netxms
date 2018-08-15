@@ -171,6 +171,7 @@
     <ClCompile Include="proc.cpp" />
     <ClCompile Include="test-libnetxms.cpp" />
     <ClCompile Include="threads.cpp" />
+    <ClCompile Include="tp.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\testtools.h" />
