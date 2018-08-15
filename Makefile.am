@@ -10,7 +10,7 @@
 
 ACLOCAL_AMFLAGS = -I m4
 BUILT_SOURCES = netxms-build-tag.h
-EXTRA_DIST = reconf configure netxms.sln README.HPUX netxms-build-tag.h
+EXTRA_DIST = reconf configure netxms.sln README.HPUX netxms-build-tag.h jemalloc.sym
 SUBDIRS = . m4 src doc tools contrib
 SUBDIRS += @TOP_LEVEL_MODULES@
 
