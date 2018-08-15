@@ -443,7 +443,7 @@ bool AgentTunnel::sendMessage(NXCPMessage *msg)
    if (m_state == AGENT_TUNNEL_SHUTDOWN)
       return false;
 
-   if (nxlog_get_debug_level() >= 6)
+   if (nxlog_get_debug_level_tag(DEBUG_TAG) >= 6)
    {
       TCHAR buffer[64];
       debugPrintf(6, _T("Sending message %s"), NXCPMessageCodeName(msg->getCode(), buffer));
