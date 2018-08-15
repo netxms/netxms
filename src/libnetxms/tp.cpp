@@ -221,11 +221,11 @@ static THREAD_RESULT THREAD_CALL MaintenanceThread(void *arg)
             bool failure = false;
 
             MutexLock(p->mutex);
-            INT32 threadCount = p->threads->size();
+            int threadCount = p->threads->size();
             INT64 averageWaitTime = p->averageWaitTime / FP_1;
             if ((averageWaitTime > s_waitTimeHighWatermark) && (threadCount < p->maxThreads))
             {
-               int delta = std::min(p->maxThreads - threadCount, std::max((p->activeRequests - threadCount) / 2, 1));
+               int delta = std::min(p->maxThreads - threadCount, std::max((static_cast<int>(p->activeRequests) - threadCount) / 2, 1));
                for(int i = 0; i < delta; i++)
                {
                   WorkerThreadInfo *wt = new WorkerThreadInfo;
@@ -538,10 +538,10 @@ void LIBNETXMS_EXPORTABLE ThreadPoolGetInfo(ThreadPool *p, ThreadPoolInfo *info)
    info->totalRequests = p->taskExecutionCount;
    info->load = (info->curThreads > 0) ? info->activeRequests * 100 / info->curThreads : 0;
    info->usage = info->curThreads * 100 / info->maxThreads;
-   info->loadAvg[0] = (double)p->loadAverage[0] / FP_1;
-   info->loadAvg[1] = (double)p->loadAverage[1] / FP_1;
-   info->loadAvg[2] = (double)p->loadAverage[2] / FP_1;
-   info->averageWaitTime = p->averageWaitTime / FP_1;
+   info->loadAvg[0] = static_cast<double>(p->loadAverage[0]) / FP_1;
+   info->loadAvg[1] = static_cast<double>(p->loadAverage[1]) / FP_1;
+   info->loadAvg[2] = static_cast<double>(p->loadAverage[2]) / FP_1;
+   info->averageWaitTime = static_cast<UINT32>(p->averageWaitTime / FP_1);
    MutexUnlock(p->mutex);
    MutexLock(p->schedulerLock);
    info->scheduledRequests = p->schedulerQueue->size();
