@@ -192,6 +192,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="abind_target.cpp" />
     <ClCompile Include="accesspoint.cpp" />
     <ClCompile Include="acl.cpp" />
     <ClCompile Include="actions.cpp" />
@@ -231,6 +232,7 @@
     <ClCompile Include="dcivalue.cpp" />
     <ClCompile Include="dci_recalc.cpp" />
     <ClCompile Include="dcobject.cpp" />
+    <ClCompile Include="dcowner.cpp" />
     <ClCompile Include="dcst.cpp" />
     <ClCompile Include="dctable.cpp" />
     <ClCompile Include="dctarget.cpp" />
@@ -330,6 +332,7 @@
     <ClCompile Include="uptimecalc.cpp" />
     <ClCompile Include="userdb.cpp" />
     <ClCompile Include="userdb_objects.cpp" />
+    <ClCompile Include="vobject.cpp" />
     <ClCompile Include="vpnconn.cpp" />
     <ClCompile Include="vrrp.cpp" />
     <ClCompile Include="watchdog.cpp" />

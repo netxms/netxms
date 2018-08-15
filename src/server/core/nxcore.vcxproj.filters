@@ -450,6 +450,15 @@
     <ClCompile Include="ucc.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="abind_target.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dcowner.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vobject.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\include\dbdrv.h">
