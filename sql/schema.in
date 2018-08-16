@@ -336,8 +336,8 @@ CREATE TABLE nodes
   ssh_login varchar(63) null,
   ssh_password varchar(63) null,
   ssh_proxy integer not null,
-  port_rows integer null,
-  port_numbering_scheme integer null,
+  port_rows integer not null,
+  port_numbering_scheme integer not null,
   agent_comp_mode char(1) not null, // compression mode for agent
   fail_time_snmp integer not null,
   fail_time_agent integer not null,

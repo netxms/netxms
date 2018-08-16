@@ -28,6 +28,11 @@
 extern const TCHAR *g_tables[];
 
 /**
+ * Fields to be fixed during migration
+ */
+extern FIX_FIELD g_fixFields[];
+
+/**
  * Source config
  */
 static TCHAR s_dbDriver[MAX_PATH] = _T("");
@@ -161,7 +166,28 @@ static bool MigrateTable(const TCHAR *table)
       {
 			for(int i = 0; i < columnCount; i++)
          {
-            DBBind(hStmt, i + 1, DB_SQLTYPE_VARCHAR, DBGetField(hResult, i, NULL, 0), DB_BIND_DYNAMIC);
+			   TCHAR *value = DBGetField(hResult, i, NULL, 0);
+			   if ((value == NULL) || (*value == 0))
+			   {
+			      char cname[256];
+			      DBGetColumnNameA(hResult, i, cname, 256);
+
+               bool fix = false;
+               for(int n = 0; g_fixFields[n].table != NULL; n++)
+               {
+                  if (!_tcsicmp(g_fixFields[n].table, table) &&
+                      !stricmp(g_fixFields[n].column, cname))
+                  {
+                     fix = true;
+                     break;
+                  }
+               }
+               DBBind(hStmt, i + 1, DB_SQLTYPE_VARCHAR, fix ? _T("0") : _T(""), DB_BIND_STATIC);
+			   }
+			   else
+			   {
+			      DBBind(hStmt, i + 1, DB_SQLTYPE_VARCHAR, value, DB_BIND_DYNAMIC);
+			   }
          }
          if (!SQLExecute(hStmt))
          {

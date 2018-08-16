@@ -866,11 +866,11 @@ bool LIBNXDB_EXPORTABLE DBSetNotNullConstraint(DB_HANDLE hdb, const TCHAR *table
    {
       case DB_SYNTAX_DB2:
          _sntprintf(query, 1024, _T("ALTER TABLE %s ALTER COLUMN %s SET NOT NULL"), table, column);
-         success = DBQuery(hdb, query);
+         success = ExecuteQuery(hdb, query);
          if (success)
          {
             _sntprintf(query, 1024, _T("CALL Sysproc.admin_cmd('REORG TABLE %s')"), table);
-            success = DBQuery(hdb, query);
+            success = ExecuteQuery(hdb, query);
          }
          break;
       case DB_SYNTAX_MSSQL:
@@ -878,7 +878,7 @@ bool LIBNXDB_EXPORTABLE DBSetNotNullConstraint(DB_HANDLE hdb, const TCHAR *table
          if (success)
          {
             _sntprintf(query, 1024, _T("ALTER TABLE %s ALTER COLUMN %s %s NOT NULL"), table, column, type);
-            success = DBQuery(hdb, query);
+            success = ExecuteQuery(hdb, query);
          }
          break;
       case DB_SYNTAX_MYSQL:
@@ -886,7 +886,7 @@ bool LIBNXDB_EXPORTABLE DBSetNotNullConstraint(DB_HANDLE hdb, const TCHAR *table
          if (success)
          {
             _sntprintf(query, 1024, _T("ALTER TABLE %s MODIFY %s %s NOT NULL"), table, column, type);
-            success = DBQuery(hdb, query);
+            success = ExecuteQuery(hdb, query);
          }
          break;
       case DB_SYNTAX_ORACLE:
@@ -894,11 +894,11 @@ bool LIBNXDB_EXPORTABLE DBSetNotNullConstraint(DB_HANDLE hdb, const TCHAR *table
                                  _T("PRAGMA EXCEPTION_INIT(already_not_null, -1442); ")
                                  _T("BEGIN EXECUTE IMMEDIATE 'ALTER TABLE %s MODIFY %s NOT NULL'; ")
                                  _T("EXCEPTION WHEN already_not_null THEN null; END;"), table, column);
-         success = DBQuery(hdb, query);
+         success = ExecuteQuery(hdb, query);
          break;
       case DB_SYNTAX_PGSQL:
          _sntprintf(query, 1024, _T("ALTER TABLE %s ALTER COLUMN %s SET NOT NULL"), table, column);
-         success = DBQuery(hdb, query);
+         success = ExecuteQuery(hdb, query);
          break;
       case DB_SYNTAX_SQLITE:
          success = SQLiteAlterTable(hdb, SET_NOT_NULL, table, column, _T(""));

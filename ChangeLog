@@ -11,6 +11,7 @@
 - Fixed menu path creation for Summary DCI Table and folder creation for graph view
 - New command line options for Windows agent installer: /FORCECREATECONFIG, /LOGFILE=, /FILESTORE=, /CONFIGINCLUDEDIR=
 - Server optimization for high load
+- Fixed SQL errors during database import or migration
 - Fixed issues:
 	NX-1377 (Can't upgrade sqlite database from version 21.4 to 21.5 with error "Unable to set not null constraint")
 	NX-1435 (AgentTunnelListenPort configuration parameter is missing from config table)

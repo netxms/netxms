@@ -48,6 +48,15 @@ struct GUID_MAPPING
    const TCHAR *guid;
 };
 
+/**
+ * Well-known fields to be fixed during import or migration
+ */
+struct FIX_FIELD
+{
+   const TCHAR *table;
+   const char *column;
+};
+
 //
 // Functions
 //

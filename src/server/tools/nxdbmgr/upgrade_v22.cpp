@@ -24,6 +24,28 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 22.35 to 22.36
+ */
+static bool H_UpgradeFromV35()
+{
+   static const TCHAR *batch =
+      _T("UPDATE object_properties SET state_before_maint=0 WHERE state_before_maint IS NULL\n")
+      _T("UPDATE nodes SET port_rows=0 WHERE port_rows IS NULL\n")
+      _T("UPDATE nodes SET port_numbering_scheme=0 WHERE port_numbering_scheme IS NULL\n")
+      _T("UPDATE dct_threshold_instances SET row_number=0 WHERE row_number IS NULL\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+
+   CHK_EXEC(DBSetNotNullConstraint(g_hCoreDB, _T("object_properties"), _T("state_before_maint")));
+   CHK_EXEC(DBSetNotNullConstraint(g_hCoreDB, _T("nodes"), _T("port_rows")));
+   CHK_EXEC(DBSetNotNullConstraint(g_hCoreDB, _T("nodes"), _T("port_numbering_scheme")));
+   CHK_EXEC(DBSetNotNullConstraint(g_hCoreDB, _T("dct_threshold_instances"), _T("row_number")));
+
+   CHK_EXEC(SetMinorSchemaVersion(36));
+   return true;
+}
+
+/**
  * Upgrade from 22.34 to 22.35
  */
 static bool H_UpgradeFromV34()
@@ -697,6 +719,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 35, 22, 36, H_UpgradeFromV35 },
    { 34, 22, 35, H_UpgradeFromV34 },
    { 33, 22, 34, H_UpgradeFromV33 },
    { 32, 22, 33, H_UpgradeFromV32 },
