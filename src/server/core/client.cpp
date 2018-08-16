@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,6 +22,11 @@
 
 #include "nxcore.h"
 #include <socket_listener.h>
+
+/**
+ * Client thread pool
+ */
+ThreadPool *g_clientThreadPool = NULL;
 
 /**
  * Static data
@@ -96,6 +101,10 @@ static THREAD_RESULT THREAD_CALL ClientKeepAliveThread(void *)
  */
 void InitClientListeners()
 {
+   g_clientThreadPool = ThreadPoolCreate(_T("CLIENT"),
+            ConfigReadInt(_T("ThreadPool.Client.BaseSize"), 16),
+            ConfigReadInt(_T("ThreadPool.Client.MaxSize"), MAX_CLIENT_SESSIONS * 4));
+
    memset(s_sessionList, 0, sizeof(s_sessionList));
 
    // Create session list access rwlock

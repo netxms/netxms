@@ -61,6 +61,7 @@
  */
 extern Queue g_nodePollerQueue;
 extern Queue g_dciCacheLoaderQueue;
+extern ThreadPool *g_clientThreadPool;
 extern ThreadPool *g_dataCollectorThreadPool;
 
 void UnregisterClientSession(int id);
@@ -115,75 +116,6 @@ static void ImageLibraryDeleteCallback(ClientSession *pSession, void *pArg)
 }
 
 /**
- * Additional message processing thread starters
- */
-#define CALL_IN_NEW_THREAD(func, msg) \
-{ \
-	PROCTHREAD_START_DATA *pData = MemAllocStruct<PROCTHREAD_START_DATA>(); \
-	pData->pSession = this; \
-	pData->pMsg = msg; \
-	msg = NULL; /* prevent deletion by main processing thread*/ \
-	InterlockedIncrement(&m_refCount); \
-	ThreadPoolExecute(g_mainThreadPool, ThreadStarter_##func, pData); \
-}
-
-#define DEFINE_THREAD_STARTER(func) \
-void ClientSession::ThreadStarter_##func(void *pArg) \
-{ \
-   ((PROCTHREAD_START_DATA *)pArg)->pSession->debugPrintf(6, _T("Method ") _T(#func) _T(" called on background thread")); \
-   ((PROCTHREAD_START_DATA *)pArg)->pSession->func(((PROCTHREAD_START_DATA *)pArg)->pMsg); \
-	InterlockedDecrement(&((PROCTHREAD_START_DATA *)pArg)->pSession->m_refCount); \
-	delete ((PROCTHREAD_START_DATA *)pArg)->pMsg; \
-	free(pArg); \
-}
-
-DEFINE_THREAD_STARTER(cancelFileMonitoring)
-DEFINE_THREAD_STARTER(clearDCIData)
-DEFINE_THREAD_STARTER(closeTcpProxy)
-DEFINE_THREAD_STARTER(createObject)
-DEFINE_THREAD_STARTER(deleteDCIEntry)
-DEFINE_THREAD_STARTER(executeAction)
-DEFINE_THREAD_STARTER(executeScript)
-DEFINE_THREAD_STARTER(executeLibraryScript)
-DEFINE_THREAD_STARTER(fileManagerControl)
-DEFINE_THREAD_STARTER(findIpAddress)
-DEFINE_THREAD_STARTER(findMacAddress)
-DEFINE_THREAD_STARTER(findHostname)
-DEFINE_THREAD_STARTER(findNodeConnection)
-DEFINE_THREAD_STARTER(forceDCIPoll)
-DEFINE_THREAD_STARTER(forwardToReportingServer)
-DEFINE_THREAD_STARTER(getAgentFile)
-DEFINE_THREAD_STARTER(getAlarms)
-DEFINE_THREAD_STARTER(getAlarmEvents)
-DEFINE_THREAD_STARTER(getCollectedData)
-DEFINE_THREAD_STARTER(getLocationHistory)
-DEFINE_THREAD_STARTER(getNetworkPath)
-DEFINE_THREAD_STARTER(getPredictedData)
-DEFINE_THREAD_STARTER(getRoutingTable)
-DEFINE_THREAD_STARTER(getServerFile)
-DEFINE_THREAD_STARTER(getServerLogQueryData)
-DEFINE_THREAD_STARTER(getSwitchForwardingDatabase)
-DEFINE_THREAD_STARTER(getTableCollectedData)
-DEFINE_THREAD_STARTER(importConfiguration)
-DEFINE_THREAD_STARTER(openHelpdeskIssue)
-DEFINE_THREAD_STARTER(processConsoleCommand)
-DEFINE_THREAD_STARTER(queryAgentTable)
-DEFINE_THREAD_STARTER(queryL2Topology)
-DEFINE_THREAD_STARTER(queryInternalCommunicationTopology)
-DEFINE_THREAD_STARTER(queryObjects)
-DEFINE_THREAD_STARTER(queryObjectDetails)
-DEFINE_THREAD_STARTER(queryParameter)
-DEFINE_THREAD_STARTER(queryServerLog)
-DEFINE_THREAD_STARTER(recalculateDCIValues)
-DEFINE_THREAD_STARTER(sendMib)
-DEFINE_THREAD_STARTER(setupTcpProxy)
-DEFINE_THREAD_STARTER(uploadUserFileToAgent)
-DEFINE_THREAD_STARTER(getRepositories)
-DEFINE_THREAD_STARTER(addRepository)
-DEFINE_THREAD_STARTER(modifyRepository)
-DEFINE_THREAD_STARTER(deleteRepository)
-
-/**
  * Client communication read thread starter
  */
 THREAD_RESULT THREAD_CALL ClientSession::readThreadStarter(void *pArg)
@@ -199,39 +131,15 @@ THREAD_RESULT THREAD_CALL ClientSession::readThreadStarter(void *pArg)
    return THREAD_OK;
 }
 
- /**
- * Client communication write thread starter
- */
-THREAD_RESULT THREAD_CALL ClientSession::writeThreadStarter(void *pArg)
-{
-   ThreadSetName("SessionWriter");
-   ((ClientSession *)pArg)->writeThread();
-   return THREAD_OK;
-}
-
-/**
- * Received message processing thread starter
- */
-THREAD_RESULT THREAD_CALL ClientSession::processingThreadStarter(void *pArg)
-{
-   ThreadSetName("SessionProc");
-   ((ClientSession *)pArg)->processingThread();
-   return THREAD_OK;
-}
-
 /**
  * Client session class constructor
  */
 ClientSession::ClientSession(SOCKET hSocket, const InetAddress& addr)
 {
-   m_sendQueue = new Queue;
-   m_requestQueue = new Queue;
    m_hSocket = hSocket;
    m_id = -1;
    m_state = SESSION_STATE_INIT;
    m_pCtx = NULL;
-   m_hWriteThread = INVALID_THREAD_HANDLE;
-   m_hProcessingThread = INVALID_THREAD_HANDLE;
 	m_mutexSocketWrite = MutexCreate();
    m_mutexSendObjects = MutexCreate();
    m_mutexSendAlarms = MutexCreate();
@@ -279,8 +187,6 @@ ClientSession::~ClientSession()
 {
    if (m_hSocket != -1)
       closesocket(m_hSocket);
-   delete m_sendQueue;
-   delete m_requestQueue;
 	MutexDestroy(m_mutexSocketWrite);
    MutexDestroy(m_mutexSendObjects);
    MutexDestroy(m_mutexSendAlarms);
@@ -327,8 +233,6 @@ ClientSession::~ClientSession()
  */
 void ClientSession::run()
 {
-   m_hWriteThread = ThreadCreateEx(writeThreadStarter, 0, this);
-   m_hProcessingThread = ThreadCreateEx(processingThreadStarter, 0, this);
    ThreadCreate(readThreadStarter, 0, this);
 }
 
@@ -595,28 +499,14 @@ void ClientSession::readThread()
 			}
 			else
          {
-            m_requestQueue->put(msg);
+			   incRefCount();
+			   ThreadPoolExecute(g_clientThreadPool, this, &ClientSession::processRequest, msg);
          }
       }
    }
 
    // Mark as terminated (sendMessage calls will not work after that point)
    m_dwFlags |= CSF_TERMINATED;
-
-   // Notify other threads to exit
-   NXCP_MESSAGE *rawMsg;
-   while((rawMsg = (NXCP_MESSAGE *)m_sendQueue->get()) != NULL)
-      free(rawMsg);
-   m_sendQueue->put(INVALID_POINTER_VALUE);
-
-   NXCPMessage *msg;
-	while((msg = (NXCPMessage *)m_requestQueue->get()) != NULL)
-		delete msg;
-   m_requestQueue->put(INVALID_POINTER_VALUE);
-
-   // Wait for other threads to finish
-   ThreadJoin(m_hWriteThread);
-   ThreadJoin(m_hProcessingThread);
 
    // remove all pending file transfers from reporting server
    RemovePendingFileTransferRequests(this);
@@ -652,841 +542,819 @@ void ClientSession::readThread()
 }
 
 /**
- * Network write thread
+ * Request processing
  */
-void ClientSession::writeThread()
+void ClientSession::processRequest(NXCPMessage *request)
 {
-   while(true)
-   {
-      NXCP_MESSAGE *rawMsg = (NXCP_MESSAGE *)m_sendQueue->getOrBlock();
-      if (rawMsg == INVALID_POINTER_VALUE)    // Session termination indicator
-         break;
+   m_wCurrentCmd = request->getCode();
 
-      sendRawMessage(rawMsg);
-      free(rawMsg);
+   TCHAR buffer[128];
+   debugPrintf(6, _T("Received message %s"), NXCPMessageCodeName(m_wCurrentCmd, buffer));
+   if (!(m_dwFlags & CSF_AUTHENTICATED) &&
+       (m_wCurrentCmd != CMD_LOGIN) &&
+       (m_wCurrentCmd != CMD_GET_SERVER_INFO) &&
+       (m_wCurrentCmd != CMD_REQUEST_ENCRYPTION) &&
+       (m_wCurrentCmd != CMD_GET_MY_CONFIG) &&
+       (m_wCurrentCmd != CMD_REGISTER_AGENT))
+   {
+      delete request;
+      decRefCount();
+      return;
    }
-}
 
-/**
- * Message processing thread
- */
-void ClientSession::processingThread()
-{
-   NXCPMessage *pMsg;
-   TCHAR szBuffer[128];
-   UINT32 i;
-	int status;
-
-   while(true)
+   m_state = SESSION_STATE_PROCESSING;
+   switch(m_wCurrentCmd)
    {
-      pMsg = (NXCPMessage *)m_requestQueue->getOrBlock();
-      if (pMsg == INVALID_POINTER_VALUE)    // Session termination indicator
+      case CMD_LOGIN:
+         login(request);
          break;
-
-      m_wCurrentCmd = pMsg->getCode();
-      debugPrintf(6, _T("Received message %s"), NXCPMessageCodeName(m_wCurrentCmd, szBuffer));
-      if (!(m_dwFlags & CSF_AUTHENTICATED) &&
-          (m_wCurrentCmd != CMD_LOGIN) &&
-          (m_wCurrentCmd != CMD_GET_SERVER_INFO) &&
-          (m_wCurrentCmd != CMD_REQUEST_ENCRYPTION) &&
-          (m_wCurrentCmd != CMD_GET_MY_CONFIG) &&
-          (m_wCurrentCmd != CMD_REGISTER_AGENT))
-      {
-         delete pMsg;
-         continue;
-      }
-
-      m_state = SESSION_STATE_PROCESSING;
-      switch(m_wCurrentCmd)
-      {
-         case CMD_LOGIN:
-            login(pMsg);
-            break;
-         case CMD_GET_SERVER_INFO:
-            sendServerInfo(pMsg->getId());
-            break;
-         case CMD_GET_MY_CONFIG:
-            sendConfigForAgent(pMsg);
-            break;
-         case CMD_GET_OBJECTS:
-            getObjects(pMsg);
-            break;
-         case CMD_GET_SELECTED_OBJECTS:
-            getSelectedObjects(pMsg);
-            break;
-         case CMD_QUERY_OBJECTS:
-            CALL_IN_NEW_THREAD(queryObjects, pMsg);
-            break;
-         case CMD_QUERY_OBJECT_DETAILS:
-            CALL_IN_NEW_THREAD(queryObjectDetails, pMsg);
-            break;
-         case CMD_GET_CONFIG_VARLIST:
-            getConfigurationVariables(pMsg->getId());
-            break;
-         case CMD_GET_PUBLIC_CONFIG_VAR:
-            getPublicConfigurationVariable(pMsg);
-            break;
-         case CMD_SET_CONFIG_VARIABLE:
-            setConfigurationVariable(pMsg);
-            break;
-         case CMD_SET_CONFIG_TO_DEFAULT:
-            setDefaultConfigurationVariableValues(pMsg);
-            break;
-         case CMD_DELETE_CONFIG_VARIABLE:
-            deleteConfigurationVariable(pMsg);
-            break;
-			case CMD_CONFIG_GET_CLOB:
-				getConfigCLOB(pMsg);
-				break;
-			case CMD_CONFIG_SET_CLOB:
-				setConfigCLOB(pMsg);
-				break;
-         case CMD_GET_ALARM_CATEGORIES:
-            getAlarmCategories(pMsg->getId());
-            break;
-         case CMD_MODIFY_ALARM_CATEGORY:
-            modifyAlarmCategory(pMsg);
-            break;
-         case CMD_DELETE_ALARM_CATEGORY:
-            deleteAlarmCategory(pMsg);
-            break;
-         case CMD_LOAD_EVENT_DB:
-            sendEventDB(pMsg);
-            break;
-         case CMD_SET_EVENT_INFO:
-            modifyEventTemplate(pMsg);
-            break;
-         case CMD_DELETE_EVENT_TEMPLATE:
-            deleteEventTemplate(pMsg);
-            break;
-         case CMD_GENERATE_EVENT_CODE:
-            generateEventCode(pMsg->getId());
-            break;
-         case CMD_MODIFY_OBJECT:
-            modifyObject(pMsg);
-            break;
-         case CMD_SET_OBJECT_MGMT_STATUS:
-            changeObjectMgmtStatus(pMsg);
-            break;
-         case CMD_ENTER_MAINT_MODE:
-            enterMaintenanceMode(pMsg);
-            break;
-         case CMD_LEAVE_MAINT_MODE:
-            leaveMaintenanceMode(pMsg);
-            break;
-         case CMD_LOAD_USER_DB:
-            sendUserDB(pMsg->getId());
-            break;
-         case CMD_CREATE_USER:
-            createUser(pMsg);
-            break;
-         case CMD_UPDATE_USER:
-            updateUser(pMsg);
-            break;
-         case CMD_DETACH_LDAP_USER:
-            detachLdapUser(pMsg);
-            break;
-         case CMD_DELETE_USER:
-            deleteUser(pMsg);
-            break;
-         case CMD_LOCK_USER_DB:
-            lockUserDB(pMsg->getId(), TRUE);
-            break;
-         case CMD_UNLOCK_USER_DB:
-            lockUserDB(pMsg->getId(), FALSE);
-            break;
-         case CMD_SET_PASSWORD:
-            setPassword(pMsg);
-            break;
-         case CMD_VALIDATE_PASSWORD:
-            validatePassword(pMsg);
-            break;
-         case CMD_GET_NODE_DCI_LIST:
-            openNodeDCIList(pMsg);
-            break;
-         case CMD_UNLOCK_NODE_DCI_LIST:
-            closeNodeDCIList(pMsg);
-            break;
-         case CMD_MODIFY_NODE_DCI:
-         case CMD_DELETE_NODE_DCI:
-            modifyNodeDCI(pMsg);
-            break;
-         case CMD_SET_DCI_STATUS:
-            changeDCIStatus(pMsg);
-            break;
-         case CMD_COPY_DCI:
-            copyDCI(pMsg);
-            break;
-         case CMD_APPLY_TEMPLATE:
-            applyTemplate(pMsg);
-            break;
-         case CMD_GET_DCI_DATA:
-            CALL_IN_NEW_THREAD(getCollectedData, pMsg);
-            break;
-         case CMD_GET_TABLE_DCI_DATA:
-            CALL_IN_NEW_THREAD(getTableCollectedData, pMsg);
-            break;
-			case CMD_CLEAR_DCI_DATA:
-				CALL_IN_NEW_THREAD(clearDCIData, pMsg);
-				break;
-			case CMD_DELETE_DCI_ENTRY:
-			   CALL_IN_NEW_THREAD(deleteDCIEntry, pMsg);
-			   break;
-			case CMD_FORCE_DCI_POLL:
-				CALL_IN_NEW_THREAD(forceDCIPoll, pMsg);
-				break;
-			case CMD_RECALCULATE_DCI_VALUES:
-            CALL_IN_NEW_THREAD(recalculateDCIValues, pMsg);
-			   break;
-         case CMD_OPEN_EPP:
-            openEPP(pMsg);
-            break;
-         case CMD_CLOSE_EPP:
-            closeEPP(pMsg->getId());
-            break;
-         case CMD_SAVE_EPP:
-            saveEPP(pMsg);
-            break;
-         case CMD_EPP_RECORD:
-            processEPPRecord(pMsg);
-            break;
-         case CMD_GET_MIB_TIMESTAMP:
-            sendMIBTimestamp(pMsg->getId());
-            break;
-         case CMD_GET_MIB:
-            CALL_IN_NEW_THREAD(sendMib, pMsg);
-            break;
-         case CMD_CREATE_OBJECT:
-            CALL_IN_NEW_THREAD(createObject, pMsg);
-            break;
-         case CMD_BIND_OBJECT:
-            changeObjectBinding(pMsg, TRUE);
-            break;
-         case CMD_UNBIND_OBJECT:
-            changeObjectBinding(pMsg, FALSE);
-            break;
-         case CMD_ADD_CLUSTER_NODE:
-            addClusterNode(pMsg);
-            break;
-         case CMD_GET_ALL_ALARMS:
-            CALL_IN_NEW_THREAD(getAlarms, pMsg);
-            break;
-         case CMD_GET_ALARM_COMMENTS:
-				getAlarmComments(pMsg);
-            break;
-         case CMD_SET_ALARM_STATUS_FLOW:
-            updateAlarmStatusFlow(pMsg);
-            break;
-         case CMD_UPDATE_ALARM_COMMENT:
-				updateAlarmComment(pMsg);
-            break;
-         case CMD_DELETE_ALARM_COMMENT:
-            deleteAlarmComment(pMsg);
-            break;
-         case CMD_GET_ALARM:
-            getAlarm(pMsg);
-            break;
-         case CMD_GET_ALARM_EVENTS:
-            CALL_IN_NEW_THREAD(getAlarmEvents, pMsg);
-            break;
-         case CMD_ACK_ALARM:
-            acknowledgeAlarm(pMsg);
-            break;
-         case CMD_RESOLVE_ALARM:
-            resolveAlarm(pMsg, false);
-            break;
-         case CMD_TERMINATE_ALARM:
-            resolveAlarm(pMsg, true);
-            break;
-         case CMD_DELETE_ALARM:
-            deleteAlarm(pMsg);
-            break;
-         case CMD_BULK_RESOLVE_ALARMS:
-            bulkResolveAlarms(pMsg, false);
-            break;
-         case CMD_BULK_TERMINATE_ALARMS:
-            bulkResolveAlarms(pMsg, true);
-            break;
-         case CMD_OPEN_HELPDESK_ISSUE:
-            CALL_IN_NEW_THREAD(openHelpdeskIssue, pMsg);
-            break;
-         case CMD_GET_HELPDESK_URL:
-            getHelpdeskUrl(pMsg);
-            break;
-         case CMD_UNLINK_HELPDESK_ISSUE:
-            unlinkHelpdeskIssue(pMsg);
-            break;
-         case CMD_CREATE_ACTION:
-            createAction(pMsg);
-            break;
-         case CMD_MODIFY_ACTION:
-            updateAction(pMsg);
-            break;
-         case CMD_DELETE_ACTION:
-            deleteAction(pMsg);
-            break;
-         case CMD_LOAD_ACTIONS:
-            sendAllActions(pMsg->getId());
-            break;
-         case CMD_DELETE_OBJECT:
-            deleteObject(pMsg);
-            break;
-         case CMD_POLL_NODE:
-            forcedNodePoll(pMsg);
-            break;
-         case CMD_TRAP:
-            onTrap(pMsg);
-            break;
-         case CMD_WAKEUP_NODE:
-            onWakeUpNode(pMsg);
-            break;
-         case CMD_CREATE_TRAP:
-            editTrap(TRAP_CREATE, pMsg);
-            break;
-         case CMD_MODIFY_TRAP:
-            editTrap(TRAP_UPDATE, pMsg);
-            break;
-         case CMD_DELETE_TRAP:
-            editTrap(TRAP_DELETE, pMsg);
-            break;
-         case CMD_LOAD_TRAP_CFG:
-            sendAllTraps(pMsg->getId());
-            break;
-			case CMD_GET_TRAP_CFG_RO:
-				sendAllTraps2(pMsg->getId());
-				break;
-         case CMD_QUERY_PARAMETER:
-            CALL_IN_NEW_THREAD(queryParameter, pMsg);
-            break;
-         case CMD_QUERY_TABLE:
-            CALL_IN_NEW_THREAD(queryAgentTable, pMsg);
-            break;
-         case CMD_GET_PACKAGE_LIST:
-            getInstalledPackages(pMsg->getId());
-            break;
-         case CMD_INSTALL_PACKAGE:
-            installPackage(pMsg);
-            break;
-         case CMD_REMOVE_PACKAGE:
-            removePackage(pMsg);
-            break;
-         case CMD_GET_PARAMETER_LIST:
-            getParametersList(pMsg);
-            break;
-         case CMD_DEPLOY_PACKAGE:
-            deployPackage(pMsg);
-            break;
-         case CMD_GET_LAST_VALUES:
-            getLastValues(pMsg);
-            break;
-         case CMD_GET_DCI_VALUES:
-            getLastValuesByDciId(pMsg);
-            break;
-         case CMD_GET_TABLE_LAST_VALUES:
-            getTableLastValues(pMsg);
-            break;
-         case CMD_GET_ACTIVE_THRESHOLDS:
-            getActiveThresholds(pMsg);
-            break;
-			case CMD_GET_THRESHOLD_SUMMARY:
-				getThresholdSummary(pMsg);
-				break;
-         case CMD_GET_USER_VARIABLE:
-            getUserVariable(pMsg);
-            break;
-         case CMD_SET_USER_VARIABLE:
-            setUserVariable(pMsg);
-            break;
-         case CMD_DELETE_USER_VARIABLE:
-            deleteUserVariable(pMsg);
-            break;
-         case CMD_ENUM_USER_VARIABLES:
-            enumUserVariables(pMsg);
-            break;
-         case CMD_COPY_USER_VARIABLE:
-            copyUserVariable(pMsg);
-            break;
-         case CMD_CHANGE_ZONE:
-            changeObjectZone(pMsg);
-            break;
-         case CMD_REQUEST_ENCRYPTION:
-            setupEncryption(pMsg);
-            break;
-         case CMD_GET_AGENT_CONFIG:
-            getAgentConfig(pMsg);
-            break;
-         case CMD_UPDATE_AGENT_CONFIG:
-            updateAgentConfig(pMsg);
-            break;
-         case CMD_EXECUTE_ACTION:
-            CALL_IN_NEW_THREAD(executeAction, pMsg);
-            break;
-         case CMD_GET_OBJECT_TOOLS:
-            getObjectTools(pMsg->getId());
-            break;
-         case CMD_EXEC_TABLE_TOOL:
-            execTableTool(pMsg);
-            break;
-         case CMD_GET_OBJECT_TOOL_DETAILS:
-            getObjectToolDetails(pMsg);
-            break;
-         case CMD_UPDATE_OBJECT_TOOL:
-            updateObjectTool(pMsg);
-            break;
-         case CMD_DELETE_OBJECT_TOOL:
-            deleteObjectTool(pMsg);
-            break;
-         case CMD_CHANGE_OBJECT_TOOL_STATUS:
-            changeObjectToolStatus(pMsg);
-            break;
-         case CMD_GENERATE_OBJECT_TOOL_ID:
-            generateObjectToolId(pMsg->getId());
-            break;
-         case CMD_CHANGE_SUBSCRIPTION:
-            changeSubscription(pMsg);
-            break;
-         case CMD_GET_SERVER_STATS:
-            sendServerStats(pMsg->getId());
-            break;
-         case CMD_GET_SCRIPT_LIST:
-            sendScriptList(pMsg->getId());
-            break;
-         case CMD_GET_SCRIPT:
-            sendScript(pMsg);
-            break;
-         case CMD_UPDATE_SCRIPT:
-            updateScript(pMsg);
-            break;
-         case CMD_RENAME_SCRIPT:
-            renameScript(pMsg);
-            break;
-         case CMD_DELETE_SCRIPT:
-            deleteScript(pMsg);
-            break;
-         case CMD_GET_SESSION_LIST:
-            SendSessionList(pMsg->getId());
-            break;
-         case CMD_KILL_SESSION:
-            KillSession(pMsg);
-            break;
-         case CMD_START_SNMP_WALK:
-            StartSnmpWalk(pMsg);
-            break;
-         case CMD_RESOLVE_DCI_NAMES:
-            resolveDCINames(pMsg);
-            break;
-			case CMD_GET_DCI_INFO:
-				SendDCIInfo(pMsg);
-				break;
-			case CMD_GET_DCI_THRESHOLDS:
-				sendDCIThresholds(pMsg);
-				break;
-         case CMD_GET_DCI_EVENTS_LIST:
-            getDCIEventList(pMsg);
-            break;
-         case CMD_GET_DCI_SCRIPT_LIST:
-            getDCIScriptList(pMsg);
-            break;
-			case CMD_GET_PERFTAB_DCI_LIST:
-				sendPerfTabDCIList(pMsg);
-				break;
-         case CMD_PUSH_DCI_DATA:
-            pushDCIData(pMsg);
-            break;
-         case CMD_GET_AGENT_CFG_LIST:
-            sendAgentCfgList(pMsg->getId());
-            break;
-         case CMD_OPEN_AGENT_CONFIG:
-            OpenAgentConfig(pMsg);
-            break;
-         case CMD_SAVE_AGENT_CONFIG:
-            SaveAgentConfig(pMsg);
-            break;
-         case CMD_DELETE_AGENT_CONFIG:
-            DeleteAgentConfig(pMsg);
-            break;
-         case CMD_SWAP_AGENT_CONFIGS:
-            SwapAgentConfigs(pMsg);
-            break;
-         case CMD_GET_OBJECT_COMMENTS:
-            SendObjectComments(pMsg);
-            break;
-         case CMD_UPDATE_OBJECT_COMMENTS:
-            updateObjectComments(pMsg);
-            break;
-         case CMD_GET_ADDR_LIST:
-            getAddrList(pMsg);
-            break;
-         case CMD_SET_ADDR_LIST:
-            setAddrList(pMsg);
-            break;
-         case CMD_RESET_COMPONENT:
-            resetComponent(pMsg);
-            break;
-         case CMD_EXPORT_CONFIGURATION:
-            exportConfiguration(pMsg);
-            break;
-         case CMD_IMPORT_CONFIGURATION:
-            CALL_IN_NEW_THREAD(importConfiguration, pMsg);
-            break;
-			case CMD_GET_GRAPH_LIST:
-				sendGraphList(pMsg);
-				break;
-			case CMD_SAVE_GRAPH:
-			   saveGraph(pMsg);
-            break;
-			case CMD_DELETE_GRAPH:
-				deleteGraph(pMsg);
-				break;
-			case CMD_ADD_CA_CERTIFICATE:
-				addCACertificate(pMsg);
-				break;
-			case CMD_DELETE_CERTIFICATE:
-				deleteCertificate(pMsg);
-				break;
-			case CMD_UPDATE_CERT_COMMENTS:
-				updateCertificateComments(pMsg);
-				break;
-			case CMD_GET_CERT_LIST:
-				getCertificateList(pMsg->getId());
-				break;
-			case CMD_QUERY_L2_TOPOLOGY:
-				CALL_IN_NEW_THREAD(queryL2Topology, pMsg);
-				break;
-			case CMD_QUERY_INTERNAL_TOPOLOGY:
-			   CALL_IN_NEW_THREAD(queryInternalCommunicationTopology, pMsg);
-			   break;
-			case CMD_SEND_SMS:
-				sendSMS(pMsg);
-				break;
-			case CMD_GET_COMMUNITY_LIST:
-				SendCommunityList(pMsg->getId());
-				break;
-			case CMD_UPDATE_COMMUNITY_LIST:
-				UpdateCommunityList(pMsg);
-				break;
-			case CMD_GET_USM_CREDENTIALS:
-				sendUsmCredentials(pMsg->getId());
-				break;
-			case CMD_UPDATE_USM_CREDENTIALS:
-				updateUsmCredentials(pMsg);
-				break;
-			case CMD_GET_PERSISTENT_STORAGE:
-				getPersistantStorage(pMsg->getId());
-				break;
-			case CMD_SET_PSTORAGE_VALUE:
-				setPstorageValue(pMsg);
-				break;
-			case CMD_DELETE_PSTORAGE_VALUE:
-				deletePstorageValue(pMsg);
-				break;
-			case CMD_REGISTER_AGENT:
-				registerAgent(pMsg);
-				break;
-			case CMD_GET_SERVER_FILE:
-				CALL_IN_NEW_THREAD(getServerFile, pMsg);
-				break;
-			case CMD_GET_AGENT_FILE:
-				CALL_IN_NEW_THREAD(getAgentFile, pMsg);
-				break;
-         case CMD_CANCEL_FILE_MONITORING:
-				CALL_IN_NEW_THREAD(cancelFileMonitoring, pMsg);
-				break;
-			case CMD_TEST_DCI_TRANSFORMATION:
-				testDCITransformation(pMsg);
-				break;
-			case CMD_EXECUTE_SCRIPT:
-            CALL_IN_NEW_THREAD(executeScript, pMsg);
-				break;
-         case CMD_EXECUTE_LIBRARY_SCRIPT:
-            CALL_IN_NEW_THREAD(executeLibraryScript, pMsg);
-            break;
-			case CMD_GET_JOB_LIST:
-				sendJobList(pMsg->getId());
-				break;
-			case CMD_CANCEL_JOB:
-				cancelJob(pMsg);
-				break;
-			case CMD_HOLD_JOB:
-				holdJob(pMsg);
-				break;
-			case CMD_UNHOLD_JOB:
-				unholdJob(pMsg);
-				break;
-			case CMD_DEPLOY_AGENT_POLICY:
-				deployAgentPolicy(pMsg, false);
-				break;
-			case CMD_UNINSTALL_AGENT_POLICY:
-				deployAgentPolicy(pMsg, true);
-				break;
-			case CMD_GET_CURRENT_USER_ATTR:
-				getUserCustomAttribute(pMsg);
-				break;
-			case CMD_SET_CURRENT_USER_ATTR:
-				setUserCustomAttribute(pMsg);
-				break;
-			case CMD_OPEN_SERVER_LOG:
-				openServerLog(pMsg);
-				break;
-			case CMD_CLOSE_SERVER_LOG:
-				closeServerLog(pMsg);
-				break;
-			case CMD_QUERY_LOG:
-				CALL_IN_NEW_THREAD(queryServerLog, pMsg);
-				break;
-			case CMD_GET_LOG_DATA:
-				CALL_IN_NEW_THREAD(getServerLogQueryData, pMsg);
-				break;
-			case CMD_FIND_NODE_CONNECTION:
-				CALL_IN_NEW_THREAD(findNodeConnection, pMsg);
-				break;
-			case CMD_FIND_MAC_LOCATION:
-				CALL_IN_NEW_THREAD(findMacAddress, pMsg);
-				break;
-			case CMD_FIND_IP_LOCATION:
-				CALL_IN_NEW_THREAD(findIpAddress, pMsg);
-				break;
-			case CMD_FIND_HOSTNAME_LOCATION:
-			   CALL_IN_NEW_THREAD(findHostname, pMsg);
-			   break;
-			case CMD_GET_IMAGE:
-				sendLibraryImage(pMsg);
-				break;
-			case CMD_CREATE_IMAGE:
-				updateLibraryImage(pMsg);
-				break;
-			case CMD_DELETE_IMAGE:
-				deleteLibraryImage(pMsg);
-				break;
-			case CMD_MODIFY_IMAGE:
-				updateLibraryImage(pMsg);
-				break;
-			case CMD_LIST_IMAGES:
-				listLibraryImages(pMsg);
-				break;
-			case CMD_EXECUTE_SERVER_COMMAND:
-				executeServerCommand(pMsg);
-				break;
-			case CMD_STOP_SERVER_COMMAND:
-			   stopServerCommand(pMsg);
-			   break;
-			case CMD_LIST_SERVER_FILES:
-				listServerFileStore(pMsg);
-				break;
-			case CMD_UPLOAD_FILE_TO_AGENT:
-				uploadFileToAgent(pMsg);
-				break;
-			case CMD_UPLOAD_FILE:
-				receiveFile(pMsg);
-				break;
-			case CMD_DELETE_FILE:
-				deleteFile(pMsg);
-				break;
-			case CMD_OPEN_CONSOLE:
-				openConsole(pMsg->getId());
-				break;
-			case CMD_CLOSE_CONSOLE:
-				closeConsole(pMsg->getId());
-				break;
-			case CMD_ADM_REQUEST:
-				CALL_IN_NEW_THREAD(processConsoleCommand, pMsg);
-				break;
-			case CMD_GET_VLANS:
-				getVlans(pMsg);
-				break;
-			case CMD_GET_NETWORK_PATH:
-				CALL_IN_NEW_THREAD(getNetworkPath, pMsg);
-				break;
-			case CMD_GET_NODE_COMPONENTS:
-				getNodeComponents(pMsg);
-				break;
-			case CMD_GET_NODE_SOFTWARE:
-				getNodeSoftware(pMsg);
-				break;
-			case CMD_GET_WINPERF_OBJECTS:
-				getWinPerfObjects(pMsg);
-				break;
-			case CMD_LIST_MAPPING_TABLES:
-				listMappingTables(pMsg);
-				break;
-			case CMD_GET_MAPPING_TABLE:
-				getMappingTable(pMsg);
-				break;
-			case CMD_UPDATE_MAPPING_TABLE:
-				updateMappingTable(pMsg);
-				break;
-			case CMD_DELETE_MAPPING_TABLE:
-				deleteMappingTable(pMsg);
-				break;
-			case CMD_GET_WIRELESS_STATIONS:
-				getWirelessStations(pMsg);
-				break;
-         case CMD_GET_SUMMARY_TABLES:
-            getSummaryTables(pMsg->getId());
-            break;
-         case CMD_GET_SUMMARY_TABLE_DETAILS:
-            getSummaryTableDetails(pMsg);
-            break;
-         case CMD_MODIFY_SUMMARY_TABLE:
-            modifySummaryTable(pMsg);
-            break;
-         case CMD_DELETE_SUMMARY_TABLE:
-            deleteSummaryTable(pMsg);
-            break;
-         case CMD_QUERY_SUMMARY_TABLE:
-            querySummaryTable(pMsg);
-            break;
-         case CMD_QUERY_ADHOC_SUMMARY_TABLE:
-            queryAdHocSummaryTable(pMsg);
-            break;
-         case CMD_GET_SUBNET_ADDRESS_MAP:
-            getSubnetAddressMap(pMsg);
-            break;
-         case CMD_GET_EFFECTIVE_RIGHTS:
-            getEffectiveRights(pMsg);
-            break;
-         case CMD_GET_FOLDER_SIZE:
-         case CMD_GET_FOLDER_CONTENT:
-         case CMD_FILEMGR_DELETE_FILE:
-         case CMD_FILEMGR_RENAME_FILE:
-         case CMD_FILEMGR_MOVE_FILE:
-         case CMD_FILEMGR_CREATE_FOLDER:
-         case CMD_FILEMGR_COPY_FILE:
-            CALL_IN_NEW_THREAD(fileManagerControl, pMsg);
-            break;
-         case CMD_FILEMGR_UPLOAD:
-            CALL_IN_NEW_THREAD(uploadUserFileToAgent, pMsg);
-            break;
-         case CMD_GET_SWITCH_FDB:
-            CALL_IN_NEW_THREAD(getSwitchForwardingDatabase, pMsg);
-            break;
-         case CMD_GET_ROUTING_TABLE:
-            CALL_IN_NEW_THREAD(getRoutingTable, pMsg);
-            break;
-         case CMD_GET_LOC_HISTORY:
-            CALL_IN_NEW_THREAD(getLocationHistory, pMsg);
-            break;
-         case CMD_TAKE_SCREENSHOT:
-            getScreenshot(pMsg);
-            break;
-         case CMD_COMPILE_SCRIPT:
-            compileScript(pMsg);
-            break;
-         case CMD_CLEAN_AGENT_DCI_CONF:
-            cleanAgentDciConfiguration(pMsg);
-            break;
-         case CMD_RESYNC_AGENT_DCI_CONF:
-            resyncAgentDciConfiguration(pMsg);
-            break;
-         case CMD_LIST_SCHEDULE_CALLBACKS:
-            getSchedulerTaskHandlers(pMsg);
-            break;
-         case CMD_LIST_SCHEDULES:
-            getScheduledTasks(pMsg);
-            break;
-         case CMD_ADD_SCHEDULE:
-            addScheduledTask(pMsg);
-            break;
-         case CMD_UPDATE_SCHEDULE:
-            updateScheduledTask(pMsg);
-            break;
-         case CMD_REMOVE_SCHEDULE:
-            removeScheduledTask(pMsg);
-            break;
-         case CMD_GET_REPOSITORIES:
-            CALL_IN_NEW_THREAD(getRepositories, pMsg);
-            break;
-         case CMD_ADD_REPOSITORY:
-            CALL_IN_NEW_THREAD(addRepository, pMsg);
-            break;
-         case CMD_MODIFY_REPOSITORY:
-            CALL_IN_NEW_THREAD(modifyRepository, pMsg);
-            break;
-         case CMD_DELETE_REPOSITORY:
-            CALL_IN_NEW_THREAD(deleteRepository, pMsg);
-            break;
-         case CMD_GET_AGENT_TUNNELS:
-            getAgentTunnels(pMsg);
-            break;
-         case CMD_BIND_AGENT_TUNNEL:
-            bindAgentTunnel(pMsg);
-            break;
-         case CMD_UNBIND_AGENT_TUNNEL:
-            unbindAgentTunnel(pMsg);
-            break;
-         case CMD_GET_PREDICTION_ENGINES:
-            getPredictionEngines(pMsg);
-            break;
-         case CMD_GET_PREDICTED_DATA:
-            CALL_IN_NEW_THREAD(getPredictedData, pMsg);
-            break;
-         case CMD_EXPAND_MACROS:
-            expandMacros(pMsg);
-            break;
-         case CMD_SETUP_TCP_PROXY:
-            CALL_IN_NEW_THREAD(setupTcpProxy, pMsg);
-            break;
-         case CMD_CLOSE_TCP_PROXY:
-            CALL_IN_NEW_THREAD(closeTcpProxy, pMsg);
-            break;
+      case CMD_GET_SERVER_INFO:
+         sendServerInfo(request->getId());
+         break;
+      case CMD_GET_MY_CONFIG:
+         sendConfigForAgent(request);
+         break;
+      case CMD_GET_OBJECTS:
+         getObjects(request);
+         break;
+      case CMD_GET_SELECTED_OBJECTS:
+         getSelectedObjects(request);
+         break;
+      case CMD_QUERY_OBJECTS:
+         queryObjects(request);
+         break;
+      case CMD_QUERY_OBJECT_DETAILS:
+         queryObjectDetails(request);
+         break;
+      case CMD_GET_CONFIG_VARLIST:
+         getConfigurationVariables(request->getId());
+         break;
+      case CMD_GET_PUBLIC_CONFIG_VAR:
+         getPublicConfigurationVariable(request);
+         break;
+      case CMD_SET_CONFIG_VARIABLE:
+         setConfigurationVariable(request);
+         break;
+      case CMD_SET_CONFIG_TO_DEFAULT:
+         setDefaultConfigurationVariableValues(request);
+         break;
+      case CMD_DELETE_CONFIG_VARIABLE:
+         deleteConfigurationVariable(request);
+         break;
+      case CMD_CONFIG_GET_CLOB:
+         getConfigCLOB(request);
+         break;
+      case CMD_CONFIG_SET_CLOB:
+         setConfigCLOB(request);
+         break;
+      case CMD_GET_ALARM_CATEGORIES:
+         getAlarmCategories(request->getId());
+         break;
+      case CMD_MODIFY_ALARM_CATEGORY:
+         modifyAlarmCategory(request);
+         break;
+      case CMD_DELETE_ALARM_CATEGORY:
+         deleteAlarmCategory(request);
+         break;
+      case CMD_LOAD_EVENT_DB:
+         sendEventDB(request);
+         break;
+      case CMD_SET_EVENT_INFO:
+         modifyEventTemplate(request);
+         break;
+      case CMD_DELETE_EVENT_TEMPLATE:
+         deleteEventTemplate(request);
+         break;
+      case CMD_GENERATE_EVENT_CODE:
+         generateEventCode(request->getId());
+         break;
+      case CMD_MODIFY_OBJECT:
+         modifyObject(request);
+         break;
+      case CMD_SET_OBJECT_MGMT_STATUS:
+         changeObjectMgmtStatus(request);
+         break;
+      case CMD_ENTER_MAINT_MODE:
+         enterMaintenanceMode(request);
+         break;
+      case CMD_LEAVE_MAINT_MODE:
+         leaveMaintenanceMode(request);
+         break;
+      case CMD_LOAD_USER_DB:
+         sendUserDB(request->getId());
+         break;
+      case CMD_CREATE_USER:
+         createUser(request);
+         break;
+      case CMD_UPDATE_USER:
+         updateUser(request);
+         break;
+      case CMD_DETACH_LDAP_USER:
+         detachLdapUser(request);
+         break;
+      case CMD_DELETE_USER:
+         deleteUser(request);
+         break;
+      case CMD_LOCK_USER_DB:
+         lockUserDB(request->getId(), TRUE);
+         break;
+      case CMD_UNLOCK_USER_DB:
+         lockUserDB(request->getId(), FALSE);
+         break;
+      case CMD_SET_PASSWORD:
+         setPassword(request);
+         break;
+      case CMD_VALIDATE_PASSWORD:
+         validatePassword(request);
+         break;
+      case CMD_GET_NODE_DCI_LIST:
+         openNodeDCIList(request);
+         break;
+      case CMD_UNLOCK_NODE_DCI_LIST:
+         closeNodeDCIList(request);
+         break;
+      case CMD_MODIFY_NODE_DCI:
+      case CMD_DELETE_NODE_DCI:
+         modifyNodeDCI(request);
+         break;
+      case CMD_SET_DCI_STATUS:
+         changeDCIStatus(request);
+         break;
+      case CMD_COPY_DCI:
+         copyDCI(request);
+         break;
+      case CMD_APPLY_TEMPLATE:
+         applyTemplate(request);
+         break;
+      case CMD_GET_DCI_DATA:
+         getCollectedData(request);
+         break;
+      case CMD_GET_TABLE_DCI_DATA:
+         getTableCollectedData(request);
+         break;
+      case CMD_CLEAR_DCI_DATA:
+         clearDCIData(request);
+         break;
+      case CMD_DELETE_DCI_ENTRY:
+         deleteDCIEntry(request);
+         break;
+      case CMD_FORCE_DCI_POLL:
+         forceDCIPoll(request);
+         break;
+      case CMD_RECALCULATE_DCI_VALUES:
+         recalculateDCIValues(request);
+         break;
+      case CMD_OPEN_EPP:
+         openEPP(request);
+         break;
+      case CMD_CLOSE_EPP:
+         closeEPP(request->getId());
+         break;
+      case CMD_SAVE_EPP:
+         saveEPP(request);
+         break;
+      case CMD_EPP_RECORD:
+         processEPPRecord(request);
+         break;
+      case CMD_GET_MIB_TIMESTAMP:
+         sendMIBTimestamp(request->getId());
+         break;
+      case CMD_GET_MIB:
+         sendMib(request);
+         break;
+      case CMD_CREATE_OBJECT:
+         createObject(request);
+         break;
+      case CMD_BIND_OBJECT:
+         changeObjectBinding(request, TRUE);
+         break;
+      case CMD_UNBIND_OBJECT:
+         changeObjectBinding(request, FALSE);
+         break;
+      case CMD_ADD_CLUSTER_NODE:
+         addClusterNode(request);
+         break;
+      case CMD_GET_ALL_ALARMS:
+         getAlarms(request);
+         break;
+      case CMD_GET_ALARM_COMMENTS:
+         getAlarmComments(request);
+         break;
+      case CMD_SET_ALARM_STATUS_FLOW:
+         updateAlarmStatusFlow(request);
+         break;
+      case CMD_UPDATE_ALARM_COMMENT:
+         updateAlarmComment(request);
+         break;
+      case CMD_DELETE_ALARM_COMMENT:
+         deleteAlarmComment(request);
+         break;
+      case CMD_GET_ALARM:
+         getAlarm(request);
+         break;
+      case CMD_GET_ALARM_EVENTS:
+         getAlarmEvents(request);
+         break;
+      case CMD_ACK_ALARM:
+         acknowledgeAlarm(request);
+         break;
+      case CMD_RESOLVE_ALARM:
+         resolveAlarm(request, false);
+         break;
+      case CMD_TERMINATE_ALARM:
+         resolveAlarm(request, true);
+         break;
+      case CMD_DELETE_ALARM:
+         deleteAlarm(request);
+         break;
+      case CMD_BULK_RESOLVE_ALARMS:
+         bulkResolveAlarms(request, false);
+         break;
+      case CMD_BULK_TERMINATE_ALARMS:
+         bulkResolveAlarms(request, true);
+         break;
+      case CMD_OPEN_HELPDESK_ISSUE:
+         openHelpdeskIssue(request);
+         break;
+      case CMD_GET_HELPDESK_URL:
+         getHelpdeskUrl(request);
+         break;
+      case CMD_UNLINK_HELPDESK_ISSUE:
+         unlinkHelpdeskIssue(request);
+         break;
+      case CMD_CREATE_ACTION:
+         createAction(request);
+         break;
+      case CMD_MODIFY_ACTION:
+         updateAction(request);
+         break;
+      case CMD_DELETE_ACTION:
+         deleteAction(request);
+         break;
+      case CMD_LOAD_ACTIONS:
+         sendAllActions(request->getId());
+         break;
+      case CMD_DELETE_OBJECT:
+         deleteObject(request);
+         break;
+      case CMD_POLL_NODE:
+         forcedNodePoll(request);
+         break;
+      case CMD_TRAP:
+         onTrap(request);
+         break;
+      case CMD_WAKEUP_NODE:
+         onWakeUpNode(request);
+         break;
+      case CMD_CREATE_TRAP:
+         editTrap(TRAP_CREATE, request);
+         break;
+      case CMD_MODIFY_TRAP:
+         editTrap(TRAP_UPDATE, request);
+         break;
+      case CMD_DELETE_TRAP:
+         editTrap(TRAP_DELETE, request);
+         break;
+      case CMD_LOAD_TRAP_CFG:
+         sendAllTraps(request->getId());
+         break;
+      case CMD_GET_TRAP_CFG_RO:
+         sendAllTraps2(request->getId());
+         break;
+      case CMD_QUERY_PARAMETER:
+         queryParameter(request);
+         break;
+      case CMD_QUERY_TABLE:
+         queryAgentTable(request);
+         break;
+      case CMD_GET_PACKAGE_LIST:
+         getInstalledPackages(request->getId());
+         break;
+      case CMD_INSTALL_PACKAGE:
+         installPackage(request);
+         break;
+      case CMD_REMOVE_PACKAGE:
+         removePackage(request);
+         break;
+      case CMD_GET_PARAMETER_LIST:
+         getParametersList(request);
+         break;
+      case CMD_DEPLOY_PACKAGE:
+         deployPackage(request);
+         break;
+      case CMD_GET_LAST_VALUES:
+         getLastValues(request);
+         break;
+      case CMD_GET_DCI_VALUES:
+         getLastValuesByDciId(request);
+         break;
+      case CMD_GET_TABLE_LAST_VALUES:
+         getTableLastValues(request);
+         break;
+      case CMD_GET_ACTIVE_THRESHOLDS:
+         getActiveThresholds(request);
+         break;
+      case CMD_GET_THRESHOLD_SUMMARY:
+         getThresholdSummary(request);
+         break;
+      case CMD_GET_USER_VARIABLE:
+         getUserVariable(request);
+         break;
+      case CMD_SET_USER_VARIABLE:
+         setUserVariable(request);
+         break;
+      case CMD_DELETE_USER_VARIABLE:
+         deleteUserVariable(request);
+         break;
+      case CMD_ENUM_USER_VARIABLES:
+         enumUserVariables(request);
+         break;
+      case CMD_COPY_USER_VARIABLE:
+         copyUserVariable(request);
+         break;
+      case CMD_CHANGE_ZONE:
+         changeObjectZone(request);
+         break;
+      case CMD_REQUEST_ENCRYPTION:
+         setupEncryption(request);
+         break;
+      case CMD_GET_AGENT_CONFIG:
+         getAgentConfig(request);
+         break;
+      case CMD_UPDATE_AGENT_CONFIG:
+         updateAgentConfig(request);
+         break;
+      case CMD_EXECUTE_ACTION:
+         executeAction(request);
+         break;
+      case CMD_GET_OBJECT_TOOLS:
+         getObjectTools(request->getId());
+         break;
+      case CMD_EXEC_TABLE_TOOL:
+         execTableTool(request);
+         break;
+      case CMD_GET_OBJECT_TOOL_DETAILS:
+         getObjectToolDetails(request);
+         break;
+      case CMD_UPDATE_OBJECT_TOOL:
+         updateObjectTool(request);
+         break;
+      case CMD_DELETE_OBJECT_TOOL:
+         deleteObjectTool(request);
+         break;
+      case CMD_CHANGE_OBJECT_TOOL_STATUS:
+         changeObjectToolStatus(request);
+         break;
+      case CMD_GENERATE_OBJECT_TOOL_ID:
+         generateObjectToolId(request->getId());
+         break;
+      case CMD_CHANGE_SUBSCRIPTION:
+         changeSubscription(request);
+         break;
+      case CMD_GET_SERVER_STATS:
+         sendServerStats(request->getId());
+         break;
+      case CMD_GET_SCRIPT_LIST:
+         sendScriptList(request->getId());
+         break;
+      case CMD_GET_SCRIPT:
+         sendScript(request);
+         break;
+      case CMD_UPDATE_SCRIPT:
+         updateScript(request);
+         break;
+      case CMD_RENAME_SCRIPT:
+         renameScript(request);
+         break;
+      case CMD_DELETE_SCRIPT:
+         deleteScript(request);
+         break;
+      case CMD_GET_SESSION_LIST:
+         SendSessionList(request->getId());
+         break;
+      case CMD_KILL_SESSION:
+         KillSession(request);
+         break;
+      case CMD_START_SNMP_WALK:
+         StartSnmpWalk(request);
+         break;
+      case CMD_RESOLVE_DCI_NAMES:
+         resolveDCINames(request);
+         break;
+      case CMD_GET_DCI_INFO:
+         SendDCIInfo(request);
+         break;
+      case CMD_GET_DCI_THRESHOLDS:
+         sendDCIThresholds(request);
+         break;
+      case CMD_GET_DCI_EVENTS_LIST:
+         getDCIEventList(request);
+         break;
+      case CMD_GET_DCI_SCRIPT_LIST:
+         getDCIScriptList(request);
+         break;
+      case CMD_GET_PERFTAB_DCI_LIST:
+         sendPerfTabDCIList(request);
+         break;
+      case CMD_PUSH_DCI_DATA:
+         pushDCIData(request);
+         break;
+      case CMD_GET_AGENT_CFG_LIST:
+         sendAgentCfgList(request->getId());
+         break;
+      case CMD_OPEN_AGENT_CONFIG:
+         OpenAgentConfig(request);
+         break;
+      case CMD_SAVE_AGENT_CONFIG:
+         SaveAgentConfig(request);
+         break;
+      case CMD_DELETE_AGENT_CONFIG:
+         DeleteAgentConfig(request);
+         break;
+      case CMD_SWAP_AGENT_CONFIGS:
+         SwapAgentConfigs(request);
+         break;
+      case CMD_GET_OBJECT_COMMENTS:
+         SendObjectComments(request);
+         break;
+      case CMD_UPDATE_OBJECT_COMMENTS:
+         updateObjectComments(request);
+         break;
+      case CMD_GET_ADDR_LIST:
+         getAddrList(request);
+         break;
+      case CMD_SET_ADDR_LIST:
+         setAddrList(request);
+         break;
+      case CMD_RESET_COMPONENT:
+         resetComponent(request);
+         break;
+      case CMD_EXPORT_CONFIGURATION:
+         exportConfiguration(request);
+         break;
+      case CMD_IMPORT_CONFIGURATION:
+         importConfiguration(request);
+         break;
+      case CMD_GET_GRAPH_LIST:
+         sendGraphList(request);
+         break;
+      case CMD_SAVE_GRAPH:
+         saveGraph(request);
+         break;
+      case CMD_DELETE_GRAPH:
+         deleteGraph(request);
+         break;
+      case CMD_ADD_CA_CERTIFICATE:
+         addCACertificate(request);
+         break;
+      case CMD_DELETE_CERTIFICATE:
+         deleteCertificate(request);
+         break;
+      case CMD_UPDATE_CERT_COMMENTS:
+         updateCertificateComments(request);
+         break;
+      case CMD_GET_CERT_LIST:
+         getCertificateList(request->getId());
+         break;
+      case CMD_QUERY_L2_TOPOLOGY:
+         queryL2Topology(request);
+         break;
+      case CMD_QUERY_INTERNAL_TOPOLOGY:
+         queryInternalCommunicationTopology(request);
+         break;
+      case CMD_SEND_SMS:
+         sendSMS(request);
+         break;
+      case CMD_GET_COMMUNITY_LIST:
+         SendCommunityList(request->getId());
+         break;
+      case CMD_UPDATE_COMMUNITY_LIST:
+         UpdateCommunityList(request);
+         break;
+      case CMD_GET_USM_CREDENTIALS:
+         sendUsmCredentials(request->getId());
+         break;
+      case CMD_UPDATE_USM_CREDENTIALS:
+         updateUsmCredentials(request);
+         break;
+      case CMD_GET_PERSISTENT_STORAGE:
+         getPersistantStorage(request->getId());
+         break;
+      case CMD_SET_PSTORAGE_VALUE:
+         setPstorageValue(request);
+         break;
+      case CMD_DELETE_PSTORAGE_VALUE:
+         deletePstorageValue(request);
+         break;
+      case CMD_REGISTER_AGENT:
+         registerAgent(request);
+         break;
+      case CMD_GET_SERVER_FILE:
+         getServerFile(request);
+         break;
+      case CMD_GET_AGENT_FILE:
+         getAgentFile(request);
+         break;
+      case CMD_CANCEL_FILE_MONITORING:
+         cancelFileMonitoring(request);
+         break;
+      case CMD_TEST_DCI_TRANSFORMATION:
+         testDCITransformation(request);
+         break;
+      case CMD_EXECUTE_SCRIPT:
+         executeScript(request);
+         break;
+      case CMD_EXECUTE_LIBRARY_SCRIPT:
+         executeLibraryScript(request);
+         break;
+      case CMD_GET_JOB_LIST:
+         sendJobList(request->getId());
+         break;
+      case CMD_CANCEL_JOB:
+         cancelJob(request);
+         break;
+      case CMD_HOLD_JOB:
+         holdJob(request);
+         break;
+      case CMD_UNHOLD_JOB:
+         unholdJob(request);
+         break;
+      case CMD_DEPLOY_AGENT_POLICY:
+         deployAgentPolicy(request, false);
+         break;
+      case CMD_UNINSTALL_AGENT_POLICY:
+         deployAgentPolicy(request, true);
+         break;
+      case CMD_GET_CURRENT_USER_ATTR:
+         getUserCustomAttribute(request);
+         break;
+      case CMD_SET_CURRENT_USER_ATTR:
+         setUserCustomAttribute(request);
+         break;
+      case CMD_OPEN_SERVER_LOG:
+         openServerLog(request);
+         break;
+      case CMD_CLOSE_SERVER_LOG:
+         closeServerLog(request);
+         break;
+      case CMD_QUERY_LOG:
+         queryServerLog(request);
+         break;
+      case CMD_GET_LOG_DATA:
+         getServerLogQueryData(request);
+         break;
+      case CMD_FIND_NODE_CONNECTION:
+         findNodeConnection(request);
+         break;
+      case CMD_FIND_MAC_LOCATION:
+         findMacAddress(request);
+         break;
+      case CMD_FIND_IP_LOCATION:
+         findIpAddress(request);
+         break;
+      case CMD_FIND_HOSTNAME_LOCATION:
+         findHostname(request);
+         break;
+      case CMD_GET_IMAGE:
+         sendLibraryImage(request);
+         break;
+      case CMD_CREATE_IMAGE:
+         updateLibraryImage(request);
+         break;
+      case CMD_DELETE_IMAGE:
+         deleteLibraryImage(request);
+         break;
+      case CMD_MODIFY_IMAGE:
+         updateLibraryImage(request);
+         break;
+      case CMD_LIST_IMAGES:
+         listLibraryImages(request);
+         break;
+      case CMD_EXECUTE_SERVER_COMMAND:
+         executeServerCommand(request);
+         break;
+      case CMD_STOP_SERVER_COMMAND:
+         stopServerCommand(request);
+         break;
+      case CMD_LIST_SERVER_FILES:
+         listServerFileStore(request);
+         break;
+      case CMD_UPLOAD_FILE_TO_AGENT:
+         uploadFileToAgent(request);
+         break;
+      case CMD_UPLOAD_FILE:
+         receiveFile(request);
+         break;
+      case CMD_DELETE_FILE:
+         deleteFile(request);
+         break;
+      case CMD_OPEN_CONSOLE:
+         openConsole(request->getId());
+         break;
+      case CMD_CLOSE_CONSOLE:
+         closeConsole(request->getId());
+         break;
+      case CMD_ADM_REQUEST:
+         processConsoleCommand(request);
+         break;
+      case CMD_GET_VLANS:
+         getVlans(request);
+         break;
+      case CMD_GET_NETWORK_PATH:
+         getNetworkPath(request);
+         break;
+      case CMD_GET_NODE_COMPONENTS:
+         getNodeComponents(request);
+         break;
+      case CMD_GET_NODE_SOFTWARE:
+         getNodeSoftware(request);
+         break;
+      case CMD_GET_WINPERF_OBJECTS:
+         getWinPerfObjects(request);
+         break;
+      case CMD_LIST_MAPPING_TABLES:
+         listMappingTables(request);
+         break;
+      case CMD_GET_MAPPING_TABLE:
+         getMappingTable(request);
+         break;
+      case CMD_UPDATE_MAPPING_TABLE:
+         updateMappingTable(request);
+         break;
+      case CMD_DELETE_MAPPING_TABLE:
+         deleteMappingTable(request);
+         break;
+      case CMD_GET_WIRELESS_STATIONS:
+         getWirelessStations(request);
+         break;
+      case CMD_GET_SUMMARY_TABLES:
+         getSummaryTables(request->getId());
+         break;
+      case CMD_GET_SUMMARY_TABLE_DETAILS:
+         getSummaryTableDetails(request);
+         break;
+      case CMD_MODIFY_SUMMARY_TABLE:
+         modifySummaryTable(request);
+         break;
+      case CMD_DELETE_SUMMARY_TABLE:
+         deleteSummaryTable(request);
+         break;
+      case CMD_QUERY_SUMMARY_TABLE:
+         querySummaryTable(request);
+         break;
+      case CMD_QUERY_ADHOC_SUMMARY_TABLE:
+         queryAdHocSummaryTable(request);
+         break;
+      case CMD_GET_SUBNET_ADDRESS_MAP:
+         getSubnetAddressMap(request);
+         break;
+      case CMD_GET_EFFECTIVE_RIGHTS:
+         getEffectiveRights(request);
+         break;
+      case CMD_GET_FOLDER_SIZE:
+      case CMD_GET_FOLDER_CONTENT:
+      case CMD_FILEMGR_DELETE_FILE:
+      case CMD_FILEMGR_RENAME_FILE:
+      case CMD_FILEMGR_MOVE_FILE:
+      case CMD_FILEMGR_CREATE_FOLDER:
+      case CMD_FILEMGR_COPY_FILE:
+         fileManagerControl(request);
+         break;
+      case CMD_FILEMGR_UPLOAD:
+         uploadUserFileToAgent(request);
+         break;
+      case CMD_GET_SWITCH_FDB:
+         getSwitchForwardingDatabase(request);
+         break;
+      case CMD_GET_ROUTING_TABLE:
+         getRoutingTable(request);
+         break;
+      case CMD_GET_LOC_HISTORY:
+         getLocationHistory(request);
+         break;
+      case CMD_TAKE_SCREENSHOT:
+         getScreenshot(request);
+         break;
+      case CMD_COMPILE_SCRIPT:
+         compileScript(request);
+         break;
+      case CMD_CLEAN_AGENT_DCI_CONF:
+         cleanAgentDciConfiguration(request);
+         break;
+      case CMD_RESYNC_AGENT_DCI_CONF:
+         resyncAgentDciConfiguration(request);
+         break;
+      case CMD_LIST_SCHEDULE_CALLBACKS:
+         getSchedulerTaskHandlers(request);
+         break;
+      case CMD_LIST_SCHEDULES:
+         getScheduledTasks(request);
+         break;
+      case CMD_ADD_SCHEDULE:
+         addScheduledTask(request);
+         break;
+      case CMD_UPDATE_SCHEDULE:
+         updateScheduledTask(request);
+         break;
+      case CMD_REMOVE_SCHEDULE:
+         removeScheduledTask(request);
+         break;
+      case CMD_GET_REPOSITORIES:
+         getRepositories(request);
+         break;
+      case CMD_ADD_REPOSITORY:
+         addRepository(request);
+         break;
+      case CMD_MODIFY_REPOSITORY:
+         modifyRepository(request);
+         break;
+      case CMD_DELETE_REPOSITORY:
+         deleteRepository(request);
+         break;
+      case CMD_GET_AGENT_TUNNELS:
+         getAgentTunnels(request);
+         break;
+      case CMD_BIND_AGENT_TUNNEL:
+         bindAgentTunnel(request);
+         break;
+      case CMD_UNBIND_AGENT_TUNNEL:
+         unbindAgentTunnel(request);
+         break;
+      case CMD_GET_PREDICTION_ENGINES:
+         getPredictionEngines(request);
+         break;
+      case CMD_GET_PREDICTED_DATA:
+         getPredictedData(request);
+         break;
+      case CMD_EXPAND_MACROS:
+         expandMacros(request);
+         break;
+      case CMD_SETUP_TCP_PROXY:
+         setupTcpProxy(request);
+         break;
+      case CMD_CLOSE_TCP_PROXY:
+         closeTcpProxy(request);
+         break;
 #ifdef WITH_ZMQ
-         case CMD_ZMQ_SUBSCRIBE_EVENT:
-            zmqManageSubscription(pMsg, zmq::EVENT, true);
-            break;
-         case CMD_ZMQ_UNSUBSCRIBE_EVENT:
-            zmqManageSubscription(pMsg, zmq::EVENT, false);
-            break;
-         case CMD_ZMQ_SUBSCRIBE_DATA:
-            zmqManageSubscription(pMsg, zmq::DATA, true);
-            break;
-         case CMD_ZMQ_UNSUBSCRIBE_DATA:
-            zmqManageSubscription(pMsg, zmq::DATA, false);
-            break;
-         case CMD_ZMQ_GET_EVT_SUBSCRIPTIONS:
-            zmqListSubscriptions(pMsg, zmq::EVENT);
-            break;
-         case CMD_ZMQ_GET_DATA_SUBSCRIPTIONS:
-            zmqListSubscriptions(pMsg, zmq::DATA);
-            break;
+      case CMD_ZMQ_SUBSCRIBE_EVENT:
+         zmqManageSubscription(request, zmq::EVENT, true);
+         break;
+      case CMD_ZMQ_UNSUBSCRIBE_EVENT:
+         zmqManageSubscription(request, zmq::EVENT, false);
+         break;
+      case CMD_ZMQ_SUBSCRIBE_DATA:
+         zmqManageSubscription(request, zmq::DATA, true);
+         break;
+      case CMD_ZMQ_UNSUBSCRIBE_DATA:
+         zmqManageSubscription(request, zmq::DATA, false);
+         break;
+      case CMD_ZMQ_GET_EVT_SUBSCRIPTIONS:
+         zmqListSubscriptions(request, zmq::EVENT);
+         break;
+      case CMD_ZMQ_GET_DATA_SUBSCRIPTIONS:
+         zmqListSubscriptions(request, zmq::DATA);
+         break;
 #endif
-         default:
-            if ((m_wCurrentCmd >> 8) == 0x11)
-            {
-               // Reporting Server range (0x1100 - 0x11FF)
-               CALL_IN_NEW_THREAD(forwardToReportingServer, pMsg);
-               break;
-            }
-
+      default:
+         if ((m_wCurrentCmd >> 8) == 0x11)
+         {
+            // Reporting Server range (0x1100 - 0x11FF)
+            forwardToReportingServer(request);
+         }
+         else
+         {
             // Pass message to loaded modules
+            UINT32 i;
             for(i = 0; i < g_dwNumModules; i++)
-				{
-					if (g_pModuleList[i].pfClientCommandHandler != NULL)
-					{
-						status = g_pModuleList[i].pfClientCommandHandler(m_wCurrentCmd, pMsg, this);
-						if (status != NXMOD_COMMAND_IGNORED)
-						{
-							if (status == NXMOD_COMMAND_ACCEPTED_ASYNC)
-							{
-								pMsg = NULL;	// Prevent deletion
-							}
-							break;   // Message was processed by the module
-						}
-					}
-				}
+            {
+               if (g_pModuleList[i].pfClientCommandHandler != NULL)
+               {
+                  int status = g_pModuleList[i].pfClientCommandHandler(m_wCurrentCmd, request, this);
+                  if (status != NXMOD_COMMAND_IGNORED)
+                  {
+                     if (status == NXMOD_COMMAND_ACCEPTED_ASYNC)
+                     {
+                        request = NULL;	// Prevent deletion
+                     }
+                     break;   // Message was processed by the module
+                  }
+               }
+            }
             if (i == g_dwNumModules)
             {
                NXCPMessage response;
 
-               response.setId(pMsg->getId());
+               response.setId(request->getId());
                response.setCode(CMD_REQUEST_COMPLETED);
                response.setField(VID_RCC, RCC_NOT_IMPLEMENTED);
                sendMessage(&response);
             }
-            break;
-      }
-      delete pMsg;
-      m_state = (m_dwFlags & CSF_AUTHENTICATED) ? SESSION_STATE_IDLE : SESSION_STATE_INIT;
+         }
+         break;
    }
+   delete request;
+   m_state = (m_dwFlags & CSF_AUTHENTICATED) ? SESSION_STATE_IDLE : SESSION_STATE_INIT;
+   decRefCount();
 }
 
 /**
@@ -1597,6 +1465,36 @@ void ClientSession::sendRawMessage(NXCP_MESSAGE *msg)
       closesocket(m_hSocket);
       m_hSocket = -1;
    }
+}
+
+/**
+ * Send raw message to client and delete message after sending
+ */
+void ClientSession::sendRawMessageAndDelete(NXCP_MESSAGE *msg)
+{
+   sendRawMessage(msg);
+   MemFree(msg);
+   decRefCount();
+}
+
+/**
+ * Send message in background
+ */
+void ClientSession::postMessage(NXCPMessage *msg)
+{
+   if (!isTerminated())
+      postRawMessageAndDelete(msg->serialize((m_dwFlags & CSF_COMPRESSION_ENABLED) != 0));
+}
+
+/**
+ * Send raw message in background and delete after sending
+ */
+void ClientSession::postRawMessageAndDelete(NXCP_MESSAGE *msg)
+{
+   TCHAR key[32];
+   _sntprintf(key, 32, _T("POST/%u"), m_id);
+   incRefCount();
+   ThreadPoolExecuteSerialized(g_clientThreadPool, key, this, &ClientSession::sendRawMessageAndDelete, msg);
 }
 
 /**
@@ -14329,7 +14227,7 @@ void ClientSession::processTcpProxyData(AgentConnectionEx *conn, UINT32 agentCha
          msg->numFields = htonl(static_cast<UINT32>(size));
          msg->size = htonl(static_cast<UINT32>(msgSize));
          memcpy(msg->fields, data, size);
-         m_sendQueue->put(msg);
+         postRawMessageAndDelete(msg);
       }
       else
       {

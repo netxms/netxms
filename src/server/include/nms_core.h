@@ -447,8 +447,6 @@ class NXCORE_EXPORTABLE ClientSession
 {
 private:
    SOCKET m_hSocket;
-   Queue *m_sendQueue;
-   Queue *m_requestQueue;
    int m_id;
    int m_state;
    WORD m_wCurrentCmd;
@@ -458,8 +456,6 @@ private:
 	int m_clientType;				// Client system type - desktop, web, mobile, etc.
    NXCPEncryptionContext *m_pCtx;
 	BYTE m_challenge[CLIENT_CHALLENGE_SIZE];
-   THREAD m_hWriteThread;
-   THREAD m_hProcessingThread;
 	MUTEX m_mutexSocketWrite;
    MUTEX m_mutexSendObjects;
    MUTEX m_mutexSendAlarms;
@@ -496,60 +492,15 @@ private:
 	VolatileCounter m_tcpProxyChannelId;
 
    static THREAD_RESULT THREAD_CALL readThreadStarter(void *);
-   static THREAD_RESULT THREAD_CALL writeThreadStarter(void *);
-   static THREAD_RESULT THREAD_CALL processingThreadStarter(void *);
    static void pollerThreadStarter(void *);
 
-   DECLARE_THREAD_STARTER(cancelFileMonitoring)
-   DECLARE_THREAD_STARTER(clearDCIData)
-   DECLARE_THREAD_STARTER(closeTcpProxy)
-   DECLARE_THREAD_STARTER(createObject)
-   DECLARE_THREAD_STARTER(deleteDCIEntry)
-   DECLARE_THREAD_STARTER(executeAction)
-   DECLARE_THREAD_STARTER(executeScript)
-   DECLARE_THREAD_STARTER(executeLibraryScript)
-   DECLARE_THREAD_STARTER(fileManagerControl)
-   DECLARE_THREAD_STARTER(findIpAddress)
-   DECLARE_THREAD_STARTER(findMacAddress)
-   DECLARE_THREAD_STARTER(findHostname)
-   DECLARE_THREAD_STARTER(findNodeConnection)
-   DECLARE_THREAD_STARTER(forceDCIPoll)
-   DECLARE_THREAD_STARTER(forwardToReportingServer)
-   DECLARE_THREAD_STARTER(getAgentFile)
-   DECLARE_THREAD_STARTER(getAlarmEvents)
-   DECLARE_THREAD_STARTER(getAlarms)
-   DECLARE_THREAD_STARTER(getCollectedData)
-   DECLARE_THREAD_STARTER(getPredictedData)
-   DECLARE_THREAD_STARTER(getLocationHistory)
-   DECLARE_THREAD_STARTER(getNetworkPath)
-   DECLARE_THREAD_STARTER(getRoutingTable)
-   DECLARE_THREAD_STARTER(getServerFile)
-   DECLARE_THREAD_STARTER(getServerLogQueryData)
-   DECLARE_THREAD_STARTER(getSwitchForwardingDatabase)
-   DECLARE_THREAD_STARTER(getTableCollectedData)
-   DECLARE_THREAD_STARTER(importConfiguration)
-   DECLARE_THREAD_STARTER(openHelpdeskIssue)
-   DECLARE_THREAD_STARTER(processConsoleCommand)
-   DECLARE_THREAD_STARTER(queryAgentTable)
-   DECLARE_THREAD_STARTER(queryL2Topology)
-   DECLARE_THREAD_STARTER(queryInternalCommunicationTopology)
-   DECLARE_THREAD_STARTER(queryObjects)
-   DECLARE_THREAD_STARTER(queryObjectDetails)
-   DECLARE_THREAD_STARTER(queryParameter)
-   DECLARE_THREAD_STARTER(queryServerLog)
-   DECLARE_THREAD_STARTER(recalculateDCIValues)
-   DECLARE_THREAD_STARTER(sendMib)
-   DECLARE_THREAD_STARTER(setupTcpProxy)
-   DECLARE_THREAD_STARTER(uploadUserFileToAgent)
-   DECLARE_THREAD_STARTER(getRepositories)
-   DECLARE_THREAD_STARTER(addRepository)
-   DECLARE_THREAD_STARTER(modifyRepository)
-   DECLARE_THREAD_STARTER(deleteRepository)
-
    void readThread();
-   void writeThread();
-   void processingThread();
    void pollerThread(DataCollectionTarget *pNode, int iPollType, UINT32 dwRqId);
+
+   void processRequest(NXCPMessage *request);
+
+   void postRawMessageAndDelete(NXCP_MESSAGE *msg);
+   void sendRawMessageAndDelete(NXCP_MESSAGE *msg);
 
    void debugPrintf(int level, const TCHAR *format, ...);
 
@@ -811,9 +762,9 @@ public:
 
    void run();
 
-   void postMessage(NXCPMessage *pMsg) { if (!isTerminated()) m_sendQueue->put(pMsg->serialize((m_dwFlags & CSF_COMPRESSION_ENABLED) != 0)); }
-   bool sendMessage(NXCPMessage *pMsg);
-   void sendRawMessage(NXCP_MESSAGE *pMsg);
+   void postMessage(NXCPMessage *msg);
+   bool sendMessage(NXCPMessage *msg);
+   void sendRawMessage(NXCP_MESSAGE *msg);
    void sendPollerMsg(UINT32 dwRqId, const TCHAR *pszMsg);
 	BOOL sendFile(const TCHAR *file, UINT32 dwRqId, long offset, bool allowCompression = true);
 
