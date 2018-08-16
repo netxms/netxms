@@ -231,6 +231,9 @@
     <ClCompile Include="macaddr.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="hashsetbase.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\base64.h">
