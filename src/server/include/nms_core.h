@@ -448,8 +448,6 @@ class NXCORE_EXPORTABLE ClientSession
 private:
    SOCKET m_hSocket;
    int m_id;
-   int m_state;
-   WORD m_wCurrentCmd;
    UINT32 m_dwUserId;
    UINT64 m_dwSystemAccess;    // User's system access rights
    UINT32 m_dwFlags;           // Session flags
@@ -775,7 +773,6 @@ public:
    int getId() const { return m_id; }
    void setId(int id) { if (m_id == -1) m_id = id; }
 
-   int getState() const { return m_state; }
    const TCHAR *getLoginName() const { return m_loginName; }
    const TCHAR *getSessionName() const { return m_sessionName; }
    const TCHAR *getClientInfo() const { return m_clientInfo; }
@@ -788,7 +785,6 @@ public:
    bool isTerminated() const { return (m_dwFlags & CSF_TERMINATED) ? true : false; }
    bool isConsoleOpen() const { return (m_dwFlags & CSF_CONSOLE_OPEN) ? true : false; }
    bool isCompressionEnabled() const { return (m_dwFlags & CSF_COMPRESSION_ENABLED) ? true : false; }
-   UINT16 getCurrentCmd() const { return m_wCurrentCmd; }
    int getCipher() const { return (m_pCtx == NULL) ? -1 : m_pCtx->getCipher(); }
 	int getClientType() const { return m_clientType; }
    time_t getLoginTime() const { return m_loginTime; }
