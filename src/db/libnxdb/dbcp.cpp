@@ -120,14 +120,13 @@ static bool ResetConnection(PoolConnectionInfo *conn)
 		conn->usageCount = 0;
 
 		nxlog_debug_tag(DEBUG_TAG, 3, _T("Connection %p reconnected"), conn);
-		return true;
 	}
    else
    {
 		nxlog_debug_tag(DEBUG_TAG, 3, _T("Connection %p reconnect failure (%s)"), conn, errorText);
-		return false;
 	}
    conn->resetOnRelease = false;
+   return conn->handle != NULL;
 }
 
 /**
