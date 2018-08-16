@@ -1,7 +1,7 @@
 SOURCES = array.cpp base64.cpp bytestream.cpp cc_mb.cpp cc_ucs2.cpp \
           cc_ucs4.cpp cc_utf8.cpp cch.cpp config.cpp crypto.cpp debug_tag_tree.cpp diff.cpp \
 	  dirw_unix.c geolocation.cpp getopt.c dload.cpp hash.cpp \
-	  hashmapbase.cpp ice.c icmp.cpp icmp6.cpp iconv.cpp inet_pton.c \
+	  hashmapbase.cpp hashsetbase.cpp ice.c icmp.cpp icmp6.cpp iconv.cpp inet_pton.c \
 	  inetaddr.cpp log.cpp lz4.c macaddr.cpp main.cpp md5.cpp message.cpp \
 	  msgrecv.cpp msgwq.cpp net.cpp npipe.cpp npipe_unix.cpp \
 	  nxcp.cpp pa.cpp parisc_atomic.cpp procexec.cpp \
