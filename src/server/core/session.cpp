@@ -138,7 +138,6 @@ ClientSession::ClientSession(SOCKET hSocket, const InetAddress& addr)
 {
    m_hSocket = hSocket;
    m_id = -1;
-   m_state = SESSION_STATE_INIT;
    m_pCtx = NULL;
 	m_mutexSocketWrite = MutexCreate();
    m_mutexSendObjects = MutexCreate();
@@ -161,7 +160,6 @@ ClientSession::ClientSession(SOCKET hSocket, const InetAddress& addr)
    m_dwOpenDCIListSize = 0;
    m_pOpenDCIList = NULL;
    m_ppEPPRuleList = NULL;
-   m_wCurrentCmd = 0;
    m_dwNumRecordsToUpload = 0;
    m_dwRecordsUploaded = 0;
    m_refCount = 0;
@@ -529,24 +527,23 @@ void ClientSession::readThread()
  */
 void ClientSession::processRequest(NXCPMessage *request)
 {
-   m_wCurrentCmd = request->getCode();
+   UINT16 code = request->getCode();
 
    TCHAR buffer[128];
-   debugPrintf(6, _T("Received message %s"), NXCPMessageCodeName(m_wCurrentCmd, buffer));
+   debugPrintf(6, _T("Received message %s"), NXCPMessageCodeName(code, buffer));
    if (!(m_dwFlags & CSF_AUTHENTICATED) &&
-       (m_wCurrentCmd != CMD_LOGIN) &&
-       (m_wCurrentCmd != CMD_GET_SERVER_INFO) &&
-       (m_wCurrentCmd != CMD_REQUEST_ENCRYPTION) &&
-       (m_wCurrentCmd != CMD_GET_MY_CONFIG) &&
-       (m_wCurrentCmd != CMD_REGISTER_AGENT))
+       (code != CMD_LOGIN) &&
+       (code != CMD_GET_SERVER_INFO) &&
+       (code != CMD_REQUEST_ENCRYPTION) &&
+       (code != CMD_GET_MY_CONFIG) &&
+       (code != CMD_REGISTER_AGENT))
    {
       delete request;
       decRefCount();
       return;
    }
 
-   m_state = SESSION_STATE_PROCESSING;
-   switch(m_wCurrentCmd)
+   switch(code)
    {
       case CMD_LOGIN:
          login(request);
@@ -1291,7 +1288,7 @@ void ClientSession::processRequest(NXCPMessage *request)
          break;
 #endif
       default:
-         if ((m_wCurrentCmd >> 8) == 0x11)
+         if ((code >> 8) == 0x11)
          {
             // Reporting Server range (0x1100 - 0x11FF)
             forwardToReportingServer(request);
@@ -1304,7 +1301,7 @@ void ClientSession::processRequest(NXCPMessage *request)
             {
                if (g_pModuleList[i].pfClientCommandHandler != NULL)
                {
-                  int status = g_pModuleList[i].pfClientCommandHandler(m_wCurrentCmd, request, this);
+                  int status = g_pModuleList[i].pfClientCommandHandler(code, request, this);
                   if (status != NXMOD_COMMAND_IGNORED)
                   {
                      if (status == NXMOD_COMMAND_ACCEPTED_ASYNC)
@@ -1328,7 +1325,6 @@ void ClientSession::processRequest(NXCPMessage *request)
          break;
    }
    delete request;
-   m_state = (m_dwFlags & CSF_AUTHENTICATED) ? SESSION_STATE_IDLE : SESSION_STATE_INIT;
    decRefCount();
 }
 

@@ -181,7 +181,7 @@ void DumpClientSessions(CONSOLE_CTX pCtx)
    static const TCHAR *pszCipherName[] = { _T("NONE"), _T("AES-256"), _T("BF-256"), _T("IDEA"), _T("3DES"), _T("AES-128"), _T("BF-128") };
 	static const TCHAR *pszClientType[] = { _T("DESKTOP"), _T("WEB"), _T("MOBILE"), _T("TABLET"), _T("APP") };
 
-   ConsolePrintf(pCtx, _T("ID  STATE                    CIPHER   CLTYPE  USER [CLIENT]\n"));
+   ConsolePrintf(pCtx, _T("ID  CIPHER   CLTYPE  USER [CLIENT]\n"));
    RWLockReadLock(s_sessionListLock, INFINITE);
    for(i = 0, iCount = 0; i < MAX_CLIENT_SESSIONS; i++)
       if (s_sessionList[i] != NULL)
@@ -191,10 +191,7 @@ void DumpClientSessions(CONSOLE_CTX pCtx)
          {
             _sntprintf(webServer, 256, _T(" (%s)"), s_sessionList[i]->getWebServerAddress());
          }
-         ConsolePrintf(pCtx, _T("%-3d %-24s %-8s %-7s %s%s [%s]\n"), i,
-                       (s_sessionList[i]->getState() != SESSION_STATE_PROCESSING) ?
-                         pszStateName[s_sessionList[i]->getState()] :
-                         NXCPMessageCodeName(s_sessionList[i]->getCurrentCmd(), szBuffer),
+         ConsolePrintf(pCtx, _T("%-3d %-8s %-7s %s%s [%s]\n"), i,
 					        pszCipherName[s_sessionList[i]->getCipher() + 1],
 							  pszClientType[s_sessionList[i]->getClientType()],
                        s_sessionList[i]->getSessionName(), webServer,
