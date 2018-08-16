@@ -68,6 +68,7 @@ extern const TCHAR *g_szMessages[];
  * Externals
  */
 extern Queue g_dciCacheLoaderQueue;
+extern ThreadPool *g_clientThreadPool;
 extern ThreadPool *g_syncerThreadPool;
 
 void InitClientListeners();
@@ -1212,6 +1213,7 @@ void NXCORE_EXPORTABLE Shutdown()
    ShutdownAlarmManager();
    nxlog_debug(1, _T("Event processing stopped"));
 
+   ThreadPoolDestroy(g_clientThreadPool);
 	ThreadPoolDestroy(g_agentConnectionThreadPool);
    ThreadPoolDestroy(g_mainThreadPool);
    MsgWaitQueue::shutdown();
