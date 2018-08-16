@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2015 Victor Kirhenshtein
+** Copyright (C) 2003-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -41,7 +41,7 @@ struct HashMapEntry
 /**
  * Delete key
  */
-#define DELETE_KEY(m, e) do { if ((m)->m_keylen > 16) free((e)->key.p); } while(0)
+#define DELETE_KEY(m, e) do { if ((m)->m_keylen > 16) MemFree((e)->key.p); } while(0)
 
 /**
  * Get pointer to key
@@ -53,7 +53,7 @@ struct HashMapEntry
  */
 static void ObjectDestructor(void *object, HashMapBase *map)
 {
-	free(object);
+	MemFree(object);
 }
 
 /**
@@ -87,7 +87,7 @@ void HashMapBase::clear()
       DELETE_KEY(this, entry);
       if (m_objectOwner)
          destroyObject(entry->value);
-      free(entry);
+      MemFree(entry);
    }
 }
 
@@ -121,7 +121,7 @@ void HashMapBase::_set(const void *key, void *value)
 	}
 	else
 	{
-      entry = (HashMapEntry *)malloc(sizeof(HashMapEntry));
+      entry = MemAllocStruct<HashMapEntry>();
       if (m_keylen <= 16)
          memcpy(entry->key.d, key, m_keylen);
       else
@@ -154,7 +154,7 @@ void HashMapBase::_remove(const void *key)
       DELETE_KEY(this, entry);
 		if (m_objectOwner)
          destroyObject(entry->value);
-      free(entry);
+      MemFree(entry);
    }
 }
 
@@ -258,5 +258,5 @@ void HashMapIterator::remove()
    DELETE_KEY(m_hashMap, m_curr);
    if (m_hashMap->m_objectOwner)
       m_hashMap->destroyObject(m_curr->value);
-   free(m_curr);
+   MemFree(m_curr);
 }

@@ -769,11 +769,16 @@ static void TestQueue()
 typedef char HASH_KEY[6];
 
 /**
+ * Long hash key
+ */
+typedef char LONG_HASH_KEY[32];
+
+/**
  * Test hash map
  */
 static void TestHashMap()
 {
-   StartTest(_T("HashMap: create"));
+   StartTest(_T("HashMap - create"));
    HashMap<HASH_KEY, String> *hashMap = new HashMap<HASH_KEY, String>(true);
    AssertEquals(hashMap->size(), 0);
    EndTest();
@@ -782,7 +787,7 @@ static void TestHashMap()
    HASH_KEY k2 = { '0', '0', 'a', 'b', 'c', 'd' };
    HASH_KEY k3 = { '0', '0', '3', 'X', '1', '1' };
 
-   StartTest(_T("HashMap: set/get"));
+   StartTest(_T("HashMap - set/get"));
 
    hashMap->set(k1, new String(_T("String 1")));
    hashMap->set(k2, new String(_T("String 2")));
@@ -802,14 +807,14 @@ static void TestHashMap()
 
    EndTest();
 
-   StartTest(_T("HashMap: replace"));
+   StartTest(_T("HashMap - replace"));
    hashMap->set(k2, new String(_T("REPLACE")));
    s = hashMap->get(k2);
    AssertNotNull(s);
    AssertTrue(!_tcscmp(s->getBuffer(), _T("REPLACE")));
    EndTest();
 
-   StartTest(_T("HashMap: iterator"));
+   StartTest(_T("HashMap - iterator"));
    Iterator<String> *it = hashMap->iterator();
    AssertTrue(it->hasNext());
    s = it->next();
@@ -822,7 +827,7 @@ static void TestHashMap()
    delete it;
    EndTest();
 
-   StartTest(_T("HashMap: iterator remove"));
+   StartTest(_T("HashMap - iterator remove"));
    it = hashMap->iterator();
    AssertTrue(it->hasNext());
    AssertNotNull(it->next());
@@ -839,12 +844,12 @@ static void TestHashMap()
    AssertNotNull(hashMap->get(k3));
    EndTest();
 
-   StartTest(_T("HashMap: remove"));
+   StartTest(_T("HashMap - remove"));
    hashMap->remove(k3);
    AssertNull(hashMap->get(k3));
    EndTest();
 
-   StartTest(_T("HashMap: clear"));
+   StartTest(_T("HashMap - clear"));
    hashMap->clear();
    AssertEquals(hashMap->size(), 0);
    it = hashMap->iterator();
@@ -855,7 +860,7 @@ static void TestHashMap()
 
    delete hashMap;
 
-   StartTest(_T("HashMap: InetAddress as key"));
+   StartTest(_T("HashMap - InetAddress as key"));
 
    InetAddress addr1 = InetAddress::parse("127.0.0.1");
    InetAddress addr2 = InetAddress::parse("10.0.0.76");
@@ -889,6 +894,118 @@ static void TestHashMap()
 
    delete ipAddrMap;
    EndTest();
+
+   StartTest(_T("HashMap - long key"));
+
+   LONG_HASH_KEY lk1 = "alpha";
+   LONG_HASH_KEY lk2 = "omega";
+   LONG_HASH_KEY lk3 = "some long key";
+   LONG_HASH_KEY lk4 = "other key";
+
+   HashMap<LONG_HASH_KEY, String> *longKeyMap = new HashMap<LONG_HASH_KEY, String>(true);
+   longKeyMap->set(lk1, new String(_T("key1")));
+   longKeyMap->set(lk2, new String(_T("key2")));
+   longKeyMap->set(lk3, new String(_T("key3")));
+   longKeyMap->set(lk4, new String(_T("key4")));
+
+   s = longKeyMap->get(lk2);
+   AssertNotNull(s);
+   AssertTrue(!_tcscmp(s->getBuffer(), _T("key2")));
+
+   s = longKeyMap->get(lk3);
+   AssertNotNull(s);
+   AssertTrue(!_tcscmp(s->getBuffer(), _T("key3")));
+
+   s = longKeyMap->get(lk4);
+   AssertNotNull(s);
+   AssertTrue(!_tcscmp(s->getBuffer(), _T("key4")));
+
+   longKeyMap->set(lk3, new String(_T("key3_replaced")));
+   s = longKeyMap->get(lk3);
+   AssertNotNull(s);
+   AssertTrue(!_tcscmp(s->getBuffer(), _T("key3_replaced")));
+
+   AssertEquals(longKeyMap->size(), 4);
+
+   delete longKeyMap;
+   EndTest();
+}
+
+/**
+ * Test hash set
+ */
+static void TestHashSet()
+{
+   StartTest(_T("HashSet - create"));
+   HashSet<INT32> *s1 = new HashSet<INT32>();
+   AssertEquals(s1->size(), 0);
+   EndTest();
+
+   StartTest(_T("HashSet - put/contains"));
+   s1->put(1);
+   s1->put(10);
+   s1->put(33);
+   s1->put(10);
+   AssertEquals(s1->size(), 3);
+   AssertTrue(s1->contains(1));
+   AssertTrue(s1->contains(10));
+   AssertTrue(s1->contains(33));
+   AssertFalse(s1->contains(12));
+   EndTest();
+
+   StartTest(_T("HashSet - remove"));
+   s1->remove(25);
+   s1->remove(33);
+   AssertEquals(s1->size(), 2);
+   AssertTrue(s1->contains(10));
+   AssertFalse(s1->contains(33));
+   EndTest();
+
+   StartTest(_T("HashSet - clear"));
+   s1->clear();
+   AssertEquals(s1->size(), 0);
+   AssertFalse(s1->contains(1));
+   EndTest();
+
+   delete s1;
+
+   LONG_HASH_KEY k1 = "alpha";
+   LONG_HASH_KEY k2 = "omega";
+   LONG_HASH_KEY k3 = "some long key";
+   LONG_HASH_KEY k4 = "unused key";
+
+   StartTest(_T("HashSet (long key) - create"));
+   HashSet<LONG_HASH_KEY> *s2 = new HashSet<LONG_HASH_KEY>();
+   AssertEquals(s2->size(), 0);
+   EndTest();
+
+   StartTest(_T("HashSet (long key) - put/contains"));
+   s2->put(k1);
+   s2->put(k2);
+   s2->put(k3);
+   s2->put(k2);
+   AssertEquals(s2->size(), 3);
+   AssertTrue(s2->contains(k1));
+   AssertTrue(s2->contains(k2));
+   AssertTrue(s2->contains(k3));
+   AssertFalse(s2->contains(k4));
+   EndTest();
+
+   StartTest(_T("HashSet (long key) - remove"));
+   s2->remove(k2);
+   s2->remove(k4);
+   AssertEquals(s2->size(), 2);
+   AssertTrue(s2->contains(k1));
+   AssertFalse(s2->contains(k2));
+   EndTest();
+
+   StartTest(_T("HashSet (long key) - clear"));
+   s2->clear();
+   AssertEquals(s2->size(), 0);
+   AssertFalse(s2->contains(k1));
+   EndTest();
+
+   delete s2;
 }
 
 /**
@@ -1497,6 +1614,7 @@ int main(int argc, char *argv[])
    TestItoa();
    TestQueue();
    TestHashMap();
+   TestHashSet();
    TestObjectArray();
    TestTable();
    TestMutexWrapper();

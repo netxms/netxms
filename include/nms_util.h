@@ -1251,6 +1251,50 @@ public:
 };
 
 /**
+ * Opaque hash set entry structure
+ */
+struct HashSetEntry;
+
+/**
+ * Hash set base class (for fixed size non-pointer keys)
+ */
+class LIBNETXMS_EXPORTABLE HashSetBase
+{
+private:
+   HashSetEntry *m_data;
+   unsigned int m_keylen;
+
+protected:
+   HashSetBase(unsigned int keylen);
+
+   void _put(const void *key);
+   void _remove(const void *key);
+   bool _contains(const void *key) const;
+
+public:
+   virtual ~HashSetBase();
+
+   int size() const;
+
+   void clear();
+
+   EnumerationCallbackResult forEach(EnumerationCallbackResult (*cb)(const void *, void *), void *userData) const;
+};
+
+/**
+ * Hash set template
+ */
+template <class K> class HashSet : public HashSetBase
+{
+public:
+   HashSet() : HashSetBase(sizeof(K)) { }
+
+   void put(const K& key) { _put(&key); }
+   void remove(const K& key) { _remove(&key); }
+   bool contains(const K& key) { return _contains(&key); }
+};
+
+/**
  * Opaque hash map entry structure
  */
 struct HashMapEntry;
