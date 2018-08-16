@@ -230,7 +230,7 @@ void AbstractIndexBase::clear()
  */
 int AbstractIndexBase::findElement(INDEX_HEAD *index, UINT64 key)
 {
-   int first, last, mid;
+   size_t first, last, mid;
 
 	if (index->size == 0)
       return -1;

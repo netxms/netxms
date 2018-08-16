@@ -3902,7 +3902,6 @@ void ClientSession::copyDCI(NXCPMessage *pRequest)
 {
    NXCPMessage msg;
    NetObj *pSource, *pDestination;
-   TCHAR szLockInfo[MAX_SESSION_NAME];
    BOOL bMove;
 
    // Prepare response message
@@ -7171,7 +7170,6 @@ void ClientSession::applyTemplate(NXCPMessage *pRequest)
       // Check object types
       if ((pSource->getObjectClass() == OBJECT_TEMPLATE) && pDestination->isDataCollectionTarget())
       {
-         TCHAR szLockInfo[MAX_SESSION_NAME];
          // Check access rights
          if ((pSource->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ)) &&
              (pDestination->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY)))

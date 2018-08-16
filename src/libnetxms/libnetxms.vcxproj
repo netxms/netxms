@@ -206,6 +206,7 @@
     <ClCompile Include="getopt.c" />
     <ClCompile Include="hash.cpp" />
     <ClCompile Include="hashmapbase.cpp" />
+    <ClCompile Include="hashsetbase.cpp" />
     <ClCompile Include="ice.c" />
     <ClCompile Include="icmp.cpp" />
     <ClCompile Include="inetaddr.cpp" />

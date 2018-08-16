@@ -88,8 +88,6 @@ static THREAD_RESULT THREAD_CALL ApplyTemplateThread(void *pArg)
       {
          if (dcTarget->isDataCollectionTarget())
          {
-            BOOL lock1, lock2;
-
             switch(pInfo->updateType)
             {
                case APPLY_TEMPLATE:
