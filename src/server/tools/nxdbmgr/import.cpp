@@ -31,16 +31,14 @@ extern const TCHAR *g_tables[];
 /**
  * Well-known integer fields to be fixed during import
  */
-static struct
+FIX_FIELD g_fixFields[] =
 {
-   const TCHAR *table;
-   const char *column;
-} s_fixFields[] =
-{
+   { _T("dct_threshold_instances"), "row_number" },
    { _T("network_maps"), "bg_zoom" },
    { _T("nodes"), "capabilities" },
    { _T("nodes"), "port_rows" },
    { _T("nodes"), "port_numbering_scheme" },
+   { _T("object_properties"), "state_before_maint" },
    { _T("snmp_communities"), "zone" },
    { _T("usm_credentials"), "zone" },
    { NULL, NULL },
@@ -69,13 +67,15 @@ static int ImportTableCB(void *arg, int cols, char **data, char **names)
 			if (*data[i] == 0)
 			{
             bool fix = false;
-				for(int n = 0; s_fixFields[n].table != NULL; n++)
-					if (!_tcsicmp(s_fixFields[n].table, static_cast<TCHAR*>(arg)) &&
-                   !stricmp(s_fixFields[n].column, names[i]))
+				for(int n = 0; g_fixFields[n].table != NULL; n++)
+				{
+					if (!_tcsicmp(g_fixFields[n].table, static_cast<TCHAR*>(arg)) &&
+                   !stricmp(g_fixFields[n].column, names[i]))
                {
                   fix = true;
                   break;
                }
+				}
             query.append(fix ? _T("0,") : _T("'',"));
 			}
 			else

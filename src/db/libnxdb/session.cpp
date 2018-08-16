@@ -413,10 +413,23 @@ bool LIBNXDB_EXPORTABLE DBGetColumnName(DB_RESULT hResult, int column, TCHAR *bu
 		MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, name, -1, buffer, bufSize);
 		buffer[bufSize - 1] = 0;
 #else
-		nx_strncpy(buffer, name, bufSize);
+		strlcpy(buffer, name, bufSize);
 #endif
 	}
 	return name != NULL;
+}
+
+/**
+ * Get column name as multibyte string
+ */
+bool LIBNXDB_EXPORTABLE DBGetColumnNameA(DB_RESULT hResult, int column, char *buffer, int bufSize)
+{
+   const char *name = hResult->m_driver->m_fpDrvGetColumnName(hResult->m_data, column);
+   if (name != NULL)
+   {
+      strlcpy(buffer, name, bufSize);
+   }
+   return name != NULL;
 }
 
 /**
@@ -432,19 +445,30 @@ int LIBNXDB_EXPORTABLE DBGetColumnCount(DB_UNBUFFERED_RESULT hResult)
  */
 bool LIBNXDB_EXPORTABLE DBGetColumnName(DB_UNBUFFERED_RESULT hResult, int column, TCHAR *buffer, int bufSize)
 {
-	const char *name;
-
-	name = hResult->m_driver->m_fpDrvGetColumnNameUnbuffered(hResult->m_data, column);
+	const char *name = hResult->m_driver->m_fpDrvGetColumnNameUnbuffered(hResult->m_data, column);
 	if (name != NULL)
 	{
 #ifdef UNICODE
 		MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, name, -1, buffer, bufSize);
 		buffer[bufSize - 1] = 0;
 #else
-		nx_strncpy(buffer, name, bufSize);
+		strlcpy(buffer, name, bufSize);
 #endif
 	}
 	return name != NULL;
+}
+
+/**
+ * Get column name for unbuffered result set as multibyte string
+ */
+bool LIBNXDB_EXPORTABLE DBGetColumnNameA(DB_UNBUFFERED_RESULT hResult, int column, char *buffer, int bufSize)
+{
+   const char *name = hResult->m_driver->m_fpDrvGetColumnNameUnbuffered(hResult->m_data, column);
+   if (name != NULL)
+   {
+      strlcpy(buffer, name, bufSize);
+   }
+   return name != NULL;
 }
 
 /**
