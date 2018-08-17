@@ -2,19 +2,19 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: NXMC Object Viewer Plug-in
 Bundle-SymbolicName: org.netxms.ui.eclipse.objectview;singleton:=true
-Bundle-Version: 2.2.7
+Bundle-Version: 2.2.8
 Bundle-Activator: org.netxms.ui.eclipse.objectview.Activator
 Bundle-Vendor: netxms.org
 Require-Bundle: org.eclipse.ui;bundle-version="3.8.2",
  org.eclipse.core.runtime;bundle-version="3.8.0",
- org.netxms.ui.eclipse.console;bundle-version="2.2.7",
- org.netxms.ui.eclipse.charts;bundle-version="2.2.7",
- org.netxms.ui.eclipse.objecttools;bundle-version="2.2.7",
- org.netxms.ui.eclipse.imagelibrary;bundle-version="2.2.7",
- org.netxms.ui.eclipse.objectbrowser;bundle-version="2.2.7",
+ org.netxms.ui.eclipse.console;bundle-version="2.2.8",
+ org.netxms.ui.eclipse.charts;bundle-version="2.2.8",
+ org.netxms.ui.eclipse.objecttools;bundle-version="2.2.8",
+ org.netxms.ui.eclipse.imagelibrary;bundle-version="2.2.8",
+ org.netxms.ui.eclipse.objectbrowser;bundle-version="2.2.8",
  org.eclipse.ui.forms;bundle-version="3.5.200",
- org.netxms.ui.base;bundle-version="2.2.7",
- org.netxms.ui.eclipse.clientlibrary;bundle-version="2.2.7",
+ org.netxms.ui.base;bundle-version="2.2.8",
+ org.netxms.ui.eclipse.clientlibrary;bundle-version="2.2.8",
  org.eclipse.core.expressions;bundle-version="3.4.400"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy
