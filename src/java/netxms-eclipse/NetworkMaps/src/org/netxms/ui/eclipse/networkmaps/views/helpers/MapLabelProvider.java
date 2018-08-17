@@ -50,7 +50,9 @@ import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.base.NXCommon;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.ObjectStatus;
+import org.netxms.client.constants.Severity;
 import org.netxms.client.datacollection.DciValue;
+import org.netxms.client.datacollection.Threshold;
 import org.netxms.client.maps.MapObjectDisplayMode;
 import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.elements.NetworkMapDCIContainer;
@@ -516,6 +518,33 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
                   altStatus = s;
             }
          }
+
+         if (!link.getDciAsList().isEmpty() && link.getConfig().isUseActiveThresholds())
+         {
+            Severity severity = Severity.UNKNOWN;
+            try
+            {
+               List<Threshold> thresholds = session.getActiveThresholds(link.getDciAsList());
+               for(Threshold t : thresholds)
+               {
+                  Severity s = t.getCurrentSeverity();
+                  if ((s.compareTo(Severity.UNKNOWN) < 0) && ((severity.compareTo(s) < 0) || (severity == Severity.UNKNOWN)))
+                  {
+                     severity = s;
+                     if (severity == Severity.CRITICAL)
+                        break;
+                  }
+               }
+            }
+            catch(Exception e)
+            {
+               Activator.logError("Exception in map label provider", e);
+            }            
+
+            if ((severity != Severity.UNKNOWN) && (severity.getValue() > status.getValue()))
+               status = ObjectStatus.getByValue(severity.getValue());
+         }
+         
          connection.setLineColor(StatusDisplayInfo.getStatusColor((status != ObjectStatus.UNKNOWN) ? status : altStatus));            
       }
       else if (link.getColor() >= 0)
