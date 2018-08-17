@@ -532,6 +532,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
             if ((severity != Severity.UNKNOWN) && (severity.getValue() > status.getValue()))
                status = ObjectStatus.getByValue(severity.getValue());
          }
+         
          connection.setLineColor(StatusDisplayInfo.getStatusColor((status != ObjectStatus.UNKNOWN) ? status : altStatus));            
 		}
 		else if (link.getColor() >= 0)
