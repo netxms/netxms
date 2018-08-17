@@ -550,7 +550,7 @@ TCHAR *Event::expandText(const Event *event, UINT32 sourceObject, const TCHAR *t
 								if (alarmKey != NULL)
 									vm->setGlobalVariable(_T("$alarmKey"), new NXSL_Value(alarmKey));
 
-								if (vm->run(0, NULL, NULL, NULL, entryPoint))
+								if (vm->run(0, NULL, NULL, NULL, NULL, entryPoint))
 								{
 									NXSL_Value *result = vm->getResult();
 									if (result != NULL)

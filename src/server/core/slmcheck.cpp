@@ -381,7 +381,7 @@ void SlmCheck::execute()
 
 				m_pCompiledScript->setGlobalVariable(_T("$reason"), new NXSL_Value(m_reason));
 				m_pCompiledScript->setGlobalVariable(_T("$node"), getNodeObjectForNXSL());
-				if (m_pCompiledScript->run(0, NULL, &pGlobals, &m_nxslConstants))
+				if (m_pCompiledScript->run(0, NULL, &pGlobals, NULL, &m_nxslConstants))
 				{
 					NXSL_Value *pValue = m_pCompiledScript->getResult();
 					m_status = (pValue->getValueAsInt32() == 0) ? STATUS_NORMAL : STATUS_CRITICAL;
