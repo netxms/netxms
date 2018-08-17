@@ -499,6 +499,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
       if (link.getStatusObject() != null && link.getStatusObject().size() != 0)
       {
          ObjectStatus status = ObjectStatus.UNKNOWN;
+         ObjectStatus altStatus = ObjectStatus.UNKNOWN;
          for(Long id : link.getStatusObject())
          {
             AbstractObject object = session.findObjectById(id);
@@ -511,9 +512,11 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
                   if (status == ObjectStatus.CRITICAL)
                      break;
                }
-            } 
+               if (s != ObjectStatus.UNKNOWN)
+                  altStatus = s;
+            }
          }
-         connection.setLineColor(StatusDisplayInfo.getStatusColor(status));            
+         connection.setLineColor(StatusDisplayInfo.getStatusColor((status != ObjectStatus.UNKNOWN) ? status : altStatus));            
       }
       else if (link.getColor() >= 0)
       {
