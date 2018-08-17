@@ -314,21 +314,44 @@ public class NetworkMapLink
 	   config.setColor(color);
 	}
 
+   /**
+    * Get color source
+    * 
+    * @return color source
+    */
+   public int getColorSource()
+   {
+      return config.getColorSource();
+   }
+
+   /**
+    * Set color source
+    * 
+    * @param colorSource new color source
+    */
+   public void setColorSource(int colorSource)
+   {
+      config.setColorSource(colorSource);
+   }
+
 	/**
-	 * @return the statusObject
+    * Get list of objects used for status calculation
+    * 
+	 * @return list of objects used for status calculation
 	 */
-	public List<Long> getStatusObject()
+	public List<Long> getStatusObjects()
 	{
 		return config.getObjectStatusList();
 	}
 
 	/**
-	 * @param statusObject the statusObject to set
+	 * Set list of objects used for status calculation
+	 * 
+	 * @param statusObjects new list of objects
 	 */
-	public void setStatusObject(List<Long> statusObject)
+	public void setStatusObjects(List<Long> statusObjects)
 	{
-	   if(statusObject != null)
-	      config.setObjectStatusList(statusObject);
+	   config.setObjectStatusList((statusObjects != null) ? statusObjects : new ArrayList<Long>(0));
 	}
 
 	/**
