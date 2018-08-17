@@ -411,6 +411,16 @@
             </instanceof>
          </enabledWhen>
       </page>
+      <page
+            class="org.netxms.ui.eclipse.dashboard.propertypages.PortView"
+            id="org.netxms.ui.eclipse.dashboard.propertypages.PortView#0"
+            name="Port View">
+         <enabledWhen>
+            <instanceof
+                  value="org.netxms.ui.eclipse.dashboard.widgets.internal.PortViewConfig">
+            </instanceof>
+         </enabledWhen>
+      </page>
    </extension>
    <extension
          point="org.eclipse.core.runtime.adapters">

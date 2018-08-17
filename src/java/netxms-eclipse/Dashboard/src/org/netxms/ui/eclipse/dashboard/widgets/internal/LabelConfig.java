@@ -37,7 +37,7 @@ public class LabelConfig extends DashboardElementConfig
 	private String background = "0xFFFFFF"; //$NON-NLS-1$
 
 	/**
-	 * Create line chart settings object from XML document
+	 * Create label configuration object from XML document
 	 * 
 	 * @param xml XML document
 	 * @return deserialized object

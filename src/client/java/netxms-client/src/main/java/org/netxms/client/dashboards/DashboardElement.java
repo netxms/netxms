@@ -54,6 +54,7 @@ public class DashboardElement
    public static final int RACK_DIAGRAM = 26;
    public static final int OBJECT_TOOLS = 27;
    public static final int OBJECT_DETAILS = 28;
+   public static final int PORT_VIEW = 29;
    
 	public static final int FILL = 0;
 	public static final int CENTER = 1;

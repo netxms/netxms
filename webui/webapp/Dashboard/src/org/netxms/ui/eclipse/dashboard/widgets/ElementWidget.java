@@ -39,8 +39,6 @@ import org.netxms.ui.eclipse.widgets.DashboardComposite;
  */
 public class ElementWidget extends DashboardComposite implements ControlListener
 {
-   private static final String[] TITLE_FONTS = { "Segoe UI", "Liberation Sans", "DejaVu Sans", "Verdana", "Arial" };
-   
 	protected DashboardElement element;
 	protected IViewPart viewPart;
 	
@@ -192,7 +190,7 @@ public class ElementWidget extends DashboardComposite implements ControlListener
    protected Label createTitleLabel(Composite parent, String text)
    {
       Label title = new Label(this, SWT.CENTER);
-      final Font font = FontTools.createFont(TITLE_FONTS, 2, SWT.BOLD);
+      final Font font = FontTools.createTitleFont();
       title.setFont(font);
       title.setBackground(parent.getBackground());
       title.setText(text);

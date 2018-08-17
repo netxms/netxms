@@ -26,10 +26,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Menu;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
@@ -38,6 +41,7 @@ import org.netxms.client.objects.Node;
 import org.netxms.client.topology.Port;
 import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.FontTools;
 import org.netxms.ui.eclipse.topology.Messages;
 import org.netxms.ui.eclipse.topology.widgets.helpers.PortInfo;
 import org.netxms.ui.eclipse.topology.widgets.helpers.PortSelectionListener;
@@ -53,7 +57,10 @@ public class DeviceView extends DashboardComposite
 	private NXCSession session;
 	private Map<Long, PortInfo> ports = new HashMap<Long, PortInfo>();
 	private Map<Integer, SlotView> slots = new HashMap<Integer, SlotView>();
+	private Label header = null;
+	private Font headerFont = null;
 	private boolean portStatusVisible = true;
+	private boolean headerVisible = false;
 	private Set<PortSelectionListener> selectionListeners = new HashSet<PortSelectionListener>();
 	private PortSelectionListener listener;
 	
@@ -93,7 +100,12 @@ public class DeviceView extends DashboardComposite
 		AbstractObject object = session.findObjectById(nodeId);
 		if ((object == null) || !(object instanceof Node))
 			return;
-		
+
+		if (!headerVisible && (header != null))
+		{
+		   header.dispose();
+		   header = null;
+		}
 		for(SlotView s : slots.values())
 		{
 			s.setMenu(null);
@@ -101,6 +113,28 @@ public class DeviceView extends DashboardComposite
 		}
 		slots.clear();
 		ports.clear();
+		
+		if (headerVisible)
+		{
+		   if (header == null)
+		   {
+		      header = new Label(this, SWT.NONE);
+		      header.setBackground(getBackground());
+		      if (headerFont == null)
+		      {
+		         headerFont = FontTools.createTitleFont();
+		         addDisposeListener(new DisposeListener() {
+                  @Override
+                  public void widgetDisposed(DisposeEvent e)
+                  {
+                     headerFont.dispose();
+                  }
+               });
+		      }
+		      header.setFont(headerFont);
+		   }
+		   header.setText(object.getObjectName());
+		}
 		
 		List<Interface> interfaces = new ArrayList<Interface>();
 		for(AbstractObject o: object.getAllChilds(AbstractObject.OBJECT_INTERFACE))
@@ -177,6 +211,22 @@ public class DeviceView extends DashboardComposite
 	}
 	
 	/**
+    * @return the headerVisible
+    */
+   public boolean isHeaderVisible()
+   {
+      return headerVisible;
+   }
+
+   /**
+    * @param headerVisible the headerVisible to set
+    */
+   public void setHeaderVisible(boolean headerVisible)
+   {
+      this.headerVisible = headerVisible;
+   }
+
+   /**
 	 * Set port highlight
 	 * 
 	 * @param ports

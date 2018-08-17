@@ -37,6 +37,7 @@ import org.netxms.ui.eclipse.dashboard.widgets.internal.ObjectDetailsConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.ObjectStatusChartConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.ObjectToolsConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.PieChartConfig;
+import org.netxms.ui.eclipse.dashboard.widgets.internal.PortViewConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.RackDiagramConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.SeparatorConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.ServiceComponentsConfig;
@@ -121,6 +122,8 @@ public class DashboardElementAdapterFactory implements IAdapterFactory
                   return ObjectToolsConfig.createFromXml(element.getData());
 					case DashboardElement.PIE_CHART:
 						return PieChartConfig.createFromXml(element.getData());
+               case DashboardElement.PORT_VIEW:
+                  return PortViewConfig.createFromXml(element.getData());
                case DashboardElement.RACK_DIAGRAM:
                   return RackDiagramConfig.createFromXml(element.getData());
 					case DashboardElement.SEPARATOR:

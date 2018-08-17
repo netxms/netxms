@@ -559,6 +559,16 @@ public abstract class AbstractNode extends DataCollectionTarget implements RackE
 		return (capabilities & NC_HAS_AGENT_IFXCOUNTERS) != 0;
 	}
 
+   /**
+    * Check for bridge capabilities flag
+    * 
+    * @return true if node is has bridge capabilities
+    */
+   public boolean isBridge()
+   {
+      return (capabilities & NC_IS_BRIDGE) != 0;
+   }
+
 	/**
 	 * 
 	 * @return true if node is a wireless network controller
