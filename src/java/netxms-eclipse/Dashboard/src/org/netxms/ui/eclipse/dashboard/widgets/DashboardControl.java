@@ -183,6 +183,9 @@ public class DashboardControl extends Composite
          case DashboardElement.PIE_CHART:
             w = new PieChartElement(this, e, viewPart);
             break;
+         case DashboardElement.PORT_VIEW:
+            w = new PortViewElement(this, e, viewPart);
+            break;
          case DashboardElement.RACK_DIAGRAM:
             w = new RackDiagramElement(this, e, viewPart);
             break;

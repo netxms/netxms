@@ -23,6 +23,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import org.eclipse.jface.resource.JFaceResources;
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.widgets.Display;
@@ -32,8 +33,11 @@ import org.eclipse.swt.widgets.Display;
  */
 public class FontTools
 {
+   private static final String[] TITLE_FONTS = { "Segoe UI", "Liberation Sans", "DejaVu Sans", "Verdana", "Arial" };
+   
    private static Set<String> availableFonts = null;
    private static Map<String, Font> fontCache = new HashMap<String, Font>();  
+   
    
    /**
     * Find first available font from given list
@@ -144,5 +148,15 @@ public class FontTools
    public static Font createFont(String[] names, int style)
    {
       return createFont(names, 0, style);
+   }
+   
+   /**
+    * Create standard title font
+    * 
+    * @return title font
+    */
+   public static Font createTitleFont()
+   {
+      return createFont(TITLE_FONTS, 2, SWT.BOLD);
    }
 }

@@ -123,12 +123,7 @@ public class Ports extends ObjectTab implements ISelectionProvider
 	@Override
 	public boolean showForObject(AbstractObject object)
 	{
-		if (object instanceof Node)
-		{
-			if ((((Node)object).getFlags() & Node.NF_IS_BRIDGE) != 0)
-				return true;
-		}
-		return false;
+		return (object instanceof Node) ? ((Node)object).isBridge() : false;
 	}
 
 	/**

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2018 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -84,6 +84,7 @@ public class AddDashboardElementDlg extends Dialog
       elementTypeSelector.add("Rack diagram");
       elementTypeSelector.add("Object tools");
       elementTypeSelector.add("Object details");
+      elementTypeSelector.add("Port view");
 		elementTypeSelector.select(1);
 		
 		return dialogArea;
