@@ -43,6 +43,7 @@
 	NX-1482 (NetXMS server ignoring Syslog and Traps from devices in a Zone which are sending directly to NetXMS server)
 	NX-1484 (Corrupted event messages if MySQL is used as backend database)
 	NX-1488 ("Use active thresholds" checkbox gets checked after clicking on OK in map link properties)
+	NX-1492 (Changes in object status not reflected on geo map)
 
 
 *
