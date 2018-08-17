@@ -34,6 +34,11 @@ import org.simpleframework.xml.core.Persister;
 @Root(name="config", strict=false)
 public class LinkConfig
 {
+   public static final int COLOR_SOURCE_UNDEFINED = -1;
+   public static final int COLOR_SOURCE_DEFAULT = 0;
+   public static final int COLOR_SOURCE_OBJECT_STATUS = 1;
+   public static final int COLOR_SOURCE_CUSTOM_COLOR = 2;
+   
    @ElementArray(required=false)
    private SingleDciConfig[] dciList;
 
@@ -54,6 +59,9 @@ public class LinkConfig
 
    @Element(required=false)
    private boolean isLocked;
+   
+   @Element(required=false)
+   private int colorSource;
 
    /**
     * Default constructor
@@ -61,6 +69,7 @@ public class LinkConfig
    public LinkConfig()
    {           
       color = -1;
+      colorSource = COLOR_SOURCE_UNDEFINED;
       routing = NetworkMapLink.ROUTING_DEFAULT;
       bendPoints = null;
       dciList = null;
@@ -71,12 +80,13 @@ public class LinkConfig
    /**
     * Constructor for creating XML
     */
-   public LinkConfig(SingleDciConfig[] dciList, List<Long> objectStatusList, int color, int routing,
+   public LinkConfig(SingleDciConfig[] dciList, List<Long> objectStatusList, 
+         int colorSource, int color, int routing,
          long[] bendPoints, boolean useActiveThresholds, boolean isLocked)
    {
-      super();
       this.dciList = dciList;
       this.objectStatusList = objectStatusList;
+      this.colorSource = colorSource;
       this.color = color;
       this.routing = routing;
       this.bendPoints = bendPoints;
@@ -116,7 +126,7 @@ public class LinkConfig
     */
    public List<Long> getObjectStatusList()
    {
-      return objectStatusList;
+      return (objectStatusList != null) ? objectStatusList : new ArrayList<Long>(0);
    }
 
    /**
@@ -221,6 +231,29 @@ public class LinkConfig
    public void setLocked(boolean isLocked)
    {
       this.isLocked = isLocked;
+   }
+
+   /**
+    * @return the colorSource
+    */
+   public int getColorSource()
+   {
+      if (colorSource == COLOR_SOURCE_UNDEFINED)
+      {
+         // Old configuration version, calculate source from other settings
+         if ((objectStatusList != null) && !objectStatusList.isEmpty())
+            return COLOR_SOURCE_OBJECT_STATUS;
+         return (color >= 0) ? COLOR_SOURCE_CUSTOM_COLOR : COLOR_SOURCE_DEFAULT;
+      }
+      return colorSource;
+   }
+
+   /**
+    * @param colorSource the colorSource to set
+    */
+   public void setColorSource(int colorSource)
+   {
+      this.colorSource = colorSource;
    }
 
    /* (non-Javadoc)

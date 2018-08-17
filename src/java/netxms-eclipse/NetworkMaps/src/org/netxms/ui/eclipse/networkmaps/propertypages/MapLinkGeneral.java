@@ -18,6 +18,7 @@ import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.List;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.NXCSession;
+import org.netxms.client.maps.configs.LinkConfig;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.networkmaps.Messages;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.LinkEditor;
@@ -117,12 +118,12 @@ public class MapLinkGeneral extends PropertyPage
 		
 		radioColorDefault = new Button(colorGroup, SWT.RADIO);
 		radioColorDefault.setText(Messages.get().MapLinkGeneral_DefColor);
-		radioColorDefault.setSelection((object.getColor() < 0) && (object.getStatusObject().size() == 0));
+		radioColorDefault.setSelection(object.getColorSource() == LinkConfig.COLOR_SOURCE_DEFAULT);
 		radioColorDefault.addSelectionListener(listener);
 
 		radioColorObject = new Button(colorGroup, SWT.RADIO);
 		radioColorObject.setText(Messages.get().MapLinkGeneral_BasedOnObjStatus);
-		radioColorObject.setSelection(object.getStatusObject().size() != 0);
+		radioColorObject.setSelection(object.getColorSource() == LinkConfig.COLOR_SOURCE_OBJECT_STATUS);
 		radioColorObject.addSelectionListener(listener);
 		
 		final Composite nodeSelectionGroup = new Composite(colorGroup, SWT.NONE);
@@ -143,12 +144,12 @@ public class MapLinkGeneral extends PropertyPage
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalIndent = 20;
       list.setLayoutData(gd);
-		if(object.getStatusObject() != null)
+		if(object.getStatusObjects() != null)
 		{
-		   for(int i = 0; i < object.getStatusObject().size(); i++)
+		   for(int i = 0; i < object.getStatusObjects().size(); i++)
 		   {
-		      final AbstractObject obj = ((NXCSession)ConsoleSharedData.getSession()).findObjectById(object.getStatusObject().get(i));
-	         list.add((obj != null) ? obj.getObjectName() : ("<" + Long.toString(object.getStatusObject().get(i)) + ">")); //$NON-NLS-1$ //$NON-NLS-2$
+		      final AbstractObject obj = ((NXCSession)ConsoleSharedData.getSession()).findObjectById(object.getStatusObjects().get(i));
+	         list.add((obj != null) ? obj.getObjectName() : ("<" + Long.toString(object.getStatusObjects().get(i)) + ">")); //$NON-NLS-1$ //$NON-NLS-2$
 		   }
 		}
       list.setEnabled(radioColorObject.getSelection());
@@ -195,7 +196,7 @@ public class MapLinkGeneral extends PropertyPage
       remove.setEnabled(radioColorObject.getSelection());
       
       checkUseThresholds = new Button(nodeSelectionGroup, SWT.CHECK);
-      checkUseThresholds.setText("Use active thresholds");
+      checkUseThresholds.setText("Include active thresholds into calculation");
       checkUseThresholds.setEnabled(radioColorObject.getSelection());
       checkUseThresholds.setSelection(object.isUseActiveThresholds());
       gd = new GridData();
@@ -204,7 +205,7 @@ public class MapLinkGeneral extends PropertyPage
 
 		radioColorCustom = new Button(colorGroup, SWT.RADIO);
 		radioColorCustom.setText(Messages.get().MapLinkGeneral_CustomColor);
-		radioColorCustom.setSelection((object.getColor() >= 0) && (object.getStatusObject().size() == 0));
+		radioColorCustom.setSelection(object.getColorSource() == LinkConfig.COLOR_SOURCE_CUSTOM_COLOR);
 		radioColorCustom.addSelectionListener(listener);
 
 		color = new ColorSelector(colorGroup);
@@ -273,17 +274,16 @@ public class MapLinkGeneral extends PropertyPage
 		if (radioColorCustom.getSelection())
 		{
 			object.setColor(ColorConverter.rgbToInt(color.getColorValue()));
-			object.setStatusObject(null);
+			object.setColorSource(LinkConfig.COLOR_SOURCE_CUSTOM_COLOR);
 		}
 		else if (radioColorObject.getSelection())
 		{
-			object.setColor(-1);
-			//status object already set
+         object.setColorSource(LinkConfig.COLOR_SOURCE_OBJECT_STATUS);
+			//status objects already set
 		}
 		else
 		{
-			object.setColor(-1);
-			object.setStatusObject(null);
+         object.setColorSource(LinkConfig.COLOR_SOURCE_DEFAULT);
 		}
       object.setUseActiveThresholds(checkUseThresholds.getSelection());
 		object.setRoutingAlgorithm(routingAlgorithm.getSelectionIndex());

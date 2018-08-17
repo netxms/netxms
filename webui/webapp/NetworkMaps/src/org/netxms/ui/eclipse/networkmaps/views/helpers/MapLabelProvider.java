@@ -56,6 +56,7 @@ import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.datacollection.Threshold;
 import org.netxms.client.maps.MapObjectDisplayMode;
 import org.netxms.client.maps.NetworkMapLink;
+import org.netxms.client.maps.configs.LinkConfig;
 import org.netxms.client.maps.elements.NetworkMapDCIContainer;
 import org.netxms.client.maps.elements.NetworkMapDCIImage;
 import org.netxms.client.maps.elements.NetworkMapDecoration;
@@ -499,11 +500,11 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 		boolean hasDciData = link.hasDciData();
       boolean hasName = link.hasName();
       
-      if (link.getStatusObject() != null && link.getStatusObject().size() != 0)
+      if (link.getColorSource() == LinkConfig.COLOR_SOURCE_OBJECT_STATUS)
       {
          ObjectStatus status = ObjectStatus.UNKNOWN;
          ObjectStatus altStatus = ObjectStatus.UNKNOWN;
-         for(Long id : link.getStatusObject())
+         for(Long id : link.getStatusObjects())
          {
             AbstractObject object = session.findObjectById(id);
             if (object != null)
@@ -520,7 +521,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
             }
          }
 
-         if (!link.getDciAsList().isEmpty() && link.getConfig().isUseActiveThresholds())
+         if (link.getConfig().isUseActiveThresholds() && !link.getDciAsList().isEmpty())
          {
             Severity severity = Severity.UNKNOWN;
             try
@@ -542,13 +543,13 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
                Activator.logError("Exception in map label provider", e);
             }            
 
-            if ((severity != Severity.UNKNOWN) && (severity.getValue() > status.getValue()))
+            if ((severity != Severity.UNKNOWN) && ((severity.getValue() > status.getValue()) || (status.compareTo(ObjectStatus.UNKNOWN) >= 0)))
                status = ObjectStatus.getByValue(severity.getValue());
          }
          
          connection.setLineColor(StatusDisplayInfo.getStatusColor((status != ObjectStatus.UNKNOWN) ? status : altStatus));            
       }
-      else if (link.getColor() >= 0)
+      else if (link.getColorSource() == LinkConfig.COLOR_SOURCE_CUSTOM_COLOR)
       {
          connection.setLineColor(colors.create(ColorConverter.rgbFromInt(link.getColor())));
       }

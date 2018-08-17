@@ -284,7 +284,7 @@ public class NetworkMapPage
 		List<NetworkMapLink> list = null;
 		for(NetworkMapLink l : links)
 		{
-		   for(Long obj : l.getStatusObject())
+		   for(Long obj : l.getStatusObjects())
 			if (obj == objectId)
 			{
 				if (list == null)

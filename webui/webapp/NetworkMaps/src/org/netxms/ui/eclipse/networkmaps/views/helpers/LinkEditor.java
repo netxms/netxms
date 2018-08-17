@@ -36,7 +36,8 @@ public class LinkEditor
 	private String connectorName1;
 	private String connectorName2;
 	private int color;
-	private List<Long> statusObject;
+	private int colorSource;
+	private List<Long> statusObjects;
 	private int routingAlgorithm;
 	private boolean modified = false;
 	private List<SingleDciConfig> dciList;
@@ -55,7 +56,8 @@ public class LinkEditor
 		connectorName1 = link.getConnectorName1();
 		connectorName2 = link.getConnectorName2();
 		color = link.getColor();
-		statusObject = link.getStatusObject();
+		colorSource = link.getColorSource();
+		statusObjects = link.getStatusObjects();
 		routingAlgorithm = link.getRouting();
 		dciList = link.getDciAsList();
 		useActiveThresholds = link.getConfig().isUseActiveThresholds();
@@ -70,7 +72,8 @@ public class LinkEditor
 		long[] bp = link.getBendPoints();
 		link = new NetworkMapLink(name, type, link.getElement1(), link.getElement2(), connectorName1, connectorName2, dciList.toArray(new SingleDciConfig[dciList.size()]), link.getFlags(), link.isLocked()); 
 		link.setColor(color);
-		link.setStatusObject(statusObject);
+		link.setColorSource(colorSource);
+		link.setStatusObjects(statusObjects);
 		link.setRouting(routingAlgorithm);
 		link.setBendPoints(bp);
 		link.getConfig().setUseActiveThresholds(useActiveThresholds);
@@ -159,19 +162,35 @@ public class LinkEditor
 	}
 
 	/**
+    * @return the colorSource
+    */
+   public int getColorSource()
+   {
+      return colorSource;
+   }
+
+   /**
+    * @param colorSource the colorSource to set
+    */
+   public void setColorSource(int colorSource)
+   {
+      this.colorSource = colorSource;
+   }
+
+   /**
 	 * @return the statusObject
 	 */
-	public List<Long> getStatusObject()
+	public List<Long> getStatusObjects()
 	{
-		return statusObject;
+		return statusObjects;
 	}
 
 	/**
 	 * @param statusObject the statusObject to set
 	 */
-	public void setStatusObject(List<Long> statusObject)
+	public void setStatusObjects(List<Long> statusObject)
 	{
-		this.statusObject = statusObject;
+		this.statusObjects = statusObject;
 	}
 	
 	/**
@@ -179,7 +198,7 @@ public class LinkEditor
     */
 	public void addStatusObject(Long id)
 	{
-	   statusObject.add(id);
+	   statusObjects.add(id);
 	}
 	
 	/**
@@ -187,7 +206,7 @@ public class LinkEditor
     */
 	public void removeStatusObjectByIndex(int index)
 	{
-	   statusObject.remove(index);
+	   statusObjects.remove(index);
 	}
 
 	/**
