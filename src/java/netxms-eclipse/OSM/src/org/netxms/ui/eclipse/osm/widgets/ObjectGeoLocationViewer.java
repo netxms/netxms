@@ -37,6 +37,8 @@ import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.base.GeoLocation;
+import org.netxms.client.SessionListener;
+import org.netxms.client.SessionNotification;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.MobileDevice;
 import org.netxms.ui.eclipse.console.resources.RegionalSettings;
@@ -44,6 +46,7 @@ import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.osm.GeoLocationCache;
 import org.netxms.ui.eclipse.osm.Messages;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.ColorConverter;
 import org.netxms.ui.eclipse.tools.FontTools;
 
@@ -78,10 +81,30 @@ public class ObjectGeoLocationViewer extends AbstractGeoMapViewer implements Mou
 
       objectToolTipHeaderFont = FontTools.createFont(TITLE_FONTS, 1, SWT.BOLD);
       
+      final SessionListener listener = new SessionListener() {
+         @Override
+         public void notificationHandler(final SessionNotification n)
+         {
+            if (n.getCode() != SessionNotification.OBJECT_CHANGED)
+               return;
+            
+            getDisplay().asyncExec(new Runnable() {
+               @Override
+               public void run()
+               {
+                  if (onObjectUpdate((AbstractObject)n.getObject()))
+                     redraw();
+               }
+            });
+         }
+      };
+      ConsoleSharedData.getSession().addListener(listener);
+      
       addDisposeListener(new DisposeListener() {
          @Override
          public void widgetDisposed(DisposeEvent e)
          {
+            ConsoleSharedData.getSession().removeListener(listener);
             objectToolTipHeaderFont.dispose();
          }
       });
@@ -102,7 +125,31 @@ public class ObjectGeoLocationViewer extends AbstractGeoMapViewer implements Mou
    {
       this.rootObjectId = rootObjectId;
    }
-
+   
+   /**
+    * Process object update
+    * 
+    * @param object updated object
+    * @return true if redraw is needed
+    */
+   private boolean onObjectUpdate(AbstractObject object)
+   {
+      int index;
+      for(index = 0; index < objects.size(); index++)
+      {
+         if (objects.get(index).getObjectId() == object.getObjectId())
+            break;
+      }
+      
+      if (index < objects.size())
+      {
+         AbstractObject curr = objects.set(index, object);
+         return curr.getStatus() != object.getStatus();
+      }
+      
+      return false;
+   }
+   
    /* (non-Javadoc)
     * @see org.netxms.ui.eclipse.osm.widgets.AbstractGeoMapViewer#onMapLoad()
     */
