@@ -493,13 +493,14 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 		int size = ((IStructuredSelection)viewer.getSelection()).size();
 		manager.add(actionRemove);
 		manager.add(new Separator());
+      manager.add(actionLockLink);
+      manager.add(new Separator());
 		super.fillLinkContextMenu(manager);
 		if (size == 1)
 		{
 			manager.add(new Separator());
 			manager.add(actionLinkProperties);
 		}
-		manager.add(actionLockLink);
 	}
 
 	/*

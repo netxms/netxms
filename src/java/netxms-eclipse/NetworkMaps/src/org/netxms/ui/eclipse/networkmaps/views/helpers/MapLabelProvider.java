@@ -18,7 +18,6 @@
  */
 package org.netxms.ui.eclipse.networkmaps.views.helpers;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -48,7 +47,6 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.base.NXCommon;
-import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.constants.Severity;
@@ -490,20 +488,23 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 
 		if (link.getStatusObject() != null && link.getStatusObject().size() != 0)
 		{		   
-		   ObjectStatus status = ObjectStatus.UNKNOWN;
-		   for(Long id : link.getStatusObject())
-		   {
-   			AbstractObject object = session.findObjectById(id);
-   			if (object != null)
+         ObjectStatus status = ObjectStatus.UNKNOWN;
+         ObjectStatus altStatus = ObjectStatus.UNKNOWN;
+         for(Long id : link.getStatusObject())
+         {
+            AbstractObject object = session.findObjectById(id);
+            if (object != null)
             {
-   			   ObjectStatus s = object.getStatus();
-   			   if ((s.compareTo(ObjectStatus.UNKNOWN) < 0) && ((status.compareTo(s) < 0) || (status == ObjectStatus.UNKNOWN)))
-   			   {
-   			      status = s;
-   			      if (status == ObjectStatus.CRITICAL)
-   			         break;
-   			   }
-            } 
+               ObjectStatus s = object.getStatus();
+               if ((s.compareTo(ObjectStatus.UNKNOWN) < 0) && ((status.compareTo(s) < 0) || (status == ObjectStatus.UNKNOWN)))
+               {
+                  status = s;
+                  if (status == ObjectStatus.CRITICAL)
+                     break;
+               }
+               if (s != ObjectStatus.UNKNOWN)
+                  altStatus = s;
+            }
          }
 		   
          if (!link.getDciAsList().isEmpty() && link.getConfig().isUseActiveThresholds())
@@ -523,18 +524,15 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
                   }
                }
             }
-            catch(IOException | NXCException e)
+            catch(Exception e)
             {
-               e.printStackTrace();
+               Activator.logError("Exception in map label provider", e);
             }            
 
-            if (status.getValue() > severity.getValue())
-               connection.setLineColor(StatusDisplayInfo.getStatusColor(status));
-            else
-               connection.setLineColor(StatusDisplayInfo.getStatusColor(severity));
+            if ((severity != Severity.UNKNOWN) && (severity.getValue() > status.getValue()))
+               status = ObjectStatus.getByValue(severity.getValue());
          }
-         else
-            connection.setLineColor(StatusDisplayInfo.getStatusColor(status));
+         connection.setLineColor(StatusDisplayInfo.getStatusColor((status != ObjectStatus.UNKNOWN) ? status : altStatus));            
 		}
 		else if (link.getColor() >= 0)
 		{

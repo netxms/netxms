@@ -285,7 +285,7 @@ public class MapLinkGeneral extends PropertyPage
 			object.setColor(-1);
 			object.setStatusObject(null);
 		}
-      object.setUseActiveThresholds(checkUseThresholds.getEnabled());
+      object.setUseActiveThresholds(checkUseThresholds.getSelection());
 		object.setRoutingAlgorithm(routingAlgorithm.getSelectionIndex());
 		object.update();
 		return true;
