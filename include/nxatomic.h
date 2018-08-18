@@ -40,6 +40,33 @@
 typedef volatile LONG VolatileCounter;
 typedef volatile LONGLONG VolatileCounter64;
 
+// 64 bit atomics not available on Windows XP, implement them using _InterlockedCompareExchange64
+#if !defined(_WIN64) && (_WIN32_WINNT < 0x0502)
+
+#pragma intrinsic(_InterlockedCompareExchange64)
+
+FORCEINLINE LONGLONG InterlockedIncrement64(LONGLONG volatile *v)
+{
+   LONGLONG old;
+   do 
+   {
+      old = *v;
+   } while(_InterlockedCompareExchange64(v, old + 1, old) != old);
+   return old + 1;
+}
+
+FORCEINLINE LONGLONG InterlockedDecrement64(LONGLONG volatile *v)
+{
+   LONGLONG old;
+   do 
+   {
+      old = *v;
+   } while(_InterlockedCompareExchange64(v, old - 1, old) != old);
+   return old - 1;
+}
+
+#endif
+
 #else
 
 #if defined(__sun)

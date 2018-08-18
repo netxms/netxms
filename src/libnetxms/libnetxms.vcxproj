@@ -273,6 +273,7 @@
     <ClInclude Include="..\..\include\nms_cscp.h" />
     <ClInclude Include="..\..\include\nms_threads.h" />
     <ClInclude Include="..\..\include\nms_util.h" />
+    <ClInclude Include="..\..\include\nxatomic.h" />
     <ClInclude Include="..\..\include\nxconfig.h" />
     <ClInclude Include="..\..\include\nxcpapi.h" />
     <ClInclude Include="..\..\include\nxlog.h" />
