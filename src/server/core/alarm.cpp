@@ -1453,8 +1453,13 @@ static THREAD_RESULT THREAD_CALL WatchdogThread(void *arg)
 				          alarm->getAlarmId(), alarm->getLastChangeTime(),
 							 alarm->getTimeout(), (UINT32)now);
 
-				PostEvent(alarm->getTimeoutEvent(), alarm->getSourceObject(), "dssd",
-				          alarm->getAlarmId(), alarm->getMessage(), alarm->getKey(), alarm->getSourceEventCode());
+				TCHAR eventName[MAX_EVENT_NAME];
+				if (!EventNameFromCode(alarm->getSourceEventCode(), eventName))
+				{
+				   _sntprintf(eventName, MAX_EVENT_NAME, _T("[%u]"), alarm->getSourceEventCode());
+				}
+				PostEvent(alarm->getTimeoutEvent(), alarm->getSourceObject(), "dssds",
+				          alarm->getAlarmId(), alarm->getMessage(), alarm->getKey(), alarm->getSourceEventCode(), eventName);
 				alarm->clearTimeout();	// Disable repeated timeout events
 				alarm->updateInDatabase();
 			}

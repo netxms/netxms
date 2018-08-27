@@ -1539,6 +1539,34 @@ static int F_CurrencyName(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL
 }
 
 /**
+ * Get event name from code
+ */
+static int F_EventNameFromCode(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   if (!argv[0]->isInteger())
+      return NXSL_ERR_NOT_INTEGER;
+
+   TCHAR eventName[MAX_EVENT_NAME];
+   if (EventNameFromCode(argv[0]->getValueAsUInt32(), eventName))
+      *result = vm->createValue(eventName);
+   else
+      *result = vm->createValue();
+   return 0;
+}
+
+/**
+ * Get event code from name
+ */
+static int F_EventCodeFromName(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   *result = vm->createValue(EventCodeFromName(argv[0]->getValueAsCString(), 0));
+   return 0;
+}
+
+/**
  * Additional server functions to use within all scripts
  */
 static NXSL_ExtFunction m_nxslServerFunctions[] =
@@ -1559,6 +1587,8 @@ static NXSL_ExtFunction m_nxslServerFunctions[] =
 	{ "DeleteCustomAttribute", F_DeleteCustomAttribute, 2 },
    { "DriverReadParameter", F_DriverReadParameter, 2 },
    { "EnterMaintenance", F_EnterMaintenance, 1 },
+   { "EventNameFromCode", F_EventNameFromCode, 1 },
+   { "EventCodeFromName", F_EventCodeFromName, 1 },
    { "GetAllNodes", F_GetAllNodes, -1 },
    { "GetConfigurationVariable", F_GetConfigurationVariable, -1 },
    { "GetCustomAttribute", F_GetCustomAttribute, 2 },
