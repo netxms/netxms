@@ -545,7 +545,8 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'   1) Alarm ID' CONCAT CRLF CONCAT
 		'   2) Alarm message' CONCAT CRLF CONCAT
 		'   3) Alarm key' CONCAT CRLF CONCAT
-		'   4) Original event code'
+		'   4) Original event code' CONCAT CRLF CONCAT
+		'   5) Original event name'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(

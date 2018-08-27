@@ -1,4 +1,12 @@
 *
+* 2.2.9
+*
+
+- New NXSL functions: EventCodeFromName, EventNameFromCode
+- Original event name passed to alarm timeout event as 5th parameter
+
+
+*
 * 2.2.8
 *
 
