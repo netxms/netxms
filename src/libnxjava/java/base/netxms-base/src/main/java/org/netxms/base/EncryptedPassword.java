@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2018 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
  */
 package org.netxms.base;
 
-import javax.xml.bind.DatatypeConverter;
+import org.apache.commons.codec.binary.Base64;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
@@ -46,7 +46,7 @@ public class EncryptedPassword
    {
       byte[] key = MessageDigest.getInstance("MD5").digest(login.getBytes("UTF-8"));
       byte[] encrypted = IceCrypto.encrypt(Arrays.copyOf(password.getBytes("UTF-8"), 32), key);
-      return DatatypeConverter.printBase64Binary(encrypted);
+      return new String(Base64.encodeBase64(encrypted, false), "ISO-8859-1");
    }
    
    /**
@@ -58,8 +58,10 @@ public class EncryptedPassword
     */
    public static String decrypt(String login, String password) throws NoSuchAlgorithmException, IllegalArgumentException, IOException
    {
+      if (password.length() != 44)
+         return password;  // assume that password is not encrypted
       byte[] key = MessageDigest.getInstance("MD5").digest(login.getBytes("UTF-8"));
-      byte[] encrypted = DatatypeConverter.parseBase64Binary(password);
+      byte[] encrypted = Base64.decodeBase64(password.getBytes("ISO-8859-1"));
       byte[] plainText = IceCrypto.decrypt(encrypted, key);
       int i;
       for(i = 0; i < plainText.length; i++)
