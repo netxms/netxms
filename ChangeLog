@@ -14,6 +14,7 @@
 - Fixed SQL errors during database import or migration
 - New dashboard element "Port view"
 - Fixed issues:
+	NX-1186 (WebUI does not show objects on geo map)
 	NX-1377 (Can't upgrade sqlite database from version 21.4 to 21.5 with error "Unable to set not null constraint")
 	NX-1435 (AgentTunnelListenPort configuration parameter is missing from config table)
 	NX-1458 (DB upgrade from 0.454 to 0.455 failing for sqlite)
