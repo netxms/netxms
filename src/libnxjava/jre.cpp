@@ -53,7 +53,7 @@ static bool CheckJvmPath(const char *base, const char *libdir, const char *arch,
    if (!strcmp(arch, "i686"))
       return CheckJvmPath(base, libdir, "i386", jvm, description);
 
-   return false;
+   return CheckJvmPath(base, libdir, "", jvm, description);
 }
 
 #endif
