@@ -20,6 +20,7 @@ package org.netxms.ui.eclipse.perfview.views.helpers;
 
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
+import org.netxms.client.datacollection.GraphFolder;
 import org.netxms.client.datacollection.GraphSettings;
 
 /**
