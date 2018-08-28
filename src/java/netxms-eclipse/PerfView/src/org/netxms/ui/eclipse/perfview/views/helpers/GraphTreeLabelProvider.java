@@ -20,6 +20,7 @@ package org.netxms.ui.eclipse.perfview.views.helpers;
 
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
+import org.netxms.client.datacollection.GraphFolder;
 import org.netxms.client.datacollection.GraphSettings;
 import org.netxms.ui.eclipse.perfview.Activator;
 
