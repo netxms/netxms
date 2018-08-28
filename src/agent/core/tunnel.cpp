@@ -1351,6 +1351,11 @@ THREAD_RESULT THREAD_CALL TunnelManager(void *)
       }
    }
    while(!AgentSleepAndCheckForShutdown(g_tunnelKeepaliveInterval));
+
+   // Shutdown all running tunnels
+   for(int i = 0; i < s_tunnels.size(); i++)
+      s_tunnels.get(i)->disconnect();
+
    nxlog_debug_tag(DEBUG_TAG, 3, _T("Tunnel manager stopped"));
 #else
    nxlog_debug_tag(DEBUG_TAG, 3, _T("Agent built without encryption support, tunnel manager will not start"));
