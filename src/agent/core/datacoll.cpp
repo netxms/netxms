@@ -962,11 +962,14 @@ static THREAD_RESULT THREAD_CALL DataCollectionScheduler(void *arg)
  */
 void ConfigureDataCollection(UINT64 serverId, NXCPMessage *msg)
 {
+   MutexLock(s_itemLock);
    if (!s_dataCollectorStarted)
    {
+      MutexUnlock(s_itemLock);
       DebugPrintf(1, _T("Local data collector was not started, ignoring configuration received from server ") UINT64X_FMT(_T("016")), serverId);
       return;
    }
+   MutexUnlock(s_itemLock);
 
    DB_HANDLE hdb = GetLocalDatabaseHandle();
 
@@ -1173,6 +1176,11 @@ void ShutdownLocalDataCollector()
       DebugPrintf(5, _T("Local data collector was not started"));
       return;
    }
+
+   // Prevent configuration attempts by incoming sessions during shutdown
+   MutexLock(s_itemLock);
+   s_dataCollectorStarted = false;
+   MutexUnlock(s_itemLock);
 
    DebugPrintf(5, _T("Waiting for data collector thread termination"));
    ThreadJoin(s_dataCollectionSchedulerThread);
