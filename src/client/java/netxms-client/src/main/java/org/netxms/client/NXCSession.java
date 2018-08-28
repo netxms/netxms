@@ -90,6 +90,7 @@ import org.netxms.client.datacollection.DciSummaryTable;
 import org.netxms.client.datacollection.DciSummaryTableColumn;
 import org.netxms.client.datacollection.DciSummaryTableDescriptor;
 import org.netxms.client.datacollection.DciValue;
+import org.netxms.client.datacollection.GraphFolder;
 import org.netxms.client.datacollection.GraphSettings;
 import org.netxms.client.datacollection.PerfTabDci;
 import org.netxms.client.datacollection.PredictionEngine;
@@ -7928,54 +7929,39 @@ public class NXCSession
    
    /**
 	 * @return root graph folder
-	 * @throws IOException
-	 * @throws NXCException
+    * @throws IOException  if socket or file I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
 	 */
-   /*public GraphFolder getPredefinedGraphsAsTree() throws IOException, NXCException
+   public GraphFolder getPredefinedGraphsAsTree() throws IOException, NXCException
    {
-	  List<GraphSettings> settings = getPredefinedGraphs(false);
-	  
-	  if (settings != null)
-      {
-         Map<String, GraphFolder> folders = new HashMap<String, GraphFolder>();
-         for(int i = 0; i < settings.size(); i++)
-         {
-            String[] path = settings.get(i).getName().split("\\-\\>"); //$NON-NLS-1$
-         
-            GraphFolder root = null;
-            for(int j = 0; j < path.length - 1; j++)
-            {
-               String key = (root == null ? "" : root.hashCode() + "@" ) + path[j].replace("&", ""); //$NON-NLS-1$ //$NON-NLS-2$
-               GraphFolder curr = folders.get(key);
-               if (curr == null)
-               {
-                  curr = new GraphFolder(path[j], root);
-                  folders.put(key, curr);
-                  if(root == null)
-                  {
-                     list.add(curr);
-                  }
-                  else
-                  {
-                     root.addFolder(curr);
-                  }
-               }
-               root = curr;
-            }
-            
-            if(root == null)
-            {
-               list.add(settings.get(i));
-            }
-            else
-            {
-               root.addGraph(settings.get(i));               
-            }
-            
-            parentFolders.put(settings.get(i), root);
-         }
-      }
-   }*/
+       GraphFolder root = new GraphFolder("root", null);
+       List<GraphSettings> settings = getPredefinedGraphs(false);
+      
+       if (settings != null)
+       {
+          Map<String, GraphFolder> folders = new HashMap<String, GraphFolder>();
+          for(int i = 0; i < settings.size(); i++)
+          {
+             String[] path = settings.get(i).getName().split("\\-\\>"); //$NON-NLS-1$
+
+             for(int j = 0; j < path.length - 1; j++)
+             {
+                String key = (root == null ? "" : root.hashCode() + "@" ) + path[j].replace("&", ""); //$NON-NLS-1$ //$NON-NLS-2$
+                GraphFolder curr = folders.get(key);
+                if (curr == null)
+                {
+                   curr = new GraphFolder(path[j], root);
+                   folders.put(key, curr);
+              
+                  root.addFolder(curr);
+                }
+                root = curr;
+             }
+             root.addGraph(settings.get(i));
+          }
+       }
+       return root;
+   }
    
    /**
     * Checks if graph with specified name can be created/overwritten and creates/overwrites it in DB. 

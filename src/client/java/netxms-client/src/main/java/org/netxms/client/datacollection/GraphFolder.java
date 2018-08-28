@@ -68,6 +68,14 @@ public class GraphFolder
 	}
 	
 	/**
+	 * @return true if folder has parent
+	 */ 
+	public boolean hasParent()
+	{
+		return (parent == null ? false : true);
+	}
+	
+	/**
 	 * Get all child objects (subfolders and graphs) as an array
 	 * 
 	 * @return array of all child objects

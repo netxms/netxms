@@ -18,7 +18,6 @@
  */
 package org.netxms.ui.eclipse.perfview.views.helpers;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -36,8 +35,8 @@ import org.netxms.client.datacollection.GraphSettings;
 public class GraphTreeContentProvider implements ITreeContentProvider
 {
    private List<GraphSettings> input = null;
-	private List<Object> list = new ArrayList<Object>();
-	private Map<GraphSettings, GraphFolder> parentFolders = new HashMap<GraphSettings, GraphFolder>();
+   private GraphFolder root = new GraphFolder("root", null);
+   private Map<GraphSettings, GraphFolder> parentFolders = new HashMap<GraphSettings, GraphFolder>();
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ITreeContentProvider#getChildren(java.lang.Object)
@@ -79,7 +78,7 @@ public class GraphTreeContentProvider implements ITreeContentProvider
 	public Object[] getElements(Object inputElement)
 	{
 	   updateModel();
-		return list.toArray();
+	   return root.getChildObjects();
 	}
 
 	/* (non-Javadoc)
@@ -111,50 +110,37 @@ public class GraphTreeContentProvider implements ITreeContentProvider
 	   updateModel();
 	}
 	
+	/**
+	 * update tree contents
+	 */
 	private void updateModel()
 	{
-      parentFolders.clear();
-      list.clear();
+       parentFolders.clear();
+       root.clear();
       
-      if (input != null)
-      {
-         Map<String, GraphFolder> folders = new HashMap<String, GraphFolder>();
-         for(int i = 0; i < input.size(); i++)
-         {
-            String[] path = input.get(i).getName().split("\\-\\>"); //$NON-NLS-1$
-         
-            GraphFolder root = null;
-            for(int j = 0; j < path.length - 1; j++)
-            {
-               String key = (root == null ? "" : root.hashCode() + "@" ) + path[j].replace("&", ""); //$NON-NLS-1$ //$NON-NLS-2$
-               GraphFolder curr = folders.get(key);
-               if (curr == null)
-               {
-                  curr = new GraphFolder(path[j], root);
-                  folders.put(key, curr);
-                  if(root == null)
-                  {
-                     list.add(curr);
-                  }
-                  else
-                  {
-                     root.addFolder(curr);
-                  }
-               }
-               root = curr;
-            }
-            
-            if(root == null)
-            {
-               list.add(input.get(i));
-            }
-            else
-            {
-               root.addGraph(input.get(i));               
-            }
-            
-            parentFolders.put(input.get(i), root);
-         }
-      }
+       if (input != null)
+       {
+          Map<String, GraphFolder> folders = new HashMap<String, GraphFolder>();
+          for(int i = 0; i < input.size(); i++)
+          {
+             String[] path = input.get(i).getName().split("\\-\\>"); //$NON-NLS-1$
+
+             for(int j = 0; j < path.length - 1; j++)
+             {
+                String key = (root == null ? "" : root.hashCode() + "@" ) + path[j].replace("&", ""); //$NON-NLS-1$ //$NON-NLS-2$
+                GraphFolder curr = folders.get(key);
+                if (curr == null)
+                {
+                   curr = new GraphFolder(path[j], root);
+                   folders.put(key, curr);
+              
+                  root.addFolder(curr);
+                }
+                root = curr;
+             }
+             root.addGraph(input.get(i));             
+             parentFolders.put(input.get(i), root);
+          }
+       }
 	}
 }
