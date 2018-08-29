@@ -19,31 +19,29 @@
 package org.netxms.websvc.handlers;
 
 import java.util.Map;
-import org.netxms.client.NXCException;
+
 import org.netxms.client.NXCSession;
-import org.netxms.client.constants.RCC;
-import org.netxms.client.datacollection.DciValue;
-import org.netxms.client.objects.AbstractObject;
-import org.netxms.client.objects.DataCollectionTarget;
+import org.netxms.client.datacollection.GraphFolder;
 import org.netxms.websvc.json.ResponseContainer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-public class LastValues extends AbstractObjectHandler
+public class PredefinedGraphs extends AbstractHandler
 {
-
+	private Logger log = LoggerFactory.getLogger(GrafanaDataCollection.class);
    /* (non-Javadoc)
-    * @see org.netxms.websvc.handlers.AbstractHandler#getCollection(java.util.Map)
-    */
-   @Override
+ * @see org.netxms.websvc.handlers.AbstractHandler#getCollection(java.util.Map)
+ */
+@Override
    protected Object getCollection(Map<String, String> query) throws Exception
    {
       NXCSession session = getSession();
-      AbstractObject obj = getObject();
+      GraphFolder root = session.getPredefinedGraphsAsTree();
+      log.debug("Predefined");
+      log.debug(root.toString());
       
-      if (!(obj instanceof DataCollectionTarget))
-         throw new NXCException(RCC.INVALID_OBJECT_ID);
-      
-      DciValue[] values = session.getLastValues(obj.getObjectId());
-      
-      return new ResponseContainer("lastValues", values);
+
+      return new ResponseContainer("root", root);
    }
+   
 }

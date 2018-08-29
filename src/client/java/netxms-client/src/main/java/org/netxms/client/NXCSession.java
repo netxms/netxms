@@ -7963,7 +7963,7 @@ public class NXCSession
        return root;
    }
    
-   /**
+  /**
     * Checks if graph with specified name can be created/overwritten and creates/overwrites it in DB. 
     * If graph id is set to 0 it checks if graph with the same name exists, and if yes checks overwrite parameter. If it is
     * set to false, then function returns error that graph with this name already exists. 

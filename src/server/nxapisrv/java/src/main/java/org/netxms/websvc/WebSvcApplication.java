@@ -28,6 +28,7 @@ import org.netxms.websvc.handlers.HistoricalData;
 import org.netxms.websvc.handlers.LastValues;
 import org.netxms.websvc.handlers.NotificationHandler;
 import org.netxms.websvc.handlers.Objects;
+import org.netxms.websvc.handlers.PredefinedGraphs;
 import org.netxms.websvc.handlers.Sessions;
 import org.netxms.websvc.handlers.SummaryTableAdHoc;
 import org.restlet.Application;
@@ -76,6 +77,7 @@ public class WebSvcApplication extends Application
       router.attach("/objects/{object-id}", Objects.class);
       router.attach("/objects/{object-id}/lastvalues", LastValues.class);
       router.attach("/objects/{object-id}/datacollection/{id}/values", HistoricalData.class);
+      router.attach("/predefinedgraphs", PredefinedGraphs.class);
       router.attach("/sessions", Sessions.class);
       router.attach("/sessions/{id}", Sessions.class);
       router.attach("/summaryTable/adHoc", SummaryTableAdHoc.class);
