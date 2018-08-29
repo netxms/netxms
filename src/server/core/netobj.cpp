@@ -451,12 +451,26 @@ static EnumerationCallbackResult SaveModuleDataCallback(const TCHAR *key, const 
 }
 
 /**
+ * Save module data to database
+ */
+bool NetObj::saveModuleData(DB_HANDLE hdb)
+{
+   if (!(m_modified & MODIFY_MODULE_DATA) || (m_moduleData == NULL))
+      return true;
+
+   ModuleDataDatabaseCallbackParams data;
+   data.id = m_id;
+   data.hdb = hdb;
+   return m_moduleData->forEach(SaveModuleDataCallback, &data) == _CONTINUE;
+}
+
+/**
  * Save common object properties to database
  */
 bool NetObj::saveCommonProperties(DB_HANDLE hdb)
 {
    if (!(m_modified & MODIFY_COMMON_PROPERTIES))
-      return true;
+      return saveModuleData(hdb);
 
    static const TCHAR *columns[] = {
       _T("name"), _T("status"), _T("is_deleted"), _T("inherit_access_rights"), _T("last_modified"), _T("status_calc_alg"),
@@ -586,19 +600,10 @@ bool NetObj::saveCommonProperties(DB_HANDLE hdb)
       }
    }
 
-   // Save module data
-   if (success && (m_moduleData != NULL))
-   {
-      ModuleDataDatabaseCallbackParams data;
-      data.id = m_id;
-      data.hdb = hdb;
-      success = (m_moduleData->forEach(SaveModuleDataCallback, &data) == _CONTINUE);
-   }
-
 	if (success)
 		success = saveTrustedNodes(hdb);
 
-   return success;
+   return success ? saveModuleData(hdb) : false;
 }
 
 /**
