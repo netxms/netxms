@@ -78,6 +78,8 @@ int F_x2d(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_AddrInRange(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_AddrInSubnet(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_ArrayToString(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_Base64Decode(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_Base64Encode(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_GeoLocation(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_InetAddress(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_ReadPersistentStorage(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
@@ -105,13 +107,13 @@ static NXSL_ExtFunction s_builtinFunctions[] =
    { _T("__new@InetAddress"), F_InetAddress, -1 },
    { _T("__new@Table"), F_Table, 0 },
    { _T("__new@TIME"), F_TIME, 0 },
-	{ _T("_exit"), F_exit, -1 },
+   { _T("_exit"), F_exit, -1 },
    { _T("abs"), F_abs, 1 },
    { _T("assert"), F_assert, 1 },
    { _T("ceil"), F_ceil, 1 },
    { _T("chr"), F_chr, 1 },
    { _T("classof"), F_classof, 1 },
-	{ _T("d2x"), F_d2x, -1 },
+   { _T("d2x"), F_d2x, -1 },
    { _T("exp"), F_exp, 1 },
    { _T("gethostbyaddr"), F_gethostbyaddr, 1 },
    { _T("gethostbyname"), F_gethostbyname, -1 },
@@ -126,7 +128,7 @@ static NXSL_ExtFunction s_builtinFunctions[] =
    { _T("log"), F_log, 1 },
    { _T("log10"), F_log10, 1 },
    { _T("lower"), F_lower, 1 },
-	{ _T("ltrim"), F_ltrim, 1 },
+   { _T("ltrim"), F_ltrim, 1 },
    { _T("max"), F_max, -1 },
    { _T("md5"), F_md5, 1 },
    { _T("min"), F_min, -1 },
@@ -146,18 +148,20 @@ static NXSL_ExtFunction s_builtinFunctions[] =
 	{ _T("sys"), F_sys, 1 },
 	{ _T("time"), F_time, 0 },
    { _T("trace"), F_trace, 2 },
-	{ _T("trim"), F_trim, 1 },
+   { _T("trim"), F_trim, 1 },
    { _T("typeof"), F_typeof, 1 },
    { _T("upper"), F_upper, 1 },
    { _T("x2d"), F_x2d, 1 },
    { _T("AddrInRange"), F_AddrInRange, 3 },
    { _T("AddrInSubnet"), F_AddrInSubnet, 3 },
    { _T("ArrayToString"), F_ArrayToString, 2 },
+   { _T("Base64Decode"), F_Base64Decode, -1 },
+   { _T("Base64Encode"), F_Base64Encode, -1 },
    { _T("ReadPersistentStorage"), F_ReadPersistentStorage, 1 },
-	{ _T("SecondsToUptime"), F_SecondsToUptime, 1 },
+   { _T("SecondsToUptime"), F_SecondsToUptime, 1 },
    { _T("SplitString"), F_SplitString, 2 },
-	{ _T("TCPConnector"), F_tcpConnector, 2 },
-	{ _T("UDPConnector"), F_udpConnector, 2 },
+   { _T("TCPConnector"), F_tcpConnector, 2 },
+   { _T("UDPConnector"), F_udpConnector, 2 },
    { _T("WritePersistentStorage"), F_WritePersistentStorage, 2 }
 };
 

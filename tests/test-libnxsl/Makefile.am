@@ -12,6 +12,7 @@ nxsltestdir=$(pkgdatadir)/nxsltest
 
 nxsltest_DATA = \
 	arrays.nxsl \
+	base64.nxsl \
 	control.nxsl \
 	globals.nxsl \
 	math.nxsl \
