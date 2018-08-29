@@ -81,6 +81,7 @@ int main(int argc, char *argv[])
 {
    TestCompiler();
    RunTestScript(_T("arrays.nxsl"));
+   RunTestScript(_T("base64.nxsl"));
    RunTestScript(_T("control.nxsl"));
    RunTestScript(_T("globals.nxsl"));
    RunTestScript(_T("math.nxsl"));
