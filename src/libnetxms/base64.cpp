@@ -122,11 +122,11 @@ size_t LIBNETXMS_EXPORTABLE base64_encode_alloc(const char *in, size_t inlen, ch
       return 0;
    }
 
-   *out = (char *)malloc (outlen);
+   *out = (char *)MemAlloc(outlen);
    if (!*out)
       return outlen;
 
-   base64_encode (in, inlen, *out, outlen);
+   base64_encode(in, inlen, *out, outlen);
 
    return outlen - 1;
 }
@@ -401,7 +401,7 @@ BOOL LIBNETXMS_EXPORTABLE base64_decode(const char *in, size_t inlen, char *out,
    decoding and memory error.)  The function returns false if the
    input was invalid, in which case *OUT is NULL and *OUTLEN is
    undefined. */
-BOOL LIBNETXMS_EXPORTABLE base64_decode_alloc (const char *in, size_t inlen, char **out, size_t *outlen)
+BOOL LIBNETXMS_EXPORTABLE base64_decode_alloc(const char *in, size_t inlen, char **out, size_t *outlen)
 {
    /* This may allocate a few bytes too much, depending on input,
    but it's not worth the extra CPU time to compute the exact amount.
@@ -411,11 +411,11 @@ BOOL LIBNETXMS_EXPORTABLE base64_decode_alloc (const char *in, size_t inlen, cha
 
    size_t needlen = 3 * (inlen / 4) + 2;
 
-   *out = (char *)malloc (needlen);
+   *out = (char *)MemAlloc(needlen);
    if (!*out)
       return true;
 
-   if (!base64_decode (in, inlen, *out, &needlen))
+   if (!base64_decode(in, inlen, *out, &needlen))
    {
       free (*out);
       *out = NULL;

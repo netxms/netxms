@@ -1481,3 +1481,159 @@ int F_WritePersistentStorage(int argc, NXSL_Value **argv, NXSL_Value **result, N
    *result = vm->createValue();
    return 0;
 }
+
+/**
+ * Decode base64 encoded string. Accepts string to encode and optional character encoding.
+ * Valid character encodings are "UTF-8", "UCS-2", "UCS-4", "SYSTEM". Default is UTF-8.
+ */
+int F_Base64Decode(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   if ((argc < 1) || (argc > 2))
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
+   if (!argv[0]->isString() || ((argc > 1) && !argv[1]->isString()))
+      return NXSL_ERR_NOT_STRING;
+
+#ifdef UNICODE
+   char *in = MBStringFromWideString(argv[0]->getValueAsCString());
+#else
+   const char *in = argv[0]->getValueAsCString();
+#endif
+   size_t ilen = strlen(in);
+
+   size_t olen = 3 * (ilen / 4) + 8;
+   char *out = MemAllocArray<char>(olen);
+   BOOL success = base64_decode(in, ilen, out, &olen);
+#ifdef UNICODE
+   MemFree(in);
+#endif
+
+   if (success)
+   {
+      const TCHAR *encoding = (argc > 1) ? argv[1]->getValueAsCString() : _T("UTF-8");
+      if (!_tcsicmp(encoding, _T("UCS-4")))
+      {
+#ifdef UNICODE
+#ifdef UNICODE_UCS2
+         WCHAR *s = UCS2StringFromUCS4String((UCS4CHAR *)out);
+         *result = vm->createValue(s);
+         MemFree(s);
+#else
+         *result = vm->createValue((WCHAR *)out);
+#endif
+#else
+         char *s = MBStringFromUCS4String((UCS4CHAR *)out);
+         *result = vm->createValue(s);
+         MemFree(s);
+#endif
+      }
+      else if (!_tcsicmp(encoding, _T("UCS-2")))
+      {
+#ifdef UNICODE
+#ifdef UNICODE_UCS2
+         *result = vm->createValue((WCHAR *)out);
+#else
+         WCHAR *s = UCS4StringFromUCS2String((UCS2CHAR *)out);
+         *result = vm->createValue(s);
+         MemFree(s);
+#endif
+#else
+         char *s = MBStringFromUCS2String((UCS2CHAR *)out);
+         *result = vm->createValue(s);
+         MemFree(s);
+#endif
+      }
+      else if (!_tcsicmp(encoding, _T("SYSTEM")))
+      {
+         *result = vm->createValue(out);
+      }
+      else
+      {
+#ifdef UNICODE
+         WCHAR *s = WideStringFromUTF8String(out);
+#else
+         char *s = MBStringFromUTF8String(out);
+#endif
+         *result = vm->createValue(s);
+         MemFree(s);
+      }
+   }
+   else
+   {
+      *result = vm->createValue();
+   }
+   MemFree(out);
+   return 0;
+}
+
+/**
+ * Encode string as base64. Accepts string to encode and optional character encoding. 
+ * Valid character encodings are "UTF-8", "UCS-2", "UCS-4", "SYSTEM". Default is UTF-8.
+ */
+int F_Base64Encode(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   if ((argc < 1) || (argc > 2))
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
+   if (!argv[0]->isString() || ((argc > 1) && !argv[1]->isString()))
+      return NXSL_ERR_NOT_STRING;
+
+   char *in;
+   size_t ilen;
+   const TCHAR *encoding = (argc > 1) ? argv[1]->getValueAsCString() : _T("UTF-8");
+   if (!_tcsicmp(encoding, _T("UCS-4")))
+   {
+#ifdef UNICODE
+#ifdef UNICODE_UCS2
+      in = (char *)UCS4StringFromUCS2String(argv[0]->getValueAsCString());
+#else
+#define BASE64_STATIC_INPUT
+      in = (char *)argv[0]->getValueAsCString();
+#endif
+#else
+      in = (char *)UCS4StringFromMBString(argv[0]->getValueAsCString());
+#endif
+      ilen = ucs4_strlen((UCS4CHAR *)in);
+   }
+   else if (!_tcsicmp(encoding, _T("UCS-2")))
+   {
+#ifdef UNICODE
+#ifdef UNICODE_UCS2
+#define BASE64_STATIC_INPUT
+      in = (char *)argv[0]->getValueAsCString();
+#else
+      in = (char *)UCS2StringFromUCS4String(argv[0]->getValueAsCString());
+#endif
+#else
+      in = (char *)UCS2StringFromMBString(argv[0]->getValueAsCString());
+#endif
+      ilen = ucs2_strlen((UCS2CHAR *)in);
+   }
+   else if (!_tcsicmp(encoding, _T("SYSTEM")))
+   {
+#ifdef UNICODE
+      in = MBStringFromWideString(argv[0]->getValueAsCString());
+#else
+#define BASE64_STATIC_INPUT
+      in = (char *)argv[0]->getValueAsCString();
+#endif
+      ilen = strlen(in);
+   }
+   else  // UTF-8 by default
+   {
+      in = UTF8StringFromTString(argv[0]->getValueAsCString());
+      ilen = strlen(in);
+   }
+
+   char *out = NULL;
+   size_t olen = base64_encode_alloc(in, ilen, &out);
+   *result = vm->createValue(out);
+
+#ifndef BASE64_STATIC_INPUT
+   MemFree(in);
+#endif
+#undef BASE64_STATIC_INPUT
+   MemFree(out);
+
+   return 0;
+}
