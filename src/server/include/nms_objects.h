@@ -518,6 +518,7 @@ struct NXCORE_EXPORTABLE NewNodeData
 #define MODIFY_CLUSTER_RESOURCES    0x0100
 #define MODIFY_MAP_CONTENT          0x0200
 #define MODIFY_SENSOR_PROPERTIES    0x0400
+#define MODIFY_MODULE_DATA          0x0800
 #define MODIFY_ALL                  0xFFFF
 
 /**
@@ -701,7 +702,8 @@ protected:
    bool saveACLToDB(DB_HANDLE hdb);
    bool loadCommonProperties(DB_HANDLE hdb);
    bool saveCommonProperties(DB_HANDLE hdb);
-	bool loadTrustedNodes(DB_HANDLE hdb);
+   bool saveModuleData(DB_HANDLE hdb);
+   bool loadTrustedNodes(DB_HANDLE hdb);
 	bool saveTrustedNodes(DB_HANDLE hdb);
    bool executeQueryOnObject(DB_HANDLE hdb, const TCHAR *query) { return ExecuteQueryOnObject(hdb, m_id, query); }
 
