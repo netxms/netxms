@@ -60,7 +60,7 @@ static BOOL RecreateTData(const TCHAR *className, bool multipleTables, bool inde
                _sntprintf(query, 256, _T("CREATE INDEX idx_tdata_rec_%d_id ON tdata_records_%d(record_id)"), id, id);
                if (!SQLQuery(query))
                {
-                  if (!g_bIgnoreErrors)
+                  if (!g_ignoreErrors)
                   {
                      DBFreeResult(hResult);
                      return FALSE;
@@ -81,7 +81,7 @@ static BOOL RecreateTData(const TCHAR *className, bool multipleTables, bool inde
             }
             if (!SQLBatch(query))
             {
-               if (!g_bIgnoreErrors)
+               if (!g_ignoreErrors)
                {
                   DBFreeResult(hResult);
                   return FALSE;
@@ -90,7 +90,7 @@ static BOOL RecreateTData(const TCHAR *className, bool multipleTables, bool inde
 
             if (!CreateTDataTable(id))
             {
-               if (!g_bIgnoreErrors)
+               if (!g_ignoreErrors)
                {
                   DBFreeResult(hResult);
                   return FALSE;
@@ -102,7 +102,7 @@ static BOOL RecreateTData(const TCHAR *className, bool multipleTables, bool inde
    }
    else
    {
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
    }
    return TRUE;
@@ -123,7 +123,7 @@ static BOOL ConvertNetMasks(const TCHAR *table, const TCHAR *column, const TCHAR
    if (hResult == NULL)
       return FALSE;
 
-   bool success = DBDropColumn(g_hCoreDB, table, column);
+   bool success = DBDropColumn(g_dbHandle, table, column);
 
    if (success)
    {
@@ -231,7 +231,7 @@ static bool ConvertObjectToolMacros(UINT32 id, const TCHAR *text, const TCHAR *c
    String query = _T("UPDATE object_tools SET ");
    query.append(column);
    query.append(_T('='));
-   query.append(DBPrepareString(g_hCoreDB, s));
+   query.append(DBPrepareString(g_dbHandle, s));
    query.append(_T(" WHERE tool_id="));
    query.append(id);
    return SQLQuery(query);
@@ -486,7 +486,7 @@ static BOOL H_UpgradeFromV454(int currVersion, int newVersion)
             _T("UPDATE interfaces SET parent_iface=0\n")
             _T("<END>");
    CHK_EXEC(SQLBatch(batch));
-   CHK_EXEC(DBSetNotNullConstraint(g_hCoreDB, _T("interfaces"), _T("parent_iface")));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("interfaces"), _T("parent_iface")));
 
    CHK_EXEC(SetSchemaVersion(455));
    return TRUE;
@@ -731,7 +731,7 @@ static BOOL H_UpgradeFromV449(int currVersion, int newVersion)
             _T("UPDATE dct_thresholds SET sample_count=1\n")
             _T("<END>");
    CHK_EXEC(SQLBatch(batch));
-   DBSetNotNullConstraint(g_hCoreDB, _T("dct_thresholds"), _T("sample_count"));
+   DBSetNotNullConstraint(g_dbHandle, _T("dct_thresholds"), _T("sample_count"));
 
    CHK_EXEC(CreateTable(
       _T("CREATE TABLE dct_threshold_instances (")
@@ -793,8 +793,8 @@ static BOOL H_UpgradeFromV445(int currVersion, int newVersion)
       _T("  seed_node_id integer not null,")
       _T("PRIMARY KEY(map_id,seed_node_id))")));
 
-   DB_RESULT hResult = DBSelect(g_hCoreDB, _T("SELECT id,seed FROM network_maps"));
-   DB_STATEMENT hStmt = DBPrepare(g_hCoreDB, _T("INSERT INTO network_map_seed_nodes (map_id,seed_node_id) VALUES (?,?)"));
+   DB_RESULT hResult = DBSelect(g_dbHandle, _T("SELECT id,seed FROM network_maps"));
+   DB_STATEMENT hStmt = DBPrepare(g_dbHandle, _T("INSERT INTO network_map_seed_nodes (map_id,seed_node_id) VALUES (?,?)"));
    if (hResult != NULL)
    {
       if (hStmt != NULL)
@@ -807,7 +807,7 @@ static BOOL H_UpgradeFromV445(int currVersion, int newVersion)
 
             if (!SQLExecute(hStmt))
             {
-               if (!g_bIgnoreErrors)
+               if (!g_ignoreErrors)
                {
                   DBFreeStatement(hStmt);
                   DBFreeResult(hResult);
@@ -816,7 +816,7 @@ static BOOL H_UpgradeFromV445(int currVersion, int newVersion)
             }
          }
 
-         CHK_EXEC(DBDropColumn(g_hCoreDB, _T("network_maps"), _T("seed")));
+         CHK_EXEC(DBDropColumn(g_dbHandle, _T("network_maps"), _T("seed")));
          DBFreeStatement(hStmt);
       }
       DBFreeResult(hResult);
@@ -859,7 +859,7 @@ static BOOL H_UpgradeFromV442(int currVersion, int newVersion)
             _T("ALTER TABLE dc_tables ADD instd_filter $SQL:TEXT null\n")
             _T("<END>");
    CHK_EXEC(SQLBatch(batch));
-   DBSetNotNullConstraint(g_hCoreDB, _T("dc_tables"), _T("instd_method"));
+   DBSetNotNullConstraint(g_dbHandle, _T("dc_tables"), _T("instd_method"));
    CHK_EXEC(SetSchemaVersion(443));
    return TRUE;
 }
@@ -945,10 +945,10 @@ static BOOL H_UpgradeFromV437(int currVersion, int newVersion)
             _T("<END>");
    CHK_EXEC(SQLBatch(batch));
 
-   DB_RESULT hResult = DBSelect(g_hCoreDB, _T("SELECT trap_id FROM snmp_trap_cfg WHERE guid IS NULL"));
+   DB_RESULT hResult = DBSelect(g_dbHandle, _T("SELECT trap_id FROM snmp_trap_cfg WHERE guid IS NULL"));
    if (hResult != NULL)
    {
-      DB_STATEMENT hStmt = DBPrepare(g_hCoreDB, _T("UPDATE snmp_trap_cfg SET guid=? WHERE trap_id=?"));
+      DB_STATEMENT hStmt = DBPrepare(g_dbHandle, _T("UPDATE snmp_trap_cfg SET guid=? WHERE trap_id=?"));
       if (hStmt != NULL)
       {
          int numRows = DBGetNumRows(hResult);
@@ -960,7 +960,7 @@ static BOOL H_UpgradeFromV437(int currVersion, int newVersion)
 
             if (!SQLExecute(hStmt))
             {
-               if (!g_bIgnoreErrors)
+               if (!g_ignoreErrors)
                {
                   DBFreeStatement(hStmt);
                   DBFreeResult(hResult);
@@ -973,10 +973,10 @@ static BOOL H_UpgradeFromV437(int currVersion, int newVersion)
       DBFreeResult(hResult);
    }
 
-   hResult = DBSelect(g_hCoreDB, _T("SELECT guid,script_id FROM script_library WHERE guid IS NULL"));
+   hResult = DBSelect(g_dbHandle, _T("SELECT guid,script_id FROM script_library WHERE guid IS NULL"));
    if (hResult != NULL)
    {
-      DB_STATEMENT hStmt = DBPrepare(g_hCoreDB, _T("UPDATE script_library SET guid=? WHERE script_id=?"));
+      DB_STATEMENT hStmt = DBPrepare(g_dbHandle, _T("UPDATE script_library SET guid=? WHERE script_id=?"));
       if (hStmt != NULL)
       {
          int numRows = DBGetNumRows(hResult);
@@ -987,7 +987,7 @@ static BOOL H_UpgradeFromV437(int currVersion, int newVersion)
             DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, DBGetFieldULong(hResult, i, 1));
             if (!SQLExecute(hStmt))
             {
-               if (!g_bIgnoreErrors)
+               if (!g_ignoreErrors)
                {
                   DBFreeStatement(hStmt);
                   DBFreeResult(hResult);
@@ -1000,8 +1000,8 @@ static BOOL H_UpgradeFromV437(int currVersion, int newVersion)
       DBFreeResult(hResult);
    }
 
-   CHK_EXEC(DBSetNotNullConstraint(g_hCoreDB, _T("snmp_trap_cfg"), _T("guid")));
-   CHK_EXEC(DBSetNotNullConstraint(g_hCoreDB, _T("script_library"), _T("guid")));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("snmp_trap_cfg"), _T("guid")));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("script_library"), _T("guid")));
    CHK_EXEC(SetSchemaVersion(438));
    return TRUE;
 }
@@ -1042,7 +1042,7 @@ static BOOL H_UpgradeFromV435(int currVersion, int newVersion)
             _T("UPDATE nodes SET agent_comp_mode='0'\n")
             _T("<END>");
    CHK_EXEC(SQLBatch(batch));
-   CHK_EXEC(DBSetNotNullConstraint(g_hCoreDB, _T("nodes"), _T("agent_comp_mode")));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("nodes"), _T("agent_comp_mode")));
    CHK_EXEC(SetSchemaVersion(436));
    return TRUE;
 }
@@ -1172,7 +1172,7 @@ static BOOL H_UpgradeFromV429(int currVersion, int newVersion)
    if (hResult != NULL)
    {
       int count = DBGetNumRows(hResult);
-      DB_STATEMENT hStmt = DBPrepare(g_hCoreDB, _T("INSERT INTO policy_pstorage_actions (rule_id,ps_key,value,action) VALUES (?,?,?,1)"));
+      DB_STATEMENT hStmt = DBPrepare(g_dbHandle, _T("INSERT INTO policy_pstorage_actions (rule_id,ps_key,value,action) VALUES (?,?,?,1)"));
       if (hStmt != NULL)
       {
          String key;
@@ -1194,7 +1194,7 @@ static BOOL H_UpgradeFromV429(int currVersion, int newVersion)
             DBBind(hStmt, 3, DB_SQLTYPE_TEXT, tmp, DB_BIND_STATIC);
             if (!SQLExecute(hStmt))
             {
-               if (!g_bIgnoreErrors)
+               if (!g_ignoreErrors)
                {
                   DBFreeStatement(hStmt);
                   DBFreeResult(hResult);
@@ -1205,7 +1205,7 @@ static BOOL H_UpgradeFromV429(int currVersion, int newVersion)
          }
          DBFreeStatement(hStmt);
       }
-      else if (!g_bIgnoreErrors)
+      else if (!g_ignoreErrors)
       {
          DBFreeStatement(hStmt);
          DBFreeResult(hResult);
@@ -1215,14 +1215,14 @@ static BOOL H_UpgradeFromV429(int currVersion, int newVersion)
    }
    else
    {
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return false;
    }
 
    CHK_EXEC(SQLQuery(_T("DROP TABLE situations")));
    CHK_EXEC(SQLQuery(_T("DROP TABLE policy_situation_attr_list")));
-   CHK_EXEC(DBDropColumn(g_hCoreDB, _T("event_policy"), _T("situation_id")));
-   CHK_EXEC(DBDropColumn(g_hCoreDB, _T("event_policy"), _T("situation_instance")));
+   CHK_EXEC(DBDropColumn(g_dbHandle, _T("event_policy"), _T("situation_id")));
+   CHK_EXEC(DBDropColumn(g_dbHandle, _T("event_policy"), _T("situation_instance")));
    CHK_EXEC(SetSchemaVersion(430));
    return TRUE;
 }
@@ -1232,7 +1232,7 @@ static BOOL H_UpgradeFromV429(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV428(int currVersion, int newVersion)
 {
-   CHK_EXEC(DBResizeColumn(g_hCoreDB, _T("config"), _T("description"), 450, true));
+   CHK_EXEC(DBResizeColumn(g_dbHandle, _T("config"), _T("description"), 450, true));
    CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',description='Interval in seconds between active network discovery polls.' WHERE var_name='ActiveDiscoveryInterval'")));
    CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='B',description='Enable/disable active network discovery. This setting is change by Network Discovery GUI' WHERE var_name='ActiveNetworkDiscovery'")));
    CHK_EXEC(SQLQuery(_T("UPDATE config SET data_type='I',description='Timeout in milliseconds for commands sent to agent. If agent did not respond to command within given number of seconds, \ncommand considered as failed.' WHERE var_name='AgentCommandTimeout'")));
@@ -1547,7 +1547,7 @@ static BOOL H_UpgradeFromV420(int currVersion, int newVersion)
    if (hResult != NULL)
    {
       UINT32 rights;
-      DB_STATEMENT hStmt = DBPrepare(g_hCoreDB, _T("UPDATE acl SET access_rights=? WHERE user_id=? AND object_id=?"));
+      DB_STATEMENT hStmt = DBPrepare(g_dbHandle, _T("UPDATE acl SET access_rights=? WHERE user_id=? AND object_id=?"));
       if (hStmt != NULL)
       {
          for(int i = 0; i < DBGetNumRows(hResult); i++)
@@ -1566,7 +1566,7 @@ static BOOL H_UpgradeFromV420(int currVersion, int newVersion)
       }
       else
       {
-         if (!g_bIgnoreErrors)
+         if (!g_ignoreErrors)
          {
             DBFreeResult(hResult);
             return FALSE;
@@ -1576,7 +1576,7 @@ static BOOL H_UpgradeFromV420(int currVersion, int newVersion)
    }
    else
    {
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
    }
 
@@ -1696,7 +1696,7 @@ static BOOL H_UpgradeFromV417(int currVersion, int newVersion)
             _sntprintf(tmp, len, _T("<objectMenuFilter><flags>%d</flags></objectMenuFilter>"), filteringFlag);
          }
 
-         DB_STATEMENT hStmt = DBPrepare(g_hCoreDB, _T("UPDATE object_tools SET flags=?,tool_filter=? WHERE tool_id=?"));
+         DB_STATEMENT hStmt = DBPrepare(g_dbHandle, _T("UPDATE object_tools SET flags=?,tool_filter=? WHERE tool_id=?"));
          if (hStmt != NULL)
          {
             DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, objectToolFlag);
@@ -1704,7 +1704,7 @@ static BOOL H_UpgradeFromV417(int currVersion, int newVersion)
             DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, DBGetFieldULong(hResult, i, 0));
             if (!SQLExecute(hStmt))
             {
-               if (!g_bIgnoreErrors)
+               if (!g_ignoreErrors)
                {
                   free(xml);
                   DBFreeStatement(hStmt);
@@ -1716,7 +1716,7 @@ static BOOL H_UpgradeFromV417(int currVersion, int newVersion)
          else
          {
             free(tmp);
-            if (!g_bIgnoreErrors)
+            if (!g_ignoreErrors)
             {
                free(xml);
                DBFreeResult(hResult);
@@ -1729,7 +1729,7 @@ static BOOL H_UpgradeFromV417(int currVersion, int newVersion)
    }
    else
    {
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return false;
    }
 
@@ -1793,7 +1793,7 @@ static BOOL H_UpgradeFromV415(int currVersion, int newVersion)
    }
    else
    {
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return false;
    }
 
@@ -1806,7 +1806,7 @@ static BOOL H_UpgradeFromV415(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV414(int currVersion, int newVersion)
 {
-   CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("dci_summary_tables"), _T("menu_path")));
+   CHK_EXEC(DBRemoveNotNullConstraint(g_dbHandle, _T("dci_summary_tables"), _T("menu_path")));
    CHK_EXEC(SetSchemaVersion(415));
    return TRUE;
 }
@@ -1840,7 +1840,7 @@ static BOOL H_UpgradeFromV412(int currVersion, int newVersion)
    }
    else
    {
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return false;
    }
 
@@ -1854,7 +1854,7 @@ static BOOL H_UpgradeFromV412(int currVersion, int newVersion)
    }
    else
    {
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return false;
    }
 
@@ -1887,7 +1887,7 @@ static BOOL H_UpgradeFromV412(int currVersion, int newVersion)
    }
    else
    {
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return false;
    }
    if(groupId != 0)
@@ -1944,7 +1944,7 @@ static BOOL H_UpgradeFromV411(int currVersion, int newVersion)
    }
    else
    {
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return false;
    }
    CHK_EXEC(SetSchemaVersion(412));
@@ -1957,7 +1957,7 @@ static BOOL H_UpgradeFromV411(int currVersion, int newVersion)
 static BOOL H_UpgradeFromV410(int currVersion, int newVersion)
 {
    //check if tdata upgrade was already done, then just delete "TdataTableUpdated" metadata parameter
-   if (!MetaDataReadInt(_T("TdataTableUpdated"), 0))
+   if (!DBMgrMetaDataReadInt32(_T("TdataTableUpdated"), 0))
    {
       StringMap savedMetadata;
       DB_RESULT hResult = SQLSelect(_T("SELECT var_name,var_value FROM metadata WHERE var_name LIKE 'TDataTableCreationCommand_%' OR var_name LIKE 'TDataIndexCreationCommand_%'"));
@@ -1970,7 +1970,7 @@ static BOOL H_UpgradeFromV410(int currVersion, int newVersion)
          }
          DBFreeResult(hResult);
       }
-      else if (!g_bIgnoreErrors)
+      else if (!g_ignoreErrors)
       {
          return false;
       }
@@ -1987,10 +1987,10 @@ static BOOL H_UpgradeFromV410(int currVersion, int newVersion)
          CHK_EXEC(SQLQuery(_T("INSERT INTO metadata (var_name,var_value) VALUES ('TDataIndexCreationCommand_0','CREATE INDEX idx_tdata_%d ON tdata_%d(item_id,tdata_timestamp)')")));
 
       // table conversion will require multiple commits
-      DBCommit(g_hCoreDB);
+      DBCommit(g_dbHandle);
       if (!ConvertTDataTables())
       {
-         if (!g_bIgnoreErrors)
+         if (!g_ignoreErrors)
          {
             // Restore metadata
             SQLQuery(_T("DELETE FROM metadata WHERE var_name LIKE 'TDataTableCreationCommand_%' OR var_name LIKE 'TDataIndexCreationCommand_%'"));
@@ -1999,15 +1999,15 @@ static BOOL H_UpgradeFromV410(int currVersion, int newVersion)
             {
                TCHAR query[4096];
                _sntprintf(query, 4096, _T("INSERT INTO metadata (var_name,var_value) VALUES (%s,%s)"),
-                          (const TCHAR *)DBPrepareString(g_hCoreDB, keys->get(i)),
-                          (const TCHAR *)DBPrepareString(g_hCoreDB, savedMetadata.get(keys->get(i))));
+                          (const TCHAR *)DBPrepareString(g_dbHandle, keys->get(i)),
+                          (const TCHAR *)DBPrepareString(g_dbHandle, savedMetadata.get(keys->get(i))));
                SQLQuery(query);
             }
             return false;
          }
       }
 
-      DBBegin(g_hCoreDB);
+      DBBegin(g_dbHandle);
    }
    else
    {
@@ -2032,8 +2032,8 @@ static BOOL H_UpgradeFromV409(int currVersion, int newVersion)
       _T("<END>");
    CHK_EXEC(SQLBatch(batch));
 
-   CHK_EXEC(DBSetNotNullConstraint(g_hCoreDB, _T("nodes"), _T("ssh_proxy")));
-   CHK_EXEC(DBSetNotNullConstraint(g_hCoreDB, _T("zones"), _T("ssh_proxy")));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("nodes"), _T("ssh_proxy")));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("zones"), _T("ssh_proxy")));
 
    CHK_EXEC(SetSchemaVersion(410));
    return TRUE;
@@ -2051,7 +2051,7 @@ static BOOL H_UpgradeFromV408(int currVersion, int newVersion)
       _T("<END>");
    CHK_EXEC(SQLBatch(batch));
 
-   CHK_EXEC(DBSetNotNullConstraint(g_hCoreDB, _T("nodes"), _T("node_type")));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("nodes"), _T("node_type")));
 
    CHK_EXEC(SetSchemaVersion(409));
    return TRUE;
@@ -2080,7 +2080,7 @@ static BOOL H_UpgradeFromV407(int currVersion, int newVersion)
       _T("<END>");
    CHK_EXEC(SQLBatch(batch));
 
-   CHK_EXEC(DBSetNotNullConstraint(g_hCoreDB, _T("nodes"), _T("chassis_id")));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("nodes"), _T("chassis_id")));
 
    CHK_EXEC(SetSchemaVersion(408));
    return TRUE;
@@ -2091,7 +2091,7 @@ static BOOL H_UpgradeFromV407(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV406(int currVersion, int newVersion)
 {
-   DBResizeColumn(g_hCoreDB, _T("user_groups"), _T("ldap_unique_id"), 64, true);
+   DBResizeColumn(g_dbHandle, _T("user_groups"), _T("ldap_unique_id"), 64, true);
    CHK_EXEC(SetSchemaVersion(407));
    return TRUE;
 }
@@ -2897,7 +2897,7 @@ static BOOL H_UpgradeFromV389(int currVersion, int newVersion)
       int count = DBGetNumRows(hResult);
       if (count > 0)
       {
-         DB_STATEMENT hStmt = DBPrepare(g_hCoreDB, _T("INSERT INTO object_containers (id,object_class,flags,auto_bind_filter) VALUES (?,?,?,?)"));
+         DB_STATEMENT hStmt = DBPrepare(g_dbHandle, _T("INSERT INTO object_containers (id,object_class,flags,auto_bind_filter) VALUES (?,?,?,?)"));
          if (hStmt != NULL)
          {
             for(int i = 0; i < count; i++)
@@ -2908,7 +2908,7 @@ static BOOL H_UpgradeFromV389(int currVersion, int newVersion)
                DBBind(hStmt, 4, DB_SQLTYPE_TEXT, DBGetField(hResult, i, 3, NULL, 0), DB_BIND_DYNAMIC);
                if (!SQLExecute(hStmt))
                {
-                  if (!g_bIgnoreErrors)
+                  if (!g_ignoreErrors)
                   {
                      DBFreeStatement(hStmt);
                      DBFreeResult(hResult);
@@ -2918,7 +2918,7 @@ static BOOL H_UpgradeFromV389(int currVersion, int newVersion)
             }
             DBFreeStatement(hStmt);
          }
-         else if (!g_bIgnoreErrors)
+         else if (!g_ignoreErrors)
          {
             DBFreeResult(hResult);
             return FALSE;
@@ -2928,7 +2928,7 @@ static BOOL H_UpgradeFromV389(int currVersion, int newVersion)
    }
    else
    {
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
    }
 
@@ -2993,7 +2993,7 @@ static BOOL H_UpgradeFromV386(int currVersion, int newVersion)
    }
    else
    {
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
    }
    CHK_EXEC(SetSchemaVersion(387));
@@ -3101,7 +3101,7 @@ static BOOL H_UpgradeFromV383(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV382(int currVersion, int newVersion)
 {
-   CHK_EXEC(DBResizeColumn(g_hCoreDB, _T("nodes"), _T("primary_ip"), 48, false));
+   CHK_EXEC(DBResizeColumn(g_dbHandle, _T("nodes"), _T("primary_ip"), 48, false));
    CHK_EXEC(SetSchemaVersion(383));
    return TRUE;
 }
@@ -3271,8 +3271,8 @@ static BOOL H_UpgradeFromV371(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV370(int currVersion, int newVersion)
 {
-   int defaultPollingInterval = ConfigReadInt(_T("DefaultDCIPollingInterval"), 60);
-   int defaultRetentionTime = ConfigReadInt(_T("DefaultDCIRetentionTime"), 30);
+   int defaultPollingInterval = DBMgrConfigReadInt32(_T("DefaultDCIPollingInterval"), 60);
+   int defaultRetentionTime = DBMgrConfigReadInt32(_T("DefaultDCIRetentionTime"), 30);
 
    TCHAR query[256];
    _sntprintf(query, 256, _T("UPDATE items SET polling_interval=0 WHERE polling_interval=%d"), defaultPollingInterval);
@@ -3395,7 +3395,7 @@ static BOOL H_UpgradeFromV363(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV362(int currVersion, int newVersion)
 {
-   DBResizeColumn(g_hCoreDB, _T("config"), _T("var_value"), 2000, true);
+   DBResizeColumn(g_dbHandle, _T("config"), _T("var_value"), 2000, true);
    CHK_EXEC(SetSchemaVersion(363));
    return TRUE;
 }
@@ -3463,7 +3463,7 @@ static BOOL H_UpgradeFromV359(int currVersion, int newVersion)
    }
    else
    {
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
    }
    CHK_EXEC(SetSchemaVersion(360));
@@ -3600,7 +3600,7 @@ static BOOL H_UpgradeFromV354(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV353(int currVersion, int newVersion)
 {
-   CHK_EXEC(DBResizeColumn(g_hCoreDB, _T("users"), _T("password"), 127, false));
+   CHK_EXEC(DBResizeColumn(g_dbHandle, _T("users"), _T("password"), 127, false));
    CHK_EXEC(SetSchemaVersion(354));
    return TRUE;
 }
@@ -3671,7 +3671,7 @@ static BOOL H_UpgradeFromV349(int currVersion, int newVersion)
          break;
 	}
 
-   CHK_EXEC(DBDropColumn(g_hCoreDB, _T("ap_common"), _T("description")));
+   CHK_EXEC(DBDropColumn(g_dbHandle, _T("ap_common"), _T("description")));
    CHK_EXEC(SetSchemaVersion(350));
    return TRUE;
 }
@@ -3743,7 +3743,7 @@ static BOOL H_UpgradeFromV346(int currVersion, int newVersion)
    }
    else
    {
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
    }
 
@@ -3764,21 +3764,21 @@ static BOOL H_UpgradeFromV345(int currVersion, int newVersion)
 {
    if (g_dbSyntax == DB_SYNTAX_MSSQL)
    {
-      CHK_EXEC(DBDropPrimaryKey(g_hCoreDB, _T("cluster_sync_subnets")));
-      CHK_EXEC(DBDropPrimaryKey(g_hCoreDB, _T("address_lists")));
-      CHK_EXEC(DBDropPrimaryKey(g_hCoreDB, _T("vpn_connector_networks")));
+      CHK_EXEC(DBDropPrimaryKey(g_dbHandle, _T("cluster_sync_subnets")));
+      CHK_EXEC(DBDropPrimaryKey(g_dbHandle, _T("address_lists")));
+      CHK_EXEC(DBDropPrimaryKey(g_dbHandle, _T("vpn_connector_networks")));
    }
 
-   CHK_EXEC(DBResizeColumn(g_hCoreDB, _T("cluster_sync_subnets"), _T("subnet_addr"), 48, false));
-   CHK_EXEC(DBResizeColumn(g_hCoreDB, _T("cluster_resources"), _T("ip_addr"), 48, false));
-   CHK_EXEC(DBResizeColumn(g_hCoreDB, _T("subnets"), _T("ip_addr"), 48, false));
-   CHK_EXEC(DBResizeColumn(g_hCoreDB, _T("interfaces"), _T("ip_addr"), 48, false));
-   CHK_EXEC(DBResizeColumn(g_hCoreDB, _T("network_services"), _T("ip_bind_addr"), 48, false));
-   CHK_EXEC(DBResizeColumn(g_hCoreDB, _T("vpn_connector_networks"), _T("ip_addr"), 48, false));
-   CHK_EXEC(DBResizeColumn(g_hCoreDB, _T("snmp_trap_log"), _T("ip_addr"), 48, false));
-   CHK_EXEC(DBResizeColumn(g_hCoreDB, _T("address_lists"), _T("addr1"), 48, false));
-   CHK_EXEC(DBResizeColumn(g_hCoreDB, _T("address_lists"), _T("addr2"), 48, false));
-   CHK_EXEC(DBResizeColumn(g_hCoreDB, _T("nodes"), _T("primary_ip"), 48, false));
+   CHK_EXEC(DBResizeColumn(g_dbHandle, _T("cluster_sync_subnets"), _T("subnet_addr"), 48, false));
+   CHK_EXEC(DBResizeColumn(g_dbHandle, _T("cluster_resources"), _T("ip_addr"), 48, false));
+   CHK_EXEC(DBResizeColumn(g_dbHandle, _T("subnets"), _T("ip_addr"), 48, false));
+   CHK_EXEC(DBResizeColumn(g_dbHandle, _T("interfaces"), _T("ip_addr"), 48, false));
+   CHK_EXEC(DBResizeColumn(g_dbHandle, _T("network_services"), _T("ip_bind_addr"), 48, false));
+   CHK_EXEC(DBResizeColumn(g_dbHandle, _T("vpn_connector_networks"), _T("ip_addr"), 48, false));
+   CHK_EXEC(DBResizeColumn(g_dbHandle, _T("snmp_trap_log"), _T("ip_addr"), 48, false));
+   CHK_EXEC(DBResizeColumn(g_dbHandle, _T("address_lists"), _T("addr1"), 48, false));
+   CHK_EXEC(DBResizeColumn(g_dbHandle, _T("address_lists"), _T("addr2"), 48, false));
+   CHK_EXEC(DBResizeColumn(g_dbHandle, _T("nodes"), _T("primary_ip"), 48, false));
 
    CHK_EXEC(ConvertNetMasks(_T("cluster_sync_subnets"), _T("subnet_mask"), _T("cluster_id")));
    CHK_EXEC(ConvertNetMasks(_T("subnets"), _T("ip_netmask"), _T("id")));
@@ -3806,7 +3806,7 @@ static BOOL H_UpgradeFromV345(int currVersion, int newVersion)
    }
    else
    {
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
    }
 
@@ -3855,9 +3855,9 @@ static BOOL H_UpgradeFromV342(int currVersion, int newVersion)
    if (g_dbSyntax != DB_SYNTAX_MSSQL)
    {
       CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='CREATE INDEX idx_idata_%d_id_timestamp ON idata_%d(item_id,idata_timestamp DESC)' WHERE var_name='IDataIndexCreationCommand_0'")));
-      CHK_EXEC(DBCommit(g_hCoreDB));   // do reindexing outside current transaction
+      CHK_EXEC(DBCommit(g_dbHandle));   // do reindexing outside current transaction
       ReindexIData();
-      CHK_EXEC(DBBegin(g_hCoreDB));
+      CHK_EXEC(DBBegin(g_dbHandle));
    }
    CHK_EXEC(SetSchemaVersion(343));
    return TRUE;
@@ -3885,7 +3885,7 @@ static BOOL H_UpgradeFromV341(int currVersion, int newVersion)
             _tcscat(newConfig, _T("</snmpOid>"));
             _tcscat(newConfig, _T("</objectToolFilter>"));
 
-            DB_STATEMENT statment = DBPrepare(g_hCoreDB, _T("UPDATE object_tools SET tool_filter=? WHERE tool_id=?"));
+            DB_STATEMENT statment = DBPrepare(g_dbHandle, _T("UPDATE object_tools SET tool_filter=? WHERE tool_id=?"));
             if (statment != NULL)
             {
                DBBind(statment, 1, DB_SQLTYPE_TEXT, newConfig, DB_BIND_STATIC);
@@ -3895,14 +3895,14 @@ static BOOL H_UpgradeFromV341(int currVersion, int newVersion)
             }
             else
             {
-               if (!g_bIgnoreErrors)
+               if (!g_ignoreErrors)
                   return FALSE;
             }
          }
          free(oid);
       }
    }
-   CHK_EXEC(DBDropColumn(g_hCoreDB, _T("object_tools"), _T("matching_oid"))); //delete old column
+   CHK_EXEC(DBDropColumn(g_dbHandle, _T("object_tools"), _T("matching_oid"))); //delete old column
    CHK_EXEC(SetSchemaVersion(342));
    return TRUE;
 }
@@ -3973,8 +3973,8 @@ static BOOL H_UpgradeFromV336(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV335(int currVersion, int newVersion)
 {
-   CHK_EXEC(DBResizeColumn(g_hCoreDB, _T("network_map_links"), _T("connector_name1"), 255, true));
-   CHK_EXEC(DBResizeColumn(g_hCoreDB, _T("network_map_links"), _T("connector_name2"), 255, true));
+   CHK_EXEC(DBResizeColumn(g_dbHandle, _T("network_map_links"), _T("connector_name1"), 255, true));
+   CHK_EXEC(DBResizeColumn(g_dbHandle, _T("network_map_links"), _T("connector_name2"), 255, true));
    CHK_EXEC(SetSchemaVersion(336));
    return TRUE;
 }
@@ -4003,7 +4003,7 @@ static BOOL H_UpgradeFromV334(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV333(int currVersion, int newVersion)
 {
-   CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("user_groups"), _T("description")));
+   CHK_EXEC(DBRemoveNotNullConstraint(g_dbHandle, _T("user_groups"), _T("description")));
    CHK_EXEC(SetSchemaVersion(334));
    return TRUE;
 }
@@ -4085,7 +4085,7 @@ static BOOL H_UpgradeFromV327(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV326(int currVersion, int newVersion)
 {
-   CHK_EXEC(DBDropPrimaryKey(g_hCoreDB, _T("network_map_links")));
+   CHK_EXEC(DBDropPrimaryKey(g_dbHandle, _T("network_map_links")));
    CHK_EXEC(SQLQuery(_T("CREATE INDEX idx_network_map_links_map_id ON network_map_links(map_id)")));
    CHK_EXEC(SetSchemaVersion(327));
    return TRUE;
@@ -4173,7 +4173,7 @@ static BOOL H_UpgradeFromV324(int currVersion, int newVersion)
          _tcscat(newConfig, _T("</config>"));
 
          free(config);
-         DB_STATEMENT statment = DBPrepare(g_hCoreDB, _T("UPDATE network_map_links SET element_data=? WHERE map_id=? AND element1=? AND element2=?"));
+         DB_STATEMENT statment = DBPrepare(g_dbHandle, _T("UPDATE network_map_links SET element_data=? WHERE map_id=? AND element1=? AND element2=?"));
          if (statment != NULL)
          {
             DBBind(statment, 1, DB_SQLTYPE_TEXT, newConfig, DB_BIND_STATIC);
@@ -4185,7 +4185,7 @@ static BOOL H_UpgradeFromV324(int currVersion, int newVersion)
          }
          else
          {
-            if (!g_bIgnoreErrors)
+            if (!g_ignoreErrors)
                return false;
          }
          free(newConfig);
@@ -4202,13 +4202,9 @@ static BOOL H_UpgradeFromV324(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV323(int currVersion, int newVersion)
 {
-   if (!MetaDataReadInt(_T("ValidTDataIndex"), 0))  // check if schema is already correct
+   if (!DBMgrMetaDataReadInt32(_T("ValidTDataIndex"), 0))  // check if schema is already correct
    {
-      TCHAR query[1024];
-      _sntprintf(query, 1024,
-         _T("UPDATE metadata SET var_value='CREATE TABLE tdata_records_%%d (record_id %s not null,row_id %s not null,instance varchar(255) null,PRIMARY KEY(row_id),FOREIGN KEY (record_id) REFERENCES tdata_%%d(record_id) ON DELETE CASCADE)' WHERE var_name='TDataTableCreationCommand_1'"),
-         g_pszSqlType[g_dbSyntax][SQL_TYPE_INT64], g_pszSqlType[g_dbSyntax][SQL_TYPE_INT64]);
-      CHK_EXEC(SQLQuery(query));
+      CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='CREATE TABLE tdata_records_%%d (record_id $SQL:INT64 not null,row_id $SQL:INT64 not null,instance varchar(255) null,PRIMARY KEY(row_id),FOREIGN KEY (record_id) REFERENCES tdata_%%d(record_id) ON DELETE CASCADE)' WHERE var_name='TDataTableCreationCommand_1'")));
 
       RecreateTData(_T("nodes"), true, true);
       RecreateTData(_T("clusters"), true, true);
@@ -4449,7 +4445,7 @@ static BOOL H_UpgradeFromV313(int currVersion, int newVersion)
          TCHAR* toolData = DBGetField(hResult, i, 1, NULL, 0);
          TranslateStr(toolData, _T("\\\\"), _T("\\"));
 
-         DB_STATEMENT statment = DBPrepare(g_hCoreDB, _T("UPDATE object_tools SET tool_data=?  WHERE tool_id=?"));
+         DB_STATEMENT statment = DBPrepare(g_dbHandle, _T("UPDATE object_tools SET tool_data=?  WHERE tool_id=?"));
          if (statment == NULL)
             return FALSE;
          DBBind(statment, 1, DB_SQLTYPE_TEXT, toolData, DB_BIND_DYNAMIC);
@@ -4470,12 +4466,12 @@ static BOOL H_UpgradeFromV313(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV312(int currVersion, int newVersion)
 {
-   CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("object_tools"), _T("tool_name")));
-   CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("object_tools"), _T("tool_data")));
-   CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("object_tools"), _T("description")));
-   CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("object_tools"), _T("confirmation_text")));
-   CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("object_tools"), _T("matching_oid")));
-   CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("object_tools_table_columns"), _T("col_name")));
+   CHK_EXEC(DBRemoveNotNullConstraint(g_dbHandle, _T("object_tools"), _T("tool_name")));
+   CHK_EXEC(DBRemoveNotNullConstraint(g_dbHandle, _T("object_tools"), _T("tool_data")));
+   CHK_EXEC(DBRemoveNotNullConstraint(g_dbHandle, _T("object_tools"), _T("description")));
+   CHK_EXEC(DBRemoveNotNullConstraint(g_dbHandle, _T("object_tools"), _T("confirmation_text")));
+   CHK_EXEC(DBRemoveNotNullConstraint(g_dbHandle, _T("object_tools"), _T("matching_oid")));
+   CHK_EXEC(DBRemoveNotNullConstraint(g_dbHandle, _T("object_tools_table_columns"), _T("col_name")));
    CHK_EXEC(ConvertStrings(_T("object_tools"), _T("tool_id"), _T("tool_name")));
    CHK_EXEC(ConvertStrings(_T("object_tools"), _T("tool_id"), _T("tool_data")));
    CHK_EXEC(ConvertStrings(_T("object_tools"), _T("tool_id"), _T("description")));
@@ -4621,7 +4617,7 @@ static BOOL H_UpgradeFromV307(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV306(int currVersion, int newVersion)
 {
-	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("config_clob"), _T("var_value")));
+	CHK_EXEC(DBRemoveNotNullConstraint(g_dbHandle, _T("config_clob"), _T("var_value")));
 	CHK_EXEC(ConvertStrings(_T("config_clob"), _T("var_name"), NULL, _T("var_value"), true));
    CHK_EXEC(SetSchemaVersion(307));
    return TRUE;
@@ -4732,11 +4728,11 @@ static BOOL H_UpgradeFromV299(int currVersion, int newVersion)
 	CHK_EXEC(CreateConfigParam(_T("XMPPServer"), _T("localhost"), 1, 1));
 	CHK_EXEC(CreateConfigParam(_T("XMPPPort"), _T("5222"), 1, 1));
 
-   DBRemoveNotNullConstraint(g_hCoreDB, _T("users"), _T("full_name"));
-   DBRemoveNotNullConstraint(g_hCoreDB, _T("users"), _T("description"));
-   DBRemoveNotNullConstraint(g_hCoreDB, _T("users"), _T("cert_mapping_data"));
-   DBRemoveNotNullConstraint(g_hCoreDB, _T("user_groups"), _T("description"));
-   DBRemoveNotNullConstraint(g_hCoreDB, _T("userdb_custom_attributes"), _T("attr_value"));
+   DBRemoveNotNullConstraint(g_dbHandle, _T("users"), _T("full_name"));
+   DBRemoveNotNullConstraint(g_dbHandle, _T("users"), _T("description"));
+   DBRemoveNotNullConstraint(g_dbHandle, _T("users"), _T("cert_mapping_data"));
+   DBRemoveNotNullConstraint(g_dbHandle, _T("user_groups"), _T("description"));
+   DBRemoveNotNullConstraint(g_dbHandle, _T("userdb_custom_attributes"), _T("attr_value"));
 
    ConvertStrings(_T("users"), _T("id"), _T("full_name"));
    ConvertStrings(_T("users"), _T("id"), _T("description"));
@@ -4894,7 +4890,7 @@ static BOOL H_UpgradeFromV289(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV288(int currVersion, int newVersion)
 {
-   CHK_EXEC(DBDropColumn(g_hCoreDB, _T("dct_thresholds"), _T("current_state")));
+   CHK_EXEC(DBDropColumn(g_dbHandle, _T("dct_thresholds"), _T("current_state")));
    CHK_EXEC(SetSchemaVersion(289));
    return TRUE;
 }
@@ -5072,7 +5068,7 @@ static BOOL H_UpgradeFromV279(int currVersion, int newVersion)
          {
             TCHAR query[256];
             _sntprintf(query, 256, _T("UPDATE dc_table_columns SET flags=flags+256 WHERE table_id=%d AND column_name=%s"),
-               DBGetFieldLong(hResult, i, 0), (const TCHAR *)DBPrepareString(g_hCoreDB, columnName));
+               DBGetFieldLong(hResult, i, 0), (const TCHAR *)DBPrepareString(g_dbHandle, columnName));
             CHK_EXEC(SQLQuery(query));
          }
       }
@@ -5080,11 +5076,11 @@ static BOOL H_UpgradeFromV279(int currVersion, int newVersion)
    }
    else
    {
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
    }
 
-   CHK_EXEC(DBDropColumn(g_hCoreDB, _T("dc_tables"), _T("instance_column")));
+   CHK_EXEC(DBDropColumn(g_dbHandle, _T("dc_tables"), _T("instance_column")));
 
    CHK_EXEC(SetSchemaVersion(280));
    return TRUE;
@@ -5116,7 +5112,7 @@ static BOOL H_UpgradeFromV277(int currVersion, int newVersion)
          DWORD id = DBGetFieldULong(hResult, i, 0);
          if (!CreateIDataTable(id))
          {
-            if (!g_bIgnoreErrors)
+            if (!g_ignoreErrors)
             {
                DBFreeResult(hResult);
                return FALSE;
@@ -5124,7 +5120,7 @@ static BOOL H_UpgradeFromV277(int currVersion, int newVersion)
          }
          if (!CreateTDataTable_preV281(id))
          {
-            if (!g_bIgnoreErrors)
+            if (!g_ignoreErrors)
             {
                DBFreeResult(hResult);
                return FALSE;
@@ -5135,7 +5131,7 @@ static BOOL H_UpgradeFromV277(int currVersion, int newVersion)
    }
    else
    {
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
    }
 
@@ -5284,26 +5280,26 @@ static BOOL H_UpgradeFromV269(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV268(int currVersion, int newVersion)
 {
-	CHK_EXEC(DBResizeColumn(g_hCoreDB, _T("alarms"), _T("message"), 2000, true));
-	CHK_EXEC(DBResizeColumn(g_hCoreDB, _T("alarm_events"), _T("message"), 2000, true));
-	CHK_EXEC(DBResizeColumn(g_hCoreDB, _T("event_log"), _T("event_message"), 2000, true));
-	CHK_EXEC(DBResizeColumn(g_hCoreDB, _T("event_cfg"), _T("message"), 2000, true));
-	CHK_EXEC(DBResizeColumn(g_hCoreDB, _T("event_policy"), _T("alarm_message"), 2000, true));
-	CHK_EXEC(DBResizeColumn(g_hCoreDB, _T("items"), _T("name"), 1024, true));
-	CHK_EXEC(DBResizeColumn(g_hCoreDB, _T("dc_tables"), _T("name"), 1024, true));
+	CHK_EXEC(DBResizeColumn(g_dbHandle, _T("alarms"), _T("message"), 2000, true));
+	CHK_EXEC(DBResizeColumn(g_dbHandle, _T("alarm_events"), _T("message"), 2000, true));
+	CHK_EXEC(DBResizeColumn(g_dbHandle, _T("event_log"), _T("event_message"), 2000, true));
+	CHK_EXEC(DBResizeColumn(g_dbHandle, _T("event_cfg"), _T("message"), 2000, true));
+	CHK_EXEC(DBResizeColumn(g_dbHandle, _T("event_policy"), _T("alarm_message"), 2000, true));
+	CHK_EXEC(DBResizeColumn(g_dbHandle, _T("items"), _T("name"), 1024, true));
+	CHK_EXEC(DBResizeColumn(g_dbHandle, _T("dc_tables"), _T("name"), 1024, true));
 
-	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("event_policy"), _T("alarm_key")));
-	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("event_policy"), _T("alarm_message")));
-	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("event_policy"), _T("comments")));
-	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("event_policy"), _T("situation_instance")));
-	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("event_policy"), _T("script")));
+	CHK_EXEC(DBRemoveNotNullConstraint(g_dbHandle, _T("event_policy"), _T("alarm_key")));
+	CHK_EXEC(DBRemoveNotNullConstraint(g_dbHandle, _T("event_policy"), _T("alarm_message")));
+	CHK_EXEC(DBRemoveNotNullConstraint(g_dbHandle, _T("event_policy"), _T("comments")));
+	CHK_EXEC(DBRemoveNotNullConstraint(g_dbHandle, _T("event_policy"), _T("situation_instance")));
+	CHK_EXEC(DBRemoveNotNullConstraint(g_dbHandle, _T("event_policy"), _T("script")));
 	CHK_EXEC(ConvertStrings(_T("event_policy"), _T("rule_id"), _T("alarm_key")));
 	CHK_EXEC(ConvertStrings(_T("event_policy"), _T("rule_id"), _T("alarm_message")));
 	CHK_EXEC(ConvertStrings(_T("event_policy"), _T("rule_id"), _T("comments")));
 	CHK_EXEC(ConvertStrings(_T("event_policy"), _T("rule_id"), _T("situation_instance")));
 	CHK_EXEC(ConvertStrings(_T("event_policy"), _T("rule_id"), _T("script")));
 
-	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("policy_situation_attr_list"), _T("attr_value")));
+	CHK_EXEC(DBRemoveNotNullConstraint(g_dbHandle, _T("policy_situation_attr_list"), _T("attr_value")));
 	// convert strings in policy_situation_attr_list
 	DB_RESULT hResult = SQLSelect(_T("SELECT rule_id,situation_id,attr_name,attr_value FROM policy_situation_attr_list"));
 	if (hResult != NULL)
@@ -5326,10 +5322,10 @@ static BOOL H_UpgradeFromV268(int currVersion, int newVersion)
 					_tcscpy(name, _T("noname"));
 
 				_sntprintf(query, 1024, _T("INSERT INTO policy_situation_attr_list (rule_id,situation_id,attr_name,attr_value) VALUES (%d,%d,%s,%s)"),
-				           ruleId, situationId, (const TCHAR *)DBPrepareString(g_hCoreDB, name), (const TCHAR *)DBPrepareString(g_hCoreDB, value));
+				           ruleId, situationId, (const TCHAR *)DBPrepareString(g_dbHandle, name), (const TCHAR *)DBPrepareString(g_dbHandle, value));
 				if (!SQLQuery(query))
 				{
-					if (!g_bIgnoreErrors)
+					if (!g_ignoreErrors)
 					{
 						DBFreeResult(hResult);
 						return FALSE;
@@ -5339,7 +5335,7 @@ static BOOL H_UpgradeFromV268(int currVersion, int newVersion)
 		}
 		else
 		{
-			if (!g_bIgnoreErrors)
+			if (!g_ignoreErrors)
 			{
 				DBFreeResult(hResult);
 				return FALSE;
@@ -5349,12 +5345,12 @@ static BOOL H_UpgradeFromV268(int currVersion, int newVersion)
 	}
 	else
 	{
-		if (!g_bIgnoreErrors)
+		if (!g_ignoreErrors)
 			return FALSE;
 	}
 
-	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("event_cfg"), _T("description")));
-	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("event_cfg"), _T("message")));
+	CHK_EXEC(DBRemoveNotNullConstraint(g_dbHandle, _T("event_cfg"), _T("description")));
+	CHK_EXEC(DBRemoveNotNullConstraint(g_dbHandle, _T("event_cfg"), _T("message")));
 	CHK_EXEC(ConvertStrings(_T("event_cfg"), _T("event_code"), _T("description")));
 	CHK_EXEC(ConvertStrings(_T("event_cfg"), _T("event_code"), _T("message")));
 
@@ -5367,15 +5363,15 @@ static BOOL H_UpgradeFromV268(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV267(int currVersion, int newVersion)
 {
-	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("network_services"), _T("check_request")));
-	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("network_services"), _T("check_responce")));
+	CHK_EXEC(DBRemoveNotNullConstraint(g_dbHandle, _T("network_services"), _T("check_request")));
+	CHK_EXEC(DBRemoveNotNullConstraint(g_dbHandle, _T("network_services"), _T("check_responce")));
 	CHK_EXEC(ConvertStrings(_T("network_services"), _T("id"), _T("check_request")));
 	CHK_EXEC(ConvertStrings(_T("network_services"), _T("id"), _T("check_responce")));
 
-	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("config"), _T("var_value")));
+	CHK_EXEC(DBRemoveNotNullConstraint(g_dbHandle, _T("config"), _T("var_value")));
 	CHK_EXEC(ConvertStrings(_T("config"), _T("var_name"), NULL, _T("var_value"), true));
 
-	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("dci_schedules"), _T("schedule")));
+	CHK_EXEC(DBRemoveNotNullConstraint(g_dbHandle, _T("dci_schedules"), _T("schedule")));
 	CHK_EXEC(ConvertStrings(_T("dci_schedules"), _T("schedule_id"), _T("item_id"), _T("schedule"), false));
 
 	CHK_EXEC(SetSchemaVersion(268));
@@ -5537,8 +5533,8 @@ static BOOL H_UpgradeFromV258(int currVersion, int newVersion)
 	// have to made these columns nullable again because
 	// because they was forgotten as NOT NULL in schema.in
 	// and so some databases can still have them as NOT NULL
-	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("templates"), _T("apply_filter")));
-	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("containers"), _T("auto_bind_filter")));
+	CHK_EXEC(DBRemoveNotNullConstraint(g_dbHandle, _T("templates"), _T("apply_filter")));
+	CHK_EXEC(DBRemoveNotNullConstraint(g_dbHandle, _T("containers"), _T("auto_bind_filter")));
 
 	CHK_EXEC(SetSchemaVersion(259));
 	return TRUE;
@@ -5636,10 +5632,10 @@ static BOOL H_UpgradeFromV253(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV252(int currVersion, int newVersion)
 {
-	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("templates"), _T("apply_filter")));
+	CHK_EXEC(DBRemoveNotNullConstraint(g_dbHandle, _T("templates"), _T("apply_filter")));
 	CHK_EXEC(ConvertStrings(_T("templates"), _T("id"), _T("apply_filter")));
 
-	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("containers"), _T("auto_bind_filter")));
+	CHK_EXEC(DBRemoveNotNullConstraint(g_dbHandle, _T("containers"), _T("auto_bind_filter")));
 	CHK_EXEC(ConvertStrings(_T("containers"), _T("id"), _T("auto_bind_filter")));
 
 	static TCHAR batch[] =
@@ -5695,7 +5691,7 @@ static BOOL H_UpgradeFromV252(int currVersion, int newVersion)
 										  ));
 
 	TCHAR buffer[64];
-	_sntprintf(buffer, 64, _T("%d"), ConfigReadInt(_T("AllowedCiphers"), 15) + 16);
+	_sntprintf(buffer, 64, _T("%d"), DBMgrConfigReadInt32(_T("AllowedCiphers"), 15) + 16);
 	CreateConfigParam(_T("AllowedCiphers"), buffer, 1, 1, TRUE);
 
 	CHK_EXEC(SetSchemaVersion(253));
@@ -5785,8 +5781,8 @@ static BOOL H_UpgradeFromV250(int currVersion, int newVersion)
 
 	CHK_EXEC(SQLBatch(batch));
 
-	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("thresholds"), _T("fire_value")));
-	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("thresholds"), _T("rearm_value")));
+	CHK_EXEC(DBRemoveNotNullConstraint(g_dbHandle, _T("thresholds"), _T("fire_value")));
+	CHK_EXEC(DBRemoveNotNullConstraint(g_dbHandle, _T("thresholds"), _T("rearm_value")));
 	CHK_EXEC(ConvertStrings(_T("thresholds"), _T("threshold_id"), _T("fire_value")));
 	CHK_EXEC(ConvertStrings(_T("thresholds"), _T("threshold_id"), _T("rearm_value")));
 
@@ -5874,7 +5870,7 @@ static BOOL H_UpgradeFromV248(int currVersion, int newVersion)
 		{
 			if (!CreateTData(DBGetFieldULong(hResult, i, 0)))
 			{
-				if (!g_bIgnoreErrors)
+				if (!g_ignoreErrors)
 				{
 					DBFreeResult(hResult);
 					return FALSE;
@@ -5885,7 +5881,7 @@ static BOOL H_UpgradeFromV248(int currVersion, int newVersion)
 	}
 	else
 	{
-		if (!g_bIgnoreErrors)
+		if (!g_ignoreErrors)
 			return FALSE;
 	}
 
@@ -5937,7 +5933,7 @@ static BOOL H_UpgradeFromV246(int currVersion, int newVersion)
 {
 	static TCHAR insertQuery[] = _T("INSERT INTO object_custom_attributes (object_id,attr_name,attr_value) VALUES (?,?,?)");
 
-	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("object_custom_attributes"), _T("attr_value")));
+	CHK_EXEC(DBRemoveNotNullConstraint(g_dbHandle, _T("object_custom_attributes"), _T("attr_value")));
 
 	// Convert strings in object_custom_attributes table
 	DB_RESULT hResult = SQLSelect(_T("SELECT object_id,attr_name,attr_value FROM object_custom_attributes"));
@@ -5946,7 +5942,7 @@ static BOOL H_UpgradeFromV246(int currVersion, int newVersion)
 		if (SQLQuery(_T("DELETE FROM object_custom_attributes")))
 		{
 			TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
-			DB_STATEMENT hStmt = DBPrepareEx(g_hCoreDB, insertQuery, true, errorText);
+			DB_STATEMENT hStmt = DBPrepareEx(g_dbHandle, insertQuery, true, errorText);
 			if (hStmt != NULL)
 			{
 				TCHAR name[128], *value;
@@ -5962,12 +5958,12 @@ static BOOL H_UpgradeFromV246(int currVersion, int newVersion)
 					DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, id);
 					DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, name, DB_BIND_STATIC);
 					DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, value, DB_BIND_DYNAMIC);
-					if (g_bTrace)
+					if (IsQueryTraceEnabled())
 						ShowQuery(insertQuery);
 					if (!DBExecuteEx(hStmt, errorText))
 					{
 						WriteToTerminalEx(_T("SQL query failed (%s):\n\x1b[33;1m%s\x1b[0m\n"), errorText, insertQuery);
-						if (!g_bIgnoreErrors)
+						if (!g_ignoreErrors)
 						{
 							DBFreeStatement(hStmt);
 							DBFreeResult(hResult);
@@ -5980,7 +5976,7 @@ static BOOL H_UpgradeFromV246(int currVersion, int newVersion)
 			else
 			{
 				WriteToTerminalEx(_T("SQL query failed (%s):\n\x1b[33;1m%s\x1b[0m\n"), errorText, insertQuery);
-				if (!g_bIgnoreErrors)
+				if (!g_ignoreErrors)
 				{
 					DBFreeResult(hResult);
 					return FALSE;
@@ -5989,7 +5985,7 @@ static BOOL H_UpgradeFromV246(int currVersion, int newVersion)
 		}
 		else
 		{
-			if (!g_bIgnoreErrors)
+			if (!g_ignoreErrors)
 			{
 				DBFreeResult(hResult);
 				return FALSE;
@@ -6000,7 +5996,7 @@ static BOOL H_UpgradeFromV246(int currVersion, int newVersion)
 	}
 	else
 	{
-		if (!g_bIgnoreErrors)
+		if (!g_ignoreErrors)
 			return FALSE;
 	}
 
@@ -6023,10 +6019,10 @@ static BOOL H_UpgradeFromV245(int currVersion, int newVersion)
 
 	CHK_EXEC(SQLBatch(batch));
 
-	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("snmp_trap_pmap"), _T("description")));
+	CHK_EXEC(DBRemoveNotNullConstraint(g_dbHandle, _T("snmp_trap_pmap"), _T("description")));
 	CHK_EXEC(ConvertStrings(_T("snmp_trap_pmap"), _T("trap_id"), _T("parameter"), _T("description"), false));
 
-	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("cluster_resources"), _T("resource_name")));
+	CHK_EXEC(DBRemoveNotNullConstraint(g_dbHandle, _T("cluster_resources"), _T("resource_name")));
 	CHK_EXEC(ConvertStrings(_T("cluster_resources"), _T("cluster_id"), _T("resource_id"), _T("resource_name"), false));
 
 	CHK_EXEC(SetSchemaVersion(246));
@@ -6045,9 +6041,9 @@ static BOOL H_UpgradeFromV244(int currVersion, int newVersion)
 
 	CHK_EXEC(SQLBatch(batch));
 
-	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("actions"), _T("rcpt_addr")));
-	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("actions"), _T("email_subject")));
-	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("actions"), _T("action_data")));
+	CHK_EXEC(DBRemoveNotNullConstraint(g_dbHandle, _T("actions"), _T("rcpt_addr")));
+	CHK_EXEC(DBRemoveNotNullConstraint(g_dbHandle, _T("actions"), _T("email_subject")));
+	CHK_EXEC(DBRemoveNotNullConstraint(g_dbHandle, _T("actions"), _T("action_data")));
 
 	CHK_EXEC(ConvertStrings(_T("actions"), _T("action_id"), _T("rcpt_addr")));
 	CHK_EXEC(ConvertStrings(_T("actions"), _T("action_id"), _T("email_subject")));
@@ -6513,14 +6509,14 @@ static BOOL H_UpgradeFromV229(int currVersion, int newVersion)
 			           (int)DBGetFieldLong(hResult, i, 2), (int)DBGetFieldLong(hResult, i, 3),
 						  (int)DBGetFieldLong(hResult, i, 4), (int)DBGetFieldLong(hResult, i, 5));
 			_sntprintf(query, 1024, _T("UPDATE dashboard_elements SET layout_data=%s WHERE dashboard_id=%d AND element_id=%d"),
-			           (const TCHAR *)DBPrepareString(g_hCoreDB, xml), (int)DBGetFieldLong(hResult, i, 0), (int)DBGetFieldLong(hResult, i, 1));
+			           (const TCHAR *)DBPrepareString(g_dbHandle, xml), (int)DBGetFieldLong(hResult, i, 0), (int)DBGetFieldLong(hResult, i, 1));
 			CHK_EXEC(SQLQuery(query));
 		}
 		DBFreeResult(hResult);
 	}
 	else
 	{
-		if (!g_bIgnoreErrors)
+		if (!g_ignoreErrors)
 			return FALSE;
 	}
 
@@ -6779,7 +6775,7 @@ static BOOL H_UpgradeFromV218(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV217(int currVersion, int newVersion)
 {
-	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("snmp_communities"), _T("community")));
+	CHK_EXEC(DBRemoveNotNullConstraint(g_dbHandle, _T("snmp_communities"), _T("community")));
 	CHK_EXEC(ConvertStrings(_T("snmp_communities"), _T("id"), _T("community")));
 
 	CHK_EXEC(SetSchemaVersion(218));
@@ -6800,40 +6796,40 @@ static BOOL H_UpgradeFromV216(int currVersion, int newVersion)
 
 	CHK_EXEC(SQLBatch(batch));
 
-	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("nodes"), _T("community")));
+	CHK_EXEC(DBRemoveNotNullConstraint(g_dbHandle, _T("nodes"), _T("community")));
 	CHK_EXEC(ConvertStrings(_T("nodes"), _T("id"), _T("community")));
 
-	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("nodes"), _T("usm_auth_password")));
+	CHK_EXEC(DBRemoveNotNullConstraint(g_dbHandle, _T("nodes"), _T("usm_auth_password")));
 	CHK_EXEC(ConvertStrings(_T("nodes"), _T("id"), _T("usm_auth_password")));
 
-	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("nodes"), _T("usm_priv_password")));
+	CHK_EXEC(DBRemoveNotNullConstraint(g_dbHandle, _T("nodes"), _T("usm_priv_password")));
 	CHK_EXEC(ConvertStrings(_T("nodes"), _T("id"), _T("usm_priv_password")));
 
-	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("nodes"), _T("snmp_oid")));
+	CHK_EXEC(DBRemoveNotNullConstraint(g_dbHandle, _T("nodes"), _T("snmp_oid")));
 	CHK_EXEC(ConvertStrings(_T("nodes"), _T("id"), _T("snmp_oid")));
 
-	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("nodes"), _T("secret")));
+	CHK_EXEC(DBRemoveNotNullConstraint(g_dbHandle, _T("nodes"), _T("secret")));
 	CHK_EXEC(ConvertStrings(_T("nodes"), _T("id"), _T("secret")));
 
-	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("nodes"), _T("agent_version")));
+	CHK_EXEC(DBRemoveNotNullConstraint(g_dbHandle, _T("nodes"), _T("agent_version")));
 	CHK_EXEC(ConvertStrings(_T("nodes"), _T("id"), _T("agent_version")));
 
-	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("nodes"), _T("platform_name")));
+	CHK_EXEC(DBRemoveNotNullConstraint(g_dbHandle, _T("nodes"), _T("platform_name")));
 	CHK_EXEC(ConvertStrings(_T("nodes"), _T("id"), _T("platform_name")));
 
-	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("nodes"), _T("uname")));
+	CHK_EXEC(DBRemoveNotNullConstraint(g_dbHandle, _T("nodes"), _T("uname")));
 	CHK_EXEC(ConvertStrings(_T("nodes"), _T("id"), _T("uname")));
 
-	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("items"), _T("name")));
+	CHK_EXEC(DBRemoveNotNullConstraint(g_dbHandle, _T("items"), _T("name")));
 	CHK_EXEC(ConvertStrings(_T("items"), _T("item_id"), _T("name")));
 
-	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("items"), _T("description")));
+	CHK_EXEC(DBRemoveNotNullConstraint(g_dbHandle, _T("items"), _T("description")));
 	CHK_EXEC(ConvertStrings(_T("items"), _T("item_id"), _T("description")));
 
-	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("items"), _T("transformation")));
+	CHK_EXEC(DBRemoveNotNullConstraint(g_dbHandle, _T("items"), _T("transformation")));
 	CHK_EXEC(ConvertStrings(_T("items"), _T("item_id"), _T("transformation")));
 
-	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("items"), _T("instance")));
+	CHK_EXEC(DBRemoveNotNullConstraint(g_dbHandle, _T("items"), _T("instance")));
 	CHK_EXEC(ConvertStrings(_T("items"), _T("item_id"), _T("instance")));
 
 	CHK_EXEC(SetSchemaVersion(217));
@@ -6845,13 +6841,13 @@ static BOOL H_UpgradeFromV216(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV215(int currVersion, int newVersion)
 {
-	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("ap_common"), _T("description")));
+	CHK_EXEC(DBRemoveNotNullConstraint(g_dbHandle, _T("ap_common"), _T("description")));
 	CHK_EXEC(ConvertStrings(_T("ap_common"), _T("id"), _T("description")));
 
 	if (g_dbSyntax != DB_SYNTAX_SQLITE)
 		CHK_EXEC(SQLQuery(_T("ALTER TABLE ap_config_files DROP COLUMN file_name")));
 
-	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("ap_config_files"), _T("file_content")));
+	CHK_EXEC(DBRemoveNotNullConstraint(g_dbHandle, _T("ap_config_files"), _T("file_content")));
 	CHK_EXEC(ConvertStrings(_T("ap_config_files"), _T("policy_id"), _T("file_content")));
 
 	CHK_EXEC(SQLQuery(_T("ALTER TABLE object_properties ADD guid varchar(36)")));
@@ -6919,10 +6915,10 @@ static BOOL H_UpgradeFromV214(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV213(int currVersion, int newVersion)
 {
-	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("script_library"), _T("script_code")));
+	CHK_EXEC(DBRemoveNotNullConstraint(g_dbHandle, _T("script_library"), _T("script_code")));
 	CHK_EXEC(ConvertStrings(_T("script_library"), _T("script_id"), _T("script_code")));
 
-	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("raw_dci_values"), _T("raw_value")));
+	CHK_EXEC(DBRemoveNotNullConstraint(g_dbHandle, _T("raw_dci_values"), _T("raw_value")));
 	CHK_EXEC(ConvertStrings(_T("raw_dci_values"), _T("item_id"), _T("raw_value")));
 
 	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='CREATE TABLE idata_%d (item_id integer not null,idata_timestamp integer not null,idata_value varchar(255) null)' WHERE var_name='IDataTableCreationCommand'")));
@@ -6937,7 +6933,7 @@ static BOOL H_UpgradeFromV213(int currVersion, int newVersion)
 
 			DWORD nodeId = DBGetFieldULong(hResult, i, 0);
 			_sntprintf(table, 32, _T("idata_%d"), nodeId);
-			CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, table, _T("idata_value")));
+			CHK_EXEC(DBRemoveNotNullConstraint(g_dbHandle, table, _T("idata_value")));
 		}
 		DBFreeResult(hResult);
 	}
@@ -6954,7 +6950,7 @@ static BOOL H_UpgradeFromV213(int currVersion, int newVersion)
 			DWORD nodeId = DBGetFieldULong(hResult, i, 0);
 			DWORD dciId = DBGetFieldULong(hResult, i, 1);
 
-			if (IsDatabaseRecordExist(_T("nodes"), _T("id"), nodeId))
+			if (IsDatabaseRecordExist(g_dbHandle, _T("nodes"), _T("id"), nodeId))
 			{
 				_sntprintf(query, 512, _T("SELECT idata_timestamp,idata_value FROM idata_%d WHERE item_id=%d AND idata_value LIKE '%%#%%'"), nodeId, dciId);
 				DB_RESULT hData = SQLSelect(query);
@@ -6970,7 +6966,7 @@ static BOOL H_UpgradeFromV213(int currVersion, int newVersion)
 						DecodeSQLString(buffer);
 
 						_sntprintf(query, 512, _T("UPDATE idata_%d SET idata_value=%s WHERE item_id=%d AND idata_timestamp=%ld"),
-									  nodeId, (const TCHAR *)DBPrepareString(g_hCoreDB, buffer), dciId, (long)ts);
+									  nodeId, (const TCHAR *)DBPrepareString(g_dbHandle, buffer), dciId, (long)ts);
 						CHK_EXEC(SQLQuery(query));
 					}
 					DBFreeResult(hData);
@@ -6989,8 +6985,8 @@ static BOOL H_UpgradeFromV213(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV212(int currVersion, int newVersion)
 {
-	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("items"), _T("custom_units_name")));
-	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("items"), _T("perftab_settings")));
+	CHK_EXEC(DBRemoveNotNullConstraint(g_dbHandle, _T("items"), _T("custom_units_name")));
+	CHK_EXEC(DBRemoveNotNullConstraint(g_dbHandle, _T("items"), _T("perftab_settings")));
 
 	CHK_EXEC(ConvertStrings(_T("items"), _T("item_id"), _T("custom_units_name")));
 	CHK_EXEC(ConvertStrings(_T("items"), _T("item_id"), _T("perftab_settings")));
@@ -7005,9 +7001,9 @@ static BOOL H_UpgradeFromV212(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV211(int currVersion, int newVersion)
 {
-	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("snmp_trap_cfg"), _T("snmp_oid")));
-	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("snmp_trap_cfg"), _T("user_tag")));
-	CHK_EXEC(DBRemoveNotNullConstraint(g_hCoreDB, _T("snmp_trap_cfg"), _T("description")));
+	CHK_EXEC(DBRemoveNotNullConstraint(g_dbHandle, _T("snmp_trap_cfg"), _T("snmp_oid")));
+	CHK_EXEC(DBRemoveNotNullConstraint(g_dbHandle, _T("snmp_trap_cfg"), _T("user_tag")));
+	CHK_EXEC(DBRemoveNotNullConstraint(g_dbHandle, _T("snmp_trap_cfg"), _T("description")));
 
 	CHK_EXEC(ConvertStrings(_T("snmp_trap_cfg"), _T("trap_id"), _T("user_tag")));
 	CHK_EXEC(ConvertStrings(_T("snmp_trap_cfg"), _T("trap_id"), _T("description")));
@@ -7049,7 +7045,7 @@ static BOOL H_UpgradeFromV210(int currVersion, int newVersion)
 static BOOL H_UpgradeFromV209(int currVersion, int newVersion)
 {
 	if (!SQLQuery(_T("DELETE FROM metadata WHERE var_name like 'IDataIndexCreationCommand_%'")))
-		if (!g_bIgnoreErrors)
+		if (!g_ignoreErrors)
 			return FALSE;
 
 	const TCHAR *query;
@@ -7067,13 +7063,13 @@ static BOOL H_UpgradeFromV209(int currVersion, int newVersion)
 	}
 
 	if (!SQLQuery(query))
-		if (!g_bIgnoreErrors)
+		if (!g_ignoreErrors)
 			return FALSE;
 
 	ReindexIData();
 
 	if (!SQLQuery(_T("UPDATE metadata SET var_value='210' WHERE var_name='SchemaVersion'")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    return TRUE;
@@ -7095,39 +7091,39 @@ static BOOL H_UpgradeFromV208(int currVersion, int newVersion)
 		_T("<END>");
 
 	if (!SQLBatch(batch))
-		if (!g_bIgnoreErrors)
+		if (!g_ignoreErrors)
 			return FALSE;
 
 	if (!CreateConfigParam(_T("PasswordHistoryLength"), _T("0"), 1, 0))
-		if (!g_bIgnoreErrors)
+		if (!g_ignoreErrors)
 			return FALSE;
 
 	if (!CreateConfigParam(_T("IntruderLockoutThreshold"), _T("0"), 1, 0))
-		if (!g_bIgnoreErrors)
+		if (!g_ignoreErrors)
 			return FALSE;
 
 	if (!CreateConfigParam(_T("IntruderLockoutTime"), _T("30"), 1, 0))
-		if (!g_bIgnoreErrors)
+		if (!g_ignoreErrors)
 			return FALSE;
 
 	if (!CreateConfigParam(_T("MinPasswordLength"), _T("0"), 1, 0))
-		if (!g_bIgnoreErrors)
+		if (!g_ignoreErrors)
 			return FALSE;
 
 	if (!CreateConfigParam(_T("PasswordComplexity"), _T("0"), 1, 0))
-		if (!g_bIgnoreErrors)
+		if (!g_ignoreErrors)
 			return FALSE;
 
 	if (!CreateConfigParam(_T("PasswordExpiration"), _T("0"), 1, 0))
-		if (!g_bIgnoreErrors)
+		if (!g_ignoreErrors)
 			return FALSE;
 
 	if (!CreateConfigParam(_T("BlockInactiveUserAccounts"), _T("0"), 1, 0))
-		if (!g_bIgnoreErrors)
+		if (!g_ignoreErrors)
 			return FALSE;
 
 	if (!SQLQuery(_T("UPDATE metadata SET var_value='209' WHERE var_name='SchemaVersion'")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    return TRUE;
@@ -7141,11 +7137,11 @@ static BOOL H_UpgradeFromV208(int currVersion, int newVersion)
 static BOOL H_UpgradeFromV207(int currVersion, int newVersion)
 {
 	if (!SQLQuery(_T("ALTER TABLE items ADD system_tag varchar(255)")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
 	if (!SQLQuery(_T("UPDATE metadata SET var_value='208' WHERE var_name='SchemaVersion'")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    return TRUE;
@@ -7159,39 +7155,39 @@ static BOOL H_UpgradeFromV207(int currVersion, int newVersion)
 static BOOL H_UpgradeFromV206(int currVersion, int newVersion)
 {
 	if (!CreateConfigParam(_T("RADIUSSecondaryServer"), _T("none"), 1, 0))
-		if (!g_bIgnoreErrors)
+		if (!g_ignoreErrors)
 			return FALSE;
 
 	if (!CreateConfigParam(_T("RADIUSSecondarySecret"), _T("netxms"), 1, 0))
-		if (!g_bIgnoreErrors)
+		if (!g_ignoreErrors)
 			return FALSE;
 
 	if (!CreateConfigParam(_T("RADIUSSecondaryPort"), _T("1645"), 1, 0))
-		if (!g_bIgnoreErrors)
+		if (!g_ignoreErrors)
 			return FALSE;
 
 	if (!CreateConfigParam(_T("ExternalAuditServer"), _T("none"), 1, 1))
-		if (!g_bIgnoreErrors)
+		if (!g_ignoreErrors)
 			return FALSE;
 
 	if (!CreateConfigParam(_T("ExternalAuditPort"), _T("514"), 1, 1))
-		if (!g_bIgnoreErrors)
+		if (!g_ignoreErrors)
 			return FALSE;
 
 	if (!CreateConfigParam(_T("ExternalAuditFacility"), _T("13"), 1, 1))
-		if (!g_bIgnoreErrors)
+		if (!g_ignoreErrors)
 			return FALSE;
 
 	if (!CreateConfigParam(_T("ExternalAuditSeverity"), _T("5"), 1, 1))
-		if (!g_bIgnoreErrors)
+		if (!g_ignoreErrors)
 			return FALSE;
 
 	if (!CreateConfigParam(_T("ExternalAuditTag"), _T("netxmsd-audit"), 1, 1))
-		if (!g_bIgnoreErrors)
+		if (!g_ignoreErrors)
 			return FALSE;
 
 	if (!SQLQuery(_T("UPDATE metadata SET var_value='207' WHERE var_name='SchemaVersion'")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    return TRUE;
@@ -7217,7 +7213,7 @@ static BOOL H_UpgradeFromV205(int currVersion, int newVersion)
 			_T("<END>");
 
 		if (!SQLBatch(oraBatch))
-			if (!g_bIgnoreErrors)
+			if (!g_ignoreErrors)
 				return FALSE;
 	}
 
@@ -7228,49 +7224,49 @@ static BOOL H_UpgradeFromV205(int currVersion, int newVersion)
 	if (clearLogs)
 	{
 		if (!SQLQuery(_T("DELETE FROM audit_log")))
-			if (!g_bIgnoreErrors)
+			if (!g_ignoreErrors)
 				return FALSE;
 
 		if (!SQLQuery(_T("DELETE FROM event_log")))
-			if (!g_bIgnoreErrors)
+			if (!g_ignoreErrors)
 				return FALSE;
 
 		if (!SQLQuery(_T("DELETE FROM syslog")))
-			if (!g_bIgnoreErrors)
+			if (!g_ignoreErrors)
 				return FALSE;
 
 		if (!SQLQuery(_T("DELETE FROM snmp_trap_log")))
-			if (!g_bIgnoreErrors)
+			if (!g_ignoreErrors)
 				return FALSE;
 	}
 	else
 	{
 		// Convert event log
 		if (!ConvertStrings(_T("event_log"), _T("event_id"), _T("event_message")))
-			if (!g_bIgnoreErrors)
+			if (!g_ignoreErrors)
 				return FALSE;
 		if (!ConvertStrings(_T("event_log"), _T("event_id"), _T("user_tag")))
-			if (!g_bIgnoreErrors)
+			if (!g_ignoreErrors)
 				return FALSE;
 
 		// Convert audit log
 		if (!ConvertStrings(_T("audit_log"), _T("record_id"), _T("message")))
-			if (!g_bIgnoreErrors)
+			if (!g_ignoreErrors)
 				return FALSE;
 
 		// Convert syslog
 		if (!ConvertStrings(_T("syslog"), _T("msg_id"), _T("msg_text")))
-			if (!g_bIgnoreErrors)
+			if (!g_ignoreErrors)
 				return FALSE;
 
 		// Convert SNMP trap log
 		if (!ConvertStrings(_T("snmp_trap_log"), _T("trap_id"), _T("trap_varlist")))
-			if (!g_bIgnoreErrors)
+			if (!g_ignoreErrors)
 				return FALSE;
 	}
 
 	if (!SQLQuery(_T("UPDATE metadata SET var_value='206' WHERE var_name='SchemaVersion'")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    return TRUE;
@@ -7291,11 +7287,11 @@ static BOOL H_UpgradeFromV204(int currVersion, int newVersion)
 						  _T("auth_password varchar(255),")
 						  _T("priv_password varchar(255),")
 						  _T("PRIMARY KEY(id))")))
-		if (!g_bIgnoreErrors)
+		if (!g_ignoreErrors)
 			return FALSE;
 
 	if (!SQLQuery(_T("UPDATE metadata SET var_value='205' WHERE var_name='SchemaVersion'")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    return TRUE;
@@ -7317,34 +7313,34 @@ static BOOL H_UpgradeFromV203(int currVersion, int newVersion)
 		_T("<END>");
 
 	if (!SQLBatch(batch))
-		if (!g_bIgnoreErrors)
+		if (!g_ignoreErrors)
 			return FALSE;
 
 	if (!CreateConfigParam(_T("ConnectionPoolBaseSize"), _T("5"), 1, 1))
-		if (!g_bIgnoreErrors)
+		if (!g_ignoreErrors)
 			return FALSE;
 
 	if (!CreateConfigParam(_T("ConnectionPoolMaxSize"), _T("20"), 1, 1))
-		if (!g_bIgnoreErrors)
+		if (!g_ignoreErrors)
 			return FALSE;
 
 	if (!CreateConfigParam(_T("ConnectionPoolCooldownTime"), _T("300"), 1, 1))
-		if (!g_bIgnoreErrors)
+		if (!g_ignoreErrors)
 			return FALSE;
 
 	if (g_dbSyntax == DB_SYNTAX_ORACLE)
 	{
 		if (!SQLQuery(_T("ALTER TABLE object_properties MODIFY comments null\n")))
-			if (!g_bIgnoreErrors)
+			if (!g_ignoreErrors)
 				return FALSE;
 	}
 
 	if (!ConvertStrings(_T("object_properties"), _T("object_id"), _T("comments")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
 	if (!SQLQuery(_T("UPDATE metadata SET var_value='204' WHERE var_name='SchemaVersion'")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    return TRUE;
@@ -7376,11 +7372,11 @@ static BOOL H_UpgradeFromV202(int currVersion, int newVersion)
 		_T("<END>");
 
 	if (!SQLBatch(batch))
-		if (!g_bIgnoreErrors)
+		if (!g_ignoreErrors)
 			return FALSE;
 
 	if (!SQLQuery(_T("UPDATE metadata SET var_value='203' WHERE var_name='SchemaVersion'")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    return TRUE;
@@ -7402,22 +7398,22 @@ static BOOL H_UpgradeFromV201(int currVersion, int newVersion)
 			_T("<END>");
 
 		if (!SQLBatch(oraBatch))
-			if (!g_bIgnoreErrors)
+			if (!g_ignoreErrors)
 				return FALSE;
 	}
 
 	if (!ConvertStrings(_T("alarms"), _T("alarm_id"), _T("message")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 	if (!ConvertStrings(_T("alarms"), _T("alarm_id"), _T("alarm_key")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 	if (!ConvertStrings(_T("alarms"), _T("alarm_id"), _T("hd_ref")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
 	if (!SQLQuery(_T("UPDATE metadata SET var_value='202' WHERE var_name='SchemaVersion'")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    return TRUE;
@@ -7438,11 +7434,11 @@ static BOOL H_UpgradeFromV200(int currVersion, int newVersion)
 		_T("<END>");
 
 	if (!SQLBatch(batch))
-		if (!g_bIgnoreErrors)
+		if (!g_ignoreErrors)
 			return FALSE;
 
 	if (!SQLQuery(_T("UPDATE metadata SET var_value='201' WHERE var_name='SchemaVersion'")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    return TRUE;
@@ -7468,14 +7464,14 @@ static BOOL H_UpgradeFromV9x(int currVersion, int newVersion)
 		              _T("version integer not null,")
 						  _T("description $SQL:TEXT not null,")
 						  _T("PRIMARY KEY(id))")))
-		if (!g_bIgnoreErrors)
+		if (!g_ignoreErrors)
 			return FALSE;
 
 	if (!CreateTable(_T("CREATE TABLE ap_bindings (")
 		              _T("policy_id integer not null,")
 		              _T("node_id integer not null,")
 						  _T("PRIMARY KEY(policy_id,node_id))")))
-		if (!g_bIgnoreErrors)
+		if (!g_ignoreErrors)
 			return FALSE;
 
 	if (!CreateTable(_T("CREATE TABLE ap_config_files (")
@@ -7483,7 +7479,7 @@ static BOOL H_UpgradeFromV9x(int currVersion, int newVersion)
 		              _T("file_name varchar(63) not null,")
 						  _T("file_content $SQL:TEXT not null,")
 						  _T("PRIMARY KEY(policy_id))")))
-		if (!g_bIgnoreErrors)
+		if (!g_ignoreErrors)
 			return FALSE;
 
 	CHK_EXEC(SetSchemaVersion(newVersion));
@@ -7565,11 +7561,11 @@ static BOOL H_UpgradeFromV91(int currVersion, int newVersion)
 		_T("<END>");
 
 	if (!SQLBatch(batch))
-		if (!g_bIgnoreErrors)
+		if (!g_ignoreErrors)
 			return FALSE;
 
 	if (!SQLQuery(_T("UPDATE metadata SET var_value='92' WHERE var_name='SchemaVersion'")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    return TRUE;
@@ -7587,11 +7583,11 @@ static BOOL H_UpgradeFromV90(int currVersion, int newVersion)
 	                 _T("attr_name varchar(255) not null,")
 						  _T("attr_value $SQL:TEXT not null,")
 						  _T("PRIMARY KEY(object_id,attr_name))")))
-		if (!g_bIgnoreErrors)
+		if (!g_ignoreErrors)
 			return FALSE;
 
 	if (!SQLQuery(_T("UPDATE metadata SET var_value='91' WHERE var_name='SchemaVersion'")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    return TRUE;
@@ -7613,11 +7609,11 @@ static BOOL H_UpgradeFromV89(int currVersion, int newVersion)
 		_T("<END>");
 
 	if (!SQLBatch(m_szBatch))
-		if (!g_bIgnoreErrors)
+		if (!g_ignoreErrors)
 			return FALSE;
 
 	if (!SQLQuery(_T("UPDATE metadata SET var_value='90' WHERE var_name='SchemaVersion'")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    return TRUE;
@@ -7643,11 +7639,11 @@ static BOOL H_UpgradeFromV88(int currVersion, int newVersion)
 		_T("<END>");
 
 	if (!SQLBatch(m_szBatch))
-		if (!g_bIgnoreErrors)
+		if (!g_ignoreErrors)
 			return FALSE;
 
 	if (!SQLQuery(_T("UPDATE metadata SET var_value='89' WHERE var_name='SchemaVersion'")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    return TRUE;
@@ -7667,11 +7663,11 @@ static BOOL H_UpgradeFromV87(int currVersion, int newVersion)
 		_T("<END>");
 
 	if (!SQLBatch(m_szBatch))
-		if (!g_bIgnoreErrors)
+		if (!g_ignoreErrors)
 			return FALSE;
 
 	if (!SQLQuery(_T("UPDATE metadata SET var_value='88' WHERE var_name='SchemaVersion'")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    return TRUE;
@@ -7724,39 +7720,39 @@ static BOOL H_UpgradeFromV86(int currVersion, int newVersion)
 		              _T("var_name varchar(63) not null,")
 						  _T("var_value varchar(255) not null,")
 						  _T("PRIMARY KEY(var_name))")))
-		if (!g_bIgnoreErrors)
+		if (!g_ignoreErrors)
 			return FALSE;
 
 	if (!MoveConfigToMetadata(_T("DBFormatVersion"), _T("SchemaVersion")))
-		if (!g_bIgnoreErrors)
+		if (!g_ignoreErrors)
 			return FALSE;
 
 	if (!MoveConfigToMetadata(_T("DBSyntax"), _T("Syntax")))
-		if (!g_bIgnoreErrors)
+		if (!g_ignoreErrors)
 			return FALSE;
 
 	if (!MoveConfigToMetadata(_T("IDataTableCreationCommand"), _T("IDataTableCreationCommand")))
-		if (!g_bIgnoreErrors)
+		if (!g_ignoreErrors)
 			return FALSE;
 
 	if (!MoveConfigToMetadata(_T("IDataIndexCreationCommand_0"), _T("IDataIndexCreationCommand_0")))
-		if (!g_bIgnoreErrors)
+		if (!g_ignoreErrors)
 			return FALSE;
 
 	if (!MoveConfigToMetadata(_T("IDataIndexCreationCommand_1"), _T("IDataIndexCreationCommand_1")))
-		if (!g_bIgnoreErrors)
+		if (!g_ignoreErrors)
 			return FALSE;
 
 	if (!MoveConfigToMetadata(_T("IDataIndexCreationCommand_2"), _T("IDataIndexCreationCommand_2")))
-		if (!g_bIgnoreErrors)
+		if (!g_ignoreErrors)
 			return FALSE;
 
 	if (!MoveConfigToMetadata(_T("IDataIndexCreationCommand_3"), _T("IDataIndexCreationCommand_3")))
-		if (!g_bIgnoreErrors)
+		if (!g_ignoreErrors)
 			return FALSE;
 
 	if (!SQLQuery(_T("UPDATE metadata SET var_value='87' WHERE var_name='SchemaVersion'")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    return TRUE;
@@ -7781,11 +7777,11 @@ static BOOL H_UpgradeFromV85(int currVersion, int newVersion)
 		_T("<END>");
 
 	if (!SQLBatch(m_szBatch))
-		if (!g_bIgnoreErrors)
+		if (!g_ignoreErrors)
 			return FALSE;
 
 	if (!SQLQuery(_T("UPDATE config SET var_value='86' WHERE var_name='DBFormatVersion'")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    return TRUE;
@@ -7804,19 +7800,19 @@ static BOOL H_UpgradeFromV84(int currVersion, int newVersion)
 		_T("<END>");
 
 	if (!SQLBatch(m_szBatch))
-		if (!g_bIgnoreErrors)
+		if (!g_ignoreErrors)
 			return FALSE;
 
 	if (!CreateConfigParam(_T("UseIfXTable"), _T("1"), 1, 0))
-		if (!g_bIgnoreErrors)
+		if (!g_ignoreErrors)
 			return FALSE;
 
 	if (!CreateConfigParam(_T("SMTPRetryCount"), _T("1"), 1, 0))
-		if (!g_bIgnoreErrors)
+		if (!g_ignoreErrors)
 			return FALSE;
 
 	if (!SQLQuery(_T("UPDATE config SET var_value='85' WHERE var_name='DBFormatVersion'")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    return TRUE;
@@ -7830,23 +7826,23 @@ static BOOL H_UpgradeFromV84(int currVersion, int newVersion)
 static BOOL H_UpgradeFromV83(int currVersion, int newVersion)
 {
 	if (!CreateConfigParam(_T("EnableAgentRegistration"), _T("1"), 1, 0))
-		if (!g_bIgnoreErrors)
+		if (!g_ignoreErrors)
 			return FALSE;
 
 	if (!CreateConfigParam(_T("AnonymousFileAccess"), _T("0"), 1, 0))
-		if (!g_bIgnoreErrors)
+		if (!g_ignoreErrors)
 			return FALSE;
 
 	if (!CreateConfigParam(_T("EnableISCListener"), _T("0"), 1, 1))
-		if (!g_bIgnoreErrors)
+		if (!g_ignoreErrors)
 			return FALSE;
 
 	if (!CreateConfigParam(_T("ReceiveForwardedEvents"), _T("0"), 1, 0))
-		if (!g_bIgnoreErrors)
+		if (!g_ignoreErrors)
 			return FALSE;
 
 	if (!SQLQuery(_T("UPDATE config SET var_value='84' WHERE var_name='DBFormatVersion'")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    return TRUE;
@@ -7861,11 +7857,11 @@ static BOOL H_UpgradeFromV82(int currVersion, int newVersion)
 {
 	// Fix incorrect alarm timeouts
 	if (!SQLQuery(_T("UPDATE alarms SET timeout=0,timeout_event=43")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
 	if (!SQLQuery(_T("UPDATE config SET var_value='83' WHERE var_name='DBFormatVersion'")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    return TRUE;
@@ -7882,11 +7878,11 @@ static BOOL H_UpgradeFromV81(int currVersion, int newVersion)
 	                 _T("var_name varchar(63) not null,")
 	                 _T("var_value $SQL:TEXT not null,")
 	                 _T("PRIMARY KEY(var_name))")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
 	if (!SQLQuery(_T("UPDATE config SET var_value='82' WHERE var_name='DBFormatVersion'")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    return TRUE;
@@ -7908,7 +7904,7 @@ static BOOL H_UpgradeFromV80(int currVersion, int newVersion)
 	if (hResult != NULL)
 	{
 		if (!SQLQuery(_T("DROP TABLE dci_schedules")))
-		   if (!g_bIgnoreErrors)
+		   if (!g_ignoreErrors)
 		      return FALSE;
 
 		if (!CreateTable(_T("CREATE TABLE dci_schedules (")
@@ -7916,7 +7912,7 @@ static BOOL H_UpgradeFromV80(int currVersion, int newVersion)
 							  _T("item_id integer not null,")
 							  _T("schedule varchar(255) not null,")
 							  _T("PRIMARY KEY(item_id,schedule_id))")))
-			if (!g_bIgnoreErrors)
+			if (!g_ignoreErrors)
 				return FALSE;
 
 		for(i = 0; i < DBGetNumRows(hResult); i++)
@@ -7924,14 +7920,14 @@ static BOOL H_UpgradeFromV80(int currVersion, int newVersion)
 			_sntprintf(query, 1024, _T("INSERT INTO dci_schedules (item_id,schedule_id,schedule) VALUES(%d,%d,'%s')"),
 			           DBGetFieldULong(hResult, i, 0), i + 1, DBGetField(hResult, i, 1, buffer, 1024));
 			if (!SQLQuery(query))
-				if (!g_bIgnoreErrors)
+				if (!g_ignoreErrors)
 				   return FALSE;
 		}
 		DBFreeResult(hResult);
 	}
 	else
 	{
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 	}
 
@@ -7940,7 +7936,7 @@ static BOOL H_UpgradeFromV80(int currVersion, int newVersion)
 	if (hResult != NULL)
 	{
 		if (!SQLQuery(_T("DROP TABLE address_lists")))
-		   if (!g_bIgnoreErrors)
+		   if (!g_ignoreErrors)
 		      return FALSE;
 
 		if (!CreateTable(_T("CREATE TABLE address_lists (")
@@ -7950,7 +7946,7 @@ static BOOL H_UpgradeFromV80(int currVersion, int newVersion)
 							  _T("addr1 varchar(15) not null,")
 							  _T("addr2 varchar(15) not null,")
 							  _T("PRIMARY KEY(list_type,community_id,addr_type,addr1,addr2))")))
-			if (!g_bIgnoreErrors)
+			if (!g_ignoreErrors)
 				return FALSE;
 
 		for(i = 0; i < DBGetNumRows(hResult); i++)
@@ -7960,7 +7956,7 @@ static BOOL H_UpgradeFromV80(int currVersion, int newVersion)
 						  DBGetFieldULong(hResult, i, 2), DBGetField(hResult, i, 3, buffer, 64),
 						  DBGetField(hResult, i, 4, &buffer[128], 64));
 			if (!SQLQuery(query))
-				if (!g_bIgnoreErrors)
+				if (!g_ignoreErrors)
 				   return FALSE;
 		}
 
@@ -7968,7 +7964,7 @@ static BOOL H_UpgradeFromV80(int currVersion, int newVersion)
 	}
 	else
 	{
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 	}
 
@@ -7978,7 +7974,7 @@ static BOOL H_UpgradeFromV80(int currVersion, int newVersion)
 	                 _T("attr_name varchar(127) not null,")
 	                 _T("attr_value $SQL:TEXT not null,")
 	                 _T("PRIMARY KEY(object_id,attr_name))")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
 	if (!CreateTable(_T("CREATE TABLE web_maps (")
@@ -7987,11 +7983,11 @@ static BOOL H_UpgradeFromV80(int currVersion, int newVersion)
 	                 _T("properties $SQL:TEXT not null,")
 	                 _T("data $SQL:TEXT not null,")
 	                 _T("PRIMARY KEY(id))")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
 	if (!SQLQuery(_T("UPDATE config SET var_value='81' WHERE var_name='DBFormatVersion'")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    return TRUE;
@@ -8010,11 +8006,11 @@ static BOOL H_UpgradeFromV79(int currVersion, int newVersion)
 		_T("<END>");
 
 	if (!SQLBatch(m_szBatch))
-		if (!g_bIgnoreErrors)
+		if (!g_ignoreErrors)
 			return FALSE;
 
 	if (!SQLQuery(_T("UPDATE config SET var_value='80' WHERE var_name='DBFormatVersion'")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    return TRUE;
@@ -8062,18 +8058,18 @@ static BOOL H_UpgradeFromV78(int currVersion, int newVersion)
 		_T("<END>");
 
 	if (!SQLBatch(m_szBatch))
-		if (!g_bIgnoreErrors)
+		if (!g_ignoreErrors)
 			return FALSE;
 
 	if (g_dbSyntax == DB_SYNTAX_MYSQL)
 	{
 		if (!SQLBatch(m_szMySQLBatch))
-			if (!g_bIgnoreErrors)
+			if (!g_ignoreErrors)
 				return FALSE;
 	}
 
 	if (!SQLQuery(_T("UPDATE config SET var_value='79' WHERE var_name='DBFormatVersion'")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    return TRUE;
@@ -8088,15 +8084,15 @@ static BOOL H_UpgradeFromV77(int currVersion, int newVersion)
 	                 _T("source_object_id integer not null,")
 	                 _T("target_node_id integer not null,")
 	                 _T("PRIMARY KEY(source_object_id,target_node_id))")))
-		if (!g_bIgnoreErrors)
+		if (!g_ignoreErrors)
 			return FALSE;
 
 	if (!CreateConfigParam(_T("CheckTrustedNodes"), _T("1"), 1, 1))
-		if (!g_bIgnoreErrors)
+		if (!g_ignoreErrors)
 			return FALSE;
 
 	if (!SQLQuery(_T("UPDATE config SET var_value='78' WHERE var_name='DBFormatVersion'")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    return TRUE;
@@ -8116,11 +8112,11 @@ static BOOL H_UpgradeFromV76(int currVersion, int newVersion)
 
 	hResult = SQLSelect(_T("SELECT condition_id,dci_id,node_id,dci_func,num_polls FROM cond_dci_map ORDER BY condition_id"));
 	if (hResult == NULL)
-		if (!g_bIgnoreErrors)
+		if (!g_ignoreErrors)
 			return FALSE;
 
 	if (!SQLQuery(_T("DROP TABLE cond_dci_map")))
-		if (!g_bIgnoreErrors)
+		if (!g_ignoreErrors)
 			goto error;
 
 	if (!CreateTable(_T("CREATE TABLE cond_dci_map (")
@@ -8131,7 +8127,7 @@ static BOOL H_UpgradeFromV76(int currVersion, int newVersion)
 	                 _T("dci_func integer not null,")
 	                 _T("num_polls integer not null,")
 	                 _T("PRIMARY KEY(condition_id,sequence_number))")))
-		if (!g_bIgnoreErrors)
+		if (!g_ignoreErrors)
 			goto error;
 
 	count = DBGetNumRows(hResult);
@@ -8147,14 +8143,14 @@ static BOOL H_UpgradeFromV76(int currVersion, int newVersion)
 		           id, seq, DBGetFieldULong(hResult, i, 1), DBGetFieldULong(hResult, i, 2),
 					  DBGetFieldULong(hResult, i, 3), DBGetFieldULong(hResult, i, 4));
 		if (!SQLQuery(query))
-			if (!g_bIgnoreErrors)
+			if (!g_ignoreErrors)
 				goto error;
 	}
 
 	DBFreeResult(hResult);
 
 	if (!SQLQuery(_T("UPDATE config SET var_value='77' WHERE var_name='DBFormatVersion'")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    return TRUE;
@@ -8183,27 +8179,27 @@ static BOOL H_UpgradeFromV75(int currVersion, int newVersion)
       _T("<END>");
 
 	if (!SQLBatch(m_szBatch))
-		if (!g_bIgnoreErrors)
+		if (!g_ignoreErrors)
 			return FALSE;
 
 	if (!CreateConfigParam(_T("AgentCommandTimeout"), _T("2000"), 1, 1))
-		if (!g_bIgnoreErrors)
+		if (!g_ignoreErrors)
 			return FALSE;
 
 	if (!CreateConfigParam(_T("BeaconHosts"), _T(""), 1, 1))
-		if (!g_bIgnoreErrors)
+		if (!g_ignoreErrors)
 			return FALSE;
 
 	if (!CreateConfigParam(_T("BeaconTimeout"), _T("1000"), 1, 1))
-		if (!g_bIgnoreErrors)
+		if (!g_ignoreErrors)
 			return FALSE;
 
 	if (!CreateConfigParam(_T("BeaconPollingInterval"), _T("1000"), 1, 1))
-		if (!g_bIgnoreErrors)
+		if (!g_ignoreErrors)
 			return FALSE;
 
 	if (!SQLQuery(_T("UPDATE config SET var_value='76' WHERE var_name='DBFormatVersion'")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    return TRUE;
@@ -8220,26 +8216,26 @@ static BOOL H_UpgradeFromV74(int currVersion, int newVersion)
       _T("<END>");
 
 	if (!SQLBatch(m_szBatch))
-		if (!g_bIgnoreErrors)
+		if (!g_ignoreErrors)
 			return FALSE;
 
 	if (!CreateTable(_T("CREATE TABLE snmp_communities (")
 	                 _T("id integer not null,")
 	                 _T("community varchar(255) not null,")
 	                 _T("PRIMARY KEY(id))")))
-		if (!g_bIgnoreErrors)
+		if (!g_ignoreErrors)
 			return FALSE;
 
 	if (!CreateConfigParam(_T("UseInterfaceAliases"), _T("0"), 1, 0))
-		if (!g_bIgnoreErrors)
+		if (!g_ignoreErrors)
 			return FALSE;
 
 	if (!CreateConfigParam(_T("SyncNodeNamesWithDNS"), _T("0"), 1, 0))
-		if (!g_bIgnoreErrors)
+		if (!g_ignoreErrors)
 			return FALSE;
 
 	if (!SQLQuery(_T("UPDATE config SET var_value='75' WHERE var_name='DBFormatVersion'")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    return TRUE;
@@ -8264,23 +8260,23 @@ static BOOL H_UpgradeFromV73(int currVersion, int newVersion)
       _T("<END>");
 
    if (!SQLBatch(m_szBatch))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!CreateConfigParam(_T("EnableEventStormDetection"), _T("0"), 1, 1))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
 	if (!CreateConfigParam(_T("EventStormEventsPerSecond"), _T("100"), 1, 1))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
 	if (!CreateConfigParam(_T("EventStormDuration"), _T("15"), 1, 1))
-		if (!g_bIgnoreErrors)
+		if (!g_ignoreErrors)
 			return FALSE;
 
 	if (!SQLQuery(_T("UPDATE config SET var_value='74' WHERE var_name='DBFormatVersion'")))
-		if (!g_bIgnoreErrors)
+		if (!g_ignoreErrors)
 			return FALSE;
 
    return TRUE;
@@ -8300,7 +8296,7 @@ static BOOL H_UpgradeFromV72(int currVersion, int newVersion)
       _T("<END>");
 
    if (!SQLBatch(m_szBatch))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
 	if (!CreateTable(_T("CREATE TABLE policy_situation_attr_list (")
@@ -8309,7 +8305,7 @@ static BOOL H_UpgradeFromV72(int currVersion, int newVersion)
 	                 _T("attr_name varchar(255) not null,")
 	                 _T("attr_value varchar(255) not null,")
 	                 _T("PRIMARY KEY(rule_id,situation_id,attr_name))")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
 	if (!CreateTable(_T("CREATE TABLE situations (")
@@ -8317,23 +8313,23 @@ static BOOL H_UpgradeFromV72(int currVersion, int newVersion)
 	                 _T("name varchar(127) not null,")
 	                 _T("comments $SQL:TEXT not null,")
 	                 _T("PRIMARY KEY(id))")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!CreateConfigParam(_T("RetainCustomInterfaceNames"), _T("0"), 1, 0))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!CreateConfigParam(_T("AllowDirectSMS"), _T("0"), 1, 0))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!CreateConfigParam(_T("EventStormThreshold"), _T("0"), 1, 1))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
 	if (!SQLQuery(_T("UPDATE config SET var_value='73' WHERE var_name='DBFormatVersion'")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    return TRUE;
@@ -8352,11 +8348,11 @@ static BOOL H_UpgradeFromV71(int currVersion, int newVersion)
       _T("<END>");
 
    if (!SQLBatch(m_szBatch))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
 	if (!SQLQuery(_T("UPDATE config SET var_value='72' WHERE var_name='DBFormatVersion'")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    return TRUE;
@@ -8379,15 +8375,15 @@ static BOOL H_UpgradeFromV70(int currVersion, int newVersion)
       _T("<END>");
 
    if (!SQLBatch(m_szBatch))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!CreateConfigParam(_T("PollCountForStatusChange"), _T("1"), 1, 1))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
 	if (!SQLQuery(_T("UPDATE config SET var_value='71' WHERE var_name='DBFormatVersion'")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    return TRUE;
@@ -8406,29 +8402,27 @@ static BOOL H_UpgradeFromV69(int currVersion, int newVersion)
 		_T("ALTER TABLE event_log ADD user_tag varchar(63)\n")
 		_T("UPDATE event_log SET user_tag='#00'\n")
       _T("<END>");
-	int n;
-	TCHAR buffer[64];
-
    if (!SQLBatch(m_szBatch))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
 	// Convert event log retention time from seconds to days
-	n = ConfigReadInt(_T("EventLogRetentionTime"), 5184000) / 86400;
+	int n = DBMgrConfigReadInt32(_T("EventLogRetentionTime"), 5184000) / 86400;
+   TCHAR buffer[64];
 	_sntprintf(buffer, 64, _T("%d"), std::max(n, 1));
    if (!CreateConfigParam(_T("EventLogRetentionTime"), buffer, 1, 0, TRUE))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
 	// Convert event log retention time from seconds to days
-	n = ConfigReadInt(_T("SyslogRetentionTime"), 5184000) / 86400;
+	n = DBMgrConfigReadInt32(_T("SyslogRetentionTime"), 5184000) / 86400;
 	_sntprintf(buffer, 64, _T("%d"), std::max(n, 1));
    if (!CreateConfigParam(_T("SyslogRetentionTime"), buffer, 1, 0, TRUE))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
 	if (!SQLQuery(_T("UPDATE config SET var_value='70' WHERE var_name='DBFormatVersion'")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    return TRUE;
@@ -8449,19 +8443,19 @@ static BOOL H_UpgradeFromV68(int currVersion, int newVersion)
 	                 _T("object_id integer not null,")
 	                 _T("message $SQL:TEXT not null,")
 	                 _T("PRIMARY KEY(record_id))")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!CreateConfigParam(_T("EnableAuditLog"), _T("1"), 1, 1))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!CreateConfigParam(_T("AuditLogRetentionTime"), _T("90"), 1, 0))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
 	if (!SQLQuery(_T("UPDATE config SET var_value='69' WHERE var_name='DBFormatVersion'")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    return TRUE;
@@ -8480,15 +8474,15 @@ static BOOL H_UpgradeFromV67(int currVersion, int newVersion)
       _T("<END>");
 
    if (!SQLBatch(m_szBatch))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!CreateConfigParam(_T("ThresholdRepeatInterval"), _T("0"), 1, 1))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
 	if (!SQLQuery(_T("UPDATE config SET var_value='68' WHERE var_name='DBFormatVersion'")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    return TRUE;
@@ -8509,11 +8503,11 @@ static BOOL H_UpgradeFromV66(int currVersion, int newVersion)
       _T("<END>");
 
    if (!SQLBatch(m_szBatch))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
 	if (!SQLQuery(_T("UPDATE config SET var_value='67' WHERE var_name='DBFormatVersion'")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    return TRUE;
@@ -8533,11 +8527,11 @@ static BOOL H_UpgradeFromV65(int currVersion, int newVersion)
       _T("<END>");
 
    if (!SQLBatch(m_szBatch))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
 	if (!SQLQuery(_T("UPDATE config SET var_value='66' WHERE var_name='DBFormatVersion'")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    return TRUE;
@@ -8561,24 +8555,24 @@ static BOOL H_UpgradeFromV64(int currVersion, int newVersion)
 		case DB_SYNTAX_MYSQL:
 		case DB_SYNTAX_ORACLE:
 			if (!SQLQuery(_T("ALTER TABLE nodes MODIFY community varchar(127)")))
-		      if (!g_bIgnoreErrors)
+		      if (!g_ignoreErrors)
 					return FALSE;
 			break;
 		case DB_SYNTAX_PGSQL:
-			if (g_bTrace)
+			if (IsQueryTraceEnabled())
 				ShowQuery(_T("ALTER TABLE nodes ALTER COLUMN community TYPE varchar(127)"));
 
-			if (!DBQuery(g_hCoreDB, _T("ALTER TABLE nodes ALTER COLUMN community TYPE varchar(127)")))
+			if (!DBQuery(g_dbHandle, _T("ALTER TABLE nodes ALTER COLUMN community TYPE varchar(127)")))
 			{
 				// Assume that we are using PostgreSQL oldest than 8.x
 				if (!SQLBatch(m_szPGSQLBatch))
-					if (!g_bIgnoreErrors)
+					if (!g_ignoreErrors)
 						return FALSE;
 			}
 			break;
 		case DB_SYNTAX_MSSQL:
 			if (!SQLQuery(_T("ALTER TABLE nodes ALTER COLUMN community varchar(127)")))
-		      if (!g_bIgnoreErrors)
+		      if (!g_ignoreErrors)
 					return FALSE;
 			break;
 		case DB_SYNTAX_SQLITE:
@@ -8590,7 +8584,7 @@ static BOOL H_UpgradeFromV64(int currVersion, int newVersion)
 	}
 
 	if (!SQLQuery(_T("UPDATE config SET var_value='65' WHERE var_name='DBFormatVersion'")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    return TRUE;
@@ -8624,11 +8618,11 @@ static BOOL H_UpgradeFromV63(int currVersion, int newVersion)
       _T("<END>");
 
    if (!SQLBatch(m_szBatch))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
 	if (!SQLQuery(_T("UPDATE config SET var_value='64' WHERE var_name='DBFormatVersion'")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    return TRUE;
@@ -8669,11 +8663,11 @@ static BOOL H_UpgradeFromV62(int currVersion, int newVersion)
       _T("<END>");
 
    if (!SQLBatch(m_szBatch))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
 	if (!SQLQuery(_T("UPDATE config SET var_value='63' WHERE var_name='DBFormatVersion'")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    return TRUE;
@@ -8709,7 +8703,7 @@ static BOOL H_UpgradeFromV61(int currVersion, int newVersion)
       _T("<END>");
 
    if (!SQLBatch(m_szBatch))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
 	if (!CreateTable(_T("CREATE TABLE lpp_groups (")
@@ -8717,7 +8711,7 @@ static BOOL H_UpgradeFromV61(int currVersion, int newVersion)
 	                 _T("lpp_group_name varchar(63) not null,")
 	                 _T("parent_group integer not null,")
 	                 _T("PRIMARY KEY(lpp_group_id))")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
 	if (!CreateTable(_T("CREATE TABLE lpp (")
@@ -8727,21 +8721,21 @@ static BOOL H_UpgradeFromV61(int currVersion, int newVersion)
 	                 _T("lpp_version integer not null,")
 	                 _T("lpp_flags integer not null,")
 	                 _T("PRIMARY KEY(lpp_id))")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
 	if (!CreateTable(_T("CREATE TABLE lpp_associations (")
 	                 _T("lpp_id integer not null,")
 	                 _T("node_id integer not null,")
 	                 _T("log_file varchar(255) not null)")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
 	if (!CreateTable(_T("CREATE TABLE lpp_rulesets (")
 	                 _T("ruleset_id integer not null,")
 	                 _T("ruleset_name varchar(63),")
 	                 _T("PRIMARY KEY(ruleset_id))")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
 	if (!CreateTable(_T("CREATE TABLE lpp_rules (")
@@ -8755,11 +8749,11 @@ static BOOL H_UpgradeFromV61(int currVersion, int newVersion)
 	                 _T("msg_text_regexp varchar(255) not null,")
 	                 _T("event_code integer not null,")
 	                 _T("PRIMARY KEY(lpp_id,rule_number))")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
 	if (!SQLQuery(_T("UPDATE config SET var_value='62' WHERE var_name='DBFormatVersion'")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    return TRUE;
@@ -8820,19 +8814,19 @@ static BOOL H_UpgradeFromV60(int currVersion, int newVersion)
       _T("<END>");
 
    if (!SQLBatch(m_szBatch))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!CreateConfigParam(_T("TopologyExpirationTime"), _T("900"), 1, 0))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!CreateConfigParam(_T("TopologyDiscoveryRadius"), _T("3"), 1, 0))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!SQLQuery(_T("UPDATE config SET var_value='61' WHERE var_name='DBFormatVersion'")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    return TRUE;
@@ -8852,15 +8846,15 @@ static BOOL H_UpgradeFromV59(int currVersion, int newVersion)
 	                 _T("subject $SQL:TEXT not null,")
 	                 _T("comments $SQL:TEXT not null,")
 	                 _T("PRIMARY KEY(cert_id))")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!CreateConfigParam(_T("SNMPRequestTimeout"), _T("2000"), 1, 1))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!SQLQuery(_T("UPDATE config SET var_value='60' WHERE var_name='DBFormatVersion'")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    return TRUE;
@@ -8881,15 +8875,15 @@ static BOOL H_UpgradeFromV58(int currVersion, int newVersion)
       _T("<END>");
 
    if (!SQLBatch(m_szBatch))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!CreateConfigParam(_T("InternalCA"), _T("0"), 1, 1))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!SQLQuery(_T("UPDATE config SET var_value='59' WHERE var_name='DBFormatVersion'")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    return TRUE;
@@ -8908,7 +8902,7 @@ static BOOL H_UpgradeFromV57(int currVersion, int newVersion)
       _T("<END>");
 
    if (!SQLBatch(m_szBatch))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
 	if (!CreateTable(_T("CREATE TABLE graphs (")
@@ -8917,7 +8911,7 @@ static BOOL H_UpgradeFromV57(int currVersion, int newVersion)
 	                 _T("name varchar(255) not null,")
 	                 _T("config $SQL:TEXT not null,")
 	                 _T("PRIMARY KEY(graph_id))")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
 	if (!CreateTable(_T("CREATE TABLE graph_acl (")
@@ -8925,11 +8919,11 @@ static BOOL H_UpgradeFromV57(int currVersion, int newVersion)
 	                 _T("user_id integer not null,")
 	                 _T("user_rights integer not null,")
 	                 _T("PRIMARY KEY(graph_id,user_id))")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!SQLQuery(_T("UPDATE config SET var_value='58' WHERE var_name='DBFormatVersion'")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    return TRUE;
@@ -8950,11 +8944,11 @@ static BOOL H_UpgradeFromV56(int currVersion, int newVersion)
       _T("<END>");
 
    if (!SQLBatch(m_szBatch))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!SQLQuery(_T("UPDATE config SET var_value='57' WHERE var_name='DBFormatVersion'")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    return TRUE;
@@ -8997,7 +8991,7 @@ static BOOL H_UpgradeFromV55(int currVersion, int newVersion)
       _T("<END>");
 
    if (!SQLBatch(m_szBatch))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
 	if (!CreateTable(_T("CREATE TABLE cluster_resources (")
@@ -9006,11 +9000,11 @@ static BOOL H_UpgradeFromV55(int currVersion, int newVersion)
 	                 _T("resource_name varchar(255) not null,")
 	                 _T("ip_addr varchar(15) not null,")
 	                 _T("PRIMARY KEY(cluster_id,resource_id))")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!SQLQuery(_T("UPDATE config SET var_value='56' WHERE var_name='DBFormatVersion'")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    return TRUE;
@@ -9039,21 +9033,21 @@ static BOOL H_UpgradeFromV54(int currVersion, int newVersion)
       _T("<END>");
 
    if (!SQLBatch(m_szBatch))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!CreateTable(_T("CREATE TABLE clusters (")
 	                 _T("id integer not null,")
 	                 _T("cluster_type integer not null,")
 	                 _T("PRIMARY KEY(id))")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
 	if (!CreateTable(_T("CREATE TABLE cluster_members (")
 	                 _T("cluster_id integer not null,")
 	                 _T("node_id integer not null,")
 	                 _T("PRIMARY KEY(cluster_id,node_id))")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
 	if (!CreateTable(_T("CREATE TABLE cluster_sync_subnets (")
@@ -9061,15 +9055,15 @@ static BOOL H_UpgradeFromV54(int currVersion, int newVersion)
 	                 _T("subnet_addr varchar(15) not null,")
 	                 _T("subnet_mask varchar(15) not null,")
 	                 _T("PRIMARY KEY(cluster_id,subnet_addr))")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!CreateConfigParam(_T("WindowsConsoleUpgradeURL"), _T("http://www.netxms.org/download/netxms-%version%.exe"), 1, 0))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!SQLQuery(_T("UPDATE config SET var_value='55' WHERE var_name='DBFormatVersion'")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    return TRUE;
@@ -9091,27 +9085,27 @@ static BOOL H_UpgradeFromV53(int currVersion, int newVersion)
 	                 _T("addr_type integer not null,")
 	                 _T("addr1 varchar(15) not null,")
 	                 _T("addr2 varchar(15) not null)")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!SQLBatch(m_szBatch))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!CreateConfigParam(_T("ActiveNetworkDiscovery"), _T("0"), 1, 1))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!CreateConfigParam(_T("ActiveDiscoveryInterval"), _T("7200"), 1, 1))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!CreateConfigParam(_T("DiscoveryFilterFlags"), _T("0"), 1, 0))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!SQLQuery(_T("UPDATE config SET var_value='54' WHERE var_name='DBFormatVersion'")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    return TRUE;
@@ -9150,7 +9144,7 @@ static BOOL H_UpgradeFromV52(int currVersion, int newVersion)
 
       // Drop old indexes
       _sntprintf(szQuery, 1024, _T("DROP INDEX idx_idata_%d_timestamp"), dwId);
-      DBQuery(g_hCoreDB, szQuery);
+      DBQuery(g_dbHandle, szQuery);
 
       // Create new index
       _sntprintf(szQuery, 1024, pszNewIdx[g_dbSyntax], dwId, dwId);
@@ -9160,13 +9154,13 @@ static BOOL H_UpgradeFromV52(int currVersion, int newVersion)
    DBFreeResult(hResult);
 
    // Update index creation command
-   DBQuery(g_hCoreDB, _T("DELETE FROM config WHERE var_name='IDataIndexCreationCommand_1'"));
+   DBQuery(g_dbHandle, _T("DELETE FROM config WHERE var_name='IDataIndexCreationCommand_1'"));
    if (!CreateConfigParam(_T("IDataIndexCreationCommand_1"), pszNewIdx[g_dbSyntax], 0, 1))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!SQLQuery(_T("UPDATE config SET var_value='53' WHERE var_name='DBFormatVersion'")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    return TRUE;
@@ -9200,15 +9194,15 @@ static BOOL H_UpgradeFromV51(int currVersion, int newVersion)
       _T("<END>");
 
    if (!SQLBatch(m_szBatch))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!CreateConfigParam(_T("MailEncoding"), _T("iso-8859-1"), 1, 0))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!SQLQuery(_T("UPDATE config SET var_value='52' WHERE var_name='DBFormatVersion'")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    return TRUE;
@@ -9228,11 +9222,11 @@ static BOOL H_UpgradeFromV50(int currVersion, int newVersion)
       _T("<END>");
 
    if (!SQLBatch(m_szBatch))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!SQLQuery(_T("UPDATE config SET var_value='51' WHERE var_name='DBFormatVersion'")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    return TRUE;
@@ -9255,11 +9249,11 @@ static BOOL H_UpgradeFromV49(int currVersion, int newVersion)
       _T("<END>");
 
    if (!SQLBatch(m_szBatch))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!SQLQuery(_T("UPDATE config SET var_value='50' WHERE var_name='DBFormatVersion'")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    return TRUE;
@@ -9280,11 +9274,11 @@ static BOOL H_UpgradeFromV48(int currVersion, int newVersion)
       _T("<END>");
 
    if (!SQLBatch(m_szBatch))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!SQLQuery(_T("UPDATE config SET var_value='49' WHERE var_name='DBFormatVersion'")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    return TRUE;
@@ -9303,14 +9297,14 @@ static BOOL H_UpgradeFromV47(int currVersion, int newVersion)
       _T("<END>");
 
    if (!SQLBatch(m_szBatch))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!CreateTable(_T("CREATE TABLE policy_time_range_list (")
 		              _T("rule_id integer not null,")
 		              _T("time_range_id integer not null,")
 		              _T("PRIMARY KEY(rule_id,time_range_id))")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!CreateTable(_T("CREATE TABLE time_ranges (")
@@ -9320,11 +9314,11 @@ static BOOL H_UpgradeFromV47(int currVersion, int newVersion)
 		              _T("month_mask integer not null,")
 		              _T("time_range varchar(255) not null,")
 		              _T("PRIMARY KEY(time_range_id))")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!SQLQuery(_T("UPDATE config SET var_value='48' WHERE var_name='DBFormatVersion'")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    return TRUE;
@@ -9368,7 +9362,7 @@ static BOOL H_UpgradeFromV46(int currVersion, int newVersion)
       _T("<END>");
 
    if (!SQLBatch(m_szBatch))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!CreateTable(_T("CREATE TABLE alarm_notes (")
@@ -9378,7 +9372,7 @@ static BOOL H_UpgradeFromV46(int currVersion, int newVersion)
 		                 _T("user_id integer not null,")
 		                 _T("note_text $SQL:TEXT not null,")
 		                 _T("PRIMARY KEY(note_id))")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!CreateTable(_T("CREATE TABLE alarm_change_log	(")
@@ -9389,29 +9383,29 @@ static BOOL H_UpgradeFromV46(int currVersion, int newVersion)
 		                 _T("user_id integer not null,")
 		                 _T("info_text $SQL:TEXT not null,")
 		                 _T("PRIMARY KEY(change_id))")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!CreateTable(_T("CREATE TABLE alarm_grops (")
 		                 _T("alarm_group_id integer not null,")
 		                 _T("group_name varchar(255) not null,")
 		                 _T("PRIMARY KEY(alarm_group_id))")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!CreateTable(_T("CREATE TABLE alarm_group_map (")
 		                 _T("alarm_group_id integer not null,")
                        _T("alarm_id integer not null,")
 		                 _T("PRIMARY KEY(alarm_group_id,alarm_id))")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!SQLBatch(m_szBatch2))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!SQLQuery(_T("UPDATE config SET var_value='47' WHERE var_name='DBFormatVersion'")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    return TRUE;
@@ -9471,11 +9465,11 @@ static BOOL H_UpgradeFromV45(int currVersion, int newVersion)
       _T("<END>");
 
    if (!SQLBatch(m_szBatch))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!SQLQuery(_T("UPDATE config SET var_value='46' WHERE var_name='DBFormatVersion'")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    return TRUE;
@@ -9502,11 +9496,11 @@ static BOOL H_UpgradeFromV44(int currVersion, int newVersion)
       _T("<END>");
 
    if (!SQLBatch(m_szBatch))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!SQLQuery(_T("UPDATE config SET var_value='45' WHERE var_name='DBFormatVersion'")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    return TRUE;
@@ -9541,19 +9535,19 @@ static BOOL H_UpgradeFromV43(int currVersion, int newVersion)
 		                 _T("config_filter $SQL:TEXT not null,")
 		                 _T("sequence_number integer not null,")
 		                 _T("PRIMARY KEY(config_id))")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!SQLBatch(m_szBatch))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!CreateConfigParam(_T("DBLockPID"), _T("0"), 0, 0))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!SQLQuery(_T("UPDATE config SET var_value='44' WHERE var_name='DBFormatVersion'")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    return TRUE;
@@ -9567,11 +9561,11 @@ static BOOL H_UpgradeFromV43(int currVersion, int newVersion)
 static BOOL H_UpgradeFromV42(int currVersion, int newVersion)
 {
    if (!CreateConfigParam(_T("RADIUSPort"), _T("1645"), 1, 0))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!SQLQuery(_T("UPDATE config SET var_value='43' WHERE var_name='DBFormatVersion'")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    return TRUE;
@@ -9612,7 +9606,7 @@ static BOOL H_UpgradeFromV41(int currVersion, int newVersion)
 		                 _T("inactive_status integer not null,")
 		                 _T("script $SQL:TEXT not null,")
 		                 _T("PRIMARY KEY(id))")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!CreateTable(_T("CREATE TABLE cond_dci_map (")
@@ -9622,23 +9616,23 @@ static BOOL H_UpgradeFromV41(int currVersion, int newVersion)
 		                 _T("dci_func integer not null,")
 		                 _T("num_polls integer not null,")
 		                 _T("PRIMARY KEY(condition_id,dci_id))")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!SQLBatch(m_szBatch))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!CreateConfigParam(_T("NumberOfConditionPollers"), _T("10"), 1, 1))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!CreateConfigParam(_T("ConditionPollingInterval"), _T("60"), 1, 1))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!SQLQuery(_T("UPDATE config SET var_value='42' WHERE var_name='DBFormatVersion'")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    return TRUE;
@@ -9664,7 +9658,7 @@ static BOOL H_UpgradeFromV40(int currVersion, int newVersion)
    TCHAR szQuery[256], szGUID[64];
 
    if (!SQLBatch(m_szBatch))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    // Generate GUIDs for users and groups
@@ -9681,7 +9675,7 @@ static BOOL H_UpgradeFromV40(int currVersion, int newVersion)
          _sntprintf(szQuery, 256, _T("UPDATE users SET guid='%s' WHERE id=%d"),
                     _uuid_to_string(guid, szGUID), dwId);
          if (!SQLQuery(szQuery))
-            if (!g_bIgnoreErrors)
+            if (!g_ignoreErrors)
             {
                DBFreeResult(hResult);
                return FALSE;
@@ -9701,7 +9695,7 @@ static BOOL H_UpgradeFromV40(int currVersion, int newVersion)
          _sntprintf(szQuery, 256, _T("UPDATE user_groups SET guid='%s' WHERE id=%d"),
                     _uuid_to_string(guid, szGUID), dwId);
          if (!SQLQuery(szQuery))
-            if (!g_bIgnoreErrors)
+            if (!g_ignoreErrors)
             {
                DBFreeResult(hResult);
                return FALSE;
@@ -9711,23 +9705,23 @@ static BOOL H_UpgradeFromV40(int currVersion, int newVersion)
    }
 
    if (!CreateConfigParam(_T("RADIUSServer"), _T("localhost"), 1, 0))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!CreateConfigParam(_T("RADIUSSecret"), _T("netxms"), 1, 0))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!CreateConfigParam(_T("RADIUSNumRetries"), _T("5"), 1, 0))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!CreateConfigParam(_T("RADIUSTimeout"), _T("3"), 1, 0))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!SQLQuery(_T("UPDATE config SET var_value='41' WHERE var_name='DBFormatVersion'")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    return TRUE;
@@ -9746,11 +9740,11 @@ static BOOL H_UpgradeFromV39(int currVersion, int newVersion)
       _T("<END>");
 
    if (!SQLBatch(m_szBatch))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!SQLQuery(_T("UPDATE config SET var_value='40' WHERE var_name='DBFormatVersion'")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    return TRUE;
@@ -9783,7 +9777,7 @@ static BOOL H_UpgradeFromV38(int currVersion, int newVersion)
 		                 _T("description $SQL:TEXT not null,")
 		                 _T("root_object_id integer not null,")
 		                 _T("PRIMARY KEY(map_id))")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!CreateTable(_T("CREATE TABLE map_access_lists (")
@@ -9791,7 +9785,7 @@ static BOOL H_UpgradeFromV38(int currVersion, int newVersion)
 		                 _T("user_id integer not null,")
 		                 _T("access_rights integer not null,")
 		                 _T("PRIMARY KEY(map_id,user_id))")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!CreateTable(_T("CREATE TABLE submaps (")
@@ -9799,7 +9793,7 @@ static BOOL H_UpgradeFromV38(int currVersion, int newVersion)
 		                 _T("submap_id integer not null,")
 		                 _T("attributes integer not null,")
 		                 _T("PRIMARY KEY(map_id,submap_id))")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!CreateTable(_T("CREATE TABLE submap_object_positions (")
@@ -9809,7 +9803,7 @@ static BOOL H_UpgradeFromV38(int currVersion, int newVersion)
 		                 _T("x integer not null,")
 		                 _T("y integer not null,")
 		                 _T("PRIMARY KEY(map_id,submap_id,object_id))")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!CreateTable(_T("CREATE TABLE submap_links (")
@@ -9819,23 +9813,23 @@ static BOOL H_UpgradeFromV38(int currVersion, int newVersion)
 		                 _T("object_id2 integer not null,")
 		                 _T("link_type integer not null,")
 		                 _T("PRIMARY KEY(map_id,submap_id,object_id1,object_id2))")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!SQLBatch(m_szBatch))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!CreateConfigParam(_T("LockTimeout"), _T("60000"), 1, 1))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!CreateConfigParam(_T("DisableVacuum"), _T("0"), 1, 0))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!SQLQuery(_T("UPDATE config SET var_value='39' WHERE var_name='DBFormatVersion'")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    return TRUE;
@@ -9863,19 +9857,19 @@ static BOOL H_UpgradeFromV37(int currVersion, int newVersion)
 		                 _T("trap_varlist $SQL:TEXT not null,")
 		                 _T("PRIMARY KEY(trap_id))")))
 
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!SQLBatch(m_szBatch))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!CreateConfigParam(_T("LogAllSNMPTraps"), _T("0"), 1, 1))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!SQLQuery(_T("UPDATE config SET var_value='38' WHERE var_name='DBFormatVersion'")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    return TRUE;
@@ -9906,23 +9900,23 @@ static BOOL H_UpgradeFromV36(int currVersion, int newVersion)
 		              _T("script_name varchar(63) not null,")
 		              _T("script_code $SQL:TEXT not null,")
 		              _T("PRIMARY KEY(script_id))")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!SQLBatch(m_szBatch))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!CreateConfigParam(_T("DefaultCommunityString"), _T("public"), 1, 0))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!CreateConfigParam(_T("DiscoveryFilter"), _T("none"), 1, 0))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!SQLQuery(_T("UPDATE config SET var_value='37' WHERE var_name='DBFormatVersion'")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    return TRUE;
@@ -9943,15 +9937,15 @@ static BOOL H_UpgradeFromV35(int currVersion, int newVersion)
       _T("<END>");
 
    if (!SQLBatch(m_szBatch))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!CreateConfigParam(_T("CapabilityExpirationTime"), _T("604800"), 1, 0))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!SQLQuery(_T("UPDATE config SET var_value='36' WHERE var_name='DBFormatVersion'")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    return TRUE;
@@ -9980,39 +9974,39 @@ static BOOL H_UpgradeFromV34(int currVersion, int newVersion)
       _T("<END>");
 
    if (!SQLBatch(m_szBatch))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!CreateConfigParam(_T("StatusCalculationAlgorithm"), _T("1"), 1, 1))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!CreateConfigParam(_T("StatusPropagationAlgorithm"), _T("1"), 1, 1))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!CreateConfigParam(_T("FixedStatusValue"), _T("0"), 1, 1))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!CreateConfigParam(_T("StatusShift"), _T("0"), 1, 1))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!CreateConfigParam(_T("StatusTranslation"), _T("01020304"), 1, 1))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!CreateConfigParam(_T("StatusSingleThreshold"), _T("75"), 1, 1))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!CreateConfigParam(_T("StatusThresholds"), _T("503C2814"), 1, 1))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!SQLQuery(_T("UPDATE config SET var_value='35' WHERE var_name='DBFormatVersion'")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    return TRUE;
@@ -10031,13 +10025,13 @@ static BOOL H_UpgradeFromV33(int currVersion, int newVersion)
       _T("<END>");
 
    if (!SQLBatch(m_szBatch))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!CreateTable(_T("CREATE TABLE dci_schedules (")
 		                 _T("item_id integer not null,")
                        _T("schedule varchar(255) not null)")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!CreateTable(_T("CREATE TABLE syslog (")
@@ -10050,31 +10044,31 @@ static BOOL H_UpgradeFromV33(int currVersion, int newVersion)
 		                 _T("msg_tag varchar(32) not null,")
 		                 _T("msg_text $SQL:TEXT not null,")
 		                 _T("PRIMARY KEY(msg_id))")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!CreateConfigParam(_T("IcmpPingSize"), _T("46"), 1, 1))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!CreateConfigParam(_T("SMSDrvConfig"), _T(""), 1, 1))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!CreateConfigParam(_T("EnableSyslogDaemon"), _T("0"), 1, 1))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!CreateConfigParam(_T("SyslogListenPort"), _T("514"), 1, 1))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!CreateConfigParam(_T("SyslogRetentionTime"), _T("5184000"), 1, 0))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!SQLQuery(_T("UPDATE config SET var_value='34' WHERE var_name='DBFormatVersion'")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    return TRUE;
@@ -10152,15 +10146,15 @@ static BOOL H_UpgradeFromV32(int currVersion, int newVersion)
 		                 _T("col_format integer,")
 		                 _T("col_substr integer,")
 		                 _T("PRIMARY KEY(tool_id,col_number))")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!SQLBatch(m_szBatch))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!SQLQuery(_T("UPDATE config SET var_value='33' WHERE var_name='DBFormatVersion'")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    return TRUE;
@@ -10196,22 +10190,22 @@ static BOOL H_UpgradeFromV31(int currVersion, int newVersion)
 	                    _T("description varchar(255),")
 	                    _T("flags integer not null,")
 	                    _T("PRIMARY KEY(tool_id))")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!CreateTable(_T("CREATE TABLE object_tools_acl (")
 	                    _T("tool_id integer not null,")
 	                    _T("user_id integer not null,")
 	                    _T("PRIMARY KEY(tool_id,user_id))")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!SQLBatch(m_szBatch))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!SQLQuery(_T("UPDATE config SET var_value='32' WHERE var_name='DBFormatVersion'")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    return TRUE;
@@ -10233,7 +10227,7 @@ static BOOL H_UpgradeFromV30(int currVersion, int newVersion)
       _T("<END>");
 
    if (!SQLBatch(m_szBatch))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!CreateTable(_T("CREATE TABLE vpn_connectors (")
@@ -10241,7 +10235,7 @@ static BOOL H_UpgradeFromV30(int currVersion, int newVersion)
 		                 _T("node_id integer not null,")
 		                 _T("peer_gateway integer not null,")
 		                 _T("PRIMARY KEY(id))")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!CreateTable(_T("CREATE TABLE vpn_connector_networks (")
@@ -10250,19 +10244,19 @@ static BOOL H_UpgradeFromV30(int currVersion, int newVersion)
 		                 _T("ip_addr varchar(15) not null,")
 		                 _T("ip_netmask varchar(15) not null,")
 		                 _T("PRIMARY KEY(vpn_id,ip_addr))")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!CreateConfigParam(_T("NumberOfRoutingTablePollers"), _T("5"), 1, 1))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!CreateConfigParam(_T("RoutingTableUpdateInterval"), _T("300"), 1, 1))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!SQLQuery(_T("UPDATE config SET var_value='31' WHERE var_name='DBFormatVersion'")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    return TRUE;
@@ -10281,35 +10275,35 @@ static BOOL H_UpgradeFromV29(int currVersion, int newVersion)
       _T("<END>");
 
    if (!SQLBatch(m_szBatch))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!CreateConfigParam(_T("StatusCalculationAlgorithm"), _T("0"), 1, 1))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!CreateConfigParam(_T("EnableMultipleDBConnections"), _T("1"), 1, 1))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!CreateConfigParam(_T("NumberOfDatabaseWriters"), _T("1"), 1, 1))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!CreateConfigParam(_T("DefaultEncryptionPolicy"), _T("1"), 1, 1))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!CreateConfigParam(_T("AllowedCiphers"), _T("15"), 1, 1))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!CreateConfigParam(_T("KeepAliveInterval"), _T("60"), 1, 1))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!SQLQuery(_T("UPDATE config SET var_value='30' WHERE var_name='DBFormatVersion'")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    return TRUE;
@@ -10340,26 +10334,26 @@ static BOOL H_UpgradeFromV28(int currVersion, int newVersion)
 	                    _T("controller_ip varchar(15) not null,")
 	                    _T("description $SQL:TEXT,")
 	                    _T("PRIMARY KEY(id))")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!CreateTable(_T("CREATE TABLE zone_ip_addr_list (")
 	                    _T("zone_id integer not null,")
 	                    _T("ip_addr varchar(15) not null,")
 	                    _T("PRIMARY KEY(zone_id,ip_addr))")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!SQLBatch(m_szBatch))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!CreateConfigParam(_T("EnableZoning"), _T("0"), 1, 1))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!SQLQuery(_T("UPDATE config SET var_value='29' WHERE var_name='DBFormatVersion'")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    return TRUE;
@@ -10382,11 +10376,11 @@ static BOOL H_UpgradeFromV27(int currVersion, int newVersion)
       _T("<END>");
 
    if (!SQLBatch(m_szBatch))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!SQLQuery(_T("UPDATE config SET var_value='28' WHERE var_name='DBFormatVersion'")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    return TRUE;
@@ -10429,7 +10423,7 @@ static BOOL MoveObjectData(DWORD dwId, BOOL bInheritRights)
       }
       else
       {
-         if (!g_bIgnoreErrors)
+         if (!g_ignoreErrors)
             return FALSE;
       }
    }
@@ -10442,7 +10436,7 @@ static BOOL MoveObjectData(DWORD dwId, BOOL bInheritRights)
                  dwId, szName, dwStatus, bIsDeleted, dwImageId, bInheritRights, (INT64)time(NULL));
 
       if (!SQLQuery(szQuery))
-         if (!g_bIgnoreErrors)
+         if (!g_ignoreErrors)
             return FALSE;
    }
    else
@@ -10510,7 +10504,7 @@ static BOOL H_UpgradeFromV26(int currVersion, int newVersion)
 	                    _T("last_modified integer not null,")
 	                    _T("inherit_access_rights integer not null,")
 	                    _T("PRIMARY KEY(object_id))")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!CreateTable(_T("CREATE TABLE user_profiles (")
@@ -10518,7 +10512,7 @@ static BOOL H_UpgradeFromV26(int currVersion, int newVersion)
 	                    _T("var_name varchar(63) not null,")
 	                    _T("var_value $SQL:TEXT,")
 	                    _T("PRIMARY KEY(user_id,var_name))")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    // Move data from access_options and class-specific tables to object_properties
@@ -10546,19 +10540,19 @@ static BOOL H_UpgradeFromV26(int currVersion, int newVersion)
             switch(dwId)
             {
                case 1:     // Topology Root
-                  ConfigReadStr(_T("TopologyRootObjectName"), szName,
+                  DBMgrConfigReadStr(_T("TopologyRootObjectName"), szName,
                                 MAX_OBJECT_NAME, _T("Entire Network"));
-                  dwImageId = ConfigReadULong(_T("TopologyRootImageId"), 0);
+                  dwImageId = DBMgrConfigReadUInt32(_T("TopologyRootImageId"), 0);
                   break;
                case 2:     // Service Root
-                  ConfigReadStr(_T("ServiceRootObjectName"), szName,
+                  DBMgrConfigReadStr(_T("ServiceRootObjectName"), szName,
                                 MAX_OBJECT_NAME, _T("All Services"));
-                  dwImageId = ConfigReadULong(_T("ServiceRootImageId"), 0);
+                  dwImageId = DBMgrConfigReadUInt32(_T("ServiceRootImageId"), 0);
                   break;
                case 3:     // Template Root
-                  ConfigReadStr(_T("TemplateRootObjectName"), szName,
+                  DBMgrConfigReadStr(_T("TemplateRootObjectName"), szName,
                                 MAX_OBJECT_NAME, _T("All Services"));
-                  dwImageId = ConfigReadULong(_T("TemplateRootImageId"), 0);
+                  dwImageId = DBMgrConfigReadUInt32(_T("TemplateRootImageId"), 0);
                   break;
                default:
                   bValidObject = FALSE;
@@ -10575,7 +10569,7 @@ static BOOL H_UpgradeFromV26(int currVersion, int newVersion)
                           (INT64)time(NULL));
 
                if (!SQLQuery(szQuery))
-                  if (!g_bIgnoreErrors)
+                  if (!g_ignoreErrors)
                      return FALSE;
             }
             else
@@ -10588,16 +10582,16 @@ static BOOL H_UpgradeFromV26(int currVersion, int newVersion)
    }
    else
    {
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
    }
 
    if (!SQLBatch(m_szBatch))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!SQLQuery(_T("UPDATE config SET var_value='27' WHERE var_name='DBFormatVersion'")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    return TRUE;
@@ -10621,7 +10615,7 @@ static BOOL H_UpgradeFromV25(int currVersion, int newVersion)
          if (!CreateConfigParam(_T("IDataIndexCreationCommand_0"),
                                 DBGetField(hResult, 0, 0, szTemp, 512), 0, 1))
          {
-            if (!g_bIgnoreErrors)
+            if (!g_ignoreErrors)
             {
                DBFreeResult(hResult);
                return FALSE;
@@ -10631,17 +10625,17 @@ static BOOL H_UpgradeFromV25(int currVersion, int newVersion)
       DBFreeResult(hResult);
 
       if (!SQLQuery(_T("DELETE FROM config WHERE var_name='IDataIndexCreationCommand'")))
-         if (!g_bIgnoreErrors)
+         if (!g_ignoreErrors)
             return FALSE;
    }
 
    if (!CreateConfigParam(_T("IDataIndexCreationCommand_1"),
                           _T("CREATE INDEX idx_timestamp ON idata_%d(idata_timestamp)"), 0, 1))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!SQLQuery(_T("UPDATE config SET var_value='26' WHERE var_name='DBFormatVersion'")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    return TRUE;
@@ -10671,7 +10665,7 @@ static BOOL H_UpgradeFromV24(int currVersion, int newVersion)
             _tprintf(_T("Creating indexes for table \"idata_%d\"...\n"), dwNodeId);
             _sntprintf(szQuery, 256, _T("CREATE INDEX idx_timestamp ON idata_%d(idata_timestamp)"), dwNodeId);
             if (!SQLQuery(szQuery))
-               if (!g_bIgnoreErrors)
+               if (!g_ignoreErrors)
                {
                   DBFreeResult(hResult);
                   return FALSE;
@@ -10681,13 +10675,13 @@ static BOOL H_UpgradeFromV24(int currVersion, int newVersion)
       }
       else
       {
-         if (!g_bIgnoreErrors)
+         if (!g_ignoreErrors)
             return FALSE;
       }
    }
 
    if (!SQLQuery(_T("UPDATE config SET var_value='25' WHERE var_name='DBFormatVersion'")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    return TRUE;
@@ -10709,11 +10703,11 @@ static BOOL H_UpgradeFromV23(int currVersion, int newVersion)
 	                    _T("   raw_value varchar(255),")
 	                    _T("   last_poll_time integer,")
 	                    _T("   PRIMARY KEY(item_id))")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!SQLQuery(_T("CREATE INDEX idx_item_id ON raw_dci_values(item_id)")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
 
@@ -10727,7 +10721,7 @@ static BOOL H_UpgradeFromV23(int currVersion, int newVersion)
          _sntprintf(szQuery, 256, _T("INSERT INTO raw_dci_values (item_id,raw_value,last_poll_time) VALUES (%d,'#00',1)"),
                    DBGetFieldULong(hResult, i, 0));
          if (!SQLQuery(szQuery))
-            if (!g_bIgnoreErrors)
+            if (!g_ignoreErrors)
             {
                DBFreeResult(hResult);
                return FALSE;
@@ -10737,12 +10731,12 @@ static BOOL H_UpgradeFromV23(int currVersion, int newVersion)
    }
    else
    {
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
    }
 
    if (!SQLQuery(_T("UPDATE config SET var_value='24' WHERE var_name='DBFormatVersion'")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    return TRUE;
@@ -10762,11 +10756,11 @@ static BOOL H_UpgradeFromV22(int currVersion, int newVersion)
       _T("<END>");
 
    if (!SQLBatch(m_szBatch))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!SQLQuery(_T("UPDATE config SET var_value='23' WHERE var_name='DBFormatVersion'")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    return TRUE;
@@ -10804,23 +10798,23 @@ static BOOL H_UpgradeFromV21(int currVersion, int newVersion)
       _T("<END>");
 
    if (!SQLBatch(m_szBatch))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!CreateConfigParam(_T("SMSDriver"), _T("<none>"), 1, 1))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!CreateConfigParam(_T("AgentUpgradeWaitTime"), _T("600"), 1, 0))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!CreateConfigParam(_T("NumberOfUpgradeThreads"), _T("10"), 1, 0))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!SQLQuery(_T("UPDATE config SET var_value='22' WHERE var_name='DBFormatVersion'")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    return TRUE;
@@ -10857,7 +10851,7 @@ static BOOL H_UpgradeFromV20(int currVersion, int newVersion)
    TCHAR szQuery[256];
 
    if (!SQLBatch(m_szBatch))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    // Convert "is_xxx" fields into one _T("node_flags") field
@@ -10875,7 +10869,7 @@ static BOOL H_UpgradeFromV20(int currVersion, int newVersion)
          _sntprintf(szQuery, 256, _T("UPDATE nodes SET node_flags=%d WHERE id=%d"),
                     dwFlags, DBGetFieldULong(hResult, i, 0));
          if (!SQLQuery(szQuery))
-            if (!g_bIgnoreErrors)
+            if (!g_ignoreErrors)
             {
                DBFreeResult(hResult);
                return FALSE;
@@ -10885,12 +10879,12 @@ static BOOL H_UpgradeFromV20(int currVersion, int newVersion)
    }
    else
    {
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
    }
 
    if (!SQLBatch(m_szBatch2))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (GetYesNo(_T("Create indexes on existing IDATA tables?")))
@@ -10905,7 +10899,7 @@ static BOOL H_UpgradeFromV20(int currVersion, int newVersion)
             _tprintf(_T("Creating indexes for table \"idata_%d\"...\n"), dwNodeId);
             _sntprintf(szQuery, 256, _T("CREATE INDEX idx_item_id ON idata_%d(item_id)"), dwNodeId);
             if (!SQLQuery(szQuery))
-               if (!g_bIgnoreErrors)
+               if (!g_ignoreErrors)
                {
                   DBFreeResult(hResult);
                   return FALSE;
@@ -10915,23 +10909,23 @@ static BOOL H_UpgradeFromV20(int currVersion, int newVersion)
       }
       else
       {
-         if (!g_bIgnoreErrors)
+         if (!g_ignoreErrors)
             return FALSE;
       }
    }
 
    if (!CreateConfigParam(_T("NumberOfStatusPollers"), _T("10"), 1, 1))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
    if (!CreateConfigParam(_T("NumberOfConfigurationPollers"), _T("4"), 1, 1))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
    if (!CreateConfigParam(_T("IDataIndexCreationCommand"), _T("CREATE INDEX idx_item_id ON idata_%d(item_id)"), 0, 1))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!SQLQuery(_T("UPDATE config SET var_value='21' WHERE var_name='DBFormatVersion'")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    return TRUE;
@@ -10981,7 +10975,7 @@ static BOOL H_UpgradeFromV19(int currVersion, int newVersion)
       _T("<END>");
 
    if (!SQLBatch(m_szBatch))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!CreateTable(_T("CREATE TABLE network_services (")
@@ -10999,11 +10993,11 @@ static BOOL H_UpgradeFromV19(int currVersion, int newVersion)
 	                    _T("poller_node_id integer not null,")
 	                    _T("image_id integer not null,")
 	                    _T("PRIMARY KEY(id))")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!SQLQuery(_T("UPDATE config SET var_value='20' WHERE var_name='DBFormatVersion'")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    return TRUE;
@@ -11022,7 +11016,7 @@ static BOOL H_UpgradeFromV18(int currVersion, int newVersion)
       _T("<END>");
 
    if (!SQLBatch(m_szBatch))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!CreateTable(_T("CREATE TABLE agent_pkg (")
@@ -11033,11 +11027,11 @@ static BOOL H_UpgradeFromV18(int currVersion, int newVersion)
 	                       _T("pkg_file varchar(255),")
 	                       _T("description varchar(255),")
 	                       _T("PRIMARY KEY(pkg_id))")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!SQLQuery(_T("UPDATE config SET var_value='19' WHERE var_name='DBFormatVersion'")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    return TRUE;
@@ -11086,7 +11080,7 @@ static BOOL H_UpgradeFromV17(int currVersion, int newVersion)
 
       if (!SQLQuery(_T("DROP TABLE policy_event_list")))
       {
-         if (!g_bIgnoreErrors)
+         if (!g_ignoreErrors)
          {
             DBFreeResult(hResult);
             return FALSE;
@@ -11098,7 +11092,7 @@ static BOOL H_UpgradeFromV17(int currVersion, int newVersion)
                        _T("event_code integer not null,")
                        _T("PRIMARY KEY(rule_id,event_code))")))
       {
-         if (!g_bIgnoreErrors)
+         if (!g_ignoreErrors)
          {
             DBFreeResult(hResult);
             return FALSE;
@@ -11111,7 +11105,7 @@ static BOOL H_UpgradeFromV17(int currVersion, int newVersion)
          _sntprintf(szQuery, 4096, _T("INSERT INTO policy_event_list (rule_id,event_code) VALUES (%d,%d)"),
                     DBGetFieldULong(hResult, i, 0), DBGetFieldULong(hResult, i, 1));
          if (!SQLQuery(szQuery))
-            if (!g_bIgnoreErrors)
+            if (!g_ignoreErrors)
             {
                DBFreeResult(hResult);
                return FALSE;
@@ -11122,35 +11116,27 @@ static BOOL H_UpgradeFromV17(int currVersion, int newVersion)
    }
    else
    {
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
    }
 
-   _sntprintf(szQuery, 4096,
+   CHK_EXEC(CreateTable(
       _T("CREATE TABLE event_cfg (event_code integer not null,")
 	      _T("event_name varchar(63) not null,severity integer,flags integer,")
-	      _T("message varchar(255),description %s,PRIMARY KEY(event_code))"),
-              g_pszSqlType[g_dbSyntax][SQL_TYPE_TEXT]);
-   if (!SQLQuery(szQuery))
-      if (!g_bIgnoreErrors)
-         return FALSE;
+	      _T("message varchar(255),description $SQL:TEXT,PRIMARY KEY(event_code))")));
 
    if (!SQLBatch(m_szBatch))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
-   _sntprintf(szQuery, 4096,
+   CHK_EXEC(CreateTable(
       _T("CREATE TABLE modules (module_id integer not null,")
 	      _T("module_name varchar(63),exec_name varchar(255),")
-	      _T("module_flags integer not null default 0,description %s,")
-	      _T("license_key varchar(255),PRIMARY KEY(module_id))"),
-              g_pszSqlType[g_dbSyntax][SQL_TYPE_TEXT]);
-   if (!SQLQuery(szQuery))
-      if (!g_bIgnoreErrors)
-         return FALSE;
+	      _T("module_flags integer not null default 0,description $SQL:TEXT,")
+	      _T("license_key varchar(255),PRIMARY KEY(module_id))")));
 
    if (!SQLQuery(_T("UPDATE config SET var_value='18' WHERE var_name='DBFormatVersion'")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    return TRUE;
@@ -11215,35 +11201,35 @@ static BOOL H_UpgradeFromV16(int currVersion, int newVersion)
       _T("<END>");
 
    if (!SQLBatch(m_szBatch))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!CreateConfigParam(_T("DBLockStatus"), _T("UNLOCKED"), 0, 1))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!CreateConfigParam(_T("DBLockInfo"), _T(""), 0, 0))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!CreateConfigParam(_T("EnableSNMPTraps"), _T("1"), 1, 1))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!CreateConfigParam(_T("SMSDriver"), _T("<none>"), 1, 1))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!CreateConfigParam(_T("SMTPServer"), _T("localhost"), 1, 0))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!CreateConfigParam(_T("SMTPFromAddr"), _T("netxms@localhost"), 1, 0))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    if (!SQLQuery(_T("UPDATE config SET var_value='17' WHERE var_name='DBFormatVersion'")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
 
    return TRUE;
@@ -11286,10 +11272,10 @@ static BOOL H_UpgradeFromV15(int currVersion, int newVersion)
       _T("<END>");
 
    if (!SQLBatch(m_szBatch))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
    if (!SQLQuery(_T("UPDATE config SET var_value='16' WHERE var_name='DBFormatVersion'")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
    return TRUE;
 }
@@ -11336,10 +11322,10 @@ static BOOL H_UpgradeFromV14(int currVersion, int newVersion)
       _T("<END>");
 
    if (!SQLBatch(m_szBatch))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
    if (!SQLQuery(_T("UPDATE config SET var_value='15' WHERE var_name='DBFormatVersion'")))
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return FALSE;
    return TRUE;
 }
@@ -11725,7 +11711,7 @@ static struct
 bool MajorSchemaUpgrade_V0()
 {
    INT32 major, version;
-   if (!DBGetSchemaVersion(g_hCoreDB, &major, &version))
+   if (!DBGetSchemaVersion(g_dbHandle, &major, &version))
       return false;
 
    while((major == 0) && (version < DB_LEGACY_SCHEMA_VERSION))
@@ -11741,17 +11727,17 @@ bool MajorSchemaUpgrade_V0()
          return false;
       }
       _tprintf(_T("Upgrading from version 0.%d to 0.%d\n"), version, m_dbUpgradeMap[i].newVersion);
-      DBBegin(g_hCoreDB);
+      DBBegin(g_dbHandle);
       if (m_dbUpgradeMap[i].fpProc(version, m_dbUpgradeMap[i].newVersion))
       {
-         DBCommit(g_hCoreDB);
-         if (!DBGetSchemaVersion(g_hCoreDB, &major, &version))
+         DBCommit(g_dbHandle);
+         if (!DBGetSchemaVersion(g_dbHandle, &major, &version))
             return false;
       }
       else
       {
          _tprintf(_T("Rolling back last stage due to upgrade errors...\n"));
-         DBRollback(g_hCoreDB);
+         DBRollback(g_dbHandle);
          return false;
       }
    }

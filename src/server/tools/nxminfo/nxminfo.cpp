@@ -45,7 +45,7 @@ struct NXMODULE_METADATA_V1
 /**
  * Check if entry point is present
  */
-#define CHECK_ENTRY_POINT(p) _tprintf(_T("   %-16hs : %s\n"), p, (DLGetSymbolAddr(handle, p, NULL) != NULL) ? _T("yes") : _T("no"))
+#define CHECK_ENTRY_POINT(p) _tprintf(_T("   %-20hs : %s\n"), p, (DLGetSymbolAddr(handle, p, NULL) != NULL) ? _T("yes") : _T("no"))
 
 /**
  * Entry point
@@ -135,6 +135,7 @@ int main(int argc, char *argv[])
    CHECK_ENTRY_POINT("NXM_CheckDB");
    CHECK_ENTRY_POINT("NXM_UpgradeDB");
    CHECK_ENTRY_POINT("NXM_GetTables");
+   CHECK_ENTRY_POINT("NXM_GetSchemaPrefix");
 
    DLClose(handle);
 #ifdef UNICODE

@@ -1,6 +1,6 @@
 /*
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004-2017 Victor Kirhenshtein
+** Copyright (C) 2004-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -58,7 +58,7 @@ static bool DeleteDataTables()
 	}
 	else
 	{
-		if (!g_bIgnoreErrors)
+		if (!g_ignoreErrors)
 			return false;
 	}
 
@@ -66,19 +66,28 @@ static bool DeleteDataTables()
 }
 
 /**
+ * Clear table
+ */
+static bool ClearTable(const TCHAR *table, void *userData)
+{
+   TCHAR query[256];
+   if ((g_dbSyntax == DB_SYNTAX_ORACLE) || (g_dbSyntax == DB_SYNTAX_PGSQL))
+      _sntprintf(query, 256, _T("TRUNCATE TABLE %s"), table);
+   else
+      _sntprintf(query, 256, _T("DELETE FROM %s"), table);
+   return SQLQuery(query);
+}
+
+/**
  * Clear tables
  */
 static bool ClearTables()
 {
-	TCHAR query[256];
-	int i;
-
-	for(i = 0; g_tables[i] != NULL; i++)
+	for(int i = 0; g_tables[i] != NULL; i++)
 	{
-		_sntprintf(query, 256, _T("DELETE FROM %s"), g_tables[i]);
-		CHK_EXEC(SQLQuery(query));
+	   CHK_EXEC(ClearTable(g_tables[i], NULL));
 	}
-	return true;
+	return EnumerateModuleTables(ClearTable, NULL);
 }
 
 /**
@@ -102,7 +111,7 @@ bool ClearDatabase(bool preMigration)
 
 	bool success = false;
 
-	if (DBBegin(g_hCoreDB))
+	if (DBBegin(g_dbHandle))
 	{
 	   if (!g_skipDataSchemaMigration)
 	      success = DeleteDataTables();
@@ -114,12 +123,12 @@ bool ClearDatabase(bool preMigration)
 
 	   if (success)
 		{
-			success = DBCommit(g_hCoreDB);
+			success = DBCommit(g_dbHandle);
 			_tprintf(success ? _T("Database successfully cleared\n") : _T("ERROR: cannot commit transaction\n"));
 		}
 		else
 		{
-			DBRollback(g_hCoreDB);
+			DBRollback(g_dbHandle);
 		}
 	}
 	else

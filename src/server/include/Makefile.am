@@ -34,6 +34,7 @@ serverinclude_HEADERS = \
 	nxcore_ps.h \
 	nxcore_smclp.h \
 	nxcore_winperf.h \
+	nxdbmgr_tools.h \
 	nxmodule.h \
 	nxsrvapi.h \
 	pdsdrv.h \

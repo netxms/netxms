@@ -208,7 +208,7 @@ static void ReindexIDataForClass(const TCHAR *objectTable)
       for(int j = 0; j < 10; j++)
       {
          _sntprintf(query, 256, _T("IDataIndexCreationCommand_%d"), j);
-         MetaDataReadStr(query, queryTemplate, 256, _T(""));
+         DBMgrMetaDataReadStr(query, queryTemplate, 256, _T(""));
          if (queryTemplate[0] != 0)
          {
             _sntprintf(query, 256, queryTemplate, id, id);

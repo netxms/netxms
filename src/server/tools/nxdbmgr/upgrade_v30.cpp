@@ -38,10 +38,10 @@ static bool H_UpgradeFromV47()
          _T("<END>");
       CHK_EXEC(SQLBatch(batch));
 
-      CHK_EXEC(DBSetNotNullConstraint(g_hCoreDB, _T("object_properties"), _T("state_before_maint")));
-      CHK_EXEC(DBSetNotNullConstraint(g_hCoreDB, _T("nodes"), _T("port_rows")));
-      CHK_EXEC(DBSetNotNullConstraint(g_hCoreDB, _T("nodes"), _T("port_numbering_scheme")));
-      CHK_EXEC(DBSetNotNullConstraint(g_hCoreDB, _T("dct_threshold_instances"), _T("row_number")));
+      CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("object_properties"), _T("state_before_maint")));
+      CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("nodes"), _T("port_rows")));
+      CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("nodes"), _T("port_numbering_scheme")));
+      CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("dct_threshold_instances"), _T("row_number")));
 
       CHK_EXEC(SetSchemaLevelForMajorVersion(22, 36));
    }
@@ -85,9 +85,9 @@ static bool H_UpgradeFromV45()
       _T("   PRIMARY KEY(object_id))")));
 
 
-   DB_STATEMENT stmtAutoBind = DBPrepare(g_hCoreDB, _T("INSERT INTO auto_bind_target (object_id,bind_filter,bind_flag,unbind_flag) VALUES (?,?,?,?)"));
-   DB_STATEMENT stmtVersion = DBPrepare(g_hCoreDB, _T("INSERT INTO versionable_object (object_id,version) VALUES (?,?)"));
-   DB_STATEMENT stmtFlags = DBPrepare(g_hCoreDB, _T("UPDATE object_properties SET flags=? WHERE object_id=?"));
+   DB_STATEMENT stmtAutoBind = DBPrepare(g_dbHandle, _T("INSERT INTO auto_bind_target (object_id,bind_filter,bind_flag,unbind_flag) VALUES (?,?,?,?)"));
+   DB_STATEMENT stmtVersion = DBPrepare(g_dbHandle, _T("INSERT INTO versionable_object (object_id,version) VALUES (?,?)"));
+   DB_STATEMENT stmtFlags = DBPrepare(g_dbHandle, _T("UPDATE object_properties SET flags=? WHERE object_id=?"));
    //Template table upgrade
    bool success = true;
    DB_RESULT result = SQLSelect(_T("SELECT id,version,apply_filter FROM templates"));
@@ -104,7 +104,7 @@ static bool H_UpgradeFromV45()
             DBBind(stmtVersion, 2, DB_SQLTYPE_INTEGER, DBGetFieldULong(result, i, 1));
             if (!(SQLExecute(stmtVersion)))
             {
-               if (!g_bIgnoreErrors)
+               if (!g_ignoreErrors)
                {
                   success = false;
                   break;
@@ -125,7 +125,7 @@ static bool H_UpgradeFromV45()
                   DBBind(stmtFlags, 2, DB_SQLTYPE_INTEGER, id);
                   if (!(SQLExecute(stmtFlags)))
                   {
-                     if (!g_bIgnoreErrors)
+                     if (!g_ignoreErrors)
                      {
                         DBFreeResult(flagResult);
                         success = false;
@@ -134,7 +134,7 @@ static bool H_UpgradeFromV45()
                   }
                   DBFreeResult(flagResult);
                }
-               else if (!g_bIgnoreErrors)
+               else if (!g_ignoreErrors)
                {
                   success = false;
                   break;
@@ -150,7 +150,7 @@ static bool H_UpgradeFromV45()
                DBBind(stmtAutoBind, 4, DB_SQLTYPE_VARCHAR, ((flags & 2) ? _T("1") : _T("0")), DB_BIND_STATIC);
                if (!(SQLExecute(stmtAutoBind)))
                {
-                  if (!g_bIgnoreErrors)
+                  if (!g_ignoreErrors)
                   {
                      success = false;
                      break;
@@ -159,13 +159,13 @@ static bool H_UpgradeFromV45()
             }
          }
       }
-      else if (!g_bIgnoreErrors)
+      else if (!g_ignoreErrors)
       {
          success = false;
       }
       DBFreeResult(result);
    }
-   else if (!g_bIgnoreErrors)
+   else if (!g_ignoreErrors)
       success = false;
 
    //Template table upgrade
@@ -184,7 +184,7 @@ static bool H_UpgradeFromV45()
                UINT32 flags = 0;
                TCHAR query[512];
                _sntprintf(query, 512, _T("SELECT flags FROM object_properties WHERE object_id=%d"), id);
-               DB_RESULT flagResult = DBSelect(g_hCoreDB, query);
+               DB_RESULT flagResult = DBSelect(g_dbHandle, query);
                if (flagResult != NULL)
                {
                   flags = DBGetFieldULong(flagResult, 0, 0);
@@ -192,7 +192,7 @@ static bool H_UpgradeFromV45()
                   DBBind(stmtFlags, 2, DB_SQLTYPE_INTEGER, id);
                   if (!(SQLExecute(stmtFlags)))
                   {
-                     if (!g_bIgnoreErrors)
+                     if (!g_ignoreErrors)
                      {
                         DBFreeResult(flagResult);
                         success = false;
@@ -201,7 +201,7 @@ static bool H_UpgradeFromV45()
                   }
                   DBFreeResult(flagResult);
                }
-               else if (!g_bIgnoreErrors)
+               else if (!g_ignoreErrors)
                {
                   success = false;
                   break;
@@ -216,7 +216,7 @@ static bool H_UpgradeFromV45()
                   DBBind(stmtAutoBind, 4, DB_SQLTYPE_VARCHAR, ((flags & 2) ? _T("1") : _T("0")), DB_BIND_STATIC);
                   if (!(SQLExecute(stmtAutoBind)))
                   {
-                     if (!g_bIgnoreErrors)
+                     if (!g_ignoreErrors)
                      {
                         success = false;
                         break;
@@ -227,7 +227,7 @@ static bool H_UpgradeFromV45()
          }
          DBFreeResult(result);
       }
-      else if (!g_bIgnoreErrors)
+      else if (!g_ignoreErrors)
          success = false;
    }
 
@@ -248,7 +248,7 @@ static bool H_UpgradeFromV45()
                DBBind(stmtVersion, 2, DB_SQLTYPE_INTEGER, DBGetFieldULong(result, i, 1));
                if (!(SQLExecute(stmtVersion)))
                {
-                  if (!g_bIgnoreErrors)
+                  if (!g_ignoreErrors)
                   {
                      success = false;
                      break;
@@ -269,7 +269,7 @@ static bool H_UpgradeFromV45()
                      DBBind(stmtFlags, 2, DB_SQLTYPE_INTEGER, id);
                      if (!(SQLExecute(stmtFlags)))
                      {
-                        if (!g_bIgnoreErrors)
+                        if (!g_ignoreErrors)
                         {
                            DBFreeResult(flagResult);
                            success = false;
@@ -278,7 +278,7 @@ static bool H_UpgradeFromV45()
                      }
                      DBFreeResult(flagResult);
                   }
-                  else if (!g_bIgnoreErrors)
+                  else if (!g_ignoreErrors)
                   {
                      success = false;
                      break;
@@ -294,7 +294,7 @@ static bool H_UpgradeFromV45()
                   DBBind(stmtAutoBind, 4, DB_SQLTYPE_VARCHAR, ((flags & 2) ? _T("1") : _T("0")), DB_BIND_STATIC);
                   if (!(SQLExecute(stmtAutoBind)))
                   {
-                     if (!g_bIgnoreErrors)
+                     if (!g_ignoreErrors)
                      {
                         success = false;
                         break;
@@ -303,13 +303,13 @@ static bool H_UpgradeFromV45()
                }
             }
          }
-         else if (!g_bIgnoreErrors)
+         else if (!g_ignoreErrors)
          {
             success = false;
          }
          DBFreeResult(result);
       }
-      else if (!g_bIgnoreErrors)
+      else if (!g_ignoreErrors)
          success = false;
    }
 
@@ -323,11 +323,11 @@ static bool H_UpgradeFromV45()
    if(!success)
       return false;
 
-   CHK_EXEC(DBDropColumn(g_hCoreDB, _T("templates"), _T("version")));
-   CHK_EXEC(DBDropColumn(g_hCoreDB, _T("templates"), _T("apply_filter")));
-   CHK_EXEC(DBDropColumn(g_hCoreDB, _T("ap_common"), _T("version")));
-   CHK_EXEC(DBDropColumn(g_hCoreDB, _T("ap_common"), _T("deploy_filter")));
-   CHK_EXEC(DBDropColumn(g_hCoreDB, _T("object_containers"), _T("auto_bind_filter")));
+   CHK_EXEC(DBDropColumn(g_dbHandle, _T("templates"), _T("version")));
+   CHK_EXEC(DBDropColumn(g_dbHandle, _T("templates"), _T("apply_filter")));
+   CHK_EXEC(DBDropColumn(g_dbHandle, _T("ap_common"), _T("version")));
+   CHK_EXEC(DBDropColumn(g_dbHandle, _T("ap_common"), _T("deploy_filter")));
+   CHK_EXEC(DBDropColumn(g_dbHandle, _T("object_containers"), _T("auto_bind_filter")));
 
    CHK_EXEC(SetMinorSchemaVersion(46));
    return true;
@@ -366,7 +366,7 @@ static bool H_UpgradeFromV43()
          _T("UPDATE policy_action_list SET timer_delay=0\n")
          _T("<END>");
       CHK_EXEC(SQLBatch(batch));
-      CHK_EXEC(DBSetNotNullConstraint(g_hCoreDB, _T("policy_action_list"), _T("timer_delay")));
+      CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("policy_action_list"), _T("timer_delay")));
 
       CHK_EXEC(CreateTable(
          _T("CREATE TABLE policy_timer_cancellation_list (")
@@ -439,7 +439,7 @@ static bool H_UpgradeFromV39()
 {
    if (GetSchemaLevelForMajorVersion(22) < 29)
    {
-      DB_STATEMENT hStmt = DBPrepare(g_hCoreDB, _T("UPDATE event_cfg SET description=? WHERE event_code=?"));
+      DB_STATEMENT hStmt = DBPrepare(g_dbHandle, _T("UPDATE event_cfg SET description=? WHERE event_code=?"));
       if (hStmt != NULL)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_TEXT,
@@ -456,7 +456,7 @@ static bool H_UpgradeFromV39()
                   DB_BIND_STATIC);
          DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, EVENT_TUNNEL_OPEN);
          bool success = DBExecute(hStmt);
-         if (!success && !g_bIgnoreErrors)
+         if (!success && !g_ignoreErrors)
          {
             DBFreeStatement(hStmt);
             return false;
@@ -476,7 +476,7 @@ static bool H_UpgradeFromV39()
                   DB_BIND_STATIC);
          DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, EVENT_TUNNEL_CLOSED);
          success = DBExecute(hStmt);
-         if (!success && !g_bIgnoreErrors)
+         if (!success && !g_ignoreErrors)
          {
             DBFreeStatement(hStmt);
             return false;
@@ -497,7 +497,7 @@ static bool H_UpgradeFromV39()
                   DB_BIND_STATIC);
          DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, EVENT_UNBOUND_TUNNEL);
          success = DBExecute(hStmt);
-         if (!success && !g_bIgnoreErrors)
+         if (!success && !g_ignoreErrors)
          {
             DBFreeStatement(hStmt);
             return false;
@@ -507,7 +507,7 @@ static bool H_UpgradeFromV39()
       }
       else
       {
-         if (!g_bIgnoreErrors)
+         if (!g_ignoreErrors)
             return false;
       }
 
@@ -641,7 +641,7 @@ static bool H_UpgradeFromV35()
    {
       CHK_EXEC(SQLQuery(_T("ALTER TABLE actions ADD guid varchar(36)")));
       CHK_EXEC(GenerateGUID(_T("actions"), _T("action_id"), _T("guid"), NULL));
-      DBSetNotNullConstraint(g_hCoreDB, _T("actions"), _T("guid"));
+      DBSetNotNullConstraint(g_dbHandle, _T("actions"), _T("guid"));
       CHK_EXEC(SetSchemaLevelForMajorVersion(22, 25));
    }
    CHK_EXEC(SetMinorSchemaVersion(36));
@@ -655,7 +655,7 @@ static bool H_UpgradeFromV34()
 {
    if (GetSchemaLevelForMajorVersion(22) < 24)
    {
-      CHK_EXEC(DBRenameColumn(g_hCoreDB, _T("dct_threshold_instances"), _T("row"), _T("row_number")));
+      CHK_EXEC(DBRenameColumn(g_dbHandle, _T("dct_threshold_instances"), _T("row"), _T("row_number")));
       CHK_EXEC(SetSchemaLevelForMajorVersion(22, 24));
    }
    CHK_EXEC(SetMinorSchemaVersion(35));
@@ -677,11 +677,11 @@ static bool H_UpgradeFromV33()
          _T("<END>");
       CHK_EXEC(SQLBatch(batch));
 
-      CHK_EXEC(DBDropColumn(g_hCoreDB, _T("object_properties"), _T("maint_mode")));
+      CHK_EXEC(DBDropColumn(g_dbHandle, _T("object_properties"), _T("maint_mode")));
       CHK_EXEC(SQLQuery(_T("UPDATE dct_threshold_instances SET maint_copy='0'")));
-      CHK_EXEC(DBDropPrimaryKey(g_hCoreDB, _T("dct_threshold_instances")));
-      CHK_EXEC(DBSetNotNullConstraint(g_hCoreDB, _T("dct_threshold_instances"), _T("maint_copy")));
-      CHK_EXEC(DBAddPrimaryKey(g_hCoreDB, _T("dct_threshold_instances"), _T("threshold_id,instance,maint_copy")));
+      CHK_EXEC(DBDropPrimaryKey(g_dbHandle, _T("dct_threshold_instances")));
+      CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("dct_threshold_instances"), _T("maint_copy")));
+      CHK_EXEC(DBAddPrimaryKey(g_dbHandle, _T("dct_threshold_instances"), _T("threshold_id,instance,maint_copy")));
 
       CHK_EXEC(SetSchemaLevelForMajorVersion(22, 24));
    }
@@ -1044,7 +1044,7 @@ static bool H_UpgradeFromV17()
 {
    if (GetSchemaLevelForMajorVersion(22) < 9)
    {
-      CHK_EXEC(DBResizeColumn(g_hCoreDB, _T("nodes"), _T("lldp_id"), 255, true));
+      CHK_EXEC(DBResizeColumn(g_dbHandle, _T("nodes"), _T("lldp_id"), 255, true));
       CHK_EXEC(SetSchemaLevelForMajorVersion(22, 9));
    }
    CHK_EXEC(SetMinorSchemaVersion(18));
@@ -1065,8 +1065,8 @@ static bool H_UpgradeFromV16()
          _T("UPDATE chassis SET rack_image_rear='00000000-0000-0000-0000-000000000000'\n")
          _T("<END>");
       CHK_EXEC(SQLBatch(batch));
-      CHK_EXEC(DBRenameColumn(g_hCoreDB, _T("nodes"), _T("rack_image"), _T("rack_image_front")));
-      CHK_EXEC(DBRenameColumn(g_hCoreDB, _T("chassis"), _T("rack_image"), _T("rack_image_front")));
+      CHK_EXEC(DBRenameColumn(g_dbHandle, _T("nodes"), _T("rack_image"), _T("rack_image_front")));
+      CHK_EXEC(DBRenameColumn(g_dbHandle, _T("chassis"), _T("rack_image"), _T("rack_image_front")));
       CHK_EXEC(SetSchemaLevelForMajorVersion(22, 8));
    }
    CHK_EXEC(SetMinorSchemaVersion(17));
@@ -1121,8 +1121,8 @@ static bool H_UpgradeFromV13()
                _T("<END>");
       CHK_EXEC(SQLBatch(batch));
 
-      CHK_EXEC(DBSetNotNullConstraint(g_hCoreDB, _T("items"), _T("instance_retention_time")));
-      CHK_EXEC(DBSetNotNullConstraint(g_hCoreDB, _T("dc_tables"), _T("instance_retention_time")));
+      CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("items"), _T("instance_retention_time")));
+      CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("dc_tables"), _T("instance_retention_time")));
 
       CHK_EXEC(SetSchemaLevelForMajorVersion(22, 5));
    }
@@ -1145,8 +1145,8 @@ static bool H_UpgradeFromV12()
                _T("<END>");
       CHK_EXEC(SQLBatch(batch));
 
-      CHK_EXEC(DBSetNotNullConstraint(g_hCoreDB, _T("nodes"), _T("rack_orientation")));
-      CHK_EXEC(DBSetNotNullConstraint(g_hCoreDB, _T("chassis"), _T("rack_orientation")));
+      CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("nodes"), _T("rack_orientation")));
+      CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("chassis"), _T("rack_orientation")));
 
       CHK_EXEC(SetSchemaLevelForMajorVersion(22, 4));
       CHK_EXEC(SetSchemaLevelForMajorVersion(21, 5));
@@ -1209,8 +1209,8 @@ static bool H_UpgradeFromV9()
             _T("<END>");
    CHK_EXEC(SQLBatch(batch));
 
-   DBSetNotNullConstraint(g_hCoreDB, _T("snmp_communities"), _T("zone"));
-   DBSetNotNullConstraint(g_hCoreDB, _T("usm_credentials"), _T("zone"));
+   DBSetNotNullConstraint(g_dbHandle, _T("snmp_communities"), _T("zone"));
+   DBSetNotNullConstraint(g_dbHandle, _T("usm_credentials"), _T("zone"));
 
    CHK_EXEC(SetMinorSchemaVersion(10));
    return true;
@@ -1237,7 +1237,7 @@ static bool H_UpgradeFromV7()
 {
    if (GetSchemaLevelForMajorVersion(22) < 1)
    {
-      int count = ConfigReadInt(_T("NumberOfDataCollectors"), 250);
+      int count = DBMgrConfigReadInt32(_T("NumberOfDataCollectors"), 250);
       TCHAR value[64];
       _sntprintf(value, 64,_T("%d"), std::max(250, count));
       CHK_EXEC(CreateConfigParam(_T("DataCollector.ThreadPool.BaseSize"), _T("10"), _T("Base size for data collector thread pool."), NULL, 'I', true, true, false, false));
@@ -1257,10 +1257,10 @@ static bool H_UpgradeFromV6()
 {
    if ((GetSchemaLevelForMajorVersion(21) < 4) && (GetSchemaLevelForMajorVersion(22) < 1))
    {
-      DB_RESULT hResult = DBSelect(g_hCoreDB, _T("SELECT access_rights,object_id FROM acl WHERE user_id=-2147483647")); // Get group Admins object acl
+      DB_RESULT hResult = DBSelect(g_dbHandle, _T("SELECT access_rights,object_id FROM acl WHERE user_id=-2147483647")); // Get group Admins object acl
       if (hResult != NULL)
       {
-         DB_STATEMENT hStmt = DBPrepare(g_hCoreDB, _T("UPDATE acl SET access_rights=? WHERE user_id=-2147483647 AND object_id=? "));
+         DB_STATEMENT hStmt = DBPrepare(g_dbHandle, _T("UPDATE acl SET access_rights=? WHERE user_id=-2147483647 AND object_id=? "));
          if (hStmt != NULL)
          {
             int nRows = DBGetNumRows(hResult);
@@ -1276,7 +1276,7 @@ static bool H_UpgradeFromV6()
 
                   if (!SQLExecute(hStmt))
                   {
-                     if (!g_bIgnoreErrors)
+                     if (!g_ignoreErrors)
                      {
                         DBFreeStatement(hStmt);
                         DBFreeResult(hResult);
@@ -1288,11 +1288,11 @@ static bool H_UpgradeFromV6()
 
             DBFreeStatement(hStmt);
          }
-         else if (!g_bIgnoreErrors)
+         else if (!g_ignoreErrors)
             return FALSE;
          DBFreeResult(hResult);
       }
-      else if (!g_bIgnoreErrors)
+      else if (!g_ignoreErrors)
          return false;
       CHK_EXEC(SetSchemaLevelForMajorVersion(21, 4));
    }
@@ -1313,8 +1313,8 @@ static bool H_UpgradeFromV5()
                _T("<END>");
       CHK_EXEC(SQLBatch(batch));
 
-      CHK_EXEC(DBSetNotNullConstraint(g_hCoreDB, _T("nodes"), _T("fail_time_snmp")));
-      CHK_EXEC(DBSetNotNullConstraint(g_hCoreDB, _T("nodes"), _T("fail_time_agent")));
+      CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("nodes"), _T("fail_time_snmp")));
+      CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("nodes"), _T("fail_time_agent")));
       CHK_EXEC(SetSchemaLevelForMajorVersion(21, 3));
    }
    CHK_EXEC(SetMinorSchemaVersion(6));
@@ -1346,8 +1346,8 @@ static BOOL MoveFlagsFromOldTables(const TCHAR *tableName)
 {
    TCHAR query[256];
    _sntprintf(query, 256, _T("SELECT id,flags FROM %s"), tableName);
-   DB_RESULT hResult = DBSelect(g_hCoreDB, query);
-   DB_STATEMENT hStmt = DBPrepare(g_hCoreDB, _T("UPDATE object_properties SET flags=? WHERE object_id=?"));
+   DB_RESULT hResult = DBSelect(g_dbHandle, query);
+   DB_STATEMENT hStmt = DBPrepare(g_dbHandle, _T("UPDATE object_properties SET flags=? WHERE object_id=?"));
    if (hResult != NULL)
    {
       if (hStmt != NULL)
@@ -1360,7 +1360,7 @@ static BOOL MoveFlagsFromOldTables(const TCHAR *tableName)
 
             if (!SQLExecute(hStmt))
             {
-               if (!g_bIgnoreErrors)
+               if (!g_ignoreErrors)
                {
                   DBFreeStatement(hStmt);
                   DBFreeResult(hResult);
@@ -1370,18 +1370,18 @@ static BOOL MoveFlagsFromOldTables(const TCHAR *tableName)
          }
          DBFreeStatement(hStmt);
       }
-      else if (!g_bIgnoreErrors)
+      else if (!g_ignoreErrors)
       {
          return FALSE;
       }
       DBFreeResult(hResult);
    }
-   else if (!g_bIgnoreErrors)
+   else if (!g_ignoreErrors)
    {
       return FALSE;
    }
 
-   CHK_EXEC(DBDropColumn(g_hCoreDB, tableName, _T("flags")));
+   CHK_EXEC(DBDropColumn(g_dbHandle, tableName, _T("flags")));
    return TRUE;
 }
 
@@ -1490,9 +1490,9 @@ static bool H_UpgradeFromV3()
 
    //create special behavior for node and sensor, cluster
    //node
-   DB_RESULT hResult = DBSelect(g_hCoreDB, _T("SELECT id,runtime_flags FROM nodes"));
-   DB_STATEMENT stmtNetObj = DBPrepare(g_hCoreDB, _T("UPDATE object_properties SET flags=?, state=? WHERE object_id=?"));
-   DB_STATEMENT stmtNode = DBPrepare(g_hCoreDB, _T("UPDATE nodes SET capabilities=? WHERE id=?"));
+   DB_RESULT hResult = DBSelect(g_dbHandle, _T("SELECT id,runtime_flags FROM nodes"));
+   DB_STATEMENT stmtNetObj = DBPrepare(g_dbHandle, _T("UPDATE object_properties SET flags=?, state=? WHERE object_id=?"));
+   DB_STATEMENT stmtNode = DBPrepare(g_dbHandle, _T("UPDATE nodes SET capabilities=? WHERE id=?"));
    if (hResult != NULL)
    {
       if (stmtNetObj != NULL && stmtNode != NULL)
@@ -1508,14 +1508,14 @@ static bool H_UpgradeFromV3()
             UINT32 capabilities = 0;
             TCHAR query[256];
             _sntprintf(query, 256, _T("SELECT node_flags FROM nodes WHERE id=%d"), id);
-            DB_RESULT flagResult = DBSelect(g_hCoreDB, query);
+            DB_RESULT flagResult = DBSelect(g_dbHandle, query);
             if(DBGetNumRows(flagResult) >= 1)
             {
                oldFlags = DBGetFieldULong(flagResult, 0, 0);
             }
             else
             {
-               if(!g_bIgnoreErrors)
+               if(!g_ignoreErrors)
                {
                   DBFreeStatement(stmtNetObj);
                   DBFreeStatement(stmtNode);
@@ -1536,7 +1536,7 @@ static bool H_UpgradeFromV3()
 
             if (!(SQLExecute(stmtNetObj)))
             {
-               if (!g_bIgnoreErrors)
+               if (!g_ignoreErrors)
                {
                   DBFreeStatement(stmtNetObj);
                   DBFreeStatement(stmtNode);
@@ -1547,7 +1547,7 @@ static bool H_UpgradeFromV3()
 
             if (!SQLExecute(stmtNode))
             {
-               if (!g_bIgnoreErrors)
+               if (!g_ignoreErrors)
                {
                   DBFreeStatement(stmtNetObj);
                   DBFreeStatement(stmtNode);
@@ -1566,19 +1566,19 @@ static bool H_UpgradeFromV3()
 
         if(stmtNode != NULL)
            DBFreeStatement(stmtNode);
-        if (!g_bIgnoreErrors)
+        if (!g_ignoreErrors)
         {
            return FALSE;
         }
      }
      DBFreeResult(hResult);
    }
-   CHK_EXEC(DBDropColumn(g_hCoreDB, _T("nodes"), _T("runtime_flags")));
-   CHK_EXEC(DBDropColumn(g_hCoreDB, _T("nodes"), _T("node_flags")));
+   CHK_EXEC(DBDropColumn(g_dbHandle, _T("nodes"), _T("runtime_flags")));
+   CHK_EXEC(DBDropColumn(g_dbHandle, _T("nodes"), _T("node_flags")));
 
    //sensor
-   hResult = DBSelect(g_hCoreDB, _T("SELECT id,runtime_flags,flags FROM sensors"));
-   DB_STATEMENT stmt = DBPrepare(g_hCoreDB, _T("UPDATE object_properties SET status=? WHERE object_id=?"));
+   hResult = DBSelect(g_dbHandle, _T("SELECT id,runtime_flags,flags FROM sensors"));
+   DB_STATEMENT stmt = DBPrepare(g_dbHandle, _T("UPDATE object_properties SET status=? WHERE object_id=?"));
    if (hResult != NULL)
    {
       if (stmt != NULL)
@@ -1594,7 +1594,7 @@ static bool H_UpgradeFromV3()
 
             if (!(SQLExecute(stmt)))
             {
-               if (!g_bIgnoreErrors)
+               if (!g_ignoreErrors)
                {
                   DBFreeStatement(stmt);
                   DBFreeResult(hResult);
@@ -1604,14 +1604,14 @@ static bool H_UpgradeFromV3()
          }
          DBFreeStatement(stmt);
       }
-      else if (!g_bIgnoreErrors)
+      else if (!g_ignoreErrors)
       {
          return FALSE;
       }
       DBFreeResult(hResult);
    }
-   CHK_EXEC(DBDropColumn(g_hCoreDB, _T("sensors"), _T("runtime_flags")));
-   CHK_EXEC(DBDropColumn(g_hCoreDB, _T("sensors"), _T("flags")));
+   CHK_EXEC(DBDropColumn(g_dbHandle, _T("sensors"), _T("runtime_flags")));
+   CHK_EXEC(DBDropColumn(g_dbHandle, _T("sensors"), _T("flags")));
 
    CHK_EXEC(SetMinorSchemaVersion(4));
    return true;
@@ -1622,8 +1622,8 @@ static bool H_UpgradeFromV3()
  */
 static bool H_UpgradeFromV2()
 {
-   CHK_EXEC(DBDropColumn(g_hCoreDB, _T("event_groups"), _T("range_start")));
-   CHK_EXEC(DBDropColumn(g_hCoreDB, _T("event_groups"), _T("range_end")));
+   CHK_EXEC(DBDropColumn(g_dbHandle, _T("event_groups"), _T("range_start")));
+   CHK_EXEC(DBDropColumn(g_dbHandle, _T("event_groups"), _T("range_end")));
 
    static const TCHAR *batch =
             _T("ALTER TABLE event_groups ADD guid varchar(36) null\n")
@@ -1631,7 +1631,7 @@ static bool H_UpgradeFromV2()
             _T("UPDATE event_groups SET guid='b61859c6-1768-4a61-a0cf-eed07d688f66' WHERE id=-2147483646\n")
             _T("<END>");
    CHK_EXEC(SQLBatch(batch));
-   DBSetNotNullConstraint(g_hCoreDB, _T("event_groups"), _T("guid"));
+   DBSetNotNullConstraint(g_dbHandle, _T("event_groups"), _T("guid"));
 
    CHK_EXEC(SetMinorSchemaVersion(3));
    return true;
@@ -1649,8 +1649,8 @@ static bool H_UpgradeFromV1()
             _T("UPDATE user_groups SET created=0\n")
             _T("<END>");
    CHK_EXEC(SQLBatch(batch));
-   CHK_EXEC(DBSetNotNullConstraint(g_hCoreDB, _T("users"), _T("created")));
-   CHK_EXEC(DBSetNotNullConstraint(g_hCoreDB, _T("user_groups"), _T("created")));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("users"), _T("created")));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("user_groups"), _T("created")));
 
    CHK_EXEC(SetMinorSchemaVersion(2));
    return true;
@@ -1756,7 +1756,7 @@ static struct
 bool MajorSchemaUpgrade_V30()
 {
    INT32 major, minor;
-   if (!DBGetSchemaVersion(g_hCoreDB, &major, &minor))
+   if (!DBGetSchemaVersion(g_dbHandle, &major, &minor))
       return false;
 
    while((major == 30) && (minor < DB_SCHEMA_VERSION_V30_MINOR))
@@ -1772,17 +1772,17 @@ bool MajorSchemaUpgrade_V30()
          return false;
       }
       _tprintf(_T("Upgrading from version 30.%d to %d.%d\n"), minor, s_dbUpgradeMap[i].nextMajor, s_dbUpgradeMap[i].nextMinor);
-      DBBegin(g_hCoreDB);
+      DBBegin(g_dbHandle);
       if (s_dbUpgradeMap[i].upgradeProc())
       {
-         DBCommit(g_hCoreDB);
-         if (!DBGetSchemaVersion(g_hCoreDB, &major, &minor))
+         DBCommit(g_dbHandle);
+         if (!DBGetSchemaVersion(g_dbHandle, &major, &minor))
             return false;
       }
       else
       {
          _tprintf(_T("Rolling back last stage due to upgrade errors...\n"));
-         DBRollback(g_hCoreDB);
+         DBRollback(g_dbHandle);
          return false;
       }
    }

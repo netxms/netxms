@@ -1,3 +1,3 @@
-SUBDIRS = nddload nxaction nxadm nxap nxdbmgr nxget nxminfo nxupload
+SUBDIRS = libnxdbmgr nddload nxaction nxadm nxap nxdbmgr nxget nxminfo nxupload
 
 include ..\..\..\Makefile.inc.w32

@@ -45,10 +45,10 @@ static bool H_UpgradeFromV35()
       _T("<END>");
    CHK_EXEC(SQLBatch(batch));
 
-   CHK_EXEC(DBSetNotNullConstraint(g_hCoreDB, _T("object_properties"), _T("state_before_maint")));
-   CHK_EXEC(DBSetNotNullConstraint(g_hCoreDB, _T("nodes"), _T("port_rows")));
-   CHK_EXEC(DBSetNotNullConstraint(g_hCoreDB, _T("nodes"), _T("port_numbering_scheme")));
-   CHK_EXEC(DBSetNotNullConstraint(g_hCoreDB, _T("dct_threshold_instances"), _T("row_number")));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("object_properties"), _T("state_before_maint")));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("nodes"), _T("port_rows")));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("nodes"), _T("port_numbering_scheme")));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("dct_threshold_instances"), _T("row_number")));
 
    CHK_EXEC(SetMinorSchemaVersion(36));
    return true;
@@ -92,7 +92,7 @@ static bool H_UpgradeFromV32()
       _T("UPDATE policy_action_list SET timer_delay=0\n")
       _T("<END>");
    CHK_EXEC(SQLBatch(batch));
-   CHK_EXEC(DBSetNotNullConstraint(g_hCoreDB, _T("policy_action_list"), _T("timer_delay")));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("policy_action_list"), _T("timer_delay")));
 
    CHK_EXEC(CreateTable(
       _T("CREATE TABLE policy_timer_cancellation_list (")
@@ -147,7 +147,7 @@ static bool H_UpgradeFromV29()
  */
 static bool H_UpgradeFromV28()
 {
-   DB_STATEMENT hStmt = DBPrepare(g_hCoreDB, _T("UPDATE event_cfg SET description=? WHERE event_code=?"));
+   DB_STATEMENT hStmt = DBPrepare(g_dbHandle, _T("UPDATE event_cfg SET description=? WHERE event_code=?"));
    if (hStmt != NULL)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_TEXT,
@@ -164,7 +164,7 @@ static bool H_UpgradeFromV28()
                DB_BIND_STATIC);
       DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, EVENT_TUNNEL_OPEN);
       bool success = DBExecute(hStmt);
-      if (!success && !g_bIgnoreErrors)
+      if (!success && !g_ignoreErrors)
       {
          DBFreeStatement(hStmt);
          return false;
@@ -184,7 +184,7 @@ static bool H_UpgradeFromV28()
                DB_BIND_STATIC);
       DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, EVENT_TUNNEL_CLOSED);
       success = DBExecute(hStmt);
-      if (!success && !g_bIgnoreErrors)
+      if (!success && !g_ignoreErrors)
       {
          DBFreeStatement(hStmt);
          return false;
@@ -205,7 +205,7 @@ static bool H_UpgradeFromV28()
                DB_BIND_STATIC);
       DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, EVENT_UNBOUND_TUNNEL);
       success = DBExecute(hStmt);
-      if (!success && !g_bIgnoreErrors)
+      if (!success && !g_ignoreErrors)
       {
          DBFreeStatement(hStmt);
          return false;
@@ -215,7 +215,7 @@ static bool H_UpgradeFromV28()
    }
    else
    {
-      if (!g_bIgnoreErrors)
+      if (!g_ignoreErrors)
          return false;
    }
 
@@ -325,7 +325,7 @@ static bool H_UpgradeFromV24()
 {
    CHK_EXEC(SQLQuery(_T("ALTER TABLE actions ADD guid varchar(36)")));
    CHK_EXEC(GenerateGUID(_T("actions"), _T("action_id"), _T("guid"), NULL));
-   DBSetNotNullConstraint(g_hCoreDB, _T("actions"), _T("guid"));
+   DBSetNotNullConstraint(g_dbHandle, _T("actions"), _T("guid"));
    CHK_EXEC(SetMinorSchemaVersion(25));
    return true;
 }
@@ -335,7 +335,7 @@ static bool H_UpgradeFromV24()
  */
 static bool H_UpgradeFromV23()
 {
-   CHK_EXEC(DBRenameColumn(g_hCoreDB, _T("dct_threshold_instances"), _T("row"), _T("row_number")));
+   CHK_EXEC(DBRenameColumn(g_dbHandle, _T("dct_threshold_instances"), _T("row"), _T("row_number")));
    CHK_EXEC(SetMinorSchemaVersion(24));
    return true;
 }
@@ -353,11 +353,11 @@ static bool H_UpgradeFromV22()
       _T("<END>");
    CHK_EXEC(SQLBatch(batch));
 
-   CHK_EXEC(DBDropColumn(g_hCoreDB, _T("object_properties"), _T("maint_mode")));
+   CHK_EXEC(DBDropColumn(g_dbHandle, _T("object_properties"), _T("maint_mode")));
    CHK_EXEC(SQLQuery(_T("UPDATE dct_threshold_instances SET maint_copy='0'")));
-   CHK_EXEC(DBDropPrimaryKey(g_hCoreDB, _T("dct_threshold_instances")));
-   CHK_EXEC(DBSetNotNullConstraint(g_hCoreDB, _T("dct_threshold_instances"), _T("maint_copy")));
-   CHK_EXEC(DBAddPrimaryKey(g_hCoreDB, _T("dct_threshold_instances"), _T("threshold_id,instance,maint_copy")));
+   CHK_EXEC(DBDropPrimaryKey(g_dbHandle, _T("dct_threshold_instances")));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("dct_threshold_instances"), _T("maint_copy")));
+   CHK_EXEC(DBAddPrimaryKey(g_dbHandle, _T("dct_threshold_instances"), _T("threshold_id,instance,maint_copy")));
 
    CHK_EXEC(SetMinorSchemaVersion(24));
    return true;
@@ -516,7 +516,7 @@ static bool H_UpgradeFromV11()
       _T("ALTER TABLE ap_common ADD deploy_filter $SQL:TEXT\n")
       _T("<END>");
    CHK_EXEC(SQLBatch(batch));
-   CHK_EXEC(DBSetNotNullConstraint(g_hCoreDB, _T("ap_common"), _T("flags")));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("ap_common"), _T("flags")));
 
    CHK_EXEC(CreateEventTemplate(EVENT_POLICY_AUTODEPLOY, _T("SYS_POLICY_AUTODEPLOY"), SEVERITY_NORMAL, EF_LOG, _T("f26d70b3-d48d-472c-b2ec-bfa7c20958ea"),
             _T("Agent policy %4 automatically deployed to node %2"),
@@ -581,7 +581,7 @@ static bool H_UpgradeFromV9()
  */
 static bool H_UpgradeFromV8()
 {
-   CHK_EXEC(DBResizeColumn(g_hCoreDB, _T("nodes"), _T("lldp_id"), 255, true));
+   CHK_EXEC(DBResizeColumn(g_dbHandle, _T("nodes"), _T("lldp_id"), 255, true));
    CHK_EXEC(SetMinorSchemaVersion(9));
    return true;
 }
@@ -598,8 +598,8 @@ static bool H_UpgradeFromV7()
       _T("UPDATE chassis SET rack_image_rear='00000000-0000-0000-0000-000000000000'\n")
       _T("<END>");
    CHK_EXEC(SQLBatch(batch));
-   CHK_EXEC(DBRenameColumn(g_hCoreDB, _T("nodes"), _T("rack_image"), _T("rack_image_front")));
-   CHK_EXEC(DBRenameColumn(g_hCoreDB, _T("chassis"), _T("rack_image"), _T("rack_image_front")));
+   CHK_EXEC(DBRenameColumn(g_dbHandle, _T("nodes"), _T("rack_image"), _T("rack_image_front")));
+   CHK_EXEC(DBRenameColumn(g_dbHandle, _T("chassis"), _T("rack_image"), _T("rack_image_front")));
    CHK_EXEC(SetMinorSchemaVersion(8));
    return true;
 }
@@ -646,8 +646,8 @@ static bool H_UpgradeFromV4()
             _T("<END>");
    CHK_EXEC(SQLBatch(batch));
 
-   CHK_EXEC(DBSetNotNullConstraint(g_hCoreDB, _T("items"), _T("instance_retention_time")));
-   CHK_EXEC(DBSetNotNullConstraint(g_hCoreDB, _T("dc_tables"), _T("instance_retention_time")));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("items"), _T("instance_retention_time")));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("dc_tables"), _T("instance_retention_time")));
 
    CHK_EXEC(SetMinorSchemaVersion(5));
    return true;
@@ -668,8 +668,8 @@ static bool H_UpgradeFromV3()
                _T("<END>");
       CHK_EXEC(SQLBatch(batch));
 
-      CHK_EXEC(DBSetNotNullConstraint(g_hCoreDB, _T("nodes"), _T("rack_orientation")));
-      CHK_EXEC(DBSetNotNullConstraint(g_hCoreDB, _T("chassis"), _T("rack_orientation")));
+      CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("nodes"), _T("rack_orientation")));
+      CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("chassis"), _T("rack_orientation")));
 
       CHK_EXEC(SetSchemaLevelForMajorVersion(21, 5));
    }
@@ -706,7 +706,7 @@ static bool H_UpgradeFromV1()
  */
 static bool H_UpgradeFromV0()
 {
-   int count = ConfigReadInt(_T("NumberOfDataCollectors"), 250);
+   int count = DBMgrConfigReadInt32(_T("NumberOfDataCollectors"), 250);
    TCHAR value[64];
    _sntprintf(value, 64,_T("%d"), std::max(250, count));
    CHK_EXEC(CreateConfigParam(_T("DataCollector.ThreadPool.BaseSize"), _T("10"), _T("Base size for data collector thread pool."), NULL, 'I', true, true, false, false));
@@ -774,7 +774,7 @@ static struct
 bool MajorSchemaUpgrade_V22()
 {
    INT32 major, minor;
-   if (!DBGetSchemaVersion(g_hCoreDB, &major, &minor))
+   if (!DBGetSchemaVersion(g_dbHandle, &major, &minor))
       return false;
 
    while(major == 22)
@@ -790,17 +790,17 @@ bool MajorSchemaUpgrade_V22()
          return false;
       }
       _tprintf(_T("Upgrading from version 22.%d to %d.%d\n"), minor, s_dbUpgradeMap[i].nextMajor, s_dbUpgradeMap[i].nextMinor);
-      DBBegin(g_hCoreDB);
+      DBBegin(g_dbHandle);
       if (s_dbUpgradeMap[i].upgradeProc())
       {
-         DBCommit(g_hCoreDB);
-         if (!DBGetSchemaVersion(g_hCoreDB, &major, &minor))
+         DBCommit(g_dbHandle);
+         if (!DBGetSchemaVersion(g_dbHandle, &major, &minor))
             return false;
       }
       else
       {
          _tprintf(_T("Rolling back last stage due to upgrade errors...\n"));
-         DBRollback(g_hCoreDB);
+         DBRollback(g_dbHandle);
          return false;
       }
    }

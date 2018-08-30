@@ -32,7 +32,7 @@ void UnlockDatabase()
    BOOL bLocked = FALSE;
 
    // Check if database is locked
-   hResult = DBSelect(g_hCoreDB, _T("SELECT var_value FROM config WHERE var_name='DBLockStatus'"));
+   hResult = DBSelect(g_dbHandle, _T("SELECT var_value FROM config WHERE var_name='DBLockStatus'"));
    if (hResult != NULL)
    {
       if (DBGetNumRows(hResult) > 0)
@@ -45,7 +45,7 @@ void UnlockDatabase()
 
       if (bLocked)
       {
-         hResult = DBSelect(g_hCoreDB, _T("SELECT var_value FROM config WHERE var_name='DBLockInfo'"));
+         hResult = DBSelect(g_dbHandle, _T("SELECT var_value FROM config WHERE var_name='DBLockInfo'"));
          if (hResult != NULL)
          {
             if (DBGetNumRows(hResult) > 0)

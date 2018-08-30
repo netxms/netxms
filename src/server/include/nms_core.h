@@ -23,6 +23,8 @@
 #ifndef _nms_core_h_
 #define _nms_core_h_
 
+#ifndef MODULE_NXDBMGR_EXTENSION
+
 #ifdef NXCORE_EXPORTS
 #define NXCORE_EXPORTABLE __EXPORT
 #else
@@ -1342,5 +1344,7 @@ extern int NXCORE_EXPORTABLE g_dbSyntax;
 extern FileMonitoringList g_monitoringList;
 
 extern ThreadPool NXCORE_EXPORTABLE *g_mainThreadPool;
+
+#endif   /* MODULE_NXDBMGR_EXTENSION */
 
 #endif   /* _nms_core_h_ */

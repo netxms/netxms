@@ -23,6 +23,8 @@
 #ifndef _nxmodule_h_
 #define _nxmodule_h_
 
+#ifndef MODULE_NXDBMGR_EXTENSION
+
 #include <nxdbapi.h>
 
 /**
@@ -168,5 +170,7 @@ bool LoadNetXMSModules();
  */
 extern UINT32 g_dwNumModules;
 extern NXMODULE *g_pModuleList;
+
+#endif   /* MODULE_NXDBMGR_EXTENSION */
 
 #endif   /* _nxmodule_h_ */
