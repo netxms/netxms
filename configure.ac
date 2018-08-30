@@ -1862,7 +1862,7 @@ else
 	AC_CHECK_HEADERS([pthread_np.h],,,[
 #include <pthread.h>
 	])
-	AC_CHECK_FUNCS([pthread_cond_reltimedwait_np pthread_setname_np pthread_getthreadid_np])
+	AC_CHECK_FUNCS([pthread_cond_reltimedwait_np pthread_setname_np pthread_threadid_np pthread_getthreadid_np])
 
 	# Check if pthread_setname_np accepts two arguments
 	if test "$ac_cv_func_pthread_setname_np" = "yes"; then
