@@ -182,6 +182,49 @@ static int GetIDataQueryCB(void *arg, int cols, char **data, char **names)
 }
 
 /**
+ * Callback for exporting module table
+ */
+static bool ExportModuleTable(const TCHAR *table, void *userData)
+{
+   return ExportTable(static_cast<sqlite3*>(userData), table);
+}
+
+/**
+ * Execute schema file
+ */
+static bool ExecuteSchemaFile(const TCHAR *prefix, void *userArg)
+{
+   TCHAR schemaFile[MAX_PATH];
+   GetNetXMSDirectory(nxDirShare, schemaFile);
+   _tcslcat(schemaFile, FS_PATH_SEPARATOR _T("sql") FS_PATH_SEPARATOR, MAX_PATH);
+   if (prefix != NULL)
+   {
+      _tcslcat(schemaFile, prefix, MAX_PATH);
+      _tcslcat(schemaFile, _T("_"), MAX_PATH);
+   }
+   _tcslcat(schemaFile, _T("dbschema_sqlite.sql"), MAX_PATH);
+
+   UINT32 size;
+   char *data = (char *)LoadFile(schemaFile, &size);
+   if (data == NULL)
+   {
+      WriteToTerminalEx(_T("\x1b[31;1mERROR:\x1b[0m cannot load schema file \"%s\"\n"), schemaFile);
+      return false;
+   }
+
+   char *errmsg;
+   bool success = (sqlite3_exec(static_cast<sqlite3*>(userArg), data, NULL, NULL, &errmsg) == SQLITE_OK);
+   if (!success)
+   {
+      _tprintf(_T("\x1b[31;1mERROR:\x1b[0m unable to apply database schema (%hs)\n"), errmsg);
+      sqlite3_free(errmsg);
+   }
+
+   free(data);
+   return success;
+}
+
+/**
  * Export database
  */
 void ExportDatabase(char *file, bool skipAudit, bool skipAlarms, bool skipEvent, bool skipSysLog, bool skipTrapLog)
@@ -211,26 +254,10 @@ void ExportDatabase(char *file, bool skipAudit, bool skipAlarms, bool skipEvent,
    }
 
 	// Setup database schema
-   TCHAR schemaFile[MAX_PATH];
-   GetNetXMSDirectory(nxDirShare, schemaFile);
-   _tcslcat(schemaFile, FS_PATH_SEPARATOR _T("sql") FS_PATH_SEPARATOR _T("dbschema_sqlite.sql"), MAX_PATH);
-
-   UINT32 size;
-	data = (char *)LoadFile(schemaFile, &size);
-	if (data == NULL)
-	{
-		_tprintf(_T("ERROR: cannot load schema file \"%s\"\n"), schemaFile);
-		goto cleanup;
-	}
-
-	if (sqlite3_exec(db, data, NULL, NULL, &errmsg) != SQLITE_OK)
-	{
-		_tprintf(_T("ERROR: unable to apply database schema: %hs\n"), errmsg);
-		sqlite3_free(errmsg);
-		goto cleanup;
-	}
-
-	free(data);
+   if (!ExecuteSchemaFile(NULL, db))
+      goto cleanup;
+   if (!EnumerateModuleSchemas(ExecuteSchemaFile, db))
+      goto cleanup;
 
 	// Check that dbschema_sqlite.sql and database have the same schema version
 	if ((sqlite3_exec(db, "SELECT var_value FROM metadata WHERE var_name='SchemaVersion'", GetSchemaVersionCB, &legacy, &errmsg) != SQLITE_OK) ||
@@ -243,7 +270,7 @@ void ExportDatabase(char *file, bool skipAudit, bool skipAlarms, bool skipEvent,
 	}
 
 	INT32 dbmajor, dbminor;
-	if (!DBGetSchemaVersion(g_hCoreDB, &dbmajor, &dbminor))
+	if (!DBGetSchemaVersion(g_dbHandle, &dbmajor, &dbminor))
 	{
       _tprintf(_T("ERROR: Cannot determine database schema version. Please check that NetXMS server installed correctly.\n"));
       goto cleanup;
@@ -275,6 +302,9 @@ void ExportDatabase(char *file, bool skipAudit, bool skipAlarms, bool skipEvent,
       if (!ExportTable(db, g_tables[i]))
 			goto cleanup;
 	}
+
+   if (!EnumerateModuleTables(ExportModuleTable, db))
+      goto cleanup;
 
 	if (!g_skipDataMigration || !g_skipDataSchemaMigration)
 	{

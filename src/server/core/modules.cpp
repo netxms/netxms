@@ -42,7 +42,9 @@ static bool LoadNetXMSModule(const TCHAR *name)
 	bool success = false;
    TCHAR szErrorText[256];
 
-#if !defined(_WIN32) && !defined(_NETWARE)
+#ifdef _WIN32
+   HMODULE hModule = DLOpen(name, szErrorText);
+#else
    TCHAR fullName[MAX_PATH];
 
    if (_tcschr(name, _T('/')) == NULL)
@@ -64,8 +66,6 @@ static bool LoadNetXMSModule(const TCHAR *name)
       nx_strncpy(fullName, name, MAX_PATH);
    }
    HMODULE hModule = DLOpen(fullName, szErrorText);
-#else
-   HMODULE hModule = DLOpen(name, szErrorText);
 #endif
 
    if (hModule != NULL)

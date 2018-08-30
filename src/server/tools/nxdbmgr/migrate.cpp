@@ -123,7 +123,7 @@ static bool MigrateTable(const TCHAR *table)
 {
 	WriteToTerminalEx(_T("Migrating table \x1b[1m%s\x1b[0m\n"), table);
 
-	if (!DBBegin(g_hCoreDB))
+	if (!DBBegin(g_dbHandle))
 	{
 		_tprintf(_T("ERROR: unable to start transaction in target database\n"));
       return false;
@@ -136,7 +136,7 @@ static bool MigrateTable(const TCHAR *table)
    if (hResult == NULL)
    {
 		_tprintf(_T("ERROR: unable to read data from source table (%s)\n"), errorText);
-      DBRollback(g_hCoreDB);
+      DBRollback(g_dbHandle);
       return false;
    }
 
@@ -157,7 +157,7 @@ static bool MigrateTable(const TCHAR *table)
       query += _T(",?");
    query += _T(")");
 
-   DB_STATEMENT hStmt = DBPrepareEx(g_hCoreDB, query, true, errorText);
+   DB_STATEMENT hStmt = DBPrepareEx(g_dbHandle, query, true, errorText);
    if (hStmt != NULL)
    {
       success = true;
@@ -207,8 +207,8 @@ static bool MigrateTable(const TCHAR *table)
          if (rows >= g_migrationTxnSize)
          {
             rows = 0;
-            DBCommit(g_hCoreDB);
-            DBBegin(g_hCoreDB);
+            DBCommit(g_dbHandle);
+            DBBegin(g_dbHandle);
          }
 
          totalRows++;
@@ -220,15 +220,15 @@ static bool MigrateTable(const TCHAR *table)
       }
 
       if (success)
-         DBCommit(g_hCoreDB);
+         DBCommit(g_dbHandle);
       else
-         DBRollback(g_hCoreDB);
+         DBRollback(g_dbHandle);
       DBFreeStatement(hStmt);
    }
    else
    {
 		_tprintf(_T("ERROR: cannot prepare INSERT statement (%s)\n"), errorText);
-      DBRollback(g_hCoreDB);
+      DBRollback(g_dbHandle);
    }
    DBFreeResult(hResult);
 	return success;
@@ -283,6 +283,14 @@ static bool MigrateDataTables()
 }
 
 /**
+ * Callback for migrating module table
+ */
+static bool MigrateTableCallback(const TCHAR *table, void *userData)
+{
+   return MigrateTable(table);
+}
+
+/**
  * Migrate database
  */
 void MigrateDatabase(const TCHAR *sourceConfig, TCHAR *destConfFields)
@@ -321,6 +329,9 @@ void MigrateDatabase(const TCHAR *sourceConfig, TCHAR *destConfFields)
 		   if (!MigrateTable(g_tables[i]))
 			   goto cleanup;
 	   }
+
+	   if (!EnumerateModuleTables(MigrateTableCallback, NULL))
+         goto cleanup;
    }
 
    if (!g_skipDataSchemaMigration)

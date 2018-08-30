@@ -28,7 +28,7 @@
 bool IsOnlineUpgradePending()
 {
    TCHAR buffer[MAX_DB_STRING];
-   MetaDataReadStr(_T("PendingOnlineUpgrades"), buffer, MAX_DB_STRING, _T(""));
+   DBMgrMetaDataReadStr(_T("PendingOnlineUpgrades"), buffer, MAX_DB_STRING, _T(""));
    Trim(buffer);
    return buffer[0] != 0;
 }
@@ -42,18 +42,18 @@ void RegisterOnlineUpgrade(int major, int minor)
    _sntprintf(id, 16, _T("%X"), (major << 16) | minor);
 
    TCHAR buffer[MAX_DB_STRING];
-   MetaDataReadStr(_T("PendingOnlineUpgrades"), buffer, MAX_DB_STRING, _T(""));
+   DBMgrMetaDataReadStr(_T("PendingOnlineUpgrades"), buffer, MAX_DB_STRING, _T(""));
    Trim(buffer);
 
    if (buffer[0] == 0)
    {
-      MetaDataWriteStr(_T("PendingOnlineUpgrades"), id);
+      DBMgrMetaDataWriteStr(_T("PendingOnlineUpgrades"), id);
    }
    else
    {
       _tcslcat(buffer, _T(","), MAX_DB_STRING);
       _tcslcat(buffer, id, MAX_DB_STRING);
-      MetaDataWriteStr(_T("PendingOnlineUpgrades"), buffer);
+      DBMgrMetaDataWriteStr(_T("PendingOnlineUpgrades"), buffer);
    }
 }
 
@@ -66,7 +66,7 @@ void UnregisterOnlineUpgrade(int major, int minor)
    _sntprintf(id, 16, _T("%X"), (major << 16) | minor);
 
    TCHAR buffer[MAX_DB_STRING];
-   MetaDataReadStr(_T("PendingOnlineUpgrades"), buffer, MAX_DB_STRING, _T(""));
+   DBMgrMetaDataReadStr(_T("PendingOnlineUpgrades"), buffer, MAX_DB_STRING, _T(""));
    Trim(buffer);
 
    bool changed = false;
@@ -84,7 +84,7 @@ void UnregisterOnlineUpgrade(int major, int minor)
    if (changed)
    {
       TCHAR *list = upgradeList->join(_T(","));
-      MetaDataWriteStr(_T("PendingOnlineUpgrades"), (list[0] != 0) ? list : _T(" ")); // Oracle workaround
+      DBMgrMetaDataWriteStr(_T("PendingOnlineUpgrades"), (list[0] != 0) ? list : _T(" ")); // Oracle workaround
       free(list);
    }
    delete upgradeList;
@@ -124,13 +124,13 @@ static bool SetZoneUIN(const TCHAR *table, const TCHAR *idColumn, const TCHAR *o
 
    TCHAR updateQuery[256];
    _sntprintf(updateQuery, 256, _T("UPDATE %s SET zone_uin=COALESCE((SELECT zone_guid FROM nodes WHERE nodes.id=?),0) WHERE %s=?"), table, idColumn);
-   DB_STATEMENT hStmt = DBPrepare(g_hCoreDB, updateQuery);
+   DB_STATEMENT hStmt = DBPrepare(g_dbHandle, updateQuery);
    if (hStmt == NULL)
       return false;
 
    while(true)
    {
-      DB_RESULT hResult = DBSelect(g_hCoreDB, query);
+      DB_RESULT hResult = DBSelect(g_dbHandle, query);
       if (hResult == NULL)
       {
          DBFreeStatement(hStmt);
@@ -141,7 +141,7 @@ static bool SetZoneUIN(const TCHAR *table, const TCHAR *idColumn, const TCHAR *o
       if (count == 0)
          break;
 
-      bool success = DBBegin(g_hCoreDB);
+      bool success = DBBegin(g_dbHandle);
       for(int i = 0; (i < count) && success; i++)
       {
          UINT64 id = DBGetFieldUInt64(hResult, i, 0);
@@ -151,9 +151,9 @@ static bool SetZoneUIN(const TCHAR *table, const TCHAR *idColumn, const TCHAR *o
          success = DBExecute(hStmt);
       }
       if (success)
-         DBCommit(g_hCoreDB);
+         DBCommit(g_dbHandle);
       else
-         DBRollback(g_hCoreDB);
+         DBRollback(g_dbHandle);
       DBFreeResult(hResult);
 
       if (!success)
@@ -179,10 +179,10 @@ static bool Upgrade_22_21()
    CHK_EXEC_NO_SP(SetZoneUIN(_T("snmp_trap_log"), _T("trap_id"), _T("object_id")));
    CHK_EXEC_NO_SP(SetZoneUIN(_T("syslog"), _T("msg_id"), _T("source_object_id")));
 
-   CHK_EXEC_NO_SP(DBSetNotNullConstraint(g_hCoreDB, _T("alarms"), _T("zone_uin")));
-   CHK_EXEC_NO_SP(DBSetNotNullConstraint(g_hCoreDB, _T("event_log"), _T("zone_uin")));
-   CHK_EXEC_NO_SP(DBSetNotNullConstraint(g_hCoreDB, _T("snmp_trap_log"), _T("zone_uin")));
-   CHK_EXEC_NO_SP(DBSetNotNullConstraint(g_hCoreDB, _T("syslog"), _T("zone_uin")));
+   CHK_EXEC_NO_SP(DBSetNotNullConstraint(g_dbHandle, _T("alarms"), _T("zone_uin")));
+   CHK_EXEC_NO_SP(DBSetNotNullConstraint(g_dbHandle, _T("event_log"), _T("zone_uin")));
+   CHK_EXEC_NO_SP(DBSetNotNullConstraint(g_dbHandle, _T("snmp_trap_log"), _T("zone_uin")));
+   CHK_EXEC_NO_SP(DBSetNotNullConstraint(g_dbHandle, _T("syslog"), _T("zone_uin")));
 
    return true;
 }
@@ -207,7 +207,7 @@ struct
 void RunPendingOnlineUpgrades()
 {
    TCHAR buffer[MAX_DB_STRING];
-   MetaDataReadStr(_T("PendingOnlineUpgrades"), buffer, MAX_DB_STRING, _T(""));
+   DBMgrMetaDataReadStr(_T("PendingOnlineUpgrades"), buffer, MAX_DB_STRING, _T(""));
    Trim(buffer);
    if (buffer[0] == 0)
    {

@@ -70,9 +70,9 @@ static DWORD CreateMapObject(const TCHAR *name, const TCHAR *description)
               _T("(%d,'%s',%s,0,0,0,1,") TIME_T_FMT _T(",0,0,0,0,0,0,'00000000',0,")
 				  _T("'0.000000','0.000000','00000000-0000-0000-0000-000000000000',%s,'0',0)"),
               (int)id, (const TCHAR *)uuid::generate().toString(),
-				  (const TCHAR *)DBPrepareString(g_hCoreDB, name), 
+				  (const TCHAR *)DBPrepareString(g_dbHandle, name),
 				  TIME_T_FCAST(time(NULL)),
-				  (const TCHAR *)DBPrepareString(g_hCoreDB, description, 2048));
+				  (const TCHAR *)DBPrepareString(g_dbHandle, description, 2048));
 	if (!SQLQuery(query))
 		return FALSE;
 
@@ -104,7 +104,7 @@ static BOOL MigrateObjects(DWORD mapId, DWORD submapId, DWORD mapObjectId)
 	   config->setValue(_T("/type"), 1);   // MAP_ELEMENT_OBJECT
 	   config->setValue(_T("/posX"), DBGetFieldLong(hResult, i, 1));
 	   config->setValue(_T("/posY"), DBGetFieldLong(hResult, i, 2));
-		String data = DBPrepareString(g_hCoreDB, config->createXml());
+		String data = DBPrepareString(g_dbHandle, config->createXml());
 		delete config;
 
 		_sntprintf(query, 8192, _T("INSERT INTO network_map_elements (map_id,element_id,element_type,element_data) VALUES (%d,%d,1,%s)"),
@@ -149,8 +149,8 @@ static BOOL MigrateLinks(DWORD mapId, DWORD submapId, DWORD mapObjectId)
 
 		_sntprintf(query, 8192, _T("INSERT INTO network_map_links (map_id,element1,element2,link_type,link_name,connector_name1,connector_name2) VALUES (%d,%d,%d,%d,'',%s,%s)"),
 		           (int)mapObjectId, (int)id1, (int)id2, type, 
-					  (const TCHAR *)DBPrepareString(g_hCoreDB, cname1),
-					  (const TCHAR *)DBPrepareString(g_hCoreDB, cname2));
+					  (const TCHAR *)DBPrepareString(g_dbHandle, cname1),
+					  (const TCHAR *)DBPrepareString(g_dbHandle, cname2));
 		if (!SQLQuery(query))
 			goto cleanup;
 	}

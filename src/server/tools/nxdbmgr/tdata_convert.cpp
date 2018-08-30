@@ -33,7 +33,7 @@ static Table *ReadTable(UINT64 recordId, UINT32 tableId, UINT32 objectId)
        _T("LEFT OUTER JOIN dc_table_columns c ON c.table_id=%d AND c.column_name=n.column_name ")
        _T("WHERE r.record_id=") UINT64_FMT _T(" ")
        _T("ORDER BY r.row_id"), objectId, objectId, tableId, recordId);
-   DB_RESULT hResult = DBSelect(g_hCoreDB, query);
+   DB_RESULT hResult = DBSelect(g_dbHandle, query);
    if (hResult == NULL)
       return NULL;
 
@@ -80,7 +80,7 @@ static bool ConvertTData(UINT32 id, int *skippedRecords)
    TCHAR oldName[64], newName[64];
    _sntprintf(oldName, 64, _T("tdata_%d"), id);
    _sntprintf(newName, 64, _T("tdata_temp_%d"), id);
-   if (!DBRenameTable(g_hCoreDB, oldName, newName))
+   if (!DBRenameTable(g_dbHandle, oldName, newName))
    {
       _tprintf(_T("Table rename failed (%s -> %s)\n"), oldName, newName);
       return false;
@@ -92,7 +92,7 @@ static bool ConvertTData(UINT32 id, int *skippedRecords)
       int total = 0x07FFFFFF;
       TCHAR query[256];
       _sntprintf(query, 256, _T("SELECT count(*) FROM tdata_temp_%d"), id);
-      DB_RESULT hCountResult = DBSelect(g_hCoreDB, query);
+      DB_RESULT hCountResult = DBSelect(g_dbHandle, query);
       if (hCountResult != NULL)
       {
          total = DBGetFieldLong(hCountResult, 0, 0);
@@ -110,13 +110,13 @@ static bool ConvertTData(UINT32 id, int *skippedRecords)
          if (hResult != NULL)
          {
             _sntprintf(query, 256, _T("INSERT INTO tdata_%d (item_id,tdata_timestamp,tdata_value) VALUES (?,?,?)"), id);
-            DB_STATEMENT hStmt = DBPrepare(g_hCoreDB, query);
+            DB_STATEMENT hStmt = DBPrepare(g_dbHandle, query);
             if (hStmt != NULL)
             {
                success = true;
                int converted = 0;
                int skipped = 0;
-               DBBegin(g_hCoreDB);
+               DBBegin(g_dbHandle);
                while(DBFetch(hResult))
                {
                   UINT32 tableId = DBGetFieldULong(hResult, 0);
@@ -149,11 +149,11 @@ static bool ConvertTData(UINT32 id, int *skippedRecords)
                         pct = 100;
                      WriteToTerminalEx(_T("\b\b\b\b%3d%%"), pct);
                      fflush(stdout);
-                     DBCommit(g_hCoreDB);
-                     DBBegin(g_hCoreDB);
+                     DBCommit(g_dbHandle);
+                     DBBegin(g_dbHandle);
                   }
                }
-               DBCommit(g_hCoreDB);
+               DBCommit(g_dbHandle);
                DBFreeStatement(hStmt);
                *skippedRecords = skipped;
             }
@@ -181,7 +181,7 @@ static bool ConvertTData(UINT32 id, int *skippedRecords)
 
       _sntprintf(oldName, 64, _T("tdata_temp_%d"), id);
       _sntprintf(newName, 64, _T("tdata_%d"), id);
-      DBRenameTable(g_hCoreDB, oldName, newName);
+      DBRenameTable(g_dbHandle, oldName, newName);
    }
 
    return success;
@@ -219,7 +219,7 @@ static bool ConvertTDataForClass(const TCHAR *className)
             {
                WriteToTerminalEx(_T("\b\b\b\b\x1b[31;1mfailed\x1b[0m\n"));
                success = false;
-               if(g_bIgnoreErrors)
+               if(g_ignoreErrors)
                   continue;
                else
                   break;

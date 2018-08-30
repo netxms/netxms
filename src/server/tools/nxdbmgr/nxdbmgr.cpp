@@ -1,6 +1,6 @@
 /*
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004-2017 Victor Kirhenshtein
+** Copyright (C) 2004-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -32,27 +32,12 @@ NETXMS_EXECUTABLE_HEADER(nxdbmgr)
 /**
  * Global variables
  */
-DB_HANDLE g_hCoreDB;
-BOOL g_bIgnoreErrors = FALSE;
-BOOL g_bTrace = FALSE;
-bool g_isGuiMode = false;
 bool g_checkData = false;
 bool g_checkDataTablesOnly = false;
 bool g_dataOnlyMigration = false;
 bool g_skipDataMigration = false;
 bool g_skipDataSchemaMigration = false;
 int g_migrationTxnSize = 4096;
-int g_dbSyntax;
-const TCHAR *g_pszTableSuffix = _T("");
-const TCHAR *g_pszSqlType[6][3] =
-{
-   { _T("longtext"), _T("text"), _T("bigint") },             // MySQL
-   { _T("text"), _T("varchar(4000)"), _T("bigint") },        // PostgreSQL
-   { _T("text"), _T("varchar(4000)"), _T("bigint") },        // Microsoft SQL
-   { _T("clob"), _T("varchar(4000)"), _T("number(20)") },    // Oracle
-   { _T("varchar"), _T("varchar(4000)"), _T("number(20)") }, // SQLite
-   { _T("long varchar"), _T("varchar(4000)"), _T("bigint") } // DB/2
-};
 
 /**
  * Static data
@@ -65,6 +50,7 @@ static TCHAR s_dbLogin[MAX_DB_LOGIN] = _T("netxms");
 static TCHAR s_dbPassword[MAX_PASSWORD] = _T("");
 static TCHAR s_dbName[MAX_DB_NAME] = _T("netxms_db");
 static TCHAR s_dbSchema[MAX_DB_NAME] = _T("");
+static TCHAR *s_moduleLoadList = NULL;
 static NX_CFG_TEMPLATE m_cfgTemplate[] =
 {
    { _T("CodePage"), CT_MB_STRING, 0, 0, MAX_PATH, 0, m_szCodePage },
@@ -76,157 +62,10 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("DBEncryptedPassword"), CT_STRING, 0, 0, MAX_PASSWORD, 0, s_dbPassword },
    { _T("DBSchema"), CT_STRING, 0, 0, MAX_DB_NAME, 0, s_dbSchema },
    { _T("DBServer"), CT_STRING, 0, 0, MAX_PATH, 0, s_dbServer },
+   { _T("Module"), CT_STRING_LIST, '\n', 0, 0, 0, &s_moduleLoadList, NULL },
    { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
 };
-static BOOL m_bForce = FALSE;
 static DB_DRIVER s_driver = NULL;
-static bool m_operationInProgress = false;
-
-/**
- * Show query if trace mode is ON
- */
-void ShowQuery(const TCHAR *pszQuery)
-{
-	WriteToTerminalEx(_T("\x1b[1m>>> \x1b[32;1m%s\x1b[0m\n"), pszQuery);
-}
-
-/**
- * Set "operation in progress" flag
- */
-void SetOperationInProgress(bool inProgress)
-{
-   m_operationInProgress = inProgress;
-}
-
-/**
- * Flag for "all" answer in GetYesNo
- */
-static bool s_yesForAll = false;
-static bool s_noForAll = false;
-
-/**
- * Get Yes or No answer from keyboard
- */
-static bool GetYesNoInternal(bool allowBulk, const TCHAR *format, va_list args)
-{
-	if (g_isGuiMode)
-	{
-		if (m_bForce || s_yesForAll)
-			return true;
-		if (s_noForAll)
-		   return false;
-
-		TCHAR message[4096];
-		_vsntprintf(message, 4096, format, args);
-
-#ifdef _WIN32
-		return MessageBox(NULL, message, _T("NetXMS Database Manager"), MB_YESNO | MB_ICONQUESTION) == IDYES;
-#else
-		return false;
-#endif
-	}
-	else
-	{
-	   if (m_operationInProgress)
-	      _tprintf(_T("\n"));
-		_vtprintf(format, args);
-		_tprintf(allowBulk ? _T(" (Yes/No/All/Skip) ") : _T(" (Yes/No) "));
-
-		if (m_bForce || s_yesForAll)
-		{
-			_tprintf(_T("Y\n"));
-			return true;
-		}
-		else if (s_noForAll)
-		{
-         _tprintf(_T("N\n"));
-         return false;
-		}
-		else
-		{
-#ifdef _WIN32
-			while(true)
-			{
-				int ch = _getch();
-				if ((ch == 'y') || (ch == 'Y'))
-				{
-					_tprintf(_T("Y\n"));
-					return true;
-				}
-            if (allowBulk && ((ch == 'a') || (ch == 'A')))
-            {
-               _tprintf(_T("A\n"));
-               s_yesForAll = true;
-               return true;
-            }
-				if ((ch == 'n') || (ch == 'N'))
-				{
-					_tprintf(_T("N\n"));
-					return false;
-				}
-            if (allowBulk && ((ch == 's') || (ch == 'S')))
-            {
-               _tprintf(_T("S\n"));
-               s_noForAll = true;
-               return false;
-            }
-			}
-#else
-			fflush(stdout);
-         TCHAR buffer[16];
-			_fgetts(buffer, 16, stdin);
-			Trim(buffer);
-			if (allowBulk)
-			{
-			   if ((buffer[0] == 'a') || (buffer[0] == 'A'))
-			   {
-               s_yesForAll = true;
-               return true;
-			   }
-            if ((buffer[0] == 's') || (buffer[0] == 'S'))
-            {
-               s_noForAll = true;
-               return false;
-            }
-			}
-			return ((buffer[0] == 'y') || (buffer[0] == 'Y'));
-#endif
-	   }
-	}
-}
-
-/**
- * Get Yes or No answer from keyboard
- */
-bool GetYesNo(const TCHAR *format, ...)
-{
-   va_list args;
-   va_start(args, format);
-   bool result = GetYesNoInternal(false, format, args);
-   va_end(args);
-   return result;
-}
-
-/**
- * Get Yes or No answer from keyboard (with bulk answer options)
- */
-bool GetYesNoEx(const TCHAR *format, ...)
-{
-   va_list args;
-   va_start(args, format);
-   bool result = GetYesNoInternal(true, format, args);
-   va_end(args);
-   return result;
-}
-
-/**
- * Reset bulk yes/no answer
- */
-void ResetBulkYesNo()
-{
-   s_yesForAll = false;
-   s_noForAll = false;
-}
 
 /**
  * Query tracer callback
@@ -235,302 +74,8 @@ static void QueryTracerCallback(const TCHAR *query, bool failure, const TCHAR *e
 {
    if (failure)
       WriteToTerminalEx(_T("SQL query failed (%s):\n\x1b[33;1m%s\x1b[0m\n"), errorText, query);
-   else if (g_bTrace)
+   else if (IsQueryTraceEnabled())
       ShowQuery(query);
-}
-
-/**
- * Execute SQL SELECT query and print error message on screen if query failed
- */
-DB_RESULT SQLSelect(const TCHAR *pszQuery)
-{
-   DB_RESULT hResult;
-	TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
-
-   if (g_bTrace)
-      ShowQuery(pszQuery);
-
-   hResult = DBSelectEx(g_hCoreDB, pszQuery, errorText);
-   if (hResult == NULL)
-      WriteToTerminalEx(_T("SQL query failed (%s):\n\x1b[33;1m%s\x1b[0m\n"), errorText, pszQuery);
-   return hResult;
-}
-
-/**
- * Execute SQL SELECT query via DBSelectUnbuffered and print error message on screen if query failed
- */
-DB_UNBUFFERED_RESULT SQLSelectUnbuffered(const TCHAR *pszQuery)
-{
-   if (g_bTrace)
-      ShowQuery(pszQuery);
-
-   TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
-   DB_UNBUFFERED_RESULT hResult = DBSelectUnbufferedEx(g_hCoreDB, pszQuery, errorText);
-   if (hResult == NULL)
-      WriteToTerminalEx(_T("SQL query failed (%s):\n\x1b[33;1m%s\x1b[0m\n"), errorText, pszQuery);
-   return hResult;
-}
-
-/**
- * Execute prepared statement and print error message on screen if query failed
- */
-bool SQLExecute(DB_STATEMENT hStmt)
-{
-	TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
-
-   if (g_bTrace)
-      ShowQuery(DBGetStatementSource(hStmt));
-
-   bool result = DBExecuteEx(hStmt, errorText);
-   if (!result)
-      WriteToTerminalEx(_T("SQL query failed (%s):\n\x1b[33;1m%s\x1b[0m\n"), errorText, DBGetStatementSource(hStmt));
-   return result;
-}
-
-/**
- * Execute SQL query and print error message on screen if query failed
- */
-bool SQLQuery(const TCHAR *pszQuery)
-{
-	if (*pszQuery == 0)
-		return true;
-
-	String query(pszQuery);
-
-   query.replace(_T("$SQL:TEXT"), g_pszSqlType[g_dbSyntax][SQL_TYPE_TEXT]);
-   query.replace(_T("$SQL:TXT4K"), g_pszSqlType[g_dbSyntax][SQL_TYPE_TEXT4K]);
-   query.replace(_T("$SQL:INT64"), g_pszSqlType[g_dbSyntax][SQL_TYPE_INT64]);
-
-   if (g_bTrace)
-      ShowQuery(query);
-
-   TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
-   bool success = DBQueryEx(g_hCoreDB, (const TCHAR *)query, errorText);
-   if (!success)
-      WriteToTerminalEx(_T("SQL query failed (%s):\n\x1b[33;1m%s\x1b[0m\n"), errorText, (const TCHAR *)query);
-   return success;
-}
-
-/**
- * Execute SQL batch
- */
-bool SQLBatch(const TCHAR *pszBatch)
-{
-   String batch(pszBatch);
-   TCHAR *pszBuffer, *pszQuery, *ptr;
-	TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
-   bool success = true;
-	TCHAR table[128], column[128];
-
-   batch.replace(_T("$SQL:TEXT"), g_pszSqlType[g_dbSyntax][SQL_TYPE_TEXT]);
-   batch.replace(_T("$SQL:TXT4K"), g_pszSqlType[g_dbSyntax][SQL_TYPE_TEXT4K]);
-   batch.replace(_T("$SQL:INT64"), g_pszSqlType[g_dbSyntax][SQL_TYPE_INT64]);
-
-   pszQuery = pszBuffer = batch.getBuffer();
-   while(true)
-   {
-      ptr = _tcschr(pszQuery, _T('\n'));
-      if (ptr != NULL)
-         *ptr = 0;
-      if (!_tcscmp(pszQuery, _T("<END>")))
-         break;
-
-		if (_stscanf(pszQuery, _T("ALTER TABLE %128s DROP COLUMN %128s"), table, column) == 2)
-		{
-			if (!DBDropColumn(g_hCoreDB, table, column))
-			{
-				WriteToTerminalEx(_T("Cannot drop column \x1b[37;1m%s.%s\x1b[0m\n"), table, column);
-				if (!g_bIgnoreErrors)
-				{
-					success = false;
-					break;
-				}
-			}
-		}
-		else
-		{
-			if (g_bTrace)
-				ShowQuery(pszQuery);
-
-			if (!DBQueryEx(g_hCoreDB, pszQuery, errorText))
-			{
-				WriteToTerminalEx(_T("SQL query failed (%s):\n\x1b[33;1m%s\x1b[0m\n"), errorText, pszQuery);
-				if (!g_bIgnoreErrors)
-				{
-					success = false;
-					break;
-				}
-			}
-		}
-
-		if (ptr == NULL)
-		   break;
-      ptr++;
-      pszQuery = ptr;
-   }
-   return success;
-}
-
-/**
- * Read string value from metadata table
- */
-BOOL MetaDataReadStr(const TCHAR *pszVar, TCHAR *pszBuffer, int iBufSize, const TCHAR *pszDefault)
-{
-   DB_RESULT hResult;
-   TCHAR szQuery[256];
-   BOOL bSuccess = FALSE;
-
-   nx_strncpy(pszBuffer, pszDefault, iBufSize);
-   if (_tcslen(pszVar) > 127)
-      return FALSE;
-
-   _sntprintf(szQuery, 256, _T("SELECT var_value FROM metadata WHERE var_name='%s'"), pszVar);
-   hResult = SQLSelect(szQuery);
-   if (hResult == NULL)
-      return FALSE;
-
-   if (DBGetNumRows(hResult) > 0)
-   {
-      DBGetField(hResult, 0, 0, pszBuffer, iBufSize);
-      bSuccess = TRUE;
-   }
-
-   DBFreeResult(hResult);
-   return bSuccess;
-}
-
-/**
- * Read integer value from configuration table
- */
-int MetaDataReadInt(const TCHAR *variable, int defaultValue)
-{
-   TCHAR szBuffer[64];
-   if (MetaDataReadStr(variable, szBuffer, 64, _T("")))
-      return _tcstol(szBuffer, NULL, 0);
-   else
-      return defaultValue;
-}
-
-/**
- * Write string value to metadata table
- */
-bool MetaDataWriteStr(const TCHAR *variable, const TCHAR *value)
-{
-   // Check for variable existence
-   DB_STATEMENT hStmt = DBPrepare(g_hCoreDB, _T("SELECT var_value FROM metadata WHERE var_name=?"));
-   if (hStmt == NULL)
-      return false;
-
-   DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, variable, DB_BIND_STATIC);
-   DB_RESULT hResult = DBSelectPrepared(hStmt);
-   bool bVarExist = false;
-   if (hResult != NULL)
-   {
-      if (DBGetNumRows(hResult) > 0)
-         bVarExist = true;
-      DBFreeResult(hResult);
-   }
-   DBFreeStatement(hStmt);
-
-   // Create or update variable value
-   if (bVarExist)
-   {
-      hStmt = DBPrepare(g_hCoreDB, _T("UPDATE metadata SET var_value=? WHERE var_name=?"));
-      if (hStmt == NULL)
-         return false;
-      DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, value, DB_BIND_STATIC);
-      DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, variable, DB_BIND_STATIC);
-   }
-   else
-   {
-      hStmt = DBPrepare(g_hCoreDB, _T("INSERT INTO metadata (var_name,var_value) VALUES (?,?)"));
-      if (hStmt == NULL)
-         return false;
-      DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, variable, DB_BIND_STATIC);
-      DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, value, DB_BIND_STATIC);
-   }
-   bool success = DBExecute(hStmt);
-   DBFreeStatement(hStmt);
-   return success;
-}
-
-/**
- * Read string value from configuration table
- */
-BOOL ConfigReadStr(const TCHAR *pszVar, TCHAR *pszBuffer, int iBufSize, const TCHAR *pszDefault)
-{
-   DB_RESULT hResult;
-   TCHAR szQuery[256];
-   BOOL bSuccess = FALSE;
-
-   nx_strncpy(pszBuffer, pszDefault, iBufSize);
-   if (_tcslen(pszVar) > 127)
-      return FALSE;
-
-   _sntprintf(szQuery, 256, _T("SELECT var_value FROM config WHERE var_name='%s'"), pszVar);
-   hResult = SQLSelect(szQuery);
-   if (hResult == NULL)
-      return FALSE;
-
-   if (DBGetNumRows(hResult) > 0)
-   {
-      DBGetField(hResult, 0, 0, pszBuffer, iBufSize);
-      bSuccess = TRUE;
-   }
-
-   DBFreeResult(hResult);
-   return bSuccess;
-}
-
-/**
- * Read integer value from configuration table
- */
-int ConfigReadInt(const TCHAR *pszVar, int iDefault)
-{
-   TCHAR szBuffer[64];
-
-   if (ConfigReadStr(pszVar, szBuffer, 64, _T("")))
-      return _tcstol(szBuffer, NULL, 0);
-   else
-      return iDefault;
-}
-
-/**
- * Read unsigned long value from configuration table
- */
-DWORD ConfigReadULong(const TCHAR *pszVar, DWORD dwDefault)
-{
-   TCHAR szBuffer[64];
-
-   if (ConfigReadStr(pszVar, szBuffer, 64, _T("")))
-      return _tcstoul(szBuffer, NULL, 0);
-   else
-      return dwDefault;
-}
-
-/**
- * Check if given record exists in database
- */
-bool IsDatabaseRecordExist(const TCHAR *table, const TCHAR *idColumn, UINT32 id)
-{
-	bool exist = false;
-
-	TCHAR query[256];
-	_sntprintf(query, 256, _T("SELECT %s FROM %s WHERE %s=?"), idColumn, table, idColumn);
-
-   DB_STATEMENT hStmt = DBPrepare(g_hCoreDB, query);
-	if (hStmt != NULL)
-	{
-		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, id);
-		DB_RESULT hResult = DBSelectPrepared(hStmt);
-		if (hResult != NULL)
-		{
-			exist = (DBGetNumRows(hResult) > 0);
-			DBFreeResult(hResult);
-		}
-		DBFreeStatement(hStmt);
-	}
-	return exist;
 }
 
 /**
@@ -545,7 +90,7 @@ bool ValidateDatabase()
 
    // Get database format version
    INT32 major, minor;
-   if (!DBGetSchemaVersion(g_hCoreDB, &major, &minor))
+   if (!DBGetSchemaVersion(g_dbHandle, &major, &minor))
    {
       _tprintf(_T("Unable to determine database schema version\n"));
       return false;
@@ -565,7 +110,7 @@ bool ValidateDatabase()
    }
 
    // Check if database is locked
-   hResult = DBSelect(g_hCoreDB, _T("SELECT var_value FROM config WHERE var_name='DBLockStatus'"));
+   hResult = DBSelect(g_dbHandle, _T("SELECT var_value FROM config WHERE var_name='DBLockStatus'"));
    if (hResult != NULL)
    {
       if (DBGetNumRows(hResult) > 0)
@@ -577,7 +122,7 @@ bool ValidateDatabase()
 
       if (bLocked)
       {
-         hResult = DBSelect(g_hCoreDB, _T("SELECT var_value FROM config WHERE var_name='DBLockInfo'"));
+         hResult = DBSelect(g_dbHandle, _T("SELECT var_value FROM config WHERE var_name='DBLockInfo'"));
          if (hResult != NULL)
          {
             if (DBGetNumRows(hResult) > 0)
@@ -764,10 +309,10 @@ stop_search:
             skipEvent = true;
             break;
          case 'f':
-            m_bForce = TRUE;
+            SetDBMgrForcedConfirmationMode(true);
             break;
 			case 'G':
-				g_isGuiMode = true;
+			   SetDBMgrGUIMode(true);
 				break;
          case 'N':
             replaceValue = false;
@@ -786,7 +331,7 @@ stop_search:
             g_skipDataSchemaMigration = true;
             break;
          case 't':
-            g_bTrace = TRUE;
+            SetQueryTraceMode(true);
             break;
          case 'T':
             g_migrationTxnSize = strtol(optarg, NULL, 0);
@@ -797,16 +342,16 @@ stop_search:
             }
             break;
          case 'I':
-            g_pszTableSuffix = _T(" TYPE=InnoDB");
+            SetTableSuffix(_T(" TYPE=InnoDB"));
             break;
          case 'L':
             skipAlarms = true;
             break;
          case 'M':
-            g_pszTableSuffix = _T(" TYPE=MyISAM");
+            SetTableSuffix(_T(" TYPE=MyISAM"));
             break;
          case 'X':
-            g_bIgnoreErrors = TRUE;
+            g_ignoreErrors = true;
             break;
          case 'Y':
             skipSysLog = true;
@@ -893,11 +438,18 @@ stop_search:
       return 3;
    }
 
-   g_hCoreDB = ConnectToDatabase();
-   if (g_hCoreDB == NULL)
+   g_dbHandle = ConnectToDatabase();
+   if (g_dbHandle == NULL)
    {
       DBUnloadDriver(s_driver);
       return 4;
+   }
+
+   if (!LoadServerModules(s_moduleLoadList))
+   {
+      DBDisconnect(g_dbHandle);
+      DBUnloadDriver(s_driver);
+      return 6;
    }
 
    if (!strcmp(argv[optind], "init"))
@@ -907,11 +459,11 @@ stop_search:
    else
    {
       // Get database syntax
-		g_dbSyntax = DBGetSyntax(g_hCoreDB);
+		g_dbSyntax = DBGetSyntax(g_dbHandle);
 		if (g_dbSyntax == DB_SYNTAX_UNKNOWN)
 		{
          _tprintf(_T("Unable to determine database syntax\n"));
-         DBDisconnect(g_hCoreDB);
+         DBDisconnect(g_dbHandle);
          DBUnloadDriver(s_driver);
          return 5;
       }
@@ -974,7 +526,7 @@ stop_search:
 			char *var = argv[optind + 1];
 #endif
 			TCHAR buffer[MAX_CONFIG_VALUE];
-			ConfigReadStr(var, buffer, MAX_CONFIG_VALUE, _T(""));
+			DBMgrConfigReadStr(var, buffer, MAX_CONFIG_VALUE, _T(""));
 			_tprintf(_T("%s\n"), buffer);
 #ifdef UNICODE
 			free(var);
@@ -1005,7 +557,7 @@ stop_search:
    }
 
    // Shutdown
-   DBDisconnect(g_hCoreDB);
+   DBDisconnect(g_dbHandle);
    DBUnloadDriver(s_driver);
    return 0;
 }

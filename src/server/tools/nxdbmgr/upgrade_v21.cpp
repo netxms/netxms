@@ -44,8 +44,8 @@ static bool H_UpgradeFromV4()
             _T("<END>");
    CHK_EXEC(SQLBatch(batch));
 
-   CHK_EXEC(DBSetNotNullConstraint(g_hCoreDB, _T("nodes"), _T("rack_orientation")));
-   CHK_EXEC(DBSetNotNullConstraint(g_hCoreDB, _T("chassis"), _T("rack_orientation")));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("nodes"), _T("rack_orientation")));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("chassis"), _T("rack_orientation")));
 
    CHK_EXEC(SetMinorSchemaVersion(5));
    return true;
@@ -56,10 +56,10 @@ static bool H_UpgradeFromV4()
  */
 static bool H_UpgradeFromV3()
 {
-   DB_RESULT hResult = DBSelect(g_hCoreDB, _T("SELECT access_rights,object_id FROM acl WHERE user_id=-2147483647")); // Get group Admins object acl
+   DB_RESULT hResult = DBSelect(g_dbHandle, _T("SELECT access_rights,object_id FROM acl WHERE user_id=-2147483647")); // Get group Admins object acl
    if (hResult != NULL)
    {
-      DB_STATEMENT hStmt = DBPrepare(g_hCoreDB, _T("UPDATE acl SET access_rights=? WHERE user_id=-2147483647 AND object_id=? "));
+      DB_STATEMENT hStmt = DBPrepare(g_dbHandle, _T("UPDATE acl SET access_rights=? WHERE user_id=-2147483647 AND object_id=? "));
       if (hStmt != NULL)
       {
          int nRows = DBGetNumRows(hResult);
@@ -75,7 +75,7 @@ static bool H_UpgradeFromV3()
 
                if (!SQLExecute(hStmt))
                {
-                  if (!g_bIgnoreErrors)
+                  if (!g_ignoreErrors)
                   {
                      DBFreeStatement(hStmt);
                      DBFreeResult(hResult);
@@ -87,11 +87,11 @@ static bool H_UpgradeFromV3()
 
          DBFreeStatement(hStmt);
       }
-      else if (!g_bIgnoreErrors)
+      else if (!g_ignoreErrors)
          return FALSE;
       DBFreeResult(hResult);
    }
-   else if (!g_bIgnoreErrors)
+   else if (!g_ignoreErrors)
       return FALSE;
 
    CHK_EXEC(SetMinorSchemaVersion(4));
@@ -109,8 +109,8 @@ static bool H_UpgradeFromV2()
             _T("<END>");
    CHK_EXEC(SQLBatch(batch));
 
-   DBSetNotNullConstraint(g_hCoreDB, _T("nodes"), _T("fail_time_snmp"));
-   DBSetNotNullConstraint(g_hCoreDB, _T("nodes"), _T("fail_time_agent"));
+   DBSetNotNullConstraint(g_dbHandle, _T("nodes"), _T("fail_time_snmp"));
+   DBSetNotNullConstraint(g_dbHandle, _T("nodes"), _T("fail_time_agent"));
 
    CHK_EXEC(SetMinorSchemaVersion(3));
    return true;
@@ -155,7 +155,7 @@ static struct
 bool MajorSchemaUpgrade_V21()
 {
    INT32 major, minor;
-   if (!DBGetSchemaVersion(g_hCoreDB, &major, &minor))
+   if (!DBGetSchemaVersion(g_dbHandle, &major, &minor))
       return false;
 
    while(major == 21)
@@ -171,17 +171,17 @@ bool MajorSchemaUpgrade_V21()
          return false;
       }
       _tprintf(_T("Upgrading from version 21.%d to %d.%d\n"), minor, s_dbUpgradeMap[i].nextMajor, s_dbUpgradeMap[i].nextMinor);
-      DBBegin(g_hCoreDB);
+      DBBegin(g_dbHandle);
       if (s_dbUpgradeMap[i].upgradeProc())
       {
-         DBCommit(g_hCoreDB);
-         if (!DBGetSchemaVersion(g_hCoreDB, &major, &minor))
+         DBCommit(g_dbHandle);
+         if (!DBGetSchemaVersion(g_dbHandle, &major, &minor))
             return false;
       }
       else
       {
          _tprintf(_T("Rolling back last stage due to upgrade errors...\n"));
-         DBRollback(g_hCoreDB);
+         DBRollback(g_dbHandle);
          return false;
       }
    }

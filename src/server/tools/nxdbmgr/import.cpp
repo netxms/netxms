@@ -82,10 +82,10 @@ static int ImportTableCB(void *arg, int cols, char **data, char **names)
 			{
 #ifdef UNICODE
 				WCHAR *wcData = WideStringFromUTF8String(data[i]);
-				String prepData = DBPrepareString(g_hCoreDB, wcData);
+				String prepData = DBPrepareString(g_dbHandle, wcData);
 				free(wcData);
 #else
-				String prepData = DBPrepareString(g_hCoreDB, data[i]);
+				String prepData = DBPrepareString(g_dbHandle, data[i]);
 #endif
 				query.append(prepData);
 				query.append(_T(","));
@@ -141,7 +141,7 @@ static BOOL ImportTable(sqlite3 *db, const TCHAR *table)
 
    _tprintf(_T("Importing table %s\n"), table);
 
-   if (DBBegin(g_hCoreDB))
+   if (DBBegin(g_dbHandle))
    {
 #ifdef UNICODE
       char *mbTable = MBStringFromWideString(table);
@@ -153,7 +153,7 @@ static BOOL ImportTable(sqlite3 *db, const TCHAR *table)
       rc = sqlite3_exec(db, query, ImportTableCB, (void *)table, &errmsg);
       if (rc == SQLITE_OK)
       {
-         DBCommit(g_hCoreDB);
+         DBCommit(g_dbHandle);
       }
       else
       {
@@ -161,7 +161,7 @@ static BOOL ImportTable(sqlite3 *db, const TCHAR *table)
              GetYesNo(_T("ERROR: SQL query \"%hs\" on import file failed (%hs). Continue?\n"), query, errmsg))
             rc = SQLITE_OK;
          sqlite3_free(errmsg);
-         DBRollback(g_hCoreDB);
+         DBRollback(g_dbHandle);
       }
    }
    else
@@ -228,6 +228,14 @@ static int GetSchemaVersionCB(void *arg, int cols, char **data, char **names)
 }
 
 /**
+ * Callback for importing module table
+ */
+static bool ImportModuleTable(const TCHAR *table, void *userData)
+{
+   return ImportTable(static_cast<sqlite3*>(userData), table);
+}
+
+/**
  * Import database
  */
 void ImportDatabase(const char *file)
@@ -271,8 +279,11 @@ void ImportDatabase(const char *file)
 		if (!ImportTable(db, g_tables[i]))
 			goto cleanup;
 	}
+
 	if (!ImportDataTables(db))
 		goto cleanup;
+	if (!EnumerateModuleTables(ImportModuleTable, db))
+      goto cleanup;
 
 	success = TRUE;
 

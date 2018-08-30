@@ -1,6 +1,6 @@
 /*
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004-2016 Victor Kirhenshtein
+** Copyright (C) 2004-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,98 +21,6 @@
 **/
 
 #include "nxdbmgr.h"
-
-
-//
-// Static data
-//
-
-static int m_iNumErrors = 0;
-static int m_iNumFixes = 0;
-static int m_iStageErrors;
-static int s_stageErrorsUpdate;
-static int m_iStageFixes;
-static TCHAR *m_pszStageMsg = NULL;
-static int s_stageWorkTotal = 0;
-static int s_stageWorkDone = 0;
-
-/**
- * Start stage
- */
-static void StartStage(const TCHAR *pszMsg, int workTotal = 1)
-{
-   if (pszMsg != NULL)
-   {
-      free(m_pszStageMsg);
-      m_pszStageMsg = _tcsdup(pszMsg);
-      m_iStageErrors = m_iNumErrors;
-      s_stageErrorsUpdate = m_iNumErrors;
-      m_iStageFixes = m_iNumFixes;
-      s_stageWorkTotal = workTotal;
-      s_stageWorkDone = 0;
-      ResetBulkYesNo();
-   }
-   WriteToTerminalEx(_T("\x1b[1m*\x1b[0m %-67s  \x1b[37;1m[\x1b[0m   0%% \x1b[37;1m]\x1b[0m\b\b\b"), m_pszStageMsg);
-#ifndef _WIN32
-   fflush(stdout);
-#endif
-   SetOperationInProgress(true);
-}
-
-/**
- * Set total work for stage
- */
-static void SetStageWorkTotal(int workTotal)
-{
-   s_stageWorkTotal = workTotal;
-   if (s_stageWorkDone > s_stageWorkTotal)
-      s_stageWorkDone = s_stageWorkTotal;
-}
-
-/**
- * Update stage progress
- */
-static void UpdateStageProgress(int installment)
-{
-   if (m_iNumErrors - s_stageErrorsUpdate > 0)
-   {
-      StartStage(NULL); // redisplay stage message
-      s_stageErrorsUpdate = m_iNumErrors;
-   }
-
-   s_stageWorkDone += installment;
-   if (s_stageWorkDone > s_stageWorkTotal)
-      s_stageWorkDone = s_stageWorkTotal;
-   WriteToTerminalEx(_T("\b\b\b%3d"), s_stageWorkDone * 100 / s_stageWorkTotal);
-#ifndef _WIN32
-   fflush(stdout);
-#endif
-}
-
-/**
- * End stage
- */
-static void EndStage()
-{
-   static const TCHAR *pszStatus[] = { _T("PASSED"), _T("FIXED "), _T("ERROR ") };
-   static int nColor[] = { 32, 33, 31 };
-   int nCode, nErrors;
-
-   nErrors = m_iNumErrors - m_iStageErrors;
-   if (nErrors > 0)
-   {
-      nCode = (m_iNumFixes - m_iStageFixes == nErrors) ? 1 : 2;
-      if (m_iNumErrors - s_stageErrorsUpdate > 0)
-         StartStage(NULL); // redisplay stage message
-   }
-   else
-   {
-      nCode = 0;
-   }
-   WriteToTerminalEx(_T("\b\b\b\b\b\x1b[37;1m[\x1b[%d;1m%s\x1b[37;1m]\x1b[0m\n"), nColor[nCode], pszStatus[nCode]);
-   SetOperationInProgress(false);
-   ResetBulkYesNo();
-}
 
 /**
  * Get object name from object_properties table
@@ -202,28 +110,28 @@ static BOOL FindSubnetForNode(DWORD id, const TCHAR *name)
 				if (DBGetNumRows(hResult2) > 0)
 				{
 					UINT32 subnetId = DBGetFieldULong(hResult2, 0, 0);
-					m_iNumErrors++;
+					g_dbCheckErrors++;
 					if (GetYesNoEx(_T("Unlinked node object %d (\"%s\") can be linked to subnet %d (%s). Link?"), id, name, subnetId, buffer))
 					{
 						_sntprintf(query, 256, _T("INSERT INTO nsmap (subnet_id,node_id) VALUES (%d,%d)"), subnetId, id);
 						if (SQLQuery(query))
 						{
 							success = TRUE;
-							m_iNumFixes++;
+							g_dbCheckFixes++;
 							break;
 						}
 						else
 						{
 							// Node remains unlinked, so error count will be
 							// incremented again by node deletion code or next iteration
-							m_iNumErrors--;
+							g_dbCheckErrors--;
 						}
 					}
 					else
 					{
 						// Node remains unlinked, so error count will be
 						// incremented again by node deletion code
-						m_iNumErrors--;
+						g_dbCheckErrors--;
 					}
 				}
 				DBFreeResult(hResult2);
@@ -251,7 +159,7 @@ static void CheckMissingObjectProperties(const TCHAR *table, const TCHAR *classN
       UINT32 id = DBGetFieldULong(hResult, i, 0);
       if (id == builtinObjectId)
          continue;
-      m_iNumErrors++;
+      g_dbCheckErrors++;
       if (GetYesNoEx(_T("Missing %s object %d properties. Create?"), className, id))
       {
          uuid_t guid;
@@ -264,12 +172,13 @@ static void CheckMissingObjectProperties(const TCHAR *table, const TCHAR *classN
                     _T("last_modified,status_calc_alg,status_prop_alg,")
                     _T("status_fixed_val,status_shift,status_translation,")
                     _T("status_single_threshold,status_thresholds,location_type,")
-                    _T("latitude,longitude,location_accuracy,location_timestamp,image,submap_id,maint_mode,maint_event_id) VALUES ")
+                    _T("latitude,longitude,location_accuracy,location_timestamp,")
+                    _T("image,submap_id,state_before_maint,maint_event_id) VALUES ")
                     _T("(%d,'%s','lost_%s_%d',5,0,0,1,") TIME_T_FMT _T(",0,0,0,0,0,0,'00000000',0,")
                     _T("'0.000000','0.000000',0,0,'00000000-0000-0000-0000-000000000000',0,'0',0)"),
                     (int)id, _uuid_to_string(guid, guidText), className, (int)id, TIME_T_FCAST(time(NULL)));
          if (SQLQuery(query))
-            m_iNumFixes++;
+            g_dbCheckFixes++;
       }
    }
    DBFreeResult(hResult);
@@ -280,7 +189,7 @@ static void CheckMissingObjectProperties(const TCHAR *table, const TCHAR *classN
  */
 static void CheckZones()
 {
-   StartStage(_T("Checking zone object properties"));
+   StartStage(_T("Zone object properties"));
    CheckMissingObjectProperties(_T("zones"), _T("zone"), 4);
    EndStage();
 }
@@ -290,11 +199,11 @@ static void CheckZones()
  */
 static void CheckNodes()
 {
-   StartStage(_T("Checking node object properties"));
+   StartStage(_T("Node object properties"));
    CheckMissingObjectProperties(_T("nodes"), _T("node"), 0);
    EndStage();
 
-   StartStage(_T("Checking node to subnet bindings"));
+   StartStage(_T("Node to subnet bindings"));
    DB_RESULT hResult = SQLSelect(_T("SELECT n.id,p.name FROM nodes n INNER JOIN object_properties p ON p.object_id = n.id WHERE p.is_deleted=0"));
    int count = DBGetNumRows(hResult);
    SetStageWorkTotal(count);
@@ -313,7 +222,7 @@ static void CheckNodes()
             DBGetField(hResult, i, 1, nodeName, MAX_OBJECT_NAME);
             if ((DBGetFieldIPAddr(hResult, i, 1) == 0) || (!FindSubnetForNode(nodeId, nodeName)))
             {
-               m_iNumErrors++;
+               g_dbCheckErrors++;
                if (GetYesNoEx(_T("Unlinked node object %d (\"%s\"). Delete it?"), nodeId, nodeName))
                {
                   _sntprintf(query, 1024, _T("DELETE FROM nodes WHERE id=%d"), nodeId);
@@ -322,7 +231,7 @@ static void CheckNodes()
                   success = success && SQLQuery(query);
                   _sntprintf(query, 1024, _T("DELETE FROM object_properties WHERE object_id=%d"), nodeId);
                   if (success && SQLQuery(query))
-                     m_iNumFixes++;
+                     g_dbCheckFixes++;
                }
             }
          }
@@ -340,12 +249,12 @@ static void CheckNodes()
 static void CheckComponents(const TCHAR *pszDisplayName, const TCHAR *pszTable)
 {
    TCHAR stageName[256];
-   _sntprintf(stageName, 256, _T("Checking %s object properties"), pszDisplayName);
+   _sntprintf(stageName, 256, _T("%s object properties"), pszDisplayName);
    StartStage(stageName);
    CheckMissingObjectProperties(pszTable, pszDisplayName, 0);
    EndStage();
 
-   _sntprintf(stageName, 256, _T("Checking %s bindings"), pszDisplayName);
+   _sntprintf(stageName, 256, _T("%s bindings"), pszDisplayName);
    StartStage(stageName);
 
    TCHAR query[256];
@@ -367,7 +276,7 @@ static void CheckComponents(const TCHAR *pszDisplayName, const TCHAR *pszTable)
          {
             if (DBGetNumRows(hResult2) == 0)
             {
-               m_iNumErrors++;
+               g_dbCheckErrors++;
                TCHAR objectName[MAX_OBJECT_NAME];
                if (GetYesNoEx(_T("Unlinked %s object %d (\"%s\"). Delete it?"), pszDisplayName, objectId, GetObjectName(objectId, objectName)))
                {
@@ -376,7 +285,7 @@ static void CheckComponents(const TCHAR *pszDisplayName, const TCHAR *pszTable)
                   {
                      _sntprintf(query, 256, _T("DELETE FROM object_properties WHERE object_id=%d"), objectId);
                      SQLQuery(query);
-                     m_iNumFixes++;
+                     g_dbCheckFixes++;
                   }
                }
             }
@@ -393,7 +302,7 @@ static void CheckComponents(const TCHAR *pszDisplayName, const TCHAR *pszTable)
  */
 static void CheckObjectProperties()
 {
-   StartStage(_T("Checking object properties"));
+   StartStage(_T("Object properties"));
    DB_RESULT hResult = SQLSelect(_T("SELECT object_id,name,last_modified FROM object_properties"));
    if (hResult != NULL)
    {
@@ -406,7 +315,7 @@ static void CheckObjectProperties()
          // Check last change time
          if (DBGetFieldULong(hResult, i, 2) == 0)
          {
-            m_iNumErrors++;
+            g_dbCheckErrors++;
             TCHAR objectName[MAX_OBJECT_NAME];
             if (GetYesNoEx(_T("Object %d [%s] has invalid timestamp. Fix it?"),
 				                objectId, DBGetField(hResult, i, 1, objectName, MAX_OBJECT_NAME)))
@@ -415,7 +324,7 @@ static void CheckObjectProperties()
                _sntprintf(query, 256, _T("UPDATE object_properties SET last_modified=") TIME_T_FMT _T(" WHERE object_id=%d"),
                           TIME_T_FCAST(time(NULL)), (int)objectId);
                if (SQLQuery(query))
-                  m_iNumFixes++;
+                  g_dbCheckFixes++;
             }
          }
          UpdateStageProgress(1);
@@ -430,7 +339,7 @@ static void CheckObjectProperties()
  */
 static void CheckContainerMembership()
 {
-   StartStage(_T("Checking container membership"));
+   StartStage(_T("Container membership"));
    DB_RESULT containerList = SQLSelect(_T("SELECT object_id,container_id FROM container_members"));
    DB_RESULT objectList = SQLSelect(_T("SELECT object_id FROM object_properties"));
    if (containerList != NULL && objectList != NULL)
@@ -453,14 +362,14 @@ static void CheckContainerMembership()
          }
          if (!match)
          {
-            m_iNumErrors++;
+            g_dbCheckErrors++;
             if (GetYesNoEx(_T("Container %d contains non-existing child %d. Fix it?"),
                            DBGetFieldULong(containerList, i, 1), DBGetFieldULong(containerList, i, 0)))
             {
                _sntprintf(szQuery, 1024, _T("DELETE FROM container_members WHERE object_id=%d AND container_id=%d"),
                            DBGetFieldULong(containerList, i, 0), DBGetFieldULong(containerList, i, 1));
                if (SQLQuery(szQuery))
-                  m_iNumFixes++;
+                  g_dbCheckFixes++;
             }
          }
          match = false;
@@ -477,11 +386,11 @@ static void CheckContainerMembership()
  */
 static void CheckClusters()
 {
-   StartStage(_T("Checking cluster object properties"));
+   StartStage(_T("Cluster object properties"));
    CheckMissingObjectProperties(_T("clusters"), _T("cluster"), 0);
    EndStage();
 
-   StartStage(_T("Checking cluster member nodes"));
+   StartStage(_T("Cluster member nodes"));
    DB_RESULT hResult = SQLSelect(_T("SELECT cluster_id,node_id FROM cluster_members"));
    if (hResult != NULL)
    {
@@ -490,9 +399,9 @@ static void CheckClusters()
       for(int i = 0; i < count; i++)
       {
          UINT32 nodeId = DBGetFieldULong(hResult, i, 1);
-			if (!IsDatabaseRecordExist(_T("nodes"), _T("id"), nodeId))
+			if (!IsDatabaseRecordExist(g_dbHandle, _T("nodes"), _T("id"), nodeId))
 			{
-            m_iNumErrors++;
+            g_dbCheckErrors++;
             UINT32 clusterId = DBGetFieldULong(hResult, i, 0);
             TCHAR name[MAX_OBJECT_NAME];
             if (GetYesNoEx(_T("Cluster object %s [%d] refers to non-existing node %d. Dereference?"),
@@ -502,7 +411,7 @@ static void CheckClusters()
                _sntprintf(query, 256, _T("DELETE FROM cluster_members WHERE cluster_id=%d AND node_id=%d"), clusterId, nodeId);
                if (SQLQuery(query))
                {
-                  m_iNumFixes++;
+                  g_dbCheckFixes++;
                }
             }
 			}
@@ -540,7 +449,7 @@ static void CheckEPP()
    int i, iNumRows;
    DWORD dwId;
 
-   StartStage(_T("Checking event processing policy"));
+   StartStage(_T("Event processing policy"));
 
    // Check source object ID's
    hResult = SQLSelect(_T("SELECT object_id FROM policy_source_list"));
@@ -553,12 +462,12 @@ static void CheckEPP()
          _sntprintf(szQuery, 1024, _T("SELECT object_id FROM object_properties WHERE object_id=%d"), dwId);
          if (!CheckResultSet(szQuery))
          {
-            m_iNumErrors++;
+            g_dbCheckErrors++;
             if (GetYesNoEx(_T("Invalid object ID %d used in policy. Delete it from policy?"), dwId))
             {
                _sntprintf(szQuery, 1024, _T("DELETE FROM policy_source_list WHERE object_id=%d"), dwId);
                if (SQLQuery(szQuery))
-                  m_iNumFixes++;
+                  g_dbCheckFixes++;
             }
          }
       }
@@ -580,12 +489,12 @@ static void CheckEPP()
             _sntprintf(szQuery, 1024, _T("SELECT event_code FROM event_cfg WHERE event_code=%d"), dwId);
          if (!CheckResultSet(szQuery))
          {
-            m_iNumErrors++;
+            g_dbCheckErrors++;
             if (GetYesNoEx(_T("Invalid event%s ID 0x%08X referenced in policy. Delete this reference?"), (dwId & GROUP_FLAG) ? _T(" group") : _T(""), dwId))
             {
                _sntprintf(szQuery, 1024, _T("DELETE FROM policy_event_list WHERE event_code=%d"), dwId);
                if (SQLQuery(szQuery))
-                  m_iNumFixes++;
+                  g_dbCheckFixes++;
             }
          }
       }
@@ -604,12 +513,12 @@ static void CheckEPP()
          _sntprintf(szQuery, 1024, _T("SELECT action_id FROM actions WHERE action_id=%d"), dwId);
          if (!CheckResultSet(szQuery))
          {
-            m_iNumErrors++;
+            g_dbCheckErrors++;
             if (GetYesNoEx(_T("Invalid action ID %d referenced in policy. Delete this reference?"), dwId))
             {
                _sntprintf(szQuery, 1024, _T("DELETE FROM policy_action_list WHERE action_id=%d"), dwId);
                if (SQLQuery(szQuery))
-                  m_iNumFixes++;
+                  g_dbCheckFixes++;
             }
          }
       }
@@ -660,7 +569,7 @@ BOOL CreateIDataTable(DWORD nodeId)
    TCHAR szQuery[256], szQueryTemplate[256];
    DWORD i;
 
-   MetaDataReadStr(_T("IDataTableCreationCommand"), szQueryTemplate, 255, _T(""));
+   DBMgrMetaDataReadStr(_T("IDataTableCreationCommand"), szQueryTemplate, 255, _T(""));
    _sntprintf(szQuery, 256, szQueryTemplate, nodeId);
    if (!SQLQuery(szQuery))
 		return FALSE;
@@ -668,7 +577,7 @@ BOOL CreateIDataTable(DWORD nodeId)
    for(i = 0; i < 10; i++)
    {
       _sntprintf(szQuery, 256, _T("IDataIndexCreationCommand_%d"), i);
-      MetaDataReadStr(szQuery, szQueryTemplate, 255, _T(""));
+      DBMgrMetaDataReadStr(szQuery, szQueryTemplate, 255, _T(""));
       if (szQueryTemplate[0] != 0)
       {
          _sntprintf(szQuery, 256, szQueryTemplate, nodeId, nodeId);
@@ -688,7 +597,7 @@ BOOL CreateTDataTable_preV281(DWORD nodeId)
    TCHAR szQuery[256], szQueryTemplate[256];
    DWORD i;
 
-   MetaDataReadStr(_T("TDataTableCreationCommand"), szQueryTemplate, 255, _T(""));
+   DBMgrMetaDataReadStr(_T("TDataTableCreationCommand"), szQueryTemplate, 255, _T(""));
    _sntprintf(szQuery, 256, szQueryTemplate, nodeId);
    if (!SQLQuery(szQuery))
 		return FALSE;
@@ -696,7 +605,7 @@ BOOL CreateTDataTable_preV281(DWORD nodeId)
    for(i = 0; i < 10; i++)
    {
       _sntprintf(szQuery, 256, _T("TDataIndexCreationCommand_%d"), i);
-      MetaDataReadStr(szQuery, szQueryTemplate, 255, _T(""));
+      DBMgrMetaDataReadStr(szQuery, szQueryTemplate, 255, _T(""));
       if (szQueryTemplate[0] != 0)
       {
          _sntprintf(szQuery, 256, szQueryTemplate, nodeId, nodeId);
@@ -719,7 +628,7 @@ BOOL CreateTDataTable(DWORD nodeId)
    for(i = 0; i < 10; i++)
    {
       _sntprintf(szQuery, 256, _T("TDataTableCreationCommand_%d"), i);
-      MetaDataReadStr(szQuery, szQueryTemplate, 255, _T(""));
+      DBMgrMetaDataReadStr(szQuery, szQueryTemplate, 255, _T(""));
       if (szQueryTemplate[0] != 0)
       {
          _sntprintf(szQuery, 256, szQueryTemplate, nodeId, nodeId);
@@ -731,7 +640,7 @@ BOOL CreateTDataTable(DWORD nodeId)
    for(i = 0; i < 10; i++)
    {
       _sntprintf(szQuery, 256, _T("TDataIndexCreationCommand_%d"), i);
-      MetaDataReadStr(szQuery, szQueryTemplate, 255, _T(""));
+      DBMgrMetaDataReadStr(szQuery, szQueryTemplate, 255, _T(""));
       if (szQueryTemplate[0] != 0)
       {
          _sntprintf(szQuery, 256, szQueryTemplate, nodeId, nodeId);
@@ -767,7 +676,7 @@ static bool IsDciExists(UINT32 dciId, UINT32 nodeId, bool isTable)
  */
 static void CheckCollectedData(bool isTable)
 {
-   StartStage(isTable ? _T("Checking table DCI history records") : _T("Checking DCI history records"));
+   StartStage(isTable ? _T("Table DCI history records") : _T("DCI history records"));
 
 	time_t now = time(NULL);
 	IntegerArray<UINT32> *targets = GetDataCollectionTargets();
@@ -783,13 +692,13 @@ static void CheckCollectedData(bool isTable)
       {
          if (DBGetFieldLong(hResult, 0, 0) > 0)
          {
-            m_iNumErrors++;
+            g_dbCheckErrors++;
             if (GetYesNoEx(_T("Found collected data for node [%d] with timestamp in the future. Delete invalid records?"), objectId))
             {
                _sntprintf(query, 1024, _T("DELETE FROM %s_%d WHERE %s_timestamp>") TIME_T_FMT,
                         isTable ? _T("tdata") : _T("idata"), objectId, isTable ? _T("tdata") : _T("idata"), TIME_T_FCAST(now));
                if (SQLQuery(query))
-                  m_iNumFixes++;
+                  g_dbCheckFixes++;
             }
          }
          DBFreeResult(hResult);
@@ -812,12 +721,12 @@ static void CheckCollectedData(bool isTable)
             UINT32 id = DBGetFieldLong(hResult, i, 0);
             if (!IsDciExists(id, objectId, isTable))
             {
-               m_iNumErrors++;
+               g_dbCheckErrors++;
                if (GetYesNoEx(_T("Found collected data for non-existing DCI [%d] on node [%d]. Delete invalid records?"), id, objectId))
                {
                   _sntprintf(query, 1024, _T("DELETE FROM %s_%d WHERE item_id=%d"), isTable ? _T("tdata") : _T("idata"), objectId, id);
                   if (SQLQuery(query))
-                     m_iNumFixes++;
+                     g_dbCheckFixes++;
                }
             }
          }
@@ -836,7 +745,7 @@ static void CheckCollectedData(bool isTable)
  */
 static void CheckRawDciValues()
 {
-   StartStage(_T("Checking raw DCI values table"));
+   StartStage(_T("Raw DCI values table"));
 
    time_t now = time(NULL);
 
@@ -850,13 +759,13 @@ static void CheckRawDciValues()
          UINT32 id = DBGetFieldLong(hResult, i, 0);
          if (!IsDciExists(id, 0, false))
          {
-            m_iNumErrors++;
+            g_dbCheckErrors++;
             if (GetYesNoEx(_T("Found raw value record for non-existing DCI [%d]. Delete it?"), id))
             {
                TCHAR query[256];
                _sntprintf(query, 256, _T("DELETE FROM raw_dci_values WHERE item_id=%d"), id);
                if (SQLQuery(query))
-                  m_iNumFixes++;
+                  g_dbCheckFixes++;
             }
          }
          UpdateStageProgress(1);
@@ -872,12 +781,12 @@ static void CheckRawDciValues()
    {
       if (DBGetFieldLong(hResult, 0, 0) > 0)
       {
-         m_iNumErrors++;
+         g_dbCheckErrors++;
          if (GetYesNoEx(_T("Found DCIs with last poll timestamp in the future. Fix it?")))
          {
             _sntprintf(query, 1024, _T("UPDATE raw_dci_values SET last_poll_time=") TIME_T_FMT _T(" WHERE last_poll_time>") TIME_T_FMT, TIME_T_FCAST(now), TIME_T_FCAST(now));
             if (SQLQuery(query))
-               m_iNumFixes++;
+               g_dbCheckFixes++;
          }
       }
       DBFreeResult(hResult);
@@ -892,7 +801,7 @@ static void CheckRawDciValues()
  */
 static void CheckThresholds()
 {
-   StartStage(_T("Checking DCI thresholds"));
+   StartStage(_T("DCI thresholds"));
 
    DB_RESULT hResult = SQLSelect(_T("SELECT threshold_id,item_id FROM thresholds"));
    if (hResult != NULL)
@@ -904,13 +813,13 @@ static void CheckThresholds()
          UINT32 dciId = DBGetFieldULong(hResult, i, 1);
          if (!IsDciExists(dciId, 0, false))
          {
-            m_iNumErrors++;
+            g_dbCheckErrors++;
             if (GetYesNoEx(_T("Found threshold configuration for non-existing DCI [%d]. Delete?"), dciId))
             {
                TCHAR query[256];
                _sntprintf(query, 256, _T("DELETE FROM thresholds WHERE threshold_id=%d AND item_id=%d"), DBGetFieldLong(hResult, i, 0), dciId);
                if (SQLQuery(query))
-                  m_iNumFixes++;
+                  g_dbCheckFixes++;
             }
          }
          UpdateStageProgress(1);
@@ -926,7 +835,7 @@ static void CheckThresholds()
  */
 static void CheckTableThresholds()
 {
-   StartStage(_T("Checking table DCI thresholds"));
+   StartStage(_T("Table DCI thresholds"));
 
    DB_RESULT hResult = SQLSelect(_T("SELECT id,table_id FROM dct_thresholds"));
    if (hResult != NULL)
@@ -938,7 +847,7 @@ static void CheckTableThresholds()
          UINT32 dciId = DBGetFieldULong(hResult, i, 1);
          if (!IsDciExists(dciId, 0, true))
          {
-            m_iNumErrors++;
+            g_dbCheckErrors++;
             if (GetYesNoEx(_T("Found threshold configuration for non-existing table DCI [%d]. Delete?"), dciId))
             {
                UINT32 id = DBGetFieldLong(hResult, i, 0);
@@ -952,7 +861,7 @@ static void CheckTableThresholds()
                   {
                      _sntprintf(query, 256, _T("DELETE FROM dct_thresholds WHERE id=%d"), id);
                      if (SQLQuery(query))
-                        m_iNumFixes++;
+                        g_dbCheckFixes++;
                   }
                }
             }
@@ -972,7 +881,7 @@ bool IsDataTableExist(const TCHAR *format, UINT32 id)
 {
    TCHAR table[256];
    _sntprintf(table, 256, format, id);
-   int rc = DBIsTableExist(g_hCoreDB, table);
+   int rc = DBIsTableExist(g_dbHandle, table);
    if (rc == DBIsTableExist_Failure)
    {
       _tprintf(_T("WARNING: call to DBIsTableExist(\"%s\") failed\n"), table);
@@ -985,7 +894,7 @@ bool IsDataTableExist(const TCHAR *format, UINT32 id)
  */
 static void CheckDataTables()
 {
-   StartStage(_T("Checking data tables"));
+   StartStage(_T("Data tables"));
 
 	IntegerArray<UINT32> *targets = GetDataCollectionTargets();
 	SetStageWorkTotal(targets->size());
@@ -996,28 +905,28 @@ static void CheckDataTables()
       // IDATA
       if (!IsDataTableExist(_T("idata_%d"), objectId))
       {
-			m_iNumErrors++;
+			g_dbCheckErrors++;
 
          TCHAR objectName[MAX_OBJECT_NAME];
          GetObjectName(objectId, objectName);
 			if (GetYesNoEx(_T("Data collection table (IDATA) for object %s [%d] not found. Create? (Y/N) "), objectName, objectId))
 			{
 				if (CreateIDataTable(objectId))
-					m_iNumFixes++;
+					g_dbCheckFixes++;
 			}
       }
 
       // TDATA
       if (!IsDataTableExist(_T("tdata_%d"), objectId))
       {
-			m_iNumErrors++;
+			g_dbCheckErrors++;
 
          TCHAR objectName[MAX_OBJECT_NAME];
          GetObjectName(objectId, objectName);
 			if (GetYesNoEx(_T("Data collection table (TDATA) for %s [%d] not found. Create? (Y/N) "), objectName, objectId))
 			{
 				if (CreateTDataTable(objectId))
-					m_iNumFixes++;
+					g_dbCheckFixes++;
 			}
       }
 
@@ -1037,7 +946,7 @@ static void CheckTemplateNodeMapping()
    TCHAR name[256], query[256];
    DWORD i, dwNumRows, dwTemplateId, dwNodeId;
 
-   StartStage(_T("Checking template to node mapping"));
+   StartStage(_T("Template to node mapping"));
    hResult = SQLSelect(_T("SELECT template_id,node_id FROM dct_node_map ORDER BY template_id"));
    if (hResult != NULL)
    {
@@ -1049,18 +958,18 @@ static void CheckTemplateNodeMapping()
          dwNodeId = DBGetFieldULong(hResult, i, 1);
 
          // Check node existence
-         if (!IsDatabaseRecordExist(_T("nodes"), _T("id"), dwNodeId) &&
-             !IsDatabaseRecordExist(_T("clusters"), _T("id"), dwNodeId) &&
-             !IsDatabaseRecordExist(_T("mobile_devices"), _T("id"), dwNodeId))
+         if (!IsDatabaseRecordExist(g_dbHandle, _T("nodes"), _T("id"), dwNodeId) &&
+             !IsDatabaseRecordExist(g_dbHandle, _T("clusters"), _T("id"), dwNodeId) &&
+             !IsDatabaseRecordExist(g_dbHandle, _T("mobile_devices"), _T("id"), dwNodeId))
          {
-            m_iNumErrors++;
+            g_dbCheckErrors++;
 				GetObjectName(dwTemplateId, name);
             if (GetYesNoEx(_T("Template %d [%s] mapped to non-existent node %d. Delete this mapping?"), dwTemplateId, name, dwNodeId))
             {
                _sntprintf(query, 256, _T("DELETE FROM dct_node_map WHERE template_id=%d AND node_id=%d"),
                           dwTemplateId, dwNodeId);
                if (SQLQuery(query))
-                  m_iNumFixes++;
+                  g_dbCheckFixes++;
             }
          }
          UpdateStageProgress(1);
@@ -1075,7 +984,7 @@ static void CheckTemplateNodeMapping()
  */
 static void CheckMapLinks()
 {
-   StartStage(_T("Checking network map links"));
+   StartStage(_T("Network map links"));
 
    for(int pass = 1; pass <= 2; pass++)
    {
@@ -1094,7 +1003,7 @@ static void CheckMapLinks()
          int count = DBGetNumRows(hResult);
          for(int i = 0; i < count; i++)
          {
-            m_iNumErrors++;
+            g_dbCheckErrors++;
             DWORD mapId = DBGetFieldULong(hResult, i, 0);
             TCHAR name[MAX_OBJECT_NAME];
 				GetObjectName(mapId, name);
@@ -1103,13 +1012,64 @@ static void CheckMapLinks()
                _sntprintf(query, 256, _T("DELETE FROM network_map_links WHERE map_id=%d AND element1=%d AND element2=%d"),
                           mapId, DBGetFieldLong(hResult, i, 1), DBGetFieldLong(hResult, i, 2));
                if (SQLQuery(query))
-                  m_iNumFixes++;
+                  g_dbCheckFixes++;
             }
          }
          DBFreeResult(hResult);
       }
    }
    EndStage();
+}
+
+/**
+ * Init DB lock
+ */
+static bool InitLocks()
+{
+   TCHAR buffer[MAX_DB_STRING], bufferInfo[MAX_DB_STRING];
+   bool result = false;
+
+   DBMgrConfigReadStr(_T("DBLockStatus"), buffer, MAX_DB_STRING, _T("ERROR"));
+   if (_tcscmp(buffer, _T("ERROR")))
+   {
+      bool locked = _tcscmp(buffer, _T("UNLOCKED"));
+
+      if (locked)
+      {
+         DBMgrConfigReadStr(_T("DBLockInfo"), bufferInfo, MAX_DB_STRING, _T("<error>"));
+         if (GetYesNo(_T("Database is locked by server %s [%s]\nDo you wish to force database unlock?"), buffer, bufferInfo))
+         {
+            locked = false;
+            _tprintf(_T("Database lock removed\n"));
+         }
+      }
+      if (!locked)
+      {
+         CreateConfigParam(_T("DBLockStatus"), _T("NXDBMGR Check"), false, true, true);
+         GetLocalHostName(buffer, MAX_DB_STRING, false);
+         CreateConfigParam(_T("DBLockInfo"), buffer, false, false, true);
+         _sntprintf(buffer, 64, _T("%u"), GetCurrentProcessId());
+         CreateConfigParam(_T("DBLockPID"), buffer, false, false, true);
+         result = true;
+      }
+
+      return result;
+   }
+   else
+   {
+      _tprintf(_T("Unable to get database lock status\n"));
+      return result;
+   }
+}
+
+/**
+ * Unlock database
+ */
+static void UnlockDB()
+{
+   CreateConfigParam(_T("DBLockStatus"), _T("UNLOCKED"), false, true, true);
+   CreateConfigParam(_T("DBLockInfo"), _T(""),  false, false, true);
+   CreateConfigParam(_T("DBLockPID"), _T("0"), false, false, true);
 }
 
 /**
@@ -1124,7 +1084,7 @@ void CheckDatabase()
 
    // Get database format version
    INT32 major, minor;
-   if (!DBGetSchemaVersion(g_hCoreDB, &major, &minor))
+   if (!DBGetSchemaVersion(g_dbHandle, &major, &minor))
    {
       _tprintf(_T("Unable to determine database schema version\n"));
       _tprintf(_T("Database check aborted\n"));
@@ -1146,117 +1106,76 @@ void CheckDatabase()
       return;
    }
 
-   TCHAR szLockStatus[MAX_DB_STRING], szLockInfo[MAX_DB_STRING];
-   BOOL bLocked = FALSE;
    BOOL bCompleted = FALSE;
 
    // Check if database is locked
-   DB_RESULT hResult = DBSelect(g_hCoreDB, _T("SELECT var_value FROM config WHERE var_name='DBLockStatus'"));
-   if (hResult != NULL)
+   if (InitLocks())
    {
-      if (DBGetNumRows(hResult) > 0)
-      {
-         DBGetField(hResult, 0, 0, szLockStatus, MAX_DB_STRING);
-         DecodeSQLString(szLockStatus);
-         bLocked = _tcscmp(szLockStatus, _T("UNLOCKED"));
-      }
-      DBFreeResult(hResult);
+      DBBegin(g_dbHandle);
 
-      if (bLocked)
+      if (g_checkDataTablesOnly)
       {
-         hResult = DBSelect(g_hCoreDB, _T("SELECT var_value FROM config WHERE var_name='DBLockInfo'"));
-         if (hResult != NULL)
-         {
-            if (DBGetNumRows(hResult) > 0)
-            {
-               DBGetField(hResult, 0, 0, szLockInfo, MAX_DB_STRING);
-               DecodeSQLString(szLockInfo);
-            }
-            DBFreeResult(hResult);
-         }
+         CheckDataTables();
       }
-
-      if (bLocked)
+      else
       {
-         if (GetYesNo(_T("Database is locked by server %s [%s]\nDo you wish to force database unlock?"), szLockStatus, szLockInfo))
+         CheckZones();
+         CheckNodes();
+         CheckComponents(_T("Interface"), _T("interfaces"));
+         CheckComponents(_T("Network service"), _T("network_services"));
+         CheckClusters();
+         CheckTemplateNodeMapping();
+         CheckObjectProperties();
+         CheckContainerMembership();
+         CheckEPP();
+         CheckMapLinks();
+         CheckDataTables();
+         CheckRawDciValues();
+         CheckThresholds();
+         CheckTableThresholds();
+         if (g_checkData)
          {
-            if (SQLQuery(_T("UPDATE config SET var_value='UNLOCKED' where var_name='DBLockStatus'")))
-            {
-               bLocked = FALSE;
-               _tprintf(_T("Database lock removed\n"));
-            }
+            CheckCollectedData(false);
+            CheckCollectedData(true);
          }
+         CheckModuleSchemas();
       }
 
-      if (!bLocked)
+      if (g_dbCheckErrors == 0)
       {
-         DBBegin(g_hCoreDB);
-
-         if (g_checkDataTablesOnly)
-         {
-            CheckDataTables();
-         }
+         _tprintf(_T("Database doesn't contain any errors\n"));
+         DBCommit(g_dbHandle);
+      }
+      else
+      {
+         _tprintf(_T("%d errors was found, %d errors was corrected\n"), g_dbCheckErrors, g_dbCheckFixes);
+         if (g_dbCheckFixes == g_dbCheckErrors)
+            _tprintf(_T("All errors in database was fixed\n"));
          else
+            _tprintf(_T("Database still contain errors\n"));
+         if (g_dbCheckFixes > 0)
          {
-            CheckZones();
-            CheckNodes();
-            CheckComponents(_T("interface"), _T("interfaces"));
-            CheckComponents(_T("network service"), _T("network_services"));
-            CheckClusters();
-            CheckTemplateNodeMapping();
-            CheckObjectProperties();
-            CheckContainerMembership();
-            CheckEPP();
-            CheckMapLinks();
-            CheckDataTables();
-            CheckRawDciValues();
-            CheckThresholds();
-            CheckTableThresholds();
-            if (g_checkData)
+            if (GetYesNo(_T("Commit changes?")))
             {
-               CheckCollectedData(false);
-               CheckCollectedData(true);
-            }
-         }
-
-         if (m_iNumErrors == 0)
-         {
-            _tprintf(_T("Database doesn't contain any errors\n"));
-            DBCommit(g_hCoreDB);
-         }
-         else
-         {
-            _tprintf(_T("%d errors was found, %d errors was corrected\n"), m_iNumErrors, m_iNumFixes);
-            if (m_iNumFixes == m_iNumErrors)
-               _tprintf(_T("All errors in database was fixed\n"));
-            else
-               _tprintf(_T("Database still contain errors\n"));
-            if (m_iNumFixes > 0)
-            {
-               if (GetYesNo(_T("Commit changes?")))
-               {
-                  _tprintf(_T("Committing changes...\n"));
-                  if (DBCommit(g_hCoreDB))
-                     _tprintf(_T("Changes was successfully committed to database\n"));
-               }
-               else
-               {
-                  _tprintf(_T("Rolling back changes...\n"));
-                  if (DBRollback(g_hCoreDB))
-                     _tprintf(_T("All changes made to database was cancelled\n"));
-               }
+               _tprintf(_T("Committing changes...\n"));
+               if (DBCommit(g_dbHandle))
+                  _tprintf(_T("Changes was successfully committed to database\n"));
             }
             else
             {
-               DBRollback(g_hCoreDB);
+               _tprintf(_T("Rolling back changes...\n"));
+               if (DBRollback(g_dbHandle))
+                  _tprintf(_T("All changes made to database was cancelled\n"));
             }
          }
-         bCompleted = TRUE;
+         else
+         {
+            DBRollback(g_dbHandle);
+         }
       }
-   }
-   else
-   {
-      _tprintf(_T("Unable to get database lock status\n"));
+      bCompleted = TRUE;
+
+      UnlockDB();
    }
 
    _tprintf(_T("Database check %s\n"), bCompleted ? _T("completed") : _T("aborted"));
