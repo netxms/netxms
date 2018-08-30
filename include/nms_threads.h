@@ -1001,8 +1001,13 @@ inline UINT32 GetCurrentThreadId()
    return (UINT32)syscall(SYS_gettid);
 #elif HAVE_PTHREAD_GETTHREADID_NP
    return (UINT32)pthread_getthreadid_np();
+#elif HAVE_PTHREAD_THREADID_NP
+   uint64_t id;
+   if (pthread_threadid_np(NULL, &id) != 0)
+      return 0;
+   return (UINT32)id;
 #else
-   return (UINT32)pthread_self();
+   return 0;
 #endif
 }
 
