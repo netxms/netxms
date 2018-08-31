@@ -170,6 +170,7 @@
     <ClCompile Include="init.cpp" />
     <ClCompile Include="migrate.cpp" />
     <ClCompile Include="mm.cpp" />
+    <ClCompile Include="modules.cpp" />
     <ClCompile Include="nxdbmgr.cpp" />
     <ClCompile Include="reindex.cpp" />
     <ClCompile Include="resetadmin.cpp" />
@@ -227,6 +228,9 @@
     <ProjectReference Include="..\..\libnxsrv\libnxsrv.vcxproj">
       <Project>{cb89d905-c8be-4027-b2d8-f96c245e9160}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\libnxdbmgr\libnxdbmgr.vcxproj">
+      <Project>{503e1db1-0aee-4d71-8dfd-e0d695bdde5f}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

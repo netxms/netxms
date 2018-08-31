@@ -21,4 +21,5 @@ messages.h: messages.mc
 EXTRA_DIST = \
 	libnxsrv.vcxproj libnxsrv.vcxproj.filters libnxsrv.rc \
 	messages.mc messages.c messages.h \
-	libnxsrv.h resource.h
+	libnxsrv.h resource.h \
+	Makefile.w32
