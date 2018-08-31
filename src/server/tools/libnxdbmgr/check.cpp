@@ -129,3 +129,29 @@ bool LIBNXDBMGR_EXPORTABLE DBMgrExecuteQueryOnObject(UINT32 objectId, const TCHA
    DBFreeStatement(hStmt);
    return success;
 }
+
+/**
+ * Get object name from object_properties table
+ */
+TCHAR LIBNXDBMGR_EXPORTABLE *DBMgrGetObjectName(UINT32 objectId, TCHAR *buffer)
+{
+   TCHAR query[256];
+   _sntprintf(query, 256, _T("SELECT name FROM object_properties WHERE object_id=%d"), objectId);
+   DB_RESULT hResult = SQLSelect(query);
+   if (hResult != NULL)
+   {
+      if (DBGetNumRows(hResult) > 0)
+      {
+         DBGetField(hResult, 0, 0, buffer, MAX_OBJECT_NAME);
+      }
+      else
+      {
+         _sntprintf(buffer, MAX_OBJECT_NAME, _T("[%u]"), objectId);
+      }
+   }
+   else
+   {
+      _sntprintf(buffer, MAX_OBJECT_NAME, _T("[%u]"), objectId);
+   }
+   return buffer;
+}
