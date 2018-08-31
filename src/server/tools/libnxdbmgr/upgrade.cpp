@@ -72,11 +72,14 @@ bool LIBNXDBMGR_EXPORTABLE GenerateGUID(const TCHAR *table, const TCHAR *idColum
  */
 bool LIBNXDBMGR_EXPORTABLE CreateTable(const TCHAR *pszQuery)
 {
-	String query(pszQuery);
+   String query(pszQuery);
 
-   query.replace(_T("$SQL:TEXT"), g_sqlTypes[g_dbSyntax][SQL_TYPE_TEXT]);
-   query.replace(_T("$SQL:TXT4K"), g_sqlTypes[g_dbSyntax][SQL_TYPE_TEXT4K]);
-   query.replace(_T("$SQL:INT64"), g_sqlTypes[g_dbSyntax][SQL_TYPE_INT64]);
+   if (g_dbSyntax != DB_SYNTAX_UNKNOWN)
+   {
+      query.replace(_T("$SQL:TEXT"), g_sqlTypes[g_dbSyntax][SQL_TYPE_TEXT]);
+      query.replace(_T("$SQL:TXT4K"), g_sqlTypes[g_dbSyntax][SQL_TYPE_TEXT4K]);
+      query.replace(_T("$SQL:INT64"), g_sqlTypes[g_dbSyntax][SQL_TYPE_INT64]);
+   }
    if (g_dbSyntax == DB_SYNTAX_MYSQL)
       query.append(g_tableSuffix);
    return SQLQuery(query);
