@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Database Abstraction Library
-** Copyright (C) 2003-2015 Victor Kirhenshtein
+** Copyright (C) 2003-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -692,6 +692,27 @@ bool LIBNXDB_EXPORTABLE DBGetColumnDataType(DB_HANDLE hdb, const TCHAR *table, c
          break;
    }
    return success;
+}
+
+/**
+ * Drop index from table
+ */
+bool LIBNXDB_EXPORTABLE DBDropIndex(DB_HANDLE hdb, const TCHAR *table, const TCHAR *index)
+{
+   TCHAR query[1024];
+   switch(DBGetSyntax(hdb))
+   {
+      case DB_SYNTAX_MSSQL:
+         _sntprintf(query, 1024, _T("DROP INDEX %s ON %s"), index, table);
+         break;
+      case DB_SYNTAX_MYSQL:
+         _sntprintf(query, 1024, _T("DROP INDEX `%s` ON `%s`"), index, table);
+         break;
+      default:
+         _sntprintf(query, 1024, _T("DROP INDEX %s"), index);
+         break;
+   }
+   return ExecuteQuery(hdb, query);
 }
 
 /**

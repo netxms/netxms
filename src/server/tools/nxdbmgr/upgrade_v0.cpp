@@ -9111,11 +9111,9 @@ static BOOL H_UpgradeFromV53(int currVersion, int newVersion)
    return TRUE;
 }
 
-
-//
-// Upgrade from V52 to V53
-//
-
+/**
+ * Upgrade from V52 to V53
+ */
 static BOOL H_UpgradeFromV52(int currVersion, int newVersion)
 {
    DB_RESULT hResult;
@@ -9143,8 +9141,10 @@ static BOOL H_UpgradeFromV52(int currVersion, int newVersion)
       _tprintf(_T("   * idata_%d\n"), dwId);
 
       // Drop old indexes
-      _sntprintf(szQuery, 1024, _T("DROP INDEX idx_idata_%d_timestamp"), dwId);
-      DBQuery(g_dbHandle, szQuery);
+      TCHAR table[64], index[64];
+      _sntprintf(table, 64, _T("idata_%d"), dwId);
+      _sntprintf(index, 64, _T("idx_idata_%d_timestamp"), dwId);
+      DBDropIndex(g_dbHandle, table, index);
 
       // Create new index
       _sntprintf(szQuery, 1024, pszNewIdx[g_dbSyntax], dwId, dwId);

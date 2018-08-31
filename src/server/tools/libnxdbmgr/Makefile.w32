@@ -1,0 +1,9 @@
+TARGET = libnxdbmgr.dll
+TYPE = dll
+COMPONENT = server
+SOURCES = check.cpp config.cpp confirm.cpp main.cpp query.cpp upgrade.cpp
+
+CPPFLAGS = /DLIBNXDBMGR_EXPORTS
+LIBS = libnxdb.lib libnetxms.lib
+	  
+include ..\..\..\..\Makefile.inc.w32

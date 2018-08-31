@@ -6,5 +6,6 @@ libnxdbmgr_la_LIBADD = \
 	../../../libnetxms/libnetxms.la
 
 EXTRA_DIST = \
-	libnxdbmgr.vcxproj libnxdbmgr.vcxproj.filters
-	libnxdbmgr.h resource.h
+	libnxdbmgr.h \
+	libnxdbmgr.vcxproj libnxdbmgr.vcxproj.filters \
+	Makefile.w32
