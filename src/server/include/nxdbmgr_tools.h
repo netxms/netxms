@@ -99,6 +99,8 @@ void LIBNXDBMGR_EXPORTABLE EndStage();
 
 bool LIBNXDBMGR_EXPORTABLE DBMgrExecuteQueryOnObject(UINT32 objectId, const TCHAR *query);
 
+TCHAR LIBNXDBMGR_EXPORTABLE *DBMgrGetObjectName(UINT32 objectId, TCHAR *buffer);
+
 
 // Global variables
 extern int LIBNXDBMGR_EXPORTABLE g_dbSyntax;

@@ -23,34 +23,6 @@
 #include "nxdbmgr.h"
 
 /**
- * Get object name from object_properties table
- */
-static TCHAR *GetObjectName(DWORD dwId, TCHAR *pszBuffer)
-{
-	TCHAR szQuery[256];
-	DB_RESULT hResult;
-
-	_sntprintf(szQuery, 256, _T("SELECT name FROM object_properties WHERE object_id=%d"), dwId);
-	hResult = SQLSelect(szQuery);
-	if (hResult != NULL)
-	{
-		if (DBGetNumRows(hResult) > 0)
-		{
-			DBGetField(hResult, 0, 0, pszBuffer, MAX_OBJECT_NAME);
-		}
-		else
-		{
-			_tcscpy(pszBuffer, _T("<unknown>"));
-		}
-	}
-	else
-	{
-		_tcscpy(pszBuffer, _T("<unknown>"));
-	}
-	return pszBuffer;
-}
-
-/**
  * Check that given node is inside at least one container or cluster
  */
 static bool NodeInContainer(DWORD id)
@@ -278,7 +250,7 @@ static void CheckComponents(const TCHAR *pszDisplayName, const TCHAR *pszTable)
             {
                g_dbCheckErrors++;
                TCHAR objectName[MAX_OBJECT_NAME];
-               if (GetYesNoEx(_T("Unlinked %s object %d (\"%s\"). Delete it?"), pszDisplayName, objectId, GetObjectName(objectId, objectName)))
+               if (GetYesNoEx(_T("Unlinked %s object %d (\"%s\"). Delete it?"), pszDisplayName, objectId, DBMgrGetObjectName(objectId, objectName)))
                {
                   _sntprintf(query, 256, _T("DELETE FROM %s WHERE id=%d"), pszTable, objectId);
                   if (SQLQuery(query))
@@ -405,7 +377,7 @@ static void CheckClusters()
             UINT32 clusterId = DBGetFieldULong(hResult, i, 0);
             TCHAR name[MAX_OBJECT_NAME];
             if (GetYesNoEx(_T("Cluster object %s [%d] refers to non-existing node %d. Dereference?"),
-				               GetObjectName(clusterId, name), clusterId, nodeId))
+				               DBMgrGetObjectName(clusterId, name), clusterId, nodeId))
             {
                TCHAR query[256];
                _sntprintf(query, 256, _T("DELETE FROM cluster_members WHERE cluster_id=%d AND node_id=%d"), clusterId, nodeId);
@@ -908,7 +880,7 @@ static void CheckDataTables()
 			g_dbCheckErrors++;
 
          TCHAR objectName[MAX_OBJECT_NAME];
-         GetObjectName(objectId, objectName);
+         DBMgrGetObjectName(objectId, objectName);
 			if (GetYesNoEx(_T("Data collection table (IDATA) for object %s [%d] not found. Create? (Y/N) "), objectName, objectId))
 			{
 				if (CreateIDataTable(objectId))
@@ -922,7 +894,7 @@ static void CheckDataTables()
 			g_dbCheckErrors++;
 
          TCHAR objectName[MAX_OBJECT_NAME];
-         GetObjectName(objectId, objectName);
+         DBMgrGetObjectName(objectId, objectName);
 			if (GetYesNoEx(_T("Data collection table (TDATA) for %s [%d] not found. Create? (Y/N) "), objectName, objectId))
 			{
 				if (CreateTDataTable(objectId))
@@ -963,7 +935,7 @@ static void CheckTemplateNodeMapping()
              !IsDatabaseRecordExist(g_dbHandle, _T("mobile_devices"), _T("id"), dwNodeId))
          {
             g_dbCheckErrors++;
-				GetObjectName(dwTemplateId, name);
+				DBMgrGetObjectName(dwTemplateId, name);
             if (GetYesNoEx(_T("Template %d [%s] mapped to non-existent node %d. Delete this mapping?"), dwTemplateId, name, dwNodeId))
             {
                _sntprintf(query, 256, _T("DELETE FROM dct_node_map WHERE template_id=%d AND node_id=%d"),
@@ -1006,7 +978,7 @@ static void CheckMapLinks()
             g_dbCheckErrors++;
             DWORD mapId = DBGetFieldULong(hResult, i, 0);
             TCHAR name[MAX_OBJECT_NAME];
-				GetObjectName(mapId, name);
+				DBMgrGetObjectName(mapId, name);
             if (GetYesNoEx(_T("Invalid link on network map %s [%d]. Delete?"), name, mapId))
             {
                _sntprintf(query, 256, _T("DELETE FROM network_map_links WHERE map_id=%d AND element1=%d AND element2=%d"),
