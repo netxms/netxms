@@ -101,9 +101,12 @@ bool LIBNXDBMGR_EXPORTABLE SQLQuery(const TCHAR *query)
 
    String realQuery(query);
 
-   realQuery.replace(_T("$SQL:TEXT"), g_sqlTypes[g_dbSyntax][SQL_TYPE_TEXT]);
-   realQuery.replace(_T("$SQL:TXT4K"), g_sqlTypes[g_dbSyntax][SQL_TYPE_TEXT4K]);
-   realQuery.replace(_T("$SQL:INT64"), g_sqlTypes[g_dbSyntax][SQL_TYPE_INT64]);
+   if (g_dbSyntax != DB_SYNTAX_UNKNOWN)
+   {
+      realQuery.replace(_T("$SQL:TEXT"), g_sqlTypes[g_dbSyntax][SQL_TYPE_TEXT]);
+      realQuery.replace(_T("$SQL:TXT4K"), g_sqlTypes[g_dbSyntax][SQL_TYPE_TEXT4K]);
+      realQuery.replace(_T("$SQL:INT64"), g_sqlTypes[g_dbSyntax][SQL_TYPE_INT64]);
+   }
 
    if (g_queryTrace)
       ShowQuery(realQuery);
@@ -126,9 +129,12 @@ bool LIBNXDBMGR_EXPORTABLE SQLBatch(const TCHAR *batchSource)
    bool success = true;
    TCHAR table[128], column[128];
 
-   batch.replace(_T("$SQL:TEXT"), g_sqlTypes[g_dbSyntax][SQL_TYPE_TEXT]);
-   batch.replace(_T("$SQL:TXT4K"), g_sqlTypes[g_dbSyntax][SQL_TYPE_TEXT4K]);
-   batch.replace(_T("$SQL:INT64"), g_sqlTypes[g_dbSyntax][SQL_TYPE_INT64]);
+   if (g_dbSyntax != DB_SYNTAX_UNKNOWN)
+   {
+      batch.replace(_T("$SQL:TEXT"), g_sqlTypes[g_dbSyntax][SQL_TYPE_TEXT]);
+      batch.replace(_T("$SQL:TXT4K"), g_sqlTypes[g_dbSyntax][SQL_TYPE_TEXT4K]);
+      batch.replace(_T("$SQL:INT64"), g_sqlTypes[g_dbSyntax][SQL_TYPE_INT64]);
+   }
 
    pszQuery = pszBuffer = batch.getBuffer();
    while(true)

@@ -25,7 +25,7 @@
 /**
  * Database syntax
  */
-int LIBNXDBMGR_EXPORTABLE g_dbSyntax = -1;
+int LIBNXDBMGR_EXPORTABLE g_dbSyntax = DB_SYNTAX_UNKNOWN;
 
 /**
  * Global DB handle
