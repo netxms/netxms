@@ -64,7 +64,7 @@ def main():
    replaceInFile('src/java/netxms-eclipse/Core/plugin.xml', r'Version .*&#x0A;', r'Version %s&#x0A;'  % sys.argv[1]) 
    replaceInFile('android/src/agent/app/build.gradle', r'org.netxms:netxms-mobile-agent:.*\'\)', r"org.netxms:netxms-mobile-agent:%s')"  % sys.argv[1]) 
    replaceInFile('android/src/agent/app/build.gradle', r'org.netxms:netxms-base:.*\'\)', r"org.netxms:netxms-base:%s')"  % sys.argv[1]) 
-   replaceInFile('android/src/console/app/build.gradle', r'org.netxms:netxms-mobile-agent:.*\'\)', r"org.netxms:netxms-mobile-agent:%s')"  % sys.argv[1]) 
+   replaceInFile('android/src/console/app/build.gradle', r'org.netxms:netxms-client:.*\'\)', r"org.netxms:netxms-client:%s')"  % sys.argv[1]) 
    replaceInFile('android/src/console/app/build.gradle', r'org.netxms:netxms-base:.*\'\)', r"org.netxms:netxms-base:%s')"  % sys.argv[1]) 
    replaceInFile('src/install/windows/webui-x64.iss', r'OutputBaseFilename=netxms-webui-.*', r'OutputBaseFilename=netxms-webui-%s-x64'  % sys.argv[1]) 
    replaceInFile('src/install/windows/setup-webui.iss', r'AppVerName=NetXMS WebUI .*', r'AppVerName=NetXMS WebUI %s'  % sys.argv[1]) 
