@@ -105,6 +105,7 @@ static void PrintFlags(const TCHAR *src)
 	String s = src;
 	s.replace(_T("${bindir}"), BINDIR);
 	s.replace(_T("${libdir}"), LIBDIR);
+	s.replace(_T("${localstatedir}"), STATEDIR);
 	s.replace(_T("${pkgdatadir}"), DATADIR);
 	s.replace(_T("${pkglibdir}"), PKGLIBDIR);
 	s.replace(_T("${prefix}"), PREFIX);
