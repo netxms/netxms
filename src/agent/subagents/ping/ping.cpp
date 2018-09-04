@@ -165,6 +165,7 @@ static LONG H_IcmpPing(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, 
 	   dontFragment = (_tcstol(dontFragmentFlag, NULL, 0) != 0);
 	}
 
+	nxlog_debug_tag(DEBUG_TAG, 7, _T("IcmpPing started for host %s"), szHostName);
 	UINT32 result = IcmpPing(addr, 1, dwTimeOut, &dwRTT, dwPacketSize, dontFragment);
 	nxlog_debug_tag(DEBUG_TAG, 7, _T("IcmpPing: hostName=%s timeout=%d packetSize=%d dontFragment=%s result=%d time=%d"),
 	      szHostName, dwTimeOut, dwPacketSize, dontFragment ? _T("true") : _T("false"), result, dwRTT);

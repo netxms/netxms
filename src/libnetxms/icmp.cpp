@@ -333,6 +333,10 @@ static UINT32 IcmpPing4(UINT32 addr, int retries, UINT32 timeout, UINT32 *rtt, U
           if (result != ICMP_TIMEOUT)
              break;  // success or fatal error
       }
+      else
+      {
+         result = ICMP_SEND_FAILED;
+      }
 
       UINT32 minDelay = 500 * i; // min = 0 in first run, then wait longer and longer
       UINT32 maxDelay = 200 + minDelay * 2;  // increased random window between retries
