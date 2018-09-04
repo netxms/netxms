@@ -203,6 +203,7 @@ inline WCHAR towupper(WCHAR c)
 #define ICMP_TIMEOUT          2
 #define ICMP_RAW_SOCK_FAILED  3
 #define ICMP_API_ERROR        4
+#define ICMP_SEND_FAILED      5
 
 /**
  * Token types for configuration loader
