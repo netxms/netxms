@@ -6581,10 +6581,14 @@ void ClientSession::queryAgentTable(NXCPMessage *pRequest)
    {
       if (object->getObjectClass() == OBJECT_NODE)
       {
-         if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ_AGENT))
+         TCHAR name[MAX_PARAM_NAME];
+         pRequest->getFieldAsString(VID_NAME, name, MAX_PARAM_NAME);
+
+         // Allow access to agent table Agent.SessionAgents if user has access rights for taking screenshots
+         // Data from this table required by client to determine correct UI session name
+         if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ_AGENT) ||
+             (!_tcsicmp(name, _T("Agent.SessionAgents")) && object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_SCREENSHOT)))
          {
-				TCHAR name[MAX_PARAM_NAME];
-				pRequest->getFieldAsString(VID_NAME, name, MAX_PARAM_NAME);
 
 				Table *table;
 				UINT32 rcc = ((Node *)object)->getTableForClient(name, &table);
