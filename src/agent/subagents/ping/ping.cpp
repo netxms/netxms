@@ -130,7 +130,7 @@ retry:
  */
 static LONG H_IcmpPing(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
-	TCHAR szHostName[256], szTimeOut[32], szPacketSize[32], dontFragmentFlag[32];
+	TCHAR szHostName[256], szTimeOut[32], szPacketSize[32], dontFragmentFlag[32], retryCountText[32];
 	UINT32 dwTimeOut = m_timeout, dwRTT, dwPacketSize = m_defaultPacketSize;
 	bool dontFragment = ((s_options & PING_OPT_DONT_FRAGMENT) != 0);
 
@@ -146,6 +146,9 @@ static LONG H_IcmpPing(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, 
    if (!AgentGetParameterArg(pszParam, 4, dontFragmentFlag, 32))
       return SYSINFO_RC_UNSUPPORTED;
    Trim(dontFragmentFlag);
+   if (!AgentGetParameterArg(pszParam, 5, retryCountText, 32))
+      return SYSINFO_RC_UNSUPPORTED;
+   Trim(retryCountText);
 
    InetAddress addr = InetAddress::resolveHostName(szHostName);
 	if (szTimeOut[0] != 0)
@@ -165,21 +168,27 @@ static LONG H_IcmpPing(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, 
 	   dontFragment = (_tcstol(dontFragmentFlag, NULL, 0) != 0);
 	}
 
-	nxlog_debug_tag(DEBUG_TAG, 7, _T("IcmpPing started for host %s"), szHostName);
-	UINT32 result = IcmpPing(addr, 1, dwTimeOut, &dwRTT, dwPacketSize, dontFragment);
-	nxlog_debug_tag(DEBUG_TAG, 7, _T("IcmpPing: hostName=%s timeout=%d packetSize=%d dontFragment=%s result=%d time=%d"),
+	int retryCount = (retryCountText[0] != 0) ? _tcstol(retryCountText, NULL, 0) : 1;
+	if (retryCount < 1)
+	   retryCount = 1;
+
+	TCHAR ipAddrText[64];
+	nxlog_debug_tag(DEBUG_TAG, 7, _T("IcmpPing: start for host=%s addr=%s retryCount=%d"), szHostName, addr.toString(ipAddrText), retryCount);
+	UINT32 result = IcmpPing(addr, retryCount, dwTimeOut, &dwRTT, dwPacketSize, dontFragment);
+	nxlog_debug_tag(DEBUG_TAG, 7, _T("IcmpPing: completed for host=%s timeout=%d packetSize=%d dontFragment=%s result=%d time=%d"),
 	      szHostName, dwTimeOut, dwPacketSize, dontFragment ? _T("true") : _T("false"), result, dwRTT);
 
-	if (result == ICMP_TIMEOUT || result == ICMP_UNREACHEABLE)
-		dwRTT = 10000;
-
-	if(result == ICMP_TIMEOUT || result == ICMP_UNREACHEABLE || result == ICMP_SUCCESS)
+   if (result == ICMP_SUCCESS)
+   {
+      ret_uint(pValue, dwRTT);
+      return SYSINFO_RC_SUCCESS;
+   }
+   else if ((result == ICMP_TIMEOUT) || (result == ICMP_UNREACHEABLE))
 	{
-	   ret_uint(pValue, dwRTT);
-	   return SYSINFO_RC_SUCCESS;
+      ret_uint(pValue, 10000);
+      return SYSINFO_RC_SUCCESS;
 	}
-	else
-	   return SYSINFO_RC_ERROR;
+   return SYSINFO_RC_ERROR;
 }
 
 /**
