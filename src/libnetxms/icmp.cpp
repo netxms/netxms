@@ -1,6 +1,6 @@
 /* 
 ** libnetxms - Common NetXMS utility library
-** Copyright (C) 2003-2015 Victor Kirhenshtein
+** Copyright (C) 2003-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -23,12 +23,10 @@
 #include "libnetxms.h"
 
 
-//
-// Constants
-//
-
+/**
+ * Max size for ping packet
+ */
 #define MAX_PING_SIZE      8192
-#define ICMP_REQUEST_ID    0x5050
 
 
 #ifdef _WIN32
@@ -202,7 +200,7 @@ static WORD IPChecksum(BYTE *addr, int len)
 /**
  * Wait for reply from given address
  */
-static UINT32 WaitForReply(int sock, UINT32 addr, UINT16 sequence, UINT32 dwTimeout, UINT32 *prtt)
+static UINT32 WaitForReply(int sock, UINT32 addr, UINT16 id, UINT16 sequence, UINT32 dwTimeout, UINT32 *prtt)
 {
    UINT32 rtt = 0;
    UINT32 result = ICMP_TIMEOUT;
@@ -233,7 +231,7 @@ static UINT32 WaitForReply(int sock, UINT32 addr, UINT16 sequence, UINT32 dwTime
 				// Check response
 				if ((reply.m_ipHdr.m_iaSrc.s_addr == addr) && 
 					 (reply.m_icmpHdr.m_cType == 0) &&
-					 (reply.m_icmpHdr.m_wId == ICMP_REQUEST_ID) &&
+					 (reply.m_icmpHdr.m_wId == id) &&
 					 (reply.m_icmpHdr.m_wSeq == sequence))
 				{
 					result = ICMP_SUCCESS;   // We succeed
@@ -310,11 +308,11 @@ static UINT32 IcmpPing4(UINT32 addr, int retries, UINT32 timeout, UINT32 *rtt, U
    ECHOREQUEST request;
    request.m_icmpHdr.m_cType = 8;   // ICMP ECHO REQUEST
    request.m_icmpHdr.m_cCode = 0;
-   request.m_icmpHdr.m_wId = ICMP_REQUEST_ID;
+   request.m_icmpHdr.m_wId = (WORD)GetCurrentThreadId();
    request.m_icmpHdr.m_wSeq = 0;
    memcpy(request.m_cData, szPayload, MIN(packetSize - sizeof(ICMPHDR) - sizeof(IPHDR), 64));
 
-   UINT32 result = ICMP_TIMEOUT;
+   UINT32 result = ICMP_API_ERROR;
 
    // Do ping
 #if HAVE_RAND_R
@@ -323,13 +321,12 @@ static UINT32 IcmpPing4(UINT32 addr, int retries, UINT32 timeout, UINT32 *rtt, U
    int bytes = packetSize - sizeof(IPHDR);
    for(int i = 0; i < retries; i++)
    {
-      request.m_icmpHdr.m_wId = ICMP_REQUEST_ID;
       request.m_icmpHdr.m_wSeq++;
       request.m_icmpHdr.m_wChecksum = 0;
       request.m_icmpHdr.m_wChecksum = IPChecksum((BYTE *)&request, bytes);
       if (sendto(sock, (char *)&request, bytes, 0, (struct sockaddr *)&saDest, sizeof(struct sockaddr_in)) == bytes)
       {
-          result = WaitForReply(sock, addr, request.m_icmpHdr.m_wSeq, timeout, rtt);
+          result = WaitForReply(sock, addr, request.m_icmpHdr.m_wId, request.m_icmpHdr.m_wSeq, timeout, rtt);
           if (result != ICMP_TIMEOUT)
              break;  // success or fatal error
       }

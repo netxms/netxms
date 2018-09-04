@@ -1,6 +1,6 @@
 /* 
 ** libnetxms - Common NetXMS utility library
-** Copyright (C) 2003-2015 Victor Kirhenshtein
+** Copyright (C) 2003-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -24,6 +24,9 @@
 
 #ifdef WITH_IPV6
 
+/**
+ * Max size for ping packet
+ */
 #define MAX_PACKET_SIZE   8192
 
 #if HAVE_POLL_H
@@ -257,31 +260,36 @@ UINT32 IcmpPing6(const InetAddress &addr, int retries, UINT32 timeout, UINT32 *r
 #if HAVE_ALLOCA
    PACKET_HEADER *p = (PACKET_HEADER *)alloca(size);
 #else
-   PACKET_HEADER *p = (PACKET_HEADER *)malloc(size);
+   PACKET_HEADER *p = (PACKET_HEADER *)MemAlloc(size);
 #endif
    memset(p, 0, size);
    memcpy(p->srcAddr, src.sin6_addr.s6_addr, 16);
    memcpy(p->destAddr, dest.sin6_addr.s6_addr, 16);
    p->nextHeader = 58;
    p->type = 128;  // ICMPv6 Echo Request
-   p->id = getpid();
+   p->id = GetCurrentThreadId();
    memcpy(p->data, payload, MIN(33, size - sizeof(PACKET_HEADER) + 8));
 
    // Send packets
    int bytes = size - 40;  // excluding IPv6 header
-   UINT32 result = ICMP_UNREACHEABLE;
+   UINT32 result = ICMP_API_ERROR;
 #if HAVE_RAND_R
    unsigned int seed = (unsigned int)(time(NULL) * *((UINT32 *)&addr.getAddressV6()[12]));
 #endif
    for(int i = 0; i < retries; i++)
    {
       p->sequence++;
+      p->checksum = 0;
       p->checksum = CalculateChecksum((UINT16 *)p, size);
       if (sendto(sd, (char *)p + 40, bytes, 0, (struct sockaddr *)&dest, sizeof(struct sockaddr_in6)) == bytes)
       {
           result = WaitForReply(sd, &dest, p->id, p->sequence, timeout, rtt);
           if (result != ICMP_TIMEOUT)
              break;  // success or fatal error
+      }
+      else
+      {
+         result = ICMP_SEND_FAILED;
       }
  
       UINT32 minDelay = 500 * i; // min = 0 in first run, then wait longer and longer
@@ -296,7 +304,7 @@ UINT32 IcmpPing6(const InetAddress &addr, int retries, UINT32 timeout, UINT32 *r
 
    close(sd);
 #if !HAVE_ALLOCA
-   free(p);
+   MemFree(p);
 #endif
    return result;
 }
