@@ -899,21 +899,16 @@ inline void NetObj::decRefCount()
 class NXCORE_EXPORTABLE VersionableObject
 {
 protected:
-   UINT32 m_version;
-   MUTEX m_mutexProperties;
+   VolatileCounter m_version;
    NetObj *m_parent;
-
-   void internalLock() const { MutexLock(m_mutexProperties); }
-   void internalUnlock() const { MutexUnlock(m_mutexProperties); }
 
    void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId);
 
 public:
    VersionableObject(NetObj *parent);
    VersionableObject(NetObj *parent, ConfigEntry *config);
-   ~VersionableObject();
-   void updateVersion() { internalLock(); m_version++; internalUnlock(); }
-   UINT32 getVersion() { internalLock(); return m_version; internalUnlock(); }
+   void updateVersion() { InterlockedIncrement(&m_version); }
+   UINT32 getVersion() { return m_version; }
    virtual void updateFromImport(ConfigEntry *config);
 
    virtual bool saveToDatabase(DB_HANDLE hdb);

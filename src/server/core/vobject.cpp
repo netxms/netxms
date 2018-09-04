@@ -29,7 +29,6 @@ VersionableObject::VersionableObject(NetObj *parent)
 {
    m_parent = parent;
    m_version = 0;
-   m_mutexProperties = MutexCreate();
 }
 
 /**
@@ -39,15 +38,6 @@ VersionableObject::VersionableObject(NetObj *parent, ConfigEntry *config)
 {
    m_parent = parent;
    m_version = config->getSubEntryValueAsUInt(_T("version"), 0, 0x00010000);
-   m_mutexProperties = MutexCreate();
-}
-
-/**
- * AutoApply object destructor
- */
-VersionableObject::~VersionableObject()
-{
-   MutexDestroy(m_mutexProperties);
 }
 
 /**
@@ -74,10 +64,8 @@ bool VersionableObject::saveToDatabase(DB_HANDLE hdb)
    }
    if (hStmt != NULL)
    {
-      internalLock();
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_version);
       DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_parent->getId());
-      internalUnlock();
       success = DBExecute(hStmt);
       DBFreeStatement(hStmt);
    }
@@ -106,9 +94,7 @@ bool VersionableObject::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
 
 void VersionableObject::updateFromImport(ConfigEntry *config)
 {
-   internalLock();
    m_version = config->getSubEntryValueAsUInt(_T("version"), 0, m_version);
-   internalUnlock();
 }
 
 /**
