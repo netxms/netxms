@@ -28,6 +28,7 @@ import java.util.Set;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
+import org.eclipse.swt.events.MouseTrackListener;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.graphics.GC;
@@ -37,9 +38,12 @@ import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.constants.ObjectStatus;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Interface;
 import org.netxms.client.topology.Port;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
+import org.netxms.ui.eclipse.objectview.widgets.ObjectPopupDialog;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.ColorCache;
 import org.netxms.ui.eclipse.topology.widgets.helpers.PortCalculator;
 import org.netxms.ui.eclipse.topology.widgets.helpers.PortCalculatorDownUpLeftRight;
@@ -52,7 +56,7 @@ import org.netxms.ui.eclipse.topology.widgets.helpers.PortSelectionListener;
 /**
  * Single slot view
  */
-public class SlotView extends Canvas implements PaintListener, MouseListener
+public class SlotView extends Canvas implements PaintListener, MouseListener, MouseTrackListener
 {
    // Slot layouts
    private static final int NDD_PN_UNKNOWN = 0; // port layout not known to driver, default used (layout 4)
@@ -90,6 +94,8 @@ public class SlotView extends Canvas implements PaintListener, MouseListener
 	private Set<PortSelectionListener> selectionListeners = new HashSet<PortSelectionListener>();
 	private ColorCache colors;
 	private PortLocationFinder finder = new PortLocationFinder();
+   private AbstractObject tooltipObject = null;
+   private ObjectPopupDialog tooltipDialog = null;
 	
 	/**
 	 * @param parent
@@ -113,6 +119,7 @@ public class SlotView extends Canvas implements PaintListener, MouseListener
 		
 		addPaintListener(this);
 		addMouseListener(this);
+		addMouseTrackListener(this);
 	}
 	
 	/**
@@ -303,6 +310,52 @@ public class SlotView extends Canvas implements PaintListener, MouseListener
 		}
 	}
 
+   /* (non-Javadoc)
+    * @see org.eclipse.swt.events.MouseTrackListener#mouseEnter(org.eclipse.swt.events.MouseEvent)
+    */
+   @Override
+   public void mouseEnter(MouseEvent e)
+   {
+   }
+
+   /* (non-Javadoc)
+    * @see org.eclipse.swt.events.MouseTrackListener#mouseExit(org.eclipse.swt.events.MouseEvent)
+    */
+   @Override
+   public void mouseExit(MouseEvent e)
+   {
+      if ((tooltipDialog != null) && (tooltipDialog.getShell() != null) && !tooltipDialog.getShell().isDisposed() && (e.display.getActiveShell() != tooltipDialog.getShell()))
+      {
+         tooltipDialog.close();
+         tooltipDialog = null;
+      }
+      tooltipObject = null;
+   }
+
+   /* (non-Javadoc)
+    * @see org.eclipse.swt.events.MouseTrackListener#mouseHover(org.eclipse.swt.events.MouseEvent)
+    */
+   @Override
+   public void mouseHover(MouseEvent e)
+   {
+      PortInfo p = finder.findPortInfo(e.x, e.y);
+      AbstractObject object = (p != null) ? ConsoleSharedData.getSession().findObjectById(p.getInterfaceObjectId()) : null;
+      if ((object != null) && ((object != tooltipObject) || (tooltipDialog == null) || (tooltipDialog.getShell() == null) || tooltipDialog.getShell().isDisposed()))
+      {
+         if ((tooltipDialog != null) && (tooltipDialog.getShell() != null) && !tooltipDialog.getShell().isDisposed())
+            tooltipDialog.close();
+      
+         tooltipObject = object;
+         tooltipDialog = new ObjectPopupDialog(getShell(), object, toDisplay(e.x, e.y));
+         tooltipDialog.open();
+      }
+      else if ((object == null) && (tooltipDialog != null) && (tooltipDialog.getShell() != null) && !tooltipDialog.getShell().isDisposed())
+      {
+         tooltipDialog.close();
+         tooltipDialog = null;
+      }
+   }
+	
 	/**
 	 * @return the selection
 	 */

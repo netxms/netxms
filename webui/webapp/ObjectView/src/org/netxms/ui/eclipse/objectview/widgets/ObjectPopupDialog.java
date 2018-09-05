@@ -40,6 +40,7 @@ import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.DataCollectionTarget;
+import org.netxms.client.objects.Interface;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 
 /**
@@ -137,6 +138,14 @@ public class ObjectPopupDialog extends PopupDialog
          appendText(sb, sd);
          appendText(sb, ((AbstractNode)object).getSnmpSysName());
          appendText(sb, ((AbstractNode)object).getSnmpSysContact());
+      }
+      else if (object instanceof Interface)
+      {
+         appendText(sb, ((Interface)object).getDescription());
+         appendText(sb, ((Interface)object).getAlias());
+         if (!((Interface)object).getMacAddress().isNull())
+            appendText(sb, ((Interface)object).getMacAddress().toString());
+         appendText(sb, ((Interface)object).getAdminStateAsText() + " / " + ((Interface)object).getOperStateAsText());
       }
 
       if (sb.length() > 0)
