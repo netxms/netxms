@@ -7,9 +7,11 @@
    <version>2.2.8</version>
    <name>NetXMS REST API Server</name>
    <url>http://netxms.org</url>
+
    <properties>
       <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
    </properties>
+
    <repositories>
       <repository>
          <id>maven-restlet</id>
@@ -17,6 +19,7 @@
          <url>http://maven.restlet.com</url>
       </repository>
    </repositories>
+
    <dependencies>
       <dependency>
          <groupId>junit</groupId>
@@ -72,11 +75,13 @@
          <version>${project.version}</version>
       </dependency>
    </dependencies>
+
    <build>
       <plugins>
          <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-compiler-plugin</artifactId>
+	    <version>3.8.0</version>
             <configuration>
                <source>1.7</source>
                <target>1.7</target>
