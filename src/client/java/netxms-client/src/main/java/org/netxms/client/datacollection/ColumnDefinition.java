@@ -258,7 +258,7 @@ public class ColumnDefinition
 	/**
 	 * Set column name
 	 * 
-	 * @param new column name
+	 * @param name new column name
 	 */
 	public void setName(String name)
 	{
