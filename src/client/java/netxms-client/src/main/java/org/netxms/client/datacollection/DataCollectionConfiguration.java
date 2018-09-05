@@ -192,7 +192,10 @@ public class DataCollectionConfiguration
 	@Deprecated
 	public long createItem(DataCollectionObject object) throws IOException, NXCException
 	{
-      return modifyObject(object);
+      if (object != null)
+         return modifyObject(object);
+      else
+         return modifyObject(new DataCollectionItem(null, 0));
 	}
 	
 	/**
@@ -206,7 +209,10 @@ public class DataCollectionConfiguration
 	@Deprecated
 	public long createTable(DataCollectionObject object) throws IOException, NXCException
 	{
-		return modifyObject(object);
+	   if (object != null)
+	      return modifyObject(object);
+	   else
+	      return modifyObject(new DataCollectionTable(null, 0));
 	}
 	
 	/**
@@ -239,9 +245,7 @@ public class DataCollectionConfiguration
 		if (dco != null)
 		   dco.fillMessage(msg);
 		session.sendMessage(msg);
-		final NXCPMessage response = session.waitForRCC(msg.getMessageId());
-      long id = response.getFieldAsInt64(NXCPCodes.VID_DCI_ID);
-      return id;
+      return session.waitForRCC(msg.getMessageId()).getFieldAsInt64(NXCPCodes.VID_DCI_ID);
 	}
 	
 	/**
