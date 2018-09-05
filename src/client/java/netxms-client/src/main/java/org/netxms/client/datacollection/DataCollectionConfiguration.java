@@ -236,7 +236,8 @@ public class DataCollectionConfiguration
 	{
 		NXCPMessage msg = session.newMessage(NXCPCodes.CMD_MODIFY_NODE_DCI);
 		msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
-		dco.fillMessage(msg);
+		if (dco != null)
+		   dco.fillMessage(msg);
 		session.sendMessage(msg);
 		final NXCPMessage response = session.waitForRCC(msg.getMessageId());
       long id = response.getFieldAsInt64(NXCPCodes.VID_DCI_ID);
