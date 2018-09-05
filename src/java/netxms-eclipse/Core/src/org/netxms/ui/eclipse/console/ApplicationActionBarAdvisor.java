@@ -454,6 +454,10 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor
 		statusLine.add(statusItem);
 
       statusLine.add(new ServerNameStatusLineItem("ServerName")); //$NON-NLS-1$
+      
+      StatusLineContributionItem syncStatusItem = new StatusLineContributionItem("ObjectSyncStatus"); //$NON-NLS-1$
+      syncStatusItem.setText(""); //$NON-NLS-1$
+      statusLine.add(syncStatusItem); 
 	}
 	
 	/**

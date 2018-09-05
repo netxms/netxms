@@ -476,6 +476,7 @@ enum SessionState
 #define NX_NOTIFY_DCI_UPDATE                 35
 #define NX_NOTIFY_DCI_DELETE                 36
 #define NX_NOTIFY_DCI_STATE_CHANGE           37
+#define NX_NOTIFY_OBJECTS_OUT_OF_SYNC        38
 
 /**
  * Request completion codes

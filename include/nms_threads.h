@@ -1060,6 +1060,8 @@ void LIBNETXMS_EXPORTABLE ThreadPoolScheduleAbsoluteMs(ThreadPool *p, INT64 runT
 void LIBNETXMS_EXPORTABLE ThreadPoolScheduleRelative(ThreadPool *p, UINT32 delay, ThreadPoolWorkerFunction f, void *arg);
 void LIBNETXMS_EXPORTABLE ThreadPoolGetInfo(ThreadPool *p, ThreadPoolInfo *info);
 bool LIBNETXMS_EXPORTABLE ThreadPoolGetInfo(const TCHAR *name, ThreadPoolInfo *info);
+int LIBNETXMS_EXPORTABLE ThreadPoolGetSerializedRequestCount(ThreadPool *p, const TCHAR *key);
+UINT32 LIBNETXMS_EXPORTABLE ThreadPoolGetSerializedRequestMaxWaitTime(ThreadPool *p, const TCHAR *key);
 StringList LIBNETXMS_EXPORTABLE *ThreadPoolGetAllPools();
 void LIBNETXMS_EXPORTABLE ThreadPoolSetResizeParameters(int responsiveness, UINT32 waitTimeHWM, UINT32 waitTimeLWM);
 
@@ -1086,6 +1088,7 @@ template <typename T, typename R> void __ThreadPoolExecute_Wrapper(void *arg)
    delete wd;
 }
 
+
 /**
  * Execute task as soon as possible (use class member with one argument)
  */
@@ -1100,6 +1103,14 @@ template <typename T, typename B, typename R> inline void ThreadPoolExecute(Thre
 template <typename T, typename B, typename R> inline void ThreadPoolExecuteSerialized(ThreadPool *p, const TCHAR *key, T *object, void (B::*f)(R), R arg)
 {
    ThreadPoolExecuteSerialized(p, key, __ThreadPoolExecute_Wrapper<B, R>, new __ThreadPoolExecute_WrapperData<B, R>(object, f, arg));
+}
+
+/**
+ * Execute task with delay (use class member with one argument)
+ */
+template <typename T, typename B, typename R> inline void ThreadPoolScheduleRelative(ThreadPool *p, UINT32 delay, T *object, void (B::*f)(R), R arg)
+{
+   ThreadPoolScheduleRelative(p, delay, __ThreadPoolExecute_Wrapper<B, R>, new __ThreadPoolExecute_WrapperData<B, R>(object, f, arg));
 }
 
 /**

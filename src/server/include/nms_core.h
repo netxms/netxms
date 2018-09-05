@@ -185,6 +185,8 @@ typedef __console_ctx * CONSOLE_CTX;
 #define CSF_COMPRESSION_ENABLED  ((UINT32)0x00000100)
 #define CSF_RECEIVING_MAP_DATA   ((UINT32)0x00000200)
 #define CSF_SYNC_OBJECT_COMMENTS ((UINT32)0x00000400)
+#define CSF_OBJECT_SYNC_FINISHED ((UINT32)0x00000800)
+#define CSF_OBJECTS_OUT_OF_SYNC  ((UINT32)0x00001000)
 #define CSF_CUSTOM_LOCK_1        ((UINT32)0x01000000)
 #define CSF_CUSTOM_LOCK_2        ((UINT32)0x02000000)
 #define CSF_CUSTOM_LOCK_3        ((UINT32)0x04000000)
@@ -457,7 +459,6 @@ private:
    NXCPEncryptionContext *m_pCtx;
 	BYTE m_challenge[CLIENT_CHALLENGE_SIZE];
 	MUTEX m_mutexSocketWrite;
-   MUTEX m_mutexSendObjects;
    MUTEX m_mutexSendAlarms;
    MUTEX m_mutexSendActions;
 	MUTEX m_mutexSendAuditLog;
@@ -490,6 +491,9 @@ private:
 	ObjectArray<TcpProxy> *m_tcpProxyConnections;
 	MUTEX m_tcpProxyLock;
 	VolatileCounter m_tcpProxyChannelId;
+	HashSet<UINT32> *m_pendingObjectNotifications;
+   MUTEX m_pendingObjectNotificationsLock;
+   int m_objectNotificationDelay;
 
    static THREAD_RESULT THREAD_CALL readThreadStarter(void *);
    static void pollerThreadStarter(void *);
@@ -752,6 +756,7 @@ private:
    void alarmUpdateWorker(Alarm *alarm);
    void sendActionDBUpdateMessage(NXCP_MESSAGE *msg);
    void sendObjectUpdate(NetObj *object);
+   void scheduleObjectUpdate(NetObj *object);
 
 public:
    ClientSession(SOCKET hSocket, const InetAddress& addr);
