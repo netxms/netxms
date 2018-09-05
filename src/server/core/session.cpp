@@ -140,7 +140,6 @@ ClientSession::ClientSession(SOCKET hSocket, const InetAddress& addr)
    m_id = -1;
    m_pCtx = NULL;
 	m_mutexSocketWrite = MutexCreate();
-   m_mutexSendObjects = MutexCreate();
    m_mutexSendAlarms = MutexCreate();
    m_mutexSendActions = MutexCreate();
    m_mutexSendAuditLog = MutexCreate();
@@ -175,6 +174,9 @@ ClientSession::ClientSession(SOCKET hSocket, const InetAddress& addr)
    m_tcpProxyConnections = new ObjectArray<TcpProxy>(0, 16, true);
    m_tcpProxyLock = MutexCreate();
    m_tcpProxyChannelId = 0;
+   m_pendingObjectNotifications = new HashSet<UINT32>();
+   m_pendingObjectNotificationsLock = MutexCreate();
+   m_objectNotificationDelay = 200;
 }
 
 /**
@@ -185,7 +187,6 @@ ClientSession::~ClientSession()
    if (m_hSocket != -1)
       closesocket(m_hSocket);
 	MutexDestroy(m_mutexSocketWrite);
-   MutexDestroy(m_mutexSendObjects);
    MutexDestroy(m_mutexSendAlarms);
    MutexDestroy(m_mutexSendActions);
    MutexDestroy(m_mutexSendAuditLog);
@@ -222,6 +223,8 @@ ClientSession::~ClientSession()
    delete m_downloadFileMap;
    delete m_tcpProxyConnections;
    MutexDestroy(m_tcpProxyLock);
+   delete m_pendingObjectNotifications;
+   MutexDestroy(m_pendingObjectNotificationsLock);
 }
 
 /**
@@ -2217,7 +2220,6 @@ void ClientSession::getObjects(NXCPMessage *request)
    data.session = this;
    data.baseTimeStamp = request->getFieldAsTime(VID_TIMESTAMP);
 	ObjectArray<NetObj> *objects = g_idxObjectById.getObjects(true, SessionObjectFilter, &data);
-   MutexLock(m_mutexSendObjects);
 	for(int i = 0; i < objects->size(); i++)
 	{
 		NetObj *object = objects->get(i);
@@ -2241,7 +2243,7 @@ void ClientSession::getObjects(NXCPMessage *request)
    msg.setCode(CMD_OBJECT_LIST_END);
    sendMessage(&msg);
 
-   MutexUnlock(m_mutexSendObjects);
+   m_dwFlags |= CSF_OBJECT_SYNC_FINISHED;
 }
 
 /**
@@ -2270,8 +2272,6 @@ void ClientSession::getSelectedObjects(NXCPMessage *request)
 	request->getFieldAsInt32Array(VID_OBJECT_LIST, numObjects, objects);
 	UINT32 options = request->getFieldAsUInt16(VID_FLAGS);
 
-   MutexLock(m_mutexSendObjects);
-
    // Prepare message
 	msg.setCode((options & OBJECT_SYNC_SEND_UPDATES) ? CMD_OBJECT_UPDATE : CMD_OBJECT);
 
@@ -2299,7 +2299,7 @@ void ClientSession::getSelectedObjects(NXCPMessage *request)
       }
 	}
 
-   MutexUnlock(m_mutexSendObjects);
+   m_dwFlags |= CSF_OBJECT_SYNC_FINISHED;
 	free(objects);
 
 	if (options & OBJECT_SYNC_DUAL_CONFIRM)
@@ -2731,6 +2731,24 @@ void ClientSession::onNewEvent(Event *pEvent)
  */
 void ClientSession::sendObjectUpdate(NetObj *object)
 {
+   String key(_T("ObjectUpdate"));
+   key.append(m_id);
+   UINT32 waitTime = ThreadPoolGetSerializedRequestMaxWaitTime(g_mainThreadPool, key);
+
+   MutexLock(m_pendingObjectNotificationsLock);
+   m_pendingObjectNotifications->remove(object->getId());
+
+   if ((waitTime > m_objectNotificationDelay * 2) && (m_objectNotificationDelay < 1600))
+   {
+      m_objectNotificationDelay *= 2;
+   }
+
+   if ((waitTime < m_objectNotificationDelay / 2) && (m_objectNotificationDelay > 200))
+   {
+      m_objectNotificationDelay /= 2;
+   }
+
+   MutexUnlock(m_pendingObjectNotificationsLock);
    debugPrintf(5, _T("Sending update for object %s [%d]"), object->getName(), object->getId());
 
    NXCPMessage msg(CMD_OBJECT_UPDATE, 0);
@@ -2745,11 +2763,38 @@ void ClientSession::sendObjectUpdate(NetObj *object)
       msg.setField(VID_OBJECT_ID, object->getId());
       msg.setField(VID_IS_DELETED, (UINT16)1);
    }
-   MutexLock(m_mutexSendObjects);
    sendMessage(&msg);
-   MutexUnlock(m_mutexSendObjects);
    object->decRefCount();
    decRefCount();
+}
+
+/**
+ * Schedule object update (executed in thread pool relative schedule)
+ */
+void ClientSession::scheduleObjectUpdate(NetObj *object)
+{
+   String key(_T("ObjectUpdate"));
+   key.append(m_id);
+
+   if (ThreadPoolGetSerializedRequestCount(g_mainThreadPool, key) < 500)
+   {
+      debugPrintf(5, _T("Scheduling update for object %s [%d]"), object->getName(), object->getId());
+      ThreadPoolExecuteSerialized(g_mainThreadPool, key, this, &ClientSession::sendObjectUpdate, object);
+   }
+   else
+   {
+      debugPrintf(5, _T("Drop update for object %s [%d]"), object->getName(), object->getId());
+      MutexLock(m_pendingObjectNotificationsLock);
+      m_pendingObjectNotifications->remove(object->getId());
+      MutexUnlock(m_pendingObjectNotificationsLock);
+      if ((m_dwFlags & CSF_OBJECTS_OUT_OF_SYNC) == 0)
+      {
+         m_dwFlags |= CSF_OBJECTS_OUT_OF_SYNC;
+         notify(NX_NOTIFY_OBJECTS_OUT_OF_SYNC);
+      }
+      object->decRefCount();
+      decRefCount();
+   }
 }
 
 /**
@@ -2757,13 +2802,19 @@ void ClientSession::sendObjectUpdate(NetObj *object)
  */
 void ClientSession::onObjectChange(NetObj *object)
 {
-   if (isAuthenticated() && isSubscribedTo(NXC_CHANNEL_OBJECTS) &&
-      (object->isDeleted() || object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ)))
+   //create object list with mutex to control objects that already scheduled for update
+   MutexLock(m_pendingObjectNotificationsLock);
+   if (((m_dwFlags & CSF_OBJECT_SYNC_FINISHED) > 0) && isAuthenticated() &&
+         isSubscribedTo(NXC_CHANNEL_OBJECTS) &&
+      (object->isDeleted() || object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ)) &&
+       !m_pendingObjectNotifications->contains(object->getId()))
    {
+      m_pendingObjectNotifications->put(object->getId());
       object->incRefCount();
       incRefCount();
-      ThreadPoolExecute(g_mainThreadPool, this, &ClientSession::sendObjectUpdate, object);
+      ThreadPoolScheduleRelative(g_mainThreadPool, m_objectNotificationDelay, this, &ClientSession::scheduleObjectUpdate, object);
    }
+   MutexUnlock(m_pendingObjectNotificationsLock);
 }
 
 /**
@@ -2771,9 +2822,7 @@ void ClientSession::onObjectChange(NetObj *object)
  */
 void ClientSession::notify(UINT32 dwCode, UINT32 dwData)
 {
-   NXCPMessage msg;
-
-   msg.setCode(CMD_NOTIFY);
+   NXCPMessage msg(CMD_NOTIFY, 0);
    msg.setField(VID_NOTIFICATION_CODE, dwCode);
    msg.setField(VID_NOTIFICATION_DATA, dwData);
    postMessage(&msg);

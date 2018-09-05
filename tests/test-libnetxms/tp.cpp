@@ -48,3 +48,46 @@ void TestThreadPool()
 
    ThreadPoolDestroy(p);
 }
+
+static Mutex s_waitTimeTestLock1;
+static Mutex s_waitTimeTestLock2;
+
+static void CountAndMaxWaitThread(void *arg)
+{
+   static_cast<Mutex*>(arg)->lock();
+   ThreadSleepMs(20);
+   static_cast<Mutex*>(arg)->unlock();
+}
+
+void TestThreadCountAndMaxWaitTime()
+{
+   StartTest(_T("Thread pool - serialized count and max wait time"));
+   ThreadPool *threadPool = ThreadPoolCreate(_T("MAIN"), 8, 256);    
+   
+   s_waitTimeTestLock1.lock();
+   s_waitTimeTestLock2.lock();
+   
+   ThreadPoolExecuteSerialized(threadPool, _T("Test1"), CountAndMaxWaitThread, &s_waitTimeTestLock1);
+   ThreadPoolExecuteSerialized(threadPool, _T("Test2"), CountAndMaxWaitThread, &s_waitTimeTestLock1);
+   ThreadPoolExecuteSerialized(threadPool, _T("Test1"), CountAndMaxWaitThread, &s_waitTimeTestLock1);
+   ThreadPoolExecuteSerialized(threadPool, _T("Test1"), CountAndMaxWaitThread, &s_waitTimeTestLock2);
+
+   ThreadSleepMs(100);  // yield CPU
+   
+   AssertEquals(2, ThreadPoolGetSerializedRequestCount(threadPool,  _T("Test1")));
+   AssertEquals(0, ThreadPoolGetSerializedRequestCount(threadPool,  _T("Test2")));
+   AssertEquals(0, ThreadPoolGetSerializedRequestMaxWaitTime(threadPool, _T("Test1")));
+   
+   s_waitTimeTestLock1.unlock();
+   ThreadSleepMs(100);
+   AssertTrue(ThreadPoolGetSerializedRequestMaxWaitTime(threadPool,  _T("Test1")) >= 140);
+
+   s_waitTimeTestLock2.unlock();
+   ThreadSleepMs(200);
+   AssertEquals(0, ThreadPoolGetSerializedRequestCount(threadPool,  _T("Test1")));
+   AssertEquals(0, ThreadPoolGetSerializedRequestCount(threadPool,  _T("Test2")));
+   AssertEquals(0, ThreadPoolGetSerializedRequestMaxWaitTime(threadPool, _T("Test1")));
+    
+   ThreadPoolDestroy(threadPool);
+   EndTest();
+}

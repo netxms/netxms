@@ -12,6 +12,7 @@ void TestMessageClass();
 void TestMutexWrapper();
 void TestRWLockWrapper();
 void TestConditionWrapper();
+void TestThreadCountAndMaxWaitTime();
 void TestProcessExecutor(const char *procname);
 void TestProcessExecutorWorker();
 
@@ -1482,6 +1483,7 @@ int main(int argc, char *argv[])
    TestDebugTags();
    TestProcessExecutor(argv[0]);
    TestThreadPool();
+   TestThreadCountAndMaxWaitTime();
 
    MsgWaitQueue::shutdown();
    return 0;

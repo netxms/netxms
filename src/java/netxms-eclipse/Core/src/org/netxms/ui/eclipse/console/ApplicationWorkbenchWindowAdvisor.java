@@ -47,6 +47,9 @@ import org.netxms.certificate.manager.CertificateManagerProvider;
 import org.netxms.certificate.request.KeyStoreEntryPasswordRequestListener;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
+import org.netxms.client.ServerAction;
+import org.netxms.client.SessionListener;
+import org.netxms.client.SessionNotification;
 import org.netxms.client.constants.AuthenticationType;
 import org.netxms.client.constants.RCC;
 import org.netxms.client.objects.AbstractObject;
@@ -117,7 +120,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor im
       configurer.setTitle(configurer.getTitle() + " - [" + settings.get("Connect.Login") + "@" + settings.get("Connect.Server") + "]"); 
 
       NXCSession session = ConsoleSharedData.getSession();
-      Activator activator = Activator.getDefault();
+      final Activator activator = Activator.getDefault();
       StatusLineContributionItem statusItemConnection = (StatusLineContributionItem)activator.getStatusLine().find("ConnectionStatus");
       statusItemConnection.setImage(Activator.getImageDescriptor(
             session.isEncrypted() ? "icons/conn_encrypted.png" : "icons/conn_unencrypted.png").createImage()); //$NON-NLS-1$ //$NON-NLS-2$
@@ -129,6 +132,28 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor im
 
       if (activator.getPreferenceStore().getBoolean("SHOW_TRAY_ICON")) //$NON-NLS-1$
          Activator.showTrayIcon();
+      
+      session.addListener(new SessionListener() {
+         
+         @Override
+         public void notificationHandler(SessionNotification n)
+         {
+            switch(n.getCode())
+            {
+               case SessionNotification.OBJECTS_OUT_OF_SYNC:
+                  activator.getWorkbench().getDisplay().asyncExec(new Runnable() {
+                     
+                     @Override
+                     public void run()
+                     {
+                        StatusLineContributionItem objecSyncStatus = (StatusLineContributionItem)activator.getStatusLine().find("ObjectSyncStatus");
+                        objecSyncStatus.setText("Objects are out of sync");
+                     }
+                  });
+                  break;
+            }
+         }
+      });
 
       TweakletManager.postWindowCreate(configurer);
    }
