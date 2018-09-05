@@ -284,7 +284,9 @@ public class ScheduledTask
    }
 
    /**
-    * @return
+    * Get task status
+    *
+    * @return task status
     */
    public String getStatus()
    {
@@ -298,7 +300,8 @@ public class ScheduledTask
    }
    
    /**
-    * Get scheduled task comments
+    * Get task comments
+    *
     * @return comments
     */
    public String getComments()
@@ -317,7 +320,9 @@ public class ScheduledTask
    }
    
    /**
-    * @return
+    * Check if this task is a system task
+    *
+    * @return true if this task is a system task
     */
    public boolean isSystem()
    {
@@ -325,7 +330,9 @@ public class ScheduledTask
    }
 
    /**
-    * @return
+    * Check if this task has completed execution
+    *
+    * @return true if this task has completed execution
     */
    public boolean isCompleted()
    {
@@ -333,7 +340,9 @@ public class ScheduledTask
    }
 
    /**
-    * @return
+    * Check if this task is disabled
+    *
+    * @return true if this task is disabled
     */
    public boolean isDisabled()
    {
@@ -341,7 +350,9 @@ public class ScheduledTask
    }
 
    /**
-    * @return
+    * Check if this task is configured for recurring execution
+    *
+    * @return true if this task is configured for recurring execution
     */
    public boolean isRecurring()
    {
@@ -349,7 +360,9 @@ public class ScheduledTask
    }
 
    /**
-    * @param enabled
+    * Enable/disable task
+    *
+    * @param enabled true if task should be enabled
     */
    public void setEnabed(boolean enabled)
    {
