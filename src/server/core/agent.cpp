@@ -839,23 +839,21 @@ UINT32 AgentConnectionEx::processBulkCollectedData(NXCPMessage *request, NXCPMes
       }
 
       void *value = request->getFieldAsString(fieldId + 5);
-      UINT32 status_code = request->getFieldAsUInt32(fieldId + 6);
+      UINT32 statusCode = request->getFieldAsUInt32(fieldId + 6);
       debugPrintf(7, _T("AgentConnectionEx::processBulkCollectedData: processing DCI %s [%d] (type=%d) (status=%d) on object %s [%d] (element %d)"),
-                  dcObject->getName(), dciId, type, status, target->getName(), target->getId(), i);
+                  dcObject->getName(), dciId, type, statusCode, target->getName(), target->getId(), i);
       time_t t = request->getFieldAsTime(fieldId + 4);
       bool success = true;
 
-      switch(status_code)
+      switch(statusCode)
       {
          case ERR_SUCCESS:
-         {
             if (dcObject->getStatus() == ITEM_STATUS_NOT_SUPPORTED)
                dcObject->setStatus(ITEM_STATUS_ACTIVE, true);
             success = target->processNewDCValue(dcObject, t, value);
             if (t > dcObject->getLastPollTime())
                dcObject->setLastPollTime(t);
             break;
-         }
          case ERR_UNKNOWN_PARAMETER:
             if (dcObject->getStatus() == ITEM_STATUS_NOT_SUPPORTED)
                dcObject->setStatus(ITEM_STATUS_ACTIVE, true);
@@ -871,9 +869,8 @@ UINT32 AgentConnectionEx::processBulkCollectedData(NXCPMessage *request, NXCPMes
             break;
       }
 
-
       status[i] = success ? BULK_DATA_REC_SUCCESS : BULK_DATA_REC_FAILURE;
-      free(value);
+      MemFree(value);
    }
 
    response->setField(VID_STATUS, status, count);
