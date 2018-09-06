@@ -45,6 +45,7 @@ public class StatusMap extends PropertyPage
    private Button checkGroupObjects;
 	private Button checkShowFilter;
    private Button checkRadial;
+   private Button checkFitToScreen;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -119,6 +120,10 @@ public class StatusMap extends PropertyPage
 		checkRadial = new Button(optionsGroup, SWT.CHECK);
 		checkRadial.setText("Show in radial form");
 		checkRadial.setSelection(config.isShowRadial());
+      
+      checkFitToScreen = new Button(optionsGroup, SWT.CHECK);
+      checkFitToScreen.setText("Fit to screen");
+      checkFitToScreen.setSelection(config.isFitToScreen());
 
 		return dialogArea;
 	}
@@ -140,6 +145,7 @@ public class StatusMap extends PropertyPage
 		config.setGroupObjects(checkGroupObjects.getSelection());
 		config.setShowTextFilter(checkShowFilter.getSelection());
       config.setShowRadial(checkRadial.getSelection());
+      config.setFitToScreen(checkFitToScreen.getSelection());
 		
 		return true;
 	}

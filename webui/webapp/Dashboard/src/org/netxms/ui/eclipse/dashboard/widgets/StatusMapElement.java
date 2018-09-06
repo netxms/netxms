@@ -85,6 +85,7 @@ public class StatusMapElement extends ElementWidget
             map = new ObjectStatusMap(viewPart, this, SWT.NONE, false);
 			((Composite)map).setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		}
+      map.setFitToScreen(config.isFitToScreen());
 		if(!config.isShowRadial())
 		   ((ObjectStatusMap)map).setGroupObjects(config.isGroupObjects());
 		map.setSeverityFilter(config.getSeverityFilter());

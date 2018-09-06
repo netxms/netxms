@@ -50,7 +50,11 @@ public class StatusMapConfig extends DashboardElementConfig
    @Element(required=false)
    private boolean showRadial = false;
 
-	/**
+   @Element(required=false)
+   private boolean fitToScreen = false;
+
+   
+   /**
 	 * Create line chart settings object from XML document
 	 * 
 	 * @param xml XML document
@@ -186,5 +190,21 @@ public class StatusMapConfig extends DashboardElementConfig
    public void setShowRadial(boolean showRadial)
    {
       this.showRadial = showRadial;
+   }
+
+   /**
+    * @return the fitToScreen
+    */
+   public boolean isFitToScreen()
+   {
+      return fitToScreen;
+   }
+
+   /**
+    * @param fitToScreen the fitToScreen to set
+    */
+   public void setFitToScreen(boolean fitToScreen)
+   {
+      this.fitToScreen = fitToScreen;
    }
 }
