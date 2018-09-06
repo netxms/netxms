@@ -227,6 +227,7 @@ public class ObjectStatusMapView extends ViewPart
 
       map.setRootObject(rootObjectId);
       map.enableFilter(showFilter);
+      map.setFitToScreen(fitToScreen);
             
       map.setFilterCloseAction(new Action() {
          @Override

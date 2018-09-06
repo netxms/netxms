@@ -167,6 +167,8 @@ public class ObjectStatusMapRadial extends AbstractObjectStatusMap
 	public void refresh()
 	{
       AbstractObject root = session.findObjectById(rootObjectId);
+      if(root == null)
+         return;
       Collection<AbstractObject> objects = createFilteredList(root);
       widget.updateObjects(root, objects);
       widget.refresh();
