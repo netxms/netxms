@@ -194,7 +194,7 @@ ConstDefinition:
 		delete_and_null($3);
 		YYERROR;
 	}
-	MemFree($1);
+	MemFreeAndNull($1);
 	$3 = NULL;
 }
 ;
@@ -203,7 +203,7 @@ UseStatement:
 	T_USE AnyIdentifier ';'
 {
 	pScript->addRequiredModule($2, pLexer->getCurrLine());
-	MemFree($2);
+	MemFreeAndNull($2);
 }
 ;
 
@@ -224,7 +224,7 @@ Function:
 			pCompiler->error(szErrorText);
 			YYERROR;
 		}
-		MemFree($2);
+		MemFreeAndNull($2);
 		pCompiler->setIdentifierOperation(OPCODE_BIND);
 	}
 	ParameterDeclaration Block
@@ -319,7 +319,7 @@ WithAssignment:
 {
 	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_JMP, INVALID_ADDRESS));
 	pScript->registerExpressionVariable($1);
-	MemFree($1);
+	MemFreeAndNull($1);
 }	 
 	'=' WithCalculationBlock
 {
@@ -712,7 +712,7 @@ Operand:
 |	T_IDENTIFIER
 {
 	pScript->addPushVariableInstruction($1, pLexer->getCurrLine());
-	MemFree($1);
+	MemFreeAndNull($1);
 }
 |	T_COMPOUND_IDENTIFIER
 {
@@ -963,13 +963,13 @@ ForEach:
 	T_FOREACH '(' T_IDENTIFIER ':'
 {
 	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_PUSH_CONSTANT, new NXSL_Value($3)));
-	MemFree($3);
+	MemFreeAndNull($3);
 }
 |
 	T_FOR '(' T_IDENTIFIER ':'
 {
 	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_PUSH_CONSTANT, new NXSL_Value($3)));
-	MemFree($3);
+	MemFreeAndNull($3);
 }
 ;
 
@@ -1164,24 +1164,21 @@ New:
 	char fname[256];
 	snprintf(fname, 256, "__new@%s", $2); 
 	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_CALL_EXTERNAL, strdup(fname), 0));
-	free($2);
-	$2 = NULL;
+	MemFreeAndNull($2);
 }
 |	T_NEW T_IDENTIFIER '(' ParameterList ')'
 {
 	char fname[256];
 	snprintf(fname, 256, "__new@%s", $2); 
 	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_CALL_EXTERNAL, strdup(fname), $4));
-	free($2);
-	$2 = NULL;
+	MemFreeAndNull($2);
 }
 |	T_NEW T_IDENTIFIER '(' ')'
 {
 	char fname[256];
 	snprintf(fname, 256, "__new@%s", $2); 
 	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_CALL_EXTERNAL, strdup(fname), 0));
-	free($2);
-	$2 = NULL;
+	MemFreeAndNull($2);
 }
 ;
 
@@ -1223,7 +1220,7 @@ StorageItem:
 	'#' T_IDENTIFIER
 {
 	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_PUSH_CONSTANT, new NXSL_Value($2)));
-	MemFree($2);
+	MemFreeAndNull($2);
 }
 |	'#' '(' Expression ')'
 ;	
