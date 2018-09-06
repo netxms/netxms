@@ -24,7 +24,8 @@
 - Original event name passed to alarm timeout event as 5th parameter
 - Added information tooltips in switch port view
 - Fixed issues:
-	- NX-1503 (Access denied error on attempt to take screenshot even if user has take screenshot access right)
+	NX-1503 (Access denied error on attempt to take screenshot even if user has take screenshot access right)
+	NX-1504 (Server crash after compiling library script with syntax error)
 
 
 *
