@@ -179,14 +179,14 @@ bool LogParserRule::matchInternal(bool extMode, const TCHAR *source, UINT32 even
 			if ((cb != NULL) && ((m_eventCode != 0) || (m_eventName != NULL)))
 			{
             StringList captureGroups;
-				for(int i = 0; i < MAX_PARAM_COUNT; i++)
+				for(int i = 1; i < MAX_PARAM_COUNT; i++)
 				{
-               if (m_pmatch[i + 1].rm_so == -1)
-                  break;
+               if (m_pmatch[i].rm_so == -1)
+                  continue;
 
-					int len = m_pmatch[i + 1].rm_eo - m_pmatch[i + 1].rm_so;
+					int len = m_pmatch[i].rm_eo - m_pmatch[i].rm_so;
 					TCHAR *s = (TCHAR *)MemAlloc((len + 1) * sizeof(TCHAR));
-					memcpy(s, &line[m_pmatch[i + 1].rm_so], len * sizeof(TCHAR));
+					memcpy(s, &line[m_pmatch[i].rm_so], len * sizeof(TCHAR));
 					s[len] = 0;
                captureGroups.addPreallocated(s);
 				}

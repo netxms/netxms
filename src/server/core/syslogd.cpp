@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -23,6 +23,8 @@
 #include "nxcore.h"
 #include <nxlog.h>
 #include <nxlpapi.h>
+
+#define DEBUG_TAG _T("syslog")
 
 /**
  * Max syslog message length
@@ -315,17 +317,17 @@ static Node *FindNodeByHostname(const char *hostName, UINT32 zoneUIN)
  */
 static Node *BindMsgToNode(NX_SYSLOG_RECORD *pRec, const InetAddress& sourceAddr, UINT32 zoneUIN, UINT32 nodeId)
 {
-   nxlog_debug(6, _T("BindMsgToNode: addr=%s zoneUIN=%d"), (const TCHAR *)sourceAddr.toString(), zoneUIN);
+   nxlog_debug_tag(DEBUG_TAG, 6, _T("BindMsgToNode: addr=%s zoneUIN=%d"), (const TCHAR *)sourceAddr.toString(), zoneUIN);
 
    Node *node = NULL;
    if (nodeId != 0)
    {
-      nxlog_debug(6, _T("BindMsgToNode: node ID explicitly set to %d"), nodeId);
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("BindMsgToNode: node ID explicitly set to %d"), nodeId);
       node = (Node *)FindObjectById(nodeId, OBJECT_NODE);
    }
    else if (sourceAddr.isLoopback() && (zoneUIN == 0))
    {
-      nxlog_debug(6, _T("BindMsgToNode: source is loopback in default zone, binding to management node (ID %d)"), g_dwMgmtNode);
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("BindMsgToNode: source is loopback in default zone, binding to management node (ID %d)"), g_dwMgmtNode);
       node = (Node *)FindObjectById(g_dwMgmtNode, OBJECT_NODE);
    }
    else if (s_nodeMatchingPolicy == SOURCE_IP_THEN_HOSTNAME)
@@ -386,7 +388,7 @@ static void BroadcastSyslogMessage(ClientSession *pSession, void *pArg)
 static THREAD_RESULT THREAD_CALL SyslogWriterThread(void *arg)
 {
    ThreadSetName("SyslogWriter");
-   DbgPrintf(1, _T("Syslog writer thread started"));
+   nxlog_debug_tag(DEBUG_TAG, 1, _T("Syslog writer thread started"));
    int maxRecords = ConfigReadInt(_T("DBWriter.MaxRecordsPerTransaction"), 1000);
    while(true)
    {
@@ -443,7 +445,7 @@ static THREAD_RESULT THREAD_CALL SyslogWriterThread(void *arg)
       if (r == INVALID_POINTER_VALUE)
          break;
    }
-   DbgPrintf(1, _T("Syslog writer thread stopped"));
+   nxlog_debug_tag(DEBUG_TAG, 1, _T("Syslog writer thread stopped"));
    return THREAD_OK;
 }
 
@@ -454,7 +456,7 @@ static void ProcessSyslogMessage(QueuedSyslogMessage *msg)
 {
    NX_SYSLOG_RECORD record;
 
-	DbgPrintf(6, _T("ProcessSyslogMessage: Raw syslog message to process:\n%hs"), msg->message);
+	nxlog_debug_tag(DEBUG_TAG, 6, _T("ProcessSyslogMessage: Raw syslog message to process:\n%hs"), msg->message);
    if (ParseSyslogMessage(msg->message, msg->messageLength, msg->timestamp, &record))
    {
       g_syslogMessagesReceived++;
@@ -468,7 +470,7 @@ static void ProcessSyslogMessage(QueuedSyslogMessage *msg)
       EnumerateClientSessions(BroadcastSyslogMessage, &record);
 
 		TCHAR ipAddr[64];
-		nxlog_debug(6, _T("Syslog message: ipAddr=%s zone=%d objectId=%d tag=\"%hs\" msg=\"%hs\""),
+		nxlog_debug_tag(DEBUG_TAG, 6, _T("Syslog message: ipAddr=%s zone=%d objectId=%d tag=\"%hs\" msg=\"%hs\""),
 		            msg->sourceAddr.toString(ipAddr), msg->zoneUIN, record.dwSourceObject, record.szTag, record.szMessage);
 
 		MutexLock(s_parserLock);
@@ -489,13 +491,13 @@ static void ProcessSyslogMessage(QueuedSyslogMessage *msg)
 
 	   if ((record.dwSourceObject == 0) && (g_flags & AF_SYSLOG_DISCOVERY))  // unknown node, discovery enabled
 	   {
-	      DbgPrintf(4, _T("ProcessSyslogMessage: source not matched to node, adding new IP address %s for discovery"), msg->sourceAddr.toString(ipAddr));
+	      nxlog_debug_tag(DEBUG_TAG, 4, _T("ProcessSyslogMessage: source not matched to node, adding new IP address %s for discovery"), msg->sourceAddr.toString(ipAddr));
 	      CheckPotentialNode(msg->sourceAddr, msg->zoneUIN);
 	   }
    }
 	else
 	{
-		DbgPrintf(6, _T("ProcessSyslogMessage: Cannot parse syslog message"));
+		nxlog_debug_tag(DEBUG_TAG, 6, _T("ProcessSyslogMessage: Cannot parse syslog message"));
 	}
 }
 
@@ -541,15 +543,19 @@ static void SyslogParserCallback(UINT32 eventCode, const TCHAR *eventName, const
 {
 	char format[] = "sssssssssssssssssssssssssssssssss";
 	const TCHAR *plist[33];
-	TCHAR repeatCountText[16];
+
+	nxlog_debug_tag(DEBUG_TAG, 7, _T("Syslog message matched, capture group count = %d, repeat count = %d"), captureGroups->size(), repeatCount);
 
 	int count = std::min(captureGroups->size(), 32);
 	format[count + 1] = 0;
 	for(int i = 0; i < count; i++)
 		plist[i] = captureGroups->get(i);
+
+	TCHAR repeatCountText[16];
    _sntprintf(repeatCountText, 16, _T("%d"), repeatCount);
    plist[count] = repeatCountText;
-	PostEvent(eventCode, objectId, format,
+
+   PostEvent(eventCode, objectId, format,
 	          plist[0], plist[1], plist[2], plist[3],
 	          plist[4], plist[5], plist[6], plist[7],
 	          plist[8], plist[9], plist[10], plist[11],
@@ -609,7 +615,7 @@ static void CreateParserFromConfig()
 			s_parser->setCallback(SyslogParserCallback);
 			if (prev != NULL)
 			   s_parser->restoreCounters(prev);
-			DbgPrintf(3, _T("syslogd: parser successfully created from config"));
+			nxlog_debug_tag(DEBUG_TAG, 3, _T("Syslog parser successfully created from config"));
 		}
 		else
 		{
@@ -666,7 +672,7 @@ static THREAD_RESULT THREAD_CALL SyslogReceiver(void *pArg)
    int port = ConfigReadInt(_T("SyslogListenPort"), 514);
    if ((port < 1) || (port > 65535))
    {
-      DbgPrintf(2, _T("Syslog: invalid listen port number %d, using default"), port);
+      nxlog_debug_tag(DEBUG_TAG, 2, _T("Invalid syslog listen port number %d, using default"), port);
       port = 514;
    }
 
@@ -720,7 +726,7 @@ static THREAD_RESULT THREAD_CALL SyslogReceiver(void *pArg)
    // Bind socket
    TCHAR buffer[64];
    int bindFailures = 0;
-   DbgPrintf(5, _T("Trying to bind on UDP %s:%d"), SockaddrToStr((struct sockaddr *)&servAddr, buffer), ntohs(servAddr.sin_port));
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("Trying to bind on UDP %s:%d"), SockaddrToStr((struct sockaddr *)&servAddr, buffer), ntohs(servAddr.sin_port));
    if (bind(hSocket, (struct sockaddr *)&servAddr, sizeof(struct sockaddr_in)) != 0)
    {
       nxlog_write(MSG_BIND_ERROR, EVENTLOG_ERROR_TYPE, "dse", port, _T("SyslogReceiver"), WSAGetLastError());
@@ -730,7 +736,7 @@ static THREAD_RESULT THREAD_CALL SyslogReceiver(void *pArg)
    }
 
 #ifdef WITH_IPV6
-   DbgPrintf(5, _T("Trying to bind on UDP [%s]:%d"), SockaddrToStr((struct sockaddr *)&servAddr6, buffer), ntohs(servAddr6.sin6_port));
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("Trying to bind on UDP [%s]:%d"), SockaddrToStr((struct sockaddr *)&servAddr6, buffer), ntohs(servAddr6.sin6_port));
    if (bind(hSocket6, (struct sockaddr *)&servAddr6, sizeof(struct sockaddr_in6)) != 0)
    {
       nxlog_write(MSG_BIND_ERROR, EVENTLOG_ERROR_TYPE, "dse", port, _T("SyslogReceiver"), WSAGetLastError());
@@ -745,7 +751,7 @@ static THREAD_RESULT THREAD_CALL SyslogReceiver(void *pArg)
    // Abort if cannot bind to at least one socket
    if (bindFailures == 2)
    {
-      DbgPrintf(1, _T("Syslog receiver aborted - cannot bind at least one socket"));
+      nxlog_debug_tag(DEBUG_TAG, 1, _T("Syslog receiver aborted - cannot bind at least one socket"));
       return THREAD_OK;
    }
 
@@ -758,7 +764,7 @@ static THREAD_RESULT THREAD_CALL SyslogReceiver(void *pArg)
 
    SocketPoller sp;
 
-   DbgPrintf(1, _T("Syslog receiver thread started"));
+   nxlog_debug_tag(DEBUG_TAG, 1, _T("Syslog receiver thread started"));
 
    // Wait for packets
    while(s_running)
@@ -808,7 +814,7 @@ static THREAD_RESULT THREAD_CALL SyslogReceiver(void *pArg)
       closesocket(hSocket6);
 #endif
 
-   nxlog_debug(1, _T("Syslog receiver thread stopped"));
+   nxlog_debug_tag(DEBUG_TAG, 1, _T("Syslog receiver thread stopped"));
    return THREAD_OK;
 }
 
@@ -848,7 +854,7 @@ void OnSyslogConfigurationChange(const TCHAR *name, const TCHAR *value)
    if (!_tcscmp(name, _T("SyslogIgnoreMessageTimestamp")))
    {
       s_alwaysUseServerTime = _tcstol(value, NULL, 0) ? true : false;
-      nxlog_debug(4, _T("Syslog: ignore message timestamp option set to %s"), s_alwaysUseServerTime ? _T("ON") : _T("OFF"));
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Ignore message timestamp option set to %s"), s_alwaysUseServerTime ? _T("ON") : _T("OFF"));
    }
 }
 
@@ -882,12 +888,12 @@ int F_GetSyslogRuleCheckCount(int argc, NXSL_Value **argv, NXSL_Value **result, 
    if (s_parserLock == INVALID_MUTEX_HANDLE)
    {
       // Syslog daemon not initialized
-      *result = new NXSL_Value(-1);
+      *result = vm->createValue(-1);
       return 0;
    }
 
    MutexLock(s_parserLock);
-   *result = new NXSL_Value(s_parser->getRuleCheckCount(argv[0]->getValueAsCString(), objectId));
+   *result = vm->createValue(s_parser->getRuleCheckCount(argv[0]->getValueAsCString(), objectId));
    MutexUnlock(s_parserLock);
    return 0;
 }
@@ -919,12 +925,12 @@ int F_GetSyslogRuleMatchCount(int argc, NXSL_Value **argv, NXSL_Value **result, 
    if (s_parserLock == INVALID_MUTEX_HANDLE)
    {
       // Syslog daemon not initialized
-      *result = new NXSL_Value(-1);
+      *result = vm->createValue(-1);
       return 0;
    }
 
    MutexLock(s_parserLock);
-   *result = new NXSL_Value(s_parser->getRuleMatchCount(argv[0]->getValueAsCString(), objectId));
+   *result = vm->createValue(s_parser->getRuleMatchCount(argv[0]->getValueAsCString(), objectId));
    MutexUnlock(s_parserLock);
    return 0;
 }
