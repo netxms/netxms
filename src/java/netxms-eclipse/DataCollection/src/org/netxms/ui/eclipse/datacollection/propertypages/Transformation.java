@@ -112,7 +112,7 @@ public class Transformation extends DCIPropertyPageDialog
 				@Override
 				public void widgetSelected(SelectionEvent e)
 				{
-					TestTransformationDlg dlg = new TestTransformationDlg(getShell(), editor.getObject().getNodeId(), transformationScript.getText());
+					TestTransformationDlg dlg = new TestTransformationDlg(getShell(), editor.getObject(), transformationScript.getText());
 					dlg.open();
 				}
 				

@@ -37,6 +37,7 @@ import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.constants.Severity;
+import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.TransformationTestResult;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.datacollection.Activator;
@@ -52,7 +53,7 @@ public class TestTransformationDlg extends Dialog
 {
 	private static final int RUN = 111;	// "Run" button ID
 	
-	private long nodeId;
+	private DataCollectionObject object;
 	private String script;
 	private LabeledText inputValue;
 	private CLabel status;
@@ -64,10 +65,10 @@ public class TestTransformationDlg extends Dialog
 	 * @param nodeId
 	 * @param script
 	 */
-	public TestTransformationDlg(Shell parentShell, long nodeId, String script)
+	public TestTransformationDlg(Shell parentShell, DataCollectionObject object, String script)
 	{
 		super(parentShell);
-		this.nodeId = nodeId;
+		this.object = object;
 		this.script = script;
 	}
 
@@ -149,12 +150,12 @@ public class TestTransformationDlg extends Dialog
 		
 		result.setText(""); //$NON-NLS-1$
 		
-		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+		final NXCSession session = ConsoleSharedData.getSession();
 		new ConsoleJob(Messages.get().TestTransformationDlg_JobTitle, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				final TransformationTestResult r = session.testTransformationScript(nodeId, script, input);
+				final TransformationTestResult r = session.testTransformationScript(object.getNodeId(), script, input, object);
 				runInUIThread(new Runnable() {
 					@Override
 					public void run()

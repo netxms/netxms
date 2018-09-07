@@ -6356,17 +6356,22 @@ public class NXCSession
     * @param nodeId     ID of the node object to test script on
     * @param script     script source code
     * @param inputValue input value for the script
+    * @param dcObject   optional data collection object data (for $dci variable in script)
     * @return test execution results
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public TransformationTestResult testTransformationScript(long nodeId, String script, String inputValue)
+   public TransformationTestResult testTransformationScript(long nodeId, String script, String inputValue, DataCollectionObject dcObject)
       throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_TEST_DCI_TRANSFORMATION);
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
       msg.setField(NXCPCodes.VID_SCRIPT, script);
       msg.setField(NXCPCodes.VID_VALUE, inputValue);
+      if (dcObject != null)
+      {
+         dcObject.fillMessage(msg);
+      }
       sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());
       TransformationTestResult r = new TransformationTestResult();

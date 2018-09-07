@@ -1453,6 +1453,28 @@ DCObjectInfo::DCObjectInfo(DCObject *object)
 }
 
 /**
+ * Data collection object info - constructor for client provided DCI info
+ */
+DCObjectInfo::DCObjectInfo(const NXCPMessage *msg, DCObject *object)
+{
+   m_id = msg->getFieldAsUInt32(VID_DCI_ID);
+   m_ownerId = msg->getFieldAsUInt32(VID_OBJECT_ID);
+   m_templateId = (object != NULL) ? object->getTemplateId() : 0;
+   m_templateItemId = (object != NULL) ? object->getTemplateItemId() : 0;
+   m_type = msg->getFieldAsInt16(VID_DCOBJECT_TYPE);
+   msg->getFieldAsString(VID_NAME, m_name, MAX_ITEM_NAME);
+   msg->getFieldAsString(VID_DESCRIPTION, m_description, MAX_DB_STRING);
+   msg->getFieldAsString(VID_SYSTEM_TAG, m_systemTag, MAX_DB_STRING);
+   msg->getFieldAsString(VID_INSTANCE, m_instance, MAX_DB_STRING);
+   m_comments = msg->getFieldAsString(VID_COMMENTS);
+   m_dataType = (m_type == DCO_TYPE_ITEM) ? msg->getFieldAsInt16(VID_DCI_DATA_TYPE) : -1;
+   m_origin = msg->getFieldAsInt16(VID_DCI_SOURCE_TYPE);
+   m_status = msg->getFieldAsInt16(VID_DCI_STATUS);
+   m_errorCount = (object != NULL) ? object->getErrorCount() : 0;
+   m_lastPollTime = (object != NULL) ? object->getLastPollTime() : 0;
+}
+
+/**
  * Data collection object info - destructor
  */
 DCObjectInfo::~DCObjectInfo()
