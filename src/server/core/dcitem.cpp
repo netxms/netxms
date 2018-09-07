@@ -1700,8 +1700,9 @@ BOOL DCItem::enumThresholds(BOOL (* pfCallback)(Threshold *, UINT32, void *), vo
 
 /**
  * Test DCI's transformation script
+ * If dcObjectInfo is not NULL it will be destroyed by this method
  */
-bool DCItem::testTransformation(DataCollectionTarget *object, const TCHAR *script, const TCHAR *value, TCHAR *buffer, size_t bufSize)
+bool DCItem::testTransformation(DataCollectionTarget *object, DCObjectInfo *dcObjectInfo, const TCHAR *script, const TCHAR *value, TCHAR *buffer, size_t bufSize)
 {
 	bool success = false;
 	NXSL_VM *vm = NXSLCompileAndCreateVM(script, buffer, (int)bufSize, new NXSL_ServerEnv);
@@ -1713,7 +1714,10 @@ bool DCItem::testTransformation(DataCollectionTarget *object, const TCHAR *scrip
       {
          vm->setGlobalVariable(_T("$node"), object->createNXSLObject());
       }
-      //FIXME: vm->setGlobalVariable(_T("$dci"), new NXSL_Value(new NXSL_Object(&g_nxslDciClass, this)));
+      if (dcObjectInfo != NULL)
+      {
+         vm->setGlobalVariable(_T("$dci"), new NXSL_Value(new NXSL_Object(&g_nxslDciClass, dcObjectInfo)));
+      }
       vm->setGlobalVariable(_T("$isCluster"), new NXSL_Value((object->getObjectClass() == OBJECT_CLUSTER) ? 1 : 0));
 
 		if (vm->run(1, &pValue))
@@ -1751,6 +1755,10 @@ bool DCItem::testTransformation(DataCollectionTarget *object, const TCHAR *scrip
       {
 			nx_strncpy(buffer, vm->getErrorText(), bufSize);
       }
+   }
+   else
+   {
+      delete dcObjectInfo;
    }
    delete vm;
 	return success;

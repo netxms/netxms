@@ -10660,9 +10660,16 @@ void ClientSession::testDCITransformation(NXCPMessage *pRequest)
 				script = pRequest->getFieldAsString(VID_SCRIPT);
 				if (script != NULL)
 				{
+				   DCObjectInfo *dcObjectInfo = NULL;
+				   if (pRequest->isFieldExist(VID_DCI_ID))
+				   {
+				      UINT32 dciId = pRequest->getFieldAsUInt32(VID_DCI_ID);
+				      DCObject *dcObject = static_cast<DataCollectionTarget*>(object)->getDCObjectById(dciId, m_dwUserId);
+				      dcObjectInfo = new DCObjectInfo(pRequest, dcObject);   // will be destroyed by DCItem::testTransformation
+				   }
 					pRequest->getFieldAsString(VID_VALUE, value, sizeof(value) / sizeof(TCHAR));
-               success = DCItem::testTransformation((DataCollectionTarget *)object, script, value, result, sizeof(result) / sizeof(TCHAR));
-					free(script);
+               success = DCItem::testTransformation(static_cast<DataCollectionTarget*>(object), dcObjectInfo, script, value, result, sizeof(result) / sizeof(TCHAR));
+					MemFree(script);
 					msg.setField(VID_RCC, RCC_SUCCESS);
 					msg.setField(VID_EXECUTION_STATUS, (WORD)success);
 					msg.setField(VID_EXECUTION_RESULT, result);

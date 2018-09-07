@@ -165,6 +165,7 @@ public:
 };
 
 class Template;
+class DCObjectInfo;
 
 /**
  * Generic data collection object
@@ -437,7 +438,7 @@ public:
 	void addThreshold(Threshold *pThreshold);
 	void deleteAllThresholds();
 
-   static bool testTransformation(DataCollectionTarget *object, const TCHAR *script, const TCHAR *value, TCHAR *buffer, size_t bufSize);
+   static bool testTransformation(DataCollectionTarget *object, DCObjectInfo *dcObjectInfo, const TCHAR *script, const TCHAR *value, TCHAR *buffer, size_t bufSize);
 };
 
 struct TableThresholdCbData;
@@ -702,6 +703,7 @@ private:
 
 public:
    DCObjectInfo(DCObject *object);
+   DCObjectInfo(const NXCPMessage *msg, DCObject *object);
    ~DCObjectInfo();
 
    UINT32 getId() const { return m_id; }
