@@ -24,6 +24,7 @@
 - Original event name passed to alarm timeout event as 5th parameter
 - Added information tooltips in switch port view
 - Fixed issues:
+	NX-1494 (Release 2.2.8 failed to compile on macOS)
 	NX-1501 (In test mode $dci variable is not set)
 	NX-1503 (Access denied error on attempt to take screenshot even if user has take screenshot access right)
 	NX-1504 (Server crash after compiling library script with syntax error)
