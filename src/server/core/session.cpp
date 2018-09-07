@@ -498,6 +498,13 @@ void ClientSession::readThread()
 				respondToKeepalive(msg->getId());
 				delete msg;
 			}
+         else if(msg->getCode() == CMD_EPP_RECORD)
+         {
+            incRefCount();
+            TCHAR key[64];
+            _sntprintf(key, 64, _T("EPP_%d"), m_id);
+            ThreadPoolExecuteSerialized(g_clientThreadPool, key, this, &ClientSession::processEPPRecord, msg);
+         }
 			else
          {
 			   incRefCount();
@@ -712,9 +719,6 @@ void ClientSession::processRequest(NXCPMessage *request)
          break;
       case CMD_SAVE_EPP:
          saveEPP(request);
-         break;
-      case CMD_EPP_RECORD:
-         processEPPRecord(request);
          break;
       case CMD_GET_MIB_TIMESTAMP:
          sendMIBTimestamp(request->getId());
@@ -4811,7 +4815,6 @@ void ClientSession::closeEPP(UINT32 dwRqId)
    sendMessage(&msg);
 }
 
-
 /**
  * Save event processing policy
  */
@@ -4865,18 +4868,14 @@ void ClientSession::saveEPP(NXCPMessage *pRequest)
    sendMessage(&msg);
 }
 
-
 /**
  * Process EPP rule received from client
  */
-void ClientSession::processEPPRecord(NXCPMessage *pRequest)
+void ClientSession::processEPPRecord(NXCPMessage *request)
 {
    if (!(m_dwFlags & CSF_EPP_LOCKED))
    {
-      NXCPMessage msg;
-
-      msg.setCode(CMD_REQUEST_COMPLETED);
-      msg.setId(pRequest->getId());
+      NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
       msg.setField(VID_RCC, RCC_OUT_OF_STATE_REQUEST);
       sendMessage(&msg);
    }
@@ -4884,7 +4883,7 @@ void ClientSession::processEPPRecord(NXCPMessage *pRequest)
    {
       if (m_dwRecordsUploaded < m_dwNumRecordsToUpload)
       {
-         m_ppEPPRuleList[m_dwRecordsUploaded] = new EPRule(pRequest);
+         m_ppEPPRuleList[m_dwRecordsUploaded] = new EPRule(request);
          m_dwRecordsUploaded++;
          if (m_dwRecordsUploaded == m_dwNumRecordsToUpload)
          {
@@ -4894,12 +4893,11 @@ void ClientSession::processEPPRecord(NXCPMessage *pRequest)
             json_t *oldVersion = g_pEventPolicy->toJson();
             g_pEventPolicy->replacePolicy(m_dwNumRecordsToUpload, m_ppEPPRuleList);
             bool success = g_pEventPolicy->saveToDB();
-            free(m_ppEPPRuleList);
-            m_ppEPPRuleList = NULL;
+            MemFreeAndNull(m_ppEPPRuleList);
             json_t *newVersion = g_pEventPolicy->toJson();
 
             // ... and send final confirmation
-            NXCPMessage msg(CMD_REQUEST_COMPLETED, pRequest->getId());
+            NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
             msg.setField(VID_RCC, success ? RCC_SUCCESS : RCC_DB_FAILURE);
             sendMessage(&msg);
 
@@ -4911,6 +4909,12 @@ void ClientSession::processEPPRecord(NXCPMessage *pRequest)
          }
       }
    }
+
+   // This handler is called directly, not through processRequest,
+   // so session reference count should be decremented here and
+   // request message deleted
+   delete request;
+   decRefCount();
 }
 
 /**
