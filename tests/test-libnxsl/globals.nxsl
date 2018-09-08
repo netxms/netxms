@@ -21,4 +21,7 @@ sub test()
 	y = 20;
 }
 
+global x = 42;
+assert(x == 42);
+
 return 0;

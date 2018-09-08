@@ -740,6 +740,18 @@ void NXSL_VM::execute()
 					}
 				}
 			}
+         else if (cp->m_stackItems > 0)	// process initialization block as assignment
+         {
+            pValue = (NXSL_Value *)m_dataStack->pop();
+            if (pValue != NULL)
+            {
+               pVar->setValue(pValue);
+            }
+            else
+            {
+               error(NXSL_ERR_DATA_STACK_UNDERFLOW);
+            }
+         }
 			break;
 		case OPCODE_SET_ELEMENT:	// Set array or map element; stack should contain: array index value (top) / hashmap key value (top)
 			pValue = (NXSL_Value *)m_dataStack->pop();
