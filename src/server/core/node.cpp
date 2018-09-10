@@ -6719,20 +6719,20 @@ BOOL Node::resolveName(BOOL useOnlyDNS)
    if(m_zoneUIN != 0)
    {
       AgentConnectionEx *conn = getConnectionToZoneNodeProxy();
-      if(conn != NULL)
+      if (conn != NULL)
       {
-         nameResolved = conn->getHostByAddr(m_ipAddress, name, MAX_DNS_NAME) != NULL ? true : false;
+         nameResolved = (conn->getHostByAddr(m_ipAddress, name, MAX_DNS_NAME) != NULL);
       }
    }
    else
    {
-      nameResolved = m_ipAddress.getHostByAddr(name, MAX_OBJECT_NAME) != NULL ? true : false;
+      nameResolved = (m_ipAddress.getHostByAddr(name, MAX_OBJECT_NAME) != NULL);
    }
 
    // Try to resolve primary IP
    if (nameResolved)
    {
-      nx_strncpy(m_name, name, MAX_OBJECT_NAME);
+      _tcslcpy(m_name, name, MAX_OBJECT_NAME);
       if (!(g_flags & AF_USE_FQDN_FOR_NODE_NAMES))
       {
          TCHAR *pPoint = _tcschr(m_name, _T('.'));
@@ -6758,7 +6758,7 @@ BOOL Node::resolveName(BOOL useOnlyDNS)
                const InetAddress& a = list->get(i);
                if (a.isValidUnicast() && (a.getHostByAddr(name, MAX_OBJECT_NAME) != NULL))
                {
-                  nx_strncpy(m_name, name, MAX_OBJECT_NAME);
+                  _tcslcpy(m_name, name, MAX_OBJECT_NAME);
                   bSuccess = TRUE;
                   break;
                }
@@ -6776,7 +6776,7 @@ BOOL Node::resolveName(BOOL useOnlyDNS)
             StrStrip(szBuffer);
             if (szBuffer[0] != 0)
             {
-               nx_strncpy(m_name, szBuffer, MAX_OBJECT_NAME);
+               _tcslcpy(m_name, szBuffer, MAX_OBJECT_NAME);
                bSuccess = TRUE;
             }
          }
@@ -6791,7 +6791,7 @@ BOOL Node::resolveName(BOOL useOnlyDNS)
             StrStrip(szBuffer);
             if (szBuffer[0] != 0)
             {
-               nx_strncpy(m_name, szBuffer, MAX_OBJECT_NAME);
+               _tcslcpy(m_name, szBuffer, MAX_OBJECT_NAME);
                bSuccess = TRUE;
             }
          }
