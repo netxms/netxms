@@ -76,7 +76,6 @@ void TestThreadCountAndMaxWaitTime()
    
    AssertEquals(2, ThreadPoolGetSerializedRequestCount(threadPool,  _T("Test1")));
    AssertEquals(0, ThreadPoolGetSerializedRequestCount(threadPool,  _T("Test2")));
-   AssertEquals(0, ThreadPoolGetSerializedRequestMaxWaitTime(threadPool, _T("Test1")));
    
    s_waitTimeTestLock1.unlock();
    ThreadSleepMs(100);
