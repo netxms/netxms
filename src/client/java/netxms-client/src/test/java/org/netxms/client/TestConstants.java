@@ -28,8 +28,8 @@ public class TestConstants
    public static String loginName = "admin";
    public static String password = "";
    //Other constants
-   public static int NODE_ID = 2594;
-   public static int LOCAL_NODE_ID = 142;
+   public static int NODE_ID = 114;
+   public static int LOCAL_NODE_ID = 114;
    public static long SUBNET_ID = 796;
    public static String FILE_NAME = "/var/adm/messages";
    public static int FILE_OFFSET = 0;

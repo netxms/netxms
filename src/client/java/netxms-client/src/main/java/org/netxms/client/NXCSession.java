@@ -78,6 +78,7 @@ import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.constants.RCC;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.ConditionDciInfo;
+import org.netxms.client.datacollection.DCONotificationCallback;
 import org.netxms.client.datacollection.DCOStatusHolder;
 import org.netxms.client.datacollection.DataCollectionConfiguration;
 import org.netxms.client.datacollection.DataCollectionItem;
@@ -6301,7 +6302,7 @@ public class NXCSession
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
-
+   
    /**
     * Open data collection configuration for given node. You must call
     * DataCollectionConfiguration.close() to close data collection configuration
@@ -6314,8 +6315,24 @@ public class NXCSession
     */
    public DataCollectionConfiguration openDataCollectionConfiguration(long nodeId) throws IOException, NXCException
    {
+      return openDataCollectionConfiguration(nodeId, null);
+   }
+
+   /**
+    * Open data collection configuration for given node. You must call
+    * DataCollectionConfiguration.close() to close data collection configuration
+    * when it is no longer needed.
+    *
+    * @param nodeId Node object identifier
+    * @param notifyDCOChangeCB callback that will be called when DCO object is changed by server notification
+    * @return Data collection configuration object
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public DataCollectionConfiguration openDataCollectionConfiguration(long nodeId, DCONotificationCallback notifyDCOChangeCB) throws IOException, NXCException
+   {
       final DataCollectionConfiguration cfg = new DataCollectionConfiguration(this, nodeId);
-      cfg.open();
+      cfg.open(notifyDCOChangeCB);
       return cfg;
    }
    

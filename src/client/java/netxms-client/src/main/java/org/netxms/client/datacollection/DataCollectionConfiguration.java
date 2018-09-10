@@ -23,6 +23,8 @@ import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
+import org.netxms.client.SessionListener;
+import org.netxms.client.SessionNotification;
 import org.netxms.client.constants.RCC;
 
 /**
@@ -35,6 +37,8 @@ public class DataCollectionConfiguration
 	private HashMap<Long, DataCollectionObject> items;
 	private boolean isOpen = false;
 	private Object userData = null;
+   private SessionListener listener;
+   private DCONotificationCallback cb; 
 
 	/**
 	 * Create empty data collection configuration.
@@ -55,12 +59,13 @@ public class DataCollectionConfiguration
 	 * @throws IOException if socket I/O error occurs
 	 * @throws NXCException if NetXMS server returns an error or operation was timed out
 	 */
-	public void open() throws IOException, NXCException
+	public void open(DCONotificationCallback notifyDCOChangeCB) throws IOException, NXCException
 	{
 		NXCPMessage msg = session.newMessage(NXCPCodes.CMD_GET_NODE_DCI_LIST);
 		msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
 		session.sendMessage(msg);
 		session.waitForRCC(msg.getMessageId());
+		cb = notifyDCOChangeCB;
 		
 		while(true)
 		{
@@ -85,7 +90,38 @@ public class DataCollectionConfiguration
 			if (dco != null)
 				items.put(dco.getId(), dco);
 		}
-		isOpen = true;
+      
+      listener = new SessionListener() {
+         @Override
+         public void notificationHandler(SessionNotification n)
+         {
+            if(n.getSubCode() != nodeId)
+               return;
+            
+            if (n.getCode() == SessionNotification.DCI_UPDATE)
+            {
+               final DataCollectionObject dco = (DataCollectionObject)n.getObject();
+               updateItemFromNotification(dco);
+            }
+            else if (n.getCode() == SessionNotification.DCI_DELETE)
+            {
+               final long id = (Long)n.getObject();
+               removeItemFromNotification(id);
+            }
+            else if (n.getCode() == SessionNotification.DCI_STATE_CHANGE)
+            {
+               DCOStatusHolder stHolder = (DCOStatusHolder)n.getObject();
+               updateItemStatusFromNotification(stHolder.getDciIdArray(), stHolder.getStatus());
+            }
+            if(n.getCode() == SessionNotification.DCI_UPDATE || n.getCode() == SessionNotification.DCI_DELETE ||
+                  n.getCode() == SessionNotification.DCI_STATE_CHANGE)
+               if(cb != null)
+                  cb.notifyDCOChange();
+                  
+         }
+      };
+      session.addListener(listener);
+      isOpen = true;
 	}
 	
 	/**
@@ -101,7 +137,9 @@ public class DataCollectionConfiguration
 		session.sendMessage(msg);
 		session.waitForRCC(msg.getMessageId());
 		items.clear();
+		session.removeListener(listener);
 		isOpen = false;
+		cb = null;
 	}
 	
 	/**
@@ -388,5 +426,5 @@ public class DataCollectionConfiguration
 	protected final NXCSession getSession()
 	{
 		return session;
-	}
+	}	
 }
