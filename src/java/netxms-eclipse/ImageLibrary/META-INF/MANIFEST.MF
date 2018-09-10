@@ -17,3 +17,4 @@ Export-Package: org.netxms.ui.eclipse.imagelibrary,
  org.netxms.ui.eclipse.imagelibrary.dialogs,
  org.netxms.ui.eclipse.imagelibrary.shared,
  org.netxms.ui.eclipse.imagelibrary.widgets
+Automatic-Module-Name: org.netxms.ui.eclipse.imagelibrary

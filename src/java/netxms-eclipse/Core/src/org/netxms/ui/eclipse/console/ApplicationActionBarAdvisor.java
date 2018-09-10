@@ -402,6 +402,8 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor
 		   coolBar.add(new ServerClockContributionItem());
 		}
 		ConsoleSharedData.setProperty("CoolBarManager", coolBar); //$NON-NLS-1$
+		
+		coolBar.setLockLayout(true);
 	}
 
 	/*

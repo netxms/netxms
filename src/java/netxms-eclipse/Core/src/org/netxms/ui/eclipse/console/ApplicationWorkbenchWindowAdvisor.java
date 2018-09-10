@@ -105,7 +105,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor im
       configurer.setShowCoolBar(ps.getBoolean("SHOW_COOLBAR")); //$NON-NLS-1$
       configurer.setShowStatusLine(true);
       configurer.setShowProgressIndicator(true);
-      configurer.setShowPerspectiveBar(true);
+      configurer.setShowPerspectiveBar(false);
 
       TweakletManager.preWindowOpen(configurer);
    }
