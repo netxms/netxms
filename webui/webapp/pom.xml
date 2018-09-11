@@ -57,7 +57,7 @@
         <replacer.version>1.4.1</replacer.version>
     </properties>
 
-  <repositories>        
+  <repositories>     
         <repository>
           <id>orbit latest</id>
           <layout>p2</layout>
@@ -70,14 +70,14 @@
         </repository> 
         <repository>
             <id>eclipse</id>
-            <url>http://download.eclipse.org/releases/oxygen</url>
+            <url>http://download.eclipse.org/releases/photon</url>
             <layout>p2</layout>
         </repository>
         <repository>  
-            <id>rap-3.4</id>
-            <url>http://download.eclipse.org/rt/rap/3.4</url>
+            <id>rap-3.6</id>
+            <url>http://download.eclipse.org/rt/rap/3.6</url>
             <layout>p2</layout>
-        </repository>
+        </repository>   
         <repository>
             <id>zest</id>
             <url>http://www.netxms.org/eclipse/zest-rap</url>
