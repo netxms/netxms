@@ -31,9 +31,14 @@
    <profile>
      <id>web</id>
      <repositories>
+        <repository>
+            <id>eclipse</id>
+            <url>http://download.eclipse.org/releases/photon</url>
+            <layout>p2</layout>
+        </repository>
         <repository>  
-            <id>rap-3.4</id>
-            <url>http://download.eclipse.org/rt/rap/3.4</url>
+            <id>rap-3.6</id>
+            <url>http://download.eclipse.org/rt/rap/3.6</url>
             <layout>p2</layout>
         </repository>
      </repositories>
