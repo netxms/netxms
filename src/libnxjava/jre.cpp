@@ -45,6 +45,16 @@ static bool CheckJvmPath(const char *base, const char *libdir, const char *arch,
       nxlog_debug(7, _T("FindJavaRuntime: checking %hs (%s)"), jvm, description);
       if (_access(jvm, 0) == 0)
          return true;
+
+      snprintf(jvm, MAX_PATH, "%s%s/lib/%s/%s/libjvm.dylib", base, libdir, arch, jreType[i]);
+      nxlog_debug(7, _T("FindJavaRuntime: checking %hs (%s)"), jvm, description);
+      if (_access(jvm, 0) == 0)
+         return true;
+
+      snprintf(jvm, MAX_PATH, "%s%s/jre/lib/%s/%s/libjvm.dylib", base, libdir, arch, jreType[i]);
+      nxlog_debug(7, _T("FindJavaRuntime: checking %hs (%s)"), jvm, description);
+      if (_access(jvm, 0) == 0)
+         return true;
    }
 
    if (!strcmp(arch, "x86_64") || !strcmp(arch, "i86pc"))
