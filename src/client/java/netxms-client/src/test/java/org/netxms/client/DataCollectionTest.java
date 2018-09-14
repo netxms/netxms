@@ -21,8 +21,11 @@ package org.netxms.client;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import org.netxms.client.constants.AggregationFunction;
 import org.netxms.client.constants.RCC;
+import org.netxms.client.datacollection.DCONotificationCallback;
 import org.netxms.client.datacollection.DataCollectionConfiguration;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.DataCollectionObject;
@@ -82,9 +85,20 @@ public class DataCollectionTest extends AbstractSessionTest
 	{
 		final NXCSession session = connect();
 		
-		DataCollectionConfiguration dc = session.openDataCollectionConfiguration(TestConstants.NODE_ID);
-		final long dciId = dc.createItem(null);
+		final Lock mutex = new ReentrantLock(true);
+      mutex.lock();
+		DataCollectionConfiguration dc = session.openDataCollectionConfiguration(TestConstants.NODE_ID, new DCONotificationCallback() {
+         
+         @Override
+         public void notifyDCOChange()
+         {
+            mutex.unlock();
+         }
+      });
+      final long dciId = dc.createItem(null);
+      mutex.lock();
 		DataCollectionItem dci = (DataCollectionItem)dc.findItem(dciId, DataCollectionItem.class);
+      
 		dci.setName("TEST");
 		dci.getThresholds().add(new Threshold());
 		dc.modifyObject(dciId);
@@ -96,6 +110,7 @@ public class DataCollectionTest extends AbstractSessionTest
 		dc.deleteObject(dciId);
 		dc.close();
 		session.disconnect();
+		mutex.unlock();
 	}
 	
 	public void testGetThresholdSummary() throws Exception
