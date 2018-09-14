@@ -36,22 +36,12 @@ static bool CheckJvmPath(const char *base, const char *libdir, const char *arch,
 
    for(int i = 0; jreType[i] != NULL; i++)
    {
-      snprintf(jvm, MAX_PATH, "%s%s/lib/%s/%s/libjvm.so", base, libdir, arch, jreType[i]);
+      snprintf(jvm, MAX_PATH, "%s%s/lib/%s/%s/libjvm" SYSTEM_SHLIB_SUFFIX, base, libdir, arch, jreType[i]);
       nxlog_debug(7, _T("FindJavaRuntime: checking %hs (%s)"), jvm, description);
       if (_access(jvm, 0) == 0)
          return true;
 
-      snprintf(jvm, MAX_PATH, "%s%s/jre/lib/%s/%s/libjvm.so", base, libdir, arch, jreType[i]);
-      nxlog_debug(7, _T("FindJavaRuntime: checking %hs (%s)"), jvm, description);
-      if (_access(jvm, 0) == 0)
-         return true;
-
-      snprintf(jvm, MAX_PATH, "%s%s/lib/%s/%s/libjvm.dylib", base, libdir, arch, jreType[i]);
-      nxlog_debug(7, _T("FindJavaRuntime: checking %hs (%s)"), jvm, description);
-      if (_access(jvm, 0) == 0)
-         return true;
-
-      snprintf(jvm, MAX_PATH, "%s%s/jre/lib/%s/%s/libjvm.dylib", base, libdir, arch, jreType[i]);
+      snprintf(jvm, MAX_PATH, "%s%s/jre/lib/%s/%s/libjvm" SYSTEM_SHLIB_SUFFIX, base, libdir, arch, jreType[i]);
       nxlog_debug(7, _T("FindJavaRuntime: checking %hs (%s)"), jvm, description);
       if (_access(jvm, 0) == 0)
          return true;
@@ -64,9 +54,7 @@ static bool CheckJvmPath(const char *base, const char *libdir, const char *arch,
       return CheckJvmPath(base, libdir, "i386", jvm, description);
 
    if (arch[0] != 0)
-   {
       return CheckJvmPath(base, libdir, "", jvm, description);
-   }
 
    return false;
 }

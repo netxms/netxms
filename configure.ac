@@ -3897,14 +3897,23 @@ fi
 
 if test "x$PLATFORM" = "xDarwin"; then
 	SHLIB_SUFFIX=".so"
+	if test "x$shrext_cmds" != "x"; then
+		SYSTEM_SHLIB_SUFFIX="$shrext_cmds"
+	else
+		SYSTEM_SHLIB_SUFFIX=".dylib"
+	fi
 else
 	if test "x$shrext_cmds" != "x"; then
 		SHLIB_SUFFIX="$shrext_cmds"
 	else
 		SHLIB_SUFFIX=".so"
 	fi
+	SYSTEM_SHLIB_SUFFIX="$SHLIB_SUFFIX"
 fi
-AC_DEFINE_UNQUOTED([SHLIB_SUFFIX], _T("$SHLIB_SUFFIX"), [Define to platform's shared library suffix])
+AC_DEFINE_UNQUOTED([SHLIB_SUFFIX], _T("$SHLIB_SUFFIX"), [Define to shared library suffix used by NetXMS libraries])
+AC_DEFINE_UNQUOTED([SHLIB_SUFFIX_A], "$SHLIB_SUFFIX", [Define to shared library suffix used by NetXMS libraries])
+AC_DEFINE_UNQUOTED([SYSTEM_SHLIB_SUFFIX], _T("$SYSTEM_SHLIB_SUFFIX"), [Define to platform's shared library suffix])
+AC_DEFINE_UNQUOTED([SYSTEM_SHLIB_SUFFIX_A], "$SYSTEM_SHLIB_SUFFIX", [Define to platform's shared library suffix])
 
 if test "x$ENABLE_DEBUG" = "xno"; then
 	CPPFLAGS="$CPPFLAGS -DNDEBUG"
