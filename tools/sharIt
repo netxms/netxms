@@ -2,6 +2,12 @@
 #
 # vim:ts=3 sw=3
 
+if [ -x /usr/xpg4/bin/tail ]; then
+	TAIL="/usr/xpg4/bin/tail"
+else
+	TAIL="tail"
+fi
+
 trap '
 	rm -f tmp
 ' INT EXIT
@@ -55,7 +61,7 @@ fi
 sed "s,__SKIP__,$skip,g" < $stub |
 	sed "s,__SKIP1__,$skip1,g" |
 	sed "s,__COMMAND__,$2,g" > tmp
-hash1=`tail -n +5 tmp | eval $md5`
+hash1=`$TAIL -n +5 tmp | eval $md5`
 hash2=`cat $1 | eval $md5`
 sed "s,__HASH1__,$hash1,g" < tmp | sed "s,__HASH2__,$hash2,g" > $3
 
