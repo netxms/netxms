@@ -454,7 +454,7 @@ static void ProcessSerializedRequests(void *arg)
          break;
       }
       SerializationQueue *q = data->pool->serializationQueues->get(data->key);
-      q->updateMaxWaitTime(GetCurrentTimeMs() - rq->queueTime);
+      q->updateMaxWaitTime(static_cast<UINT32>(GetCurrentTimeMs() - rq->queueTime));
       MutexUnlock(data->pool->serializationLock);
 
       rq->func(rq->arg);

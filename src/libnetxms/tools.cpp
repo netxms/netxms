@@ -52,6 +52,10 @@
 #include <locale.h>
 #endif
 
+#ifdef _WIN32
+HRESULT (*imp_SetThreadDescription)(HANDLE, PCWSTR) = NULL;
+#endif
+
 /**
  * Common initialization for any NetXMS process
  *
@@ -84,6 +88,7 @@ void LIBNETXMS_EXPORTABLE InitNetXMSProcess(bool commandLineTool)
 
 #ifdef _WIN32
    SetErrorMode(SEM_FAILCRITICALERRORS | SEM_NOGPFAULTERRORBOX | SEM_NOOPENFILEERRORBOX);
+   imp_SetThreadDescription = (HRESULT (*)(HANDLE, PCWSTR))GetProcAddress(LoadLibrary(_T("kernel32.dll")), "SetThreadDescription");
 #endif
 
 #if defined(__sun) || defined(_AIX) || defined(__hpux)
@@ -1688,10 +1693,10 @@ bool LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsBoolA(const char *optString, 
 /**
  * Extract named option value as integer (UNICODE version)
  */
-INT32 LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsIntW(const WCHAR *optString, const WCHAR *option, long defVal)
+INT32 LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsIntW(const WCHAR *optString, const WCHAR *option, INT32 defVal)
 {
 	WCHAR buffer[256], *eptr;
-	long val;
+	INT32 val;
 
 	if (ExtractNamedOptionValueW(optString, option, buffer, 256))
 	{
@@ -1705,10 +1710,10 @@ INT32 LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsIntW(const WCHAR *optString,
 /**
  * Extract named option value as integer (multibyte version)
  */
-INT32 LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsIntA(const char *optString, const char *option, long defVal)
+INT32 LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsIntA(const char *optString, const char *option, INT32 defVal)
 {
 	char buffer[256], *eptr;
-	long val;
+	INT32 val;
 
 	if (ExtractNamedOptionValueA(optString, option, buffer, 256))
 	{
@@ -1722,10 +1727,10 @@ INT32 LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsIntA(const char *optString, 
 /**
  * Extract named option value as unsigned integer (UNICODE version)
  */
-UINT32 LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsUIntW(const WCHAR *optString, const WCHAR *option, long defVal)
+UINT32 LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsUIntW(const WCHAR *optString, const WCHAR *option, UINT32 defVal)
 {
    WCHAR buffer[256], *eptr;
-   long val;
+   UINT32 val;
 
    if (ExtractNamedOptionValueW(optString, option, buffer, 256))
    {
@@ -1739,10 +1744,10 @@ UINT32 LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsUIntW(const WCHAR *optStrin
 /**
  * Extract named option value as unsigned integer (multibyte version)
  */
-UINT32 LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsUIntA(const char *optString, const char *option, long defVal)
+UINT32 LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsUIntA(const char *optString, const char *option, UINT32 defVal)
 {
    char buffer[256], *eptr;
-   long val;
+   UINT32 val;
 
    if (ExtractNamedOptionValueA(optString, option, buffer, 256))
    {
@@ -1756,10 +1761,10 @@ UINT32 LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsUIntA(const char *optString
 /**
  * Extract named option value as 64 bit unsigned integer (UNICODE version)
  */
-UINT64 LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsUInt64W(const WCHAR *optString, const WCHAR *option, long defVal)
+UINT64 LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsUInt64W(const WCHAR *optString, const WCHAR *option, UINT64 defVal)
 {
    WCHAR buffer[256], *eptr;
-   long val;
+   UINT64 val;
 
    if (ExtractNamedOptionValueW(optString, option, buffer, 256))
    {
@@ -1773,10 +1778,10 @@ UINT64 LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsUInt64W(const WCHAR *optStr
 /**
  * Extract named option value as 64 bit unsigned integer (multibyte version)
  */
-UINT64 LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsUInt64A(const char *optString, const char *option, long defVal)
+UINT64 LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsUInt64A(const char *optString, const char *option, UINT64 defVal)
 {
    char buffer[256], *eptr;
-   long val;
+   UINT64 val;
 
    if (ExtractNamedOptionValueA(optString, option, buffer, 256))
    {
