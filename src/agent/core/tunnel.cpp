@@ -230,7 +230,13 @@ void Tunnel::disconnect()
  */
 THREAD_RESULT THREAD_CALL Tunnel::recvThreadStarter(void *arg)
 {
-   ((Tunnel *)arg)->recvThread();
+   char name[256];
+#ifdef UNICODE
+   snprintf(name, 256, "TunnelRecvThread/%S", static_cast<Tunnel*>(arg)->m_hostname);
+#else
+   snprintf(name, 256, "TunnelRecvThread/%s", static_cast<Tunnel*>(arg)->m_hostname);
+#endif
+   static_cast<Tunnel*>(arg)->recvThread();
    return THREAD_OK;
 }
 

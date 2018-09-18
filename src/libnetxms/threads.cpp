@@ -251,5 +251,40 @@ void LIBNETXMS_EXPORTABLE StartMainLoop(ThreadFunction pfSignalHandler, ThreadFu
    }
 }
 
-
 #endif   /* _WIN32 && _NETWARE*/
+
+#ifdef _WIN32
+extern HRESULT (*imp_SetThreadDescription)(HANDLE, PCWSTR);
+
+/**
+* Set thread name. Thread can be set to INVALID_THREAD_HANDLE to change name of current thread.
+*/
+void LIBNETXMS_EXPORTABLE ThreadSetName(THREAD thread, const char *name)
+{
+   if (imp_SetThreadDescription != NULL)
+   {
+      WCHAR wname[256];
+      MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, name, -1, wname, 256);
+      imp_SetThreadDescription((thread != INVALID_THREAD_HANDLE) ? thread->handle : GetCurrentThread(), wname);
+   }
+   else
+   {
+      THREADNAME_INFO info;
+      info.dwType = 0x1000;
+      info.szName = name;
+      info.dwThreadID = (thread != INVALID_THREAD_HANDLE) ? thread->id : (DWORD)-1;
+      info.dwFlags = 0;
+#pragma warning(push)
+#pragma warning(disable: 6320 6322)
+      __try
+      {
+         RaiseException(0x406D1388, 0, sizeof(info) / sizeof(ULONG_PTR), (ULONG_PTR*)&info);
+      }
+      __except (EXCEPTION_EXECUTE_HANDLER)
+      {
+      }
+#pragma warning(pop)
+   }
+}
+
+#endif   /* _WIN32 */

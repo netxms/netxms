@@ -39,6 +39,7 @@ static CRITICAL_SECTION s_lock;
  */
 static THREAD_RESULT THREAD_CALL CPUStatCollector(void *arg)
 {
+   ThreadSetName("CPUStatCollector");
    nxlog_debug(3, _T("CPU stat collector started (%d CPUs)"), s_cpuCount);
 
    SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION *prev = s_cpuTimes;
