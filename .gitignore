@@ -239,6 +239,7 @@ target
 /src/snmp/nxsnmpget/nxsnmpget
 /src/snmp/nxsnmpset/nxsnmpset
 /src/snmp/nxsnmpwalk/nxsnmpwalk
+/src/tools/nxcsum/nxcsum
 /src/tools/nxcptest/nxcptest
 /src/tools/nxdevcfg/flags.cpp
 /src/tools/nxdevcfg/nxdevcfg
