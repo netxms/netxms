@@ -62,7 +62,8 @@ sed "s,__SKIP__,$skip,g" < $stub |
 	sed "s,__SKIP1__,$skip1,g" |
 	sed "s,__COMMAND__,$2,g" > tmp
 hash1=`$TAIL -n +5 tmp | eval $md5`
-hash2=`cat $1 | eval $md5`
+hashTool=`dirname \`echo $0\``/../src/tools/nxcsum/nxcsum
+hash2=`$hashTool md5 $1`
 sed "s,__HASH1__,$hash1,g" < tmp | sed "s,__HASH2__,$hash2,g" > $3
 
 cat $1 >> $3
