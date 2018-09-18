@@ -2433,7 +2433,12 @@ void LIBNETXMS_EXPORTABLE SHA1Init(SHA1_STATE *state);
 void LIBNETXMS_EXPORTABLE SHA1Update(SHA1_STATE *state, const BYTE *data, size_t size);
 void LIBNETXMS_EXPORTABLE SHA1Finish(SHA1_STATE *state, BYTE *hash);
 
+typedef unsigned char SHA256_STATE[256];
+
 void LIBNETXMS_EXPORTABLE CalculateSHA256Hash(const BYTE *data, size_t len, BYTE *hash);
+void LIBNETXMS_EXPORTABLE SHA256Init(SHA256_STATE *state);
+void LIBNETXMS_EXPORTABLE SHA256Update(SHA256_STATE *state, const BYTE *data, size_t size);
+void LIBNETXMS_EXPORTABLE SHA256Finish(SHA256_STATE *state, BYTE *hash);
 
 void LIBNETXMS_EXPORTABLE GenerateRandomBytes(BYTE *buffer, size_t size);
 

@@ -304,6 +304,31 @@ BOOL LIBNETXMS_EXPORTABLE CalculateFileSHA1Hash(const TCHAR *pszFileName, BYTE *
 }
 
 /**
+ * Init SHA1 hash function
+ */
+void LIBNETXMS_EXPORTABLE SHA256Init(SHA256_STATE *state)
+{
+   I_sha256_init((sha256_ctx *)state);
+}
+
+/**
+ * Append data to SHA1 hash
+ */
+void LIBNETXMS_EXPORTABLE SHA256Update(SHA256_STATE *state, const BYTE *data, size_t size)
+{
+   I_sha256_update((sha256_ctx *)state, data, (unsigned int)size);
+}
+
+/**
+ * Finish SHA1 calculation
+ */
+void LIBNETXMS_EXPORTABLE SHA256Finish(SHA256_STATE *state, BYTE *hash)
+{
+   I_sha256_final((sha256_ctx *)state, hash);
+}
+
+
+/**
  * Calculate SHA2-256 hash for array of bytes
  */
 void LIBNETXMS_EXPORTABLE CalculateSHA256Hash(const BYTE *data, size_t len, BYTE *hash)
