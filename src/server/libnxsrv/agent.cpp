@@ -781,6 +781,7 @@ InterfaceList *AgentConnection::getInterfaceList()
 
    // Parse result set. Each line should have the following format:
    // index ip_address/mask_bits iftype mac_address name
+   // index ip_address/mask_bits iftype(mtu) mac_address name
    for(int i = 0; i < data->size(); i++)
    {
       TCHAR *line = _tcsdup(data->get(i));
