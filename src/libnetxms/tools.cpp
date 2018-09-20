@@ -105,14 +105,30 @@ void LIBNETXMS_EXPORTABLE InitNetXMSProcess(bool commandLineTool)
 }
 
 /**
- * Calculate number of bits in netmask (in host byte order)
+ * Calculate number of bits in IPv4 netmask (in host byte order)
  */
-int LIBNETXMS_EXPORTABLE BitsInMask(UINT32 dwMask)
+int LIBNETXMS_EXPORTABLE BitsInMask(UINT32 mask)
 {
    int bits;
-   UINT32 dwTemp;
+   for(bits = 0; mask != 0; bits++, mask <<= 1);
+   return bits;
+}
 
-   for(bits = 0, dwTemp = dwMask; dwTemp != 0; bits++, dwTemp <<= 1);
+/**
+ * Calculate number of bits in IP netmask (in network byte order)
+ */
+int LIBNETXMS_EXPORTABLE BitsInMask(const BYTE *mask, size_t size)
+{
+   int bits = 0;
+   for(size_t i = 0; i < size; i++, bits += 8)
+   {
+      BYTE byte = mask[i];
+      if (byte != 0xFF)
+      {
+         for(; byte != 0; bits++, byte <<= 1);
+         break;
+      }
+   }
    return bits;
 }
 

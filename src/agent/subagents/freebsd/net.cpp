@@ -46,19 +46,15 @@
 
 #include "net.h"
 
-typedef struct t_Addr
-{
-	struct in_addr ip;
-	int mask;
-} ADDR;
-
 typedef struct t_IfList
 {
 	char *name;
 	struct ether_addr *mac;
-	ADDR *addr;
+	InetAddress *addr;
 	int addrCount;
 	int index;
+	int type;
+	int mtu;
 } IFLIST;
 
 /**
@@ -282,12 +278,7 @@ LONG H_NetArpCache(const TCHAR *pszParam, const TCHAR *pArg, StringList *value, 
 				pEa->octet[4], pEa->octet[5],
 				inet_ntoa(pSin->sin_addr),
 				pSdl->sdl_index);
-
-#ifdef UNICODE
-		value->addPreallocated(WideStringFromMBString(szBuff));
-#else
-		value->add(szBuff);
-#endif
+		value->addMBString(szBuff);
 	}
 
 	return nRet;
@@ -404,11 +395,7 @@ LONG H_NetRoutingTable(const TCHAR *pszParam, const TCHAR *pArg, StringList *val
 						(rtm->rtm_flags & RTF_GATEWAY) == 0 ? 3 : 4);
 				strcat(szOut, szTmp);
 
-#ifdef UNICODE
-				value->addPreallocated(WideStringFromMBString(szOut));
-#else
-				value->add(szOut);
-#endif
+				value->addMBString(szOut);
 			}
 		}
 
@@ -422,9 +409,52 @@ LONG H_NetRoutingTable(const TCHAR *pszParam, const TCHAR *pArg, StringList *val
 }
 
 /**
- * Handler for Net.InterfaceList list
+ * Dump full interface info to string list
  */
-LONG H_NetIfList(const TCHAR *pszParam, const TCHAR *pArg, StringList *value, AbstractCommSession *session)
+static void DumpInterfaceInfo(IFLIST *pList, int nIfCount, StringList *value)
+{
+   char szOut[1024], macAddr[32], ipAddrText[64];
+
+   for(int i = 0; i < nIfCount; i++)
+   {
+      if (pList[i].addrCount == 0)
+      {
+         snprintf(szOut, sizeof(szOut), "%d 0.0.0.0/0 %d(%d) %s %s",
+               pList[i].index, pList[i].type, pList[i].mtu,
+               BinToStrA((BYTE *)pList[i].mac, 6, macAddr),
+               pList[i].name);
+         value->addMBString(szOut);
+      }
+      else
+      {
+         for(int j = 0; j < pList[i].addrCount; j++)
+         {
+            snprintf(szOut, sizeof(szOut), "%d %s/%d %d(%d) %s %s",
+                  pList[i].index, pList[i].addr[j].toStringA(ipAddrText),
+                  pList[i].addr[j].getMaskBits(), pList[i].type, pList[i].mtu,
+                  BinToStrA((BYTE *)pList[i].mac, 6, macAddr),
+                  pList[i].name);
+            value->addMBString(szOut);
+         }
+      }
+   }
+}
+
+/**
+ * Dump only interface names to string list
+ */
+static void DumpInterfaceNames(IFLIST *pList, int nIfCount, StringList *value)
+{
+   for(int i = 0; i < nIfCount; i++)
+   {
+      value->addMBString(pList[i].name);
+   }
+}
+
+/**
+ * Common handler for Net.InterfaceList and Net.InterfaceNames lists
+ */
+static LONG GetInterfaceList(StringList *value, bool namesOnly)
 {
 	int nRet = SYSINFO_RC_ERROR;
 	struct ifaddrs *pIfAddr, *pNext;
@@ -445,7 +475,7 @@ LONG H_NetIfList(const TCHAR *pszParam, const TCHAR *pArg, StringList *value, Ab
 				IFLIST *pTmp;
 
 				nIfCount++;
-				pTmp = (IFLIST *)realloc(pList, nIfCount * sizeof(IFLIST));
+				pTmp = (IFLIST *)MemRealloc(pList, nIfCount * sizeof(IFLIST));
 				if (pTmp == NULL)
 				{
 					// out of memoty
@@ -455,31 +485,39 @@ LONG H_NetIfList(const TCHAR *pszParam, const TCHAR *pArg, StringList *value, Ab
 				}
 				pList = pTmp;
 
-				memset(&(pList[nIfCount-1]), 0, sizeof(IFLIST));
-				pList[nIfCount-1].name = pNext->ifa_name;
+				memset(&(pList[nIfCount - 1]), 0, sizeof(IFLIST));
+				pList[nIfCount - 1].name = pNext->ifa_name;
 				pName = pNext->ifa_name;
 			}
 
-			switch (pNext->ifa_addr->sa_family)
+			switch(pNext->ifa_addr->sa_family)
 			{
 			case AF_INET:
+			case AF_INET6:
 				{
-					ADDR *pTmp;
-					pList[nIfCount-1].addrCount++;
-					pTmp = (ADDR *)realloc(pList[nIfCount-1].addr,
-							pList[nIfCount-1].addrCount * sizeof(ADDR));
+					InetAddress *pTmp;
+					pList[nIfCount - 1].addrCount++;
+					pTmp = (InetAddress *)MemRealloc(pList[nIfCount - 1].addr,
+							pList[nIfCount - 1].addrCount * sizeof(InetAddress));
 					if (pTmp == NULL)
 					{
 						pList[nIfCount-1].addrCount--;
 						nRet = SYSINFO_RC_ERROR;
 						break;
 					}
-					pList[nIfCount-1].addr = pTmp;
-					pList[nIfCount-1].addr[pList[nIfCount-1].addrCount-1].ip =
-						((struct sockaddr_in *)(pNext->ifa_addr))->sin_addr;
-					pList[nIfCount-1].addr[pList[nIfCount-1].addrCount-1].mask = 
-						BitsInMask(htonl(((struct sockaddr_in *)
-										(pNext->ifa_netmask))->sin_addr.s_addr));
+					pList[nIfCount - 1].addr = pTmp;
+               if (pNext->ifa_addr->sa_family == AF_INET)
+               {
+                  UINT32 addr = htonl(reinterpret_cast<struct sockaddr_in*>(pNext->ifa_addr)->sin_addr.s_addr);
+                  UINT32 mask = htonl(reinterpret_cast<struct sockaddr_in*>(pNext->ifa_netmask)->sin_addr.s_addr);
+					   pList[nIfCount - 1].addr[pList[nIfCount - 1].addrCount - 1] = InetAddress(addr, mask);
+               }
+               else
+               {
+                  pList[nIfCount - 1].addr[pList[nIfCount - 1].addrCount - 1] =
+                        InetAddress(reinterpret_cast<struct sockaddr_in6*>(pNext->ifa_addr)->sin6_addr.s6_addr,
+                              BitsInMask(reinterpret_cast<struct sockaddr_in6*>(pNext->ifa_netmask)->sin6_addr.s6_addr, 16));
+               }
 				}
 				break;
 			case AF_LINK:
@@ -487,8 +525,10 @@ LONG H_NetIfList(const TCHAR *pszParam, const TCHAR *pArg, StringList *value, Ab
 					struct sockaddr_dl *pSdl;
 
 					pSdl = (struct sockaddr_dl *)pNext->ifa_addr;
-					pList[nIfCount-1].mac = (struct ether_addr *)LLADDR(pSdl);
-					pList[nIfCount-1].index = pSdl->sdl_index;
+					pList[nIfCount - 1].mac = (struct ether_addr *)LLADDR(pSdl);
+					pList[nIfCount - 1].index = pSdl->sdl_index;
+					pList[nIfCount - 1].type = static_cast<struct if_data*>(pNext->ifa_data)->ifi_type;
+					pList[nIfCount - 1].mtu = static_cast<struct if_data*>(pNext->ifa_data)->ifi_mtu;
 				}
 				break;
 			}
@@ -502,71 +542,24 @@ LONG H_NetIfList(const TCHAR *pszParam, const TCHAR *pArg, StringList *value, Ab
 
 		if (nRet == SYSINFO_RC_SUCCESS)
 		{
-			int j;
-			char szOut[1024], macAddr[32];
-
-			for (i = 0; i < nIfCount; i++)
-			{
-				if (pList[i].addrCount == 0)
-				{
-					snprintf(szOut, sizeof(szOut), "%d 0.0.0.0/0 %d %s %s",
-							pList[i].index,
-							IFTYPE_OTHER,
-							BinToStrA((BYTE *)pList[i].mac, 6, macAddr),
-							pList[i].name);
-#ifdef UNICODE
-					value->addPreallocated(WideStringFromMBString(szOut));
-#else
-					value->add(szOut);
-#endif
-				}
-				else
-				{
-					for (j = 0; j < pList[i].addrCount; j++)
-					{
-						if (j > 0)
-						{
-							snprintf(szOut, sizeof(szOut), "%d %s/%d %d %s %s:%d",
-									pList[i].index,
-									inet_ntoa(pList[i].addr[j].ip),
-									pList[i].addr[j].mask,
-									IFTYPE_OTHER,
-							                BinToStrA((BYTE *)pList[i].mac, 6, macAddr),
-									pList[i].name,
-									j - 1);
-						}
-						else
-						{
-							snprintf(szOut, sizeof(szOut), "%d %s/%d %d %s %s",
-									pList[i].index,
-									inet_ntoa(pList[i].addr[j].ip),
-									pList[i].addr[j].mask,
-									IFTYPE_OTHER,
-							                BinToStrA((BYTE *)pList[i].mac, 6, macAddr),
-									pList[i].name);
-						}
-#ifdef UNICODE
-						value->addPreallocated(WideStringFromMBString(szOut));
-#else
-						value->add(szOut);
-#endif
-					}
-				}
-			}
+         if (namesOnly)
+            DumpInterfaceNames(pList, nIfCount, value);
+         else
+            DumpInterfaceInfo(pList, nIfCount, value);
 		}
 
 		for (i = 0; i < nIfCount; i++)
 		{
 			if (pList[i].addr != NULL)
 			{
-				free(pList[i].addr);
+				MemFree(pList[i].addr);
 				pList[i].addr = NULL;
 				pList[i].addrCount = 0;
 			}
 		}
 		if (pList != NULL)
 		{
-			free(pList);
+			MemFree(pList);
 			pList = NULL;
 		}
 
@@ -574,9 +567,25 @@ LONG H_NetIfList(const TCHAR *pszParam, const TCHAR *pArg, StringList *value, Ab
 	}
 	else
 	{
-		perror("getifaddrs()");
+		AgentWriteDebugLog(5, _T("FreeBSD: call to getifaddrs() failed"));
 	}
 	return nRet;
+}
+
+/**
+ * Handler for Net.InterfaceList list
+ */
+LONG H_NetIfList(const TCHAR *pszParam, const TCHAR *pArg, StringList *value, AbstractCommSession *session)
+{
+   return GetInterfaceList(value, false);
+}
+
+/**
+ * Handler for Net.InterfaceNames list
+ */
+LONG H_NetIfNames(const TCHAR *pszParam, const TCHAR *pArg, StringList *value, AbstractCommSession *session)
+{
+   return GetInterfaceList(value, true);
 }
 
 /**

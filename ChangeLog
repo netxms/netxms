@@ -29,6 +29,7 @@
 	NX-1503 (Access denied error on attempt to take screenshot even if user has take screenshot access right)
 	NX-1504 (Server crash after compiling library script with syntax error)
 	NX-1505 (Assignment in NXSL "global" statement ignored if variable already declared as global)
+	NX-1510 (Agent list Net.InterfaceNames not supported on FreeBSD)
 
 
 *
