@@ -502,7 +502,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements RackE
 	 */
 	public boolean isManagementServer()
 	{
-		return (flags & NC_IS_LOCAL_MGMT) != 0;
+		return (capabilities & NC_IS_LOCAL_MGMT) != 0;
 	}
 
 	/**
