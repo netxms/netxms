@@ -333,7 +333,6 @@ static bool H_UpgradeFromV45()
    return true;
 }
 
-
 /**
  * Upgrade from 30.44 to 30.45 (changes also included into 22.34)
  */
@@ -1396,12 +1395,16 @@ inline void MoveFlag(UINT32 oldVar, UINT32 *newVar, UINT32 oldFlag, UINT32 newFl
 /**
  * Move node flags
  */
-static void MoveNodeFlags(UINT32 oldFlag, UINT32 *flags)
+static void MoveNodeFlags(UINT32 oldFlag, UINT32 *flags, bool withSnmpConfLock)
 {
    MoveFlag(oldFlag, flags, 0x10000000, DCF_DISABLE_STATUS_POLL);
    MoveFlag(oldFlag, flags, 0x20000000, DCF_DISABLE_CONF_POLL);
    MoveFlag(oldFlag, flags, 0x80000000, DCF_DISABLE_DATA_COLLECT);
    MoveFlag(oldFlag, flags, 0x00000080, NF_REMOTE_AGENT);
+   if (withSnmpConfLock)
+   {
+      MoveFlag(oldFlag, flags, 0x00200000, NF_SNMP_SETTINGS_LOCKED);
+   }
    MoveFlag(oldFlag, flags, 0x00400000, NF_DISABLE_DISCOVERY_POLL);
    MoveFlag(oldFlag, flags, 0x00800000, NF_DISABLE_TOPOLOGY_POLL);
    MoveFlag(oldFlag, flags, 0x01000000, NF_DISABLE_SNMP);
@@ -1414,7 +1417,7 @@ static void MoveNodeFlags(UINT32 oldFlag, UINT32 *flags)
 /**
  * Move node capabilities flags
  */
-static void MoveNodeCapabilities(UINT32 oldFlag, UINT32 *capabilities)
+static void MoveNodeCapabilities(UINT32 oldFlag, UINT32 *capabilities, bool withSnmpConfLock)
 {
    MoveFlag(oldFlag, capabilities, 0x00000001, NC_IS_SNMP);
    MoveFlag(oldFlag, capabilities, 0x00000002, NC_IS_NATIVE_AGENT);
@@ -1436,7 +1439,10 @@ static void MoveNodeCapabilities(UINT32 oldFlag, UINT32 *capabilities)
    MoveFlag(oldFlag, capabilities, 0x00040000, NC_HAS_AGENT_IFXCOUNTERS);
    MoveFlag(oldFlag, capabilities, 0x00080000, NC_HAS_WINPDH);
    MoveFlag(oldFlag, capabilities, 0x00100000, NC_IS_WIFI_CONTROLLER);
-   MoveFlag(oldFlag, capabilities, 0x00200000, NC_IS_SMCLP);
+   if (!withSnmpConfLock)
+   {
+      MoveFlag(oldFlag, capabilities, 0x00200000, NC_IS_SMCLP);
+   }
 }
 
 /**
@@ -1477,7 +1483,7 @@ static bool H_UpgradeFromV3()
             _T("<END>");
    CHK_EXEC(SQLBatch(batch));
 
-   //move flags from old tables to the new one
+   // move flags from old tables to the new one
    CHK_EXEC(MoveFlagsFromOldTables(_T("interfaces")));
    CHK_EXEC(MoveFlagsFromOldTables(_T("templates")));
    CHK_EXEC(MoveFlagsFromOldTables(_T("chassis")));
@@ -1488,14 +1494,14 @@ static bool H_UpgradeFromV3()
       CHK_EXEC(MoveFlagsFromOldTables(_T("ap_common")));
    }
 
-   //create special behavior for node and sensor, cluster
-   //node
+   // create special behavior for node and sensor, cluster node
+   bool withSnmpConfLock = (GetSchemaLevelForMajorVersion(22) >= 37);
    DB_RESULT hResult = DBSelect(g_dbHandle, _T("SELECT id,runtime_flags FROM nodes"));
    DB_STATEMENT stmtNetObj = DBPrepare(g_dbHandle, _T("UPDATE object_properties SET flags=?, state=? WHERE object_id=?"));
    DB_STATEMENT stmtNode = DBPrepare(g_dbHandle, _T("UPDATE nodes SET capabilities=? WHERE id=?"));
    if (hResult != NULL)
    {
-      if (stmtNetObj != NULL && stmtNode != NULL)
+      if ((stmtNetObj != NULL) && (stmtNode != NULL))
       {
          int nRows = DBGetNumRows(hResult);
          for(int i = 0; i < nRows; i++)
@@ -1509,7 +1515,7 @@ static bool H_UpgradeFromV3()
             TCHAR query[256];
             _sntprintf(query, 256, _T("SELECT node_flags FROM nodes WHERE id=%d"), id);
             DB_RESULT flagResult = DBSelect(g_dbHandle, query);
-            if(DBGetNumRows(flagResult) >= 1)
+            if (DBGetNumRows(flagResult) >= 1)
             {
                oldFlags = DBGetFieldULong(flagResult, 0, 0);
             }
@@ -1523,8 +1529,8 @@ static bool H_UpgradeFromV3()
                   return FALSE;
                }
             }
-            MoveNodeFlags(oldFlags, &flags);
-            MoveNodeCapabilities(oldFlags, &capabilities);
+            MoveNodeFlags(oldFlags, &flags, withSnmpConfLock);
+            MoveNodeCapabilities(oldFlags, &capabilities, withSnmpConfLock);
             MoveNodeState(oldRuntime, &state);
 
             DBBind(stmtNetObj, 1, DB_SQLTYPE_INTEGER, flags);

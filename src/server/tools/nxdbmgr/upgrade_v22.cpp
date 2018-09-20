@@ -24,11 +24,22 @@
 #include <nxevent.h>
 
 /**
- * Upgrade from 22.36 to 30.0
+ * Upgrade from 22.37 to 30.0
+ */
+static bool H_UpgradeFromV37()
+{
+   CHK_EXEC(SetMajorSchemaVersion(30, 0));
+   return true;
+}
+
+/**
+ * Upgrade from 22.36 to 22.37
  */
 static bool H_UpgradeFromV36()
 {
-   CHK_EXEC(SetMajorSchemaVersion(30, 0));
+   // This schema upgrade only needed to indicate change of node flag meaning
+   // NF_IS_SMCLP replaced by NF_SNMP_SETTINGS_LOCKED
+   CHK_EXEC(SetMinorSchemaVersion(37));
    return true;
 }
 
@@ -728,7 +739,8 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
-   { 36, 30, 0,  H_UpgradeFromV36 },
+   { 37, 30, 0,  H_UpgradeFromV37 },
+   { 36, 22, 37, H_UpgradeFromV36 },
    { 35, 22, 36, H_UpgradeFromV35 },
    { 34, 22, 35, H_UpgradeFromV34 },
    { 33, 22, 34, H_UpgradeFromV33 },
