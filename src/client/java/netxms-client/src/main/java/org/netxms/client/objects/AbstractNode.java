@@ -80,6 +80,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements RackE
 	public static final int NF_FORCE_ENCRYPTION       = 0x00400000;
    public static final int NF_DISABLE_ROUTE_POLL     = 0x00800000;
    public static final int NF_AGENT_OVER_TUNNEL_ONLY = 0x01000000;
+   public static final int NF_SNMP_SETTINGS_LOCKED   = 0x02000000;
 	
 	// Node state flags
 	public static final int NSF_AGENT_UNREACHABLE  = 0x00010000;
@@ -884,5 +885,15 @@ public abstract class AbstractNode extends DataCollectionTarget implements RackE
    public boolean isSnmpReachable()
    {
       return (stateFlags & NSF_SNMP_UNREACHABLE) == 0;
+   }
+   
+   /**
+    * Check node flags for "SNMP settings locked" flag.
+    * 
+    * @return true if SNMP settings are locked (flag is set)
+    */
+   public boolean isSnmpSettingsLocked()
+   {
+      return (flags & NF_SNMP_SETTINGS_LOCKED) != 0;      
    }
 }

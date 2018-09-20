@@ -26,6 +26,7 @@ import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
@@ -55,6 +56,7 @@ public class SNMP extends PropertyPage
    private LabeledText snmpAuthName;
    private LabeledText snmpAuthPassword;
    private LabeledText snmpPrivPassword;
+   private Button snmpSettingsLocked;
 
    /* (non-Javadoc)
     * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -161,6 +163,15 @@ public class SNMP extends PropertyPage
       fd.top = new FormAttachment(0, 0);
       snmpPort.setLayoutData(fd);
       
+      snmpSettingsLocked = new Button(dialogArea, SWT.CHECK);
+      snmpSettingsLocked.setText("&Prevent automatic SNMP configuration changes");
+      snmpSettingsLocked.setSelection(node.isSnmpSettingsLocked());
+      fd = new FormData();
+      fd.left = new FormAttachment(0, 0);
+      fd.right = new FormAttachment(100, 0);
+      fd.top = new FormAttachment(snmpProxy, 0, SWT.BOTTOM);
+      snmpSettingsLocked.setLayoutData(fd);
+      
       return dialogArea;
    }
 
@@ -236,6 +247,13 @@ public class SNMP extends PropertyPage
       md.setSnmpAuthName(snmpAuthName.getText());
       md.setSnmpAuthPassword(snmpAuthPassword.getText());
       md.setSnmpPrivPassword(snmpPrivPassword.getText());
+      
+      int flags = node.getFlags();
+      if (snmpSettingsLocked.getSelection())
+         flags |= AbstractNode.NF_SNMP_SETTINGS_LOCKED;
+      else
+         flags &= ~AbstractNode.NF_SNMP_SETTINGS_LOCKED;
+      md.setObjectFlags(flags, AbstractNode.NF_SNMP_SETTINGS_LOCKED);
       
       final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
       new ConsoleJob(String.format("Updating SNMP settings for node %s", node.getObjectName()), null, Activator.PLUGIN_ID, null) {
