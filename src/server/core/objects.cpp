@@ -1280,7 +1280,7 @@ BOOL LoadObjects()
                DBCacheTable(cachedb, mainDB, _T("dci_schedules"), _T("item_id,schedule_id"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("dci_access"), _T("dci_id,user_id"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("ap_common"), _T("id"), _T("*")) &&
-               DBCacheTable(cachedb, mainDB, _T("ap_bindings"), _T("policy_id"), _T("*")) &&
+               DBCacheTable(cachedb, mainDB, _T("ap_bindings"), _T("policy_id,node_id"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("ap_config_files"), _T("policy_id"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("ap_log_parser"), _T("policy_id"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("network_maps"), _T("id"), _T("*")) &&
