@@ -2,15 +2,17 @@
 #
 # vim:ts=3 sw=3
 
+trap '
+	rm -f tmp
+' INT EXIT
+
 if [ -x /usr/xpg4/bin/tail ]; then
 	TAIL="/usr/xpg4/bin/tail"
 else
 	TAIL="tail"
 fi
 
-trap '
-	rm -f tmp
-' INT EXIT
+hashTool=`dirname \`echo $0\``/../src/tools/nxcsum/nxcsum
 
 if [ "x"$3 = "x" ]; then
 	echo "Usage: $0 input.tar.gz scriptname output.sh"
@@ -28,27 +30,6 @@ if [ ! -r $stub ]; then
 	exit
 fi
 
-if [ "x`echo test | md5 2>/dev/null | tr A-Z a-z | cut -b1-32`" = 'xd8e8fca2dc0f896fd7cb4cb0031ba249' ]; then
-   md5="md5 | tr A-Z a-z | cut -b1-32"
-fi
-if [ "x$md5" = "x" ] && [ "x`echo test | md5sum 2>/dev/null | tr A-Z a-z | cut -b1-32`" = 'xd8e8fca2dc0f896fd7cb4cb0031ba249' ]; then
-   md5="md5sum | tr A-Z a-z | cut -b1-32"
-fi
-if [ "x$md5" = "x" ] && [ "x`echo test | csum -h MD5 - 2>/dev/null | tr A-Z a-z | cut -b1-32`" = 'xd8e8fca2dc0f896fd7cb4cb0031ba249' ]; then
-   md5="csum -h MD5 - | tr A-Z a-z | cut -b1-32"
-fi
-if [ "x$md5" = "x" ] && [ "x`echo test | openssl md5 2>/dev/null | tr A-Z a-z`" = 'xd8e8fca2dc0f896fd7cb4cb0031ba249' ]; then
-   md5="openssl md5 | tr A-Z a-z"
-fi
-if [ "x$md5" = "x" ] && [ "x`echo test | openssl md5 2>/dev/null | tr A-Z a-z | rev | cut -b1-32 | rev`" = 'xd8e8fca2dc0f896fd7cb4cb0031ba249' ]; then
-   md5="openssl md5 | tr A-Z a-z | rev | cut -b1-32 | rev"
-fi
-
-if [ -z "$md5" ]; then
-   echo "Can't calculate MD5, exiting"
-   exit
-fi
-
 skip=`echo \`wc -l $stub|awk '{ print $1 }'\``
 
 if [ "x$BASH" == "x" ]; then
@@ -61,8 +42,7 @@ fi
 sed "s,__SKIP__,$skip,g" < $stub |
 	sed "s,__SKIP1__,$skip1,g" |
 	sed "s,__COMMAND__,$2,g" > tmp
-hash1=`$TAIL -n +5 tmp | eval $md5`
-hashTool=`dirname \`echo $0\``/../src/tools/nxcsum/nxcsum
+hash1=`$TAIL -n +5 tmp | $hashTool md5 -`
 hash2=`$hashTool md5 $1`
 sed "s,__HASH1__,$hash1,g" < tmp | sed "s,__HASH2__,$hash2,g" > $3
 
