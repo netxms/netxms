@@ -1142,10 +1142,10 @@ template <typename T> void MemFreeAndNull(T* &p) { if (p != NULL) { free(p); p =
 #define MemRealloc(p, size) realloc(p, size)
 #if FREE_IS_NULL_SAFE
 #define MemFree(p) free(p);
-#define MemFreeAndNull(p) { free(p); p = NULL; }
+#define MemFreeAndNull(p) do { free(p); p = NULL; } while(0)
 #else
-#define MemFree(p) { if ((p) != NULL) free(p); }
-#define MemFreeAndNull(p) { if ((p) != NULL) { free(p); p = NULL; } }
+#define MemFree(p) do { if ((p) != NULL) free(p); } while(0)
+#define MemFreeAndNull(p) do { if ((p) != NULL) { free(p); p = NULL; } } while(0)
 #endif
 
 #endif /* __cplusplus */
@@ -1157,7 +1157,7 @@ template <typename T> void MemFreeAndNull(T* &p) { if (p != NULL) { free(p); p =
 /**
  * delete object and nullify pointer
  */
-#define delete_and_null(x) { delete x; x = NULL; }
+#define delete_and_null(x) do { delete x; x = NULL; } while(0)
 
 /**
  * Convert half-byte's value to hex digit and vice versa

@@ -91,7 +91,7 @@ ROUTING_TABLE *SnmpGetRoutingTable(UINT32 dwVersion, SNMP_Transport *pTransport)
 /**
  * Send request and check if we get any response
  */
-static bool SnmpTestRequest(SNMP_Transport *snmp, StringList *testOids)
+bool SnmpTestRequest(SNMP_Transport *snmp, StringList *testOids)
 {
    bool success = false;
    SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
@@ -110,7 +110,7 @@ static bool SnmpTestRequest(SNMP_Transport *snmp, StringList *testOids)
 /**
  * Check SNMP v3 connectivity
  */
-bool SnmpCheckV3CommSettings(SNMP_Transport *pTransport, SNMP_SecurityContext *originalContext, StringList *testOids, const TCHAR *id)
+static bool SnmpCheckV3CommSettings(SNMP_Transport *pTransport, SNMP_SecurityContext *originalContext, StringList *testOids, const TCHAR *id)
 {
    pTransport->setSnmpVersion(SNMP_VERSION_3);
 
@@ -231,7 +231,7 @@ SNMP_Transport *SnmpCheckCommSettings(UINT32 snmpProxy, const InetAddress& ipAdd
       else
       {
          pTransport = new SNMP_UDPTransport();
-         ((SNMP_UDPTransport *)pTransport)->createUDPTransport(ipAddr, port);
+         static_cast<SNMP_UDPTransport*>(pTransport)->createUDPTransport(ipAddr, port);
       }
 
       // Check for V3 USM
