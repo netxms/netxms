@@ -1,3 +1,3 @@
-SUBDIRS = nxencpasswd nxgenguid
+SUBDIRS = nxcsum nxencpasswd nxgenguid
 
 include ..\..\Makefile.inc.w32

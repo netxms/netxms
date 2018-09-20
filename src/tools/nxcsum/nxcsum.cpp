@@ -1,6 +1,6 @@
 /* 
-** nxgenguid - command line tool for GUID generation
-** Copyright (C) 2004-2015 Victor Kirhenshtein
+** nxcsum - command line tool for checksum calculation
+** Copyright (C) 2018 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,11 +21,10 @@
 **/
 
 #include <nms_util.h>
-#include <nxstat.h>
 
 NETXMS_EXECUTABLE_HEADER(nxcsum)
 
-#define MAX_READ_SIZE 1024
+#define MAX_READ_SIZE 4096
 
 union HashState
 {
@@ -35,15 +34,33 @@ union HashState
 };
 
 static bool PrintHash(const char *fileName, size_t digestSize, void (*init)(HashState*), void (*update)(HashState*, BYTE*, size_t), void (*finish)(HashState*, BYTE*))
-{   
-	HashState state;
-   BYTE buffer[MAX_READ_SIZE];
-	BYTE hash[MD5_DIGEST_SIZE];
+{  
+   bool useStdin = (strcmp(fileName, "-") == 0);
 
-	init(&state);
-   int hFile = _open(fileName, O_RDONLY | O_BINARY);
+#ifdef _WIN32
+   int hFile;
+   if (useStdin)
+   {
+      hFile = _fileno(stdin);
+      _setmode(hFile, _O_BINARY);
+   }
+   else
+   {
+      hFile = _sopen(fileName, O_RDONLY | O_BINARY, SH_DENYWR);
+   }
+#else
+   int hFile = useStdin ? fileno(stdin) : _open(fileName, O_RDONLY | O_BINARY);
+#endif
    if (hFile == -1)
+   {
+      _ftprintf(stderr, _T("Cannot open input file (%hs)\n"), strerror(errno));
       return false;
+   }
+
+   BYTE buffer[MAX_READ_SIZE];
+
+   HashState state;
+   init(&state);
 
    while(true)
    {
@@ -52,10 +69,17 @@ static bool PrintHash(const char *fileName, size_t digestSize, void (*init)(Hash
          break;
 	   update(&state, buffer, readSize);
    }
-	finish(&state, hash);
 
-   char dump[digestSize * 2 + 1];
-   printf("%s", strlwr(BinToStrA(hash, digestSize, dump)));
+   if (!useStdin)
+      _close(hFile);
+
+   BYTE *hash = (BYTE *)MemAlloc(digestSize);
+   finish(&state, hash);
+
+   TCHAR *dump = MemAllocArray<TCHAR>(digestSize * 2 + 1);
+   _tprintf(_T("%s"), _tcslwr(BinToStr(hash, digestSize, dump)));
+   MemFree(dump);
+   MemFree(hash);
    return true;
 }
 
@@ -106,4 +130,3 @@ int main(int argc, char *argv[])
 
    return success ? 0 : 2;
 }
-

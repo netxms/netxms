@@ -1,0 +1,7 @@
+TARGET = nxcsum.exe
+TYPE = exe
+SOURCES = nxcsum.cpp
+
+LIBS = libnetxms.lib
+	  
+include ..\..\..\Makefile.inc.w32
