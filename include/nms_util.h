@@ -2277,6 +2277,23 @@ bool LIBNETXMS_EXPORTABLE RecvAll(SOCKET s, void *buffer, size_t size, UINT32 ti
 
 SOCKET LIBNETXMS_EXPORTABLE ConnectToHost(const InetAddress& addr, UINT16 port, UINT32 timeout);
 
+int LIBNETXMS_EXPORTABLE BitsInMask(UINT32 mask);
+int LIBNETXMS_EXPORTABLE BitsInMask(const BYTE *mask, size_t size);
+
+TCHAR LIBNETXMS_EXPORTABLE *IpToStr(UINT32 dwAddr, TCHAR *szBuffer);
+#ifdef UNICODE
+char LIBNETXMS_EXPORTABLE *IpToStrA(UINT32 dwAddr, char *szBuffer);
+#else
+#define IpToStrA IpToStr
+#endif
+TCHAR LIBNETXMS_EXPORTABLE *Ip6ToStr(const BYTE *addr, TCHAR *buffer);
+#ifdef UNICODE
+char LIBNETXMS_EXPORTABLE *Ip6ToStrA(const BYTE *addr, char *buffer);
+#else
+#define Ip6ToStrA Ip6ToStr
+#endif
+TCHAR LIBNETXMS_EXPORTABLE *SockaddrToStr(struct sockaddr *addr, TCHAR *buffer);
+
 #endif   /* __cplusplus */
 
 #ifdef __cplusplus
@@ -2307,21 +2324,6 @@ UINT64 LIBNETXMS_EXPORTABLE FileSizeA(const char *pszFileName);
 #else
 #define FileSize FileSizeA
 #endif
-
-int LIBNETXMS_EXPORTABLE BitsInMask(UINT32 dwMask);
-TCHAR LIBNETXMS_EXPORTABLE *IpToStr(UINT32 dwAddr, TCHAR *szBuffer);
-#ifdef UNICODE
-char LIBNETXMS_EXPORTABLE *IpToStrA(UINT32 dwAddr, char *szBuffer);
-#else
-#define IpToStrA IpToStr
-#endif
-TCHAR LIBNETXMS_EXPORTABLE *Ip6ToStr(const BYTE *addr, TCHAR *buffer);
-#ifdef UNICODE
-char LIBNETXMS_EXPORTABLE *Ip6ToStrA(const BYTE *addr, char *buffer);
-#else
-#define Ip6ToStrA Ip6ToStr
-#endif
-TCHAR LIBNETXMS_EXPORTABLE *SockaddrToStr(struct sockaddr *addr, TCHAR *buffer);
 
 void LIBNETXMS_EXPORTABLE *nx_memdup(const void *data, size_t size);
 void LIBNETXMS_EXPORTABLE nx_memswap(void *block1, void *block2, size_t size);

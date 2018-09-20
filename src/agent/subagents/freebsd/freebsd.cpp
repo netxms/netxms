@@ -235,6 +235,7 @@ static NETXMS_SUBAGENT_LIST m_lists[] =
 	{ _T("FileSystem.MountPoints"),       H_MountPoints,     NULL },
 	{ _T("Net.ArpCache"),                 H_NetArpCache,     NULL },
 	{ _T("Net.InterfaceList"),            H_NetIfList,       NULL },
+	{ _T("Net.InterfaceNames"),           H_NetIfNames,      NULL },
 	{ _T("Net.IP.RoutingTable"),          H_NetRoutingTable, NULL },
 	{ _T("System.ProcessList"),           H_ProcessList,     NULL },
 };

@@ -47,6 +47,7 @@ LONG H_NetIfAdminStatus(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSessi
 LONG H_NetIfOperStatus(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 LONG H_NetArpCache(const TCHAR *, const TCHAR *, StringList *, AbstractCommSession *);
 LONG H_NetIfList(const TCHAR *, const TCHAR *, StringList *, AbstractCommSession *);
+LONG H_NetIfNames(const TCHAR *, const TCHAR *, StringList *, AbstractCommSession *);
 LONG H_NetRoutingTable(const TCHAR *, const TCHAR *, StringList *, AbstractCommSession *);
 LONG H_NetIfInfoFromKVM(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 LONG H_NetInterface64bitSupport(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
