@@ -1024,6 +1024,7 @@ void PerfDataStorageRequest(DCTable *dci, time_t timestamp, Table *value);
 
 void DecodeSQLStringAndSetVariable(NXCPMessage *pMsg, UINT32 dwVarId, TCHAR *pszStr);
 
+bool SnmpTestRequest(SNMP_Transport *snmp, StringList *testOids);
 SNMP_Transport *SnmpCheckCommSettings(UINT32 snmpProxy, const InetAddress& ipAddr, INT16 *version, UINT16 originalPort, SNMP_SecurityContext *originalContext, StringList *customTestOids, UINT32 zoneUIN);
 void StrToMac(const TCHAR *pszStr, BYTE *pBuffer);
 

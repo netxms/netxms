@@ -3005,7 +3005,7 @@ bool Node::confPollSnmp(UINT32 rqId)
    bool hasChanges = false;
 
    sendPollerMsg(rqId, _T("   Checking SNMP...\r\n"));
-   DbgPrintf(5, _T("ConfPoll(%s): calling SnmpCheckCommSettings()"), m_name);
+   nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): calling SnmpCheckCommSettings()"), m_name);
    StringList oids;
    const TCHAR *customOid = m_customAttributes.get(_T("snmp.testoid"));
    if (customOid != NULL)
@@ -3013,10 +3013,19 @@ bool Node::confPollSnmp(UINT32 rqId)
    oids.add(_T(".1.3.6.1.2.1.1.2.0"));
    oids.add(_T(".1.3.6.1.2.1.1.1.0"));
    AddDriverSpecificOids(&oids);
-   SNMP_Transport *pTransport = SnmpCheckCommSettings(getEffectiveSnmpProxy(), (getEffectiveSnmpProxy() == m_id) ? InetAddress::LOOPBACK : m_ipAddress, &m_snmpVersion, m_snmpPort, m_snmpSecurity, &oids, m_zoneUIN);
+
+   // Check current SNMP settings first
+   SNMP_Transport *pTransport = createSnmpTransport();
+   if ((pTransport != NULL) && !SnmpTestRequest(pTransport, &oids))
+   {
+      delete_and_null(pTransport);
+      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): node is not responding to SNMP using current settings"), m_name);
+   }
+   if (pTransport == NULL)
+      pTransport = SnmpCheckCommSettings(getEffectiveSnmpProxy(), (getEffectiveSnmpProxy() == m_id) ? InetAddress::LOOPBACK : m_ipAddress, &m_snmpVersion, m_snmpPort, m_snmpSecurity, &oids, m_zoneUIN);
    if (pTransport == NULL)
    {
-      DbgPrintf(5, _T("ConfPoll(%s): unable to create SNMP transport"), m_name);
+      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): unable to create SNMP transport"), m_name);
       return false;
    }
 
@@ -3033,7 +3042,9 @@ bool Node::confPollSnmp(UINT32 rqId)
    }
    unlockProperties();
    sendPollerMsg(rqId, _T("   SNMP agent is active (version %s)\r\n"),
-      (m_snmpVersion == SNMP_VERSION_3) ? _T("3") : ((m_snmpVersion == SNMP_VERSION_2C) ? _T("2c") : _T("1")));
+            (m_snmpVersion == SNMP_VERSION_3) ? _T("3") : ((m_snmpVersion == SNMP_VERSION_2C) ? _T("2c") : _T("1")));
+   nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): SNMP agent detected (version %s)"), m_name,
+            (m_snmpVersion == SNMP_VERSION_3) ? _T("3") : ((m_snmpVersion == SNMP_VERSION_2C) ? _T("2c") : _T("1")));
 
    TCHAR szBuffer[4096];
    if (SnmpGet(m_snmpVersion, pTransport, _T(".1.3.6.1.2.1.1.2.0"), NULL, 0, szBuffer, sizeof(szBuffer), SG_STRING_RESULT) != SNMP_ERR_SUCCESS)
@@ -3068,7 +3079,7 @@ bool Node::confPollSnmp(UINT32 rqId)
 
    // Select device driver
    NetworkDeviceDriver *driver = FindDriverForNode(this, pTransport);
-   DbgPrintf(5, _T("ConfPoll(%s): selected device driver %s"), m_name, driver->getName());
+   nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): selected device driver %s"), m_name, driver->getName());
    lockProperties();
    if (driver != m_driver)
    {
@@ -3275,7 +3286,7 @@ bool Node::confPollSnmp(UINT32 rqId)
    // Get wireless controller data
    if ((m_driver != NULL) && m_driver->isWirelessController(pTransport, &m_customAttributes, m_driverData))
    {
-      DbgPrintf(5, _T("ConfPoll(%s): node is wireless controller, reading access point information"), m_name);
+      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): node is wireless controller, reading access point information"), m_name);
       sendPollerMsg(rqId, _T("   Reading wireless access point information\r\n"));
       lockProperties();
       m_capabilities |= NC_IS_WIFI_CONTROLLER;
@@ -3287,7 +3298,7 @@ bool Node::confPollSnmp(UINT32 rqId)
       if (aps != NULL)
       {
          sendPollerMsg(rqId, POLLER_INFO _T("   %d wireless access points found\r\n"), aps->size());
-         DbgPrintf(5, _T("ConfPoll(%s): got information about %d access points"), m_name, aps->size());
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): got information about %d access points"), m_name, aps->size());
          int adopted = 0;
          for(int i = 0; i < aps->size(); i++)
          {
@@ -3316,7 +3327,7 @@ bool Node::confPollSnmp(UINT32 rqId)
                }
                ap = new AccessPoint((const TCHAR *)name, info->getIndex(), info->getMacAddr());
                NetObjInsert(ap, true, false);
-               DbgPrintf(5, _T("ConfPoll(%s): created new access point object %s [%d]"), m_name, ap->getName(), ap->getId());
+               nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): created new access point object %s [%d]"), m_name, ap->getName(), ap->getId());
                newAp = true;
             }
             ap->attachToNode(m_id);
@@ -3339,7 +3350,7 @@ bool Node::confPollSnmp(UINT32 rqId)
       }
       else
       {
-         DbgPrintf(5, _T("ConfPoll(%s): failed to read access point information"), m_name);
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): failed to read access point information"), m_name);
          sendPollerMsg(rqId, POLLER_ERROR _T("   Failed to read access point information\r\n"));
       }
    }
@@ -3353,14 +3364,14 @@ bool Node::confPollSnmp(UINT32 rqId)
    if (ConfigReadBoolean(_T("EnableCheckPointSNMP"), false))
    {
       // Check for CheckPoint SNMP agent on port 161
-      DbgPrintf(5, _T("ConfPoll(%s): checking for CheckPoint SNMP"), m_name);
+      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): checking for CheckPoint SNMP"), m_name);
       TCHAR szBuffer[4096];
       if (SnmpGet(SNMP_VERSION_1, pTransport, _T(".1.3.6.1.4.1.2620.1.1.10.0"), NULL, 0, szBuffer, sizeof(szBuffer), 0) == SNMP_ERR_SUCCESS)
       {
          lockProperties();
          if (_tcscmp(m_snmpObjectId, _T(".1.3.6.1.4.1.2620.1.1")))
          {
-            nx_strncpy(m_snmpObjectId, _T(".1.3.6.1.4.1.2620.1.1"), MAX_OID_LEN * 4);
+            _tcslcpy(m_snmpObjectId, _T(".1.3.6.1.4.1.2620.1.1"), MAX_OID_LEN * 4);
             hasChanges = true;
          }
 
