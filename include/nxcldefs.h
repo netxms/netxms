@@ -200,15 +200,17 @@
 #define NF_HAS_AGENT_IFXCOUNTERS  0x00040000  /* Agent supports 64-bit interface counters */
 #define NF_HAS_WINPDH             0x00080000  /* Node supports Windows PDH parameters */
 #define NF_IS_WIFI_CONTROLLER     0x00100000  /* Node is wireless network controller */
-#define NF_IS_SMCLP               0x00200000  /* Node supports SMCLP protocol */
+//#define NF_IS_SMCLP               0x00200000  /* Node supports SMCLP protocol */
+//removed in favor of NF_SNMP_SETTINGS_LOCKED becaue it is not really set anywhere
 
 /**
  * Node flags
  */
-#define NF_SYSTEM_FLAGS           0x003FFF7F
-#define NF_USER_FLAGS             0xFFC00080
+#define NF_SYSTEM_FLAGS           0x001FFF7F
+#define NF_USER_FLAGS             0xFFE00080
 
 #define NF_REMOTE_AGENT           0x00000080
+#define NF_SNMP_SETTINGS_LOCKED   0x00200000
 #define NF_DISABLE_DISCOVERY_POLL 0x00400000
 #define NF_DISABLE_TOPOLOGY_POLL  0x00800000
 #define NF_DISABLE_SNMP           0x01000000

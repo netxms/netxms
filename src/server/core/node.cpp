@@ -3049,6 +3049,11 @@ bool Node::confPollSnmp(UINT32 rqId)
    {
       delete_and_null(pTransport);
       nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): node is not responding to SNMP using current settings"), m_name);
+      if (m_flags & NF_SNMP_SETTINGS_LOCKED)
+      {
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): SNMP settings are locked, skip SnmpCheckCommSettings()"), m_name);
+         return false;
+      }
    }
    if (pTransport == NULL)
       pTransport = SnmpCheckCommSettings(getEffectiveSnmpProxy(), (getEffectiveSnmpProxy() == m_id) ? InetAddress::LOOPBACK : m_ipAddress, &m_snmpVersion, m_snmpPort, m_snmpSecurity, &oids);

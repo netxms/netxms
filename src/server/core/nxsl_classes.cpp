@@ -508,10 +508,13 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const TCHAR *attr)
    {
       value = new NXSL_Value((LONG)((node->getFlags() & NF_IS_ROUTER) ? 1 : 0));
    }
+   /*
+    * removed because NF_IS_SMCLP flag is removed
    else if (!_tcscmp(attr, _T("isSMCLP")))
    {
       value = new NXSL_Value((LONG)((node->getFlags() & NF_IS_SMCLP) ? 1 : 0));
    }
+   */
    else if (!_tcscmp(attr, _T("isSNMP")))
    {
       value = new NXSL_Value((LONG)((node->getFlags() & NF_IS_SNMP) ? 1 : 0));
