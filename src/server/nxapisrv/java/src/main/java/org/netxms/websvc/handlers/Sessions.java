@@ -88,7 +88,7 @@ public class Sessions extends AbstractHandler
          if (request.has("attachNotificationHandler"))
             attachNotificationHandler = request.getBoolean("attachNotificationHandler");
       }
-      
+
       if (entity == null || (login == null && password == null))
       {
          log.warn("No POST data in login call, looking for authentication data instead...");
@@ -96,6 +96,7 @@ public class Sessions extends AbstractHandler
          if ((authHeader != null) && !authHeader.isEmpty())
          {
             String[] values = decodeBase64(authHeader).split(":", 2);
+            log.debug(values.toString());
             if (values.length == 2)
             {
                login = values[0];
@@ -109,7 +110,7 @@ public class Sessions extends AbstractHandler
          log.warn("Login or password not specified in login call");
          return new StringRepresentation(createErrorResponse(RCC.INVALID_REQUEST).toString(), MediaType.APPLICATION_JSON);
       }
-      
+
       SessionToken token = login(login, password);
       if (attachNotificationHandler)
          attachNotificationHandler(token);

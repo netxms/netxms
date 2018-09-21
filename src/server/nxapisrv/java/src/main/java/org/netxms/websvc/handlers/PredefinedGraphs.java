@@ -37,9 +37,6 @@ public class PredefinedGraphs extends AbstractHandler
    {
       NXCSession session = getSession();
       GraphFolder root = session.getPredefinedGraphsAsTree();
-      log.debug("Predefined");
-      log.debug(root.toString());
-      
 
       return new ResponseContainer("root", root);
    }

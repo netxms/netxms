@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2017 Raden Solutions
+ * Copyright (C) 2003-2018 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,36 +16,36 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
+
 package org.netxms.websvc.handlers;
 
-import java.util.Date;
-import java.util.Map;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.RCC;
-import org.netxms.client.datacollection.DciData;
-import org.netxms.client.datacollection.DciValue;
+import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.client.objects.DataCollectionTarget;
+import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.websvc.json.ResponseContainer;
 
-public class LastValues extends AbstractObjectHandler
-{
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
-   /* (non-Javadoc)
-    * @see org.netxms.websvc.handlers.AbstractHandler#getCollection(java.util.Map)
-    */
-   @Override
-   protected Object getCollection(Map<String, String> query) throws Exception
+public class ObjectTools extends AbstractObjectHandler
+{
+   @Override protected Object getCollection(Map<String, String> query) throws Exception
    {
       NXCSession session = getSession();
-      AbstractObject obj = getObject();
-      
-      if (!(obj instanceof DataCollectionTarget))
+      AbstractObject object = getObject();
+      if (object.getObjectClass() != AbstractObject.OBJECT_NODE)
          throw new NXCException(RCC.INVALID_OBJECT_ID);
-      
-      DciValue[] values = session.getLastValues(obj.getObjectId());
-      
-      return new ResponseContainer("lastValues", values);
+
+      List<ObjectTool> objectTools = session.getObjectTools();
+      List<ObjectTool> result = new ArrayList<ObjectTool>();
+      for(ObjectTool t : objectTools)
+         if (t.isApplicableForNode((AbstractNode)object))
+            result.add(t);
+
+      return new ResponseContainer("objectTools", objectTools);
    }
 }

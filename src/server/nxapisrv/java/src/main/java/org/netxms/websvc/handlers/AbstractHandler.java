@@ -23,6 +23,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import org.apache.commons.codec.binary.Base64;
 import javax.servlet.ServletContext;
 import javax.xml.bind.DatatypeConverter;
 import org.json.JSONException;
@@ -192,7 +193,7 @@ public abstract class AbstractHandler extends ServerResource
       if (data != null && !data.equals("0"))
       {
          String value = data.substring(data.indexOf(' ') + 1, data.length());
-         return new String(DatatypeConverter.parseBase64Binary(value), Charset.forName("UTF-8"));
+         return new String(Base64.decodeBase64(value), Charset.forName("UTF-8"));
       }
       return null;
    }
@@ -286,10 +287,8 @@ public abstract class AbstractHandler extends ServerResource
    
    /**
     * Create error response.
-    * 
-    * @param httpError
+    *
     * @param rcc
-    * @param message
     * @return
     * @throws JSONException
     */
