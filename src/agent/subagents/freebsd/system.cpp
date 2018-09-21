@@ -40,7 +40,7 @@ LONG H_Uptime(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractC
 	}
 	else
 	{
-		perror("uptime()");
+		nxlog_debug_tag(SUBAGENT_DEBUG_TAG, 5, _T("uptime() call failed (%s)"), _tcserror(errno));
 	}
 
 	if (nUptime > 0)
@@ -80,7 +80,7 @@ LONG H_MemoryInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abstr
 {
 	int nRet = SYSINFO_RC_ERROR;
 	FILE *hFile;
-	int nPageCount, nFreeCount;
+	int nPageCount, nFreeCount, nCacheCount, nInactiveCount;
 	int64_t nSwapTotal, nSwapUsed;
 	char *pTag;
 	int mib[4];
@@ -104,10 +104,10 @@ LONG H_MemoryInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abstr
 		if (sysctl(mib, nSize, &y, &__nTmp, NULL, 0) == 0) { \
 			nRet = SYSINFO_RC_SUCCESS; \
 		} else { \
-			perror(x ": sysctl()"); \
+			nxlog_debug_tag(SUBAGENT_DEBUG_TAG, 5, _T("sysctl(%hs) failed (%s)"), x, _tcserror(errno)); \
 		} \
 	} else { \
-		perror(x ": sysctlnametomib()"); \
+		nxlog_debug_tag(SUBAGENT_DEBUG_TAG, 5, _T("sysctlnametomib(%hs) failed (%s)"), x, _tcserror(errno)); \
 	} \
 }
 
@@ -121,6 +121,18 @@ LONG H_MemoryInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abstr
 	{
 		nRet = SYSINFO_RC_ERROR;
 		DOIT("vm.stats.vm.v_free_count", nFreeCount);
+	}
+
+	if (nRet == SYSINFO_RC_SUCCESS)
+	{
+		nRet = SYSINFO_RC_ERROR;
+		DOIT("vm.stats.vm.v_cache_count", nCacheCount);
+	}
+
+	if (nRet == SYSINFO_RC_SUCCESS)
+	{
+		nRet = SYSINFO_RC_ERROR;
+		DOIT("vm.stats.vm.v_inactive_count", nInactiveCount);
 	}
 
 #undef DOIT
@@ -152,10 +164,22 @@ LONG H_MemoryInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abstr
 	{
 		switch(type)
 		{
-			case PHYSICAL_FREE: // ph-free
+			case PHYSICAL_AVAIL:
+				ret_uint64(pValue, ((int64_t)nFreeCount + (int64_t)nCacheCount + (int64_t)nInactiveCount) * nPageSize);
+				break;
+			case PHYSICAL_AVAIL_PCT:
+				ret_double(pValue, (((double)nFreeCount + (double)nCacheCount + (double)nInactiveCount) * 100.0 / nPageCount), 2);
+				break;
+			case PHYSICAL_CACHED:
+				ret_uint64(pValue, ((int64_t)nCacheCount) * nPageSize);
+				break;
+			case PHYSICAL_CACHED_PCT:
+				ret_double(pValue, (((double)nCacheCount * 100.0) / nPageCount), 2);
+				break;
+			case PHYSICAL_FREE:
 				ret_uint64(pValue, ((int64_t)nFreeCount) * nPageSize);
 				break;
-			case PHYSICAL_FREE_PCT: // ph-free %
+			case PHYSICAL_FREE_PCT:
 				ret_double(pValue, (((double)nFreeCount * 100.0) / nPageCount), 2);
 				break;
 			case PHYSICAL_TOTAL: // ph-total
