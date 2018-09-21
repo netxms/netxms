@@ -42,6 +42,7 @@ obj.sync	Object synchronization
 
 poll.*		Polling
 poll.conf	Configuration poll
+poll.discovery	Network discovery
 poll.node	New node poll
 poll.route	Routing table poll
 poll.status	Status poll

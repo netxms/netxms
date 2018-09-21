@@ -1238,6 +1238,11 @@ UINT32 RenameScript(const NXCPMessage *request);
 UINT32 DeleteScript(const NXCPMessage *request);
 
 /**
+ * ICMP scan
+ */
+void ScanAddressRange(const InetAddress& from, const InetAddress& to, void(*callback)(const InetAddress&, UINT32, void *), void *context);
+
+/**
  * Prepare MERGE statement if possible, otherwise INSERT or UPDATE depending on record existence
  * Identification column appended to provided column list
  */

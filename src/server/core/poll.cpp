@@ -22,6 +22,8 @@
 
 #include "nxcore.h"
 
+#define DEBUG_TAG_DISCOVERY   _T("poll.discovery")
+
 /**
  * Node poller queue (polls new nodes)
  */
@@ -74,7 +76,7 @@ static EnumerationCallbackResult ShowPollerInfo(const void *key, const void *obj
 
    TCHAR name[32];
    nx_strncpy(name, o->getName(), 31);
-   ConsolePrintf((CONSOLE_CTX)arg, _T("%s | %9d | %-30s | %s\n"), pollerType[p->getType()], o->getId(), name, p->getStatus());
+   ConsolePrintf(static_cast<CONSOLE_CTX>(arg), _T("%s | %9d | %-30s | %s\n"), pollerType[p->getType()], o->getId(), name, p->getStatus()); 
 
    return _CONTINUE;
 }
@@ -231,35 +233,35 @@ static bool PollerQueueElementComparator(void *key, void *element)
 }
 
 /**
- * Check potential new node from sysog or SNMP trap
+ * Check potential new node from sysog, SNMP trap, or address range scan
  */
 void CheckPotentialNode(const InetAddress& ipAddr, UINT32 zoneUIN)
 {
 	TCHAR buffer[64];
-	nxlog_debug(6, _T("CheckPotentialNode(): checking address %s in zone %d"), ipAddr.toString(buffer), zoneUIN);
+	nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Checking address %s in zone %d"), ipAddr.toString(buffer), zoneUIN);
    if (!ipAddr.isValid() || ipAddr.isBroadcast() || ipAddr.isLoopback() || ipAddr.isMulticast())
    {
-      nxlog_debug(6, _T("CheckPotentialNode(): potential node %s rejected (IP address is not a valid unicast address)"), ipAddr.toString(buffer));
+      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Potential node %s rejected (IP address is not a valid unicast address)"), ipAddr.toString(buffer));
       return;
    }
 
    Node *curr = FindNodeByIP(zoneUIN, ipAddr);
    if (curr != NULL)
    {
-      nxlog_debug(6, _T("CheckPotentialNode(): potential node %s rejected (IP address already known at node %s [%d])"),
+      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Potential node %s rejected (IP address already known at node %s [%d])"),
                ipAddr.toString(buffer), curr->getName(), curr->getId());
       return;
    }
 
    if (IsClusterIP(zoneUIN, ipAddr))
    {
-      nxlog_debug(6, _T("CheckPotentialNode(): potential node %s rejected (IP address is known as cluster resource address)"), ipAddr.toString(buffer));
+      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Potential node %s rejected (IP address is known as cluster resource address)"), ipAddr.toString(buffer));
       return;
    }
 
    if (g_nodePollerQueue.find((void *)&ipAddr, PollerQueueElementComparator) != NULL)
    {
-      nxlog_debug(6, _T("CheckPotentialNode(): potential node %s rejected (IP address already queued for polling)"), ipAddr.toString(buffer));
+      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Potential node %s rejected (IP address already queued for polling)"), ipAddr.toString(buffer));
       return;
    }
 
@@ -268,29 +270,29 @@ void CheckPotentialNode(const InetAddress& ipAddr, UINT32 zoneUIN)
    {
       if (!subnet->getIpAddress().equals(ipAddr) && !ipAddr.isSubnetBroadcast(subnet->getIpAddress().getMaskBits()))
       {
-         NEW_NODE *pInfo = (NEW_NODE *)malloc(sizeof(NEW_NODE));
-         pInfo->ipAddr = ipAddr;
-         pInfo->ipAddr.setMaskBits(subnet->getIpAddress().getMaskBits());
-         pInfo->zoneUIN = zoneUIN;
-         pInfo->ignoreFilter = FALSE;
-         memset(pInfo->bMacAddr, 0, MAC_ADDR_LENGTH);
-         nxlog_debug(5, _T("CheckPotentialNode(): new node queued: %s/%d"), pInfo->ipAddr.toString(buffer), pInfo->ipAddr.getMaskBits());
-         g_nodePollerQueue.put(pInfo);
+         NEW_NODE *nodeInfo = MemAllocStruct<NEW_NODE>();
+         nodeInfo->ipAddr = ipAddr;
+         nodeInfo->ipAddr.setMaskBits(subnet->getIpAddress().getMaskBits());
+         nodeInfo->zoneUIN = zoneUIN;
+         nodeInfo->ignoreFilter = FALSE;
+         memset(nodeInfo->bMacAddr, 0, MAC_ADDR_LENGTH);
+         nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 5, _T("New node queued: %s/%d"), nodeInfo->ipAddr.toString(buffer), nodeInfo->ipAddr.getMaskBits());
+         g_nodePollerQueue.put(nodeInfo);
       }
       else
       {
-         nxlog_debug(6, _T("CheckPotentialNode(): potential node %s rejected (IP address is a base or broadcast address of existing subnet)"), ipAddr.toString(buffer));
+         nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Potential node %s rejected (IP address is a base or broadcast address of existing subnet)"), ipAddr.toString(buffer));
       }
    }
    else
    {
-      NEW_NODE *pInfo = (NEW_NODE *)malloc(sizeof(NEW_NODE));
-      pInfo->ipAddr = ipAddr;
-      pInfo->zoneUIN = zoneUIN;
-      pInfo->ignoreFilter = FALSE;
-      memset(pInfo->bMacAddr, 0, MAC_ADDR_LENGTH);
-      nxlog_debug(5, _T("CheckPotentialNode(): new node queued: %s/%d"), pInfo->ipAddr.toString(buffer), pInfo->ipAddr.getMaskBits());
-      g_nodePollerQueue.put(pInfo);
+      NEW_NODE *nodeInfo = MemAllocStruct<NEW_NODE>();
+      nodeInfo->ipAddr = ipAddr;
+      nodeInfo->zoneUIN = zoneUIN;
+      nodeInfo->ignoreFilter = FALSE;
+      memset(nodeInfo->bMacAddr, 0, MAC_ADDR_LENGTH);
+      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 5, _T("New node queued: %s/%d"), nodeInfo->ipAddr.toString(buffer), nodeInfo->ipAddr.getMaskBits());
+      g_nodePollerQueue.put(nodeInfo);
    }
 }
 
@@ -300,30 +302,30 @@ void CheckPotentialNode(const InetAddress& ipAddr, UINT32 zoneUIN)
 static void CheckPotentialNode(Node *node, const InetAddress& ipAddr, UINT32 ifIndex, const BYTE *macAddr = NULL)
 {
    TCHAR buffer[64];
-   nxlog_debug(6, _T("DiscoveryPoller(): checking potential node %s at %s:%d"), ipAddr.toString(buffer), node->getName(), ifIndex);
+   nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Checking potential node %s at %s:%d"), ipAddr.toString(buffer), node->getName(), ifIndex);
    if (!ipAddr.isValid() || ipAddr.isBroadcast() || ipAddr.isLoopback() || ipAddr.isMulticast())
    {
-      nxlog_debug(6, _T("DiscoveryPoller(): potential node %s rejected (IP address is not a valid unicast address)"), ipAddr.toString(buffer));
+      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Potential node %s rejected (IP address is not a valid unicast address)"), ipAddr.toString(buffer));
       return;
    }
 
    Node *curr = FindNodeByIP(node->getZoneUIN(), ipAddr);
    if (curr != NULL)
    {
-      nxlog_debug(6, _T("DiscoveryPoller(): potential node %s rejected (IP address already known at node %s [%d])"),
+      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Potential node %s rejected (IP address already known at node %s [%d])"),
                ipAddr.toString(buffer), curr->getName(), curr->getId());
       return;
    }
 
    if (IsClusterIP(node->getZoneUIN(), ipAddr))
    {
-      nxlog_debug(6, _T("DiscoveryPoller(): potential node %s rejected (IP address is known as cluster resource address)"), ipAddr.toString(buffer));
+      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Potential node %s rejected (IP address is known as cluster resource address)"), ipAddr.toString(buffer));
       return;
    }
 
    if (g_nodePollerQueue.find((void *)&ipAddr, PollerQueueElementComparator) != NULL)
    {
-      nxlog_debug(6, _T("DiscoveryPoller(): potential node %s rejected (IP address already queued for polling)"), ipAddr.toString(buffer));
+      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Potential node %s rejected (IP address already queued for polling)"), ipAddr.toString(buffer));
       return;
    }
 
@@ -333,7 +335,7 @@ static void CheckPotentialNode(Node *node, const InetAddress& ipAddr, UINT32 ifI
       const InetAddress& interfaceAddress = pInterface->getIpAddressList()->findSameSubnetAddress(ipAddr);
       if (interfaceAddress.isValidUnicast())
       {
-         nxlog_debug(6, _T("DiscoveryPoller(): interface found: %s [%d] addr=%s/%d ifIndex=%d"),
+         nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Interface found: %s [%d] addr=%s/%d ifIndex=%d"),
             pInterface->getName(), pInterface->getId(), interfaceAddress.toString(buffer), interfaceAddress.getMaskBits(), pInterface->getIfIndex());
          if (!ipAddr.isSubnetBroadcast(interfaceAddress.getMaskBits()))
          {
@@ -346,23 +348,23 @@ static void CheckPotentialNode(Node *node, const InetAddress& ipAddr, UINT32 ifI
                memset(pInfo->bMacAddr, 0, MAC_ADDR_LENGTH);
             else
                memcpy(pInfo->bMacAddr, macAddr, MAC_ADDR_LENGTH);
-            DbgPrintf(5, _T("DiscoveryPoller(): new node queued: %s/%d"),
+            nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 5, _T("New node queued: %s/%d"),
                       pInfo->ipAddr.toString(buffer), pInfo->ipAddr.getMaskBits());
             g_nodePollerQueue.put(pInfo);
          }
          else
          {
-            nxlog_debug(6, _T("DiscoveryPoller(): potential node %s rejected - broadcast/multicast address"), ipAddr.toString(buffer));
+            nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Potential node %s rejected - broadcast/multicast address"), ipAddr.toString(buffer));
          }
       }
       else
       {
-         nxlog_debug(6, _T("DiscoveryPoller(): interface object found but IP address not found"));
+         nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Interface object found but IP address not found"));
       }
    }
    else
    {
-      nxlog_debug(6, _T("DiscoveryPoller(): interface object not found"));
+      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Interface object not found"));
    }
 }
 
@@ -375,7 +377,7 @@ static void CheckHostRoute(Node *node, ROUTE *route)
 	TCHAR buffer[16];
 	Interface *iface;
 
-	DbgPrintf(6, _T("DiscoveryPoller(): checking host route %s at %d"), IpToStr(route->dwDestAddr, buffer), route->dwIfIndex);
+	nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Checking host route %s at %d"), IpToStr(route->dwDestAddr, buffer), route->dwIfIndex);
 	iface = node->findInterfaceByIndex(route->dwIfIndex);
 	if ((iface != NULL) && iface->getIpAddressList()->findSameSubnetAddress(route->dwDestAddr).isValidUnicast())
 	{
@@ -383,7 +385,7 @@ static void CheckHostRoute(Node *node, ROUTE *route)
 	}
 	else
 	{
-		DbgPrintf(6, _T("DiscoveryPoller(): interface object not found for host route"));
+		nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Interface object not found for host route"));
 	}
 }
 
@@ -409,7 +411,7 @@ static void DiscoveryPoller(void *arg)
       return;
 	}
 
-   DbgPrintf(4, _T("Starting discovery poll for node %s (%s) in zone %d"),
+   nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("Starting discovery poll for node %s (%s) in zone %d"),
 	          node->getName(), (const TCHAR *)node->getIpAddress().toString(), (int)node->getZoneUIN());
 
    // Retrieve and analyze node's ARP cache
@@ -426,7 +428,7 @@ static void DiscoveryPoller(void *arg)
    }
 
 	// Retrieve and analyze node's routing table
-   DbgPrintf(5, _T("Discovery poll for node %s (%s) - reading routing table"),
+   nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 5, _T("Discovery poll for node %s (%s) - reading routing table"),
              node->getName(), (const TCHAR *)node->getIpAddress().toString());
 	ROUTING_TABLE *rt = node->getRoutingTable();
 	if (rt != NULL)
@@ -442,10 +444,19 @@ static void DiscoveryPoller(void *arg)
 
 	node->executeHookScript(_T("DiscoveryPoll"));
 
-   DbgPrintf(4, _T("Finished discovery poll for node %s (%s)"),
+   nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("Finished discovery poll for node %s (%s)"),
              node->getName(), (const TCHAR *)node->getIpAddress().toString());
    node->setDiscoveryPollTimeStamp();
    delete poller;
+}
+
+/**
+ * Callback for address range scan
+ */
+static void RangeScanCallback(const InetAddress& addr, UINT32 rtt, void *context)
+{
+   nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 5, _T("Active discovery - node %s responds to ICMP ping"), (const TCHAR *)addr.toString());
+   CheckPotentialNode(addr, 0);
 }
 
 /**
@@ -455,7 +466,7 @@ static void CheckRange(const InetAddressListElement& range)
 {
    if (range.getBaseAddress().getFamily() != AF_INET)
    {
-      DbgPrintf(4, _T("Active discovery on range %s skipped - only IPv4 ranges supported"), (const TCHAR *)range.toString());
+      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("Active discovery on range %s skipped - only IPv4 ranges supported"), (const TCHAR *)range.toString());
       return;
    }
 
@@ -471,52 +482,21 @@ static void CheckRange(const InetAddressListElement& range)
       to = range.getEndAddress().getAddressV4();
    }
 
-   TCHAR ipAddr1[16], ipAddr2[16];
-   DbgPrintf(4, _T("Starting active discovery check on range %s - %s"), IpToStr(from, ipAddr1), IpToStr(to, ipAddr2));
-
-   for(UINT32 curr = from; (curr <= to) && !IsShutdownInProgress(); curr++)
+   if (from >= to)
    {
-      InetAddress addr = InetAddress(curr);
-      if (IcmpPing(addr, 3, g_icmpPingTimeout, NULL, g_icmpPingSize, false) == ICMP_SUCCESS)
-      {
-         DbgPrintf(5, _T("Active discovery - node %s responds to ICMP ping"), addr.toString(ipAddr1));
-         if (FindNodeByIP(0, addr) == NULL)
-         {
-            Subnet *pSubnet;
-
-            pSubnet = FindSubnetForNode(0, addr);
-            if (pSubnet != NULL)
-            {
-               if (!pSubnet->getIpAddress().equals(addr) &&
-                   !addr.isSubnetBroadcast(pSubnet->getIpAddress().getMaskBits()))
-               {
-                  NEW_NODE *pInfo;
-
-                  pInfo = (NEW_NODE *)malloc(sizeof(NEW_NODE));
-                  pInfo->ipAddr = addr;
-                  pInfo->ipAddr.setMaskBits(pSubnet->getIpAddress().getMaskBits());
-						pInfo->zoneUIN = 0;	/* FIXME: add correct zone ID */
-						pInfo->ignoreFilter = FALSE;
-						memset(pInfo->bMacAddr, 0, MAC_ADDR_LENGTH);
-                  g_nodePollerQueue.put(pInfo);
-               }
-            }
-            else
-            {
-               NEW_NODE *pInfo;
-
-               pInfo = (NEW_NODE *)malloc(sizeof(NEW_NODE));
-               pInfo->ipAddr = addr;
-					pInfo->zoneUIN = 0;	/* FIXME: add correct zone ID */
-					pInfo->ignoreFilter = FALSE;
-					memset(pInfo->bMacAddr, 0, MAC_ADDR_LENGTH);
-               g_nodePollerQueue.put(pInfo);
-            }
-         }
-      }
+      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("Invalid address range %s"), (const TCHAR *)range.toString());
+      return;
    }
 
-   DbgPrintf(4, _T("Finished active discovery check on range %s - %s"), IpToStr(from, ipAddr1), IpToStr(to, ipAddr2));
+   TCHAR ipAddr1[16], ipAddr2[16];
+   nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("Starting active discovery check on range %s - %s"), IpToStr(from, ipAddr1), IpToStr(to, ipAddr2));
+   while((from < to) && !IsShutdownInProgress())
+   {
+      ScanAddressRange(from, std::min(to, from + 1023), RangeScanCallback, NULL);
+      from += 1024;
+   }
+
+   nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("Finished active discovery check on range %s - %s"), ipAddr1, ipAddr2);
 }
 
 /**
@@ -686,13 +666,12 @@ THREAD_RESULT THREAD_CALL PollManager(void *arg)
  */
 void ResetDiscoveryPoller()
 {
-   NEW_NODE *pInfo;
-
    // Clear node poller queue
-   while((pInfo = (NEW_NODE *)g_nodePollerQueue.get()) != NULL)
+   NEW_NODE *nodeInfo;
+   while((nodeInfo = static_cast<NEW_NODE*>(g_nodePollerQueue.get())) != NULL)
    {
-      if (pInfo != INVALID_POINTER_VALUE)
-         free(pInfo);
+      if (nodeInfo != INVALID_POINTER_VALUE)
+         MemFree(nodeInfo);
    }
 
    // Reload discovery parameters
