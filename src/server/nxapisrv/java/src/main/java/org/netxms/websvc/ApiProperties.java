@@ -7,7 +7,7 @@ import java.util.Properties;
 public class ApiProperties
 {
    private Properties properties;
-   private String host = "127.0.0.1";
+   private String host = "10.5.0.48";
    private int port = 4701;
    
    /**
@@ -23,7 +23,7 @@ public class ApiProperties
          if (in != null)
          {
             properties.load(in);
-            host = properties.getProperty("netxms.server.address", "127.0.0.1");
+            //host = properties.getProperty("netxms.server.address", "127.0.0.1");
             port = getIntProperty("netxms.server.port", 4701);
          }
       }

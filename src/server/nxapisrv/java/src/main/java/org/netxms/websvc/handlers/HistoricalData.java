@@ -19,28 +19,33 @@
 package org.netxms.websvc.handlers;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.RCC;
 import org.netxms.client.datacollection.DciData;
+import org.netxms.client.datacollection.GraphSettings;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.DataCollectionTarget;
 import org.netxms.websvc.json.ResponseContainer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Objects request handler
  */
 public class HistoricalData extends AbstractObjectHandler
 {
-   
+   private Logger log = LoggerFactory.getLogger(HistoricalData.class);
+
    /* (non-Javadoc)
     * @see org.netxms.websvc.handlers.AbstractHandler#get(java.lang.String)
     */
    @Override
    protected Object get(String id, Map<String, String> query) throws Exception
    {
-      NXCSession session = getSession();      
+      NXCSession session = getSession();
       AbstractObject obj = getObject();
       long dciId = 0;
       try 
@@ -84,5 +89,69 @@ public class HistoricalData extends AbstractObjectHandler
       }
       
       return new ResponseContainer("values", data);
+   }
+
+   /*
+    * @see org.netxms.websvc.handlers.AbstractHandler#getCollection(java.util.Map)
+    */
+   @Override protected Object getCollection(Map<String, String> query) throws Exception
+   {
+      NXCSession session = getSession();
+
+      String dciQuery = query.get("dciList");
+      log.debug(dciQuery);
+      String[] requestPairs = dciQuery.split(";");
+      if (requestPairs == null)
+         throw new NXCException(RCC.INVALID_DCI_ID);
+
+      HashMap<Long, DciData> dciData = new HashMap<Long, DciData>();
+
+      for (int i = 0; i < requestPairs.length; i++)
+      {
+         String[] dciPairs = requestPairs[i].split(",");
+         if (dciPairs == null)
+            throw new NXCException(RCC.INVALID_DCI_ID);
+
+         String dciId = dciPairs[0];
+         String nodeId = dciPairs[1];
+         String timeFrom = dciPairs[2];
+         String timeTo = dciPairs[3];
+         String timeInterval = dciPairs[4];
+         String timeUnit = dciPairs[5];
+
+         if(dciId == null || nodeId == null || !(session.findObjectById(parseInt(nodeId, 0)) instanceof DataCollectionTarget))
+            throw new NXCException(RCC.INVALID_OBJECT_ID);
+
+         DciData collectedData = null;
+
+         if (!timeFrom.equals("0") || !timeTo.equals("0"))
+         {
+            collectedData = session.getCollectedData(parseInt(nodeId, 0), parseInt(dciId, 0), new Date(parseLong(timeFrom, 0) * 1000), new Date(parseLong(timeTo, System.currentTimeMillis() / 1000) * 1000), 0, false);
+         }
+         else if (!timeInterval.equals("0"))
+         {
+            Date now = new Date();
+            long from;
+            if (parseInt(timeUnit, 0 ) == GraphSettings.TIME_UNIT_HOUR)
+               from = now.getTime() - parseLong(timeInterval, 0) * 3600000;
+            else if (parseInt(timeUnit, 0 ) == GraphSettings.TIME_UNIT_DAY)
+               from = now.getTime() - parseLong(timeInterval, 0) * 3600000 * 24;
+            else
+               from = now.getTime() - parseLong(timeInterval, 0) * 60000;
+            log.debug("interval: " + Long.toString(parseLong(timeInterval, 0)) + " from: " + Long.toString(from) + " now: " + Long.toString(now.getTime()) + " minus: " + Long.toString(parseLong(timeInterval, 0) * 1000));
+            collectedData = session.getCollectedData(parseInt(nodeId, 0), parseInt(dciId, 0), new Date(from), new Date(), 0, false);
+            log.debug(collectedData.toString());
+         }
+         else
+         {
+            Date now = new Date();
+            long from = now.getTime() - 3600000; // one hour
+            collectedData = session.getCollectedData(parseInt(nodeId, 0), parseInt(dciId, 0), new Date(from), now, 0, false);
+         }
+         
+         dciData.put((long)parseInt(dciId, 0), collectedData);
+      }
+
+      return new ResponseContainer("values", dciData);
    }
 }
