@@ -251,6 +251,7 @@
     <ClCompile Include="graph.cpp" />
     <ClCompile Include="hdlink.cpp" />
     <ClCompile Include="hk.cpp" />
+    <ClCompile Include="icmpscan.cpp" />
     <ClCompile Include="id.cpp" />
     <ClCompile Include="import.cpp" />
     <ClCompile Include="inaddr_index.cpp" />

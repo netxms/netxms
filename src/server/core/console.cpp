@@ -123,6 +123,15 @@ static int CompareDebugTags(const DebugTagInfo **t1, const DebugTagInfo **t2)
 }
 
 /**
+ * Callback for address scan
+ */
+static void ScanCallback(const InetAddress& addr, UINT32 rtt, void *arg)
+{
+   TCHAR buffer[64];
+   ConsolePrintf(static_cast<CONSOLE_CTX>(arg), _T("   Reply from %s in %dms\n"), addr.toString(buffer), rtt);
+}
+
+/**
  * Process command entered from command line in standalone mode
  * Return TRUE if command was _T("down")
  */
@@ -445,6 +454,38 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
       else
       {
          ConsoleWrite(pCtx, _T("Usage POLL [CONFIGURATION|STATUS|TOPOLOGY] <node>\n"));
+      }
+   }
+   else if (IsCommand(_T("SCAN"), szBuffer, 4))
+   {
+      pArg = ExtractWord(pArg, szBuffer);
+      if (szBuffer[0] != 0)
+      {
+         TCHAR addr2[256];
+         ExtractWord(pArg, addr2);
+         if (addr2[0] != 0)
+         {
+            InetAddress start = InetAddress::parse(szBuffer);
+            InetAddress end = InetAddress::parse(addr2);
+            if (start.isValid() && end.isValid())
+            {
+               ConsolePrintf(pCtx, _T("Scanning address range %s - %s\n"), start.toString(szBuffer), end.toString(addr2));
+               ScanAddressRange(start, end, ScanCallback, pCtx);
+               ConsolePrintf(pCtx, _T("Address range %s - %s scan completed\n"), start.toString(szBuffer), end.toString(addr2));
+            }
+            else
+            {
+               ConsolePrintf(pCtx, _T("Invalid address\n"));
+            }
+         }
+         else
+         {
+            ConsolePrintf(pCtx, _T("End address missing\n"));
+         }
+      }
+      else
+      {
+         ConsolePrintf(pCtx, _T("Start address missing\n"));
       }
    }
    else if (IsCommand(_T("SET"), szBuffer, 3))

@@ -438,6 +438,9 @@
     <ClCompile Include="zone.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="icmpscan.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\include\dbdrv.h">
