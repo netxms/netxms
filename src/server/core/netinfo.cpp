@@ -114,26 +114,6 @@ void InitLocalNetInfo()
 }
 
 /**
- * Convert string representation of MAC address to binary form
- */
-void StrToMac(const TCHAR *pszStr, BYTE *pBuffer)
-{
-   UINT32 byte1, byte2, byte3, byte4, byte5, byte6;
-
-   memset(pBuffer, 0, 6);
-   if (_stscanf(pszStr, _T("%x:%x:%x:%x:%x:%x"), &byte1, &byte2, &byte3,
-                &byte4, &byte5, &byte6) == 6)
-   {
-      pBuffer[0] = (BYTE)byte1;
-      pBuffer[1] = (BYTE)byte2;
-      pBuffer[2] = (BYTE)byte3;
-      pBuffer[3] = (BYTE)byte4;
-      pBuffer[4] = (BYTE)byte5;
-      pBuffer[5] = (BYTE)byte6;
-   }
-}
-
-/**
  * Get local ARP cache
  */
 static ArpCache *SysGetLocalArpCache()
