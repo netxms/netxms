@@ -48,6 +48,7 @@ poll.status	Status poll
 poll.topo	Topology poll
 
 sa.*		Sub-agent related messages
+sa.freebsd	FreeBSD platform subagent messages
 sa.ping		Ping subagent
 
 sync		Syncer messages

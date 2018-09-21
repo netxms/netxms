@@ -44,7 +44,7 @@
 #include <kvm.h>
 #include <nlist.h>
 
-#include "net.h"
+#include "freebsd_subagent.h"
 
 typedef struct t_IfList
 {
@@ -567,7 +567,7 @@ static LONG GetInterfaceList(StringList *value, bool namesOnly)
 	}
 	else
 	{
-		AgentWriteDebugLog(5, _T("FreeBSD: call to getifaddrs() failed"));
+		nxlog_debug_tag(SUBAGENT_DEBUG_TAG, 5, _T("Call to getifaddrs() failed (%s)"), _tcserror(errno));
 	}
 	return nRet;
 }

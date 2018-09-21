@@ -1,6 +1,6 @@
 /* 
 ** NetXMS subagent for FreeBSD
-** Copyright (C) 2004-2016 Raden Solutions
+** Copyright (C) 2004-2018 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -20,10 +20,7 @@
 
 #include <nms_common.h>
 #include <nms_agent.h>
-
-#include "net.h"
 #include "freebsd_subagent.h"
-#include "disk.h"
 
 /**
  * Execute sysctl on named parameter
@@ -40,6 +37,14 @@ int ExecSysctl(const char *param, void *buffer, size_t buffSize)
       {
          ret = SYSINFO_RC_SUCCESS;
       }
+      else
+      {
+         nxlog_debug_tag(SUBAGENT_DEBUG_TAG, 5, _T("sysctl(%hs) failed (%s)"), param, _tcserror(errno));
+      }
+   }
+   else
+   {
+      nxlog_debug_tag(SUBAGENT_DEBUG_TAG, 5, _T("sysctlnametomib(%hs) failed (%s)"), param, _tcserror(errno));
    }
 
    return ret;
@@ -51,6 +56,7 @@ int ExecSysctl(const char *param, void *buffer, size_t buffSize)
 static bool SubAgentInit(Config *config)
 {
 	StartCpuUsageCollector();
+	nxlog_debug_tag(SUBAGENT_DEBUG_TAG, 1, _T("FreeBSD platform subagent initialized"));
 	return true;
 }
 
@@ -202,6 +208,10 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 	{ _T("System.CPU.Usage15.Idle(*)"),        H_CpuUsageEx,      MAKE_CPU_USAGE_PARAM(INTERVAL_15MIN, CPU_USAGE_IDLE),
 		DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_USAGE15_IDLE_EX },
 
+   { _T("System.Memory.Physical.Available"),  H_MemoryInfo, (const TCHAR *)PHYSICAL_AVAIL, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_PHYSICAL_AVAILABLE },
+   { _T("System.Memory.Physical.AvailablePerc"), H_MemoryInfo, (const TCHAR *)PHYSICAL_AVAIL_PCT, DCI_DT_FLOAT, DCIDESC_SYSTEM_MEMORY_PHYSICAL_AVAILABLE_PCT },
+   { _T("System.Memory.Physical.Cached"),  H_MemoryInfo, (const TCHAR *)PHYSICAL_CACHED, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_PHYSICAL_CACHED },
+   { _T("System.Memory.Physical.CachedPerc"), H_MemoryInfo, (const TCHAR *)PHYSICAL_CACHED_PCT, DCI_DT_FLOAT, DCIDESC_SYSTEM_MEMORY_PHYSICAL_CACHED_PCT },
 	{ _T("System.Memory.Physical.Free"),  H_MemoryInfo,      (const TCHAR *)PHYSICAL_FREE,		DCI_DT_UINT64,	DCIDESC_SYSTEM_MEMORY_PHYSICAL_FREE },
 	{ _T("System.Memory.Physical.FreePerc"), H_MemoryInfo,   (const TCHAR *)PHYSICAL_FREE_PCT,	DCI_DT_FLOAT,	DCIDESC_SYSTEM_MEMORY_PHYSICAL_FREE_PCT },
 	{ _T("System.Memory.Physical.Total"), H_MemoryInfo,      (const TCHAR *)PHYSICAL_TOTAL,		DCI_DT_UINT64,	DCIDESC_SYSTEM_MEMORY_PHYSICAL_TOTAL },

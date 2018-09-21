@@ -43,8 +43,17 @@
 #include <kvm.h>
 #include <paths.h>
 
+#define SUBAGENT_DEBUG_TAG _T("sa.freebsd")
+
+#include "net.h"
+#include "disk.h"
+
 enum
 {
+   PHYSICAL_AVAIL,
+   PHYSICAL_AVAIL_PCT,
+   PHYSICAL_CACHED,
+   PHYSICAL_CACHED_PCT,
    PHYSICAL_FREE,
    PHYSICAL_FREE_PCT,
    PHYSICAL_USED,
