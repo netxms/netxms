@@ -166,11 +166,11 @@ struct ECHOREPLY
  *	U. S. Army Ballistic Research Laboratory
  *	December, 1983
  */
-static WORD IPChecksum(BYTE *addr, int len)
+UINT16 LIBNETXMS_EXPORTABLE CalculateIPChecksum(const void *data, size_t len)
 {
-	int nleft = len;
+	size_t nleft = len;
 	UINT32 sum = 0;
-	BYTE *curr = addr;
+	const BYTE *curr = static_cast<const BYTE*>(data);
 
 	/*
 	 *  Our algorithm is simple, using a 32 bit accumulator (sum),
@@ -323,7 +323,7 @@ static UINT32 IcmpPing4(UINT32 addr, int retries, UINT32 timeout, UINT32 *rtt, U
    {
       request.m_icmpHdr.m_wSeq++;
       request.m_icmpHdr.m_wChecksum = 0;
-      request.m_icmpHdr.m_wChecksum = IPChecksum((BYTE *)&request, bytes);
+      request.m_icmpHdr.m_wChecksum = CalculateIPChecksum(&request, bytes);
       if (sendto(sock, (char *)&request, bytes, 0, (struct sockaddr *)&saDest, sizeof(struct sockaddr_in)) == bytes)
       {
           result = WaitForReply(sock, addr, request.m_icmpHdr.m_wId, request.m_icmpHdr.m_wSeq, timeout, rtt);
