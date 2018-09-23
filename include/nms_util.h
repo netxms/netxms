@@ -2850,6 +2850,7 @@ INT64 LIBNETXMS_EXPORTABLE GetMappedHeapMemory();
 void LIBNETXMS_EXPORTABLE GetNetXMSDirectory(nxDirectoryType type, TCHAR *dir);
 
 UINT32 LIBNETXMS_EXPORTABLE IcmpPing(const InetAddress& addr, int numRetries, UINT32 timeout, UINT32 *rtt, UINT32 packetSize, bool dontFragment);
+UINT16 LIBNETXMS_EXPORTABLE CalculateIPChecksum(const void *data, size_t len);
 
 TCHAR LIBNETXMS_EXPORTABLE *EscapeStringForXML(const TCHAR *str, int length);
 String LIBNETXMS_EXPORTABLE EscapeStringForXML2(const TCHAR *str, int length = -1);

@@ -109,11 +109,118 @@ void ScanAddressRange(const InetAddress& from, const InetAddress& to, void(*call
 #else /* _WIN32 */
 
 /**
+ * ICMP echo request structure
+ */
+struct ECHOREQUEST
+{
+   ICMPHDR m_icmpHdr;
+   BYTE m_cData[64];
+};
+
+/**
+ * ICMP echo reply structure
+ */
+struct ECHOREPLY
+{
+   IPHDR m_ipHdr;
+   ICMPHDR m_icmpHdr;
+   BYTE m_cData[64];
+};
+
+/**
+ * Scan status for each address
+ */
+struct ScanStatus
+{
+   INT64 startTime;
+   bool success;
+   UINT32 rtt;
+};
+
+/**
+ * Process ICMP response
+ */
+static void ProcessResponse(SOCKET sock, UINT32 baseAddr, UINT32 lastAddr, ScanStatus *status)
+{
+   ECHOREPLY reply;
+   struct sockaddr_in saSrc;
+   socklen_t addrLen = sizeof(struct sockaddr_in);
+   if (recvfrom(sock, (char *)&reply, sizeof(ECHOREPLY), 0, (struct sockaddr *)&saSrc, &addrLen) > 0)
+   {
+      UINT32 addr = ntohl(reply.m_ipHdr.m_iaSrc.s_addr);
+      if ((addr >= baseAddr) && (addr <= lastAddr) &&
+          (reply.m_icmpHdr.m_cType == 0) &&
+          !status[addr - baseAddr].success)
+      {
+         status[addr - baseAddr].success = true;
+         status[addr - baseAddr].rtt = static_cast<UINT32>(GetCurrentTimeMs() - status[addr - baseAddr].startTime);
+      }
+   }
+}
+
+/**
 * Scan range of IPv4 addresses
 */
 void ScanAddressRange(const InetAddress& from, const InetAddress& to, void(*callback)(const InetAddress&, UINT32, void *), void *context)
 {
-   // FIXME: UNIX implementation
+   SOCKET sock = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
+   if (sock == INVALID_SOCKET)
+      return;
+
+   ECHOREQUEST request;
+   memset(&request, 0, sizeof(ECHOREQUEST));
+   request.m_icmpHdr.m_cType = 8;   // ICMP ECHO REQUEST
+   request.m_icmpHdr.m_cCode = 0;
+   request.m_icmpHdr.m_wId = (WORD)GetCurrentThreadId();
+   request.m_icmpHdr.m_wSeq = 0;
+
+   struct sockaddr_in saDest;
+   memset(&saDest, 0, sizeof(sockaddr_in));
+   saDest.sin_family = AF_INET;
+   saDest.sin_port = 0;
+
+   SocketPoller sp;
+   ScanStatus *status = MemAllocArray<ScanStatus>(to.getAddressV4() - from.getAddressV4() + 1);
+   UINT32 baseAddr = from.getAddressV4();
+   for(UINT32 a = baseAddr, i = 0; a <= to.getAddressV4(); a++, i++)
+   {
+      request.m_icmpHdr.m_wSeq++;
+      request.m_icmpHdr.m_wChecksum = 0;
+      request.m_icmpHdr.m_wChecksum = CalculateIPChecksum(&request, sizeof(ECHOREQUEST));
+      saDest.sin_addr.s_addr = htonl(a);
+      status[i].startTime = GetCurrentTimeMs();
+      status[i].success = false;
+      sendto(sock, (char *)&request, sizeof(ECHOREQUEST), 0, (struct sockaddr *)&saDest, sizeof(struct sockaddr_in));
+
+      sp.reset();
+      sp.add(sock);
+      if (sp.poll(10) > 0)
+      {
+         ProcessResponse(sock, baseAddr, to.getAddressV4(), status);
+      }
+   }
+
+   UINT32 elapsedTime = 0;
+   while(elapsedTime < g_icmpPingTimeout)
+   {
+      sp.reset();
+      sp.add(sock);
+      INT64 startTime = GetCurrentTimeMs();
+      if (sp.poll(g_icmpPingTimeout - elapsedTime) <= 0)
+         break;
+
+      ProcessResponse(sock, baseAddr, to.getAddressV4(), status);
+      elapsedTime += static_cast<UINT32>(GetCurrentTimeMs() - startTime);
+   }
+
+   closesocket(sock);
+
+   for(UINT32 a = baseAddr, i = 0; a <= to.getAddressV4(); a++, i++)
+   {
+      if (status[i].success)
+         callback(a, status[i].rtt, context);
+   }
+   MemFree(status);
 }
 
 #endif   /* _WIN32 */

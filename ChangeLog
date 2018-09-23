@@ -23,6 +23,7 @@
 - New NXSL functions: Base64Decode, Base64Encode, EventCodeFromName, EventNameFromCode
 - Original event name passed to alarm timeout event as 5th parameter
 - Added information tooltips in switch port view
+- Improved performance of active network discovery
 - Fixed issues:
 	NX-1494 (Release 2.2.8 failed to compile on macOS)
 	NX-1496 (Add agent parameters System.Memory.Physical.Available and System.Memory.Physical.AvailablePerc on FreeBSD)
