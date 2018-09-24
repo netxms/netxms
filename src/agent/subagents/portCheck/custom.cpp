@@ -55,22 +55,24 @@ LONG H_CheckCustom(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractC
 /**
  * Check custom service
  */
-int CheckCustom(char *szAddr, const InetAddress& addr, short nPort, UINT32 dwTimeout)
+int CheckCustom(char *hostname, const InetAddress& addr, short nPort, UINT32 dwTimeout)
 {
 	int nRet;
 	SOCKET nSd;
 
-	nSd = NetConnectTCP(szAddr, addr, nPort, dwTimeout);
+	nSd = NetConnectTCP(hostname, addr, nPort, dwTimeout);
 	if (nSd != INVALID_SOCKET)
 	{
 		nRet = PC_ERR_NONE;
-
 		NetClose(nSd);
 	}
 	else
 	{
 		nRet = PC_ERR_CONNECT;
 	}
+
+   char buffer[64];
+   nxlog_debug_tag(SUBAGENT_DEBUG_TAG, 7, _T("CheckCustom(%hs, %d): result=%d"), (hostname != NULL) ? hostname : addr.toStringA(buffer), (int)nPort, nRet);
 
 	return nRet;
 }

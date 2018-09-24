@@ -1252,7 +1252,11 @@ int LIBNETXMS_EXPORTABLE ConnectEx(SOCKET s, struct sockaddr *addr, int len, UIN
 
 			if (rc > 0)
 			{
-            if (fds.revents & POLLOUT)
+            if (fds.revents & (POLLERR | POLLHUP | POLLNVAL))
+            {
+               rc = -1;
+            }
+            else if (fds.revents & POLLOUT)
             {
                rc = 0;
             }
