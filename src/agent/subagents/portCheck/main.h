@@ -5,6 +5,8 @@
 #include <openssl/ssl.h>
 #endif
 
+#define SUBAGENT_DEBUG_TAG _T("sa.portcheck")
+
 /**
  * Service check return codes
  */

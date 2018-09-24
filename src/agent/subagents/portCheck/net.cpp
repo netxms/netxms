@@ -25,9 +25,9 @@
 
 #include "net.h"
 
-SOCKET NetConnectTCP(const char *szHost, const InetAddress& addr, unsigned short nPort, UINT32 dwTimeout)
+SOCKET NetConnectTCP(const char *hostname, const InetAddress& addr, unsigned short nPort, UINT32 dwTimeout)
 {
-   InetAddress hostAddr = (szHost != NULL) ? InetAddress::resolveHostName(szHost) : addr;
+   InetAddress hostAddr = (hostname != NULL) ? InetAddress::resolveHostName(hostname) : addr;
    if (!hostAddr.isValidUnicast() && !hostAddr.isLoopback())
       return INVALID_SOCKET;
 
