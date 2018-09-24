@@ -110,24 +110,24 @@ static void DeleteCallback(NetObj* obj, void *data)
 /**
  * Callback for sending image library delete notifications
  */
-static void ImageLibraryDeleteCallback(ClientSession *pSession, void *pArg)
+static void ImageLibraryDeleteCallback(ClientSession *pSession, void *context)
 {
-	pSession->onLibraryImageChange(*((const uuid *)pArg), true);
+	pSession->onLibraryImageChange(*static_cast<const uuid*>(context), true);
 }
 
 /**
  * Client communication read thread starter
  */
-THREAD_RESULT THREAD_CALL ClientSession::readThreadStarter(void *pArg)
+THREAD_RESULT THREAD_CALL ClientSession::readThreadStarter(void *arg)
 {
    ThreadSetName("SessionReader");
-   ((ClientSession *)pArg)->readThread();
+   static_cast<ClientSession*>(arg)->readThread();
 
    // When ClientSession::ReadThread exits, all other session
    // threads are already stopped, so we can safely destroy
    // session object
-   UnregisterClientSession(((ClientSession *)pArg)->getId());
-   delete (ClientSession *)pArg;
+   UnregisterClientSession(static_cast<ClientSession*>(arg)->getId());
+   delete static_cast<ClientSession*>(arg);
    return THREAD_OK;
 }
 
@@ -228,11 +228,11 @@ ClientSession::~ClientSession()
 }
 
 /**
- * Start all threads
+ * Start session
  */
-void ClientSession::run()
+bool ClientSession::start()
 {
-   ThreadCreate(readThreadStarter, 0, this);
+   return ThreadCreate(readThreadStarter, 0, this);
 }
 
 /**
@@ -295,10 +295,7 @@ bool ClientSession::isSubscribedTo(const TCHAR *channel) const
  */
 void ClientSession::readThread()
 {
-   TCHAR szBuffer[256];
-   UINT32 i;
-   NetObj *object;
-
+   debugPrintf(3, _T("Read thread started"));
    SocketMessageReceiver receiver(m_hSocket, 4096, MAX_MSG_SIZE);
    while(true)
    {
@@ -331,7 +328,8 @@ void ClientSession::readThread()
       // Special handling for raw messages
       if (msg->isBinary())
       {
-         debugPrintf(6, _T("Received raw message %s"), NXCPMessageCodeName(msg->getCode(), szBuffer));
+         TCHAR buffer[256];
+         debugPrintf(6, _T("Received raw message %s"), NXCPMessageCodeName(msg->getCode(), buffer));
 
          if ((msg->getCode() == CMD_FILE_DATA) ||
              (msg->getCode() == CMD_ABORT_FILE_TRANSFER))
@@ -470,7 +468,8 @@ void ClientSession::readThread()
       {
          if ((msg->getCode() == CMD_SESSION_KEY) && (msg->getId() == m_dwEncryptionRqId))
          {
-		      debugPrintf(6, _T("Received message %s"), NXCPMessageCodeName(msg->getCode(), szBuffer));
+            TCHAR buffer[256];
+		      debugPrintf(6, _T("Received message %s"), NXCPMessageCodeName(msg->getCode(), buffer));
             m_dwEncryptionResult = SetupEncryptionContext(msg, &m_pCtx, NULL, g_pServerKey, NXCP_VERSION);
             receiver.setEncryptionContext(m_pCtx);
             ConditionSet(m_condEncryptionSetup);
@@ -479,7 +478,8 @@ void ClientSession::readThread()
          }
          else if (msg->getCode() == CMD_KEEPALIVE)
 			{
-		      debugPrintf(6, _T("Received message %s"), NXCPMessageCodeName(msg->getCode(), szBuffer));
+            TCHAR buffer[256];
+		      debugPrintf(6, _T("Received message %s"), NXCPMessageCodeName(msg->getCode(), buffer));
 				respondToKeepalive(msg->getId());
 				delete msg;
 			}
@@ -506,9 +506,9 @@ void ClientSession::readThread()
 
    // Remove all locks created by this session
    RemoveAllSessionLocks(m_id);
-   for(i = 0; i < m_dwOpenDCIListSize; i++)
+   for(UINT32 i = 0; i < m_dwOpenDCIListSize; i++)
    {
-      object = FindObjectById(m_pOpenDCIList[i]);
+      NetObj *object = FindObjectById(m_pOpenDCIList[i]);
       if (object != NULL)
          if (object->isDataCollectionTarget() || (object->getObjectClass() == OBJECT_TEMPLATE))
             ((Template *)object)->unlockDCIList(m_id);

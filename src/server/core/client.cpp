@@ -23,6 +23,8 @@
 #include "nxcore.h"
 #include <socket_listener.h>
 
+#define DEBUG_TAG _T("client.session")
+
 /**
  * Client thread pool
  */
@@ -46,6 +48,7 @@ static BOOL RegisterClientSession(ClientSession *pSession)
          s_sessionList[i] = pSession;
          pSession->setId(i);
          RWLockUnlock(s_sessionListLock);
+         nxlog_debug_tag(DEBUG_TAG, 3, _T("Client session with ID %d registered"), i);
          return TRUE;
       }
    RWLockUnlock(s_sessionListLock);
@@ -61,6 +64,7 @@ void UnregisterClientSession(int id)
    RWLockWriteLock(s_sessionListLock, INFINITE);
    s_sessionList[id] = NULL;
    RWLockUnlock(s_sessionListLock);
+   nxlog_debug_tag(DEBUG_TAG, 3, _T("Client session with ID %d unregistered"), id);
 }
 
 /**
@@ -144,7 +148,12 @@ ConnectionProcessingResult ClientListener::processConnection(SOCKET s, const Ine
    ClientSession *session = new ClientSession(s, peer);
    if (RegisterClientSession(session))
    {
-      session->run();
+      if (!session->start())
+      {
+         nxlog_write(MSG_CANNOT_CREATE_SESSION_THREAD, NXLOG_ERROR, NULL);
+         UnregisterClientSession(session->getId());
+         delete session;
+      }
    }
    else
    {

@@ -1106,4 +1106,22 @@ Language=English
 Failed to execute filter script for policy object %1 "%2": %3
 .
 
+MessageId=
+SymbolicName=MSG_JVM_CREATION_FAILED
+Language=English
+Cannot create Java VM (%1)
+.
+
+MessageId=
+SymbolicName=MSG_UCC_INITIALIZATION_FAILED
+Language=English
+User communication channels initialization failed (%1)
+.
+
+MessageId=
+SymbolicName=MSG_CANNOT_CREATE_SESSION_THREAD
+Language=English
+Cannot create client session service thread
+.
+
 ;#endif

@@ -756,7 +756,7 @@ public:
    void incRefCount() { InterlockedIncrement(&m_refCount); }
    void decRefCount() { InterlockedDecrement(&m_refCount); }
 
-   void run();
+   bool start();
 
    void postMessage(NXCPMessage *msg);
    bool sendMessage(NXCPMessage *msg);

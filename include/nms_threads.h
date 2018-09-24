@@ -349,11 +349,11 @@ inline bool ThreadCreate(ThreadFunction start_address, int stack_size, void *arg
 	if ((id = pth_spawn(PTH_ATTR_DEFAULT, start_address, args)) != NULL) 
    {
       pth_attr_set(pth_attr_of(id), PTH_ATTR_JOINABLE, 0);
-		return TRUE;
+		return true;
 	} 
    else 
    {
-		return FALSE;
+		return false;
 	}
 }
 
@@ -712,14 +712,12 @@ inline THREAD ThreadCreateEx(ThreadFunction start_address, int stack_size, void 
 inline bool ThreadCreate(ThreadFunction start_address, int stack_size, void *args)
 {
 	THREAD id = ThreadCreateEx(start_address, stack_size, args);
-
 	if (id != INVALID_THREAD_HANDLE)
 	{
 		pthread_detach(id);
-		return TRUE;
+		return true;
 	}
-
-	return FALSE;
+	return false;
 }
 
 /**
