@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Client Library
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Copyright (C) 2003-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -65,6 +65,7 @@ NXCSession::NXCSession()
    m_commandTimeout = 60000;  // 60 seconds
    m_protocolVersions = new IntegerArray<UINT32>(8, 8);
    m_passwordChangeNeeded = false;
+	m_compressionEnabled = false;
 }
 
 /**
@@ -141,12 +142,12 @@ UINT32 NXCSession::connect(const TCHAR *host, const TCHAR *login, const TCHAR *p
       return RCC_OUT_OF_STATE_REQUEST;
 
    TCHAR hostname[128];
-   nx_strncpy(hostname, host, 128);
+   _tcslcpy(hostname, host, 128);
    Trim(hostname);
 
    // Check if server given in form host:port
    // If IPv6 address is given, it must be enclosed in [] if port is also specified
-   WORD port = SERVER_LISTEN_PORT_FOR_CLIENTS;
+   UINT16 port = SERVER_LISTEN_PORT_FOR_CLIENTS;
    TCHAR *p = _tcsrchr(hostname, _T(':'));
    if ((p != NULL) && (p != hostname) &&
        ((hostname[0] != _T('[')) || (NumChars(hostname, _T(':') == 1)) || (*(p - 1) == _T(']'))))
@@ -157,7 +158,7 @@ UINT32 NXCSession::connect(const TCHAR *host, const TCHAR *login, const TCHAR *p
       int n = _tcstol(p, &eptr, 10);
       if ((*eptr != 0) || (n < 1) || (n > 65535))
          return RCC_INVALID_ARGUMENT;
-      port = (WORD)n;
+      port = (UINT16)n;
    }
    DebugPrintf(_T("NXCSession::connect: host=\"%s\" port=%d"), hostname, (int)port);
 
@@ -306,6 +307,7 @@ UINT32 NXCSession::connect(const TCHAR *host, const TCHAR *login, const TCHAR *p
 	   }
       msg.setField(VID_CLIENT_INFO, (clientInfo != NULL) ? clientInfo : _T("Unnamed Client"));
       msg.setField(VID_LIBNXCL_VERSION, NETXMS_VERSION_STRING);
+		msg.setField(VID_ENABLE_COMPRESSION, true);
       
       TCHAR buffer[64];
       GetOSVersionString(buffer, 64);
@@ -322,6 +324,7 @@ UINT32 NXCSession::connect(const TCHAR *host, const TCHAR *login, const TCHAR *p
                m_userId = response->getFieldAsUInt32(VID_USER_ID);
                m_systemRights = response->getFieldAsUInt64(VID_USER_SYS_RIGHTS);
                m_passwordChangeNeeded = response->getFieldAsBoolean(VID_CHANGE_PASSWD_FLAG);
+               m_compressionEnabled = response->getFieldAsBoolean(VID_ENABLE_COMPRESSION);
             }
             delete response;
          }
@@ -355,7 +358,7 @@ bool NXCSession::sendMessage(NXCPMessage *msg)
    DebugPrintf(_T("NXCSession::sendMessage(\"%s\", id:%d)"), NXCPMessageCodeName(msg->getCode(), buffer), msg->getId());
 
    bool result;
-   NXCP_MESSAGE *rawMsg = msg->serialize();
+   NXCP_MESSAGE *rawMsg = msg->serialize(m_compressionEnabled);
 	MutexLock(m_msgSendLock);
    if (m_encryptionContext != NULL)
    {
