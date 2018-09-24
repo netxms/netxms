@@ -261,6 +261,7 @@ protected:
    MsgWaitQueue *m_msgWaitQueue;
    NXCPEncryptionContext *m_encryptionContext;
    UINT32 m_commandTimeout;
+   bool m_compressionEnabled;
 
    // server information
    BYTE m_serverId[8];
