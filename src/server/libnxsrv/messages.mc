@@ -1118,4 +1118,10 @@ Language=English
 User communication channels initialization failed (%1)
 .
 
+MessageId=
+SymbolicName=MSG_CANNOT_CREATE_SESSION_THREAD
+Language=English
+Cannot create client session service thread
+.
+
 ;#endif
