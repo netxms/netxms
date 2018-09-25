@@ -415,9 +415,7 @@ void AgentConnection::receiverThread()
                   }
                   else
                   {
-                     NXCPMessage response;
-                     response.setCode(CMD_REQUEST_COMPLETED);
-                     response.setId(msg->getId());
+                     NXCPMessage response(CMD_REQUEST_COMPLETED, msg->getId(), m_nProtocolVersion);
                      response.setField(VID_RCC, ERR_INTERNAL_ERROR);
                      sendMessage(&response);
                      delete msg;
@@ -2300,9 +2298,7 @@ NXCPEncryptionContext *AgentConnection::acquireEncryptionContext()
  */
 void AgentConnection::processCollectedDataCallback(NXCPMessage *msg)
 {
-   NXCPMessage response;
-   response.setCode(CMD_REQUEST_COMPLETED);
-   response.setId(msg->getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, msg->getId(), m_nProtocolVersion);
 
    if (msg->getFieldAsBoolean(VID_BULK_RECONCILIATION))
    {
