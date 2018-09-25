@@ -197,8 +197,6 @@ extern "C" bool __EXPORT DrvInit(const char *cmdLine)
 	if (mysql_library_init(0, NULL, NULL) != 0)
 	   return false;
 	nxlog_debug_tag(DEBUG_TAG, 4, _T("MariaDB client library version %hs"), mysql_get_client_info());
-   if (mysql_get_client_version() < 100209)  // client before 10.2.9, warn about CONC-281
-      nxlog_debug_tag(DEBUG_TAG, 0, _T("This version of MariaDB client library can be affected by bug CONC-281, upgrade is recommended"));
 	return true;
 }
 
@@ -208,6 +206,35 @@ extern "C" bool __EXPORT DrvInit(const char *cmdLine)
 extern "C" void __EXPORT DrvUnload()
 {
 	mysql_library_end();
+}
+
+/**
+ * Get real connector version (defined as MARIADB_PACKAGE_VERSION)
+ */
+static bool GetConnectorVersion(MYSQL *conn, char *version)
+{
+   bool success = false;
+   int elements = 0;
+   if (mysql_get_optionv(conn, MYSQL_OPT_CONNECT_ATTRS, NULL, NULL, (void *)&elements) == 0)
+   {
+      char **keys = MemAllocArray<char*>(elements);
+      char **values = MemAllocArray<char*>(elements);
+      if (mysql_get_optionv(conn, MYSQL_OPT_CONNECT_ATTRS, &keys, &values, &elements) == 0)
+      {
+         for(int i = 0; i < elements; i++)
+         {
+            if (!strcmp(keys[i], "_client_version"))
+            {
+               strlcpy(version, values[i], 64);
+               success = true;
+               break;
+            }
+         }
+      }
+      MemFree(keys);
+      MemFree(values);
+   }
+   return success;
 }
 
 /**
@@ -258,7 +285,27 @@ extern "C" DBDRV_CONNECTION __EXPORT DrvConnect(const char *host, const char *lo
    // Switch to UTF-8 encoding
    mysql_set_character_set(pMySQL, "utf8");
 
-   nxlog_debug_tag(DEBUG_TAG, 5, _T("Connected to %hs"), mysql_get_host_info(pMySQL));
+   char connectorVersion[64];
+   if (GetConnectorVersion(pMySQL, connectorVersion))
+   {
+      int major, minor, patch;
+      if (sscanf(connectorVersion, "%d.%d.%d", &major, &minor, &patch) == 3)
+      {
+         pConn->fixForCONC281 = (major < 3) || ((major == 3) && (minor < 1) && (patch < 6));
+      }
+      else
+      {
+         pConn->fixForCONC281 = true;  // cannot determine version, assume that fix is needed
+      }
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("Connected to %hs (connector version %hs)"), mysql_get_host_info(pMySQL), connectorVersion);
+   }
+   else
+   {
+      pConn->fixForCONC281 = true;  // cannot determine version, assume that fix is needed
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("Connected to %hs"), mysql_get_host_info(pMySQL));
+   }
+   if (pConn->fixForCONC281)
+      nxlog_debug_tag(DEBUG_TAG, 7, _T("Enabled workaround for MariadB bug CONC-281"));
 	return (DBDRV_CONNECTION)pConn;
 }
 
@@ -923,7 +970,7 @@ extern "C" DBDRV_RESULT __EXPORT DrvSelectPreparedUnbuffered(MARIADB_CONN *pConn
             mysql_stmt_bind_result(hStmt->statement, result->bindings);
 
             /* workaround for MariaDB C Connector bug CONC-281 */
-            if (mysql_get_client_version() < 100209)  // for any client before 10.2.9
+            if (pConn->fixForCONC281)
             {
                mysql_stmt_store_result(hStmt->statement);
             }

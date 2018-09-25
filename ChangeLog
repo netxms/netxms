@@ -25,6 +25,7 @@
 - Added information tooltips in switch port view
 - Improved performance of active network discovery
 - Fixed issues:
+	NX-1489 (Unreliable MariaDB Connector/C version detection in workaround for MariaDB bug CONC-281)
 	NX-1494 (Release 2.2.8 failed to compile on macOS)
 	NX-1496 (Add agent parameters System.Memory.Physical.Available and System.Memory.Physical.AvailablePerc on FreeBSD)
 	NX-1501 (In test mode $dci variable is not set)

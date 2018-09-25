@@ -55,6 +55,7 @@ typedef struct
 {
    MYSQL *pMySQL;
    MUTEX mutexQueryLock;
+   bool fixForCONC281;
 } MARIADB_CONN;
 
 /**
