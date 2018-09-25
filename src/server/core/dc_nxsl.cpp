@@ -452,7 +452,7 @@ static int F_CreateDCI(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_
 	int pollingInterval = argv[5]->getValueAsInt32();
 	int retentionTime = argv[6]->getValueAsInt32();
 
-	if ((origin != -1) && (dataType != -1) && (pollingInterval > 0) && (retentionTime > 0))
+	if ((origin != -1) && (dataType != -1) && (pollingInterval >= 0) && (retentionTime >= 0))
 	{
 		DCItem *dci = new DCItem(CreateUniqueId(IDG_ITEM), argv[2]->getValueAsCString(),
 			origin, dataType, pollingInterval, retentionTime, node, argv[3]->getValueAsCString());
