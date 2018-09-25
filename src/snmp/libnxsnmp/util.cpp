@@ -178,14 +178,25 @@ UINT32 LIBNXSNMP_EXPORTABLE SnmpGetEx(SNMP_Transport *pTransport,
                   switch(pVar->getType())
                   {
                      case ASN_INTEGER:
-                     case ASN_UINTEGER32:
+                        if (bufferSize >= sizeof(INT32))
+                           *((INT32 *)pValue) = pVar->getValueAsInt();
+                        break;
                      case ASN_COUNTER32:
                      case ASN_GAUGE32:
                      case ASN_TIMETICKS:
-                        *((INT32 *)pValue) = pVar->getValueAsInt();
+                     case ASN_UINTEGER32:
+                        if (bufferSize >= sizeof(UINT32))
+                           *((UINT32 *)pValue) = pVar->getValueAsUInt();
+                        break;
+                     case ASN_COUNTER64:
+                        if (bufferSize >= sizeof(UINT64))
+                           *((UINT64 *)pValue) = pVar->getValueAsUInt64();
+                        else if (bufferSize >= sizeof(UINT32))
+                           *((UINT32 *)pValue) = pVar->getValueAsUInt();
                         break;
                      case ASN_IP_ADDR:
-                        *((UINT32 *)pValue) = ntohl(pVar->getValueAsUInt());
+                        if (bufferSize >= sizeof(UINT32))
+                           *((UINT32 *)pValue) = ntohl(pVar->getValueAsUInt());
                         break;
                      case ASN_OCTET_STRING:
                         pVar->getValueAsString((TCHAR *)pValue, bufferSize / sizeof(TCHAR));

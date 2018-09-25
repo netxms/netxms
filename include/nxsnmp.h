@@ -419,8 +419,9 @@ public:
    const BYTE *getValue() const { return m_value; }
 
 	size_t getRawValue(BYTE *buffer, size_t bufSize) const;
+   INT32 getValueAsInt() const;
    UINT32 getValueAsUInt() const;
-   LONG getValueAsInt() const;
+   UINT64 getValueAsUInt64() const;
    TCHAR *getValueAsString(TCHAR *buffer, size_t bufferSize) const;
    TCHAR *getValueAsPrintableString(TCHAR *buffer, size_t bufferSize, bool *convertToHex) const;
    SNMP_ObjectId getValueAsObjectId() const;

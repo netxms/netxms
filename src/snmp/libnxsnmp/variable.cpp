@@ -189,7 +189,7 @@ UINT32 SNMP_Variable::getValueAsUInt() const
          dwValue = *((UINT32 *)m_value);
          break;
       case ASN_COUNTER64:
-         dwValue = (UINT32)(*((QWORD *)m_value));
+         dwValue = (UINT32)(*((UINT64 *)m_value));
          break;
       default:
          dwValue = 0;
@@ -202,7 +202,7 @@ UINT32 SNMP_Variable::getValueAsUInt() const
 /**
  * Get value as signed integer
  */
-LONG SNMP_Variable::getValueAsInt() const
+INT32 SNMP_Variable::getValueAsInt() const
 {
    LONG iValue;
 
@@ -225,6 +225,34 @@ LONG SNMP_Variable::getValueAsInt() const
    }
 
    return iValue;
+}
+
+/**
+ * Get value as 64 bit unsigned integer
+ */
+UINT64 SNMP_Variable::getValueAsUInt64() const
+{
+   UINT64 value;
+
+   switch(m_type)
+   {
+      case ASN_INTEGER:
+      case ASN_COUNTER32:
+      case ASN_GAUGE32:
+      case ASN_TIMETICKS:
+      case ASN_UINTEGER32:
+      case ASN_IP_ADDR:
+         value = *((UINT32 *)m_value);
+         break;
+      case ASN_COUNTER64:
+         value = *((UINT64 *)m_value);
+         break;
+      default:
+         value = 0;
+         break;
+   }
+
+   return value;
 }
 
 /**
