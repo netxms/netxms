@@ -365,6 +365,8 @@ public class RuleAlarm extends PropertyPage
 				rule.setFlags(rule.getFlags() | EventProcessingPolicyRule.GENERATE_ALARM);
 				if (checkCreateHelpdeskTicket.getSelection())
 				   rule.setFlags(rule.getFlags() | EventProcessingPolicyRule.CREATE_TICKET);
+				else
+               rule.setFlags(rule.getFlags() & ~EventProcessingPolicyRule.CREATE_TICKET);
 				break;
 			case ALARM_RESOLVE:
 			case ALARM_TERMINATE:
@@ -375,9 +377,10 @@ public class RuleAlarm extends PropertyPage
 					rule.setFlags(rule.getFlags() | EventProcessingPolicyRule.TERMINATE_BY_REGEXP);
 				else
 					rule.setFlags(rule.getFlags() & ~EventProcessingPolicyRule.TERMINATE_BY_REGEXP);
+            rule.setFlags(rule.getFlags() & ~EventProcessingPolicyRule.CREATE_TICKET);
 				break;
 			default:
-				rule.setFlags(rule.getFlags() & ~EventProcessingPolicyRule.GENERATE_ALARM);
+				rule.setFlags(rule.getFlags() & ~(EventProcessingPolicyRule.GENERATE_ALARM | EventProcessingPolicyRule.CREATE_TICKET));
 				break;
 		}
 		editor.setModified(true);
