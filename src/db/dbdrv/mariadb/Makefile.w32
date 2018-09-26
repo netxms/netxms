@@ -2,8 +2,8 @@ TARGET = mariadb.ddr
 TYPE = ddr
 SOURCES = mariadb.cpp
 
-CPPFLAGS = /I "$(MARIADB_BASE)\include\mariadb"
-LDFLAGS = /LIBPATH:"$(MARIADB_BASE)\lib\$(ARCH)"
+CPPFLAGS = /I "$(MARIADB_BASE)\$(ARCH)\include"
+LDFLAGS = /LIBPATH:"$(MARIADB_BASE)\$(ARCH)\lib"
 LIBS = libnetxms.lib libmariadb.lib
 	  
 include ..\..\..\..\Makefile.inc.w32
