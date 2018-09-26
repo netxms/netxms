@@ -110,7 +110,7 @@ public class OverviewAdapter extends BaseExpandableListAdapter
 					addPair(capabilities.info, r.getString(R.string.overview_is_sonmp), getYesNo((((Node)obj).getFlags() & AbstractNode.NF_IS_SONMP) != 0));
 					addPair(capabilities.info, r.getString(R.string.overview_is_printer), getYesNo((((Node)obj).getFlags() & AbstractNode.NF_IS_PRINTER) != 0));
 					addPair(capabilities.info, r.getString(R.string.overview_is_router), getYesNo((((Node)obj).getFlags() & AbstractNode.NF_IS_ROUTER) != 0));
-					addPair(capabilities.info, r.getString(R.string.overview_is_smclp), getYesNo((((Node)obj).getFlags() & AbstractNode.NF_IS_SMCLP) != 0));
+					//addPair(capabilities.info, r.getString(R.string.overview_is_smclp), getYesNo((((Node)obj).getFlags() & AbstractNode.NF_IS_SMCLP) != 0));
 					addPair(capabilities.info, r.getString(R.string.overview_is_snmp), getYesNo((((Node)obj).getFlags() & AbstractNode.NF_IS_SNMP) != 0));
 					addPair(capabilities.info, r.getString(R.string.overview_is_stp), getYesNo((((Node)obj).getFlags() & AbstractNode.NF_IS_STP) != 0));
 					addPair(capabilities.info, r.getString(R.string.overview_is_vrrp), getYesNo((((Node)obj).getFlags() & AbstractNode.NF_IS_VRRP) != 0));
