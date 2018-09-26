@@ -69,6 +69,9 @@ NetObj *FindInterfaceConnectionPoint(const BYTE *macAddr, int *type)
 
    *type = CP_TYPE_INDIRECT;
 
+   if (!memcmp(macAddr, "\x00\x00\x00\x00\x00\x00", MAC_ADDR_LENGTH))
+      return NULL;
+
 	NetObj *cp = NULL;
 	ObjectArray<NetObj> *nodes = g_idxNodeById.getObjects(true);
 
