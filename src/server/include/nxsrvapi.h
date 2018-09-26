@@ -538,6 +538,7 @@ private:
 	void (*m_sendToClientMessageCallback)(NXCP_MESSAGE *, void *);
 	bool m_fileUploadInProgress;
 	bool m_allowCompression;
+	VolatileCounter m_bulkDataProcessing;
 
    void receiverThread();
    static THREAD_RESULT THREAD_CALL receiverThreadStarter(void *);

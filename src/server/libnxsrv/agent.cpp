@@ -131,6 +131,7 @@ AgentConnection::AgentConnection(const InetAddress& addr, WORD port, int authMet
    m_dwDownloadRequestId = 0;
    m_downloadProgressCallback = NULL;
    m_downloadProgressCallbackArg = NULL;
+   m_bulkDataProcessing = 0;
 }
 
 /**
@@ -2302,8 +2303,16 @@ void AgentConnection::processCollectedDataCallback(NXCPMessage *msg)
 
    if (msg->getFieldAsBoolean(VID_BULK_RECONCILIATION))
    {
-      UINT32 rcc = processBulkCollectedData(msg, &response);
-      response.setField(VID_RCC, rcc);
+      // Check that only one bulk data processor is running
+      if (InterlockedIncrement(&m_bulkDataProcessing) == 1)
+      {
+         response.setField(VID_RCC, processBulkCollectedData(msg, &response));
+      }
+      else
+      {
+         response.setField(VID_RCC, ERR_RESOURCE_BUSY);
+      }
+      InterlockedDecrement(&m_bulkDataProcessing);
    }
    else
    {
