@@ -258,6 +258,7 @@ Source: "..\files\windows\x64\libmosquitto.dll"; DestDir: "{app}\bin"; Flags: ig
 Source: "..\files\windows\x64\libssh.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
 Source: "..\files\windows\x64\libssl.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: base
 Source: "..\files\windows\x64\libmariadb.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\mariadb
+Source: "..\files\windows\x64\libmariadb.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\mariadb and pdb
 Source: "..\files\windows\x64\libmysql.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\mysql
 Source: "..\files\windows\x64\libpq.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\pgsql
 Source: "..\files\windows\x64\libintl-8.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\pgsql

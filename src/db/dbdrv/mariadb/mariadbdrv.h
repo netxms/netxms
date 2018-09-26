@@ -45,8 +45,13 @@
 #include <nms_util.h>
 
 #undef GROUP_FLAG
+#ifdef _WIN32
+// Include our own wrapper header on Windows to avoid conflict with MySQL client library
+#include <mariadb.h>
+#else
 #include <mysql.h>
 #include <errmsg.h>
+#endif
 
 /**
  * Structure of DB connection handle
