@@ -189,7 +189,7 @@ UINT32 g_dwStartupDelay = 0;
 UINT32 g_dwMaxSessions = 0;
 UINT32 g_longRunningQueryThreshold = 250;
 UINT32 g_dcReconciliationBlockSize = 1024;
-UINT32 g_dcReconciliationTimeout = 15000;
+UINT32 g_dcReconciliationTimeout = 300000;
 UINT32 g_dcMaxCollectorPoolSize = 64;
 UINT32 g_zoneUIN = 0;
 UINT32 g_tunnelKeepaliveInterval = 30;
@@ -267,7 +267,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("DataReconciliationBlockSize"), CT_LONG, 0, 0, 0, 0, &g_dcReconciliationBlockSize, NULL },
    { _T("DataReconciliationTimeout"), CT_LONG, 0, 0, 0, 0, &g_dcReconciliationTimeout, NULL },
    { _T("DailyLogFileSuffix"), CT_STRING, 0, 0, 64, 0, s_dailyLogFileSuffix, NULL },
-	{ _T("DebugLevel"), CT_LONG, 0, 0, 0, 0, &s_debugLevel, &s_debugLevel },
+   { _T("DebugLevel"), CT_LONG, 0, 0, 0, 0, &s_debugLevel, &s_debugLevel },
    { _T("DebugTags"), CT_STRING_LIST, ',', 0, 0, 0, &s_debugTags, NULL },
    { _T("DisableIPv4"), CT_BOOLEAN, 0, 0, AF_DISABLE_IPV4, 0, &g_dwFlags, NULL },
    { _T("DisableIPv6"), CT_BOOLEAN, 0, 0, AF_DISABLE_IPV6, 0, &g_dwFlags, NULL },
@@ -286,7 +286,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("EncryptedSharedSecret"), CT_STRING, 0, 0, MAX_SECRET_LENGTH, 0, g_szSharedSecret, NULL },
    { _T("ExecTimeout"), CT_LONG, 0, 0, 0, 0, &g_execTimeout, NULL },
    { _T("ExternalList"), CT_STRING_LIST, '\n', 0, 0, 0, &s_externalListsConfig, NULL },
-	{ _T("ExternalMasterAgent"), CT_STRING, 0, 0, MAX_PATH, 0, g_masterAgent, NULL },
+   { _T("ExternalMasterAgent"), CT_STRING, 0, 0, MAX_PATH, 0, g_masterAgent, NULL },
    { _T("ExternalParameter"), CT_STRING_LIST, '\n', 0, 0, 0, &s_externalParametersConfig, NULL },
    { _T("ExternalParameterShellExec"), CT_STRING_LIST, '\n', 0, 0, 0, &s_externalShellExecParametersConfig, NULL },
    { _T("ExternalParametersProvider"), CT_STRING_LIST, '\n', 0, 0, 0, &s_externalParameterProvidersConfig, NULL },

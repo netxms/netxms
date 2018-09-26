@@ -1147,10 +1147,10 @@ void StartLocalDataCollector()
       nxlog_debug(1, _T("Invalid data reconciliation timeout %d, resetting to 1000"), g_dcReconciliationTimeout);
       g_dcReconciliationTimeout = 1000;
    }
-   else if (g_dcReconciliationTimeout > 600000)
+   else if (g_dcReconciliationTimeout > 900000)
    {
-      nxlog_debug(1, _T("Invalid data reconciliation timeout %d, resetting to 600000"), g_dcReconciliationTimeout);
-      g_dcReconciliationTimeout = 600000;
+      nxlog_debug(1, _T("Invalid data reconciliation timeout %d, resetting to 900000"), g_dcReconciliationTimeout);
+      g_dcReconciliationTimeout = 900000;
    }
 
    s_itemLock = MutexCreate();
