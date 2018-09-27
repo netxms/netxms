@@ -99,7 +99,7 @@ static bool H_UpgradeFromV32()
 {
    static const TCHAR *batch =
       _T("ALTER TABLE policy_action_list ADD timer_delay integer\n")
-      _T("ALTER TABLE policy_action_list ADD timer_key varchar(255)\n")
+      _T("ALTER TABLE policy_action_list ADD timer_key varchar(127)\n")
       _T("UPDATE policy_action_list SET timer_delay=0\n")
       _T("<END>");
    CHK_EXEC(SQLBatch(batch));
@@ -108,7 +108,7 @@ static bool H_UpgradeFromV32()
    CHK_EXEC(CreateTable(
       _T("CREATE TABLE policy_timer_cancellation_list (")
       _T("   rule_id integer not null,")
-      _T("   timer_key varchar(255) not null,")
+      _T("   timer_key varchar(127) not null,")
       _T("   PRIMARY KEY(rule_id,timer_key))")));
 
    CHK_EXEC(SetMinorSchemaVersion(33));

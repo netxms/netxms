@@ -1152,7 +1152,7 @@ static BOOL H_UpgradeFromV429(int currVersion, int newVersion)
    CHK_EXEC(CreateTable(
             _T("CREATE TABLE policy_pstorage_actions (")
             _T("rule_id integer not null,")
-            _T("ps_key varchar(255) not null,")
+            _T("ps_key varchar(127) not null,")
             _T("value varchar(2000) null,")
             _T("action integer not null,")
             _T("PRIMARY KEY(rule_id,ps_key,action))")));

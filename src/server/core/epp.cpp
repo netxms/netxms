@@ -761,7 +761,7 @@ bool EPRule::loadFromDB(DB_HANDLE hdb)
 static EnumerationCallbackResult SavePstorageSetActions(const TCHAR *key, const void *value, void *data)
 {
    DB_STATEMENT hStmt = (DB_STATEMENT)data;
-   DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, key, DB_BIND_STATIC);
+   DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, key, DB_BIND_STATIC, 127);
    DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, (TCHAR *)value, DB_BIND_STATIC);
    return DBExecute(hStmt) ? _CONTINUE : _STOP;
 }
@@ -811,7 +811,7 @@ bool EPRule::saveToDB(DB_HANDLE hdb)
             const ActionExecutionConfiguration *a = m_actions.get(i);
             DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, a->actionId);
             DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, a->timerDelay);
-            DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, a->timerKey, DB_BIND_STATIC);
+            DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, a->timerKey, DB_BIND_STATIC, 127);
             success = DBExecute(hStmt);
          }
          DBFreeStatement(hStmt);
@@ -831,7 +831,7 @@ bool EPRule::saveToDB(DB_HANDLE hdb)
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
          for(i = 0; i < m_timerCancellations.size() && success; i++)
          {
-            DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_timerCancellations.get(i), DB_BIND_STATIC);
+            DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_timerCancellations.get(i), DB_BIND_STATIC, 127);
             success = DBExecute(hStmt);
          }
          DBFreeStatement(hStmt);
@@ -882,7 +882,7 @@ bool EPRule::saveToDB(DB_HANDLE hdb)
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
          for(int i = 0; i < m_pstorageDeleteActions.size() && success; i++)
          {
-            DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_pstorageDeleteActions.get(i), DB_BIND_STATIC);
+            DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_pstorageDeleteActions.get(i), DB_BIND_STATIC, 127);
             success = DBExecute(hStmt);
          }
          DBFreeStatement(hStmt);
