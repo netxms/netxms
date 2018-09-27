@@ -1,0 +1,29 @@
+#!/bin/sh
+
+set -e
+
+if [ -z $1 ]; then
+   echo "Usage: $0 <version>"
+   exit 1
+fi
+
+V=$1
+
+cd src/libnxjava/java/base/netxms-base
+mvn clean package install
+cd -
+cd src/client/java/netxms-client
+mvn clean package install
+cd -
+
+cd src/libnxjava/java/base/netxms-base/target
+mvn gpg:sign-and-deploy-file -Durl=https://oss.sonatype.org/service/local/staging/deploy/maven2/ -DrepositoryId=ossrh -DpomFile=../pom.xml -Dpackaging=jar -Dfile=netxms-base-$V.jar -Possrh
+mvn gpg:sign-and-deploy-file -Durl=https://oss.sonatype.org/service/local/staging/deploy/maven2/ -DrepositoryId=ossrh -Dpackaging=jar -DpomFile=../pom.xml  -Dfile=netxms-base-$V-javadoc.jar -Possrh -Dclassifier=javadoc
+mvn gpg:sign-and-deploy-file -Durl=https://oss.sonatype.org/service/local/staging/deploy/maven2/ -DrepositoryId=ossrh -DpomFile=../pom.xml -Dfile=netxms-base-$V-sources.jar -Possrh -Dclassifier=sources -Dpackaging=jar
+cd -
+
+cd src/client/java/netxms-client/target
+mvn gpg:sign-and-deploy-file -Durl=https://oss.sonatype.org/service/local/staging/deploy/maven2/ -DrepositoryId=ossrh -DpomFile=../pom.xml -Dpackaging=jar -Dfile=netxms-client-$V.jar -Possrh
+mvn gpg:sign-and-deploy-file -Durl=https://oss.sonatype.org/service/local/staging/deploy/maven2/ -DrepositoryId=ossrh -Dpackaging=jar -DpomFile=../pom.xml  -Dfile=netxms-client-$V-javadoc.jar -Possrh -Dclassifier=javadoc
+mvn gpg:sign-and-deploy-file -Durl=https://oss.sonatype.org/service/local/staging/deploy/maven2/ -DrepositoryId=ossrh -DpomFile=../pom.xml -Dfile=netxms-client-$V-sources.jar -Possrh -Dclassifier=sources -Dpackaging=jar
+cd -
