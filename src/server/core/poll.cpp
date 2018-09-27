@@ -23,6 +23,7 @@
 #include "nxcore.h"
 
 #define DEBUG_TAG_DISCOVERY   _T("poll.discovery")
+#define DEBUG_TAG_POLL_MANAGER   _T("poll.manager")
 
 /**
  * Node poller queue (polls new nodes)
@@ -136,7 +137,7 @@ static void CheckMgmtFlagCallback(NetObj *object, void *data)
 	if ((g_dwMgmtNode != object->getId()) && ((Node *)object)->isLocalManagement())
 	{
 		((Node *)object)->clearLocalMgmtFlag();
-		DbgPrintf(2, _T("Incorrectly set flag NF_IS_LOCAL_MGMT cleared from node %s [%d]"),
+		nxlog_debug_tag(DEBUG_TAG_POLL_MANAGER, 2, _T("Incorrectly set flag NF_IS_LOCAL_MGMT cleared from node %s [%d]"),
 					 object->getName(), object->getId());
 	}
 }
@@ -172,7 +173,8 @@ void CheckForMgmtNode()
             if (!(node->getFlags() & NF_IS_LOCAL_MGMT))
             {
                node->setLocalMgmtFlag();
-               DbgPrintf(1, _T("Local management node %s [%d] was not have NF_IS_LOCAL_MGMT flag set"), node->getName(), node->getId());
+               nxlog_debug_tag(DEBUG_TAG_POLL_MANAGER, 1, _T("Local management node %s [%d] was not have NF_IS_LOCAL_MGMT flag set"),
+                     node->getName(), node->getId());
             }
             g_dwMgmtNode = node->getId();   // Set local management node ID
             break;
@@ -543,6 +545,9 @@ static void QueueForPolling(NetObj *object, void *data)
    if (IsShutdownInProgress())
       return;
 
+   TCHAR threadKey[32];
+   _sntprintf(threadKey, 32, _T("POLL_%u"), object->getId());
+
 	switch(object->getObjectClass())
 	{
 		case OBJECT_NODE:
@@ -551,38 +556,38 @@ static void QueueForPolling(NetObj *object, void *data)
 				if (node->isReadyForConfigurationPoll())
 				{
 					node->lockForConfigurationPoll();
-					DbgPrintf(6, _T("Node %d \"%s\" queued for configuration poll"), (int)node->getId(), node->getName());
-               ThreadPoolExecute(g_pollerThreadPool, node, &Node::configurationPoll, RegisterPoller(POLLER_TYPE_CONFIGURATION, node));
+					nxlog_debug_tag(DEBUG_TAG_POLL_MANAGER, 6, _T("Node %d \"%s\" queued for configuration poll"), (int)node->getId(), node->getName());
+               ThreadPoolExecuteSerialized(g_pollerThreadPool, threadKey, node, &Node::configurationPoll, RegisterPoller(POLLER_TYPE_CONFIGURATION, node));
 				}
 				if (node->isReadyForInstancePoll())
 				{
 					node->lockForInstancePoll();
-					DbgPrintf(6, _T("Node %d \"%s\" queued for instance discovery poll"), (int)node->getId(), node->getName());
-               ThreadPoolExecute(g_pollerThreadPool, node, &Node::instanceDiscoveryPoll, RegisterPoller(POLLER_TYPE_INSTANCE_DISCOVERY, node));
+					nxlog_debug_tag(DEBUG_TAG_POLL_MANAGER, 6, _T("Node %d \"%s\" queued for instance discovery poll"), (int)node->getId(), node->getName());
+               ThreadPoolExecuteSerialized(g_pollerThreadPool, threadKey, node, &Node::instanceDiscoveryPoll, RegisterPoller(POLLER_TYPE_INSTANCE_DISCOVERY, node));
 				}
 				if (node->isReadyForStatusPoll())
 				{
 					node->lockForStatusPoll();
-					DbgPrintf(6, _T("Node %d \"%s\" queued for status poll"), (int)node->getId(), node->getName());
-               ThreadPoolExecute(g_pollerThreadPool, node, &Node::statusPoll, RegisterPoller(POLLER_TYPE_STATUS, node));
+					nxlog_debug_tag(DEBUG_TAG_POLL_MANAGER, 6, _T("Node %d \"%s\" queued for status poll"), (int)node->getId(), node->getName());
+               ThreadPoolExecuteSerialized(g_pollerThreadPool, threadKey, node, &Node::statusPoll, RegisterPoller(POLLER_TYPE_STATUS, node));
 				}
 				if (node->isReadyForRoutePoll())
 				{
 					node->lockForRoutePoll();
-					DbgPrintf(6, _T("Node %d \"%s\" queued for routing table poll"), (int)node->getId(), node->getName());
-               ThreadPoolExecute(g_pollerThreadPool, node, &Node::routingTablePoll, RegisterPoller(POLLER_TYPE_ROUTING_TABLE, node));
+					nxlog_debug_tag(DEBUG_TAG_POLL_MANAGER, 6, _T("Node %d \"%s\" queued for routing table poll"), (int)node->getId(), node->getName());
+               ThreadPoolExecuteSerialized(g_pollerThreadPool, threadKey, node, &Node::routingTablePoll, RegisterPoller(POLLER_TYPE_ROUTING_TABLE, node));
 				}
 				if (node->isReadyForDiscoveryPoll())
 				{
 					node->lockForDiscoveryPoll();
-					DbgPrintf(6, _T("Node %d \"%s\" queued for discovery poll"), (int)node->getId(), node->getName());
-               ThreadPoolExecute(g_pollerThreadPool, DiscoveryPoller, RegisterPoller(POLLER_TYPE_DISCOVERY, node));
+					nxlog_debug_tag(DEBUG_TAG_POLL_MANAGER, 6, _T("Node %d \"%s\" queued for discovery poll"), (int)node->getId(), node->getName());
+               ThreadPoolExecuteSerialized(g_pollerThreadPool, threadKey, DiscoveryPoller, RegisterPoller(POLLER_TYPE_DISCOVERY, node));
 				}
 				if (node->isReadyForTopologyPoll())
 				{
 					node->lockForTopologyPoll();
-					DbgPrintf(6, _T("Node %d \"%s\" queued for topology poll"), (int)node->getId(), node->getName());
-               ThreadPoolExecute(g_pollerThreadPool, node, &Node::topologyPoll, RegisterPoller(POLLER_TYPE_TOPOLOGY, node));
+					nxlog_debug_tag(DEBUG_TAG_POLL_MANAGER, 6, _T("Node %d \"%s\" queued for topology poll"), (int)node->getId(), node->getName());
+               ThreadPoolExecuteSerialized(g_pollerThreadPool, threadKey, node, &Node::topologyPoll, RegisterPoller(POLLER_TYPE_TOPOLOGY, node));
 				}
 			}
 			break;
@@ -592,8 +597,8 @@ static void QueueForPolling(NetObj *object, void *data)
 				if (cond->isReadyForPoll())
 				{
 					cond->lockForPoll();
-					DbgPrintf(6, _T("Condition %d \"%s\" queued for poll"), (int)object->getId(), object->getName());
-               ThreadPoolExecute(g_pollerThreadPool, cond, &ConditionObject::doPoll, RegisterPoller(POLLER_TYPE_CONDITION, cond));
+					nxlog_debug_tag(DEBUG_TAG_POLL_MANAGER, 6, _T("Condition %d \"%s\" queued for poll"), (int)object->getId(), object->getName());
+               ThreadPoolExecuteSerialized(g_pollerThreadPool, threadKey, cond, &ConditionObject::doPoll, RegisterPoller(POLLER_TYPE_CONDITION, cond));
 				}
 			}
 			break;
@@ -603,14 +608,14 @@ static void QueueForPolling(NetObj *object, void *data)
 				if (cluster->isReadyForStatusPoll())
 				{
 					cluster->lockForStatusPoll();
-					DbgPrintf(6, _T("Cluster %d \"%s\" queued for status poll"), (int)cluster->getId(), cluster->getName());
-               ThreadPoolExecute(g_pollerThreadPool, cluster, &Cluster::statusPoll, RegisterPoller(POLLER_TYPE_STATUS, cluster));
+					nxlog_debug_tag(DEBUG_TAG_POLL_MANAGER, 6, _T("Cluster %d \"%s\" queued for status poll"), (int)cluster->getId(), cluster->getName());
+               ThreadPoolExecuteSerialized(g_pollerThreadPool, threadKey, cluster, &Cluster::statusPoll, RegisterPoller(POLLER_TYPE_STATUS, cluster));
 				}
             if (cluster->isReadyForConfigurationPoll())
             {
                cluster->lockForConfigurationPoll();
-               DbgPrintf(6, _T("Cluster %d \"%s\" queued for configuration poll"), (int)cluster->getId(), cluster->getName());
-               ThreadPoolExecute(g_pollerThreadPool, cluster, &Cluster::configurationPoll, RegisterPoller(POLLER_TYPE_CONFIGURATION, cluster));
+               nxlog_debug_tag(DEBUG_TAG_POLL_MANAGER, 6, _T("Cluster %d \"%s\" queued for configuration poll"), (int)cluster->getId(), cluster->getName());
+               ThreadPoolExecuteSerialized(g_pollerThreadPool, threadKey, cluster, &Cluster::configurationPoll, RegisterPoller(POLLER_TYPE_CONFIGURATION, cluster));
             }
 			}
 			break;
@@ -620,8 +625,8 @@ static void QueueForPolling(NetObj *object, void *data)
 				if (service->isReadyForPolling())
 				{
 					service->lockForPolling();
-					DbgPrintf(6, _T("Business service %d \"%s\" queued for poll"), (int)object->getId(), object->getName());
-               ThreadPoolExecute(g_pollerThreadPool, service, &BusinessService::poll, RegisterPoller(POLLER_TYPE_BUSINESS_SERVICE, service));
+					nxlog_debug_tag(DEBUG_TAG_POLL_MANAGER, 6, _T("Business service %d \"%s\" queued for poll"), (int)object->getId(), object->getName());
+               ThreadPoolExecuteSerialized(g_pollerThreadPool, threadKey, service, &BusinessService::poll, RegisterPoller(POLLER_TYPE_BUSINESS_SERVICE, service));
 				}
 			}
 			break;
@@ -672,7 +677,7 @@ THREAD_RESULT THREAD_CALL PollManager(void *arg)
    g_nodePollerQueue.put(INVALID_POINTER_VALUE);
 
    ThreadPoolDestroy(g_pollerThreadPool);
-   DbgPrintf(1, _T("PollManager: main thread terminated"));
+   nxlog_debug_tag(DEBUG_TAG_POLL_MANAGER, 1, _T("Poll manager main thread terminated"));
    return THREAD_OK;
 }
 
