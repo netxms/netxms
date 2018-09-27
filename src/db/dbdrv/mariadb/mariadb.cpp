@@ -214,6 +214,7 @@ extern "C" void __EXPORT DrvUnload()
 static bool GetConnectorVersion(MYSQL *conn, char *version)
 {
    bool success = false;
+#if HAVE_DECL_MYSQL_GET_OPTIONV && HAVE_DECL_MYSQL_OPT_CONNECT_ATTRS
    int elements = 0;
    if (mysql_get_optionv(conn, MYSQL_OPT_CONNECT_ATTRS, NULL, NULL, (void *)&elements) == 0)
    {
@@ -234,6 +235,7 @@ static bool GetConnectorVersion(MYSQL *conn, char *version)
       MemFree(keys);
       MemFree(values);
    }
+#endif
    return success;
 }
 

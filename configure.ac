@@ -3302,6 +3302,12 @@ if test $? = 0; then
  			AC_MSG_ERROR(libmariadb is requred for MariaDB support)
 		])
 
+	AC_CHECK_DECLS([MYSQL_OPT_CONNECT_ATTRS, mysql_get_optionv],,,[
+#if HAVE_MYSQL_H
+#include <mysql.h>
+#endif
+		])
+
 	CPPFLAGS="$OLD_CPPFLAGS"
 	LDFLAGS="$OLD_LDFLAGS"
 	LD_RUN_PATH="$OLD_LD_RUN_PATH"
