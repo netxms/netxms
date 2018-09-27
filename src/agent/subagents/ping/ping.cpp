@@ -35,6 +35,14 @@ static UINT32 s_maxTargetInactivityTime = 86400;
 static UINT32 s_options = PING_OPT_ALLOW_AUTOCONFIGURE;
 
 /**
+ * Exponential moving average calculation
+ */
+#define FP_SHIFT  11              /* nr of bits of precision */
+#define FP_1      (1 << FP_SHIFT) /* 1.0 as fixed-point */
+#define EXP       2037            /* 1/exp(5sec/15min) */
+#define CALC_EMA(s, y) do { s *= EXP; s += y * (FP_1 - EXP); s >>= FP_SHIFT; } while(0)
+
+/**
  * Poller
  */
 static void Poller(void *arg)
@@ -61,7 +69,7 @@ retry:
       {
          TCHAR ip1[64], ip2[64];
          nxlog_debug_tag(DEBUG_TAG, 6, _T("IP address for target %s changed from %s to %s"), target->name,
-                         target->ipAddr.toString(ip1), ip.toString(ip2));
+                  target->ipAddr.toString(ip1), ip.toString(ip2));
          target->ipAddr = ip;
          goto retry;
       }
@@ -90,7 +98,7 @@ retry:
       }
    }
 
-   UINT32 sum = 0, count = 0, lost = 0, stdDev = 0;
+   UINT32 sum = 0, count = 0, lost = 0, stdDev = 0, localMin = 0x7FFFFFFF, localMax = 0;
    for(UINT32 i = 0; i < m_pollsPerMinute; i++)
    {
       if (target->history[i] < 10000)
@@ -100,6 +108,14 @@ retry:
          {
             stdDev += (target->avgRTT - target->history[i]) * (target->avgRTT - target->history[i]);
          }
+         if (target->history[i] < localMin)
+         {
+            localMin = target->history[i];
+         }
+         if (target->history[i] > localMax)
+         {
+            localMax = target->history[i];
+         }
          count++;
       }
       else
@@ -108,7 +124,18 @@ retry:
       }
    }
    target->avgRTT = unreachable ? 10000 : (sum / count);
+   target->minRTT = localMin;
+   target->maxRTT = localMax;
    target->packetLoss = lost * 100 / m_pollsPerMinute;
+
+   if (target->cumulativeMinRTT > localMin)
+   {
+      target->cumulativeMinRTT = localMin;
+   }
+   if (target->cumulativeMaxRTT < localMax)
+   {
+      target->cumulativeMaxRTT = localMax;
+   }
 
    if (count > 0)
    {
@@ -117,6 +144,18 @@ retry:
    else
    {
       target->stdDevRTT = 0;
+   }
+
+   if (target->lastRTT != 10000)
+   {
+      if (target->movingAvgRTT == 0x7FFFFFFF)
+      {
+         target->movingAvgRTT = target->lastRTT;
+      }
+      else
+      {
+         CALC_EMA(target->movingAvgRTT, target->lastRTT);
+      }
    }
 
    UINT32 elapsedTime = static_cast<UINT32>(GetCurrentTimeMs() - startTime);
@@ -243,6 +282,8 @@ static LONG H_PollResult(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue
          nx_strncpy(t->name, szTarget, MAX_DB_STRING);
          t->packetSize = m_defaultPacketSize;
          t->dontFragment = ((s_options & PING_OPT_DONT_FRAGMENT) != 0);
+         t->cumulativeMinRTT = 0x7FFFFFFF;
+         t->movingAvgRTT = 0x7FFFFFFF;
          t->automatic = true;
          s_targets.add(t);
 
@@ -264,14 +305,29 @@ static LONG H_PollResult(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue
 		case _T('A'):
 			ret_uint(pValue, t->avgRTT);
 			break;
+      case _T('a'):
+         ret_uint(pValue, t->movingAvgRTT);
+         break;
+      case _T('c'):
+         ret_uint(pValue, t->cumulativeMinRTT);
+         break;
+      case _T('C'):
+         ret_uint(pValue, t->cumulativeMaxRTT);
+         break;
+      case _T('D'):
+         ret_uint(pValue, t->stdDevRTT);
+         break;
 		case _T('L'):
 			ret_uint(pValue, t->lastRTT);
 			break;
+      case _T('m'):
+         ret_uint(pValue, t->minRTT);
+         break;
+      case _T('M'):
+         ret_uint(pValue, t->maxRTT);
+         break;
 		case _T('P'):
 			ret_uint(pValue, t->packetLoss);
-			break;
-		case _T('D'):
-			ret_uint(pValue, t->stdDevRTT);
 			break;
 		default:
 			return SYSINFO_RC_UNSUPPORTED;
@@ -307,6 +363,11 @@ static LONG H_TargetTable(const TCHAR *pszParam, const TCHAR *pArg, Table *value
     value->addColumn(_T("IP"), DCI_DT_STRING, _T("IP"), true);
     value->addColumn(_T("LAST_RTT"), DCI_DT_UINT, _T("Last response time"));
     value->addColumn(_T("AVERAGE_RTT"), DCI_DT_UINT, _T("Average response time"));
+    value->addColumn(_T("MIN_RTT"), DCI_DT_UINT, _T("Minimum response time"));
+    value->addColumn(_T("MAX_RTT"), DCI_DT_UINT, _T("Maximum response time"));
+    value->addColumn(_T("MOVING_AVERAGE_RTT"), DCI_DT_UINT, _T("Moving average of response time"));
+    value->addColumn(_T("CMIN_RTT"), DCI_DT_UINT, _T("Cumulative minimum response time"));
+    value->addColumn(_T("CMAX_RTT"), DCI_DT_UINT, _T("Cumulative maximum response time"));
     value->addColumn(_T("PACKET_LOSS"), DCI_DT_UINT, _T("Packet loss"));
     value->addColumn(_T("PACKET_SIZE"), DCI_DT_UINT, _T("Packet size"));
     value->addColumn(_T("NAME"), DCI_DT_STRING, _T("Name"));
@@ -321,11 +382,16 @@ static LONG H_TargetTable(const TCHAR *pszParam, const TCHAR *pArg, Table *value
         value->set(0, t->ipAddr.toString());
         value->set(1, t->lastRTT);
         value->set(2, t->avgRTT);
-        value->set(3, t->packetLoss);
-        value->set(4, t->packetSize);
-        value->set(5, t->name);
-        value->set(6, t->dnsName);
-        value->set(7, t->automatic);
+        value->set(3, t->minRTT);
+        value->set(4, t->maxRTT);
+        value->set(5, t->movingAvgRTT);
+        value->set(6, t->cumulativeMinRTT);
+        value->set(7, t->cumulativeMaxRTT);
+        value->set(8, t->packetLoss);
+        value->set(9, t->packetSize);
+        value->set(10, t->name);
+        value->set(11, t->dnsName);
+        value->set(12, t->automatic);
     }
     s_targetLock.unlock();
     return SYSINFO_RC_SUCCESS;
@@ -415,6 +481,8 @@ static BOOL AddTargetFromConfig(TCHAR *pszCfg)
          addr.toString(t->name);
 		t->packetSize = dwPacketSize;
 		t->dontFragment = dontFragment;
+		t->cumulativeMinRTT = 0x7FFFFFFF;
+		t->movingAvgRTT = 0x7FFFFFFF;
       s_targets.add(t);
 		bResult = TRUE;
 	}
@@ -495,7 +563,12 @@ static bool SubagentInit(Config *config)
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
 	{ _T("Icmp.AvgPingTime(*)"), H_PollResult, _T("A"), DCI_DT_UINT, _T("Average response time of ICMP ping to {instance} for last minute") },
+   { _T("Icmp.CumulativeMaxPingTime(*)"), H_PollResult, _T("M"), DCI_DT_UINT, _T("Cumulative maximum response time of ICMP ping to {instance}") },
+   { _T("Icmp.CumulativeMinPingTime(*)"), H_PollResult, _T("M"), DCI_DT_UINT, _T("Cumulative minimum response time of ICMP ping to {instance}") },
 	{ _T("Icmp.LastPingTime(*)"), H_PollResult, _T("L"), DCI_DT_UINT, _T("Response time of last ICMP ping to {instance}") },
+   { _T("Icmp.MaxPingTime(*)"), H_PollResult, _T("M"), DCI_DT_UINT, _T("Maximum response time of ICMP ping to {instance} for last minute") },
+   { _T("Icmp.MinPingTime(*)"), H_PollResult, _T("M"), DCI_DT_UINT, _T("Minimum response time of ICMP ping to {instance} for last minute") },
+   { _T("Icmp.MovingAvgPingTime(*)"), H_PollResult, _T("a"), DCI_DT_UINT, _T("Moving average of response time of ICMP ping to {instance}") },
 	{ _T("Icmp.PacketLoss(*)"), H_PollResult, _T("P"), DCI_DT_UINT, _T("Packet loss for ICMP ping to {instance}") },
  	{ _T("Icmp.PingStdDev(*)"), H_PollResult, _T("D"), DCI_DT_UINT, _T("Standard deviation for ICMP ping to {instance}") },
 	{ _T("Icmp.Ping(*)"), H_IcmpPing, NULL, DCI_DT_UINT, _T("ICMP ping response time for {instance}") }

@@ -49,8 +49,13 @@ struct PING_TARGET
    UINT32 packetSize;
    UINT32 avgRTT;
    UINT32 lastRTT;
+   UINT32 minRTT;
+   UINT32 maxRTT;
    UINT32 stdDevRTT;
    UINT32 packetLoss;
+   UINT32 cumulativeMinRTT;
+   UINT32 cumulativeMaxRTT;
+   UINT32 movingAvgRTT;
    UINT32 history[MAX_POLLS_PER_MINUTE];
    int bufPos;
 	int ipAddrAge;
