@@ -965,7 +965,7 @@ CREATE TABLE policy_action_list
   rule_id integer not null,
   action_id integer not null,
   timer_delay integer not null,
-  timer_key varchar(255) null,
+  timer_key varchar(127) null,
   PRIMARY KEY(rule_id,action_id)
 ) TABLE_TYPE;
 
@@ -975,7 +975,7 @@ CREATE TABLE policy_action_list
 CREATE TABLE policy_timer_cancellation_list
 (
   rule_id integer not null,
-  timer_key varchar(255) not null,
+  timer_key varchar(127) not null,
   PRIMARY KEY(rule_id,timer_key)
 ) TABLE_TYPE;
 
@@ -985,9 +985,9 @@ CREATE TABLE policy_timer_cancellation_list
 CREATE TABLE policy_pstorage_actions
 (
   rule_id integer not null,
-  ps_key varchar(255) not null,
-  value varchar(2000) null,
+  ps_key varchar(127) not null,
   action integer not null,
+  value varchar(2000) null,
   PRIMARY KEY(rule_id,ps_key,action)
 ) TABLE_TYPE;
 
