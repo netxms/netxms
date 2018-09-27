@@ -19,7 +19,6 @@
 package org.netxms.websvc.handlers;
 
 import java.util.Map;
-
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.GraphFolder;
 import org.netxms.websvc.json.ResponseContainer;
@@ -28,17 +27,18 @@ import org.slf4j.LoggerFactory;
 
 public class PredefinedGraphs extends AbstractHandler
 {
-	private Logger log = LoggerFactory.getLogger(GrafanaDataCollection.class);
-   /* (non-Javadoc)
- * @see org.netxms.websvc.handlers.AbstractHandler#getCollection(java.util.Map)
- */
-@Override
+   private Logger log = LoggerFactory.getLogger(GrafanaDataCollection.class);
+
+   /*
+    * (non-Javadoc)
+    * 
+    * @see org.netxms.websvc.handlers.AbstractHandler#getCollection(java.util.Map)
+    */
+   @Override
    protected Object getCollection(Map<String, String> query) throws Exception
    {
       NXCSession session = getSession();
       GraphFolder root = session.getPredefinedGraphsAsTree();
-
       return new ResponseContainer("root", root);
    }
-   
 }
