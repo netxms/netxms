@@ -6,6 +6,7 @@
 - Original event name passed to alarm timeout event as 5th parameter
 - Added information tooltips in switch port view
 - Improved performance of active network discovery
+- Minimum, maximum, and moving average for ICMP response time in ping subagent
 - Fixed issues:
 	NX-1463 (Web UI does not work under Tomcat 9)
 	NX-1475 (Deselected "Create helpdesk ticket on alarm creation" is not being saved in EPP)
