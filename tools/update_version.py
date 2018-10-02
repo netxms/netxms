@@ -5,9 +5,20 @@ import re
 import os
 import codecs
 
+import xml.etree.ElementTree as ET
+
 def fromatFilePath(filePath):
    dir_path = os.path.dirname(os.path.realpath(__file__))
    return "%s/../%s" % (dir_path, filePath)
+
+
+def replaceVersionInJuraXML(version):
+   fileName = fromatFilePath('src/java/netxms-jira-connector/pom.xml')
+   ET.register_namespace('', "http://maven.apache.org/POM/4.0.0")
+   tree = ET.parse(fileName)
+   tree.find("{http://maven.apache.org/POM/4.0.0}version").text = version   
+   tree.write(fileName, xml_declaration=True, encoding="UTF-8", method="xml")
+   print("  File %s updated" % (fileName))
       
 def updatePomVersion(fileName, version):
    fileName = fromatFilePath(fileName)
@@ -47,7 +58,7 @@ def main():
    updatePomVersion('src/server/nxapisrv/java/pom.xml', sys.argv[1])
    replaceInFile('src/java/build/pack.sh', r'version=.*', r'version=%s'  % sys.argv[1]) 
    updatePomVersion('src/java/client/mobile-agent/pom.xml', sys.argv[1])
-   updatePomVersion('src/java/netxms-jira-connector/pom.xml', sys.argv[1])
+   replaceVersionInJuraXML(sys.argv[1])
    updatePomVersion('src/java/nxreporting/pom.xml', sys.argv[1])
    updatePomVersion('src/agent/subagents/java/java/pom.xml', sys.argv[1])
    updatePomVersion('src/agent/subagents/bind9/pom.xml', sys.argv[1])
