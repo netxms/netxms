@@ -6,6 +6,8 @@ client.session	Client sessions
 crypto.*	Encryption functions
 crypto.cert	Certificate related messages
 
+dc.*		Data collection
+
 db.*		Database related
 db.drv.*	Database drivers related
 db.drv.mariadb	MariaDB driver

@@ -17,6 +17,15 @@
 
 
 *
+* 2.2.10
+*
+
+- Improved server startup time
+- Fixed issues:
+	NX-1477 (Offline data collection does not cleanup old data if there are no connection with the server)
+
+
+*
 * 2.2.9
 *
 

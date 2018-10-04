@@ -191,6 +191,7 @@ UINT32 g_longRunningQueryThreshold = 250;
 UINT32 g_dcReconciliationBlockSize = 1024;
 UINT32 g_dcReconciliationTimeout = 300000;
 UINT32 g_dcMaxCollectorPoolSize = 64;
+UINT32 g_dcOfflineExpirationTime = 10; // 10 days
 UINT32 g_zoneUIN = 0;
 UINT32 g_tunnelKeepaliveInterval = 30;
 UINT16 g_syslogListenPort = 514;
@@ -305,6 +306,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("MasterServers"), CT_STRING_LIST, ',', 0, 0, 0, &m_pszMasterServerList, NULL },
    { _T("MaxLogSize"), CT_SIZE_BYTES, 0, 0, 0, 0, &s_maxLogSize, NULL },
    { _T("MaxSessions"), CT_LONG, 0, 0, 0, 0, &g_dwMaxSessions, NULL },
+   { _T("OfflineDataExpirationTime"), CT_LONG, 0, 0, 0, 0, &g_dcOfflineExpirationTime, NULL },
    { _T("PlatformSuffix"), CT_STRING, 0, 0, MAX_PSUFFIX_LENGTH, 0, g_szPlatformSuffix, NULL },
    { _T("RequireAuthentication"), CT_BOOLEAN, 0, 0, AF_REQUIRE_AUTH, 0, &g_dwFlags, NULL },
    { _T("RequireEncryption"), CT_BOOLEAN, 0, 0, AF_REQUIRE_ENCRYPTION, 0, &g_dwFlags, NULL },
