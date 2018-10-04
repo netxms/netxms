@@ -1440,6 +1440,9 @@ static THREAD_RESULT THREAD_CALL WatchdogThread(void *arg)
 		if (m_condShutdown.wait(1000))
 			break;
 
+		if (!(g_flags & AF_SERVER_INITIALIZED))
+		   continue;   // Server not initialized yet
+
 		MutexLock(m_mutex);
 		time_t now = time(NULL);
 	   for(int i = 0; i < m_alarmList->size(); i++)

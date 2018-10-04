@@ -40,6 +40,7 @@ struct INDEX_HEAD
    size_t size;
    size_t allocated;
    VolatileCounter readers;
+   VolatileCounter writers;
 };
 
 /**
@@ -77,11 +78,9 @@ AbstractIndexBase::~AbstractIndexBase()
 void AbstractIndexBase::swapAndWait()
 {
    m_secondary = InterlockedExchangeObjectPointer(&m_primary, m_secondary);
-   do
-   {
+   InterlockedIncrement(&m_secondary->writers);
+   while(m_secondary->readers > 0)
       ThreadSleepMs(10);
-   }
-   while(m_secondary->readers > 0);
 }
 
 /**
@@ -89,8 +88,15 @@ void AbstractIndexBase::swapAndWait()
  */
 INDEX_HEAD *AbstractIndexBase::acquireIndex()
 {
-   INDEX_HEAD *h = m_primary;
-   InterlockedIncrement(&m_primary->readers);
+   INDEX_HEAD *h;
+   while(true)
+   {
+      h = m_primary;
+      InterlockedIncrement(&h->readers);
+      if (h->writers == 0)
+         break;
+      InterlockedDecrement(&h->readers);
+   }
    return h;
 }
 
@@ -166,6 +172,8 @@ bool AbstractIndexBase::put(UINT64 key, void *object)
 	   memcpy(m_secondary->elements, m_primary->elements, m_secondary->size * sizeof(INDEX_ELEMENT));
 	}
 
+   InterlockedDecrement(&m_secondary->writers);
+
 	MutexUnlock(m_writerLock);
 	return replace;
 }
@@ -193,6 +201,8 @@ void AbstractIndexBase::remove(UINT64 key)
    m_secondary->size--;
    memmove(&m_secondary->elements[pos], &m_secondary->elements[pos + 1], sizeof(INDEX_ELEMENT) * (m_secondary->size - pos));
 
+   InterlockedDecrement(&m_secondary->writers);
+
    MutexUnlock(m_writerLock);
 }
 
@@ -218,6 +228,8 @@ void AbstractIndexBase::clear()
    m_secondary->size = 0;
    m_secondary->allocated = 0;
    MemFreeAndNull(m_secondary->elements);
+
+   InterlockedDecrement(&m_secondary->writers);
 
    MutexUnlock(m_writerLock);
 }
