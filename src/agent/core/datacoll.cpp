@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,6 +22,13 @@
 
 #include "nxagentd.h"
 
+#define DEBUG_TAG _T("dc")
+
+/**
+ * Interval in milliseconds between stalled data checks
+ */
+#define STALLED_DATA_CHECK_INTERVAL    3600000
+
 /**
  * Externals
  */
@@ -31,6 +38,7 @@ UINT32 GetSnmpValue(const uuid& target, UINT16 port, const TCHAR *oid, TCHAR *va
 extern UINT32 g_dcReconciliationBlockSize;
 extern UINT32 g_dcReconciliationTimeout;
 extern UINT32 g_dcMaxCollectorPoolSize;
+extern UINT32 g_dcOfflineExpirationTime;
 
 /**
  * Data collector start indicator
@@ -485,11 +493,15 @@ void DataElement::fillReconciliationMessage(NXCPMessage *msg, UINT32 baseId)
  */
 struct ServerSyncStatus
 {
+   UINT64 serverId;
    INT32 queueSize;
+   time_t lastSync;
 
-   ServerSyncStatus()
+   ServerSyncStatus(UINT64 sid)
    {
+      serverId = sid;
       queueSize = 0;
+      lastSync = time(NULL);
    }
 };
 
@@ -651,6 +663,7 @@ static THREAD_RESULT THREAD_CALL ReconciliationThread(void *arg)
                   if (e->sendToServer(true))
                   {
                      status->queueSize--;
+                     status->lastSync = time(NULL);
                      deleteList.add(e);
                   }
                   else
@@ -711,6 +724,7 @@ static THREAD_RESULT THREAD_CALL ReconciliationThread(void *arg)
                         delete e;
                      }
                   }
+                  serverSyncStatus->lastSync = time(NULL);
 
                   MutexUnlock(s_serverSyncStatusLock);
                }
@@ -764,7 +778,7 @@ static THREAD_RESULT THREAD_CALL DataSender(void *arg)
    DebugPrintf(1, _T("Data sender thread started"));
    while(true)
    {
-      DataElement *e = (DataElement *)s_dataSenderQueue.getOrBlock();
+      DataElement *e = static_cast<DataElement*>(s_dataSenderQueue.getOrBlock());
       if (e == INVALID_POINTER_VALUE)
          break;
 
@@ -772,7 +786,7 @@ static THREAD_RESULT THREAD_CALL DataSender(void *arg)
       ServerSyncStatus *status = s_serverSyncStatus.get(e->getServerId());
       if (status == NULL)
       {
-         status = new ServerSyncStatus();
+         status = new ServerSyncStatus(e->getServerId());
          s_serverSyncStatus.set(e->getServerId(), status);
       }
 
@@ -909,7 +923,7 @@ static UINT32 DataCollectionSchedulerRun()
       UINT32 timeToPoll = dci->getTimeToNextPoll(now);
       if (timeToPoll == 0)
       {
-         DebugPrintf(7, _T("DataCollector: polling DCI %d \"%s\""), dci->getId(), dci->getName());
+         nxlog_debug_tag(DEBUG_TAG, 7, _T("DataCollector: polling DCI %d \"%s\""), dci->getId(), dci->getName());
 
          if (dci->getOrigin() == DS_NATIVE_AGENT)
          {
@@ -943,7 +957,6 @@ static UINT32 DataCollectionSchedulerRun()
 static THREAD_RESULT THREAD_CALL DataCollectionScheduler(void *arg)
 {
    DebugPrintf(1, _T("Data collection scheduler thread started"));
-   s_dataCollectorPool = ThreadPoolCreate(_T("DATACOLL"), 1, g_dcMaxCollectorPoolSize);
 
    UINT32 sleepTime = DataCollectionSchedulerRun();
    while(!AgentSleepAndCheckForShutdown(sleepTime * 1000))
@@ -1033,9 +1046,9 @@ void ConfigureDataCollection(UINT64 serverId, NXCPMessage *msg)
    for(int i = 0; i < s_items.size(); i++)
    {
       DataCollectionItem *item = s_items.get(i);
-      //If item is from other server, then, do not search it in list of this server
-      if(item->getServerId() != serverId)
+      if (item->getServerId() != serverId)
          continue;
+
       bool exist = false;
       for(int j = 0; j < config.size(); j++)
       {
@@ -1095,20 +1108,99 @@ static void LoadState()
       DBFreeResult(hResult);
    }
 
-   hResult = DBSelect(hdb, _T("SELECT server_id,count(*) FROM dc_queue GROUP BY server_id"));
+   hResult = DBSelect(hdb, _T("SELECT server_id,count(*),coalesce(min(timestamp),0) FROM dc_queue GROUP BY server_id"));
    if (hResult != NULL)
    {
       int count = DBGetNumRows(hResult);
       for(int i = 0; i < count; i++)
       {
-         ServerSyncStatus *s = new ServerSyncStatus;
-         s->queueSize = DBGetFieldLong(hResult, i, 1);
          UINT64 serverId = DBGetFieldUInt64(hResult, i, 0);
+         ServerSyncStatus *s = new ServerSyncStatus(serverId);
+         s->queueSize = DBGetFieldLong(hResult, i, 1);
+         s->lastSync = static_cast<time_t>(DBGetFieldInt64(hResult, i, 2));
          s_serverSyncStatus.set(serverId, s);
-         DebugPrintf(2, _T("%d elements in queue for server ID ") UINT64X_FMT(_T("016")), s->queueSize, serverId);
+         nxlog_debug_tag(DEBUG_TAG, 2, _T("%d elements in queue for server ID ") UINT64X_FMT(_T("016")), s->queueSize, serverId);
+
+#if HAVE_LOCALTIME_R
+         struct tm tbuffer;
+         struct tm *ltm = localtime_r(&s->lastSync, &tbuffer);
+#else
+         struct tm *ltm = localtime(&s->lastSync);
+#endif
+         TCHAR ts[64];
+         _tcsftime(ts, 64, _T("%Y.%m.%d %H:%M:%S"), ltm);
+         nxlog_debug_tag(DEBUG_TAG, 2, _T("Oldest timestamp is %s for server ID ") UINT64X_FMT(_T("016")), ts, serverId);
       }
       DBFreeResult(hResult);
    }
+}
+
+/**
+ * Clear stalled offline data
+ */
+static void ClearStalledOfflineData(void *arg)
+{
+   if (g_dwFlags & AF_SHUTDOWN)
+      return;
+
+   IntegerArray<UINT64> deleteList;
+
+   MutexLock(s_serverSyncStatusLock);
+   time_t expirationTime = time(NULL) - g_dcOfflineExpirationTime * 86400;
+   Iterator<ServerSyncStatus> *it = s_serverSyncStatus.iterator();
+   while(it->hasNext())
+   {
+      ServerSyncStatus *status = it->next();
+      if ((status->queueSize > 0) && (status->lastSync < expirationTime))
+      {
+         nxlog_debug_tag(DEBUG_TAG, 2, _T("Offline data for server ID ") UINT64X_FMT(_T("016")) _T(" expired"), status->serverId);
+         deleteList.add(status->serverId);
+         it->remove();
+      }
+   }
+   delete it;
+   MutexUnlock(s_serverSyncStatusLock);
+
+   if (deleteList.size() > 0)
+   {
+      TCHAR query[256];
+      DB_HANDLE hdb = GetLocalDatabaseHandle();
+
+      for(int i = 0; i < deleteList.size(); i++)
+      {
+         UINT64 serverId = deleteList.get(i);
+
+         DBBegin(hdb);
+
+         _sntprintf(query, 256, _T("DELETE FROM dc_queue WHERE server_id=") UINT64_FMT, serverId);
+         DBQuery(hdb, query);
+
+         _sntprintf(query, 256, _T("DELETE FROM dc_snmp_targets WHERE server_id=") UINT64_FMT, serverId);
+         DBQuery(hdb, query);
+
+         _sntprintf(query, 256, _T("DELETE FROM dc_config WHERE server_id=") UINT64_FMT, serverId);
+         DBQuery(hdb, query);
+
+         DBCommit(hdb);
+
+         MutexLock(s_itemLock);
+         for(int i = 0; i < s_items.size(); i++)
+         {
+            DataCollectionItem *item = s_items.get(i);
+            if (item->getServerId() == serverId)
+            {
+               s_items.unlink(i);
+               item->decRefCount();
+               i--;
+            }
+         }
+         MutexUnlock(s_itemLock);
+
+         nxlog_debug_tag(DEBUG_TAG, 2, _T("Offline data collection configuration for server ID ") UINT64X_FMT(_T("016")) _T(" deleted"), serverId);
+      }
+   }
+
+   ThreadPoolScheduleRelative(s_dataCollectorPool, STALLED_DATA_CHECK_INTERVAL, ClearStalledOfflineData, NULL);
 }
 
 /**
@@ -1158,10 +1250,12 @@ void StartLocalDataCollector()
 
    LoadState();
 
+   s_dataCollectorPool = ThreadPoolCreate(_T("DATACOLL"), 1, g_dcMaxCollectorPoolSize);
    s_dataCollectionSchedulerThread = ThreadCreateEx(DataCollectionScheduler, 0, NULL);
    s_dataSenderThread = ThreadCreateEx(DataSender, 0, NULL);
    s_databaseWriterThread = ThreadCreateEx(DatabaseWriter, 0, NULL);
    s_reconciliationThread = ThreadCreateEx(ReconciliationThread, 0, NULL);
+   ThreadPoolScheduleRelative(s_dataCollectorPool, STALLED_DATA_CHECK_INTERVAL, ClearStalledOfflineData, NULL);
 
    s_dataCollectorStarted = true;
 }
