@@ -7,6 +7,16 @@ skip1=__SKIP1__
 command=__COMMAND__
 log=/tmp/nxagentupdate.log
 
+for var in "$@"; do
+   if [ $(echo $var | cut -d= -f1) = "prefix" ]; then
+      prefix=$(echo $var | cut -d= -f2)
+   fi
+done
+
+if [ "x$prefix" != "x" ]; then
+   prefix=/opt/netxms
+fi
+
 # trap '
 # 	echo "Upgrade script finished" >> $log
 # 	cd $wd
@@ -28,14 +38,14 @@ _mktemp() {
 	mkdir $d && echo $d || false
 }
 
+if [ "x$md5" = "x" ] && [ "x`echo test | $prefix/bin/nxcsum md5 -`" = 'xd8e8fca2dc0f896fd7cb4cb0031ba249' ]; then
+   md5="$prefix/bin/nxcsum md5 -"
+fi
 if [ "x`echo test | md5 2>/dev/null | tr A-Z a-z | cut -b1-32`" = 'xd8e8fca2dc0f896fd7cb4cb0031ba249' ]; then
    md5="md5 | tr A-Z a-z | cut -b1-32"
 fi
 if [ "x$md5" = "x" ] && [ "x`echo test | md5sum 2>/dev/null | tr A-Z a-z | cut -b1-32`" = 'xd8e8fca2dc0f896fd7cb4cb0031ba249' ]; then
    md5="md5sum | tr A-Z a-z | cut -b1-32"
-fi
-if [ "x$md5" = "x" ] && [ "x`echo test | csum -h MD5 - 2>/dev/null | tr A-Z a-z | cut -b1-32`" = 'xd8e8fca2dc0f896fd7cb4cb0031ba249' ]; then
-   md5="csum -h MD5 - | tr A-Z a-z | cut -b1-32"
 fi
 if [ "x$md5" = "x" ] && [ "x`echo test | openssl md5 2>/dev/null | tr A-Z a-z`" = 'xd8e8fca2dc0f896fd7cb4cb0031ba249' ]; then
    md5="openssl md5 | tr A-Z a-z"
