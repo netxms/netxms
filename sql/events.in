@@ -1160,6 +1160,13 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'   1) Old agent ID' CONCAT CRLF CONCAT
 		'   2) New agent ID'
 	);
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
+		EVENT_SERVER_STARTED, 'SYS_SERVER_STARTED', '32f3305b-1c1b-4597-9eb5-b74eca54330d',
+		EVENT_SEVERITY_NORMAL, 1,
+		'Server started',
+		'Generated when server initialization is completed.'
+	);
 
 
 /*

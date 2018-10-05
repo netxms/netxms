@@ -24,6 +24,23 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 30.48 to 30.49 (changes also included into 22.38)
+ */
+static bool H_UpgradeFromV48()
+{
+   if (GetSchemaLevelForMajorVersion(22) < 38)
+   {
+      CHK_EXEC(CreateEventTemplate(EVENT_SERVER_STARTED, _T("SYS_SERVER_STARTED"), SEVERITY_NORMAL, EF_LOG, _T("32f3305b-1c1b-4597-9eb5-b74eca54330d"),
+               _T("Server started"),
+               _T("Generated when server initialization is completed.")
+               ));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(22, 38));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(49));
+   return true;
+}
+
+/**
  * Upgrade from 30.47 to 30.48 (changes also included into 22.36)
  */
 static bool H_UpgradeFromV47()
@@ -1705,6 +1722,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 48, 30, 49, H_UpgradeFromV48 },
    { 47, 30, 48, H_UpgradeFromV47 },
    { 46, 30, 47, H_UpgradeFromV46 },
    { 45, 30, 46, H_UpgradeFromV45 },
