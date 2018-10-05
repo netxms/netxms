@@ -1123,6 +1123,7 @@ retry_db_lock:
    ExecuteStartupScripts();
 
 	g_flags |= AF_SERVER_INITIALIZED;
+	PostEvent(EVENT_SERVER_STARTED, g_dwMgmtNode, NULL);
 	nxlog_debug(1, _T("Server initialization completed in %d milliseconds"), static_cast<int>(GetCurrentTimeMs() - initStartTime));
 	return TRUE;
 }
