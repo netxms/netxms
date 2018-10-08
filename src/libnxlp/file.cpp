@@ -720,6 +720,28 @@ bool LogParser::monitorFile2(bool readFromCurrPos)
          else
          {
             lseek(fh, lastPos, SEEK_SET);
+            char buffer[4];
+            int bytes = _read(fh, buffer, 4);
+            if ((bytes == 4) && memcmp(buffer, "\x00\x00\x00\x00", 4))
+            {
+               lseek(fh, -4, SEEK_CUR);
+               nxlog_debug_tag(DEBUG_TAG, 6, _T("New data available in file \"%s\""), fname);
+            }
+            else
+            {
+               off_t pos = lseek(fh, -bytes, SEEK_CUR);
+               if (pos > 0)
+               {
+                  int readSize = std::min(pos, (off_t)4);
+                  lseek(fh, -readSize, SEEK_CUR);
+                  int bytes = _read(fh, buffer, readSize);
+                  if ((bytes == readSize) && !memcmp(buffer, "\x00\x00\x00\x00", readSize))
+                  {
+                     nxlog_debug_tag(DEBUG_TAG, 6, _T("Detected reset of preallocated file \"%s\""), fname);
+                     lseek(fh, 0, SEEK_SET);
+                  }
+               }
+            }
          }
       }
       readFromStart = false;
