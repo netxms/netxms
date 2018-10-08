@@ -192,16 +192,16 @@ void AbstractIndexBase::remove(UINT64 key)
 	{
       m_secondary->size--;
       memmove(&m_secondary->elements[pos], &m_secondary->elements[pos + 1], sizeof(INDEX_ELEMENT) * (m_secondary->size - pos));
-	}
 
-	swapAndWait();
+      swapAndWait();
 
-   if (m_owner)
-      destroyObject(m_secondary->elements[pos].object);
-   m_secondary->size--;
-   memmove(&m_secondary->elements[pos], &m_secondary->elements[pos + 1], sizeof(INDEX_ELEMENT) * (m_secondary->size - pos));
+      if (m_owner)
+         destroyObject(m_secondary->elements[pos].object);
+      m_secondary->size--;
+      memmove(&m_secondary->elements[pos], &m_secondary->elements[pos + 1], sizeof(INDEX_ELEMENT) * (m_secondary->size - pos));
 
-   InterlockedDecrement(&m_secondary->writers);
+      InterlockedDecrement(&m_secondary->writers);
+   }
 
    MutexUnlock(m_writerLock);
 }
