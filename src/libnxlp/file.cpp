@@ -256,7 +256,7 @@ static off_t ParseNewRecords(LogParser *parser, int fh)
                   break;
                case LP_FCP_UCS2:
 #ifdef UNICODE_UCS2
-						nx_strncpy(text, (TCHAR *)ptr, READ_BUFFER_SIZE);
+						_tcslcpy(text, (TCHAR *)ptr, READ_BUFFER_SIZE);
 #else
                   ucs2_to_ucs4((UCS2CHAR *)ptr, -1, text, READ_BUFFER_SIZE);
 #endif
@@ -268,7 +268,7 @@ static off_t ParseNewRecords(LogParser *parser, int fh)
 #ifdef UNICODE_UCS2
                   ucs4_to_ucs2((UCS4CHAR *)ptr, -1, text, READ_BUFFER_SIZE);
 #else
-                  nx_strncpy(text, (TCHAR *)ptr, READ_BUFFER_SIZE);
+                  _tcslcpy(text, (TCHAR *)ptr, READ_BUFFER_SIZE);
 #endif
                   break;
                case LP_FCP_UCS4_BE:
@@ -278,14 +278,14 @@ static off_t ParseNewRecords(LogParser *parser, int fh)
 #ifdef UNICODE_UCS2
                   ucs4_to_ucs2((UCS4CHAR *)ptr, -1, text, READ_BUFFER_SIZE);
 #else
-                  nx_strncpy(text, (TCHAR *)ptr, READ_BUFFER_SIZE);
+                  _tcslcpy(text, (TCHAR *)ptr, READ_BUFFER_SIZE);
 #endif
                   break;
                case LP_FCP_UCS4:
 #ifdef UNICODE_UCS2
                   ucs4_to_ucs2((UCS4CHAR *)ptr, -1, text, READ_BUFFER_SIZE);
 #else
-                  nx_strncpy(text, (TCHAR *)ptr, READ_BUFFER_SIZE);
+                  _tcslcpy(text, (TCHAR *)ptr, READ_BUFFER_SIZE);
 #endif
                   break;
 					default:
@@ -295,7 +295,7 @@ static off_t ParseNewRecords(LogParser *parser, int fh)
 				switch(encoding)
 				{
 					case LP_FCP_ACP:
-						nx_strncpy(text, ptr, READ_BUFFER_SIZE);
+						_tcslcpy(text, ptr, READ_BUFFER_SIZE);
 						break;
                case LP_FCP_UTF8:
                   utf8_to_mb(ptr, -1, text, READ_BUFFER_SIZE);
