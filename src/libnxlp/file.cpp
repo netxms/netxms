@@ -697,7 +697,7 @@ bool LogParser::monitorFile2(CONDITION stopCondition, bool readFromCurrPos)
             static_cast<UINT64>(size), static_cast<UINT64>(st.st_size), static_cast<UINT64>(ctime), static_cast<UINT64>(st.st_ctime));
          ctime = st.st_ctime;
 #else
-         nxlog_debug_tag(5, _T("LogParser: file \"%s\" rotation detected (size=%llu/%llu)"),  fname,
+         nxlog_debug(5, _T("LogParser: file \"%s\" rotation detected (size=%llu/%llu)"),  fname,
             static_cast<UINT64>(size), static_cast<UINT64>(st.st_size));
 #endif
          readFromStart = true;   // Assume file rotation
@@ -727,7 +727,7 @@ bool LogParser::monitorFile2(CONDITION stopCondition, bool readFromCurrPos)
             if ((bytes == 4) && memcmp(buffer, "\x00\x00\x00\x00", 4))
             {
                lseek(fh, -4, SEEK_CUR);
-               nxlog_debug_tag(DEBUG_TAG, 6, _T("New data available in file \"%s\""), fname);
+               nxlog_debug(7, _T("LogPrser: New data available in file \"%s\""), fname);
             }
             else
             {
@@ -739,7 +739,7 @@ bool LogParser::monitorFile2(CONDITION stopCondition, bool readFromCurrPos)
                   int bytes = _read(fh, buffer, readSize);
                   if ((bytes == readSize) && !memcmp(buffer, "\x00\x00\x00\x00", readSize))
                   {
-                     nxlog_debug_tag(DEBUG_TAG, 6, _T("Detected reset of preallocated file \"%s\""), fname);
+                     nxlog_debug(6, _T("LogParser: Detected reset of preallocated file \"%s\""), fname);
                      lseek(fh, 0, SEEK_SET);
                   }
                }
