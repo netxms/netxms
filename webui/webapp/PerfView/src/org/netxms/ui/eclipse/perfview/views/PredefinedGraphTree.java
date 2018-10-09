@@ -62,13 +62,13 @@ import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
+import org.netxms.client.datacollection.GraphFolder;
 import org.netxms.client.datacollection.GraphSettings;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.perfview.Activator;
 import org.netxms.ui.eclipse.perfview.Messages;
-import org.netxms.ui.eclipse.perfview.views.helpers.GraphFolder;
 import org.netxms.ui.eclipse.perfview.views.helpers.GraphTreeContentProvider;
 import org.netxms.ui.eclipse.perfview.views.helpers.GraphTreeFilter;
 import org.netxms.ui.eclipse.perfview.views.helpers.GraphTreeLabelProvider;
@@ -150,11 +150,11 @@ public class PredefinedGraphTree extends ViewPart implements SessionListener
          @Override
          public int hashCode(Object element)
          {
-            if((element instanceof GraphSettings))
+            if ((element instanceof GraphSettings))
             {
                return (int)((GraphSettings)element).getId();
             }
-            if((element instanceof GraphFolder))
+            if ((element instanceof GraphFolder))
             {
                return ((GraphFolder)element).getName().hashCode();
             }
@@ -231,7 +231,9 @@ public class PredefinedGraphTree extends ViewPart implements SessionListener
          enableFilter(false); // Will hide filter area correctly
 	}
 
-
+   /* (non-Javadoc)
+    * @see org.eclipse.ui.part.WorkbenchPart#dispose()
+    */
    @Override
    public void dispose()
    {
@@ -240,7 +242,6 @@ public class PredefinedGraphTree extends ViewPart implements SessionListener
       super.dispose();
    }
 
-	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
 	 */
@@ -422,12 +423,12 @@ public class PredefinedGraphTree extends ViewPart implements SessionListener
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				final List<GraphSettings> list = session.getPredefinedGraphs(false);
+				final GraphFolder root = session.getPredefinedGraphsAsTree();
 				runInUIThread(new Runnable() {
 					@Override
 					public void run()
 					{
-						viewer.setInput(list);
+						viewer.setInput(root);
 					}
 				});
 			}

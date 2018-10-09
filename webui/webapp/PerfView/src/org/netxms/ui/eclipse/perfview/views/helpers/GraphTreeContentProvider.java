@@ -18,14 +18,9 @@
  */
 package org.netxms.ui.eclipse.perfview.views.helpers;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.Viewer;
+import org.netxms.client.datacollection.GraphFolder;
 import org.netxms.client.datacollection.GraphSettings;
 
 /**
@@ -34,10 +29,6 @@ import org.netxms.client.datacollection.GraphSettings;
  */
 public class GraphTreeContentProvider implements ITreeContentProvider
 {
-   private List<GraphSettings> input = null;
-	private List<Object> list = new ArrayList<Object>();
-	private Map<GraphSettings, GraphFolder> parentFolders = new HashMap<GraphSettings, GraphFolder>();
-	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ITreeContentProvider#getChildren(java.lang.Object)
 	 */
@@ -45,7 +36,7 @@ public class GraphTreeContentProvider implements ITreeContentProvider
 	public Object[] getChildren(Object parentElement)
 	{
 		if (parentElement instanceof GraphFolder)
-			return ((GraphFolder)parentElement).getChildObjects();
+			return ((GraphFolder)parentElement).getChildren();
 		return null;
 	}
 
@@ -57,7 +48,9 @@ public class GraphTreeContentProvider implements ITreeContentProvider
 	{
 		if (element instanceof GraphFolder)
 			return ((GraphFolder)element).getParent();
-		return parentFolders.get(element);
+      if (element instanceof GraphSettings)
+         return ((GraphSettings)element).getParent();
+		return null;
 	}
 
 	/* (non-Javadoc)
@@ -77,8 +70,7 @@ public class GraphTreeContentProvider implements ITreeContentProvider
 	@Override
 	public Object[] getElements(Object inputElement)
 	{
-	   updateModel();
-		return list.toArray();
+	   return ((GraphFolder)inputElement).getChildren();
 	}
 
 	/* (non-Javadoc)
@@ -92,68 +84,8 @@ public class GraphTreeContentProvider implements ITreeContentProvider
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.IContentProvider#inputChanged(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
 	 */
-	@SuppressWarnings("unchecked")
 	@Override
 	public void inputChanged(Viewer viewer, Object oldInput, Object newInput)
 	{
-	   input = (List<GraphSettings>)newInput;
-      if (input != null)
-      {
-         Collections.sort(input, new Comparator<GraphSettings>() {
-            @Override
-            public int compare(GraphSettings arg0, GraphSettings arg1)
-            {
-               return arg0.getName().replace("&", "").compareToIgnoreCase(arg1.getName().replace("&", "")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-            }
-         });
-      }
-	   updateModel();
-	}
-	
-	private void updateModel()
-	{
-      parentFolders.clear();
-      list.clear();
-      
-      if (input != null)
-      {
-         Map<String, GraphFolder> folders = new HashMap<String, GraphFolder>();
-         for(int i = 0; i < input.size(); i++)
-         {
-            String[] path = input.get(i).getName().split("\\-\\>"); //$NON-NLS-1$
-         
-            GraphFolder root = null;
-            for(int j = 0; j < path.length - 1; j++)
-            {
-               String key = (root == null ? "" : root.hashCode() + "@" ) + path[j].replace("&", ""); //$NON-NLS-1$ //$NON-NLS-2$
-               GraphFolder curr = folders.get(key);
-               if (curr == null)
-               {
-                  curr = new GraphFolder(path[j], root);
-                  folders.put(key, curr);
-                  if(root == null)
-                  {
-                     list.add(curr);
-                  }
-                  else
-                  {
-                     root.addFolder(curr);
-                  }
-               }
-               root = curr;
-            }
-            
-            if(root == null)
-            {
-               list.add(input.get(i));
-            }
-            else
-            {
-               root.addGraph(input.get(i));               
-            }
-            
-            parentFolders.put(input.get(i), root);
-         }
-      }
 	}
 }
