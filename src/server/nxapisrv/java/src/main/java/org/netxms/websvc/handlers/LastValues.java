@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2017 Raden Solutions
+ * Copyright (C) 2003-2018 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,7 +18,6 @@
  */
 package org.netxms.websvc.handlers;
 
-import java.util.Date;
 import java.util.Map;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
@@ -29,9 +28,11 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.DataCollectionTarget;
 import org.netxms.websvc.json.ResponseContainer;
 
+/**
+ * Handler for /objects/{object-id}/lastvalues
+ */
 public class LastValues extends AbstractObjectHandler
 {
-
    /* (non-Javadoc)
     * @see org.netxms.websvc.handlers.AbstractHandler#getCollection(java.util.Map)
     */
