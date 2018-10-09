@@ -7940,11 +7940,11 @@ public class NXCSession
       final NXCPMessage response = waitForRCC(msg.getMessageId());
       int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_GRAPHS);
       List<GraphSettings> list = new ArrayList<GraphSettings>(count);
-      long varId = NXCPCodes.VID_GRAPH_LIST_BASE;
+      long fieldId = NXCPCodes.VID_GRAPH_LIST_BASE;
       for(int i = 0; i < count; i++)
       {
-         list.add(GraphSettings.createGraphSettings(response, varId));
-         varId += 10;
+         list.add(GraphSettings.createGraphSettings(response, fieldId));
+         fieldId += 10;
       }
       return list;
    }
@@ -7956,33 +7956,32 @@ public class NXCSession
 	 */
    public GraphFolder getPredefinedGraphsAsTree() throws IOException, NXCException
    {
-       GraphFolder root = new GraphFolder("root", null);
-       List<GraphSettings> settings = getPredefinedGraphs(false);
-      
-       if (settings != null)
-       {
-          Map<String, GraphFolder> folders = new HashMap<String, GraphFolder>();
-          for(int i = 0; i < settings.size(); i++)
-          {
-             String[] path = settings.get(i).getName().split("\\-\\>"); //$NON-NLS-1$
+      GraphFolder root = new GraphFolder("root", null);
+      List<GraphSettings> settings = getPredefinedGraphs(false);
+      if (settings != null)
+      {
+         Map<String, GraphFolder> folders = new HashMap<String, GraphFolder>();
+         for(int i = 0; i < settings.size(); i++)
+         {
+            String[] path = settings.get(i).getName().split("\\-\\>"); //$NON-NLS-1$
 
-             for(int j = 0; j < path.length - 1; j++)
-             {
-                String key = (root == null ? "" : root.hashCode() + "@" ) + path[j].replace("&", ""); //$NON-NLS-1$ //$NON-NLS-2$
-                GraphFolder curr = folders.get(key);
-                if (curr == null)
-                {
-                   curr = new GraphFolder(path[j], root);
-                   folders.put(key, curr);
-              
+            for(int j = 0; j < path.length - 1; j++)
+            {
+               String key = (root == null ? "" : root.hashCode() + "@") + path[j].replace("&", ""); //$NON-NLS-1$ //$NON-NLS-2$
+               GraphFolder curr = folders.get(key);
+               if (curr == null)
+               {
+                  curr = new GraphFolder(path[j], root);
+                  folders.put(key, curr);
+
                   root.addFolder(curr);
-                }
-                root = curr;
-             }
-             root.addGraph(settings.get(i));
-          }
-       }
-       return root;
+               }
+               root = curr;
+            }
+            root.addGraph(settings.get(i));
+         }
+      }
+      return root;
    }
    
   /**

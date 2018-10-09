@@ -138,7 +138,7 @@ public class GraphSettings extends ChartConfig implements ObjectAction
 	 * @param baseId base variable id
 	 * @return The graph settings object
 	 */
-	static public GraphSettings createGraphSettings(final NXCPMessage msg, long baseId)
+   public static GraphSettings createGraphSettings(final NXCPMessage msg, long baseId)
 	{
 	   GraphSettings gs;
       try
@@ -155,16 +155,24 @@ public class GraphSettings extends ChartConfig implements ObjectAction
       gs.flags = (int)msg.getFieldAsInt64(baseId + 2);
       gs.name = msg.getFieldAsString(baseId + 3);
       
-      try
+      String filterXml = msg.getFieldAsString(baseId + 5);
+      if ((filterXml != null) && !filterXml.isEmpty())
       {
-         gs.filter = ObjectMenuFilter.createFromXml(msg.getFieldAsString(baseId + 5));
+         try
+         {
+            gs.filter = ObjectMenuFilter.createFromXml(filterXml);
+         }
+         catch(Exception e)
+         {
+            Logger.debug("GraphSettings.CreateGraphSettings", "Cannot parse ObjectMenuFilter XML: ", e);
+            gs.filter = new ObjectMenuFilter();
+         }
       }
-      catch(Exception e)
+      else
       {
-         Logger.debug("GraphSettings.CreateGraphSettings", "Cannot parse ObjectMenuFilter XML: ", e);
          gs.filter = new ObjectMenuFilter();
       }
-		
+      
 		String[] parts = gs.name.split("->");
 		gs.shortName = (parts.length > 1) ? parts[parts.length - 1] : gs.name;
 		
@@ -180,6 +188,11 @@ public class GraphSettings extends ChartConfig implements ObjectAction
 		return gs;
 	}
 	
+	/**
+	 * Fill NXCP message
+	 * 
+	 * @param msg NXCP message
+	 */
 	public void fillMessage(NXCPMessage msg)
 	{
 	   msg.setFieldInt32(NXCPCodes.VID_GRAPH_ID, (int) id);
@@ -314,5 +327,15 @@ public class GraphSettings extends ChartConfig implements ObjectAction
    public int getToolType()
    {
       return 0;
+   }
+
+   /* (non-Javadoc)
+    * @see java.lang.Object#toString()
+    */
+   @Override
+   public String toString()
+   {
+      return "GraphSettings [id=" + id + ", ownerId=" + ownerId + ", flags=" + flags + ", name=" + name + ", shortName="
+            + shortName + ", accessList=" + accessList + ", filter=" + filter + "]";
    }
 }
