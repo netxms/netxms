@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2017 Raden Solutions
+ * Copyright (C) 2003-2018 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,13 +22,9 @@ import java.util.Map;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.GraphFolder;
 import org.netxms.websvc.json.ResponseContainer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class PredefinedGraphs extends AbstractHandler
 {
-   private Logger log = LoggerFactory.getLogger(GrafanaDataCollection.class);
-
    /*
     * (non-Javadoc)
     * 
