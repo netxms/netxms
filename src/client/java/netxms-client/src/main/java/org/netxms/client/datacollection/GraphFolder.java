@@ -18,8 +18,8 @@
  */
 package org.netxms.client.datacollection;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Virtual folder object for predefined graphs
@@ -27,20 +27,22 @@ import java.util.Set;
 public class GraphFolder
 {
 	private String name;
+	private String displayName;
 	private GraphFolder parent;
-	private Set<GraphFolder> subfolders;
-	private Set<GraphSettings> graphs;
+	private Map<String, GraphFolder> subfolders;
+	private Map<Long, GraphSettings> graphs;
 	
 	/**
 	 * @param name
 	 * @param parent
 	 */
-	public GraphFolder(String name, GraphFolder parent)
+	public GraphFolder(String name)
 	{
 		this.name = name;
-		this.parent = parent;
-		subfolders = new HashSet<GraphFolder>();
-		graphs = new HashSet<GraphSettings>();
+		displayName = name.replace("&", "");
+		this.parent = null;
+		this.subfolders = new HashMap<String, GraphFolder>();
+		this.graphs = new HashMap<Long, GraphSettings>();
 	}
 	
 	/**
@@ -63,6 +65,16 @@ public class GraphFolder
 	}
 
 	/**
+	 * Get display name (name with & shortcut marks removed)
+	 *  
+	 * @return display name
+	 */
+	public String getDisplayName()
+   {
+      return displayName;
+   }
+
+   /**
 	 * Get parent folder
 	 * 
 	 * @return parent folder
@@ -99,9 +111,9 @@ public class GraphFolder
 	{
 		Object[] objects = new Object[subfolders.size() + graphs.size()];
       int index = 0;
-		for(GraphFolder f : subfolders)
+		for(GraphFolder f : subfolders.values())
 		   objects[index++] = f;
-      for(GraphSettings s : graphs)
+      for(GraphSettings s : graphs.values())
          objects[index++] = s;
 		return objects;
 	}
@@ -124,7 +136,7 @@ public class GraphFolder
 	public void addGraph(GraphSettings g)
 	{
 	   g.setParent(this);
-		graphs.add(g);
+		graphs.put(g.getId(), g);
 	}
 	
 	/**
@@ -135,7 +147,74 @@ public class GraphFolder
 	public void addFolder(GraphFolder f)
 	{
 	   f.setParent(this);
-		subfolders.add(f);
+		subfolders.put(f.getDisplayName(), f);
+	}
+	
+	/**
+	 * Update graph recursively
+	 * 
+	 * @param graph graph settings
+	 * @param path prepared path
+	 * @param level current tree level
+	 */
+	private void updateGraphInternal(GraphSettings graph, String[] path, int level)
+	{
+	   if (level == path.length - 1)
+	   {
+	      addGraph(graph);
+	   }
+	   else
+	   {
+	      GraphFolder f = subfolders.get(path[level].replace("&", ""));
+	      if (f == null)
+	      {
+	         f = new GraphFolder(path[level]);
+	         addFolder(f);
+	      }
+	      f.updateGraphInternal(graph, path, level + 1);
+	   }
+	}
+	
+	/**
+	 * Update graph in the tree
+	 * 
+	 * @param graph new graph settings
+	 */
+	public void updateGraph(GraphSettings graph)
+	{
+	   if (parent != null)
+	      return; // should be called only on root
+	   
+	   removeGraph(graph.getId());
+	   
+	   String[] path = graph.getName().split("->");
+	   updateGraphInternal(graph, path, 0);
+	}
+	
+	/**
+	 * Remove graph from the tree. Will also remove any empty folders.
+	 * 
+	 * @param id graph settings ID
+	 * @return true if graph was removed
+	 */
+	public boolean removeGraph(long id)
+	{
+	   if (graphs.remove(id) != null)
+	      return true;
+	   
+	   if (!subfolders.isEmpty())
+	   {
+	      for(GraphFolder f : subfolders.values())
+	      {
+            if (f.removeGraph(id))
+            {
+               if (!f.hasChildren())
+                  subfolders.remove(f.getDisplayName());
+               return true;
+            }
+	      }
+	   }	   
+	   return false;
 	}
 
    /* (non-Javadoc)

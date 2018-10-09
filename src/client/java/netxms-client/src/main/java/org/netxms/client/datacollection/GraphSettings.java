@@ -72,6 +72,7 @@ public class GraphSettings extends ChartConfig implements ObjectAction
 	private int flags;
 	private String name;
 	private String shortName;
+	private String displayName;
 	private List<AccessListElement> accessList;
 	private ObjectMenuFilter filter;
 	private GraphFolder parent;  // Used by predefined graph tree
@@ -86,6 +87,7 @@ public class GraphSettings extends ChartConfig implements ObjectAction
       flags = 0;
 		name = "noname";
 		shortName = "noname";
+      displayName = "noname";
 		accessList = new ArrayList<AccessListElement>(0);
 		filter = new ObjectMenuFilter();
 		parent = null;
@@ -100,6 +102,7 @@ public class GraphSettings extends ChartConfig implements ObjectAction
 		this.ownerId = ownerId;
 		name = "noname";
 		shortName = "noname";
+      displayName = "noname";
 		this.flags = flags;
 		this.accessList = new ArrayList<AccessListElement>(accessList.size());
 		this.accessList.addAll(accessList);
@@ -119,6 +122,7 @@ public class GraphSettings extends ChartConfig implements ObjectAction
       ownerId = src.ownerId;
       this.name = src.name;      
       shortName = src.shortName;
+      displayName = src.displayName;
       flags = src.flags & ~GRAPH_FLAG_TEMPLATE;
       this.accessList = new ArrayList<AccessListElement>(src.accessList.size());
       this.accessList.addAll(src.accessList);
@@ -185,6 +189,7 @@ public class GraphSettings extends ChartConfig implements ObjectAction
       
 		String[] parts = gs.name.split("->");
 		gs.shortName = (parts.length > 1) ? parts[parts.length - 1] : gs.name;
+      gs.displayName = gs.shortName.replace("&", "");
 		
 		int count = msg.getFieldAsInt32(baseId + 6);  // ACL size
 		long[] users = msg.getFieldAsUInt32Array(baseId + 7);
@@ -260,12 +265,24 @@ public class GraphSettings extends ChartConfig implements ObjectAction
 	}
 
 	/**
-	 * @return the shortName
+	 * Get short name (last part of full path separated by ->)
+	 * 
+	 * @return short name
 	 */
 	public String getShortName()
 	{
 		return shortName;
 	}
+
+   /**
+    * Get display name (short name with & shortcut marks removed)
+    * 
+    * @return display name
+    */
+   public String getDisplayName()
+   {
+      return displayName;
+   }
 
 	/**
 	 * @param name the name to set
@@ -275,6 +292,7 @@ public class GraphSettings extends ChartConfig implements ObjectAction
 		this.name = name;
 		String[] parts = name.split("->");
 		shortName = (parts.length > 1) ? parts[parts.length - 1] : name;
+		displayName = shortName.replace("&", "");
 	}
 
    /**

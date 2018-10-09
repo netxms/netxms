@@ -20,6 +20,7 @@ package org.netxms.ui.eclipse.perfview.views.helpers;
 
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
+import org.netxms.client.datacollection.GraphFolder;
 import org.netxms.client.datacollection.GraphSettings;
 import org.netxms.ui.eclipse.perfview.Activator;
 
@@ -32,6 +33,9 @@ public class GraphTreeLabelProvider extends LabelProvider
 	private Image imgFolder;
 	private Image imgGraph;
 	
+	/**
+	 * Constructor
+	 */
 	public GraphTreeLabelProvider()
 	{
 		imgFolder = Activator.getImageDescriptor("icons/folder.png").createImage(); //$NON-NLS-1$
@@ -58,9 +62,9 @@ public class GraphTreeLabelProvider extends LabelProvider
 	public String getText(Object element)
 	{
 		if (element instanceof GraphFolder)
-			return ((GraphFolder)element).getName();
+			return ((GraphFolder)element).getDisplayName();
 		if (element instanceof GraphSettings)
-			return ((GraphSettings)element).getShortName();
+			return ((GraphSettings)element).getDisplayName();
 		return null;
 	}
 

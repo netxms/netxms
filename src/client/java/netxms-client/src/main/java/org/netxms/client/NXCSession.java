@@ -7562,26 +7562,26 @@ public class NXCSession
    }
    
    /**
-	 * @return root graph folder
-    * @throws IOException  if socket or file I/O error occurs
-    * @throws NXCException if NetXMS server returns an error or operation was timed out
-	 */
-   public GraphFolder getPredefinedGraphsAsTree() throws IOException, NXCException
+    * Create graph tree from list
+    * 
+    * @param graphs list of predefined graphs
+    * @return graph tree
+    */
+   public GraphFolder createGraphTree(List<GraphSettings> graphs)
    {
-      GraphFolder root = new GraphFolder("[root]", null);
-      List<GraphSettings> settings = getPredefinedGraphs(false);
+      GraphFolder root = new GraphFolder("[root]");
       Map<String, GraphFolder> folders = new HashMap<String, GraphFolder>();
-      for(GraphSettings s : settings)
+      for(GraphSettings s : graphs)
       {
          GraphFolder folder = root;
-         String[] path = s.getName().split("\\-\\>"); //$NON-NLS-1$
-         for(int j = 0; j < path.length - 1; j++)
+         String[] path = s.getName().split("\\-\\>");
+         for(int i = 0; i < path.length - 1; i++)
          {
-            String key = (root == null ? "" : root.hashCode() + "@") + path[j].replace("&", ""); //$NON-NLS-1$ //$NON-NLS-2$
+            String key = folder.hashCode() + "@" + path[i].replace("&", "");
             GraphFolder curr = folders.get(key);
             if (curr == null)
             {
-               curr = new GraphFolder(path[j], root);
+               curr = new GraphFolder(path[i]);
                folders.put(key, curr);
                folder.addFolder(curr);
             }
@@ -7590,6 +7590,16 @@ public class NXCSession
          folder.addGraph(s);
       }
       return root;
+   }
+   
+   /**
+	 * @return root graph folder
+    * @throws IOException  if socket or file I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+   public GraphFolder getPredefinedGraphsAsTree() throws IOException, NXCException
+   {
+      return createGraphTree(getPredefinedGraphs(false));
    }
    
    /**
