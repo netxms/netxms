@@ -21,7 +21,6 @@ package org.netxms.ui.eclipse.perfview.views;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.Iterator;
-import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.GroupMarker;
@@ -34,12 +33,13 @@ import org.eclipse.jface.commands.ActionHandler;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
-import org.eclipse.jface.viewers.IElementComparer;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TreeViewer;
+import org.eclipse.jface.viewers.Viewer;
+import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
@@ -83,7 +83,8 @@ import org.netxms.ui.eclipse.widgets.FilterText;
 public class PredefinedGraphTree extends ViewPart implements SessionListener
 {
 	public static final String ID = "org.netxms.ui.eclipse.perfview.views.PredefinedGraphTree"; //$NON-NLS-1$
-	
+
+	private GraphFolder root = null;
 	private TreeViewer viewer;
    private FilterText filterText;
    private boolean initShowFilter = true;
@@ -146,31 +147,15 @@ public class PredefinedGraphTree extends ViewPart implements SessionListener
 		viewer.setUseHashlookup(true);
 		viewer.setContentProvider(new GraphTreeContentProvider());
 		viewer.setLabelProvider(new GraphTreeLabelProvider());
-		viewer.setComparer(new IElementComparer() {
+		viewer.setComparator(new ViewerComparator() {
          @Override
-         public int hashCode(Object element)
+         public int compare(Viewer viewer, Object e1, Object e2)
          {
-            if ((element instanceof GraphSettings))
-            {
-               return (int)((GraphSettings)element).getId();
-            }
-            if ((element instanceof GraphFolder))
-            {
-               return ((GraphFolder)element).getName().hashCode();
-            }
-            return element.hashCode();
+            return (e1 instanceof GraphFolder) ?
+                  ((e2 instanceof GraphFolder) ? ((GraphFolder)e1).getDisplayName().compareToIgnoreCase(((GraphFolder)e2).getDisplayName()) : -1) :
+                  ((e2 instanceof GraphSettings) ? ((GraphSettings)e1).getDisplayName().compareToIgnoreCase(((GraphSettings)e2).getDisplayName()) : 1);
          }
-         
-         @Override
-         public boolean equals(Object a, Object b)
-         {
-            if ((a instanceof GraphSettings) && (b instanceof GraphSettings))
-               return ((GraphSettings)a).getId() == ((GraphSettings)b).getId();
-            if ((a instanceof GraphFolder) && (b instanceof GraphFolder))
-               return ((GraphFolder)a).getName().equals(((GraphFolder)b).getName());
-            return a.equals(b);
-         }
-      });		
+		});
 		viewer.addDoubleClickListener(new IDoubleClickListener() {
 			@Override
 			public void doubleClick(DoubleClickEvent event)
@@ -290,6 +275,13 @@ public class PredefinedGraphTree extends ViewPart implements SessionListener
 					if (o instanceof GraphSettings)
 					{
 						showPredefinedGraph((GraphSettings)o);
+					}
+					else if (o instanceof GraphFolder)
+					{
+					   if (viewer.getExpandedState(o))
+					      viewer.collapseToLevel(o, TreeViewer.ALL_LEVELS);
+					   else
+					      viewer.expandToLevel(o, 1);
 					}
 				}
 			}
@@ -423,11 +415,12 @@ public class PredefinedGraphTree extends ViewPart implements SessionListener
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				final GraphFolder root = session.getPredefinedGraphsAsTree();
+				final GraphFolder graphs = session.getPredefinedGraphsAsTree();
 				runInUIThread(new Runnable() {
 					@Override
 					public void run()
 					{
+					   root = graphs;
 						viewer.setInput(root);
 					}
 				});
@@ -554,19 +547,11 @@ public class PredefinedGraphTree extends ViewPart implements SessionListener
       {
          case SessionNotification.PREDEFINED_GRAPHS_DELETED:
             viewer.getControl().getDisplay().asyncExec(new Runnable() {
-               @SuppressWarnings("unchecked")
                @Override
                public void run()
                {
-                  List<GraphSettings> list = (List<GraphSettings>)viewer.getInput();    
-                  for(int i = 0; i < list.size(); i++)
-                     if(list.get(i).getId() == n.getSubCode())
-                     {
-                        Object o = list.get(i);
-                        list.remove(o);
-                        viewer.refresh();
-                        break;
-                     }
+                  if (root.removeGraph(n.getSubCode()))
+                     viewer.refresh();
                }
             });
             break;
@@ -575,29 +560,12 @@ public class PredefinedGraphTree extends ViewPart implements SessionListener
                return;
             
             viewer.getControl().getDisplay().asyncExec(new Runnable() {
-               @SuppressWarnings("unchecked")
                @Override
                public void run()
                {
                   final IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();  
                   
-                  final List<GraphSettings> list = (List<GraphSettings>)viewer.getInput();       
-                  boolean objectUpdated = false;
-                  for(int i = 0; i < list.size(); i++)
-                  {
-                     if (list.get(i).getId() == n.getSubCode())
-                     {
-                        list.set(i, (GraphSettings)n.getObject());
-                        objectUpdated = true;
-                        break;
-                     }
-                  }
-                  
-                  if (!objectUpdated)
-                  {
-                     list.add((GraphSettings)n.getObject());
-                     viewer.setInput(list);
-                  }
+                  root.updateGraph((GraphSettings)n.getObject());
                   viewer.refresh();
                   
                   if ((selection.size() == 1) && (selection.getFirstElement() instanceof GraphSettings))
