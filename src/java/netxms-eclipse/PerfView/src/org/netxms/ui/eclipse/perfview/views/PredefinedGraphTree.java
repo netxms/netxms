@@ -150,11 +150,11 @@ public class PredefinedGraphTree extends ViewPart implements SessionListener
          @Override
          public int hashCode(Object element)
          {
-            if((element instanceof GraphSettings))
+            if ((element instanceof GraphSettings))
             {
                return (int)((GraphSettings)element).getId();
             }
-            if((element instanceof GraphFolder))
+            if ((element instanceof GraphFolder))
             {
                return ((GraphFolder)element).getName().hashCode();
             }
@@ -231,7 +231,9 @@ public class PredefinedGraphTree extends ViewPart implements SessionListener
          enableFilter(false); // Will hide filter area correctly
 	}
 
-
+   /* (non-Javadoc)
+    * @see org.eclipse.ui.part.WorkbenchPart#dispose()
+    */
    @Override
    public void dispose()
    {
@@ -240,7 +242,6 @@ public class PredefinedGraphTree extends ViewPart implements SessionListener
       super.dispose();
    }
 
-	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
 	 */
@@ -422,12 +423,12 @@ public class PredefinedGraphTree extends ViewPart implements SessionListener
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				final List<GraphSettings> list = session.getPredefinedGraphs(false);
+				final GraphFolder root = session.getPredefinedGraphsAsTree();
 				runInUIThread(new Runnable() {
 					@Override
 					public void run()
 					{
-						viewer.setInput(list);
+						viewer.setInput(root);
 					}
 				});
 			}

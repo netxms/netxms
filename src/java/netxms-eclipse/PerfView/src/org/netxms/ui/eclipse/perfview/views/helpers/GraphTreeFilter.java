@@ -52,7 +52,7 @@ public class GraphTreeFilter extends ViewerFilter
       
       if (element instanceof GraphFolder)
       {
-         for(Object o : ((GraphFolder)element).getChildObjects())
+         for(Object o : ((GraphFolder)element).getChildren())
          {
             if (select(viewer, element, o))
                return true;

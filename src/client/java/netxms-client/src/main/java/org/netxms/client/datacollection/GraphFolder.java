@@ -18,20 +18,18 @@
  */
 package org.netxms.client.datacollection;
 
-import java.util.ArrayList;
-import java.util.List;
-import org.netxms.client.datacollection.GraphSettings;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Virtual folder object for predefined graphs
- *
  */
 public class GraphFolder
 {
 	private String name;
 	private GraphFolder parent;
-	private List<GraphFolder> subfolders;
-	private List<GraphSettings> graphs;
+	private Set<GraphFolder> subfolders;
+	private Set<GraphSettings> graphs;
 	
 	/**
 	 * @param name
@@ -41,10 +39,13 @@ public class GraphFolder
 	{
 		this.name = name;
 		this.parent = parent;
-		subfolders = new ArrayList<GraphFolder>();
-		graphs = new ArrayList<GraphSettings>();
+		subfolders = new HashSet<GraphFolder>();
+		graphs = new HashSet<GraphSettings>();
 	}
 	
+	/**
+	 * Clear folder (remove all children)
+	 */
 	public void clear()
 	{
 	   subfolders.clear();
@@ -52,7 +53,9 @@ public class GraphFolder
 	}
 
 	/**
-	 * @return the name
+	 * Get folder name
+	 * 
+	 * @return folder name
 	 */
 	public String getName()
 	{
@@ -60,7 +63,9 @@ public class GraphFolder
 	}
 
 	/**
-	 * @return the parent
+	 * Get parent folder
+	 * 
+	 * @return parent folder
 	 */
 	public GraphFolder getParent()
 	{
@@ -68,6 +73,16 @@ public class GraphFolder
 	}
 	
 	/**
+	 * Set parent folder
+	 * 
+	 * @param parent new parent folder
+	 */
+	public void setParent(GraphFolder parent)
+   {
+      this.parent = parent;
+   }
+
+   /**
 	 * @return true if folder has parent
 	 */ 
 	public boolean hasParent()
@@ -80,14 +95,14 @@ public class GraphFolder
 	 * 
 	 * @return array of all child objects
 	 */
-	public Object[] getChildObjects()
+	public Object[] getChildren()
 	{
 		Object[] objects = new Object[subfolders.size() + graphs.size()];
-		int index = 0;
-		for(int i = 0; i < subfolders.size(); i++)
-			objects[index++] = subfolders.get(i);
-		for(int i = 0; i < graphs.size(); i++)
-			objects[index++] = graphs.get(i);
+      int index = 0;
+		for(GraphFolder f : subfolders)
+		   objects[index++] = f;
+      for(GraphSettings s : graphs)
+         objects[index++] = s;
 		return objects;
 	}
 
@@ -98,24 +113,37 @@ public class GraphFolder
 	 */
 	public boolean hasChildren()
 	{
-		return (subfolders.size() > 0) || (graphs.size() > 0);
+		return !subfolders.isEmpty() || !graphs.isEmpty();
 	}
 	
 	/**
 	 * Add graph to folder
+	 * 
 	 * @param g graph to add
 	 */
 	public void addGraph(GraphSettings g)
 	{
+	   g.setParent(this);
 		graphs.add(g);
 	}
 	
 	/**
-	 * Add subfolder
-	 * @param f subfolder
+	 * Add sub-folder
+	 * 
+	 * @param f sub-folder
 	 */
 	public void addFolder(GraphFolder f)
 	{
+	   f.setParent(this);
 		subfolders.add(f);
 	}
+
+   /* (non-Javadoc)
+    * @see java.lang.Object#toString()
+    */
+   @Override
+   public String toString()
+   {
+      return "GraphFolder [name=" + name + ", subfolders=" + subfolders + ", graphs=" + graphs + "]";
+   }
 }

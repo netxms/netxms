@@ -74,6 +74,7 @@ public class GraphSettings extends ChartConfig implements ObjectAction
 	private String shortName;
 	private List<AccessListElement> accessList;
 	private ObjectMenuFilter filter;
+	private GraphFolder parent;  // Used by predefined graph tree
 	
 	/**
 	 * Create default settings
@@ -87,6 +88,7 @@ public class GraphSettings extends ChartConfig implements ObjectAction
 		shortName = "noname";
 		accessList = new ArrayList<AccessListElement>(0);
 		filter = new ObjectMenuFilter();
+		parent = null;
 	}
 	
 	/**
@@ -102,20 +104,28 @@ public class GraphSettings extends ChartConfig implements ObjectAction
 		this.accessList = new ArrayList<AccessListElement>(accessList.size());
 		this.accessList.addAll(accessList);
       filter = new ObjectMenuFilter();
+      parent = null;
 	}
 	
-   public GraphSettings(GraphSettings data, String name)
+   /**
+    * Create copy of provided settings
+    * 
+    * @param src source object
+    * @param name new name
+    */
+   public GraphSettings(GraphSettings src, String name)
    {
-      id = data.id;
-      ownerId = data.ownerId;
-      this.name = data.name;      
-      shortName = data.shortName;
-      flags = data.flags & ~GRAPH_FLAG_TEMPLATE;
-      this.accessList = new ArrayList<AccessListElement>(data.accessList.size());
-      this.accessList.addAll(data.accessList);
-      filter = data.filter;
-      setConfig(data);
+      id = src.id;
+      ownerId = src.ownerId;
+      this.name = src.name;      
+      shortName = src.shortName;
+      flags = src.flags & ~GRAPH_FLAG_TEMPLATE;
+      this.accessList = new ArrayList<AccessListElement>(src.accessList.size());
+      this.accessList.addAll(src.accessList);
+      filter = src.filter;
+      setConfig(src);
       setTitle(name);
+      parent = null;
    }
 
    /**
@@ -291,6 +301,26 @@ public class GraphSettings extends ChartConfig implements ObjectAction
    public boolean isTemplate()
    {
       return (flags & GRAPH_FLAG_TEMPLATE) > 0;
+   }
+
+   /**
+    * Get parent folder
+    * 
+    * @return parent folder
+    */
+   public GraphFolder getParent()
+   {
+      return parent;
+   }
+
+   /**
+    * Set parent folder
+    * 
+    * @param parent new parent folder
+    */
+   public void setParent(GraphFolder parent)
+   {
+      this.parent = parent;
    }
 
    /* (non-Javadoc)

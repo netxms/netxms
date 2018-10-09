@@ -20,6 +20,7 @@ package org.netxms.ui.eclipse.perfview.views.helpers;
 
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
+import org.netxms.client.datacollection.GraphFolder;
 import org.netxms.client.datacollection.GraphSettings;
 
 /**
@@ -51,7 +52,7 @@ public class GraphTreeFilter extends ViewerFilter
       
       if (element instanceof GraphFolder)
       {
-         for(Object o : ((GraphFolder)element).getChildObjects())
+         for(Object o : ((GraphFolder)element).getChildren())
          {
             if (select(viewer, element, o))
                return true;
