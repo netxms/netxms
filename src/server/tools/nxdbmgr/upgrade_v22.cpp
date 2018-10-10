@@ -37,7 +37,7 @@ static bool H_UpgradeFromV38()
    }
 
    CHK_EXEC(SQLQuery(_T("UPDATE config SET var_name='LdapUserMappingName' WHERE var_name='LdapMappingName'")));
-   CHK_EXEC(CreateConfigParam(_T("LdapGroupMappingName"), _T(""), _T("The name of an attribute whose value will be used as a group''s login name."), NULL, 'S', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(_T("LdapGroupMappingName"), _T(""), _T("The name of an attribute whose value will be used as a group''s login name."), 'S', true, false, false, false));
 
    DB_STATEMENT hStmt = DBPrepare(g_dbHandle, _T("UPDATE config SET var_value=? WHERE var_name='LdapGroupMappingName'"));
    if (hStmt != NULL)
