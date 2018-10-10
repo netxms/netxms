@@ -24,6 +24,42 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 30.49 to 30.50 (changes also included into 22.39)
+ */
+static bool H_UpgradeFromV49()
+{
+   if (GetSchemaLevelForMajorVersion(22) < 39)
+   {
+      TCHAR tmp[MAX_CONFIG_VALUE] = _T("");
+      DB_RESULT hResult = DBSelect(g_dbHandle, _T("SELECT var_value from config WHERE var_name='LdapMappingName'"));
+      if (hResult != NULL)
+      {
+         if(DBGetNumRows(hResult) > 0)
+            DBGetField(hResult, 0, 0, tmp, MAX_CONFIG_VALUE);
+      }
+
+      CHK_EXEC(SQLQuery(_T("UPDATE config SET var_name='LdapUserMappingName' WHERE var_name='LdapMappingName'")));
+      CHK_EXEC(CreateConfigParam(_T("LdapGroupMappingName"), _T(""), _T("The name of an attribute whose value will be used as a group''s login name."), NULL, 'S', true, true, false, false));
+
+      DB_STATEMENT hStmt = DBPrepare(g_dbHandle, _T("UPDATE config SET var_value=? WHERE var_name='LdapGroupMappingName'"));
+      if (hStmt != NULL)
+      {
+         DBBind(hStmt, 1, DB_SQLTYPE_TEXT, tmp, DB_BIND_STATIC);
+         CHK_EXEC(DBExecute(hStmt));
+      }
+      else
+      {
+         if (!g_ignoreErrors)
+            return false;
+      }
+
+      CHK_EXEC(SetSchemaLevelForMajorVersion(22, 39));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(50));
+   return true;
+}
+
+/**
  * Upgrade from 30.48 to 30.49 (changes also included into 22.38)
  */
 static bool H_UpgradeFromV48()
@@ -1722,6 +1758,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 49, 30, 50, H_UpgradeFromV49 },
    { 48, 30, 49, H_UpgradeFromV48 },
    { 47, 30, 48, H_UpgradeFromV47 },
    { 46, 30, 47, H_UpgradeFromV46 },

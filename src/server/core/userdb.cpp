@@ -820,19 +820,45 @@ void RemoveDeletedLDAPEntries(StringObjectMap<Entry> *entryListDn, StringObjectM
 }
 
 /**
- * Synchronize new user list with old user list of given group. Note: LDAP user will not be changed.
+ * Synchronize new user/group list with old user/group list of given group.
+ * Note: none LDAP users and groups will not be changed.
  */
-static void SyncGroupMembers(Group *group, Entry *obj)
+void SyncLDAPGroupMembers(const TCHAR *dn, Entry *obj)
 {
-   DbgPrintf(4, _T("SyncGroupMembers(): Sync for LDAP group: %s"), group->getDn());
+   // Check existing user/group with same DN
+   UserDatabaseObject *object = NULL;
+   RWLockWriteLock(s_userDatabaseLock, INFINITE);
+
+   if(obj->m_id != NULL)
+      object = s_ldapGroupId.get(obj->m_id);
+   else
+      object = s_ldapNames.get(dn);
+
+   if ((object != NULL) && !object->isGroup())
+   {
+      DbgPrintf(4, _T("SyncGroupMembers(): Ignore LDAP object: %s"), dn);
+      RWLockUnlock(s_userDatabaseLock);
+      return;
+   }
+
+   if (object == NULL)
+   {
+      DbgPrintf(4, _T("SyncGroupMembers(): Unable to find LDAP object: %s"), dn);
+      RWLockUnlock(s_userDatabaseLock);
+      return;
+   }
+
+   Group *group = (Group *)object;
+
+   DbgPrintf(4, _T("SyncGroupMembers(): Sync for LDAP group: %s"), dn);
 
    StringSet *newMembers = obj->m_memberList;
    UINT32 *oldMembers = NULL;
    int count = group->getMembers(&oldMembers);
 
    /**
-    * Go through existing group member list checking each LDAP user by DN
-    * with new gotten group member list and removing LDAP users not existing in last list.
+    * Go through existing group member list checking each LDAP user/group by DN
+    * with new gotten group member list and removing LDAP users/groups not existing in last list.
     */
    for(int i = 0; i < count; i++)
    {
@@ -850,8 +876,8 @@ static void SyncGroupMembers(Group *group, Entry *obj)
    }
 
    /**
-    * Go through new gotten group member list checking each LDAP user by DN
-    * with existing group member list and adding users not existing in last list.
+    * Go through new gotten group member list checking each LDAP user/group by DN
+    * with existing group member list and adding users/groups not existing in last list.
     */
    Iterator<const TCHAR> *it = newMembers->iterator();
    while(it->hasNext())
@@ -868,6 +894,7 @@ static void SyncGroupMembers(Group *group, Entry *obj)
       }
    }
    delete it;
+   RWLockUnlock(s_userDatabaseLock);
 }
 
 /**
@@ -877,7 +904,7 @@ void UpdateLDAPGroup(const TCHAR *dn, Entry *obj) //no full name, add users insi
 {
    RWLockWriteLock(s_userDatabaseLock, INFINITE);
 
-   bool userModified = false;
+   bool groupModified = false;
    bool conflict = false;
    TCHAR description[1024];
    TCHAR guid[64];
@@ -891,7 +918,7 @@ void UpdateLDAPGroup(const TCHAR *dn, Entry *obj) //no full name, add users insi
       object = s_ldapNames.get(dn);
    if ((object != NULL) && !object->isGroup())
    {
-      _sntprintf(description, MAX_USER_DESCR, _T("Got group with DN=%s but found existing group %s with same DN"), dn, object->getName());
+      _sntprintf(description, MAX_USER_DESCR, _T("Got group with DN=%s but found existing user %s with same DN"), dn, object->getName());
       object->getGuidAsText(guid);
       PostEvent(EVENT_LDAP_SYNC_ERROR ,g_dwMgmtNode, "issss", object->getId(), guid, object->getDn(), object->getName(), description);
       DbgPrintf(4,  _T("UpdateLDAPGroup(): %s"), description);
@@ -940,12 +967,11 @@ void UpdateLDAPGroup(const TCHAR *dn, Entry *obj) //no full name, add users insi
          {
             SendUserDBUpdate(USER_DB_MODIFY, group->getId(), group);
          }
-         SyncGroupMembers(group , obj);
       }
-      userModified = true;
+      groupModified = true;
    }
 
-   if (!userModified)
+   if (!groupModified)
    {
       if (GroupNameIsUnique(obj->m_loginName, NULL))
       {
@@ -957,7 +983,6 @@ void UpdateLDAPGroup(const TCHAR *dn, Entry *obj) //no full name, add users insi
             group->setLdapId(obj->m_id);
          SendUserDBUpdate(USER_DB_CREATE, group->getId(), group);
          AddDatabaseObject(group);
-         SyncGroupMembers(group , obj);
          DbgPrintf(4, _T("UpdateLDAPGroup(): Group added: ID: %s DN: %s, login name: %s, description: %s"), CHECK_NULL(obj->m_id), dn, obj->m_loginName, CHECK_NULL(obj->m_description));
       }
       else
@@ -974,7 +999,6 @@ void UpdateLDAPGroup(const TCHAR *dn, Entry *obj) //no full name, add users insi
             group->setLdapId(obj->m_id);
          SendUserDBUpdate(USER_DB_CREATE, group->getId(), group);
          AddDatabaseObject(group);
-         SyncGroupMembers(group , obj);
          group->getGuidAsText(guid);
          PostEvent(EVENT_LDAP_SYNC_ERROR ,g_dwMgmtNode, "issss", group->getId(), guid, group->getDn(), group->getName(), description);
          DbgPrintf(4, _T("UpdateLDAPGroup(): Group added: ID: %s DN: %s, login name: %s, description: %s"), CHECK_NULL(obj->m_id), dn, obj->m_loginName, CHECK_NULL(obj->m_description));

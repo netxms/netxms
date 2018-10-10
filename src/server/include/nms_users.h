@@ -115,7 +115,8 @@ private:
    LDAP_CHAR m_userDN[MAX_CONFIG_VALUE];
    LDAP_CHAR m_userPassword[MAX_PASSWORD];
    char m_ldapFullNameAttr[MAX_CONFIG_VALUE];
-   char m_ldapLoginNameAttr[MAX_CONFIG_VALUE];
+   char m_ldapUserLoginNameAttr[MAX_CONFIG_VALUE];
+   char m_ldapGroupLoginNameAttr[MAX_CONFIG_VALUE];
    char m_ldapDescriptionAttr[MAX_CONFIG_VALUE];
    char m_ldapUsreIdAttr[MAX_CONFIG_VALUE];
    char m_ldapGroupIdAttr[MAX_CONFIG_VALUE];
@@ -435,6 +436,7 @@ TCHAR NXCORE_EXPORTABLE *ResolveUserId(UINT32 id, TCHAR *buffer, bool noFail = f
 void UpdateLDAPUser(const TCHAR* dn, Entry *obj);
 void RemoveDeletedLDAPEntries(StringObjectMap<Entry> *entryListDn, StringObjectMap<Entry> *entryListId, UINT32 m_action, bool isUser);
 void UpdateLDAPGroup(const TCHAR* dn, Entry *obj);
+void SyncLDAPGroupMembers(const TCHAR *dn, Entry *obj);
 THREAD_RESULT THREAD_CALL SyncLDAPUsers(void *arg);
 void FillGroupMembershipInfo(NXCPMessage *msg, UINT32 userId);
 void UpdateGroupMembership(UINT32 userId, int numGroups, UINT32 *groups);
