@@ -283,7 +283,8 @@ void LDAPConnection::getAllSyncParameters()
 #endif // UNICODE
 
 #endif //win32
-   ConfigReadStrUTF8(_T("LdapMappingName"), m_ldapLoginNameAttr, MAX_CONFIG_VALUE, "");
+   ConfigReadStrUTF8(_T("LdapUserMappingName"), m_ldapUserLoginNameAttr, MAX_CONFIG_VALUE, "");
+   ConfigReadStrUTF8(_T("LdapGroupMappingName"), m_ldapGroupLoginNameAttr, MAX_CONFIG_VALUE, "");
    ConfigReadStrUTF8(_T("LdapMappingFullName"), m_ldapFullNameAttr, MAX_CONFIG_VALUE, "");
    ConfigReadStrUTF8(_T("LdapMappingDescription"), m_ldapDescriptionAttr, MAX_CONFIG_VALUE, "");
    ConfigReadStrUTF8(_T("LdapUserUniqueId"), m_ldapUsreIdAttr, MAX_CONFIG_VALUE, "");
@@ -563,7 +564,11 @@ void LDAPConnection::fillLists(LDAPMessage *searchResult)
          {
             newObj->m_fullName = getAttrValue(entry, attribute);
          }
-         if (!strcmp(attribute, m_ldapLoginNameAttr))
+         if (!strcmp(attribute, m_ldapUserLoginNameAttr) && newObj->m_type == LDAP_USER)
+         {
+            newObj->m_loginName = getAttrValue(entry, attribute);
+         }
+         if (!strcmp(attribute, m_ldapGroupLoginNameAttr) && newObj->m_type == LDAP_GROUP)
          {
             newObj->m_loginName = getAttrValue(entry, attribute);
          }
@@ -835,12 +840,22 @@ static EnumerationCallbackResult UpdateGroupCallback(const TCHAR *key, const voi
 }
 
 /**
+ * Update group callback
+ */
+static EnumerationCallbackResult SyncGroupMembersCallback(const TCHAR *key, const void *value, void *data)
+{
+   SyncLDAPGroupMembers(key, (Entry *)value);
+   return _CONTINUE;
+}
+
+/**
  * Updates group list according to newly recievd user list
  */
 void LDAPConnection::compareGroupList()
 {
    groupDnEntryList->forEach(UpdateGroupCallback, NULL);
    RemoveDeletedLDAPEntries(groupDnEntryList, groupIdEntryList, m_action, false);
+   groupDnEntryList->forEach(SyncGroupMembersCallback, NULL);
 }
 
 /**
