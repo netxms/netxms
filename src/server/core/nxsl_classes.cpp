@@ -310,6 +310,32 @@ NXSL_Value *NXSL_NetObjClass::getAttr(NXSL_Object *_object, const char *attr)
 }
 
 /**
+ * readInternalParameter(name) method
+ */
+NXSL_METHOD_DEFINITION(DataCollectionTarget, readInternalParameter)
+{
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   DataCollectionTarget *dct = static_cast<DataCollectionTarget*>(object->getData());
+
+   TCHAR value[MAX_RESULT_LENGTH];
+   DataCollectionError rc = dct->getInternalItem(argv[0]->getValueAsCString(), MAX_RESULT_LENGTH, value);
+   *result = (rc == DCE_SUCCESS) ? object->vm()->createValue(value) : object->vm()->createValue();
+   return 0;
+}
+
+/**
+ * NXSL class DataCollectionTarget: constructor
+ */
+NXSL_DCTargetClass::NXSL_DCTargetClass() : NXSL_NetObjClass()
+{
+   setName(_T("DataCollectionTarget"));
+
+   NXSL_REGISTER_METHOD(DataCollectionTarget, readInternalParameter, 1);
+}
+
+/**
  * NXSL class Zone: constructor
  */
 NXSL_ZoneClass::NXSL_ZoneClass() : NXSL_NetObjClass()
@@ -433,7 +459,7 @@ NXSL_METHOD_DEFINITION(Node, enableTopologyPolling)
 /**
  * NXSL class Node: constructor
  */
-NXSL_NodeClass::NXSL_NodeClass() : NXSL_NetObjClass()
+NXSL_NodeClass::NXSL_NodeClass() : NXSL_DCTargetClass()
 {
    setName(_T("Node"));
 
@@ -452,7 +478,7 @@ NXSL_NodeClass::NXSL_NodeClass() : NXSL_NetObjClass()
  */
 NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const char *attr)
 {
-   NXSL_Value *value = NXSL_NetObjClass::getAttr(object, attr);
+   NXSL_Value *value = NXSL_DCTargetClass::getAttr(object, attr);
    if (value != NULL)
       return value;
 
@@ -925,7 +951,7 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *object, const char *attr)
 /**
  * NXSL class Mobile Device: constructor
  */
-NXSL_MobileDeviceClass::NXSL_MobileDeviceClass() : NXSL_NetObjClass()
+NXSL_MobileDeviceClass::NXSL_MobileDeviceClass() : NXSL_DCTargetClass()
 {
    setName(_T("MobileDevice"));
 }
@@ -935,7 +961,7 @@ NXSL_MobileDeviceClass::NXSL_MobileDeviceClass() : NXSL_NetObjClass()
  */
 NXSL_Value *NXSL_MobileDeviceClass::getAttr(NXSL_Object *object, const char *attr)
 {
-   NXSL_Value *value = NXSL_NetObjClass::getAttr(object, attr);
+   NXSL_Value *value = NXSL_DCTargetClass::getAttr(object, attr);
    if (value != NULL)
       return value;
 
@@ -1067,7 +1093,7 @@ NXSL_METHOD_DEFINITION(Cluster, getResourceOwner)
 /**
  * NXSL class "Cluster" constructor
  */
-NXSL_ClusterClass::NXSL_ClusterClass() : NXSL_NetObjClass()
+NXSL_ClusterClass::NXSL_ClusterClass() : NXSL_DCTargetClass()
 {
    setName(_T("Cluster"));
 
@@ -1079,7 +1105,7 @@ NXSL_ClusterClass::NXSL_ClusterClass() : NXSL_NetObjClass()
  */
 NXSL_Value *NXSL_ClusterClass::getAttr(NXSL_Object *object, const char *attr)
 {
-   NXSL_Value *value = NXSL_NetObjClass::getAttr(object, attr);
+   NXSL_Value *value = NXSL_DCTargetClass::getAttr(object, attr);
    if (value != NULL)
       return value;
 
@@ -1576,7 +1602,7 @@ NXSL_Value *NXSL_DciClass::getAttr(NXSL_Object *object, const char *attr)
 /**
  * Implementation of "Sensor" class: constructor
  */
-NXSL_SensorClass::NXSL_SensorClass() : NXSL_NetObjClass()
+NXSL_SensorClass::NXSL_SensorClass() : NXSL_DCTargetClass()
 {
    setName(_T("Sensor"));
 }
@@ -1586,7 +1612,7 @@ NXSL_SensorClass::NXSL_SensorClass() : NXSL_NetObjClass()
  */
 NXSL_Value *NXSL_SensorClass::getAttr(NXSL_Object *object, const char *attr)
 {
-   NXSL_Value *value = NXSL_NetObjClass::getAttr(object, attr);
+   NXSL_Value *value = NXSL_DCTargetClass::getAttr(object, attr);
    if (value != NULL)
       return value;
 

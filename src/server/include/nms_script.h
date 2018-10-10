@@ -38,9 +38,18 @@ public:
 };
 
 /**
+ * NXSL "DataCollectionTarget" class
+ */
+class NXSL_DCTargetClass : public NXSL_NetObjClass
+{
+public:
+   NXSL_DCTargetClass();
+};
+
+/**
  * NXSL "Node" class
  */
-class NXSL_NodeClass : public NXSL_NetObjClass
+class NXSL_NodeClass : public NXSL_DCTargetClass
 {
 public:
    NXSL_NodeClass();
@@ -62,7 +71,7 @@ public:
 /**
  * NXSL "MobileDevice" class
  */
-class NXSL_MobileDeviceClass : public NXSL_NetObjClass
+class NXSL_MobileDeviceClass : public NXSL_DCTargetClass
 {
 public:
    NXSL_MobileDeviceClass();
@@ -84,7 +93,7 @@ public:
 /**
  * NXSL "Cluster" class
  */
-class NXSL_ClusterClass : public NXSL_NetObjClass
+class NXSL_ClusterClass : public NXSL_DCTargetClass
 {
 public:
    NXSL_ClusterClass();
@@ -110,6 +119,17 @@ class NXSL_ZoneClass : public NXSL_NetObjClass
 {
 public:
    NXSL_ZoneClass();
+
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr);
+};
+
+/**
+ * NXSL "Sensor" class
+ */
+class NXSL_SensorClass : public NXSL_DCTargetClass
+{
+public:
+   NXSL_SensorClass();
 
    virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr);
 };
@@ -147,17 +167,6 @@ public:
 
    virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr);
    virtual void onObjectDelete(NXSL_Object *object);
-};
-
-/**
- * NXSL "Sensor" class
- */
-class NXSL_SensorClass : public NXSL_NetObjClass
-{
-public:
-   NXSL_SensorClass();
-
-   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr);
 };
 
 /**
