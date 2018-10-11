@@ -586,6 +586,14 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const char *attr)
    {
       value = vm->createValue((INT64)node->getLastAgentCommTime());
    }
+   else if (!strcmp(attr, "nodeSubType"))
+   {
+      value = vm->createValue(node->getSubType());
+   }
+   else if (!strcmp(attr, "nodeType"))
+   {
+      value = vm->createValue((INT32)node->getType());
+   }
    else if (!strcmp(attr, "platformName"))
    {
       value = vm->createValue(node->getPlatformName());
@@ -638,17 +646,9 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const char *attr)
    {
       value = vm->createValue((LONG)node->getSNMPVersion());
    }
-   else if (!strcmp(attr, "subType"))
-   {
-      value = vm->createValue(node->getSubType());
-   }
    else if (!strcmp(attr, "sysDescription"))
    {
       value = vm->createValue(node->getSysDescription());
-   }
-   else if (!strcmp(attr, "type"))
-   {
-      value = vm->createValue((INT32)node->getType());
    }
    else if (!strcmp(attr, "zone"))
 	{
