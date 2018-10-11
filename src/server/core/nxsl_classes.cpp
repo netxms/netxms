@@ -563,11 +563,11 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const TCHAR *attr)
    }
    else if (!_tcscmp(attr, _T("nodeSubType")))
    {
-      value = vm->createValue(node->getSubType());
+      value = new NXSL_Value(node->getSubType());
    }
    else if (!_tcscmp(attr, _T("nodeType")))
    {
-      value = vm->createValue((INT32)node->getType());
+      value = new NXSL_Value((INT32)node->getType());
    }
    else if (!_tcscmp(attr, _T("platformName")))
    {
