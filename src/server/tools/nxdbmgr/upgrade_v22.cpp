@@ -52,7 +52,8 @@ static bool H_UpgradeFromV38()
    if (hStmt != NULL)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_TEXT, tmp, DB_BIND_STATIC);
-      CHK_EXEC(DBExecute(hStmt));
+      CHK_EXEC(SQLExecute(hStmt));
+      DBFreeStatement(hStmt);
    }
    else
    {
