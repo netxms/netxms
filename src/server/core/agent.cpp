@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -778,11 +778,25 @@ UINT32 AgentConnectionEx::processBulkCollectedData(NXCPMessage *request, NXCPMes
       count = MAX_BULK_DATA_BLOCK_SIZE;
    debugPrintf(5, _T("AgentConnectionEx::processBulkCollectedData: %d elements from node %s [%d]"), count, node->getName(), node->getId());
 
+   // Use half timeout for sending progress updates
+   UINT32 agentTimeout = request->getFieldAsUInt32(VID_TIMEOUT) / 2;
+
    BYTE status[MAX_BULK_DATA_BLOCK_SIZE];
    memset(status, 0, MAX_BULK_DATA_BLOCK_SIZE);
    UINT32 fieldId = VID_ELEMENT_LIST_BASE;
+   INT64 startTime = GetCurrentTimeMs();
    for(int i = 0; i < count; i++, fieldId += 10)
    {
+      UINT32 elapsed = static_cast<UINT32>(GetCurrentTimeMs() - startTime);
+      if ((agentTimeout > 0) && (elapsed >= agentTimeout)) // agent timeout 0 means that agent will not understand processing notifications
+      {
+         NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId(), getProtocolVersion());
+         msg.setField(VID_RCC, ERR_PROCESSING);
+         msg.setField(VID_PROGRESS, i * 100 / count);
+         postRawMessage(msg.serialize(isCompressionAllowed()));
+         startTime = GetCurrentTimeMs();
+      }
+
       int origin = request->getFieldAsInt16(fieldId + 1);
       if ((origin != DS_NATIVE_AGENT) && (origin != DS_SNMP_AGENT))
       {

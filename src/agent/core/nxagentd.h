@@ -380,6 +380,7 @@ public:
 	virtual bool sendFile(UINT32 requestId, const TCHAR *file, long offset, bool allowCompression, VolatileCounter *cancellationFlag);
    virtual UINT32 doRequest(NXCPMessage *msg, UINT32 timeout);
    virtual NXCPMessage *doRequestEx(NXCPMessage *msg, UINT32 timeout);
+   virtual NXCPMessage *waitForMessage(UINT16 code, UINT32 id, UINT32 timeout);
    virtual UINT32 generateRequestId();
 
    virtual UINT32 getId() { return m_id; };
@@ -441,6 +442,7 @@ public:
    virtual bool sendFile(UINT32 requestId, const TCHAR *file, long offset, bool allowCompression, VolatileCounter *cancelationFlag) { return false; }
    virtual UINT32 doRequest(NXCPMessage *msg, UINT32 timeout) { return RCC_NOT_IMPLEMENTED; }
    virtual NXCPMessage *doRequestEx(NXCPMessage *msg, UINT32 timeout) { return NULL; }
+   virtual NXCPMessage *waitForMessage(UINT16 code, UINT32 id, UINT32 timeout) { return NULL; }
    virtual UINT32 generateRequestId() { return 0; }
    virtual UINT32 openFile(TCHAR *fileName, UINT32 requestId, time_t fileModTime = 0) { return ERR_INTERNAL_ERROR; }
    virtual void debugPrintf(int level, const TCHAR *format, ...);
@@ -487,6 +489,7 @@ public:
    virtual bool sendFile(UINT32 requestId, const TCHAR *file, long offset, bool allowCompression, VolatileCounter *cancelationFlag) { return false; }
    virtual UINT32 doRequest(NXCPMessage *msg, UINT32 timeout) { return RCC_NOT_IMPLEMENTED; }
    virtual NXCPMessage *doRequestEx(NXCPMessage *msg, UINT32 timeout) { return NULL; }
+   virtual NXCPMessage *waitForMessage(UINT16 code, UINT32 id, UINT32 timeout) { return NULL; }
    virtual UINT32 generateRequestId() { return 0; }
    virtual UINT32 openFile(TCHAR *fileName, UINT32 requestId, time_t fileModTime = 0) { return ERR_INTERNAL_ERROR; }
    virtual void debugPrintf(int level, const TCHAR *format, ...);

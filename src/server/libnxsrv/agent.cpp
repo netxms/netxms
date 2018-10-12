@@ -1154,7 +1154,9 @@ void AgentConnection::postRawMessageCallback(NXCP_MESSAGE *msg)
 void AgentConnection::postRawMessage(NXCP_MESSAGE *msg)
 {
    incInternalRefCount();
-   ThreadPoolExecuteSerialized(g_agentConnectionThreadPool, _T("TcpProxy"), this, &AgentConnection::postRawMessageCallback, msg);
+   TCHAR key[64];
+   _sntprintf(key, 64, _T("PostMessage_%p"), this);
+   ThreadPoolExecuteSerialized(g_agentConnectionThreadPool, key, this, &AgentConnection::postRawMessageCallback, msg);
 }
 
 /**

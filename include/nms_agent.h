@@ -75,6 +75,7 @@
  * Error codes
  */
 #define ERR_SUCCESS                 ((UINT32)0)
+#define ERR_PROCESSING              ((UINT32)102)
 #define ERR_UNKNOWN_COMMAND         ((UINT32)400)
 #define ERR_AUTH_REQUIRED           ((UINT32)401)
 #define ERR_ACCESS_DENIED           ((UINT32)403)
@@ -550,6 +551,7 @@ public:
 	virtual bool sendFile(UINT32 requestId, const TCHAR *file, long offset, bool allowCompression, VolatileCounter *cancelationFlag) = 0;
    virtual UINT32 doRequest(NXCPMessage *msg, UINT32 timeout) = 0;
    virtual NXCPMessage *doRequestEx(NXCPMessage *msg, UINT32 timeout) = 0;
+   virtual NXCPMessage *waitForMessage(UINT16 code, UINT32 id, UINT32 timeout) = 0;
    virtual UINT32 generateRequestId() = 0;
    virtual UINT32 openFile(TCHAR* nameOfFile, UINT32 requestId, time_t fileModTime = 0) = 0;
    virtual void debugPrintf(int level, const TCHAR *format, ...) = 0;

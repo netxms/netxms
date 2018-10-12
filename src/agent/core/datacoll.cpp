@@ -597,7 +597,7 @@ static THREAD_RESULT THREAD_CALL ReconciliationThread(void *arg)
    {
       // Check if there is something to sync
       MutexLock(s_serverSyncStatusLock);
-      CommSession *session = (CommSession *)FindServerSession(SessionComparator_Reconciliation, NULL);
+      CommSession *session = static_cast<CommSession*>(FindServerSession(SessionComparator_Reconciliation, NULL));
       MutexUnlock(s_serverSyncStatusLock);
       if (session == NULL)
       {
@@ -689,6 +689,7 @@ static THREAD_RESULT THREAD_CALL ReconciliationThread(void *arg)
             msg.setId(session->generateRequestId());
             msg.setField(VID_BULK_RECONCILIATION, (INT16)1);
             msg.setField(VID_NUM_ELEMENTS, (INT16)bulkSendList.size());
+            msg.setField(VID_TIMEOUT, g_dcReconciliationTimeout);
 
             UINT32 fieldId = VID_ELEMENT_LIST_BASE;
             for(int i = 0; i < bulkSendList.size(); i++)
@@ -697,46 +698,62 @@ static THREAD_RESULT THREAD_CALL ReconciliationThread(void *arg)
                fieldId += 10;
             }
 
-            NXCPMessage *response = session->doRequestEx(&msg, g_dcReconciliationTimeout);
-            if (response != NULL)
+            if (session->sendMessage(&msg))
             {
-               UINT32 rcc = response->getFieldAsUInt32(VID_RCC);
-               if (rcc == ERR_SUCCESS)
+               UINT32 rcc;
+               do
                {
-                  MutexLock(s_serverSyncStatusLock);
-                  ServerSyncStatus *serverSyncStatus = s_serverSyncStatus.get(session->getServerId());
-
-                  // Check status for each data element
-                  BYTE status[MAX_BULK_DATA_BLOCK_SIZE];
-                  memset(status, 0, MAX_BULK_DATA_BLOCK_SIZE);
-                  response->getFieldAsBinary(VID_STATUS, status, MAX_BULK_DATA_BLOCK_SIZE);
-                  bulkSendList.setOwner(false);
-                  for(int i = 0; i < bulkSendList.size(); i++)
+                  NXCPMessage *response = session->waitForMessage(CMD_REQUEST_COMPLETED, msg.getId(), g_dcReconciliationTimeout);
+                  if (response != NULL)
                   {
-                     DataElement *e = bulkSendList.get(i);
-                     if (status[i] != BULK_DATA_REC_RETRY)
+                     rcc = response->getFieldAsUInt32(VID_RCC);
+                     if (rcc == ERR_SUCCESS)
                      {
-                        deleteList.add(e);
-                        serverSyncStatus->queueSize--;
+                        MutexLock(s_serverSyncStatusLock);
+                        ServerSyncStatus *serverSyncStatus = s_serverSyncStatus.get(session->getServerId());
+
+                        // Check status for each data element
+                        BYTE status[MAX_BULK_DATA_BLOCK_SIZE];
+                        memset(status, 0, MAX_BULK_DATA_BLOCK_SIZE);
+                        response->getFieldAsBinary(VID_STATUS, status, MAX_BULK_DATA_BLOCK_SIZE);
+                        bulkSendList.setOwner(false);
+                        for(int i = 0; i < bulkSendList.size(); i++)
+                        {
+                           DataElement *e = bulkSendList.get(i);
+                           if (status[i] != BULK_DATA_REC_RETRY)
+                           {
+                              deleteList.add(e);
+                              serverSyncStatus->queueSize--;
+                           }
+                           else
+                           {
+                              delete e;
+                           }
+                        }
+                        serverSyncStatus->lastSync = time(NULL);
+
+                        MutexUnlock(s_serverSyncStatusLock);
+                     }
+                     else if (rcc == ERR_PROCESSING)
+                     {
+                        DebugPrintf(4, _T("ReconciliationThread: server is processing data (%d%% completed)"), response->getFieldAsInt32(VID_PROGRESS));
                      }
                      else
                      {
-                        delete e;
+                        DebugPrintf(4, _T("ReconciliationThread: bulk send failed (%d)"), rcc);
                      }
+                     delete response;
                   }
-                  serverSyncStatus->lastSync = time(NULL);
-
-                  MutexUnlock(s_serverSyncStatusLock);
-               }
-               else
-               {
-                  DebugPrintf(4, _T("ReconciliationThread: bulk send failed (%d)"), rcc);
-               }
-               delete response;
+                  else
+                  {
+                     DebugPrintf(4, _T("ReconciliationThread: timeout on bulk send"));
+                     rcc = ERR_REQUEST_TIMEOUT;
+                  }
+               } while(rcc == ERR_PROCESSING);
             }
             else
             {
-               DebugPrintf(4, _T("ReconciliationThread: timeout on bulk send"));
+               DebugPrintf(4, _T("ReconciliationThread: communication error"));
             }
          }
 

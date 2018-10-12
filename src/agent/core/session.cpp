@@ -1184,6 +1184,11 @@ NXCPMessage *CommSession::doRequestEx(NXCPMessage *msg, UINT32 timeout)
    return m_responseQueue->waitForMessage(CMD_REQUEST_COMPLETED, msg->getId(), timeout);
 }
 
+NXCPMessage *CommSession::waitForMessage(UINT16 code, UINT32 id, UINT32 timeout)
+{
+   return m_responseQueue->waitForMessage(code, id, timeout);
+}
+
 /**
  * Generate new request ID
  */
