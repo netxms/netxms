@@ -20,6 +20,7 @@ package org.netxms.ui.eclipse.tools;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.Separator;
@@ -43,6 +44,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.ScrollBar;
 import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
@@ -401,7 +403,25 @@ public class WidgetHelper
          Object id = columns[i].getData("ID");
          if ((id == null) || !(id instanceof Integer))
             id = Integer.valueOf(i);
-			settings.put(prefix + "." + id + ".width", columns[i].getWidth()); //$NON-NLS-1$ //$NON-NLS-2$
+         int width = columns[i].getWidth();
+         if (((Integer)id == columns.length - 1) && Platform.getOS().equals(Platform.OS_LINUX))
+         {
+            // Attempt workaround for Linux issue when last table column grows by few pixels on each open
+            try
+            {
+               int oldWidth = settings.getInt(prefix + "." + id + ".width");
+               ScrollBar sb = table.getVerticalBar();
+               if ((sb != null) && (oldWidth < width) && (width - oldWidth <= sb.getSize().y))
+               {
+                  // assume that last column grows because of a bug
+                  width = oldWidth;
+               }
+            }
+            catch(NumberFormatException e)
+            {
+            }
+         }
+			settings.put(prefix + "." + id + ".width", width); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 	}
 
