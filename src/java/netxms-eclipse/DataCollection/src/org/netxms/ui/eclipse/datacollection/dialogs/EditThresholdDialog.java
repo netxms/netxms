@@ -265,12 +265,14 @@ public class EditThresholdDialog extends Dialog
       
       script = new LabeledText(scriptGroup, SWT.NONE);
       script.setLabel(Messages.get().EditThresholdDialog_Script);
-      script.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+      GridData gd = new GridData(SWT.FILL, SWT.CENTER, true, false);
+      gd.widthHint = 400;  // Prevent excessive field growth if script is big
+      script.setLayoutData(gd);
       script.setText(savedScript != null ? savedScript : threshold.getScript());
       
       final Button editButton = new Button(scriptGroup, SWT.PUSH);
       editButton.setImage(SharedIcons.IMG_EDIT);
-      GridData gd = new GridData();
+      gd = new GridData();
       gd.verticalAlignment = SWT.BOTTOM;
       gd.horizontalAlignment = SWT.FILL;
       gd.heightHint = script.getTextControl().computeSize(SWT.DEFAULT, SWT.DEFAULT).y;
