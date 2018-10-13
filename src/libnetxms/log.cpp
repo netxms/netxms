@@ -69,11 +69,9 @@ static Mutex s_mutexDebugTagTreeWrite;
 static inline void SwapAndWait()
 {
    s_tagTreeSecondary = InterlockedExchangeObjectPointer(&s_tagTreeActive, s_tagTreeSecondary);
-   do
-   {
+   InterlockedIncrement(&s_tagTreeSecondary->m_writers);
+   while(s_tagTreeSecondary->m_readers > 0)
       ThreadSleepMs(10);
-   }
-   while(s_tagTreeSecondary->getReaderCount() > 0);
 }
 
 /**
@@ -87,6 +85,7 @@ void LIBNETXMS_EXPORTABLE nxlog_set_debug_level(int level)
       s_tagTreeSecondary->setRootDebugLevel(level); // Update the secondary tree
       SwapAndWait();
       s_tagTreeSecondary->setRootDebugLevel(level); // Update the previously active tree
+      InterlockedDecrement(&s_tagTreeSecondary->m_writers);
       s_mutexDebugTagTreeWrite.unlock();
    }
 }
@@ -115,6 +114,7 @@ void LIBNETXMS_EXPORTABLE nxlog_set_debug_level_tag(const TCHAR *tag, int level)
          SwapAndWait();
          s_tagTreeSecondary->remove(tag);
       }
+      InterlockedDecrement(&s_tagTreeSecondary->m_writers);
       s_mutexDebugTagTreeWrite.unlock();
    }
 }
@@ -128,7 +128,33 @@ void LIBNETXMS_EXPORTABLE nxlog_reset_debug_level_tags()
    s_tagTreeSecondary->clear();
    SwapAndWait();
    s_tagTreeSecondary->clear();
+   InterlockedDecrement(&s_tagTreeSecondary->m_writers);
    s_mutexDebugTagTreeWrite.unlock();
+}
+
+/**
+ * Acquire active tag tree for reading
+ */
+inline DebugTagTree *AcquireTagTree()
+{
+   DebugTagTree *tagTree;
+   while(true)
+   {
+      tagTree = s_tagTreeActive;
+      InterlockedIncrement(&tagTree->m_readers);
+      if (tagTree->m_writers == 0)
+         break;
+      InterlockedDecrement(&tagTree->m_readers);
+   }
+   return tagTree;
+}
+
+/**
+ * Release previously acquited tag tree
+ */
+inline void ReleaseTagTree(DebugTagTree *tagTree)
+{
+   InterlockedDecrement(&tagTree->m_readers);
 }
 
 /**
@@ -136,7 +162,10 @@ void LIBNETXMS_EXPORTABLE nxlog_reset_debug_level_tags()
  */
 int LIBNETXMS_EXPORTABLE nxlog_get_debug_level()
 {
-   return s_tagTreeActive->getRootDebugLevel();
+   DebugTagTree *tagTree = AcquireTagTree();
+   int level = tagTree->getRootDebugLevel();
+   ReleaseTagTree(tagTree);
+   return level;
 }
 
 /**
@@ -144,17 +173,23 @@ int LIBNETXMS_EXPORTABLE nxlog_get_debug_level()
  */
 int LIBNETXMS_EXPORTABLE nxlog_get_debug_level_tag(const TCHAR *tag)
 {
-   return s_tagTreeActive->getDebugLevel(tag);
+   DebugTagTree *tagTree = AcquireTagTree();
+   int level = tagTree->getDebugLevel(tag);
+   ReleaseTagTree(tagTree);
+   return level;
 }
 
 /**
- * Get current debug level for tag
+ * Get current debug level for tag/object combination
  */
 int LIBNETXMS_EXPORTABLE nxlog_get_debug_level_tag_object(const TCHAR *tag, UINT32 objectId)
 {
    TCHAR fullTag[256];
    _sntprintf(fullTag, 256, _T("%s.%u"), tag, objectId);
-   return s_tagTreeActive->getDebugLevel(fullTag);
+   DebugTagTree *tagTree = AcquireTagTree();
+   int level = tagTree->getDebugLevel(fullTag);
+   ReleaseTagTree(tagTree);
+   return level;
 }
 
 /**
@@ -162,7 +197,10 @@ int LIBNETXMS_EXPORTABLE nxlog_get_debug_level_tag_object(const TCHAR *tag, UINT
  */
 ObjectArray<DebugTagInfo> LIBNETXMS_EXPORTABLE *nxlog_get_all_debug_tags()
 {
-   return s_tagTreeActive->getAllTags();
+   DebugTagTree *tagTree = AcquireTagTree();
+   ObjectArray<DebugTagInfo> *tags = tagTree->getAllTags();
+   ReleaseTagTree(tagTree);
+   return tags;
 }
 
 /**

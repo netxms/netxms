@@ -62,15 +62,16 @@ class DebugTagTree
 {
 private:
    DebugTagTreeNode *m_root;
-   VolatileCounter m_readerCount;
 
 public:
-   DebugTagTree() { m_root = new DebugTagTreeNode(); m_readerCount = 0; }
+   VolatileCounter m_readers;
+   VolatileCounter m_writers;
+
+   DebugTagTree() { m_root = new DebugTagTreeNode(); m_readers = 0; m_writers = 0; }
    ~DebugTagTree() { delete m_root; }
 
    int getDebugLevel(const TCHAR *tags);
-   int getRootDebugLevel();
-   int getReaderCount() { return (int)m_readerCount; }
+   int getRootDebugLevel() { return m_root->getWildcardDebugLevel(); }
    ObjectArray<DebugTagInfo> *getAllTags();
 
    void add(const TCHAR *tag, int level) { m_root->add(tag, level); }
