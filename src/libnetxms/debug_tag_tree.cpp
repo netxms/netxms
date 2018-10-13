@@ -182,7 +182,6 @@ void DebugTagTreeNode::getAllTags(const TCHAR *prefix, ObjectArray<DebugTagInfo>
  */
 int DebugTagTree::getDebugLevel(const TCHAR *tags)
 {
-   InterlockedIncrement(&m_readerCount);
    int result;
    if (tags == NULL)
    {
@@ -194,19 +193,7 @@ int DebugTagTree::getDebugLevel(const TCHAR *tags)
       if (result == -1)
          result = 0;
    }
-   InterlockedDecrement(&m_readerCount);
    return result;
-}
-
-/**
- * Get main debug level
- */
-int DebugTagTree::getRootDebugLevel()
-{
-   InterlockedIncrement(&m_readerCount);
-   int level = m_root->getWildcardDebugLevel();
-   InterlockedDecrement(&m_readerCount);
-   return level;
 }
 
 /**
@@ -215,8 +202,6 @@ int DebugTagTree::getRootDebugLevel()
 ObjectArray<DebugTagInfo> *DebugTagTree::getAllTags()
 {
    ObjectArray<DebugTagInfo> *tags = new ObjectArray<DebugTagInfo>(64, 64, true);
-   InterlockedIncrement(&m_readerCount);
    m_root->getAllTags(_T(""), tags);
-   InterlockedDecrement(&m_readerCount);
    return tags;
 }
