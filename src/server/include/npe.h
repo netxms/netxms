@@ -126,6 +126,18 @@ public:
    virtual double getPredictedValue(UINT32 nodeId, UINT32 dciId, time_t timestamp) = 0;
 
    /**
+    * Get series of predicted values starting with current time. Default implementation
+    * calls getPredictedValue with incrementing timestamp
+    *
+    * @param nodeId Node object ID
+    * @param dciId DCI ID
+    * @param count number of values to retrieve
+    * @param series buffer for values
+    * @return true on success
+    */
+   virtual bool getPredictedSeries(UINT32 nodeId, UINT32 dciId, int count, double *series);
+
+   /**
     * Get DCi cache size required by this engine
     */
    virtual int getRequiredCacheSize() const = 0;

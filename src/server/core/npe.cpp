@@ -61,6 +61,36 @@ void PredictionEngine::train(UINT32 nodeId, UINT32 dciId)
 }
 
 /**
+ * Get series of predicted values starting with current time. Default implementation
+ * calls getPredictedValue with incrementing timestamp.
+ *
+ * @param nodeId Node object ID
+ * @param dciId DCI ID
+ * @param count number of values to retrieve
+ * @param series buffer for values
+ * @return true on success
+ */
+bool PredictionEngine::getPredictedSeries(UINT32 nodeId, UINT32 dciId, int count, double *series)
+{
+   NetObj *object = FindObjectById(nodeId);
+   if ((object == NULL) || !object->isDataCollectionTarget())
+      return false;
+
+   DCObject *dci = static_cast<DataCollectionTarget*>(object)->getDCObjectById(dciId, 0);
+   if (dci->getType() != DCO_TYPE_ITEM)
+      return false;
+
+   time_t interval = dci->getPollingInterval();
+   time_t t = time(NULL);
+   for(int i = 0; i < count; i++)
+   {
+      series[i] = getPredictedValue(nodeId, dciId, t);
+      t += interval;
+   }
+   return true;
+}
+
+/**
  * Helper method to read last N values of given DCI
  */
 StructArray<DciValue> *PredictionEngine::getDciValues(UINT32 nodeId, UINT32 dciId, int maxRows)
