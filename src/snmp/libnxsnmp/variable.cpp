@@ -294,7 +294,12 @@ TCHAR *SNMP_Variable::getValueAsString(TCHAR *buffer, size_t bufferSize) const
          if (length > 0)
          {
 #ifdef UNICODE
-            if (MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (char *)m_value, (int)length, buffer, (int)bufferSize) == 0)
+            int cch = MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (char *)m_value, (int)length, buffer, (int)bufferSize);
+            if (cch > 0)
+            {
+               length = cch;  // length can be different for multibyte character set
+            }
+            else
             {
                // fallback if conversion fails
 		         for(size_t i = 0; i < length; i++)
@@ -350,20 +355,18 @@ TCHAR *SNMP_Variable::getValueAsPrintableString(TCHAR *buffer, size_t bufferSize
          if (!conversionNeeded)
          {
 #ifdef UNICODE
-            if (MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (char *)m_value, (int)length, buffer, (int)bufferSize) < (int)length)
+            int cch = MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (char *)m_value, (int)length, buffer, (int)bufferSize);
+            if (cch > 0)
             {
-               if (convertToHexAllowed)
+               length = cch;  // length can be different for multibyte character set
+            }
+            else
+            {
+               // fallback if conversion fails
+               for(size_t i = 0; i < length; i++)
                {
-                  conversionNeeded = true;
-               }
-               else
-               {
-                  // fallback if conversion fails
-                  for(size_t i = 0; i < length; i++)
-                  {
-                     char c = ((char *)m_value)[i];
-                     buffer[i] = (((BYTE)c & 0x80) == 0) ? c : '?';
-                  }
+                  char c = ((char *)m_value)[i];
+                  buffer[i] = (((BYTE)c & 0x80) == 0) ? c : '?';
                }
             }
 #else
