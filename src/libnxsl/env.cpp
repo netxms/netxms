@@ -195,12 +195,12 @@ NXSL_Environment::NXSL_Environment()
 {
    m_numFunctions = sizeof(s_builtinFunctions) / sizeof(NXSL_ExtFunction);
    m_functionsAllocated = std::max(m_numFunctions, 256);
-   m_functions = (NXSL_ExtFunction *)malloc(m_functionsAllocated * sizeof(s_builtinFunctions));
+   m_functions = MemAllocArray<NXSL_ExtFunction>(m_functionsAllocated);
    memcpy(m_functions, s_builtinFunctions, sizeof(s_builtinFunctions));
 
    m_numSelectors = sizeof(s_builtinSelectors) / sizeof(NXSL_ExtSelector);
    m_selectorsAllocated = std::max(m_numSelectors, 16);
-   m_selectors = (NXSL_ExtSelector *)malloc(m_selectorsAllocated * sizeof(s_builtinSelectors));
+   m_selectors = MemAllocArray<NXSL_ExtSelector>(m_selectorsAllocated);
    memcpy(m_selectors, s_builtinSelectors, sizeof(s_builtinSelectors));
 
    m_library = NULL;
@@ -211,8 +211,8 @@ NXSL_Environment::NXSL_Environment()
  */
 NXSL_Environment::~NXSL_Environment()
 {
-   free(m_functions);
-   free(m_selectors);
+   MemFree(m_functions);
+   MemFree(m_selectors);
 }
 
 /**
@@ -234,7 +234,7 @@ void NXSL_Environment::registerFunctionSet(int count, NXSL_ExtFunction *list)
    if (m_numFunctions + count > m_functionsAllocated)
    {
       m_functionsAllocated += std::max(count, 256);
-      m_functions = (NXSL_ExtFunction *)realloc(m_functions, sizeof(NXSL_ExtFunction) * m_functionsAllocated);
+      m_functions = MemReallocArray(m_functions, m_functionsAllocated);
    }
    memcpy(&m_functions[m_numFunctions], list, sizeof(NXSL_ExtFunction) * count);
    m_numFunctions += count;
@@ -267,7 +267,7 @@ void NXSL_Environment::registerSelectorSet(int count, NXSL_ExtSelector *list)
    if (m_numSelectors + count > m_selectorsAllocated)
    {
       m_selectorsAllocated += std::max(count, 256);
-      m_selectors = (NXSL_ExtSelector *)realloc(m_selectors, sizeof(NXSL_ExtSelector) * m_selectorsAllocated);
+      m_selectors = MemReallocArray(m_selectors, m_selectorsAllocated);
    }
    memcpy(&m_selectors[m_numSelectors], list, sizeof(NXSL_ExtSelector) * count);
    m_numSelectors += count;
