@@ -2624,7 +2624,7 @@ void ClientSession::sendObjectUpdate(NetObj *object)
 {
    String key(_T("ObjectUpdate"));
    key.append(m_id);
-   UINT32 waitTime = ThreadPoolGetSerializedRequestMaxWaitTime(g_mainThreadPool, key);
+   UINT32 waitTime = ThreadPoolGetSerializedRequestMaxWaitTime(g_clientThreadPool, key);
 
    MutexLock(m_pendingObjectNotificationsLock);
    m_pendingObjectNotifications->remove(object->getId());
@@ -2664,13 +2664,12 @@ void ClientSession::sendObjectUpdate(NetObj *object)
  */
 void ClientSession::scheduleObjectUpdate(NetObj *object)
 {
-   String key(_T("ObjectUpdate"));
-   key.append(m_id);
-
-   if (ThreadPoolGetSerializedRequestCount(g_mainThreadPool, key) < 500)
+   TCHAR key[64];
+   _sntprintf(key, 64, _T("ObjectUpdate_%d"), m_id);
+   if (ThreadPoolGetSerializedRequestCount(g_clientThreadPool, key) < 500)
    {
       debugPrintf(5, _T("Scheduling update for object %s [%d]"), object->getName(), object->getId());
-      ThreadPoolExecuteSerialized(g_mainThreadPool, key, this, &ClientSession::sendObjectUpdate, object);
+      ThreadPoolExecuteSerialized(g_clientThreadPool, key, this, &ClientSession::sendObjectUpdate, object);
    }
    else
    {
@@ -2703,7 +2702,7 @@ void ClientSession::onObjectChange(NetObj *object)
       m_pendingObjectNotifications->put(object->getId());
       object->incRefCount();
       incRefCount();
-      ThreadPoolScheduleRelative(g_mainThreadPool, m_objectNotificationDelay, this, &ClientSession::scheduleObjectUpdate, object);
+      ThreadPoolScheduleRelative(g_clientThreadPool, m_objectNotificationDelay, this, &ClientSession::scheduleObjectUpdate, object);
    }
    MutexUnlock(m_pendingObjectNotificationsLock);
 }
@@ -5518,7 +5517,7 @@ void ClientSession::deleteObject(NXCPMessage *pRequest)
          {
 				if ((object->getObjectClass() != OBJECT_ZONE) || object->isEmpty())
 				{
-               ThreadPoolExecute(g_mainThreadPool, DeleteObjectWorker, object);
+               ThreadPoolExecute(g_clientThreadPool, DeleteObjectWorker, object);
 					msg.setField(VID_RCC, RCC_SUCCESS);
                WriteAuditLog(AUDIT_OBJECTS, TRUE, m_dwUserId, m_workstation, m_id, object->getId(), _T("Object %s deleted"), object->getName());
 				}
@@ -5573,7 +5572,7 @@ void ClientSession::onAlarmUpdate(UINT32 code, const Alarm *alarm)
           object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ_ALARMS) &&
           alarm->checkCategoryAccess(this))
       {
-         ThreadPoolExecute(g_mainThreadPool, this, &ClientSession::alarmUpdateWorker, new Alarm(alarm, false, code));
+         ThreadPoolExecute(g_clientThreadPool, this, &ClientSession::alarmUpdateWorker, new Alarm(alarm, false, code));
       }
    }
 }
@@ -6244,7 +6243,7 @@ void ClientSession::onActionDBUpdate(UINT32 dwCode, const Action *action)
       msg.setField(VID_ACTION_ID, action->id);
       if (dwCode != NX_NOTIFY_ACTION_DELETED)
          action->fillMessage(&msg);
-      ThreadPoolExecute(g_mainThreadPool, this, &ClientSession::sendActionDBUpdateMessage,
+      ThreadPoolExecute(g_clientThreadPool, this, &ClientSession::sendActionDBUpdateMessage,
                msg.serialize((m_dwFlags & CSF_COMPRESSION_ENABLED) != 0));
    }
 }
@@ -6317,7 +6316,7 @@ void ClientSession::forcedNodePoll(NXCPMessage *pRequest)
             InterlockedIncrement(&m_refCount);
 
             pData->pTarget = (DataCollectionTarget *)object;
-            ThreadPoolExecute(g_mainThreadPool, pollerThreadStarter, pData);
+            ThreadPoolExecute(g_clientThreadPool, pollerThreadStarter, pData);
             msg.setField(VID_RCC, RCC_OPERATION_IN_PROGRESS);
             msg.setField(VID_POLLER_MESSAGE, _T("Poll request accepted\r\n"));
 				pData = NULL;
@@ -8619,7 +8618,7 @@ void ClientSession::StartSnmpWalk(NXCPMessage *pRequest)
             pArg->dwRqId = pRequest->getId();
             pRequest->getFieldAsString(VID_SNMP_OID, pArg->szBaseOID, MAX_OID_LEN * 4);
 
-            ThreadPoolExecute(g_mainThreadPool, WalkerThread, pArg);
+            ThreadPoolExecute(g_clientThreadPool, WalkerThread, pArg);
          }
          else
          {
@@ -11093,7 +11092,7 @@ void ClientSession::executeLibraryScript(NXCPMessage *request)
       }
       else
       {
-         ThreadPoolExecute(g_mainThreadPool, ExecuteLibraryScript, new LibraryScriptExecutionData(vm, args));
+         ThreadPoolExecute(g_clientThreadPool, ExecuteLibraryScript, new LibraryScriptExecutionData(vm, args));
       }
    }
    else

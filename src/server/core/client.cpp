@@ -28,7 +28,7 @@
 /**
  * Client thread pool
  */
-ThreadPool *g_clientThreadPool = NULL;
+ThreadPool NXCORE_EXPORTABLE *g_clientThreadPool = NULL;
 
 /**
  * Static data
@@ -107,7 +107,7 @@ void InitClientListeners()
 {
    g_clientThreadPool = ThreadPoolCreate(_T("CLIENT"),
             ConfigReadInt(_T("ThreadPool.Client.BaseSize"), 16),
-            ConfigReadInt(_T("ThreadPool.Client.MaxSize"), MAX_CLIENT_SESSIONS * 4));
+            ConfigReadInt(_T("ThreadPool.Client.MaxSize"), MAX_CLIENT_SESSIONS * 8));
 
    memset(s_sessionList, 0, sizeof(s_sessionList));
 

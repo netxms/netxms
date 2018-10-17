@@ -1354,6 +1354,7 @@ extern int NXCORE_EXPORTABLE g_dbSyntax;
 extern FileMonitoringList g_monitoringList;
 
 extern ThreadPool NXCORE_EXPORTABLE *g_mainThreadPool;
+extern ThreadPool NXCORE_EXPORTABLE *g_clientThreadPool;
 
 #endif   /* MODULE_NXDBMGR_EXTENSION */
 
