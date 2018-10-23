@@ -24,6 +24,30 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 30.50 to 30.51 (changes also included into 22.40)
+ */
+static bool H_UpgradeFromV50()
+{
+   if (GetSchemaLevelForMajorVersion(22) < 40)
+   {
+      static const TCHAR *batch =
+         _T("ALTER TABLE items ADD grace_period_start integer\n")
+         _T("ALTER TABLE dc_tables ADD grace_period_start integer\n")
+         _T("UPDATE items SET grace_period_start=0\n")
+         _T("UPDATE dc_tables SET grace_period_start=0\n")
+         _T("<END>");
+      CHK_EXEC(SQLBatch(batch));
+
+      CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("items"), _T("grace_period_start")));
+      CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("dc_tables"), _T("grace_period_start")));
+
+      CHK_EXEC(SetSchemaLevelForMajorVersion(22, 40));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(51));
+   return true;
+}
+
+/**
  * Upgrade from 30.49 to 30.50 (changes also included into 22.39)
  */
 static bool H_UpgradeFromV49()
@@ -1759,6 +1783,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 50, 30, 51, H_UpgradeFromV50 },
    { 49, 30, 50, H_UpgradeFromV49 },
    { 48, 30, 49, H_UpgradeFromV48 },
    { 47, 30, 48, H_UpgradeFromV47 },

@@ -230,7 +230,7 @@ static bool ExecuteSchemaFile(const TCHAR *prefix, void *userArg)
 void ExportDatabase(char *file, bool skipAudit, bool skipAlarms, bool skipEvent, bool skipSysLog, bool skipTrapLog)
 {
 	sqlite3 *db;
-	char *errmsg, queryTemplate[11][MAX_DB_STRING], *data;
+	char *errmsg, queryTemplate[11][MAX_DB_STRING];
 	TCHAR idataTable[128];
    int legacy = 0, major = 0, minor = 0;
 	BOOL success = FALSE;

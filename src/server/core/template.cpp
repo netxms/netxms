@@ -55,7 +55,9 @@ Template::Template(ConfigEntry *config) : DataCollectionOwner(config), AutoBindT
    nx_strncpy(m_name, config->getSubEntryValue(_T("name"), 0, _T("Unnamed Template")), MAX_OBJECT_NAME);
 }
 
-
+/**
+ * Save template object to database
+ */
 bool Template::saveToDatabase(DB_HANDLE hdb)
 {
    bool success = DataCollectionOwner::saveToDatabase(hdb);
@@ -85,6 +87,9 @@ bool Template::saveToDatabase(DB_HANDLE hdb)
    return success;
 }
 
+/**
+ * Delete template object from database
+ */
 bool Template::deleteFromDatabase(DB_HANDLE hdb)
 {
    bool success = DataCollectionOwner::deleteFromDatabase(hdb);
@@ -99,6 +104,9 @@ bool Template::deleteFromDatabase(DB_HANDLE hdb)
    return success;
 }
 
+/**
+ * Load template object from database
+ */
 bool Template::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
 {
    bool success = DataCollectionOwner::loadFromDatabase(hdb, id);

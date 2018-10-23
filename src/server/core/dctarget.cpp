@@ -1612,7 +1612,13 @@ void DataCollectionTarget::doInstanceDiscovery(UINT32 requestId)
    }
 
    if (changed)
+   {
       onDataCollectionChange();
+
+      lockProperties();
+      setModified(MODIFY_DATA_COLLECTION);
+      unlockProperties();
+   }
 }
 
 /**
@@ -1706,6 +1712,7 @@ bool DataCollectionTarget::updateInstances(DCObject *root, StringMap *instances,
             nxlog_debug(5, _T("DataCollectionTarget::updateInstances(%s [%u], %s [%u]): instance \"%s\" not found, grace period started"),
                       m_name, m_id, root->getName(), root->getId(), dcoInstance);
             sendPollerMsg(requestId, _T("      Existing instance \"%s\" not found, grace period started\r\n"), dcoInstance);
+            changed = true;
          }
 
          if ((retentionTime == 0) || ((time(NULL) - object->getInstanceGracePeriodStart()) > retentionTime))
