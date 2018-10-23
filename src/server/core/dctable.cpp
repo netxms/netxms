@@ -578,7 +578,7 @@ bool DCTable::saveToDatabase(DB_HANDLE hdb)
    DBBind(hStmt, 21, DB_SQLTYPE_TEXT, m_instanceFilterSource, DB_BIND_STATIC);
    DBBind(hStmt, 22, DB_SQLTYPE_VARCHAR, m_instance, DB_BIND_STATIC);
    DBBind(hStmt, 23, DB_SQLTYPE_INTEGER, m_instanceRetentionTime);
-   DBBind(hStmt, 24, DB_SQLTYPE_INTEGER, m_instanceGracePeriodStart);
+   DBBind(hStmt, 24, DB_SQLTYPE_INTEGER, (INT32)m_instanceGracePeriodStart);
    DBBind(hStmt, 25, DB_SQLTYPE_INTEGER, m_id);
 
 	bool result = DBExecute(hStmt);
