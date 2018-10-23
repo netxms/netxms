@@ -4004,7 +4004,13 @@ void Node::doInstanceDiscovery(UINT32 requestId)
    }
 
    if (changed)
+   {
       onDataCollectionChange();
+
+      lockProperties();
+      setModified(MODIFY_DATA_COLLECTION);
+      unlockProperties();
+   }
 }
 
 /**
@@ -4160,6 +4166,7 @@ bool Node::updateInstances(DCObject *root, StringMap *instances, UINT32 requestI
             nxlog_debug(5, _T("DataCollectionTarget::updateInstances(%s [%u], %s [%u]): instance \"%s\" not found, grace period started"),
                       m_name, m_id, root->getName(), root->getId(), dcoInstance);
             sendPollerMsg(requestId, _T("      Existing instance \"%s\" not found, grace period started\r\n"), dcoInstance);
+            changed = true;
          }
 
          if ((retentionTime == 0) || ((time(NULL) - object->getInstanceGracePeriodStart()) > retentionTime))
@@ -4175,7 +4182,7 @@ bool Node::updateInstances(DCObject *root, StringMap *instances, UINT32 requestI
    }
 
    for(int i = 0; i < deleteList.size(); i++)
-      deleteDCObject(deleteList.get(i), 0, false);
+      deleteDCObject(deleteList.get(i), false, 0);
 
    // Create new instances
    if (instances->size() > 0)

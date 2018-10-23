@@ -161,7 +161,7 @@ DCTable::DCTable(UINT32 id, const TCHAR *name, int source, int pollingInterval, 
  *    description,flags,source,snmp_port,polling_interval,retention_time,
  *    status,system_tag,resource_id,proxy_node,perftab_settings,
  *    transformation_script,comments,guid,instd_method,instd_data,
- *    instd_filter,instance
+ *    instd_filter,instance,instance_retention_time,grace_period_start
  */
 DCTable::DCTable(DB_HANDLE hdb, DB_RESULT hResult, int iRow, Template *pNode) : DCObject()
 {
@@ -194,6 +194,7 @@ DCTable::DCTable(DB_HANDLE hdb, DB_RESULT hResult, int iRow, Template *pNode) : 
    free(pszTmp);
    DBGetField(hResult, iRow, 21, m_instance, MAX_DB_STRING);
    m_instanceRetentionTime = DBGetFieldLong(hResult, iRow, 22);
+   m_instanceGracePeriodStart = DBGetFieldLong(hResult, iRow, 23);
 
    m_owner = pNode;
 	m_columns = new ObjectArray<DCTableColumn>(8, 8, true);
@@ -544,6 +545,7 @@ bool DCTable::saveToDatabase(DB_HANDLE hdb)
       _T("snmp_port"), _T("polling_interval"), _T("retention_time"), _T("status"), _T("system_tag"), _T("resource_id"),
       _T("proxy_node"), _T("perftab_settings"), _T("transformation_script"), _T("comments"), _T("guid"),
       _T("instd_method"), _T("instd_data"), _T("instd_filter"), _T("instance"), _T("instance_retention_time"),
+      _T("grace_period_start"),
       NULL
    };
 
@@ -576,7 +578,8 @@ bool DCTable::saveToDatabase(DB_HANDLE hdb)
    DBBind(hStmt, 21, DB_SQLTYPE_TEXT, m_instanceFilterSource, DB_BIND_STATIC);
    DBBind(hStmt, 22, DB_SQLTYPE_VARCHAR, m_instance, DB_BIND_STATIC);
    DBBind(hStmt, 23, DB_SQLTYPE_INTEGER, m_instanceRetentionTime);
-   DBBind(hStmt, 24, DB_SQLTYPE_INTEGER, m_id);
+   DBBind(hStmt, 24, DB_SQLTYPE_INTEGER, m_instanceGracePeriodStart);
+   DBBind(hStmt, 25, DB_SQLTYPE_INTEGER, m_id);
 
 	bool result = DBExecute(hStmt);
 	DBFreeStatement(hStmt);

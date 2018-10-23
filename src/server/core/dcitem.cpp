@@ -109,7 +109,8 @@ DCItem::DCItem(const DCItem *src, bool shadowCopy) : DCObject(src, shadowCopy)
  *    delta_calculation,transformation,template_id,description,instance,
  *    template_item_id,flags,resource_id,proxy_node,base_units,unit_multiplier,
  *    custom_units_name,perftab_settings,system_tag,snmp_port,snmp_raw_value_type,
- *    instd_method,instd_data,instd_filter,samples,comments,guid,npe_name
+ *    instd_method,instd_data,instd_filter,samples,comments,guid,npe_name,
+ *    instance_retention_time, grace_period_start
  */
 DCItem::DCItem(DB_HANDLE hdb, DB_RESULT hResult, int iRow, Template *pNode) : DCObject()
 {
@@ -157,6 +158,7 @@ DCItem::DCItem(DB_HANDLE hdb, DB_RESULT hResult, int iRow, Template *pNode) : DC
    m_guid = DBGetFieldGUID(hResult, iRow, 28);
    DBGetField(hResult, iRow, 29, m_predictionEngine, MAX_NPE_NAME_LEN);
    m_instanceRetentionTime = DBGetFieldLong(hResult, iRow, 30);
+   m_instanceGracePeriodStart = DBGetFieldLong(hResult, iRow, 31);
 
    // Load last raw value from database
 	TCHAR szQuery[256];
@@ -325,6 +327,7 @@ bool DCItem::saveToDatabase(DB_HANDLE hdb)
       _T("flags"), _T("resource_id"), _T("proxy_node"), _T("base_units"), _T("unit_multiplier"), _T("custom_units_name"),
       _T("perftab_settings"), _T("system_tag"), _T("snmp_port"), _T("snmp_raw_value_type"), _T("instd_method"), _T("instd_data"),
       _T("instd_filter"), _T("samples"), _T("comments"), _T("guid"), _T("npe_name"), _T("instance_retention_time"),
+      _T("grace_period_start"),
       NULL
    };
 
@@ -365,7 +368,8 @@ bool DCItem::saveToDatabase(DB_HANDLE hdb)
    DBBind(hStmt, 29, DB_SQLTYPE_VARCHAR, m_guid);
    DBBind(hStmt, 30, DB_SQLTYPE_VARCHAR, m_predictionEngine, DB_BIND_STATIC);
    DBBind(hStmt, 31, DB_SQLTYPE_INTEGER, m_instanceRetentionTime);
-	DBBind(hStmt, 32, DB_SQLTYPE_INTEGER, m_id);
+   DBBind(hStmt, 32, DB_SQLTYPE_INTEGER, (INT32)m_instanceGracePeriodStart);
+   DBBind(hStmt, 33, DB_SQLTYPE_INTEGER, m_id);
 
    bool bResult = DBExecute(hStmt);
 	DBFreeStatement(hStmt);

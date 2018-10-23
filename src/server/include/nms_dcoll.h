@@ -305,8 +305,8 @@ public:
 
    NXSL_Value *createNXSLObject();
 
-	void setName(const TCHAR *name) { nx_strncpy(m_name, name, MAX_ITEM_NAME); }
-	void setDescription(const TCHAR *description) { nx_strncpy(m_description, description, MAX_DB_STRING); }
+	void setName(const TCHAR *name) { _tcslcpy(m_name, name, MAX_ITEM_NAME); }
+	void setDescription(const TCHAR *description) { _tcslcpy(m_description, description, MAX_DB_STRING); }
 	void setOrigin(int origin) { m_source = origin; }
 	void setRetentionTime(int nTime) { m_iRetentionTime = nTime; }
 	void setInterval(int nInt) { m_iPollingInterval = nInt; }
@@ -328,7 +328,7 @@ public:
    void setInstanceDiscoveryMethod(WORD method) { m_instanceDiscoveryMethod = method; }
    void setInstanceDiscoveryData(const TCHAR *data) { MemFree(m_instanceDiscoveryData); m_instanceDiscoveryData = _tcsdup_ex(data); }
    void setInstanceFilter(const TCHAR *pszScript);
-   void setInstance(const TCHAR *instance) { nx_strncpy(m_instance, instance, MAX_DB_STRING); }
+   void setInstance(const TCHAR *instance) { _tcslcpy(m_instance, instance, MAX_DB_STRING); }
    const TCHAR *getInstance() const { return m_instance; }
    void expandInstance();
    time_t getInstanceGracePeriodStart() const { return m_instanceGracePeriodStart; }
