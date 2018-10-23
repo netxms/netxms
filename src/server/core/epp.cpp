@@ -470,7 +470,6 @@ bool EPRule::matchScript(Event *pEvent)
    for(int i = 0; i < pEvent->getParametersCount(); i++)
       ppValueList[i] = new NXSL_Value(pEvent->getParameter(i));
 
-   NXSL_VariableSystem *pLocals = new NXSL_VariableSystem;
 	NetObj *pObject = FindObjectById(pEvent->getSourceId());
 	if (pObject != NULL)
 	{
