@@ -975,7 +975,7 @@ protected:
 
    void loadItemsFromDB(DB_HANDLE hdb);
    void destroyItems();
-   void updateInstanceDiscoveryItems(DCItem *dci);
+   void updateInstanceDiscoveryItems(DCObject *dci);
 
    void lockDciAccess(bool writeLock) { if (writeLock) { RWLockWriteLock(m_dciAccessLock, INFINITE); } else { RWLockReadLock(m_dciAccessLock, INFINITE); } }
 	void unlockDciAccess() { RWLockUnlock(m_dciAccessLock); }

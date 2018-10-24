@@ -550,12 +550,12 @@ bool DataCollectionOwner::updateDCObject(UINT32 dwItemId, NXCPMessage *pMsg, UIN
  *
  * @param dci instance discovery template DCI
  */
-void DataCollectionOwner::updateInstanceDiscoveryItems(DCItem *dci)
+void DataCollectionOwner::updateInstanceDiscoveryItems(DCObject *dci)
 {
    for(int i = 0; i < m_dcObjects->size(); i++)
 	{
 		DCObject *object = m_dcObjects->get(i);
-      if ((object->getType() == DCO_TYPE_ITEM) && (object->getTemplateId() == m_id) && (object->getTemplateItemId() == dci->getId()))
+      if ((object->getTemplateId() == m_id) && (object->getTemplateItemId() == dci->getId()))
       {
          object->updateFromTemplate(dci);
       }
