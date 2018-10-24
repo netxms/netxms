@@ -649,17 +649,13 @@ bool Template::updateDCObject(UINT32 dwItemId, NXCPMessage *pMsg, UINT32 *pdwNum
          if (object->hasAccess(userId))
          {
             if (object->getType() == DCO_TYPE_ITEM)
-            {
-               ((DCItem *)object)->updateFromMessage(pMsg, pdwNumMaps, ppdwMapIndex, ppdwMapId);
-               if (((DCItem *)object)->getInstanceDiscoveryMethod() != IDM_NONE)
-               {
-                  updateInstanceDiscoveryItems((DCItem *)object);
-               }
-            }
+               static_cast<DCItem*>(object)->updateFromMessage(pMsg, pdwNumMaps, ppdwMapIndex, ppdwMapId);
             else
-            {
                object->updateFromMessage(pMsg);
-            }
+
+            if (object->getInstanceDiscoveryMethod() != IDM_NONE)
+               updateInstanceDiscoveryItems(object);
+
             success = true;
          }
          else
@@ -688,12 +684,12 @@ bool Template::updateDCObject(UINT32 dwItemId, NXCPMessage *pMsg, UINT32 *pdwNum
  *
  * @param dci instance discovery template DCI
  */
-void Template::updateInstanceDiscoveryItems(DCItem *dci)
+void Template::updateInstanceDiscoveryItems(DCObject *dci)
 {
    for(int i = 0; i < m_dcObjects->size(); i++)
 	{
 		DCObject *object = m_dcObjects->get(i);
-      if ((object->getType() == DCO_TYPE_ITEM) && (object->getTemplateId() == m_id) && (object->getTemplateItemId() == dci->getId()))
+      if ((object->getTemplateId() == m_id) && (object->getTemplateItemId() == dci->getId()))
       {
          object->updateFromTemplate(dci);
       }
@@ -1172,7 +1168,7 @@ StringSet *Template::getDCIScriptList()
          if (p != NULL)
          {
             TCHAR buffer[256];
-            nx_strncpy(buffer, name, p - name + 1);
+            _tcslcpy(buffer, name, p - name + 1);
             list->add(buffer);
          }
          else

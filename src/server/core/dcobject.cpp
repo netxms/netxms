@@ -938,7 +938,6 @@ void DCObject::updateFromTemplate(DCObject *src)
    m_iPollingInterval = src->m_iPollingInterval;
    m_iRetentionTime = src->m_iRetentionTime;
    m_source = src->m_source;
-   setStatus(src->m_status, true);
 	m_flags = src->m_flags;
 	m_sourceNode = src->m_sourceNode;
 	m_dwResourceId = src->m_dwResourceId;
@@ -968,6 +967,12 @@ void DCObject::updateFromTemplate(DCObject *src)
       setInstanceFilter(src->m_instanceFilterSource);
    }
    m_instanceRetentionTime = src->m_instanceRetentionTime;
+
+   if (((m_status != ITEM_STATUS_DISABLED) || (g_flags & AF_APPLY_TO_DISABLED_DCI_FROM_TEMPLATE)) &&
+       !((m_owner->getId() == m_dwTemplateId) && (m_instanceGracePeriodStart > 0))) // check if DCI is not disabled by instance discovery
+   {
+      setStatus(src->m_status, true);
+   }
 
 	unlock();
 }

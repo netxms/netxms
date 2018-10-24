@@ -323,21 +323,11 @@ bool DataCollectionTarget::applyTemplateItem(UINT32 dwTemplateId, DCObject *dcOb
    {
       // Update existing item unless it is disabled
       DCObject *curr = m_dcObjects->get(i);
-		if ((curr->getStatus() != ITEM_STATUS_DISABLED) || (g_flags & AF_APPLY_TO_DISABLED_DCI_FROM_TEMPLATE))
-		{
-			curr->updateFromTemplate(dcObject);
-			DbgPrintf(9, _T("DCO \"%s\" NOT disabled or ApplyDCIFromTemplateToDisabledDCI set, updated (%d)"),
-				dcObject->getName(), curr->getStatus());
-         if ((curr->getType() == DCO_TYPE_ITEM) && (((DCItem *)curr)->getInstanceDiscoveryMethod() != IDM_NONE))
-         {
-            updateInstanceDiscoveryItems((DCItem *)curr);
-         }
-		}
-		else
-		{
-			DbgPrintf(9, _T("DCO \"%s\" is disabled and ApplyDCIFromTemplateToDisabledDCI not set, no update (%d)"),
-				dcObject->getName(), curr->getStatus());
-		}
+      curr->updateFromTemplate(dcObject);
+      if (curr->getInstanceDiscoveryMethod() != IDM_NONE)
+      {
+         updateInstanceDiscoveryItems(curr);
+      }
    }
 
    unlockDciAccess();
