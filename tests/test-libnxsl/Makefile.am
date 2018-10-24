@@ -24,7 +24,8 @@ nxsltest_DATA = \
 bin_PROGRAMS = test-libnxsl
 test_libnxsl_SOURCES = test-libnxsl.cpp
 test_libnxsl_CPPFLAGS = -I@top_srcdir@/include -I../include
-test_libnxsl_LDADD = @top_srcdir@/src/libnxsl/libnxsl.la @top_srcdir@/src/libnetxms/libnetxms.la
+test_libnxsl_LDFLAGS = @EXEC_LDFLAGS@
+test_libnxsl_LDADD = @top_srcdir@/src/libnxsl/libnxsl.la @top_srcdir@/src/libnetxms/libnetxms.la @EXEC_LIBS@
 
 if USE_INTERNAL_LIBTRE
 test_libnxsl_LDADD += @top_srcdir@/src/libtre/libnxtre.la
