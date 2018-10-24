@@ -511,17 +511,13 @@ bool DataCollectionOwner::updateDCObject(UINT32 dwItemId, NXCPMessage *pMsg, UIN
          if (object->hasAccess(userId))
          {
             if (object->getType() == DCO_TYPE_ITEM)
-            {
-               ((DCItem *)object)->updateFromMessage(pMsg, pdwNumMaps, ppdwMapIndex, ppdwMapId);
-               if (((DCItem *)object)->getInstanceDiscoveryMethod() != IDM_NONE)
-               {
-                  updateInstanceDiscoveryItems((DCItem *)object);
-               }
-            }
+               static_cast<DCItem*>(object)->updateFromMessage(pMsg, pdwNumMaps, ppdwMapIndex, ppdwMapId);
             else
-            {
                object->updateFromMessage(pMsg);
-            }
+
+            if (object->getInstanceDiscoveryMethod() != IDM_NONE)
+               updateInstanceDiscoveryItems(object);
+
             success = true;
          }
          else
@@ -955,7 +951,7 @@ StringSet *DataCollectionOwner::getDCIScriptList()
          if (p != NULL)
          {
             TCHAR buffer[256];
-            nx_strncpy(buffer, name, p - name + 1);
+            _tcslcpy(buffer, name, p - name + 1);
             list->add(buffer);
          }
          else
