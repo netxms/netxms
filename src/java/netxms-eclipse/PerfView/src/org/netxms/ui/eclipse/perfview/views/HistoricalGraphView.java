@@ -96,6 +96,16 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
       { Messages.get().HistoricalGraphView_Preset10min, Messages.get().HistoricalGraphView_Preset30min, Messages.get().HistoricalGraphView_Preset1hour, Messages.get().HistoricalGraphView_Preset2hours, Messages.get().HistoricalGraphView_Preset4hours, Messages.get().HistoricalGraphView_Preset12hours, Messages.get().HistoricalGraphView_Preset1day,
         Messages.get().HistoricalGraphView_Preset2days, Messages.get().HistoricalGraphView_Preset5days, Messages.get().HistoricalGraphView_PresetWeek, Messages.get().HistoricalGraphView_PresetMonth, Messages.get().HistoricalGraphView_PresetYear };
 
+   private static final int[] presetPredictUnits = { GraphSettings.TIME_UNIT_NONE, GraphSettings.TIME_UNIT_MINUTE, GraphSettings.TIME_UNIT_MINUTE,
+         GraphSettings.TIME_UNIT_HOUR, GraphSettings.TIME_UNIT_HOUR, GraphSettings.TIME_UNIT_HOUR, GraphSettings.TIME_UNIT_HOUR,
+         GraphSettings.TIME_UNIT_DAY, GraphSettings.TIME_UNIT_DAY, GraphSettings.TIME_UNIT_DAY, GraphSettings.TIME_UNIT_DAY,
+         GraphSettings.TIME_UNIT_DAY, GraphSettings.TIME_UNIT_DAY };
+   private static final int[] presetPredictRanges = { 0, 10, 30, 1, 2, 4, 12, 1, 2, 5, 7, 31, 365 };
+   private static final String[] presetPredictNames = 
+      { "None", Messages.get().HistoricalGraphView_Preset10min, Messages.get().HistoricalGraphView_Preset30min, Messages.get().HistoricalGraphView_Preset1hour, Messages.get().HistoricalGraphView_Preset2hours, Messages.get().HistoricalGraphView_Preset4hours, Messages.get().HistoricalGraphView_Preset12hours, Messages.get().HistoricalGraphView_Preset1day,
+        Messages.get().HistoricalGraphView_Preset2days, Messages.get().HistoricalGraphView_Preset5days, Messages.get().HistoricalGraphView_PresetWeek, Messages.get().HistoricalGraphView_PresetMonth, Messages.get().HistoricalGraphView_PresetYear };
+
+   
    private NXCSession session;
    private HistoricalDataChart chart = null;
    private boolean updateInProgress = false;
@@ -125,6 +135,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
    private Action actionSave;
    private Action actionSaveAsTemplate;
    private Action[] presetActions;
+   private Action[] presetActionsPredict;
    private Action actionCopyImage;
    private Action actionSaveAsImage;
 
@@ -465,6 +476,14 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
                         currentItem.column, settings.getTimeFrom(), settings.getTimeTo(), 0);
                   thresholds[i] = null;
                }
+               
+               //TODO: update 
+               System.out.println(settings.getPredictTimeUnits());
+               System.out.println(data[i].toString());
+               if(currentItem.type == ChartDciConfig.ITEM && settings.getPredictTimeUnits() != GraphSettings.TIME_UNIT_NONE)
+               {
+                  data[i].update(session.getPredictedData(currentItem.nodeId, currentItem.dciId, new Date(System.currentTimeMillis()), new Date(System.currentTimeMillis() + settings.getPredictionTimeRangeMillis())));
+               }
                monitor.worked(1);
             }
 
@@ -723,6 +742,16 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
          }
       });
       
+      presetActionsPredict = createPresetActionsPredicted(new PresetHandler() {
+         @Override
+         public void onPresetSelected(int units, int range)
+         {
+            settings.setPredictTimeUnits(units);
+            settings.setPredictTimeRange(range);
+            updateChart();
+         }
+      });
+      
       if (!System.getProperty("os.name").toLowerCase().contains("linux"))
       {
          actionCopyImage = new Action(Messages.get().HistoricalGraphView_CopyToClipboard, SharedIcons.COPY) {
@@ -785,6 +814,10 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
       MenuManager presets = new MenuManager(Messages.get().HistoricalGraphView_Presets);
       for(int i = 0; i < presetActions.length; i++)
          presets.add(presetActions[i]);
+      
+      MenuManager presetsPredict = new MenuManager("Predicted data");
+      for(int i = 0; i < presetActionsPredict.length; i++)
+         presetsPredict.add(presetActionsPredict[i]);
 
       MenuManager legend = new MenuManager(Messages.get().HistoricalGraphView_Legend);
       legend.add(actionShowLegend);
@@ -796,6 +829,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
       legend.add(actionLegendBottom);
 
       manager.add(presets);
+      manager.add(presetsPredict);
       manager.add(new Separator());
       manager.add(actionAdjustBoth);
       manager.add(actionAdjustX);
@@ -828,6 +862,10 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
       MenuManager presets = new MenuManager(Messages.get().HistoricalGraphView_Presets);
       for(int i = 0; i < presetActions.length; i++)
          presets.add(presetActions[i]);
+      
+      MenuManager presetsPredict = new MenuManager("Predicted data");
+      for(int i = 0; i < presetActionsPredict.length; i++)
+         presetsPredict.add(presetActionsPredict[i]);
 
       MenuManager legend = new MenuManager(Messages.get().HistoricalGraphView_Legend);
       legend.add(actionShowLegend);
@@ -839,6 +877,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
       legend.add(actionLegendBottom);
 
       manager.add(presets);
+      manager.add(presetsPredict);
       manager.add(new Separator());
       manager.add(actionAdjustBoth);
       manager.add(actionAdjustX);
@@ -1071,6 +1110,29 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
             public void run()
             {
                handler.onPresetSelected(presetUnits[presetIndex], presetRanges[presetIndex]);
+            }
+         };
+      }
+      return actions;
+   }
+
+   /**
+    * Create preset actions
+    * 
+    * @param handler
+    * @return
+    */
+   public static Action[] createPresetActionsPredicted(final PresetHandler handler)
+   {
+      Action[] actions = new Action[presetPredictRanges.length];
+      for(int i = 0; i < presetPredictRanges.length; i++)
+      {
+         final Integer presetIndex = i;
+         actions[i] = new Action(String.format(Messages.get().HistoricalGraphView_Last, presetPredictNames[i])) {
+            @Override
+            public void run()
+            {
+               handler.onPresetSelected(presetPredictUnits[presetIndex], presetPredictRanges[presetIndex]);
             }
          };
       }

@@ -119,4 +119,16 @@ public class DciData
    {
       return "DciData [nodeId=" + nodeId + ", dciId=" + dciId + ", dataType=" + dataType + ", valuesSize=" + values.size() + "]";
    }
+
+   /**
+    * Add predicted values to value list
+    * 
+    * @param predictedData predicted data
+    */
+   public void update(DciData predictedData)
+   {
+      for(DciDataRow r : predictedData.values)
+         values.add(r);
+      
+   }
 }

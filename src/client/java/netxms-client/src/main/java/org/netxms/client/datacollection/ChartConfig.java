@@ -98,6 +98,12 @@ public class ChartConfig
 	
 	@Element(required=false)
 	protected int timeRange = 1;
+
+   @Element(required=false)
+   protected int timePredictUnits = GraphSettings.TIME_UNIT_HOUR;
+   
+   @Element(required=false)
+   protected int timePredictRange = 1;
 	
 	@Element(required=false)
 	protected int timeFrameType = GraphSettings.TIME_FRAME_BACK_FROM_NOW;
@@ -163,6 +169,27 @@ public class ChartConfig
 		}
 		return 0;
 	}
+
+   /**
+    * Get time range covered by graph in milliseconds
+    * 
+    * @return The time range
+    */
+   public long getPredictionTimeRangeMillis()
+   {
+      switch(timePredictUnits)
+      {
+         case GraphSettings.TIME_UNIT_MINUTE:
+            return (long)timePredictRange * 60L * 1000L;
+         case GraphSettings.TIME_UNIT_HOUR:
+            return (long)timePredictRange * 60L * 60L * 1000L;
+         case GraphSettings.TIME_UNIT_DAY:
+            return (long)timePredictRange * 24L * 60L * 60L * 1000L;
+         case GraphSettings.TIME_UNIT_NONE:
+            return -1;
+      }
+      return 0;
+   }
 
 	/**
 	 * @return the title
@@ -291,6 +318,40 @@ public class ChartConfig
 	{
 		this.timeRange = timeRange;
 	}
+	
+
+
+   /**
+    * @return the timePredictUnits
+    */
+   public int getPredictTimeUnits()
+   {
+      return timePredictUnits;
+   }
+
+   /**
+    * @param timePredictUnits the timePredictUnits to set
+    */
+   public void setPredictTimeUnits(int timePredictUnits)
+   {
+      this.timePredictUnits = timePredictUnits;
+   }
+
+   /**
+    * @return the timePredictRange
+    */
+   public int getPredictTimeRange()
+   {
+      return timePredictRange;
+   }
+
+   /**
+    * @param timePredictRange the timePredictRange to set
+    */
+   public void setPredictTimeRange(int timePredictRange)
+   {
+      this.timePredictRange = timePredictRange;
+   }
 
 	/**
 	 * @return the showHostNames

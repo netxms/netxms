@@ -42,7 +42,8 @@ public class GraphSettings extends ChartConfig implements ObjectAction
 	public static final int TIME_FRAME_FIXED = 0;
 	public static final int TIME_FRAME_BACK_FROM_NOW = 1;
 	public static final int TIME_FRAME_CURRENT = 2;
-	
+
+   public static final int TIME_UNIT_NONE = -1;
 	public static final int TIME_UNIT_MINUTE = 0;
 	public static final int TIME_UNIT_HOUR = 1;
 	public static final int TIME_UNIT_DAY = 2;
