@@ -13,7 +13,7 @@
 void TestOracleBatch()
 {
    /*** connect ***/
-   StartTest(_T("Connect to Oracle"));
+   StartTest(_T("Oracle: connect to database"));
 
    DB_DRIVER drv = DBLoadDriver(_T("oracle.ddr"), _T(""), false, NULL, NULL);
    AssertNotNull(drv);
@@ -29,13 +29,13 @@ void TestOracleBatch()
       DBQuery(session, _T("DROP TABLE nx_test"));
 
    /*** create test table ***/
-   StartTest(_T("Create test table"));
+   StartTest(_T("Oracle: create test table"));
    AssertTrueEx(DBQueryEx(session, _T("CREATE TABLE nx_test (id integer not null,value1 varchar(63), value2 integer, PRIMARY KEY(id))"), buffer), buffer);
    AssertTrue(DBIsTableExist(session, _T("nx_test")) == DBIsTableExist_Found);
    EndTest();
 
    /*** insert single record ***/
-   StartTest(_T("Insert single record"));
+   StartTest(_T("Oracle: insert single record"));
    DB_STATEMENT hStmt = DBPrepareEx(session, _T("INSERT INTO nx_test (id,value1,value2) VALUES (?,?,?)"), true, buffer);
    AssertNotNullEx(hStmt, buffer);
    DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (INT32)0);
@@ -50,7 +50,7 @@ void TestOracleBatch()
    EndTest();
 
    /*** check record count ***/
-   StartTest(_T("Check record count"));
+   StartTest(_T("Oracle: check record count"));
    DB_RESULT hResult = DBSelectEx(session, _T("SELECT count(*) FROM nx_test"), buffer);
    AssertNotNullEx(hResult, buffer);
    AssertTrue(DBGetFieldLong(hResult, 0, 0) == 1);
@@ -58,7 +58,7 @@ void TestOracleBatch()
    EndTest();
 
    /*** do bulk insert ***/
-   StartTest(_T("Bulk insert"));
+   StartTest(_T("Oracle: bulk insert"));
    hStmt = DBPrepareEx(session, _T("INSERT INTO nx_test (id,value1,value2) VALUES (?,?,?)"), true, buffer);
    AssertNotNullEx(hStmt, buffer);
    AssertTrueEx(DBOpenBatch(hStmt), _T("Call to DBOpenBatch() failed"));
@@ -80,7 +80,7 @@ void TestOracleBatch()
    EndTest();
 
    /*** check record count after bulk insert ***/
-   StartTest(_T("Check record count"));
+   StartTest(_T("Oracle: check record count"));
    hResult = DBSelectEx(session, _T("SELECT count(*) FROM nx_test"), buffer);
    AssertNotNullEx(hResult, buffer);
    AssertTrue(DBGetFieldLong(hResult, 0, 0) == 111);
@@ -88,12 +88,12 @@ void TestOracleBatch()
    EndTest();
 
    /*** drop test table ***/
-   StartTest(_T("Drop test table"));
+   StartTest(_T("Oracle: drop test table"));
    AssertTrue(DBQuery(session, _T("DROP TABLE nx_test")));
    EndTest();
 
    /*** disconnect ***/
-   StartTest(_T("Disconnect from Oracle"));
+   StartTest(_T("Oracle: disconnect from database"));
    DBDisconnect(session);
    DBUnloadDriver(drv);
    EndTest();
