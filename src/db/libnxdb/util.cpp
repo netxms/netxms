@@ -384,6 +384,7 @@ bool LIBNXDB_EXPORTABLE DBRenameTable(DB_HANDLE hdb, const TCHAR *oldName, const
 enum SQLileAlterOp
 {
    ALTER_COLUMN,
+   RENAME_COLUMN,
    DROP_COLUMN,
    SET_NOT_NULL,
    REMOVE_NOT_NULL,
@@ -406,7 +407,8 @@ static bool SQLiteAlterTable(DB_HANDLE hdb, SQLileAlterOp operation, const TCHAR
    int numColumns = DBGetNumRows(hResult);
 
    // Intermediate buffers for SQLs
-   String columnList;
+   String originColumnList;
+   String targetColumnList;
    String createList;
 
    // TABLE_INFO() columns
@@ -419,13 +421,31 @@ static bool SQLiteAlterTable(DB_HANDLE hdb, SQLileAlterOp operation, const TCHAR
       DBGetField(hResult, i, 4, tabColDefault, 128);
       if ((operation != DROP_COLUMN) || _tcsicmp(tabColName, column))
       {
-         if (!columnList.isEmpty())
-            columnList.append(_T(','));
-         columnList.append(tabColName);
+         if (!originColumnList.isEmpty())
+            originColumnList.append(_T(','));
+         originColumnList.append(tabColName);
+
+         if (!targetColumnList.isEmpty())
+            targetColumnList.append(_T(','));
+         if (!_tcsicmp(tabColName, column) && (operation == RENAME_COLUMN))
+         {
+            targetColumnList.append(operationData);
+         }
+         else
+         {
+            targetColumnList.append(tabColName);
+         }
 
          if (!createList.isEmpty())
             createList.append(_T(','));
-         createList.append(tabColName);
+         if (!_tcsicmp(tabColName, column) && (operation == RENAME_COLUMN))
+         {
+            createList.append(operationData);
+         }
+         else
+         {
+            createList.append(tabColName);
+         }
          createList.append(_T(' '));
          if (!_tcsicmp(tabColName, column) && (operation == ALTER_COLUMN))
          {
@@ -456,7 +476,7 @@ static bool SQLiteAlterTable(DB_HANDLE hdb, SQLileAlterOp operation, const TCHAR
    }
    DBFreeResult(hResult);
 
-   if (columnList.isEmpty())
+   if (originColumnList.isEmpty())
       return false;
 
    // Primary key
@@ -525,9 +545,9 @@ static bool SQLiteAlterTable(DB_HANDLE hdb, SQLileAlterOp operation, const TCHAR
       query = _T("INSERT INTO ");
       query.append(table);
       query.append(_T("__backup__ ("));
-      query.append(columnList);
+      query.append(targetColumnList);
       query.append(_T(") SELECT "));
-      query.append(columnList);
+      query.append(originColumnList);
       query.append(_T(" FROM "));
       query.append(table);
       success = ExecuteQuery(hdb, query);
@@ -1036,8 +1056,7 @@ bool LIBNXDB_EXPORTABLE DBRenameColumn(DB_HANDLE hdb, const TCHAR *tableName, co
          success = ExecuteQuery(hdb, query);
          break;
       case DB_SYNTAX_SQLITE:
-         success = false;
-         // TODO add SQLite support
+         success = SQLiteAlterTable(hdb, RENAME_COLUMN, tableName, oldName, newName);
          break;
       default:
          success = false;
