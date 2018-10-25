@@ -24,6 +24,20 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 30.51 to 30.52 (changes also included into 22.41)
+ */
+static bool H_UpgradeFromV51()
+{
+   if (GetSchemaLevelForMajorVersion(22) < 41)
+   {
+      CHK_EXEC(DBRenameColumn(g_dbHandle, _T("dct_threshold_instances"), _T("row_number"), _T("tt_row_number")));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(22, 41));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(52));
+   return true;
+}
+
+/**
  * Upgrade from 30.50 to 30.51 (changes also included into 22.40)
  */
 static bool H_UpgradeFromV50()
@@ -1783,6 +1797,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 51, 30, 52, H_UpgradeFromV51 },
    { 50, 30, 51, H_UpgradeFromV50 },
    { 49, 30, 50, H_UpgradeFromV49 },
    { 48, 30, 49, H_UpgradeFromV48 },
