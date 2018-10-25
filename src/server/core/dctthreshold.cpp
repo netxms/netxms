@@ -512,7 +512,7 @@ void DCTableThreshold::loadConditions(DB_HANDLE hdb)
  */
 void DCTableThreshold::loadInstances(DB_HANDLE hdb)
 {
-   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT instance,match_count,is_active,row_number FROM dct_threshold_instances WHERE threshold_id=? AND maint_copy='0'"));
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT instance,match_count,is_active,tt_row_number FROM dct_threshold_instances WHERE threshold_id=? AND maint_copy='0'"));
    if (hStmt == NULL)
       return;
 
@@ -531,7 +531,7 @@ void DCTableThreshold::loadInstances(DB_HANDLE hdb)
    }
    DBFreeStatement(hStmt);
 
-   hStmt = DBPrepare(hdb, _T("SELECT instance,match_count,is_active,row_number FROM dct_threshold_instances WHERE threshold_id=? AND maint_copy='1'"));
+   hStmt = DBPrepare(hdb, _T("SELECT instance,match_count,is_active,tt_row_number FROM dct_threshold_instances WHERE threshold_id=? AND maint_copy='1'"));
    if (hStmt == NULL)
       return;
 
@@ -620,7 +620,7 @@ bool DCTableThreshold::saveToDatabase(DB_HANDLE hdb, UINT32 tableId, int seq)
 
    if (m_instances->size() > 0)
    {
-      hStmt = DBPrepare(hdb, _T("INSERT INTO dct_threshold_instances (threshold_id,instance,match_count,is_active,row_number,maint_copy) VALUES (?,?,?,?,?,?)"));
+      hStmt = DBPrepare(hdb, _T("INSERT INTO dct_threshold_instances (threshold_id,instance,match_count,is_active,tt_row_number,maint_copy) VALUES (?,?,?,?,?,?)"));
       if (hStmt == NULL)
          return false;
 
@@ -632,7 +632,7 @@ bool DCTableThreshold::saveToDatabase(DB_HANDLE hdb, UINT32 tableId, int seq)
 
    if (m_instances->size() > 0)
    {
-      hStmt = DBPrepare(hdb, _T("INSERT INTO dct_threshold_instances (threshold_id,instance,match_count,is_active,row_number,maint_copy) VALUES (?,?,?,?,?,?)"));
+      hStmt = DBPrepare(hdb, _T("INSERT INTO dct_threshold_instances (threshold_id,instance,match_count,is_active,tt_row_number,maint_copy) VALUES (?,?,?,?,?,?)"));
       if (hStmt == NULL)
          return false;
 
