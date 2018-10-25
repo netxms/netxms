@@ -234,7 +234,6 @@ void GetPredictionEngines(NXCPMessage *msg)
 
 /**
  * Get predicted data for DCI
- */
 bool GetPredictedData(ClientSession *session, const NXCPMessage *request, NXCPMessage *response, DataCollectionTarget *dcTarget)
 {
    static UINT32 s_rowSize[] = { 8, 8, 16, 16, 516, 16, 8, 8, 16 };
@@ -321,6 +320,101 @@ bool GetPredictedData(ClientSession *session, const NXCPMessage *request, NXCPMe
    NXCP_MESSAGE *msg =
       CreateRawNXCPMessage(CMD_DCI_DATA, request->getId(), 0,
                            pData, rows * s_rowSize[dataType] + sizeof(DCI_DATA_HEADER),
+                           NULL, session->isCompressionEnabled());
+   free(pData);
+   session->sendRawMessage(msg);
+   free(msg);
+   return true;
+}
+ */
+
+/**
+ * Get predicted data for DCI
+ */
+bool GetPredictedData(ClientSession *session, const NXCPMessage *request, NXCPMessage *response, DataCollectionTarget *dcTarget)
+{
+   static UINT32 s_rowSize[] = { 8, 8, 16, 16, 516, 16, 8, 8, 16 };
+
+   // Find DCI object
+   DCObject *dci = dcTarget->getDCObjectById(request->getFieldAsUInt32(VID_DCI_ID), session->getUserId());
+   if (dci == NULL)
+   {
+      response->setField(VID_RCC, RCC_INVALID_DCI_ID);
+      return false;
+   }
+
+   if (dci->getType() != DCO_TYPE_ITEM)
+   {
+      response->setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+      return false;
+   }
+
+   PredictionEngine *engine = FindPredictionEngine(((DCItem *)dci)->getPredictionEngine());
+
+   // Send CMD_REQUEST_COMPLETED message
+   response->setField(VID_RCC, RCC_SUCCESS);
+   ((DCItem *)dci)->fillMessageWithThresholds(response, false);
+   session->sendMessage(response);
+
+   int dataType = ((DCItem *)dci)->getDataType();
+   time_t timeFrom = request->getFieldAsTime(VID_TIME_FROM);
+   time_t timestamp = request->getFieldAsTime(VID_TIME_TO);
+   time_t interval = dci->getEffectivePollingInterval();
+
+   // Allocate memory for data and prepare data header
+   char buffer[64];
+   int count = MIN((timestamp - timeFrom)/interval, MAX_DCI_DATA_RECORDS);
+   DCI_DATA_HEADER *pData = (DCI_DATA_HEADER *)malloc(count * s_rowSize[dataType] + sizeof(DCI_DATA_HEADER));
+   pData->dataType = htonl((UINT32)dataType);
+   pData->dciId = htonl(dci->getId());
+
+   // Fill memory block with records
+   double *series = new double[count];
+   if(timestamp >= timeFrom)
+   {
+      engine->getPredictedSeries(dci->getOwner()->getId(), dci->getId(), count, series);
+
+      DCI_DATA_ROW *pCurr = (DCI_DATA_ROW *)(((char *)pData) + sizeof(DCI_DATA_HEADER));
+      for(int i = 0; i < count; i++)
+      {
+         pCurr->timeStamp = htonl((UINT32)timestamp);
+         switch(dataType)
+         {
+            case DCI_DT_INT:
+               pCurr->value.int32 = htonl((UINT32)((INT32)series[i]));
+               break;
+            case DCI_DT_UINT:
+            case DCI_DT_COUNTER32:
+               pCurr->value.int32 = htonl((UINT32)series[i]);
+               break;
+            case DCI_DT_INT64:
+               pCurr->value.ext.v64.int64 = htonq((UINT64)((INT64)series[i]));
+               break;
+            case DCI_DT_UINT64:
+            case DCI_DT_COUNTER64:
+               pCurr->value.ext.v64.int64 = htonq((UINT64)series[i]);
+               break;
+            case DCI_DT_FLOAT:
+               pCurr->value.ext.v64.real = htond(series[i]);
+               break;
+            case DCI_DT_STRING:
+               snprintf(buffer, 64, "%f", series[i]);
+               mb_to_ucs2(buffer, -1, pCurr->value.string, MAX_DCI_STRING_VALUE);
+               SwapUCS2String(pCurr->value.string);
+               break;
+         }
+         pCurr = (DCI_DATA_ROW *)(((char *)pCurr) + s_rowSize[dataType]);
+         timestamp -= interval;
+
+      }
+
+      pData->numRows = htonl(count);
+   }
+
+   // Prepare and send raw message with fetched data
+   NXCP_MESSAGE *msg =
+      CreateRawNXCPMessage(CMD_DCI_DATA, request->getId(), 0,
+                           pData, count * s_rowSize[dataType] + sizeof(DCI_DATA_HEADER),
                            NULL, session->isCompressionEnabled());
    free(pData);
    session->sendRawMessage(msg);
