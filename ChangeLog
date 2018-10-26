@@ -6,6 +6,7 @@
 - Added server startup event SYS_SERVER_STARTED
 - New method readInternalParameter in NXSL classes Node, Cluster, MobileDevice
 - Improved cached agent data reconciliation
+- Fixed DCI instance discovery issues
 - Fixed issues:
 	NX-1477 (Offline data collection does not cleanup old data if there are no connection with the server)
 	NX-1514 (Predefined graph tree displayed incorrectly)
