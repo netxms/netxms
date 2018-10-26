@@ -15,6 +15,12 @@
 	NX-1271 (Implemented internal server topology)
 	NX-1386 (Implemented units for Server Variables)
 
+*
+* 2.2.11
+*
+
+- Fixed issues:
+   NX-1513 (Server installation fails with MySQL 8.0)
 
 *
 * 2.2.10
@@ -25,6 +31,7 @@
 - New method readInternalParameter in NXSL classes Node, Cluster, MobileDevice
 - Improved cached agent data reconciliation
 - Fixed DCI instance discovery issues
+- Fixed apkg installer script on AIX
 - Fixed issues:
 	NX-1477 (Offline data collection does not cleanup old data if there are no connection with the server)
 	NX-1514 (Predefined graph tree displayed incorrectly)
