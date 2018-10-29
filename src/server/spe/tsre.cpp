@@ -181,6 +181,49 @@ double TimeSeriesRegressionEngine::getPredictedValue(UINT32 nodeId, UINT32 dciId
 }
 
 /**
+    * Get series of predicted values starting with current time. Default implementation
+    * calls getPredictedValue with incrementing timestamp
+    *
+    * @param nodeId Node object ID
+    * @param dciId DCI ID
+    * @param count number of values to retrieve
+    * @param series buffer for values
+    * @return true on success
+    */
+bool TimeSeriesRegressionEngine::getPredictedSeries(UINT32 nodeId, UINT32 dciId, int count, double *series)
+{
+   StructArray<DciValue> *values = getDciValues(nodeId, dciId, INPUT_LAYER_SIZE);
+   if (values == NULL)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("TimeSeriesRegressionEngine::getPredictedValue: cannot read data for DCI %u/%u"), nodeId, dciId);
+      return false;
+   }
+
+   double *input = new double[INPUT_LAYER_SIZE];
+   int j = INPUT_LAYER_SIZE;
+   for(int i = 0; i < values->size(); i++)
+      input[--j] = values->get(i)->value;
+   while(j > 0)
+      input[--j] = 0.0;
+   delete values;
+
+   NeuralNetwork *nn = acquireNetwork(nodeId, dciId);
+   for(int n = 0; n < count-1; n++)
+   {
+      series[n] = nn->computeOutput(input);
+
+      for(int i = INPUT_LAYER_SIZE - 1; i > 0; i--)
+         input[i-1] = input[i];
+      input[INPUT_LAYER_SIZE-1] = series[n];
+   }
+   series[count-1] = nn->computeOutput(input); //no value bid
+   nn->unlock();
+
+   delete[] input;
+   return true;
+}
+
+/**
  * Get DCI cache size required by this engine
  */
 int TimeSeriesRegressionEngine::getRequiredCacheSize() const
