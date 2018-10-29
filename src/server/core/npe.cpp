@@ -370,7 +370,7 @@ bool GetPredictedData(ClientSession *session, const NXCPMessage *request, NXCPMe
 
    // Fill memory block with records
    double *series = new double[count];
-   if(timestamp >= timeFrom)
+   if (timestamp >= timeFrom)
    {
       engine->getPredictedSeries(dci->getOwner()->getId(), dci->getId(), count, series);
 
