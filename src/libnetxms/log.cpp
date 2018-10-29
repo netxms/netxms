@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Utility Library
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -35,16 +35,16 @@
  * Static data
  */
 #ifdef _WIN32
-static HANDLE m_eventLogHandle = NULL;
-static HMODULE m_msgModuleHandle = NULL;
+static HANDLE s_eventLogHandle = NULL;
+static HMODULE s_msgModuleHandle = NULL;
 #else
-static unsigned int m_numMessages;
-static const TCHAR **m_messages;
+static unsigned int s_numMessages;
+static const TCHAR **s_messages;
 static char s_syslogName[64];
 #endif
-static TCHAR m_logFileName[MAX_PATH] = _T("");
-static FILE *m_logFileHandle = NULL;
-static MUTEX m_mutexLogAccess = INVALID_MUTEX_HANDLE;
+static TCHAR s_logFileName[MAX_PATH] = _T("");
+static FILE *s_logFileHandle = NULL;
+static MUTEX s_mutexLogAccess = INVALID_MUTEX_HANDLE;
 static UINT32 s_flags = 0;
 static DWORD s_debugMsg = 0;
 static DWORD s_debugMsgTag = 0;
@@ -53,7 +53,7 @@ static int s_rotationMode = NXLOG_ROTATION_BY_SIZE;
 static UINT64 s_maxLogSize = 4096 * 1024;	// 4 MB
 static int s_logHistorySize = 4;		// Keep up 4 previous log files
 static TCHAR s_dailyLogSuffixTemplate[64] = _T("%Y%m%d");
-static time_t m_currentDayStart = 0;
+static time_t s_currentDayStart = 0;
 static NxLogConsoleWriter m_consoleWriter = (NxLogConsoleWriter)_tprintf;
 static String s_logBuffer;
 static THREAD s_writerThread = INVALID_THREAD_HANDLE;
@@ -245,7 +245,7 @@ static void SetDayStart()
 	dayStart.tm_hour = 0;
 	dayStart.tm_min = 0;
 	dayStart.tm_sec = 0;
-	m_currentDayStart = mktime(&dayStart);
+	s_currentDayStart = mktime(&dayStart);
 }
 
 /**
@@ -320,11 +320,11 @@ static bool RotateLog(bool needLock)
 		return FALSE;	// Cannot rotate system logs
 
 	if (needLock)
-		MutexLock(m_mutexLogAccess);
+		MutexLock(s_mutexLogAccess);
 
-	if ((m_logFileHandle != NULL) && (s_flags & NXLOG_IS_OPEN))
+	if ((s_logFileHandle != NULL) && (s_flags & NXLOG_IS_OPEN))
 	{
-		fclose(m_logFileHandle);
+		fclose(s_logFileHandle);
 		s_flags &= ~NXLOG_IS_OPEN;
 	}
 
@@ -333,60 +333,60 @@ static bool RotateLog(bool needLock)
 		// Delete old files
 		for(i = MAX_LOG_HISTORY_SIZE; i >= s_logHistorySize; i--)
 		{
-			_sntprintf(oldName, MAX_PATH, _T("%s.%d"), m_logFileName, i);
+			_sntprintf(oldName, MAX_PATH, _T("%s.%d"), s_logFileName, i);
 			_tunlink(oldName);
 		}
 
 		// Shift file names
 		for(; i >= 0; i--)
 		{
-			_sntprintf(oldName, MAX_PATH, _T("%s.%d"), m_logFileName, i);
-			_sntprintf(newName, MAX_PATH, _T("%s.%d"), m_logFileName, i + 1);
+			_sntprintf(oldName, MAX_PATH, _T("%s.%d"), s_logFileName, i);
+			_sntprintf(newName, MAX_PATH, _T("%s.%d"), s_logFileName, i + 1);
 			_trename(oldName, newName);
 		}
 
 		// Rename current log to name.0
-		_sntprintf(newName, MAX_PATH, _T("%s.0"), m_logFileName);
-		_trename(m_logFileName, newName);
+		_sntprintf(newName, MAX_PATH, _T("%s.0"), s_logFileName);
+		_trename(s_logFileName, newName);
 	}
 	else if (s_rotationMode == NXLOG_ROTATION_DAILY)
 	{
 #if HAVE_LOCALTIME_R
       struct tm ltmBuffer;
-      struct tm *loc = localtime_r(&m_currentDayStart, &ltmBuffer);
+      struct tm *loc = localtime_r(&s_currentDayStart, &ltmBuffer);
 #else
-      struct tm *loc = localtime(&m_currentDayStart);
+      struct tm *loc = localtime(&s_currentDayStart);
 #endif
 		TCHAR buffer[64];
       _tcsftime(buffer, 64, s_dailyLogSuffixTemplate, loc);
 
 		// Rename current log to name.suffix
-		_sntprintf(newName, MAX_PATH, _T("%s.%s"), m_logFileName, buffer);
-		_trename(m_logFileName, newName);
+		_sntprintf(newName, MAX_PATH, _T("%s.%s"), s_logFileName, buffer);
+		_trename(s_logFileName, newName);
 
 		SetDayStart();
 	}
 
    // Reopen log
 #if HAVE_FOPEN64
-   m_logFileHandle = _tfopen64(m_logFileName, _T("w"));
+   s_logFileHandle = _tfopen64(s_logFileName, _T("w"));
 #else
-   m_logFileHandle = _tfopen(m_logFileName, _T("w"));
+   s_logFileHandle = _tfopen(s_logFileName, _T("w"));
 #endif
-   if (m_logFileHandle != NULL)
+   if (s_logFileHandle != NULL)
    {
       s_flags |= NXLOG_IS_OPEN;
       TCHAR buffer[32];
-      _ftprintf(m_logFileHandle, _T("%s Log file truncated.\n"), FormatLogTimestamp(buffer));
-      fflush(m_logFileHandle);
+      _ftprintf(s_logFileHandle, _T("%s Log file truncated.\n"), FormatLogTimestamp(buffer));
+      fflush(s_logFileHandle);
 #ifndef _WIN32
-      int fd = fileno(m_logFileHandle);
+      int fd = fileno(s_logFileHandle);
       fcntl(fd, F_SETFD, fcntl(fd, F_GETFD) | FD_CLOEXEC);
 #endif
    }
 
 	if (needLock)
-		MutexUnlock(m_mutexLogAccess);
+		MutexUnlock(s_mutexLogAccess);
 
 	return (s_flags & NXLOG_IS_OPEN) ? true : false;
 }
@@ -411,12 +411,12 @@ static THREAD_RESULT THREAD_CALL BackgroundWriterThread(void *arg)
 
 	   // Check for new day start
       time_t t = time(NULL);
-	   if ((s_rotationMode == NXLOG_ROTATION_DAILY) && (t >= m_currentDayStart + 86400))
+	   if ((s_rotationMode == NXLOG_ROTATION_DAILY) && (t >= s_currentDayStart + 86400))
 	   {
 		   RotateLog(FALSE);
 	   }
 
-      MutexLock(m_mutexLogAccess);
+      MutexLock(s_mutexLogAccess);
       if (!s_logBuffer.isEmpty())
       {
          if (s_flags & NXLOG_PRINT_TO_STDOUT)
@@ -425,7 +425,7 @@ static THREAD_RESULT THREAD_CALL BackgroundWriterThread(void *arg)
          size_t buflen = s_logBuffer.length();
          char *data = s_logBuffer.getUTF8String();
          s_logBuffer.clear();
-         MutexUnlock(m_mutexLogAccess);
+         MutexUnlock(s_mutexLogAccess);
 
          if (s_flags & NXLOG_DEBUG_MODE)
          {
@@ -433,14 +433,14 @@ static THREAD_RESULT THREAD_CALL BackgroundWriterThread(void *arg)
             sprintf(marker, "##(" INT64_FMTA ")" INT64_FMTA " @" INT64_FMTA "\n",
                     (INT64)buflen, (INT64)strlen(data), GetCurrentTimeMs());
 #ifdef _WIN32
-            fwrite(marker, 1, strlen(marker), m_logFileHandle);
+            fwrite(marker, 1, strlen(marker), s_logFileHandle);
 #else
-            write(fileno(m_logFileHandle), marker, strlen(marker));
+            write(fileno(s_logFileHandle), marker, strlen(marker));
 #endif
          }
 
 #ifdef _WIN32
-			fwrite(data, 1, strlen(data), m_logFileHandle);
+			fwrite(data, 1, strlen(data), s_logFileHandle);
 #else
          // write is used here because on linux fwrite is not working
          // after calling fwprintf on a stream
@@ -448,27 +448,27 @@ static THREAD_RESULT THREAD_CALL BackgroundWriterThread(void *arg)
 			size_t offset = 0;
 			do
 			{
-			   int bw = write(fileno(m_logFileHandle), &data[offset], size);
+			   int bw = write(fileno(s_logFileHandle), &data[offset], size);
 			   if (bw < 0)
 			      break;
 			   size -= bw;
 			   offset += bw;
 			} while(size > 0);
 #endif
-         free(data);
+         MemFree(data);
 
 	      // Check log size
-	      if ((m_logFileHandle != NULL) && (s_rotationMode == NXLOG_ROTATION_BY_SIZE) && (s_maxLogSize != 0))
+	      if ((s_logFileHandle != NULL) && (s_rotationMode == NXLOG_ROTATION_BY_SIZE) && (s_maxLogSize != 0))
 	      {
 	         NX_STAT_STRUCT st;
-		      NX_FSTAT(fileno(m_logFileHandle), &st);
+		      NX_FSTAT(fileno(s_logFileHandle), &st);
 		      if ((UINT64)st.st_size >= s_maxLogSize)
 			      RotateLog(FALSE);
 	      }
       }
       else
       {
-         MutexUnlock(m_mutexLogAccess);
+         MutexUnlock(s_mutexLogAccess);
       }
    }
    return THREAD_OK;
@@ -483,10 +483,10 @@ bool LIBNETXMS_EXPORTABLE nxlog_open(const TCHAR *logName, UINT32 flags,
 {
 	s_flags = flags & 0x7FFFFFFF;
 #ifdef _WIN32
-	m_msgModuleHandle = GetModuleHandle(msgModule);
+	s_msgModuleHandle = GetModuleHandle(msgModule);
 #else
-	m_numMessages = msgCount;
-	m_messages = messages;
+	s_numMessages = msgCount;
+	s_messages = messages;
 #endif
 	s_debugMsg = debugMsg;
    s_debugMsgTag = debugMsgTag;
@@ -495,8 +495,8 @@ bool LIBNETXMS_EXPORTABLE nxlog_open(const TCHAR *logName, UINT32 flags,
    if (s_flags & NXLOG_USE_SYSLOG)
    {
 #ifdef _WIN32
-      m_eventLogHandle = RegisterEventSource(NULL, logName);
-		if (m_eventLogHandle != NULL)
+      s_eventLogHandle = RegisterEventSource(NULL, logName);
+		if (s_eventLogHandle != NULL)
 			s_flags |= NXLOG_IS_OPEN;
 #else
 #ifdef UNICODE
@@ -513,21 +513,21 @@ bool LIBNETXMS_EXPORTABLE nxlog_open(const TCHAR *logName, UINT32 flags,
    {
       TCHAR buffer[32];
 
-		nx_strncpy(m_logFileName, logName, MAX_PATH);
+		nx_strncpy(s_logFileName, logName, MAX_PATH);
 #if HAVE_FOPEN64
-      m_logFileHandle = _tfopen64(logName, _T("a"));
+      s_logFileHandle = _tfopen64(logName, _T("a"));
 #else
-      m_logFileHandle = _tfopen(logName, _T("a"));
+      s_logFileHandle = _tfopen(logName, _T("a"));
 #endif
-      if (m_logFileHandle != NULL)
+      if (s_logFileHandle != NULL)
       {
 			s_flags |= NXLOG_IS_OPEN;
-         _ftprintf(m_logFileHandle, _T("\n%s Log file opened (rotation policy %d, max size ") UINT64_FMT _T(")\n"),
+         _ftprintf(s_logFileHandle, _T("\n%s Log file opened (rotation policy %d, max size ") UINT64_FMT _T(")\n"),
                    FormatLogTimestamp(buffer), s_rotationMode, s_maxLogSize);
-         fflush(m_logFileHandle);
+         fflush(s_logFileHandle);
 
 #ifndef _WIN32
-         int fd = fileno(m_logFileHandle);
+         int fd = fileno(s_logFileHandle);
          fcntl(fd, F_SETFD, fcntl(fd, F_GETFD) | FD_CLOEXEC);
 #endif
 
@@ -539,7 +539,7 @@ bool LIBNETXMS_EXPORTABLE nxlog_open(const TCHAR *logName, UINT32 flags,
          }
       }
 
-      m_mutexLogAccess = MutexCreate();
+      s_mutexLogAccess = MutexCreate();
 		SetDayStart();
    }
 	return (s_flags & NXLOG_IS_OPEN) ? true : false;
@@ -555,7 +555,7 @@ void LIBNETXMS_EXPORTABLE nxlog_close()
       if (s_flags & NXLOG_USE_SYSLOG)
       {
 #ifdef _WIN32
-         DeregisterEventSource(m_eventLogHandle);
+         DeregisterEventSource(s_eventLogHandle);
 #else
          closelog();
 #endif
@@ -569,10 +569,10 @@ void LIBNETXMS_EXPORTABLE nxlog_close()
             ConditionDestroy(s_writerStopCondition);
          }
 
-         if (m_logFileHandle != NULL)
-            fclose(m_logFileHandle);
-         if (m_mutexLogAccess != INVALID_MUTEX_HANDLE)
-            MutexDestroy(m_mutexLogAccess);
+         if (s_logFileHandle != NULL)
+            fclose(s_logFileHandle);
+         if (s_mutexLogAccess != INVALID_MUTEX_HANDLE)
+            MutexDestroy(s_mutexLogAccess);
       }
 	   s_flags &= ~NXLOG_IS_OPEN;
    }
@@ -606,7 +606,7 @@ static void WriteLogToFile(TCHAR *message, const WORD type)
    TCHAR buffer[64];
    if (s_flags & NXLOG_BACKGROUND_WRITER)
    {
-      MutexLock(m_mutexLogAccess);
+      MutexLock(s_mutexLogAccess);
 
 	   FormatLogTimestamp(buffer);
       s_logBuffer.append(buffer);
@@ -614,39 +614,39 @@ static void WriteLogToFile(TCHAR *message, const WORD type)
       s_logBuffer.append(loglevel);
       s_logBuffer.append(message);
 
-      MutexUnlock(m_mutexLogAccess);
+      MutexUnlock(s_mutexLogAccess);
    }
    else
    {
       // Prevent simultaneous write to log file
-      MutexLock(m_mutexLogAccess);
+      MutexLock(s_mutexLogAccess);
 
 	   // Check for new day start
       time_t t = time(NULL);
-	   if ((s_rotationMode == NXLOG_ROTATION_DAILY) && (t >= m_currentDayStart + 86400))
+	   if ((s_rotationMode == NXLOG_ROTATION_DAILY) && (t >= s_currentDayStart + 86400))
 	   {
 		   RotateLog(FALSE);
 	   }
 
 	   FormatLogTimestamp(buffer);
-      if (m_logFileHandle != NULL)
+      if (s_logFileHandle != NULL)
 	   {
-         _ftprintf(m_logFileHandle, _T("%s %s%s"), buffer, loglevel, message);
-		   fflush(m_logFileHandle);
+         _ftprintf(s_logFileHandle, _T("%s %s%s"), buffer, loglevel, message);
+		   fflush(s_logFileHandle);
 	   }
       if (s_flags & NXLOG_PRINT_TO_STDOUT)
          m_consoleWriter(_T("%s %s%s"), buffer, loglevel, message);
 
 	   // Check log size
-	   if ((m_logFileHandle != NULL) && (s_rotationMode == NXLOG_ROTATION_BY_SIZE) && (s_maxLogSize != 0))
+	   if ((s_logFileHandle != NULL) && (s_rotationMode == NXLOG_ROTATION_BY_SIZE) && (s_maxLogSize != 0))
 	   {
 	      NX_STAT_STRUCT st;
-		   NX_FSTAT(fileno(m_logFileHandle), &st);
+		   NX_FSTAT(fileno(s_logFileHandle), &st);
 		   if ((UINT64)st.st_size >= s_maxLogSize)
 			   RotateLog(FALSE);
 	   }
 
-      MutexUnlock(m_mutexLogAccess);
+      MutexUnlock(s_mutexLogAccess);
    }
 }
 
@@ -661,7 +661,7 @@ static TCHAR *FormatMessageUX(UINT32 dwMsgId, TCHAR **ppStrings)
    TCHAR *pMsg;
    int i, iSize, iLen;
 
-   if (dwMsgId >= m_numMessages)
+   if (dwMsgId >= s_numMessages)
    {
       // No message with this ID
       pMsg = (TCHAR *)malloc(64 * sizeof(TCHAR));
@@ -669,10 +669,10 @@ static TCHAR *FormatMessageUX(UINT32 dwMsgId, TCHAR **ppStrings)
    }
    else
    {
-      iSize = (_tcslen(m_messages[dwMsgId]) + 2) * sizeof(TCHAR);
+      iSize = (_tcslen(s_messages[dwMsgId]) + 2) * sizeof(TCHAR);
       pMsg = (TCHAR *)malloc(iSize);
 
-      for(i = 0, p = m_messages[dwMsgId]; *p != 0; p++)
+      for(i = 0, p = s_messages[dwMsgId]; *p != 0; p++)
          if (*p == _T('%'))
          {
             p++;
@@ -837,7 +837,7 @@ void LIBNETXMS_EXPORTABLE nxlog_write(DWORD msg, WORD wType, const char *format,
 
       if (FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | 
                         FORMAT_MESSAGE_FROM_HMODULE | FORMAT_MESSAGE_ARGUMENT_ARRAY,
-                        m_msgModuleHandle, msg, 0, (LPTSTR)&lpMsgBuf, 0, (va_list *)strings) > 0)
+                        s_msgModuleHandle, msg, 0, (LPTSTR)&lpMsgBuf, 0, (va_list *)strings) > 0)
       {
          TCHAR *pCR;
 
@@ -877,7 +877,7 @@ void LIBNETXMS_EXPORTABLE nxlog_write(DWORD msg, WORD wType, const char *format,
 
    if (s_flags & NXLOG_USE_SYSLOG)
 	{
-      ReportEvent(m_eventLogHandle, (wType == EVENTLOG_DEBUG_TYPE) ? EVENTLOG_INFORMATION_TYPE : wType, 0, msg, NULL, numStrings, 0, (const TCHAR **)strings, NULL);
+      ReportEvent(s_eventLogHandle, (wType == EVENTLOG_DEBUG_TYPE) ? EVENTLOG_INFORMATION_TYPE : wType, 0, msg, NULL, numStrings, 0, (const TCHAR **)strings, NULL);
 	}
 #else  /* _WIN32 */
    pMsg = FormatMessageUX(msg, strings);
@@ -906,7 +906,7 @@ void LIBNETXMS_EXPORTABLE nxlog_write(DWORD msg, WORD wType, const char *format,
 #ifdef UNICODE
 		mbMsg = MBStringFromWideString(pMsg);
       syslog(level, "%s", mbMsg);
-		free(mbMsg);
+		MemFree(mbMsg);
 #else
       syslog(level, "%s", pMsg);
 #endif
@@ -920,11 +920,11 @@ void LIBNETXMS_EXPORTABLE nxlog_write(DWORD msg, WORD wType, const char *format,
    {
       WriteLogToFile(pMsg, wType);
    }
-   free(pMsg);
+   MemFree(pMsg);
 #endif /* _WIN32 */
 
    while(--numStrings >= 0)
-      free(strings[numStrings]);
+      MemFree(strings[numStrings]);
 }
 
 /**
