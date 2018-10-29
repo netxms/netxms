@@ -29,7 +29,7 @@
 
 NETXMS_EXECUTABLE_HEADER(nxdevcfg)
 
-#define VALID_OPTIONS "bcCdDilLoOpPStTuUX"
+#define VALID_OPTIONS "bcCdDeEilLoOpPStTuUX"
 
 /**
  * Externals
@@ -38,7 +38,9 @@ extern const TCHAR *g_cFlags;
 extern const TCHAR *g_cxxFlags;
 extern const TCHAR *g_cppFlags;
 extern const TCHAR *g_ldFlags;
+extern const TCHAR *g_execLdFlags;
 extern const TCHAR *g_libs;
+extern const TCHAR *g_execLibs;
 extern const TCHAR *g_cc;
 extern const TCHAR *g_cxx;
 extern const TCHAR *g_ld;
@@ -63,6 +65,8 @@ static void ShowHelp()
 	       "   -O, --cxx             C++ compiler\n"
 	       "   -X, --cxxflags        C++ compiler flags\n"
 	       "   -d, --datadir         Data directory\n"
+	       "   -e, --exec-ldflags    Linker flags (all except -l) for executables\n"
+	       "   -E, --exec-libs       Linker flags (only -l) for executables\n"
 	       "   -D, --ld              Linker\n"
 	       "   -l, --ldflags         Linker flags (all except -l)\n"
 	       "   -L, --libdir          Library directory\n"
@@ -80,6 +84,8 @@ static void ShowHelp()
 	       "   -C  C/C++ compiler flags\n"
 	       "   -d  Data directory\n"
 	       "   -D  Linker\n"
+	       "   -e  Linker flags (all except -l) for executables\n"
+	       "   -E  Linker flags (only -l) for executables\n"
 	       "   -i  Linker flags (only -l)\n"
 	       "   -l  Linker flags (all except -l)\n"
 	       "   -L  Library directory\n"
@@ -129,6 +135,8 @@ int main(int argc, char *argv[])
 		{ (char *)"cxx", 0, NULL, 'O' },
 		{ (char *)"cxxflags", 0, NULL, 'X' },
 		{ (char *)"datadir", 0, NULL, 'd' },
+		{ (char *)"exec-ldflags", 0, NULL, 'e' },
+		{ (char *)"exec-libs", 0, NULL, 'E' },
 		{ (char *)"ld", 0, NULL, 'D' },
 		{ (char *)"ldflags", 0, NULL, 'l' },
 		{ (char *)"libdir", 0, NULL, 'L' },
@@ -174,6 +182,12 @@ int main(int argc, char *argv[])
 				return 0;
 			case 'D':
 				_tprintf(_T("%s\n"), g_ld);
+				return 0;
+			case 'e':
+				_tprintf(_T("%s\n"), g_execLdFlags);
+				return 0;
+			case 'E':
+				_tprintf(_T("%s\n"), g_execLibs);
 				return 0;
          case 'i':
             PrintFlags(g_libs);
