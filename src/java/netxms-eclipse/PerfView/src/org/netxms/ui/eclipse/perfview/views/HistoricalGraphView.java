@@ -478,11 +478,9 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
                }
                
                //TODO: update 
-               System.out.println(settings.getPredictTimeUnits());
-               System.out.println(data[i].toString());
                if(currentItem.type == ChartDciConfig.ITEM && settings.getPredictTimeUnits() != GraphSettings.TIME_UNIT_NONE)
                {
-                  data[i].update(session.getPredictedData(currentItem.nodeId, currentItem.dciId, new Date(System.currentTimeMillis()), new Date(System.currentTimeMillis() + settings.getPredictionTimeRangeMillis())));
+                  data[i].merge(session.getPredictedData(currentItem.nodeId, currentItem.dciId, new Date(System.currentTimeMillis()), new Date(System.currentTimeMillis() + settings.getPredictionTimeRangeMillis())));
                }
                monitor.worked(1);
             }
@@ -493,7 +491,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
                {
                   if (!((Widget)chart).isDisposed())
                   {
-                     chart.setTimeRange(settings.getTimeFrom(), settings.getTimeTo());
+                     chart.setTimeRange(settings.getTimeFrom(), settings.getPredictTimeUnits() == GraphSettings.TIME_UNIT_NONE ? settings.getTimeTo() : new Date(System.currentTimeMillis() + settings.getPredictionTimeRangeMillis()));
                      setChartData(data);
                      chart.clearErrors();
                   }

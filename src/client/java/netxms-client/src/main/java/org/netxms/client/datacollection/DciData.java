@@ -123,12 +123,11 @@ public class DciData
    /**
     * Add predicted values to value list
     * 
-    * @param predictedData predicted data
+    * @param data predicted data
     */
-   public void update(DciData predictedData)
+   public void merge(DciData data)
    {
-      for(DciDataRow r : predictedData.values)
-         values.add(r);
-      
+      data.values.addAll(values);
+      values = data.values;      
    }
 }

@@ -51,6 +51,14 @@
             name="Template Graphs"
             restorable="true">
       </view>
+      <view
+            allowMultiple="true"
+            class="org.netxms.ui.eclipse.perfview.views.PredictedDataView"
+            icon="icons/data_history.gif"
+            id="org.netxms.ui.eclipse.perfview.views.PredictedDataView"
+            name="Predicted Data"
+            restorable="true">
+      </view>
    </extension>
 
    <extension
@@ -84,6 +92,13 @@
                icon="icons/data_history.gif"
                id="org.netxms.ui.eclipse.perfview.popupActions.ShowHistoryData_SimpleDciValue#40"
                label="%action.label.History"
+               menubarPath="additions">
+         </action>
+         <action
+               class="org.netxms.ui.eclipse.perfview.actions.ShowPredictedData"
+               icon="icons/data_history.gif"
+               id="org.netxms.ui.eclipse.perfview.popupActions.ShowPredictedData_SimpleDciValue#40"
+               label="Predicted data"
                menubarPath="additions">
          </action>
       </objectContribution>
@@ -128,6 +143,13 @@
                icon="icons/data_history.gif"
                id="org.netxms.ui.eclipse.perfview.popupActions.ShowHistoryData_DataCollectionItem"
                label="%action.label.History"
+               menubarPath="additions">
+         </action>
+         <action
+               class="org.netxms.ui.eclipse.perfview.actions.ShowPredictedData"
+               icon="icons/data_history.gif"
+               id="org.netxms.ui.eclipse.perfview.popupActions.ShowPredictedData_DataCollectionItem"
+               label="Predicted data"
                menubarPath="additions">
          </action>
       </objectContribution>

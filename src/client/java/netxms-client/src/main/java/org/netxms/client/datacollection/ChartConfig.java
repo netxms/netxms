@@ -100,7 +100,7 @@ public class ChartConfig
 	protected int timeRange = 1;
 
    @Element(required=false)
-   protected int timePredictUnits = GraphSettings.TIME_UNIT_HOUR;
+   protected int timePredictUnits = GraphSettings.TIME_UNIT_NONE;
    
    @Element(required=false)
    protected int timePredictRange = 1;

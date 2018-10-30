@@ -350,16 +350,21 @@ bool GetPredictedData(ClientSession *session, const NXCPMessage *request, NXCPMe
    }
 
    PredictionEngine *engine = FindPredictionEngine(((DCItem *)dci)->getPredictionEngine());
+   int dataType = ((DCItem *)dci)->getDataType();
+   time_t timeFrom = request->getFieldAsTime(VID_TIME_FROM);
+   time_t timestamp = request->getFieldAsTime(VID_TIME_TO);
+   time_t interval = dci->getEffectivePollingInterval();
+
+   if(engine == NULL || (timestamp - timeFrom) <= 0)
+   {
+      response->setField(VID_RCC, RCC_INTERNAL_ERROR);
+      return false;
+   }
 
    // Send CMD_REQUEST_COMPLETED message
    response->setField(VID_RCC, RCC_SUCCESS);
    ((DCItem *)dci)->fillMessageWithThresholds(response, false);
    session->sendMessage(response);
-
-   int dataType = ((DCItem *)dci)->getDataType();
-   time_t timeFrom = request->getFieldAsTime(VID_TIME_FROM);
-   time_t timestamp = request->getFieldAsTime(VID_TIME_TO);
-   time_t interval = dci->getEffectivePollingInterval();
 
    // Allocate memory for data and prepare data header
    char buffer[64];
