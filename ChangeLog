@@ -20,7 +20,8 @@
 *
 
 - Fixed issues:
-   NX-1513 (Server installation fails with MySQL 8.0)
+	NX-1513 (Server installation fails with MySQL 8.0)
+	NX-1518 (Variable $object is not set for scheduled scripts associated with object other than node)
 
 *
 * 2.2.10

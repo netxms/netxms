@@ -445,22 +445,22 @@ void ExecuteScheduledScript(const ScheduledTaskParameters *parameters)
    _tcslcpy(name, parameters->m_persistentData, 256);
    Trim(name);
 
-   Node *object = (Node *)FindObjectById(parameters->m_objectId, OBJECT_NODE);
-   if (object != NULL)
+   NetObj *object = FindObjectById(parameters->m_objectId);
+   if ((object != NULL) && !object->checkAccessRights(parameters->m_userId, OBJECT_ACCESS_CONTROL))
    {
-      if (!object->checkAccessRights(parameters->m_userId, OBJECT_ACCESS_CONTROL))
-      {
-         nxlog_debug(4, _T("ExecuteScheduledScript(%s): access denied for userId %d object \"%s\" [%d]"),
-                  name, parameters->m_userId, object->getName(), object->getId());
-         return;
-      }
+      nxlog_debug(4, _T("ExecuteScheduledScript(%s): access denied for userId %d object \"%s\" [%d]"),
+               name, parameters->m_userId, object->getName(), object->getId());
+      return;
    }
 
    NXSL_VM *vm = CreateServerScriptVM(name, object);
    if (vm == NULL)
    {
-      nxlog_debug(4, _T("ExecuteScheduledScript(%s): cannot create VM (object \"%s\" [%d])"),
-               name, object->getName(), object->getId());
+      if (object != NULL)
+         nxlog_debug(4, _T("ExecuteScheduledScript(%s): cannot create VM (object \"%s\" [%d])"),
+                  name, object->getName(), object->getId());
+      else
+         nxlog_debug(4, _T("ExecuteScheduledScript(%s): cannot create VM (not attached to object)"), name);
       return;
    }
 
