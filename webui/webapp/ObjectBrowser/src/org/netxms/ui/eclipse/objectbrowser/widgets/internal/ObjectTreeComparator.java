@@ -60,10 +60,12 @@ public class ObjectTreeComparator extends ViewerComparator
 		if ((((AbstractObject)element).getObjectClass() == AbstractObject.OBJECT_CONTAINER) ||
 		    (((AbstractObject)element).getObjectClass() == AbstractObject.OBJECT_TEMPLATEGROUP) ||
 		    (((AbstractObject)element).getObjectClass() == AbstractObject.OBJECT_POLICYGROUP) ||
+		    (((AbstractObject)element).getObjectClass() == AbstractObject.OBJECT_DASHBOARDGROUP) ||
+          (((AbstractObject)element).getObjectClass() == AbstractObject.OBJECT_NETWORKMAPGROUP) ||
 		    (((AbstractObject)element).getObjectClass() == AbstractObject.OBJECT_BUSINESSSERVICE))
 			return CATEGORY_CONTAINER;
 		if (((AbstractObject)element).getObjectClass() == AbstractObject.OBJECT_NODELINK)
-				return CATEGORY_NODELINK;
+		   return CATEGORY_NODELINK;
 		return CATEGORY_OTHER;
 	}
 
