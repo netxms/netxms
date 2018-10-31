@@ -379,10 +379,14 @@ static ObjectArray<VolumeGroup> *ReadVolumeGroups()
    long rc = CAST_FROM_POINTER(odm_get_obj(CuAt_CLASS, "attribute='vgserial_id'", &object, ODM_FIRST), long);
    while((rc != 0) && (rc != -1))
    {
-      VolumeGroup *vg = VolumeGroup::create(object.name, object.value);
-      if (vg != NULL)
-         vgs->add(vg);
-      rc = CAST_FROM_POINTER(odm_get_obj(CuAt_CLASS, NULL, &object, ODM_NEXT), long);
+      // Sanity check - some versions of AIX return all attributes despite filter in odm_get_obj
+      if (!strcmp(object.attribute, "vgserial_id"))
+      {
+         VolumeGroup *vg = VolumeGroup::create(object.name, object.value);
+         if (vg != NULL)
+            vgs->add(vg);
+      }
+      rc = CAST_FROM_POINTER(odm_get_obj(CuAt_CLASS, "attribute='vgserial_id'", &object, ODM_NEXT), long);
    }
    return vgs;
 }
