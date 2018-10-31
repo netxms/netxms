@@ -77,6 +77,14 @@
             id="org.netxms.ui.eclipse.dashboard.actions.popup.object.DashboardGroup"
             objectClass="org.netxms.client.objects.DashboardGroup">
          <action
+               class="org.netxms.ui.eclipse.dashboard.actions.ImportDashboard"
+               enablesFor="1"
+               icon="icons/import.gif"
+               id="org.netxms.ui.eclipse.dashboard.actions.ImportDashboard#DashboardGroup"
+               label="%action.label.ImportDashboard"
+               menubarPath="objectcreation">
+         </action>
+         <action
                class="org.netxms.ui.eclipse.dashboard.actions.CreateDashboardGroup"
                enablesFor="1"
                id="org.netxms.ui.eclipse.dashboard.popupActions.CreateDashboardGroup#DashboardGroup"
