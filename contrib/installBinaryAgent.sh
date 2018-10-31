@@ -1,8 +1,6 @@
 #!/bin/sh
 
-# $Id$
-
-# Copyright (c) 2007, NetXMS Team
+# Copyright (c) 2007-2018, NetXMS Team
 #
 # All rights reserved.
 # Redistribution and use in source and binary forms, with or without
@@ -78,6 +76,7 @@ fi
 # install new files
 mkdir -p $prefix 2>/dev/null
 if test "x$platform" = "xAIX"; then
+	echo Running slibclean >>$log
 	slibclean
 fi
 tar cf - . | ( cd $prefix ; tar xf - )
