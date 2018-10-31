@@ -51,6 +51,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.objects.Dashboard;
+import org.netxms.client.objects.DashboardGroup;
 import org.netxms.client.objects.DashboardRoot;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.dashboard.Activator;
@@ -96,7 +97,7 @@ public class ImportDashboard implements IObjectActionDelegate
 		if ((selection instanceof IStructuredSelection) && (((IStructuredSelection)selection).size() == 1))
 		{
 			final Object object = ((IStructuredSelection)selection).getFirstElement();
-			if ((object instanceof Dashboard) || (object instanceof DashboardRoot))
+			if ((object instanceof Dashboard) || (object instanceof DashboardGroup) || (object instanceof DashboardRoot))
 			{
 				parentId = ((AbstractObject)object).getObjectId();
 			}
@@ -135,6 +136,10 @@ public class ImportDashboard implements IObjectActionDelegate
 				Document dom = db.parse(dlg.getImportFile());
 				
 				Element root = dom.getDocumentElement();
+				if (!root.getNodeName().equals("dashboard")) //$NON-NLS-1$
+					throw new Exception(Messages.get().ImportDashboard_InvalidFile);
+				
+				root.normalize();
 				
 				List<DashboardElement> dashboardElements = new ArrayList<DashboardElement>(); 
 				
