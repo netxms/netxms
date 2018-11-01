@@ -2282,7 +2282,7 @@ public:
    void closeTableList() { unlockProperties(); }
 
    AgentConnectionEx *createAgentConnection(bool sendServerId = false);
-   AgentConnectionEx *getAgentConnection();
+   AgentConnectionEx *getAgentConnection(bool forcePrimary = false);
    AgentConnectionEx *acquireProxyConnection(ProxyType type, bool validate = false);
    AgentConnectionEx *getConnectionToZoneNodeProxy(bool validate = false);
 	SNMP_Transport *createSnmpTransport(WORD port = 0, const TCHAR *context = NULL);
