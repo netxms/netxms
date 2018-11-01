@@ -83,6 +83,7 @@
  * Error codes
  */
 #define ERR_SUCCESS                 ((UINT32)0)
+#define ERR_PROCESSING              ((UINT32)102)
 #define ERR_UNKNOWN_COMMAND         ((UINT32)400)
 #define ERR_AUTH_REQUIRED           ((UINT32)401)
 #define ERR_ACCESS_DENIED           ((UINT32)403)
