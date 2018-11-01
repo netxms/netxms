@@ -28,7 +28,7 @@ Copyright (c) 2003-2018 Raden Solutions
       location="org.netxms.ui.eclipse.console"
       startupProgressRect="0,325,500,5"
       startupMessageRect="7,300,490,18"
-      startupForegroundColor="F18515" />
+      startupForegroundColor="E0E0E0" />
    <launcher name="nxmc">
       <linux icon="/Core/icons/launcher/nxmc.xpm"/>
       <macosx icon="/Core/icons/launcher/nxmc.icns"/>
@@ -38,7 +38,6 @@ Copyright (c) 2003-2018 Raden Solutions
          <bmp/>
       </win>
    </launcher>
-
 
    <vm>
    </vm>
