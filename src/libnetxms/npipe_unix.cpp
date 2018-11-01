@@ -203,7 +203,7 @@ void NamedPipeListener::serverThread()
       }
       else
       {
-         nxlog_debug(2, _T("NamedPipeListener(%s): accept failed (%s)"), m_name, _tcserror(errno));
+         nxlog_debug(2, _T("NamedPipeListener(%s): accept failed (%s) on fd %d"), m_name, _tcserror(errno), m_handle);
       }
    }
    nxlog_debug(2, _T("NamedPipeListener(%s): stopped"), m_name);
