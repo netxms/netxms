@@ -51,6 +51,7 @@ poll.status	Status poll
 poll.topo	Topology poll
 
 sa.*		Sub-agent related messages
+sa.aix          AIX platform subagent messages
 sa.freebsd	FreeBSD platform subagent messages
 sa.ping		Ping subagent
 

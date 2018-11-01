@@ -1,6 +1,6 @@
 /* 
 ** NetXMS subagent for AIX
-** Copyright (C) 2004-2016 Victor Kirhenshtein
+** Copyright (C) 2004-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -254,7 +254,7 @@ VolumeGroup *VolumeGroup::create(const char *name, const char *id)
    struct unique_id uid;
    if (!ParseUniqueId(id, &uid))
    {
-      nxlog_debug(5, _T("AIX: VolumeGroup::create: cannot parse ID '%hs'"), id);
+      nxlog_debug_tag(AIX_DEBUG_TAG, 5, _T("VolumeGroup::create: cannot parse ID '%hs'"), id);
       return NULL;
    }
    
@@ -262,7 +262,7 @@ VolumeGroup *VolumeGroup::create(const char *name, const char *id)
    int rc = lvm_queryvg(&uid, &vgdata, NULL);
    if (rc != 0)
    {
-      nxlog_debug(5, _T("AIX: VolumeGroup::create: lvm_queryvg failed for VG %hs (%hs)"), name, id);
+      nxlog_debug_tag(AIX_DEBUG_TAG, 5, _T("VolumeGroup::create: lvm_queryvg failed for VG %hs (%hs)"), name, id);
       return NULL;
    }
    
@@ -281,7 +281,7 @@ VolumeGroup *VolumeGroup::create(const char *name, const char *id)
       rc = lvm_querypv(&uid, &vgdata->pvs[i].pv_id, &pv, NULL);
       if (rc != 0)
       {
-         nxlog_debug(5, _T("AIX: VolumeGroup::create: lvm_querypv failed for VG %hs (%hs) PV %d"), name, id, i);
+         nxlog_debug_tag(AIX_DEBUG_TAG, 5, _T("VolumeGroup::create: lvm_querypv failed for VG %hs (%hs) PV %d"), name, id, i);
          goto failure;
       }
       
@@ -303,7 +303,7 @@ VolumeGroup *VolumeGroup::create(const char *name, const char *id)
       rc = lvm_querylv(&vgdata->lvs[i].lv_id, &lv, NULL);
       if (rc != 0)
       {
-         nxlog_debug(5, _T("AIX: VolumeGroup::create: lvm_querylv failed for VG %hs (%hs) LV %hs"), name, id, vgdata->lvs[i].lvname);
+         nxlog_debug_tag(AIX_DEBUG_TAG, 5, _T("VolumeGroup::create: lvm_querylv failed for VG %hs (%hs) LV %hs"), name, id, vgdata->lvs[i].lvname);
          goto failure;
       }
       

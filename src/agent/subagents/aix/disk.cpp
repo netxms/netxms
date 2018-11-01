@@ -207,7 +207,7 @@ LONG H_FileSystems(const TCHAR *cmd, const TCHAR *arg, Table *table, AbstractCom
          else
          {
             TCHAR buffer[1024];
-            AgentWriteDebugLog(4, _T("AIX: H_FileSystems: Call to statvfs(\"%hs\") failed (%s)"), mountPoint, _tcserror(errno));
+            nxlog_debug_tag(AIX_DEBUG_TAG, 4, _T("H_FileSystems: Call to statvfs(\"%hs\") failed (%s)"), mountPoint, _tcserror(errno));
 
             table->set(4, (QWORD)0);
             table->set(5, (QWORD)0);
@@ -224,7 +224,7 @@ LONG H_FileSystems(const TCHAR *cmd, const TCHAR *arg, Table *table, AbstractCom
    }
    else
    {
-      AgentWriteDebugLog(4, _T("AIX: H_FileSystems: Call to GetMountPoints failed"));
+      nxlog_debug_tag(AIX_DEBUG_TAG, 4, _T("H_FileSystems: Call to GetMountPoints failed"));
       rc = SYSINFO_RC_ERROR;
    }
 	return rc;
@@ -255,7 +255,7 @@ LONG H_MountPoints(const TCHAR *cmd, const TCHAR *arg, StringList *value, Abstra
 	}
 	else
 	{
-		AgentWriteDebugLog(4, _T("AIX: H_MountPoints: Call to GetMountPoints failed"));
+		nxlog_debug_tag(AIX_DEBUG_TAG, 4, _T("H_MountPoints: Call to GetMountPoints failed"));
 		rc = SYSINFO_RC_ERROR;
 	}
 	return rc;

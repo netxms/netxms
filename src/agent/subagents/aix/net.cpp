@@ -110,7 +110,7 @@ LONG H_NetInterfaceInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abst
 		// Index passed as argument, convert to name
 		if (if_indextoname(ifIndex, ifName) == NULL)
 		{
-			AgentWriteDebugLog(7, _T("AIX: unable to resolve interface index %u"), ifIndex);
+			nxlog_debug_tag(AIX_DEBUG_TAG, 7, _T("Unable to resolve interface index %u"), ifIndex);
 			return SYSINFO_RC_ERROR;
 		}
 	}
@@ -318,7 +318,7 @@ LONG H_NetInterfaceStatus(const TCHAR *param, const TCHAR *arg, TCHAR *value, Ab
 		// Index passed as argument, convert to name
 		if (if_indextoname(ifIndex, ifName) == NULL)
 		{
-			AgentWriteDebugLog(7, _T("AIX: unable to resolve interface index %u"), ifIndex);
+			nxlog_debug_tag(AIX_DEBUG_TAG, 7, _T("Unable to resolve interface index %u"), ifIndex);
 			return SYSINFO_RC_ERROR;
 		}
 	}
@@ -333,7 +333,7 @@ LONG H_NetInterfaceStatus(const TCHAR *param, const TCHAR *arg, TCHAR *value, Ab
 			requestedFlag = IFF_RUNNING;
 			break;
 		default:
-			AgentWriteDebugLog(7, _T("AIX: internal error in H_NetIfterfaceStatus (invalid flag requested)"));
+			nxlog_debug_tag(AIX_DEBUG_TAG, 7, _T("Internal error in H_NetIfterfaceStatus (invalid flag requested)"));
 			return SYSINFO_RC_ERROR;
 	}
 

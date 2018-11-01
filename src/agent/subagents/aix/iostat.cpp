@@ -101,7 +101,7 @@ static void ProcessDiskStats(perfstat_disk_t *di)
 			dev = &s_devices[i];
 			strcpy(dev->name, di->name);
 			memcpy(&dev->last, di, sizeof(perfstat_disk_t));
-			AgentWriteDebugLog(4, _T("AIX: device %hs on adapter %hs added to I/O stat collection"), dev->name, di->adapter);
+			nxlog_debug_tag(AIX_DEBUG_TAG, 4, _T("Device %hs on adapter %hs added to I/O stat collection"), dev->name, di->adapter);
 			return;  // No prev data for new device, ignore this sample
 		}
 	}
@@ -127,7 +127,7 @@ static void ProcessDiskStats(perfstat_disk_t *di)
  */
 static THREAD_RESULT THREAD_CALL IOStatCollector(void *arg)
 {
-	AgentWriteDebugLog(1, _T("AIX: I/O stat collector thread started"));
+	nxlog_debug_tag(AIX_DEBUG_TAG, 1, _T("I/O stat collector thread started"));
 
 	while(!ConditionWait(s_condShutdown, 1000))
 	{
@@ -154,7 +154,7 @@ static THREAD_RESULT THREAD_CALL IOStatCollector(void *arg)
 		MutexUnlock(s_dataLock);
 	}
 
-	AgentWriteDebugLog(1, _T("AIX: I/O stat collector thread stopped"));
+	nxlog_debug_tag(AIX_DEBUG_TAG, 1, _T("I/O stat collector thread stopped"));
 	return THREAD_OK;
 }
 
