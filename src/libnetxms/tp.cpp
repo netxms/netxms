@@ -239,7 +239,8 @@ static THREAD_RESULT THREAD_CALL MaintenanceThread(void *arg)
             MutexLock(p->mutex);
             int threadCount = p->threads->size();
             INT64 averageWaitTime = p->averageWaitTime / FP_1;
-            if ((averageWaitTime > s_waitTimeHighWatermark) && (threadCount < p->maxThreads))
+            if (((averageWaitTime > s_waitTimeHighWatermark) && (threadCount < p->maxThreads)) ||
+                ((threadCount == 0) && (p->activeRequests > 0)))
             {
                int delta = std::min(p->maxThreads - threadCount, std::max((static_cast<int>(p->activeRequests) - threadCount) / 2, 1));
                for(int i = 0; i < delta; i++)
