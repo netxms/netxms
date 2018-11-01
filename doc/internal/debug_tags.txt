@@ -54,6 +54,7 @@ proc.*          Process related trace
 proc.spexec     Sub-process executor
 
 sa.*		Sub-agent related messages
+sa.aix          AIX platform subagent messages
 sa.freebsd	FreeBSD platform subagent messages
 sa.ping		Ping subagent
 

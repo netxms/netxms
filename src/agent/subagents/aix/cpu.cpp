@@ -1,6 +1,6 @@
 /*
 ** NetXMS subagent for AIX
-** Copyright (C) 2004-2014 Victor Kirhenshtein
+** Copyright (C) 2004-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -80,11 +80,12 @@ static void CpuUsageCollector()
 		int cpuCount = perfstat_cpu(&firstcpu, m_cpuStats, sizeof(perfstat_cpu_t), m_maxCPU);
 		if (cpuCount > m_maxCPU)
 		{
+			nxlog_debug_tag(AIX_DEBUG_TAG, 6, _T("perfstat_cpu return code (%d) > maxCPU (%d)"), cpuCount, m_maxCPU);
 			cpuCount = m_maxCPU;
 		}
 		else if (cpuCount <= 0)
 		{
-			AgentWriteDebugLog(6, _T("AIX: call to perfstat_cpu failed (%s)"), _tcserror(errno));
+			nxlog_debug_tag(AIX_DEBUG_TAG, 6, _T("Call to perfstat_cpu failed (%s)"), _tcserror(errno));
 			cpuCount = 0;
 		}
 		
@@ -147,7 +148,7 @@ static void CpuUsageCollector()
 	}
 	else
 	{
-		AgentWriteDebugLog(6, _T("AIX: call to perfstat_cpu_total failed (%s)"), _tcserror(errno));
+		nxlog_debug_tag(AIX_DEBUG_TAG, 6, _T("Call to perfstat_cpu_total failed (%s)"), _tcserror(errno));
 	}
 
    perfstat_partition_total_t lparstats;
@@ -179,7 +180,7 @@ static void CpuUsageCollector()
    }
    else
    {
-		AgentWriteDebugLog(6, _T("AIX: call to perfstat_partition_total failed (%s)"), _tcserror(errno));
+      nxlog_debug_tag(AIX_DEBUG_TAG, 6, _T("Call to perfstat_partition_total failed (%s)"), _tcserror(errno));
    }
 
 	// go to the next slot
@@ -192,13 +193,13 @@ static void CpuUsageCollector()
  */
 static THREAD_RESULT THREAD_CALL CpuUsageCollectorThread(void *arg)
 {
-	AgentWriteDebugLog(1, _T("CPU usage collector thread started"));
+   nxlog_debug_tag(AIX_DEBUG_TAG, 1, _T("CPU usage collector thread started"));
 	while(m_stopCollectorThread == false)
 	{
 		CpuUsageCollector();
 		ThreadSleepMs(1000); // sleep 1 second
 	}
-	AgentWriteDebugLog(1, _T("CPU usage collector thread stopped"));
+   nxlog_debug_tag(AIX_DEBUG_TAG, 1, _T("CPU usage collector thread stopped"));
 	return THREAD_OK;
 }
 
@@ -220,6 +221,7 @@ void StartCpuUsageCollector()
    {
       m_maxCPU = 1;
    }
+   nxlog_debug_tag(AIX_DEBUG_TAG, 2, _T("CPU count set to %d"), m_maxCPU);
 
    m_cpuStats = (perfstat_cpu_t *)malloc(sizeof(perfstat_cpu_t) * m_maxCPU);
 
@@ -293,24 +295,24 @@ void ShutdownCpuUsageCollector()
    ThreadJoin(m_cpuUsageCollector);
    MutexDestroy(m_cpuUsageMutex);
 
-   free(m_cpuStats);
+   MemFree(m_cpuStats);
 
-   free(m_cpuUsage);
-   free(m_cpuUsageUser);
-   free(m_cpuUsageSystem);
-   free(m_cpuUsageIdle);
-   free(m_cpuUsageIoWait);
+   MemFree(m_cpuUsage);
+   MemFree(m_cpuUsageUser);
+   MemFree(m_cpuUsageSystem);
+   MemFree(m_cpuUsageIdle);
+   MemFree(m_cpuUsageIoWait);
 
-   free(m_cpuPhysicalUsage);
-   free(m_cpuPhysicalUsageUser);
-   free(m_cpuPhysicalUsageSystem);
-   free(m_cpuPhysicalUsageIoWait);
-   free(m_cpuPhysicalUsageIdle);
+   MemFree(m_cpuPhysicalUsage);
+   MemFree(m_cpuPhysicalUsageUser);
+   MemFree(m_cpuPhysicalUsageSystem);
+   MemFree(m_cpuPhysicalUsageIoWait);
+   MemFree(m_cpuPhysicalUsageIdle);
 
-   free(m_lastUser);
-   free(m_lastSystem);
-   free(m_lastIdle);
-   free(m_lastIoWait);
+   MemFree(m_lastUser);
+   MemFree(m_lastSystem);
+   MemFree(m_lastIdle);
+   MemFree(m_lastIoWait);
 }
 
 /**
