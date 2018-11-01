@@ -6003,7 +6003,7 @@ AgentConnectionEx *Node::createAgentConnection(bool sendServerId)
  * when connection is no longer needed. File transfers and other long running oprations should
  * be avoided.
  */
-AgentConnectionEx *Node::getAgentConnection()
+AgentConnectionEx *Node::getAgentConnection(bool forcePrimary)
 {
    if (m_status == STATUS_UNMANAGED)
       return NULL;
@@ -6028,7 +6028,7 @@ AgentConnectionEx *Node::getAgentConnection()
       ThreadSleepMs(50);
    }
 
-   if (!success)
+   if (!success && !forcePrimary)
    {
       // was unable to obtain lock on primary connection
       nxlog_debug_tag(DEBUG_TAG_AGENT, 6, _T("Node::getAgentConnection(%s [%d]): cannot obtain lock on primary connection"), m_name, (int)m_id);
