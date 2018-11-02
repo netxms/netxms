@@ -60,6 +60,7 @@ reconnect:
 	if (connect(*hPipe, (struct sockaddr *)&remote, SUN_LEN(&remote)) == -1)
 	{
 		close(*hPipe);
+		*hPipe = INVALID_PIPE_HANDLE;
 		return false;
 	}
 #endif
