@@ -33,7 +33,7 @@
 
 #if defined(_WIN32)
 
-int LIBNETXMS_EXPORTABLE _statw32(const TCHAR *file, struct _stati64 *st);
+int LIBNETXMS_EXPORTABLE _statw32(const WCHAR *file, struct _stati64 *st);
 
 #define NX_STAT _statw32
 #define NX_FSTAT _fstati64
@@ -69,5 +69,8 @@ inline int __call_stat(const WCHAR *f, NX_STAT_STRUCT *s, bool follow)
 #define CALL_STAT(f, s) NX_STAT(f, s)
 #define CALL_STAT_FOLLOW_SYMLINK(f, s) NX_STAT_FOLLOW_SYMLINK(f, s)
 #endif
+
+#define CALL_STAT_A(f, s) NX_STAT(f, s)
+#define CALL_STAT_FOLLOW_SYMLINK_A(f, s) NX_STAT_FOLLOW_SYMLINK(f, s)
 
 #endif
