@@ -191,7 +191,11 @@ static LONG GetDirInfo(const char *path, const char *pattern, bool bRecursive, u
              uFileCount++;
          }
       }
+#ifdef _WIN32
+      wclosedir(dir);
+#else
       closedir(dir);
+#endif
    }
 
    return nRet;
