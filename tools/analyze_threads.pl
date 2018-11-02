@@ -9,7 +9,10 @@
 	"poll",
 	"select",
 	"accept",
-	"AgentTunnelCommChannel::recv"
+	"AgentTunnelCommChannel::recv",
+	"_p_nsleep",
+	"_event_sleep",
+	"__fd_select"
 );
 
 my %skiplist;
@@ -23,7 +26,7 @@ while(<STDIN>)
    chomp;
    $line = $_;
 
-   if (($line =~ /^Thread .*/) || ($line =~ /^-----------------  lwp# [0-9]+.*/))
+   if (($line =~ /^Thread .*/) || ($line =~ /^-----------------  lwp# [0-9]+.*/) || ($line =~ /^---------- tid# [0-9]+.*/))
    {
       if ($ignore == 0)
       {
@@ -46,6 +49,10 @@ while(<STDIN>)
       $func = $1;
    }
    elsif ($line =~ /^ [0-9a-f]+ ([^ ]+)\s.*/)
+   {
+      $func = $1;
+   }
+   elsif ($line =~ /^0x[0-9a-f]+  ([^(]+)\(.*/)
    {
       $func = $1;
    }
