@@ -353,13 +353,13 @@ WCHAR LIBNETXMS_EXPORTABLE *nx_wcsdup(const WCHAR *src)
 /**
  * Compare pattern with possible ? characters with given text
  */
-static bool CompareTextBlocks(const TCHAR *pattern, const TCHAR *text, size_t size)
+template<typename T> bool CompareTextBlocks(const T *pattern, const T *text, size_t size)
 {
-	const TCHAR *p = pattern;
-	const TCHAR *t = text;
+	const T *p = pattern;
+	const T *t = text;
 	for(size_t i = size; i > 0; i--, p++, t++)
 	{
-		if (*p == _T('?'))
+		if (*p == '?')
 			continue;
 		if (*p != *t)
 			return false;
@@ -370,10 +370,10 @@ static bool CompareTextBlocks(const TCHAR *pattern, const TCHAR *text, size_t si
 /**
  * Match string against pattern with * and ? metasymbols - implementation
  */
-static bool MatchStringEngine(const TCHAR *pattern, const TCHAR *string)
+template<typename T> bool MatchStringEngine(const T *pattern, const T *string, size_t (*slen)(const T *))
 {
-   const TCHAR *SPtr, *MPtr, *BPtr, *EPtr;
-	size_t bsize;
+   const T *SPtr, *MPtr, *BPtr, *EPtr;
+   size_t bsize;
    bool finishScan;
 
    SPtr = string;
@@ -383,37 +383,37 @@ static bool MatchStringEngine(const TCHAR *pattern, const TCHAR *string)
    {
       switch(*MPtr)
       {
-         case _T('?'):
+         case '?':
             if (*SPtr != 0)
             {
                SPtr++;
                MPtr++;
             }
             else
-				{
+            {
                return false;
-				}
+            }
             break;
-         case _T('*'):
-            while(*MPtr == _T('*'))
+         case '*':
+            while(*MPtr == '*')
                MPtr++;
             if (*MPtr == 0)
-	            return true;
-            while(*MPtr == _T('?'))      // Handle "*?" case
+               return true;
+            while(*MPtr == '?')      // Handle "*?" case
             {
                if (*SPtr != 0)
                   SPtr++;
                else
                   return false;
-					MPtr++;
+               MPtr++;
             }
             BPtr = MPtr;           // Text block begins here
-            while((*MPtr != 0) && (*MPtr != _T('*')))
+            while((*MPtr != 0) && (*MPtr != '*'))
                MPtr++;     // Find the end of text block
             // Try to find rightmost matching block
-				bsize = (size_t)(MPtr - BPtr);
-				if (bsize == 0)
-				   break;   // * immediately after ?
+            bsize = (size_t)(MPtr - BPtr);
+            if (bsize == 0)
+               break;   // * immediately after ?
             EPtr = NULL;
             finishScan = false;
             do
@@ -422,7 +422,7 @@ static bool MatchStringEngine(const TCHAR *pattern, const TCHAR *string)
                {
                   while((*SPtr != 0) && (*SPtr != *BPtr))
                      SPtr++;
-                  if (_tcslen(SPtr) < bsize)
+                  if (slen(SPtr) < bsize)
                   {
                      if (EPtr == NULL)
                      {
@@ -456,9 +456,9 @@ static bool MatchStringEngine(const TCHAR *pattern, const TCHAR *string)
                MPtr++;
             }
             else
-				{
+            {
                return false;
-				}
+            }
             break;
       }
    }
@@ -474,19 +474,45 @@ static bool MatchStringEngine(const TCHAR *pattern, const TCHAR *string)
  * @param matchCase set to true for case-sensetive match
  * @return true if string matches given pattern
  */
-bool LIBNETXMS_EXPORTABLE MatchString(const TCHAR *pattern, const TCHAR *str, bool matchCase)
+bool LIBNETXMS_EXPORTABLE MatchStringA(const char *pattern, const char *str, bool matchCase)
 {
    if (matchCase)
-      return MatchStringEngine(pattern, str);
+      return MatchStringEngine(pattern, str, strlen);
 
-   TCHAR *tp, *ts;
+   char *tp, *ts;
    bool bResult;
 
-   tp = _tcsdup(pattern);
-   ts = _tcsdup(str);
-   _tcsupr(tp);
-   _tcsupr(ts);
-   bResult = MatchStringEngine(tp, ts);
+   tp = strdup(pattern);
+   ts = strdup(str);
+   strupr(tp);
+   strupr(ts);
+   bResult = MatchStringEngine(tp, ts, strlen);
+   MemFree(tp);
+   MemFree(ts);
+   return bResult;
+}
+
+/**
+ * Match string against pattern with * and ? metasymbols
+ *
+ * @param pattern pattern to match against
+ * @param str string to match
+ * @param matchCase set to true for case-sensetive match
+ * @return true if string matches given pattern
+ */
+bool LIBNETXMS_EXPORTABLE MatchStringW(const WCHAR *pattern, const WCHAR *str, bool matchCase)
+{
+   if (matchCase)
+      return MatchStringEngine(pattern, str, wcslen);
+
+   WCHAR *tp, *ts;
+   bool bResult;
+
+   tp = wcsdup(pattern);
+   ts = wcsdup(str);
+   wcsupr(tp);
+   wcsupr(ts);
+   bResult = MatchStringEngine(tp, ts, wcslen);
    MemFree(tp);
    MemFree(ts);
    return bResult;

@@ -2392,8 +2392,15 @@ bool LIBNETXMS_EXPORTABLE SetLastModificationTime(TCHAR *fileName, time_t lastMo
 BOOL LIBNETXMS_EXPORTABLE CopyFileOrDirectory(const TCHAR *oldName, const TCHAR *newName);
 BOOL LIBNETXMS_EXPORTABLE MoveFileOrDirectory(const TCHAR *oldName, const TCHAR *newName);
 
+bool LIBNETXMS_EXPORTABLE MatchStringA(const char *pattern, const char *str, bool matchCase);
+bool LIBNETXMS_EXPORTABLE MatchStringW(const WCHAR *pattern, const WCHAR *str, bool matchCase);
+#ifdef UNICODE
+#define MatchString MatchStringW
+#else
+#define MatchString MatchStringA
+#endif
+
 TCHAR LIBNETXMS_EXPORTABLE *Trim(TCHAR *str);
-bool LIBNETXMS_EXPORTABLE MatchString(const TCHAR *pattern, const TCHAR *str, bool matchCase);
 TCHAR LIBNETXMS_EXPORTABLE **SplitString(const TCHAR *source, TCHAR sep, int *numStrings);
 int LIBNETXMS_EXPORTABLE GetLastMonthDay(struct tm *currTime);
 bool LIBNETXMS_EXPORTABLE MatchScheduleElement(TCHAR *pszPattern, int nValue, int maxValue, struct tm *localTime, time_t currTime);
