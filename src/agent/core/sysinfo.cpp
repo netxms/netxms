@@ -48,10 +48,19 @@ LONG H_AgentUptime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCom
 /**
  * File filter for GetDirInfo
  */
-static bool MatchFileFilter(const TCHAR *fileName, const NX_STAT_STRUCT &fileInfo, const TCHAR *pattern, int ageFilter, INT64 sizeFilter)
+#ifdef _WIN32
+static bool MatchFileFilter(const WCHAR *fileName, const NX_STAT_STRUCT &fileInfo, const WCHAR *pattern, int ageFilter, INT64 sizeFilter)
+#else
+static bool MatchFileFilter(const char *fileName, const NX_STAT_STRUCT &fileInfo, const char *pattern, int ageFilter, INT64 sizeFilter)
+#endif
 {
-   if (!MatchString(pattern, fileName, FALSE))
+#ifdef _WIN32
+   if (!MatchStringW(pattern, fileName, FALSE))
       return false;
+#else
+   if (!MatchStringA(pattern, fileName, FALSE))
+      return false;
+#endif
 
    if (ageFilter != 0)
    {
@@ -88,18 +97,18 @@ static bool MatchFileFilter(const TCHAR *fileName, const NX_STAT_STRUCT &fileInf
 /**
  * Helper function for H_DirInfo
  */
-static LONG GetDirInfo(TCHAR *szPath, TCHAR *szPattern, bool bRecursive, unsigned int &uFileCount, 
+#ifdef _WIN32
+static LONG GetDirInfo(const WCHAR *path, const WCHAR *pattern, bool bRecursive, unsigned int &uFileCount,
                        UINT64 &llFileSize, int ageFilter, INT64 sizeFilter, bool countFiles, bool countFolders)
+#else
+static LONG GetDirInfo(const char *path, const char *pattern, bool bRecursive, unsigned int &uFileCount,
+                       UINT64 &llFileSize, int ageFilter, INT64 sizeFilter, bool countFiles, bool countFolders)
+#endif
 {
-   _TDIR *pDir = NULL;
-   struct _tdirent *pFile;
    NX_STAT_STRUCT fileInfo;
-   TCHAR szFileName[MAX_PATH];
-   LONG nRet = SYSINFO_RC_SUCCESS;
-
-   if (CALL_STAT(szPath, &fileInfo) == -1)
+   if (CALL_STAT_A(path, &fileInfo) == -1)
    {
-      nxlog_debug(5, _T("GetDirInfo: stat() call on \"%s\" failed (%s)"), szPath, _tcserror(errno));
+      nxlog_debug(5, _T("GetDirInfo: stat() call on \"%hs\" failed (%s)"), path, _tcserror(errno));
       return SYSINFO_RC_ERROR;
    }
 
@@ -109,32 +118,57 @@ static LONG GetDirInfo(TCHAR *szPath, TCHAR *szPattern, bool bRecursive, unsigne
    {
       llFileSize += (UINT64)fileInfo.st_size;
       uFileCount++;
-      return nRet;
+      return SYSINFO_RC_SUCCESS;
    }
 
+   LONG nRet = SYSINFO_RC_SUCCESS;
+
    // this is a dir
-   pDir = _topendir(szPath);
-   if (pDir != NULL)
+#ifdef _WIN32
+   DIRW *dir = wopendir(path);
+#else
+   DIR *dir = opendir(path);
+#endif
+   if (dir != NULL)
    {
-      while(1)
+      while(true)
       {
-         pFile = _treaddir(pDir);
+#ifdef _WIN32
+         struct dirent_w *pFile = wreaddir(dir);
+#else
+         struct dirent *pFile = readdir(dir);
+#endif
          if (pFile == NULL)
             break;
 
-         if (!_tcscmp(pFile->d_name, _T(".")) || !_tcscmp(pFile->d_name, _T("..")))
+#ifdef _WIN32
+         if (!wcscmp(pFile->d_name, L".") || !wcscmp(pFile->d_name, L".."))
             continue;
 
-         size_t len = _tcslen(szPath) + _tcslen(pFile->d_name) + 2;
+         size_t len = wcslen(path) + wcslen(pFile->d_name) + 2;
          if (len > MAX_PATH)
             continue;   // Full file name is too long
 
-         _tcscpy(szFileName, szPath);
-         _tcscat(szFileName, FS_PATH_SEPARATOR);
-         _tcscat(szFileName, pFile->d_name);
+         WCHAR szFileName[MAX_PATH];
+         wcscpy(szFileName, path);
+         wcscat(szFileName, FS_PATH_SEPARATOR);
+         wcscat(szFileName, pFile->d_name);
+#else
+         if (!strcmp(pFile->d_name, ".") || !strcmp(pFile->d_name, ".."))
+            continue;
+
+         size_t len = strlen(path) + strlen(pFile->d_name) + 2;
+         if (len > MAX_PATH)
+            continue;   // Full file name is too long
+
+         char szFileName[MAX_PATH];
+         strcpy(szFileName, path);
+         strcat(szFileName, FS_PATH_SEPARATOR_A);
+         strcat(szFileName, pFile->d_name);
+#endif
 
          // skip unaccessible entries
-         if (CALL_STAT(szFileName, &fileInfo) == -1)
+         if (CALL_STAT_A(szFileName, &fileInfo) == -1)
             continue;
 
          // skip symlinks
@@ -145,20 +179,19 @@ static LONG GetDirInfo(TCHAR *szPath, TCHAR *szPattern, bool bRecursive, unsigne
 
          if (S_ISDIR(fileInfo.st_mode) && bRecursive)
          {
-            nRet = GetDirInfo(szFileName, szPattern, bRecursive, uFileCount, llFileSize, ageFilter, sizeFilter, countFiles, countFolders);
-
+            nRet = GetDirInfo(szFileName, pattern, bRecursive, uFileCount, llFileSize, ageFilter, sizeFilter, countFiles, countFolders);
             if (nRet != SYSINFO_RC_SUCCESS)
                 break;
          }
 
          if (((countFiles && !S_ISDIR(fileInfo.st_mode)) || (countFolders && S_ISDIR(fileInfo.st_mode))) && 
-             MatchFileFilter(pFile->d_name, fileInfo, szPattern, ageFilter, sizeFilter))
+             MatchFileFilter(pFile->d_name, fileInfo, pattern, ageFilter, sizeFilter))
          {
              llFileSize += (UINT64)fileInfo.st_size;
              uFileCount++;
          }
       }
-      _tclosedir(pDir);
+      closedir(dir);
    }
 
    return nRet;
@@ -223,7 +256,14 @@ LONG H_DirInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSes
    int mode = CAST_FROM_POINTER(arg, int);
    DebugPrintf(6, _T("H_DirInfo: path=\"%s\" pattern=\"%s\" recursive=%s mode=%d"), szRealPath, szRealPattern, bRecursive ? _T("true") : _T("false"), mode);
 
+#if defined(_WIN32) || !defined(UNICODE)
    nRet = GetDirInfo(szRealPath, szRealPattern, bRecursive, uFileCount, llFileSize, ageFilter, sizeFilter, mode != DIRINFO_FOLDER_COUNT, mode == DIRINFO_FOLDER_COUNT);
+#else
+   char mbRealPath[MAX_PATH], mbRealPattern[MAX_PATH];
+   WideCharToMultiByte(CP_UTF8, 0, szRealPath, -1, mbRealPath, MAX_PATH, NULL, NULL);
+   WideCharToMultiByte(CP_UTF8, 0, szRealPattern, -1, mbRealPattern, MAX_PATH, NULL, NULL);
+   nRet = GetDirInfo(mbRealPath, mbRealPattern, bRecursive, uFileCount, llFileSize, ageFilter, sizeFilter, mode != DIRINFO_FOLDER_COUNT, mode == DIRINFO_FOLDER_COUNT);
+#endif
 
    switch(mode)
    {
