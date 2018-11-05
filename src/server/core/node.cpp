@@ -30,8 +30,8 @@
 /**
  * Externals
  */
-extern UINT64 g_syslogMessagesReceived;
-extern UINT64 g_snmpTrapsReceived;
+extern VolatileCounter64 g_syslogMessagesReceived;
+extern VolatileCounter64 g_snmpTrapsReceived;
 
 /**
  * Node class default constructor

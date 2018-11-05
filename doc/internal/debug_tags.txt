@@ -58,6 +58,9 @@ sa.aix          AIX platform subagent messages
 sa.freebsd	FreeBSD platform subagent messages
 sa.ping		Ping subagent
 
+snmp.*		SNMP related messages
+snmp.trap	SNMP trap processing
+
 sync		Syncer messages
 
 threads.*	Thread related

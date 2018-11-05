@@ -77,7 +77,7 @@ Queue g_syslogWriteQueue(1000, 100);
 /**
  * Total number of received syslog messages
  */
-UINT64 g_syslogMessagesReceived = 0;
+VolatileCounter64 g_syslogMessagesReceived = 0;
 
 /**
  * Node matching policy
@@ -459,7 +459,7 @@ static void ProcessSyslogMessage(QueuedSyslogMessage *msg)
 	nxlog_debug_tag(DEBUG_TAG, 6, _T("ProcessSyslogMessage: Raw syslog message to process:\n%hs"), msg->message);
    if (ParseSyslogMessage(msg->message, msg->messageLength, msg->timestamp, &record))
    {
-      g_syslogMessagesReceived++;
+      InterlockedIncrement64(&g_syslogMessagesReceived);
 
       record.qwMsgId = s_msgId++;
       Node *node = BindMsgToNode(&record, msg->sourceAddr, msg->zoneUIN, msg->nodeId);

@@ -22,13 +22,15 @@
 
 #include "nxcore.h"
 
+#define DEBUG_TAG _T("snmp.trap")
+
 #define BY_OBJECT_ID 0
 #define BY_POSITION 1
 
 /**
  * Total number of received SNMP traps
  */
-UINT64 g_snmpTrapsReceived = 0;
+VolatileCounter64 g_snmpTrapsReceived = 0;
 
 /**
  * Max SNMP packet length
@@ -41,8 +43,7 @@ UINT64 g_snmpTrapsReceived = 0;
 static Mutex s_trapCfgLock;
 static ObjectArray<SNMPTrapConfiguration> m_trapCfgList(16, 4, true);
 static bool s_logAllTraps = false;
-static Mutex s_trapCountersLock;
-static INT64 s_trapId = 1; // Next free trap ID
+static VolatileCounter64 s_trapId = 0; // Next free trap ID
 static bool s_allowVarbindConversion = true;
 static UINT16 m_wTrapPort = 162;
 
@@ -363,7 +364,7 @@ void InitTraps()
 	if (hResult != NULL)
 	{
 		if (DBGetNumRows(hResult) > 0)
-		   s_trapId = DBGetFieldInt64(hResult, 0, 0) + 1;
+		   s_trapId = DBGetFieldInt64(hResult, 0, 0);
 		DBFreeResult(hResult);
 	}
 	DBConnectionPoolReleaseConnection(hdb);
@@ -466,21 +467,51 @@ static void BroadcastNewTrap(ClientSession *pSession, void *pArg)
 }
 
 /**
+ * Build trap varbind list
+ */
+static String BuildVarbindList(SNMP_PDU *pdu)
+{
+   String out;
+   TCHAR oidText[1024], data[4096];
+
+   for(int i = (pdu->getVersion() == SNMP_VERSION_1) ? 0 : 2; i < pdu->getNumVariables(); i++)
+   {
+      SNMP_Variable *v = pdu->getVariable(i);
+      if (!out.isEmpty())
+         out.append(_T("; "));
+
+      v->getName().toString(oidText, 1024);
+
+      bool convertToHex = true;
+      if (s_allowVarbindConversion)
+         v->getValueAsPrintableString(data, 4096, &convertToHex);
+      else
+         v->getValueAsString(data, 4096);
+
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("   %s == '%s'"), oidText, data);
+
+      out.append(oidText);
+      out.append(_T(" == '"));
+      out.append(data);
+      out.append(_T('\''));
+   }
+
+   return out;
+}
+
+/**
  * Process trap
  */
 void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, UINT32 zoneUIN, int srcPort, SNMP_Transport *snmpTransport, SNMP_Engine *localEngine, bool isInformRq)
 {
-   UINT32 dwBufPos, dwBufSize;
-   TCHAR *pszTrapArgs, szBuffer[4096];
-   SNMP_Variable *pVar;
+   String varbinds;
+   TCHAR buffer[4096];
 	BOOL processed = FALSE;
    int iResult;
 
-   nxlog_debug(4, _T("Received SNMP %s %s from %s"), isInformRq ? _T("INFORM-REQUEST") : _T("TRAP"),
-             pdu->getTrapId()->toString(&szBuffer[96], 4000), srcAddr.toString(szBuffer));
-   s_trapCountersLock.lock();
-   g_snmpTrapsReceived++; // FIXME: change to 64 bit volatile counter
-   s_trapCountersLock.unlock();
+   InterlockedIncrement64(&g_snmpTrapsReceived);
+   nxlog_debug_tag(DEBUG_TAG, 4, _T("Received SNMP %s %s from %s"), isInformRq ? _T("INFORM-REQUEST") : _T("TRAP"),
+             pdu->getTrapId()->toString(&buffer[96], 4000), srcAddr.toString(buffer));
 
 	if (isInformRq)
 	{
@@ -505,31 +536,18 @@ void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, UINT32 zoneUIN, int 
       TCHAR szQuery[8192], oidText[1024];
       UINT32 dwTimeStamp = (UINT32)time(NULL);
 
-      dwBufSize = pdu->getNumVariables() * 4096 + 16;
-      pszTrapArgs = (TCHAR *)malloc(sizeof(TCHAR) * dwBufSize);
-      pszTrapArgs[0] = 0;
-      dwBufPos = 0;
-		for(int i = (pdu->getVersion() == SNMP_VERSION_1) ? 0 : 2; i < pdu->getNumVariables(); i++)
-      {
-         pVar = pdu->getVariable((int)i);
-			bool convertToHex = true;
-         dwBufPos += _sntprintf(&pszTrapArgs[dwBufPos], dwBufSize - dwBufPos, _T("%s%s == '%s'"),
-                                (dwBufPos == 0) ? _T("") : _T("; "),
-                                pVar->getName().toString(oidText, 1024),
-										  s_allowVarbindConversion ? pVar->getValueAsPrintableString(szBuffer, 3000, &convertToHex) : pVar->getValueAsString(szBuffer, 3000));
-      }
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("Varbinds for %s %s from %s:"), isInformRq ? _T("INFORM-REQUEST") : _T("TRAP"), &buffer[96], buffer);
+      varbinds = BuildVarbindList(pdu);
 
       // Write new trap to database
-		s_trapCountersLock.lock();
-		UINT64 trapId = s_trapId++; // FIXME: change to 64 bit volatile counter
-		s_trapCountersLock.unlock();
+		UINT64 trapId = InterlockedIncrement64(&s_trapId);
       _sntprintf(szQuery, 8192, _T("INSERT INTO snmp_trap_log (trap_id,trap_timestamp,")
                                 _T("ip_addr,object_id,zone_uin,trap_oid,trap_varlist) VALUES ")
                                 _T("(") INT64_FMT _T(",%d,'%s',%d,%d,'%s',%s)"),
-                 trapId, dwTimeStamp, srcAddr.toString(szBuffer),
+                 trapId, dwTimeStamp, srcAddr.toString(buffer),
                  (node != NULL) ? node->getId() : (UINT32)0, (node != NULL) ? node->getZoneUIN() : zoneUIN,
                  pdu->getTrapId()->toString(oidText, 1024),
-                 (const TCHAR *)DBPrepareString(g_dbDriver, pszTrapArgs));
+                 (const TCHAR *)DBPrepareString(g_dbDriver, varbinds));
       QueueSQLRequest(szQuery);
 
       // Notify connected clients
@@ -541,15 +559,19 @@ void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, UINT32 zoneUIN, int 
       msg.setField(VID_TRAP_LOG_MSG_BASE + 2, srcAddr);
       msg.setField(VID_TRAP_LOG_MSG_BASE + 3, (node != NULL) ? node->getId() : (UINT32)0);
       msg.setField(VID_TRAP_LOG_MSG_BASE + 4, pdu->getTrapId()->toString(oidText, 1024));
-      msg.setField(VID_TRAP_LOG_MSG_BASE + 5, pszTrapArgs);
+      msg.setField(VID_TRAP_LOG_MSG_BASE + 5, varbinds);
       EnumerateClientSessions(BroadcastNewTrap, &msg);
-      free(pszTrapArgs);
+   }
+   else if (nxlog_get_debug_level_tag(DEBUG_TAG) >= 5)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("Varbinds for %s %s:"), isInformRq ? _T("INFORM-REQUEST") : _T("TRAP"), &buffer[96]);
+      BuildVarbindList(pdu);
    }
 
    // Process trap if it is coming from host registered in database
    if (node != NULL)
    {
-      nxlog_debug(4, _T("ProcessTrap: trap matched to node %s [%d]"), node->getName(), node->getId());
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("ProcessTrap: trap matched to node %s [%d]"), node->getName(), node->getId());
       node->incSnmpTrapCount();
       if ((node->getStatus() != STATUS_UNMANAGED) || (g_flags & AF_TRAPS_FROM_UNMANAGED_NODES))
       {
@@ -607,44 +629,28 @@ void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, UINT32 zoneUIN, int 
             // Handle unprocessed traps
             if (!processed)
             {
-               TCHAR oidText[1024];
-
-               // Build trap's parameters string
-               dwBufSize = pdu->getNumVariables() * 4096 + 16;
-               pszTrapArgs = (TCHAR *)malloc(sizeof(TCHAR) * dwBufSize);
-               pszTrapArgs[0] = 0;
-               for(int i = (pdu->getVersion() == SNMP_VERSION_1) ? 0 : 2, dwBufPos = 0; i < pdu->getNumVariables(); i++)
-               {
-                  pVar = pdu->getVariable(i);
-					   bool convertToHex = true;
-                  dwBufPos += _sntprintf(&pszTrapArgs[dwBufPos], dwBufSize - dwBufPos, _T("%s%s == '%s'"),
-                                         (dwBufPos == 0) ? _T("") : _T("; "),
-                                         pVar->getName().toString(oidText, 1024),
-												     s_allowVarbindConversion ? pVar->getValueAsPrintableString(szBuffer, 512, &convertToHex) : pVar->getValueAsString(szBuffer, 512));
-               }
-
                // Generate default event for unmatched traps
                const TCHAR *names[3] = { _T("oid"), NULL, _T("sourcePort") };
+               TCHAR oidText[1024];
                PostEventWithNames(EVENT_SNMP_UNMATCHED_TRAP, node->getId(), "ssd", names,
-                  pdu->getTrapId()->toString(oidText, 1024), pszTrapArgs, srcPort);
-               free(pszTrapArgs);
+                  pdu->getTrapId()->toString(oidText, 1024), (const TCHAR *)varbinds, srcPort);
             }
          }
          s_trapCfgLock.unlock();
       }
       else
       {
-         nxlog_debug(4, _T("ProcessTrap: Node %s [%d] is in UNMANAGED state, trap ignored"), node->getName(), node->getId());
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("ProcessTrap: Node %s [%d] is in UNMANAGED state, trap ignored"), node->getName(), node->getId());
       }
    }
    else if (g_flags & AF_SNMP_TRAP_DISCOVERY)  // unknown node, discovery enabled
    {
-      nxlog_debug(4, _T("ProcessTrap: trap not matched to node, adding new IP address %s for discovery"), srcAddr.toString(szBuffer));
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("ProcessTrap: trap not matched to node, adding new IP address %s for discovery"), srcAddr.toString(buffer));
       CheckPotentialNode(srcAddr, zoneUIN);
    }
    else  // unknown node, discovery disabled
    {
-      nxlog_debug(4, _T("ProcessTrap: trap not matched to any node"));
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("ProcessTrap: trap not matched to any node"));
    }
 }
 
@@ -656,7 +662,7 @@ static SNMP_SecurityContext *ContextFinder(struct sockaddr *addr, socklen_t addr
    InetAddress ipAddr = InetAddress::createFromSockaddr(addr);
 	Node *node = FindNodeByIP((g_flags & AF_TRAP_SOURCES_IN_ALL_ZONES) ? ALL_ZONES : 0, ipAddr);
 	TCHAR buffer[64];
-	nxlog_debug(6, _T("SNMPTrapReceiver: looking for SNMP security context for node %s %s"),
+	nxlog_debug_tag(DEBUG_TAG, 6, _T("SNMPTrapReceiver: looking for SNMP security context for node %s %s"),
       ipAddr.toString(buffer), (node != NULL) ? node->getName() : _T("<unknown>"));
 	return (node != NULL) ? node->getSnmpSecurityContext() : NULL;
 }
@@ -767,7 +773,7 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
    // Bind socket
    TCHAR buffer[64];
    int bindFailures = 0;
-   DbgPrintf(5, _T("Trying to bind on UDP %s:%d"), SockaddrToStr((struct sockaddr *)&servAddr, buffer), ntohs(servAddr.sin_port));
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("Trying to bind on UDP %s:%d"), SockaddrToStr((struct sockaddr *)&servAddr, buffer), ntohs(servAddr.sin_port));
    if (bind(hSocket, (struct sockaddr *)&servAddr, sizeof(struct sockaddr_in)) != 0)
    {
       nxlog_write(MSG_BIND_ERROR, EVENTLOG_ERROR_TYPE, "dse", m_wTrapPort, _T("SNMPTrapReceiver"), WSAGetLastError());
@@ -777,7 +783,7 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
    }
 
 #ifdef WITH_IPV6
-   DbgPrintf(5, _T("Trying to bind on UDP [%s]:%d"), SockaddrToStr((struct sockaddr *)&servAddr6, buffer), ntohs(servAddr6.sin6_port));
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("Trying to bind on UDP [%s]:%d"), SockaddrToStr((struct sockaddr *)&servAddr6, buffer), ntohs(servAddr6.sin6_port));
    if (bind(hSocket6, (struct sockaddr *)&servAddr6, sizeof(struct sockaddr_in6)) != 0)
    {
       nxlog_write(MSG_BIND_ERROR, EVENTLOG_ERROR_TYPE, "dse", m_wTrapPort, _T("SNMPTrapReceiver"), WSAGetLastError());
@@ -792,7 +798,7 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
    // Abort if cannot bind to at least one socket
    if (bindFailures == 2)
    {
-      DbgPrintf(1, _T("SNMP trap receiver aborted - cannot bind at least one socket"));
+      nxlog_debug_tag(DEBUG_TAG, 1, _T("SNMP trap receiver aborted - cannot bind at least one socket"));
       return THREAD_OK;
    }
 
@@ -810,7 +816,7 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
 
    SocketPoller sp;
 
-   DbgPrintf(1, _T("SNMP Trap Receiver started on port %u"), m_wTrapPort);
+   nxlog_debug_tag(DEBUG_TAG, 1, _T("SNMP Trap Receiver started on port %u"), m_wTrapPort);
 
    // Wait for packets
    while(!IsShutdownInProgress())
@@ -838,7 +844,7 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
          if ((bytes > 0) && (pdu != NULL))
          {
             InetAddress sourceAddr = InetAddress::createFromSockaddr((struct sockaddr *)&addr);
-            DbgPrintf(6, _T("SNMPTrapReceiver: received PDU of type %d from %s"), pdu->getCommand(), (const TCHAR *)sourceAddr.toString());
+            nxlog_debug_tag(DEBUG_TAG, 6, _T("SNMPTrapReceiver: received PDU of type %d from %s"), pdu->getCommand(), (const TCHAR *)sourceAddr.toString());
 			   if ((pdu->getCommand() == SNMP_TRAP) || (pdu->getCommand() == SNMP_INFORM_REQUEST))
 			   {
 				   if ((pdu->getVersion() == SNMP_VERSION_3) && (pdu->getCommand() == SNMP_INFORM_REQUEST))
@@ -851,7 +857,7 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
 			   else if ((pdu->getVersion() == SNMP_VERSION_3) && (pdu->getCommand() == SNMP_GET_REQUEST) && (pdu->getAuthoritativeEngine().getIdLen() == 0))
 			   {
 				   // Engine ID discovery
-				   DbgPrintf(6, _T("SNMPTrapReceiver: EngineId discovery"));
+				   nxlog_debug_tag(DEBUG_TAG, 6, _T("SNMPTrapReceiver: EngineId discovery"));
 
 				   SNMP_PDU *response = new SNMP_PDU(SNMP_REPORT, pdu->getRequestId(), pdu->getVersion());
 				   response->setReportable(false);
@@ -875,7 +881,7 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
 			   }
 			   else if (pdu->getCommand() == SNMP_REPORT)
 			   {
-				   DbgPrintf(6, _T("SNMPTrapReceiver: REPORT PDU with error %s"), (const TCHAR *)pdu->getVariable(0)->getName().toString());
+				   nxlog_debug_tag(DEBUG_TAG, 6, _T("SNMPTrapReceiver: REPORT PDU with error %s"), (const TCHAR *)pdu->getVariable(0)->getName().toString());
 			   }
             delete pdu;
          }
@@ -891,7 +897,7 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
 #ifdef WITH_IPV6
    delete snmp6;
 #endif
-   DbgPrintf(1, _T("SNMP Trap Receiver terminated"));
+   nxlog_debug_tag(DEBUG_TAG, 1, _T("SNMP Trap Receiver terminated"));
    return THREAD_OK;
 }
 
