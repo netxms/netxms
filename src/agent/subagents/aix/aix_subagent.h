@@ -27,7 +27,7 @@
 #include <nms_agent.h>
 #include <nms_threads.h>
 #include <sys/var.h>
-#include <libperfstat.h>
+#include "libperfstat_compat.h"
 
 #define AIX_DEBUG_TAG	_T("sa.aix")
 

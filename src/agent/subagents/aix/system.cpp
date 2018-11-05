@@ -27,7 +27,6 @@
 #include <sys/msg.h>
 #include <nlist.h>
 #include <utmp.h>
-#include <libperfstat.h>
 
 /**
  * Hander for System.CPU.Count parameter
