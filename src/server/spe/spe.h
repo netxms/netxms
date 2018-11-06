@@ -64,6 +64,7 @@ public:
    ~NeuralNetwork();
 
    double computeOutput(double *inputs);
+   double accuracy(double *series, size_t length, double howClose);
    void train(double *series, size_t length, int rounds, double learnRate);
 
    void lock() { MutexLock(m_mutex); }
@@ -119,6 +120,14 @@ public:
     * @return true if engine requires training
     */
    virtual bool requiresTraining();
+
+   /**
+    * Get engine accuracy using existing training data for given DCI
+    *
+    * @param nodeId Node object ID
+    * @param dciId DCI ID
+    */
+   virtual void getAccuracy(UINT32 nodeId, UINT32 dciId);
 
    /**
     * Train engine using existing data for given DCI

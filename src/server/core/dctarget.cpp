@@ -269,9 +269,11 @@ void DataCollectionTarget::queuePredictionEngineTraining()
          DCItem *dci = static_cast<DCItem*>(o);
          if (dci->getPredictionEngine()[0] != 0)
          {
+            nxlog_debug_tag(_T("housekeeper"), 6, _T("DataCollectionTarget::queuePredictionEngineTraining(): check prediction engine for %s node and %d dci id."), m_name, dci->getId());
             PredictionEngine *e = FindPredictionEngine(dci->getPredictionEngine());
             if ((e != NULL) && e->requiresTraining())
             {
+               nxlog_debug_tag(_T("housekeeper"), 6, _T("DataCollectionTarget::queuePredictionEngineTraining(): queue prediction engine training for %s node and %d dci id."), m_name, dci->getId());
                QueuePredictionEngineTraining(e, dci->getOwner()->getId(), dci->getId());
             }
          }

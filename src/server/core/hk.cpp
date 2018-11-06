@@ -338,6 +338,7 @@ static THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
 		SaveCurrentFreeId();
 
 		// Run training on prediction engines
+      nxlog_debug_tag(DEBUG_TAG, 2, _T("Run training on prediction engines"));
 		g_idxObjectById.forEach(QueuePredictionEngineTraining, NULL);
 
       ThreadSleep(1);   // to prevent multiple executions if processing took less then 1 second

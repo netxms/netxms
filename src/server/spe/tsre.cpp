@@ -96,6 +96,32 @@ bool TimeSeriesRegressionEngine::requiresTraining()
 }
 
 /**
+ * Get engine accuracy using existing training data for given DCI
+ *
+ * @param nodeId Node object ID
+ * @param dciId DCI ID
+ */
+void TimeSeriesRegressionEngine::getAccuracy(UINT32 nodeId, UINT32 dciId)
+{
+   nxlog_debug_tag(DEBUG_TAG, 2, _T("Starting accuracy check for DCI %u/%u"), nodeId, dciId);
+   StructArray<DciValue> *values = getDciValues(nodeId, dciId, 1000);
+   double result = 0;
+
+   if ((values != NULL) && (values->size() > INPUT_LAYER_SIZE))
+   {
+      double *series = new double[values->size()];
+      for(int i = 0, j = values->size(); i < values->size(); i++)
+         series[--j] = values->get(i)->value;
+      NeuralNetwork *nn = acquireNetwork(nodeId, dciId);
+      result = nn->accuracy(series, values->size(), 0.5);
+      nn->unlock();
+      delete[] series;
+   }
+   delete values;
+   nxlog_debug_tag(DEBUG_TAG, 2, _T("Prediction accuracy for DCI %u/%u is %f"), nodeId, dciId, result);
+}
+
+/**
  * Train engine using existing data for given DCI
  *
  * @param nodeId Node object ID
@@ -104,7 +130,7 @@ bool TimeSeriesRegressionEngine::requiresTraining()
 void TimeSeriesRegressionEngine::train(UINT32 nodeId, UINT32 dciId)
 {
    nxlog_debug_tag(DEBUG_TAG, 5, _T("Starting training for DCI %u/%u"), nodeId, dciId);
-   StructArray<DciValue> *values = getDciValues(nodeId, dciId, 10000);
+   StructArray<DciValue> *values = getDciValues(nodeId, dciId, 5000);
    if ((values != NULL) && (values->size() > INPUT_LAYER_SIZE))
    {
       double *series = new double[values->size()];
@@ -210,13 +236,14 @@ bool TimeSeriesRegressionEngine::getPredictedSeries(UINT32 nodeId, UINT32 dciId,
    NeuralNetwork *nn = acquireNetwork(nodeId, dciId);
    for(int n = 0; n < count-1; n++)
    {
-      series[n] = nn->computeOutput(input);
+      series[count-1-n] = nn->computeOutput(input);
+      nxlog_debug_tag(DEBUG_TAG, 2, _T("TimeSeriesRegressionEngine::getPredictedValue: input: %lf %lf %lf %lf %lf output: %lf"), input[0], input[1], input[2], input[3], input[4], series[count-1-n]);
 
-      for(int i = INPUT_LAYER_SIZE - 1; i > 0; i--)
-         input[i-1] = input[i];
-      input[INPUT_LAYER_SIZE-1] = series[n];
+      for(int i = 0; i < INPUT_LAYER_SIZE-1; i++)
+         input[i] = input[i+1];
+      input[INPUT_LAYER_SIZE-1] = series[count-1-n];
    }
-   series[count-1] = nn->computeOutput(input); //no value bid
+   series[0] = nn->computeOutput(input); //no value bid
    nn->unlock();
 
    delete[] input;
@@ -243,7 +270,7 @@ NeuralNetwork *TimeSeriesRegressionEngine::acquireNetwork(UINT32 nodeId, UINT32 
    NeuralNetwork *nn = m_networks.get(nid);
    if (nn == NULL)
    {
-      nn = new NeuralNetwork(INPUT_LAYER_SIZE, 10);
+      nn = new NeuralNetwork(INPUT_LAYER_SIZE, 24);
       m_networks.set(nid, nn);
    }
    nn->lock();

@@ -120,6 +120,27 @@ static void Shuffle(int *data, int size)
       data[idx] = t;
    }
 }
+/**
+ * Train network using given data series
+ */
+double NeuralNetwork::accuracy(double *series, size_t length, double howClose)
+{
+   int numCorrect = 0;
+   int numWrong = 0;
+   for(int i = 0; i < static_cast<int>(length) - m_input.size(); i++)
+   {
+      double expectedResult = series[m_input.size() + i];
+      double actualResult = computeOutput(series+i);
+
+
+      if (abs(expectedResult - actualResult) < howClose)  // within 30
+        ++numCorrect;
+      else
+        ++numWrong;
+   }
+
+   return (numCorrect * 1.0) / (numCorrect + numWrong);
+}
 
 /**
  * Train network using given data series

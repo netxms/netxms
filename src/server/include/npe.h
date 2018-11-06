@@ -90,6 +90,14 @@ public:
    virtual bool requiresTraining();
 
    /**
+    * Get engine accuracy using existing training data for given DCI
+    *
+    * @param nodeId Node object ID
+    * @param dciId DCI ID
+    */
+   virtual void getAccuracy(UINT32 nodeId, UINT32 dciId) = 0;
+
+   /**
     * Train engine using existing data for given DCI
     *
     * @param nodeId Node object ID
