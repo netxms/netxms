@@ -172,7 +172,7 @@ AC_ARG_WITH(clang,
 AC_ARG_WITH(server,
 [AS_HELP_STRING(--with-server,build server)],
 [
-	COMPONENTS="$COMPONENTS java sqlite snmp server agent sqlite_drv"
+	COMPONENTS="$COMPONENTS sqlite snmp server agent sqlite_drv"
 ])
 
 AC_ARG_WITH(snmp,
@@ -4208,7 +4208,6 @@ AC_CONFIG_FILES([
 	src/server/hdlink/jira/Makefile
 	src/server/hdlink/redmine/Makefile
 	src/server/include/Makefile
-	src/server/jcore/Makefile
 	src/server/libnxsrv/Makefile
 	src/server/netxmsd/Makefile
 	src/server/pdsdrv/Makefile

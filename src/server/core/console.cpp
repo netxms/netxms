@@ -1401,24 +1401,6 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
          ConsoleWrite(pCtx, _T("ERROR: Invalid TUNNEL subcommand\n\n"));
       }
    }
-   else if (IsCommand(_T("UCC"), szBuffer, 2))
-   {
-      pArg = ExtractWord(pArg, szBuffer);
-      if (IsCommand(_T("SEND"), szBuffer, 1))
-      {
-         TCHAR channelId[128], recipient[256];
-         pArg = ExtractWord(pArg, channelId);
-         pArg = ExtractWord(pArg, recipient);
-         if (SendMessageToUserCommunicationChannel(channelId, recipient, _T("Test message"), pArg))
-            ConsoleWrite(pCtx, _T("Message sent to channel\n\n"));
-         else
-            ConsoleWrite(pCtx, _T("ERROR: cannot send message\n\n"));
-      }
-      else
-      {
-         ConsoleWrite(pCtx, _T("ERROR: Invalid UCC subcommand\n\n"));
-      }
-   }
    else if (IsCommand(_T("HELP"), szBuffer, 2) || IsCommand(_T("?"), szBuffer, 1))
    {
       ConsoleWrite(pCtx,
@@ -1467,7 +1449,6 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
             _T("   trace <node1> <node2>             - Show network path trace between two nodes\n")
             _T("   tunnel bind <tunnel> <node>       - Bind agent tunnel to node\n")
             _T("   tunnel unbind <node>              - Unbind agent tunnel from node\n")
-            _T("   ucc send <ch> <rcpt> <message>    - Send test message via user communication channel\n")
             _T("\nAlmost all commands can be abbreviated to 2 or 3 characters\n")
             _T("\n"));
    }

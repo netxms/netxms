@@ -35,9 +35,6 @@ extern TCHAR *g_serverCACertificatesPath;
 extern TCHAR g_serverCertificatePath[];
 extern TCHAR g_serverCertificateKeyPath[];
 extern char g_serverCertificatePassword[];
-extern TCHAR g_jvmPath[];
-extern TCHAR *g_jvmOptions;
-extern TCHAR *g_userClasspath;
 
 /**
  * Database connection parameters
@@ -71,7 +68,6 @@ static TCHAR s_peerNode[MAX_DB_STRING];
 static NX_CFG_TEMPLATE m_cfgTemplate[] =
 {
    { _T("BackgroundLogWriter"), CT_BOOLEAN64, 0, 0, AF_BACKGROUND_LOG_WRITER, 0, &g_flags, NULL },
-   { _T("ClassPath"), CT_STRING_LIST, JAVA_CLASSPATH_SEPARATOR, 0, 0, 0, &g_userClasspath },
    { _T("CodePage"), CT_MB_STRING, 0, 0, 256, 0, g_szCodePage, NULL },
    { _T("CreateCrashDumps"), CT_BOOLEAN64, 0, 0, AF_CATCH_EXCEPTIONS, 0, &g_flags, NULL },
    { _T("DailyLogFileSuffix"), CT_STRING, 0, 0, 64, 0, g_szDailyLogFileSuffix, NULL },
@@ -90,8 +86,6 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("DumpDirectory"), CT_STRING, 0, 0, MAX_PATH, 0, g_szDumpDir, NULL },
    { _T("EnableServerConsole"), CT_BOOLEAN64, 0, 0, AF_ENABLE_LOCAL_CONSOLE, 0, &g_flags, NULL },
    { _T("FullCrashDumps"), CT_BOOLEAN64, 0, 0, AF_WRITE_FULL_DUMP, 0, &g_flags, NULL },
-   { _T("JVM"), CT_STRING, 0, 0, MAX_PATH, 0,  g_jvmPath },
-   { _T("JVMOptions"), CT_STRING_LIST, _T('\n'), 0, 0, 0, &g_jvmOptions },
    { _T("LibraryDirectory"), CT_STRING, 0, 0, MAX_PATH, 0, g_netxmsdLibDir, NULL },
    { _T("ListenAddress"), CT_STRING, 0, 0, MAX_PATH, 0, g_szListenAddress, NULL },
    { _T("LogFailedSQLQueries"), CT_BOOLEAN64, 0, 0, AF_LOG_SQL_ERRORS, 0, &g_flags, NULL },
@@ -168,9 +162,6 @@ stop_search:
 
    if (IsStandalone())
       _tprintf(_T("Using configuration file \"%s\"\n"), g_szConfigFile);
-
-   // Try to set default JVM before parsing config
-   FindJavaRuntime(g_jvmPath, MAX_PATH);
 
 	if (g_serverConfig.loadConfig(g_szConfigFile, _T("server")) && g_serverConfig.parseTemplate(_T("server"), m_cfgTemplate))
    {
