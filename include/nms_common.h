@@ -1120,8 +1120,10 @@ typedef struct tagICMPHDR
  */
 #define CHECK_NULL(x)      ((x) == NULL ? _T("(null)") : (x))
 #define CHECK_NULL_A(x)    ((x) == NULL ? "(null)" : (x))
+#define CHECK_NULL_W(x)    ((x) == NULL ? L"(null)" : (x))
 #define CHECK_NULL_EX(x)   ((x) == NULL ? _T("") : (x))
 #define CHECK_NULL_EX_A(x) ((x) == NULL ? "" : (x))
+#define CHECK_NULL_EX_W(x) ((x) == NULL ? L"" : (x))
 
 /**
  * Heap functions

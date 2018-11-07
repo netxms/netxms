@@ -1186,6 +1186,7 @@ protected:
 	void *getObject(const TCHAR *key) const;
    void *getObject(const TCHAR *key, size_t len) const;
 	void destroyObject(void *object) { if (object != NULL) m_objectDestructor(object, this); }
+	void fillValues(Array *a) const;
 
 public:
 	StringMapBase(bool objectOwner);
@@ -1268,6 +1269,7 @@ public:
 	void setPreallocated(TCHAR *key, T *object) { setObject((TCHAR *)key, (void *)object, true); }
 	T *get(const TCHAR *key) const { return (T*)getObject(key); }
    T *get(const TCHAR *key, size_t len) const { return (T*)getObject(key, len); }
+   ObjectArray<T> *values() const { ObjectArray<T> *v = new ObjectArray<T>(size()); fillValues(v); return v; }
 };
 
 /**

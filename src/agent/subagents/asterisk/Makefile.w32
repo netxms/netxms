@@ -1,0 +1,7 @@
+TARGET = asterisk.nsm
+TYPE = nsm
+SOURCES = ami.cpp main.cpp system.cpp
+
+LIBS = libnxagent.lib libnetxms.lib
+	  
+include ..\..\..\..\Makefile.inc.w32

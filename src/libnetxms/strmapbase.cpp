@@ -282,6 +282,18 @@ StringList *StringMapBase::keys() const
 }
 
 /**
+ * Get list of all values
+ */
+void StringMapBase::fillValues(Array *values) const
+{
+   StringMapEntry *entry, *tmp;
+   HASH_ITER(hh, m_data, entry, tmp)
+   {
+      values->add(entry->value);
+   }
+}
+
+/**
  * Get size
  */
 int StringMapBase::size() const

@@ -181,6 +181,7 @@ DISABLE_READLINE="yes"
 TUXEDO_LIBS=""
 TUXEDO_TPINIT=""
 MONGODB_LIBS=""
+ASTERISK_LIBS=""
 VMGR_CPPFLAGS=""
 VMGR_LDFLAGS=""
 VMGR_LIBS=""
@@ -446,6 +447,12 @@ AC_ARG_WITH(mongodb,
 		MONGODB_BASE="$withval"
 	fi
 	COMPONENTS="$COMPONENTS mongodb"
+fi ])
+
+AC_ARG_WITH(asterisk,
+[AS_HELP_STRING(--with-asterisk,build Asterisk subagent)],
+[ if test "x$withval" != "xno" ; then
+	COMPONENTS="$COMPONENTS asterisk"
 fi ])
 
 AC_ARG_WITH(vmgr,
@@ -798,7 +805,7 @@ AC_ARG_WITH(dist,
 	DB_DRIVERS="mysql mariadb pgsql odbc mssql sqlite oracle db2 informix"
 	MODULES="appagent jansson libexpat libstrophe libtre zlib libnetxms libnxjava install sqlite snmp libnxsl libnxmb libnxlp libnxpython libnxcc db server smsdrv agent client nxscript nxcproxy"
 	TOOLS="nxlptest"
-	SUBAGENT_DIRS="linux ds18x20 freebsd openbsd minix mqtt mysql netbsd sunos aix ipso hpux odbcquery informix oracle lmsensors darwin rpi java jmx bind9 ubntlw netsvc db2 tuxedo mongodb ssh vmgr xen lorawan"
+	SUBAGENT_DIRS="linux ds18x20 freebsd openbsd minix mqtt mysql netbsd sunos aix ipso hpux odbcquery informix oracle lmsensors darwin rpi java jmx bind9 ubntlw netsvc db2 tuxedo mongodb ssh vmgr xen lorawan asterisk"
 	AGENT_DIRS="libnxtux"
 	SMSDRV_DIRS="anysms kannel mymobile nexmo nxagent slack smseagle text2reach websms"
    HDLINK_DIRS="jira redmine"
@@ -885,6 +892,12 @@ if test $? = 0; then
 	fi
 
 	SUBAGENT_LIBS="../subagents/ecs/ecs.la ../subagents/filemgr/filemgr.la ../subagents/logwatch/logwatch.la ../subagents/ping/ping.la ../subagents/portCheck/portcheck.la ../subagents/ups/ups.la"
+
+	check_substr "$STATIC_SUBAGENT_LIST" "asterisk"
+	if test $? = 0; then
+		COMPONENTS="$COMPONENTS asterisk"
+		SUBAGENT_LIBS="$SUBAGENT_LIBS ../subagents/asterisk/asterisk.la"
+	fi
 
 	check_substr "$STATIC_SUBAGENT_LIST" "odbcquery"
 	if test $? = 0; then
@@ -1131,6 +1144,11 @@ fi
 check_substr "$COMPONENTS" "xen"
 if test $? = 0; then
 	SUBAGENT_DIRS="$SUBAGENT_DIRS xen"
+fi
+
+check_substr "$COMPONENTS" "asterisk"
+if test $? = 0; then
+	SUBAGENT_DIRS="$SUBAGENT_DIRS asterisk"
 fi
 
 check_substr "$COMPONENTS" "sdk"
@@ -3721,6 +3739,25 @@ fi
 
 
 #--------------------------------------------------------------------
+# Asterisk
+#--------------------------------------------------------------------
+
+check_substr "$COMPONENTS" "asterisk"
+if test $? = 0; then
+	OLD_CPPFLAGS="$CPPFLAGS"
+	OLD_LDFLAGS="$LDFLAGS"
+	OLD_LIBS="$LIBS"
+
+	AC_CHECK_HEADER(eXosip2/eXosip.h,,AC_MSG_ERROR([*** Cannot find eXosip.h - check your libeXosip2 installation ***]))
+	AC_CHECK_LIB(eXosip2, eXosip_malloc, [ ASTERISK_LIBS="$ASTERISK_LIBS -leXosip2" ])
+
+	CPPFLAGS="$OLD_CPPFLAGS"
+	LDFLAGS="$OLD_LDFLAGS"
+	LIBS="$OLD_LIBS"
+fi
+
+
+#--------------------------------------------------------------------
 # VMGR
 #--------------------------------------------------------------------
 
@@ -3926,6 +3963,7 @@ AS_IF([test "x$with_dist" = "xyes"],
 # Substitute variables
 #--------------------------------------------------------------------
 
+AC_SUBST(ASTERISK_LIBS)
 AC_SUBST(MODULES)
 AC_SUBST(TOOLS)
 AC_SUBST(AGENT_DIRS)
@@ -4038,6 +4076,7 @@ AC_CONFIG_FILES([
 	src/agent/libnxtux/Makefile
 	src/agent/subagents/Makefile
 	src/agent/subagents/aix/Makefile
+	src/agent/subagents/asterisk/Makefile
 	src/agent/subagents/bind9/Makefile
 	src/agent/subagents/darwin/Makefile
 	src/agent/subagents/db2/Makefile
@@ -4482,6 +4521,10 @@ if test "x${ZEROMQ_CPPFLAGS}" != "x"; then
 fi
 if test "x${ZEROMQ_LDFLAGS}" != "x"; then
 	echo "ZeroMQ LDFLAGS          : ${ZEROMQ_LDFLAGS}"
+fi
+
+if test "x${ASTERISK_LIBS}" != "x"; then
+	echo "Asterisk LIBS           : ${ASTERISK_LIBS}"
 fi
 
 if test "x${VMGR_CPPFLAGS}" != "x"; then
