@@ -1050,35 +1050,72 @@ StringList LIBNETXMS_EXPORTABLE *ThreadPoolGetAllPools();
 void LIBNETXMS_EXPORTABLE ThreadPoolSetResizeParameters(int responsiveness, UINT32 waitTimeHWM, UINT32 waitTimeLWM);
 
 /**
- * Wrapper data for ThreadPoolExecute
+ * Wrapper data for ThreadPoolExecute (no arguments)
  */
-template <typename T, typename R> class __ThreadPoolExecute_WrapperData
+template <typename T> class __ThreadPoolExecute_WrapperData_0
+{
+public:
+   T *m_object;
+   void (T::*m_func)();
+
+   __ThreadPoolExecute_WrapperData_0(T *object, void (T::*func)()) { m_object = object; m_func = func; }
+};
+
+/**
+ * Wrapper for ThreadPoolExecute (no arguments)
+ */
+template <typename T> void __ThreadPoolExecute_Wrapper_0(void *arg)
+{
+   __ThreadPoolExecute_WrapperData_0<T> *wd = static_cast<__ThreadPoolExecute_WrapperData_0<T> *>(arg);
+   ((*wd->m_object).*(wd->m_func))();
+   delete wd;
+}
+
+/**
+ * Execute task as soon as possible (use class member without arguments)
+ */
+template <typename T, typename B> inline void ThreadPoolExecute(ThreadPool *p, T *object, void (B::*f)())
+{
+   ThreadPoolExecute(p, __ThreadPoolExecute_Wrapper_0<B>, new __ThreadPoolExecute_WrapperData_0<B>(object, f));
+}
+
+/**
+ * Execute task with delay (use class member without arguments)
+ */
+template <typename T, typename B> inline void ThreadPoolScheduleRelative(ThreadPool *p, UINT32 delay, T *object, void (B::*f)())
+{
+   ThreadPoolScheduleRelative(p, delay, __ThreadPoolExecute_Wrapper_0<B>, new __ThreadPoolExecute_WrapperData_0<B>(object, f));
+}
+
+/**
+ * Wrapper data for ThreadPoolExecute (one argument)
+ */
+template <typename T, typename R> class __ThreadPoolExecute_WrapperData_1
 {
 public:
    T *m_object;
    void (T::*m_func)(R);
    R m_arg;
 
-   __ThreadPoolExecute_WrapperData(T *object, void (T::*func)(R), R arg) { m_object = object; m_func = func; m_arg = arg; }
+   __ThreadPoolExecute_WrapperData_1(T *object, void (T::*func)(R), R arg) { m_object = object; m_func = func; m_arg = arg; }
 };
 
 /**
- * Wrapper for ThreadPoolExecute
+ * Wrapper for ThreadPoolExecute (one argument)
  */
-template <typename T, typename R> void __ThreadPoolExecute_Wrapper(void *arg)
+template <typename T, typename R> void __ThreadPoolExecute_Wrapper_1(void *arg)
 {
-   __ThreadPoolExecute_WrapperData<T, R> *wd = static_cast<__ThreadPoolExecute_WrapperData<T, R> *>(arg);
+   __ThreadPoolExecute_WrapperData_1<T, R> *wd = static_cast<__ThreadPoolExecute_WrapperData_1<T, R> *>(arg);
    ((*wd->m_object).*(wd->m_func))(wd->m_arg);
    delete wd;
 }
-
 
 /**
  * Execute task as soon as possible (use class member with one argument)
  */
 template <typename T, typename B, typename R> inline void ThreadPoolExecute(ThreadPool *p, T *object, void (B::*f)(R), R arg)
 {
-   ThreadPoolExecute(p, __ThreadPoolExecute_Wrapper<B, R>, new __ThreadPoolExecute_WrapperData<B, R>(object, f, arg));
+   ThreadPoolExecute(p, __ThreadPoolExecute_Wrapper_1<B, R>, new __ThreadPoolExecute_WrapperData_1<B, R>(object, f, arg));
 }
 
 /**
@@ -1086,7 +1123,7 @@ template <typename T, typename B, typename R> inline void ThreadPoolExecute(Thre
  */
 template <typename T, typename B, typename R> inline void ThreadPoolExecuteSerialized(ThreadPool *p, const TCHAR *key, T *object, void (B::*f)(R), R arg)
 {
-   ThreadPoolExecuteSerialized(p, key, __ThreadPoolExecute_Wrapper<B, R>, new __ThreadPoolExecute_WrapperData<B, R>(object, f, arg));
+   ThreadPoolExecuteSerialized(p, key, __ThreadPoolExecute_Wrapper_1<B, R>, new __ThreadPoolExecute_WrapperData_1<B, R>(object, f, arg));
 }
 
 /**
@@ -1094,13 +1131,13 @@ template <typename T, typename B, typename R> inline void ThreadPoolExecuteSeria
  */
 template <typename T, typename B, typename R> inline void ThreadPoolScheduleRelative(ThreadPool *p, UINT32 delay, T *object, void (B::*f)(R), R arg)
 {
-   ThreadPoolScheduleRelative(p, delay, __ThreadPoolExecute_Wrapper<B, R>, new __ThreadPoolExecute_WrapperData<B, R>(object, f, arg));
+   ThreadPoolScheduleRelative(p, delay, __ThreadPoolExecute_Wrapper_1<B, R>, new __ThreadPoolExecute_WrapperData_1<B, R>(object, f, arg));
 }
 
 /**
  * Wrapper data for ThreadPoolExecute (two arguments)
  */
-template <typename T, typename R1, typename R2> class __ThreadPoolExecute_WrapperData2
+template <typename T, typename R1, typename R2> class __ThreadPoolExecute_WrapperData_2
 {
 public:
    T *m_object;
@@ -1108,15 +1145,15 @@ public:
    R1 m_arg1;
    R2 m_arg2;
 
-   __ThreadPoolExecute_WrapperData2(T *object, void (T::*func)(R1, R2), R1 arg1, R2 arg2) { m_object = object; m_func = func; m_arg1 = arg1; m_arg2 = arg2; }
+   __ThreadPoolExecute_WrapperData_2(T *object, void (T::*func)(R1, R2), R1 arg1, R2 arg2) { m_object = object; m_func = func; m_arg1 = arg1; m_arg2 = arg2; }
 };
 
 /**
  * Wrapper for ThreadPoolExecute (two arguments)
  */
-template <typename T, typename R1, typename R2> void __ThreadPoolExecute_Wrapper2(void *arg)
+template <typename T, typename R1, typename R2> void __ThreadPoolExecute_Wrapper_2(void *arg)
 {
-   __ThreadPoolExecute_WrapperData2<T, R1, R2> *wd = static_cast<__ThreadPoolExecute_WrapperData2<T, R1, R2> *>(arg);
+   __ThreadPoolExecute_WrapperData_2<T, R1, R2> *wd = static_cast<__ThreadPoolExecute_WrapperData_2<T, R1, R2> *>(arg);
    ((*wd->m_object).*(wd->m_func))(wd->m_arg1, wd->m_arg2);
    delete wd;
 }
@@ -1126,7 +1163,28 @@ template <typename T, typename R1, typename R2> void __ThreadPoolExecute_Wrapper
  */
 template <typename T, typename B, typename R1, typename R2> inline void ThreadPoolExecute(ThreadPool *p, T *object, void (B::*f)(R1, R2), R1 arg1, R2 arg2)
 {
-   ThreadPoolExecute(p, __ThreadPoolExecute_Wrapper2<B, R1, R2>, new __ThreadPoolExecute_WrapperData2<B, R1, R2>(object, f, arg1, arg2));
+   ThreadPoolExecute(p, __ThreadPoolExecute_Wrapper_2<B, R1, R2>, new __ThreadPoolExecute_WrapperData_2<B, R1, R2>(object, f, arg1, arg2));
+}
+
+/**
+ * Get value of given attribute protected by given mutex
+ */
+template<typename T> inline T GetAttributeWithLock(T* attr, MUTEX mutex)
+{
+   MutexLock(mutex);
+   T value = *attr;
+   MutexUnlock(mutex);
+   return value;
+}
+
+/**
+ * Set value of given attribute protected by given mutex
+ */
+template<typename T> inline void SetAttributeWithLock(T* attr, T value, MUTEX mutex)
+{
+   MutexLock(mutex);
+   *attr = value;
+   MutexUnlock(mutex);
 }
 
 /**
