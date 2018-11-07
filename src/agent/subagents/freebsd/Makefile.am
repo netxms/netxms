@@ -1,7 +1,7 @@
 SUBAGENT = freebsd
 
 pkglib_LTLIBRARIES = freebsd.la
-freebsd_la_SOURCES = cpu.cpp disk.cpp freebsd.cpp net.cpp proc.cpp system.cpp 
+freebsd_la_SOURCES = cpu.cpp disk.cpp freebsd.cpp net.cpp packages.cpp proc.cpp system.cpp 
 freebsd_la_CPPFLAGS=-I@top_srcdir@/include
 freebsd_la_LDFLAGS = -module -avoid-version -export-symbols ../platform-subagent.sym
 freebsd_la_LIBADD = ../../libnxagent/libnxagent.la ../../../libnetxms/libnetxms.la -lkvm
