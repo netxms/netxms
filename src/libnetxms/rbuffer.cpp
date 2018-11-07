@@ -34,6 +34,8 @@ RingBuffer::RingBuffer(size_t initial, size_t allocationStep)
    m_allocationStep = allocationStep;
    m_readPos = 0;
    m_writePos = 0;
+   m_savedPos = 0;
+   m_savedSize = 0;
 }
 
 /**
@@ -119,4 +121,47 @@ size_t RingBuffer::read(BYTE *buffer, size_t bufferSize)
 
    m_size -= readSize;
    return readSize;
+}
+
+/**
+ * Read single byte
+ */
+BYTE RingBuffer::readByte()
+{
+   if (m_size == 0)
+      return 0;
+
+   BYTE b = m_data[m_readPos++];
+   if (m_readPos == m_allocated)
+      m_readPos = 0;
+   m_size--;
+   return b;
+}
+
+/**
+ * Save read position
+ */
+void RingBuffer::savePos()
+{
+   m_savedPos = m_readPos;
+   m_savedSize = m_size;
+}
+
+/**
+ * Restore read position
+ */
+void RingBuffer::restorePos()
+{
+   m_readPos = m_savedPos;
+   m_size = m_savedSize;
+}
+
+/**
+ * Clear buffer
+ */
+void RingBuffer::clear()
+{
+   m_size = 0;
+   m_readPos = 0;
+   m_writePos = 0;
 }
