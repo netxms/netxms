@@ -68,6 +68,8 @@ static void SubAgentShutdown()
 	ShutdownCpuUsageCollector();
 }
 
+LONG H_InstalledProducts(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *session)
+
 /**
  * Supported parameters
  */
@@ -251,6 +253,14 @@ static NETXMS_SUBAGENT_LIST m_lists[] =
 };
 
 /**
+ * Subagent's tables
+ */
+static NETXMS_SUBAGENT_TABLE m_tables[] =
+{
+   { _T("System.InstalledProducts"), H_InstalledProducts, NULL, _T("NAME"), DCTDESC_SYSTEM_INSTALLED_PRODUCTS },
+};
+
+/**
  * Subagent information
  */
 static NETXMS_SUBAGENT_INFO m_info =
@@ -266,7 +276,8 @@ static NETXMS_SUBAGENT_INFO m_info =
 	m_parameters,
 	sizeof(m_lists) / sizeof(NETXMS_SUBAGENT_LIST),
 	m_lists,
-	0, NULL,	// tables
+	sizeof(m_tables) / sizeof(NETXMS_SUBAGENT_TABLE),
+        m_tables,
 	0, NULL,	// actions
 	0, NULL	// push parameters
 };
