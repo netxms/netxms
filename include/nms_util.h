@@ -1411,6 +1411,8 @@ private:
    size_t m_allocationStep;
    size_t m_readPos;
    size_t m_writePos;
+   size_t m_savedPos;
+   size_t m_savedSize;
 
 public:
    RingBuffer(size_t initial = 8192, size_t allocationStep = 8192);
@@ -1418,6 +1420,12 @@ public:
 
    void write(const BYTE *data, size_t dataSize);
    size_t read(BYTE *buffer, size_t bufferSize);
+   BYTE readByte();
+
+   void clear();
+
+   void savePos();
+   void restorePos();
 
    size_t size() const { return m_size; }
    bool isEmpty() const { return m_size == 0; }
