@@ -261,7 +261,6 @@
     <ClCompile Include="index.cpp" />
     <ClCompile Include="interface.cpp" />
     <ClCompile Include="isc.cpp" />
-    <ClCompile Include="java.cpp" />
     <ClCompile Include="job.cpp" />
     <ClCompile Include="jobmgr.cpp" />
     <ClCompile Include="jobqueue.cpp" />
@@ -327,7 +326,6 @@
     <ClCompile Include="tools.cpp" />
     <ClCompile Include="tracert.cpp" />
     <ClCompile Include="tunnel.cpp" />
-    <ClCompile Include="ucc.cpp" />
     <ClCompile Include="uniroot.cpp" />
     <ClCompile Include="upload_job.cpp" />
     <ClCompile Include="uptimecalc.cpp" />
