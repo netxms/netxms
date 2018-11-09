@@ -537,15 +537,15 @@ public:
    {
       m_headerSize = sizeof(void*);
       if (m_headerSize % 16 != 0)
-         m_headerSize += 8 - m_headerSize % 8;
+         m_headerSize += 16 - m_headerSize % 16;
       m_elementSize = sizeof(T);
       if (m_elementSize % 8 != 0)
          m_elementSize += 8 - m_elementSize % 8;
       m_regionSize = m_headerSize + regionCapacity * m_elementSize;
-      m_currentRegion = malloc(m_regionSize);
+      m_currentRegion = MemAlloc(m_regionSize);
       *((void **)m_currentRegion) = NULL; // pointer to previous region
       m_firstDeleted = NULL;
-      m_allocated = sizeof(void*);
+      m_allocated = m_headerSize;
    }
 
    /**
@@ -557,7 +557,7 @@ public:
       while(r != NULL)
       {
          void *n = *((void **)r);
-         ::free(r);
+         MemFree(r);
          r = n;
       }
    }
@@ -580,7 +580,7 @@ public:
       }
       else
       {
-         void *region = malloc(m_regionSize);
+         void *region = MemAlloc(m_regionSize);
          *((void **)region) = m_currentRegion;
          m_currentRegion = region;
          p = (T*)((char*)m_currentRegion + m_headerSize);
