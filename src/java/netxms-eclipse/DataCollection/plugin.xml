@@ -381,6 +381,16 @@
               </instanceof>
            </enabledWhen>
         </page>
+        <page
+              class="org.netxms.ui.eclipse.datacollection.propertypages.Analytics"
+              id="org.netxms.ui.eclipse.datacollection.propertypages.Analytics#40"
+              name="Analytics">
+           <enabledWhen>
+              <instanceof
+                    value="org.netxms.client.datacollection.DataCollectionItem">
+              </instanceof>
+           </enabledWhen>
+        </page>
    </extension>
 
   <extension
