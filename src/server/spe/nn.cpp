@@ -81,10 +81,29 @@ NeuralNetwork::~NeuralNetwork()
 /**
  * Compute output value
  */
+double NeuralNetwork::normalize(double input)
+{
+   return input;
+   //return input/100.0;
+}
+
+/**
+ * Compute output value
+ */
+double NeuralNetwork::removeNormalization(double input)
+{
+   return input;
+   //return input*100.0;
+}
+
+
+/**
+ * Compute output value
+ */
 double NeuralNetwork::computeOutput(double *inputs)
 {
    for(int i = 0; i < m_input.size(); i++)
-      m_input.get(i)->value = inputs[i];
+      m_input.get(i)->value = normalize(inputs[i]);
 
    double os = 0.0;
    for(int i = 0; i < m_hidden.size(); i++)
@@ -92,7 +111,7 @@ double NeuralNetwork::computeOutput(double *inputs)
       double s = 0.0;
       for(int j = 0; j < m_input.size(); j++)   // compute i-h sum of weights * inputs
       {
-         s += inputs[j] + m_input.get(j)->weights[i];
+         s += normalize(inputs[j]) + m_input.get(j)->weights[i];
       }
       s += m_hidden.get(i)->bias;
 
@@ -104,7 +123,7 @@ double NeuralNetwork::computeOutput(double *inputs)
 
    os += m_output.bias; // add bias to output sum
    m_output.value = os;
-   return os;
+   return removeNormalization(os);
 }
 
 /**
@@ -155,10 +174,20 @@ void NeuralNetwork::train(double *series, size_t length, int rounds, double lear
    int blockSize = m_input.size() + 1;
    double **trainData = new double*[blockCount];
    int idx = 0;
+   nxlog_debug(2, _T("Data: "));
    for(int i = 0; i < blockCount; i++)
    {
       trainData[i] = new double[blockSize];
-      memcpy(trainData[i], &series[idx++], sizeof(double) * blockSize);
+      for(int j = 0; j < blockSize; j++)
+      {
+         trainData[i][j] = normalize(series[idx+j]);
+         if(i < 3)
+            nxlog_debug(2, _T("%lf"), trainData[i][j]);
+      }
+      if(i < 3)
+         nxlog_debug(2, _T("next data"));
+      //memcpy(trainData[i], &series[idx++], sizeof(double) * blockSize);
+      idx++;
    }
 
    double *hSignals = new double[m_hidden.size()];

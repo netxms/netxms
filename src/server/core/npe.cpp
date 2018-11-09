@@ -433,5 +433,5 @@ bool GetPredictedData(ClientSession *session, const NXCPMessage *request, NXCPMe
 void QueuePredictionEngineTraining(PredictionEngine *engine, UINT32 nodeId, UINT32 dciId)
 {
    ThreadPoolExecute(g_npeThreadPool, engine, &PredictionEngine::train, nodeId, dciId);
-   ThreadPoolExecute(g_npeThreadPool, engine, &PredictionEngine::getAccuracy, nodeId, dciId);
+   //ThreadPoolExecute(g_npeThreadPool, engine, &PredictionEngine::getAccuracy, nodeId, dciId);
 }

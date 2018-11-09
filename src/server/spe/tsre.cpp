@@ -104,7 +104,7 @@ bool TimeSeriesRegressionEngine::requiresTraining()
 void TimeSeriesRegressionEngine::getAccuracy(UINT32 nodeId, UINT32 dciId)
 {
    nxlog_debug_tag(DEBUG_TAG, 2, _T("Starting accuracy check for DCI %u/%u"), nodeId, dciId);
-   StructArray<DciValue> *values = getDciValues(nodeId, dciId, 1000);
+   StructArray<DciValue> *values = getDciValues(nodeId, dciId, 10000);
    double result = 0;
 
    if ((values != NULL) && (values->size() > INPUT_LAYER_SIZE))
@@ -113,7 +113,7 @@ void TimeSeriesRegressionEngine::getAccuracy(UINT32 nodeId, UINT32 dciId)
       for(int i = 0, j = values->size(); i < values->size(); i++)
          series[--j] = values->get(i)->value;
       NeuralNetwork *nn = acquireNetwork(nodeId, dciId);
-      result = nn->accuracy(series, values->size(), 0.5);
+      result = nn->accuracy(series, values->size(), 0.1);
       nn->unlock();
       delete[] series;
    }
@@ -130,7 +130,7 @@ void TimeSeriesRegressionEngine::getAccuracy(UINT32 nodeId, UINT32 dciId)
 void TimeSeriesRegressionEngine::train(UINT32 nodeId, UINT32 dciId)
 {
    nxlog_debug_tag(DEBUG_TAG, 5, _T("Starting training for DCI %u/%u"), nodeId, dciId);
-   StructArray<DciValue> *values = getDciValues(nodeId, dciId, 5000);
+   StructArray<DciValue> *values = getDciValues(nodeId, dciId, 10000);
    if ((values != NULL) && (values->size() > INPUT_LAYER_SIZE))
    {
       double *series = new double[values->size()];
@@ -143,6 +143,7 @@ void TimeSeriesRegressionEngine::train(UINT32 nodeId, UINT32 dciId)
    }
    delete values;
    nxlog_debug_tag(DEBUG_TAG, 5, _T("Training completed for DCI %u/%u"), nodeId, dciId);
+   getAccuracy(nodeId, dciId);
 }
 
 /**

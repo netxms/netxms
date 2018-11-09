@@ -63,6 +63,8 @@ public:
    NeuralNetwork(int inputCount, int hiddenCount);
    ~NeuralNetwork();
 
+   double normalize(double input);
+   double removeNormalization(double input);
    double computeOutput(double *inputs);
    double accuracy(double *series, size_t length, double howClose);
    void train(double *series, size_t length, int rounds, double learnRate);
