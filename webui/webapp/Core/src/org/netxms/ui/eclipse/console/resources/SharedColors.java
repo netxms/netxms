@@ -92,7 +92,7 @@ public class SharedColors
 		defaultColors.put(CGROUP_TITLE, new RGB(0, 0, 0));
 		defaultColors.put(COMMAND_BOX_TEXT, new RGB(0, 0, 96));
 		defaultColors.put(COMMAND_BOX_BACKGROUND, new RGB(255, 255, 255));
-		defaultColors.put(DASHBOARD_BACKGROUND, new RGB(255, 255, 255));
+		defaultColors.put(DASHBOARD_BACKGROUND, new RGB(240, 240, 240));
 		defaultColors.put(ERROR_BACKGROUND, new RGB(255, 0, 0));
 		defaultColors.put(GEOMAP_TITLE, new RGB(0, 0, 0));
 		defaultColors.put(MAP_GROUP_BOX_TITLE, new RGB(255, 255, 255));
