@@ -499,7 +499,8 @@ bool Tunnel::connectToServer()
    m_socket = ConnectToHost(m_address, m_port, REQUEST_TIMEOUT);
    if (m_socket == INVALID_SOCKET)
    {
-      debugPrintf(4, _T("Cannot establish connection (%s)"), _tcserror(WSAGetLastError()));
+      TCHAR buffer[1024];
+      debugPrintf(4, _T("Cannot establish connection (%s)"), GetLastSocketErrorText(buffer, 1024));
       MutexUnlock(m_stateLock);
       return false;
    }
