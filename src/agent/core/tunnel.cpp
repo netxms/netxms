@@ -484,7 +484,8 @@ bool Tunnel::connectToServer()
    m_socket = socket(m_address.getFamily(), SOCK_STREAM, 0);
    if (m_socket == INVALID_SOCKET)
    {
-      debugPrintf(4, _T("Cannot create socket (%s)"), _tcserror(WSAGetLastError()));
+      TCHAR buffer[1024];
+      debugPrintf(4, _T("Cannot create socket (%s)"), GetLastSocketErrorText(buffer, 1024));
       return false;
    }
 
@@ -492,7 +493,8 @@ bool Tunnel::connectToServer()
    m_address.fillSockAddr(&sa, m_port);
    if (ConnectEx(m_socket, (struct sockaddr *)&sa, SA_LEN((struct sockaddr *)&sa), REQUEST_TIMEOUT) == -1)
    {
-      debugPrintf(4, _T("Cannot establish connection (%s)"), _tcserror(WSAGetLastError()));
+      TCHAR buffer[1024];
+      debugPrintf(4, _T("Cannot establish connection (%s)"), GetLastSocketErrorText(buffer, 1024));
       return false;
    }
 
