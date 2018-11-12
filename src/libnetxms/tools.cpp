@@ -830,26 +830,26 @@ const char LIBNETXMS_EXPORTABLE *ExtractWordA(const char *line, char *buffer)
  * Get system error string by call to FormatMessage
  * (Windows only)
  */
-TCHAR LIBNETXMS_EXPORTABLE *GetSystemErrorText(UINT32 dwError, TCHAR *pszBuffer, size_t iBufSize)
+TCHAR LIBNETXMS_EXPORTABLE *GetSystemErrorText(UINT32 error, TCHAR *buffer, size_t size)
 {
    TCHAR *msgBuf;
 
    if (FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER |
                      FORMAT_MESSAGE_FROM_SYSTEM |
                      FORMAT_MESSAGE_IGNORE_INSERTS,
-                     NULL, dwError,
+                     NULL, error,
                      MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // Default language
                      (LPTSTR)&msgBuf, 0, NULL) > 0)
    {
       msgBuf[_tcscspn(msgBuf, _T("\r\n"))] = 0;
-      _tcslcpy(pszBuffer, msgBuf, iBufSize);
+      _tcslcpy(buffer, msgBuf, size);
       LocalFree(msgBuf);
    }
    else
    {
-      _sntprintf(pszBuffer, iBufSize, _T("MSG 0x%08X - Unable to find message text"), dwError);
+      _sntprintf(buffer, size, _T("No description for error code 0x%08X"), error);
    }
-   return pszBuffer;
+   return buffer;
 }
 
 #endif
@@ -860,11 +860,16 @@ TCHAR LIBNETXMS_EXPORTABLE *GetSystemErrorText(UINT32 dwError, TCHAR *pszBuffer,
 TCHAR LIBNETXMS_EXPORTABLE *GetLastSocketErrorText(TCHAR *buffer, size_t size)
 {
 #ifdef _WIN32
-   return GetSystemErrorText(WSAGetLastError(), buffer, size);
+   DWORD error = WSAGetLastError();
+   _sntprintf(buffer, size, _T("%u "), error);
+   size_t len = _tcslen(buffer);
+   GetSystemErrorText(error, &buffer[len], size - len);
 #else
-   _tcslcpy(buffer, _tcserror(errno), size);
-   return buffer;
+   _sntprintf(buffer, size, _T("%u "), errno);
+   size_t len = _tcslen(buffer);
+   _tcslcpy(&buffer[len], _tcserror(errno), size - len);
 #endif
+   return buffer;
 }
 
 #if (!HAVE_DAEMON || !HAVE_DECL_DAEMON) && !defined(_NETWARE) && !defined(_WIN32)
