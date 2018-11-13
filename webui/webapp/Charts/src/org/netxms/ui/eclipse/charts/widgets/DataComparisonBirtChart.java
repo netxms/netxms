@@ -127,6 +127,8 @@ public class DataComparisonBirtChart extends GenericBirtChart implements DataCom
 		chart.getBlock().setBackground(getColorFromPreferences("Chart.Colors.Background")); //$NON-NLS-1$
 		chart.getPlot().setBackground(getColorFromPreferences("Chart.Colors.Background")); //$NON-NLS-1$
 		chart.getPlot().getClientArea().setBackground(getColorFromPreferences("Chart.Colors.PlotArea")); //$NON-NLS-1$
+		chart.getPlot().setHorizontalSpacing(1);
+      chart.getPlot().setVerticalSpacing(1);
 
 		// Title
 		Text tc = chart.getTitle().getLabel().getCaption();
