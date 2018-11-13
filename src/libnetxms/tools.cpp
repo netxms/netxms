@@ -20,6 +20,10 @@
 **
 **/
 
+#ifdef _WIN32
+#define _CRT_NONSTDC_NO_WARNINGS
+#endif
+
 #include "libnetxms.h"
 #include <stdarg.h>
 #include <nms_agent.h>
@@ -3209,6 +3213,15 @@ int LIBNETXMS_EXPORTABLE _statw32(const TCHAR *file, struct _stati64 *st)
    if (((l == 2) && (file[1] == _T(':'))) ||
        ((l == 3) && (file[1] == _T(':')) && (file[2] == _T('\\'))))
    {
+      if (l == 2)
+      {
+         TCHAR temp[4];
+         temp[0] = file[0];
+         temp[1] = _T(':');
+         temp[2] = _T('\\');
+         temp[3] = 0;
+         return _tstati64(temp, st);
+      }
       return _tstati64(file, st);
    }
 
