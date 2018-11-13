@@ -20,3 +20,4 @@ Bundle-ActivationPolicy: lazy
 Export-Package: org.netxms.ui.eclipse.perfview.views,
  org.netxms.ui.eclipse.perfview.views.helpers,
  org.netxms.ui.eclipse.perfview.widgets
+Automatic-Module-Name: org.netxms.ui.eclipse.perfview

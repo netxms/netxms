@@ -12,3 +12,4 @@ Export-Package: org.netxms.nebula.animation,
  org.netxms.nebula.jface.galleryviewer,
  org.netxms.nebula.widgets.gallery
 Bundle-Vendor: Nicolas Richeton
+Automatic-Module-Name: org.netxms.nebula.widgets.gallery
