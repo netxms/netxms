@@ -31,6 +31,7 @@ import org.eclipse.birt.chart.model.attribute.LineStyle;
 import org.eclipse.birt.chart.model.attribute.Position;
 import org.eclipse.birt.chart.model.attribute.RiserType;
 import org.eclipse.birt.chart.model.attribute.Text;
+import org.eclipse.birt.chart.model.attribute.TickStyle;
 import org.eclipse.birt.chart.model.attribute.impl.LineAttributesImpl;
 import org.eclipse.birt.chart.model.component.Axis;
 import org.eclipse.birt.chart.model.component.Series;
@@ -149,9 +150,11 @@ public class DataComparisonBirtChart extends GenericBirtChart implements DataCom
 		
 		// X axis
 		xAxis = chart.getPrimaryBaseAxes()[0];
+      xAxis.setLineAttributes(LineAttributesImpl.create(getColorFromPreferences("Chart.Axis.X.Color"), LineStyle.SOLID_LITERAL, 0));
+      xAxis.getMajorGrid().setTickAttributes(LineAttributesImpl.create(getColorFromPreferences("Chart.Axis.X.Color"), LineStyle.SOLID_LITERAL, 0));
+      xAxis.getMajorGrid().setTickStyle(TickStyle.BELOW_LITERAL);
 		xAxis.getTitle().setVisible(false);
 		xAxis.getLabel().setVisible(false);
-	
 		
 		// Y axis
 		yAxis = chart.getPrimaryOrthogonalAxis(xAxis);
@@ -166,6 +169,9 @@ public class DataComparisonBirtChart extends GenericBirtChart implements DataCom
          yAxis.getScale().setMin(NumberDataElementImpl.create(0));
       }
 		yAxis.getMajorGrid().setLineAttributes(LineAttributesImpl.create(getColorFromPreferences("Chart.Grid.Y.Color"), LineStyle.DOTTED_LITERAL, 0)); //$NON-NLS-1$
+		yAxis.getMajorGrid().setTickAttributes(LineAttributesImpl.create(getColorFromPreferences("Chart.Axis.Y.Color"), LineStyle.SOLID_LITERAL, 0));
+      yAxis.getMajorGrid().setTickStyle(TickStyle.LEFT_LITERAL);
+		yAxis.setLineAttributes(LineAttributesImpl.create(getColorFromPreferences("Chart.Axis.Y.Color"), LineStyle.SOLID_LITERAL, 0));
 		yAxis.setType(useLogScale ? AxisType.LOGARITHMIC_LITERAL : AxisType.LINEAR_LITERAL);
 		yAxis.getLabel().getCaption().getFont().setName(CHART_FONT_NAME);
 		yAxis.getLabel().getCaption().getFont().setSize(CHART_FONT_SIZE_AXIS);
@@ -274,7 +280,8 @@ public class DataComparisonBirtChart extends GenericBirtChart implements DataCom
 				{
 					ps.setLabelPosition(Position.OUTSIDE_LITERAL);
 					ps.setLeaderLineStyle(LeaderLineStyle.FIXED_LENGTH_LITERAL);
-					ps.getLeaderLineAttributes().setVisible(true);
+					ps.setLeaderLineAttributes(LineAttributesImpl.createDefault(true));
+					ps.getLeaderLineAttributes().setThickness(0);
 					ps.getLabel().getCaption().getFont().setName(CHART_FONT_NAME);
 					ps.getLabel().getCaption().getFont().setSize(CHART_FONT_SIZE_AXIS);
 				}

@@ -36,7 +36,7 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer
 	   // Set default values for preferences
 	   IPreferenceStore ps = Activator.getDefault().getPreferenceStore();
 	   
-	   ps.setDefault("Chart.Colors.Background", "240,240,240"); //$NON-NLS-1$ //$NON-NLS-2$
+	   ps.setDefault("Chart.Colors.Background", "255,255,255"); //$NON-NLS-1$ //$NON-NLS-2$
 	   ps.setDefault("Chart.Colors.Data.0", "64,105,156"); //$NON-NLS-1$ //$NON-NLS-2$
 	   ps.setDefault("Chart.Colors.Data.1", "158,65,62"); //$NON-NLS-1$ //$NON-NLS-2$
 	   ps.setDefault("Chart.Colors.Data.2", "127,154,72"); //$NON-NLS-1$ //$NON-NLS-2$
