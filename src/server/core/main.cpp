@@ -657,7 +657,6 @@ BOOL NXCORE_EXPORTABLE Initialize()
 
 	INT64 initStartTime = GetCurrentTimeMs();
 	g_serverStartTime = static_cast<time_t>(initStartTime / 1000);
-	srand(static_cast<unsigned int>(g_serverStartTime));
 
 	if (!(g_flags & AF_USE_SYSLOG))
 	{
