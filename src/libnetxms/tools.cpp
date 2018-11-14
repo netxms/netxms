@@ -106,6 +106,8 @@ void LIBNETXMS_EXPORTABLE InitNetXMSProcess(bool commandLineTool)
 #ifndef _WIN32
    BlockAllSignals(true, commandLineTool);
 #endif
+
+   srand(static_cast<unsigned int>(time(NULL)));
 }
 
 /**
