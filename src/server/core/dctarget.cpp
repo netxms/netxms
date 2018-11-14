@@ -585,7 +585,7 @@ void DataCollectionTarget::queueItemsForPolling()
          {
             ThreadPoolExecute(g_dataCollectorThreadPool, DataCollector, object);
          }
-			nxlog_debug(8, _T("DataCollectionTarget(%s)->QueueItemsForPolling(): item %d \"%s\" added to queue"), m_name, object->getId(), object->getName());
+			nxlog_debug_tag(_T("obj.dc.queue"), 8, _T("DataCollectionTarget(%s)->QueueItemsForPolling(): item %d \"%s\" added to queue"), m_name, object->getId(), object->getName());
       }
    }
    unlockDciAccess();

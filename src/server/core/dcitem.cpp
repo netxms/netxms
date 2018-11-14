@@ -112,7 +112,7 @@ DCItem::DCItem(const DCItem *src, bool shadowCopy) : DCObject(src, shadowCopy)
  *    instd_method,instd_data,instd_filter,samples,comments,guid,npe_name,
  *    instance_retention_time, grace_period_start
  */
-DCItem::DCItem(DB_HANDLE hdb, DB_RESULT hResult, int iRow, DataCollectionOwner *pNode) : DCObject()
+DCItem::DCItem(DB_HANDLE hdb, DB_RESULT hResult, int iRow, DataCollectionOwner *pNode, bool useStartupDelay) : DCObject()
 {
    m_id = DBGetFieldULong(hResult, iRow, 0);
    DBGetField(hResult, iRow, 1, m_name, MAX_ITEM_NAME);
@@ -159,6 +159,9 @@ DCItem::DCItem(DB_HANDLE hdb, DB_RESULT hResult, int iRow, DataCollectionOwner *
    DBGetField(hResult, iRow, 29, m_predictionEngine, MAX_NPE_NAME_LEN);
    m_instanceRetentionTime = DBGetFieldLong(hResult, iRow, 30);
    m_instanceGracePeriodStart = DBGetFieldLong(hResult, iRow, 31);
+
+   int effectivePollingInterval = getEffectivePollingInterval();
+   m_startTime = (useStartupDelay && (effectivePollingInterval > 0)) ? time(NULL) + rand() % (effectivePollingInterval / 2) : 0;
 
    // Load last raw value from database
 	TCHAR szQuery[256];

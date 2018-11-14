@@ -12,8 +12,10 @@
 	NX-1102 (Implement event groups)
 	NX-1199 (SNMP credentials per-zone)
 	NX-1219 (Add 'created' and 'last login' columns to User Manager)
-	NX-1271 (Implemented internal server topology)
-	NX-1386 (Implemented units for Server Variables)
+	NX-1271 (Implement internal server topology map)
+	NX-1386 (Implement units for server variables)
+	NX-1479 (DCI poll spread after NetXMS server/service restart)
+
 
 *
 * 2.2.11

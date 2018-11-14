@@ -318,6 +318,8 @@ bool DataCollectionOwner::deleteFromDatabase(DB_HANDLE hdb)
  */
 void DataCollectionOwner::loadItemsFromDB(DB_HANDLE hdb)
 {
+   bool useStartupDelay = ConfigReadBoolean(_T("DataCollection.StartupDelay"), false);
+
 	DB_STATEMENT hStmt = DBPrepare(hdb,
 	           _T("SELECT item_id,name,source,datatype,polling_interval,retention_time,")
               _T("status,delta_calculation,transformation,template_id,description,")
@@ -334,7 +336,7 @@ void DataCollectionOwner::loadItemsFromDB(DB_HANDLE hdb)
 		{
 			int count = DBGetNumRows(hResult);
 			for(int i = 0; i < count; i++)
-				m_dcObjects->add(new DCItem(hdb, hResult, i, this));
+				m_dcObjects->add(new DCItem(hdb, hResult, i, this, useStartupDelay));
 			DBFreeResult(hResult);
 		}
 		DBFreeStatement(hStmt);
@@ -355,7 +357,7 @@ void DataCollectionOwner::loadItemsFromDB(DB_HANDLE hdb)
 		{
 			int count = DBGetNumRows(hResult);
 			for(int i = 0; i < count; i++)
-				m_dcObjects->add(new DCTable(hdb, hResult, i, this));
+				m_dcObjects->add(new DCTable(hdb, hResult, i, this, useStartupDelay));
 			DBFreeResult(hResult);
 		}
 		DBFreeStatement(hStmt);

@@ -74,6 +74,7 @@ DCObject::DCObject()
    m_accessList = new IntegerArray<UINT32>(0, 16);
    m_instanceRetentionTime = -1;
    m_instanceGracePeriodStart = 0;
+   m_startTime = 0;
 }
 
 /**
@@ -123,6 +124,7 @@ DCObject::DCObject(const DCObject *src, bool shadowCopy)
    m_accessList = new IntegerArray<UINT32>(src->m_accessList);
    m_instanceRetentionTime = src->m_instanceRetentionTime;
    m_instanceGracePeriodStart = src->m_instanceGracePeriodStart;
+   m_startTime = src->m_startTime;
 }
 
 /**
@@ -172,6 +174,7 @@ DCObject::DCObject(UINT32 dwId, const TCHAR *szName, int iSource,
    m_accessList = new IntegerArray<UINT32>(0, 16);
    m_instanceRetentionTime = -1;
    m_instanceGracePeriodStart = 0;
+   m_startTime = 0;
 }
 
 /**
@@ -237,10 +240,11 @@ DCObject::DCObject(ConfigEntry *config, DataCollectionOwner *owner)
    m_instanceFilterSource = NULL;
    m_instanceFilter = NULL;
    setInstanceFilter(config->getSubEntryValue(_T("instanceFilter")));
-   nx_strncpy(m_instance, config->getSubEntryValue(_T("instance"), 0, _T("")), MAX_DB_STRING);
+   _tcslcpy(m_instance, config->getSubEntryValue(_T("instance"), 0, _T("")), MAX_DB_STRING);
    m_accessList = new IntegerArray<UINT32>(0, 16);
    m_instanceRetentionTime = config->getSubEntryValueAsInt(_T("instanceRetentionTime"), 0, -1);
    m_instanceGracePeriodStart = 0;
+   m_startTime = 0;
 }
 
 /**
@@ -248,14 +252,14 @@ DCObject::DCObject(ConfigEntry *config, DataCollectionOwner *owner)
  */
 DCObject::~DCObject()
 {
-   free(m_transformationScriptSource);
+   MemFree(m_transformationScriptSource);
    delete m_transformationScript;
    delete m_schedules;
-	free(m_pszPerfTabSettings);
-	free(m_comments);
+   MemFree(m_pszPerfTabSettings);
+   MemFree(m_comments);
    MutexDestroy(m_hMutex);
-   free(m_instanceDiscoveryData);
-   free(m_instanceFilterSource);
+   MemFree(m_instanceDiscoveryData);
+   MemFree(m_instanceFilterSource);
    delete m_instanceFilter;
    delete m_accessList;
 }
@@ -663,9 +667,9 @@ bool DCObject::isReadyForPolling(time_t currTime)
       else
       {
 			if (m_status == ITEM_STATUS_NOT_SUPPORTED)
-		      result = (m_tLastPoll + getEffectivePollingInterval() * 10 <= currTime);
+		      result = ((m_tLastPoll + getEffectivePollingInterval() * 10 <= currTime) && (m_startTime <= currTime));
 			else
-		      result = (m_tLastPoll + getEffectivePollingInterval() <= currTime);
+		      result = ((m_tLastPoll + getEffectivePollingInterval() <= currTime) && (m_startTime <= currTime));
       }
    }
    else

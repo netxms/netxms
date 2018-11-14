@@ -24,6 +24,16 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 30.52 to 30.53
+ */
+static bool H_UpgradeFromV52()
+{
+   CHK_EXEC(CreateConfigParam(_T("DataCollection.StartupDelay"), _T("0"), _T("Enable/disable randomized data collection delays on server startup for evening server load distrubution."), NULL, 'B', true, true, false, false));
+   CHK_EXEC(SetMinorSchemaVersion(53));
+   return true;
+}
+
+/**
  * Upgrade from 30.51 to 30.52 (changes also included into 22.41)
  */
 static bool H_UpgradeFromV51()
@@ -1797,6 +1807,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 52, 30, 53, H_UpgradeFromV52 },
    { 51, 30, 52, H_UpgradeFromV51 },
    { 50, 30, 51, H_UpgradeFromV50 },
    { 49, 30, 50, H_UpgradeFromV49 },

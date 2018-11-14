@@ -163,7 +163,7 @@ DCTable::DCTable(UINT32 id, const TCHAR *name, int source, int pollingInterval, 
  *    transformation_script,comments,guid,instd_method,instd_data,
  *    instd_filter,instance,instance_retention_time,grace_period_start
  */
-DCTable::DCTable(DB_HANDLE hdb, DB_RESULT hResult, int iRow, DataCollectionOwner *pNode) : DCObject()
+DCTable::DCTable(DB_HANDLE hdb, DB_RESULT hResult, int iRow, DataCollectionOwner *pNode, bool useStartupDelay) : DCObject()
 {
    m_id = DBGetFieldULong(hResult, iRow, 0);
    m_dwTemplateId = DBGetFieldULong(hResult, iRow, 1);
@@ -195,6 +195,9 @@ DCTable::DCTable(DB_HANDLE hdb, DB_RESULT hResult, int iRow, DataCollectionOwner
    DBGetField(hResult, iRow, 21, m_instance, MAX_DB_STRING);
    m_instanceRetentionTime = DBGetFieldLong(hResult, iRow, 22);
    m_instanceGracePeriodStart = DBGetFieldLong(hResult, iRow, 23);
+
+   int effectivePollingInterval = getEffectivePollingInterval();
+   m_startTime = (useStartupDelay && (effectivePollingInterval > 0)) ? time(NULL) + rand() % (effectivePollingInterval / 2) : 0;
 
    m_owner = pNode;
 	m_columns = new ObjectArray<DCTableColumn>(8, 8, true);

@@ -210,6 +210,7 @@ protected:
    IntegerArray<UINT32> *m_accessList;
    time_t m_instanceGracePeriodStart;  // Start of grace period for missing instance
    INT32 m_instanceRetentionTime;      // Retention time if instance is not found
+   time_t m_startTime;                 // Time to start data collection
 
    void lock() { MutexLock(m_hMutex); }
    bool tryLock() { return MutexTryLock(m_hMutex); }
@@ -374,7 +375,7 @@ protected:
 public:
    DCItem();
    DCItem(const DCItem *src, bool shadowCopy);
-   DCItem(DB_HANDLE hdb, DB_RESULT hResult, int iRow, DataCollectionOwner *pNode);
+   DCItem(DB_HANDLE hdb, DB_RESULT hResult, int iRow, DataCollectionOwner *pNode, bool useStartupDelay);
    DCItem(UINT32 dwId, const TCHAR *szName, int iSource, int iDataType,
           int iPollingInterval, int iRetentionTime, DataCollectionOwner *pNode,
           const TCHAR *pszDescription = NULL, const TCHAR *systemTag = NULL);
@@ -628,7 +629,7 @@ public:
    DCTable(const DCTable *src, bool shadowCopy);
    DCTable(UINT32 id, const TCHAR *name, int source, int pollingInterval, int retentionTime,
          DataCollectionOwner *node, const TCHAR *description = NULL, const TCHAR *systemTag = NULL);
-   DCTable(DB_HANDLE hdb, DB_RESULT hResult, int iRow, DataCollectionOwner *pNode);
+   DCTable(DB_HANDLE hdb, DB_RESULT hResult, int iRow, DataCollectionOwner *pNode, bool useStartupDelay);
    DCTable(ConfigEntry *config, DataCollectionOwner *owner);
 	virtual ~DCTable();
 
