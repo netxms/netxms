@@ -111,7 +111,7 @@ double NeuralNetwork::computeOutput(double *inputs)
       double s = 0.0;
       for(int j = 0; j < m_input.size(); j++)   // compute i-h sum of weights * inputs
       {
-         s += normalize(inputs[j]) + m_input.get(j)->weights[i];
+         s += m_input.get(j)->value * m_input.get(j)->weights[i];
       }
       s += m_hidden.get(i)->bias;
 
@@ -120,6 +120,7 @@ double NeuralNetwork::computeOutput(double *inputs)
 
       os += v * m_hidden.get(i)->weights[0]; // update h-o sum of weights * hidden
    }
+
 
    os += m_output.bias; // add bias to output sum
    m_output.value = os;
@@ -161,6 +162,25 @@ double NeuralNetwork::accuracy(double *series, size_t length, double howClose)
    return (numCorrect * 1.0) / (numCorrect + numWrong);
 }
 
+void NeuralNetwork::showWeights()
+{
+   for(int i = 0; i < m_hidden.size(); i++)
+   {
+      double s = 0.0;
+      for(int j = 0; j < m_input.size(); j++)   // compute i-h sum of weights * inputs
+      {
+         nxlog_debug(2, _T("%f, "), m_input.get(j)->weights[i]);
+      }
+      nxlog_debug(2, _T("\n"));
+      nxlog_debug(2, _T("bias: "), m_hidden.get(i)->bias);
+
+      double v = tanh(s);
+      m_hidden.get(i)->value = v;
+      nxlog_debug(2, _T("hiden: %f"), m_hidden.get(i)->weights[0]);
+   }
+   nxlog_debug(2, _T("bias: %f"), m_output.bias);
+}
+
 /**
  * Train network using given data series
  */
@@ -181,11 +201,10 @@ void NeuralNetwork::train(double *series, size_t length, int rounds, double lear
       for(int j = 0; j < blockSize; j++)
       {
          trainData[i][j] = normalize(series[idx+j]);
-         if(i < 3)
-            nxlog_debug(2, _T("%lf"), trainData[i][j]);
       }
-      if(i < 3)
-         nxlog_debug(2, _T("next data"));
+      //nxlog_debug(2, _T("airData[%d] = new double[] { %lf, %lf, %lf, %lf, %lf };"), i, series[idx], series[idx+1], series[idx+2], series[idx+3], series[idx+4]);
+      //if(i < 3)
+         // nxlog_debug(2, _T("next data"));
       //memcpy(trainData[i], &series[idx++], sizeof(double) * blockSize);
       idx++;
    }
@@ -215,6 +234,9 @@ void NeuralNetwork::train(double *series, size_t length, int rounds, double lear
          // 1. compute output node signal
          double errorSignal = target - m_output.value;
 
+         if((rounds % 2000) == 0 && i == 0)
+            nxlog_debug(2, _T("epoch = %d, error = %f"), rounds, errorSignal);
+
          // 2. compute hidden-to-output weight gradients using output signals
          for(int j = 0; j < m_hidden.size(); j++)
             m_hidden.get(j)->weightGradients[0] = errorSignal * m_hidden.get(j)->value;
@@ -227,7 +249,7 @@ void NeuralNetwork::train(double *series, size_t length, int rounds, double lear
          {
             NeuralNetworkNode *n = m_hidden.get(j);
             double derivative = (1 + n->value) * (1 - n->value);
-            hSignals[j] = derivative * n->weights[0];
+            hSignals[j] = derivative * n->weights[0] * errorSignal; //Check if it is correct
          }
 
          // 5. compute input-hidden weight gradients

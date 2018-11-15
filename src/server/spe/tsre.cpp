@@ -138,6 +138,8 @@ void TimeSeriesRegressionEngine::train(UINT32 nodeId, UINT32 dciId)
          series[--j] = values->get(i)->value;
       NeuralNetwork *nn = acquireNetwork(nodeId, dciId);
       nn->train(series, values->size(), 10000, 0.01);
+      nxlog_debug_tag(DEBUG_TAG, 2, _T("Final neural network model weights and biases:"));
+      nn->showWeights();
       nn->unlock();
       delete[] series;
    }

@@ -68,6 +68,7 @@ public:
    double computeOutput(double *inputs);
    double accuracy(double *series, size_t length, double howClose);
    void train(double *series, size_t length, int rounds, double learnRate);
+   void showWeights();
 
    void lock() { MutexLock(m_mutex); }
    void unlock() { MutexUnlock(m_mutex); }
