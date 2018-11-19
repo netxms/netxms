@@ -3522,12 +3522,14 @@ if test $? = 0; then
 	OLD_CPPFLAGS="$CPPFLAGS"
 	OLD_LDFLAGS="$LDFLAGS"
 	OLD_LIBS="$LIBS"
+	OLD_LD_RUN_PATH="$LD_RUN_PATH"
 
 	if test "x$TUXEDO_BASE" != "x"; then
 		TUXEDO_CPPFLAGS="-I$TUXEDO_BASE/include"
 		TUXEDO_LDFLAGS="-L$TUXEDO_BASE/lib"
 		CPPFLAGS="$CPPFLAGS $TUXEDO_CPPFLAGS"
 		LDFLAGS="$LDFLAGS $TUXEDO_LDFLAGS"
+		LD_RUN_PATH="${TUXEDO_BASE}/lib${LD_RUN_PATH:+:}${LD_RUN_PATH}"
 	fi
 	
 	AC_CHECK_HEADER(atmi.h,,AC_MSG_ERROR([*** Cannot find atmi.h - check your Tuxedo installation ***]))
@@ -3561,6 +3563,7 @@ if test $? = 0; then
 	CPPFLAGS="$OLD_CPPFLAGS"
 	LDFLAGS="$OLD_LDFLAGS"
 	LIBS="$OLD_LIBS"
+	LD_RUN_PATH="$OLD_LD_RUN_PATH"
 
 	if test "x$PLATFORM" = "xAIX"; then
 		if test -e $TUXEDO_BASE/lib/tpinit.o; then
