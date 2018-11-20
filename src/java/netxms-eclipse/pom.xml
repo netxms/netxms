@@ -74,7 +74,7 @@
         </repository>
         <repository>
             <id>Target-Management-Terminal</id>
-            <url>http://download.eclipse.org/tm/updates/3.5</url>
+            <url>http://download.eclipse.org/tm/terminal/updates/4.4milestones/20180611</url>
             <layout>p2</layout>
         </repository>
         <repository>
