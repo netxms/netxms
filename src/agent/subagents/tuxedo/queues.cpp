@@ -97,6 +97,7 @@ TuxedoQueue::TuxedoQueue(const TuxedoQueue *src)
  */
 void TuxedoQueue::update(TuxedoQueue *q)
 {
+   m_serverCount += q->m_serverCount;
    m_requestsTotal += q->m_requestsTotal;
    m_requestsCurrent += q->m_requestsCurrent;
    m_workloadsTotal += q->m_workloadsTotal;
