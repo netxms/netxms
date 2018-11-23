@@ -31,7 +31,7 @@ public:
    long m_id;
    long m_baseId;
    char m_group[32];
-   char m_name[MAX_PATH];
+   char m_name[128];
    char m_state[16];
    char m_cmdLine[1024];
    char m_envFile[256];
@@ -107,7 +107,7 @@ TuxedoServer::TuxedoServer(FBFR32 *fb, FLDOCC32 index)
    CFget32(fb, TA_SRVID, index, (char *)&m_id, NULL, FLD_LONG);
    CFget32(fb, TA_BASESRVID, index, (char *)&m_baseId, NULL, FLD_LONG);
    CFgetString(fb, TA_SRVGRP, index, m_group, sizeof(m_group));
-   CFgetString(fb, TA_SERVERNAME, index, m_name, sizeof(m_name));
+   CFgetExecutableName(fb, TA_SERVERNAME, index, m_name, sizeof(m_name));
    CFgetString(fb, TA_STATE, index, m_state, sizeof(m_state));
    CFgetString(fb, TA_CLOPT, index, m_cmdLine, sizeof(m_cmdLine));
    CFgetString(fb, TA_ENVFILE, index, m_envFile, sizeof(m_envFile));

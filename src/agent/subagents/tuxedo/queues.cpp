@@ -1,6 +1,6 @@
 /*
 ** NetXMS Tuxedo subagent
-** Copyright (C) 2014 Raden Solutions
+** Copyright (C) 2014-2018 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -30,7 +30,7 @@ class TuxedoQueue
 public:
    TCHAR m_name[32];
    char m_lmid[64];
-   char m_serverName[MAX_PATH];
+   char m_serverName[128];
    char m_state[16];
    long m_serverCount;
    long m_requestsTotal;
@@ -39,6 +39,7 @@ public:
    long m_workloadsCurrent;
 
    TuxedoQueue(FBFR32 *fb, FLDOCC32 index);
+   TuxedoQueue(const TuxedoQueue *src);
 
    void update(TuxedoQueue *q);
 };
@@ -66,13 +67,29 @@ TuxedoQueue::TuxedoQueue(FBFR32 *fb, FLDOCC32 index)
    CFgetString(fb, TA_RQADDR, index, m_name, sizeof(m_name));
 #endif
    CFgetString(fb, TA_LMID, index, m_lmid, sizeof(m_lmid));
-   CFgetString(fb, TA_SERVERNAME, index, m_serverName, sizeof(m_serverName));
+   CFgetExecutableName(fb, TA_SERVERNAME, index, m_serverName, sizeof(m_serverName));
    CFgetString(fb, TA_STATE, index, m_state, sizeof(m_state));
    CFget32(fb, TA_SERVERCNT, index, (char *)&m_serverCount, NULL, FLD_LONG);
    CFget32(fb, TA_TOTNQUEUED, index, (char *)&m_requestsTotal, NULL, FLD_LONG);
    CFget32(fb, TA_NQUEUED, index, (char *)&m_requestsCurrent, NULL, FLD_LONG);
    CFget32(fb, TA_TOTWKQUEUED, index, (char *)&m_workloadsTotal, NULL, FLD_LONG);
    CFget32(fb, TA_WKQUEUED, index, (char *)&m_workloadsCurrent, NULL, FLD_LONG);
+}
+
+/**
+ * Queue copy constructor
+ */
+TuxedoQueue::TuxedoQueue(const TuxedoQueue *src)
+{
+   _tcscpy(m_name, src->m_name);
+   strcpy(m_lmid, src->m_lmid);
+   strcpy(m_serverName, src->m_serverName);
+   strcpy(m_state, src->m_state);
+   m_serverCount = src->m_serverCount;
+   m_requestsTotal = src->m_requestsTotal;
+   m_requestsCurrent = src->m_requestsCurrent;
+   m_workloadsTotal = src->m_workloadsTotal;
+   m_workloadsCurrent = src->m_workloadsCurrent;
 }
 
 /**
@@ -92,6 +109,7 @@ void TuxedoQueue::update(TuxedoQueue *q)
 static MUTEX s_lock = MutexCreate();
 static time_t s_lastQuery = 0;
 static StringObjectMap<TuxedoQueue> *s_queues = NULL;
+static StringObjectMap<TuxedoQueue> *s_queuesByServer = NULL;
 
 /**
  * Query queues
@@ -99,6 +117,7 @@ static StringObjectMap<TuxedoQueue> *s_queues = NULL;
 static void QueryQueues()
 {
    delete_and_null(s_queues);
+   delete_and_null(s_queuesByServer);
 
    if (!TuxedoConnect())
       AgentWriteDebugLog(3, _T("Tuxedo: tpinit() call failed (%hs)"), tpstrerrordetail(tperrno, 0));
@@ -120,13 +139,33 @@ static void QueryQueues()
       {
          if (s_queues == NULL)
             s_queues = new StringObjectMap<TuxedoQueue>(true);
+         if (s_queuesByServer == NULL)
+            s_queuesByServer = new StringObjectMap<TuxedoQueue>(true);
 
          long count = 0;
          CFget32(rsp, TA_OCCURS, 0, (char *)&count, NULL, FLD_LONG);
          for(int i = 0; i < (int)count; i++)
          {
             TuxedoQueue *q = new TuxedoQueue(rsp, (FLDOCC32)i);
-            TuxedoQueue *t = s_queues->get(q->m_name);
+
+#ifdef UNICODE
+            WCHAR serverNameKey[128];
+            MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, q->m_serverName, -1, serverNameKey, 128);
+#else
+#define serverNameKey (q->m_serverName)
+#endif
+            TuxedoQueue *t = s_queuesByServer->get(serverNameKey);
+            if (t != NULL)
+            {
+               // Queue for that server name already exist
+               t->update(q);
+            }
+            else
+            {
+               s_queuesByServer->set(serverNameKey, new TuxedoQueue(q));
+            }
+
+            t = s_queues->get(q->m_name);
             if (t != NULL)
             {
                // Queue with that name already exist
@@ -249,8 +288,8 @@ LONG H_QueuesTable(const TCHAR *param, const TCHAR *arg, Table *value, AbstractC
  */
 LONG H_QueueInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
-   TCHAR queueName[32];
-   if (!AgentGetParameterArg(param, 1, queueName, 32))
+   TCHAR queueName[128];
+   if (!AgentGetParameterArg(param, 1, queueName, 128))
       return SYSINFO_RC_UNSUPPORTED;
 
    LONG rc = SYSINFO_RC_SUCCESS;
@@ -265,6 +304,8 @@ LONG H_QueueInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCom
    if (s_queues != NULL)
    {
       TuxedoQueue *q = s_queues->get(queueName);
+      if (q == NULL)
+         q = s_queuesByServer->get(queueName);
       if (q != NULL)
       {
          switch(*arg)

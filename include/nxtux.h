@@ -40,5 +40,6 @@ bool LIBNXTUX_EXPORTABLE TuxedoConnect();
 void LIBNXTUX_EXPORTABLE TuxedoDisconnect();
 
 bool LIBNXTUX_EXPORTABLE CFgetString(FBFR32 *fb, FLDID32 fieldid, FLDOCC32 oc, char *buf, size_t size);
+bool LIBNXTUX_EXPORTABLE CFgetExecutableName(FBFR32 *fb, FLDID32 fieldid, FLDOCC32 oc, char *buf, size_t size);
 
 #endif   /* _nms_agent_h_ */
