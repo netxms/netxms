@@ -356,15 +356,42 @@ static bool FillMessageFolderContent(const TCHAR *filePath, const TCHAR *fileNam
       msg->setField(varId++, fullName);
 
 #ifndef _WIN32
-      struct passwd *pw = getpwuid(st.st_uid);
-      struct group  *gr = getgrgid(st.st_gid);
-#ifdef UNICODE
-      msg->setFieldFromMBString(varId++, pw->pw_name);
-      msg->setFieldFromMBString(varId++, gr->gr_name);
+#if HAVE_GETPWUID_R
+      struct passwd *pw, pwbuf;
+      char pwtxt[4096];
+      getpwuid_r(st.st_uid, &pwbuf, pwtxt, 4096, &pw);
 #else
-      msg->setField(varId++, pw->pw_name);
-      msg->setField(varId++, gr->gr_name);
+      struct passwd *pw = getpwuid(st.st_uid);
 #endif
+#if HAVE_GETGRGID_R
+      struct group *gr, grbuf;
+      char grtxt[4096];
+      getgrgid_r(st.st_gid, &grbuf, grtxt, 4096, &gr);
+#else
+      struct group *gr = getgrgid(st.st_gid);
+#endif
+
+      if (pw != NULL)
+      {
+         msg->setFieldFromMBString(varId++, pw->pw_name);
+      }
+      else
+      {
+	 TCHAR id[32];
+	 _sntprintf(id, 32, _T("[%lu]"), (unsigned long)st.st_uid);
+         msg->setField(varId++, id);
+      }
+      if (gr != NULL)
+      {
+         msg->setFieldFromMBString(varId++, gr->gr_name);
+      }
+      else
+      {
+	 TCHAR id[32];
+	 _sntprintf(id, 32, _T("[%lu]"), (unsigned long)st.st_gid);
+         msg->setField(varId++, id);
+      }
+
       accessRights[1] = (S_IRUSR & st.st_mode) > 0 ? _T('r') : _T('-');
       accessRights[2] = (S_IWUSR & st.st_mode) > 0 ? _T('w') : _T('-');
       accessRights[3] = (S_IXUSR & st.st_mode) > 0 ? _T('x') : _T('-');
@@ -376,7 +403,7 @@ static bool FillMessageFolderContent(const TCHAR *filePath, const TCHAR *fileNam
       accessRights[9] = (S_IXOTH & st.st_mode) > 0 ? _T('x') : _T('-');
       accessRights[10] = 0;
       msg->setField(varId++, accessRights);
-#else
+#else	/* _WIN32 */
       TCHAR *owner = GetFileOwnerWin(filePath);
       msg->setField(varId++, owner);
       free(owner);
