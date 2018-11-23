@@ -1,6 +1,6 @@
 /*
 ** nxget - command line tool used to retrieve parameters from NetXMS agent
-** Copyright (C) 2004-2017 Victor Kirhenshtein
+** Copyright (C) 2004-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -135,9 +135,9 @@ static int GetTable(AgentConnection *pConn, const TCHAR *pszParam)
 			for(int j = 0; j < table->getNumColumns(); j++)
 			{
 			   if (table->getColumnDefinition(j)->isInstanceColumn())
-               _tprintf(_T(" \x1b[32;1m%*s\x1b[0m \x1b[1m|\x1b[0m"), -widths[j], table->getAsString(i, j));
+               WriteToTerminalEx(_T(" \x1b[32;1m%*s\x1b[0m \x1b[1m|\x1b[0m"), -widths[j], table->getAsString(i, j));
 			   else
-			      _tprintf(_T(" %*s \x1b[1m|\x1b[0m"), -widths[j], table->getAsString(i, j));
+			      WriteToTerminalEx(_T(" %*s \x1b[1m|\x1b[0m"), -widths[j], table->getAsString(i, j));
 			}
 			WriteToTerminal(_T("\n"));
 		}
