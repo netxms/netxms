@@ -1,6 +1,6 @@
 /*
 ** NetXMS Tuxedo helper library
-** Copyright (C) 2014-2016 Raden Solutions
+** Copyright (C) 2014-2018 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -81,6 +81,24 @@ bool LIBNXTUX_EXPORTABLE CFgetString(FBFR32 *fb, FLDID32 fieldid, FLDOCC32 oc, c
       buf[0] = 0;
       return false;
    }
+   return true;
+}
+
+/**
+ * Helper function for extracting executable name
+ */
+bool LIBNXTUX_EXPORTABLE CFgetExecutableName(FBFR32 *fb, FLDID32 fieldid, FLDOCC32 oc, char *buf, size_t size)
+{
+   char temp[MAX_PATH];
+   if (!CFgetString(fb, fieldid, oc, temp, sizeof(temp)))
+      return false;
+   
+   char *p = strrchr(temp, '/');
+   if (p != NULL)
+      p++;
+   else
+      p = temp;
+   strlcpy(buf, p, size);
    return true;
 }
 
