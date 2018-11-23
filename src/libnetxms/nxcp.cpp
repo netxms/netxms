@@ -26,6 +26,10 @@
 #include <nxstat.h>
 #include <zlib.h>
 
+#ifdef _WIN32
+#pragma warning( disable : 4267 )
+#endif
+
 /**
  * Additional message name resolvers
  */

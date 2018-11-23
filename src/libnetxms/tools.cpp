@@ -2323,6 +2323,63 @@ static WORD ApplyTerminalAttribute(HANDLE out, WORD currAttr, long code)
 
 #endif
 
+#if defined(UNICODE) && !defined(_WIN32) && HAVE_FPUTWS
+#define WRT_TCHAR    WCHAR
+#define _wrt_tcschr  wcschr
+#define _wrt_tcslen  wcslen
+#else
+#define WRT_TCHAR    char
+#define _wrt_tcschr  strchr
+#define _wrt_tcslen  strlen
+#endif
+
+#ifdef _WIN32
+#define WRT_HANDLE   HANDLE
+#else
+#define WRT_HANDLE   FILE*
+#endif
+
+/**
+ * Write text with escape sequences to file
+ */
+static void WriteRedirectedTerminalOutput(const WRT_TCHAR *text)
+{
+   const WRT_TCHAR *curr = text;
+   while(*curr != 0)
+   {
+      const WRT_TCHAR *esc = _wrt_tcschr(curr, 27);	// Find ESC
+      if (esc != NULL)
+      {
+         esc++;
+         if (*esc == '[')
+         {
+            // write everything up to ESC char
+            fwrite(curr, sizeof(WRT_TCHAR), esc - curr - 1, stdout);
+            esc++;
+            while((*esc != 0) && (*esc != _T('m')))
+               esc++;
+            if (*esc == 0)
+               break;
+            esc++;
+         }
+         else
+         {
+            fwrite(curr, sizeof(WRT_TCHAR), esc - curr, stdout);
+         }
+         curr = esc;
+      }
+      else
+      {
+#if HAVE_FPUTWS
+         fputws(curr, stdout);
+#else
+         fputs(curr, stdout);
+#endif
+         break;
+      }
+   }
+}
+
 /**
  * Write to terminal with support for ANSI color codes
  */
@@ -2337,10 +2394,10 @@ void LIBNETXMS_EXPORTABLE WriteToTerminal(const TCHAR *text)
       // Assume output is redirected
 #ifdef UNICODE
       char *mbText = MBStringFromWideString(text);
-      WriteFile(out, mbText, (UINT32)strlen(mbText), &mode, NULL);
+      WriteRedirectedTerminalOutput(mbText);
       MemFree(mbText);
 #else
-      WriteFile(out, text, (UINT32)strlen(text), &mode, NULL);
+      WriteRedirectedTerminalOutput(text);
 #endif
       return;
    }
@@ -2380,6 +2437,8 @@ void LIBNETXMS_EXPORTABLE WriteToTerminal(const TCHAR *text)
 					}
 					esc++;
 				}
+            if (*esc == 0)
+               break;
 				if (pos > 0)
 				{
 					code[pos] = 0;
@@ -2404,14 +2463,23 @@ void LIBNETXMS_EXPORTABLE WriteToTerminal(const TCHAR *text)
 #else
 #ifdef UNICODE
 #if HAVE_FPUTWS
-	fputws(text, stdout);
+   if (isatty(fileno(stdout)))
+	   fputws(text, stdout);
+   else
+      WriteRedirectedTerminalOutput(text);
 #else
 	char *mbtext = MBStringFromWideStringSysLocale(text);
-	fputs(mbtext, stdout);
-	MemFree(mbtext);
+   if (isatty(fileno(stdout)))
+      fputs(mbtext, stdout);
+   else
+      WriteRedirectedTerminalOutput(mbtext);
+   MemFree(mbtext);
 #endif
 #else
-	fputs(text, stdout);
+   if (isatty(fileno(stdout)))
+      fputs(text, stdout);
+   else
+      WriteRedirectedTerminalOutput(text);
 #endif
 #endif
 }
