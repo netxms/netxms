@@ -2307,6 +2307,7 @@ static WORD ApplyTerminalAttribute(HANDLE out, WORD currAttr, long code)
 #endif
 
 #if defined(UNICODE) && !defined(_WIN32) && HAVE_FPUTWS
+#define WRT_UNICODE  1
 #define WRT_TCHAR    WCHAR
 #define _wrt_tcschr  wcschr
 #define _wrt_tcslen  wcslen
@@ -2316,10 +2317,16 @@ static WORD ApplyTerminalAttribute(HANDLE out, WORD currAttr, long code)
 #define _wrt_tcslen  strlen
 #endif
 
-#ifdef _WIN32
-#define WRT_HANDLE   HANDLE
-#else
-#define WRT_HANDLE   FILE*
+#if WRT_UNICODE
+static void fputwsl(const WCHAR *text, const WCHAR *stop, FILE *out)
+{
+   const WCHAR *p = text;
+   while(p < stop)
+   {
+      fputwc(*p, out);
+      p++;
+   }
+}
 #endif
 
 /**
@@ -2337,7 +2344,11 @@ static void WriteRedirectedTerminalOutput(const WRT_TCHAR *text)
          if (*esc == '[')
          {
             // write everything up to ESC char
+#if WRT_UNICODE
+            fputwsl(curr, esc - 1, stdout);
+#else
             fwrite(curr, sizeof(WRT_TCHAR), esc - curr - 1, stdout);
+#endif
             esc++;
             while((*esc != 0) && (*esc != _T('m')))
                esc++;
@@ -2347,13 +2358,17 @@ static void WriteRedirectedTerminalOutput(const WRT_TCHAR *text)
          }
          else
          {
+#if WRT_UNICODE
+            fputwsl(curr, esc, stdout);
+#else
             fwrite(curr, sizeof(WRT_TCHAR), esc - curr, stdout);
+#endif
          }
          curr = esc;
       }
       else
       {
-#if HAVE_FPUTWS
+#if WRT_UNICODE
          fputws(curr, stdout);
 #else
          fputs(curr, stdout);
