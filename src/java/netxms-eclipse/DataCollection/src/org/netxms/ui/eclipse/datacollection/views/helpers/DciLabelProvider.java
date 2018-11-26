@@ -168,6 +168,10 @@ public class DciLabelProvider implements ITableLabelProvider, IColorProvider
                }
 			   }
 			   return thresholds.toString();
+         case DataCollectionEditor.COLUMN_PREDICTION_ENGINE:
+            if(!(dci instanceof DataCollectionItem))
+               return null;
+            return ((DataCollectionItem)dci).getPredictionEngine();
 			case DataCollectionEditor.COLUMN_TEMPLATE:
 				if (dci.getTemplateId() == 0)
 					return null;

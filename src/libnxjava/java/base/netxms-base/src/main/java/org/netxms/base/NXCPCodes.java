@@ -1027,6 +1027,7 @@ public class NXCPCodes
    public static final long VID_TIMER_COUNT = 624;
    public static final long VID_AUTOBIND_FLAG = 625;
    public static final long VID_AUTOUNBIND_FLAG = 626;
+   public static final long VID_INCLUDE_PREDICTED_VALUES = 627;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;

@@ -267,7 +267,7 @@ void DataCollectionTarget::queuePredictionEngineTraining()
       if (o->getType() == DCO_TYPE_ITEM)
       {
          DCItem *dci = static_cast<DCItem*>(o);
-         if (dci->getPredictionEngine()[0] != 0)
+         if (dci->getPredictionEngine()[0] != 0 && dci->getStatus() == ITEM_STATUS_ACTIVE)
          {
             nxlog_debug_tag(_T("housekeeper"), 6, _T("DataCollectionTarget::queuePredictionEngineTraining(): check prediction engine for %s node and %d dci id."), m_name, dci->getId());
             PredictionEngine *e = FindPredictionEngine(dci->getPredictionEngine());

@@ -548,7 +548,7 @@ private:
    void applyTemplate(NXCPMessage *pRequest);
    void getCollectedData(NXCPMessage *pRequest);
    void getTableCollectedData(NXCPMessage *pRequest);
-	bool getCollectedDataFromDB(NXCPMessage *request, NXCPMessage *response, DataCollectionTarget *object, int dciType, bool withRawValues);
+	bool getCollectedDataFromDB(NXCPMessage *request, NXCPMessage *response, DataCollectionTarget *object, int dciType, bool withRawValues, bool withPredictedValues);
 	void clearDCIData(NXCPMessage *pRequest);
 	void deleteDCIEntry(NXCPMessage *request);
 	void forceDCIPoll(NXCPMessage *pRequest);
@@ -1011,7 +1011,7 @@ void NXCORE_EXPORTABLE ObjectTransactionEnd();
 
 void NXCORE_EXPORTABLE QueueSQLRequest(const TCHAR *query);
 void NXCORE_EXPORTABLE QueueSQLRequest(const TCHAR *query, int bindCount, int *sqlTypes, const TCHAR **values);
-void QueueIDataInsert(time_t timestamp, UINT32 nodeId, UINT32 dciId, const TCHAR *rawValue, const TCHAR *transformedValue);
+void QueueIDataInsert(time_t timestamp, UINT32 nodeId, UINT32 dciId, const TCHAR *rawValue, const TCHAR *transformedValue, const TCHAR *predictedValue);
 void QueueRawDciDataUpdate(time_t timestamp, UINT32 dciId, const TCHAR *rawValue, const TCHAR *transformedValue);
 void QueueRawDciDataDelete(UINT32 dciId);
 int GetIDataWriterQueueSize();

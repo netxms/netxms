@@ -34,6 +34,7 @@ static ObjectArray<PredictionEngine> *GetPredictionEngines()
 {
    ObjectArray<PredictionEngine> *engines = new ObjectArray<PredictionEngine>();
    engines->add(new TimeSeriesRegressionEngine());
+   engines->add(new TimeDependentEngine());
    return engines;
 }
 

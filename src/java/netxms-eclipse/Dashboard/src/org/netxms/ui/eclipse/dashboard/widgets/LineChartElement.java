@@ -266,7 +266,7 @@ public class LineChartElement extends ElementWidget
 				{
 					currentDci = dciList[i];
 					if (currentDci.type == ChartDciConfig.ITEM)
-						data[i] = session.getCollectedData(currentDci.nodeId, currentDci.dciId, from, to, 0, false);
+						data[i] = session.getCollectedData(currentDci.nodeId, currentDci.dciId, from, to, 0, false, false);
 					else
 						data[i] = session.getCollectedTableData(currentDci.nodeId, currentDci.dciId, currentDci.instance, currentDci.column, from, to, 0);
 				}

@@ -745,7 +745,7 @@ public class AlarmDetails extends ViewPart
          {
             final Date from = new Date(System.currentTimeMillis() - 86400000);
             final Date to = new Date(System.currentTimeMillis());
-            final DciData data = session.getCollectedData(nodeId, dciId, from, to, 0, false);
+            final DciData data = session.getCollectedData(nodeId, dciId, from, to, 0, false, false);
             runInUIThread(new Runnable() {
                @Override
                public void run()

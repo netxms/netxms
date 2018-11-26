@@ -1,7 +1,7 @@
 MODULE = spe
 
 pkglib_LTLIBRARIES = spe.la
-spe_la_SOURCES = main.cpp nn.cpp tsre.cpp
+spe_la_SOURCES = main.cpp nn.cpp tde.cpp tsre.cpp 
 spe_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include
 spe_la_LDFLAGS = -module -avoid-version
 spe_la_LIBADD = ../../libnetxms/libnetxms.la ../libnxsrv/libnxsrv.la ../core/libnxcore.la

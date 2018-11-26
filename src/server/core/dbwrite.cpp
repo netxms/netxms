@@ -46,6 +46,7 @@ struct DELAYED_IDATA_INSERT
    UINT32 dciId;
    TCHAR rawValue[MAX_RESULT_LENGTH];
    TCHAR transformedValue[MAX_RESULT_LENGTH];
+   TCHAR predictedValue[MAX_RESULT_LENGTH];
 };
 
 /**
@@ -176,7 +177,7 @@ void NXCORE_EXPORTABLE QueueSQLRequest(const TCHAR *query, int bindCount, int *s
 /**
  * Queue INSERT request for idata_xxx table
  */
-void QueueIDataInsert(time_t timestamp, UINT32 nodeId, UINT32 dciId, const TCHAR *rawValue, const TCHAR *transformedValue)
+void QueueIDataInsert(time_t timestamp, UINT32 nodeId, UINT32 dciId, const TCHAR *rawValue, const TCHAR *transformedValue, const TCHAR *predictedValue)
 {
 	DELAYED_IDATA_INSERT *rq = (DELAYED_IDATA_INSERT *)malloc(sizeof(DELAYED_IDATA_INSERT));
 	rq->timestamp = timestamp;
@@ -184,6 +185,7 @@ void QueueIDataInsert(time_t timestamp, UINT32 nodeId, UINT32 dciId, const TCHAR
 	rq->dciId = dciId;
    _tcslcpy(rq->rawValue, rawValue, MAX_RESULT_LENGTH);
    _tcslcpy(rq->transformedValue, transformedValue, MAX_RESULT_LENGTH);
+   _tcslcpy(rq->predictedValue, predictedValue, MAX_RESULT_LENGTH);
    if (s_idataWriterCount > 1)
    {
       int hash = nodeId % s_idataWriterCount;
@@ -303,7 +305,7 @@ static THREAD_RESULT THREAD_CALL IDataWriteThread(void *arg)
 				if (g_dbSyntax == DB_SYNTAX_ORACLE)
 				{
 	            TCHAR query[256];
-               _sntprintf(query, 256, _T("INSERT INTO idata_%d (item_id,idata_timestamp,idata_value,raw_value) VALUES (?,?,?,?)"), (int)rq->nodeId);
+               _sntprintf(query, 256, _T("INSERT INTO idata_%d (item_id,idata_timestamp,idata_value,raw_value,predicted_value) VALUES (?,?,?,?,?)"), (int)rq->nodeId);
                DB_STATEMENT hStmt = DBPrepare(hdb, query);
                if (hStmt != NULL)
                {
@@ -311,6 +313,7 @@ static THREAD_RESULT THREAD_CALL IDataWriteThread(void *arg)
                   DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (INT64)rq->timestamp);
                   DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, rq->transformedValue, DB_BIND_STATIC);
                   DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, rq->rawValue, DB_BIND_STATIC);
+                  DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, rq->predictedValue, DB_BIND_STATIC);
                   success = DBExecute(hStmt);
                   DBFreeStatement(hStmt);
                }
@@ -322,10 +325,11 @@ static THREAD_RESULT THREAD_CALL IDataWriteThread(void *arg)
 				else
 				{
                TCHAR query[1024];
-               _sntprintf(query, 1024, _T("INSERT INTO idata_%d (item_id,idata_timestamp,idata_value,raw_value) VALUES (%d,%d,%s,%s)"),
+               _sntprintf(query, 1024, _T("INSERT INTO idata_%d (item_id,idata_timestamp,idata_value,raw_value,predicted_value) VALUES (%d,%d,%s,%s,%s)"),
                           (int)rq->nodeId, (int)rq->dciId, (int)rq->timestamp,
                           (const TCHAR *)DBPrepareString(hdb, rq->transformedValue),
-                          (const TCHAR *)DBPrepareString(hdb, rq->rawValue));
+                          (const TCHAR *)DBPrepareString(hdb, rq->rawValue),
+                          (const TCHAR *)DBPrepareString(hdb, rq->predictedValue));
                success = DBQuery(hdb, query);
 				}
 

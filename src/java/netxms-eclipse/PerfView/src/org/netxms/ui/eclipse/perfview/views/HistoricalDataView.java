@@ -84,11 +84,13 @@ public class HistoricalDataView extends ViewPart
 	private Date timeTo = null;
 	private int recordLimit = 4096;
 	private boolean updateInProgress = false;
+	private boolean showPredictedData = false;
 	private Action actionRefresh;
 	private Action actionSelectRange;
 	private Action actionExportToCsv;
 	private Action actionExportAllToCsv;
 	private Action actionDeleteDciEntry;
+	private Action actionShowPredictedData;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
@@ -188,6 +190,17 @@ public class HistoricalDataView extends ViewPart
 		   }
 		};
 		
+		actionShowPredictedData = new Action("Show predicted data") {
+         @Override
+         public void run ()
+         {
+            showPredictedData  = actionShowPredictedData.isChecked();
+            actionShowPredictedData.setChecked(showPredictedData);
+            refreshData();
+         }
+      };
+      actionShowPredictedData.setChecked(showPredictedData);
+		
 		actionExportToCsv = new ExportToCsvAction(this, viewer, true);
 		actionExportAllToCsv = new ExportToCsvAction(this, viewer, false);
 	}
@@ -211,6 +224,7 @@ public class HistoricalDataView extends ViewPart
 	private void fillLocalPullDown(IMenuManager manager)
 	{
 		manager.add(actionSelectRange);
+      manager.add(actionShowPredictedData);
 		manager.add(actionExportAllToCsv);
 		manager.add(new Separator());
 		manager.add(actionRefresh);
@@ -259,6 +273,7 @@ public class HistoricalDataView extends ViewPart
 	{
       manager.add(actionDeleteDciEntry);
 		manager.add(actionSelectRange);
+      manager.add(actionShowPredictedData);
 		manager.add(actionExportToCsv);
 		manager.add(new Separator());
 		manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
@@ -290,7 +305,7 @@ public class HistoricalDataView extends ViewPart
 			   if (subparts != null)
 			      data = session.getCollectedTableData(nodeId, dciId, instance, column, timeFrom, timeTo, recordLimit);
 			   else
-			      data = session.getCollectedData(nodeId, dciId, timeFrom, timeTo, recordLimit, true);
+			      data = session.getCollectedData(nodeId, dciId, timeFrom, timeTo, recordLimit, true, showPredictedData);
 			   
 				runInUIThread(new Runnable() {
 					@Override
@@ -344,7 +359,7 @@ public class HistoricalDataView extends ViewPart
             if (subparts != null)
                data = session.getCollectedTableData(nodeId, dciId, instance, column, timeFrom, timeTo, recordLimit);
             else
-               data = session.getCollectedData(nodeId, dciId, timeFrom, timeTo, recordLimit, true);
+               data = session.getCollectedData(nodeId, dciId, timeFrom, timeTo, recordLimit, true, showPredictedData);
             
             runInUIThread(new Runnable() {
                @Override

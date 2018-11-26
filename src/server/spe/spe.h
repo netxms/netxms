@@ -58,6 +58,8 @@ private:
    ObjectArray<NeuralNetworkNode> m_hidden;
    NeuralNetworkNode m_output;
    MUTEX m_mutex;
+   double m_minValue;
+   double m_maxValue;
 
 public:
    NeuralNetwork(int inputCount, int hiddenCount);
@@ -69,6 +71,7 @@ public:
    double accuracy(double *series, size_t length, double howClose);
    void train(double *series, size_t length, int rounds, double learnRate);
    void showWeights();
+   void setDataRange(double min, double max);
 
    void lock() { MutexLock(m_mutex); }
    void unlock() { MutexUnlock(m_mutex); }
@@ -88,6 +91,118 @@ private:
 public:
    TimeSeriesRegressionEngine();
    virtual ~TimeSeriesRegressionEngine();
+
+   /**
+    * Get engine name (must not be longer than 15 characters)
+    */
+   virtual const TCHAR *getName() const;
+
+   /**
+    * Get engine description
+    */
+   virtual const TCHAR *getDescription() const;
+
+   /**
+    * Get engine version
+    */
+   virtual const TCHAR *getVersion() const;
+
+   /**
+    * Get engine vendor
+    */
+   virtual const TCHAR *getVendor() const;
+
+   /**
+    * Initialize engine
+    *
+    * @param errorMessage buffer for error message in case of failure
+    * @return true on success
+    */
+   virtual bool initialize(TCHAR *errorMessage);
+
+   /**
+    * Check if engine requires training
+    *
+    * @return true if engine requires training
+    */
+   virtual bool requiresTraining();
+
+   /**
+    * Get engine accuracy using existing training data for given DCI
+    *
+    * @param nodeId Node object ID
+    * @param dciId DCI ID
+    */
+   virtual void getAccuracy(UINT32 nodeId, UINT32 dciId);
+
+   /**
+    * Train engine using existing data for given DCI
+    *
+    * @param nodeId Node object ID
+    * @param dciId DCI ID
+    */
+   virtual void train(UINT32 nodeId, UINT32 dciId);
+
+   /**
+    * Update internal model for given DCI
+    *
+    * @param nodeId Node object ID
+    * @param dciId DCI ID
+    * @param timestamp timestamp of new value
+    * @param value new value
+    */
+   virtual void update(UINT32 nodeId, UINT32 dciId, time_t timestamp, double value);
+
+   /**
+    * Reset internal model for given DCI
+    *
+    * @param nodeId Node object ID
+    * @param dciId DCI ID
+    */
+   virtual void reset(UINT32 nodeId, UINT32 dciId);
+
+   /**
+    * Get predicted value for given DCI and time
+    *
+    * @param nodeId Node object ID
+    * @param dciId DCI ID
+    * @param timestamp timestamp of interest
+    * @return predicted value
+    */
+   virtual double getPredictedValue(UINT32 nodeId, UINT32 dciId, time_t timestamp);
+
+   /**
+    * Get series of predicted values starting with current time. Default implementation
+    * calls getPredictedValue with incrementing timestamp
+    *
+    * @param nodeId Node object ID
+    * @param dciId DCI ID
+    * @param count number of values to retrieve
+    * @param series buffer for values
+    * @return true on success
+    */
+   virtual bool getPredictedSeries(UINT32 nodeId, UINT32 dciId, int count, double *series);
+
+   /**
+    * Get DCi cache size required by this engine
+    */
+   virtual int getRequiredCacheSize() const;
+};
+
+/**
+ * Prediction engine based on time data time
+ */
+class TimeDependentEngine : public PredictionEngine
+{
+private:
+   StringObjectMap<NeuralNetwork> m_networks;
+   MUTEX m_networkLock;
+
+   NeuralNetwork *acquireNetwork(UINT32 nodeId, UINT32 dciId);
+
+public:
+   TimeDependentEngine();
+   virtual ~TimeDependentEngine();
 
    /**
     * Get engine name (must not be longer than 15 characters)

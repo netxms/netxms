@@ -80,7 +80,7 @@ bool PredictionEngine::getPredictedSeries(UINT32 nodeId, UINT32 dciId, int count
    if (dci->getType() != DCO_TYPE_ITEM)
       return false;
 
-   time_t interval = dci->getPollingInterval();
+   time_t interval = dci->getEffectivePollingInterval();
    time_t t = time(NULL);
    for(int i = 0; i < count; i++)
    {
@@ -137,6 +137,56 @@ StructArray<DciValue> *PredictionEngine::getDciValues(UINT32 nodeId, UINT32 dciI
 
    DBConnectionPoolReleaseConnection(hdb);
    return values;
+}
+
+double PredictionEngine::getDCIMinValue(UINT32 nodeId, UINT32 dciId)
+{
+   return getBoundaryDCIValue(nodeId, dciId, _T("ASC"));
+}
+
+double PredictionEngine::getDCIMaxValue(UINT32 nodeId, UINT32 dciId)
+{
+   return getBoundaryDCIValue(nodeId, dciId, _T("DESC"));
+}
+
+double PredictionEngine::getBoundaryDCIValue(UINT32 nodeId, UINT32 dciId, TCHAR *sorting)
+{
+   TCHAR query[1024];
+   switch(g_dbSyntax)
+   {
+      case DB_SYNTAX_MSSQL:
+         _sntprintf(query, 1024, _T("SELECT TOP %d idata_value FROM idata_%u WHERE item_id=%u ORDER BY idata_timestamp %s"), 1, nodeId, dciId, sorting);
+         break;
+      case DB_SYNTAX_ORACLE:
+         _sntprintf(query, 1024, _T("SELECT * FROM (SELECT idata_value FROM idata_%u WHERE item_id=%u ORDER BY idata_timestamp %s) WHERE ROWNUM<=%d"), nodeId, dciId, sorting, 1);
+         break;
+      case DB_SYNTAX_MYSQL:
+      case DB_SYNTAX_PGSQL:
+      case DB_SYNTAX_SQLITE:
+         _sntprintf(query, 1024, _T("SELECT idata_value FROM idata_%u WHERE item_id=%u ORDER BY idata_timestamp %s LIMIT %d"), nodeId, dciId, sorting, 1);
+         break;
+      case DB_SYNTAX_DB2:
+         _sntprintf(query, 1024, _T("SELECT idata_value FROM idata_%u WHERE item_id=%u ORDER BY idata_timestamp %s ETCH FIRST %d ROWS ONLY"), nodeId, dciId, sorting, 1);
+         break;
+      default:
+         nxlog_debug(1, _T("INTERNAL ERROR: unsupported database in PredictionEngine::getDciValues"));
+         return NULL;   // Unsupported database
+   }
+
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   DB_RESULT hResult = DBSelect(hdb, query);
+   double value = 0.0;
+   if (hResult != NULL)
+   {
+      if(DBGetNumRows(hResult) > 0)
+      {
+         value = DBGetFieldULong(hResult, 0, 0);
+      }
+      DBFreeResult(hResult);
+   }
+
+   DBConnectionPoolReleaseConnection(hdb);
+   return value;
 }
 
 /**
@@ -432,6 +482,7 @@ bool GetPredictedData(ClientSession *session, const NXCPMessage *request, NXCPMe
  */
 void QueuePredictionEngineTraining(PredictionEngine *engine, UINT32 nodeId, UINT32 dciId)
 {
+   nxlog_debug(1, _T("Starting train"));
    ThreadPoolExecute(g_npeThreadPool, engine, &PredictionEngine::train, nodeId, dciId);
    //ThreadPoolExecute(g_npeThreadPool, engine, &PredictionEngine::getAccuracy, nodeId, dciId);
 }

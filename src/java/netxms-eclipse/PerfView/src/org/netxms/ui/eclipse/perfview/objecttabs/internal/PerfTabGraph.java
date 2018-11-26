@@ -245,7 +245,7 @@ public class PerfTabGraph extends DashboardComposite
 					for(int i = 0; i < data.length; i++)
 					{
 						currentDci = items.get(i);
-						data[i] = session.getCollectedData(nodeId, currentDci.getId(), from, to, 0, false);
+						data[i] = session.getCollectedData(nodeId, currentDci.getId(), from, to, 0, false, false);
 					}
 					runInUIThread(new Runnable() {
 						@Override

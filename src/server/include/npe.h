@@ -149,6 +149,10 @@ public:
     * Get DCi cache size required by this engine
     */
    virtual int getRequiredCacheSize() const = 0;
+
+   double getDCIMinValue(UINT32 nodeId, UINT32 dciId);
+   double getDCIMaxValue(UINT32 nodeId, UINT32 dciId);
+   double getBoundaryDCIValue(UINT32 nodeId, UINT32 dciId, TCHAR *sorting);
 };
 
 /**

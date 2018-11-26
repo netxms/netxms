@@ -4415,7 +4415,7 @@ public class NXCSession
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    private DciData getCollectedDataInternal(long nodeId, long dciId, String instance, String dataColumn, Date from, Date to,
-         int maxRows, boolean includeRawValues) throws IOException, NXCException
+         int maxRows, boolean includeRawValues, boolean includePredictedValues) throws IOException, NXCException
    {
       NXCPMessage msg;
       if (instance != null) // table DCI
@@ -4431,6 +4431,7 @@ public class NXCSession
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
       msg.setFieldInt32(NXCPCodes.VID_DCI_ID, (int) dciId);
       msg.setField(NXCPCodes.VID_INCLUDE_RAW_VALUES, includeRawValues);
+      msg.setField(NXCPCodes.VID_INCLUDE_PREDICTED_VALUES, includePredictedValues);
 
       DciData data = new DciData(nodeId, dciId);
 
@@ -4492,10 +4493,10 @@ public class NXCSession
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public DciData getCollectedData(long nodeId, long dciId, Date from, Date to, int maxRows, boolean includeRawValues)
+   public DciData getCollectedData(long nodeId, long dciId, Date from, Date to, int maxRows, boolean includeRawValues, boolean includePredictedValues)
          throws IOException, NXCException
    {
-      return getCollectedDataInternal(nodeId, dciId, null, null, from, to, maxRows, includeRawValues);
+      return getCollectedDataInternal(nodeId, dciId, null, null, from, to, maxRows, includeRawValues, includePredictedValues);
    }
 
    /**
@@ -4518,7 +4519,7 @@ public class NXCSession
    {
       if (instance == null || dataColumn == null) 
          throw new NXCException(RCC.INVALID_ARGUMENT);
-      return getCollectedDataInternal(nodeId, dciId, instance, dataColumn, from, to, maxRows, false);
+      return getCollectedDataInternal(nodeId, dciId, instance, dataColumn, from, to, maxRows, false, false);
    }
 
    /**

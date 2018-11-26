@@ -24,6 +24,26 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 30.52 to 30.53
+ */
+static bool H_UpgradeFromV52()
+{
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='CREATE TABLE idata_%d (item_id integer not null,idata_timestamp integer not null,idata_value varchar(255) null,raw_value varchar(255) null,predicted_value varchar(255) null)' WHERE var_name='IDataTableCreationCommand'")));
+
+   IntegerArray<UINT32> *targets = GetDataCollectionTargets();
+   for(int i = 0; i < targets->size(); i++)
+   {
+      TCHAR query[256];
+      _sntprintf(query, 256, _T("ALTER TABLE idata_%d ADD predicted_value varchar(255)"), targets->get(i));
+      CHK_EXEC(SQLQuery(query));
+   }
+   delete targets;
+
+   CHK_EXEC(SetMinorSchemaVersion(53));
+   return true;
+}
+
+/**
  * Upgrade from 30.51 to 30.52 (changes also included into 22.41)
  */
 static bool H_UpgradeFromV51()
@@ -1797,6 +1817,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 52, 30, 53, H_UpgradeFromV52 },
    { 51, 30, 52, H_UpgradeFromV51 },
    { 50, 30, 51, H_UpgradeFromV50 },
    { 49, 30, 50, H_UpgradeFromV49 },

@@ -79,12 +79,13 @@ NeuralNetwork::~NeuralNetwork()
 }
 
 /**
- * Compute output value
+ * Compute input value
  */
 double NeuralNetwork::normalize(double input)
 {
-   return input;
-   //return input/100.0;
+   //if(m_maxValue == m_minValue || (m_maxValue < 1 && m_minValue < -1))
+      return input;
+   //return (input - m_minValue)/(m_maxValue - m_minValue);
 }
 
 /**
@@ -92,10 +93,17 @@ double NeuralNetwork::normalize(double input)
  */
 double NeuralNetwork::removeNormalization(double input)
 {
-   return input;
-   //return input*100.0;
+   //if(m_maxValue == m_minValue || (m_maxValue < 1 && m_minValue < -1))
+      return input;
+   //return input * (m_maxValue - m_minValue) + m_minValue;
 }
 
+double ourThan(double x)
+{
+   if (x < -20.0) return -1.0; // approximation is correct to 30 decimals
+   else if (x > 20.0) return 1.0;
+   return tanh(x);
+}
 
 /**
  * Compute output value
@@ -115,7 +123,7 @@ double NeuralNetwork::computeOutput(double *inputs)
       }
       s += m_hidden.get(i)->bias;
 
-      double v = tanh(s);
+      double v = ourThan(s);
       m_hidden.get(i)->value = v;
 
       os += v * m_hidden.get(i)->weights[0]; // update h-o sum of weights * hidden
@@ -136,8 +144,8 @@ static void Shuffle(int *data, int size)
    {
       int idx = i + rand() % (size - i);
       int t = data[idx];
-      data[i] = data[idx];
-      data[idx] = t;
+      data[idx] = data[i];
+      data[i] = t;
    }
 }
 /**
@@ -149,8 +157,8 @@ double NeuralNetwork::accuracy(double *series, size_t length, double howClose)
    int numWrong = 0;
    for(int i = 0; i < static_cast<int>(length) - m_input.size(); i++)
    {
-      double expectedResult = series[m_input.size() + i];
-      double actualResult = computeOutput(series+i);
+      double expectedResult = series[(m_input.size()+1)*i + m_input.size()];
+      double actualResult = computeOutput(series+(m_input.size()+1)*i);
 
 
       if (abs(expectedResult - actualResult) < howClose)  // within 30
@@ -174,11 +182,17 @@ void NeuralNetwork::showWeights()
       nxlog_debug(2, _T("\n"));
       nxlog_debug(2, _T("bias: "), m_hidden.get(i)->bias);
 
-      double v = tanh(s);
+      double v = ourThan(s);
       m_hidden.get(i)->value = v;
       nxlog_debug(2, _T("hiden: %f"), m_hidden.get(i)->weights[0]);
    }
    nxlog_debug(2, _T("bias: %f"), m_output.bias);
+}
+
+void NeuralNetwork::setDataRange(double min, double max)
+{
+   m_minValue = min;
+   m_maxValue = max;
 }
 
 /**
@@ -190,24 +204,17 @@ void NeuralNetwork::train(double *series, size_t length, int rounds, double lear
       return;  // Series is too short
 
    // Prepare training data
-   int blockCount = static_cast<int>(length) - m_input.size();
+   int blockCount = length;
    int blockSize = m_input.size() + 1;
-   double **trainData = new double*[blockCount];
-   int idx = 0;
-   nxlog_debug(2, _T("Data: "));
+   /*
    for(int i = 0; i < blockCount; i++)
    {
-      trainData[i] = new double[blockSize];
       for(int j = 0; j < blockSize; j++)
       {
-         trainData[i][j] = normalize(series[idx+j]);
+         series[i*blockSize+j] = normalize(series[i*blockSize+j]);
       }
-      //nxlog_debug(2, _T("airData[%d] = new double[] { %lf, %lf, %lf, %lf, %lf };"), i, series[idx], series[idx+1], series[idx+2], series[idx+3], series[idx+4]);
-      //if(i < 3)
-         // nxlog_debug(2, _T("next data"));
-      //memcpy(trainData[i], &series[idx++], sizeof(double) * blockSize);
-      idx++;
    }
+   */
 
    double *hSignals = new double[m_hidden.size()];
 
@@ -221,21 +228,27 @@ void NeuralNetwork::train(double *series, size_t length, int rounds, double lear
    int *sequence = new int[blockCount];
    for(int i = 0; i < blockCount; i++)
       sequence[i] = i;
+   nxlog_debug(2, _T("bc = %d"), blockCount);
 
    while(rounds-- > 0)
    {
       Shuffle(sequence, blockCount); // visit each block in random order
       for(int i = 0; i < blockCount; i++)
       {
-         double *block = trainData[sequence[i]];
+         double *block = series+(sequence[i]*blockSize);
          double target = block[m_input.size()];
          computeOutput(block);
 
          // 1. compute output node signal
          double errorSignal = target - m_output.value;
 
-         if((rounds % 2000) == 0 && i == 0)
-            nxlog_debug(2, _T("epoch = %d, error = %f"), rounds, errorSignal);
+         if((rounds % 2000) == 0 && (i == 0 || i ==1))
+         {
+            nxlog_debug(2, _T("sequence[%d] = %d"), i, sequence[i]);
+            nxlog_debug(2, _T("epoch = %d, error = %lf"), rounds, errorSignal);
+            nxlog_debug(2, _T("target = %lf, out = %lf"), target,  m_output.value);
+            nxlog_debug(2, _T("0 = %lf, 1 = %lf, 2 = %lf"), block[0], block[1], block[2]);
+         }
 
          // 2. compute hidden-to-output weight gradients using output signals
          for(int j = 0; j < m_hidden.size(); j++)
@@ -287,7 +300,4 @@ void NeuralNetwork::train(double *series, size_t length, int rounds, double lear
 
    delete[] hSignals;
    delete[] sequence;
-   for(int i = 0; i < blockCount; i++)
-      delete[] trainData[i];
-   delete[] trainData;
 }

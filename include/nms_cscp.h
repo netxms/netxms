@@ -1247,6 +1247,7 @@ typedef struct
 #define VID_AUTOUNBIND_FLAG         ((UINT32)626)
 #define VID_TIMEOUT                 ((UINT32)627)
 #define VID_PROGRESS                ((UINT32)628)
+#define VID_INCLUDE_PREDICTED_VALUES ((UINT32)629)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

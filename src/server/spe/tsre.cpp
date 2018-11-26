@@ -24,7 +24,7 @@
 
 #define DEBUG_TAG _T("npe.tsre")
 
-#define INPUT_LAYER_SIZE   5
+#define INPUT_LAYER_SIZE   20
 
 /**
  * Constructor
@@ -95,6 +95,21 @@ bool TimeSeriesRegressionEngine::requiresTraining()
    return true;
 }
 
+void prepareData(StructArray<DciValue> *values, double *series)
+{
+   int blockCount = values->size() - INPUT_LAYER_SIZE;
+   int blockSize = INPUT_LAYER_SIZE + 1;
+   int idx = values->size()-1;
+   for(int i = 0; i < blockCount; i++)
+   {
+      for(int j = 0; j < blockSize; j++)
+      {
+         series[i*(INPUT_LAYER_SIZE+1) + j] = values->get(idx-j)->value;
+      }
+      idx--;
+   }
+}
+
 /**
  * Get engine accuracy using existing training data for given DCI
  *
@@ -109,9 +124,8 @@ void TimeSeriesRegressionEngine::getAccuracy(UINT32 nodeId, UINT32 dciId)
 
    if ((values != NULL) && (values->size() > INPUT_LAYER_SIZE))
    {
-      double *series = new double[values->size()];
-      for(int i = 0, j = values->size(); i < values->size(); i++)
-         series[--j] = values->get(i)->value;
+      double *series = new double[values->size()*(INPUT_LAYER_SIZE+1)];
+      prepareData(values, series);
       NeuralNetwork *nn = acquireNetwork(nodeId, dciId);
       result = nn->accuracy(series, values->size(), 0.1);
       nn->unlock();
@@ -129,17 +143,17 @@ void TimeSeriesRegressionEngine::getAccuracy(UINT32 nodeId, UINT32 dciId)
  */
 void TimeSeriesRegressionEngine::train(UINT32 nodeId, UINT32 dciId)
 {
-   nxlog_debug_tag(DEBUG_TAG, 5, _T("Starting training for DCI %u/%u"), nodeId, dciId);
-   StructArray<DciValue> *values = getDciValues(nodeId, dciId, 10000);
+   nxlog_debug_tag(DEBUG_TAG, 2, _T("Starting training for DCI %u/%u"), nodeId, dciId);
+   StructArray<DciValue> *values = getDciValues(nodeId, dciId, 30000);
    if ((values != NULL) && (values->size() > INPUT_LAYER_SIZE))
    {
-      double *series = new double[values->size()];
-      for(int i = 0, j = values->size(); i < values->size(); i++)
-         series[--j] = values->get(i)->value;
+      double *series = new double[(values->size() - INPUT_LAYER_SIZE)*(INPUT_LAYER_SIZE+1)];
+      prepareData(values, series);
       NeuralNetwork *nn = acquireNetwork(nodeId, dciId);
-      nn->train(series, values->size(), 10000, 0.01);
+      //nn->setDataRange(getDCIMinValue(nodeId, dciId), getDCIMaxValue(nodeId, dciId));
+      nn->train(series, (values->size() - INPUT_LAYER_SIZE), 10000, 0.01);
       nxlog_debug_tag(DEBUG_TAG, 2, _T("Final neural network model weights and biases:"));
-      nn->showWeights();
+      //nn->showWeights();
       nn->unlock();
       delete[] series;
    }
@@ -273,7 +287,7 @@ NeuralNetwork *TimeSeriesRegressionEngine::acquireNetwork(UINT32 nodeId, UINT32 
    NeuralNetwork *nn = m_networks.get(nid);
    if (nn == NULL)
    {
-      nn = new NeuralNetwork(INPUT_LAYER_SIZE, 24);
+      nn = new NeuralNetwork(INPUT_LAYER_SIZE, 40);
       m_networks.set(nid, nn);
    }
    nn->lock();

@@ -706,19 +706,25 @@ bool DCItem::processNewValue(time_t tmTimeStamp, const void *originalValue, bool
       QueueRawDciDataUpdate(tmTimeStamp, m_id, (const TCHAR *)originalValue, pValue->getString());
    }
 
-	// Save transformed value to database
-   if ((m_flags & DCF_NO_STORAGE) == 0)
-	   QueueIDataInsert(tmTimeStamp, m_owner->getId(), m_id, (const TCHAR *)originalValue, pValue->getString());
-   if (g_flags & AF_PERFDATA_STORAGE_DRIVER_LOADED)
-      PerfDataStorageRequest(this, tmTimeStamp, pValue->getString());
-
    // Update prediction engine
+   TCHAR predictedValue[MAX_RESULT_LENGTH];
+   predictedValue[0] = 0;
    if (m_predictionEngine[0] != 0)
    {
       PredictionEngine *engine = FindPredictionEngine(m_predictionEngine);
       if (engine != NULL)
+      {
          engine->update(m_owner->getId(), m_id, tmTimeStamp, pValue->getDouble());
+         _tprintf(predictedValue, _T("%lf"), engine->getPredictedValue(m_owner->getId(), m_id, tmTimeStamp));
+
+      }
    }
+
+	// Save transformed value to database
+   if ((m_flags & DCF_NO_STORAGE) == 0)
+	   QueueIDataInsert(tmTimeStamp, m_owner->getId(), m_id, (const TCHAR *)originalValue, pValue->getString(), predictedValue);
+   if (g_flags & AF_PERFDATA_STORAGE_DRIVER_LOADED)
+      PerfDataStorageRequest(this, tmTimeStamp, pValue->getString());
 
    // Check thresholds and add value to cache
    if (m_bCacheLoaded && (tmTimeStamp >= m_tPrevValueTimeStamp) &&
@@ -1581,6 +1587,9 @@ void DCItem::updateFromTemplate(DCObject *src)
    // Update data type in thresholds
    for(i = 0; i < getThresholdCount(); i++)
       m_thresholds->get(i)->setDataType(m_dataType);
+
+   // Update Engine
+   _tcsncpy(m_predictionEngine, item->m_predictionEngine, MAX_NPE_NAME_LEN);
 
    updateCacheSizeInternal(true);
    unlock();
