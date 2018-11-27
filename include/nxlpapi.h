@@ -166,8 +166,8 @@ public:
 	bool matchEx(const TCHAR *source, UINT32 eventId, UINT32 level, const TCHAR *line, StringList *variables, 
                 UINT64 recordId, UINT32 objectId, LogParserCallback cb, void *userArg);
 
-	void setContext(const TCHAR *context) { MemFree(m_context); m_context = (context != NULL) ? _tcsdup(context) : NULL; }
-	void setContextToChange(const TCHAR *context) { MemFree(m_contextToChange); m_contextToChange = (context != NULL) ? _tcsdup(context) : NULL; }
+	void setContext(const TCHAR *context) { MemFree(m_context); m_context = MemCopyString(context); }
+	void setContextToChange(const TCHAR *context) { MemFree(m_contextToChange); m_contextToChange = MemCopyString(context); }
 	void setContextAction(int action) { m_contextAction = action; }
 
 	void setInverted(bool flag) { m_isInverted = flag; }
@@ -180,10 +180,10 @@ public:
 	const TCHAR *getContextToChange() const { return m_contextToChange; }
 	int getContextAction() const { return m_contextAction; }
 
-	void setDescription(const TCHAR *descr) { MemFree(m_description); m_description = _tcsdup_ex(descr); }
+	void setDescription(const TCHAR *descr) { MemFree(m_description); m_description = MemCopyString(descr); }
 	const TCHAR *getDescription() const { return CHECK_NULL_EX(m_description); }
 
-	void setSource(const TCHAR *source) { MemFree(m_source); m_source = _tcsdup_ex(source); }
+	void setSource(const TCHAR *source) { MemFree(m_source); m_source = MemCopyString(source); }
 	const TCHAR *getSource() const { return CHECK_NULL_EX(m_source); }
 
 	void setLevel(UINT32 level) { m_level = level; }

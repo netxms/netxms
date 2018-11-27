@@ -91,8 +91,8 @@ MqttBroker *MqttBroker::createFromConfig(const ConfigEntry *config, StructArray<
    broker->m_hostname = strdup(config->getSubEntryValue("Hostname", 0, "127.0.0.1"));
 #endif
    broker->m_port = (UINT16)config->getSubEntryValueAsUInt(_T("Port"), 0, 1883);
-   broker->m_login = _tcsdup_ex(config->getSubEntryValue(_T("Login")));
-   broker->m_password = _tcsdup_ex(config->getSubEntryValue(_T("Password")));
+   broker->m_login = MemCopyString(config->getSubEntryValue(_T("Login")));
+   broker->m_password = MemCopyString(config->getSubEntryValue(_T("Password")));
 
    const ConfigEntry *metricRoot = config->findEntry(_T("Metrics"));
    if (metricRoot != NULL)

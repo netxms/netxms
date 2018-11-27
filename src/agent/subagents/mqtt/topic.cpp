@@ -27,9 +27,9 @@ Topic::Topic(const TCHAR *pattern, const TCHAR *event)
 #ifdef UNICODE
    m_pattern = (pattern != NULL) ? UTF8StringFromWideString(pattern) : NULL;
 #else
-   m_pattern = (pattern != NULL) ? strdup(pattern) : NULL;
+   m_pattern = MemCopyStringA(pattern);
 #endif
-   m_event = _tcsdup_ex(event);
+   m_event = MemCopyString(event);
    m_lastName[0] = 0;
    m_lastValue[0] = 0;
    m_timestamp = 0;

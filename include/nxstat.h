@@ -60,7 +60,7 @@ inline int __call_stat(const WCHAR *f, NX_STAT_STRUCT *s, bool follow)
 {
 	char *mbf = MBStringFromWideString(f);
 	int rc = follow ? NX_STAT_FOLLOW_SYMLINK(mbf, s) : NX_STAT(mbf, s);
-	free(mbf);
+	MemFree(mbf);
 	return rc;
 }
 #define CALL_STAT(f, s) __call_stat(f, s, false)

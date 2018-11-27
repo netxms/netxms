@@ -515,7 +515,7 @@ stop_search:
 			_sntprintf(destConfFields, 2048, _T("\tDB Name: %s\n\tDB Server: %s\n\tDB Login: %s"), s_dbName, s_dbServer, s_dbLogin);
          MigrateDatabase(sourceConfig, destConfFields);
 #ifdef UNICODE
-			free(sourceConfig);
+         MemFree(sourceConfig);
 #endif
 		}
       else if (!strcmp(argv[optind], "get"))
@@ -529,7 +529,7 @@ stop_search:
 			DBMgrConfigReadStr(var, buffer, MAX_CONFIG_VALUE, _T(""));
 			_tprintf(_T("%s\n"), buffer);
 #ifdef UNICODE
-			free(var);
+			MemFree(var);
 #endif
 		}
       else if (!strcmp(argv[optind], "set"))
@@ -543,8 +543,8 @@ stop_search:
 #endif
 			CreateConfigParam(var, value, true, false, replaceValue);
 #ifdef UNICODE
-			free(var);
-			free(value);
+			MemFree(var);
+			MemFree(value);
 #endif
 		}
       else if (!strcmp(argv[optind], "reset-system-account"))

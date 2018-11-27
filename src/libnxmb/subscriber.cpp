@@ -28,7 +28,7 @@
  */
 NXMBSubscriber::NXMBSubscriber(const TCHAR *id)
 {
-	m_id = _tcsdup_ex(id);
+	m_id = MemCopyString(id);
 }
 
 /**

@@ -114,13 +114,13 @@ static BOOL ExportTable(sqlite3 *db, const TCHAR *name)
 				char *utf8query = query.getUTF8String();
 				if (sqlite3_exec(db, utf8query, NULL, NULL, &errmsg) != SQLITE_OK)
 				{
-					free(utf8query);
+				   MemFree(utf8query);
 					_tprintf(_T("ERROR: SQLite query failed: %hs\n   Query: %s\n"), errmsg, (const TCHAR *)query);
 					sqlite3_free(errmsg);
 					success = FALSE;
 					break;
 				}
-				free(utf8query);
+				MemFree(utf8query);
 			}
 			DBFreeResult(hResult);
 
@@ -220,7 +220,7 @@ static bool ExecuteSchemaFile(const TCHAR *prefix, void *userArg)
       sqlite3_free(errmsg);
    }
 
-   free(data);
+   MemFree(data);
    return success;
 }
 

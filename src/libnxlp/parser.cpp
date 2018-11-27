@@ -146,8 +146,8 @@ LogParser::LogParser(const LogParser *src)
 
 	m_cb = src->m_cb;
 	m_userArg = src->m_userArg;
-	m_name = _tcsdup_ex(src->m_name);
-	m_fileName = _tcsdup_ex(src->m_fileName);
+	m_name = MemCopyString(src->m_name);
+	m_fileName = MemCopyString(src->m_fileName);
 	m_fileEncoding = src->m_fileEncoding;
 	m_preallocatedFile = src->m_preallocatedFile;
 
@@ -174,7 +174,7 @@ LogParser::LogParser(const LogParser *src)
 	m_traceLevel = src->m_traceLevel;
 	m_status = LPS_INIT;
 #ifdef _WIN32
-   m_marker = _tcsdup_ex(src->m_marker);
+   m_marker = MemCopyString(src->m_marker);
 #endif
 }
 
@@ -346,9 +346,9 @@ bool LogParser::matchEvent(const TCHAR *source, UINT32 eventId, UINT32 level, co
 void LogParser::setFileName(const TCHAR *name)
 {
 	MemFree(m_fileName);
-	m_fileName = (name != NULL) ? _tcsdup(name) : NULL;
+	m_fileName = MemCopyString(name);
 	if (m_name == NULL)
-		m_name = _tcsdup(name);	// Set parser name to file name
+		m_name = MemCopyString(name);	// Set parser name to file name
 }
 
 /**
@@ -357,7 +357,7 @@ void LogParser::setFileName(const TCHAR *name)
 void LogParser::setName(const TCHAR *name)
 {
 	MemFree(m_name);
-	m_name = _tcsdup((name != NULL) ? name : CHECK_NULL(m_fileName));
+	m_name = MemCopyString((name != NULL) ? name : CHECK_NULL(m_fileName));
 }
 
 /**

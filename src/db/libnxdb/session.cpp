@@ -153,7 +153,7 @@ void LIBNXDB_EXPORTABLE DBDisconnect(DB_HANDLE hConn)
    MemFree(hConn->m_server);
    MemFree(hConn->m_schema);
    delete hConn->m_preparedStatements;
-   free(hConn);
+   MemFree(hConn);
 }
 
 /**
@@ -545,7 +545,7 @@ char LIBNXDB_EXPORTABLE *DBGetFieldUTF8(DB_RESULT hResult, int iRow, int iColumn
       hResult->m_driver->m_fpDrvGetField(hResult->m_data, iRow, iColumn, wtemp, nLen);
       char *value = (pszBuffer != NULL) ? pszBuffer : (char *)malloc(nLen);
       WideCharToMultiByte(CP_UTF8, 0, wtemp, -1, value, (pszBuffer != NULL) ? nBufLen : nLen, NULL, NULL);
-      free(wtemp);
+      MemFree(wtemp);
       return value;
    }
 }
@@ -574,7 +574,7 @@ char LIBNXDB_EXPORTABLE *DBGetFieldA(DB_RESULT hResult, int iRow, int iColumn, c
       {
          pszRet = NULL;
       }
-      free(pwszBuffer);
+      MemFree(pwszBuffer);
    }
    else
    {
@@ -598,7 +598,7 @@ char LIBNXDB_EXPORTABLE *DBGetFieldA(DB_RESULT hResult, int iRow, int iColumn, c
          {
             pszRet = NULL;
          }
-         free(pwszBuffer);
+         MemFree(pwszBuffer);
       }
    }
    return pszRet;
@@ -813,7 +813,7 @@ void LIBNXDB_EXPORTABLE DBFreeResult(DB_RESULT hResult)
    if (hResult != NULL)
 	{
       hResult->m_driver->m_fpDrvFreeResult(hResult->m_data);
-		free(hResult);
+      MemFree(hResult);
 	}
 }
 
@@ -1022,7 +1022,7 @@ char LIBNXDB_EXPORTABLE *DBGetFieldUTF8(DB_UNBUFFERED_RESULT hResult, int iColum
       hResult->m_driver->m_fpDrvGetFieldUnbuffered(hResult->m_data, iColumn, wtemp, nLen);
       char *value = (buffer != NULL) ? buffer : (char *)malloc(nLen);
       WideCharToMultiByte(CP_UTF8, 0, wtemp, -1, value, (buffer != NULL) ? iBufSize : nLen, NULL, NULL);
-      free(wtemp);
+      MemFree(wtemp);
       return value;
    }
 }
@@ -1136,7 +1136,7 @@ void LIBNXDB_EXPORTABLE DBFreeResult(DB_UNBUFFERED_RESULT hResult)
 {
 	hResult->m_driver->m_fpDrvFreeUnbufferedResult(hResult->m_data);
 	MutexUnlock(hResult->m_connection->m_mutexTransLock);
-	free(hResult);
+	MemFree(hResult);
 }
 
 /**
@@ -1235,8 +1235,8 @@ void LIBNXDB_EXPORTABLE DBFreeStatement(DB_STATEMENT hStmt)
       hStmt->m_connection->m_preparedStatements->remove(hStmt);
    }
    hStmt->m_driver->m_fpDrvFreeStatement(hStmt->m_statement);
-   free(hStmt->m_query);
-	free(hStmt);
+   MemFree(hStmt->m_query);
+   MemFree(hStmt);
 }
 
 /**
@@ -1822,7 +1822,7 @@ String LIBNXDB_EXPORTABLE DBPrepareString(DB_DRIVER drv, const TCHAR *str, int m
 #else
 		out.setBuffer(drv->m_fpDrvPrepareStringA(temp));
 #endif
-		free(temp);
+		MemFree(temp);
 	}
 	else	
 	{
@@ -1844,7 +1844,7 @@ String LIBNXDB_EXPORTABLE DBPrepareStringA(DB_HANDLE conn, const char *str, int 
 {
 	WCHAR *wcs = WideStringFromMBString(str);
 	String s = DBPrepareString(conn, wcs, maxSize);
-	free(wcs);
+	MemFree(wcs);
 	return s;
 }
 
@@ -1852,7 +1852,7 @@ String LIBNXDB_EXPORTABLE DBPrepareStringA(DB_DRIVER drv, const char *str, int m
 {
    WCHAR *wcs = WideStringFromMBString(str);
    String s = DBPrepareString(drv, wcs, maxSize);
-   free(wcs);
+   MemFree(wcs);
    return s;
 }
 

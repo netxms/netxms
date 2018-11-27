@@ -129,13 +129,13 @@ UserDatabaseObject::UserDatabaseObject(const UserDatabaseObject *src)
 {
    m_id = src->m_id;
    m_guid = src->m_guid;
-   _tcsncpy(m_name, src->m_name, MAX_USER_NAME);
+   _tcslcpy(m_name, src->m_name, MAX_USER_NAME);
    m_systemRights = src->m_systemRights;
-   _tcsncpy(m_description, src->m_description, MAX_USER_DESCR);
+   _tcslcpy(m_description, src->m_description, MAX_USER_DESCR);
    m_flags = src->m_flags;
    m_attributes.addAll(&src->m_attributes);
-   m_ldapDn = _tcsdup_ex(src->m_ldapDn);
-   m_ldapId = _tcsdup_ex(src->m_ldapId);
+   m_ldapDn = MemCopyString(src->m_ldapDn);
+   m_ldapId = MemCopyString(src->m_ldapId);
    m_created = src->m_created;
 }
 
@@ -144,8 +144,8 @@ UserDatabaseObject::UserDatabaseObject(const UserDatabaseObject *src)
  */
 UserDatabaseObject::~UserDatabaseObject()
 {
-   free(m_ldapDn);
-   free(m_ldapId);
+   MemFree(m_ldapDn);
+   MemFree(m_ldapId);
 }
 
 /**
@@ -342,7 +342,7 @@ void UserDatabaseObject::setDn(const TCHAR *dn)
    if(m_ldapDn != NULL && !_tcscmp(m_ldapDn, dn))
       return;
    free(m_ldapDn);
-   m_ldapDn = _tcsdup_ex(dn);
+   m_ldapDn = MemCopyString(dn);
    m_flags |= UF_MODIFIED;
 }
 
@@ -351,7 +351,7 @@ void UserDatabaseObject::setLdapId(const TCHAR *id)
    if(m_ldapId != NULL && !_tcscmp(m_ldapId, id))
       return;
    free(m_ldapId);
-   m_ldapId = _tcsdup_ex(id);
+   m_ldapId = MemCopyString(id);
    m_flags |= UF_MODIFIED;
 }
 
@@ -559,7 +559,7 @@ User::User(const User *src) : UserDatabaseObject(src)
    m_graceLogins = src->m_graceLogins;
    m_authMethod = src->m_authMethod;
    m_certMappingMethod = src->m_certMappingMethod;
-   m_certMappingData = _tcsdup_ex(src->m_certMappingData);
+   m_certMappingData = MemCopyString(src->m_certMappingData);
    m_disabledUntil = src->m_disabledUntil;
    m_lastPasswordChange = src->m_lastPasswordChange;
    m_lastLogin = src->m_lastLogin;
@@ -573,7 +573,7 @@ User::User(const User *src) : UserDatabaseObject(src)
  */
 User::~User()
 {
-	free(m_certMappingData);
+	MemFree(m_certMappingData);
 }
 
 /**

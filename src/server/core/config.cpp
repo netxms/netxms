@@ -196,11 +196,11 @@ stop_search:
                Trim(tagList[i]);
                nxlog_set_debug_level_tag(tagList[i], _tcstol(level, NULL, 0));
             }
-            free(tagList[i]);
+            MemFree(tagList[i]);
          }
-         free(tagList);
+         MemFree(tagList);
       }
-      free(s_debugTags);
+      MemFree(s_debugTags);
    }
 
 	// Decrypt password
@@ -216,9 +216,9 @@ stop_search:
          InetAddress a = InetAddress::resolveHostName(list[i]);
          if (a.isValidUnicast())
             g_peerNodeAddrList.add(a);
-         free(list[i]);
+         MemFree(list[i]);
       }
-      free(list);
+      MemFree(list);
    }
    return bSuccess;
 }

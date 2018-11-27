@@ -85,7 +85,7 @@ void UnregisterOnlineUpgrade(int major, int minor)
    {
       TCHAR *list = upgradeList->join(_T(","));
       DBMgrMetaDataWriteStr(_T("PendingOnlineUpgrades"), (list[0] != 0) ? list : _T(" ")); // Oracle workaround
-      free(list);
+      MemFree(list);
    }
    delete upgradeList;
 }

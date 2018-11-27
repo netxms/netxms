@@ -74,10 +74,10 @@ public:
 
    ScheduledTaskParameters(const TCHAR *taskKey, UINT32 userId, UINT32 objectId, const TCHAR *persistentData = NULL, ScheduledTaskTransientData *transientData = NULL)
    {
-      m_taskKey = _tcsdup_ex(taskKey);
+      m_taskKey = MemCopyString(taskKey);
       m_userId = userId;
       m_objectId = objectId;
-      m_persistentData = _tcsdup_ex(persistentData);
+      m_persistentData = MemCopyString(persistentData);
       m_transientData = transientData;
    }
 
@@ -86,7 +86,7 @@ public:
       m_taskKey = NULL;
       m_userId = userId;
       m_objectId = objectId;
-      m_persistentData = _tcsdup_ex(persistentData);
+      m_persistentData = MemCopyString(persistentData);
       m_transientData = transientData;
    }
 

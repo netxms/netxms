@@ -783,7 +783,7 @@ InterfaceList *AgentConnection::getInterfaceList()
    // index ip_address/mask_bits iftype(mtu) mac_address name
    for(int i = 0; i < data->size(); i++)
    {
-      TCHAR *line = _tcsdup(data->get(i));
+      TCHAR *line = MemCopyString(data->get(i));
       TCHAR *pBuf = line;
       UINT32 ifIndex = 0;
 
@@ -950,7 +950,7 @@ ArpCache *AgentConnection::getArpCache()
    // n is an interface index
    for(int i = 0; i < data->size(); i++)
    {
-      TCHAR *line = _tcsdup(data->get(i));
+      TCHAR *line = MemCopyString(data->get(i));
       pBuf = line;
       if (_tcslen(pBuf) < 20)     // Invalid line
       {
@@ -1858,7 +1858,7 @@ ROUTING_TABLE *AgentConnection::getRoutingTable()
    pRT->pRoutes = (ROUTE *)calloc(data->size(), sizeof(ROUTE));
    for(int i = 0; i < data->size(); i++)
    {
-      TCHAR *line = _tcsdup(data->get(i));
+      TCHAR *line = MemCopyString(data->get(i));
       TCHAR *pBuf = line;
 
       // Destination address and mask
@@ -2429,8 +2429,8 @@ AgentParameterDefinition::AgentParameterDefinition(NXCPMessage *msg, UINT32 base
  */
 AgentParameterDefinition::AgentParameterDefinition(AgentParameterDefinition *src)
 {
-   m_name = _tcsdup_ex(src->m_name);
-   m_description = _tcsdup_ex(src->m_description);
+   m_name = MemCopyString(src->m_name);
+   m_description = MemCopyString(src->m_description);
    m_dataType = src->m_dataType;
 }
 
@@ -2439,8 +2439,8 @@ AgentParameterDefinition::AgentParameterDefinition(AgentParameterDefinition *src
  */
 AgentParameterDefinition::AgentParameterDefinition(const TCHAR *name, const TCHAR *description, int dataType)
 {
-   m_name = _tcsdup_ex(name);
-   m_description = _tcsdup_ex(description);
+   m_name = MemCopyString(name);
+   m_description = MemCopyString(description);
    m_dataType = dataType;
 }
 
@@ -2491,8 +2491,8 @@ AgentTableDefinition::AgentTableDefinition(NXCPMessage *msg, UINT32 baseId)
  */
 AgentTableDefinition::AgentTableDefinition(AgentTableDefinition *src)
 {
-   m_name = (src->m_name != NULL) ? _tcsdup(src->m_name) : NULL;
-   m_description = (src->m_description != NULL) ? _tcsdup(src->m_description) : NULL;
+   m_name = MemCopyString(src->m_name);
+   m_description = MemCopyString(src->m_description);
    m_instanceColumns = new StringList(src->m_instanceColumns);
    m_columns = new ObjectArray<AgentTableColumnDefinition>(16, 16, true);
    for(int i = 0; i < src->m_columns->size(); i++)

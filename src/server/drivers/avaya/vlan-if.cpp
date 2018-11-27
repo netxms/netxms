@@ -154,5 +154,5 @@ void AvayaERSDriver::getVlanInterfaces(SNMP_Transport *pTransport, InterfaceList
    // Get interfaces
    pIfList->setData(&vlanList);
    SnmpWalk(pTransport, _T(".1.3.6.1.4.1.2272.1.8.2.1.1"), HandlerRapidCityIfList, pIfList);
-   free(vlanList.pList);
+   MemFree(vlanList.pList);
 }

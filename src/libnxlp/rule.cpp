@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Log Parsing Library
-** Copyright (C) 2003-2016 Raden Solutions
+** Copyright (C) 2003-2018 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -35,14 +35,14 @@ LogParserRule::LogParserRule(LogParser *parser, const TCHAR *name, const TCHAR *
 	String expandedRegexp;
 
 	m_parser = parser;
-	m_name = _tcsdup((name != NULL) ? name : _T(""));
+	m_name = MemCopyString(CHECK_NULL_EX(name));
 	expandMacros(regexp, expandedRegexp);
-	m_regexp = _tcsdup(expandedRegexp);
+	m_regexp = MemCopyString(expandedRegexp);
 	m_isValid = (_tregcomp(&m_preg, expandedRegexp, REG_EXTENDED | REG_ICASE) == 0);
 	m_eventCode = eventCode;
-	m_eventName = (eventName != NULL) ? _tcsdup(eventName) : NULL;
+	m_eventName = MemCopyString(eventName);
 	m_pmatch = MemAllocArray<regmatch_t>(MAX_PARAM_COUNT);
-	m_source = _tcsdup_ex(source);
+	m_source = MemCopyString(source);
 	m_level = level;
 	m_idStart = idStart;
 	m_idEnd = idEnd;
@@ -67,22 +67,22 @@ LogParserRule::LogParserRule(LogParser *parser, const TCHAR *name, const TCHAR *
 LogParserRule::LogParserRule(LogParserRule *src, LogParser *parser)
 {
 	m_parser = parser;
-	m_name = _tcsdup_ex(src->m_name);
-	m_regexp = _tcsdup(src->m_regexp);
+	m_name = MemCopyString(src->m_name);
+	m_regexp = MemCopyString(src->m_regexp);
 	m_isValid = (_tregcomp(&m_preg, m_regexp, REG_EXTENDED | REG_ICASE) == 0);
 	m_eventCode = src->m_eventCode;
-	m_eventName = (src->m_eventName != NULL) ? _tcsdup(src->m_eventName) : NULL;
+	m_eventName = MemCopyString(src->m_eventName);
    m_pmatch = MemAllocArray<regmatch_t>(MAX_PARAM_COUNT);
-   m_source = (src->m_source != NULL) ? _tcsdup(src->m_source) : NULL;
+   m_source = MemCopyString(src->m_source);
 	m_level = src->m_level;
 	m_idStart = src->m_idStart;
 	m_idEnd = src->m_idEnd;
-	m_context = (src->m_context != NULL) ? _tcsdup(src->m_context) : NULL;
+	m_context = MemCopyString(src->m_context);
 	m_contextAction = src->m_contextAction;
-	m_contextToChange = (src->m_contextToChange != NULL) ? _tcsdup(src->m_contextToChange) : NULL;
+	m_contextToChange = MemCopyString(src->m_contextToChange);
 	m_isInverted = src->m_isInverted;
 	m_breakOnMatch = src->m_breakOnMatch;
-	m_description = (src->m_description != NULL) ? _tcsdup(src->m_description) : NULL;
+	m_description = MemCopyString(src->m_description);
    m_repeatInterval = src->m_repeatInterval;
 	m_repeatCount = src->m_repeatCount;
 	m_resetRepeat = src->m_resetRepeat;

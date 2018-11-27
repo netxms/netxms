@@ -70,10 +70,10 @@ ScheduledTask::ScheduledTask(int id, const TCHAR *taskHandlerId, const TCHAR *sc
          ScheduledTaskParameters *parameters, const TCHAR *comments, UINT32 flags)
 {
    m_id = id;
-   m_taskHandlerId = _tcsdup(CHECK_NULL_EX(taskHandlerId));
-   m_schedule = _tcsdup(CHECK_NULL_EX(schedule));
+   m_taskHandlerId = MemCopyString(CHECK_NULL_EX(taskHandlerId));
+   m_schedule = MemCopyString(CHECK_NULL_EX(schedule));
    m_parameters = parameters;
-   m_comments = _tcsdup(CHECK_NULL_EX(comments));
+   m_comments = MemCopyString(CHECK_NULL_EX(comments));
    m_executionTime = NEVER;
    m_lastExecution = NEVER;
    m_flags = flags;
@@ -86,10 +86,10 @@ ScheduledTask::ScheduledTask(int id, const TCHAR *taskHandlerId, time_t executio
          ScheduledTaskParameters *parameters, const TCHAR *comments, UINT32 flags)
 {
    m_id = id;
-   m_taskHandlerId = _tcsdup(CHECK_NULL_EX(taskHandlerId));
-   m_schedule = _tcsdup(_T(""));
+   m_taskHandlerId = MemCopyString(CHECK_NULL_EX(taskHandlerId));
+   m_schedule = MemCopyString(_T(""));
    m_parameters = parameters;
-   m_comments = _tcsdup(CHECK_NULL_EX(comments));
+   m_comments = MemCopyString(CHECK_NULL_EX(comments));
    m_executionTime = executionTime;
    m_lastExecution = NEVER;
    m_flags = flags;
@@ -134,13 +134,13 @@ ScheduledTask::~ScheduledTask()
 void ScheduledTask::update(const TCHAR *taskHandlerId, const TCHAR *schedule, ScheduledTaskParameters *parameters, const TCHAR *comments, UINT32 flags)
 {
    MemFree(m_taskHandlerId);
-   m_taskHandlerId = _tcsdup(CHECK_NULL_EX(taskHandlerId));
+   m_taskHandlerId = MemCopyString(CHECK_NULL_EX(taskHandlerId));
    MemFree(m_schedule);
-   m_schedule = _tcsdup(CHECK_NULL_EX(schedule));
+   m_schedule = MemCopyString(CHECK_NULL_EX(schedule));
    delete m_parameters;
    m_parameters = parameters;
    MemFree(m_comments);
-   m_comments = _tcsdup(CHECK_NULL_EX(comments));
+   m_comments = MemCopyString(CHECK_NULL_EX(comments));
    m_flags = flags;
 }
 
@@ -150,13 +150,13 @@ void ScheduledTask::update(const TCHAR *taskHandlerId, const TCHAR *schedule, Sc
 void ScheduledTask::update(const TCHAR *taskHandlerId, time_t nextExecution, ScheduledTaskParameters *parameters, const TCHAR *comments, UINT32 flags)
 {
    MemFree(m_taskHandlerId);
-   m_taskHandlerId = _tcsdup(CHECK_NULL_EX(taskHandlerId));
+   m_taskHandlerId = MemCopyString(CHECK_NULL_EX(taskHandlerId));
    MemFree(m_schedule);
-   m_schedule = _tcsdup(_T(""));
+   m_schedule = MemCopyString(_T(""));
    delete m_parameters;
    m_parameters = parameters;
    MemFree(m_comments);
-   m_comments = _tcsdup(CHECK_NULL_EX(comments));
+   m_comments = MemCopyString(CHECK_NULL_EX(comments));
    m_executionTime = nextExecution;
    m_flags = flags;
 }

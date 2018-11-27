@@ -127,13 +127,13 @@ EPRule::EPRule(ConfigEntry *config) : m_actions(0, 16, true)
          {
             UINT32 actionId = FindActionByGUID(guid);
             if (actionId != 0)
-               m_actions.add(new ActionExecutionConfiguration(actionId, timerDelay, _tcsdup_ex(timerKey)));
+               m_actions.add(new ActionExecutionConfiguration(actionId, timerDelay, MemCopyString(timerKey)));
          }
          else
          {
             UINT32 actionId = actions->get(i)->getId();
             if (IsValidActionId(actionId))
-               m_actions.add(new ActionExecutionConfiguration(actionId, timerDelay, _tcsdup_ex(timerKey)));
+               m_actions.add(new ActionExecutionConfiguration(actionId, timerDelay, MemCopyString(timerKey)));
          }
       }
       delete actions;

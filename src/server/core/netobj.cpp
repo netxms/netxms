@@ -2403,7 +2403,7 @@ TCHAR *NetObj::getCustomAttributeCopy(const TCHAR *name) const
 {
    lockProperties();
    const TCHAR *value = m_customAttributes.get(name);
-   TCHAR *result = _tcsdup_ex(value);
+   TCHAR *result = MemCopyString(value);
    unlockProperties();
    return result;
 }

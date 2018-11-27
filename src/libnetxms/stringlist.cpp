@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -33,8 +33,7 @@ StringList::StringList()
 {
 	m_count = 0;
 	m_allocated = ALLOCATION_STEP;
-	m_values = (TCHAR **)malloc(sizeof(TCHAR *) * m_allocated);
-	memset(m_values, 0, sizeof(TCHAR *) * m_allocated);
+	m_values = MemAllocArray<TCHAR*>(m_allocated);
 }
 
 /**
@@ -44,8 +43,7 @@ StringList::StringList(const StringList *src)
 {
 	m_count = 0;
    m_allocated = src->m_allocated;
-	m_values = (TCHAR **)malloc(sizeof(TCHAR *) * m_allocated);
-	memset(m_values, 0, sizeof(TCHAR *) * m_allocated);
+   m_values = MemAllocArray<TCHAR*>(m_allocated);
    addAll(src);
 }
 
@@ -56,8 +54,7 @@ StringList::StringList(const StringList &src)
 {
    m_count = 0;
    m_allocated = src.m_allocated;
-   m_values = (TCHAR **)malloc(sizeof(TCHAR *) * m_allocated);
-   memset(m_values, 0, sizeof(TCHAR *) * m_allocated);
+   m_values = MemAllocArray<TCHAR*>(m_allocated);
    addAll(&src);
 }
 
@@ -68,8 +65,7 @@ StringList::StringList(const TCHAR *src, const TCHAR *separator)
 {
 	m_count = 0;
 	m_allocated = ALLOCATION_STEP;
-	m_values = (TCHAR **)malloc(sizeof(TCHAR *) * m_allocated);
-	memset(m_values, 0, sizeof(TCHAR *) * m_allocated);
+   m_values = MemAllocArray<TCHAR*>(m_allocated);
    splitAndAdd(src, separator);
 }
 
@@ -80,7 +76,7 @@ StringList::StringList(const NXCPMessage *msg, UINT32 baseId, UINT32 countId)
 {
    m_count = msg->getFieldAsInt32(countId);
    m_allocated = m_count;
-   m_values = (TCHAR **)malloc(sizeof(TCHAR *) * m_allocated);
+   m_values = MemAllocArray<TCHAR*>(m_allocated);
    UINT32 fieldId = baseId;
    for(int i = 0; i < m_count; i++)
       m_values[i] = msg->getFieldAsString(fieldId++);
@@ -115,7 +111,7 @@ void StringList::addPreallocated(TCHAR *value)
 	if (m_allocated == m_count)
 	{
 		m_allocated += ALLOCATION_STEP;
-		m_values = (TCHAR **)realloc(m_values, sizeof(TCHAR *) * m_allocated);
+		m_values = MemReallocArray(m_values, m_allocated);
 	}
 	m_values[m_count++] = value;
 }
@@ -125,7 +121,7 @@ void StringList::addPreallocated(TCHAR *value)
  */
 void StringList::add(const TCHAR *value)
 {
-   addPreallocated(_tcsdup_ex(value));
+   addPreallocated(MemCopyString(value));
 }
 
 /**
@@ -134,7 +130,6 @@ void StringList::add(const TCHAR *value)
 void StringList::add(INT32 value)
 {
 	TCHAR buffer[32];
-
 	_sntprintf(buffer, 32, _T("%d"), (int)value);
 	add(buffer);
 }
@@ -145,7 +140,6 @@ void StringList::add(INT32 value)
 void StringList::add(UINT32 value)
 {
 	TCHAR buffer[32];
-
 	_sntprintf(buffer, 32, _T("%u"), (unsigned int)value);
 	add(buffer);
 }
@@ -156,7 +150,6 @@ void StringList::add(UINT32 value)
 void StringList::add(INT64 value)
 {
 	TCHAR buffer[32];
-
 	_sntprintf(buffer, 32, INT64_FMT, value);
 	add(buffer);
 }
@@ -167,7 +160,6 @@ void StringList::add(INT64 value)
 void StringList::add(UINT64 value)
 {
 	TCHAR buffer[32];
-
 	_sntprintf(buffer, 32, UINT64_FMT, value);
 	add(buffer);
 }
@@ -178,7 +170,6 @@ void StringList::add(UINT64 value)
 void StringList::add(double value)
 {
 	TCHAR buffer[64];
-
 	_sntprintf(buffer, 64, _T("%f"), value);
 	add(buffer);
 }
@@ -192,7 +183,7 @@ void StringList::replace(int index, const TCHAR *value)
 		return;
 
 	MemFree(m_values[index]);
-	m_values[index] = _tcsdup_ex(value);
+	m_values[index] = MemCopyString(value);
 }
 
 /**
@@ -206,7 +197,7 @@ void StringList::addOrReplace(int index, const TCHAR *value)
    if (index < m_count)
    {
 	   MemFree(m_values[index]);
-      m_values[index] = _tcsdup_ex(value);
+      m_values[index] = MemCopyString(value);
    }
    else
    {

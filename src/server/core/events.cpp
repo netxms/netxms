@@ -431,15 +431,15 @@ Event::Event(const Event *src)
    m_zoneUIN = src->m_zoneUIN;
    m_dciId = src->m_dciId;
    m_flags = src->m_flags;
-   m_messageText = _tcsdup_ex(src->m_messageText);
-   m_messageTemplate = _tcsdup_ex(src->m_messageTemplate);
+   m_messageText = MemCopyString(src->m_messageText);
+   m_messageTemplate = MemCopyString(src->m_messageTemplate);
    m_timeStamp = src->m_timeStamp;
-	m_userTag = _tcsdup_ex(src->m_userTag);
-	m_customMessage = _tcsdup_ex(src->m_customMessage);
+	m_userTag = MemCopyString(src->m_userTag);
+	m_customMessage = MemCopyString(src->m_customMessage);
 	m_parameters.setOwner(true);
    for(int i = 0; i < src->m_parameters.size(); i++)
    {
-      m_parameters.add(_tcsdup_ex((TCHAR *)src->m_parameters.get(i)));
+      m_parameters.add(MemCopyString((TCHAR *)src->m_parameters.get(i)));
    }
    m_parameterNames.addAll(&src->m_parameterNames);
 }
@@ -459,7 +459,7 @@ Event::Event(const EventTemplate *eventTemplate, UINT32 sourceId, UINT32 dciId, 
    m_sourceId = sourceId;
    m_dciId = dciId;
    m_messageText = NULL;
-	m_userTag = _tcsdup_ex(userTag);
+	m_userTag = MemCopyString(userTag);
    if ((m_userTag != NULL) && (_tcslen(m_userTag) >= MAX_USERTAG_LENGTH))
       m_userTag[MAX_USERTAG_LENGTH - 1] = 0;
 	m_customMessage = NULL;
@@ -506,16 +506,16 @@ Event::Event(const EventTemplate *eventTemplate, UINT32 sourceId, UINT32 dciId, 
             case 's':
                {
                   const TCHAR *s = va_arg(args, const TCHAR *);
-					   m_parameters.add(_tcsdup_ex(s));
+					   m_parameters.add(MemCopyString(s));
                }
                break;
             case 'm':	// multibyte string
                {
                   const char *s = va_arg(args, const char *);
 #ifdef UNICODE
-                  m_parameters.add((s != NULL) ? WideStringFromMBString(s) : _tcsdup(_T("")));
+                  m_parameters.add((s != NULL) ? WideStringFromMBString(s) : MemCopyStringW(L""));
 #else
-					   m_parameters.add(strdup(CHECK_NULL_EX(s)));
+					   m_parameters.add(MemCopyStringA(s));
 #endif
                }
                break;
@@ -523,9 +523,9 @@ Event::Event(const EventTemplate *eventTemplate, UINT32 sourceId, UINT32 dciId, 
                {
                   const WCHAR *s = va_arg(args, const WCHAR *);
 #ifdef UNICODE
-		   			m_parameters.add(wcsdup(CHECK_NULL_EX(s)));
+		   			m_parameters.add(MemCopyStringW(s));
 #else
-                  m_parameters.add((s != NULL) ? MBStringFromWideString(s) : strdup(""));
+                  m_parameters.add((s != NULL) ? MBStringFromWideString(s) : MemCopyStringA(""));
 #endif
                }
                break;
@@ -580,7 +580,7 @@ Event::Event(const EventTemplate *eventTemplate, UINT32 sourceId, UINT32 dciId, 
       }
    }
 
-   m_messageTemplate = _tcsdup(eventTemplate->getMessageTemplate());
+   m_messageTemplate = MemCopyString(eventTemplate->getMessageTemplate());
 }
 
 /**
@@ -588,10 +588,10 @@ Event::Event(const EventTemplate *eventTemplate, UINT32 sourceId, UINT32 dciId, 
  */
 Event::~Event()
 {
-   free(m_messageText);
-   free(m_messageTemplate);
-	free(m_userTag);
-	free(m_customMessage);
+   MemFree(m_messageText);
+   MemFree(m_messageTemplate);
+	MemFree(m_userTag);
+	MemFree(m_customMessage);
 }
 
 /**
@@ -603,7 +603,7 @@ void Event::expandMessageText()
       return;
 
    if (m_messageText != NULL)
-      free(m_messageText);
+      MemFree(m_messageText);
    m_messageText = expandText(m_messageTemplate);
 }
 
@@ -628,7 +628,7 @@ TCHAR *Event::expandText(const TCHAR *textTemplate, const Alarm *alarm) const
  */
 void Event::addParameter(const TCHAR *name, const TCHAR *value)
 {
-	m_parameters.add(_tcsdup(value));
+	m_parameters.add(MemCopyString(value));
 	m_parameterNames.add(name);
 }
 
@@ -640,12 +640,12 @@ void Event::setNamedParameter(const TCHAR *name, const TCHAR *value)
 	int index = m_parameterNames.indexOfIgnoreCase(name);
 	if (index != -1)
 	{
-		m_parameters.replace(index, _tcsdup(value));
+		m_parameters.replace(index, MemCopyString(value));
 		m_parameterNames.replace(index, name);
 	}
 	else
 	{
-		m_parameters.add(_tcsdup(value));
+		m_parameters.add(MemCopyString(value));
 		m_parameterNames.add(name);
 	}
 }
@@ -665,17 +665,17 @@ void Event::setParameter(int index, const TCHAR *name, const TCHAR *value)
    int addup = index - m_parameters.size();
    for(int i = 0; i < addup; i++)
    {
-		m_parameters.add(_tcsdup(_T("")));
+		m_parameters.add(MemCopyString(_T("")));
 		m_parameterNames.add(_T(""));
    }
    if (index < m_parameters.size())
    {
-		m_parameters.replace(index, _tcsdup(value));
+		m_parameters.replace(index, MemCopyString(value));
 		m_parameterNames.replace(index, CHECK_NULL_EX(name));
    }
    else
    {
-		m_parameters.add(_tcsdup(value));
+		m_parameters.add(MemCopyString(value));
 		m_parameterNames.add(CHECK_NULL_EX(name));
    }
 }

@@ -137,7 +137,7 @@ bool ExecSQLBatch(const char *pszFile)
 #ifdef UNICODE
 				WCHAR *wcQuery = WideStringFromMBString((char *)pQuery);
             result = SQLQuery(wcQuery);
-				free(wcQuery);
+            MemFree(wcQuery);
 #else
             result = SQLQuery((char *)pQuery);
 #endif
@@ -145,7 +145,7 @@ bool ExecSQLBatch(const char *pszFile)
                pNext = pBatch + dwSize;
          }
       }
-      free(pBatch);
+      MemFree(pBatch);
    }
    return result;
 }

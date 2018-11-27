@@ -487,7 +487,7 @@ static BOOL AddTargetFromConfig(TCHAR *pszCfg)
 		bResult = TRUE;
 	}
 
-	free(pszLine);
+   MemFree(pszLine);
 	return bResult;
 }
 
@@ -516,7 +516,7 @@ static bool SubagentInit(Config *config)
 	bool success = config->parseTemplate(_T("Ping"), m_cfgTemplate);
 	if (!success)
 	{
-	   free(m_pszTargetList);
+	   MemFree(m_pszTargetList);
 	   return false;
 	}
 
@@ -544,7 +544,7 @@ static bool SubagentInit(Config *config)
          pItem = pEnd +1;
          pEnd = _tcschr(pItem, _T('\n'));
       }
-      free(m_pszTargetList);
+      MemFree(m_pszTargetList);
    }
 
    // First poll

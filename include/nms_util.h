@@ -320,18 +320,6 @@ WCHAR LIBNETXMS_EXPORTABLE *nx_wcsdup(const WCHAR *src);
 
 #endif
 
-#ifdef __cplusplus
-
-/**
- * Extended tcsdup: returns NULL if NULL pointer passed
- */
-inline TCHAR *_tcsdup_ex(const TCHAR *s)
-{
-   return (s != NULL) ? _tcsdup(s) : NULL;
-}
-
-#endif
-
 /******* UNICODE related conversion and helper functions *******/
 
 #ifdef __cplusplus
@@ -735,7 +723,7 @@ public:
    void append(UINT64 n);
    void append(const uuid& guid);
 
-	void appendPreallocated(TCHAR *str) { if (str != NULL) { append(str); free(str); } }
+	void appendPreallocated(TCHAR *str) { if (str != NULL) { append(str); MemFree(str); } }
 
 	void appendMBString(const char *str, size_t len, int nCodePage);
 	void appendWideString(const WCHAR *str, size_t len);
@@ -1569,17 +1557,17 @@ private:
 
 public:
    TableCell() { m_value = NULL; m_status = -1; m_objectId = 0; }
-   TableCell(const TCHAR *value) { m_value = _tcsdup_ex(value); m_status = -1; m_objectId = 0; }
-   TableCell(const TCHAR *value, int status) { m_value = _tcsdup_ex(value); m_status = status; m_objectId = 0; }
-   TableCell(TableCell *src) { m_value = _tcsdup_ex(src->m_value); m_status = src->m_status; m_objectId = src->m_objectId; }
+   TableCell(const TCHAR *value) { m_value = MemCopyString(value); m_status = -1; m_objectId = 0; }
+   TableCell(const TCHAR *value, int status) { m_value = MemCopyString(value); m_status = status; m_objectId = 0; }
+   TableCell(TableCell *src) { m_value = MemCopyString(src->m_value); m_status = src->m_status; m_objectId = src->m_objectId; }
    ~TableCell() { MemFree(m_value); }
 
-   void set(const TCHAR *value, int status, UINT32 objectId) { MemFree(m_value); m_value = _tcsdup_ex(value); m_status = status; m_objectId = objectId; }
+   void set(const TCHAR *value, int status, UINT32 objectId) { MemFree(m_value); m_value = MemCopyString(value); m_status = status; m_objectId = objectId; }
    void setPreallocated(TCHAR *value, int status, UINT32 objectId) { MemFree(m_value); m_value = value; m_status = status; m_objectId = objectId; }
 
    const TCHAR *getValue() const { return m_value; }
-   void setValue(const TCHAR *value) { MemFree(m_value); m_value = _tcsdup_ex(value); }
-   void setPreallocatedValue(TCHAR *value) { free(m_value); m_value = value; }
+   void setValue(const TCHAR *value) { MemFree(m_value); m_value = MemCopyString(value); }
+   void setPreallocatedValue(TCHAR *value) { MemFree(m_value); m_value = value; }
 
    int getStatus() const { return m_status; }
    void setStatus(int status) { m_status = status; }
@@ -1673,7 +1661,7 @@ public:
 	int getColumnIndex(const TCHAR *name) const;
    ObjectArray<TableColumnDefinition> *getColumnDefinitions() { return m_columns; }
 
-	void setTitle(const TCHAR *title) { MemFree(m_title); m_title = _tcsdup_ex(title); }
+	void setTitle(const TCHAR *title) { MemFree(m_title); m_title = MemCopyString(title); }
    void setSource(int source) { m_source = source; }
    int addColumn(const TCHAR *name, INT32 dataType = 0, const TCHAR *displayName = NULL, bool isInstance = false);
    int addColumn(const TableColumnDefinition *d);
@@ -2076,10 +2064,10 @@ public:
 
    json_t *toJson() const;
 
-   void setCountry(const TCHAR *country) { free(m_country); m_country = _tcsdup_ex(country); }
-   void setCity(const TCHAR *city) { free(m_city); m_city = _tcsdup_ex(city); }
-   void setStreetAddress(const TCHAR *streetAddress) { free(m_streetAddress); m_streetAddress = _tcsdup_ex(streetAddress); }
-   void setPostCode(const TCHAR *postcode) { free(m_postcode); m_postcode = _tcsdup_ex(postcode); }
+   void setCountry(const TCHAR *country) { MemFree(m_country); m_country = MemCopyString(country); }
+   void setCity(const TCHAR *city) { MemFree(m_city); m_city = MemCopyString(city); }
+   void setStreetAddress(const TCHAR *streetAddress) { MemFree(m_streetAddress); m_streetAddress = MemCopyString(streetAddress); }
+   void setPostCode(const TCHAR *postcode) { MemFree(m_postcode); m_postcode = MemCopyString(postcode); }
 };
 
 /**

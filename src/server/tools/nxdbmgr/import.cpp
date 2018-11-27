@@ -83,7 +83,7 @@ static int ImportTableCB(void *arg, int cols, char **data, char **names)
 #ifdef UNICODE
 				WCHAR *wcData = WideStringFromUTF8String(data[i]);
 				String prepData = DBPrepareString(g_dbHandle, wcData);
-				free(wcData);
+				MemFree(wcData);
 #else
 				String prepData = DBPrepareString(g_dbHandle, data[i]);
 #endif
@@ -121,7 +121,7 @@ static bool IsTableExist(sqlite3 *db, const TCHAR* table)
 #ifdef UNICODE
    char *mbTable = MBStringFromWideString(table);
    snprintf(query, 256, "SELECT count(*) FROM sqlite_master WHERE type='table' AND upper(name)=upper('%s')", mbTable);
-   free(mbTable);
+   MemFree(mbTable);
 #else
    snprintf(query, 256, _T("SELECT count(*) FROM sqlite_master WHERE type='table' AND upper(name)=upper('%s')"), table);
 #endif
@@ -146,7 +146,7 @@ static BOOL ImportTable(sqlite3 *db, const TCHAR *table)
 #ifdef UNICODE
       char *mbTable = MBStringFromWideString(table);
       snprintf(query, 256, "SELECT * FROM %s", mbTable);
-      free(mbTable);
+      MemFree(mbTable);
 #else
       snprintf(query, 256, "SELECT * FROM %s", table);
 #endif

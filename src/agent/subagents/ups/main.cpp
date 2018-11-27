@@ -213,7 +213,7 @@ static BOOL AddDeviceFromConfig(const TCHAR *pszStr)
 				break;
 		}
 	}
-	free(pszCurrField);
+	MemFree(pszCurrField);
 
 	// Add new device if parsing was successful
 	if ((nState == -1) && (nField >= 3))
@@ -277,7 +277,7 @@ static bool SubAgentInit(Config *config)
 						_T("Unable to add UPS device from configuration file. ")
 						_T("Original configuration record: %s"), devices->getValue(i));
 			}
-			free(entry);
+			MemFree(entry);
 		}
 	}
 

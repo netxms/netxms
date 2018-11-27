@@ -4624,7 +4624,7 @@ void ClientSession::getLastValuesByDciId(NXCPMessage *pRequest)
                   int columnIndex =  t->getColumnIndex(column);
                   int rowIndex = t->findRowByInstance(instance);
                   type = t->getColumnDataType(columnIndex);
-                  value = _tcsdup_ex(t->getAsString(rowIndex, columnIndex));
+                  value = MemCopyString(t->getAsString(rowIndex, columnIndex));
                   t->decRefCount();
 
                   MemFree(column);
@@ -4635,7 +4635,7 @@ void ClientSession::getLastValuesByDciId(NXCPMessage *pRequest)
                   if (dcoObj->getType() == DCO_TYPE_ITEM)
                   {
                      type = (WORD)((DCItem *)dcoObj)->getDataType();
-                     value = _tcsdup_ex(((DCItem *)dcoObj)->getLastValue());
+                     value = MemCopyString(((DCItem *)dcoObj)->getLastValue());
                   }
                   else
                      continue;

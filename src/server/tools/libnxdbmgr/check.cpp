@@ -45,7 +45,7 @@ void LIBNXDBMGR_EXPORTABLE StartStage(const TCHAR *pszMsg, int workTotal)
 {
    if (pszMsg != NULL)
    {
-      free(m_pszStageMsg);
+      MemFree(m_pszStageMsg);
       m_pszStageMsg = _tcsdup(pszMsg);
       m_iStageErrors = g_dbCheckErrors;
       s_stageErrorsUpdate = g_dbCheckErrors;

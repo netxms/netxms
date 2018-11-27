@@ -103,7 +103,7 @@ ProcessExecutor::ProcessExecutor(const TCHAR *cmd, bool shellExec)
    m_pipe[0] = -1;
    m_pipe[1] = -1;
 #endif
-   m_cmd = _tcsdup_ex(cmd);
+   m_cmd = MemCopyString(cmd);
    m_streamId = InterlockedIncrement(&s_nextStreamId);
    m_shellExec = shellExec;
    m_sendOutput = false;
@@ -119,7 +119,7 @@ ProcessExecutor::~ProcessExecutor()
 {
    stop();
    ThreadJoin(m_outputThread);
-   free(m_cmd);
+   MemFree(m_cmd);
 #ifdef _WIN32
    CloseHandle(m_phandle);
 #endif

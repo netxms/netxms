@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -89,7 +89,7 @@ Threshold::Threshold(Threshold *src, bool shadowCopy)
    m_sampleCount = src->m_sampleCount;
    m_scriptSource = NULL;
    m_script = NULL;
-   setScript(_tcsdup_ex(src->m_scriptSource));
+   setScript(MemCopyString(src->m_scriptSource));
    m_lastScriptErrorReport = shadowCopy ? src->m_lastScriptErrorReport : 0;
    m_isReached = shadowCopy ? src->m_isReached : FALSE;
    m_wasReachedBeforeMaint = shadowCopy ? src->m_wasReachedBeforeMaint : FALSE;
@@ -154,7 +154,7 @@ Threshold::Threshold(ConfigEntry *config, DCItem *parentItem)
    m_script = NULL;
    m_lastScriptErrorReport = 0;
    const TCHAR *script = config->getSubEntryValue(_T("script"));
-   setScript(_tcsdup_ex(script));
+   setScript(MemCopyString(script));
    m_isReached = FALSE;
    m_wasReachedBeforeMaint = FALSE;
 	m_currentSeverity = SEVERITY_NORMAL;
@@ -168,7 +168,7 @@ Threshold::Threshold(ConfigEntry *config, DCItem *parentItem)
  */
 Threshold::~Threshold()
 {
-   free(m_scriptSource);
+   MemFree(m_scriptSource);
    delete m_script;
 }
 

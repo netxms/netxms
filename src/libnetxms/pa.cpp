@@ -39,10 +39,10 @@ PostalAddress::PostalAddress()
  */
 PostalAddress::PostalAddress(const TCHAR *country, const TCHAR *city, const TCHAR *streetAddress, const TCHAR *postcode)
 {
-   m_country = Trim(_tcsdup_ex(country));
-   m_city = Trim(_tcsdup_ex(city));
-   m_streetAddress = Trim(_tcsdup_ex(streetAddress));
-   m_postcode = Trim(_tcsdup_ex(postcode));
+   m_country = Trim(MemCopyString(country));
+   m_city = Trim(MemCopyString(city));
+   m_streetAddress = Trim(MemCopyString(streetAddress));
+   m_postcode = Trim(MemCopyString(postcode));
 }
 
 /**
@@ -50,10 +50,10 @@ PostalAddress::PostalAddress(const TCHAR *country, const TCHAR *city, const TCHA
  */
 PostalAddress::~PostalAddress()
 {
-   free(m_country);
-   free(m_city);
-   free(m_streetAddress);
-   free(m_postcode);
+   MemFree(m_country);
+   MemFree(m_city);
+   MemFree(m_streetAddress);
+   MemFree(m_postcode);
 }
 
 /**

@@ -30,7 +30,7 @@
 		if (!_tcsicmp(table->getColumnName(i), _T(name))) \
 		{ \
 			const TCHAR *value = table->getAsString(row, i); \
-			pkg->field = _tcsdup_ex(value); \
+			pkg->field = MemCopyString(value); \
 			continue; \
 		} \
 	}

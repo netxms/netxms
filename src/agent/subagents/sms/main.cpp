@@ -53,8 +53,8 @@ static LONG H_SendSMS(const TCHAR *pszAction, StringList *pArgs, const TCHAR *pD
 	char *rcpt = MBStringFromWideString(pArgs->get(0));
 	char *text = MBStringFromWideString(pArgs->get(1));
 	LONG rc = SendSMS(rcpt, text) ? ERR_SUCCESS : ERR_INTERNAL_ERROR;
-	free(rcpt);
-	free(text);
+	MemFree(rcpt);
+	MemFree(text);
 #else
 	LONG rc = SendSMS(pArgs->get(0), pArgs->get(1)) ? ERR_SUCCESS : ERR_INTERNAL_ERROR;
 #endif

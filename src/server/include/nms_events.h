@@ -173,8 +173,8 @@ public:
 
    void expandMessageText();
    TCHAR *expandText(const TCHAR *textTemplate, const Alarm *alarm = NULL) const;
-   void setMessage(const TCHAR *text) { free(m_messageText); m_messageText = _tcsdup_ex(text); }
-   void setUserTag(const TCHAR *text) { free(m_userTag); m_userTag = _tcsdup_ex(text); }
+   void setMessage(const TCHAR *text) { MemFree(m_messageText); m_messageText = MemCopyString(text); }
+   void setUserTag(const TCHAR *text) { MemFree(m_userTag); m_userTag = MemCopyString(text); }
 
    int getParametersCount() const { return m_parameters.size(); }
    const TCHAR *getParameter(int index) const { return static_cast<TCHAR*>(m_parameters.get(index)); }
@@ -190,7 +190,7 @@ public:
 	void setParameter(int index, const TCHAR *name, const TCHAR *value);
 
    const TCHAR *getCustomMessage() const { return CHECK_NULL_EX(m_customMessage); }
-   void setCustomMessage(const TCHAR *message) { free(m_customMessage); m_customMessage = _tcsdup_ex(message); }
+   void setCustomMessage(const TCHAR *message) { MemFree(m_customMessage); m_customMessage = MemCopyString(message); }
 
    json_t *toJson();
 };

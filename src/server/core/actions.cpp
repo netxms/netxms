@@ -814,7 +814,7 @@ bool ImportAction(ConfigEntry *config)
       action->rcptAddr[0] = 0;
    else
       _tcslcpy(action->rcptAddr, config->getSubEntryValue(_T("recipientAddress")), MAX_RCPT_ADDR_LEN);
-   action->data = _tcsdup_ex(config->getSubEntryValue(_T("data")));
+   action->data = MemCopyString(config->getSubEntryValue(_T("data")));
    action->saveToDatabase();
    EnumerateClientSessions(SendActionDBUpdate, action);
 

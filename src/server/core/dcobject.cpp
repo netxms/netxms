@@ -947,7 +947,7 @@ void DCObject::updateFromTemplate(DCObject *src)
 	m_snmpPort = src->m_snmpPort;
 
 	MemFree(m_pszPerfTabSettings);
-	m_pszPerfTabSettings = _tcsdup_ex(src->m_pszPerfTabSettings);
+	m_pszPerfTabSettings = MemCopyString(src->m_pszPerfTabSettings);
 
    setTransformationScript(src->m_transformationScriptSource);
 
@@ -964,7 +964,7 @@ void DCObject::updateFromTemplate(DCObject *src)
       expandMacros(src->m_instance, m_instance, MAX_DB_STRING);
       m_instanceDiscoveryMethod = src->m_instanceDiscoveryMethod;
       MemFree(m_instanceDiscoveryData);
-      m_instanceDiscoveryData = _tcsdup_ex(src->m_instanceDiscoveryData);
+      m_instanceDiscoveryData = MemCopyString(src->m_instanceDiscoveryData);
       MemFreeAndNull(m_instanceFilterSource);
       delete_and_null(m_instanceFilter);
       setInstanceFilter(src->m_instanceFilterSource);
@@ -1117,7 +1117,7 @@ void DCObject::updateFromImport(ConfigEntry *config)
    m_flags = (UINT16)config->getSubEntryValueAsInt(_T("flags"));
    const TCHAR *perfTabSettings = config->getSubEntryValue(_T("perfTabSettings"));
    MemFree(m_pszPerfTabSettings);
-   m_pszPerfTabSettings = _tcsdup_ex(perfTabSettings);
+   m_pszPerfTabSettings = MemCopyString(perfTabSettings);
    m_snmpPort = (WORD)config->getSubEntryValueAsInt(_T("snmpPort"));
 
    setTransformationScript(config->getSubEntryValue(_T("transformation")));
@@ -1146,7 +1146,7 @@ void DCObject::updateFromImport(ConfigEntry *config)
    m_instanceDiscoveryMethod = (WORD)config->getSubEntryValueAsInt(_T("instanceDiscoveryMethod"));
    const TCHAR *value = config->getSubEntryValue(_T("instanceDiscoveryData"));
    MemFree(m_instanceDiscoveryData);
-   m_instanceDiscoveryData = _tcsdup_ex(value);
+   m_instanceDiscoveryData = MemCopyString(value);
    setInstanceFilter(config->getSubEntryValue(_T("instanceFilter")));
    nx_strncpy(m_instance, config->getSubEntryValue(_T("instance"), 0, _T("")), MAX_DB_STRING);
    m_instanceRetentionTime = config->getSubEntryValueAsInt(_T("instanceRetentionTime"), 0, -1);
@@ -1453,7 +1453,7 @@ DCObjectInfo::DCObjectInfo(DCObject *object)
    _tcslcpy(m_description, object->getDescription(), MAX_DB_STRING);
    _tcslcpy(m_systemTag, object->getSystemTag(), MAX_DB_STRING);
    _tcslcpy(m_instance, object->getInstance(), MAX_DB_STRING);
-   m_comments = _tcsdup_ex(object->getComments());
+   m_comments = MemCopyString(object->getComments());
    m_dataType = (m_type == DCO_TYPE_ITEM) ? ((DCItem *)object)->getDataType() : -1;
    m_origin = object->getDataSource();
    m_status = object->getStatus();
@@ -1488,5 +1488,5 @@ DCObjectInfo::DCObjectInfo(const NXCPMessage *msg, DCObject *object)
  */
 DCObjectInfo::~DCObjectInfo()
 {
-   free(m_comments);
+   MemFree(m_comments);
 }

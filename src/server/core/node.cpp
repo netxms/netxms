@@ -8217,7 +8217,7 @@ void Node::setTunnelId(const uuid& tunnelId, const TCHAR *certSubject)
    lockProperties();
    m_tunnelId = tunnelId;
    free(m_agentCertSubject);
-   m_agentCertSubject = _tcsdup_ex(certSubject);
+   m_agentCertSubject = MemCopyString(certSubject);
    setModified(MODIFY_NODE_PROPERTIES, false);
    unlockProperties();
 

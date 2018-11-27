@@ -69,7 +69,7 @@ public:
    void enableIPv4(bool enabled) { m_allowV4 = enabled; }
    void enableIPv6(bool enabled) { m_allowV6 = enabled; }
    void setName(const TCHAR *name) { _tcslcpy(m_name, name, MAX_LISTENER_NAME_LEN); }
-   void setListenAddress(const TCHAR *addr) { free(m_listenAddress); m_listenAddress = _tcsdup_ex(addr); }
+   void setListenAddress(const TCHAR *addr) { MemFree(m_listenAddress); m_listenAddress = MemCopyString(addr); }
 
    UINT32 getAcceptErrors() const { return m_acceptErrors; }
    UINT32 getAcceptedConnections() const { return m_acceptedConnections; }

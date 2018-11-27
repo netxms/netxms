@@ -274,14 +274,14 @@ DB_DRIVER LIBNXDB_EXPORTABLE DBLoadDriver(const TCHAR *module, const TCHAR *init
 failure:
 	if (driver->m_handle != NULL)
 		DLClose(driver->m_handle);
-	free(driver);
+	MemFree(driver);
 	MutexUnlock(s_driverListLock);
 	return NULL;
 
 reuse_driver:
 	if (driver->m_handle != NULL)
 		DLClose(driver->m_handle);
-	free(driver);
+	MemFree(driver);
 	s_drivers[position]->m_refCount++;
 	MutexUnlock(s_driverListLock);
 	return s_drivers[position];
@@ -307,7 +307,7 @@ void LIBNXDB_EXPORTABLE DBUnloadDriver(DB_DRIVER driver)
 				driver->m_fpDrvUnload();
 				DLClose(driver->m_handle);
 				MutexDestroy(driver->m_mutexReconnect);
-				free(driver);
+				MemFree(driver);
 				s_drivers[i] = NULL;
 			}
 			break;

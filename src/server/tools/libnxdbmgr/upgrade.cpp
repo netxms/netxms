@@ -204,7 +204,7 @@ bool LIBNXDBMGR_EXPORTABLE ConvertStrings(const TCHAR *table, const TCHAR *idCol
 	}
 	if (!SQLQuery(query))
 	{
-		free(query);
+	   MemFree(query);
 		return FALSE;
 	}
 
@@ -213,7 +213,7 @@ bool LIBNXDBMGR_EXPORTABLE ConvertStrings(const TCHAR *table, const TCHAR *idCol
 	hResult = SQLSelect(query);
 	if (hResult == NULL)
 	{
-		free(query);
+	   MemFree(query);
 		return FALSE;
 	}
 
@@ -246,7 +246,7 @@ bool LIBNXDBMGR_EXPORTABLE ConvertStrings(const TCHAR *table, const TCHAR *idCol
 					_sntprintf(query, queryLen, _T("UPDATE %s SET %s=%s WHERE %s=%s"), table, column,
 								  (const TCHAR *)newValue, idColumn, (const TCHAR *)DBPrepareString(g_dbHandle, id));
 				}
-				free(id);
+				MemFree(id);
 			}
 			else
 			{
@@ -271,7 +271,7 @@ bool LIBNXDBMGR_EXPORTABLE ConvertStrings(const TCHAR *table, const TCHAR *idCol
 
 cleanup:
 	DBFreeResult(hResult);
-	free(query);
+	MemFree(query);
 	return success;
 }
 
