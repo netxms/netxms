@@ -335,6 +335,7 @@
 #define DCIDESC_PROCESS_THREADS                   _T("Number of threads in process {instance}")
 #define DCIDESC_PROCESS_USEROBJ                   _T("USER objects used by process {instance}")
 #define DCIDESC_PROCESS_USERTIME                  _T("Total execution time in user mode for process {instance}")
+#define DCIDESC_PROCESS_VMREGIONS                 _T("Number of mapped virtual memory regions within process {instance}")
 #define DCIDESC_PROCESS_VMSIZE                    _T("Virtual memory used by process {instance}")
 #define DCIDESC_PROCESS_WKSET                     _T("Physical memory used by process {instance}")
 #define DCIDESC_PROCESS_ZOMBIE_COUNT              _T("Number of {instance} zombie processes")

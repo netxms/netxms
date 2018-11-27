@@ -441,6 +441,30 @@ LONG H_HandleCount(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractC
 }
 
 /**
+ * Count VM regions within process
+ */
+static INT64 CountVMRegions(UINT32 pid)
+{
+   char fname[128];
+   sprintf(fname, "/proc/%u/maps", pid);
+   FILE *f = fopen(fname, "r");
+   if (f == NULL)
+      return 0;
+
+   INT64 count = 0;
+   char line[1024];
+   while(!feof(f))
+   {
+      if (fgets(line, 1024, f) == NULL)
+         break;
+      count++;
+   }
+
+   fclose(f);
+   return count;
+}
+
+/**
  * Handler for Process.xxx() parameters
  * Parameter has the following syntax:
  *    Process.XXX(<process>,<type>,<cmdline>)
@@ -517,6 +541,9 @@ LONG H_ProcessDetails(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abstra
 			case PROCINFO_THREADS:
 				currVal = p->threads;
 				break;
+         case PROCINFO_VMREGIONS:
+            currVal = CountVMRegions(p->pid);
+            break;
 			case PROCINFO_VMSIZE:
 				currVal = p->vmsize;
 				break;

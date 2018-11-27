@@ -2,6 +2,7 @@
 * 2.2.11
 *
 
+- New parameter Process.VMRegions in Linux sub-agent
 - Fixed issues:
 	NX-1512 (File Manager: Unable to create new directory in root directory on Windows)
 	NX-1513 (Server installation fails with MySQL 8.0)
