@@ -509,7 +509,7 @@ struct ServerSyncStatus
  * Server sync status information
  */
 static HashMap<UINT64, ServerSyncStatus> s_serverSyncStatus(true);
-static MUTEX s_serverSyncStatusLock = INVALID_MUTEX_HANDLE;
+static Mutex s_serverSyncStatusLock;
 
 /**
  * Database writer queue
@@ -566,7 +566,7 @@ static THREAD_RESULT THREAD_CALL DatabaseWriter(void *arg)
  * List of all data collection items
  */
 static ObjectArray<DataCollectionItem> s_items(64, 64, true);
-static MUTEX s_itemLock = INVALID_MUTEX_HANDLE;
+static Mutex s_itemLock;
 
 /**
  * Session comparator
@@ -596,13 +596,13 @@ static THREAD_RESULT THREAD_CALL ReconciliationThread(void *arg)
    while(!AgentSleepAndCheckForShutdown(sleepTime))
    {
       // Check if there is something to sync
-      MutexLock(s_serverSyncStatusLock);
+      s_serverSyncStatusLock.lock();
       CommSession *session = static_cast<CommSession*>(FindServerSession(SessionComparator_Reconciliation, NULL));
-      MutexUnlock(s_serverSyncStatusLock);
+      s_serverSyncStatusLock.unlock();
       if (session == NULL)
       {
          // Save last poll times when reconciliation thread is idle
-         MutexLock(s_itemLock);
+         s_itemLock.lock();
          if (s_pollTimeChanged)
          {
             DBBegin(hdb);
@@ -617,7 +617,7 @@ static THREAD_RESULT THREAD_CALL ReconciliationThread(void *arg)
             DBCommit(hdb);
             s_pollTimeChanged = false;
          }
-         MutexUnlock(s_itemLock);
+         s_itemLock.unlock();
 
          if (vacuumNeeded)
          {
@@ -656,7 +656,7 @@ static THREAD_RESULT THREAD_CALL ReconciliationThread(void *arg)
             }
             else
             {
-               MutexLock(s_serverSyncStatusLock);
+               s_serverSyncStatusLock.lock();
                ServerSyncStatus *status = s_serverSyncStatus.get(e->getServerId());
                if (status != NULL)
                {
@@ -676,7 +676,7 @@ static THREAD_RESULT THREAD_CALL ReconciliationThread(void *arg)
                   DebugPrintf(5, _T("INTERNAL ERROR: cached DCI value without server sync status object"));
                   deleteList.add(e);  // record should be deleted
                }
-               MutexUnlock(s_serverSyncStatusLock);
+               s_serverSyncStatusLock.unlock();
             }
          }
 
@@ -709,7 +709,7 @@ static THREAD_RESULT THREAD_CALL ReconciliationThread(void *arg)
                      rcc = response->getFieldAsUInt32(VID_RCC);
                      if (rcc == ERR_SUCCESS)
                      {
-                        MutexLock(s_serverSyncStatusLock);
+                        s_serverSyncStatusLock.lock();
                         ServerSyncStatus *serverSyncStatus = s_serverSyncStatus.get(session->getServerId());
 
                         // Check status for each data element
@@ -732,7 +732,7 @@ static THREAD_RESULT THREAD_CALL ReconciliationThread(void *arg)
                         }
                         serverSyncStatus->lastSync = time(NULL);
 
-                        MutexUnlock(s_serverSyncStatusLock);
+                        s_serverSyncStatusLock.unlock();
                      }
                      else if (rcc == ERR_PROCESSING)
                      {
@@ -799,7 +799,7 @@ static THREAD_RESULT THREAD_CALL DataSender(void *arg)
       if (e == INVALID_POINTER_VALUE)
          break;
 
-      MutexLock(s_serverSyncStatusLock);
+      s_serverSyncStatusLock.lock();
       ServerSyncStatus *status = s_serverSyncStatus.get(e->getServerId());
       if (status == NULL)
       {
@@ -822,7 +822,7 @@ static THREAD_RESULT THREAD_CALL DataSender(void *arg)
          s_databaseWriterQueue.put(e);
          e = NULL;
       }
-      MutexUnlock(s_serverSyncStatusLock);
+      s_serverSyncStatusLock.unlock();
 
       delete e;
    }
@@ -932,7 +932,7 @@ static UINT32 DataCollectionSchedulerRun()
 {
    UINT32 sleepTime = 60;
 
-   MutexLock(s_itemLock);
+   s_itemLock.lock();
    for(int i = 0; i < s_items.size(); i++)
    {
       DataCollectionItem *dci = s_items.get(i);
@@ -964,7 +964,7 @@ static UINT32 DataCollectionSchedulerRun()
       if (sleepTime > timeToPoll)
          sleepTime = timeToPoll;
    }
-   MutexUnlock(s_itemLock);
+   s_itemLock.unlock();
    return sleepTime;
 }
 
@@ -992,14 +992,14 @@ static THREAD_RESULT THREAD_CALL DataCollectionScheduler(void *arg)
  */
 void ConfigureDataCollection(UINT64 serverId, NXCPMessage *msg)
 {
-   MutexLock(s_itemLock);
+   s_itemLock.lock();
    if (!s_dataCollectorStarted)
    {
-      MutexUnlock(s_itemLock);
+      s_itemLock.unlock();
       DebugPrintf(1, _T("Local data collector was not started, ignoring configuration received from server ") UINT64X_FMT(_T("016")), serverId);
       return;
    }
-   MutexUnlock(s_itemLock);
+   s_itemLock.unlock();
 
    DB_HANDLE hdb = GetLocalDatabaseHandle();
 
@@ -1031,7 +1031,7 @@ void ConfigureDataCollection(UINT64 serverId, NXCPMessage *msg)
 
    bool txnOpen = false;
 
-   MutexLock(s_itemLock);
+   s_itemLock.lock();
 
    // Update and add new
    for(int j = 0; j < config.size(); j++)
@@ -1091,7 +1091,7 @@ void ConfigureDataCollection(UINT64 serverId, NXCPMessage *msg)
    if (txnOpen)
       DBCommit(hdb);
 
-   MutexUnlock(s_itemLock);
+   s_itemLock.unlock();
 
    DebugPrintf(4, _T("Data collection for server ") UINT64X_FMT(_T("016")) _T(" reconfigured"), serverId);
 }
@@ -1162,7 +1162,7 @@ static void ClearStalledOfflineData(void *arg)
 
    IntegerArray<UINT64> deleteList;
 
-   MutexLock(s_serverSyncStatusLock);
+   s_serverSyncStatusLock.lock();
    time_t expirationTime = time(NULL) - g_dcOfflineExpirationTime * 86400;
    Iterator<ServerSyncStatus> *it = s_serverSyncStatus.iterator();
    while(it->hasNext())
@@ -1176,7 +1176,7 @@ static void ClearStalledOfflineData(void *arg)
       }
    }
    delete it;
-   MutexUnlock(s_serverSyncStatusLock);
+   s_serverSyncStatusLock.unlock();
 
    if (deleteList.size() > 0)
    {
@@ -1200,7 +1200,7 @@ static void ClearStalledOfflineData(void *arg)
 
          DBCommit(hdb);
 
-         MutexLock(s_itemLock);
+         s_itemLock.lock();
          for(int i = 0; i < s_items.size(); i++)
          {
             DataCollectionItem *item = s_items.get(i);
@@ -1211,7 +1211,7 @@ static void ClearStalledOfflineData(void *arg)
                i--;
             }
          }
-         MutexUnlock(s_itemLock);
+         s_itemLock.unlock();
 
          nxlog_debug_tag(DEBUG_TAG, 2, _T("Offline data collection configuration for server ID ") UINT64X_FMT(_T("016")) _T(" deleted"), serverId);
       }
@@ -1262,9 +1262,6 @@ void StartLocalDataCollector()
       g_dcReconciliationTimeout = 900000;
    }
 
-   s_itemLock = MutexCreate();
-   s_serverSyncStatusLock = MutexCreate();
-
    LoadState();
 
    s_dataCollectorPool = ThreadPoolCreate(_T("DATACOLL"), 1, g_dcMaxCollectorPoolSize);
@@ -1289,9 +1286,9 @@ void ShutdownLocalDataCollector()
    }
 
    // Prevent configuration attempts by incoming sessions during shutdown
-   MutexLock(s_itemLock);
+   s_itemLock.lock();
    s_dataCollectorStarted = false;
-   MutexUnlock(s_itemLock);
+   s_itemLock.unlock();
 
    DebugPrintf(5, _T("Waiting for data collector thread termination"));
    ThreadJoin(s_dataCollectionSchedulerThread);
@@ -1306,9 +1303,6 @@ void ShutdownLocalDataCollector()
 
    DebugPrintf(5, _T("Waiting for data reconciliation thread termination"));
    ThreadJoin(s_reconciliationThread);
-
-   MutexDestroy(s_itemLock);
-   MutexDestroy(s_serverSyncStatusLock);
 }
 
 /**
@@ -1316,17 +1310,17 @@ void ShutdownLocalDataCollector()
  */
 void ClearDataCollectionConfiguration()
 {
-   MutexLock(s_itemLock);
+   s_itemLock.lock();
    DB_HANDLE db = GetLocalDatabaseHandle();
    DBQuery(db, _T("DELETE FROM dc_queue"));
    DBQuery(db, _T("DELETE FROM dc_config"));
    DBQuery(db, _T("DELETE FROM dc_snmp_targets"));
    s_items.clear();
-   MutexUnlock(s_itemLock);
+   s_itemLock.unlock();
 
-   MutexLock(s_serverSyncStatusLock);
+   s_serverSyncStatusLock.lock();
    s_serverSyncStatus.clear();
-   MutexUnlock(s_serverSyncStatusLock);
+   s_serverSyncStatusLock.unlock();
 }
 
 /**
@@ -1338,12 +1332,12 @@ LONG H_DataCollectorQueueSize(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, 
       return SYSINFO_RC_UNSUPPORTED;
 
    UINT32 count = 0;
-   MutexLock(s_serverSyncStatusLock);
+   s_serverSyncStatusLock.lock();
    Iterator<ServerSyncStatus> *it = s_serverSyncStatus.iterator();
    while(it->hasNext())
       count += (UINT32)it->next()->queueSize;
    delete it;
-   MutexUnlock(s_serverSyncStatusLock);
+   s_serverSyncStatusLock.unlock();
 
    ret_uint(value, count);
    return SYSINFO_RC_SUCCESS;
