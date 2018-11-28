@@ -485,7 +485,7 @@ void NXSL_Value::updateNumber()
    INT64 nVal = _tcstoll(s, &eptr, 0);
    if ((*eptr == 0) && ((UINT32)(eptr - s) == m_length))
    {
-      if (nVal > 0x7FFFFFFF)
+      if ((nVal > 2147483647) || (nVal < -2147483648))
       {
          m_dataType = NXSL_DT_INT64;
          m_value.int64 = nVal;
@@ -516,7 +516,7 @@ void NXSL_Value::updateString()
 
    MemFree(m_stringPtr);
 #ifdef UNICODE
-	MemFreeAndNull(m_mbString);
+   MemFreeAndNull(m_mbString);
 #endif
    switch(m_dataType)
    {
