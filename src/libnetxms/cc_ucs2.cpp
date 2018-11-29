@@ -1,6 +1,6 @@
 /*
  ** NetXMS - Network Management System
- ** Copyright (C) 2003-2016 Raden Solutions
+ ** Copyright (C) 2003-2018 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU Lesser General Public License as published
@@ -24,69 +24,43 @@
 #include "unicode_cc.h"
 
 /**
- * Convert UCS-2 to UCS-4 - internal dumb method
- */
-static int __internal_ucs2_to_ucs4(const UCS2CHAR *src, int srcLen, UCS4CHAR *dst, int dstLen)
-{
-   int i, len;
-
-   len = (int) ((srcLen == -1) ? ucs2_strlen(src) : srcLen);
-   if (len > (int) dstLen - 1)
-      len = (int) dstLen - 1;
-   for(i = 0; i < len; i++)
-      dst[i] = (UCS4CHAR)src[i];
-   dst[i] = 0;
-   return len;
-}
-
-/**
  * Convert UCS-2 to UCS-4
  */
 int LIBNETXMS_EXPORTABLE ucs2_to_ucs4(const UCS2CHAR *src, int srcLen, UCS4CHAR *dst, int dstLen)
 {
-#if !defined(__DISABLE_ICONV) && !defined(_WIN32)
-   iconv_t cd;
-   const char *inbuf;
-   char *outbuf;
-   size_t count, inbytes, outbytes;
-
-   cd = IconvOpen(UCS4_CODEPAGE_NAME, UCS2_CODEPAGE_NAME);
-   if (cd == (iconv_t) (-1))
+   int len = static_cast<int>((srcLen == -1) ? ucs2_strlen(src) : srcLen);
+   int scount = 0, dcount = 0;
+   const UCS2CHAR *s = src;
+   UCS4CHAR *d = dst;
+   while((scount < len) && (dcount < dstLen))
    {
-      return __internal_ucs2_to_ucs4(src, srcLen, dst, dstLen);
-   }
-
-   inbuf = (const char *) src;
-   inbytes = ((srcLen == -1) ? ucs2_strlen(src) + 1 : (size_t) srcLen) * sizeof(UCS2CHAR);
-   outbuf = (char *) dst;
-   outbytes = (size_t) dstLen * sizeof(UCS4CHAR);
-   count = iconv(cd, (ICONV_CONST char **) &inbuf, &inbytes, &outbuf, &outbytes);
-   IconvClose(cd);
-
-   if (count == (size_t) - 1)
-   {
-      if (errno == EILSEQ)
+      UCS2CHAR ch = *s++;
+      scount++;
+      if ((ch & 0xFC00) == 0xD800)  // high surrogate
       {
-         count = (dstLen * sizeof(UCS4CHAR) - outbytes) / sizeof(UCS4CHAR);
+         UCS4CHAR ch4 = static_cast<UCS4CHAR>(ch & 0x03FF) << 10;
+         if (scount < len)
+         {
+            ch = *s;
+            if ((ch & 0xFC00) == 0xDC00)  // low surrogate
+            {
+               s++;
+               scount++;
+               *d++ = (ch4 | static_cast<UCS4CHAR>(ch & 0x03FF)) + 0x10000;
+               dcount++;
+            }
+         }
       }
-      else
+      else if ((ch & 0xFC00) != 0xDC00)   // ignore unexpected low surrogate
       {
-         count = 0;
+         *d++ = static_cast<UCS4CHAR>(ch);
+         dcount++;
       }
    }
-   else
-   {
-      count = (dstLen * sizeof(UCS4CHAR) - outbytes) / sizeof(UCS4CHAR);
-   }
-   if ((srcLen == -1) && (outbytes >= sizeof(UCS4CHAR)))
-   {
-      *((UCS4CHAR *) outbuf) = 0;
-   }
-
-   return (int)count;
-#else
-   return __internal_ucs2_to_ucs4(src, srcLen, dst, dstLen);
-#endif
+   if (dcount == dstLen)
+      dcount--;
+   dst[dcount] = 0;
+   return dcount;
 }
 
 #if !defined(_WIN32) && !defined(UNICODE_UCS2)

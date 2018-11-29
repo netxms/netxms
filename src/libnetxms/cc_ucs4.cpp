@@ -1,6 +1,6 @@
 /*
  ** NetXMS - Network Management System
- ** Copyright (C) 2003-2016 Raden Solutions
+ ** Copyright (C) 2003-2018 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU Lesser General Public License as published
@@ -24,75 +24,37 @@
 #include "unicode_cc.h"
 
 /**
- * Convert UCS-4 to UCS-2 - internal dumb method
- */
-static int __internal_ucs4_to_ucs2(const UCS4CHAR *src, int srcLen, UCS2CHAR *dst, int dstLen)
-{
-   int i, len;
-
-   len = (int)((srcLen == -1) ? ucs4_strlen(src) : srcLen);
-   if (len > (int)dstLen - 1)
-      len = (int)dstLen - 1;
-   for(i = 0; i < len; i++)
-      dst[i] = (UCS2CHAR)src[i];
-   dst[i] = 0;
-   return len;
-}
-
-/**
  * Convert UCS-4 to UCS-2
  */
 int LIBNETXMS_EXPORTABLE ucs4_to_ucs2(const UCS4CHAR *src, int srcLen, UCS2CHAR *dst, int dstLen)
 {
-#if !defined(__DISABLE_ICONV) && !defined(_WIN32)
-   iconv_t cd;
-   const char *inbuf;
-   char *outbuf;
-   size_t count, inbytes, outbytes;
-
-   cd = IconvOpen(UCS2_CODEPAGE_NAME, UCS4_CODEPAGE_NAME);
-   if (cd == (iconv_t)(-1))
+   int len = static_cast<int>((srcLen == -1) ? ucs4_strlen(src) : srcLen);
+   int scount = 0, dcount = 0;
+   const UCS4CHAR *s = src;
+   UCS2CHAR *d = dst;
+   while((scount < len) && (dcount < dstLen))
    {
-      return __internal_ucs4_to_ucs2(src, srcLen, dst, dstLen);
-   }
-
-   inbuf = (const char *) src;
-   inbytes = ((srcLen == -1) ? ucs4_strlen(src) + 1 : (size_t)srcLen) * sizeof(UCS4CHAR);
-   outbuf = (char *)dst;
-   outbytes = (size_t)dstLen * sizeof(UCS2CHAR);
-   count = iconv(cd, (ICONV_CONST char **) &inbuf, &inbytes, &outbuf, &outbytes);
-   IconvClose(cd);
-
-   if (count == (size_t) - 1)
-   {
-      if (errno == EILSEQ)
+      UCS4CHAR ch = *s++;
+      scount++;
+      if (ch <= 0xFFFF)
       {
-         count = (dstLen * sizeof(UCS2CHAR) - outbytes) / sizeof(UCS2CHAR);
+         *d++ = static_cast<UCS2CHAR>(ch);
+         dcount++;
       }
-      else
+      else if (ch <= 0x10FFFF)
       {
-         count = 0;
+         if (dcount > dstLen - 2)
+            break;   // no enough space in destination buffer
+         ch -= 0x10000;
+         *d++ = static_cast<UCS2CHAR>((ch >> 10) | 0xD800);
+         *d++ = static_cast<UCS2CHAR>((ch & 0x3FF) | 0xDC00);
+         dcount += 2;
       }
    }
-   else
-   {
-      count = (dstLen * sizeof(UCS2CHAR) - outbytes) / sizeof(UCS2CHAR);
-   }
-   if (((char *) outbuf - (char *) dst > sizeof(UCS2CHAR)) && (*dst == 0xFEFF))
-   {
-      // Remove UNICODE byte order indicator if presented
-      memmove(dst, &dst[1], (char *) outbuf - (char *) dst - sizeof(UCS2CHAR));
-      outbuf -= sizeof(UCS2CHAR);
-   }
-   if ((srcLen == -1) && (outbytes >= sizeof(UCS2CHAR)))
-   {
-      *((UCS2CHAR *)outbuf) = 0;
-   }
-
-   return (int)count;
-#else
-   return __internal_ucs4_to_ucs2(src, srcLen, dst, dstLen);
-#endif
+   if (dcount == dstLen)
+      dcount--;
+   dst[dcount] = 0;
+   return dcount;
 }
 
 #if defined(_WIN32)
