@@ -367,9 +367,41 @@ WCHAR LIBNETXMS_EXPORTABLE *nx_wcsdup(const WCHAR *src)
 #endif
 
 /**
+ * Character comparator - UNICODE/case sensitive
+ */
+inline bool _ccw(WCHAR c1, WCHAR c2)
+{
+   return c1 == c2;
+}
+
+/**
+ * Character comparator - UNICODE/case insensitive
+ */
+inline bool _ccwi(WCHAR c1, WCHAR c2)
+{
+   return towupper(c1) == towupper(c2);
+}
+
+/**
+ * Character comparator - non-UNICODE/case sensitive
+ */
+inline bool _cca(char c1, char c2)
+{
+   return c1 == c2;
+}
+
+/**
+ * Character comparator - non-UNICODE/case insensitive
+ */
+inline bool _ccai(char c1, char c2)
+{
+   return toupper(c1) == toupper(c2);
+}
+
+/**
  * Compare pattern with possible ? characters with given text
  */
-template<typename T> bool CompareTextBlocks(const T *pattern, const T *text, size_t size)
+template<typename T, bool (*Compare)(T, T)> bool CompareTextBlocks(const T *pattern, const T *text, size_t size)
 {
 	const T *p = pattern;
 	const T *t = text;
@@ -377,7 +409,7 @@ template<typename T> bool CompareTextBlocks(const T *pattern, const T *text, siz
 	{
 		if (*p == '?')
 			continue;
-		if (*p != *t)
+		if (!Compare(*p, *t))
 			return false;
 	}
 	return true;
@@ -386,7 +418,7 @@ template<typename T> bool CompareTextBlocks(const T *pattern, const T *text, siz
 /**
  * Match string against pattern with * and ? metasymbols - implementation
  */
-template<typename T> bool MatchStringEngine(const T *pattern, const T *string, size_t (*slen)(const T *))
+template<typename T, bool (*Compare)(T, T), size_t (*Length)(const T*)> bool MatchStringEngine(const T *pattern, const T *string)
 {
    const T *SPtr, *MPtr, *BPtr, *EPtr;
    size_t bsize;
@@ -436,9 +468,9 @@ template<typename T> bool MatchStringEngine(const T *pattern, const T *string, s
             {
                while(1)
                {
-                  while((*SPtr != 0) && (*SPtr != *BPtr))
+                  while((*SPtr != 0) && !Compare(*SPtr, *BPtr))
                      SPtr++;
-                  if (slen(SPtr) < bsize)
+                  if (Length(SPtr) < bsize)
                   {
                      if (EPtr == NULL)
                      {
@@ -451,7 +483,7 @@ template<typename T> bool MatchStringEngine(const T *pattern, const T *string, s
                         break;
                      }
                   }
-                  if (CompareTextBlocks(BPtr, SPtr, bsize))
+                  if (CompareTextBlocks<T, Compare>(BPtr, SPtr, bsize))
                      break;
                   SPtr++;
                }
@@ -466,7 +498,7 @@ template<typename T> bool MatchStringEngine(const T *pattern, const T *string, s
          default:
             if (*SPtr == 0)
                return false;
-            if (*MPtr == *SPtr)
+            if (Compare(*MPtr, *SPtr))
             {
                SPtr++;
                MPtr++;
@@ -493,19 +525,9 @@ template<typename T> bool MatchStringEngine(const T *pattern, const T *string, s
 bool LIBNETXMS_EXPORTABLE MatchStringA(const char *pattern, const char *str, bool matchCase)
 {
    if (matchCase)
-      return MatchStringEngine(pattern, str, strlen);
-
-   char *tp, *ts;
-   bool bResult;
-
-   tp = strdup(pattern);
-   ts = strdup(str);
-   strupr(tp);
-   strupr(ts);
-   bResult = MatchStringEngine(tp, ts, strlen);
-   MemFree(tp);
-   MemFree(ts);
-   return bResult;
+      return MatchStringEngine<char, _cca, strlen>(pattern, str);
+   else
+      return MatchStringEngine<char, _ccai, strlen>(pattern, str);
 }
 
 /**
@@ -519,19 +541,9 @@ bool LIBNETXMS_EXPORTABLE MatchStringA(const char *pattern, const char *str, boo
 bool LIBNETXMS_EXPORTABLE MatchStringW(const WCHAR *pattern, const WCHAR *str, bool matchCase)
 {
    if (matchCase)
-      return MatchStringEngine(pattern, str, wcslen);
-
-   WCHAR *tp, *ts;
-   bool bResult;
-
-   tp = wcsdup(pattern);
-   ts = wcsdup(str);
-   wcsupr(tp);
-   wcsupr(ts);
-   bResult = MatchStringEngine(tp, ts, wcslen);
-   MemFree(tp);
-   MemFree(ts);
-   return bResult;
+      return MatchStringEngine<WCHAR, _ccw, wcslen>(pattern, str);
+   else
+      return MatchStringEngine<WCHAR, _ccwi, wcslen>(pattern, str);
 }
 
 /**
