@@ -1242,7 +1242,6 @@ void Shutdown()
    }
 
 	DestroySessionList();
-	MsgWaitQueue::shutdown();
 
    if (!(g_dwFlags & AF_SUBAGENT_LOADER))
    {

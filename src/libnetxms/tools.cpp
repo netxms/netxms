@@ -61,6 +61,14 @@ HRESULT (*imp_SetThreadDescription)(HANDLE, PCWSTR) = NULL;
 #endif
 
 /**
+ * Process exit handler
+ */
+static void OnProcessExit()
+{
+   MsgWaitQueue::shutdown();
+}
+
+/**
  * Common initialization for any NetXMS process
  *
  * @param commandLineTool set to true for command line tool initialization
@@ -108,6 +116,8 @@ void LIBNETXMS_EXPORTABLE InitNetXMSProcess(bool commandLineTool)
 #endif
 
    srand(static_cast<unsigned int>(time(NULL)));
+
+   atexit(OnProcessExit);
 }
 
 /**

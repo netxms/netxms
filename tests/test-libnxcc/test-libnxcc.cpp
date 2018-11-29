@@ -68,6 +68,8 @@ static void TestDirectCommand()
  */
 int main(int argc, char *argv[])
 {
+   InitNetXMSProcess(true);
+
    if (argc < 2)
    {
       _tprintf(_T("Please specify node ID\n"));

@@ -79,6 +79,8 @@ static void RunTestScript(const TCHAR *name)
  */
 int main(int argc, char *argv[])
 {
+   InitNetXMSProcess(true);
+
    TestCompiler();
    RunTestScript(_T("arrays.nxsl"));
    RunTestScript(_T("base64.nxsl"));

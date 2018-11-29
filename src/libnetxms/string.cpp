@@ -88,7 +88,7 @@ String& String::operator =(const String &src)
 {
 	if (&src == this)
 		return *this;
-   free(m_buffer);
+   MemFree(m_buffer);
 	m_length = src.m_length;
    m_allocated = src.m_length + 1;
    m_allocationStep = src.m_allocationStep;
@@ -107,7 +107,7 @@ String& String::operator +=(const TCHAR *str)
       if (m_length + len >= m_allocated)
       {
          m_allocated += std::max(m_allocationStep, len + 1);
-      	m_buffer = (TCHAR *)realloc(m_buffer, m_allocated * sizeof(TCHAR));
+      	m_buffer = (TCHAR *)MemRealloc(m_buffer, m_allocated * sizeof(TCHAR));
       }
    	_tcscpy(&m_buffer[m_length], str);
    	m_length += len;
@@ -125,7 +125,7 @@ String& String::operator +=(const String &str)
       if (m_length + str.m_length >= m_allocated)
       {
          m_allocated += std::max(m_allocationStep, str.m_length + 1);
-      	m_buffer = (TCHAR *)realloc(m_buffer, m_allocated * sizeof(TCHAR));
+      	m_buffer = (TCHAR *)MemRealloc(m_buffer, m_allocated * sizeof(TCHAR));
       }
       memcpy(&m_buffer[m_length], str.m_buffer, (str.m_length + 1) * sizeof(TCHAR));
 	   m_length += str.m_length;
@@ -159,7 +159,6 @@ String String::operator +(const TCHAR *right) const
 void String::appendFormattedString(const TCHAR *format, ...)
 {
    va_list args;
-
 	va_start(args, format);
 	appendFormattedStringV(format, args);
 	va_end(args);
@@ -242,7 +241,7 @@ void String::append(const TCHAR *str, size_t len)
    if (m_length + len >= m_allocated)
    {
       m_allocated += std::max(m_allocationStep, len + 1);
-   	m_buffer = (TCHAR *)realloc(m_buffer, m_allocated * sizeof(TCHAR));
+   	m_buffer = (TCHAR *)MemRealloc(m_buffer, m_allocated * sizeof(TCHAR));
    }
    memcpy(&m_buffer[m_length], str, len * sizeof(TCHAR));
    m_length += len;
@@ -307,7 +306,7 @@ void String::appendMBString(const char *str, size_t len, int nCodePage)
    if (m_length + len >= m_allocated)
    {
       m_allocated += std::max(m_allocationStep, len + 1);
-   	m_buffer = (TCHAR *)realloc(m_buffer, m_allocated * sizeof(TCHAR));
+   	m_buffer = (TCHAR *)MemRealloc(m_buffer, m_allocated * sizeof(TCHAR));
    }
 	m_length += MultiByteToWideChar(nCodePage, (nCodePage == CP_UTF8) ? 0 : MB_PRECOMPOSED, str, (int)len, &m_buffer[m_length], (int)len);
 	m_buffer[m_length] = 0;
@@ -327,7 +326,7 @@ void String::appendWideString(const WCHAR *str, size_t len)
    if (m_length + len >= m_allocated)
    {
       m_allocated += std::max(m_allocationStep, len + 1);
-   	m_buffer = (TCHAR *)realloc(m_buffer, m_allocated * sizeof(TCHAR));
+   	m_buffer = (TCHAR *)MemRealloc(m_buffer, m_allocated * sizeof(TCHAR));
    }
 	WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, str, len, &m_buffer[m_length], len, NULL, NULL);
    m_length += len;
@@ -350,7 +349,7 @@ void String::escapeCharacter(int ch, int esc)
    if (m_length + nCount >= m_allocated)
    {
       m_allocated += std::max(m_allocationStep, (size_t)nCount);
-   	m_buffer = (TCHAR *)realloc(m_buffer, m_allocated * sizeof(TCHAR));
+   	m_buffer = (TCHAR *)MemRealloc(m_buffer, m_allocated * sizeof(TCHAR));
    }
 
    m_length += nCount;
@@ -420,7 +419,7 @@ void String::replace(const TCHAR *pszSrc, const TCHAR *pszDst)
             if (m_length + delta >= m_allocated)
             {
                m_allocated += std::max(m_allocationStep, delta);
-               m_buffer = (TCHAR *)realloc(m_buffer, m_allocated * sizeof(TCHAR));
+               m_buffer = (TCHAR *)MemRealloc(m_buffer, m_allocated * sizeof(TCHAR));
             }
             memmove(&m_buffer[i + lenDst], &m_buffer[i + lenSrc], (m_length - i - lenSrc + 1) * sizeof(TCHAR));
             m_length += delta;
@@ -470,13 +469,13 @@ TCHAR *String::substring(size_t start, ssize_t len, TCHAR *buffer) const
 		{
 			count = std::min(static_cast<size_t>(len), m_length - start);
 		}
-		s = (buffer != NULL) ? buffer : (TCHAR *)malloc((count + 1) * sizeof(TCHAR));
+		s = (buffer != NULL) ? buffer : (TCHAR *)MemAlloc((count + 1) * sizeof(TCHAR));
 		memcpy(s, &m_buffer[start], count * sizeof(TCHAR));
 		s[count] = 0;
 	}
 	else
 	{
-		s = (buffer != NULL) ? buffer : (TCHAR *)malloc(sizeof(TCHAR));
+		s = (buffer != NULL) ? buffer : (TCHAR *)MemAlloc(sizeof(TCHAR));
 		*s = 0;
 	}
 	return s;

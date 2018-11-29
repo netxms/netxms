@@ -13,6 +13,8 @@ void TestSQLite();
  */
 int main(int argc, char *argv[])
 {
+   InitNetXMSProcess(true);
+
    bool skipOracle = false;
    bool skipSQLite = false;
 

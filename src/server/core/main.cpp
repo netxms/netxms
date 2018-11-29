@@ -1216,7 +1216,6 @@ void NXCORE_EXPORTABLE Shutdown()
    ThreadPoolDestroy(g_clientThreadPool);
 	ThreadPoolDestroy(g_agentConnectionThreadPool);
    ThreadPoolDestroy(g_mainThreadPool);
-   MsgWaitQueue::shutdown();
    WatchdogShutdown();
 
 	nxlog_debug(1, _T("Server shutdown complete"));
