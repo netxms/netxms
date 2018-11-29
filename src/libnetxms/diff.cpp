@@ -541,15 +541,16 @@ String DiffEngine::diff_linesToCharsMunge(const String &text, StringList &lineAr
       line = safeMid(text, lineStart, (int)(lineEnd - lineStart + 1));
       lineStart = lineEnd + 1;
 
+      /* FIXME: non-UNICODE version will fail on texts with > 255 unique lines */
       if (lineHash.contains(line))
       {
-         chars.append(static_cast<WCHAR>(lineHash.get(line)));
+         chars.append(static_cast<TCHAR>(lineHash.get(line)));
       }
       else
       {
          lineArray.add(line);
          lineHash.set(line, lineArray.size() - 1);
-         chars.append(static_cast<WCHAR>(lineArray.size() - 1));
+         chars.append(static_cast<TCHAR>(lineArray.size() - 1));
       }
    }
    return chars;
@@ -562,9 +563,9 @@ void DiffEngine::diff_charsToLines(ObjectArray<Diff> *diffs, const StringList &l
    {
       Diff *diff = i.next();
       String text;
-      for(int y = 0; y < (int)diff->text.length(); y++)
+      for(size_t y = 0; y < diff->text.length(); y++)
       {
-         text += lineArray.get(static_cast<int>(diff->text.charAt(y)));
+         text.append(lineArray.get(static_cast<int>(diff->text.charAt(y))));
       }
       diff->text = text;
    }

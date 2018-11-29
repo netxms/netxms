@@ -755,7 +755,7 @@ public:
    bool endsWith(const String& s) const;
    bool endsWith(const TCHAR *s) const;
 
-	wchar_t charAt(size_t pos) const { return (pos < m_length) ? m_buffer[pos] : 0; }
+	TCHAR charAt(size_t pos) const { return (pos < m_length) ? m_buffer[pos] : 0; }
 
    String substring(size_t start, ssize_t len) const;
 	TCHAR *substring(size_t start, ssize_t len, TCHAR *buffer) const;
