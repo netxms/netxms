@@ -20,6 +20,10 @@ static char mbText[] = "Lorem ipsum dolor sit amet, consectetur adipiscing elit,
 static WCHAR wcText[] = L"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.";
 static char mbTextShort[] = "Lorem ipsum";
 static UCS2CHAR ucs2TextShort[] = { 'L', 'o', 'r', 'e', 'm', ' ', 'i', 'p', 's', 'u', 'm', 0 };
+static UCS2CHAR ucs2TextSurrogates[] = { 'L', 'o', 'r', 'e', 'm', 0xD801, 0xDFFF, 'i', 'p', 's', 'u', 'm', 0 };
+#ifdef UNICODE_UCS4
+static UCS4CHAR ucs4TextSurrogatesTest[] = { 'L', 'o', 'r', 'e', 'm', 0x0107FF, 'i', 'p', 's', 'u', 'm', 0 };
+#endif
 
 /**
  * Test string conversion
@@ -75,6 +79,19 @@ static void TestStringConversion()
       WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, wcText, -1, buffer, 1024, NULL, NULL);
    }
    EndTest(GetCurrentTimeMs() - start);
+
+   StartTest(_T("UCS-2 to UCS-4 conversion"));
+   UCS4CHAR ucs4buffer[128];
+   int len = ucs2_to_ucs4(ucs2TextSurrogates, -1, ucs4buffer, 128);
+   AssertEquals(len, 11);
+   AssertTrue(!wcscmp(ucs4buffer, ucs4TextSurrogatesTest));
+   EndTest();
+
+   StartTest(_T("UCS-4 to UCS-2 conversion"));
+   len = ucs4_to_ucs2(ucs4TextSurrogatesTest, -1, ucs2buffer, 1024);
+   AssertEquals(len, 12);
+   AssertTrue(!memcmp(ucs2buffer, ucs2TextSurrogates, 12 * sizeof(UCS2CHAR)));
+   EndTest();
 
    StartTest(_T("UCS-2 to UCS-4 conversion performance"));
    mb_to_ucs2(mbText, -1, ucs2buffer, 1024);
