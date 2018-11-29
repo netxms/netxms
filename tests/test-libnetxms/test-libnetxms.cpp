@@ -473,6 +473,24 @@ static void TestString()
    free(str);
    EndTest();
 
+   StartTest(_T("String - substring #4"));
+   s = _T("alpha beta gamma");
+   String ss = s.substring(0, 5);
+   AssertTrue(!_tcscmp(ss, _T("alpha")));
+   EndTest();
+
+   StartTest(_T("String - substring #5"));
+   s = _T("alpha beta gamma");
+   ss = s.substring(5, -1);
+   AssertTrue(!_tcscmp(ss, _T(" beta gamma")));
+   EndTest();
+
+   StartTest(_T("String - substring #6"));
+   s = _T("alpha beta gamma");
+   ss = s.substring(14, 4);
+   AssertTrue(!_tcscmp(ss, _T("ma")));
+   EndTest();
+
    StartTest(_T("String - left #1"));
    s = _T("alpha beta gamma");
    String ls = s.left(5);
@@ -1593,6 +1611,7 @@ static void DebugWriter(const TCHAR *tag, const TCHAR *message)
  */
 int main(int argc, char *argv[])
 {
+   InitNetXMSProcess(true);
    if (argc > 1)
    {
       if (!strcmp(argv[1], "@proc"))
@@ -1613,7 +1632,7 @@ int main(int argc, char *argv[])
 
 #ifdef _WIN32
    WSADATA wsaData;
-	WSAStartup(MAKEWORD(2, 2), &wsaData);
+   WSAStartup(MAKEWORD(2, 2), &wsaData);
 #endif
 
    TestObjectMemoryPool();
@@ -1647,7 +1666,5 @@ int main(int argc, char *argv[])
    TestSubProcess(argv[0]);
    TestThreadPool();
    TestThreadCountAndMaxWaitTime();
-
-   MsgWaitQueue::shutdown();
    return 0;
 }

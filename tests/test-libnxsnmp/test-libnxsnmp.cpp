@@ -147,6 +147,8 @@ static void TestVariableClass()
  */
 int main(int argc, char *argv[])
 {
+   InitNetXMSProcess(true);
+
    TestOidConversion();
    TestOidClass();
    TestVariableClass();

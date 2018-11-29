@@ -1226,7 +1226,6 @@ void NXCORE_EXPORTABLE Shutdown()
    ThreadPoolDestroy(g_clientThreadPool);
 	ThreadPoolDestroy(g_agentConnectionThreadPool);
    ThreadPoolDestroy(g_mainThreadPool);
-   MsgWaitQueue::shutdown();
    WatchdogShutdown();
 
 #if WITH_PYTHON
