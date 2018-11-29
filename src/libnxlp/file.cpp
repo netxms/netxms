@@ -157,13 +157,15 @@ static off_t ParseNewRecords(LogParser *parser, int fh)
                resetPos = lseek(fh, 0, SEEK_CUR) - remaining;
 					if (remaining > 0)
 					{
-                  memmove(buffer, ptr, remaining);
+					   if (buffer != ptr)
+					      memmove(buffer, ptr, remaining);
                   if (parser->isFilePreallocated() && !memcmp(buffer, "\x00\x00\x00\x00", std::min(remaining, 4)))
                   {
                      // Found zeroes in preallocated file, next read should be after last known EOL
                      return resetPos;
                   }
 					}
+					bufPos = remaining;
                break;
             }
 				// remove possible CR character and put 0 to indicate end of line
