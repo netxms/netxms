@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -558,7 +558,7 @@ bool String::equals(const TCHAR *s) const
 {
    if (s == NULL)
       return false;
-   return !_tcscmp(m_buffer, s);
+   return !_tcscmp(CHECK_NULL_EX(m_buffer), s);
 }
 
 /**
@@ -568,6 +568,8 @@ bool String::startsWith(const String& s) const
 {
    if (s.m_length > m_length)
       return false;
+   if (s.m_length == 0)
+      return true;
    return !memcmp(m_buffer, s.m_buffer, s.m_length * sizeof(TCHAR));
 }
 
@@ -581,6 +583,8 @@ bool String::startsWith(const TCHAR *s) const
    size_t l = _tcslen(s);
    if (l > m_length)
       return false;
+   if (l == 0)
+      return true;
    return !memcmp(m_buffer, s, l * sizeof(TCHAR));
 }
 
@@ -591,6 +595,8 @@ bool String::endsWith(const String& s) const
 {
    if (s.m_length > m_length)
       return false;
+   if (s.m_length == 0)
+      return true;
    return !memcmp(&m_buffer[m_length - s.m_length], s.m_buffer, s.m_length * sizeof(TCHAR));
 }
 
@@ -604,6 +610,8 @@ bool String::endsWith(const TCHAR *s) const
    size_t l = _tcslen(s);
    if (l > m_length)
       return false;
+   if (l == 0)
+      return true;
    return !memcmp(&m_buffer[m_length - l], s, l * sizeof(TCHAR));
 }
 
