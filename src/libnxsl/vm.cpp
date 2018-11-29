@@ -547,7 +547,7 @@ void NXSL_VM::execute()
          break;
       case OPCODE_PUSH_EXPRVAR:
          if (m_expressionVariables == NULL)
-            m_expressionVariables = new NXSL_VariableSystem(this);
+            m_expressionVariables = new NXSL_VariableSystem();
 
          pVar = m_expressionVariables->find(cp->m_operand.m_pszString);
          if (pVar != NULL)
@@ -577,7 +577,7 @@ void NXSL_VM::execute()
          }
 
          if (m_expressionVariables == NULL)
-            m_expressionVariables = new NXSL_VariableSystem(this);
+            m_expressionVariables = new NXSL_VariableSystem();
 
          pVar = m_expressionVariables->find(cp->m_operand.m_pszString);
          if (pVar != NULL)
