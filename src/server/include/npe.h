@@ -152,7 +152,7 @@ public:
 
    double getDCIMinValue(UINT32 nodeId, UINT32 dciId);
    double getDCIMaxValue(UINT32 nodeId, UINT32 dciId);
-   double getBoundaryDCIValue(UINT32 nodeId, UINT32 dciId, TCHAR *sorting);
+   double getBoundaryDCIValue(UINT32 nodeId, UINT32 dciId, const TCHAR *sorting);
 };
 
 /**

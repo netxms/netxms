@@ -109,6 +109,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
    private NXCSession session;
    private HistoricalDataChart chart = null;
    private boolean updateInProgress = false;
+   private boolean showPredictedData = false;
    private ViewRefreshController refreshController;
    private Composite chartParent = null;
    private GraphSettings settings = new GraphSettings();
@@ -467,7 +468,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
                if (currentItem.type == ChartDciConfig.ITEM)
                {
                   data[i] = session.getCollectedData(currentItem.nodeId, currentItem.dciId, settings.getTimeFrom(),
-                        settings.getTimeTo(), 0, false, false); //TODo: tmp!!                 
+                        settings.getTimeTo(), 0, false, showPredictedData);                 
                   thresholds[i] = session.getThresholds(currentItem.nodeId, currentItem.dciId);
                }
                else

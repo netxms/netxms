@@ -147,8 +147,8 @@ public class HistoricalDataView extends ViewPart
 	{
 		final String[] names = (tableName != null) ? 
          new String[] { Messages.get().HistoricalDataView_ColTimestamp, Messages.get().HistoricalDataView_ColValue } :
-         new String[] { Messages.get().HistoricalDataView_ColTimestamp, Messages.get().HistoricalDataView_ColValue, "Raw value" };
-		final int[] widths = { 150, 400, 400 };
+         new String[] { Messages.get().HistoricalDataView_ColTimestamp, Messages.get().HistoricalDataView_ColValue, "Raw value", "Predicted value" };
+		final int[] widths = { 150, 400, 400, 400 };
 		viewer = new SortableTableViewer(parent, names, widths, 0, SWT.DOWN, SWT.FULL_SELECTION | SWT.MULTI);
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setLabelProvider(new HistoricalDataLabelProvider());

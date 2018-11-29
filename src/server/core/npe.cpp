@@ -149,7 +149,7 @@ double PredictionEngine::getDCIMaxValue(UINT32 nodeId, UINT32 dciId)
    return getBoundaryDCIValue(nodeId, dciId, _T("DESC"));
 }
 
-double PredictionEngine::getBoundaryDCIValue(UINT32 nodeId, UINT32 dciId, TCHAR *sorting)
+double PredictionEngine::getBoundaryDCIValue(UINT32 nodeId, UINT32 dciId, const TCHAR *sorting)
 {
    TCHAR query[1024];
    switch(g_dbSyntax)
@@ -170,7 +170,7 @@ double PredictionEngine::getBoundaryDCIValue(UINT32 nodeId, UINT32 dciId, TCHAR 
          break;
       default:
          nxlog_debug(1, _T("INTERNAL ERROR: unsupported database in PredictionEngine::getDciValues"));
-         return NULL;   // Unsupported database
+         return 0.0;   // Unsupported database
    }
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
