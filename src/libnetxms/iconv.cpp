@@ -26,7 +26,7 @@
 #include <iconv.h>
 #endif
 
-#if !defined(__DISABLE_ICONV) && WITH_ICONV_CACHE
+#if !defined(__DISABLE_ICONV)
 
 /**
  * iconv descriptor
@@ -120,4 +120,4 @@ void IconvClose(iconv_t cd)
    s_cacheLock.unlock();
 }
 
-#endif /* !defined(__DISABLE_ICONV) && WITH_ICONV_CACHE */
+#endif /* !defined(__DISABLE_ICONV) */

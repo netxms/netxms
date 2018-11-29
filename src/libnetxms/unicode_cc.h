@@ -13,13 +13,8 @@
 #ifndef __DISABLE_ICONV
 
 // iconv cache functions
-#if WITH_ICONV_CACHE
 iconv_t IconvOpen(const char *to, const char *from);
 void IconvClose(iconv_t cd);
-#else
-#define IconvOpen iconv_open
-#define IconvClose iconv_close
-#endif
 
 // configure first test for libiconv, then for iconv
 // if libiconv was found, HAVE_ICONV will not be set correctly

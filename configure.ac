@@ -631,11 +631,6 @@ AC_ARG_ENABLE(ipv6,
 	fi
 ])
 
-AC_ARG_ENABLE(iconv-cache,
-[AS_HELP_STRING([--enable-iconv-cache=@<:@yes/no/auto@:>@],
-[cache iconv descriptors [default=auto]])],,
-[enable_iconv_cache=auto])
-
 AC_ARG_ENABLE(readline,
 [AS_HELP_STRING(--disable-readline,do not use libreadline)],
 [
@@ -3176,29 +3171,6 @@ if test "x$ac_found_iconv" = "xyes"; then
    [ AC_MSG_RESULT(no) ],
    [ AC_MSG_RESULT(no) ]
    )
-
-   AC_MSG_CHECKING(whether iconv descriptor cache is needed)
-   case $enable_iconv_cache in
-      auto)
-         case $PLATFORM in
-               SunOS|HP-UX|AIX)
-                  enable_iconv_cache=yes
-                  ;;
-               *)
-                  enable_iconv_cache=no
-                  ;;
-         esac
-         ;;
-      yes|no)
-         ;;
-      *)
-         AC_MSG_ERROR([Value given to --enable-iconv-cache must be one of yes, no or auto])
-         ;;
-   esac
-   if test "x$enable_iconv_cache" = "xyes"; then
-      AC_DEFINE(WITH_ICONV_CACHE, 1, Define to 1 to enable iconv descriptor cache)
-   fi
-   AC_MSG_RESULT($enable_iconv_cache)
 
    # taken from ZSH's configure
    # Check if iconv uses const in prototype declaration
