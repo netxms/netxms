@@ -914,14 +914,17 @@ WCHAR LIBNETXMS_EXPORTABLE *wcserror_r(int errnum, WCHAR *strerrbuf, size_t bufl
 
 #endif /* !HAVE_WCSERROR_R && HAVE_STRERROR_R */
 
-/**
+/*************************************************************************
  * Wrappers for wprintf/wscanf family
  *
  * All these wrappers replaces %s with %S and %c with %C
  * because in POSIX version of wprintf functions %s and %c
  * means "multibyte string/char" instead of expected "UNICODE string/char"
- */
+ *************************************************************************/
 
+/**
+ * Internal version of wprintf() with Windows compatible format specifiers
+ */
 int LIBNETXMS_EXPORTABLE nx_wprintf(const WCHAR *format, ...)
 {
    va_list args;
@@ -933,6 +936,9 @@ int LIBNETXMS_EXPORTABLE nx_wprintf(const WCHAR *format, ...)
    return rc;
 }
 
+/**
+ * Internal version of fwprintf() with Windows compatible format specifiers
+ */
 int LIBNETXMS_EXPORTABLE nx_fwprintf(FILE *fp, const WCHAR *format, ...)
 {
    va_list args;
@@ -944,6 +950,9 @@ int LIBNETXMS_EXPORTABLE nx_fwprintf(FILE *fp, const WCHAR *format, ...)
    return rc;
 }
 
+/**
+ * Internal version of swprintf() with Windows compatible format specifiers
+ */
 int LIBNETXMS_EXPORTABLE nx_swprintf(WCHAR *buffer, size_t size, const WCHAR *format, ...)
 {
    va_list args;
@@ -955,6 +964,9 @@ int LIBNETXMS_EXPORTABLE nx_swprintf(WCHAR *buffer, size_t size, const WCHAR *fo
    return rc;
 }
 
+/**
+ * Internal version of wscanf() with Windows compatible format specifiers
+ */
 int LIBNETXMS_EXPORTABLE nx_wscanf(const WCHAR *format, ...)
 {
    va_list args;
@@ -966,6 +978,9 @@ int LIBNETXMS_EXPORTABLE nx_wscanf(const WCHAR *format, ...)
    return rc;
 }
 
+/**
+ * Internal version of fwscanf() with Windows compatible format specifiers
+ */
 int LIBNETXMS_EXPORTABLE nx_fwscanf(FILE *fp, const WCHAR *format, ...)
 {
    va_list args;
@@ -977,6 +992,9 @@ int LIBNETXMS_EXPORTABLE nx_fwscanf(FILE *fp, const WCHAR *format, ...)
    return rc;
 }
 
+/**
+ * Internal version of swscanf() with Windows compatible format specifiers
+ */
 int LIBNETXMS_EXPORTABLE nx_swscanf(const WCHAR *str, const WCHAR *format, ...)
 {
    va_list args;
@@ -988,14 +1006,23 @@ int LIBNETXMS_EXPORTABLE nx_swscanf(const WCHAR *str, const WCHAR *format, ...)
    return rc;
 }
 
-static WCHAR *ReplaceFormatSpecs(const WCHAR *oldFormat)
+/**
+ * Length of local format buffer
+ */
+#define LOCAL_FORMAT_BUFFER_LENGTH  256
+
+/**
+ * Replace string/char format specifiers from Windows to POSIX version
+ */
+static WCHAR *ReplaceFormatSpecs(const WCHAR *oldFormat, WCHAR *localBuffer)
 {
-   WCHAR *fmt, *p;
+   size_t len = wcslen(oldFormat) + 1;
+   WCHAR *fmt = (len <= LOCAL_FORMAT_BUFFER_LENGTH) ? localBuffer : static_cast<WCHAR*>(MemAlloc(len * sizeof(WCHAR)));
+   memcpy(fmt, oldFormat, len * sizeof(WCHAR));
+
    int state = 0;
    bool hmod;
-
-   fmt = wcsdup(oldFormat);
-   for(p = fmt; *p != 0; p++)
+   for(WCHAR *p = fmt; *p != 0; p++)
    {
       switch (state)
       {
@@ -1075,81 +1102,92 @@ static WCHAR *ReplaceFormatSpecs(const WCHAR *oldFormat)
    return fmt;
 }
 
+/**
+ * Free format buffer of it is not local
+ */
+#define FreeFormatBuffer(b) do { if (b != localBuffer) MemFree(b); } while(0)
+
+/**
+ * Internal version of vwprintf() with Windows compatible format specifiers
+ */
 int LIBNETXMS_EXPORTABLE nx_vwprintf(const WCHAR *format, va_list args)
 {
-   WCHAR *fmt;
-   int rc;
-
-   fmt = ReplaceFormatSpecs(format);
-   rc = vwprintf(fmt, args);
-   MemFree(fmt);
+   WCHAR localBuffer[LOCAL_FORMAT_BUFFER_LENGTH];
+   WCHAR *fmt = ReplaceFormatSpecs(format, localBuffer);
+   int rc = vwprintf(fmt, args);
+   FreeFormatBuffer(fmt);
    return rc;
 }
 
+/**
+ * Internal version of vfwprintf() with Windows compatible format specifiers
+ */
 int LIBNETXMS_EXPORTABLE nx_vfwprintf(FILE *fp, const WCHAR *format, va_list args)
 {
-   WCHAR *fmt;
-   int rc;
-
-   fmt = ReplaceFormatSpecs(format);
-   rc = vfwprintf(fp, fmt, args);
-   MemFree(fmt);
+   WCHAR localBuffer[LOCAL_FORMAT_BUFFER_LENGTH];
+   WCHAR *fmt = ReplaceFormatSpecs(format, localBuffer);
+   int rc = vfwprintf(fp, fmt, args);
+   FreeFormatBuffer(fmt);
    return rc;
 }
 
+/**
+ * Internal version of vswprintf() with Windows compatible format specifiers
+ */
 int LIBNETXMS_EXPORTABLE nx_vswprintf(WCHAR *buffer, size_t size, const WCHAR *format, va_list args)
 {
-   WCHAR *fmt;
-   int rc;
-
-   fmt = ReplaceFormatSpecs(format);
-   rc = vswprintf(buffer, size, fmt, args);
-   MemFree(fmt);
+   WCHAR localBuffer[LOCAL_FORMAT_BUFFER_LENGTH];
+   WCHAR *fmt = ReplaceFormatSpecs(format, localBuffer);
+   int rc = vswprintf(buffer, size, fmt, args);
+   FreeFormatBuffer(fmt);
    return rc;
 }
 
+/**
+ * Internal version of vwscanf() with Windows compatible format specifiers
+ */
 int LIBNETXMS_EXPORTABLE nx_vwscanf(const WCHAR *format, va_list args)
 {
-   WCHAR *fmt;
-   int rc;
-
-   fmt = ReplaceFormatSpecs(format);
+   WCHAR localBuffer[LOCAL_FORMAT_BUFFER_LENGTH];
+   WCHAR *fmt = ReplaceFormatSpecs(format, localBuffer);
 #if HAVE_VWSCANF
-   rc = vwscanf(fmt, args);
+   int rc = vwscanf(fmt, args);
 #else
-   rc = -1; // FIXME: add workaround implementation
+   int rc = -1; // FIXME: add workaround implementation
 #endif
-   MemFree(fmt);
+   FreeFormatBuffer(fmt);
    return rc;
 }
 
+/**
+ * Internal version of vfwscanf() with Windows compatible format specifiers
+ */
 int LIBNETXMS_EXPORTABLE nx_vfwscanf(FILE *fp, const WCHAR *format, va_list args)
 {
-   WCHAR *fmt;
-   int rc;
-
-   fmt = ReplaceFormatSpecs(format);
+   WCHAR localBuffer[LOCAL_FORMAT_BUFFER_LENGTH];
+   WCHAR *fmt = ReplaceFormatSpecs(format, localBuffer);
 #if HAVE_VFWSCANF
-   rc = vfwscanf(fp, fmt, args);
+   int rc = vfwscanf(fp, fmt, args);
 #else
-   rc = -1; // FIXME: add workaround implementation
+   int rc = -1; // FIXME: add workaround implementation
 #endif
-   MemFree(fmt);
+   FreeFormatBuffer(fmt);
    return rc;
 }
 
+/**
+ * Internal version of vswscanf() with Windows compatible format specifiers
+ */
 int LIBNETXMS_EXPORTABLE nx_vswscanf(const WCHAR *str, const WCHAR *format, va_list args)
 {
-   WCHAR *fmt;
-   int rc;
-
-   fmt = ReplaceFormatSpecs(format);
+   WCHAR localBuffer[LOCAL_FORMAT_BUFFER_LENGTH];
+   WCHAR *fmt = ReplaceFormatSpecs(format, localBuffer);
 #if HAVE_VSWSCANF
-   rc = vswscanf(str, fmt, args);
+   int rc = vswscanf(str, fmt, args);
 #else
-   rc = -1; // FIXME: add workaround implementation
+   int rc = -1; // FIXME: add workaround implementation
 #endif
-   MemFree(fmt);
+   FreeFormatBuffer(fmt);
    return rc;
 }
 
