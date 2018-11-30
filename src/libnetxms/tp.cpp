@@ -407,6 +407,8 @@ void LIBNETXMS_EXPORTABLE ThreadPoolDestroy(ThreadPool *p)
    delete p->queue;
    delete p->serializationQueues;
    MutexDestroy(p->serializationLock);
+   for(int i = 0; i < p->schedulerQueue->size(); i++)
+      MemFree(p->schedulerQueue->get(i));
    delete p->schedulerQueue;
    MutexDestroy(p->schedulerLock);
    MutexDestroy(p->mutex);
@@ -447,7 +449,7 @@ static void ProcessSerializedRequests(void *arg)
    while(true)
    {
       MutexLock(data->pool->serializationLock);
-      WorkRequest *rq = (WorkRequest *)data->queue->get();
+      WorkRequest *rq = static_cast<WorkRequest*>(data->queue->get());
       if (rq == NULL)
       {
          data->pool->serializationQueues->remove(data->key);
@@ -459,7 +461,7 @@ static void ProcessSerializedRequests(void *arg)
       MutexUnlock(data->pool->serializationLock);
 
       rq->func(rq->arg);
-      free(rq);
+      MemFree(rq);
    }
    free(data->key);
    delete data;
@@ -509,7 +511,7 @@ static int ScheduledRequestsComparator(const WorkRequest **e1, const WorkRequest
  */
 void LIBNETXMS_EXPORTABLE ThreadPoolScheduleAbsoluteMs(ThreadPool *p, INT64 runTime, ThreadPoolWorkerFunction f, void *arg)
 {
-   WorkRequest *rq = (WorkRequest *)malloc(sizeof(WorkRequest));
+   WorkRequest *rq = MemAllocStruct<WorkRequest>();
    rq->func = f;
    rq->arg = arg;
    rq->runTime = runTime;

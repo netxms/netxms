@@ -162,6 +162,22 @@ static void TestStringList()
    AssertTrue(!_tcsncmp(s3->get(4), _T("3.1415"), 6));
    delete s3;
    EndTest();
+
+   StartTest(_T("String list - performance"));
+   INT64 startTime = GetCurrentTimeMs();
+   StringList *s4 = new StringList();
+   for(int i = 0; i < 100000; i++)
+   {
+      s4->add(42);
+   }
+   AssertEquals(s4->size(), 100000);
+   for(int i = 0; i < 100000; i++)
+   {
+      s4->replace(i, _T("value for replacement"));
+   }
+   AssertEquals(s4->size(), 100000);
+   delete s4;
+   EndTest(GetCurrentTimeMs() - startTime);
 }
 
 /**

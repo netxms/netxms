@@ -1302,7 +1302,7 @@ void TunnelCommChannel::putData(const BYTE *data, size_t size)
 /**
  * Configured tunnels
  */
-static ObjectArray<Tunnel> s_tunnels;
+static ObjectArray<Tunnel> s_tunnels(0, 8, true);
 
 #endif	/* _WITH_ENCRYPTION */
 
