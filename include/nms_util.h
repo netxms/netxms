@@ -736,6 +736,7 @@ public:
          MemFree(r);
          r = n;
       }
+      *((void **)m_currentRegion) = NULL;
       m_allocated = m_headerSize;
    }
 };
