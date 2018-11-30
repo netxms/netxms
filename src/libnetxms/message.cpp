@@ -22,8 +22,14 @@
 **/
 #include "libnetxms.h"
 #include <nxcpapi.h>
-#include <uthash.h>
 #include <zlib.h>
+
+#undef uthash_malloc
+#define uthash_malloc(sz) m_pool.allocate(sz)
+#undef uthash_free
+#define uthash_free(ptr,sz) do { } while(0)
+
+#include <uthash.h>
 
 /**
  * Calculate field size
@@ -73,12 +79,13 @@ struct MessageField
 };
 
 /**
- * Create new hash entry wth given field size
+ * Create new hash entry with given field size
  */
-inline MessageField *CreateMessageField(size_t fieldSize)
+inline MessageField *CreateMessageField(MemoryPool& pool, size_t fieldSize)
 {
    size_t entrySize = sizeof(MessageField) - sizeof(NXCP_MESSAGE_FIELD) + fieldSize;
-   MessageField *entry = (MessageField *)calloc(1, entrySize);
+   MessageField *entry = static_cast<MessageField*>(pool.allocate(entrySize));
+   memset(entry, 0, entrySize);
    entry->size = entrySize;
    return entry;
 }
@@ -86,7 +93,7 @@ inline MessageField *CreateMessageField(size_t fieldSize)
 /**
  * Default constructor for NXCPMessage class
  */
-NXCPMessage::NXCPMessage(int version)
+NXCPMessage::NXCPMessage(int version) : m_pool(131072)
 {
    m_code = 0;
    m_id = 0;
@@ -100,7 +107,7 @@ NXCPMessage::NXCPMessage(int version)
 /**
  * Create message with given code and ID
  */
-NXCPMessage::NXCPMessage(UINT16 code, UINT32 id, int version)
+NXCPMessage::NXCPMessage(UINT16 code, UINT32 id, int version) : m_pool(131072)
 {
    m_code = code;
    m_id = id;
@@ -114,7 +121,7 @@ NXCPMessage::NXCPMessage(UINT16 code, UINT32 id, int version)
 /**
  * Create a copy of prepared CSCP message
  */
-NXCPMessage::NXCPMessage(NXCPMessage *msg)
+NXCPMessage::NXCPMessage(NXCPMessage *msg) : m_pool(131072)
 {
    m_code = msg->m_code;
    m_id = msg->m_id;
@@ -125,7 +132,7 @@ NXCPMessage::NXCPMessage(NXCPMessage *msg)
    if (m_flags & MF_BINARY)
    {
       m_dataSize = msg->m_dataSize;
-      m_data = (BYTE *)nx_memdup(msg->m_data, m_dataSize);
+      m_data = m_pool.copyMemoryBlock(msg->m_data, m_dataSize);
    }
    else
    {
@@ -135,7 +142,7 @@ NXCPMessage::NXCPMessage(NXCPMessage *msg)
       MessageField *entry, *tmp;
       HASH_ITER(hh, msg->m_fields, entry, tmp)
       {
-         MessageField *f = (MessageField *)nx_memdup(entry, entry->size);
+         MessageField *f = m_pool.copyMemoryBlock(entry, entry->size);
          HASH_ADD_INT(m_fields, id, f);
       }
    }
@@ -146,9 +153,9 @@ NXCPMessage::NXCPMessage(NXCPMessage *msg)
  *
  * @return message object or NULL on failure
  */
-NXCPMessage *NXCPMessage::deserialize(const NXCP_MESSAGE *rawMag, int version)
+NXCPMessage *NXCPMessage::deserialize(const NXCP_MESSAGE *rawMsg, int version)
 {
-   NXCPMessage *msg = new NXCPMessage(rawMag, version);
+   NXCPMessage *msg = new NXCPMessage(rawMsg, version);
    if (msg->isValid())
       return msg;
    delete msg;
@@ -187,7 +194,7 @@ NXCPMessage::NXCPMessage(const NXCP_MESSAGE *msg, int version)
             return;
          }
 
-         m_data = (BYTE *)malloc(m_dataSize);
+         m_data = m_pool.allocateArray<BYTE>(m_dataSize);
          stream.next_out = m_data;
          stream.avail_out = (UINT32)m_dataSize;
 
@@ -203,7 +210,7 @@ NXCPMessage::NXCPMessage(const NXCP_MESSAGE *msg, int version)
       }
       else
       {
-         m_data = (BYTE *)nx_memdup(msg->fields, m_dataSize);
+         m_data = m_pool.copyMemoryBlock(reinterpret_cast<const BYTE*>(msg->fields), m_dataSize);
       }
    }
    else
@@ -231,7 +238,7 @@ NXCPMessage::NXCPMessage(const NXCP_MESSAGE *msg, int version)
             return;
          }
 
-         msgData = (BYTE *)malloc(msgDataSize);
+         msgData = m_pool.allocateArray<BYTE>(msgDataSize);
          stream.next_out = msgData;
          stream.avail_out = (UINT32)msgDataSize;
 
@@ -279,7 +286,7 @@ NXCPMessage::NXCPMessage(const NXCP_MESSAGE *msg, int version)
          }
 
          // Create new entry
-         MessageField *entry = CreateMessageField(fieldSize);
+         MessageField *entry = CreateMessageField(m_pool, fieldSize);
          entry->id = ntohl(field->fieldId);
          memcpy(&entry->data, field, fieldSize);
 
@@ -324,9 +331,6 @@ NXCPMessage::NXCPMessage(const NXCP_MESSAGE *msg, int version)
          else
             pos += fieldSize;
       }
-
-      if (msgData != (BYTE *)msg + NXCP_HEADER_SIZE)
-         free(msgData);
    }
 }
 
@@ -335,8 +339,6 @@ NXCPMessage::NXCPMessage(const NXCP_MESSAGE *msg, int version)
  */
 NXCPMessage::~NXCPMessage()
 {
-   deleteAllFields();
-   free(m_data);
 }
 
 /**
@@ -363,7 +365,7 @@ void *NXCPMessage::set(UINT32 fieldId, BYTE type, const void *value, bool isSign
 #if defined(UNICODE_UCS2) && defined(UNICODE)
 #define __buffer value
 #else
-   UCS2CHAR *__buffer;
+   UCS2CHAR *__buffer, localBuffer[256];
 #endif
 
    // Create entry
@@ -371,19 +373,19 @@ void *NXCPMessage::set(UINT32 fieldId, BYTE type, const void *value, bool isSign
    switch(type)
    {
       case NXCP_DT_INT32:
-         entry = CreateMessageField(12);
+         entry = CreateMessageField(m_pool, 12);
          entry->data.df_int32 = *((const UINT32 *)value);
          break;
       case NXCP_DT_INT16:
-         entry = CreateMessageField(8);
+         entry = CreateMessageField(m_pool, 8);
          entry->data.df_int16 = *((const WORD *)value);
          break;
       case NXCP_DT_INT64:
-         entry = CreateMessageField(16);
+         entry = CreateMessageField(m_pool, 16);
          entry->data.df_int64 = *((const UINT64 *)value);
          break;
       case NXCP_DT_FLOAT:
-         entry = CreateMessageField(16);
+         entry = CreateMessageField(m_pool, 16);
          entry->data.df_real = *((const double *)value);
          break;
       case NXCP_DT_STRING:
@@ -392,30 +394,28 @@ void *NXCPMessage::set(UINT32 fieldId, BYTE type, const void *value, bool isSign
 			if ((size > 0) && (length > size))
 				length = size;
 #ifndef UNICODE_UCS2 /* assume UNICODE_UCS4 */
-         __buffer = (UCS2CHAR *)malloc(length * 2 + 2);
-         ucs4_to_ucs2((WCHAR *)value, length, __buffer, length + 1);
+         __buffer = (length < 256) ? localBuffer : m_pool.allocateArray<UCS2CHAR>(length + 1);
+         ucs4_to_ucs2(static_cast<const WCHAR*>(value), length, __buffer, length + 1);
 #endif         
 #else		/* not UNICODE */
-			__buffer = UCS2StringFromMBString((const char *)value);
+         __buffer = (length < 256) ? localBuffer : m_pool.allocateArray<UCS2CHAR>(length + 1);
+         mb_to_ucs2(static_cast<const char*>(value), length, __buffer, length + 1);
 			length = (UINT32)ucs2_strlen(__buffer);
 			if ((size > 0) && (length > size))
 				length = size;
 #endif
-         entry = CreateMessageField(12 + length * 2);
+         entry = CreateMessageField(m_pool, 12 + length * 2);
          entry->data.df_string.length = (UINT32)(length * 2);
          memcpy(entry->data.df_string.value, __buffer, entry->data.df_string.length);
-#if !defined(UNICODE_UCS2) || !defined(UNICODE)
-         free(__buffer);
-#endif
          break;
       case NXCP_DT_BINARY:
-         entry = CreateMessageField(12 + size);
+         entry = CreateMessageField(m_pool, 12 + size);
          entry->data.df_binary.length = (UINT32)size;
          if ((entry->data.df_binary.length > 0) && (value != NULL))
             memcpy(entry->data.df_binary.value, value, entry->data.df_binary.length);
          break;
       case NXCP_DT_INETADDR:
-         entry = CreateMessageField(32);
+         entry = CreateMessageField(m_pool, 32);
          entry->data.df_inetaddr.family =
                   (((InetAddress *)value)->getFamily() == AF_INET) ? NXCP_AF_INET :
                            ((((InetAddress *)value)->getFamily() == AF_INET6) ? NXCP_AF_INET6 : NXCP_AF_UNSPEC);
@@ -444,7 +444,6 @@ void *NXCPMessage::set(UINT32 fieldId, BYTE type, const void *value, bool isSign
    if (curr != NULL)
    {
       HASH_DEL(m_fields, curr);
-      free(curr);
    }
    HASH_ADD_INT(m_fields, id, entry);
 
@@ -639,7 +638,7 @@ MacAddress NXCPMessage::getFieldAsMacAddress(UINT32 fieldId) const
  * be placed to buffer and pointer to buffer will be returned.
  * Note: bufferSize is buffer size in characters, not bytes!
  */
-TCHAR *NXCPMessage::getFieldAsString(UINT32 fieldId, TCHAR *buffer, size_t bufferSize) const
+TCHAR *NXCPMessage::getFieldAsString(UINT32 fieldId, MemoryPool *pool, TCHAR *buffer, size_t bufferSize) const
 {
    if ((buffer != NULL) && (bufferSize == 0))
       return NULL;   // non-sense combination
@@ -651,12 +650,13 @@ TCHAR *NXCPMessage::getFieldAsString(UINT32 fieldId, TCHAR *buffer, size_t buffe
       if (buffer == NULL)
       {
 #if defined(UNICODE) && defined(UNICODE_UCS4)
-         str = (TCHAR *)malloc(*((UINT32 *)value) * 2 + 4);
+         size_t bytes = *((UINT32 *)value) * 2 + 4;
 #elif defined(UNICODE) && defined(UNICODE_UCS2)
-         str = (TCHAR *)malloc(*((UINT32 *)value) + 2);
+         size_t bytes = *((UINT32 *)value) + 2;
 #else
-         str = (TCHAR *)malloc(*((UINT32 *)value) / 2 + 1);
+         size_t bytes = *((UINT32 *)value) / 2 + 1;
 #endif
+         str = static_cast<TCHAR*>((pool != NULL) ? pool->allocate(bytes) : MemAlloc(bytes));
       }
       else
       {
@@ -887,7 +887,7 @@ NXCP_MESSAGE *NXCPMessage::serialize(bool allowCompression) const
    }
 
    // Create message
-   NXCP_MESSAGE *msg = (NXCP_MESSAGE *)malloc(size);
+   NXCP_MESSAGE *msg = static_cast<NXCP_MESSAGE*>(MemAlloc(size));
    memset(msg, 0, size);
    msg->code = htons(m_code);
    msg->flags = htons(m_flags);
@@ -1002,24 +1002,32 @@ NXCP_MESSAGE *NXCPMessage::serialize(bool allowCompression) const
  */
 void NXCPMessage::deleteAllFields()
 {
-   MessageField *entry, *tmp;
-   HASH_ITER(hh, m_fields, entry, tmp)
-   {
-      HASH_DEL(m_fields, entry);
-      free(entry);
-   }
+   m_fields = NULL;
+   m_data = NULL;
+   m_dataSize = 0;
+   m_pool.clear();
 }
 
 #ifdef UNICODE
 
 /**
- * set variable from multibyte string
+ * Set field from multibyte string
  */
 void NXCPMessage::setFieldFromMBString(UINT32 fieldId, const char *value)
 {
-	WCHAR *wcValue = WideStringFromMBString(value);
+   size_t l = strlen(value) + 1;
+#if HAVE_ALLOCA
+   WCHAR *wcValue = static_cast<WCHAR*>(alloca(l));
+#else
+   WCHAR localBuffer[256];
+	WCHAR *wcValue = (l <= 256) ? localBuffer : static_cast<WCHAR*>(MemAlloc(l));
+#endif
+   MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, value, -1, wcValue, static_cast<int>(l));
 	set(fieldId, NXCP_DT_STRING, wcValue);
-	free(wcValue);
+#if !HAVE_ALLOCA
+	if (wcValue != localBuffer)
+	   MemFree(wcValue);
+#endif
 }
 
 #endif

@@ -21,6 +21,11 @@
 #include "linux_subagent.h"
 
 /**
+ * Maximum possible length of process name
+ */
+#define MAX_PROCESS_NAME_LEN  32
+
+/**
  * File descriptor
  */
 class FileDescriptor
@@ -62,7 +67,7 @@ class Process
 {
 public:
 	UINT32 pid;
-	char *name;
+	char name[MAX_PROCESS_NAME_LEN];
 	UINT32 parent;          // PID of parent process
 	UINT32 group;           // Group ID
 	char state;             // Process state
@@ -78,7 +83,7 @@ public:
    Process(UINT32 _pid, const char *_name)
    {
       pid = _pid;
-      name = strdup(_name);
+      strlcpy(name, _name, MAX_PROCESS_NAME_LEN);
       parent = 0;
       group = 0;
       state = '?';
@@ -94,7 +99,6 @@ public:
    
    ~Process()
    {
-      free(name);
       delete fd;
    }
 };
@@ -160,7 +164,7 @@ static ObjectArray<FileDescriptor> *ReadProcessHandles(UINT32 pid)
  *    procUser - If not NULL, only processes run by this user will be counted.
  * Return value: number of matched processes or -1 in case of error.
  */
-static int ProcRead(ObjectArray<Process> *plist, const char *procNameFilter, const char *cmdLineFilter, const char *procUser)
+static int ProcRead(ObjectArray<Process> *plist, const char *procNameFilter, const char *cmdLineFilter, const char *procUser, bool readHandles)
 {
 	AgentWriteDebugLog(5, _T("ProcRead(%p, \"%hs\",\"%hs\",\"%hs\")"), plist, CHECK_NULL_A(procNameFilter), CHECK_NULL_A(cmdLineFilter), CHECK_NULL_A(procUser));
 
@@ -209,29 +213,33 @@ static int ProcRead(ObjectArray<Process> *plist, const char *procNameFilter, con
       char *pProcStat = NULL;
       unsigned long nPid = 0;
 
-      char fileName[MAX_PATH], procNameBuffer[1024];
+      char fileName[MAX_PATH], procNameBuffer[MAX_PROCESS_NAME_LEN + 1];
 
       snprintf(fileName, MAX_PATH, "/proc/%s/comm", nameList[count]->d_name);
-      FILE *hFile = fopen(fileName, "r");
-      if (hFile != NULL)
+      int hFile = _open(fileName, O_RDONLY);
+      if (hFile != -1)
       {
-         if (fgets(procNameBuffer, sizeof(procNameBuffer), hFile) != NULL)
+         ssize_t bytes = _read(hFile, procNameBuffer, sizeof(procNameBuffer) - 1);
+         if (bytes > 0)
          {
+            procNameBuffer[bytes] = 0;
             char *p = strrchr(procNameBuffer, '\n');
             if (p != NULL)
                *p = 0;
             pProcName = procNameBuffer;
          }
-         fclose(hFile);
+         _close(hFile);
       }
 
       snprintf(fileName, MAX_PATH, "/proc/%s/stat", nameList[count]->d_name);
-      hFile = fopen(fileName, "r");
-      if (hFile != NULL)
+      hFile = _open(fileName, O_RDONLY);
+      if (hFile != -1)
       {
-         char szProcStat[1024] = {0}; 
-         if (fgets(szProcStat, sizeof(szProcStat), hFile) != NULL)
+         char szProcStat[1024];
+         ssize_t bytes = _read(hFile, szProcStat, sizeof(szProcStat) - 1);
+         if (bytes > 0)
          {
+            szProcStat[bytes] = 0;
             if (sscanf(szProcStat, "%lu ", &nPid) == 1)
             {
                char *procNamePos = strchr(szProcStat, '(');
@@ -268,8 +276,8 @@ static int ProcRead(ObjectArray<Process> *plist, const char *procNameFilter, con
                   }
                } // pProcName != NULL
             }
-         } // fgets   
-         fclose(hFile);
+         } // _read
+         _close(hFile);
       } // hFile
 
       if (procUid != -1)
@@ -285,14 +293,14 @@ static int ProcRead(ObjectArray<Process> *plist, const char *procNameFilter, con
       if ((cmdLineFilter != NULL) && (*cmdLineFilter != 0))
       {
          snprintf(fileName, MAX_PATH, "/proc/%s/cmdline", nameList[count]->d_name);
-         hFile = fopen(fileName, "r");
-         if (hFile != NULL)
+         hFile = _open(fileName, O_RDONLY);
+         if (hFile != -1)
          {
             size_t len = 0, pos = 0;
-            char *processCmdLine = (char *)malloc(1024);
+            char *processCmdLine = (char *)malloc(4096);
             while(true)
             {
-               int bytes = fread(&processCmdLine[pos], 1, 1024, hFile);
+               ssize_t bytes = _read(hFile, &processCmdLine[pos], 4096);
                if (bytes < 0)
                   bytes = 0;
                len += bytes;
@@ -302,7 +310,7 @@ static int ProcRead(ObjectArray<Process> *plist, const char *procNameFilter, con
                   break;
                }
                pos += bytes;
-               processCmdLine = (char *)realloc(processCmdLine, pos + 1024);
+               processCmdLine = (char *)realloc(processCmdLine, pos + 4096);
             }
             if (len > 0)
             {
@@ -323,9 +331,9 @@ static int ProcRead(ObjectArray<Process> *plist, const char *procNameFilter, con
             {
                cmdFound = RegexpMatchA("", cmdLineFilter, TRUE);
             }
-            fclose(hFile);
+            _close(hFile);
             free(processCmdLine);
-         } // hFile != NULL
+         } // hFile != -1
          else
          {
             cmdFound = RegexpMatchA("", cmdLineFilter, TRUE);
@@ -351,7 +359,7 @@ static int ProcRead(ObjectArray<Process> *plist, const char *procNameFilter, con
                   AgentWriteDebugLog(2, _T("Error parsing /proc/%d/stat"), nPid);
                }
             }
-            p->fd = ReadProcessHandles(nPid);
+            p->fd = readHandles ? ReadProcessHandles(nPid) : NULL;
             plist->add(p);
          }
          found++;
@@ -382,7 +390,7 @@ LONG H_ProcessCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abs
 		}
 	}
 
-	nCount = ProcRead(NULL, (*pArg != _T('T')) ? procNameFilter : NULL, (*pArg == _T('E')) ? cmdLineFilter : NULL, (*pArg == _T('E')) ? userFilter : NULL);
+	nCount = ProcRead(NULL, (*pArg != _T('T')) ? procNameFilter : NULL, (*pArg == _T('E')) ? cmdLineFilter : NULL, (*pArg == _T('E')) ? userFilter : NULL, false);
 
 	if (nCount == -2)
    {
@@ -405,7 +413,7 @@ LONG H_ThreadCount(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractC
 	int i, sum, count, ret = SYSINFO_RC_ERROR;
 	ObjectArray<Process> procList(128, 128, true);
 
-	count = ProcRead(&procList, NULL, NULL, NULL);
+	count = ProcRead(&procList, NULL, NULL, NULL, false);
 	if (count >= 0)
 	{
 		for(i = 0, sum = 0; i < procList.size(); i++)
@@ -425,7 +433,7 @@ LONG H_HandleCount(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractC
 	int i, sum, count, ret = SYSINFO_RC_ERROR;
 	ObjectArray<Process> procList(128, 128, true);
 
-	count = ProcRead(&procList, NULL, NULL, NULL);
+	count = ProcRead(&procList, NULL, NULL, NULL, true);
 	if (count >= 0)
 	{
 		for(i = 0, sum = 0; i < procList.size(); i++)
@@ -447,20 +455,24 @@ static INT64 CountVMRegions(UINT32 pid)
 {
    char fname[128];
    sprintf(fname, "/proc/%u/maps", pid);
-   FILE *f = fopen(fname, "r");
-   if (f == NULL)
+   int f = _open(fname, O_RDONLY);
+   if (f == -1)
       return 0;
 
    INT64 count = 0;
-   char line[1024];
-   while(!feof(f))
+   char buffer[16384];
+   while(true)
    {
-      if (fgets(line, 1024, f) == NULL)
+      ssize_t bytes = _read(f, buffer, 16384);
+      if (bytes <= 0)
          break;
-      count++;
+      char *p = buffer;
+      for(ssize_t i = 0; i < bytes; i++)
+         if (*p++ == '\n')
+            count++;
    }
 
-   fclose(f);
+   _close(f);
    return count;
 }
 
@@ -509,7 +521,8 @@ LONG H_ProcessDetails(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abstra
 	StrStripA(cmdLineFilter);
 
 	ObjectArray<Process> procList(128, 128, true);
-	count = ProcRead(&procList, procNameFilter, (cmdLineFilter[0] != 0) ? cmdLineFilter : NULL, (userFilter[0] != 0) ? userFilter : NULL);
+	count = ProcRead(&procList, procNameFilter, (cmdLineFilter[0] != 0) ? cmdLineFilter : NULL,
+	         (userFilter[0] != 0) ? userFilter : NULL, CAST_FROM_POINTER(arg, int) == PROCINFO_HANDLES);
 	AgentWriteDebugLog(5, _T("H_ProcessDetails(\"%hs\"): ProcRead() returns %d"), param, count);
 	if (count == -1)
 		return SYSINFO_RC_ERROR;
@@ -585,7 +598,7 @@ LONG H_ProcessList(const TCHAR *pszParam, const TCHAR *pArg, StringList *value, 
    int nRet = SYSINFO_RC_ERROR;
 
 	ObjectArray<Process> procList(128, 128, true);
-   int nCount = ProcRead(&procList, NULL, NULL, NULL);
+   int nCount = ProcRead(&procList, NULL, NULL, NULL, false);
    if (nCount >= 0)
    {    
       nRet = SYSINFO_RC_SUCCESS;
@@ -620,7 +633,7 @@ LONG H_ProcessTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCo
    int rc = SYSINFO_RC_ERROR;
 
 	ObjectArray<Process> procList(128, 128, true);
-   int nCount = ProcRead(&procList, NULL, NULL, NULL);
+   int nCount = ProcRead(&procList, NULL, NULL, NULL, true);
    if (nCount >= 0)
    {    
       rc = SYSINFO_RC_SUCCESS;
@@ -662,7 +675,7 @@ LONG H_OpenFilesTable(const TCHAR *cmd, const TCHAR *arg, Table *value, Abstract
    int rc = SYSINFO_RC_ERROR;
 
 	ObjectArray<Process> procList(128, 128, true);
-   int nCount = ProcRead(&procList, NULL, NULL, NULL);
+   int nCount = ProcRead(&procList, NULL, NULL, NULL, true);
    if (nCount >= 0)
    {    
       rc = SYSINFO_RC_SUCCESS;

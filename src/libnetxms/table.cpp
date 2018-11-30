@@ -891,8 +891,8 @@ int Table::findRowByInstance(const TCHAR *instance)
  */
 TableColumnDefinition::TableColumnDefinition(const TCHAR *name, const TCHAR *displayName, INT32 dataType, bool isInstance)
 {
-   m_name = _tcsdup(CHECK_NULL(name));
-   m_displayName = (displayName != NULL) ? _tcsdup(displayName) : _tcsdup(m_name);
+   _tcslcpy(m_name, CHECK_NULL(name), MAX_COLUMN_NAME);
+   _tcslcpy(m_displayName, (displayName != NULL) ? displayName : m_name, MAX_DB_STRING);
    m_dataType = dataType;
    m_instanceColumn = isInstance;
 }
@@ -902,8 +902,8 @@ TableColumnDefinition::TableColumnDefinition(const TCHAR *name, const TCHAR *dis
  */
 TableColumnDefinition::TableColumnDefinition(const TableColumnDefinition *src)
 {
-   m_name = _tcsdup(src->m_name);
-   m_displayName = _tcsdup(src->m_displayName);
+   _tcscpy(m_name, src->m_name);
+   _tcscpy(m_displayName, src->m_displayName);
    m_dataType = src->m_dataType;
    m_instanceColumn = src->m_instanceColumn;
 }
@@ -913,23 +913,12 @@ TableColumnDefinition::TableColumnDefinition(const TableColumnDefinition *src)
  */
 TableColumnDefinition::TableColumnDefinition(const NXCPMessage *msg, UINT32 baseId)
 {
-   m_name = msg->getFieldAsString(baseId);
-   if (m_name == NULL)
-      m_name = _tcsdup(_T("(null)"));
+   msg->getFieldAsString(baseId, m_name, MAX_COLUMN_NAME);
    m_dataType = msg->getFieldAsInt32(baseId + 1);
-   m_displayName = msg->getFieldAsString(baseId + 2);
-   if (m_displayName == NULL)
-      m_displayName = _tcsdup(m_name);
+   msg->getFieldAsString(baseId + 2, m_displayName, MAX_DB_STRING);
+   if (m_displayName[0] == 0)
+      _tcscpy(m_displayName, m_name);
    m_instanceColumn = msg->getFieldAsUInt16(baseId + 3) ? true : false;
-}
-
-/**
- * Destructor for table column definition
- */
-TableColumnDefinition::~TableColumnDefinition()
-{
-   free(m_name);
-   free(m_displayName);
 }
 
 /**
@@ -941,4 +930,12 @@ void TableColumnDefinition::fillMessage(NXCPMessage *msg, UINT32 baseId) const
    msg->setField(baseId + 1, (UINT32)m_dataType);
    msg->setField(baseId + 2, m_displayName);
    msg->setField(baseId + 3, (WORD)(m_instanceColumn ? 1 : 0));
+}
+
+/**
+ * Set display name for column
+ */
+void TableColumnDefinition::setDisplayName(const TCHAR *name)
+{
+   _tcslcpy(m_displayName, CHECK_NULL_EX(name), MAX_DB_STRING);
 }

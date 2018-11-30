@@ -65,6 +65,7 @@ private:
    int m_version;          // Protocol version
    BYTE *m_data;           // binary data
    size_t m_dataSize;      // binary data size
+   MemoryPool m_pool;
 
    NXCPMessage(const NXCP_MESSAGE *msg, int version);
 
@@ -73,13 +74,15 @@ private:
    NXCP_MESSAGE_FIELD *find(UINT32 fieldId) const;
    bool isValid() { return m_version != -1; }
 
+   TCHAR *getFieldAsString(UINT32 fieldId, MemoryPool *pool, TCHAR *buffer, size_t bufferSize) const;
+
 public:
    NXCPMessage(int version = NXCP_VERSION);
    NXCPMessage(UINT16 code, UINT32 id, int version = NXCP_VERSION);
    NXCPMessage(NXCPMessage *msg);
    ~NXCPMessage();
 
-   static NXCPMessage *deserialize(const NXCP_MESSAGE *rawMag, int version = NXCP_VERSION);
+   static NXCPMessage *deserialize(const NXCP_MESSAGE *rawMsg, int version = NXCP_VERSION);
    NXCP_MESSAGE *serialize(bool allowCompression = false) const;
 
    UINT16 getCode() const { return m_code; }
@@ -141,7 +144,8 @@ public:
    size_t getFieldAsInt32Array(UINT32 fieldId, UINT32 numElements, UINT32 *buffer) const;
    size_t getFieldAsInt32Array(UINT32 fieldId, IntegerArray<UINT32> *data) const;
    const BYTE *getBinaryFieldPtr(UINT32 fieldId, size_t *size) const;
-   TCHAR *getFieldAsString(UINT32 fieldId, TCHAR *buffer = NULL, size_t bufferSize = 0) const;
+   TCHAR *getFieldAsString(UINT32 fieldId, MemoryPool *pool) const { return getFieldAsString(fieldId, pool, NULL, 0); }
+   TCHAR *getFieldAsString(UINT32 fieldId, TCHAR *buffer = NULL, size_t bufferSize = 0) const { return getFieldAsString(fieldId, NULL, buffer, bufferSize); }
 	char *getFieldAsMBString(UINT32 fieldId, char *buffer = NULL, size_t bufferSize = 0) const;
 	char *getFieldAsUtf8String(UINT32 fieldId, char *buffer = NULL, size_t bufferSize = 0) const;
    size_t getFieldAsBinary(UINT32 fieldId, BYTE *buffer, size_t bufferSize) const;

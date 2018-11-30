@@ -24,7 +24,17 @@
 #include "libnetxms.h"
 #include <nxcpapi.h>
 
-#define ALLOCATION_STEP		16
+#define INITIAL_CAPACITY   256
+
+#define CHECK_ALLOCATION do { \
+   if (m_allocated == m_count) { \
+      size_t step = std::min(4096, m_allocated); \
+      m_allocated += step; \
+      TCHAR **values = m_pool.allocateArray<TCHAR*>(m_allocated); \
+      memcpy(values, m_values, (m_allocated - step) * sizeof(TCHAR*)); \
+      m_values = values; \
+   } } while(0)
+
 
 /**
  * Constructor: create empty string list
@@ -32,8 +42,8 @@
 StringList::StringList()
 {
 	m_count = 0;
-	m_allocated = ALLOCATION_STEP;
-	m_values = MemAllocArray<TCHAR*>(m_allocated);
+	m_allocated = INITIAL_CAPACITY;
+	m_values = m_pool.allocateArray<TCHAR*>(m_allocated);
 }
 
 /**
@@ -43,7 +53,7 @@ StringList::StringList(const StringList *src)
 {
 	m_count = 0;
    m_allocated = src->m_allocated;
-   m_values = MemAllocArray<TCHAR*>(m_allocated);
+   m_values = m_pool.allocateArray<TCHAR*>(m_allocated);
    addAll(src);
 }
 
@@ -54,7 +64,7 @@ StringList::StringList(const StringList &src)
 {
    m_count = 0;
    m_allocated = src.m_allocated;
-   m_values = MemAllocArray<TCHAR*>(m_allocated);
+   m_values = m_pool.allocateArray<TCHAR*>(m_allocated);
    addAll(&src);
 }
 
@@ -64,8 +74,8 @@ StringList::StringList(const StringList &src)
 StringList::StringList(const TCHAR *src, const TCHAR *separator)
 {
 	m_count = 0;
-	m_allocated = ALLOCATION_STEP;
-   m_values = MemAllocArray<TCHAR*>(m_allocated);
+	m_allocated = INITIAL_CAPACITY;
+   m_values = m_pool.allocateArray<TCHAR*>(m_allocated);
    splitAndAdd(src, separator);
 }
 
@@ -76,10 +86,10 @@ StringList::StringList(const NXCPMessage *msg, UINT32 baseId, UINT32 countId)
 {
    m_count = msg->getFieldAsInt32(countId);
    m_allocated = m_count;
-   m_values = MemAllocArray<TCHAR*>(m_allocated);
+   m_values = m_pool.allocateArray<TCHAR*>(m_allocated);
    UINT32 fieldId = baseId;
    for(int i = 0; i < m_count; i++)
-      m_values[i] = msg->getFieldAsString(fieldId++);
+      m_values[i] = msg->getFieldAsString(fieldId++, &m_pool);
 }
 
 /**
@@ -87,9 +97,6 @@ StringList::StringList(const NXCPMessage *msg, UINT32 baseId, UINT32 countId)
  */
 StringList::~StringList()
 {
-	for(int i = 0; i < m_count; i++)
-		MemFree(m_values[i]);
-	MemFree(m_values);
 }
 
 /**
@@ -97,10 +104,10 @@ StringList::~StringList()
  */
 void StringList::clear()
 {
-	for(int i = 0; i < m_count; i++)
-		MemFree(m_values[i]);
-	m_count = 0;
-	memset(m_values, 0, sizeof(TCHAR *) * m_allocated);
+	m_pool.clear();
+   m_count = 0;
+   m_allocated = INITIAL_CAPACITY;
+   m_values = m_pool.allocateArray<TCHAR*>(m_allocated);
 }
 
 /**
@@ -108,12 +115,8 @@ void StringList::clear()
  */
 void StringList::addPreallocated(TCHAR *value)
 {
-	if (m_allocated == m_count)
-	{
-		m_allocated += ALLOCATION_STEP;
-		m_values = MemReallocArray(m_values, m_allocated);
-	}
-	m_values[m_count++] = value;
+   add(value);
+   MemFree(value);
 }
 
 /**
@@ -121,8 +124,22 @@ void StringList::addPreallocated(TCHAR *value)
  */
 void StringList::add(const TCHAR *value)
 {
-   addPreallocated(MemCopyString(value));
+   CHECK_ALLOCATION;
+   m_values[m_count++] = m_pool.copyString(value);
 }
+
+#ifdef UNICODE
+
+void StringList::addMBString(const char *value)
+{
+   CHECK_ALLOCATION;
+   size_t l = strlen(value);
+   WCHAR *s = m_pool.allocateArray<WCHAR>(l + 1);
+   MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, value, -1, s, static_cast<int>(l + 1));
+   m_values[m_count++] = s;
+}
+
+#endif
 
 /**
  * Add signed 32-bit integer as string
@@ -182,8 +199,7 @@ void StringList::replace(int index, const TCHAR *value)
 	if ((index < 0) || (index >= m_count))
 		return;
 
-	MemFree(m_values[index]);
-	m_values[index] = MemCopyString(value);
+	m_values[index] = m_pool.copyString(value);
 }
 
 /**
@@ -196,13 +212,15 @@ void StringList::addOrReplace(int index, const TCHAR *value)
 
    if (index < m_count)
    {
-	   MemFree(m_values[index]);
-      m_values[index] = MemCopyString(value);
+      m_values[index] = m_pool.copyString(value);
    }
    else
    {
       for(int i = m_count; i < index; i++)
-         addPreallocated(NULL);
+      {
+         CHECK_ALLOCATION;
+         m_values[m_count++] = NULL;
+      }
       add(value);
    }
 }
@@ -212,20 +230,8 @@ void StringList::addOrReplace(int index, const TCHAR *value)
  */
 void StringList::addOrReplacePreallocated(int index, TCHAR *value)
 {
-   if (index < 0)
-      return;
-
-   if (index < m_count)
-   {
-	   MemFree(m_values[index]);
-      m_values[index] = value;
-   }
-   else
-   {
-      for(int i = m_count; i < index; i++)
-         addPreallocated(NULL);
-      addPreallocated(value);
-   }
+   addOrReplace(index, value);
+   MemFree(value);
 }
 
 /**
@@ -262,7 +268,6 @@ void StringList::remove(int index)
 	if ((index < 0) || (index >= m_count))
 		return;
 
-	MemFree(m_values[index]);
 	m_count--;
 	memmove(&m_values[index], &m_values[index + 1], (m_count - index) * sizeof(TCHAR *));
 }
@@ -300,10 +305,11 @@ TCHAR *StringList::join(const TCHAR *separator)
    if (m_count == 0)
       return _tcsdup(_T(""));
 
-   int i, len = 0;
+   int i;
+   size_t len = 0;
    for(i = 0; i < m_count; i++)
-      len += (int)_tcslen(m_values[i]);
-   TCHAR *result = (TCHAR *)malloc((len + _tcslen(separator) * (m_count - 1) + 1) * sizeof(TCHAR));
+      len += _tcslen(m_values[i]);
+   TCHAR *result = (TCHAR *)MemAlloc((len + _tcslen(separator) * (m_count - 1) + 1) * sizeof(TCHAR));
    _tcscpy(result, m_values[0]);
    for(i = 1; i < m_count; i++)
    {
@@ -333,10 +339,11 @@ void StringList::splitAndAdd(const TCHAR *src, const TCHAR *separator)
       if (next != NULL)
       {
          int len = (int)(next - curr);
-         TCHAR *value = (TCHAR *)malloc((len + 1) * sizeof(TCHAR));
+         TCHAR *value = m_pool.allocateArray<TCHAR>(len + 1);
          memcpy(value, curr, len * sizeof(TCHAR));
          value[len] = 0;
-         addPreallocated(value);
+         CHECK_ALLOCATION;
+         m_values[m_count++] = value;
          next += slen;
       }
       else

@@ -612,6 +612,123 @@ public:
 };
 
 /**
+ * Simple allocate only heap
+ */
+class MemoryPool
+{
+private:
+   void *m_currentRegion;
+   size_t m_headerSize;
+   size_t m_regionSize;
+   size_t m_allocated;
+
+public:
+   /**
+    * Create new memory pool
+    */
+   MemoryPool(size_t regionSize = 32768)
+   {
+      m_headerSize = sizeof(void*);
+      if (m_headerSize % 16 != 0)
+         m_headerSize += 16 - m_headerSize % 16;
+      m_regionSize = regionSize;
+      m_currentRegion = MemAlloc(m_regionSize);
+      *((void **)m_currentRegion) = NULL; // pointer to previous region
+      m_allocated = m_headerSize;
+   }
+
+   /**
+    * Destroy memory pool (object destructors will not be called
+    */
+   ~MemoryPool()
+   {
+      void *r = m_currentRegion;
+      while(r != NULL)
+      {
+         void *n = *((void **)r);
+         MemFree(r);
+         r = n;
+      }
+   }
+
+   /**
+    * Allocate memory block
+    */
+   void *allocate(size_t size)
+   {
+      size_t allocationSize = ((size % 8) == 0) ? size : (size + 8 - size % 8);
+      void *p;
+      if (m_allocated + allocationSize <= m_regionSize)
+      {
+         p = (char*)m_currentRegion + m_allocated;
+         m_allocated += allocationSize;
+      }
+      else
+      {
+         void *region = MemAlloc(std::max(m_regionSize, allocationSize + m_headerSize));
+         *((void **)region) = m_currentRegion;
+         m_currentRegion = region;
+         p = (char*)m_currentRegion + m_headerSize;
+         m_allocated = m_headerSize + allocationSize;
+      }
+      return p;
+   }
+
+   /**
+    * Allocate memory block for array of objects
+    */
+   template<typename T> T *allocateArray(size_t count)
+   {
+      return static_cast<T*>(allocate(sizeof(T) * count));
+   }
+
+   /**
+    * Create object in pool
+    */
+   template<typename T> T *create()
+   {
+      void *p = allocate(sizeof(T));
+      return new(p) T();
+   }
+
+   /**
+    * Create copy of given C string within pool
+    */
+   TCHAR *copyString(const TCHAR *s)
+   {
+      size_t l = _tcslen(s) + 1;
+      TCHAR *p = static_cast<TCHAR*>(allocate(l * sizeof(TCHAR)));
+      memcpy(p, s, l * sizeof(TCHAR));
+      return p;
+   }
+
+   /**
+    * Create copy of given memory block within pool
+    */
+   template<typename T> T *copyMemoryBlock(const T *b, size_t s)
+   {
+      void *p = allocate(s);
+      memcpy(p, b, s);
+      return static_cast<T*>(p);
+   }
+
+   /**
+    * Drop all allocated memory except one region
+    */
+   void clear()
+   {
+      void *r = *((void **)m_currentRegion);
+      while(r != NULL)
+      {
+         void *n = *((void **)r);
+         MemFree(r);
+         r = n;
+      }
+      m_allocated = m_headerSize;
+   }
+};
+
+/**
  * Class that can store any object with connected to it mutex
  */
 template <class T> class ObjectLock
@@ -1118,6 +1235,7 @@ public:
 class LIBNETXMS_EXPORTABLE StringList
 {
 private:
+   MemoryPool m_pool;
 	int m_count;
 	int m_allocated;
 	TCHAR **m_values;
@@ -1141,7 +1259,7 @@ public:
 	void addOrReplace(int index, const TCHAR *value);
 	void addOrReplacePreallocated(int index, TCHAR *value);
 #ifdef UNICODE
-   void addMBString(const char *value) { addPreallocated(WideStringFromMBString(value)); }
+   void addMBString(const char *value);
 #else
 	void addMBString(const char *value) { add(value); }
 #endif
@@ -1517,11 +1635,9 @@ class NXCPMessage;
  */
 class LIBNETXMS_EXPORTABLE TableColumnDefinition
 {
-   DISABLE_COPY_CTOR(TableColumnDefinition)
-
 private:
-   TCHAR *m_name;
-   TCHAR *m_displayName;
+   TCHAR m_name[MAX_COLUMN_NAME];
+   TCHAR m_displayName[MAX_DB_STRING];
    INT32 m_dataType;
    bool m_instanceColumn;
 
@@ -1529,7 +1645,6 @@ public:
    TableColumnDefinition(const TCHAR *name, const TCHAR *displayName, INT32 dataType, bool isInstance);
    TableColumnDefinition(const NXCPMessage *msg, UINT32 baseId);
    TableColumnDefinition(const TableColumnDefinition *src);
-   ~TableColumnDefinition();
 
    void fillMessage(NXCPMessage *msg, UINT32 baseId) const;
 
@@ -1540,7 +1655,7 @@ public:
 
    void setDataType(INT32 type) { m_dataType = type; }
    void setInstanceColumn(bool isInstance) { m_instanceColumn = isInstance; }
-   void setDisplayName(const TCHAR *name) { MemFree(m_displayName); m_displayName = _tcsdup(CHECK_NULL_EX(name)); }
+   void setDisplayName(const TCHAR *name);
 };
 
 /**
