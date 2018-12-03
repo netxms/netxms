@@ -32,6 +32,27 @@
 #define MAX_LOG_HISTORY_SIZE	128
 
 /**
+ * Debug tags
+ */
+struct DebugTagManager
+{
+   DebugTagTree* volatile active;
+   DebugTagTree* volatile secondary;
+
+   DebugTagManager()
+   {
+      active = new DebugTagTree();
+      secondary = new DebugTagTree();
+   }
+
+   ~DebugTagManager()
+   {
+      delete active;
+      delete secondary;
+   }
+};
+
+/**
  * Static data
  */
 #ifdef _WIN32
@@ -59,8 +80,7 @@ static String s_logBuffer;
 static THREAD s_writerThread = INVALID_THREAD_HANDLE;
 static CONDITION s_writerStopCondition = INVALID_CONDITION_HANDLE;
 static NxLogDebugWriter s_debugWriter = NULL;
-static DebugTagTree* volatile s_tagTreeActive = new DebugTagTree();
-static DebugTagTree* volatile s_tagTreeSecondary = new DebugTagTree();
+static volatile DebugTagManager s_tagTree;
 static Mutex s_mutexDebugTagTreeWrite;
 
 /**
@@ -68,9 +88,9 @@ static Mutex s_mutexDebugTagTreeWrite;
  */
 static inline void SwapAndWait()
 {
-   s_tagTreeSecondary = InterlockedExchangeObjectPointer(&s_tagTreeActive, s_tagTreeSecondary);
-   InterlockedIncrement(&s_tagTreeSecondary->m_writers);
-   while(s_tagTreeSecondary->m_readers > 0)
+   s_tagTree.secondary = InterlockedExchangeObjectPointer(&s_tagTree.active, s_tagTree.secondary);
+   InterlockedIncrement(&s_tagTree.secondary->m_writers);
+   while(s_tagTree.secondary->m_readers > 0)
       ThreadSleepMs(10);
 }
 
@@ -82,10 +102,10 @@ void LIBNETXMS_EXPORTABLE nxlog_set_debug_level(int level)
    if ((level >= 0) && (level <= 9))
    {
       s_mutexDebugTagTreeWrite.lock();
-      s_tagTreeSecondary->setRootDebugLevel(level); // Update the secondary tree
+      s_tagTree.secondary->setRootDebugLevel(level); // Update the secondary tree
       SwapAndWait();
-      s_tagTreeSecondary->setRootDebugLevel(level); // Update the previously active tree
-      InterlockedDecrement(&s_tagTreeSecondary->m_writers);
+      s_tagTree.secondary->setRootDebugLevel(level); // Update the previously active tree
+      InterlockedDecrement(&s_tagTree.secondary->m_writers);
       s_mutexDebugTagTreeWrite.unlock();
    }
 }
@@ -104,17 +124,17 @@ void LIBNETXMS_EXPORTABLE nxlog_set_debug_level_tag(const TCHAR *tag, int level)
       s_mutexDebugTagTreeWrite.lock();
       if ((level >= 0) && (level <= 9))
       {
-         s_tagTreeSecondary->add(tag, level);
+         s_tagTree.secondary->add(tag, level);
          SwapAndWait();
-         s_tagTreeSecondary->add(tag, level);
+         s_tagTree.secondary->add(tag, level);
       }
       else if (level < 0)
       {
-         s_tagTreeSecondary->remove(tag);
+         s_tagTree.secondary->remove(tag);
          SwapAndWait();
-         s_tagTreeSecondary->remove(tag);
+         s_tagTree.secondary->remove(tag);
       }
-      InterlockedDecrement(&s_tagTreeSecondary->m_writers);
+      InterlockedDecrement(&s_tagTree.secondary->m_writers);
       s_mutexDebugTagTreeWrite.unlock();
    }
 }
@@ -125,10 +145,10 @@ void LIBNETXMS_EXPORTABLE nxlog_set_debug_level_tag(const TCHAR *tag, int level)
 void LIBNETXMS_EXPORTABLE nxlog_reset_debug_level_tags()
 {
    s_mutexDebugTagTreeWrite.lock();
-   s_tagTreeSecondary->clear();
+   s_tagTree.secondary->clear();
    SwapAndWait();
-   s_tagTreeSecondary->clear();
-   InterlockedDecrement(&s_tagTreeSecondary->m_writers);
+   s_tagTree.secondary->clear();
+   InterlockedDecrement(&s_tagTree.secondary->m_writers);
    s_mutexDebugTagTreeWrite.unlock();
 }
 
@@ -140,7 +160,7 @@ inline DebugTagTree *AcquireTagTree()
    DebugTagTree *tagTree;
    while(true)
    {
-      tagTree = s_tagTreeActive;
+      tagTree = s_tagTree.active;
       InterlockedIncrement(&tagTree->m_readers);
       if (tagTree->m_writers == 0)
          break;

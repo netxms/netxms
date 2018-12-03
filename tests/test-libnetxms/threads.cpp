@@ -100,10 +100,15 @@ void TestConditionWrapper()
    THREAD t[200];
    s_count = 100 + (rand() % 100);
    for(int i = 0; i < s_count; i++)
+   {
       t[i] = ThreadCreateEx(ConditionWrapperWorkerThread, 0, i % 2 ? &c2 : &c1);
+      AssertNotEquals(t[i], INVALID_THREAD_HANDLE);
+   }
    c2.set();
    for(int i = 0; i < s_count; i++)
-      ThreadJoin(t[i]);
+   {
+      AssertTrue(ThreadJoin(t[i]));
+   }
    AssertEquals(s_condPass, s_count);
    EndTest();
 }
