@@ -19,20 +19,32 @@
 
 package org.netxms.websvc.handlers;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.RCC;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objecttools.ObjectTool;
+import org.netxms.client.objecttools.ObjectToolDetails;
+import org.netxms.websvc.ObjectToolExecutor;
+import org.netxms.websvc.ObjectToolOutputListener;
 import org.netxms.websvc.json.ResponseContainer;
+import org.restlet.data.MediaType;
+import org.restlet.ext.json.JsonRepresentation;
+import org.restlet.representation.Representation;
+import org.restlet.representation.StringRepresentation;
+import org.restlet.resource.Post;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class ObjectTools extends AbstractObjectHandler
 {
+   private Logger log = LoggerFactory.getLogger(ObjectTools.class);
+
    @Override protected Object getCollection(Map<String, String> query) throws Exception
    {
       NXCSession session = getSession();
@@ -46,6 +58,66 @@ public class ObjectTools extends AbstractObjectHandler
          if (t.isApplicableForNode((AbstractNode)object))
             result.add(t);
 
-      return new ResponseContainer("objectTools", objectTools);
+      return new ResponseContainer("objectTools", result);
+   }
+
+   @Post
+   public Representation onPost(Representation entity) throws Exception
+   {
+      if (entity == null || !attachToSession())
+      {
+         return new StringRepresentation(createErrorResponse(RCC.ACCESS_DENIED).toString(), MediaType.APPLICATION_JSON);
+      }
+
+      NXCSession session = getSession();
+      AbstractObject object = getObject();
+
+      if (object == null)
+         return new StringRepresentation(createErrorResponse(RCC.INVALID_OBJECT_ID).toString(), MediaType.APPLICATION_JSON);
+      JSONObject json = new JsonRepresentation(entity).getJsonObject();
+
+      if (json.has("toolList"))
+      {
+         JSONArray toolList = json.getJSONArray("toolList");
+
+         for(int i = 0; i < toolList.length(); i++)
+         {
+            Map<String, String> fields = new HashMap<String, String>();
+            JSONObject tool = toolList.getJSONObject(i);
+
+            int id = tool.getInt("id");
+            if (tool.optJSONArray("inputFields") != null)
+            {
+               JSONArray inputFields = tool.getJSONArray("inputFields");
+
+               for(int n = 0; n < inputFields.length(); n++)
+               {
+                  String field = inputFields.getString(n);
+                  String[] pair = field.split(";");
+                  if (pair != null && pair.length == 2)
+                  {
+                     fields.put(pair[1], pair[0]);
+                  }
+               }
+            }
+
+            ObjectToolDetails details = session.getObjectToolDetails(id);
+            if (((details.getFlags() & ObjectTool.GENERATES_OUTPUT) != 0))
+            {
+               ObjectToolOutputListener listener = new ObjectToolOutputListener();
+               UUID uuid = UUID.randomUUID();
+               ObjectToolOutputHandler.addListener(uuid, listener);
+               new ObjectToolExecutor(details, object.getObjectId(), fields, listener, session);
+
+               JSONObject response = new JSONObject();
+               response.put("UUID", uuid);
+               return new StringRepresentation(response.toString(), MediaType.APPLICATION_JSON);
+            }
+            else
+               return new StringRepresentation(createErrorResponse(RCC.SUCCESS).toString(), MediaType.APPLICATION_JSON);
+         }
+      }
+
+      return new StringRepresentation(createErrorResponse(RCC.INTERNAL_ERROR).toString(), MediaType.APPLICATION_JSON);
    }
 }

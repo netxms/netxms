@@ -18,6 +18,8 @@
  */
 package org.netxms.websvc.handlers;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
@@ -26,12 +28,16 @@ import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.DataCollectionTarget;
 import org.netxms.websvc.json.ResponseContainer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Handler for /objects/{object-id}/lastvalues
  */
 public class LastValues extends AbstractObjectHandler
 {
+   private Logger log = LoggerFactory.getLogger(LastValues.class);
+
    /* (non-Javadoc)
     * @see org.netxms.websvc.handlers.AbstractHandler#getCollection(java.util.Map)
     */
@@ -40,12 +46,23 @@ public class LastValues extends AbstractObjectHandler
    {
       NXCSession session = getSession();
       AbstractObject obj = getObject();
-      
-      if (!(obj instanceof DataCollectionTarget))
+      List<DciValue[]> values = new ArrayList<DciValue[]>();
+      if (!(obj instanceof DataCollectionTarget) || obj.getObjectClass() == AbstractObject.OBJECT_CONTAINER)
+      {
+         AbstractObject[] children = obj.getChildsAsArray();
+         for(AbstractObject child : children)
+         {
+            if (child instanceof DataCollectionTarget)
+               values.add(session.getLastValues(child.getObjectId()));
+         }
+      }
+      else if (obj instanceof DataCollectionTarget)
+      {
+         values.add(session.getLastValues(obj.getObjectId()));
+      }
+      else
          throw new NXCException(RCC.INVALID_OBJECT_ID);
       
-      DciValue[] values = session.getLastValues(obj.getObjectId());
-      
-      return new ResponseContainer("lastValues", values);
+      return new ResponseContainer("lastValues", values.toArray());
    }
 }

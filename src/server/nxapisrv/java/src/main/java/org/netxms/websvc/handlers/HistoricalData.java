@@ -35,6 +35,7 @@ import org.netxms.websvc.json.ResponseContainer;
  */
 public class HistoricalData extends AbstractObjectHandler
 {
+
    /* (non-Javadoc)
     * @see org.netxms.websvc.handlers.AbstractHandler#get(java.lang.String)
     */

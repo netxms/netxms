@@ -24,6 +24,7 @@ import java.util.List;
 import org.netxms.base.Logger;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
+import org.netxms.base.annotations.Internal;
 import org.netxms.client.AccessListElement;
 import org.netxms.client.ObjectMenuFilter;
 import org.netxms.client.objects.AbstractNode;
@@ -67,6 +68,9 @@ public class GraphSettings extends ChartConfig implements ObjectAction
 	
 	public static final int GRAPH_FLAG_TEMPLATE = 1;
 	
+	@Internal
+	private GraphFolder parent;  // Used by predefined graph tree
+	
 	private long id;
 	private long ownerId;
 	private int flags;
@@ -75,7 +79,6 @@ public class GraphSettings extends ChartConfig implements ObjectAction
 	private String displayName;
 	private List<AccessListElement> accessList;
 	private ObjectMenuFilter filter;
-	private GraphFolder parent;  // Used by predefined graph tree
 	
 	/**
 	 * Create default settings

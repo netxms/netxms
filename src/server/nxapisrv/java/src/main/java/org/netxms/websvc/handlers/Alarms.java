@@ -96,8 +96,6 @@ public class Alarms extends AbstractHandler
       HashMap<Long, Alarm> alarms = session.getAlarms();
       
       JSONObject data = new JsonRepresentation(entity).getJsonObject();
-      log.debug(data.toString());
-      
       if (data.has("alarmList"))
       {
          JSONArray alarmList = data.getJSONArray("alarmList");

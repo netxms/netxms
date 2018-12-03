@@ -68,6 +68,7 @@ public class WebSvcApplication extends Application
       router.attach("/objects/{object-id}/lastvalues", LastValues.class);
       router.attach("/objects/{object-id}/datacollection/{id}/values", HistoricalData.class);
       router.attach("/objects/{object-id}/objecttools", ObjectTools.class);
+      router.attach("/objects/{object-id}/objecttools/output/{id}", ObjectToolOutputHandler.class);
       router.attach("/objects/lastvalues", LastValues.class);
       router.attach("/objects/datacollection/values", HistoricalData.class);
       router.attach("/predefinedgraphs", PredefinedGraphs.class);
