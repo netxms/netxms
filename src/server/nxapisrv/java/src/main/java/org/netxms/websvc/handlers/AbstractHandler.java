@@ -25,7 +25,6 @@ import java.util.Set;
 import java.util.UUID;
 import org.apache.commons.codec.binary.Base64;
 import javax.servlet.ServletContext;
-import javax.xml.bind.DatatypeConverter;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.netxms.client.NXCSession;

@@ -19,6 +19,7 @@
 package org.netxms.websvc.handlers;
 
 import org.json.JSONObject;
+import org.netxms.client.NXCException;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
 import org.netxms.client.constants.RCC;
@@ -35,6 +36,10 @@ import org.restlet.resource.Get;
 import org.restlet.resource.Post;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+
+import static org.netxms.client.NXCSession.CHANNEL_ALARMS;
 
 /**
  * Session requests handler
@@ -96,7 +101,6 @@ public class Sessions extends AbstractHandler
          if ((authHeader != null) && !authHeader.isEmpty())
          {
             String[] values = decodeBase64(authHeader).split(":", 2);
-            log.debug(values.toString());
             if (values.length == 2)
             {
                login = values[0];
@@ -145,26 +149,23 @@ public class Sessions extends AbstractHandler
    /**
     * Atatch notification handler to session
     */
-   private void attachNotificationHandler(final SessionToken token)
+   private void attachNotificationHandler(final SessionToken token) throws NXCException, IOException
    {
-      log.debug("Listener added");
       SessionListener listener = new SessionListener() {
          @Override
          public void notificationHandler(SessionNotification n)
          {
-            log.debug("Notification received");
             switch(n.getCode())
             {
-               case SessionNotification.ALARM_CHANGED:
-               case SessionNotification.ALARM_DELETED:
-               case SessionNotification.ALARM_TERMINATED:
                case SessionNotification.MULTIPLE_ALARMS_RESOLVED:
                case SessionNotification.MULTIPLE_ALARMS_TERMINATED:
                case SessionNotification.NEW_ALARM:
+               case SessionNotification.OBJECT_CHANGED:
                   token.addNotificationToQueue(n);
             }
          }
       };
       token.getSession().addListener(listener);
+      token.getSession().subscribe(CHANNEL_ALARMS);
    }
 }

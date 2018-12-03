@@ -21,14 +21,18 @@ package org.netxms.client.datacollection;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.netxms.base.annotations.Internal;
+
 /**
  * Virtual folder object for predefined graphs
  */
 public class GraphFolder
 {
+	@Internal 
+	private GraphFolder parent;
+	
 	private String name;
 	private String displayName;
-	private GraphFolder parent;
 	private Map<String, GraphFolder> subfolders;
 	private Map<Long, GraphSettings> graphs;
 	
