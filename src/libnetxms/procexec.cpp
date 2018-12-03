@@ -128,6 +128,15 @@ ProcessExecutor::~ProcessExecutor()
  */
 bool ProcessExecutor::execute()
 {
+   if (isRunning())
+      return false;  // Process already running
+
+   if (m_outputThread != INVALID_THREAD_HANDLE)
+   {
+      ThreadJoin(m_outputThread);
+      m_outputThread = INVALID_THREAD_HANDLE;
+   }
+
    bool success = false;
 
 #ifdef _WIN32  /* Windows implementation */

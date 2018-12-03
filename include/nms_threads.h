@@ -188,14 +188,15 @@ inline void ThreadExit()
 #endif
 }
 
-inline void ThreadJoin(THREAD thread)
+inline bool ThreadJoin(THREAD thread)
 {
-   if (thread != INVALID_THREAD_HANDLE)
-   {
-      WaitForSingleObject(thread->handle, INFINITE);
-      CloseHandle(thread->handle);
-		MemFree(thread);
-   }
+   if (thread == INVALID_THREAD_HANDLE)
+      return false;
+
+   bool success = (WaitForSingleObject(thread->handle, INFINITE) == WAIT_OBJECT_0);
+   CloseHandle(thread->handle);
+   MemFree(thread);
+   return success;
 }
 
 inline void ThreadDetach(THREAD thread)
@@ -394,10 +395,11 @@ inline void ThreadExit(void)
    pth_exit(NULL);
 }
 
-inline void ThreadJoin(THREAD hThread)
+inline bool ThreadJoin(THREAD hThread)
 {
-   if (hThread != INVALID_THREAD_HANDLE)
-      pth_join(hThread, NULL);
+   if (hThread == INVALID_THREAD_HANDLE)
+      return false;
+   return pth_join(hThread, NULL) != -1;
 }
 
 inline void ThreadDetach(THREAD hThread)
@@ -751,10 +753,11 @@ inline void ThreadExit()
    pthread_exit(NULL);
 }
 
-inline void ThreadJoin(THREAD hThread)
+inline bool ThreadJoin(THREAD hThread)
 {
-   if (hThread != INVALID_THREAD_HANDLE)
-      pthread_join(hThread, NULL);
+   if (hThread == INVALID_THREAD_HANDLE)
+      return false;
+   return pthread_join(hThread, NULL) == 0;
 }
 
 inline void ThreadDetach(THREAD hThread)
