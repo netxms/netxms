@@ -181,6 +181,7 @@ void SubProcessExecutor::shutdown()
          p->stop();
       }
    }
+   delete_and_null(m_registry);
    m_registryLock.unlock();
 }
 
