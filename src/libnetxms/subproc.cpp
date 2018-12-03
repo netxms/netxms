@@ -172,16 +172,19 @@ void SubProcessExecutor::shutdown()
    m_monitorThread = INVALID_THREAD_HANDLE;
 
    m_registryLock.lock();
-   for(int i = 0; i < m_registry->size(); i++)
+   if (m_registry != NULL)
    {
-      SubProcessExecutor *p = m_registry->get(i);
-      if (p->isStarted() && p->isRunning())
+      for(int i = 0; i < m_registry->size(); i++)
       {
-         nxlog_debug_tag(DEBUG_TAG, 3, _T("Stopping sub-process %s"), p->getName());
-         p->stop();
+         SubProcessExecutor *p = m_registry->get(i);
+         if (p->isStarted() && p->isRunning())
+         {
+            nxlog_debug_tag(DEBUG_TAG, 3, _T("Stopping sub-process %s"), p->getName());
+            p->stop();
+         }
       }
+      delete_and_null(m_registry);
    }
-   delete_and_null(m_registry);
    m_registryLock.unlock();
 }
 

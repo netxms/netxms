@@ -65,8 +65,8 @@ HRESULT (*imp_SetThreadDescription)(HANDLE, PCWSTR) = NULL;
  */
 static void OnProcessExit()
 {
-   MsgWaitQueue::shutdown();
    SubProcessExecutor::shutdown();
+   MsgWaitQueue::shutdown();
 }
 
 /**
