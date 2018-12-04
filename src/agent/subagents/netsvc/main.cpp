@@ -96,7 +96,7 @@ static LONG H_CheckService(const TCHAR *parameters, const TCHAR *arg, TCHAR *val
             curl_easy_setopt(curl, CURLOPT_NOSIGNAL, (long)1);
 #endif
 
-            // curl_easy_setopt(curl, CURLOPT_VERBOSE, (long)1);
+            curl_easy_setopt(curl, CURLOPT_NOSIGNAL, (long)1); // do not install signal handlers or send signals
             curl_easy_setopt(curl, CURLOPT_HEADER, (long)1); // include header in data
             curl_easy_setopt(curl, CURLOPT_TIMEOUT, g_timeout);
             curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, OnCurlDataReceived);

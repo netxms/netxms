@@ -133,6 +133,7 @@ extern "C" bool __EXPORT SMSDriverSend(const TCHAR *phoneNumber, const TCHAR *te
       curl_easy_setopt(curl, CURLOPT_NOSIGNAL, (long)1);
 #endif
 
+      curl_easy_setopt(curl, CURLOPT_NOSIGNAL, (long)1); // do not install signal handlers or send signals
       curl_easy_setopt(curl, CURLOPT_HEADER, (long)0); // do not include header in data
       curl_easy_setopt(curl, CURLOPT_TIMEOUT, 10);
       curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &OnCurlDataReceived);
