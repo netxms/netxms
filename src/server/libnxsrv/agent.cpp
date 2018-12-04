@@ -763,7 +763,7 @@ void AgentConnection::setAuthData(int method, const TCHAR *secret)
 	WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, secret, -1, m_szSecret, MAX_SECRET_LENGTH, NULL, NULL);
 	m_szSecret[MAX_SECRET_LENGTH - 1] = 0;
 #else
-   nx_strncpy(m_szSecret, secret, MAX_SECRET_LENGTH);
+   strlcpy(m_szSecret, secret, MAX_SECRET_LENGTH);
 #endif
 }
 
