@@ -433,26 +433,38 @@ int main(int argc, char *argv[])
             break;
          case 'r':   // Service check request string
 #ifdef UNICODE
+#if HAVE_MBSTOWCS
+            mbstowcs(szRequest, optarg, MAX_DB_STRING);
+#else
 	         MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, szRequest, MAX_DB_STRING);
+#endif
 				szRequest[MAX_DB_STRING - 1] = 0;
 #else
-            nx_strncpy(szRequest, optarg, MAX_DB_STRING);
+            strlcpy(szRequest, optarg, MAX_DB_STRING);
 #endif
             break;
          case 'R':   // Service check response string
 #ifdef UNICODE
+#if HAVE_MBSTOWCS
+            mbstowcs(szResponse, optarg, MAX_DB_STRING);
+#else
 	         MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, szResponse, MAX_DB_STRING);
+#endif
 				szResponse[MAX_DB_STRING - 1] = 0;
 #else
-            nx_strncpy(szResponse, optarg, MAX_DB_STRING);
+            strlcpy(szResponse, optarg, MAX_DB_STRING);
 #endif
             break;
          case 's':   // Shared secret
 #ifdef UNICODE
+#if HAVE_MBSTOWCS
+            mbstowcs(szSecret, optarg, MAX_SECRET_LENGTH);
+#else
 	         MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, szSecret, MAX_SECRET_LENGTH);
+#endif
 				szSecret[MAX_SECRET_LENGTH - 1] = 0;
 #else
-            nx_strncpy(szSecret, optarg, MAX_SECRET_LENGTH);
+            strlcpy(szSecret, optarg, MAX_SECRET_LENGTH);
 #endif
             break;
          case 'S':   // Check service
@@ -559,10 +571,14 @@ int main(int argc, char *argv[])
             break;
          case 'K':
 #ifdef UNICODE
+#if HAVE_MBSTOWCS
+            mbstowcs(keyFile, optarg, MAX_PATH);
+#else
 	         MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, keyFile, MAX_PATH);
+#endif
 				keyFile[MAX_PATH - 1] = 0;
 #else
-            nx_strncpy(keyFile, optarg, MAX_PATH);
+            strlcpy(keyFile, optarg, MAX_PATH);
 #endif
             break;
 #else
@@ -579,10 +595,14 @@ int main(int argc, char *argv[])
             break;
          case 'Z':   // Shared secret for proxy agent
 #ifdef UNICODE
+#if HAVE_MBSTOWCS
+            mbstowcs(szProxySecret, optarg, MAX_SECRET_LENGTH);
+#else
 	         MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, szProxySecret, MAX_SECRET_LENGTH);
+#endif
 				szProxySecret[MAX_SECRET_LENGTH - 1] = 0;
 #else
-            nx_strncpy(szProxySecret, optarg, MAX_SECRET_LENGTH);
+            strlcpy(szProxySecret, optarg, MAX_SECRET_LENGTH);
 #endif
             break;
          case '?':
@@ -673,9 +693,9 @@ int main(int argc, char *argv[])
                         do
                         {
 #ifdef UNICODE
-									wcValue = WideStringFromMBString(argv[iPos++]);
+									wcValue = WideStringFromMBStringSysLocale(argv[iPos++]);
                            iExitCode = Get(conn, wcValue, showNames);
-									free(wcValue);
+									MemFree(wcValue);
 #else
                            iExitCode = Get(conn, argv[iPos++], showNames);
 #endif
@@ -683,18 +703,18 @@ int main(int argc, char *argv[])
                         break;
                      case CMD_LIST:
 #ifdef UNICODE
-								wcValue = WideStringFromMBString(argv[optind + 1]);
+								wcValue = WideStringFromMBStringSysLocale(argv[optind + 1]);
                         iExitCode = List(conn, wcValue);
-								free(wcValue);
+                        MemFree(wcValue);
 #else
                         iExitCode = List(conn, argv[optind + 1]);
 #endif
                         break;
                      case CMD_TABLE:
 #ifdef UNICODE
-								wcValue = WideStringFromMBString(argv[optind + 1]);
+								wcValue = WideStringFromMBStringSysLocale(argv[optind + 1]);
                         iExitCode = GetTable(conn, wcValue);
-								free(wcValue);
+                        MemFree(wcValue);
 #else
                         iExitCode = GetTable(conn, argv[optind + 1]);
 #endif
