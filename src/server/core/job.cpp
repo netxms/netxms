@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2018 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -24,7 +24,7 @@
 #include <math.h>
 
 /**
- * Externals
+ * Unregister job
  */
 void UnregisterJob(UINT32 jobId);
 
@@ -35,8 +35,8 @@ ServerJob::ServerJob(const TCHAR *type, const TCHAR *description, UINT32 nodeId,
 {
 	m_id = CreateUniqueId(IDG_JOB);
 	m_userId = userId;
-	m_type = _tcsdup(CHECK_NULL(type));
-	m_description = _tcsdup(CHECK_NULL(description));
+	_tcslcpy(m_type, CHECK_NULL(type), MAX_JOB_NAME_LEN);
+	_tcslcpy(m_description, CHECK_NULL_EX(description), MAX_DB_STRING);
 	m_status = createOnHold ? JOB_ON_HOLD : JOB_PENDING;
 	m_lastStatusChange = time(NULL);
 	m_autoCancelDelay = 600;
@@ -49,7 +49,7 @@ ServerJob::ServerJob(const TCHAR *type, const TCHAR *description, UINT32 nodeId,
 	m_lastNotification = 0;
 	m_notificationLock = MutexCreate();
 	m_blockNextJobsOnFailure = false;
-	m_retryCount = retryCount == -1 ? ConfigReadInt(_T("JobRetryCount"), 5) : retryCount;
+	m_retryCount = (retryCount == -1) ? ConfigReadInt(_T("JobRetryCount"), 5) : retryCount;
 	m_valid = (m_node != NULL);
 
    if (m_node != NULL)
@@ -65,9 +65,9 @@ ServerJob::ServerJob(const TCHAR *params, UINT32 nodeId, UINT32 userId)
 {
 	m_id = CreateUniqueId(IDG_JOB);
 	m_userId = userId;
-	m_type = _tcsdup(_T(""));
+	m_type[0] = 0;
 	m_status = JOB_PENDING;
-	m_description = _tcsdup(_T(""));
+	m_description[0] = 0;
 	m_lastStatusChange = time(NULL);
 	m_autoCancelDelay = 600;
    m_nodeId = nodeId;
@@ -97,9 +97,7 @@ ServerJob::~ServerJob()
 
 	ThreadJoin(m_workerThread);
 
-	free(m_type);
-	free(m_description);
-	free(m_failureMessage);
+	MemFree(m_failureMessage);
 	MutexDestroy(m_notificationLock);
 
    if (m_node != NULL)
@@ -115,7 +113,6 @@ void ServerJob::sendNotification(ClientSession *session, void *arg)
 	if (job->m_node->checkAccessRights(session->getUserId(), OBJECT_ACCESS_READ))
 		session->postMessage(&job->m_notificationMessage);
 }
-
 
 /**
  * Notify clients
@@ -137,7 +134,6 @@ void ServerJob::notifyClients(bool isStatusChange)
 	MutexUnlock(m_notificationLock);
 }
 
-
 /**
  * Change status
  */
@@ -147,7 +143,6 @@ void ServerJob::changeStatus(ServerJobStatus newStatus)
 	m_lastStatusChange = time(NULL);
 	notifyClients(true);
 }
-
 
 /**
  * Set owning queue
@@ -197,10 +192,12 @@ THREAD_RESULT THREAD_CALL ServerJob::WorkerThreadStarter(void *arg)
          job->changeStatus(JOB_FAILED);
          break;
 	}
-	job->m_workerThread = INVALID_THREAD_HANDLE;
 
 	DbgPrintf(4, _T("Job %d finished, status=%s"), job->m_id, (job->m_status == JOB_COMPLETED) ? _T("COMPLETED") : ((job->m_status == JOB_CANCELLED) ? _T("CANCELLED") : _T("FAILED")));
 	job->updateHistoryRecord(false);
+
+	ThreadDetach(job->m_workerThread);
+   job->m_workerThread = INVALID_THREAD_HANDLE;
 
 	if (job->m_owningQueue != NULL)
 		job->m_owningQueue->jobCompleted(job);
@@ -237,34 +234,29 @@ bool ServerJob::cancel()
 	}
 }
 
-
 /**
  * Hold job
  */
 bool ServerJob::hold()
 {
-	if (m_status == JOB_PENDING)
-	{
-		changeStatus(JOB_ON_HOLD);
-		return true;
-	}
-	return false;
-}
+	if (m_status != JOB_PENDING)
+	   return false;
 
+	changeStatus(JOB_ON_HOLD);
+	return true;
+}
 
 /**
  * Unhold job
  */
 bool ServerJob::unhold()
 {
-	if (m_status == JOB_ON_HOLD)
-	{
-		changeStatus(JOB_PENDING);
-		return true;
-	}
-	return false;
-}
+	if (m_status != JOB_ON_HOLD)
+	   return false;
 
+	changeStatus(JOB_PENDING);
+	return true;
+}
 
 /**
  * Default run (empty)
@@ -274,7 +266,6 @@ ServerJobResult ServerJob::run()
 	return JOB_RESULT_SUCCESS;
 }
 
-
 /**
  * Default cancel handler
  */
@@ -283,26 +274,22 @@ bool ServerJob::onCancel()
 	return false;
 }
 
-
 /**
  * Set failure message
  */
 void ServerJob::setFailureMessage(const TCHAR *msg)
 {
-	free(m_failureMessage);
-	m_failureMessage = (msg != NULL) ? _tcsdup(msg) : NULL;
+	MemFree(m_failureMessage);
+	m_failureMessage = MemCopyString(msg);
 }
-
 
 /**
  * Set description
  */
 void ServerJob::setDescription(const TCHAR *description)
 {
-	free(m_description);
-	m_description = _tcsdup(description);
+	_tcslcpy(m_description, CHECK_NULL_EX(description), MAX_DB_STRING);
 }
-
 
 /**
  * Fill NXCP message with job's data
@@ -313,7 +300,7 @@ void ServerJob::fillMessage(NXCPMessage *msg)
 	msg->setField(VID_USER_ID, m_userId);
 	msg->setField(VID_JOB_TYPE, m_type);
 	msg->setField(VID_OBJECT_ID, m_nodeId);
-	msg->setField(VID_DESCRIPTION, CHECK_NULL_EX(m_description));
+	msg->setField(VID_DESCRIPTION, m_description);
 	msg->setField(VID_JOB_STATUS, (WORD)m_status);
 	msg->setField(VID_JOB_PROGRESS, (WORD)m_progress);
 	if (m_status == JOB_FAILED)
@@ -337,7 +324,7 @@ void ServerJob::createHistoryRecord()
 		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
 		DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (UINT32)time(NULL));
 		DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_type, DB_BIND_STATIC);
-		DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, CHECK_NULL_EX(m_description), DB_BIND_STATIC);
+		DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, m_description, DB_BIND_STATIC);
 		DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, m_nodeId);
 		DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, m_userId);
 		DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, (LONG)m_status);
@@ -363,7 +350,7 @@ void ServerJob::updateHistoryRecord(bool onStart)
 	{
 		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (UINT32)time(NULL));
 		DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (LONG)m_status);
-		DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, CHECK_NULL_EX(m_description), DB_BIND_STATIC);
+		DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_description, DB_BIND_STATIC);
 		DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, getAdditionalInfo(), DB_BIND_TRANSIENT);
 		if (onStart)
 		{

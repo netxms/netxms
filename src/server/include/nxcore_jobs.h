@@ -27,6 +27,8 @@
 
 #define JOB_RESCHEDULE_OFFSET 600
 
+#define MAX_JOB_NAME_LEN      128
+
 /**
  * Job status
  */
@@ -52,21 +54,21 @@ enum ServerJobResult
 	JOB_RESULT_RESCHEDULE
 };
 
-/**
- * Job class
- */
 class ServerJobQueue;
 class NetObj;
 
+/**
+ * Job class
+ */
 class NXCORE_EXPORTABLE ServerJob
 {
 private:
 	UINT32 m_id;
 	UINT32 m_userId;
-	TCHAR *m_type;
+	TCHAR m_type[MAX_JOB_NAME_LEN];
 	UINT32 m_nodeId;
    Node *m_node;
-	TCHAR *m_description;
+	TCHAR m_description[MAX_DB_STRING];
 	ServerJobStatus m_status;
 	int m_progress;
 	TCHAR *m_failureMessage;
