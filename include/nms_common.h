@@ -1135,6 +1135,9 @@ inline void MemFree(void *p) { if (p != NULL) free(p); }
 template <typename T> void MemFreeAndNull(T* &p) { if (p != NULL) { free(p); p = NULL; } }
 #endif
 
+inline char *MemCopyStringA(const char *src) { return (src != NULL) ? strdup(src) : NULL; }
+inline WCHAR *MemCopyStringW(const WCHAR *src) { return (src != NULL) ? wcsdup(src) : NULL; }
+
 #else /* __cplusplus */
 
 #define MemAlloc(size) malloc(size)
@@ -1148,7 +1151,16 @@ template <typename T> void MemFreeAndNull(T* &p) { if (p != NULL) { free(p); p =
 #define MemFreeAndNull(p) do { if ((p) != NULL) { free(p); p = NULL; } } while(0)
 #endif
 
+#define MemCopyStringA(src) ((src != NULL) ? strdup(src) : NULL)
+#define MemCopyStringW(src) ((src != NULL) ? wcsdup(src) : NULL)
+
 #endif /* __cplusplus */
+
+#ifdef UNICODE
+#define MemCopyString MemCopyStringW
+#else
+#define MemCopyString MemCopyStringA
+#endif
 
 // malloc/free for uthash
 #define uthash_malloc(sz) MemAlloc(sz)
