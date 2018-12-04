@@ -626,7 +626,7 @@ public:
 /**
  * Simple allocate only heap
  */
-class MemoryPool
+class LIBNETXMS_EXPORTABLE MemoryPool
 {
 private:
    void *m_currentRegion;
@@ -638,53 +638,17 @@ public:
    /**
     * Create new memory pool
     */
-   MemoryPool(size_t regionSize = 32768)
-   {
-      m_headerSize = sizeof(void*);
-      if (m_headerSize % 16 != 0)
-         m_headerSize += 16 - m_headerSize % 16;
-      m_regionSize = regionSize;
-      m_currentRegion = MemAlloc(m_regionSize);
-      *((void **)m_currentRegion) = NULL; // pointer to previous region
-      m_allocated = m_headerSize;
-   }
-
+   MemoryPool(size_t regionSize = 32768);
+   
    /**
-    * Destroy memory pool (object destructors will not be called
+    * Destroy memory pool (object destructors will not be called)
     */
-   ~MemoryPool()
-   {
-      void *r = m_currentRegion;
-      while(r != NULL)
-      {
-         void *n = *((void **)r);
-         MemFree(r);
-         r = n;
-      }
-   }
+   ~MemoryPool();
 
    /**
     * Allocate memory block
     */
-   void *allocate(size_t size)
-   {
-      size_t allocationSize = ((size % 8) == 0) ? size : (size + 8 - size % 8);
-      void *p;
-      if (m_allocated + allocationSize <= m_regionSize)
-      {
-         p = (char*)m_currentRegion + m_allocated;
-         m_allocated += allocationSize;
-      }
-      else
-      {
-         void *region = MemAlloc(std::max(m_regionSize, allocationSize + m_headerSize));
-         *((void **)region) = m_currentRegion;
-         m_currentRegion = region;
-         p = (char*)m_currentRegion + m_headerSize;
-         m_allocated = m_headerSize + allocationSize;
-      }
-      return p;
-   }
+   void *allocate(size_t size);
 
    /**
     * Allocate memory block for array of objects
@@ -706,13 +670,7 @@ public:
    /**
     * Create copy of given C string within pool
     */
-   TCHAR *copyString(const TCHAR *s)
-   {
-      size_t l = _tcslen(s) + 1;
-      TCHAR *p = static_cast<TCHAR*>(allocate(l * sizeof(TCHAR)));
-      memcpy(p, s, l * sizeof(TCHAR));
-      return p;
-   }
+   TCHAR *copyString(const TCHAR *s);
 
    /**
     * Create copy of given memory block within pool
@@ -727,18 +685,7 @@ public:
    /**
     * Drop all allocated memory except one region
     */
-   void clear()
-   {
-      void *r = *((void **)m_currentRegion);
-      while(r != NULL)
-      {
-         void *n = *((void **)r);
-         MemFree(r);
-         r = n;
-      }
-      *((void **)m_currentRegion) = NULL;
-      m_allocated = m_headerSize;
-   }
+   void clear();
 };
 
 /**
