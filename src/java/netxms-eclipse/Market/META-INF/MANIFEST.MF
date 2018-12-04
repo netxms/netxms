@@ -14,3 +14,4 @@ Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Bundle-ActivationPolicy: lazy
 Bundle-ClassPath: .,
  lib/json-20160212.jar
+Automatic-Module-Name: org.netxms.ui.eclipse.market

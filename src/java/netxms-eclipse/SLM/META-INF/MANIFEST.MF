@@ -12,5 +12,6 @@ Require-Bundle: org.eclipse.ui;bundle-version="3.8.2",
  org.netxms.ui.eclipse.objectbrowser;bundle-version="3.0.0",
  org.netxms.ui.eclipse.nxsl;bundle-version="3.0.0",
  org.netxms.ui.eclipse.charts;bundle-version="3.0.0"
-Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ActivationPolicy: lazy
+Automatic-Module-Name: org.netxms.ui.eclipse.slm

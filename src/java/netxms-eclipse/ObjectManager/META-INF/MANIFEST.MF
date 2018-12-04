@@ -22,3 +22,4 @@ Bundle-ActivationPolicy: lazy
 Export-Package: org.netxms.ui.eclipse.objectmanager.actions,
  org.netxms.ui.eclipse.objectmanager.dialogs,
  org.netxms.ui.eclipse.objectmanager.propertypages
+Automatic-Module-Name: org.netxms.ui.eclipse.objectmanager

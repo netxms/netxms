@@ -27,3 +27,4 @@ Export-Package: org.netxms.ui.eclipse.datacollection.actions,
  org.netxms.ui.eclipse.datacollection.dialogs,
  org.netxms.ui.eclipse.datacollection.propertypages.helpers,
  org.netxms.ui.eclipse.datacollection.widgets
+Automatic-Module-Name: org.netxms.ui.eclipse.datacollection

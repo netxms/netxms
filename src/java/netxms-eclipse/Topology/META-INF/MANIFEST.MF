@@ -16,3 +16,4 @@ Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Bundle-ActivationPolicy: lazy
 Export-Package: org.netxms.ui.eclipse.topology.widgets,
  org.netxms.ui.eclipse.topology.widgets.helpers
+Automatic-Module-Name: org.netxms.ui.eclipse.topology

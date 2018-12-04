@@ -21,3 +21,4 @@ Export-Package: org.netxms.ui.eclipse.snmp.actions,
  org.netxms.ui.eclipse.snmp.views,
  org.netxms.ui.eclipse.snmp.widgets
 Import-Package: org.eclipse.core.expressions
+Automatic-Module-Name: org.netxms.ui.eclipse.snmp

@@ -17,3 +17,4 @@ Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Bundle-ActivationPolicy: lazy
 Export-Package: org.netxms.ui.eclipse.epp.dialogs
 Import-Package: org.netxms.ui.eclipse.alarmviewer.widgets
+Automatic-Module-Name: org.netxms.ui.eclipse.epp
