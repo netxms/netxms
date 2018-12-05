@@ -447,7 +447,7 @@ Unable to find entry point in server module "%1"
 .
 
 MessageId=
-SymbolicName=MSG_MODULE_INIT_FAILED
+SymbolicName=MSG_MODULE_INITIALIZATION_FAILED
 Language=English
 Initialization of server module "%1" failed
 .
@@ -1122,6 +1122,12 @@ MessageId=
 SymbolicName=MSG_CANNOT_CREATE_SESSION_THREAD
 Language=English
 Cannot create client session service thread
+.
+
+MessageId=
+SymbolicName=MSG_MODULE_REGISTRATION_FAILED
+Language=English
+Registartion of server module "%1" failed
 .
 
 ;#endif

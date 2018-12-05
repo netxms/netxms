@@ -70,26 +70,32 @@ static bool LoadNetXMSModule(const TCHAR *name)
 
    if (hModule != NULL)
    {
-      bool (* ModuleInit)(NXMODULE *, Config *);
-
-      ModuleInit = (bool (*)(NXMODULE *, Config *))DLGetSymbolAddr(hModule, "NXM_Init", szErrorText);
-      if (ModuleInit != NULL)
+      bool (* RegisterModule)(NXMODULE *) = (bool (*)(NXMODULE *))DLGetSymbolAddr(hModule, "NXM_Register", szErrorText);
+      if (RegisterModule != NULL)
       {
          NXMODULE module;
          memset(&module, 0, sizeof(NXMODULE));
-         if (ModuleInit(&module, &g_serverConfig))
+         if (RegisterModule(&module))
          {
             if (module.dwSize == sizeof(NXMODULE))
             {
-               // Add module to module's list
-               g_pModuleList = (NXMODULE *)realloc(g_pModuleList, sizeof(NXMODULE) * (g_dwNumModules + 1));
-               memcpy(&g_pModuleList[g_dwNumModules], &module, sizeof(NXMODULE));
-               g_pModuleList[g_dwNumModules].hModule = hModule;
+               if (module.pfInitialize(&g_serverConfig))
+               {
+                  // Add module to module's list
+                  g_pModuleList = (NXMODULE *)realloc(g_pModuleList, sizeof(NXMODULE) * (g_dwNumModules + 1));
+                  memcpy(&g_pModuleList[g_dwNumModules], &module, sizeof(NXMODULE));
+                  g_pModuleList[g_dwNumModules].hModule = hModule;
 
-               nxlog_write(MSG_MODULE_LOADED, EVENTLOG_INFORMATION_TYPE, "s", g_pModuleList[g_dwNumModules].szName);
-               g_dwNumModules++;
+                  nxlog_write(MSG_MODULE_LOADED, EVENTLOG_INFORMATION_TYPE, "s", g_pModuleList[g_dwNumModules].szName);
+                  g_dwNumModules++;
 
-               success = true;
+                  success = true;
+               }
+               else
+               {
+                  nxlog_write(MSG_MODULE_INITIALIZATION_FAILED, EVENTLOG_ERROR_TYPE, "s", name);
+                  DLClose(hModule);
+               }
             }
             else
             {
@@ -99,7 +105,7 @@ static bool LoadNetXMSModule(const TCHAR *name)
          }
          else
          {
-            nxlog_write(MSG_MODULE_INIT_FAILED, EVENTLOG_ERROR_TYPE, "s", name);
+            nxlog_write(MSG_MODULE_REGISTRATION_FAILED, EVENTLOG_ERROR_TYPE, "s", name);
             DLClose(hModule);
          }
       }

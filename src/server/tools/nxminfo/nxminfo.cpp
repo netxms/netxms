@@ -131,7 +131,7 @@ int main(int argc, char *argv[])
    _tprintf(_T("UNICODE build:  %s\n"), module.unicode ? _T("yes") : _T("no"));
 
    _tprintf(_T("\nEntry points:\n"));
-   CHECK_ENTRY_POINT("NXM_Init");
+   CHECK_ENTRY_POINT("NXM_Register");
    CHECK_ENTRY_POINT("NXM_CheckDB");
    CHECK_ENTRY_POINT("NXM_UpgradeDB");
    CHECK_ENTRY_POINT("NXM_GetTables");

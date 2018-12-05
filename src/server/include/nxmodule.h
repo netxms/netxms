@@ -72,6 +72,7 @@ typedef struct
 {
    UINT32 dwSize;           // Size of structure in bytes
    TCHAR szName[MAX_OBJECT_NAME];
+   bool (* pfInitialize)(Config *config);
    void (* pfServerStarted)();
 	void (* pfShutdown)();
 	void (* pfLoadObjects)();
