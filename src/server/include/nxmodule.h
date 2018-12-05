@@ -26,6 +26,7 @@
 #ifndef MODULE_NXDBMGR_EXTENSION
 
 #include <nxdbapi.h>
+#include "nxcore_console.h"
 
 /**
  * Forward declaration of server classes
@@ -100,6 +101,7 @@ typedef struct
    void (* pfOnConnectToAgent)(Node *node, AgentConnection *conn);
    BOOL (* pfOnAgentMessage)(NXCPMessage *msg, UINT32 nodeId);
    void (* pfHousekeeperHook)();
+   bool (* pfProcessServerConsoleCommand)(const TCHAR *command, CONSOLE_CTX pCtx);
    ObjectArray<PredictionEngine> *(* pfGetPredictionEngines)();
    NXCORE_LOG *logs;
    HMODULE hModule;

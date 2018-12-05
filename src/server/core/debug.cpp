@@ -54,7 +54,7 @@ void DbgTestRWLock(RWLOCK hLock, const TCHAR *szName, CONSOLE_CTX console)
 /**
  * Print message to console, either local or remote
  */
-void ConsolePrintf(CONSOLE_CTX console, const TCHAR *pszFormat, ...)
+void NXCORE_EXPORTABLE ConsolePrintf(CONSOLE_CTX console, const TCHAR *pszFormat, ...)
 {
    va_list args;
    TCHAR szBuffer[8192];
@@ -110,7 +110,7 @@ void ConsolePrintf(CONSOLE_CTX console, const TCHAR *pszFormat, ...)
 /**
  * Print message to console, either local or remote
  */
-void ConsoleWrite(CONSOLE_CTX console, const TCHAR *text)
+void NXCORE_EXPORTABLE ConsoleWrite(CONSOLE_CTX console, const TCHAR *text)
 {
 	if ((console->hSocket == -1) && (console->session == NULL) && (console->output == NULL))
    {
