@@ -75,7 +75,7 @@ public class TerminalReader extends Reader
 				escState = processEscape(escState, ch);
 				continue;
 			}
-			if (ch == '\n')
+			if (ch == '\r')
 				break;
 			switch(ch)
 			{
@@ -96,7 +96,7 @@ public class TerminalReader extends Reader
 				case 27: // ESC
 					escState = ESC_START;
 					break;
-				case '\r':
+				case '\n':
 					break;
 				default:
 					command.append((char)ch);
