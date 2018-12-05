@@ -1382,16 +1382,16 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
    else
    {
       bool success = false;
-      for(UINT32 i = 0; i < g_dwNumModules; i++)
+      ENUMERATE_MODULES(pfProcessServerConsoleCommand)
       {
-         if (g_pModuleList[i].pfProcessServerConsoleCommand != NULL && g_pModuleList[i].pfProcessServerConsoleCommand(pszCmdLine, pCtx))
+         if (g_pModuleList[__i].pfProcessServerConsoleCommand(pszCmdLine, pCtx))
          {
             success = true;
             break;
          }
       }
 
-      if(!success)
+      if (!success)
          ConsoleWrite(pCtx, _T("UNKNOWN COMMAND\n\n"));
    }
 
