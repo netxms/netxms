@@ -48,7 +48,7 @@ int GetEventLogWriterQueueSize();
 /**
  * Compare given string to command template with abbreviation possibility
  */
-static bool IsCommand(const TCHAR *cmdTemplate, const TCHAR *str, int minChars)
+bool NXCORE_EXPORTABLE IsCommand(const TCHAR *cmdTemplate, const TCHAR *str, int minChars)
 {
    TCHAR temp[256];
    _tcslcpy(temp, str, 256);
@@ -1381,7 +1381,18 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
    }
    else
    {
-      ConsoleWrite(pCtx, _T("UNKNOWN COMMAND\n\n"));
+      bool success = false;
+      for(UINT32 i = 0; i < g_dwNumModules; i++)
+      {
+         if (g_pModuleList[i].pfProcessServerConsoleCommand != NULL && g_pModuleList[i].pfProcessServerConsoleCommand(pszCmdLine, pCtx))
+         {
+            success = true;
+            break;
+         }
+      }
+
+      if(!success)
+         ConsoleWrite(pCtx, _T("UNKNOWN COMMAND\n\n"));
    }
 
    return nExitCode;

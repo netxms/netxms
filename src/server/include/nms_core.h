@@ -79,22 +79,9 @@
 #include <nxproc.h>
 
 /**
- * Console context
- */
-struct __console_ctx
-{
-   SOCKET hSocket;
-	MUTEX socketMutex;
-   NXCPMessage *pMsg;
-	ClientSession *session;
-   String *output;
-};
-
-typedef __console_ctx * CONSOLE_CTX;
-
-/**
  * Server includes
  */
+#include "nxcore_console.h"
 #include "nms_dcoll.h"
 #include "nms_users.h"
 #include "nxcore_winperf.h"
@@ -987,12 +974,6 @@ void InitiateShutdown();
 
 bool NXCORE_EXPORTABLE SleepAndCheckForShutdown(int iSeconds);
 
-void ConsolePrintf(CONSOLE_CTX pCtx, const TCHAR *pszFormat, ...)
-#if !defined(UNICODE) && (defined(__GNUC__) || defined(__clang__))
-   __attribute__ ((format(printf, 2, 3)))
-#endif
-;
-void ConsoleWrite(CONSOLE_CTX pCtx, const TCHAR *text);
 int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx);
 
 void SaveObjects(DB_HANDLE hdb, UINT32 watchdogId, bool saveRuntimeData);
@@ -1181,6 +1162,8 @@ const TCHAR NXCORE_EXPORTABLE *CurrencyName(const TCHAR *code);
 
 void NXCORE_EXPORTABLE RegisterComponent(const TCHAR *id);
 bool NXCORE_EXPORTABLE IsComponentRegistered(const TCHAR *id);
+
+bool NXCORE_EXPORTABLE IsCommand(const TCHAR *cmdTemplate, const TCHAR *str, int minChars);
 
 /**
  * Watchdog API
