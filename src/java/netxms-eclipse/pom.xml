@@ -64,7 +64,7 @@
         </repository>
         <repository>
             <id>Bable-project</id>
-            <url>http://archive.eclipse.org/technology/babel/update-site/R0.12.0/juno</url>
+            <url>http://archive.eclipse.org/technology/babel/update-site/R0.12.1/juno</url>
             <layout>p2</layout>
         </repository>
         <repository>
@@ -79,7 +79,7 @@
         </repository>
         <repository>
             <id>Birt</id>
-            <url>http://download.eclipse.org/birt/update-site/3.7</url>
+            <url>http://download.eclipse.org/birt/update-site/4.4</url>
             <layout>p2</layout>
         </repository>
         <repository>
