@@ -1004,16 +1004,16 @@ void NXCPMessage::setFieldFromMBString(UINT32 fieldId, const char *value)
 {
    size_t l = strlen(value) + 1;
 #if HAVE_ALLOCA
-   WCHAR *wcValue = static_cast<WCHAR*>(alloca(l));
+   WCHAR *wcValue = static_cast<WCHAR*>(alloca(l * sizeof(WCHAR)));
 #else
    WCHAR localBuffer[256];
-	WCHAR *wcValue = (l <= 256) ? localBuffer : static_cast<WCHAR*>(MemAlloc(l));
+   WCHAR *wcValue = (l <= 256) ? localBuffer : static_cast<WCHAR*>(MemAlloc(l * sizeof(WCHAR)));
 #endif
    MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, value, -1, wcValue, static_cast<int>(l));
-	set(fieldId, NXCP_DT_STRING, wcValue);
+   set(fieldId, NXCP_DT_STRING, wcValue);
 #if !HAVE_ALLOCA
-	if (wcValue != localBuffer)
-	   MemFree(wcValue);
+   if (wcValue != localBuffer)
+      MemFree(wcValue);
 #endif
 }
 
