@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2018 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,7 +31,6 @@ import org.eclipse.tm.internal.terminal.provisional.api.provider.TerminalConnect
 /**
  * Terminal connector for server console
  */
-@SuppressWarnings("restriction")
 public class ServerConsoleTerminalConnector extends TerminalConnectorImpl implements ITerminalConnector
 {
 	private PipedInputStream inputStream;
