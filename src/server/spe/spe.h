@@ -43,6 +43,7 @@ struct NeuralNetworkNode
    double value;
 
    NeuralNetworkNode(int nextLevelSize);
+   NeuralNetworkNode(NeuralNetworkNode *nnn);
    ~NeuralNetworkNode();
 
    void reset();
@@ -62,6 +63,7 @@ private:
    double m_maxValue;
 
 public:
+   NeuralNetwork(NeuralNetwork *nn);
    NeuralNetwork(int inputCount, int hiddenCount);
    ~NeuralNetwork();
 
@@ -87,6 +89,7 @@ private:
    MUTEX m_networkLock;
 
    NeuralNetwork *acquireNetwork(UINT32 nodeId, UINT32 dciId);
+   void replaceNetwork(UINT32 nodeId, UINT32 dciId, NeuralNetwork *newNn);
 
 public:
    TimeSeriesRegressionEngine();
@@ -199,6 +202,7 @@ private:
    MUTEX m_networkLock;
 
    NeuralNetwork *acquireNetwork(UINT32 nodeId, UINT32 dciId);
+   void replaceNetwork(UINT32 nodeId, UINT32 dciId, NeuralNetwork *newNn);
 
 public:
    TimeDependentEngine();

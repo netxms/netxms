@@ -715,8 +715,7 @@ bool DCItem::processNewValue(time_t tmTimeStamp, const void *originalValue, bool
       if (engine != NULL)
       {
          engine->update(m_owner->getId(), m_id, tmTimeStamp, pValue->getDouble());
-         _tprintf(predictedValue, _T("%lf"), engine->getPredictedValue(m_owner->getId(), m_id, tmTimeStamp));
-
+         _sntprintf(predictedValue, MAX_RESULT_LENGTH, _T("%lf"), engine->getPredictedValue(m_owner->getId(), m_id, tmTimeStamp));
       }
    }
 

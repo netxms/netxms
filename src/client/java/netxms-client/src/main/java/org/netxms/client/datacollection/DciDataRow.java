@@ -30,6 +30,7 @@ public class DciDataRow
 	private Date timestamp;
 	private Object value;
 	private Object rawValue;
+   private Object predictedValue;
 
 	public DciDataRow(Date timestamp, Object value)
 	{
@@ -37,6 +38,7 @@ public class DciDataRow
 		this.timestamp = timestamp;
 		this.value = value;
 		this.rawValue = null;
+      this.predictedValue = null;
 	}
 
 	/**
@@ -48,6 +50,16 @@ public class DciDataRow
 	{
 	   this.rawValue = rawValue;
 	}
+
+   /**
+    * Set predicted value
+    * 
+    * @param rawValue new raw value
+    */
+   public void setPredictedValue(Object predictedValue)
+   {
+      this.predictedValue = predictedValue;
+   }
 	
 	/**
 	 * @return the timestamp
@@ -143,7 +155,52 @@ public class DciDataRow
          return ((Double)rawValue).doubleValue();
       
       return 0;
+   }  
+   
+   /**
+    * @return raw value
+    */
+   public Object getPredictedValue()
+   {
+      return predictedValue;
    }
+
+   
+   /**
+    * @return raw value as string
+    */
+   public String getPredictedValueAsString()
+   {
+      return (predictedValue != null) ? predictedValue.toString() : "";
+   }
+
+   /**
+    * @return raw value as long
+    */
+   public long getPredictedValueAsLong()
+   {
+      if (predictedValue instanceof Long)
+         return ((Long)predictedValue).longValue();
+
+      if (predictedValue instanceof Double)
+         return ((Double)predictedValue).longValue();
+      
+      return 0;
+   }
+
+   /**
+    * @return raw value as double
+    */
+   public double getPredictedValueAsDouble()
+   {
+      if (predictedValue instanceof Long)
+         return ((Long)predictedValue).doubleValue();
+
+      if (predictedValue instanceof Double)
+         return ((Double)predictedValue).doubleValue();
+      
+      return 0;
+   }  
 	
    /**
     * Invert value
@@ -162,6 +219,6 @@ public class DciDataRow
    @Override
    public String toString()
    {
-      return "DciDataRow [timestamp=" + timestamp + ", value=" + value + ", rawValue=" + rawValue + "]";
+      return "DciDataRow [timestamp=" + timestamp + ", value=" + value + ", rawValue=" + rawValue + ", predictedValue=" + predictedValue + "]";
    }
 }

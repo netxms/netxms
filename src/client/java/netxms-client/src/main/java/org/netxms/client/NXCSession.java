@@ -4320,11 +4320,12 @@ public class NXCSession
     * @param data  Data object to add rows to
     * @return number of received data rows
     */
-   public int parseDataRows(final byte[] input, DciData data)
+   public int parseDataRows(final byte[] input, DciData data, boolean includeRawValues, boolean includePredictedValues)
    {
       final NXCPDataInputStream inputStream = new NXCPDataInputStream(input);
       int rows = 0;
       DciDataRow row = null;
+      boolean rawValueSet = false;
 
       try
       {
@@ -4381,12 +4382,21 @@ public class NXCSession
             {
                row = new DciDataRow(new Date(timestamp), value);
                data.addDataRow(row);
+               rawValueSet = false;
             }
             else
             {
-               // raw value for previous entry
+               // raw or/and predicted value for previous entry
                if (row != null)
-                  row.setRawValue(value);
+               {
+                  if(includeRawValues && !rawValueSet)
+                  {
+                     row.setRawValue(value);
+                     rawValueSet = true;
+                  }
+                  else if(includePredictedValues)
+                     row.setPredictedValue(value);
+               }
             }
          }
       }
@@ -4453,7 +4463,7 @@ public class NXCSession
          if (!response.isBinaryMessage()) 
             throw new NXCException(RCC.INTERNAL_ERROR);
 
-         rowsReceived = parseDataRows(response.getBinaryData(), data);
+         rowsReceived = parseDataRows(response.getBinaryData(), data, includeRawValues, includePredictedValues);
          if (((rowsRemaining == 0) || (rowsRemaining > MAX_DCI_DATA_ROWS)) && (rowsReceived == MAX_DCI_DATA_ROWS))
          {
             // adjust boundaries for next request
@@ -10496,7 +10506,7 @@ public class NXCSession
          if (!response.isBinaryMessage()) 
             throw new NXCException(RCC.INTERNAL_ERROR);
 
-         rowsReceived = parseDataRows(response.getBinaryData(), data);
+         rowsReceived = parseDataRows(response.getBinaryData(), data, false, false);
          if (rowsReceived == MAX_DCI_DATA_ROWS)
          {
             // Rows goes in newest to oldest order, so if we need to

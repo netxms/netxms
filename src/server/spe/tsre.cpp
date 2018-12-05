@@ -295,3 +295,20 @@ NeuralNetwork *TimeSeriesRegressionEngine::acquireNetwork(UINT32 nodeId, UINT32 
 
    return nn;
 }
+
+/**
+ * Update neural network after training
+ */
+void TimeSeriesRegressionEngine::replaceNetwork(UINT32 nodeId, UINT32 dciId, NeuralNetwork *newNn)
+{
+   TCHAR nid[64];
+   _sntprintf(nid, 64, _T("%u/%u"), nodeId, dciId);
+
+   MutexLock(m_networkLock);
+   NeuralNetwork *nn = m_networks.get(nid);
+   nn->lock();
+   m_networks.set(nid, newNn);
+   nn->unlock();
+   delete nn;
+   MutexUnlock(m_networkLock);
+}

@@ -39,12 +39,27 @@ NeuralNetworkNode::NeuralNetworkNode(int nextLevelSize)
 }
 
 /**
+ * Node constructor
+ */
+NeuralNetworkNode::NeuralNetworkNode(NeuralNetworkNode *nnn)
+{
+   numWeights = nnn->numWeights;
+   weights = new double[numWeights];
+   weightGradients = new double[numWeights];
+   memcpy(weights, nnn->weights, numWeights * sizeof(double));
+   memcpy(weightGradients, nnn->weightGradients, numWeights * sizeof(double));
+   bias = nnn->bias;
+   biasGradient = nnn->biasGradient;
+   value = nnn->value;
+}
+
+/**
  * Node destructor
  */
 NeuralNetworkNode::~NeuralNetworkNode()
 {
-   delete weights;
-   delete weightGradients;
+   delete[] weights;
+   delete[] weightGradients;
 }
 
 /**
@@ -68,6 +83,23 @@ NeuralNetwork::NeuralNetwork(int inputCount, int hiddenCount) :
    for(int i = 0; i < hiddenCount; i++)
       m_hidden.add(new NeuralNetworkNode(1));
    m_mutex = MutexCreate();
+   m_maxValue = 0.0;
+   m_minValue = 0.0;
+}
+
+/**
+ *
+ */
+NeuralNetwork::NeuralNetwork(NeuralNetwork *nn) :
+      m_input(nn->m_input.size(), 8, true), m_hidden(nn->m_hidden.size(), 8, true), m_output(nn->m_output)
+{
+   for(int i = 0; i < nn->m_input.size(); i++)
+      m_input.add(new NeuralNetworkNode(nn->m_input.get(i)));
+   for(int i = 0; i < nn->m_hidden.size(); i++)
+      m_hidden.add(new NeuralNetworkNode(nn->m_hidden.get(i)));
+   m_mutex = MutexCreate();
+   m_maxValue = nn->m_maxValue;
+   m_minValue = nn->m_minValue;
 }
 
 /**

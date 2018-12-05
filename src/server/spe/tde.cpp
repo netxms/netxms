@@ -157,11 +157,11 @@ void TimeDependentEngine::train(UINT32 nodeId, UINT32 dciId)
          //nxlog_debug_tag(DEBUG_TAG, 2, _T("!!!train %f %f"), series[i*TRAIN_SIZE+5], series[i*TRAIN_SIZE+6]);
       }
       NeuralNetwork *nn = acquireNetwork(nodeId, dciId);
-      //nn->setDataRange(getDCIMinValue(nodeId, dciId), getDCIMaxValue(nodeId, dciId));
-      nn->train(series, values->size()-1, 10000, 0.01);
-      nxlog_debug_tag(DEBUG_TAG, 2, _T("Final neural network model weights and biases:"));
-      //nn->showWeights();
+      NeuralNetwork *newNn = new NeuralNetwork(nn);
       nn->unlock();
+      newNn->train(series, values->size()-1, 10000, 0.01);
+      replaceNetwork(nodeId, dciId, newNn);
+      nxlog_debug_tag(DEBUG_TAG, 2, _T("Final neural network model weights and biases:"));
       delete[] series;
    }
    delete values;
@@ -208,12 +208,11 @@ void TimeDependentEngine::reset(UINT32 nodeId, UINT32 dciId)
 double TimeDependentEngine::getPredictedValue(UINT32 nodeId, UINT32 dciId, time_t timestamp)
 {
    StructArray<DciValue> *values = getDciValues(nodeId, dciId, 1);
-   if (values == NULL && values->size() < 1)
+   if (values == NULL || values->size() < 1)
    {
       nxlog_debug_tag(DEBUG_TAG, 5, _T("TimeDependentEngine::getPredictedValue: cannot read data for DCI %u/%u"), nodeId, dciId);
       return 0;
    }
-   //nxlog_debug_tag(DEBUG_TAG, 2, _T("!!!requested time %d %f"), timestamp, values->get(0)->value);
 
    double *series = new double[INPUT_LAYER_SIZE];
    tm *time = localtime(&timestamp);
@@ -246,7 +245,7 @@ double TimeDependentEngine::getPredictedValue(UINT32 nodeId, UINT32 dciId, time_
 bool TimeDependentEngine::getPredictedSeries(UINT32 nodeId, UINT32 dciId, int count, double *series)
 {
    StructArray<DciValue> *values = getDciValues(nodeId, dciId, 1);
-   if (values == NULL && values->size() < 1)
+   if (values == NULL || values->size() < 1)
    {
       nxlog_debug_tag(DEBUG_TAG, 5, _T("TimeDependentEngine::getPredictedValue: cannot read data for DCI %u/%u"), nodeId, dciId);
       return false;
@@ -317,4 +316,21 @@ NeuralNetwork *TimeDependentEngine::acquireNetwork(UINT32 nodeId, UINT32 dciId)
    MutexUnlock(m_networkLock);
 
    return nn;
+}
+
+/**
+ * Update neural network after training
+ */
+void TimeDependentEngine::replaceNetwork(UINT32 nodeId, UINT32 dciId, NeuralNetwork *newNn)
+{
+   TCHAR nid[64];
+   _sntprintf(nid, 64, _T("%u/%u"), nodeId, dciId);
+
+   MutexLock(m_networkLock);
+   NeuralNetwork *nn = m_networks.get(nid);
+   nn->lock();
+   m_networks.set(nid, newNn);
+   nn->unlock();
+   delete nn;
+   MutexUnlock(m_networkLock);
 }

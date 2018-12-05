@@ -52,6 +52,8 @@ public class HistoricalDataLabelProvider extends LabelProvider implements ITable
 				return ((DciDataRow)element).getValueAsString();
          case 2:
             return ((DciDataRow)element).getRawValueAsString();
+         case 3:
+            return ((DciDataRow)element).getPredictedValueAsString();
 		}
 		return null;
 	}
