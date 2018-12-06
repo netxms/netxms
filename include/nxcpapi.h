@@ -53,6 +53,11 @@ typedef struct
 struct MessageField;
 
 /**
+ * Default size hint
+ */
+#define NXCP_DEFAULT_SIZE_HINT   (4096)
+
+/**
  * Parsed NXCP message
  */
 class LIBNETXMS_EXPORTABLE NXCPMessage

@@ -638,7 +638,7 @@ public:
    /**
     * Create new memory pool
     */
-   MemoryPool(size_t regionSize = 32768);
+   MemoryPool(size_t regionSize = 8192);
    
    /**
     * Destroy memory pool (object destructors will not be called)
@@ -686,6 +686,11 @@ public:
     * Drop all allocated memory except one region
     */
    void clear();
+
+   /**
+    * Get region size
+    */
+   size_t regionSize() const { return m_regionSize; }
 };
 
 /**
