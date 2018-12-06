@@ -6,6 +6,8 @@
 
 NETXMS_EXECUTABLE_HEADER(test-libnetxms)
 
+void TestMemoryPool();
+void TestObjectMemoryPool();
 void TestThreadPool();
 void TestMsgWaitQueue();
 void TestMessageClass();
@@ -1417,76 +1419,14 @@ static void TestDebugTags()
 }
 
 /**
- * Test object class
+ * Debug writer for logger
  */
-class TestClass
+static void DebugWriter(const TCHAR *tag, const TCHAR *message)
 {
-public:
-   void *dummy;
-   int index;
-   bool initialized;
-   bool deleted;
-
-   TestClass()
-   {
-      dummy = this;
-      index = -1;
-      initialized = true;
-      deleted = false;
-   }
-
-   TestClass(int i)
-   {
-      dummy = this;
-      index = i;
-      initialized = true;
-      deleted = false;
-   }
-
-   ~TestClass()
-   {
-      deleted = true;
-   }
-};
-
-/**
- * Test object memory pool
- */
-static void TestObjectMemoryPool()
-{
-   StartTest(_T("Object memory pool"));
-   ObjectMemoryPool<TestClass> pool(64);
-
-   TestClass *o = pool.create();
-   AssertTrue(o->initialized);
-   AssertEquals(o->index, -1);
-   AssertFalse(o->deleted);
-
-   o->index = -42;
-   pool.destroy(o);
-
-   TestClass *o2 = pool.allocate();
-   AssertEquals(o, o2);
-   pool.free(o2);
-
-   TestClass *o3;
-   for(int i = 0; i < 200; i++)
-   {
-      o = new (pool.allocate()) TestClass(i);
-      AssertEquals(o->index, i);
-      if (i == 20)
-         o2 = o;
-      if (i == 70)
-         o3 = o;
-   }
-
-   pool.destroy(o2);
-   pool.destroy(o3);
-
-   AssertEquals(pool.allocate(), o3);
-   AssertEquals(pool.allocate(), o2);
-
-   EndTest();
+   if (tag != NULL)
+      _tprintf(_T("[DEBUG/%-20s] %s\n"), tag, message);
+   else
+      _tprintf(_T("[DEBUG%-21s] %s\n"), _T(""), message);
 }
 
 /**
@@ -1495,18 +1435,25 @@ static void TestObjectMemoryPool()
 int main(int argc, char *argv[])
 {
    InitNetXMSProcess(true);
-
-   if ((argc > 1) && !strcmp(argv[1], "@proc"))
+   if (argc > 1)
    {
-      TestProcessExecutorWorker();
-      return 0;
+      if (!strcmp(argv[1], "@proc"))
+      {
+         TestProcessExecutorWorker();
+         return 0;
+      }
+      else if (!strcmp(argv[1], "-debug"))
+      {
+         nxlog_set_debug_writer(DebugWriter);
+      }
    }
 
 #ifdef _WIN32
    WSADATA wsaData;
-	WSAStartup(MAKEWORD(2, 2), &wsaData);
+   WSAStartup(MAKEWORD(2, 2), &wsaData);
 #endif
 
+   TestMemoryPool();
    TestObjectMemoryPool();
    TestString();
    TestStringConversion();
