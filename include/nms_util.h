@@ -694,6 +694,99 @@ public:
 };
 
 /**
+ * Resource pool element
+ */
+template<typename T> struct ResourcePoolElement
+{
+   ResourcePoolElement<T> *next;
+   T *resource;
+
+   ResourcePoolElement(T *r)
+   {
+      resource = r;
+      next = NULL;
+   }
+};
+
+/**
+ * Generic resource pool
+ */
+template<typename T, T* (*Create)(), void (*Destroy)(T*), void (*Reset)()> class ResourcePool
+{
+private:
+   ResourcePoolElement<T> *m_free;
+   ResourcePoolElement<T> *m_used;
+   MemoryPool m_metadata;
+
+public:
+   ResourcePool()
+   {
+      m_free = NULL;
+      m_used = NULL;
+   }
+
+   ~ResourcePool()
+   {
+      ResourcePoolElement<T> *handle = m_used;
+      while(handle != NULL)
+      {
+         Destroy(handle->resource);
+         handle = handle->next;
+      }
+
+      handle = m_free;
+      while(handle != NULL)
+      {
+         Destroy(handle->resource);
+         handle = handle->next;
+      }
+   }
+
+   /**
+    * Acquire resource
+    */
+   T *acquire()
+   {
+      ResourcePoolElement<T> *handle;
+      if (m_free != NULL)
+      {
+         handle = m_free;
+         m_free = handle->next;
+      }
+      else
+      {
+         handle = m_metadata.create<T>(Create());
+      }
+      handle->next = m_used;
+      m_used = handle;
+      return handle->resource;
+   }
+
+   /**
+    * Release resource
+    */
+   void release(T *resource)
+   {
+      ResourcePoolElement<T> *handle = m_used, *prev = NULL;
+      while((handle != NULL) && (handle->resource != resource))
+      {
+         prev = handle;
+         handle = handle->next;
+      }
+      if (handle != NULL)
+      {
+         Reset(handle->resource);
+         if (prev != NULL)
+            prev->next = handle->next;
+         else
+            m_used = handle->next;
+         handle->next = m_free;
+         m_free = handle;
+      }
+   }
+};
+
+/**
  * Class that can store any object with connected to it mutex
  */
 template <class T> class ObjectLock
