@@ -134,16 +134,16 @@ protected:
    AgentTunnel *m_proxyTunnel;
    ClientSession *m_tcpProxySession;
 
-   virtual AbstractCommChannel *createChannel();
-   virtual void onTrap(NXCPMessage *msg);
-   virtual void onSyslogMessage(NXCPMessage *pMsg);
-   virtual void onDataPush(NXCPMessage *msg);
-   virtual void onFileMonitoringData(NXCPMessage *msg);
-   virtual void onSnmpTrap(NXCPMessage *pMsg);
-   virtual UINT32 processCollectedData(NXCPMessage *msg);
-   virtual UINT32 processBulkCollectedData(NXCPMessage *request, NXCPMessage *response);
-   virtual bool processCustomMessage(NXCPMessage *msg);
-   virtual void processTcpProxyData(UINT32 channelId, const void *data, size_t size);
+   virtual AbstractCommChannel *createChannel() OVERRIDE;
+   virtual void onTrap(NXCPMessage *msg) OVERRIDE;
+   virtual void onSyslogMessage(NXCPMessage *pMsg) OVERRIDE;
+   virtual void onDataPush(NXCPMessage *msg) OVERRIDE;
+   virtual void onFileMonitoringData(NXCPMessage *msg) OVERRIDE;
+   virtual void onSnmpTrap(NXCPMessage *pMsg) OVERRIDE;
+   virtual UINT32 processCollectedData(NXCPMessage *msg) OVERRIDE;
+   virtual UINT32 processBulkCollectedData(NXCPMessage *request, NXCPMessage *response) OVERRIDE;
+   virtual bool processCustomMessage(NXCPMessage *msg) OVERRIDE;
+   virtual void processTcpProxyData(UINT32 channelId, const void *data, size_t size) OVERRIDE;
 
    virtual ~AgentConnectionEx();
 
