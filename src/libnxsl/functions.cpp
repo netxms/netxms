@@ -1584,7 +1584,6 @@ int F_Base64Encode(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm
 #ifdef UNICODE_UCS2
       in = (char *)UCS4StringFromUCS2String(argv[0]->getValueAsCString());
 #else
-#define BASE64_STATIC_INPUT
       in = (char *)argv[0]->getValueAsCString();
 #endif
 #else
@@ -1596,7 +1595,6 @@ int F_Base64Encode(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm
    {
 #ifdef UNICODE
 #ifdef UNICODE_UCS2
-#define BASE64_STATIC_INPUT
       in = (char *)argv[0]->getValueAsCString();
 #else
       in = (char *)UCS2StringFromUCS4String(argv[0]->getValueAsCString());
@@ -1611,7 +1609,6 @@ int F_Base64Encode(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm
 #ifdef UNICODE
       in = MBStringFromWideString(argv[0]->getValueAsCString());
 #else
-#define BASE64_STATIC_INPUT
       in = (char *)argv[0]->getValueAsCString();
 #endif
       ilen = strlen(in);
@@ -1626,10 +1623,8 @@ int F_Base64Encode(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm
    size_t olen = base64_encode_alloc(in, ilen, &out);
    *result = vm->createValue(CHECK_NULL_EX_A(out));
 
-#ifndef BASE64_STATIC_INPUT
-   MemFree(in);
-#endif
-#undef BASE64_STATIC_INPUT
+   if (in != (char *)argv[0]->getValueAsCString())
+      MemFree(in);
    MemFree(out);
 
    return 0;
