@@ -494,20 +494,44 @@ struct NXSL_ModuleImport
 class NXSL_Library;
 
 /**
+ * Generic environment element list reference
+ */
+template<typename T> struct NXSL_EnvironmentListRef
+{
+   NXSL_EnvironmentListRef<T> *next;
+   const T *elements;
+   size_t count;
+
+   NXSL_EnvironmentListRef(const T *_elements, size_t _count)
+   {
+      next = NULL;
+      elements = _elements;
+      count = _count;
+   }
+};
+
+/**
  * Environment for NXSL program
  */
 class LIBNXSL_EXPORTABLE NXSL_Environment
 {
 private:
-   int m_numFunctions;
-   int m_functionsAllocated;
-   NXSL_ExtFunction *m_functions;
-
-   int m_numSelectors;
-   int m_selectorsAllocated;
-   NXSL_ExtSelector *m_selectors;
-
+   NXSL_EnvironmentListRef<NXSL_ExtFunction> *m_functions;
+   NXSL_EnvironmentListRef<NXSL_ExtSelector> *m_selectors;
    NXSL_Library *m_library;
+
+   NXSL_EnvironmentListRef<NXSL_ExtFunction> *createFunctionListRef(const NXSL_ExtFunction *list, size_t count)
+   {
+      return new(m_metadata.allocate(sizeof(NXSL_EnvironmentListRef<NXSL_ExtFunction>))) NXSL_EnvironmentListRef<NXSL_ExtFunction>(list, count);
+   }
+
+   NXSL_EnvironmentListRef<NXSL_ExtSelector> *createSelectorListRef(const NXSL_ExtSelector *list, size_t count)
+   {
+      return new(m_metadata.allocate(sizeof(NXSL_EnvironmentListRef<NXSL_ExtSelector>))) NXSL_EnvironmentListRef<NXSL_ExtSelector>(list, count);
+   }
+
+protected:
+   MemoryPool m_metadata;
 
 public:
    NXSL_Environment();
@@ -520,12 +544,12 @@ public:
 
    void setLibrary(NXSL_Library *lib) { m_library = lib; }
 
-   NXSL_ExtFunction *findFunction(const TCHAR *name);
-   void registerFunctionSet(int count, NXSL_ExtFunction *list);
+   const NXSL_ExtFunction *findFunction(const TCHAR *name) const;
+   void registerFunctionSet(size_t count, const NXSL_ExtFunction *list);
    void registerIOFunctions();
 
-   NXSL_ExtSelector *findSelector(const TCHAR *name);
-   void registerSelectorSet(int count, NXSL_ExtSelector *list);
+   const NXSL_ExtSelector *findSelector(const TCHAR *name) const;
+   void registerSelectorSet(size_t count, const NXSL_ExtSelector *list);
 
    bool loadModule(NXSL_VM *vm, const NXSL_ModuleImport *importInfo);
 };

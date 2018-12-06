@@ -191,16 +191,10 @@ static NXSL_ExtSelector s_builtinSelectors[] =
 /**
  * Constructor
  */
-NXSL_Environment::NXSL_Environment()
+NXSL_Environment::NXSL_Environment() : m_metadata(1024)
 {
-   m_numFunctions = sizeof(s_builtinFunctions) / sizeof(NXSL_ExtFunction);
-   m_functionsAllocated = std::max(m_numFunctions, 256);
-   m_functions = MemAllocArray<NXSL_ExtFunction>(m_functionsAllocated);
-   memcpy(m_functions, s_builtinFunctions, sizeof(s_builtinFunctions));
-   m_numSelectors = sizeof(s_builtinSelectors) / sizeof(NXSL_ExtSelector);
-   m_selectorsAllocated = std::max(m_numSelectors, 16);
-   m_selectors = MemAllocArray<NXSL_ExtSelector>(m_selectorsAllocated);
-   memcpy(m_selectors, s_builtinSelectors, sizeof(s_builtinSelectors));
+   m_functions = createFunctionListRef(s_builtinFunctions, sizeof(s_builtinFunctions) / sizeof(NXSL_ExtFunction));
+   m_selectors = createSelectorListRef(s_builtinSelectors, sizeof(s_builtinSelectors) / sizeof(NXSL_ExtSelector));
    m_library = NULL;
 }
 
@@ -209,33 +203,30 @@ NXSL_Environment::NXSL_Environment()
  */
 NXSL_Environment::~NXSL_Environment()
 {
-   MemFree(m_functions);
-   MemFree(m_selectors);
 }
 
 /**
  * Find function by name
  */
-NXSL_ExtFunction *NXSL_Environment::findFunction(const TCHAR *name)
+const NXSL_ExtFunction *NXSL_Environment::findFunction(const TCHAR *name) const
 {
-   for(int i = 0; i < m_numFunctions; i++)
-      if (!_tcscmp(m_functions[i].m_name, name))
-         return &m_functions[i];
+   for(NXSL_EnvironmentListRef<NXSL_ExtFunction> *list = m_functions; list != NULL; list = list->next)
+   {
+      for(size_t i = 0; i < list->count; i++)
+         if (!_tcscmp(list->elements[i].m_name, name))
+            return &list->elements[i];
+   }
    return NULL;
 }
 
 /**
  * Register function set
  */
-void NXSL_Environment::registerFunctionSet(int count, NXSL_ExtFunction *list)
+void NXSL_Environment::registerFunctionSet(size_t count, const NXSL_ExtFunction *list)
 {
-   if (m_numFunctions + count > m_functionsAllocated)
-   {
-      m_functionsAllocated += std::max(count, 256);
-      m_functions = MemReallocArray(m_functions, m_functionsAllocated);
-   }
-   memcpy(&m_functions[m_numFunctions], list, sizeof(NXSL_ExtFunction) * count);
-   m_numFunctions += count;
+   NXSL_EnvironmentListRef<NXSL_ExtFunction> *ref = createFunctionListRef(list, count);
+   ref->next = m_functions;
+   m_functions = ref;
 }
 
 /**
@@ -249,26 +240,25 @@ void NXSL_Environment::registerIOFunctions()
 /**
  * Find selector by name
  */
-NXSL_ExtSelector *NXSL_Environment::findSelector(const TCHAR *name)
+const NXSL_ExtSelector *NXSL_Environment::findSelector(const TCHAR *name) const
 {
-   for(int i = 0; i < m_numSelectors; i++)
-      if (!_tcscmp(m_selectors[i].m_name, name))
-         return &m_selectors[i];
+   for(NXSL_EnvironmentListRef<NXSL_ExtSelector> *list = m_selectors; list != NULL; list = list->next)
+   {
+      for(size_t i = 0; i < list->count; i++)
+         if (!_tcscmp(list->elements[i].m_name, name))
+            return &list->elements[i];
+   }
    return NULL;
 }
 
 /**
  * Register selector set
  */
-void NXSL_Environment::registerSelectorSet(int count, NXSL_ExtSelector *list)
+void NXSL_Environment::registerSelectorSet(size_t count, const NXSL_ExtSelector *list)
 {
-   if (m_numSelectors + count > m_selectorsAllocated)
-   {
-      m_selectorsAllocated += std::max(count, 256);
-      m_selectors = MemReallocArray(m_selectors, m_selectorsAllocated);
-   }
-   memcpy(&m_selectors[m_numSelectors], list, sizeof(NXSL_ExtSelector) * count);
-   m_numSelectors += count;
+   NXSL_EnvironmentListRef<NXSL_ExtSelector> *ref = createSelectorListRef(list, count);
+   ref->next = m_selectors;
+   m_selectors = ref;
 }
 
 /**

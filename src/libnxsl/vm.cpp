@@ -529,7 +529,7 @@ void NXSL_VM::execute()
    NXSL_Instruction *cp;
    NXSL_Value *pValue;
    NXSL_Variable *pVar;
-   NXSL_ExtFunction *pFunc;
+   const NXSL_ExtFunction *pFunc;
    UINT32 dwNext = m_cp + 1;
    TCHAR szBuffer[256];
    int i, nRet;
@@ -2189,7 +2189,7 @@ UINT32 NXSL_VM::getFunctionAddress(const TCHAR *pszName)
  */
 UINT32 NXSL_VM::callSelector(const TCHAR *name, int numElements)
 {
-   NXSL_ExtSelector *selector = m_env->findSelector(name);
+   const NXSL_ExtSelector *selector = m_env->findSelector(name);
    if (selector == NULL)
    {
       error(NXSL_ERR_NO_SELECTOR);
