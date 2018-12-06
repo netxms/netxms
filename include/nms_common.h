@@ -61,6 +61,8 @@
 #define _CRT_SECURE_NO_WARNINGS
 #endif
 
+#define HAVE_OVERRIDE_SPECIFIER  1
+
 #endif   /* _WIN32 */
 
 #if HAVE_JEMALLOC_JEMALLOC_H
@@ -1284,6 +1286,15 @@ enum VirtualizationType
 #define DISABLE_COPY_CTOR(c) c (const c &s) = delete;
 #else
 #define DISABLE_COPY_CTOR(c)
+#endif
+
+/**
+ * Override specifier if compiler supports it
+ */
+#if HAVE_OVERRIDE_SPECIFIER
+#define OVERRIDE override
+#else
+#define OVERRIDE
 #endif
 
 #endif

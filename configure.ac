@@ -1155,6 +1155,28 @@ AC_C_BIGENDIAN
 
 AC_LANG_PUSH([C++])
 
+if test "x$ac_compiler_gnu" = "xyes" ; then
+	AC_MSG_CHECKING(whether C++ compiler accepts -std=c++11)
+	OLD_CXXFLAGS="$CXXFLAGS"
+	CXXFLAGS="$CXXFLAGS -std=c++11"
+	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
+		[ AC_MSG_RESULT(yes) ], 
+		[ 
+			CXXFLAGS="$OLD_CXXFLAGS"
+			AC_MSG_RESULT(no)
+
+			AC_MSG_CHECKING(whether C++ compiler accepts -std=c++0x)
+			OLD_CXXFLAGS="$CXXFLAGS"
+			CXXFLAGS="$CXXFLAGS -std=c++0x"
+			AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
+				[ AC_MSG_RESULT(yes) ], 
+				[ 
+					CXXFLAGS="$OLD_CXXFLAGS"
+					AC_MSG_RESULT(no)
+				])
+		])
+fi
+
 AC_MSG_CHECKING(whether C++ compiler supports deletion of copy constructor)
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 class A {
@@ -1168,6 +1190,25 @@ public:
 ],[
 	AC_MSG_RESULT(no)
 	AC_DEFINE(CAN_DELETE_COPY_CTOR,0,Define to 1 if C++ compiler supports copy constructor deletion)
+])
+
+AC_MSG_CHECKING(whether C++ compiler supports "override" specifier)
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+class A {
+public:
+   virtual void test();
+};
+class B : public A {
+public:
+   virtual void test() override;
+};
+]],[[ ]])
+],[
+	AC_MSG_RESULT(yes)
+	AC_DEFINE(HAVE_OVERRIDE_SPECIFIER,1,Define to 1 if C++ compiler supports "override" specifier)
+],[
+	AC_MSG_RESULT(no)
+	AC_DEFINE(HAVE_OVERRIDE_SPECIFIER,0,Define to 1 if C++ compiler supports "override" specifier)
 ])
 
 AC_LANG_POP([C++])
@@ -1317,26 +1358,6 @@ if test "x$ac_compiler_gnu" = "xyes" ; then
    CPPFLAGS="$OLD_CPPFLAGS"
 
 	AC_LANG_PUSH([C++])
-
-	AC_MSG_CHECKING(whether C++ compiler accepts -std=c++11)
-	OLD_CXXFLAGS="$CXXFLAGS"
-	CXXFLAGS="$CXXFLAGS -std=c++11"
-	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
-		[ AC_MSG_RESULT(yes) ], 
-		[ 
-			CXXFLAGS="$OLD_CXXFLAGS"
-			AC_MSG_RESULT(no)
-
-			AC_MSG_CHECKING(whether C++ compiler accepts -std=c++0x)
-			OLD_CXXFLAGS="$CXXFLAGS"
-			CXXFLAGS="$CXXFLAGS -std=c++0x"
-			AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
-				[ AC_MSG_RESULT(yes) ], 
-				[ 
-					CXXFLAGS="$OLD_CXXFLAGS"
-					AC_MSG_RESULT(no)
-				])
-		])
 
 	AC_MSG_CHECKING(whether C++ compiler accepts -fno-rtti)
 	OLD_CXXFLAGS="$CXXFLAGS"
