@@ -551,7 +551,7 @@ void NXSL_VM::execute()
    NXSL_Instruction *cp;
    NXSL_Value *pValue;
    NXSL_Variable *pVar;
-   NXSL_ExtFunction *pFunc;
+   const NXSL_ExtFunction *pFunc;
    UINT32 dwNext = m_cp + 1;
    char varName[MAX_IDENTIFIER_LENGTH];
    int i, nRet;
@@ -2228,7 +2228,7 @@ void NXSL_VM::loadModule(NXSL_Program *module, const NXSL_ModuleImport *importIn
 /**
  * Call external function
  */
-bool NXSL_VM::callExternalFunction(NXSL_ExtFunction *function, int stackItems)
+bool NXSL_VM::callExternalFunction(const NXSL_ExtFunction *function, int stackItems)
 {
    bool stopExecution = false;
    bool constructor = !strncmp(function->m_name, "__new@", 6);
@@ -2339,7 +2339,7 @@ UINT32 NXSL_VM::getFunctionAddress(const NXSL_Identifier& name)
  */
 UINT32 NXSL_VM::callSelector(const NXSL_Identifier& name, int numElements)
 {
-   NXSL_ExtSelector *selector = m_env->findSelector(name);
+   const NXSL_ExtSelector *selector = m_env->findSelector(name);
    if (selector == NULL)
    {
       error(NXSL_ERR_NO_SELECTOR);
