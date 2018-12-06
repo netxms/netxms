@@ -167,6 +167,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="mempool.cpp" />
     <ClCompile Include="nxcp.cpp" />
     <ClCompile Include="proc.cpp" />
     <ClCompile Include="test-libnetxms.cpp" />
