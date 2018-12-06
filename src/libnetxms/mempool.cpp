@@ -41,7 +41,7 @@ MemoryPool::MemoryPool(size_t regionSize)
 MemoryPool::~MemoryPool()
 {
    void *r = m_currentRegion;
-   while (r != NULL)
+   while(r != NULL)
    {
       void *n = *((void **)r);
       MemFree(r);
@@ -89,7 +89,7 @@ TCHAR *MemoryPool::copyString(const TCHAR *s)
 void MemoryPool::clear()
 {
    void *r = *((void **)m_currentRegion);
-   while (r != NULL)
+   while(r != NULL)
    {
       void *n = *((void **)r);
       MemFree(r);

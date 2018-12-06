@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -93,7 +93,7 @@ inline MessageField *CreateMessageField(MemoryPool& pool, size_t fieldSize)
 /**
  * Default constructor for NXCPMessage class
  */
-NXCPMessage::NXCPMessage(int version) : m_pool(131072)
+NXCPMessage::NXCPMessage(int version) : m_pool(NXCP_DEFAULT_SIZE_HINT)
 {
    m_code = 0;
    m_id = 0;
@@ -107,7 +107,7 @@ NXCPMessage::NXCPMessage(int version) : m_pool(131072)
 /**
  * Create message with given code and ID
  */
-NXCPMessage::NXCPMessage(UINT16 code, UINT32 id, int version) : m_pool(131072)
+NXCPMessage::NXCPMessage(UINT16 code, UINT32 id, int version) : m_pool(NXCP_DEFAULT_SIZE_HINT)
 {
    m_code = code;
    m_id = id;
@@ -121,7 +121,7 @@ NXCPMessage::NXCPMessage(UINT16 code, UINT32 id, int version) : m_pool(131072)
 /**
  * Create a copy of prepared CSCP message
  */
-NXCPMessage::NXCPMessage(NXCPMessage *msg) : m_pool(131072)
+NXCPMessage::NXCPMessage(NXCPMessage *msg) : m_pool(msg->m_pool.regionSize())
 {
    m_code = msg->m_code;
    m_id = msg->m_id;
@@ -163,9 +163,18 @@ NXCPMessage *NXCPMessage::deserialize(const NXCP_MESSAGE *rawMsg, int version)
 }
 
 /**
+ * Calculate size hint for message memory pool
+ */
+inline size_t SizeHint(const NXCP_MESSAGE *msg)
+{
+   size_t size = ntohl(msg->size);
+   return size + 4096 - (size % 4096);
+}
+
+/**
  * Create NXCPMessage object from serialized message
  */
-NXCPMessage::NXCPMessage(const NXCP_MESSAGE *msg, int version)
+NXCPMessage::NXCPMessage(const NXCP_MESSAGE *msg, int version) : m_pool(SizeHint(msg))
 {
    m_flags = ntohs(msg->flags);
    m_code = ntohs(msg->code);
