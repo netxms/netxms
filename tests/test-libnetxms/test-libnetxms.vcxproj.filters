@@ -30,6 +30,9 @@
     <ClCompile Include="tp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="mempool.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\testtools.h">
