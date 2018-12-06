@@ -474,7 +474,7 @@ private:
 	VolatileCounter m_tcpProxyChannelId;
 	HashSet<UINT32> *m_pendingObjectNotifications;
    MUTEX m_pendingObjectNotificationsLock;
-   int m_objectNotificationDelay;
+   UINT32 m_objectNotificationDelay;
 
    static THREAD_RESULT THREAD_CALL readThreadStarter(void *);
    static void pollerThreadStarter(void *);
