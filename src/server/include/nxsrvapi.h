@@ -670,11 +670,11 @@ public:
 
    virtual int readMessage(SNMP_PDU **ppData, UINT32 dwTimeout = INFINITE,
                            struct sockaddr *pSender = NULL, socklen_t *piAddrSize = NULL,
-	                        SNMP_SecurityContext* (*contextFinder)(struct sockaddr *, socklen_t) = NULL);
-   virtual int sendMessage(SNMP_PDU *pdu);
-   virtual InetAddress getPeerIpAddress();
-   virtual UINT16 getPort();
-   virtual bool isProxyTransport();
+	                        SNMP_SecurityContext* (*contextFinder)(struct sockaddr *, socklen_t) = NULL) OVERRIDE;
+   virtual int sendMessage(SNMP_PDU *pdu) OVERRIDE;
+   virtual InetAddress getPeerIpAddress() OVERRIDE;
+   virtual UINT16 getPort() OVERRIDE;
+   virtual bool isProxyTransport() OVERRIDE;
 
    void setWaitForResponse(bool wait) { m_waitForResponse = wait; }
 };
