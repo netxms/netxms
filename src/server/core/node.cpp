@@ -449,10 +449,7 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    m_agentId = DBGetFieldGUID(hResult, 0, 53);
    m_agentCertSubject = DBGetField(hResult, 0, 54, NULL, 0);
    if ((m_agentCertSubject != NULL) && (m_agentCertSubject[0] == 0))
-   {
-      free(m_agentCertSubject);
-      m_agentCertSubject = NULL;
-   }
+      MemFreeAndNull(m_agentCertSubject);
    DBGetField(hResult, 0, 55, m_hypervisorType, MAX_HYPERVISOR_TYPE_LENGTH);
    m_hypervisorInfo = DBGetField(hResult, 0, 56, NULL, 0);
 
