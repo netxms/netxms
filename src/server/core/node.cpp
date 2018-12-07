@@ -2671,8 +2671,8 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
 
          if (*hypervisorInfo != 0)
             sendPollerMsg(rqId, _T("   Hypervisor information set to %s\r\n"), hypervisorInfo);
-         free(m_hypervisorInfo);
-         m_hypervisorInfo = _tcsdup(hypervisorInfo);
+         MemFree(m_hypervisorInfo);
+         m_hypervisorInfo = MemCopyString(hypervisorInfo);
       }
       unlockProperties();
 
