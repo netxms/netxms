@@ -1043,9 +1043,9 @@ private:
 public:
    ArrayIterator(Array *array);
 
-   virtual bool hasNext();
-   virtual void *next();
-   virtual void remove();
+   virtual bool hasNext() OVERRIDE;
+   virtual void *next() OVERRIDE;
+   virtual void remove() OVERRIDE;
 };
 
 /**
@@ -1372,9 +1372,9 @@ private:
 public:
    StringSetIterator(StringSet *stringSet);
 
-   virtual bool hasNext();
-   virtual void *next();
-   virtual void remove();
+   virtual bool hasNext() OVERRIDE;
+   virtual void *next() OVERRIDE;
+   virtual void remove() OVERRIDE;
 };
 
 /**
@@ -1517,9 +1517,9 @@ private:
 public:
    HashMapIterator(HashMapBase *hashMap);
 
-   virtual bool hasNext();
-   virtual void *next();
-   virtual void remove();
+   virtual bool hasNext() OVERRIDE;
+   virtual void *next() OVERRIDE;
+   virtual void remove() OVERRIDE;
 };
 
 /**
@@ -2208,7 +2208,7 @@ public:
 	static TelnetConnection *createConnection(const TCHAR *hostName, WORD port, UINT32 timeout);
    static TelnetConnection *createConnection(const InetAddress& ip, WORD port, UINT32 timeout);
 
-	virtual int read(char *pBuff, int nSize, UINT32 timeout = INFINITE);
+	virtual int read(char *pBuff, int nSize, UINT32 timeout = INFINITE) OVERRIDE;
 	int readLine(char *buffer, int size, UINT32 timeout = INFINITE);
 };
 
@@ -2314,11 +2314,11 @@ protected:
 public:
    SocketCommChannel(SOCKET socket, bool owner = true);
 
-   virtual int send(const void *data, size_t size, MUTEX mutex = INVALID_MUTEX_HANDLE);
-   virtual int recv(void *buffer, size_t size, UINT32 timeout = INFINITE);
-   virtual int poll(UINT32 timeout, bool write = false);
-   virtual int shutdown();
-   virtual void close();
+   virtual int send(const void *data, size_t size, MUTEX mutex = INVALID_MUTEX_HANDLE) OVERRIDE;
+   virtual int recv(void *buffer, size_t size, UINT32 timeout = INFINITE) OVERRIDE;
+   virtual int poll(UINT32 timeout, bool write = false) OVERRIDE;
+   virtual int shutdown() OVERRIDE;
+   virtual void close() OVERRIDE;
 };
 
 #endif   /* __cplusplus */
