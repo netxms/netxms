@@ -25,10 +25,9 @@ static char mbText[] = "Lorem ipsum dolor sit amet, consectetur adipiscing elit,
 static WCHAR wcText[] = L"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.";
 static char mbTextShort[] = "Lorem ipsum";
 static UCS2CHAR ucs2TextShort[] = { 'L', 'o', 'r', 'e', 'm', ' ', 'i', 'p', 's', 'u', 'm', 0 };
-static UCS2CHAR ucs2TextSurrogates[] = { 'L', 'o', 'r', 'e', 'm', 0xD801, 0xDFFF, 'i', 'p', 's', 'u', 'm', 0 };
-#ifdef UNICODE_UCS4
-static UCS4CHAR ucs4TextSurrogatesTest[] = { 'L', 'o', 'r', 'e', 'm', 0x0107FF, 'i', 'p', 's', 'u', 'm', 0 };
-#endif
+static UCS2CHAR ucs2TextSurrogates[] = { 'L', 'o', 'r', 'e', 'm', 0xD801, 0xDFFF, 'i', 'p', 's', 'u', 'm', 0x1CD, '.', 0 };
+static UCS4CHAR ucs4TextSurrogatesTest[] = { 'L', 'o', 'r', 'e', 'm', 0x0107FF, 'i', 'p', 's', 'u', 'm', 0x1CD, '.', 0 };
+static char utf8TextSurrogatesTest[] = { 'L', 'o', 'r', 'e', 'm', (char)0xF0, (char)0x90, (char)0x9F, (char)0xBF, 'i', 'p', 's', 'u', 'm', (char)0xC7, (char)0x8D, '.', 0 };
 
 /**
  * Test string conversion
@@ -84,39 +83,131 @@ static void TestStringConversion()
       WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, wcText, -1, buffer, 1024, NULL, NULL);
    }
    EndTest(GetCurrentTimeMs() - start);
+#endif
 
    StartTest(_T("UCS-2 to UCS-4 conversion"));
-   UCS4CHAR ucs4buffer[128];
+   UCS4CHAR ucs4buffer[1024];
    int len = ucs2_to_ucs4(ucs2TextSurrogates, -1, ucs4buffer, 128);
-   AssertEquals(len, 11);
-   AssertTrue(!wcscmp(ucs4buffer, ucs4TextSurrogatesTest));
+   AssertEquals(len, 13);
+   AssertTrue(!memcmp(ucs4buffer, ucs4TextSurrogatesTest, 13 * sizeof(UCS4CHAR)));
    EndTest();
 
    StartTest(_T("UCS-4 to UCS-2 conversion"));
    len = ucs4_to_ucs2(ucs4TextSurrogatesTest, -1, ucs2buffer, 1024);
-   AssertEquals(len, 12);
-   AssertTrue(!memcmp(ucs2buffer, ucs2TextSurrogates, 12 * sizeof(UCS2CHAR)));
+   AssertEquals(len, 14);
+   AssertTrue(!memcmp(ucs2buffer, ucs2TextSurrogates, 14 * sizeof(UCS2CHAR)));
    EndTest();
 
    StartTest(_T("UCS-2 to UCS-4 conversion performance"));
+#ifdef UNICODE_UCS4
    mb_to_ucs2(mbText, -1, ucs2buffer, 1024);
+#endif
    start = GetCurrentTimeMs();
    for(int i = 0; i < 10000; i++)
    {
       WCHAR buffer[1024];
+#ifdef UNICODE_UCS4
       ucs2_to_ucs4(ucs2buffer, -1, buffer, 1024);
+#else
+      ucs2_to_ucs4(wcText, -1, buffer, 1024);
+#endif
    }
    EndTest(GetCurrentTimeMs() - start);
 
    StartTest(_T("UCS-4 to UCS-2 conversion performance"));
+#ifdef UNICODE_UCS2
+   ucs2_to_ucs4(wcText, -1, ucs4buffer, 1024);
+#endif
    start = GetCurrentTimeMs();
    for(int i = 0; i < 10000; i++)
    {
       UCS2CHAR buffer[1024];
+#ifdef UNICODE_UCS4
       ucs4_to_ucs2(wcText, -1, buffer, 1024);
+#else
+      ucs4_to_ucs2(ucs4buffer, -1, buffer, 1024);
+#endif
    }
    EndTest(GetCurrentTimeMs() - start);
-#endif
+
+   StartTest(_T("ucs2_utf8len"));
+   AssertEquals(ucs2_utf8len(ucs2TextSurrogates, -1), 18);  // ucs2_utf8len includes trailing 0 into length
+   EndTest();
+
+   StartTest(_T("utf8_ucs2len"));
+   AssertEquals(utf8_ucs2len(utf8TextSurrogatesTest, -1), 15);  // utf8_ucs2len includes trailing 0 into length
+   EndTest();
+
+   StartTest(_T("UCS-2 to UTF-8 conversion"));
+   char utf8buffer[128];
+   len = ucs2_to_utf8(ucs2TextSurrogates, -1, utf8buffer, 128);
+   AssertEquals(len, 17);
+   AssertTrue(!strcmp(utf8buffer, utf8TextSurrogatesTest));
+   EndTest();
+
+   StartTest(_T("UTF-8 to UCS-2 conversion"));
+   len = utf8_to_ucs2(utf8TextSurrogatesTest, -1, ucs2buffer, 1024);
+   AssertEquals(len, 14);
+   AssertTrue(!memcmp(ucs2buffer, ucs2TextSurrogates, 14 * sizeof(UCS2CHAR)));
+   EndTest();
+
+   StartTest(_T("UCS-2 to UTF-8 conversion performance"));
+   mb_to_ucs2(mbText, -1, ucs2buffer, 1024);
+   start = GetCurrentTimeMs();
+   for(int i = 0; i < 10000; i++)
+   {
+      char buffer[1024];
+      ucs2_to_utf8(ucs2buffer, -1, buffer, 1024);
+   }
+   EndTest(GetCurrentTimeMs() - start);
+
+   StartTest(_T("UTF-8 to UCS-2 conversion performance"));
+   start = GetCurrentTimeMs();
+   for(int i = 0; i < 10000; i++)
+   {
+      UCS2CHAR buffer[1024];
+      utf8_to_ucs2(mbText, -1, buffer, 1024);
+   }
+   EndTest(GetCurrentTimeMs() - start);
+
+   StartTest(_T("ucs4_utf8len"));
+   AssertEquals(ucs4_utf8len(ucs4TextSurrogatesTest, -1), 18);  // ucs4_utf8len includes trailing 0 into length
+   EndTest();
+
+   StartTest(_T("utf8_ucs4len"));
+   AssertEquals(utf8_ucs4len(utf8TextSurrogatesTest, -1), 14);  // utf8_ucs2len includes trailing 0 into length
+   EndTest();
+
+   StartTest(_T("UCS-4 to UTF-8 conversion"));
+   len = ucs4_to_utf8(ucs4TextSurrogatesTest, -1, utf8buffer, 128);
+   AssertEquals(len, 17);
+   AssertTrue(!strcmp(utf8buffer, utf8TextSurrogatesTest));
+   EndTest();
+
+   StartTest(_T("UTF-8 to UCS-4 conversion"));
+   len = utf8_to_ucs4(utf8TextSurrogatesTest, -1, ucs4buffer, 1024);
+   AssertEquals(len, 13);
+   AssertTrue(!memcmp(ucs4buffer, ucs4TextSurrogatesTest, 13 * sizeof(UCS2CHAR)));
+   EndTest();
+
+   StartTest(_T("UCS-4 to UTF-8 conversion performance"));
+   mb_to_ucs4(mbText, -1, ucs4buffer, 1024);
+   start = GetCurrentTimeMs();
+   for(int i = 0; i < 10000; i++)
+   {
+      char buffer[1024];
+      ucs4_to_utf8(ucs4buffer, -1, buffer, 1024);
+   }
+   EndTest(GetCurrentTimeMs() - start);
+
+   StartTest(_T("UTF-8 to UCS-4 conversion performance"));
+   start = GetCurrentTimeMs();
+   for(int i = 0; i < 10000; i++)
+   {
+      UCS4CHAR buffer[1024];
+      utf8_to_ucs4(mbText, -1, buffer, 1024);
+   }
+   EndTest(GetCurrentTimeMs() - start);
 }
 
 /**
@@ -1175,6 +1266,7 @@ static void TestTable()
    AssertEquals(table2->getNumColumns(), table->getNumColumns());
    AssertEquals(table2->getNumRows(), table->getNumRows());
    AssertEquals(table2->getAsInt(10, 1), table->getAsInt(10, 1));
+   AssertTrue(!_tcscmp(table2->getAsString(15, 0), table->getAsString(15, 0)));
    EndTest(GetCurrentTimeMs() - start);
 
    delete table;

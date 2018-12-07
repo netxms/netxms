@@ -34,53 +34,36 @@ int LIBNETXMS_EXPORTABLE ucs2_to_ucs4(const UCS2CHAR *src, int srcLen, UCS4CHAR 
    UCS4CHAR *d = dst;
    while((scount < len) && (dcount < dstLen))
    {
-      UCS2CHAR ch = *s++;
+      UCS2CHAR ch2 = *s++;
       scount++;
-      if ((ch & 0xFC00) == 0xD800)  // high surrogate
+      if ((ch2 & 0xFC00) == 0xD800)  // high surrogate
       {
-         UCS4CHAR ch4 = static_cast<UCS4CHAR>(ch & 0x03FF) << 10;
+         UCS4CHAR ch4 = static_cast<UCS4CHAR>(ch2 & 0x03FF) << 10;
          if (scount < len)
          {
-            ch = *s;
-            if ((ch & 0xFC00) == 0xDC00)  // low surrogate
+            ch2 = *s;
+            if ((ch2 & 0xFC00) == 0xDC00)  // low surrogate
             {
                s++;
                scount++;
-               *d++ = (ch4 | static_cast<UCS4CHAR>(ch & 0x03FF)) + 0x10000;
+               *d++ = (ch4 | static_cast<UCS4CHAR>(ch2 & 0x03FF)) + 0x10000;
                dcount++;
             }
          }
       }
-      else if ((ch & 0xFC00) != 0xDC00)   // ignore unexpected low surrogate
+      else if ((ch2 & 0xFC00) != 0xDC00)   // ignore unexpected low surrogate
       {
-         *d++ = static_cast<UCS4CHAR>(ch);
+         *d++ = static_cast<UCS4CHAR>(ch2);
          dcount++;
       }
    }
+
+   if (srcLen != -1)
+      return dcount;
    if (dcount == dstLen)
       dcount--;
    dst[dcount] = 0;
    return dcount;
-}
-
-#if !defined(_WIN32) && !defined(UNICODE_UCS2)
-
-/**
- * Convert UCS-2 to UTF-8 using stub (no actual conversion for character codes above 0x007F)
- */
-static int __internal_ucs2_to_utf8(const UCS2CHAR *src, int srcLen, char *dst, int dstLen)
-{
-   const UCS2CHAR *psrc;
-   char *pdst;
-   int pos, size;
-
-   size = (srcLen == -1) ? ucs2_strlen(src) : srcLen;
-   if (size >= dstLen)
-      size = dstLen - 1;
-   for(psrc = src, pos = 0, pdst = dst; pos < size; pos++, psrc++, pdst++)
-      *pdst = (*psrc < 128) ? (char) (*psrc) : '?';
-   *pdst = 0;
-   return size;
 }
 
 /**
@@ -88,50 +71,139 @@ static int __internal_ucs2_to_utf8(const UCS2CHAR *src, int srcLen, char *dst, i
  */
 int LIBNETXMS_EXPORTABLE ucs2_to_utf8(const UCS2CHAR *src, int srcLen, char *dst, int dstLen)
 {
-#if HAVE_ICONV && !defined(__DISABLE_ICONV)
-   iconv_t cd;
-   const char *inbuf;
-   char *outbuf;
-   size_t count, inbytes, outbytes;
-
-   cd = IconvOpen("UTF-8", UCS2_CODEPAGE_NAME);
-   if (cd == (iconv_t) (-1))
+   int len = static_cast<int>((srcLen == -1) ? ucs2_strlen(src) : srcLen);
+   int scount = 0, dcount = 0;
+   const UCS2CHAR *s = src;
+   char *d = dst;
+   while((scount < len) && (dcount < dstLen))
    {
-      return __internal_ucs2_to_utf8(src, srcLen, dst, dstLen);
-   }
+      UCS2CHAR ch2 = *s++;
+      scount++;
 
-   inbuf = (const char *) src;
-   inbytes = ((srcLen == -1) ? ucs2_strlen(src) + 1 : (size_t) srcLen) * sizeof(UCS2CHAR);
-   outbuf = (char *) dst;
-   outbytes = (size_t) dstLen;
-   count = iconv(cd, (ICONV_CONST char **) &inbuf, &inbytes, &outbuf, &outbytes);
-   IconvClose(cd);
-
-   if (count == (size_t) - 1)
-   {
-      if (errno == EILSEQ)
+      UCS4CHAR ch;
+      if ((ch2 & 0xFC00) == 0xD800)  // high surrogate
       {
-         count = (dstLen * sizeof(char) - outbytes) / sizeof(char);
+         ch = static_cast<UCS4CHAR>(ch2 & 0x03FF) << 10;
+         if (scount < len)
+         {
+            ch2 = *s;
+            if ((ch2 & 0xFC00) == 0xDC00)  // low surrogate
+            {
+               s++;
+               scount++;
+               ch = (ch | static_cast<UCS4CHAR>(ch2 & 0x03FF)) + 0x10000;
+            }
+         }
+      }
+      else if ((ch & 0xFC00) != 0xDC00)   // ignore unexpected low surrogate
+      {
+         ch = static_cast<UCS4CHAR>(ch2);
       }
       else
       {
-         count = 0;
+         continue;
+      }
+
+      if (ch <= 0x7F)
+      {
+         *d++ = static_cast<char>(ch);
+         dcount++;
+      }
+      else if (ch <= 0x7FF)
+      {
+         if (dcount > dstLen - 2)
+            break;   // no enough space in destination buffer
+         *d++ = static_cast<char>((ch >> 6) | 0xC0);
+         *d++ = static_cast<char>((ch & 0x3F) | 0x80);
+         dcount += 2;
+      }
+      else if (ch <= 0xFFFF)
+      {
+         if (dcount > dstLen - 3)
+            break;   // no enough space in destination buffer
+         *d++ = static_cast<char>((ch >> 12) | 0xE0);
+         *d++ = static_cast<char>(((ch >> 6) & 0x3F) | 0x80);
+         *d++ = static_cast<char>((ch & 0x3F) | 0x80);
+         dcount += 3;
+      }
+      else if (ch <= 0x10FFFF)
+      {
+         if (dcount > dstLen - 4)
+            break;   // no enough space in destination buffer
+         *d++ = static_cast<char>((ch >> 18) | 0xF0);
+         *d++ = static_cast<char>(((ch >> 12) & 0x3F) | 0x80);
+         *d++ = static_cast<char>(((ch >> 6) & 0x3F) | 0x80);
+         *d++ = static_cast<char>((ch & 0x3F) | 0x80);
+         dcount += 4;
       }
    }
-   else
-   {
-      count = dstLen - outbytes;
-   }
-   if ((srcLen == -1) && (outbytes >= sizeof(char)))
-   {
-      *((char *) outbuf) = 0;
-   }
 
-   return (int)count;
-#else
-   return __internal_ucs2_to_utf8(src, srcLen, dst, dstLen);
-#endif
+   if (srcLen != -1)
+      return dcount;
+   if (dcount == dstLen)
+      dcount--;
+   dst[dcount] = 0;
+   return dcount;
 }
+
+/**
+ * Calculate length in bytes of given UCS-2 string in UTF-8 encoding (including terminating 0 byte)
+ */
+int LIBNETXMS_EXPORTABLE ucs2_utf8len(const UCS2CHAR *src, int srcLen)
+{
+   int len = static_cast<int>((srcLen == -1) ? ucs2_strlen(src) : srcLen);
+   int scount = 0, dcount = 1;
+   const UCS2CHAR *s = src;
+   while(scount < len)
+   {
+      UCS2CHAR ch2 = *s++;
+      scount++;
+
+      UCS4CHAR ch;
+      if ((ch2 & 0xFC00) == 0xD800)  // high surrogate
+      {
+         ch = static_cast<UCS4CHAR>(ch2 & 0x03FF) << 10;
+         if (scount < len)
+         {
+            ch2 = *s;
+            if ((ch2 & 0xFC00) == 0xDC00)  // low surrogate
+            {
+               s++;
+               scount++;
+               ch = (ch | static_cast<UCS4CHAR>(ch2 & 0x03FF)) + 0x10000;
+            }
+         }
+      }
+      else if ((ch & 0xFC00) != 0xDC00)   // ignore unexpected low surrogate
+      {
+         ch = static_cast<UCS4CHAR>(ch2);
+      }
+      else
+      {
+         continue;
+      }
+
+      if (ch <= 0x7F)
+      {
+         dcount++;
+      }
+      else if (ch <= 0x7FF)
+      {
+         dcount += 2;
+      }
+      else if (ch <= 0xFFFF)
+      {
+         dcount += 3;
+      }
+      else if (ch <= 0x10FFFF)
+      {
+         dcount += 4;
+      }
+   }
+   return dcount;
+}
+
+#if !defined(_WIN32) && !defined(UNICODE_UCS2)
 
 /**
  * Convert UCS-2 to multibyte using stub (no actual conversion for character codes above 0x007F)

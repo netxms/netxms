@@ -351,33 +351,27 @@ UCS2CHAR LIBNETXMS_EXPORTABLE *ucs2_strdup(const UCS2CHAR *src);
 
 // Character conversion functions
 int LIBNETXMS_EXPORTABLE ucs2_to_ucs4(const UCS2CHAR *src, int srcLen, UCS4CHAR *dst, int dstLen);
+int LIBNETXMS_EXPORTABLE ucs2_to_utf8(const UCS2CHAR *src, int srcLen, char *dst, int dstLen);
+int LIBNETXMS_EXPORTABLE ucs2_utf8len(const UCS2CHAR *src, int srcLen);
 #if defined(_WIN32) || defined(UNICODE_UCS2)
-#define ucs2_to_utf8(wstr, wlen, mstr, mlen) WideCharToMultiByte(CP_UTF8, 0, wstr, wlen, mstr, mlen, NULL, NULL)
 #define ucs2_to_mb(wstr, wlen, mstr, mlen)   WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, wstr, wlen, mstr, mlen, NULL, NULL)
 #else
-int LIBNETXMS_EXPORTABLE ucs2_to_utf8(const UCS2CHAR *src, int srcLen, char *dst, int dstLen);
 int LIBNETXMS_EXPORTABLE ucs2_to_mb(const UCS2CHAR *src, int srcLen, char *dst, int dstLen);
 #endif
 
 int LIBNETXMS_EXPORTABLE ucs4_to_ucs2(const UCS4CHAR *src, int srcLen, UCS2CHAR *dst, int dstLen);
+int LIBNETXMS_EXPORTABLE ucs4_to_utf8(const UCS4CHAR *src, int srcLen, char *dst, int dstLen);
+int LIBNETXMS_EXPORTABLE ucs4_utf8len(const UCS4CHAR *src, int srcLen);
 #ifdef UNICODE_UCS4
-#define ucs4_to_utf8(wstr, wlen, mstr, mlen) WideCharToMultiByte(CP_UTF8, 0, wstr, wlen, mstr, mlen, NULL, NULL)
 #define ucs4_to_mb(wstr, wlen, mstr, mlen)   WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, wstr, wlen, mstr, mlen, NULL, NULL)
 #else
-int LIBNETXMS_EXPORTABLE ucs4_to_utf8(const UCS4CHAR *src, int srcLen, char *dst, int dstLen);
 int LIBNETXMS_EXPORTABLE ucs4_to_mb(const UCS4CHAR *src, int srcLen, char *dst, int dstLen);
 #endif
 
-#ifdef UNICODE_UCS4
-#define utf8_to_ucs4(mstr, mlen, wstr, wlen)   MultiByteToWideChar(CP_UTF8, 0, mstr, mlen, wstr, wlen)
-#else
 int LIBNETXMS_EXPORTABLE utf8_to_ucs4(const char *src, int srcLen, UCS4CHAR *dst, int dstLen);
-#endif
-#if defined(_WIN32) || defined(UNICODE_UCS2)
-#define utf8_to_ucs2(mstr, mlen, wstr, wlen)   MultiByteToWideChar(CP_UTF8, 0, mstr, mlen, wstr, wlen)
-#else
+int LIBNETXMS_EXPORTABLE utf8_ucs4len(const char *src, int srcLen);
 int LIBNETXMS_EXPORTABLE utf8_to_ucs2(const char *src, int srcLen, UCS2CHAR *dst, int dstLen);
-#endif
+int LIBNETXMS_EXPORTABLE utf8_ucs2len(const char *src, int srcLen);
 int LIBNETXMS_EXPORTABLE utf8_to_mb(const char *src, int srcLen, char *dst, int dstLen);
 
 #ifdef UNICODE_UCS4
