@@ -1,6 +1,6 @@
 /*
  ** NetXMS - Network Management System
- ** Copyright (C) 2003-2016 Raden Solutions
+ ** Copyright (C) 2003-2018 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU Lesser General Public License as published
@@ -261,13 +261,25 @@ static int WideCharToMultiByteIconv(int iCodePage, DWORD dwFlags, const WCHAR *p
 int LIBNETXMS_EXPORTABLE WideCharToMultiByte(int iCodePage, DWORD dwFlags, const WCHAR *pWideCharStr, int cchWideChar,
                                              char *pByteStr, int cchByteChar, char *pDefaultChar, BOOL *pbUsedDefChar)
 {
+   if (iCodePage == CP_UTF8)
+   {
+#ifdef UNICODE_UCS4
+      if (cchByteChar == 0)
+         return ucs4_utf8len(pWideCharStr, (cchWideChar == -1) ? wcslen(pWideCharStr) : cchWideChar);
+      return ucs4_to_utf8(pWideCharStr, cchWideChar, pByteStr, cchByteChar);
+#else
+      if (cchByteChar == 0)
+         return ucs2_utf8len(pWideCharStr, (cchWideChar == -1) ? wcslen(pWideCharStr) : cchWideChar);
+      return ucs2_to_utf8(pWideCharStr, cchWideChar, pByteStr, cchByteChar);
+#endif
+   }
+
 #if HAVE_ICONV && !defined(__DISABLE_ICONV)
-   // Calculate required length. Because iconv cannot calculate
-   // resulting multibyte string length, assume the worst case - 3 bytes
-   // per character for UTF-8 and 2 bytes per character for other encodings
    if (cchByteChar == 0)
    {
-      return wcslen(pWideCharStr) * (iCodePage == CP_UTF8 ? 3 : 2) + 1;
+      // Calculate required length. Because iconv cannot calculate
+      // resulting multibyte string length, assume the worst case - 2 bytes per character
+      return ((cchWideChar == -1) ? wcslen(pWideCharStr) : cchWideChar) * 2 + 1;
    }
 
    return WideCharToMultiByteIconv(iCodePage, dwFlags, pWideCharStr, cchWideChar, pByteStr, cchByteChar, pDefaultChar, pbUsedDefChar);
@@ -363,11 +375,21 @@ static int MultiByteToWideCharIconv(int iCodePage, DWORD dwFlags, const char *pB
  */
 int LIBNETXMS_EXPORTABLE MultiByteToWideChar(int iCodePage, DWORD dwFlags, const char *pByteStr, int cchByteChar, WCHAR *pWideCharStr, int cchWideChar)
 {
-   if (cchWideChar == 0)
+   if (iCodePage == CP_UTF8)
    {
-      return strlen(pByteStr) + 1;
+#if UNICODE_UCS4
+      if (cchWideChar == 0)
+         return utf8_ucs4len(pByteStr, cchByteChar);
+      return utf8_to_ucs4(pByteStr, cchByteChar, pWideCharStr, cchWideChar);
+#else
+      if (cchWideChar == 0)
+         return utf8_ucs2len(pByteStr, cchByteChar);
+      return utf8_to_ucs2(pByteStr, cchByteChar, pWideCharStr, cchWideChar);
+#endif
    }
 
+   if (cchWideChar == 0)
+      return strlen(pByteStr) + 1;
 #if HAVE_ICONV && !defined(__DISABLE_ICONV)
    return MultiByteToWideCharIconv(iCodePage, dwFlags, pByteStr, cchByteChar, pWideCharStr, cchWideChar);
 #else
@@ -541,8 +563,8 @@ UCS2CHAR LIBNETXMS_EXPORTABLE *UCS2StringFromUTF8String(const char *utf8String)
  */
 char LIBNETXMS_EXPORTABLE *UTF8StringFromUCS2String(const UCS2CHAR *src)
 {
-   int len = (int)ucs2_strlen(src) + 1;
-   char *out = (char *)MemAlloc(len * 2);
+   int len = ucs2_utf8len(src, -1);
+   char *out = (char *)MemAlloc(len);
    ucs2_to_utf8(src, -1, out, len);
    return out;
 }

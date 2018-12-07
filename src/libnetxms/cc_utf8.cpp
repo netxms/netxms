@@ -1,6 +1,6 @@
 /*
  ** NetXMS - Network Management System
- ** Copyright (C) 2003-2016 Raden Solutions
+ ** Copyright (C) 2003-2018 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU Lesser General Public License as published
@@ -23,40 +23,37 @@
 #include "libnetxms.h"
 #include "unicode_cc.h"
 
-#if defined(_WIN32)
-
-/**
- * Convert UTF-8 to UCS-4
- */
-int LIBNETXMS_EXPORTABLE utf8_to_ucs4(const char *src, int srcLen, UCS4CHAR *dst, int dstLen)
+inline UCS4CHAR CodePointFromUTF8(const BYTE*& s, size_t& len)
 {
-   int len = (srcLen < 0) ? (int)strlen(src) + 1 : srcLen;
-   WCHAR *buffer = (len <= 32768) ? (WCHAR *)alloca(len * sizeof(WCHAR)) : (WCHAR *)malloc(len * sizeof(WCHAR));
-   MultiByteToWideChar(CP_UTF8, 0, src, srcLen, buffer, len);
-   int ret = ucs2_to_ucs4(buffer, srcLen, dst, dstLen);
-   if (len > 32768)
-      free(buffer);
-   return ret;
-}
-
-#elif !defined(UNICODE_UCS4)
-
-/**
- * Convert UTF-8 to UCS-4 using stub (no actual conversion for character codes above 0x007F)
- */
-static int __internal_utf8_to_ucs4(const char *src, int srcLen, UCS4CHAR *dst, int dstLen)
-{
-   const char *psrc;
-   UCS4CHAR *pdst;
-   int pos, size;
-
-   size = (srcLen == -1) ? strlen(src) : srcLen;
-   if (size >= dstLen)
-      size = dstLen - 1;
-   for(psrc = src, pos = 0, pdst = dst; pos < size; pos++, psrc++, pdst++)
-      *pdst = (*psrc < 128) ? (UCS4CHAR)(*psrc) : '?';
-   *pdst = 0;
-   return size;
+   BYTE b = *s++;
+   if ((b & 0x80) == 0)
+   {
+      len--;
+      return static_cast<UCS4CHAR>(b);
+   }
+   if (((b & 0xE0) == 0xC0) && (len >= 2))
+   {
+      len -= 2;
+      return (static_cast<UCS4CHAR>(b & 0x1F) << 6) | static_cast<UCS4CHAR>(*s++ & 0x3F);
+   }
+   if (((b & 0xF0) == 0xE0) && (len >= 3))
+   {
+      len -= 3;
+      BYTE b2 = *s++;
+      return (static_cast<UCS4CHAR>(b & 0x0F) << 12) | (static_cast<UCS4CHAR>(b2 & 0x3F) << 6) | static_cast<UCS4CHAR>(*s++ & 0x3F);
+   }
+   if (((b & 0xF8) == 0xF0) && (len >= 4))
+   {
+      len -= 4;
+      BYTE b2 = *s++;
+      BYTE b3 = *s++;
+      return (static_cast<UCS4CHAR>(b & 0x0F) << 18) |
+               (static_cast<UCS4CHAR>(b2 & 0x3F) << 12) |
+               (static_cast<UCS4CHAR>(b3 & 0x3F) << 6) |
+               static_cast<UCS4CHAR>(*s++ & 0x3F);
+   }
+   len--;
+   return '?';   // invalid sequence
 }
 
 /**
@@ -64,71 +61,38 @@ static int __internal_utf8_to_ucs4(const char *src, int srcLen, UCS4CHAR *dst, i
  */
 int LIBNETXMS_EXPORTABLE utf8_to_ucs4(const char *src, int srcLen, UCS4CHAR *dst, int dstLen)
 {
-#if HAVE_ICONV && !defined(__DISABLE_ICONV)
-   iconv_t cd;
-   const char *inbuf;
-   char *outbuf;
-   size_t count, inbytes, outbytes;
-
-   cd = IconvOpen(UCS4_CODEPAGE_NAME, "UTF-8");
-   if (cd == (iconv_t) (-1))
+   size_t len = (srcLen == -1) ? strlen(src) : srcLen;
+   const BYTE *s = reinterpret_cast<const BYTE*>(src);
+   UCS4CHAR *d = dst;
+   int dcount = 0;
+   while((len > 0) && (dcount < dstLen))
    {
-      return __internal_utf8_to_ucs4(src, srcLen, dst, dstLen);
+      *d++ = CodePointFromUTF8(s, len);
+      dcount++;
    }
 
-   inbuf = (const char *)src;
-   inbytes = (srcLen == -1) ? strlen(src) + 1 : (size_t) srcLen;
-   outbuf = (char *)dst;
-   outbytes = (size_t)dstLen * sizeof(UCS4CHAR);
-   count = iconv(cd, (ICONV_CONST char **) &inbuf, &inbytes, &outbuf, &outbytes);
-   IconvClose(cd);
-
-   if (count == (size_t) - 1)
-   {
-      if (errno == EILSEQ)
-      {
-         count = (dstLen * sizeof(UCS4CHAR) - outbytes) / sizeof(UCS4CHAR);
-      }
-      else
-      {
-         count = 0;
-      }
-   }
-   else
-   {
-      count = (dstLen - outbytes) / sizeof(UCS4CHAR);
-   }
-   if ((srcLen == -1) && (outbytes >= sizeof(UCS4CHAR)))
-   {
-      *((UCS4CHAR *)outbuf) = 0;
-   }
-
-   return (int)count;
-#else
-   return __internal_utf8_to_ucs4(src, srcLen, dst, dstLen);
-#endif
+   if (srcLen != -1)
+      return dcount;
+   if (dcount == dstLen)
+      dcount--;
+   dst[dcount] = 0;
+   return dcount;
 }
 
-#endif /* UNICODE_UCS4 */
-
-#if !defined(_WIN32) && !defined(UNICODE_UCS2)
-
 /**
- * Convert UTF-8 to UCS-2 using stub (no actual conversion for character codes above 0x007F)
+ * Calculate length of given UTF-8 string in UCS-4 characters (including terminator)
  */
-static int __internal_utf8_to_ucs2(const char *src, int srcLen, UCS2CHAR *dst, int dstLen)
+int LIBNETXMS_EXPORTABLE utf8_ucs4len(const char *src, int srcLen)
 {
-   const char *psrc;
-   UCS2CHAR *pdst;
-   int pos, size;
-
-   size = (srcLen == -1) ? strlen(src) : srcLen;
-   if (size >= dstLen)
-      size = dstLen - 1;
-   for(psrc = src, pos = 0, pdst = dst; pos < size; pos++, psrc++, pdst++)
-      *pdst = (((BYTE)*psrc & 0x80) == 0) ? (UCS2CHAR)(*psrc) : '?';
-   *pdst = 0;
-   return size;
+   size_t len = (srcLen == -1) ? strlen(src) : srcLen;
+   const BYTE *s = reinterpret_cast<const BYTE*>(src);
+   int dcount = 1;
+   while(len > 0)
+   {
+      CodePointFromUTF8(s, len);
+      dcount++;
+   }
+   return dcount;
 }
 
 /**
@@ -136,52 +100,54 @@ static int __internal_utf8_to_ucs2(const char *src, int srcLen, UCS2CHAR *dst, i
  */
 int LIBNETXMS_EXPORTABLE utf8_to_ucs2(const char *src, int srcLen, UCS2CHAR *dst, int dstLen)
 {
-#if HAVE_ICONV && !defined(__DISABLE_ICONV)
-   iconv_t cd;
-   const char *inbuf;
-   char *outbuf;
-   size_t count, inbytes, outbytes;
-
-   cd = IconvOpen(UCS2_CODEPAGE_NAME, "UTF-8");
-   if (cd == (iconv_t) (-1))
+   size_t len = (srcLen == -1) ? strlen(src) : srcLen;
+   const BYTE *s = reinterpret_cast<const BYTE*>(src);
+   UCS2CHAR *d = dst;
+   int dcount = 0;
+   while((len > 0) && (dcount < dstLen))
    {
-      return __internal_utf8_to_ucs2(src, srcLen, dst, dstLen);
-   }
-
-   inbuf = (const char *)src;
-   inbytes = (srcLen == -1) ? strlen(src) + 1 : (size_t) srcLen;
-   outbuf = (char *)dst;
-   outbytes = (size_t)dstLen * sizeof(UCS2CHAR);
-   count = iconv(cd, (ICONV_CONST char **) &inbuf, &inbytes, &outbuf, &outbytes);
-   IconvClose(cd);
-
-   if (count == (size_t) - 1)
-   {
-      if (errno == EILSEQ)
+      UCS4CHAR ch = CodePointFromUTF8(s, len);
+      if (ch <= 0xFFFF)
       {
-         count = (dstLen * sizeof(UCS2CHAR) - outbytes) / sizeof(UCS2CHAR);
+         *d++ = static_cast<UCS2CHAR>(ch);
+         dcount++;
       }
-      else
+      else if (ch <= 0x10FFFF)
       {
-         count = 0;
+         if (dcount > dstLen - 2)
+            break;   // no enough space in destination buffer
+         ch -= 0x10000;
+         *d++ = static_cast<UCS2CHAR>((ch >> 10) | 0xD800);
+         *d++ = static_cast<UCS2CHAR>((ch & 0x3FF) | 0xDC00);
+         dcount += 2;
       }
    }
-   else
-   {
-      count = (dstLen - outbytes) / sizeof(UCS2CHAR);
-   }
-   if ((srcLen == -1) && (outbytes >= sizeof(UCS2CHAR)))
-   {
-      *((UCS2CHAR *)outbuf) = 0;
-   }
 
-   return (int)count;
-#else
-   return __internal_utf8_to_ucs2(src, srcLen, dst, dstLen);
-#endif
+   if (srcLen != -1)
+      return dcount;
+   if (dcount == dstLen)
+      dcount--;
+   dst[dcount] = 0;
+   return dcount;
 }
 
-#endif /* !defined(_WIN32) && !defined(UNICODE_UCS2) */
+/**
+ * Calculate length of given UTF-8 string in UCS-2 characters (including terminator)
+ */
+int LIBNETXMS_EXPORTABLE utf8_ucs2len(const char *src, int srcLen)
+{
+   size_t len = (srcLen == -1) ? strlen(src) : srcLen;
+   const BYTE *s = reinterpret_cast<const BYTE*>(src);
+   int dcount = 1;
+   while(len > 0)
+   {
+      UCS4CHAR ch = CodePointFromUTF8(s, len);
+      dcount++;
+      if (ch > 0xFFFF)
+         dcount++;
+   }
+   return dcount;
+}
 
 #ifdef _WIN32
 
