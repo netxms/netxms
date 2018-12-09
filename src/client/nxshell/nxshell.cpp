@@ -34,7 +34,7 @@ NETXMS_EXECUTABLE_HEADER(nxshell)
 static const char *s_optHost = "127.0.0.1";
 static const char *s_optPort = "";
 static const char *s_optUser = "admin";
-static const char *s_optPassword = "";
+static const char *s_optPassword = NULL;
 static const char *s_optJre = NULL;
 static const char *s_optClassPath = NULL;
 
@@ -71,6 +71,24 @@ static int StartApp(int argc, char *argv[])
    vmOptions.addMBString(buffer);
    snprintf(buffer, 256, "-Dnetxms.login=%s", s_optUser);
    vmOptions.addMBString(buffer);
+
+	if (s_optPassword == NULL)
+	{
+      TCHAR prompt[256], passwordBuffer[256];
+      _sntprintf(prompt, 256, _T("%hs@%hs password: "), s_optUser, s_optHost);
+      if (ReadPassword(prompt, passwordBuffer, 256))
+      {
+#ifdef UNICODE
+         s_optPassword = MBStringFromWideString(passwordBuffer);
+#else
+         s_optPassword = MemCopyStringA(passwordBuffer);
+#endif
+      }
+		else
+      {
+         s_optPassword = "";
+      }
+	}
 
    char clearPassword[128];
    DecryptPasswordA(s_optUser, s_optPassword, clearPassword, 128);
@@ -170,7 +188,7 @@ static void usage(bool showVersion)
       _T("  -H <hostname>  Specify host name or IP address. Could be in host:port form.\n")
       _T("  -j <path>      Specify JRE location.\n")
       _T("  -p <port>      Specify TCP port for connection. Default is 4701.\n")
-      _T("  -P <password>  Specify user's password. Default is empty.\n")
+      _T("  -P <password>  Specify user's password. If not given, password will be read from terminal.\n")
       _T("  -u <user>      Login to server as user. Default is \"admin\".\n")
       _T("  -v             Display version information.\n\n")
 #endif
