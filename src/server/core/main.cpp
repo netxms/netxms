@@ -1190,7 +1190,7 @@ void NXCORE_EXPORTABLE Shutdown()
 #endif
 
 	ThreadSleep(1);     // Give other threads a chance to terminate in a safe way
-	nxlog_debug(2, _T("All threads was notified, continue with shutdown"));
+	nxlog_debug(2, _T("All threads were notified, continue with shutdown"));
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 	SaveObjects(hdb, INVALID_INDEX, true);

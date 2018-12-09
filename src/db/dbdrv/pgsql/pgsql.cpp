@@ -1,6 +1,6 @@
 /* 
 ** PostgreSQL Database Driver
-** Copyright (C) 2003 - 2016 Victor Kirhenshtein and Alex Kirhenshtein
+** Copyright (C) 2003 - 2018 Victor Kirhenshtein and Alex Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -43,6 +43,34 @@ static int (*s_PQsetSingleRowMode)(PGconn *) = NULL;
 #if !HAVE_DECL_PGRES_SINGLE_TUPLE
 #define PGRES_SINGLE_TUPLE    9
 #endif
+
+/**
+ * Convert wide character string to UTF-8 using internal buffer when possible
+ */
+inline char *WideStringToUTF8(const WCHAR *str, char *localBuffer, size_t size)
+{
+#ifdef UNICODE_UCS4
+   size_t len = ucs4_utf8len(str, -1);
+#else
+   size_t len = ucs2_utf8len(str, -1);
+#endif
+   char *buffer = (len <= size) ? localBuffer : static_cast<char*>(MemAlloc(len));
+#ifdef UNICODE_UCS4
+   ucs4_to_utf8(str, -1, buffer, len);
+#else
+   ucs2_to_utf8(str, -1, buffer, len);
+#endif
+   return buffer;
+}
+
+/**
+ * Free converted string if local buffer was not used
+ */
+inline void FreeConvertedString(char *str, char *localBuffer)
+{
+   if (str != localBuffer)
+      MemFree(str);
+}
 
 /**
  * Statement ID
@@ -291,14 +319,17 @@ extern "C" void __EXPORT DrvDisconnect(DBDRV_CONNECTION pConn)
 /**
  * Convert query from NetXMS portable format to native PostgreSQL format
  */
-static char *ConvertQuery(WCHAR *query)
+static char *ConvertQuery(WCHAR *query, char *localBuffer, size_t bufferSize)
 {
-	char *srcQuery = UTF8StringFromWideString(query);
-	int count = NumCharsA(srcQuery, '?');
-	if (count == 0)
-		return srcQuery;
+   int count = NumCharsW(query, '?');
+   if (count == 0)
+      return WideStringToUTF8(query, localBuffer, bufferSize);
 
-	char *dstQuery = (char *)malloc(strlen(srcQuery) + count * 3 + 1);
+   char srcQueryBuffer[1024];
+	char *srcQuery = WideStringToUTF8(query, srcQueryBuffer, 1024);
+
+	size_t dstSize = strlen(srcQuery) + count * 3 + 1;
+	char *dstQuery = (dstSize <= bufferSize) ? localBuffer : static_cast<char*>(MemAlloc(dstSize));
 	bool inString = false;
 	int pos = 1;
 	char *src, *dst;
@@ -346,7 +377,7 @@ static char *ConvertQuery(WCHAR *query)
 		}
 	}
 	*dst = 0;
-	free(srcQuery);
+	FreeConvertedString(srcQuery, srcQueryBuffer);
 	return dstQuery;
 }
 
@@ -355,7 +386,8 @@ static char *ConvertQuery(WCHAR *query)
  */
 extern "C" DBDRV_STATEMENT __EXPORT DrvPrepare(PG_CONN *pConn, WCHAR *pwszQuery, bool optimizeForReuse, DWORD *pdwError, WCHAR *errorText)
 {
-	char *pszQueryUTF8 = ConvertQuery(pwszQuery);
+   char localBuffer[1024];
+	char *pszQueryUTF8 = ConvertQuery(pwszQuery, localBuffer, 1024);
 	PG_STATEMENT *hStmt = (PG_STATEMENT *)malloc(sizeof(PG_STATEMENT));
 	hStmt->connection = pConn;
 
@@ -390,12 +422,12 @@ extern "C" DBDRV_STATEMENT __EXPORT DrvPrepare(PG_CONN *pConn, WCHAR *pwszQuery,
       MutexUnlock(pConn->mutexQueryLock);
       if (pResult != NULL)
          PQclear(pResult);
-      free(pszQueryUTF8);
+      FreeConvertedString(pszQueryUTF8, localBuffer);
    }
    else
    {
       hStmt->name[0] = 0;
-      hStmt->query = pszQueryUTF8;
+      hStmt->query = (pszQueryUTF8 != localBuffer) ? pszQueryUTF8 : MemCopyStringA(pszQueryUTF8);
       hStmt->allocated = 0;
       hStmt->pcount = 0;
       hStmt->buffers = NULL;
@@ -555,14 +587,14 @@ extern "C" void __EXPORT DrvFreeStatement(PG_STATEMENT *hStmt)
    }
    else
    {
-      free(hStmt->query);
+      MemFree(hStmt->query);
    }
 
 	for(int i = 0; i < hStmt->allocated; i++)
-		free(hStmt->buffers[i]);
-	free(hStmt->buffers);
+	   MemFree(hStmt->buffers[i]);
+	MemFree(hStmt->buffers);
 
-	free(hStmt);
+	MemFree(hStmt);
 }
 
 /**
@@ -626,7 +658,8 @@ extern "C" DWORD __EXPORT DrvQuery(PG_CONN *pConn, WCHAR *pwszQuery, WCHAR *erro
 {
 	DWORD dwRet;
 
-   char *pszQueryUTF8 = UTF8StringFromWideString(pwszQuery);
+	char localBuffer[1024];
+   char *pszQueryUTF8 = WideStringToUTF8(pwszQuery, localBuffer, 1024);
 	MutexLock(pConn->mutexQueryLock);
 	if (UnsafeDrvQuery(pConn, pszQueryUTF8, errorText))
    {
@@ -637,7 +670,7 @@ extern "C" DWORD __EXPORT DrvQuery(PG_CONN *pConn, WCHAR *pwszQuery, WCHAR *erro
       dwRet = (PQstatus(pConn->handle) == CONNECTION_BAD) ? DBERR_CONNECTION_LOST : DBERR_OTHER_ERROR;
    }
 	MutexUnlock(pConn->mutexQueryLock);
-   free(pszQueryUTF8);
+   FreeConvertedString(pszQueryUTF8, localBuffer);
 
 	return dwRet;
 }
@@ -701,12 +734,10 @@ retry:
  */
 extern "C" DBDRV_RESULT __EXPORT DrvSelect(PG_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError, WCHAR *errorText)
 {
-	DBDRV_RESULT pResult;
-   char *pszQueryUTF8;
-
-   pszQueryUTF8 = UTF8StringFromWideString(pwszQuery);
+   char localBuffer[1024];
+   char *pszQueryUTF8 = WideStringToUTF8(pwszQuery, localBuffer, 1024);
 	MutexLock(pConn->mutexQueryLock);
-	pResult = UnsafeDrvSelect(pConn, pszQueryUTF8, errorText);
+	DBDRV_RESULT pResult = UnsafeDrvSelect(pConn, pszQueryUTF8, errorText);
    if (pResult != NULL)
    {
       *pdwError = DBERR_SUCCESS;
@@ -716,8 +747,7 @@ extern "C" DBDRV_RESULT __EXPORT DrvSelect(PG_CONN *pConn, WCHAR *pwszQuery, DWO
       *pdwError = (PQstatus(pConn->handle) == CONNECTION_BAD) ? DBERR_CONNECTION_LOST : DBERR_OTHER_ERROR;
    }
 	MutexUnlock(pConn->mutexQueryLock);
-   free(pszQueryUTF8);
-
+   FreeConvertedString(pszQueryUTF8, localBuffer);
    return pResult;
 }
 
@@ -834,8 +864,7 @@ extern "C" char __EXPORT *DrvGetFieldUTF8(DBDRV_RESULT pResult, int nRow, int nC
 	if (value == NULL)
 	   return NULL;
 
-   strncpy(pBuffer, value, nBufLen);
-   pBuffer[nBufLen - 1] = 0;
+   strlcpy(pBuffer, value, nBufLen);
 	return pBuffer;
 }
 
@@ -882,7 +911,7 @@ extern "C" DBDRV_UNBUFFERED_RESULT __EXPORT DrvSelectUnbuffered(PG_CONN *pConn, 
 	if (pConn == NULL)
 		return NULL;
 
-	PG_UNBUFFERED_RESULT *result = (PG_UNBUFFERED_RESULT *)malloc(sizeof(PG_UNBUFFERED_RESULT));
+	PG_UNBUFFERED_RESULT *result = MemAllocStruct<PG_UNBUFFERED_RESULT>();
 	result->conn = pConn;
    result->fetchBuffer = NULL;
    result->keepFetchBuffer = true;
@@ -892,7 +921,8 @@ extern "C" DBDRV_UNBUFFERED_RESULT __EXPORT DrvSelectUnbuffered(PG_CONN *pConn, 
 	bool success = false;
 	bool retry;
 	int retryCount = 60;
-   char *queryUTF8 = UTF8StringFromWideString(pwszQuery);
+	char localBuffer[1024];
+   char *queryUTF8 = WideStringToUTF8(pwszQuery, localBuffer, 1024);
    do
    {
       retry = false;
@@ -966,11 +996,11 @@ extern "C" DBDRV_UNBUFFERED_RESULT __EXPORT DrvSelectUnbuffered(PG_CONN *pConn, 
       }
    }
    while(retry);
-   free(queryUTF8);
+   FreeConvertedString(queryUTF8, localBuffer);
 
    if (!success)
    {
-      free(result);
+      MemFree(result);
       result = NULL;
       MutexUnlock(pConn->mutexQueryLock);
    }
@@ -985,7 +1015,7 @@ extern "C" DBDRV_UNBUFFERED_RESULT __EXPORT DrvSelectPreparedUnbuffered(PG_CONN 
    if (pConn == NULL)
       return NULL;
 
-   PG_UNBUFFERED_RESULT *result = (PG_UNBUFFERED_RESULT *)malloc(sizeof(PG_UNBUFFERED_RESULT));
+   PG_UNBUFFERED_RESULT *result = MemAllocStruct<PG_UNBUFFERED_RESULT>();
    result->conn = pConn;
    result->fetchBuffer = NULL;
    result->keepFetchBuffer = true;
@@ -1201,9 +1231,7 @@ extern "C" char __EXPORT *DrvGetFieldUnbufferedUTF8(PG_UNBUFFERED_RESULT *result
    if (value == NULL)
       return NULL;
 
-   strncpy(pBuffer, value, nBufSize);
-   pBuffer[nBufSize - 1] = 0;
-
+   strlcpy(pBuffer, value, nBufSize);
    return pBuffer;
 }
 
