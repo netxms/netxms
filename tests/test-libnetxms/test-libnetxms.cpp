@@ -1,3 +1,7 @@
+#ifdef _WIN32
+#define _CRT_NONSTDC_NO_WARNINGS
+#endif
+
 #include <nms_common.h>
 #include <nms_util.h>
 #include <nxqueue.h>
@@ -102,7 +106,7 @@ static void TestStringConversion()
    start = GetCurrentTimeMs();
    for(int i = 0; i < 10000; i++)
    {
-      WCHAR buffer[1024];
+      UCS4CHAR buffer[1024];
 #ifdef UNICODE_UCS4
       ucs2_to_ucs4(ucs2buffer, -1, buffer, 1024);
 #else
