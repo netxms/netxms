@@ -155,9 +155,24 @@ THREAD_RESULT THREAD_CALL LocalAdminListener(void *pArg)
    // Set up queue
    listen(sock, SOMAXCONN);
 
+   nxlog_debug(1, _T("Local administration interface listener started"));
+
    // Wait for connection requests
    while(!IsShutdownInProgress())
    {
+      SocketPoller sp;
+      sp.add(sock);
+      int pollError = sp.poll(2000);
+      if (pollError <= 0)
+      {
+         if (pollError < 0)
+         {
+            if (SleepAndCheckForShutdown(30))
+               break;
+         }
+         continue;
+      }
+
       iSize = sizeof(struct sockaddr_in);
       if ((sockClient = accept(sock, (struct sockaddr *)&servAddr, &iSize)) == -1)
       {
@@ -191,5 +206,6 @@ THREAD_RESULT THREAD_CALL LocalAdminListener(void *pArg)
    }
 
    closesocket(sock);
+   nxlog_debug(1, _T("Local administration interface listener stopped"));
    return THREAD_OK;
 }
