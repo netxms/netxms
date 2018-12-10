@@ -1,6 +1,6 @@
 /* 
 ** MySQL Database Driver
-** Copyright (C) 2003-2015 Victor Kirhenshtein
+** Copyright (C) 2003-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -23,6 +23,34 @@
 #include "mysqldrv.h"
 
 DECLARE_DRIVER_HEADER("MYSQL")
+
+/**
+ * Convert wide character string to UTF-8 using internal buffer when possible
+ */
+inline char *WideStringToUTF8(const WCHAR *str, char *localBuffer, size_t size)
+{
+#ifdef UNICODE_UCS4
+   size_t len = ucs4_utf8len(str, -1);
+#else
+   size_t len = ucs2_utf8len(str, -1);
+#endif
+   char *buffer = (len <= size) ? localBuffer : static_cast<char*>(MemAlloc(len));
+#ifdef UNICODE_UCS4
+   ucs4_to_utf8(str, -1, buffer, len);
+#else
+   ucs2_to_utf8(str, -1, buffer, len);
+#endif
+   return buffer;
+}
+
+/**
+ * Free converted string if local buffer was not used
+ */
+inline void FreeConvertedString(char *str, char *localBuffer)
+{
+   if (str != localBuffer)
+      MemFree(str);
+}
 
 /**
  * Update error message from given source
@@ -56,7 +84,7 @@ extern "C" WCHAR __EXPORT *DrvPrepareStringW(const WCHAR *str)
 {
 	int len = (int)wcslen(str) + 3;   // + two quotes and \0 at the end
 	int bufferSize = len + 128;
-	WCHAR *out = (WCHAR *)malloc(bufferSize * sizeof(WCHAR));
+	WCHAR *out = (WCHAR *)MemAlloc(bufferSize * sizeof(WCHAR));
 	out[0] = _T('\'');
 
 	const WCHAR *src = str;
@@ -131,7 +159,7 @@ extern "C" char __EXPORT *DrvPrepareStringA(const char *str)
 {
 	int len = (int)strlen(str) + 3;   // + two quotes and \0 at the end
 	int bufferSize = len + 128;
-	char *out = (char *)malloc(bufferSize);
+	char *out = (char *)MemAlloc(bufferSize);
 	out[0] = _T('\'');
 
 	const char *src = str;
@@ -244,7 +272,7 @@ extern "C" DBDRV_CONNECTION __EXPORT DrvConnect(const char *szHost, const char *
 		return NULL;
 	}
 	
-	pConn = (MYSQL_CONN *)malloc(sizeof(MYSQL_CONN));
+	pConn = MemAllocStruct<MYSQL_CONN>();
 	pConn->pMySQL = pMySQL;
 	pConn->mutexQueryLock = MutexCreate();
 
@@ -278,18 +306,17 @@ extern "C" DBDRV_STATEMENT __EXPORT DrvPrepare(MYSQL_CONN *pConn, WCHAR *pwszQue
 	MYSQL_STMT *stmt = mysql_stmt_init(pConn->pMySQL);
 	if (stmt != NULL)
 	{
-		char *pszQueryUTF8 = UTF8StringFromWideString(pwszQuery);
+	   char localBuffer[1024];
+		char *pszQueryUTF8 = WideStringToUTF8(pwszQuery, localBuffer, 1024);
 		int rc = mysql_stmt_prepare(stmt, pszQueryUTF8, (unsigned long)strlen(pszQueryUTF8));
 		if (rc == 0)
 		{
-			result = (MYSQL_STATEMENT *)malloc(sizeof(MYSQL_STATEMENT));
+			result = MemAllocStruct<MYSQL_STATEMENT>();
 			result->connection = pConn;
 			result->statement = stmt;
 			result->paramCount = (int)mysql_stmt_param_count(stmt);
-			result->bindings = (MYSQL_BIND *)malloc(sizeof(MYSQL_BIND) * result->paramCount);
-			memset(result->bindings, 0, sizeof(MYSQL_BIND) * result->paramCount);
-			result->lengthFields = (unsigned long *)malloc(sizeof(unsigned long) * result->paramCount);
-			memset(result->lengthFields, 0, sizeof(unsigned long) * result->paramCount);
+			result->bindings = MemAllocArray<MYSQL_BIND>(result->paramCount);
+			result->lengthFields = MemAllocArray<unsigned long>(result->paramCount);
 			result->buffers = new Array(result->paramCount, 16, true);
 			*pdwError = DBERR_SUCCESS;
 		}
@@ -307,7 +334,7 @@ extern "C" DBDRV_STATEMENT __EXPORT DrvPrepare(MYSQL_CONN *pConn, WCHAR *pwszQue
 			UpdateErrorMessage(mysql_stmt_error(stmt), errorText);
 			mysql_stmt_close(stmt);
 		}
-		free(pszQueryUTF8);
+		FreeConvertedString(pszQueryUTF8, localBuffer);
 	}
 	else
 	{
@@ -482,13 +509,11 @@ static DWORD DrvQueryInternal(MYSQL_CONN *pConn, const char *pszQuery, WCHAR *er
  */
 extern "C" DWORD __EXPORT DrvQuery(MYSQL_CONN *pConn, WCHAR *pwszQuery, WCHAR *errorText)
 {
-	DWORD dwRet;
-   char *pszQueryUTF8;
-
-   pszQueryUTF8 = UTF8StringFromWideString(pwszQuery);
-   dwRet = DrvQueryInternal(pConn, pszQueryUTF8, errorText);
-   free(pszQueryUTF8);
-	return dwRet;
+   char localBuffer[1024];
+   char *pszQueryUTF8 = WideStringToUTF8(pwszQuery, localBuffer, 1024);
+   DWORD rc = DrvQueryInternal(pConn, pszQueryUTF8, errorText);
+   FreeConvertedString(pszQueryUTF8, localBuffer);
+	return rc;
 }
 
 /**
@@ -496,20 +521,20 @@ extern "C" DWORD __EXPORT DrvQuery(MYSQL_CONN *pConn, WCHAR *pwszQuery, WCHAR *e
  */
 extern "C" DBDRV_RESULT __EXPORT DrvSelect(MYSQL_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError, WCHAR *errorText)
 {
-	MYSQL_RESULT *result = NULL;
-	char *pszQueryUTF8;
-
 	if (pConn == NULL)
 	{
 		*pdwError = DBERR_INVALID_HANDLE;
 		return NULL;
 	}
 
-	pszQueryUTF8 = UTF8StringFromWideString(pwszQuery);
+   MYSQL_RESULT *result = NULL;
+
+   char localBuffer[1024];
+	char *pszQueryUTF8 = WideStringToUTF8(pwszQuery, localBuffer, 1024);
 	MutexLock(pConn->mutexQueryLock);
 	if (mysql_query(pConn->pMySQL, pszQueryUTF8) == 0)
 	{
-		result = (MYSQL_RESULT *)malloc(sizeof(MYSQL_RESULT));
+		result = MemAllocStruct<MYSQL_RESULT>();
       result->connection = pConn;
 		result->isPreparedStatement = false;
 		result->resultSet = mysql_store_result(pConn->pMySQL);
@@ -532,7 +557,7 @@ extern "C" DBDRV_RESULT __EXPORT DrvSelect(MYSQL_CONN *pConn, WCHAR *pwszQuery, 
 	}
 
 	MutexUnlock(pConn->mutexQueryLock);
-	free(pszQueryUTF8);
+	FreeConvertedString(pszQueryUTF8, localBuffer);
 	return result;
 }
 
@@ -555,7 +580,7 @@ extern "C" DBDRV_RESULT __EXPORT DrvSelectPrepared(MYSQL_CONN *pConn, MYSQL_STAT
 	{
 		if (mysql_stmt_execute(hStmt->statement) == 0)
 		{
-			result = (MYSQL_RESULT *)malloc(sizeof(MYSQL_RESULT));
+			result = MemAllocStruct<MYSQL_RESULT>();
          result->connection = pConn;
 			result->isPreparedStatement = true;
 			result->statement = hStmt->statement;
@@ -563,12 +588,9 @@ extern "C" DBDRV_RESULT __EXPORT DrvSelectPrepared(MYSQL_CONN *pConn, MYSQL_STAT
 			if (result->resultSet != NULL)
 			{
 				result->numColumns = mysql_num_fields(result->resultSet);
+				result->lengthFields = MemAllocArray<unsigned long>(result->numColumns);
 
-				result->lengthFields = (unsigned long *)malloc(sizeof(unsigned long) * result->numColumns);
-				memset(result->lengthFields, 0, sizeof(unsigned long) * result->numColumns);
-
-				result->bindings = (MYSQL_BIND *)malloc(sizeof(MYSQL_BIND) * result->numColumns);
-				memset(result->bindings, 0, sizeof(MYSQL_BIND) * result->numColumns);
+				result->bindings = MemAllocArray<MYSQL_BIND>(result->numColumns);
 				for(int i = 0; i < result->numColumns; i++)
 				{
 					result->bindings[i].buffer_type = MYSQL_TYPE_STRING;
@@ -684,7 +706,7 @@ static void *GetFieldInternal(MYSQL_RESULT *hResult, int iRow, int iColumn, void
 #if HAVE_ALLOCA
 		b.buffer = alloca(hResult->lengthFields[iColumn] + 1);
 #else
-		b.buffer = malloc(hResult->lengthFields[iColumn] + 1);
+		b.buffer = MemAlloc(hResult->lengthFields[iColumn] + 1);
 #endif
 		b.buffer_length = hResult->lengthFields[iColumn] + 1;
 		b.buffer_type = MYSQL_TYPE_STRING;
@@ -803,7 +825,7 @@ extern "C" void __EXPORT DrvFreeResult(MYSQL_RESULT *hResult)
 	}
 
 	mysql_free_result(hResult->resultSet);
-	free(hResult);
+	MemFree(hResult);
 }
 
 /**
@@ -811,20 +833,20 @@ extern "C" void __EXPORT DrvFreeResult(MYSQL_RESULT *hResult)
  */
 extern "C" DBDRV_UNBUFFERED_RESULT __EXPORT DrvSelectUnbuffered(MYSQL_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError, WCHAR *errorText)
 {
-	MYSQL_UNBUFFERED_RESULT *pResult = NULL;
-	char *pszQueryUTF8;
-	
 	if (pConn == NULL)
 	{
 		*pdwError = DBERR_INVALID_HANDLE;
 		return NULL;
 	}
 
-	pszQueryUTF8 = UTF8StringFromWideString(pwszQuery);
+   MYSQL_UNBUFFERED_RESULT *pResult = NULL;
+
+   char localBuffer[1024];
+	char *pszQueryUTF8 = WideStringToUTF8(pwszQuery, localBuffer, 1024);
 	MutexLock(pConn->mutexQueryLock);
 	if (mysql_query(pConn->pMySQL, pszQueryUTF8) == 0)
 	{
-		pResult = (MYSQL_UNBUFFERED_RESULT *)malloc(sizeof(MYSQL_UNBUFFERED_RESULT));
+		pResult = MemAllocStruct<MYSQL_UNBUFFERED_RESULT>();
 		pResult->connection = pConn;
 		pResult->isPreparedStatement = false;
 		pResult->resultSet = mysql_use_result(pConn->pMySQL);
@@ -833,7 +855,7 @@ extern "C" DBDRV_UNBUFFERED_RESULT __EXPORT DrvSelectUnbuffered(MYSQL_CONN *pCon
 			pResult->noMoreRows = false;
 			pResult->numColumns = mysql_num_fields(pResult->resultSet);
 			pResult->pCurrRow = NULL;
-			pResult->lengthFields = (unsigned long *)malloc(sizeof(unsigned long) * pResult->numColumns);
+			pResult->lengthFields = MemAllocArray<unsigned long>(pResult->numColumns);
 			pResult->bindings = NULL;
 		}
 		else
@@ -870,7 +892,7 @@ extern "C" DBDRV_UNBUFFERED_RESULT __EXPORT DrvSelectUnbuffered(MYSQL_CONN *pCon
 	{
 		MutexUnlock(pConn->mutexQueryLock);
 	}
-	free(pszQueryUTF8);
+	FreeConvertedString(pszQueryUTF8, localBuffer);
 
 	return pResult;
 }
@@ -888,7 +910,7 @@ extern "C" DBDRV_RESULT __EXPORT DrvSelectPreparedUnbuffered(MYSQL_CONN *pConn, 
    {
       if (mysql_stmt_execute(hStmt->statement) == 0)
       {
-         result = (MYSQL_UNBUFFERED_RESULT *)malloc(sizeof(MYSQL_UNBUFFERED_RESULT));
+         result = MemAllocStruct<MYSQL_UNBUFFERED_RESULT>();
          result->connection = pConn;
          result->isPreparedStatement = true;
          result->statement = hStmt->statement;
@@ -899,11 +921,9 @@ extern "C" DBDRV_RESULT __EXPORT DrvSelectPreparedUnbuffered(MYSQL_CONN *pConn, 
             result->numColumns = mysql_num_fields(result->resultSet);
             result->pCurrRow = NULL;
 
-            result->lengthFields = (unsigned long *)malloc(sizeof(unsigned long) * result->numColumns);
-            memset(result->lengthFields, 0, sizeof(unsigned long) * result->numColumns);
+            result->lengthFields = MemAllocArray<unsigned long>(result->numColumns);
 
-            result->bindings = (MYSQL_BIND *)malloc(sizeof(MYSQL_BIND) * result->numColumns);
-            memset(result->bindings, 0, sizeof(MYSQL_BIND) * result->numColumns);
+            result->bindings = MemAllocArray<MYSQL_BIND>(result->numColumns);
             for(int i = 0; i < result->numColumns; i++)
             {
                result->bindings[i].buffer_type = MYSQL_TYPE_STRING;
@@ -1046,7 +1066,7 @@ static void *GetFieldUnbufferedInternal(MYSQL_UNBUFFERED_RESULT *hResult, int iC
 #if HAVE_ALLOCA
       b.buffer = alloca(hResult->lengthFields[iColumn] + 1);
 #else
-      b.buffer = malloc(hResult->lengthFields[iColumn] + 1);
+      b.buffer = MemAlloc(hResult->lengthFields[iColumn] + 1);
 #endif
       b.buffer_length = hResult->lengthFields[iColumn] + 1;
       b.buffer_type = MYSQL_TYPE_STRING;
@@ -1078,7 +1098,7 @@ static void *GetFieldUnbufferedInternal(MYSQL_UNBUFFERED_RESULT *hResult, int iC
          value = pBuffer;
       }
 #if !HAVE_ALLOCA
-      free(b.buffer);
+      MemFree(b.buffer);
 #endif
    }
    else
