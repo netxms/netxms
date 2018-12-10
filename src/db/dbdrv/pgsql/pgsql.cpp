@@ -84,7 +84,7 @@ extern "C" WCHAR __EXPORT *DrvPrepareStringW(const WCHAR *str)
 {
 	int len = (int)wcslen(str) + 3;   // + two quotes and \0 at the end
 	int bufferSize = len + 128;
-	WCHAR *out = (WCHAR *)malloc(bufferSize * sizeof(WCHAR));
+	WCHAR *out = (WCHAR *)MemAlloc(bufferSize * sizeof(WCHAR));
 	out[0] = L'\'';
 
 	const WCHAR *src = str;
@@ -146,7 +146,7 @@ extern "C" char __EXPORT *DrvPrepareStringA(const char *str)
 {
 	int len = (int)strlen(str) + 3;   // + two quotes and \0 at the end
 	int bufferSize = len + 128;
-	char *out = (char *)malloc(bufferSize);
+	char *out = (char *)MemAlloc(bufferSize);
 	out[0] = '\'';
 
 	const char *src = str;
@@ -253,7 +253,7 @@ extern "C" DBDRV_CONNECTION __EXPORT DrvConnect(const char *szHost,	const char *
 		port++;
 	}
 	
-	pConn = (PG_CONN *)malloc(sizeof(PG_CONN));
+	pConn = MemAllocStruct<PG_CONN>();
 	
 	if (pConn != NULL)
 	{
@@ -266,8 +266,7 @@ extern "C" DBDRV_CONNECTION __EXPORT DrvConnect(const char *szHost,	const char *
 			errorText[DBDRV_MAX_ERROR_TEXT - 1] = 0;
 			RemoveTrailingCRLFW(errorText);
 			PQfinish(pConn->handle);
-			free(pConn);
-			pConn = NULL;
+			MemFreeAndNull(pConn);
 		}
 		else
 		{
@@ -312,7 +311,7 @@ extern "C" void __EXPORT DrvDisconnect(DBDRV_CONNECTION pConn)
 	{
    	PQfinish(((PG_CONN *)pConn)->handle);
      	MutexDestroy(((PG_CONN *)pConn)->mutexQueryLock);
-      free(pConn);
+      MemFree(pConn);
 	}
 }
 
@@ -388,7 +387,7 @@ extern "C" DBDRV_STATEMENT __EXPORT DrvPrepare(PG_CONN *pConn, WCHAR *pwszQuery,
 {
    char localBuffer[1024];
 	char *pszQueryUTF8 = ConvertQuery(pwszQuery, localBuffer, 1024);
-	PG_STATEMENT *hStmt = (PG_STATEMENT *)malloc(sizeof(PG_STATEMENT));
+	PG_STATEMENT *hStmt = MemAllocStruct<PG_STATEMENT>();
 	hStmt->connection = pConn;
 
    if (optimizeForReuse)
@@ -399,8 +398,7 @@ extern "C" DBDRV_STATEMENT __EXPORT DrvPrepare(PG_CONN *pConn, WCHAR *pwszQuery,
       PGresult	*pResult = PQprepare(pConn->handle, hStmt->name, pszQueryUTF8, 0, NULL);
       if ((pResult == NULL) || (PQresultStatus(pResult) != PGRES_COMMAND_OK))
       {
-         free(hStmt);
-         hStmt = NULL;
+         MemFreeAndNull(hStmt);
 
          *pdwError = (PQstatus(pConn->handle) == CONNECTION_BAD) ? DBERR_CONNECTION_LOST : DBERR_OTHER_ERROR;
 
@@ -454,7 +452,7 @@ extern "C" void __EXPORT DrvBind(PG_STATEMENT *hStmt, int pos, int sqlType, int 
 	if (hStmt->pcount < pos)
 		hStmt->pcount = pos;
 
-	free(hStmt->buffers[pos - 1]);
+	MemFree(hStmt->buffers[pos - 1]);
 
 	switch(cType)
 	{
@@ -473,32 +471,32 @@ extern "C" void __EXPORT DrvBind(PG_STATEMENT *hStmt, int pos, int sqlType, int 
          }
          break;
 		case DB_CTYPE_INT32:
-			hStmt->buffers[pos - 1] = (char *)malloc(16);
+			hStmt->buffers[pos - 1] = (char *)MemAlloc(16);
 			sprintf(hStmt->buffers[pos - 1], "%d", *((int *)buffer));
 			break;
 		case DB_CTYPE_UINT32:
-			hStmt->buffers[pos - 1] = (char *)malloc(16);
+			hStmt->buffers[pos - 1] = (char *)MemAlloc(16);
 			sprintf(hStmt->buffers[pos - 1], "%u", *((unsigned int *)buffer));
 			break;
 		case DB_CTYPE_INT64:
-			hStmt->buffers[pos - 1] = (char *)malloc(32);
+			hStmt->buffers[pos - 1] = (char *)MemAlloc(32);
 			sprintf(hStmt->buffers[pos - 1], INT64_FMTA, *((INT64 *)buffer));
 			break;
 		case DB_CTYPE_UINT64:
-			hStmt->buffers[pos - 1] = (char *)malloc(32);
+			hStmt->buffers[pos - 1] = (char *)MemAlloc(32);
 			sprintf(hStmt->buffers[pos - 1], UINT64_FMTA, *((QWORD *)buffer));
 			break;
 		case DB_CTYPE_DOUBLE:
-			hStmt->buffers[pos - 1] = (char *)malloc(32);
+			hStmt->buffers[pos - 1] = (char *)MemAlloc(32);
 			sprintf(hStmt->buffers[pos - 1], "%f", *((double *)buffer));
 			break;
 		default:
-			hStmt->buffers[pos - 1] = strdup("");
+			hStmt->buffers[pos - 1] = MemCopyStringA("");
 			break;
 	}
 
 	if (allocType == DB_BIND_DYNAMIC)
-		free(buffer);
+		MemFree(buffer);
 }
 
 /**
@@ -1000,8 +998,7 @@ extern "C" DBDRV_UNBUFFERED_RESULT __EXPORT DrvSelectUnbuffered(PG_CONN *pConn, 
 
    if (!success)
    {
-      MemFree(result);
-      result = NULL;
+      MemFreeAndNull(result);
       MutexUnlock(pConn->mutexQueryLock);
    }
    return (DBDRV_UNBUFFERED_RESULT)result;
@@ -1104,8 +1101,7 @@ extern "C" DBDRV_UNBUFFERED_RESULT __EXPORT DrvSelectPreparedUnbuffered(PG_CONN 
 
    if (!success)
    {
-      free(result);
-      result = NULL;
+      MemFreeAndNull(result);
       MutexUnlock(pConn->mutexQueryLock);
    }
    return (DBDRV_UNBUFFERED_RESULT)result;
@@ -1272,7 +1268,7 @@ extern "C" void __EXPORT DrvFreeUnbufferedResult(PG_UNBUFFERED_RESULT *result)
    }
 
    MutexUnlock(result->conn->mutexQueryLock);
-   free(result);
+   MemFree(result);
 }
 
 /**
