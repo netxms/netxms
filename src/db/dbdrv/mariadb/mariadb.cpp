@@ -1,6 +1,6 @@
 /* 
 ** MariaDB Database Driver
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -25,6 +25,34 @@
 DECLARE_DRIVER_HEADER("MARIADB")
 
 #define DEBUG_TAG _T("db.drv.mariadb")
+
+/**
+ * Convert wide character string to UTF-8 using internal buffer when possible
+ */
+inline char *WideStringToUTF8(const WCHAR *str, char *localBuffer, size_t size)
+{
+#ifdef UNICODE_UCS4
+   size_t len = ucs4_utf8len(str, -1);
+#else
+   size_t len = ucs2_utf8len(str, -1);
+#endif
+   char *buffer = (len <= size) ? localBuffer : static_cast<char*>(MemAlloc(len));
+#ifdef UNICODE_UCS4
+   ucs4_to_utf8(str, -1, buffer, len);
+#else
+   ucs2_to_utf8(str, -1, buffer, len);
+#endif
+   return buffer;
+}
+
+/**
+ * Free converted string if local buffer was not used
+ */
+inline void FreeConvertedString(char *str, char *localBuffer)
+{
+   if (str != localBuffer)
+      MemFree(str);
+}
 
 /**
  * Update error message from given source
@@ -58,7 +86,7 @@ extern "C" WCHAR __EXPORT *DrvPrepareStringW(const WCHAR *str)
 {
 	int len = (int)wcslen(str) + 3;   // + two quotes and \0 at the end
 	int bufferSize = len + 128;
-	WCHAR *out = (WCHAR *)malloc(bufferSize * sizeof(WCHAR));
+	WCHAR *out = (WCHAR *)MemAlloc(bufferSize * sizeof(WCHAR));
 	out[0] = _T('\'');
 
 	const WCHAR *src = str;
@@ -133,7 +161,7 @@ extern "C" char __EXPORT *DrvPrepareStringA(const char *str)
 {
 	int len = (int)strlen(str) + 3;   // + two quotes and \0 at the end
 	int bufferSize = len + 128;
-	char *out = (char *)malloc(bufferSize);
+	char *out = (char *)MemAlloc(bufferSize);
 	out[0] = _T('\'');
 
 	const char *src = str;
@@ -280,7 +308,7 @@ extern "C" DBDRV_CONNECTION __EXPORT DrvConnect(const char *host, const char *lo
 		return NULL;
 	}
 	
-	pConn = (MARIADB_CONN *)malloc(sizeof(MARIADB_CONN));
+	pConn = MemAllocStruct<MARIADB_CONN>();
 	pConn->pMySQL = pMySQL;
 	pConn->mutexQueryLock = MutexCreate();
 
@@ -320,7 +348,7 @@ extern "C" void __EXPORT DrvDisconnect(MARIADB_CONN *pConn)
 	{
 		mysql_close(pConn->pMySQL);
 		MutexDestroy(pConn->mutexQueryLock);
-		free(pConn);
+		MemFree(pConn);
 	}
 }
 
@@ -335,18 +363,17 @@ extern "C" DBDRV_STATEMENT __EXPORT DrvPrepare(MARIADB_CONN *pConn, WCHAR *pwszQ
 	MYSQL_STMT *stmt = mysql_stmt_init(pConn->pMySQL);
 	if (stmt != NULL)
 	{
-		char *pszQueryUTF8 = UTF8StringFromWideString(pwszQuery);
+	   char localBuffer[1024];
+		char *pszQueryUTF8 = WideStringToUTF8(pwszQuery, localBuffer, 1024);
 		int rc = mysql_stmt_prepare(stmt, pszQueryUTF8, (unsigned long)strlen(pszQueryUTF8));
 		if (rc == 0)
 		{
-			result = (MARIADB_STATEMENT *)malloc(sizeof(MARIADB_STATEMENT));
+			result = MemAllocStruct<MARIADB_STATEMENT>();
 			result->connection = pConn;
 			result->statement = stmt;
 			result->paramCount = (int)mysql_stmt_param_count(stmt);
-			result->bindings = (MYSQL_BIND *)malloc(sizeof(MYSQL_BIND) * result->paramCount);
-			memset(result->bindings, 0, sizeof(MYSQL_BIND) * result->paramCount);
-			result->lengthFields = (unsigned long *)malloc(sizeof(unsigned long) * result->paramCount);
-			memset(result->lengthFields, 0, sizeof(unsigned long) * result->paramCount);
+			result->bindings = MemAllocArray<MYSQL_BIND>(result->paramCount);
+			result->lengthFields = MemAllocArray<unsigned long>(result->paramCount);
 			result->buffers = new Array(result->paramCount, 16, true);
 			*pdwError = DBERR_SUCCESS;
 		}
@@ -364,7 +391,7 @@ extern "C" DBDRV_STATEMENT __EXPORT DrvPrepare(MARIADB_CONN *pConn, WCHAR *pwszQ
 			UpdateErrorMessage(mysql_stmt_error(stmt), errorText);
 			mysql_stmt_close(stmt);
 		}
-		free(pszQueryUTF8);
+		FreeConvertedString(pszQueryUTF8, localBuffer);
 	}
 	else
 	{
@@ -391,7 +418,7 @@ extern "C" void __EXPORT DrvBind(MARIADB_STATEMENT *hStmt, int pos, int sqlType,
 		b->buffer = UTF8StringFromWideString((WCHAR *)buffer);
 		hStmt->buffers->add(b->buffer);
 		if (allocType == DB_BIND_DYNAMIC)
-			free(buffer);
+			MemFree(buffer);
 		b->buffer_length = (unsigned long)strlen((char *)b->buffer) + 1;
 		hStmt->lengthFields[pos - 1] = b->buffer_length - 1;
 		b->length = &hStmt->lengthFields[pos - 1];
@@ -499,7 +526,7 @@ extern "C" void __EXPORT DrvFreeStatement(MARIADB_STATEMENT *hStmt)
 	delete hStmt->buffers;
 	MemFree(hStmt->bindings);
 	MemFree(hStmt->lengthFields);
-	free(hStmt);
+	MemFree(hStmt);
 }
 
 /**
@@ -539,13 +566,11 @@ static DWORD DrvQueryInternal(MARIADB_CONN *pConn, const char *pszQuery, WCHAR *
  */
 extern "C" DWORD __EXPORT DrvQuery(MARIADB_CONN *pConn, WCHAR *pwszQuery, WCHAR *errorText)
 {
-	DWORD dwRet;
-   char *pszQueryUTF8;
-
-   pszQueryUTF8 = UTF8StringFromWideString(pwszQuery);
-   dwRet = DrvQueryInternal(pConn, pszQueryUTF8, errorText);
-   free(pszQueryUTF8);
-	return dwRet;
+   char localBuffer[1024];
+   char *pszQueryUTF8 = WideStringToUTF8(pwszQuery, localBuffer, 1024);
+   DWORD rc = DrvQueryInternal(pConn, pszQueryUTF8, errorText);
+   FreeConvertedString(pszQueryUTF8, localBuffer);
+	return rc;
 }
 
 /**
@@ -553,20 +578,20 @@ extern "C" DWORD __EXPORT DrvQuery(MARIADB_CONN *pConn, WCHAR *pwszQuery, WCHAR 
  */
 extern "C" DBDRV_RESULT __EXPORT DrvSelect(MARIADB_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError, WCHAR *errorText)
 {
-	MARIADB_RESULT *result = NULL;
-	char *pszQueryUTF8;
-
 	if (pConn == NULL)
 	{
 		*pdwError = DBERR_INVALID_HANDLE;
 		return NULL;
 	}
 
-	pszQueryUTF8 = UTF8StringFromWideString(pwszQuery);
+   MARIADB_RESULT *result = NULL;
+
+   char localBuffer[1024];
+   char *pszQueryUTF8 = WideStringToUTF8(pwszQuery, localBuffer, 1024);
 	MutexLock(pConn->mutexQueryLock);
 	if (mysql_query(pConn->pMySQL, pszQueryUTF8) == 0)
 	{
-		result = (MARIADB_RESULT *)malloc(sizeof(MARIADB_RESULT));
+		result = MemAllocStruct<MARIADB_RESULT>();
       result->connection = pConn;
 		result->isPreparedStatement = false;
 		result->resultSet = mysql_store_result(pConn->pMySQL);
@@ -589,7 +614,7 @@ extern "C" DBDRV_RESULT __EXPORT DrvSelect(MARIADB_CONN *pConn, WCHAR *pwszQuery
 	}
 
 	MutexUnlock(pConn->mutexQueryLock);
-	free(pszQueryUTF8);
+	FreeConvertedString(pszQueryUTF8, localBuffer);
 	return result;
 }
 
@@ -598,13 +623,13 @@ extern "C" DBDRV_RESULT __EXPORT DrvSelect(MARIADB_CONN *pConn, WCHAR *pwszQuery
  */
 extern "C" DBDRV_RESULT __EXPORT DrvSelectPrepared(MARIADB_CONN *pConn, MARIADB_STATEMENT *hStmt, DWORD *pdwError, WCHAR *errorText)
 {
-	MARIADB_RESULT *result = NULL;
-
 	if (pConn == NULL)
 	{
 		*pdwError = DBERR_INVALID_HANDLE;
 		return NULL;
 	}
+
+   MARIADB_RESULT *result = NULL;
 
 	MutexLock(pConn->mutexQueryLock);
 
@@ -612,7 +637,7 @@ extern "C" DBDRV_RESULT __EXPORT DrvSelectPrepared(MARIADB_CONN *pConn, MARIADB_
 	{
 		if (mysql_stmt_execute(hStmt->statement) == 0)
 		{
-			result = (MARIADB_RESULT *)malloc(sizeof(MARIADB_RESULT));
+			result = MemAllocStruct<MARIADB_RESULT>();
          result->connection = pConn;
 			result->isPreparedStatement = true;
 			result->statement = hStmt->statement;
@@ -620,12 +645,9 @@ extern "C" DBDRV_RESULT __EXPORT DrvSelectPrepared(MARIADB_CONN *pConn, MARIADB_
 			if (result->resultSet != NULL)
 			{
 				result->numColumns = mysql_num_fields(result->resultSet);
+				result->lengthFields = MemAllocArray<unsigned long>(result->numColumns);
 
-				result->lengthFields = (unsigned long *)malloc(sizeof(unsigned long) * result->numColumns);
-				memset(result->lengthFields, 0, sizeof(unsigned long) * result->numColumns);
-
-				result->bindings = (MYSQL_BIND *)malloc(sizeof(MYSQL_BIND) * result->numColumns);
-				memset(result->bindings, 0, sizeof(MYSQL_BIND) * result->numColumns);
+				result->bindings = MemAllocArray<MYSQL_BIND>(result->numColumns);
 				for(int i = 0; i < result->numColumns; i++)
 				{
 					result->bindings[i].buffer_type = MYSQL_TYPE_STRING;
@@ -645,18 +667,16 @@ extern "C" DBDRV_RESULT __EXPORT DrvSelectPrepared(MARIADB_CONN *pConn, MARIADB_
 					UpdateErrorMessage(mysql_stmt_error(hStmt->statement), errorText);
 					*pdwError = DBERR_OTHER_ERROR;
 					mysql_free_result(result->resultSet);
-					free(result->bindings);
-					free(result->lengthFields);
-					free(result);
-					result = NULL;
+					MemFree(result->bindings);
+					MemFree(result->lengthFields);
+					MemFreeAndNull(result);
 				}
 			}
 			else
 			{
 				UpdateErrorMessage(mysql_stmt_error(hStmt->statement), errorText);
 				*pdwError = DBERR_OTHER_ERROR;
-				free(result);
-				result = NULL;
+				MemFreeAndNull(result);
 			}
 		}
 		else
@@ -741,7 +761,7 @@ static void *GetFieldInternal(MARIADB_RESULT *hResult, int iRow, int iColumn, vo
 #if HAVE_ALLOCA
 		b.buffer = alloca(hResult->lengthFields[iColumn] + 1);
 #else
-		b.buffer = malloc(hResult->lengthFields[iColumn] + 1);
+		b.buffer = MemAlloc(hResult->lengthFields[iColumn] + 1);
 #endif
 		b.buffer_length = hResult->lengthFields[iColumn] + 1;
 		b.buffer_type = MYSQL_TYPE_STRING;
@@ -774,7 +794,7 @@ static void *GetFieldInternal(MARIADB_RESULT *hResult, int iRow, int iColumn, vo
 		}
       MutexUnlock(hResult->connection->mutexQueryLock);
 #if !HAVE_ALLOCA
-		free(b.buffer);
+		MemFree(b.buffer);
 #endif
 	}
 	else
@@ -862,7 +882,7 @@ extern "C" void __EXPORT DrvFreeResult(MARIADB_RESULT *hResult)
 	}
 
 	mysql_free_result(hResult->resultSet);
-	free(hResult);
+	MemFree(hResult);
 }
 
 /**
@@ -870,20 +890,20 @@ extern "C" void __EXPORT DrvFreeResult(MARIADB_RESULT *hResult)
  */
 extern "C" DBDRV_UNBUFFERED_RESULT __EXPORT DrvSelectUnbuffered(MARIADB_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError, WCHAR *errorText)
 {
-	MARIADB_UNBUFFERED_RESULT *pResult = NULL;
-	char *pszQueryUTF8;
-	
 	if (pConn == NULL)
 	{
 		*pdwError = DBERR_INVALID_HANDLE;
 		return NULL;
 	}
 
-	pszQueryUTF8 = UTF8StringFromWideString(pwszQuery);
+   MARIADB_UNBUFFERED_RESULT *pResult = NULL;
+
+   char localBuffer[1024];
+	char *pszQueryUTF8 = WideStringToUTF8(pwszQuery, localBuffer, 1024);
 	MutexLock(pConn->mutexQueryLock);
 	if (mysql_query(pConn->pMySQL, pszQueryUTF8) == 0)
 	{
-		pResult = (MARIADB_UNBUFFERED_RESULT *)malloc(sizeof(MARIADB_UNBUFFERED_RESULT));
+		pResult = MemAllocStruct<MARIADB_UNBUFFERED_RESULT>();
 		pResult->connection = pConn;
 		pResult->isPreparedStatement = false;
 		pResult->resultSet = mysql_use_result(pConn->pMySQL);
@@ -892,13 +912,12 @@ extern "C" DBDRV_UNBUFFERED_RESULT __EXPORT DrvSelectUnbuffered(MARIADB_CONN *pC
 			pResult->noMoreRows = false;
 			pResult->numColumns = mysql_num_fields(pResult->resultSet);
 			pResult->pCurrRow = NULL;
-			pResult->lengthFields = (unsigned long *)malloc(sizeof(unsigned long) * pResult->numColumns);
+			pResult->lengthFields = MemAllocArray<unsigned long>(pResult->numColumns);
 			pResult->bindings = NULL;
 		}
 		else
 		{
-			free(pResult);
-			pResult = NULL;
+			MemFreeAndNull(pResult);
 		}
 
 		*pdwError = DBERR_SUCCESS;
@@ -929,7 +948,7 @@ extern "C" DBDRV_UNBUFFERED_RESULT __EXPORT DrvSelectUnbuffered(MARIADB_CONN *pC
 	{
 		MutexUnlock(pConn->mutexQueryLock);
 	}
-	free(pszQueryUTF8);
+	FreeConvertedString(pszQueryUTF8, localBuffer);
 
 	return pResult;
 }
@@ -947,7 +966,7 @@ extern "C" DBDRV_RESULT __EXPORT DrvSelectPreparedUnbuffered(MARIADB_CONN *pConn
    {
       if (mysql_stmt_execute(hStmt->statement) == 0)
       {
-         result = (MARIADB_UNBUFFERED_RESULT *)malloc(sizeof(MARIADB_UNBUFFERED_RESULT));
+         result = MemAllocStruct<MARIADB_UNBUFFERED_RESULT>();
          result->connection = pConn;
          result->isPreparedStatement = true;
          result->statement = hStmt->statement;
@@ -957,12 +976,9 @@ extern "C" DBDRV_RESULT __EXPORT DrvSelectPreparedUnbuffered(MARIADB_CONN *pConn
             result->noMoreRows = false;
             result->numColumns = mysql_num_fields(result->resultSet);
             result->pCurrRow = NULL;
+            result->lengthFields = MemAllocArray<unsigned long>(result->numColumns);
 
-            result->lengthFields = (unsigned long *)malloc(sizeof(unsigned long) * result->numColumns);
-            memset(result->lengthFields, 0, sizeof(unsigned long) * result->numColumns);
-
-            result->bindings = (MYSQL_BIND *)malloc(sizeof(MYSQL_BIND) * result->numColumns);
-            memset(result->bindings, 0, sizeof(MYSQL_BIND) * result->numColumns);
+            result->bindings = MemAllocArray<MYSQL_BIND>(result->numColumns);
             for(int i = 0; i < result->numColumns; i++)
             {
                result->bindings[i].buffer_type = MYSQL_TYPE_STRING;
@@ -982,8 +998,7 @@ extern "C" DBDRV_RESULT __EXPORT DrvSelectPreparedUnbuffered(MARIADB_CONN *pConn
          {
             UpdateErrorMessage(mysql_stmt_error(hStmt->statement), errorText);
             *pdwError = DBERR_OTHER_ERROR;
-            free(result);
-            result = NULL;
+            MemFreeAndNull(result);
          }
       }
       else
@@ -1111,7 +1126,7 @@ static void *GetFieldUnbufferedInternal(MARIADB_UNBUFFERED_RESULT *hResult, int 
 #if HAVE_ALLOCA
       b.buffer = alloca(hResult->lengthFields[iColumn] + 1);
 #else
-      b.buffer = malloc(hResult->lengthFields[iColumn] + 1);
+      b.buffer = MemAlloc(hResult->lengthFields[iColumn] + 1);
 #endif
       b.buffer_length = hResult->lengthFields[iColumn] + 1;
       b.buffer_type = MYSQL_TYPE_STRING;
@@ -1143,7 +1158,7 @@ static void *GetFieldUnbufferedInternal(MARIADB_UNBUFFERED_RESULT *hResult, int 
          value = pBuffer;
       }
 #if !HAVE_ALLOCA
-      free(b.buffer);
+      MemFree(b.buffer);
 #endif
    }
    else
@@ -1235,9 +1250,9 @@ extern "C" void __EXPORT DrvFreeUnbufferedResult(MARIADB_UNBUFFERED_RESULT *hRes
 
    // Free allocated memory
    mysql_free_result(hResult->resultSet);
-   free(hResult->lengthFields);
-   free(hResult->bindings);
-   free(hResult);
+   MemFree(hResult->lengthFields);
+   MemFree(hResult->bindings);
+   MemFree(hResult);
 }
 
 /**
