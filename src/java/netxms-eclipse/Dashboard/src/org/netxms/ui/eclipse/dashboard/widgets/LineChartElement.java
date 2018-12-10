@@ -280,7 +280,7 @@ public class LineChartElement extends ElementWidget
 							chart.setTimeRange(from, to);
 							for(int i = 0; i < data.length; i++)
 							{
-								chart.updateParameter(i, data[i], false);
+								chart.updateParameter(i, data[i], false, false);
 								dataCache.add(new DataCacheElement(dciList[i], data[i]));
 							}
 							chart.refresh();

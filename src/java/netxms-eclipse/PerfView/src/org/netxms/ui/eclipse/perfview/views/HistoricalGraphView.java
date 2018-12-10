@@ -139,6 +139,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
    private Action[] presetActionsPredict;
    private Action actionCopyImage;
    private Action actionSaveAsImage;
+   private Action actionShowPredictedData;
 
    /*
     * (non-Javadoc)
@@ -364,6 +365,15 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
             color = ChartColor.getDefaultColor(index).getRGB();
          styles.add(new GraphItemStyle(getDisplayType(dci), color, 2, dci.invertValues ? GraphItemStyle.INVERTED : 0));
          index++;
+         if(showPredictedData)
+         {
+            chart.addParameter(new GraphItem(dci.nodeId, dci.dciId, 0, DataType.INT32, Long.toString(dci.dciId), name + " predicted", dci.getDisplayFormat()));
+            color = dci.getColorAsInt();
+            if (color == -1)
+               color = ChartColor.getDefaultColor(index).getRGB();
+            styles.add(new GraphItemStyle(getDisplayType(dci), color, 2, dci.invertValues ? GraphItemStyle.INVERTED : 0));
+            index++;
+         }
       }
       
       //Check that all DCI's are form one node
@@ -483,6 +493,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
                {
                   data[i].merge(session.getPredictedData(currentItem.nodeId, currentItem.dciId, new Date(System.currentTimeMillis()), new Date(System.currentTimeMillis() + settings.getPredictionTimeRangeMillis())));
                }
+               
                monitor.worked(1);
             }
 
@@ -772,6 +783,18 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
              saveAsImage();
           }
        };
+       
+       actionShowPredictedData = new Action("Show predicted data") {
+          @Override
+          public void run ()
+          {
+             showPredictedData  = actionShowPredictedData.isChecked();
+             actionShowPredictedData.setChecked(showPredictedData);
+             configureGraphFromSettings();
+          }
+       };
+       actionShowPredictedData.setChecked(showPredictedData);      
+       
    }
    
    /**
@@ -829,6 +852,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
 
       manager.add(presets);
       manager.add(presetsPredict);
+      manager.add(actionShowPredictedData);
       manager.add(new Separator());
       manager.add(actionAdjustBoth);
       manager.add(actionAdjustX);
@@ -877,6 +901,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
 
       manager.add(presets);
       manager.add(presetsPredict);
+      manager.add(actionShowPredictedData);
       manager.add(new Separator());
       manager.add(actionAdjustBoth);
       manager.add(actionAdjustX);
@@ -928,7 +953,13 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
    private void setChartData(final DciData[] data)
    {
       for(int i = 0; i < data.length; i++)
-         chart.updateParameter(i, data[i], false);
+      {
+         chart.updateParameter(i, data[i], false, false);
+         if(showPredictedData)
+         {
+            chart.updateParameter(i, data[i], false, true);            
+         }
+      }
       chart.refresh();
    }
 

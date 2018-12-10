@@ -713,7 +713,7 @@ public class LineChart extends Chart implements HistoricalDataChart
 	 * @see org.netxms.ui.eclipse.charts.api.HistoricalDataChart#updateParameter(int, org.netxms.client.datacollection.DciData, boolean)
 	 */
 	@Override
-	public void updateParameter(int index, DciData data, boolean updateChart)
+	public void updateParameter(int index, DciData data, boolean updateChart, boolean usePredictedValue)
 	{
 		if ((index < 0) || (index >= items.size()))
 			return;
@@ -727,7 +727,7 @@ public class LineChart extends Chart implements HistoricalDataChart
 		for(int i = 0; i < values.length; i++)
 		{
 			xSeries[i] = values[i].getTimestamp();
-			ySeries[i] = values[i].getValueAsDouble();
+			ySeries[i] = usePredictedValue ? values[i].getValueAsDouble() : values[i].getPredictedValueAsDouble();
 		}
 		
 		ILineSeries series = addLineSeries(index, item.getDescription(), xSeries, ySeries, updateChart);

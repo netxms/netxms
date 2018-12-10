@@ -52,20 +52,18 @@ struct NeuralNetworkNode
 /**
  * Neural network class
  */
-class NeuralNetwork
+class NeuralNetwork : public RefCountObject
 {
 private:
    ObjectArray<NeuralNetworkNode> m_input;
    ObjectArray<NeuralNetworkNode> m_hidden;
    NeuralNetworkNode m_output;
-   MUTEX m_mutex;
    double m_minValue;
    double m_maxValue;
 
 public:
    NeuralNetwork(NeuralNetwork *nn);
    NeuralNetwork(int inputCount, int hiddenCount);
-   ~NeuralNetwork();
 
    double normalize(double input);
    double removeNormalization(double input);
@@ -74,9 +72,6 @@ public:
    void train(double *series, size_t length, int rounds, double learnRate);
    void showWeights();
    void setDataRange(double min, double max);
-
-   void lock() { MutexLock(m_mutex); }
-   void unlock() { MutexUnlock(m_mutex); }
 };
 
 /**

@@ -30,7 +30,7 @@
 /**
  * Constructor
  */
-TimeDependentEngine::TimeDependentEngine() : PredictionEngine(), m_networks(true)
+TimeDependentEngine::TimeDependentEngine() : PredictionEngine(), m_networks(false)
 {
    m_networkLock = MutexCreate();
 }
@@ -130,7 +130,7 @@ void TimeDependentEngine::getAccuracy(UINT32 nodeId, UINT32 dciId)
       }
       NeuralNetwork *nn = acquireNetwork(nodeId, dciId);
       result = nn->accuracy(series, values->size() - 1, 0.1);
-      nn->unlock();
+      nn->decRefCount();
       delete[] series;
    }
    delete values;
@@ -158,7 +158,7 @@ void TimeDependentEngine::train(UINT32 nodeId, UINT32 dciId)
       }
       NeuralNetwork *nn = acquireNetwork(nodeId, dciId);
       NeuralNetwork *newNn = new NeuralNetwork(nn);
-      nn->unlock();
+      nn->decRefCount();
       newNn->train(series, values->size()-1, 10000, 0.01);
       replaceNetwork(nodeId, dciId, newNn);
       nxlog_debug_tag(DEBUG_TAG, 2, _T("Final neural network model weights and biases:"));
@@ -226,7 +226,7 @@ double TimeDependentEngine::getPredictedValue(UINT32 nodeId, UINT32 dciId, time_
 
    NeuralNetwork *nn = acquireNetwork(nodeId, dciId);
    double result = nn->computeOutput(series);
-   nn->unlock();
+   nn->decRefCount();
 
    delete[] series;
    return result;
@@ -283,7 +283,7 @@ bool TimeDependentEngine::getPredictedSeries(UINT32 nodeId, UINT32 dciId, int co
       //nxlog_debug_tag(DEBUG_TAG, 2, _T("!!!requested time %d %f"), startTime, series[count-1-n]);
    }
    series[0] = nn->computeOutput(input); //no value bid
-   nn->unlock();
+   nn->decRefCount();
 
    delete[] input;
    return true;
@@ -312,7 +312,7 @@ NeuralNetwork *TimeDependentEngine::acquireNetwork(UINT32 nodeId, UINT32 dciId)
       nn = new NeuralNetwork(INPUT_LAYER_SIZE, 40);
       m_networks.set(nid, nn);
    }
-   nn->lock();
+   nn->incRefCount();
    MutexUnlock(m_networkLock);
 
    return nn;
@@ -328,9 +328,7 @@ void TimeDependentEngine::replaceNetwork(UINT32 nodeId, UINT32 dciId, NeuralNetw
 
    MutexLock(m_networkLock);
    NeuralNetwork *nn = m_networks.get(nid);
-   nn->lock();
    m_networks.set(nid, newNn);
-   nn->unlock();
-   delete nn;
+   nn->decRefCount();
    MutexUnlock(m_networkLock);
 }

@@ -753,7 +753,7 @@ public class AlarmDetails extends ViewPart
                   if (!((Control)chart).isDisposed())
                   {
                      chart.setTimeRange(from, to);
-                     chart.updateParameter(0, data, true);
+                     chart.updateParameter(0, data, true, false);
                      chart.clearErrors();
                   }
                   updateInProgress = false;

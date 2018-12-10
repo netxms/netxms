@@ -255,7 +255,7 @@ public class PerfTabGraph extends DashboardComposite
 							{
 								chart.setTimeRange(from, to);
 								for(int i = 0; i < data.length; i++)
-									chart.updateParameter(i, data[i], true);
+									chart.updateParameter(i, data[i], true, false);
 							}
 							updateInProgress = false;
 						}

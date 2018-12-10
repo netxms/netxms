@@ -75,7 +75,7 @@ public interface HistoricalDataChart extends DataChart
 	 * @param data data for parameter
 	 * @param updateChart if true, chart will be updated (repainted)
 	 */
-	public abstract void updateParameter(int index, DciData data, boolean updateChart);
+	public abstract void updateParameter(int index, DciData data, boolean updateChart, boolean usePredictedValues);
 	
 	/**
 	 * Adjust X axis to fit all data

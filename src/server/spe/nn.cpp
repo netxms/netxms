@@ -82,7 +82,6 @@ NeuralNetwork::NeuralNetwork(int inputCount, int hiddenCount) :
       m_input.add(new NeuralNetworkNode(hiddenCount));
    for(int i = 0; i < hiddenCount; i++)
       m_hidden.add(new NeuralNetworkNode(1));
-   m_mutex = MutexCreate();
    m_maxValue = 0.0;
    m_minValue = 0.0;
 }
@@ -97,17 +96,8 @@ NeuralNetwork::NeuralNetwork(NeuralNetwork *nn) :
       m_input.add(new NeuralNetworkNode(nn->m_input.get(i)));
    for(int i = 0; i < nn->m_hidden.size(); i++)
       m_hidden.add(new NeuralNetworkNode(nn->m_hidden.get(i)));
-   m_mutex = MutexCreate();
    m_maxValue = nn->m_maxValue;
    m_minValue = nn->m_minValue;
-}
-
-/**
- * Destructor
- */
-NeuralNetwork::~NeuralNetwork()
-{
-   MutexDestroy(m_mutex);
 }
 
 /**

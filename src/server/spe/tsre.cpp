@@ -29,7 +29,7 @@
 /**
  * Constructor
  */
-TimeSeriesRegressionEngine::TimeSeriesRegressionEngine() : PredictionEngine(), m_networks(true)
+TimeSeriesRegressionEngine::TimeSeriesRegressionEngine() : PredictionEngine(), m_networks(false)
 {
    m_networkLock = MutexCreate();
 }
@@ -128,7 +128,7 @@ void TimeSeriesRegressionEngine::getAccuracy(UINT32 nodeId, UINT32 dciId)
       prepareData(values, series);
       NeuralNetwork *nn = acquireNetwork(nodeId, dciId);
       result = nn->accuracy(series, values->size(), 0.1);
-      nn->unlock();
+      nn->decRefCount();
       delete[] series;
    }
    delete values;
@@ -154,7 +154,7 @@ void TimeSeriesRegressionEngine::train(UINT32 nodeId, UINT32 dciId)
       nn->train(series, (values->size() - INPUT_LAYER_SIZE), 10000, 0.01);
       nxlog_debug_tag(DEBUG_TAG, 2, _T("Final neural network model weights and biases:"));
       //nn->showWeights();
-      nn->unlock();
+      nn->decRefCount();
       delete[] series;
    }
    delete values;
@@ -217,7 +217,7 @@ double TimeSeriesRegressionEngine::getPredictedValue(UINT32 nodeId, UINT32 dciId
 
    NeuralNetwork *nn = acquireNetwork(nodeId, dciId);
    double result = nn->computeOutput(series);
-   nn->unlock();
+   nn->decRefCount();
 
    delete[] series;
    return result;
@@ -261,7 +261,7 @@ bool TimeSeriesRegressionEngine::getPredictedSeries(UINT32 nodeId, UINT32 dciId,
       input[INPUT_LAYER_SIZE-1] = series[count-1-n];
    }
    series[0] = nn->computeOutput(input); //no value bid
-   nn->unlock();
+   nn->decRefCount();
 
    delete[] input;
    return true;
@@ -290,7 +290,7 @@ NeuralNetwork *TimeSeriesRegressionEngine::acquireNetwork(UINT32 nodeId, UINT32 
       nn = new NeuralNetwork(INPUT_LAYER_SIZE, 40);
       m_networks.set(nid, nn);
    }
-   nn->lock();
+   nn->incRefCount();
    MutexUnlock(m_networkLock);
 
    return nn;
@@ -306,9 +306,6 @@ void TimeSeriesRegressionEngine::replaceNetwork(UINT32 nodeId, UINT32 dciId, Neu
 
    MutexLock(m_networkLock);
    NeuralNetwork *nn = m_networks.get(nid);
-   nn->lock();
    m_networks.set(nid, newNn);
-   nn->unlock();
-   delete nn;
    MutexUnlock(m_networkLock);
 }
