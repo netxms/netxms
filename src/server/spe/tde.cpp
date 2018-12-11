@@ -312,7 +312,6 @@ NeuralNetwork *TimeDependentEngine::acquireNetwork(UINT32 nodeId, UINT32 dciId)
       nn = new NeuralNetwork(INPUT_LAYER_SIZE, 40);
       m_networks.set(nid, nn);
    }
-   nn->incRefCount();
    MutexUnlock(m_networkLock);
 
    return nn;

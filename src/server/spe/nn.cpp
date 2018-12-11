@@ -75,7 +75,7 @@ void NeuralNetworkNode::reset()
 /**
  * Constructor
  */
-NeuralNetwork::NeuralNetwork(int inputCount, int hiddenCount) :
+NeuralNetwork::NeuralNetwork(int inputCount, int hiddenCount) : RefCountObject(),
       m_input(inputCount, 8, true), m_hidden(hiddenCount, 8, true), m_output(1)
 {
    for(int i = 0; i < inputCount; i++)
@@ -89,8 +89,8 @@ NeuralNetwork::NeuralNetwork(int inputCount, int hiddenCount) :
 /**
  *
  */
-NeuralNetwork::NeuralNetwork(NeuralNetwork *nn) :
-      m_input(nn->m_input.size(), 8, true), m_hidden(nn->m_hidden.size(), 8, true), m_output(nn->m_output)
+NeuralNetwork::NeuralNetwork(NeuralNetwork *nn) : RefCountObject(),
+      m_input(nn->m_input.size(), 8, true), m_hidden(nn->m_hidden.size(), 8, true), m_output(nn->m_output.size())
 {
    for(int i = 0; i < nn->m_input.size(); i++)
       m_input.add(new NeuralNetworkNode(nn->m_input.get(i)));
