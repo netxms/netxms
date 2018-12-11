@@ -61,6 +61,23 @@ int LIBNETXMS_EXPORTABLE ucs4_to_ucs2(const UCS4CHAR *src, int srcLen, UCS2CHAR 
 }
 
 /**
+ * Calculate length in characters of given UCS-4 string in UCS-2 encoding (including terminating 0 byte)
+ */
+int LIBNETXMS_EXPORTABLE ucs4_ucs2len(const UCS4CHAR *src, int srcLen)
+{
+   int len = static_cast<int>((srcLen == -1) ? ucs4_strlen(src) : srcLen);
+   int dcount = len + 1;
+   const UCS4CHAR *s = src;
+   while(len-- > 0)
+   {
+      UCS4CHAR ch = *s++;
+      if (ch > 0xFFFF)
+         dcount++;
+   }
+   return dcount;
+}
+
+/**
  * Convert UCS-4 to UTF-8
  */
 int LIBNETXMS_EXPORTABLE ucs4_to_utf8(const UCS4CHAR *src, int srcLen, char *dst, int dstLen)
