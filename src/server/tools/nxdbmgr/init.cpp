@@ -109,25 +109,12 @@ bool ExecSQLBatch(const char *pszFile)
    UINT32 dwSize;
    bool result = false;
 
-	if (strstr(pszFile, "@dbengine@") != NULL)
-	{
-		static const TCHAR *dbengine[] = { _T("mysql"), _T("pgsql"), _T("mssql"), _T("oracle"), _T("sqlite"), _T("db2"), _T("informix") };
-
-		String name;
-		name.appendMBString(pszFile, strlen(pszFile), CP_ACP);
-		name.replace(_T("@dbengine@"), dbengine[g_dbSyntax]);
-	   pBatch = LoadFile(name, &dwSize);
-	   if (pBatch == NULL)
-		   _tprintf(_T("ERROR: Cannot load SQL command file %s\n"), (const TCHAR *)name);
-	}
-	else
-	{
-	   pBatch = LoadFileA(pszFile, &dwSize);
-	   if (pBatch == NULL)
-		   _tprintf(_T("ERROR: Cannot load SQL command file %hs\n"), pszFile);
-	}
-
-   if (pBatch != NULL)
+   pBatch = LoadFileA(pszFile, &dwSize);
+   if (pBatch == NULL)
+   {
+	   _tprintf(_T("ERROR: Cannot load SQL command file %hs\n"), pszFile);
+   }
+   else
    {
       for(pQuery = pBatch; pQuery < pBatch + dwSize; pQuery = pNext)
       {
