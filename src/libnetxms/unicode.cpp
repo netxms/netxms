@@ -411,7 +411,7 @@ WCHAR LIBNETXMS_EXPORTABLE *WideStringFromMBStringSysLocale(const char *pszStrin
    if (pszString == NULL)
       return NULL;
    int nLen = (int)strlen(pszString) + 1;
-   WCHAR *pwszOut = MemAllocArray<WCHAR>(nLen);
+   WCHAR *pwszOut = MemAllocArrayNoInit<WCHAR>(nLen);
 #if HAVE_MBSTOWCS
    mbstowcs(pwszOut, pszString, nLen);
 #else
@@ -430,7 +430,7 @@ WCHAR LIBNETXMS_EXPORTABLE *WideStringFromMBString(const char *src)
    if (src == NULL)
       return NULL;
    int len = (int)strlen(src) + 1;
-   WCHAR *out = MemAllocArray<WCHAR>(len);
+   WCHAR *out = MemAllocArrayNoInit<WCHAR>(len);
    MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, src, -1, out, len);
    return out;
 }
@@ -443,7 +443,7 @@ WCHAR LIBNETXMS_EXPORTABLE *WideStringFromUTF8String(const char *pszString)
    if (pszString == NULL)
       return NULL;
    int nLen = (int)strlen(pszString) + 1;
-   WCHAR *pwszOut = MemAllocArray<WCHAR>(nLen);
+   WCHAR *pwszOut = MemAllocArrayNoInit<WCHAR>(nLen);
    MultiByteToWideChar(CP_UTF8, 0, pszString, -1, pwszOut, nLen);
    return pwszOut;
 }
@@ -523,13 +523,10 @@ char LIBNETXMS_EXPORTABLE *UTF8StringFromMBString(const char *s)
  */
 UCS2CHAR LIBNETXMS_EXPORTABLE *UCS2StringFromUCS4String(const UCS4CHAR *src)
 {
-   UCS2CHAR *pszOut;
-   int nLen;
-
-   nLen = (int)ucs4_strlen(src) + 1;
-   pszOut = MemAllocArray<UCS2CHAR>(nLen);
-   ucs4_to_ucs2(src, -1, pszOut, nLen);
-   return pszOut;
+   int len = ucs4_ucs2len(src, -1);
+   UCS2CHAR *out = MemAllocArrayNoInit<UCS2CHAR>(len);
+   ucs4_to_ucs2(src, -1, out, len);
+   return out;
 }
 
 /**
@@ -537,8 +534,8 @@ UCS2CHAR LIBNETXMS_EXPORTABLE *UCS2StringFromUCS4String(const UCS4CHAR *src)
  */
 UCS4CHAR LIBNETXMS_EXPORTABLE *UCS4StringFromUCS2String(const UCS2CHAR *src)
 {
-   int len = (int)ucs2_strlen(src) + 1;
-   UCS4CHAR *out = MemAllocArray<UCS4CHAR>(len);
+   int len = ucs2_strlen(src) + 1;
+   UCS4CHAR *out = MemAllocArrayNoInit<UCS4CHAR>(len);
    ucs2_to_ucs4(src, -1, out, len);
    return out;
 }
@@ -553,7 +550,7 @@ UCS2CHAR LIBNETXMS_EXPORTABLE *UCS2StringFromUTF8String(const char *utf8String)
    if (utf8String == NULL)
       return NULL;
    int nLen = (int)strlen(utf8String) + 1;
-   UCS2CHAR *out = MemAllocArray<UCS2CHAR>(nLen);
+   UCS2CHAR *out = MemAllocArrayNoInit<UCS2CHAR>(nLen);
    utf8_to_ucs2(utf8String, -1, out, nLen);
    return out;
 }
@@ -575,7 +572,7 @@ char LIBNETXMS_EXPORTABLE *UTF8StringFromUCS2String(const UCS2CHAR *src)
 UCS2CHAR LIBNETXMS_EXPORTABLE *UCS2StringFromMBString(const char *src)
 {
    int len = (int)strlen(src) + 1;
-   UCS2CHAR *out = MemAllocArray<UCS2CHAR>(len);
+   UCS2CHAR *out = MemAllocArrayNoInit<UCS2CHAR>(len);
    mb_to_ucs2(src, -1, out, len);
    return out;
 }
@@ -601,7 +598,7 @@ char LIBNETXMS_EXPORTABLE *MBStringFromUCS2String(const UCS2CHAR *src)
 UCS4CHAR LIBNETXMS_EXPORTABLE *UCS4StringFromMBString(const char *src)
 {
    int len = (int)strlen(src) + 1;
-   UCS4CHAR *out = MemAllocArray<UCS4CHAR>(len);
+   UCS4CHAR *out = MemAllocArrayNoInit<UCS4CHAR>(len);
    mb_to_ucs4(src, -1, out, len);
    return out;
 }

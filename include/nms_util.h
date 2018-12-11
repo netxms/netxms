@@ -360,6 +360,7 @@ int LIBNETXMS_EXPORTABLE ucs2_to_mb(const UCS2CHAR *src, int srcLen, char *dst, 
 #endif
 
 int LIBNETXMS_EXPORTABLE ucs4_to_ucs2(const UCS4CHAR *src, int srcLen, UCS2CHAR *dst, int dstLen);
+int LIBNETXMS_EXPORTABLE ucs4_ucs2len(const UCS4CHAR *src, int srcLen);
 int LIBNETXMS_EXPORTABLE ucs4_to_utf8(const UCS4CHAR *src, int srcLen, char *dst, int dstLen);
 int LIBNETXMS_EXPORTABLE ucs4_utf8len(const UCS4CHAR *src, int srcLen);
 #ifdef UNICODE_UCS4
@@ -2513,8 +2514,8 @@ const WCHAR LIBNETXMS_EXPORTABLE *ExtractWordW(const WCHAR *line, WCHAR *buffer)
 #define ExtractWord ExtractWordA
 #endif
 
-int LIBNETXMS_EXPORTABLE NumCharsA(const char *pszStr, char ch);
-int LIBNETXMS_EXPORTABLE NumCharsW(const WCHAR *pszStr, WCHAR ch);
+int LIBNETXMS_EXPORTABLE NumCharsA(const char *str, char ch);
+int LIBNETXMS_EXPORTABLE NumCharsW(const WCHAR *str, WCHAR ch);
 #ifdef UNICODE
 #define NumChars NumCharsW
 #else

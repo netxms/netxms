@@ -1131,6 +1131,7 @@ typedef struct tagICMPHDR
 inline void * MemAlloc(size_t size) { return malloc(size); }
 template <typename T> T *MemAllocStruct() { return (T*)calloc(1, sizeof(T)); }
 template <typename T> T *MemAllocArray(size_t count) { return (T*)calloc(count, sizeof(T)); }
+template <typename T> T *MemAllocArrayNoInit(size_t count) { return (T*)malloc(count * sizeof(T)); }
 template <typename T> T *MemRealloc(T *p, size_t size) { return (T*)realloc(p, size); }
 template <typename T> T *MemReallocArray(T *p, size_t count) { return (T*)realloc(p, count * sizeof(T)); }
 #if FREE_IS_NULL_SAFE
@@ -1148,6 +1149,7 @@ inline WCHAR *MemCopyStringW(const WCHAR *src) { return (src != NULL) ? wcsdup(s
 
 #define MemAlloc(size) malloc(size)
 #define MemAllocArray(count, size) calloc(count, size)
+#define MemAllocArrayNoInit(count, size) malloc((count) * (size))
 #define MemRealloc(p, size) realloc(p, size)
 #if FREE_IS_NULL_SAFE
 #define MemFree(p) free(p);

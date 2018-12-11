@@ -1551,31 +1551,28 @@ BOOL LIBNETXMS_EXPORTABLE GetWindowsVersionString(TCHAR *versionString, int strS
 
 #endif
 
-
-//
-// Count number of characters in string
-//
-
-int LIBNETXMS_EXPORTABLE NumCharsW(const WCHAR *pszStr, WCHAR ch)
+/**
+ * Count number of characters in UNICODE string
+ */
+int LIBNETXMS_EXPORTABLE NumCharsW(const WCHAR *str, WCHAR ch)
 {
-   const WCHAR *p;
-   int nCount;
-
-   for(p = pszStr, nCount = 0; *p != 0; p++)
+   int count = 0;
+   for(const WCHAR *p = str; *p != 0; p++)
       if (*p == ch)
-         nCount++;
-   return nCount;
+         count++;
+   return count;
 }
 
-int LIBNETXMS_EXPORTABLE NumCharsA(const char *pszStr, char ch)
+/**
+ * Count number of characters in non-UNICODE string
+ */
+int LIBNETXMS_EXPORTABLE NumCharsA(const char *str, char ch)
 {
-   const char *p;
-   int nCount;
-
-   for(p = pszStr, nCount = 0; *p != 0; p++)
+   int count = 0;
+   for(const char *p = str; *p != 0; p++)
       if (*p == ch)
-         nCount++;
-   return nCount;
+         count++;
+   return count;
 }
 
 /**
