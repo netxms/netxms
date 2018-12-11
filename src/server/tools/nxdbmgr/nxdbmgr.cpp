@@ -250,7 +250,8 @@ stop_search:
                      _T("   export <file>        : Export database to file\n")
                      _T("   get <name>           : Get value of server configuration variable\n")
                      _T("   import <file>        : Import database from file\n")
-                     _T("   init <file>          : Initialize database\n")
+                     _T("   init [file]          : Initialize database. If schema file is not specified,\n")
+                     _T("                          it's loaded from $NETXMS_HOME/share/netxms/sql/dbinit_DBTYPE.sql\n")
 				         _T("   migrate <source>     : Migrate database from given source\n")
                      _T("   online-upgrade       : Run pending online upgrade procedures\n")
                      _T("   reset-system-account : Unlock user \"system\" and reset it's password to default\n")
@@ -393,7 +394,7 @@ stop_search:
       _tprintf(_T("Invalid command \"%hs\". Type nxdbmgr -h for command line syntax.\n"), argv[optind]);
       return 1;
    }
-   if (((!strcmp(argv[optind], "init") || !strcmp(argv[optind], "batch") || !strcmp(argv[optind], "export") || !strcmp(argv[optind], "import") || !strcmp(argv[optind], "get") || !strcmp(argv[optind], "migrate")) && (argc - optind < 2)) ||
+   if (((!strcmp(argv[optind], "batch") || !strcmp(argv[optind], "export") || !strcmp(argv[optind], "import") || !strcmp(argv[optind], "get") || !strcmp(argv[optind], "migrate")) && (argc - optind < 2)) ||
        (!strcmp(argv[optind], "set") && (argc - optind < 3)))
    {
       _tprintf(_T("Required command argument(s) missing\n"));
@@ -454,7 +455,28 @@ stop_search:
 
    if (!strcmp(argv[optind], "init"))
    {
-      InitDatabase(argv[optind + 1]);
+      if (argc - optind < 2) {
+         String initFile;
+         const TCHAR *home = _tgetenv(_T("NETXMS_HOME"));
+         if (home != NULL)
+         {
+            initFile = home;
+         }
+         else
+         {
+            initFile = PREFIX;
+         }
+         initFile.append(_T("/share/netxms/sql/dbinit_"));
+         String driver;
+         driver.appendMBString(DBGetDriverName(s_driver), strlen(DBGetDriverName(s_driver)), CP_ACP);
+         driver.toLowercase();
+         initFile.append(driver);
+         initFile.append(_T(".sql"));
+         InitDatabase(initFile.getUTF8String());
+      }
+      else {
+         InitDatabase(argv[optind + 1]);
+      }
    }
    else
    {
