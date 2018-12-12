@@ -189,11 +189,15 @@ static void QueryQueues()
             char cursor[256];
             CFgetString(rsp, TA_CURSOR, 0, cursor, sizeof(cursor));
          	CFchg32(fb, TA_CURSOR, 0, cursor, 0, FLD_STRING);
+
+            readMore = true;
          }
       }
       else
       {
          AgentWriteDebugLog(3, _T("Tuxedo: tpcall() call failed (%hs)"), tpstrerrordetail(tperrno, 0));
+         delete_and_null(s_queues);
+         delete_and_null(s_queuesByServer);
       }
    }
 

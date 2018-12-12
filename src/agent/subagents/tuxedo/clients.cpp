@@ -1,6 +1,6 @@
 /*
 ** NetXMS Tuxedo subagent
-** Copyright (C) 2014 Raden Solutions
+** Copyright (C) 2014-2018 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -158,11 +158,14 @@ static void QueryClients()
             char cursor[256];
             CFgetString(rsp, TA_CURSOR, 0, cursor, sizeof(cursor));
          	CFchg32(fb, TA_CURSOR, 0, cursor, 0, FLD_STRING);
+
+         	readMore = true;
          }
       }
       else
       {
          AgentWriteDebugLog(3, _T("Tuxedo: tpcall() call failed (%hs)"), tpstrerrordetail(tperrno, 0));
+         delete_and_null(s_clients);
       }
    }
 
