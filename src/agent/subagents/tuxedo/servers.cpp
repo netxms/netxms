@@ -1,6 +1,6 @@
 /*
 ** NetXMS Tuxedo subagent
-** Copyright (C) 2014 Raden Solutions
+** Copyright (C) 2014-2018 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -250,11 +250,14 @@ static void QueryServers()
             char cursor[256];
             CFgetString(rsp, TA_CURSOR, 0, cursor, sizeof(cursor));
          	CFchg32(fb, TA_CURSOR, 0, cursor, 0, FLD_STRING);
+
+            readMore = true;
          }
       }
       else
       {
          AgentWriteDebugLog(3, _T("Tuxedo: tpcall() call failed (%hs)"), tpstrerrordetail(tperrno, 0));
+         delete_and_null(s_serverInstances);
       }
    }
 
@@ -263,27 +266,30 @@ static void QueryServers()
    TuxedoDisconnect();
 
    // Create summary list
-   s_servers = new ObjectArray<TuxedoServer>(1024, 1024, true);
-   TuxedoServer *base = NULL;
-   for(int id = 0; id < s_serverInstances->size(); id++)
+   if (s_serverInstances != NULL)
    {
-      TuxedoServer *s = s_serverInstances->get(id);
-      if (s == NULL)
-         continue;
+      s_servers = new ObjectArray<TuxedoServer>(1024, 1024, true);
+      TuxedoServer *base = NULL;
+      for(int id = 0; id < s_serverInstances->size(); id++)
+      {
+         TuxedoServer *s = s_serverInstances->get(id);
+         if (s == NULL)
+            continue;
 
-      if (s->m_baseId == s->m_id)
-      {
-         if (base != NULL)
-            s_servers->set(base->m_baseId, base);
-         base = new TuxedoServer(s);
+         if (s->m_baseId == s->m_id)
+         {
+            if (base != NULL)
+               s_servers->set(base->m_baseId, base);
+            base = new TuxedoServer(s);
+         }
+         else if (base != NULL)
+         {
+            base->addInstance(s);
+         }
       }
-      else if (base != NULL)
-      {
-         base->addInstance(s);
-      }
+      if (base != NULL)
+         s_servers->set(base->m_baseId, base);
    }
-   if (base != NULL)
-      s_servers->set(base->m_baseId, base);
 }
 
 /**
