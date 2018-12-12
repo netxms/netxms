@@ -41,6 +41,70 @@ find_existing_dir()
 
 
 #--------------------------------------------------------------------
+# Macros
+#--------------------------------------------------------------------
+
+AC_DEFUN([AC_C_CHECK_OPTION],[
+	AC_MSG_CHECKING(whether C compiler accepts $1)
+	OLD_CFLAGS="$CFLAGS"
+	if test "x$ac_compiler_gnu" = "xyes" ; then
+		CFLAGS="$CFLAGS -Werror $1"
+	else
+		CFLAGS="$CFLAGS $1"
+	fi
+	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
+		[ 
+			CFLAGS="$OLD_CFLAGS $1"
+			AC_MSG_RESULT(yes) 
+		], 
+		[ 
+			CFLAGS="$OLD_CFLAGS"
+			AC_MSG_RESULT(no)
+		])
+])
+
+AC_DEFUN([AC_CPP_CHECK_OPTION],[
+	AC_MSG_CHECKING(whether C compiler accepts $1)
+	OLD_CPPFLAGS="$CPPFLAGS"
+	if test "x$ac_compiler_gnu" = "xyes" ; then
+		CPPFLAGS="$CPPFLAGS -Werror $1"
+	else
+		CPPFLAGS="$CPPFLAGS $1"
+	fi
+	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
+		[ 
+			CPPFLAGS="$OLD_CPPFLAGS $1"
+			AC_MSG_RESULT(yes) 
+		], 
+		[ 
+			CPPFLAGS="$OLD_CPPFLAGS"
+			AC_MSG_RESULT(no)
+		])
+])
+
+AC_DEFUN([AC_CXX_CHECK_OPTION],[
+	AC_MSG_CHECKING(whether C++ compiler accepts $1)
+	OLD_CXXFLAGS="$CXXFLAGS"
+	if test "x$ac_compiler_gnu" = "xyes" ; then
+		CXXFLAGS="$CXXFLAGS -Werror $1"
+	else
+		CXXFLAGS="$CXXFLAGS $1"
+	fi
+	AC_LANG_PUSH([C++])
+	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
+		[ 
+			CXXFLAGS="$OLD_CXXFLAGS $1"
+			AC_MSG_RESULT(yes) 
+		], 
+		[ 
+			CXXFLAGS="$OLD_CXXFLAGS"
+			AC_MSG_RESULT(no)
+		])
+	AC_LANG_POP([C++])
+])
+
+
+#--------------------------------------------------------------------
 # Initialize variables
 #--------------------------------------------------------------------
 
@@ -1240,17 +1304,7 @@ fi
 case "$PLATFORM" in
    AIX)
       LDFLAGS_PREFIX="-no-undefined -Wl,-brtl $LDFLAGS"
-
-      AC_MSG_CHECKING(whether C compiler accepts qsuppess=1540-1401)
-      OLD_CPPFLAGS="$CPPFLAGS"
-      CPPFLAGS="$CPPFLAGS -qsuppress=1540-1401"
-      AC_RUN_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
-         [ AC_MSG_RESULT(yes) ],
-         [
-            CPPFLAGS="$OLD_CPPFLAGS"
-            AC_MSG_RESULT(no)
-         ])
-
+      AC_CPP_CHECK_OPTION(-qsuppess=1540-1401)
       ;;
    HP-UX)
       CPPFLAGS="$CPPFLAGS -D_HPUX -D_HPUX_SOURCE -D_POSIX_PTHREAD_SEMANTICS -D_XOPEN_SOURCE=500 -D_XOPEN_SOURCE_EXTENDED=1 -D_REENTRANT -D_INCLUDE_LONGLONG -D_LARGEFILE64_SOURCE"
@@ -1266,26 +1320,8 @@ case "$PLATFORM" in
       ;;
    SunOS)
       CPPFLAGS="$CPPFLAGS -D_REENTRANT -D_POSIX_PTHREAD_SEMANTICS -D__EXTENSIONS__"
-
-      AC_MSG_CHECKING(whether C compiler accepts -O2)
-      OLD_CPPFLAGS="$CPPFLAGS"
-      CPPFLAGS="$CPPFLAGS -O2"
-      AC_RUN_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
-         [ AC_MSG_RESULT(yes) ],
-         [
-            CPPFLAGS="$OLD_CPPFLAGS"
-            AC_MSG_RESULT(no)
-         ])
-
-      AC_MSG_CHECKING(whether C compiler accepts -features=extensions)
-      OLD_CFLAGS="$CFLAGS"
-      CFLAGS="$CFLAGS -features=extensions"
-      AC_RUN_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
-         [ AC_MSG_RESULT(yes) ],
-         [
-            CFLAGS="$OLD_CFLAGS"
-            AC_MSG_RESULT(no)
-         ])
+      AC_CPP_CHECK_OPTION(-O2)
+      AC_C_CHECK_OPTION(-features=extensions)
       ;;
    Linux)
       CPPFLAGS="$CPPFLAGS -D_GNU_SOURCE -O2"
@@ -1316,108 +1352,28 @@ if test "x$ac_compiler_gnu" = "xyes" ; then
 	SQLFLAGS="-x c -Wundef"
 	CPPFLAGS="$CPPFLAGS -Wformat"
 
-	AC_MSG_CHECKING(whether C compiler accepts -Wno-unused-result)
-	OLD_CPPFLAGS="$CPPFLAGS"
-	CPPFLAGS="$CPPFLAGS -Wno-unused-result"
-	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
-		[ AC_MSG_RESULT(yes) ], 
-		[ 
-			CPPFLAGS="$OLD_CPPFLAGS"
-			AC_MSG_RESULT(no)
-		])
-
-	AC_MSG_CHECKING(whether C compiler accepts -Wno-format-truncation)
-	OLD_CPPFLAGS="$CPPFLAGS"
-	CPPFLAGS="$CPPFLAGS -Wno-format-truncation"
-	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
-		[ AC_MSG_RESULT(yes) ], 
-		[ 
-			CPPFLAGS="$OLD_CPPFLAGS"
-			AC_MSG_RESULT(no)
-		])
-
-	AC_MSG_CHECKING(whether C compiler accepts -Werror=return-type)
-	OLD_CPPFLAGS="$CPPFLAGS"
-	CPPFLAGS="$CPPFLAGS -Werror=return-type"
-	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
-		[ AC_MSG_RESULT(yes) ], 
-		[ 
-			CPPFLAGS="$OLD_CPPFLAGS"
-			AC_MSG_RESULT(no)
-		])
+	AC_CPP_CHECK_OPTION(-Wno-unused-result)
+	AC_CPP_CHECK_OPTION(-Wno-format-truncation)
+	AC_CPP_CHECK_OPTION(-Werror=return-type)
+	AC_CXX_CHECK_OPTION(-fno-rtti)
+	AC_CXX_CHECK_OPTION(-fno-exceptions)
+	AC_CXX_CHECK_OPTION(-fvisibility-inlines-hidden)
+	AC_CPP_CHECK_OPTION(-fvisibility=hidden)
 
 	AC_MSG_CHECKING(whether C compiler accepts -Wno-invalid-pp-token)
 	OLD_CPPFLAGS="$CPPFLAGS"
 	CPPFLAGS="$SQLFLAGS -Wno-invalid-pp-token"
 	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
 		[
-         SQLFLAGS="$SQLFLAGS -Wno-invalid-pp-token"
-         AC_MSG_RESULT(yes)
-      ],
+			SQLFLAGS="$SQLFLAGS -Wno-invalid-pp-token"
+			AC_MSG_RESULT(yes)
+                ],
 		[ AC_MSG_RESULT(no) ])
-   CPPFLAGS="$OLD_CPPFLAGS"
-
-	AC_LANG_PUSH([C++])
-
-	AC_MSG_CHECKING(whether C++ compiler accepts -fno-rtti)
-	OLD_CXXFLAGS="$CXXFLAGS"
-	CXXFLAGS="$CXXFLAGS -fno-rtti"
-	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
-		[ AC_MSG_RESULT(yes) ], 
-		[ 
-			CXXFLAGS="$OLD_CXXFLAGS"
-			AC_MSG_RESULT(no)
-		])
-
-	AC_MSG_CHECKING(whether C++ compiler accepts -fno-exceptions)
-	OLD_CXXFLAGS="$CXXFLAGS"
-	CXXFLAGS="$CXXFLAGS -fno-exceptions"
-	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
-		[ AC_MSG_RESULT(yes) ], 
-		[ 
-			CXXFLAGS="$OLD_CXXFLAGS"
-			AC_MSG_RESULT(no)
-		])
-
-	AC_MSG_CHECKING(whether C compiler accepts -fvisibility-inlines-hidden)
-	OLD_CXXFLAGS="$CXXFLAGS"
-	CXXFLAGS="$CXXFLAGS -fvisibility-inlines-hidden"
-	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
-		[ 
-			AC_MSG_RESULT(yes) 
-		], 
-		[ 
-			CXXFLAGS="$OLD_CXXFLAGS"
-			AC_MSG_RESULT(no)
-		])
-
-	AC_LANG_POP([C++])
-
-	AC_MSG_CHECKING(whether C compiler accepts -fvisibility=hidden)
-	OLD_CPPFLAGS="$CPPFLAGS"
-	CPPFLAGS="$CPPFLAGS -fvisibility=hidden"
-	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
-		[ 
-			AC_MSG_RESULT(yes) 
-		], 
-		[ 
-			CPPFLAGS="$OLD_CPPFLAGS"
-			AC_MSG_RESULT(no)
-		])
+	CPPFLAGS="$OLD_CPPFLAGS"
 
 	MACHINE=`uname -m`
 	if test "x$MACHINE" = "xi686" -o "x$MACHINE" = "xi586"; then
-			AC_MSG_CHECKING(whether C compiler accepts -march=$MACHINE)
-			OLD_CPPFLAGS="$CPPFLAGS"
-			CPPFLAGS="$CPPFLAGS -march=$MACHINE"
-			AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
-				[ 
-					AC_MSG_RESULT(yes) 
-				], 
-				[ 
-					CPPFLAGS="$OLD_CPPFLAGS"
-					AC_MSG_RESULT(no)
-				])
+		AC_CPP_CHECK_OPTION(-march=$MACHINE)
 	fi
 
 	if test "x$PLATFORM" = "xHP-UX"; then
@@ -1600,19 +1556,7 @@ if test "x$CXX" = "xaCC" ; then
 			AC_MSG_RESULT(no)
 		])
 
-	AC_LANG_PUSH([C++])
-
-	AC_MSG_CHECKING(whether C++ compiler accepts +std=c++11)
-	OLD_CXXFLAGS="$CXXFLAGS"
-	CXXFLAGS="$CXXFLAGS +std=c++11"
-	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
-		[ AC_MSG_RESULT(yes) ], 
-		[ 
-			CXXFLAGS="$OLD_CXXFLAGS"
-			AC_MSG_RESULT(no)
-		])
-
-	AC_LANG_POP([C++])
+	AC_CXX_CHECK_OPTION(+std=c++11)
 fi
 
 if test "x$CXX" = "xxlC_r" ; then
