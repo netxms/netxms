@@ -205,14 +205,14 @@ public class AlarmList extends CompositeWithMessageBar
 		alarmViewer = new SortableTableViewer(getContent(), names, widths, 0, SWT.DOWN, SortableTableViewer.DEFAULT_STYLE);
       if (!session.isZoningEnabled())
          alarmViewer.removeColumnById(COLUMN_ZONE);
-		WidgetHelper.restoreTableViewerSettings(alarmViewer, Activator.getDefault().getDialogSettings(), configPrefix);
-	
-		labelProvider = new AlarmListLabelProvider(alarmViewer);
-		labelProvider.setShowColor(Activator.getDefault().getPreferenceStore().getBoolean("SHOW_ALARM_STATUS_COLORS"));
-		alarmViewer.setLabelProvider(labelProvider);
-		alarmViewer.setContentProvider(new ArrayContentProvider());
-		alarmViewer.setComparator(new AlarmComparator());
-		alarmFilter = new AlarmListFilter();
+      WidgetHelper.restoreTableViewerSettings(alarmViewer, Activator.getDefault().getDialogSettings(), configPrefix);
+
+      labelProvider = new AlarmListLabelProvider(alarmViewer);
+      labelProvider.setShowColor(Activator.getDefault().getPreferenceStore().getBoolean("SHOW_ALARM_STATUS_COLORS"));
+      alarmViewer.setLabelProvider(labelProvider);
+      alarmViewer.setContentProvider(new ArrayContentProvider());
+      alarmViewer.setComparator(new AlarmComparator());
+      alarmFilter = new AlarmListFilter();
 		alarmViewer.addFilter(alarmFilter);
 		alarmViewer.getTable().addDisposeListener(new DisposeListener() {
 			@Override
@@ -383,13 +383,13 @@ public class AlarmList extends CompositeWithMessageBar
 				}
 				else if (event.getProperty().equals("SHOW_ALARM_STATUS_COLORS")) //$NON-NLS-1$
             {
-				   boolean showColors = ps.getBoolean("SHOW_ALARM_STATUS_COLORS");
-				   if (labelProvider.isShowColor() != showColors)
-				   {
-				      labelProvider.setShowColor(showColors);
-				      actionShowColor.setChecked(showColors);
-				      alarmViewer.refresh();
-				   }
+               boolean showColors = ps.getBoolean("SHOW_ALARM_STATUS_COLORS");
+               if (labelProvider.isShowColor() != showColors)
+               {
+                  labelProvider.setShowColor(showColors);
+                  actionShowColor.setChecked(showColors);
+                  alarmViewer.refresh();
+               }
             }
 			}
       };
@@ -623,16 +623,16 @@ public class AlarmList extends CompositeWithMessageBar
 	 */
 	private void initializeTimeAcknowledge()
    {
-	   IDialogSettings settings = Activator.getDefault().getDialogSettings();
-	   int menuSize;
-	   try
-	   {
-	      menuSize = settings.getInt("AlarmList.ackMenuSize");//$NON-NLS-1$
-	   }
-	   catch(NumberFormatException e)
-	   {
-	      settings.put("AlarmList.ackMenuSize", 4); //$NON-NLS-1$
-	      timeAcknowledge = new ArrayList<Action>(4);
+      IDialogSettings settings = Activator.getDefault().getDialogSettings();
+      int menuSize;
+      try
+      {
+         menuSize = settings.getInt("AlarmList.ackMenuSize");//$NON-NLS-1$
+      }
+      catch(NumberFormatException e)
+      {
+         settings.put("AlarmList.ackMenuSize", 4); //$NON-NLS-1$
+         timeAcknowledge = new ArrayList<Action>(4);
          createDefaultIntervals();
          settings.put("AlarmList.ackMenuEntry0", 1 * 60 * 60); //$NON-NLS-1$
          settings.put("AlarmList.ackMenuEntry1", 4 * 60 * 60); //$NON-NLS-1$
@@ -711,19 +711,19 @@ public class AlarmList extends CompositeWithMessageBar
    }
 
    /**
-	 * Create pop-up menu for alarm list
-	 */
-	private void createPopupMenu()
-	{
-		// Create menu manager.
-		MenuManager menuMgr = new FilteringMenuManager(Activator.PLUGIN_ID);
-		menuMgr.setRemoveAllWhenShown(true);
-		menuMgr.addMenuListener(new IMenuListener() {
-			public void menuAboutToShow(IMenuManager mgr)
-			{
-				fillContextMenu(mgr);
-			}
-		});
+    * Create pop-up menu for alarm list
+    */
+   private void createPopupMenu()
+   {
+      // Create menu manager.
+      MenuManager menuMgr = new FilteringMenuManager(Activator.PLUGIN_ID);
+      menuMgr.setRemoveAllWhenShown(true);
+      menuMgr.addMenuListener(new IMenuListener() {
+         public void menuAboutToShow(IMenuManager mgr)
+         {
+            fillContextMenu(mgr);
+         }
+      });
 
 		// Create menu.
 		Menu menu = menuMgr.createContextMenu(alarmViewer.getControl());
@@ -908,14 +908,14 @@ public class AlarmList extends CompositeWithMessageBar
          filteredAlarmList = filteredAlarmList.subList(0, session.getAlarmListDisplayLimit());
       }
 
-      if ((visibilityValidator != null) && !visibilityValidator.isVisible())
-         return;
-      
       alarmViewer.getControl().getDisplay().asyncExec(new Runnable() {
          @Override
          public void run()
          {
             if (alarmViewer.getControl().isDisposed())
+               return;
+
+            if ((visibilityValidator != null) && !visibilityValidator.isVisible())
                return;
             
             synchronized(alarmList)
@@ -935,10 +935,10 @@ public class AlarmList extends CompositeWithMessageBar
    }
 
 	/**
-	 * Refresh alarm list
-	 */
-	public void refresh()
-	{
+    * Refresh alarm list
+    */
+   public void refresh()
+   {
       if ((visibilityValidator != null) && !visibilityValidator.isVisible())
 	      return;
 		new ConsoleJob(Messages.get().AlarmList_SyncJobName, viewPart, Activator.PLUGIN_ID, JOB_FAMILY) {
@@ -946,13 +946,13 @@ public class AlarmList extends CompositeWithMessageBar
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 			   HashMap<Long, Alarm> alarms = session.getAlarms();
-      		synchronized(alarmList)
-      		{
+            synchronized(alarmList)
+            {
       		   alarmList.clear();
       		   alarmList.putAll(alarms);
                filterAndLimit();
-      		}
-			}
+            }
+         }
 
 			@Override
 			protected String getErrorMessage()
@@ -1067,24 +1067,24 @@ public class AlarmList extends CompositeWithMessageBar
                   }
                });
             }
-			}
-			
-			@Override
-			protected String getErrorMessage()
-			{
-				return Messages.get().AlarmList_CannotResoveAlarm;
-			}
-		}.start();
-	}
+         }
+         
+         @Override
+         protected String getErrorMessage()
+         {
+            return Messages.get().AlarmList_CannotResoveAlarm;
+         }
+      }.start();
+   }
 
 	/**
-	 * Terminate selected alarms
-	 */
-	private void terminateAlarms()
-	{
-		IStructuredSelection selection = (IStructuredSelection)alarmViewer.getSelection();
-		if (selection.isEmpty())
-			return;		
+    * Terminate selected alarms
+    */
+   private void terminateAlarms()
+   {
+      IStructuredSelection selection = (IStructuredSelection)alarmViewer.getSelection();
+      if (selection.isEmpty())
+         return;     
 
 		final List<Long> alarmIds = new ArrayList<Long>(selection.size());
 		for(Object o : selection.toList())
@@ -1107,16 +1107,16 @@ public class AlarmList extends CompositeWithMessageBar
                      }
                   }
                });
-				}
-			}
-			
-			@Override
-			protected String getErrorMessage()
-			{
-				return Messages.get().TerminateAlarm_ErrorMessage;
-			}
-		}.start();
-	}
+            }
+         }
+         
+         @Override
+         protected String getErrorMessage()
+         {
+            return Messages.get().TerminateAlarm_ErrorMessage;
+         }
+      }.start();
+   }
 
    /**
     * Create helpdesk ticket (issue) from selected alarms
@@ -1224,10 +1224,10 @@ public class AlarmList extends CompositeWithMessageBar
 			try
 			{
 				TabbedObjectView view = (TabbedObjectView)PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().showView(TabbedObjectView.ID);
-				view.setObject(object);
-			}
-			catch(PartInitException e)
-			{
+            view.setObject(object);
+         }
+         catch(PartInitException e)
+         {
             MessageDialogHelper.openError(getShell(), Messages.get().AlarmList_Error,
                   Messages.get().AlarmList_OpenDetailsError + e.getLocalizedMessage());
          }

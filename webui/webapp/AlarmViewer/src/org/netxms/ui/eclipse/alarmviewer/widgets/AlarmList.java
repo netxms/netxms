@@ -793,14 +793,14 @@ public class AlarmList extends CompositeWithMessageBar
          filteredAlarmList = filteredAlarmList.subList(0, session.getAlarmListDisplayLimit());
       }
 
-      if ((visibilityValidator != null) && !visibilityValidator.isVisible())
-         return;
-      
       alarmViewer.getControl().getDisplay().asyncExec(new Runnable() {
          @Override
          public void run()
          {
             if (alarmViewer.getControl().isDisposed())
+               return;
+
+            if ((visibilityValidator != null) && !visibilityValidator.isVisible())
                return;
             
             synchronized(alarmList)
