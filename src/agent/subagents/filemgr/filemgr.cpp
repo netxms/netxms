@@ -205,8 +205,8 @@ static TCHAR *GetRealPath(TCHAR *path)
 /**
  * Takes folder/file path - make it absolute (result will be written back to the folder variable)
  * and check that this folder/file is under allowed root path.
- * If second parameter is set to true - then request is for getting content and "/" path should be acepted
- * and afterwards treatet as: "give list of all allowd folders".
+ * If second parameter is set to true - then request is for getting content and "/" path should be accepted
+ * and afterwards interpreted as "give list of all allowed folders".
  */
 static bool CheckFullPath(TCHAR *folder, bool withHomeDir, bool isModify = false)
 {
@@ -646,7 +646,7 @@ static bool ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *r
          }
          ConvertPathToHost(directory);
 
-         if (CheckFullPath(directory, false) && session->isMasterServer())
+         if (CheckFullPath(directory, false))
          {
             UINT64 fileCount = 0, fileSize = 0;
             GetFolderInfo(directory, &fileCount, &fileSize);
@@ -676,7 +676,7 @@ static bool ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *r
          ConvertPathToHost(directory);
 
          bool rootFolder = request->getFieldAsUInt16(VID_ROOT) ? 1 : 0;
-         if (CheckFullPath(directory, rootFolder) && session->isMasterServer())
+         if (CheckFullPath(directory, rootFolder))
          {
             GetFolderContent(directory, response, rootFolder, request->getFieldAsBoolean(VID_ALLOW_MULTIPART), session);
          }
@@ -692,7 +692,7 @@ static bool ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *r
          TCHAR file[MAX_PATH];
          request->getFieldAsString(VID_FILE_NAME, file, MAX_PATH);
          response->setId(request->getId());
-         if(file[0] == 0)
+         if (file[0] == 0)
          {
             response->setField(VID_RCC, ERR_IO_FAILURE);
             AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(CMD_FILEMGR_DELETE_FILE): File name should be set."));
@@ -827,7 +827,7 @@ static bool ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *r
          ExpandFileName(fileName, fileName, MAX_PATH, session->isMasterServer());
          response->setId(request->getId());
 
-      	if (session->isMasterServer() && CheckFullPath(fileName, false))
+      	if (CheckFullPath(fileName, false))
          {
             NX_STAT_STRUCT fs;
 
