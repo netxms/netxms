@@ -224,20 +224,28 @@ void TuxedoServer::addInstance(TuxedoServerInstance *s)
 /**
  * Service list
  */
-static MUTEX s_lock = MutexCreate();
-static time_t s_lastQuery = 0;
+static Mutex s_lock;
 static HashMap<UINT32, TuxedoServer> *s_servers = NULL;
 static HashMap<UINT32, TuxedoServerInstance> *s_serverInstances = NULL;
 
 /**
+ * Reset server cache
+ */
+void TuxedoResetServers()
+{
+   s_lock.lock();
+   delete_and_null(s_servers);
+   delete_and_null(s_serverInstances);
+   s_lock.unlock();
+}
+
+/**
  * Query servers
  */
-static void QueryServers()
+void TuxedoQueryServers()
 {
-   delete_and_null(s_servers);
-
-   if (!TuxedoConnect())
-      AgentWriteDebugLog(3, _T("Tuxedo: tpinit() call failed (%hs)"), tpstrerrordetail(tperrno, 0));
+   HashMap<UINT32, TuxedoServer> *servers = new HashMap<UINT32, TuxedoServer>(true);
+   HashMap<UINT32, TuxedoServerInstance> *serverInstances = new HashMap<UINT32, TuxedoServerInstance>(false);
 
    FBFR32 *fb = (FBFR32 *)tpalloc((char *)"FML32", NULL, 4096);
    CFchg32(fb, TA_OPERATION, 0, (char *)"GET", 0, FLD_STRING);
@@ -254,17 +262,12 @@ static void QueryServers()
       readMore = false;
       if (tpcall((char *)".TMIB", (char *)fb, 0, (char **)&rsp, &rsplen, 0) != -1)
       {
-         if (s_servers == NULL)
-            s_servers = new HashMap<UINT32, TuxedoServer>(true);
-         if (s_serverInstances == NULL)
-            s_serverInstances = new HashMap<UINT32, TuxedoServerInstance>(false);
-
          long count = 0;
          CFget32(rsp, TA_OCCURS, 0, (char *)&count, NULL, FLD_LONG);
          for(int i = 0; i < (int)count; i++)
          {
             TuxedoServerInstance *instance = new TuxedoServerInstance(rsp, (FLDOCC32)i);
-            TuxedoServer *server = s_servers->get(instance->getUniqueBaseId());
+            TuxedoServer *server = servers->get(instance->getUniqueBaseId());
             if (server != NULL)
             {
                server->addInstance(instance);
@@ -272,9 +275,9 @@ static void QueryServers()
             else
             {
                server = new TuxedoServer(instance);
-               s_servers->set(server->m_uniqueId, server);
+               servers->set(server->m_uniqueId, server);
             }
-            s_serverInstances->set(static_cast<UINT32>((instance->m_groupId << 16) | instance->m_id), instance);
+            serverInstances->set(static_cast<UINT32>((instance->m_groupId << 16) | instance->m_id), instance);
          }
 
          long more = 0;
@@ -292,15 +295,21 @@ static void QueryServers()
       }
       else
       {
-         AgentWriteDebugLog(3, _T("Tuxedo: tpcall() call failed (%hs)"), tpstrerrordetail(tperrno, 0));
-         delete_and_null(s_servers);
-         delete_and_null(s_serverInstances);
+         nxlog_debug_tag(TUXEDO_DEBUG_TAG, 3, _T("tpcall() call failed (%hs)"), tpstrerrordetail(tperrno, 0));
+         delete_and_null(servers);
+         delete_and_null(serverInstances);
       }
    }
 
    tpfree((char *)rsp);
    tpfree((char *)fb);
-   TuxedoDisconnect();
+
+   s_lock.lock();
+   delete s_servers;
+   s_servers = servers;
+   delete s_serverInstances;
+   s_serverInstances = serverInstances;
+   s_lock.unlock();
 }
 
 /**
@@ -326,13 +335,7 @@ LONG H_ServerInstancesList(const TCHAR *param, const TCHAR *arg, StringList *val
 {
    LONG rc = SYSINFO_RC_SUCCESS;
 
-   MutexLock(s_lock);
-   if (time(NULL) - s_lastQuery > 5)
-   {
-      QueryServers();
-      s_lastQuery = time(NULL);
-   }
-
+   s_lock.lock();
    if (s_servers != NULL)
    {
       s_servers->forEach(FillServerInstanceList, value);
@@ -341,7 +344,7 @@ LONG H_ServerInstancesList(const TCHAR *param, const TCHAR *arg, StringList *val
    {
       rc = SYSINFO_RC_ERROR;
    }
-   MutexUnlock(s_lock);
+   s_lock.unlock();
    return rc;
 }
 
@@ -364,13 +367,7 @@ LONG H_ServersList(const TCHAR *param, const TCHAR *arg, StringList *value, Abst
 {
    LONG rc = SYSINFO_RC_SUCCESS;
 
-   MutexLock(s_lock);
-   if (time(NULL) - s_lastQuery > 5)
-   {
-      QueryServers();
-      s_lastQuery = time(NULL);
-   }
-
+   s_lock.lock();
    if (s_servers != NULL)
    {
       s_servers->forEach(FillServerList, value);
@@ -379,7 +376,7 @@ LONG H_ServersList(const TCHAR *param, const TCHAR *arg, StringList *value, Abst
    {
       rc = SYSINFO_RC_ERROR;
    }
-   MutexUnlock(s_lock);
+   s_lock.unlock();
    return rc;
 }
 
@@ -434,13 +431,7 @@ LONG H_ServerInstancesTable(const TCHAR *param, const TCHAR *arg, Table *value, 
 {
    LONG rc = SYSINFO_RC_SUCCESS;
 
-   MutexLock(s_lock);
-   if (time(NULL) - s_lastQuery > 5)
-   {
-      QueryServers();
-      s_lastQuery = time(NULL);
-   }
-
+   s_lock.lock();
    if (s_servers != NULL)
    {
       value->addColumn(_T("GROUP_ID"), DCI_DT_INT, _T("Group ID"), true);
@@ -479,7 +470,7 @@ LONG H_ServerInstancesTable(const TCHAR *param, const TCHAR *arg, Table *value, 
    {
       rc = SYSINFO_RC_ERROR;
    }
-   MutexUnlock(s_lock);
+   s_lock.unlock();
    return rc;
 }
 
@@ -524,13 +515,7 @@ LONG H_ServersTable(const TCHAR *param, const TCHAR *arg, Table *value, Abstract
 {
    LONG rc = SYSINFO_RC_SUCCESS;
 
-   MutexLock(s_lock);
-   if (time(NULL) - s_lastQuery > 5)
-   {
-      QueryServers();
-      s_lastQuery = time(NULL);
-   }
-
+   s_lock.lock();
    if (s_servers != NULL)
    {
       value->addColumn(_T("GROUP_ID"), DCI_DT_INT, _T("Group ID"), true);
@@ -563,7 +548,7 @@ LONG H_ServersTable(const TCHAR *param, const TCHAR *arg, Table *value, Abstract
    {
       rc = SYSINFO_RC_ERROR;
    }
-   MutexUnlock(s_lock);
+   s_lock.unlock();
    return rc;
 }
 
@@ -590,13 +575,7 @@ LONG H_ServerInstanceInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, Ab
 
    LONG rc = SYSINFO_RC_SUCCESS;
 
-   MutexLock(s_lock);
-   if (time(NULL) - s_lastQuery > 5)
-   {
-      QueryServers();
-      s_lastQuery = time(NULL);
-   }
-
+   s_lock.lock();
    if (s_servers != NULL)
    {
       const TuxedoServerInstance *s = s_serverInstances->get(static_cast<UINT32>((groupId << 16) | serverId));
@@ -654,7 +633,7 @@ LONG H_ServerInstanceInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, Ab
    {
       rc = SYSINFO_RC_ERROR;
    }
-   MutexUnlock(s_lock);
+   s_lock.unlock();
    return rc;
 }
 
@@ -681,13 +660,7 @@ LONG H_ServerInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCo
 
    LONG rc = SYSINFO_RC_SUCCESS;
 
-   MutexLock(s_lock);
-   if (time(NULL) - s_lastQuery > 5)
-   {
-      QueryServers();
-      s_lastQuery = time(NULL);
-   }
-
+   s_lock.lock();
    if (s_servers != NULL)
    {
       const TuxedoServer *s = s_servers->get(static_cast<UINT32>((groupId << 16) | baseId));
@@ -739,6 +712,6 @@ LONG H_ServerInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCo
    {
       rc = SYSINFO_RC_ERROR;
    }
-   MutexUnlock(s_lock);
+   s_lock.unlock();
    return rc;
 }

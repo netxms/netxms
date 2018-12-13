@@ -107,21 +107,28 @@ void TuxedoQueue::update(TuxedoQueue *q)
 /**
  * Queue list
  */
-static MUTEX s_lock = MutexCreate();
-static time_t s_lastQuery = 0;
+static Mutex s_lock;
 static StringObjectMap<TuxedoQueue> *s_queues = NULL;
 static StringObjectMap<TuxedoQueue> *s_queuesByServer = NULL;
 
 /**
- * Query queues
+ * Reset queues cache
  */
-static void QueryQueues()
+void TuxedoResetQueues()
 {
+   s_lock.lock();
    delete_and_null(s_queues);
    delete_and_null(s_queuesByServer);
+   s_lock.unlock();
+}
 
-   if (!TuxedoConnect())
-      AgentWriteDebugLog(3, _T("Tuxedo: tpinit() call failed (%hs)"), tpstrerrordetail(tperrno, 0));
+/**
+ * Query queues
+ */
+void TuxedoQueryQueues()
+{
+   StringObjectMap<TuxedoQueue> *queues = new StringObjectMap<TuxedoQueue>(true);
+   StringObjectMap<TuxedoQueue> *queuesByServer = new StringObjectMap<TuxedoQueue>(true);
 
    FBFR32 *fb = (FBFR32 *)tpalloc((char *)"FML32", NULL, 4096);
    CFchg32(fb, TA_OPERATION, 0, (char *)"GET", 0, FLD_STRING);
@@ -138,11 +145,6 @@ static void QueryQueues()
       readMore = false;
       if (tpcall((char *)".TMIB", (char *)fb, 0, (char **)&rsp, &rsplen, 0) != -1)
       {
-         if (s_queues == NULL)
-            s_queues = new StringObjectMap<TuxedoQueue>(true);
-         if (s_queuesByServer == NULL)
-            s_queuesByServer = new StringObjectMap<TuxedoQueue>(true);
-
          long count = 0;
          CFget32(rsp, TA_OCCURS, 0, (char *)&count, NULL, FLD_LONG);
          for(int i = 0; i < (int)count; i++)
@@ -155,7 +157,7 @@ static void QueryQueues()
 #else
 #define serverNameKey (q->m_serverName)
 #endif
-            TuxedoQueue *t = s_queuesByServer->get(serverNameKey);
+            TuxedoQueue *t = queuesByServer->get(serverNameKey);
             if (t != NULL)
             {
                // Queue for that server name already exist
@@ -163,10 +165,10 @@ static void QueryQueues()
             }
             else
             {
-               s_queuesByServer->set(serverNameKey, new TuxedoQueue(q));
+               queuesByServer->set(serverNameKey, new TuxedoQueue(q));
             }
 
-            t = s_queues->get(q->m_name);
+            t = queues->get(q->m_name);
             if (t != NULL)
             {
                // Queue with that name already exist
@@ -176,7 +178,7 @@ static void QueryQueues()
             }
             else
             {
-               s_queues->set(q->m_name, q);
+               queues->set(q->m_name, q);
             }
          }
 
@@ -196,14 +198,20 @@ static void QueryQueues()
       else
       {
          AgentWriteDebugLog(3, _T("Tuxedo: tpcall() call failed (%hs)"), tpstrerrordetail(tperrno, 0));
-         delete_and_null(s_queues);
-         delete_and_null(s_queuesByServer);
+         delete_and_null(queues);
+         delete_and_null(queuesByServer);
       }
    }
 
    tpfree((char *)rsp);
    tpfree((char *)fb);
-   TuxedoDisconnect();
+
+   s_lock.lock();
+   delete s_queues;
+   s_queues = queues;
+   delete s_queuesByServer;
+   s_queuesByServer = queuesByServer;
+   s_lock.unlock();
 }
 
 /**
@@ -213,13 +221,7 @@ LONG H_QueuesList(const TCHAR *param, const TCHAR *arg, StringList *value, Abstr
 {
    LONG rc = SYSINFO_RC_SUCCESS;
 
-   MutexLock(s_lock);
-   if (time(NULL) - s_lastQuery > 5)
-   {
-      QueryQueues();
-      s_lastQuery = time(NULL);
-   }
-
+   s_lock.lock();
    if (s_queues != NULL)
    {
       StructArray<KeyValuePair> *queues = s_queues->toArray();
@@ -233,7 +235,7 @@ LONG H_QueuesList(const TCHAR *param, const TCHAR *arg, StringList *value, Abstr
    {
       rc = SYSINFO_RC_ERROR;
    }
-   MutexUnlock(s_lock);
+   s_lock.unlock();
    return rc;
 }
 
@@ -244,13 +246,7 @@ LONG H_QueuesTable(const TCHAR *param, const TCHAR *arg, Table *value, AbstractC
 {
    LONG rc = SYSINFO_RC_SUCCESS;
 
-   MutexLock(s_lock);
-   if (time(NULL) - s_lastQuery > 5)
-   {
-      QueryQueues();
-      s_lastQuery = time(NULL);
-   }
-
+   s_lock.lock();
    if (s_queues != NULL)
    {
       value->addColumn(_T("NAME"), DCI_DT_STRING, _T("Name"), true);
@@ -284,7 +280,7 @@ LONG H_QueuesTable(const TCHAR *param, const TCHAR *arg, Table *value, AbstractC
    {
       rc = SYSINFO_RC_ERROR;
    }
-   MutexUnlock(s_lock);
+   s_lock.unlock();
    return rc;
 }
 
@@ -299,13 +295,7 @@ LONG H_QueueInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCom
 
    LONG rc = SYSINFO_RC_SUCCESS;
 
-   MutexLock(s_lock);
-   if (time(NULL) - s_lastQuery > 5)
-   {
-      QueryQueues();
-      s_lastQuery = time(NULL);
-   }
-
+   s_lock.lock();
    if (s_queues != NULL)
    {
       TuxedoQueue *q = s_queues->get(queueName);
@@ -353,6 +343,6 @@ LONG H_QueueInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCom
    {
       rc = SYSINFO_RC_ERROR;
    }
-   MutexUnlock(s_lock);
+   s_lock.unlock();
    return rc;
 }
