@@ -46,6 +46,69 @@ LONG H_ServicesList(const TCHAR *param, const TCHAR *arg, StringList *value, Abs
 LONG H_ServicesTable(const TCHAR *param, const TCHAR *arg, Table *value, AbstractCommSession *session);
 
 /**
+ * Pollers
+ */
+void TuxedoQueryClients();
+void TuxedoQueryDomain();
+void TuxedoQueryMachines();
+void TuxedoQueryQueues();
+void TuxedoQueryServers();
+void TuxedoQueryServices();
+
+/**
+ * Cleaners
+ */
+void TuxedoResetClients();
+void TuxedoResetDomain();
+void TuxedoResetMachines();
+void TuxedoResetQueues();
+void TuxedoResetServers();
+void TuxedoResetServices();
+
+/**
+ * Poller thread
+ */
+static THREAD_RESULT THREAD_CALL TuxedoPollerThread(void *arg)
+{
+   ThreadSetName("TuxedoPoller");
+   UINT32 sleepTime = CAST_FROM_POINTER(arg, UINT32) * 1000;
+   int errors = 0;
+   nxlog_debug_tag(TUXEDO_DEBUG_TAG, 3, _T("Poller thread started with polling interval %u milliseconds"), sleepTime);
+   while(!AgentSleepAndCheckForShutdown(sleepTime))
+   {
+      if (!TuxedoConnect())
+      {
+         if (errors % 40 == 0)  // log error once per 10 minutes with 15 sec polling interval
+            nxlog_debug_tag(TUXEDO_DEBUG_TAG, 3, _T("tpinit() call failed (%hs)"), tpstrerrordetail(tperrno, 0));
+         errors++;
+
+         TuxedoResetClients();
+         TuxedoResetDomain();
+         TuxedoResetMachines();
+         TuxedoResetQueues();
+         TuxedoResetServers();
+         TuxedoResetServices();
+         continue;
+      }
+
+      TuxedoQueryClients();
+      TuxedoQueryDomain();
+      TuxedoQueryMachines();
+      TuxedoQueryQueues();
+      TuxedoQueryServers();
+      TuxedoQueryServices();
+
+      TuxedoDisconnect();
+   }
+   return THREAD_OK;
+}
+
+/**
+ * Poller thread handle
+ */
+static THREAD s_pollerThread = INVALID_THREAD_HANDLE;
+
+/**
  * Subagent initialization
  */
 static bool SubAgentInit(Config *config)
@@ -56,7 +119,8 @@ static bool SubAgentInit(Config *config)
       AgentWriteLog(NXLOG_ERROR, _T("Tuxedo: TUXCONFIG environment variable not set"));
       return false;
    }
-   AgentWriteDebugLog(2, _T("Tuxedo: using configuration file %hs"), tc);
+   nxlog_debug_tag(TUXEDO_DEBUG_TAG, 2, _T("Using Tuxedo configuration file %hs"), tc);
+   s_pollerThread = ThreadCreateEx(TuxedoPollerThread, 0, CAST_TO_POINTER(config->getValueAsUInt(_T("/Tuxedo/PollingInterval"), 10), void*));
    return true;
 }
 
@@ -65,6 +129,8 @@ static bool SubAgentInit(Config *config)
  */
 static void SubAgentShutdown()
 {
+   ThreadJoin(s_pollerThread);
+   nxlog_debug_tag(TUXEDO_DEBUG_TAG, 2, _T("Tuxedo subagent shutdown completed"));
 }
 
 /**

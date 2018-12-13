@@ -64,19 +64,25 @@ TuxedoService::TuxedoService(FBFR32 *fb, FLDOCC32 index)
 /**
  * Service list
  */
-static MUTEX s_lock = MutexCreate();
-static time_t s_lastQuery = 0;
+static Mutex s_lock;
 static StringObjectMap<TuxedoService> *s_services = NULL;
+
+/**
+ * Reset services cache
+ */
+void TuxedoResetServices()
+{
+   s_lock.lock();
+   delete_and_null(s_services);
+   s_lock.unlock();
+}
 
 /**
  * Query services
  */
-static void QueryServices()
+void TuxedoQueryServices()
 {
-   delete_and_null(s_services);
-
-   if (!TuxedoConnect())
-      AgentWriteDebugLog(3, _T("Tuxedo: tpinit() call failed (%hs)"), tpstrerrordetail(tperrno, 0));
+   StringObjectMap<TuxedoService> *services = new StringObjectMap<TuxedoService>(true);
 
    FBFR32 *fb = (FBFR32 *)tpalloc((char *)"FML32", NULL, 4096);
    CFchg32(fb, TA_OPERATION, 0, (char *)"GET", 0, FLD_STRING);
@@ -90,15 +96,12 @@ static void QueryServices()
       readMore = false;
       if (tpcall((char *)".TMIB", (char *)fb, 0, (char **)&rsp, &rsplen, 0) != -1)
       {
-         if (s_services == NULL)
-            s_services = new StringObjectMap<TuxedoService>(true);
-
          long count = 0;
          CFget32(rsp, TA_OCCURS, 0, (char *)&count, NULL, FLD_LONG);
          for(int i = 0; i < (int)count; i++)
          {
             TuxedoService *s = new TuxedoService(rsp, (FLDOCC32)i);
-            s_services->set(s->m_name, s);
+            services->set(s->m_name, s);
          }
 
          long more = 0;
@@ -116,14 +119,18 @@ static void QueryServices()
       }
       else
       {
-         AgentWriteDebugLog(3, _T("Tuxedo: tpcall() call failed (%hs)"), tpstrerrordetail(tperrno, 0));
-         delete_and_null(s_services);
+         nxlog_debug_tag(TUXEDO_DEBUG_TAG, 3, _T("tpcall() call failed (%hs)"), tpstrerrordetail(tperrno, 0));
+         delete_and_null(services);
       }
    }
 
    tpfree((char *)rsp);
    tpfree((char *)fb);
-   TuxedoDisconnect();
+
+   s_lock.lock();
+   delete s_services;
+   s_services = services;
+   s_lock.unlock();
 }
 
 /**
@@ -133,13 +140,7 @@ LONG H_ServicesList(const TCHAR *param, const TCHAR *arg, StringList *value, Abs
 {
    LONG rc = SYSINFO_RC_SUCCESS;
 
-   MutexLock(s_lock);
-   if (time(NULL) - s_lastQuery > 5)
-   {
-      QueryServices();
-      s_lastQuery = time(NULL);
-   }
-
+   s_lock.lock();
    if (s_services != NULL)
    {
       StructArray<KeyValuePair> *services = s_services->toArray();
@@ -153,7 +154,7 @@ LONG H_ServicesList(const TCHAR *param, const TCHAR *arg, StringList *value, Abs
    {
       rc = SYSINFO_RC_ERROR;
    }
-   MutexUnlock(s_lock);
+   s_lock.unlock();
    return rc;
 }
 
@@ -164,13 +165,7 @@ LONG H_ServicesTable(const TCHAR *param, const TCHAR *arg, Table *value, Abstrac
 {
    LONG rc = SYSINFO_RC_SUCCESS;
 
-   MutexLock(s_lock);
-   if (time(NULL) - s_lastQuery > 5)
-   {
-      QueryServices();
-      s_lastQuery = time(NULL);
-   }
-
+   s_lock.lock();
    if (s_services != NULL)
    {
       value->addColumn(_T("NAME"), DCI_DT_STRING, _T("Name"), true);
@@ -196,7 +191,7 @@ LONG H_ServicesTable(const TCHAR *param, const TCHAR *arg, Table *value, Abstrac
    {
       rc = SYSINFO_RC_ERROR;
    }
-   MutexUnlock(s_lock);
+   s_lock.unlock();
    return rc;
 }
 
@@ -211,13 +206,7 @@ LONG H_ServiceInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractC
 
    LONG rc = SYSINFO_RC_SUCCESS;
 
-   MutexLock(s_lock);
-   if (time(NULL) - s_lastQuery > 5)
-   {
-      QueryServices();
-      s_lastQuery = time(NULL);
-   }
-
+   s_lock.lock();
    if (s_services != NULL)
    {
       TuxedoService *s = s_services->get(serviceName);
@@ -251,6 +240,6 @@ LONG H_ServiceInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractC
    {
       rc = SYSINFO_RC_ERROR;
    }
-   MutexUnlock(s_lock);
+   s_lock.unlock();
    return rc;
 }

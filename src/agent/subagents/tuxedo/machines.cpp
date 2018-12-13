@@ -109,19 +109,25 @@ TuxedoMachine::TuxedoMachine(FBFR32 *fb, FLDOCC32 index)
 /**
  * Queue list
  */
-static MUTEX s_lock = MutexCreate();
-static time_t s_lastQuery = 0;
+static Mutex s_lock;
 static StringObjectMap<TuxedoMachine> *s_machines = NULL;
+
+/**
+ * Reset machines cache
+ */
+void TuxedoResetMachines()
+{
+   s_lock.lock();
+   delete_and_null(s_machines);
+   s_lock.unlock();
+}
 
 /**
  * Query machines
  */
-static void QueryMachines()
+void TuxedoQueryMachines()
 {
-   delete_and_null(s_machines);
-
-   if (!TuxedoConnect())
-      AgentWriteDebugLog(3, _T("Tuxedo: tpinit() call failed (%hs)"), tpstrerrordetail(tperrno, 0));
+   StringObjectMap<TuxedoMachine> *machines = new StringObjectMap<TuxedoMachine>(true);
 
    FBFR32 *fb = (FBFR32 *)tpalloc((char *)"FML32", NULL, 4096);
    CFchg32(fb, TA_OPERATION, 0, (char *)"GET", 0, FLD_STRING);
@@ -138,15 +144,12 @@ static void QueryMachines()
       readMore = false;
       if (tpcall((char *)".TMIB", (char *)fb, 0, (char **)&rsp, &rsplen, 0) != -1)
       {
-         if (s_machines == NULL)
-            s_machines = new StringObjectMap<TuxedoMachine>(true);
-
          long count = 0;
          CFget32(rsp, TA_OCCURS, 0, (char *)&count, NULL, FLD_LONG);
          for(int i = 0; i < (int)count; i++)
          {
             TuxedoMachine *m = new TuxedoMachine(rsp, (FLDOCC32)i);
-            s_machines->set(m->m_id, m);
+            machines->set(m->m_id, m);
          }
 
          long more = 0;
@@ -164,14 +167,18 @@ static void QueryMachines()
       }
       else
       {
-         AgentWriteDebugLog(3, _T("Tuxedo: tpcall() call failed (%hs)"), tpstrerrordetail(tperrno, 0));
-         delete_and_null(s_machines);
+         nxlog_debug_tag(TUXEDO_DEBUG_TAG, 3, _T("tpcall() call failed (%hs)"), tpstrerrordetail(tperrno, 0));
+         delete_and_null(machines);
       }
    }
 
    tpfree((char *)rsp);
    tpfree((char *)fb);
-   TuxedoDisconnect();
+
+   s_lock.lock();
+   delete s_machines;
+   s_machines = machines;
+   s_lock.unlock();
 }
 
 /**
@@ -181,13 +188,7 @@ LONG H_MachinesList(const TCHAR *param, const TCHAR *arg, StringList *value, Abs
 {
    LONG rc = SYSINFO_RC_SUCCESS;
 
-   MutexLock(s_lock);
-   if (time(NULL) - s_lastQuery > 5)
-   {
-      QueryMachines();
-      s_lastQuery = time(NULL);
-   }
-
+   s_lock.lock();
    if (s_machines != NULL)
    {
       StructArray<KeyValuePair> *machines = s_machines->toArray();
@@ -201,7 +202,7 @@ LONG H_MachinesList(const TCHAR *param, const TCHAR *arg, StringList *value, Abs
    {
       rc = SYSINFO_RC_ERROR;
    }
-   MutexUnlock(s_lock);
+   s_lock.unlock();
    return rc;
 }
 
@@ -212,13 +213,7 @@ LONG H_MachinesTable(const TCHAR *param, const TCHAR *arg, Table *value, Abstrac
 {
    LONG rc = SYSINFO_RC_SUCCESS;
 
-   MutexLock(s_lock);
-   if (time(NULL) - s_lastQuery > 5)
-   {
-      QueryMachines();
-      s_lastQuery = time(NULL);
-   }
-
+   s_lock.lock();
    if (s_machines != NULL)
    {
       value->addColumn(_T("ID"), DCI_DT_STRING, _T("ID"), true);
@@ -274,7 +269,7 @@ LONG H_MachinesTable(const TCHAR *param, const TCHAR *arg, Table *value, Abstrac
    {
       rc = SYSINFO_RC_ERROR;
    }
-   MutexUnlock(s_lock);
+   s_lock.unlock();
    return rc;
 }
 
@@ -289,13 +284,7 @@ LONG H_MachineInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractC
 
    LONG rc = SYSINFO_RC_SUCCESS;
 
-   MutexLock(s_lock);
-   if (time(NULL) - s_lastQuery > 5)
-   {
-      QueryMachines();
-      s_lastQuery = time(NULL);
-   }
-
+   s_lock.lock();
    if (s_machines != NULL)
    {
       TuxedoMachine *m = s_machines->get(id);
@@ -356,6 +345,6 @@ LONG H_MachineInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractC
    {
       rc = SYSINFO_RC_ERROR;
    }
-   MutexUnlock(s_lock);
+   s_lock.unlock();
    return rc;
 }

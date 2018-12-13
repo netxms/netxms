@@ -29,4 +29,6 @@
 #include <nxtux.h>
 #include <tpadm.h>
 
+#define TUXEDO_DEBUG_TAG   _T("sa.tuxedo")
+
 #endif

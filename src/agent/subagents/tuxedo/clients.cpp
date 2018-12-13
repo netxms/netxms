@@ -110,21 +110,27 @@ TuxedoClient::TuxedoClient(FBFR32 *fb, FLDOCC32 index)
 }
 
 /**
- * Queue list
+ * Client list
  */
-static MUTEX s_lock = MutexCreate();
-static time_t s_lastQuery = 0;
+static Mutex s_lock;
 static StringObjectMap<TuxedoClient> *s_clients = NULL;
+
+/**
+ * Reset client cache
+ */
+void TuxedoResetClients()
+{
+   s_lock.lock();
+   delete_and_null(s_clients);
+   s_lock.unlock();
+}
 
 /**
  * Query clients
  */
-static void QueryClients()
+void TuxedoQueryClients()
 {
-   delete_and_null(s_clients);
-
-   if (!TuxedoConnect())
-      AgentWriteDebugLog(3, _T("Tuxedo: tpinit() call failed (%hs)"), tpstrerrordetail(tperrno, 0));
+   StringObjectMap<TuxedoClient> *clients = new StringObjectMap<TuxedoClient>(true);
 
    FBFR32 *fb = (FBFR32 *)tpalloc((char *)"FML32", NULL, 4096);
    CFchg32(fb, TA_OPERATION, 0, (char *)"GET", 0, FLD_STRING);
@@ -138,15 +144,12 @@ static void QueryClients()
       readMore = false;
       if (tpcall((char *)".TMIB", (char *)fb, 0, (char **)&rsp, &rsplen, 0) != -1)
       {
-         if (s_clients == NULL)
-            s_clients = new StringObjectMap<TuxedoClient>(true);
-
          long count = 0;
          CFget32(rsp, TA_OCCURS, 0, (char *)&count, NULL, FLD_LONG);
          for(int i = 0; i < (int)count; i++)
          {
             TuxedoClient *c = new TuxedoClient(rsp, (FLDOCC32)i);
-            s_clients->set(c->m_id, c);
+            clients->set(c->m_id, c);
          }
 
          long more = 0;
@@ -164,14 +167,18 @@ static void QueryClients()
       }
       else
       {
-         AgentWriteDebugLog(3, _T("Tuxedo: tpcall() call failed (%hs)"), tpstrerrordetail(tperrno, 0));
-         delete_and_null(s_clients);
+         nxlog_debug_tag(TUXEDO_DEBUG_TAG, 3, _T("tpcall() call failed (%hs)"), tpstrerrordetail(tperrno, 0));
+         delete_and_null(clients);
       }
    }
 
    tpfree((char *)rsp);
    tpfree((char *)fb);
-   TuxedoDisconnect();
+
+   s_lock.lock();
+   delete s_clients;
+   s_clients = clients;
+   s_lock.unlock();
 }
 
 /**
@@ -181,13 +188,7 @@ LONG H_ClientsList(const TCHAR *param, const TCHAR *arg, StringList *value, Abst
 {
    LONG rc = SYSINFO_RC_SUCCESS;
 
-   MutexLock(s_lock);
-   if (time(NULL) - s_lastQuery > 5)
-   {
-      QueryClients();
-      s_lastQuery = time(NULL);
-   }
-
+   s_lock.lock();
    if (s_clients != NULL)
    {
       StructArray<KeyValuePair> *clients = s_clients->toArray();
@@ -201,7 +202,7 @@ LONG H_ClientsList(const TCHAR *param, const TCHAR *arg, StringList *value, Abst
    {
       rc = SYSINFO_RC_ERROR;
    }
-   MutexUnlock(s_lock);
+   s_lock.unlock();
    return rc;
 }
 
@@ -212,13 +213,7 @@ LONG H_ClientsTable(const TCHAR *param, const TCHAR *arg, Table *value, Abstract
 {
    LONG rc = SYSINFO_RC_SUCCESS;
 
-   MutexLock(s_lock);
-   if (time(NULL) - s_lastQuery > 5)
-   {
-      QueryClients();
-      s_lastQuery = time(NULL);
-   }
-
+   s_lock.lock();
    if (s_clients != NULL)
    {
       value->addColumn(_T("ID"), DCI_DT_STRING, _T("ID"), true);
@@ -276,7 +271,7 @@ LONG H_ClientsTable(const TCHAR *param, const TCHAR *arg, Table *value, Abstract
    {
       rc = SYSINFO_RC_ERROR;
    }
-   MutexUnlock(s_lock);
+   s_lock.unlock();
    return rc;
 }
 
@@ -291,13 +286,7 @@ LONG H_ClientInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCo
 
    LONG rc = SYSINFO_RC_SUCCESS;
 
-   MutexLock(s_lock);
-   if (time(NULL) - s_lastQuery > 5)
-   {
-      QueryClients();
-      s_lastQuery = time(NULL);
-   }
-
+   s_lock.lock();
    if (s_clients != NULL)
    {
       TuxedoClient *c = s_clients->get(id);
@@ -334,6 +323,6 @@ LONG H_ClientInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCo
    {
       rc = SYSINFO_RC_ERROR;
    }
-   MutexUnlock(s_lock);
+   s_lock.unlock();
    return rc;
 }
