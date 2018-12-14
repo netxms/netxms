@@ -1,6 +1,6 @@
 /*
 ** NetXMS Tuxedo subagent
-** Copyright (C) 2014-2016 Raden Solutions
+** Copyright (C) 2014-2018 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,6 +21,10 @@
 **/
 
 #include "tuxedo_subagent.h"
+
+#ifndef _WIN32
+#include <sys/utsname.h>
+#endif
 
 /**
  * Handlers
@@ -64,6 +68,44 @@ void TuxedoResetMachines();
 void TuxedoResetQueues();
 void TuxedoResetServers();
 void TuxedoResetServices();
+
+/**
+ * Local data query flags
+ */
+UINT32 g_tuxedoQueryLocalData = LOCAL_DATA_MACHINES | LOCAL_DATA_QUEUES | LOCAL_DATA_SERVERS;
+
+/**
+ * Handler for Tuxedo.IsMasterMachine parameter
+ */
+static LONG H_IsMasterMachine(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   TCHAR master[MAX_RESULT_LENGTH];
+   LONG rc = H_DomainInfo(_T("Tuxedo.Domain.Master"), _T("M"), master, session);
+   if (rc != SYSINFO_RC_SUCCESS)
+      return rc;
+
+   TCHAR *p = _tcschr(master, _T(','));
+   if (p != NULL)
+      *p = 0;
+
+   char pmid[64];
+   if (!TuxedoGetMachinePhysicalID(master, pmid))
+      return SYSINFO_RC_ERROR;
+
+#ifdef _WIN32
+   char nodename[MAX_COMPUTERNAME_LENGTH + 1];
+   DWORD size = MAX_COMPUTERNAME_LENGTH + 1;
+   if (!GetComputerName(nodename, &size))
+      return SYSINFO_RC_ERROR;
+   ret_int(value, !stricmp(pmid, nodename) ? 1 : 0);
+#else
+   struct utsname un;
+   if (uname(&un) != 0)
+      return SYSINFO_RC_ERROR;
+   ret_int(value, !strcmp(pmid, un.nodename) ? 1 : 0);
+#endif
+   return SYSINFO_RC_SUCCESS;
+}
 
 /**
  * Poller thread
@@ -120,6 +162,15 @@ static bool SubAgentInit(Config *config)
       return false;
    }
    nxlog_debug_tag(TUXEDO_DEBUG_TAG, 2, _T("Using Tuxedo configuration file %hs"), tc);
+
+   g_tuxedoQueryLocalData = config->getValueAsUInt(_T("/Tuxedo/QueryLocalData"), g_tuxedoQueryLocalData);
+   nxlog_debug_tag(TUXEDO_DEBUG_TAG, 3, _T("Query local data for machines is %s"),
+            (g_tuxedoQueryLocalData & LOCAL_DATA_QUEUES) ? _T("ON") : _T("OFF"));
+   nxlog_debug_tag(TUXEDO_DEBUG_TAG, 3, _T("Query local data for queues is %s"),
+            (g_tuxedoQueryLocalData & LOCAL_DATA_MACHINES) ? _T("ON") : _T("OFF"));
+   nxlog_debug_tag(TUXEDO_DEBUG_TAG, 3, _T("Query local data for servers is %s"),
+            (g_tuxedoQueryLocalData & LOCAL_DATA_SERVERS) ? _T("ON") : _T("OFF"));
+
    s_pollerThread = ThreadCreateEx(TuxedoPollerThread, 0, CAST_TO_POINTER(config->getValueAsUInt(_T("/Tuxedo/PollingInterval"), 10), void*));
    return true;
 }
@@ -143,6 +194,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("Tuxedo.Client.Machine(*)"), H_ClientInfo, _T("N"), DCI_DT_STRING, _T("Tuxedo client {instance} name") },
    { _T("Tuxedo.Client.Name(*)"), H_ClientInfo, _T("N"), DCI_DT_STRING, _T("Tuxedo client {instance} name") },
    { _T("Tuxedo.Client.State(*)"), H_ClientInfo, _T("S"), DCI_DT_STRING, _T("Tuxedo client {instance} state") },
+   { _T("Tuxedo.IsMasterMachine"), H_IsMasterMachine, NULL, DCI_DT_INT, _T("Tuxedo master machine flag") },
 	{ _T("Tuxedo.Domain.ID"), H_DomainInfo, _T("I"), DCI_DT_STRING, _T("Tuxedo domain ID") },
    { _T("Tuxedo.Domain.Master"), H_DomainInfo, _T("M"), DCI_DT_STRING, _T("Tuxedo domain master/backup machines") },
    { _T("Tuxedo.Domain.Model"), H_DomainInfo, _T("m"), DCI_DT_STRING, _T("Tuxedo domain model") },
