@@ -137,6 +137,12 @@ void TuxedoQueryQueues()
    long flags = ((g_tuxedoQueryLocalData & LOCAL_DATA_QUEUES) ? MIB_LOCAL : 0);
    CFchg32(fb, TA_FLAGS, 0, (char *)&flags, 0, FLD_LONG);
 
+   char lmid[64];
+   if (g_tuxedoLocalMachineFilter && TuxedoGetLocalMachineID(lmid))
+   {
+      CFchg32(fb, TA_LMID, 0, lmid, 0, FLD_STRING);
+   }
+
    bool readMore = true;
    long rsplen = 262144;
    FBFR32 *rsp = (FBFR32 *)tpalloc((char *)"FML32", NULL, rsplen);

@@ -22,6 +22,10 @@
 
 #include "tuxedo_subagent.h"
 
+#ifndef _WIN32
+#include <sys/utsname.h>
+#endif
+
 /**
  * Tuxedo queue information
  */
@@ -107,7 +111,44 @@ TuxedoMachine::TuxedoMachine(FBFR32 *fb, FLDOCC32 index)
 }
 
 /**
- * Queue list
+ * Local machine ID
+ */
+static char s_localMachineId[64];
+static bool s_validLocalMachineId = false;
+
+/**
+ * Get local machine ID
+ */
+bool TuxedoGetLocalMachineID(char *lmid)
+{
+   if (!s_validLocalMachineId)
+      return false;
+   strcpy(lmid, s_localMachineId);
+   return true;
+}
+
+/**
+ * Update local machine ID
+ */
+static EnumerationCallbackResult UpdateLocalMachineId(const TCHAR *key, const void *value, void *arg)
+{
+   const TuxedoMachine *m = static_cast<const TuxedoMachine*>(value);
+   if (!stricmp(m->m_pmid, static_cast<char*>(arg)))
+   {
+#ifdef UNICODE
+      WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, m->m_id, -1, s_localMachineId, 64, NULL, NULL);
+#else
+      strlcpy(s_localMachineId, m->m_id, 64);
+#endif
+      s_validLocalMachineId = true;
+      nxlog_debug_tag(TUXEDO_DEBUG_TAG, 1, _T("Local machine ID set to %s"), m->m_id);
+      return _STOP;
+   }
+   return _CONTINUE;
+}
+
+/**
+ * Machine list
  */
 static Mutex s_lock;
 static StringObjectMap<TuxedoMachine> *s_machines = NULL;
@@ -174,6 +215,20 @@ void TuxedoQueryMachines()
 
    tpfree((char *)rsp);
    tpfree((char *)fb);
+
+   if ((s_localMachineId[0] == 0) && (machines != NULL))
+   {
+#ifdef _WIN32
+   char nodename[MAX_COMPUTERNAME_LENGTH + 1];
+   DWORD size = MAX_COMPUTERNAME_LENGTH + 1;
+   if (GetComputerNameA(nodename, &size))
+      machines->forEach(UpdateLocalMachineId, nodename);
+#else
+   struct utsname un;
+   if (uname(&un) == 0)
+      machines->forEach(UpdateLocalMachineId, un.nodename);
+#endif
+   }
 
    s_lock.lock();
    delete s_machines;
@@ -364,4 +419,16 @@ LONG H_MachineInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractC
    }
    s_lock.unlock();
    return rc;
+}
+
+/**
+ * Handler for parameter Tuxedo.LocalMachineId
+ */
+LONG H_LocalMachineId(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   char lmid[64];
+   if (!TuxedoGetLocalMachineID(lmid))
+      return SYSINFO_RC_ERROR;
+   ret_mbstring(value, lmid);
+   return SYSINFO_RC_SUCCESS;
 }

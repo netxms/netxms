@@ -136,6 +136,12 @@ void TuxedoQueryClients()
    CFchg32(fb, TA_OPERATION, 0, (char *)"GET", 0, FLD_STRING);
    CFchg32(fb, TA_CLASS, 0, (char *)"T_CLIENT", 0, FLD_STRING);
 
+   char lmid[64];
+   if (g_tuxedoLocalMachineFilter && TuxedoGetLocalMachineID(lmid))
+   {
+      CFchg32(fb, TA_LMID, 0, lmid, 0, FLD_STRING);
+   }
+
    bool readMore = true;
    long rsplen = 262144;
    FBFR32 *rsp = (FBFR32 *)tpalloc((char *)"FML32", NULL, rsplen);
