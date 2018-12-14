@@ -1,6 +1,6 @@
 /*
 ** NetXMS Tuxedo subagent
-** Copyright (C) 2014-2016 Raden Solutions
+** Copyright (C) 2014-2018 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -30,5 +30,13 @@
 #include <tpadm.h>
 
 #define TUXEDO_DEBUG_TAG   _T("sa.tuxedo")
+
+bool TuxedoGetMachinePhysicalID(const TCHAR *lmid, char *pmid);
+
+#define LOCAL_DATA_MACHINES   0x01
+#define LOCAL_DATA_QUEUES     0x02
+#define LOCAL_DATA_SERVERS    0x04
+
+extern UINT32 g_tuxedoQueryLocalData;
 
 #endif

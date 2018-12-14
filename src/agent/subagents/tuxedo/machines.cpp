@@ -1,6 +1,6 @@
 /*
 ** NetXMS Tuxedo subagent
-** Copyright (C) 2014 Raden Solutions
+** Copyright (C) 2014-2018 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -133,7 +133,7 @@ void TuxedoQueryMachines()
    CFchg32(fb, TA_OPERATION, 0, (char *)"GET", 0, FLD_STRING);
    CFchg32(fb, TA_CLASS, 0, (char *)"T_MACHINE", 0, FLD_STRING);
 
-   long flags = MIB_LOCAL;
+   long flags = ((g_tuxedoQueryLocalData & LOCAL_DATA_MACHINES) ? MIB_LOCAL : 0);
    CFchg32(fb, TA_FLAGS, 0, (char *)&flags, 0, FLD_LONG);
 
    bool readMore = true;
@@ -179,6 +179,23 @@ void TuxedoQueryMachines()
    delete s_machines;
    s_machines = machines;
    s_lock.unlock();
+}
+
+/**
+ * Get machine physical ID
+ */
+bool TuxedoGetMachinePhysicalID(const TCHAR *lmid, char *pmid)
+{
+   bool success = false;
+   s_lock.lock();
+   TuxedoMachine *m = s_machines->get(lmid);
+   if (m != NULL)
+   {
+      strcpy(pmid, m->m_pmid);
+      success = true;
+   }
+   s_lock.unlock();
+   return success;
 }
 
 /**

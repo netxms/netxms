@@ -134,7 +134,7 @@ void TuxedoQueryQueues()
    CFchg32(fb, TA_OPERATION, 0, (char *)"GET", 0, FLD_STRING);
    CFchg32(fb, TA_CLASS, 0, (char *)"T_QUEUE", 0, FLD_STRING);
 
-   long flags = MIB_LOCAL;
+   long flags = ((g_tuxedoQueryLocalData & LOCAL_DATA_QUEUES) ? MIB_LOCAL : 0);
    CFchg32(fb, TA_FLAGS, 0, (char *)&flags, 0, FLD_LONG);
 
    bool readMore = true;
