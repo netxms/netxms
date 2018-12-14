@@ -76,6 +76,11 @@ void TuxedoResetServices();
 UINT32 g_tuxedoQueryLocalData = LOCAL_DATA_MACHINES | LOCAL_DATA_QUEUES | LOCAL_DATA_SERVERS;
 
 /**
+ * Local host LMID filter settings
+ */
+bool g_tuxedoLocalMachineFilter = true;
+
+/**
  * Handler for Tuxedo.IsMasterMachine parameter
  */
 static LONG H_IsMasterMachine(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
