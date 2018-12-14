@@ -33,6 +33,7 @@ LONG H_ClientInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCo
 LONG H_ClientsList(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session);
 LONG H_ClientsTable(const TCHAR *param, const TCHAR *arg, Table *value, AbstractCommSession *session);
 LONG H_DomainInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_LocalMachineId(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_MachineInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_MachinesList(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session);
 LONG H_MachinesTable(const TCHAR *param, const TCHAR *arg, Table *value, AbstractCommSession *session);
@@ -95,7 +96,7 @@ static LONG H_IsMasterMachine(const TCHAR *param, const TCHAR *arg, TCHAR *value
 #ifdef _WIN32
    char nodename[MAX_COMPUTERNAME_LENGTH + 1];
    DWORD size = MAX_COMPUTERNAME_LENGTH + 1;
-   if (!GetComputerName(nodename, &size))
+   if (!GetComputerNameA(nodename, &size))
       return SYSINFO_RC_ERROR;
    ret_int(value, !stricmp(pmid, nodename) ? 1 : 0);
 #else
@@ -165,12 +166,14 @@ static bool SubAgentInit(Config *config)
 
    g_tuxedoQueryLocalData = config->getValueAsUInt(_T("/Tuxedo/QueryLocalData"), g_tuxedoQueryLocalData);
    nxlog_debug_tag(TUXEDO_DEBUG_TAG, 3, _T("Query local data for machines is %s"),
-            (g_tuxedoQueryLocalData & LOCAL_DATA_QUEUES) ? _T("ON") : _T("OFF"));
-   nxlog_debug_tag(TUXEDO_DEBUG_TAG, 3, _T("Query local data for queues is %s"),
             (g_tuxedoQueryLocalData & LOCAL_DATA_MACHINES) ? _T("ON") : _T("OFF"));
+   nxlog_debug_tag(TUXEDO_DEBUG_TAG, 3, _T("Query local data for queues is %s"),
+            (g_tuxedoQueryLocalData & LOCAL_DATA_QUEUES) ? _T("ON") : _T("OFF"));
    nxlog_debug_tag(TUXEDO_DEBUG_TAG, 3, _T("Query local data for servers is %s"),
             (g_tuxedoQueryLocalData & LOCAL_DATA_SERVERS) ? _T("ON") : _T("OFF"));
 
+   g_tuxedoLocalMachineFilter = config->getValueAsBoolean(_T("/Tuxedo/FilterByLocalMachineId"), true);
+   nxlog_debug_tag(TUXEDO_DEBUG_TAG, 3, _T("Filter by local machine ID is %s"), g_tuxedoLocalMachineFilter ? _T("ON") : _T("OFF"));
    s_pollerThread = ThreadCreateEx(TuxedoPollerThread, 0, CAST_TO_POINTER(config->getValueAsUInt(_T("/Tuxedo/PollingInterval"), 10), void*));
    return true;
 }
@@ -203,6 +206,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("Tuxedo.Domain.Servers"), H_DomainInfo, _T("S"), DCI_DT_INT, _T("Tuxedo: number of servers") },
    { _T("Tuxedo.Domain.Services"), H_DomainInfo, _T("s"), DCI_DT_INT, _T("Tuxedo: number of services") },
    { _T("Tuxedo.Domain.State"), H_DomainInfo, _T("T"), DCI_DT_STRING, _T("Tuxedo domain state") },
+   { _T("Tuxedo.LocalMachineId"), H_LocalMachineId, NULL, DCI_DT_STRING, _T("Tuxedo machine ID for local host") },
    { _T("Tuxedo.Machine.Accessers(*)"), H_MachineInfo, _T("A"), DCI_DT_INT, _T("Tuxedo machine {instance}: accessers") },
    { _T("Tuxedo.Machine.Bridge(*)"), H_MachineInfo, _T("B"), DCI_DT_STRING, _T("Tuxedo machine {instance} bridge") },
    { _T("Tuxedo.Machine.Clients(*)"), H_MachineInfo, _T("C"), DCI_DT_INT, _T("Tuxedo machine {instance}: clients") },
