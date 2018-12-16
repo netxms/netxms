@@ -455,26 +455,26 @@ stop_search:
 
    if (!strcmp(argv[optind], "init"))
    {
-      if (argc - optind < 2) {
-         String initFile;
-         const TCHAR *home = _tgetenv(_T("NETXMS_HOME"));
-         if (home != NULL)
-         {
-            initFile = home;
-         }
-         else
-         {
-            initFile = PREFIX;
-         }
-         initFile.append(_T("/share/netxms/sql/dbinit_"));
-         String driver;
-         driver.appendMBString(DBGetDriverName(s_driver), strlen(DBGetDriverName(s_driver)), CP_ACP);
-         driver.toLowercase();
-         initFile.append(driver);
+      if (argc - optind < 2) 
+      {
+         char driver[64];
+         strcpy(driver, DBGetDriverName(s_driver));
+         strlwr(driver);
+
+         TCHAR shareDir[MAX_PATH];
+         GetNetXMSDirectory(nxDirShare, shareDir);
+
+         String initFile = shareDir;
+         initFile.append(FS_PATH_SEPARATOR _T("sql") FS_PATH_SEPARATOR _T("dbinit_"));
+         initFile.appendMBString(driver, strlen(driver), CP_ACP);
          initFile.append(_T(".sql"));
-         InitDatabase(initFile.getUTF8String());
+
+         char *initFileUtf8 = initFile.getUTF8String();
+         InitDatabase(initFileUtf8);
+         MemFree(initFileUtf8);
       }
-      else {
+      else 
+      {
          InitDatabase(argv[optind + 1]);
       }
    }

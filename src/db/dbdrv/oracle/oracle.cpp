@@ -50,7 +50,7 @@ inline void FreeConvertedString(UCS2CHAR *str, UCS2CHAR *localBuffer)
       MemFree(str);
 }
 
-#endif
+#endif   /* UNICODE_UCS4 */
 
 /**
  * Global environment handle
@@ -471,8 +471,8 @@ extern "C" ORACLE_STATEMENT __EXPORT *DrvPrepare(ORACLE_CONN *pConn, WCHAR *pwsz
 	MutexUnlock(pConn->mutexQueryLock);
 
 #if UNICODE_UCS2
-	if (ucs2Query != query)
-	   FreeConvertedString(ucs2Query, localBuffer);
+	if ((ucs2Query != pwszQuery) && (ucs2Query != localBuffer))
+	   MemFree(ucs2Query);
 #else
 	FreeConvertedString(ucs2Query, localBuffer);
 #endif
