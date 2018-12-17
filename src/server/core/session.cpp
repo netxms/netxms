@@ -5182,7 +5182,7 @@ void ClientSession::createObject(NXCPMessage *request)
 								   object = PollNewNode(&newNodeData);
 								   if (object != NULL)
 								   {
-									   ((Node *)object)->setPrimaryName(nodePrimaryName);
+									   static_cast<Node*>(object)->setPrimaryName(nodePrimaryName);
 								   }
 								   break;
 							   }
