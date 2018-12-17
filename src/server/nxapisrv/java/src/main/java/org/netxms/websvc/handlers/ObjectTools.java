@@ -74,47 +74,39 @@ public class ObjectTools extends AbstractObjectHandler
       if (object == null)
          return new StringRepresentation(createErrorResponse(RCC.INVALID_OBJECT_ID).toString(), MediaType.APPLICATION_JSON);
       JSONObject json = new JsonRepresentation(entity).getJsonObject();
-
-      if (json.has("toolList"))
+      if (json.has("toolData"))
       {
-         JSONArray toolList = json.getJSONArray("toolList");
+         JSONObject toolData = json.getJSONObject("toolData");
+         Map<String, String> fields = new HashMap<String, String>();
 
-         for(int i = 0; i < toolList.length(); i++)
+         int id = toolData.getInt("id");
+         if (toolData.optJSONArray("inputFields") != null)
          {
-            Map<String, String> fields = new HashMap<String, String>();
-            JSONObject tool = toolList.getJSONObject(i);
+            JSONArray inputFields = toolData.getJSONArray("inputFields");
 
-            int id = tool.getInt("id");
-            if (tool.optJSONArray("inputFields") != null)
+            for(int n = 0; n < inputFields.length(); n++)
             {
-               JSONArray inputFields = tool.getJSONArray("inputFields");
-
-               for(int n = 0; n < inputFields.length(); n++)
-               {
-                  String field = inputFields.getString(n);
-                  String[] pair = field.split(";");
-                  if (pair != null && pair.length == 2)
-                  {
-                     fields.put(pair[1], pair[0]);
-                  }
-               }
+               String field = inputFields.getString(n);
+               String[] pair = field.split(";");
+               if (pair.length == 2)
+                  fields.put(pair[1], pair[0]);
             }
-
-            ObjectToolDetails details = session.getObjectToolDetails(id);
-            if (((details.getFlags() & ObjectTool.GENERATES_OUTPUT) != 0))
-            {
-               ObjectToolOutputListener listener = new ObjectToolOutputListener();
-               UUID uuid = UUID.randomUUID();
-               ObjectToolOutputHandler.addListener(uuid, listener);
-               new ObjectToolExecutor(details, object.getObjectId(), fields, listener, session);
-
-               JSONObject response = new JSONObject();
-               response.put("UUID", uuid);
-               return new StringRepresentation(response.toString(), MediaType.APPLICATION_JSON);
-            }
-            else
-               return new StringRepresentation(createErrorResponse(RCC.SUCCESS).toString(), MediaType.APPLICATION_JSON);
          }
+
+         ObjectToolDetails details = session.getObjectToolDetails(id);
+         if (((details.getFlags() & ObjectTool.GENERATES_OUTPUT) != 0))
+         {
+            ObjectToolOutputListener listener = new ObjectToolOutputListener();
+            UUID uuid = UUID.randomUUID();
+            ObjectToolOutputHandler.addListener(uuid, listener);
+            new ObjectToolExecutor(details, object.getObjectId(), fields, listener, session);
+
+            JSONObject response = new JSONObject();
+            response.put("UUID", uuid);
+            return new StringRepresentation(response.toString(), MediaType.APPLICATION_JSON);
+         }
+         else
+            return new StringRepresentation(createErrorResponse(RCC.SUCCESS).toString(), MediaType.APPLICATION_JSON);
       }
 
       return new StringRepresentation(createErrorResponse(RCC.INTERNAL_ERROR).toString(), MediaType.APPLICATION_JSON);
