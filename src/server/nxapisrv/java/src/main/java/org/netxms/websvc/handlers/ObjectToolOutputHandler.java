@@ -1,5 +1,8 @@
 package org.netxms.websvc.handlers;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 import org.json.JSONObject;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.RCC;
@@ -10,16 +13,9 @@ import org.restlet.representation.Representation;
 import org.restlet.representation.StringRepresentation;
 import org.restlet.resource.Get;
 import org.restlet.resource.Post;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
 
 public class ObjectToolOutputHandler extends AbstractHandler
 {
-   private Logger log = LoggerFactory.getLogger(ObjectToolOutputHandler.class);
-
    private static Map<UUID, ObjectToolOutputListener> listenerMap = new HashMap<>();
 
    @Get

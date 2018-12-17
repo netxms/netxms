@@ -98,6 +98,8 @@ public class SessionToken
     */
    public SessionNotification pollNotificationQueue(long timeout) throws InterruptedException
    {
-      return notificationQueue.poll(timeout, TimeUnit.SECONDS);
+      SessionNotification n = notificationQueue.poll(timeout, TimeUnit.SECONDS);
+      updateActivityTimestamp();
+      return n;
    }
 }

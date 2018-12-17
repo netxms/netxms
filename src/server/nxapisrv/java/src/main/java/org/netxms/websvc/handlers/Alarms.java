@@ -36,8 +36,6 @@ import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.Representation;
 import org.restlet.representation.StringRepresentation;
 import org.restlet.resource.Post;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Handler for alarm management
@@ -48,8 +46,6 @@ public class Alarms extends AbstractHandler
    private static final int ACKNOWLEDGE = 1;
    private static final int STICKY_ACKNOWLEDGE = 2;
    private static final int RESOLVE = 3;
-   
-   private Logger log = LoggerFactory.getLogger(Alarms.class);
    
    /* (non-Javadoc)
     * @see org.netxms.websvc.handlers.AbstractHandler#getCollection(org.json.JSONObject)

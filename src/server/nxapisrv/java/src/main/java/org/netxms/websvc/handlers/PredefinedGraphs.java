@@ -23,13 +23,9 @@ import java.util.Map;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.GraphFolder;
 import org.netxms.websvc.json.ResponseContainer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class PredefinedGraphs extends AbstractHandler
 {
-   private Logger log = LoggerFactory.getLogger(PredefinedGraphs.class);
-
    /*
     * (non-Javadoc)
     * 

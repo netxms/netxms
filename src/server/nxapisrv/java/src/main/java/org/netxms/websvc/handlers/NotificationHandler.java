@@ -44,11 +44,9 @@ public class NotificationHandler extends AbstractHandler
       
       SessionNotification n = getSessionToken().pollNotificationQueue(60);
       if (!getSession().isConnected())
-         return new StringRepresentation(createErrorResponse(RCC.ACCESS_DENIED).toString(), MediaType.APPLICATION_JSON);         
+         return new StringRepresentation(createErrorResponse(RCC.CONNECTION_BROKEN).toString(), MediaType.APPLICATION_JSON);         
       else if (n == null)
          return new StringRepresentation(createErrorResponse(RCC.TIMEOUT).toString(), MediaType.APPLICATION_JSON);
-
-      getSessionToken().updateActivityTimestamp();
 
       JSONObject response = new JSONObject();
       response.put("code", n.getCode());
