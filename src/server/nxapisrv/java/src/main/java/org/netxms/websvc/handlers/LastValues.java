@@ -28,16 +28,12 @@ import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.DataCollectionTarget;
 import org.netxms.websvc.json.ResponseContainer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Handler for /objects/{object-id}/lastvalues
  */
 public class LastValues extends AbstractObjectHandler
 {
-   private Logger log = LoggerFactory.getLogger(LastValues.class);
-
    /* (non-Javadoc)
     * @see org.netxms.websvc.handlers.AbstractHandler#getCollection(java.util.Map)
     */

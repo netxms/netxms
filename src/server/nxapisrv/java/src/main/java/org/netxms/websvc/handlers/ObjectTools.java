@@ -19,6 +19,11 @@
 
 package org.netxms.websvc.handlers;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.netxms.client.NXCException;
@@ -36,15 +41,9 @@ import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.Representation;
 import org.restlet.representation.StringRepresentation;
 import org.restlet.resource.Post;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.*;
 
 public class ObjectTools extends AbstractObjectHandler
 {
-   private Logger log = LoggerFactory.getLogger(ObjectTools.class);
-
    @Override protected Object getCollection(Map<String, String> query) throws Exception
    {
       NXCSession session = getSession();

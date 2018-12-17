@@ -1,12 +1,9 @@
 package org.netxms.websvc;
 
 import org.netxms.client.TextOutputListener;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class ObjectToolOutputListener implements TextOutputListener
 {
-   private Logger log = LoggerFactory.getLogger(ObjectToolOutputListener.class);
    private Object mutex = new Object();
    private StringBuilder buffer = new StringBuilder();
    private boolean completed = false;
