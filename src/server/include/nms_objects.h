@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -741,7 +741,7 @@ public:
 	const GeoLocation& getGeoLocation() const { return m_geoLocation; }
 	void setGeoLocation(const GeoLocation& geoLocation);
 
-   const PostalAddress *getPostalAddress() const { return m_postalAddress; }
+   const PostalAddress *getPostalAddress() const { return GetAttributeWithLock(&m_postalAddress, m_mutexProperties); }
    void setPostalAddress(PostalAddress * addr) { lockProperties(); delete m_postalAddress; m_postalAddress = addr; setModified(MODIFY_COMMON_PROPERTIES); unlockProperties(); }
 
    const uuid& getMapImage() { return m_image; }
@@ -1172,8 +1172,8 @@ public:
 	void setManualCreationFlag(bool isManual) { if (isManual) m_flags |= IF_CREATED_MANUALLY; else m_flags &= ~IF_CREATED_MANUALLY; setModified(MODIFY_INTERFACE_PROPERTIES); }
 	void setPeer(Node *node, Interface *iface, LinkLayerProtocol protocol, bool reflection);
    void clearPeer() { lockProperties(); m_peerNodeId = 0; m_peerInterfaceId = 0; m_peerDiscoveryProtocol = LL_PROTO_UNKNOWN; setModified(MODIFY_INTERFACE_PROPERTIES); unlockProperties(); }
-   void setDescription(const TCHAR *descr) { lockProperties(); nx_strncpy(m_description, descr, MAX_DB_STRING); setModified(MODIFY_INTERFACE_PROPERTIES); unlockProperties(); }
-   void setAlias(const TCHAR *alias) { lockProperties(); nx_strncpy(m_alias, alias, MAX_DB_STRING); setModified(MODIFY_INTERFACE_PROPERTIES); unlockProperties(); }
+   void setDescription(const TCHAR *descr) { lockProperties(); _tcslcpy(m_description, descr, MAX_DB_STRING); setModified(MODIFY_INTERFACE_PROPERTIES); unlockProperties(); }
+   void setAlias(const TCHAR *alias) { lockProperties(); _tcslcpy(m_alias, alias, MAX_DB_STRING); setModified(MODIFY_INTERFACE_PROPERTIES); unlockProperties(); }
    void addIpAddress(const InetAddress& addr);
    void deleteIpAddress(InetAddress addr);
    void setNetMask(const InetAddress& addr);
@@ -1577,13 +1577,13 @@ public:
    AccessPoint(const TCHAR *name, UINT32 index, const BYTE *macAddr);
    virtual ~AccessPoint();
 
-   virtual int getObjectClass() const { return OBJECT_ACCESSPOINT; }
+   virtual int getObjectClass() const OVERRIDE { return OBJECT_ACCESSPOINT; }
 
    virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
    virtual bool saveToDatabase(DB_HANDLE hdb);
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
 
-   virtual json_t *toJson();
+   virtual json_t *toJson() OVERRIDE;
 
    void statusPollFromController(ClientSession *session, UINT32 rqId, Queue *eventQueue, Node *controller, SNMP_Transport *snmpTransport);
 
@@ -1602,9 +1602,9 @@ public:
 	void updateInfo(const TCHAR *vendor, const TCHAR *model, const TCHAR *serialNumber);
    void updateState(AccessPointState state);
 
-   virtual bool isReadyForStatusPoll()  { return false; }
-   virtual bool isReadyForConfigurationPoll()  { return false; }
-   virtual bool isReadyForInstancePoll() { return false; }
+   virtual bool isReadyForStatusPoll() OVERRIDE { return false; }
+   virtual bool isReadyForConfigurationPoll() OVERRIDE { return false; }
+   virtual bool isReadyForInstancePoll() OVERRIDE { return false; }
 };
 
 /**
@@ -1619,13 +1619,13 @@ protected:
 	CLUSTER_RESOURCE *m_pResourceList;
 	UINT32 m_zoneUIN;
 
-   virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId);
-   virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
+   virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId) OVERRIDE;
+   virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest) OVERRIDE;
 
-   virtual void onDataCollectionChange();
+   virtual void onDataCollectionChange() OVERRIDE;
 
-   virtual void statusPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId);
-   virtual void configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId);
+   virtual void statusPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) OVERRIDE;
+   virtual void configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) OVERRIDE;
 
    UINT32 getResourceOwnerInternal(UINT32 id, const TCHAR *name);
 
@@ -1634,19 +1634,19 @@ public:
    Cluster(const TCHAR *pszName, UINT32 zoneUIN);
 	virtual ~Cluster();
 
-   virtual int getObjectClass() const { return OBJECT_CLUSTER; }
-   virtual bool saveToDatabase(DB_HANDLE hdb);
-   virtual bool deleteFromDatabase(DB_HANDLE hdb);
-   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
-   virtual bool showThresholdSummary();
+   virtual int getObjectClass() const OVERRIDE { return OBJECT_CLUSTER; }
+   virtual bool saveToDatabase(DB_HANDLE hdb) OVERRIDE;
+   virtual bool deleteFromDatabase(DB_HANDLE hdb) OVERRIDE;
+   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) OVERRIDE;
+   virtual bool showThresholdSummary() OVERRIDE;
 
-   virtual bool isReadyForInstancePoll() { return false; }
+   virtual bool isReadyForInstancePoll() OVERRIDE { return false; }
 
-   virtual void unbindFromTemplate(UINT32 dwTemplateId, bool removeDCI);
+   virtual void unbindFromTemplate(UINT32 dwTemplateId, bool removeDCI) OVERRIDE;
 
-   virtual NXSL_Value *createNXSLObject(NXSL_VM *vm);
+   virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) OVERRIDE;
 
-   virtual json_t *toJson();
+   virtual json_t *toJson() OVERRIDE;
 
 	bool isSyncAddr(const InetAddress& addr);
 	bool isVirtualAddr(const InetAddress& addr);
@@ -1699,17 +1699,17 @@ public:
    Chassis(const TCHAR *name, UINT32 controllerId);
    virtual ~Chassis();
 
-   virtual int getObjectClass() const { return OBJECT_CHASSIS; }
-   virtual bool saveToDatabase(DB_HANDLE hdb);
-   virtual bool deleteFromDatabase(DB_HANDLE hdb);
-   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
-   virtual void linkObjects();
-   virtual bool showThresholdSummary();
-   virtual UINT32 getEffectiveSourceNode(DCObject *dco);
+   virtual int getObjectClass() const OVERRIDE { return OBJECT_CHASSIS; }
+   virtual bool saveToDatabase(DB_HANDLE hdb) OVERRIDE;
+   virtual bool deleteFromDatabase(DB_HANDLE hdb) OVERRIDE;
+   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) OVERRIDE;
+   virtual void linkObjects() OVERRIDE;
+   virtual bool showThresholdSummary() OVERRIDE;
+   virtual UINT32 getEffectiveSourceNode(DCObject *dco) OVERRIDE;
 
-   virtual bool isReadyForStatusPoll()  { return false; }
-   virtual bool isReadyForConfigurationPoll()  { return false; }
-   virtual bool isReadyForInstancePoll() { return false; }
+   virtual bool isReadyForStatusPoll() OVERRIDE { return false; }
+   virtual bool isReadyForConfigurationPoll() OVERRIDE { return false; }
+   virtual bool isReadyForInstancePoll() OVERRIDE { return false; }
 
    virtual NXSL_Value *createNXSLObject(NXSL_VM *vm);
 
@@ -2126,10 +2126,10 @@ public:
 	Cluster *getMyCluster();
 
    const InetAddress& getIpAddress() const { return m_ipAddress; }
-   UINT32 getZoneUIN() const { return m_zoneUIN; }
-   NodeType getType() const { return m_type; }
+   UINT32 getZoneUIN() const { return GetAttributeWithLock(&m_zoneUIN, m_mutexProperties); }
+   NodeType getType() const { return GetAttributeWithLock(&m_type, m_mutexProperties); }
    bool isVirtual() const { return (m_type == NODE_TYPE_VIRTUAL) || (m_type == NODE_TYPE_CONTAINER); }
-   const TCHAR *getSubType() const { return m_subType; }
+   const TCHAR *getSubType() { return m_subType; }
    const TCHAR *getHypervisorType() const { return m_hypervisorType; }
    const TCHAR *getHypervisorInfo() const { return CHECK_NULL_EX(m_hypervisorInfo); }
 
@@ -2178,7 +2178,7 @@ public:
    time_t getLastAgentCommTime() const { return m_lastAgentCommTime; }
    const TCHAR *getPrimaryName() const { return m_primaryName; }
    const uuid& getTunnelId() const { return m_tunnelId; }
-   const TCHAR *getAgentCertificateSubject() const { return m_agentCertSubject; }
+   const TCHAR *getAgentCertificateSubject() const { return GetAttributeWithLock(&m_agentCertSubject, m_mutexProperties); }
    UINT32 getRequiredPollCount() const { return m_requiredPollCount; }
 
    bool isDown() { return (m_state & DCSF_UNREACHABLE) ? true : false; }
@@ -2192,7 +2192,7 @@ public:
    Interface *createNewInterface(const InetAddress& ipAddr, BYTE *macAddr, bool fakeInterface);
    void deleteInterface(Interface *iface);
 
-	void setPrimaryName(const TCHAR *name) { nx_strncpy(m_primaryName, name, MAX_DNS_NAME); }
+	void setPrimaryName(const TCHAR *name) { lockProperties(); _tcslcpy(m_primaryName, name, MAX_DNS_NAME); unlockProperties(); }
 	void setAgentPort(UINT16 port) { m_agentPort = port; }
 	void setSnmpPort(UINT16 port) { m_snmpPort = port; }
    void setSshCredentials(const TCHAR *login, const TCHAR *password);
