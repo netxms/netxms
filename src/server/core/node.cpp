@@ -119,6 +119,7 @@ Node::Node() : super()
    m_driverData = NULL;
    m_components = NULL;
    m_softwarePackages = NULL;
+   m_hardwareComponents = NULL;
    m_winPerfObjects = NULL;
    memset(m_baseBridgeAddress, 0, MAC_ADDR_LENGTH);
    m_fileUpdateConn = NULL;
@@ -234,6 +235,7 @@ Node::Node(const NewNodeData *newNodeData, UINT32 flags)  : super()
    m_driverData = NULL;
    m_components = NULL;
    m_softwarePackages = NULL;
+   m_hardwareComponents = NULL;
    m_winPerfObjects = NULL;
    memset(m_baseBridgeAddress, 0, MAC_ADDR_LENGTH);
    m_fileUpdateConn = NULL;
@@ -292,6 +294,7 @@ Node::~Node()
       m_components->decRefCount();
    delete m_lldpLocalPortInfo;
    delete m_softwarePackages;
+   delete m_hardwareComponents;
    delete m_winPerfObjects;
    free(m_sysName);
    free(m_sysContact);
@@ -456,67 +459,131 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    DBFreeResult(hResult);
    DBFreeStatement(hStmt);
 
-   if (!m_isDeleted)
+   if (m_isDeleted)
    {
-      // Link node to subnets
-      hStmt = DBPrepare(hdb, _T("SELECT subnet_id FROM nsmap WHERE node_id=?"));
-      if (hStmt == NULL)
-         return false;
+      return true;
+   }
 
-      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
-      hResult = DBSelectPrepared(hStmt);
-      if (hResult == NULL)
+   // Link node to subnets
+   hStmt = DBPrepare(hdb, _T("SELECT subnet_id FROM nsmap WHERE node_id=?"));
+   if (hStmt == NULL)
+      return false;
+
+   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+   hResult = DBSelectPrepared(hStmt);
+   if (hResult == NULL)
+   {
+      DBFreeStatement(hStmt);
+      return false;     // Query failed
+   }
+
+   iNumRows = DBGetNumRows(hResult);
+   for(i = 0; i < iNumRows; i++)
+   {
+      dwSubnetId = DBGetFieldULong(hResult, i, 0);
+      pObject = FindObjectById(dwSubnetId);
+      if (pObject == NULL)
       {
-         DBFreeStatement(hStmt);
-         return false;     // Query failed
+         nxlog_write(MSG_INVALID_SUBNET_ID, EVENTLOG_ERROR_TYPE, "dd", dwId, dwSubnetId);
+         break;
       }
-
-      iNumRows = DBGetNumRows(hResult);
-      for(i = 0; i < iNumRows; i++)
+      else if (pObject->getObjectClass() != OBJECT_SUBNET)
       {
-         dwSubnetId = DBGetFieldULong(hResult, i, 0);
-         pObject = FindObjectById(dwSubnetId);
-         if (pObject == NULL)
+         nxlog_write(MSG_SUBNET_NOT_SUBNET, EVENTLOG_ERROR_TYPE, "dd", dwId, dwSubnetId);
+         break;
+      }
+      else
+      {
+         pObject->addChild(this);
+         addParent(pObject);
+      }
+   }
+
+   DBFreeResult(hResult);
+   DBFreeStatement(hStmt);
+
+   loadItemsFromDB(hdb);
+   loadACLFromDB(hdb);
+
+   // Walk through all items in the node and load appropriate thresholds
+   bResult = true;
+   for(i = 0; i < m_dcObjects->size(); i++)
+   {
+      if (!m_dcObjects->get(i)->loadThresholdsFromDB(hdb))
+      {
+         DbgPrintf(3, _T("Cannot load thresholds for DCI %d of node %d (%s)"),
+                   m_dcObjects->get(i)->getId(), dwId, m_name);
+         bResult = false;
+      }
+   }
+
+   updatePhysicalContainerBinding(OBJECT_RACK, m_rackId);
+   updatePhysicalContainerBinding(OBJECT_CHASSIS, m_chassisId);
+
+   if (bResult)
+   {
+      // Load software packages
+      hStmt = DBPrepare(hdb, _T("SELECT name,version,vendor,date,url,description FROM software_inventory WHERE node_id=?"));
+      if (hStmt != NULL)
+      {
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+         hResult = DBSelectPrepared(hStmt);
+         if (hResult != NULL)
          {
-            nxlog_write(MSG_INVALID_SUBNET_ID, EVENTLOG_ERROR_TYPE, "dd", dwId, dwSubnetId);
-            break;
-         }
-         else if (pObject->getObjectClass() != OBJECT_SUBNET)
-         {
-            nxlog_write(MSG_SUBNET_NOT_SUBNET, EVENTLOG_ERROR_TYPE, "dd", dwId, dwSubnetId);
-            break;
+            int nRows = DBGetNumRows(hResult);
+            m_softwarePackages = new ObjectArray<SoftwarePackage>(nRows, 16, true);
+
+            for(int i = 0; i < nRows; i++)
+               m_softwarePackages->add(new SoftwarePackage(hResult, i));
+
+            DBFreeResult(hResult);
          }
          else
          {
-            pObject->addChild(this);
-            addParent(pObject);
-         }
-      }
-
-      DBFreeResult(hResult);
-      DBFreeStatement(hStmt);
-
-      loadItemsFromDB(hdb);
-      loadACLFromDB(hdb);
-
-      // Walk through all items in the node and load appropriate thresholds
-      bResult = true;
-      for(i = 0; i < m_dcObjects->size(); i++)
-      {
-         if (!m_dcObjects->get(i)->loadThresholdsFromDB(hdb))
-         {
-            DbgPrintf(3, _T("Cannot load thresholds for DCI %d of node %d (%s)"),
-                      m_dcObjects->get(i)->getId(), dwId, m_name);
             bResult = false;
          }
+         DBFreeStatement(hStmt);
+      }
+      else
+      {
+         bResult = false;
       }
 
-      updatePhysicalContainerBinding(OBJECT_RACK, m_rackId);
-      updatePhysicalContainerBinding(OBJECT_CHASSIS, m_chassisId);
+      if (!bResult)
+         DbgPrintf(3, _T("Cannot load software packages of node %d (%s)"), m_id, m_name);
    }
-   else
+
+   if (bResult)
    {
-      bResult = true;
+      // Load hardware components
+      hStmt = DBPrepare(hdb, _T("SELECT component_type,component_index,vendor,model,capacity,serial FROM hardware_inventory WHERE node_id=?"));
+      if (hStmt != NULL)
+      {
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+         hResult = DBSelectPrepared(hStmt);
+         if (hResult != NULL)
+         {
+            int nRows = DBGetNumRows(hResult);
+            m_hardwareComponents = new ObjectArray<HardwareComponent>(nRows, 16, true);
+
+            for(int i = 0; i < nRows; i++)
+               m_hardwareComponents->add(new HardwareComponent(hResult, i));
+
+            DBFreeResult(hResult);
+         }
+         else
+         {
+            bResult = false;
+         }
+         DBFreeStatement(hStmt);
+      }
+      else
+      {
+         bResult = false;
+      }
+
+      if (!bResult)
+         DbgPrintf(3, _T("Cannot load hardware information of node %d (%s)"), m_id, m_name);
    }
 
    return bResult;
@@ -636,6 +703,52 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
    // Save access list
    if (success)
       success = saveACLToDB(hdb);
+
+   if ((m_softwarePackages != NULL) && success && (m_modified & MODIFY_SOFTWARE_INV))
+   {
+      DB_STATEMENT hStmt = DBPrepare(hdb, _T("DELETE FROM software_inventory WHERE node_id=?"));
+      if (hStmt != NULL)
+      {
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+         if (DBExecute(hStmt))
+         {
+            for(int i = 0; success && i < m_softwarePackages->size(); i++)
+               success = m_softwarePackages->get(i)->saveToDatabase(hdb, m_id);
+         }
+         else
+         {
+            success = false;
+         }
+         DBFreeStatement(hStmt);
+      }
+      else
+      {
+         success = false;
+      }
+   }
+
+   if ((m_hardwareComponents != NULL) && success && (m_modified & MODIFY_HARDWARE))
+   {
+      DB_STATEMENT hStmt = DBPrepare(hdb, _T("DELETE FROM hardware_inventory WHERE node_id=?"));
+      if (hStmt != NULL)
+      {
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+         if (DBExecute(hStmt))
+         {
+            for(int i = 0; success && i < m_hardwareComponents->size(); i++)
+               success = m_hardwareComponents->get(i)->saveToDatabase(hdb, m_id);
+         }
+         else
+         {
+            success = false;
+         }
+         DBFreeStatement(hStmt);
+      }
+      else
+      {
+         success = false;
+      }
+   }
 
    unlockProperties();
 
@@ -2364,7 +2477,7 @@ static ObjectArray<SoftwarePackage> *CalculatePackageChanges(ObjectArray<Softwar
       SoftwarePackage *np = (SoftwarePackage *)newSet->find(p, PackageNameComparator);
       if (np == NULL)
       {
-         p->setChangeCode(SWPKG_REMOVED);
+         p->setChangeCode(CHANGE_REMOVED);
          changes->add(p);
          continue;
       }
@@ -2387,12 +2500,12 @@ static ObjectArray<SoftwarePackage> *CalculatePackageChanges(ObjectArray<Softwar
 
       if (multipleVersions)
       {
-         p->setChangeCode(SWPKG_REMOVED);
+         p->setChangeCode(CHANGE_REMOVED);
       }
       else
       {
-         p->setChangeCode(SWPKG_UPDATED);
-         np->setChangeCode(SWPKG_UPDATED);
+         p->setChangeCode(CHANGE_UPDATED);
+         np->setChangeCode(CHANGE_UPDATED);
          changes->add(np);
       }
       changes->add(p);
@@ -2402,16 +2515,115 @@ static ObjectArray<SoftwarePackage> *CalculatePackageChanges(ObjectArray<Softwar
    for(int i = 0; i < newSet->size(); i++)
    {
       SoftwarePackage *p = newSet->get(i);
-      if (p->getChangeCode() == SWPKG_UPDATED)
+      if (p->getChangeCode() == CHANGE_UPDATED)
          continue;   // already marked as upgrade for some existig package
       if (oldSet->find(p, PackageNameVersionComparator) != NULL)
          continue;
 
-      p->setChangeCode(SWPKG_ADDED);
+      p->setChangeCode(CHANGE_ADDED);
       changes->add(p);
    }
 
    return changes;
+}
+
+static int HardwareSerialComparator(const HardwareComponent **c1, const HardwareComponent **c2)
+{
+   return _tcscmp((*c1)->getSerial(), (*c2)->getSerial());
+}
+
+/**
+ * Calculate hardware changes
+ */
+static ObjectArray<HardwareComponent> *CalculateHardwareChanges(ObjectArray<HardwareComponent> *oldSet, ObjectArray<HardwareComponent> *newSet)
+{
+   HardwareComponent *nc = NULL, *oc = NULL;
+   int i;
+   ObjectArray<HardwareComponent> *changes = new ObjectArray<HardwareComponent>(16, 16);
+
+   for(i = 0; i < newSet->size(); i++)
+   {
+      nc = newSet->get(i);
+      oc = oldSet->find(nc, HardwareSerialComparator);
+      if (oc == NULL)
+      {
+         nc->setChangeCode(CHANGE_ADDED);
+         changes->add(nc);
+      }
+   }
+
+   for(i = 0; i < oldSet->size(); i++)
+   {
+      oc = oldSet->get(i);
+      nc = newSet->find(oc, HardwareSerialComparator);
+      if (nc == NULL)
+      {
+         oc->setChangeCode(CHANGE_REMOVED);
+         changes->add(oc);
+      }
+   }
+
+   return changes;
+}
+
+/*
+ * Update list of hardware components for node
+ */
+bool Node::updateHardwareComponents(PollerInfo *poller, UINT32 requestId)
+{
+   static const TCHAR *eventParamNames[] = { _T("type"), _T("serial") };
+
+   poller->setStatus(_T("hardware check"));
+   sendPollerMsg(requestId, _T("Reading list of installed hardware components\r\n"));
+
+   Table *tableMem, *tableProc;
+   if ((getTableFromAgent(_T("Hardware.MemoryDevices"), &tableMem) != DCE_SUCCESS) ||
+       (getTableFromAgent(_T("Hardware.Processors"), &tableProc) != DCE_SUCCESS))
+   {
+      sendPollerMsg(requestId, POLLER_WARNING _T("Unable to get installed hardware information\r\n"));
+      return false;
+   }
+
+   ObjectArray<HardwareComponent> *components = new ObjectArray<HardwareComponent>((tableMem->getNumRows() + tableProc->getNumRows()), 16, true);
+   for(int i = 0; i < tableMem->getNumRows(); i++)
+      components->add(new HardwareComponent(tableMem, i));
+   for(int i = 0; i < tableProc->getNumRows(); i++)
+      components->add(new HardwareComponent(tableProc, i));
+   delete tableMem;
+   delete tableProc;
+
+   sendPollerMsg(requestId, POLLER_INFO _T("Received information on %d installed hardware components\r\n"), components->size());
+
+   lockProperties();
+   if (m_hardwareComponents != NULL)
+   {
+      ObjectArray<HardwareComponent> *changes = CalculateHardwareChanges(m_hardwareComponents, components);
+      for(int i = 0; i < changes->size(); i++)
+      {
+         HardwareComponent *c = changes->get(i);
+         switch(c->getChangeCode())
+         {
+            case CHANGE_NONE:
+               break;
+            case CHANGE_ADDED:
+               nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): new hardware of type: %s, serial: %s added"), m_name, c->getType(), c->getSerial());
+               sendPollerMsg(requestId, _T("   New hardware component, type: %s, serial: %s\r\n"), c->getType(), c->getSerial());
+               PostEventWithNames(EVENT_HARDWARE_ADDED, m_id, "ss", eventParamNames, c->getType(), c->getSerial());
+               break;
+            case CHANGE_REMOVED:
+               nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): hardware of type: %s, serial: %s removed"), m_name, c->getType(), c->getSerial());
+               sendPollerMsg(requestId, _T("   Hardware component, type: %s, serial: %s removed\r\n"), c->getType(), c->getSerial());
+               PostEventWithNames(EVENT_HARDWARE_ADDED, m_id, "ss", eventParamNames, c->getType(), c->getSerial());
+               break;
+         }
+      }
+      delete changes;
+      delete m_hardwareComponents;
+      setModified(MODIFY_HARDWARE);
+   }
+   m_hardwareComponents = components;
+   unlockProperties();
+   return true;
 }
 
 /**
@@ -2454,19 +2666,19 @@ bool Node::updateSoftwarePackages(PollerInfo *poller, UINT32 requestId)
          SoftwarePackage *p = changes->get(i);
          switch(p->getChangeCode())
          {
-            case SWPKG_NONE:
+            case CHANGE_NONE:
                break;
-            case SWPKG_ADDED:
+            case CHANGE_ADDED:
                nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): new package %s version %s"), m_name, p->getName(), p->getVersion());
                sendPollerMsg(requestId, _T("   New package %s version %s\r\n"), p->getName(), p->getVersion());
                PostEventWithNames(EVENT_PACKAGE_INSTALLED, m_id, "ss", eventParamNames, p->getName(), p->getVersion());
                break;
-            case SWPKG_REMOVED:
+            case CHANGE_REMOVED:
                nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): package %s version %s removed"), m_name, p->getName(), p->getVersion());
                sendPollerMsg(requestId, _T("   Package %s version %s removed\r\n"), p->getName(), p->getVersion());
                PostEventWithNames(EVENT_PACKAGE_REMOVED, m_id, "ss", eventParamNames, p->getName(), p->getVersion());
                break;
-            case SWPKG_UPDATED:
+            case CHANGE_UPDATED:
                SoftwarePackage *prev = changes->get(++i);   // next entry contains previous package version
                nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): package %s updated (%s -> %s)"), m_name, p->getName(), prev->getVersion(), p->getVersion());
                sendPollerMsg(requestId, _T("   Package %s updated (%s -> %s)\r\n"), p->getName(), prev->getVersion(), p->getVersion());
@@ -2476,6 +2688,7 @@ bool Node::updateSoftwarePackages(PollerInfo *poller, UINT32 requestId)
       }
       delete changes;
       delete m_softwarePackages;
+      setModified(MODIFY_SOFTWARE_INV);
    }
    m_softwarePackages = packages;
    unlockProperties();
@@ -2625,6 +2838,7 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
       }
 
       updateSoftwarePackages(poller, rqId);
+      updateHardwareComponents(poller, rqId);
 
       applyUserTemplates();
       updateContainerMembership();
@@ -7767,6 +7981,30 @@ void Node::writePackageListToMessage(NXCPMessage *msg)
    else
    {
       msg->setField(VID_RCC, RCC_NO_SOFTWARE_PACKAGE_DATA);
+   }
+   unlockProperties();
+}
+
+/**
+ * Fill NXCP message with hardware component list
+ */
+void Node::writeHardwareListToMessage(NXCPMessage *msg)
+{
+   lockProperties();
+   if (m_hardwareComponents != NULL)
+   {
+      msg->setField(VID_NUM_ELEMENTS, m_hardwareComponents->size());
+      UINT32 varId = VID_ELEMENT_LIST_BASE;
+      for(int i = 0; i < m_hardwareComponents->size(); i++)
+      {
+         m_hardwareComponents->get(i)->fillMessage(msg, varId);
+         varId += 10;
+      }
+      msg->setField(VID_RCC, RCC_SUCCESS);
+   }
+   else
+   {
+      msg->setField(VID_RCC, RCC_NO_HARDWARE_DATA);
    }
    unlockProperties();
 }

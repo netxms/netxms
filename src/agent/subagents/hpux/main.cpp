@@ -33,7 +33,7 @@ static LONG H_SourcePkg(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue,
 /**
  * Handler for shutdown/restart actions
  */
-static LONG H_Shutdown(const TCHAR *pszAction, StringList *pArgList, const TCHAR *pData, AbstractCommSession *session)
+static LONG H_Shutdown(const TCHAR *pszAction, const StringList *pArgList, const TCHAR *pData, AbstractCommSession *session)
 {
    chdir("/");
    char cmd[128];

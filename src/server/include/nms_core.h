@@ -701,6 +701,7 @@ private:
 	void getNetworkPath(NXCPMessage *request);
 	void getNodeComponents(NXCPMessage *request);
 	void getNodeSoftware(NXCPMessage *request);
+   void getNodeHardware(NXCPMessage *request);
 	void getWinPerfObjects(NXCPMessage *request);
 	void listMappingTables(NXCPMessage *request);
 	void getMappingTable(NXCPMessage *request);

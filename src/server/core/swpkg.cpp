@@ -79,7 +79,24 @@ SoftwarePackage::SoftwarePackage()
 	m_date = 0;
 	m_url = NULL;
 	m_description = NULL;
-	m_changeCode = SWPKG_NONE;
+	m_changeCode = CHANGE_NONE;
+}
+
+/**
+ * Constructor to load from database
+ *
+ * @param database query result
+ * @param row id
+ */
+SoftwarePackage::SoftwarePackage(DB_RESULT result, int row)
+{
+   m_name = DBGetField(result, row, 0, NULL, 0);
+   m_version = DBGetField(result, row, 1, NULL, 0);
+   m_vendor = DBGetField(result, row, 2, NULL, 0);
+   m_date = (time_t)DBGetFieldULong(result, row, 3);
+   m_url = DBGetField(result, row, 4, NULL, 0);
+   m_description = DBGetField(result, row, 5, NULL, 0);
+   m_changeCode = CHANGE_NONE;
 }
 
 /**
@@ -103,7 +120,32 @@ void SoftwarePackage::fillMessage(NXCPMessage *msg, UINT32 baseId) const
 	msg->setField(varId++, CHECK_NULL_EX(m_name));
 	msg->setField(varId++, CHECK_NULL_EX(m_version));
 	msg->setField(varId++, CHECK_NULL_EX(m_vendor));
-	msg->setField(varId++, (UINT32)m_date);
+	msg->setField(varId++, static_cast<UINT32>(m_date));
 	msg->setField(varId++, CHECK_NULL_EX(m_url));
 	msg->setField(varId++, CHECK_NULL_EX(m_description));
+}
+
+/**
+ * Save software package data to database
+ */
+bool SoftwarePackage::saveToDatabase(DB_HANDLE hdb, UINT32 nodeId) const
+{
+   bool result = false;
+
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO software_inventory (name,version,vendor,date,url,description,node_id) VALUES (?,?,?,?,?,?,?)"));
+   if (hStmt != NULL)
+   {
+      DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_name, DB_BIND_STATIC);
+      DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_version, DB_BIND_STATIC);
+      DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_vendor, DB_BIND_STATIC);
+      DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, static_cast<UINT32>(m_date));
+      DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, m_url, DB_BIND_STATIC);
+      DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, m_description, DB_BIND_STATIC);
+      DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, nodeId);
+
+      result = DBExecute(hStmt);
+      DBFreeStatement(hStmt);
+   }
+
+   return result;
 }

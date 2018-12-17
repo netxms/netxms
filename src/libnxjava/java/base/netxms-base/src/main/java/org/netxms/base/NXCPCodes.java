@@ -392,7 +392,8 @@ public class NXCPCodes
    public static final int CMD_DELETE_AGENT_POLICY = 0x0177;
    public static final int CMD_GET_AGENT_POLICY = 0x0178;
    public static final int CMD_POLICY_EDITOR_CLOSED = 0x0179;
-   public static final int CMD_POLICY_FORCE_APPLY = 0x0180;
+   public static final int CMD_POLICY_FORCE_APPLY = 0x017A;
+   public static final int CMD_GET_NODE_HARDWARE = 0x017B;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;

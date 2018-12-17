@@ -452,7 +452,7 @@ void StringList::sort(bool ascending, bool caseSensitive)
 /**
  * Fill NXCP message with list data
  */
-void StringList::fillMessage(NXCPMessage *msg, UINT32 baseId, UINT32 countId)
+void StringList::fillMessage(NXCPMessage *msg, UINT32 baseId, UINT32 countId) const
 {
    msg->setField(countId, (UINT32)m_count);
    UINT32 fieldId = baseId;

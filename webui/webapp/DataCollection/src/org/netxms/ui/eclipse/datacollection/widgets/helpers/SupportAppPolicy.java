@@ -2,10 +2,9 @@ package org.netxms.ui.eclipse.datacollection.widgets.helpers;
 
 import java.io.StringWriter;
 import java.io.Writer;
-import java.util.Base64;
 import java.util.UUID;
-import java.util.Base64.Decoder;
-import java.util.Base64.Encoder;
+import org.apache.commons.codec.Encoder;
+import org.apache.commons.codec.binary.Base64;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementArray;
 import org.simpleframework.xml.Root;
@@ -68,8 +67,7 @@ public class SupportAppPolicy
    
    public void setLogo(byte bs[])
    {
-      Encoder enc = Base64.getEncoder();  
-      logo = enc.encodeToString(bs);
+      logo = Base64.encodeBase64String(bs);
    }
 	
    public byte[] getLogo() 

@@ -591,10 +591,10 @@ UINT32 ExternalSubagent::getList(const TCHAR *name, StringList *value)
 /**
  * Execute action by remote subagent
  */
-UINT32 ExternalSubagent::executeAction(const TCHAR *name, StringList *args, AbstractCommSession *session, UINT32 requestId, bool sendOutput)
+UINT32 ExternalSubagent::executeAction(const TCHAR *name, const StringList *args, AbstractCommSession *session, UINT32 requestId, bool sendOutput)
 {
 	NXCPMessage msg(CMD_EXECUTE_ACTION, m_requestId++);
-	msg.setField(VID_NAME, name);
+	msg.setField(VID_ACTION_NAME, name);
    args->fillMessage(&msg, VID_ACTION_ARG_BASE, VID_NUM_ARGS);
    msg.setField(VID_REQUEST_ID, requestId);
    msg.setField(VID_RECEIVE_OUTPUT, sendOutput);
@@ -832,7 +832,7 @@ UINT32 GetListValueFromExtSubagent(const TCHAR *name, StringList *value)
  *
  * @return agent error code
  */
-UINT32 ExecuteActionByExtSubagent(const TCHAR *name, StringList *args, AbstractCommSession *session, UINT32 requestId, bool sendOutput)
+UINT32 ExecuteActionByExtSubagent(const TCHAR *name, const StringList *args, AbstractCommSession *session, UINT32 requestId, bool sendOutput)
 {
 	UINT32 rc = ERR_UNKNOWN_PARAMETER;
 	for(int i = 0; i < s_subagents.size(); i++)

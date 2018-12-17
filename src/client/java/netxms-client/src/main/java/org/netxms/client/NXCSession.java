@@ -6160,6 +6160,25 @@ public class NXCSession
       return packages;
    }
    
+   public List<HardwareComponent> getNodeHardwareComponents(long nodeId) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_NODE_HARDWARE);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+      sendMessage(msg);
+      
+      final NXCPMessage response = waitForRCC(msg.getMessageId());
+      int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_ELEMENTS);
+      List<HardwareComponent> components = new ArrayList<HardwareComponent>(count);
+      long baseId = NXCPCodes.VID_ELEMENT_LIST_BASE;
+      
+      for(int i = 0; i < count; i++)
+      {
+         components.add(new HardwareComponent(response, baseId));
+         baseId += 10;
+      }
+      return components;
+   }
+   
    /**
     * Get list of dependent nodes for given node. Node is considered dependent if it use given node
     * as any type of proxy or as data collection source for at least one DCI.

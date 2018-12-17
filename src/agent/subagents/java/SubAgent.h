@@ -71,7 +71,7 @@ public:
    LONG parameterHandler(const TCHAR *param, const TCHAR *id, TCHAR *value);
    LONG listHandler(const TCHAR *param, const TCHAR *id, StringList *value);
    LONG tableHandler(const TCHAR *param, const TCHAR *id, Table *value);
-   LONG actionHandler(const TCHAR *action, StringList *args, const TCHAR *id);
+   LONG actionHandler(const TCHAR *action, const StringList *args, const TCHAR *id);
 
    StringList *getActions() { return getContributionItems(m_getActions, _T("getActions")); }
    StringList *getParameters() { return getContributionItems(m_getParameters, _T("getParameters")); }

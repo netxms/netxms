@@ -44,7 +44,7 @@ static LONG H_StringConst(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValu
 /**
  * Handler for SMS.Send action
  */
-static LONG H_SendSMS(const TCHAR *pszAction, StringList *pArgs, const TCHAR *pData, AbstractCommSession *session)
+static LONG H_SendSMS(const TCHAR *pszAction, const StringList *pArgs, const TCHAR *pData, AbstractCommSession *session)
 {
 	if (pArgs->size() < 2)
 		return ERR_BAD_ARGUMENTS;

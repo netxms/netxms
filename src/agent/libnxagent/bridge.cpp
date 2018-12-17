@@ -35,6 +35,7 @@ static bool (* s_fpPushData)(const TCHAR *, const TCHAR *, UINT32, time_t) = NUL
 static CONDITION s_agentShutdownCondition = INVALID_CONDITION_HANDLE;
 static const TCHAR *s_dataDirectory = NULL;
 static DB_HANDLE (*s_fpGetLocalDatabaseHandle)() = NULL;
+static void (* s_fpExecuteAction)(const TCHAR *, const StringList *);
 
 /**
  * Initialize subagent API
@@ -47,7 +48,7 @@ void LIBNXAGENT_EXPORTABLE InitSubAgentAPI(void (* writeLog)(int, int, const TCH
                                            bool (* sendFile)(void *, UINT32, const TCHAR *, long, bool, VolatileCounter *),
                                            bool (* pushData)(const TCHAR *, const TCHAR *, UINT32, time_t),
                                            DB_HANDLE (* getLocalDatabaseHandle)(),
-                                           CONDITION shutdownCondition, const TCHAR *dataDirectory)
+                                           CONDITION shutdownCondition, const TCHAR *dataDirectory, void (* executeAction)(const TCHAR *, const StringList*))
 {
    s_fpWriteLog = writeLog;
 	s_fpSendTrap1 = sendTrap1;
@@ -59,6 +60,7 @@ void LIBNXAGENT_EXPORTABLE InitSubAgentAPI(void (* writeLog)(int, int, const TCH
    s_agentShutdownCondition = shutdownCondition;
    s_dataDirectory = dataDirectory;
    s_fpGetLocalDatabaseHandle = getLocalDatabaseHandle;
+   s_fpExecuteAction = executeAction;
 }
 
 /**
@@ -281,4 +283,15 @@ AbstractCommSession LIBNXAGENT_EXPORTABLE *AgentFindServerSession(UINT64 serverI
 DB_HANDLE LIBNXAGENT_EXPORTABLE AgentGetLocalDatabaseHandle()
 {
    return (s_fpGetLocalDatabaseHandle != NULL) ? s_fpGetLocalDatabaseHandle() : NULL;
+}
+
+/**
+ * Execute agent action or command line command
+ *
+ * @param agent action or command
+ */
+void LIBNXAGENT_EXPORTABLE AgentExecuteAction(const TCHAR *action, const StringList *args)
+{
+   if (s_fpExecuteAction != NULL)
+      s_fpExecuteAction(action, args);
 }

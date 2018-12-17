@@ -81,9 +81,9 @@ enum LogParserFileEncoding
  * Parameters:
  *    NetXMS event code, NetXMS event name, original text, source,
  *    original event ID (facility), original severity,
- *    capture groups, variables, record id, object id, repeat count, user arg
+ *    capture groups, variables, record id, object id, repeat count, user arg, agent action
  */
-typedef void (* LogParserCallback)(UINT32, const TCHAR *, const TCHAR *, const TCHAR *, UINT32, UINT32, StringList *, StringList *, UINT64, UINT32, int, void *);
+typedef void (* LogParserCallback)(UINT32, const TCHAR *, const TCHAR *, const TCHAR *, UINT32, UINT32, StringList *, StringList *, UINT64, UINT32, int, void *, const TCHAR *, const StringList *);
 
 class LIBNXLP_EXPORTABLE LogParser;
 
@@ -141,6 +141,8 @@ private:
 	bool m_resetRepeat;
 	int m_checkCount;
 	int m_matchCount;
+	TCHAR *m_agentAction;
+	StringList *m_agentActionArgs;
 	HashMap<UINT32, ObjectRuleStats> *m_objectCounters;
 
 	bool matchInternal(bool extMode, const TCHAR *source, UINT32 eventId, UINT32 level, const TCHAR *line, 
@@ -165,6 +167,9 @@ public:
 	bool match(const TCHAR *line, UINT32 objectId, LogParserCallback cb, void *userArg);
 	bool matchEx(const TCHAR *source, UINT32 eventId, UINT32 level, const TCHAR *line, StringList *variables, 
                 UINT64 recordId, UINT32 objectId, LogParserCallback cb, void *userArg);
+
+	void setAgentAction(const TCHAR *agentAction) { MemFree(m_agentAction); m_agentAction = MemCopyString(agentAction); }
+	void setAgentActionArgs(StringList *args) { delete(m_agentActionArgs); m_agentActionArgs = args; }
 
 	void setContext(const TCHAR *context) { MemFree(m_context); m_context = MemCopyString(context); }
 	void setContextToChange(const TCHAR *context) { MemFree(m_contextToChange); m_contextToChange = MemCopyString(context); }

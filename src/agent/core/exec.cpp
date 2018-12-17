@@ -138,7 +138,7 @@ static THREAD_RESULT THREAD_CALL Worker(void *arg)
 }
 #endif
 
-UINT32 ExecuteCommand(TCHAR *pszCommand, StringList *args, pid_t *pid)
+UINT32 ExecuteCommand(TCHAR *pszCommand, const StringList *args, pid_t *pid)
 {
    TCHAR *pszCmdLine, *sptr;
    UINT32 i, dwSize, dwRetCode = ERR_SUCCESS;
@@ -617,7 +617,7 @@ LONG H_ExternalTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractC
 /**
  * Execute external command via shell
  */
-UINT32 ExecuteShellCommand(TCHAR *pszCommand, StringList *args)
+UINT32 ExecuteShellCommand(TCHAR *pszCommand, const StringList *args)
 {
    TCHAR *pszCmdLine, *sptr;
    UINT32 i, dwSize, dwRetCode = ERR_SUCCESS;

@@ -41,6 +41,12 @@ ThreadPool *g_snmpProxyThreadPool = NULL;
  */
 ThreadPool *g_commThreadPool = NULL;
 
+
+/**
+ * Agent action thread pool
+ */
+ThreadPool *g_agentActionThreadPool = NULL;
+
 /**
  * Next free session ID
  */
@@ -902,33 +908,9 @@ void CommSession::getTable(NXCPMessage *pRequest, NXCPMessage *pMsg)
 void CommSession::action(NXCPMessage *pRequest, NXCPMessage *pMsg)
 {
    if ((g_dwFlags & AF_ENABLE_ACTIONS) && m_controlServer)
-   {
-      // Get action name and arguments
-      TCHAR action[MAX_RUNTIME_PARAM_NAME];
-      pRequest->getFieldAsString(VID_ACTION_NAME, action, MAX_RUNTIME_PARAM_NAME);
-
-      int numArgs = pRequest->getFieldAsInt32(VID_NUM_ARGS);
-      StringList *args = new StringList;
-      for(int i = 0; i < numArgs; i++)
-			args->addPreallocated(pRequest->getFieldAsString(VID_ACTION_ARG_BASE + i));
-
-      // Execute action
-      if (pRequest->getFieldAsBoolean(VID_RECEIVE_OUTPUT))
-      {
-         UINT32 rcc = ExecActionWithOutput(this, pRequest->getId(), action, args);
-         pMsg->setField(VID_RCC, rcc);
-      }
-      else
-      {
-         UINT32 rcc = ExecAction(action, args, this);
-         pMsg->setField(VID_RCC, rcc);
-         delete args;
-      }
-   }
+      ExecuteAction(pRequest, pMsg, this);
    else
-   {
       pMsg->setField(VID_RCC, ERR_ACCESS_DENIED);
-   }
 }
 
 /**

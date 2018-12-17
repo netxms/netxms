@@ -23,14 +23,43 @@
 #include "nxdbmgr.h"
 #include <nxevent.h>
 
+/**
+* Upgrade from 30.56 to 30.57
+*/
+static bool H_UpgradeFromV56()
+{
+   CHK_EXEC(CreateTable(
+         _T("CREATE TABLE software_inventory (")
+         _T("   node_id integer not null,")
+         _T("   name varchar(255) not null,")
+         _T("   version varchar(63) not null,")
+         _T("   vendor varchar(63) null,")
+         _T("   date integer not null,")
+         _T("   url varchar(255) null,")
+         _T("   description varchar(255) null,")
+         _T("   PRIMARY KEY(node_id,version,name))")));
 
+   CHK_EXEC(CreateTable(
+         _T("CREATE TABLE hardware_inventory (")
+         _T("   node_id integer not null,")
+         _T("   component_type varchar(63) not null,")
+         _T("   component_index integer not null,")
+         _T("   vendor varchar(63) null,")
+         _T("   model varchar(63) null,")
+         _T("   capacity integer not null,")
+         _T("   serial varchar(63) null,")
+         _T("   PRIMARY KEY(node_id,component_type,component_index))")));
 
+   CHK_EXEC(SetMinorSchemaVersion(57));
+   return true;
+}
 
 /**
  * Upgrade from 30.55 to 30.56
  */
 static bool H_UpgradeFromV55()
 {
+
    //Rename old ap_common
    DBRenameTable(g_dbHandle, _T("ap_common"), _T("ap_common_old"));
    //create new ap_common
@@ -2029,6 +2058,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 56, 30, 57, H_UpgradeFromV56 },
    { 55, 30, 56, H_UpgradeFromV55 },
    { 54, 30, 55, H_UpgradeFromV54 },
    { 53, 30, 54, H_UpgradeFromV53 },

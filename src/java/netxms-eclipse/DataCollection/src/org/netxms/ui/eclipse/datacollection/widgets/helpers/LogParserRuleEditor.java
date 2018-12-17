@@ -75,6 +75,7 @@ public class LogParserRuleEditor extends DashboardComposite
 	private LabeledText tag;
 	private LabeledText activeContext;
 	private LabeledText description;
+	private LabeledText agentAction;
 	private EventSelector event;
 	private LabeledText context;
 	private Combo contextAction;
@@ -532,6 +533,16 @@ public class LogParserRuleEditor extends DashboardComposite
 			}
 		});
 		
+		agentAction = new LabeledText(area, SWT.NONE);
+		toolkit.adapt(agentAction);
+		agentAction.setLabel("Execute action");
+		agentAction.setText((rule.getAgentAction() != null) ? rule.getAgentAction().getAction() : ""); //$NON-NLS-1$
+		gd = new GridData();
+		gd.horizontalAlignment = SWT.FILL;
+		gd.grabExcessHorizontalSpace = true;
+		gd.horizontalSpan = 2;
+		agentAction.setLayoutData(gd);
+		
 		checkboxBreak = toolkit.createButton(area, "Process all", SWT.CHECK);
 		checkboxBreak.setText("Break");
 		checkboxBreak.setSelection(rule.isBreakProcessing());
@@ -575,6 +586,9 @@ public class LogParserRuleEditor extends DashboardComposite
 			ctx.setReset(contextResetMode.getSelectionIndex());
 			rule.setContextDefinition(ctx);
 		}
+		
+		if (!agentAction.getText().trim().isEmpty())
+			rule.setAgentAction(agentAction.getText().trim());
 	}
 	
 	/**

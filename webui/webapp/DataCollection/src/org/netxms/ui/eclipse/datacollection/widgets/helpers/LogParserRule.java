@@ -70,6 +70,9 @@ public class LogParserRule
 	
 	@Element(name="context", required=false)
 	private LogParserContext contextDefinition = null;
+
+	@Element(required=false)
+	private LogParserAgentAction agentAction = null;
 	
 	private LogParserRuleEditor editor;
 
@@ -289,6 +292,22 @@ public class LogParserRule
 	public void setEditor(LogParserRuleEditor editor)
 	{
 		this.editor = editor;
+	}
+
+	/**
+	 * @return agent action
+	 */
+	public LogParserAgentAction getAgentAction()
+	{
+		return agentAction;
+	}
+	
+	/**
+	 * @param agentAction the agent action to set
+	 */
+	public void setAgentAction(String agentAction)
+	{
+		this.agentAction = new LogParserAgentAction(agentAction);
 	}
 
    public void updateFieldsCorrectly(boolean isSyslogParser)

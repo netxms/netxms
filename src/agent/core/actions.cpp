@@ -31,10 +31,176 @@ static ACTION *m_pActionList = NULL;
 static UINT32 m_dwNumActions = 0;
 
 /**
+ * Agent command executor default constructor
+ */
+AgentActionExecutor::AgentActionExecutor() : ProcessExecutor(NULL)
+{
+   m_requestId = 0;
+   m_session = NULL;
+   m_args = NULL;
+}
+
+/**
+ * Agent command executor destructor
+ */
+AgentActionExecutor::~AgentActionExecutor()
+{
+   delete(m_args);
+   if (m_session != NULL)
+      m_session->decRefCount();
+}
+
+/**
+ * Agent action executor creator
+ */
+AgentActionExecutor *AgentActionExecutor::createAgentExecutor(const TCHAR *cmd, const StringList *args)
+{
+   AgentActionExecutor *executor = new AgentActionExecutor();
+   executor->m_cmd = MemCopyString(cmd);
+   executor->m_args = new StringList(args);
+   executor->m_session = new VirtualSession(0);
+
+   UINT32 rcc = executor->findAgentAction();
+
+   if (rcc == ERR_SUCCESS)
+   {
+      delete(executor);
+      return NULL;
+   }
+
+   return executor;
+}
+
+/**
+ * Agent action executor creator
+ */
+AgentActionExecutor *AgentActionExecutor::createAgentExecutor(NXCPMessage *request, AbstractCommSession *session, UINT32 *rcc)
+{
+   AgentActionExecutor *executor = new AgentActionExecutor();
+   executor->m_sendOutput = request->getFieldAsBoolean(VID_RECEIVE_OUTPUT);
+   executor->m_requestId = request->getId();
+   executor->m_session = session;
+   executor->m_session->incRefCount();
+   executor->m_cmd = request->getFieldAsString(VID_ACTION_NAME);
+
+   UINT32 count = request->getFieldAsUInt32(VID_NUM_ARGS);
+   if (count > 0)
+   {
+      executor->m_args = new StringList();
+      UINT32 fieldId = VID_ACTION_ARG_BASE;
+      for(UINT32 i = 0; i < count; i++)
+         executor->m_args->addPreallocated(request->getFieldAsString(fieldId++));
+   }
+   *rcc = executor->findAgentAction();
+
+   if (*rcc == ERR_SUCCESS)
+   {
+      delete(executor);
+      return NULL;
+   }
+
+   return executor;
+}
+
+UINT32 AgentActionExecutor::findAgentAction()
+{
+   UINT32 rcc = ERR_UNKNOWN_PARAMETER;
+   for(UINT32 i = 0; i < m_dwNumActions; i++)
+   {
+      if (!_tcsicmp(m_pActionList[i].szName, m_cmd))
+      {
+         MemFree(m_cmd);
+         m_cmd = MemCopyString(m_pActionList[i].handler.pszCmdLine);
+         switch(m_pActionList[i].iType)
+         {
+            case AGENT_ACTION_EXEC:
+            case AGENT_ACTION_SHELLEXEC:
+               rcc = ERR_PROCESSING;
+               substituteArgs();
+               break;
+            case AGENT_ACTION_SUBAGENT:
+               rcc = m_pActionList[i].handler.sa.fpHandler(m_cmd, m_args, m_pActionList[i].handler.sa.pArg, m_session);
+               break;
+            default:
+               rcc = ERR_NOT_IMPLEMENTED;
+               break;
+         }
+         DebugPrintf(4, _T("Executing action %s of type %d"), m_cmd, m_pActionList[i].iType);
+         break;
+      }
+   }
+
+   if (rcc == ERR_UNKNOWN_PARAMETER)
+      rcc = ExecuteActionByExtSubagent(m_cmd, m_args, m_session, 0, false);
+
+   return rcc;
+}
+
+void AgentActionExecutor::stopAction(AgentActionExecutor *executor)
+{
+   if (executor->isRunning())
+      executor->stop();
+
+   DebugPrintf(6, _T("Agent action: %s timed out"), executor->getCommand());
+
+   delete(executor);
+}
+
+/**
+ * Substitute agent action arguments
+ */
+void AgentActionExecutor::substituteArgs()
+{
+   if (m_args != NULL && m_args->size() > 0)
+   {
+      String cmd(m_cmd);
+      TCHAR macro[3];
+      for(int i = 0; i < m_args->size() && i <= 9; i++)
+      {
+         _sntprintf(macro, 3, _T("$%d"), i+1);
+         cmd.replace(macro, m_args->get(i));
+      }
+      MemFree(m_cmd);
+      m_cmd = MemCopyString(cmd);
+   }
+}
+
+/**
+ * Send output to console
+ */
+void AgentActionExecutor::onOutput(const char *text)
+{
+   NXCPMessage msg;
+   msg.setId(m_requestId);
+   msg.setCode(CMD_COMMAND_OUTPUT);
+#ifdef UNICODE
+   TCHAR *buffer = WideStringFromMBStringSysLocale(text);
+   msg.setField(VID_MESSAGE, buffer);
+   m_session->sendMessage(&msg);
+   free(buffer);
+#else
+   msg.setField(VID_MESSAGE, text);
+   m_session->sendMessage(&msg);
+#endif
+}
+
+/**
+ * Send message to make console stop listening to output
+ */
+void AgentActionExecutor::endOfOutput()
+{
+   NXCPMessage msg;
+   msg.setId(m_requestId);
+   msg.setCode(CMD_COMMAND_OUTPUT);
+   msg.setEndOfSequence();
+   m_session->sendMessage(&msg);
+}
+
+/**
  * Add action
  */
 BOOL AddAction(const TCHAR *pszName, int iType, const TCHAR *pArg,
-               LONG (*fpHandler)(const TCHAR *, StringList *, const TCHAR *, AbstractCommSession *),
+               LONG (*fpHandler)(const TCHAR *, const StringList *, const TCHAR *, AbstractCommSession *),
                const TCHAR *pszSubAgent, const TCHAR *pszDescription)
 {
    UINT32 i;
@@ -113,7 +279,7 @@ BOOL AddActionFromConfig(TCHAR *pszLine, BOOL bShellExec) //to be TCHAR
 /**
  * Execute action
  */
-UINT32 ExecAction(const TCHAR *action, StringList *args, AbstractCommSession *session)
+UINT32 ExecAction(const TCHAR *action, const StringList *args, AbstractCommSession *session)
 {
    UINT32 rcc = ERR_UNKNOWN_PARAMETER;
 

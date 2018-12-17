@@ -1282,6 +1282,8 @@ BOOL LoadObjects()
                DBCacheTable(cachedb, mainDB, _T("acl"), _T("object_id,user_id"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("trusted_nodes"), _T("source_object_id,target_node_id"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("auto_bind_target"), _T("object_id"), _T("*")) &&
+               DBCacheTable(cachedb, mainDB, _T("software_inventory"), _T("node_id,version,name"), _T("*")) &&
+               DBCacheTable(cachedb, mainDB, _T("hardware_inventory"), _T("node_id,component_type,component_index"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("versionable_object"), _T("object_id"), _T("*"));
 
       if (success)

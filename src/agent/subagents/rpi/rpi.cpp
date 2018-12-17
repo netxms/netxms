@@ -92,7 +92,7 @@ static LONG H_PinState(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abstr
 /**
  * Set GPIO pin state
  */
-static LONG H_SetPinState(const TCHAR *action, StringList *arguments, const TCHAR *data, AbstractCommSession *session)
+static LONG H_SetPinState(const TCHAR *action, const StringList *arguments, const TCHAR *data, AbstractCommSession *session)
 {
    const TCHAR *pinStr = arguments->get(0);
    const TCHAR *stateStr = arguments->get(1);

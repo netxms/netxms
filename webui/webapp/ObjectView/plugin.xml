@@ -36,6 +36,13 @@
             name="Rack"
             restorable="true">
       </view>
+      <view
+            class="org.netxms.ui.eclipse.objectview.views.HardwareInventoryView"
+            icon="icons/components.png"
+            id="org.netxms.ui.eclipse.objectview.views.HardwareInventoryView"
+            name="Hardware Inventory"
+            restorable="true">
+      </view>
    </extension>
 
    <extension
@@ -182,6 +189,13 @@
                icon="icons/software.png"
                id="org.netxms.ui.eclipse.objectview.popupActions.ShowSoftwareInventory_Node"
                label="%action.label.SoftwareInventory">
+         </action>
+         <action
+               class="org.netxms.ui.eclipse.objectview.actions.ShowHardwareInventory"
+               enablesFor="1"
+               icon="icons/components.png"
+               id="org.netxms.ui.eclipse.objectview.popupActions.ShowHardwareInventory"
+               label="Hardware inventory">
          </action>
       </objectContribution>
    </extension>

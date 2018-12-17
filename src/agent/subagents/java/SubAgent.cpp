@@ -461,7 +461,7 @@ LONG SubAgent::tableHandler(const TCHAR *param, const TCHAR *id, Table *value)
 /**
  * Call Java method SubAgent.actionHandler()
  */
-LONG SubAgent::actionHandler(const TCHAR *action, StringList *args, const TCHAR *id)
+LONG SubAgent::actionHandler(const TCHAR *action, const StringList *args, const TCHAR *id)
 {
    if (!m_initialized)
       return SYSINFO_RC_ERROR;

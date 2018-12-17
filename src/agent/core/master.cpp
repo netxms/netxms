@@ -82,32 +82,29 @@ static void H_GetList(NXCPMessage *pRequest, NXCPMessage *pMsg)
 /**
  * Execute action
  */
-static void ExecuteAction(NXCPMessage *request, NXCPMessage *response)
+void ExecuteAction(NXCPMessage *request, NXCPMessage *response, AbstractCommSession *session)
 {
-   StringList *args = new StringList();
-   UINT32 count = request->getFieldAsUInt32(VID_NUM_ARGS);
-   UINT32 fieldId = VID_ACTION_ARG_BASE;
-   for(UINT32 i = 0; i < count; i++)
+   UINT32 rcc = ERR_UNKNOWN_PARAMETER;
+   AgentActionExecutor *executor = AgentActionExecutor::createAgentExecutor(request, session, &rcc);
+   DebugPrintf(6, _T("Creating AgentActionExecutor instance"));
+   if (executor != NULL)
    {
-      args->addPreallocated(request->getFieldAsString(fieldId++));
-   }
-
-   TCHAR name[MAX_OBJECT_NAME];
-   request->getFieldAsString(VID_NAME, name, MAX_OBJECT_NAME);
-
-   ProxySession *session = new ProxySession(request);
-   if (request->getFieldAsBoolean(VID_RECEIVE_OUTPUT))
-   {
-      UINT32 rcc = ExecActionWithOutput(session, request->getFieldAsUInt32(VID_REQUEST_ID), name, args);
-      response->setField(VID_RCC, rcc);
+      rcc = (executor->execute() ? ERR_SUCCESS : ERR_EXEC_FAILED);
+      if (rcc == ERR_SUCCESS)
+         ThreadPoolScheduleRelative(g_agentActionThreadPool, g_execTimeout, AgentActionExecutor::stopAction, executor);
    }
    else
-   {
-      UINT32 rcc = ExecAction(name, args, session);
-      response->setField(VID_RCC, rcc);
-      delete args;
-   }
-   session->decRefCount();
+      DebugPrintf(6, _T("AgentActionExecutor instance creation failed"));
+
+   response->setField(VID_RCC, rcc);
+}
+
+void ExecuteAction(const TCHAR *cmd, const StringList *args)
+{
+   VirtualSession *session = new VirtualSession(0);
+   AgentActionExecutor *executor = AgentActionExecutor::createAgentExecutor(cmd, args);
+   if (executor != NULL && executor->execute())
+      ThreadPoolScheduleRelative(g_agentActionThreadPool, g_execTimeout, AgentActionExecutor::stopAction, executor);
 }
 
 /**
@@ -167,7 +164,7 @@ THREAD_RESULT THREAD_CALL MasterAgentListener(void *arg)
 						H_GetList(msg, &response);
 						break;
                case CMD_EXECUTE_ACTION:
-                  ExecuteAction(msg, &response);
+                  ExecuteAction(msg, &response, new ProxySession(msg));
                   break;
 					case CMD_GET_PARAMETER_LIST:
 						response.setField(VID_RCC, ERR_SUCCESS);

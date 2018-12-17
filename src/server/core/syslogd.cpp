@@ -539,7 +539,8 @@ void QueueProxiedSyslogMessage(const InetAddress &addr, UINT32 zoneUIN, UINT32 n
  * Callback for syslog parser
  */
 static void SyslogParserCallback(UINT32 eventCode, const TCHAR *eventName, const TCHAR *line, const TCHAR *source, UINT32 facility, UINT32 severity,
-                                 StringList *captureGroups, StringList *variables, UINT64 recordId, UINT32 objectId, int repeatCount, void *userArg)
+                                 StringList *captureGroups, StringList *variables, UINT64 recordId, UINT32 objectId, int repeatCount, void *userArg,
+                                 const TCHAR *agentAction, const StringList *agentActionArgs)
 {
 	char format[] = "sssssssssssssssssssssssssssssssss";
 	const TCHAR *plist[33];

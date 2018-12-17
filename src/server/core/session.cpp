@@ -1170,6 +1170,9 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_GET_NODE_SOFTWARE:
          getNodeSoftware(request);
          break;
+      case CMD_GET_NODE_HARDWARE:
+         getNodeHardware(request);
+         break;
       case CMD_GET_WINPERF_OBJECTS:
          getWinPerfObjects(request);
          break;
@@ -12812,6 +12815,30 @@ void ClientSession::getNodeSoftware(NXCPMessage *request)
    }
 
    // Send response
+   sendMessage(&msg);
+}
+
+/**
+ * Get list of hardware installed on node
+ */
+void ClientSession::getNodeHardware(NXCPMessage *request)
+{
+   NXCPMessage msg;
+
+   msg.setCode(CMD_REQUEST_COMPLETED);
+   msg.setId(request->getId());
+
+   Node *node = static_cast<Node *>(FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID), OBJECT_NODE));
+   if (node != NULL)
+   {
+      if (node->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+         node->writeHardwareListToMessage(&msg);
+      else
+         msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+   }
+   else
+      msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+
    sendMessage(&msg);
 }
 

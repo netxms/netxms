@@ -1290,7 +1290,7 @@ public:
    bool containsIgnoreCase(const TCHAR *value) const { return indexOfIgnoreCase(value) != -1; }
    TCHAR *join(const TCHAR *separator);
 
-   void fillMessage(NXCPMessage *msg, UINT32 baseId, UINT32 countId);
+   void fillMessage(NXCPMessage *msg, UINT32 baseId, UINT32 countId) const;
    json_t *toJson() const;
 };
 

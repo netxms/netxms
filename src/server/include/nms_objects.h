@@ -61,6 +61,7 @@ bool NXCORE_EXPORTABLE ExecuteQueryOnObject(DB_HANDLE hdb, UINT32 objectId, cons
 #define MAX_INTERFACES        4096
 #define MAX_ATTR_NAME_LEN     128
 #define INVALID_INDEX         0xFFFFFFFF
+#define MAX_HARDWARE_NAME     64
 
 /**
  * Last events
@@ -414,14 +415,14 @@ public:
 };
 
 /**
- * Change code of software package
+ * Change code
  */
-enum SoftwarePackageChangeCode
+enum ChangeCode
 {
-   SWPKG_NONE = 0,
-   SWPKG_ADDED = 1,
-   SWPKG_UPDATED = 2,
-   SWPKG_REMOVED = 3
+   CHANGE_NONE = 0,
+   CHANGE_ADDED = 1,
+   CHANGE_UPDATED = 2,
+   CHANGE_REMOVED = 3
 };
 
 /**
@@ -436,22 +437,51 @@ private:
 	time_t m_date;
 	TCHAR *m_url;
 	TCHAR *m_description;
-	SoftwarePackageChangeCode m_changeCode;
+	ChangeCode m_changeCode;
 
 	SoftwarePackage();
 
 public:
+	SoftwarePackage(DB_RESULT result, int row);
 	~SoftwarePackage();
 
 	void fillMessage(NXCPMessage *msg, UINT32 baseId) const;
+	bool saveToDatabase(DB_HANDLE hdb, UINT32 nodeId) const;
 
 	const TCHAR *getName() const { return m_name; }
 	const TCHAR *getVersion() const { return m_version; }
-	SoftwarePackageChangeCode getChangeCode() const { return m_changeCode; }
+	ChangeCode getChangeCode() const { return m_changeCode; }
 
-	void setChangeCode(SoftwarePackageChangeCode c) { m_changeCode = c; }
+	void setChangeCode(ChangeCode c) { m_changeCode = c; }
 
 	static SoftwarePackage *createFromTableRow(const Table *table, int row);
+};
+
+/**
+ * Hardware component information
+ */
+class HardwareComponent
+{
+private:
+   TCHAR m_type[MAX_HARDWARE_NAME];
+   ChangeCode m_changeCode;
+   UINT32 m_index;
+   TCHAR m_vendor[MAX_HARDWARE_NAME];
+   TCHAR m_model[MAX_HARDWARE_NAME];
+   UINT64 m_capacity;
+   TCHAR m_serial[MAX_HARDWARE_NAME];
+
+public:
+   HardwareComponent();
+   HardwareComponent(DB_RESULT result, int row);
+   HardwareComponent(const Table *table, int row);
+
+   void fillMessage(NXCPMessage *msg, UINT32 baseId) const;
+   bool saveToDatabase(DB_HANDLE hdb, UINT32 nodeId) const;
+   ChangeCode getChangeCode() const { return m_changeCode; };
+   void setChangeCode(ChangeCode code) { m_changeCode = code; }
+   const TCHAR *getSerial() const { return m_serial; };
+   const TCHAR *getType() const { return m_type; };
 };
 
 /**
@@ -521,6 +551,8 @@ struct NXCORE_EXPORTABLE NewNodeData
 #define MODIFY_SENSOR_PROPERTIES    0x0400
 #define MODIFY_MODULE_DATA          0x0800
 #define MODIFY_POLICY               0x1000
+#define MODIFY_SOFTWARE_INV         0x2000
+#define MODIFY_HARDWARE             0x4000
 #define MODIFY_ALL                  0xFFFF
 
 /**
@@ -2108,6 +2140,7 @@ protected:
 	ServerJobQueue *m_jobQueue;
 	ComponentTree *m_components;		// Hardware components
 	ObjectArray<SoftwarePackage> *m_softwarePackages;  // installed software packages
+   ObjectArray<HardwareComponent> *m_hardwareComponents;  // installed hardware components
 	ObjectArray<WinPerfObject> *m_winPerfObjects;  // Windows performance objects
 	AgentConnection *m_fileUpdateConn;
 	INT16 m_rackHeight;
@@ -2174,6 +2207,7 @@ protected:
 	bool confPollSnmp(UINT32 dwRqId);
 	NodeType detectNodeType(TCHAR *hypervisorType, TCHAR *hypervisorInfo);
 	bool updateSoftwarePackages(PollerInfo *poller, UINT32 requestId);
+   bool updateHardwareComponents(PollerInfo *poller, UINT32 requestId);
 	bool querySnmpSysProperty(SNMP_Transport *snmp, const TCHAR *oid, const TCHAR *propName, UINT32 pollRqId, TCHAR **value);
 	void checkBridgeMib(SNMP_Transport *pTransport);
 	void checkIfXTable(SNMP_Transport *pTransport);
@@ -2393,6 +2427,7 @@ public:
 	void writeWinPerfObjectsToMessage(NXCPMessage *msg);
 	void writePackageListToMessage(NXCPMessage *msg);
 	void writeWsListToMessage(NXCPMessage *msg);
+	void writeHardwareListToMessage(NXCPMessage *msg);
 
    UINT32 wakeUp();
 

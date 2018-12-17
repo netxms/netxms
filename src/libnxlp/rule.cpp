@@ -58,6 +58,8 @@ LogParserRule::LogParserRule(LogParser *parser, const TCHAR *name, const TCHAR *
 	m_resetRepeat = resetRepeat;
 	m_checkCount = 0;
 	m_matchCount = 0;
+	m_agentAction = NULL;
+	m_agentActionArgs = new StringList();
    m_objectCounters = new HashMap<UINT32, ObjectRuleStats>(true);
 }
 
@@ -96,6 +98,8 @@ LogParserRule::LogParserRule(LogParserRule *src, LogParser *parser)
    {
       m_matchArray = new IntegerArray<time_t>();
    }
+   m_agentAction = MemCopyString(src->m_agentAction);
+   m_agentActionArgs = new StringList(src->m_agentActionArgs);
    m_objectCounters = new HashMap<UINT32, ObjectRuleStats>(true);
    restoreCounters(src);
 }
@@ -115,6 +119,8 @@ LogParserRule::~LogParserRule()
 	MemFree(m_eventName);
 	MemFree(m_context);
 	MemFree(m_contextToChange);
+	MemFree(m_agentAction);
+	delete m_agentActionArgs;
 	delete m_matchArray;
 	delete m_objectCounters;
 }
@@ -165,7 +171,7 @@ bool LogParserRule::matchInternal(bool extMode, const TCHAR *source, UINT32 even
 			m_parser->trace(6, _T("  matched"));
 			if ((cb != NULL) && ((m_eventCode != 0) || (m_eventName != NULL)))
 				cb(m_eventCode, m_eventName, line, source, eventId, level, NULL, variables, recordId, objectId, 
-               ((m_repeatCount > 0) && (m_repeatInterval > 0)) ? m_matchArray->size() : 1, userArg);
+               ((m_repeatCount > 0) && (m_repeatInterval > 0)) ? m_matchArray->size() : 1, userArg, m_agentAction, m_agentActionArgs);
 			incMatchCount(objectId);
 			return true;
 		}
@@ -192,7 +198,7 @@ bool LogParserRule::matchInternal(bool extMode, const TCHAR *source, UINT32 even
 				}
 
 				cb(m_eventCode, m_eventName, line, source, eventId, level, &captureGroups, variables, recordId, objectId,
-               ((m_repeatCount > 0) && (m_repeatInterval > 0)) ? m_matchArray->size() : 1, userArg);
+               ((m_repeatCount > 0) && (m_repeatInterval > 0)) ? m_matchArray->size() : 1, userArg, m_agentAction, m_agentActionArgs);
             m_parser->trace(8, _T("  callback completed"));
          }
          incMatchCount(objectId);

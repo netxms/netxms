@@ -136,7 +136,8 @@ static void SubagentShutdown()
  * Callback for matched log records
  */
 static void LogParserMatch(UINT32 eventCode, const TCHAR *eventName, const TCHAR *text, const TCHAR *source, UINT32 eventId,
-                           UINT32 severity, StringList *cgs, StringList *variables, UINT64 recordId, UINT32 objectId, int repeatCount, void *userArg)
+                           UINT32 severity, StringList *cgs, StringList *variables, UINT64 recordId, UINT32 objectId,
+                           int repeatCount, void *userArg, const TCHAR *agentAction, const StringList *agentActionArgs)
 {
    int count = cgs->size() + 1 + ((variables != NULL) ? variables->size() : 0);
    TCHAR eventIdText[16], severityText[16], repeatCountText[16], recordIdText[32];
@@ -169,6 +170,7 @@ static void LogParserMatch(UINT32 eventCode, const TCHAR *eventName, const TCHAR
          list[i++] = variables->get(j);
    }
 
+   AgentExecuteAction(agentAction, agentActionArgs);
    AgentSendTrap2(eventCode, eventName, count, list);
    free(list);
 }

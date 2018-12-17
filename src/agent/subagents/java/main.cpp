@@ -32,7 +32,7 @@ static SubAgent *s_subAgent = NULL;
 /**
  * Action handler
  */
-static LONG ActionHandler(const TCHAR *action, StringList *args, const TCHAR *id, AbstractCommSession *session)
+static LONG ActionHandler(const TCHAR *action, const StringList *args, const TCHAR *id, AbstractCommSession *session)
 {
     if (s_subAgent == NULL)
       return SYSINFO_RC_ERROR;

@@ -107,7 +107,7 @@ void LIBNXAGENT_EXPORTABLE InitSubAgentAPI(void (* writeLog)(int, int, const TCH
                                            bool (* sendFile)(void *, UINT32, const TCHAR *, long, bool, VolatileCounter *),
                                            bool (* pushData)(const TCHAR *, const TCHAR *, UINT32, time_t),
                                            DB_HANDLE (* getLocalDatabaseHandle)(),
-                                           CONDITION shutdownCondition, const TCHAR *dataDirectory);
+                                           CONDITION shutdownCondition, const TCHAR *dataDirectory, void (* executeAction)(const TCHAR *, const StringList *));
 
 int CreateConfig(bool forceCreate, const char *pszServer, const char *pszLogFile, const char *pszFileStore,
    const char *configIncludeDir, int iNumSubAgents, char **ppszSubAgentList, const char *extraValues);
@@ -594,7 +594,7 @@ LONG RestartAgent()
 /**
  * Handler for Agent.Restart action
  */
-static LONG H_RestartAgent(const TCHAR *action, StringList *args, const TCHAR *data, AbstractCommSession *session)
+static LONG H_RestartAgent(const TCHAR *action, const StringList *args, const TCHAR *data, AbstractCommSession *session)
 {
    return RestartAgent();
 }
@@ -846,8 +846,10 @@ BOOL Initialize()
    // Initialize API for subagents
    s_subAgentsStopCondition = ConditionCreate(TRUE);
    InitSubAgentAPI(WriteSubAgentMsg, SendTrap, SendTrap, EnumerateSessions, FindServerSessionByServerId,
-      SendFileToServer, PushData, GetLocalDatabaseHandle, s_subAgentsStopCondition, g_szDataDirectory);
+      SendFileToServer, PushData, GetLocalDatabaseHandle, s_subAgentsStopCondition, g_szDataDirectory, ExecuteAction);
    nxlog_debug(1, _T("Subagent API initialized"));
+
+   g_agentActionThreadPool = ThreadPoolCreate(_T("AGENTACTION"), 1, 32);
 
    // Initialize cryptografy
    if (!InitCryptoLib(s_enabledCiphers))
@@ -1255,6 +1257,7 @@ void Shutdown()
       }
       ThreadPoolDestroy(g_commThreadPool);
    }
+   ThreadPoolDestroy(g_agentActionThreadPool);
 
    UnloadAllSubAgents();
    CloseLocalDatabase();

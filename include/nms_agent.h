@@ -665,7 +665,7 @@ typedef struct
 typedef struct
 {
    TCHAR name[MAX_PARAM_NAME];
-   LONG (* handler)(const TCHAR *, StringList *, const TCHAR *, AbstractCommSession *);
+   LONG (* handler)(const TCHAR *, const StringList *, const TCHAR *, AbstractCommSession *);
    const TCHAR *arg;
    TCHAR description[MAX_DB_STRING];
 } NETXMS_SUBAGENT_ACTION;
@@ -841,6 +841,8 @@ bool LIBNXAGENT_EXPORTABLE AgentSleepAndCheckForShutdown(UINT32 sleepTime);
 const TCHAR LIBNXAGENT_EXPORTABLE *AgentGetDataDirectory();
 
 DB_HANDLE LIBNXAGENT_EXPORTABLE AgentGetLocalDatabaseHandle();
+
+void LIBNXAGENT_EXPORTABLE AgentExecuteAction(const TCHAR *action, const StringList *args);
 
 TCHAR LIBNXAGENT_EXPORTABLE *ReadRegistryAsString(const TCHAR *attr, TCHAR *buffer = NULL, int bufSize = 0, const TCHAR *defaultValue = NULL);
 INT32 LIBNXAGENT_EXPORTABLE ReadRegistryAsInt32(const TCHAR *attr, INT32 defaultValue);

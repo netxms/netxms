@@ -57,7 +57,7 @@ THREAD_RESULT THREAD_CALL RebootThread(void *arg)
 /**
  * Handler for hard shutdown/restart actions
  */
-static LONG H_HardShutdown(const TCHAR *pszAction, StringList *pArgList, const TCHAR *pData, AbstractCommSession *session)
+static LONG H_HardShutdown(const TCHAR *pszAction, const StringList *pArgList, const TCHAR *pData, AbstractCommSession *session)
 {
 #if HAVE_REBOOT
 	if (*pData == _T('R'))
@@ -86,7 +86,7 @@ static LONG H_HardShutdown(const TCHAR *pszAction, StringList *pArgList, const T
 /**
  * Handler for soft shutdown/restart actions
  */
-static LONG H_SoftShutdown(const TCHAR *pszAction, StringList *pArgList, const TCHAR *pData, AbstractCommSession *session)
+static LONG H_SoftShutdown(const TCHAR *pszAction, const StringList *pArgList, const TCHAR *pData, AbstractCommSession *session)
 {
 	char cmd[128];
 	snprintf(cmd, 128, "shutdown %s now", (*pData == _T('R')) ? "-r" : "-h");

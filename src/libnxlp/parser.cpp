@@ -51,7 +51,8 @@ enum ParserState
    XML_STATE_MACRO,
    XML_STATE_DESCRIPTION,
    XML_STATE_EXCLUSION_SCHEDULES,
-   XML_STATE_EXCLUSION_SCHEDULE
+   XML_STATE_EXCLUSION_SCHEDULE,
+   XML_STATE_AGENT_ACTION
 };
 
 /**
@@ -76,6 +77,8 @@ struct LogParser_XmlParserState
 	String context;
 	String description;
 	String ruleName;
+	String agentAction;
+	String agentActionArgs;
 	int contextAction;
 	String ruleContext;
 	String errorText;
@@ -501,6 +504,7 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 		ps->id = NULL;
 		ps->source = NULL;
 		ps->level = NULL;
+		ps->agentAction = NULL;
 #ifdef UNICODE
 		ps->ruleContext.clear();
 		const char *context = XMLGetAttr(attrs, "context");
@@ -516,6 +520,19 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 #endif
 		ps->breakFlag = XMLGetAttrBoolean(attrs, "break", false);
 		ps->state = XML_STATE_RULE;
+	}
+	else if (!strcmp(name, "agentAction"))
+	{
+	   ps->state = XML_STATE_AGENT_ACTION;
+	   const char *action = XMLGetAttr(attrs, "action");
+	   if (action != NULL)
+	   {
+#ifdef UNICODE
+	      ps->agentAction.appendMBString(action, strlen(action), CP_UTF8);
+#else
+	      ps->agentAction = action;
+#endif
+	   }
 	}
 	else if (!strcmp(name, "match"))
 	{
@@ -657,6 +674,10 @@ static void EndElement(void *userData, const char *name)
 		if (ps->regexp.isEmpty())
 			ps->regexp = _T(".*");
 		rule = new LogParserRule(ps->parser, (const TCHAR *)ps->ruleName, (const TCHAR *)ps->regexp, eventCode, eventName, ps->repeatInterval, ps->repeatCount, ps->resetRepeat);
+		if(!ps->agentAction.isEmpty())
+		   rule->setAgentAction(ps->agentAction);
+		if(!ps->agentActionArgs.isEmpty())
+		   rule->setAgentActionArgs(new StringList(ps->agentActionArgs, _T(" ")));
 		if (!ps->ruleContext.isEmpty())
 			rule->setContext(ps->ruleContext);
 		if (!ps->context.isEmpty())
@@ -698,6 +719,10 @@ static void EndElement(void *userData, const char *name)
 
 		ps->parser->addRule(rule);
 		ps->state = XML_STATE_RULES;
+	}
+	else if (!strcmp(name, "agentAction"))
+	{
+	   ps->state = XML_STATE_RULE;
 	}
 	else if (!strcmp(name, "match"))
 	{
@@ -748,6 +773,9 @@ static void CharData(void *userData, const XML_Char *s, int len)
 
 	switch(ps->state)
 	{
+	   case XML_STATE_AGENT_ACTION:
+	      ps->agentActionArgs.appendMBString(s, len, CP_UTF8);
+	      break;
 		case XML_STATE_MATCH:
 			ps->regexp.appendMBString(s, len, CP_UTF8);
 			break;

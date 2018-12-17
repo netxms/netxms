@@ -152,6 +152,8 @@
 #define EVENT_TUNNEL_CLOSED                95
 #define EVENT_TUNNEL_AGENT_ID_MISMATCH     96
 #define EVENT_SERVER_STARTED               97
+#define EVENT_HARDWARE_ADDED               98
+#define EVENT_HARDWARE_REMOVED             99
 
 #define EVENT_SNMP_UNMATCHED_TRAP          500
 #define EVENT_SNMP_COLD_START              501

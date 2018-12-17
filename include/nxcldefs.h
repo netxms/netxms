@@ -612,6 +612,7 @@ enum SessionState
 #define RCC_FILE_ALREADY_EXISTS       ((UINT32)126)
 #define RCC_FOLDER_ALREADY_EXISTS     ((UINT32)127)
 #define RCC_NO_SUCH_POLICY            ((UINT32)128)
+#define RCC_NO_HARDWARE_DATA          ((UINT32)129)
 
 /**
  * Mask bits for NXCModifyEventTemplate()

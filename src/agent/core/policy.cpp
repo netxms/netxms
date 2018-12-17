@@ -266,7 +266,7 @@ UINT32 UninstallPolicy(CommSession *session, NXCPMessage *request)
 	if (rcc == RCC_SUCCESS)
 		UnregisterPolicy(guid);
 
-   session->debugPrintf(3, _T("Policy uninstall: GUID=%s TYPE=%s RCC=%d"), guid.toString(buffer), type, rcc);
+   session->debugPrintf(3, _T("Policy uninstall: GUID=%s TYPE=%s RCC=%d"), guid.toString(buffer), static_cast<const TCHAR*>(type), rcc);
 	return rcc;
 }
 

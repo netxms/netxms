@@ -146,7 +146,7 @@ static BOOL SetCurrentPrivilege(LPCTSTR pszPrivilege, BOOL bEnablePrivilege)
 /**
  * Shutdown system
  */
-static LONG H_ActionShutdown(const TCHAR *action, StringList *args, const TCHAR *data, AbstractCommSession *session)
+static LONG H_ActionShutdown(const TCHAR *action, const StringList *args, const TCHAR *data, AbstractCommSession *session)
 {
 	LONG nRet = ERR_INTERNAL_ERROR;
 
@@ -162,7 +162,7 @@ static LONG H_ActionShutdown(const TCHAR *action, StringList *args, const TCHAR 
  * Change user's password
  * Parameters: user new_password
  */
-static LONG H_ChangeUserPassword(const TCHAR *action, StringList *args, const TCHAR *data, AbstractCommSession *session)
+static LONG H_ChangeUserPassword(const TCHAR *action, const StringList *args, const TCHAR *data, AbstractCommSession *session)
 {
    if (args->size() < 2)
 	   return ERR_INTERNAL_ERROR;
