@@ -2987,13 +2987,13 @@ time_t LIBNETXMS_EXPORTABLE ParseDateTimeW(const WCHAR *text, time_t defaultValu
 }
 #endif
 
-
-//
-// C++ only functions
-//
+/***** C++ only functions *****/
 
 #ifdef __cplusplus
 
+/**
+ * NetXMS directory type
+ */
 enum nxDirectoryType
 {
    nxDirBin = 0,
@@ -3002,6 +3002,22 @@ enum nxDirectoryType
    nxDirLib = 3,
    nxDirShare = 4
 };
+
+#define EMA_FP_SHIFT  11                  /* nr of bits of precision */
+#define EMA_FP_1      (1 << EMA_FP_SHIFT) /* 1.0 as fixed-point */
+#define EMA_EXP_1     1884                /* 1/exp(5sec/1min) as fixed-point */
+#define EMA_EXP_5     2014                /* 1/exp(5sec/5min) */
+#define EMA_EXP_15    2037                /* 1/exp(5sec/15min) */
+
+/**
+ * Update xponential moving average value
+ */
+template<typename T> inline void UpdateExpMovingAverage(T& load, int exp, T n)
+{
+   load *= exp;
+   load += n * (EMA_FP_1 - exp);
+   load >>= EMA_FP_SHIFT;
+}
 
 TCHAR LIBNETXMS_EXPORTABLE *GetHeapInfo();
 INT64 LIBNETXMS_EXPORTABLE GetAllocatedHeapMemory();

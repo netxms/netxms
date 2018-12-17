@@ -86,12 +86,30 @@ const char *AmiMessage::getTag(const char *name)
 }
 
 /**
- * Get tag value as integer
+ * Get tag value as 32 bit integer
  */
-int AmiMessage::getTagAsInt(const char *name, int defaultValue)
+INT32 AmiMessage::getTagAsInt32(const char *name, INT32 defaultValue)
 {
    const char *v = getTag(name);
    return (v != NULL) ? strtol(v, NULL, 0) : defaultValue;
+}
+
+/**
+ * Get tag value as 32 bit unsigned integer
+ */
+UINT32 AmiMessage::getTagAsUInt32(const char *name, UINT32 defaultValue)
+{
+   const char *v = getTag(name);
+   return (v != NULL) ? strtoul(v, NULL, 0) : defaultValue;
+}
+
+/**
+ * Get tag value as double
+ */
+double AmiMessage::getTagAsDouble(const char *name, double defaultValue)
+{
+   const char *v = getTag(name);
+   return (v != NULL) ? strtod(v, NULL) : defaultValue;
 }
 
 /**
@@ -424,6 +442,8 @@ bool AsteriskSystem::processMessage(AmiMessage *msg)
 
       if (!stricmp(msg->getSubType(), "Hangup"))
          processHangup(msg);
+      else if (!stricmp(msg->getSubType(), "RTCPReceived"))
+         processRTCP(msg);
    }
 
    msg->decRefCount();
