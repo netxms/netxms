@@ -23,22 +23,44 @@
 #include "asterisk.h"
 
 /**
+ * Get event counters for given peer
+ */
+const EventCounters *AsteriskSystem::getPeerEventCounters(const TCHAR *peer) const
+{
+   MutexLock(m_eventCounterLock);
+   const EventCounters *counters = m_peerEventCounters.get(peer);
+   MutexUnlock(m_eventCounterLock);
+   return counters;
+}
+
+/**
  * Process hangup event
  */
 void AsteriskSystem::processHangup(AmiMessage *msg)
 {
+   const char *channel = msg->getTag("Channel");
+
    TCHAR peer[128];
-   PeerFromChannel(msg->getTag("Channel"), peer, 128);
-   EventCounters *peerEventCounters = ((peer[0] != 0) ? m_peerEventCounters.get(peer) : NULL);
-   if ((peer[0] != 0) && (peerEventCounters == NULL))
+   PeerFromChannel(channel, peer, 128);
+   EventCounters *peerEventCounters;
+   if (peer[0] != 0)
    {
-      peerEventCounters = new EventCounters;
-      memset(peerEventCounters, 0, sizeof(EventCounters));
-      m_peerEventCounters.set(peer, peerEventCounters);
+      MutexLock(m_eventCounterLock);
+      peerEventCounters = m_peerEventCounters.get(peer);
+      if (peerEventCounters == NULL)
+      {
+         peerEventCounters = new EventCounters;
+         memset(peerEventCounters, 0, sizeof(EventCounters));
+         m_peerEventCounters.set(peer, peerEventCounters);
+      }
+      MutexUnlock(m_eventCounterLock);
+   }
+   else
+   {
+      peerEventCounters = NULL;
    }
 
-   int cause = msg->getTagAsInt("Cause");
-   switch(cause)
+   switch(msg->getTagAsInt32("Cause"))
    {
       case 2:
       case 3:
@@ -74,6 +96,8 @@ void AsteriskSystem::processHangup(AmiMessage *msg)
             peerEventCounters->callBarred++;
          break;
    }
+
+   updateRTCPStatistic(channel, peer);
 }
 
 /**

@@ -28,6 +28,7 @@ LONG H_ChannelStats(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abstract
 LONG H_ChannelTable(const TCHAR *param, const TCHAR *arg, Table *value, AbstractCommSession *session);
 LONG H_GlobalEventCounters(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_PeerEventCounters(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_PeerRTCPStats(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_SIPPeerDetails(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_SIPPeerList(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session);
 LONG H_SIPPeerStats(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
@@ -229,6 +230,18 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("Asterisk.Peer.Events.Congestion(*)"), H_PeerEventCounters, _T("C"), DCI_DT_COUNTER64, _T("Asterisk: peer {instance} congestion events") },
    { _T("Asterisk.Peer.Events.NoRoute(*)"), H_PeerEventCounters, _T("N"), DCI_DT_COUNTER64, _T("Asterisk: peer {instance} no route events") },
    { _T("Asterisk.Peer.Events.SubscriberAbsent(*)"), H_PeerEventCounters, _T("A"), DCI_DT_COUNTER64, _T("Asterisk: peer {instance} subscriber absent events") },
+   { _T("Asterisk.Peer.RTCP.AverageJitter(*)"), H_PeerRTCPStats, _T("JA"), DCI_DT_INT, _T("Asterisk: peer {instance} average jitter") },
+   { _T("Asterisk.Peer.RTCP.AveragePacketLoss(*)"), H_PeerRTCPStats, _T("PA"), DCI_DT_INT, _T("Asterisk: peer {instance} average packet loss") },
+   { _T("Asterisk.Peer.RTCP.AverageRTT(*)"), H_PeerRTCPStats, _T("RA"), DCI_DT_INT, _T("Asterisk: peer {instance} average RTT") },
+   { _T("Asterisk.Peer.RTCP.LastJitter(*)"), H_PeerRTCPStats, _T("JL"), DCI_DT_INT, _T("Asterisk: peer {instance} last call jitter") },
+   { _T("Asterisk.Peer.RTCP.LastPacketLoss(*)"), H_PeerRTCPStats, _T("PL"), DCI_DT_INT, _T("Asterisk: peer {instance} last call packet loss") },
+   { _T("Asterisk.Peer.RTCP.LastRTT(*)"), H_PeerRTCPStats, _T("RL"), DCI_DT_INT, _T("Asterisk: peer {instance} last call RTT") },
+   { _T("Asterisk.Peer.RTCP.MaxJitter(*)"), H_PeerRTCPStats, _T("JM"), DCI_DT_INT, _T("Asterisk: peer {instance} maximum jitter") },
+   { _T("Asterisk.Peer.RTCP.MaxPacketLoss(*)"), H_PeerRTCPStats, _T("PM"), DCI_DT_INT, _T("Asterisk: peer {instance} maximum packet loss") },
+   { _T("Asterisk.Peer.RTCP.MaxRTT(*)"), H_PeerRTCPStats, _T("RM"), DCI_DT_INT, _T("Asterisk: peer {instance} maximum RTT") },
+   { _T("Asterisk.Peer.RTCP.MinJitter(*)"), H_PeerRTCPStats, _T("Jm"), DCI_DT_INT, _T("Asterisk: peer {instance} minimum jitter") },
+   { _T("Asterisk.Peer.RTCP.MinPacketLoss(*)"), H_PeerRTCPStats, _T("Pm"), DCI_DT_INT, _T("Asterisk: peer {instance} minimum packet loss") },
+   { _T("Asterisk.Peer.RTCP.MinRTT(*)"), H_PeerRTCPStats, _T("Rm"), DCI_DT_INT, _T("Asterisk: peer {instance} minimum RTT") },
    { _T("Asterisk.SIP.Peer.Details(*)"), H_SIPPeerDetails, NULL, DCI_DT_STRING, _T("Asterisk: SIP peer {instance} detailed information") },
    { _T("Asterisk.SIP.Peer.IPAddress(*)"), H_SIPPeerDetails, _T("I"), DCI_DT_STRING, _T("Asterisk: SIP peer {instance} IP address") },
    { _T("Asterisk.SIP.Peer.Status(*)"), H_SIPPeerDetails, _T("S"), DCI_DT_STRING, _T("Asterisk: SIP peer {instance} status") },

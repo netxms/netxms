@@ -27,16 +27,6 @@
 #define DEBUG_TAG _T("threads.pool")
 
 /**
- * Exponential moving average calculation
- */
-#define FP_SHIFT  11              /* nr of bits of precision */
-#define FP_1      (1 << FP_SHIFT) /* 1.0 as fixed-point */
-#define EXP_1     1884            /* 1/exp(5sec/1min) as fixed-point */
-#define EXP_5     2014            /* 1/exp(5sec/5min) */
-#define EXP_15    2037            /* 1/exp(5sec/15min) */ 
-#define CALC_EMA(load, exp, n) do { load *= exp; load += n * (FP_1 - exp); load >>= FP_SHIFT; } while(0)
-
-/**
  * Wait time watermarks (milliseconds)
  */
 static UINT32 s_waitTimeHighWatermark = 200;
@@ -157,7 +147,7 @@ static THREAD_RESULT THREAD_CALL WorkerThread(void *arg)
       if (rq == NULL)
       {
          MutexLock(p->mutex);
-         if ((p->threads->size() <= p->minThreads) || (p->averageWaitTime / FP_1 > s_waitTimeLowWatermark))
+         if ((p->threads->size() <= p->minThreads) || (p->averageWaitTime / EMA_FP_1 > s_waitTimeLowWatermark))
          {
             MutexUnlock(p->mutex);
             continue;
@@ -181,9 +171,9 @@ static THREAD_RESULT THREAD_CALL WorkerThread(void *arg)
       if (rq->func == NULL) // stop indicator
          break;
       
-      INT64 waitTime = (GetCurrentTimeMs() - rq->queueTime) << FP_SHIFT;
+      INT64 waitTime = (GetCurrentTimeMs() - rq->queueTime) << EMA_FP_SHIFT;
       MutexLock(p->mutex);
-      CALC_EMA(p->averageWaitTime, EXP_15, waitTime);
+      UpdateExpMovingAverage(p->averageWaitTime, EMA_EXP_15, waitTime);
       MutexUnlock(p->mutex);
 
       rq->func(rq->arg);
@@ -224,10 +214,10 @@ static THREAD_RESULT THREAD_CALL MaintenanceThread(void *arg)
       {
          cycleTime = 0;
 
-         INT64 requestCount = static_cast<INT64>(p->activeRequests) << FP_SHIFT;
-         CALC_EMA(p->loadAverage[0], EXP_1, requestCount);
-         CALC_EMA(p->loadAverage[1], EXP_5, requestCount);
-         CALC_EMA(p->loadAverage[2], EXP_15, requestCount);
+         INT64 requestCount = static_cast<INT64>(p->activeRequests) << EMA_FP_SHIFT;
+         UpdateExpMovingAverage(p->loadAverage[0], EMA_EXP_1, requestCount);
+         UpdateExpMovingAverage(p->loadAverage[1], EMA_EXP_5, requestCount);
+         UpdateExpMovingAverage(p->loadAverage[2], EMA_EXP_15, requestCount);
 
          count++;
          if (count == s_maintThreadResponsiveness)
@@ -238,7 +228,7 @@ static THREAD_RESULT THREAD_CALL MaintenanceThread(void *arg)
 
             MutexLock(p->mutex);
             int threadCount = p->threads->size();
-            INT64 averageWaitTime = p->averageWaitTime / FP_1;
+            INT64 averageWaitTime = p->averageWaitTime / EMA_FP_1;
             if (((averageWaitTime > s_waitTimeHighWatermark) && (threadCount < p->maxThreads)) ||
                 ((threadCount == 0) && (p->activeRequests > 0)))
             {
@@ -559,10 +549,10 @@ void LIBNETXMS_EXPORTABLE ThreadPoolGetInfo(ThreadPool *p, ThreadPoolInfo *info)
    info->totalRequests = p->taskExecutionCount;
    info->load = (info->curThreads > 0) ? info->activeRequests * 100 / info->curThreads : 0;
    info->usage = info->curThreads * 100 / info->maxThreads;
-   info->loadAvg[0] = static_cast<double>(p->loadAverage[0]) / FP_1;
-   info->loadAvg[1] = static_cast<double>(p->loadAverage[1]) / FP_1;
-   info->loadAvg[2] = static_cast<double>(p->loadAverage[2]) / FP_1;
-   info->averageWaitTime = static_cast<UINT32>(p->averageWaitTime / FP_1);
+   info->loadAvg[0] = static_cast<double>(p->loadAverage[0]) / EMA_FP_1;
+   info->loadAvg[1] = static_cast<double>(p->loadAverage[1]) / EMA_FP_1;
+   info->loadAvg[2] = static_cast<double>(p->loadAverage[2]) / EMA_FP_1;
+   info->averageWaitTime = static_cast<UINT32>(p->averageWaitTime / EMA_FP_1);
    MutexUnlock(p->mutex);
    MutexLock(p->schedulerLock);
    info->scheduledRequests = p->schedulerQueue->size();

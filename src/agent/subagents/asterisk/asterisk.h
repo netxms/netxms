@@ -95,7 +95,9 @@ public:
    void setId(INT64 id) { m_id = id; }
 
    const char *getTag(const char *name);
-   int getTagAsInt(const char *name, int defaultValue = 0);
+   INT32 getTagAsInt32(const char *name, INT32 defaultValue = 0);
+   UINT32 getTagAsUInt32(const char *name, UINT32 defaultValue = 0);
+   double getTagAsDouble(const char *name, double defaultValue = 0);
    void setTag(const char *name, const char *value);
 
    const StringList *getData() const { return m_data; }
@@ -128,6 +130,37 @@ struct EventCounters
    UINT64 congestion;
    UINT64 noRoute;
    UINT64 subscriberAbsent;
+};
+
+/**
+ * Real time RTCP data
+ */
+struct RTCPData
+{
+   UINT32 rtt;
+   UINT32 jitter;
+   UINT32 packetLoss;
+};
+
+/**
+ * RTCP statistic element index
+ */
+enum RTCPStatisticElementIndex
+{
+   RTCP_AVG = 0,
+   RTCP_LAST = 1,
+   RTCP_MAX = 2,
+   RTCP_MIN = 3
+};
+
+/**
+ * RTCP based statistic
+ */
+struct RTCPStatistic
+{
+   UINT64 rtt[4];
+   UINT64 jitter[4];
+   UINT64 packetLoss[4];
 };
 
 /**
@@ -193,6 +226,10 @@ private:
    UINT32 m_amiTimeout;
    EventCounters m_globalEventCounters;
    StringObjectMap<EventCounters> m_peerEventCounters;
+   MUTEX m_eventCounterLock;
+   StringObjectMap<RTCPData> m_rtcpData;
+   StringObjectMap<RTCPStatistic> m_peerRTCPStatistic;
+   MUTEX m_rtcpLock;
    StringObjectMap<SIPRegistrationTest> m_registrationTests;
 
    static THREAD_RESULT THREAD_CALL connectorThreadStarter(void *arg);
@@ -204,6 +241,8 @@ private:
    bool sendLoginRequest();
 
    void processHangup(AmiMessage *msg);
+   void processRTCP(AmiMessage *msg);
+   void updateRTCPStatistic(const char *channel, const TCHAR *peer);
 
    AsteriskSystem(const TCHAR *name);
 
@@ -230,7 +269,8 @@ public:
    StringList *executeCommand(const char *command);
 
    const EventCounters *getGlobalEventCounters() const { return &m_globalEventCounters; }
-   const EventCounters *getPeerEventCounters(const TCHAR *peer) const { return m_peerEventCounters.get(peer); }
+   const EventCounters *getPeerEventCounters(const TCHAR *peer) const;
+   RTCPStatistic *getPeerRTCPStatistic(const TCHAR *peer, RTCPStatistic *buffer) const;
 
    ObjectArray<SIPRegistrationTest> *getRegistrationTests() const { return m_registrationTests.values(); }
    SIPRegistrationTest *getRegistartionTest(const TCHAR *name) const { return m_registrationTests.get(name); }

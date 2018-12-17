@@ -71,7 +71,8 @@ AsteriskSystem *AsteriskSystem::createFromConfig(ConfigEntry *config, bool defau
 /**
  * Constructor
  */
-AsteriskSystem::AsteriskSystem(const TCHAR *name) : m_eventListeners(0, 16, false), m_peerEventCounters(true), m_registrationTests(true)
+AsteriskSystem::AsteriskSystem(const TCHAR *name) :
+         m_eventListeners(0, 16, false), m_peerEventCounters(true), m_peerRTCPStatistic(true), m_rtcpData(true), m_registrationTests(true)
 {
    m_name = _tcsdup(name);
    m_port = 5038;
@@ -87,6 +88,8 @@ AsteriskSystem::AsteriskSystem(const TCHAR *name) : m_eventListeners(0, 16, fals
    m_amiSessionReady = false;
    m_resetSession = false;
    m_eventListenersLock = MutexCreate();
+   m_eventCounterLock = MutexCreate();
+   m_rtcpLock = MutexCreate();
    m_amiTimeout = 2000;
    memset(&m_globalEventCounters, 0, sizeof(EventCounters));
 }
@@ -104,6 +107,8 @@ AsteriskSystem::~AsteriskSystem()
    if (m_response != NULL)
       m_response->decRefCount();
    MutexDestroy(m_eventListenersLock);
+   MutexDestroy(m_eventCounterLock);
+   MutexDestroy(m_rtcpLock);
 }
 
 /**
