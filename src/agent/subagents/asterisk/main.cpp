@@ -257,11 +257,11 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("Asterisk.SIP.RegistrationTest.Status(*)"), H_SIPRegistrationTestData, _T("S"), DCI_DT_INT, _T("Asterisk: SIP client registration test {instance} status") },
    { _T("Asterisk.SIP.RegistrationTest.Timestamp(*)"), H_SIPRegistrationTestData, _T("T"), DCI_DT_INT64, _T("Asterisk: SIP client registration test {instance} timestamp") },
    { _T("Asterisk.SIP.TestRegistration(*)"), H_SIPTestRegistration, NULL, DCI_DT_INT, _T("Asterisk: ad-hoc SIP client registration test") },
-   { _T("Asterisk.TaskProcessor.HighWatermark(*)"), H_TaskProcessorDetails, _T("H"), DCI_DT_COUNTER32, _T("Asterisk: task processor {instance} high watermark") },
-   { _T("Asterisk.TaskProcessor.LowWatermark(*)"), H_TaskProcessorDetails, _T("L"), DCI_DT_COUNTER32, _T("Asterisk: task processor {instance} low watermark") },
-   { _T("Asterisk.TaskProcessor.MaxDepth(*)"), H_TaskProcessorDetails, _T("M"), DCI_DT_COUNTER32, _T("Asterisk: task processor {instance} max queue depth") },
+   { _T("Asterisk.TaskProcessor.HighWatermark(*)"), H_TaskProcessorDetails, _T("H"), DCI_DT_UINT, _T("Asterisk: task processor {instance} high watermark") },
+   { _T("Asterisk.TaskProcessor.LowWatermark(*)"), H_TaskProcessorDetails, _T("L"), DCI_DT_UINT, _T("Asterisk: task processor {instance} low watermark") },
+   { _T("Asterisk.TaskProcessor.MaxDepth(*)"), H_TaskProcessorDetails, _T("M"), DCI_DT_UINT, _T("Asterisk: task processor {instance} max queue depth") },
    { _T("Asterisk.TaskProcessor.Processed(*)"), H_TaskProcessorDetails, _T("P"), DCI_DT_COUNTER64, _T("Asterisk: task processor {instance} processed tasks") },
-   { _T("Asterisk.TaskProcessor.Queued(*)"), H_TaskProcessorDetails, _T("Q"), DCI_DT_COUNTER32, _T("Asterisk: task processor {instance} queued tasks") },
+   { _T("Asterisk.TaskProcessor.Queued(*)"), H_TaskProcessorDetails, _T("Q"), DCI_DT_UINT, _T("Asterisk: task processor {instance} queued tasks") },
    { _T("Asterisk.Version"), H_AsteriskVersion, NULL, DCI_DT_STRING, _T("Asterisk: version") },
    { _T("Asterisk.Version(*)"), H_AsteriskVersion, NULL, DCI_DT_STRING, _T("Asterisk: version") }
 };

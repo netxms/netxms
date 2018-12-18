@@ -95,10 +95,10 @@ LONG H_TaskProcessorTable(const TCHAR *param, const TCHAR *arg, Table *value, Ab
 
    value->addColumn(_T("NAME"), DCI_DT_STRING, _T("Name"), true);
    value->addColumn(_T("PROCESSED"), DCI_DT_COUNTER64, _T("Processed"));
-   value->addColumn(_T("QUEUED"), DCI_DT_COUNTER32, _T("Queued"));
-   value->addColumn(_T("MAX_DEPTH"), DCI_DT_COUNTER32, _T("Max Depth"));
-   value->addColumn(_T("LOW_WATERMARK"), DCI_DT_COUNTER32, _T("Low Watermark"));
-   value->addColumn(_T("HIGH_WATERMARK"), DCI_DT_COUNTER32, _T("High Watermark"));
+   value->addColumn(_T("QUEUED"), DCI_DT_UINT, _T("Queued"));
+   value->addColumn(_T("MAX_DEPTH"), DCI_DT_UINT, _T("Max Depth"));
+   value->addColumn(_T("LOW_WATERMARK"), DCI_DT_UINT, _T("Low Watermark"));
+   value->addColumn(_T("HIGH_WATERMARK"), DCI_DT_UINT, _T("High Watermark"));
 
    for(int i = 0; i < list->size(); i++)
    {
