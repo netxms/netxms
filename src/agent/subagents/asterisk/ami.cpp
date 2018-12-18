@@ -304,6 +304,7 @@ void AsteriskSystem::connectorThread()
          nxlog_debug_tag(DEBUG_TAG, 5, _T("Connected to Asterisk system %s at %s:%d"), m_name, (const TCHAR *)m_ipAddress.toString(), m_port);
          if (sendLoginRequest())
          {
+            ThreadPoolExecute(g_asteriskThreadPool, this, &AsteriskSystem::setupEventFilters);
             while(!m_resetSession)
             {
                BYTE data[4096];
@@ -575,4 +576,28 @@ AmiMessage *AsteriskSystem::sendRequest(AmiMessage *request, ObjectRefArray<AmiM
 
    request->decRefCount();
    return response;
+}
+
+/**
+ * Send simple AMI request - response message is analyzed and dropped
+ */
+bool AsteriskSystem::sendSimpleRequest(AmiMessage *request)
+{
+   request->incRefCount(); // prevent destruction by sendRequest()
+   AmiMessage *response = sendRequest(request);
+   if (response == NULL)
+   {
+      request->decRefCount();
+      return false;
+   }
+
+   bool success = response->isSuccess();
+   if (!success)
+   {
+      const char *reason = response->getTag("Message");
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("Request \"%hs\" to %s failed (%hs)"), request->getSubType(), m_name, (reason != NULL) ? reason : "Unknown reason");
+   }
+   request->decRefCount();
+   response->decRefCount();
+   return success;
 }
