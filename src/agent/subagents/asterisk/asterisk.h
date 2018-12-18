@@ -240,6 +240,7 @@ private:
    void connectorThread();
 
    bool sendLoginRequest();
+   void setupEventFilters();
 
    void processHangup(AmiMessage *msg);
    void processRTCP(AmiMessage *msg);
@@ -265,6 +266,7 @@ public:
 
    AmiMessage *sendRequest(AmiMessage *request, ObjectRefArray<AmiMessage> *list = NULL, UINT32 timeout = 0);
 
+   bool sendSimpleRequest(AmiMessage *request);
    LONG readSingleTag(const char *rqname, const char *tag, TCHAR *value);
    ObjectRefArray<AmiMessage> *readTable(const char *rqname);
    StringList *executeCommand(const char *command);

@@ -23,6 +23,28 @@
 #include "asterisk.h"
 
 /**
+ * Setup event filters on AMI session
+ */
+void AsteriskSystem::setupEventFilters()
+{
+   AmiMessage *request = new AmiMessage("Events");
+   request->setTag("EventMask", "call,reporting");
+   sendSimpleRequest(request);
+
+   // Try to setup filter for specific events (may fail if user does not have "system" permission)
+   // https://wiki.asterisk.org/wiki/display/AST/Asterisk+16+ManagerAction_Filter
+   request = new AmiMessage("Events");
+   request->setTag("Operation", "Add");
+   request->setTag("Filter", "Event: Hangup");
+   sendSimpleRequest(request);
+
+   request = new AmiMessage("Events");
+   request->setTag("Operation", "Add");
+   request->setTag("Filter", "Event: RTCPReceived");
+   sendSimpleRequest(request);
+}
+
+/**
  * Get event counters for given peer
  */
 const EventCounters *AsteriskSystem::getPeerEventCounters(const TCHAR *peer) const

@@ -165,7 +165,7 @@ static bool SubagentInit(Config *config)
       }
    }
 
-   g_asteriskThreadPool = ThreadPoolCreate(_T("ASTERISK"), 0, 64, 0);
+   g_asteriskThreadPool = ThreadPoolCreate(_T("ASTERISK"), 1, 64, 0);
 
    for(int i = 0; i < s_systems.size(); i++)
    {
