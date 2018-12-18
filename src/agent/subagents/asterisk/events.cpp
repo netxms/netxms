@@ -27,21 +27,25 @@
  */
 void AsteriskSystem::setupEventFilters()
 {
+   ThreadSleepMs(100);
+
    AmiMessage *request = new AmiMessage("Events");
    request->setTag("EventMask", "call,reporting");
    sendSimpleRequest(request);
 
    // Try to setup filter for specific events (may fail if user does not have "system" permission)
    // https://wiki.asterisk.org/wiki/display/AST/Asterisk+16+ManagerAction_Filter
-   request = new AmiMessage("Events");
+   request = new AmiMessage("Filter");
    request->setTag("Operation", "Add");
    request->setTag("Filter", "Event: Hangup");
    sendSimpleRequest(request);
 
-   request = new AmiMessage("Events");
+   request = new AmiMessage("Filter");
    request->setTag("Operation", "Add");
    request->setTag("Filter", "Event: RTCPReceived");
    sendSimpleRequest(request);
+
+   nxlog_debug_tag(DEBUG_TAG, 6, _T("Event filter setup complete for %s"), m_name);
 }
 
 /**
