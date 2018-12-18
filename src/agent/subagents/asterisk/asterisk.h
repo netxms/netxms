@@ -137,6 +137,7 @@ struct EventCounters
  */
 struct RTCPData
 {
+   UINT32 count;
    UINT32 rtt;
    UINT32 jitter;
    UINT32 packetLoss;

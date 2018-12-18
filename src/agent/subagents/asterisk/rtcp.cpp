@@ -31,18 +31,36 @@ void AsteriskSystem::processRTCP(AmiMessage *msg)
    if ((channel == NULL) || (*channel == 0))
       return;
 
-   RTCPData *data = new RTCPData;
-   data->jitter = msg->getTagAsUInt32("Report0IAJitter");
-   data->packetLoss = msg->getTagAsUInt32("Report0CumulativeLost");
-   data->rtt = static_cast<UINT32>(msg->getTagAsDouble("RTT") * 1000);
+   if (msg->getTagAsInt32("ReportCount") == 0)
+      return;
 
 #ifdef UNICODE
-   WCHAR wchannel[256];
-   MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, channel, -1, wchannel, 256);
-   m_rtcpData.set(wchannel, data);
+   WCHAR channelKey[256];
+   MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, channel, -1, channelKey, 256);
 #else
-   m_rtcpData.set(channel, data);
+#define channelKey channel
 #endif
+
+   RTCPData *data = m_rtcpData.get(channelKey);
+   if (data != NULL)
+   {
+      data->jitter = msg->getTagAsUInt32("Report0IAJitter");
+      UINT64 packetLoss = static_cast<UINT64>(data->packetLoss) * data->count + msg->getTagAsUInt32("Report0FractionLost");
+      UINT64 rtt = static_cast<UINT64>(data->rtt) * data->count + static_cast<UINT64>(msg->getTagAsDouble("RTT") * 1000);
+      data->count++;
+      data->packetLoss = static_cast<UINT32>(packetLoss / data->count);
+      data->rtt = static_cast<UINT32>(rtt / data->count);
+   }
+   else
+   {
+      data = new RTCPData;
+      data->count = 1;
+      data->jitter = msg->getTagAsUInt32("Report0IAJitter");
+      data->packetLoss = msg->getTagAsUInt32("Report0FractionLost");
+      data->rtt = static_cast<UINT32>(msg->getTagAsDouble("RTT") * 1000);
+      m_rtcpData.set(channelKey, data);
+   }
+#undef channelKey
 }
 
 /**
@@ -75,12 +93,12 @@ inline void UpdateRTCPStatisticEntry(UINT32 curr, UINT64 *stat)
 void AsteriskSystem::updateRTCPStatistic(const char *channel, const TCHAR *peer)
 {
 #ifdef UNICODE
-   WCHAR wchannel[256];
-   MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, channel, -1, wchannel, 256);
-   RTCPData *data = m_rtcpData.get(wchannel);
+   WCHAR channelKey[256];
+   MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, channel, -1, channelKey, 256);
 #else
-   RTCPData *data = m_rtcpData.get(channel);
+#define channelKey channel
 #endif
+   RTCPData *data = m_rtcpData.get(channelKey);
 
    if (data == NULL)
       return;  // No RTCP data for this channel
@@ -91,14 +109,14 @@ void AsteriskSystem::updateRTCPStatistic(const char *channel, const TCHAR *peer)
    {
       stat = new RTCPStatistic;
       InitRTCPStatisticEntry(data->jitter, stat->jitter);
-      InitRTCPStatisticEntry(data->packetLoss, stat->packetLoss);
+      InitRTCPStatisticEntry(data->packetLoss * 100 / 256, stat->packetLoss);
       InitRTCPStatisticEntry(data->rtt, stat->rtt);
       m_peerRTCPStatistic.set(peer, stat);
    }
    else
    {
       UpdateRTCPStatisticEntry(data->jitter, stat->jitter);
-      UpdateRTCPStatisticEntry(data->packetLoss, stat->packetLoss);
+      UpdateRTCPStatisticEntry(data->packetLoss * 100 / 256, stat->packetLoss);
       UpdateRTCPStatisticEntry(data->rtt, stat->rtt);
    }
    nxlog_debug_tag(DEBUG_TAG, 8, _T("RTCP: %s jitter=%llu/%llu/%llu/%llu loss=%llu/%llu/%llu/%llu rtt=%llu/%llu/%llu/%llu"), peer,
@@ -107,11 +125,8 @@ void AsteriskSystem::updateRTCPStatistic(const char *channel, const TCHAR *peer)
             stat->rtt[RTCP_MIN], stat->rtt[RTCP_MAX], stat->rtt[RTCP_AVG] >> EMA_FP_SHIFT, stat->rtt[RTCP_LAST]);
    MutexUnlock(m_rtcpLock);
 
-#ifdef UNICODE
-   m_rtcpData.remove(wchannel);
-#else
-   m_rtcpData.remove(channel);
-#endif
+   m_rtcpData.remove(channelKey);
+#undef channelKey
 }
 
 /**
