@@ -8722,13 +8722,15 @@ public class NXCSession
     * @param maxFileSize maximum download size, 0 == UNLIMITED
     * @param follow if set to true, server will send file updates as they appear (like for tail -f command)
     * @param listener The ProgressListener to set
+    * @param updateServerJobId callback for updating server job ID
     * @return agent file handle which contains server assigned ID and handle for local file
     * @throws IOException  if socket or file I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public AgentFileData downloadFileFromAgent(long nodeId, String remoteFileName, long maxFileSize, boolean follow, ProgressListener listener, ServerJobIdUpdater updateServerJobId) throws IOException, NXCException
+   public AgentFileData downloadFileFromAgent(long nodeId, String remoteFileName, long maxFileSize, boolean follow, 
+         ProgressListener listener, ServerJobIdUpdater updateServerJobId) throws IOException, NXCException
    {
-      return downloadFileFromAgent(nodeId, remoteFileName, maxFileSize, follow, null, 0, listener, updateServerJobId);
+      return downloadFileFromAgent(nodeId, remoteFileName, false, 0, null, maxFileSize, follow, listener, updateServerJobId);
    }
    
    /**
@@ -8736,24 +8738,29 @@ public class NXCSession
     *
     * @param nodeId node object ID
     * @param remoteFileName fully qualified file name on remote system
+    * @param expandMacros if true, macros in remote file name will be expanded on server side
+    * @param alarmId alarm ID used for macro expansion
+    * @param inputValues input field values for macro expansion (can be null if none provided)
     * @param maxFileSize maximum download size, 0 == UNLIMITED
     * @param follow if set to true, server will send file updates as they appear (like for tail -f command)
-    * @param inputValues input values map for %() macro substitution (can be null)
-    * @param alarmId alarm ID used for macro expansion
     * @param listener The ProgressListener to set
+    * @param updateServerJobId callback for updating server job ID
     * @return agent file handle which contains server assigned ID and handle for local file
     * @throws IOException  if socket or file I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public AgentFileData downloadFileFromAgent(long nodeId, String remoteFileName, long maxFileSize, boolean follow, Map<String, String> inputValues, long alarmId, ProgressListener listener, ServerJobIdUpdater updateServerJobId) throws IOException, NXCException
+   public AgentFileData downloadFileFromAgent(long nodeId, String remoteFileName, boolean expandMacros, 
+         long alarmId, Map<String, String> inputValues, long maxFileSize, boolean follow, ProgressListener listener, 
+         ServerJobIdUpdater updateServerJobId) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_AGENT_FILE);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
       msg.setField(NXCPCodes.VID_FILE_NAME, remoteFileName);
       msg.setFieldInt32(NXCPCodes.VID_FILE_SIZE_LIMIT, (int)maxFileSize);
-      msg.setFieldInt16(NXCPCodes.VID_FILE_FOLLOW, follow ? 1 : 0);
+      msg.setField(NXCPCodes.VID_FILE_FOLLOW, follow);
+      msg.setField(NXCPCodes.VID_EXPAND_STRING, expandMacros);
       msg.setFieldInt32(NXCPCodes.VID_ALARM_ID, (int)alarmId);
-      if(inputValues != null)
+      if (inputValues != null)
       {
          msg.setFieldInt32(NXCPCodes.VID_IN_FIELD_COUNT, inputValues.size());
          long varId = NXCPCodes.VID_IN_FIELD_BASE;
@@ -8768,7 +8775,7 @@ public class NXCSession
       final NXCPMessage response = waitForRCC(msg.getMessageId()); // first confirmation - server job started
       final String id = response.getFieldAsString(NXCPCodes.VID_NAME);
       remoteFileName = response.getFieldAsString(NXCPCodes.VID_FILE_NAME);
-      if(updateServerJobId != null)
+      if (updateServerJobId != null)
          updateServerJobId.setJobIdCallback(response.getFieldAsInt32(NXCPCodes.VID_REQUEST_ID));
       if (listener != null)
       {
@@ -8804,7 +8811,7 @@ public class NXCSession
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     * @return The downloaded file
     */
-   public File downloadFileFromServer( String remoteFileName) throws IOException, NXCException
+   public File downloadFileFromServer(String remoteFileName) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_SERVER_FILE);
       msg.setField(NXCPCodes.VID_FILE_NAME, remoteFileName);

@@ -153,7 +153,7 @@ public class ObjectToolsCache
                if ((imageBytes == null) || (imageBytes.length == 0))
                   continue;
                
-               ByteArrayInputStream input = new ByteArrayInputStream(imageBytes);
+               final ByteArrayInputStream input = new ByteArrayInputStream(imageBytes);
                try
                {
                   icons.put(tool.getId(), ImageDescriptor.createFromImageData(new ImageData(input)));
@@ -243,7 +243,7 @@ public class ObjectToolsCache
 	   synchronized(icons)
       {
          return icons.get(toolId);
-		}
+      }
 	}
 	
 	/**

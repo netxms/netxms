@@ -28,6 +28,7 @@ import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.graphics.ImageData;
+import org.eclipse.swt.graphics.ImageDataProvider;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
@@ -150,10 +151,16 @@ public class ObjectToolsCache
                if ((imageBytes == null) || (imageBytes.length == 0))
                   continue;
                
-               ByteArrayInputStream input = new ByteArrayInputStream(imageBytes);
+               final ByteArrayInputStream input = new ByteArrayInputStream(imageBytes);
                try
                {
-                  icons.put(tool.getId(), ImageDescriptor.createFromImageData(new ImageData(input)));
+                  icons.put(tool.getId(), ImageDescriptor.createFromImageDataProvider(new ImageDataProvider() {
+                     @Override
+                     public ImageData getImageData(int zoom)
+                     {
+                        return new ImageData(input);
+                     }
+                  }));
                }
                catch(Exception e)
                {

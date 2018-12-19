@@ -10627,18 +10627,18 @@ void ClientSession::getAgentFile(NXCPMessage *request)
 			   StringMap strMap;
 			   strMap.loadMessage(request, VID_IN_FIELD_COUNT, VID_IN_FIELD_BASE);
             Alarm *alarm = FindAlarmById(request->getFieldAsUInt32(VID_ALARM_ID));
-            if(alarm != NULL && !object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ_ALARMS) && !alarm->checkCategoryAccess(this))
+            if ((alarm != NULL) && !object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ_ALARMS) && !alarm->checkCategoryAccess(this))
             {
                msg.setField(VID_RCC, RCC_ACCESS_DENIED);
                sendMessage(&msg);
                delete alarm;
                return;
             }
-				TCHAR *expandedName = object->expandText(remoteFile, alarm, NULL, m_loginName, &strMap);
+				TCHAR *expandedName = request->getFieldAsBoolean(VID_EXPAND_STRING) ? object->expandText(remoteFile, alarm, NULL, m_loginName, &strMap) : NULL;
             bool follow = request->getFieldAsBoolean(VID_FILE_FOLLOW);
-				FileDownloadJob *job = new FileDownloadJob((Node *)object, expandedName,
+				FileDownloadJob *job = new FileDownloadJob((Node *)object, (expandedName != NULL) ? expandedName : remoteFile,
 				         request->getFieldAsUInt32(VID_FILE_SIZE_LIMIT), follow, this, request->getId());
-				free(expandedName);
+				MemFree(expandedName);
 				delete alarm;
 				if (AddJob(job))
 				{
