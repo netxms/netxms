@@ -741,7 +741,7 @@ public:
 	const GeoLocation& getGeoLocation() const { return m_geoLocation; }
 	void setGeoLocation(const GeoLocation& geoLocation);
 
-   const PostalAddress *getPostalAddress() const { return GetAttributeWithLock(&m_postalAddress, m_mutexProperties); }
+   const PostalAddress *getPostalAddress() const { return m_postalAddress; }
    void setPostalAddress(PostalAddress * addr) { lockProperties(); delete m_postalAddress; m_postalAddress = addr; setModified(MODIFY_COMMON_PROPERTIES); unlockProperties(); }
 
    const uuid& getMapImage() { return m_image; }
@@ -2126,8 +2126,8 @@ public:
 	Cluster *getMyCluster();
 
    const InetAddress& getIpAddress() const { return m_ipAddress; }
-   UINT32 getZoneUIN() const { return GetAttributeWithLock(&m_zoneUIN, m_mutexProperties); }
-   NodeType getType() const { return GetAttributeWithLock(&m_type, m_mutexProperties); }
+   UINT32 getZoneUIN() const { return m_zoneUIN; }
+   NodeType getType() const { return m_type; }
    bool isVirtual() const { return (m_type == NODE_TYPE_VIRTUAL) || (m_type == NODE_TYPE_CONTAINER); }
    const TCHAR *getSubType() { return m_subType; }
    const TCHAR *getHypervisorType() const { return m_hypervisorType; }
@@ -2178,7 +2178,7 @@ public:
    time_t getLastAgentCommTime() const { return m_lastAgentCommTime; }
    const TCHAR *getPrimaryName() const { return m_primaryName; }
    const uuid& getTunnelId() const { return m_tunnelId; }
-   const TCHAR *getAgentCertificateSubject() const { return GetAttributeWithLock(&m_agentCertSubject, m_mutexProperties); }
+   const TCHAR *getAgentCertificateSubject() const { return m_agentCertSubject; }
    UINT32 getRequiredPollCount() const { return m_requiredPollCount; }
 
    bool isDown() { return (m_state & DCSF_UNREACHABLE) ? true : false; }
