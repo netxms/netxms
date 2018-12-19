@@ -2721,6 +2721,13 @@ TCHAR *NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, const E
                   }
                   break;
                case 'Y': // alarm ID
+                  if (alarm != NULL)
+                  {
+                     dwSize += 16;
+                     pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
+                     _sntprintf(&pText[dwPos], 16, _T("%u"), alarm->getAlarmId());
+                     dwPos = (UINT32)_tcslen(pText);
+                  }
                   break;
                case '0':
                case '1':
