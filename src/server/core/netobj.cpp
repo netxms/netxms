@@ -1472,12 +1472,12 @@ void NetObj::setMgmtStatus(BOOL bIsManaged)
    oldStatus = m_status;
    m_status = (bIsManaged ? STATUS_UNKNOWN : STATUS_UNMANAGED);
 
+   setModified(MODIFY_COMMON_PROPERTIES);
+   unlockProperties();
+
    // Generate event if current object is a node
    if (getObjectClass() == OBJECT_NODE)
       PostEvent(bIsManaged ? EVENT_NODE_UNKNOWN : EVENT_NODE_UNMANAGED, m_id, "d", oldStatus);
-
-   setModified(MODIFY_COMMON_PROPERTIES);
-   unlockProperties();
 
    // Change status for child objects also
    lockChildList(false);
