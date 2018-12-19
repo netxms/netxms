@@ -1449,6 +1449,10 @@ typedef struct
 
 #define VID_CALLBACK_BASE           ((UINT32)0x10000000)
 
+//base value for macro expansion
+#define VID_EXP_STRING_BASE         ((UINT32)0x10000000)
+#define VID_IN_FIELD_BASE           ((UINT32)0x20000000)
+
 #define VID_ZMQ_SUBSCRIPTION_BASE   ((UINT32)0x10000000)
 
 #define VID_CONFIG_HINT_LIST_BASE   ((UINT32)0x10000000)

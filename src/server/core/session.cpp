@@ -10524,9 +10524,22 @@ void ClientSession::getAgentFile(NXCPMessage *request)
 			if (object->getObjectClass() == OBJECT_NODE)
 			{
 				request->getFieldAsString(VID_FILE_NAME, remoteFile, MAX_PATH);
+			   StringMap strMap;
+			   strMap.loadMessage(request, VID_IN_FIELD_COUNT, VID_IN_FIELD_BASE);
+            Alarm *alarm = FindAlarmById(request->getFieldAsUInt32(VID_ALARM_ID));
+            if ((alarm != NULL) && !object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ_ALARMS) && !alarm->checkCategoryAccess(this))
+            {
+               msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+               sendMessage(&msg);
+               delete alarm;
+               return;
+            }
+				TCHAR *expandedName = request->getFieldAsBoolean(VID_EXPAND_STRING) ? static_cast<Node*>(object)->expandText(remoteFile, &strMap, m_loginName, alarm) : NULL;
             bool follow = request->getFieldAsBoolean(VID_FILE_FOLLOW);
-				FileDownloadJob *job = new FileDownloadJob((Node *)object, remoteFile,
+				FileDownloadJob *job = new FileDownloadJob((Node *)object, (expandedName != NULL) ? expandedName : remoteFile,
 				         request->getFieldAsUInt32(VID_FILE_SIZE_LIMIT), follow, this, request->getId());
+				MemFree(expandedName);
+				delete alarm;
 				if (AddJob(job))
 				{
 				   success = true;
@@ -10892,7 +10905,7 @@ void ClientSession::executeLibraryScript(NXCPMessage *request)
                      inputFields = NULL;
                   }
 
-                  TCHAR *expScript = ((Node *)object)->expandText(script, inputFields, m_loginName);
+                  TCHAR *expScript = static_cast<Node*>(object)->expandText(script, inputFields, m_loginName, NULL);
                   script = expScript;
                   delete inputFields;
                }

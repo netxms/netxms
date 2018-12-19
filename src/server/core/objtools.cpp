@@ -1527,7 +1527,7 @@ ServerCommandExec::ServerCommandExec(NXCPMessage *request, ClientSession *sessio
          inputFields = NULL;
 
       TCHAR *cmd = request->getFieldAsString(VID_COMMAND);
-      m_cmd = ((Node *)object)->expandText(cmd, inputFields, session->getLoginName());
+      m_cmd = static_cast<Node*>(object)->expandText(cmd, inputFields, session->getLoginName(), NULL);
       free(cmd);
       delete inputFields;
    }

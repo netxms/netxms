@@ -1,7 +1,6 @@
 package org.netxms.ui.eclipse.objects;
 
 import java.util.Map;
-
 import org.netxms.base.NXCommon;
 import org.netxms.client.events.Alarm;
 import org.netxms.client.objects.AbstractNode;
@@ -174,5 +173,15 @@ public class ObjectContext
       }
       
       return sb.toString();
+   }
+
+   /**
+    * Returns alarm id or 0 if alarm is not set
+    * 
+    * @return Context alarm id or 0 if alarm is not set
+    */
+   public long getAlarmId()
+   {
+      return alarm != null ? alarm.getId() : 0;
    }
 }

@@ -11,6 +11,7 @@
 	NX-1519 ("Import dashboard" action not available in dashboard group context menu)
 	NX-1521 (Agent crash if file manager cannot resolve user or group name)
 	NX-1522 (Log parser can read file incorrectly during high write activity)
+	NX-1531 (Scripts are not executed during macro expansion in "download file" type object tools)
 
 
 *

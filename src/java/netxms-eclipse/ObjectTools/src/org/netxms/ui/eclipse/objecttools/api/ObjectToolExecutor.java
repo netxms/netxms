@@ -575,14 +575,14 @@ public final class ObjectToolExecutor
     * @param tool
     * @param inputValues 
     */
-   private static void executeFileDownload(final ObjectContext node, final ObjectTool tool, Map<String, String> inputValues)
+   private static void executeFileDownload(final ObjectContext node, final ObjectTool tool, final Map<String, String> inputValues)
    {
       final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
       String[] parameters = tool.getData().split("\u007F"); //$NON-NLS-1$
       
-      final String fileName = node.substituteMacros(parameters[0], inputValues);
-      final int maxFileSize = Integer.parseInt(parameters[1]);
-      final boolean follow = parameters[2].equals("true") ? true : false; //$NON-NLS-1$
+      final String fileName = parameters[0];
+      final int maxFileSize = (parameters.length > 0) ? Integer.parseInt(parameters[1]) : 0;
+      final boolean follow = (parameters.length > 1) ? parameters[2].equals("true") : false; //$NON-NLS-1$
       
       ConsoleJobCallingServerJob job = new ConsoleJobCallingServerJob(Messages.get().ObjectToolsDynamicMenu_DownloadFromAgent, null, Activator.PLUGIN_ID, null) {
          @Override
@@ -594,7 +594,7 @@ public final class ObjectToolExecutor
          @Override
          protected void runInternal(final IProgressMonitor monitor) throws Exception
          {
-            final AgentFileData file = session.downloadFileFromAgent(node.object.getObjectId(), fileName, maxFileSize, follow, new ProgressListener() {
+            final AgentFileData file = session.downloadFileFromAgent(node.object.getObjectId(), fileName, true, node.getAlarmId(), inputValues, maxFileSize, follow, new ProgressListener() {
                @Override
                public void setTotalWorkAmount(long workTotal)
                {

@@ -7806,7 +7806,7 @@ VlanList *Node::getVlans()
 /**
  * Substitute % macros in given text with actual values
  */
-TCHAR *Node::expandText(const TCHAR *textTemplate, StringMap *inputFields, const TCHAR *userName)
+TCHAR *Node::expandText(const TCHAR *textTemplate, StringMap *inputFields, const TCHAR *userName, Alarm *alarm)
 {
    const TCHAR *pCurr;
    UINT32 dwPos, dwSize;
@@ -7837,6 +7837,15 @@ TCHAR *Node::expandText(const TCHAR *textTemplate, StringMap *inputFields, const
                   m_ipAddress.toString(&pText[dwPos]);
                   dwPos = (UINT32)_tcslen(pText);
                   break;
+               case 'A':   // Associated alarm message
+                  if (alarm != NULL)
+                  {
+                     dwSize += (UINT32)_tcslen(alarm->getMessage());
+                     pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
+                     _tcscpy(&pText[dwPos], alarm->getMessage());
+                     dwPos += (UINT32)_tcslen(alarm->getMessage());
+                  }
+                  break;
                case 'g':   // node's GUID
                   dwSize += 36;
                   pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
@@ -7855,6 +7864,15 @@ TCHAR *Node::expandText(const TCHAR *textTemplate, StringMap *inputFields, const
                   _sntprintf(&pText[dwPos], 11, _T("%u"), m_id);
                   dwPos = (UINT32)_tcslen(pText);
                   break;
+               case 'K':   // Associated alarm key
+                  if (alarm != NULL)
+                  {
+                     dwSize += (UINT32)_tcslen(alarm->getKey());
+                     pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
+                     _tcscpy(&pText[dwPos], alarm->getKey());
+                     dwPos += (UINT32)_tcslen(alarm->getKey());
+                  }
+                  break;
                case 'n':   // Name of the node
                   dwSize += (UINT32)_tcslen(m_name);
                   pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
@@ -7872,6 +7890,24 @@ TCHAR *Node::expandText(const TCHAR *textTemplate, StringMap *inputFields, const
                   pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
                   _tcscpy(&pText[dwPos], NETXMS_VERSION_STRING);
                   dwPos += (UINT32)_tcslen(NETXMS_VERSION_STRING);
+                  break;
+               case 'y': // alarm state
+                  if (alarm != NULL)
+                  {
+                     dwSize += 3;
+                     pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
+                     _sntprintf(&pText[dwPos], 4, _T("%d"), (int)alarm->getState());
+                     dwPos = (UINT32)_tcslen(pText);
+                  }
+                  break;
+               case 'Y': // alarm ID
+                  if (alarm != NULL)
+                  {
+                     dwSize += 16;
+                     pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
+                     _sntprintf(&pText[dwPos], 16, _T("%u"), alarm->getAlarmId());
+                     dwPos = (UINT32)_tcslen(pText);
+                  }
                   break;
                case '[':   // Script
                   for(i = 0, pCurr++; (*pCurr != ']') && (*pCurr != 0) && (i < 255); pCurr++)

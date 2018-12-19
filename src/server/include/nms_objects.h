@@ -1833,7 +1833,7 @@ public:
 
    virtual json_t *toJson();
 
-	TCHAR *expandText(const TCHAR *textTemplate, StringMap *inputFields, const TCHAR *userName);
+	TCHAR *expandText(const TCHAR *textTemplate, StringMap *inputFields, const TCHAR *userName, Alarm *alarm);
 
 	Cluster *getMyCluster();
 

@@ -174,4 +174,14 @@ public class ObjectContext
       
       return sb.toString();
    }
+
+   /**
+    * Returns alarm id or 0 if alarm is not set
+    * 
+    * @return Context alarm id or 0 if alarm is not set
+    */
+   public long getAlarmId()
+   {
+      return alarm != null ? alarm.getId() : 0;
+   }
 }
