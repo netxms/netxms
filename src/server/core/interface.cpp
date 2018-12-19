@@ -262,7 +262,7 @@ bool Interface::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
          {
             object->addChild(this);
             addParent(object);
-				m_zoneUIN = ((Node *)object)->getZoneUIN();
+				m_zoneUIN = static_cast<Node*>(object)->getZoneUIN();
             bResult = true;
          }
       }
@@ -1197,13 +1197,14 @@ void Interface::updateZoneUIN()
 		if (zone != NULL)
 			zone->removeFromIndex(this);
 
+		UINT32 newZoneUIN = node->getZoneUIN();
 		lockProperties();
-		m_zoneUIN = node->getZoneUIN();
+		m_zoneUIN = newZoneUIN;
 		setModified(MODIFY_INTERFACE_PROPERTIES);
 		unlockProperties();
 
 		// Register in new zone
-		zone = FindZoneByUIN(m_zoneUIN);
+		zone = FindZoneByUIN(newZoneUIN);
 		if (zone != NULL)
 			zone->addToIndex(this);
 	}
