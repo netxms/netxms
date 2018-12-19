@@ -29,6 +29,8 @@ import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.dialogs.IDialogSettings;
+import org.eclipse.jface.viewers.ArrayContentProvider;
+import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CLabel;
@@ -45,6 +47,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IViewSite;
@@ -63,11 +66,13 @@ import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.RCC;
 import org.netxms.client.constants.Severity;
+import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.datacollection.GraphItemStyle;
 import org.netxms.client.datacollection.GraphSettings;
+import org.netxms.client.datacollection.Threshold;
 import org.netxms.client.events.Alarm;
 import org.netxms.client.events.AlarmComment;
 import org.netxms.client.events.EventInfo;
@@ -79,6 +84,7 @@ import org.netxms.ui.eclipse.alarmviewer.dialogs.EditCommentDialog;
 import org.netxms.ui.eclipse.alarmviewer.views.helpers.EventTreeComparator;
 import org.netxms.ui.eclipse.alarmviewer.views.helpers.EventTreeContentProvider;
 import org.netxms.ui.eclipse.alarmviewer.views.helpers.EventTreeLabelProvider;
+import org.netxms.ui.eclipse.alarmviewer.views.helpers.HistoricalDataLabelProvider;
 import org.netxms.ui.eclipse.alarmviewer.widgets.AlarmCommentsEditor;
 import org.netxms.ui.eclipse.charts.api.ChartFactory;
 import org.netxms.ui.eclipse.charts.api.HistoricalDataChart;
@@ -108,6 +114,8 @@ public class AlarmDetails extends ViewPart
 	public static final int EV_COLUMN_MESSAGE = 3;
 	public static final int EV_COLUMN_TIMESTAMP = 4;
 	
+   private static final String[] dciStatusImage = { "icons/active.gif", "icons/disabled.gif", "icons/unsupported.gif" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+   
 	private static final String[] stateImage = { "icons/outstanding.png", "icons/acknowledged.png", "icons/resolved.png", "icons/terminated.png", "icons/acknowledged_sticky.png" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
 	private final String[] stateText = { Messages.get().AlarmListLabelProvider_AlarmState_Outstanding, Messages.get().AlarmListLabelProvider_AlarmState_Acknowledged, Messages.get().AlarmListLabelProvider_AlarmState_Resolved, Messages.get().AlarmListLabelProvider_AlarmState_Terminated };
 	
@@ -120,6 +128,7 @@ public class AlarmDetails extends ViewPart
 	private CLabel alarmSeverity;
 	private CLabel alarmState;
 	private CLabel alarmSource;
+   private CLabel alarmDCI;
 	private Text alarmText;
 	private Composite editorsArea;
 	private ImageHyperlink linkAddComment;
@@ -131,6 +140,8 @@ public class AlarmDetails extends ViewPart
 	private boolean dataSectionCreated = false;
 	private Section dataSection;
 	private HistoricalDataChart chart;
+	private TableViewer dataViewer;
+	private Control dataViewControl;
 	private long nodeId;
 	private long dciId;
 	private ViewRefreshController refreshController = null;
@@ -260,7 +271,7 @@ public class AlarmDetails extends ViewPart
 		gd = new GridData();
 		gd.verticalAlignment = SWT.FILL;
 		gd.grabExcessVerticalSpace = true;
-		gd.verticalSpan = 3;
+		gd.verticalSpan = 4;
 		sep.setLayoutData(gd);
 		
 		final ScrolledComposite textContainer = new ScrolledComposite(clientArea, SWT.H_SCROLL | SWT.V_SCROLL) {
@@ -312,6 +323,13 @@ public class AlarmDetails extends ViewPart
 		gd.horizontalAlignment = SWT.FILL;
 		gd.verticalAlignment = SWT.TOP;
 		alarmSource.setLayoutData(gd);
+
+      alarmDCI = new CLabel(clientArea, SWT.NONE);
+      toolkit.adapt(alarmDCI);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.verticalAlignment = SWT.TOP;
+      alarmDCI.setLayoutData(gd);
 	}
 	
 	/**
@@ -513,41 +531,18 @@ public class AlarmDetails extends ViewPart
    						   }
    						   if (dci != null)
    						   {
-   						      nodeId = alarm.getSourceObjectId();
-   						      dciId = alarm.getDciId();
+                           Threshold t = dci.getActiveThreshold();
+   						      alarmDCI.setText(dci.getDescription() + ((t != null) ? (" (" + t.getTextualRepresentation() + ")") : " (OK)"));
+   						      alarmDCI.setImage(imageCache.add(Activator.getImageDescriptor(dciStatusImage[dci.getStatus()])));
    						      
-      					      chart = ChartFactory.createLineChart(dataArea, SWT.BORDER);
-      					      chart.setZoomEnabled(true);
-      					      chart.setTitleVisible(true);
-      					      chart.setChartTitle(dci.getDescription());
-      					      chart.setLegendVisible(true);
-      					      chart.setLegendPosition(GraphSettings.POSITION_BOTTOM);
-      					      chart.setExtendedLegend(true);
-      					      chart.setGridVisible(true);
-      					      chart.setTranslucent(true);
-      				         chart.addParameter(new GraphItem(nodeId, dciId, 0, dci.getDataType(), dci.getName(), dci.getDescription(), "%s"));
-      				         
-      				         List<GraphItemStyle> itemStyles = chart.getItemStyles();
-      				         itemStyles.get(0).setType(GraphItemStyle.AREA);
-      				         itemStyles.get(0).setColor(ColorConverter.rgbToInt(new RGB(127, 154, 72)));
-      				         chart.setItemStyles(itemStyles);
-   
-      				         refreshController = new ViewRefreshController(AlarmDetails.this, 30, new Runnable() {
-      				            @Override
-      				            public void run()
-      				            {
-      				               if (((Control)chart).isDisposed())
-      				                  return;
-      				               
-      				               refreshData();
-      				            }
-      				         });
+   						      createDataAreaElements(alarm, dci);
       				         refreshData();
    						   }
    						   else
    						   {
    	                     Label label = new Label(dataArea, SWT.NONE);
    	                     label.setText(String.format("DCI with ID %d is not accessible", alarm.getDciId()));
+                           alarmDCI.setText("[" + alarm.getDciId() + "]");
    	                     dataSection.setExpanded(false);
    	                     DashboardLayoutData dd = (DashboardLayoutData)dataSection.getLayoutData();
    	                     dd.fill = false;
@@ -560,10 +555,11 @@ public class AlarmDetails extends ViewPart
    						   dataSection.setExpanded(false);
    						   DashboardLayoutData dd = (DashboardLayoutData)dataSection.getLayoutData();
    						   dd.fill = false;
+   						   alarmDCI.dispose();
    						}
    						dataSectionCreated = true;
 						}						
-						else if (chart != null)
+						else if (dataViewControl != null)
 						{
 						   refreshData();
 						}
@@ -578,6 +574,65 @@ public class AlarmDetails extends ViewPart
 				return Messages.get().AlarmDetails_RefreshJobError;
 			}
 		}.start();
+	}
+	
+	/**
+	 * Create elements of data area
+	 * 
+	 * @param alarm current alarm
+	 * @param dci current DCI
+	 */
+	private void createDataAreaElements(Alarm alarm, DciValue dci)
+	{
+      nodeId = alarm.getSourceObjectId();
+      dciId = alarm.getDciId();
+      
+      if (dci.getDataType() != DataCollectionObject.DT_STRING)
+      {
+         chart = ChartFactory.createLineChart(dataArea, SWT.BORDER);
+         chart.setZoomEnabled(true);
+         chart.setTitleVisible(true);
+         chart.setChartTitle(dci.getDescription());
+         chart.setLegendVisible(true);
+         chart.setLegendPosition(GraphSettings.POSITION_BOTTOM);
+         chart.setExtendedLegend(true);
+         chart.setGridVisible(true);
+         chart.setTranslucent(true);
+         chart.addParameter(new GraphItem(nodeId, dciId, 0, dci.getDataType(), dci.getName(), dci.getDescription(), "%s"));
+         
+         List<GraphItemStyle> itemStyles = chart.getItemStyles();
+         itemStyles.get(0).setType(GraphItemStyle.AREA);
+         itemStyles.get(0).setColor(ColorConverter.rgbToInt(new RGB(127, 154, 72)));
+         chart.setItemStyles(itemStyles);
+         
+         dataViewControl = (Control)chart;
+      }
+      else
+      {
+         dataViewer = new TableViewer(dataArea, SWT.BORDER | SWT.FULL_SELECTION);
+         dataViewer.getTable().setHeaderVisible(true);
+         
+         TableColumn tc = new TableColumn(dataViewer.getTable(), SWT.LEFT);
+         tc.setText("Timestamp");
+         tc = new TableColumn(dataViewer.getTable(), SWT.LEFT);
+         tc.setText("Value");
+         
+         dataViewer.setContentProvider(new ArrayContentProvider());
+         dataViewer.setLabelProvider(new HistoricalDataLabelProvider());
+         
+         dataViewControl = dataViewer.getControl();
+      }
+      
+      refreshController = new ViewRefreshController(AlarmDetails.this, 30, new Runnable() {
+         @Override
+         public void run()
+         {
+            if (dataViewControl.isDisposed())
+               return;
+            
+            refreshData();
+         }
+      });
 	}
 	
 	/**
@@ -737,26 +792,49 @@ public class AlarmDetails extends ViewPart
       
       updateInProgress = true;
       
-      ConsoleJob job = new ConsoleJob("Update line chart", this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
+      ConsoleJob job = new ConsoleJob("Update DCI data view", this, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            final Date from = new Date(System.currentTimeMillis() - 86400000);
-            final Date to = new Date(System.currentTimeMillis());
-            final DciData data = session.getCollectedData(nodeId, dciId, from, to, 0);
-            runInUIThread(new Runnable() {
-               @Override
-               public void run()
-               {
-                  if (!((Control)chart).isDisposed())
+            if (chart != null)
+            {
+               final Date from = new Date(System.currentTimeMillis() - 86400000);
+               final Date to = new Date(System.currentTimeMillis());
+               final DciData data = session.getCollectedData(nodeId, dciId, from, to, 0);
+               runInUIThread(new Runnable() {
+                  @Override
+                  public void run()
                   {
-                     chart.setTimeRange(from, to);
-                     chart.updateParameter(0, data, true);
-                     chart.clearErrors();
+                     if (!dataViewControl.isDisposed())
+                     {
+                        chart.setTimeRange(from, to);
+                        chart.updateParameter(0, data, true);
+                        chart.clearErrors();
+                     }
+                     updateInProgress = false;
                   }
-                  updateInProgress = false;
-               }
-            });
+               });
+            }
+            else
+            {
+               final DciData data = session.getCollectedData(nodeId, dciId, null, null, 20);
+               runInUIThread(new Runnable() {
+                  @Override
+                  public void run()
+                  {
+                     if (!dataViewControl.isDisposed())
+                     {
+                        dataViewer.setInput(data.getValues());
+                        for(TableColumn tc : dataViewer.getTable().getColumns())
+                        {
+                           tc.pack();
+                           tc.setWidth(tc.getWidth() + 10); // compensate for pack issues on Linux
+                        }
+                     }
+                     updateInProgress = false;
+                  }
+               });
+            }
          }
 
          @Override
@@ -779,7 +857,10 @@ public class AlarmDetails extends ViewPart
                @Override
                public void run()
                {
-                  chart.addError(getErrorMessage() + " (" + e.getLocalizedMessage() + ")"); //$NON-NLS-1$ //$NON-NLS-2$
+                  if (chart != null)
+                     chart.addError(getErrorMessage() + " (" + e.getLocalizedMessage() + ")"); //$NON-NLS-1$ //$NON-NLS-2$
+                  else
+                     dataViewer.setInput(new Object[0]);
                }
             });
             return Status.OK_STATUS;

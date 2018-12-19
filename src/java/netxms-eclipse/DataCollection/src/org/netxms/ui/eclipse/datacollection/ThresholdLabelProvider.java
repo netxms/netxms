@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2018 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,9 +35,6 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public class ThresholdLabelProvider extends LabelProvider implements ITableLabelProvider
 {
-	public static final String[] FUNCTIONS = { "last(", "average(", "deviation(", "diff(", "error(", "sum(", "script(" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
-	public static final String[] OPERATIONS = { "<", "<=", "==", ">=", ">", "!=", "like", "!like" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$
-	
 	private WorkbenchLabelProvider eventLabelProvider = new WorkbenchLabelProvider();
 	private NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 	private Image thresholdIcon = Activator.getImageDescriptor("icons/threshold.png").createImage(); //$NON-NLS-1$
@@ -68,17 +65,7 @@ public class ThresholdLabelProvider extends LabelProvider implements ITableLabel
 		switch(columnIndex)
 		{
 			case Thresholds.COLUMN_OPERATION:
-				int f = ((Threshold)element).getFunction();
-				StringBuilder text = new StringBuilder(FUNCTIONS[f]);
-				text.append(((Threshold)element).getSampleCount());
-				text.append(") "); //$NON-NLS-1$
-				if (f != Threshold.F_SCRIPT)
-				{
-   				text.append(OPERATIONS[((Threshold)element).getOperation()]);
-   				text.append(' ');
-   				text.append(((Threshold)element).getValue());
-				}
-				return text.toString();
+				return ((Threshold)element).getTextualRepresentation();
 			case Thresholds.COLUMN_EVENT:
 				final EventTemplate event = session.findEventTemplateByCode(((Threshold)element).getFireEvent());
 				return eventLabelProvider.getText(event);

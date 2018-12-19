@@ -44,6 +44,9 @@ public class Threshold
 	public static final int OP_LIKE     = 6;
 	public static final int OP_NOTLIKE  = 7;
 	
+   public static final String[] FUNCTION_NAMES = { "last(", "average(", "deviation(", "diff(", "error(", "sum(", "script(" };
+   public static final String[] OPERATION_NAMES = { "<", "<=", "==", ">=", ">", "!=", "like", "not like" };
+	
 	private long id;
 	private int fireEvent;
 	private int rearmEvent;
@@ -304,5 +307,24 @@ public class Threshold
    public void setScript(String script)
    {
       this.script = script;
+   }
+   
+   /**
+    * Get textual representation of this threshold
+    * 
+    * @return textual representation of this threshold
+    */
+   public String getTextualRepresentation()
+   {
+      StringBuilder text = new StringBuilder(FUNCTION_NAMES[function]);
+      text.append(sampleCount);
+      text.append(") "); //$NON-NLS-1$
+      if (function != Threshold.F_SCRIPT)
+      {
+         text.append(OPERATION_NAMES[operation]);
+         text.append(' ');
+         text.append(value);
+      }
+      return text.toString();
    }
 }
