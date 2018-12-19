@@ -40,7 +40,6 @@ import org.netxms.client.objects.Template;
 import org.netxms.ui.eclipse.console.resources.DataCollectionDisplayInfo;
 import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.Messages;
-import org.netxms.ui.eclipse.datacollection.ThresholdLabelProvider;
 import org.netxms.ui.eclipse.datacollection.views.DataCollectionEditor;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
@@ -141,17 +140,7 @@ public class DciLabelProvider implements ITableLabelProvider, IColorProvider
                for(int i = 0; i < list.size(); i++)
                {
                   Threshold tr = list.get(i);
-                  int f = tr.getFunction();
-                  StringBuilder text = new StringBuilder(ThresholdLabelProvider.FUNCTIONS[f]);
-                  text.append(tr.getSampleCount());
-                  text.append(") "); //$NON-NLS-1$
-                  if (f != Threshold.F_SCRIPT)
-                  {
-                     text.append(ThresholdLabelProvider.OPERATIONS[tr.getOperation()]);
-                     text.append(' ');
-                     text.append(tr.getValue());
-                  }
-                  thresholds.append(text);
+                  thresholds.append(tr.getTextualRepresentation());
                   if (i < list.size() - 1)
                      thresholds.append(", "); //$NON-NLS-1$
                }
