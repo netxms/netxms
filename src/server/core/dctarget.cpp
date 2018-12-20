@@ -1295,7 +1295,7 @@ void DataCollectionTarget::applyUserTemplates()
       AutoBindDecision decision = pTemplate->isApplicable(this);
       if (decision == AutoBindDecision_Bind)
       {
-         if (!pTemplate->isChild(m_id))
+         if (!pTemplate->isDirectChild(m_id))
          {
             DbgPrintf(4, _T("DataCollectionTarget::applyUserTemplates(): applying template %d \"%s\" to object %d \"%s\""),
                       pTemplate->getId(), pTemplate->getName(), m_id, m_name);
@@ -1305,7 +1305,7 @@ void DataCollectionTarget::applyUserTemplates()
       }
       else if (decision == AutoBindDecision_Unbind)
       {
-         if (pTemplate->isAutoRemoveEnabled() && pTemplate->isChild(m_id))
+         if (pTemplate->isAutoRemoveEnabled() && pTemplate->isDirectChild(m_id))
          {
             DbgPrintf(4, _T("DataCollectionTarget::applyUserTemplates(): removing template %d \"%s\" from object %d \"%s\""),
                       pTemplate->getId(), pTemplate->getName(), m_id, m_name);
@@ -1343,7 +1343,7 @@ void DataCollectionTarget::updateContainerMembership()
       AutoBindDecision decision = pContainer->isSuitableForObject(this);
       if (decision == AutoBindDecision_Bind)
       {
-         if (!pContainer->isChild(m_id))
+         if (!pContainer->isDirectChild(m_id))
          {
             DbgPrintf(4, _T("DataCollectionTarget::updateContainerMembership(): binding object %d \"%s\" to container %d \"%s\""),
                       m_id, m_name, pContainer->getId(), pContainer->getName());
@@ -1355,7 +1355,7 @@ void DataCollectionTarget::updateContainerMembership()
       }
       else if (decision == AutoBindDecision_Unbind)
       {
-         if (pContainer->isAutoUnbindEnabled() && pContainer->isChild(m_id))
+         if (pContainer->isAutoUnbindEnabled() && pContainer->isDirectChild(m_id))
          {
             DbgPrintf(4, _T("DataCollectionTarget::updateContainerMembership(): removing object %d \"%s\" from container %d \"%s\""),
                       m_id, m_name, pContainer->getId(), pContainer->getName());

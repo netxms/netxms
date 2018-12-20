@@ -2249,7 +2249,7 @@ void Node::checkAgentPolicyBinding(AgentConnection *conn)
       {
          uuid guid = ap->getGuid(i);
          NetObj *object = FindObjectByGUID(guid, -1);
-         if ((object != NULL) && (!object->isChild(m_id)))
+         if ((object != NULL) && (!object->isDirectChild(m_id)))
          {
             object->addChild(this);
             addParent(object);
@@ -7507,7 +7507,7 @@ void Node::checkSubnetBinding()
             }
 
             // Check if node is linked to this subnet
-            if ((pSubnet != NULL) && !pSubnet->isChild(m_id))
+            if ((pSubnet != NULL) && !pSubnet->isDirectChild(m_id))
             {
                DbgPrintf(4, _T("Restored link between subnet %s [%d] and node %s [%d]"),
                          pSubnet->getName(), pSubnet->getId(), m_name, m_id);
@@ -7562,7 +7562,7 @@ void Node::checkSubnetBinding()
       if (pSubnet != NULL)
       {
          // Check if node is linked to this subnet
-         if (!pSubnet->isChild(m_id))
+         if (!pSubnet->isDirectChild(m_id))
          {
             DbgPrintf(4, _T("Restored link between subnet %s [%d] and node %s [%d]"),
                       pSubnet->getName(), pSubnet->getId(), m_name, m_id);
@@ -8692,7 +8692,7 @@ void Node::deployAgentPolicies()
       AutoBindDecision decision = policy->isApplicable(this);
       if (decision == AutoBindDecision_Bind)
       {
-         if (!policy->isChild(m_id))
+         if (!policy->isDirectChild(m_id))
          {
             DbgPrintf(4, _T("Node::deployAgentPolicies(): deploying policy %d \"%s\" to node %d \"%s\""),
                       policy->getId(), policy->getName(), m_id, m_name);
@@ -8709,7 +8709,7 @@ void Node::deployAgentPolicies()
       }
       else if (decision == AutoBindDecision_Unbind)
       {
-         if (policy->isAutoUninstallEnabled() && policy->isChild(m_id))
+         if (policy->isAutoUninstallEnabled() && policy->isDirectChild(m_id))
          {
             DbgPrintf(4, _T("Node::deployAgentPolicies(): uninstalling policy %d \"%s\" from node %d \"%s\""),
                       policy->getId(), policy->getName(), m_id, m_name);
