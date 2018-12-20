@@ -64,9 +64,9 @@ import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
+import org.netxms.client.constants.DataType;
 import org.netxms.client.constants.RCC;
 import org.netxms.client.constants.Severity;
-import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.datacollection.GraphItem;
@@ -589,7 +589,7 @@ public class AlarmDetails extends ViewPart
       nodeId = alarm.getSourceObjectId();
       dciId = alarm.getDciId();
       
-      if (dci.getDataType() != DataCollectionObject.DT_STRING)
+      if (dci.getDataType() != DataType.STRING)
       {
          chart = ChartFactory.createLineChart(dataArea, SWT.BORDER);
          chart.setZoomEnabled(true);
