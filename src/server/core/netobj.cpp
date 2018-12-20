@@ -1578,39 +1578,48 @@ void NetObj::setMgmtStatus(BOOL bIsManaged)
  */
 bool NetObj::isChild(UINT32 id)
 {
-   bool bResult = false;
-
-   // Check for our own ID (object ID should never change, so we may not lock object's data)
-   if (m_id == id)
-      bResult = true;
-
-   // First, walk through our own child list
-   if (!bResult)
-   {
-      lockChildList(false);
-      for(int i = 0; i < m_childList->size(); i++)
-         if (m_childList->get(i)->getId() == id)
-         {
-            bResult = true;
-            break;
-         }
-      unlockChildList();
-   }
+   bool result = isDirectChild(id);
 
    // If given object is not in child list, check if it is indirect child
-   if (!bResult)
+   if (!result)
    {
       lockChildList(false);
       for(int i = 0; i < m_childList->size(); i++)
          if (m_childList->get(i)->isChild(id))
          {
-            bResult = true;
+            result = true;
             break;
          }
       unlockChildList();
    }
 
-   return bResult;
+   return result;
+}
+
+/**
+ * Check if given object is our direct child
+ *
+ * @param id object ID to test
+ */
+bool NetObj::isDirectChild(UINT32 id)
+{
+   // Check for our own ID (object ID should never change, so we may not lock object's data)
+   if (m_id == id)
+      return true;
+
+   bool result = false;
+
+   // First, walk through our own child list
+   lockChildList(false);
+   for(int i = 0; i < m_childList->size(); i++)
+      if (m_childList->get(i)->getId() == id)
+      {
+         result = true;
+         break;
+      }
+   unlockChildList();
+
+   return result;
 }
 
 /**

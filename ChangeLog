@@ -32,6 +32,7 @@
 	NX-1521 (Agent crash if file manager cannot resolve user or group name)
 	NX-1522 (Log parser can read file incorrectly during high write activity)
 	NX-1531 (Scripts are not executed during macro expansion in "download file" type object tools)
+	NX-1535 (Auto bind to container is not working if node already is an indirect child of this container)
 
 
 *

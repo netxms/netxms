@@ -762,6 +762,7 @@ public:
    void decRefCount();
 
    bool isChild(UINT32 id);
+   bool isDirectChild(UINT32 id);
 	bool isTrustedNode(UINT32 id);
 
    void addChild(NetObj *object);     // Add reference to child object

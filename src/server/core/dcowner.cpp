@@ -829,7 +829,7 @@ BOOL DataCollectionOwner::applyToTarget(DataCollectionTarget *target)
    BOOL bErrors = FALSE;
 
    // Link node to template
-   if (!isChild(target->getId()))
+   if (!isDirectChild(target->getId()))
    {
       addChild(target);
       target->addParent(this);
