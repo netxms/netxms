@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2018 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -194,6 +194,15 @@ static void CleanDciData(NetObj *object, void *data)
 }
 
 /**
+ * Callback for validating template DCIs
+ */
+static void QueueTemplateUpdate(NetObj *object, void *data)
+{
+   if (object->getObjectClass() == OBJECT_TEMPLATE)
+      static_cast<Template*>(object)->queueUpdate();
+}
+
+/**
  * Callback for queuing prediction engines training
  */
 static void QueuePredictionEngineTraining(NetObj *object, void *arg)
@@ -324,6 +333,9 @@ static THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
 		g_idxSensorById.forEach(CleanDciData, hdb);
 
 		DBConnectionPoolReleaseConnection(hdb);
+
+		// Validate template DCIs
+		g_idxObjectById.forEach(QueueTemplateUpdate, NULL);
 
       // Call hooks in loaded modules
       for(UINT32 i = 0; i < g_dwNumModules; i++)

@@ -23,6 +23,7 @@
 
 - New parameter Process.VMRegions in Linux sub-agent
 - nxshell reads password from terminal if not given on command line
+- Housekeeper validates configuration for template DCIs
 - Fixed issues:
 	NX-1499 (Show last N values instead of line chart for string DCIs in alarm details view)
 	NX-1512 (File Manager: Unable to create new directory in root directory on Windows)
