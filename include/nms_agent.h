@@ -452,6 +452,8 @@
 #define DCIDESC_SYSTEM_CPU_USAGECURR_GUEST        _T("Current CPU utilization (guest)")
 #define DCIDESC_SYSTEM_CPU_USAGECURR_GUEST_EX     _T("Current CPU {instance} utilization (guest)")
 
+#define DCIDESC_SYSTEM_CPU_VENDORID               _T("CPU vendor ID")
+
 #define DCIDESC_SYSTEM_IO_DISKQUEUE               _T("Average disk queue length for last minute")
 #define DCIDESC_SYSTEM_IO_DISKQUEUE_MIN           _T("Minimum disk queue length for last minute")
 #define DCIDESC_SYSTEM_IO_DISKQUEUE_MAX           _T("Maximum disk queue length for last minute")

@@ -25,6 +25,26 @@
 #endif
 
 /**
+ * CPU vendor ID
+ */
+static char s_cpuVendorId[16] = "UNKNOWN";
+
+/**
+ * Read CPU vendor ID
+ */
+void ReadCPUVendorId()
+{
+   unsigned int eax, ebx, ecx, edx;
+   if (__get_cpuid(0, &eax, &ebx, &ecx, &edx) == 1)
+   {
+      memcpy(s_cpuVendorId, &ebx, 4);
+      memcpy(&s_cpuVendorId[4], &edx, 4);
+      memcpy(&s_cpuVendorId[8], &ecx, 4);
+      s_cpuVendorId[12] = 0;
+   }
+}
+
+/**
  * Check if /proc/1/sched reports PID different from 1 (won't work on kernel 4.15 or higher)
  */
 static bool CheckPid1Sched()
@@ -268,6 +288,9 @@ static bool GetVMwareVersionString(TCHAR *value)
  */
 static bool IsXEN()
 {
+   if (!strncmp(s_cpuVendorId, "XenVMM", 6))
+      return true;
+
    UINT32 size;
    BYTE *content = LoadFileA("/sys/hypervisor/type", &size);
    if (content == NULL)
@@ -352,6 +375,30 @@ LONG H_HypervisorType(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abstra
       ret_mbstring(value, "VMware");
       return SYSINFO_RC_SUCCESS;
    }
+
+   if (!strcmp(s_cpuVendorId, "Microsoft Hv"))
+   {
+      ret_mbstring(value, "Hyper-V");
+      return SYSINFO_RC_SUCCESS;
+   }
+
+   if (!strncmp(s_cpuVendorId, "KVM", 3))
+   {
+      ret_mbstring(value, "KVM");
+      return SYSINFO_RC_SUCCESS;
+   }
+
+   if (!strncmp(s_cpuVendorId, "bhyve", 5))
+   {
+      ret_mbstring(value, "bhyve");
+      return SYSINFO_RC_SUCCESS;
+   }
+
+   if (!strcmp(s_cpuVendorId, " lrpepyh vr"))
+   {
+      ret_mbstring(value, "Parallels");
+      return SYSINFO_RC_SUCCESS;
+   }
    return SYSINFO_RC_UNSUPPORTED;
 }
 
@@ -377,5 +424,14 @@ LONG H_HypervisorVersion(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abs
 LONG H_IsVirtual(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    ret_int(value, IsVirtual());
+   return SYSINFO_RC_SUCCESS;
+}
+
+/**
+ * Handler for System.CPU.VendorId parameter
+ */
+LONG H_CpuVendorId(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   ret_mbstring(value, s_cpuVendorId);
    return SYSINFO_RC_SUCCESS;
 }

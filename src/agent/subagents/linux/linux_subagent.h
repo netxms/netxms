@@ -237,6 +237,7 @@ LONG H_CpuInterrupts(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abstrac
 LONG H_CpuLoad(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 LONG H_CpuUsage(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 LONG H_CpuUsageEx(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
+LONG H_CpuVendorId(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 LONG H_ProcessCount(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 LONG H_ProcessDetails(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 LONG H_ThreadCount(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
@@ -254,5 +255,7 @@ void ShutdownIoStatCollector();
 
 void InitDrbdCollector();
 void StopDrbdCollector();
+
+void ReadCPUVendorId();
 
 #endif // __LINUX_SUBAGENT_H__
