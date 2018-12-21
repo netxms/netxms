@@ -13,6 +13,7 @@
 	NX-1519 ("Import dashboard" action not available in dashboard group context menu)
 	NX-1521 (Agent crash if file manager cannot resolve user or group name)
 	NX-1522 (Log parser can read file incorrectly during high write activity)
+	NX-1530 (Linux agent do not detect Hyper-V host)
 	NX-1531 (Scripts are not executed during macro expansion in "download file" type object tools)
 	NX-1532 (Agent external table does not handle UTF-8 text correctly)
 	NX-1535 (Auto bind to container is not working if node already is an indirect child of this container)
