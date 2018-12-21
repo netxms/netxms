@@ -428,7 +428,8 @@ static int F_CreateDCI(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_
 	DataCollectionTarget *node = (DataCollectionTarget *)object->getData();
 
 	// Origin
-	static const TCHAR *originNames[] = { _T("internal"), _T("agent"), _T("snmp"), _T("cpsnmp"), _T("push"), NULL };
+	static const TCHAR *originNames[] = { _T("internal"), _T("agent"), _T("snmp"), _T("cpsnmp"),
+	         _T("push"), _T("winperf"), _T("smclp"), _T("script"), _T("ssh"), _T("mqtt"), _T("driver"), NULL };
 	int origin = -1;
 	const TCHAR *name = argv[1]->getValueAsCString();
 	for(int i = 0; originNames[i] != NULL; i++)

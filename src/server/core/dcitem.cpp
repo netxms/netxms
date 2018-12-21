@@ -223,7 +223,7 @@ DCItem::DCItem(ConfigEntry *config, Template *owner) : DCObject(config, owner)
 	m_nMultiplier = 1;
 	m_customUnitName = NULL;
 	m_snmpRawValueType = (WORD)config->getSubEntryValueAsInt(_T("snmpRawValueType"));
-   nx_strncpy(m_predictionEngine, config->getSubEntryValue(_T("predictionEngine"), 0, _T("")), MAX_NPE_NAME_LEN);
+   _tcslcpy(m_predictionEngine, config->getSubEntryValue(_T("predictionEngine"), 0, _T("")), MAX_NPE_NAME_LEN);
 
    // for compatibility with old format
 	if (config->getSubEntryValueAsInt(_T("allThresholds")))
