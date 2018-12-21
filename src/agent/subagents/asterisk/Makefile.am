@@ -6,7 +6,7 @@ asterisk_la_CPPFLAGS=-I@top_srcdir@/include
 asterisk_la_LDFLAGS = -module -avoid-version -export-symbols ../subagent.sym
 asterisk_la_LIBADD = ../../libnxagent/libnxagent.la ../../../libnetxms/libnetxms.la @ASTERISK_LIBS@
 
-EXTRA_DIST = Makefile.w32 asterisk.h asterisk.vcxproj asterisk.vcxproj.filters
+EXTRA_DIST = asterisk.h
 
 if !STATIC_BUILD
 install-exec-hook:
