@@ -1,7 +1,7 @@
 #!/bin/sh
 
 . ./set_build_number.sh
-version=2.2.10
+version=2.2.11
 
 cd win32.win32.x86
 zip -r nxmc-$version-win32-x86.zip nxmc
