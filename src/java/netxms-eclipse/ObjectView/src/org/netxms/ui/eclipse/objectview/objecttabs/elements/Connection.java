@@ -75,7 +75,7 @@ public class Connection extends OverviewPageElement
 		Composite area = new Composite(parent, SWT.NONE);
 		GridLayout layout = new GridLayout();
 		area.setLayout(layout);
-		area.setBackground(SharedColors.getColor(SharedColors.OBJECT_TAB_BACKGROUND, parent.getDisplay()));
+		area.setBackground(parent.getDisplay().getSystemColor(SWT.COLOR_LIST_BACKGROUND));
 		
 		nodeLabel = new CLabel(area, SWT.NONE);
 		nodeLabel.setBackground(area.getBackground());

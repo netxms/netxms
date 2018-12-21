@@ -57,7 +57,6 @@ public abstract class TableElement extends OverviewPageElement
 		
 		table.setHeaderVisible(false);
 		table.setLinesVisible(false);
-		table.setBackground(SharedColors.getColor(SharedColors.OBJECT_TAB_BACKGROUND, getDisplay()));
 	}
 	
 	/**

@@ -30,6 +30,7 @@
 	NX-1513 (Server installation fails with MySQL 8.0)
 	NX-1518 (Variable $object is not set for scheduled scripts associated with object other than node)
 	NX-1519 ("Import dashboard" action not available in dashboard group context menu)
+	NX-1520 (Object Details - Overview tab in desktop client is unusable when using dark gtk3 theme)
 	NX-1521 (Agent crash if file manager cannot resolve user or group name)
 	NX-1522 (Log parser can read file incorrectly during high write activity)
 	NX-1530 (Linux agent do not detect Hyper-V host)

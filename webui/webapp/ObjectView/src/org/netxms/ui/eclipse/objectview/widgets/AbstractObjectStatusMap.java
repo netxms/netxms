@@ -24,7 +24,6 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
-
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtensionRegistry;
@@ -128,7 +127,7 @@ public abstract class AbstractObjectStatusMap extends Composite implements ISele
       FormLayout formLayout = new FormLayout();
       setLayout(formLayout);
       
-      setBackground(SharedColors.getColor(SharedColors.OBJECT_TAB_BACKGROUND, getDisplay()));
+      setBackground(getDisplay().getSystemColor(SWT.COLOR_LIST_BACKGROUND));
 
       // Create filter area
       filterTextControl = new FilterText(this, SWT.NONE, null, allowFilterClose);

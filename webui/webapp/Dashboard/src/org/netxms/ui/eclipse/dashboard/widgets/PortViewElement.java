@@ -55,7 +55,6 @@ import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.Node;
-import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.PortViewConfig;
 import org.netxms.ui.eclipse.objectbrowser.api.ObjectContextMenu;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -150,10 +149,10 @@ public class PortViewElement extends ElementWidget
 		setLayout(layout);
 
 		scroller = new ScrolledComposite(this, SWT.H_SCROLL | SWT.V_SCROLL);
-      scroller.setBackground(SharedColors.getColor(SharedColors.OBJECT_TAB_BACKGROUND, getDisplay()));
+      scroller.setBackground(getDisplay().getSystemColor(SWT.COLOR_LIST_BACKGROUND));
 		
 		content = new Composite(scroller, SWT.NONE);
-		content.setBackground(SharedColors.getColor(SharedColors.OBJECT_TAB_BACKGROUND, getDisplay()));
+		content.setBackground(getDisplay().getSystemColor(SWT.COLOR_LIST_BACKGROUND));
 		GridLayout contentLayout = new GridLayout();
 		contentLayout.verticalSpacing = WidgetHelper.OUTER_SPACING * 3;
 		content.setLayout(contentLayout);

@@ -47,7 +47,6 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.MobileDevice;
 import org.netxms.client.objects.Sensor;
-import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab;
 import org.netxms.ui.eclipse.perfview.Activator;
 import org.netxms.ui.eclipse.perfview.Messages;
@@ -76,7 +75,7 @@ public class PerformanceTab extends ObjectTab
 		scroller = new ScrolledComposite(parent, SWT.V_SCROLL);
 		
 		chartArea = new Composite(scroller, SWT.NONE);
-		chartArea.setBackground(SharedColors.getColor(SharedColors.OBJECT_TAB_BACKGROUND, parent.getDisplay()));
+		chartArea.setBackground(parent.getDisplay().getSystemColor(SWT.COLOR_LIST_BACKGROUND));
 		
 		GridLayout layout = new GridLayout();
 		layout.numColumns = 2;
