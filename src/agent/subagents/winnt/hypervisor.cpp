@@ -24,13 +24,13 @@
 #include <intrin.h>
 
 /**
-* CPU vendor ID
-*/
+ * CPU vendor ID
+ */
 static char s_cpuVendorId[16] = "UNKNOWN";
 
 /**
-* Read CPU vendor ID
-*/
+ * Read CPU vendor ID
+ */
 void ReadCPUVendorId()
 {
    int cpuInfo[4];
@@ -162,4 +162,13 @@ LONG H_HypervisorVersion(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abs
    if (IsVirtualBox() && GetVirtualBoxVersionString(value))
       return SYSINFO_RC_SUCCESS;
    return SYSINFO_RC_UNSUPPORTED;
+}
+
+/**
+ * Handler for System.CPU.VendorId parameter
+ */
+LONG H_CpuVendorId(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   ret_mbstring(value, s_cpuVendorId);
+   return SYSINFO_RC_SUCCESS;
 }
