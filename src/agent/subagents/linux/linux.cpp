@@ -98,6 +98,7 @@ static LONG H_SoftShutdown(const TCHAR *pszAction, StringList *pArgList, const T
  */
 static bool SubAgentInit(Config *config)
 {
+   ReadCPUVendorId();
 	StartCpuUsageCollector();
 	StartIoStatCollector();
 	InitDrbdCollector();
@@ -388,6 +389,8 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 		DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_USAGE5_GUEST_EX },
 	{ _T("System.CPU.Usage15.Guest(*)"),        H_CpuUsageEx,      MAKE_CPU_USAGE_PARAM(INTERVAL_15MIN, CPU_USAGE_GUEST),
 		DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_USAGE15_GUEST_EX },
+
+   { _T("System.CPU.VendorId"), H_CpuVendorId, NULL, DCI_DT_STRING, DCIDESC_SYSTEM_CPU_VENDORID },
 
    { _T("System.IsVirtual"), H_IsVirtual, NULL, DCI_DT_INT, DCIDESC_SYSTEM_IS_VIRTUAL },
 
