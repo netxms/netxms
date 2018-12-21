@@ -2578,7 +2578,11 @@ TCHAR LIBNETXMS_EXPORTABLE *safe_fgetts(TCHAR *buffer, int len, FILE *f)
 	if (s == NULL)
 		return NULL;
 	mbBuffer[len - 1] = 0;
+#if HAVE_MBSTOWCS
+	mbstowcs(buffer, mbBuffer, len);
+#else
 	MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, mbBuffer, -1, buffer, len);
+#endif
 	return buffer;
 #endif
 #else
