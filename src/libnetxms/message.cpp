@@ -1026,7 +1026,7 @@ void NXCPMessage::setFieldFromMBString(UINT32 fieldId, const char *value)
 {
    size_t l = strlen(value) + 1;
 #if HAVE_ALLOCA
-   WCHAR *wcValue = static_cast<WCHAR*>(alloca(l * sizeof(WCHAR)));
+   WCHAR *wcValue = reinterpret_cast<WCHAR*>(alloca(l * sizeof(WCHAR)));
 #else
    WCHAR localBuffer[256];
    WCHAR *wcValue = (l <= 256) ? localBuffer : static_cast<WCHAR*>(MemAlloc(l * sizeof(WCHAR)));
