@@ -73,7 +73,7 @@ public class ObjectOverview extends ObjectTab
 		});
 		
 		viewArea = new Composite(scroller, SWT.NONE);
-		viewArea.setBackground(SharedColors.getColor(SharedColors.OBJECT_TAB_BACKGROUND, parent.getDisplay()));
+		viewArea.setBackground(parent.getDisplay().getSystemColor(SWT.COLOR_LIST_BACKGROUND));
 		GridLayout layout = new GridLayout();
 		layout.numColumns = 2;
 		viewArea.setLayout(layout);
@@ -81,7 +81,7 @@ public class ObjectOverview extends ObjectTab
 		
 		leftColumn = new Composite(viewArea, SWT.NONE);
 		leftColumn.setLayout(createColumnLayout());
-		leftColumn.setBackground(SharedColors.getColor(SharedColors.OBJECT_TAB_BACKGROUND, parent.getDisplay()));
+		leftColumn.setBackground(viewArea.getBackground());
 		GridData gd = new GridData();
 		gd.verticalAlignment = SWT.TOP;
 		gd.horizontalAlignment = SWT.FILL;
@@ -90,7 +90,7 @@ public class ObjectOverview extends ObjectTab
 		
 		rightColumn = new Composite(viewArea, SWT.NONE);
 		rightColumn.setLayout(createColumnLayout());
-		rightColumn.setBackground(SharedColors.getColor(SharedColors.OBJECT_TAB_BACKGROUND, parent.getDisplay()));
+		rightColumn.setBackground(viewArea.getBackground());
 		gd = new GridData();
 		gd.verticalAlignment = SWT.TOP;
 		gd.horizontalAlignment = SWT.LEFT;

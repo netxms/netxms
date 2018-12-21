@@ -80,7 +80,7 @@ public class DeviceView extends DashboardComposite
 		layout.wrap = false;
 		setLayout(layout);
 		
-		setBackground(SharedColors.getColor(SharedColors.OBJECT_TAB_BACKGROUND, getDisplay()));
+		setBackground(getDisplay().getSystemColor(SWT.COLOR_LIST_BACKGROUND));
 		
 		listener = new PortSelectionListener() {
 			@Override

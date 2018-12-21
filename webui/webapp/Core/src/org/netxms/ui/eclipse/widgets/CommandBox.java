@@ -38,7 +38,6 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 
 /**
@@ -59,7 +58,7 @@ public class CommandBox extends Composite implements DisposeListener
 	{
 		super(parent, style);
 		
-		setBackground(SharedColors.getColor(SharedColors.COMMAND_BOX_BACKGROUND, getDisplay()));
+		setBackground(getDisplay().getSystemColor(SWT.COLOR_LIST_BACKGROUND));
 		
 		cursor = new Cursor(getDisplay(), SWT.CURSOR_HAND);
 		font = new Font(getDisplay(), "Verdana", 9, SWT.NORMAL); //$NON-NLS-1$
@@ -90,8 +89,8 @@ public class CommandBox extends Composite implements DisposeListener
 			label.setText(a.getText());
 			label.setImage(getImage(a));
 			label.setCursor(cursor);
-			label.setForeground(SharedColors.getColor(SharedColors.COMMAND_BOX_TEXT, getDisplay()));
-			label.setBackground(SharedColors.getColor(SharedColors.COMMAND_BOX_BACKGROUND, getDisplay()));
+			label.setForeground(getDisplay().getSystemColor(SWT.COLOR_LIST_FOREGROUND));
+			label.setBackground(getDisplay().getSystemColor(SWT.COLOR_LIST_BACKGROUND));
 			//label.setFont(font);
 			label.addMouseListener(new MouseListener() {
 				@Override

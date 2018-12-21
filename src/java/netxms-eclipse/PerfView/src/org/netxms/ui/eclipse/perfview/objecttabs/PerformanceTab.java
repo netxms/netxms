@@ -45,7 +45,6 @@ import org.netxms.client.datacollection.PerfTabDci;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Cluster;
-import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab;
 import org.netxms.ui.eclipse.perfview.Activator;
 import org.netxms.ui.eclipse.perfview.Messages;
@@ -74,7 +73,7 @@ public class PerformanceTab extends ObjectTab
 		scroller = new ScrolledComposite(parent, SWT.V_SCROLL);
 		
 		chartArea = new Composite(scroller, SWT.NONE);
-		chartArea.setBackground(SharedColors.getColor(SharedColors.OBJECT_TAB_BACKGROUND, parent.getDisplay()));
+		chartArea.setBackground(parent.getDisplay().getSystemColor(SWT.COLOR_LIST_BACKGROUND));
 		
 		GridLayout layout = new GridLayout();
 		layout.numColumns = 2;
@@ -261,7 +260,7 @@ public class PerformanceTab extends ObjectTab
 	@Override
 	public boolean showForObject(AbstractObject object)
 	{
-		return (object instanceof AbstractNode || object instanceof Cluster);
+		return (object instanceof AbstractNode || object instanceof Cluster || object instanceof MobileDevice);
 	}
 
    /* (non-Javadoc)

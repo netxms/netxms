@@ -53,7 +53,7 @@ public class Comments extends OverviewPageElement
 	protected Control createClientArea(Composite parent)
 	{
 		comments = new Text(parent, SWT.MULTI | SWT.READ_ONLY | SWT.WRAP);
-		comments.setBackground(SharedColors.getColor(SharedColors.OBJECT_TAB_BACKGROUND, parent.getDisplay()));
+		comments.setBackground(getDisplay().getSystemColor(SWT.COLOR_LIST_BACKGROUND));
 		if (getObject() != null)
 			comments.setText(getObject().getComments());
 		return comments;

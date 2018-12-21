@@ -149,7 +149,6 @@ public class LastValues extends OverviewPageElement
 
       viewer.getTable().setHeaderVisible(false);
       viewer.getTable().setLinesVisible(false);
-      viewer.getTable().setBackground(SharedColors.getColor(SharedColors.OBJECT_TAB_BACKGROUND, getDisplay()));
 
       // On Windows Vista and Windows 7, Table widget draws
       // vertical lines even when setLinesVisible set to false.
@@ -160,7 +159,7 @@ public class LastValues extends OverviewPageElement
          public void handleEvent(Event event)
          {
             GC gc = event.gc;
-            gc.setBackground(SharedColors.getColor(SharedColors.OBJECT_TAB_BACKGROUND, getDisplay()));
+            gc.setBackground(getDisplay().getSystemColor(SWT.COLOR_LIST_BACKGROUND));
             gc.fillRectangle(event.x, event.y, event.width, event.height);
          }
       });

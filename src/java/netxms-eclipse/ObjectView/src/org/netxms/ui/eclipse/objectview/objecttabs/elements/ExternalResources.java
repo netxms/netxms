@@ -33,7 +33,6 @@ import org.eclipse.ui.forms.events.HyperlinkEvent;
 import org.eclipse.ui.forms.widgets.Hyperlink;
 import org.netxms.client.ObjectUrl;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.objectview.Activator;
 import org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
@@ -84,7 +83,7 @@ public class ExternalResources extends OverviewPageElement
       GridLayout layout = new GridLayout();
       layout.numColumns = 2;
       content.setLayout(layout);
-      content.setBackground(SharedColors.getColor(SharedColors.OBJECT_TAB_BACKGROUND, parent.getDisplay()));
+      content.setBackground(parent.getDisplay().getSystemColor(SWT.COLOR_LIST_BACKGROUND));
       return content;
    }
 
@@ -135,7 +134,7 @@ public class ExternalResources extends OverviewPageElement
          
          link = new Hyperlink(parent, SWT.NONE);
          link.setBackground(content.getBackground());
-         link.setForeground(SharedColors.getColor(SharedColors.COMMAND_BOX_TEXT, link.getDisplay()));
+         link.setForeground(getDisplay().getSystemColor(SWT.COLOR_LIST_FOREGROUND));
          link.setText(url.getUrl().toExternalForm());
          link.addHyperlinkListener(new HyperlinkAdapter() {
             @Override

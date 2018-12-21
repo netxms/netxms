@@ -75,7 +75,7 @@ public class PerformanceTab extends ObjectTab
 		scroller = new ScrolledComposite(parent, SWT.V_SCROLL);
 		
 		chartArea = new Composite(scroller, SWT.NONE);
-		chartArea.setBackground(SharedColors.getColor(SharedColors.OBJECT_TAB_BACKGROUND, parent.getDisplay()));
+		chartArea.setBackground(parent.getDisplay().getSystemColor(SWT.COLOR_LIST_BACKGROUND));
 		
 		GridLayout layout = new GridLayout();
 		layout.numColumns = 2;

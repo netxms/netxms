@@ -68,7 +68,7 @@ public class ObjectStatusIndicator extends Canvas implements PaintListener
 	{
 		super(parent, style | SWT.DOUBLE_BUFFERED);
 		addPaintListener(this);
-		setBackground(SharedColors.getColor(SharedColors.OBJECT_TAB_BACKGROUND, getDisplay()));
+		setBackground(getDisplay().getSystemColor(SWT.COLOR_LIST_BACKGROUND));
 		
 		final IPreferenceStore ps = Activator.getDefault().getPreferenceStore();
 		showIcons = ps.getBoolean("ObjectStatusIndicator.showIcons"); //$NON-NLS-1$

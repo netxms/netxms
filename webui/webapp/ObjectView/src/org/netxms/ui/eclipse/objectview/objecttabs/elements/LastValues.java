@@ -146,7 +146,6 @@ public class LastValues extends OverviewPageElement
 
       viewer.getTable().setHeaderVisible(false);
       viewer.getTable().setLinesVisible(false);
-      viewer.getTable().setBackground(SharedColors.getColor(SharedColors.OBJECT_TAB_BACKGROUND, getDisplay()));
    }
    
    /**

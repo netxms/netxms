@@ -37,8 +37,6 @@ public class SharedColors
 	public static final String BORDER = "Border";  //$NON-NLS-1$
 	public static final String CGROUP_BORDER = "CGroup.Border";  //$NON-NLS-1$
 	public static final String CGROUP_TITLE = "CGroup.Title";  //$NON-NLS-1$
-	public static final String COMMAND_BOX_TEXT = "CommandBox.Text";  //$NON-NLS-1$
-	public static final String COMMAND_BOX_BACKGROUND = "CommandBox.Background";  //$NON-NLS-1$
 	public static final String DASHBOARD_BACKGROUND = "Dashboard.Background";  //$NON-NLS-1$
 	public static final String ERROR_BACKGROUND = "ErrorBackground";  //$NON-NLS-1$
 	public static final String GEOMAP_TITLE = "GeoMap.Title";  //$NON-NLS-1$
@@ -49,7 +47,6 @@ public class SharedColors
    public static final String MESSAGE_BAR_TEXT = "MessageBar.Text";  //$NON-NLS-1$
 	public static final String MIB_EXPLORER_HEADER_BACKGROUND = "MibExplorer.Header.Background";  //$NON-NLS-1$
 	public static final String MIB_EXPLORER_HEADER_TEXT = "MibExplorer.Header.Text";  //$NON-NLS-1$
-	public static final String OBJECT_TAB_BACKGROUND = "ObjectTab.Background";  //$NON-NLS-1$
 	public static final String OBJECT_TAB_HEADER = "ObjectTab.Header";  //$NON-NLS-1$
 	public static final String OBJECT_TAB_HEADER_BACKGROUND = "ObjectTab.Header.Background"; //$NON-NLS-1$
    public static final String RACK_BACKGROUND = "Rack.Background"; //$NON-NLS-1$
@@ -90,8 +87,6 @@ public class SharedColors
 		defaultColors.put(BORDER, new RGB(153, 180, 209));
 		defaultColors.put(CGROUP_BORDER, new RGB(153, 180, 209));
 		defaultColors.put(CGROUP_TITLE, new RGB(0, 0, 0));
-		defaultColors.put(COMMAND_BOX_TEXT, new RGB(0, 0, 96));
-		defaultColors.put(COMMAND_BOX_BACKGROUND, new RGB(255, 255, 255));
 		defaultColors.put(DASHBOARD_BACKGROUND, new RGB(240, 240, 240));
 		defaultColors.put(ERROR_BACKGROUND, new RGB(255, 0, 0));
 		defaultColors.put(GEOMAP_TITLE, new RGB(0, 0, 0));
@@ -102,7 +97,6 @@ public class SharedColors
       defaultColors.put(MESSAGE_BAR_TEXT, new RGB(0, 0, 0));
 		defaultColors.put(MIB_EXPLORER_HEADER_BACKGROUND, new RGB(153, 180, 209));
 		defaultColors.put(MIB_EXPLORER_HEADER_TEXT, new RGB(255, 255, 255));
-		defaultColors.put(OBJECT_TAB_BACKGROUND, new RGB(255, 255, 255));
 		defaultColors.put(OBJECT_TAB_HEADER, new RGB(255, 255, 255));
 		defaultColors.put(OBJECT_TAB_HEADER_BACKGROUND, new RGB(153, 180, 209));
       defaultColors.put(RACK_BACKGROUND, new RGB(255, 255, 255));
