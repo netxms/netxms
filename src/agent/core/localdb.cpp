@@ -95,7 +95,7 @@ static const TCHAR *s_dbInitQueries[] =
 {
    _T("CREATE TABLE agent_policy (")
    _T("  guid varchar(36) not null,")
-   _T("  type integer not null,")
+   _T("  type varchar(31) not null,")
    _T("  server_info varchar(64) null,")
    _T("  server_id number(20) not null,")
    _T("  version integer not null,")

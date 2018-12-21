@@ -25,7 +25,7 @@
 /**
  * Default constructor
  */
-Dashboard::Dashboard() : AbstractContainer()
+Dashboard::Dashboard() : super()
 {
 	m_elements = new ObjectArray<DashboardElement>();
 	m_elements->setOwner(true);
@@ -37,7 +37,7 @@ Dashboard::Dashboard() : AbstractContainer()
 /**
  * Constructor for creating new dashboard object
  */
-Dashboard::Dashboard(const TCHAR *name) : AbstractContainer(name, 0)
+Dashboard::Dashboard(const TCHAR *name) : super(name, 0)
 {
 	m_elements = new ObjectArray<DashboardElement>();
 	m_elements->setOwner(true);
@@ -67,7 +67,7 @@ void Dashboard::calculateCompoundStatus(BOOL bForcedRecalc)
  */
 bool Dashboard::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 {
-	if (!AbstractContainer::loadFromDatabase(hdb, dwId))
+	if (!super::loadFromDatabase(hdb, dwId))
 		return false;
 
 	m_status = STATUS_NORMAL;
@@ -157,7 +157,7 @@ bool Dashboard::saveToDatabase(DB_HANDLE hdb)
 
    DBFreeStatement(hStmt);
 	unlockProperties();
-	return AbstractContainer::saveToDatabase(hdb);
+	return super::saveToDatabase(hdb);
 
 fail:
    if (hStmt != NULL)
@@ -171,7 +171,7 @@ fail:
  */
 bool Dashboard::deleteFromDatabase(DB_HANDLE hdb)
 {
-   bool success = AbstractContainer::deleteFromDatabase(hdb);
+   bool success = super::deleteFromDatabase(hdb);
    if (success)
       success = executeQueryOnObject(hdb, _T("DELETE FROM dashboards WHERE id=?"));
    if (success)
@@ -184,7 +184,7 @@ bool Dashboard::deleteFromDatabase(DB_HANDLE hdb)
  */
 void Dashboard::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
 {
-   AbstractContainer::fillMessageInternal(msg, userId);
+   super::fillMessageInternal(msg, userId);
 
 	msg->setField(VID_NUM_COLUMNS, (WORD)m_numColumns);
 	msg->setField(VID_NUM_ELEMENTS, (UINT32)m_elements->size());
@@ -228,7 +228,7 @@ UINT32 Dashboard::modifyFromMessageInternal(NXCPMessage *request)
 		}
 	}
 
-	return AbstractContainer::modifyFromMessageInternal(request);
+	return super::modifyFromMessageInternal(request);
 }
 
 /**
@@ -244,7 +244,7 @@ bool Dashboard::showThresholdSummary()
  */
 json_t *Dashboard::toJson()
 {
-   json_t *root = AbstractContainer::toJson();
+   json_t *root = super::toJson();
    json_object_set_new(root, "numColumns", json_integer(m_numColumns));
    json_object_set_new(root, "options", json_integer(m_options));
    json_object_set_new(root, "elements", json_object_array(m_elements));

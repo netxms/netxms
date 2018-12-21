@@ -24,7 +24,7 @@
 /**
  * Default empty Sensor class constructior
  */
-Sensor::Sensor() : DataCollectionTarget()
+Sensor::Sensor() : super()
 {
    m_proxyNodeId = 0;
 	m_flags = 0;
@@ -52,7 +52,7 @@ Sensor::Sensor() : DataCollectionTarget()
  */
 Sensor::Sensor(TCHAR *name, UINT32 flags, MacAddress macAddress, UINT32 deviceClass, TCHAR *vendor,
                UINT32 commProtocol, TCHAR *xmlRegConfig, TCHAR *xmlConfig, TCHAR *serialNumber, TCHAR *deviceAddress,
-               TCHAR *metaType, TCHAR *description, UINT32 proxyNode) : DataCollectionTarget(name)
+               TCHAR *metaType, TCHAR *description, UINT32 proxyNode) : super(name)
 {
    m_runtimeFlags |= DCDF_CONFIGURATION_POLL_PENDING;
    m_flags = flags;
@@ -331,7 +331,7 @@ bool Sensor::saveToDatabase(DB_HANDLE hdb)
  */
 bool Sensor::deleteFromDatabase(DB_HANDLE hdb)
 {
-   bool success = DataCollectionTarget::deleteFromDatabase(hdb);
+   bool success = super::deleteFromDatabase(hdb);
    if (success)
       success = executeQueryOnObject(hdb, _T("DELETE FROM sensors WHERE id=?"));
    return success;
@@ -350,7 +350,7 @@ NXSL_Value *Sensor::createNXSLObject(NXSL_VM *vm)
  */
 json_t *Sensor::toJson()
 {
-   json_t *root = DataCollectionTarget::toJson();
+   json_t *root = super::toJson();
    json_object_set_new(root, "flags", json_integer(m_flags));
    json_object_set_new(root, "macAddr", json_string_t(m_macAddress.toString(MAC_ADDR_FLAT_STRING)));
    json_object_set_new(root, "deviceClass", json_integer(m_deviceClass));
@@ -367,7 +367,7 @@ json_t *Sensor::toJson()
 
 void Sensor::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
 {
-   DataCollectionTarget::fillMessageInternal(msg, userId);
+   super::fillMessageInternal(msg, userId);
    msg->setField(VID_SENSOR_FLAGS, m_flags);
 	msg->setField(VID_MAC_ADDR, m_macAddress);
    msg->setField(VID_DEVICE_CLASS, m_deviceClass);
@@ -429,7 +429,7 @@ UINT32 Sensor::modifyFromMessageInternal(NXCPMessage *request)
       m_xmlConfig = request->getFieldAsString(VID_XML_CONFIG);
    }
 
-   return DataCollectionTarget::modifyFromMessageInternal(request);
+   return super::modifyFromMessageInternal(request);
 }
 
 /**
@@ -453,7 +453,7 @@ void Sensor::calculateStatus(BOOL bForcedRecalc)
       m_status = STATUS_UNKNOWN;
       return;
    }
-   DataCollectionTarget::calculateCompoundStatus(bForcedRecalc);
+   super::calculateCompoundStatus(bForcedRecalc);
    lockProperties();
    int status = 0;
    if (m_state == 0 || m_state == SSF_PROVISIONED)
@@ -1008,7 +1008,7 @@ void Sensor::prepareForDeletion()
       }
    }
 
-   DataCollectionTarget::prepareForDeletion();
+   super::prepareForDeletion();
 }
 
 /**

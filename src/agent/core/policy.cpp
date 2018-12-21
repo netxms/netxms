@@ -26,7 +26,7 @@
 /**
  * Register policy in persistent storage
  */
-static void RegisterPolicy(CommSession *session, UINT32 type, const uuid& guid)
+static void RegisterPolicy(CommSession *session, const TCHAR *type, const uuid& guid, UINT32 version)
 {
    bool isNew = true;
    TCHAR buffer[64];
@@ -49,24 +49,25 @@ static void RegisterPolicy(CommSession *session, UINT32 type, const uuid& guid)
       if(isNew)
       {
          hStmt = DBPrepare(hdb,
-                       _T("INSERT INTO agent_policy (type,server_info,server_id,version, guid)")
-                       _T(" VALUES (?,?,?,0,?)"));
+                       _T("INSERT INTO agent_policy (type,server_info,server_id,version,guid)")
+                       _T(" VALUES (?,?,?,?,?)"));
       }
       else
       {
          hStmt = DBPrepare(hdb,
-                       _T("UPDATE agent_policy SET type=?,server_info=?,server_id=?,version=0")
+                       _T("UPDATE agent_policy SET type=?,server_info=?,server_id=?,version=?")
                        _T(" WHERE guid=?"));
       }
 
       if (hStmt == NULL)
          return;
 
-      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (LONG)type);
+      DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, type, DB_BIND_STATIC);
       session->getServerAddress().toString(buffer);
       DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, buffer, DB_BIND_STATIC);
       DBBind(hStmt, 3, DB_SQLTYPE_BIGINT, session->getServerId());
-      DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, guid);
+      DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, version);
+      DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, guid);
 
       DBExecute(hStmt);
       DBFreeStatement(hStmt);
@@ -97,9 +98,9 @@ static void UnregisterPolicy(const uuid& guid)
 /**
  * Get policy type by GUID
  */
-static int GetPolicyType(const uuid& guid)
+static const String GetPolicyType(const uuid& guid)
 {
-   int type = -1;
+   String type(_T(""));
 	DB_HANDLE hdb = GetLocalDatabaseHandle();
 	if(hdb != NULL)
    {
@@ -110,7 +111,10 @@ static int GetPolicyType(const uuid& guid)
          DB_RESULT hResult = DBSelectPrepared(hStmt);
          if (hResult != NULL)
          {
-            type = DBGetNumRows(hResult) > 0 ? DBGetFieldLong(hResult, 0, 0) : -1;
+            if(DBGetNumRows(hResult) > 0)
+            {
+               type.appendPreallocated(DBGetField(hResult, 0, 0, NULL, 0));
+            }
             DBFreeResult(hResult);
          }
          DBFreeStatement(hStmt);
@@ -217,31 +221,32 @@ static UINT32 DeployLogParser(AbstractCommSession *session, const uuid& guid, NX
  */
 UINT32 DeployPolicy(CommSession *session, NXCPMessage *request)
 {
-	UINT32 type, rcc;
+	UINT32 rcc;
 
-	type = request->getFieldAsUInt16(VID_POLICY_TYPE);
+	TCHAR *type = request->getFieldAsString(VID_POLICY_TYPE, NULL, 0);
 	uuid guid = request->getFieldAsGUID(VID_GUID);
 
-	switch(type)
-	{
-		case AGENT_POLICY_CONFIG:
-			rcc = DeployConfig(session, guid, request);
-			break;
-		case AGENT_POLICY_LOG_PARSER:
-			rcc = DeployLogParser(session, guid, request);
-			break;
-		default:
-			rcc = ERR_BAD_ARGUMENTS;
-			break;
-	}
+   if(!_tcscmp(type, _T("AgentConfig")))
+   {
+      rcc = DeployConfig(session, guid, request);
+   }
+   else if(!_tcscmp(type, _T("LogParserConfig")))
+   {
+      rcc = DeployLogParser(session, guid, request);
+   }
+   else
+   {
+      rcc = ERR_BAD_ARGUMENTS;
+   }
 
 	if (rcc == RCC_SUCCESS)
 	{
-		RegisterPolicy(session, type, guid);
+	   UINT32 version = request->getFieldAsUInt32(VID_VERSION);
+		RegisterPolicy(session, type, guid, version);
 		NotifySubAgents(AGENT_NOTIFY_POLICY_INSTALLED, &guid);
 	}
-
-	session->debugPrintf(3, _T("Policy deployment: TYPE=%d RCC=%d"), type, rcc);
+	session->debugPrintf(3, _T("Policy deployment: TYPE=%s RCC=%d"), type, rcc);
+   free(type);
 	return rcc;
 }
 
@@ -297,31 +302,30 @@ static UINT32 RemoveLogParser(UINT32 session, const uuid& guid,  NXCPMessage *ms
 UINT32 UninstallPolicy(CommSession *session, NXCPMessage *request)
 {
 	UINT32 rcc;
-	int type;
 	TCHAR buffer[64];
 
 	uuid guid = request->getFieldAsGUID(VID_GUID);
-	type = GetPolicyType(guid);
-	if(type == -1)
+	const String type = GetPolicyType(guid);
+	if(!_tcscmp(type, _T("")))
       return RCC_SUCCESS;
 
-	switch(type)
-	{
-		case AGENT_POLICY_CONFIG:
-			rcc = RemoveConfig(session->getIndex(), guid, request);
-			break;
-		case AGENT_POLICY_LOG_PARSER:
-			rcc = RemoveLogParser(session->getIndex(), guid, request);
-			break;
-		default:
-			rcc = ERR_BAD_ARGUMENTS;
-			break;
-	}
+   if(!_tcscmp(type, _T("AgentConfig")))
+   {
+      rcc = RemoveConfig(session->getIndex(), guid, request);
+   }
+   else if(!_tcscmp(type, _T("LogParserConfig")))
+   {
+      rcc = RemoveLogParser(session->getIndex(), guid, request);
+   }
+   else
+   {
+      rcc = ERR_BAD_ARGUMENTS;
+   }
 
 	if (rcc == RCC_SUCCESS)
 		UnregisterPolicy(guid);
 
-   session->debugPrintf(3, _T("Policy uninstall: GUID=%s TYPE=%d RCC=%d"), guid.toString(buffer), type, rcc);
+   session->debugPrintf(3, _T("Policy uninstall: GUID=%s TYPE=%s RCC=%d"), guid.toString(buffer), type, rcc);
 	return rcc;
 }
 
@@ -345,11 +349,14 @@ UINT32 GetPolicyInventory(CommSession *session, NXCPMessage *msg)
          else
             msg->setField(VID_NUM_ELEMENTS, (UINT32)0);
 
+         msg->setField(VID_NEW_POLICY_TYPE, true);
+
          UINT32 varId = VID_ELEMENT_LIST_BASE;
          for(int row = 0; row < count; row++, varId += 5)
          {
 				msg->setField(varId++, DBGetFieldGUID(hResult, row, 0));
-				msg->setField(varId++, DBGetFieldULong(hResult, row, 1));
+				TCHAR type[32];
+				msg->setField(varId++, DBGetField(hResult, row, 1, type, 32));
 				TCHAR *text = DBGetField(hResult, row, 2, NULL, 0);
 				msg->setField(varId++, CHECK_NULL_EX(text));
 				free(text);
@@ -376,24 +383,22 @@ void UpdatePolicyInventory()
          for(int row = 0; row < DBGetNumRows(hResult); row++)
          {
             uuid guid = DBGetFieldGUID(hResult, row, 0);
-            int type = DBGetFieldULong(hResult, row, 1);
+            TCHAR *type = DBGetField(hResult, row, 1, NULL, 0);
             TCHAR filePath[MAX_PATH], name[64], tail;
 
-            switch(type)
+            if(!_tcscmp(type, _T("AgentConfig")))
             {
-               case AGENT_POLICY_CONFIG:
-                  tail = g_szConfigPolicyDir[_tcslen(g_szConfigPolicyDir) - 1];
-                  _sntprintf(filePath, MAX_PATH, _T("%s%s%s.conf"), g_szConfigPolicyDir,
-                             ((tail != '\\') && (tail != '/')) ? FS_PATH_SEPARATOR : _T(""),
-                             guid.toString(name));
-                  break;
-               case AGENT_POLICY_LOG_PARSER:
-                  _sntprintf(filePath, MAX_PATH, _T("%s%s.xml"), g_szLogParserDirectory, guid.toString(name));
-                  break;
-               default:
-                  continue;
-                  break;
+               tail = g_szConfigPolicyDir[_tcslen(g_szConfigPolicyDir) - 1];
+               _sntprintf(filePath, MAX_PATH, _T("%s%s%s.conf"), g_szConfigPolicyDir,
+                          ((tail != '\\') && (tail != '/')) ? FS_PATH_SEPARATOR : _T(""),
+                          guid.toString(name));
+
             }
+            else if(!_tcscmp(type, _T("LogParserConfig")))
+            {
+               _sntprintf(filePath, MAX_PATH, _T("%s%s.xml"), g_szLogParserDirectory, guid.toString(name));
+            }
+            free(type);
 
             NX_STAT_STRUCT st;
             if (CALL_STAT(filePath, &st) == 0)

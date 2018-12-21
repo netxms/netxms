@@ -25,7 +25,7 @@
 /**
  * Default constructor for VPNConnector object
  */
-VPNConnector::VPNConnector() : NetObj()
+VPNConnector::VPNConnector() : super()
 {
    m_dwPeerGateway = 0;
    m_localNetworks = new ObjectArray<InetAddress>(8, 8, true);
@@ -35,7 +35,7 @@ VPNConnector::VPNConnector() : NetObj()
 /**
  * Constructor for new VPNConnector object
  */
-VPNConnector::VPNConnector(bool hidden) : NetObj()
+VPNConnector::VPNConnector(bool hidden) : super()
 {
    m_dwPeerGateway = 0;
    m_localNetworks = new ObjectArray<InetAddress>(8, 8, true);
@@ -191,7 +191,7 @@ bool VPNConnector::saveToDatabase(DB_HANDLE hdb)
  */
 bool VPNConnector::deleteFromDatabase(DB_HANDLE hdb)
 {
-   bool success = NetObj::deleteFromDatabase(hdb);
+   bool success = super::deleteFromDatabase(hdb);
    if (success)
       success = executeQueryOnObject(hdb, _T("DELETE FROM vpn_connectors WHERE id=?"));
    if (success)
@@ -225,7 +225,7 @@ Node *VPNConnector::getParentNode()
  */
 void VPNConnector::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
 {
-   NetObj::fillMessageInternal(pMsg, userId);
+   super::fillMessageInternal(pMsg, userId);
    pMsg->setField(VID_PEER_GATEWAY, m_dwPeerGateway);
    pMsg->setField(VID_NUM_LOCAL_NETS, (UINT32)m_localNetworks->size());
    pMsg->setField(VID_NUM_REMOTE_NETS, (UINT32)m_remoteNetworks->size());
@@ -267,7 +267,7 @@ UINT32 VPNConnector::modifyFromMessageInternal(NXCPMessage *pRequest)
          m_remoteNetworks->add(new InetAddress(pRequest->getFieldAsInetAddress(fieldId++)));
    }
 
-   return NetObj::modifyFromMessageInternal(pRequest);
+   return super::modifyFromMessageInternal(pRequest);
 }
 
 /**
@@ -331,7 +331,7 @@ InetAddress VPNConnector::getPeerGatewayAddr()
  */
 json_t *VPNConnector::toJson()
 {
-   json_t *root = NetObj::toJson();
+   json_t *root = super::toJson();
    json_object_set_new(root, "peerGateway", json_integer(m_dwPeerGateway));
    json_object_set_new(root, "localNetworks", json_object_array(m_localNetworks));
    json_object_set_new(root, "remoteNetworks", json_object_array(m_remoteNetworks));

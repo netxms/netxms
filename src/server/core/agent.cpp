@@ -545,7 +545,7 @@ void AgentConnectionEx::onSnmpTrap(NXCPMessage *msg)
 /**
  * Deploy policy to agent
  */
-UINT32 AgentConnectionEx::deployPolicy(AgentPolicy *policy)
+UINT32 AgentConnectionEx::deployPolicy(GenericAgentPolicy *policy, bool supportNewTypeFormat)
 {
 	UINT32 rqId, rcc;
 	NXCPMessage msg(getProtocolVersion());
@@ -553,7 +553,7 @@ UINT32 AgentConnectionEx::deployPolicy(AgentPolicy *policy)
    rqId = generateRequestId();
    msg.setId(rqId);
 	msg.setCode(CMD_DEPLOY_AGENT_POLICY);
-	if (policy->createDeploymentMessage(&msg))
+	if (policy->createDeploymentMessage(&msg, supportNewTypeFormat))
 	{
 		if (sendMessage(&msg))
 		{
@@ -574,7 +574,7 @@ UINT32 AgentConnectionEx::deployPolicy(AgentPolicy *policy)
 /**
  * Uninstall policy from agent
  */
-UINT32 AgentConnectionEx::uninstallPolicy(AgentPolicy *policy)
+UINT32 AgentConnectionEx::uninstallPolicy(uuid guid, TCHAR *type, bool supportNewTypeFormat)
 {
 	UINT32 rqId, rcc;
 	NXCPMessage msg(getProtocolVersion());
@@ -582,21 +582,30 @@ UINT32 AgentConnectionEx::uninstallPolicy(AgentPolicy *policy)
    rqId = generateRequestId();
    msg.setId(rqId);
 	msg.setCode(CMD_UNINSTALL_AGENT_POLICY);
-	if (policy->createUninstallMessage(&msg))
-	{
-		if (sendMessage(&msg))
-		{
-			rcc = waitForRCC(rqId, getCommandTimeout());
-		}
-		else
-		{
-			rcc = ERR_CONNECTION_BROKEN;
-		}
-	}
-	else
-	{
-		rcc = ERR_INTERNAL_ERROR;
-	}
+	if(supportNewTypeFormat)
+   {
+	   msg.setField(VID_POLICY_TYPE, type);
+   }
+   else
+   {
+      if(!_tcscmp(type, _T("AgentConfig")))
+      {
+         msg.setField(VID_POLICY_TYPE, AGENT_POLICY_CONFIG);
+      }
+      else if(!_tcscmp(type, _T("LogParserConfig")))
+      {
+         msg.setField(VID_POLICY_TYPE, AGENT_POLICY_LOG_PARSER);
+      }
+   }
+   msg.setField(VID_GUID, guid);
+   if (sendMessage(&msg))
+   {
+      rcc = waitForRCC(rqId, getCommandTimeout());
+   }
+   else
+   {
+      rcc = ERR_CONNECTION_BROKEN;
+   }
    return rcc;
 }
 

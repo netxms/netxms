@@ -43,7 +43,7 @@ bool NetworkMapGroup::showThresholdSummary()
 /**
  * Network map object default constructor
  */
-NetworkMap::NetworkMap() : NetObj()
+NetworkMap::NetworkMap() : super()
 {
 	m_mapType = NETMAP_USER_DEFINED;
 	m_discoveryRadius = -1;
@@ -68,7 +68,7 @@ NetworkMap::NetworkMap() : NetObj()
 /**
  * Create network map object from user session
  */
-NetworkMap::NetworkMap(int type, IntegerArray<UINT32> *seeds) : NetObj()
+NetworkMap::NetworkMap(int type, IntegerArray<UINT32> *seeds) : super()
 {
 	m_mapType = type;
 	if (type == MAP_INTERNAL_COMMUNICATION_TOPOLOGY)
@@ -387,7 +387,7 @@ bool NetworkMap::saveToDatabase(DB_HANDLE hdb)
  */
 bool NetworkMap::deleteFromDatabase(DB_HANDLE hdb)
 {
-   bool success = NetObj::deleteFromDatabase(hdb);
+   bool success = super::deleteFromDatabase(hdb);
    if (success)
       success = executeQueryOnObject(hdb, _T("DELETE FROM network_maps WHERE id=?"));
    if (success)
@@ -548,7 +548,7 @@ bool NetworkMap::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
  */
 void NetworkMap::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
 {
-	NetObj::fillMessageInternal(msg, userId);
+	super::fillMessageInternal(msg, userId);
 
 	msg->setField(VID_MAP_TYPE, (WORD)m_mapType);
 	msg->setField(VID_LAYOUT, (WORD)m_layout);
@@ -688,7 +688,7 @@ UINT32 NetworkMap::modifyFromMessageInternal(NXCPMessage *request)
 		}
 	}
 
-	return NetObj::modifyFromMessageInternal(request);
+	return super::modifyFromMessageInternal(request);
 }
 
 /**
@@ -1066,7 +1066,7 @@ void NetworkMap::onObjectDelete(UINT32 dwObjectId)
 
    unlockProperties();
 
-   NetObj::onObjectDelete(dwObjectId);
+   super::onObjectDelete(dwObjectId);
 }
 
 /**
@@ -1074,7 +1074,7 @@ void NetworkMap::onObjectDelete(UINT32 dwObjectId)
  */
 json_t *NetworkMap::toJson()
 {
-   json_t *root = NetObj::toJson();
+   json_t *root = super::toJson();
    json_object_set_new(root, "mapType", json_integer(m_mapType));
    json_object_set_new(root, "seedObjects", m_seedObjects->toJson());
    json_object_set_new(root, "discoveryRadius", json_integer(m_discoveryRadius));

@@ -18,6 +18,5 @@ Require-Bundle: org.eclipse.ui;bundle-version="3.8.2",
  org.netxms.ui.base;bundle-version="3.0.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Bundle-ActivationPolicy: lazy
-Export-Package: org.netxms.ui.eclipse.agentmanager.dialogs,
- org.netxms.ui.eclipse.agentmanager.widgets
+Export-Package: org.netxms.ui.eclipse.agentmanager.dialogs
 Automatic-Module-Name: org.netxms.ui.eclipse.agentmanager

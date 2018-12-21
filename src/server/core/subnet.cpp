@@ -24,7 +24,7 @@
 /**
  * Subnet class default constructor
  */
-Subnet::Subnet() : NetObj()
+Subnet::Subnet() : super()
 {
    m_zoneUIN = 0;
 	m_bSyntheticMask = false;
@@ -33,7 +33,7 @@ Subnet::Subnet() : NetObj()
 /**
  * Subnet class constructor
  */
-Subnet::Subnet(const InetAddress& addr, UINT32 zoneUIN, bool bSyntheticMask) : NetObj()
+Subnet::Subnet(const InetAddress& addr, UINT32 zoneUIN, bool bSyntheticMask) : super()
 {
    TCHAR szBuffer[64];
    _sntprintf(m_name, MAX_OBJECT_NAME, _T("%s/%d"), addr.toString(szBuffer), addr.getMaskBits());
@@ -142,7 +142,7 @@ bool Subnet::saveToDatabase(DB_HANDLE hdb)
  */
 bool Subnet::deleteFromDatabase(DB_HANDLE hdb)
 {
-   bool success = NetObj::deleteFromDatabase(hdb);
+   bool success = super::deleteFromDatabase(hdb);
    if (success)
       success = executeQueryOnObject(hdb, _T("DELETE FROM subnets WHERE id=?"));
    if (success)
@@ -155,7 +155,7 @@ bool Subnet::deleteFromDatabase(DB_HANDLE hdb)
  */
 void Subnet::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
 {
-   NetObj::fillMessageInternal(pMsg, userId);
+   super::fillMessageInternal(pMsg, userId);
    pMsg->setField(VID_IP_ADDRESS, m_ipAddress);
    pMsg->setField(VID_ZONE_UIN, m_zoneUIN);
 	pMsg->setField(VID_SYNTHETIC_MASK, (WORD)(m_bSyntheticMask ? 1 : 0));
@@ -303,7 +303,7 @@ UINT32 *Subnet::buildAddressMap(int *length)
 void Subnet::prepareForDeletion()
 {
    PostEvent(EVENT_SUBNET_DELETED, g_dwMgmtNode, "isAd", m_id, m_name, &m_ipAddress, m_ipAddress.getMaskBits());
-   NetObj::prepareForDeletion();
+   super::prepareForDeletion();
 }
 
 /**
@@ -311,7 +311,7 @@ void Subnet::prepareForDeletion()
  */
 json_t *Subnet::toJson()
 {
-   json_t *root = NetObj::toJson();
+   json_t *root = super::toJson();
    json_object_set_new(root, "ipAddress", m_ipAddress.toJson());
    json_object_set_new(root, "zoneUIN", json_integer(m_zoneUIN));
    json_object_set_new(root, "syntheticMask", json_boolean(m_bSyntheticMask));

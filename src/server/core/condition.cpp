@@ -25,7 +25,7 @@
 /**
  * Default constructor
  */
-ConditionObject::ConditionObject() : NetObj()
+ConditionObject::ConditionObject() : super()
 {
    m_scriptSource = NULL;
    m_script = NULL;
@@ -44,7 +44,7 @@ ConditionObject::ConditionObject() : NetObj()
 /**
  * Constructor for new objects
  */
-ConditionObject::ConditionObject(bool hidden) : NetObj()
+ConditionObject::ConditionObject(bool hidden) : super()
 {
    m_scriptSource = NULL;
    m_script = NULL;
@@ -230,7 +230,7 @@ bool ConditionObject::saveToDatabase(DB_HANDLE hdb)
  */
 bool ConditionObject::deleteFromDatabase(DB_HANDLE hdb)
 {
-   bool success = NetObj::deleteFromDatabase(hdb);
+   bool success = super::deleteFromDatabase(hdb);
    if (success)
       success = executeQueryOnObject(hdb, _T("DELETE FROM conditions WHERE id=?"));
    if (success)
@@ -243,7 +243,7 @@ bool ConditionObject::deleteFromDatabase(DB_HANDLE hdb)
  */
 void ConditionObject::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
 {
-   NetObj::fillMessageInternal(pMsg, userId);
+   super::fillMessageInternal(pMsg, userId);
 
    pMsg->setField(VID_SCRIPT, CHECK_NULL_EX(m_scriptSource));
    pMsg->setField(VID_ACTIVATION_EVENT, m_activationEventCode);
@@ -357,7 +357,7 @@ UINT32 ConditionObject::modifyFromMessageInternal(NXCPMessage *pRequest)
       }
    }
 
-   return NetObj::modifyFromMessageInternal(pRequest);
+   return super::modifyFromMessageInternal(pRequest);
 }
 
 /**
@@ -566,7 +566,7 @@ int ConditionObject::getCacheSizeForDCI(UINT32 itemId, bool noLock)
  */
 json_t *ConditionObject::toJson()
 {
-   json_t *root = NetObj::toJson();
+   json_t *root = super::toJson();
    json_t *inputs = json_array();
    for(int i = 0; i < m_dciCount; i++)
    {

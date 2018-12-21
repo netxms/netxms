@@ -23,6 +23,186 @@
 #include "nxdbmgr.h"
 #include <nxevent.h>
 
+
+
+
+/**
+ * Upgrade from 30.55 to 30.56
+ */
+static bool H_UpgradeFromV55()
+{
+   //Rename old ap_common
+   DBRenameTable(g_dbHandle, _T("ap_common"), _T("ap_common_old"));
+   //create new ap_common
+   CHK_EXEC(CreateTable(
+      _T("CREATE TABLE ap_common (")
+      _T("   policy_name varchar(63) not null,")
+      _T("   owner_id integer not null,")
+      _T("   policy_type varchar(31) not null,")
+      _T("   file_content $SQL:TEXT null,")
+      _T("   version integer not null,")
+      _T("   guid varchar(36) not null,")
+      _T("   PRIMARY KEY(guid))")));
+
+   bool success = true;
+
+   DB_RESULT hResult = DBSelect(g_dbHandle, _T("SELECT id,policy_type,name,guid FROM ap_common_old a INNER JOIN object_properties p ON p.object_id=a.id WHERE policy_type IN (1,2)"));
+   if (hResult != NULL)
+   {
+      int count = DBGetNumRows(hResult);
+      for(int i=0; i < count; i++)
+      {
+         UINT32 id = DBGetFieldLong(hResult, i, 0);
+         UINT32 type = DBGetFieldLong(hResult, i, 1);
+         TCHAR name[MAX_OBJECT_NAME];
+         DBGetField(hResult, i, 2, name, MAX_OBJECT_NAME);
+         TCHAR guid[64];
+         DBGetField(hResult, i, 3, guid, 64);
+
+         TCHAR *content = NULL;
+
+         TCHAR query[512];
+         if (type == 1)
+         {
+            _sntprintf(query, 512, _T("SELECT file_content FROM ap_config_files WHERE policy_id=%d"), id);
+            DB_RESULT policy = DBSelect(g_dbHandle, query);
+            if (policy != NULL)
+            {
+               if(DBGetNumRows(policy) > 0)
+                  content = DBGetField(policy, 0, 0, NULL, 0);
+               DBFreeResult(policy);
+            }
+            else
+            {
+               success = false;
+               break;
+            }
+         }
+         else
+         {
+            _sntprintf(query, 512, _T("SELECT file_content FROM ap_log_parser WHERE policy_id=%d"), id);
+            DB_RESULT policy = DBSelect(g_dbHandle, query);
+            if (policy != NULL)
+            {
+               if(DBGetNumRows(policy) > 0)
+                  content = DBGetField(policy, 0, 0, NULL, 0);
+               DBFreeResult(policy);
+            }
+            else
+            {
+               success = false;
+               break;
+            }
+         }
+
+         //Change every policy to template
+         DB_STATEMENT hStmt = DBPrepare(g_dbHandle, _T("INSERT INTO templates (id) VALUES (?)"));
+         if (hStmt != NULL)
+         {
+            DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, id);
+            if (!(SQLExecute(hStmt)))
+            {
+               if (!g_ignoreErrors)
+               {
+                  success = false;
+                  break;
+               }
+            }
+            DBFreeStatement(hStmt);
+         }
+         else
+         {
+            success = false;
+            break;
+         }
+
+         //Move common info to the new table
+         DB_STATEMENT apCommon = DBPrepare(g_dbHandle, _T("INSERT INTO ap_common (policy_name,owner_id,policy_type,file_content,version,guid) VALUES (?,?,?,?,?,?)"));
+         if (apCommon == NULL)
+         {
+            success = false;
+            break;
+         }
+
+         DBBind(apCommon, 1, DB_SQLTYPE_TEXT, name, DB_BIND_STATIC);
+         DBBind(apCommon, 2, DB_SQLTYPE_INTEGER, id);
+         DBBind(apCommon, 3, DB_SQLTYPE_VARCHAR, type == 1 ? _T("AgentConfig") : _T("LogParserConfig"), DB_BIND_STATIC);
+         DBBind(apCommon, 4, DB_SQLTYPE_VARCHAR, content, DB_BIND_STATIC);
+         DBBind(apCommon, 5, DB_SQLTYPE_INTEGER, 0);
+         DBBind(apCommon, 6, DB_SQLTYPE_VARCHAR, guid, DB_BIND_STATIC);
+         if (!(SQLExecute(apCommon)))
+         {
+            if (!g_ignoreErrors)
+            {
+               success = false;
+               break;
+            }
+         }
+         DBFreeStatement(apCommon);
+         MemFree(content);
+      }
+      DBFreeResult(hResult);
+   }
+
+   if (!success || (hResult == NULL))
+   {
+      if (!g_ignoreErrors)
+         return false;
+   }
+
+   //ap_bindings move to template bindings dct_node_map (template_id,node_id)
+   hResult = DBSelect(g_dbHandle, _T("SELECT policy_id,node_id FROM ap_bindings"));
+   if (hResult == NULL)
+   {
+      if (!g_ignoreErrors)
+         return false;
+   }
+
+   int count = DBGetNumRows(hResult);
+   for(int i=0; i < count; i++)
+   {
+      DB_STATEMENT apBinding = DBPrepare(g_dbHandle, _T("INSERT INTO dct_node_map (template_id,node_id) VALUES (?,?)"));
+      if(apBinding != NULL)
+      {
+         DBBind(apBinding, 1, DB_SQLTYPE_INTEGER, DBGetFieldLong(hResult, i, 0));
+         DBBind(apBinding, 2, DB_SQLTYPE_INTEGER, DBGetFieldLong(hResult, i, 1));
+         if (!(SQLExecute(apBinding)))
+         {
+            if (!g_ignoreErrors)
+            {
+               success = false;
+               break;
+            }
+         }
+         DBFreeStatement(apBinding);
+      }
+   }
+   DBFreeResult(hResult);
+
+   if (!success && !g_ignoreErrors)
+      return false;
+
+   CHK_EXEC(SQLQuery(_T("UPDATE container_members SET container_id=3 WHERE container_id=5")));
+   CHK_EXEC(SQLQuery(_T("UPDATE object_containers SET object_class=9 WHERE object_class=15")));
+   CHK_EXEC(SQLQuery(_T("DELETE FROM object_containers WHERE id=5")));
+   CHK_EXEC(SQLQuery(_T("DELETE FROM object_custom_attributes WHERE object_id=5")));
+   CHK_EXEC(SQLQuery(_T("DELETE FROM object_urls WHERE object_id=5")));
+   CHK_EXEC(SQLQuery(_T("DELETE FROM responsible_users WHERE object_id=5")));
+   CHK_EXEC(SQLQuery(_T("DELETE FROM acl WHERE object_id=5")));
+   CHK_EXEC(SQLQuery(_T("DELETE FROM object_properties WHERE object_id=5")));
+
+   CHK_EXEC(SQLQuery(_T("DELETE FROM scheduled_tasks WHERE taskid='Policy.Deploy'")));
+   CHK_EXEC(SQLQuery(_T("DELETE FROM scheduled_tasks WHERE taskid='Policy.Uninstall'")));
+
+   CHK_EXEC(SQLQuery(_T("DROP TABLE ap_common_old")));
+   CHK_EXEC(SQLQuery(_T("DROP TABLE ap_log_parser")));
+   CHK_EXEC(SQLQuery(_T("DROP TABLE ap_config_files")));
+   CHK_EXEC(SQLQuery(_T("DROP TABLE ap_bindings")));
+
+   CHK_EXEC(SetMinorSchemaVersion(56));
+   return true;
+}
+
 /**
  * Upgrade from 30.54 to 30.55 (changes also included into 22.43)
  */
@@ -1849,6 +2029,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 55, 30, 56, H_UpgradeFromV55 },
    { 54, 30, 55, H_UpgradeFromV54 },
    { 53, 30, 54, H_UpgradeFromV53 },
    { 52, 30, 53, H_UpgradeFromV52 },

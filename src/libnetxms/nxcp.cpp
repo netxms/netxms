@@ -414,10 +414,16 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD code, TCHAR *pszBuffer)
       _T("CMD_GET_ACTIVE_THRESHOLDS"),
       _T("CMD_QUERY_INTERNAL_TOPOLOGY"),
       _T("CMD_GET_ACTION_LIST"),
-      _T("CMD_PROXY_MESSAGE")
+      _T("CMD_PROXY_MESSAGE"),
+      _T("CMD_GET_GRAPH"),
+      _T("CMD_UPDATE_AGENT_POLICY"),
+      _T("CMD_DELETE_AGENT_POLICY"),
+      _T("CMD_GET_AGENT_POLICY"),
+      _T("CMD_POLICY_EDITOR_CLOSED"),
+      _T("CMD_POLICY_FORCE_APPLY")
    };
 
-   if ((code >= CMD_LOGIN) && (code <= CMD_PROXY_MESSAGE))
+   if ((code >= CMD_LOGIN) && (code <= CMD_POLICY_FORCE_APPLY))
    {
       _tcscpy(pszBuffer, pszMsgNames[code - CMD_LOGIN]);
    }

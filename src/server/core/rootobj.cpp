@@ -25,7 +25,7 @@
 /**
  * Service root class default constructor
  */
-ServiceRoot::ServiceRoot() : UniversalRoot()
+ServiceRoot::ServiceRoot() : super()
 {
    m_id = BUILTIN_OID_SERVICEROOT;
    _tcscpy(m_name, _T("Infrastructure Services"));
@@ -49,7 +49,7 @@ bool ServiceRoot::showThresholdSummary()
 /**
  * Template root class default constructor
  */
-TemplateRoot::TemplateRoot() : UniversalRoot()
+TemplateRoot::TemplateRoot() : super()
 {
    m_id = BUILTIN_OID_TEMPLATEROOT;
    _tcscpy(m_name, _T("Templates"));
@@ -72,34 +72,9 @@ void TemplateRoot::calculateCompoundStatus(BOOL bForcedRecalc)
 }
 
 /**
- * Policy root class default constructor
- */
-PolicyRoot::PolicyRoot() : UniversalRoot()
-{
-   m_id = BUILTIN_OID_POLICYROOT;
-   _tcscpy(m_name, _T("Policies"));
-	m_status = STATUS_NORMAL;
-}
-
-/**
- * Policy root class destructor
- */
-PolicyRoot::~PolicyRoot()
-{
-}
-
-/**
- * Redefined status calculation for policy root
- */
-void PolicyRoot::calculateCompoundStatus(BOOL bForcedRecalc)
-{
-   m_status = STATUS_NORMAL;
-}
-
-/**
  * Network maps root class default constructor
  */
-NetworkMapRoot::NetworkMapRoot() : UniversalRoot()
+NetworkMapRoot::NetworkMapRoot() : super()
 {
    m_id = BUILTIN_OID_NETWORKMAPROOT;
    _tcscpy(m_name, _T("Network Maps"));
@@ -124,7 +99,7 @@ void NetworkMapRoot::calculateCompoundStatus(BOOL bForcedRecalc)
 /**
  * Dashboard tree root class default constructor
  */
-DashboardRoot::DashboardRoot() : UniversalRoot()
+DashboardRoot::DashboardRoot() : super()
 {
    m_id = BUILTIN_OID_DASHBOARDROOT;
    _tcscpy(m_name, _T("Dashboards"));

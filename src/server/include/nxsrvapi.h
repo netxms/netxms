@@ -421,9 +421,10 @@ typedef struct
 class LIBNXSRV_EXPORTABLE AgentPolicyInfo
 {
 private:
+   bool m_newPolicyType;
 	int m_size;
 	BYTE *m_guidList;
-	int *m_typeList;
+	TCHAR **m_typeList;
    TCHAR **m_serverInfoList;
 	UINT64 *m_serverIdList;
 	int *m_version;
@@ -434,10 +435,11 @@ public:
 
 	int size() { return m_size; }
 	uuid getGuid(int index);
-	int getType(int index) { return ((index >= 0) && (index < m_size)) ? m_typeList[index] : -1; }
+	const TCHAR *getType(int index) { return ((index >= 0) && (index < m_size)) ? m_typeList[index] : NULL; }
 	const TCHAR *getServerInfo(int index) { return ((index >= 0) && (index < m_size)) ? m_serverInfoList[index] : NULL; }
 	UINT64 getServerId(int index) { return ((index >= 0) && (index < m_size)) ? m_serverIdList[index] : 0; }
 	int getVersion(int index) { return ((index >= 0) && (index < m_size)) ? m_version[index] : -1; }
+	bool isNewPolicyType() { return m_newPolicyType; }
 };
 
 /**

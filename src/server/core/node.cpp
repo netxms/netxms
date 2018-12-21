@@ -36,7 +36,7 @@ extern VolatileCounter64 g_snmpTrapsReceived;
 /**
  * Node class default constructor
  */
-Node::Node() : DataCollectionTarget()
+Node::Node() : super()
 {
    m_primaryName[0] = 0;
    m_status = STATUS_UNKNOWN;
@@ -140,7 +140,7 @@ Node::Node() : DataCollectionTarget()
 /**
  * Create new node from new node data
  */
-Node::Node(const NewNodeData *newNodeData, UINT32 flags)  : DataCollectionTarget()
+Node::Node(const NewNodeData *newNodeData, UINT32 flags)  : super()
 {
    m_runtimeFlags |= DCDF_CONFIGURATION_POLL_PENDING;
    newNodeData->ipAddr.toString(m_primaryName);
@@ -663,7 +663,7 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
  */
 bool Node::saveRuntimeData(DB_HANDLE hdb)
 {
-   if (!DataCollectionTarget::saveRuntimeData(hdb))
+   if (!super::saveRuntimeData(hdb))
       return false;
 
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("UPDATE nodes SET last_agent_comm_time=?,syslog_msg_count=?,snmp_trap_count=? WHERE id=?"));
@@ -687,7 +687,7 @@ bool Node::saveRuntimeData(DB_HANDLE hdb)
  */
 bool Node::deleteFromDatabase(DB_HANDLE hdb)
 {
-   bool success = DataCollectionTarget::deleteFromDatabase(hdb);
+   bool success = super::deleteFromDatabase(hdb);
    if (success)
       success = executeQueryOnObject(hdb, _T("DELETE FROM nodes WHERE id=?"));
    if (success)
@@ -1379,7 +1379,7 @@ void Node::calculateCompoundStatus(BOOL bForcedRecalc)
       EVENT_NODE_MINOR, EVENT_NODE_MAJOR, EVENT_NODE_CRITICAL,
       EVENT_NODE_UNKNOWN, EVENT_NODE_UNMANAGED };
 
-   DataCollectionTarget::calculateCompoundStatus(bForcedRecalc);
+   super::calculateCompoundStatus(bForcedRecalc);
    if (m_status != iOldStatus)
       PostEvent(dwEventCodes[m_status], m_id, "d", iOldStatus);
 }
@@ -2243,13 +2243,28 @@ void Node::checkAgentPolicyBinding(AgentConnection *conn)
       for(int i = 0; i < ap->size(); i++)
       {
          uuid guid = ap->getGuid(i);
-         NetObj *object = FindObjectByGUID(guid, -1);
-         if ((object != NULL) && (!object->isDirectChild(m_id)))
+         bool found = false;
+         lockParentList(false);
+         for(int i = 0; i < m_parentList->size(); i++)
          {
-            object->addChild(this);
-            addParent(object);
-            DbgPrintf(5, _T("ConfPoll(%s): bound to policy object %s [%d]"), m_name, object->getName(), object->getId());
+            if (m_parentList->get(i)->getObjectClass() == OBJECT_TEMPLATE)
+            {
+                if(((Template*)m_parentList->get(i))->hasPolicy(guid))
+                {
+                   found = false;
+                   break;
+                }
+            }
          }
+
+         if(!found)
+         {
+            ServerJob *job = new PolicyUninstallJob(this, ap->getType(i), guid, 0);
+            if(!AddJob(job))
+               delete job;
+         }
+
+         unlockParentList();
       }
 
       // Check for bound but not installed policies and schedule it's installation again
@@ -2259,29 +2274,9 @@ void Node::checkAgentPolicyBinding(AgentConnection *conn)
       int unbindListSize = 0;
       for(int i = 0; i < m_parentList->size(); i++)
       {
-         if (IsAgentPolicyObject(m_parentList->get(i)))
+         if (m_parentList->get(i)->getObjectClass() == OBJECT_TEMPLATE)
          {
-            const uuid& guid = m_parentList->get(i)->getGuid();
-            int j;
-            for(j = 0; j < ap->size(); j++)
-            {
-               if (ap->getGuid(j).equals(guid))
-                  break;
-            }
-            if (j == ap->size())
-            {
-               ServerJob *job = new PolicyInstallJob(this, (AgentPolicy *)m_parentList->get(i), 0);
-               if (AddJob(job))
-               {
-                  DbgPrintf(5, _T("ConfPoll(%s): \"%s\" policy deploy scheduled for \"%s\" node"), m_name, m_parentList->get(i)->getName(), m_name );
-               }
-               else
-               {
-                  DbgPrintf(5, _T("ConfPoll(%s): \"%s\" policy deploy is not possible to scheduled for \"%s\" node"), m_name, m_parentList->get(i)->getName(), m_name);
-                  delete job;
-                  unbindList[unbindListSize++] = m_parentList->get(i);
-               }
-            }
+            ((Template *)m_parentList->get(i))->checkPolicyBind(this, ap, unbindList, &unbindListSize);
          }
       }
       unlockParentList();
@@ -2294,6 +2289,7 @@ void Node::checkAgentPolicyBinding(AgentConnection *conn)
       }
       MemFree(unbindList);
 
+      m_capabilities |= ap->isNewPolicyType() ? NC_IS_NEW_POLICY_TYPES : 0;
       delete ap;
    }
    else
@@ -2632,7 +2628,6 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
 
       applyUserTemplates();
       updateContainerMembership();
-      deployAgentPolicies();
 
       // Call hooks in loaded modules
       for(UINT32 i = 0; i < g_dwNumModules; i++)
@@ -4634,7 +4629,7 @@ DataCollectionError Node::getItemFromDeviceDriver(const TCHAR *param, TCHAR *buf
  */
 DataCollectionError Node::getInternalItem(const TCHAR *param, size_t bufSize, TCHAR *buffer)
 {
-   DataCollectionError rc = DataCollectionTarget::getInternalItem(param, bufSize, buffer);
+   DataCollectionError rc = super::getInternalItem(param, bufSize, buffer);
    if (rc != DCE_NOT_SUPPORTED)
       return rc;
    rc = DCE_SUCCESS;
@@ -5042,7 +5037,7 @@ UINT32 Node::getTableForClient(const TCHAR *name, Table **table)
  */
 void Node::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
 {
-   DataCollectionTarget::fillMessageInternal(pMsg, userId);
+   super::fillMessageInternal(pMsg, userId);
    pMsg->setField(VID_IP_ADDRESS, m_ipAddress);
    pMsg->setField(VID_PRIMARY_NAME, m_primaryName);
    pMsg->setField(VID_NODE_TYPE, (INT16)m_type);
@@ -5367,7 +5362,7 @@ UINT32 Node::modifyFromMessageInternal(NXCPMessage *pRequest)
    if (pRequest->isFieldExist(VID_RACK_ORIENTATION))
       m_rackOrientation = static_cast<RackOrientation>(pRequest->getFieldAsUInt16(VID_RACK_ORIENTATION));
 
-   return DataCollectionTarget::modifyFromMessageInternal(pRequest);
+   return super::modifyFromMessageInternal(pRequest);
 }
 
 /**
@@ -5651,7 +5646,7 @@ void Node::onObjectDelete(UINT32 objectId)
    }
    unlockProperties();
 
-   DataCollectionTarget::onObjectDelete(objectId);
+   super::onObjectDelete(objectId);
 }
 
 /**
@@ -6319,7 +6314,7 @@ void Node::prepareForDeletion()
       ThreadSleepMs(100);
    }
    DbgPrintf(4, _T("Node::PrepareForDeletion(%s [%d]): no outstanding polls left"), m_name, (int)m_id);
-   DataCollectionTarget::prepareForDeletion();
+   super::prepareForDeletion();
 }
 
 /**
@@ -7950,9 +7945,9 @@ void Node::syncDataCollectionWithAgent(AgentConnectionEx *conn)
    data.nodeInfoCount = 0;
    data.nodeInfoFieldId = VID_NODE_INFO_LIST_BASE;
 
-   g_idxAccessPointById.forEach(DataCollectionTarget::collectProxyInfoCallback, &data);
-   g_idxChassisById.forEach(DataCollectionTarget::collectProxyInfoCallback, &data);
-   g_idxNodeById.forEach(DataCollectionTarget::collectProxyInfoCallback, &data);
+   g_idxAccessPointById.forEach(super::collectProxyInfoCallback, &data);
+   g_idxChassisById.forEach(super::collectProxyInfoCallback, &data);
+   g_idxNodeById.forEach(super::collectProxyInfoCallback, &data);
 
    msg.setField(VID_NUM_ELEMENTS, data.count);
    msg.setField(VID_NUM_NODES, data.nodeInfoCount);
@@ -8021,7 +8016,7 @@ void Node::onDataCollectionChangeAsyncCallback(void *arg)
  */
 void Node::onDataCollectionChange()
 {
-   DataCollectionTarget::onDataCollectionChange();
+   super::onDataCollectionChange();
    if (m_capabilities & NC_IS_NATIVE_AGENT)
    {
       DbgPrintf(5, _T("Node::onDataCollectionChange(%s [%d]): executing data collection sync"), m_name, m_id);
@@ -8242,66 +8237,6 @@ void Node::setTunnelId(const uuid& tunnelId, const TCHAR *certSubject)
 }
 
 /**
- * Filter for selecting agent policies from objects
- */
-static bool PolicySelectionFilter(NetObj *object, void *userData)
-{
-   return object->isAgentPolicy() && !object->isDeleted() && static_cast<AgentPolicy*>(object)->isAutoBindEnabled();
-}
-
-/**
- * Apply user templates
- */
-void Node::deployAgentPolicies()
-{
-   if (IsShutdownInProgress())
-      return;
-
-   ObjectArray<NetObj> *policies = g_idxObjectById.getObjects(true, PolicySelectionFilter);
-   for(int i = 0; i < policies->size(); i++)
-   {
-      AgentPolicy *policy = static_cast<AgentPolicy*>(policies->get(i));
-      AutoBindDecision decision = policy->isApplicable(this);
-      if (decision == AutoBindDecision_Bind)
-      {
-         if (!policy->isDirectChild(m_id))
-         {
-            DbgPrintf(4, _T("Node::deployAgentPolicies(): deploying policy %d \"%s\" to node %d \"%s\""),
-                      policy->getId(), policy->getName(), m_id, m_name);
-            PolicyInstallJob *job = new PolicyInstallJob(this, policy, 0);
-            if (AddJob(job))
-            {
-               PostEvent(EVENT_POLICY_AUTODEPLOY, g_dwMgmtNode, "isis", m_id, m_name, policy->getId(), policy->getName());
-            }
-            else
-            {
-               delete job;
-            }
-         }
-      }
-      else if (decision == AutoBindDecision_Unbind)
-      {
-         if (policy->isAutoUnbindEnabled() && policy->isDirectChild(m_id))
-         {
-            DbgPrintf(4, _T("Node::deployAgentPolicies(): uninstalling policy %d \"%s\" from node %d \"%s\""),
-                      policy->getId(), policy->getName(), m_id, m_name);
-            PolicyUninstallJob *job = new PolicyUninstallJob(this, policy, 0);
-            if (AddJob(job))
-            {
-               PostEvent(EVENT_POLICY_AUTOUNINSTALL, g_dwMgmtNode, "isis", m_id, m_name, policy->getId(), policy->getName());
-            }
-            else
-            {
-               delete job;
-            }
-         }
-      }
-      policy->decRefCount();
-   }
-   delete policies;
-}
-
-/**
  * Build internal connection topology
  */
 NetworkMapObjectList *Node::buildInternalConnectionTopology()
@@ -8424,7 +8359,7 @@ void Node::buildInternalCommunicationTopologyInternal(NetworkMapObjectList *topo
  */
 json_t *Node::toJson()
 {
-   json_t *root = DataCollectionTarget::toJson();
+   json_t *root = super::toJson();
    json_object_set_new(root, "ipAddress", m_ipAddress.toJson());
    json_object_set_new(root, "primaryName", json_string_t(m_primaryName));
    json_object_set_new(root, "tunnelId", m_tunnelId.toJson());

@@ -292,7 +292,34 @@ void NXCORE_EXPORTABLE NotifyClientGraphUpdate(NXCPMessage *update, UINT32 graph
 }
 
 /**
- * Send graph update to all active sessions
+ * Send policy update/create to all sessions
+ */
+void NotifyClientPolicyUpdate(NXCPMessage *msg, Template *object)
+{
+   RWLockReadLock(s_sessionListLock, INFINITE);
+   for(int i = 0; i < MAX_CLIENT_SESSIONS; i++)
+      if ((s_sessionList[i] != NULL) &&
+          s_sessionList[i]->isAuthenticated() &&
+          !s_sessionList[i]->isTerminated() &&
+          object->checkAccessRights(s_sessionList[i]->getUserId(), OBJECT_ACCESS_MODIFY))
+         s_sessionList[i]->postMessage(msg);
+   RWLockUnlock(s_sessionListLock);
+}
+
+/**
+ * Send policy update/create to all sessions
+ */
+void NotifyClientPolicyDelete(uuid guid, Template *object)
+{
+   NXCPMessage msg;
+   msg.setCode(CMD_DELETE_AGENT_POLICY);
+   msg.setField(VID_GUID, guid);
+   msg.setField(VID_TEMPLATE_ID, object->getId());
+   NotifyClientPolicyUpdate(&msg, object);
+}
+
+/**
+ * Send DCI update to all active sessions
  */
 void NotifyClientDCIUpdate(DataCollectionOwner *object, DCObject *dco)
 {
@@ -316,7 +343,7 @@ void NotifyClientDCIDelete(DataCollectionOwner *object, UINT32 dcoId)
 }
 
 /**
- * Send graph update to all active sessions
+ * Send DCI delete to all active sessions
  */
 void NotifyClientDCIStatusChange(DataCollectionOwner *object, UINT32 dcoId, int status)
 {
@@ -330,7 +357,7 @@ void NotifyClientDCIStatusChange(DataCollectionOwner *object, UINT32 dcoId, int 
 }
 
 /**
- * Send graph update to all active sessions
+ * Send DCI update/delete to all active sessions
  */
 void NotifyClientDCIUpdate(NXCPMessage *update, NetObj *object)
 {

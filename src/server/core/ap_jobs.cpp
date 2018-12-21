@@ -53,14 +53,14 @@ void ScheduleDeployPolicy(const ScheduledTaskParameters *parameters)
 /**
  * Constructor
  */
-PolicyInstallJob::PolicyInstallJob(Node *node, AgentPolicy *policy, UINT32 userId)
-                    : ServerJob(_T("DEPLOY_AGENT_POLICY"), _T("Deploy agent policy"), node->getId(), userId, false)
+PolicyInstallJob::PolicyInstallJob(DataCollectionTarget *node, UINT32 templateId, uuid policyGuid, const TCHAR *policyName, UINT32 userId)
+                    : ServerJob(_T("DEPLOY_AGENT_POLICY"), _T("Deploy agent policy"), node->getId(), userId, false, 0)
 {
-	m_policy = policy;
-	policy->incRefCount();
+   m_templateId = templateId;
+   m_policyGuid = policyGuid;
 
 	TCHAR buffer[1024];
-	_sntprintf(buffer, 1024, _T("Deploy policy %s"), policy->getName());
+	_sntprintf(buffer, 1024, _T("Deploy policy %s"), policyName);
 	setDescription(buffer);
 
    setAutoCancelDelay(getRetryDelay() + 30);
@@ -70,34 +70,45 @@ PolicyInstallJob::PolicyInstallJob(Node *node, AgentPolicy *policy, UINT32 userI
  * Constructor
  */
 PolicyInstallJob::PolicyInstallJob(const TCHAR *params, UINT32 nodeId, UINT32 userId)
-                    : ServerJob(_T("DEPLOY_AGENT_POLICY"), _T("Deploy agent policy"), nodeId, userId, false)
+                    : ServerJob(_T("DEPLOY_AGENT_POLICY"), _T("Deploy agent policy"), nodeId, userId, false, 0)
 {
    StringList paramList(params, _T(","));
-   if (paramList.size() < 1)
+   if (paramList.size() < 2)
    {
-      m_policy = NULL;
+      m_templateId = 0;
       invalidate();
       return;
    }
 
+   TCHAR name[MAX_DB_STRING];
 	NetObj *obj = FindObjectById(_tcstol(paramList.get(0), NULL, 0));
-	if (obj != NULL && (obj->getObjectClass() == OBJECT_AGENTPOLICY || obj->getObjectClass() == OBJECT_AGENTPOLICY_CONFIG ||
-       obj->getObjectClass() == OBJECT_AGENTPOLICY_LOGPARSER))
+	if (obj != NULL && obj->getObjectClass() == OBJECT_TEMPLATE)
 	{
-      m_policy = (AgentPolicy *)obj;
-      m_policy->incRefCount();
+	   m_templateId = obj->getId();
+	   m_policyGuid = uuid::parse(paramList.get(1));
    }
 	else
 	{
-	   m_policy = NULL;
+      m_templateId = 0;
 	   invalidate();
 	   return;
 	}
 
-   m_retryCount = (paramList.size() >= 2) ? _tcstol(paramList.get(1), NULL, 0) : 0;
+	GenericAgentPolicy *policy = ((Template *)obj)->getAgentPolicyCopy(m_policyGuid);
+	if(policy != NULL)
+	{
+	   _tcscpy(name,policy->getName());
+	   delete policy;
+	}
+	else
+	{
+
+	}
+
+   m_retryCount = (paramList.size() >= 2) ? _tcstol(paramList.get(2), NULL, 0) : 0;
 
    TCHAR buffer[1024];
-   _sntprintf(buffer, 1024, _T("Deploy policy %s"), m_policy->getName());
+   _sntprintf(buffer, 1024, _T("Deploy policy %s"), name);
    setDescription(buffer);
 
    setAutoCancelDelay(getRetryDelay() + 30);
@@ -108,8 +119,6 @@ PolicyInstallJob::PolicyInstallJob(const TCHAR *params, UINT32 nodeId, UINT32 us
  */
 PolicyInstallJob::~PolicyInstallJob()
 {
-   if (m_policy != NULL)
-      m_policy->decRefCount();
 }
 
 /**
@@ -118,19 +127,24 @@ PolicyInstallJob::~PolicyInstallJob()
 ServerJobResult PolicyInstallJob::run()
 {
    ServerJobResult result = JOB_RESULT_FAILED;
+   GenericAgentPolicy *policy = NULL;
+   NetObj *obj = FindObjectById(m_templateId);
+   if (obj != NULL && obj->getObjectClass() == OBJECT_TEMPLATE)
+   {
+      policy = ((Template *)obj)->getAgentPolicyCopy(m_policyGuid);
+   }
 
    TCHAR jobName[1024];
-   _sntprintf(jobName, 1024, _T("Deploy policy %s"), m_policy->getName());
+   _sntprintf(jobName, 1024, _T("Deploy policy %s"), policy->getName());
 
    setDescription(jobName);
    AgentConnectionEx *conn = getNode()->createAgentConnection(true);
    if (conn != NULL)
    {
-      UINT32 rcc = conn->deployPolicy(m_policy);
+      UINT32 rcc = conn->deployPolicy(policy, getNode()->supportNewTypeFormat());
       conn->decRefCount();
       if (rcc == ERR_SUCCESS)
       {
-         m_policy->linkNode(getNode());
          result = JOB_RESULT_SUCCESS;
       }
       else
@@ -159,18 +173,12 @@ ServerJobResult PolicyInstallJob::run()
 const String PolicyInstallJob::serializeParameters()
 {
    String params;
-   params.append(m_policy->getId());
+   params.append(m_templateId);
+   params.append(_T(','));
+   params.append(m_policyGuid);
    params.append(_T(','));
    params.append(m_retryCount);
    return params;
-}
-
-/**
- * Schedules execution in 10 minutes
- */
-void PolicyInstallJob::rescheduleExecution()
-{
-   AddOneTimeScheduledTask(_T("Policy.Deploy"), time(NULL) + getRetryDelay(), serializeParameters(), NULL, getUserId(), getNodeId(), SYSTEM_ACCESS_FULL, _T(""), SCHEDULED_TASK_SYSTEM);
 }
 
 /**
@@ -204,14 +212,14 @@ void ScheduleUninstallPolicy(const ScheduledTaskParameters *parameters)
 /**
  * Constructor
  */
-PolicyUninstallJob::PolicyUninstallJob(Node *node, AgentPolicy *policy, UINT32 userId)
-                   : ServerJob(_T("UNINSTALL_AGENT_POLICY"), _T("Uninstall agent policy"), node->getId(), userId, false)
+PolicyUninstallJob::PolicyUninstallJob(DataCollectionTarget *node, const TCHAR *policyType, uuid policyGuid, UINT32 userId)
+                   : ServerJob(_T("UNINSTALL_AGENT_POLICY"), _T("Uninstall agent policy"), node->getId(), userId, false, 0)
 {
-	m_policy = policy;
-	policy->incRefCount();
+   m_policyGuid = policyGuid;
+   _tcsncpy(m_policyType, policyType, 32);
 
 	TCHAR buffer[1024];
-	_sntprintf(buffer, 1024, _T("Uninstall policy %s"), policy->getName());
+	_sntprintf(buffer, 1024, _T("Uninstall policy %s"), (const TCHAR *)policyGuid.toString());
 	setDescription(buffer);
 
    setAutoCancelDelay(getRetryDelay() + 30);
@@ -221,34 +229,22 @@ PolicyUninstallJob::PolicyUninstallJob(Node *node, AgentPolicy *policy, UINT32 u
  * Constructor
  */
 PolicyUninstallJob::PolicyUninstallJob(const TCHAR* params, UINT32 node, UINT32 userId)
-                    : ServerJob(_T("DEPLOY_AGENT_POLICY"), _T("Deploy agent policy"), node, userId, false)
+                    : ServerJob(_T("DEPLOY_AGENT_POLICY"), _T("Deploy agent policy"), node, userId, false, 0)
 {
    StringList paramList(params, _T(","));
-   if (paramList.size() < 1)
+   if (paramList.size() < 2)
    {
-      m_policy = NULL;
       invalidate();
       return;
    }
 
-	NetObj *obj = FindObjectById(_tcstol(paramList.get(0), NULL, 0));
-	if(obj != NULL && (obj->getObjectClass() == OBJECT_AGENTPOLICY || obj->getObjectClass() == OBJECT_AGENTPOLICY_CONFIG
-      || obj->getObjectClass() == OBJECT_AGENTPOLICY_LOGPARSER))
-	{
-      m_policy = (AgentPolicy *)obj;
-      m_policy->incRefCount();
-   }
-	else
-	{
-      m_policy = NULL;
-      invalidate();
-      return;
-	}
+   m_policyGuid = uuid::parse(paramList.get(0));
+   _tcsncpy(m_policyType, paramList.get(1), 32);
 
    m_retryCount = (paramList.size() >= 2) ? _tcstol(paramList.get(1), NULL, 0) : 0;
 
    TCHAR buffer[1024];
-   _sntprintf(buffer, 1024, _T("Uninstall policy %s"), m_policy->getName());
+   _sntprintf(buffer, 1024, _T("Uninstall policy %s"), (const TCHAR *)m_policyGuid.toString());
    setDescription(buffer);
 
    setAutoCancelDelay(getRetryDelay() + 30);
@@ -259,8 +255,6 @@ PolicyUninstallJob::PolicyUninstallJob(const TCHAR* params, UINT32 node, UINT32 
  */
 PolicyUninstallJob::~PolicyUninstallJob()
 {
-   if (m_policy != NULL)
-      m_policy->decRefCount();
 }
 
 /**
@@ -273,11 +267,10 @@ ServerJobResult PolicyUninstallJob::run()
 	AgentConnectionEx *conn = getNode()->createAgentConnection();
 	if (conn != NULL)
 	{
-		UINT32 rcc = conn->uninstallPolicy(m_policy);
+		UINT32 rcc = conn->uninstallPolicy(m_policyGuid, m_policyType, getNode()->supportNewTypeFormat());
 		conn->decRefCount();
 		if (rcc == ERR_SUCCESS)
 		{
-			m_policy->unlinkNode(getNode());
 			result = JOB_RESULT_SUCCESS;
 		}
 		else
@@ -307,16 +300,10 @@ ServerJobResult PolicyUninstallJob::run()
 const String PolicyUninstallJob::serializeParameters()
 {
    String params;
-   params.append(m_policy->getId());
+   params.append(m_policyGuid);
+   params.append(_T(','));
+   params.append(m_policyType);
    params.append(_T(','));
    params.append(m_retryCount);
    return params;
-}
-
-/**
- * Schedules execution in 10 minutes
- */
-void PolicyUninstallJob::rescheduleExecution()
-{
-   AddOneTimeScheduledTask(_T("Policy.Uninstall"), time(NULL) + getRetryDelay(), serializeParameters(), NULL, 0, getNodeId(), SYSTEM_ACCESS_FULL, _T(""), SCHEDULED_TASK_SYSTEM);//TODO: change to correct user
 }

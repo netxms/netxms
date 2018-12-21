@@ -40,7 +40,7 @@ bool ThrottleHousekeeper();
 /**
  * Default constructor
  */
-DataCollectionTarget::DataCollectionTarget() : DataCollectionOwner()
+DataCollectionTarget::DataCollectionTarget() : super()
 {
    m_deletedItems = new IntegerArray<UINT32>(32, 32);
    m_deletedTables = new IntegerArray<UINT32>(32, 32);
@@ -56,7 +56,7 @@ DataCollectionTarget::DataCollectionTarget() : DataCollectionOwner()
 /**
  * Constructor for creating new data collection capable objects
  */
-DataCollectionTarget::DataCollectionTarget(const TCHAR *name) : DataCollectionOwner(name)
+DataCollectionTarget::DataCollectionTarget(const TCHAR *name) : super(name)
 {
    m_deletedItems = new IntegerArray<UINT32>(32, 32);
    m_deletedTables = new IntegerArray<UINT32>(32, 32);
@@ -85,7 +85,7 @@ DataCollectionTarget::~DataCollectionTarget()
  */
 bool DataCollectionTarget::deleteFromDatabase(DB_HANDLE hdb)
 {
-   bool success = DataCollectionOwner::deleteFromDatabase(hdb);
+   bool success = super::deleteFromDatabase(hdb);
    if(success)
       success = executeQueryOnObject(hdb, _T("DELETE FROM dct_node_map WHERE node_id=?"));
    if (success)
@@ -105,7 +105,7 @@ bool DataCollectionTarget::deleteFromDatabase(DB_HANDLE hdb)
  */
 void DataCollectionTarget::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
 {
-   DataCollectionOwner::fillMessageInternal(msg, userId);
+   super::fillMessageInternal(msg, userId);
 }
 
 /**
@@ -113,7 +113,7 @@ void DataCollectionTarget::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
  */
 void DataCollectionTarget::fillMessageInternalStage2(NXCPMessage *msg, UINT32 userId)
 {
-   DataCollectionOwner::fillMessageInternalStage2(msg, userId);
+   super::fillMessageInternalStage2(msg, userId);
 
    // Sent all DCIs marked for display on overview page or in tooltips
    UINT32 fieldIdOverview = VID_OVERVIEW_DCI_LIST_BASE;
@@ -153,7 +153,7 @@ void DataCollectionTarget::fillMessageInternalStage2(NXCPMessage *msg, UINT32 us
  */
 UINT32 DataCollectionTarget::modifyFromMessageInternal(NXCPMessage *pRequest)
 {
-   return DataCollectionOwner::modifyFromMessageInternal(pRequest);
+   return super::modifyFromMessageInternal(pRequest);
 }
 
 /**
@@ -1424,7 +1424,7 @@ void DataCollectionTarget::updateContainerMembership()
  */
 json_t *DataCollectionTarget::toJson()
 {
-   json_t *root = DataCollectionOwner::toJson();
+   json_t *root = super::toJson();
    json_object_set_new(root, "pingTime", json_integer(m_pingTime));
    json_object_set_new(root, "pingLastTimeStamp", json_integer(m_pingLastTimeStamp));
    return root;

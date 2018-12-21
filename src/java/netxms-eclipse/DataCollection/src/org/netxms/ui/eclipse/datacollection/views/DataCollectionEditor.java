@@ -56,11 +56,8 @@ import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
-import org.netxms.client.SessionListener;
-import org.netxms.client.SessionNotification;
 import org.netxms.client.constants.RCC;
 import org.netxms.client.datacollection.DCONotificationCallback;
-import org.netxms.client.datacollection.DCOStatusHolder;
 import org.netxms.client.datacollection.DataCollectionConfiguration;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.DataCollectionObject;
@@ -72,6 +69,7 @@ import org.netxms.client.objects.DataCollectionTarget;
 import org.netxms.client.objects.MobileDevice;
 import org.netxms.client.objects.Sensor;
 import org.netxms.client.objects.Template;
+import org.netxms.ui.eclipse.actions.ExportToCsvAction;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.console.resources.GroupMarkers;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
@@ -90,7 +88,6 @@ import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.FilterText;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
-import org.netxms.ui.eclipse.actions.ExportToCsvAction;
 
 /**
  * Data collection configuration view

@@ -26,7 +26,7 @@
 /**
  * NodeLink default constructor
  */
-NodeLink::NodeLink() : ServiceContainer()
+NodeLink::NodeLink() : super()
 {
 	_tcscpy(m_name, _T("Default"));
 	m_nodeId = 0;
@@ -35,7 +35,7 @@ NodeLink::NodeLink() : ServiceContainer()
 /**
  * Constructor for new nodelink object
  */
-NodeLink::NodeLink(const TCHAR *name, UINT32 nodeId) : ServiceContainer(name)
+NodeLink::NodeLink(const TCHAR *name, UINT32 nodeId) : super(name)
 {
 	nx_strncpy(m_name, name, MAX_OBJECT_NAME);
 	m_nodeId = nodeId;
@@ -55,7 +55,7 @@ bool NodeLink::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
 {
 	m_id = id;
 
-	if (!ServiceContainer::loadFromDatabase(hdb, id))
+	if (!super::loadFromDatabase(hdb, id))
 		return false;
 
 	DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT node_id FROM node_links WHERE nodelink_id=?"));
@@ -117,7 +117,7 @@ bool NodeLink::saveToDatabase(DB_HANDLE hdb)
       if (!success)
          return false;
    }
-	return ServiceContainer::saveToDatabase(hdb);
+	return super::saveToDatabase(hdb);
 }
 
 /**
@@ -125,7 +125,7 @@ bool NodeLink::saveToDatabase(DB_HANDLE hdb)
  */
 bool NodeLink::deleteFromDatabase(DB_HANDLE hdb)
 {
-	bool success = ServiceContainer::deleteFromDatabase(hdb);
+	bool success = super::deleteFromDatabase(hdb);
 	if (success)
       success = executeQueryOnObject(hdb, _T("DELETE FROM node_links WHERE nodelink_id=?"));
 	return success;
@@ -136,7 +136,7 @@ bool NodeLink::deleteFromDatabase(DB_HANDLE hdb)
  */
 void NodeLink::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
 {
-	ServiceContainer::fillMessageInternal(pMsg, userId);
+	super::fillMessageInternal(pMsg, userId);
 	pMsg->setField(VID_NODE_ID, m_nodeId);
 }
 
@@ -150,7 +150,7 @@ UINT32 NodeLink::modifyFromMessageInternal(NXCPMessage *pRequest)
 		m_nodeId = pRequest->getFieldAsUInt32(VID_NODE_ID);
 	}
 
-	return ServiceContainer::modifyFromMessageInternal(pRequest);
+	return super::modifyFromMessageInternal(pRequest);
 }
 
 /**
@@ -254,5 +254,5 @@ void NodeLink::onObjectDelete(UINT32 dwObjectId)
 		DbgPrintf(4, _T("Scheduling deletion of nodelink object %s [%u] due to linked node deletion"), m_name, m_id);
       ThreadPoolExecute(g_mainThreadPool, DeleteNodeLink, this);
 	}
-   ServiceContainer::onObjectDelete(dwObjectId);
+   super::onObjectDelete(dwObjectId);
 }

@@ -606,6 +606,11 @@ typedef struct
 #define CMD_GET_ACTION_LIST               0x0173
 #define CMD_PROXY_MESSAGE                 0x0174
 #define CMD_GET_GRAPH                     0x0175
+#define CMD_UPDATE_AGENT_POLICY           0x0176
+#define CMD_DELETE_AGENT_POLICY           0x0177
+#define CMD_GET_AGENT_POLICY              0x0178
+#define CMD_POLICY_EDITOR_CLOSED          0x0179
+#define CMD_POLICY_FORCE_APPLY            0x017A
 
 #define CMD_RS_LIST_REPORTS            0x1100
 #define CMD_RS_GET_REPORT              0x1101
@@ -1249,6 +1254,8 @@ typedef struct
 #define VID_AUTOUNBIND_FLAG         ((UINT32)626)
 #define VID_TIMEOUT                 ((UINT32)627)
 #define VID_PROGRESS                ((UINT32)628)
+#define VID_POLICY_COUNT            ((UINT32)629)
+#define VID_NEW_POLICY_TYPE         ((UINT32)630)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)
@@ -1450,6 +1457,8 @@ typedef struct
 #define VID_SCHEDULE_LIST_BASE      ((UINT32)0x10000000)
 
 #define VID_CALLBACK_BASE           ((UINT32)0x10000000)
+
+#define VID_AGENT_POLICY_BASE       ((UINT32)0x10000000)
 
 //base value for macro expansion
 #define VID_EXP_STRING_BASE         ((UINT32)0x10000000)

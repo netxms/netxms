@@ -670,7 +670,6 @@ private:
 	void cancelJob(NXCPMessage *pRequest);
 	void holdJob(NXCPMessage *pRequest);
 	void unholdJob(NXCPMessage *pRequest);
-	void deployAgentPolicy(NXCPMessage *pRequest, bool uninstallFlag);
 	void getUserCustomAttribute(NXCPMessage *request);
 	void setUserCustomAttribute(NXCPMessage *request);
 	void openServerLog(NXCPMessage *request);
@@ -745,6 +744,11 @@ private:
    void getPredictionEngines(NXCPMessage *request);
    void getPredictedData(NXCPMessage *request);
    void expandMacros(NXCPMessage *request);
+   void updatePolicy(NXCPMessage *request);
+   void deletePolicy(NXCPMessage *request);
+   void getPolicyList(NXCPMessage *request);
+   void onPolicyEditorClose(NXCPMessage *request);
+   void forcApplyPolicy(NXCPMessage *pRequest);
 #ifdef WITH_ZMQ
    void zmqManageSubscription(NXCPMessage *request, zmq::SubscriptionType type, bool subscribe);
    void zmqListSubscriptions(NXCPMessage *request, zmq::SubscriptionType type);
@@ -1041,6 +1045,8 @@ void NXCORE_EXPORTABLE EnumerateClientSessions(void (*pHandler)(ClientSession *,
 void NXCORE_EXPORTABLE NotifyClientSessions(UINT32 dwCode, UINT32 dwData);
 void NXCORE_EXPORTABLE NotifyClientSession(UINT32 sessionId, UINT32 dwCode, UINT32 dwData);
 void NXCORE_EXPORTABLE NotifyClientGraphUpdate(NXCPMessage *update, UINT32 graphId);
+void NotifyClientPolicyUpdate(NXCPMessage *msg, Template *object);
+void NotifyClientPolicyDelete(uuid guid, Template *object);
 void NotifyClientDCIUpdate(DataCollectionOwner *object, DCObject *dco);
 void NotifyClientDCIDelete(DataCollectionOwner *object, UINT32 dcoId);
 void NotifyClientDCIStatusChange(DataCollectionOwner *object, UINT32 dcoId, int status);

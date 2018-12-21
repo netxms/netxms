@@ -23,252 +23,223 @@
 #include "nxcore.h"
 
 /**
- * Redefined status calculation for policy group
+ * Constructor for user-initiated object creation
  */
-void PolicyGroup::calculateCompoundStatus(BOOL bForcedRecalc)
+GenericAgentPolicy::GenericAgentPolicy(uuid guid, UINT32 ownerId)
 {
-   m_status = STATUS_NORMAL;
+   m_name[0] = 0;
+   m_policyType[0] = 0;
+   m_guid = guid;
+   m_ownerId = ownerId;
+   m_fileContent = NULL;
+   m_version = 1;
 }
 
-/**
- * Called by client session handler to check if threshold summary should be shown for this object.
- */
-bool PolicyGroup::showThresholdSummary()
-{
-	return false;
-}
 
-/**
- * Agent policy default constructor
- */
-AgentPolicy::AgentPolicy(int type) : NetObj(), AutoBindTarget(this), VersionableObject(this)
+GenericAgentPolicy::GenericAgentPolicy(GenericAgentPolicy *policy)
 {
-	m_policyType = type;
-   m_status = STATUS_NORMAL;
+   nx_strncpy(m_name, policy->m_name, MAX_OBJECT_NAME);
+   nx_strncpy(m_policyType, policy->m_policyType, MAX_OBJECT_NAME);
+   m_guid = policy->m_guid;
+   m_ownerId = policy->m_ownerId;
+   m_fileContent = MemCopyString(policy->m_fileContent);
+   m_version = policy->m_version;
 }
 
 /**
  * Constructor for user-initiated object creation
  */
-AgentPolicy::AgentPolicy(const TCHAR *name, int type) : NetObj(), AutoBindTarget(this), VersionableObject(this)
+GenericAgentPolicy::GenericAgentPolicy(const TCHAR *name, const TCHAR *type, UINT32 ownerId)
 {
 	nx_strncpy(m_name, name, MAX_OBJECT_NAME);
-	m_policyType = type;
-   m_status = STATUS_NORMAL;
+   nx_strncpy(m_policyType, type, MAX_OBJECT_NAME);
+   m_guid = uuid::generate();
+   m_ownerId = ownerId;
+   m_fileContent = NULL;
+   m_version = 1;
 }
 
 /**
- * Must return true if object is an agent policy (derived from AgentPolicy class)
+ * Destructor
  */
-bool AgentPolicy::isAgentPolicy()
+GenericAgentPolicy::~GenericAgentPolicy()
 {
-   return true;
-}
-
-/**
- * Save common policy properties to database
- */
-bool AgentPolicy::savePolicyCommonProperties(DB_HANDLE hdb)
-{
-	if (!saveCommonProperties(hdb))
-      return false;
-
-	bool success = false;
-   if (!IsDatabaseRecordExist(hdb, _T("ap_common"), _T("id"), m_id)) //Policy can be only created. Policy type can't be changed.
-   {
-      DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO ap_common (policy_type,id) VALUES (?,?)"));
-      if (hStmt == NULL)
-         return false;
-
-      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_policyType);
-      DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_id);
-      success = DBExecute(hStmt);
-      DBFreeStatement(hStmt);
-   }
-   else
-   {
-      success = true;
-   }
-
-   // Save access list
-   if (success)
-      success = saveACLToDB(hdb);
-
-   // Update node bindings
-   if (success)
-      success = executeQueryOnObject(hdb, _T("DELETE FROM ap_bindings WHERE policy_id=?"));
-
-
-   lockChildList(false);
-   if (success && (m_childList->size() > 0))
-   {
-      DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO ap_bindings (policy_id,node_id) VALUES (?,?)"), m_childList->size() > 1);
-      if (hStmt != NULL)
-      {
-         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
-         for(int i = 0; (i < m_childList->size()) && success; i++)
-         {
-            DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_childList->get(i)->getId());
-            success = DBExecute(hStmt);
-         }
-         DBFreeStatement(hStmt);
-      }
-      else
-      {
-         success = false;
-      }
-   }
-   unlockChildList();
-
-   if (success)
-      success = AutoBindTarget::saveToDatabase(hdb);
-   if (success)
-      success = VersionableObject::saveToDatabase(hdb);
-
-	return success;
+   MemFree(m_fileContent);
 }
 
 /**
  * Save to database
  */
-bool AgentPolicy::saveToDatabase(DB_HANDLE hdb)
+bool GenericAgentPolicy::saveToDatabase(DB_HANDLE hdb)
 {
-	lockProperties();
-   bool success = savePolicyCommonProperties(hdb);
-	// Clear modifications flag and unlock object
-	if (success)
-		m_modified = 0;
-   unlockProperties();
+   bool success = false;
+   DB_STATEMENT hStmt;
+   if (!IsDatabaseRecordExist(hdb, _T("ap_common"), _T("guid"), m_guid)) //Policy can be only created. Policy type can't be changed.
+      hStmt = DBPrepare(hdb, _T("INSERT INTO ap_common (policy_name,owner_id,policy_type,file_content,version,guid) VALUES (?,?,?,?,?,?)"));
+   else
+      hStmt = DBPrepare(hdb, _T("UPDATE ap_common SET policy_name=?,owner_id=?,policy_type=?,file_content=?,version=? WHERE guid=?"));
+
+   if(hStmt != NULL)
+   {
+      DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_name, DB_BIND_STATIC);
+      DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_ownerId);
+      DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_policyType, DB_BIND_STATIC);
+      DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, CHECK_NULL_EX(m_fileContent), DB_BIND_STATIC);
+      DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, m_version);
+      DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, m_guid);
+      success = DBExecute(hStmt);
+      DBFreeStatement(hStmt);
+   }
+   else
+      success = false;
+
    return success;
 }
 
 /**
  * Delete from database
  */
-bool AgentPolicy::deleteFromDatabase(DB_HANDLE hdb)
+bool GenericAgentPolicy::deleteFromDatabase(DB_HANDLE hdb)
 {
-   bool success = NetObj::deleteFromDatabase(hdb);
-   if (success)
-      success = executeQueryOnObject(hdb, _T("DELETE FROM ap_common WHERE id=?"));
-   if (success)
-      success = executeQueryOnObject(hdb, _T("DELETE FROM ap_bindings WHERE policy_id=?"));
-   if(success)
-      success = AutoBindTarget::deleteFromDatabase(hdb);
-   if(success)
-      success = VersionableObject::deleteFromDatabase(hdb);
-   return success;
+   TCHAR query[256];
+   _sntprintf(query, 256, _T("DELETE FROM ap_common WHERE guid='%s'"), (const TCHAR *)m_guid.toString());
+   return DBQuery(hdb, query);
 }
 
 /**
  * Load from database
  */
-bool AgentPolicy::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
+bool GenericAgentPolicy::loadFromDatabase(DB_HANDLE hdb)
 {
-	m_id = id;
-
-	if (!loadCommonProperties(hdb))
-   {
-      DbgPrintf(2, _T("Cannot load common properties for agent policy object %d"), id);
-      return false;
-   }
-
-   if (m_isDeleted)
-      return true;
-
    TCHAR query[256];
-
-   bool success = loadACLFromDB(hdb);
-
+   bool success = false;
    // Load related nodes list
-   if(success)
+   _sntprintf(query, 256, _T("SELECT policy_name,owner_id,policy_type,file_content,version FROM ap_common WHERE guid='%s'"), (const TCHAR *)m_guid.toString());
+   DB_RESULT hResult = DBSelect(hdb, query);
+   if (hResult != NULL && DBGetNumRows(hResult) > 0)
    {
-      _sntprintf(query, 256, _T("SELECT node_id FROM ap_bindings WHERE policy_id=%d"), m_id);
-      DB_RESULT hResult = DBSelect(hdb, query);
-      if (hResult != NULL)
-      {
-         int numNodes = DBGetNumRows(hResult);
-         for(int i = 0; i < numNodes; i++)
-         {
-            UINT32 nodeId = DBGetFieldULong(hResult, i, 0);
-            NetObj *object = FindObjectById(nodeId);
-            if (object != NULL)
-            {
-               if (object->getObjectClass() == OBJECT_NODE)
-               {
-                  addChild(object);
-                  object->addParent(this);
-               }
-               else
-               {
-                  nxlog_write(MSG_AP_BINDING_NOT_NODE, EVENTLOG_ERROR_TYPE, "dd", m_id, nodeId);
-               }
-            }
-            else
-            {
-               nxlog_write(MSG_INVALID_AP_BINDING, EVENTLOG_ERROR_TYPE, "dd", m_id, nodeId);
-            }
-         }
-         DBFreeResult(hResult);
-      }
-      else
-         success = false;
+      DBGetField(hResult, 0, 0, m_name, MAX_DB_STRING);
+      m_ownerId = DBGetFieldLong(hResult, 0, 1);
+      DBGetField(hResult, 0, 2, m_policyType, 32);
+      m_fileContent = DBGetField(hResult, 0, 3, NULL, 0);
+      m_version = DBGetFieldLong(hResult, 0, 4);
+      DBFreeResult(hResult);
+      success = true;
    }
 
-   if(success)
-      success = AutoBindTarget::loadFromDatabase(hdb, id);
-   if(success)
-      success = VersionableObject::loadFromDatabase(hdb, id);
-	return true;
+	return success;
 }
 
 /**
  * Create NXCP message with policy data
  */
-void AgentPolicy::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
+void GenericAgentPolicy::fillMessage(NXCPMessage *msg, UINT32 baseId)
 {
-	NetObj::fillMessageInternal(msg, userId);
-   AutoBindTarget::fillMessageInternal(msg, userId);
-   VersionableObject::fillMessageInternal(msg, userId);
+   msg->setField(baseId, m_guid);
+   msg->setField(baseId+1, m_policyType);
+   msg->setField(baseId+2, m_name);
+   msg->setField(baseId+3, CHECK_NULL_EX(m_fileContent));
 }
+
+/**
+ * Create NXCP message with policy data for notifications
+ */
+void GenericAgentPolicy::fillUpdateMessage(NXCPMessage *msg)
+{
+   msg->setField(VID_GUID, m_guid);
+   msg->setField(VID_NAME, m_name);
+   msg->setField(VID_POLICY_TYPE, m_policyType);
+   msg->setField(VID_CONFIG_FILE_DATA, CHECK_NULL_EX(m_fileContent));
+}
+
 
 /**
  * Modify policy from message
  */
-UINT32 AgentPolicy::modifyFromMessageInternal(NXCPMessage *request)
+UINT32 GenericAgentPolicy::modifyFromMessage(NXCPMessage *msg)
 {
-   updateVersion();
-   AutoBindTarget::modifyFromMessageInternal(request);
-   return NetObj::modifyFromMessageInternal(request);
+   msg->getFieldAsString(VID_NAME, m_name, MAX_DB_STRING);
+
+   if (msg->isFieldExist(VID_CONFIG_FILE_DATA))
+   {
+      MemFree(m_fileContent);
+      m_fileContent = msg->getFieldAsString(VID_CONFIG_FILE_DATA);
+   }
+   m_version++;
+   return RCC_SUCCESS;
 }
 
 /**
  * Create deployment message
  */
-bool AgentPolicy::createDeploymentMessage(NXCPMessage *msg)
+bool GenericAgentPolicy::createDeploymentMessage(NXCPMessage *msg, bool supportNewTypeFormat)
 {
-	msg->setField(VID_POLICY_TYPE, (WORD)m_policyType);
-	msg->setField(VID_GUID, m_guid);
-	return true;
-}
+   if (m_fileContent == NULL)
+      return false;  // Policy cannot be deployed
 
-/**
- * Create uninstall message
- */
-bool AgentPolicy::createUninstallMessage(NXCPMessage *msg)
-{
-	msg->setField(VID_POLICY_TYPE, (WORD)m_policyType);
-	msg->setField(VID_GUID, m_guid);
+#ifdef UNICODE
+   char *fd = MBStringFromWideStringSysLocale(m_fileContent);
+   msg->setField(VID_CONFIG_FILE_DATA, (BYTE *)fd, (UINT32)strlen(fd));
+   free(fd);
+#else
+   msg->setField(VID_CONFIG_FILE_DATA, (BYTE *)m_fileContent, (UINT32)strlen(m_fileContent));
+#endif
+
+   if(supportNewTypeFormat)
+   {
+      msg->setField(VID_POLICY_TYPE, m_policyType);
+   }
+   else
+   {
+      if(!_tcscmp(m_policyType, _T("AgentConfig")))
+      {
+         msg->setField(VID_POLICY_TYPE, AGENT_POLICY_CONFIG);
+      }
+      else if(!_tcscmp(m_policyType, _T("LogParserConfig")))
+      {
+         msg->setField(VID_POLICY_TYPE, AGENT_POLICY_LOG_PARSER);
+      }
+   }
+   msg->setField(VID_GUID, m_guid);
+   msg->setField(VID_VERSION, m_version);
+
 	return true;
 }
 
 /**
  * Serialize object to JSON
  */
-json_t *AgentPolicy::toJson()
+json_t *GenericAgentPolicy::toJson()
 {
-   json_t *root = NetObj::toJson();
-   json_object_set_new(root, "policyType", json_integer(m_policyType));
-   AutoBindTarget::toJson(root);
-   VersionableObject::toJson(root);
+   json_t *root = json_object();
+   json_object_set_new(root, "guid", json_string_t((const TCHAR *)m_guid.toString()));
+   json_object_set_new(root, "name", json_string_t(m_name));
+   json_object_set_new(root, "policyType", json_string_t(m_policyType));
+   json_object_set_new(root, "fileContent", json_string_t(CHECK_NULL_EX(m_fileContent)));
    return root;
+}
+
+void GenericAgentPolicy::updateFromImport(ConfigEntry *config)
+{
+   nx_strncpy(m_name, config->getSubEntryValue(_T("name"), 0, _T("unnamed")), MAX_ITEM_NAME);
+   nx_strncpy(m_policyType, config->getSubEntryValue(_T("policyType"), 0, _T("none")), MAX_DB_STRING);
+   const TCHAR *fileContent=config->getSubEntryValue(_T("fileContent"), 0, _T(""));
+   MemFree(m_fileContent);
+   m_fileContent = MemCopyString(fileContent);
+}
+
+void GenericAgentPolicy::createExportRecord(String &str)
+{
+
+   str.appendFormattedString(_T("\t\t\t<agentPolicy id=\"%s\">\n"), (const TCHAR *)m_guid.toString());
+   str.append(_T("\t\t\t\t<name>"));
+   str.append(m_name);
+   str.append(_T("</name>\n"));
+   str.append(_T("\t\t\t\t<policyType>"));
+   str.append(m_policyType);
+   str.append(_T("</policyType>\n"));
+   str.append(_T("\t\t\t\t<fileContent>"));
+   str.append(m_fileContent);
+   str.append(_T("</fileContent>\n"));
+   str.append(_T("</agentPolicy>\n"));
 }

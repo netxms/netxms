@@ -30,7 +30,6 @@ BOOL g_bModificationsLocked = FALSE;
 Network NXCORE_EXPORTABLE *g_pEntireNet = NULL;
 ServiceRoot NXCORE_EXPORTABLE *g_pServiceRoot = NULL;
 TemplateRoot NXCORE_EXPORTABLE *g_pTemplateRoot = NULL;
-PolicyRoot NXCORE_EXPORTABLE *g_pPolicyRoot = NULL;
 NetworkMapRoot NXCORE_EXPORTABLE *g_pMapRoot = NULL;
 DashboardRoot NXCORE_EXPORTABLE *g_pDashboardRoot = NULL;
 BusinessServiceRoot NXCORE_EXPORTABLE *g_pBusinessServiceRoot = NULL;
@@ -211,10 +210,6 @@ void ObjectsInit()
    g_pTemplateRoot = new TemplateRoot;
    NetObjInsert(g_pTemplateRoot, false, false);
 
-	// Create "Policy Root" object
-   g_pPolicyRoot = new PolicyRoot;
-   NetObjInsert(g_pPolicyRoot, false, false);
-
 	// Create "Network Maps Root" object
    g_pMapRoot = new NetworkMapRoot;
    NetObjInsert(g_pMapRoot, false, false);
@@ -304,10 +299,6 @@ void NetObjInsert(NetObj *pObject, bool newObject, bool importedObject)
          case OBJECT_TEMPLATEGROUP:
          case OBJECT_TEMPLATEROOT:
 			case OBJECT_VPNCONNECTOR:
-			case OBJECT_POLICYGROUP:
-			case OBJECT_POLICYROOT:
-			case OBJECT_AGENTPOLICY:
-			case OBJECT_AGENTPOLICY_CONFIG:
          case OBJECT_AGENTPOLICY_LOGPARSER:
 			case OBJECT_NETWORKMAPROOT:
 			case OBJECT_NETWORKMAPGROUP:
@@ -470,10 +461,6 @@ void NetObjDeleteFromIndexes(NetObj *pObject)
       case OBJECT_TEMPLATEGROUP:
       case OBJECT_TEMPLATEROOT:
 		case OBJECT_VPNCONNECTOR:
-		case OBJECT_POLICYGROUP:
-		case OBJECT_POLICYROOT:
-		case OBJECT_AGENTPOLICY:
-		case OBJECT_AGENTPOLICY_CONFIG:
 		case OBJECT_NETWORKMAPROOT:
 		case OBJECT_NETWORKMAPGROUP:
 		case OBJECT_DASHBOARDROOT:
@@ -1279,10 +1266,7 @@ BOOL LoadObjects()
                DBCacheTable(cachedb, mainDB, _T("dct_node_map"), _T("template_id,node_id"), _T("*"), intColumns) &&
                DBCacheTable(cachedb, mainDB, _T("dci_schedules"), _T("item_id,schedule_id"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("dci_access"), _T("dci_id,user_id"), _T("*")) &&
-               DBCacheTable(cachedb, mainDB, _T("ap_common"), _T("id"), _T("*")) &&
-               DBCacheTable(cachedb, mainDB, _T("ap_bindings"), _T("policy_id,node_id"), _T("*")) &&
-               DBCacheTable(cachedb, mainDB, _T("ap_config_files"), _T("policy_id"), _T("*")) &&
-               DBCacheTable(cachedb, mainDB, _T("ap_log_parser"), _T("policy_id"), _T("*")) &&
+               DBCacheTable(cachedb, mainDB, _T("ap_common"), _T("guid"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("network_maps"), _T("id"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("network_map_elements"), _T("map_id,element_id"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("network_map_links"), NULL, _T("*")) &&
@@ -1317,7 +1301,6 @@ BOOL LoadObjects()
    g_pEntireNet->loadFromDatabase(hdb);
    g_pServiceRoot->loadFromDatabase(hdb);
    g_pTemplateRoot->loadFromDatabase(hdb);
-	g_pPolicyRoot->loadFromDatabase(hdb);
 	g_pMapRoot->loadFromDatabase(hdb);
 	g_pDashboardRoot->loadFromDatabase(hdb);
 	g_pBusinessServiceRoot->loadFromDatabase(hdb);
@@ -1679,44 +1662,6 @@ BOOL LoadObjects()
       DBFreeResult(hResult);
    }
 
-   // Load agent policies
-   DbgPrintf(2, _T("Loading agent policies..."));
-   hResult = DBSelect(hdb, _T("SELECT id,policy_type FROM ap_common"));
-   if (hResult != NULL)
-   {
-      int count = DBGetNumRows(hResult);
-      for(int i = 0; i < count; i++)
-      {
-         AgentPolicy *policy;
-
-			UINT32 id = DBGetFieldULong(hResult, i, 0);
-			int type = DBGetFieldLong(hResult, i, 1);
-			switch(type)
-			{
-				case AGENT_POLICY_CONFIG:
-					policy = new AgentPolicyConfig();
-					break;
-				case AGENT_POLICY_LOG_PARSER:
-					policy = new AgentPolicyLogParser();
-					break;
-				default:
-					policy = new AgentPolicy(type);
-					break;
-			}
-         if (policy->loadFromDatabase(hdb, id))
-         {
-            NetObjInsert(policy, false, false);  // Insert into indexes
-				policy->calculateCompoundStatus();	// Force status change to NORMAL
-         }
-         else     // Object load failed
-         {
-            delete policy;
-            nxlog_write(MSG_AGENTPOLICY_LOAD_FAILED, NXLOG_ERROR, "d", id);
-         }
-      }
-      DBFreeResult(hResult);
-   }
-
    // Load network maps
    DbgPrintf(2, _T("Loading network maps..."));
    hResult = DBSelect(hdb, _T("SELECT id FROM network_maps"));
@@ -1788,30 +1733,6 @@ BOOL LoadObjects()
          {
             delete pGroup;
             nxlog_write(MSG_TG_LOAD_FAILED, NXLOG_ERROR, "d", id);
-         }
-      }
-      DBFreeResult(hResult);
-   }
-
-   // Load policy group objects
-   DbgPrintf(2, _T("Loading policy groups..."));
-   _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("SELECT id FROM object_containers WHERE object_class=%d"), OBJECT_POLICYGROUP);
-   hResult = DBSelect(hdb, query);
-   if (hResult != NULL)
-   {
-      int count = DBGetNumRows(hResult);
-      for(int i = 0; i < count; i++)
-      {
-         UINT32 id = DBGetFieldULong(hResult, i, 0);
-         PolicyGroup *group = new PolicyGroup;
-         if (group->loadFromDatabase(hdb, id))
-         {
-            NetObjInsert(group, false, false);  // Insert into indexes
-         }
-         else     // Object load failed
-         {
-            delete group;
-            nxlog_write(MSG_PG_LOAD_FAILED, NXLOG_ERROR, "d", id);
          }
       }
       DBFreeResult(hResult);
@@ -1978,7 +1899,6 @@ BOOL LoadObjects()
    g_pEntireNet->calculateCompoundStatus();
    g_pServiceRoot->calculateCompoundStatus();
    g_pTemplateRoot->calculateCompoundStatus();
-   g_pPolicyRoot->calculateCompoundStatus();
    g_pMapRoot->calculateCompoundStatus();
    g_pBusinessServiceRoot->calculateCompoundStatus();
 
@@ -2169,14 +2089,6 @@ bool IsValidParentClass(int childClass, int parentClass)
              (childClass == OBJECT_DASHBOARD))
             return true;
          break;
-      case OBJECT_POLICYROOT:
-      case OBJECT_POLICYGROUP:
-         if ((childClass == OBJECT_POLICYGROUP) ||
-             (childClass == OBJECT_AGENTPOLICY) ||
-             (childClass == OBJECT_AGENTPOLICY_CONFIG) ||
-             (childClass == OBJECT_AGENTPOLICY_LOGPARSER))
-            return true;
-         break;
       case OBJECT_NODE:
          if ((childClass == OBJECT_NETWORKSERVICE) ||
              (childClass == OBJECT_VPNCONNECTOR) ||
@@ -2337,14 +2249,6 @@ int GetDefaultStatusCalculation(int *pnSingleThreshold, int **ppnThresholds)
 }
 
 /**
- * Check if given object is an agent policy object
- */
-bool IsAgentPolicyObject(NetObj *object)
-{
-	return (object->getObjectClass() == OBJECT_AGENTPOLICY) || (object->getObjectClass() == OBJECT_AGENTPOLICY_CONFIG) || (object->getObjectClass() == OBJECT_AGENTPOLICY_LOGPARSER);
-}
-
-/**
  * Returns true if object of given class can be event source
  */
 bool IsEventSource(int objectClass)
@@ -2496,8 +2400,6 @@ ObjectArray<NetObj> *QueryObjects(const TCHAR *query, UINT32 userId, TCHAR *erro
 
    // Set class constants
    vm->addConstant("ACCESSPOINT", vm->createValue(OBJECT_ACCESSPOINT));
-   vm->addConstant("AGENTPOLICY", vm->createValue(OBJECT_AGENTPOLICY));
-   vm->addConstant("AGENTPOLICY_CONFIG", vm->createValue(OBJECT_AGENTPOLICY_CONFIG));
    vm->addConstant("AGENTPOLICY_LOGPARSER", vm->createValue(OBJECT_AGENTPOLICY_LOGPARSER));
    vm->addConstant("BUSINESSSERVICE", vm->createValue(OBJECT_BUSINESSSERVICE));
    vm->addConstant("BUSINESSSERVICEROOT", vm->createValue(OBJECT_BUSINESSSERVICEROOT));
@@ -2517,8 +2419,6 @@ ObjectArray<NetObj> *QueryObjects(const TCHAR *query, UINT32 userId, TCHAR *erro
    vm->addConstant("NETWORKSERVICE", vm->createValue(OBJECT_NETWORKSERVICE));
    vm->addConstant("NODE", vm->createValue(OBJECT_NODE));
    vm->addConstant("NODELINK", vm->createValue(OBJECT_NODELINK));
-   vm->addConstant("POLICYGROUP", vm->createValue(OBJECT_POLICYGROUP));
-   vm->addConstant("POLICYROOT", vm->createValue(OBJECT_POLICYROOT));
    vm->addConstant("RACK", vm->createValue(OBJECT_RACK));
    vm->addConstant("SENSOR", vm->createValue(OBJECT_SENSOR));
    vm->addConstant("SERVICEROOT", vm->createValue(OBJECT_SERVICEROOT));

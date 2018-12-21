@@ -26,7 +26,7 @@
 /**
  * Default constructor for Interface object
  */
-Interface::Interface() : NetObj()
+Interface::Interface() : super()
 {
    m_parentInterfaceId = 0;
 	nx_strncpy(m_description, m_name, MAX_DB_STRING);
@@ -64,7 +64,7 @@ Interface::Interface() : NetObj()
 /**
  * Constructor for "fake" interface object
  */
-Interface::Interface(const InetAddressList& addrList, UINT32 zoneUIN, bool bSyntheticMask) : NetObj()
+Interface::Interface(const InetAddressList& addrList, UINT32 zoneUIN, bool bSyntheticMask) : super()
 {
    m_parentInterfaceId = 0;
 	m_flags = bSyntheticMask ? IF_SYNTHETIC_MASK : 0;
@@ -110,7 +110,7 @@ Interface::Interface(const InetAddressList& addrList, UINT32 zoneUIN, bool bSynt
  * Constructor for normal interface object
  */
 Interface::Interface(const TCHAR *name, const TCHAR *descr, UINT32 index, const InetAddressList& addrList, UINT32 ifType, UINT32 zoneUIN)
-          : NetObj()
+          : super()
 {
    if ((ifType == IFTYPE_SOFTWARE_LOOPBACK) || addrList.isLoopbackOnly())
 		m_flags = IF_LOOPBACK;
@@ -495,7 +495,7 @@ bool Interface::saveToDatabase(DB_HANDLE hdb)
  */
 bool Interface::deleteFromDatabase(DB_HANDLE hdb)
 {
-   bool success = NetObj::deleteFromDatabase(hdb);
+   bool success = super::deleteFromDatabase(hdb);
    if (success)
       success = executeQueryOnObject(hdb, _T("DELETE FROM interfaces WHERE id=?"));
    if (success)
@@ -1051,7 +1051,7 @@ void Interface::paeStatusPoll(UINT32 rqId, SNMP_Transport *pTransport, Node *nod
  */
 void Interface::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
 {
-   NetObj::fillMessageInternal(msg, userId);
+   super::fillMessageInternal(msg, userId);
 
    m_ipAddressList.fillMessage(msg, VID_IP_ADDRESS_COUNT, VID_IP_ADDRESS_LIST_BASE);
    msg->setField(VID_IF_INDEX, m_index);
@@ -1100,7 +1100,7 @@ UINT32 Interface::modifyFromMessageInternal(NXCPMessage *request)
 		setExpectedStateInternal(request->getFieldAsInt16(VID_EXPECTED_STATE));
 	}
 
-   return NetObj::modifyFromMessageInternal(request);
+   return super::modifyFromMessageInternal(request);
 }
 
 /**
@@ -1223,7 +1223,7 @@ void Interface::onObjectDelete(UINT32 dwObjectId)
 		setModified(MODIFY_INTERFACE_PROPERTIES);
 		unlockProperties();
 	}
-	NetObj::onObjectDelete(dwObjectId);
+	super::onObjectDelete(dwObjectId);
 }
 
 /**
@@ -1423,7 +1423,7 @@ NXSL_Value *Interface::getVlanListForNXSL(NXSL_VM *vm)
  */
 json_t *Interface::toJson()
 {
-   json_t *root = NetObj::toJson();
+   json_t *root = super::toJson();
    json_object_set_new(root, "index", json_integer(m_index));
    char macAddrText[64];
    json_object_set_new(root, "macAddr", json_string(BinToStrA(m_macAddr, MAC_ADDR_LENGTH, macAddrText)));

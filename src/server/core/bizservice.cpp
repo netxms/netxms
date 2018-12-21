@@ -27,7 +27,7 @@
 /**
  * Service default constructor
  */
-BusinessService::BusinessService() : ServiceContainer()
+BusinessService::BusinessService() : super()
 {
 	m_busy = false;
    m_pollingDisabled = false;
@@ -39,7 +39,7 @@ BusinessService::BusinessService() : ServiceContainer()
 /**
  * Constructor for new service object
  */
-BusinessService::BusinessService(const TCHAR *name) : ServiceContainer(name)
+BusinessService::BusinessService(const TCHAR *name) : super(name)
 {
 	m_busy = false;
    m_pollingDisabled = false;
@@ -60,7 +60,7 @@ BusinessService::~BusinessService()
  */
 bool BusinessService::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
 {
-	if (!ServiceContainer::loadFromDatabase(hdb, id))
+	if (!super::loadFromDatabase(hdb, id))
 		return false;
 
 	// now it doesn't make any sense but hopefully will do in the future
@@ -105,7 +105,7 @@ bool BusinessService::saveToDatabase(DB_HANDLE hdb)
          return false;
    }
 
-	return ServiceContainer::saveToDatabase(hdb);
+	return super::saveToDatabase(hdb);
 }
 
 /**
@@ -113,7 +113,7 @@ bool BusinessService::saveToDatabase(DB_HANDLE hdb)
  */
 bool BusinessService::deleteFromDatabase(DB_HANDLE hdb)
 {
-   bool success = ServiceContainer::deleteFromDatabase(hdb);
+   bool success = super::deleteFromDatabase(hdb);
    if (success)
    {
       success = executeQueryOnObject(hdb, _T("DELETE FROM business_services WHERE service_id=?"));
@@ -126,7 +126,7 @@ bool BusinessService::deleteFromDatabase(DB_HANDLE hdb)
  */
 void BusinessService::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
 {
-   ServiceContainer::fillMessageInternal(pMsg, userId);
+   super::fillMessageInternal(pMsg, userId);
 }
 
 /**
@@ -134,7 +134,7 @@ void BusinessService::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
  */
 UINT32 BusinessService::modifyFromMessageInternal(NXCPMessage *pRequest)
 {
-   return ServiceContainer::modifyFromMessageInternal(pRequest);
+   return super::modifyFromMessageInternal(pRequest);
 }
 
 /**
@@ -255,5 +255,5 @@ void BusinessService::prepareForDeletion()
       ThreadSleep(100);
    }
 	DbgPrintf(4, _T("BusinessService::PrepareForDeletion(%s [%d]): no outstanding polls left"), m_name, (int)m_id);
-   ServiceContainer::prepareForDeletion();
+   super::prepareForDeletion();
 }

@@ -124,8 +124,6 @@ import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.AccessPoint;
 import org.netxms.client.objects.AgentPolicy;
-import org.netxms.client.objects.AgentPolicyConfig;
-import org.netxms.client.objects.AgentPolicyLogParser;
 import org.netxms.client.objects.BusinessService;
 import org.netxms.client.objects.BusinessServiceRoot;
 import org.netxms.client.objects.Chassis;
@@ -614,6 +612,12 @@ public class NXCSession
                      }
                      sendNotification(new SessionNotification(SessionNotification.DCI_STATE_CHANGE, msg.getFieldAsInt64(NXCPCodes.VID_OBJECT_ID), 
                                       new DCOStatusHolder(itemList, msg.getFieldAsInt32(NXCPCodes.VID_DCI_STATUS))));
+                     break;
+                  case NXCPCodes.CMD_UPDATE_AGENT_POLICY:
+                     sendNotification(new SessionNotification(SessionNotification.POLICY_MODIFIED, msg.getFieldAsInt64(NXCPCodes.VID_TEMPLATE_ID), new AgentPolicy(msg)));
+                     break;
+                  case NXCPCodes.CMD_DELETE_AGENT_POLICY:
+                     sendNotification(new SessionNotification(SessionNotification.POLICY_DELETED, msg.getFieldAsInt64(NXCPCodes.VID_TEMPLATE_ID), msg.getFieldAsUUID(NXCPCodes.VID_GUID)));
                      break;
                   default:
                      // Check subscriptions
@@ -1216,15 +1220,6 @@ public class NXCSession
       {
          case AbstractObject.OBJECT_ACCESSPOINT:
             object = new AccessPoint(msg, this);
-            break;
-         case AbstractObject.OBJECT_AGENTPOLICY:
-            object = new AgentPolicy(msg, this);
-            break;
-         case AbstractObject.OBJECT_AGENTPOLICY_CONFIG:
-            object = new AgentPolicyConfig(msg, this);
-            break;
-         case AbstractObject.OBJECT_AGENTPOLICY_LOGPARSER:
-            object = new AgentPolicyLogParser(msg, this);
             break;
          case AbstractObject.OBJECT_BUSINESSSERVICE:
             object = new BusinessService(msg, this);
@@ -10816,5 +10811,55 @@ public class NXCSession
       {
          tcpProxies.remove(channelId);
       }
+   }
+
+   public HashMap<UUID, AgentPolicy> getAgentPolicyList(long templateId) throws IOException, NXCException
+   {
+
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_AGENT_POLICY);
+      msg.setFieldInt32(NXCPCodes.VID_TEMPLATE_ID, (int)templateId);    
+      sendMessage(msg);  
+      final NXCPMessage response = waitForRCC(msg.getMessageId());
+      HashMap<UUID, AgentPolicy> map = new HashMap<UUID, AgentPolicy>();
+      long base = NXCPCodes.VID_AGENT_POLICY_BASE;
+      int size = response.getFieldAsInt32(NXCPCodes.VID_POLICY_COUNT);
+      for(int i = 0; i < size; i++, base+=100)
+      {
+         AgentPolicy policy = new AgentPolicy(response, base);
+         map.put(policy.getGuid(), policy);         
+      }
+      return map;
+   }
+
+   public UUID savePolicy(long templateId, AgentPolicy currentlySelectedElement) throws NXCException, IOException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_UPDATE_AGENT_POLICY);
+      msg.setFieldInt32(NXCPCodes.VID_TEMPLATE_ID, (int)templateId);
+      currentlySelectedElement.fillMessage(msg);
+      sendMessage(msg);      
+      return waitForRCC(msg.getMessageId()).getFieldAsUUID(NXCPCodes.VID_GUID);
+   }
+
+   public void deletePolicy(long templateId, UUID guid) throws NXCException, IOException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_AGENT_POLICY);
+      msg.setFieldInt32(NXCPCodes.VID_TEMPLATE_ID, (int)templateId);
+      msg.setField(NXCPCodes.VID_GUID, guid);
+      sendMessage(msg); 
+      waitForRCC(msg.getMessageId());
+   }
+   
+   public void onPolicyEditorClose(long templateId) throws NXCException, IOException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_POLICY_EDITOR_CLOSED);
+      msg.setFieldInt32(NXCPCodes.VID_TEMPLATE_ID, (int)templateId);
+      sendMessage(msg); 
+   }
+   
+   public void forcePolicyInstallation(long templateId) throws NXCException, IOException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_POLICY_FORCE_APPLY);
+      msg.setFieldInt32(NXCPCodes.VID_TEMPLATE_ID, (int)templateId);
+      sendMessage(msg); 
    }
 }

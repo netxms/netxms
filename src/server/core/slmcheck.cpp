@@ -25,7 +25,7 @@
 /**
  * SLM check default constructor
  */
-SlmCheck::SlmCheck() : NetObj()
+SlmCheck::SlmCheck() : super()
 {
 	_tcscpy(m_name, _T("Default"));
 	m_type = SlmCheck::check_script;
@@ -41,7 +41,7 @@ SlmCheck::SlmCheck() : NetObj()
 /**
  * Constructor for new check object
  */
-SlmCheck::SlmCheck(const TCHAR *name, bool isTemplate) : NetObj()
+SlmCheck::SlmCheck(const TCHAR *name, bool isTemplate) : super()
 {
    m_isHidden = true;
 	nx_strncpy(m_name, name, MAX_OBJECT_NAME);
@@ -60,7 +60,7 @@ SlmCheck::SlmCheck(const TCHAR *name, bool isTemplate) : NetObj()
 // Used to create a new object from a check template
 //
 
-SlmCheck::SlmCheck(SlmCheck *tmpl) : NetObj()
+SlmCheck::SlmCheck(SlmCheck *tmpl) : super()
 {
    m_isHidden = true;
 	_tcslcpy(m_name, tmpl->m_name, MAX_OBJECT_NAME);
@@ -248,7 +248,7 @@ bool SlmCheck::saveToDatabase(DB_HANDLE hdb)
  */
 bool SlmCheck::deleteFromDatabase(DB_HANDLE hdb)
 {
-	bool success = NetObj::deleteFromDatabase(hdb);
+	bool success = super::deleteFromDatabase(hdb);
 	if (success)
       success = executeQueryOnObject(hdb, _T("DELETE FROM slm_checks WHERE id=?"));
 	return success;
@@ -259,7 +259,7 @@ bool SlmCheck::deleteFromDatabase(DB_HANDLE hdb)
  */
 void SlmCheck::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
 {
-	NetObj::fillMessageInternal(pMsg, userId);
+	super::fillMessageInternal(pMsg, userId);
 	pMsg->setField(VID_SLMCHECK_TYPE, UINT32(m_type));
 	pMsg->setField(VID_SCRIPT, CHECK_NULL_EX(m_script));
 	pMsg->setField(VID_REASON, m_reason);
@@ -291,7 +291,7 @@ UINT32 SlmCheck::modifyFromMessageInternal(NXCPMessage *pRequest)
 		m_threshold->updateFromMessage(pRequest, VID_THRESHOLD_BASE);
 	}
 
-	return NetObj::modifyFromMessageInternal(pRequest);
+	return super::modifyFromMessageInternal(pRequest);
 }
 
 /**
@@ -514,5 +514,5 @@ void SlmCheck::onObjectDelete(UINT32 objectId)
 		DbgPrintf(4, _T("SlmCheck %s [%d] delete itself because of template deletion"), m_name, (int)m_id);
 		deleteObject();
 	}
-   NetObj::onObjectDelete(objectId);
+   super::onObjectDelete(objectId);
 }

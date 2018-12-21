@@ -20,6 +20,7 @@ package org.netxms.ui.eclipse.console;
 
 import org.eclipse.core.commands.common.NotDefinedException;
 import org.eclipse.jface.bindings.BindingManager;
+import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.rap.rwt.RWT;
 import org.eclipse.rap.rwt.client.service.JavaScriptExecutor;

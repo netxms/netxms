@@ -25,7 +25,7 @@
 /**
  * Default constructor
  */
-NetworkService::NetworkService() : NetObj()
+NetworkService::NetworkService() : super()
 {
    m_serviceType = NETSRV_HTTP;
    m_hostNode = NULL;
@@ -47,7 +47,7 @@ NetworkService::NetworkService() : NetObj()
  */
 NetworkService::NetworkService(int iServiceType, WORD wProto, WORD wPort,
                                TCHAR *pszRequest, TCHAR *pszResponse,
-										 Node *pHostNode, UINT32 dwPollerNode) : NetObj()
+										 Node *pHostNode, UINT32 dwPollerNode) : super()
 {
    m_serviceType = iServiceType;
    m_hostNode = pHostNode;
@@ -225,7 +225,7 @@ bool NetworkService::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
  */
 bool NetworkService::deleteFromDatabase(DB_HANDLE hdb)
 {
-   bool success = NetObj::deleteFromDatabase(hdb);
+   bool success = super::deleteFromDatabase(hdb);
    if (success)
       success = executeQueryOnObject(hdb, _T("DELETE FROM network_services WHERE id=?"));
    return success;
@@ -236,7 +236,7 @@ bool NetworkService::deleteFromDatabase(DB_HANDLE hdb)
  */
 void NetworkService::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
 {
-   NetObj::fillMessageInternal(pMsg, userId);
+   super::fillMessageInternal(pMsg, userId);
    pMsg->setField(VID_SERVICE_TYPE, (WORD)m_serviceType);
    pMsg->setField(VID_IP_ADDRESS, m_ipAddress);
    pMsg->setField(VID_IP_PROTO, m_proto);
@@ -322,7 +322,7 @@ UINT32 NetworkService::modifyFromMessageInternal(NXCPMessage *pRequest)
       m_response = pRequest->getFieldAsString(VID_SERVICE_RESPONSE);
    }
 
-   return NetObj::modifyFromMessageInternal(pRequest);
+   return super::modifyFromMessageInternal(pRequest);
 }
 
 /**
@@ -436,7 +436,7 @@ void NetworkService::onObjectDelete(UINT32 objectId)
    }
 	unlockProperties();
 
-   NetObj::onObjectDelete(objectId);
+	super::onObjectDelete(objectId);
 }
 
 /**
@@ -444,7 +444,7 @@ void NetworkService::onObjectDelete(UINT32 objectId)
  */
 json_t *NetworkService::toJson()
 {
-   json_t *root = NetObj::toJson();
+   json_t *root = super::toJson();
    json_object_set_new(root, "serviceType", json_integer(m_serviceType));
    json_object_set_new(root, "pollerNode", json_integer(m_pollerNode));
    json_object_set_new(root, "proto", json_integer(m_proto));

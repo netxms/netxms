@@ -77,7 +77,7 @@ bool NXCORE_EXPORTABLE ExecuteQueryOnObject(DB_HANDLE hdb, UINT32 objectId, cons
 #define BUILTIN_OID_SERVICEROOT           2
 #define BUILTIN_OID_TEMPLATEROOT          3
 #define BUILTIN_OID_ZONE0                 4
-#define BUILTIN_OID_POLICYROOT            5
+//#define BUILTIN_OID_POLICYROOT            5
 #define BUILTIN_OID_NETWORKMAPROOT        6
 #define BUILTIN_OID_DASHBOARDROOT         7
 #define BUILTIN_OID_BUSINESSSERVICEROOT   9
@@ -88,6 +88,7 @@ bool NXCORE_EXPORTABLE ExecuteQueryOnObject(DB_HANDLE hdb, UINT32 objectId, cons
 #define ALL_ZONES ((UINT32)0xFFFFFFFF)
 
 class AgentTunnel;
+class GenericAgentPolicy;
 
 /**
  * Extended agent connection
@@ -117,8 +118,8 @@ public:
    AgentConnectionEx(UINT32 nodeId, const InetAddress& ipAddr, WORD port = AGENT_LISTEN_PORT, int authMethod = AUTH_NONE, const TCHAR *secret = NULL, bool allowCompression = true);
    AgentConnectionEx(UINT32 nodeId, AgentTunnel *tunnel, int authMethod = AUTH_NONE, const TCHAR *secret = NULL, bool allowCompression = true);
 
-   UINT32 deployPolicy(AgentPolicy *policy);
-   UINT32 uninstallPolicy(AgentPolicy *policy);
+   UINT32 deployPolicy(GenericAgentPolicy *policy, bool supportNewTypeFormat);
+   UINT32 uninstallPolicy(uuid guid, TCHAR *type, bool supportNewTypeFormat);
 
    void setTunnel(AgentTunnel *tunnel);
 
@@ -519,6 +520,7 @@ struct NXCORE_EXPORTABLE NewNodeData
 #define MODIFY_MAP_CONTENT          0x0200
 #define MODIFY_SENSOR_PROPERTIES    0x0400
 #define MODIFY_MODULE_DATA          0x0800
+#define MODIFY_POLICY               0x1000
 #define MODIFY_ALL                  0xFFFF
 
 /**
@@ -961,6 +963,9 @@ public:
  */
 class NXCORE_EXPORTABLE DataCollectionOwner : public NetObj
 {
+private:
+   typedef NetObj super;
+
 protected:
 	ObjectArray<DCObject> *m_dcObjects;
    bool m_dciListModified;
@@ -1015,8 +1020,8 @@ public:
    IntegerArray<UINT32> *getDCIEventsList();
    StringSet *getDCIScriptList();
    bool isDataCollectionSource(UINT32 nodeId);
+   virtual BOOL applyToTarget(DataCollectionTarget *pNode);
 
-   BOOL applyToTarget(DataCollectionTarget *pNode);
    void queueUpdate();
    void queueRemoveFromTarget(UINT32 targetId, bool removeDCI);
 
@@ -1027,12 +1032,58 @@ public:
 	void associateItems();
 };
 
+
+/**
+ * Generic agent policy object
+ */
+class NXCORE_EXPORTABLE GenericAgentPolicy
+{
+protected:
+   UINT32 m_ownerId;
+   uuid m_guid;
+   TCHAR m_name[MAX_DB_STRING];
+   TCHAR m_policyType[32];
+   TCHAR *m_fileContent;
+   UINT32 m_version;
+
+public:
+   GenericAgentPolicy(uuid guid, UINT32 ownerId);
+   GenericAgentPolicy(const TCHAR *name, const TCHAR *type, UINT32 ownerId);
+   GenericAgentPolicy(GenericAgentPolicy *policy);
+   ~GenericAgentPolicy();
+
+   const TCHAR *getName() const { return m_name; }
+   const uuid getGuid() const { return m_guid; }
+   const UINT32 getVersion() const { return m_version; }
+   const TCHAR *getType() const { return m_policyType; }
+
+   virtual bool saveToDatabase(DB_HANDLE hdb);
+   virtual bool deleteFromDatabase(DB_HANDLE hdb);
+   virtual bool loadFromDatabase(DB_HANDLE hdb);
+
+   virtual void fillMessage(NXCPMessage *pMsg, UINT32 baseId);
+   virtual void fillUpdateMessage(NXCPMessage *msg);
+   virtual UINT32 modifyFromMessage(NXCPMessage *pRequest);
+
+   virtual void updateFromImport(ConfigEntry *config);
+   virtual json_t *toJson();
+   virtual void createExportRecord(String &str);
+
+   virtual bool createDeploymentMessage(NXCPMessage *msg, bool supportNewTypeFormat);
+};
+
 /**
  * Data collection template class
  */
-class NXCORE_EXPORTABLE Template: public DataCollectionOwner, public AutoBindTarget, public VersionableObject
+class NXCORE_EXPORTABLE Template : public DataCollectionOwner, public AutoBindTarget, public VersionableObject
 {
+private:
+   typedef DataCollectionOwner super;
+
 protected:
+   HashMap<uuid, GenericAgentPolicy> *m_policyList;
+   ObjectArray<GenericAgentPolicy> *m_deletedPolicyList;
+
    virtual void prepareForDeletion();
    virtual void onDataCollectionChange();
 
@@ -1040,9 +1091,10 @@ protected:
    virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
 
 public:
-   Template() : DataCollectionOwner(), AutoBindTarget(this), VersionableObject(this) { }
+   Template();
    Template(ConfigEntry *config);
-   Template(const TCHAR *pszName) : DataCollectionOwner(pszName), AutoBindTarget(this), VersionableObject(this) { }
+   Template(const TCHAR *pszName);
+   ~Template();
 
    virtual int getObjectClass() const { return OBJECT_TEMPLATE; }
 
@@ -1050,11 +1102,23 @@ public:
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
    virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
    virtual void applyDCIChanges();
+   virtual BOOL applyToTarget(DataCollectionTarget *pNode);
 
    virtual void updateFromImport(ConfigEntry *config);
    virtual json_t *toJson();
 
    void createExportRecord(String &str);
+
+   GenericAgentPolicy *getAgentPolicyCopy(uuid guid);
+   bool hasPolicy(uuid guid);
+   uuid updatePolicyFromMessage(NXCPMessage *request);
+   bool removePolicy(uuid guid);
+   void fillPolicyMessage(NXCPMessage *pMsg);
+   void applyPolicyChanges();
+   void forceApplyPolicyChanges();
+   void applyPolicyChanges(DataCollectionTarget *object);
+   void checkPolicyBind(Node *node, AgentPolicyInfo *ap, NetObj **unbindList, int *unbindListSize);
+   void forceInstallPolicy(DataCollectionTarget *target);
 };
 
 /**
@@ -1062,6 +1126,9 @@ public:
  */
 class NXCORE_EXPORTABLE Interface : public NetObj
 {
+private:
+   typedef NetObj super;
+
 protected:
    UINT32 m_parentInterfaceId;
    UINT32 m_index;
@@ -1201,6 +1268,9 @@ public:
  */
 class NXCORE_EXPORTABLE NetworkService : public NetObj
 {
+private:
+   typedef NetObj super;
+
 protected:
    int m_serviceType;   // SSH, POP3, etc.
    Node *m_hostNode;    // Pointer to node object which hosts this service
@@ -1246,6 +1316,9 @@ public:
  */
 class NXCORE_EXPORTABLE VPNConnector : public NetObj
 {
+private:
+   typedef NetObj super;
+
 protected:
    UINT32 m_dwPeerGateway;        // Object ID of peer gateway
    ObjectArray<InetAddress> *m_localNetworks;
@@ -1293,6 +1366,9 @@ struct ProxyInfo
  */
 class NXCORE_EXPORTABLE DataCollectionTarget : public DataCollectionOwner
 {
+private:
+   typedef DataCollectionOwner super;
+
 protected:
    IntegerArray<UINT32> *m_deletedItems;
    IntegerArray<UINT32> *m_deletedTables;
@@ -1501,6 +1577,9 @@ inline void DataCollectionTarget::unlockForStatusPoll()
  */
 class NXCORE_EXPORTABLE MobileDevice : public DataCollectionTarget
 {
+private:
+   typedef DataCollectionTarget super;
+
 protected:
 	time_t m_lastReportTime;
 	TCHAR *m_deviceId;
@@ -1557,6 +1636,9 @@ public:
  */
 class NXCORE_EXPORTABLE AccessPoint : public DataCollectionTarget
 {
+private:
+   typedef DataCollectionTarget super;
+
 protected:
    UINT32 m_index;
    InetAddress m_ipAddress;
@@ -1614,6 +1696,9 @@ public:
  */
 class NXCORE_EXPORTABLE Cluster : public DataCollectionTarget
 {
+private:
+   typedef DataCollectionTarget super;
+
 protected:
 	UINT32 m_dwClusterType;
    ObjectArray<InetAddress> *m_syncNetworks;
@@ -1678,6 +1763,9 @@ enum RackOrientation
  */
 class NXCORE_EXPORTABLE Chassis : public DataCollectionTarget
 {
+private:
+   typedef DataCollectionTarget super;
+
 protected:
    UINT32 m_controllerId;
    INT16 m_rackHeight;
@@ -1747,6 +1835,9 @@ public:
 class NXCORE_EXPORTABLE Sensor : public DataCollectionTarget
 {
    friend class Node;
+
+private:
+   typedef DataCollectionTarget super;
 
 protected:
 	MacAddress m_macAddress;
@@ -1915,6 +2006,8 @@ class NXCORE_EXPORTABLE Node : public DataCollectionTarget
    friend void Sensor::buildInternalConnectionTopologyInternal(NetworkMapObjectList *topology, bool checkAllProxies);
 
 private:
+   typedef DataCollectionTarget super;
+
 	/**
 	 * Delete agent connection
 	 */
@@ -1930,6 +2023,7 @@ private:
 	void onSnmpProxyChange(UINT32 oldProxy);
 
    static void onDataCollectionChangeAsyncCallback(void *arg);
+
 
 protected:
    InetAddress m_ipAddress;
@@ -2071,8 +2165,6 @@ protected:
 
    UINT32 getInterfaceCount(Interface **ppInterface);
 
-   void deployAgentPolicies();
-
    void checkInterfaceNames(InterfaceList *pIfList);
    bool filterInterface(InterfaceInfo *info);
    Subnet *createSubnet(InetAddress& baseAddr, bool syntheticMask);
@@ -2150,6 +2242,7 @@ public:
    bool isLocalManagement() const { return m_capabilities & NC_IS_LOCAL_MGMT ? true : false; }
 	bool isPerVlanFdbSupported() const { return (m_driver != NULL) ? m_driver->isPerVlanFdbSupported() : false; }
 	bool isWirelessController() const { return m_capabilities & NC_IS_WIFI_CONTROLLER ? true : false; }
+	bool supportNewTypeFormat() const { return m_capabilities & NC_IS_NEW_POLICY_TYPES ? true : false; }
 
    const uuid& getAgentId() const { return m_agentId; }
 	const TCHAR *getAgentVersion() const { return m_agentVersion; }
@@ -2430,6 +2523,9 @@ class NXCORE_EXPORTABLE Subnet : public NetObj
 {
 	friend void Node::buildIPTopologyInternal(NetworkMapObjectList &topology, int nDepth, UINT32 seedSubnet, bool vpnLink, bool includeEndNodes);
 
+private:
+   typedef NetObj super;
+
 protected:
    InetAddress m_ipAddress;
    UINT32 m_zoneUIN;
@@ -2476,6 +2572,9 @@ class NXCORE_EXPORTABLE UniversalRoot : public NetObj
 {
    using NetObj::loadFromDatabase;
 
+private:
+   typedef NetObj super;
+
 public:
    UniversalRoot();
    virtual ~UniversalRoot();
@@ -2491,6 +2590,9 @@ public:
  */
 class NXCORE_EXPORTABLE ServiceRoot : public UniversalRoot
 {
+private:
+   typedef UniversalRoot super;
+
 public:
    ServiceRoot();
    virtual ~ServiceRoot();
@@ -2505,6 +2607,9 @@ public:
  */
 class NXCORE_EXPORTABLE TemplateRoot : public UniversalRoot
 {
+private:
+   typedef UniversalRoot super;
+
 public:
    TemplateRoot();
    virtual ~TemplateRoot();
@@ -2519,6 +2624,8 @@ public:
 class NXCORE_EXPORTABLE AbstractContainer : public NetObj
 {
 private:
+   typedef NetObj super;
+
    UINT32 *m_pdwChildIdList;
    UINT32 m_dwChildIdListSize;
 
@@ -2546,12 +2653,14 @@ public:
 class NXCORE_EXPORTABLE Container : public AbstractContainer, public AutoBindTarget
 {
 protected:
+   typedef AbstractContainer super;
+
    UINT32 modifyFromMessageInternal(NXCPMessage *request);
    virtual void fillMessageInternal(NXCPMessage *msg, UINT32 userId);
 
 public:
-   Container() : AbstractContainer(), AutoBindTarget(this) {}
-   Container(const TCHAR *pszName, UINT32 dwCategory) : AbstractContainer(pszName, dwCategory), AutoBindTarget(this) {}
+   Container() : super(), AutoBindTarget(this) {}
+   Container(const TCHAR *pszName, UINT32 dwCategory) : super(pszName, dwCategory), AutoBindTarget(this) {}
    virtual ~Container() {}
 
    virtual int getObjectClass() const { return OBJECT_CONTAINER; }
@@ -2570,9 +2679,12 @@ public:
  */
 class NXCORE_EXPORTABLE TemplateGroup : public AbstractContainer
 {
+protected:
+   typedef AbstractContainer super;
+
 public:
    TemplateGroup() : AbstractContainer() { }
-   TemplateGroup(const TCHAR *pszName) : AbstractContainer(pszName, 0) { m_status = STATUS_NORMAL; }
+   TemplateGroup(const TCHAR *pszName) : super(pszName, 0) { m_status = STATUS_NORMAL; }
    virtual ~TemplateGroup() { }
 
    virtual int getObjectClass() const { return OBJECT_TEMPLATEGROUP; }
@@ -2586,6 +2698,9 @@ public:
  */
 class NXCORE_EXPORTABLE Rack : public AbstractContainer
 {
+protected:
+   typedef AbstractContainer super;
+
 protected:
 	int m_height;	// Rack height in units
 	bool m_topBottomNumbering;
@@ -2613,6 +2728,9 @@ public:
  */
 class NXCORE_EXPORTABLE Zone : public NetObj
 {
+protected:
+   typedef NetObj super;
+
 protected:
    UINT32 m_uin;
    UINT32 m_proxyNodeId;
@@ -2677,6 +2795,9 @@ class NXCORE_EXPORTABLE Network : public NetObj
 {
    using NetObj::loadFromDatabase;
 
+protected:
+   typedef NetObj super;
+
 public:
    Network();
    virtual ~Network();
@@ -2696,6 +2817,9 @@ public:
  */
 class NXCORE_EXPORTABLE ConditionObject : public NetObj
 {
+protected:
+   typedef NetObj super;
+
 protected:
    int m_dciCount;
    INPUT_DCI *m_dciList;
@@ -2741,128 +2865,13 @@ public:
 };
 
 /**
- * Generic agent policy object
- */
-class NXCORE_EXPORTABLE AgentPolicy : public NetObj, public AutoBindTarget, public VersionableObject
-{
-protected:
-	int m_policyType;
-
-	bool savePolicyCommonProperties(DB_HANDLE hdb);
-
-   virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId);
-   virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
-
-public:
-   AgentPolicy(int type);
-   AgentPolicy(const TCHAR *name, int type);
-
-   virtual int getObjectClass() const { return OBJECT_AGENTPOLICY; }
-
-   virtual bool saveToDatabase(DB_HANDLE hdb);
-   virtual bool deleteFromDatabase(DB_HANDLE hdb);
-   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
-
-   virtual bool isAgentPolicy();
-
-   virtual json_t *toJson();
-
-	virtual bool createDeploymentMessage(NXCPMessage *msg);
-	virtual bool createUninstallMessage(NXCPMessage *msg);
-
-	void linkNode(Node *node) { addChild(node); node->addParent(this); }
-	void unlinkNode(Node *node) { deleteChild(node); node->deleteParent(this); }
-};
-
-/**
- * Agent config policy object
- */
-class NXCORE_EXPORTABLE AgentPolicyConfig : public AgentPolicy
-{
-protected:
-	TCHAR *m_fileContent;
-
-   virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId);
-   virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
-
-public:
-   AgentPolicyConfig();
-   AgentPolicyConfig(const TCHAR *name);
-   virtual ~AgentPolicyConfig();
-
-   virtual int getObjectClass() const { return OBJECT_AGENTPOLICY_CONFIG; }
-
-   virtual bool saveToDatabase(DB_HANDLE hdb);
-   virtual bool deleteFromDatabase(DB_HANDLE hdb);
-   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
-
-   virtual json_t *toJson();
-
-	virtual bool createDeploymentMessage(NXCPMessage *msg);
-	virtual bool createUninstallMessage(NXCPMessage *msg);
-};
-
-/**
- * Log parser configuration policy object
- */
-class NXCORE_EXPORTABLE AgentPolicyLogParser : public AgentPolicy
-{
- protected:
-   TCHAR *m_fileContent;
-
-   virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId);
-   virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
- public:
-   AgentPolicyLogParser();
-   AgentPolicyLogParser(const TCHAR *name);
-   virtual ~AgentPolicyLogParser();
-
-   virtual int getObjectClass() const { return OBJECT_AGENTPOLICY_LOGPARSER; }
-
-   virtual bool saveToDatabase(DB_HANDLE hdb);
-   virtual bool deleteFromDatabase(DB_HANDLE hdb);
-   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
-
-   virtual json_t *toJson();
-
-	virtual bool createDeploymentMessage(NXCPMessage *msg);
-	virtual bool createUninstallMessage(NXCPMessage *msg);
-};
-
-/**
- * Policy group object
- */
-class NXCORE_EXPORTABLE PolicyGroup : public AbstractContainer
-{
-public:
-   PolicyGroup() : AbstractContainer() { }
-   PolicyGroup(const TCHAR *pszName) : AbstractContainer(pszName, 0) { }
-   virtual ~PolicyGroup() { }
-
-   virtual int getObjectClass() const { return OBJECT_POLICYGROUP; }
-   virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
-
-	virtual bool showThresholdSummary();
-};
-
-/**
- * Policy root
- */
-class NXCORE_EXPORTABLE PolicyRoot : public UniversalRoot
-{
-public:
-   PolicyRoot();
-   virtual ~PolicyRoot();
-
-   virtual int getObjectClass() const { return OBJECT_POLICYROOT; }
-   virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
-};
-
-/**
  * Network map root
  */
 class NXCORE_EXPORTABLE NetworkMapRoot : public UniversalRoot
 {
+protected:
+   typedef UniversalRoot super;
+
 public:
    NetworkMapRoot();
    virtual ~NetworkMapRoot();
@@ -2876,9 +2885,12 @@ public:
  */
 class NXCORE_EXPORTABLE NetworkMapGroup : public AbstractContainer
 {
+protected:
+   typedef AbstractContainer super;
+
 public:
-   NetworkMapGroup() : AbstractContainer() { }
-   NetworkMapGroup(const TCHAR *pszName) : AbstractContainer(pszName, 0) { }
+   NetworkMapGroup() : super() { }
+   NetworkMapGroup(const TCHAR *pszName) : super(pszName, 0) { }
    virtual ~NetworkMapGroup() { }
 
    virtual int getObjectClass() const { return OBJECT_NETWORKMAPGROUP; }
@@ -2892,6 +2904,9 @@ public:
  */
 class NXCORE_EXPORTABLE NetworkMap : public NetObj
 {
+protected:
+   typedef NetObj super;
+
 protected:
 	int m_mapType;
 	IntegerArray<UINT32> *m_seedObjects;
@@ -2949,6 +2964,9 @@ public:
  */
 class NXCORE_EXPORTABLE DashboardRoot : public UniversalRoot
 {
+protected:
+   typedef UniversalRoot super;
+
 public:
    DashboardRoot();
    virtual ~DashboardRoot();
@@ -2986,6 +3004,9 @@ public:
 class NXCORE_EXPORTABLE Dashboard : public AbstractContainer
 {
 protected:
+   typedef AbstractContainer super;
+
+protected:
 	int m_numColumns;
 	UINT32 m_options;
 	ObjectArray<DashboardElement> *m_elements;
@@ -3015,9 +3036,12 @@ public:
  */
 class NXCORE_EXPORTABLE DashboardGroup : public AbstractContainer
 {
+protected:
+   typedef AbstractContainer super;
+
 public:
-   DashboardGroup() : AbstractContainer() { }
-   DashboardGroup(const TCHAR *pszName) : AbstractContainer(pszName, 0) { }
+   DashboardGroup() : super() { }
+   DashboardGroup(const TCHAR *pszName) : super(pszName, 0) { }
    virtual ~DashboardGroup() { }
 
    virtual int getObjectClass() const { return OBJECT_DASHBOARDGROUP; }
@@ -3031,6 +3055,9 @@ public:
  */
 class NXCORE_EXPORTABLE SlmCheck : public NetObj
 {
+protected:
+   typedef NetObj super;
+
 protected:
 	Threshold *m_threshold;
 	enum CheckType { check_undefined = 0, check_script = 1, check_threshold = 2 } m_type;
@@ -3084,6 +3111,9 @@ class NXCORE_EXPORTABLE ServiceContainer : public AbstractContainer
 	enum Period { DAY, WEEK, MONTH };
 
 protected:
+   typedef AbstractContainer super;
+
+protected:
 	time_t m_prevUptimeUpdateTime;
 	int m_prevUptimeUpdateStatus;
 	double m_uptimeDay;
@@ -3132,6 +3162,9 @@ class NXCORE_EXPORTABLE BusinessServiceRoot : public ServiceContainer
 {
    using ServiceContainer::loadFromDatabase;
 
+protected:
+   typedef ServiceContainer super;
+
 public:
 	BusinessServiceRoot();
 	virtual ~BusinessServiceRoot();
@@ -3151,6 +3184,9 @@ public:
  */
 class NXCORE_EXPORTABLE BusinessService : public ServiceContainer
 {
+protected:
+   typedef ServiceContainer super;
+
 protected:
 	bool m_busy;
    bool m_pollingDisabled;
@@ -3186,6 +3222,9 @@ public:
  */
 class NXCORE_EXPORTABLE NodeLink : public ServiceContainer
 {
+protected:
+   typedef ServiceContainer super;
+
 protected:
 	UINT32 m_nodeId;
 
@@ -3317,7 +3356,6 @@ void ShowPollers(CONSOLE_CTX console);
 extern Network NXCORE_EXPORTABLE *g_pEntireNet;
 extern ServiceRoot NXCORE_EXPORTABLE *g_pServiceRoot;
 extern TemplateRoot NXCORE_EXPORTABLE *g_pTemplateRoot;
-extern PolicyRoot NXCORE_EXPORTABLE *g_pPolicyRoot;
 extern NetworkMapRoot NXCORE_EXPORTABLE *g_pMapRoot;
 extern DashboardRoot NXCORE_EXPORTABLE *g_pDashboardRoot;
 extern BusinessServiceRoot NXCORE_EXPORTABLE *g_pBusinessServiceRoot;

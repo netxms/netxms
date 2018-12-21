@@ -388,6 +388,11 @@ public class NXCPCodes
    public static final int CMD_GET_ACTIVE_THRESHOLDS = 0x0171;
    public static final int CMD_QUERY_INTERNAL_TOPOLOGY = 0x0172;
    public static final int CMD_GET_GRAPH = 0x0175;
+   public static final int CMD_UPDATE_AGENT_POLICY = 0x0176;
+   public static final int CMD_DELETE_AGENT_POLICY = 0x0177;
+   public static final int CMD_GET_AGENT_POLICY = 0x0178;
+   public static final int CMD_POLICY_EDITOR_CLOSED = 0x0179;
+   public static final int CMD_POLICY_FORCE_APPLY = 0x0180;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;
@@ -1028,6 +1033,7 @@ public class NXCPCodes
    public static final long VID_TIMER_COUNT = 624;
    public static final long VID_AUTOBIND_FLAG = 625;
    public static final long VID_AUTOUNBIND_FLAG = 626;
+   public static final long VID_POLICY_COUNT = 629;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;
@@ -1127,4 +1133,5 @@ public class NXCPCodes
    public static final long VID_ZONE_SNMP_PORT_LIST_BASE = 0x10000000L;
    public static final long VID_CONFIG_HINT_LIST_BASE= 0x10000000L;
    public static final long VID_TIMER_LIST_BASE= 0x60000000L;
+   public static final long VID_AGENT_POLICY_BASE = 0x10000000L;
 }

@@ -30,7 +30,7 @@ void DumpIndex(CONSOLE_CTX pCtx, InetAddressIndex *index);
 /**
  * Zone class default constructor
  */
-Zone::Zone() : NetObj()
+Zone::Zone() : super()
 {
    m_id = 0;
    m_uin = 0;
@@ -44,7 +44,7 @@ Zone::Zone() : NetObj()
 /**
  * Constructor for new zone object
  */
-Zone::Zone(UINT32 uin, const TCHAR *name) : NetObj()
+Zone::Zone(UINT32 uin, const TCHAR *name) : super()
 {
    m_id = 0;
    m_uin = uin;
@@ -166,7 +166,7 @@ bool Zone::saveToDatabase(DB_HANDLE hdb)
  */
 bool Zone::deleteFromDatabase(DB_HANDLE hdb)
 {
-   bool success = NetObj::deleteFromDatabase(hdb);
+   bool success = super::deleteFromDatabase(hdb);
    if (success)
       success = executeQueryOnObject(hdb, _T("DELETE FROM zones WHERE id=?"));
    return success;
@@ -177,7 +177,7 @@ bool Zone::deleteFromDatabase(DB_HANDLE hdb)
  */
 void Zone::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
 {
-   NetObj::fillMessageInternal(msg, userId);
+   super::fillMessageInternal(msg, userId);
    msg->setField(VID_ZONE_UIN, m_uin);
    msg->setField(VID_ZONE_PROXY, m_proxyNodeId);
    m_snmpPorts.fillMessage(msg, VID_ZONE_SNMP_PORT_LIST_BASE, VID_ZONE_SNMP_PORT_COUNT);
@@ -202,7 +202,7 @@ UINT32 Zone::modifyFromMessageInternal(NXCPMessage *request)
 	   }
 	}
 
-   return NetObj::modifyFromMessageInternal(request);
+   return super::modifyFromMessageInternal(request);
 }
 
 /**
@@ -279,7 +279,7 @@ void Zone::dumpSubnetIndex(CONSOLE_CTX console)
  */
 json_t *Zone::toJson()
 {
-   json_t *root = NetObj::toJson();
+   json_t *root = super::toJson();
    json_object_set_new(root, "uin", json_integer(m_uin));
    json_object_set_new(root, "proxyNodeId", json_integer(m_proxyNodeId));
    return root;

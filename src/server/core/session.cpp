@@ -1086,12 +1086,6 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_UNHOLD_JOB:
          unholdJob(request);
          break;
-      case CMD_DEPLOY_AGENT_POLICY:
-         deployAgentPolicy(request, false);
-         break;
-      case CMD_UNINSTALL_AGENT_POLICY:
-         deployAgentPolicy(request, true);
-         break;
       case CMD_GET_CURRENT_USER_ATTR:
          getUserCustomAttribute(request);
          break;
@@ -1299,11 +1293,23 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_SETUP_TCP_PROXY:
          setupTcpProxy(request);
          break;
-      case CMD_CLOSE_TCP_PROXY:
-         closeTcpProxy(request);
+      case CMD_GET_AGENT_POLICY:
+         getPolicyList(request);
+         break;
+      case CMD_UPDATE_AGENT_POLICY:
+         updatePolicy(request);
+         break;
+      case CMD_DELETE_AGENT_POLICY:
+         deletePolicy(request);
          break;
       case CMD_GET_DEPENDENT_NODES:
          getDependentNodes(request);
+         break;
+      case CMD_POLICY_EDITOR_CLOSED:
+         onPolicyEditorClose(request);
+         break;
+      case CMD_POLICY_FORCE_APPLY:
+         forcApplyPolicy(request);
          break;
 #ifdef WITH_ZMQ
       case CMD_ZMQ_SUBSCRIBE_EVENT:
@@ -5105,16 +5111,6 @@ void ClientSession::createObject(NXCPMessage *request)
                      TCHAR deviceId[MAX_OBJECT_NAME];
 						   switch(objectClass)
 						   {
-                        case OBJECT_AGENTPOLICY_CONFIG:
-                           object = new AgentPolicyConfig(objectName);
-                           NetObjInsert(object, true, false);
-                           object->calculateCompoundStatus();  // Force status change to NORMAL
-                           break;
-                        case OBJECT_AGENTPOLICY_LOGPARSER:
-                           object = new AgentPolicyLogParser(objectName);
-                           NetObjInsert(object, true, false);
-                           object->calculateCompoundStatus();  // Force status change to NORMAL
-                           break;
                         case OBJECT_BUSINESSSERVICE:
                            object = new BusinessService(objectName);
                            NetObjInsert(object, true, false);
@@ -5218,11 +5214,6 @@ void ClientSession::createObject(NXCPMessage *request)
                            {
                               object = NULL;
                            }
-                           break;
-                        case OBJECT_POLICYGROUP:
-                           object = new PolicyGroup(objectName);
-                           NetObjInsert(object, true, false);
-                           object->calculateCompoundStatus();  // Force status change to NORMAL
                            break;
 							   case OBJECT_RACK:
 								   object = new Rack(objectName, (int)request->getFieldAsUInt16(VID_HEIGHT));
@@ -11256,68 +11247,6 @@ void ClientSession::unholdJob(NXCPMessage *request)
 }
 
 /**
- * Deploy agent policy
- */
-void ClientSession::deployAgentPolicy(NXCPMessage *request, bool uninstallFlag)
-{
-	NXCPMessage msg;
-
-	msg.setCode(CMD_REQUEST_COMPLETED);
-	msg.setId(request->getId());
-
-	UINT32 policyId = request->getFieldAsUInt32(VID_POLICY_ID);
-	UINT32 targetId = request->getFieldAsUInt32(VID_OBJECT_ID);
-
-	NetObj *policy = FindObjectById(policyId);
-	if ((policy != NULL) && (policy->getObjectClass() >= OBJECT_AGENTPOLICY))
-	{
-		NetObj *target = FindObjectById(targetId);
-		if ((target != NULL) && (target->getObjectClass() == OBJECT_NODE))
-		{
-			if (target->checkAccessRights(m_dwUserId, OBJECT_ACCESS_CONTROL) &&
-			    policy->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
-			{
-				if (((Node *)target)->isNativeAgent())
-				{
-					ServerJob *job;
-					if (uninstallFlag)
-						job = new PolicyUninstallJob((Node *)target, (AgentPolicy *)policy, m_dwUserId);
-					else
-						job = new PolicyInstallJob((Node *)target, (AgentPolicy *)policy, m_dwUserId);
-					if (AddJob(job))
-					{
-						msg.setField(VID_RCC, RCC_SUCCESS);
-					}
-					else
-					{
-						delete job;
-						msg.setField(VID_RCC, RCC_INTERNAL_ERROR);
-					}
-				}
-				else
-				{
-					msg.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
-				}
-			}
-			else
-			{
-				msg.setField(VID_RCC, RCC_ACCESS_DENIED);
-			}
-		}
-		else
-		{
-			msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
-		}
-	}
-	else
-	{
-		msg.setField(VID_RCC, RCC_INVALID_POLICY_ID);
-	}
-
-	sendMessage(&msg);
-}
-
-/**
  * Get custom attribute for current user
  */
 void ClientSession::getUserCustomAttribute(NXCPMessage *request)
@@ -14439,6 +14368,162 @@ void ClientSession::expandMacros(NXCPMessage *request)
    }
 
    msg.setField(VID_RCC, RCC_SUCCESS);
+   sendMessage(&msg);
+}
+
+/**
+ * Update or create policy from message
+ */
+void ClientSession::updatePolicy(NXCPMessage *request)
+{
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+
+   Template *templateObject = (Template *)FindObjectById(request->getFieldAsUInt32(VID_TEMPLATE_ID), OBJECT_TEMPLATE);
+   if(templateObject != NULL)
+   {
+      if (templateObject->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
+      {
+         uuid guid = templateObject->updatePolicyFromMessage(request);
+         if(!guid.isNull())
+         {
+            msg.setField(VID_GUID, guid);
+            msg.setField(VID_RCC, RCC_SUCCESS);
+         }
+         else
+            msg.setField(VID_RCC, RCC_NO_SUCH_POLICY);
+      }
+      else
+         msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+   }
+   else
+      msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+
+   sendMessage(&msg);
+}
+
+/**
+ * Delete agent policy from template
+ */
+void ClientSession::deletePolicy(NXCPMessage *request)
+{
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+
+   Template *templateObject = (Template *)FindObjectById(request->getFieldAsUInt32(VID_TEMPLATE_ID), OBJECT_TEMPLATE);
+   if(templateObject != NULL)
+   {
+      if (templateObject->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
+      {
+         if(templateObject->removePolicy(request->getFieldAsGUID(VID_GUID)))
+            msg.setField(VID_RCC, RCC_SUCCESS);
+         else
+            msg.setField(VID_RCC, RCC_NO_SUCH_POLICY);
+      }
+      else
+         msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+   }
+   else
+      msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+
+   sendMessage(&msg);
+}
+
+/**
+ * Get policy list for template
+ */
+void ClientSession::getPolicyList(NXCPMessage *request)
+{
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+
+   Template *templateObject = (Template *)FindObjectById(request->getFieldAsUInt32(VID_TEMPLATE_ID), OBJECT_TEMPLATE);
+   if(templateObject != NULL)
+   {
+      if (templateObject->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
+      {
+         templateObject->fillPolicyMessage(&msg);
+         msg.setField(VID_RCC, RCC_SUCCESS);
+      }
+      else
+         msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+   }
+   else
+      msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+
+   sendMessage(&msg);
+}
+
+/**
+ * Worker thread for policy apply
+ */
+static void ApplyPolicyChanges(void *arg)
+{
+   ((Template *)arg)->applyPolicyChanges();
+}
+
+/**
+ * Get policy list for template
+ */
+void ClientSession::onPolicyEditorClose(NXCPMessage *request)
+{
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+
+   Template *templateObject = (Template *)FindObjectById(request->getFieldAsUInt32(VID_TEMPLATE_ID), OBJECT_TEMPLATE);
+   ThreadPoolExecute(g_clientThreadPool, ApplyPolicyChanges, templateObject);
+   msg.setField(VID_RCC, RCC_SUCCESS);
+
+   sendMessage(&msg);
+}
+
+/**
+ * Worker thread for policy force apply
+ */
+static void ForceApplyPolicyChanges(void *arg)
+{
+   ((Template *)arg)->forceApplyPolicyChanges();
+}
+
+/**
+ * Force apply
+ */
+void ClientSession::forcApplyPolicy(NXCPMessage *pRequest)
+{
+   NXCPMessage msg;
+   NetObj *pSource, *pDestination;
+
+   // Prepare response message
+   msg.setCode(CMD_REQUEST_COMPLETED);
+   msg.setId(pRequest->getId());
+
+   // Get source and destination
+   pSource = FindObjectById(pRequest->getFieldAsUInt32(VID_SOURCE_OBJECT_ID));
+   pDestination = FindObjectById(pRequest->getFieldAsUInt32(VID_DESTINATION_OBJECT_ID));
+   if ((pSource != NULL) && (pDestination != NULL))
+   {
+      // Check object types
+      if ((pSource->getObjectClass() == OBJECT_TEMPLATE) && pDestination->getObjectClass() == OBJECT_NODE)
+      {
+         // Check access rights
+         if ((pSource->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ)) &&
+             (pDestination->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY)))
+         {
+            ThreadPoolExecute(g_clientThreadPool, ForceApplyPolicyChanges, ((Template *)pSource));
+            msg.setField(VID_RCC, RCC_SUCCESS);
+         }
+         else  // User doesn't have enough rights on object(s)
+         {
+            msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+         }
+      }
+      else     // Object(s) is not a node
+      {
+         msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+      }
+   }
+   else  // No object(s) with given ID
+   {
+      msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+
+   // Send response
    sendMessage(&msg);
 }
 

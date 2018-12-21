@@ -25,7 +25,7 @@
 /**
  * Cluster class default constructor
  */
-Cluster::Cluster() : DataCollectionTarget()
+Cluster::Cluster() : super()
 {
 	m_dwClusterType = 0;
    m_syncNetworks = new ObjectArray<InetAddress>(8, 8, true);
@@ -37,7 +37,7 @@ Cluster::Cluster() : DataCollectionTarget()
 /**
  * Cluster class new object constructor
  */
-Cluster::Cluster(const TCHAR *pszName, UINT32 zoneUIN) : DataCollectionTarget(pszName)
+Cluster::Cluster(const TCHAR *pszName, UINT32 zoneUIN) : super(pszName)
 {
 	m_dwClusterType = 0;
    m_syncNetworks = new ObjectArray<InetAddress>(8, 8, true);
@@ -367,7 +367,7 @@ bool Cluster::saveToDatabase(DB_HANDLE hdb)
  */
 bool Cluster::deleteFromDatabase(DB_HANDLE hdb)
 {
-   bool success = DataCollectionTarget::deleteFromDatabase(hdb);
+   bool success = super::deleteFromDatabase(hdb);
    if (success)
    {
       success = executeQueryOnObject(hdb, _T("DELETE FROM clusters WHERE id=?"));
@@ -386,7 +386,7 @@ void Cluster::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
 {
 	UINT32 i, dwId;
 
-   DataCollectionTarget::fillMessageInternal(pMsg, userId);
+	super::fillMessageInternal(pMsg, userId);
    pMsg->setField(VID_CLUSTER_TYPE, m_dwClusterType);
 	pMsg->setField(VID_ZONE_UIN, m_zoneUIN);
 
@@ -470,7 +470,7 @@ UINT32 Cluster::modifyFromMessageInternal(NXCPMessage *pRequest)
 		m_dwNumResources = dwCount;
 	}
 
-   return DataCollectionTarget::modifyFromMessageInternal(pRequest);
+   return super::modifyFromMessageInternal(pRequest);
 }
 
 /**
@@ -900,7 +900,7 @@ UINT32 Cluster::collectAggregatedData(DCTable *table, Table **result)
  */
 void Cluster::unbindFromTemplate(UINT32 dwTemplateId, bool removeDCI)
 {
-   DataCollectionTarget::unbindFromTemplate(dwTemplateId, removeDCI);
+   super::unbindFromTemplate(dwTemplateId, removeDCI);
    queueUpdate();
 }
 
@@ -946,7 +946,7 @@ NXSL_Array *Cluster::getNodesForNXSL(NXSL_VM *vm)
  */
 json_t *Cluster::toJson()
 {
-   json_t *root = DataCollectionTarget::toJson();
+   json_t *root = super::toJson();
    json_object_set_new(root, "clusterType", json_integer(m_dwClusterType));
    json_object_set_new(root, "syncNetworks", json_object_array(m_syncNetworks));
    json_object_set_new(root, "lastStatusPoll", json_integer(m_lastStatusPoll));

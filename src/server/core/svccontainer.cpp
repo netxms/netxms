@@ -32,7 +32,7 @@ INT32 __EXPORT ServiceContainer::logRecordId = -1;
 /**
  * Default constructor for service service object
  */
-ServiceContainer::ServiceContainer() : AbstractContainer()
+ServiceContainer::ServiceContainer() : super()
 {
 	initServiceContainer();
 }
@@ -40,7 +40,7 @@ ServiceContainer::ServiceContainer() : AbstractContainer()
 /**
  * Create new service container object
  */
-ServiceContainer::ServiceContainer(const TCHAR *pszName) : AbstractContainer(pszName, 0)
+ServiceContainer::ServiceContainer(const TCHAR *pszName) : super(pszName, 0)
 {
 	initServiceContainer();
 }
@@ -65,7 +65,7 @@ void ServiceContainer::initServiceContainer()
  */
 bool ServiceContainer::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
 {
-	if (!AbstractContainer::loadFromDatabase(hdb, id))
+	if (!super::loadFromDatabase(hdb, id))
 		return false;
 
 	initUptimeStats();
@@ -77,7 +77,7 @@ bool ServiceContainer::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
  */
 bool ServiceContainer::saveToDatabase(DB_HANDLE hdb)
 {
-	return AbstractContainer::saveToDatabase(hdb);
+	return super::saveToDatabase(hdb);
 }
 
 /**
@@ -85,7 +85,7 @@ bool ServiceContainer::saveToDatabase(DB_HANDLE hdb)
  */
 bool ServiceContainer::deleteFromDatabase(DB_HANDLE hdb)
 {
-	return AbstractContainer::deleteFromDatabase(hdb);
+	return super::deleteFromDatabase(hdb);
 }
 
 /**
@@ -93,7 +93,7 @@ bool ServiceContainer::deleteFromDatabase(DB_HANDLE hdb)
  */
 void ServiceContainer::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
 {
-   AbstractContainer::fillMessageInternal(pMsg, userId);
+   super::fillMessageInternal(pMsg, userId);
    pMsg->setField(VID_UPTIME_DAY, m_uptimeDay);
    pMsg->setField(VID_UPTIME_WEEK, m_uptimeWeek);
    pMsg->setField(VID_UPTIME_MONTH, m_uptimeMonth);
@@ -104,7 +104,7 @@ void ServiceContainer::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
  */
 UINT32 ServiceContainer::modifyFromMessageInternal(NXCPMessage *pRequest)
 {
-   return AbstractContainer::modifyFromMessageInternal(pRequest);
+   return super::modifyFromMessageInternal(pRequest);
 }
 
 /**

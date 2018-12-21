@@ -18,93 +18,128 @@
  */
 package org.netxms.client.objects;
 
+import java.util.UUID;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
-import org.netxms.client.NXCSession;
 
 /**
  * Generic agent policy object
  *
  */
-public class AgentPolicy extends GenericObject
+public class AgentPolicy
 {   
-	private int version;
-	private int policyType;
-	private int flags;
-   private boolean autoBind;
-   private boolean autoUnbind;
-	private String autoDeployFilter;
+   public static final String logParser = "LogParserConfig";
+   public static final String agent = "AgentConfig";
+   public static final String supportApplication = "SupportApplicationConfig";
+   
+   private UUID guid;
+   private String name;
+	private String policyType;
+	private String content;
 	
 	/**
 	 * @param msg
-	 * @param session
 	 */
-	public AgentPolicy(NXCPMessage msg, NXCSession session)
-	{
-		super(msg, session);
-		
-		policyType = msg.getFieldAsInt32(NXCPCodes.VID_POLICY_TYPE);
-		version = msg.getFieldAsInt32(NXCPCodes.VID_VERSION);
-		flags = msg.getFieldAsInt32(NXCPCodes.VID_FLAGS);
-		autoDeployFilter = msg.getFieldAsString(NXCPCodes.VID_AUTOBIND_FILTER);
-      autoBind = msg.getFieldAsBoolean(NXCPCodes.VID_AUTOBIND_FLAG);
-      autoUnbind = msg.getFieldAsBoolean(NXCPCodes.VID_AUTOUNBIND_FLAG);
+	public AgentPolicy(NXCPMessage msg)
+	{		
+		guid = msg.getFieldAsUUID(NXCPCodes.VID_GUID);
+		name = msg.getFieldAsString(NXCPCodes.VID_NAME);
+		policyType = msg.getFieldAsString(NXCPCodes.VID_POLICY_TYPE);
+		content = msg.getFieldAsString(NXCPCodes.VID_CONFIG_FILE_DATA);
 	}
+	
+	public AgentPolicy(String policyName, String policyType)
+   {
+	   guid = null;
+	   name = policyName;
+	   this.policyType = policyType;
+	   content = "";
+   }
+	
+   public AgentPolicy(NXCPMessage msg, long base)
+   {
+      guid = msg.getFieldAsUUID(base);
+      policyType = msg.getFieldAsString(base+1);
+      name = msg.getFieldAsString(base+2);
+      content = msg.getFieldAsString(base+3);    
+   }
 
-	/* (non-Javadoc)
-	 * @see org.netxms.client.NXCObject#getObjectClassName()
-	 */
-	@Override
-	public String getObjectClassName()
-	{
-		return "AgentPolicy";
-	}
-
-	/**
-	 * @return the version
-	 */
-	public int getVersion()
-	{
-		return version;
-	}
+   public void fillMessage(NXCPMessage msg)
+   {
+      if(guid != null)
+         msg.setField(NXCPCodes.VID_GUID, guid);
+      msg.setField(NXCPCodes.VID_NAME, name);
+      msg.setField(NXCPCodes.VID_POLICY_TYPE, policyType);
+      msg.setField(NXCPCodes.VID_CONFIG_FILE_DATA, content);
+   }
 
 	/**
 	 * @return the policyType
 	 */
-	public int getPolicyType()
+	public String getPolicyType()
 	{
 		return policyType;
 	}
 
    /**
-    * @return the flags
+    * @return the guid
     */
-   public int getFlags()
+   public UUID getGuid()
    {
-      return flags;
+      return guid;
    }
 
    /**
-    * @return true if automatic deployment is enabled
+    * @return the name
     */
-   public boolean isAutoDeployEnabled()
+   public String getName()
    {
-      return autoBind;
+      return name;
    }
 
    /**
-    * @return true if automatic uninstall is enabled
+    * @return the content
     */
-   public boolean isAutoUninstallEnabled()
+   public String getContent()
    {
-      return autoUnbind;
+      return content;
    }
 
    /**
-    * @return the deployFilter
+    * @param name the name to set
     */
-   public String getAutoDeployFilter()
+   public void setName(String name)
    {
-      return autoDeployFilter;
+      this.name = name;
+   }
+
+   /**
+    * @param content the content to set
+    */
+   public void setContent(String content)
+   {
+      this.content = content;
+   }
+
+   public void setGuid(UUID newObjectGuid)
+   {
+      guid = newObjectGuid;
+   }
+
+   /* (non-Javadoc)
+    * @see java.lang.Object#toString()
+    */
+   @Override
+   public String toString()
+   {
+      return name;
+   }
+
+   public void update(AgentPolicy object)
+   {
+      guid = object.guid;
+      name = object.name;
+      policyType = object.policyType;
+      content = object.content;
    }
 }

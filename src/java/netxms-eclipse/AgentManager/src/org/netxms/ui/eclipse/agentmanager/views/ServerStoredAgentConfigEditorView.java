@@ -60,12 +60,12 @@ import org.netxms.ui.eclipse.agentmanager.Activator;
 import org.netxms.ui.eclipse.agentmanager.Messages;
 import org.netxms.ui.eclipse.agentmanager.dialogs.SaveConfigDialog;
 import org.netxms.ui.eclipse.agentmanager.dialogs.SaveStoredConfigDialog;
-import org.netxms.ui.eclipse.agentmanager.widgets.AgentConfigEditor;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.nxsl.widgets.ScriptEditor;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
+import org.netxms.ui.eclipse.widgets.AgentConfigEditor;
 
 /**
  * Sored on server agent's configuration editor

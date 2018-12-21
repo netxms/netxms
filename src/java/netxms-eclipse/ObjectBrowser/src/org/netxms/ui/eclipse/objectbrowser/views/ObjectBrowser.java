@@ -880,11 +880,6 @@ public class ObjectBrowser extends ViewPart
                        ((parentObject instanceof DashboardRoot) ||
                        (parentObject instanceof DashboardGroup) ||
                        (parentObject instanceof Dashboard))) ? APPROVE : REJECT;
-					case POLICIES:
-					   return ((currentObject instanceof AgentPolicy) ||
-					         (currentObject instanceof PolicyGroup))&&
-					         ((parentObject instanceof PolicyGroup) ||
-					         (parentObject instanceof PolicyRoot)) ? APPROVE : REJECT;
 					default:
 						return REJECT;
 				}

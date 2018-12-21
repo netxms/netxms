@@ -22,16 +22,19 @@
 
 #include "libnxsrv.h"
 
+static const TCHAR *PolicyNames[] = { _T("None"), _T("AgentConfig"), _T("LogParserConfig")};
+
 /**
  * Constructor
  */
 AgentPolicyInfo::AgentPolicyInfo(NXCPMessage *msg)
 {
+   m_newPolicyType = msg->getFieldAsBoolean(VID_NEW_POLICY_TYPE);
 	m_size = msg->getFieldAsUInt32(VID_NUM_ELEMENTS);
 	if (m_size > 0)
 	{
 		m_guidList = (BYTE *)malloc(UUID_LENGTH * m_size);
-		m_typeList = (int *)malloc(sizeof(int) * m_size);
+		m_typeList = (TCHAR **)malloc(sizeof(TCHAR *) * m_size);
 		m_serverIdList = (UINT64*)malloc(sizeof(UINT64) * m_size);
 		m_serverInfoList = (TCHAR **)malloc(sizeof(TCHAR *) * m_size);
 		m_version = (int *)malloc(sizeof(int) * m_size);
@@ -40,7 +43,14 @@ AgentPolicyInfo::AgentPolicyInfo(NXCPMessage *msg)
 		for(int i = 0; i < m_size; i++, varId += 5)
 		{
 			msg->getFieldAsBinary(varId++, &m_guidList[i * UUID_LENGTH], UUID_LENGTH);
-			m_typeList[i] = (int)msg->getFieldAsUInt32(varId++);
+			if(!m_newPolicyType)
+			{
+	         int type = (int)msg->getFieldAsUInt32(varId++);
+	         m_typeList[i] = _tcsdup(PolicyNames[type]);
+			}
+			else
+			   m_typeList[i] = msg->getFieldAsString(varId++);
+
 			m_serverInfoList[i] = msg->getFieldAsString(varId++);
 			m_serverIdList[i] = msg->getFieldAsUInt64(varId++);
 			m_version[i] = (int)msg->getFieldAsUInt32(varId++);
@@ -62,10 +72,12 @@ AgentPolicyInfo::AgentPolicyInfo(NXCPMessage *msg)
 AgentPolicyInfo::~AgentPolicyInfo()
 {
    for(int i = 0; i < m_size; i++)
+      free(m_typeList[i]);
+   free(m_typeList);
+   for(int i = 0; i < m_size; i++)
 		free(m_serverInfoList[i]);
    free(m_serverInfoList);
 	free(m_serverIdList);
-	free(m_typeList);
 	free(m_guidList);
 	free(m_version);
 }

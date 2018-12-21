@@ -37,6 +37,14 @@
             name="%view.name.SummaryTable"
             restorable="true">
       </view>
+      <view
+            allowMultiple="true"
+            class="org.netxms.ui.eclipse.datacollection.views.PolicyEditorView"
+            icon="icons/policy.gif"
+            id="org.netxms.ui.eclipse.datacollection.views.policy_editor"
+            name="Policy editor"
+            restorable="false">
+      </view>
    </extension>
    
    <extension
@@ -89,6 +97,20 @@
                menubarPath="objectbinding"
                style="push"
                tooltip="%action.tooltip.Apply">
+         </action>
+         <action
+               class="org.netxms.ui.eclipse.datacollection.actions.EditPolicy"
+               enablesFor="+"
+               id="org.netxms.ui.eclipse.datacollection.EditPolicy"
+               label="Edit Policy..."
+               menubarPath="objectmgmt">
+         </action>
+         <action
+               class="org.netxms.ui.eclipse.datacollection.actions.ForceReinstallPolicy"
+               enablesFor="+"
+               icon="objectmgmt"
+               id="org.netxms.ui.eclipse.datacollection.ForceReinstallPolicy"
+               label="Force install policy">
          </action>
       </objectContribution>
       <objectContribution

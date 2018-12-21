@@ -24,7 +24,7 @@
 /**
  * Network class default constructor
  */
-Network::Network() : NetObj()
+Network::Network() : super()
 {
    m_id = BUILTIN_OID_NETWORK;
    _tcscpy(m_name, _T("Entire Network"));

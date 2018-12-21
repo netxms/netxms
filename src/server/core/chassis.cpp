@@ -25,7 +25,7 @@
 /**
  * Default constructor
  */
-Chassis::Chassis() : DataCollectionTarget()
+Chassis::Chassis() : super()
 {
    m_controllerId = 0;
    m_rackId = 0;
@@ -37,7 +37,7 @@ Chassis::Chassis() : DataCollectionTarget()
 /**
  * Create new chassis object
  */
-Chassis::Chassis(const TCHAR *name, UINT32 controllerId) : DataCollectionTarget(name)
+Chassis::Chassis(const TCHAR *name, UINT32 controllerId) : super(name)
 {
    m_controllerId = controllerId;
    m_rackId = 0;
@@ -158,7 +158,7 @@ void Chassis::updateControllerBinding()
  */
 void Chassis::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
 {
-   DataCollectionTarget::fillMessageInternal(msg, userId);
+   super::fillMessageInternal(msg, userId);
    msg->setField(VID_CONTROLLER_ID, m_controllerId);
    msg->setField(VID_RACK_ID, m_rackId);
    msg->setField(VID_RACK_IMAGE_FRONT, m_rackImageFront);
@@ -191,7 +191,7 @@ UINT32 Chassis::modifyFromMessageInternal(NXCPMessage *request)
    if (request->isFieldExist(VID_RACK_ORIENTATION))
       m_rackOrientation = static_cast<RackOrientation>(request->getFieldAsInt16(VID_RACK_ORIENTATION));
 
-   return DataCollectionTarget::modifyFromMessageInternal(request);
+   return super::modifyFromMessageInternal(request);
 }
 
 /**
@@ -252,7 +252,7 @@ bool Chassis::saveToDatabase(DB_HANDLE hdb)
  */
 bool Chassis::deleteFromDatabase(DB_HANDLE hdb)
 {
-   bool success = DataCollectionTarget::deleteFromDatabase(hdb);
+   bool success = super::deleteFromDatabase(hdb);
    if (success)
    {
       success = executeQueryOnObject(hdb, _T("DELETE FROM chassis WHERE id=?"));
@@ -313,7 +313,7 @@ bool Chassis::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
  */
 void Chassis::linkObjects()
 {
-   DataCollectionTarget::linkObjects();
+   super::linkObjects();
    updateControllerBinding();
 }
 
@@ -413,7 +413,7 @@ void Chassis::setBindUnderController(bool doBind)
  */
 json_t *Chassis::toJson()
 {
-   json_t *root = DataCollectionTarget::toJson();
+   json_t *root = super::toJson();
    json_object_set_new(root, "controllerId", json_integer(m_controllerId));
    json_object_set_new(root, "rackHeight", json_integer(m_rackHeight));
    json_object_set_new(root, "rackPosition", json_integer(m_rackPosition));

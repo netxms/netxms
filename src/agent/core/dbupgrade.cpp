@@ -38,6 +38,40 @@ bool g_ignoreAgentDbErrors = FALSE;
 static DB_HANDLE s_db = NULL;
 
 /**
+ * Upgrade from V6 to V7
+ */
+static BOOL H_UpgradeFromV6(int currVersion, int newVersion)
+{
+   const TCHAR *policyNames[] = { _T("None"), _T("AgentConfig"), _T("LogParserConfig")};
+
+   //Select all types
+   DB_RESULT hResult = DBSelect(s_db, _T("SELECT guid,type FROM agent_policy"));
+   if (hResult != NULL)
+   {
+      CHK_EXEC(DBDropColumn(s_db, _T("agent_policy"), _T("type")));
+      CHK_EXEC(Query(_T("ALTER TABLE agent_policy ADD type varchar(31)")));
+      DB_STATEMENT hStmt = DBPrepare(s_db, _T("UPDATE agent_policy SET type=? WHERE guid=?"));
+      if(hStmt != NULL)
+      {
+         for(int row = 0; row < DBGetNumRows(hResult); row++)
+         {
+            DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, policyNames[DBGetFieldULong(hResult, row, 1)], DB_BIND_STATIC);
+            DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, DBGetFieldGUID(hResult, row, 0));
+            CHK_EXEC(DBExecute(hStmt));
+         }
+         DBFreeStatement(hStmt);
+      }
+   }
+   else
+   {
+      if (!g_ignoreAgentDbErrors)
+         return FALSE;
+   }
+   CHK_EXEC(WriteMetadata(_T("SchemaVersion"), 7));
+   return TRUE;
+}
+
+/**
  * Upgrade from V5 to V6
  */
 static BOOL H_UpgradeFromV5(int currVersion, int newVersion)
@@ -305,6 +339,7 @@ static struct
    { 3, 4, H_UpgradeFromV3 },
    { 4, 5, H_UpgradeFromV4 },
    { 5, 6, H_UpgradeFromV5 },
+   { 6, 7, H_UpgradeFromV6 },
    { 0, 0, NULL }
 };
 

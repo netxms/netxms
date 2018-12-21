@@ -25,7 +25,7 @@
 /**
  * Default abstract container class constructor
  */
-AbstractContainer::AbstractContainer() : NetObj()
+AbstractContainer::AbstractContainer() : super()
 {
    m_pdwChildIdList = NULL;
    m_dwChildIdListSize = 0;
@@ -34,7 +34,7 @@ AbstractContainer::AbstractContainer() : NetObj()
 /**
  * "Normal" abstract container class constructor
  */
-AbstractContainer::AbstractContainer(const TCHAR *pszName, UINT32 dwCategory) : NetObj()
+AbstractContainer::AbstractContainer(const TCHAR *pszName, UINT32 dwCategory) : super()
 {
    _tcslcpy(m_name, pszName, MAX_OBJECT_NAME);
    m_pdwChildIdList = NULL;
@@ -56,7 +56,7 @@ AbstractContainer::~AbstractContainer()
  */
 void AbstractContainer::linkObjects()
 {
-   NetObj::linkObjects();
+   super::linkObjects();
    if (m_dwChildIdListSize > 0)
    {
       // Find and link child objects
@@ -81,7 +81,7 @@ void AbstractContainer::linkObjects()
  */
 void AbstractContainer::calculateCompoundStatus(BOOL bForcedRecalc)
 {
-	NetObj::calculateCompoundStatus(bForcedRecalc);
+	super::calculateCompoundStatus(bForcedRecalc);
 
 	if ((m_status == STATUS_UNKNOWN) && (m_dwChildIdListSize == 0))
    {
@@ -97,7 +97,7 @@ void AbstractContainer::calculateCompoundStatus(BOOL bForcedRecalc)
  */
 void AbstractContainer::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
 {
-   NetObj::fillMessageInternal(msg, userId);
+   super::fillMessageInternal(msg, userId);
 }
 
 /**
@@ -109,7 +109,7 @@ UINT32 AbstractContainer::modifyFromMessageInternal(NXCPMessage *request)
    if (request->isFieldExist(VID_FLAGS))
 		m_flags = request->getFieldAsUInt32(VID_FLAGS);
 
-   return NetObj::modifyFromMessageInternal(request);
+   return super::modifyFromMessageInternal(request);
 }
 
 /**
@@ -117,7 +117,7 @@ UINT32 AbstractContainer::modifyFromMessageInternal(NXCPMessage *request)
  */
 json_t *AbstractContainer::toJson()
 {
-   json_t *root = NetObj::toJson();
+   json_t *root = super::toJson();
    json_object_set_new(root, "flags", json_integer(m_flags));
    return root;
 }
@@ -219,7 +219,7 @@ bool AbstractContainer::saveToDatabase(DB_HANDLE hdb)
  */
 bool AbstractContainer::deleteFromDatabase(DB_HANDLE hdb)
 {
-   bool success = NetObj::deleteFromDatabase(hdb);
+   bool success = super::deleteFromDatabase(hdb);
    if (success)
       success = executeQueryOnObject(hdb, _T("DELETE FROM object_containers WHERE id=?"));
    if (success)
@@ -234,7 +234,7 @@ bool AbstractContainer::deleteFromDatabase(DB_HANDLE hdb)
  */
 bool Container::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 {
-   bool success = AbstractContainer::loadFromDatabase(hdb, dwId);
+   bool success = super::loadFromDatabase(hdb, dwId);
 
    if(success)
       success = AutoBindTarget::loadFromDatabase(hdb, m_id);
@@ -248,7 +248,7 @@ bool Container::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
  */
 bool Container::saveToDatabase(DB_HANDLE hdb)
 {
-   bool success = AbstractContainer::saveToDatabase(hdb);
+   bool success = super::saveToDatabase(hdb);
    if(success)
    {
       if (!IsDatabaseRecordExist(hdb, _T("object_containers"), _T("id"), m_id))
@@ -279,7 +279,7 @@ bool Container::saveToDatabase(DB_HANDLE hdb)
  */
 bool Container::deleteFromDatabase(DB_HANDLE hdb)
 {
-   bool success = AbstractContainer::deleteFromDatabase(hdb);
+   bool success = super::deleteFromDatabase(hdb);
    if(success)
       success = executeQueryOnObject(hdb, _T("DELETE FROM object_containers WHERE id=?"));
    if (success)
@@ -303,7 +303,7 @@ bool Container::showThresholdSummary()
 UINT32 Container::modifyFromMessageInternal(NXCPMessage *request)
 {
    AutoBindTarget::modifyFromMessageInternal(request);
-   return AbstractContainer::modifyFromMessageInternal(request);
+   return super::modifyFromMessageInternal(request);
 }
 
 /**
@@ -311,7 +311,7 @@ UINT32 Container::modifyFromMessageInternal(NXCPMessage *request)
  */
 void Container::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
 {
-   AbstractContainer::fillMessageInternal(msg, userId);
+   super::fillMessageInternal(msg, userId);
    AutoBindTarget::fillMessageInternal(msg, userId);
 }
 

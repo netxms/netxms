@@ -25,7 +25,7 @@
 /**
  * Constructor
  */
-UniversalRoot::UniversalRoot() : NetObj()
+UniversalRoot::UniversalRoot() : super()
 {
    m_guid = uuid::generate();
 }
@@ -43,7 +43,7 @@ UniversalRoot::~UniversalRoot()
  */
 void UniversalRoot::linkObjects()
 {
-   NetObj::linkObjects();
+   super::linkObjects();
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 

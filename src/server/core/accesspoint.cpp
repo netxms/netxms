@@ -24,7 +24,7 @@
 /**
  * Default constructor
  */
-AccessPoint::AccessPoint() : DataCollectionTarget()
+AccessPoint::AccessPoint() : super()
 {
 	m_nodeId = 0;
    m_index = 0;
@@ -40,7 +40,7 @@ AccessPoint::AccessPoint() : DataCollectionTarget()
 /**
  * Constructor for creating new access point object
  */
-AccessPoint::AccessPoint(const TCHAR *name, UINT32 index, const BYTE *macAddr) : DataCollectionTarget(name)
+AccessPoint::AccessPoint(const TCHAR *name, UINT32 index, const BYTE *macAddr) : super(name)
 {
 	m_nodeId = 0;
    m_index = index;
@@ -198,7 +198,7 @@ bool AccessPoint::saveToDatabase(DB_HANDLE hdb)
  */
 bool AccessPoint::deleteFromDatabase(DB_HANDLE hdb)
 {
-   bool success = DataCollectionTarget::deleteFromDatabase(hdb);
+   bool success = super::deleteFromDatabase(hdb);
    if (success)
       success = executeQueryOnObject(hdb, _T("DELETE FROM access_points WHERE id=?"));
    return success;
@@ -209,7 +209,7 @@ bool AccessPoint::deleteFromDatabase(DB_HANDLE hdb)
  */
 void AccessPoint::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
 {
-   DataCollectionTarget::fillMessageInternal(msg, userId);
+   super::fillMessageInternal(msg, userId);
    msg->setField(VID_IP_ADDRESS, m_ipAddress);
 	msg->setField(VID_NODE_ID, m_nodeId);
 	msg->setField(VID_MAC_ADDR, m_macAddr, MAC_ADDR_LENGTH);
@@ -246,7 +246,7 @@ void AccessPoint::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
  */
 UINT32 AccessPoint::modifyFromMessageInternal(NXCPMessage *msg)
 {
-   return DataCollectionTarget::modifyFromMessageInternal(msg);
+   return super::modifyFromMessageInternal(msg);
 }
 
 /**
@@ -622,7 +622,7 @@ void AccessPoint::updatePingData()
  */
 json_t *AccessPoint::toJson()
 {
-   json_t *root = DataCollectionTarget::toJson();
+   json_t *root = super::toJson();
    json_object_set_new(root, "index", json_integer(m_index));
    json_object_set_new(root, "ipAddress", m_ipAddress.toJson());
    json_object_set_new(root, "nodeId", json_integer(m_nodeId));

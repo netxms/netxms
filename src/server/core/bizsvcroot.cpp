@@ -25,7 +25,7 @@
 /**
  * Business service tree root class default constructor
  */
-BusinessServiceRoot::BusinessServiceRoot() : ServiceContainer()
+BusinessServiceRoot::BusinessServiceRoot() : super()
 {
 	m_id = BUILTIN_OID_BUSINESSSERVICEROOT;
 	_tcscpy(m_name, _T("Business Services"));
@@ -87,7 +87,7 @@ void BusinessServiceRoot::loadFromDatabase(DB_HANDLE hdb)
  */
 void BusinessServiceRoot::linkObjects()
 {
-   ServiceContainer::linkObjects();
+   super::linkObjects();
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 

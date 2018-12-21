@@ -24,7 +24,7 @@
 /**
  * Default constructor
  */
-MobileDevice::MobileDevice() : DataCollectionTarget()
+MobileDevice::MobileDevice() : super()
 {
 	m_lastReportTime = 0;
 	m_deviceId = NULL;
@@ -40,7 +40,7 @@ MobileDevice::MobileDevice() : DataCollectionTarget()
 /**
  * Constructor for creating new mobile device object
  */
-MobileDevice::MobileDevice(const TCHAR *name, const TCHAR *deviceId) : DataCollectionTarget(name)
+MobileDevice::MobileDevice(const TCHAR *name, const TCHAR *deviceId) : super(name)
 {
 	m_lastReportTime = 0;
 	m_deviceId = _tcsdup(deviceId);
@@ -171,7 +171,7 @@ bool MobileDevice::saveToDatabase(DB_HANDLE hdb)
  */
 bool MobileDevice::deleteFromDatabase(DB_HANDLE hdb)
 {
-   bool success = DataCollectionTarget::deleteFromDatabase(hdb);
+   bool success = super::deleteFromDatabase(hdb);
    if (success)
       success = executeQueryOnObject(hdb, _T("DELETE FROM mobile_devices WHERE id=?"));
    return success;
@@ -182,7 +182,7 @@ bool MobileDevice::deleteFromDatabase(DB_HANDLE hdb)
  */
 void MobileDevice::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
 {
-   DataCollectionTarget::fillMessageInternal(msg, userId);
+   super::fillMessageInternal(msg, userId);
 
 	msg->setField(VID_DEVICE_ID, CHECK_NULL_EX(m_deviceId));
 	msg->setField(VID_VENDOR, CHECK_NULL_EX(m_vendor));
@@ -200,7 +200,7 @@ void MobileDevice::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
  */
 UINT32 MobileDevice::modifyFromMessageInternal(NXCPMessage *pRequest)
 {
-   return DataCollectionTarget::modifyFromMessageInternal(pRequest);
+   return super::modifyFromMessageInternal(pRequest);
 }
 
 /**
@@ -274,7 +274,7 @@ void MobileDevice::updateStatus(NXCPMessage *msg)
  */
 DataCollectionError MobileDevice::getInternalItem(const TCHAR *param, size_t bufSize, TCHAR *buffer)
 {
-   DataCollectionError rc = DataCollectionTarget::getInternalItem(param, bufSize, buffer);
+   DataCollectionError rc = super::getInternalItem(param, bufSize, buffer);
 	if (rc != DCE_NOT_SUPPORTED)
 		return rc;
 	rc = DCE_SUCCESS;
@@ -353,7 +353,7 @@ NXSL_Value *MobileDevice::createNXSLObject(NXSL_VM *vm)
  */
 json_t *MobileDevice::toJson()
 {
-   json_t *root = DataCollectionTarget::toJson();
+   json_t *root = super::toJson();
    json_object_set_new(root, "lastReportTime", json_integer(m_lastReportTime));
    json_object_set_new(root, "deviceId", json_string_t(m_deviceId));
    json_object_set_new(root, "vendor", json_string_t(m_vendor));

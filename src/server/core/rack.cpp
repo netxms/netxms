@@ -25,7 +25,7 @@
 /**
  * Default constructor
  */
-Rack::Rack() : AbstractContainer()
+Rack::Rack() : super()
 {
 	m_height = 42;
 	m_topBottomNumbering = false;
@@ -35,7 +35,7 @@ Rack::Rack() : AbstractContainer()
 /**
  * Constructor for creating new object
  */
-Rack::Rack(const TCHAR *name, int height) : AbstractContainer(name, 0)
+Rack::Rack(const TCHAR *name, int height) : super(name, 0)
 {
 	m_height = height;
    m_topBottomNumbering = false;
@@ -55,7 +55,7 @@ Rack::~Rack()
  */
 bool Rack::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
 {
-	if (!AbstractContainer::loadFromDatabase(hdb, id))
+	if (!super::loadFromDatabase(hdb, id))
 		return false;
 
 	DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT height,top_bottom_num,passive_elements FROM racks WHERE id=?"));
@@ -86,7 +86,7 @@ bool Rack::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
  */
 bool Rack::saveToDatabase(DB_HANDLE hdb)
 {
-	if (!AbstractContainer::saveToDatabase(hdb))
+	if (!super::saveToDatabase(hdb))
 		return false;
 
 	DB_STATEMENT hStmt;
@@ -115,7 +115,7 @@ bool Rack::saveToDatabase(DB_HANDLE hdb)
  */
 bool Rack::deleteFromDatabase(DB_HANDLE hdb)
 {
-   bool success = AbstractContainer::deleteFromDatabase(hdb);
+   bool success = super::deleteFromDatabase(hdb);
    if (success)
       success = executeQueryOnObject(hdb, _T("DELETE FROM racks WHERE id=?"));
    return success;
@@ -126,7 +126,7 @@ bool Rack::deleteFromDatabase(DB_HANDLE hdb)
  */
 void Rack::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
 {
-   AbstractContainer::fillMessageInternal(pMsg, userId);
+   super::fillMessageInternal(pMsg, userId);
    pMsg->setField(VID_HEIGHT, (WORD)m_height);
    pMsg->setField(VID_TOP_BOTTOM, (INT16)(m_topBottomNumbering ? 1 : 0));
    pMsg->setField(VID_PASSIVE_ELEMENTS, m_passiveElements);
@@ -149,7 +149,7 @@ UINT32 Rack::modifyFromMessageInternal(NXCPMessage *pRequest)
       m_passiveElements = pRequest->getFieldAsString(VID_PASSIVE_ELEMENTS);
    }
 
-   return AbstractContainer::modifyFromMessageInternal(pRequest);
+   return super::modifyFromMessageInternal(pRequest);
 }
 
 /**
@@ -157,7 +157,7 @@ UINT32 Rack::modifyFromMessageInternal(NXCPMessage *pRequest)
  */
 json_t *Rack::toJson()
 {
-   json_t *root = AbstractContainer::toJson();
+   json_t *root = super::toJson();
    json_object_set_new(root, "height", json_integer(m_height));
    json_object_set_new(root, "topBottomNumbering", json_boolean(m_topBottomNumbering));
    json_object_set_new(root, "passiveElements", json_string_t(m_passiveElements));

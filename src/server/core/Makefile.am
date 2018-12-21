@@ -6,7 +6,7 @@ radius_DATA = radius.dict
 lib_LTLIBRARIES = libnxcore.la
 libnxcore_la_SOURCES = abind_target.cpp accesspoint.cpp acl.cpp actions.cpp addrlist.cpp \
 			admin.cpp agent.cpp agent_policy.cpp alarm.cpp alarm_category.cpp audit.cpp \
-			ap_config.cpp ap_jobs.cpp ap_logparser.cpp beacon.cpp bizservice.cpp \
+			ap_jobs.cpp beacon.cpp bizservice.cpp \
 			bizsvcroot.cpp bridge.cpp cas_validator.cpp ccy.cpp cdp.cpp \
 			cert.cpp chassis.cpp client.cpp cluster.cpp columnfilter.cpp \
 			components.cpp condition.cpp config.cpp console.cpp \

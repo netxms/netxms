@@ -84,6 +84,8 @@ public class SessionNotification
    public static final int DCI_DELETE = 1036;
    public static final int DCI_STATE_CHANGE = 1037;
    public static final int OBJECTS_OUT_OF_SYNC = 1038;
+   public static final int POLICY_MODIFIED = 1039;
+   public static final int POLICY_DELETED = 1040;
 	
 	public static final int CUSTOM_MESSAGE = 2000;
    public static final int OBJECT_SYNC_COMPLETED = 2001;

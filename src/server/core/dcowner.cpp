@@ -25,7 +25,7 @@
 /**
  * Data collection owner object constructor
  */
-DataCollectionOwner::DataCollectionOwner() : NetObj()
+DataCollectionOwner::DataCollectionOwner() : super()
 {
 	m_dcObjects = new ObjectArray<DCObject>(8, 16, true);
    m_status = STATUS_NORMAL;
@@ -36,7 +36,7 @@ DataCollectionOwner::DataCollectionOwner() : NetObj()
 /**
  * Constructor for new data collection owner object
  */
-DataCollectionOwner::DataCollectionOwner(const TCHAR *pszName) : NetObj()
+DataCollectionOwner::DataCollectionOwner(const TCHAR *pszName) : super()
 {
    nx_strncpy(m_name, pszName, MAX_OBJECT_NAME);
 	m_dcObjects = new ObjectArray<DCObject>(8, 16, true);
@@ -110,9 +110,6 @@ void DataCollectionOwner::destroyItems()
  */
 bool DataCollectionOwner::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
 {
-   TCHAR szQuery[256];
-   UINT32 i, dwNumNodes, dwNodeId;
-   NetObj *pObject;
    bool success = true;
 
    m_id = id;
@@ -123,42 +120,9 @@ bool DataCollectionOwner::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
    // Load DCI and access list
    loadACLFromDB(hdb);
    loadItemsFromDB(hdb);
-   for(i = 0; i < (UINT32)m_dcObjects->size(); i++)
+   for(int i = 0; i < (UINT32)m_dcObjects->size(); i++)
       if (!m_dcObjects->get(i)->loadThresholdsFromDB(hdb))
          success = false;
-
-   // Load related nodes list
-   if (!m_isDeleted)
-   {
-      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT node_id FROM dct_node_map WHERE template_id=%d"), m_id);
-      DB_RESULT hResult = DBSelect(hdb, szQuery);
-      if (hResult != NULL)
-      {
-         dwNumNodes = DBGetNumRows(hResult);
-         for(i = 0; i < dwNumNodes; i++)
-         {
-            dwNodeId = DBGetFieldULong(hResult, i, 0);
-            pObject = FindObjectById(dwNodeId);
-            if (pObject != NULL)
-            {
-               if ((pObject->getObjectClass() == OBJECT_NODE) || (pObject->getObjectClass() == OBJECT_CLUSTER) || (pObject->getObjectClass() == OBJECT_MOBILEDEVICE) || (pObject->getObjectClass() == OBJECT_SENSOR))
-               {
-                  addChild(pObject);
-                  pObject->addParent(this);
-               }
-               else
-               {
-                  nxlog_write(MSG_DCT_MAP_NOT_NODE, EVENTLOG_ERROR_TYPE, "dd", m_id, dwNodeId);
-               }
-            }
-            else
-            {
-               nxlog_write(MSG_INVALID_DCT_MAP, EVENTLOG_ERROR_TYPE, "dd", m_id, dwNodeId);
-            }
-         }
-         DBFreeResult(hResult);
-      }
-   }
 
 	m_status = STATUS_NORMAL;
 
@@ -180,32 +144,6 @@ bool DataCollectionOwner::saveToDatabase(DB_HANDLE hdb)
 
    unlockProperties();
 
-	if (success && (m_modified & MODIFY_RELATIONS))
-	{
-		// Update members list
-		success = executeQueryOnObject(hdb, _T("DELETE FROM dct_node_map WHERE template_id=?"));
-      lockChildList(false);
-		if (success && !m_childList->isEmpty())
-		{
-		   DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO dct_node_map (template_id,node_id) VALUES (?,?)"), m_childList->size() > 1);
-		   if (hStmt != NULL)
-		   {
-		      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
-            for(int i = 0; success && (i < m_childList->size()); i++)
-            {
-               DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_childList->get(i)->getId());
-               success = DBExecute(hStmt);
-            }
-            DBFreeStatement(hStmt);
-		   }
-		   else
-		   {
-		      success = false;
-		   }
-		}
-      unlockChildList();
-	}
-
    // Save data collection items
 	if (success && (m_modified & MODIFY_DATA_COLLECTION))
 	{
@@ -223,7 +161,7 @@ bool DataCollectionOwner::saveToDatabase(DB_HANDLE hdb)
  */
 bool DataCollectionOwner::deleteFromDatabase(DB_HANDLE hdb)
 {
-   bool success = NetObj::deleteFromDatabase(hdb);
+   bool success = super::deleteFromDatabase(hdb);
    if (!success)
       return false;
 
@@ -809,7 +747,7 @@ void DataCollectionOwner::calculateCompoundStatus(BOOL bForcedRecalc)
  */
 void DataCollectionOwner::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
 {
-   NetObj::fillMessageInternal(pMsg, userId);
+   super::fillMessageInternal(pMsg, userId);
 }
 
 /**
@@ -817,7 +755,7 @@ void DataCollectionOwner::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
  */
 UINT32 DataCollectionOwner::modifyFromMessageInternal(NXCPMessage *pRequest)
 {
-   return NetObj::modifyFromMessageInternal(pRequest);
+   return super::modifyFromMessageInternal(pRequest);
 }
 
 /**
@@ -836,7 +774,7 @@ BOOL DataCollectionOwner::applyToTarget(DataCollectionTarget *target)
    }
 
    pdwItemList = MemAllocArray<UINT32>(m_dcObjects->size());
-   nxlog_debug_tag(_T("obj.dc"), 2, _T("Apply %d items from template \"%s\" to target \"%s\""),
+   nxlog_debug_tag(_T("obj.dc"), 2, _T("Apply %d metric items from template \"%s\" to target \"%s\""),
                    m_dcObjects->size(), m_name, target->getName());
 
    // Copy items
@@ -1002,7 +940,7 @@ void DataCollectionOwner::associateItems()
  */
 void DataCollectionOwner::prepareForDeletion()
 {
-	NetObj::prepareForDeletion();
+   super::prepareForDeletion();
 }
 
 /**
@@ -1091,7 +1029,7 @@ void DataCollectionOwner::updateFromImport(ConfigEntry *config)
  */
 json_t *DataCollectionOwner::toJson()
 {
-   json_t *root = NetObj::toJson();
+   json_t *root = super::toJson();
    lockProperties();
    json_object_set_new(root, "dcObjects", json_object_array(m_dcObjects));
    json_object_set_new(root, "flags", json_integer(m_flags));

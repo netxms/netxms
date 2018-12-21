@@ -19,12 +19,14 @@ Require-Bundle: org.eclipse.ui;bundle-version="3.8.2",
  org.netxms.ui.eclipse.charts;bundle-version="3.0.0",
  org.netxms.ui.eclipse.objecttools;bundle-version="3.0.0",
  org.netxms.ui.base;bundle-version="3.0.0",
- org.netxms.ui.eclipse.usermanager;bundle-version="3.0.0"
+ org.netxms.ui.eclipse.usermanager;bundle-version="3.0.0",
+ org.apache.commons.codec;bundle-version="1.10.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Bundle-ActivationPolicy: lazy
 Export-Package: org.netxms.ui.eclipse.datacollection.actions,
  org.netxms.ui.eclipse.datacollection.api,
  org.netxms.ui.eclipse.datacollection.dialogs,
  org.netxms.ui.eclipse.datacollection.propertypages.helpers,
- org.netxms.ui.eclipse.datacollection.widgets
+ org.netxms.ui.eclipse.datacollection.widgets,
+ org.netxms.ui.eclipse.datacollection.widgets.helpers
 Automatic-Module-Name: org.netxms.ui.eclipse.datacollection

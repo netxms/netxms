@@ -35,11 +35,11 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.constants.RCC;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
+import org.netxms.ui.eclipse.datacollection.widgets.LogParserEditor;
+import org.netxms.ui.eclipse.datacollection.widgets.helpers.LogParserModifyListener;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.serverconfig.Activator;
 import org.netxms.ui.eclipse.serverconfig.Messages;
-import org.netxms.ui.eclipse.serverconfig.widgets.LogParserEditor;
-import org.netxms.ui.eclipse.serverconfig.widgets.helpers.LogParserModifyListener;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
