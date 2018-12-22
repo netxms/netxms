@@ -130,17 +130,17 @@ THREAD_RESULT THREAD_CALL TunnelListenerThread(void *arg);
 /**
  * Global variables
  */
-TCHAR NXCORE_EXPORTABLE g_szConfigFile[MAX_PATH] = _T("{search}");
-TCHAR NXCORE_EXPORTABLE g_szLogFile[MAX_PATH] = DEFAULT_LOG_FILE;
+NXCORE_EXPORTABLE_VAR(TCHAR g_szConfigFile[MAX_PATH]) = _T("{search}");
+NXCORE_EXPORTABLE_VAR(TCHAR g_szLogFile[MAX_PATH]) = DEFAULT_LOG_FILE;
 UINT32 g_logRotationMode = NXLOG_ROTATION_BY_SIZE;
 UINT64 g_maxLogSize = 16384 * 1024;
 UINT32 g_logHistorySize = 4;
 TCHAR g_szDailyLogFileSuffix[64] = _T("");
-TCHAR NXCORE_EXPORTABLE g_szDumpDir[MAX_PATH] = DEFAULT_DUMP_DIR;
+NXCORE_EXPORTABLE_VAR(TCHAR g_szDumpDir[MAX_PATH]) = DEFAULT_DUMP_DIR;
 char g_szCodePage[256] = ICONV_DEFAULT_CODEPAGE;
-TCHAR NXCORE_EXPORTABLE g_szListenAddress[MAX_PATH] = _T("*");
+NXCORE_EXPORTABLE_VAR(TCHAR g_szListenAddress[MAX_PATH]) = _T("*");
 #ifndef _WIN32
-TCHAR NXCORE_EXPORTABLE g_szPIDFile[MAX_PATH] = _T("/var/run/netxmsd.pid");
+NXCORE_EXPORTABLE_VAR(TCHAR g_szPIDFile[MAX_PATH]) = _T("/var/run/netxmsd.pid");
 #endif
 UINT32 g_dwDiscoveryPollingInterval;
 UINT32 g_dwStatusPollingInterval;
@@ -154,10 +154,10 @@ UINT32 g_icmpPingTimeout = 1500;    // ICMP ping timeout (milliseconds)
 UINT32 g_auditFlags;
 UINT32 g_slmPollingInterval;
 UINT32 g_offlineDataRelevanceTime = 86400;
-TCHAR NXCORE_EXPORTABLE g_netxmsdDataDir[MAX_PATH] = _T("");
-TCHAR NXCORE_EXPORTABLE g_netxmsdLibDir[MAX_PATH] = _T("");
-int g_dbSyntax = DB_SYNTAX_UNKNOWN;
-UINT32 NXCORE_EXPORTABLE g_processAffinityMask = DEFAULT_AFFINITY_MASK;
+NXCORE_EXPORTABLE_VAR(TCHAR g_netxmsdDataDir[MAX_PATH]) = _T("");
+NXCORE_EXPORTABLE_VAR(TCHAR g_netxmsdLibDir[MAX_PATH]) = _T("");
+NXCORE_EXPORTABLE_VAR(int g_dbSyntax) = DB_SYNTAX_UNKNOWN;
+NXCORE_EXPORTABLE_VAR(UINT32 g_processAffinityMask) = DEFAULT_AFFINITY_MASK;
 UINT64 g_serverId = 0;
 RSA *g_pServerKey = NULL;
 time_t g_serverStartTime = 0;
@@ -167,7 +167,7 @@ UINT32 g_thresholdRepeatInterval = 0;	// Disabled by default
 UINT32 g_requiredPolls = 1;
 INT32 g_instanceRetentionTime = 0; // Default instance retention time
 DB_DRIVER g_dbDriver = NULL;
-ThreadPool NXCORE_EXPORTABLE *g_mainThreadPool = NULL;
+NXCORE_EXPORTABLE_VAR(ThreadPool *g_mainThreadPool) = NULL;
 INT16 g_defaultAgentCacheMode = AGENT_CACHE_OFF;
 InetAddressList g_peerNodeAddrList;
 Condition g_dbPasswordReady(true);

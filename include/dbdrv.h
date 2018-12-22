@@ -30,69 +30,46 @@
  */
 #define DBDRV_API_VERSION           21
 
-
 /**
  * Driver header
  */
-
-#ifdef __IBMCPP__
-
 #define DECLARE_DRIVER_HEADER(name) \
-extern "C" int __EXPORT drvAPIVersion; \
-extern "C" const char* __EXPORT drvName; \
-int __EXPORT drvAPIVersion = DBDRV_API_VERSION; \
-const char* __EXPORT drvName = name;
-
-#else
-
-#define DECLARE_DRIVER_HEADER(name) \
-extern "C" int __EXPORT drvAPIVersion; \
-extern "C" const char __EXPORT *drvName; \
-int __EXPORT drvAPIVersion = DBDRV_API_VERSION; \
-const char __EXPORT *drvName = name;
-
-#endif
-
+extern "C" __EXPORT_VAR(int drvAPIVersion); \
+extern "C" __EXPORT_VAR(const char *drvName); \
+__EXPORT_VAR(int drvAPIVersion) = DBDRV_API_VERSION; \
+__EXPORT_VAR(const char *drvName) = name;
 
 /**
  * Max error text length
  */
 #define DBDRV_MAX_ERROR_TEXT        1024
 
-
-//
-// Datatypes
-//
-
+/**
+ * Datatypes
+ */
 typedef void * DBDRV_CONNECTION;
 typedef void * DBDRV_STATEMENT;
 typedef void * DBDRV_RESULT;
 typedef void * DBDRV_UNBUFFERED_RESULT;
 
-
 //
 // Error codes
 //
-
 #define DBERR_SUCCESS               0
 #define DBERR_CONNECTION_LOST       1
 #define DBERR_INVALID_HANDLE        2
 #define DBERR_OTHER_ERROR           255
 
-
 //
 // DB binding buffer allocation types
 //
-
 #define DB_BIND_STATIC     0 // buffer is managed by caller and will be valid until after the query is executed
 #define DB_BIND_TRANSIENT  1 // buffer will be duplicated by DB driver in DBBind()
 #define DB_BIND_DYNAMIC    2 // DB Driver will call free() on buffer
 
-
 //
 // C and SQL types for parameter binding
 //
-
 #define DB_CTYPE_STRING       0
 #define DB_CTYPE_INT32        1
 #define DB_CTYPE_UINT32       2

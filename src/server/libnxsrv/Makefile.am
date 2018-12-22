@@ -18,6 +18,8 @@ messages.c: messages.h
 messages.h: messages.mc
 	$(PERL) @top_builddir@/tools/mc.pl messages.mc
 
+CLEANFILES = messages.c messages.h
+
 EXTRA_DIST = \
 	libnxsrv.vcxproj libnxsrv.vcxproj.filters libnxsrv.rc \
 	messages.mc messages.c messages.h \

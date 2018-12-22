@@ -43,7 +43,7 @@
 #if defined(_STATIC_AGENT) || defined(_NETWARE)
 #define DECLARE_SUBAGENT_ENTRY_POINT(name) extern "C" bool NxSubAgentRegister_##name(NETXMS_SUBAGENT_INFO **ppInfo, Config *config)
 #else
-#define DECLARE_SUBAGENT_ENTRY_POINT(name) extern "C" bool __EXPORT NxSubAgentRegister(NETXMS_SUBAGENT_INFO **ppInfo, Config *config)
+#define DECLARE_SUBAGENT_ENTRY_POINT(name) extern "C" __EXPORT bool NxSubAgentRegister(NETXMS_SUBAGENT_INFO **ppInfo, Config *config)
 #endif
 
 /**

@@ -43,4 +43,12 @@
 #define __IMPORT
 #endif
 
+#ifdef __IBMCPP__
+#define __EXPORT_VAR(s) s __EXPORT
+#define __IMPORT_VAR(s) s __IMPORT
+#else
+#define __EXPORT_VAR(s) __EXPORT s
+#define __IMPORT_VAR(s) __IMPORT s
+#endif
+
 #endif /* _symbol_visibility_h_ */
