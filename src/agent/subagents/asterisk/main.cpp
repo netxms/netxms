@@ -319,7 +319,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 /**
  * Entry point for NetXMS agent
  */
-DECLARE_SUBAGENT_ENTRY_POINT(PING)
+DECLARE_SUBAGENT_ENTRY_POINT(ASTERISK)
 {
 	*ppInfo = &m_info;
 	return true;

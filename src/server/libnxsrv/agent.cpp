@@ -39,11 +39,7 @@
 /**
  * Agent connection thread pool
  */
-#ifdef __IBMCPP__
-ThreadPool* LIBNXSRV_EXPORTABLE g_agentConnectionThreadPool = NULL;
-#else
-ThreadPool LIBNXSRV_EXPORTABLE *g_agentConnectionThreadPool = NULL;
-#endif
+LIBNXSRV_EXPORTABLE_VAR(ThreadPool *g_agentConnectionThreadPool) = NULL;
 
 /**
  * Unique connection ID

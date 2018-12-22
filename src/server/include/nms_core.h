@@ -27,8 +27,10 @@
 
 #ifdef NXCORE_EXPORTS
 #define NXCORE_EXPORTABLE __EXPORT
+#define NXCORE_EXPORTABLE_VAR(v)  __EXPORT_VAR(v)
 #else
 #define NXCORE_EXPORTABLE __IMPORT
+#define NXCORE_EXPORTABLE_VAR(v)  __IMPORT_VAR(v)
 #endif
 
 #define LIBNXCL_NO_DECLARATIONS  1
@@ -1273,20 +1275,20 @@ ObjectArray<ObjectsDistance> *FindNearestObjects(UINT32 currObjectId, int maxDis
 /**
  * Global variables
  */
-extern TCHAR NXCORE_EXPORTABLE g_szConfigFile[];
-extern TCHAR NXCORE_EXPORTABLE g_szLogFile[];
+extern NXCORE_EXPORTABLE_VAR(TCHAR g_szConfigFile[]);
+extern NXCORE_EXPORTABLE_VAR(TCHAR g_szLogFile[]);
 extern UINT32 g_logRotationMode;
 extern UINT64 g_maxLogSize;
 extern UINT32 g_logHistorySize;
 extern TCHAR g_szDailyLogFileSuffix[64];
-extern TCHAR NXCORE_EXPORTABLE g_szDumpDir[];
-extern TCHAR NXCORE_EXPORTABLE g_szListenAddress[];
+extern NXCORE_EXPORTABLE_VAR(TCHAR g_szDumpDir[]);
+extern NXCORE_EXPORTABLE_VAR(TCHAR g_szListenAddress[]);
 #ifndef _WIN32
-extern TCHAR NXCORE_EXPORTABLE g_szPIDFile[];
+extern NXCORE_EXPORTABLE_VAR(TCHAR g_szPIDFile[]);
 #endif
-extern TCHAR NXCORE_EXPORTABLE g_netxmsdDataDir[];
-extern TCHAR NXCORE_EXPORTABLE g_netxmsdLibDir[];
-extern UINT32 NXCORE_EXPORTABLE g_processAffinityMask;
+extern NXCORE_EXPORTABLE_VAR(TCHAR g_netxmsdDataDir[]);
+extern NXCORE_EXPORTABLE_VAR(TCHAR g_netxmsdLibDir[]);
+extern NXCORE_EXPORTABLE_VAR(UINT32 g_processAffinityMask);
 extern UINT64 g_serverId;
 extern RSA *g_pServerKey;
 extern UINT32 g_icmpPingSize;
@@ -1314,11 +1316,11 @@ extern UINT64 g_idataWriteRequests;
 extern UINT64 g_rawDataWriteRequests;
 extern UINT64 g_otherWriteRequests;
 
-extern int NXCORE_EXPORTABLE g_dbSyntax;
+extern NXCORE_EXPORTABLE_VAR(int g_dbSyntax);
 extern FileMonitoringList g_monitoringList;
 
-extern ThreadPool NXCORE_EXPORTABLE *g_mainThreadPool;
-extern ThreadPool NXCORE_EXPORTABLE *g_clientThreadPool;
+extern NXCORE_EXPORTABLE_VAR(ThreadPool *g_mainThreadPool);
+extern NXCORE_EXPORTABLE_VAR(ThreadPool *g_clientThreadPool);
 
 #endif   /* MODULE_NXDBMGR_EXTENSION */
 
