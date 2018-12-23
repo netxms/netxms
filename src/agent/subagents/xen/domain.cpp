@@ -223,6 +223,7 @@ LONG H_XenDomainState(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abstra
             break;
       }
    }
+#if HAVE_DECL_ERROR_DOMAIN_NOTFOUND
    else if (rc == ERROR_DOMAIN_NOTFOUND)
    {
       if (*arg == '?')
@@ -234,6 +235,7 @@ LONG H_XenDomainState(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abstra
          ret_int(value, 0);
       }
    }
+#endif
    else
    {
       ret = SYSINFO_RC_ERROR;
