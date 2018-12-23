@@ -3714,6 +3714,9 @@ if test $? = 0; then
 	AC_CHECK_HEADER(libxl.h,,AC_MSG_ERROR([*** Cannot find libxl.h - check your libxen installation ***]))
 	AC_CHECK_LIB(xenlight, libxl_ctx_alloc, [ XEN_LIBS="$XEN_LIBS -lxenlight" ])
 	AC_CHECK_LIB(xenctrl, xc_vcpu_getinfo, [ XEN_LIBS="$XEN_LIBS -lxenctrl" ])
+	AC_CHECK_DECLS([ERROR_DOMAIN_NOTFOUND],,,[
+#include <libxl.h>
+	])
 
 	CPPFLAGS="$OLD_CPPFLAGS"
 	LDFLAGS="$OLD_LDFLAGS"
