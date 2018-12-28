@@ -34,6 +34,7 @@ static char s_cpuVendorId[16] = "UNKNOWN";
  */
 void ReadCPUVendorId()
 {
+#if HAVE_GET_CPUID
    unsigned int eax, ebx, ecx, edx;
    if (__get_cpuid(0, &eax, &ebx, &ecx, &edx) == 1)
    {
@@ -42,6 +43,7 @@ void ReadCPUVendorId()
       memcpy(&s_cpuVendorId[8], &ecx, 4);
       s_cpuVendorId[12] = 0;
    }
+#endif
 }
 
 /**
