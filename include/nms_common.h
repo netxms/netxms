@@ -1184,18 +1184,18 @@ LIBNETXMS_EXPORTABLE void *MemCopyBlock(const void *data, size_t size);
 
 inline char *MemCopyStringA(const char *src)
 {
-   return static_cast<char*>(MemCopyBlock(src, strlen(src) + 1));
+   return (src != NULL) ? static_cast<char*>(MemCopyBlock(src, strlen(src) + 1)) : NULL;
 }
 
 inline WCHAR *MemCopyStringW(const WCHAR *src)
 {
-   return static_cast<WCHAR*>(MemCopyBlock(src, (wcslen(src) + 1) * sizeof(WCHAR)));
+   return (src != NULL) ? static_cast<WCHAR*>(MemCopyBlock(src, (wcslen(src) + 1) * sizeof(WCHAR))) : NULL;
 }
 
 #else
 
-#define MemCopyStringA(s) (static_cast<char*>(MemCopyBlock(src, strlen(src) + 1)))
-#define MemCopyStringW(s) (static_cast<WCHAR*>(MemCopyBlock(src, (wcslen(src) + 1) * sizeof(WCHAR))))
+#define MemCopyStringA(s) (((s) != NULL) ? static_cast<char*>(MemCopyBlock((s), strlen(s) + 1)) : NULL)
+#define MemCopyStringW(s) (((s) != NULL) ? static_cast<WCHAR*>(MemCopyBlock((s), (wcslen(s) + 1) * sizeof(WCHAR))) : NULL)
 
 #endif
 
