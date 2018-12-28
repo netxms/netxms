@@ -301,11 +301,9 @@ char LIBNETXMS_EXPORTABLE *Ip6ToStrA(const BYTE *addr, char *buffer)
 /**
  * Duplicate memory block
  */
-void LIBNETXMS_EXPORTABLE *nx_memdup(const void *data, size_t size)
+LIBNETXMS_EXPORTABLE void *MemCopyBlock(const void *data, size_t size)
 {
-   void *newData;
-
-   newData = MemAlloc(size);
+   void *newData = MemAlloc(size);
    memcpy(newData, data, size);
    return newData;
 }
@@ -323,48 +321,6 @@ void LIBNETXMS_EXPORTABLE nx_memswap(void *block1, void *block2, size_t size)
    memcpy(block2, temp, size);
    MemFree(temp);
 }
-
-#if defined(_WIN32) && defined(USE_WIN32_HEAP)
-
-/**
- * Copy string
- */
-char LIBNETXMS_EXPORTABLE *nx_strdup(const char *src)
-{
-	return (char *)nx_memdup(src, strlen(src) + 1);
-}
-
-/**
- * Copy string
- */
-WCHAR LIBNETXMS_EXPORTABLE *nx_wcsdup(const WCHAR *src)
-{
-	return (WCHAR *)nx_memdup(src, (wcslen(src) + 1) * sizeof(WCHAR));
-}
-
-#endif
-
-#if !HAVE_WCSDUP && !defined(_WIN32)
-
-/**
- * Copy string
- */
-WCHAR LIBNETXMS_EXPORTABLE *wcsdup(const WCHAR *src)
-{
-	return (WCHAR *)nx_memdup(src, (wcslen(src) + 1) * sizeof(WCHAR));
-}
-
-#elif defined(_AIX)
-
-/**
- * Copy string
- */
-WCHAR LIBNETXMS_EXPORTABLE *nx_wcsdup(const WCHAR *src)
-{
-	return (WCHAR *)nx_memdup(src, (wcslen(src) + 1) * sizeof(WCHAR));
-}
-
-#endif
 
 /**
  * Character comparator - UNICODE/case sensitive

@@ -766,18 +766,18 @@ void LIBNETXMS_EXPORTABLE nxlog_write(DWORD msg, WORD wType, const char *format,
          switch(format[numStrings])
          {
             case 's':
-               strings[numStrings] = _tcsdup(va_arg(args, TCHAR *));
+               strings[numStrings] = MemCopyString(va_arg(args, TCHAR *));
                break;
             case 'm':
 #ifdef UNICODE
 					strings[numStrings] = WideStringFromMBString(va_arg(args, char *));
 #else
-               strings[numStrings] = strdup(va_arg(args, char *));
+               strings[numStrings] = MemCopyStringA(va_arg(args, char *));
 #endif
                break;
             case 'u':
 #ifdef UNICODE
-               strings[numStrings] = wcsdup(va_arg(args, WCHAR *));
+               strings[numStrings] = MemCopyStringW(va_arg(args, WCHAR *));
 #else
 					strings[numStrings] = MBStringFromWideString(va_arg(args, WCHAR *));
 #endif

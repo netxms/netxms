@@ -87,6 +87,13 @@
 
 #include <symbol_visibility.h>
 
+/******* export attribute for libnetxms symbols *******/
+#ifdef LIBNETXMS_EXPORTS
+#define LIBNETXMS_EXPORTABLE __EXPORT
+#else
+#define LIBNETXMS_EXPORTABLE __IMPORT
+#endif
+
 /**
  * Define __64BIT__ if compiling for 64bit platform with Visual C++
  */
@@ -404,14 +411,13 @@ typedef unsigned __int64 uint64_t;
 #define malloc(n)       HeapAlloc(GetProcessHeap(), 0, n)
 #define realloc(p, n)   (((p) == NULL) ? HeapAlloc(GetProcessHeap(), 0, n) : HeapReAlloc(GetProcessHeap(), 0, p, n))
 #define free(p)         HeapFree(GetProcessHeap(), 0, p)
-#define _tcsdup(s)      nx__tcsdup(s)
-#define wcsdup(s)       nx_wcsdup(s)
+#define wcsdup(s)       MemCopyStringW(s)
 
 #undef _tcsdup
 #ifdef UNICODE
-#define _tcsdup         nx_wcsdup
+#define _tcsdup         MemCopyStringW
 #else
-#define _tcsdup         nx_strdup
+#define _tcsdup         MemCopyStringA
 #endif
 
 #else
@@ -1144,9 +1150,6 @@ inline void MemFree(void *p) { if (p != NULL) free(p); }
 template <typename T> void MemFreeAndNull(T* &p) { if (p != NULL) { free(p); p = NULL; } }
 #endif
 
-inline char *MemCopyStringA(const char *src) { return (src != NULL) ? strdup(src) : NULL; }
-inline WCHAR *MemCopyStringW(const WCHAR *src) { return (src != NULL) ? wcsdup(src) : NULL; }
-
 #else /* __cplusplus */
 
 #define MemAlloc(size) malloc(size)
@@ -1161,10 +1164,40 @@ inline WCHAR *MemCopyStringW(const WCHAR *src) { return (src != NULL) ? wcsdup(s
 #define MemFreeAndNull(p) do { if ((p) != NULL) { free(p); p = NULL; } } while(0)
 #endif
 
-#define MemCopyStringA(src) ((src != NULL) ? strdup(src) : NULL)
-#define MemCopyStringW(src) ((src != NULL) ? wcsdup(src) : NULL)
-
 #endif /* __cplusplus */
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+LIBNETXMS_EXPORTABLE void *MemCopyBlock(const void *data, size_t size);
+
+#ifdef __cplusplus
+}
+#endif
+
+#define nx_memdup MemCopyBlock
+
+/******* C string copy functions *******/
+
+#ifdef __cplusplus
+
+inline char *MemCopyStringA(const char *src)
+{
+   return static_cast<char*>(MemCopyBlock(src, strlen(src) + 1));
+}
+
+inline WCHAR *MemCopyStringW(const WCHAR *src)
+{
+   return static_cast<WCHAR*>(MemCopyBlock(src, (wcslen(src) + 1) * sizeof(WCHAR)));
+}
+
+#else
+
+#define MemCopyStringA(s) (static_cast<char*>(MemCopyBlock(src, strlen(src) + 1)))
+#define MemCopyStringW(s) (static_cast<WCHAR*>(MemCopyBlock(src, (wcslen(src) + 1) * sizeof(WCHAR))))
+
+#endif
 
 #ifdef UNICODE
 #define MemCopyString MemCopyStringW
@@ -1172,7 +1205,7 @@ inline WCHAR *MemCopyStringW(const WCHAR *src) { return (src != NULL) ? wcsdup(s
 #define MemCopyString MemCopyStringA
 #endif
 
-// malloc/free for uthash
+/******* malloc/free for uthash *******/
 #define uthash_malloc(sz) MemAlloc(sz)
 #define uthash_free(ptr,sz) MemFree(ptr)
 

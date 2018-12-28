@@ -23,12 +23,6 @@
 #ifndef _nms_util_h_
 #define _nms_util_h_
 
-#ifdef LIBNETXMS_EXPORTS
-#define LIBNETXMS_EXPORTABLE __EXPORT
-#else
-#define LIBNETXMS_EXPORTABLE __IMPORT
-#endif
-
 #include <nms_common.h>
 #include <nxatomic.h>
 #include <nms_cscp.h>
@@ -278,46 +272,9 @@ WCHAR LIBNETXMS_EXPORTABLE *wcsncpy(WCHAR *dest, const WCHAR *src, size_t n);
 
 #endif
 
-/**
- * _tcsdup() replacement
- */
-#if defined(_WIN32) && defined(USE_WIN32_HEAP)
-#ifdef __cplusplus
-extern "C" {
-#endif
-char LIBNETXMS_EXPORTABLE *nx_strdup(const char *src);
-WCHAR LIBNETXMS_EXPORTABLE *nx_wcsdup(const WCHAR *src);
-#ifdef __cplusplus
-}
-#endif
-#endif
-
-/**
- * Custom wcsdup
- */
-#if !HAVE_WCSDUP
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-WCHAR LIBNETXMS_EXPORTABLE *wcsdup(const WCHAR *src);
-#ifdef __cplusplus
-}
-#endif
-
-#elif defined(_AIX)
-
 // Some AIX versions have broken wcsdup() so we use internal implementation
-#ifdef __cplusplus
-extern "C" {
-#endif
-WCHAR LIBNETXMS_EXPORTABLE *nx_wcsdup(const WCHAR *src);
-#ifdef __cplusplus
-}
-#endif
-
-#define wcsdup nx_wcsdup
-
+#if !HAVE_WCSDUP || defined(_AIX)
+#define wcsdup MemCopyStringW
 #endif
 
 #ifdef __cplusplus
@@ -343,7 +300,7 @@ extern "C" {
 
 #define ucs2_strlen  wcslen
 #define ucs2_strncpy wcsncpy
-#define ucs2_strdup  wcsdup
+#define ucs2_strdup  MemCopyStringW
 
 size_t LIBNETXMS_EXPORTABLE ucs4_strlen(const UCS4CHAR *s);
 UCS4CHAR LIBNETXMS_EXPORTABLE *ucs4_strncpy(UCS4CHAR *dest, const UCS2CHAR *src, size_t n);
@@ -357,7 +314,7 @@ UCS2CHAR LIBNETXMS_EXPORTABLE *ucs2_strdup(const UCS2CHAR *src);
 
 #define ucs4_strlen  wcslen
 #define ucs4_strncpy wcsncpy
-#define ucs4_strdup  wcsdup
+#define ucs4_strdup  MemCopyStringW
 
 #endif
 
@@ -2491,7 +2448,6 @@ UINT64 LIBNETXMS_EXPORTABLE FileSizeA(const char *pszFileName);
 #define FileSize FileSizeA
 #endif
 
-void LIBNETXMS_EXPORTABLE *nx_memdup(const void *data, size_t size);
 void LIBNETXMS_EXPORTABLE nx_memswap(void *block1, void *block2, size_t size);
 
 WCHAR LIBNETXMS_EXPORTABLE *BinToStrW(const void *data, size_t size, WCHAR *str);
