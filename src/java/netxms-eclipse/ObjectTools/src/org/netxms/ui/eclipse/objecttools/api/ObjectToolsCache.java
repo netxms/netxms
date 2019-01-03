@@ -151,14 +151,15 @@ public class ObjectToolsCache
                if ((imageBytes == null) || (imageBytes.length == 0))
                   continue;
                
-               final ByteArrayInputStream input = new ByteArrayInputStream(imageBytes);
+               ByteArrayInputStream input = new ByteArrayInputStream(imageBytes);
                try
                {
+                  final ImageData imageData = new ImageData(input); 
                   icons.put(tool.getId(), ImageDescriptor.createFromImageDataProvider(new ImageDataProvider() {
                      @Override
                      public ImageData getImageData(int zoom)
                      {
-                        return new ImageData(input);
+                        return imageData;
                      }
                   }));
                }
