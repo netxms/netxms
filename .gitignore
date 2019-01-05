@@ -222,6 +222,7 @@ target
 /src/server/nxapisrv/java/.classpath
 /src/server/nxapisrv/java/.project
 /src/server/nxapisrv/java/.settings
+/src/server/nxapisrv/java/local
 /src/server/nxreportd/java/.classpath
 /src/server/nxreportd/java/.project
 /src/server/nxreportd/java/.settings

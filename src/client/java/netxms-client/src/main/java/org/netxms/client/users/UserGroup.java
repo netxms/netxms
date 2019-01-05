@@ -36,7 +36,7 @@ public class UserGroup extends AbstractUserObject
 	 */
 	public UserGroup(final String name)
 	{
-		super(name);
+		super(name, USERDB_TYPE_GROUP);
 		members = new long[0];
 	}
 	
@@ -59,7 +59,7 @@ public class UserGroup extends AbstractUserObject
 	 */
 	public UserGroup(final NXCPMessage msg)
 	{
-		super(msg);
+		super(msg, USERDB_TYPE_GROUP);
 
 		int count = msg.getFieldAsInt32(NXCPCodes.VID_NUM_MEMBERS);
 		members = new long[count];

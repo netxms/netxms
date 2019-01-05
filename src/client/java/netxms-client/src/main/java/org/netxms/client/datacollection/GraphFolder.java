@@ -37,8 +37,9 @@ public class GraphFolder
 	private Map<Long, GraphSettings> graphs;
 	
 	/**
-	 * @param name
-	 * @param parent
+	 * Create new graph folder
+	 * 
+	 * @param name folder name
 	 */
 	public GraphFolder(String name)
 	{

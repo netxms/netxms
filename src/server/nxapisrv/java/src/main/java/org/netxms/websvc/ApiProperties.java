@@ -3,9 +3,12 @@ package org.netxms.websvc;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ApiProperties
 {
+   private Logger log = LoggerFactory.getLogger(ApiProperties.class);
    private Properties properties;
    private String host = "127.0.0.1";
    private int port = 4701;
@@ -29,7 +32,7 @@ public class ApiProperties
       }
       catch(Exception e)
       {
-         e.printStackTrace();
+         log.warn("Cannot open property file", e);
       }
       finally
       {

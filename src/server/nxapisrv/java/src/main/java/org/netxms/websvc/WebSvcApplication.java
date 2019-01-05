@@ -20,8 +20,21 @@ package org.netxms.websvc;
 
 import java.util.Arrays;
 import java.util.HashSet;
-
-import org.netxms.websvc.handlers.*;
+import org.netxms.websvc.handlers.AccessIntegrationTools;
+import org.netxms.websvc.handlers.Alarms;
+import org.netxms.websvc.handlers.GrafanaAlarms;
+import org.netxms.websvc.handlers.GrafanaDataCollection;
+import org.netxms.websvc.handlers.HistoricalData;
+import org.netxms.websvc.handlers.LastValues;
+import org.netxms.websvc.handlers.NotificationHandler;
+import org.netxms.websvc.handlers.ObjectToolOutputHandler;
+import org.netxms.websvc.handlers.ObjectTools;
+import org.netxms.websvc.handlers.Objects;
+import org.netxms.websvc.handlers.PredefinedGraphs;
+import org.netxms.websvc.handlers.Sessions;
+import org.netxms.websvc.handlers.SummaryTableAdHoc;
+import org.netxms.websvc.handlers.UserPassword;
+import org.netxms.websvc.handlers.Users;
 import org.restlet.Application;
 import org.restlet.Restlet;
 import org.restlet.data.Method;
@@ -64,6 +77,7 @@ public class WebSvcApplication extends Application
       router.attach("/authenticate", AccessIntegrationTools.class);
       router.attach("/grafana/alarms", GrafanaAlarms.class);
       router.attach("/grafana/datacollection", GrafanaDataCollection.class);
+      router.attach("/notifications", NotificationHandler.class);
       router.attach("/objects", Objects.class);
       router.attach("/objects/{object-id}/lastvalues", LastValues.class);
       router.attach("/objects/{object-id}/datacollection/{id}/values", HistoricalData.class);
@@ -75,7 +89,9 @@ public class WebSvcApplication extends Application
       router.attach("/sessions", Sessions.class);
       router.attach("/sessions/{id}", Sessions.class);
       router.attach("/summaryTable/adHoc", SummaryTableAdHoc.class);
-      router.attach("/notifications", NotificationHandler.class);
+      router.attach("/users", Users.class);
+      router.attach("/users/{id}", Users.class);
+      router.attach("/users/{id}/password", UserPassword.class);
       return router;
    }
 }

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2018 Victor Kirhenshtein
+ * Copyright (C) 2003-2019 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -331,7 +331,9 @@ public class NXCSession
    private boolean objectsSynchronized = false;
 
    // Users
-   private Map<Long, AbstractUserObject> userDB = new HashMap<Long, AbstractUserObject>();
+   private Map<Long, AbstractUserObject> userDatabase = new HashMap<Long, AbstractUserObject>();
+   private Map<UUID, AbstractUserObject> userDatabaseGUID = new HashMap<UUID, AbstractUserObject>();
+   private boolean userDatabaseSynchronized = false;
 
    // Event objects
    private Map<Long, EventObject> eventObjects = new HashMap<Long, EventObject>();
@@ -481,29 +483,35 @@ public class NXCSession
                      break;
                   case NXCPCodes.CMD_USER_DATA:
                      final User user = new User(msg);
-                     synchronized(userDB)
+                     synchronized(userDatabase)
                      {
                         if (user.isDeleted())
                         {
-                           userDB.remove(user.getId());
+                           AbstractUserObject o = userDatabase.remove(user.getId());
+                           if (o != null)
+                              userDatabaseGUID.remove(o.getGuid());
                         }
                         else
                         {
-                           userDB.put(user.getId(), user);
+                           userDatabase.put(user.getId(), user);
+                           userDatabaseGUID.put(user.getGuid(), user);
                         }
                      }
                      break;
                   case NXCPCodes.CMD_GROUP_DATA:
                      final UserGroup group = new UserGroup(msg);
-                     synchronized(userDB)
+                     synchronized(userDatabase)
                      {
                         if (group.isDeleted())
                         {
-                           userDB.remove(group.getId());
+                           AbstractUserObject o = userDatabase.remove(group.getId());
+                           if (o != null)
+                              userDatabaseGUID.remove(o.getGuid());
                         }
                         else
                         {
-                           userDB.put(group.getId(), group);
+                           userDatabase.put(group.getId(), group);
+                           userDatabaseGUID.put(group.getGuid(), group);
                         }
                      }
                      break;
@@ -848,18 +856,20 @@ public class NXCSession
             case SessionNotification.USER_DB_OBJECT_CREATED:
             case SessionNotification.USER_DB_OBJECT_MODIFIED:
                object = ((id & 0x80000000) != 0) ? new UserGroup(msg) : new User(msg);
-               synchronized(userDB)
+               synchronized(userDatabase)
                {
-                  userDB.put(id, object);
+                  userDatabase.put(id, object);
+                  userDatabaseGUID.put(object.getGuid(), object);
                }
                break;
             case SessionNotification.USER_DB_OBJECT_DELETED:
-               synchronized(userDB)
+               synchronized(userDatabase)
                {
-                  object = userDB.get(id);
+                  object = userDatabase.get(id);
                   if (object != null)
                   {
-                     userDB.remove(id);
+                     userDatabase.remove(id);
+                     userDatabaseGUID.remove(object.getGuid());
                   }
                }
                break;
@@ -2225,7 +2235,8 @@ public class NXCSession
       objectListGUID.clear();
       zoneList.clear();
       eventObjects.clear();
-      userDB.clear();
+      userDatabase.clear();
+      userDatabaseGUID.clear();
       alarmCategories.clear();
       tcpProxies.clear();
    }
@@ -3809,11 +3820,22 @@ public class NXCSession
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
       waitForSync(syncUserDB, commandTimeout * 10);
+      userDatabaseSynchronized = true;
       subscribe(CHANNEL_USERDB);
    }
    
    /**
-    * Find a multiple users by list of IDs
+    * Check if user database is synchronized with client
+    * 
+    * @return true if user database is synchronized with client
+    */
+   public boolean isUserDatabaseSynchronized()
+   {
+      return userDatabaseSynchronized;
+   }
+
+   /**
+    * Find multiple users by list of IDs
     * 
     * @param ids of user DBObjects to find
     * @return list of found users
@@ -3821,11 +3843,11 @@ public class NXCSession
    public List<AbstractUserObject> findUserDBObjectsByIds(final List<Long> ids)
    {
       List<AbstractUserObject> users = new ArrayList<AbstractUserObject>();
-      synchronized(userDB)
+      synchronized(userDatabase)
       {
          for(Long l : ids)
          {
-            AbstractUserObject user = userDB.get(l);
+            AbstractUserObject user = userDatabase.get(l);
             if (user != null)
                   users.add(user);
          }
@@ -3834,20 +3856,31 @@ public class NXCSession
    }
 
    /**
-    * Find user by ID
+    * Find user or group by ID
     * 
     * @param id The user DBObject Id
     * @return User object with given ID or null if such user does not exist
     */
    public AbstractUserObject findUserDBObjectById(final long id)
    {
-      AbstractUserObject object;
-
-      synchronized(userDB)
+      synchronized(userDatabase)
       {
-         object = userDB.get(id);
+         return userDatabase.get(id);
       }
-      return object;
+   }
+
+   /**
+    * Find user or group by GUID
+    * 
+    * @param guid The user DBObject GUID
+    * @return User object with given GUID or null if such user does not exist
+    */
+   public AbstractUserObject findUserDBObjectByGUID(final UUID guid)
+   {
+      synchronized(userDatabase)
+      {
+         return userDatabaseGUID.get(guid);
+      }
    }
 
    /**
@@ -3859,9 +3892,9 @@ public class NXCSession
    {
       AbstractUserObject[] list;
 
-      synchronized(userDB)
+      synchronized(userDatabase)
       {
-         Collection<AbstractUserObject> values = userDB.values();
+         Collection<AbstractUserObject> values = userDatabase.values();
          list = values.toArray(new AbstractUserObject[values.size()]);
       }
       return list;
@@ -4001,28 +4034,28 @@ public class NXCSession
     * @throws NXCException
     *            if NetXMS server returns an error or operation was timed out
     */
-   public void detachUserFromLdap(final AbstractUserObject object) throws IOException, NXCException
-   {
-      NXCPMessage msg = newMessage(NXCPCodes.CMD_DETACH_LDAP_USER);
-      msg.setFieldInt32(NXCPCodes.VID_USER_ID, (int)object.getId());
-      sendMessage(msg);
-      waitForRCC(msg.getMessageId());
-   }
-   
-   /**
-    * Modify user database object
-    * 
-    * @param object User data
-    * @throws IOException
-    *            if socket I/O error occurs
-    * @throws NXCException
-    *            if NetXMS server returns an error or operation was timed out
-    */
    public void modifyUserDBObject(final AbstractUserObject object) throws IOException, NXCException
    {
       modifyUserDBObject(object, 0x7FFFFFFF);
    }
 
+   /**
+    * Detach user from LDAP
+    * 
+    * @param id user ID
+    * @throws IOException
+    *            if socket I/O error occurs
+    * @throws NXCException
+    *            if NetXMS server returns an error or operation was timed out
+    */
+   public void detachUserFromLdap(long userId) throws IOException, NXCException
+   {
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_DETACH_LDAP_USER);
+      msg.setFieldInt32(NXCPCodes.VID_USER_ID, (int)userId);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
+   
    /**
     * Lock user database
     * 

@@ -101,6 +101,9 @@
                      <maxIdleTime>60000</maxIdleTime>
                   </connector>
                </connectors>
+	       <webApp>
+                  <extraClasspath>${basedir}/local</extraClasspath>
+               </webApp>
             </configuration>
          </plugin>
       </plugins>

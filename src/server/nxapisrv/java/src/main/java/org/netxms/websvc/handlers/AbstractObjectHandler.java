@@ -37,10 +37,11 @@ public class AbstractObjectHandler extends AbstractHandler
     */
    protected AbstractObject getObject() throws Exception
    {
-      String entityId = (String)getRequest().getAttributes().get("object-id");
       NXCSession session = getSession();
       if (!session.isObjectsSynchronized())
          session.syncObjects();
+      
+      String entityId = (String)getRequest().getAttributes().get("object-id");
       AbstractObject object;
       try
       {
