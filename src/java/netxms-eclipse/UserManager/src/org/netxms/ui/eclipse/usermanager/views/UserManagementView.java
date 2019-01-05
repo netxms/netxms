@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2019 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -595,7 +595,7 @@ public class UserManagementView extends ViewPart
             for(Object object : selection.toList())
             {                
                ((AbstractUserObject)object).setFlags(((AbstractUserObject)object).getFlags() & ~AbstractUserObject.LDAP_USER);
-               session.detachUserFromLdap(((AbstractUserObject)object));
+               session.detachUserFromLdap(((AbstractUserObject)object).getId());
             }
             
          }

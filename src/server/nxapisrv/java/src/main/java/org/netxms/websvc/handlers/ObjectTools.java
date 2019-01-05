@@ -44,6 +44,9 @@ import org.restlet.resource.Post;
 
 public class ObjectTools extends AbstractObjectHandler
 {
+   /* (non-Javadoc)
+    * @see org.netxms.websvc.handlers.AbstractHandler#getCollection(java.util.Map)
+    */
    @Override protected Object getCollection(Map<String, String> query) throws Exception
    {
       NXCSession session = getSession();
@@ -60,6 +63,9 @@ public class ObjectTools extends AbstractObjectHandler
       return new ResponseContainer("objectTools", result);
    }
 
+   /* (non-Javadoc)
+    * @see org.netxms.websvc.handlers.AbstractHandler#onPost(org.restlet.representation.Representation)
+    */
    @Post
    public Representation onPost(Representation entity) throws Exception
    {

@@ -59,7 +59,7 @@ public class User extends AbstractUserObject
 	 */
 	public User(final String name)
 	{
-		super(name);
+		super(name, USERDB_TYPE_USER);
 		fullName = "";
 		xmppId = "";
 		groups = new long[0];
@@ -94,7 +94,7 @@ public class User extends AbstractUserObject
 	 */
 	public User(final NXCPMessage msg)
 	{
-		super(msg);
+		super(msg, USERDB_TYPE_USER);
 		authMethod = msg.getFieldAsInt32(NXCPCodes.VID_AUTH_METHOD);
 		fullName = msg.getFieldAsString(NXCPCodes.VID_USER_FULL_NAME);
 		certMappingMethod = msg.getFieldAsInt32(NXCPCodes.VID_CERT_MAPPING_METHOD);

@@ -33,6 +33,10 @@ import org.netxms.base.NXCPMessage;
  */
 public abstract class AbstractUserObject
 {
+   // Type strings
+   public static final String USERDB_TYPE_USER = "user";
+   public static final String USERDB_TYPE_GROUP = "group";
+   
 	// Object flags
 	public static final int MODIFIED = 0x0001;
 	public static final int DELETED = 0x0002;
@@ -60,6 +64,7 @@ public abstract class AbstractUserObject
    public static final int MODIFY_XMPP_ID           = 0x00000800;
    public static final int MODIFY_GROUP_MEMBERSHIP  = 0x00001000;
    
+   protected String type;  // "user" or "group", used by REST API
 	protected long id;
 	protected String name;
 	protected UUID guid;
@@ -74,8 +79,9 @@ public abstract class AbstractUserObject
 	 * Default constructor
 	 * @param name object name
 	 */
-	public AbstractUserObject(final String name)
+	public AbstractUserObject(String name, String type)
 	{
+	   this.type = type;
 		this.name = name;
 		description = "";
 		guid = UUID.randomUUID();
@@ -88,6 +94,7 @@ public abstract class AbstractUserObject
 	 */
 	public AbstractUserObject(final AbstractUserObject src)
 	{
+	   this.type = src.type;
 		this.id = src.id;
 		this.name = new String(src.name);
 		this.guid = UUID.fromString(src.guid.toString());
@@ -108,9 +115,11 @@ public abstract class AbstractUserObject
 	/**
 	 * Create object from NXCP message
 	 * @param msg Message containing object's data
+	 * @param type object type
 	 */
-	public AbstractUserObject(final NXCPMessage msg)
+	public AbstractUserObject(final NXCPMessage msg, String type)
 	{
+	   this.type = type;
 		id = msg.getFieldAsInt64(NXCPCodes.VID_USER_ID);
 		name = msg.getFieldAsString(NXCPCodes.VID_USER_NAME);
 		flags = msg.getFieldAsInt32(NXCPCodes.VID_USER_FLAGS);
