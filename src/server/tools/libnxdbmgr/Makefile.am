@@ -3,6 +3,7 @@ libnxdbmgr_la_SOURCES = check.cpp config.cpp confirm.cpp main.cpp query.cpp upgr
 libnxdbmgr_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include -DLIBNXDBMGR_EXPORTS
 libnxdbmgr_la_LDFLAGS = -release $(NETXMS_LIBRARY_VERSION)
 libnxdbmgr_la_LIBADD = \
+	../../../db/libnxdb/libnxdb.la \
 	../../../libnetxms/libnetxms.la
 
 EXTRA_DIST = \
