@@ -123,7 +123,7 @@ CREATE TABLE user_group_members
 CREATE TABLE user_profiles
 (
   user_id integer not null,
-  var_name varchar(255) not null,
+  var_name varchar(63) not null,
   var_value SQL_TEXT not null,
   PRIMARY KEY(user_id,var_name)
 ) TABLE_TYPE;

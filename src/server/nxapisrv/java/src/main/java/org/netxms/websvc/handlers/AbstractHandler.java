@@ -250,6 +250,8 @@ public abstract class AbstractHandler extends ServerResource
          UUID guid = UUID.fromString(sid);
          return SessionStore.getInstance(getServletContext()).getSessionToken(guid);
       }
+      
+      log.debug("Session token not present in request");
       return null;
    }
 
