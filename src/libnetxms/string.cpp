@@ -308,7 +308,7 @@ void String::appendMBString(const char *str, size_t len, int nCodePage)
       m_allocated += std::max(m_allocationStep, len + 1);
    	m_buffer = (TCHAR *)MemRealloc(m_buffer, m_allocated * sizeof(TCHAR));
    }
-	m_length += MultiByteToWideChar(nCodePage, (nCodePage == CP_UTF8) ? 0 : MB_PRECOMPOSED, str, (int)len, &m_buffer[m_length], (int)len);
+	m_length += MultiByteToWideChar(nCodePage, (nCodePage == CP_UTF8) ? 0 : MB_PRECOMPOSED, str, (int)len, &m_buffer[m_length], (int)len + 1);
 	m_buffer[m_length] = 0;
 #else
 	append(str, len);
