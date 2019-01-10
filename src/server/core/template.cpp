@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -146,7 +146,7 @@ void Template::createExportRecord(String &str)
       str.append(_T("\t\t\t\t<element id=\""));
       str.append(id);
       str.append(_T("\">"));
-      str.append(path.get(j));
+      str.append(EscapeStringForXML2(path.get(j)));
       str.append(_T("</element>\n"));
    }
    str.append(_T("\t\t\t</path>\n\t\t\t<dataCollection>\n"));

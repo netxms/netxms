@@ -18,6 +18,14 @@
 
 
 *
+* 2.2.12
+*
+
+- Fixed issues:
+	NX-1542 (Ampersand characters in template path not escaped in exported configuration XML file)
+
+
+*
 * 2.2.11
 *
 
