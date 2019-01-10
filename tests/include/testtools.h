@@ -78,6 +78,16 @@ inline void StartTest(const TCHAR *name)
 }
 
 /**
+ * Show test start mark
+ */
+inline void StartTest(const TCHAR *prefix, const TCHAR *name)
+{
+   TCHAR fullName[256];
+   _sntprintf(fullName, 256, _T("%s: %s"), prefix, name);
+   StartTest(fullName);
+}
+
+/**
  * Show test end
  */
 inline void EndTest()
