@@ -26,7 +26,9 @@ import java.util.Map;
 import java.util.Map.Entry;
 import org.netxms.base.Glob;
 import org.netxms.client.NXCSession;
+import org.netxms.client.constants.RCC;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.websvc.WebSvcException;
 import org.netxms.websvc.json.ResponseContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,6 +56,7 @@ public class Objects extends AbstractObjectHandler
       String areaFilter = query.get("area");
       String classFilter = query.get("class");
       String nameFilter = query.get("name");
+      String parentFilter = query.get("parent");
       
       Map<String, String> customAttributes = null;
       for(String k : query.keySet())
@@ -66,7 +69,7 @@ public class Objects extends AbstractObjectHandler
          customAttributes.put(k.substring(1), query.get(k));
       }
       
-      if ((areaFilter != null) || (classFilter != null) || (customAttributes != null) || (nameFilter != null))
+      if ((areaFilter != null) || (classFilter != null) || (customAttributes != null) || (nameFilter != null) || (parentFilter != null))
       {
          double[] area = null;
          if (areaFilter != null)
@@ -97,13 +100,30 @@ public class Objects extends AbstractObjectHandler
             classes = classFilter.split(",");
          }
          
+         long parentId;
+         if (parentFilter != null)
+         {
+            try
+            {
+               parentId = Long.parseLong(parentFilter);
+            }
+            catch(NumberFormatException e)
+            {
+               throw new WebSvcException(RCC.INVALID_ARGUMENT);
+            }
+         }
+         else
+         {
+            parentId = 0;
+         }
+         
          List<AbstractObject> filteredObjects = new ArrayList<AbstractObject>();
          for(AbstractObject o : objects)
          {
             // Filter by name
             if ((nameFilter != null) && !nameFilter.isEmpty() && !Glob.matchIgnoreCase(nameFilter, o.getObjectName()))
                continue;
-
+            
             // Filter by class
             if (classes != null)
             {
@@ -120,6 +140,10 @@ public class Objects extends AbstractObjectHandler
                   continue;
             }
             
+            // Filter by parent
+            if ((parentId != 0) && !o.isChildOf(parentId))
+               continue;
+
             // Filter by geographical area
             if (area != null)
             {
