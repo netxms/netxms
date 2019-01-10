@@ -3,14 +3,10 @@
 #include <nxdbapi.h>
 #include <testtools.h>
 
-#define ORA_SERVER   _T("//127.0.0.1/XE")
-#define ORA_LOGIN    _T("netxms")
-#define ORA_PASSWORD _T("netxms")
-
 /**
  * Test batches in Oracle
  */
-void TestOracleBatch()
+void TestOracleBatch(const TCHAR *server, const TCHAR *login, const TCHAR *password)
 {
    /*** connect ***/
    StartTest(_T("Oracle: connect to database"));
@@ -19,7 +15,7 @@ void TestOracleBatch()
    AssertNotNull(drv);
 
    TCHAR buffer[DBDRV_MAX_ERROR_TEXT];
-   DB_HANDLE session = DBConnect(drv, ORA_SERVER, NULL, ORA_LOGIN, ORA_PASSWORD, NULL, buffer);
+   DB_HANDLE session = DBConnect(drv, server, NULL, login, password, NULL, buffer);
    AssertNotNull(session);
 
    EndTest();
