@@ -77,63 +77,63 @@ int LIBNETXMS_EXPORTABLE ucs2_to_utf8(const UCS2CHAR *src, int srcLen, char *dst
    char *d = dst;
    while((scount < len) && (dcount < dstLen))
    {
-      UCS2CHAR ch2 = *s++;
+      UCS2CHAR ch = *s++;
       scount++;
 
-      UCS4CHAR ch;
-      if ((ch2 & 0xFC00) == 0xD800)  // high surrogate
+      UCS4CHAR codepoint;
+      if ((ch & 0xFC00) == 0xD800)  // high surrogate
       {
-         ch = static_cast<UCS4CHAR>(ch2 & 0x03FF) << 10;
+         codepoint = static_cast<UCS4CHAR>(ch & 0x03FF) << 10;
          if (scount < len)
          {
-            ch2 = *s;
-            if ((ch2 & 0xFC00) == 0xDC00)  // low surrogate
+            ch = *s;
+            if ((ch & 0xFC00) == 0xDC00)  // low surrogate
             {
                s++;
                scount++;
-               ch = (ch | static_cast<UCS4CHAR>(ch2 & 0x03FF)) + 0x10000;
+               codepoint = (codepoint | static_cast<UCS4CHAR>(ch & 0x03FF)) + 0x10000;
             }
          }
       }
       else if ((ch & 0xFC00) != 0xDC00)   // ignore unexpected low surrogate
       {
-         ch = static_cast<UCS4CHAR>(ch2);
+         codepoint = static_cast<UCS4CHAR>(ch);
       }
       else
       {
          continue;
       }
 
-      if (ch <= 0x7F)
+      if (codepoint <= 0x7F)
       {
-         *d++ = static_cast<char>(ch);
+         *d++ = static_cast<char>(codepoint);
          dcount++;
       }
-      else if (ch <= 0x7FF)
+      else if (codepoint <= 0x7FF)
       {
          if (dcount > dstLen - 2)
             break;   // no enough space in destination buffer
-         *d++ = static_cast<char>((ch >> 6) | 0xC0);
-         *d++ = static_cast<char>((ch & 0x3F) | 0x80);
+         *d++ = static_cast<char>((codepoint >> 6) | 0xC0);
+         *d++ = static_cast<char>((codepoint & 0x3F) | 0x80);
          dcount += 2;
       }
-      else if (ch <= 0xFFFF)
+      else if (codepoint <= 0xFFFF)
       {
          if (dcount > dstLen - 3)
             break;   // no enough space in destination buffer
-         *d++ = static_cast<char>((ch >> 12) | 0xE0);
-         *d++ = static_cast<char>(((ch >> 6) & 0x3F) | 0x80);
-         *d++ = static_cast<char>((ch & 0x3F) | 0x80);
+         *d++ = static_cast<char>((codepoint >> 12) | 0xE0);
+         *d++ = static_cast<char>(((codepoint >> 6) & 0x3F) | 0x80);
+         *d++ = static_cast<char>((codepoint & 0x3F) | 0x80);
          dcount += 3;
       }
-      else if (ch <= 0x10FFFF)
+      else if (codepoint <= 0x10FFFF)
       {
          if (dcount > dstLen - 4)
             break;   // no enough space in destination buffer
-         *d++ = static_cast<char>((ch >> 18) | 0xF0);
-         *d++ = static_cast<char>(((ch >> 12) & 0x3F) | 0x80);
-         *d++ = static_cast<char>(((ch >> 6) & 0x3F) | 0x80);
-         *d++ = static_cast<char>((ch & 0x3F) | 0x80);
+         *d++ = static_cast<char>((codepoint >> 18) | 0xF0);
+         *d++ = static_cast<char>(((codepoint >> 12) & 0x3F) | 0x80);
+         *d++ = static_cast<char>(((codepoint >> 6) & 0x3F) | 0x80);
+         *d++ = static_cast<char>((codepoint & 0x3F) | 0x80);
          dcount += 4;
       }
    }
@@ -156,46 +156,46 @@ int LIBNETXMS_EXPORTABLE ucs2_utf8len(const UCS2CHAR *src, int srcLen)
    const UCS2CHAR *s = src;
    while(scount < len)
    {
-      UCS2CHAR ch2 = *s++;
+      UCS2CHAR ch = *s++;
       scount++;
 
-      UCS4CHAR ch;
-      if ((ch2 & 0xFC00) == 0xD800)  // high surrogate
+      UCS4CHAR codepoint;
+      if ((ch & 0xFC00) == 0xD800)  // high surrogate
       {
-         ch = static_cast<UCS4CHAR>(ch2 & 0x03FF) << 10;
+         codepoint = static_cast<UCS4CHAR>(ch & 0x03FF) << 10;
          if (scount < len)
          {
-            ch2 = *s;
-            if ((ch2 & 0xFC00) == 0xDC00)  // low surrogate
+            ch = *s;
+            if ((ch & 0xFC00) == 0xDC00)  // low surrogate
             {
                s++;
                scount++;
-               ch = (ch | static_cast<UCS4CHAR>(ch2 & 0x03FF)) + 0x10000;
+               codepoint = (codepoint | static_cast<UCS4CHAR>(ch & 0x03FF)) + 0x10000;
             }
          }
       }
       else if ((ch & 0xFC00) != 0xDC00)   // ignore unexpected low surrogate
       {
-         ch = static_cast<UCS4CHAR>(ch2);
+         codepoint = static_cast<UCS4CHAR>(ch);
       }
       else
       {
          continue;
       }
 
-      if (ch <= 0x7F)
+      if (codepoint <= 0x7F)
       {
          dcount++;
       }
-      else if (ch <= 0x7FF)
+      else if (codepoint <= 0x7FF)
       {
          dcount += 2;
       }
-      else if (ch <= 0xFFFF)
+      else if (codepoint <= 0xFFFF)
       {
          dcount += 3;
       }
-      else if (ch <= 0x10FFFF)
+      else if (codepoint <= 0x10FFFF)
       {
          dcount += 4;
       }
