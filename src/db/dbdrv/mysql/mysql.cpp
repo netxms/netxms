@@ -285,14 +285,14 @@ extern "C" DBDRV_CONNECTION __EXPORT DrvConnect(const char *szHost, const char *
 /**
  * Disconnect from database
  */
-extern "C" void __EXPORT DrvDisconnect(MYSQL_CONN *pConn)
+extern "C" void __EXPORT DrvDisconnect(MYSQL_CONN *conn)
 {
-	if (pConn != NULL)
-	{
-		mysql_close(pConn->pMySQL);
-		MutexDestroy(pConn->mutexQueryLock);
-		free(pConn);
-	}
+   if (conn == NULL)
+      return;
+
+	mysql_close(conn->pMySQL);
+	MutexDestroy(conn->mutexQueryLock);
+	MemFree(conn);
 }
 
 /**

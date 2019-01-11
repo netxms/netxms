@@ -164,7 +164,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="oracle.cpp" />
-    <ClCompile Include="sqlite.cpp" />
     <ClCompile Include="test-libnxdb.cpp" />
   </ItemGroup>
   <ItemGroup>
