@@ -170,7 +170,6 @@ UINT32 GetGraphAccessCheckResult(UINT32 graphId, UINT32 graphUserId)
  */
 GRAPH_ACL_AND_ID IsGraphNameExists(const TCHAR *graphName)
 {
-   TCHAR szQuery[256];
    DB_RESULT hResult;
    GRAPH_ACL_AND_ID result;
    result.graphId = 0;
@@ -178,22 +177,29 @@ GRAPH_ACL_AND_ID IsGraphNameExists(const TCHAR *graphName)
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
    // Check existence and access rights
-   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT graph_id FROM graphs WHERE name=%s"),
-              (const TCHAR *)DBPrepareString(hdb, graphName));
-   hResult = DBSelect(hdb, szQuery);
-
-   if (hResult != NULL)
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT graph_id FROM graphs WHERE name=?"));
+   if(hStmt != NULL)
    {
-      if (DBGetNumRows(hResult) > 0)
+      DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, graphName, DB_BIND_STATIC);
+      hResult = DBSelectPrepared(hStmt);
+      if (hResult != NULL)
       {
-         result.graphId = DBGetFieldULong(hResult, 0, 0);
-         result.status = RCC_OBJECT_ALREADY_EXISTS;
+         if (DBGetNumRows(hResult) > 0)
+         {
+            result.graphId = DBGetFieldULong(hResult, 0, 0);
+            result.status = RCC_OBJECT_ALREADY_EXISTS;
+         }
+         else
+         {
+            result.status = RCC_SUCCESS;
+         }
+         DBFreeResult(hResult);
       }
       else
       {
-         result.status = RCC_SUCCESS;
+         result.status = RCC_DB_FAILURE;
       }
-      DBFreeResult(hResult);
+      DBFreeStatement(hStmt);
    }
    else
    {
@@ -304,10 +310,9 @@ void SaveGraph(NXCPMessage *pRequest, UINT32 userId, NXCPMessage *msg)
 
    UINT32 graphId = pRequest->getFieldAsUInt32(VID_GRAPH_ID);
 	pRequest->getFieldAsString(VID_NAME,dwGraphName,255);
-	UINT16 overwrite = pRequest->getFieldAsUInt16(VID_OVERWRITE);
+	bool overwrite = pRequest->getFieldAsBoolean(VID_OVERWRITE);
 
    GRAPH_ACL_AND_ID nameUniq = IsGraphNameExists(dwGraphName);
-
    if (nameUniq.graphId == graphId)
    {
       nameUniq.status = RCC_SUCCESS;
@@ -325,7 +330,7 @@ void SaveGraph(NXCPMessage *pRequest, UINT32 userId, NXCPMessage *msg)
 		isNew = false;
 	}
 
-   if (accessRightStatus == RCC_SUCCESS && (nameUniq.status == RCC_SUCCESS || (overwrite && isNew)))
+   if (accessRightStatus == RCC_SUCCESS && (nameUniq.status == RCC_SUCCESS || overwrite))
    {
       sucess = true;
       if (nameUniq.status != RCC_SUCCESS)
