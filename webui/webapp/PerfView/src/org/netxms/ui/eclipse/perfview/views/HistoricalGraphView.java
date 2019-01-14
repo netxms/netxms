@@ -296,7 +296,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
     */
    public void initPredefinedGraph(GraphSettings gs)
    {
-      settings = gs;
+      settings = new GraphSettings(gs);
       settings.addChangeListener(this);
       configureGraphFromSettings();
    }
@@ -925,7 +925,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
       if (result == Window.CANCEL)
          return;
 
-      final GraphSettings gs = new GraphSettings(0, session.getUserId(), 0, new ArrayList<AccessListElement>(0));
+      final GraphSettings gs = new GraphSettings(asTemplate ? 0 : settings.getId(), session.getUserId(), 0, new ArrayList<AccessListElement>(0));
       gs.setName(dlg.getName());
       gs.setConfig(settings);
       if(asTemplate)
@@ -939,7 +939,9 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
             @Override
             protected void runInternal(IProgressMonitor monitor) throws Exception
             {
-               session.saveGraph(gs, canBeOverwritten);
+               long id = session.saveGraph(gs, canBeOverwritten);
+               if(!asTemplate)
+                  settings.setId(id);
             }
 
             @Override

@@ -8046,7 +8046,7 @@ public class NXCSession
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_SAVE_GRAPH);
       graph.fillMessage(msg);
-      msg.setFieldInt16(NXCPCodes.VID_OVERWRITE, overwrite ? 1 : 0);
+      msg.setField(NXCPCodes.VID_OVERWRITE, overwrite);
       sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());
       return response.getFieldAsInt64(NXCPCodes.VID_GRAPH_ID);

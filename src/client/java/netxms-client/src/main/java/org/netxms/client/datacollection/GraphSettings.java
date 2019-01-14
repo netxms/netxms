@@ -134,6 +134,28 @@ public class GraphSettings extends ChartConfig implements ObjectAction
       setTitle(name);
       parent = null;
    }
+   
+   /**
+    * Create copy of provided settings
+    * 
+    * @param src source object
+    * @param name new name
+    */
+   public GraphSettings(GraphSettings src)
+   {
+      id = src.id;
+      ownerId = src.ownerId;
+      this.name = src.name;      
+      shortName = src.shortName;
+      displayName = src.displayName;
+      flags = src.flags & ~GRAPH_FLAG_TEMPLATE;
+      this.accessList = new ArrayList<AccessListElement>(src.accessList.size());
+      this.accessList.addAll(src.accessList);
+      filter = src.filter;
+      setConfig(src);
+      setTitle(src.getTitle());
+      parent = null;
+   }
 
    /**
     * Create chart settings object from XML document
@@ -378,6 +400,14 @@ public class GraphSettings extends ChartConfig implements ObjectAction
    public int getToolType()
    {
       return 0;
+   }
+
+   /**
+    * @param id the id to set
+    */
+   public void setId(long id)
+   {
+      this.id = id;
    }
 
    /* (non-Javadoc)
