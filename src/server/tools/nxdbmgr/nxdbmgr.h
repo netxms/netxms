@@ -1,6 +1,6 @@
 /*
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004-2016 Victor Kirhenshtein
+** Copyright (C) 2004-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -50,7 +50,7 @@ void InitDatabase(const char *pszInitFile);
 bool ClearDatabase(bool preMigration);
 void ExportDatabase(char *file, bool skipAudit, bool skipAlarms, bool skipEvent, bool skipSysLog, bool skipTrapLog);
 void ImportDatabase(const char *file);
-void MigrateDatabase(const TCHAR *sourceConfig, TCHAR *destConfFields);
+void MigrateDatabase(const TCHAR *sourceConfig, TCHAR *destConfFields, bool skipAudit, bool skipAlarms, bool skipEvent, bool skipSysLog, bool skipTrapLog);
 void UpgradeDatabase();
 void UnlockDatabase();
 void ReindexIData();

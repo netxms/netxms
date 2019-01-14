@@ -1,6 +1,6 @@
 /*
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004-2018 Victor Kirhenshtein
+** Copyright (C) 2004-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -263,25 +263,25 @@ stop_search:
                      _T("   -c <config> : Use alternate configuration file. Default is %s\n")
                      _T("   -d          : Check collected data (may take very long time).\n")
                      _T("   -D          : Migrate only collected data.\n")
-                     _T("   -E          : Skip export of event log\n")
+                     _T("   -E          : Skip export or migration of event log\n")
                      _T("   -f          : Force repair - do not ask for confirmation.\n")
 #ifdef _WIN32
 				         _T("   -G          : GUI mode.\n")
 #endif
                      _T("   -h          : Display help and exit.\n")
                      _T("   -I          : MySQL only - specify TYPE=InnoDB for new tables.\n")
-                     _T("   -L          : Skip export of alarms.\n")
+                     _T("   -L          : Skip export or migration of alarm log.\n")
                      _T("   -M          : MySQL only - specify TYPE=MyISAM for new tables.\n")
                      _T("   -N          : Do not replace existing configuration value (\"set\" command only).\n")
                      _T("   -q          : Quiet mode (don't show startup banner).\n")
-                     _T("   -R          : Skip export of SNMP trap log.\n")
+                     _T("   -R          : Skip export or migration of SNMP trap log.\n")
                      _T("   -s          : Skip collected data during migration on export.\n")
                      _T("   -S          : Skip collected data during migration on export and do not clear or create data tables.\n")
                      _T("   -t          : Enable trace mode (show executed SQL queries).\n")
                      _T("   -T <recs>   : Transaction size for migration.\n")
                      _T("   -v          : Display version and exit.\n")
                      _T("   -X          : Ignore SQL errors when upgrading (USE WITH CAUTION!!!)\n")
-                     _T("   -Y          : Skip export of collected syslog records.\n")
+                     _T("   -Y          : Skip export or migration of collected syslog records.\n")
                      _T("\n"), configFile);
             bStart = FALSE;
             break;
@@ -535,7 +535,7 @@ stop_search:
 #endif
 			TCHAR destConfFields[2048];
 			_sntprintf(destConfFields, 2048, _T("\tDB Name: %s\n\tDB Server: %s\n\tDB Login: %s"), s_dbName, s_dbServer, s_dbLogin);
-         MigrateDatabase(sourceConfig, destConfFields);
+         MigrateDatabase(sourceConfig, destConfFields, skipAudit, skipAlarms, skipEvent, skipSysLog, skipTrapLog);
 #ifdef UNICODE
 			free(sourceConfig);
 #endif

@@ -1,6 +1,6 @@
 /*
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004-2016 Victor Kirhenshtein
+** Copyright (C) 2004-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -293,7 +293,7 @@ static bool MigrateTableCallback(const TCHAR *table, void *userData)
 /**
  * Migrate database
  */
-void MigrateDatabase(const TCHAR *sourceConfig, TCHAR *destConfFields)
+void MigrateDatabase(const TCHAR *sourceConfig, TCHAR *destConfFields, bool skipAudit, bool skipAlarms, bool skipEvent, bool skipSysLog, bool skipTrapLog)
 {
    bool success = false;
 
@@ -326,6 +326,21 @@ void MigrateDatabase(const TCHAR *sourceConfig, TCHAR *destConfFields)
 	   // Migrate tables
 	   for(int i = 0; g_tables[i] != NULL; i++)
 	   {
+	      if (skipAudit && !_tcscmp(g_tables[i], _T("audit_log")))
+	         continue;
+	      if (skipEvent && !_tcscmp(g_tables[i], _T("event_log")))
+	         continue;
+	      if (skipAlarms && (!_tcscmp(g_tables[i], _T("alarms")) ||
+	                         !_tcscmp(g_tables[i], _T("alarm_notes")) ||
+	                         !_tcscmp(g_tables[i], _T("alarm_events"))))
+	         continue;
+	      if (skipTrapLog && !_tcscmp(g_tables[i], _T("snmp_trap_log")))
+	         continue;
+	      if (skipSysLog && !_tcscmp(g_tables[i], _T("syslog")))
+	         continue;
+	      if ((g_skipDataMigration || g_skipDataSchemaMigration) &&
+	           !_tcscmp(g_tables[i], _T("raw_dci_values")))
+	         continue;
 		   if (!MigrateTable(g_tables[i]))
 			   goto cleanup;
 	   }
