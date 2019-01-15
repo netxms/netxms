@@ -1,5 +1,5 @@
 package org.netxms.base;
 public final class BuildNumber {
-   public static final String TEXT = "9022";
-   public static final int NUMBER = 9022;
+   public static final String TEXT = "9023";
+   public static final int NUMBER = 9023;
 }
