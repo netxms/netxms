@@ -1,6 +1,6 @@
 /*
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004-2018 Victor Kirhenshtein
+** Copyright (C) 2004-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -23,6 +23,25 @@
 #include "nxdbmgr.h"
 #include <nxevent.h>
 
+/**
+ * Upgrade from 22.41 to 22.42
+ */
+static bool H_UpgradeFromV41()
+{
+   CHK_EXEC(DBDropPrimaryKey(g_dbHandle, _T("address_lists")));
+
+   static const TCHAR *batch =
+      _T("ALTER TABLE address_lists ADD zone_uin integer\n")
+      _T("ALTER TABLE address_lists ADD proxy_id integer\n")
+      _T("UPDATE address_lists SET zone_uin=0,proxy_id=0\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+
+   CHK_EXEC(DBAddPrimaryKey(g_dbHandle, _T("address_lists"), _T("list_type,community_id,zone_uin,addr_type,addr1,addr2")));
+
+   CHK_EXEC(SetMinorSchemaVersion(42));
+   return true;
+}
 
 /**
  * Upgrade from 22.40 to 22.41
@@ -807,6 +826,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 41, 22, 42, H_UpgradeFromV41 },
    { 40, 22, 41, H_UpgradeFromV40 },
    { 39, 22, 40, H_UpgradeFromV39 },
    { 38, 22, 39, H_UpgradeFromV38 },

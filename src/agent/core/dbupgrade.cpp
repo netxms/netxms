@@ -243,13 +243,9 @@ static BOOL H_UpgradeFromV1(int currVersion, int newVersion)
          for(int i = 0; i < list->size(); i++)
          {
             ConfigEntry *e = list->get(i);
-            uuid_t guid;
-
             if (MatchString(_T("policy-*"), e->getName(), TRUE))
             {
-               _uuid_parse(&(e->getName()[7]), guid);
-
-               DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, guid);
+               DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, uuid::parse(&(e->getName()[7])));
                DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, e->getSubEntryValueAsInt(_T("type")));
                DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, e->getSubEntryValue(_T("server")), DB_BIND_STATIC);
                CHK_EXEC(DBExecute(hStmt));

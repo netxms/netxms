@@ -1417,6 +1417,24 @@ void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, const u
 }
 
 /**
+ * Bind MAC address
+ */
+void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, const MacAddress& value)
+{
+   TCHAR buffer[36];
+   DBBind(hStmt, pos, sqlType, DB_CTYPE_STRING, value.toString(buffer, MAC_ADDR_FLAT_STRING), DB_BIND_TRANSIENT);
+}
+
+/**
+ * Bind IP address
+ */
+void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, const InetAddress& value)
+{
+   TCHAR buffer[64];
+   DBBind(hStmt, pos, sqlType, DB_CTYPE_STRING, value.toString(buffer), DB_BIND_TRANSIENT);
+}
+
+/**
  * Bind JSON object
  */
 void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, json_t *value, int allocType)

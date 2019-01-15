@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2015 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -27,7 +27,7 @@
  */
 InetAddressListElement::InetAddressListElement(NXCPMessage *msg, UINT32 baseId)
 {
-   m_type = msg->getFieldAsInt16(baseId);
+   m_type = (AddressListElementType)msg->getFieldAsInt16(baseId);
    m_baseAddress = msg->getFieldAsInetAddress(baseId + 1);
    if (m_type == InetAddressListElement_SUBNET)
    {
@@ -37,6 +37,8 @@ InetAddressListElement::InetAddressListElement(NXCPMessage *msg, UINT32 baseId)
    {
       m_endAddress = msg->getFieldAsInetAddress(baseId + 2);
    }
+   m_zoneUIN = msg->getFieldAsInt32(baseId + 3);
+   m_proxyId = msg->getFieldAsInt32(baseId + 4);
 }
 
 /**
@@ -47,6 +49,8 @@ InetAddressListElement::InetAddressListElement(const InetAddress& baseAddr, cons
    m_type = InetAddressListElement_RANGE;
    m_baseAddress = baseAddr;
    m_endAddress = endAddr;
+   m_zoneUIN = 0;
+   m_proxyId = 0;
 }
 
 /**
@@ -57,15 +61,17 @@ InetAddressListElement::InetAddressListElement(const InetAddress& baseAddr, int 
    m_type = InetAddressListElement_SUBNET;
    m_baseAddress = baseAddr;
    m_baseAddress.setMaskBits(maskBits);
+   m_zoneUIN = 0;
+   m_proxyId = 0;
 }
 
 /**
  * Create address list element from DB record
- * Expected field order: addr_type,addr1,addr2
+ * Expected field order: addr_type,addr1,addr2,zone_uin,proxy_id
  */
 InetAddressListElement::InetAddressListElement(DB_RESULT hResult, int row)
 {
-   m_type = DBGetFieldLong(hResult, row, 0);
+   m_type = (AddressListElementType)DBGetFieldLong(hResult, row, 0);
    m_baseAddress = DBGetFieldInetAddr(hResult, row, 1);
    if (m_type == InetAddressListElement_SUBNET)
    {
@@ -92,6 +98,8 @@ InetAddressListElement::InetAddressListElement(DB_RESULT hResult, int row)
    {
       m_endAddress = DBGetFieldInetAddr(hResult, row, 2);
    }
+   m_zoneUIN = DBGetFieldLong(hResult, row, 3);
+   m_proxyId = DBGetFieldLong(hResult, row, 4);
 }
 
 /**
@@ -99,12 +107,14 @@ InetAddressListElement::InetAddressListElement(DB_RESULT hResult, int row)
  */
 void InetAddressListElement::fillMessage(NXCPMessage *msg, UINT32 baseId) const
 {
-   msg->setField(baseId, (INT16)m_type);
+   msg->setField(baseId, static_cast<INT16>(m_type));
    msg->setField(baseId + 1, m_baseAddress);
    if (m_type == InetAddressListElement_SUBNET)
-      msg->setField(baseId + 2, (INT16)m_baseAddress.getMaskBits());
+      msg->setField(baseId + 2, static_cast<INT16>(m_baseAddress.getMaskBits()));
    else
       msg->setField(baseId + 2, m_endAddress);
+   msg->setField(baseId + 3, m_zoneUIN);
+   msg->setField(baseId + 4, m_proxyId);
 }
 
 /**
@@ -112,15 +122,7 @@ void InetAddressListElement::fillMessage(NXCPMessage *msg, UINT32 baseId) const
  */
 bool InetAddressListElement::contains(const InetAddress& addr) const
 {
-   if (m_type == InetAddressListElement_SUBNET)
-      return m_baseAddress.contain(addr);
-   if ((m_baseAddress.getFamily() == addr.getFamily()) && (m_endAddress.getFamily() == addr.getFamily()))
-   {
-      InetAddress a = addr;
-      a.setMaskBits(m_baseAddress.getMaskBits());   // compare only address parts
-      return (m_baseAddress.compareTo(a) <= 0) && (m_endAddress.compareTo(a) >= 0);
-   }
-   return false;
+   return (m_type == InetAddressListElement_SUBNET) ? m_baseAddress.contain(addr) : addr.inRange(m_baseAddress, m_endAddress);
 }
 
 /**
@@ -150,31 +152,42 @@ bool UpdateAddressListFromMessage(NXCPMessage *msg)
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
    int listType = msg->getFieldAsInt32(VID_ADDR_LIST_TYPE);
-   TCHAR query[256];
-   _sntprintf(query, 256, _T("DELETE FROM address_lists WHERE list_type=%d"), listType);
 
    DBBegin(hdb);
-   bool success = DBQuery(hdb, query);
+
+   bool success = ExecuteQueryOnObject(hdb, listType, _T("DELETE FROM address_lists WHERE list_type=?"));
    if (success)
    {
       int count = msg->getFieldAsInt32(VID_NUM_RECORDS);
-      UINT32 fieldId = VID_ADDR_LIST_BASE;
-      for(int i = 0; (i < count) && success; i++, fieldId += 10)
+      if (count > 0)
       {
-         InetAddressListElement e = InetAddressListElement(msg, fieldId);
-         if (e.getType() == InetAddressListElement_SUBNET)
+         DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO address_lists (list_type,addr_type,addr1,addr2,community_id,zone_uin,proxy_id) VALUES (?,?,?,?,?,?,?)"), count > 1);
+         if (hStmt != NULL)
          {
-            TCHAR baseAddr[64];
-            _sntprintf(query, 256, _T("INSERT INTO address_lists (list_type,addr_type,addr1,addr2,community_id) VALUES (%d,%d,'%s','%d',0)"),
-                       listType, e.getType(), e.getBaseAddress().toString(baseAddr), e.getBaseAddress().getMaskBits());
+            DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, listType);
+
+            UINT32 fieldId = VID_ADDR_LIST_BASE;
+            for(int i = 0; (i < count) && success; i++, fieldId += 10)
+            {
+               InetAddressListElement e = InetAddressListElement(msg, fieldId);
+               DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, e.getType());
+               DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, e.getBaseAddress());
+               if (e.getType() == InetAddressListElement_SUBNET)
+                  DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, e.getBaseAddress().getMaskBits());
+               else
+                  DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, e.getEndAddress());
+               DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, (INT32)0);
+               DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, e.getZoneUIN());
+               DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, e.getProxyId());
+               success = DBExecute(hStmt);
+            }
+
+            DBFreeStatement(hStmt);
          }
          else
          {
-            TCHAR baseAddr[64], endAddr[64];
-            _sntprintf(query, 256, _T("INSERT INTO address_lists (list_type,addr_type,addr1,addr2,community_id) VALUES (%d,%d,'%s','%s',0)"),
-                       listType, e.getType(), e.getBaseAddress().toString(baseAddr), e.getEndAddress().toString(endAddr));
+            success = false;
          }
-         success = DBQuery(hdb, query);
       }
 
       if (success)
