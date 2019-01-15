@@ -1261,10 +1261,12 @@ CREATE TABLE address_lists
 (
   list_type integer not null, // discovery filter, etc.
   community_id integer not null, // community id for snmp community addr list, otherwise 0
+  zone_uin integer not null,  // zone UIN for discovery ranges, otherwise 0
+  proxy_id integer not null,  // proxy node ID for discovery ranges, otherwise 0
   addr_type integer not null, // 0 - addr/mask, 1 - address range
   addr1 varchar(48) not null,
   addr2 varchar(48) not null,
-  PRIMARY KEY(list_type,community_id,addr_type,addr1,addr2)
+  PRIMARY KEY(list_type,community_id,zone_uin,addr_type,addr1,addr2)
 ) TABLE_TYPE;
 
 CREATE INDEX idx_address_lists_list_type ON address_lists(list_type);
