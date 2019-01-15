@@ -409,7 +409,7 @@ public class DataSources extends PropertyPage
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
-					session.saveGraph((GraphSettings)config, true);
+					session.saveGraph((GraphSettings)config, false);
 				}
 	
 				@Override

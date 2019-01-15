@@ -168,7 +168,7 @@ UINT32 GetGraphAccessCheckResult(UINT32 graphId, UINT32 graphUserId)
 /**
  * Check if graph name already exist
  */
-GRAPH_ACL_AND_ID IsGraphNameExists(const TCHAR *graphName)
+GRAPH_ACL_AND_ID IsGraphNameExists(const TCHAR *graphName, UINT32 flags)
 {
    DB_RESULT hResult;
    GRAPH_ACL_AND_ID result;
@@ -177,10 +177,11 @@ GRAPH_ACL_AND_ID IsGraphNameExists(const TCHAR *graphName)
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
    // Check existence and access rights
-   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT graph_id FROM graphs WHERE name=?"));
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT graph_id FROM graphs WHERE name=? AND flags=?")); // check unique only thought same type of graph
    if(hStmt != NULL)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, graphName, DB_BIND_STATIC);
+      DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, flags);
       hResult = DBSelectPrepared(hStmt);
       if (hResult != NULL)
       {
@@ -213,17 +214,25 @@ GRAPH_ACL_AND_ID IsGraphNameExists(const TCHAR *graphName)
 /**
  * Fills message with available graph list
  */
-void FillGraphListMsg(NXCPMessage *msg, UINT32 userId, bool templageGraphs)
+void FillGraphListMsg(NXCPMessage *msg, UINT32 userId, bool templageGraphs, UINT32 graphId)
 {
 	int nACLSize;
 	TCHAR *pszStr;
+	TCHAR szQuery[512];
 	UINT32 dwId, numGraphs;
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 	GRAPH_ACL_ENTRY *pACL = LoadAllGraphACL(hdb, &nACLSize);
 	if (nACLSize != -1)
 	{
-		DB_RESULT hResult = DBSelect(hdb, _T("SELECT graph_id,owner_id,flags,name,config,filters FROM graphs"));
+	   DB_RESULT hResult = NULL;
+	   if(graphId != 0)
+	   {
+	      _sntprintf(szQuery, 512, _T("SELECT graph_id,owner_id,flags,name,config,filters FROM graphs WHERE graph_id=%d"), graphId);
+	      hResult = DBSelect(hdb, szQuery);
+	   }
+	   else
+	      hResult = DBSelect(hdb, _T("SELECT graph_id,owner_id,flags,name,config,filters FROM graphs"));
 		if (hResult != NULL)
 		{
 			UINT32 *pdwUsers = (UINT32 *)malloc(sizeof(UINT32) * nACLSize);
@@ -312,7 +321,7 @@ void SaveGraph(NXCPMessage *pRequest, UINT32 userId, NXCPMessage *msg)
 	pRequest->getFieldAsString(VID_NAME,dwGraphName,255);
 	bool overwrite = pRequest->getFieldAsBoolean(VID_OVERWRITE);
 
-   GRAPH_ACL_AND_ID nameUniq = IsGraphNameExists(dwGraphName);
+   GRAPH_ACL_AND_ID nameUniq = IsGraphNameExists(dwGraphName, pRequest->getFieldAsUInt32(VID_FLAGS));
    if (nameUniq.graphId == graphId)
    {
       nameUniq.status = RCC_SUCCESS;

@@ -7567,6 +7567,20 @@ public class NXCSession
 
       return file.getFile();
    }
+   
+   /**
+    * Get predefined graph infromation by graph id
+    * 
+    * @param graphId graph id
+    */
+   public GraphSettings getPredefinedGraph(long graphId) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_GRAPH);
+      msg.setFieldInt32(NXCPCodes.VID_GRAPH_ID, (int)graphId);
+      sendMessage(msg);
+      final NXCPMessage response = waitForRCC(msg.getMessageId());
+      return GraphSettings.createGraphSettings(response, NXCPCodes.VID_GRAPH_LIST_BASE);
+   }
 
 
    /**

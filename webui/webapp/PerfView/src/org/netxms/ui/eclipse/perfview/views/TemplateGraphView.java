@@ -321,18 +321,25 @@ public class TemplateGraphView extends ViewPart implements SessionListener
       
       GraphSettings settings = (GraphSettings)selection.getFirstElement();
       PropertyDialog dlg = PropertyDialog.createDialogOn(getSite().getShell(), null, settings);
-      final GraphSettings newSettings = settings;
       if (dlg != null)
       {
          if (dlg.open() == Window.OK)
          {
+            final GraphSettings newSettings = settings;
             try
             {
                new ConsoleJob("Update template graph", null, Activator.PLUGIN_ID, null) {
                   @Override
                   protected void runInternal(IProgressMonitor monitor) throws Exception
                   {
-                     session.saveGraph(newSettings, true);
+                     session.saveGraph(newSettings, false);
+                     runInUIThread(new Runnable() {
+                        @Override
+                        public void run()
+                        {
+                           viewer.update(newSettings, null);
+                        }
+                     });
                   }
                   
                   @Override
@@ -347,10 +354,6 @@ public class TemplateGraphView extends ViewPart implements SessionListener
                MessageDialogHelper.openError(getSite().getShell(), "Internal Error", String.format("Unexpected exception: %s", e.getLocalizedMessage())); //$NON-NLS-1$ //$NON-NLS-2$
             }
          }
-         settings.setName(newSettings.getName());
-         settings.getAccessList().clear();
-         settings.getAccessList().addAll(newSettings.getAccessList());
-         viewer.update(settings, null);
       }
    }
    
