@@ -141,6 +141,11 @@ String InetAddressListElement::toString() const
       s.append(_T('-'));
       s.append(m_endAddress.toString());
    }
+   if (m_zoneUIN != 0)
+   {
+      s.append(_T('@'));
+      s.append(m_zoneUIN);
+   }
    return s;
 }
 
@@ -205,4 +210,33 @@ bool UpdateAddressListFromMessage(NXCPMessage *msg)
    }
    DBConnectionPoolReleaseConnection(hdb);
    return success;
+}
+
+/**
+ * Load server address list of given type
+ */
+ObjectArray<InetAddressListElement> *LoadServerAddressList(int listType)
+{
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+
+   TCHAR query[256];
+   _sntprintf(query, 256, _T("SELECT addr_type,addr1,addr2,zone_uin,proxy_id FROM address_lists WHERE list_type=%d"), listType);
+   DB_RESULT hResult = DBSelect(hdb, query);
+   if (hResult == NULL)
+   {
+      DBConnectionPoolReleaseConnection(hdb);
+      return NULL;
+   }
+
+   int count = DBGetNumRows(hResult);
+   ObjectArray<InetAddressListElement> *list = new ObjectArray<InetAddressListElement>(count, 16, true);
+
+   for(int i = 0; i < count; i++)
+   {
+      list->add(new InetAddressListElement(hResult, i));
+   }
+
+   DBFreeResult(hResult);
+   DBConnectionPoolReleaseConnection(hdb);
+   return list;
 }

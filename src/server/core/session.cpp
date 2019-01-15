@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2018 Raden Solutions
+** Copyright (C) 2003-2019 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -9322,30 +9322,24 @@ void ClientSession::getAddrList(NXCPMessage *request)
 
    if (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG)
    {
-      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-
-      TCHAR query[256];
-      _sntprintf(query, 256, _T("SELECT addr_type,addr1,addr2 FROM address_lists WHERE list_type=%d"), request->getFieldAsInt32(VID_ADDR_LIST_TYPE));
-      DB_RESULT hResult = DBSelect(hdb, query);
-      if (hResult != NULL)
+      ObjectArray<InetAddressListElement> *list = LoadServerAddressList(request->getFieldAsInt32(VID_ADDR_LIST_TYPE));
+      if (list != NULL)
       {
-         int count = DBGetNumRows(hResult);
-         msg.setField(VID_NUM_RECORDS, (INT32)count);
+         msg.setField(VID_NUM_RECORDS, (INT32)list->size());
 
          UINT32 fieldId = VID_ADDR_LIST_BASE;
-         for(int i = 0; i < count; i++)
+         for(int i = 0; i < list->size(); i++)
          {
-            InetAddressListElement(hResult, i).fillMessage(&msg, fieldId);
+            list->get(i)->fillMessage(&msg, fieldId);
             fieldId += 10;
          }
-         DBFreeResult(hResult);
          msg.setField(VID_RCC, RCC_SUCCESS);
+         delete list;
       }
       else
       {
          msg.setField(VID_RCC, RCC_DB_FAILURE);
       }
-      DBConnectionPoolReleaseConnection(hdb);
    }
    else
    {

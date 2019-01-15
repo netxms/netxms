@@ -1175,6 +1175,8 @@ bool NXCORE_EXPORTABLE IsComponentRegistered(const TCHAR *id);
 
 bool NXCORE_EXPORTABLE IsCommand(const TCHAR *cmdTemplate, const TCHAR *str, int minChars);
 
+ObjectArray<InetAddressListElement> *LoadServerAddressList(int listType);
+
 /**
  * Watchdog API
  */

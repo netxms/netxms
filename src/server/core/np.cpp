@@ -568,18 +568,15 @@ static BOOL AcceptNewNode(NewNodeData *newNodeData, BYTE *macAddr)
 		if (autoFilterFlags & DFF_ONLY_RANGE)
       {
 		   nxlog_debug_tag(DEBUG_TAG, 4, _T("AcceptNewNode(%s): auto filter - checking range"), szIpAddr);
-			DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-         DB_RESULT hResult = DBSelect(hdb, _T("SELECT addr_type,addr1,addr2 FROM address_lists WHERE list_type=2"));
-         if (hResult != NULL)
+	      ObjectArray<InetAddressListElement> *list = LoadServerAddressList(2);
+	      if (list != NULL)
          {
-            int nRows = DBGetNumRows(hResult);
-            for(int i = 0; (i < nRows) && (!bResult); i++)
+            for(int i = 0; (i < list->size()) && (!bResult); i++)
             {
-               bResult = InetAddressListElement(hResult, i).contains(data.ipAddr);
+               bResult = list->get(i)->contains(data.ipAddr);
             }
-            DBFreeResult(hResult);
+            delete list;
          }
-         DBConnectionPoolReleaseConnection(hdb);
          nxlog_debug_tag(DEBUG_TAG, 4, _T("AcceptNewNode(%s): auto filter - range check result is %d"), szIpAddr, bResult);
 			if (!bResult)
 				return FALSE;

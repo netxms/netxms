@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -459,7 +459,7 @@ static void DiscoveryPoller(void *arg)
  */
 static void RangeScanCallback(const InetAddress& addr, UINT32 rtt, void *context)
 {
-   nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 5, _T("Active discovery - node %s responds to ICMP ping"), (const TCHAR *)addr.toString());
+   nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 5, _T("Active discovery - node %s responded to ICMP ping"), (const TCHAR *)addr.toString());
    CheckPotentialNode(addr, 0);
 }
 
@@ -492,15 +492,75 @@ static void CheckRange(const InetAddressListElement& range)
       return;
    }
 
-   TCHAR ipAddr1[16], ipAddr2[16];
-   nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("Starting active discovery check on range %s - %s"), IpToStr(from, ipAddr1), IpToStr(to, ipAddr2));
-   while((from < to) && !IsShutdownInProgress())
+   if ((range.getZoneUIN() != 0) || (range.getProxyId() != 0))
    {
-      ScanAddressRange(from, std::min(to, from + 1023), RangeScanCallback, NULL);
-      from += 1024;
-   }
+      UINT32 proxyId;
+      if (range.getProxyId() != 0)
+      {
+         proxyId = range.getProxyId();
+      }
+      else
+      {
+         Zone *zone = FindZoneByUIN(range.getZoneUIN());
+         if (zone == NULL)
+         {
+            nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("Invalid zone UIN for address range %s"), (const TCHAR *)range.toString());
+            return;
+         }
+         proxyId = zone->getProxyNodeId();
+      }
 
-   nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("Finished active discovery check on range %s - %s"), ipAddr1, ipAddr2);
+      Node *proxy = (Node *)FindObjectById(proxyId, OBJECT_NODE);
+      if (proxy == NULL)
+      {
+         nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("Cannot find zone proxy node for address range %s"), (const TCHAR *)range.toString());
+         return;
+      }
+
+      AgentConnectionEx *conn = proxy->createAgentConnection();
+      if (conn == NULL)
+      {
+         nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("Cannot connect to proxy agent for address range %s"), (const TCHAR *)range.toString());
+         return;
+      }
+      conn->setCommandTimeout(10000);
+
+      TCHAR ipAddr1[16], ipAddr2[16];
+      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("Starting active discovery check on range %s - %s via proxy %s [%u]"),
+               IpToStr(from, ipAddr1), IpToStr(to, ipAddr2), proxy->getName(), proxy->getId());
+      while((from < to) && !IsShutdownInProgress())
+      {
+         TCHAR request[256];
+         _sntprintf(request, 256, _T("ICMP.ScanRange(%s,%s)"), IpToStr(from, ipAddr1), IpToStr(std::min(to, from + 255), ipAddr2));
+         StringList *list;
+         if (conn->getList(request, &list) == ERR_SUCCESS)
+         {
+            for(int i = 0; i < list->size(); i++)
+            {
+               nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 5, _T("Active discovery - node %s responded to ICMP ping via proxy %s [%u]"),
+                        list->get(i), proxy->getName(), proxy->getId());
+               CheckPotentialNode(InetAddress::parse(list->get(i)), range.getZoneUIN());
+            }
+            delete list;
+         }
+         from += 256;
+      }
+      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("Finished active discovery check on range %s - %s via proxy %s [%u]"),
+               IpToStr(from, ipAddr1), IpToStr(to, ipAddr2), proxy->getName(), proxy->getId());
+
+      conn->decRefCount();
+   }
+   else
+   {
+      TCHAR ipAddr1[16], ipAddr2[16];
+      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("Starting active discovery check on range %s - %s"), IpToStr(from, ipAddr1), IpToStr(to, ipAddr2));
+      while((from < to) && !IsShutdownInProgress())
+      {
+         ScanAddressRange(from, std::min(to, from + 1023), RangeScanCallback, NULL);
+         from += 1024;
+      }
+      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("Finished active discovery check on range %s - %s"), ipAddr1, ipAddr2);
+   }
 }
 
 /**
@@ -520,17 +580,14 @@ static THREAD_RESULT THREAD_CALL ActiveDiscoveryPoller(void *arg)
       if (!(g_flags & AF_ACTIVE_NETWORK_DISCOVERY))
          continue;
 
-      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-      DB_RESULT hResult = DBSelect(hdb, _T("SELECT addr_type,addr1,addr2 FROM address_lists WHERE list_type=1"));
-      DBConnectionPoolReleaseConnection(hdb);
-      if (hResult != NULL)
+      ObjectArray<InetAddressListElement> *addressList = LoadServerAddressList(1);
+      if (addressList != NULL)
       {
-         int nRows = DBGetNumRows(hResult);
-         for(int i = 0; (i < nRows) && !IsShutdownInProgress(); i++)
+         for(int i = 0; (i < addressList->size()) && !IsShutdownInProgress(); i++)
          {
-            CheckRange(InetAddressListElement(hResult, i));
+            CheckRange(*addressList->get(i));
          }
-         DBFreeResult(hResult);
+         delete addressList;
       }
    }
    return THREAD_OK;

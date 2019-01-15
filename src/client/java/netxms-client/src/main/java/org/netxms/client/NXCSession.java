@@ -3074,6 +3074,18 @@ public class NXCSession
    }
    
    /**
+    * Get zone name by UIN
+    * 
+    * @param zoneUIN zone UIN
+    * @return zone name
+    */
+   public String getZoneName(long zoneUIN)
+   {
+      Zone zone = findZone(zoneUIN);
+      return (zone != null) ? zone.getObjectName() : ("[" + Long.toString(zoneUIN) + "]");
+   }
+   
+   /**
     * Query objects on server side
     * 
     * @param query query to execute

@@ -33,19 +33,25 @@ public class InetAddressListElement
 	private InetAddress baseAddress;
 	private InetAddress endAddress;
 	private int maskBits;
+	private long zoneUIN;
+	private long proxyId;
 	
 	/**
 	 * Create new "range" element
 	 * 
 	 * @param baseAddress base address
 	 * @param endAddress end address
+	 * @param zoneUIN zone UIN
+	 * @param proxyId proxy node ID
 	 */
-	public InetAddressListElement(InetAddress baseAddress, InetAddress endAddress)
+	public InetAddressListElement(InetAddress baseAddress, InetAddress endAddress, long zoneUIN, long proxyId)
 	{
 		this.type = RANGE;
 		this.baseAddress = baseAddress;
 		this.endAddress = endAddress;
 		this.maskBits = 0;
+		this.zoneUIN = zoneUIN;
+		this.proxyId = proxyId;
 	}
 
    /**
@@ -53,13 +59,17 @@ public class InetAddressListElement
     * 
     * @param baseAddress base address
     * @param maskBits mask bits
+    * @param zoneUIN zone UIN
+    * @param proxyId proxy node ID
     */
-   public InetAddressListElement(InetAddress baseAddress, int maskBits)
+   public InetAddressListElement(InetAddress baseAddress, int maskBits, long zoneUIN, long proxyId)
    {
       this.type = SUBNET;
       this.baseAddress = baseAddress;
       this.endAddress = null;
       this.maskBits = maskBits;
+      this.zoneUIN = zoneUIN;
+      this.proxyId = proxyId;
    }
 
 	/**
@@ -82,6 +92,8 @@ public class InetAddressListElement
 		   endAddress = msg.getFieldAsInetAddress(baseId + 2);
 		   maskBits = 0;
 		}
+      zoneUIN = msg.getFieldAsInt64(baseId + 3);
+      proxyId = msg.getFieldAsInt64(baseId + 4);
 	}
 
 	/**
@@ -98,6 +110,8 @@ public class InetAddressListElement
 	      msg.setFieldInt16(baseId + 2, maskBits);
 	   else
 	      msg.setField(baseId + 2, endAddress);
+      msg.setFieldInt32(baseId + 3, (int)zoneUIN);
+      msg.setFieldInt32(baseId + 4, (int)proxyId);
    }
 
 	/**
@@ -132,13 +146,30 @@ public class InetAddressListElement
       return maskBits;
    }
 
+   /**
+    * @return the zoneUIN
+    */
+   public long getZoneUIN()
+   {
+      return zoneUIN;
+   }
+
+   /**
+    * @return the proxyId
+    */
+   public long getProxyId()
+   {
+      return proxyId;
+   }
+
    /* (non-Javadoc)
     * @see java.lang.Object#toString()
     */
    @Override
    public String toString()
    {
-      return (type == SUBNET) ? baseAddress.getHostAddress() + "/" + maskBits : baseAddress.getHostAddress() + " - " + endAddress.getHostAddress();
+      return "InetAddressListElement [type=" + type + ", baseAddress=" + baseAddress + ", endAddress=" + endAddress + ", maskBits="
+            + maskBits + ", zoneUIN=" + zoneUIN + ", proxyId=" + proxyId + "]";
    }
 
    /* (non-Javadoc)
@@ -152,7 +183,9 @@ public class InetAddressListElement
       result = prime * result + ((baseAddress == null) ? 0 : baseAddress.hashCode());
       result = prime * result + ((endAddress == null) ? 0 : endAddress.hashCode());
       result = prime * result + maskBits;
+      result = prime * result + (int)(proxyId ^ (proxyId >>> 32));
       result = prime * result + type;
+      result = prime * result + (int)(zoneUIN ^ (zoneUIN >>> 32));
       return result;
    }
 
@@ -185,7 +218,11 @@ public class InetAddressListElement
          return false;
       if (maskBits != other.maskBits)
          return false;
+      if (proxyId != other.proxyId)
+         return false;
       if (type != other.type)
+         return false;
+      if (zoneUIN != other.zoneUIN)
          return false;
       return true;
    }
