@@ -41,6 +41,7 @@ import org.eclipse.ui.internal.keys.BindingService;
 import org.eclipse.ui.keys.IBindingService;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
+import org.netxms.client.ObjectFilter;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Dashboard;
 import org.netxms.ui.eclipse.console.resources.RegionalSettings;
@@ -183,7 +184,15 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
       }
       catch(NumberFormatException e)
       {
-         AbstractObject object = session.findObjectByName(dashboardId);
+         AbstractObject object = session.findObjectByName(dashboardId, new ObjectFilter() {
+            @Override
+            public boolean filter(AbstractObject object)
+            {
+               if (object instanceof Dashboard)
+                  return true;
+               return false;
+            }
+         });
          if ((object == null) || !(object instanceof Dashboard))
          {
             MessageDialogHelper.openError(null, Messages.get().ApplicationWorkbenchWindowAdvisor_Error, String.format(Messages.get().ApplicationWorkbenchWindowAdvisor_CannotOpenDashboard, dashboardId));

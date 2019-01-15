@@ -2912,6 +2912,30 @@ public class NXCSession
       }
       return result;
    }
+   
+   /**
+    * Find object by name with object filter. Name comparison
+    * is case-insensitive.
+    *
+    * @param name object name to find
+    * @return object with matching name or null
+    */
+   public AbstractObject findObjectByName(final String name, ObjectFilter filter)
+   {
+      AbstractObject result = null;
+      synchronized(objectList)
+      {
+         for(AbstractObject object : objectList.values())
+         {
+            if (object.getObjectName().equalsIgnoreCase(name) && filter.filter(object))
+            {
+               result = object;
+               break;
+            }
+         }
+      }
+      return result;
+   }
 
    /**
     * Find object by name using regular expression. If multiple objects with same name exist,
