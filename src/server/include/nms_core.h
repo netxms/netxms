@@ -255,8 +255,11 @@ typedef struct
 /**
  * Address list element types
  */
-#define InetAddressListElement_SUBNET     0
-#define InetAddressListElement_RANGE      1
+enum AddressListElementType
+{
+   InetAddressListElement_SUBNET = 0,
+   InetAddressListElement_RANGE = 1
+};
 
 /**
  * SNMP config global ID
@@ -269,7 +272,9 @@ typedef struct
 class NXCORE_EXPORTABLE InetAddressListElement
 {
 private:
-   int m_type;
+   AddressListElementType m_type;
+   UINT32 m_zoneUIN;
+   UINT32 m_proxyId;
    InetAddress m_baseAddress;
    InetAddress m_endAddress;
 
@@ -283,9 +288,11 @@ public:
 
    bool contains(const InetAddress& addr) const;
 
-   int getType() const { return m_type; }
+   AddressListElementType getType() const { return m_type; }
    const InetAddress& getBaseAddress() const { return m_baseAddress; }
    const InetAddress& getEndAddress() const { return m_endAddress; }
+   UINT32 getZoneUIN() const { return m_zoneUIN; }
+   UINT32 getProxyId() const { return m_proxyId; }
 
    String toString() const;
 };

@@ -1,6 +1,6 @@
 /*
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004-2018 Victor Kirhenshtein
+** Copyright (C) 2004-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,6 +22,30 @@
 
 #include "nxdbmgr.h"
 #include <nxevent.h>
+
+/**
+ * Upgrade from 30.53 to 30.54 (changes also included into 22.42)
+ */
+static bool H_UpgradeFromV53()
+{
+   if (GetSchemaLevelForMajorVersion(22) < 42)
+   {
+      CHK_EXEC(DBDropPrimaryKey(g_dbHandle, _T("address_lists")));
+
+      static const TCHAR *batch =
+         _T("ALTER TABLE address_lists ADD zone_uin integer\n")
+         _T("ALTER TABLE address_lists ADD proxy_id integer\n")
+         _T("UPDATE address_lists SET zone_uin=0,proxy_id=0\n")
+         _T("<END>");
+      CHK_EXEC(SQLBatch(batch));
+
+      CHK_EXEC(DBAddPrimaryKey(g_dbHandle, _T("address_lists"), _T("list_type,community_id,zone_uin,addr_type,addr1,addr2")));
+
+      CHK_EXEC(SetSchemaLevelForMajorVersion(22, 42));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(54));
+   return true;
+}
 
 /**
  * Upgrade from 30.52 to 30.53
@@ -1807,6 +1831,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 53, 30, 54, H_UpgradeFromV53 },
    { 52, 30, 53, H_UpgradeFromV52 },
    { 51, 30, 52, H_UpgradeFromV51 },
    { 50, 30, 51, H_UpgradeFromV50 },
