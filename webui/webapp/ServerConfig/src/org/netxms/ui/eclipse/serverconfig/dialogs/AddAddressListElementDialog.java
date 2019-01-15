@@ -33,7 +33,11 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.InetAddressListElement;
+import org.netxms.ui.eclipse.objectbrowser.api.ObjectSelectionFilterFactory;
+import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
+import org.netxms.ui.eclipse.objectbrowser.widgets.ZoneSelector;
 import org.netxms.ui.eclipse.serverconfig.Messages;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
@@ -47,14 +51,18 @@ public class AddAddressListElementDialog extends Dialog
 	private Button radioRange;
 	private LabeledText textAddr1;
 	private LabeledText textAddr2;
+	private ZoneSelector zoneSelector;
+	private ObjectSelector proxySelector;
 	private InetAddressListElement element;
+	private boolean enableProxySelection;
 	
 	/**
 	 * @param parentShell
 	 */
-	public AddAddressListElementDialog(Shell parentShell)
+	public AddAddressListElementDialog(Shell parentShell, boolean enableProxySelection)
 	{
 		super(parentShell);
+		this.enableProxySelection = enableProxySelection;
 	}
 
 	/* (non-Javadoc)
@@ -133,6 +141,27 @@ public class AddAddressListElementDialog extends Dialog
 		gd.grabExcessHorizontalSpace = true;
 		textAddr2.setLayoutData(gd);
 		
+		if (enableProxySelection)
+		{
+		   if (ConsoleSharedData.getSession().isZoningEnabled())
+		   {
+		      zoneSelector = new ZoneSelector(dialogArea, SWT.NONE, true);
+		      zoneSelector.setLabel("Zone");
+		      gd = new GridData();
+		      gd.horizontalAlignment = SWT.FILL;
+		      gd.grabExcessHorizontalSpace = true;
+		      zoneSelector.setLayoutData(gd);
+		   }
+		   
+		   proxySelector = new ObjectSelector(dialogArea, SWT.NONE, true);
+		   proxySelector.setLabel("Proxy node");
+		   proxySelector.setClassFilter(ObjectSelectionFilterFactory.getInstance().createNodeSelectionFilter(false));
+         gd = new GridData();
+         gd.horizontalAlignment = SWT.FILL;
+         gd.grabExcessHorizontalSpace = true;
+         proxySelector.setLayoutData(gd);
+		}
+		
 		return dialogArea;
 	}
 
@@ -144,6 +173,10 @@ public class AddAddressListElementDialog extends Dialog
 	{
 		try
 		{
+		   long zoneUIN = (zoneSelector != null) ? zoneSelector.getZoneUIN() : 0;
+		   if (zoneUIN == -1)
+		      zoneUIN = 0;
+		   long proxyId = (proxySelector != null) ? proxySelector.getObjectId() : 0;
 	      if (radioSubnet.getSelection())
 	      {
 	         InetAddress baseAddress = InetAddress.getByName(textAddr1.getText().trim());
@@ -152,11 +185,11 @@ public class AddAddressListElementDialog extends Dialog
 	             ((baseAddress instanceof Inet4Address) && (maskBits > 32)) ||
                 ((baseAddress instanceof Inet6Address) && (maskBits > 128)))
 	            throw new NumberFormatException("Invalid network mask");
-	         element = new InetAddressListElement(baseAddress, maskBits);
+	         element = new InetAddressListElement(baseAddress, maskBits, zoneUIN, proxyId);
 	      }
 	      else
 	      {
-            element = new InetAddressListElement(InetAddress.getByName(textAddr1.getText().trim()), InetAddress.getByName(textAddr2.getText().trim()));
+            element = new InetAddressListElement(InetAddress.getByName(textAddr1.getText().trim()), InetAddress.getByName(textAddr2.getText().trim()), zoneUIN, proxyId);
 	      }
 		}
 		catch(UnknownHostException e)

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2019 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -61,6 +61,7 @@ import org.netxms.ui.eclipse.serverconfig.Activator;
 import org.netxms.ui.eclipse.serverconfig.Messages;
 import org.netxms.ui.eclipse.serverconfig.dialogs.AddAddressListElementDialog;
 import org.netxms.ui.eclipse.serverconfig.views.helpers.AddressListElementComparator;
+import org.netxms.ui.eclipse.serverconfig.views.helpers.AddressListLabelProvider;
 import org.netxms.ui.eclipse.serverconfig.views.helpers.DiscoveryConfig;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
@@ -413,6 +414,7 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
       activeDiscoveryAddressList.getTable().setLayoutData(gd);
       activeDiscoveryAddressList.getTable().setSortDirection(SWT.UP);
       activeDiscoveryAddressList.setContentProvider(new ArrayContentProvider());
+      activeDiscoveryAddressList.setLabelProvider(new AddressListLabelProvider());
       activeDiscoveryAddressList.setComparator(new AddressListElementComparator());
 
       final ImageHyperlink linkAdd = toolkit.createImageHyperlink(clientArea, SWT.NONE);
@@ -475,6 +477,7 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
       filterAddressList.getTable().setLayoutData(gd);
       filterAddressList.getTable().setSortDirection(SWT.UP);
       filterAddressList.setContentProvider(new ArrayContentProvider());
+      filterAddressList.setLabelProvider(new AddressListLabelProvider());
       filterAddressList.setComparator(new AddressListElementComparator());
 
       final ImageHyperlink linkAdd = toolkit.createImageHyperlink(clientArea, SWT.NONE);
@@ -689,11 +692,11 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
    }
 
    /**
-    * Add element to address filter
+    * Add element to active discovery range list
     */
    private void addTargetAddressListElement()
    {
-      AddAddressListElementDialog dlg = new AddAddressListElementDialog(getSite().getShell());
+      AddAddressListElementDialog dlg = new AddAddressListElementDialog(getSite().getShell(), true);
       if (dlg.open() == Window.OK)
       {
          final List<InetAddressListElement> list = config.getTargets();
@@ -708,7 +711,7 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
    }
 
    /**
-    * Remove element(s) from address filter
+    * Remove element(s) from active discovery range list
     */
    private void removeTargetAddressListElements()
    {
@@ -730,7 +733,7 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
     */
    private void addAddressFilterElement()
    {
-      AddAddressListElementDialog dlg = new AddAddressListElementDialog(getSite().getShell());
+      AddAddressListElementDialog dlg = new AddAddressListElementDialog(getSite().getShell(), false);
       if (dlg.open() == Window.OK)
       {
          final List<InetAddressListElement> list = config.getAddressFilter();
