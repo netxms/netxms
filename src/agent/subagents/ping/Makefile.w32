@@ -1,6 +1,6 @@
 TARGET = ping.nsm
 TYPE = nsm
-SOURCES = ping.cpp
+SOURCES = ping.cpp scan_win32.cpp
 
 LIBS = libnxagent.lib libnetxms.lib
 	  

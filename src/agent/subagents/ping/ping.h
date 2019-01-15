@@ -36,7 +36,7 @@
 #define PING_OPT_ALLOW_AUTOCONFIGURE   0x0001
 #define PING_OPT_DONT_FRAGMENT         0x0002
 
-#define DEBUG_TAG _T("ping")
+#define DEBUG_TAG _T("sa.ping")
 
 /**
  * Target information structure
@@ -63,5 +63,7 @@ struct PING_TARGET
 	bool automatic;
 	time_t lastDataRead;
 };
+
+StructArray<InetAddress> *ScanAddressRange(const InetAddress& start, const InetAddress& end, UINT32 timeout);
 
 #endif

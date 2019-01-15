@@ -1,6 +1,6 @@
 /*
 ** NetXMS PING subagent
-** Copyright (C) 2004-2018 Victor Kirhenshtein
+** Copyright (C) 2004-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -398,6 +398,40 @@ static LONG H_TargetTable(const TCHAR *pszParam, const TCHAR *pArg, Table *value
 }
 
 /**
+ * Handler for scanning address range
+ * Arguments: start address, end address, timeout
+ */
+static LONG H_ScanRange(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session)
+{
+   char startAddr[128], endAddr[128];
+   TCHAR timeoutText[64];
+   if (!AgentGetParameterArgA(param, 1, startAddr, 128) ||
+       !AgentGetParameterArgA(param, 2, endAddr, 128) ||
+       !AgentGetParameterArg(param, 3, timeoutText, 64))
+   {
+      return SYSINFO_RC_UNSUPPORTED;
+   }
+
+   InetAddress start = InetAddress::parse(startAddr);
+   InetAddress end = InetAddress::parse(endAddr);
+   UINT32 timeout = (timeoutText[0] != 0) ? _tcstoul(timeoutText, NULL, 0) : 1000;
+   if (!start.isValid() || !end.isValid() || (timeout == 0))
+   {
+      return SYSINFO_RC_UNSUPPORTED;
+   }
+
+   StructArray<InetAddress> *results = ScanAddressRange(start, end, timeout);
+   if (results == NULL)
+      return SYSINFO_RC_ERROR;
+
+   TCHAR buffer[128];
+   for(int i = 0; i < results->size(); i++)
+      value->add(results->get(i)->toString(buffer));
+   delete results;
+   return SYSINFO_RC_SUCCESS;
+}
+
+/**
  * Called by master agent at unload
  */
 static void SubagentShutdown()
@@ -579,6 +613,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
  */
 static NETXMS_SUBAGENT_LIST m_lists[] =
 {
+   { _T("Icmp.ScanRange(*)"), H_ScanRange, NULL },
 	{ _T("Icmp.Targets"), H_TargetList, NULL }
 };
 
