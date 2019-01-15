@@ -357,6 +357,23 @@ int InetAddress::compareTo(const InetAddress &a) const
 }
 
 /**
+ * Check if address is within given range
+ */
+bool InetAddress::inRange(const InetAddress& start, const InetAddress& end) const
+{
+   if ((start.m_family != end.m_family) || (start.m_family != m_family))
+      return false;
+
+   if (m_family == AF_INET)
+      return (m_addr.v4 >= start.m_addr.v4) && (m_addr.v4 <= end.m_addr.v4);
+
+   if (m_family == AF_INET6)
+      return (memcmp(m_addr.v6, start.m_addr.v6, 16) >= 0) && (memcmp(m_addr.v6, end.m_addr.v6, 16) <= 0);
+
+   return false;
+}
+
+/**
  * Fill sockaddr structure
  */
 struct sockaddr *InetAddress::fillSockAddr(SockAddrBuffer *buffer, UINT16 port) const

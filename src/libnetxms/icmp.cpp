@@ -1,6 +1,6 @@
 /* 
 ** libnetxms - Common NetXMS utility library
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -145,7 +145,7 @@ UINT32 LIBNETXMS_EXPORTABLE IcmpPing(const InetAddress &addr, int numRetries, UI
 struct ECHOREQUEST
 {
    ICMPHDR m_icmpHdr;
-   BYTE m_cData[MAX_PING_SIZE - sizeof(ICMPHDR) - sizeof(IPHDR)];
+   BYTE m_data[MAX_PING_SIZE - sizeof(ICMPHDR) - sizeof(IPHDR)];
 };
 
 /**
@@ -155,7 +155,7 @@ struct ECHOREPLY
 {
    IPHDR m_ipHdr;
    ICMPHDR m_icmpHdr;
-   BYTE m_cData[MAX_PING_SIZE - sizeof(ICMPHDR) - sizeof(IPHDR)];
+   BYTE m_data[MAX_PING_SIZE - sizeof(ICMPHDR) - sizeof(IPHDR)];
 };
 
 /**
@@ -200,33 +200,31 @@ UINT16 LIBNETXMS_EXPORTABLE CalculateIPChecksum(const void *data, size_t len)
 /**
  * Wait for reply from given address
  */
-static UINT32 WaitForReply(int sock, UINT32 addr, UINT16 id, UINT16 sequence, UINT32 dwTimeout, UINT32 *prtt)
+static UINT32 WaitForReply(int sock, UINT32 addr, UINT16 id, UINT16 sequence, UINT32 timeout, UINT32 *prtt)
 {
    UINT32 rtt = 0;
    UINT32 result = ICMP_TIMEOUT;
-   UINT32 dwTimeLeft, dwElapsedTime;
-   ECHOREPLY reply;
 
    SocketPoller sp;
-   socklen_t iAddrLen;
-   struct sockaddr_in saSrc;
 
    // Wait for response
-   for(dwTimeLeft = dwTimeout; dwTimeLeft > 0;)
+   for(UINT32 timeLeft = timeout; timeLeft > 0;)
    {
       sp.reset();
       sp.add(sock);
 
-      UINT64 qwStartTime = GetCurrentTimeMs();
-      if (sp.poll(dwTimeLeft) > 0)
+      UINT64 startTime = GetCurrentTimeMs();
+      if (sp.poll(timeLeft) > 0)
 		{
-			dwElapsedTime = (UINT32)(GetCurrentTimeMs() - qwStartTime);
-			dwTimeLeft -= std::min(dwElapsedTime, dwTimeLeft);
-			rtt += dwElapsedTime;
+			UINT32 elapsedTime = (UINT32)(GetCurrentTimeMs() - startTime);
+			timeLeft -= std::min(elapsedTime, timeLeft);
+			rtt += elapsedTime;
 
 			// Receive reply
-			iAddrLen = sizeof(struct sockaddr_in);
-			if (recvfrom(sock, (char *)&reply, sizeof(ECHOREPLY), 0, (struct sockaddr *)&saSrc, &iAddrLen) > 0)
+			socklen_t addrLen = sizeof(struct sockaddr_in);
+		   struct sockaddr_in saSrc;
+		   ECHOREPLY reply;
+			if (recvfrom(sock, (char *)&reply, sizeof(ECHOREPLY), 0, (struct sockaddr *)&saSrc, &addrLen) > 0)
 			{
 				// Check response
 				if ((reply.m_ipHdr.m_iaSrc.s_addr == addr) && 
@@ -244,7 +242,7 @@ static UINT32 WaitForReply(int sock, UINT32 addr, UINT16 id, UINT16 sequence, UI
 				if ((reply.m_icmpHdr.m_cType == 3) &&
 					 (reply.m_icmpHdr.m_cCode == 1))    // code 1 is "host unreachable"
 				{
-					if (((IPHDR *)reply.m_cData)->m_iaDst.s_addr == addr)
+					if (((IPHDR *)reply.m_data)->m_iaDst.s_addr == addr)
 					{
 						result = ICMP_UNREACHEABLE;
 						break;
@@ -254,7 +252,7 @@ static UINT32 WaitForReply(int sock, UINT32 addr, UINT16 id, UINT16 sequence, UI
 		}
 		else     // select() or poll() ended on timeout
 		{
-			dwTimeLeft = 0;
+			timeLeft = 0;
 		}
 	}
    return result;
@@ -310,7 +308,7 @@ static UINT32 IcmpPing4(UINT32 addr, int retries, UINT32 timeout, UINT32 *rtt, U
    request.m_icmpHdr.m_cCode = 0;
    request.m_icmpHdr.m_wId = (WORD)GetCurrentThreadId();
    request.m_icmpHdr.m_wSeq = 0;
-   memcpy(request.m_cData, szPayload, MIN(packetSize - sizeof(ICMPHDR) - sizeof(IPHDR), 64));
+   memcpy(request.m_data, szPayload, MIN(packetSize - sizeof(ICMPHDR) - sizeof(IPHDR), 64));
 
    UINT32 result = ICMP_API_ERROR;
 

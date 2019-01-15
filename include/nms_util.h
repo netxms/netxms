@@ -1111,16 +1111,16 @@ public:
 	StructArray(const StructArray<T> *src) : Array(src) { }
 	virtual ~StructArray() { }
 
-	int add(T *element) { return Array::add((void *)element); }
+	int add(const T *element) { return Array::add((void *)element); }
 	T *get(int index) const { return (T*)Array::get(index); }
-   int indexOf(T *element) const { return Array::indexOf((void *)element); }
-   bool contains(T *element) const { return indexOf(element) >= 0; }
-	void set(int index, T *element) { Array::set(index, (void *)element); }
-	void replace(int index, T *element) { Array::replace(index, (void *)element); }
+   int indexOf(const T *element) const { return Array::indexOf((void *)element); }
+   bool contains(const T *element) const { return indexOf(element) >= 0; }
+	void set(int index, const T *element) { Array::set(index, (void *)element); }
+	void replace(int index, const T *element) { Array::replace(index, (void *)element); }
 	void remove(int index) { Array::remove(index); }
-   void remove(T *element) { Array::remove((void *)element); }
+   void remove(const T *element) { Array::remove((void *)element); }
 	void unlink(int index) { Array::unlink(index); }
-   void unlink(T *element) { Array::unlink((void *)element); }
+   void unlink(const T *element) { Array::unlink((void *)element); }
 
    T *getBuffer() const { return (T*)__getBuffer(); }
 };
@@ -2036,6 +2036,7 @@ public:
    bool sameSubnet(const InetAddress &a) const;
    bool equals(const InetAddress &a) const;
    int compareTo(const InetAddress &a) const;
+   bool inRange(const InetAddress& start, const InetAddress& end) const;
 
    void setMaskBits(int m) { m_maskBits = m; }
    int getMaskBits() const { return m_maskBits; }
