@@ -1002,6 +1002,9 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_GET_GRAPH_LIST:
          sendGraphList(request);
          break;
+      case CMD_GET_GRAPH:
+         sendGraph(request);
+         break;
       case CMD_SAVE_GRAPH:
          saveGraph(request);
          break;
@@ -9850,6 +9853,22 @@ void ClientSession::SendDCIInfo(NXCPMessage *pRequest)
    sendMessage(&msg);
 }
 
+void ClientSession::sendGraph(NXCPMessage *request)
+{
+   NXCPMessage msg;
+   msg.setCode(CMD_REQUEST_COMPLETED);
+   msg.setId(request->getId());
+   UINT32 rcc = GetGraphAccessCheckResult(request->getFieldAsUInt32(VID_GRAPH_ID), m_dwUserId);
+   if(rcc == RCC_SUCCESS)
+   {
+      FillGraphListMsg(&msg, m_dwUserId, false, request->getFieldAsUInt32(VID_GRAPH_ID));
+   }
+   else
+      msg.setField(VID_RCC, rcc);
+
+   sendMessage(&msg);
+}
+
 /**
  * Send list of available graphs to client
  */
@@ -9859,7 +9878,7 @@ void ClientSession::sendGraphList(NXCPMessage *request)
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(request->getId());
    bool templageGraphs = request->getFieldAsBoolean(VID_GRAPH_TEMPALTE);
-   FillGraphListMsg(&msg, m_dwUserId, templageGraphs);
+   FillGraphListMsg(&msg, m_dwUserId, templageGraphs, 0);
    sendMessage(&msg);
 }
 

@@ -116,6 +116,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
    private Action actionLegendBottom;
    private Action actionProperties;
    private Action actionSave;
+   private Action actionSaveAs;
    private Action actionSaveAsTemplate;
    private Action[] presetActions;
    private Action actionSaveAsImage;
@@ -255,20 +256,41 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
     * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite, org.eclipse.ui.IMemento)
     */
    @Override
-   public void init(IViewSite site, IMemento memento) throws PartInitException
+   public void init(IViewSite site, final IMemento memento) throws PartInitException
    {
       init(site);
 
       if (memento != null)
       {
+         long tmpId = 0;
          try
          {
-            settings = GraphSettings.createFromXml(memento.getTextData());
+            tmpId = Long.parseLong(memento.getTextData()); // to prevent errors on old memento format
          }
          catch(Exception e)
          {
             e.printStackTrace();
+            return;
          }
+         final long id = tmpId;
+         
+         ConsoleJob job = new ConsoleJob(Messages.get().HistoricalGraphView_JobName, this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
+
+            @Override
+            protected void runInternal(IProgressMonitor monitor) throws Exception
+            {
+               settings = session.getPredefinedGraph(id);     
+            }
+
+            @Override
+            protected String getErrorMessage()
+            {
+               //settings = new GraphSettings();
+               return null;
+            }
+         };
+         job.setUser(false);
+         job.start();
       }
    }
 
@@ -282,7 +304,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
    {
       try
       {
-         memento.putTextData(settings.createXml());
+         memento.putTextData(Long.toString(settings.getId()));
       }
       catch(Exception e)
       {
@@ -656,22 +678,37 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
       };
       actionLegendBottom.setChecked(settings.getLegendPosition() == GraphSettings.POSITION_BOTTOM);
 
-      actionSave = new Action(Messages.get().HistoricalGraphView_Save, SharedIcons.SAVE) {
+      actionSave = new Action("Save", SharedIcons.SAVE) {
+         @Override
+         public void run()
+         {
+            System.out.println(settings.getId());
+            if(settings.getId() == 0)
+            {
+               String initalName = settings.getName().compareTo("noname") == 0 ? settings.getTitle() : settings.getName();
+               saveGraph(initalName, null, false, false, true);
+            }
+            else
+               saveGraph(settings.getName(), null, false, false, false);
+         }
+      };     
+
+      actionSaveAs = new Action("Save as...", SharedIcons.SAVE_AS) {
          @Override
          public void run()
          {
             String initalName = settings.getName().compareTo("noname") == 0 ? settings.getTitle() : settings.getName();
-            saveGraph(initalName, null, false, false);
+            saveGraph(initalName, null, false, false, true);
          }
-      };      
+      };  
 
       //TODO: add check that graph uses only one node as source
-      actionSaveAsTemplate = new Action("Save as template", SharedIcons.SAVE_AS) {
+      actionSaveAsTemplate = new Action("Save as template") {
          @Override
          public void run()
          {
             String initalName = settings.getName().compareTo("noname") == 0 ? settings.getTitle() : settings.getName();
-            saveGraph(initalName, null, false, true);
+            saveGraph(initalName, null, false, true, true);
          }
       };
 
@@ -792,6 +829,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
       manager.add(actionRefresh);
       manager.add(new Separator());
       manager.add(actionSave);
+      manager.add(actionSaveAs);
       manager.add(actionSaveAsTemplate);
       manager.add(actionProperties);
    }
@@ -852,7 +890,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
       manager.add(actionZoomOut);
       manager.add(new Separator());
       manager.add(actionSave);
-      manager.add(actionSaveAsTemplate);
+      manager.add(actionSaveAs);
       manager.add(actionSaveAsImage);
       manager.add(new Separator());
       manager.add(actionRefresh);
@@ -913,25 +951,45 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
    /**
     * Save this graph as predefined
     */
-   private void saveGraph(String graphName, String errorMessage, final boolean canBeOverwritten, final boolean asTemplate)
+   private void saveGraph(String graphName, String errorMessage, final boolean canBeOverwritten, final boolean asTemplate, final boolean showNameDialog)
    {
       if(asTemplate && useMoreThanOneShoucrNode)
       {
          String templateError = "More than one node is used for template creation.\nThis may cause undefined behaviour.";
          errorMessage = errorMessage == null ? templateError : errorMessage+"\n\n" +templateError;
       }
-      SaveGraphDlg dlg = new SaveGraphDlg(getSite().getShell(), graphName, errorMessage, canBeOverwritten);
-      int result = dlg.open();
-      if (result == Window.CANCEL)
-         return;
-
-      final GraphSettings gs = new GraphSettings(asTemplate ? 0 : settings.getId(), session.getUserId(), 0, new ArrayList<AccessListElement>(0));
-      gs.setName(dlg.getName());
-      gs.setConfig(settings);
+      
+      int result = SaveGraphDlg.OK;
+      GraphSettings tamplateGs = null;
+      final long oldGraphId = settings.getId();
       if(asTemplate)
       {
-         gs.setFlags(GraphSettings.GRAPH_FLAG_TEMPLATE);
-      }         
+         tamplateGs = new GraphSettings(0, session.getUserId(), 0, new ArrayList<AccessListElement>(0));
+         SaveGraphDlg dlg = new SaveGraphDlg(getSite().getShell(), graphName, errorMessage, canBeOverwritten);
+         result = dlg.open();
+         if (result == Window.CANCEL)
+            return;
+         tamplateGs.setName(dlg.getName());
+         tamplateGs.setConfig(settings);
+         tamplateGs.setFlags(GraphSettings.GRAPH_FLAG_TEMPLATE);
+      }
+      else
+      {
+         if(showNameDialog)
+         {
+            SaveGraphDlg dlg = new SaveGraphDlg(getSite().getShell(), graphName, errorMessage, canBeOverwritten);
+            result = dlg.open();
+            if (result == Window.CANCEL)
+               return;
+            settings.setName(dlg.getName());
+            if(!canBeOverwritten)
+               settings.setId(0);
+         }
+         else
+            settings.setName(graphName);
+      }    
+      
+      final GraphSettings gs = asTemplate ? tamplateGs : settings;
 
       if (result == SaveGraphDlg.OVERRIDE)
       {
@@ -947,7 +1005,8 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
             @Override
             protected String getErrorMessage()
             {
-               return Messages.get().HistoricalGraphView_SaveSettingsError;
+               settings.setId(oldGraphId);
+               return Messages.get().HistoricalGraphView_SaveSettingsError;               
             }
          }.start();
       }
@@ -959,7 +1018,9 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
             {
                try
                {
-                  session.saveGraph(gs, canBeOverwritten);
+                  long id = session.saveGraph(gs, canBeOverwritten);
+                  if(!asTemplate)
+                     settings.setId(id);
                }
                catch(NXCException e)
                {
@@ -970,7 +1031,8 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
                         @Override
                         public void run()
                         {
-                           saveGraph(gs.getName(), Messages.get().HistoricalGraphView_NameAlreadyExist, true, asTemplate);
+                           settings.setId(oldGraphId);
+                           saveGraph(gs.getName(), Messages.get().HistoricalGraphView_NameAlreadyExist, true, asTemplate, true);
                         }
 
                      });
@@ -984,13 +1046,15 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
                            @Override
                            public void run()
                            {
-                              saveGraph(gs.getName(), Messages.get().HistoricalGraphView_NameAlreadyExistNoOverwrite, false, asTemplate);
+                              settings.setId(oldGraphId);
+                              saveGraph(gs.getName(), Messages.get().HistoricalGraphView_NameAlreadyExistNoOverwrite, false, asTemplate, true);
                            }
 
                         });
                      }
                      else
                      {
+                        settings.setId(oldGraphId);
                         throw e;
                      }
                   }

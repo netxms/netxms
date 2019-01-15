@@ -479,7 +479,7 @@ public class PredefinedGraphTree extends ViewPart implements SessionListener
 						@Override
 						protected void runInternal(IProgressMonitor monitor) throws Exception
 						{
-							session.saveGraph(newSettings, true);
+							session.saveGraph(newSettings, false);
 							runInUIThread(new Runnable() {
                         @Override
                         public void run()

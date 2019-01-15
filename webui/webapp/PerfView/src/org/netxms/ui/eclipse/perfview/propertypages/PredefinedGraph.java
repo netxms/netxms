@@ -289,7 +289,7 @@ public class PredefinedGraph extends PropertyPage
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
-					session.saveGraph(settings, true);
+					session.saveGraph(settings, false);
 				}
 	
 				@Override

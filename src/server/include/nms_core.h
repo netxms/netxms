@@ -642,6 +642,7 @@ private:
    void sendPerfTabDCIList(NXCPMessage *pRequest);
    void exportConfiguration(NXCPMessage *pRequest);
    void importConfiguration(NXCPMessage *pRequest);
+   void sendGraph(NXCPMessage *request);
 	void sendGraphList(NXCPMessage *request);
 	void saveGraph(NXCPMessage *pRequest);
 	void deleteGraph(NXCPMessage *pRequest);
@@ -1169,7 +1170,7 @@ GRAPH_ACL_ENTRY *LoadAllGraphACL(DB_HANDLE hdb, int *pnACLSize);
 BOOL CheckGraphAccess(GRAPH_ACL_ENTRY *pACL, int nACLSize, UINT32 graphId, UINT32 graphUserId, UINT32 graphDesiredAccess);
 UINT32 GetGraphAccessCheckResult(UINT32 graphId, UINT32 graphUserId);
 GRAPH_ACL_AND_ID IsGraphNameExists(const TCHAR *graphName);
-void FillGraphListMsg(NXCPMessage *msg, UINT32 userId, bool templageGraphs);
+void FillGraphListMsg(NXCPMessage *msg, UINT32 userId, bool templageGraphs, UINT32 graphId = 0);
 void SaveGraph(NXCPMessage *pRequest, UINT32 userId, NXCPMessage *msg);
 UINT32 DeleteGraph(UINT32 graphId, UINT32 userId);
 

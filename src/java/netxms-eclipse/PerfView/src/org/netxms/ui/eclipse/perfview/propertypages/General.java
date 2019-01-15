@@ -362,7 +362,7 @@ public class General extends PropertyPage
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
-					session.saveGraph((GraphSettings)config, true);
+					session.saveGraph((GraphSettings)config, false);
 					runInUIThread(new Runnable() {
 						@Override
 						public void run()
