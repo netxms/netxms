@@ -277,7 +277,7 @@ public class CreateNodeDialog extends Dialog
 		hostName = hostNameField.getText().trim();
 		if (hostName.isEmpty())
 			hostName = objectNameField.getText().trim();
-		if (!hostName.matches("^(([A-Za-z0-9\\-]+\\.)*[A-Za-z0-9\\-]+|[A-Fa-f0-9:]+)$")) //$NON-NLS-1$
+		if (!hostName.matches("^(([A-Za-z0-9_-]+\\.)*[A-Za-z0-9_-]+|[A-Fa-f0-9:]+)$")) //$NON-NLS-1$
 		{
 			MessageDialogHelper.openWarning(getShell(), Messages.get().CreateNodeDialog_Warning, 
 			      String.format(Messages.get().CreateNodeDialog_WarningInvalidHostname, hostName));
