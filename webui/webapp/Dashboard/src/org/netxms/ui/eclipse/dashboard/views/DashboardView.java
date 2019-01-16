@@ -31,9 +31,14 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.commands.ActionHandler;
+import org.eclipse.jface.util.IPropertyChangeListener;
+import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.KeyEvent;
+import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.ISaveablePart;
@@ -72,7 +77,7 @@ public class DashboardView extends ViewPart implements ISaveablePart
 	public static final String ID = "org.netxms.ui.eclipse.dashboard.views.DashboardView"; //$NON-NLS-1$
 	
 	private NXCSession session;
-   private SessionListener clientListener;
+	private SessionListener clientListener;
 	private Dashboard dashboard;
 	private boolean readOnly = true;
 	private IntermediateSelectionProvider selectionProvider;
@@ -172,7 +177,7 @@ public class DashboardView extends ViewPart implements ISaveablePart
 		createActions();
 		contributeToActionBars();
 		
-		clientListener = new SessionListener() {         
+	   clientListener = new SessionListener() {         
          @Override
          public void notificationHandler(SessionNotification n)
          {
@@ -190,6 +195,19 @@ public class DashboardView extends ViewPart implements ISaveablePart
       };
       
       session.addListener(clientListener);
+      
+      addPartPropertyListener(new IPropertyChangeListener() {
+         @Override
+         public void propertyChange(PropertyChangeEvent event)
+         {
+            if (event.getProperty().equals("FullScreen"))
+            {
+               boolean enable = Boolean.parseBoolean(event.getNewValue().toString());
+               actionFullScreenDisplay.setChecked(enable);
+               enableFullScreenDisplay(enable);
+            }
+         }
+      });
 	}
 
 	/* (non-Javadoc)
@@ -198,6 +216,11 @@ public class DashboardView extends ViewPart implements ISaveablePart
    @Override
    public void dispose()
    {
+      if (fullScreenDisplayShell != null)
+      {
+         fullScreenDisplayShell.close();
+         fullScreenDisplayShell.dispose();
+      }
       if ((session != null) && (clientListener != null))
          session.removeListener(clientListener);
       super.dispose();
@@ -368,9 +391,10 @@ public class DashboardView extends ViewPart implements ISaveablePart
          @Override
          public void run()
          {
-            toggleFullScreenDisplay(actionFullScreenDisplay.isChecked());
+            enableFullScreenDisplay(actionFullScreenDisplay.isChecked());
          }
 		};
+		actionFullScreenDisplay.setImageDescriptor(Activator.getImageDescriptor("icons/full-screen.png"));
 		actionFullScreenDisplay.setActionDefinitionId("org.netxms.ui.eclipse.dashboard.commands.full_screen"); //$NON-NLS-1$
       handlerService.activateHandler(actionFullScreenDisplay.getActionDefinitionId(), new ActionHandler(actionFullScreenDisplay));
 	}
@@ -434,6 +458,8 @@ public class DashboardView extends ViewPart implements ISaveablePart
    		manager.add(new Separator());
 	   }
 	   manager.add(actionExportValues);
+      manager.add(new Separator());
+      manager.add(actionFullScreenDisplay);
       manager.add(new Separator());
 		manager.add(actionRefresh);
 	}
@@ -685,29 +711,48 @@ public class DashboardView extends ViewPart implements ISaveablePart
 	/**
 	 * Enable/disable full screen display
 	 * 
-	 * @param enable true to show dashboard on fillscreen
+	 * @param enable true to show dashboard on full screen
 	 */
-   private void toggleFullScreenDisplay(boolean enable)
+   private void enableFullScreenDisplay(boolean enable)
    {
       if (enable)
       {
          if (fullScreenDisplayShell == null)
          {
-            fullScreenDisplayShell = new Shell(SWT.SHELL_TRIM);
+            fullScreenDisplayShell = new Shell(Display.getCurrent(), SWT.SHELL_TRIM);
             fullScreenDisplayShell.setLayout(new FillLayout());
             fullScreenDisplayShell.open();
             fullScreenDisplayShell.setFullScreen(true);
+            fullScreenDisplayShell.addKeyListener(new KeyListener() {
+               @Override
+               public void keyReleased(KeyEvent e)
+               {
+               }
+               
+               @Override
+               public void keyPressed(KeyEvent e)
+               {
+                  if ((e.keyCode == SWT.F11) && ((e.stateMask & (SWT.ALT | SWT.COMMAND)) != 0))
+                  {
+                     actionFullScreenDisplay.setChecked(false);
+                     enableFullScreenDisplay(false);
+                  }
+               }
+            });
          }
       }
       else
       {
          if (fullScreenDisplayShell != null)
          {
+            fullScreenDisplayShell.close();
             fullScreenDisplayShell.dispose();
             fullScreenDisplayShell = null;
          }
       }
       fullScreenDisplay = enable;
       rebuildDashboard(false);
+      if (!enable)
+         parentComposite.setFocus();
    }
 }
