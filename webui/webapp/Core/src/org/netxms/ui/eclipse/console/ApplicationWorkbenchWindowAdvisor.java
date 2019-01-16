@@ -54,21 +54,25 @@ import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 @SuppressWarnings("restriction")
 public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 {
-	/**
-	 * @param configurer
-	 */
-	public ApplicationWorkbenchWindowAdvisor(IWorkbenchWindowConfigurer configurer)
-	{
-		super(configurer);
-	}
+   private IDialogSettings settings;
+   /**
+    * @param configurer
+    */
+   public ApplicationWorkbenchWindowAdvisor(IWorkbenchWindowConfigurer configurer)
+   {
+      super(configurer);
+   }
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.application.WorkbenchWindowAdvisor#createActionBarAdvisor(org.eclipse.ui.application.IActionBarConfigurer)
-	 */
-	public ActionBarAdvisor createActionBarAdvisor(IActionBarConfigurer configurer)
-	{
-		return new ApplicationActionBarAdvisor(configurer);
-	}
+   /*
+    * (non-Javadoc)
+    * 
+    * @see org.eclipse.ui.application.WorkbenchWindowAdvisor#createActionBarAdvisor(org.eclipse.ui.application.IActionBarConfigurer)
+    */
+   @Override
+   public ActionBarAdvisor createActionBarAdvisor(IActionBarConfigurer configurer)
+   {
+      return new ApplicationActionBarAdvisor(configurer);
+   }
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.application.WorkbenchWindowAdvisor#preWindowOpen()
@@ -166,15 +170,15 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
          }
       }
       showMessageOfTheDay();
-   }
-    
-	/**
-	 * Show dashboard
-	 * 
-	 * @param dashboardId
-	 */
-	private void showDashboard(String dashboardId, boolean fullScreen)
-	{
+	}
+
+   /**
+    * Show dashboard
+    * 
+    * @param dashboardId
+    */
+   private void showDashboard(String dashboardId, boolean fullScreen)
+   {
       NXCSession session = (NXCSession)ConsoleSharedData.getSession();
       
       long objectId;
@@ -188,9 +192,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
             @Override
             public boolean filter(AbstractObject object)
             {
-               if (object instanceof Dashboard)
-                  return true;
-               return false;
+               return object instanceof Dashboard;
             }
          });
          if ((object == null) || !(object instanceof Dashboard))

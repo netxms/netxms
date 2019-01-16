@@ -25,6 +25,7 @@
 - Database manager options to skip various logs during database export also works for database migration
 - Fixed issues:
 	NX-1206 (Full screen mode with only dashboard elements)
+	NX-1541 (Cannot open dashboard by name using command line option)
 	NX-1542 (Ampersand characters in template path not escaped in exported configuration XML file)
 
 
