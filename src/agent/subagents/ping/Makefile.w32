@@ -2,6 +2,6 @@ TARGET = ping.nsm
 TYPE = nsm
 SOURCES = ping.cpp scan_win32.cpp
 
-LIBS = libnxagent.lib libnetxms.lib
+LIBS = libnxagent.lib libnetxms.lib iphlpapi.lib
 	  
 include ..\..\..\..\Makefile.inc.w32
