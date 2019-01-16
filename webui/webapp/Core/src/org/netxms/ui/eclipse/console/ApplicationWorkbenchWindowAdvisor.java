@@ -39,6 +39,7 @@ import org.eclipse.ui.application.IWorkbenchWindowConfigurer;
 import org.eclipse.ui.application.WorkbenchWindowAdvisor;
 import org.eclipse.ui.internal.keys.BindingService;
 import org.eclipse.ui.keys.IBindingService;
+import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Dashboard;
@@ -152,7 +153,17 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
    {
       String dashboardId = Application.getParameter("dashboard"); //$NON-NLS-1$
       if (dashboardId != null)
-         showDashboard(dashboardId);
+      {
+         showDashboard(dashboardId, false);
+      }
+      else
+      {
+         dashboardId = Application.getParameter("fullscreen-dashboard"); //$NON-NLS-1$
+         if (dashboardId != null)
+         {
+            showDashboard(dashboardId, true);
+         }
+      }
       showMessageOfTheDay();
    }
     
@@ -161,7 +172,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 	 * 
 	 * @param dashboardId
 	 */
-	private void showDashboard(String dashboardId)
+	private void showDashboard(String dashboardId, boolean fullScreen)
 	{
       NXCSession session = (NXCSession)ConsoleSharedData.getSession();
       
@@ -192,7 +203,14 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
       try
       {
          IViewPart view = page.showView("org.netxms.ui.eclipse.dashboard.views.DashboardView", Long.toString(objectId), IWorkbenchPage.VIEW_ACTIVATE); //$NON-NLS-1$
-         page.setPartState(page.getReference(view), IWorkbenchPage.STATE_MAXIMIZED);
+         if (fullScreen)
+         {
+            ((ViewPart)view).setPartProperty("FullScreen", "true");
+         }
+         else
+         {
+            page.setPartState(page.getReference(view), IWorkbenchPage.STATE_MAXIMIZED);
+         }
       }
       catch(PartInitException e)
       {
