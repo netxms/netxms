@@ -18,6 +18,9 @@
     <ClCompile Include="ping.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="scan_win32.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\include\nms_agent.h">
