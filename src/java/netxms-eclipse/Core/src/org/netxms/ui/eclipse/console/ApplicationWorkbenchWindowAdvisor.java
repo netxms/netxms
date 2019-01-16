@@ -48,6 +48,7 @@ import org.netxms.certificate.manager.CertificateManagerProvider;
 import org.netxms.certificate.request.KeyStoreEntryPasswordRequestListener;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
+import org.netxms.client.ObjectFilter;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
 import org.netxms.client.constants.AuthenticationType;
@@ -205,7 +206,13 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor im
       }
       catch(NumberFormatException e)
       {
-         AbstractObject object = session.findObjectByName(dashboardId);
+         AbstractObject object = session.findObjectByName(dashboardId, new ObjectFilter() {
+            @Override
+            public boolean filter(AbstractObject object)
+            {
+               return object instanceof Dashboard;
+            }
+         });
          if ((object == null) || !(object instanceof Dashboard))
          {
             MessageDialogHelper.openError(null, Messages.get().ApplicationWorkbenchWindowAdvisor_Error, String.format(Messages.get().ApplicationWorkbenchWindowAdvisor_CannotOpenDashboard, dashboardId));
