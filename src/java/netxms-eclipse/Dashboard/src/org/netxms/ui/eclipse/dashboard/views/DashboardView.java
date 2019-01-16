@@ -31,8 +31,10 @@ import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.commands.ActionHandler;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.FileDialog;
+import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.ISaveablePart;
 import org.eclipse.ui.IViewSite;
@@ -73,8 +75,10 @@ public class DashboardView extends ViewPart implements ISaveablePart
 	private Dashboard dashboard;
 	private boolean readOnly = true;
 	private IntermediateSelectionProvider selectionProvider;
+	private boolean fullScreenDisplay = false;
+	private Shell fullScreenDisplayShell;
+   private Composite parentComposite;
 	private DashboardControl dbc;
-	private Composite parentComposite;
 	private DashboardModifyListener dbcModifyListener;
 	private Action actionRefresh;
 	private Action actionEditMode;
@@ -92,6 +96,7 @@ public class DashboardView extends ViewPart implements ISaveablePart
 	private Action actionAddEventMonitor;
 	private Action actionAddSnmpTrapMonitor;
 	private Action actionAddSyslogMonitor;
+	private Action actionFullScreenDisplay;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
@@ -357,6 +362,16 @@ public class DashboardView extends ViewPart implements ISaveablePart
 				dbc.addStatusIndicator();
 			}
 		};
+		
+		actionFullScreenDisplay = new Action("&Full screen display", Action.AS_CHECK_BOX) {
+         @Override
+         public void run()
+         {
+            toggleFullScreenDisplay(actionFullScreenDisplay.isChecked());
+         }
+		};
+		actionFullScreenDisplay.setActionDefinitionId("org.netxms.ui.eclipse.dashboard.commands.full_screen"); //$NON-NLS-1$
+      handlerService.activateHandler(actionFullScreenDisplay.getActionDefinitionId(), new ActionHandler(actionFullScreenDisplay));
 	}
 	
 	/**
@@ -397,6 +412,8 @@ public class DashboardView extends ViewPart implements ISaveablePart
    		manager.add(new Separator());
 	   }
       manager.add(actionExportValues);
+      manager.add(new Separator());
+      manager.add(actionFullScreenDisplay);
       manager.add(new Separator());
 		manager.add(actionRefresh);
 	}
@@ -493,8 +510,8 @@ public class DashboardView extends ViewPart implements ISaveablePart
 
 			if (dashboard != null)
 			{
-				dbc = new DashboardControl(parentComposite, SWT.NONE, dashboard, this, selectionProvider, false);
-				parentComposite.layout(true, true);
+				dbc = new DashboardControl(fullScreenDisplay ? fullScreenDisplayShell : parentComposite, SWT.NONE, dashboard, this, selectionProvider, false);
+				dbc.getParent().layout(true, true);
 				setPartName(Messages.get().DashboardView_PartNamePrefix + dashboard.getObjectName());
 				if (!readOnly)
 				{
@@ -508,8 +525,8 @@ public class DashboardView extends ViewPart implements ISaveablePart
 		}
 		else
 		{
-			dbc = new DashboardControl(parentComposite, SWT.NONE, dashboard, dbc.getElements(), this, selectionProvider, dbc.isModified());
-			parentComposite.layout(true, true);
+			dbc = new DashboardControl(fullScreenDisplay ? fullScreenDisplayShell : parentComposite, SWT.NONE, dashboard, dbc.getElements(), this, selectionProvider, dbc.isModified());
+			dbc.getParent().layout(true, true);
 			if (!readOnly)
 			{
 			   dbc.setModifyListener(dbcModifyListener);
@@ -659,4 +676,33 @@ public class DashboardView extends ViewPart implements ISaveablePart
          }
       }.start();
 	}
+	
+	/**
+	 * Enable/disable full screen display
+	 * 
+	 * @param enable true to show dashboard on fillscreen
+	 */
+   private void toggleFullScreenDisplay(boolean enable)
+   {
+      if (enable)
+      {
+         if (fullScreenDisplayShell == null)
+         {
+            fullScreenDisplayShell = new Shell(SWT.SHELL_TRIM);
+            fullScreenDisplayShell.setLayout(new FillLayout());
+            fullScreenDisplayShell.open();
+            fullScreenDisplayShell.setFullScreen(true);
+         }
+      }
+      else
+      {
+         if (fullScreenDisplayShell != null)
+         {
+            fullScreenDisplayShell.dispose();
+            fullScreenDisplayShell = null;
+         }
+      }
+      fullScreenDisplay = enable;
+      rebuildDashboard(false);
+   }
 }

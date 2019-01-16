@@ -5,6 +5,7 @@
 - Added support for active network discovery in remote zones
 - Database manager options to skip various logs during database export also works for database migration
 - Fixed issues:
+	NX-1206 (Full screen mode with only dashboard elements)
 	NX-1542 (Ampersand characters in template path not escaped in exported configuration XML file)
 
 
