@@ -54,7 +54,6 @@ import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 @SuppressWarnings("restriction")
 public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 {
-   private IDialogSettings settings;
    /**
     * @param configurer
     */
