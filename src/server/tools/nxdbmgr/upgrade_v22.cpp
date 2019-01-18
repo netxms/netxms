@@ -37,6 +37,8 @@ static bool H_UpgradeFromV41()
       _T("<END>");
    CHK_EXEC(SQLBatch(batch));
 
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("address_lists"), _T("proxy_id")));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("address_lists"), _T("zone_uin")));
    CHK_EXEC(DBAddPrimaryKey(g_dbHandle, _T("address_lists"), _T("list_type,community_id,zone_uin,addr_type,addr1,addr2")));
 
    CHK_EXEC(SetMinorSchemaVersion(42));
