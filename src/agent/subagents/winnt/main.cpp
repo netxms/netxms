@@ -189,7 +189,7 @@ struct BiosHeader
  */
 static BYTE *BIOSReader(size_t *size)
 {
-   BYTE *buffer = (BYTE *)malloc(16384);
+   BYTE *buffer = (BYTE *)MemAlloc(16384);
    UINT rc = GetSystemFirmwareTable('RSMB', 0, buffer, 16384);
    if (rc > 16384)
    {
@@ -205,10 +205,10 @@ static BYTE *BIOSReader(size_t *size)
    }
 
    BiosHeader *header = reinterpret_cast<BiosHeader*>(buffer);
-   BYTE *bios = (BYTE *)malloc(header->length);
+   BYTE *bios = (BYTE *)MemAlloc(header->length);
    memcpy(bios, header->tables, header->length);
    *size = header->length;
-   free(buffer);
+   MemFree(buffer);
 
    return bios;
 }
@@ -251,6 +251,17 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("FileSystem.Type(*)"), H_FileSystemType, NULL, DCI_DT_STRING, DCIDESC_FS_TYPE },
    { _T("FileSystem.Used(*)"), H_FileSystemInfo, (TCHAR *)FSINFO_USED_BYTES, DCI_DT_UINT64, DCIDESC_FS_USED },
    { _T("FileSystem.UsedPerc(*)"), H_FileSystemInfo, (TCHAR *)FSINFO_USED_SPACE_PCT, DCI_DT_FLOAT, DCIDESC_FS_USEDPERC },
+
+   { _T("Hardware.Baseboard.Manufacturer"), SMBIOS_ParameterHandler, _T("bM"), DCI_DT_STRING, DCIDESC_HARDWARE_BASEBOARD_MANUFACTURER },
+   { _T("Hardware.Baseboard.Product"), SMBIOS_ParameterHandler, _T("bP"), DCI_DT_STRING, DCIDESC_HARDWARE_BASEBOARD_PRODUCT },
+   { _T("Hardware.Baseboard.SerialNumber"), SMBIOS_ParameterHandler, _T("bS"), DCI_DT_STRING, DCIDESC_HARDWARE_BASEBOARD_SERIALNUMBER },
+   { _T("Hardware.Baseboard.Type"), SMBIOS_ParameterHandler, _T("bT"), DCI_DT_STRING, DCIDESC_HARDWARE_BASEBOARD_TYPE },
+   { _T("Hardware.Baseboard.Version"), SMBIOS_ParameterHandler, _T("bV"), DCI_DT_STRING, DCIDESC_HARDWARE_BASEBOARD_VERSION },
+   { _T("Hardware.System.Manufacturer"), SMBIOS_ParameterHandler, _T("HM"), DCI_DT_STRING, DCIDESC_HARDWARE_SYSTEM_MANUFACTURER },
+   { _T("Hardware.System.Product"), SMBIOS_ParameterHandler, _T("HP"), DCI_DT_STRING, DCIDESC_HARDWARE_SYSTEM_PRODUCT },
+   { _T("Hardware.System.SerialNumber"), SMBIOS_ParameterHandler, _T("HS"), DCI_DT_STRING, DCIDESC_HARDWARE_SYSTEM_SERIALNUMBER },
+   { _T("Hardware.System.Version"), SMBIOS_ParameterHandler, _T("HV"), DCI_DT_STRING, DCIDESC_HARDWARE_SYSTEM_VERSION },
+   { _T("Hardware.WakeUpEvent"), SMBIOS_ParameterHandler, _T("W"), DCI_DT_STRING, DCIDESC_HARDWARE_WAKEUPEVENT },
 
    { _T("Hypervisor.Type"), H_HypervisorType, NULL, DCI_DT_STRING, DCIDESC_HYPERVISOR_TYPE },
    { _T("Hypervisor.Version"), H_HypervisorVersion, NULL, DCI_DT_STRING, DCIDESC_HYPERVISOR_VERSION },
@@ -297,9 +308,9 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 	{ _T("Process.WkSet(*)"), H_ProcInfo, (TCHAR *)PROCINFO_WKSET, DCI_DT_UINT64, DCIDESC_PROCESS_WKSET },
 
 	{ _T("System.AppAddressSpace"), H_AppAddressSpace, NULL, DCI_DT_UINT, DCIDESC_SYSTEM_APPADDRESSSPACE },
-   { _T("System.BIOS.Date"), SMBIOS_ParameterHandler, _T("D"), DCI_DT_STRING, DCIDESC_SYSTEM_BIOS_DATE },
-   { _T("System.BIOS.Vendor"), SMBIOS_ParameterHandler, _T("v"), DCI_DT_STRING, DCIDESC_SYSTEM_BIOS_VENDOR },
-   { _T("System.BIOS.Version"), SMBIOS_ParameterHandler, _T("V"), DCI_DT_STRING, DCIDESC_SYSTEM_BIOS_VERSION },
+   { _T("System.BIOS.Date"), SMBIOS_ParameterHandler, _T("BD"), DCI_DT_STRING, DCIDESC_SYSTEM_BIOS_DATE },
+   { _T("System.BIOS.Vendor"), SMBIOS_ParameterHandler, _T("Bv"), DCI_DT_STRING, DCIDESC_SYSTEM_BIOS_VENDOR },
+   { _T("System.BIOS.Version"), SMBIOS_ParameterHandler, _T("BV"), DCI_DT_STRING, DCIDESC_SYSTEM_BIOS_VERSION },
    { _T("System.ConnectedUsers"), H_ConnectedUsers, NULL, DCI_DT_INT, DCIDESC_SYSTEM_CONNECTEDUSERS },
 
 	{ _T("System.CPU.Interrupts"), H_CpuInterrupts, _T("T"), DCI_DT_UINT, DCIDESC_SYSTEM_CPU_INTERRUPTS },
@@ -359,11 +370,6 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("System.CPU.VendorId"), H_CpuVendorId, NULL, DCI_DT_STRING, DCIDESC_SYSTEM_CPU_VENDORID },
 
    { _T("System.HandleCount"), H_HandleCount, NULL, DCI_DT_UINT, DCIDESC_SYSTEM_HANDLECOUNT },
-   { _T("System.Hardware.Manufacturer"), SMBIOS_ParameterHandler, _T("M"), DCI_DT_STRING, DCIDESC_SYSTEM_HARDWARE_MANUFACTURER },
-   { _T("System.Hardware.Product"), SMBIOS_ParameterHandler, _T("P"), DCI_DT_STRING, DCIDESC_SYSTEM_HARDWARE_PRODUCT },
-   { _T("System.Hardware.SerialNumber"), SMBIOS_ParameterHandler, _T("S"), DCI_DT_STRING, DCIDESC_SYSTEM_HARDWARE_SERIALNUMBER },
-   { _T("System.Hardware.Version"), SMBIOS_ParameterHandler, _T("w"), DCI_DT_STRING, DCIDESC_SYSTEM_HARDWARE_VERSION },
-   { _T("System.Hardware.WakeUpEvent"), SMBIOS_ParameterHandler, _T("W"), DCI_DT_STRING, DCIDESC_SYSTEM_HARDWARE_WAKEUPEVENT },
 
    { _T("System.Memory.Physical.Available"), H_MemoryInfo, (TCHAR *)MEMINFO_PHYSICAL_AVAIL, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_PHYSICAL_AVAILABLE },
    { _T("System.Memory.Physical.AvailablePerc"), H_MemoryInfo, (TCHAR *)MEMINFO_PHYSICAL_AVAIL_PCT, DCI_DT_FLOAT, DCIDESC_SYSTEM_MEMORY_PHYSICAL_AVAILABLE_PCT },

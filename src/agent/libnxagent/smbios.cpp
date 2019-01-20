@@ -27,6 +27,11 @@
 /**
  * BIOS and system information
  */
+char s_baseboardManufacturer[128] = "";
+char s_baseboardProduct[128] = "";
+char s_baseboardSerialNumber[128] = "";
+char s_baseboardType[32] = "";
+char s_baseboardVersion[64] = "";
 WORD s_biosAddress = 0;
 char s_biosDate[16] = "";
 char s_biosVendor[128] = "";
@@ -34,7 +39,7 @@ char s_biosVersion[64] = "";
 char s_hardwareManufacturer[128] = "";
 char s_hardwareProduct[128] = "";
 char s_hardwareSerialNumber[128] = "";
-char s_hardwareVersion[128] = "";
+char s_hardwareVersion[64] = "";
 char s_systemWakeUpEvent[32] = "Unknown";
 char *s_oemStrings[64];
 
@@ -69,28 +74,58 @@ LIBNXAGENT_EXPORTABLE const char * const *SMBIOS_GetOEMStrings()
  */
 LONG LIBNXAGENT_EXPORTABLE SMBIOS_ParameterHandler(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
-   switch(*arg)
+   switch(arg[0])
    {
-      case 'D':
-         RETURN_BIOS_DATA(s_biosDate);
+      case 'B':   // BIOS
+         switch(arg[1])
+         {
+            case 'D':
+               RETURN_BIOS_DATA(s_biosDate);
+               break;
+            case 'V':
+               RETURN_BIOS_DATA(s_biosVersion);
+               break;
+            case 'v':
+               RETURN_BIOS_DATA(s_biosVendor);
+               break;
+         }
          break;
-      case 'M':
-         RETURN_BIOS_DATA(s_hardwareManufacturer);
+      case 'b':   // baseboard
+         switch(arg[1])
+         {
+            case 'M':
+               RETURN_BIOS_DATA(s_baseboardManufacturer);
+               break;
+            case 'P':
+               RETURN_BIOS_DATA(s_baseboardProduct);
+               break;
+            case 'S':
+               RETURN_BIOS_DATA(s_baseboardSerialNumber);
+               break;
+            case 'T':
+               RETURN_BIOS_DATA(s_baseboardType);
+               break;
+            case 'V':
+               RETURN_BIOS_DATA(s_baseboardVersion);
+               break;
+         }
          break;
-      case 'P':
-         RETURN_BIOS_DATA(s_hardwareProduct);
-         break;
-      case 'S':
-         RETURN_BIOS_DATA(s_hardwareSerialNumber);
-         break;
-      case 'v':
-         RETURN_BIOS_DATA(s_biosVendor);
-         break;
-      case 'V':
-         RETURN_BIOS_DATA(s_biosVersion);
-         break;
-      case 'w':
-         RETURN_BIOS_DATA(s_hardwareVersion);
+      case 'H':   // hardware
+         switch(arg[1])
+         {
+            case 'M':
+               RETURN_BIOS_DATA(s_hardwareManufacturer);
+               break;
+            case 'P':
+               RETURN_BIOS_DATA(s_hardwareProduct);
+               break;
+            case 'S':
+               RETURN_BIOS_DATA(s_hardwareSerialNumber);
+               break;
+            case 'V':
+               RETURN_BIOS_DATA(s_hardwareVersion);
+               break;
+         }
          break;
       case 'W':
          RETURN_BIOS_DATA(s_systemWakeUpEvent);
@@ -202,6 +237,60 @@ static void ParseSystemInformation(TableHeader *t)
 }
 
 /**
+ * Parse base board information (table type 2)
+ */
+static void ParseBaseBoardInformation(TableHeader *t)
+{
+   GetStringByIndex(t, BYTE_AT(t, 0x04), s_baseboardManufacturer, sizeof(s_baseboardManufacturer));
+   GetStringByIndex(t, BYTE_AT(t, 0x05), s_baseboardProduct, sizeof(s_baseboardProduct));
+   GetStringByIndex(t, BYTE_AT(t, 0x06), s_baseboardVersion, sizeof(s_baseboardVersion));
+   GetStringByIndex(t, BYTE_AT(t, 0x04), s_baseboardSerialNumber, sizeof(s_baseboardSerialNumber));
+
+   switch(BYTE_AT(t, 0x0D))
+   {
+      case 0x02:
+         strcpy(s_baseboardType, "Other");
+         break;
+      case 0x03:
+         strcpy(s_baseboardType, "Server Blade");
+         break;
+      case 0x04:
+         strcpy(s_baseboardType, "Connectivity Switch");
+         break;
+      case 0x05:
+         strcpy(s_baseboardType, "System Management Module");
+         break;
+      case 0x06:
+         strcpy(s_baseboardType, "Processor Module");
+         break;
+      case 0x07:
+         strcpy(s_baseboardType, "I/O Module");
+         break;
+      case 0x08:
+         strcpy(s_baseboardType, "Memory Module");
+         break;
+      case 0x09:
+         strcpy(s_baseboardType, "Daughter Board");
+         break;
+      case 0x0A:
+         strcpy(s_baseboardType, "Motherboard");
+         break;
+      case 0x0B:
+         strcpy(s_baseboardType, "Processor/Memory Module");
+         break;
+      case 0x0C:
+         strcpy(s_baseboardType, "Processor/IO Module");
+         break;
+      case 0x0D:
+         strcpy(s_baseboardType, "Interconnect Board");
+         break;
+      default:
+         strcpy(s_baseboardType, "Unknown");
+         break;
+   }
+}
+
+/**
 * Parse OEM strings (table type 11)
 */
 static void ParseOEMStrings(TableHeader *t)
@@ -241,6 +330,9 @@ bool LIBNXAGENT_EXPORTABLE SMBIOS_Parse(BYTE *(*reader)(size_t *size))
             break;
          case 1:
             ParseSystemInformation(curr);
+            break;
+         case 2:
+            ParseBaseBoardInformation(curr);
             break;
          case 11:
             ParseOEMStrings(curr);
