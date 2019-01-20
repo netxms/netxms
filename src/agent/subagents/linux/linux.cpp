@@ -94,11 +94,23 @@ static LONG H_SoftShutdown(const TCHAR *pszAction, StringList *pArgList, const T
 }
 
 /**
+ * SMBIOS reader
+ */
+static BYTE *BIOSReader(size_t *size)
+{
+   UINT32 fsize;
+   BYTE *bios = LoadFileA("/sys/firmware/dmi/tables/DMI", &fsize);
+   *size = fsize;
+   return bios;
+}
+
+/**
  * Initalization callback
  */
 static bool SubAgentInit(Config *config)
 {
    ReadCPUVendorId();
+   SMBIOS_Parse(BIOSReader);
 	StartCpuUsageCollector();
 	StartIoStatCollector();
 	InitDrbdCollector();
@@ -184,6 +196,17 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 	{ _T("DRBD.Version.Protocol"),        H_DRBDVersion,     _T("p"),
 		DCI_DT_STRING, _T("DRBD protocol version") },
 
+   { _T("Hardware.Baseboard.Manufacturer"), SMBIOS_ParameterHandler, _T("bM"), DCI_DT_STRING, DCIDESC_HARDWARE_BASEBOARD_MANUFACTURER },
+   { _T("Hardware.Baseboard.Product"), SMBIOS_ParameterHandler, _T("bP"), DCI_DT_STRING, DCIDESC_HARDWARE_BASEBOARD_PRODUCT },
+   { _T("Hardware.Baseboard.SerialNumber"), SMBIOS_ParameterHandler, _T("bS"), DCI_DT_STRING, DCIDESC_HARDWARE_BASEBOARD_SERIALNUMBER },
+   { _T("Hardware.Baseboard.Type"), SMBIOS_ParameterHandler, _T("bT"), DCI_DT_STRING, DCIDESC_HARDWARE_BASEBOARD_TYPE },
+   { _T("Hardware.Baseboard.Version"), SMBIOS_ParameterHandler, _T("bV"), DCI_DT_STRING, DCIDESC_HARDWARE_BASEBOARD_VERSION },
+   { _T("Hardware.System.Manufacturer"), SMBIOS_ParameterHandler, _T("HM"), DCI_DT_STRING, DCIDESC_HARDWARE_SYSTEM_MANUFACTURER },
+   { _T("Hardware.System.Product"), SMBIOS_ParameterHandler, _T("HP"), DCI_DT_STRING, DCIDESC_HARDWARE_SYSTEM_PRODUCT },
+   { _T("Hardware.System.SerialNumber"), SMBIOS_ParameterHandler, _T("HS"), DCI_DT_STRING, DCIDESC_HARDWARE_SYSTEM_SERIALNUMBER },
+   { _T("Hardware.System.Version"), SMBIOS_ParameterHandler, _T("HV"), DCI_DT_STRING, DCIDESC_HARDWARE_SYSTEM_VERSION },
+   { _T("Hardware.WakeUpEvent"), SMBIOS_ParameterHandler, _T("W"), DCI_DT_STRING, DCIDESC_HARDWARE_WAKEUPEVENT },
+
    { _T("Hypervisor.Type"), H_HypervisorType, NULL, DCI_DT_STRING, DCIDESC_HYPERVISOR_TYPE },
    { _T("Hypervisor.Version"), H_HypervisorVersion, NULL, DCI_DT_STRING, DCIDESC_HYPERVISOR_VERSION },
 
@@ -227,10 +250,9 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 	{ _T("Process.VMSize(*)"), H_ProcessDetails, CAST_TO_POINTER(PROCINFO_VMSIZE, const TCHAR *), DCI_DT_UINT64, DCIDESC_PROCESS_VMSIZE },
 	{ _T("Process.WkSet(*)"), H_ProcessDetails, CAST_TO_POINTER(PROCINFO_WKSET, const TCHAR *), DCI_DT_UINT64, DCIDESC_PROCESS_WKSET },
 	
-	{ _T("System.HandleCount"), H_HandleCount, NULL, DCI_DT_UINT, DCIDESC_SYSTEM_HANDLECOUNT },
-	{ _T("System.ProcessCount"), H_ProcessCount, _T("T"), DCI_DT_UINT, DCIDESC_SYSTEM_PROCESSCOUNT },
-	{ _T("System.ThreadCount"), H_ThreadCount, NULL, DCI_DT_UINT, DCIDESC_SYSTEM_THREADCOUNT },
-
+   { _T("System.BIOS.Date"), SMBIOS_ParameterHandler, _T("BD"), DCI_DT_STRING, DCIDESC_SYSTEM_BIOS_DATE },
+   { _T("System.BIOS.Vendor"), SMBIOS_ParameterHandler, _T("Bv"), DCI_DT_STRING, DCIDESC_SYSTEM_BIOS_VENDOR },
+   { _T("System.BIOS.Version"), SMBIOS_ParameterHandler, _T("BV"), DCI_DT_STRING, DCIDESC_SYSTEM_BIOS_VERSION },
 	{ _T("System.ConnectedUsers"), H_ConnectedUsers, NULL, DCI_DT_INT, DCIDESC_SYSTEM_CONNECTEDUSERS },
 
    { _T("System.CPU.CacheSize(*)"), H_CpuInfo, _T("S"), DCI_DT_INT, DCIDESC_SYSTEM_CPU_CACHE_SIZE },
@@ -392,9 +414,24 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 
    { _T("System.CPU.VendorId"), H_CpuVendorId, NULL, DCI_DT_STRING, DCIDESC_SYSTEM_CPU_VENDORID },
 
+	/**************************************************************/
+   { _T("System.HandleCount"), H_HandleCount, NULL, DCI_DT_UINT, DCIDESC_SYSTEM_HANDLECOUNT },
    { _T("System.IsVirtual"), H_IsVirtual, NULL, DCI_DT_INT, DCIDESC_SYSTEM_IS_VIRTUAL },
 
-	/**************************************************************/
+   /* iostat */
+   { _T("System.IO.ReadRate"), H_IoStatsTotal, (const TCHAR *)IOSTAT_NUM_READS, DCI_DT_FLOAT, DCIDESC_SYSTEM_IO_READS },
+   { _T("System.IO.ReadRate(*)"), H_IoStats, (const TCHAR *)IOSTAT_NUM_READS, DCI_DT_FLOAT, DCIDESC_SYSTEM_IO_READS_EX },
+   { _T("System.IO.WriteRate"), H_IoStatsTotal, (const TCHAR *)IOSTAT_NUM_WRITES, DCI_DT_FLOAT, DCIDESC_SYSTEM_IO_WRITES },
+   { _T("System.IO.WriteRate(*)"), H_IoStats, (const TCHAR *)IOSTAT_NUM_WRITES, DCI_DT_FLOAT, DCIDESC_SYSTEM_IO_WRITES_EX },
+   { _T("System.IO.BytesReadRate"), H_IoStatsTotal, (const TCHAR *)IOSTAT_NUM_SREADS, DCI_DT_UINT64, DCIDESC_SYSTEM_IO_BYTEREADS },
+   { _T("System.IO.BytesReadRate(*)"), H_IoStats, (const TCHAR *)IOSTAT_NUM_SREADS, DCI_DT_UINT64, DCIDESC_SYSTEM_IO_BYTEREADS_EX },
+   { _T("System.IO.BytesWriteRate"), H_IoStatsTotal, (const TCHAR *)IOSTAT_NUM_SWRITES, DCI_DT_UINT64, DCIDESC_SYSTEM_IO_BYTEWRITES },
+   { _T("System.IO.BytesWriteRate(*)"), H_IoStats, (const TCHAR *)IOSTAT_NUM_SWRITES, DCI_DT_UINT64, DCIDESC_SYSTEM_IO_BYTEWRITES_EX },
+   { _T("System.IO.DiskQueue(*)"), H_DiskQueue, NULL, DCI_DT_FLOAT, DCIDESC_SYSTEM_IO_DISKQUEUE_EX },
+   { _T("System.IO.DiskQueue"), H_DiskQueueTotal, NULL, DCI_DT_FLOAT, DCIDESC_SYSTEM_IO_DISKQUEUE },
+   { _T("System.IO.DiskTime"), H_IoStatsTotal, (const TCHAR *)IOSTAT_IO_TIME, DCI_DT_FLOAT, DCIDESC_SYSTEM_IO_DISKTIME },
+   { _T("System.IO.DiskTime(*)"), H_IoStats, (const TCHAR *)IOSTAT_IO_TIME, DCI_DT_FLOAT, DCIDESC_SYSTEM_IO_DISKTIME_EX },
+
    { _T("System.Memory.Physical.Available"),  H_MemoryInfo, (TCHAR *)PHYSICAL_AVAILABLE, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_PHYSICAL_AVAILABLE },
    { _T("System.Memory.Physical.AvailablePerc"), H_MemoryInfo, (TCHAR *)PHYSICAL_AVAILABLE_PCT, DCI_DT_FLOAT, DCIDESC_SYSTEM_MEMORY_PHYSICAL_AVAILABLE_PCT },
    { _T("System.Memory.Physical.Buffers"),  H_MemoryInfo, (TCHAR *)PHYSICAL_BUFFERS, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_PHYSICAL_BUFFERS },
@@ -431,22 +468,11 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("System.MsgQueue.RecvTime(*)"), H_SysMsgQueue, _T("r"), DCI_DT_UINT64, DCIDESC_SYSTEM_MSGQUEUE_RECV_TIME },
    { _T("System.MsgQueue.SendTime(*)"), H_SysMsgQueue, _T("s"), DCI_DT_UINT64, DCIDESC_SYSTEM_MSGQUEUE_SEND_TIME },
 
-	{ _T("System.Uname"), H_Uname, NULL, DCI_DT_STRING, DCIDESC_SYSTEM_UNAME },
-	{ _T("System.Uptime"), H_Uptime, NULL, DCI_DT_UINT, DCIDESC_SYSTEM_UPTIME },
+   { _T("System.ProcessCount"), H_ProcessCount, _T("T"), DCI_DT_UINT, DCIDESC_SYSTEM_PROCESSCOUNT },
+   { _T("System.ThreadCount"), H_ThreadCount, NULL, DCI_DT_UINT, DCIDESC_SYSTEM_THREADCOUNT },
 
-	/* iostat */
-	{ _T("System.IO.ReadRate"), H_IoStatsTotal, (const TCHAR *)IOSTAT_NUM_READS, DCI_DT_FLOAT, DCIDESC_SYSTEM_IO_READS },
-	{ _T("System.IO.ReadRate(*)"), H_IoStats, (const TCHAR *)IOSTAT_NUM_READS, DCI_DT_FLOAT, DCIDESC_SYSTEM_IO_READS_EX },
-	{ _T("System.IO.WriteRate"), H_IoStatsTotal, (const TCHAR *)IOSTAT_NUM_WRITES, DCI_DT_FLOAT, DCIDESC_SYSTEM_IO_WRITES },
-	{ _T("System.IO.WriteRate(*)"), H_IoStats, (const TCHAR *)IOSTAT_NUM_WRITES, DCI_DT_FLOAT, DCIDESC_SYSTEM_IO_WRITES_EX },
-	{ _T("System.IO.BytesReadRate"), H_IoStatsTotal, (const TCHAR *)IOSTAT_NUM_SREADS, DCI_DT_UINT64, DCIDESC_SYSTEM_IO_BYTEREADS },
-	{ _T("System.IO.BytesReadRate(*)"), H_IoStats, (const TCHAR *)IOSTAT_NUM_SREADS, DCI_DT_UINT64, DCIDESC_SYSTEM_IO_BYTEREADS_EX },
-	{ _T("System.IO.BytesWriteRate"), H_IoStatsTotal, (const TCHAR *)IOSTAT_NUM_SWRITES, DCI_DT_UINT64, DCIDESC_SYSTEM_IO_BYTEWRITES },
-	{ _T("System.IO.BytesWriteRate(*)"), H_IoStats, (const TCHAR *)IOSTAT_NUM_SWRITES, DCI_DT_UINT64, DCIDESC_SYSTEM_IO_BYTEWRITES_EX },
-	{ _T("System.IO.DiskQueue(*)"), H_DiskQueue, NULL, DCI_DT_FLOAT, DCIDESC_SYSTEM_IO_DISKQUEUE_EX },
-	{ _T("System.IO.DiskQueue"), H_DiskQueueTotal, NULL, DCI_DT_FLOAT, DCIDESC_SYSTEM_IO_DISKQUEUE },
-	{ _T("System.IO.DiskTime"), H_IoStatsTotal, (const TCHAR *)IOSTAT_IO_TIME, DCI_DT_FLOAT, DCIDESC_SYSTEM_IO_DISKTIME },
-	{ _T("System.IO.DiskTime(*)"), H_IoStats, (const TCHAR *)IOSTAT_IO_TIME, DCI_DT_FLOAT, DCIDESC_SYSTEM_IO_DISKTIME_EX }
+	{ _T("System.Uname"), H_Uname, NULL, DCI_DT_STRING, DCIDESC_SYSTEM_UNAME },
+	{ _T("System.Uptime"), H_Uptime, NULL, DCI_DT_UINT, DCIDESC_SYSTEM_UPTIME }
 };
 
 /**
