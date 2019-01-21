@@ -2567,3 +2567,51 @@ ObjectArray<NetObj> *QueryObjects(const TCHAR *query, UINT32 userId, TCHAR *erro
 
    return resultSet;
 }
+
+/**
+ * Node dependency check data
+ */
+struct NodeDependencyCheckData
+{
+   UINT32 nodeId;
+   StructArray<DependentNode> *dependencies;
+};
+
+/**
+ * Node dependency check callback
+ */
+static void NodeDependencyCheckCallback(NetObj *object, void *context)
+{
+   NodeDependencyCheckData *d = static_cast<NodeDependencyCheckData*>(context);
+   Node *node = static_cast<Node*>(object);
+
+   UINT32 type = 0;
+   if (node->getEffectiveAgentProxy() == d->nodeId)
+      type |= NODE_DEP_AGENT_PROXY;
+   if (node->getEffectiveSnmpProxy() == d->nodeId)
+      type |= NODE_DEP_SNMP_PROXY;
+   if (node->getEffectiveIcmpProxy() == d->nodeId)
+      type |= NODE_DEP_ICMP_PROXY;
+   if (node->isDataCollectionSource(d->nodeId))
+      type |= NODE_DEP_DC_SOURCE;
+
+   if (type != 0)
+   {
+      DependentNode dn;
+      dn.nodeId = node->getId();
+      dn.dependencyType = type;
+      d->dependencies->add(&dn);
+   }
+}
+
+/**
+ * Get dependent nodes
+ */
+StructArray<DependentNode> *GetNodeDependencies(UINT32 nodeId)
+{
+   NodeDependencyCheckData data;
+   data.nodeId = nodeId;
+   data.dependencies = new StructArray<DependentNode>();
+   g_idxNodeById.forEach(NodeDependencyCheckCallback, &data);
+   return data.dependencies;
+}

@@ -383,6 +383,7 @@ public class NXCPCodes
    public static final int CMD_SETUP_TCP_PROXY = 0x016C;
    public static final int CMD_TCP_PROXY_DATA = 0x016D;
    public static final int CMD_CLOSE_TCP_PROXY = 0x016E;
+   public static final int CMD_GET_DEPENDENT_NODES = 0x016F;
    public static final int CMD_DELETE_DCI_ENTRY = 0x0170;
    public static final int CMD_GET_ACTIVE_THRESHOLDS = 0x0171;
    public static final int CMD_QUERY_INTERNAL_TOPOLOGY = 0x0172;

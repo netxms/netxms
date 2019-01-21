@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -481,6 +481,16 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const TCHAR *attr)
    else if (!_tcscmp(attr, _T("components")))
    {
       value = new NXSL_Value(new NXSL_Object(&g_nxslComponentClass, node->getComponents()->getRoot()));
+   }
+   else if (!_tcscmp(attr, _T("dependentNodes")))
+   {
+      StructArray<DependentNode> *dependencies = GetNodeDependencies(node->getId());
+      NXSL_Array *a = new NXSL_Array();
+      for(int i = 0; i < dependencies->size(); i++)
+      {
+         a->append(new NXSL_Value(new NXSL_Object(&g_nxslNodeDependencyClass, new DependentNode(*dependencies->get(i)))));
+      }
+      value = new NXSL_Value(a);
    }
    else if (!_tcscmp(attr, _T("driver")))
    {
@@ -1705,6 +1715,57 @@ NXSL_Value *NXSL_ComponentClass::getAttr(NXSL_Object *object, const TCHAR *attr)
 }
 
 /**
+ * NXSL class NodeDependency: constructor
+ */
+NXSL_NodeDependencyClass::NXSL_NodeDependencyClass() : NXSL_Class()
+{
+   setName(_T("NodeDependency"));
+}
+
+/**
+ * NXSL class NodeDependency: get attribute
+ */
+NXSL_Value *NXSL_NodeDependencyClass::getAttr(NXSL_Object *object, const TCHAR *attr)
+{
+   NXSL_Value *value = NULL;
+   DependentNode *dn = static_cast<DependentNode*>(object->getData());
+
+   if (!_tcscmp(attr, _T("id")))
+   {
+      value = new NXSL_Value(dn->nodeId);
+   }
+   else if (!_tcscmp(attr, _T("isAgentProxy")))
+   {
+      value = new NXSL_Value((dn->dependencyType & NODE_DEP_AGENT_PROXY) != 0);
+   }
+   else if (!_tcscmp(attr, _T("isDataCollectionSource")))
+   {
+      value = new NXSL_Value((dn->dependencyType & NODE_DEP_DC_SOURCE) != 0);
+   }
+   else if (!_tcscmp(attr, _T("isICMPProxy")))
+   {
+      value = new NXSL_Value((dn->dependencyType & NODE_DEP_ICMP_PROXY) != 0);
+   }
+   else if (!_tcscmp(attr, _T("isSNMPProxy")))
+   {
+      value = new NXSL_Value((dn->dependencyType & NODE_DEP_SNMP_PROXY) != 0);
+   }
+   else if (!_tcscmp(attr, _T("type")))
+   {
+      value = new NXSL_Value(dn->dependencyType);
+   }
+   return value;
+}
+
+/**
+ * NXSL class NodeDependency: NXSL object desctructor
+ */
+void NXSL_NodeDependencyClass::onObjectDelete(NXSL_Object *object)
+{
+   delete static_cast<DependentNode*>(object->getData());
+}
+
+/**
  * Class objects
  */
 NXSL_AlarmClass g_nxslAlarmClass;
@@ -1718,6 +1779,7 @@ NXSL_InterfaceClass g_nxslInterfaceClass;
 NXSL_MobileDeviceClass g_nxslMobileDeviceClass;
 NXSL_NetObjClass g_nxslNetObjClass;
 NXSL_NodeClass g_nxslNodeClass;
+NXSL_NodeDependencyClass g_nxslNodeDependencyClass;
 NXSL_SNMPTransportClass g_nxslSnmpTransportClass;
 NXSL_SNMPVarBindClass g_nxslSnmpVarBindClass;
 NXSL_ZoneClass g_nxslZoneClass;

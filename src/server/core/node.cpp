@@ -6617,13 +6617,17 @@ Cluster *Node::getMyCluster()
    return pCluster;
 }
 
-
-
+/**
+ * Get node state
+ */
 UINT32 Node::getState()
 {
    return m_dwDynamicFlags & NDF_PERSISTENT;
 }
 
+/**
+ * Set node state
+ */
 void Node::setState(UINT32 state)
 {
    m_dwDynamicFlags = state | (m_dwDynamicFlags & ~NDF_PERSISTENT);
@@ -6645,6 +6649,78 @@ UINT32 Node::getEffectiveSnmpProxy() const
       }
    }
    return snmpProxy;
+}
+
+/**
+ * Get effective SSH proxy for this node
+ */
+UINT32 Node::getEffectiveSshProxy() const
+{
+   UINT32 sshProxy = m_sshProxy;
+   if (IsZoningEnabled() && (sshProxy == 0) && (m_zoneUIN != 0))
+   {
+      // Use zone default proxy if set
+      Zone *zone = FindZoneByUIN(m_zoneUIN);
+      if (zone != NULL)
+      {
+         sshProxy = zone->getProxyNodeId();
+      }
+   }
+   return sshProxy;
+}
+
+/**
+ * Get effective ICMP proxy for this node
+ */
+UINT32 Node::getEffectiveIcmpProxy() const
+{
+   UINT32 icmpProxy = m_icmpProxy;
+   if (IsZoningEnabled() && (icmpProxy == 0) && (m_zoneUIN != 0))
+   {
+      // Use zone default proxy if set
+      Zone *zone = FindZoneByUIN(m_zoneUIN);
+      if (zone != NULL)
+      {
+         icmpProxy = zone->getProxyNodeId();
+      }
+   }
+   return icmpProxy;
+}
+
+/**
+ * Get effective Agent proxy for this node
+ */
+UINT32 Node::getEffectiveAgentProxy() const
+{
+   UINT32 agentProxy = m_agentProxy;
+   if (IsZoningEnabled() && (agentProxy == 0) && (m_zoneUIN != 0))
+   {
+      // Use zone default proxy if set
+      Zone *zone = FindZoneByUIN(m_zoneUIN);
+      if (zone != NULL)
+      {
+         agentProxy = zone->getProxyNodeId();
+      }
+   }
+   return agentProxy;
+}
+
+/**
+ * Get effective Zone proxy for this node
+ */
+UINT32 Node::getEffectiveZoneProxy() const
+{
+   UINT32 zoneProxy = 0;
+   if (IsZoningEnabled() && (m_zoneUIN != 0))
+   {
+      // Use zone default proxy if set
+      Zone *zone = FindZoneByUIN(m_zoneUIN);
+      if (zone != NULL)
+      {
+         zoneProxy = zone->getProxyNodeId();
+      }
+   }
+   return zoneProxy;
 }
 
 /**

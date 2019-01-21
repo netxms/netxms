@@ -979,6 +979,7 @@ public:
    bool isLockedBySession(int sessionId) { return m_dciLockStatus == sessionId; }
    IntegerArray<UINT32> *getDCIEventsList();
    StringSet *getDCIScriptList();
+   bool isDataCollectionSource(UINT32 nodeId);
 
    BOOL applyToTarget(DataCollectionTarget *pNode);
 	AutoBindDecision isApplicable(DataCollectionTarget *object);
@@ -2018,7 +2019,12 @@ public:
    AgentConnectionEx *acquireProxyConnection(ProxyType type, bool validate = false);
 	SNMP_Transport *createSnmpTransport(WORD port = 0, const TCHAR *context = NULL);
 	SNMP_SecurityContext *getSnmpSecurityContext() const;
+
    UINT32 getEffectiveSnmpProxy() const;
+   UINT32 getEffectiveSshProxy() const;
+   UINT32 getEffectiveIcmpProxy() const;
+   UINT32 getEffectiveAgentProxy() const;
+   UINT32 getEffectiveZoneProxy() const;
 
    void writeParamListToMessage(NXCPMessage *pMsg, int origin, WORD flags);
 	void writeWinPerfObjectsToMessage(NXCPMessage *msg);
@@ -3008,6 +3014,23 @@ inline const InetAddress& GetObjectIpAddress(const NetObj *object)
 }
 
 /**
+ * Node dependency types
+ */
+#define NODE_DEP_AGENT_PROXY  0x01
+#define NODE_DEP_SNMP_PROXY   0x02
+#define NODE_DEP_ICMP_PROXY   0x04
+#define NODE_DEP_DC_SOURCE    0x08
+
+/**
+ * Dependent node information
+ */
+struct DependentNode
+{
+   UINT32 nodeId;
+   UINT32 dependencyType;
+};
+
+/**
  * Functions
  */
 void ObjectsInit();
@@ -3053,6 +3076,7 @@ bool NXCORE_EXPORTABLE IsClusterIP(UINT32 zoneUIN, const InetAddress& ipAddr);
 bool NXCORE_EXPORTABLE IsParentObject(UINT32 object1, UINT32 object2);
 ObjectArray<NetObj> *QueryObjects(const TCHAR *query, UINT32 userId, TCHAR *errorMessage,
          size_t errorMessageLen, StringList *fields = NULL, ObjectArray<StringList> *values = NULL);
+StructArray<DependentNode> *GetNodeDependencies(UINT32 nodeId);
 
 BOOL LoadObjects();
 void DumpObjects(CONSOLE_CTX pCtx, const TCHAR *filter);

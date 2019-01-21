@@ -644,6 +644,7 @@ private:
 	void updateCertificateComments(NXCPMessage *pRequest);
 	void getCertificateList(UINT32 dwRqId);
 	void queryL2Topology(NXCPMessage *pRequest);
+   void getDependentNodes(NXCPMessage *request);
 	void sendSMS(NXCPMessage *pRequest);
 	void SendCommunityList(UINT32 dwRqId);
 	void UpdateCommunityList(NXCPMessage *pRequest);

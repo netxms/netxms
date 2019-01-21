@@ -205,6 +205,18 @@ public:
 };
 
 /**
+ * NXSL "NodeDependency" class
+ */
+class NXSL_NodeDependencyClass : public NXSL_Class
+{
+public:
+   NXSL_NodeDependencyClass();
+
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const TCHAR *attr);
+   virtual void onObjectDelete(NXSL_Object *object);
+};
+
+/**
  * Server's default script environment
  */
 class NXSL_ServerEnv : public NXSL_Environment
@@ -277,6 +289,7 @@ extern NXSL_InterfaceClass g_nxslInterfaceClass;
 extern NXSL_MobileDeviceClass g_nxslMobileDeviceClass;
 extern NXSL_NetObjClass g_nxslNetObjClass;
 extern NXSL_NodeClass g_nxslNodeClass;
+extern NXSL_NodeDependencyClass g_nxslNodeDependencyClass;
 extern NXSL_SNMPTransportClass g_nxslSnmpTransportClass;
 extern NXSL_SNMPVarBindClass g_nxslSnmpVarBindClass;
 extern NXSL_ZoneClass g_nxslZoneClass;
