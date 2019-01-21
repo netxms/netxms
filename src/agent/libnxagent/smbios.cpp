@@ -25,23 +25,104 @@
 #define DEBUG_TAG _T("smbios")
 
 /**
+ * Memory device form factor table
+ */
+static const char *s_memoryFormFactors[] =
+{
+   "Unknown",
+   "Other",
+   "Unknown",
+   "SIMM",
+   "SIP",
+   "Chip",
+   "DIP",
+   "ZIP",
+   "Proprietary card",
+   "DIMM",
+   "TSOP",
+   "Row of chips",
+   "RIMM",
+   "SO-DIMM",
+   "SRIMM",
+   "FB-DIMM"
+};
+
+/**
+ * Memory device type table
+ */
+static const char *s_memoryTypes[] =
+{
+   "Unknown",
+   "Other",
+   "Unknown",
+   "DRAM",
+   "EDRAM",
+   "VRAM",
+   "SRAM",
+   "RAM",
+   "ROM",
+   "FLASH",
+   "EEPROM",
+   "FEPROM",
+   "EPROM",
+   "CDRAM",
+   "3DRAM",
+   "SDRAM",
+   "SGRAM",
+   "RDRAM",
+   "DDR",
+   "DDR2",
+   "DDR2 FB-DIMM",
+   "Type 15h",
+   "Type 16h",
+   "Type 17h",
+   "DDR3",
+   "FBD2",
+   "DDR4",
+   "LPDDR",
+   "LPDDR2",
+   "LPDDR3",
+   "LPDDR4",
+   "Logical non-volatile device"
+};
+
+/**
+ * Memory device information
+ */
+struct MemoryDevice
+{
+   UINT64 size;
+   const char *formFactor;
+   const char *type;
+   char location[64];
+   char bank[64];
+   UINT32 maxSpeed;
+   UINT32 configuredSpeed;
+   char manufacturer[64];
+   char serial[32];
+   char partNumber[32];
+   UINT16 handle;
+};
+
+/**
  * BIOS and system information
  */
-char s_baseboardManufacturer[128] = "";
-char s_baseboardProduct[128] = "";
-char s_baseboardSerialNumber[128] = "";
-char s_baseboardType[32] = "";
-char s_baseboardVersion[64] = "";
-WORD s_biosAddress = 0;
-char s_biosDate[16] = "";
-char s_biosVendor[128] = "";
-char s_biosVersion[64] = "";
-char s_hardwareManufacturer[128] = "";
-char s_hardwareProduct[128] = "";
-char s_hardwareSerialNumber[128] = "";
-char s_hardwareVersion[64] = "";
-char s_systemWakeUpEvent[32] = "Unknown";
-char *s_oemStrings[64];
+static char s_baseboardManufacturer[128] = "";
+static char s_baseboardProduct[128] = "";
+static char s_baseboardSerialNumber[128] = "";
+static char s_baseboardType[32] = "";
+static char s_baseboardVersion[64] = "";
+static WORD s_biosAddress = 0;
+static char s_biosDate[16] = "";
+static char s_biosVendor[128] = "";
+static char s_biosVersion[64] = "";
+static char s_hardwareManufacturer[128] = "";
+static char s_hardwareProduct[128] = "";
+static char s_hardwareSerialNumber[128] = "";
+static char s_hardwareVersion[64] = "";
+static char s_systemWakeUpEvent[32] = "Unknown";
+static char *s_oemStrings[64];
+static StructArray<MemoryDevice> s_memoryDevices;
 
 /**
  * Get hardware manufacturer
@@ -70,6 +151,68 @@ LIBNXAGENT_EXPORTABLE const char * const *SMBIOS_GetOEMStrings()
 #define RETURN_BIOS_DATA(p) do { if (*p == 0) return SYSINFO_RC_UNSUPPORTED; ret_mbstring(value, p); } while(0)
 
 /**
+ * Handler for memory device parameters
+ */
+LONG LIBNXAGENT_EXPORTABLE SMBIOS_MemDevParameterHandler(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   TCHAR instanceText[64];
+   if (!AgentGetParameterArg(cmd, 1, instanceText, 64))
+      return SYSINFO_RC_UNSUPPORTED;
+
+   MemoryDevice *md = NULL;
+   UINT16 instance = static_cast<UINT16>(_tcstol(instanceText, NULL, 0));
+   for(int i = 0; i < s_memoryDevices.size(); i++)
+   {
+      if (s_memoryDevices.get(i)->handle == instance)
+      {
+         md = s_memoryDevices.get(i);
+         break;
+      }
+   }
+
+   if (md == NULL)
+      return SYSINFO_RC_NO_SUCH_INSTANCE;
+
+   switch(*arg)
+   {
+      case 'B':
+         ret_mbstring(value, md->bank);
+         break;
+      case 'c':
+         ret_uint(value, md->configuredSpeed);
+         break;
+      case 'F':
+         ret_mbstring(value, md->formFactor);
+         break;
+      case 'L':
+         ret_mbstring(value, md->location);
+         break;
+      case 'M':
+         ret_mbstring(value, md->manufacturer);
+         break;
+      case 'm':
+         ret_uint(value, md->maxSpeed);
+         break;
+      case 'P':
+         ret_mbstring(value, md->partNumber);
+         break;
+      case 'S':
+         ret_uint64(value, md->size);
+         break;
+      case 's':
+         ret_mbstring(value, md->serial);
+         break;
+      case 'T':
+         ret_mbstring(value, md->type);
+         break;
+      default:
+         return SYSINFO_RC_UNSUPPORTED;
+   }
+
+   return SYSINFO_RC_SUCCESS;
+}
+
+/**
  * Handler for BIOS-related parameters
  */
 LONG LIBNXAGENT_EXPORTABLE SMBIOS_ParameterHandler(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
@@ -88,6 +231,8 @@ LONG LIBNXAGENT_EXPORTABLE SMBIOS_ParameterHandler(const TCHAR *cmd, const TCHAR
             case 'v':
                RETURN_BIOS_DATA(s_biosVendor);
                break;
+            default:
+               return SYSINFO_RC_UNSUPPORTED;
          }
          break;
       case 'b':   // baseboard
@@ -108,6 +253,8 @@ LONG LIBNXAGENT_EXPORTABLE SMBIOS_ParameterHandler(const TCHAR *cmd, const TCHAR
             case 'V':
                RETURN_BIOS_DATA(s_baseboardVersion);
                break;
+            default:
+               return SYSINFO_RC_UNSUPPORTED;
          }
          break;
       case 'H':   // hardware
@@ -125,11 +272,75 @@ LONG LIBNXAGENT_EXPORTABLE SMBIOS_ParameterHandler(const TCHAR *cmd, const TCHAR
             case 'V':
                RETURN_BIOS_DATA(s_hardwareVersion);
                break;
+            default:
+               return SYSINFO_RC_UNSUPPORTED;
          }
          break;
       case 'W':
          RETURN_BIOS_DATA(s_systemWakeUpEvent);
          break;
+      default:
+         return SYSINFO_RC_UNSUPPORTED;
+   }
+   return SYSINFO_RC_SUCCESS;
+}
+
+/**
+ * Handler for BIOS-related lists
+ */
+LONG LIBNXAGENT_EXPORTABLE SMBIOS_ListHandler(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session)
+{
+   switch(*arg)
+   {
+      case 'M':   // memory devices
+         for(int i = 0; i < s_memoryDevices.size(); i++)
+         {
+            value->add(s_memoryDevices.get(i)->handle);
+         }
+         break;
+      default:
+         return SYSINFO_RC_UNSUPPORTED;
+   }
+   return SYSINFO_RC_SUCCESS;
+}
+
+/**
+ * Handler for BIOS-related tables
+ */
+LONG LIBNXAGENT_EXPORTABLE SMBIOS_TableHandler(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *session)
+{
+   switch(*arg)
+   {
+      case 'M':   // memory devices
+         value->addColumn(_T("HANDLE"), DCI_DT_INT, _T("Handle"), true);
+         value->addColumn(_T("LOCATION"), DCI_DT_STRING, _T("Location"));
+         value->addColumn(_T("BANK"), DCI_DT_STRING, _T("Bank"));
+         value->addColumn(_T("FORM_FACTOR"), DCI_DT_STRING, _T("Form factor"));
+         value->addColumn(_T("TYPE"), DCI_DT_STRING, _T("Type"));
+         value->addColumn(_T("SIZE"), DCI_DT_UINT64, _T("Size"));
+         value->addColumn(_T("MAX_SPEED"), DCI_DT_UINT64, _T("Max Speed"));
+         value->addColumn(_T("CONF_SPEED"), DCI_DT_UINT64, _T("Configured Speed"));
+         value->addColumn(_T("MANUFACTURER"), DCI_DT_STRING, _T("Manufacturer"));
+         value->addColumn(_T("PART_NUMBER"), DCI_DT_STRING, _T("Part Number"));
+         value->addColumn(_T("SERIAL_NUMBER"), DCI_DT_STRING, _T("Serial Number"));
+         for(int i = 0; i < s_memoryDevices.size(); i++)
+         {
+            value->addRow();
+            value->set(0, s_memoryDevices.get(i)->handle);
+            value->set(1, s_memoryDevices.get(i)->location);
+            value->set(2, s_memoryDevices.get(i)->bank);
+            value->set(3, s_memoryDevices.get(i)->formFactor);
+            value->set(4, s_memoryDevices.get(i)->type);
+            value->set(5, s_memoryDevices.get(i)->size);
+            value->set(6, s_memoryDevices.get(i)->maxSpeed);
+            value->set(7, s_memoryDevices.get(i)->configuredSpeed);
+            value->set(8, s_memoryDevices.get(i)->manufacturer);
+            value->set(9, s_memoryDevices.get(i)->partNumber);
+            value->set(10, s_memoryDevices.get(i)->serial);
+         }
+         break;
+      default:
+         return SYSINFO_RC_UNSUPPORTED;
    }
    return SYSINFO_RC_SUCCESS;
 }
@@ -186,8 +397,9 @@ static const char *GetStringByIndex(TableHeader *t, int index, char *buffer, siz
    return s;
 }
 
-#define BYTE_AT(t,a) (*(reinterpret_cast<BYTE*>(t) + a))
-#define WORD_AT(t,a) (*(reinterpret_cast<WORD*>(reinterpret_cast<BYTE*>(t) + a)))
+#define BYTE_AT(t, a)  (*(reinterpret_cast<BYTE*>(t) + a))
+#define WORD_AT(t, a)  (*(reinterpret_cast<WORD*>(reinterpret_cast<BYTE*>(t) + a)))
+#define DWORD_AT(t, a) (*(reinterpret_cast<DWORD*>(reinterpret_cast<BYTE*>(t) + a)))
 
 /**
  * Parse BIOS information (table type 0)
@@ -306,6 +518,55 @@ static void ParseOEMStrings(TableHeader *t)
 }
 
 /**
+* Parse memory device information (table type 17)
+*/
+static void ParseMemoryDeviceInformation(TableHeader *t)
+{
+   if (WORD_AT(t, 0x0C) == 0)
+      return;  // Empty memory slot
+
+   MemoryDevice md;
+   md.handle = WORD_AT(t, 0x02);
+
+   WORD size = WORD_AT(t, 0x0C);
+   if (size != 0xFFFF)
+   {
+      if (size == 0x7FFF)
+      {
+         // Use extended size field
+         md.size = static_cast<UINT64>(DWORD_AT(t, 0x1C)) * _ULL(1024 * 1024);
+      }
+      else
+      {
+         if (size & 0x8000)   // size in KBytes if bit 15 is set
+            md.size = static_cast<UINT64>(size & 0x7FFF) * _ULL(1024);
+         else
+            md.size = static_cast<UINT64>(size & 0x7FFF) * _ULL(1024 * 1024);
+      }
+   }
+   else
+   {
+      md.size = 0;   // unknown
+   }
+
+   int ff = BYTE_AT(t, 0x0E);
+   md.formFactor = s_memoryFormFactors[((ff > 0) && (ff <= 0x0F)) ? ff : 0];
+
+   int type = BYTE_AT(t, 0x12);
+   md.type = s_memoryTypes[((type > 0) && (type <= 0x1F)) ? type : 0];
+
+   GetStringByIndex(t, BYTE_AT(t, 0x10), md.location, sizeof(md.location));
+   GetStringByIndex(t, BYTE_AT(t, 0x11), md.bank, sizeof(md.bank));
+   md.maxSpeed = WORD_AT(t, 0x15);
+   GetStringByIndex(t, BYTE_AT(t, 0x17), md.manufacturer, sizeof(md.manufacturer));
+   GetStringByIndex(t, BYTE_AT(t, 0x18), md.serial, sizeof(md.serial));
+   GetStringByIndex(t, BYTE_AT(t, 0x1A), md.partNumber, sizeof(md.partNumber));
+   md.configuredSpeed = WORD_AT(t, 0x20);
+
+   s_memoryDevices.add(&md);
+}
+
+/**
  * Parse SMBIOS data
  */
 bool LIBNXAGENT_EXPORTABLE SMBIOS_Parse(BYTE *(*reader)(size_t *size))
@@ -336,6 +597,9 @@ bool LIBNXAGENT_EXPORTABLE SMBIOS_Parse(BYTE *(*reader)(size_t *size))
             break;
          case 11:
             ParseOEMStrings(curr);
+            break;
+         case 17:
+            ParseMemoryDeviceInformation(curr);
             break;
          default:
             break;
