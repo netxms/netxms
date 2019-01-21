@@ -136,6 +136,7 @@ import org.netxms.client.objects.Container;
 import org.netxms.client.objects.Dashboard;
 import org.netxms.client.objects.DashboardGroup;
 import org.netxms.client.objects.DashboardRoot;
+import org.netxms.client.objects.DependentNode;
 import org.netxms.client.objects.EntireNetwork;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Interface;
@@ -191,7 +192,6 @@ import org.netxms.client.users.User;
 import org.netxms.client.users.UserGroup;
 import org.netxms.client.zeromq.ZmqSubscription;
 import org.netxms.client.zeromq.ZmqSubscriptionType;
-
 import com.jcraft.jzlib.Deflater;
 import com.jcraft.jzlib.JZlib;
 
@@ -6166,6 +6166,31 @@ public class NXCSession
          varId += 10;
       }
       return packages;
+   }
+   
+   /**
+    * Get list of dependent nodes for given node. Node is considered dependent if it use given node
+    * as any type of proxy or as data collection source for at least one DCI.
+    * 
+    * @param nodeId node object ID
+    * @return list of dependent node descriptors
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public List<DependentNode> getDependentNodes(long nodeId) throws IOException, NXCException
+   {
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_DEPENDENT_NODES);
+      msg.setFieldInt32(NXCPCodes.VID_NODE_ID, (int)nodeId);
+      sendMessage(msg);
+      
+      final NXCPMessage response = waitForRCC(msg.getMessageId());
+      
+      int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_ELEMENTS);
+      List<DependentNode> nodes = new ArrayList<DependentNode>(count);
+      long fieldId = NXCPCodes.VID_ELEMENT_LIST_BASE;
+      for(int i = 0; i < count; i++, fieldId += 10)
+         nodes.add(new DependentNode(msg, fieldId));
+       return nodes;
    }
 
    /**

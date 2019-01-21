@@ -1098,3 +1098,22 @@ json_t *DataCollectionOwner::toJson()
    unlockProperties();
    return root;
 }
+
+/**
+ * Check if given node is data collection source for at least one DCI
+ */
+bool DataCollectionOwner::isDataCollectionSource(UINT32 nodeId)
+{
+   bool result = false;
+   lockDciAccess(false);
+   for(int i = 0; i < m_dcObjects->size(); i++)
+   {
+      if (m_dcObjects->get(i)->getSourceNode() == nodeId)
+      {
+         result = true;
+         break;
+      }
+   }
+   unlockDciAccess();
+   return result;
+}

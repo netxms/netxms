@@ -1302,6 +1302,9 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_CLOSE_TCP_PROXY:
          closeTcpProxy(request);
          break;
+      case CMD_GET_DEPENDENT_NODES:
+         getDependentNodes(request);
+         break;
 #ifdef WITH_ZMQ
       case CMD_ZMQ_SUBSCRIBE_EVENT:
          zmqManageSubscription(request, zmq::EVENT, true);
@@ -10301,6 +10304,50 @@ void ClientSession::queryInternalCommunicationTopology(NXCPMessage *pRequest)
             {
                msg.setField(VID_RCC, RCC_EXEC_FAILED);
             }
+         }
+         else
+         {
+            msg.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+         }
+      }
+      else
+      {
+         msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      }
+   }
+   else
+   {
+      msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+
+   sendMessage(&msg);
+}
+
+/**
+ * Get list of dependent nodes
+ */
+void ClientSession::getDependentNodes(NXCPMessage *request)
+{
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+
+   NetObj *object = FindObjectById(request->getFieldAsUInt32(VID_NODE_ID));
+   if (object != NULL)
+   {
+      if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+      {
+         if (object->getObjectClass() == OBJECT_NODE)
+         {
+            StructArray<DependentNode> *dependencies = GetNodeDependencies(object->getId());
+            msg.setField(VID_NUM_ELEMENTS, dependencies->size());
+            UINT32 fieldId = VID_ELEMENT_LIST_BASE;
+            for(int i = 0; i < dependencies->size(); i++)
+            {
+               msg.setField(fieldId++, dependencies->get(i)->nodeId);
+               msg.setField(fieldId++, dependencies->get(i)->dependencyType);
+               fieldId += 8;
+            }
+            msg.setField(VID_RCC, RCC_SUCCESS);
+            delete dependencies;
          }
          else
          {
