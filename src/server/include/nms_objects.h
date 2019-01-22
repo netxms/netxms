@@ -990,9 +990,13 @@ public:
    DataCollectionOwner(ConfigEntry *config);
    virtual ~DataCollectionOwner();
 
-   virtual json_t *toJson();
+   virtual bool saveToDatabase(DB_HANDLE hdb);
+   virtual bool deleteFromDatabase(DB_HANDLE hdb);
+   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
 
    virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
+
+   virtual json_t *toJson();
 
    int getItemCount() { return m_dcObjects->size(); }
    bool addDCObject(DCObject *object, bool alreadyLocked = false, bool notify = true);
@@ -1010,13 +1014,9 @@ public:
    void sendItemsToClient(ClientSession *pSession, UINT32 dwRqId);
    IntegerArray<UINT32> *getDCIEventsList();
    StringSet *getDCIScriptList();
-   BOOL applyToTarget(DataCollectionTarget *pNode);
    bool isDataCollectionSource(UINT32 nodeId);
 
-   virtual bool saveToDatabase(DB_HANDLE hdb);
-   virtual bool deleteFromDatabase(DB_HANDLE hdb);
-   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
-
+   BOOL applyToTarget(DataCollectionTarget *pNode);
    void queueUpdate();
    void queueRemoveFromTarget(UINT32 targetId, bool removeDCI);
 
@@ -2289,8 +2289,8 @@ public:
    AgentConnectionEx *getConnectionToZoneNodeProxy(bool validate = false);
 	SNMP_Transport *createSnmpTransport(WORD port = 0, const TCHAR *context = NULL);
 	SNMP_SecurityContext *getSnmpSecurityContext() const;
-   UINT32 getEffectiveSnmpProxy() const;
 
+	UINT32 getEffectiveSnmpProxy() const;
    UINT32 getEffectiveSshProxy() const;
    UINT32 getEffectiveIcmpProxy() const;
    UINT32 getEffectiveAgentProxy() const;

@@ -8299,26 +8299,20 @@ NetworkMapObjectList *Node::buildInternalConnectionTopology()
  */
 bool Node::checkProxyAndLink(NetworkMapObjectList *topology, UINT32 seedNode, UINT32 proxyId, UINT32 linkType, const TCHAR *linkName, bool checkAllProxies)
 {
-   if (IsZoningEnabled() && getEffectiveZoneProxy() == proxyId && linkType != LINK_TYPE_ZONE_PROXY)
+   if ((proxyId == 0) || (IsZoningEnabled() && (getEffectiveZoneProxy() == proxyId) && (linkType != LINK_TYPE_ZONE_PROXY)))
       return false;
 
-   if (proxyId != 0)
+   Node *proxy = reinterpret_cast<Node *>(FindObjectById(proxyId, OBJECT_NODE));
+   if (proxy != NULL && proxy->getId() != m_id)
    {
-      Node *proxy = reinterpret_cast<Node *>(FindObjectById(proxyId, OBJECT_NODE));
-      if (proxy != NULL && proxy->getId() != m_id)
-      {
-         ObjLink *link = topology->getLink(m_id, proxyId, linkType);
-         if (link != NULL)
-            return true;
+      ObjLink *link = topology->getLink(m_id, proxyId, linkType);
+      if (link != NULL)
+         return true;
 
-         topology->addObject(proxyId);
-         topology->linkObjects(m_id, proxyId, linkType, linkName);
-         proxy->buildInternalConnectionTopologyInternal(topology, seedNode, !checkAllProxies, checkAllProxies);
-      }
+      topology->addObject(proxyId);
+      topology->linkObjects(m_id, proxyId, linkType, linkName);
+      proxy->buildInternalConnectionTopologyInternal(topology, seedNode, !checkAllProxies, checkAllProxies);
    }
-   else
-      return false;
-
    return true;
 }
 
