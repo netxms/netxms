@@ -1,6 +1,6 @@
 /* 
 ** nxshell - launcher for main Java application
-** Copyright (C) 2017 Raden Solutions
+** Copyright (C) 2017-2019 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -37,6 +37,7 @@ static const char *s_optUser = "admin";
 static const char *s_optPassword = NULL;
 static const char *s_optJre = NULL;
 static const char *s_optClassPath = NULL;
+static bool s_optSync = true;
 
 /**
  * Start application
@@ -70,6 +71,8 @@ static int StartApp(int argc, char *argv[])
    snprintf(buffer, 256, "-Dnetxms.port=%s", s_optPort);
    vmOptions.addMBString(buffer);
    snprintf(buffer, 256, "-Dnetxms.login=%s", s_optUser);
+   vmOptions.addMBString(buffer);
+   snprintf(buffer, 256, "-Dnetxms.syncObjects=%s", s_optSync ? "true" : "false");
    vmOptions.addMBString(buffer);
 
 	if (s_optPassword == NULL)
@@ -145,6 +148,7 @@ static struct option longOptions[] =
 	{ (char *)"help",           no_argument,       NULL,        'h' },
 	{ (char *)"host",           required_argument, NULL,        'H' },
 	{ (char *)"jre",            required_argument, NULL,        'j' },
+	{ (char *)"no-sync",        required_argument, NULL,        'n' },
 	{ (char *)"password",       required_argument, NULL,        'P' },
    { (char *)"port",           required_argument, NULL,        'p' },
 	{ (char *)"user",           required_argument, NULL,        'u' },
@@ -153,7 +157,7 @@ static struct option longOptions[] =
 };
 #endif
 
-#define SHORT_OPTIONS "C:DhH:j:p:P:u:v"
+#define SHORT_OPTIONS "C:DhH:j:np:P:u:v"
 
 /**
  * Print usage info
@@ -164,7 +168,7 @@ static void usage(bool showVersion)
    {
       _tprintf(
          _T("NetXMS Interactive Shell  Version ") NETXMS_VERSION_STRING _T("\n")
-         _T("Copyright (c) 2006-2017 Raden Solutions\n\n"));
+         _T("Copyright (c) 2006-2019 Raden Solutions\n\n"));
    }
 
 	_tprintf(
@@ -177,6 +181,7 @@ static void usage(bool showVersion)
       _T("  -h, --help                  Display this help message.\n")
       _T("  -H, --host <hostname>       Specify host name or IP address. Could be in host:port form.\n")
       _T("  -j, --jre <path>            Specify JRE location.\n")
+      _T("  -n, --no-sync               Do not synchronize objects on connect.\n")
       _T("  -p, --port <port>           Specify TCP port for connection. Default is 4701.\n")
       _T("  -P, --password <password>   Specify user's password. Default is empty.\n")
       _T("  -u, --user <user>           Login to server as user. Default is \"admin\".\n")
@@ -187,6 +192,7 @@ static void usage(bool showVersion)
       _T("  -h             Display this help message.\n")
       _T("  -H <hostname>  Specify host name or IP address. Could be in host:port form.\n")
       _T("  -j <path>      Specify JRE location.\n")
+      _T("  -n             Do not synchronize objects on connect.\n")
       _T("  -p <port>      Specify TCP port for connection. Default is 4701.\n")
       _T("  -P <password>  Specify user's password. If not given, password will be read from terminal.\n")
       _T("  -u <user>      Login to server as user. Default is \"admin\".\n")
@@ -242,6 +248,9 @@ int main(int argc, char *argv[])
 		   case 'j': // JRE
 			   s_optJre = optarg;
 			   break;
+         case 'n': // no sync
+            s_optSync = false;
+            break;
          case 'p': // port
             s_optPort = optarg;
             break;
