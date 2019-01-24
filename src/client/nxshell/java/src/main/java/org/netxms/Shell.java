@@ -123,6 +123,11 @@ public class Shell {
         if (encryptOption != null) {
             encrypt = Boolean.parseBoolean(encryptOption);
         }
+        boolean sync = true;
+        String syncOption = System.getProperty("netxms.syncObjects");
+        if (syncOption != null) {
+            sync = Boolean.parseBoolean(syncOption);
+        }
 
         final String hostName;
         int port = NXCSession.DEFAULT_CONN_PORT;
@@ -150,8 +155,10 @@ public class Shell {
         final NXCSession session = new NXCSession(hostName, port, encrypt);
         session.connect();
         session.login(optLogin, optPassword);
-        session.syncObjects();
-        session.syncUserDatabase();
+        if (sync) {
+            session.syncObjects();
+            session.syncUserDatabase();
+        }
         return session;
     }
 
