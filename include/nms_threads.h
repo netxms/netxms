@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -1048,6 +1048,46 @@ int LIBNETXMS_EXPORTABLE ThreadPoolGetSerializedRequestCount(ThreadPool *p, cons
 UINT32 LIBNETXMS_EXPORTABLE ThreadPoolGetSerializedRequestMaxWaitTime(ThreadPool *p, const TCHAR *key);
 StringList LIBNETXMS_EXPORTABLE *ThreadPoolGetAllPools();
 void LIBNETXMS_EXPORTABLE ThreadPoolSetResizeParameters(int responsiveness, UINT32 waitTimeHWM, UINT32 waitTimeLWM);
+
+/**
+ * Wrapper for ThreadPoolExecute to use pointer to given type as argument
+ */
+template <typename T> inline void ThreadPoolExecute(ThreadPool *p, void (*f)(T *), T *arg)
+{
+   ThreadPoolExecute(p, (ThreadPoolWorkerFunction)f, (void *)arg);
+}
+
+/**
+ * Wrapper for ThreadPoolExecuteSerialized to use pointer to given type as argument
+ */
+template <typename T> inline void LIBNETXMS_EXPORTABLE ThreadPoolExecuteSerialized(ThreadPool *p, const TCHAR *key, void (*f)(T *), T *arg)
+{
+   ThreadPoolExecuteSerialized(p, key, (ThreadPoolWorkerFunction)f, (void *)arg);
+}
+
+/**
+ * Wrapper for ThreadPoolScheduleAbsolute to use pointer to given type as argument
+ */
+template <typename T> inline void LIBNETXMS_EXPORTABLE ThreadPoolScheduleAbsolute(ThreadPool *p, time_t runTime, void (*f)(T *), T *arg)
+{
+   ThreadPoolScheduleAbsolute(p, runTime, (ThreadPoolWorkerFunction)f, (void *)arg);
+}
+
+/**
+ * Wrapper for ThreadPoolScheduleAbsoluteMs to use pointer to given type as argument
+ */
+template <typename T> inline void LIBNETXMS_EXPORTABLE ThreadPoolScheduleAbsoluteMs(ThreadPool *p, INT64 runTime, void (*f)(T *), T *arg)
+{
+   ThreadPoolScheduleAbsoluteMs(p, runTime, (ThreadPoolWorkerFunction)f, (void *)arg);
+}
+
+/**
+ * Wrapper for ThreadPoolScheduleRelative to use pointer to given type as argument
+ */
+template <typename T> inline void LIBNETXMS_EXPORTABLE ThreadPoolScheduleRelative(ThreadPool *p, UINT32 delay, void (*f)(T *), T *arg)
+{
+   ThreadPoolScheduleRelative(p, delay, (ThreadPoolWorkerFunction)f, (void *)arg);
+}
 
 /**
  * Wrapper data for ThreadPoolExecute (no arguments)

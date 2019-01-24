@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -27,7 +27,37 @@
 /**
  * Externals
  */
-extern Queue g_nodePollerQueue;
+extern ObjectQueue<DiscoveredAddress> g_nodePollerQueue;
+
+/**
+ * Thread pool
+ */
+ThreadPool *g_discoveryThreadPool = NULL;
+
+/**
+ * IP addresses being processed by node poller
+ */
+static ObjectArray<DiscoveredAddress> s_processingList(64, 64, false);
+static Mutex s_processingListLock;
+
+/**
+ * Check if given address is in processing by new node poller
+ */
+bool IsNodePollerActiveAddress(const InetAddress& addr)
+{
+   bool result = false;
+   s_processingListLock.lock();
+   for(int i = 0; i < s_processingList.size(); i++)
+   {
+      if (s_processingList.get(i)->ipAddr.equals(addr))
+      {
+         result = true;
+         break;
+      }
+   }
+   s_processingListLock.unlock();
+   return result;
+}
 
 /**
  * Constructor for NewNodeData
@@ -719,11 +749,33 @@ static BOOL AcceptNewNode(NewNodeData *newNodeData, BYTE *macAddr)
 }
 
 /**
+ * Process discovered address
+ */
+static void ProcessDiscoveredAddress(DiscoveredAddress *address)
+{
+   NewNodeData newNodeData(address->ipAddr);
+   newNodeData.zoneUIN = address->zoneUIN;
+   newNodeData.origin = NODE_ORIGIN_NETWORK_DISCOVERY;
+   newNodeData.doConfPoll = true;
+
+   if (address->ignoreFilter || AcceptNewNode(&newNodeData, address->bMacAddr))
+   {
+      ObjectTransactionStart();
+      PollNewNode(&newNodeData);
+      ObjectTransactionEnd();
+   }
+
+   s_processingListLock.lock();
+   s_processingList.remove(address);
+   s_processingListLock.unlock();
+   MemFree(address);
+}
+
+/**
  * Node poller thread (poll new nodes and put them into the database)
  */
 THREAD_RESULT THREAD_CALL NodePoller(void *arg)
 {
-   NEW_NODE *pInfo;
 	TCHAR szIpAddr[64];
 
    ThreadSetName("NodePoller");
@@ -731,25 +783,34 @@ THREAD_RESULT THREAD_CALL NodePoller(void *arg)
 
    while(!IsShutdownInProgress())
    {
-      pInfo = (NEW_NODE *)g_nodePollerQueue.getOrBlock();
-      if (pInfo == INVALID_POINTER_VALUE)
+      DiscoveredAddress *address = g_nodePollerQueue.getOrBlock();
+      if (address == INVALID_POINTER_VALUE)
          break;   // Shutdown indicator received
 
 		nxlog_debug_tag(DEBUG_TAG, 4, _T("NodePoller: processing node %s/%d in zone %d"),
-		          pInfo->ipAddr.toString(szIpAddr), pInfo->ipAddr.getMaskBits(), (int)pInfo->zoneUIN);
+		         address->ipAddr.toString(szIpAddr), address->ipAddr.getMaskBits(), (int)address->zoneUIN);
 
-		NewNodeData newNodeData(pInfo->ipAddr);
-		newNodeData.zoneUIN = pInfo->zoneUIN;
-		newNodeData.origin = NODE_ORIGIN_NETWORK_DISCOVERY;
-		newNodeData.doConfPoll = true;
+		s_processingListLock.lock();
+		s_processingList.add(address);
+      s_processingListLock.unlock();
 
-      if (pInfo->ignoreFilter || AcceptNewNode(&newNodeData, pInfo->bMacAddr))
-		{
-         ObjectTransactionStart();
-         PollNewNode(&newNodeData);
-         ObjectTransactionEnd();
-		}
-      free(pInfo);
+      if (g_discoveryThreadPool != NULL)
+      {
+         if (g_flags & AF_PARALLEL_NETWORK_DISCOVERY)
+         {
+            ThreadPoolExecute(g_discoveryThreadPool, ProcessDiscoveredAddress, address);
+         }
+         else
+         {
+            TCHAR key[32];
+            _sntprintf(key, 32, _T("Zone%u"), address->zoneUIN);
+            ThreadPoolExecuteSerialized(g_discoveryThreadPool, key, ProcessDiscoveredAddress, address);
+         }
+      }
+      else
+      {
+         ProcessDiscoveredAddress(address);
+      }
    }
    nxlog_debug(1, _T("Node poller thread terminated"));
    return THREAD_OK;

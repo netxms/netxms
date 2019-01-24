@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -66,11 +66,11 @@ void NXCORE_EXPORTABLE ObjectTransactionEnd()
 /**
  * Save object to database on separate thread
  */
-static void SaveObject(void *object)
+static void SaveObject(NetObj *object)
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    DBBegin(hdb);
-   if (static_cast<NetObj*>(object)->saveToDatabase(hdb))
+   if (object->saveToDatabase(hdb))
    {
       DBCommit(hdb);
    }

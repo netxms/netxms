@@ -45,10 +45,8 @@ static UINT32 s_options = PING_OPT_ALLOW_AUTOCONFIGURE;
 /**
  * Poller
  */
-static void Poller(void *arg)
+static void Poller(PING_TARGET *target)
 {
-   PING_TARGET *target = (PING_TARGET *)arg;
-
 	bool unreachable = false;
 	INT64 startTime = GetCurrentTimeMs();
 
@@ -161,7 +159,7 @@ retry:
    UINT32 elapsedTime = static_cast<UINT32>(GetCurrentTimeMs() - startTime);
    UINT32 interval = 60000 / m_pollsPerMinute;
 
-   ThreadPoolScheduleRelative(s_pollers, (interval > elapsedTime) ? interval - elapsedTime : 1, Poller, arg);
+   ThreadPoolScheduleRelative(s_pollers, (interval > elapsedTime) ? interval - elapsedTime : 1, Poller, target);
 }
 
 /**

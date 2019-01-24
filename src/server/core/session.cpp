@@ -59,7 +59,7 @@
 /**
  * Externals
  */
-extern Queue g_nodePollerQueue;
+extern ObjectQueue<DiscoveredAddress> g_nodePollerQueue;
 extern Queue g_dciCacheLoaderQueue;
 extern ThreadPool *g_clientThreadPool;
 extern ThreadPool *g_dataCollectorThreadPool;
@@ -8271,10 +8271,10 @@ void ClientSession::sendServerStats(UINT32 dwRqId)
    ThreadPoolGetInfo(g_dataCollectorThreadPool, &poolInfo);
 	msg.setField(VID_QSIZE_DCI_POLLER, (poolInfo.activeRequests > poolInfo.curThreads) ? poolInfo.activeRequests - poolInfo.curThreads : 0);
 
-	msg.setField(VID_QSIZE_DCI_CACHE_LOADER, g_dciCacheLoaderQueue.size());
-	msg.setField(VID_QSIZE_DBWRITER, g_dbWriterQueue->size());
-	msg.setField(VID_QSIZE_EVENT, g_pEventQueue->size());
-	msg.setField(VID_QSIZE_NODE_POLLER, g_nodePollerQueue.size());
+	msg.setField(VID_QSIZE_DCI_CACHE_LOADER, static_cast<UINT32>(g_dciCacheLoaderQueue.size()));
+	msg.setField(VID_QSIZE_DBWRITER, static_cast<UINT32>(g_dbWriterQueue->size()));
+	msg.setField(VID_QSIZE_EVENT, static_cast<UINT32>(g_pEventQueue->size()));
+	msg.setField(VID_QSIZE_NODE_POLLER, static_cast<UINT32>(g_nodePollerQueue.size()));
 
    // Send response
    sendMessage(&msg);
@@ -10487,7 +10487,7 @@ void ClientSession::registerAgent(NXCPMessage *pRequest)
       }
       else
       {
-         NEW_NODE *info = MemAllocStruct<NEW_NODE>();
+         DiscoveredAddress *info = MemAllocStruct<DiscoveredAddress>();
          info->ipAddr = m_clientAddr;
          info->zoneUIN = 0;	// Add to default zone
          info->ignoreFilter = TRUE;		// Ignore discovery filters and add node anyway

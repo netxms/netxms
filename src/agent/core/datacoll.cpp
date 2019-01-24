@@ -881,10 +881,8 @@ static DataElement *CollectDataFromSNMP(DataCollectionItem *dci)
 /**
  * Local data collection callback
  */
-static void LocalDataCollectionCallback(void *arg)
+static void LocalDataCollectionCallback(DataCollectionItem *dci)
 {
-   DataCollectionItem *dci = (DataCollectionItem *)arg;
-
    DataElement *e = CollectDataFromAgent(dci);
    if (e != NULL)
    {

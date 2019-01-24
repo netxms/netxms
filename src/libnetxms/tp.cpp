@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -433,9 +433,8 @@ struct RequestSerializationData
 /**
  * Worker function to process serialized requests
  */
-static void ProcessSerializedRequests(void *arg)
+static void ProcessSerializedRequests(RequestSerializationData *data)
 {
-   RequestSerializationData *data = (RequestSerializationData *)arg;
    while(true)
    {
       MutexLock(data->pool->serializationLock);

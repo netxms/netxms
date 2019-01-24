@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -28,7 +28,7 @@
 /**
  * Comparator for queue search
  */
-typedef bool (*QUEUE_COMPARATOR)(void *key, void *object);
+typedef bool (*QueueComparator)(const void *key, const void *object);
 
 /**
  * Queue class
@@ -39,12 +39,12 @@ private:
    MUTEX m_mutexQueueAccess;
    CONDITION m_condWakeup;
    void **m_elements;
-   UINT32 m_numElements;
-   UINT32 m_bufferSize;
-   UINT32 m_initialSize;
-   UINT32 m_first;
-   UINT32 m_last;
-   UINT32 m_bufferIncrement;
+   size_t m_numElements;
+   size_t m_bufferSize;
+   size_t m_initialSize;
+   size_t m_first;
+   size_t m_last;
+   size_t m_bufferIncrement;
 	bool m_shutdownFlag;
 
 	void commonInit();
@@ -54,19 +54,32 @@ private:
 
 public:
    Queue();
-   Queue(UINT32 initialSize, UINT32 bufferIncrement = 32);
-   ~Queue();
+   Queue(size_t initialSize, size_t bufferIncrement = 32);
+   virtual ~Queue();
 
    void put(void *object);
 	void insert(void *object);
 	void setShutdownMode();
    void *get();
    void *getOrBlock(UINT32 timeout = INFINITE);
-   int size() { return (int)m_numElements; }
-   int allocated() { return (int)m_bufferSize; }
+   size_t size() const { return m_numElements; }
+   size_t allocated() const { return m_bufferSize; }
    void clear();
-	void *find(void *key, QUEUE_COMPARATOR comparator);
-	bool remove(void *key, QUEUE_COMPARATOR comparator);
+	void *find(const void *key, QueueComparator comparator);
+	bool remove(const void *key, QueueComparator comparator);
+};
+
+template<typename T> class ObjectQueue : public Queue
+{
+public:
+   ObjectQueue() : Queue() { }
+   ObjectQueue(size_t initialSize, size_t bufferIncrement = 32) : Queue(initialSize, bufferIncrement) { }
+   virtual ~ObjectQueue() { }
+
+   T *get() { return (T*)Queue::get(); }
+   T *getOrBlock(UINT32 timeout = INFINITE) { return (T*)Queue::getOrBlock(timeout); }
+   void *find(const void *key, bool (*comparator)(const void *key, const T *object)) { return Queue::find(key, (QueueComparator)comparator); }
+   bool remove(const void *key, bool (*comparator)(const void *key, const T *object)) { return Queue::remove(key, (QueueComparator)comparator); }
 };
 
 #endif    /* _nxqueue_h_ */

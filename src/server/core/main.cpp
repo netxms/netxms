@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2018 Raden Solutions
+** Copyright (C) 2003-2019 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -70,6 +70,7 @@ extern const TCHAR *g_szMessages[];
 extern Queue g_dciCacheLoaderQueue;
 extern ThreadPool *g_clientThreadPool;
 extern ThreadPool *g_syncerThreadPool;
+extern ThreadPool *g_discoveryThreadPool;
 
 void InitClientListeners();
 void InitMobileDeviceListeners();
@@ -352,6 +353,8 @@ static void LoadGlobalConfig()
 		g_flags |= AF_SYNC_NODE_NAMES_WITH_DNS;
 	if (ConfigReadBoolean(_T("CheckTrustedNodes"), true))
 		g_flags |= AF_CHECK_TRUSTED_NODES;
+   if (ConfigReadBoolean(_T("NetworkDiscovery.EnableParallelProcessing"), false))
+      g_flags |= AF_PARALLEL_NETWORK_DISCOVERY;
 	if (ConfigReadBoolean(_T("NXSL.EnableContainerFunctions"), true))
 	{
 		g_flags |= AF_ENABLE_NXSL_CONTAINER_FUNCTIONS;
@@ -1016,6 +1019,13 @@ retry_db_lock:
       g_syncerThreadPool = ThreadPoolCreate(_T("SYNCER"), ConfigReadInt(_T("ThreadPool.Syncer.BaseSize"), 1), maxSize);
    }
 
+   // Create network discovery thread pool
+   maxSize = ConfigReadInt(_T("ThreadPool.Discovery.MaxSize"), 16);
+   if (maxSize > 1)
+   {
+      g_discoveryThreadPool = ThreadPoolCreate(_T("DISCOVERY"), ConfigReadInt(_T("ThreadPool.Discovery.BaseSize"), 1), maxSize);
+   }
+
 	// Start threads
 	ThreadCreate(WatchdogThread, 0, NULL);
 	ThreadCreate(NodePoller, 0, NULL);
@@ -1194,6 +1204,9 @@ void NXCORE_EXPORTABLE Shutdown()
 
 	if (g_syncerThreadPool != NULL)
 	   ThreadPoolDestroy(g_syncerThreadPool);
+
+   if (g_discoveryThreadPool != NULL)
+      ThreadPoolDestroy(g_discoveryThreadPool);
 
 	StopDBWriter();
 	nxlog_debug(1, _T("Database writer stopped"));
