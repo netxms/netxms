@@ -26,7 +26,7 @@
 /**
  * Externals
  */
-extern Queue g_nodePollerQueue;
+extern ObjectQueue<DiscoveredAddress> g_nodePollerQueue;
 extern Queue g_dciCacheLoaderQueue;
 extern Queue g_syslogProcessingQueue;
 extern Queue g_syslogWriteQueue;
@@ -35,6 +35,7 @@ extern ThreadPool *g_schedulerThreadPool;
 extern ThreadPool *g_dataCollectorThreadPool;
 extern ThreadPool *g_npeThreadPool;
 extern ThreadPool *g_syncerThreadPool;
+extern ThreadPool *g_discoveryThreadPool;
 
 void ShowPredictionEngines(CONSOLE_CTX console);
 void ShowAgentTunnels(CONSOLE_CTX console);
@@ -735,6 +736,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_ENABLE_NXSL_FILE_IO_FUNCTIONS));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_ENABLE_EMBEDDED_PYTHON));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DB_SUPPORTS_MERGE));
+         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_PARALLEL_NETWORK_DISCOVERY));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_SERVER_INITIALIZED));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_SHUTDOWN));
          ConsolePrintf(pCtx, _T("\n"));
@@ -1034,6 +1036,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
       {
          ShowThreadPool(pCtx, g_mainThreadPool);
          ShowThreadPool(pCtx, g_pollerThreadPool);
+         ShowThreadPool(pCtx, g_discoveryThreadPool);
          ShowThreadPool(pCtx, g_dataCollectorThreadPool);
          ShowThreadPool(pCtx, g_schedulerThreadPool);
          ShowThreadPool(pCtx, g_agentConnectionThreadPool);

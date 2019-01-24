@@ -24,11 +24,23 @@
 #include <nxevent.h>
 
 /**
- * Upgrade from 22.42 to 30.0
+ * Upgrade from 22.43 to 30.0
+ */
+static bool H_UpgradeFromV43()
+{
+   CHK_EXEC(SetMajorSchemaVersion(30, 0));
+   return true;
+}
+
+/**
+ * Upgrade from 22.42 to 22.43
  */
 static bool H_UpgradeFromV42()
 {
-   CHK_EXEC(SetMajorSchemaVersion(30, 0));
+   CHK_EXEC(CreateConfigParam(_T("NetworkDiscovery.EnableParallelProcessing"), _T("0"), _T("Enable/disable parallel processing of discovered addresses."), NULL, 'B', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(_T("ThreadPool.Discovery.BaseSize"), _T("1"), _T("Base size for network discovery thread pool."), NULL, 'I', true, true, false, false));
+   CHK_EXEC(CreateConfigParam(_T("ThreadPool.Discovery.MaxSize"), _T("16"), _T("Maximum size for network discovery thread pool."), NULL, 'I', true, true, false, false));
+   CHK_EXEC(SetMinorSchemaVersion(43));
    return true;
 }
 
@@ -837,7 +849,8 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
-   { 42, 30, 0,  H_UpgradeFromV42 },
+   { 43, 30, 0,  H_UpgradeFromV43 },
+   { 42, 22, 43, H_UpgradeFromV42 },
    { 41, 22, 42, H_UpgradeFromV41 },
    { 40, 22, 41, H_UpgradeFromV40 },
    { 39, 22, 40, H_UpgradeFromV39 },

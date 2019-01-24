@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -452,6 +452,13 @@ static void OnConfigVariableChange(bool isCLOB, const TCHAR *name, const TCHAR *
          EnableAlarmSummaryEmails();
       else
          DeleteScheduledTaskByHandlerId(ALARM_SUMMARY_EMAIL_TASK_ID);
+   }
+   else if (!_tcscmp(name, _T("NetworkDiscovery.EnableParallelProcessing")))
+   {
+      if (_tcstol(value, NULL, 0))
+         g_flags |= AF_PARALLEL_NETWORK_DISCOVERY;
+      else
+         g_flags &= ~AF_PARALLEL_NETWORK_DISCOVERY;
    }
    else if (!_tcscmp(name, _T("StrictAlarmStatusFlow")))
    {

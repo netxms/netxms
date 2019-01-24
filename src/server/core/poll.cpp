@@ -26,9 +26,14 @@
 #define DEBUG_TAG_POLL_MANAGER   _T("poll.manager")
 
 /**
+ * Check if given address is in processing by new node poller
+ */
+bool IsNodePollerActiveAddress(const InetAddress& addr);
+
+/**
  * Node poller queue (polls new nodes)
  */
-Queue g_nodePollerQueue;
+ObjectQueue<DiscoveredAddress> g_nodePollerQueue;
 
 /**
  * Thread pool for pollers
@@ -228,9 +233,9 @@ void CheckForMgmtNode()
 /**
  * Comparator for poller queue elements
  */
-static bool PollerQueueElementComparator(void *key, void *element)
+static bool PollerQueueElementComparator(const void *key, const DiscoveredAddress *element)
 {
-   return ((InetAddress *)key)->equals(((NEW_NODE *)element)->ipAddr);
+   return static_cast<const InetAddress*>(key)->equals(element->ipAddr);
 }
 
 /**
@@ -260,7 +265,7 @@ void CheckPotentialNode(const InetAddress& ipAddr, UINT32 zoneUIN)
       return;
    }
 
-   if (g_nodePollerQueue.find((void *)&ipAddr, PollerQueueElementComparator) != NULL)
+   if (IsNodePollerActiveAddress(ipAddr) || (g_nodePollerQueue.find(&ipAddr, PollerQueueElementComparator) != NULL))
    {
       nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Potential node %s rejected (IP address already queued for polling)"), ipAddr.toString(buffer));
       return;
@@ -271,7 +276,7 @@ void CheckPotentialNode(const InetAddress& ipAddr, UINT32 zoneUIN)
    {
       if (!subnet->getIpAddress().equals(ipAddr) && !ipAddr.isSubnetBroadcast(subnet->getIpAddress().getMaskBits()))
       {
-         NEW_NODE *nodeInfo = MemAllocStruct<NEW_NODE>();
+         DiscoveredAddress *nodeInfo = MemAllocStruct<DiscoveredAddress>();
          nodeInfo->ipAddr = ipAddr;
          nodeInfo->ipAddr.setMaskBits(subnet->getIpAddress().getMaskBits());
          nodeInfo->zoneUIN = zoneUIN;
@@ -287,7 +292,7 @@ void CheckPotentialNode(const InetAddress& ipAddr, UINT32 zoneUIN)
    }
    else
    {
-      NEW_NODE *nodeInfo = MemAllocStruct<NEW_NODE>();
+      DiscoveredAddress *nodeInfo = MemAllocStruct<DiscoveredAddress>();
       nodeInfo->ipAddr = ipAddr;
       nodeInfo->zoneUIN = zoneUIN;
       nodeInfo->ignoreFilter = FALSE;
@@ -324,7 +329,7 @@ static void CheckPotentialNode(Node *node, const InetAddress& ipAddr, UINT32 ifI
       return;
    }
 
-   if (g_nodePollerQueue.find((void *)&ipAddr, PollerQueueElementComparator) != NULL)
+   if (IsNodePollerActiveAddress(ipAddr) || (g_nodePollerQueue.find(&ipAddr, PollerQueueElementComparator) != NULL))
    {
       nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Potential node %s rejected (IP address already queued for polling)"), ipAddr.toString(buffer));
       return;
@@ -340,7 +345,7 @@ static void CheckPotentialNode(Node *node, const InetAddress& ipAddr, UINT32 ifI
             pInterface->getName(), pInterface->getId(), interfaceAddress.toString(buffer), interfaceAddress.getMaskBits(), pInterface->getIfIndex());
          if (!ipAddr.isSubnetBroadcast(interfaceAddress.getMaskBits()))
          {
-            NEW_NODE *pInfo = (NEW_NODE *)malloc(sizeof(NEW_NODE));
+            DiscoveredAddress *pInfo = MemAllocStruct<DiscoveredAddress>();
             pInfo->ipAddr = ipAddr;
             pInfo->ipAddr.setMaskBits(interfaceAddress.getMaskBits());
             pInfo->zoneUIN = node->getZoneUIN();
@@ -715,7 +720,13 @@ THREAD_RESULT THREAD_CALL PollManager(void *arg)
 	   WatchdogStartSleep(watchdogId);
    }
 
-   g_nodePollerQueue.clear();
+   // Clear node poller queue
+   DiscoveredAddress *nodeInfo;
+   while((nodeInfo = g_nodePollerQueue.get()) != NULL)
+   {
+      if (nodeInfo != INVALID_POINTER_VALUE)
+         MemFree(nodeInfo);
+   }
    g_nodePollerQueue.put(INVALID_POINTER_VALUE);
 
    ThreadPoolDestroy(g_pollerThreadPool);
@@ -729,8 +740,8 @@ THREAD_RESULT THREAD_CALL PollManager(void *arg)
 void ResetDiscoveryPoller()
 {
    // Clear node poller queue
-   NEW_NODE *nodeInfo;
-   while((nodeInfo = static_cast<NEW_NODE*>(g_nodePollerQueue.get())) != NULL)
+   DiscoveredAddress *nodeInfo;
+   while((nodeInfo = g_nodePollerQueue.get()) != NULL)
    {
       if (nodeInfo != INVALID_POINTER_VALUE)
          MemFree(nodeInfo);

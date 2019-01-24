@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -230,15 +230,15 @@ enum CertificateOperation
 #include "nms_alarm.h"
 
 /**
- * New node information
+ * Discovered address information
  */
-typedef struct
+struct DiscoveredAddress
 {
    InetAddress ipAddr;
 	UINT32 zoneUIN;
-	BOOL ignoreFilter;
+	bool ignoreFilter;
 	BYTE bMacAddr[MAC_ADDR_LENGTH];
-} NEW_NODE;
+};
 
 /**
  * New node flags

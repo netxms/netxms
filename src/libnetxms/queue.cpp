@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2015 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -26,7 +26,7 @@
 /**
  * Queue constructor
  */
-Queue::Queue(UINT32 initialSize, UINT32 bufferIncrement)
+Queue::Queue(size_t initialSize, size_t bufferIncrement)
 {
    m_initialSize = initialSize;
    m_bufferSize = initialSize;
@@ -55,8 +55,8 @@ void Queue::commonInit()
    m_numElements = 0;
    m_first = 0;
    m_last = 0;
-   m_elements = (void **)malloc(sizeof(void *) * m_bufferSize);
-	m_shutdownFlag = FALSE;
+   m_elements = MemAllocArray<void*>(m_bufferSize);
+	m_shutdownFlag = false;
 }
 
 /**
@@ -79,7 +79,7 @@ void Queue::put(void *pElement)
    {
       // Extend buffer
       m_bufferSize += m_bufferIncrement;
-      m_elements = (void **)realloc(m_elements, sizeof(void *) * m_bufferSize);
+      m_elements = MemReallocArray(m_elements, m_bufferSize);
       
       // Move free space
       memmove(&m_elements[m_first + m_bufferIncrement], &m_elements[m_first],
@@ -104,7 +104,7 @@ void Queue::insert(void *pElement)
    {
       // Extend buffer
       m_bufferSize += m_bufferIncrement;
-      m_elements = (void **)realloc(m_elements, sizeof(void *) * m_bufferSize);
+      m_elements = MemReallocArray(m_elements, m_bufferSize);
       
       // Move free space
       memmove(&m_elements[m_first + m_bufferIncrement], &m_elements[m_first],
@@ -186,7 +186,7 @@ void Queue::clear()
 void Queue::setShutdownMode()
 {
 	lock();
-	m_shutdownFlag = TRUE;
+	m_shutdownFlag = true;
 	ConditionSet(m_condWakeup);
 	unlock();
 }
@@ -196,7 +196,7 @@ void Queue::setShutdownMode()
  * Returns pointer to element or NULL if element was not found.
  * Element remains in the queue
  */
-void *Queue::find(void *key, QUEUE_COMPARATOR comparator)
+void *Queue::find(const void *key, QueueComparator comparator)
 {
 	void *element = NULL;
 	UINT32 i, pos;
@@ -221,7 +221,7 @@ void *Queue::find(void *key, QUEUE_COMPARATOR comparator)
  * Find element in queue using given key and comparator and remove it.
  * Returns true if element was removed.
  */
-bool Queue::remove(void *key, QUEUE_COMPARATOR comparator)
+bool Queue::remove(const void *key, QueueComparator comparator)
 {
 	bool success = false;
 	UINT32 i, pos;
@@ -258,5 +258,5 @@ void Queue::shrink()
       m_first = 0;
    }
    m_bufferSize = m_initialSize;
-   m_elements = (void **)realloc(m_elements, m_bufferSize * sizeof(void *));
+   m_elements = MemReallocArray(m_elements, m_bufferSize);
 }
