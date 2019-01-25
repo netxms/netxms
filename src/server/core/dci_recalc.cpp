@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -55,7 +55,10 @@ ServerJobResult DCIRecalculationJob::run()
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
    TCHAR query[256];
-   _sntprintf(query, 256, _T("SELECT idata_timestamp,raw_value FROM idata_%d WHERE item_id=%d ORDER BY idata_timestamp"), m_object->getId(), m_dci->getId());
+   if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
+      _sntprintf(query, 256, _T("SELECT idata_timestamp,raw_value FROM idata WHERE node_id=%d AND item_id=%d ORDER BY idata_timestamp"), m_object->getId(), m_dci->getId());
+   else
+      _sntprintf(query, 256, _T("SELECT idata_timestamp,raw_value FROM idata_%d WHERE item_id=%d ORDER BY idata_timestamp"), m_object->getId(), m_dci->getId());
    DB_RESULT hResult = DBSelect(hdb, query);
    if (hResult == NULL)
    {
@@ -67,8 +70,16 @@ ServerJobResult DCIRecalculationJob::run()
    int count = DBGetNumRows(hResult);
    if (count > 0)
    {
-      _sntprintf(query, 256, _T("UPDATE idata_%d SET idata_value=? WHERE item_id=? AND idata_timestamp=?"), m_object->getId());
-      DB_STATEMENT hStmt = DBPrepare(hdb, query);
+      DB_STATEMENT hStmt;
+      if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
+      {
+         hStmt = DBPrepare(hdb, _T("UPDATE idata SET idata_value=? WHERE node_id=? AND item_id=? AND idata_timestamp=?"));
+      }
+      else
+      {
+         _sntprintf(query, 256, _T("UPDATE idata_%d SET idata_value=? WHERE item_id=? AND idata_timestamp=?"), m_object->getId());
+         hStmt = DBPrepare(hdb, query);
+      }
       if (hStmt != NULL)
       {
          m_dci->prepareForRecalc();
@@ -81,9 +92,12 @@ ServerJobResult DCIRecalculationJob::run()
             ItemValue value(data, timestamp);
             m_dci->recalculateValue(value);
 
-            DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, value.getString(), DB_BIND_STATIC);
-            DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_dci->getId());
-            DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (UINT32)value.getTimeStamp());
+            int index = 1;
+            DBBind(hStmt, index++, DB_SQLTYPE_VARCHAR, value.getString(), DB_BIND_STATIC);
+            if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
+               DBBind(hStmt, index++, DB_SQLTYPE_INTEGER, m_object->getId());
+            DBBind(hStmt, index++, DB_SQLTYPE_INTEGER, m_dci->getId());
+            DBBind(hStmt, index++, DB_SQLTYPE_INTEGER, (UINT32)value.getTimeStamp());
             DBExecute(hStmt);
 
             if (i % 10 == 0)

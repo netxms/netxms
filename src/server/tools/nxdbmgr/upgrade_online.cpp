@@ -109,6 +109,7 @@ static bool SetZoneUIN(const TCHAR *table, const TCHAR *idColumn, const TCHAR *o
       case DB_SYNTAX_MYSQL:
       case DB_SYNTAX_PGSQL:
       case DB_SYNTAX_SQLITE:
+      case DB_SYNTAX_TSDB:
          queryTemplate = _T("SELECT %s,%s FROM %s WHERE zone_uin IS NULL LIMIT 2000");
          break;
       case DB_SYNTAX_ORACLE:

@@ -1,6 +1,6 @@
 /* 
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004-2017 Victor Kirhenshtein
+** Copyright (C) 2004-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -253,10 +253,11 @@ void ImportDatabase(const char *file)
 	}
 
 	// Check schema version
-   int legacy = 0, major = 0, minor = 0;
+   int legacy = 0, major = 0, minor = 0, singleTablePerfData = 0;
    if ((sqlite3_exec(db, "SELECT var_value FROM metadata WHERE var_name='SchemaVersion'", GetSchemaVersionCB, &legacy, &errmsg) != SQLITE_OK) ||
        (sqlite3_exec(db, "SELECT var_value FROM metadata WHERE var_name='SchemaVersionMajor'", GetSchemaVersionCB, &major, &errmsg) != SQLITE_OK) ||
-       (sqlite3_exec(db, "SELECT var_value FROM metadata WHERE var_name='SchemaVersionMinor'", GetSchemaVersionCB, &minor, &errmsg) != SQLITE_OK))
+       (sqlite3_exec(db, "SELECT var_value FROM metadata WHERE var_name='SchemaVersionMinor'", GetSchemaVersionCB, &minor, &errmsg) != SQLITE_OK) ||
+       (sqlite3_exec(db, "SELECT var_value FROM metadata WHERE var_name='SingeTablePerfData'", GetSchemaVersionCB, &singleTablePerfData, &errmsg) != SQLITE_OK))
 	{
 		_tprintf(_T("ERROR: SQL query failed (%hs)\n"), errmsg);
 		sqlite3_free(errmsg);
@@ -280,8 +281,11 @@ void ImportDatabase(const char *file)
 			goto cleanup;
 	}
 
-	if (!ImportDataTables(db))
-		goto cleanup;
+	if (!singleTablePerfData)
+	{
+      if (!ImportDataTables(db))
+         goto cleanup;
+	}
 	if (!EnumerateModuleTables(ImportModuleTable, db))
       goto cleanup;
 

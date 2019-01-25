@@ -18,6 +18,13 @@
 
 
 *
+* 2.2.13
+*
+
+- TimescaleDB as backend database
+
+
+*
 * 2.2.12
 *
 

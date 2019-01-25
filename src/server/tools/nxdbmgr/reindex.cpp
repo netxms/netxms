@@ -168,6 +168,7 @@ static void DropAllIndexesFromTable(const TCHAR *table)
 			DropAllIndexesFromTable_MYSQL(table);
 			break;
 		case DB_SYNTAX_PGSQL:
+      case DB_SYNTAX_TSDB:
 			DropAllIndexesFromTable_PGSQL(table);
 			break;
 		case DB_SYNTAX_MSSQL:

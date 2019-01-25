@@ -4001,36 +4001,71 @@ void ClientSession::sendDCIThresholds(NXCPMessage *request)
  */
 static DB_STATEMENT PrepareDataSelect(DB_HANDLE hdb, UINT32 nodeId, int dciType, UINT32 maxRows, bool withRawValues, const TCHAR *condition)
 {
+   const TCHAR *tablePrefix = (dciType == DCO_TYPE_ITEM) ? _T("idata") : _T("tdata");
 	TCHAR query[512];
-
-	const TCHAR *tablePrefix = (dciType == DCO_TYPE_ITEM) ? _T("idata") : _T("tdata");
-	switch(g_dbSyntax)
+	if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
 	{
-		case DB_SYNTAX_MSSQL:
-			_sntprintf(query, 512, _T("SELECT TOP %d %s_timestamp,%s_value%s FROM %s_%d WHERE item_id=?%s ORDER BY %s_timestamp DESC"),
-			         (int)maxRows, tablePrefix, tablePrefix, withRawValues ? _T(",raw_value") : _T(""),
-			         tablePrefix, (int)nodeId, condition, tablePrefix);
-			break;
-		case DB_SYNTAX_ORACLE:
-			_sntprintf(query, 512, _T("SELECT * FROM (SELECT %s_timestamp,%s_value%s FROM %s_%d WHERE item_id=?%s ORDER BY %s_timestamp DESC) WHERE ROWNUM<=%d"),
-			         tablePrefix, tablePrefix, withRawValues ? _T(",raw_value") : _T(""),
-			         tablePrefix, (int)nodeId, condition, tablePrefix, (int)maxRows);
-			break;
-		case DB_SYNTAX_MYSQL:
-		case DB_SYNTAX_PGSQL:
-		case DB_SYNTAX_SQLITE:
-			_sntprintf(query, 512, _T("SELECT %s_timestamp,%s_value%s FROM %s_%d WHERE item_id=?%s ORDER BY %s_timestamp DESC LIMIT %d"),
-			         tablePrefix, tablePrefix, withRawValues ? _T(",raw_value") : _T(""),
-			         tablePrefix, (int)nodeId, condition, tablePrefix, (int)maxRows);
-			break;
-		case DB_SYNTAX_DB2:
-		   _sntprintf(query, 512, _T("SELECT %s_timestamp,%s_value%s FROM %s_%d WHERE item_id=?%s ORDER BY %s_timestamp DESC FETCH FIRST %d ROWS ONLY"),
-		            tablePrefix, tablePrefix, withRawValues ? _T(",raw_value") : _T(""),
-		            tablePrefix, (int)nodeId, condition, tablePrefix, (int)maxRows);
-		   break;
-		default:
-			DbgPrintf(1, _T("INTERNAL ERROR: unsupported database in PrepareDataSelect"));
-			return NULL;	// Unsupported database
+      switch(g_dbSyntax)
+      {
+         case DB_SYNTAX_MSSQL:
+            _sntprintf(query, 512, _T("SELECT TOP %d %s_timestamp,%s_value%s FROM %s WHERE node_id=? AND item_id=?%s ORDER BY %s_timestamp DESC"),
+                     (int)maxRows, tablePrefix, tablePrefix, withRawValues ? _T(",raw_value") : _T(""),
+                     tablePrefix, condition, tablePrefix);
+            break;
+         case DB_SYNTAX_ORACLE:
+            _sntprintf(query, 512, _T("SELECT * FROM (SELECT %s_timestamp,%s_value%s FROM %s WHERE node_id=? AND item_id=?%s ORDER BY %s_timestamp DESC) WHERE ROWNUM<=%d"),
+                     tablePrefix, tablePrefix, withRawValues ? _T(",raw_value") : _T(""),
+                     tablePrefix, condition, tablePrefix, (int)maxRows);
+            break;
+         case DB_SYNTAX_MYSQL:
+         case DB_SYNTAX_PGSQL:
+         case DB_SYNTAX_SQLITE:
+         case DB_SYNTAX_TSDB:
+            _sntprintf(query, 512, _T("SELECT %s_timestamp,%s_value%s FROM %s WHERE node_id=? AND item_id=?%s ORDER BY %s_timestamp DESC LIMIT %d"),
+                     tablePrefix, tablePrefix, withRawValues ? _T(",raw_value") : _T(""),
+                     tablePrefix, condition, tablePrefix, (int)maxRows);
+            break;
+         case DB_SYNTAX_DB2:
+            _sntprintf(query, 512, _T("SELECT %s_timestamp,%s_value%s FROM %s WHERE node_id=? AND item_id=?%s ORDER BY %s_timestamp DESC FETCH FIRST %d ROWS ONLY"),
+                     tablePrefix, tablePrefix, withRawValues ? _T(",raw_value") : _T(""),
+                     tablePrefix, condition, tablePrefix, (int)maxRows);
+            break;
+         default:
+            DbgPrintf(1, _T("INTERNAL ERROR: unsupported database in PrepareDataSelect"));
+            return NULL;   // Unsupported database
+      }
+	}
+	else
+	{
+      switch(g_dbSyntax)
+      {
+         case DB_SYNTAX_MSSQL:
+            _sntprintf(query, 512, _T("SELECT TOP %d %s_timestamp,%s_value%s FROM %s_%d WHERE item_id=?%s ORDER BY %s_timestamp DESC"),
+                     (int)maxRows, tablePrefix, tablePrefix, withRawValues ? _T(",raw_value") : _T(""),
+                     tablePrefix, (int)nodeId, condition, tablePrefix);
+            break;
+         case DB_SYNTAX_ORACLE:
+            _sntprintf(query, 512, _T("SELECT * FROM (SELECT %s_timestamp,%s_value%s FROM %s_%d WHERE item_id=?%s ORDER BY %s_timestamp DESC) WHERE ROWNUM<=%d"),
+                     tablePrefix, tablePrefix, withRawValues ? _T(",raw_value") : _T(""),
+                     tablePrefix, (int)nodeId, condition, tablePrefix, (int)maxRows);
+            break;
+         case DB_SYNTAX_MYSQL:
+         case DB_SYNTAX_PGSQL:
+         case DB_SYNTAX_SQLITE:
+         case DB_SYNTAX_TSDB:
+            _sntprintf(query, 512, _T("SELECT %s_timestamp,%s_value%s FROM %s_%d WHERE item_id=?%s ORDER BY %s_timestamp DESC LIMIT %d"),
+                     tablePrefix, tablePrefix, withRawValues ? _T(",raw_value") : _T(""),
+                     tablePrefix, (int)nodeId, condition, tablePrefix, (int)maxRows);
+            break;
+         case DB_SYNTAX_DB2:
+            _sntprintf(query, 512, _T("SELECT %s_timestamp,%s_value%s FROM %s_%d WHERE item_id=?%s ORDER BY %s_timestamp DESC FETCH FIRST %d ROWS ONLY"),
+                     tablePrefix, tablePrefix, withRawValues ? _T(",raw_value") : _T(""),
+                     tablePrefix, (int)nodeId, condition, tablePrefix, (int)maxRows);
+            break;
+         default:
+            DbgPrintf(1, _T("INTERNAL ERROR: unsupported database in PrepareDataSelect"));
+            return NULL;	// Unsupported database
+      }
 	}
 	return DBPrepare(hdb, query);
 }
@@ -4229,6 +4264,8 @@ read_from_db:
       TCHAR instance[256];
 
 		int pos = 1;
+		if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
+	      DBBind(hStmt, pos++, DB_SQLTYPE_INTEGER, dcTarget->getId());
 		DBBind(hStmt, pos++, DB_SQLTYPE_INTEGER, dci->getId());
 		if (dciType == DCO_TYPE_TABLE)
 		{

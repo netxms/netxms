@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -354,6 +354,87 @@ static THREAD_RESULT THREAD_CALL IDataWriteThread(void *arg)
 }
 
 /**
+ * Database "lazy" write thread for idata INSERTs
+ */
+static THREAD_RESULT THREAD_CALL IDataWriteThreadSingleTable(void *arg)
+{
+   ThreadSetName("DBWriter/IData");
+   IDataWriter *writer = static_cast<IDataWriter*>(arg);
+   int maxRecords = ConfigReadInt(_T("DBWriter.MaxRecordsPerTransaction"), 1000);
+   while(true)
+   {
+      DELAYED_IDATA_INSERT *rq = static_cast<DELAYED_IDATA_INSERT*>(writer->queue->getOrBlock());
+      if (rq == INVALID_POINTER_VALUE)   // End-of-job indicator
+         break;
+
+      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+      if (DBBegin(hdb))
+      {
+         int count = 0;
+         DB_STATEMENT hStmt = NULL;
+         while(true)
+         {
+            bool success;
+
+            // For Oracle preparing statement even for one time execution is preferred
+            // For other databases it will actually slow down inserts
+            if (g_dbSyntax == DB_SYNTAX_ORACLE)
+            {
+               if (hStmt == NULL)
+               {
+                  hStmt = DBPrepare(hdb, _T("INSERT INTO idata (node_id,item_id,idata_timestamp,idata_value,raw_value) VALUES (?,?,?,?,?)"));
+               }
+               if (hStmt != NULL)
+               {
+                  DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, rq->nodeId);
+                  DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, rq->dciId);
+                  DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (INT64)rq->timestamp);
+                  DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, rq->transformedValue, DB_BIND_STATIC);
+                  DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, rq->rawValue, DB_BIND_STATIC);
+                  success = DBExecute(hStmt);
+               }
+               else
+               {
+                  success = false;
+               }
+            }
+            else
+            {
+               TCHAR query[1024];
+               _sntprintf(query, 1024, _T("INSERT INTO idata (node_id,item_id,idata_timestamp,idata_value,raw_value) VALUES (%d,%d,%d,%s,%s)"),
+                          (int)rq->nodeId, (int)rq->dciId, (int)rq->timestamp,
+                          (const TCHAR *)DBPrepareString(hdb, rq->transformedValue),
+                          (const TCHAR *)DBPrepareString(hdb, rq->rawValue));
+               success = DBQuery(hdb, query);
+            }
+
+            MemFree(rq);
+
+            count++;
+            if (!success || (count > maxRecords))
+               break;
+
+            rq = static_cast<DELAYED_IDATA_INSERT*>(writer->queue->getOrBlock(500));
+            if ((rq == NULL) || (rq == INVALID_POINTER_VALUE))
+               break;
+         }
+         if (hStmt != NULL)
+            DBFreeStatement(hStmt);
+         DBCommit(hdb);
+      }
+      else
+      {
+         MemFree(rq);
+      }
+      DBConnectionPoolReleaseConnection(hdb);
+      if (rq == INVALID_POINTER_VALUE)   // End-of-job indicator
+         break;
+   }
+
+   return THREAD_OK;
+}
+
+/**
  * Save raw DCI data
  */
 static void SaveRawData(int maxRecords)
@@ -463,16 +544,25 @@ void StartDBWriter()
    s_writerThread = ThreadCreateEx(DBWriteThread, 0, NULL);
 	s_rawDataWriterThread = ThreadCreateEx(RawDataWriteThread, 0, NULL);
 
-	s_idataWriterCount = ConfigReadInt(_T("DBWriter.DataQueues"), 1);
-	if (s_idataWriterCount < 1)
-	   s_idataWriterCount = 1;
-	else if (s_idataWriterCount > MAX_IDATA_WRITERS)
-	   s_idataWriterCount = MAX_IDATA_WRITERS;
-	nxlog_debug(1, _T("Using %d DCI data write queues"), s_idataWriterCount);
-	for(int i = 0; i < s_idataWriterCount; i++)
+	if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
 	{
-	   s_idataWriters[i].queue = new Queue();
-	   s_idataWriters[i].thread = ThreadCreateEx(IDataWriteThread, 0, &s_idataWriters[i]);
+	   // Always use single writer if performance data stored in single table
+      s_idataWriters[0].queue = new Queue();
+      s_idataWriters[0].thread = ThreadCreateEx(IDataWriteThreadSingleTable, 0, &s_idataWriters[0]);
+	}
+	else
+	{
+      s_idataWriterCount = ConfigReadInt(_T("DBWriter.DataQueues"), 1);
+      if (s_idataWriterCount < 1)
+         s_idataWriterCount = 1;
+      else if (s_idataWriterCount > MAX_IDATA_WRITERS)
+         s_idataWriterCount = MAX_IDATA_WRITERS;
+      nxlog_debug(1, _T("Using %d DCI data write queues"), s_idataWriterCount);
+      for(int i = 0; i < s_idataWriterCount; i++)
+      {
+         s_idataWriters[i].queue = new Queue();
+         s_idataWriters[i].thread = ThreadCreateEx(IDataWriteThread, 0, &s_idataWriters[i]);
+      }
 	}
 }
 

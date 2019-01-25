@@ -3659,6 +3659,7 @@ static BOOL H_UpgradeFromV349(int currVersion, int newVersion)
          CHK_EXEC(SQLQuery(_T("UPDATE object_properties SET comments = CAST(comments AS varchar(4000)) + char(13) + char(10) + CAST((SELECT description FROM ap_common WHERE ap_common.id = object_properties.object_id) AS varchar(4000)) WHERE EXISTS (SELECT description FROM ap_common WHERE ap_common.id = object_properties.object_id AND description IS NOT NULL AND datalength(description) <> 0)")));
 			break;
 		case DB_SYNTAX_PGSQL:
+      case DB_SYNTAX_TSDB:
          CHK_EXEC(SQLQuery(_T("UPDATE object_properties SET comments = comments || '\\015\\012' || (SELECT description FROM ap_common WHERE ap_common.id = object_properties.object_id) WHERE EXISTS (SELECT description FROM ap_common WHERE ap_common.id = object_properties.object_id AND description IS NOT NULL AND description <> '')")));
 			break;
 		case DB_SYNTAX_SQLITE:
@@ -4246,6 +4247,7 @@ static BOOL H_UpgradeFromV321(int currVersion, int newVersion)
 			   _T("<END>")));
 			break;
 		case DB_SYNTAX_PGSQL:
+      case DB_SYNTAX_TSDB:
          CHK_EXEC(SQLBatch(
 			   _T("ALTER TABLE users ALTER COLUMN system_access TYPE $SQL:INT64\n")
 			   _T("ALTER TABLE user_groups ALTER COLUMN system_access TYPE $SQL:INT64\n")
@@ -5400,6 +5402,7 @@ static BOOL H_UpgradeFromV265(int currVersion, int newVersion)
 	{
 		case DB_SYNTAX_MSSQL:
 		case DB_SYNTAX_PGSQL:
+      case DB_SYNTAX_TSDB:
 			CHK_EXEC(SQLQuery(_T("CREATE INDEX idx_event_log_root_id ON event_log(root_event_id) WHERE root_event_id > 0")));
 			break;
 		case DB_SYNTAX_ORACLE:
@@ -5829,6 +5832,7 @@ static BOOL CreateTData(DWORD nodeId)
 			_sntprintf(query, 256, TDATA_INDEX_MSSQL, (int)nodeId, (int)nodeId);
 			break;
 		case DB_SYNTAX_PGSQL:
+      case DB_SYNTAX_TSDB:
 			_sntprintf(query, 256, TDATA_INDEX_PGSQL, (int)nodeId, (int)nodeId);
 			break;
 		default:
@@ -5850,6 +5854,7 @@ static BOOL H_UpgradeFromV248(int currVersion, int newVersion)
 			CHK_EXEC(SQLQuery(_T("INSERT INTO metadata (var_name,var_value) VALUES ('TDataIndexCreationCommand_0','") TDATA_INDEX_MSSQL _T("')")));
 			break;
 		case DB_SYNTAX_PGSQL:
+      case DB_SYNTAX_TSDB:
 			CHK_EXEC(SQLQuery(_T("INSERT INTO metadata (var_name,var_value) VALUES ('TDataIndexCreationCommand_0','") TDATA_INDEX_PGSQL _T("')")));
 			break;
 		default:
@@ -7052,6 +7057,7 @@ static BOOL H_UpgradeFromV209(int currVersion, int newVersion)
 	switch(g_dbSyntax)
 	{
 		case DB_SYNTAX_PGSQL:
+      case DB_SYNTAX_TSDB:
 			query = _T("INSERT INTO metadata (var_name,var_value)	VALUES ('IDataIndexCreationCommand_0','CREATE INDEX idx_idata_%d_timestamp_id ON idata_%d(idata_timestamp,item_id)')");
 			break;
 		case DB_SYNTAX_MSSQL:
@@ -8559,6 +8565,7 @@ static BOOL H_UpgradeFromV64(int currVersion, int newVersion)
 					return FALSE;
 			break;
 		case DB_SYNTAX_PGSQL:
+      case DB_SYNTAX_TSDB:
 			if (IsQueryTraceEnabled())
 				ShowQuery(_T("ALTER TABLE nodes ALTER COLUMN community TYPE varchar(127)"));
 

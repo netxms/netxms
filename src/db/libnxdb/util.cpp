@@ -371,6 +371,7 @@ bool LIBNXDB_EXPORTABLE DBRenameTable(DB_HANDLE hdb, const TCHAR *oldName, const
       case DB_SYNTAX_ORACLE:
       case DB_SYNTAX_PGSQL:
       case DB_SYNTAX_SQLITE:
+      case DB_SYNTAX_TSDB:
          _sntprintf(query, 1024, _T("ALTER TABLE %s RENAME TO %s"), oldName, newName);
          break;
       case DB_SYNTAX_MSSQL:
@@ -761,6 +762,7 @@ bool LIBNXDB_EXPORTABLE DBDropPrimaryKey(DB_HANDLE hdb, const TCHAR *table)
          success = ExecuteQuery(hdb, query);
          break;
       case DB_SYNTAX_PGSQL:
+      case DB_SYNTAX_TSDB:
          _sntprintf(query, 1024, _T("ALTER TABLE %s DROP CONSTRAINT %s_pkey"), table, table);
          success = ExecuteQuery(hdb, query);
          break;
@@ -824,6 +826,7 @@ bool LIBNXDB_EXPORTABLE DBAddPrimaryKey(DB_HANDLE hdb, const TCHAR *table, const
          break;
       case DB_SYNTAX_MYSQL:
       case DB_SYNTAX_PGSQL:
+      case DB_SYNTAX_TSDB:
          _sntprintf(query, 1024, _T("ALTER TABLE %s ADD PRIMARY KEY (%s)"), table, columns);
          success = ExecuteQuery(hdb, query);
          break;
@@ -886,6 +889,7 @@ bool LIBNXDB_EXPORTABLE DBRemoveNotNullConstraint(DB_HANDLE hdb, const TCHAR *ta
          success = DBQuery(hdb, query);
          break;
       case DB_SYNTAX_PGSQL:
+      case DB_SYNTAX_TSDB:
          _sntprintf(query, 1024, _T("ALTER TABLE %s ALTER COLUMN %s DROP NOT NULL"), table, column);
          success = DBQuery(hdb, query);
          break;
@@ -943,6 +947,7 @@ bool LIBNXDB_EXPORTABLE DBSetNotNullConstraint(DB_HANDLE hdb, const TCHAR *table
          success = ExecuteQuery(hdb, query);
          break;
       case DB_SYNTAX_PGSQL:
+      case DB_SYNTAX_TSDB:
          _sntprintf(query, 1024, _T("ALTER TABLE %s ALTER COLUMN %s SET NOT NULL"), table, column);
          success = ExecuteQuery(hdb, query);
          break;
@@ -987,6 +992,7 @@ bool LIBNXDB_EXPORTABLE DBResizeColumn(DB_HANDLE hdb, const TCHAR *table, const 
          _sntprintf(query, 1024, _T("ALTER TABLE %s MODIFY %s varchar(%d)"), table, column, newSize);
          break;
       case DB_SYNTAX_PGSQL:
+      case DB_SYNTAX_TSDB:
          _sntprintf(query, 1024, _T("ALTER TABLE %s ALTER COLUMN %s TYPE varchar(%d)"), table, column, newSize);
          break;
       default:
@@ -1057,6 +1063,7 @@ bool LIBNXDB_EXPORTABLE DBRenameColumn(DB_HANDLE hdb, const TCHAR *tableName, co
          break;
       case DB_SYNTAX_ORACLE:
       case DB_SYNTAX_PGSQL:
+      case DB_SYNTAX_TSDB:
          _sntprintf(query, 1024, _T("ALTER TABLE %s RENAME COLUMN %s TO %s"), tableName, oldName, newName);
          success = ExecuteQuery(hdb, query);
          break;

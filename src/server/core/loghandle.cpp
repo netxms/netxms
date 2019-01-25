@@ -234,10 +234,11 @@ bool LogHandle::queryInternal(INT64 *rowCount, const UINT32 userId)
 		case DB_SYNTAX_ORACLE:
 			query.appendFormattedString(_T("SELECT * FROM (SELECT %s FROM %s"), (const TCHAR *)m_queryColumns, m_log->table);
 			break;
-		case DB_SYNTAX_SQLITE:
-		case DB_SYNTAX_PGSQL:
+      case DB_SYNTAX_DB2:
 		case DB_SYNTAX_MYSQL:
-		case DB_SYNTAX_DB2:
+      case DB_SYNTAX_PGSQL:
+      case DB_SYNTAX_SQLITE:
+      case DB_SYNTAX_TSDB:
 			query.appendFormattedString(_T("SELECT %s FROM %s"), (const TCHAR *)m_queryColumns, m_log->table);
 			break;
 	}

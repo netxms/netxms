@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -91,10 +91,10 @@ bool DataCollectionTarget::deleteFromDatabase(DB_HANDLE hdb)
    if (success)
    {
       TCHAR query[256];
-      _sntprintf(query, 256, _T("DROP TABLE idata_%d"), (int)m_id);
+      _sntprintf(query, 256, (g_flags & AF_SINGLE_TABLE_PERF_DATA) ? _T("DELETE FROM idata WHERE node_id=%u") : _T("DROP TABLE idata_%u"), m_id);
       QueueSQLRequest(query);
 
-      _sntprintf(query, 256, _T("DROP TABLE tdata_%d"), (int)m_id);
+      _sntprintf(query, 256, (g_flags & AF_SINGLE_TABLE_PERF_DATA) ? _T("DELETE FROM tdata WHERE node_id=%u") : _T("DROP TABLE tdata_%u"), m_id);
       QueueSQLRequest(query);
    }
    return success;

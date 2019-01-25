@@ -313,6 +313,12 @@ static BOOL CheckDataDir()
  */
 static void LoadGlobalConfig()
 {
+   if (MetaDataReadInt32(_T("SingeTablePerfData"), 0))
+   {
+      nxlog_debug(1, _T("Using single table for performance data storage"));
+      g_flags |= AF_SINGLE_TABLE_PERF_DATA;
+   }
+
 	g_dwDiscoveryPollingInterval = ConfigReadInt(_T("DiscoveryPollingInterval"), 900);
 	g_dwStatusPollingInterval = ConfigReadInt(_T("StatusPollingInterval"), 60);
 	g_dwConfigurationPollingInterval = ConfigReadInt(_T("ConfigurationPollingInterval"), 3600);
@@ -326,7 +332,7 @@ static void LoadGlobalConfig()
    g_defaultAgentCacheMode = (INT16)ConfigReadInt(_T("DefaultAgentCacheMode"), AGENT_CACHE_OFF);
    if ((g_defaultAgentCacheMode != AGENT_CACHE_ON) && (g_defaultAgentCacheMode != AGENT_CACHE_OFF))
    {
-      DbgPrintf(1, _T("Invalid value %d of DefaultAgentCacheMode: reset to %d (OFF)"), g_defaultAgentCacheMode, AGENT_CACHE_OFF);
+      nxlog_debug(1, _T("Invalid value %d of DefaultAgentCacheMode: reset to %d (OFF)"), g_defaultAgentCacheMode, AGENT_CACHE_OFF);
       ConfigWriteInt(_T("DefaultAgentCacheMode"), AGENT_CACHE_OFF, true, true, true);
       g_defaultAgentCacheMode = AGENT_CACHE_OFF;
    }
@@ -802,6 +808,11 @@ BOOL NXCORE_EXPORTABLE Initialize()
          }
          DBFreeResult(hResult);
       }
+   }
+   else if (g_dbSyntax == DB_SYNTAX_TSDB)
+   {
+      // TimeScaleDB requires PostgreSQL 9.6.3+ so merge is always supported
+      g_flags |= AF_DB_SUPPORTS_MERGE;
    }
 
 	int baseSize = ConfigReadIntEx(hdbBootstrap, _T("DBConnectionPoolBaseSize"), 10);

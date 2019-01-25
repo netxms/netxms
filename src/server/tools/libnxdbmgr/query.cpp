@@ -100,6 +100,7 @@ bool LIBNXDBMGR_EXPORTABLE SQLQuery(const TCHAR *query)
       return true;
 
    String realQuery(query);
+   realQuery.trim();
 
    if (g_dbSyntax != DB_SYNTAX_UNKNOWN)
    {
@@ -112,7 +113,24 @@ bool LIBNXDBMGR_EXPORTABLE SQLQuery(const TCHAR *query)
       ShowQuery(realQuery);
 
    TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
-   bool success = DBQueryEx(g_dbHandle, realQuery, errorText);
+   bool success;
+   if (!_tcsnicmp(realQuery, _T("SELECT "), 7))
+   {
+      DB_RESULT hResult = DBSelectEx(g_dbHandle, realQuery, errorText);
+      if (hResult != NULL)
+      {
+         DBFreeResult(hResult);
+         success = true;
+      }
+      else
+      {
+         success = false;
+      }
+   }
+   else
+   {
+      success = DBQueryEx(g_dbHandle, realQuery, errorText);
+   }
    if (!success)
       WriteToTerminalEx(_T("SQL query failed (%s):\n\x1b[33;1m%s\x1b[0m\n"), errorText, (const TCHAR *)realQuery);
    return success;

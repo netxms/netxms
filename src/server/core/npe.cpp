@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -99,18 +99,31 @@ StructArray<DciValue> *PredictionEngine::getDciValues(UINT32 nodeId, UINT32 dciI
    switch(g_dbSyntax)
    {
       case DB_SYNTAX_MSSQL:
-         _sntprintf(query, 1024, _T("SELECT TOP %d idata_timestamp,idata_value FROM idata_%u WHERE item_id=%u ORDER BY idata_timestamp DESC"), maxRows, nodeId, dciId);
+         if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
+            _sntprintf(query, 1024, _T("SELECT TOP %d idata_timestamp,idata_value FROM idata WHERE node_id=%u AND item_id=%u ORDER BY idata_timestamp DESC"), maxRows, nodeId, dciId);
+         else
+            _sntprintf(query, 1024, _T("SELECT TOP %d idata_timestamp,idata_value FROM idata_%u WHERE item_id=%u ORDER BY idata_timestamp DESC"), maxRows, nodeId, dciId);
          break;
       case DB_SYNTAX_ORACLE:
-         _sntprintf(query, 1024, _T("SELECT * FROM (SELECT idata_timestamp,idata_value FROM idata_%u WHERE item_id=%u ORDER BY idata_timestamp DESC) WHERE ROWNUM<=%d"), nodeId, dciId, maxRows);
+         if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
+            _sntprintf(query, 1024, _T("SELECT * FROM (SELECT idata_timestamp,idata_value FROM idata WHERE node_id=%u AND item_id=%u ORDER BY idata_timestamp DESC) WHERE ROWNUM<=%d"), nodeId, dciId, maxRows);
+         else
+            _sntprintf(query, 1024, _T("SELECT * FROM (SELECT idata_timestamp,idata_value FROM idata_%u WHERE item_id=%u ORDER BY idata_timestamp DESC) WHERE ROWNUM<=%d"), nodeId, dciId, maxRows);
          break;
       case DB_SYNTAX_MYSQL:
       case DB_SYNTAX_PGSQL:
       case DB_SYNTAX_SQLITE:
-         _sntprintf(query, 1024, _T("SELECT idata_timestamp,idata_value FROM idata_%u WHERE item_id=%u ORDER BY idata_timestamp DESC LIMIT %d"), nodeId, dciId, maxRows);
+      case DB_SYNTAX_TSDB:
+         if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
+            _sntprintf(query, 1024, _T("SELECT idata_timestamp,idata_value FROM idata WHERE node_id=%u AND item_id=%u ORDER BY idata_timestamp DESC ETCH FIRST %d ROWS ONLY"), nodeId, dciId, maxRows);
+         else
+            _sntprintf(query, 1024, _T("SELECT idata_timestamp,idata_value FROM idata_%u WHERE item_id=%u ORDER BY idata_timestamp DESC LIMIT %d"), nodeId, dciId, maxRows);
          break;
       case DB_SYNTAX_DB2:
-         _sntprintf(query, 1024, _T("SELECT idata_timestamp,idata_value FROM idata_%u WHERE item_id=%u ORDER BY idata_timestamp DESC ETCH FIRST %d ROWS ONLY"), nodeId, dciId, maxRows);
+         if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
+            _sntprintf(query, 1024, _T("SELECT idata_timestamp,idata_value FROM idata WHERE node_id=%u AND item_id=%u ORDER BY idata_timestamp DESC ETCH FIRST %d ROWS ONLY"), nodeId, dciId, maxRows);
+         else
+            _sntprintf(query, 1024, _T("SELECT idata_timestamp,idata_value FROM idata_%u WHERE item_id=%u ORDER BY idata_timestamp DESC ETCH FIRST %d ROWS ONLY"), nodeId, dciId, maxRows);
          break;
       default:
          nxlog_debug(1, _T("INTERNAL ERROR: unsupported database in PredictionEngine::getDciValues"));
