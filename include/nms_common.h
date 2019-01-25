@@ -220,10 +220,12 @@ typedef int bool;
 
 #define FREE_IS_NULL_SAFE       1
 
-#define FS_PATH_SEPARATOR       _T("\\")
-#define FS_PATH_SEPARATOR_A     "\\"
-#define FS_PATH_SEPARATOR_W     L"\\"
-#define FS_PATH_SEPARATOR_CHAR  _T('\\')
+#define FS_PATH_SEPARATOR           _T("\\")
+#define FS_PATH_SEPARATOR_A         "\\"
+#define FS_PATH_SEPARATOR_W         L"\\"
+#define FS_PATH_SEPARATOR_CHAR      _T('\\')
+#define FS_PATH_SEPARATOR_CHAR_A    '\\'
+#define FS_PATH_SEPARATOR_CHAR_W    L'\\'
 
 #define WEXITSTATUS(x)          (x)
 
@@ -471,10 +473,12 @@ using std::wcsncasecmp;
 
 #include <errno.h>
 
-#define FS_PATH_SEPARATOR       _T("/")
-#define FS_PATH_SEPARATOR_A     "/"
-#define FS_PATH_SEPARATOR_W     L"/"
-#define FS_PATH_SEPARATOR_CHAR  _T('/')
+#define FS_PATH_SEPARATOR           _T("/")
+#define FS_PATH_SEPARATOR_A         "/"
+#define FS_PATH_SEPARATOR_W         L"/"
+#define FS_PATH_SEPARATOR_CHAR      _T('/')
+#define FS_PATH_SEPARATOR_CHAR_A    '/'
+#define FS_PATH_SEPARATOR_CHAR_W    L'/'
 
 #if HAVE_UNISTD_H
 #include <unistd.h>

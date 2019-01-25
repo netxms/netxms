@@ -115,12 +115,14 @@ target
 /sql/dbinit_oracle.sql
 /sql/dbinit_pgsql.sql
 /sql/dbinit_sqlite.sql
+/sql/dbinit_tsdb.sql
 /sql/dbschema_db2.sql
 /sql/dbschema_mssql.sql
 /sql/dbschema_mysql.sql
 /sql/dbschema_oracle.sql
 /sql/dbschema_pgsql.sql
 /sql/dbschema_sqlite.sql
+/sql/dbschema_tsdb.sql
 /sql/additional_comments.sql
 /sql/gen.cmd
 /src/agent/core/MSG00001.bin

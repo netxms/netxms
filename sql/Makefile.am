@@ -10,15 +10,17 @@ sql_DATA = dbinit_mysql.sql \
            dbinit_oracle.sql \
            dbinit_sqlite.sql \
            dbinit_db2.sql \
+           dbinit_tsdb.sql \
            dbschema_mysql.sql \
            dbschema_pgsql.sql \
            dbschema_mssql.sql \
            dbschema_oracle.sql \
            dbschema_sqlite.sql \
-           dbschema_db2.sql
+           dbschema_db2.sql \
+           dbschema_tsdb.sql
 
 ROOT_FILE = dbinit.in
-SOURCE = $(ROOT_FILE) database.in schema.in metadata.in setup.in events.in policy.in objtools.in scripts.in images.in traps.in country_codes.in currency_codes.in
+SOURCE = $(ROOT_FILE) database.in schema.in metadata.in setup.in events.in policy.in objtools.in scripts.in images.in traps.in country_codes.in currency_codes.in devdb.in
 HEADER_FILES = ../include/netxmsdb.h ../include/nxevent.h ../src/server/include/nms_locks.h
 COMMAND = $(CPP) @SQLFLAGS@ -P -D_NETXMS_DB_SCHEMA_ -I@top_srcdir@/include -I@top_srcdir@/src/server/include
 SQUEEZE = perl -n strip.pl
@@ -43,6 +45,9 @@ dbinit_sqlite.sql: $(SOURCE) $(HEADER_FILES)
 dbinit_db2.sql: $(SOURCE) $(HEADER_FILES)
 	$(COMMAND) -DDB_DB2 $(ROOT_FILE) | $(SQUEEZE) > $@
 
+dbinit_tsdb.sql: $(SOURCE) $(HEADER_FILES)
+	$(COMMAND) -DDB_TSDB $(ROOT_FILE) | $(SQUEEZE) > $@
+
 dbschema_mysql.sql: $(SOURCE) $(HEADER_FILES)
 	$(COMMAND) -DDB_MYSQL -DSCHEMA_ONLY $(ROOT_FILE) | $(SQUEEZE) > $@
 
@@ -60,6 +65,9 @@ dbschema_sqlite.sql: $(SOURCE) $(HEADER_FILES)
 
 dbschema_db2.sql: $(SOURCE) $(HEADER_FILES)
 	$(COMMAND) -DDB_DB2 -DSCHEMA_ONLY $(ROOT_FILE) | $(SQUEEZE) > $@
+
+dbschema_tsdb.sql: $(SOURCE) $(HEADER_FILES)
+	$(COMMAND) -DDB_TSDB -DSCHEMA_ONLY $(ROOT_FILE) | $(SQUEEZE) > $@
 
 clean-local:
 	rm -f dbinit_*.sql dbschema_*.sql
