@@ -106,8 +106,8 @@ LONG H_GetUIntParam(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abs
          {
             resultValue = nodeInfo->mhz;
          }
-         break;
          conn->unlockNodeInfo();
+         break;
       }
       default:
          result = SYSINFO_RC_ERROR;
@@ -155,8 +155,8 @@ LONG H_GetUInt64Param(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, A
          {
             resultValue = nodeInfo->memory*1024;
          }
-         break;
          conn->unlockNodeInfo();
+         break;
       }
       case 'V': //ConnectionVersion
          resultValue = conn->getConnectionVersion();
@@ -211,8 +211,8 @@ LONG H_GetStringParam(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, A
          {
             resultValue = (char *)nodeInfo->model;
          }
-         break;
          conn->unlockNodeInfo();
+         break;
       }
       case 'C': //ConnectionType
          resultValue = (char *)conn->getConnectionType();
