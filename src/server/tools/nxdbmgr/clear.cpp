@@ -71,7 +71,7 @@ static bool DeleteDataTables()
 static bool ClearTable(const TCHAR *table, void *userData)
 {
    TCHAR query[256];
-   if ((g_dbSyntax == DB_SYNTAX_ORACLE) || (g_dbSyntax == DB_SYNTAX_PGSQL))
+   if ((g_dbSyntax == DB_SYNTAX_ORACLE) || (g_dbSyntax == DB_SYNTAX_PGSQL) || (g_dbSyntax == DB_SYNTAX_TSDB))
       _sntprintf(query, 256, _T("TRUNCATE TABLE %s"), table);
    else
       _sntprintf(query, 256, _T("DELETE FROM %s"), table);

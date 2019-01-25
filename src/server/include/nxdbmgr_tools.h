@@ -114,7 +114,7 @@ extern int LIBNXDBMGR_EXPORTABLE g_dbCheckFixes;
  */
 inline INT64 CreateSavePoint()
 {
-   if (g_dbSyntax != DB_SYNTAX_PGSQL)
+   if ((g_dbSyntax != DB_SYNTAX_PGSQL) && (g_dbSyntax != DB_SYNTAX_TSDB))
       return 0;
    INT64 id = GetCurrentTimeMs();
    TCHAR query[64];
@@ -128,7 +128,7 @@ inline INT64 CreateSavePoint()
  */
 inline void ReleaseSavePoint(INT64 id)
 {
-   if (g_dbSyntax != DB_SYNTAX_PGSQL)
+   if ((g_dbSyntax != DB_SYNTAX_PGSQL) && (g_dbSyntax != DB_SYNTAX_TSDB))
       return;
    TCHAR query[64];
    _sntprintf(query, 64, _T("RELEASE SAVEPOINT nxdbmgr_") INT64_FMT, id);
@@ -140,7 +140,7 @@ inline void ReleaseSavePoint(INT64 id)
  */
 inline void RollbackToSavePoint(INT64 id)
 {
-   if (g_dbSyntax != DB_SYNTAX_PGSQL)
+   if ((g_dbSyntax != DB_SYNTAX_PGSQL) && (g_dbSyntax != DB_SYNTAX_TSDB))
       return;
    TCHAR query[64];
    _sntprintf(query, 64, _T("ROLLBACK TO SAVEPOINT nxdbmgr_") INT64_FMT, id);

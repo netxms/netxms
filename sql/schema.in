@@ -808,7 +808,7 @@ CREATE TABLE raw_dci_values
   PRIMARY KEY(item_id)
 ) TABLE_TYPE;
 
-#if !defined(DB_ORACLE) && !defined(DB_DB2) && !defined(DB_POSTGRESQL)
+#if !defined(DB_ORACLE) && !defined(DB_DB2) && !defined(DB_POSTGRESQL) && !defined(DB_TSDB)
 CREATE INDEX idx_raw_dci_values_item_id ON raw_dci_values(item_id);
 #endif
 
@@ -835,6 +835,10 @@ CREATE TABLE idata
    PRIMARY KEY(node_id,item_id,idata_timestamp)
 ) TABLE_TYPE;
 
+#ifdef DB_TSDB
+SELECT create_hypertable('idata', 'idata_timestamp', 'node_id', chunk_time_interval => 604800, number_partitions => 100, migrate_data => true);
+#endif
+
 /**
  * Collected table DCI data
  */
@@ -846,6 +850,10 @@ CREATE TABLE tdata
    tdata_value SQL_TEXT null,
    PRIMARY KEY(node_id,item_id,tdata_timestamp)
 ) TABLE_TYPE;
+
+#ifdef DB_TSDB
+SELECT create_hypertable('tdata', 'tdata_timestamp', 'node_id', chunk_time_interval => 604800, number_partitions => 100, migrate_data => true);
+#endif
 
 /**
  * Events configuration
@@ -878,14 +886,18 @@ CREATE TABLE event_log
   root_event_id SQL_INT64 not null, /* Non-zero if current event correlates to some other event */
   user_tag varchar(63) null,
   raw_data SQL_TEXT null, /* Raw event data in JSON format */
+#ifdef DB_TSDB
+  PRIMARY KEY(event_id,event_source,event_timestamp)
+#else
   PRIMARY KEY(event_id)
+#endif
 ) TABLE_TYPE;
 
 CREATE INDEX idx_event_log_event_timestamp ON event_log(event_timestamp);
 
 CREATE INDEX idx_event_log_source ON event_log(event_source);
 
-#if defined(DB_POSTGRESQL)
+#if defined(DB_POSTGRESQL) || defined(DB_TSDB)
 CREATE INDEX idx_event_log_root_id ON event_log(root_event_id) WHERE root_event_id > 0;
 #elif defined(DB_ORACLE)
 CREATE OR REPLACE FUNCTION zero_to_null(id NUMBER)
@@ -902,6 +914,10 @@ END;
 CREATE INDEX idx_event_log_root_id ON event_log(zero_to_null(root_event_id));
 #else
 CREATE INDEX idx_event_log_root_id ON event_log(root_event_id);
+#endif
+
+#ifdef DB_TSDB
+SELECT create_hypertable('event_log', 'event_timestamp', 'event_source', chunk_time_interval => 604800, number_partitions => 50, migrate_data => true);
 #endif
 
 /*
@@ -1049,8 +1065,16 @@ CREATE TABLE alarms
   timeout_event integer not null,
   ack_timeout integer not null,
   alarm_category_ids varchar(255) null,
+#ifdef DB_TSDB
+  PRIMARY KEY(alarm_id,source_object_id,creation_time)
+#else
   PRIMARY KEY(alarm_id)
+#endif
 ) TABLE_TYPE;
+
+#ifdef DB_TSDB
+SELECT create_hypertable('alarms', 'creation_time', 'source_object_id', chunk_time_interval => 604800, number_partitions => 50, migrate_data => true);
+#endif
 
 /*
 ** Alarm notes
@@ -1230,11 +1254,19 @@ CREATE TABLE syslog
   hostname varchar(127) null,
   msg_tag varchar(32) null,
   msg_text SQL_TEXT null,
+#ifdef DB_TSDB
+  PRIMARY KEY(msg_id,source_object_id,msg_timestamp)
+#else
   PRIMARY KEY(msg_id)
+#endif
 ) TABLE_TYPE;
 
 CREATE INDEX idx_syslog_msg_timestamp ON syslog(msg_timestamp);
 CREATE INDEX idx_syslog_source ON syslog(source_object_id);
+
+#ifdef DB_TSDB
+SELECT create_hypertable('syslog', 'msg_timestamp', 'source_object_id', chunk_time_interval => 604800, number_partitions => 50, migrate_data => true);
+#endif
 
 /*
 ** Script library
@@ -1260,11 +1292,19 @@ CREATE TABLE snmp_trap_log
   zone_uin integer not null,
   trap_oid varchar(255) not null,
   trap_varlist SQL_TEXT null,
+#ifdef DB_TSDB
+  PRIMARY KEY(trap_id,object_id,trap_timestamp)
+#else
   PRIMARY KEY(trap_id)
+#endif
 ) TABLE_TYPE;
 
 CREATE INDEX idx_snmp_trap_log_tt ON snmp_trap_log(trap_timestamp);
 CREATE INDEX idx_snmp_trap_log_oid ON snmp_trap_log(object_id);
+
+#ifdef DB_TSDB
+SELECT create_hypertable('snmp_trap_log', 'trap_timestamp', 'object_id', chunk_time_interval => 604800, number_partitions => 50, migrate_data => true);
+#endif
 
 /*
 ** Agent configurations

@@ -1,6 +1,6 @@
 /*
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004-2018 Victor Kirhenshtein
+** Copyright (C) 2004-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -866,6 +866,9 @@ bool IsDataTableExist(const TCHAR *format, UINT32 id)
  */
 static void CheckDataTables()
 {
+   if (DBMgrMetaDataReadInt32(_T("SingeTablePerfData"), 0))
+      return;  // Single table mode
+
    StartStage(_T("Data tables"));
 
 	IntegerArray<UINT32> *targets = GetDataCollectionTargets();

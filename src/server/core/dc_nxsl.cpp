@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -360,14 +360,20 @@ static int F_GetDCIValues(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
 		DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
       TCHAR query[1024];
-      _sntprintf(query, 1024, _T("SELECT idata_value FROM idata_%u WHERE item_id=? AND idata_timestamp BETWEEN ? AND ? ORDER BY idata_timestamp DESC"), node->getId());
+      if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
+         _tcscpy(query, _T("SELECT idata_value FROM idata WHERE node_id=? AND item_id=? AND idata_timestamp BETWEEN ? AND ? ORDER BY idata_timestamp DESC"));
+      else
+         _sntprintf(query, 1024, _T("SELECT idata_value FROM idata_%u WHERE item_id=? AND idata_timestamp BETWEEN ? AND ? ORDER BY idata_timestamp DESC"), node->getId());
 
       DB_STATEMENT hStmt = DBPrepare(hdb, query);
 		if (hStmt != NULL)
 		{
-			DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, argv[1]->getValueAsUInt32());
-			DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, argv[2]->getValueAsInt32());
-			DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, argv[3]->getValueAsInt32());
+		   int index = 1;
+	      if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
+	         DBBind(hStmt, index++, DB_SQLTYPE_INTEGER, node->getId());
+			DBBind(hStmt, index++, DB_SQLTYPE_INTEGER, argv[1]->getValueAsUInt32());
+			DBBind(hStmt, index++, DB_SQLTYPE_INTEGER, argv[2]->getValueAsInt32());
+			DBBind(hStmt, index++, DB_SQLTYPE_INTEGER, argv[3]->getValueAsInt32());
 			DB_RESULT hResult = DBSelectPrepared(hStmt);
 			if (hResult != NULL)
 			{

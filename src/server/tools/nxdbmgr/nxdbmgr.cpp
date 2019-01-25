@@ -221,7 +221,7 @@ static const char *SelectDatabaseType(const char *driver)
 
       TCHAR *eptr;
       selection = _tcstol(buffer, &eptr, 10);
-      if ((*eptr == 0) && (selection >= 0) && (selection < index))
+      if ((*eptr == 0) && (selection >= 0) && (selection <= index))
          break;
    }
    return (selection > 0) ? types[selection - 1].name : NULL;

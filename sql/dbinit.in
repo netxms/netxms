@@ -19,7 +19,6 @@ CREATE EXTENSION IF NOT EXISTS timescaledb CASCADE;
 #endif
 
 // Start transaction
-
 #if defined(DB_POSTGRESQL) || defined(DB_SQLITE) || defined(DB_TSDB)
 BEGIN TRANSACTION;
 #endif
@@ -46,9 +45,4 @@ BEGIN TRANSACTION;
 COMMIT TRANSACTION;
 #elif defined(DB_DB2)
 COMMIT;
-#endif
-
-#ifdef DB_TSDB
-SELECT create_hypertable('idata', 'idata_timestamp', 'node_id', chunk_time_interval => 604800, number_partitions => 100, migrate_data => true);
-SELECT create_hypertable('tdata', 'tdata_timestamp', 'node_id', chunk_time_interval => 604800, number_partitions => 100, migrate_data => true);
 #endif

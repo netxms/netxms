@@ -1,6 +1,6 @@
 /*
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004-2015 Victor Kirhenshtein
+** Copyright (C) 2004-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -297,7 +297,9 @@ void ExportDatabase(char *file, bool skipAudit, bool skipAlarms, bool skipEvent,
       if (skipSysLog && !_tcscmp(g_tables[i], _T("syslog")))
          continue;
       if ((g_skipDataMigration || g_skipDataSchemaMigration) &&
-           !_tcscmp(g_tables[i], _T("raw_dci_values")))
+           (!_tcscmp(g_tables[i], _T("raw_dci_values")) ||
+            !_tcscmp(g_tables[i], _T("idata")) ||
+            !_tcscmp(g_tables[i], _T("tdata"))))
          continue;
       if (!ExportTable(db, g_tables[i]))
 			goto cleanup;
@@ -306,7 +308,7 @@ void ExportDatabase(char *file, bool skipAudit, bool skipAlarms, bool skipEvent,
    if (!EnumerateModuleTables(ExportModuleTable, db))
       goto cleanup;
 
-	if (!g_skipDataMigration || !g_skipDataSchemaMigration)
+	if ((!g_skipDataMigration || !g_skipDataSchemaMigration) && !DBMgrMetaDataReadInt32(_T("SingeTablePerfData"), 0))
 	{
 	   int i;
 

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2018 Raden Solutions
+** Copyright (C) 2003-2019 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -257,7 +257,7 @@ void NetObjInsert(NetObj *pObject, bool newObject, bool importedObject)
          pObject->generateGuid();
 
       // Create tables for storing data collection values
-      if (pObject->isDataCollectionTarget())
+      if (pObject->isDataCollectionTarget() && !(g_flags & AF_SINGLE_TABLE_PERF_DATA))
       {
          TCHAR szQuery[256], szQueryTemplate[256];
          UINT32 i;

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -283,7 +283,11 @@ bool DCTable::deleteAllData()
 
    lock();
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   _sntprintf(szQuery, 256, _T("DELETE FROM tdata_%d WHERE item_id=%d"), m_owner->getId(), (int)m_id);
+   _sntprintf(szQuery, 256,
+            (g_flags & AF_SINGLE_TABLE_PERF_DATA) ?
+                     _T("DELETE FROM tdata WHERE node_id=%u AND item_id=%u") :
+                     _T("DELETE FROM tdata_%u WHERE item_id=%u"),
+            m_owner->getId(), m_id);
 	success = DBQuery(hdb, szQuery) ? true : false;
    DBConnectionPoolReleaseConnection(hdb);
    unlock();
@@ -298,7 +302,11 @@ bool DCTable::deleteEntry(time_t timestamp)
    TCHAR szQuery[256];
    lock();
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   _sntprintf(szQuery, 256, _T("DELETE FROM tdata_%d WHERE item_id=%d AND tdata_timestamp=%d"), m_owner->getId(), m_id, (int)timestamp);
+   _sntprintf(szQuery, 256,
+            (g_flags & AF_SINGLE_TABLE_PERF_DATA) ?
+                     _T("DELETE FROM tdata WHERE node_id=%u AND item_id=%u AND tdata_timestamp=%u") :
+                     _T("DELETE FROM tdata_%u WHERE item_id=%u AND tdata_timestamp=%u"),
+            m_owner->getId(), m_id, (UINT32)timestamp);
    bool success = DBQuery(hdb, szQuery);
    DBConnectionPoolReleaseConnection(hdb);
    unlock();
@@ -368,14 +376,25 @@ bool DCTable::processNewValue(time_t timestamp, const void *value, bool *updateS
       bool success = false;
 	   Table *data = (Table *)value;
 
-	   TCHAR query[256];
-	   _sntprintf(query, 256, _T("INSERT INTO tdata_%d (item_id,tdata_timestamp,tdata_value) VALUES (?,?,?)"), (int)nodeId);
-	   DB_STATEMENT hStmt = DBPrepare(hdb, query);
+	   DB_STATEMENT hStmt;
+	   if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
+	   {
+	      hStmt = DBPrepare(hdb, _T("INSERT INTO tdata (node_id,item_id,tdata_timestamp,tdata_value) VALUES (?,?,?,?)"));
+	   }
+	   else
+	   {
+	      TCHAR query[256];
+	      _sntprintf(query, 256, _T("INSERT INTO tdata_%u (item_id,tdata_timestamp,tdata_value) VALUES (?,?,?)"), nodeId);
+	      hStmt = DBPrepare(hdb, query);
+	   }
 	   if (hStmt != NULL)
 	   {
-		   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, tableId);
-		   DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (INT32)timestamp);
-		   DBBind(hStmt, 3, DB_SQLTYPE_TEXT, DB_CTYPE_UTF8_STRING, data->createPackedXML(), DB_BIND_DYNAMIC);
+	      int index = 1;
+	      if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
+	         DBBind(hStmt, index++, DB_SQLTYPE_INTEGER, nodeId);
+		   DBBind(hStmt, index++, DB_SQLTYPE_INTEGER, tableId);
+		   DBBind(hStmt, index++, DB_SQLTYPE_INTEGER, (INT32)timestamp);
+		   DBBind(hStmt, index++, DB_SQLTYPE_TEXT, DB_CTYPE_UTF8_STRING, data->createPackedXML(), DB_BIND_DYNAMIC);
 	      success = DBExecute(hStmt);
 		   DBFreeStatement(hStmt);
 	   }

@@ -105,35 +105,34 @@ static BYTE *FindEndOfQuery(BYTE *pStart, BYTE *pBatchEnd)
  */
 bool ExecSQLBatch(const char *batchFile)
 {
-   BYTE *pBatch, *pQuery, *pNext;
    UINT32 dwSize;
+   BYTE *batch = LoadFileA(batchFile, &dwSize);
+   if (batch == NULL)
+   {
+      _tprintf(_T("ERROR: Cannot load SQL command file %hs\n"), batchFile);
+      return false;
+   }
+
+   BYTE *pQuery, *pNext;
    bool result = false;
 
-   pBatch = LoadFileA(batchFile, &dwSize);
-   if (pBatch == NULL)
+   for(pQuery = batch; pQuery < batch + dwSize; pQuery = pNext)
    {
-	   _tprintf(_T("ERROR: Cannot load SQL command file %hs\n"), batchFile);
-   }
-   else
-   {
-      for(pQuery = pBatch; pQuery < pBatch + dwSize; pQuery = pNext)
+      pNext = FindEndOfQuery(pQuery, batch + dwSize);
+      if (!IsEmptyQuery((char *)pQuery))
       {
-         pNext = FindEndOfQuery(pQuery, pBatch + dwSize);
-         if (!IsEmptyQuery((char *)pQuery))
-         {
 #ifdef UNICODE
-				WCHAR *wcQuery = WideStringFromMBString((char *)pQuery);
-            result = SQLQuery(wcQuery);
-				free(wcQuery);
+         WCHAR *wcQuery = WideStringFromMBString((char *)pQuery);
+         result = SQLQuery(wcQuery);
+         MemFree(wcQuery);
 #else
-            result = SQLQuery((char *)pQuery);
+         result = SQLQuery((char *)pQuery);
 #endif
-            if (!result)
-               pNext = pBatch + dwSize;
-         }
+         if (!result)
+            pNext = batch + dwSize;
       }
-      free(pBatch);
    }
+   MemFree(batch);
    return result;
 }
 

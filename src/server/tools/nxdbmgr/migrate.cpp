@@ -239,7 +239,9 @@ static bool MigrateTable(const TCHAR *table)
  */
 static bool MigrateDataTables()
 {
-	int i, count;
+   if (DBMgrMetaDataReadInt32(_T("SingeTablePerfData"), 0))
+      return true;  // Single table mode
+
 	TCHAR buffer[1024];
 
 	DB_RESULT hResult = SQLSelect(_T("SELECT id FROM nodes"));
@@ -247,7 +249,8 @@ static bool MigrateDataTables()
 		return FALSE;
 
 	// Create and import idata_xx and tdata_xx tables for each node in "nodes" table
-	count = DBGetNumRows(hResult);
+	int count = DBGetNumRows(hResult);
+	int i;
 	for(i = 0; i < count; i++)
 	{
 		DWORD id = DBGetFieldULong(hResult, i, 0);
@@ -339,7 +342,9 @@ void MigrateDatabase(const TCHAR *sourceConfig, TCHAR *destConfFields, bool skip
 	      if (skipSysLog && !_tcscmp(g_tables[i], _T("syslog")))
 	         continue;
 	      if ((g_skipDataMigration || g_skipDataSchemaMigration) &&
-	           !_tcscmp(g_tables[i], _T("raw_dci_values")))
+	           (!_tcscmp(g_tables[i], _T("raw_dci_values")) ||
+	            !_tcscmp(g_tables[i], _T("idata")) ||
+	            !_tcscmp(g_tables[i], _T("tdata"))))
 	         continue;
 		   if (!MigrateTable(g_tables[i]))
 			   goto cleanup;
