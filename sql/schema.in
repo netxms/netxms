@@ -820,9 +820,34 @@ CREATE TABLE dci_access
    PRIMARY KEY(dci_id,user_id)
 ) TABLE_TYPE;
 
-/*
-** Events configuration
-*/
+/**
+ * Collected DCI data
+ */
+CREATE TABLE idata
+(
+   node_id integer not null,
+   item_id integer not null,
+   idata_timestamp integer not null,
+   idata_value varchar(255) null,
+   raw_value varchar(255) null,
+   PRIMARY KEY(node_id,item_id,idata_timestamp)
+) TABLE_TYPE;
+
+/**
+ * Collected table DCI data
+ */
+CREATE TABLE tdata
+(
+   node_id integer not null,
+   item_id integer not null,
+   tdata_timestamp integer not null,
+   tdata_value SQL_TEXT null,
+   PRIMARY KEY(node_id,item_id,tdata_timestamp)
+) TABLE_TYPE;
+
+/**
+ * Events configuration
+ */
 CREATE TABLE event_cfg
 (
   event_code integer not null,

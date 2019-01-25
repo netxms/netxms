@@ -341,6 +341,10 @@ int LIBNXDB_EXPORTABLE DBGetSyntax(DB_HANDLE conn)
    {
       syntax = DB_SYNTAX_DB2;
    }
+   else if (!_tcscmp(syntaxId, _T("TSDB")))
+   {
+      syntax = DB_SYNTAX_TSDB;
+   }
    else
    {
 		syntax = DB_SYNTAX_UNKNOWN;
@@ -699,6 +703,7 @@ bool LIBNXDB_EXPORTABLE DBGetColumnDataType(DB_HANDLE hdb, const TCHAR *table, c
    {
       case DB_SYNTAX_MSSQL:
       case DB_SYNTAX_PGSQL:
+      case DB_SYNTAX_TSDB:
          success = GetColumnDataType_MSSQL_PGSQL(hdb, table, column, definition, len);
          break;
       case DB_SYNTAX_MYSQL:

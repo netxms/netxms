@@ -103,16 +103,16 @@ static BYTE *FindEndOfQuery(BYTE *pStart, BYTE *pBatchEnd)
  * Execute SQL batch file. If file name contains @dbengine@ macro,
  * it will be replaced with current database engine name in lowercase
  */
-bool ExecSQLBatch(const char *pszFile)
+bool ExecSQLBatch(const char *batchFile)
 {
    BYTE *pBatch, *pQuery, *pNext;
    UINT32 dwSize;
    bool result = false;
 
-   pBatch = LoadFileA(pszFile, &dwSize);
+   pBatch = LoadFileA(batchFile, &dwSize);
    if (pBatch == NULL)
    {
-	   _tprintf(_T("ERROR: Cannot load SQL command file %hs\n"), pszFile);
+	   _tprintf(_T("ERROR: Cannot load SQL command file %hs\n"), batchFile);
    }
    else
    {

@@ -158,6 +158,76 @@ DB_HANDLE ConnectToDatabase()
 }
 
 /**
+ * Database type descriptor
+ */
+struct DB_TYPE
+{
+   const char *name;
+   const TCHAR *displayName;
+};
+
+/**
+ * Database types for ODBC driver
+ */
+static const DB_TYPE s_dbTypesODBC[] =
+{
+   { "db2", _T("DB/2") },
+   { "mssql", _T("Microsoft SQL") },
+   { "mysql", _T("MySQL / MariaDB") },
+   { "oracle", _T("Oracle") },
+   { "pgsql", _T("PostgreSQL") },
+   { "tsdb", _T("TimeScaleDB") },
+   { NULL, NULL }
+};
+
+/**
+ * Database types for PostgreSQL driver
+ */
+static const DB_TYPE s_dbTypesPostgreSQL[] =
+{
+   { "pgsql", _T("PostgreSQL") },
+   { "tsdb", _T("TimeScaleDB") },
+   { NULL, NULL }
+};
+
+/**
+ * Select database type
+ */
+static const char *SelectDatabaseType(const char *driver)
+{
+   _tprintf(_T("Selected database driver supports multiple database types.\nPlease select actual database type:\n"));
+
+   const DB_TYPE *types = !strcmp(driver, "odbc") ? s_dbTypesODBC : s_dbTypesPostgreSQL;
+   int index = 0;
+   for(; types[index].name != NULL; index++)
+   {
+      _tprintf(_T("   %d. %s (%hs)\n"), index + 1, types[index].displayName, types[index].name);
+   }
+
+   int selection;
+   while(true)
+   {
+      _tprintf(_T("Enter database type [1..%d] or 0 to abort: "), index);
+      fflush(stdout);
+
+      TCHAR buffer[256];
+      if (_fgetts(buffer, 256, stdin) == NULL)
+         return NULL;
+
+      TCHAR *p = _tcschr(buffer, _T('\n'));
+      if (p != NULL)
+         *p = 0;
+      Trim(buffer);
+
+      TCHAR *eptr;
+      selection = _tcstol(buffer, &eptr, 10);
+      if ((*eptr == 0) && (selection >= 0) && (selection < index))
+         break;
+   }
+   return (selection > 0) ? types[selection - 1].name : NULL;
+}
+
+/**
  * Startup
  */
 int main(int argc, char *argv[])
@@ -457,12 +527,28 @@ stop_search:
    {
       if (argc - optind < 2) 
       {
+         TCHAR shareDir[MAX_PATH];
+         GetNetXMSDirectory(nxDirShare, shareDir);
+
          char driver[64];
          strcpy(driver, DBGetDriverName(s_driver));
          strlwr(driver);
 
-         TCHAR shareDir[MAX_PATH];
-         GetNetXMSDirectory(nxDirShare, shareDir);
+         if (!strcmp(driver, "odbc") || !strcmp(driver, "pgsql"))
+         {
+            if (!isatty(fileno(stdin)))
+            {
+               _tprintf(_T("Cannot determine database type from driver name\n"));
+               return 7;
+            }
+            const char *dbType = SelectDatabaseType(driver);
+            if (dbType == NULL)
+            {
+               _tprintf(_T("Database initialization aborted\n"));
+               return 8;
+            }
+            strcpy(driver, dbType);
+         }
 
          String initFile = shareDir;
          initFile.append(FS_PATH_SEPARATOR _T("sql") FS_PATH_SEPARATOR _T("dbinit_"));
@@ -473,7 +559,21 @@ stop_search:
          InitDatabase(initFileUtf8);
          MemFree(initFileUtf8);
       }
-      else 
+      else if (strchr(argv[optind + 1], FS_PATH_SEPARATOR_CHAR_A) == NULL)
+      {
+         TCHAR shareDir[MAX_PATH];
+         GetNetXMSDirectory(nxDirShare, shareDir);
+
+         String initFile = shareDir;
+         initFile.append(FS_PATH_SEPARATOR _T("sql") FS_PATH_SEPARATOR _T("dbinit_"));
+         initFile.appendMBString(argv[optind + 1], strlen(argv[optind + 1]), CP_ACP);
+         initFile.append(_T(".sql"));
+
+         char *initFileUtf8 = initFile.getUTF8String();
+         InitDatabase(initFileUtf8);
+         MemFree(initFileUtf8);
+      }
+      else
       {
          InitDatabase(argv[optind + 1]);
       }

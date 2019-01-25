@@ -78,6 +78,18 @@
 #define CRLF            chr(13)||chr(10)
 #define CONCAT          ||
 
+#elif defined(DB_TSDB)
+
+#define DB_SYNTAX       'TSDB'
+#define SQL_TEXT        text
+#define SQL_TEXT_TEXT   'text'
+#define SQL_TEXT4K      varchar(4000)
+#define SQL_INT64       bigint
+#define SQL_INT64_TEXT  'bigint'
+#define TABLE_TYPE
+#define CRLF            chr(13)||chr(10)
+#define CONCAT          ||
+
 #else
 
 #error Database type should be defined

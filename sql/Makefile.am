@@ -10,12 +10,14 @@ sql_DATA = dbinit_mysql.sql \
            dbinit_oracle.sql \
            dbinit_sqlite.sql \
            dbinit_db2.sql \
+           dbinit_tsdb.sql \
            dbschema_mysql.sql \
            dbschema_pgsql.sql \
            dbschema_mssql.sql \
            dbschema_oracle.sql \
            dbschema_sqlite.sql \
            dbschema_db2.sql \
+           dbschema_tsdb.sql \
            devdb.in
 
 ROOT_FILE = dbinit.in
@@ -44,6 +46,9 @@ dbinit_sqlite.sql: $(SOURCE) $(HEADER_FILES)
 dbinit_db2.sql: $(SOURCE) $(HEADER_FILES)
 	$(COMMAND) -DDB_DB2 $(ROOT_FILE) | $(SQUEEZE) > $@
 
+dbinit_tsdb.sql: $(SOURCE) $(HEADER_FILES)
+	$(COMMAND) -DDB_TSDB $(ROOT_FILE) | $(SQUEEZE) > $@
+
 dbschema_mysql.sql: $(SOURCE) $(HEADER_FILES)
 	$(COMMAND) -DDB_MYSQL -DSCHEMA_ONLY $(ROOT_FILE) | $(SQUEEZE) > $@
 
@@ -61,6 +66,9 @@ dbschema_sqlite.sql: $(SOURCE) $(HEADER_FILES)
 
 dbschema_db2.sql: $(SOURCE) $(HEADER_FILES)
 	$(COMMAND) -DDB_DB2 -DSCHEMA_ONLY $(ROOT_FILE) | $(SQUEEZE) > $@
+
+dbschema_tsdb.sql: $(SOURCE) $(HEADER_FILES)
+	$(COMMAND) -DDB_TSDB -DSCHEMA_ONLY $(ROOT_FILE) | $(SQUEEZE) > $@
 
 clean-local:
 	rm -f dbinit_*.sql dbschema_*.sql
