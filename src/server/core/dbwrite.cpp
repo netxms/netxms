@@ -377,15 +377,14 @@ static THREAD_RESULT THREAD_CALL IDataWriteThreadSingleTable(void *arg)
             {
                if (hStmt == NULL)
                {
-                  hStmt = DBPrepare(hdb, _T("INSERT INTO idata (node_id,item_id,idata_timestamp,idata_value,raw_value) VALUES (?,?,?,?,?)"));
+                  hStmt = DBPrepare(hdb, _T("INSERT INTO idata (node_id,item_id,idata_timestamp,idata_value) VALUES (?,?,?,?)"));
                }
                if (hStmt != NULL)
                {
                   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, rq->nodeId);
                   DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, rq->dciId);
                   DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (INT64)rq->timestamp);
-                  DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, rq->transformedValue, DB_BIND_STATIC);
-                  DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, rq->rawValue, DB_BIND_STATIC);
+                  DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, rq->value, DB_BIND_STATIC);
                   success = DBExecute(hStmt);
                }
                else
@@ -396,10 +395,9 @@ static THREAD_RESULT THREAD_CALL IDataWriteThreadSingleTable(void *arg)
             else
             {
                TCHAR query[1024];
-               _sntprintf(query, 1024, _T("INSERT INTO idata (node_id,item_id,idata_timestamp,idata_value,raw_value) VALUES (%d,%d,%d,%s,%s)"),
+               _sntprintf(query, 1024, _T("INSERT INTO idata (node_id,item_id,idata_timestamp,idata_value) VALUES (%d,%d,%d,%s)"),
                           (int)rq->nodeId, (int)rq->dciId, (int)rq->timestamp,
-                          (const TCHAR *)DBPrepareString(hdb, rq->transformedValue),
-                          (const TCHAR *)DBPrepareString(hdb, rq->rawValue));
+                          (const TCHAR *)DBPrepareString(hdb, rq->value));
                success = DBQuery(hdb, query);
             }
 
