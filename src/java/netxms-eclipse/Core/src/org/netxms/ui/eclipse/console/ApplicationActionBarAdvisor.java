@@ -256,12 +256,6 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor
             setLanguage("ar"); //$NON-NLS-1$
          }
       };
-		actionLangChinese = new Action("C&hinese", Activator.getImageDescriptor("icons/lang/zh.png")) { //$NON-NLS-1$ //$NON-NLS-2$
-			public void run()
-			{
-				setLanguage("zh"); //$NON-NLS-1$
-			}
-		};
       actionLangCzech = new Action("&Czech", Activator.getImageDescriptor("icons/lang/cs.png")) { //$NON-NLS-1$ //$NON-NLS-2$
          public void run()
          {
@@ -286,10 +280,10 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor
             setLanguage("de"); //$NON-NLS-1$
          }
       };
-      actionLangPortuguese = new Action("&Portuguese", Activator.getImageDescriptor("icons/lang/pt.png")) { //$NON-NLS-1$ //$NON-NLS-2$
+      actionLangPortuguese = new Action("&Portuguese (Brazilian)", Activator.getImageDescriptor("icons/lang/pt_br.png")) { //$NON-NLS-1$ //$NON-NLS-2$
          public void run()
          {
-            setLanguage("pt"); //$NON-NLS-1$
+            setLanguage("pt_BR"); //$NON-NLS-1$
          }
       };
 		actionLangRussian = new Action("&Russian", Activator.getImageDescriptor("icons/lang/ru.png")) { //$NON-NLS-1$ //$NON-NLS-2$
@@ -335,7 +329,6 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor
 		// Language selection (intentionally left in English only)
 		final MenuManager langMenu = new MenuManager("&Language"); //$NON-NLS-1$
       langMenu.add(actionLangArabic);
-		langMenu.add(actionLangChinese);
       langMenu.add(actionLangCzech);
 		langMenu.add(actionLangEnglish);
       langMenu.add(actionLangFrench);
