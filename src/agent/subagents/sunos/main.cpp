@@ -262,9 +262,9 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("Process.VMSize(*)"), H_ProcessInfo, CAST_TO_POINTER(PROCINFO_VMSIZE, const TCHAR *), DCI_DT_UINT64, DCIDESC_PROCESS_VMSIZE },
    { _T("Process.WkSet(*)"), H_ProcessInfo, CAST_TO_POINTER(PROCINFO_WKSET, const TCHAR *), DCI_DT_UINT64, DCIDESC_PROCESS_WKSET },
 
-   { _T("System.BIOS.Date"), SMBIOS_ParameterHandler, _T("D"), DCI_DT_STRING, DCIDESC_SYSTEM_BIOS_DATE },
-   { _T("System.BIOS.Vendor"), SMBIOS_ParameterHandler, _T("v"), DCI_DT_STRING, DCIDESC_SYSTEM_BIOS_VENDOR },
-   { _T("System.BIOS.Version"), SMBIOS_ParameterHandler, _T("V"), DCI_DT_STRING, DCIDESC_SYSTEM_BIOS_VERSION },
+   { _T("System.BIOS.Date"), SMBIOS_ParameterHandler, _T("BD"), DCI_DT_STRING, DCIDESC_SYSTEM_BIOS_DATE },
+   { _T("System.BIOS.Vendor"), SMBIOS_ParameterHandler, _T("Bv"), DCI_DT_STRING, DCIDESC_SYSTEM_BIOS_VENDOR },
+   { _T("System.BIOS.Version"), SMBIOS_ParameterHandler, _T("BV"), DCI_DT_STRING, DCIDESC_SYSTEM_BIOS_VERSION },
 
    { _T("System.CPU.Count"), H_CPUCount, NULL, DCI_DT_UINT, DCIDESC_SYSTEM_CPU_COUNT },
    { _T("System.CPU.LoadAvg"), H_LoadAvg, (TCHAR *)0, DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_LOADAVG },
