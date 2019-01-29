@@ -170,13 +170,33 @@ void DataCollectionTarget::updateDciCache()
  */
 void DataCollectionTarget::cleanDCIData(DB_HANDLE hdb)
 {
-   String queryItems = _T("DELETE FROM idata_");
-   queryItems.append(m_id);
-   queryItems.append(_T(" WHERE "));
+   String queryItems = _T("DELETE FROM idata");
+   if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
+   {
+      queryItems.append(_T(" WHERE node_id="));
+      queryItems.append(m_id);
+      queryItems.append(_T(" AND "));
+   }
+   else
+   {
+      queryItems.append(_T('_'));
+      queryItems.append(m_id);
+      queryItems.append(_T(" WHERE "));
+   }
 
-   String queryTables = _T("DELETE FROM tdata_");
-   queryTables.append(m_id);
-   queryTables.append(_T(" WHERE "));
+   String queryTables = _T("DELETE FROM tdata");
+   if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
+   {
+      queryTables.append(_T(" WHERE node_id="));
+      queryTables.append(m_id);
+      queryTables.append(_T(" AND "));
+   }
+   else
+   {
+      queryTables.append(_T('_'));
+      queryTables.append(m_id);
+      queryTables.append(_T(" WHERE "));
+   }
 
    int itemCount = 0;
    int tableCount = 0;
