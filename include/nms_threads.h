@@ -1060,7 +1060,7 @@ template <typename T> inline void ThreadPoolExecute(ThreadPool *p, void (*f)(T *
 /**
  * Wrapper for ThreadPoolExecuteSerialized to use pointer to given type as argument
  */
-template <typename T> inline void LIBNETXMS_EXPORTABLE ThreadPoolExecuteSerialized(ThreadPool *p, const TCHAR *key, void (*f)(T *), T *arg)
+template <typename T> inline void ThreadPoolExecuteSerialized(ThreadPool *p, const TCHAR *key, void (*f)(T *), T *arg)
 {
    ThreadPoolExecuteSerialized(p, key, (ThreadPoolWorkerFunction)f, (void *)arg);
 }
@@ -1068,7 +1068,7 @@ template <typename T> inline void LIBNETXMS_EXPORTABLE ThreadPoolExecuteSerializ
 /**
  * Wrapper for ThreadPoolScheduleAbsolute to use pointer to given type as argument
  */
-template <typename T> inline void LIBNETXMS_EXPORTABLE ThreadPoolScheduleAbsolute(ThreadPool *p, time_t runTime, void (*f)(T *), T *arg)
+template <typename T> inline void ThreadPoolScheduleAbsolute(ThreadPool *p, time_t runTime, void (*f)(T *), T *arg)
 {
    ThreadPoolScheduleAbsolute(p, runTime, (ThreadPoolWorkerFunction)f, (void *)arg);
 }
@@ -1076,7 +1076,7 @@ template <typename T> inline void LIBNETXMS_EXPORTABLE ThreadPoolScheduleAbsolut
 /**
  * Wrapper for ThreadPoolScheduleAbsoluteMs to use pointer to given type as argument
  */
-template <typename T> inline void LIBNETXMS_EXPORTABLE ThreadPoolScheduleAbsoluteMs(ThreadPool *p, INT64 runTime, void (*f)(T *), T *arg)
+template <typename T> inline void ThreadPoolScheduleAbsoluteMs(ThreadPool *p, INT64 runTime, void (*f)(T *), T *arg)
 {
    ThreadPoolScheduleAbsoluteMs(p, runTime, (ThreadPoolWorkerFunction)f, (void *)arg);
 }
@@ -1084,7 +1084,7 @@ template <typename T> inline void LIBNETXMS_EXPORTABLE ThreadPoolScheduleAbsolut
 /**
  * Wrapper for ThreadPoolScheduleRelative to use pointer to given type as argument
  */
-template <typename T> inline void LIBNETXMS_EXPORTABLE ThreadPoolScheduleRelative(ThreadPool *p, UINT32 delay, void (*f)(T *), T *arg)
+template <typename T> inline void ThreadPoolScheduleRelative(ThreadPool *p, UINT32 delay, void (*f)(T *), T *arg)
 {
    ThreadPoolScheduleRelative(p, delay, (ThreadPoolWorkerFunction)f, (void *)arg);
 }
