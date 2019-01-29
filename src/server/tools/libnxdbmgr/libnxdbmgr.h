@@ -38,7 +38,7 @@
 #define SQL_TYPE_INT64     2
 
 extern bool g_queryTrace;
-extern const TCHAR *g_sqlTypes[6][3];
+extern const TCHAR *g_sqlTypes[8][3];
 extern const TCHAR *g_tableSuffix;
 
 #endif   /* _libnxdbmgr_h_ */

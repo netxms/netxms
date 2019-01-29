@@ -81,14 +81,16 @@ bool LIBNXDBMGR_EXPORTABLE SQLExecute(DB_STATEMENT hStmt)
 /**
  * Non-standard SQL data type names
  */
-const TCHAR *g_sqlTypes[6][3] =
+const TCHAR *g_sqlTypes[8][3] =
 {
-   { _T("longtext"), _T("text"), _T("bigint") },             // MySQL
-   { _T("text"), _T("varchar(4000)"), _T("bigint") },        // PostgreSQL
-   { _T("text"), _T("varchar(4000)"), _T("bigint") },        // Microsoft SQL
-   { _T("clob"), _T("varchar(4000)"), _T("number(20)") },    // Oracle
-   { _T("varchar"), _T("varchar(4000)"), _T("number(20)") }, // SQLite
-   { _T("long varchar"), _T("varchar(4000)"), _T("bigint") } // DB/2
+   { _T("longtext"), _T("text"), _T("bigint") },              // MySQL
+   { _T("text"), _T("varchar(4000)"), _T("bigint") },         // PostgreSQL
+   { _T("text"), _T("varchar(4000)"), _T("bigint") },         // Microsoft SQL
+   { _T("clob"), _T("varchar(4000)"), _T("number(20)") },     // Oracle
+   { _T("varchar"), _T("varchar(4000)"), _T("number(20)") },  // SQLite
+   { _T("long varchar"), _T("varchar(4000)"), _T("bigint") }, // DB/2
+   { _T("text"), _T("lvarchar(4000)"), _T("bigint") },        // Informix
+   { _T("text"), _T("varchar(4000)"), _T("bigint") }          // TimescaleDB
 };
 
 /**
