@@ -214,6 +214,27 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("FileSystem.Used(*)"), H_DiskInfo, (TCHAR *)DISK_USED, DCI_DT_UINT64, DCIDESC_FS_USED },
    { _T("FileSystem.UsedPerc(*)"), H_DiskInfo, (TCHAR *)DISK_USED_PERC, DCI_DT_FLOAT, DCIDESC_FS_USEDPERC },
 
+   { _T("Hardware.Baseboard.Manufacturer"), SMBIOS_ParameterHandler, _T("bM"), DCI_DT_STRING, DCIDESC_HARDWARE_BASEBOARD_MANUFACTURER },
+   { _T("Hardware.Baseboard.Product"), SMBIOS_ParameterHandler, _T("bP"), DCI_DT_STRING, DCIDESC_HARDWARE_BASEBOARD_PRODUCT },
+   { _T("Hardware.Baseboard.SerialNumber"), SMBIOS_ParameterHandler, _T("bS"), DCI_DT_STRING, DCIDESC_HARDWARE_BASEBOARD_SERIALNUMBER },
+   { _T("Hardware.Baseboard.Type"), SMBIOS_ParameterHandler, _T("bT"), DCI_DT_STRING, DCIDESC_HARDWARE_BASEBOARD_TYPE },
+   { _T("Hardware.Baseboard.Version"), SMBIOS_ParameterHandler, _T("bV"), DCI_DT_STRING, DCIDESC_HARDWARE_BASEBOARD_VERSION },
+   { _T("Hardware.MemoryDevice.Bank(*)"), SMBIOS_MemDevParameterHandler, _T("B"), DCI_DT_STRING, DCIDESC_HARDWARE_MEMORYDEVICE_BANK },
+   { _T("Hardware.MemoryDevice.ConfiguredSpeed(*)"), SMBIOS_MemDevParameterHandler, _T("c"), DCI_DT_UINT, DCIDESC_HARDWARE_MEMORYDEVICE_CONFSPEED },
+   { _T("Hardware.MemoryDevice.FormFactor(*)"), SMBIOS_MemDevParameterHandler, _T("F"), DCI_DT_STRING, DCIDESC_HARDWARE_MEMORYDEVICE_FORMFACTOR },
+   { _T("Hardware.MemoryDevice.Location(*)"), SMBIOS_MemDevParameterHandler, _T("L"), DCI_DT_STRING, DCIDESC_HARDWARE_MEMORYDEVICE_LOCATION },
+   { _T("Hardware.MemoryDevice.Manufacturer(*)"), SMBIOS_MemDevParameterHandler, _T("M"), DCI_DT_STRING, DCIDESC_HARDWARE_MEMORYDEVICE_MANUFACTURER },
+   { _T("Hardware.MemoryDevice.MaxSpeed(*)"), SMBIOS_MemDevParameterHandler, _T("m"), DCI_DT_STRING, DCIDESC_HARDWARE_MEMORYDEVICE_MAXSPEED },
+   { _T("Hardware.MemoryDevice.PartNumber(*)"), SMBIOS_MemDevParameterHandler, _T("P"), DCI_DT_STRING, DCIDESC_HARDWARE_MEMORYDEVICE_PARTNUMBER },
+   { _T("Hardware.MemoryDevice.SerialNumber(*)"), SMBIOS_MemDevParameterHandler, _T("s"), DCI_DT_STRING, DCIDESC_HARDWARE_MEMORYDEVICE_SERIALNUMBER },
+   { _T("Hardware.MemoryDevice.Size(*)"), SMBIOS_MemDevParameterHandler, _T("S"), DCI_DT_STRING, DCIDESC_HARDWARE_MEMORYDEVICE_SIZE },
+   { _T("Hardware.MemoryDevice.Type(*)"), SMBIOS_MemDevParameterHandler, _T("T"), DCI_DT_STRING, DCIDESC_HARDWARE_MEMORYDEVICE_TYPE },
+   { _T("Hardware.System.Manufacturer"), SMBIOS_ParameterHandler, _T("HM"), DCI_DT_STRING, DCIDESC_HARDWARE_SYSTEM_MANUFACTURER },
+   { _T("Hardware.System.Product"), SMBIOS_ParameterHandler, _T("HP"), DCI_DT_STRING, DCIDESC_HARDWARE_SYSTEM_PRODUCT },
+   { _T("Hardware.System.SerialNumber"), SMBIOS_ParameterHandler, _T("HS"), DCI_DT_STRING, DCIDESC_HARDWARE_SYSTEM_SERIALNUMBER },
+   { _T("Hardware.System.Version"), SMBIOS_ParameterHandler, _T("HV"), DCI_DT_STRING, DCIDESC_HARDWARE_SYSTEM_VERSION },
+   { _T("Hardware.WakeUpEvent"), SMBIOS_ParameterHandler, _T("W"), DCI_DT_STRING, DCIDESC_HARDWARE_WAKEUPEVENT },
+
    { _T("Hypervisor.Type"), H_HypervisorType, NULL, DCI_DT_STRING, DCIDESC_HYPERVISOR_TYPE },
    { _T("Hypervisor.Version"), H_HypervisorVersion, NULL, DCI_DT_STRING, DCIDESC_HYPERVISOR_VERSION },
 
@@ -241,9 +262,9 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("Process.VMSize(*)"), H_ProcessInfo, CAST_TO_POINTER(PROCINFO_VMSIZE, const TCHAR *), DCI_DT_UINT64, DCIDESC_PROCESS_VMSIZE },
    { _T("Process.WkSet(*)"), H_ProcessInfo, CAST_TO_POINTER(PROCINFO_WKSET, const TCHAR *), DCI_DT_UINT64, DCIDESC_PROCESS_WKSET },
 
-   { _T("System.BIOS.Date"), SMBIOS_ParameterHandler, _T("D"), DCI_DT_STRING, DCIDESC_SYSTEM_BIOS_DATE },
-   { _T("System.BIOS.Vendor"), SMBIOS_ParameterHandler, _T("v"), DCI_DT_STRING, DCIDESC_SYSTEM_BIOS_VENDOR },
-   { _T("System.BIOS.Version"), SMBIOS_ParameterHandler, _T("V"), DCI_DT_STRING, DCIDESC_SYSTEM_BIOS_VERSION },
+   { _T("System.BIOS.Date"), SMBIOS_ParameterHandler, _T("BD"), DCI_DT_STRING, DCIDESC_SYSTEM_BIOS_DATE },
+   { _T("System.BIOS.Vendor"), SMBIOS_ParameterHandler, _T("Bv"), DCI_DT_STRING, DCIDESC_SYSTEM_BIOS_VENDOR },
+   { _T("System.BIOS.Version"), SMBIOS_ParameterHandler, _T("BV"), DCI_DT_STRING, DCIDESC_SYSTEM_BIOS_VERSION },
 
    { _T("System.CPU.Count"), H_CPUCount, NULL, DCI_DT_UINT, DCIDESC_SYSTEM_CPU_COUNT },
    { _T("System.CPU.LoadAvg"), H_LoadAvg, (TCHAR *)0, DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_LOADAVG },
@@ -255,12 +276,6 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("System.CPU.Usage(*)"), H_CPUUsage, _T("C0"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE_EX },
    { _T("System.CPU.Usage5(*)"), H_CPUUsage, _T("C1"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE5_EX },
    { _T("System.CPU.Usage15(*)"), H_CPUUsage, _T("C2"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE15_EX },
-
-   { _T("System.Hardware.Manufacturer"), SMBIOS_ParameterHandler, _T("M"), DCI_DT_STRING, DCIDESC_SYSTEM_HARDWARE_MANUFACTURER },
-   { _T("System.Hardware.Product"), SMBIOS_ParameterHandler, _T("P"), DCI_DT_STRING, DCIDESC_SYSTEM_HARDWARE_PRODUCT },
-   { _T("System.Hardware.SerialNumber"), SMBIOS_ParameterHandler, _T("S"), DCI_DT_STRING, DCIDESC_SYSTEM_HARDWARE_SERIALNUMBER },
-   { _T("System.Hardware.Version"), SMBIOS_ParameterHandler, _T("w"), DCI_DT_STRING, DCIDESC_SYSTEM_HARDWARE_VERSION },
-   { _T("System.Hardware.WakeUpEvent"), SMBIOS_ParameterHandler, _T("W"), DCI_DT_STRING, DCIDESC_SYSTEM_HARDWARE_WAKEUPEVENT },
 
    { _T("System.Hostname"), H_Hostname, NULL, DCI_DT_STRING, DCIDESC_SYSTEM_HOSTNAME },
    { _T("System.KStat(*)"), H_KStat, NULL, DCI_DT_STRING, _T("") },
@@ -332,6 +347,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 static NETXMS_SUBAGENT_LIST m_lists[] =
 {
    { _T("FileSystem.MountPoints"), H_MountPoints, NULL },
+   { _T("Hardware.MemoryDevices"), SMBIOS_ListHandler,   _T("M") },
    { _T("Net.InterfaceList"), H_NetIfList, NULL },
    { _T("Net.InterfaceNames"), H_NetIfNames, NULL },
    { _T("System.ProcessList"), H_ProcessList, NULL }
@@ -342,7 +358,8 @@ static NETXMS_SUBAGENT_LIST m_lists[] =
  */
 static NETXMS_SUBAGENT_TABLE m_tables[] =
 {
-   { _T("FileSystem.Volumes"), H_FileSystems, NULL, _T("MOUNTPOINT"), DCTDESC_FILESYSTEM_VOLUMES }
+   { _T("FileSystem.Volumes"), H_FileSystems, NULL, _T("MOUNTPOINT"), DCTDESC_FILESYSTEM_VOLUMES },
+   { _T("Hardware.MemoryDevices"), SMBIOS_TableHandler, _T("M"), _T("HANDLE"), DCTDESC_HARDWARE_MEMORY_DEVIECS }
 };
 
 /**
