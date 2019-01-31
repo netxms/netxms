@@ -314,6 +314,7 @@ stop_search:
 			   _tprintf(_T("NetXMS Database Manager Version ") NETXMS_VERSION_STRING _T(" Build ") NETXMS_VERSION_BUILD_STRING _T(" (") NETXMS_BUILD_TAG _T(")") IS_UNICODE_BUILD_STRING _T("\n\n"));
             _tprintf(_T("Usage: nxdbmgr [<options>] <command> [<options>]\n")
                      _T("Valid commands are:\n")
+                     _T("   background-upgrade   : Run pending background upgrade procedures\n")
 						   _T("   batch <file>         : Run SQL batch file\n")
                      _T("   check                : Check database for errors\n")
                      _T("   check-data-tables    : Check database for missing data tables\n")
@@ -323,7 +324,6 @@ stop_search:
                      _T("   init [file]          : Initialize database. If schema file is not specified,\n")
                      _T("                          it's loaded from $NETXMS_HOME/share/netxms/sql/dbinit_DBTYPE.sql\n")
 				         _T("   migrate <source>     : Migrate database from given source\n")
-                     _T("   online-upgrade       : Run pending online upgrade procedures\n")
                      _T("   reset-system-account : Unlock user \"system\" and reset it's password to default\n")
                      _T("   set <name> <value>   : Set value of server configuration variable\n")
                      _T("   unlock               : Forced database unlock\n")
@@ -447,7 +447,8 @@ stop_search:
       _tprintf(_T("Command missing. Type nxdbmgr -h for command line syntax.\n"));
       return 1;
    }
-   if (strcmp(argv[optind], "batch") &&
+   if (strcmp(argv[optind], "background-upgrade") &&
+       strcmp(argv[optind], "batch") &&
        strcmp(argv[optind], "check") &&
        strcmp(argv[optind], "check-data-tables") &&
        strcmp(argv[optind], "export") &&
@@ -455,7 +456,7 @@ stop_search:
        strcmp(argv[optind], "import") &&
        strcmp(argv[optind], "init") &&
        strcmp(argv[optind], "migrate") &&
-       strcmp(argv[optind], "online-upgrade") &&
+       strcmp(argv[optind], "online-upgrade") &&   // synonym for "background-upgrade" for compatibility
        strcmp(argv[optind], "reset-system-account") &&
        strcmp(argv[optind], "set") &&
        strcmp(argv[optind], "unlock") &&
@@ -610,7 +611,7 @@ stop_search:
       {
          UpgradeDatabase();
       }
-      else if (!strcmp(argv[optind], "online-upgrade"))
+      else if (!strcmp(argv[optind], "background-upgrade") || !strcmp(argv[optind], "online-upgrade"))
       {
          RunPendingOnlineUpgrades();
       }
@@ -675,7 +676,7 @@ stop_search:
       }
 
       if (IsOnlineUpgradePending())
-         WriteToTerminal(_T("\n\x1b[31;1mWARNING:\x1b[0m Online upgrades pending. Please run \x1b[1mnxdbmgr online-upgrade\x1b[0m when possible.\n"));
+         WriteToTerminal(_T("\n\x1b[31;1mWARNING:\x1b[0m Background upgrades pending. Please run \x1b[1mnxdbmgr background-upgrade\x1b[0m when possible.\n"));
    }
 
    // Shutdown

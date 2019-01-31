@@ -1,6 +1,6 @@
 /*
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004-2018 Victor Kirhenshtein
+** Copyright (C) 2004-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -212,7 +212,7 @@ void RunPendingOnlineUpgrades()
    Trim(buffer);
    if (buffer[0] == 0)
    {
-      _tprintf(_T("No pending online upgrades\n"));
+      _tprintf(_T("No pending background upgrades\n"));
       return;
    }
 
@@ -235,18 +235,18 @@ void RunPendingOnlineUpgrades()
          }
          if (handler != NULL)
          {
-            _tprintf(_T("Running online upgrade procedure for version %d.%d\n"), major, minor);
+            _tprintf(_T("Running background upgrade procedure for version %d.%d\n"), major, minor);
             if (!handler())
             {
-               _tprintf(_T("Online upgrade procedure for version %d.%d failed\n"), major, minor);
+               _tprintf(_T("Background upgrade procedure for version %d.%d failed\n"), major, minor);
                break;
             }
-            _tprintf(_T("Online upgrade procedure for version %d.%d completed\n"), major, minor);
+            _tprintf(_T("Background upgrade procedure for version %d.%d completed\n"), major, minor);
             UnregisterOnlineUpgrade(major, minor);
          }
          else
          {
-            _tprintf(_T("Cannot find online upgrade procedure for version %d.%d\n"), major, minor);
+            _tprintf(_T("Cannot find background upgrade procedure for version %d.%d\n"), major, minor);
          }
       }
    }
