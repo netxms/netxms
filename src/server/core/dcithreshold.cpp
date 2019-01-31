@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -763,59 +763,59 @@ void Threshold::calculateDiff(ItemValue *pResult, ItemValue &lastValue, ItemValu
 }
 
 /**
- * Compare to another threshold
+ * Check if given threshold is equal to this threshold
  */
-BOOL Threshold::compare(Threshold *pThr)
+bool Threshold::equals(const Threshold *t) const
 {
-   BOOL bMatch;
+   bool match;
 
    if (m_function == F_SCRIPT)
    {
       // Threat value field as string for script thresholds
-      bMatch = !_tcscmp(pThr->m_value.getString(), m_value.getString());
+      match = (_tcscmp(t->m_value.getString(), m_value.getString()) == 0);
    }
    else
    {
       switch(m_dataType)
       {
          case DCI_DT_INT:
-            bMatch = ((INT32)pThr->m_value == (INT32)m_value);
+            match = ((INT32)t->m_value == (INT32)m_value);
             break;
          case DCI_DT_UINT:
-            bMatch = ((UINT32)pThr->m_value == (UINT32)m_value);
+            match = ((UINT32)t->m_value == (UINT32)m_value);
             break;
          case DCI_DT_INT64:
-            bMatch = ((INT64)pThr->m_value == (INT64)m_value);
+            match = ((INT64)t->m_value == (INT64)m_value);
             break;
          case DCI_DT_UINT64:
-            bMatch = ((UINT64)pThr->m_value == (UINT64)m_value);
+            match = ((UINT64)t->m_value == (UINT64)m_value);
             break;
          case DCI_DT_FLOAT:
-            bMatch = ((double)pThr->m_value == (double)m_value);
+            match = ((double)t->m_value == (double)m_value);
             break;
          case DCI_DT_STRING:
-            bMatch = !_tcscmp(pThr->m_value.getString(), m_value.getString());
+            match = !_tcscmp(t->m_value.getString(), m_value.getString());
             break;
          default:
-            bMatch = TRUE;
+            match = true;
             break;
       }
    }
-   return bMatch &&
-          (pThr->m_eventCode == m_eventCode) &&
-          (pThr->m_rearmEventCode == m_rearmEventCode) &&
-          (pThr->m_dataType == m_dataType) &&
-          (pThr->m_function == m_function) &&
-          (pThr->m_operation == m_operation) &&
-          (pThr->m_sampleCount == m_sampleCount) &&
-          !_tcscmp(CHECK_NULL_EX(pThr->m_scriptSource), CHECK_NULL_EX(m_scriptSource)) &&
-			 (pThr->m_repeatInterval == m_repeatInterval);
+   return match &&
+          (t->m_eventCode == m_eventCode) &&
+          (t->m_rearmEventCode == m_rearmEventCode) &&
+          (t->m_dataType == m_dataType) &&
+          (t->m_function == m_function) &&
+          (t->m_operation == m_operation) &&
+          (t->m_sampleCount == m_sampleCount) &&
+          !_tcscmp(CHECK_NULL_EX(t->m_scriptSource), CHECK_NULL_EX(m_scriptSource)) &&
+			 (t->m_repeatInterval == m_repeatInterval);
 }
 
 /**
  * Create management pack record
  */
-void Threshold::createNXMPRecord(String &str, int index)
+void Threshold::createExportRecord(String &str, int index) const
 {
    TCHAR activationEvent[MAX_EVENT_NAME], deactivationEvent[MAX_EVENT_NAME];
 

@@ -1031,9 +1031,23 @@ void DCTable::updateFromTemplate(DCObject *src)
 	for(int i = 0; i < table->m_columns->size(); i++)
 		m_columns->add(new DCTableColumn(table->m_columns->get(i)));
 
-   m_thresholds->clear();
-	for(int i = 0; i < table->m_thresholds->size(); i++)
-		m_thresholds->add(new DCTableThreshold(table->m_thresholds->get(i), false));
+   // Copy thresholds
+   // ***************************
+   // First, skip matching thresholds
+   int count = std::min(m_thresholds->size(), table->m_thresholds->size());
+   int i;
+   for(i = 0; i < count; i++)
+      if (!m_thresholds->get(i)->equals(table->m_thresholds->get(i)))
+         break;
+   count = i;   // First unmatched threshold's position
+
+   // Delete all original thresholds starting from first unmatched
+   while(count < m_thresholds->size())
+      m_thresholds->remove(count);
+
+   // (Re)create thresholds starting from first unmatched
+   for(i = count; i < table->m_thresholds->size(); i++)
+      m_thresholds->add(new DCTableThreshold(table->m_thresholds->get(i), false));
 
    unlock();
 }
@@ -1087,22 +1101,22 @@ void DCTable::createExportRecord(String &str)
 
 	if (m_columns != NULL)
 	{
-	   str += _T("\t\t\t\t\t<columns>\n");
+	   str.append(_T("\t\t\t\t\t<columns>\n"));
 		for(int i = 0; i < m_columns->size(); i++)
 		{
 			m_columns->get(i)->createNXMPRecord(str, i + 1);
 		}
-	   str += _T("\t\t\t\t\t</columns>\n");
+	   str.append(_T("\t\t\t\t\t</columns>\n"));
 	}
 
 	if (m_thresholds != NULL)
 	{
-	   str += _T("\t\t\t\t\t<thresholds>\n");
+	   str.append(_T("\t\t\t\t\t<thresholds>\n"));
 		for(int i = 0; i < m_thresholds->size(); i++)
 		{
-			m_thresholds->get(i)->createNXMPRecord(str, i + 1);
+			m_thresholds->get(i)->createExportRecord(str, i + 1);
 		}
-	   str += _T("\t\t\t\t\t</thresholds>\n");
+	   str.append(_T("\t\t\t\t\t</thresholds>\n"));
 	}
 
 	if (m_pszPerfTabSettings != NULL)
@@ -1121,9 +1135,9 @@ void DCTable::createExportRecord(String &str)
 
    if (m_instanceFilterSource != NULL)
    {
-      str += _T("\t\t\t\t\t<instanceFilter>");
+      str.append(_T("\t\t\t\t\t<instanceFilter>"));
       str.appendPreallocated(EscapeStringForXML(m_instanceFilterSource, -1));
-      str += _T("</instanceFilter>\n");
+      str.append(_T("</instanceFilter>\n"));
    }
 
    unlock();
