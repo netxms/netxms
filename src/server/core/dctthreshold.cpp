@@ -256,6 +256,16 @@ json_t *DCTableCondition::toJson() const
 }
 
 /**
+ * Check if this condition equals to given condition
+ */
+bool DCTableCondition::equals(DCTableCondition *c) const
+{
+   return !_tcsicmp(c->m_column, m_column) &&
+          (c->m_operation == m_operation) &&
+          !_tcscmp(c->m_value.getString(), m_value.getString());
+}
+
+/**
  * Condition group constructor
  */
 DCTableConditionGroup::DCTableConditionGroup()
@@ -329,13 +339,13 @@ DCTableConditionGroup::~DCTableConditionGroup()
 /**
  * Fill NXCP mesage
  */
-UINT32 DCTableConditionGroup::fillMessage(NXCPMessage *msg, UINT32 baseId)
+UINT32 DCTableConditionGroup::fillMessage(NXCPMessage *msg, UINT32 baseId) const
 {
    UINT32 varId = baseId;
    msg->setField(varId++, (UINT32)m_conditions->size());
    for(int i = 0; i < m_conditions->size(); i++)
    {
-      DCTableCondition *c = m_conditions->get(i);
+      const DCTableCondition *c = m_conditions->get(i);
       msg->setField(varId++, c->getColumn());
       msg->setField(varId++, (UINT16)c->getOperation());
       msg->setField(varId++, c->getValue());
@@ -351,6 +361,19 @@ json_t *DCTableConditionGroup::toJson() const
    json_t *root = json_object();
    json_object_set_new(root, "conditions", json_object_array(m_conditions));
    return root;
+}
+
+/**
+ * Check if this condition group is equal to given condition group
+ */
+bool DCTableConditionGroup::equals(DCTableConditionGroup *g) const
+{
+   if (m_conditions->size() != g->m_conditions->size())
+      return false;
+   for(int i = 0; i < m_conditions->size(); i++)
+      if (!m_conditions->get(i)->equals(g->m_conditions->get(i)))
+         return false;
+   return true;
 }
 
 /**
@@ -507,7 +530,7 @@ void DCTableThreshold::loadConditions(DB_HANDLE hdb)
                m_groups->add(group);
             }
             TCHAR column[MAX_COLUMN_NAME], value[MAX_RESULT_LENGTH];
-            group->getConditions()->add(
+            group->addCondition(
                new DCTableCondition(
                   DBGetField(hResult, i, 1, column, MAX_COLUMN_NAME),
                   DBGetFieldLong(hResult, i, 2),
@@ -614,7 +637,7 @@ bool DCTableThreshold::saveToDatabase(DB_HANDLE hdb, UINT32 tableId, int seq)
       for(int i = 0; i < m_groups->size(); i++)
       {
          DCTableConditionGroup *group = m_groups->get(i);
-         ObjectArray<DCTableCondition> *conditions = group->getConditions();
+         const ObjectArray<DCTableCondition> *conditions = group->getConditions();
          for(int j = 0; j < conditions->size(); j++)
          {
             DCTableCondition *c = conditions->get(j);
@@ -801,7 +824,7 @@ void DCTableThreshold::generateEventsBasedOnThrDiff(TableThresholdCbData *data)
 /**
  * Create NXMP record for threshold
  */
-void DCTableThreshold::createNXMPRecord(String &str, int id)
+void DCTableThreshold::createExportRecord(String &str, int id) const
 {
    TCHAR activationEvent[MAX_EVENT_NAME], deactivationEvent[MAX_EVENT_NAME];
 
@@ -818,7 +841,7 @@ void DCTableThreshold::createNXMPRecord(String &str, int id)
    for(int i = 0; i < m_groups->size(); i++)
    {
       str.appendFormattedString(_T("\t\t\t\t\t\t\t\t<group id=\"%d\">\n\t\t\t\t\t\t\t\t\t<conditions>\n"), i + 1);
-      ObjectArray<DCTableCondition> *conditions = m_groups->get(i)->getConditions();
+      const ObjectArray<DCTableCondition> *conditions = m_groups->get(i)->getConditions();
       for(int j = 0; j < conditions->size(); j++)
       {
          DCTableCondition *c = conditions->get(j);
@@ -830,9 +853,9 @@ void DCTableThreshold::createNXMPRecord(String &str, int id)
                                 j + 1, (const TCHAR *)EscapeStringForXML2(c->getColumn()),
                                 c->getOperation(), (const TCHAR *)EscapeStringForXML2(c->getValue()));
       }
-      str += _T("\t\t\t\t\t\t\t\t\t</conditions>\n\t\t\t\t\t\t\t\t</group>\n");
+      str.append(_T("\t\t\t\t\t\t\t\t\t</conditions>\n\t\t\t\t\t\t\t\t</group>\n"));
    }
-   str += _T("\t\t\t\t\t\t\t</groups>\n\t\t\t\t\t\t</threshold>\n");
+   str.append(_T("\t\t\t\t\t\t\t</groups>\n\t\t\t\t\t\t</threshold>\n"));
 }
 
 /**
@@ -856,4 +879,22 @@ void DCTableThreshold::copyState(DCTableThreshold *src)
 {
    m_instances->clear();
    src->m_instances->forEach(CloneThresholdInstances, m_instances);
+}
+
+/**
+ * Check if this threshold is equal to given threshold
+ */
+bool DCTableThreshold::equals(const DCTableThreshold *t) const
+{
+   if ((m_activationEvent != t->m_activationEvent) ||
+       (m_deactivationEvent != t->m_deactivationEvent) ||
+       (m_sampleCount != t->m_sampleCount) ||
+       (m_groups->size() != t->m_groups->size()))
+      return false;
+
+   for(int i = 0; i < m_groups->size(); i++)
+      if (!m_groups->get(i)->equals(t->m_groups->get(i)))
+         return false;
+
+   return true;
 }

@@ -1882,7 +1882,7 @@ template<typename T> json_t *json_integer_array(const T *values, size_t size)
 /**
  * Serialize ObjectArray as JSON
  */
-template<typename T> json_t *json_object_array(ObjectArray<T> *a)
+template<typename T> json_t *json_object_array(const ObjectArray<T> *a)
 {
    json_t *root = json_array();
    if (a != NULL)

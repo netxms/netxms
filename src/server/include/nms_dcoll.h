@@ -153,9 +153,9 @@ public:
    void createId();
    UINT32 getRequiredCacheSize() { return ((m_function == F_LAST) || (m_function == F_ERROR)) ? 0 : m_sampleCount; }
 
-   BOOL compare(Threshold *pThr);
+   bool equals(const Threshold *t) const;
 
-   void createNXMPRecord(String &str, int index);
+   void createExportRecord(String &str, int index) const;
    json_t *toJson() const;
 
 	void associate(DCItem *pItem);
@@ -504,11 +504,13 @@ public:
 
    bool check(Table *value, int row);
 
-   const TCHAR *getColumn() { return m_column; }
-   int getOperation() { return m_operation; }
-   const TCHAR *getValue() { return m_value.getString(); }
+   const TCHAR *getColumn() const { return m_column; }
+   int getOperation() const { return m_operation; }
+   const TCHAR *getValue() const { return m_value.getString(); }
 
    json_t *toJson() const;
+
+   bool equals(DCTableCondition *c) const;
 };
 
 /**
@@ -526,12 +528,16 @@ public:
    DCTableConditionGroup(ConfigEntry *e);
    ~DCTableConditionGroup();
 
-   bool check(Table *value, int row);
+   void addCondition(DCTableCondition *c) { m_conditions->add(c); }
 
-   UINT32 fillMessage(NXCPMessage *msg, UINT32 baseId);
+   const ObjectArray<DCTableCondition> *getConditions() const { return m_conditions; }
+
+   UINT32 fillMessage(NXCPMessage *msg, UINT32 baseId) const;
    json_t *toJson() const;
 
-   ObjectArray<DCTableCondition> *getConditions() { return m_conditions; }
+   bool equals(DCTableConditionGroup *g) const;
+
+   bool check(Table *value, int row);
 };
 
 /**
@@ -594,8 +600,11 @@ public:
 
    bool saveToDatabase(DB_HANDLE hdb, UINT32 tableId, int seq);
    UINT32 fillMessage(NXCPMessage *msg, UINT32 baseId);
-   void createNXMPRecord(String &str, int id);
+
+   void createExportRecord(String &str, int id) const;
    json_t *toJson() const;
+
+   bool equals(const DCTableThreshold *t) const;
 
    UINT32 getId() const { return m_id; }
    UINT32 getActivationEvent() const { return m_activationEvent; }
