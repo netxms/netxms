@@ -105,8 +105,18 @@ InterfaceList *ProCurveDriver::getInterfaces(SNMP_Transport *snmp, StringMap *at
 			iface->isPhysicalPort = true;
 			if (isModular)
 			{
-				iface->slot = (iface->index / slotSize) + 1;
-				iface->port = iface->index % slotSize;
+			   int p = iface->index % slotSize;
+			   if (p != 0)
+			   {
+               iface->slot = (iface->index / slotSize) + 1;
+               iface->port = p;
+			   }
+			   else
+			   {
+			      // Last port in slot
+               iface->slot = iface->index / slotSize;
+               iface->port = slotSize;
+			   }
 			}
 			else
 			{
