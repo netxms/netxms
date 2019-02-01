@@ -65,4 +65,5 @@ sync		Syncer messages
 
 threads.*	Thread related
 
-topology.*	Topology related
+topo.*		Topology related
+topo.ipv4	IPv4 topology
