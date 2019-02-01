@@ -63,7 +63,7 @@ public class AttributeEditDialog extends Dialog
 		
       textName = new LabeledText(dialogArea, SWT.NONE);
       textName.setLabel(Messages.get().AttributeEditDialog_Name);
-      textName.getTextControl().setTextLimit(63);
+      textName.getTextControl().setTextLimit(127);
       if (name != null)
       {
       	textName.setText(name);
@@ -76,7 +76,6 @@ public class AttributeEditDialog extends Dialog
       
       textValue = new LabeledText(dialogArea, SWT.NONE);
       textValue.setLabel(Messages.get().AttributeEditDialog_Value);
-      textValue.getTextControl().setTextLimit(255);
       if (value != null)
       	textValue.setText(value);
       gd = new GridData();
