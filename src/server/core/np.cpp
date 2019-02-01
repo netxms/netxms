@@ -467,7 +467,6 @@ static bool HostIsReachable(const InetAddress& ipAddr, UINT32 zoneUIN, bool full
    oids.add(_T(".1.3.6.1.2.1.1.1.0"));
    AddDriverSpecificOids(&oids);
    SNMP_Transport *pTransport = SnmpCheckCommSettings(snmpProxy, ipAddr, &version, 0, NULL, &oids);
-   //pass correct port
    if (pTransport != NULL)
    {
       if (transport != NULL)

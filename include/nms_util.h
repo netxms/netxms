@@ -1276,8 +1276,18 @@ public:
 	void addMBString(const char *value) { add(value); }
 #endif
    void addAll(const StringList *src);
+
+   void insert(int pos, const TCHAR *value);
+#ifdef UNICODE
+   void insertMBString(int pos, const char *value);
+#else
+   void insertMBString(int pos, const char *value) { insert(pos, value); }
+#endif
+   void insertAll(int pos, const StringList *src);
+
    void merge(const StringList *src, bool matchCase);
    void splitAndAdd(const TCHAR *src, const TCHAR *separator);
+
    void remove(int index);
 	void clear();
 

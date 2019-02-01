@@ -130,6 +130,9 @@ void StringList::add(const TCHAR *value)
 
 #ifdef UNICODE
 
+/**
+ * Add multibyte string to list
+ */
 void StringList::addMBString(const char *value)
 {
    CHECK_ALLOCATION;
@@ -240,6 +243,45 @@ void StringList::addOrReplacePreallocated(int index, TCHAR *value)
 }
 
 /**
+ * Insert string into list
+ */
+void StringList::insert(int pos, const TCHAR *value)
+{
+   if ((pos < 0) || (pos > m_count))
+      return;
+
+   CHECK_ALLOCATION;
+
+   if (pos < m_count)
+      memmove(&m_values[pos + 1], &m_values[pos], (m_count - pos) * sizeof(TCHAR*));
+   m_count++;
+   m_values[pos] = m_pool.copyString(value);
+}
+
+#ifdef UNICODE
+
+/**
+ * Insert multibyte string to list
+ */
+void StringList::insertMBString(int pos, const char *value)
+{
+   if ((pos < 0) || (pos > m_count))
+      return;
+
+   CHECK_ALLOCATION;
+
+   size_t l = strlen(value);
+   WCHAR *s = m_pool.allocateArray<WCHAR>(l + 1);
+   MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, value, -1, s, static_cast<int>(l + 1));
+   if (pos < m_count)
+      memmove(&m_values[pos + 1], &m_values[pos], (m_count - pos) * sizeof(TCHAR*));
+   m_count++;
+   m_values[pos] = s;
+}
+
+#endif
+
+/**
  * Get index of given value. Returns zero-based index ot -1 
  * if given value not found in the list. If list contains duplicate values,
  * index of first occurence will be returned.
@@ -284,6 +326,15 @@ void StringList::addAll(const StringList *src)
 {
    for(int i = 0; i < src->m_count; i++)
       add(src->m_values[i]);
+}
+
+/**
+ * Insert all values from another list
+ */
+void StringList::insertAll(int pos, const StringList *src)
+{
+   for(int i = 0; i < src->m_count; i++)
+      insert(pos++, src->m_values[i]);
 }
 
 /**
