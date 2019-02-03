@@ -635,7 +635,7 @@ stop_search:
 			char *sourceConfig = argv[optind + 1];
 #endif
 			TCHAR destConfFields[2048];
-			_sntprintf(destConfFields, 2048, _T("\tDB Name: %s\n\tDB Server: %s\n\tDB Login: %s"), s_dbName, s_dbServer, s_dbLogin);
+			_sntprintf(destConfFields, 2048, _T("\tDriver: %s\n\tDB Name: %s\n\tDB Server: %s\n\tDB Login: %s"), s_dbDriver, s_dbName, s_dbServer, s_dbLogin);
          MigrateDatabase(sourceConfig, destConfFields, skipAudit, skipAlarms, skipEvent, skipSysLog, skipTrapLog);
 #ifdef UNICODE
 			free(sourceConfig);
