@@ -178,17 +178,10 @@ CommSession::~CommSession()
  */
 void CommSession::debugPrintf(int level, const TCHAR *format, ...)
 {
-   if (level > nxlog_get_debug_level())
-      return;
-
    va_list args;
-   TCHAR buffer[8192];
-
    va_start(args, format);
-   _vsntprintf(buffer, 8192, format, args);
+   nxlog_debug_tag_object2(_T("comm.cs"), m_id, level, format, args);
    va_end(args);
-
-   nxlog_write(MSG_DEBUG_SESSION, EVENTLOG_DEBUG_TYPE, "dds", m_index, m_id, buffer);
 }
 
 /**
@@ -698,6 +691,7 @@ void CommSession::processingThread()
                m_bulkReconciliationSupported = request->getFieldAsBoolean(VID_BULK_RECONCILIATION);
                m_allowCompression = request->getFieldAsBoolean(VID_ENABLE_COMPRESSION);
                response.setField(VID_RCC, ERR_SUCCESS);
+               response.setField(VID_FLAGS, static_cast<UINT16>((m_controlServer ? 0x01 : 0x00) | (m_masterServer ? 0x02 : 0x00)));
                debugPrintf(1, _T("Server capabilities: IPv6: %s; bulk reconciliation: %s; compression: %s"),
                            m_ipv6Aware ? _T("yes") : _T("no"),
                            m_bulkReconciliationSupported ? _T("yes") : _T("no"),
@@ -1345,17 +1339,10 @@ VirtualSession::~VirtualSession()
  */
 void VirtualSession::debugPrintf(int level, const TCHAR *format, ...)
 {
-   if (level > nxlog_get_debug_level())
-      return;
-
    va_list args;
-   TCHAR buffer[8192];
-
    va_start(args, format);
-   _vsntprintf(buffer, 8192, format, args);
+   nxlog_debug_tag_object2(_T("comm.vs"), m_id, level, format, args);
    va_end(args);
-
-   nxlog_write(MSG_DEBUG_VSESSION, EVENTLOG_DEBUG_TYPE, "ds", m_id, buffer);
 }
 
 /**

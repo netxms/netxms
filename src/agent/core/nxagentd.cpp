@@ -425,11 +425,11 @@ ServerInfo::~ServerInfo()
 /**
  * Server info: resolve hostname if needed
  */
-void ServerInfo::resolve()
+void ServerInfo::resolve(bool forceResolve)
 {
    time_t now = time(NULL);
    time_t age = now - m_lastResolveTime;
-   if ((age >= 3600) || ((age > 300) && !m_address.isValid()))
+   if ((age >= 3600) || ((age > 300) && !m_address.isValid()) || forceResolve)
    {
       m_address = InetAddress::resolveHostName(m_name);
       m_lastResolveTime = now;
@@ -439,11 +439,11 @@ void ServerInfo::resolve()
 /**
  * Server info: match address
  */
-bool ServerInfo::match(const InetAddress &addr)
+bool ServerInfo::match(const InetAddress &addr, bool forceResolve)
 {
    MutexLock(m_mutex);
    if (m_redoResolve)
-      resolve();
+      resolve(forceResolve);
    bool result = m_address.isValid() ? m_address.contain(addr) : false;
    MutexUnlock(m_mutex);
    return result;

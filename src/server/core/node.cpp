@@ -1589,6 +1589,14 @@ restart_agent_check:
                PostEventEx(pQueue, EVENT_AGENT_OK, m_id, NULL);
                sendPollerMsg(dwRqId, POLLER_INFO _T("Connectivity with NetXMS agent restored\r\n"));
                m_pollCountAgent = 0;
+
+               // Reset connection time of all proxy connections so they can be re-established immediately
+               for(int i = 0; i < MAX_PROXY_TYPE; i++)
+               {
+                  m_proxyConnections[i].lock();
+                  m_proxyConnections[i].setLastConnectTime(0);
+                  m_proxyConnections[i].unlock();
+               }
             }
          }
          else
@@ -6066,10 +6074,21 @@ AgentConnectionEx *Node::acquireProxyConnection(ProxyType type, bool validate)
    if ((conn == NULL) && (time(NULL) - m_proxyConnections[type].getLastConnectTime() > 60))
    {
       conn = createAgentConnection();
-      m_proxyConnections[type].set(conn);
-      m_proxyConnections[type].setLastConnectTime(time(NULL));
       if (conn != NULL)
-         nxlog_debug_tag(DEBUG_TAG_AGENT, 4, _T("Node::acquireProxyConnection(%s [%d] type=%d): new agent connection created"), m_name, (int)m_id, (int)type);
+      {
+         if (conn->isMasterServer())
+         {
+            m_proxyConnections[type].set(conn);
+            nxlog_debug_tag(DEBUG_TAG_AGENT, 4, _T("Node::acquireProxyConnection(%s [%d] type=%d): new agent connection created"), m_name, (int)m_id, (int)type);
+         }
+         else
+         {
+            nxlog_debug_tag(DEBUG_TAG_AGENT, 6, _T("Node::acquireProxyConnection(%s [%d] type=%d): server does not have master access to agent"), m_name, (int)m_id, (int)type);
+            conn->decRefCount();
+            conn = NULL;
+         }
+      }
+      m_proxyConnections[type].setLastConnectTime(time(NULL));
    }
 
    if (conn != NULL)

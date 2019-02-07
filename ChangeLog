@@ -4,6 +4,8 @@
 
 - TimescaleDB supported as backend database
 - Added option to show SELECT output in nxdbmgr batch
+- Fixed issues:
+	NX-1561 (Unexpected SYS_SNMP_DOWN events after SNMP proxy node restart)
 
 
 *
