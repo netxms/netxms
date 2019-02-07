@@ -188,6 +188,7 @@ int LIBNXDB_EXPORTABLE DBGetColumnCount(DB_UNBUFFERED_RESULT hResult);
 bool LIBNXDB_EXPORTABLE DBGetColumnName(DB_UNBUFFERED_RESULT hResult, int column, TCHAR *buffer, int bufSize);
 bool LIBNXDB_EXPORTABLE DBGetColumnNameA(DB_UNBUFFERED_RESULT hResult, int column, char *buffer, int bufSize);
 void LIBNXDB_EXPORTABLE DBFreeResult(DB_UNBUFFERED_RESULT hResult);
+void LIBNXDB_EXPORTABLE DBResultToTable(DB_RESULT hResult, Table *table);
 
 TCHAR LIBNXDB_EXPORTABLE *DBGetField(DB_UNBUFFERED_RESULT hResult, int iColumn, TCHAR *pBuffer, int iBufSize);
 char LIBNXDB_EXPORTABLE *DBGetFieldUTF8(DB_UNBUFFERED_RESULT hResult, int iColumn, char *buffer, int iBufSize);

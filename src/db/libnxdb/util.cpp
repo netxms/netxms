@@ -1077,3 +1077,28 @@ bool LIBNXDB_EXPORTABLE DBRenameColumn(DB_HANDLE hdb, const TCHAR *tableName, co
 
    return success;
 }
+
+/**
+ * Convert DB_RESULT to table object
+ */
+void LIBNXDB_EXPORTABLE DBResultToTable(DB_RESULT hResult, Table *table)
+{
+   int numColumns = DBGetColumnCount(hResult);
+   for(int c = 0; c < numColumns; c++)
+   {
+      TCHAR name[64];
+      if (!DBGetColumnName(hResult, c, name, 64))
+         _sntprintf(name, 64, _T("COL_%d"), c + 1);
+      table->addColumn(name);
+   }
+
+   int numRows = DBGetNumRows(hResult);
+   for(int r = 0; r < numRows; r++)
+   {
+      table->addRow();
+      for(int c = 0; c < numColumns; c++)
+      {
+         table->setPreallocated(c, DBGetField(hResult, r, c, NULL, 0));
+      }
+   }
+}

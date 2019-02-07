@@ -55,7 +55,7 @@ void UpgradeDatabase();
 void UnlockDatabase();
 void ReindexIData();
 
-bool ExecSQLBatch(const char *pszFile);
+bool ExecSQLBatch(const char *pszFile, bool showOutput);
 bool ValidateDatabase();
 
 bool SetMajorSchemaVersion(INT32 nextMajor, INT32 nextMinor);

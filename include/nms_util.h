@@ -1844,6 +1844,8 @@ public:
    void setBaseRow(int baseRow) { setBaseRowAt(getNumRows() - 1, baseRow); }
    int getBaseRow(int row) const { const TableRow *r = m_data->get(row); return (r != NULL) ? r->getBaseRow() : 0; }
 
+   void writeToTerminal();
+
    static Table *createFromXML(const char *xml);
    TCHAR *createXML() const;
 

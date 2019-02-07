@@ -96,7 +96,7 @@ const TCHAR *g_sqlTypes[8][3] =
 /**
  * Execute SQL query and print error message on screen if query failed
  */
-bool LIBNXDBMGR_EXPORTABLE SQLQuery(const TCHAR *query)
+bool LIBNXDBMGR_EXPORTABLE SQLQuery(const TCHAR *query, bool showOutput)
 {
    if (*query == 0)
       return true;
@@ -121,6 +121,12 @@ bool LIBNXDBMGR_EXPORTABLE SQLQuery(const TCHAR *query)
       DB_RESULT hResult = DBSelectEx(g_dbHandle, realQuery, errorText);
       if (hResult != NULL)
       {
+         if (showOutput)
+         {
+            Table table;
+            DBResultToTable(hResult, &table);
+            table.writeToTerminal();
+         }
          DBFreeResult(hResult);
          success = true;
       }

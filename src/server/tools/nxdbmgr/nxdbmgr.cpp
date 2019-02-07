@@ -239,6 +239,7 @@ int main(int argc, char *argv[])
    bool skipEvent = false;
    bool skipSysLog = false;
    bool skipTrapLog = false;
+   bool showOutput = false;
    int ch;
 
    InitNetXMSProcess(true);
@@ -306,7 +307,7 @@ stop_search:
 
    // Parse command line
    opterr = 1;
-   while((ch = getopt(argc, argv, "Ac:dDEfGhILMNqRsStT:vXY")) != -1)
+   while((ch = getopt(argc, argv, "Ac:dDEfGhILMNoqRsStT:vXY")) != -1)
    {
       switch(ch)
       {
@@ -343,6 +344,7 @@ stop_search:
                      _T("   -L          : Skip export or migration of alarm log.\n")
                      _T("   -M          : MySQL only - specify TYPE=MyISAM for new tables.\n")
                      _T("   -N          : Do not replace existing configuration value (\"set\" command only).\n")
+                     _T("   -o          : Show output from SELECT statements in a batch.\n")
                      _T("   -q          : Quiet mode (don't show startup banner).\n")
                      _T("   -R          : Skip export or migration of SNMP trap log.\n")
                      _T("   -s          : Skip collected data during migration on export.\n")
@@ -367,7 +369,7 @@ stop_search:
 	         MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, configFile, MAX_PATH);
 				configFile[MAX_PATH - 1] = 0;
 #else
-            nx_strncpy(configFile, optarg, MAX_PATH);
+            strlcpy(configFile, optarg, MAX_PATH);
 #endif
             break;
 			case 'd':
@@ -387,6 +389,9 @@ stop_search:
 				break;
          case 'N':
             replaceValue = false;
+            break;
+         case 'o':
+            showOutput = true;
             break;
          case 'q':
             bQuiet = TRUE;
@@ -596,7 +601,7 @@ stop_search:
       // Do requested operation
       if (!strcmp(argv[optind], "batch"))
       {
-         ExecSQLBatch(argv[optind + 1]);
+         ExecSQLBatch(argv[optind + 1], showOutput);
       }
       else if (!strcmp(argv[optind], "check"))
       {

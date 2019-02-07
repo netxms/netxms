@@ -103,7 +103,7 @@ static BYTE *FindEndOfQuery(BYTE *pStart, BYTE *pBatchEnd)
  * Execute SQL batch file. If file name contains @dbengine@ macro,
  * it will be replaced with current database engine name in lowercase
  */
-bool ExecSQLBatch(const char *batchFile)
+bool ExecSQLBatch(const char *batchFile, bool showOutput)
 {
    UINT32 dwSize;
    BYTE *batch = LoadFileA(batchFile, &dwSize);
@@ -123,10 +123,10 @@ bool ExecSQLBatch(const char *batchFile)
       {
 #ifdef UNICODE
          WCHAR *wcQuery = WideStringFromMBString((char *)pQuery);
-         result = SQLQuery(wcQuery);
+         result = SQLQuery(wcQuery, showOutput);
          MemFree(wcQuery);
 #else
-         result = SQLQuery((char *)pQuery);
+         result = SQLQuery((char *)pQuery, showOutput);
 #endif
          if (!result)
             pNext = batch + dwSize;
@@ -145,7 +145,7 @@ void InitDatabase(const char *pszInitFile)
    TCHAR szQuery[256], szGUID[64];
 
    _tprintf(_T("Initializing database...\n"));
-   if (!ExecSQLBatch(pszInitFile))
+   if (!ExecSQLBatch(pszInitFile, false))
       goto init_failed;
 
    // Generate GUID for user "system"

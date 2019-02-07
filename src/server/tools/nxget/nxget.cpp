@@ -109,40 +109,11 @@ static int List(AgentConnection *pConn, const TCHAR *pszParam)
 static int GetTable(AgentConnection *pConn, const TCHAR *pszParam)
 {
 	Table *table;
-
    UINT32 rcc = pConn->getTable(pszParam, &table);
    if (rcc == ERR_SUCCESS)
    {
-      // calculate column widths and print headers
-      int *widths = (int *)calloc(table->getNumColumns(), sizeof(int));
-		WriteToTerminal(_T("\x1b[1m|"));
-		for(int c = 0; c < table->getNumColumns(); c++)
-		{
-         widths[c] = (int)_tcslen(table->getColumnName(c));
-   		for(int i = 0; i < table->getNumRows(); i++)
-         {
-            int len = (int)_tcslen(table->getAsString(i, c));
-            if (len > widths[c])
-               widths[c] = len;
-         }
-			WriteToTerminalEx(_T(" %*s |"), -widths[c], table->getColumnName(c));
-      }
-
-		WriteToTerminal(_T("\n"));
-		for(int i = 0; i < table->getNumRows(); i++)
-		{
-   		WriteToTerminal(_T("\x1b[1m|\x1b[0m"));
-			for(int j = 0; j < table->getNumColumns(); j++)
-			{
-			   if (table->getColumnDefinition(j)->isInstanceColumn())
-               WriteToTerminalEx(_T(" \x1b[32;1m%*s\x1b[0m \x1b[1m|\x1b[0m"), -widths[j], table->getAsString(i, j));
-			   else
-			      WriteToTerminalEx(_T(" %*s \x1b[1m|\x1b[0m"), -widths[j], table->getAsString(i, j));
-			}
-			WriteToTerminal(_T("\n"));
-		}
+      table->writeToTerminal();
 		delete table;
-		free(widths);
    }
    else
    {
