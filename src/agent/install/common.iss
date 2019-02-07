@@ -7,6 +7,7 @@ Name: "{app}\var"
 
 [Tasks]
 Name: sessionagent; Description: "Install session agent (will run in every user session)"; Flags: unchecked
+Name: useragent; Description: "Install desktop support application (will run in every user session)"; Flags: unchecked
 
 [Registry]
 Root: HKLM; Subkey: "Software\NetXMS"; Flags: uninsdeletekeyifempty
@@ -14,7 +15,9 @@ Root: HKLM; Subkey: "Software\NetXMS\Agent"; Flags: uninsdeletekey
 Root: HKLM; Subkey: "Software\NetXMS\Agent"; ValueType: string; ValueName: "InstallPath"; ValueData: "{app}"
 Root: HKLM; Subkey: "Software\NetXMS\Agent"; ValueType: string; ValueName: "ConfigFile"; ValueData: "{app}\etc\nxagentd.conf"
 Root: HKLM; Subkey: "Software\NetXMS\Agent"; ValueType: string; ValueName: "ConfigIncludeDir"; ValueData: "{app}\etc\nxagentd.conf.d"
+Root: HKLM; Subkey: "Software\NetXMS\Agent"; ValueType: dword; ValueName: "WithUserAgent"; ValueData: "1"; Tasks: useragent
 Root: HKLM; Subkey: "SOFTWARE\Microsoft\Windows\CurrentVersion\Run"; ValueType: string; ValueName: "NetXMSSessionAgent"; ValueData: """{app}\bin\nxsagent.exe"" -c ""{app}\etc\nxagentd.conf"" -H"; Flags: uninsdeletevalue; Tasks: sessionagent
+Root: HKLM; Subkey: "SOFTWARE\Microsoft\Windows\CurrentVersion\Run"; ValueType: string; ValueName: "NetXMSUserAgent"; ValueData: """{app}\bin\nxuseragent.exe"""; Flags: uninsdeletevalue; Tasks: useragent
 
 [Run]
 Filename: "{app}\bin\nxagentd.exe"; Parameters: "-Z ""{app}\etc\nxagentd.conf"" {code:GetForceCreateConfigFlag} ""{code:GetMasterServer}"" ""{code:GetLogFile}"" ""{code:GetFileStore}"" ""{code:GetConfigIncludeDir}"" {code:GetSubagentList} {code:GetExtraConfigValues}"; WorkingDir: "{app}\bin"; StatusMsg: "Creating agent's config..."; Flags: runhidden
@@ -249,7 +252,6 @@ Begin
   cbDownloadConfig.Caption := 'Download configuration file from management server on startup';
   cbDownloadConfig.Checked := StrToBool(GetPreviousData('DownloadConfig', sbDownloadConfig));
   cbDownloadConfig.Parent := ServerSelectionPage.Surface;
-
 
   SubagentSelectionPage := CreateInputOptionPage(ServerSelectionPage.Id,
     'Subagent Selection', 'Select desired subagents.',
