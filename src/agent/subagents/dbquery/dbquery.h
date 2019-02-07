@@ -138,7 +138,6 @@ void ShutdownConnections();
 DB_HANDLE GetConnectionHandle(const TCHAR *dbid);
 void StartPollingThreads();
 void StopPollingThreads();
-void DBResultToTable(DB_RESULT hResult, Table *table);
 Query *AcquireQueryObject(const TCHAR *name);
 
 /**

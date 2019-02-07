@@ -1,6 +1,6 @@
 /*
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004-2018 Victor Kirhenshtein
+** Copyright (C) 2004-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -90,19 +90,19 @@ static bool LoadServerModule(const TCHAR *name, bool mandatory)
       m->GetSchemaPrefix = (const TCHAR* (*)())DLGetSymbolAddr(hModule, "NXM_GetSchemaPrefix", szErrorText);
       if ((m->CheckDB != NULL) || (m->UpgradeDB != NULL) || (m->GetTables != NULL) || (m->GetSchemaPrefix != NULL))
       {
-         WriteToTerminalEx(_T("\x1b[32;1mINFO:\x1b[0m Server module \x1b[1m%s\x1b[0m loaded\r\n"), name);
+         WriteToTerminalEx(_T("\x1b[32;1mINFO:\x1b[0m Server module \x1b[1m%s\x1b[0m loaded\n"), name);
          s_modules.add(m);
       }
       else
       {
-         WriteToTerminalEx(_T("\x1b[32;1mINFO:\x1b[0m Server module \x1b[1m%s\x1b[0m skipped\r\n"), name);
+         WriteToTerminalEx(_T("\x1b[32;1mINFO:\x1b[0m Server module \x1b[1m%s\x1b[0m skipped\n"), name);
          delete m;
       }
       success = true;
    }
    else
    {
-      WriteToTerminalEx(_T("\x1b[%s:\x1b[0m Cannot load server module \x1b[1m%s\x1b[0m (%s)\r\n"),
+      WriteToTerminalEx(_T("\x1b[%s:\x1b[0m Cannot load server module \x1b[1m%s\x1b[0m (%s)\n"),
                mandatory ? _T("31;1mERROR") : _T("33;1mWARNING"), name, szErrorText);
    }
    return success;

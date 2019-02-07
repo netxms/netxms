@@ -55,7 +55,7 @@ void LIBNXDBMGR_EXPORTABLE ShowQuery(const TCHAR *query);
 DB_RESULT LIBNXDBMGR_EXPORTABLE SQLSelect(const TCHAR *query);
 DB_UNBUFFERED_RESULT LIBNXDBMGR_EXPORTABLE SQLSelectUnbuffered(const TCHAR *query);
 bool LIBNXDBMGR_EXPORTABLE SQLExecute(DB_STATEMENT hStmt);
-bool LIBNXDBMGR_EXPORTABLE SQLQuery(const TCHAR *query);
+bool LIBNXDBMGR_EXPORTABLE SQLQuery(const TCHAR *query, bool showOutput = false);
 bool LIBNXDBMGR_EXPORTABLE SQLBatch(const TCHAR *batch);
 
 // Confirmations

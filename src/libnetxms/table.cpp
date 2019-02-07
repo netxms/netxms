@@ -887,6 +887,42 @@ int Table::findRowByInstance(const TCHAR *instance)
 }
 
 /**
+ * Display table on terminal
+ */
+void Table::writeToTerminal()
+{
+   // calculate column widths and print headers
+   int *widths = MemAllocArray<int>(m_columns->size());
+   WriteToTerminal(_T("\x1b[1m|"));
+   for(int c = 0; c < m_columns->size(); c++)
+   {
+      widths[c] = (int)_tcslen(getColumnName(c));
+      for(int i = 0; i < m_data->size(); i++)
+      {
+         int len = (int)_tcslen(getAsString(i, c));
+         if (len > widths[c])
+            widths[c] = len;
+      }
+      WriteToTerminalEx(_T(" %*s |"), -widths[c], getColumnName(c));
+   }
+
+   WriteToTerminal(_T("\n"));
+   for(int i = 0; i < m_columns->size(); i++)
+   {
+      WriteToTerminal(_T("\x1b[1m|\x1b[0m"));
+      for(int j = 0; j < m_columns->size(); j++)
+      {
+         if (m_columns->get(j)->isInstanceColumn())
+            WriteToTerminalEx(_T(" \x1b[32;1m%*s\x1b[0m \x1b[1m|\x1b[0m"), -widths[j], getAsString(i, j));
+         else
+            WriteToTerminalEx(_T(" %*s \x1b[1m|\x1b[0m"), -widths[j], getAsString(i, j));
+      }
+      WriteToTerminal(_T("\n"));
+   }
+   free(widths);
+}
+
+/**
  * Create new table column definition
  */
 TableColumnDefinition::TableColumnDefinition(const TCHAR *name, const TCHAR *displayName, INT32 dataType, bool isInstance)
