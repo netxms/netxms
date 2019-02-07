@@ -270,13 +270,13 @@ private:
    bool m_redoResolve;
    MUTEX m_mutex;
 
-   void resolve();
+   void resolve(bool forceResolve);
 
 public:
    ServerInfo(const TCHAR *name, bool control, bool master);
    ~ServerInfo();
 
-   bool match(const InetAddress &addr);
+   bool match(const InetAddress &addr, bool forceResolve);
 
    bool isMaster() { return m_master; }
    bool isControl() { return m_control; }

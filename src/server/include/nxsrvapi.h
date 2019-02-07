@@ -511,6 +511,8 @@ private:
    UINT32 m_debugId;
    InetAddress m_addr;
    int m_nProtocolVersion;
+   bool m_controlServer;
+   bool m_masterServer;
    int m_iAuthMethod;
    char m_szSecret[MAX_SECRET_LENGTH];
    time_t m_tLastCommandTime;
@@ -601,6 +603,8 @@ public:
    bool isConnected() const { return m_isConnected; }
    bool isProxyMode() { return m_useProxy; }
 	int getProtocolVersion() const { return m_nProtocolVersion; }
+	bool isControlServer() const { return m_controlServer; }
+	bool isMasterServer() const { return m_masterServer; }
 	bool isCompressionAllowed() const { return m_allowCompression && (m_nProtocolVersion >= 4); }
 
    bool sendMessage(NXCPMessage *msg);

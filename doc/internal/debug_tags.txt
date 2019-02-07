@@ -3,6 +3,8 @@ agent.tunnel    Agent tunnels
 
 client.session	Client sessions
 
+comm.*		Communications (in agent log)
+
 crypto.*	Encryption functions
 crypto.cert	Certificate related messages
 

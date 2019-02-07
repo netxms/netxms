@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -32,7 +32,7 @@
 /**
  * Check if server address is valid
  */
-bool IsValidServerAddress(const InetAddress &addr, bool *pbMasterServer, bool *pbControlServer);
+bool IsValidServerAddress(const InetAddress &addr, bool *pbMasterServer, bool *pbControlServer, bool forceResolve);
 
 /**
  * Register session
@@ -99,6 +99,7 @@ private:
    MUTEX m_stateLock;
    bool m_connected;
    bool m_reset;
+   bool m_forceResolve;
    VolatileCounter m_requestId;
    THREAD m_recvThread;
    MsgWaitQueue *m_queue;
@@ -147,7 +148,7 @@ public:
  */
 Tunnel::Tunnel(const TCHAR *hostname, UINT16 port) : m_channels(true)
 {
-   m_hostname = _tcsdup(hostname);
+   m_hostname = MemCopyString(hostname);
    m_port = port;
    m_socket = INVALID_SOCKET;
    m_context = NULL;
@@ -157,6 +158,7 @@ Tunnel::Tunnel(const TCHAR *hostname, UINT16 port) : m_channels(true)
    m_stateLock = MutexCreate();
    m_connected = false;
    m_reset = false;
+   m_forceResolve = false;
    m_requestId = 0;
    m_recvThread = INVALID_THREAD_HANDLE;
    m_queue = NULL;
@@ -181,7 +183,7 @@ Tunnel::~Tunnel()
    MutexDestroy(m_writeLock);
    MutexDestroy(m_stateLock);
    MutexDestroy(m_channelLock);
-   free(m_hostname);
+   MemFree(m_hostname);
 }
 
 /**
@@ -650,6 +652,13 @@ bool Tunnel::connectToServer()
       return false;
    }
 
+   // Force master/control server DNS names resolve after new tunnel is established
+   // This will fix the following situation:
+   //    - server DNS name was not available at agent startup
+   //    - DNS name was resolved later and used for establishing tunnel
+   //    - first session from server got wrong access because DNS name in server info structure still unresolved
+   m_forceResolve = true;
+
    nxlog_write(MSG_TUNNEL_ESTABLISHED, NXLOG_INFO, "s", m_hostname);
    return true;
 }
@@ -964,7 +973,8 @@ void Tunnel::createSession(NXCPMessage *request)
 
    // Assume that peer always have minimal access, so don't check return value
    bool masterServer, controlServer;
-   IsValidServerAddress(m_address, &masterServer, &controlServer);
+   IsValidServerAddress(m_address, &masterServer, &controlServer, m_forceResolve);
+   m_forceResolve = false;
 
    TunnelCommChannel *channel = createChannel();
    if (channel != NULL)

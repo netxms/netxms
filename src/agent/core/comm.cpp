@@ -22,6 +22,8 @@
 
 #include "nxagentd.h"
 
+#define DEBUG_TAG _T("comm")
+
 /**
  * Statistics
  */
@@ -80,12 +82,12 @@ void DestroySessionList()
 /**
  * Validates server's address
  */
-bool IsValidServerAddress(const InetAddress &addr, bool *pbMasterServer, bool *pbControlServer)
+bool IsValidServerAddress(const InetAddress &addr, bool *pbMasterServer, bool *pbControlServer, bool forceResolve)
 {
    for(int i = 0; i < g_serverList.size(); i++)
 	{
       ServerInfo *s = g_serverList.get(i);
-      if (s->match(addr))
+      if (s->match(addr, forceResolve))
       {
          *pbMasterServer = s->isMaster();
          *pbControlServer = s->isControl();
@@ -107,6 +109,8 @@ bool RegisterSession(CommSession *session)
          g_pSessionList[i] = session;
          session->setIndex(i);
          MutexUnlock(g_hSessionListAccess);
+         session->debugPrintf(4, _T("Session registered (control=%s, master=%s)"),
+                  session->isControlServer() ? _T("true") : _T("false"), session->isMasterServer() ? _T("true") : _T("false"));
          return true;
       }
 
@@ -424,7 +428,7 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
          DebugPrintf(5, _T("Incoming connection from %s"), addr.toString(buffer));
 
          bool masterServer, controlServer;
-         if (IsValidServerAddress(addr, &masterServer, &controlServer))
+         if (IsValidServerAddress(addr, &masterServer, &controlServer, false))
          {
             g_acceptedConnections++;
             DebugPrintf(5, _T("Connection from %s accepted"), buffer);
@@ -434,14 +438,14 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
             CommSession *session = new CommSession(channel, addr, masterServer, controlServer);
             channel->decRefCount();
 			
-            if (!RegisterSession(session))
+            if (RegisterSession(session))
             {
-               delete session;
+               nxlog_debug(9, _T("Session registered for %s"), buffer);
+               session->run();
             }
             else
             {
-               DebugPrintf(9, _T("Session registered for %s"), buffer);
-               session->run();
+               delete session;
             }
          }
          else     // Unauthorized connection
@@ -449,7 +453,7 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
             g_rejectedConnections++;
             shutdown(hClientSocket, SHUT_RDWR);
             closesocket(hClientSocket);
-            DebugPrintf(5, _T("Connection from %s rejected"), buffer);
+            nxlog_debug(5, _T("Connection from %s rejected"), buffer);
          }
       }
       else if (nRet == -1)

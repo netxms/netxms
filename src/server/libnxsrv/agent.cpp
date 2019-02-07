@@ -128,6 +128,8 @@ AgentConnection::AgentConnection(const InetAddress& addr, WORD port, int authMet
    m_downloadProgressCallback = NULL;
    m_downloadProgressCallbackArg = NULL;
    m_bulkDataProcessing = 0;
+   m_controlServer = false;
+   m_masterServer = false;
 }
 
 /**
@@ -1017,10 +1019,33 @@ UINT32 AgentConnection::setServerCapabilities()
    msg.setField(VID_BULK_RECONCILIATION, (INT16)1);
    msg.setField(VID_ENABLE_COMPRESSION, (INT16)(m_allowCompression ? 1 : 0));
    msg.setId(dwRqId);
-   if (sendMessage(&msg))
-      return waitForRCC(dwRqId, m_dwCommandTimeout);
-   else
+   if (!sendMessage(&msg))
       return ERR_CONNECTION_BROKEN;
+
+   NXCPMessage *response = m_pMsgWaitQueue->waitForMessage(CMD_REQUEST_COMPLETED, dwRqId, m_dwCommandTimeout);
+   if (response == NULL)
+      return ERR_REQUEST_TIMEOUT;
+
+   UINT32 rcc = response->getFieldAsUInt32(VID_RCC);
+   if (rcc == ERR_SUCCESS)
+   {
+      if (response->isFieldExist(VID_FLAGS))
+      {
+         UINT16 flags = response->getFieldAsUInt16(VID_FLAGS);
+         if (flags & 0x01)
+            m_controlServer = true;
+         if (flags & 0x02)
+            m_masterServer = true;
+      }
+      else
+      {
+         // Agents before 2.2.13 do not return access flags, assume this server has full access
+         m_controlServer = true;
+         m_masterServer = true;
+      }
+   }
+   delete response;
+   return rcc;
 }
 
 /**
