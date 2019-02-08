@@ -907,7 +907,7 @@ void Table::writeToTerminal()
    }
 
    WriteToTerminal(_T("\n"));
-   for(int i = 0; i < m_columns->size(); i++)
+   for(int i = 0; i < m_data->size(); i++)
    {
       WriteToTerminal(_T("\x1b[1m|\x1b[0m"));
       for(int j = 0; j < m_columns->size(); j++)

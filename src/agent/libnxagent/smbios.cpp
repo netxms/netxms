@@ -1,6 +1,6 @@
 /*
 ** NetXMS platform subagent for Windows
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -105,6 +105,91 @@ struct MemoryDevice
 };
 
 /**
+ * Processor types
+ */
+static const char *s_processorTypes[] =
+{
+   "Unknown",
+   "Other",
+   "Unknown",
+   "CPU",
+   "FPU",
+   "DSP",
+   "GPU"
+};
+
+/**
+ * Processor types
+ */
+static const char *s_processorFamilies[] =
+{
+   "Unknown",
+   "Other",
+   "Unknown",
+   "8086",
+   "80286",
+   "Intel386",
+   "Intel486",
+   "8087",
+   "80287",
+   "80387",
+   "80487",
+   "Intel Pentium",
+   "Pentium Pro",
+   "Pentium® II",
+   "Pentium MMX",
+   "Intel Celeron",
+   "Pentium II Xeon",
+   "Pentium III",
+   "M1",
+   "M2",
+   "Intel Celeron M",
+   "Intel Pentium 4 HT",
+   "Unknown",  // 0x16
+   "Unknown",  // 0x17
+   "AMD Duron",
+   "AMD K5",
+   "AMD K6",
+   "AMD K6-2",
+   "AMD K6-3",
+   "AMD Athlon",
+   "AMD29000",
+   "AMD K6-2+",
+   "Power PC",
+   "Power PC 601",
+   "Power PC 603",
+   "Power PC 603+",
+   "Power PC 604",
+   "Power PC 620",
+   "Power PC x704",
+   "Power PC 750",
+   "Intel Core Duo",
+   "Intel Core Duo mobile",
+   "Intel Core Solo mobile",
+   "Intel Atom",
+   "Intel Core M" // 0x2C
+};
+
+/**
+ * Processor information
+ */
+struct Processor
+{
+   char socket[32];
+   const char *type;
+   const char *family;
+   char manufacturer[64];
+   char version[64];
+   UINT16 maxSpeed;
+   UINT16 currentSpeed;
+   char serial[32];
+   char partNumber[32];
+   int cores;
+   int threads;
+   UINT16 handle;
+};
+
+/**
  * BIOS and system information
  */
 static char s_baseboardManufacturer[128] = "";
@@ -123,6 +208,7 @@ static char s_hardwareVersion[64] = "";
 static char s_systemWakeUpEvent[32] = "Unknown";
 static char *s_oemStrings[64];
 static StructArray<MemoryDevice> s_memoryDevices;
+static StructArray<Processor> s_processors;
 
 /**
  * Get hardware manufacturer
@@ -204,6 +290,71 @@ LONG LIBNXAGENT_EXPORTABLE SMBIOS_MemDevParameterHandler(const TCHAR *cmd, const
          break;
       case 'T':
          ret_mbstring(value, md->type);
+         break;
+      default:
+         return SYSINFO_RC_UNSUPPORTED;
+   }
+
+   return SYSINFO_RC_SUCCESS;
+}
+
+/**
+ * Handler for processor parameters
+ */
+LONG LIBNXAGENT_EXPORTABLE SMBIOS_ProcessorParameterHandler(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   TCHAR instanceText[64];
+   if (!AgentGetParameterArg(cmd, 1, instanceText, 64))
+      return SYSINFO_RC_UNSUPPORTED;
+
+   Processor *proc = NULL;
+   UINT16 instance = static_cast<UINT16>(_tcstol(instanceText, NULL, 0));
+   for(int i = 0; i < s_processors.size(); i++)
+   {
+      if (s_processors.get(i)->handle == instance)
+      {
+         proc = s_processors.get(i);
+         break;
+      }
+   }
+
+   if (proc == NULL)
+      return SYSINFO_RC_NO_SUCH_INSTANCE;
+
+   switch(*arg)
+   {
+      case 'C':
+         ret_uint(value, proc->cores);
+         break;
+      case 'c':
+         ret_uint(value, proc->currentSpeed);
+         break;
+      case 'F':
+         ret_mbstring(value, proc->family);
+         break;
+      case 'M':
+         ret_mbstring(value, proc->manufacturer);
+         break;
+      case 'm':
+         ret_uint(value, proc->maxSpeed);
+         break;
+      case 'P':
+         ret_mbstring(value, proc->partNumber);
+         break;
+      case 'S':
+         ret_mbstring(value, proc->socket);
+         break;
+      case 's':
+         ret_mbstring(value, proc->serial);
+         break;
+      case 'T':
+         ret_mbstring(value, proc->type);
+         break;
+      case 't':
+         ret_uint(value, proc->threads);
+         break;
+      case 'V':
+         ret_mbstring(value, proc->version);
          break;
       default:
          return SYSINFO_RC_UNSUPPORTED;
@@ -298,6 +449,12 @@ LONG LIBNXAGENT_EXPORTABLE SMBIOS_ListHandler(const TCHAR *cmd, const TCHAR *arg
             value->add(s_memoryDevices.get(i)->handle);
          }
          break;
+      case 'P':   // processors
+         for(int i = 0; i < s_processors.size(); i++)
+         {
+            value->add(s_processors.get(i)->handle);
+         }
+         break;
       default:
          return SYSINFO_RC_UNSUPPORTED;
    }
@@ -337,6 +494,36 @@ LONG LIBNXAGENT_EXPORTABLE SMBIOS_TableHandler(const TCHAR *cmd, const TCHAR *ar
             value->set(8, s_memoryDevices.get(i)->manufacturer);
             value->set(9, s_memoryDevices.get(i)->partNumber);
             value->set(10, s_memoryDevices.get(i)->serial);
+         }
+         break;
+      case 'P':   // processors
+         value->addColumn(_T("HANDLE"), DCI_DT_INT, _T("Handle"), true);
+         value->addColumn(_T("TYPE"), DCI_DT_STRING, _T("Type"));
+         value->addColumn(_T("FAMILY"), DCI_DT_STRING, _T("Family"));
+         value->addColumn(_T("VERSION"), DCI_DT_STRING, _T("Version"));
+         value->addColumn(_T("SOCKET"), DCI_DT_STRING, _T("Socket"));
+         value->addColumn(_T("CORES"), DCI_DT_UINT, _T("Cores"));
+         value->addColumn(_T("THREADS"), DCI_DT_UINT, _T("Threads"));
+         value->addColumn(_T("MAX_SPEED"), DCI_DT_UINT64, _T("Max Speed"));
+         value->addColumn(_T("CURR_SPEED"), DCI_DT_UINT64, _T("Current Speed"));
+         value->addColumn(_T("MANUFACTURER"), DCI_DT_STRING, _T("Manufacturer"));
+         value->addColumn(_T("PART_NUMBER"), DCI_DT_STRING, _T("Part Number"));
+         value->addColumn(_T("SERIAL_NUMBER"), DCI_DT_STRING, _T("Serial Number"));
+         for(int i = 0; i < s_processors.size(); i++)
+         {
+            value->addRow();
+            value->set(0, s_processors.get(i)->handle);
+            value->set(1, s_processors.get(i)->type);
+            value->set(2, s_processors.get(i)->family);
+            value->set(3, s_processors.get(i)->version);
+            value->set(4, s_processors.get(i)->socket);
+            value->set(5, s_processors.get(i)->cores);
+            value->set(6, s_processors.get(i)->threads);
+            value->set(7, s_processors.get(i)->maxSpeed);
+            value->set(8, s_processors.get(i)->currentSpeed);
+            value->set(9, s_processors.get(i)->manufacturer);
+            value->set(10, s_processors.get(i)->partNumber);
+            value->set(11, s_processors.get(i)->serial);
          }
          break;
       default:
@@ -503,6 +690,51 @@ static void ParseBaseBoardInformation(TableHeader *t)
 }
 
 /**
+ * Parse processor information (table type 4)
+ */
+static void ParseProcessorInformation(TableHeader *t)
+{
+   BYTE status = BYTE_AT(t, 0x18);
+   if ((status & 0x40) == 0)
+      return;  // Empty socket
+
+   Processor proc;
+   memset(&proc, 0, sizeof(Processor));
+
+   GetStringByIndex(t, BYTE_AT(t, 0x04), proc.socket, sizeof(proc.socket));
+   GetStringByIndex(t, BYTE_AT(t, 0x07), proc.manufacturer, sizeof(proc.manufacturer));
+   GetStringByIndex(t, BYTE_AT(t, 0x10), proc.version, sizeof(proc.version));
+   proc.maxSpeed = WORD_AT(t, 0x14);
+   proc.currentSpeed = WORD_AT(t, 0x16);
+
+   int type = BYTE_AT(t, 0x05);
+   proc.type = s_processorTypes[((type > 0) && (type <= 0x06)) ? type : 0];
+
+   int family = BYTE_AT(t, 0x06);
+   proc.family = s_processorFamilies[((family > 0) && (family <= 0x2C)) ? family : 0];
+
+   if (t->fixedLength >= 0x23)   // version 2.3+
+   {
+      GetStringByIndex(t, BYTE_AT(t, 0x20), proc.serial, sizeof(proc.serial));
+      GetStringByIndex(t, BYTE_AT(t, 0x22), proc.partNumber, sizeof(proc.partNumber));
+      if (t->fixedLength >= 0x28)   // version 2.5+
+      {
+         proc.cores = BYTE_AT(t, 0x23);
+         proc.threads = BYTE_AT(t, 0x25);
+         if (t->fixedLength >= 0x30)   // version 3.0+
+         {
+            if (proc.cores == 255)
+               proc.cores = WORD_AT(t, 0x2A);
+            if (proc.threads == 255)
+               proc.threads = WORD_AT(t, 0x2E);
+         }
+      }
+   }
+
+   s_processors.add(&proc);
+}
+
+/**
 * Parse OEM strings (table type 11)
 */
 static void ParseOEMStrings(TableHeader *t)
@@ -594,6 +826,9 @@ bool LIBNXAGENT_EXPORTABLE SMBIOS_Parse(BYTE *(*reader)(size_t *size))
             break;
          case 2:
             ParseBaseBoardInformation(curr);
+            break;
+         case 4:
+            ParseProcessorInformation(curr);
             break;
          case 11:
             ParseOEMStrings(curr);

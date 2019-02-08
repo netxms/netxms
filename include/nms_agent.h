@@ -241,6 +241,17 @@
 #define DCIDESC_HARDWARE_MEMORYDEVICE_SERIALNUMBER   _T("Hardware: memory device {instance} serial number")
 #define DCIDESC_HARDWARE_MEMORYDEVICE_SIZE           _T("Hardware: memory device {instance} size")
 #define DCIDESC_HARDWARE_MEMORYDEVICE_TYPE           _T("Hardware: memory device {instance} type")
+#define DCIDESC_HARDWARE_PROCESSOR_CORES             _T("Hardware: processor {instance} number of cores")
+#define DCIDESC_HARDWARE_PROCESSOR_CURRSPEED         _T("Hardware: processor {instance} current speed")
+#define DCIDESC_HARDWARE_PROCESSOR_FAMILY            _T("Hardware: processor {instance} family")
+#define DCIDESC_HARDWARE_PROCESSOR_MANUFACTURER      _T("Hardware: processor {instance} manufacturer")
+#define DCIDESC_HARDWARE_PROCESSOR_MAXSPEED          _T("Hardware: processor {instance} max speed")
+#define DCIDESC_HARDWARE_PROCESSOR_PARTNUMBER        _T("Hardware: processor {instance} part number")
+#define DCIDESC_HARDWARE_PROCESSOR_SERIALNUMBER      _T("Hardware: processor {instance} serial number")
+#define DCIDESC_HARDWARE_PROCESSOR_SOCKET            _T("Hardware: processor {instance} socket")
+#define DCIDESC_HARDWARE_PROCESSOR_THREADS           _T("Hardware: processor {instance} number of threads")
+#define DCIDESC_HARDWARE_PROCESSOR_TYPE              _T("Hardware: processor {instance} type")
+#define DCIDESC_HARDWARE_PROCESSOR_VERSION           _T("Hardware: processor {instance} version")
 #define DCIDESC_HARDWARE_SYSTEM_MANUFACTURER         _T("Hardware: system manufacturer")
 #define DCIDESC_HARDWARE_SYSTEM_PRODUCT              _T("Hardware: product name")
 #define DCIDESC_HARDWARE_SYSTEM_SERIALNUMBER         _T("Hardware: system serial number")
@@ -517,6 +528,7 @@
 #define DCTDESC_AGENT_SUBAGENTS                      _T("Loaded subagents")
 #define DCTDESC_FILESYSTEM_VOLUMES                   _T("File system volumes")
 #define DCTDESC_HARDWARE_MEMORY_DEVIECS              _T("Hardware: memory devices")
+#define DCTDESC_HARDWARE_PROCESSORS                  _T("Hardware: processors")
 #define DCTDESC_LVM_VOLUME_GROUPS                    _T("LVM volume groups")
 #define DCTDESC_LVM_LOGICAL_VOLUMES                  _T("Logical volumes in volume group {instance}")
 #define DCTDESC_LVM_PHYSICAL_VOLUMES                 _T("Physical volumes in volume group {instance}")
@@ -832,6 +844,7 @@ LIBNXAGENT_EXPORTABLE const char * const *SMBIOS_GetOEMStrings();
 bool LIBNXAGENT_EXPORTABLE SMBIOS_Parse(BYTE *(*reader)(size_t*));
 LONG LIBNXAGENT_EXPORTABLE SMBIOS_ParameterHandler(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG LIBNXAGENT_EXPORTABLE SMBIOS_MemDevParameterHandler(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG LIBNXAGENT_EXPORTABLE SMBIOS_ProcessorParameterHandler(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG LIBNXAGENT_EXPORTABLE SMBIOS_ListHandler(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
 LONG LIBNXAGENT_EXPORTABLE SMBIOS_TableHandler(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *session);
 
