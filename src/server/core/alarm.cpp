@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -781,29 +781,37 @@ void NXCORE_EXPORTABLE ResolveAlarmsById(IntegerArray<UINT32> *alarmIds, Integer
             // If alarm is open in helpdesk, it cannot be terminated
             if ((alarm->getHelpDeskState() != ALARM_HELPDESK_OPEN) || ConfigReadBoolean(_T("Alarms.IgnoreHelpdeskState"), false))
             {
-               if (session != NULL)
+               if (terminate || (alarm->getState() != ALARM_STATE_RESOLVED))
                {
-                  // If user does not have the required object access rights, the alarm cannot be terminated
-                  if (!object->checkAccessRights(session->getUserId(), terminate ? OBJECT_ACCESS_TERM_ALARMS : OBJECT_ACCESS_UPDATE_ALARMS))
+                  if (session != NULL)
                   {
-                     failIds->add(alarmIds->get(i));
-                     failCodes->add(RCC_ACCESS_DENIED);
-                     break;
+                     // If user does not have the required object access rights, the alarm cannot be terminated
+                     if (!object->checkAccessRights(session->getUserId(), terminate ? OBJECT_ACCESS_TERM_ALARMS : OBJECT_ACCESS_UPDATE_ALARMS))
+                     {
+                        failIds->add(alarmIds->get(i));
+                        failCodes->add(RCC_ACCESS_DENIED);
+                        break;
+                     }
+
+                     WriteAuditLog(AUDIT_OBJECTS, TRUE, session->getUserId(), session->getWorkstation(), session->getId(), object->getId(),
+                        _T("%s alarm %d (%s) on object %s"), terminate ? _T("Terminated") : _T("Resolved"),
+                        alarm->getAlarmId(), alarm->getMessage(), object->getName());
                   }
 
-                  WriteAuditLog(AUDIT_OBJECTS, TRUE, session->getUserId(), session->getWorkstation(), session->getId(), object->getId(),
-                     _T("%s alarm %d (%s) on object %s"), terminate ? _T("Terminated") : _T("Resolved"),
-                     alarm->getAlarmId(), alarm->getMessage(), object->getName());
+                  alarm->resolve((session != NULL) ? session->getUserId() : 0, NULL, terminate, false);
+                  processedAlarms.add(alarm->getAlarmId());
+                  if (!updatedObjects.contains(object->getId()))
+                     updatedObjects.add(object->getId());
+                  if (terminate)
+                  {
+                     m_alarmList->remove(n);
+                     n--;
+                  }
                }
-
-               alarm->resolve((session != NULL) ? session->getUserId() : 0, NULL, terminate, false);
-               processedAlarms.add(alarm->getAlarmId());
-               if (!updatedObjects.contains(object->getId()))
-                  updatedObjects.add(object->getId());
-               if (terminate)
+               else
                {
-                  m_alarmList->remove(n);
-                  n--;
+                  // Alarm is already resolved, just mark it as processed
+                  processedAlarms.add(alarm->getAlarmId());
                }
             }
             else
@@ -839,27 +847,19 @@ void NXCORE_EXPORTABLE ResolveAlarmsById(IntegerArray<UINT32> *alarmIds, Integer
  */
 void NXCORE_EXPORTABLE ResolveAlarmByKey(const TCHAR *pszKey, bool useRegexp, bool terminate, Event *pEvent)
 {
-   UINT32 *pdwObjectList = (UINT32 *)malloc(sizeof(UINT32) * m_alarmList->size());
+   IntegerArray<UINT32> objectList;
 
    MutexLock(m_mutex);
-   int numObjects = 0;
    for(int i = 0; i < m_alarmList->size(); i++)
    {
       Alarm *alarm = m_alarmList->get(i);
-		if ((useRegexp ? RegexpMatch(alarm->getKey(), pszKey, TRUE) : !_tcscmp(pszKey, alarm->getKey())) &&
-          ((alarm->getHelpDeskState() != ALARM_HELPDESK_OPEN) || ConfigReadBoolean(_T("Alarms.IgnoreHelpdeskState"), false)))
+		if ((useRegexp ? RegexpMatch(alarm->getKey(), pszKey, true) : !_tcscmp(pszKey, alarm->getKey())) &&
+          ((alarm->getHelpDeskState() != ALARM_HELPDESK_OPEN) || ConfigReadBoolean(_T("Alarms.IgnoreHelpdeskState"), false)) &&
+          (terminate || (alarm->getState() != ALARM_STATE_RESOLVED)))
       {
          // Add alarm's source object to update list
-         int j;
-         for(j = 0; j < numObjects; j++)
-         {
-            if (pdwObjectList[j] == alarm->getSourceObject())
-               break;
-         }
-         if (j == numObjects)
-         {
-            pdwObjectList[numObjects++] = alarm->getSourceObject();
-         }
+         if (!objectList.contains(alarm->getSourceObject()))
+            objectList.add(alarm->getSourceObject());
 
          // Resolve or terminate alarm
          alarm->resolve(0, pEvent, terminate, true);
@@ -873,9 +873,8 @@ void NXCORE_EXPORTABLE ResolveAlarmByKey(const TCHAR *pszKey, bool useRegexp, bo
    MutexUnlock(m_mutex);
 
    // Update status of objects
-   for(int i = 0; i < numObjects; i++)
-      UpdateObjectStatus(pdwObjectList[i]);
-   free(pdwObjectList);
+   for(int i = 0; i < objectList.size(); i++)
+      UpdateObjectStatus(objectList.get(i));
 }
 
 /**
@@ -883,27 +882,19 @@ void NXCORE_EXPORTABLE ResolveAlarmByKey(const TCHAR *pszKey, bool useRegexp, bo
  */
 void NXCORE_EXPORTABLE ResolveAlarmByDCObjectId(UINT32 dciId, bool terminate)
 {
-   UINT32 *pdwObjectList = (UINT32 *)malloc(sizeof(UINT32) * m_alarmList->size());
+   IntegerArray<UINT32> objectList;
 
    MutexLock(m_mutex);
-   int numObjects = 0;
    for(int i = 0; i < m_alarmList->size(); i++)
    {
       Alarm *alarm = m_alarmList->get(i);
       if ((alarm->getDciId() == dciId) &&
-          ((alarm->getHelpDeskState() != ALARM_HELPDESK_OPEN) || ConfigReadBoolean(_T("Alarms.IgnoreHelpdeskState"), false)))
+          ((alarm->getHelpDeskState() != ALARM_HELPDESK_OPEN) || ConfigReadBoolean(_T("Alarms.IgnoreHelpdeskState"), false)) &&
+          (terminate || (alarm->getState() != ALARM_STATE_RESOLVED)))
       {
          // Add alarm's source object to update list
-         int j;
-         for(j = 0; j < numObjects; j++)
-         {
-            if (pdwObjectList[j] == alarm->getSourceObject())
-               break;
-         }
-         if (j == numObjects)
-         {
-            pdwObjectList[numObjects++] = alarm->getSourceObject();
-         }
+         if (!objectList.contains(alarm->getSourceObject()))
+            objectList.add(alarm->getSourceObject());
 
          // Resolve or terminate alarm
          alarm->resolve(0, NULL, terminate, true);
@@ -917,9 +908,8 @@ void NXCORE_EXPORTABLE ResolveAlarmByDCObjectId(UINT32 dciId, bool terminate)
    MutexUnlock(m_mutex);
 
    // Update status of objects
-   for(int i = 0; i < numObjects; i++)
-      UpdateObjectStatus(pdwObjectList[i]);
-   free(pdwObjectList);
+   for (int i = 0; i < objectList.size(); i++)
+      UpdateObjectStatus(objectList.get(i));
 }
 
 /**
@@ -937,20 +927,27 @@ UINT32 NXCORE_EXPORTABLE ResolveAlarmByHDRef(const TCHAR *hdref, ClientSession *
       Alarm *alarm = m_alarmList->get(i);
       if (!_tcscmp(alarm->getHelpDeskRef(), hdref))
       {
-         objectId = alarm->getSourceObject();
-         if (session != NULL)
+         if (terminate || (alarm->getState() != ALARM_STATE_RESOLVED))
          {
-            WriteAuditLog(AUDIT_OBJECTS, TRUE, session->getUserId(), session->getWorkstation(), session->getId(), objectId,
-               _T("%s alarm %d (%s) on object %s"), terminate ? _T("Terminated") : _T("Resolved"),
-               alarm->getAlarmId(), alarm->getMessage(), GetObjectName(objectId, _T("")));
-         }
+            objectId = alarm->getSourceObject();
+            if (session != NULL)
+            {
+               WriteAuditLog(AUDIT_OBJECTS, TRUE, session->getUserId(), session->getWorkstation(), session->getId(), objectId,
+                  _T("%s alarm %d (%s) on object %s"), terminate ? _T("Terminated") : _T("Resolved"),
+                  alarm->getAlarmId(), alarm->getMessage(), GetObjectName(objectId, _T("")));
+            }
 
-         alarm->resolve((session != NULL) ? session->getUserId() : 0, NULL, terminate, true);
-			if (terminate)
-			{
-            m_alarmList->remove(i);
-			}
-         DbgPrintf(5, _T("Alarm with helpdesk reference \"%s\" %s"), hdref, terminate ? _T("terminated") : _T("resolved"));
+            alarm->resolve((session != NULL) ? session->getUserId() : 0, NULL, terminate, true);
+            if (terminate)
+            {
+               m_alarmList->remove(i);
+            }
+            DbgPrintf(5, _T("Alarm with helpdesk reference \"%s\" %s"), hdref, terminate ? _T("terminated") : _T("resolved"));
+         }
+         else
+         {
+            DbgPrintf(5, _T("Alarm with helpdesk reference \"%s\" already resolved"), hdref);
+         }
          rcc = RCC_SUCCESS;
          break;
       }
