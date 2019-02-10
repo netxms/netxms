@@ -62,6 +62,10 @@ LONG H_ProcInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSe
 LONG H_ServiceList(const TCHAR *pszCmd, const TCHAR *pArg, StringList *value, AbstractCommSession *session);
 LONG H_ServiceState(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_ServiceTable(const TCHAR *pszCmd, const TCHAR *pArg, Table *value, AbstractCommSession *session);
+LONG H_StorageDeviceInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_StorageDeviceList(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
+LONG H_StorageDeviceSize(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_StorageDeviceTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *session);
 LONG H_SystemUname(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_SysUpdateTime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_ThreadCount(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
@@ -261,10 +265,10 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("Hardware.MemoryDevice.FormFactor(*)"), SMBIOS_MemDevParameterHandler, _T("F"), DCI_DT_STRING, DCIDESC_HARDWARE_MEMORYDEVICE_FORMFACTOR },
    { _T("Hardware.MemoryDevice.Location(*)"), SMBIOS_MemDevParameterHandler, _T("L"), DCI_DT_STRING, DCIDESC_HARDWARE_MEMORYDEVICE_LOCATION },
    { _T("Hardware.MemoryDevice.Manufacturer(*)"), SMBIOS_MemDevParameterHandler, _T("M"), DCI_DT_STRING, DCIDESC_HARDWARE_MEMORYDEVICE_MANUFACTURER },
-   { _T("Hardware.MemoryDevice.MaxSpeed(*)"), SMBIOS_MemDevParameterHandler, _T("m"), DCI_DT_STRING, DCIDESC_HARDWARE_MEMORYDEVICE_MAXSPEED },
+   { _T("Hardware.MemoryDevice.MaxSpeed(*)"), SMBIOS_MemDevParameterHandler, _T("m"), DCI_DT_UINT, DCIDESC_HARDWARE_MEMORYDEVICE_MAXSPEED },
    { _T("Hardware.MemoryDevice.PartNumber(*)"), SMBIOS_MemDevParameterHandler, _T("P"), DCI_DT_STRING, DCIDESC_HARDWARE_MEMORYDEVICE_PARTNUMBER },
    { _T("Hardware.MemoryDevice.SerialNumber(*)"), SMBIOS_MemDevParameterHandler, _T("s"), DCI_DT_STRING, DCIDESC_HARDWARE_MEMORYDEVICE_SERIALNUMBER },
-   { _T("Hardware.MemoryDevice.Size(*)"), SMBIOS_MemDevParameterHandler, _T("S"), DCI_DT_STRING, DCIDESC_HARDWARE_MEMORYDEVICE_SIZE },
+   { _T("Hardware.MemoryDevice.Size(*)"), SMBIOS_MemDevParameterHandler, _T("S"), DCI_DT_UINT64, DCIDESC_HARDWARE_MEMORYDEVICE_SIZE },
    { _T("Hardware.MemoryDevice.Type(*)"), SMBIOS_MemDevParameterHandler, _T("T"), DCI_DT_STRING, DCIDESC_HARDWARE_MEMORYDEVICE_TYPE },
    { _T("Hardware.Processor.Cores(*)"), SMBIOS_ProcessorParameterHandler, _T("C"), DCI_DT_UINT, DCIDESC_HARDWARE_PROCESSOR_CORES },
    { _T("Hardware.Processor.CurrentSpeed(*)"), SMBIOS_ProcessorParameterHandler, _T("c"), DCI_DT_UINT, DCIDESC_HARDWARE_PROCESSOR_CURRSPEED },
@@ -277,6 +281,15 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("Hardware.Processor.Threads(*)"), SMBIOS_ProcessorParameterHandler, _T("t"), DCI_DT_UINT, DCIDESC_HARDWARE_PROCESSOR_THREADS },
    { _T("Hardware.Processor.Type(*)"), SMBIOS_ProcessorParameterHandler, _T("T"), DCI_DT_STRING, DCIDESC_HARDWARE_PROCESSOR_TYPE },
    { _T("Hardware.Processor.Version(*)"), SMBIOS_ProcessorParameterHandler, _T("V"), DCI_DT_STRING, DCIDESC_HARDWARE_PROCESSOR_VERSION },
+   { _T("Hardware.StorageDevice.BusType(*)"), H_StorageDeviceInfo, _T("B"), DCI_DT_STRING, DCIDESC_HARDWARE_STORAGEDEVICE_BUSTYPE },
+   { _T("Hardware.StorageDevice.IsRemovable(*)"), H_StorageDeviceInfo, _T("r"), DCI_DT_INT, DCIDESC_HARDWARE_STORAGEDEVICE_ISREMOVABLE },
+   { _T("Hardware.StorageDevice.Manufacturer(*)"), H_StorageDeviceInfo, _T("M"), DCI_DT_STRING, DCIDESC_HARDWARE_STORAGEDEVICE_MANUFACTURER },
+   { _T("Hardware.StorageDevice.Product(*)"), H_StorageDeviceInfo, _T("P"), DCI_DT_STRING, DCIDESC_HARDWARE_STORAGEDEVICE_PRODUCT },
+   { _T("Hardware.StorageDevice.Revision(*)"), H_StorageDeviceInfo, _T("R"), DCI_DT_STRING, DCIDESC_HARDWARE_STORAGEDEVICE_REVISION },
+   { _T("Hardware.StorageDevice.SerialNumber(*)"), H_StorageDeviceInfo, _T("S"), DCI_DT_STRING, DCIDESC_HARDWARE_STORAGEDEVICE_SERIALNUMBER },
+   { _T("Hardware.StorageDevice.Size(*)"), H_StorageDeviceSize, NULL, DCI_DT_UINT64, DCIDESC_HARDWARE_STORAGEDEVICE_SIZE },
+   { _T("Hardware.StorageDevice.Type(*)"), H_StorageDeviceInfo, _T("T"), DCI_DT_INT, DCIDESC_HARDWARE_STORAGEDEVICE_TYPE },
+   { _T("Hardware.StorageDevice.TypeDescription(*)"), H_StorageDeviceInfo, _T("t"), DCI_DT_STRING, DCIDESC_HARDWARE_STORAGEDEVICE_TYPEDESCR },
    { _T("Hardware.System.Manufacturer"), SMBIOS_ParameterHandler, _T("HM"), DCI_DT_STRING, DCIDESC_HARDWARE_SYSTEM_MANUFACTURER },
    { _T("Hardware.System.Product"), SMBIOS_ParameterHandler, _T("HP"), DCI_DT_STRING, DCIDESC_HARDWARE_SYSTEM_PRODUCT },
    { _T("Hardware.System.SerialNumber"), SMBIOS_ParameterHandler, _T("HS"), DCI_DT_STRING, DCIDESC_HARDWARE_SYSTEM_SERIALNUMBER },
@@ -422,7 +435,8 @@ static NETXMS_SUBAGENT_LIST m_lists[] =
 {
    { _T("FileSystem.MountPoints"), H_MountPoints, NULL },
    { _T("Hardware.MemoryDevices"), SMBIOS_ListHandler, _T("M") },
-   { _T("Hardware.Processors"), SMBIOS_ListHandler,   _T("P") },
+   { _T("Hardware.Processors"), SMBIOS_ListHandler, _T("P") },
+   { _T("Hardware.StorageDevices"), H_StorageDeviceList, NULL },
    { _T("Net.ArpCache"), H_ArpCache, NULL },
    { _T("Net.InterfaceList"), H_InterfaceList, NULL },
    { _T("Net.InterfaceNames"), H_InterfaceNames, NULL },
@@ -440,8 +454,9 @@ static NETXMS_SUBAGENT_LIST m_lists[] =
 static NETXMS_SUBAGENT_TABLE m_tables[] =
 {
    { _T("FileSystem.Volumes"), H_FileSystems, NULL, _T("VOLUME"), DCTDESC_FILESYSTEM_VOLUMES },
-   { _T("Hardware.MemoryDevices"), SMBIOS_TableHandler, _T("M"), _T("HANDLE"), DCTDESC_HARDWARE_MEMORY_DEVIECS },
+   { _T("Hardware.MemoryDevices"), SMBIOS_TableHandler, _T("M"), _T("HANDLE"), DCTDESC_HARDWARE_MEMORY_DEVICES },
    { _T("Hardware.Processors"), SMBIOS_TableHandler, _T("P"), _T("HANDLE"), DCTDESC_HARDWARE_PROCESSORS },
+   { _T("Hardware.StorageDevices"), H_StorageDeviceTable, NULL, _T("NUMBER"), DCTDESC_HARDWARE_STORAGE_DEVICES },
    { _T("System.InstalledProducts"), H_InstalledProducts, NULL, _T("NAME"), DCTDESC_SYSTEM_INSTALLED_PRODUCTS },
 	{ _T("System.Processes"), H_ProcessTable, NULL, _T("PID"), DCTDESC_SYSTEM_PROCESSES },
 	{ _T("System.Services"), H_ServiceTable, NULL, _T("Name"), _T("Services") }
