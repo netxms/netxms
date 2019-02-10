@@ -37,6 +37,7 @@
 #include <iprtrmib.h>
 #include <rtinfo.h>
 
+#define DEBUG_TAG          _T("sa.winnt")
 
 #define MAX_PROCESSES      4096
 #define MAX_MODULES        512

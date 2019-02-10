@@ -39,6 +39,9 @@
     <ClCompile Include="hypervisor.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="disk.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\include\nms_agent.h">
