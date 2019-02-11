@@ -359,7 +359,7 @@ static NETXMS_SUBAGENT_LIST m_lists[] =
 static NETXMS_SUBAGENT_TABLE m_tables[] =
 {
    { _T("FileSystem.Volumes"), H_FileSystems, NULL, _T("MOUNTPOINT"), DCTDESC_FILESYSTEM_VOLUMES },
-   { _T("Hardware.MemoryDevices"), SMBIOS_TableHandler, _T("M"), _T("HANDLE"), DCTDESC_HARDWARE_MEMORY_DEVIECS }
+   { _T("Hardware.MemoryDevices"), SMBIOS_TableHandler, _T("M"), _T("HANDLE"), DCTDESC_HARDWARE_MEMORY_DEVICES }
 };
 
 /**
