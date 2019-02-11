@@ -69,7 +69,7 @@ public class MaintanenceScheduleDialog extends Dialog
       
       endDateSelector = new DateTimeSelector(dialogArea, SWT.NONE);
       endDateSelector.setValue(new Date());
-      startDateSelector.setToolTipText(Messages.get().MaintanenceScheduleDialog_EndDate);
+      endDateSelector.setToolTipText(Messages.get().MaintanenceScheduleDialog_EndDate);
       
       return dialogArea;
    }
