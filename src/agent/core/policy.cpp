@@ -124,96 +124,49 @@ static const String GetPolicyType(const uuid& guid)
 }
 
 /**
- * Deploy configuration file
+ * Deploy policy file
  */
-static UINT32 DeployConfig(AbstractCommSession *session, const uuid& guid, NXCPMessage *msg)
-{
-	TCHAR path[MAX_PATH], name[64], tail;
-	int fh;
-	UINT32 rcc;
-
-	tail = g_szConfigPolicyDir[_tcslen(g_szConfigPolicyDir) - 1];
-	_sntprintf(path, MAX_PATH, _T("%s%s%s.conf"), g_szConfigPolicyDir,
-	           ((tail != '\\') && (tail != '/')) ? FS_PATH_SEPARATOR : _T(""),
-              guid.toString(name));
-
-	fh = _topen(path, O_CREAT | O_TRUNC | O_WRONLY | O_BINARY, S_IRUSR | S_IWUSR);
-	if (fh != -1)
-	{
-		size_t size = msg->getFieldAsBinary(VID_CONFIG_FILE_DATA, NULL, 0);
-		BYTE *data = (BYTE *)malloc(size);
-		if (data != NULL)
-		{
-			msg->getFieldAsBinary(VID_CONFIG_FILE_DATA, data, size);
-			if (_write(fh, data, static_cast<unsigned int>(size)) == static_cast<int>(size))
-			{
-		      session->debugPrintf(3, _T("Configuration file %s saved successfully"), path);
-				rcc = ERR_SUCCESS;
-			}
-			else
-			{
-				rcc = ERR_IO_FAILURE;
-			}
-			free(data);
-		}
-		else
-		{
-			rcc = ERR_MEM_ALLOC_FAILED;
-		}
-		_close(fh);
-	}
-	else
-	{
-		session->debugPrintf(2, _T("DeployConfig(): Error opening file %s for writing (%s)"), path, _tcserror(errno));
-		rcc = ERR_FILE_OPEN_ERROR;
-	}
-
-	return rcc;
-}
-
-/**
- * Deploy log parser policy
- */
-static UINT32 DeployLogParser(AbstractCommSession *session, const uuid& guid, NXCPMessage *msg)
+static UINT32 DeployPolicy(AbstractCommSession *session, const uuid& guid, NXCPMessage *msg, TCHAR *policyPath)
 {
    TCHAR path[MAX_PATH], name[64];
-	int fh;
-	UINT32 rcc;
+   int fh;
+   UINT32 rcc;
 
-	_sntprintf(path, MAX_PATH, _T("%s%s.xml"), g_szLogParserDirectory, guid.toString(name));
+   _sntprintf(path, MAX_PATH, _T("%s%s.xml"), policyPath, guid.toString(name));
 
-	fh = _topen(path, O_CREAT | O_TRUNC | O_WRONLY | O_BINARY, S_IRUSR | S_IWUSR);
-	if (fh != -1)
-	{
-		size_t size = msg->getFieldAsBinary(VID_CONFIG_FILE_DATA, NULL, 0);
-		BYTE *data = (BYTE *)malloc(size);
-		if (data != NULL)
-		{
-			msg->getFieldAsBinary(VID_CONFIG_FILE_DATA, data, size);
-			if (_write(fh, data, static_cast<unsigned int>(size)) == static_cast<int>(size))
-			{
-		      session->debugPrintf(3, _T("Log parser file %s saved successfully"), path);
-				rcc = ERR_SUCCESS;
-			}
-			else
-			{
-				rcc = ERR_IO_FAILURE;
-			}
-			free(data);
-		}
-		else
-		{
-			rcc = ERR_MEM_ALLOC_FAILED;
-		}
-		_close(fh);
-	}
-	else
-	{
-		session->debugPrintf(2, _T("DeployLogParser(): Error opening file %s for writing (%s)"), path, _tcserror(errno));
-		rcc = ERR_FILE_OPEN_ERROR;
-	}
+   fh = _topen(path, O_CREAT | O_TRUNC | O_WRONLY | O_BINARY, S_IRUSR | S_IWUSR);
+   if (fh != -1)
+   {
+      size_t size = msg->getFieldAsBinary(VID_CONFIG_FILE_DATA, NULL, 0);
+      BYTE *data = (BYTE *)malloc(size);
+      if (data != NULL)
+      {
+         msg->getFieldAsBinary(VID_CONFIG_FILE_DATA, data, size);
+         if (_write(fh, data, static_cast<unsigned int>(size)) == static_cast<int>(size))
+         {
+            session->debugPrintf(3, _T("Policy file %s saved successfully"), path);
+            rcc = ERR_SUCCESS;
+         }
+         else
+         {
+            rcc = ERR_IO_FAILURE;
+         }
+         free(data);
+      }
+      else
+      {
+         rcc = ERR_MEM_ALLOC_FAILED;
+      }
+      _close(fh);
+   }
+   else
+   {
+      session->debugPrintf(2, _T("DeployPolicy(): Error opening file %s for writing (%s)"), path, _tcserror(errno));
+      rcc = ERR_FILE_OPEN_ERROR;
+   }
 
-	return rcc;
+   return rcc;
+
 }
 
 /**
@@ -228,11 +181,15 @@ UINT32 DeployPolicy(CommSession *session, NXCPMessage *request)
 
    if(!_tcscmp(type, _T("AgentConfig")))
    {
-      rcc = DeployConfig(session, guid, request);
+      rcc = DeployPolicy(session, guid, request, g_szConfigPolicyDir);
    }
    else if(!_tcscmp(type, _T("LogParserConfig")))
    {
-      rcc = DeployLogParser(session, guid, request);
+      rcc = DeployPolicy(session, guid, request, g_szLogParserDirectory);
+   }
+   else if(!_tcscmp(type, _T("SupportApplicationConfig")))
+   {
+      rcc = DeployPolicy(session, guid, request, g_szUserAgentParserDirectory);
    }
    else
    {
@@ -253,47 +210,22 @@ UINT32 DeployPolicy(CommSession *session, NXCPMessage *request)
 /**
  * Remove configuration file
  */
-static UINT32 RemoveConfig(UINT32 session, const uuid& guid, NXCPMessage *msg)
+static UINT32 RemovePolicy(UINT32 session, const uuid& guid, TCHAR *dir)
 {
-	TCHAR path[MAX_PATH], name[64], tail;
-	UINT32 rcc;
+   TCHAR path[MAX_PATH], name[64];
+   UINT32 rcc;
 
-	tail = g_szConfigPolicyDir[_tcslen(g_szConfigPolicyDir) - 1];
-	_sntprintf(path, MAX_PATH, _T("%s%s%s.conf"), g_szConfigPolicyDir,
-	           ((tail != '\\') && (tail != '/')) ? FS_PATH_SEPARATOR : _T(""),
-              guid.toString(name));
+   _sntprintf(path, MAX_PATH, _T("%s%s.xml"), dir, guid.toString(name));
 
-	if (_tremove(path) != 0)
-	{
-		rcc = (errno == ENOENT) ? ERR_SUCCESS : ERR_IO_FAILURE;
-	}
-	else
-	{
-		rcc = ERR_SUCCESS;
-	}
-	return rcc;
-}
-
-/**
- * Remove log parser file
- */
-static UINT32 RemoveLogParser(UINT32 session, const uuid& guid,  NXCPMessage *msg)
-{
-	TCHAR path[MAX_PATH], name[64];
-	UINT32 rcc;
-
-	_sntprintf(path, MAX_PATH, _T("%s%s.xml"), g_szLogParserDirectory
-               ,guid.toString(name));
-
-	if (_tremove(path) != 0)
-	{
-		rcc = (errno == ENOENT) ? ERR_SUCCESS : ERR_IO_FAILURE;
-	}
-	else
-	{
-		rcc = ERR_SUCCESS;
-	}
-	return rcc;
+   if (_tremove(path) != 0)
+   {
+      rcc = (errno == ENOENT) ? ERR_SUCCESS : ERR_IO_FAILURE;
+   }
+   else
+   {
+      rcc = ERR_SUCCESS;
+   }
+   return rcc;
 }
 
 /**
@@ -311,11 +243,15 @@ UINT32 UninstallPolicy(CommSession *session, NXCPMessage *request)
 
    if(!_tcscmp(type, _T("AgentConfig")))
    {
-      rcc = RemoveConfig(session->getIndex(), guid, request);
+      rcc = RemovePolicy(session->getIndex(), guid, g_szConfigPolicyDir);
    }
    else if(!_tcscmp(type, _T("LogParserConfig")))
    {
-      rcc = RemoveLogParser(session->getIndex(), guid, request);
+      rcc = RemovePolicy(session->getIndex(), guid, g_szLogParserDirectory);
+   }
+   else if(!_tcscmp(type, _T("SupportApplicationConfig")))
+   {
+      rcc = RemovePolicy(session->getIndex(), guid, g_szUserAgentParserDirectory);
    }
    else
    {
@@ -388,15 +324,16 @@ void UpdatePolicyInventory()
 
             if(!_tcscmp(type, _T("AgentConfig")))
             {
-               tail = g_szConfigPolicyDir[_tcslen(g_szConfigPolicyDir) - 1];
-               _sntprintf(filePath, MAX_PATH, _T("%s%s%s.conf"), g_szConfigPolicyDir,
-                          ((tail != '\\') && (tail != '/')) ? FS_PATH_SEPARATOR : _T(""),
-                          guid.toString(name));
+               _sntprintf(filePath, MAX_PATH, _T("%s%s.xml"), g_szConfigPolicyDir, guid.toString(name));
 
             }
             else if(!_tcscmp(type, _T("LogParserConfig")))
             {
                _sntprintf(filePath, MAX_PATH, _T("%s%s.xml"), g_szLogParserDirectory, guid.toString(name));
+            }
+            else if(!_tcscmp(type, _T("SupportApplicationConfig")))
+            {
+               _sntprintf(filePath, MAX_PATH, _T("%s%s.xml"), g_szUserAgentParserDirectory, guid.toString(name));
             }
             free(type);
 

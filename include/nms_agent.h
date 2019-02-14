@@ -69,7 +69,9 @@
  * Agent log parser policy folder
  */
 #define LOGPARSER_AP_FOLDER   _T("logparser_ap")
+#define USERAGENT_AP_FOLDER   _T("useragent_ap")
 #define CONFIG_AP_FOLDER      _T("config_ap")
+#define CERTIFICATES_FOLDER   _T("certificates")
 
 /**
  * Error codes

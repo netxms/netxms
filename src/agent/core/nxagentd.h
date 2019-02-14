@@ -744,6 +744,7 @@ extern TCHAR g_szListenAddress[];
 extern TCHAR g_szConfigIncludeDir[];
 extern TCHAR g_szConfigPolicyDir[];
 extern TCHAR g_szLogParserDirectory[];
+extern TCHAR g_szUserAgentParserDirectory[];
 extern TCHAR g_certificateDirectory[];
 extern TCHAR g_szDataDirectory[];
 extern TCHAR g_masterAgent[];

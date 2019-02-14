@@ -86,7 +86,7 @@ public class CreatePolicyDialog extends Dialog
       typeSelector.add(AgentPolicy.agent);
       typeSelector.add(AgentPolicy.logParser);
       typeSelector.add(AgentPolicy.supportApplication);
-      typeSelector.select(1);
+      typeSelector.select(0);
       
 		return dialogArea;
 	}

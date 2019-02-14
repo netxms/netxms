@@ -174,6 +174,7 @@ TCHAR g_szListenAddress[MAX_PATH] = _T("*");
 TCHAR g_szConfigIncludeDir[MAX_PATH] = AGENT_DEFAULT_CONFIG_D;
 TCHAR g_szConfigPolicyDir[MAX_PATH] = AGENT_DEFAULT_CONFIG_D;
 TCHAR g_szLogParserDirectory[MAX_PATH] = _T("");
+TCHAR g_szUserAgentParserDirectory[MAX_PATH] = _T("");
 TCHAR g_certificateDirectory[MAX_PATH] = _T("");
 TCHAR g_masterAgent[MAX_PATH] = _T("not_set");
 TCHAR g_szSNMPTrapListenAddress[MAX_PATH] = _T("*");
@@ -701,6 +702,18 @@ static bool SendFileToServer(void *session, UINT32 requestId, const TCHAR *file,
 }
 
 /**
+ * Set folder path to variable - all folders will be under data dir
+ */
+static void SetPathToVar(TCHAR *var, TCHAR *dir, TCHAR *nameOfDirContent)
+{
+   TCHAR tail = g_szDataDirectory[_tcslen(g_szDataDirectory) - 1];
+   _sntprintf(var, MAX_PATH, _T("%s%s%s") FS_PATH_SEPARATOR, g_szDataDirectory,
+              ((tail != '\\') && (tail != '/')) ? FS_PATH_SEPARATOR : _T(""),
+              dir);
+   nxlog_debug(2, _T("%s directory: %s"), nameOfDirContent, var);
+}
+
+/**
  * Parser server list
  */
 static void ParseServerList(TCHAR *serverList, bool isControl, bool isMaster)
@@ -816,17 +829,16 @@ BOOL Initialize()
    nxlog_debug(2, _T("Configuration policy directory: %s"), g_szConfigPolicyDir);
 
    // Initialize log parser policy folder
-   TCHAR tail = g_szDataDirectory[_tcslen(g_szDataDirectory) - 1];
-	_sntprintf(g_szLogParserDirectory, MAX_PATH, _T("%s%s%s"), g_szDataDirectory,
-	           ((tail != '\\') && (tail != '/')) ? FS_PATH_SEPARATOR : _T(""),
-              LOGPARSER_AP_FOLDER FS_PATH_SEPARATOR);
-	nxlog_debug(2, _T("Log parser policy directory: %s"), g_szLogParserDirectory);
+   SetPathToVar(g_szLogParserDirectory, LOGPARSER_AP_FOLDER, _T("Log parser policy"));
 	CreateFolder(g_szLogParserDirectory);
 
+
+   // Initialize support application policy folder
+   SetPathToVar(g_szUserAgentParserDirectory, USERAGENT_AP_FOLDER, _T("User agent policy"));
+   CreateFolder(g_szUserAgentParserDirectory);
+
    // Initialize certificate directory
-   _sntprintf(g_certificateDirectory, MAX_PATH, _T("%s%scertificates") FS_PATH_SEPARATOR, g_szDataDirectory,
-              ((tail != '\\') && (tail != '/')) ? FS_PATH_SEPARATOR : _T(""));
-   nxlog_debug(2, _T("Certificate directory: %s"), g_certificateDirectory);
+   SetPathToVar(g_certificateDirectory, CERTIFICATES_FOLDER, _T("Certificate"));
    CreateFolder(g_certificateDirectory);
 
 #ifdef _WIN32
