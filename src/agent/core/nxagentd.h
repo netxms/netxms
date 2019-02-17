@@ -511,6 +511,8 @@ private:
    TCHAR *m_sessionName;
    INT16 m_sessionState;
    TCHAR *m_userName;
+   TCHAR *m_clientName;
+   bool m_userAgent;
    VolatileCounter m_requestId;
 
    void readThread();
@@ -526,14 +528,17 @@ public:
    void run();
    void disconnect();
 
-   UINT32 getId() { return m_id; }
-   UINT32 getSessionId() { return m_sessionId; }
-   INT16 getSessionState() { return m_sessionState; }
-   const TCHAR *getSessionName() { return CHECK_NULL(m_sessionName); }
-   const TCHAR *getUserName() { return CHECK_NULL(m_userName); }
+   UINT32 getId() const { return m_id; }
+   UINT32 getSessionId() const { return m_sessionId; }
+   INT16 getSessionState() const { return m_sessionState; }
+   const TCHAR *getSessionName() const { return CHECK_NULL_EX(m_sessionName); }
+   const TCHAR *getUserName() const { return CHECK_NULL_EX(m_userName); }
+   const TCHAR *getClientName() const { return CHECK_NULL_EX(m_clientName); }
+   bool isUserAgent() const { return m_userAgent; }
 
    bool testConnection();
    void takeScreenshot(NXCPMessage *msg);
+   void sendUserAgentConfig();
 };
 
 /**
@@ -744,7 +749,7 @@ extern TCHAR g_szListenAddress[];
 extern TCHAR g_szConfigIncludeDir[];
 extern TCHAR g_szConfigPolicyDir[];
 extern TCHAR g_szLogParserDirectory[];
-extern TCHAR g_szUserAgentParserDirectory[];
+extern TCHAR g_userAgentPolicyDirectory[];
 extern TCHAR g_certificateDirectory[];
 extern TCHAR g_szDataDirectory[];
 extern TCHAR g_masterAgent[];

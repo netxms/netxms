@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,6 +22,8 @@
 
 #include "nxagentd.h"
 #include <nxstat.h>
+
+void UpdateUserAgentsConfiguration();
 
 /**
  * Register policy in persistent storage
@@ -166,7 +168,6 @@ static UINT32 DeployPolicy(AbstractCommSession *session, const uuid& guid, NXCPM
    }
 
    return rcc;
-
 }
 
 /**
@@ -176,20 +177,25 @@ UINT32 DeployPolicy(CommSession *session, NXCPMessage *request)
 {
 	UINT32 rcc;
 
-	TCHAR *type = request->getFieldAsString(VID_POLICY_TYPE, NULL, 0);
+   TCHAR type[32];
+   request->getFieldAsString(VID_POLICY_TYPE, type, 32);
 	uuid guid = request->getFieldAsGUID(VID_GUID);
 
-   if(!_tcscmp(type, _T("AgentConfig")))
+   if (!_tcscmp(type, _T("AgentConfig")))
    {
       rcc = DeployPolicy(session, guid, request, g_szConfigPolicyDir);
    }
-   else if(!_tcscmp(type, _T("LogParserConfig")))
+   else if (!_tcscmp(type, _T("LogParserConfig")))
    {
       rcc = DeployPolicy(session, guid, request, g_szLogParserDirectory);
    }
-   else if(!_tcscmp(type, _T("SupportApplicationConfig")))
+   else if (!_tcscmp(type, _T("SupportApplicationConfig")))
    {
-      rcc = DeployPolicy(session, guid, request, g_szUserAgentParserDirectory);
+      rcc = DeployPolicy(session, guid, request, g_userAgentPolicyDirectory);
+      if (rcc == RCC_SUCCESS)
+      {
+         UpdateUserAgentsConfiguration();
+      }
    }
    else
    {
@@ -203,7 +209,6 @@ UINT32 DeployPolicy(CommSession *session, NXCPMessage *request)
 		NotifySubAgents(AGENT_NOTIFY_POLICY_INSTALLED, &guid);
 	}
 	session->debugPrintf(3, _T("Policy deployment: TYPE=%s RCC=%d"), type, rcc);
-   free(type);
 	return rcc;
 }
 
@@ -241,17 +246,17 @@ UINT32 UninstallPolicy(CommSession *session, NXCPMessage *request)
 	if(!_tcscmp(type, _T("")))
       return RCC_SUCCESS;
 
-   if(!_tcscmp(type, _T("AgentConfig")))
+   if (!_tcscmp(type, _T("AgentConfig")))
    {
       rcc = RemovePolicy(session->getIndex(), guid, g_szConfigPolicyDir);
    }
-   else if(!_tcscmp(type, _T("LogParserConfig")))
+   else if (!_tcscmp(type, _T("LogParserConfig")))
    {
       rcc = RemovePolicy(session->getIndex(), guid, g_szLogParserDirectory);
    }
-   else if(!_tcscmp(type, _T("SupportApplicationConfig")))
+   else if (!_tcscmp(type, _T("SupportApplicationConfig")))
    {
-      rcc = RemovePolicy(session->getIndex(), guid, g_szUserAgentParserDirectory);
+      rcc = RemovePolicy(session->getIndex(), guid, g_userAgentPolicyDirectory);
    }
    else
    {
@@ -272,37 +277,37 @@ UINT32 GetPolicyInventory(CommSession *session, NXCPMessage *msg)
 {
    UINT32 success = RCC_DB_FAILURE;
 	DB_HANDLE hdb = GetLocalDatabaseHandle();
-	if(hdb != NULL)
+	if (hdb != NULL)
    {
       DB_RESULT hResult = DBSelect(hdb, _T("SELECT guid,type,server_info,server_id,version FROM agent_policy"));
       if (hResult != NULL)
       {
          int count = DBGetNumRows(hResult);
-         if(count > 0 )
+         if (count > 0 )
          {
             msg->setField(VID_NUM_ELEMENTS, (UINT32)count);
+
+            UINT32 varId = VID_ELEMENT_LIST_BASE;
+            for (int row = 0; row < count; row++, varId += 5)
+            {
+               msg->setField(varId++, DBGetFieldGUID(hResult, row, 0));
+               TCHAR type[32];
+               msg->setField(varId++, DBGetField(hResult, row, 1, type, 32));
+               TCHAR *text = DBGetField(hResult, row, 2, NULL, 0);
+               msg->setField(varId++, CHECK_NULL_EX(text));
+               free(text);
+               msg->setField(varId++, DBGetFieldInt64(hResult, row, 3));
+               msg->setField(varId++, DBGetFieldULong(hResult, row, 4));
+            }
          }
          else
-            msg->setField(VID_NUM_ELEMENTS, (UINT32)0);
-
-         msg->setField(VID_NEW_POLICY_TYPE, true);
-
-         UINT32 varId = VID_ELEMENT_LIST_BASE;
-         for(int row = 0; row < count; row++, varId += 5)
          {
-				msg->setField(varId++, DBGetFieldGUID(hResult, row, 0));
-				TCHAR type[32];
-				msg->setField(varId++, DBGetField(hResult, row, 1, type, 32));
-				TCHAR *text = DBGetField(hResult, row, 2, NULL, 0);
-				msg->setField(varId++, CHECK_NULL_EX(text));
-				free(text);
-				msg->setField(varId++, DBGetFieldInt64(hResult, row, 3));
-				msg->setField(varId++, DBGetFieldULong(hResult, row, 4));
-
+            msg->setField(VID_NUM_ELEMENTS, (UINT32)0);
          }
          DBFreeResult(hResult);
+         msg->setField(VID_NEW_POLICY_TYPE, true);
+         success = RCC_SUCCESS;
       }
-      success = RCC_SUCCESS;
    }
 
 	return success;
@@ -319,23 +324,22 @@ void UpdatePolicyInventory()
          for(int row = 0; row < DBGetNumRows(hResult); row++)
          {
             uuid guid = DBGetFieldGUID(hResult, row, 0);
-            TCHAR *type = DBGetField(hResult, row, 1, NULL, 0);
-            TCHAR filePath[MAX_PATH], name[64], tail;
-
-            if(!_tcscmp(type, _T("AgentConfig")))
+            TCHAR type[32];
+            DBGetField(hResult, row, 1, type, 32);
+            
+            TCHAR filePath[MAX_PATH], name[64];
+            if (!_tcscmp(type, _T("AgentConfig")))
             {
                _sntprintf(filePath, MAX_PATH, _T("%s%s.xml"), g_szConfigPolicyDir, guid.toString(name));
-
             }
-            else if(!_tcscmp(type, _T("LogParserConfig")))
+            else if (!_tcscmp(type, _T("LogParserConfig")))
             {
                _sntprintf(filePath, MAX_PATH, _T("%s%s.xml"), g_szLogParserDirectory, guid.toString(name));
             }
-            else if(!_tcscmp(type, _T("SupportApplicationConfig")))
+            else if (!_tcscmp(type, _T("SupportApplicationConfig")))
             {
-               _sntprintf(filePath, MAX_PATH, _T("%s%s.xml"), g_szUserAgentParserDirectory, guid.toString(name));
+               _sntprintf(filePath, MAX_PATH, _T("%s%s.xml"), g_userAgentPolicyDirectory, guid.toString(name));
             }
-            free(type);
 
             NX_STAT_STRUCT st;
             if (CALL_STAT(filePath, &st) == 0)

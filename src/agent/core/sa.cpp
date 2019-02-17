@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -60,13 +60,13 @@ static void UnregisterSessionAgent(UINT32 id)
  */
 THREAD_RESULT THREAD_CALL SessionAgentConnector::readThreadStarter(void *arg)
 {
-   ((SessionAgentConnector *)arg)->readThread();
+   static_cast<SessionAgentConnector*>(arg)->readThread();
 
    // When SessionAgentConnector::ReadThread exits, all other
    // threads are already stopped, so we can safely destroy
    // session object
-   UnregisterSessionAgent(((SessionAgentConnector *)arg)->getId());
-   ((SessionAgentConnector *)arg)->decRefCount();
+   UnregisterSessionAgent(static_cast<SessionAgentConnector*>(arg)->getId());
+   static_cast<SessionAgentConnector*>(arg)->decRefCount();
    return THREAD_OK;
 }
 
@@ -81,6 +81,8 @@ SessionAgentConnector::SessionAgentConnector(UINT32 id, SOCKET s)
    m_sessionName = NULL;
    m_sessionState = USER_SESSION_OTHER;
    m_userName = NULL;
+   m_clientName = NULL;
+   m_userAgent = false;
    m_mutex = MutexCreate();
    m_requestId = 0;
 }
@@ -94,6 +96,7 @@ SessionAgentConnector::~SessionAgentConnector()
    closesocket(m_socket);
    MemFree(m_sessionName);
    MemFree(m_userName);
+   MemFree(m_clientName);
 }
 
 /**
@@ -119,7 +122,7 @@ bool SessionAgentConnector::sendMessage(const NXCPMessage *msg)
 {
    NXCP_MESSAGE *rawMsg = msg->serialize();
    bool success = (SendEx(m_socket, rawMsg, ntohl(rawMsg->size), 0, m_mutex) == ntohl(rawMsg->size));
-   free(rawMsg);
+   MemFree(rawMsg);
    return success;
 }
 
@@ -177,6 +180,7 @@ void SessionAgentConnector::readThread()
             {
                m_sessionId = msg->getFieldAsUInt32(VID_SESSION_ID);
                m_sessionState = msg->getFieldAsInt16(VID_SESSION_STATE);
+               m_userAgent = msg->getFieldAsBoolean(VID_USERAGENT);
 
                MemFree(m_sessionName);
                m_sessionName = msg->getFieldAsString(VID_NAME);
@@ -184,8 +188,17 @@ void SessionAgentConnector::readThread()
                MemFree(m_userName);
                m_userName = msg->getFieldAsString(VID_USER_NAME);
 
+               MemFree(m_clientName);
+               m_clientName = msg->getFieldAsString(VID_CLIENT_INFO);
+
                delete msg;
-               DebugPrintf(5, _T("Session agent connector %d: login as %s@%s [%d]"), m_id, getUserName(), getSessionName(), m_sessionId);
+               DebugPrintf(5, _T("Session agent connector %d: login as %s@%s [%d] (%s client)"), 
+                  m_id, getUserName(), getSessionName(), m_sessionId, m_userAgent ? _T("extended") : _T("basic"));
+
+               if (m_userAgent)
+               {
+                  sendUserAgentConfig();
+               }
             }
             else
             {
@@ -198,7 +211,7 @@ void SessionAgentConnector::readThread()
          }
       }
    }
-   free(rawMsg);
+   MemFree(rawMsg);
 
    DebugPrintf(5, _T("Session agent connector %d stopped"), m_id);
 }
@@ -260,6 +273,19 @@ void SessionAgentConnector::takeScreenshot(NXCPMessage *masterResponse)
    }
 
    delete response;
+}
+
+/**
+ * Send configuration for user agent
+ */
+void SessionAgentConnector::sendUserAgentConfig()
+{
+   Config *config = new Config();
+   config->loadConfigDirectory(g_userAgentPolicyDirectory, _T("error"));
+
+   NXCPMessage msg(CMD_UPDATE_AGENT_CONFIG, nextRequestId());
+   msg.setField(VID_CONFIG_FILE_DATA, config->createXml());
+   sendMessage(&msg);
 }
 
 /**
@@ -440,7 +466,9 @@ LONG H_SessionAgents(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractC
    value->addColumn(_T("SESSION_ID"), DCI_DT_UINT, _T("Session ID"), true);
    value->addColumn(_T("SESSION_NAME"), DCI_DT_STRING, _T("Session"));
    value->addColumn(_T("USER_NAME"), DCI_DT_STRING, _T("User"));
+   value->addColumn(_T("CLIENT_NAME"), DCI_DT_STRING, _T("Client"));
    value->addColumn(_T("STATE"), DCI_DT_INT, _T("State"));
+   value->addColumn(_T("AGENT_TYPE"), DCI_DT_INT, _T("Agent type"));
 
    RWLockReadLock(s_lock, INFINITE);
    for(int i = 0; i < s_agents.size(); i++)
@@ -450,9 +478,26 @@ LONG H_SessionAgents(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractC
       value->set(0, c->getSessionId());
       value->set(1, c->getSessionName());
       value->set(2, c->getUserName());
-      value->set(3, c->getSessionState());
+      value->set(3, c->getClientName());
+      value->set(4, c->getSessionState());
+      value->set(5, c->isUserAgent() ? 1 : 0);
    }
    RWLockUnlock(s_lock);
 
    return SYSINFO_RC_SUCCESS;
+}
+
+/**
+ * Update configuration on all connected user agents
+ */
+void UpdateUserAgentsConfiguration()
+{
+   RWLockReadLock(s_lock, INFINITE);
+   for (int i = 0; i < s_agents.size(); i++)
+   {
+      SessionAgentConnector *c = s_agents.get(i);
+      if (c->isUserAgent())
+         c->sendUserAgentConfig();
+   }
+   RWLockUnlock(s_lock);
 }

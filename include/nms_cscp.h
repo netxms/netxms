@@ -1256,6 +1256,7 @@ typedef struct
 #define VID_PROGRESS                ((UINT32)628)
 #define VID_POLICY_COUNT            ((UINT32)629)
 #define VID_NEW_POLICY_TYPE         ((UINT32)630)
+#define VID_USERAGENT               ((UINT32)631)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)
