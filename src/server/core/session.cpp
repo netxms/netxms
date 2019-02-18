@@ -7945,8 +7945,8 @@ void ClientSession::executeAction(NXCPMessage *request)
                StringList *list = NULL;
                if(request->getFieldAsBoolean(VID_EXPAND_STRING))
                {
-                  StringMap strMap;
-                  strMap.loadMessage(request, VID_IN_FIELD_COUNT, VID_IN_FIELD_BASE);
+                  StringMap inputFields;
+                  inputFields.loadMessage(request, VID_INPUT_FIELD_COUNT, VID_INPUT_FIELD_BASE);
                   Alarm *alarm = FindAlarmById(request->getFieldAsUInt32(VID_ALARM_ID));
                   if(alarm != NULL && !object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ_ALARMS) && !alarm->checkCategoryAccess(this))
                   {
@@ -7955,7 +7955,7 @@ void ClientSession::executeAction(NXCPMessage *request)
                      delete alarm;
                      return;
                   }
-                  TCHAR *result = object->expandText(action, alarm, NULL, m_loginName, &strMap);
+                  TCHAR *result = object->expandText(action, alarm, NULL, m_loginName, &inputFields);
                   list = SplitCommandLine(result);
                   _tcsncpy(action, list->get(0), MAX_PARAM_NAME);
                   list->remove(0);
@@ -10712,8 +10712,8 @@ void ClientSession::getAgentFile(NXCPMessage *request)
 			if (object->getObjectClass() == OBJECT_NODE)
 			{
 				request->getFieldAsString(VID_FILE_NAME, remoteFile, MAX_PATH);
-			   StringMap strMap;
-			   strMap.loadMessage(request, VID_IN_FIELD_COUNT, VID_IN_FIELD_BASE);
+			   StringMap inputFields;
+			   inputFields.loadMessage(request, VID_INPUT_FIELD_COUNT, VID_INPUT_FIELD_BASE);
             Alarm *alarm = FindAlarmById(request->getFieldAsUInt32(VID_ALARM_ID));
             if ((alarm != NULL) && !object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ_ALARMS) && !alarm->checkCategoryAccess(this))
             {
@@ -10722,7 +10722,7 @@ void ClientSession::getAgentFile(NXCPMessage *request)
                delete alarm;
                return;
             }
-				TCHAR *expandedName = request->getFieldAsBoolean(VID_EXPAND_STRING) ? object->expandText(remoteFile, alarm, NULL, m_loginName, &strMap) : NULL;
+				TCHAR *expandedName = request->getFieldAsBoolean(VID_EXPAND_STRING) ? object->expandText(remoteFile, alarm, NULL, m_loginName, &inputFields) : NULL;
             bool follow = request->getFieldAsBoolean(VID_FILE_FOLLOW);
 				FileDownloadJob *job = new FileDownloadJob((Node *)object, (expandedName != NULL) ? expandedName : remoteFile,
 				         request->getFieldAsUInt32(VID_FILE_SIZE_LIMIT), follow, this, request->getId());
@@ -14331,15 +14331,15 @@ void ClientSession::expandMacros(NXCPMessage *request)
 {
    NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
 
-   StringMap strMap;
-   strMap.loadMessage(request, VID_IN_FIELD_COUNT, VID_IN_FIELD_BASE);
+   StringMap inputFields;
+   inputFields.loadMessage(request, VID_INPUT_FIELD_COUNT, VID_INPUT_FIELD_BASE);
 
    int fieldCount = request->getFieldAsUInt32(VID_STRING_COUNT);
-   UINT32 inFieldId = VID_EXP_STRING_BASE;
-   UINT32 outFieldId = VID_EXP_STRING_BASE;
-   for(int i = 0; i < fieldCount; i++, inFieldId=inFieldId+2, outFieldId++)
+   UINT32 inFieldId = VID_EXPAND_STRING_BASE;
+   UINT32 outFieldId = VID_EXPAND_STRING_BASE;
+   for(int i = 0; i < fieldCount; i++, inFieldId += 2, outFieldId++)
    {
-      TCHAR *textToExpand = request->getFieldAsString(inFieldId++, NULL, 0);
+      TCHAR *textToExpand = request->getFieldAsString(inFieldId++);
       NetObj *obj = FindObjectById(request->getFieldAsUInt32(inFieldId++));
       if(obj == NULL)
       {
@@ -14358,11 +14358,11 @@ void ClientSession::expandMacros(NXCPMessage *request)
          return;
       }
 
-      TCHAR *result = obj->expandText(textToExpand, alarm, NULL, m_loginName, &strMap);
+      TCHAR *result = obj->expandText(textToExpand, alarm, NULL, m_loginName, &inputFields);
       msg.setField(outFieldId, result);
       debugPrintf(7, _T("ClientSession::expandMacros(): template=\"%s\", result=\"%s\""), textToExpand, result);
-      free(textToExpand);
-      free(result);
+      MemFree(textToExpand);
+      MemFree(result);
       obj->decRefCount();
       delete alarm;
    }

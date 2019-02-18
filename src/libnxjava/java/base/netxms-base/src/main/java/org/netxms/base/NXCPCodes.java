@@ -1009,7 +1009,7 @@ public class NXCPCodes
    public static final long VID_DCI_NAME = 600;
    public static final long VID_STATE_FLAGS = 601;
    public static final long VID_CAPABILITIES = 602;
-   public static final long VID_IN_FIELD_COUNT = 603;
+   public static final long VID_INPUT_FIELD_COUNT = 603;
    public static final long VID_STRING_COUNT = 604;
    public static final long VID_EXPAND_STRING = 605;
    public static final long VID_ACTION_LIST = 606;
@@ -1125,8 +1125,8 @@ public class NXCPCodes
    public static final long VID_LOC_LIST_BASE = 0x10000000L;
    public static final long VID_SCHEDULE_LIST_BASE = 0x10000000L;
    public static final long VID_CALLBACK_BASE = 0x10000000L;
-   public static final long VID_EXP_STRING_BASE = 0x10000000L;
-   public static final long VID_IN_FIELD_BASE = 0x20000000L;
+   public static final long VID_EXPAND_STRING_BASE = 0x10000000L;
+   public static final long VID_INPUT_FIELD_BASE = 0x20000000L;
    public static final long VID_ZMQ_SUBSCRIPTION_BASE = 0x10000000L;
    public static final long VID_COMMUNITY_STRING_LIST_BASE = 0x10000000L;
    public static final long VID_COMMUNITY_STRING_ZONE_LIST_BASE = 0x20000000L;

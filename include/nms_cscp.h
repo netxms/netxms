@@ -1228,7 +1228,7 @@ typedef struct
 #define VID_DCI_NAME                ((UINT32)600)
 #define VID_STATE_FLAGS             ((UINT32)601)
 #define VID_CAPABILITIES            ((UINT32)602)
-#define VID_IN_FIELD_COUNT          ((UINT32)603)
+#define VID_INPUT_FIELD_COUNT       ((UINT32)603)
 #define VID_STRING_COUNT            ((UINT32)604)
 #define VID_EXPAND_STRING           ((UINT32)605)
 #define VID_ACTION_LIST             ((UINT32)606)
@@ -1461,9 +1461,8 @@ typedef struct
 
 #define VID_AGENT_POLICY_BASE       ((UINT32)0x10000000)
 
-//base value for macro expansion
-#define VID_EXP_STRING_BASE         ((UINT32)0x10000000)
-#define VID_IN_FIELD_BASE           ((UINT32)0x20000000)
+#define VID_EXPAND_STRING_BASE      ((UINT32)0x10000000)
+#define VID_INPUT_FIELD_BASE        ((UINT32)0x20000000)
 
 #define VID_ZMQ_SUBSCRIPTION_BASE   ((UINT32)0x10000000)
 
