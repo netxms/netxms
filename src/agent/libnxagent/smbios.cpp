@@ -701,6 +701,7 @@ static void ParseProcessorInformation(TableHeader *t)
    Processor proc;
    memset(&proc, 0, sizeof(Processor));
 
+   proc.handle = WORD_AT(t, 0x02);
    GetStringByIndex(t, BYTE_AT(t, 0x04), proc.socket, sizeof(proc.socket));
    GetStringByIndex(t, BYTE_AT(t, 0x07), proc.manufacturer, sizeof(proc.manufacturer));
    GetStringByIndex(t, BYTE_AT(t, 0x10), proc.version, sizeof(proc.version));
