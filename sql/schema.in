@@ -1435,40 +1435,15 @@ CREATE TABLE snmp_communities
 */
 CREATE TABLE ap_common
 (
-  id integer not null,
-  policy_type integer not null,
-  PRIMARY KEY(id)
-) TABLE_TYPE;
-
-/*
-** Agent policies - node binding
-*/
-CREATE TABLE ap_bindings
-(
-  policy_id integer not null,
-  node_id integer not null,
-  PRIMARY KEY(policy_id,node_id)
-) TABLE_TYPE;
-
-/*
-** Agent policies - configuration files
-*/
-CREATE TABLE ap_config_files
-(
-  policy_id integer not null,
+  policy_name varchar(63) not null,
+  owner_id integer not null,
+  policy_type varchar(31) not null,
   file_content SQL_TEXT null,
-  PRIMARY KEY(policy_id)
+  version integer not null,
+  guid varchar(36) not null,
+  PRIMARY KEY(guid)
 ) TABLE_TYPE;
 
-/**
-** Agent policies - log parser files
-*/
-CREATE TABLE ap_log_parser
-(
-  policy_id integer not null,
-  file_content SQL_TEXT null,
-  PRIMARY KEY(policy_id)
-) TABLE_TYPE;
 
 /*
 ** Default SNMP v3 USM credentials
