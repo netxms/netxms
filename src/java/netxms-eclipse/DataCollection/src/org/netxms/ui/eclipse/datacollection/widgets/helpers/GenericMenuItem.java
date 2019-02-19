@@ -1,13 +1,16 @@
 package org.netxms.ui.eclipse.datacollection.widgets.helpers;
 
+import java.io.ByteArrayInputStream;
 import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.List;
 import org.apache.commons.codec.binary.Base64;
+import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.ImageData;
 import org.simpleframework.xml.Element;
-import org.simpleframework.xml.ElementArray;
-import org.simpleframework.xml.Root;
+import org.simpleframework.xml.ElementList;
 
-@Root(name="item")
 public abstract class GenericMenuItem
 {
    protected static final int ITEM = 1;
@@ -18,13 +21,13 @@ public abstract class GenericMenuItem
    public String name;
    
    @Element(required=false)
-   public String displayName;
+   public String discription;
    
    @Element(required=false)
    public String command;
    
-   @ElementArray(required = true)
-   public GenericMenuItem children[] = new GenericMenuItem[0];   
+   @ElementList(required = true)
+   public List<GenericMenuItem> children = new ArrayList<GenericMenuItem>();  
    
    @Element(required=false)
    public String icon;
@@ -35,12 +38,9 @@ public abstract class GenericMenuItem
    public GenericMenuItem parent; 
 
    
-   public abstract String getName();
-   public abstract String getDisplayName();
    public abstract String getCommand();
-   public abstract Image getIcon();
    public abstract boolean hasChildren();
-   public abstract GenericMenuItem[] getChildren();
+   public abstract List<GenericMenuItem> getChildren();
    public abstract GenericMenuItem getParent();
 
    public void setIcon(byte[] bs)
@@ -53,5 +53,70 @@ public abstract class GenericMenuItem
       {
          icon = "";
       }
+   }
+   
+   public void updateParents(GenericMenuItem parent) 
+   {
+   	this.parent = parent;
+   	for(GenericMenuItem child : children)
+   	   child.updateParents(this);
+   }
+   
+   public boolean delete()
+   {
+      if (parent != null)
+      {
+         parent.removeChild(this);
+         clearChildren();
+         return true;
+      }
+      return false;
+   }
+   
+   protected void clearChildren()
+   {
+      for(GenericMenuItem obj : children)
+      {
+         obj.clearChildren();
+      }
+      children = null;
+   }
+
+   protected void removeChild(GenericMenuItem item)
+   {
+      children.remove(item);
+   }
+   
+   public void addChild(GenericMenuItem item)
+   {
+      children.add(item);
+   }
+   
+   public Image getIcon()
+   {
+      if(icon == null)
+         return null;
+      try
+      {
+         byte[] tmp = Base64.decodeBase64(icon.getBytes("ISO-8859-1"));
+         ByteArrayInputStream input = new ByteArrayInputStream(tmp);
+         ImageDescriptor d = ImageDescriptor.createFromImageData(new ImageData(input));
+         return d.createImage();
+      }
+      catch(Exception e)
+      {
+         return null;
+      }
+   }
+   
+
+   public String getName()
+   {
+      return name;
+   }
+   
+   public String getDiscriptionName()
+   {
+      return discription;
    }
 }

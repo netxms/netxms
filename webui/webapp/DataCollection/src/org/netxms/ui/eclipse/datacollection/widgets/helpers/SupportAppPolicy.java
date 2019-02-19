@@ -4,6 +4,7 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.util.Base64;
 import java.util.UUID;
+import java.util.Base64.Decoder;
 import java.util.Base64.Encoder;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementArray;
@@ -70,5 +71,18 @@ public class SupportAppPolicy
       Encoder enc = Base64.getEncoder();  
       logo = enc.encodeToString(bs);
    }
+	
+   public byte[] getLogo() 
+   {
+      Decoder dec = Base64.getDecoder();  
+	  return dec.decode(logo);
+   }
 
+   public void updateParents()
+   {
+	   for(GenericMenuItem item : menuItems)
+	   {
+		   item.updateParents();
+	   }
+   }
 }

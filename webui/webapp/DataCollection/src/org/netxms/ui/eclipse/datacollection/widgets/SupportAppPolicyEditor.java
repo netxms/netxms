@@ -33,6 +33,7 @@ import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Group;
@@ -54,7 +55,7 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 import org.netxms.ui.eclipse.widgets.SortableTreeViewer;
 
 /**
- * Generic policy editor widget
+ * Support application editor widget
  */
 public class SupportAppPolicyEditor extends AbstractPolicyEditor
 {
@@ -69,6 +70,7 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
    private ColorSelector menuBackgroundColor;
    private ColorSelector menuForegroundColor;
    private LabeledText welcomeMessageText;
+   private Button setColorSchemaCheckbox;
    private SortableTreeViewer viewer;
    private SupportAppPolicy sPolicy;
    private Label iconLabel;
@@ -116,20 +118,17 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
       layout.makeColumnsEqualWidth = true;
       colorSelectors.setLayout(layout);
       colorSelectors.setLayoutData(new GridData(SWT.FILL, SWT.TOP, false, false));
-      
+
       GridData gd = new GridData();
-      backgroundColor = WidgetHelper.createLabeledColorSelector(colorSelectors, "Background", WidgetHelper.DEFAULT_LAYOUT_DATA);
+      gd.horizontalSpan = 3;
+      setColorSchemaCheckbox = new Button(colorSelectors, SWT.CHECK);
+      setColorSchemaCheckbox.setText("Define color schema");
+      setColorSchemaCheckbox.setLayoutData(gd);
       
-      gd = new GridData();
-      normalForegroundColor = WidgetHelper.createLabeledColorSelector(colorSelectors, "Normal foreground", WidgetHelper.DEFAULT_LAYOUT_DATA);
-      
-      gd = new GridData();
-      highForegroundColor = WidgetHelper.createLabeledColorSelector(colorSelectors, "High foreground", WidgetHelper.DEFAULT_LAYOUT_DATA);
-      
-      gd = new GridData();
-      menuBackgroundColor = WidgetHelper.createLabeledColorSelector(colorSelectors, "Menu background", WidgetHelper.DEFAULT_LAYOUT_DATA);
-      
-      gd = new GridData();
+      backgroundColor = WidgetHelper.createLabeledColorSelector(colorSelectors, "Background", WidgetHelper.DEFAULT_LAYOUT_DATA);      
+      normalForegroundColor = WidgetHelper.createLabeledColorSelector(colorSelectors, "Normal foreground", WidgetHelper.DEFAULT_LAYOUT_DATA);      
+      highForegroundColor = WidgetHelper.createLabeledColorSelector(colorSelectors, "High foreground", WidgetHelper.DEFAULT_LAYOUT_DATA);      
+      menuBackgroundColor = WidgetHelper.createLabeledColorSelector(colorSelectors, "Menu background", WidgetHelper.DEFAULT_LAYOUT_DATA);      
       menuForegroundColor = WidgetHelper.createLabeledColorSelector(colorSelectors, "Menu foreground", WidgetHelper.DEFAULT_LAYOUT_DATA);
       
       //ListOfActions
@@ -158,6 +157,7 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
       //comparator
       
       //add actions 
+      /*
       sPolicy.menuItems = input.toArray(new GenericMenuItem[input.size()]);
       sPolicy.backgroundColor = ColorConverter.rgbToInt(new RGB(10, 0, 50));
       sPolicy.highForegroundColor = ColorConverter.rgbToInt(new RGB(10, 0, 50));
@@ -176,7 +176,7 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
          // TODO Auto-generated catch block
          e.printStackTrace();
       }
-      
+      */
       refresh();
    }
    
@@ -193,7 +193,7 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
          icon = null;
       }
       
-      byte[] imageBytes = null; //objectTool.getImageData();
+      byte[] imageBytes = sPolicy.getLogo();
       if ((imageBytes == null) || (imageBytes.length == 0))
          return;
       

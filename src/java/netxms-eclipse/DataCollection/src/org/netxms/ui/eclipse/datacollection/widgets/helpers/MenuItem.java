@@ -1,14 +1,17 @@
 package org.netxms.ui.eclipse.datacollection.widgets.helpers;
 
-import org.eclipse.swt.graphics.Image;
+import java.util.List;
+import org.simpleframework.xml.Root;
 
+
+@Root(name="item")
 public class MenuItem extends GenericMenuItem
 {  
 
    public MenuItem(String name, String displayName, String command, FolderMenuItem parent)
    {
       this.name = name;
-      this.displayName = displayName;
+      this.discription = displayName;
       this.command = command;
       this.parent = parent;
       type= GenericMenuItem.ITEM;
@@ -17,22 +20,19 @@ public class MenuItem extends GenericMenuItem
    public MenuItem(String name, String displayName, String command)
    {
       this.name = name;
-      this.displayName = displayName;
+      this.discription = displayName;
       this.command = command;
       this.parent = null;
       type= GenericMenuItem.ITEM;
    }
 
-   @Override
-   public String getName()
+   public MenuItem()
    {
-      return name;
-   }
-
-   @Override
-   public String getDisplayName()
-   {
-      return displayName;
+      this.name = null;
+      this.discription = null;
+      this.command = null;
+      this.parent = null;
+      type= GenericMenuItem.ITEM;
    }
 
    @Override
@@ -42,19 +42,13 @@ public class MenuItem extends GenericMenuItem
    }
 
    @Override
-   public Image getIcon()
-   {
-      return null;
-   }
-
-   @Override
    public boolean hasChildren()
    {
       return false;
    }
 
    @Override
-   public GenericMenuItem[] getChildren()
+   public List<GenericMenuItem> getChildren()
    {
       return null;
    }

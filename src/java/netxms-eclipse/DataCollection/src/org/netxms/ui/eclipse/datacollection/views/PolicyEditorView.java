@@ -37,6 +37,8 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.KeyListener;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -283,15 +285,10 @@ public class PolicyEditorView  extends ViewPart implements ISaveablePart2, Sessi
       
       name = new Text(clientArea, SWT.BORDER);
       name.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
-      name.addKeyListener(new KeyListener() {
+      name.addModifyListener(new ModifyListener() {
          
          @Override
-         public void keyReleased(KeyEvent e)
-         {
-         }
-         
-         @Override
-         public void keyPressed(KeyEvent e)
+         public void modifyText(ModifyEvent e)
          {
             setModified();
          }

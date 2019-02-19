@@ -18,7 +18,9 @@ public class SupportAppMenuItemLabelProvider extends LabelProvider implements IT
       switch(columnIndex)
       {
          case SupportAppPolicyEditor.ICON:
+         {
             return ((GenericMenuItem)element).getIcon();
+         }
       }
       return null;
    }
@@ -44,8 +46,8 @@ public class SupportAppMenuItemLabelProvider extends LabelProvider implements IT
       {
          case SupportAppPolicyEditor.NAME:
             return ((GenericMenuItem)element).getName();
-         case SupportAppPolicyEditor.DICPLAY_NAME:
-            return ((GenericMenuItem)element).getDisplayName();
+         case SupportAppPolicyEditor.DISCRIPTION:
+            return ((GenericMenuItem)element).getDiscriptionName();
          case SupportAppPolicyEditor.COMMAND:
             return ((GenericMenuItem)element).getCommand();
       }

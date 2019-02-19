@@ -19,17 +19,29 @@
 package org.netxms.ui.eclipse.datacollection.widgets;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.util.ArrayList;
+import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.IMenuListener;
+import org.eclipse.jface.action.IMenuManager;
+import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.preference.ColorSelector;
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.jface.util.IPropertyChangeListener;
+import org.eclipse.jface.util.PropertyChangeEvent;
+import org.eclipse.jface.viewers.ISelectionChangedListener;
+import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
-import org.eclipse.swt.graphics.RGB;
+import org.eclipse.swt.graphics.ImageLoader;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -37,38 +49,47 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.Text;
 import org.netxms.client.objects.AgentPolicy;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.datacollection.Activator;
+import org.netxms.ui.eclipse.datacollection.dialogs.MenuItemDialog;
 import org.netxms.ui.eclipse.datacollection.widgets.helpers.FolderMenuItem;
 import org.netxms.ui.eclipse.datacollection.widgets.helpers.GenericMenuItem;
-import org.netxms.ui.eclipse.datacollection.widgets.helpers.MenuItem;
 import org.netxms.ui.eclipse.datacollection.widgets.helpers.SupportAppMenuItemLabelProvider;
 import org.netxms.ui.eclipse.datacollection.widgets.helpers.SupportAppMenuItemProvider;
 import org.netxms.ui.eclipse.datacollection.widgets.helpers.SupportAppPolicy;
 import org.netxms.ui.eclipse.tools.ColorConverter;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
-import org.netxms.ui.eclipse.widgets.LabeledText;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 import org.netxms.ui.eclipse.widgets.SortableTreeViewer;
 
 /**
- * Generic policy editor widget
+ * Support application editor widget
  */
 public class SupportAppPolicyEditor extends AbstractPolicyEditor
 {
    public static final int NAME = 0;
-   public static final int DICPLAY_NAME = 1;
+   public static final int DISCRIPTION = 1;
    public static final int COMMAND = 2;
    public static final int ICON = 3;
    
    private ColorSelector backgroundColor;
-   private ColorSelector normalForegroundColor;
-   private ColorSelector highForegroundColor;
+   private ColorSelector borderColor;
+   private ColorSelector headerColor;
+   private ColorSelector textColor;
    private ColorSelector menuBackgroundColor;
-   private ColorSelector menuForegroundColor;
-   private LabeledText welcomeMessageText;
+   private ColorSelector menuHighligtColor;
+   private ColorSelector menuSelectionColor;
+   private ColorSelector menuTextColor;
+   private Text welcomeMessageText;
+   private Button setColorSchemaCheckbox;
+   private Action addFolderAction;
+   private Action addItemAction;
+   private Action deleteAction;
+   private Action editAction;
    private SortableTreeViewer viewer;
    private SupportAppPolicy sPolicy;
    private Label iconLabel;
@@ -89,10 +110,12 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
       
       try
       {
+         System.out.println(policy.getContent());
          sPolicy = SupportAppPolicy.createFromXml(policy.getContent());
       }
       catch(Exception e)
       {
+         e.printStackTrace();
          sPolicy = new SupportAppPolicy();
          //print error of parsing in the log
       }
@@ -116,21 +139,76 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
       layout.makeColumnsEqualWidth = true;
       colorSelectors.setLayout(layout);
       colorSelectors.setLayoutData(new GridData(SWT.FILL, SWT.TOP, false, false));
-      
+
       GridData gd = new GridData();
-      backgroundColor = WidgetHelper.createLabeledColorSelector(colorSelectors, "Background", WidgetHelper.DEFAULT_LAYOUT_DATA);
+      gd.horizontalSpan = 3;
+      setColorSchemaCheckbox = new Button(colorSelectors, SWT.CHECK);
+      setColorSchemaCheckbox.setText("Define color schema");
+      setColorSchemaCheckbox.setLayoutData(gd);
       
-      gd = new GridData();
-      normalForegroundColor = WidgetHelper.createLabeledColorSelector(colorSelectors, "Normal foreground", WidgetHelper.DEFAULT_LAYOUT_DATA);
+      IPropertyChangeListener listener = new IPropertyChangeListener() {
+         
+         @Override
+         public void propertyChange(PropertyChangeEvent event)
+         {
+            fireModifyListeners();
+         }
+      };
       
-      gd = new GridData();
-      highForegroundColor = WidgetHelper.createLabeledColorSelector(colorSelectors, "High foreground", WidgetHelper.DEFAULT_LAYOUT_DATA);
+      backgroundColor = WidgetHelper.createLabeledColorSelector(colorSelectors, "Background", WidgetHelper.DEFAULT_LAYOUT_DATA);    
+      backgroundColor.addListener(listener);  
+      textColor = WidgetHelper.createLabeledColorSelector(colorSelectors, "Text", WidgetHelper.DEFAULT_LAYOUT_DATA);      
+      textColor.addListener(listener);
+      borderColor = WidgetHelper.createLabeledColorSelector(colorSelectors, "Border", WidgetHelper.DEFAULT_LAYOUT_DATA);     
+      borderColor.addListener(listener); 
+      headerColor = WidgetHelper.createLabeledColorSelector(colorSelectors, "Header text", WidgetHelper.DEFAULT_LAYOUT_DATA);     
+      headerColor.addListener(listener); 
+      menuBackgroundColor = WidgetHelper.createLabeledColorSelector(colorSelectors, "Menu background", WidgetHelper.DEFAULT_LAYOUT_DATA);   
+      menuBackgroundColor.addListener(listener);   
+      menuTextColor = WidgetHelper.createLabeledColorSelector(colorSelectors, "Menu text", WidgetHelper.DEFAULT_LAYOUT_DATA);
+      menuTextColor.addListener(listener); 
+      menuHighligtColor = WidgetHelper.createLabeledColorSelector(colorSelectors, "Menu highlight", WidgetHelper.DEFAULT_LAYOUT_DATA);
+      menuHighligtColor.addListener(listener); 
+      menuSelectionColor = WidgetHelper.createLabeledColorSelector(colorSelectors, "Menu selection", WidgetHelper.DEFAULT_LAYOUT_DATA);
+      menuSelectionColor.addListener(listener);
       
-      gd = new GridData();
-      menuBackgroundColor = WidgetHelper.createLabeledColorSelector(colorSelectors, "Menu background", WidgetHelper.DEFAULT_LAYOUT_DATA);
+      setColorSchemaCheckbox.addSelectionListener(new SelectionListener() {
+         
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            boolean enableSelection = setColorSchemaCheckbox.getSelection();
+            backgroundColor.setEnabled(enableSelection);
+            textColor.setEnabled(enableSelection);
+            borderColor.setEnabled(enableSelection);
+            headerColor.setEnabled(enableSelection);
+            menuBackgroundColor.setEnabled(enableSelection);
+            menuTextColor.setEnabled(enableSelection);
+            menuHighligtColor.setEnabled(enableSelection);
+            menuSelectionColor.setEnabled(enableSelection);
+            fireModifyListeners();
+         }
+         
+         @Override
+         public void widgetDefaultSelected(SelectionEvent e)
+         {
+            // TODO Auto-generated method stub
+            
+         }
+      });
+      setColorSchemaCheckbox.setSelection(sPolicy.menuBackgroundColor != null);
       
-      gd = new GridData();
-      menuForegroundColor = WidgetHelper.createLabeledColorSelector(colorSelectors, "Menu foreground", WidgetHelper.DEFAULT_LAYOUT_DATA);
+      welcomeMessageText =  WidgetHelper.createLabeledText(this, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT,
+            "Welcome message", "", WidgetHelper.DEFAULT_LAYOUT_DATA);
+      welcomeMessageText.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
+      welcomeMessageText.addModifyListener(new ModifyListener() {
+         
+         @Override
+         public void modifyText(ModifyEvent e)
+         {
+            fireModifyListeners();
+         }
+      });
       
       //ListOfActions
       final String[] columnNames = { "Name", "Display name", "Command", "Icon" };
@@ -142,42 +220,21 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
       gd = new GridData(SWT.FILL, SWT.FILL, true, true);
       gd.horizontalSpan = 5;
       viewer.getControl().setLayoutData(gd);
+      viewer.addSelectionChangedListener(new ISelectionChangedListener() {
+         
+         @Override
+         public void selectionChanged(SelectionChangedEvent event)
+         {
+            IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+            deleteAction.setEnabled(!selection.isEmpty());
+            editAction.setEnabled(!selection.isEmpty());            
+         }
+      });
       
-      ArrayList<GenericMenuItem> input = new ArrayList<GenericMenuItem>();
-      FolderMenuItem folder = new FolderMenuItem("Email actions");
-      folder.setIcon(new byte[10]);
-      input.add(folder);
-      MenuItem item = new MenuItem("TechMail", "Send mail to support", "mailto:tech@company.com", folder);
-      item.setIcon(new byte[10]);
-      folder.addChild(item);
-      item = new MenuItem("ManagerMail", "Send mail to manager", "mailto:manager@company.com", folder);
-      item.setIcon(new byte[10]);
-      folder.addChild(item);
-      input.add(new MenuItem("Test", "Test item", "http://netxms.org"));
-      viewer.setInput(input);
-      //comparator
-      
-      //add actions 
-      sPolicy.menuItems = input.toArray(new GenericMenuItem[input.size()]);
-      sPolicy.backgroundColor = ColorConverter.rgbToInt(new RGB(10, 0, 50));
-      sPolicy.highForegroundColor = ColorConverter.rgbToInt(new RGB(10, 0, 50));
-      sPolicy.menuBackgroundColor = ColorConverter.rgbToInt(new RGB(10, 0, 50));
-      sPolicy.menuForegroundColor = ColorConverter.rgbToInt(new RGB(10, 0, 50));
-      sPolicy.normalForegroundColor = ColorConverter.rgbToInt(new RGB(10, 0, 50));
-      sPolicy.welcomeMessage = "Test welcome message";
-      sPolicy.setLogo(new byte[10]);
-      
-      try
-      {
-         System.out.println(sPolicy.createXml());
-      }
-      catch(Exception e)
-      {
-         // TODO Auto-generated catch block
-         e.printStackTrace();
-      }
-      
+      createActions();
+      createPopupMenu();
       refresh();
+      fireModifyListeners();
    }
    
 
@@ -193,7 +250,7 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
          icon = null;
       }
       
-      byte[] imageBytes = null; //objectTool.getImageData();
+      byte[] imageBytes = sPolicy.getLogo();
       if ((imageBytes == null) || (imageBytes.length == 0))
          return;
       
@@ -258,8 +315,121 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
       });
    }
    
+
+   
    /**
-    * 
+    * Create actions
+    */
+   protected void createActions()
+   {
+      addFolderAction = new Action("Add folder", SharedIcons.ADD_OBJECT) {
+         @Override
+         public void run()
+         {
+            createObjct(true);
+         }
+      };
+      
+      addItemAction = new Action("Add tiem", SharedIcons.ADD_OBJECT) {
+         @Override
+         public void run()
+         {
+            createObjct(false);
+         }
+      };
+      
+      deleteAction = new Action("Delete", SharedIcons.DELETE_OBJECT) {
+         @Override
+         public void run()
+         {
+            
+            deleteObject();
+         }
+      };
+      
+      editAction = new Action("Edit", SharedIcons.EDIT) {
+         @Override
+         public void run()
+         {
+            editObject();
+         }
+      };
+   }
+   
+
+
+
+   /**
+    * Create pop-up menu for user list
+    */
+   private void createPopupMenu()
+   {
+      // Create menu manager
+      MenuManager menuMgr = new MenuManager();
+      menuMgr.setRemoveAllWhenShown(true);
+      menuMgr.addMenuListener(new IMenuListener() {
+         public void menuAboutToShow(IMenuManager mgr)
+         {
+            mgr.add(addFolderAction);
+            mgr.add(addItemAction);
+            mgr.add(deleteAction);
+            mgr.add(editAction);
+         }
+      });
+
+      // Create menu
+      Menu menu = menuMgr.createContextMenu(viewer.getControl());
+      viewer.getControl().setMenu(menu);
+   }
+
+   private void deleteObject()
+   {
+      IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      if (selection.isEmpty())
+         return;
+      for(Object o : selection.toList())
+      {
+         sPolicy.deleteMenuItem(((GenericMenuItem)o));
+      }
+      fireModifyListeners();
+   }
+
+   private void editObject()
+   { 
+      IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      if (selection.isEmpty() || selection.size() > 1)
+         return;
+      GenericMenuItem obj = (GenericMenuItem)selection.toList().get(0);
+      MenuItemDialog dlg = new MenuItemDialog(welcomeMessageText.getShell(), obj instanceof FolderMenuItem, obj);
+      int rc = dlg.open();
+      if(rc != dlg.OK)
+         return;      
+
+      viewer.refresh(obj);
+      fireModifyListeners();
+   }
+   
+   private void createObjct(boolean isFolder)
+   {
+      IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      
+      MenuItemDialog dlg = new MenuItemDialog(welcomeMessageText.getShell(), isFolder, null);
+      int rc = dlg.open();
+      if(rc != dlg.OK)
+         return;
+      
+      if (selection.isEmpty())
+        sPolicy.root.addChild(dlg.getItem());
+      else
+         ((GenericMenuItem)selection.toList().get(0)).addChild(dlg.getItem());
+
+      viewer.refresh();
+      fireModifyListeners();
+   }
+   
+   
+   /**
+    * Icon selection action
     */
    private void selectIcon()
    {
@@ -273,18 +443,18 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
       try
       {
          Image image = new Image(getShell().getDisplay(), new FileInputStream(new File(fileName)));
-         //if ((image.getImageData().width <= 16) && (image.getImageData().height <= 16))
-         //{ check on how large immage should be
+         if ((image.getImageData().width <= 256) && (image.getImageData().height <= 256))
+         { 
             if (icon != null)
                icon.dispose();
             icon = image;
             iconLabel.setImage(icon);
-         /*}
+         }
          else
          {
             image.dispose();
             MessageDialogHelper.openError(getShell(), "Error", "Image is too large");
-         }*/
+         }
       }
       catch(Exception e)
       {
@@ -293,11 +463,79 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
    }
    
    protected void refresh()
-   {
+   {             
+      createIcon();
+      iconLabel.setImage(icon);
+      if(sPolicy.backgroundColor != null)
+         backgroundColor.setColorValue(ColorConverter.rgbFromInt(sPolicy.backgroundColor));
+      if(sPolicy.borderColor != null)
+         borderColor.setColorValue(ColorConverter.rgbFromInt(sPolicy.borderColor));
+      if(sPolicy.headerColor != null)
+         headerColor.setColorValue(ColorConverter.rgbFromInt(sPolicy.headerColor));
+      if(sPolicy.textColor != null)
+         textColor.setColorValue(ColorConverter.rgbFromInt(sPolicy.textColor));
+      if(sPolicy.menuBackgroundColor != null)
+         menuBackgroundColor.setColorValue(ColorConverter.rgbFromInt(sPolicy.menuBackgroundColor));
+      if(sPolicy.menuHighligtColor != null)
+         menuHighligtColor.setColorValue(ColorConverter.rgbFromInt(sPolicy.menuHighligtColor));
+      if(sPolicy.menuSelectionColor != null)
+         menuSelectionColor.setColorValue(ColorConverter.rgbFromInt(sPolicy.menuSelectionColor));
+      if(sPolicy.menuTextColor != null)
+         menuTextColor.setColorValue(ColorConverter.rgbFromInt(sPolicy.menuTextColor));
+      
+      sPolicy.welcomeMessage = welcomeMessageText.getText();
+      
+      viewer.setInput(new Object[] { sPolicy.root });
    }
 
    public AgentPolicy getUpdatedPolicy()
    { 
+      if (icon != null)
+      {
+         ImageLoader loader = new ImageLoader();
+         loader.data = new ImageData[] { icon.getImageData() };
+         ByteArrayOutputStream stream = new ByteArrayOutputStream(1024);
+         loader.save(stream, SWT.IMAGE_PNG);
+         sPolicy.setLogo(stream.toByteArray());
+      }
+      else
+         sPolicy.setLogo(null);
+      
+      
+      if(setColorSchemaCheckbox.getSelection())
+      {
+         sPolicy.backgroundColor = ColorConverter.rgbToInt(backgroundColor.getColorValue());
+         sPolicy.borderColor = ColorConverter.rgbToInt(borderColor.getColorValue());
+         sPolicy.headerColor = ColorConverter.rgbToInt(headerColor.getColorValue());
+         sPolicy.textColor = ColorConverter.rgbToInt(textColor.getColorValue());
+         sPolicy.menuBackgroundColor = ColorConverter.rgbToInt(menuBackgroundColor.getColorValue());
+         sPolicy.menuHighligtColor = ColorConverter.rgbToInt(menuHighligtColor.getColorValue());
+         sPolicy.menuSelectionColor = ColorConverter.rgbToInt(menuSelectionColor.getColorValue());
+         sPolicy.menuTextColor = ColorConverter.rgbToInt(menuTextColor.getColorValue());
+      }
+      else
+      {
+         sPolicy.backgroundColor = null;
+         sPolicy.borderColor = null;
+         sPolicy.headerColor = null;
+         sPolicy.textColor = null;
+         sPolicy.menuBackgroundColor = null;
+         sPolicy.menuHighligtColor = null;
+         sPolicy.menuSelectionColor = null;
+         sPolicy.menuTextColor = null;
+      }
+      
+      try
+      {
+         policy.setContent(sPolicy.createXml());
+         System.out.println(policy.getContent());
+      }
+      catch(Exception e)
+      {
+         //TODO: make some notifiaction?
+         policy.setContent("");
+         e.printStackTrace();
+      }
       return policy;
    }
 }

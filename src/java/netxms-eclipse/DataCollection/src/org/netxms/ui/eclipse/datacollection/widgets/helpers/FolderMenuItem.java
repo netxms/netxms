@@ -1,8 +1,10 @@
 package org.netxms.ui.eclipse.datacollection.widgets.helpers;
 
-import java.util.Arrays;
+import java.util.List;
 import org.eclipse.swt.graphics.Image;
+import org.simpleframework.xml.Root;
 
+@Root(name="folder")
 public class FolderMenuItem extends GenericMenuItem
 {
    public FolderMenuItem(String name)
@@ -11,17 +13,12 @@ public class FolderMenuItem extends GenericMenuItem
       parent = null;
       type= GenericMenuItem.FOLDER;
    }
-
-   @Override
-   public String getName()
+   
+   public FolderMenuItem()
    {
-      return name;
-   }
-
-   @Override
-   public String getDisplayName()
-   {
-      return "";
+      name = "Root";
+      parent = null;
+      type= GenericMenuItem.FOLDER;
    }
 
    @Override
@@ -31,19 +28,13 @@ public class FolderMenuItem extends GenericMenuItem
    }
 
    @Override
-   public Image getIcon()
-   {
-      return null;
-   }
-
-   @Override
    public boolean hasChildren()
    {
-      return true;
+      return !children.isEmpty();
    }
 
    @Override
-   public GenericMenuItem[] getChildren()
+   public List<GenericMenuItem> getChildren()
    {
       return children;
    }
@@ -54,11 +45,9 @@ public class FolderMenuItem extends GenericMenuItem
       return parent;
    }
 
-   public void addChild(MenuItem child)
+   public void addChild(GenericMenuItem child)
    {
-      int lenght = children.length;
-      children = Arrays.copyOf(children, lenght + 1);
-      children[lenght] = child;
+      children.add(child);
    }
    
 }

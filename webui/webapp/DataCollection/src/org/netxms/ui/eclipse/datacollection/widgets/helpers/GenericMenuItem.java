@@ -54,4 +54,9 @@ public abstract class GenericMenuItem
          icon = "";
       }
    }
+   
+	public void updateParents() 
+	{
+		
+	}
 }

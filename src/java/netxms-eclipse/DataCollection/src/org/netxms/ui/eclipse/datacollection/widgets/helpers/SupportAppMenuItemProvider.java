@@ -43,9 +43,8 @@ public class SupportAppMenuItemProvider implements ITreeContentProvider
 	@Override
 	public Object[] getChildren(final Object parentElement)
 	{
-	   return ((GenericMenuItem)parentElement).getChildren();
-	   //should do refresh?
-	   
+	   List<GenericMenuItem> arr = ((GenericMenuItem)parentElement).getChildren();
+	   return arr.toArray(new GenericMenuItem[arr.size()]);	   
 	}
 
 	/* (non-Javadoc)
@@ -54,6 +53,7 @@ public class SupportAppMenuItemProvider implements ITreeContentProvider
 	@Override
 	public Object getParent(Object element)
 	{
+	   System.out.println(element);
 		return ((GenericMenuItem)element).getParent();
 	}
 
@@ -81,10 +81,6 @@ public class SupportAppMenuItemProvider implements ITreeContentProvider
    @Override
    public Object[] getElements(Object inputElement)
    {
-      List<GenericMenuItem> list = new ArrayList<GenericMenuItem>();
-      for(GenericMenuItem e : (List<GenericMenuItem>)inputElement)
-         if (e.getParent() == null)
-            list.add(e);      
-      return list.toArray();
+      return (Object[])inputElement;
    }
 }
