@@ -91,7 +91,7 @@ bool HardwareComponent::saveToDatabase(DB_HANDLE hdb, UINT32 nodeId) const
 {
    bool result = false;
 
-   DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO hardware_inventory (component_type,component_index,vendor,model,capacity,serial,node_id) VALUES (?,?,?,?,?,?,?)"));
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO hardware_inventory (component_type,component_index,vendor,model,capacity,serial_number,node_id) VALUES (?,?,?,?,?,?,?)"));
    if (hStmt != NULL)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_type, DB_BIND_STATIC);

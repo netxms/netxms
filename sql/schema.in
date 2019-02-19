@@ -357,7 +357,7 @@ CREATE TABLE software_inventory
   name varchar(255) null,
   version varchar(63) null,
   vendor varchar(63) null,
-  date integer not null,
+  install_date integer not null,
   url varchar(255) null,
   description varchar(255) null,
   PRIMARY_KEY(node_id,version,name)
@@ -374,7 +374,7 @@ CREATE TABLE hardware_inventory
   vendor varchar(63) null,
   model varchar(63) null,
   capacity integer null,
-  serial varchar(63) null,
+  serial_number varchar(63) null,
   PRIMARY_KEY(node_id,component_type,component_index)
 } TABLE_TYPE;
 

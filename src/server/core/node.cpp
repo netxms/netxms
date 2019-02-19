@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2018 Raden Solutions
+** Copyright (C) 2003-2019 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -523,7 +523,7 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    if (bResult)
    {
       // Load software packages
-      hStmt = DBPrepare(hdb, _T("SELECT name,version,vendor,date,url,description FROM software_inventory WHERE node_id=?"));
+      hStmt = DBPrepare(hdb, _T("SELECT name,version,vendor,install_date,url,description FROM software_inventory WHERE node_id=?"));
       if (hStmt != NULL)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -556,7 +556,7 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    if (bResult)
    {
       // Load hardware components
-      hStmt = DBPrepare(hdb, _T("SELECT component_type,component_index,vendor,model,capacity,serial FROM hardware_inventory WHERE node_id=?"));
+      hStmt = DBPrepare(hdb, _T("SELECT component_type,component_index,vendor,model,capacity,serial_number FROM hardware_inventory WHERE node_id=?"));
       if (hStmt != NULL)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);

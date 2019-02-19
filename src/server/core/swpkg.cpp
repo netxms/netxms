@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -132,7 +132,7 @@ bool SoftwarePackage::saveToDatabase(DB_HANDLE hdb, UINT32 nodeId) const
 {
    bool result = false;
 
-   DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO software_inventory (name,version,vendor,date,url,description,node_id) VALUES (?,?,?,?,?,?,?)"));
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO software_inventory (name,version,vendor,install_date,url,description,node_id) VALUES (?,?,?,?,?,?,?)"));
    if (hStmt != NULL)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_name, DB_BIND_STATIC);

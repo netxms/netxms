@@ -34,7 +34,7 @@ static bool H_UpgradeFromV56()
          _T("   name varchar(255) not null,")
          _T("   version varchar(63) not null,")
          _T("   vendor varchar(63) null,")
-         _T("   date integer not null,")
+         _T("   install_date integer not null,")
          _T("   url varchar(255) null,")
          _T("   description varchar(255) null,")
          _T("   PRIMARY KEY(node_id,version,name))")));
@@ -47,7 +47,7 @@ static bool H_UpgradeFromV56()
          _T("   vendor varchar(63) null,")
          _T("   model varchar(63) null,")
          _T("   capacity integer not null,")
-         _T("   serial varchar(63) null,")
+         _T("   serial_number varchar(63) null,")
          _T("   PRIMARY KEY(node_id,component_type,component_index))")));
 
    CHK_EXEC(SetMinorSchemaVersion(57));
