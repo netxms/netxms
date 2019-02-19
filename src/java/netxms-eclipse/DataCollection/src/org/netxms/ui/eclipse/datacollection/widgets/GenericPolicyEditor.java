@@ -60,10 +60,10 @@ public class GenericPolicyEditor extends AbstractPolicyEditor
       });   
       editor.setText(policy.getContent());
       
-      refresh();
+      updateControlsFromPolicy();
    }
    
-   protected void refresh()
+   protected void updateControlsFromPolicy()
    {
       editor.setText(policy.getContent());
    }

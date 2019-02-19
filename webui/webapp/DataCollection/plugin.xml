@@ -403,16 +403,6 @@
               </instanceof>
            </enabledWhen>
         </page>
-        <page
-              class="org.netxms.ui.eclipse.datacollection.propertypages.Analytics"
-              id="org.netxms.ui.eclipse.datacollection.propertypages.Analytics#40"
-              name="Analytics">
-           <enabledWhen>
-              <instanceof
-                    value="org.netxms.client.datacollection.DataCollectionItem">
-              </instanceof>
-           </enabledWhen>
-        </page>
    </extension>
 
   <extension
@@ -488,28 +478,6 @@
       </context>
    </extension>
    <extension
-         point="org.eclipse.ui.menus">
-      <menuContribution
-            allPopups="false"
-            locationURI="menu:org.netxms.ui.eclipse.objectview.view.tabbed_object_view?after=additions">
-         <command
-               commandId="org.netxms.ui.eclipse.datacollection.commands.show_dci_filter"
-               label="%command.label.ShowDCIFilter"
-               style="toggle"
-               tooltip="%command.tooltip.ShowDCIFilter">
-            <visibleWhen
-                  checkEnabled="false">
-               <with
-                     variable="org.netxms.ui.eclipse.objectview.ActiveTab">
-                  <instanceof
-                        value="org.netxms.ui.eclipse.datacollection.objecttabs.LastValues">
-                  </instanceof>
-               </with>
-            </visibleWhen>
-         </command>
-      </menuContribution>
-   </extension>
-   <extension
          point="org.eclipse.ui.actionSets">
       <actionSet
             id="org.netxms.ui.eclipse.datacollection.actionSet"
@@ -535,6 +503,25 @@
    </extension>
    <extension
          point="org.eclipse.ui.menus">
+      <menuContribution
+            allPopups="false"
+            locationURI="menu:org.netxms.ui.eclipse.objectview.view.tabbed_object_view?after=additions">
+         <command
+               commandId="org.netxms.ui.eclipse.datacollection.commands.show_dci_filter"
+               label="%command.label.ShowDCIFilter"
+               style="toggle"
+               tooltip="%command.tooltip.ShowDCIFilter">
+            <visibleWhen
+                  checkEnabled="false">
+               <with
+                     variable="org.netxms.ui.eclipse.objectview.ActiveTab">
+                  <instanceof
+                        value="org.netxms.ui.eclipse.datacollection.objecttabs.LastValues">
+                  </instanceof>
+               </with>
+            </visibleWhen>
+         </command>
+      </menuContribution>
       <menuContribution
             allPopups="false"
             locationURI="popup:org.eclipse.ui.popup.any?after=datacollection">

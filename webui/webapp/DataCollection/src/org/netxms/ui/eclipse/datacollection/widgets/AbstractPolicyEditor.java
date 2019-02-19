@@ -44,10 +44,13 @@ public abstract class AbstractPolicyEditor extends Composite
    public void updatePolicy(AgentPolicy policy)
    {
       this.policy = policy;   
-      refresh();
+      updateControlsFromPolicy();
    }
 
-   protected abstract void refresh();
+   /**
+    * Update editor controls from policy
+    */
+   protected abstract void updateControlsFromPolicy();
 
    public abstract AgentPolicy getUpdatedPolicy();
    

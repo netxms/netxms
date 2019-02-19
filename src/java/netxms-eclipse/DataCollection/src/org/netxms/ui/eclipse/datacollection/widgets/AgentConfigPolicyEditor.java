@@ -56,10 +56,10 @@ public class AgentConfigPolicyEditor extends AbstractPolicyEditor
          }
       }); 
       
-      refresh();
+      updateControlsFromPolicy();
    }
    
-   protected void refresh()
+   protected void updateControlsFromPolicy()
    {
       editor.setText(policy.getContent());
    }

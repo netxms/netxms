@@ -145,7 +145,6 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
       setColorSchemaCheckbox.setLayoutData(gd);
       
       IPropertyChangeListener listener = new IPropertyChangeListener() {
-         
          @Override
          public void propertyChange(PropertyChangeEvent event)
          {
@@ -171,7 +170,6 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
       menuSelectionColor.addListener(listener);
       
       setColorSchemaCheckbox.addSelectionListener(new SelectionListener() {
-         
          @Override
          public void widgetSelected(SelectionEvent e)
          {
@@ -190,17 +188,15 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
          @Override
          public void widgetDefaultSelected(SelectionEvent e)
          {
-            // TODO Auto-generated method stub
-            
+            widgetSelected(e);
          }
       });
       setColorSchemaCheckbox.setSelection(sPolicy.menuBackgroundColor != null);
       
-      welcomeMessageText =  WidgetHelper.createLabeledText(this, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT,
+      welcomeMessageText = WidgetHelper.createLabeledText(this, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT,
             "Welcome message", "", WidgetHelper.DEFAULT_LAYOUT_DATA);
       welcomeMessageText.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
       welcomeMessageText.addModifyListener(new ModifyListener() {
-         
          @Override
          public void modifyText(ModifyEvent e)
          {
@@ -219,7 +215,6 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
       gd.horizontalSpan = 5;
       viewer.getControl().setLayoutData(gd);
       viewer.addSelectionChangedListener(new ISelectionChangedListener() {
-         
          @Override
          public void selectionChanged(SelectionChangedEvent event)
          {
@@ -231,7 +226,7 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
       
       createActions();
       createPopupMenu();
-      refresh();
+      updateControlsFromPolicy();
       fireModifyListeners();
    }
    
@@ -451,32 +446,41 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
       }
    }
    
-   protected void refresh()
+   /* (non-Javadoc)
+    * @see org.netxms.ui.eclipse.datacollection.widgets.AbstractPolicyEditor#updateControlsFromPolicy()
+    */
+   @Override
+   protected void updateControlsFromPolicy()
    {             
       createIcon();
       iconLabel.setImage(icon);
-      if(sPolicy.backgroundColor != null)
+
+      if (sPolicy.backgroundColor != null)
          backgroundColor.setColorValue(ColorConverter.rgbFromInt(sPolicy.backgroundColor));
-      if(sPolicy.borderColor != null)
+      if (sPolicy.borderColor != null)
          borderColor.setColorValue(ColorConverter.rgbFromInt(sPolicy.borderColor));
-      if(sPolicy.headerColor != null)
+      if (sPolicy.headerColor != null)
          headerColor.setColorValue(ColorConverter.rgbFromInt(sPolicy.headerColor));
-      if(sPolicy.textColor != null)
+      if (sPolicy.textColor != null)
          textColor.setColorValue(ColorConverter.rgbFromInt(sPolicy.textColor));
-      if(sPolicy.menuBackgroundColor != null)
+      if (sPolicy.menuBackgroundColor != null)
          menuBackgroundColor.setColorValue(ColorConverter.rgbFromInt(sPolicy.menuBackgroundColor));
-      if(sPolicy.menuHighligtColor != null)
+      if (sPolicy.menuHighligtColor != null)
          menuHighligtColor.setColorValue(ColorConverter.rgbFromInt(sPolicy.menuHighligtColor));
-      if(sPolicy.menuSelectionColor != null)
+      if (sPolicy.menuSelectionColor != null)
          menuSelectionColor.setColorValue(ColorConverter.rgbFromInt(sPolicy.menuSelectionColor));
-      if(sPolicy.menuTextColor != null)
+      if (sPolicy.menuTextColor != null)
          menuTextColor.setColorValue(ColorConverter.rgbFromInt(sPolicy.menuTextColor));
-      
-      sPolicy.welcomeMessage = welcomeMessageText.getText();
-      
+
+      welcomeMessageText.setText(sPolicy.welcomeMessage);
+
       viewer.setInput(new Object[] { sPolicy.menu });
    }
 
+   /* (non-Javadoc)
+    * @see org.netxms.ui.eclipse.datacollection.widgets.AbstractPolicyEditor#getUpdatedPolicy()
+    */
+   @Override
    public AgentPolicy getUpdatedPolicy()
    { 
       if (icon != null)
@@ -492,6 +496,8 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
          sPolicy.setLogo(null);
       }
       
+      sPolicy.welcomeMessage = welcomeMessageText.getText();
+
       if (setColorSchemaCheckbox.getSelection())
       {
          sPolicy.backgroundColor = ColorConverter.rgbToInt(backgroundColor.getColorValue());

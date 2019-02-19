@@ -35,12 +35,13 @@ import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.SashForm;
-import org.eclipse.swt.events.KeyEvent;
-import org.eclipse.swt.events.KeyListener;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Text;
@@ -76,35 +77,37 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
 /**
  * Editor for the policies
  */
-public class PolicyEditorView  extends ViewPart implements ISaveablePart2, SessionListener
+public class PolicyEditorView extends ViewPart implements ISaveablePart2, SessionListener
 {
    public static final String ID = "org.netxms.ui.eclipse.datacollection.views.policy_editor"; //$NON-NLS-1$
    
-   protected NXCSession session;
-   protected long templateId;
-   protected HashMap<UUID, AgentPolicy> policies = null;
-   protected boolean modified = false;
-   protected boolean reselection = false;
-   protected AgentPolicy currentlySelectedElement;
+   private NXCSession session;
+   private long templateId;
+   private HashMap<UUID, AgentPolicy> policies = null;
+   private boolean modified = false;
+   private boolean reselection = false;
+   private AgentPolicy currentlySelectedElement;
    private AgentPolicy savedObject;   
-   protected IStructuredSelection previousSelection;
-   protected boolean throwExceptionOnSave;
-   protected Exception saveException;
+   private IStructuredSelection previousSelection;
+   private boolean throwExceptionOnSave;
+   private Exception saveException;
    
-   protected Action actionRefresh;
-   protected Action actionSave;
-   protected Action actionShowTechnicalInformation;
-   protected Action actionCreate; 
-   protected Action actionDelete; 
-   protected TableViewer policyList;
-   protected AbstractPolicyEditor editor = null;
-   protected Text name;
-   protected LabeledText guid;
+   private Display display;
+   private TableViewer policyList;
+   private AbstractPolicyEditor editor = null;
+   private Text name;
+   private LabeledText guid;
    private FormToolkit toolkit;
-   protected ScrolledForm form;
+   private ScrolledForm form;
    private Section editorSection;
    private Composite editorArea;
    private Composite clientArea;
+
+   private Action actionRefresh;
+   private Action actionSave;
+   private Action actionShowTechnicalInformation;
+   private Action actionCreate;
+   private Action actionDelete;
    
    /* (non-Javadoc)
     * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
@@ -114,6 +117,97 @@ public class PolicyEditorView  extends ViewPart implements ISaveablePart2, Sessi
    {
       super.init(site);
       session = ConsoleSharedData.getSession();
+   }
+
+   /* (non-Javadoc)
+    * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
+    */
+   @Override
+   public void createPartControl(Composite parent)
+   {
+      display = parent.getDisplay();
+
+      parent.setLayout(new FillLayout());
+
+      SashForm splitter = new SashForm(parent, SWT.HORIZONTAL);
+      splitter.setSashWidth(3);
+
+      Composite listContainer = new Composite(splitter, SWT.NONE);
+      GridLayout layout = new GridLayout();
+      layout.marginHeight = 0;
+      layout.marginWidth = 0;
+      layout.numColumns = 2;
+      layout.horizontalSpacing = 0;
+      listContainer.setLayout(layout);
+
+      policyList = new TableViewer(listContainer, SWT.FULL_SELECTION | SWT.SINGLE);
+      policyList.setContentProvider(new ArrayContentProvider());
+      policyList.addSelectionChangedListener(new ISelectionChangedListener() {
+         @Override
+         public void selectionChanged(SelectionChangedEvent event)
+         {
+            onSelectionChange(event);
+         }
+      });
+      policyList.getControl().setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+
+      new Label(listContainer, SWT.SEPARATOR | SWT.VERTICAL).setLayoutData(new GridData(SWT.RIGHT, SWT.FILL, false, true));
+
+      toolkit = new FormToolkit(display);
+
+      form = toolkit.createScrolledForm(splitter);
+      form.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+
+      layout = new GridLayout();
+      form.getBody().setLayout(layout);
+      GridData gridData = new GridData();
+      gridData.horizontalAlignment = SWT.FILL;
+      gridData.grabExcessHorizontalSpace = true;
+      form.getBody().setLayoutData(gridData);
+
+      splitter.setWeights(new int[] { 20, 80 });
+
+      Section detailsSection = toolkit.createSection(form.getBody(), Section.TITLE_BAR);
+      detailsSection.setText("Name");
+      gridData = new GridData();
+      gridData.horizontalAlignment = SWT.FILL;
+      gridData.grabExcessHorizontalSpace = true;
+      detailsSection.setLayoutData(gridData);
+
+      clientArea = toolkit.createComposite(detailsSection);
+      layout = new GridLayout();
+      layout.makeColumnsEqualWidth = true;
+      clientArea.setLayout(layout);
+      detailsSection.setClient(clientArea);
+
+      name = new Text(clientArea, SWT.BORDER);
+      name.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
+      name.addModifyListener(new ModifyListener() {
+         @Override
+         public void modifyText(ModifyEvent e)
+         {
+            setModified();
+         }
+      });
+
+      editorSection = toolkit.createSection(form.getBody(), Section.TITLE_BAR);
+      editorSection.setText("Content");
+      gridData = new GridData();
+      gridData.horizontalAlignment = SWT.FILL;
+      gridData.verticalAlignment = SWT.FILL;
+      gridData.grabExcessHorizontalSpace = true;
+      gridData.grabExcessVerticalSpace = true;
+      editorSection.setLayoutData(gridData);
+
+      editorArea = toolkit.createComposite(editorSection);
+      editorArea.setLayout(new FillLayout());
+      editorSection.setClient(editorArea);
+
+      createActions();
+      contributeToActionBars();
+      createPopupMenu();
+
+      session.addListener(this);
    }
 
    /**
@@ -225,98 +319,6 @@ public class PolicyEditorView  extends ViewPart implements ISaveablePart2, Sessi
       refreshOnSelectionChange();
    }
 
-   @Override
-   public void createPartControl(Composite parent)
-   {
-      parent.setLayout(new FillLayout());
-
-      SashForm splitter = new SashForm(parent, SWT.HORIZONTAL);
-      splitter.setSashWidth(3);
-      
-      Composite listContainer = new Composite(splitter, SWT.NONE);
-      GridLayout layout = new GridLayout();
-      layout.marginHeight = 0;
-      layout.marginWidth = 0;
-      layout.numColumns = 2;
-      layout.horizontalSpacing = 0;
-      listContainer.setLayout(layout);
-
-      policyList = new TableViewer(listContainer, SWT.FULL_SELECTION | SWT.SINGLE);
-      policyList.setContentProvider(new ArrayContentProvider());
-      policyList.addSelectionChangedListener(new ISelectionChangedListener() {
-         @Override
-         public void selectionChanged(SelectionChangedEvent event)
-         {
-            onSelectionChange(event);
-         }
-      });
-      policyList.getControl().setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-      
-      new Label(listContainer, SWT.SEPARATOR | SWT.VERTICAL).setLayoutData(new GridData(SWT.RIGHT, SWT.FILL, false, true));
-
-      toolkit = new FormToolkit(getSite().getShell().getDisplay());
-
-      form = toolkit.createScrolledForm(splitter);
-      form.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-      
-      layout = new GridLayout();
-      form.getBody().setLayout(layout);
-      GridData gridData = new GridData();
-      gridData.horizontalAlignment = SWT.FILL;
-      gridData.grabExcessHorizontalSpace = true;
-      form.getBody().setLayoutData(gridData);   
-
-      splitter.setWeights(new int[] { 20, 80 });       
-      
-      Section detailsSection = toolkit.createSection(form.getBody(), Section.TITLE_BAR);
-      detailsSection.setText("Name");
-      gridData = new GridData();
-      gridData.horizontalAlignment = SWT.FILL;
-      gridData.grabExcessHorizontalSpace = true;
-      detailsSection.setLayoutData(gridData);     
-
-      clientArea = toolkit.createComposite(detailsSection);
-      layout = new GridLayout();
-      layout.makeColumnsEqualWidth = true;
-      clientArea.setLayout(layout);
-      detailsSection.setClient(clientArea);
-      
-      name = new Text(clientArea, SWT.BORDER);
-      name.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
-      name.addKeyListener(new KeyListener() {
-         
-         @Override
-         public void keyReleased(KeyEvent e)
-         {
-         }
-         
-         @Override
-         public void keyPressed(KeyEvent e)
-         {
-            setModified();
-         }
-      });
-      
-      editorSection = toolkit.createSection(form.getBody(), Section.TITLE_BAR);
-      editorSection.setText("Content");
-      gridData = new GridData();
-      gridData.horizontalAlignment = SWT.FILL;
-      gridData.verticalAlignment = SWT.FILL;
-      gridData.grabExcessHorizontalSpace = true;
-      gridData.grabExcessVerticalSpace = true;
-      editorSection.setLayoutData(gridData);
-      
-      editorArea = toolkit.createComposite(editorSection);
-      editorArea.setLayout(new FillLayout());
-      editorSection.setClient(editorArea);
-      
-      createActions();
-      contributeToActionBars();
-      createPopupMenu(); 
-      
-      session.addListener(this);
-   }
-
    /**
     * Create actions
     */
@@ -382,6 +384,9 @@ public class PolicyEditorView  extends ViewPart implements ISaveablePart2, Sessi
       }.start();
    }
 
+   /**
+    * Create new policy
+    */
    protected void createNewPolicy()
    {
       CreatePolicyDialog dlg = new CreatePolicyDialog(getViewSite().getShell());  
@@ -549,6 +554,9 @@ public class PolicyEditorView  extends ViewPart implements ISaveablePart2, Sessi
       actionSave.setEnabled(true);
    }
 
+   /**
+    * Save policy
+    */
    private void save()
    {
       throwExceptionOnSave = true;
@@ -591,6 +599,9 @@ public class PolicyEditorView  extends ViewPart implements ISaveablePart2, Sessi
       }.start();
    }
 
+   /* (non-Javadoc)
+    * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
+    */
    @Override
    public void setFocus()
    {
@@ -598,6 +609,9 @@ public class PolicyEditorView  extends ViewPart implements ISaveablePart2, Sessi
          editor.setFocus();
    }
 
+   /* (non-Javadoc)
+    * @see org.eclipse.ui.ISaveablePart#doSave(org.eclipse.core.runtime.IProgressMonitor)
+    */
    @Override
    public void doSave(IProgressMonitor monitor)
    {      
@@ -615,6 +629,9 @@ public class PolicyEditorView  extends ViewPart implements ISaveablePart2, Sessi
       }
    }
 
+   /* (non-Javadoc)
+    * @see org.eclipse.ui.ISaveablePart#doSaveAs()
+    */
    @Override
    public void doSaveAs()
    {
@@ -647,6 +664,9 @@ public class PolicyEditorView  extends ViewPart implements ISaveablePart2, Sessi
       return modified;
    }
 
+   /* (non-Javadoc)
+    * @see org.eclipse.ui.ISaveablePart2#promptToSaveOnClose()
+    */
    @Override
    public int promptToSaveOnClose()
    {
@@ -664,20 +684,27 @@ public class PolicyEditorView  extends ViewPart implements ISaveablePart2, Sessi
       return NO;
    }
 
+   /* (non-Javadoc)
+    * @see org.netxms.client.SessionListener#notificationHandler(org.netxms.client.SessionNotification)
+    */
    @Override
    public void notificationHandler(final SessionNotification n)
    {
       switch(n.getCode())
       {
          case SessionNotification.POLICY_MODIFIED: 
-            if(n.getSubCode() != templateId)
+            if (n.getSubCode() != templateId)
                return;
-            policyList.getTable().getDisplay().asyncExec(new Runnable() {
+
+            display.asyncExec(new Runnable() {
                @Override
                public void run()
                {     
+                  if (policyList.getControl().isDisposed())
+                     return;
+
                   AgentPolicy policy = policies.get(((AgentPolicy)n.getObject()).getGuid());
-                  if(policy != null)
+                  if (policy != null)
                   {
                      policy.update((AgentPolicy)n.getObject());
                      policyList.update(policy, null);
@@ -691,12 +718,16 @@ public class PolicyEditorView  extends ViewPart implements ISaveablePart2, Sessi
             });
             break;
          case SessionNotification.POLICY_DELETED:
-            if(n.getSubCode() != templateId)
+            if (n.getSubCode() != templateId)
                return;
-            policyList.getTable().getDisplay().asyncExec(new Runnable() {
+
+            display.asyncExec(new Runnable() {
                @Override
                public void run()
                {
+                  if (policyList.getControl().isDisposed())
+                     return;
+
                   policies.remove((UUID)n.getObject());
                   policyList.setInput(policies.values().toArray());
                   refreshOnSelectionChange();
@@ -729,6 +760,4 @@ public class PolicyEditorView  extends ViewPart implements ISaveablePart2, Sessi
       job.start();
       super.dispose();
    }
-   
-   
 }

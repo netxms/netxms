@@ -53,10 +53,10 @@ public class LogParserPolicyEditor extends AbstractPolicyEditor
          }
       });
       
-      refresh();
+      updateControlsFromPolicy();
    }
    
-   protected void refresh()
+   protected void updateControlsFromPolicy()
    {
       editor.setParserXml(policy.getContent());
    }
