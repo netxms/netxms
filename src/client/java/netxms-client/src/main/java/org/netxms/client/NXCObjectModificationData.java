@@ -56,7 +56,7 @@ public class NXCObjectModificationData
 	public static final int CUSTOM_ATTRIBUTES      = 3;
 	public static final int AUTOBIND_FILTER        = 4;
 	public static final int LINK_COLOR             = 5;
-	public static final int POLICY_CONFIG          = 6;
+	//public static final int POLICY_CONFIG          = 6;
 	public static final int VERSION                = 7;
 	public static final int DESCRIPTION            = 8;
 	public static final int AGENT_PORT             = 9;
@@ -364,23 +364,6 @@ public class NXCObjectModificationData
 	{
 		this.autoBindFilter = autoBindFilter;
 		fieldSet.add(AUTOBIND_FILTER);
-	}
-
-	/**
-	 * @return the configFileContent
-	 */
-	public String getConfigFileContent()
-	{
-		return configFileContent;
-	}
-
-	/**
-	 * @param configFileContent the configFileContent to set
-	 */
-	public void setConfigFileContent(String configFileContent)
-	{
-		this.configFileContent = configFileContent;
-		fieldSet.add(POLICY_CONFIG);
 	}
 
 	/**

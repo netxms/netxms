@@ -5080,12 +5080,6 @@ public class NXCSession
          msg.setFieldInt32(NXCPCodes.VID_VERSION, data.getVersion());
       }
 
-      // Configuration file
-      if (data.isFieldSet(NXCObjectModificationData.POLICY_CONFIG))
-      {
-         msg.setField(NXCPCodes.VID_CONFIG_FILE_DATA, data.getConfigFileContent());
-      }
-
       if (data.isFieldSet(NXCObjectModificationData.AGENT_PORT))
       {
          msg.setFieldInt16(NXCPCodes.VID_AGENT_PORT, data.getAgentPort());
