@@ -108,9 +108,9 @@
          <action
                class="org.netxms.ui.eclipse.datacollection.actions.ForceReinstallPolicy"
                enablesFor="+"
-               icon="objectmgmt"
                id="org.netxms.ui.eclipse.datacollection.ForceReinstallPolicy"
-               label="Force install policy">
+               label="Force install policy"
+               menubarPath="objectmgmt">
          </action>
       </objectContribution>
       <objectContribution

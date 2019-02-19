@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2019 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,17 +18,14 @@
  */
 package org.netxms.ui.eclipse.datacollection.widgets.helpers;
 
-import java.util.ArrayList;
-import java.util.List;
 import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.Viewer;
 
 /**
- * Content provider for event tree
+ * Content provider for support application menu
  */
 public class SupportAppMenuItemProvider implements ITreeContentProvider
 {
-   
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.IContentProvider#inputChanged(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
 	 */
@@ -43,9 +40,7 @@ public class SupportAppMenuItemProvider implements ITreeContentProvider
 	@Override
 	public Object[] getChildren(final Object parentElement)
 	{
-	   return ((GenericMenuItem)parentElement).getChildren();
-	   //should do refresh?
-	   
+	   return ((AppMenuItem)parentElement).getChildren();	   
 	}
 
 	/* (non-Javadoc)
@@ -54,7 +49,7 @@ public class SupportAppMenuItemProvider implements ITreeContentProvider
 	@Override
 	public Object getParent(Object element)
 	{
-		return ((GenericMenuItem)element).getParent();
+		return ((AppMenuItem)element).getParent();
 	}
 
 	/* (non-Javadoc)
@@ -63,7 +58,7 @@ public class SupportAppMenuItemProvider implements ITreeContentProvider
 	@Override
 	public boolean hasChildren(Object element)
 	{
-		return ((GenericMenuItem)element).hasChildren();
+		return ((AppMenuItem)element).hasChildren();
 	}
 
 	/* (non-Javadoc)
@@ -77,14 +72,9 @@ public class SupportAppMenuItemProvider implements ITreeContentProvider
 	/* (non-Javadoc)
     * @see org.eclipse.jface.viewers.ITreeContentProvider#getElements(java.lang.Object)
     */
-   @SuppressWarnings("unchecked")
    @Override
    public Object[] getElements(Object inputElement)
    {
-      List<GenericMenuItem> list = new ArrayList<GenericMenuItem>();
-      for(GenericMenuItem e : (List<GenericMenuItem>)inputElement)
-         if (e.getParent() == null)
-            list.add(e);      
-      return list.toArray();
+      return (Object[])inputElement;
    }
 }

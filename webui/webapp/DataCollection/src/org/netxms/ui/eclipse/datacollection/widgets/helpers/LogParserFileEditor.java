@@ -19,7 +19,6 @@
 package org.netxms.ui.eclipse.datacollection.widgets.helpers;
 
 import java.util.Arrays;
-
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;

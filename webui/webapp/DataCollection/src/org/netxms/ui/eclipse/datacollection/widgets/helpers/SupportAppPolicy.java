@@ -1,12 +1,10 @@
 package org.netxms.ui.eclipse.datacollection.widgets.helpers;
 
 import java.io.StringWriter;
+import java.io.UnsupportedEncodingException;
 import java.io.Writer;
-import java.util.UUID;
-import org.apache.commons.codec.Encoder;
 import org.apache.commons.codec.binary.Base64;
 import org.simpleframework.xml.Element;
-import org.simpleframework.xml.ElementArray;
 import org.simpleframework.xml.Root;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
@@ -15,40 +13,51 @@ import org.simpleframework.xml.core.Persister;
 public class SupportAppPolicy
 {
    @Element(required=false)
-   public int backgroundColor;
+   public Integer backgroundColor;
    
    @Element(required=false)
-   public int normalForegroundColor;
+   public Integer borderColor;
    
    @Element(required=false)
-   public int highForegroundColor;
+   public Integer headerColor;
    
    @Element(required=false)
-   public int menuBackgroundColor;
+   public Integer textColor;
    
    @Element(required=false)
-   public int menuForegroundColor;
+   public Integer menuBackgroundColor;
+   
+   @Element(required=false)
+   public Integer menuHighligtColor;
+   
+   @Element(required=false)
+   public Integer menuSelectionColor;
+   
+   @Element(required=false)
+   public Integer menuTextColor;
    
    @Element(required=false)
    public String logo;
    
    @Element(required=false)
    public String welcomeMessage;
-   
-   @ElementArray(required = true)
-   public GenericMenuItem menuItems[] = new GenericMenuItem[0];
+
+   @Element(required=false)
+   public AppMenuItem menu = new AppMenuItem("[root]", "", null);
    
    /**
-    * Create rack attribute from config entry
+    * Create support application policy from XML
     * 
-    * @param xml config
-    * @return attribute
-    * @throws Exception
+    * @param xml configuration
+    * @return attribute support application policy
+    * @throws Exception if deserialization fails
     */
    public static SupportAppPolicy createFromXml(final String xml) throws Exception
    {
       Serializer serializer = new Persister();
-      return serializer.read(SupportAppPolicy.class, xml);
+      SupportAppPolicy obj = serializer.read(SupportAppPolicy.class, xml);
+      obj.updateParents();
+      return obj;
    }
    
    /**
@@ -67,20 +76,37 @@ public class SupportAppPolicy
    
    public void setLogo(byte bs[])
    {
-      logo = Base64.encodeBase64String(bs);
+      if(bs != null)
+      {
+         try
+         {
+            logo = new String(Base64.encodeBase64(bs, false), "ISO-8859-1");
+         }
+         catch(UnsupportedEncodingException e)
+         {
+            logo = null;
+         }
+      }
+      else
+         logo = null;
    }
 	
    public byte[] getLogo() 
    {
-      Decoder dec = Base64.getDecoder();  
-	  return dec.decode(logo);
+      if(logo == null)
+         return null;
+      try
+      {
+         return Base64.decodeBase64(logo.getBytes("ISO-8859-1"));
+      }
+      catch(UnsupportedEncodingException e)
+      {
+         return null;
+      }
    }
 
    public void updateParents()
    {
-	   for(GenericMenuItem item : menuItems)
-	   {
-		   item.updateParents();
-	   }
+      menu.updateParents(null);
    }
 }

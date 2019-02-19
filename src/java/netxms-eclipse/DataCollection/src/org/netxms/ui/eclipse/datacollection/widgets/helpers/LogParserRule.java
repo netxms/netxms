@@ -70,7 +70,7 @@ public class LogParserRule
 	
 	@Element(name="context", required=false)
 	private LogParserContext contextDefinition = null;
-	
+
 	@Element(required=false)
 	private LogParserAgentAction agentAction = null;
 	
@@ -293,7 +293,7 @@ public class LogParserRule
 	{
 		this.editor = editor;
 	}
-	
+
 	/**
 	 * @return agent action
 	 */

@@ -532,7 +532,7 @@ public class LogParserRuleEditor extends DashboardComposite
 				widgetSelected(e);
 			}
 		});
-
+		
 		agentAction = new LabeledText(area, SWT.NONE);
 		toolkit.adapt(agentAction);
 		agentAction.setLabel("Execute action");
