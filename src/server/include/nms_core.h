@@ -1011,7 +1011,7 @@ void NXCORE_EXPORTABLE QueueSQLRequest(const TCHAR *query, int bindCount, int *s
 void QueueIDataInsert(time_t timestamp, UINT32 nodeId, UINT32 dciId, const TCHAR *rawValue, const TCHAR *transformedValue);
 void QueueRawDciDataUpdate(time_t timestamp, UINT32 dciId, const TCHAR *rawValue, const TCHAR *transformedValue);
 void QueueRawDciDataDelete(UINT32 dciId);
-int GetIDataWriterQueueSize();
+size_t GetIDataWriterQueueSize();
 int GetRawDataWriterQueueSize();
 void StartDBWriter();
 void StopDBWriter();
@@ -1165,7 +1165,7 @@ void DumpClientSessions(CONSOLE_CTX console);
 void DumpMobileDeviceSessions(CONSOLE_CTX console);
 void ShowServerStats(CONSOLE_CTX console);
 void ShowQueueStats(CONSOLE_CTX console, Queue *pQueue, const TCHAR *pszName);
-void ShowQueueStats(CONSOLE_CTX console, int size, const TCHAR *pszName);
+void ShowQueueStats(CONSOLE_CTX console, size_t size, const TCHAR *pszName);
 void ShowThreadPoolPendingQueue(CONSOLE_CTX console, ThreadPool *p, const TCHAR *pszName);
 void ShowThreadPool(CONSOLE_CTX console, ThreadPool *p);
 DataCollectionError GetThreadPoolStat(ThreadPoolStat stat, const TCHAR *param, TCHAR *value);

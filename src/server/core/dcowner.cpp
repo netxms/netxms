@@ -120,7 +120,7 @@ bool DataCollectionOwner::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
    // Load DCI and access list
    loadACLFromDB(hdb);
    loadItemsFromDB(hdb);
-   for(int i = 0; i < (UINT32)m_dcObjects->size(); i++)
+   for(int i = 0; i < m_dcObjects->size(); i++)
       if (!m_dcObjects->get(i)->loadThresholdsFromDB(hdb))
          success = false;
 

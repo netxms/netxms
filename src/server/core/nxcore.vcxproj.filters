@@ -42,13 +42,7 @@
     <ClCompile Include="alarm_category.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ap_config.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="ap_jobs.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ap_logparser.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="audit.cpp">
@@ -454,6 +448,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="icmpscan.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="hwcomponent.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

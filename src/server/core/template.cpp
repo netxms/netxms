@@ -263,8 +263,8 @@ bool Template::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
       DB_RESULT hResult = DBSelect(hdb, szQuery);
       if (hResult != NULL)
       {
-         UINT32 dwNumNodes = DBGetNumRows(hResult);
-         for(int i = 0; i < dwNumNodes; i++)
+         int count = DBGetNumRows(hResult);
+         for(int i = 0; i < count; i++)
          {
             UINT32 dwNodeId = DBGetFieldULong(hResult, i, 0);
             NetObj *pObject = FindObjectById(dwNodeId);

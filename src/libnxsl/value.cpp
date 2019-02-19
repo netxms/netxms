@@ -485,7 +485,7 @@ void NXSL_Value::updateNumber()
    INT64 nVal = _tcstoll(s, &eptr, 0);
    if ((*eptr == 0) && ((UINT32)(eptr - s) == m_length))
    {
-      if ((nVal > 2147483647) || (nVal < -2147483648))
+      if ((nVal > _LL(2147483647)) || (nVal < _LL(-2147483648)))
       {
          m_dataType = NXSL_DT_INT64;
          m_value.int64 = nVal;

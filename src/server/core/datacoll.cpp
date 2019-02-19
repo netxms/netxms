@@ -34,7 +34,7 @@ extern Queue g_syslogProcessingQueue;
 extern Queue g_syslogWriteQueue;
 extern ThreadPool *g_pollerThreadPool;
 
-int GetEventLogWriterQueueSize();
+size_t GetEventLogWriterQueueSize();
 
 /**
  * Thread pool for data collectors

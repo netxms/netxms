@@ -202,9 +202,7 @@
     <ClCompile Include="agent_policy.cpp" />
     <ClCompile Include="alarm.cpp" />
     <ClCompile Include="alarm_category.cpp" />
-    <ClCompile Include="ap_config.cpp" />
     <ClCompile Include="ap_jobs.cpp" />
-    <ClCompile Include="ap_logparser.cpp" />
     <ClCompile Include="audit.cpp" />
     <ClCompile Include="beacon.cpp" />
     <ClCompile Include="bizservice.cpp" />
@@ -254,6 +252,7 @@
     <ClCompile Include="graph.cpp" />
     <ClCompile Include="hdlink.cpp" />
     <ClCompile Include="hk.cpp" />
+    <ClCompile Include="hwcomponent.cpp" />
     <ClCompile Include="icmpscan.cpp" />
     <ClCompile Include="id.cpp" />
     <ClCompile Include="import.cpp" />

@@ -586,9 +586,9 @@ void StopDBWriter()
 /**
  * Get size of IData writer queue
  */
-int GetIDataWriterQueueSize()
+size_t GetIDataWriterQueueSize()
 {
-   int size = 0;
+   size_t size = 0;
    for(int i = 0; i < s_idataWriterCount; i++)
       size += s_idataWriters[i].queue->size();
    return size;

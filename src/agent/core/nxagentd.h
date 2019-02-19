@@ -793,7 +793,7 @@ extern TCHAR g_windowsEventSourceName[];
 /**
  * Agent action executor
  */
-class LIBNETXMS_EXPORTABLE AgentActionExecutor : public ProcessExecutor
+class AgentActionExecutor : public ProcessExecutor
 {
 private:
    UINT32 m_requestId;

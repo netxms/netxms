@@ -199,10 +199,9 @@ void Queue::setShutdownMode()
 void *Queue::find(const void *key, QueueComparator comparator)
 {
 	void *element = NULL;
-	UINT32 i, pos;
 
 	lock();
-	for(i = 0, pos = m_first; i < m_numElements; i++)
+	for(size_t i = 0, pos = m_first; i < m_numElements; i++)
 	{
 		if ((m_elements[pos] != NULL) && (m_elements[pos] != INVALID_POINTER_VALUE) && comparator(key, m_elements[pos]))
 		{
@@ -224,10 +223,9 @@ void *Queue::find(const void *key, QueueComparator comparator)
 bool Queue::remove(const void *key, QueueComparator comparator)
 {
 	bool success = false;
-	UINT32 i, pos;
 
 	lock();
-	for(i = 0, pos = m_first; i < m_numElements; i++)
+	for(size_t i = 0, pos = m_first; i < m_numElements; i++)
 	{
 		if ((m_elements[pos] != NULL) && comparator(key, m_elements[pos]))
 		{

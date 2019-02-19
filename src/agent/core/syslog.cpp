@@ -69,7 +69,7 @@ LONG H_SyslogStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCom
          ret_uint64(value, s_receivedMessages);
          break;
       case 'Q':   // queue size
-         ret_int(value, s_syslogSenderQueue.size());
+         ret_uint(value, s_syslogSenderQueue.size());
          break;
       default:
          return SYSINFO_RC_UNSUPPORTED;

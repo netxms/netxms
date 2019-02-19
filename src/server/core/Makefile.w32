@@ -3,7 +3,7 @@ TYPE = dll
 COMPONENT = server
 SOURCES = abind_target.cpp accesspoint.cpp acl.cpp actions.cpp addrlist.cpp \
 	admin.cpp agent.cpp agent_policy.cpp alarm.cpp alarm_category.cpp audit.cpp \
-	ap_config.cpp ap_jobs.cpp ap_logparser.cpp beacon.cpp bizservice.cpp \
+	ap_jobs.cpp beacon.cpp bizservice.cpp \
 	bizsvcroot.cpp bridge.cpp cas_validator.cpp ccy.cpp cdp.cpp \
 	cert.cpp chassis.cpp client.cpp cluster.cpp columnfilter.cpp \
 	components.cpp condition.cpp config.cpp console.cpp \
@@ -13,7 +13,7 @@ SOURCES = abind_target.cpp accesspoint.cpp acl.cpp actions.cpp addrlist.cpp \
 	dctcolumn.cpp dctthreshold.cpp debug.cpp devdb.cpp dfile_info.cpp \
 	download_job.cpp ef.cpp email.cpp entirenet.cpp \
 	epp.cpp events.cpp evproc.cpp fdb.cpp filemonitoring.cpp \
-	graph.cpp hdlink.cpp hk.cpp hwdcomp.cpp icmpscan.cpp id.cpp \
+	graph.cpp hdlink.cpp hk.cpp hwcomponent.cpp icmpscan.cpp id.cpp \
 	import.cpp inaddr_index.cpp index.cpp interface.cpp \
 	isc.cpp job.cpp jobmgr.cpp jobqueue.cpp layer2.cpp \
 	ldap.cpp lln.cpp lldp.cpp locks.cpp logfilter.cpp \

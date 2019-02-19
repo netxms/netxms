@@ -37,15 +37,15 @@ static bool s_shutdown = false;
 /**
  * Throttling parameters
  */
-static int s_throttlingHighWatermark = 250000;
-static int s_throttlingLowWatermark = 50000;
+static size_t s_throttlingHighWatermark = 250000;
+static size_t s_throttlingLowWatermark = 50000;
 
 /**
  * Throttle housekeeper if needed. Returns false if shutdown time has arrived and housekeeper process should be aborted.
  */
 bool ThrottleHousekeeper()
 {
-   int qsize = g_dbWriterQueue->size() + GetIDataWriterQueueSize() + GetRawDataWriterQueueSize();
+   size_t qsize = g_dbWriterQueue->size() + GetIDataWriterQueueSize() + GetRawDataWriterQueueSize();
    if (qsize < s_throttlingHighWatermark)
       return true;
 

@@ -296,9 +296,9 @@ bool ClientSession::isDCOpened(UINT32 dcId) const
 {
    bool found = false;
    MutexLock(m_openDCIListLock);
-   for (int i = 0; i < m_dwOpenDCIListSize; i++)
+   for(UINT32 i = 0; i < m_dwOpenDCIListSize; i++)
    {
-      if(dcId == m_pOpenDCIList[i])
+      if (dcId == m_pOpenDCIList[i])
          found = true;
    }
    MutexUnlock(m_openDCIListLock);
@@ -3340,7 +3340,6 @@ void ClientSession::openNodeDCIList(NXCPMessage *request)
    UINT32 dwObjectId;
    NetObj *object;
    BOOL bSuccess = FALSE;
-   TCHAR szLockInfo[MAX_SESSION_NAME];
 
    // Prepare response message
    msg.setCode(CMD_REQUEST_COMPLETED);
@@ -3412,13 +3411,15 @@ void ClientSession::closeNodeDCIList(NXCPMessage *request)
          {
             ((DataCollectionOwner *)object)->applyDCIChanges();
             MutexLock(m_openDCIListLock);
-            for(int i = 0; i < m_dwOpenDCIListSize; i++)
+            for(UINT32 i = 0; i < m_dwOpenDCIListSize; i++)
+            {
                if (m_pOpenDCIList[i] == dwObjectId)
                {
                   m_dwOpenDCIListSize--;
                   memmove(&m_pOpenDCIList[i], &m_pOpenDCIList[i + 1], sizeof(UINT32) * (m_dwOpenDCIListSize - i));
                   break;
                }
+            }
             MutexUnlock(m_openDCIListLock);
             msg.setField(VID_RCC, RCC_SUCCESS);
          }
