@@ -154,6 +154,15 @@
 #define USER_SESSION_OTHER          4
 
 /**
+ * Policy change notification
+ */
+struct PolicyChangeNotification
+{
+   uuid guid;
+   const TCHAR *type;
+};
+
+/**
  * Internal notification codes
  */
 #define AGENT_NOTIFY_POLICY_INSTALLED  1

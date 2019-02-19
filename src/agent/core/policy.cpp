@@ -33,7 +33,7 @@ static void RegisterPolicy(CommSession *session, const TCHAR *type, const uuid& 
    bool isNew = true;
    TCHAR buffer[64];
    DB_HANDLE hdb = GetLocalDatabaseHandle();
-	if(hdb != NULL)
+	if (hdb != NULL)
    {
       DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT * FROM agent_policy WHERE guid=?"));
       if (hStmt != NULL)
@@ -48,7 +48,7 @@ static void RegisterPolicy(CommSession *session, const TCHAR *type, const uuid& 
          DBFreeStatement(hStmt);
       }
 
-      if(isNew)
+      if (isNew)
       {
          hStmt = DBPrepare(hdb,
                        _T("INSERT INTO agent_policy (type,server_info,server_id,version,guid)")
@@ -128,7 +128,7 @@ static const String GetPolicyType(const uuid& guid)
 /**
  * Deploy policy file
  */
-static UINT32 DeployPolicy(AbstractCommSession *session, const uuid& guid, NXCPMessage *msg, TCHAR *policyPath)
+static UINT32 DeployPolicy(AbstractCommSession *session, const uuid& guid, NXCPMessage *msg, const TCHAR *policyPath)
 {
    TCHAR path[MAX_PATH], name[64];
    int fh;
@@ -206,7 +206,11 @@ UINT32 DeployPolicy(CommSession *session, NXCPMessage *request)
 	{
 	   UINT32 version = request->getFieldAsUInt32(VID_VERSION);
 		RegisterPolicy(session, type, guid, version);
-		NotifySubAgents(AGENT_NOTIFY_POLICY_INSTALLED, &guid);
+
+      PolicyChangeNotification n;
+      n.guid = guid;
+      n.type = type;
+		NotifySubAgents(AGENT_NOTIFY_POLICY_INSTALLED, &n);
 	}
 	session->debugPrintf(3, _T("Policy deployment: TYPE=%s RCC=%d"), type, rcc);
 	return rcc;

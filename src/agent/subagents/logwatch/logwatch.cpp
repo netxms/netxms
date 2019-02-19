@@ -331,14 +331,16 @@ static void OnAgentNotify(UINT32 code, void *data)
    if (code != AGENT_NOTIFY_POLICY_INSTALLED)
       return;
 
-   // data points to uuid object
-   uuid policyId = *static_cast<uuid*>(data);
+   // data points to PolicyChangeNotification object
+   PolicyChangeNotification *n = static_cast<PolicyChangeNotification*>(data);
+   if (_tcscmp(n->type, _T("LogParserConfig")))
+      return;
 
    s_parserLock.lock();
    for (int i = 0; i < s_parsers.size(); i++)
    {
       LogParser *p = s_parsers.get(i);
-      if (!p->getGuid().equals(policyId))
+      if (!p->getGuid().equals(n->guid))
          continue;
 
       nxlog_debug_tag(DEBUG_TAG, 3, _T("Reloading parser for file %s"), p->getFileName());
@@ -353,14 +355,14 @@ static void OnAgentNotify(UINT32 code, void *data)
    TCHAR policyFile[MAX_PATH];
    _sntprintf(policyFile, MAX_PATH, _T("%s%s%s%s.xml"), dataDir,
       ((tail != '\\') && (tail != '/')) ? FS_PATH_SEPARATOR : _T(""),
-      LOGPARSER_AP_FOLDER FS_PATH_SEPARATOR, (const TCHAR *)policyId.toString());
-   AddParserFromConfig(policyFile, policyId);
+      LOGPARSER_AP_FOLDER FS_PATH_SEPARATOR, (const TCHAR *)n->guid.toString());
+   AddParserFromConfig(policyFile, n->guid);
 
    // Start parsing threads
    for (int i = 0; i < s_parsers.size(); i++)
    {
       LogParser *p = s_parsers.get(i);
-      if (!p->getGuid().equals(policyId))
+      if (!p->getGuid().equals(n->guid))
          continue;
 
 #ifdef _WIN32
