@@ -310,7 +310,7 @@ void MigrateDatabase(const TCHAR *sourceConfig, TCHAR *destConfFields, bool skip
 
 	TCHAR sourceConfFields[2048];
 	_sntprintf(sourceConfFields, 2048, _T("\tDriver: %s\n\tDB Name: %s\n\tDB Server: %s\n\tDB Login: %s"), s_dbDriver, s_dbName, s_dbServer, s_dbLogin);
-	if (!GetYesNo(_T("Source:\n%s \Target:\n%s\n\nConfirm database migration?"), sourceConfFields, destConfFields))
+	if (!GetYesNo(_T("Source:\n%s\nTarget:\n%s\n\nConfirm database migration?"), sourceConfFields, destConfFields))
 	{
 	   goto cleanup;
 	}
