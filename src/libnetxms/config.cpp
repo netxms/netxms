@@ -1,7 +1,7 @@
 /*
  ** NetXMS - Network Management System
  ** NetXMS Foundation Library
- ** Copyright (C) 2003-2017 Raden Solutions
+ ** Copyright (C) 2003-2019 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU Lesser General Public License as published
@@ -695,6 +695,7 @@ Config::Config(bool allowMacroExpansion)
    m_errorCount = 0;
    m_mutex = MutexCreate();
    m_allowMacroExpansion = allowMacroExpansion;
+   m_mergeStrategy = NULL;
 }
 
 /**

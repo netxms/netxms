@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -31,8 +31,6 @@
  * Externals
  */
 LONG H_PlatformName(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
-
-extern TCHAR g_dataDirRecoveryPath[];
 
 /**
  * Max NXCP message size
@@ -257,6 +255,11 @@ void InitConfig(const TCHAR *configSection)
 #ifdef _WIN32
 
 /**
+ * Recovery path for data directory
+ */
+extern TCHAR g_dataDirRecoveryPath[];
+
+/**
 * Recover agent's data directory.
 * During Windows 10 upgrades local service application data directory
 * can be moved to Windows.old.
@@ -314,7 +317,7 @@ void RecoverConfigPolicyDirectory()
  */
 bool LoadConfig()
 {
-   bool validConfig = g_config->loadConfig(g_szConfigFile, DEFAULT_CONFIG_SECTION, false);
+   bool validConfig = g_config->loadConfig(g_szConfigFile, DEFAULT_CONFIG_SECTION, NULL, false);
    if (validConfig)
    {
       const TCHAR *dir = g_config->getValue(_T("/%agent/DataDirectory"));
@@ -325,7 +328,7 @@ bool LoadConfig()
       if (dir != NULL)
          _tcslcpy(g_szConfigIncludeDir, dir, MAX_PATH);
 
-      validConfig = g_config->loadConfigDirectory(g_szConfigIncludeDir, DEFAULT_CONFIG_SECTION, false);
+      validConfig = g_config->loadConfigDirectory(g_szConfigIncludeDir, DEFAULT_CONFIG_SECTION, NULL, false);
       if (!validConfig)
       {
          ConsolePrintf(_T("Error reading additional configuration files from \"%s\"\n"), g_szConfigIncludeDir);
