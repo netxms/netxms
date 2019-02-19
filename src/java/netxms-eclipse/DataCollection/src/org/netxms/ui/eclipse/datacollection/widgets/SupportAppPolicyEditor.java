@@ -33,6 +33,7 @@ import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
@@ -55,8 +56,7 @@ import org.netxms.client.objects.AgentPolicy;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.dialogs.MenuItemDialog;
-import org.netxms.ui.eclipse.datacollection.widgets.helpers.FolderMenuItem;
-import org.netxms.ui.eclipse.datacollection.widgets.helpers.GenericMenuItem;
+import org.netxms.ui.eclipse.datacollection.widgets.helpers.AppMenuItem;
 import org.netxms.ui.eclipse.datacollection.widgets.helpers.SupportAppMenuItemLabelProvider;
 import org.netxms.ui.eclipse.datacollection.widgets.helpers.SupportAppMenuItemProvider;
 import org.netxms.ui.eclipse.datacollection.widgets.helpers.SupportAppPolicy;
@@ -86,7 +86,7 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
    private ColorSelector menuTextColor;
    private Text welcomeMessageText;
    private Button setColorSchemaCheckbox;
-   private Action addFolderAction;
+   private Action addSubMenuAction;
    private Action addItemAction;
    private Action deleteAction;
    private Action editAction;
@@ -94,8 +94,6 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
    private SupportAppPolicy sPolicy;
    private Label iconLabel;
    private Image icon;
-   
-   
 
    /**
     * Constructor
@@ -237,11 +235,10 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
       fireModifyListeners();
    }
    
-
-   
    /**
     * Create icon
     */
+   @SuppressWarnings("deprecation")
    private void createIcon()
    {
       if (icon != null) 
@@ -315,35 +312,24 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
       });
    }
    
-
-   
    /**
     * Create actions
     */
    protected void createActions()
    {
-      addFolderAction = new Action("Add folder", SharedIcons.ADD_OBJECT) {
+      addSubMenuAction = new Action("Add sub menu", SharedIcons.ADD_OBJECT) {
          @Override
          public void run()
          {
-            createObjct(true);
+            createMenuItem(true);
          }
       };
       
-      addItemAction = new Action("Add tiem", SharedIcons.ADD_OBJECT) {
+      addItemAction = new Action("Add item", SharedIcons.ADD_OBJECT) {
          @Override
          public void run()
          {
-            createObjct(false);
-         }
-      };
-      
-      deleteAction = new Action("Delete", SharedIcons.DELETE_OBJECT) {
-         @Override
-         public void run()
-         {
-            
-            deleteObject();
+            createMenuItem(false);
          }
       };
       
@@ -351,13 +337,18 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
          @Override
          public void run()
          {
-            editObject();
+            editMenuItem();
+         }
+      };
+
+      deleteAction = new Action("Delete", SharedIcons.DELETE_OBJECT) {
+         @Override
+         public void run()
+         {
+            deleteMenuItem();
          }
       };
    }
-   
-
-
 
    /**
     * Create pop-up menu for user list
@@ -370,7 +361,7 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
       menuMgr.addMenuListener(new IMenuListener() {
          public void menuAboutToShow(IMenuManager mgr)
          {
-            mgr.add(addFolderAction);
+            mgr.add(addSubMenuAction);
             mgr.add(addItemAction);
             mgr.add(deleteAction);
             mgr.add(editAction);
@@ -382,51 +373,49 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
       viewer.getControl().setMenu(menu);
    }
 
-   private void deleteObject()
+   private void deleteMenuItem()
    {
       IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
       if (selection.isEmpty())
          return;
       for(Object o : selection.toList())
       {
-         sPolicy.deleteMenuItem(((GenericMenuItem)o));
+         ((AppMenuItem)o).delete();
       }
       fireModifyListeners();
    }
 
-   private void editObject()
+   private void editMenuItem()
    { 
       IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-      if (selection.isEmpty() || selection.size() > 1)
+      if (selection.size() != 1)
          return;
-      GenericMenuItem obj = (GenericMenuItem)selection.toList().get(0);
-      MenuItemDialog dlg = new MenuItemDialog(welcomeMessageText.getShell(), obj instanceof FolderMenuItem, obj);
-      int rc = dlg.open();
-      if(rc != dlg.OK)
+      
+      AppMenuItem menuItem = (AppMenuItem)selection.getFirstElement();
+      MenuItemDialog dlg = new MenuItemDialog(getShell(), menuItem);
+      if (dlg.open() != Window.OK)
          return;      
 
-      viewer.refresh(obj);
+      viewer.refresh(menuItem);
       fireModifyListeners();
    }
    
-   private void createObjct(boolean isFolder)
+   private void createMenuItem(boolean isSubMenu)
    {
       IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
       
-      MenuItemDialog dlg = new MenuItemDialog(welcomeMessageText.getShell(), isFolder, null);
-      int rc = dlg.open();
-      if(rc != dlg.OK)
+      MenuItemDialog dlg = new MenuItemDialog(getShell(), isSubMenu);
+      if (dlg.open() != Window.OK)
          return;
       
       if (selection.isEmpty())
-        sPolicy.root.addChild(dlg.getItem());
+        sPolicy.menu.addSubItem(dlg.getItem());
       else
-         ((GenericMenuItem)selection.toList().get(0)).addChild(dlg.getItem());
+         ((AppMenuItem)selection.getFirstElement()).addSubItem(dlg.getItem());
 
       viewer.refresh();
       fireModifyListeners();
    }
-   
    
    /**
     * Icon selection action
@@ -485,7 +474,7 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
       
       sPolicy.welcomeMessage = welcomeMessageText.getText();
       
-      viewer.setInput(new Object[] { sPolicy.root });
+      viewer.setInput(new Object[] { sPolicy.menu });
    }
 
    public AgentPolicy getUpdatedPolicy()
@@ -499,10 +488,11 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
          sPolicy.setLogo(stream.toByteArray());
       }
       else
+      {
          sPolicy.setLogo(null);
+      }
       
-      
-      if(setColorSchemaCheckbox.getSelection())
+      if (setColorSchemaCheckbox.getSelection())
       {
          sPolicy.backgroundColor = ColorConverter.rgbToInt(backgroundColor.getColorValue());
          sPolicy.borderColor = ColorConverter.rgbToInt(borderColor.getColorValue());

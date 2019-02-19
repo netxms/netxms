@@ -43,14 +43,14 @@ public class SupportAppPolicy
    public String welcomeMessage;
 
    @Element(required=false)
-   public FolderMenuItem root = new FolderMenuItem();
+   public AppMenuItem menu = new AppMenuItem("[root]", "", null);
    
    /**
-    * Create rack attribute from config entry
+    * Create support application policy from XML
     * 
-    * @param xml config
-    * @return attribute
-    * @throws Exception
+    * @param xml configuration
+    * @return attribute support application policy
+    * @throws Exception if deserialization fails
     */
    public static SupportAppPolicy createFromXml(final String xml) throws Exception
    {
@@ -107,11 +107,6 @@ public class SupportAppPolicy
 
    public void updateParents()
    {
-      root.updateParents(null);
-   }
-
-   public void deleteMenuItem(GenericMenuItem genericMenuItem)
-   {
-      genericMenuItem.delete();
+      menu.updateParents(null);
    }
 }

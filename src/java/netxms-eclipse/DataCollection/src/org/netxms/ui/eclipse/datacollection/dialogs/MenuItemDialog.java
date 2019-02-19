@@ -21,27 +21,32 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
-import org.netxms.ui.eclipse.datacollection.widgets.helpers.FolderMenuItem;
-import org.netxms.ui.eclipse.datacollection.widgets.helpers.GenericMenuItem;
-import org.netxms.ui.eclipse.datacollection.widgets.helpers.MenuItem;
+import org.netxms.ui.eclipse.datacollection.widgets.helpers.AppMenuItem;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 public class MenuItemDialog extends Dialog
 {
-   boolean isFolder;
-   GenericMenuItem item;
+   boolean isSubMenu;
+   AppMenuItem item;
    private Text textName;
-   private Text textDisplayName;
+   private Text textDescription;
    private Text textCommand;
    private Image icon;
    private Label iconLabel;
    
-   public MenuItemDialog(Shell parentShell, boolean isFolder, GenericMenuItem item)
+   public MenuItemDialog(Shell parentShell, AppMenuItem item)
    {
       super(parentShell);
-      this.isFolder = isFolder;
+      this.isSubMenu = item.isSubMenu();
       this.item = item;
+   }
+   
+   public MenuItemDialog(Shell parentShell, boolean isSubMenu)
+   {
+      super(parentShell);
+      this.isSubMenu = isSubMenu;
+      this.item = null;
    }
    
    /* (non-Javadoc)
@@ -51,7 +56,7 @@ public class MenuItemDialog extends Dialog
    protected void configureShell(Shell newShell)
    {
       super.configureShell(newShell);
-      newShell.setText("Create new policy");
+      newShell.setText((item != null) ? "Edit Application Menu Item" : "Create Application Menu Item");
    }
    
    /* (non-Javadoc)
@@ -68,28 +73,24 @@ public class MenuItemDialog extends Dialog
       dialogArea.setLayout(layout);
       
       textName = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT,
-            "Item name", "", WidgetHelper.DEFAULT_LAYOUT_DATA); //$NON-NLS-1$
+            "Name", item != null ? item.getName() : "", WidgetHelper.DEFAULT_LAYOUT_DATA);
       textName.getShell().setMinimumSize(300, 0);
       textName.setTextLimit(63);
-      textName.setFocus();
-      textName.setText(item != null ? item.getName() : "");
       
-      textDisplayName = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT,
-            "Description", "", WidgetHelper.DEFAULT_LAYOUT_DATA); //$NON-NLS-1$
-      textDisplayName.getShell().setMinimumSize(300, 0);
-      textDisplayName.setFocus();
-      textDisplayName.setText(item != null ? item.getDiscriptionName() : "");
+      textDescription = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT,
+            "Description", item != null ? item.getDescription() : "", WidgetHelper.DEFAULT_LAYOUT_DATA);
+      textDescription.getShell().setMinimumSize(300, 0);
       
-      if(!isFolder)
+      if (!isSubMenu)
       {
          textCommand = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT,
-               "Item command", "", WidgetHelper.DEFAULT_LAYOUT_DATA); //$NON-NLS-1$
+               "Command", item != null ? item.getCommand() : "", WidgetHelper.DEFAULT_LAYOUT_DATA);
          textCommand.getShell().setMinimumSize(300, 0);
-         textCommand.setFocus();
-         textCommand.setText(item != null ? item.getDiscriptionName() : "");
       }
 
       createIconSelector(dialogArea);      
+      textName.setFocus();
+      
       return dialogArea;
    }
    
@@ -182,10 +183,10 @@ public class MenuItemDialog extends Dialog
    @Override
    protected void okPressed()
    {
-      if(item == null)
-         item = isFolder ? new FolderMenuItem() : new MenuItem(); 
-      item.name = textName.getText().trim();
-      item.discription = textDisplayName.getText().trim();
+      if (item == null)
+         item = new AppMenuItem(isSubMenu); 
+      item.setName(textName.getText().trim());
+      item.setDescription(textDescription.getText().trim());
       
       if ((icon != null) && (icon.getImageData() != null))
       {
@@ -195,17 +196,16 @@ public class MenuItemDialog extends Dialog
          loader.save(stream, SWT.IMAGE_PNG);
          item.setIcon(stream.toByteArray());
       }
-      if (!isFolder)
+      if (!isSubMenu)
       {
-         item.command = textCommand.getText().trim();
+         item.setCommand(textCommand.getText().trim());
       }
       //Check that not empty
       super.okPressed();
    }
 
-   public GenericMenuItem getItem()
+   public AppMenuItem getItem()
    {
       return item;
    }
-
 }
