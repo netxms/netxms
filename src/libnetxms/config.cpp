@@ -172,7 +172,7 @@ ConfigEntry::~ConfigEntry()
 void ConfigEntry::setName(const TCHAR *name)
 {
    MemFree(m_name);
-   m_name = _tcsdup(CHECK_NULL(name));
+   m_name = MemCopyString(CHECK_NULL(name));
 }
 
 /**
@@ -672,6 +672,9 @@ void ConfigEntry::createXml(String &xml, int level)
 
    for(int i = 1; i < m_valueCount; i++)
    {
+      if ((*m_values[i] == 0) && (m_first != NULL))
+         continue;   // Skip empty values for non-leaf elements
+
       if (m_id == 0)
          xml.appendFormattedString(_T("%*s<%s>"), level * 4, _T(""), name);
       else
@@ -1355,7 +1358,21 @@ static void StartElement(void *userData, const char *name, const char **attrs)
             strlcpy(entryName, name, MAX_PATH);
 #endif
          bool merge = XMLGetAttrBoolean(attrs, "merge", ps->merge);
-         ps->stack[ps->level] = merge ? ps->stack[ps->level - 1]->findEntry(entryName) : NULL;
+         if (merge)
+         {
+            if (ps->config->getMergeStrategy() != NULL)
+            {
+               ps->stack[ps->level] = ps->config->getMergeStrategy()(ps->stack[ps->level - 1], entryName);
+            }
+            else
+            {
+               ps->stack[ps->level] = ps->stack[ps->level - 1]->findEntry(entryName);
+            }
+         }
+         else
+         {
+            ps->stack[ps->level] = NULL;
+         }
          if (ps->stack[ps->level] == NULL)
          {
             ConfigEntry *e = new ConfigEntry(entryName, ps->stack[ps->level - 1], ps->config, ps->file, XML_GetCurrentLineNumber(ps->parser), (int)id);
@@ -1465,7 +1482,7 @@ bool Config::loadXmlConfig(const TCHAR *file, const char *topLevelTag)
 /**
  * Load config file with format auto detection
  */
-bool Config::loadConfig(const TCHAR *file, const TCHAR *defaultIniSection, bool ignoreErrors)
+bool Config::loadConfig(const TCHAR *file, const TCHAR *defaultIniSection, const char *topLevelTag, bool ignoreErrors, bool merge)
 {
    NX_STAT_STRUCT fileStats;
    int ret = CALL_STAT(file, &fileStats);
@@ -1499,13 +1516,13 @@ bool Config::loadConfig(const TCHAR *file, const TCHAR *defaultIniSection, bool 
    fclose(f);
 
    // If first non-space character is < assume XML format, otherwise assume INI format
-   return (ch == '<') ? loadXmlConfig(file) : loadIniConfig(file, defaultIniSection, ignoreErrors);
+   return (ch == '<') ? loadXmlConfig(file, topLevelTag, merge) : loadIniConfig(file, defaultIniSection, ignoreErrors);
 }
 
 /**
  * Load all files in given directory
  */
-bool Config::loadConfigDirectory(const TCHAR *path, const TCHAR *defaultIniSection, bool ignoreErrors)
+bool Config::loadConfigDirectory(const TCHAR *path, const TCHAR *defaultIniSection, const char *topLevelTag, bool ignoreErrors, bool merge)
 {
    _TDIR *dir;
    struct _tdirent *file;
@@ -1516,6 +1533,7 @@ bool Config::loadConfigDirectory(const TCHAR *path, const TCHAR *defaultIniSecti
    if (dir != NULL)
    {
       success = true;
+      bool trailingSeparator = (path[_tcslen(path) - 1] == FS_PATH_SEPARATOR_CHAR);
       while(true)
       {
          file = _treaddir(dir);
@@ -1530,10 +1548,11 @@ bool Config::loadConfigDirectory(const TCHAR *path, const TCHAR *defaultIniSecti
             continue;	// Full file name is too long
 
          _tcscpy(fileName, path);
-         _tcscat(fileName, FS_PATH_SEPARATOR);
+         if (!trailingSeparator)
+            _tcscat(fileName, FS_PATH_SEPARATOR);
          _tcscat(fileName, file->d_name);
 
-         if (!loadConfig(fileName, defaultIniSection, ignoreErrors))
+         if (!loadConfig(fileName, defaultIniSection, topLevelTag, ignoreErrors, merge))
          {
             success = false;
          }

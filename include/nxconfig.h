@@ -114,6 +114,11 @@ public:
 };
 
 /**
+ * Merge strategy
+ */
+typedef ConfigEntry *(*ConfigMergeStrategy)(ConfigEntry *parent, const TCHAR *name);
+
+/**
  * Hierarchical config
  */
 class LIBNETXMS_EXPORTABLE Config
@@ -124,6 +129,7 @@ private:
 	MUTEX m_mutex;
    StringMap m_aliases;
    bool m_allowMacroExpansion;
+   ConfigMergeStrategy m_mergeStrategy;
 
 protected:
 	virtual void onError(const TCHAR *errorMessage);
@@ -139,13 +145,16 @@ public:
 	void unlock() { MutexUnlock(m_mutex); }
 
 	void setTopLevelTag(const TCHAR *topLevelTag) { m_root->setName(topLevelTag); }
+   
+   void setMergeStrategy(ConfigMergeStrategy s) { m_mergeStrategy = s; }
+   ConfigMergeStrategy getMergeStrategy() const { return m_mergeStrategy; }
 
 	bool loadXmlConfig(const TCHAR *file, const char *topLevelTag = NULL);
 	bool loadXmlConfigFromMemory(const char *xml, int xmlSize, const TCHAR *name = NULL, const char *topLevelTag = NULL, bool merge = true);
 	bool loadIniConfig(const TCHAR *file, const TCHAR *defaultIniSection, bool ignoreErrors = true);
-	bool loadConfig(const TCHAR *file, const TCHAR *defaultIniSection, bool ignoreErrors = true);
+	bool loadConfig(const TCHAR *file, const TCHAR *defaultIniSection, const char *topLevelTag = NULL, bool ignoreErrors = true, bool merge = true);
 
-	bool loadConfigDirectory(const TCHAR *path, const TCHAR *defaultIniSection, bool ignoreErrors = true);
+	bool loadConfigDirectory(const TCHAR *path, const TCHAR *defaultIniSection, const char *topLevelTag = NULL, bool ignoreErrors = true, bool merge = true);
 
 	void deleteEntry(const TCHAR *path);
 
