@@ -149,7 +149,7 @@ public:
    void setMergeStrategy(ConfigMergeStrategy s) { m_mergeStrategy = s; }
    ConfigMergeStrategy getMergeStrategy() const { return m_mergeStrategy; }
 
-	bool loadXmlConfig(const TCHAR *file, const char *topLevelTag = NULL);
+	bool loadXmlConfig(const TCHAR *file, const char *topLevelTag = NULL, bool merge = true);
 	bool loadXmlConfigFromMemory(const char *xml, int xmlSize, const TCHAR *name = NULL, const char *topLevelTag = NULL, bool merge = true);
 	bool loadIniConfig(const TCHAR *file, const TCHAR *defaultIniSection, bool ignoreErrors = true);
 	bool loadConfig(const TCHAR *file, const TCHAR *defaultIniSection, const char *topLevelTag = NULL, bool ignoreErrors = true, bool merge = true);
