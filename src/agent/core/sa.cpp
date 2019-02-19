@@ -276,17 +276,33 @@ void SessionAgentConnector::takeScreenshot(NXCPMessage *masterResponse)
 }
 
 /**
+ * Config merge strategy for support application
+ */
+static ConfigEntry *SupportAppMergeStrategy(ConfigEntry *parent, const TCHAR *name)
+{
+   if (!_tcsicmp(name, _T("item")))
+      return NULL;
+   return parent->findEntry(name);
+}
+
+/**
  * Send configuration for user agent
  */
 void SessionAgentConnector::sendUserAgentConfig()
 {
    Config config;
    config.setTopLevelTag(_T("SupportAppPolicy"));
-   config.loadConfigDirectory(g_userAgentPolicyDirectory, _T("SupportAppPolicy"));
-
-   NXCPMessage msg(CMD_UPDATE_AGENT_CONFIG, nextRequestId());
-   msg.setField(VID_CONFIG_FILE_DATA, config.createXml());
-   sendMessage(&msg);
+   config.setMergeStrategy(SupportAppMergeStrategy);
+   if (config.loadConfigDirectory(g_userAgentPolicyDirectory, _T("SupportAppPolicy"), "SupportAppPolicy", true, true))
+   {
+      NXCPMessage msg(CMD_UPDATE_AGENT_CONFIG, nextRequestId());
+      msg.setField(VID_CONFIG_FILE_DATA, config.createXml());
+      sendMessage(&msg);
+   }
+   else
+   {
+      nxlog_debug(2, _T("SA-%d: cannot load user agent configuration from %s"), m_id, g_userAgentPolicyDirectory);
+   }
 }
 
 /**
