@@ -280,11 +280,12 @@ void SessionAgentConnector::takeScreenshot(NXCPMessage *masterResponse)
  */
 void SessionAgentConnector::sendUserAgentConfig()
 {
-   Config *config = new Config();
-   config->loadConfigDirectory(g_userAgentPolicyDirectory, _T("error"));
+   Config config;
+   config.setTopLevelTag(_T("SupportAppPolicy"));
+   config.loadConfigDirectory(g_userAgentPolicyDirectory, _T("SupportAppPolicy"));
 
    NXCPMessage msg(CMD_UPDATE_AGENT_CONFIG, nextRequestId());
-   msg.setField(VID_CONFIG_FILE_DATA, config->createXml());
+   msg.setField(VID_CONFIG_FILE_DATA, config.createXml());
    sendMessage(&msg);
 }
 
