@@ -1460,7 +1460,7 @@ bool Config::loadXmlConfigFromMemory(const char *xml, int xmlSize, const TCHAR *
 /**
  * Load config from XML file
  */
-bool Config::loadXmlConfig(const TCHAR *file, const char *topLevelTag)
+bool Config::loadXmlConfig(const TCHAR *file, const char *topLevelTag, bool merge)
 {
    BYTE *xml;
    UINT32 size;
@@ -1469,7 +1469,7 @@ bool Config::loadXmlConfig(const TCHAR *file, const char *topLevelTag)
    xml = LoadFile(file, &size);
    if (xml != NULL)
    {
-      success = loadXmlConfigFromMemory((char *)xml, (int)size, file, topLevelTag);
+      success = loadXmlConfigFromMemory((char *)xml, (int)size, file, topLevelTag, merge);
       free(xml);
    }
    else
