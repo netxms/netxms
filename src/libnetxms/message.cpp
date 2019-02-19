@@ -746,12 +746,14 @@ char *NXCPMessage::getFieldAsUtf8String(UINT32 fieldId, char *buffer, size_t buf
    void *value = get(fieldId, NXCP_DT_STRING);
    if (value != NULL)
    {
+      UCS2CHAR *in = reinterpret_cast<UCS2CHAR*>(static_cast<BYTE*>(value) + 4);
+      int inSize = *static_cast<UINT32*>(value) / 2;
+
       int outSize;
       if (buffer == NULL)
       {
-			// Assume worst case scenario - 3 bytes per character
-			outSize = (int)(*((UINT32 *)value) + *((UINT32 *)value) / 2 + 1);
-         str = (char *)malloc(outSize);
+         outSize = ucs2_utf8len(in, inSize);
+         str = MemAllocArray<char>(outSize);
       }
       else
       {
@@ -759,12 +761,7 @@ char *NXCPMessage::getFieldAsUtf8String(UINT32 fieldId, char *buffer, size_t buf
          str = buffer;
       }
 
-      size_t length = *((UINT32 *)value) / 2;
-#ifdef UNICODE_UCS2
-		int cc = WideCharToMultiByte(CP_UTF8, 0, (WCHAR *)((BYTE *)value + 4), (int)length, str, outSize - 1, NULL, NULL);
-#else
-		int cc = ucs2_to_utf8((UCS2CHAR *)((BYTE *)value + 4), (int)length, str, outSize - 1);
-#endif
+		int cc = ucs2_to_utf8(in, inSize, str, outSize - 1);
       str[cc] = 0;
    }
    else
