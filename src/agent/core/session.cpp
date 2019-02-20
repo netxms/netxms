@@ -41,11 +41,10 @@ ThreadPool *g_snmpProxyThreadPool = NULL;
  */
 ThreadPool *g_commThreadPool = NULL;
 
-
 /**
  * Agent action thread pool
  */
-ThreadPool *g_agentActionThreadPool = NULL;
+ThreadPool *g_executorThreadPool = NULL;
 
 /**
  * Next free session ID

@@ -849,7 +849,7 @@ BOOL Initialize()
       SendFileToServer, PushData, GetLocalDatabaseHandle, s_subAgentsStopCondition, g_szDataDirectory, ExecuteAction);
    nxlog_debug(1, _T("Subagent API initialized"));
 
-   g_agentActionThreadPool = ThreadPoolCreate(_T("AGENTACTION"), 1, 32);
+   g_executorThreadPool = ThreadPoolCreate(_T("PROCEXEC"), 1, 32);
 
    // Initialize cryptografy
    if (!InitCryptoLib(s_enabledCiphers))
@@ -1257,7 +1257,7 @@ void Shutdown()
       }
       ThreadPoolDestroy(g_commThreadPool);
    }
-   ThreadPoolDestroy(g_agentActionThreadPool);
+   ThreadPoolDestroy(g_executorThreadPool);
 
    UnloadAllSubAgents();
    CloseLocalDatabase();

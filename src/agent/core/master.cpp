@@ -91,7 +91,7 @@ void ExecuteAction(NXCPMessage *request, NXCPMessage *response, AbstractCommSess
    {
       rcc = (executor->execute() ? ERR_SUCCESS : ERR_EXEC_FAILED);
       if (rcc == ERR_SUCCESS)
-         ThreadPoolScheduleRelative(g_agentActionThreadPool, g_execTimeout, AgentActionExecutor::stopAction, executor);
+         ThreadPoolScheduleRelative(g_executorThreadPool, g_execTimeout, AgentActionExecutor::stopAction, executor);
    }
    else
       DebugPrintf(6, _T("AgentActionExecutor instance creation failed"));
@@ -104,7 +104,7 @@ void ExecuteAction(const TCHAR *cmd, const StringList *args)
    VirtualSession *session = new VirtualSession(0);
    AgentActionExecutor *executor = AgentActionExecutor::createAgentExecutor(cmd, args);
    if (executor != NULL && executor->execute())
-      ThreadPoolScheduleRelative(g_agentActionThreadPool, g_execTimeout, AgentActionExecutor::stopAction, executor);
+      ThreadPoolScheduleRelative(g_executorThreadPool, g_execTimeout, AgentActionExecutor::stopAction, executor);
 }
 
 /**

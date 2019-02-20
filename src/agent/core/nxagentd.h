@@ -784,7 +784,7 @@ extern CommSession **g_pSessionList;
 extern MUTEX g_hSessionListAccess;
 extern ThreadPool *g_snmpProxyThreadPool;
 extern ThreadPool *g_commThreadPool;
-extern ThreadPool *g_agentActionThreadPool;
+extern ThreadPool *g_executorThreadPool;
 
 #ifdef _WIN32
 extern TCHAR g_windowsEventSourceName[];
