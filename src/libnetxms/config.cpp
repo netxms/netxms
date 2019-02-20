@@ -131,18 +131,34 @@ static TCHAR *ExpandValue(const TCHAR *src, bool xmlFormat, bool expandEnv)
  */
 ConfigEntry::ConfigEntry(const TCHAR *name, ConfigEntry *parent, const Config *owner, const TCHAR *file, int line, int id)
 {
-   m_name = _tcsdup(CHECK_NULL(name));
+   m_name = MemCopyString(CHECK_NULL(name));
    m_first = NULL;
    m_last = NULL;
    m_next = NULL;
    m_parent = NULL;
    if (parent != NULL)
       parent->addEntry(this);
-   m_valueCount = 0;
-   m_values = NULL;
-   m_file = _tcsdup(CHECK_NULL(file));
+   m_file = MemCopyString(CHECK_NULL(file));
    m_line = line;
    m_id = id;
+   m_owner = owner;
+}
+
+/**
+ * Copy constructor (do not copy sub-entries)
+ */
+ConfigEntry::ConfigEntry(const ConfigEntry *src, const Config *owner)
+{
+   m_name = MemCopyString(src->m_name);
+   m_first = NULL;
+   m_last = NULL;
+   m_next = NULL;
+   m_parent = NULL;
+   m_values.addAll(&src->m_values);
+   m_attributes.addAll(&src->m_attributes);
+   m_file = MemCopyString(src->m_file);
+   m_line = src->m_line;
+   m_id = src->m_id;
    m_owner = owner;
 }
 
@@ -152,18 +168,13 @@ ConfigEntry::ConfigEntry(const TCHAR *name, ConfigEntry *parent, const Config *o
 ConfigEntry::~ConfigEntry()
 {
    ConfigEntry *entry, *next;
-
    for(entry = m_first; entry != NULL; entry = next)
    {
       next = entry->getNext();
       delete entry;
    }
-   free(m_name);
-   free(m_file);
-
-   for(int i = 0; i < m_valueCount; i++)
-      MemFree(m_values[i]);
-   free(m_values);
+   MemFree(m_name);
+   MemFree(m_file);
 }
 
 /**
@@ -297,16 +308,6 @@ ObjectArray<ConfigEntry> *ConfigEntry::getOrderedSubEntries(const TCHAR *mask) c
 }
 
 /**
- * Get entry value
- */
-const TCHAR* ConfigEntry::getValue(int index)
-{
-   if ((index < 0) || (index >= m_valueCount))
-      return NULL;
-   return m_values[index];
-}
-
-/**
  * Get entry value as integer
  */
 INT32 ConfigEntry::getValueAsInt(int index, INT32 defaultValue)
@@ -378,31 +379,8 @@ uuid ConfigEntry::getValueAsUUID(int index)
  */
 void ConfigEntry::setValue(const TCHAR *value)
 {
-   for(int i = 0; i < m_valueCount; i++)
-      MemFree(m_values[i]);
-   m_valueCount = 1;
-   m_values = (TCHAR **) realloc(m_values, sizeof(TCHAR *));
-   m_values[0] = _tcsdup(value);
-}
-
-/**
- * Add value
- */
-void ConfigEntry::addValue(const TCHAR *value)
-{
-   m_values = (TCHAR **) realloc(m_values, sizeof(TCHAR *) * (m_valueCount + 1));
-   m_values[m_valueCount] = _tcsdup(value);
-   m_valueCount++;
-}
-
-/**
- * Add value (pre-allocated string)
- */
-void ConfigEntry::addValuePreallocated(TCHAR *value)
-{
-   m_values = (TCHAR **) realloc(m_values, sizeof(TCHAR *) * (m_valueCount + 1));
-   m_values[m_valueCount] = value;
-   m_valueCount++;
+   m_values.clear();
+   m_values.add(value);
 }
 
 /**
@@ -410,14 +388,13 @@ void ConfigEntry::addValuePreallocated(TCHAR *value)
  */
 int ConfigEntry::getConcatenatedValuesLength()
 {
-   int i, len;
-
-   if (m_valueCount < 1)
+   if (m_values.isEmpty())
       return 0;
 
-   for(i = 0, len = 0; i < m_valueCount; i++)
-      len += (int) _tcslen(m_values[i]);
-   return len + m_valueCount;
+   int len = 0;
+   for(int i = 0; i < m_values.size(); i++)
+      len += (int)_tcslen(m_values.get(i));
+   return len + m_values.size();
 }
 
 /**
@@ -596,6 +573,43 @@ void ConfigEntry::setAttribute(const TCHAR *name, bool value)
 }
 
 /**
+ * Add subtree to this entry
+ */
+void ConfigEntry::addSubTree(const ConfigEntry *root, bool merge)
+{
+   for(ConfigEntry *src = root->m_first; src != NULL; src = src->m_next)
+   {
+      ConfigEntry *dst;
+      if (merge)
+      {
+         if (m_owner->getMergeStrategy() != NULL)
+         {
+            dst = m_owner->getMergeStrategy()(this, src->m_name);
+         }
+         else
+         {
+            dst = findEntry(src->m_name);
+         }
+         if (dst != NULL)
+         {
+            dst->m_values.addAll(&src->m_values);
+         }
+         else
+         {
+            dst = new ConfigEntry(src, m_owner);
+            addEntry(dst);
+         }
+      }
+      else
+      {
+         dst = new ConfigEntry(src, m_owner);
+         addEntry(dst);
+      }
+      dst->addSubTree(src, merge);
+   }
+}
+
+/**
  * Print config entry
  */
 void ConfigEntry::print(FILE *file, int level, TCHAR *prefix)
@@ -612,14 +626,14 @@ void ConfigEntry::print(FILE *file, int level, TCHAR *prefix)
    }
 
    // Do not print empty values for non-leaf nodes
-   if ((m_first == NULL) || ((m_valueCount > 0) && (m_values[0][0] != 0)))
+   if ((m_first == NULL) || (!m_values.isEmpty() && (*m_values.get(0) != 0)))
    {
-      for(int i = 0; i < m_valueCount; i++)
+      for(int i = 0; i < m_values.size(); i++)
       {
          if (isatty(fileno(file)))
-            WriteToTerminalEx(_T("%s  value: \x1b[1m%s\x1b[0m\n"), prefix, m_values[i]);
+            WriteToTerminalEx(_T("%s  value: \x1b[1m%s\x1b[0m\n"), prefix, m_values.get(i));
          else
-            _tprintf(_T("%s  value: %s\n"), prefix, m_values[i]);
+            _tprintf(_T("%s  value: %s\n"), prefix, m_values.get(i));
       }
    }
 
@@ -666,20 +680,20 @@ void ConfigEntry::createXml(String &xml, int level)
       xml.appendFormattedString(_T("%*s"), level * 4, _T(""));
    }
 
-   if (m_valueCount > 0)
-      xml.appendPreallocated(EscapeStringForXML(m_values[0], -1));
+   if (!m_values.isEmpty())
+      xml.appendPreallocated(EscapeStringForXML(m_values.get(0), -1));
    xml.appendFormattedString(_T("</%s>\n"), name);
 
-   for(int i = 1; i < m_valueCount; i++)
+   for(int i = 1; i < m_values.size(); i++)
    {
-      if ((*m_values[i] == 0) && (m_first != NULL))
+      if ((*m_values.get(i) == 0) && (m_first != NULL))
          continue;   // Skip empty values for non-leaf elements
 
       if (m_id == 0)
          xml.appendFormattedString(_T("%*s<%s>"), level * 4, _T(""), name);
       else
          xml.appendFormattedString(_T("%*s<%s id=\"%d\">"), level * 4, _T(""), name, m_id);
-      xml.appendPreallocated(EscapeStringForXML(m_values[i], -1));
+      xml.appendPreallocated(EscapeStringForXML(m_values.get(i), -1));
       xml.appendFormattedString(_T("</%s>\n"), name);
    }
 
@@ -1249,10 +1263,18 @@ bool Config::loadIniConfig(const TCHAR *file, const TCHAR *defaultIniSection, bo
             s = _tcschr(curr, _T('/'));
             if (s != NULL)
                *s = 0;
-            currentSection = parent->findEntry(curr);
-            if (currentSection == NULL)
+            if (*curr == _T('@'))
             {
-               currentSection = new ConfigEntry(curr, parent, this, file, sourceLine, 0);
+               // @name indicates no merge entry
+               currentSection = new ConfigEntry(curr + 1, parent, this, file, sourceLine, 0);
+            }
+            else
+            {
+               currentSection = parent->findEntry(curr);
+               if (currentSection == NULL)
+               {
+                  currentSection = new ConfigEntry(curr, parent, this, file, sourceLine, 0);
+               }
             }
             curr = s + 1;
             parent = currentSection;
@@ -1568,10 +1590,19 @@ bool Config::loadConfigDirectory(const TCHAR *path, const TCHAR *defaultIniSecti
    return success;
 }
 
-/*
+/**
+ * Add given configuration subtree into this configuration tree
+ */
+void Config::addSubTree(const TCHAR *path, const ConfigEntry *root, bool merge)
+{
+   ConfigEntry *entry = getEntry(path);
+   if (entry != NULL)
+      entry->addSubTree(root, merge);
+}
+
+/**
  * Print config to output stream
  */
-
 void Config::print(FILE *file)
 {
    TCHAR prefix[256] = _T("");

@@ -325,7 +325,7 @@ ThreadPool LIBNETXMS_EXPORTABLE *ThreadPoolCreate(const TCHAR *name, int minThre
    p->serializationLock = MutexCreate();
    p->schedulerQueue = new ObjectArray<WorkRequest>(16, 16, false);
    p->schedulerLock = MutexCreate();
-   p->name = (name != NULL) ? _tcsdup(name) : _tcsdup(_T("NONAME"));
+   p->name = (name != NULL) ? MemCopyString(name) : MemCopyString(_T("NONAME"));
    p->shutdownMode = false;
 
    p->maintThread = ThreadCreateEx(MaintenanceThread, 256 * 1024, p);
