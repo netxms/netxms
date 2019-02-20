@@ -34,22 +34,25 @@ class Config;
  */
 class LIBNETXMS_EXPORTABLE ConfigEntry
 {
+   DISABLE_COPY_CTOR(ConfigEntry);
+
 private:
 	TCHAR *m_name;
 	ConfigEntry *m_parent;
 	ConfigEntry *m_next;
 	ConfigEntry *m_first;
    ConfigEntry *m_last;
-	int m_valueCount;
-	TCHAR **m_values;
-	TCHAR *m_file;
+	StringList m_values;
+   StringMap m_attributes;
+   TCHAR *m_file;
 	int m_line;
 	int m_id;
-   StringMap m_attributes;
    const Config *m_owner;
 
 	void addEntry(ConfigEntry *entry);
 	void linkEntry(ConfigEntry *entry) { entry->m_next = m_next; m_next = entry; }
+
+   ConfigEntry(const ConfigEntry *src, const Config *owner);
 
 public:
 	ConfigEntry(const TCHAR *name, ConfigEntry *parent, const Config *owner, const TCHAR *file, int line, int id);
@@ -60,10 +63,10 @@ public:
 
 	const TCHAR *getName() const { return m_name; }
 	int getId() const { return m_id; }
-	int getValueCount() const { return m_valueCount; }
+	int getValueCount() const { return m_values.size(); }
 	int getConcatenatedValuesLength();
 
-	const TCHAR *getValue(int index = 0);
+   const TCHAR *getValue(int index = 0) const { return m_values.get(index); }
 	INT32 getValueAsInt(int index = 0, INT32 defaultValue = 0);
 	UINT32 getValueAsUInt(int index = 0, UINT32 defaultValue = 0);
 	INT64 getValueAsInt64(int index = 0, INT64 defaultValue = 0);
@@ -71,8 +74,8 @@ public:
 	bool getValueAsBoolean(int index = 0, bool defaultValue = false);
 	uuid getValueAsUUID(int index);
 
-	void addValue(const TCHAR *value);
-	void addValuePreallocated(TCHAR *value);
+   void addValue(const TCHAR *value) { m_values.add(value); }
+   void addValuePreallocated(TCHAR *value) { m_values.addPreallocated(value); }
 	void setValue(const TCHAR*value);
 
 	const TCHAR *getSubEntryValue(const TCHAR *name, int index = 0, const TCHAR *defaultValue = NULL) const;
@@ -109,6 +112,8 @@ public:
 	ObjectArray<ConfigEntry> *getOrderedSubEntries(const TCHAR *mask) const;
 	void unlinkEntry(ConfigEntry *entry);
 
+   void addSubTree(const ConfigEntry *root, bool merge);
+
 	void print(FILE *file, int level, TCHAR *prefix);
 	void createXml(String &xml, int level = 0);
 };
@@ -123,6 +128,8 @@ typedef ConfigEntry *(*ConfigMergeStrategy)(ConfigEntry *parent, const TCHAR *na
  */
 class LIBNETXMS_EXPORTABLE Config
 {
+   DISABLE_COPY_CTOR(Config);
+
 private:
 	ConfigEntry *m_root;
 	int m_errorCount;
@@ -155,6 +162,8 @@ public:
 	bool loadConfig(const TCHAR *file, const TCHAR *defaultIniSection, const char *topLevelTag = NULL, bool ignoreErrors = true, bool merge = true);
 
 	bool loadConfigDirectory(const TCHAR *path, const TCHAR *defaultIniSection, const char *topLevelTag = NULL, bool ignoreErrors = true, bool merge = true);
+
+   void addSubTree(const TCHAR *path, const ConfigEntry *root, bool merge = true);
 
 	void deleteEntry(const TCHAR *path);
 
