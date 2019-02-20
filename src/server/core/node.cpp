@@ -28,10 +28,15 @@
 #define DEBUG_TAG_STATUS_POLL _T("poll.status")
 
 /**
- * Externals
+ * Performance counters
  */
 extern VolatileCounter64 g_syslogMessagesReceived;
 extern VolatileCounter64 g_snmpTrapsReceived;
+
+/**
+ * Poller thread pool
+ */
+extern ThreadPool *g_pollerThreadPool;
 
 /**
  * Node class default constructor
@@ -2617,7 +2622,35 @@ void Node::configurationPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo 
       if (updateInterfaceConfiguration(dwRqId, maskBits))
          modified |= MODIFY_NODE_PROPERTIES;
 
-      m_lastConfigurationPoll = time(NULL);
+      if (g_flags & AF_MERGE_DUPLICATE_NODES)
+      {
+         Node *duplicateNode;
+         DuplicateCheckResult dcr = checkForDuplicates(&duplicateNode);
+         if (dcr == REMOVE_THIS)
+         {
+            nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 3, _T("Removing node %s [%u] as duplicate"), m_name, m_id);
+
+            poller->setStatus(_T("cleanup"));
+            m_runtimeFlags &= ~DCDF_CONFIGURATION_POLL_PENDING;
+            if (rqId == 0)
+               m_runtimeFlags &= ~DCDF_QUEUED_FOR_CONFIGURATION_POLL;
+            m_runtimeFlags &= ~NDF_RECHECK_CAPABILITIES;
+            pollerUnlock();
+
+            duplicateNode->reconcileWithDuplicateNode(this);
+            duplicateNode->decRefCount();
+            DbgPrintf(4, _T("Aborted configuration poll for node %s (ID: %d)"), m_name, m_id);
+            ThreadPoolExecute(g_pollerThreadPool, this, &NetObj::deleteObject, static_cast<NetObj*>(NULL));
+            return;
+         }
+         else if (dcr == REMOVE_OTHER)
+         {
+            nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 3, _T("Removing node %s [%u] as duplicate"), duplicateNode->getName(), duplicateNode->getId());
+            reconcileWithDuplicateNode(duplicateNode);
+            duplicateNode->deleteObject();
+            duplicateNode->decRefCount();
+         }
+      }
 
       // Check node name
       sendPollerMsg(dwRqId, _T("Checking node name\r\n"));
@@ -2714,6 +2747,8 @@ void Node::configurationPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo 
       poller->setStatus(_T("hook"));
       executeHookScript(_T("ConfigurationPoll"));
 
+      m_lastConfigurationPoll = time(NULL);
+
       sendPollerMsg(dwRqId, _T("Finished configuration poll for node %s\r\n"), m_name);
       sendPollerMsg(dwRqId, _T("Node configuration was%schanged after poll\r\n"), (modified != 0) ? _T(" ") : _T(" not "));
 
@@ -2734,6 +2769,161 @@ void Node::configurationPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo 
       setModified(modified);
       unlockProperties();
    }
+}
+
+/**
+ * Filter node index by zone UIN
+ */
+static bool FilterByZone(NetObj *object, void *zoneUIN)
+{
+   return static_cast<Node*>(object)->getZoneUIN() == CAST_FROM_POINTER(zoneUIN, UINT32);
+}
+
+/**
+ * Check for duplicate nodes
+ */
+DuplicateCheckResult Node::checkForDuplicates(Node **duplicate)
+{
+   DuplicateCheckResult result = NO_DUPLICATES;
+   ObjectArray<NetObj> *nodes = g_idxNodeById.getObjects(true, FilterByZone, CAST_TO_POINTER(m_zoneUIN, void*));
+   int i;
+   for(i = 0; i < nodes->size(); i++)
+   {
+      Node *node = static_cast<Node*>(nodes->get(i));
+      if (node->m_id == m_id)
+         continue;
+
+      if (isDuplicateOf(node))
+      {
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 3, _T("Node %s [%u] is a duplicate of node %s [%u]"),
+                  m_name, m_id, node->getName(), node->getId());
+
+         if ((node->m_status == STATUS_UNMANAGED) || (node->m_state & DCSF_UNREACHABLE))
+         {
+            result = REMOVE_OTHER;
+         }
+         else if (node->isNativeAgent() && !isNativeAgent())
+         {
+            result = REMOVE_THIS;
+         }
+         else if (!node->isNativeAgent() && isNativeAgent())
+         {
+            result = REMOVE_OTHER;
+         }
+         else if (node->isSNMPSupported() && !isSNMPSupported())
+         {
+            result = REMOVE_THIS;
+         }
+         else if (!node->isSNMPSupported() && isSNMPSupported())
+         {
+            result = REMOVE_OTHER;
+         }
+         else if (node->m_id > m_id)
+         {
+            result = REMOVE_OTHER;
+         }
+         else
+         {
+            result = REMOVE_THIS;
+         }
+         *duplicate = node;
+         break;
+      }
+      node->decRefCount();
+   }
+   for(i++; i < nodes->size(); i++)
+      nodes->get(i)->decRefCount();
+   delete nodes;
+   return result;
+}
+
+/**
+ * Check if this node is a duplicate of given node
+ */
+bool Node::isDuplicateOf(Node *node)
+{
+   // Check if primary IP is on one of other node's interfaces
+   Interface *iface = node->findInterfaceByIP(m_ipAddress);
+   if (iface != NULL)
+   {
+      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 3, _T("Primary IP address %s of node %s [%u] found on interface %s of node %s [%u]"),
+               (const TCHAR *)m_ipAddress.toString(), m_name, m_id, iface->getName(), node->getName(), node->getId());
+      return true;
+   }
+
+   // Check for exact match of interface list
+   //TODO
+
+   return false;
+}
+
+/**
+ * Reconcile with duplicate node.
+ *
+ * @param node Pointer to duplicate node about to be deleted.
+ */
+void Node::reconcileWithDuplicateNode(Node *node)
+{
+   // Copy all non-template DCIs
+   node->lockDciAccess(false);
+   lockDciAccess(true);
+
+   for(int i = 0; i < node->m_dcObjects->size(); i++)
+   {
+      DCObject *dci = node->m_dcObjects->get(i);
+      if (dci->getTemplateId() != 0)
+         continue;
+
+      // Check if this node already have same DCI
+      bool found = false;
+      for(int j = 0; j < m_dcObjects->size(); j++)
+      {
+         DCObject *curr = m_dcObjects->get(j);
+         if ((curr->getDataSource() == dci->getDataSource()) &&
+             (curr->getSourceNode() == dci->getSourceNode()) &&
+             !_tcsicmp(curr->getName(), dci->getName()))
+         {
+            found = true;
+            break;
+         }
+      }
+
+      if (!found)
+      {
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("Creating copy of DCI \"%s\" [%u] from node %s [%u] on node %s [%u]"),
+                  dci->getName(), dci->getId(), node->m_name, node->m_id, m_name, m_id);
+
+         DCObject *dciCopy = dci->clone();
+         dciCopy->changeBinding(CreateUniqueId(IDG_ITEM), this, false);
+         addDCObject(dciCopy, true);
+      }
+   }
+
+   unlockDciAccess();
+   node->unlockDciAccess();
+
+   // Apply all manual templates from duplicate node
+   node->lockParentList(false);
+   for(int i = 0; i < node->m_parentList->size(); i++)
+   {
+      NetObj *object = node->m_parentList->get(i);
+      if (object->getObjectClass() != OBJECT_TEMPLATE)
+         continue;
+
+      if (static_cast<Template*>(object)->isAutoBindEnabled())
+         continue;
+
+      if (!object->isDirectChild(m_id))
+      {
+         TEMPLATE_UPDATE_INFO *pInfo = MemAllocStruct<TEMPLATE_UPDATE_INFO>();
+         pInfo->updateType = APPLY_TEMPLATE;
+         pInfo->pTemplate = static_cast<Template*>(object);
+         pInfo->targetId = m_id;
+         pInfo->removeDCI = false;
+         g_templateUpdateQueue.put(pInfo);
+      }
+   }
+   node->unlockParentList();
 }
 
 /**

@@ -1610,6 +1610,16 @@ enum ProxyType
 };
 
 /**
+ * Duplicate check result
+ */
+enum DuplicateCheckResult
+{
+   NO_DUPLICATES,
+   REMOVE_THIS,
+   REMOVE_OTHER
+};
+
+/**
  * Container for proxy agent connections
  */
 class ProxyAgentConnection : public ObjectLock<AgentConnectionEx>
@@ -1800,6 +1810,9 @@ protected:
 	bool updateInterfaceConfiguration(UINT32 rqid, int maskBits);
    bool deleteDuplicateInterfaces(UINT32 rqid);
    void updatePhysicalContainerBinding(int containerClass, UINT32 containerId);
+   DuplicateCheckResult checkForDuplicates(Node **duplicate);
+   bool isDuplicateOf(Node *node);
+   void reconcileWithDuplicateNode(Node *node);
 
    bool connectToAgent(UINT32 *error = NULL, UINT32 *socketError = NULL, bool *newConnection = NULL, bool forceConnect = false);
    void setLastAgentCommTime() { m_lastAgentCommTime = time(NULL); }

@@ -459,6 +459,13 @@ static void OnConfigVariableChange(bool isCLOB, const TCHAR *name, const TCHAR *
       else
          g_flags &= ~AF_PARALLEL_NETWORK_DISCOVERY;
    }
+   else if (!_tcscmp(name, _T("NetworkDiscovery.MergeDuplicateNodes")))
+   {
+      if (_tcstol(value, NULL, 0))
+         g_flags |= AF_MERGE_DUPLICATE_NODES;
+      else
+         g_flags &= ~AF_MERGE_DUPLICATE_NODES;
+   }
    else if (!_tcscmp(name, _T("StrictAlarmStatusFlow")))
    {
       NotifyClientSessions(NX_NOTIFY_ALARM_STATUS_FLOW_CHANGED, _tcstol(value, NULL, 0));
