@@ -108,7 +108,6 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
       
       try
       {
-         System.out.println(policy.getContent());
          sPolicy = SupportAppPolicy.createFromXml(policy.getContent());
       }
       catch(Exception e)
@@ -143,7 +142,48 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
       setColorSchemaCheckbox = new Button(colorSelectors, SWT.CHECK);
       setColorSchemaCheckbox.setText("Define color schema");
       setColorSchemaCheckbox.setLayoutData(gd);
+      setColorSchemaCheckbox.setSelection(sPolicy.menuBackgroundColor != null);
       
+      
+      backgroundColor = WidgetHelper.createLabeledColorSelector(colorSelectors, "Background", WidgetHelper.DEFAULT_LAYOUT_DATA);    
+      textColor = WidgetHelper.createLabeledColorSelector(colorSelectors, "Text", WidgetHelper.DEFAULT_LAYOUT_DATA);      
+      borderColor = WidgetHelper.createLabeledColorSelector(colorSelectors, "Border", WidgetHelper.DEFAULT_LAYOUT_DATA);     
+      headerColor = WidgetHelper.createLabeledColorSelector(colorSelectors, "Header text", WidgetHelper.DEFAULT_LAYOUT_DATA);     
+      menuBackgroundColor = WidgetHelper.createLabeledColorSelector(colorSelectors, "Menu background", WidgetHelper.DEFAULT_LAYOUT_DATA);   
+      menuTextColor = WidgetHelper.createLabeledColorSelector(colorSelectors, "Menu text", WidgetHelper.DEFAULT_LAYOUT_DATA);
+      menuHighligtColor = WidgetHelper.createLabeledColorSelector(colorSelectors, "Menu highlight", WidgetHelper.DEFAULT_LAYOUT_DATA);
+      menuSelectionColor = WidgetHelper.createLabeledColorSelector(colorSelectors, "Menu selection", WidgetHelper.DEFAULT_LAYOUT_DATA);
+
+      
+      
+      welcomeMessageText = WidgetHelper.createLabeledText(this, SWT.MULTI | SWT.BORDER, SWT.DEFAULT,
+            "Welcome message", "", WidgetHelper.DEFAULT_LAYOUT_DATA);
+      GridData data = new GridData(SWT.FILL, SWT.TOP, true, false);
+      data.heightHint = 100;
+      welcomeMessageText.setLayoutData(data);
+      
+      //ListOfActions
+      final String[] columnNames = { "Name", "Display name", "Command", "Icon" };
+      final int[] columnWidths = { 300, 300, 300, 300 };         
+      viewer = new SortableTreeViewer(this, columnNames, columnWidths, 0, SWT.UP, SortableTableViewer.DEFAULT_STYLE);
+      viewer.setContentProvider(new SupportAppMenuItemProvider());
+      viewer.setLabelProvider(new SupportAppMenuItemLabelProvider());
+
+      gd = new GridData(SWT.FILL, SWT.FILL, true, true);
+      gd.horizontalSpan = 5;
+      viewer.getControl().setLayoutData(gd);
+      viewer.addSelectionChangedListener(new ISelectionChangedListener() {
+         @Override
+         public void selectionChanged(SelectionChangedEvent event)
+         {
+            IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+            deleteAction.setEnabled(!selection.isEmpty());
+            editAction.setEnabled(!selection.isEmpty());            
+         }
+      });
+      
+      updateControlsFromPolicy();      
+
       IPropertyChangeListener listener = new IPropertyChangeListener() {
          @Override
          public void propertyChange(PropertyChangeEvent event)
@@ -151,24 +191,23 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
             fireModifyListeners();
          }
       };
-      
-      backgroundColor = WidgetHelper.createLabeledColorSelector(colorSelectors, "Background", WidgetHelper.DEFAULT_LAYOUT_DATA);    
-      backgroundColor.addListener(listener);  
-      textColor = WidgetHelper.createLabeledColorSelector(colorSelectors, "Text", WidgetHelper.DEFAULT_LAYOUT_DATA);      
+      backgroundColor.addListener(listener); 
       textColor.addListener(listener);
-      borderColor = WidgetHelper.createLabeledColorSelector(colorSelectors, "Border", WidgetHelper.DEFAULT_LAYOUT_DATA);     
       borderColor.addListener(listener); 
-      headerColor = WidgetHelper.createLabeledColorSelector(colorSelectors, "Header text", WidgetHelper.DEFAULT_LAYOUT_DATA);     
       headerColor.addListener(listener); 
-      menuBackgroundColor = WidgetHelper.createLabeledColorSelector(colorSelectors, "Menu background", WidgetHelper.DEFAULT_LAYOUT_DATA);   
-      menuBackgroundColor.addListener(listener);   
-      menuTextColor = WidgetHelper.createLabeledColorSelector(colorSelectors, "Menu text", WidgetHelper.DEFAULT_LAYOUT_DATA);
+      menuBackgroundColor.addListener(listener); 
       menuTextColor.addListener(listener); 
-      menuHighligtColor = WidgetHelper.createLabeledColorSelector(colorSelectors, "Menu highlight", WidgetHelper.DEFAULT_LAYOUT_DATA);
       menuHighligtColor.addListener(listener); 
-      menuSelectionColor = WidgetHelper.createLabeledColorSelector(colorSelectors, "Menu selection", WidgetHelper.DEFAULT_LAYOUT_DATA);
       menuSelectionColor.addListener(listener);
-      
+
+      welcomeMessageText.addModifyListener(new ModifyListener() {
+         @Override
+         public void modifyText(ModifyEvent e)
+         {
+            fireModifyListeners();
+         }
+      });  
+
       setColorSchemaCheckbox.addSelectionListener(new SelectionListener() {
          @Override
          public void widgetSelected(SelectionEvent e)
@@ -191,43 +230,9 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
             widgetSelected(e);
          }
       });
-      setColorSchemaCheckbox.setSelection(sPolicy.menuBackgroundColor != null);
-      
-      welcomeMessageText = WidgetHelper.createLabeledText(this, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT,
-            "Welcome message", "", WidgetHelper.DEFAULT_LAYOUT_DATA);
-      welcomeMessageText.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
-      welcomeMessageText.addModifyListener(new ModifyListener() {
-         @Override
-         public void modifyText(ModifyEvent e)
-         {
-            fireModifyListeners();
-         }
-      });
-      
-      //ListOfActions
-      final String[] columnNames = { "Name", "Display name", "Command", "Icon" };
-      final int[] columnWidths = { 300, 300, 300, 300 };         
-      viewer = new SortableTreeViewer(this, columnNames, columnWidths, 0, SWT.UP, SortableTableViewer.DEFAULT_STYLE);
-      viewer.setContentProvider(new SupportAppMenuItemProvider());
-      viewer.setLabelProvider(new SupportAppMenuItemLabelProvider());
-
-      gd = new GridData(SWT.FILL, SWT.FILL, true, true);
-      gd.horizontalSpan = 5;
-      viewer.getControl().setLayoutData(gd);
-      viewer.addSelectionChangedListener(new ISelectionChangedListener() {
-         @Override
-         public void selectionChanged(SelectionChangedEvent event)
-         {
-            IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-            deleteAction.setEnabled(!selection.isEmpty());
-            editAction.setEnabled(!selection.isEmpty());            
-         }
-      });
       
       createActions();
       createPopupMenu();
-      updateControlsFromPolicy();
-      fireModifyListeners();
    }
    
    /**
@@ -472,7 +477,7 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
       if (sPolicy.menuTextColor != null)
          menuTextColor.setColorValue(ColorConverter.rgbFromInt(sPolicy.menuTextColor));
 
-      welcomeMessageText.setText(sPolicy.welcomeMessage);
+      welcomeMessageText.setText(sPolicy.welcomeMessage != null ? sPolicy.welcomeMessage : "");
 
       viewer.setInput(new Object[] { sPolicy.menu });
    }
@@ -524,7 +529,6 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
       try
       {
          policy.setContent(sPolicy.createXml());
-         System.out.println(policy.getContent());
       }
       catch(Exception e)
       {

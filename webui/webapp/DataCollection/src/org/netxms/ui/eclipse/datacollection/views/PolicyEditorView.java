@@ -249,6 +249,10 @@ public class PolicyEditorView extends ViewPart implements ISaveablePart2, Sessio
          }
          
          name.setText(currentlySelectedElement.getName());
+         //Remove modification flags on name change not by user
+         modified = false;
+         firePropertyChange(PROP_DIRTY);
+         actionSave.setEnabled(false);
          
          if (editor != null)
          {

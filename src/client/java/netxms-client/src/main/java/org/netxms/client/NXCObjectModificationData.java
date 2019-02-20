@@ -142,7 +142,6 @@ public class NXCObjectModificationData
 	private boolean inheritAccessRights;
 	private Map<String, String> customAttributes;
 	private String autoBindFilter;
-	private String configFileContent;
 	private int version;
 	private String description;
 	private int agentPort;
