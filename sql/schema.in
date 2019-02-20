@@ -352,7 +352,7 @@ CREATE TABLE nodes
 ** Node software inventory
 */
 CREATE TABLE software_inventory
-{
+(
   node_id integer not null,
   name varchar(255) null,
   version varchar(63) null,
@@ -361,13 +361,13 @@ CREATE TABLE software_inventory
   url varchar(255) null,
   description varchar(255) null,
   PRIMARY_KEY(node_id,version,name)
-} TABLE_TYPE;
+) TABLE_TYPE;
 
 /*
 ** Node hardware inventory
 */
 CREATE TABLE hardware_inventory
-{
+(
   node_id integer not null,
   component_type integer not null,
   component_index integer not null,
@@ -376,7 +376,7 @@ CREATE TABLE hardware_inventory
   capacity integer null,
   serial_number varchar(63) null,
   PRIMARY_KEY(node_id,component_type,component_index)
-} TABLE_TYPE;
+) TABLE_TYPE;
 
 /*
 ** Clusters information
