@@ -102,15 +102,15 @@
                class="org.netxms.ui.eclipse.datacollection.actions.EditPolicy"
                enablesFor="+"
                id="org.netxms.ui.eclipse.datacollection.EditPolicy"
-               label="Edit Policy..."
-               menubarPath="objectmgmt">
+               label="Agent policies"
+               menubarPath="datacollection">
          </action>
          <action
                class="org.netxms.ui.eclipse.datacollection.actions.ForceReinstallPolicy"
                enablesFor="+"
                id="org.netxms.ui.eclipse.datacollection.ForceReinstallPolicy"
-               label="Force install policy"
-               menubarPath="objectmgmt">
+               label="Force deployment of agent policies"
+               menubarPath="datacollection">
          </action>
       </objectContribution>
       <objectContribution
