@@ -2631,10 +2631,10 @@ void Node::configurationPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo 
             nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 3, _T("Removing node %s [%u] as duplicate"), m_name, m_id);
 
             poller->setStatus(_T("cleanup"));
-            m_runtimeFlags &= ~DCDF_CONFIGURATION_POLL_PENDING;
-            if (rqId == 0)
-               m_runtimeFlags &= ~DCDF_QUEUED_FOR_CONFIGURATION_POLL;
-            m_runtimeFlags &= ~NDF_RECHECK_CAPABILITIES;
+            m_dwDynamicFlags |= NDF_CONFIGURATION_POLL_PASSED;
+            if (dwRqId == 0)
+               m_dwDynamicFlags &= ~NDF_QUEUED_FOR_CONFIG_POLL;
+            m_dwDynamicFlags &= ~NDF_RECHECK_CAPABILITIES;
             pollerUnlock();
 
             duplicateNode->reconcileWithDuplicateNode(this);
@@ -2798,7 +2798,7 @@ DuplicateCheckResult Node::checkForDuplicates(Node **duplicate)
          nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 3, _T("Node %s [%u] is a duplicate of node %s [%u]"),
                   m_name, m_id, node->getName(), node->getId());
 
-         if ((node->m_status == STATUS_UNMANAGED) || (node->m_state & DCSF_UNREACHABLE))
+         if ((node->m_status == STATUS_UNMANAGED) || (node->m_dwDynamicFlags & NDF_UNREACHABLE))
          {
             result = REMOVE_OTHER;
          }
@@ -2910,7 +2910,7 @@ void Node::reconcileWithDuplicateNode(Node *node)
       if (object->getObjectClass() != OBJECT_TEMPLATE)
          continue;
 
-      if (static_cast<Template*>(object)->isAutoBindEnabled())
+      if (static_cast<Template*>(object)->isAutoApplyEnabled())
          continue;
 
       if (!object->isDirectChild(m_id))
