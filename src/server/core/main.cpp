@@ -362,6 +362,8 @@ static void LoadGlobalConfig()
 		g_flags |= AF_CHECK_TRUSTED_NODES;
    if (ConfigReadBoolean(_T("NetworkDiscovery.EnableParallelProcessing"), false))
       g_flags |= AF_PARALLEL_NETWORK_DISCOVERY;
+   if (ConfigReadBoolean(_T("NetworkDiscovery.MergeDuplicateNodes"), true))
+      g_flags |= AF_MERGE_DUPLICATE_NODES;
 	if (ConfigReadBoolean(_T("NXSL.EnableContainerFunctions"), true))
 	{
 		g_flags |= AF_ENABLE_NXSL_CONTAINER_FUNCTIONS;

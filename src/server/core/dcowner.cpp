@@ -817,7 +817,7 @@ void DataCollectionOwner::queueUpdate()
       if (object->isDataCollectionTarget())
       {
          incRefCount();
-         TEMPLATE_UPDATE_INFO *pInfo = (TEMPLATE_UPDATE_INFO *)malloc(sizeof(TEMPLATE_UPDATE_INFO));
+         TEMPLATE_UPDATE_INFO *pInfo = MemAllocStruct<TEMPLATE_UPDATE_INFO>();
          pInfo->updateType = APPLY_TEMPLATE;
          pInfo->pTemplate = this;
          pInfo->targetId = object->getId();
