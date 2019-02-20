@@ -295,13 +295,20 @@ void SessionAgentConnector::sendUserAgentConfig()
    config.setMergeStrategy(SupportAppMergeStrategy);
    if (config.loadConfigDirectory(g_userAgentPolicyDirectory, _T("SupportAppPolicy"), "SupportAppPolicy", true, true))
    {
+      const ConfigEntry *e = g_config->getEntry(_T("/UserAgent"));
+      if (e != NULL)
+      {
+         nxlog_debug(5, _T("SA-%d: adding local policy to user agent configuration"), m_id);
+         config.addSubTree(_T("/"), e);
+      }
+
       NXCPMessage msg(CMD_UPDATE_AGENT_CONFIG, nextRequestId());
       msg.setField(VID_CONFIG_FILE_DATA, config.createXml());
       sendMessage(&msg);
    }
    else
    {
-      nxlog_debug(2, _T("SA-%d: cannot load user agent configuration from %s"), m_id, g_userAgentPolicyDirectory);
+      nxlog_debug(4, _T("SA-%d: cannot load user agent configuration from %s"), m_id, g_userAgentPolicyDirectory);
    }
 }
 
