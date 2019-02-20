@@ -24,11 +24,21 @@
 #include <nxevent.h>
 
 /**
- * Upgrade from 22.43 to 30.0
+ * Upgrade from 22.44 to 30.0
+ */
+static bool H_UpgradeFromV44()
+{
+   CHK_EXEC(SetMajorSchemaVersion(30, 0));
+   return true;
+}
+
+/**
+ * Upgrade from 22.43 to 22.44
  */
 static bool H_UpgradeFromV43()
 {
-   CHK_EXEC(SetMajorSchemaVersion(30, 0));
+   CHK_EXEC(CreateConfigParam(_T("NetworkDiscovery.MergeDuplicateNodes"), _T("1"), _T("Enable/disable merge of duplicate nodes. When enabled, configuration of duplicate node(s) will be merged into original node and duplicate(s) will be deleted."), NULL, 'B', true, false, false, false));
+   CHK_EXEC(SetMinorSchemaVersion(44));
    return true;
 }
 
@@ -849,7 +859,8 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
-   { 43, 30, 0,  H_UpgradeFromV43 },
+   { 44, 30, 0,  H_UpgradeFromV44 },
+   { 43, 22, 44, H_UpgradeFromV43 },
    { 42, 22, 43, H_UpgradeFromV42 },
    { 41, 22, 42, H_UpgradeFromV41 },
    { 40, 22, 41, H_UpgradeFromV40 },
