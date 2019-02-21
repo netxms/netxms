@@ -1,6 +1,6 @@
 /*
  ** NetXMS - Network Management System
- ** Copyright (C) 2003-2016 Raden Solutions
+ ** Copyright (C) 2003-2019 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU Lesser General Public License as published
@@ -28,11 +28,11 @@
 int LIBNETXMS_EXPORTABLE mb_to_ucs4(const char *src, int srcLen, UCS4CHAR *dst, int dstLen)
 {
    int len = (srcLen < 0) ? (int)strlen(src) + 1 : srcLen;
-   WCHAR *buffer = (len <= 32768) ? (WCHAR *)alloca(len * sizeof(WCHAR)) : (WCHAR *)malloc(len * sizeof(WCHAR));
+   WCHAR *buffer = (len <= 32768) ? (WCHAR *)alloca(len * sizeof(WCHAR)) : (WCHAR *)MemAlloc(len * sizeof(WCHAR));
    MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, src, srcLen, buffer, len);
    int ret = ucs2_to_ucs4(buffer, srcLen, dst, dstLen);
    if (len > 32768)
-      free(buffer);
+      MemFree(buffer);
    return ret;
 }
 
@@ -177,7 +177,7 @@ int LIBNETXMS_EXPORTABLE mb_to_ucs2(const char *src, int srcLen, UCS2CHAR *dst, 
    }
    if ((srcLen == -1) && (outbytes >= sizeof(UCS2CHAR)))
    {
-      *((UCS2CHAR *) outbuf) = 0;
+      *reinterpret_cast<UCS2CHAR*>(outbuf) = 0;
    }
 
    return (int)count;
