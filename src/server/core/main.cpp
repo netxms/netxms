@@ -816,6 +816,11 @@ BOOL NXCORE_EXPORTABLE Initialize()
       // TimeScaleDB requires PostgreSQL 9.6.3+ so merge is always supported
       g_flags |= AF_DB_SUPPORTS_MERGE;
    }
+	else if (g_dbSyntax == DB_SYNTAX_SQLITE)
+	{
+      // Disable startup database cache for SQLite
+      g_flags &= ~AF_CACHE_DB_ON_STARTUP;
+	}
 
 	int baseSize = ConfigReadIntEx(hdbBootstrap, _T("DBConnectionPoolBaseSize"), 10);
 	int maxSize = ConfigReadIntEx(hdbBootstrap, _T("DBConnectionPoolMaxSize"), 30);
