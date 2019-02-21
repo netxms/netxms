@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -361,7 +361,7 @@ NXCP_MESSAGE_FIELD *NXCPMessage::find(UINT32 fieldId) const
 }
 
 /**
- * set variable
+ * Set field
  * Argument size (data size) contains data length in bytes for DT_BINARY type
  * and maximum number of characters for DT_STRING type (0 means no limit)
  */
@@ -398,10 +398,10 @@ void *NXCPMessage::set(UINT32 fieldId, BYTE type, const void *value, bool isSign
          entry->data.df_real = *((const double *)value);
          break;
       case NXCP_DT_STRING:
+         length = _tcslen(static_cast<const TCHAR*>(value));
+         if ((size > 0) && (length > size))
+            length = size;
 #ifdef UNICODE         
-         length = _tcslen((const TCHAR *)value);
-			if ((size > 0) && (length > size))
-				length = size;
 #ifndef UNICODE_UCS2 /* assume UNICODE_UCS4 */
          __buffer = (length < 256) ? localBuffer : m_pool.allocateArray<UCS2CHAR>(length + 1);
          ucs4_to_ucs2(static_cast<const WCHAR*>(value), length, __buffer, length + 1);
@@ -409,9 +409,6 @@ void *NXCPMessage::set(UINT32 fieldId, BYTE type, const void *value, bool isSign
 #else		/* not UNICODE */
          __buffer = (length < 256) ? localBuffer : m_pool.allocateArray<UCS2CHAR>(length + 1);
          mb_to_ucs2(static_cast<const char*>(value), length, __buffer, length + 1);
-			length = (UINT32)ucs2_strlen(__buffer);
-			if ((size > 0) && (length > size))
-				length = size;
 #endif
          entry = CreateMessageField(m_pool, 12 + length * 2);
          entry->data.df_string.length = (UINT32)(length * 2);
