@@ -1807,7 +1807,7 @@ void NetObj::prepareForDeletion()
 void NetObj::setComments(TCHAR *text)
 {
    lockProperties();
-   free(m_comments);
+   MemFree(m_comments);
    m_comments = text;
    setModified(MODIFY_COMMON_PROPERTIES);
    unlockProperties();

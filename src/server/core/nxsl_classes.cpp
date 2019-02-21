@@ -27,7 +27,20 @@
  */
 NXSL_METHOD_DEFINITION(NetObj, clearGeoLocation)
 {
-   ((NetObj *)object->getData())->setGeoLocation(GeoLocation());
+   static_cast<NetObj*>(object->getData())->setGeoLocation(GeoLocation());
+   *result = vm->createValue();
+   return 0;
+}
+
+/**
+ * setComments(text)
+ */
+NXSL_METHOD_DEFINITION(NetObj, setComments)
+{
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   static_cast<NetObj*>(object->getData())->setComments(MemCopyString(argv[0]->getValueAsCString()));
    *result = vm->createValue();
    return 0;
 }
@@ -45,7 +58,7 @@ NXSL_METHOD_DEFINITION(NetObj, setGeoLocation)
       return NXSL_ERR_BAD_CLASS;
 
    GeoLocation *gl = (GeoLocation *)o->getData();
-   ((NetObj *)object->getData())->setGeoLocation(*gl);
+   static_cast<NetObj*>(object->getData())->setGeoLocation(*gl);
    *result = vm->createValue();
    return 0;
 }
@@ -181,6 +194,7 @@ NXSL_NetObjClass::NXSL_NetObjClass() : NXSL_Class()
    setName(_T("NetObj"));
 
    NXSL_REGISTER_METHOD(NetObj, clearGeoLocation, 0);
+   NXSL_REGISTER_METHOD(NetObj, setComments, 1);
    NXSL_REGISTER_METHOD(NetObj, setGeoLocation, 1);
    NXSL_REGISTER_METHOD(NetObj, setMapImage, 1);
    NXSL_REGISTER_METHOD(NetObj, setStatusCalculation, -1);
