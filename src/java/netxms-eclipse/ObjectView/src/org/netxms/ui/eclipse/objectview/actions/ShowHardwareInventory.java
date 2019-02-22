@@ -62,7 +62,7 @@ public class ShowHardwareInventory implements IObjectActionDelegate
          }
          catch(PartInitException e)
          {
-            MessageDialogHelper.openError(window.getShell(), "Error", String.format("Error opening hardware inventory view", e.getMessage()));
+            MessageDialogHelper.openError(window.getShell(), "Error", String.format("Error opening hardware inventory view: %s", e.getMessage()));
          }
       }
    }
@@ -77,7 +77,6 @@ public class ShowHardwareInventory implements IObjectActionDelegate
           (((IStructuredSelection)selection).size() == 1))
       {
           Object o = ((IStructuredSelection)selection).getFirstElement();
-          System.out.println(o);
           if (o instanceof AbstractNode)
           {
              object = (AbstractObject)o;

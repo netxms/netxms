@@ -690,7 +690,6 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
          @Override
          public void run()
          {
-            System.out.println(settings.getId());
             if(settings.getId() == 0)
             {
                String initalName = settings.getName().compareTo("noname") == 0 ? settings.getTitle() : settings.getName();
