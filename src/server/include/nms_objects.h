@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -2296,6 +2296,7 @@ public:
 	const TCHAR *getPlatformName() const { return m_platformName; }
    INT16 getSNMPVersion() const { return m_snmpVersion; }
    UINT16 getSNMPPort() const { return m_snmpPort; }
+   UINT32 getSNMPProxy() const { return m_snmpProxy; }
    const TCHAR *getSNMPObjectId() const { return m_snmpObjectId; }
 	const TCHAR *getSysName() const { return CHECK_NULL_EX(m_sysName); }
 	const TCHAR *getSysDescription() const { return CHECK_NULL_EX(m_sysDescription); }
@@ -2309,6 +2310,7 @@ public:
 	INT16 getAgentAuthMethod() const { return m_agentAuthMethod; }
    INT16 getAgentCacheMode() const { return (m_state & NSF_CACHE_MODE_NOT_SUPPORTED) ? AGENT_CACHE_OFF : ((m_agentCacheMode == AGENT_CACHE_DEFAULT) ? g_defaultAgentCacheMode : m_agentCacheMode); }
 	const TCHAR *getSharedSecret() const { return m_szSharedSecret; }
+   UINT32 getAgentProxy() const { return m_agentProxy; }
 	UINT32 getRackId() const { return m_rackId; }
    INT16 getRackHeight() const { return m_rackHeight; }
    INT16 getRackPosition() const { return m_rackPosition; }

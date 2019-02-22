@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -146,16 +146,27 @@ static void C_SysNodeDown(Node *pNode, Event *pEvent)
 	   }
 	}
 
-   // Trace route from management station to failed node and
+   // Trace route from management station or proxy to failed node and
    // check for failed intermediate nodes or interfaces
-   Node *pMgmtNode = (Node *)FindObjectById(g_dwMgmtNode);
-   if (pMgmtNode == NULL)
+	UINT32 sourceNodeId;
+	if (!(pNode->getFlags() & NF_DISABLE_ICMP))
+	   sourceNodeId = pNode->getIcmpProxy();
+   if ((sourceNodeId == 0) && !(pNode->getFlags() & NF_DISABLE_NXCP))
+      sourceNodeId = pNode->getAgentProxy();
+   if ((sourceNodeId == 0) && !(pNode->getFlags() & NF_DISABLE_SNMP))
+      sourceNodeId = pNode->getSNMPProxy();
+   if (sourceNodeId == 0)
+      sourceNodeId = pNode->getEffectiveZoneProxy();
+   Node *sourceNode = static_cast<Node*>(FindObjectById((sourceNodeId != 0) ? sourceNodeId : g_dwMgmtNode, OBJECT_NODE));
+   if (sourceNode == NULL)
 	{
-		nxlog_debug_tag(DEBUG_TAG, 5, _T("C_SysNodeDown: cannot find management node"));
+		nxlog_debug_tag(DEBUG_TAG, 5, _T("C_SysNodeDown: cannot find source node for network path trace"));
 		return;
 	}
 
-	NetworkPath *trace = TraceRoute(pMgmtNode, pNode);
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("C_SysNodeDown: tracing network path from node %s [%d] to node %s [%d]"),
+            sourceNode->getName(), sourceNode->getId(), pNode->getName(), pNode->getId());
+	NetworkPath *trace = TraceRoute(sourceNode, pNode);
 	if (trace == NULL)
 	{
 		nxlog_debug_tag(DEBUG_TAG, 5, _T("C_SysNodeDown: trace to node %s [%d] not available"), pNode->getName(), pNode->getId());
@@ -168,9 +179,9 @@ static void C_SysNodeDown(Node *pNode, Event *pEvent)
       if ((hop->object == NULL) || (hop->object == pNode) || (hop->object->getObjectClass() != OBJECT_NODE))
 			continue;
 
-      if (((Node *)hop->object)->isDown())
+      if (static_cast<Node*>(hop->object)->isDown())
       {
-         pEvent->setRootId(((Node *)hop->object)->getLastEventId(LAST_EVENT_NODE_DOWN));
+         pEvent->setRootId(static_cast<Node*>(hop->object)->getLastEventId(LAST_EVENT_NODE_DOWN));
 			nxlog_debug_tag(DEBUG_TAG, 5, _T("C_SysNodeDown: upstream node %s [%d] for current node %s [%d] is down"),
 			          hop->object->getName(), hop->object->getId(), pNode->getName(), pNode->getId());
 			break;
@@ -187,7 +198,7 @@ static void C_SysNodeDown(Node *pNode, Event *pEvent)
       }
       else
       {
-         iface = ((Node *)hop->object)->findInterfaceByIndex(hop->ifIndex);
+         iface = static_cast<Node*>(hop->object)->findInterfaceByIndex(hop->ifIndex);
          if ((iface != NULL) &&
              ((iface->getAdminState() == IF_ADMIN_STATE_DOWN) || (iface->getAdminState() == IF_ADMIN_STATE_TESTING) ||
               (iface->getOperState() == IF_OPER_STATE_DOWN) || (iface->getOperState() == IF_OPER_STATE_TESTING)))
