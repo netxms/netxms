@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.UUID;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.IContributionItem;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
@@ -53,6 +54,7 @@ import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.ScrolledForm;
 import org.eclipse.ui.forms.widgets.Section;
 import org.eclipse.ui.part.ViewPart;
+import org.eclipse.ui.texteditor.FindReplaceAction;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
@@ -72,6 +74,7 @@ import org.netxms.ui.eclipse.datacollection.widgets.helpers.PolicyModifyListener
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
+import org.netxms.ui.eclipse.tools.NXFindAndReplaceAction;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
@@ -91,6 +94,7 @@ public class PolicyEditorView extends ViewPart implements ISaveablePart2, Sessio
    private IStructuredSelection previousSelection;
    private boolean throwExceptionOnSave;
    private Exception saveException;
+   private FindReplaceAction actionFindReplace; 
    
    private Display display;
    private TableViewer policyList;
@@ -266,7 +270,7 @@ public class PolicyEditorView extends ViewPart implements ISaveablePart2, Sessio
          }
          else if (currentlySelectedElement.getPolicyType().equals(AgentPolicy.logParser))
          {
-            editor = new LogParserPolicyEditor(editorArea, SWT.NONE, currentlySelectedElement);               
+            editor = new LogParserPolicyEditor(editorArea, SWT.NONE, currentlySelectedElement);      
          }
          else if (currentlySelectedElement.getPolicyType().equals(AgentPolicy.supportApplication))
          {
@@ -283,7 +287,14 @@ public class PolicyEditorView extends ViewPart implements ISaveablePart2, Sessio
             {
                setModified();
             }
-         });
+         });  
+         
+         editor.setFindAndReplaceAction(actionFindReplace);
+         if(editor.isFindReplaceRequired())
+            actionFindReplace.setEnabled(true);
+         else
+            actionFindReplace.setEnabled(false);
+         
          form.layout(true, true);
          editor.setFocus();
       }
@@ -368,6 +379,8 @@ public class PolicyEditorView extends ViewPart implements ISaveablePart2, Sessio
             deletePolicy();
          }
       };
+
+      actionFindReplace = NXFindAndReplaceAction.getFindReplaceAction(this);
    }
    
    protected void deletePolicy()
@@ -486,6 +499,7 @@ public class PolicyEditorView extends ViewPart implements ISaveablePart2, Sessio
       manager.add(actionCreate);
       manager.add(actionShowTechnicalInformation);
       manager.add(actionSave);
+      manager.add(actionFindReplace);
       manager.add(new Separator());
       manager.add(actionRefresh);
    }
@@ -500,6 +514,7 @@ public class PolicyEditorView extends ViewPart implements ISaveablePart2, Sessio
    {
       manager.add(actionCreate);
       manager.add(actionSave);
+      manager.add(actionFindReplace);
       manager.add(new Separator());
       manager.add(actionRefresh);
    }

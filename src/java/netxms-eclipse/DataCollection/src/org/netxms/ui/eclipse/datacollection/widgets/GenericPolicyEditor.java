@@ -56,6 +56,7 @@ public class GenericPolicyEditor extends AbstractPolicyEditor
          public void modifyText(ModifyEvent e)
          {
             fireModifyListeners();
+            actionFindReplace.update();
          }
       });   
       editor.setText(policy.getContent());
@@ -72,5 +73,11 @@ public class GenericPolicyEditor extends AbstractPolicyEditor
    {
       policy.setContent(editor.getText());
       return policy;
+   }
+
+   @Override
+   public boolean isFindReplaceRequired()
+   {
+      return true;
    }
 }

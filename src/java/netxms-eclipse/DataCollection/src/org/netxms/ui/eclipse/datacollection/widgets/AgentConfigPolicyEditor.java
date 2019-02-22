@@ -32,7 +32,6 @@ import org.netxms.ui.eclipse.widgets.AgentConfigEditor;
 public class AgentConfigPolicyEditor extends AbstractPolicyEditor
 {
    private AgentConfigEditor editor;
-   //private FindReplaceAction actionFindReplace; 
 
    /**
     * Constructor
@@ -47,12 +46,13 @@ public class AgentConfigPolicyEditor extends AbstractPolicyEditor
 
       setLayout(new FillLayout());
       
-      editor = new AgentConfigEditor(this, SWT.NONE, SWT.H_SCROLL | SWT.V_SCROLL);
+      editor = new AgentConfigEditor(this, SWT.BORDER, SWT.H_SCROLL | SWT.V_SCROLL);
       editor.getTextWidget().addModifyListener(new ModifyListener() {
          @Override
          public void modifyText(ModifyEvent e)
          {
             fireModifyListeners();
+            actionFindReplace.update();
          }
       }); 
       
@@ -79,16 +79,10 @@ public class AgentConfigPolicyEditor extends AbstractPolicyEditor
    {
       return editor.setFocus();      
    }
-   
-   /* toto add find and replace in the view
-   protected void createActions()
-   {
-      actionFindReplace = NXFindAndReplaceAction.getFindReplaceAction(this.getParent());
-   }
 
-   protected void fillLocalPullDown(IMenuManager manager)
+   @Override
+   public boolean isFindReplaceRequired()
    {
-      manager.add(actionFindReplace);
+      return true;
    }
-   */
 }

@@ -538,4 +538,11 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
       }
       return policy;
    }
+
+   @Override
+   public boolean isFindReplaceRequired()
+   {
+      // TODO Auto-generated method stub
+      return false;
+   }
 }

@@ -21,6 +21,7 @@ package org.netxms.ui.eclipse.datacollection.widgets;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.ui.texteditor.FindReplaceAction;
 import org.netxms.client.objects.AgentPolicy;
 import org.netxms.ui.eclipse.datacollection.widgets.helpers.LogParserModifyListener;
 
@@ -74,5 +75,16 @@ public class LogParserPolicyEditor extends AbstractPolicyEditor
    public boolean setFocus()
    {
       return editor.setFocus();      
+   }
+
+   @Override
+   public boolean isFindReplaceRequired()
+   {
+      return false; //todo think about text XML editing
+   }
+
+   public void setFindAndReplaceAction(FindReplaceAction actionFindReplace)
+   {
+      editor.setFindAndReplaceAction(actionFindReplace);
    }
 }

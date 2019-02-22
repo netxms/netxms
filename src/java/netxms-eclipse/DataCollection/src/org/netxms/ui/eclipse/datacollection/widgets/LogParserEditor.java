@@ -54,6 +54,7 @@ import org.eclipse.ui.forms.widgets.ScrolledForm;
 import org.eclipse.ui.forms.widgets.Section;
 import org.eclipse.ui.forms.widgets.TableWrapData;
 import org.eclipse.ui.forms.widgets.TableWrapLayout;
+import org.eclipse.ui.texteditor.FindReplaceAction;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.dialogs.LogMacroEditDialog;
@@ -92,6 +93,7 @@ public class LogParserEditor extends Composite
    private ImageHyperlink addFileLink;
 	private SortableTableViewer macroList;
 	private boolean isSyslogParser;
+	private FindReplaceAction actionFindReplace = null;
 	
 	/* General section */
    private LabeledText labelName;
@@ -146,6 +148,10 @@ public class LogParserEditor extends Composite
 						default:
 							break;
 					}
+				}
+				if(actionFindReplace != null)
+				{
+				   actionFindReplace.setEnabled(currentTab == TAB_XML);
 				}
 			}
 			
@@ -803,5 +809,10 @@ public class LogParserEditor extends Composite
          if(rule.getEditor() != null)
             rule.getEditor().updateWindowsEventLogFields();
       }
+   }
+
+   public void setFindAndReplaceAction(FindReplaceAction actionFindReplace)
+   {
+      this.actionFindReplace = actionFindReplace;
    }
 }

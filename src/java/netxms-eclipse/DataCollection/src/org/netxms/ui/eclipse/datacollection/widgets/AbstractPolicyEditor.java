@@ -3,6 +3,7 @@ package org.netxms.ui.eclipse.datacollection.widgets;
 import java.util.HashSet;
 import java.util.Set;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.ui.texteditor.FindReplaceAction;
 import org.netxms.client.objects.AgentPolicy;
 import org.netxms.ui.eclipse.datacollection.widgets.helpers.PolicyModifyListener;
 
@@ -10,6 +11,7 @@ public abstract class AbstractPolicyEditor extends Composite
 {
    Set<PolicyModifyListener> listeners = new HashSet<PolicyModifyListener>();
    AgentPolicy policy = null;  
+   FindReplaceAction actionFindReplace = null;
 
    public AbstractPolicyEditor(Composite parent, int style)
    {
@@ -56,6 +58,13 @@ public abstract class AbstractPolicyEditor extends Composite
    
    protected void createActions()
    {
+   }
+   
+   public abstract boolean isFindReplaceRequired();
+
+   public void setFindAndReplaceAction(FindReplaceAction actionFindReplace)
+   {
+      this.actionFindReplace = actionFindReplace;
    }
 
 }
