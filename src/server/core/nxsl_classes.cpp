@@ -1307,6 +1307,13 @@ NXSL_Value *NXSL_EventClass::getAttr(NXSL_Object *pObject, const TCHAR *attr)
          array->set(i + 1, new NXSL_Value(event->getParameter(i)));
       value = new NXSL_Value(array);
    }
+   else if (!_tcscmp(attr, _T("parameterNames")))
+   {
+      NXSL_Array *array = new NXSL_Array;
+      for(int i = 0; i < event->getParametersCount(); i++)
+         array->set(i + 1, new NXSL_Value(event->getParameterName(i)));
+      value = new NXSL_Value(array);
+   }
    else if (!_tcscmp(attr, _T("severity")))
    {
       value = new NXSL_Value(event->getSeverity());
