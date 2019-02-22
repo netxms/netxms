@@ -1338,6 +1338,13 @@ NXSL_Value *NXSL_EventClass::getAttr(NXSL_Object *pObject, const char *attr)
          array->set(i + 1, vm->createValue(event->getParameter(i)));
       value = vm->createValue(array);
    }
+   else if (!strcmp(attr, "parameterNames"))
+   {
+      NXSL_Array *array = new NXSL_Array(vm);
+      for(int i = 0; i < event->getParametersCount(); i++)
+         array->set(i + 1, vm->createValue(event->getParameterName(i)));
+      value = vm->createValue(array);
+   }
    else if (!strcmp(attr, "severity"))
    {
       value = vm->createValue(event->getSeverity());

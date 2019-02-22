@@ -178,6 +178,7 @@ public:
 
    int getParametersCount() const { return m_parameters.size(); }
    const TCHAR *getParameter(int index) const { return static_cast<TCHAR*>(m_parameters.get(index)); }
+   const TCHAR *getParameterName(int index) const { return m_parameterNames.get(index); }
    UINT32 getParameterAsULong(int index) const { const TCHAR *v = static_cast<TCHAR*>(m_parameters.get(index)); return (v != NULL) ? _tcstoul(v, NULL, 0) : 0; }
    UINT64 getParameterAsUInt64(int index) const { const TCHAR *v = static_cast<TCHAR*>(m_parameters.get(index)); return (v != NULL) ? _tcstoull(v, NULL, 0) : 0; }
 
