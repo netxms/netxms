@@ -294,6 +294,7 @@ public class AlarmSounds extends PreferencePage implements IWorkbenchPreferenceP
       if (isApply)
          setValid(false);
 
+      newSoundList.clear();
       for(int i = 0; i < comboList.size(); i++)
       {
          newSoundList.add(comboList.get(i).getText());
