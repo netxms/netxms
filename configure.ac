@@ -3658,7 +3658,7 @@ fi
 #--------------------------------------------------------------------
 
 if test "x$PYTHON_SUPPORT" = "xyes"; then
-	PYTHON_VERSIONS="3.5m 3.5 3m 3"
+	PYTHON_VERSIONS="3.6m 3.6 3.5m 3.5 3m 3"
 
 	OLD_CPPFLAGS="$CPPFLAGS"
 	OLD_LDFLAGS="$LDFLAGS"

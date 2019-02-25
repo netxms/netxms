@@ -85,7 +85,6 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor
 	private Action actionOpenProgressView;
 	private Action actionFullScreen;
    private Action actionLangArabic;
-	private Action actionLangChinese;
    private Action actionLangCzech;
 	private Action actionLangEnglish;
    private Action actionLangFrench;

@@ -162,7 +162,7 @@ static struct option longOptions[] =
 /**
  * Print usage info
  */
-static void usage(bool showVersion)
+static void ShowUsage(bool showVersion)
 {
    if (showVersion)
    {
@@ -239,7 +239,7 @@ int main(int argc, char *argv[])
             nxlog_set_debug_level(9);
             break;
 		   case 'h': // help
-			   usage(true);
+		      ShowUsage(true);
 			   exit(0);
 			   break;
 		   case 'H': // host
@@ -262,8 +262,8 @@ int main(int argc, char *argv[])
 			   break;
 		   case 'v': // version
             _tprintf(
-               _T("NetXMS Interactive Shell  Version ") NETXMS_VERSION_STRING _T("\n")
-               _T("Copyright (c) 2006-2017 Raden Solutions\n\n"));
+               _T("NetXMS Interactive Shell  Version ") NETXMS_BUILD_TAG _T("\n")
+               _T("Copyright (c) 2006-2019 Raden Solutions\n\n"));
 			   exit(0);
 			   break;
 		   case '?':

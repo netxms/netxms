@@ -135,7 +135,7 @@ public class ServerNameStatusLineItem extends ContributionItem
          GC gc = new GC(statusLine);
          gc.setFont(statusLine.getFont());
          FontMetrics fm = gc.getFontMetrics();
-         widthHint = fm.getAverageCharWidth() * charWidth;
+         widthHint = (int)(fm.getAverageCharacterWidth() * charWidth);
          heightHint = fm.getHeight();
          gc.dispose();
       }
