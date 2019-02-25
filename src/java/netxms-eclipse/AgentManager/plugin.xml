@@ -165,6 +165,11 @@
             name="Tunnel Manager"
             parentId="org.eclipse.ui.contexts.window">
       </context>
+      <context
+            id="org.netxms.ui.eclipse.agentmanager.context.ConfigEditor"
+            name="Agent Config Editor"
+            parentId="org.eclipse.ui.contexts.window">
+      </context>
    </extension>
    <extension
          point="org.eclipse.ui.bindings">
@@ -185,6 +190,12 @@
             contextId="org.netxms.ui.eclipse.agentmanager.context.TunnelManager"
             schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
             sequence="M1+F2">
+      </key>
+      <key
+            commandId="org.eclipse.ui.edit.findReplace"
+            contextId="org.netxms.ui.eclipse.agentmanager.context.ConfigEditor"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="M1+F">
       </key>
    </extension>
 
