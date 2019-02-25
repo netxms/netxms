@@ -303,6 +303,7 @@ public class AlarmSounds extends PreferencePage implements IWorkbenchPreferenceP
       if (isApply)
          setValid(false);
 
+      newSoundList.clear();
       for(int i = 0; i < comboList.size(); i++)
       {
          newSoundList.add(comboList.get(i).getText());
@@ -312,7 +313,7 @@ public class AlarmSounds extends PreferencePage implements IWorkbenchPreferenceP
          public IStatus runInUIThread(IProgressMonitor monitor)
          {
             for(int i = 0; i < newSoundList.size(); i++)
-            {
+            {              
                changeSound(newSoundList.get(i), AlarmNotifier.SEVERITY_TEXT[i], i);
             }
             for(String oldName : oldSoundList)
