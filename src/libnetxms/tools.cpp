@@ -57,7 +57,7 @@
 #endif
 
 #ifdef _WIN32
-HRESULT (*imp_SetThreadDescription)(HANDLE, PCWSTR) = NULL;
+HRESULT (WINAPI *imp_SetThreadDescription)(HANDLE, PCWSTR) = NULL;
 #endif
 
 /**
@@ -101,7 +101,7 @@ void LIBNETXMS_EXPORTABLE InitNetXMSProcess(bool commandLineTool)
 
 #ifdef _WIN32
    SetErrorMode(SEM_FAILCRITICALERRORS | SEM_NOGPFAULTERRORBOX | SEM_NOOPENFILEERRORBOX);
-   imp_SetThreadDescription = (HRESULT (*)(HANDLE, PCWSTR))GetProcAddress(LoadLibrary(_T("kernel32.dll")), "SetThreadDescription");
+   imp_SetThreadDescription = reinterpret_cast<HRESULT (WINAPI *)(HANDLE, PCWSTR)>(GetProcAddress(LoadLibrary(_T("kernel32.dll")), "SetThreadDescription"));
 #endif
 
 #if defined(__sun) || defined(_AIX) || defined(__hpux)
@@ -2094,14 +2094,12 @@ bool LIBNETXMS_EXPORTABLE DecryptPasswordA(const char *login, const char *encryp
 }
 
 /**
- * Load file content into memory
+ * Load file content into memory (internal implementation)
  */
 static BYTE *LoadFileContent(int fd, UINT32 *pdwFileSize, bool kernelFS)
 {
-   int iBufPos, iNumBytes, iBytesRead;
    BYTE *pBuffer = NULL;
    NX_STAT_STRUCT fs;
-
    if (NX_FSTAT(fd, &fs) != -1)
    {
       size_t size = (size_t)fs.st_size;
@@ -2115,25 +2113,25 @@ static BYTE *LoadFileContent(int fd, UINT32 *pdwFileSize, bool kernelFS)
       if (pBuffer != NULL)
       {
          *pdwFileSize = (UINT32)size;
-         for(iBufPos = 0; iBufPos < size; iBufPos += iBytesRead)
+         int bytesRead = 0;
+         for(size_t bufPos = 0; bufPos < size; bufPos += bytesRead)
          {
-            iNumBytes = std::min(16384, (int)size - iBufPos);
-            if ((iBytesRead = _read(fd, &pBuffer[iBufPos], iNumBytes)) < 0)
+            size_t numBytes = std::min(static_cast<size_t>(16384), size - bufPos);
+            if ((bytesRead = _read(fd, &pBuffer[bufPos], (int)numBytes)) < 0)
             {
-               MemFree(pBuffer);
-               pBuffer = NULL;
+               MemFreeAndNull(pBuffer);
                break;
             }
             // On Linux stat() for /proc files may report size larger than actual
             // so we check here for premature end of file
-            if (iBytesRead == 0)
+            if (bytesRead == 0)
             {
-               pBuffer[iBufPos] = 0;
-               *pdwFileSize = (UINT32)iBufPos;
+               pBuffer[bufPos] = 0;
+               *pdwFileSize = (UINT32)bufPos;
                break;
             }
 #ifndef _WIN32
-            if (kernelFS && (iBufPos + iBytesRead == size))
+            if (kernelFS && (bufPos + bytesRead == size))
             {
                // Assume that file is larger than expected
                size += 16384;
@@ -2150,7 +2148,7 @@ static BYTE *LoadFileContent(int fd, UINT32 *pdwFileSize, bool kernelFS)
 }
 
 /**
- * Load file into memory
+ * Load file content into memory
  */
 BYTE LIBNETXMS_EXPORTABLE *LoadFile(const TCHAR *pszFileName, UINT32 *pdwFileSize)
 {
@@ -2170,7 +2168,7 @@ BYTE LIBNETXMS_EXPORTABLE *LoadFile(const TCHAR *pszFileName, UINT32 *pdwFileSiz
 #ifdef UNICODE
 
 /**
- * Load file into memory
+ * Load file content into memory
  */
 BYTE LIBNETXMS_EXPORTABLE *LoadFileA(const char *pszFileName, UINT32 *pdwFileSize)
 {

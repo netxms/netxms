@@ -254,7 +254,7 @@ void LIBNETXMS_EXPORTABLE StartMainLoop(ThreadFunction pfSignalHandler, ThreadFu
 #endif   /* _WIN32 && _NETWARE*/
 
 #ifdef _WIN32
-extern HRESULT (*imp_SetThreadDescription)(HANDLE, PCWSTR);
+extern HRESULT (WINAPI *imp_SetThreadDescription)(HANDLE, PCWSTR);
 
 /**
 * Set thread name. Thread can be set to INVALID_THREAD_HANDLE to change name of current thread.

@@ -28,6 +28,7 @@
 	NX-1388 (Event correlation route should start at proxy)
 	NX-1558 (Add ability to change node's comment from script)
 	NX-1561 (Unexpected SYS_SNMP_DOWN events after SNMP proxy node restart)
+	NX-1569 (Agent crash on 32 bit Windows 10)
 
 
 *
