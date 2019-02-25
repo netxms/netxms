@@ -19,6 +19,7 @@
 package org.netxms.ui.eclipse.widgets;
 
 import org.eclipse.jface.resource.JFaceResources;
+import org.eclipse.jface.text.IFindReplaceTarget;
 import org.eclipse.jface.text.ITextOperationTarget;
 import org.eclipse.jface.text.TextViewerUndoManager;
 import org.eclipse.jface.text.source.ISourceViewer;
@@ -39,6 +40,7 @@ import org.netxms.ui.eclipse.widgets.internal.AgentConfigSourceViewerConfigurati
 public class AgentConfigEditor extends Composite
 {
 	private SourceViewer editor;
+	private IFindReplaceTarget findReplaceTarget;
 
 	/**
 	 * @param parent
@@ -68,7 +70,7 @@ public class AgentConfigEditor extends Composite
 		editor.setUndoManager(undoManager);
 		undoManager.connect(editor);
 		
-		editor.getFindReplaceTarget();
+		findReplaceTarget = editor.getFindReplaceTarget();
 
 		editor.prependVerifyKeyListener(new VerifyKeyListener() {
 			@Override
@@ -151,4 +153,12 @@ public class AgentConfigEditor extends Composite
 	{
 		return editor.getDocument().get();
 	}
+
+   /**
+    * @return the findReplaceTarget
+    */
+   public IFindReplaceTarget getFindReplaceTarget()
+   {
+      return findReplaceTarget;
+   }
 }

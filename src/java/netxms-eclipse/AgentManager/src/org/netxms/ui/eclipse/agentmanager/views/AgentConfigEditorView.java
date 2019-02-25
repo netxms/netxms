@@ -24,6 +24,7 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.dialogs.IDialogConstants;
+import org.eclipse.jface.text.IFindReplaceTarget;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
@@ -33,6 +34,7 @@ import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.ISaveablePart2;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.contexts.IContextService;
 import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.texteditor.FindReplaceAction;
 import org.netxms.client.NXCSession;
@@ -104,6 +106,7 @@ public class AgentConfigEditorView extends ViewPart implements ISaveablePart2
 			}
 		});
 		
+      activateContext();
 		createActions();
 		contributeToActionBars();
       actionSave.setEnabled(false);
@@ -117,6 +120,18 @@ public class AgentConfigEditorView extends ViewPart implements ISaveablePart2
 	{
 		editor.setFocus();
 	}
+
+   /**
+    * Activate context
+    */
+   private void activateContext()
+   {
+      IContextService contextService = (IContextService)getSite().getService(IContextService.class);
+      if (contextService != null)
+      {
+         contextService.activateContext("org.netxms.ui.eclipse.agentmanager.context.ConfigEditor"); //$NON-NLS-1$
+      }
+   }
 	
 	/**
 	 * Set configuration file content
@@ -126,6 +141,7 @@ public class AgentConfigEditorView extends ViewPart implements ISaveablePart2
 	public void setConfig(final String config)
 	{
 		editor.setText(config);
+		actionFindReplace.update();
 	}
 
 	/**
@@ -135,11 +151,7 @@ public class AgentConfigEditorView extends ViewPart implements ISaveablePart2
 	{
       actionFindReplace = NXFindAndReplaceAction.getFindReplaceAction(this);
 		
-		actionRefresh = new RefreshAction()
-		{
-			/* (non-Javadoc)
-			 * @see org.eclipse.jface.action.Action#run()
-			 */
+		actionRefresh = new RefreshAction() {
 			@Override
 			public void run()
 			{
@@ -262,4 +274,16 @@ public class AgentConfigEditorView extends ViewPart implements ISaveablePart2
 		saveAndApply = (rc == SaveConfigDialog.SAVE_AND_APPLY_ID);
 		return (rc == IDialogConstants.CANCEL_ID) ? CANCEL : ((rc == SaveConfigDialog.DISCARD_ID) ? NO : YES);
 	}
+
+   /* (non-Javadoc)
+    * @see org.eclipse.ui.part.WorkbenchPart#getAdapter(java.lang.Class)
+    */
+   @SuppressWarnings("unchecked")
+   @Override
+   public <T> T getAdapter(Class<T> adapter)
+   {
+      if (adapter == IFindReplaceTarget.class)
+         return (T)editor.getFindReplaceTarget();
+      return super.getAdapter(adapter);
+   }
 }
