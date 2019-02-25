@@ -66,5 +66,4 @@ public abstract class AbstractPolicyEditor extends Composite
    {
       this.actionFindReplace = actionFindReplace;
    }
-
 }

@@ -50,7 +50,6 @@ public class GenericPolicyEditor extends AbstractPolicyEditor
       editor = new Text(this, SWT.BORDER | SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
       editor.setFont(JFaceResources.getTextFont());
       
-      
       editor.addModifyListener(new ModifyListener() {
          @Override
          public void modifyText(ModifyEvent e)

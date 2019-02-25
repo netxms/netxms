@@ -222,7 +222,7 @@ public class PolicyEditorView extends ViewPart implements ISaveablePart2, Sessio
    public void setPolicy(Template templateObj)
    {
       templateId = templateObj.getObjectId();
-      setPartName("Edit Policies for \""+ templateObj.getObjectName() +"\" template");
+      setPartName(String.format("Agent Policies - %s", templateObj.getObjectName()));
       refresh();
       modified = false;
       firePropertyChange(PROP_DIRTY);
@@ -234,11 +234,11 @@ public class PolicyEditorView extends ViewPart implements ISaveablePart2, Sessio
     */
    private void refreshOnSelectionChange()
    {
-      if(currentlySelectedElement != null)
+      if (currentlySelectedElement != null)
       {
-         if(actionShowTechnicalInformation.isChecked())
+         if (actionShowTechnicalInformation.isChecked())
          {
-            if(guid == null)
+            if (guid == null)
             {
                guid = new LabeledText(clientArea, SWT.NONE);
                guid.setEditable(false);
@@ -247,9 +247,10 @@ public class PolicyEditorView extends ViewPart implements ISaveablePart2, Sessio
             }
             guid.setText(currentlySelectedElement.getGuid().toString());
          }
-         else if(guid != null)
+         else if (guid != null)
          {
             guid.dispose();
+            guid = null;
          }
          
          name.setText(currentlySelectedElement.getName());
@@ -264,7 +265,7 @@ public class PolicyEditorView extends ViewPart implements ISaveablePart2, Sessio
             editor = null;
          }
          
-         if(currentlySelectedElement.getPolicyType().equals(AgentPolicy.agent))
+         if (currentlySelectedElement.getPolicyType().equals(AgentPolicy.agent))
          {
             editor = new AgentConfigPolicyEditor(editorArea, SWT.NONE, currentlySelectedElement);            
          }
@@ -290,10 +291,7 @@ public class PolicyEditorView extends ViewPart implements ISaveablePart2, Sessio
          });  
          
          editor.setFindAndReplaceAction(actionFindReplace);
-         if(editor.isFindReplaceRequired())
-            actionFindReplace.setEnabled(true);
-         else
-            actionFindReplace.setEnabled(false);
+         actionFindReplace.setEnabled(editor.isFindReplaceRequired());
          
          form.layout(true, true);
          editor.setFocus();
