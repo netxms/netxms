@@ -68,6 +68,7 @@ struct LogParser_XmlParserState
 	StringList files;
 	IntegerArray<INT32> encodings;
    IntegerArray<INT32> preallocFlags;
+   IntegerArray<INT32> detectBrokenPreallocFlags;
    IntegerArray<INT32> snapshotFlags;
    IntegerArray<INT32> keepOpenFlags;
    IntegerArray<INT32> ignoreMTimeFlags;
@@ -91,7 +92,7 @@ struct LogParser_XmlParserState
 	int repeatInterval;
 	bool resetRepeat;
 
-	LogParser_XmlParserState() : encodings(4, 4), preallocFlags(4, 4), snapshotFlags(4, 4), keepOpenFlags(4, 4), ignoreMTimeFlags(4, 4)
+   LogParser_XmlParserState() : encodings(4, 4), preallocFlags(4, 4), detectBrokenPreallocFlags(4, 4), snapshotFlags(4, 4), keepOpenFlags(4, 4), ignoreMTimeFlags(4, 4)
 	{
       state = XML_STATE_INIT;
       parser = NULL;
@@ -467,6 +468,7 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 			ps->encodings.add(LP_FCP_AUTO);
 		}
 		ps->preallocFlags.add(XMLGetAttrBoolean(attrs, "preallocated", false) ? 1 : 0);
+		ps->detectBrokenPreallocFlags.add(XMLGetAttrBoolean(attrs, "detectBrokenPrealloc", false) ? 1 : 0);
       ps->snapshotFlags.add(XMLGetAttrBoolean(attrs, "snapshot", false) ? 1 : 0);
       ps->keepOpenFlags.add(XMLGetAttrBoolean(attrs, "keepOpen", true) ? 1 : 0);
       ps->ignoreMTimeFlags.add(XMLGetAttrBoolean(attrs, "ignoreModificationTime", false) ? 1 : 0);
@@ -850,6 +852,7 @@ ObjectArray<LogParser> *LogParser::createFromXml(const char *xml, int xmlLen, TC
 				p->setFileName(state.files.get(i));
 				p->m_fileEncoding = state.encodings.get(i);
 				p->m_preallocatedFile = (state.preallocFlags.get(i) != 0);
+				p->m_detectBrokenPrealloc = (state.detectBrokenPreallocFlags.get(i) != 0);
 				p->m_keepFileOpen = (state.keepOpenFlags.get(i) != 0);
 				p->m_ignoreMTime = (state.ignoreMTimeFlags.get(i) != 0);
 #ifdef _WIN32

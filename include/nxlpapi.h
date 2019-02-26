@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Log Parsing Library
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -227,7 +227,6 @@ private:
 	void *m_userArg;
 	TCHAR *m_fileName;
 	int m_fileEncoding;
-	bool m_preallocatedFile;
 	StringList m_exclusionSchedules;
 	TCHAR *m_name;
 	CODE_TO_TEXT *m_eventNameList;
@@ -236,10 +235,12 @@ private:
    CONDITION m_stopCondition;
    int m_recordsProcessed;
 	int m_recordsMatched;
-	bool m_processAllRules;
-   bool m_suspended;
+	bool m_preallocatedFile;
+   bool m_detectBrokenPrealloc;
    bool m_keepFileOpen;
    bool m_ignoreMTime;
+	bool m_processAllRules;
+   bool m_suspended;
 	int m_traceLevel;
 	LogParserStatus m_status;
 #ifdef _WIN32
@@ -286,6 +287,7 @@ public:
    LogParserStatus getStatus() const { return m_status; }
    const TCHAR *getStatusText() const;
    bool isFilePreallocated() const { return m_preallocatedFile; }
+   bool isDetectBrokenPrealloc() const { return m_detectBrokenPrealloc; }
 
 	void setName(const TCHAR *name);
    void setFileName(const TCHAR *name);
