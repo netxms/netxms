@@ -371,9 +371,57 @@ static int ScanFileEncoding(int fh)
 }
 
 /**
- * Seek file to the beginning of zeroes block
+ * Seek file to the end of zeroes block using given character size
+ * Reset position to the beginning of zero block if zeroes are till end of file
  */
-static void SeekToZero(int fh, int chsize)
+template<typename T> bool SkipZeroBlock(int fh)
+{
+   off_t startPos = lseek(fh, 0, SEEK_CUR);
+
+   char buffer[4096];
+   while(true)
+   {
+      int bytes = _read(fh, buffer, 4096);
+      if (bytes <= 0)
+         break;
+      T *p = reinterpret_cast<T*>(buffer);
+      for(int i = 0; i < bytes - static_cast<int>(sizeof(T)) + 1; i += sizeof(T), p++)
+      {
+         if (*p != 0)
+         {
+            off_t pos = lseek(fh, i - bytes, SEEK_CUR);
+            LogParserTrace(6, _T("LogParser: end of zero block found at %ld"), (long)pos);
+            return true;
+         }
+      }
+   }
+
+   lseek(fh, startPos, SEEK_SET);
+   return false;
+}
+
+/**
+ * Seek file to the end of zeroes block
+ * Reset position to the beginning of zero block if zeroes are till end of file
+ */
+static bool SkipZeroBlock(int fh, int chsize)
+{
+   switch(chsize)
+   {
+      case 1:
+         return SkipZeroBlock<char>(fh);
+      case 2:
+         return SkipZeroBlock<INT16>(fh);
+      case 4:
+         return SkipZeroBlock<INT32>(fh);
+   }
+   return false;
+}
+
+/**
+ * Seek file to the beginning of zeroes block using given character size
+ */
+template<typename T> bool SeekToZero(int fh)
 {
    char buffer[4096];
    while(true)
@@ -381,18 +429,49 @@ static void SeekToZero(int fh, int chsize)
       int bytes = _read(fh, buffer, 4096);
       if (bytes <= 0)
          break;
-      char *p = buffer;
-      for(int i = 0; i < bytes - chsize + 1; i++, p++)
+      T *p = reinterpret_cast<T*>(buffer);
+      for(int i = 0; i < bytes - static_cast<int>(sizeof(T)) + 1; i += sizeof(T), p++)
       {
-         if ((*p == 0) && ((chsize == 1) || !memcmp(p, "\x00\x00\x00\x00", chsize)))
+         if (*p == 0)
          {
             off_t pos = lseek(fh, i - bytes, SEEK_CUR);
             LogParserTrace(6, _T("LogParser: beginning of zero block found at %ld"), (long)pos);
-            return;
+            return true;
          }
       }
-      if (chsize > 1)
-         lseek(fh, 1 - chsize, SEEK_CUR); // re-read potentially incomplete last character
+   }
+   return false;
+}
+
+/**
+ * Seek file to the beginning of zeroes block
+ */
+static void SeekToZero(int fh, int chsize, bool detectBrokenPrealloc)
+{
+   bool found;
+   switch(chsize)
+   {
+      case 1:
+         found = SeekToZero<char>(fh);
+         break;
+      case 2:
+         found = SeekToZero<INT16>(fh);
+         break;
+      case 4:
+         found = SeekToZero<INT32>(fh);
+         break;
+      default:
+         found = false;
+         break;
+   }
+
+   if (found && detectBrokenPrealloc)
+   {
+      if (SkipZeroBlock(fh, chsize))
+      {
+	      LogParserTrace(4, _T("LogParser: broken preallocated file detected"));
+         lseek(fh, 0, SEEK_END); // assume that file has broken preallocation, read from end of file
+      }
    }
 }
 
@@ -490,7 +569,7 @@ bool LogParser::monitorFile(CONDITION stopCondition, bool readFromCurrPos)
 		}
 		else if (m_preallocatedFile)
 		{
-			SeekToZero(fh, getCharSize());
+			SeekToZero(fh, getCharSize(), m_detectBrokenPrealloc);
 		}
 		else
 		{
@@ -714,7 +793,7 @@ bool LogParser::monitorFile2(CONDITION stopCondition, bool readFromCurrPos)
          if (firstRead)
          {
             if (m_preallocatedFile)
-               SeekToZero(fh, getCharSize());
+               SeekToZero(fh, getCharSize(), m_detectBrokenPrealloc);
             else
                lseek(fh, 0, SEEK_END);
             firstRead = false;
@@ -869,7 +948,7 @@ bool LogParser::monitorFileWithSnapshot(CONDITION stopCondition, bool readFromCu
          if (firstRead)
          {
             if (m_preallocatedFile)
-               SeekToZero(fh, getCharSize());
+               SeekToZero(fh, getCharSize(), m_detectBrokenPrealloc);
             else
                lseek(fh, 0, SEEK_END);
             firstRead = false;
