@@ -18,6 +18,7 @@ Copyright (c) 2003-2018 Raden Solutions
 
    <launcherArgs>
       <programArgs>-data @user.home/.nxmc/data -nl en</programArgs>
+      <programArgsLin>--launcher.GTK_version 2</programArgsLin>
       <vmArgs>-Xms128m -Xmx1024m</vmArgs>
       <vmArgsMac>-XstartOnFirstThread -Dorg.eclipse.swt.internal.carbon.smallFonts</vmArgsMac>
    </launcherArgs>
