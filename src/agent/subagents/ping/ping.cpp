@@ -28,9 +28,9 @@
 static ThreadPool *s_pollers = NULL;
 static ObjectArray<PING_TARGET> s_targets(16, 16, true);
 static Mutex s_targetLock;
-static UINT32 m_timeout = 3000;    // Default timeout is 3 seconds
-static UINT32 m_defaultPacketSize = 46;
-static UINT32 m_pollsPerMinute = 4;
+static UINT32 s_timeout = 3000;    // Default timeout is 3 seconds
+static UINT32 s_defaultPacketSize = 46;
+static UINT32 s_pollsPerMinute = 4;
 static UINT32 s_maxTargetInactivityTime = 86400;
 static UINT32 s_options = PING_OPT_ALLOW_AUTOCONFIGURE;
 
@@ -60,7 +60,7 @@ static void Poller(PING_TARGET *target)
    }
 
 retry:
-   if (IcmpPing(target->ipAddr, 1, m_timeout, &target->lastRTT, target->packetSize, target->dontFragment) != ICMP_SUCCESS)
+   if (IcmpPing(target->ipAddr, 1, s_timeout, &target->lastRTT, target->packetSize, target->dontFragment) != ICMP_SUCCESS)
    {
       InetAddress ip = InetAddress::resolveHostName(target->dnsName);
       if (!ip.equals(target->ipAddr))
@@ -76,7 +76,7 @@ retry:
    }
 
    target->history[target->bufPos++] = target->lastRTT;
-   if (target->bufPos == (int)m_pollsPerMinute)
+   if (target->bufPos == (int)s_pollsPerMinute)
    {
       target->bufPos = 0;
 
@@ -97,7 +97,7 @@ retry:
    }
 
    UINT32 sum = 0, count = 0, lost = 0, stdDev = 0, localMin = 0x7FFFFFFF, localMax = 0;
-   for(UINT32 i = 0; i < m_pollsPerMinute; i++)
+   for(UINT32 i = 0; i < s_pollsPerMinute; i++)
    {
       if (target->history[i] < 10000)
       {
@@ -124,7 +124,7 @@ retry:
    target->avgRTT = unreachable ? 10000 : (sum / count);
    target->minRTT = localMin;
    target->maxRTT = localMax;
-   target->packetLoss = lost * 100 / m_pollsPerMinute;
+   target->packetLoss = lost * 100 / s_pollsPerMinute;
 
    if (target->cumulativeMinRTT > localMin)
    {
@@ -157,7 +157,7 @@ retry:
    }
 
    UINT32 elapsedTime = static_cast<UINT32>(GetCurrentTimeMs() - startTime);
-   UINT32 interval = 60000 / m_pollsPerMinute;
+   UINT32 interval = 60000 / s_pollsPerMinute;
 
    ThreadPoolScheduleRelative(s_pollers, (interval > elapsedTime) ? interval - elapsedTime : 1, Poller, target);
 }
@@ -168,7 +168,7 @@ retry:
 static LONG H_IcmpPing(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	TCHAR szHostName[256], szTimeOut[32], szPacketSize[32], dontFragmentFlag[32], retryCountText[32];
-	UINT32 dwTimeOut = m_timeout, dwRTT, dwPacketSize = m_defaultPacketSize;
+	UINT32 dwTimeOut = s_timeout, dwRTT, dwPacketSize = s_defaultPacketSize;
 	bool dontFragment = ((s_options & PING_OPT_DONT_FRAGMENT) != 0);
 
 	if (!AgentGetParameterArg(pszParam, 1, szHostName, 256))
@@ -264,25 +264,27 @@ static LONG H_PollResult(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue
 
    if (i == s_targets.size())
    {
+      s_targetLock.unlock();
       if (s_options & PING_OPT_ALLOW_AUTOCONFIGURE)
       {
          InetAddress addr = bUseName ? InetAddress::resolveHostName(szTarget) : ipAddr;
          if (!addr.isValid())
          {
-            s_targetLock.unlock();
             return SYSINFO_RC_UNSUPPORTED;   // Invalid hostname
          }
 
          t = new PING_TARGET;
          memset(t, 0, sizeof(PING_TARGET));
          t->ipAddr = addr;
-         nx_strncpy(t->dnsName, szTarget, MAX_DB_STRING);
-         nx_strncpy(t->name, szTarget, MAX_DB_STRING);
-         t->packetSize = m_defaultPacketSize;
+         _tcslcpy(t->dnsName, szTarget, MAX_DB_STRING);
+         _tcslcpy(t->name, szTarget, MAX_DB_STRING);
+         t->packetSize = s_defaultPacketSize;
          t->dontFragment = ((s_options & PING_OPT_DONT_FRAGMENT) != 0);
          t->cumulativeMinRTT = 0x7FFFFFFF;
          t->movingAvgRTT = 0x7FFFFFFF;
          t->automatic = true;
+
+         s_targetLock.lock();
          s_targets.add(t);
 
          nxlog_debug_tag(DEBUG_TAG, 3, _T("New ping target %s (%s) created from request"), t->name, (const TCHAR *)t->ipAddr.toString());
@@ -291,7 +293,6 @@ static LONG H_PollResult(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue
       }
       else
       {
-         s_targetLock.unlock();
          return SYSINFO_RC_UNSUPPORTED;   // No such target
       }
    }
@@ -446,7 +447,7 @@ static void SubagentShutdown()
 static BOOL AddTargetFromConfig(TCHAR *pszCfg)
 {
 	TCHAR *ptr, *pszLine, *pszName = NULL;
-	UINT32 dwPacketSize = m_defaultPacketSize;
+	UINT32 dwPacketSize = s_defaultPacketSize;
 	bool dontFragment = ((s_options & PING_OPT_DONT_FRAGMENT) != 0);
 	BOOL bResult = FALSE;
 
@@ -527,15 +528,19 @@ static BOOL AddTargetFromConfig(TCHAR *pszCfg)
  * Configuration file template
  */
 static TCHAR *m_pszTargetList = NULL;
+UINT32 s_poolMaxSize = 1024;
+UINT32 s_poolMinSize = 1;
 static NX_CFG_TEMPLATE m_cfgTemplate[] =
 {
    { _T("AutoConfigureTargets"), CT_BOOLEAN, 0, 0, PING_OPT_ALLOW_AUTOCONFIGURE, 0, &s_options },
-	{ _T("DefaultPacketSize"), CT_LONG, 0, 0, 0, 0, &m_defaultPacketSize },
+	{ _T("DefaultPacketSize"), CT_LONG, 0, 0, 0, 0, &s_defaultPacketSize },
    { _T("DefaultDoNotFragmentFlag"), CT_BOOLEAN, 0, 0, PING_OPT_DONT_FRAGMENT, 0, &s_options },
    { _T("MaxTargetInactivityTime"), CT_LONG, 0, 0, 0, 0, &s_maxTargetInactivityTime },
-	{ _T("PacketRate"), CT_LONG, 0, 0, 0, 0, &m_pollsPerMinute },
+	{ _T("PacketRate"), CT_LONG, 0, 0, 0, 0, &s_pollsPerMinute },
 	{ _T("Target"), CT_STRING_LIST, _T('\n'), 0, 0, 0, &m_pszTargetList },
-	{ _T("Timeout"), CT_LONG, 0, 0, 0, 0, &m_timeout },
+   { _T("ThreadPoolMaxSize"), CT_LONG, 0, 0, 0, 0, &s_poolMaxSize },
+   { _T("ThreadPoolMinSize"), CT_LONG, 0, 0, 0, 0, &s_poolMinSize },
+	{ _T("Timeout"), CT_LONG, 0, 0, 0, 0, &s_timeout },
 	{ _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
 };
 
@@ -552,13 +557,13 @@ static bool SubagentInit(Config *config)
 	   return false;
 	}
 
-	s_pollers = ThreadPoolCreate(_T("PING"), 1, 1024);
+	s_pollers = ThreadPoolCreate(_T("PING"), s_poolMinSize, s_poolMaxSize);
 
-   if (m_pollsPerMinute == 0)
-      m_pollsPerMinute = 1;
-   else if (m_pollsPerMinute > MAX_POLLS_PER_MINUTE)
-      m_pollsPerMinute = MAX_POLLS_PER_MINUTE;
-   nxlog_debug_tag(DEBUG_TAG, 1, _T("Packet rate set to %d packets per minute (%d ms between packets)"), m_pollsPerMinute, 60000 / m_pollsPerMinute);
+   if (s_pollsPerMinute == 0)
+      s_pollsPerMinute = 1;
+   else if (s_pollsPerMinute > MAX_POLLS_PER_MINUTE)
+      s_pollsPerMinute = MAX_POLLS_PER_MINUTE;
+   nxlog_debug_tag(DEBUG_TAG, 1, _T("Packet rate set to %d packets per minute (%d ms between packets)"), s_pollsPerMinute, 60000 / s_pollsPerMinute);
 
    // Parse target list
    if (m_pszTargetList != NULL)
