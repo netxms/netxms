@@ -152,7 +152,9 @@ bool LoadSubAgent(const TCHAR *moduleName)
    {
       _tcslcpy(fullName, moduleName, MAX_PATH);
    }
-   HMODULE hModule = DLOpen(fullName, errorText);
+   // Workaround for Python sub-agent: dlopen it with RTLD_GLOBAL
+   // so that Python C modules can access symbols from libpython
+   HMODULE hModule = DLOpenEx(fullName, _tcsstr(moduleName, _T("python.nsm")) != NULL, errorText);
 #endif
 
    if (hModule != NULL)

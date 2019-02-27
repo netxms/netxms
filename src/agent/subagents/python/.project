@@ -3,6 +3,9 @@
 	<name>python</name>
 	<comment></comment>
 	<projects>
+		<project>libnetxms</project>
+		<project>libnxagent</project>
+		<project>libnxpython</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
