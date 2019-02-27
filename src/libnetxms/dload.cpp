@@ -39,36 +39,39 @@
 
 #define DEBUG_TAG _T("dload")
 
+HMODULE LIBNETXMS_EXPORTABLE DLOpenEx(const TCHAR *libName, bool global, TCHAR *errorText)
+{
+#ifdef _WIN32
+   HMODULE hModule = LoadLibrary(libName);
+   if ((hModule == NULL) && (errorText != NULL))
+      GetSystemErrorText(GetLastError(), errorText, 255);
+#else  /* not _WIN32 */
+#ifdef UNICODE
+   char *mbbuffer = MBStringFromWideString(libName);
+   HMODULE hModule = dlopen(mbbuffer, RTLD_NOW | (global ? RTLD_GLOBAL : RTLD_LOCAL));
+   if ((hModule == NULL) && (errorText != NULL))
+   {
+      WCHAR *wbuffer = WideStringFromMBString(dlerror());
+      _tcslcpy(errorText, wbuffer, 255);
+      MemFree(wbuffer);
+   }
+   MemFree(mbbuffer);
+#else
+   HMODULE hModule = dlopen(libName, RTLD_NOW | (global ? RTLD_GLOBAL : RTLD_LOCAL));
+   if ((hModule == NULL) && (errorText != NULL))
+      _tcslcpy(errorText, dlerror(), 255);
+#endif
+#endif
+   nxlog_debug_tag(DEBUG_TAG, 7, _T("DLOpen: file=\"%s\", module=%p"), libName, hModule);
+   return hModule;
+}
+
 /**
  * Load DLL/shared library
  */
-HMODULE LIBNETXMS_EXPORTABLE DLOpen(const TCHAR *pszLibName, TCHAR *pszErrorText)
+HMODULE LIBNETXMS_EXPORTABLE DLOpen(const TCHAR *libName, TCHAR *errorText)
 {
-   HMODULE hModule;
-
-#ifdef _WIN32
-   hModule = LoadLibrary(pszLibName);
-   if ((hModule == NULL) && (pszErrorText != NULL))
-      GetSystemErrorText(GetLastError(), pszErrorText, 255);
-#else  /* not _WIN32 */
-#ifdef UNICODE
-	char *mbbuffer = MBStringFromWideString(pszLibName);
-   hModule = dlopen(mbbuffer, RTLD_NOW | RTLD_LOCAL);
-   if ((hModule == NULL) && (pszErrorText != NULL))
-   {
-   	WCHAR *wbuffer = WideStringFromMBString(dlerror());
-      _tcslcpy(pszErrorText, wbuffer, 255);
-      free(wbuffer);
-   }
-   free(mbbuffer);
-#else
-   hModule = dlopen(pszLibName, RTLD_NOW | RTLD_LOCAL);
-   if ((hModule == NULL) && (pszErrorText != NULL))
-      _tcslcpy(pszErrorText, dlerror(), 255);
-#endif
-#endif
-   nxlog_debug_tag(DEBUG_TAG, 7, _T("DLOpen: file=\"%s\", module=%p"), pszLibName, hModule);
-   return hModule;
+   return DLOpenEx(libName, false, errorText);
 }
 
 /**
@@ -90,27 +93,25 @@ void LIBNETXMS_EXPORTABLE DLClose(HMODULE hModule)
 /**
  * Get symbol address from library
  */
-void LIBNETXMS_EXPORTABLE *DLGetSymbolAddr(HMODULE hModule, const char *pszSymbol, TCHAR *pszErrorText)
+void LIBNETXMS_EXPORTABLE *DLGetSymbolAddr(HMODULE hModule, const char *symbol, TCHAR *errorText)
 {
-   void *pAddr;
-
 #ifdef _WIN32
-   pAddr = (void *)GetProcAddress(hModule, pszSymbol);
-   if ((pAddr == NULL) && (pszErrorText != NULL))
-      GetSystemErrorText(GetLastError(), pszErrorText, 255);
+   void *addr = (void *)GetProcAddress(hModule, symbol);
+   if ((addr == NULL) && (errorText != NULL))
+      GetSystemErrorText(GetLastError(), errorText, 255);
 #else    /* _WIN32 */
-   pAddr = dlsym(hModule, pszSymbol);
-   if ((pAddr == NULL) && (pszErrorText != NULL))
+   void *addr = dlsym(hModule, symbol);
+   if ((addr == NULL) && (errorText != NULL))
 	{
 #ifdef UNICODE
    	WCHAR *wbuffer = WideStringFromMBString(dlerror());
-      _tcslcpy(pszErrorText, wbuffer, 255);
+      _tcslcpy(errorText, wbuffer, 255);
       MemFree(wbuffer);
 #else
-      _tcslcpy(pszErrorText, dlerror(), 255);
+      _tcslcpy(errorText, dlerror(), 255);
 #endif
 	}
 #endif
-   nxlog_debug_tag(DEBUG_TAG, 7, _T("DLGetSymbolAddr: module=%p, symbol=%hs, address=%p"), hModule, pszSymbol, pAddr);
-   return pAddr;
+   nxlog_debug_tag(DEBUG_TAG, 7, _T("DLGetSymbolAddr: module=%p, symbol=%hs, address=%p"), hModule, symbol, addr);
+   return addr;
 }

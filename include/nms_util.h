@@ -2600,9 +2600,10 @@ bool LIBNETXMS_EXPORTABLE DecryptPasswordA(const char *login, const char *encryp
 
 int LIBNETXMS_EXPORTABLE NxDCIDataTypeFromText(const TCHAR *pszText);
 
-HMODULE LIBNETXMS_EXPORTABLE DLOpen(const TCHAR *pszLibName, TCHAR *pszErrorText);
+HMODULE LIBNETXMS_EXPORTABLE DLOpen(const TCHAR *libName, TCHAR *errorText);
+HMODULE LIBNETXMS_EXPORTABLE DLOpenEx(const TCHAR *libName, bool global, TCHAR *errorText);
 void LIBNETXMS_EXPORTABLE DLClose(HMODULE hModule);
-void LIBNETXMS_EXPORTABLE *DLGetSymbolAddr(HMODULE hModule, const char *pszSymbol, TCHAR *pszErrorText);
+void LIBNETXMS_EXPORTABLE *DLGetSymbolAddr(HMODULE hModule, const char *symbol, TCHAR *errorText);
 
 bool LIBNETXMS_EXPORTABLE ExtractNamedOptionValueW(const WCHAR *optString, const WCHAR *option, WCHAR *buffer, int bufSize);
 bool LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsBoolW(const WCHAR *optString, const WCHAR *option, bool defVal);
