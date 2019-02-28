@@ -1567,6 +1567,18 @@ static int F_EventCodeFromName(int argc, NXSL_Value **argv, NXSL_Value **result,
 }
 
 /**
+ * Count scheduled tasks by key
+ */
+static int F_CountScheduledTasksByKey(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   *result = vm->createValue(CountScheduledTasksByKey(argv[0]->getValueAsCString()));
+   return 0;
+}
+
+/**
  * Additional server functions to use within all scripts
  */
 static NXSL_ExtFunction m_nxslServerFunctions[] =
@@ -1581,6 +1593,7 @@ static NXSL_ExtFunction m_nxslServerFunctions[] =
 	{ "CreateSNMPTransport", F_CreateSNMPTransport, -1 },
    { "CountryAlphaCode", F_CountryAlphaCode, 1 },
    { "CountryName", F_CountryName, 1 },
+   { "CountScheduledTasksByKey", F_CountScheduledTasksByKey, 1 },
    { "CurrencyAlphaCode", F_CurrencyAlphaCode, 1 },
    { "CurrencyExponent", F_CurrencyExponent, 1 },
    { "CurrencyName", F_CurrencyName, 1 },
