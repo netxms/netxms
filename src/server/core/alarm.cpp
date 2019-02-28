@@ -27,10 +27,10 @@
 /**
  * Global instance of alarm manager
  */
-static ObjectArray<Alarm> *m_alarmList;
-static MUTEX m_mutex = INVALID_MUTEX_HANDLE;
-static Condition m_condShutdown(true);
-static THREAD m_hWatchdogThread = INVALID_THREAD_HANDLE;
+static ObjectArray<Alarm> s_alarmList(256, 256, true);
+static Mutex s_alarmListLock;
+static Condition s_shutdown(true);
+static THREAD s_watchdogThread = INVALID_THREAD_HANDLE;
 static UINT32 s_resolveExpirationTime = 0;
 
 /**
@@ -551,11 +551,11 @@ UINT32 NXCORE_EXPORTABLE CreateNewAlarm(TCHAR *message, TCHAR *key, int state, i
    // Check if we have a duplicate alarm
    if (((state & ALARM_STATE_MASK) != ALARM_STATE_TERMINATED) && (*pszExpKey != 0))
    {
-      MutexLock(m_mutex);
+      s_alarmListLock.lock();
 
-      for(int i = 0; i < m_alarmList->size(); i++)
+      for(int i = 0; i < s_alarmList.size(); i++)
       {
-         Alarm *alarm = m_alarmList->get(i);
+         Alarm *alarm = s_alarmList.get(i);
 			if (!_tcscmp(pszExpKey, alarm->getKey()))
          {
 			   alarm->updateFromEvent(event, state, severity, timeout, timeoutEvent, ackTimeout, pszExpMsg, alarmCategoryList);
@@ -574,7 +574,7 @@ UINT32 NXCORE_EXPORTABLE CreateNewAlarm(TCHAR *message, TCHAR *key, int state, i
          }
       }
 
-      MutexUnlock(m_mutex);
+      s_alarmListLock.unlock();
    }
 
    if (newAlarm)
@@ -590,10 +590,10 @@ UINT32 NXCORE_EXPORTABLE CreateNewAlarm(TCHAR *message, TCHAR *key, int state, i
       // Add new alarm to active alarm list if needed
 		if ((alarm->getState() & ALARM_STATE_MASK) != ALARM_STATE_TERMINATED)
       {
-         MutexLock(m_mutex);
-         DbgPrintf(7, _T("AlarmManager: adding new active alarm, current alarm count %d"), m_alarmList->size());
-         m_alarmList->add(alarm);
-         MutexUnlock(m_mutex);
+         s_alarmListLock.lock();
+         nxlog_debug_tag(DEBUG_TAG, 7, _T("AlarmManager: adding new active alarm, current alarm count %d"), s_alarmList.size());
+         s_alarmList.add(alarm);
+         s_alarmListLock.unlock();
       }
 
 		alarm->createInDatabase();
@@ -662,10 +662,10 @@ UINT32 NXCORE_EXPORTABLE AckAlarmById(UINT32 alarmId, ClientSession *session, bo
 {
    UINT32 dwObject, dwRet = RCC_INVALID_ALARM_ID;
 
-   MutexLock(m_mutex);
-   for(int i = 0; i < m_alarmList->size(); i++)
+   s_alarmListLock.lock();
+   for(int i = 0; i < s_alarmList.size(); i++)
    {
-      Alarm *alarm = m_alarmList->get(i);
+      Alarm *alarm = s_alarmList.get(i);
       if (alarm->getAlarmId() == alarmId)
       {
          dwRet = alarm->acknowledge(session, sticky, acknowledgmentActionTime);
@@ -673,7 +673,7 @@ UINT32 NXCORE_EXPORTABLE AckAlarmById(UINT32 alarmId, ClientSession *session, bo
          break;
       }
    }
-   MutexUnlock(m_mutex);
+   s_alarmListLock.unlock();
 
    if (dwRet == RCC_SUCCESS)
       UpdateObjectStatus(dwObject);
@@ -687,10 +687,10 @@ UINT32 NXCORE_EXPORTABLE AckAlarmByHDRef(const TCHAR *hdref, ClientSession *sess
 {
    UINT32 dwObject, dwRet = RCC_INVALID_ALARM_ID;
 
-   MutexLock(m_mutex);
-   for(int i = 0; i < m_alarmList->size(); i++)
+   s_alarmListLock.lock();
+   for(int i = 0; i < s_alarmList.size(); i++)
    {
-      Alarm *alarm = m_alarmList->get(i);
+      Alarm *alarm = s_alarmList.get(i);
       if (!_tcscmp(alarm->getHelpDeskRef(), hdref))
       {
          dwRet = alarm->acknowledge(session, sticky, acknowledgmentActionTime);
@@ -698,7 +698,7 @@ UINT32 NXCORE_EXPORTABLE AckAlarmByHDRef(const TCHAR *hdref, ClientSession *sess
          break;
       }
    }
-   MutexUnlock(m_mutex);
+   s_alarmListLock.unlock();
 
    if (dwRet == RCC_SUCCESS)
       UpdateObjectStatus(dwObject);
@@ -770,14 +770,14 @@ void NXCORE_EXPORTABLE ResolveAlarmsById(IntegerArray<UINT32> *alarmIds, Integer
 {
    IntegerArray<UINT32> processedAlarms, updatedObjects;
 
-   MutexLock(m_mutex);
+   s_alarmListLock.lock();
    time_t changeTime = time(NULL);
    for(int i = 0; i < alarmIds->size(); i++)
    {
       int n;
-      for(n = 0; n < m_alarmList->size(); n++)
+      for(n = 0; n < s_alarmList.size(); n++)
       {
-         Alarm *alarm = m_alarmList->get(n);
+         Alarm *alarm = s_alarmList.get(n);
          NetObj *object = GetAlarmSourceObject(alarmIds->get(i), true);
          if (alarm->getAlarmId() == alarmIds->get(i))
          {
@@ -807,7 +807,7 @@ void NXCORE_EXPORTABLE ResolveAlarmsById(IntegerArray<UINT32> *alarmIds, Integer
                      updatedObjects.add(object->getId());
                   if (terminate)
                   {
-                     m_alarmList->remove(n);
+                     s_alarmList.remove(n);
                      n--;
                   }
                }
@@ -825,13 +825,13 @@ void NXCORE_EXPORTABLE ResolveAlarmsById(IntegerArray<UINT32> *alarmIds, Integer
             break;
          }
       }
-      if (n == m_alarmList->size())
+      if (n == s_alarmList.size())
       {
          failIds->add(alarmIds->get(i));
          failCodes->add(RCC_INVALID_ALARM_ID);
       }
    }
-   MutexUnlock(m_mutex);
+   s_alarmListLock.unlock();
 
    NXCPMessage notification;
    notification.setCode(CMD_BULK_ALARM_STATE_CHANGE);
@@ -852,10 +852,10 @@ void NXCORE_EXPORTABLE ResolveAlarmByKey(const TCHAR *pszKey, bool useRegexp, bo
 {
    IntegerArray<UINT32> objectList;
 
-   MutexLock(m_mutex);
-   for(int i = 0; i < m_alarmList->size(); i++)
+   s_alarmListLock.lock();
+   for(int i = 0; i < s_alarmList.size(); i++)
    {
-      Alarm *alarm = m_alarmList->get(i);
+      Alarm *alarm = s_alarmList.get(i);
 		if ((useRegexp ? RegexpMatch(alarm->getKey(), pszKey, true) : !_tcscmp(pszKey, alarm->getKey())) &&
           ((alarm->getHelpDeskState() != ALARM_HELPDESK_OPEN) || ConfigReadBoolean(_T("Alarms.IgnoreHelpdeskState"), false)) &&
           (terminate || (alarm->getState() != ALARM_STATE_RESOLVED)))
@@ -868,12 +868,12 @@ void NXCORE_EXPORTABLE ResolveAlarmByKey(const TCHAR *pszKey, bool useRegexp, bo
          alarm->resolve(0, pEvent, terminate, true);
 			if (terminate)
 			{
-            m_alarmList->remove(i);
+            s_alarmList.remove(i);
 				i--;
 			}
       }
    }
-   MutexUnlock(m_mutex);
+   s_alarmListLock.unlock();
 
    // Update status of objects
    for(int i = 0; i < objectList.size(); i++)
@@ -887,10 +887,10 @@ void NXCORE_EXPORTABLE ResolveAlarmByDCObjectId(UINT32 dciId, bool terminate)
 {
    IntegerArray<UINT32> objectList;
 
-   MutexLock(m_mutex);
-   for(int i = 0; i < m_alarmList->size(); i++)
+   s_alarmListLock.lock();
+   for(int i = 0; i < s_alarmList.size(); i++)
    {
-      Alarm *alarm = m_alarmList->get(i);
+      Alarm *alarm = s_alarmList.get(i);
       if ((alarm->getDciId() == dciId) &&
           ((alarm->getHelpDeskState() != ALARM_HELPDESK_OPEN) || ConfigReadBoolean(_T("Alarms.IgnoreHelpdeskState"), false)) &&
           (terminate || (alarm->getState() != ALARM_STATE_RESOLVED)))
@@ -903,12 +903,12 @@ void NXCORE_EXPORTABLE ResolveAlarmByDCObjectId(UINT32 dciId, bool terminate)
          alarm->resolve(0, NULL, terminate, true);
          if (terminate)
          {
-            m_alarmList->remove(i);
+            s_alarmList.remove(i);
             i--;
          }
       }
    }
-   MutexUnlock(m_mutex);
+   s_alarmListLock.unlock();
 
    // Update status of objects
    for (int i = 0; i < objectList.size(); i++)
@@ -924,10 +924,10 @@ UINT32 NXCORE_EXPORTABLE ResolveAlarmByHDRef(const TCHAR *hdref, ClientSession *
    UINT32 objectId = 0;
    UINT32 rcc = RCC_INVALID_ALARM_ID;
 
-   MutexLock(m_mutex);
-   for(int i = 0; i < m_alarmList->size(); i++)
+   s_alarmListLock.lock();
+   for(int i = 0; i < s_alarmList.size(); i++)
    {
-      Alarm *alarm = m_alarmList->get(i);
+      Alarm *alarm = s_alarmList.get(i);
       if (!_tcscmp(alarm->getHelpDeskRef(), hdref))
       {
          if (terminate || (alarm->getState() != ALARM_STATE_RESOLVED))
@@ -943,19 +943,19 @@ UINT32 NXCORE_EXPORTABLE ResolveAlarmByHDRef(const TCHAR *hdref, ClientSession *
             alarm->resolve((session != NULL) ? session->getUserId() : 0, NULL, terminate, true);
             if (terminate)
             {
-               m_alarmList->remove(i);
+               s_alarmList.remove(i);
             }
-            DbgPrintf(5, _T("Alarm with helpdesk reference \"%s\" %s"), hdref, terminate ? _T("terminated") : _T("resolved"));
+            nxlog_debug_tag(DEBUG_TAG, 5, _T("Alarm with helpdesk reference \"%s\" %s"), hdref, terminate ? _T("terminated") : _T("resolved"));
          }
          else
          {
-            DbgPrintf(5, _T("Alarm with helpdesk reference \"%s\" already resolved"), hdref);
+            nxlog_debug_tag(DEBUG_TAG, 5, _T("Alarm with helpdesk reference \"%s\" already resolved"), hdref);
          }
          rcc = RCC_SUCCESS;
          break;
       }
    }
-   MutexUnlock(m_mutex);
+   s_alarmListLock.unlock();
 
    if (objectId != 0)
       UpdateObjectStatus(objectId);
@@ -1001,7 +1001,7 @@ UINT32 Alarm::openHelpdeskIssue(TCHAR *hdref)
          updateInDatabase();
          if (hdref != NULL)
             nx_strncpy(hdref, m_helpDeskRef, MAX_HELPDESK_REF_LEN);
-         nxlog_debug(5, _T("Helpdesk issue created for alarm %d, reference \"%s\""), m_alarmId, m_helpDeskRef);
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("Helpdesk issue created for alarm %d, reference \"%s\""), m_alarmId, m_helpDeskRef);
       }
    }
    else
@@ -1019,10 +1019,10 @@ UINT32 OpenHelpdeskIssue(UINT32 alarmId, ClientSession *session, TCHAR *hdref)
    UINT32 rcc = RCC_INVALID_ALARM_ID;
    *hdref = 0;
 
-   MutexLock(m_mutex);
-   for(int i = 0; i < m_alarmList->size(); i++)
+   s_alarmListLock.lock();
+   for(int i = 0; i < s_alarmList.size(); i++)
    {
-      Alarm *alarm = m_alarmList->get(i);
+      Alarm *alarm = s_alarmList.get(i);
       if (alarm->getAlarmId() == alarmId)
       {
          if (alarm->checkCategoryAccess(session))
@@ -1032,7 +1032,7 @@ UINT32 OpenHelpdeskIssue(UINT32 alarmId, ClientSession *session, TCHAR *hdref)
          break;
       }
    }
-   MutexUnlock(m_mutex);
+   s_alarmListLock.unlock();
    return rcc;
 }
 
@@ -1043,16 +1043,16 @@ UINT32 GetHelpdeskIssueUrlFromAlarm(UINT32 alarmId, UINT32 userId, TCHAR *url, s
 {
    UINT32 rcc = RCC_INVALID_ALARM_ID;
 
-   MutexLock(m_mutex);
-   for(int i = 0; i < m_alarmList->size(); i++)
+   s_alarmListLock.lock();
+   for(int i = 0; i < s_alarmList.size(); i++)
    {
-      if (m_alarmList->get(i)->getAlarmId() == alarmId)
+      if (s_alarmList.get(i)->getAlarmId() == alarmId)
       {
-         if (m_alarmList->get(i)->checkCategoryAccess(session))
+         if (s_alarmList.get(i)->checkCategoryAccess(session))
          {
-            if ((m_alarmList->get(i)->getHelpDeskState() != ALARM_HELPDESK_IGNORED) && (m_alarmList->get(i)->getHelpDeskRef()[0] != 0))
+            if ((s_alarmList.get(i)->getHelpDeskState() != ALARM_HELPDESK_IGNORED) && (s_alarmList.get(i)->getHelpDeskRef()[0] != 0))
             {
-               rcc = GetHelpdeskIssueUrl(m_alarmList->get(i)->getHelpDeskRef(), url, size);
+               rcc = GetHelpdeskIssueUrl(s_alarmList.get(i)->getHelpDeskRef(), url, size);
             }
             else
             {
@@ -1067,7 +1067,7 @@ UINT32 GetHelpdeskIssueUrlFromAlarm(UINT32 alarmId, UINT32 userId, TCHAR *url, s
          }
       }
    }
-   MutexUnlock(m_mutex);
+   s_alarmListLock.unlock();
    return rcc;
 }
 
@@ -1078,10 +1078,10 @@ UINT32 UnlinkHelpdeskIssueById(UINT32 alarmId, ClientSession *session)
 {
    UINT32 rcc = RCC_INVALID_ALARM_ID;
 
-   MutexLock(m_mutex);
-   for(int i = 0; i < m_alarmList->size(); i++)
+   s_alarmListLock.lock();
+   for(int i = 0; i < s_alarmList.size(); i++)
    {
-      Alarm *alarm = m_alarmList->get(i);
+      Alarm *alarm = s_alarmList.get(i);
       if (alarm->getAlarmId() == alarmId)
       {
          if (session != NULL)
@@ -1098,7 +1098,7 @@ UINT32 UnlinkHelpdeskIssueById(UINT32 alarmId, ClientSession *session)
          break;
       }
    }
-   MutexUnlock(m_mutex);
+   s_alarmListLock.unlock();
 
    return rcc;
 }
@@ -1110,10 +1110,10 @@ UINT32 UnlinkHelpdeskIssueByHDRef(const TCHAR *hdref, ClientSession *session)
 {
    UINT32 rcc = RCC_INVALID_ALARM_ID;
 
-   MutexLock(m_mutex);
-   for(int i = 0; i < m_alarmList->size(); i++)
+   s_alarmListLock.lock();
+   for(int i = 0; i < s_alarmList.size(); i++)
    {
-      Alarm *alarm = m_alarmList->get(i);
+      Alarm *alarm = s_alarmList.get(i);
       if (!_tcscmp(alarm->getHelpDeskRef(), hdref))
       {
          if (session != NULL)
@@ -1130,7 +1130,7 @@ UINT32 UnlinkHelpdeskIssueByHDRef(const TCHAR *hdref, ClientSession *session)
          break;
       }
    }
-   MutexUnlock(m_mutex);
+   s_alarmListLock.unlock();
 
    return rcc;
 }
@@ -1144,20 +1144,20 @@ void NXCORE_EXPORTABLE DeleteAlarm(UINT32 alarmId, bool objectCleanup)
 
    // Delete alarm from in-memory list
    if (!objectCleanup)  // otherwise already locked
-      MutexLock(m_mutex);
-   for(int i = 0; i < m_alarmList->size(); i++)
+      s_alarmListLock.lock();
+   for(int i = 0; i < s_alarmList.size(); i++)
    {
-      Alarm *alarm = m_alarmList->get(i);
+      Alarm *alarm = s_alarmList.get(i);
       if (alarm->getAlarmId() == alarmId)
       {
          dwObject = alarm->getSourceObject();
          NotifyClients(NX_NOTIFY_ALARM_DELETED, alarm);
-         m_alarmList->remove(i);
+         s_alarmList.remove(i);
          break;
       }
    }
    if (!objectCleanup)
-      MutexUnlock(m_mutex);
+      s_alarmListLock.unlock();
 
    // Delete from database
    if (!objectCleanup)
@@ -1183,19 +1183,19 @@ void NXCORE_EXPORTABLE DeleteAlarm(UINT32 alarmId, bool objectCleanup)
  */
 bool DeleteObjectAlarms(UINT32 objectId, DB_HANDLE hdb)
 {
-	MutexLock(m_mutex);
+	s_alarmListLock.lock();
 
-	// go through from end because m_alarmList->size() is decremented by DeleteAlarm()
-	for(int i = m_alarmList->size() - 1; i >= 0; i--)
+	// go through from end because s_alarmList.size() is decremented by DeleteAlarm()
+	for(int i = s_alarmList.size() - 1; i >= 0; i--)
    {
-      Alarm *alarm = m_alarmList->get(i);
+      Alarm *alarm = s_alarmList.get(i);
 		if (alarm->getSourceObject() == objectId)
       {
 			DeleteAlarm(alarm->getAlarmId(), true);
       }
 	}
 
-	MutexUnlock(m_mutex);
+	s_alarmListLock.unlock();
 
    // Delete all object alarms from database
    bool success = false;
@@ -1244,10 +1244,10 @@ void SendAlarmsToClient(UINT32 dwRqId, ClientSession *pSession)
    msg.setCode(CMD_ALARM_DATA);
    msg.setId(dwRqId);
 
-   MutexLock(m_mutex);
-   for(int i = 0; i < m_alarmList->size(); i++)
+   s_alarmListLock.lock();
+   for(int i = 0; i < s_alarmList.size(); i++)
    {
-      Alarm *alarm = m_alarmList->get(i);
+      Alarm *alarm = s_alarmList.get(i);
       NetObj *pObject = FindObjectById(alarm->getSourceObject());
       if (pObject != NULL)
       {
@@ -1259,7 +1259,7 @@ void SendAlarmsToClient(UINT32 dwRqId, ClientSession *pSession)
          }
       }
    }
-   MutexUnlock(m_mutex);
+   s_alarmListLock.unlock();
 
    // Send end-of-list indicator
    msg.setField(VID_ALARM_ID, (UINT32)0);
@@ -1274,10 +1274,10 @@ UINT32 NXCORE_EXPORTABLE GetAlarm(UINT32 alarmId, UINT32 userId, NXCPMessage *ms
 {
    UINT32 rcc = RCC_INVALID_ALARM_ID;
 
-   MutexLock(m_mutex);
-   for(int i = 0; i < m_alarmList->size(); i++)
+   s_alarmListLock.lock();
+   for(int i = 0; i < s_alarmList.size(); i++)
    {
-      Alarm *alarm = m_alarmList->get(i);
+      Alarm *alarm = s_alarmList.get(i);
       if (alarm->getAlarmId() == alarmId)
       {
          if (alarm->checkCategoryAccess(session))
@@ -1292,7 +1292,7 @@ UINT32 NXCORE_EXPORTABLE GetAlarm(UINT32 alarmId, UINT32 userId, NXCPMessage *ms
          break;
       }
    }
-   MutexUnlock(m_mutex);
+   s_alarmListLock.unlock();
 
    return rcc;
 }
@@ -1305,12 +1305,12 @@ UINT32 NXCORE_EXPORTABLE GetAlarmEvents(UINT32 alarmId, UINT32 userId, NXCPMessa
 {
    UINT32 dwRet = RCC_INVALID_ALARM_ID;
 
-   MutexLock(m_mutex);
-   for(int i = 0; i < m_alarmList->size(); i++)
+   s_alarmListLock.lock();
+   for(int i = 0; i < s_alarmList.size(); i++)
    {
-      if (m_alarmList->get(i)->getAlarmId() == alarmId)
+      if (s_alarmList.get(i)->getAlarmId() == alarmId)
       {
-         if (m_alarmList->get(i)->checkCategoryAccess(session))
+         if (s_alarmList.get(i)->checkCategoryAccess(session))
          {
             dwRet = RCC_SUCCESS;
             break;
@@ -1323,7 +1323,7 @@ UINT32 NXCORE_EXPORTABLE GetAlarmEvents(UINT32 alarmId, UINT32 userId, NXCPMessa
       }
    }
 
-   MutexUnlock(m_mutex);
+   s_alarmListLock.unlock();
 
 	// we don't call FillAlarmEventsMessage from within loop
 	// to prevent alarm list lock for a long time
@@ -1341,10 +1341,10 @@ NetObj NXCORE_EXPORTABLE *GetAlarmSourceObject(UINT32 alarmId, bool alreadyLocke
    UINT32 dwObjectId = 0;
 
    if (!alreadyLocked)
-      MutexLock(m_mutex);
-   for(int i = 0; i < m_alarmList->size(); i++)
+      s_alarmListLock.lock();
+   for(int i = 0; i < s_alarmList.size(); i++)
    {
-      Alarm *alarm = m_alarmList->get(i);
+      Alarm *alarm = s_alarmList.get(i);
       if (alarm->getAlarmId() == alarmId)
       {
          dwObjectId = alarm->getSourceObject();
@@ -1353,7 +1353,7 @@ NetObj NXCORE_EXPORTABLE *GetAlarmSourceObject(UINT32 alarmId, bool alreadyLocke
    }
 
    if (!alreadyLocked)
-      MutexUnlock(m_mutex);
+      s_alarmListLock.unlock();
    return (dwObjectId != 0) ? FindObjectById(dwObjectId) : NULL;
 }
 
@@ -1364,17 +1364,17 @@ NetObj NXCORE_EXPORTABLE *GetAlarmSourceObject(const TCHAR *hdref)
 {
    UINT32 dwObjectId = 0;
 
-   MutexLock(m_mutex);
-   for(int i = 0; i < m_alarmList->size(); i++)
+   s_alarmListLock.lock();
+   for(int i = 0; i < s_alarmList.size(); i++)
    {
-      Alarm *alarm = m_alarmList->get(i);
+      Alarm *alarm = s_alarmList.get(i);
       if (!_tcscmp(alarm->getHelpDeskRef(), hdref))
       {
          dwObjectId = alarm->getSourceObject();
          break;
       }
    }
-   MutexUnlock(m_mutex);
+   s_alarmListLock.unlock();
    return (dwObjectId != 0) ? FindObjectById(dwObjectId) : NULL;
 }
 
@@ -1386,10 +1386,10 @@ int GetMostCriticalStatusForObject(UINT32 dwObjectId)
 {
    int iStatus = STATUS_UNKNOWN;
 
-   MutexLock(m_mutex);
-   for(int i = 0; i < m_alarmList->size(); i++)
+   s_alarmListLock.lock();
+   for(int i = 0; i < s_alarmList.size(); i++)
    {
-      Alarm *alarm = m_alarmList->get(i);
+      Alarm *alarm = s_alarmList.get(i);
       if ((alarm->getSourceObject() == dwObjectId) &&
 			 ((alarm->getState() & ALARM_STATE_MASK) < ALARM_STATE_RESOLVED) &&
           ((alarm->getCurrentSeverity() > iStatus) || (iStatus == STATUS_UNKNOWN)))
@@ -1397,7 +1397,7 @@ int GetMostCriticalStatusForObject(UINT32 dwObjectId)
          iStatus = (int)alarm->getCurrentSeverity();
       }
    }
-   MutexUnlock(m_mutex);
+   s_alarmListLock.unlock();
    return iStatus;
 }
 
@@ -1408,12 +1408,12 @@ void GetAlarmStats(NXCPMessage *pMsg)
 {
    UINT32 dwCount[5];
 
-   MutexLock(m_mutex);
-   pMsg->setField(VID_NUM_ALARMS, m_alarmList->size());
+   s_alarmListLock.lock();
+   pMsg->setField(VID_NUM_ALARMS, s_alarmList.size());
    memset(dwCount, 0, sizeof(UINT32) * 5);
-   for(int i = 0; i < m_alarmList->size(); i++)
-      dwCount[m_alarmList->get(i)->getCurrentSeverity()]++;
-   MutexUnlock(m_mutex);
+   for(int i = 0; i < s_alarmList.size(); i++)
+      dwCount[s_alarmList.get(i)->getCurrentSeverity()]++;
+   s_alarmListLock.unlock();
    pMsg->setFieldFromInt32Array(VID_ALARMS_BY_SEVERITY, 5, dwCount);
 }
 
@@ -1422,9 +1422,9 @@ void GetAlarmStats(NXCPMessage *pMsg)
  */
 int GetAlarmCount()
 {
-   MutexLock(m_mutex);
-   int count = m_alarmList->size();
-   MutexUnlock(m_mutex);
+   s_alarmListLock.lock();
+   int count = s_alarmList.size();
+   s_alarmListLock.unlock();
    return count;
 }
 
@@ -1437,17 +1437,17 @@ static THREAD_RESULT THREAD_CALL WatchdogThread(void *arg)
 
 	while(true)
 	{
-		if (m_condShutdown.wait(1000))
+		if (s_shutdown.wait(1000))
 			break;
 
 		if (!(g_flags & AF_SERVER_INITIALIZED))
 		   continue;   // Server not initialized yet
 
-		MutexLock(m_mutex);
+		s_alarmListLock.lock();
 		time_t now = time(NULL);
-	   for(int i = 0; i < m_alarmList->size(); i++)
+	   for(int i = 0; i < s_alarmList.size(); i++)
 		{
-         Alarm *alarm = m_alarmList->get(i);
+         Alarm *alarm = s_alarmList.get(i);
 			if ((alarm->getTimeout() > 0) &&
 				 ((alarm->getState() & ALARM_STATE_MASK) == ALARM_STATE_OUTSTANDING) &&
 				 (((time_t)alarm->getLastChangeTime() + (time_t)alarm->getTimeout()) < now))
@@ -1488,11 +1488,11 @@ static THREAD_RESULT THREAD_CALL WatchdogThread(void *arg)
             nxlog_debug_tag(DEBUG_TAG, 5, _T("Resolve timeout: alarm_id=%u, last_change=%u, timeout=%u, now=%u"),
                      alarm->getAlarmId(), alarm->getLastChangeTime(), s_resolveExpirationTime, (UINT32)now);
             alarm->resolve(0, NULL, true, true);
-            m_alarmList->remove(i);
+            s_alarmList.remove(i);
             i--;
 			}
 		}
-		MutexUnlock(m_mutex);
+		s_alarmListLock.unlock();
 	}
    return THREAD_OK;
 }
@@ -1599,17 +1599,17 @@ UINT32 AddAlarmComment(const TCHAR *hdref, const TCHAR *text, UINT32 userId)
 {
    UINT32 rcc = RCC_INVALID_ALARM_ID;
 
-   MutexLock(m_mutex);
-   for(int i = 0; i < m_alarmList->size(); i++)
+   s_alarmListLock.lock();
+   for(int i = 0; i < s_alarmList.size(); i++)
    {
-      Alarm *alarm = m_alarmList->get(i);
+      Alarm *alarm = s_alarmList.get(i);
       if (!_tcscmp(alarm->getHelpDeskRef(), hdref))
       {
          rcc = alarm->updateAlarmComment(0, text, userId, false);
          break;
       }
    }
-   MutexUnlock(m_mutex);
+   s_alarmListLock.unlock();
 
    return rcc;
 }
@@ -1621,17 +1621,17 @@ UINT32 UpdateAlarmComment(UINT32 alarmId, UINT32 noteId, const TCHAR *text, UINT
 {
    UINT32 rcc = RCC_INVALID_ALARM_ID;
 
-   MutexLock(m_mutex);
-   for(int i = 0; i < m_alarmList->size(); i++)
+   s_alarmListLock.lock();
+   for(int i = 0; i < s_alarmList.size(); i++)
    {
-      Alarm *alarm = m_alarmList->get(i);
+      Alarm *alarm = s_alarmList.get(i);
       if (alarm->getAlarmId() == alarmId)
       {
          rcc = alarm->updateAlarmComment(noteId, text, userId, true);
          break;
       }
    }
-   MutexUnlock(m_mutex);
+   s_alarmListLock.unlock();
 
    return rcc;
 }
@@ -1677,17 +1677,17 @@ UINT32 DeleteAlarmCommentByID(UINT32 alarmId, UINT32 noteId)
 {
    UINT32 rcc = RCC_INVALID_ALARM_ID;
 
-   MutexLock(m_mutex);
-   for(int i = 0; i < m_alarmList->size(); i++)
+   s_alarmListLock.lock();
+   for(int i = 0; i < s_alarmList.size(); i++)
    {
-      Alarm *alarm = m_alarmList->get(i);
+      Alarm *alarm = s_alarmList.get(i);
       if (alarm->getAlarmId() == alarmId)
       {
          rcc = alarm->deleteComment(noteId);
          break;
       }
    }
-   MutexUnlock(m_mutex);
+   s_alarmListLock.unlock();
 
    return rcc;
 }
@@ -1758,17 +1758,17 @@ ObjectArray<Alarm> NXCORE_EXPORTABLE *GetAlarms(UINT32 objectId, bool recursive)
 {
    ObjectArray<Alarm> *result = new ObjectArray<Alarm>(16, 16, true);
 
-   MutexLock(m_mutex);
-   for(int i = 0; i < m_alarmList->size(); i++)
+   s_alarmListLock.lock();
+   for(int i = 0; i < s_alarmList.size(); i++)
    {
-      Alarm *alarm = m_alarmList->get(i);
+      Alarm *alarm = s_alarmList.get(i);
       if ((objectId == 0) || (alarm->getSourceObject() == objectId) ||
           (recursive && IsParentObject(objectId, alarm->getSourceObject())))
       {
          result->add(new Alarm(alarm, true));
       }
    }
-   MutexUnlock(m_mutex);
+   s_alarmListLock.unlock();
    return result;
 }
 
@@ -1797,17 +1797,17 @@ int F_FindAlarmByKey(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *
    const TCHAR *key = argv[0]->getValueAsCString();
    Alarm *alarm = NULL;
 
-   MutexLock(m_mutex);
-   for(int i = 0; i < m_alarmList->size(); i++)
+   s_alarmListLock.lock();
+   for(int i = 0; i < s_alarmList.size(); i++)
    {
-      Alarm *a = m_alarmList->get(i);
+      Alarm *a = s_alarmList.get(i);
       if (!_tcscmp(a->getKey(), key))
       {
          alarm = new Alarm(a, false);
          break;
       }
    }
-   MutexUnlock(m_mutex);
+   s_alarmListLock.unlock();
 
    *result = (alarm != NULL) ? vm->createValue(new NXSL_Object(vm, &g_nxslAlarmClass, alarm)) : vm->createValue();
    return 0;
@@ -1824,20 +1824,50 @@ int F_FindAlarmByKeyRegex(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL
    const TCHAR *key = argv[0]->getValueAsCString();
    Alarm *alarm = NULL;
 
-   MutexLock(m_mutex);
-   for(int i = 0; i < m_alarmList->size(); i++)
+   s_alarmListLock.lock();
+   for(int i = 0; i < s_alarmList.size(); i++)
    {
-      Alarm *a = m_alarmList->get(i);
+      Alarm *a = s_alarmList.get(i);
       if (RegexpMatch(a->getKey(), key, TRUE))
       {
          alarm = new Alarm(a, false);
          break;
       }
    }
-   MutexUnlock(m_mutex);
+   s_alarmListLock.unlock();
 
    *result = (alarm != NULL) ? vm->createValue(new NXSL_Object(vm, &g_nxslAlarmClass, alarm)) : vm->createValue();
    return 0;
+}
+
+/**
+ * Get alarm by id
+ */
+Alarm NXCORE_EXPORTABLE *FindAlarmById(UINT32 alarmId)
+{
+   if(alarmId == 0)
+      return NULL;
+   Alarm *alarm = NULL;
+   s_alarmListLock.lock();
+   for(int i = 0; i < s_alarmList.size(); i++)
+   {
+      if (s_alarmList.get(i)->getAlarmId() == alarmId)
+      {
+         alarm = new Alarm(s_alarmList.get(i), false);
+         break;
+      }
+   }
+   s_alarmListLock.unlock();
+   return alarm;
+}
+
+/**
+ * Update alarm expiration times
+ */
+void UpdateAlarmExpirationTimes()
+{
+   s_resolveExpirationTime = ConfigReadInt(_T("Alarms.ResolveExpirationTime"), 0);
+   nxlog_debug_tag(DEBUG_TAG, 3, _T("Resolved alarms expiration time set to %u seconds"), s_resolveExpirationTime);
 }
 
 /**
@@ -1845,10 +1875,8 @@ int F_FindAlarmByKeyRegex(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL
  */
 bool InitAlarmManager()
 {
-   m_alarmList = new ObjectArray<Alarm>(64, 64, true);
-   m_mutex = MutexCreate();
-	m_hWatchdogThread = INVALID_THREAD_HANDLE;
-	s_resolveExpirationTime = ConfigReadInt(_T("Alarms.ResolveExpirationTime"), 0);
+   s_watchdogThread = INVALID_THREAD_HANDLE;
+   s_resolveExpirationTime = ConfigReadInt(_T("Alarms.ResolveExpirationTime"), 0);
 
    // Load active alarms into memory
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
@@ -1866,7 +1894,7 @@ bool InitAlarmManager()
    DB_HANDLE cachedb = (g_flags & AF_CACHE_DB_ON_STARTUP) ? DBOpenInMemoryDatabase() : NULL;
    if (cachedb != NULL)
    {
-      nxlog_debug(2, _T("Caching alarm data tables"));
+      nxlog_debug_tag(DEBUG_TAG, 2, _T("Caching alarm data tables"));
       if (!DBCacheTable(cachedb, hdb, _T("alarm_events"), _T("alarm_id,event_id"), _T("*")) ||
           !DBCacheTable(cachedb, hdb, _T("alarm_notes"), _T("note_id"), _T("note_id,alarm_id")))
       {
@@ -1880,7 +1908,7 @@ bool InitAlarmManager()
    {
       for(int i = 0; i < count; i++)
       {
-         m_alarmList->add(new Alarm((cachedb != NULL) ? cachedb : hdb, hResult, i));
+         s_alarmList.add(new Alarm((cachedb != NULL) ? cachedb : hdb, hResult, i));
       }
    }
 
@@ -1890,7 +1918,7 @@ bool InitAlarmManager()
    if (cachedb != NULL)
       DBCloseInMemoryDatabase(cachedb);
 
-	m_hWatchdogThread = ThreadCreateEx(WatchdogThread, 0, NULL);
+   s_watchdogThread = ThreadCreateEx(WatchdogThread, 0, NULL);
    return true;
 }
 
@@ -1899,38 +1927,6 @@ bool InitAlarmManager()
  */
 void ShutdownAlarmManager()
 {
-	m_condShutdown.set();
-	ThreadJoin(m_hWatchdogThread);
-   MutexDestroy(m_mutex);
-   delete m_alarmList;
-}
-
-/**
- * Get alarm by id
- */
-Alarm NXCORE_EXPORTABLE *FindAlarmById(UINT32 alarmId)
-{
-   if(alarmId == 0)
-      return NULL;
-   Alarm *alarm = NULL;
-   MutexLock(m_mutex);
-   for(int i = 0; i < m_alarmList->size(); i++)
-   {
-      if (m_alarmList->get(i)->getAlarmId() == alarmId)
-      {
-         alarm = new Alarm(m_alarmList->get(i), false);
-         break;
-      }
-   }
-   MutexUnlock(m_mutex);
-   return alarm;
-}
-
-/**
- * Update alarm expiration times
- */
-void UpdateAlarmExpirationTimes()
-{
-   s_resolveExpirationTime = ConfigReadInt(_T("Alarms.ResolveExpirationTime"), 0);
-   nxlog_debug_tag(DEBUG_TAG, 3, _T("Resolved alarms expiration time set to %u seconds"), s_resolveExpirationTime);
+   s_shutdown.set();
+   ThreadJoin(s_watchdogThread);
 }
