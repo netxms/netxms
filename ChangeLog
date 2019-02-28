@@ -15,6 +15,7 @@
 	NX-1271 (Implement internal server topology map)
 	NX-1386 (Implement units for server variables)
 	NX-1479 (DCI poll spread after NetXMS server/service restart)
+	NX-1562 (Add "tunnel only" option to node's agent communication configuration)
 
 
 *
