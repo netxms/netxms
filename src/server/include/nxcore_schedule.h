@@ -184,6 +184,7 @@ UINT32 NXCORE_EXPORTABLE UpdateOneTimeScheduledTask(int id, const TCHAR *task, t
 UINT32 NXCORE_EXPORTABLE DeleteScheduledTask(UINT32 id, UINT32 user, UINT64 systemRights);
 bool NXCORE_EXPORTABLE DeleteScheduledTaskByHandlerId(const TCHAR *taskHandlerId);
 bool NXCORE_EXPORTABLE DeleteScheduledTaskByKey(const TCHAR *taskKey);
+int NXCORE_EXPORTABLE CountScheduledTasksByKey(const TCHAR *taskKey);
 ScheduledTask *FindScheduledTaskByHandlerId(const TCHAR *taskHandlerId);
 void GetSchedulerTaskHandlers(NXCPMessage *msg, UINT64 accessRights);
 void GetScheduledTasks(NXCPMessage *msg, UINT32 userId, UINT64 systemRights);
