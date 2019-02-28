@@ -24,13 +24,33 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 30.58 to 30.59 (changes also included into 22.45)
+ */
+static bool H_UpgradeFromV58()
+{
+   if (GetSchemaLevelForMajorVersion(22) < 45)
+   {
+      CHK_EXEC(CreateConfigParam(_T("Alarms.ResolveExpirationTime"), _T("0"),
+               _T("Expiration time (in seconds) for resolved alarms. If set to non-zero, resolved and untouched alarms will be terminated automatically after given timeout."),
+               _T("seconds"), 'I', true, false, false, false));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(22, 45));
+   }
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET units='seconds' WHERE var_name='Alarms.ResolveExpirationTime'")));
+
+   CHK_EXEC(SetMinorSchemaVersion(59));
+   return true;
+}
+
+/**
  * Upgrade from 30.57 to 30.58 (changes also included into 22.44)
  */
 static bool H_UpgradeFromV57()
 {
    if (GetSchemaLevelForMajorVersion(22) < 44)
    {
-      CHK_EXEC(CreateConfigParam(_T("NetworkDiscovery.MergeDuplicateNodes"), _T("1"), _T("Enable/disable merge of duplicate nodes. When enabled, configuration of duplicate node(s) will be merged into original node and duplicate(s) will be deleted."), NULL, 'B', true, false, false, false));
+      CHK_EXEC(CreateConfigParam(_T("NetworkDiscovery.MergeDuplicateNodes"), _T("1"),
+               _T("Enable/disable merge of duplicate nodes. When enabled, configuration of duplicate node(s) will be merged into original node and duplicate(s) will be deleted."),
+               NULL, 'B', true, false, false, false));
       CHK_EXEC(SetSchemaLevelForMajorVersion(22, 44));
    }
 
@@ -2073,6 +2093,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 58, 30, 59, H_UpgradeFromV58 },
    { 57, 30, 58, H_UpgradeFromV57 },
    { 56, 30, 57, H_UpgradeFromV56 },
    { 55, 30, 56, H_UpgradeFromV55 },
