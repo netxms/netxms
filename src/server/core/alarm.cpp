@@ -22,6 +22,8 @@
 
 #include "nxcore.h"
 
+#define DEBUG_TAG _T("alarm")
+
 /**
  * Global instance of alarm manager
  */
@@ -29,6 +31,7 @@ static ObjectArray<Alarm> *m_alarmList;
 static MUTEX m_mutex = INVALID_MUTEX_HANDLE;
 static Condition m_condShutdown(true);
 static THREAD m_hWatchdogThread = INVALID_THREAD_HANDLE;
+static UINT32 s_resolveExpirationTime = 0;
 
 /**
  * Get number of comments for alarm
@@ -1449,9 +1452,8 @@ static THREAD_RESULT THREAD_CALL WatchdogThread(void *arg)
 				 ((alarm->getState() & ALARM_STATE_MASK) == ALARM_STATE_OUTSTANDING) &&
 				 (((time_t)alarm->getLastChangeTime() + (time_t)alarm->getTimeout()) < now))
 			{
-				DbgPrintf(5, _T("Alarm timeout: alarm_id=%u, last_change=%u, timeout=%u, now=%u"),
-				          alarm->getAlarmId(), alarm->getLastChangeTime(),
-							 alarm->getTimeout(), (UINT32)now);
+            nxlog_debug_tag(DEBUG_TAG, 5, _T("Outstanding timeout: alarm_id=%u, last_change=%u, timeout=%u, now=%u"),
+                     alarm->getAlarmId(), alarm->getLastChangeTime(), alarm->getTimeout(), (UINT32)now);
 
 				TCHAR eventName[MAX_EVENT_NAME];
 				if (!EventNameFromCode(alarm->getSourceEventCode(), eventName))
@@ -1468,14 +1470,26 @@ static THREAD_RESULT THREAD_CALL WatchdogThread(void *arg)
 				 ((alarm->getState() & ALARM_STATE_STICKY) != 0) &&
 				 (((time_t)alarm->getAckTimeout() <= now)))
 			{
-				DbgPrintf(5, _T("Alarm acknowledgment timeout: alarm_id=%u, timeout=%u, now=%u"),
-				          alarm->getAlarmId(), alarm->getAckTimeout(), (UINT32)now);
+			   nxlog_debug_tag(DEBUG_TAG, 5, _T("Acknowledgment timeout: alarm_id=%u, timeout=%u, now=%u"),
+			            alarm->getAlarmId(), alarm->getAckTimeout(), (UINT32)now);
 
 				PostEvent(alarm->getTimeoutEvent(), alarm->getSourceObject(), "dssd",
-				          alarm->getAlarmId(), alarm->getMessage(), alarm->getKey(), alarm->getSourceEventCode());
+				         alarm->getAlarmId(), alarm->getMessage(), alarm->getKey(), alarm->getSourceEventCode());
 				alarm->onAckTimeoutExpiration();
 				alarm->updateInDatabase();
 				NotifyClients(NX_NOTIFY_ALARM_CHANGED, alarm);
+			}
+
+			if ((s_resolveExpirationTime > 0) &&
+			    ((alarm->getState() & ALARM_STATE_MASK) == ALARM_STATE_RESOLVED) &&
+			    (alarm->getLastChangeTime() + s_resolveExpirationTime <= now) &&
+			    (alarm->getHelpDeskState() != ALARM_HELPDESK_OPEN))
+			{
+            nxlog_debug_tag(DEBUG_TAG, 5, _T("Resolve timeout: alarm_id=%u, last_change=%u, timeout=%u, now=%u"),
+                     alarm->getAlarmId(), alarm->getLastChangeTime(), s_resolveExpirationTime, (UINT32)now);
+            alarm->resolve(0, NULL, true, true);
+            m_alarmList->remove(i);
+            i--;
 			}
 		}
 		MutexUnlock(m_mutex);
@@ -1484,7 +1498,7 @@ static THREAD_RESULT THREAD_CALL WatchdogThread(void *arg)
 }
 
 /**
- * Check if given alram/note id pair is valid
+ * Check if given alarm/note id pair is valid
  */
 static bool IsValidNoteId(UINT32 alarmId, UINT32 noteId)
 {
@@ -1834,18 +1848,18 @@ bool InitAlarmManager()
    m_alarmList = new ObjectArray<Alarm>(64, 64, true);
    m_mutex = MutexCreate();
 	m_hWatchdogThread = INVALID_THREAD_HANDLE;
-
-   DB_RESULT hResult;
+	s_resolveExpirationTime = ConfigReadInt(_T("Alarms.ResolveExpirationTime"), 0);
 
    // Load active alarms into memory
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   hResult = DBSelect(hdb, _T("SELECT alarm_id,source_object_id,zone_uin,")
-                           _T("source_event_code,source_event_id,message,")
-                           _T("original_severity,current_severity,")
-                           _T("alarm_key,creation_time,last_change_time,")
-                           _T("hd_state,hd_ref,ack_by,repeat_count,")
-                           _T("alarm_state,timeout,timeout_event,resolved_by,")
-                           _T("ack_timeout,dci_id,alarm_category_ids FROM alarms WHERE alarm_state<>3"));
+   DB_RESULT hResult = DBSelect(hdb,
+            _T("SELECT alarm_id,source_object_id,zone_uin,")
+            _T("source_event_code,source_event_id,message,")
+            _T("original_severity,current_severity,")
+            _T("alarm_key,creation_time,last_change_time,")
+            _T("hd_state,hd_ref,ack_by,repeat_count,")
+            _T("alarm_state,timeout,timeout_event,resolved_by,")
+            _T("ack_timeout,dci_id,alarm_category_ids FROM alarms WHERE alarm_state<>3"));
    if (hResult == NULL)
       return false;
 
@@ -1910,4 +1924,13 @@ Alarm NXCORE_EXPORTABLE *FindAlarmById(UINT32 alarmId)
    }
    MutexUnlock(m_mutex);
    return alarm;
+}
+
+/**
+ * Update alarm expiration times
+ */
+void UpdateAlarmExpirationTimes()
+{
+   s_resolveExpirationTime = ConfigReadInt(_T("Alarms.ResolveExpirationTime"), 0);
+   nxlog_debug_tag(DEBUG_TAG, 3, _T("Resolved alarms expiration time set to %u seconds"), s_resolveExpirationTime);
 }

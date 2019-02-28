@@ -35,6 +35,8 @@ extern TCHAR g_serverCertificatePath[];
 extern TCHAR g_serverCertificateKeyPath[];
 extern char g_serverCertificatePassword[];
 
+void UpdateAlarmExpirationTimes();
+
 /**
  * Database connection parameters
  */
@@ -428,6 +430,10 @@ static void OnConfigVariableChange(bool isCLOB, const TCHAR *name, const TCHAR *
 	{
 		ReinitializeSyslogParser();
 	}
+   else if (!_tcscmp(name, _T("Alarms.ResolveExpirationTime")))
+   {
+      UpdateAlarmExpirationTimes();
+   }
    else if (!_tcscmp(name, _T("AlarmSummaryEmailSchedule")))
    {
       if (ConfigReadBoolean(_T("EnableAlarmSummaryEmails"), false))

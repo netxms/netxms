@@ -1,6 +1,8 @@
 agent.conn  Agent connections
 agent.tunnel    Agent tunnels
 
+alarm.*		Alarm management
+
 client.session	Client sessions
 
 comm.*		Communications (in agent log)
