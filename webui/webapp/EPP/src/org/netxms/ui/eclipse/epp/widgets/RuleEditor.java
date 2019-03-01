@@ -143,23 +143,17 @@ public class RuleEditor extends Composite
          @Override
          public void mouseDown(MouseEvent e)
          {
-            if (e.button == 3 && !selected)
+            if (e.button == 1)
+            {
+               processRuleMouseEvent(e);
+            }
+            else if (e.button == 3 && !selected)
                RuleEditor.this.editor.setSelection(RuleEditor.this);
          }
 
          @Override
          public void mouseUp(MouseEvent e)
          {
-            switch(e.button)
-            {
-               case 1:
-                  processRuleMouseEvent(e);
-                  break;
-               default:
-                  if (!selected)
-                     RuleEditor.this.editor.setSelection(RuleEditor.this);
-                  break;
-            }
          }
       };
 
@@ -1072,15 +1066,20 @@ public class RuleEditor extends Composite
 
       if (ctrlPressed)
       {
-         setDragged(true);
-         editor.addToSelection(this, false);
+         if (selected)
+            editor.removeFromSelection(this);
+         else  
+         {
+            setDragged(true);
+            editor.addToSelection(this, false);
+         }
       }
       else if (shiftPressed)
       {
          setDragged(true);
          editor.addToSelection(this, true);
       }
-      else
+      else if (!editor.selectionContainsRule(this))
       {
          setDragged(false);
          editor.setSelection(this);
