@@ -924,41 +924,60 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 		lastSelectedRule = -1;
 	}
 
-	/**
-	 * Set selection to given rule
-	 * 
-	 * @param e rule editor
-	 */
-	public void setSelection(RuleEditor e)
-	{
-	   if (!e.isDragged())
-         clearSelection();      
-      
+   /**
+    * Set selection to given rule
+    * 
+    * @param e rule editor
+    */
+   public void setSelection(RuleEditor e)
+   {
+      clearSelection();      
       addToSelection(e, false);
-	}
+   }
+   
+   public void onDragDetect(RuleEditor e)
+   {
+      if (!selection.contains(e))
+         setSelection(e);
+   }
 
-	/**
-	 * Add rule to selection
-	 * 
-	 * @param e rule editor
-	 */
-	public void addToSelection(RuleEditor e, boolean allFromPrevSelection)
-	{
-		if (allFromPrevSelection && (lastSelectedRule != -1))
-		{
-			int direction = Integer.signum(e.getRuleNumber() - lastSelectedRule);
-			for(int i = lastSelectedRule + direction; i != e.getRuleNumber(); i += direction)
-			{
-				RuleEditor r = ruleEditors.get(i - 1);
-				selection.add(r);
-				r.setSelected(true);
-			}
-		}
-		selection.add(e);
-		e.setSelected(true);
-		lastSelectedRule = e.getRuleNumber();
-		onSelectionChange();
-	}
+   /**
+    * Add rule to selection
+    * 
+    * @param e rule editor
+    */
+   public void addToSelection(RuleEditor e, boolean allFromPrevSelection)
+   {
+      if (allFromPrevSelection && (lastSelectedRule != -1))
+      {
+         int direction = Integer.signum(e.getRuleNumber() - lastSelectedRule);
+         for(int i = lastSelectedRule + direction; i != e.getRuleNumber(); i += direction)
+         {
+            RuleEditor r = ruleEditors.get(i - 1);
+            selection.add(r);
+            r.setSelected(true);
+         }
+      }
+      selection.add(e);
+      e.setSelected(true);
+      lastSelectedRule = e.getRuleNumber();
+      
+      onSelectionChange();
+   }
+   
+   /**
+    * Remove rule from selection
+    * 
+    * @param e rule editor
+    */
+   public void removeFromSelection(RuleEditor e)
+   {
+      selection.remove(e);
+      e.setSelected(false);
+      lastSelectedRule = -1;
+      
+      onSelectionChange();
+   }
 
 	/**
 	 * Internal handler for selection change
@@ -1297,5 +1316,16 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
       }
 
       return false;
+   }
+   
+   /**
+    * Check if selection contains a rule
+    * 
+    * @param e rule to check
+    * @return true if contains
+    */
+   public boolean selectionContainsRule(RuleEditor e)
+   {
+      return selection.contains(e);
    }
 }

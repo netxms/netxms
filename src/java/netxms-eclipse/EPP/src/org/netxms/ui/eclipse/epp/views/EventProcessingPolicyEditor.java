@@ -949,10 +949,14 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
     */
    public void setSelection(RuleEditor e)
    {
-      if (!e.isDragged())
-         clearSelection();      
-      
+      clearSelection();      
       addToSelection(e, false);
+   }
+   
+   public void onDragDetect(RuleEditor e)
+   {
+      if (!selection.contains(e))
+         setSelection(e);
    }
 
    /**
@@ -975,6 +979,20 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
       selection.add(e);
       e.setSelected(true);
       lastSelectedRule = e.getRuleNumber();
+      
+      onSelectionChange();
+   }
+   
+   /**
+    * Remove rule from selection
+    * 
+    * @param e rule editor
+    */
+   public void removeFromSelection(RuleEditor e)
+   {
+      selection.remove(e);
+      e.setSelected(false);
+      lastSelectedRule = -1;
       
       onSelectionChange();
    }

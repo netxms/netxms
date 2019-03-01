@@ -144,27 +144,27 @@ public class RuleEditor extends Composite
          @Override
          public void mouseDown(MouseEvent e)
          {
-            if (dragDetect(e)) {
-               setDragged(true);
-            }
-            
-            if (e.button == 3 && !selected)
+            if (e.button == 1)
+            {
+               if (dragDetect(e)) 
+               {
+                  setDragged(true);
+                  RuleEditor.this.editor.onDragDetect(RuleEditor.this);
+               }
+               else
+               {
+                  processRuleMouseEvent(e);
+               }
+            }            
+            else if (e.button == 3 && !selected)
+            {
                RuleEditor.this.editor.setSelection(RuleEditor.this);
+            }
          }
 
          @Override
          public void mouseUp(MouseEvent e)
          {
-            switch(e.button)
-            {
-               case 1:
-                  processRuleMouseEvent(e);
-                  break;
-               default:
-                  if (!selected)
-                     RuleEditor.this.editor.setSelection(RuleEditor.this);
-                  break;
-            }
          }
       };
 
@@ -1075,12 +1075,15 @@ public class RuleEditor extends Composite
     */
    private void processRuleMouseEvent(MouseEvent e)
    {
-      boolean ctrlPressed = (e.stateMask & SWT.CTRL) != 0;
+      boolean ctrlPressed = (e.stateMask & SWT.MOD1) != 0;
       boolean shiftPressed = (e.stateMask & SWT.SHIFT) != 0;
 
       if (ctrlPressed)
       {
-         editor.addToSelection(this, false);
+         if (selected)
+            editor.removeFromSelection(this);
+         else
+            editor.addToSelection(this, false);
       }
       else if (shiftPressed)
       {
