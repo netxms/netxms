@@ -25,6 +25,18 @@
 #define DEBUG_TAG _T("alarm")
 
 /**
+ * Column list for loading alarms from database
+ */
+#define ALARM_LOAD_COLUMN_LIST \
+   _T("alarm_id,source_object_id,zone_uin,") \
+   _T("source_event_code,source_event_id,message,") \
+   _T("original_severity,current_severity,") \
+   _T("alarm_key,creation_time,last_change_time,") \
+   _T("hd_state,hd_ref,ack_by,repeat_count,") \
+   _T("alarm_state,timeout,timeout_event,resolved_by,") \
+   _T("ack_timeout,dci_id,alarm_category_ids")
+
+/**
  * Global instance of alarm manager
  */
 static ObjectArray<Alarm> s_alarmList(256, 256, true);
@@ -1845,8 +1857,9 @@ int F_FindAlarmByKeyRegex(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL
  */
 Alarm NXCORE_EXPORTABLE *FindAlarmById(UINT32 alarmId)
 {
-   if(alarmId == 0)
+   if (alarmId == 0)
       return NULL;
+
    Alarm *alarm = NULL;
    s_alarmListLock.lock();
    for(int i = 0; i < s_alarmList.size(); i++)
@@ -1858,6 +1871,35 @@ Alarm NXCORE_EXPORTABLE *FindAlarmById(UINT32 alarmId)
       }
    }
    s_alarmListLock.unlock();
+   return alarm;
+}
+
+/**
+ * Load alarm from database
+ */
+Alarm NXCORE_EXPORTABLE *LoadAlarmFromDatabase(UINT32 alarmId)
+{
+   if (alarmId == 0)
+      return NULL;
+
+   Alarm *alarm = NULL;
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT ") ALARM_LOAD_COLUMN_LIST _T(" FROM alarms WHERE alarm_id=?"));
+   if (hStmt != NULL)
+   {
+      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, alarmId);
+      DB_RESULT hResult = DBSelectPrepared(hStmt);
+      if (hResult != NULL)
+      {
+         if (DBGetNumRows(hResult) > 0)
+         {
+            alarm = new Alarm(hdb, hResult, 0);
+         }
+         DBFreeResult(hResult);
+      }
+      DBFreeStatement(hStmt);
+   }
+   DBConnectionPoolReleaseConnection(hdb);
    return alarm;
 }
 
@@ -1880,14 +1922,7 @@ bool InitAlarmManager()
 
    // Load active alarms into memory
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   DB_RESULT hResult = DBSelect(hdb,
-            _T("SELECT alarm_id,source_object_id,zone_uin,")
-            _T("source_event_code,source_event_id,message,")
-            _T("original_severity,current_severity,")
-            _T("alarm_key,creation_time,last_change_time,")
-            _T("hd_state,hd_ref,ack_by,repeat_count,")
-            _T("alarm_state,timeout,timeout_event,resolved_by,")
-            _T("ack_timeout,dci_id,alarm_category_ids FROM alarms WHERE alarm_state<>3"));
+   DB_RESULT hResult = DBSelect(hdb, _T("SELECT ") ALARM_LOAD_COLUMN_LIST _T(" FROM alarms WHERE alarm_state<>3"));
    if (hResult == NULL)
       return false;
 
