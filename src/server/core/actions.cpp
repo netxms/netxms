@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -828,6 +828,8 @@ bool ImportAction(ConfigEntry *config)
 void ExecuteScheduledAction(const ScheduledTaskParameters *parameter)
 {
    UINT32 actionId = ExtractNamedOptionValueAsUInt(parameter->m_persistentData, _T("action"), 0);
+   Event *restoredEvent = NULL;
+   Alarm *restoredAlarm = NULL;
    const Event *event;
    const Alarm *alarm;
    if (parameter->m_transientData != NULL)
@@ -838,14 +840,36 @@ void ExecuteScheduledAction(const ScheduledTaskParameters *parameter)
    else
    {
       UINT64 eventId = ExtractNamedOptionValueAsUInt64(parameter->m_persistentData, _T("event"), 0);
+      if (eventId != 0)
+      {
+         restoredEvent = LoadEventFromDatabase(eventId);
+      }
+
       UINT32 alarmId = ExtractNamedOptionValueAsUInt(parameter->m_persistentData, _T("alarm"), 0);
-      /* TODO: implement restoring event and alarm from database */
-      event = NULL;
-      alarm = NULL;
+      if (alarmId != 0)
+      {
+         restoredAlarm = FindAlarmById(alarmId);
+         if (restoredAlarm == NULL)
+            restoredAlarm = LoadAlarmFromDatabase(alarmId);
+      }
+
+      event = restoredEvent;
+      alarm = restoredAlarm;
    }
-   nxlog_debug_tag(DEBUG_TAG, 4, _T("Executing scheduled action [%u] for event %s on node [%u]"),
-            actionId, (event != NULL) ? event->getName() : _T("(null)"), parameter->m_objectId);
-   ExecuteAction(actionId, event, alarm);
+
+   if (event != NULL)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Executing scheduled action [%u] for event %s on node [%u]"),
+               actionId, (event != NULL) ? event->getName() : _T("(null)"), parameter->m_objectId);
+      ExecuteAction(actionId, event, alarm);
+   }
+   else
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Cannot execute scheduled action [%u] on node [%u]: original event is unavailable"),
+               actionId, parameter->m_objectId);
+   }
+   delete restoredEvent;
+   delete restoredAlarm;
 }
 
 /**

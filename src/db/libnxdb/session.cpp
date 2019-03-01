@@ -1868,6 +1868,31 @@ String LIBNXDB_EXPORTABLE DBPrepareStringA(DB_DRIVER drv, const char *str, int m
 #endif
 
 /**
+ * Prepare string for using in SQL statement (UTF8 string version)
+ */
+String LIBNXDB_EXPORTABLE DBPrepareStringUTF8(DB_HANDLE conn, const char *str, int maxSize)
+{
+   return DBPrepareStringUTF8(conn->m_driver, str, maxSize);
+}
+
+/**
+ * Prepare string for using in SQL statement (UTF8 string version)
+ */
+String LIBNXDB_EXPORTABLE DBPrepareStringUTF8(DB_DRIVER drv, const char *str, int maxSize)
+{
+#ifdef UNICODE
+   WCHAR *wcs = WideStringFromUTF8String(str);
+   String s = DBPrepareString(drv, wcs, maxSize);
+   MemFree(wcs);
+#else
+   char *mbcs = MBStringFromUTF8String(str);
+   String s = DBPrepareString(drv, mbcs, maxSize);
+   MemFree(mbcs);
+#endif
+   return s;
+}
+
+/**
  * Check if given table exist
  */
 int LIBNXDB_EXPORTABLE DBIsTableExist(DB_HANDLE conn, const TCHAR *table)

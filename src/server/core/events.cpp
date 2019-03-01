@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -445,6 +445,59 @@ Event::Event(const Event *src)
 }
 
 /**
+ * Create event object from serialized form
+ */
+Event *Event::createFromJson(json_t *json)
+{
+   Event *event = new Event();
+
+   json_int_t id, rootId, timestamp;
+   const char *name = NULL, *message = NULL;
+   json_t *tag = NULL;
+   if (json_unpack(json, "{s:I, s:I, s:i, s:s, s:I, s:i, s:i, s:i, s:i, s:o, s:s}",
+            "id", &id, "rootId", &rootId, "code", &event->m_code, "name", &name, "timestamp", &timestamp,
+            "source", &event->m_sourceId, "zone", &event->m_zoneUIN, "dci", &event->m_dciId,
+            "severity", &event->m_severity, "tag", &tag, "message", &message) == -1)
+   {
+      delete event;
+      return NULL;   // Unpack failure
+   }
+
+   event->m_id = id;
+   event->m_rootId = rootId;
+   event->m_timeStamp = timestamp;
+   if (name != NULL)
+      MultiByteToWideChar(CP_UTF8, 0, name, -1, event->m_name, MAX_EVENT_NAME);
+   event->m_messageText = WideStringFromUTF8String(message);
+   if ((tag != NULL) && json_is_string(tag))
+      event->m_userTag = WideStringFromUTF8String(json_string_value(tag));
+
+   json_t *parameters = json_object_get(json, "parameters");
+   if (parameters != NULL)
+   {
+      char *value;
+      size_t count = json_array_size(parameters);
+      for(size_t i = 0; i < count; i++)
+      {
+         json_t *p = json_array_get(parameters, i);
+         name = value = NULL;
+         if (json_unpack(p, "{s:s, s:s}", "name", &name, "value", &value) != -1)
+         {
+            event->m_parameters.add(WideStringFromUTF8String(CHECK_NULL_EX_A(value)));
+            event->m_parameterNames.addPreallocated(WideStringFromUTF8String(CHECK_NULL_EX_A(name)));
+         }
+         else
+         {
+            event->m_parameters.add(MemCopyString(_T("")));
+            event->m_parameterNames.add(_T(""));
+         }
+      }
+   }
+
+   return event;
+}
+
+/**
  * Construct event from template
  */
 Event::Event(const EventTemplate *eventTemplate, UINT32 sourceId, UINT32 dciId, const TCHAR *userTag, const char *szFormat, const TCHAR **names, va_list args)
@@ -709,10 +762,12 @@ json_t *Event::toJson()
 {
    json_t *root = json_object();
    json_object_set_new(root, "id", json_integer(m_id));
+   json_object_set_new(root, "rootId", json_integer(m_rootId));
    json_object_set_new(root, "code", json_integer(m_code));
    json_object_set_new(root, "name", json_string_t(m_name));
    json_object_set_new(root, "timestamp", json_integer(m_timeStamp));
    json_object_set_new(root, "source", json_integer(m_sourceId));
+   json_object_set_new(root, "zone", json_integer(m_zoneUIN));
    json_object_set_new(root, "dci", json_integer(m_dciId));
    json_object_set_new(root, "severity", json_integer(m_severity));
    json_object_set_new(root, "tag", json_string_t(m_userTag));
@@ -729,6 +784,51 @@ json_t *Event::toJson()
    json_object_set_new(root, "parameters", parameters);
 
    return root;
+}
+
+/**
+ * Load event from database
+ */
+Event *LoadEventFromDatabase(UINT64 eventId)
+{
+   if (eventId == 0)
+      return NULL;
+
+   Event *event = NULL;
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT raw_data FROM event_log WHERE event_id=?"));
+   if (hStmt != NULL)
+   {
+      DBBind(hStmt, 1, DB_SQLTYPE_BIGINT, eventId);
+      DB_RESULT hResult = DBSelectPrepared(hStmt);
+      if (hResult != NULL)
+      {
+         if (DBGetNumRows(hResult) > 0)
+         {
+            char *data = DBGetFieldUTF8(hResult, 0, 0, NULL, 0);
+            if (data != NULL)
+            {
+               // Event data serialized with JSON_EMBED, so add { } for decoding
+               char *pdata = MemAllocArray<char>(strlen(data) + 3);
+               pdata[0] = '{';
+               strcpy(&pdata[1], data);
+               strcat(pdata, "}");
+               json_t *json = json_loads(pdata, 0, NULL);
+               if (json != NULL)
+               {
+                  event = Event::createFromJson(json);
+                  json_decref(json);
+               }
+               MemFree(pdata);
+               MemFree(data);
+            }
+         }
+         DBFreeResult(hResult);
+      }
+      DBFreeStatement(hStmt);
+   }
+   DBConnectionPoolReleaseConnection(hdb);
+   return event;
 }
 
 /**

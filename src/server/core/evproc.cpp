@@ -114,15 +114,34 @@ static THREAD_RESULT THREAD_CALL EventLogger(void *arg)
 		int syntaxId = DBGetSyntax(hdb);
 		if (syntaxId == DB_SYNTAX_SQLITE)
 		{ 
-			TCHAR szQuery[4096];
-			_sntprintf(szQuery, 4096, _T("INSERT INTO event_log (event_id,event_code,event_timestamp,event_source,zone_uin,")
-											  _T("dci_id,event_severity,event_message,root_event_id,user_tag) VALUES (") UINT64_FMT
-											  _T(",%d,%d,%d,%d,%d,%d,%s,") UINT64_FMT _T(",%s)"), pEvent->getId(), pEvent->getCode(),
-											  (UINT32)pEvent->getTimeStamp(), pEvent->getSourceId(), pEvent->getZoneUIN(),
-											  pEvent->getDciId(), pEvent->getSeverity(),
-											  (const TCHAR *)DBPrepareString(hdb, pEvent->getMessage(), MAX_EVENT_MSG_LENGTH),
-											  pEvent->getRootId(), (const TCHAR *)DBPrepareString(hdb, pEvent->getUserTag(), 63));
-			DBQuery(hdb, szQuery);
+			String query = _T("INSERT INTO event_log (event_id,event_code,event_timestamp,event_source,zone_uin,")
+			               _T("dci_id,event_severity,event_message,root_event_id,user_tag) VALUES (");
+			query.append(pEvent->getId());
+         query.append(_T(','));
+			query.append(pEvent->getCode());
+         query.append(_T(','));
+         query.append((UINT32)pEvent->getTimeStamp());
+         query.append(_T(','));
+         query.append(pEvent->getSourceId());
+         query.append(_T(','));
+         query.append(pEvent->getZoneUIN());
+         query.append(_T(','));
+         query.append(pEvent->getDciId());
+         query.append(_T(','));
+         query.append(pEvent->getSeverity());
+         query.append(_T(','));
+         query.append(DBPrepareString(hdb, pEvent->getMessage(), MAX_EVENT_MSG_LENGTH));
+         query.append(_T(','));
+         query.append(pEvent->getRootId());
+         query.append(_T(','));
+         query.append(DBPrepareString(hdb, pEvent->getUserTag(), 63));
+         query.append(_T(','));
+         char *json = json_dumps(pEvent->toJson(), JSON_INDENT(3) | JSON_EMBED);
+         query.append(DBPrepareStringUTF8(hdb, json));
+         MemFree(json);
+         query.append(_T(')'));
+
+			DBQuery(hdb, query);
 			nxlog_debug_tag(DEBUG_TAG, 8, _T("EventLogger: DBQuery: id=%d,code=%d"), (int)pEvent->getId(), (int)pEvent->getCode());
 			delete pEvent;
 		}

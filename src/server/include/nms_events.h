@@ -147,7 +147,6 @@ public:
    Event();
    Event(const Event *src);
    Event(const EventTemplate *eventTemplate, UINT32 sourceId, UINT32 dciId, const TCHAR *userTag, const char *format, const TCHAR **names, va_list args);
-   Event(json_t *json);
    ~Event();
 
    UINT64 getId() const { return m_id; }
@@ -194,6 +193,7 @@ public:
    void setCustomMessage(const TCHAR *message) { MemFree(m_customMessage); m_customMessage = MemCopyString(message); }
 
    json_t *toJson();
+   static Event *createFromJson(json_t *json);
 };
 
 /**
@@ -337,8 +337,10 @@ UINT32 UpdateEventObject(NXCPMessage *request, NXCPMessage *response, json_t **o
 UINT32 DeleteEventObject(UINT32 eventCode);
 void GetEventConfiguration(NXCPMessage *msg);
 void DeleteEventObjectFromList(UINT32 eventCode);
-void CorrelateEvent(Event *pEvent);
 void CreateNXMPEventRecord(String &str, UINT32 eventCode);
+
+void CorrelateEvent(Event *pEvent);
+Event *LoadEventFromDatabase(UINT64 eventId);
 
 bool EventNameFromCode(UINT32 eventCode, TCHAR *buffer);
 UINT32 NXCORE_EXPORTABLE EventCodeFromName(const TCHAR *name, UINT32 defaultValue = 0);

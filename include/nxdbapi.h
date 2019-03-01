@@ -218,6 +218,8 @@ String LIBNXDB_EXPORTABLE DBPrepareStringA(DB_DRIVER drv, const char *str, int m
 #else
 #define DBPrepareStringA DBPrepareString
 #endif
+String LIBNXDB_EXPORTABLE DBPrepareStringUTF8(DB_HANDLE conn, const char *str, int maxSize = -1);
+String LIBNXDB_EXPORTABLE DBPrepareStringUTF8(DB_DRIVER drv, const char *str, int maxSize = -1);
 TCHAR LIBNXDB_EXPORTABLE *EncodeSQLString(const TCHAR *pszIn);
 void LIBNXDB_EXPORTABLE DecodeSQLString(TCHAR *pszStr);
 
