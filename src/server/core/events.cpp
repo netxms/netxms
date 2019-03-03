@@ -144,10 +144,26 @@ Event *Event::createFromJson(json_t *json)
    event->m_rootId = rootId;
    event->m_timeStamp = timestamp;
    if (name != NULL)
+   {
+#ifdef UNICODE
       MultiByteToWideChar(CP_UTF8, 0, name, -1, event->m_name, MAX_EVENT_NAME);
+#else
+      utf8_to_mb(name, -1, event->m_name, MAX_EVENT_NAME);
+#endif
+   }
+#ifdef UNICODE
    event->m_messageText = WideStringFromUTF8String(message);
+#else
+   event->m_messageText = MBStringFromUTF8String(message);
+#endif
    if ((tag != NULL) && json_is_string(tag))
+   {
+#ifdef UNICODE
       event->m_userTag = WideStringFromUTF8String(json_string_value(tag));
+#else
+      event->m_userTag = MBStringFromUTF8String(json_string_value(tag));
+#endif
+   }
 
    json_t *parameters = json_object_get(json, "parameters");
    if (parameters != NULL)
@@ -160,8 +176,13 @@ Event *Event::createFromJson(json_t *json)
          name = value = NULL;
          if (json_unpack(p, "{s:s, s:s}", "name", &name, "value", &value) != -1)
          {
+#ifdef UNICODE
             event->m_parameters.add(WideStringFromUTF8String(CHECK_NULL_EX_A(value)));
             event->m_parameterNames.addPreallocated(WideStringFromUTF8String(CHECK_NULL_EX_A(name)));
+#else
+            event->m_parameters.add(MBStringFromUTF8String(CHECK_NULL_EX_A(value)));
+            event->m_parameterNames.addPreallocated(MBStringFromUTF8String(CHECK_NULL_EX_A(name)));
+#endif
          }
          else
          {
