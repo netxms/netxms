@@ -474,7 +474,11 @@ Event *Event::createFromJson(json_t *json)
       utf8_to_mb(name, -1, event->m_name, MAX_EVENT_NAME);
 #endif
    }
+#ifdef UNICODE
    event->m_messageText = WideStringFromUTF8String(message);
+#else
+   event->m_messageText = MBStringFromUTF8String(message);
+#endif
    if ((tag != NULL) && json_is_string(tag))
    {
 #ifdef UNICODE
