@@ -95,7 +95,7 @@ public class AlarmViewer extends PropertyPage
 		}
 		
 		checkEnableLocalSound  = new Button(dialogArea, SWT.CHECK);
-		checkEnableLocalSound.setText("Enable local sound");
+		checkEnableLocalSound.setText("Play alarm sounds when active");
 		checkEnableLocalSound.setSelection(config.getIsLocalSoundEnabled());
 
 		return dialogArea;
