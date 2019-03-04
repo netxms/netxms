@@ -59,6 +59,7 @@ NetObj::NetObj()
    m_comments = NULL;
    m_modified = 0;
    m_isDeleted = false;
+   m_isDeleteInitiated = false;
    m_isHidden = false;
 	m_isSystem = false;
 	m_maintenanceEventId = 0;
@@ -101,7 +102,7 @@ NetObj::~NetObj()
    delete m_parentList;
    delete m_accessList;
 	delete m_trustedNodes;
-   free(m_comments);
+   MemFree(m_comments);
    delete m_moduleData;
    delete m_postalAddress;
    delete m_dashboards;
@@ -709,11 +710,18 @@ void NetObj::onObjectDeleteCallback(NetObj *object, void *data)
  */
 void NetObj::deleteObject(NetObj *initiator)
 {
-   DbgPrintf(4, _T("Deleting object %d [%s]"), m_id, m_name);
+   nxlog_debug(4, _T("Deleting object %d [%s]"), m_id, m_name);
 
 	// Prevent object change propagation until it's marked as deleted
-	// (to prevent the object's incorrect appearance in GUI
+	// (to prevent the object's incorrect appearance in GUI)
 	lockProperties();
+	if (m_isDeleteInitiated)
+	{
+	   nxlog_debug(4, _T("Attempt to call NetObj::deleteObject() multiple times for object %d [%s]"), m_id, m_name);
+	   unlockProperties();
+	   return;
+	}
+	m_isDeleteInitiated = true;
    m_isHidden = true;
 	unlockProperties();
 

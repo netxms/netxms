@@ -2647,7 +2647,7 @@ void Node::configurationPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo 
          {
             nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 3, _T("Removing node %s [%u] as duplicate"), duplicateNode->getName(), duplicateNode->getId());
             reconcileWithDuplicateNode(duplicateNode);
-            duplicateNode->deleteObject();
+            ThreadPoolExecute(g_pollerThreadPool, duplicateNode, &NetObj::deleteObject, static_cast<NetObj*>(NULL));
             duplicateNode->decRefCount();
          }
       }
@@ -2843,12 +2843,15 @@ DuplicateCheckResult Node::checkForDuplicates(Node **duplicate)
 bool Node::isDuplicateOf(Node *node)
 {
    // Check if primary IP is on one of other node's interfaces
-   Interface *iface = node->findInterfaceByIP(m_ipAddress);
-   if (iface != NULL)
+   if (!(m_flags & NF_REMOTE_AGENT))
    {
-      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 3, _T("Primary IP address %s of node %s [%u] found on interface %s of node %s [%u]"),
-               (const TCHAR *)m_ipAddress.toString(), m_name, m_id, iface->getName(), node->getName(), node->getId());
-      return true;
+      Interface *iface = node->findInterfaceByIP(m_ipAddress);
+      if (iface != NULL)
+      {
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 3, _T("Primary IP address %s of node %s [%u] found on interface %s of node %s [%u]"),
+                  (const TCHAR *)m_ipAddress.toString(), m_name, m_id, iface->getName(), node->getName(), node->getId());
+         return true;
+      }
    }
 
    // Check for exact match of interface list
