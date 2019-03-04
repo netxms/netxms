@@ -25,11 +25,13 @@
 - TimescaleDB supported as backend database
 - Added option to show SELECT output in nxdbmgr batch
 - New attribute "parameterNames" in NXSL class "Event"
-- Added option to play alarm notifiacation sound only for atcive dashboard
+- New attribute "instanceData" in NXSL class "DCI"
+- Added option to play alarm notifiacation sound only for active dashboard
 - Required object access is "read" for all forced polls except full configuration poll which requires "modify" access
 - Fixed issues:
+	NX-887 (Additional variables in threshold script)
 	NX-1388 (Event correlation route should start at proxy)
-   NX-1536 (No output from forced status poll without "modify" object access right)
+	NX-1536 (No output from forced status poll without "modify" object access right)
 	NX-1552 (NXSL function to check for EPP timer existence)
 	NX-1558 (Add ability to change node's comment from script)
 	NX-1561 (Unexpected SYS_SNMP_DOWN events after SNMP proxy node restart)
