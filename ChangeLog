@@ -8,6 +8,7 @@
 - Added option to play alarm notifiacation sound only for atcive dashboard
 - Fixed issues:
 	NX-1388 (Event correlation route should start at proxy)
+   NX-1536 (Poll viewer does not show access right error. Read access right required for most polls, modify access right required for full conf poll)
 	NX-1552 (NXSL function to check for EPP timer existence)
 	NX-1558 (Add ability to change node's comment from script)
 	NX-1561 (Unexpected SYS_SNMP_DOWN events after SNMP proxy node restart)

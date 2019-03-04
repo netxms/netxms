@@ -6352,6 +6352,7 @@ void ClientSession::sendAllActions(UINT32 dwRqId)
 void ClientSession::forcedNodePoll(NXCPMessage *pRequest)
 {
    NXCPMessage msg;
+   NXCPMessage msgResponse;
 
    POLLER_START_DATA *pData = MemAllocStruct<POLLER_START_DATA>();
    pData->pSession = this;
@@ -6361,6 +6362,8 @@ void ClientSession::forcedNodePoll(NXCPMessage *pRequest)
    pData->dwRqId = pRequest->getId();
    msg.setCode(CMD_POLLING_INFO);
    msg.setId(pData->dwRqId);
+   msgResponse.setCode(CMD_REQUEST_COMPLETED);
+   msgResponse.setId(pData->dwRqId);
 
    // Get polling type
    pData->iPollType = pRequest->getFieldAsUInt16(VID_POLL_TYPE);
@@ -6379,7 +6382,8 @@ void ClientSession::forcedNodePoll(NXCPMessage *pRequest)
 			  (pData->iPollType == POLL_INTERFACE_NAMES)))
       {
          // Check access rights
-         if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
+         if (((pData->iPollType == POLL_CONFIGURATION_FULL) && object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY)) ||
+               ((pData->iPollType != POLL_CONFIGURATION_FULL) && object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ)))
          {
             ((Node *)object)->incRefCount();
             InterlockedIncrement(&m_refCount);
@@ -6388,25 +6392,27 @@ void ClientSession::forcedNodePoll(NXCPMessage *pRequest)
             ThreadPoolExecute(g_clientThreadPool, pollerThreadStarter, pData);
             msg.setField(VID_RCC, RCC_OPERATION_IN_PROGRESS);
             msg.setField(VID_POLLER_MESSAGE, _T("Poll request accepted\r\n"));
+            sendMessage(&msg);
 				pData = NULL;
+				msgResponse.setField(VID_RCC, RCC_SUCCESS);
          }
          else
          {
-            msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+            msgResponse.setField(VID_RCC, RCC_ACCESS_DENIED);
          }
       }
       else
       {
-         msg.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+         msgResponse.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
       }
    }
    else
    {
-      msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+      msgResponse.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
 
    // Send response
-   sendMessage(&msg);
+   sendMessage(&msgResponse);
    MutexUnlock(m_mutexPollerInit);
 	MemFree(pData);
 }
