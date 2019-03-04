@@ -49,6 +49,7 @@ public class AlarmNotifier
    private NXCSession session;
    private IPreferenceStore ps;
    private URL workspaceUrl;
+   private boolean isGlobal;
 
    /**
     * Get cache instance
@@ -97,7 +98,8 @@ public class AlarmNotifier
          {
             if ((n.getCode() == SessionNotification.NEW_ALARM) || (n.getCode() == SessionNotification.ALARM_CHANGED))
             {
-               processNewAlarm((Alarm)n.getObject());
+               if(isGlobalSoundEnabled())
+                  processNewAlarm((Alarm)n.getObject());
             }
          }
       };
@@ -128,7 +130,7 @@ public class AlarmNotifier
          @Override
          public void run()
          {
-            result[0] = ps.getString("ALARM_NOTIFIER.MELODY." + severity);//$NON-NLS-1$
+            result[0] = ps.getString(severity);//$NON-NLS-1$
          }
       });
       return result[0];
@@ -222,7 +224,7 @@ public class AlarmNotifier
    /**
     * Process new alarm
     */
-   private void processNewAlarm(final Alarm alarm)
+   public void processNewAlarm(final Alarm alarm)
    {
       if (alarm.getState() != Alarm.STATE_OUTSTANDING)
          return;
@@ -237,23 +239,41 @@ public class AlarmNotifier
          Activator.logError("Invalid alarm severity", e); //$NON-NLS-1$
          fileName = null;
       }
-
-      if ((fileName != null) && !fileName.isEmpty())
+      final String fName = fileName;
+      
+      if ((fName != null) && !fName.isEmpty())
       {
-         JavaScriptExecutor executor = RWT.getClient().getService(JavaScriptExecutor.class);
-         File localFile = new File(workspaceUrl.getPath(), fileName);
-         String id = "audio-" + fileName;
-         DownloadServiceHandler.addDownload(id, fileName, localFile, "audio/wav"); //$NON-NLS-1$
-         StringBuilder js = new StringBuilder();
-         js.append("var testAudio = document.createElement('audio');");
-         js.append("if (testAudio.canPlayType !== undefined)");
-         js.append("{");
-         js.append("var audio = new Audio('");//$NON-NLS-1$
-         js.append(DownloadServiceHandler.createDownloadUrl(id));
-         js.append("');");//$NON-NLS-1$
-         js.append("audio.play();");//$NON-NLS-1$  
-         js.append("}");
-         executor.execute(js.toString());
+    	 display.asyncExec(new Runnable() {
+			
+			@Override
+			public void run() {
+		         JavaScriptExecutor executor = RWT.getClient().getService(JavaScriptExecutor.class);
+		         File localFile = new File(workspaceUrl.getPath(), fName);
+		         String id = "audio-" + fName;
+		         DownloadServiceHandler.addDownload(id, fName, localFile, "audio/wav"); //$NON-NLS-1$
+		         StringBuilder js = new StringBuilder();
+		         js.append("var testAudio = document.createElement('audio');");
+		         js.append("if (testAudio.canPlayType !== undefined)");
+		         js.append("{");
+		         js.append("var audio = new Audio('");//$NON-NLS-1$
+		         js.append(DownloadServiceHandler.createDownloadUrl(id));
+		         js.append("');");//$NON-NLS-1$
+		         js.append("audio.play();");//$NON-NLS-1$  
+		         js.append("}");
+		         executor.execute(js.toString());				
+			}
+		});
       }
+   }
+
+   public boolean isGlobalSoundEnabled() 
+   {
+	  display.syncExec(new Runnable() {
+	     @Override
+         public void run() {
+	    	 isGlobal = !ps.getBoolean("ALARM_NOTIFIER.SOUND.LOCAL");		
+	     }
+      });
+	  return isGlobal;
    }
 }

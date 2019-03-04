@@ -72,6 +72,7 @@ import org.netxms.client.events.BulkAlarmStateChangeData;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.actions.ExportToCsvAction;
 import org.netxms.ui.eclipse.alarmviewer.Activator;
+import org.netxms.ui.eclipse.alarmviewer.AlarmNotifier;
 import org.netxms.ui.eclipse.alarmviewer.Messages;
 import org.netxms.ui.eclipse.alarmviewer.dialogs.AcknowledgeCustomTimeDialog;
 import org.netxms.ui.eclipse.alarmviewer.dialogs.AlarmStateChangeFailureDialog;
@@ -124,6 +125,7 @@ public class AlarmList extends CompositeWithMessageBar
 	private AlarmListFilter alarmFilter;
    private FilterText filterText;
 	private Map<Long, Alarm> alarmList = new HashMap<Long, Alarm>();
+   private List<Alarm> newAlarmList = new ArrayList<Alarm>();
    private List<Alarm> filteredAlarmList = new ArrayList<Alarm>();
    private VisibilityValidator visibilityValidator;
    private boolean needInitialRefresh = false;
@@ -144,6 +146,8 @@ public class AlarmList extends CompositeWithMessageBar
    private Action timeAcknowledgeOther;
    private Action actionShowColor;
    private boolean initShowfilter;
+   private AlarmNotifier notifier;
+   private boolean isLocalNotificationsEnabled = false;
 
    /**
     * Create alarm list widget
@@ -159,6 +163,7 @@ public class AlarmList extends CompositeWithMessageBar
 		session = ConsoleSharedData.getSession();
 		this.viewPart = viewPart;
 		this.visibilityValidator = visibilityValidator;
+      notifier = AlarmNotifier.getInstance();
 
       getContent().setLayout(new FormLayout());
 		
@@ -260,6 +265,10 @@ public class AlarmList extends CompositeWithMessageBar
 				switch(n.getCode())
 				{
 					case SessionNotification.NEW_ALARM:
+					   synchronized(alarmList)
+                  {
+					      newAlarmList.add((Alarm)n.getObject());// Add to this list only new alms to be able to notify with sound
+                  }
 					case SessionNotification.ALARM_CHANGED:
 						synchronized(alarmList)
 						{
@@ -813,7 +822,17 @@ public class AlarmList extends CompositeWithMessageBar
                else
                {
                   hideMessage();
+               }               
+
+               if(!notifier.isGlobalSoundEnabled() && viewPart.getSite().getPage().isPartVisible(viewPart) && isLocalNotificationsEnabled)
+               {
+                  for(Alarm a : newAlarmList)
+                  {
+                     if(filteredAlarmList.contains(a))
+                     	notifier.processNewAlarm(a);            
+                  }
                }
+               newAlarmList.clear();
             }
          }
       });
@@ -1208,5 +1227,10 @@ public class AlarmList extends CompositeWithMessageBar
    public boolean isFilterEnabled()
    {
       return initShowfilter;
+   }
+
+   public void setIsLocalSoundEnabled(boolean isLocalSoundEnabled)
+   {
+      this.isLocalNotificationsEnabled = isLocalSoundEnabled;
    }
 }

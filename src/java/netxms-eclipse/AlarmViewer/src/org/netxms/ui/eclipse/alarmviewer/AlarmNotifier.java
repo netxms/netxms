@@ -236,6 +236,7 @@ public class AlarmNotifier
          getSoundAndDownloadIfRequired(s);
       }
    }
+   
 
    /**
     * @param severity
@@ -331,6 +332,23 @@ public class AlarmNotifier
       if ((session != null) && (listener != null))
          session.removeListener(listener);
    }
+   
+   public static boolean isGlobalSoundEnabled()
+   {
+      return !ps.getBoolean("ALARM_NOTIFIER.SOUND.LOCAL");
+   }
+   
+   public static void playSounOnAlarm(final Alarm alarm)
+   {
+      try
+      {
+         soundQueue.offer(SEVERITY_TEXT[alarm.getCurrentSeverity().getValue()]);
+      } 
+      catch(ArrayIndexOutOfBoundsException e)
+      {
+         Activator.logError("Invalid alarm severity", e); //$NON-NLS-1$
+      }      
+   }
 
    /**
     * Process new alarm
@@ -350,13 +368,9 @@ public class AlarmNotifier
       if (alarm.getState() != Alarm.STATE_OUTSTANDING)
          return;
 
-      try
+      if(!ps.getBoolean("ALARM_NOTIFIER.SOUND.LOCAL"))
       {
-         soundQueue.offer(SEVERITY_TEXT[alarm.getCurrentSeverity().getValue()]);
-      }
-      catch(ArrayIndexOutOfBoundsException e)
-      {
-         Activator.logError("Invalid alarm severity", e); //$NON-NLS-1$
+         playSounOnAlarm(alarm);
       }
 
       if (outstandingAlarms == 0)

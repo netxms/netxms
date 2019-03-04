@@ -64,6 +64,7 @@ public class AlarmViewerElement extends ElementWidget
       viewer = new AlarmList(viewPart, this, SWT.NONE, "Dashboard.AlarmList", null); //$NON-NLS-1$
 		viewer.setRootObject(config.getObjectId());
 		viewer.setSeverityFilter(config.getSeverityFilter());
+      viewer.setIsLocalSoundEnabled(config.getIsLocalSoundEnabled());
 		viewer.getViewer().getControl().addFocusListener(new FocusListener() {
          @Override
          public void focusLost(FocusEvent e)

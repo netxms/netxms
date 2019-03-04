@@ -40,6 +40,9 @@ public class AlarmViewerConfig extends DashboardElementConfig
 	
 	@Element(required=false)
 	private int severityFilter = 0xFF;
+   
+   @Element(required=false)
+   private boolean isLocalSoundEnabled = false;
 
 	/**
 	 * Create line chart settings object from XML document
@@ -136,4 +139,14 @@ public class AlarmViewerConfig extends DashboardElementConfig
 	{
 		this.severityFilter = severityFilter;
 	}
+
+   public boolean getIsLocalSoundEnabled()
+   {
+      return isLocalSoundEnabled;
+   }
+
+   public void setIsLocalSoundEnabled(boolean isLocalSoundEnabled)
+   {
+      this.isLocalSoundEnabled = isLocalSoundEnabled;
+   }
 }

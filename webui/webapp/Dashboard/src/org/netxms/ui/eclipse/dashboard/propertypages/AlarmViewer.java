@@ -42,6 +42,7 @@ public class AlarmViewer extends PropertyPage
 	private ObjectSelector objectSelector;
 	private LabeledText title;
 	private Button[] checkSeverity;
+   private Button checkEnableLocalSound;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -92,6 +93,10 @@ public class AlarmViewer extends PropertyPage
 			checkSeverity[severity].setText(StatusDisplayInfo.getStatusText(severity));
 			checkSeverity[severity].setSelection((config.getSeverityFilter() & (1 << severity)) != 0);
 		}
+		
+		checkEnableLocalSound  = new Button(dialogArea, SWT.CHECK);
+		checkEnableLocalSound.setText("Enable local sound");
+		checkEnableLocalSound.setSelection(config.getIsLocalSoundEnabled());
 
 		return dialogArea;
 	}
@@ -110,6 +115,7 @@ public class AlarmViewer extends PropertyPage
 			if (checkSeverity[i].getSelection())
 				severityFilter |= (1 << i);
 		config.setSeverityFilter(severityFilter);
+		config.setIsLocalSoundEnabled(checkEnableLocalSound.getSelection());
 		
 		return true;
 	}

@@ -42,28 +42,29 @@ public class AlarmViewerElement extends ElementWidget
 	 * @param element Dashboard element
 	 * @param viewPart viewPart
 	 */
-   public AlarmViewerElement(DashboardControl parent, DashboardElement element, IViewPart viewPart)
-   {
-      super(parent, element, viewPart);
+	public AlarmViewerElement(DashboardControl parent, DashboardElement element, IViewPart viewPart)
+	{
+		super(parent, element, viewPart);
 
-      try
-      {
-         config = AlarmViewerConfig.createFromXml(element.getData());
-      }
-      catch(Exception e)
-      {
-         e.printStackTrace();
-         config = new AlarmViewerConfig();
-      }
-
-      FillLayout layout = new FillLayout();
-      layout.marginHeight = 0;
-      layout.marginWidth = 0;
-      setLayout(layout);
+		try
+		{
+			config = AlarmViewerConfig.createFromXml(element.getData());
+		}
+		catch(Exception e)
+		{
+			e.printStackTrace();
+			config = new AlarmViewerConfig();
+		}
+		
+		FillLayout layout = new FillLayout();
+		layout.marginHeight = 0;
+		layout.marginWidth = 0;
+		setLayout(layout);
 
       viewer = new AlarmList(viewPart, this, SWT.NONE, "Dashboard.AlarmList", null); //$NON-NLS-1$
-      viewer.setRootObject(config.getObjectId());
-      viewer.setSeverityFilter(config.getSeverityFilter());
+		viewer.setRootObject(config.getObjectId());
+		viewer.setSeverityFilter(config.getSeverityFilter());
+      viewer.setIsLocalSoundEnabled(config.getIsLocalSoundEnabled());
 		viewer.getViewer().getControl().addFocusListener(new FocusListener() {
          @Override
          public void focusLost(FocusEvent e)
@@ -76,5 +77,5 @@ public class AlarmViewerElement extends ElementWidget
             setSelectionProviderDelegate(viewer.getSelectionProvider());
          }
       });
-   }
+	}
 }
