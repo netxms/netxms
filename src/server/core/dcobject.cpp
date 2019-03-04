@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -1453,7 +1453,8 @@ DCObjectInfo::DCObjectInfo(DCObject *object)
    _tcslcpy(m_description, object->getDescription(), MAX_DB_STRING);
    _tcslcpy(m_systemTag, object->getSystemTag(), MAX_DB_STRING);
    _tcslcpy(m_instance, object->getInstance(), MAX_DB_STRING);
-   m_comments = _tcsdup_ex(object->getComments());
+   m_instanceData = MemCopyString(object->getInstanceDiscoveryData());
+   m_comments = MemCopyString(object->getComments());
    m_dataType = (m_type == DCO_TYPE_ITEM) ? ((DCItem *)object)->getDataType() : -1;
    m_origin = object->getDataSource();
    m_status = object->getStatus();
@@ -1475,6 +1476,7 @@ DCObjectInfo::DCObjectInfo(const NXCPMessage *msg, DCObject *object)
    msg->getFieldAsString(VID_DESCRIPTION, m_description, MAX_DB_STRING);
    msg->getFieldAsString(VID_SYSTEM_TAG, m_systemTag, MAX_DB_STRING);
    msg->getFieldAsString(VID_INSTANCE, m_instance, MAX_DB_STRING);
+   m_instanceData = msg->getFieldAsString(VID_INSTD_DATA);
    m_comments = msg->getFieldAsString(VID_COMMENTS);
    m_dataType = (m_type == DCO_TYPE_ITEM) ? msg->getFieldAsInt16(VID_DCI_DATA_TYPE) : -1;
    m_origin = msg->getFieldAsInt16(VID_DCI_SOURCE_TYPE);
@@ -1488,5 +1490,6 @@ DCObjectInfo::DCObjectInfo(const NXCPMessage *msg, DCObject *object)
  */
 DCObjectInfo::~DCObjectInfo()
 {
-   free(m_comments);
+   MemFree(m_instanceData);
+   MemFree(m_comments);
 }

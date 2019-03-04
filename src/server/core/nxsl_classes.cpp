@@ -1515,10 +1515,8 @@ void NXSL_DciClass::onObjectDelete(NXSL_Object *object)
  */
 NXSL_Value *NXSL_DciClass::getAttr(NXSL_Object *object, const TCHAR *attr)
 {
-   DCObjectInfo *dci;
+   DCObjectInfo *dci = static_cast<DCObjectInfo*>(object->getData());
    NXSL_Value *value = NULL;
-
-   dci = (DCObjectInfo *)object->getData();
    if (!_tcscmp(attr, _T("comments")))
    {
 		value = new NXSL_Value(dci->getComments());
@@ -1539,9 +1537,13 @@ NXSL_Value *NXSL_DciClass::getAttr(NXSL_Object *object, const TCHAR *attr)
    {
 		value = new NXSL_Value(dci->getId());
    }
-   else if ((dci->getType() == DCO_TYPE_ITEM) && !_tcscmp(attr, _T("instance")))
+   else if (!_tcscmp(attr, _T("instance")))
    {
 		value = new NXSL_Value(dci->getInstance());
+   }
+   else if (!_tcscmp(attr, _T("instanceData")))
+   {
+		value = new NXSL_Value(dci->getInstanceData());
    }
    else if (!_tcscmp(attr, _T("lastPollTime")))
    {

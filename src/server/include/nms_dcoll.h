@@ -703,6 +703,7 @@ private:
    TCHAR m_description[MAX_DB_STRING];
    TCHAR m_systemTag[MAX_DB_STRING];
    TCHAR m_instance[MAX_DB_STRING];
+   TCHAR *m_instanceData;
    TCHAR *m_comments;
    int m_dataType;
    int m_origin;
@@ -723,6 +724,7 @@ public:
    const TCHAR *getDescription() const { return m_description; }
    const TCHAR *getSystemTag() const { return m_systemTag; }
    const TCHAR *getInstance() const { return m_instance; }
+   const TCHAR *getInstanceData() const { return m_instanceData; }
    const TCHAR *getComments() const { return m_comments; }
    int getDataType() const { return m_dataType; }
    int getOrigin() const { return m_origin; }
