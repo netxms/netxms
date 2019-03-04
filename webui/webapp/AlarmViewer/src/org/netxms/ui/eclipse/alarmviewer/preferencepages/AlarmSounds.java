@@ -46,6 +46,7 @@ import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Group;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 import org.eclipse.ui.progress.UIJob;
@@ -69,6 +70,7 @@ public class AlarmSounds extends PreferencePage implements IWorkbenchPreferenceP
    private NXCSession session;
    private ServerFile[] serverFiles = null;
    private Button isGeneralSound;
+   private Button isLocalSound;
    private IPreferenceStore ps;
    private URL workspaceUrl;
    private Set<String> soundList = new HashSet<String>();
@@ -107,12 +109,27 @@ public class AlarmSounds extends PreferencePage implements IWorkbenchPreferenceP
       layout.numColumns = 2;
       dialogArea.setLayout(layout);
       
-      isGeneralSound = new Button(dialogArea, SWT.CHECK);
+      Group typeGroup = new Group(dialogArea, SWT.NONE);
+      layout = new GridLayout();
+      layout.verticalSpacing = WidgetHelper.DIALOG_SPACING;
+      layout.horizontalSpacing = WidgetHelper.DIALOG_SPACING;
+      layout.numColumns = 2;
+      typeGroup.setLayout(layout);
       GridData gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
       gd.horizontalSpan = 2;
-      isGeneralSound.setText("Global configuration");
-      isGeneralSound.setLayoutData(gd);
+      typeGroup.setLayoutData(gd);
+      
+      isGeneralSound = new Button(typeGroup, SWT.RADIO);
+      isGeneralSound.setText("Play sound on all alarms");
+      isGeneralSound.setLayoutData(new GridData());
       isGeneralSound.setSelection(!ps.getBoolean("ALARM_NOTIFIER.SOUND.LOCAL"));
+      
+      isLocalSound = new Button(typeGroup, SWT.RADIO);
+      isLocalSound.setText("Play sound as defined by active dashboard");
+      isLocalSound.setLayoutData(new GridData());
+      isLocalSound.setSelection(ps.getBoolean("ALARM_NOTIFIER.SOUND.LOCAL"));
 
       Combo newCombo = null;
       Button button = null;
@@ -352,8 +369,6 @@ public class AlarmSounds extends PreferencePage implements IWorkbenchPreferenceP
             ps.setValue("ALARM_NOTIFIER.MELODY." + severity, soundName); //$NON-NLS-1$
             currentSoundList.set(id, soundName);
             oldSoundList.add(oldSoundName);
-            System.out.println("ALARM_NOTIFIER.MELODY." + severity);
-            System.out.println(soundName);
          }
          catch(final Exception e)
          {

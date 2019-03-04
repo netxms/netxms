@@ -5,6 +5,7 @@
 - TimescaleDB supported as backend database
 - Added option to show SELECT output in nxdbmgr batch
 - New attribute "parameterNames" in NXSL class "Event"
+- Added option to play alarm notifiacation sound only for atcive dashboard
 - Fixed issues:
 	NX-1388 (Event correlation route should start at proxy)
 	NX-1552 (NXSL function to check for EPP timer existence)
