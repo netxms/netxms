@@ -671,6 +671,7 @@ protected:
    UINT32 m_stateBeforeMaintenance;
    UINT32 m_modified;
    bool m_isDeleted;
+   bool m_isDeleteInitiated;
    bool m_isHidden;
 	bool m_isSystem;
 	UINT64 m_maintenanceEventId;
