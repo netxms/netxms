@@ -342,7 +342,7 @@ public class NodePollerView extends ViewPart
             }
             else
             {
-               addPollerMessage(String.format("\u007FePOLL ERROR: %s", errorMessage)); //$NON-NLS-1$
+               addPollerMessage(String.format("\u007FePOLL ERROR: %s\r\n", errorMessage)); //$NON-NLS-1$
                addPollerMessage("\u007Fl**** Poll failed ****\r\n\r\n"); //$NON-NLS-1$
             }
             pollActive = false;

@@ -8531,8 +8531,16 @@ public class NXCSession
       };
       handler.setMessageWaitTimeout(600000); // 10 min timeout
       addMessageSubscription(NXCPCodes.CMD_POLLING_INFO, msg.getMessageId(), handler);
-      
+
       sendMessage(msg);
+      try
+      {
+         waitForRCC(msg.getMessageId());
+      }
+      catch (Exception e) {
+         removeMessageSubscription(NXCPCodes.CMD_POLLING_INFO, msg.getMessageId());
+         throw e;
+      }
       synchronized(handler)
       {
          try
