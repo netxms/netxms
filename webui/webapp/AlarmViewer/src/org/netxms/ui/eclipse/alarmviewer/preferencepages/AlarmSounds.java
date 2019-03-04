@@ -68,6 +68,7 @@ public class AlarmSounds extends PreferencePage implements IWorkbenchPreferenceP
 {
    private NXCSession session;
    private ServerFile[] serverFiles = null;
+   private Button isGeneralSound;
    private IPreferenceStore ps;
    private URL workspaceUrl;
    private Set<String> soundList = new HashSet<String>();
@@ -105,6 +106,13 @@ public class AlarmSounds extends PreferencePage implements IWorkbenchPreferenceP
       layout.horizontalSpacing = WidgetHelper.DIALOG_SPACING;
       layout.numColumns = 2;
       dialogArea.setLayout(layout);
+      
+      isGeneralSound = new Button(dialogArea, SWT.CHECK);
+      GridData gd = new GridData();
+      gd.horizontalSpan = 2;
+      isGeneralSound.setText("Global configuration");
+      isGeneralSound.setLayoutData(gd);
+      isGeneralSound.setSelection(!ps.getBoolean("ALARM_NOTIFIER.SOUND.LOCAL"));
 
       Combo newCombo = null;
       Button button = null;
@@ -299,10 +307,12 @@ public class AlarmSounds extends PreferencePage implements IWorkbenchPreferenceP
       {
          newSoundList.add(comboList.get(i).getText());
       }
+      final boolean newSelection = isGeneralSound.getSelection();
       new UIJob(Messages.get().AlarmMelody_SaveClientSelection) {
          @Override
          public IStatus runInUIThread(IProgressMonitor monitor)
          {
+            ps.setValue("ALARM_NOTIFIER.SOUND.LOCAL", !newSelection); //$NON-NLS-1$
             for(int i = 0; i < newSoundList.size(); i++)
             {
                changeSound(newSoundList.get(i), AlarmNotifier.SEVERITY_TEXT[i], i);
@@ -342,6 +352,8 @@ public class AlarmSounds extends PreferencePage implements IWorkbenchPreferenceP
             ps.setValue("ALARM_NOTIFIER.MELODY." + severity, soundName); //$NON-NLS-1$
             currentSoundList.set(id, soundName);
             oldSoundList.add(oldSoundName);
+            System.out.println("ALARM_NOTIFIER.MELODY." + severity);
+            System.out.println(soundName);
          }
          catch(final Exception e)
          {
