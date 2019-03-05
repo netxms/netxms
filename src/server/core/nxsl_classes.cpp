@@ -1577,7 +1577,7 @@ NXSL_Value *NXSL_DciClass::getAttr(NXSL_Object *object, const char *attr)
    {
 		value = vm->createValue(dci->getId());
    }
-   else if (!_strcmp(attr, "instance"))
+   else if (!strcmp(attr, "instance"))
    {
 		value = vm->createValue(dci->getInstance());
    }
