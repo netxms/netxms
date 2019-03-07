@@ -83,6 +83,8 @@ bool EnumerateModuleSchemas(bool (*handler)(const TCHAR *, void *), void *userDa
 bool UpgradeModuleSchemas();
 bool CheckModuleSchemas();
 
+bool IsColumnFixNeeded(const TCHAR *table, const char *name);
+
 /**
  * Global variables
  */

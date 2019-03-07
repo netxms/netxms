@@ -31,7 +31,7 @@ extern const TCHAR *g_tables[];
 /**
  * Well-known integer fields to be fixed during import
  */
-FIX_FIELD g_fixFields[] =
+static FIX_FIELD s_fixFields[] =
 {
    { _T("dct_threshold_instances"), "tt_row_number" },
    { _T("network_maps"), "bg_zoom" },
@@ -40,9 +40,24 @@ FIX_FIELD g_fixFields[] =
    { _T("nodes"), "port_numbering_scheme" },
    { _T("object_properties"), "state_before_maint" },
    { _T("snmp_communities"), "zone" },
+   { _T("thresholds"), "state_before_maint" },
    { _T("usm_credentials"), "zone" },
    { NULL, NULL },
 };
+
+/**
+ * Check if fix is needed for column
+ */
+bool IsColumnFixNeeded(const TCHAR *table, const char *name)
+{
+   for(int n = 0; s_fixFields[n].table != NULL; n++)
+   {
+      if (!_tcsicmp(s_fixFields[n].table, table) &&
+          !stricmp(s_fixFields[n].column, name))
+         return true;
+   }
+   return false;
+}
 
 /**
  * Callback for import table
@@ -66,17 +81,7 @@ static int ImportTableCB(void *arg, int cols, char **data, char **names)
 		{
 			if (*data[i] == 0)
 			{
-            bool fix = false;
-				for(int n = 0; g_fixFields[n].table != NULL; n++)
-				{
-					if (!_tcsicmp(g_fixFields[n].table, static_cast<TCHAR*>(arg)) &&
-                   !stricmp(g_fixFields[n].column, names[i]))
-               {
-                  fix = true;
-                  break;
-               }
-				}
-            query.append(fix ? _T("0,") : _T("'',"));
+            query.append(IsColumnFixNeeded(static_cast<TCHAR*>(arg), names[i]) ? _T("0,") : _T("'',"));
 			}
 			else
 			{
@@ -90,16 +95,16 @@ static int ImportTableCB(void *arg, int cols, char **data, char **names)
 				query.append(prepData);
 				query.append(_T(","));
 			}
-		}
-		else
-		{
-			query.append(_T("NULL,"));
-		}
-	}
-	query.shrink();
-	query += _T(")");
+      }
+      else
+      {
+         query.append(IsColumnFixNeeded(static_cast<TCHAR*>(arg), names[i]) ? _T("0,") : _T("NULL,"));
+      }
+   }
+   query.shrink();
+   query += _T(")");
 
-	return SQLQuery(query) ? 0 : 1;
+   return SQLQuery(query) ? 0 : 1;
 }
 
 /**
