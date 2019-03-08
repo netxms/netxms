@@ -259,6 +259,8 @@ protected:
 	INDEX_HEAD* volatile m_secondary;
 	MUTEX m_writerLock;
 	bool m_owner;
+   bool m_startupMode;
+   bool m_dirty;
    void (*m_objectDestructor)(void *);
 
    void destroyObject(void *object)
@@ -296,6 +298,8 @@ public:
    {
       m_owner = owner;
    }
+
+   void setStartupMode(bool startupMode);
 };
 
 /**
@@ -658,6 +662,7 @@ protected:
    TCHAR m_name[MAX_OBJECT_NAME];
    TCHAR *m_comments;      // User comments
    int m_status;
+   int m_savedStatus;      // Object status in database
    int m_statusCalcAlg;      // Status calculation algorithm
    int m_statusPropAlg;      // Status propagation algorithm
    int m_fixedStatus;        // Status if propagation is "Fixed"

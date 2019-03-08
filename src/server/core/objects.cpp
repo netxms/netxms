@@ -40,6 +40,7 @@ UINT32 NXCORE_EXPORTABLE g_dwMgmtNode = 0;
 Queue g_templateUpdateQueue;
 
 ObjectIndex g_idxObjectById;
+ObjectIndex g_idxSubnetById;
 InetAddressIndex g_idxSubnetByAddr;
 InetAddressIndex g_idxInterfaceByAddr;
 ObjectIndex g_idxZoneByUIN;
@@ -371,6 +372,7 @@ void NetObjInsert(NetObj *pObject, bool newObject, bool importedObject)
             g_idxChassisById.put(pObject->getId(), pObject);
             break;
          case OBJECT_SUBNET:
+            g_idxSubnetById.put(pObject->getId(), pObject);
             if (((Subnet *)pObject)->getIpAddress().isValidUnicast())
             {
 					if (IsZoningEnabled())
@@ -533,6 +535,7 @@ void NetObjDeleteFromIndexes(NetObj *pObject)
          g_idxChassisById.remove(pObject->getId());
          break;
       case OBJECT_SUBNET:
+         g_idxSubnetById.remove(pObject->getId());
          if (((Subnet *)pObject)->getIpAddress().isValidUnicast())
          {
 				if (IsZoningEnabled())
@@ -1001,7 +1004,30 @@ Subnet NXCORE_EXPORTABLE *FindSubnetForNode(UINT32 zoneUIN, const InetAddress& n
  */
 NetObj NXCORE_EXPORTABLE *FindObjectById(UINT32 dwId, int objClass)
 {
-	NetObj *object = g_idxObjectById.get(dwId);
+   ObjectIndex *index;
+   switch(objClass)
+   {
+      case OBJECT_ACCESSPOINT:
+         index = &g_idxAccessPointById;
+         break;
+      case OBJECT_CLUSTER:
+         index = &g_idxClusterById;
+         break;
+      case OBJECT_MOBILEDEVICE:
+         index = &g_idxMobileDeviceById;
+         break;
+      case OBJECT_NODE:
+         index = &g_idxNodeById;
+         break;
+      case OBJECT_SUBNET:
+         index = &g_idxSubnetById;
+         break;
+      default:
+         index = &g_idxObjectById;
+         break;
+   }
+
+   NetObj *object = index->get(dwId);
 	if ((object == NULL) || (objClass == -1))
 		return object;
 	return (objClass == object->getObjectClass()) ? object : NULL;
@@ -1038,6 +1064,9 @@ NetObj NXCORE_EXPORTABLE *FindObject(bool (* comparator)(NetObj *, void *), void
          break;
       case OBJECT_ZONE:
          index = &g_idxZoneByUIN;
+         break;
+      case OBJECT_SUBNET:
+         index = &g_idxSubnetById;
          break;
       default:
          index = &g_idxObjectById;
@@ -1323,6 +1352,19 @@ BOOL LoadObjects()
 	g_pDashboardRoot->loadFromDatabase(hdb);
 	g_pBusinessServiceRoot->loadFromDatabase(hdb);
 
+	// Switch indexes to startup mode
+	g_idxObjectById.setStartupMode(true);
+   g_idxSubnetById.setStartupMode(true);
+	g_idxZoneByUIN.setStartupMode(true);
+	g_idxNodeById.setStartupMode(true);
+	g_idxClusterById.setStartupMode(true);
+	g_idxMobileDeviceById.setStartupMode(true);
+	g_idxAccessPointById.setStartupMode(true);
+	g_idxConditionById.setStartupMode(true);
+	g_idxServiceCheckById.setStartupMode(true);
+	g_idxNetMapById.setStartupMode(true);
+	g_idxChassisById.setStartupMode(true);
+
    // Load zones
    if (g_flags & AF_ENABLE_ZONING)
    {
@@ -1360,6 +1402,7 @@ BOOL LoadObjects()
          DBFreeResult(hResult);
       }
    }
+   g_idxZoneByUIN.setStartupMode(false);
 
    // Load conditions
    // We should load conditions before nodes because
@@ -1385,6 +1428,7 @@ BOOL LoadObjects()
       }
       DBFreeResult(hResult);
    }
+   g_idxConditionById.setStartupMode(false);
 
    // Load subnets
    DbgPrintf(2, _T("Loading subnets..."));
@@ -1421,6 +1465,7 @@ BOOL LoadObjects()
       }
       DBFreeResult(hResult);
    }
+   g_idxSubnetById.setStartupMode(false);
 
    // Load racks
    DbgPrintf(2, _T("Loading racks..."));
@@ -1467,6 +1512,7 @@ BOOL LoadObjects()
       }
       DBFreeResult(hResult);
    }
+   g_idxChassisById.setStartupMode(false);
 
    // Load mobile devices
    DbgPrintf(2, _T("Loading mobile devices..."));
@@ -1490,6 +1536,7 @@ BOOL LoadObjects()
       }
       DBFreeResult(hResult);
    }
+   g_idxMobileDeviceById.setStartupMode(false);
 
    // Load nodes
    DbgPrintf(2, _T("Loading nodes..."));
@@ -1513,6 +1560,7 @@ BOOL LoadObjects()
       }
       DBFreeResult(hResult);
    }
+   g_idxNodeById.setStartupMode(false);
 
    // Load access points
    DbgPrintf(2, _T("Loading access points..."));
@@ -1536,6 +1584,7 @@ BOOL LoadObjects()
       }
       DBFreeResult(hResult);
    }
+   g_idxAccessPointById.setStartupMode(false);
 
    // Load interfaces
    DbgPrintf(2, _T("Loading interfaces..."));
@@ -1628,6 +1677,7 @@ BOOL LoadObjects()
       }
       DBFreeResult(hResult);
    }
+   g_idxClusterById.setStartupMode(false);
 
    // Start cache loading thread.
    // All data collection targets must be loaded at this point.
@@ -1717,6 +1767,7 @@ BOOL LoadObjects()
       }
       DBFreeResult(hResult);
    }
+   g_idxNetMapById.setStartupMode(false);
 
    // Load container objects
    DbgPrintf(2, _T("Loading containers..."));
@@ -1938,6 +1989,9 @@ BOOL LoadObjects()
    }
 
    DBConnectionPoolReleaseConnection(mainDB);
+
+   g_idxObjectById.setStartupMode(false);
+   g_idxServiceCheckById.setStartupMode(false);
 
 	// Load custom object classes provided by modules
    CALL_ALL_MODULES(pfLoadObjects, ());

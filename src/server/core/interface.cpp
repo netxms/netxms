@@ -251,14 +251,10 @@ bool Interface::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
       // Link interface to node
       if (!m_isDeleted)
       {
-         NetObj *object = FindObjectById(nodeId);
+         NetObj *object = FindObjectById(nodeId, OBJECT_NODE);
          if (object == NULL)
          {
             nxlog_write(MSG_INVALID_NODE_ID, EVENTLOG_ERROR_TYPE, "dd", dwId, nodeId);
-         }
-         else if (object->getObjectClass() != OBJECT_NODE)
-         {
-            nxlog_write(MSG_NODE_NOT_NODE, EVENTLOG_ERROR_TYPE, "dd", dwId, nodeId);
          }
          else
          {

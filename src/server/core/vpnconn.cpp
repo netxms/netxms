@@ -95,7 +95,7 @@ bool VPNConnector::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
       // Link VPN connector to node
       if (!m_isDeleted)
       {
-         NetObj *pObject = FindObjectById(dwNodeId);
+         NetObj *pObject = FindObjectById(dwNodeId, OBJECT_NODE);
          if (pObject == NULL)
          {
             nxlog_write(MSG_INVALID_NODE_ID_EX, NXLOG_ERROR, "dds", dwId, dwNodeId, _T("VPN connector"));
@@ -315,15 +315,8 @@ bool VPNConnector::isRemoteAddr(const InetAddress& addr)
  */
 InetAddress VPNConnector::getPeerGatewayAddr()
 {
-   NetObj *pObject;
-
-   pObject = FindObjectById(m_dwPeerGateway);
-   if (pObject != NULL)
-   {
-      if (pObject->getObjectClass() == OBJECT_NODE)
-         return ((Node *)pObject)->getIpAddress();
-   }
-   return InetAddress();
+   NetObj *node = FindObjectById(m_dwPeerGateway, OBJECT_NODE);
+   return (node != NULL) ? static_cast<Node*>(node)->getIpAddress() : InetAddress();
 }
 
 /**
