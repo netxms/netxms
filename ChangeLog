@@ -10,6 +10,7 @@
 - Required object access is "read" for all forced polls except full configuration poll which requires "modify" access
 - Improved server startup and shutdown time
 - Fixed issues:
+	NX-241 ("nxdbmgr batch" should support stdin)
 	NX-887 (Additional variables in threshold script)
 	NX-1388 (Event correlation route should start at proxy)
 	NX-1536 (No output from forced status poll without "modify" object access right)

@@ -106,10 +106,13 @@ static BYTE *FindEndOfQuery(BYTE *pStart, BYTE *pBatchEnd)
 bool ExecSQLBatch(const char *batchFile, bool showOutput)
 {
    UINT32 dwSize;
-   BYTE *batch = LoadFileA(batchFile, &dwSize);
+   BYTE *batch = LoadFileA(strcmp(batchFile, "-") ? batchFile : NULL, &dwSize);
    if (batch == NULL)
    {
-      _tprintf(_T("ERROR: Cannot load SQL command file %hs\n"), batchFile);
+      if (strcmp(batchFile, "-"))
+         _tprintf(_T("ERROR: Cannot load SQL command file %hs\n"), batchFile);
+      else
+         _tprintf(_T("ERROR: Cannot load SQL command file standard input\n"));
       return false;
    }
 
