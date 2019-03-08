@@ -105,14 +105,10 @@ bool AccessPoint::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 	bool success = false;
    if (!m_isDeleted)
    {
-      NetObj *object = FindObjectById(m_nodeId);
+      NetObj *object = FindObjectById(m_nodeId, OBJECT_NODE);
       if (object == NULL)
       {
          nxlog_write(MSG_INVALID_NODE_ID, EVENTLOG_ERROR_TYPE, "dd", dwId, m_nodeId);
-      }
-      else if (object->getObjectClass() != OBJECT_NODE)
-      {
-         nxlog_write(MSG_NODE_NOT_NODE, EVENTLOG_ERROR_TYPE, "dd", dwId, m_nodeId);
       }
       else
       {

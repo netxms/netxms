@@ -102,7 +102,7 @@ Node::Node() : super()
    m_arpCache = NULL;
    m_failTimeSNMP = 0;
    m_failTimeAgent = 0;
-   m_lastAgentCommTime = 0;
+   m_lastAgentCommTime = NEVER;
    m_lastAgentConnectAttempt = 0;
    m_linkLayerNeighbors = NULL;
    m_vrrpInfo = NULL;
@@ -218,7 +218,7 @@ Node::Node(const NewNodeData *newNodeData, UINT32 flags)  : super()
    m_arpCache = NULL;
    m_failTimeSNMP = 0;
    m_failTimeAgent = 0;
-   m_lastAgentCommTime = 0;
+   m_lastAgentCommTime = NEVER;
    m_lastAgentConnectAttempt = 0;
    m_linkLayerNeighbors = NULL;
    m_vrrpInfo = NULL;
@@ -486,16 +486,14 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    for(i = 0; i < iNumRows; i++)
    {
       dwSubnetId = DBGetFieldULong(hResult, i, 0);
-      pObject = FindObjectById(dwSubnetId);
+      pObject = FindObjectById(dwSubnetId, OBJECT_SUBNET);
       if (pObject == NULL)
       {
          nxlog_write(MSG_INVALID_SUBNET_ID, EVENTLOG_ERROR_TYPE, "dd", dwId, dwSubnetId);
-         break;
       }
       else if (pObject->getObjectClass() != OBJECT_SUBNET)
       {
          nxlog_write(MSG_SUBNET_NOT_SUBNET, EVENTLOG_ERROR_TYPE, "dd", dwId, dwSubnetId);
-         break;
       }
       else
       {
@@ -783,6 +781,9 @@ bool Node::saveRuntimeData(DB_HANDLE hdb)
 {
    if (!super::saveRuntimeData(hdb))
       return false;
+
+   if ((m_lastAgentCommTime == NEVER) && (m_syslogMessageCount == 0) && (m_snmpTrapCount == 0))
+      return true;
 
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("UPDATE nodes SET last_agent_comm_time=?,syslog_msg_count=?,snmp_trap_count=? WHERE id=?"));
    if (hStmt == NULL)
@@ -1755,12 +1756,7 @@ restart_agent_check:
    {
       UINT32 id = m_pollerNode;
       unlockProperties();
-      pPollerNode = FindObjectById(id);
-      if (pPollerNode != NULL)
-      {
-         if (pPollerNode->getObjectClass() != OBJECT_NODE)
-            pPollerNode = NULL;
-      }
+      pPollerNode = FindObjectById(id, OBJECT_NODE);
    }
    else
    {
@@ -1770,7 +1766,7 @@ restart_agent_check:
    // If nothing found, use management server
    if (pPollerNode == NULL)
    {
-      pPollerNode = FindObjectById(g_dwMgmtNode);
+      pPollerNode = FindObjectById(g_dwMgmtNode, OBJECT_NODE);
       if (pPollerNode != NULL)
          pPollerNode->incRefCount();
    }
@@ -2228,7 +2224,7 @@ bool Node::checkNetworkPathLayer2(UINT32 requestId, bool secondPass)
  */
 bool Node::checkNetworkPathLayer3(UINT32 requestId, bool secondPass)
 {
-   Node *mgmtNode = (Node *)FindObjectById(g_dwMgmtNode);
+   Node *mgmtNode = (Node *)FindObjectById(g_dwMgmtNode, OBJECT_NODE);
    if (mgmtNode == NULL)
    {
       DbgPrintf(5, _T("Node::checkNetworkPath(%s [%d]): cannot find management node"), m_name, m_id);

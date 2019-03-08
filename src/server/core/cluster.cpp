@@ -101,19 +101,11 @@ bool Cluster::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 			for(i = 0; i < nRows; i++)
 			{
 				dwNodeId = DBGetFieldULong(hResult, i, 0);
-				pObject = FindObjectById(dwNodeId);
+				pObject = FindObjectById(dwNodeId, OBJECT_NODE);
 				if (pObject != NULL)
 				{
-					if (pObject->getObjectClass() == OBJECT_NODE)
-					{
-                  addChild(pObject);
-                  pObject->addParent(this);
-					}
-					else
-					{
-                  nxlog_write(MSG_CLUSTER_MEMBER_NOT_NODE, EVENTLOG_ERROR_TYPE, "dd", m_id, dwNodeId);
-						break;
-					}
+               addChild(pObject);
+               pObject->addParent(this);
 				}
 				else
 				{

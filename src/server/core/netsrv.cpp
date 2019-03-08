@@ -173,14 +173,10 @@ bool NetworkService::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
       if (!m_isDeleted)
       {
          // Find host node
-         pObject = FindObjectById(dwHostNodeId);
+         pObject = FindObjectById(dwHostNodeId, OBJECT_NODE);
          if (pObject == NULL)
          {
             nxlog_write(MSG_INVALID_NODE_ID_EX, EVENTLOG_ERROR_TYPE, "dds", dwId, dwHostNodeId, _T("network service"));
-         }
-         else if (pObject->getObjectClass() != OBJECT_NODE)
-         {
-            nxlog_write(MSG_NODE_NOT_NODE, EVENTLOG_ERROR_TYPE, "dd", dwId, dwHostNodeId);
          }
          else
          {
@@ -193,15 +189,10 @@ bool NetworkService::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
          // Check that polling node ID is valid
          if ((m_pollerNode != 0) && bResult)
          {
-            pObject = FindObjectById(m_pollerNode);
+            pObject = FindObjectById(m_pollerNode, OBJECT_NODE);
             if (pObject == NULL)
             {
                nxlog_write(MSG_INVALID_NODE_ID_EX, EVENTLOG_ERROR_TYPE, "dds", dwId, m_pollerNode, _T("network service"));
-               bResult = false;
-            }
-            else if (pObject->getObjectClass() != OBJECT_NODE)
-            {
-               nxlog_write(MSG_NODE_NOT_NODE, EVENTLOG_ERROR_TYPE, "dd", dwId, m_pollerNode);
                bResult = false;
             }
          }
@@ -277,7 +268,7 @@ UINT32 NetworkService::modifyFromMessageInternal(NXCPMessage *pRequest)
             else
             {
                unlockProperties();
-               return RCC_INVALID_OBJECT_ID;
+               return RCC_INCOMPATIBLE_OPERATION;
             }
          }
          else

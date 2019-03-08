@@ -54,6 +54,7 @@ NetObj::NetObj()
    m_rwlockParentList = RWLockCreate();
    m_rwlockChildList = RWLockCreate();
    m_status = STATUS_UNKNOWN;
+   m_savedStatus = STATUS_UNKNOWN;
    m_name[0] = 0;
    m_comments = NULL;
    m_modified = 0;
@@ -178,14 +179,25 @@ static EnumerationCallbackResult SaveModuleRuntimeDataCallback(const TCHAR *key,
  */
 bool NetObj::saveRuntimeData(DB_HANDLE hdb)
 {
-   DB_STATEMENT hStmt = DBPrepare(hdb, _T("UPDATE object_properties SET status=? WHERE object_id=?"));
-   if (hStmt == NULL)
-      return false;
+   bool success;
+   if (m_status != m_savedStatus)
+   {
+      DB_STATEMENT hStmt = DBPrepare(hdb, _T("UPDATE object_properties SET status=? WHERE object_id=?"));
+      if (hStmt == NULL)
+         return false;
 
-   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_status);
-   DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_id);
-   bool success = DBExecute(hStmt);
-   DBFreeStatement(hStmt);
+      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_status);
+      DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_id);
+      success = DBExecute(hStmt);
+      DBFreeStatement(hStmt);
+
+      if (success)
+         m_savedStatus = m_status;
+   }
+   else
+   {
+      success = true;
+   }
 
    // Save module data
    if (success && (m_moduleData != NULL))
@@ -286,7 +298,7 @@ bool NetObj::loadCommonProperties(DB_HANDLE hdb)
 			if (DBGetNumRows(hResult) > 0)
 			{
 				DBGetField(hResult, 0, 0, m_name, MAX_OBJECT_NAME);
-				m_status = DBGetFieldLong(hResult, 0, 1);
+				m_status = m_savedStatus = DBGetFieldLong(hResult, 0, 1);
 				m_isDeleted = DBGetFieldLong(hResult, 0, 2) ? true : false;
 				m_inheritAccessRights = DBGetFieldLong(hResult, 0, 3) ? true : false;
 				m_timestamp = (time_t)DBGetFieldULong(hResult, 0, 4);
