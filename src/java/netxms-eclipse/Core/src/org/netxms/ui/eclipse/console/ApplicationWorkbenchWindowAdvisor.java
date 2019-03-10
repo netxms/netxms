@@ -22,7 +22,9 @@ import java.lang.reflect.InvocationTargetException;
 import java.security.Signature;
 import java.security.cert.Certificate;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.dialogs.MessageDialog;
@@ -42,6 +44,7 @@ import org.eclipse.ui.application.IActionBarConfigurer;
 import org.eclipse.ui.application.IWorkbenchWindowConfigurer;
 import org.eclipse.ui.application.WorkbenchWindowAdvisor;
 import org.eclipse.ui.part.ViewPart;
+import org.eclipse.ui.progress.UIJob;
 import org.netxms.certificate.loader.KeyStoreRequestListener;
 import org.netxms.certificate.manager.CertificateManager;
 import org.netxms.certificate.manager.CertificateManagerProvider;
@@ -55,6 +58,7 @@ import org.netxms.client.constants.AuthenticationType;
 import org.netxms.client.constants.RCC;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Dashboard;
+import org.netxms.client.objects.NetworkMap;
 import org.netxms.ui.eclipse.console.dialogs.LoginDialog;
 import org.netxms.ui.eclipse.console.dialogs.PasswordExpiredDialog;
 import org.netxms.ui.eclipse.console.dialogs.PasswordRequestDialog;
@@ -62,6 +66,7 @@ import org.netxms.ui.eclipse.console.dialogs.SecurityWarningDialog;
 import org.netxms.ui.eclipse.console.resources.RegionalSettings;
 import org.netxms.ui.eclipse.jobs.LoginJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.Command;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
@@ -168,6 +173,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor im
 	{
 		super.postWindowOpen();
 		
+		boolean exitAfterOpen = false;
       for(String s : Platform.getCommandLineArgs())
       {
          if (s.equals("-fullscreen")) //$NON-NLS-1$
@@ -183,12 +189,92 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor im
          {
             showDashboard(s.substring(11), false);
          }
+         else if (s.startsWith("-exit-after-open")) //$NON-NLS-1$
+         {
+            exitAfterOpen = true;
+         }
          else if (s.startsWith("-fullscreen-dashboard=")) //$NON-NLS-1$
          {
             showDashboard(s.substring(22), true);
          }
+         else if (s.startsWith("-take-map-snapshot=")) //$NON-NLS-1$
+         {
+            takeMapSnapshot(s.substring(19));
+         }
       }
-      showMessageOfTheDay();
+      
+      if (exitAfterOpen)
+      {
+         new UIJob("Exit console") {
+            @Override
+            public IStatus runInUIThread(IProgressMonitor monitor)
+            {
+               PlatformUI.getWorkbench().close();
+               return Status.OK_STATUS;
+            }
+         }.schedule(1000);
+      }
+      else
+      {
+         showMessageOfTheDay();
+      }
+	}
+	
+	/**
+	 * Take snapshot of network map
+	 * 
+	 * @param param
+	 */
+	private void takeMapSnapshot(String param)
+	{
+	   final String[] parts = param.split(",");
+	   if (parts.length != 2)
+	      return;
+	   
+      NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+      
+      long objectId;
+      try
+      {
+         objectId = Long.parseLong(parts[0]);
+      }
+      catch(NumberFormatException e)
+      {
+         AbstractObject object = session.findObjectByName(parts[0], new ObjectFilter() {
+            @Override
+            public boolean filter(AbstractObject object)
+            {
+               return object instanceof NetworkMap;
+            }
+         });
+         if ((object == null) || !(object instanceof NetworkMap))
+         {
+            MessageDialogHelper.openError(null, Messages.get().ApplicationWorkbenchWindowAdvisor_Error, String.format("Cannot open network map %s", parts[0]));
+            return;
+         }
+         objectId = object.getObjectId();
+      }
+      
+      final IWorkbenchPage page = getWindowConfigurer().getWindow().getActivePage();
+      try
+      {
+         final IViewPart view = page.showView("org.netxms.ui.eclipse.networkmaps.views.PredefinedMap", Long.toString(objectId), IWorkbenchPage.VIEW_ACTIVATE); //$NON-NLS-1$
+         page.setPartState(page.getReference(view), IWorkbenchPage.STATE_MAXIMIZED);
+         new UIJob("Save map to file") {
+            @Override
+            public IStatus runInUIThread(IProgressMonitor monitor)
+            {
+               ((Command)view).execute("AbstractNetworkMap/SaveToFile", parts[1]);
+               page.setPartState(page.getReference(view), IWorkbenchPage.STATE_RESTORED);
+               page.hideView(view);
+               return Status.OK_STATUS;
+            }
+         }.schedule(600);
+      }
+      catch(PartInitException e)
+      {
+         MessageDialogHelper.openError(null, Messages.get().ApplicationWorkbenchWindowAdvisor_Error, String.format("Cannot open network map view %s (%s)", parts[0], e.getLocalizedMessage()));
+      }
 	}
 
    /**

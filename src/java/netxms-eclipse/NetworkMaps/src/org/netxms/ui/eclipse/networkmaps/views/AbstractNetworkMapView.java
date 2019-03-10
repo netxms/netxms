@@ -66,9 +66,12 @@ import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.ImageData;
+import org.eclipse.swt.graphics.ImageLoader;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IViewSite;
@@ -116,6 +119,7 @@ import org.netxms.ui.eclipse.networkmaps.views.helpers.MapLabelProvider;
 import org.netxms.ui.eclipse.objectbrowser.api.ObjectContextMenu;
 import org.netxms.ui.eclipse.perfview.views.HistoricalGraphView;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.Command;
 import org.netxms.ui.eclipse.tools.CommandBridge;
 import org.netxms.ui.eclipse.tools.FilteringMenuManager;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
@@ -123,7 +127,7 @@ import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 /**
  * Base class for network map views
  */
-public abstract class AbstractNetworkMapView extends ViewPart implements ISelectionProvider, IZoomableWorkbenchPart
+public abstract class AbstractNetworkMapView extends ViewPart implements ISelectionProvider, IZoomableWorkbenchPart, Command
 {
 	protected static final int LAYOUT_SPRING = 0;
 	protected static final int LAYOUT_RADIAL = 1;
@@ -183,6 +187,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 	protected Action actionSnapToGrid;
 	protected Action actionShowObjectDetails;
 	protected Action actionCopyImage;
+   protected Action actionSaveImage;
    protected Action actionHideLinkLabels;
    protected Action actionHideLinks;
    protected Action actionSelectAllObjects;
@@ -829,6 +834,14 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
          }
 		};
 		
+      actionSaveImage = new Action(Messages.get().AbstractNetworkMapView_SaveToFile) {
+         @Override
+         public void run()
+         {
+            saveMapImageToFile(null);
+         }
+      };
+      
 		actionHideLinkLabels = new Action(Messages.get().AbstractNetworkMapView_HideLinkLabels, Action.AS_CHECK_BOX) {
          @Override
          public void run()
@@ -869,7 +882,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
       };
 	}
 
-	/**
+   /**
 	 * Create "Layout" submenu
 	 * 
 	 * @return
@@ -956,6 +969,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
       manager.add(actionHideLinks);
       manager.add(new Separator());      
       manager.add(actionCopyImage);
+      manager.add(actionSaveImage);
 		manager.add(new Separator());
       manager.add(actionSelectAllObjects);
       manager.add(new Separator());
@@ -1597,5 +1611,52 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
          bendpointEditor = new BendpointEditor(link,
                (GraphConnection)viewer.getGraphControl().getSelection().get(0), viewer);
       }      
+   }
+   
+   /**
+    * Save map image to file
+    */
+   public boolean saveMapImageToFile(String fileName)
+   {
+      if (fileName == null)
+      {
+         FileDialog dlg = new FileDialog(getSite().getShell());
+         dlg.setFilterExtensions(new String[] { ".png" });
+         dlg.setOverwrite(true);
+         fileName = dlg.open();
+         if (fileName == null)
+            return false;
+      }
+      
+      Image image = viewer.takeSnapshot();
+      try
+      {
+         ImageLoader loader = new ImageLoader();
+         loader.data = new ImageData[] { image.getImageData() };
+         loader.save(fileName, SWT.IMAGE_PNG);
+         return true;
+      }
+      catch(Exception e)
+      {
+         Activator.logError("Exception in saveMapImageToFile", e);
+         return false;
+      }
+      finally
+      {
+         image.dispose();
+      }
+   }
+
+   /* (non-Javadoc)
+    * @see org.netxms.ui.eclipse.tools.Command#execute(java.lang.String, java.lang.Object)
+    */
+   @Override
+   public Object execute(String name, Object arg)
+   {
+      if ("AbstractNetworkMap/SaveToFile".equals(name))
+      {
+         return Boolean.valueOf(saveMapImageToFile((String)arg));
+      }
+      return null;
    }
 }
