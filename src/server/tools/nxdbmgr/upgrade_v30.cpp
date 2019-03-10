@@ -24,6 +24,45 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 30.59 to 30.60 (changes also included into 22.46)
+ */
+static bool H_UpgradeFromV59()
+{
+   if (GetSchemaLevelForMajorVersion(22) < 46)
+   {
+      CHK_EXEC(CreateTable(
+         _T("CREATE TABLE idata (")
+         _T("   node_id integer not null,")
+         _T("   item_id integer not null,")
+         _T("   idata_timestamp integer not null,")
+         _T("   idata_value varchar(255) null,")
+         _T("   raw_value varchar(255) null,")
+         _T("PRIMARY KEY(node_id,item_id,idata_timestamp))")));
+
+      CHK_EXEC(CreateTable(
+         _T("CREATE TABLE tdata (")
+         _T("   node_id integer not null,")
+         _T("   item_id integer not null,")
+         _T("   tdata_timestamp integer not null,")
+         _T("   tdata_value $SQL:TEXT null,")
+         _T("PRIMARY KEY(node_id,item_id,tdata_timestamp))")));
+
+      if (g_dbSyntax == DB_SYNTAX_TSDB)
+      {
+         CHK_EXEC(SQLQuery(_T("SELECT create_hypertable('idata', 'idata_timestamp', 'node_id', chunk_time_interval => 604800, number_partitions => 100, migrate_data => true)")));
+         CHK_EXEC(SQLQuery(_T("SELECT create_hypertable('tdata', 'tdata_timestamp', 'node_id', chunk_time_interval => 604800, number_partitions => 100, migrate_data => true)")));
+      }
+
+      CHK_EXEC(SQLQuery(_T("INSERT INTO metadata (var_name,var_value) VALUES ('SingeTablePerfData','0')")));
+
+      CHK_EXEC(SetSchemaLevelForMajorVersion(22, 46));
+   }
+
+   CHK_EXEC(SetMinorSchemaVersion(60));
+   return true;
+}
+
+/**
  * Upgrade from 30.58 to 30.59 (changes also included into 22.45)
  */
 static bool H_UpgradeFromV58()
@@ -2093,6 +2132,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 59, 30, 60, H_UpgradeFromV59 },
    { 58, 30, 59, H_UpgradeFromV58 },
    { 57, 30, 58, H_UpgradeFromV57 },
    { 56, 30, 57, H_UpgradeFromV56 },
