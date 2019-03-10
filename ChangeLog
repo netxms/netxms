@@ -9,6 +9,8 @@
 - Added option to play alarm notifiacation sound only for active dashboard
 - Required object access is "read" for all forced polls except full configuration poll which requires "modify" access
 - Improved server startup and shutdown time
+- Added option to save network map as image file
+- New nxmc command line options -take-map-snapshot and -exit-after-open
 - Fixed issues:
 	NX-241 ("nxdbmgr batch" should support stdin)
 	NX-887 (Additional variables in threshold script)
