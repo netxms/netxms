@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2019 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,6 +21,7 @@ package org.netxms.ui.eclipse.networkmaps.views;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
+
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
@@ -95,7 +96,8 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 	private Action actionAddDCIImage;
 	private Action actionAddTextBox;
 	private Action actionTextBoxProperties;
-	private Action actionGroupBoxEdit;
+	private Action actionGroupBoxProperties;
+   private Action actionImageProperties;
 	private Color defaultLinkColor = null;
 	private boolean readOnly;
 	private Display display;
@@ -336,6 +338,14 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 			}
 		};
 
+      actionGroupBoxProperties = new Action(Messages.get().PredefinedMap_Properties) {
+         @Override
+         public void run()
+         {
+            editGroupBox();
+         }
+      };
+      
 		actionAddImage = new Action(Messages.get().PredefinedMap_Image) {
 			@Override
 			public void run()
@@ -344,6 +354,14 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 			}
 		};
 
+      actionImageProperties = new Action(Messages.get().PredefinedMap_Properties) {
+         @Override
+         public void run()
+         {
+            editImageDecoration();
+         }
+      };
+		
 		actionLinkObjects = new Action(Messages.get().PredefinedMap_LinkObjects, Activator.getImageDescriptor("icons/link_add.png")) { //$NON-NLS-1$
 			@Override
 			public void run()
@@ -406,19 +424,11 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
          }
       };
       
-      actionTextBoxProperties = new Action("Text box properties") {
+      actionTextBoxProperties = new Action(Messages.get().PredefinedMap_Properties) {
          @Override
          public void run()
          {
             showTextBoxProperties();
-         }
-      };
-      
-      actionGroupBoxEdit = new Action("Group box properties") {
-         @Override
-         public void run()
-         {
-            editGroupBox();
          }
       };
 	}
@@ -519,14 +529,22 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 	   {
    		manager.add(actionRemove);
    		Object o = ((IStructuredSelection)viewer.getSelection()).getFirstElement();
-   		if(o instanceof NetworkMapDCIContainer)
+   		if (o instanceof NetworkMapDCIContainer)
+   		{
    		   manager.add(actionDCIContainerProperties);
-   		if(o instanceof NetworkMapDCIImage)
+   		}
+   		else if (o instanceof NetworkMapDCIImage)
+   		{
             manager.add(actionDCIImageProperties);
-         if(o instanceof NetworkMapTextBox)
+   		}
+   		else if (o instanceof NetworkMapTextBox)
+   		{
             manager.add(actionTextBoxProperties);
-         if(o instanceof NetworkMapDecoration)
-            manager.add(actionGroupBoxEdit);
+   		}
+   		else if (o instanceof NetworkMapDecoration)
+   		{
+            manager.add((((NetworkMapDecoration)o).getDecorationType() == NetworkMapDecoration.IMAGE) ? actionImageProperties : actionGroupBoxProperties);
+   		}
    		manager.add(new Separator());
 	   }
 		super.fillElementContextMenu(manager);
@@ -947,7 +965,6 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 		
 		refreshMap();
 	}
-	
 
 	/**
 	 * Show DCI Container properties
@@ -955,6 +972,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
    private void showDCIContainerProperties()
    {
       updateObjectPositions();
+      
       IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
       if ((selection.size() != 1) || !(selection.getFirstElement() instanceof NetworkMapDCIContainer))
          return;
@@ -973,6 +991,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
    private void showDCIImageProperties()
    {
       updateObjectPositions();
+      
       IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
       if ((selection.size() != 1) || !(selection.getFirstElement() instanceof NetworkMapDCIImage))
          return;
@@ -991,6 +1010,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 	private void showLinkProperties()
 	{
 		updateObjectPositions();
+		
 		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
 		if ((selection.size() != 1) || !(selection.getFirstElement() instanceof NetworkMapLink))
 			return;
@@ -1010,6 +1030,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 	private void showTextBoxProperties()
 	{
       updateObjectPositions();
+      
       IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
       if ((selection.size() != 1) || !(selection.getFirstElement() instanceof NetworkMapTextBox))
          return;
@@ -1022,10 +1043,38 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 	}
 	
 	/**
+	 * Edit image decoration
+	 */
+	private void editImageDecoration()
+	{
+      updateObjectPositions();
+      
+      IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      if ((selection.size() != 1) || !(selection.getFirstElement() instanceof NetworkMapDecoration))
+         return;
+      
+      ImageSelectionDialog dlg = new ImageSelectionDialog(getSite().getShell());
+      if (dlg.open() != Window.OK)
+         return;
+      
+      UUID imageGuid = dlg.getLibraryImage().getGuid();
+      Rectangle imageBounds = dlg.getImage().getBounds();
+
+      NetworkMapDecoration element = (NetworkMapDecoration)selection.getFirstElement();
+      element.setSize(imageBounds.width, imageBounds.height);
+      element.setTitle(imageGuid.toString());
+      mapPage.addElement(element);
+
+      saveMap();
+	}
+	
+	/**
 	 * Edit group box
 	 */
 	private void editGroupBox()
 	{
+      updateObjectPositions();
+      
       IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
       if ((selection.size() != 1) || !(selection.getFirstElement() instanceof NetworkMapDecoration))
          return;
