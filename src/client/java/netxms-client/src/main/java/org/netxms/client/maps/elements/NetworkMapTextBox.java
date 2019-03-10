@@ -44,7 +44,7 @@ public class NetworkMapTextBox extends NetworkMapElement
    protected NetworkMapTextBox(NXCPMessage msg, long baseId)
    {
       super(msg, baseId);
-      TextBoxXml = msg.getFieldAsString(baseId+10);
+      TextBoxXml = msg.getFieldAsString(baseId + 10);
       try
       {
          TextBoxConfig conf = TextBoxConfig.createFromXml(TextBoxXml);
