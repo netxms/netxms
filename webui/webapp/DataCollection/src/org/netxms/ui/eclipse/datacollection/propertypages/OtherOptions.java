@@ -38,6 +38,7 @@ public class OtherOptions extends DCIPropertyPageDialog
 	private Button checkShowOnTooltip;
 	private Button checkShowInOverview;
    private Button checkCalculateStatus;
+   private Button checkHideOnLastValues;
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -65,6 +66,10 @@ public class OtherOptions extends DCIPropertyPageDialog
       checkCalculateStatus = new Button(dialogArea, SWT.CHECK);
       checkCalculateStatus.setText(Messages.get().OtherOptions_UseForStatusCalculation);
       checkCalculateStatus.setSelection(dci.isUsedForNodeStatusCalculation());
+
+      checkHideOnLastValues = new Button(dialogArea, SWT.CHECK);
+      checkHideOnLastValues.setText("Hide valie on \"Last Values\" page");
+      checkHideOnLastValues.setSelection(dci.isHideOnLastValuesView());
       
 		return dialogArea;
 	}
@@ -79,6 +84,7 @@ public class OtherOptions extends DCIPropertyPageDialog
 		dci.setShowOnObjectTooltip(checkShowOnTooltip.getSelection());
 		dci.setShowInObjectOverview(checkShowInOverview.getSelection());
       dci.setUsedForNodeStatusCalculation(checkCalculateStatus.getSelection());
+      dci.setHideOnLastValuesView(checkHideOnLastValues.getSelection());
 		editor.modify();
 	}
 
@@ -109,6 +115,8 @@ public class OtherOptions extends DCIPropertyPageDialog
 	{
 		super.performDefaults();
 		checkShowOnTooltip.setSelection(false);
+		checkShowInOverview.setSelection(false);
 		checkCalculateStatus.setSelection(false);
+		checkHideOnLastValues.setSelection(false);
 	}
 }

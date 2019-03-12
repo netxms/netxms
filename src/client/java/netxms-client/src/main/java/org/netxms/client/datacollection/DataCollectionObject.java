@@ -70,6 +70,7 @@ public abstract class DataCollectionObject
    public static final int DCF_NO_STORAGE            = 0x0200;
    public static final int DCF_CACHE_MODE_MASK       = 0x3000;
    public static final int DCF_AGGREGATE_WITH_ERRORS = 0x4000;
+   public static final int DCF_HIDE_ON_LAST_VALUES_PAGE = 0x8000;
    
    // Instance discovery methods
    public static final int IDM_NONE = 0;
@@ -758,5 +759,28 @@ public abstract class DataCollectionObject
    public void setInstanceRetentionTime(int instanceRetentionTime)
    {
       this.instanceRetentionTime = instanceRetentionTime;
+   }
+
+   /**
+    * Returns if dco is hidden on Last Values view
+    * 
+    * @return if dco should be hidden on Last Values view
+    */
+   public boolean isHideOnLastValuesView()
+   {
+      return (flags & DCF_HIDE_ON_LAST_VALUES_PAGE) != 0;
+   }
+   
+   /**
+    * Enable or disable usage of this DCI for node status calculation
+    * 
+    * @param enable true to enable
+    */
+   public void setHideOnLastValuesView(boolean enable)
+   {
+      if(enable)
+         flags |= DCF_HIDE_ON_LAST_VALUES_PAGE;
+      else
+         flags &= ~DCF_HIDE_ON_LAST_VALUES_PAGE;
    }
 }

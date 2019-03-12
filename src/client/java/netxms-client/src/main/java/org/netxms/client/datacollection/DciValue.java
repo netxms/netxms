@@ -40,6 +40,7 @@ public abstract class DciValue
 	private int dcObjectType;		// Data collection object type (item, table, etc.)
 	private Date timestamp;
 	private Threshold activeThreshold;
+	private int flags;
 	
 	/**
 	 * Factory method to create correct DciValue subclass from NXCP message.
@@ -51,7 +52,7 @@ public abstract class DciValue
 	 */
 	public static DciValue createFromMessage(long nodeId, NXCPMessage msg, long base)
 	{
-		int type = msg.getFieldAsInt32(base + 8);
+		int type = msg.getFieldAsInt32(base + 9);
 		switch(type)
 		{
 			case DataCollectionObject.DCO_TYPE_ITEM:
@@ -84,6 +85,7 @@ public abstract class DciValue
 		this.nodeId = nodeId;
 		id = msg.getFieldAsInt64(fieldId++);
 		name = msg.getFieldAsString(fieldId++);
+      flags = msg.getFieldAsInt32(fieldId++);
 		description = msg.getFieldAsString(fieldId++);
 		source = msg.getFieldAsInt32(fieldId++);
 		dataType = msg.getFieldAsInt32(fieldId++);
@@ -97,6 +99,7 @@ public abstract class DciValue
 			activeThreshold = new Threshold(msg, fieldId);
 		else
 			activeThreshold = null;
+		
 	}
 	
    /**
@@ -222,5 +225,13 @@ public abstract class DciValue
    public Severity getThresholdSeverity()
    {
       return (activeThreshold != null) ? activeThreshold.getCurrentSeverity() : Severity.NORMAL;
+   }
+
+   /**
+    * @return the flags
+    */
+   public int getFlags()
+   {
+      return flags;
    }
 }

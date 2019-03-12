@@ -204,6 +204,10 @@ public class LastValues extends ViewPart
 		manager.add(actionShowFilter);
 		manager.add(actionAutoUpdate);
 		manager.add(dataView.getActionUseMultipliers());
+      manager.add(dataView.getActionShowErrors());
+      manager.add(dataView.getActionShowDisabled());
+      manager.add(dataView.getActionShowUnsupported());
+      manager.add(dataView.getActionShowHidden());
 		manager.add(new Separator());
 		manager.add(actionRefresh);
 	}
