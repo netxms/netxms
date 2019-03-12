@@ -1455,11 +1455,21 @@ DCObjectInfo::DCObjectInfo(DCObject *object)
    _tcslcpy(m_instance, object->getInstance(), MAX_DB_STRING);
    m_instanceData = MemCopyString(object->getInstanceDiscoveryData());
    m_comments = MemCopyString(object->getComments());
-   m_dataType = (m_type == DCO_TYPE_ITEM) ? ((DCItem *)object)->getDataType() : -1;
+   m_dataType = (m_type == DCO_TYPE_ITEM) ? static_cast<DCItem*>(object)->getDataType() : -1;
    m_origin = object->getDataSource();
    m_status = object->getStatus();
    m_errorCount = object->getErrorCount();
    m_lastPollTime = object->getLastPollTime();
+   if (m_type == DCO_TYPE_ITEM)
+   {
+      m_hasActiveThreshold = static_cast<DCItem*>(object)->hasActiveThreshold();
+      m_thresholdSeverity = static_cast<DCItem*>(object)->getThresholdSeverity();
+   }
+   else
+   {
+      m_hasActiveThreshold = false;
+      m_thresholdSeverity = SEVERITY_NORMAL;
+   }
 }
 
 /**
@@ -1483,6 +1493,8 @@ DCObjectInfo::DCObjectInfo(const NXCPMessage *msg, DCObject *object)
    m_status = msg->getFieldAsInt16(VID_DCI_STATUS);
    m_errorCount = (object != NULL) ? object->getErrorCount() : 0;
    m_lastPollTime = (object != NULL) ? object->getLastPollTime() : 0;
+   m_hasActiveThreshold = false;
+   m_thresholdSeverity = SEVERITY_NORMAL;
 }
 
 /**

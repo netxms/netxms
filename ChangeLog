@@ -19,6 +19,14 @@
 
 
 *
+* 2.2.14
+*
+
+- Fixed issues:
+	NX-1574 (Add hasActiveThreshold attribute/method to DCI object accessible in NXSL)
+
+
+*
 * 2.2.13
 *
 

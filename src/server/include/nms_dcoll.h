@@ -714,6 +714,8 @@ private:
    int m_status;
    UINT32 m_errorCount;
    time_t m_lastPollTime;
+   bool m_hasActiveThreshold;
+   int m_thresholdSeverity;
 
 public:
    DCObjectInfo(DCObject *object);
@@ -736,6 +738,8 @@ public:
    UINT32 getErrorCount() const { return m_errorCount; }
    time_t getLastPollTime() const { return m_lastPollTime; }
    UINT32 getOwnerId() const { return m_ownerId; }
+   bool hasActiveThreshold() const { return m_hasActiveThreshold; }
+   int getThresholdSeverity() const { return m_thresholdSeverity; }
 };
 
 /**

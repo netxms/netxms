@@ -1840,33 +1840,33 @@ bool DCItem::testTransformation(DataCollectionTarget *object, DCObjectInfo *dcOb
          {
 				if (pValue->isNull())
 				{
-					nx_strncpy(buffer, _T("(null)"), bufSize);
+					_tcslcpy(buffer, _T("(null)"), bufSize);
 				}
 				else if (pValue->isObject())
 				{
-					nx_strncpy(buffer, _T("(object)"), bufSize);
+					_tcslcpy(buffer, _T("(object)"), bufSize);
 				}
 				else if (pValue->isArray())
 				{
-					nx_strncpy(buffer, _T("(array)"), bufSize);
+					_tcslcpy(buffer, _T("(array)"), bufSize);
 				}
 				else
 				{
 					const TCHAR *strval;
 
 					strval = pValue->getValueAsCString();
-					nx_strncpy(buffer, CHECK_NULL(strval), bufSize);
+					_tcslcpy(buffer, CHECK_NULL(strval), bufSize);
 				}
 			}
 			else
 			{
-				nx_strncpy(buffer, _T("(null)"), bufSize);
+				_tcslcpy(buffer, _T("(null)"), bufSize);
 			}
 			success = true;
       }
       else
       {
-			nx_strncpy(buffer, vm->getErrorText(), bufSize);
+			_tcslcpy(buffer, vm->getErrorText(), bufSize);
       }
    }
    else
