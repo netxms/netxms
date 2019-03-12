@@ -104,6 +104,7 @@ target
 /packages/linux/debian/7/output
 /packages/osx/*.dmg
 /packages/osx/dist/
+/packages/osx/jre_1.8.0_151.tar.gz
 /packages/osx/out/
 /packages/solaris/pkginfo
 /private

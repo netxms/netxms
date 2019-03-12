@@ -2,6 +2,11 @@
 
 set -e
 
+if [ ! -r jre_1.8.0_151.tar.gz ]; then
+   echo jre_1.8.0_151.tar.gz is missing
+   exit 1
+fi
+
 if [ -z $1 ]; then
    version=`grep AC_INIT ../../configure.ac|cut -d'[' -f3|cut -d']' -f1`
 else
@@ -10,6 +15,8 @@ fi
 
 rm -rf dist/* nxmc-${version}.dmg
 ~/Development/yoursway-eclipse-osx-repackager/EclipseOSXRepackager out/eclipse dist/NetXMS\ Console.app
+patch -p0 < nxmc.ini.diff
+tar zxf jre_1.8.0_151.tar.gz -C dist/NetXMS\ Console.app/Contents/MacOS/
 
 cat Info.plist | sed "s,@version@,${version},g" > "dist/NetXMS Console.app/Contents/Info.plist"
 codesign --deep --force -s 'Developer ID Application: Raden Solutions, SIA (KFFD69X4L6)' -v 'dist/NetXMS Console.app'

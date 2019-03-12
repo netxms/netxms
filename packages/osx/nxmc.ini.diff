@@ -1,0 +1,11 @@
+--- dist/NetXMS Console.app/Contents/MacOS/nxmc.ini.orig	2019-03-12 16:17:28.000000000 -0400
++++ dist/NetXMS Console.app/Contents/MacOS/nxmc.ini	2019-03-12 16:13:31.000000000 -0400
+@@ -2,6 +2,8 @@
+ @user.home/.nxmc/data
+ -nl
+ en
++-vm
++jre/lib/jli/libjli.dylib
+ -vmargs
+ -Xms128m
+ -Xmx1024m
