@@ -1507,7 +1507,7 @@ NXSL_DciClass::NXSL_DciClass() : NXSL_Class()
  */
 void NXSL_DciClass::onObjectDelete(NXSL_Object *object)
 {
-   delete (DCObjectInfo *)object->getData();
+   delete static_cast<DCObjectInfo*>(object->getData());
 }
 
 /**
@@ -1517,7 +1517,11 @@ NXSL_Value *NXSL_DciClass::getAttr(NXSL_Object *object, const TCHAR *attr)
 {
    DCObjectInfo *dci = static_cast<DCObjectInfo*>(object->getData());
    NXSL_Value *value = NULL;
-   if (!_tcscmp(attr, _T("comments")))
+   if (!_tcscmp(attr, _T("activeThresholdSeverity")))
+   {
+      value = new NXSL_Value(dci->getThresholdSeverity());
+   }
+   else if (!_tcscmp(attr, _T("comments")))
    {
 		value = new NXSL_Value(dci->getComments());
    }
@@ -1532,6 +1536,10 @@ NXSL_Value *NXSL_DciClass::getAttr(NXSL_Object *object, const TCHAR *attr)
    else if (!_tcscmp(attr, _T("errorCount")))
    {
 		value = new NXSL_Value(dci->getErrorCount());
+   }
+   else if (!_tcscmp(attr, _T("hasActiveThreshold")))
+   {
+      value = new NXSL_Value(dci->hasActiveThreshold() ? 1 : 0);
    }
    else if (!_tcscmp(attr, _T("id")))
    {
