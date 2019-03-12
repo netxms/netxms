@@ -29,6 +29,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.GroupMarker;
+import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
@@ -105,10 +106,12 @@ public class LastValuesWidget extends CompositeWithMessageBar
 	private Action actionShowErrors;
 	private Action actionShowDisabled;
 	private Action actionShowUnsupported;
+   private Action actionShowHidden;
 	private Action actionExportToCsv;
 	private Action actionCopyToClipboard;
 	private Action actionCopyDciName;
 	private List<OpenHandlerData> openHandlers = new ArrayList<OpenHandlerData>(0);
+
 	
 	/**
 	 * Create "last values" widget
@@ -205,6 +208,7 @@ public class LastValuesWidget extends CompositeWithMessageBar
 				ds.put(configPrefix + ".showErrors", isShowErrors()); //$NON-NLS-1$
 				ds.put(configPrefix + ".showDisabled", isShowDisabled()); //$NON-NLS-1$
 				ds.put(configPrefix + ".showUnsupported", isShowUnsupported()); //$NON-NLS-1$
+            ds.put(configPrefix + ".showHidden", isShowHidden()); //$NON-NLS-1$
 			}
 		});
 
@@ -251,6 +255,7 @@ public class LastValuesWidget extends CompositeWithMessageBar
 		}
 		filter.setShowDisabled(ds.getBoolean(configPrefix + ".showDisabled")); //$NON-NLS-1$
 		filter.setShowUnsupported(ds.getBoolean(configPrefix + ".showUnsupported")); //$NON-NLS-1$
+      filter.setShowHidden(ds.getBoolean(configPrefix + ".showHidden")); //$NON-NLS-1$
 		
 		createActions();
 		createPopupMenu();
@@ -309,6 +314,15 @@ public class LastValuesWidget extends CompositeWithMessageBar
 			}
 		};
 		actionShowUnsupported.setChecked(isShowUnsupported());
+		
+		actionShowHidden = new Action("Show hidden", Action.AS_CHECK_BOX) {
+         @Override
+         public void run()
+         {
+            setShowHidden(actionShowHidden.isChecked());
+         }
+      };
+      actionShowHidden.setChecked(isShowHidden());
 		
 		actionShowDisabled = new Action(Messages.get().LastValuesWidget_ShowDisabled, Action.AS_CHECK_BOX) {
 			@Override
@@ -380,6 +394,7 @@ public class LastValuesWidget extends CompositeWithMessageBar
 		manager.add(actionShowErrors);
 		manager.add(actionShowDisabled);
 		manager.add(actionShowUnsupported);
+      manager.add(actionShowHidden);
 	}
 	
 	/**
@@ -630,12 +645,64 @@ public class LastValuesWidget extends CompositeWithMessageBar
 		}
 	}
 
+   /**
+    * @return
+    */
+   public boolean isShowHidden()
+   {
+      return (filter != null) ? filter.isShowHidden() : false;
+   }
+
+   /**
+    * @param show
+    */
+   public void setShowHidden(boolean show)
+   {
+      filter.setShowHidden(show);
+      if (dataViewer != null)
+      {
+         dataViewer.refresh(true);
+      }
+   }
+
 	/**
     * @return the actionUseMultipliers
     */
    public Action getActionUseMultipliers()
    {
       return actionUseMultipliers;
+   }
+
+   /**
+    * @return the actionUseMultipliers
+    */
+   public Action getActionShowDisabled()
+   {
+      return actionShowDisabled;
+   }
+
+   /**
+    * @return the actionUseMultipliers
+    */
+   public Action getActionShowErrors()
+   {
+      return actionShowErrors;
+   }
+
+   /**
+    * @return the actionUseMultipliers
+    */
+   public Action getActionShowUnsupported()
+   {
+      return actionShowUnsupported;
+   }
+
+   /**
+    * @return the actionUseMultipliers
+    */
+   public Action getActionShowHidden()
+   {
+      return actionShowHidden;
    }
 
    /**

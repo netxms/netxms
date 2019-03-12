@@ -1332,6 +1332,7 @@ void DCItem::fillLastValueMessage(NXCPMessage *pMsg, UINT32 dwId)
 	lock();
    pMsg->setField(dwId++, m_id);
    pMsg->setField(dwId++, m_name);
+   pMsg->setField(dwId++, m_flags);
    pMsg->setField(dwId++, m_description);
    pMsg->setField(dwId++, (UINT16)m_source);
    if (m_cacheSize > 0)

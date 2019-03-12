@@ -31,6 +31,7 @@ public class LastValuesFilter extends ViewerFilter
 	private String filterString = null;
 	private boolean showDisabled = false;
 	private boolean showUnsupported = false;
+   private boolean showHidden = false;
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ViewerFilter#select(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
@@ -45,6 +46,9 @@ public class LastValuesFilter extends ViewerFilter
 		
 		if (!showDisabled && (value.getStatus() == DataCollectionObject.DISABLED))
 			return false;
+		
+		if (!showHidden && (value.getFlags() == DataCollectionObject.DCF_HIDE_ON_LAST_VALUES_PAGE))
+         return false;
 		
 		if ((filterString == null) || (filterString.isEmpty()))
 			return true;
@@ -99,4 +103,20 @@ public class LastValuesFilter extends ViewerFilter
 	{
 		this.showUnsupported = showUnsupported;
 	}
+
+   /**
+    * @return the showHidden
+    */
+   public boolean isShowHidden()
+   {
+      return showHidden;
+   }
+
+   /**
+    * @param showUnsupported the showUnsupported to set
+    */
+   public void setShowHidden(boolean showHidden)
+   {
+      this.showHidden = showHidden;
+   }
 }
