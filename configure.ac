@@ -3993,6 +3993,7 @@ AC_CONFIG_FILES([
 	include/Makefile
 	include/msvc/Makefile
 	m4/Makefile
+	manpages/Makefile
 	src/Makefile
 	src/agent/Makefile
 	src/agent/core/Makefile
