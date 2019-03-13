@@ -33,7 +33,6 @@
         <module>ObjectTools</module>
         <module>ObjectView</module>
         <module>PerfView</module>
-        <module>PolicyManager</module>
         <module>Reporter</module>
         <module>SLM</module>
         <module>SNMP</module>
