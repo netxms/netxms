@@ -553,6 +553,14 @@ bool Tunnel::connectToServer()
          {
             char buffer[128];
             debugPrintf(4, _T("TLS handshake failed (%hs)"), ERR_error_string(sslErr, buffer));
+
+            unsigned long error;
+            while((error = ERR_get_error()) != 0)
+            {
+               ERR_error_string_n(error, buffer, sizeof(buffer));
+               debugPrintf(5, _T("Caused by: %hs"), buffer);
+            }
+
             if (certificateLoaded)
             {
                m_tlsHandshakeFailures++;
