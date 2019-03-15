@@ -1,34 +1,35 @@
-
 DVMRP-STD-MIB DEFINITIONS ::= BEGIN
 
 IMPORTS
-    MODULE-IDENTITY, OBJECT-TYPE, mib-2,
+    MODULE-IDENTITY, OBJECT-TYPE, experimental,
     Integer32, Counter32, Gauge32, NOTIFICATION-TYPE,
     IpAddress, TimeTicks             FROM SNMPv2-SMI
     DisplayString, RowStatus         FROM SNMPv2-TC
     MODULE-COMPLIANCE, OBJECT-GROUP,
     NOTIFICATION-GROUP               FROM SNMPv2-CONF
-    SnmpAdminString                  FROM SNMP-FRAMEWORK-MIB
-    dnOS                         FROM DELL-REF-MIB
+--    SnmpAdminString                  FROM SNMP-FRAMEWORK-MIB
     InterfaceIndexOrZero,
     InterfaceIndex                   FROM IF-MIB;
 
 dvmrpStdMIB MODULE-IDENTITY
-    LAST-UPDATED "9910191200Z" -- October 19, 1999
-    ORGANIZATION "Dell, Inc."
-    CONTACT-INFO ""
+    LAST-UPDATED "200111211200Z"
+    ORGANIZATION "IETF IDMR Working Group."
+    CONTACT-INFO
+            " Dave Thaler
+              Microsoft
+              One Microsoft Way
+              Redmond, WA 98052-6399
+              EMail: dthaler@microsoft.com"
     DESCRIPTION
             "The MIB module for management of DVMRP routers."
-    REVISION     "9910191200Z" -- October 19, 1999
-
+    REVISION     "200111211200Z"
     DESCRIPTION
             "Initial version, published as RFC xxxx (to be filled in by
             RFC-Editor)."
-    
-    ::= { dnOS 10}
-    
+    ::= { experimental 62 }
     -- NOTE TO RFC EDITOR: When this document is published as an
     -- RFC, replace xx with IANA assignment, and delete this comment.
+    -- Also, the following statement should be restored.
 
 dvmrpMIBObjects OBJECT IDENTIFIER ::= { dvmrpStdMIB 1 }
 
@@ -46,25 +47,16 @@ dvmrpVersionString OBJECT-TYPE
             used to display vendor-specific information."
     ::= { dvmrpScalar 1 }
 
-dvmrpGenerationId OBJECT-TYPE
-    SYNTAX     Integer32
-    MAX-ACCESS read-only
-    STATUS     current
-    DESCRIPTION
-            "The generation identifier for the routing process.  This is
-            used by neighboring routers to detect whether the DVMRP
-            routing table should be resent."
-    ::= { dvmrpScalar 2 }
-
-
+-- dvmrpScalar 2 was previously used for a global
+-- Generation ID.  However, the DVMRP spec changed it to
+-- a per-interface parameter.
 dvmrpNumRoutes OBJECT-TYPE
     SYNTAX     Gauge32
     MAX-ACCESS read-only
     STATUS     current
     DESCRIPTION
             "The number of entries in the routing table.  This can be
-            used to monitor the routing table size to detect illegal
-            advertisements of unicast routes."
+            used to monitor the routing table size."
     ::= { dvmrpScalar 3 }
 
 dvmrpReachableRoutes OBJECT-TYPE
@@ -97,24 +89,24 @@ dvmrpInterfaceEntry OBJECT-TYPE
             "An entry (conceptual row) in the dvmrpInterfaceTable.  This
             row augments ipMRouteInterfaceEntry in the IP Multicast MIB,
             where the threshold object resides."
-    INDEX      { dvmrpInterfaceIfIndex }
+    INDEX      { dvmrpInterfaceIndex }
     ::= { dvmrpInterfaceTable 1 }
 
 DvmrpInterfaceEntry ::= SEQUENCE {
-    dvmrpInterfaceIfIndex               InterfaceIndex,
+    dvmrpInterfaceIndex                 InterfaceIndex,
     dvmrpInterfaceLocalAddress          IpAddress,
     dvmrpInterfaceMetric                Integer32,
     dvmrpInterfaceStatus                RowStatus,
     dvmrpInterfaceRcvBadPkts            Counter32,
     dvmrpInterfaceRcvBadRoutes          Counter32,
     dvmrpInterfaceSentRoutes            Counter32,
-    dvmrpInterfaceInterfaceKey          SnmpAdminString,
-    dvmrpInterfaceInterfaceKeyVersion   Integer32
-
-    
+--    dvmrpInterfaceKey                   SnmpAdminString,
+    dvmrpInterfaceKey                   DisplayString,
+    dvmrpInterfaceKeyVersion            Integer32,
+    dvmrpInterfaceGenerationId          Integer32
 }
 
-dvmrpInterfaceIfIndex OBJECT-TYPE
+dvmrpInterfaceIndex OBJECT-TYPE
     SYNTAX     InterfaceIndex
     MAX-ACCESS not-accessible
     STATUS     current
@@ -125,7 +117,7 @@ dvmrpInterfaceIfIndex OBJECT-TYPE
 
 dvmrpInterfaceLocalAddress OBJECT-TYPE
     SYNTAX     IpAddress
-    MAX-ACCESS read-only
+    MAX-ACCESS read-create
     STATUS     current
     DESCRIPTION
             "The IP address this system will use as a source address on
@@ -184,11 +176,10 @@ dvmrpInterfaceSentRoutes OBJECT-TYPE
             dvmrpNeighborRcvRoutes at a peer, this object is useful for
             detecting routes being lost."
     ::= { dvmrpInterfaceEntry 7 }
- 
 
-
-dvmrpInterfaceInterfaceKey OBJECT-TYPE
-    SYNTAX     SnmpAdminString
+dvmrpInterfaceKey OBJECT-TYPE
+--    SYNTAX     SnmpAdminString
+    SYNTAX     DisplayString
     MAX-ACCESS read-create
     STATUS     current
     DESCRIPTION
@@ -200,7 +191,7 @@ dvmrpInterfaceInterfaceKey OBJECT-TYPE
             next, get-bulk requests."
     ::= { dvmrpInterfaceEntry 8 }
 
-dvmrpInterfaceInterfaceKeyVersion OBJECT-TYPE
+dvmrpInterfaceKeyVersion OBJECT-TYPE
     SYNTAX     Integer32
     MAX-ACCESS read-create
     STATUS     current
@@ -208,7 +199,16 @@ dvmrpInterfaceInterfaceKeyVersion OBJECT-TYPE
             "The highest version number of all known interface keys for
             this interface used for authenticating neighbors."
     ::= { dvmrpInterfaceEntry 9 }
- 
+
+dvmrpInterfaceGenerationId OBJECT-TYPE
+    SYNTAX     Integer32
+    MAX-ACCESS read-only
+    STATUS     current
+    DESCRIPTION
+            "The generation identifier for the interface.  This is used
+            by neighboring routers to detect whether the DVMRP routing
+            table should be resent."
+    ::= { dvmrpInterfaceEntry 10 }
 
 -- The DVMRP Neighbor Table
 
@@ -281,7 +281,7 @@ dvmrpNeighborExpiryTime OBJECT-TYPE
             be aged out."
     ::= { dvmrpNeighborEntry 4 }
 
-dvmrpNeighborGenerationId   OBJECT-TYPE
+dvmrpNeighborGenerationId OBJECT-TYPE
     SYNTAX     Integer32
     MAX-ACCESS read-only
     STATUS     current
@@ -362,6 +362,7 @@ dvmrpNeighborState OBJECT-TYPE
     DESCRIPTION
             "State of the neighbor adjacency."
     ::= { dvmrpNeighborEntry 12 }
+
 
 -- The DVMRP Route Table
 
@@ -641,6 +642,7 @@ dvmrpNeighborNotPruning NOTIFICATION-TYPE
             itself."
     ::= { dvmrpTraps 2 }
 
+
 -- conformance information
 
 dvmrpMIBConformance OBJECT IDENTIFIER ::= { dvmrpStdMIB 2 }
@@ -648,6 +650,7 @@ dvmrpMIBConformance OBJECT IDENTIFIER ::= { dvmrpStdMIB 2 }
 dvmrpMIBCompliances OBJECT IDENTIFIER ::= { dvmrpMIBConformance 1 }
 
 dvmrpMIBGroups      OBJECT IDENTIFIER ::= { dvmrpMIBConformance 2 }
+
 
 -- compliance statements
 
@@ -668,11 +671,11 @@ dvmrpMIBCompliance MODULE-COMPLIANCE
             neighbors."
     ::= { dvmrpMIBCompliances 1 }
 
+
 -- units of conformance
 
 dvmrpGeneralGroup OBJECT-GROUP
-    OBJECTS { dvmrpVersionString, dvmrpGenerationId,
-              dvmrpNumRoutes, dvmrpReachableRoutes
+    OBJECTS { dvmrpVersionString, dvmrpNumRoutes, dvmrpReachableRoutes
             }
     STATUS  current
     DESCRIPTION
@@ -682,7 +685,7 @@ dvmrpGeneralGroup OBJECT-GROUP
 
 dvmrpInterfaceGroup OBJECT-GROUP
     OBJECTS { dvmrpInterfaceLocalAddress, dvmrpInterfaceMetric,
-              dvmrpInterfaceStatus,
+              dvmrpInterfaceStatus, dvmrpInterfaceGenerationId,
               dvmrpInterfaceRcvBadPkts, dvmrpInterfaceRcvBadRoutes,
               dvmrpInterfaceSentRoutes
             }
@@ -718,8 +721,8 @@ dvmrpRoutingGroup OBJECT-GROUP
     ::= { dvmrpMIBGroups 5 }
 
 dvmrpSecurityGroup OBJECT-GROUP
-    OBJECTS { dvmrpInterfaceInterfaceKey,
-              dvmrpInterfaceInterfaceKeyVersion }
+    OBJECTS { dvmrpInterfaceKey,
+              dvmrpInterfaceKeyVersion }
     STATUS  current
     DESCRIPTION
             "A collection of objects used to store information related

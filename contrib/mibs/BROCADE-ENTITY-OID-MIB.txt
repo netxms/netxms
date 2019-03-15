@@ -1,0 +1,375 @@
+BROCADE-ENTITY-OID-MIB DEFINITIONS ::= BEGIN
+IMPORTS
+   MODULE-IDENTITY
+      FROM SNMPv2-SMI                                    -- [RFC2578]   
+   products
+      FROM FOUNDRY-SN-ROOT-MIB;                          -- [snrootu]
+
+brcdEntityOIDMIB MODULE-IDENTITY
+   LAST-UPDATED "201302060930Z"  -- Feb 06, 2013
+   ORGANIZATION "Brocade Communications Systems, Inc."
+   CONTACT-INFO
+             "Technical Support Center
+              130 Holger Way,
+              San Jose, CA  95134
+              Email:  ipsupport@brocade.com
+              Phone: 1-800-752-8061
+              URL:  www.brocade.com"
+   DESCRIPTION
+             "This module defines the object identifiers (OIDs) for various
+              physical components on Brocade products. These OIDs are
+              used for representing entPhysicalVendorType in Entity MIB's
+              entPhysicalTable (RFC 4133).
+
+              Copyright 1996-2012 Brocade Communications Systems, Inc.
+              All rights reserved.
+              This Brocade Communications Systems SNMP Management Information
+              Base Specification embodies Brocade Communications Systems
+              confidential and proprietary intellectual property.
+              Brocade Communications Systems retains all title and ownership
+              in the Specification, including any revisions.
+
+              This Specification is supplied AS IS, and Brocade Communications
+              Systems makes no warranty, either express or implied, as to the
+              use, operation, condition, or performance of the specification,
+              and any unintended consequence it may on the user environment."
+
+   REVISION      "201302060930Z"  -- Feb 06, 2013
+   DESCRIPTION
+            "Initial version"
+
+   ::= { products 17 }
+
+-- Brocade Entity OID MIB Objects
+brcdEntityOIDMIBObjects   OBJECT IDENTIFIER ::= { brcdEntityOIDMIB 1 }  
+
+-- The OIDs in this MIB are structured per the following PhysicalClass
+-- textual convention, defined in RFC 4133.
+--
+--      PhysicalClass ::= TEXTUAL-CONVENTION
+--            STATUS          current
+--            DESCRIPTION
+--             "An enumerated value which provides an indication of the
+--              general hardware type of a particular physical entity..."
+--      SYNTAX INTEGER {
+--              other(1),
+--              unknown(2),
+--              chassis(3),
+--              backplane(4),
+--              container(5),   e.g., chassis slot or daughter-card holder
+--              powerSupply(6),
+--              fan(7),
+--              sensor(8),
+--              module(9),     e.g., plug-in card or daughter-card
+--              port(10),
+--              stack(11),      e.g., stack of multiple chassis entities
+--              cpu(12)
+--      }
+--
+
+brcdEntityOIDOther                 OBJECT IDENTIFIER ::= { brcdEntityOIDMIBObjects 1 }
+brcdEntityOIDUnknown               OBJECT IDENTIFIER ::= { brcdEntityOIDMIBObjects 2 }
+
+-- Chassis OID assignments
+brcdEntityOIDChassis               OBJECT IDENTIFIER ::= { brcdEntityOIDMIBObjects 3 }
+brcdEntityOIDChassisUnknown                      OBJECT IDENTIFIER ::= { brcdEntityOIDChassis 1 }
+
+brcdEntityOIDChassisNetIronCes2000Family         OBJECT IDENTIFIER ::= { brcdEntityOIDChassis 2 }
+brcdEntityOIDChassisNetIronCes2024F              OBJECT IDENTIFIER ::= { brcdEntityOIDChassisNetIronCes2000Family 1 }  -- 24X1G fiber
+brcdEntityOIDChassisNetIronCes2024C              OBJECT IDENTIFIER ::= { brcdEntityOIDChassisNetIronCes2000Family 2 }  -- 24X1G copper
+brcdEntityOIDChassisNetIronCes2048F              OBJECT IDENTIFIER ::= { brcdEntityOIDChassisNetIronCes2000Family 3 }  -- 48X1G fiber
+brcdEntityOIDChassisNetIronCes2048C              OBJECT IDENTIFIER ::= { brcdEntityOIDChassisNetIronCes2000Family 4 }  -- 48X1G copper
+brcdEntityOIDChassisNetIronCes2048FX             OBJECT IDENTIFIER ::= { brcdEntityOIDChassisNetIronCes2000Family 5 }  -- 48X1G fiber + 2X10G
+brcdEntityOIDChassisNetIronCes2048CX             OBJECT IDENTIFIER ::= { brcdEntityOIDChassisNetIronCes2000Family 6 }  -- 48X1G copper + 2X10G
+brcdEntityOIDChassisNetIronCes2024F4X            OBJECT IDENTIFIER ::= { brcdEntityOIDChassisNetIronCes2000Family 7 }  -- BR-CES-2024F-4X (24X1GbE Fiber with 4 Copper combo, 4X10GbE)
+brcdEntityOIDChassisNetIronCes2024C4X            OBJECT IDENTIFIER ::= { brcdEntityOIDChassisNetIronCes2000Family 8 }  -- BR-CES-2024C-4X (24X1GbE Copper with 4 Fiber combo, 4X10GbE)
+
+brcdEntityOIDChassisNetIronCer2000Family         OBJECT IDENTIFIER ::= { brcdEntityOIDChassis 3 }
+brcdEntityOIDChassisNetIronCer2024F              OBJECT IDENTIFIER ::= { brcdEntityOIDChassisNetIronCer2000Family 1 }  -- 24X1G fiber
+brcdEntityOIDChassisNetIronCer2024C              OBJECT IDENTIFIER ::= { brcdEntityOIDChassisNetIronCer2000Family 2 }  -- 24X1G copper
+brcdEntityOIDChassisNetIronCer2048F              OBJECT IDENTIFIER ::= { brcdEntityOIDChassisNetIronCer2000Family 3 }  -- 48X1G fiber
+brcdEntityOIDChassisNetIronCer2048C              OBJECT IDENTIFIER ::= { brcdEntityOIDChassisNetIronCer2000Family 4 }  -- 48X1G copper
+brcdEntityOIDChassisNetIronCer2048FX             OBJECT IDENTIFIER ::= { brcdEntityOIDChassisNetIronCer2000Family 5 }  -- 48X1G fiber + 2X10G
+brcdEntityOIDChassisNetIronCer2048CX             OBJECT IDENTIFIER ::= { brcdEntityOIDChassisNetIronCer2000Family 6 }  -- 48X1G copper + 2X10G
+brcdEntityOIDChassisNetIronCer2024F4X            OBJECT IDENTIFIER ::= { brcdEntityOIDChassisNetIronCer2000Family 7 }  -- BR-CER-2024F-4X (24X1GbE Fiber with 4 Copper combo, 4X10GbE)
+brcdEntityOIDChassisNetIronCer2024C4X            OBJECT IDENTIFIER ::= { brcdEntityOIDChassisNetIronCer2000Family 8 }  -- BR-CER-2024C-4X (24X1GbE Copper with 4 Fiber combo, 4X10GbE)
+
+brcdEntityOIDChassisNetIronXMRFamily             OBJECT IDENTIFIER ::= { brcdEntityOIDChassis 4 }
+brcdEntityOIDChassisNetIronXMR4000               OBJECT IDENTIFIER ::= { brcdEntityOIDChassisNetIronXMRFamily 1 }  -- NetIron XMR4000 family
+brcdEntityOIDChassisNetIronXMR8000               OBJECT IDENTIFIER ::= { brcdEntityOIDChassisNetIronXMRFamily 2 }  -- NetIron XMR8000 family
+brcdEntityOIDChassisNetIronXMR16000              OBJECT IDENTIFIER ::= { brcdEntityOIDChassisNetIronXMRFamily 3 }  -- NetIron XMR16000 family
+brcdEntityOIDChassisNetIronXMR32000              OBJECT IDENTIFIER ::= { brcdEntityOIDChassisNetIronXMRFamily 4 }  -- NetIron XMR32000 family
+
+brcdEntityOIDChassisMLXFamily                    OBJECT IDENTIFIER ::= { brcdEntityOIDChassis 5 }
+brcdEntityOIDChassisMLX4                         OBJECT IDENTIFIER ::= { brcdEntityOIDChassisMLXFamily 1 }  -- NetIron MLX-4 family
+brcdEntityOIDChassisMLX8                         OBJECT IDENTIFIER ::= { brcdEntityOIDChassisMLXFamily 2 }  -- NetIron MLX-8 family
+brcdEntityOIDChassisMLX16                        OBJECT IDENTIFIER ::= { brcdEntityOIDChassisMLXFamily 3 }  -- NetIron MLX-16 family
+brcdEntityOIDChassisMLX32                        OBJECT IDENTIFIER ::= { brcdEntityOIDChassisMLXFamily 4 }  -- NetIron MLX-32 family
+
+brcdEntityOIDChassisMLXeFamily                   OBJECT IDENTIFIER ::= { brcdEntityOIDChassis 6 }
+brcdEntityOIDChassisMLXe4                        OBJECT IDENTIFIER ::= { brcdEntityOIDChassisMLXeFamily 1 }  -- NetIron MLXe-4 family
+brcdEntityOIDChassisMLXe8                        OBJECT IDENTIFIER ::= { brcdEntityOIDChassisMLXeFamily 2 }  -- NetIron MLXe-8 family
+brcdEntityOIDChassisMLXe16                       OBJECT IDENTIFIER ::= { brcdEntityOIDChassisMLXeFamily 3 }  -- NetIron MLXe-16 family
+brcdEntityOIDChassisMLXe32                       OBJECT IDENTIFIER ::= { brcdEntityOIDChassisMLXeFamily 4 }  -- NetIron MLXe-32 family
+--FI related chassis information
+brcdEntityOIDChassisICX7250Family                 OBJECT IDENTIFIER ::= { brcdEntityOIDChassis 7 }                    --FastIron ICX7250 family
+brcdEntityOIDChassisICX725024                       OBJECT IDENTIFIER ::= {brcdEntityOIDChassisICX7250Family 1 }
+brcdEntityOIDChassisICX725024HPOE              OBJECT IDENTIFIER ::= {brcdEntityOIDChassisICX7250Family 2 }
+brcdEntityOIDChassisICX725024G                     OBJECT IDENTIFIER ::= {brcdEntityOIDChassisICX7250Family 3 }
+brcdEntityOIDChassisICX725048                       OBJECT IDENTIFIER ::= {brcdEntityOIDChassisICX7250Family 4}
+brcdEntityOIDChassisICX725048HPOE               OBJECT IDENTIFIER ::= {brcdEntityOIDChassisICX7250Family 5 }
+brcdEntityOIDChassisICX7450Family                  OBJECT IDENTIFIER ::= { brcdEntityOIDChassis 8 }                     --FastIron ICX7450 family
+brcdEntityOIDChassisICX745024                        OBJECT IDENTIFIER ::= {brcdEntityOIDChassisICX7450Family 1 }
+brcdEntityOIDChassisICX745024HPOE               OBJECT IDENTIFIER ::= {brcdEntityOIDChassisICX7450Family 2 }
+brcdEntityOIDChassisICX745032ZP                    OBJECT IDENTIFIER ::= {brcdEntityOIDChassisICX7450Family 3 }
+brcdEntityOIDChassisICX745048                       OBJECT IDENTIFIER ::= {brcdEntityOIDChassisICX7450Family 4}
+brcdEntityOIDChassisICX745048HPOE               OBJECT IDENTIFIER ::= {brcdEntityOIDChassisICX7450Family 5 }
+brcdEntityOIDChassisICX745048F                      OBJECT IDENTIFIER ::= {brcdEntityOIDChassisICX7450Family 6 }
+brcdEntityOIDChassisICX7750Family                   OBJECT IDENTIFIER ::= { brcdEntityOIDChassis 9 }                   --FastIron ICX7750 family
+brcdEntityOIDChassisICX775048C                       OBJECT IDENTIFIER ::= {brcdEntityOIDChassisICX7750Family 1 }
+brcdEntityOIDChassisICX775048F                       OBJECT IDENTIFIER ::= {brcdEntityOIDChassisICX7750Family 2 }
+brcdEntityOIDChassisICX775026Q                       OBJECT IDENTIFIER ::= {brcdEntityOIDChassisICX7750Family 3 }
+--minion related chassis information
+brcdEntityOIDChassisICX7150Family      OBJECT IDENTIFIER ::= { brcdEntityOIDChassis 10 }       --FastIron ICX7150 family
+brcdEntityOIDChassisICX715024                 OBJECT IDENTIFIER ::= {brcdEntityOIDChassisICX7150Family 1 }
+brcdEntityOIDChassisICX715024POE          OBJECT IDENTIFIER ::= {brcdEntityOIDChassisICX7150Family 2 }
+brcdEntityOIDChassisICX715048                 OBJECT IDENTIFIER ::= {brcdEntityOIDChassisICX7150Family 3 }
+brcdEntityOIDChassisICX715048POE          OBJECT IDENTIFIER ::= {brcdEntityOIDChassisICX7150Family 4}
+brcdEntityOIDChassisICX715048POEF         OBJECT IDENTIFIER ::= {brcdEntityOIDChassisICX7150Family 5 }
+brcdEntityOIDChassisICX7150C12POE          OBJECT IDENTIFIER ::= {brcdEntityOIDChassisICX7150Family 6}
+brcdEntityOIDChassisICX715048ZP          OBJECT IDENTIFIER ::= {brcdEntityOIDChassisICX7150Family 7}
+
+
+-- Backplane OID assignments
+brcdEntityOIDBackplane                OBJECT IDENTIFIER ::= { brcdEntityOIDMIBObjects 4 }
+brcdEntityOIDBackplaneUnknown                OBJECT IDENTIFIER ::= { brcdEntityOIDBackplane 1 }
+brcdEntityOIDBackplaneNetIronFamily          OBJECT IDENTIFIER ::= { brcdEntityOIDBackplane 2 }
+brcdEntityOIDBackplaneNetIronCes2000                OBJECT IDENTIFIER ::= { brcdEntityOIDBackplaneNetIronFamily 1 }
+brcdEntityOIDBackplaneNetIronCer2000                OBJECT IDENTIFIER ::= { brcdEntityOIDBackplaneNetIronFamily 2 }
+brcdEntityOIDBackplaneNetIronXMR                    OBJECT IDENTIFIER ::= { brcdEntityOIDBackplaneNetIronFamily 3 }
+brcdEntityOIDBackplaneMlxFamily              OBJECT IDENTIFIER ::= { brcdEntityOIDBackplane 3 }
+brcdEntityOIDBackplaneMLX                           OBJECT IDENTIFIER ::= { brcdEntityOIDBackplaneMlxFamily 1 }
+brcdEntityOIDBackplaneMLXe                          OBJECT IDENTIFIER ::= { brcdEntityOIDBackplaneMlxFamily 2 }
+
+
+-- Container OID assignments
+brcdEntityOIDContainer                       OBJECT IDENTIFIER ::= { brcdEntityOIDMIBObjects 5 }
+brcdEntityOIDContainerUnknown                       OBJECT IDENTIFIER ::= { brcdEntityOIDContainer 1 }
+brcdEntityOIDContainerPowerSupply                   OBJECT IDENTIFIER ::= { brcdEntityOIDContainer 2 }     -- slot for Power Supply Unit
+brcdEntityOIDContainerFanTray                       OBJECT IDENTIFIER ::= { brcdEntityOIDContainer 3 }     -- slot for Fan Tray
+brcdEntityOIDContainerMgmtModuleSlot                OBJECT IDENTIFIER ::= { brcdEntityOIDContainer 4 }     -- slot for Management Module
+brcdEntityOIDContainerSwitchFabricModuleSlot        OBJECT IDENTIFIER ::= { brcdEntityOIDContainer 5 }     -- slot for Switch Fabric Module
+brcdEntityOIDContainerIntfModuleSlot                OBJECT IDENTIFIER ::= { brcdEntityOIDContainer 6 }     -- slot for Line interface Module
+
+
+-- Power Supply OID assignments
+brcdEntityOIDPowerSupply                OBJECT IDENTIFIER ::= { brcdEntityOIDMIBObjects 6 }
+brcdEntityOIDPowerSupplyUnknown                OBJECT IDENTIFIER ::= { brcdEntityOIDPowerSupply 1 }
+brcdEntityOIDPowerSupplyAC500W                 OBJECT IDENTIFIER ::= { brcdEntityOIDPowerSupply 2 }  -- CES/CER Family AC 500W Power Supply
+brcdEntityOIDPowerSupplyDC500W                 OBJECT IDENTIFIER ::= { brcdEntityOIDPowerSupply 3 }  -- CES/CER Family DC 500W Power Supply
+brcdEntityOIDPowerSupplyAC1200W                OBJECT IDENTIFIER ::= { brcdEntityOIDPowerSupply 4 }  -- 16, 8 and 4-slot MLXe and 16 and 8-Slot XMR/MLX AC 1200W power supply
+brcdEntityOIDPowerSupplyDC1200W                OBJECT IDENTIFIER ::= { brcdEntityOIDPowerSupply 5 }  -- 16, 8 and 4-slot MLXe and 16 and 8-Slot XMR/MLX DC 1200W power supply
+brcdEntityOIDPowerSupplyAC1200WA               OBJECT IDENTIFIER ::= { brcdEntityOIDPowerSupply 6 }  -- 4-Slot NetIron XMR/MLX AC 1200W power supply
+brcdEntityOIDPowerSupplyDC1200WA               OBJECT IDENTIFIER ::= { brcdEntityOIDPowerSupply 7 }  -- 4-Slot NetIron XMR/MLX DC 1200W power supply
+brcdEntityOIDPowerSupplyAC1800W                OBJECT IDENTIFIER ::= { brcdEntityOIDPowerSupply 8 }  -- 16, 8 and 4-slot MLXe and 16 and 8-Slot XMR/MLX AC 1800W power supply
+brcdEntityOIDPowerSupplyDC1800W                OBJECT IDENTIFIER ::= { brcdEntityOIDPowerSupply 9 }  -- 16, 8 and 4-slot MLXe and 16 and 8-Slot XMR/MLX DC 1800W power supply
+brcdEntityOIDPowerSupplyAC2100W                OBJECT IDENTIFIER ::= { brcdEntityOIDPowerSupply 10 } 
+brcdEntityOIDPowerSupplyDC2100W                OBJECT IDENTIFIER ::= { brcdEntityOIDPowerSupply 11 }
+brcdEntityOIDPowerSupplyAC2400W                OBJECT IDENTIFIER ::= { brcdEntityOIDPowerSupply 12 }  -- 32-Slot NetIron MLXe/XMR/MLX AC 2400W power supply
+brcdEntityOIDPowerSupplyDC2400W                OBJECT IDENTIFIER ::= { brcdEntityOIDPowerSupply 13 }  -- 32-Slot NetIron MLXe/XMR/MLX DC 2400W power supply
+brcdEntityOIDPowerSupplyAC3000W                OBJECT IDENTIFIER ::= { brcdEntityOIDPowerSupply 14 }  -- 32-slot NetIron MLXe/XMR/MLX AC 3000W power supply
+brcdEntityOIDPowerSupplyDC3000W                OBJECT IDENTIFIER ::= { brcdEntityOIDPowerSupply 15 }  -- 32-slot NetIron MLXe/XMR/MLX DC 3000W power supply
+
+--FI power supply OID assignment
+brcdEntityOIDPowerSupplyACPOE                  OBJECT IDENTIFIER ::= { brcdEntityOIDPowerSupply 16 }  -- AC POE Power Supply
+brcdEntityOIDPowerSupplyACRegular              OBJECT IDENTIFIER ::= { brcdEntityOIDPowerSupply 17 }  -- AC Regular Power Supply
+brcdEntityOIDPowerSupplyDCPOE                  OBJECT IDENTIFIER ::= { brcdEntityOIDPowerSupply 18 }  -- DC Power Supply
+brcdEntityOIDPowerSupplyDCRegular              OBJECT IDENTIFIER ::= { brcdEntityOIDPowerSupply 19 }  -- DC Power Supply
+
+-- Fan OID assignments
+brcdEntityOIDFan                        OBJECT IDENTIFIER ::= { brcdEntityOIDMIBObjects 7 }
+brcdEntityOIDFanUnknown                        OBJECT IDENTIFIER ::= { brcdEntityOIDFan 1 }
+brcdEntityOIDChassisFanTray                    OBJECT IDENTIFIER ::= { brcdEntityOIDFan 2 }    -- Any Fan Tray on the Chassis
+brcdEntityOIDChassisFan                        OBJECT IDENTIFIER ::= { brcdEntityOIDFan 3 }    -- Fan in a Chassis Fan Tray or directly on the Chassis 
+
+
+-- Sensor OID assignments
+brcdEntityOIDSensor                OBJECT IDENTIFIER ::= { brcdEntityOIDMIBObjects 8 }
+brcdEntityOIDSensorUnknown                OBJECT IDENTIFIER ::= { brcdEntityOIDSensor 1 }
+brcdEntityOIDSensorChipTemp               OBJECT IDENTIFIER ::= { brcdEntityOIDSensor 2 }      -- Chip Temperature sensor 
+brcdEntityOIDSensorModuleTemp             OBJECT IDENTIFIER ::= { brcdEntityOIDSensor 3 }      -- Module Temperature sensor 
+
+-- Module OID assignments
+brcdEntityOIDModule                OBJECT IDENTIFIER ::= { brcdEntityOIDMIBObjects 9 }
+brcdEntityOIDModuleUnknown                OBJECT IDENTIFIER ::= { brcdEntityOIDModule 1 }
+
+-- Managment Modules
+brcdEntityOIDModuleMgmt              OBJECT IDENTIFIER ::= { brcdEntityOIDModule 2 } 
+brcdEntityOIDModuleMgmtUnknown              OBJECT IDENTIFIER ::= {brcdEntityOIDModuleMgmt 1 }  
+brcdEntityOIDModuleMgmtNetIronFamily        OBJECT IDENTIFIER ::= {brcdEntityOIDModuleMgmt 2 }  
+brcdEntityOIDModuleMgmtNiMlxMr                   OBJECT IDENTIFIER ::= {brcdEntityOIDModuleMgmtNetIronFamily 1 }  -- NI-MLX-MR:    Brocade MLXe and Brocade MLX management module
+brcdEntityOIDModuleMgmtNiMlx32Mr                 OBJECT IDENTIFIER ::= {brcdEntityOIDModuleMgmtNetIronFamily 2 }  -- NI-MLX-32-MR: Brocade MLXe-32 and Brocade MLX-32 management module
+brcdEntityOIDModuleMgmtNiXmrMr                   OBJECT IDENTIFIER ::= {brcdEntityOIDModuleMgmtNetIronFamily 3 }  -- NI-XMR-MR:    Brocade NetIron XMR management module
+brcdEntityOIDModuleMgmtNiXmr32Mr                 OBJECT IDENTIFIER ::= {brcdEntityOIDModuleMgmtNetIronFamily 4 }  -- NI-XMR-32-MR: Brocade NetIron XMR 32000 management module
+brcdEntityOIDModuleMgmtMlxFamily            OBJECT IDENTIFIER ::= { brcdEntityOIDModuleMgmt 3 }
+brcdEntityOIDModuleMgmtBrMlxMr2M                 OBJECT IDENTIFIER ::= { brcdEntityOIDModuleMgmtMlxFamily 1 }  -- BR-MLX-MR2-M:    MLXe/MLX Gen2 management (M) module for 4-, 8- and 16-slot systems
+brcdEntityOIDModuleMgmtBrMlxMr2X                 OBJECT IDENTIFIER ::= { brcdEntityOIDModuleMgmtMlxFamily 2 }  -- BR-MLX-MR2-X:    MLXe/XMR Gen2 management (X) module for 4-, 8- and 16-slot systems
+brcdEntityOIDModuleMgmtBrMlx32Mr2M               OBJECT IDENTIFIER ::= { brcdEntityOIDModuleMgmtMlxFamily 3 }  -- BR-MLX-32-MR2-M: MLXe/MLX Gen2 management (M) module for 32-slot systems
+brcdEntityOIDModuleMgmtBrMlx32Mr2X               OBJECT IDENTIFIER ::= { brcdEntityOIDModuleMgmtMlxFamily 4 }  -- BR-MLX-32-MR2-X: MLXe/XMR Gen2 management (X) module for 32-slot systems
+--FI management module OID assignment
+brcdEntityOIDModuleMgmtIcx7250Family                          OBJECT IDENTIFIER ::= { brcdEntityOIDModuleMgmt 4 }
+brcdEntityOIDModuleMgmtIcx7250624BaseModule           OBJECT IDENTIFIER ::= { brcdEntityOIDModuleMgmtIcx7250Family 1 } 
+brcdEntityOIDModuleMgmtIcx7250648BaseModule           OBJECT IDENTIFIER ::= { brcdEntityOIDModuleMgmtIcx7250Family 2 } 
+brcdEntityOIDModuleMgmtIcx7250624GBaseModule         OBJECT IDENTIFIER ::= { brcdEntityOIDModuleMgmtIcx7250Family 3 }
+brcdEntityOIDModuleMgmtIcx7250624PoeBaseModule     OBJECT IDENTIFIER ::= { brcdEntityOIDModuleMgmtIcx7250Family 4 }
+brcdEntityOIDModuleMgmtIcx7250648PoeBaseModule     OBJECT IDENTIFIER ::= { brcdEntityOIDModuleMgmtIcx7250Family 5 }
+brcdEntityOIDModuleMgmtIcx7450Family                          OBJECT IDENTIFIER ::= { brcdEntityOIDModuleMgmt 5}
+brcdEntityOIDModuleMgmtIcx7450624BaseModule           OBJECT IDENTIFIER ::= { brcdEntityOIDModuleMgmtIcx7450Family 1 } 
+brcdEntityOIDModuleMgmtIcx7450648BaseModule           OBJECT IDENTIFIER ::= { brcdEntityOIDModuleMgmtIcx7450Family 2 } 
+brcdEntityOIDModuleMgmtIcx7450648FBaseModule         OBJECT IDENTIFIER ::= { brcdEntityOIDModuleMgmtIcx7450Family 3 } 
+brcdEntityOIDModuleMgmtIcx7450624PoeBaseModule     OBJECT IDENTIFIER ::= { brcdEntityOIDModuleMgmtIcx7450Family 4 } 
+brcdEntityOIDModuleMgmtIcx7450648PoeBaseModule     OBJECT IDENTIFIER ::= { brcdEntityOIDModuleMgmtIcx7450Family 5 } 
+brcdEntityOIDModuleMgmtIcx7450632ZPBaseModule       OBJECT IDENTIFIER ::= { brcdEntityOIDModuleMgmtIcx7450Family 6 } 
+brcdEntityOIDModuleMgmtIcx7750Family                           OBJECT IDENTIFIER ::= { brcdEntityOIDModuleMgmt 6}
+brcdEntityOIDModuleMgmtIcx775048CBaseModule           OBJECT IDENTIFIER ::= { brcdEntityOIDModuleMgmtIcx7750Family 1 } 
+brcdEntityOIDModuleMgmtIcx775048FBaseModule            OBJECT IDENTIFIER ::= { brcdEntityOIDModuleMgmtIcx7750Family 2 } 
+brcdEntityOIDModuleMgmtIcx775026QBaseModule           OBJECT IDENTIFIER ::= { brcdEntityOIDModuleMgmtIcx7750Family 3 } 
+brcdEntityOIDModuleMgmtIcx775020QBaseModule           OBJECT IDENTIFIER ::= { brcdEntityOIDModuleMgmtIcx7750Family 4 }
+--minion management modules
+brcdEntityOIDModuleMgmtIcx7150Family                OBJECT IDENTIFIER ::= { brcdEntityOIDModuleMgmt 7 }
+brcdEntityOIDModuleMgmtIcx7150624BaseModule   OBJECT IDENTIFIER ::= { brcdEntityOIDModuleMgmtIcx7150Family 1 } 
+brcdEntityOIDModuleMgmtIcx7150648BaseModule   OBJECT IDENTIFIER ::= { brcdEntityOIDModuleMgmtIcx7150Family 2 } 
+brcdEntityOIDModuleMgmtIcx7150624PoeBaseModule   OBJECT IDENTIFIER ::= { brcdEntityOIDModuleMgmtIcx7150Family 3 }
+brcdEntityOIDModuleMgmtIcx7150648PoeBaseModule   OBJECT IDENTIFIER ::= { brcdEntityOIDModuleMgmtIcx7150Family 4 }
+brcdEntityOIDModuleMgmtIcx7150648PoeFBaseModule   OBJECT IDENTIFIER ::= { brcdEntityOIDModuleMgmtIcx7150Family 5 }
+brcdEntityOIDModuleMgmtIcx7150612CPoeBaseModule   OBJECT IDENTIFIER ::= { brcdEntityOIDModuleMgmtIcx7150Family 6 }
+brcdEntityOIDModuleMgmtIcx7150648ZPBaseModule   OBJECT IDENTIFIER ::= { brcdEntityOIDModuleMgmtIcx7150Family 7 }
+
+
+
+-- Switch Fabric Modules
+brcdEntityOIDModuleSfm              OBJECT IDENTIFIER ::= { brcdEntityOIDModule 3 } 
+brcdEntityOIDModuleSfmUnknown              OBJECT IDENTIFIER ::= {brcdEntityOIDModuleSfm 1 }  
+brcdEntityOIDModuleSfmNetIronFamily        OBJECT IDENTIFIER ::= {brcdEntityOIDModuleSfm 2 }  
+brcdEntityOIDModuleSfmNiXSf1                    OBJECT IDENTIFIER ::= {brcdEntityOIDModuleSfmNetIronFamily 1 }  -- NI-X-SF1:      Switch fabric module for 4-slot routers
+brcdEntityOIDModuleSfmNiXSf3                    OBJECT IDENTIFIER ::= {brcdEntityOIDModuleSfmNetIronFamily 2 }  -- NI-X-SF3:      Switch fabric module for 8- and 16-slot routers
+brcdEntityOIDModuleSfmNiX32Sf                   OBJECT IDENTIFIER ::= {brcdEntityOIDModuleSfmNetIronFamily 3 }  -- NI-X-32-SF:    Switch fabric module for 32-slot routers
+brcdEntityOIDModuleSfmNiX4Hsf                   OBJECT IDENTIFIER ::= {brcdEntityOIDModuleSfmNetIronFamily 4 }  -- NI-X-4-HSF:    High speed switch fabric module for 4-slot routers
+brcdEntityOIDModuleSfmNiX16n8Hsf                OBJECT IDENTIFIER ::= {brcdEntityOIDModuleSfmNetIronFamily 5 }  -- NI-X-16-8-HSF: High speed switch fabric module for 8- and 16-slot routers
+brcdEntityOIDModuleSfmNiX32Hsf                  OBJECT IDENTIFIER ::= {brcdEntityOIDModuleSfmNetIronFamily 6 }  -- NI-X-32-HSF:   High speed switch fabric module for 32-slot routers
+
+-- Line Interface Modules
+brcdEntityOIDModuleIntf              OBJECT IDENTIFIER ::= { brcdEntityOIDModule 4 } 
+brcdEntityOIDModuleIntfUnknown              OBJECT IDENTIFIER ::= {brcdEntityOIDModuleIntf 1 }  
+brcdEntityOIDModuleIntfNetIronFamily        OBJECT IDENTIFIER ::= {brcdEntityOIDModuleIntf 2 } 
+brcdEntityOIDModuleIntfNiMlx1Gx20Gc                OBJECT IDENTIFIER ::= {brcdEntityOIDModuleIntfNetIronFamily 1 }   -- NI-MLX-1GX20-GC:  NetIron MLX Series 20-port 10/100/1000 copper module with IPv4/IPv6/MPLS hardware support
+brcdEntityOIDModuleIntfNiXmr1Gx20Gc                OBJECT IDENTIFIER ::= {brcdEntityOIDModuleIntfNetIronFamily 2 }   -- NI-XMR-1Gx20-GC:  NetIron XMR Series 20-port 10/100/1000 copper module with IPv4/IPv6/MPLS hardware support
+brcdEntityOIDModuleIntfNiMlx1Gx48Ta                OBJECT IDENTIFIER ::= {brcdEntityOIDModuleIntfNetIronFamily 3 }   -- NI-MLX-1GX48-T-A: NetIron MLX Series 48-port 10/100/1000Base-T, MRJ21 module with IPv4/IPv6/MPLS hardware support 
+brcdEntityOIDModuleIntfNiMlx1Gx20Sfp               OBJECT IDENTIFIER ::= {brcdEntityOIDModuleIntfNetIronFamily 4 }   -- NI-MLX-1GX20-SFP: NetIron MLX Series 20-port FE/GE (100/1000) module with IPv4/IPv6/MPLS hardware support
+brcdEntityOIDModuleIntfNiXmr1Gx20Sfp               OBJECT IDENTIFIER ::= {brcdEntityOIDModuleIntfNetIronFamily 5 }   -- NI-XMR-1GX20-SFP: NetIron XMR Series 20-port FE/GE (100/1000) module with IPv4/IPv6/MPLS hardware support
+brcdEntityOIDModuleIntfNiMlx10Gx2                  OBJECT IDENTIFIER ::= {brcdEntityOIDModuleIntfNetIronFamily 6 }   -- NI-MLX-10GX2:     NetIron MLX Series 2-port 10-GbE module with IPv4/IPv6/MPLS hardware support
+brcdEntityOIDModuleIntfNiXmr10Gx2                  OBJECT IDENTIFIER ::= {brcdEntityOIDModuleIntfNetIronFamily 7 }   -- NI-XMR-10GX2:     Gen-1 2-port 10-Gbps Ethernet module
+brcdEntityOIDModuleIntfNiMlx10Gx4                  OBJECT IDENTIFIER ::= {brcdEntityOIDModuleIntfNetIronFamily 8 }   -- NI-MLX-10GX4:     NetIron MLX Series 4-port 10-GbE module with IPv4/IPv6/MPLS hardware support
+brcdEntityOIDModuleIntfNiXmr10Gx4                  OBJECT IDENTIFIER ::= {brcdEntityOIDModuleIntfNetIronFamily 9 }   -- NI-XMR-10Gx4:     NetIron XMR Series 4-port 10-GbE module with IPv4/IPv6/MPLS hardware support
+brcdEntityOIDModuleIntfNiMlx10Gx8D                 OBJECT IDENTIFIER ::= {brcdEntityOIDModuleIntfNetIronFamily 10 }  -- NI-MLX-10GX8-D:   Brocade MLX Series 8-port 10-GbE (D) module with IPv4/IPv6 hardware support
+brcdEntityOIDModuleIntfNiMlx10Gx8M                 OBJECT IDENTIFIER ::= {brcdEntityOIDModuleIntfNetIronFamily 11 }  -- NI-MLX-10GX8-M:   Brocade MLX Series 8-port 10-GbE (M) module with IPv4/IPv6/MPLS hardware support
+brcdEntityOIDModuleIntfMlxFamily            OBJECT IDENTIFIER ::= { brcdEntityOIDModuleIntf 3 }
+brcdEntityOIDModuleIntfBrMlx1Gcx24X                OBJECT IDENTIFIER ::= { brcdEntityOIDModuleIntfMlxFamily 1 }   -- BR-MLX-1GCX24-X:    XMR/MLXE 24-port 1-GbE (X) Copper (RJ-45) Module with IPv4/IPv6/MPLS hardware support
+brcdEntityOIDModuleIntfBrMlx1Gcx24xMl              OBJECT IDENTIFIER ::= { brcdEntityOIDModuleIntfMlxFamily 2 }   -- BR-MLX-1GCX24-X-ML: MLX/MLXE 24-port 1-GbE (ML) Copper (RJ-45) Module with IPv4/IPv6/MPLS hardware support
+brcdEntityOIDModuleIntfBrMlx1Gfx24X                OBJECT IDENTIFIER ::= { brcdEntityOIDModuleIntfMlxFamily 3 }   -- BR-MLX-1GFx24-X:    XMR/MLXE 24-port 1-GbE (X) Copper (RJ-45) Module with IPv4/IPv6/MPLS hardware support
+brcdEntityOIDModuleIntfBrMlx1Gfx24xMl              OBJECT IDENTIFIER ::= { brcdEntityOIDModuleIntfMlxFamily 4 }   -- BR-MLX-1GFX24-X-ML: MLX/MLXE 24-port 1-GbE (ML) Fiber (SFP) Module with IPv4/IPv6/MPLS hardware support
+brcdEntityOIDModuleIntfBrMlx10Gx4X                 OBJECT IDENTIFIER ::= { brcdEntityOIDModuleIntfMlxFamily 5 }   -- BR-MLX-10GX4-X:     XMR/MLXe 4-port 10-GbE (X) module with IPv4/IPv6/MPLS hardware support
+brcdEntityOIDModuleIntfBrMlx10Gx4xMl               OBJECT IDENTIFIER ::= { brcdEntityOIDModuleIntfMlxFamily 6 }   -- BR-MLX-10Gx4-X-ML:  MLX/MLXe 4-port 10-GbE (ML) module with IPv4/IPv6/MPLS hardware support
+brcdEntityOIDModuleIntfBrMlx10Gx8X                 OBJECT IDENTIFIER ::= { brcdEntityOIDModuleIntfMlxFamily 7 }   -- BR-MLX-10GX8-X:     MLXe/XMR 8-port 10-GbE (X) module with IPv4/IPv6/MPLS hardware support
+brcdEntityOIDModuleIntfBrMlx10Gx24Dm               OBJECT IDENTIFIER ::= { brcdEntityOIDModuleIntfMlxFamily 8 }   -- BR-MLX-10GX24-DM:   MLXe 24-port 10-GbE (Up to 18-port wire-speed) Module with IPv4/IPv6/MPLS hardware support
+brcdEntityOIDModuleIntfBrMlx40Gx2                  OBJECT IDENTIFIER ::= { brcdEntityOIDModuleIntfMlxFamily 9 }   -- BR-MLX-40GX-2:      MLXE/XMR/MLX 2-port 40-GbE (X) Module with IPv4/IPv6/MPLS hardware support
+brcdEntityOIDModuleIntfBrMlx40Gx4                  OBJECT IDENTIFIER ::= { brcdEntityOIDModuleIntfMlxFamily 10 }  -- BR-MLX-40GX-4:      MLXE/XMR/MLX 4-port 40-GbE (M) Module with IPv4/IPv6/MPLS hardware support
+brcdEntityOIDModuleIntfBrMlx100Gx1                 OBJECT IDENTIFIER ::= { brcdEntityOIDModuleIntfMlxFamily 11 }  -- BR-MLX-100GX-1:     MLXE/XMR/MLX 1-port 100-GbE (X) Module with IPv4/IPv6/MPLS hardware support
+brcdEntityOIDModuleIntfBrMlx100Gx2                 OBJECT IDENTIFIER ::= { brcdEntityOIDModuleIntfMlxFamily 12 }  -- BR-MLX-100GX-2:     MLXE 2-port 100-GbE (X) Module with IPv4/IPv6/MPLS hardware support
+brcdEntityOIDModuleIntfBrMlx100Gx2CFP2             OBJECT IDENTIFIER ::= { brcdEntityOIDModuleIntfMlxFamily 13 }  -- BR-MLX-100GX2-CFP2: MLXE 2-port 100-GbE CFP2 Module
+brcdEntityOIDModuleIntfBrMlx10Gx20		   OBJECT IDENTIFIER ::= { brcdEntityOIDModuleIntfMlxFamily 14 }  -- BR-MLX-10GX20:      MLXE 20-port 10-GbE Module
+brcdEntityOIDModuleIntfBrMlx10Gx4IPSecModule	   OBJECT IDENTIFIER ::= { brcdEntityOIDModuleIntfMlxFamily 15 }  -- BR-MLX-10Gx4-M-IPSEC:     MLXE 4-port 10-GbE IPSec Module
+
+-- Optics (Transceiver) modules
+brcdEntityOIDModuleOptics             OBJECT IDENTIFIER ::= { brcdEntityOIDModule 5 }        
+brcdEntityOIDModuleOpticsUnknown             OBJECT IDENTIFIER ::= { brcdEntityOIDModuleOptics 1 }        
+brcdEntityOIDModuleOpticsSFP                 OBJECT IDENTIFIER ::= { brcdEntityOIDModuleOptics 2 } 
+brcdEntityOIDModuleOpticsSFPP                OBJECT IDENTIFIER ::= { brcdEntityOIDModuleOptics 3 } 
+brcdEntityOIDModuleOpticsXFP                 OBJECT IDENTIFIER ::= { brcdEntityOIDModuleOptics 4 } 
+brcdEntityOIDModuleOpticsCFP                 OBJECT IDENTIFIER ::= { brcdEntityOIDModuleOptics 5 } 
+brcdEntityOIDModuleOpticsQSFPP               OBJECT IDENTIFIER ::= { brcdEntityOIDModuleOptics 6 } 
+brcdEntityOIDModuleOpticsCFP2                 OBJECT IDENTIFIER ::= { brcdEntityOIDModuleOptics 7 }
+--For FI new optics is added
+brcdEntityOIDModuleOpticsGBIC                 OBJECT IDENTIFIER ::= { brcdEntityOIDModuleOptics 8 }
+
+-- Service modules
+brcdEntityOIDModuleService                                                       OBJECT IDENTIFIER ::= { brcdEntityOIDModule 6 }        
+brcdEntityOIDModuleServiceUnknown                                        OBJECT IDENTIFIER ::= { brcdEntityOIDModuleService 1 }        
+brcdEntityOIDModuleServiceIcx7250Family                                 OBJECT IDENTIFIER ::= { brcdEntityOIDModuleService 2}
+brcdEntityOIDModuleServiceIcx7250sfpplus8Port80gModule      OBJECT IDENTIFIER ::= { brcdEntityOIDModuleServiceIcx7250Family 1 } 
+brcdEntityOIDModuleServiceIcx7250sfpplus4Port4gModule        OBJECT IDENTIFIER ::= { brcdEntityOIDModuleServiceIcx7250Family 2} 
+brcdEntityOIDModuleServiceIcx7450Family                                 OBJECT IDENTIFIER ::= { brcdEntityOIDModuleService 3}
+brcdEntityOIDModuleServiceIcx7400sfpplus4Port40gModule      OBJECT IDENTIFIER ::= { brcdEntityOIDModuleServiceIcx7450Family 1 } 
+brcdEntityOIDModuleServiceIcx7400copper4Port40gModule      OBJECT IDENTIFIER ::= { brcdEntityOIDModuleServiceIcx7450Family 2 } 
+brcdEntityOIDModuleServiceIcx7400sfp4Port4gModule              OBJECT IDENTIFIER ::= { brcdEntityOIDModuleServiceIcx7450Family 3 } 
+brcdEntityOIDModuleServiceIcx7400qsfpplus1Port40gModule    OBJECT IDENTIFIER ::= { brcdEntityOIDModuleServiceIcx7450Family 4 } 
+brcdEntityOIDModuleServiceIcx7400ServiceModule                     OBJECT IDENTIFIER ::= { brcdEntityOIDModuleServiceIcx7450Family 5 } 
+brcdEntityOIDModuleServiceIcx7750Family                                 OBJECT IDENTIFIER ::= { brcdEntityOIDModuleService 4}
+brcdEntityOIDModuleServiceIcx7750QSFP6port40gModule         OBJECT IDENTIFIER ::= { brcdEntityOIDModuleServiceIcx7750Family 1 } 
+brcdEntityOIDModuleServiceIcx77506Q6port40gModule             OBJECT IDENTIFIER ::= { brcdEntityOIDModuleServiceIcx7750Family 2 } 
+--minion service modules
+brcdEntityOIDModuleServiceIcx7150Family                     OBJECT IDENTIFIER ::= { brcdEntityOIDModuleService 5}
+brcdEntityOIDModuleServiceIcx7150sfpplus2Port20gModule      OBJECT IDENTIFIER ::= { brcdEntityOIDModuleServiceIcx7150Family 1 } 
+brcdEntityOIDModuleServiceIcx7150sfpplus4Port40gModule      OBJECT IDENTIFIER ::= { brcdEntityOIDModuleServiceIcx7150Family 2} 
+brcdEntityOIDModuleServiceIcx7150gc2Port2gModule      OBJECT IDENTIFIER ::= { brcdEntityOIDModuleServiceIcx7150Family 3}
+brcdEntityOIDModuleServiceIcx7150sfpplus8Port80gModule      OBJECT IDENTIFIER ::= { brcdEntityOIDModuleServiceIcx7150Family 4} 
+
+-- Port OID assignments 
+brcdEntityOIDPort                     OBJECT IDENTIFIER ::= { brcdEntityOIDMIBObjects 10 }
+brcdEntityOIDPortUnknown                     OBJECT IDENTIFIER ::= { brcdEntityOIDPort 1 }
+brcdEntityOIDPortMgmtSerial                  OBJECT IDENTIFIER ::= { brcdEntityOIDPort 2 }        -- Console port
+brcdEntityOIDPortMgmtEth                     OBJECT IDENTIFIER ::= { brcdEntityOIDPort 3 }        -- Management module ethernet port
+brcdEntityOIDPort100BaseTx                   OBJECT IDENTIFIER ::= { brcdEntityOIDPort 4 }        -- Fast Ethernet - Copper
+brcdEntityOIDPort100BaseFx                   OBJECT IDENTIFIER ::= { brcdEntityOIDPort 5 }        -- Fast Ethernet - Fiber
+brcdEntityOIDPortGigBaseTx                   OBJECT IDENTIFIER ::= { brcdEntityOIDPort 6 }        -- Gigabit Ethernet - Copper
+brcdEntityOIDPortGigBaseFx                   OBJECT IDENTIFIER ::= { brcdEntityOIDPort 7 }        -- Gigabit Ethernet - Fiber
+brcdEntityOIDPort10GigBaseFx                 OBJECT IDENTIFIER ::= { brcdEntityOIDPort 8 }        -- 10 Gigabit Ethernet - Fiber
+brcdEntityOIDPort40GigBaseFx                 OBJECT IDENTIFIER ::= { brcdEntityOIDPort 9 }        -- 40 Gigabit Ethernet - Fiber
+brcdEntityOIDPort100GigBaseFx                OBJECT IDENTIFIER ::= { brcdEntityOIDPort 10 }       -- 100 Gigabit Ethernet - Fiber
+brcdEntityOIDPort10GigBaseTx                 OBJECT IDENTIFIER ::= { brcdEntityOIDPort 11 }        -- 10 Gigabit Ethernet - Copper
+--FI port OIDs
+brcdEntityOIDPort25GigBaseTx                 OBJECT IDENTIFIER ::= { brcdEntityOIDPort 12 }        -- 2.5 Gigabit Ethernet - Copper
+brcdEntityOIDPort40GigBaseTx                 OBJECT IDENTIFIER ::= { brcdEntityOIDPort 13 }          -- 40 Gigabit Ethernet - Copper
+
+-- Stack OID assignments
+-- e.g., stack of multiple chassis entities
+brcdEntityOIDStack                    OBJECT IDENTIFIER ::= { brcdEntityOIDMIBObjects 11 }
+brcdEntityOIDStackUnknown                    OBJECT IDENTIFIER ::= { brcdEntityOIDStack 1 }
+brcdEntityOIDStackICXStackFamily                    OBJECT IDENTIFIER ::= { brcdEntityOIDStack 2 }
+brcdEntityOIDStackICXStackIcx7250                   OBJECT IDENTIFIER ::= { brcdEntityOIDStackICXStackFamily 1 }
+brcdEntityOIDStackICXStackIcx7450                   OBJECT IDENTIFIER ::= { brcdEntityOIDStackICXStackFamily 2 }
+brcdEntityOIDStackICXStackIcx7750                   OBJECT IDENTIFIER ::= { brcdEntityOIDStackICXStackFamily 3 }
+--minion stack OID's
+brcdEntityOIDStackICXStackIcx7150                   OBJECT IDENTIFIER ::= { brcdEntityOIDStackICXStackFamily 4 }
+
+brcdEntityOIDStackICXSPXFamily             OBJECT IDENTIFIER ::= { brcdEntityOIDStack 3}   -- reserve for SPX later
+brcdEntityOIDStackICXSPX                   OBJECT IDENTIFIER ::= { brcdEntityOIDStackICXSPXFamily 1 }
+
+
+-- CPU OID assignments
+brcdEntityOIDCpu                      OBJECT IDENTIFIER ::= { brcdEntityOIDMIBObjects 12 }        
+brcdEntityOIDCpuUnknown 				     OBJECT IDENTIFIER ::= { brcdEntityOIDCpu 1 }
+brcdEntityOIDCpuPPC7447A                     OBJECT IDENTIFIER ::= { brcdEntityOIDCpu 2 }
+brcdEntityOIDCpuPPC7448                      OBJECT IDENTIFIER ::= { brcdEntityOIDCpu 3 }
+brcdEntityOIDCpuPPC7451                      OBJECT IDENTIFIER ::= { brcdEntityOIDCpu 4 }
+brcdEntityOIDCpuPPC7455                      OBJECT IDENTIFIER ::= { brcdEntityOIDCpu 5 }
+brcdEntityOIDCpuPPC7457                      OBJECT IDENTIFIER ::= { brcdEntityOIDCpu 6 }
+brcdEntityOIDCpuPPC8541                      OBJECT IDENTIFIER ::= { brcdEntityOIDCpu 7 }
+brcdEntityOIDCpuPPC8541E                     OBJECT IDENTIFIER ::= { brcdEntityOIDCpu 8 }
+brcdEntityOIDCpuPPC8544                      OBJECT IDENTIFIER ::= { brcdEntityOIDCpu 9 }
+brcdEntityOIDCpuPPC8544E                     OBJECT IDENTIFIER ::= { brcdEntityOIDCpu 10 }
+brcdEntityOIDCpuPPC8572                      OBJECT IDENTIFIER ::= { brcdEntityOIDCpu 11 }
+brcdEntityOIDCpuPPC8572E                     OBJECT IDENTIFIER ::= { brcdEntityOIDCpu 12 }
+ 
+END
+

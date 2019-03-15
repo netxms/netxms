@@ -1,0 +1,107 @@
+FOUNDRY-SN-ARP-GROUP-MIB DEFINITIONS ::= BEGIN
+-- Foundry ARP MIB Release 1.0.0
+-- Revision 1 2/9/04
+-- Copyright 2003 Foundry Networks, Inc.
+-- All rights reserved.
+-- This Foundry Networks SNMP Management Information Base 
+-- Specification embodies Foundry Networks' confidential and
+-- proprietary intellectual property. Foundry Networks retains all
+-- title and ownership in the Specification, including any
+-- revisions.
+
+-- This Specification is supplied "AS IS," and Foundry Networks makes
+-- no warranty, either express or implied, as to the use,
+-- operation, condition, or performance of the Specification.
+
+-- SECTION 1: Top Level Definitions
+-- Imports
+
+IMPORTS
+
+MODULE-IDENTITY, OBJECT-TYPE, Counter32
+		FROM SNMPv2-SMI
+snSwitch
+		FROM FOUNDRY-SN-ROOT-MIB;
+
+snArpInfo MODULE-IDENTITY
+    LAST-UPDATED "200402090000Z"
+    ORGANIZATION "Foundry Network"
+    CONTACT-INFO "support@foundrynet.com"
+    DESCRIPTION  "The Enterprise MIB for ARP support in SNMP.
+               This Foundry Networks SNMP Management Information Base 
+               Specification embodies Foundry Networks' confidential and
+               proprietary intellectual property. Foundry Networks retains all
+               title and ownership in the Specification, including any
+               revisions.
+               This Specification is supplied AS IS, and Foundry Networks makes
+               no warranty, either express or implied, as to the use,
+               operation, condition, or performance of the Specification.
+               "
+       ::= { snSwitch 22 }
+
+snArpStats                    OBJECT IDENTIFIER ::= { snArpInfo 1 }
+
+snArpStatsTotalReceived OBJECT-TYPE
+    SYNTAX         Counter32
+    MAX-ACCESS  read-only
+    STATUS         current
+    DESCRIPTION
+            "The total number of ARP packets received from
+            interfaces, including those received in error."
+              ::= { snArpStats 1 }
+
+snArpStatsRequestReceived OBJECT-TYPE
+    SYNTAX         Counter32
+    MAX-ACCESS  read-only
+    STATUS         current
+    DESCRIPTION
+            "The total number of input ARP Request packets received from
+            interfaces."
+              ::= { snArpStats 2 }
+
+snArpStatsRequestSent OBJECT-TYPE
+    SYNTAX         Counter32
+    MAX-ACCESS  read-only
+    STATUS         current
+    DESCRIPTION
+            "The total number of output ARP Request packets sent from
+            interfaces."
+              ::= { snArpStats 3 }
+
+snArpStatsRepliesSent OBJECT-TYPE
+    SYNTAX         Counter32
+    MAX-ACCESS  read-only
+    STATUS         current
+    DESCRIPTION
+            "The total number of output ARP Reply packets sent from
+            interfaces."
+              ::= { snArpStats 4 }
+
+snArpStatsPendingDrop OBJECT-TYPE
+    SYNTAX         Counter32
+    MAX-ACCESS  read-only
+    STATUS         current
+    DESCRIPTION
+            "The total number of ARP pending packets discarded."
+              ::= { snArpStats 5 }
+
+snArpStatsInvalidSource OBJECT-TYPE
+    SYNTAX         Counter32
+    MAX-ACCESS  read-only
+    STATUS         current
+    DESCRIPTION
+            "The total number of ARP packets received with invalid
+            sender protocol address."
+              ::= { snArpStats 6 }
+
+snArpStatsInvalidDestination OBJECT-TYPE
+    SYNTAX         Counter32
+    MAX-ACCESS  read-only
+    STATUS         current
+    DESCRIPTION
+            "The total number of ARP packets received with invalid
+            destination protocol address."
+              ::= { snArpStats 7 }
+
+		
+END		
