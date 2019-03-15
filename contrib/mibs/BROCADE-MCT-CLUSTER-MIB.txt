@@ -1,0 +1,850 @@
+BROCADE-MCT-CLUSTER-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+   MODULE-IDENTITY, OBJECT-TYPE, NOTIFICATION-TYPE,
+   Unsigned32
+      FROM SNMPv2-SMI                                    -- [RFC2578]
+   MODULE-COMPLIANCE, OBJECT-GROUP, NOTIFICATION-GROUP
+      FROM SNMPv2-CONF                                   -- [RFC2580]
+   TruthValue, RowStatus, DisplayString, TimeInterval,
+   TEXTUAL-CONVENTION
+      FROM SNMPv2-TC                                     -- [RFC2579]
+   InterfaceIndex
+      FROM IF-MIB                                        -- [RFC2863]
+   InetAddressType, InetAddress
+      FROM INET-ADDRESS-MIB                              -- [RFC 4001]
+   BrcdVlanIdOrNoneTC, BrcdVlanIdTC
+      FROM FOUNDRY-SN-SWITCH-GROUP-MIB                   -- [snaclu]
+   brcdMct
+      FROM FOUNDRY-SN-ROOT-MIB                           -- [snrootu]
+   EnabledStatus
+      FROM P-BRIDGE-MIB;                                 -- [RFC4363]
+
+brcdMctMIB MODULE-IDENTITY
+   LAST-UPDATED "201201120000Z"  -- January 12, 2012
+   ORGANIZATION "Brocade Communications Systems, Inc."
+   CONTACT-INFO
+             "Technical Support Center
+              130 Holger Way,
+              San Jose, CA  95134
+              Email:  ipsupport@brocade.com
+              Phone: 1-800-752-8061
+              URL:  www.brocade.com"
+   DESCRIPTION
+             "The MIB module contains the managed object definition for
+              Brocade Multi Chassis Trunking.
+
+              Supported Platforms:
+                   - supported on NetIron XMR/MLX CES/CER platforms.
+
+              Copyright 1996-2012 Brocade Communications Systems, Inc.
+              All rights reserved.
+              This Brocade Communications Systems SNMP Management Information
+              Base Specification embodies Brocade Communications Systems
+              confidential and proprietary intellectual property.
+              Brocade Communications Systems retains all title and ownership
+              in the Specification, including any revisions.
+
+              This Specification is supplied AS IS, and Brocade Communications
+              Systems makes no warranty, either express or implied, as to the
+              use, operation, condition, or performance of the specification,
+              and any unintended consequence it may on the user environment."
+
+   REVISION      "201112200000Z"  -- January 12, 2012
+   DESCRIPTION
+            "Initial version"
+
+   ::= { brcdMct 1 }
+
+---
+--- Textual Conventions
+---
+BrcdDeployStatus ::= TEXTUAL-CONVENTION
+   STATUS        current
+   DESCRIPTION
+      "The deploy status."
+   SYNTAX        INTEGER { deploy(1), undeploy(2) }
+
+-- Top level components of this MIB module.
+
+-- Notifications
+brcdMctNotifications OBJECT IDENTIFIER ::= { brcdMctMIB 0 }
+-- Tables, Scalars
+brcdMctObjects       OBJECT IDENTIFIER ::= { brcdMctMIB 1 }
+
+---
+--- MCT global configuration
+---
+brcdMctL2Forward OBJECT-TYPE
+   SYNTAX        EnabledStatus
+   MAX-ACCESS    read-write
+   STATUS        current
+   DESCRIPTION
+       "The global cluster L2 forward state for this system. When this object
+        is set to disable, the STP protocol packets coming on the MCT VLANs
+        are dropped."
+   ::= { brcdMctObjects 1 }
+
+---
+--- MCT Cluster Table
+---
+brcdMctClusterTable OBJECT-TYPE
+   SYNTAX        SEQUENCE OF BrcdMctClusterEntry
+   MAX-ACCESS    not-accessible
+   STATUS        current
+   DESCRIPTION
+       "This table provides Multi Chassis Trunking Cluster information."
+  ::= { brcdMctObjects 2 }
+
+brcdMctClusterEntry OBJECT-TYPE
+   SYNTAX        BrcdMctClusterEntry
+   MAX-ACCESS    not-accessible
+   STATUS        current
+   DESCRIPTION
+       "An entry in this table represents the MCT Cluster."
+   INDEX   { brcdMctClusterId }
+   ::= { brcdMctClusterTable 1 }
+
+BrcdMctClusterEntry ::= SEQUENCE {
+   brcdMctClusterId                    Unsigned32,
+   brcdMctClusterName                  DisplayString,
+   brcdMctClusterRbridgeId             Unsigned32,
+   brcdMctClusterSessionVlan           BrcdVlanIdTC,
+   brcdMctClusterKeepAliveVlan         BrcdVlanIdOrNoneTC,
+   brcdMctClusterClientIsolationMode   INTEGER,
+   brcdMctClusterClientShutdown        TruthValue,
+   brcdMctClusterMemberVlans           DisplayString,
+   brcdMctClusterActiveMemberVlans     DisplayString,
+   brcdMctClusterDeploy                BrcdDeployStatus,
+   brcdMctClusterDeployFailureReason   INTEGER,
+   brcdMctClusterRowStatus             RowStatus
+}
+
+brcdMctClusterId OBJECT-TYPE
+   SYNTAX        Unsigned32 (1..65535)
+   MAX-ACCESS    not-accessible
+   STATUS        current
+   DESCRIPTION
+       "The id for this MCT Cluster."
+   ::= { brcdMctClusterEntry 1 }
+
+brcdMctClusterName OBJECT-TYPE
+   SYNTAX        DisplayString (SIZE(1..64))
+   MAX-ACCESS    read-create
+   STATUS        current
+   DESCRIPTION
+       "The name of this MCT Cluster. This object cannot be modified after
+        creation."
+   ::= { brcdMctClusterEntry 2 }
+
+brcdMctClusterRbridgeId OBJECT-TYPE
+   SYNTAX        Unsigned32 (1..35535)
+   MAX-ACCESS    read-create
+   STATUS        current
+   DESCRIPTION
+       "The remote bridge id of this MCT Cluster. This remote bridge
+        id is used by the peer to communicate with this cluster node."
+   ::= { brcdMctClusterEntry 3 }
+
+brcdMctClusterSessionVlan OBJECT-TYPE
+   SYNTAX        BrcdVlanIdTC
+   MAX-ACCESS    read-create
+   STATUS        current
+   DESCRIPTION
+       "The session VLAN of this MCT Cluster. The cluster session
+        VLAN can be in the range of 1 to 4090, but cannot be default VLAN.
+        The brcdMctClusterSessionVlan and brcdMctClusterKeepAliveVlan
+        cannot be same."
+   ::= { brcdMctClusterEntry 4 }
+
+brcdMctClusterKeepAliveVlan OBJECT-TYPE
+   SYNTAX        BrcdVlanIdOrNoneTC
+   MAX-ACCESS    read-create
+   STATUS        current
+   DESCRIPTION
+       "The keep-alive VLAN of this MCT Cluster. The keep-alive VLAN
+        can be in the range of 0 to 4090, but cannot be default VLAN.
+        The brcdMctClusterSessionVlan and brcdMctClusterKeepAliveVlan
+        cannot be same.
+
+        The value 0 indicates that keep-alive VLAN is not set for this cluster.
+
+        If brcdMctClusterClientIsolationMode object is set to strict(2),
+        then brcdMctClusterKeepAliveVlan cannot be set to except with value 0."
+   DEFVAL { 0 }
+   ::= { brcdMctClusterEntry 5 }
+
+brcdMctClusterClientIsolationMode OBJECT-TYPE
+   SYNTAX        INTEGER { loose(1), strict(2) }
+   MAX-ACCESS    read-create
+   STATUS        current
+   DESCRIPTION
+       "The client isolation mode of this MCT Cluster.
+
+        When this object is set to loose(1), then whenever the
+        CCP goes down the client performs the Master/Slave
+        negotiation. After negotiation, the Slave shuts down
+        its client ports whereas the Master client ports continue
+        to forward the traffic.
+
+        When this object is set to strict(2), then whenever the CCP
+        goes down, the client interfaces on both the cluster nodes
+        are administratively shutdown. In this mode, the client is
+        completely isolated from the network if CCP is not
+        operational.
+
+        If brcdMctClusterKeepAliveVlan is set to a VLAN id except 0, then
+        brcdMctClusterClientIsolationMode cannot be set to strict(2)."
+   DEFVAL { loose }
+   ::= { brcdMctClusterEntry 6 }
+
+brcdMctClusterClientShutdown OBJECT-TYPE
+   SYNTAX        TruthValue
+   MAX-ACCESS    read-create
+   STATUS        current
+   DESCRIPTION
+       "The client shutdown state of this MCT Cluster.
+        When set to true, shutdown all the local client interfaces
+        in the cluster. This would result in failover of traffic
+        to the cluster peer."
+   DEFVAL { false }
+   ::= { brcdMctClusterEntry 7 }
+
+brcdMctClusterMemberVlans OBJECT-TYPE
+   SYNTAX        DisplayString
+   MAX-ACCESS    read-create
+   STATUS        current
+   DESCRIPTION
+       "The list of the member VLAN ids on which this MCT cluster is
+        operating. This would be the range of VLANs for which
+        there would be MAC synchronization.
+        The VLANs which are not continuous are represented with a space
+        separated and continuous VLANs represented with the range.
+        For example: 2 5 10 to 40 100"
+   ::= { brcdMctClusterEntry 8 }
+
+brcdMctClusterActiveMemberVlans OBJECT-TYPE
+   SYNTAX        DisplayString
+   MAX-ACCESS    read-only
+   STATUS        current
+   DESCRIPTION
+       "The list of the active member VLANs of this MCT Cluster.
+        The VLANs which are not continuous are represented with a space
+        separated and continuous VLANs represented with the range.
+        For example: 2 5 10 to 40 100"
+   ::= { brcdMctClusterEntry 9 }
+
+brcdMctClusterDeploy OBJECT-TYPE
+   SYNTAX        BrcdDeployStatus
+   MAX-ACCESS    read-create
+   STATUS        current
+   DESCRIPTION
+       "The admin status of this MCT Cluster. When this object
+        is set to deploy, consistency check of the entire cluster
+        configuration is done.
+
+        Once the cluster is deployed, the configuration cannot be
+        modified except for the brcdMctClusterMemberVlans,
+        brcdMctClusterClientIsolationMode and brcdMctClusterDeploy objects."
+   DEFVAL { undeploy }
+   ::= { brcdMctClusterEntry 10 }
+
+brcdMctClusterDeployFailureReason OBJECT-TYPE
+   SYNTAX        INTEGER  {
+                   none(1),
+                   unknown(2),
+                   rBridgeIdNotConfigured(3),
+                   sessionVlanNotConfigured(4),
+                   iclNotConfigured(5),
+                   peerNotConfigured(6),
+                   iclIsMrpSecondaryInterface(7),
+                   iclIsErpRplInterface(8),
+                   iclIsErpMsInterface(9),
+                   iclIsErpFsInterface(10),
+                   iclNotInSessionVlan(11),
+                   iclNotInMemberVlans(12),
+                   nonIclInterfacesInSessionVlan(13),
+                   mgmtVeNotConfiguredInSessionVlan(14),
+                   mgmtIpNotConfiguredInSessionVlan(15),
+                   mgmtIpIsUsedInPeerOrClientConfig(16),
+                   mgmtIpNotInSubnetOfPeerIp(17),
+                   rBridgeIdIsUsedInPeerOrClientConfig(18),
+                   clientInterfaceIsNotInMemberVlan(19),
+                   defaultVlanConfigForSessionOrMemberVlan(20)
+                }
+   MAX-ACCESS    read-only
+   STATUS        current
+   DESCRIPTION
+       "The last failure reason for cluster deploy operation through SNMP.
+        The following failure reason codes are supported:
+           none(1)                              - The last deploy is successful.
+           unknown(2)                           - The last deploy has failed
+                                                  for unknown reason.
+           rBridgeIdNotConfigured(3)            - Remote bridge id is not
+                                                  configured.
+           sessionVlanNotConfigured(4)          - Session VLAN is not
+                                                  configured.
+           iclNotConfigured(5)                  - ICL is not configured.
+           peerNotConfigured(6)                 - Peer is not configured.
+           iclIsMrpSecondaryInterface(7)        - In NI CES/CER devices, ICL
+                                                  should not be MRP
+                                                  secondary interface.
+           iclIsErpRplInterface(8)              - In NI CES/CER devices, ICL
+                                                  should not be ERP RPL
+                                                  interface.
+           iclIsErpMsInterface(9)               - In NI CES/CER devices, ICL
+                                                  should not be ERP MS
+                                                  interface.
+           iclIsErpFsInterface(10)              - In NI CES/CER devices, ICL
+                                                  should not be ERP FS
+                                                  interface.
+           iclNotInSessionVlan(11)              - ICL is not in session VLAN.
+           iclNotInMemberVlans(12)              - ICL is not in member VLANs.
+           nonIclInterfacesInSessionVlan(13)    - Non ICL interfaces are
+                                                  present under session VLAN.
+           mgmtVeNotConfiguredInSessionVlan(14) - Management VE is not
+                                                  configured in session VLAN.
+           mgmtIpNotConfiguredInSessionVlan(15) - Management IP is not
+                                                  configured in session VLAN.
+           mgmtIpIsUsedInPeerOrClientConfig(16) - Management IP is used in peer
+                                                  or client configuration.
+           mgmtIpNotInSubnetOfPeerIp(17)        - Management IP is not in subnet
+                                                  of peer IP.
+           rBridgeIdUsedInPeerOrClientConfig(18) - Remote bridge id is used
+                                                   in peer or client
+                                                   configuration.
+           clientInterfaceIsNotInMemberVlan(19)  - Client interface is not in
+                                                   member VLAN.
+           defaultVlanConfigAsSessOrMemberVlan(20) - Default VLAN is configured
+                                                     as session or member VLAN."
+   ::= { brcdMctClusterEntry 11 }
+
+brcdMctClusterRowStatus OBJECT-TYPE
+   SYNTAX        RowStatus
+   MAX-ACCESS    read-create
+   STATUS        current
+   DESCRIPTION
+       "The row status of this MCT Cluster. All the values of RowStatus
+        are supported. The notInService(2) indicates that cluster is not
+        yet activated.
+
+        The following objects should be present in the same SNMP set request
+        to create a row with brcdMctClusterRowStatus set to createAndGo(4)
+        value:
+           brcdMctClusterName, brcdMctClusterRbridgeId,
+           brcdMctClusterSessionVlan, brcdMctClusterMemberVlans,
+           objects.
+
+        The brcdMctClusterName object should be present in the same SNMP set
+        request to create a row in brcdMctClusterTable with
+        brcdMctClusterRowStatus set to createAndWait(5) value.
+
+        If the cluster is deployed, then brcdMctClusterRowStatus cannot be
+        set destroy(6)"
+   ::= { brcdMctClusterEntry 12 }
+
+-- End of brcdMctClusterTable
+
+--
+-- MCT Cluster ICL table
+--
+brcdMctClusterIclTable OBJECT-TYPE
+   SYNTAX        SEQUENCE OF BrcdMctClusterIclEntry
+   MAX-ACCESS    not-accessible
+   STATUS        current
+   DESCRIPTION
+       "This table provides Multi Chassis Trunking Cluster information."
+  ::= { brcdMctObjects 3 }
+
+brcdMctClusterIclEntry OBJECT-TYPE
+   SYNTAX        BrcdMctClusterIclEntry
+   MAX-ACCESS    not-accessible
+   STATUS        current
+   DESCRIPTION
+       "An entry in this table represents the MCT Cluster ICL."
+   INDEX   { brcdMctClusterId,
+             IMPLIED brcdMctClusterIclName
+   }
+   ::= { brcdMctClusterIclTable 1 }
+
+BrcdMctClusterIclEntry ::= SEQUENCE {
+   brcdMctClusterIclName               DisplayString,
+   brcdMctClusterIclIfIndex            InterfaceIndex,
+   brcdMctClusterIclRowStatus          RowStatus
+}
+
+brcdMctClusterIclName OBJECT-TYPE
+   SYNTAX        DisplayString (SIZE(1..64))
+   MAX-ACCESS    not-accessible
+   STATUS        current
+   DESCRIPTION
+       "The name of ICL."
+   ::= { brcdMctClusterIclEntry 1 }
+
+brcdMctClusterIclIfIndex OBJECT-TYPE
+   SYNTAX        InterfaceIndex
+   MAX-ACCESS    read-create
+   STATUS        current
+   DESCRIPTION
+       "The interface index of the ICL. The ICL interface can be a single
+        ethernet interface or trunk interface index."
+   ::= { brcdMctClusterIclEntry 2 }
+
+brcdMctClusterIclRowStatus OBJECT-TYPE
+   SYNTAX        RowStatus
+   MAX-ACCESS    read-create
+   STATUS        current
+   DESCRIPTION
+       "The row status of this MCT Cluster ICL entry. Only the active(1),
+        createAndGo(4) and destroy (6) values of RowStatus are supported.
+
+        If the cluster is deployed, then brcdMctClusterIclRowStatus cannot be
+        set destroy(6).
+
+        If the brcdMctClusterIclName is used in the peer configuration for
+        object brcdMctClusterPeerIclName, then the peer configuration should
+        be removed before setting the brcdMctClusterIclRowStatus to
+        destroy(6)"
+   ::= { brcdMctClusterIclEntry 3 }
+
+-- End of brcdMctClusterIclTable
+
+--
+-- MCT Cluster Peer table
+--
+brcdMctClusterPeerTable OBJECT-TYPE
+   SYNTAX        SEQUENCE OF BrcdMctClusterPeerEntry
+   MAX-ACCESS    not-accessible
+   STATUS        current
+   DESCRIPTION
+       "This table provides Multi Chassis Trunking Cluster Peers
+        information.
+        The objects in this table cannot be modified after the
+        cluster is deployed"
+  ::= { brcdMctObjects 4 }
+
+brcdMctClusterPeerEntry OBJECT-TYPE
+   SYNTAX        BrcdMctClusterPeerEntry
+   MAX-ACCESS    not-accessible
+   STATUS        current
+   DESCRIPTION
+       "An entry in this table represents the MCT Cluster Peer."
+   INDEX   {
+             brcdMctClusterId,
+             brcdMctClusterPeerAddrType,
+             brcdMctClusterPeerAddr
+   }
+   ::= { brcdMctClusterPeerTable 1 }
+
+BrcdMctClusterPeerEntry ::= SEQUENCE {
+   brcdMctClusterPeerAddrType        InetAddressType,
+   brcdMctClusterPeerAddr            InetAddress,
+   brcdMctClusterPeerRbridgeId       Unsigned32,
+   brcdMctClusterPeerIclName         DisplayString,
+   brcdMctClusterPeerFastFailover    EnabledStatus,
+   brcdMctClusterPeerKeepAliveTime   Unsigned32,
+   brcdMctClusterPeerHoldTime        Unsigned32,
+   brcdMctClusterPeerActiveVlans     DisplayString,
+   brcdMctClusterPeerOperStatus      INTEGER,
+   brcdMctClusterPeerDownReason      INTEGER,
+   brcdMctClusterPeerUpTime          TimeInterval,
+   brcdMctClusterPeerRowStatus       RowStatus
+}
+
+brcdMctClusterPeerAddrType OBJECT-TYPE
+   SYNTAX        InetAddressType
+   MAX-ACCESS    not-accessible
+   STATUS        current
+   DESCRIPTION
+       "The address type of this MCT Cluster Peer. The supported address
+        types are ipv4(1) and ipv6(2)."
+   ::= { brcdMctClusterPeerEntry 1 }
+
+brcdMctClusterPeerAddr OBJECT-TYPE
+   SYNTAX        InetAddress
+   MAX-ACCESS    not-accessible
+   STATUS        current
+   DESCRIPTION
+       "The IPv4/IPv6 address of this MCT Cluster Peer."
+   ::= { brcdMctClusterPeerEntry 2 }
+
+brcdMctClusterPeerRbridgeId OBJECT-TYPE
+   SYNTAX        Unsigned32 (1..35535)
+   MAX-ACCESS    read-create
+   STATUS        current
+   DESCRIPTION
+       "The remote bridge Id of this MCT Cluster Peer."
+   ::= { brcdMctClusterPeerEntry 3 }
+
+brcdMctClusterPeerIclName OBJECT-TYPE
+   SYNTAX        DisplayString (SIZE(1..64))
+   MAX-ACCESS    read-create
+   STATUS        current
+   DESCRIPTION
+       "The ICL name of this MCT Cluster Peer. This should be same as
+        brcdMctClusterIclName object for this MCT Cluster"
+   ::= { brcdMctClusterPeerEntry 4 }
+
+brcdMctClusterPeerFastFailover OBJECT-TYPE
+   SYNTAX        EnabledStatus
+   MAX-ACCESS    read-create
+   STATUS        current
+   DESCRIPTION
+       "The fast failover status of this MCT Cluster Peer.
+
+        When this object is set to enable, as soon as the ICL interface
+        goes down the CCP goes down. All the remote MACs are flushed.
+
+        When set to disable, even if the ICL interface goes down the
+        CCP waits for the hold-time before making the CCP down.
+        Remote MACs are flushed only when the CCP is down."
+   DEFVAL { enabled }
+   ::= { brcdMctClusterPeerEntry 5 }
+
+brcdMctClusterPeerKeepAliveTime OBJECT-TYPE
+   SYNTAX        Unsigned32
+   MAX-ACCESS    read-create
+   STATUS        current
+   DESCRIPTION
+       "The keep-alive time in seconds of this MCT Cluster Peer. The range of
+        keep-alive time is 0 to 21845. The default is 30 seconds."
+   ::= { brcdMctClusterPeerEntry 6 }
+
+brcdMctClusterPeerHoldTime OBJECT-TYPE
+   SYNTAX        Unsigned32 (3..65535)
+   MAX-ACCESS    read-create
+   STATUS        current
+   DESCRIPTION
+       "The hold time in seconds of this MCT Cluster Peer. The hold time must
+        be at least 3 times the keep alive time. The range of hold time is 3
+        to 65535. The default is 90 seconds."
+   DEFVAL { 90 }
+   ::= { brcdMctClusterPeerEntry 7 }
+
+brcdMctClusterPeerActiveVlans OBJECT-TYPE
+   SYNTAX        DisplayString
+   MAX-ACCESS    read-only
+   STATUS        current
+   DESCRIPTION
+       "The list of the active member VLANs of this MCT Cluster Peer.
+        The VLANs which are not continuous are represented with a space
+        separated and continuous VLANs represented with the range.
+        For example: 2 5 10 to 40 100"
+   ::= { brcdMctClusterPeerEntry 8 }
+
+brcdMctClusterPeerOperStatus OBJECT-TYPE
+   SYNTAX        INTEGER {
+                   unknown(1),
+                   noState(2),
+                   init(3),
+                   ccpUp(4),
+                   ccpDown(5),
+                   reachable(6)
+                }
+   MAX-ACCESS    read-only
+   STATUS        current
+   DESCRIPTION
+       "The operational status of this MCT Cluster Peer. The follwoing
+        values are supported for operational status
+        unknown(1)   - Unknown state
+        noState(2)   - The peer state machine is not started
+        init(3)      - The peer state machine is initializing
+        ccpUp(4)     - CCP is up
+        ccpDown(5)   - CCP is down
+        reachable(6) - CCP is down, but peer is reachable through keep
+                       alive VLAN"
+   ::= { brcdMctClusterPeerEntry 9 }
+
+brcdMctClusterPeerDownReason OBJECT-TYPE
+   SYNTAX        INTEGER {
+                   none(1),
+                   loopbackInterfaceDown(2),
+                   iclInterfaceDown(3),
+                   upgradeInProgress(4),
+                   routeNotAvailable(5),
+                   iclVeDown(6),
+                   rBridgeIdMismatch(7),
+                   clusterIdMismatch(8),
+                   keepAliveTimeMismatch(9),
+                   holdTimeMismatch(10),
+                   fastFailoverMismatch(11),
+                   shutdownMesgFromPeer(12),
+                   tcpKeepAliveTimeout(13),
+                   tcpConnCloseMesg(14),
+                   holdTimeoutExpired(15),
+                   sendStateTimeoutExpired(16),
+                   recvStateTimeoutExpired(17),
+                   initMesgSendFail(18),
+                   keepAliveMesgSendFail(19),
+                   invalidAppMesgRecv(20),
+                   badProtocolVersionPktRecv(21),
+                   badPduLengthPktRecv(22),
+                   unknownCcpPktRecv(23),
+                   invalidCcpPktRecv(24),
+                   internalCcpErrorRecv(25),
+                   ccpTcpCommFail(26)
+                }
+   MAX-ACCESS    read-only
+   STATUS        current
+   DESCRIPTION
+       "The reason for the brcdMctClusterPeerOperStatus is in ccpDown(3) state.
+        The following values are supported as down reason:
+        none(1)                      - Peer is not in down state
+        loopbackInterfaceDown(2)     - Loopback interface down
+        iclInterfaceDown(3)          - ICL interface down
+        upgradeInProgress(4)         - Graceful upgrade in progress
+        routeNotAvailable(5)         - Route to cluster Peer is not available
+        iclVeDown(6)                 - ICL VE interface down
+        rBridgeIdMismatch(7)         - RBridge ID does not match with Peer
+        clusterIdMismatch(8)         - Cluster ID does not match with Peer
+        keepAliveTimeMismatch(9)     - KeepAlive Time does not match with Peer
+        holdTimeMismatch(10)          - Hold Time does not match with Peer
+        fastFailoverMismatch(11)     - Fast Failover parameter does not match
+                                      with Peer
+        shutdownMesgFromPeer(12)     - ShutDown message came from Peer
+        tcpKeepAliveTimeout(13)      - TCP keepalive timeout message came
+        tcpConnCloseMesg(14)         - TCP connection close message came
+        holdTimeoutExpired(15)       - Hold timeout expired
+        sendStateTimeoutExpired(16)  - Send State timeout expired
+        recvStateTimeoutExpired(17)  - Recieve State timeout expired
+        initMesgSendFail(18)         - Unable to send the Init message
+        keepAliveMesgSendFail(19)    - Unable to send the Keepalive message
+        invalidAppMesgRecv(20)       - Invalid Application packet received
+                                       message came from peer
+        badProtocolVersionPktRecv(21) - Bad Protocol version packet received
+                                       message came from peer
+        badPduLengthPktRecv(22)      - Bad PDU length packet received message
+                                       came from peer
+        unknownCcpPktRecv(23)        - Unknown CCP message type packet received
+                                       message came from peer
+        invalidCcpPktRecv(24)        - Invalid CCP message length packet
+                                       received message came from peer
+        internalCcpErrorRecv(25)     - Internal CCP error message came from peer
+        ccpTcpCommFail(26)           - Cluster CCP TCP communication failed"
+   ::= { brcdMctClusterPeerEntry 10 }
+
+brcdMctClusterPeerUpTime OBJECT-TYPE
+   SYNTAX        TimeInterval
+   MAX-ACCESS    read-only
+   STATUS        current
+   DESCRIPTION
+       "The time since this MCT Cluster Peer is up. If the
+        brcdMctClusterPeerOperStatus is not in ccpUp(2) state, then zero
+        will be returned."
+   ::= { brcdMctClusterPeerEntry 11 }
+
+brcdMctClusterPeerRowStatus OBJECT-TYPE
+   SYNTAX        RowStatus
+   MAX-ACCESS    read-create
+   STATUS        current
+   DESCRIPTION
+       "The row status of this MCT Cluster Peer.  Only the active(1),
+        notInService(2), createAndGo(4) and destroy(6) values of RowStatus
+        are supported. The notInService(2) indicates that cluster is not
+        yet activated.
+
+        The SNMP set request to create a row with brcdMctClusterPeerRowStatus
+        set to createAndGo(4) value should contain the
+        brcdMctClusterPeerRbridgeId and brcdMctClusterPeerIclName objects in
+        the same SNMP set request.
+
+        If the cluster is deployed, then brcdMctClusterPeerRowStatus cannot be
+        set destroy(6)"
+   ::= { brcdMctClusterPeerEntry 12 }
+
+-- End of brcdMctClusterPeerTable
+
+--
+-- MCT Cluster client table
+--
+brcdMctClusterClientTable OBJECT-TYPE
+   SYNTAX        SEQUENCE OF BrcdMctClusterClientEntry
+   MAX-ACCESS    not-accessible
+   STATUS        current
+   DESCRIPTION
+       "This table provides Multi Chassis Trunking Cluster Clients information."
+  ::= { brcdMctObjects 5 }
+
+brcdMctClusterClientEntry OBJECT-TYPE
+   SYNTAX        BrcdMctClusterClientEntry
+   MAX-ACCESS    not-accessible
+   STATUS        current
+   DESCRIPTION
+       "An entry in this table represents the MCT Cluster Client."
+   INDEX   {
+             brcdMctClusterId,
+             IMPLIED brcdMctClusterClientName
+   }
+   ::= { brcdMctClusterClientTable 1 }
+
+BrcdMctClusterClientEntry ::= SEQUENCE {
+   brcdMctClusterClientName                 DisplayString,
+   brcdMctClusterClientRbridgeId            Unsigned32,
+   brcdMctClusterClientIfIndex              InterfaceIndex,
+   brcdMctClusterClientOperStatus           INTEGER,
+   brcdMctClusterClientDeploy               BrcdDeployStatus,
+   brcdMctClusterClientDeployFailureReason  INTEGER,
+   brcdMctClusterClientRowStatus            RowStatus
+}
+
+brcdMctClusterClientName OBJECT-TYPE
+   SYNTAX        DisplayString (SIZE(1..64))
+   MAX-ACCESS    not-accessible
+   STATUS        current
+   DESCRIPTION
+       "The name of this MCT Cluster client."
+   ::= { brcdMctClusterClientEntry 1 }
+
+brcdMctClusterClientRbridgeId     OBJECT-TYPE
+   SYNTAX        Unsigned32 (1..35535)
+   MAX-ACCESS    read-create
+   STATUS        current
+   DESCRIPTION
+       "The remote bridge id of this MCT Cluster client. This remote
+        bridge ID is used by the client to communicate with this
+        cluster node."
+   ::= { brcdMctClusterClientEntry 2 }
+
+brcdMctClusterClientIfIndex  OBJECT-TYPE
+   SYNTAX        InterfaceIndex
+   MAX-ACCESS    read-create
+   STATUS        current
+   DESCRIPTION
+       "The interface index which is connected to this MCT Cluster
+        client. The interface should be an ethernet interface or
+        trunk interface."
+   ::= { brcdMctClusterClientEntry 3 }
+
+brcdMctClusterClientOperStatus   OBJECT-TYPE
+   SYNTAX        INTEGER {
+                   unknown(1),
+                   noState(2),
+                   init(3),
+                   localDeploy(4),
+                   adminUp(5),
+                   remoteUp(6),
+                   localUp(7),
+                   up(8),
+                   slave(9),
+                   master(10),
+                   masterPeerUp(11)
+                }
+   MAX-ACCESS    read-only
+   STATUS        current
+   DESCRIPTION
+       "The operational status of this MCT Cluster client. The following
+        values are taken by the operational status:
+        unknown(1)       - Unknown state
+        noState(2)       - The peer state machine is not started
+        init(3)          - The peer state machine is initializing
+        localDeploy(4)   - The client is up, but not configured at remote side
+        adminUp(5)       - The client is up, but both the client interfaces
+                           are operationally down
+        remoteUp(6)      - The client's remote side is up and locally down
+        localUp(7)       - The client is locallly up and remote side is down
+        up(8)            - The client is up locally and at remote side
+        slave(9)         - The client is down and it has taken the slave role
+        master(10)       - The client is down and it has taken the master role
+        masterPeerUp(11) - The client is down, it has taken the master role
+                           and master peer is up."
+   ::= { brcdMctClusterClientEntry 4 }
+
+brcdMctClusterClientDeploy OBJECT-TYPE
+   SYNTAX        BrcdDeployStatus
+   MAX-ACCESS    read-create
+   STATUS        current
+   DESCRIPTION
+       "The admin status of this MCT Cluster client. When this object
+        is set to deploy and if cluster is not deployed, the
+        configuration will be taken but the client state machine will
+        not be started.
+
+        The objects in this table are not allowed to modify after client
+        is deployed except brcdMctClusterClientDeploy object."
+   ::= { brcdMctClusterClientEntry 5 }
+
+brcdMctClusterClientDeployFailureReason OBJECT-TYPE
+   SYNTAX        INTEGER {
+                   none(1),
+                   unknown(2),
+                   rBridgeIdNotConfigured(3),
+                   clientInterfaceNotConfigured(4),
+                   rBridgeIdUsedInClusterOrPeer(5),
+                   clientInterfacePhysicallyNotUp(6),
+                   clientInterfaceIsMrpRingInterface(7),
+                   clientInterfaceIsErpInterface(8),
+                   iclIsNotInMemberVlan(9)
+                }
+   MAX-ACCESS    read-only
+   STATUS        current
+   DESCRIPTION
+       "The failure reason for the last cluster client deploy operation
+        through SNMP. The following failure reasons are supported:
+            none(1)                             - The last deploy is successful.
+            unknown(2)                          - The last deploy is failed for
+                                                  unknown reason.
+            rBridgeIdNotConfigured(3)           - Remote bridge is not
+                                                  configured.
+            clientInterfaceNotConfigured(4)     - Client interface is not
+                                                  configured.
+            rBridgeIdUsedInClusterOrPeer(5)     - Remote bridge id is used in
+                                                  cluster or peer configuration.
+            clientInterfaceNotPresent(6)        - Client interface is physically
+                                                  not present
+            clientInterfaceIsMrpRingInterface(7) - Client interface is
+                                                   configured as MRP ring
+                                                   interface.
+            clientInterfaceIsErpInterface(8)    - Client interface is configured
+                                                  as ERP interface.
+            iclIsNotInMemberVlan(9)             - ICL is not in member VLAN."
+   ::= { brcdMctClusterClientEntry 6 }
+
+brcdMctClusterClientRowStatus   OBJECT-TYPE
+   SYNTAX        RowStatus
+   MAX-ACCESS    read-create
+   STATUS        current
+   DESCRIPTION
+       "The row status of this MCT Cluster client. All the values of RowStatus
+        are supported. The notInService(2) indicates that cluster client is
+        not deployed.
+
+        The brcdMctClusterClientRbridgeId and brcdMctClusterClientIfIndex
+        objects should be present in the same SNMP set request to create a row
+        with brcdMctClusterClientRowStatus set to createAndGo(4) value."
+   ::= { brcdMctClusterClientEntry 7 }
+
+-- End of brcdMctClusterTable
+
+---
+--- MCT Notifications
+---
+
+brcdMctClusterPeerStatus NOTIFICATION-TYPE
+   OBJECTS     { brcdMctClusterPeerOperStatus,
+                 brcdMctClusterPeerDownReason
+   }
+   STATUS      current
+   DESCRIPTION
+       "This notification is generated when the
+        brcdMctClusterPeerOperStatus object for peer entry in
+        brcdMctClusterPeerTable changes the state to ccpUp(3),
+        ccpDown(4) or reachable(5) from any other state."
+   ::= { brcdMctNotifications 1 }
+
+brcdMctClusterClientStatus NOTIFICATION-TYPE
+   OBJECTS     { brcdMctClusterClientOperStatus }
+   STATUS      current
+   DESCRIPTION
+       "This notification is generated when the
+        brcdMctClusterClientOperStatus object for peer entry in
+        brcdMctClusterClientTable changes the state to remoteUp(5),
+        localUp(6), up(7), slave(8), master(9) or masterPeerUp(10)
+        from any other state.
+
+        This notification is not generated when the client state change happens
+        when brcdMctClusterPeerOperState changes from ccpUp(2) to ccpDown(3)
+        or vice versa"
+   ::= { brcdMctNotifications 2 }
+
+--- End of MCT Notifications
+END

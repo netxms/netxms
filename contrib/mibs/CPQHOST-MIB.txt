@@ -1,11 +1,10 @@
--- vim: syntax=mib
 -- ****************************************************************************
 --
 --                  Host Operating System Information
 --         Management Information Base for SNMP Network Management
 --
 --
---      Copyright 1993,2003 Hewlett-Packard Development Company, L.P.
+--      Copyright 1993,2008 Hewlett-Packard Development Company, L.P.
 --
 --      Hewlett-Packard Company shall not be liable for technical or
 --      editorial errors or omissions contained herein. The information in
@@ -62,6 +61,7 @@ CPQHOST-MIB DEFINITIONS ::= BEGIN
     cpqHoMemory         OBJECT IDENTIFIER ::= { cpqHoComponent 13 }
     cpqHoFwVer          OBJECT IDENTIFIER ::= { cpqHoComponent 14 }
     cpqHoHWInfo         OBJECT IDENTIFIER ::= { cpqHoComponent 15 }
+    cpqPwrThreshold     OBJECT IDENTIFIER ::= { cpqHoComponent 16 }
 
     cpqHoOsCommon       OBJECT IDENTIFIER ::= { cpqHoInterface 4 }
 
@@ -77,7 +77,7 @@ CPQHOST-MIB DEFINITIONS ::= BEGIN
 --      supporting the Host OS MIB.
 --
 --      A Management Agent conforming to this document will return a
---      cpqHoMibRevMajor of one (1) and a cpqHoMibRevMinor of twenty-one (21).
+--      cpqHoMibRevMajor of one (1) and a cpqHoMibRevMinor of thirty-three (33).
 --
 -- ****************************************************************************
 
@@ -310,8 +310,8 @@ CPQHOST-MIB DEFINITIONS ::= BEGIN
             other(1),
             netware(2),                -- Novell NetWare
             windowsnt(3),              -- Microsoft Windows NT
-            sco-unix(4),               -- SCO UNIX
-            unixware(5),               -- Novell UnixWare
+            sco-unix(4),               -- SCO OpenServer
+            unixware(5),               -- SCO UnixWare
             os-2(6),                   -- IBM OS/2
             ms-dos(7),                 -- Microsoft DOS
             dos-windows(8),            -- Microsoft DOS + Microsoft Windows
@@ -323,8 +323,13 @@ CPQHOST-MIB DEFINITIONS ::= BEGIN
             linux(14),                 -- Linux
             windows2000(15),           -- Microsoft Windows 2000
             tru64UNIX(16),             -- Tru64 UNIX
-            windowsdotNet(17),         -- Microsoft Windows .NET
-            windowsdotNet-64-bit(18)   -- Microsoft Windows .NET 64-bit Edition
+            windows2003(17),           -- Microsoft Windows Server 2003
+            windows2003-x64(18),       -- Microsoft Windows Server 2003 x64 Edition
+            solaris(19),               -- Sun Solaris 
+            windows2003-ia64(20),      -- Microsoft Windows Server 2003 for Itanium-based Systems
+            windows2008(21),           -- Microsoft Windows Server 2008
+            windows2008-x64(22),       -- Microsoft Windows Server 2008 x64 Edition
+            windows2008-ia64(23)       -- Microsoft Windows Server 2008 for Itanium-based Systems
             }
         ACCESS  read-only
         STATUS  mandatory
@@ -369,6 +374,59 @@ CPQHOST-MIB DEFINITIONS ::= BEGIN
             This is a settable free form text field intended to be assigned
             by a remote console describing the system function in detail."
         ::= { cpqHoInfo 7 }
+
+    cpqHoCrashDumpState OBJECT-TYPE
+        SYNTAX INTEGER {
+            completememorydump(1),
+            kernelmemorydump(2),
+            smallmemorydump(3),
+            none(4)
+            }
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION
+            "Crash dump state.
+             Value of 'Unknown (-1)' is returned when crash dump state could 
+             not be determined."
+        ::= { cpqHoInfo 8 }
+
+    cpqHoCrashDumpCondition OBJECT-TYPE
+        SYNTAX INTEGER {
+            other(1),           -- (Crash Dump settings unknown) or (Crash dump monitoring is disabled)
+            ok(2),		-- (Crash dump settings OK) and (paging file size >= minimum) and (free disk space >= minimum)
+            degraded(3),	-- (Crash dump settings none) or (paging file size < minimum) or (free disk space < minimum)
+            failed(4)		-- N/A
+        }
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION
+            "The condition of the Crash dump configuration."
+        ::= { cpqHoInfo 9 }
+
+    cpqHoCrashDumpMonitoring OBJECT-TYPE
+        SYNTAX INTEGER {
+            enabled(1),         -- Enable crash dump monitoring.
+            disabled(2)         -- Disable crash dump monitoring.
+        }
+        ACCESS  read-write
+        STATUS  optional
+        DESCRIPTION
+            "Enable/disable crash dump monitoring.
+             If crash dump monitoring is enabled both crash dump TRAP's
+             are generated and crash dump condition is updated.
+             If crash dump monitoring is disabled, no crash dump TRAP
+             is generated and the crash dump condition is set to 
+             other"
+        ::= { cpqHoInfo 10 }
+
+    cpqHoMaxLogicalCPUSupported OBJECT-TYPE
+        SYNTAX INTEGER (0..65535)
+        ACCESS  read-only
+        STATUS  optional
+        DESCRIPTION
+            "Maximum number of logical CPUs supported by Operating System."
+        ::= { cpqHoInfo 11 }
+
 
 -- ****************************************************************************
 --   Host OS CPU Utilization Table
@@ -508,7 +566,7 @@ CPQHOST-MIB DEFINITIONS ::= BEGIN
         STATUS  mandatory
         DESCRIPTION
             "A table of file system descriptions."
-        ::= { cpqHoFileSys 1 }
+        ::= { cpqHoFileSys 1 }     
 
     cpqHoFileSysEntry OBJECT-TYPE
         SYNTAX  CpqHoFileSysEntry
@@ -526,7 +584,8 @@ CPQHOST-MIB DEFINITIONS ::= BEGIN
         cpqHoFileSysSpaceUsed          INTEGER,
         cpqHoFileSysPercentSpaceUsed   INTEGER,
         cpqHoFileSysAllocUnitsTotal    INTEGER,
-        cpqHoFileSysAllocUnitsUsed     INTEGER
+        cpqHoFileSysAllocUnitsUsed     INTEGER,
+        cpqHoFileSysStatus             INTEGER      
     }
 
     cpqHoFileSysIndex OBJECT-TYPE
@@ -600,6 +659,49 @@ CPQHOST-MIB DEFINITIONS ::= BEGIN
             information."
         ::= { cpqHoFileSysEntry 7 }
 
+    cpqHoFileSysStatus OBJECT-TYPE
+        SYNTAX  INTEGER {
+            unknown(1),
+            ok(2),              -- default state
+            degraded(3),
+            failed(4)
+            }
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION
+            "The Threshold Status.
+            
+            This object represent the status of the Filesystem threshold."
+        ::= { cpqHoFileSysEntry 8 }
+
+-- ****************************************************************************
+--   Host OS File System Table
+--   =========================
+--
+-- The compaq enterprise               (1.3.6.1.4.1.232)
+--      cpqHostOs Group                (1.3.6.1.4.1.232.11)
+--       cpqHoComponent Group          (1.3.6.1.4.1.232.11.2)
+--        cpqHoFileSys Group           (1.3.6.1.4.1.232.11.2.4)
+--         cpqHoFileSysCondition       (1.3.6.1.4.1.232.11.2.4.2)
+--
+--  The cpqHoFileSys group contains overall condition of Filesystem Threshold
+--
+-- ****************************************************************************
+    cpqHoFileSysCondition OBJECT-TYPE
+        SYNTAX  INTEGER {
+            unknown(1),
+            ok(2),              -- default state
+            degraded(3),
+            failed(4)
+            }
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION
+            "The overall condition of File System Threshold.
+
+             This object represents the overall status of the server's 
+             File System Threshold."
+        ::= { cpqHoFileSys 2 }
 
 -- ****************************************************************************
 --   Host OS Interface Physical Map Table
@@ -811,7 +913,11 @@ CPQHOST-MIB DEFINITIONS ::= BEGIN
         cpqHoSWRunningCount              INTEGER,
         cpqHoSWRunningCountMin           INTEGER,
         cpqHoSWRunningCountMax           INTEGER,
-        cpqHoSWRunningEventTime          OCTET STRING
+        cpqHoSWRunningEventTime          OCTET STRING,
+        cpqHoSWRunningStatus             INTEGER,
+        cpqHoSWRunningConfigStatus       INTEGER,
+        cpqHoSWRunningIdentifier         DisplayString,
+        cpqHoSWRunningRedundancyMode     INTEGER
     }
 
     cpqHoSWRunningIndex OBJECT-TYPE
@@ -948,6 +1054,60 @@ CPQHOST-MIB DEFINITIONS ::= BEGIN
             The hour, minute, and second field will be set to zero (0) if they are not relevant."
         ::= { cpqHoSWRunningEntry 11 }
 
+   cpqHoSWRunningStatus OBJECT-TYPE
+        SYNTAX  INTEGER
+        {
+            unknown(1),   
+            normal(2),
+            warning(3),
+            minor(4),
+            major(5),
+            critical(6),
+            disabled(7)
+        }
+        ACCESS  read-only
+        STATUS  optional
+        DESCRIPTION
+            "The overall alarm state of the resources managed by the software, or the software itself."
+        ::= { cpqHoSWRunningEntry 12 }
+
+   cpqHoSWRunningConfigStatus OBJECT-TYPE
+        SYNTAX  INTEGER
+        {
+            unknown(1),                       
+            starting(2),
+            initialized(3), 
+            configured(4),
+            operational(5)
+        }
+        ACCESS  read-only
+        STATUS  optional
+        DESCRIPTION
+            "The configuration state of the software.  The level of initialization the software has performed."
+        ::= { cpqHoSWRunningEntry 13 }
+
+   cpqHoSWRunningIdentifier OBJECT-TYPE
+        SYNTAX  DisplayString (SIZE (0..255))
+        ACCESS  read-only
+        STATUS  optional
+        DESCRIPTION
+            "The unique identifier of the sofware.  This identifier should be unique for all instances of the sofware running in the environment."
+        ::= { cpqHoSWRunningEntry 14 }
+
+   cpqHoSWRunningRedundancyMode OBJECT-TYPE
+        SYNTAX  INTEGER
+        {
+            unknown(1),                       
+            master(2),
+            backup(3), 
+            slave(4)
+        }
+        ACCESS  read-only
+        STATUS  optional
+        DESCRIPTION
+            "When the software is running in a high availability mode, the failover mode of this instance of the software."
+        ::= { cpqHoSWRunningEntry 15 }
+
     cpqHoSwRunningTrapDesc OBJECT-TYPE
         SYNTAX  DisplayString (SIZE (0..255))
         ACCESS  read-only
@@ -1059,7 +1219,8 @@ CPQHOST-MIB DEFINITIONS ::= BEGIN
             driver(2),          -- (default)
             agent(3),
             sysutil(4),
-            application(5)
+            application(5),
+            keyfile(6)
             }
         ACCESS  read-write
         STATUS  mandatory
@@ -1181,6 +1342,20 @@ CPQHOST-MIB DEFINITIONS ::= BEGIN
 --
          ::= { cpqHoGeneric 1 }
 
+    cpqHoCriticalSoftwareUpdateData OBJECT-TYPE
+        SYNTAX  DisplayString (SIZE (0..512))
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+        "Data for the Critical Software Update trap."
+--
+-- This is the data variable that is sent with the Critical Software
+-- update Notification Trap below.
+-- Writing to this variable will cause the Critical Software update Notification Trap
+-- to be sent with the newly written data.
+--
+         ::= { cpqHoGeneric 2 }
+
 -- ****************************************************************************
 --   Software Performance Group
 --  ===========================
@@ -1292,7 +1467,8 @@ CPQHOST-MIB DEFINITIONS ::= BEGIN
             UPS                        = 16
             Power Distribution Unit    = 17
             Environmental Monitor      = 18  (eg CMC)
-
+            Power Distribution Rack    = 19  (PDR)
+            Storage Device             = 20
 
             For all other blocks, they are defined as:
             Status         This is a collection of flags.  Each bit has the
@@ -1343,15 +1519,17 @@ CPQHOST-MIB DEFINITIONS ::= BEGIN
         ::= { cpqHoSystemStatus 2 }
 
     cpqHoGUID OBJECT-TYPE
-        SYNTAX  OCTET STRING (SIZE (16))
+        SYNTAX  OCTET STRING (SIZE (16..17))
         ACCESS  read-write
         STATUS  mandatory
         DESCRIPTION
-            "The globally unique identifier of this server.
+            "The globally unique identifier of this physical server.
              If the OS cannot determine a unique ID, it will default the
              variable to contain all 0's.  The management station can then
-             perform a SET to this variable to provide the unique ID."
-        ::= { cpqHoSystemStatus 3 }
+             perform a SET to this variable to provide the unique ID.
+             When the system is cellular, it will have its partition number
+             appended at the end."
+       ::= { cpqHoSystemStatus 3 }
 
     cpqHoCodeServer OBJECT-TYPE
         SYNTAX    INTEGER
@@ -1373,6 +1551,15 @@ CPQHOST-MIB DEFINITIONS ::= BEGIN
             is not enabled, this value will be -1."
         ::= { cpqHoSystemStatus 5 }
 
+    cpqHoGUIDCanonical OBJECT-TYPE
+        SYNTAX  OCTET STRING (SIZE (32..36))
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+            "The globally unique identifier in canonical format of this 
+             physical server. If the OS cannot determine a unique ID, it will 
+             default the variable to blank."
+       ::= { cpqHoSystemStatus 6 }
 -- ****************************************************************************
 --   Trap Info Group
 --   ================
@@ -1621,6 +1808,38 @@ CPQHOST-MIB DEFINITIONS ::= BEGIN
             A -1 will be returned if this value could not be determined."
         ::= { cpqHoMemory 4 }
 
+    cpqHoBootPagingFileSize OBJECT-TYPE
+        SYNTAX  DisplayString (SIZE (0..10))
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION
+            "The paging file size of the boot volume in the format xxxMB or 
+            xxxGB, where xxx is the paging file size in that unit shown right 
+            after it.
+
+            NULL value will be returned if this value could not be determined."
+        ::= { cpqHoMemory 5 }
+
+    cpqHoBootPagingFileMinimumSize OBJECT-TYPE
+        SYNTAX  DisplayString (SIZE (0..10))
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION
+	    "Minimum paging file size of the boot volume required to save the 
+            memory dump in the event of a system crash. The format is xxxMB or 
+            xxxGB, where xxx is the minimum paging file size in that unit shown 
+            right after it."
+        ::= { cpqHoMemory 6 }
+
+    cpqHoBootPagingFileVolumeFreeSpace OBJECT-TYPE
+        SYNTAX  DisplayString (SIZE (0..10))
+        ACCESS  read-only
+        STATUS  optional
+        DESCRIPTION
+	    "Free space of the boot volume required to save the memory dump in the 
+            event of a system crash. The format is xxxMB or xxxGB, where xxx is
+            the minimum paging file size in that unit shown right after it."
+        ::= { cpqHoMemory 7 }
 
 -- ****************************************************************************
 --  Firmware Version Instrumentation Group
@@ -1766,7 +1985,9 @@ CPQHOST-MIB DEFINITIONS ::= BEGIN
             "Firmware Version Xml String.
 
             This is an XML string that specifies the location of the device
-            that contains the firmware."
+            that contains the firmware.
+            This will be NULL string (size 0) if this information could not
+            be provided."
         ::= { cpqHoFwVerEntry 7 }
 
     cpqHoFwVerKeyString OBJECT-TYPE
@@ -1814,7 +2035,9 @@ CPQHOST-MIB DEFINITIONS ::= BEGIN
         SYNTAX  INTEGER {
             unknown(1),
             cellular(2),
-            foundation(3)
+            foundation(3),
+            virtualMachine(4),
+            serverBlade(5)
             }
         ACCESS  read-only
         STATUS  optional
@@ -1824,6 +2047,62 @@ CPQHOST-MIB DEFINITIONS ::= BEGIN
              This object represents the platform type of the server's host
              system represented by this MIB."
         ::= { cpqHoHWInfo 1 }
+
+-- ****************************************************************************
+-- The cpqPwrThreshold group holds data for the 
+--
+-- The compaq enterprise              (1.3.6.1.4.1.232)
+--      cpqHostOS Group               (1.3.6.1.4.1.232.11)
+--       cpqHoComponent Group         (1.3.6.1.4.1.232.11.2)
+--        cpqPwrThreshold Group       (1.3.6.1.4.1.232.11.2.16)
+--
+-- Implementation of this group is mandatory.
+--
+-- ****************************************************************************
+    cpqPwrWarnType OBJECT-TYPE
+        SYNTAX  DisplayString (SIZE (0..254))
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+        "Type of power reading on which the warning is based."
+
+         ::= { cpqPwrThreshold 1 }
+
+    cpqPwrWarnThreshold OBJECT-TYPE
+        SYNTAX  INTEGER
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+        "The threshold the power usage must exceed (in Watts)."
+
+         ::= { cpqPwrThreshold 2 }
+
+    cpqPwrWarnDuration OBJECT-TYPE
+        SYNTAX  INTEGER
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+        "Duration that power usage must be exceeded before warning (in minutes)."
+
+         ::= { cpqPwrThreshold 3 }
+
+    cpqSerialNum OBJECT-TYPE
+        SYNTAX  DisplayString (SIZE (0..254))
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+        "Serial number of the server."
+
+         ::= { cpqPwrThreshold 4 }
+
+    cpqServerUUID OBJECT-TYPE
+        SYNTAX  DisplayString (SIZE (0..254))
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+        "Server UUID"
+
+         ::= { cpqPwrThreshold 5 }
 
 
 -- ****************************************************************************
@@ -1849,7 +2128,7 @@ CPQHOST-MIB DEFINITIONS ::= BEGIN
         --  This trap is a generic trap, and left undefined.
             "Generic trap."
 
-              --#TYPE "Generic trap"
+              --#TYPE "Generic trap (11001)"
               --#SUMMARY "%s"
               --#ARGUMENTS {0}
               --#SEVERITY MAJOR
@@ -1865,7 +2144,7 @@ CPQHOST-MIB DEFINITIONS ::= BEGIN
              error information is contained in the variable
              cpqHoSwPerfAppErrorDesc."
 
-              --#TYPE "Application Error Trap"
+              --#TYPE "Application Error Trap (11002)"
               --#SUMMARY "%s"
               --#ARGUMENTS {0}
               --#SEVERITY MAJOR
@@ -1881,7 +2160,7 @@ CPQHOST-MIB DEFINITIONS ::= BEGIN
         --  This trap is a generic trap, and left undefined.
             "Generic trap."
 
-              --#TYPE "Generic trap"
+              --#TYPE "Generic trap (11003)"
               --#SUMMARY "%s"
               --#ARGUMENTS {2}
               --#SEVERITY MAJOR
@@ -1897,7 +2176,7 @@ CPQHOST-MIB DEFINITIONS ::= BEGIN
              error information is contained in the variable
              cpqHoSwPerfAppErrorDesc."
 
-              --#TYPE "Application Error Trap"
+              --#TYPE "Application Error Trap (11004)"
               --#SUMMARY "%s"
               --#ARGUMENTS {2}
               --#SEVERITY MAJOR
@@ -1912,7 +2191,7 @@ CPQHOST-MIB DEFINITIONS ::= BEGIN
             "This trap will be sent any time the status of a NIC changes to
             the OK condition."
 
-             --#TYPE "Status Trap"
+             --#TYPE "Status Trap (11005)"
              --#SUMMARY "NIC Status is OK for slot %s."
              --#ARGUMENTS {2}
              --#SEVERITY MAJOR
@@ -1926,7 +2205,7 @@ CPQHOST-MIB DEFINITIONS ::= BEGIN
             "This trap will be sent any time the status of a NIC changes to
             the Failed condition."
 
-             --#TYPE "Status Trap"
+             --#TYPE "Status Trap (11006)"
              --#SUMMARY "NIC Status is Failed for slot %s."
              --#ARGUMENTS {2}
              --#SEVERITY MAJOR
@@ -1940,7 +2219,7 @@ CPQHOST-MIB DEFINITIONS ::= BEGIN
             "This trap will be sent any time the configured redundant NIC
             becomes the active NIC."
 
-             --#TYPE "Status Trap"
+             --#TYPE "Status Trap (11007)"
              --#SUMMARY "NIC switchover to slot %s from slot %s."
              --#ARGUMENTS {2, 3}
              --#SEVERITY MAJOR
@@ -1956,7 +2235,7 @@ CPQHOST-MIB DEFINITIONS ::= BEGIN
             "This trap will be sent any time the status of a NIC changes to
             the OK condition."
 
-             --#TYPE "Status Trap"
+             --#TYPE "Status Trap (11008)"
              --#SUMMARY "NIC Status is OK for slot %s, port %s."
              --#ARGUMENTS {2, 3}
              --#SEVERITY MAJOR
@@ -1971,7 +2250,7 @@ CPQHOST-MIB DEFINITIONS ::= BEGIN
             "This trap will be sent any time the status of a NIC changes to
             the Failed condition."
 
-             --#TYPE "Status Trap"
+             --#TYPE "Status Trap (11009)"
              --#SUMMARY "NIC Status is Failed for slot %s, port %s."
              --#ARGUMENTS {2, 3}
              --#SEVERITY MAJOR
@@ -1987,7 +2266,7 @@ CPQHOST-MIB DEFINITIONS ::= BEGIN
             "This trap will be sent any time the configured redundant NIC
             becomes the active NIC."
 
-             --#TYPE "Status Trap"
+             --#TYPE "Status Trap (11010)"
              --#SUMMARY "NIC switchover to slot %s, port %s from slot %s, port %s."
              --#ARGUMENTS {2, 3, 4, 5}
              --#SEVERITY MAJOR
@@ -2000,7 +2279,7 @@ CPQHOST-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "A monitored process has either started or stopped running."
 
-              --#TYPE "Process Monitor Event Trap"
+              --#TYPE "Process Monitor Event Trap (11011)"
               --#SUMMARY "%s"
               --#ARGUMENTS {2}
               --#SEVERITY MAJOR
@@ -2016,7 +2295,7 @@ CPQHOST-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "A monitored process count has violated the thresholds set on cpqHoSWRunningCount"
 
-              --#TYPE "Process Count Event Trap"
+              --#TYPE "Process Count Event Trap (11012)"
               --#SUMMARY "Process %s has count %s which violates the thresholds %s to %s."
               --#ARGUMENTS {2, 3, 4, 5}
               --#SEVERITY MAJOR
@@ -2033,7 +2312,7 @@ CPQHOST-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "A monitored process count has returned back to normal."
 
-              --#TYPE "Process Monitor Event Trap"
+              --#TYPE "Process Monitor Event Trap (11013)"
               --#SUMMARY "Process %s has count %s which respects the thresholds %s to %s."
               --#ARGUMENTS {2, 3, 4, 5}
               --#SEVERITY INFORMATIONAL
@@ -2042,5 +2321,93 @@ CPQHOST-MIB DEFINITIONS ::= BEGIN
 
         ::= 11013
 
-END
+   cpqHoCriticalSoftwareUpdateTrap TRAP-TYPE
+        ENTERPRISE compaq
+        VARIABLES { sysName, cpqHoTrapFlags, cpqHoCriticalSoftwareUpdateData }
+        DESCRIPTION
+            "This trap is a send to the user to notify him of a Critical Software Update."
+
+              --#TYPE "Critical Software update Notification Trap (11014)"
+              --#SUMMARY "%s"
+              --#ARGUMENTS {2}
+              --#SEVERITY CRITICAL
+              --#TIMEINDEX 99
+
+        ::= 11014
+
+   cpqHoCrashDumpNotEnabledTrap TRAP-TYPE
+        ENTERPRISE compaq
+        VARIABLES { sysName, cpqHoTrapFlags, cpqHoCrashDumpState }
+        DESCRIPTION
+            "This trap is sent to the user to notify him that the Crash Dump is not enabled.
+             This trap is not sent if cpqHoCrashDumpMonitoring is disabled."
+
+              --#TYPE "Crash Dump not enabled Notification Trap (11015)"
+              --#SUMMARY "Crash Dump is not enabled."
+              --#ARGUMENTS {}
+              --#SEVERITY WARNING
+              --#TIMEINDEX 99
+
+        ::= 11015
+
+
+   cpqHoBootPagingFileTooSmallTrap TRAP-TYPE
+        ENTERPRISE compaq
+        VARIABLES { sysName, cpqHoTrapFlags, cpqHoCrashDumpState, cpqHoBootPagingFileSize, cpqHoBootPagingFileMinimumSize }
+        DESCRIPTION
+            "This trap is sent when the paging file size of the boot volume or the target volume of the memory dump file is too small to hold a crash dump.
+             This trap is not sent if cpqHoCrashDumpMonitoring is disabled."
+
+              --#TYPE "Boot Paging File Or Memory Dump Target Volume Too Small Notification Trap (11016)"
+              --#SUMMARY "The paging file size of the boot volume (%s) or the target volume of the memory dump file is not large enough to hold a crash dump in the event of a system crash (%s)."
+              --#ARGUMENTS {3, 4}
+              --#SEVERITY WARNING
+              --#TIMEINDEX 99
+
+        ::= 11016
+
+  cpqHoSWRunningStatusChangeTrap TRAP-TYPE
+        ENTERPRISE compaq
+        VARIABLES { sysName, cpqHoTrapFlags, cpqHoSWRunningName, cpqHoSWRunningDesc,cpqHoSwRunningTrapDesc, cpqHoSWRunningVersion,cpqHoSWRunningStatus, cpqHoSWRunningConfigStatus, cpqHoSWRunningIdentifier, cpqHoSWRunningRedundancyMode }
+        DESCRIPTION
+            "This trap notifies the user that the running software has changed status, configuration status, or redundancy mode."
+
+              --#TYPE "Software status change Notification Trap (11017)"
+              --#SUMMARY "Software status change for %s, description = %s, id = %s"
+              --#ARGUMENTS {2, 4, 8}
+              --#SEVERITY WARNING
+              --#TIMEINDEX 99
+
+        ::= 11017
+
+  cpqHo2PowerThresholdTrap TRAP-TYPE
+        ENTERPRISE compaq
+        VARIABLES { sysName, cpqHoTrapFlags, cpqPwrWarnType, cpqPwrWarnThreshold, cpqPwrWarnDuration, cpqSerialNum, cpqServerUUID }
+        DESCRIPTION
+        --  This trap notifies user of a power threshold breach.
+            "Power threshold exceeded."
+
+              --#TYPE "Power Threshold Exceeded (11018)"
+              --#SUMMARY "%s"
+              --#ARGUMENTS {6}
+              --#SEVERITY MINOR
+              --#TIMEINDEX 99
+
+        ::= 11018
+
+  cpqHoBootPagingFileOrFreeSpaceTooSmallTrap TRAP-TYPE
+        ENTERPRISE compaq
+        VARIABLES { sysName, cpqHoTrapFlags, cpqHoCrashDumpState, cpqHoBootPagingFileSize, cpqHoBootPagingFileVolumeFreeSpace, cpqHoBootPagingFileMinimumSize }
+        DESCRIPTION
+            "This trap is sent when the paging file size of the boot volume or the free space of memory dump target volume is too small to hold a crash dump."
+              --#TYPE "Boot Paging File Or Memory Dump Target Volume Too Small Notification Trap (11016)"
+              --#SUMMARY "The paging file size of the boot volume (%s) or the free space of the memory dump target volume (%s) is not large enough to hold a crash dump in the event of a system crash (%s)."
+              --#ARGUMENTS {3, 4, 5}
+              --#SEVERITY WARNING
+              --#TIMEINDEX 99
+
+        ::= 11019
+
+  
+  END
 

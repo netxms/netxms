@@ -1,0 +1,462 @@
+BROCADE-IPSEC-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+    MODULE-IDENTITY, OBJECT-TYPE, Unsigned32, IpAddress
+      FROM SNMPv2-SMI                  -- [RFC2578]
+    DisplayString, DateAndTime
+      FROM SNMPv2-TC                   -- [RFC2579]
+    spdIPSourceType, spdIPSourceAddress, spdIPDestinationType,
+    spdIPDestinationAddress, spdPacketDirection
+      FROM IPSEC-SPD-MIB               -- [RFC4807-IPSEC-SPD-MIB]
+    brcdIPSec
+      FROM FOUNDRY-SN-ROOT-MIB;
+
+brocadeIPSecMIB MODULE-IDENTITY
+    LAST-UPDATED "201404210000Z"  -- 21 April 2014
+    ORGANIZATION "Brocade Communications Systems, Inc."
+    CONTACT-INFO
+             "Technical Support Center
+              130 Holger Way,
+              San Jose, CA  95134
+              Email:  ipsupport@brocade.com
+              Phone: 1-800-752-8061
+              URL:  www.brocade.com"
+    DESCRIPTION
+             "This Brocade Communications' proprietery MIB module describes
+              SNMP Objects and Traps for IPSec support on  router/switch
+	      product.
+
+              Supported Platforms:
+                   - supported on NI XMR/MLX platforms.
+                   - supported on FI ICX7450 platforms.
+
+              Copyright 1996-2010 Brocade Communications Systems, Inc.
+              All rights reserved.
+              This Brocade Communications Systems SNMP Management Information
+              Base Specification embodies Brocade Communications Systems'
+              confidential and proprietary intellectual property.
+              Brocade Communications Systems retains all title and ownership
+              in the Specification, including any revisions.
+
+              This Specification is supplied AS IS, and Brocade Communications
+              Systems makes no warranty, either express or implied, as to the
+              use, operation, condition, or performance of the specification,
+              and any unintended consequence it may on the user environment."
+
+
+    REVISION      "201404210000Z"  -- 21 April 2014
+    DESCRIPTION
+            "Initial version"
+
+    ::= { brcdIPSec 1 }
+
+--
+-- high level object identifiers
+--
+brcdIPSecMIBNotification  OBJECT IDENTIFIER ::= { brocadeIPSecMIB 0 }
+brcdIPSecMIBObjects  OBJECT IDENTIFIER ::= { brocadeIPSecMIB 1 }
+
+
+-- Below objects are used only by notifications as varbinds.
+--No other SNMP operations are supported on these.
+
+brcdIPSecSPIValue OBJECT-TYPE
+	SYNTAX      DisplayString
+    	MAX-ACCESS  accessible-for-notify
+    	STATUS      current
+    	DESCRIPTION
+                        "It's a 4-byte field at the beginning of Encapsulating
+			Security Payload Packet. It's value will be displayed in
+                        hex."
+    	::= { brcdIPSecMIBObjects 1 }
+
+brcdIPSecSequenceNumber OBJECT-TYPE
+    	SYNTAX      Unsigned32
+    	MAX-ACCESS  accessible-for-notify
+    	STATUS      current
+    	DESCRIPTION
+                        "This denotes the ESP sequence number used for
+                         anti-replay check."
+    	::= { brcdIPSecMIBObjects 2 }
+
+brcdIKEMessageType OBJECT-TYPE
+    	SYNTAX      Unsigned32
+    	MAX-ACCESS  accessible-for-notify
+    	STATUS      current
+    	DESCRIPTION
+                        "Specifies the type of notification message.
+			  Only IKE_SA_INIT(34), IKE_AUTH(35), CREATE_CHILD_SA(36)
+			  and INFORMATIONAL(37) are currently supported as per
+			  RFC5996."
+    	::= { brcdIPSecMIBObjects 3 }
+
+brcdIKEPayloadType OBJECT-TYPE
+    	SYNTAX      Unsigned32
+    	MAX-ACCESS  accessible-for-notify
+    	STATUS      current
+    	DESCRIPTION
+                        "Specifies the type of IKE payload. As per RFC5996 current
+			 valid values are {0, 32 to 48}."
+    	::= { brcdIPSecMIBObjects 4 }
+
+brcdIPSecSlotNumber OBJECT-TYPE
+    	SYNTAX      Unsigned32
+    	MAX-ACCESS  accessible-for-notify
+    	STATUS      current
+    	DESCRIPTION
+                        "Indicates the Slot id of the IPsec module."
+    	::= { brcdIPSecMIBObjects 5 }
+
+brcdIPSecUnitNumber OBJECT-TYPE
+    	SYNTAX      Unsigned32
+    	MAX-ACCESS  accessible-for-notify
+    	STATUS      current
+    	DESCRIPTION
+                        "Indicates the unit number."
+    	::= { brcdIPSecMIBObjects 6 }
+
+brcdIPSecVRFValue OBJECT-TYPE
+    	SYNTAX      Unsigned32
+    	MAX-ACCESS  accessible-for-notify
+    	STATUS      current
+    	DESCRIPTION
+                        "Indicates the VRF value."
+    	::= { brcdIPSecMIBObjects 7 }
+
+brcdIPSecSessionState OBJECT-TYPE
+    	SYNTAX      DisplayString
+    	MAX-ACCESS  accessible-for-notify
+    	STATUS      current
+    	DESCRIPTION
+                        "Indicates the state of IPsec/IKE session."
+    	::= { brcdIPSecMIBObjects 8 }
+
+brcdIPSecModuleState OBJECT-TYPE
+    	SYNTAX      DisplayString
+    	MAX-ACCESS  accessible-for-notify
+    	STATUS      current
+    	DESCRIPTION
+                        "Indicates the state of IPsec module."
+    	::= { brcdIPSecMIBObjects 9 }
+
+
+---Notifications
+
+brcdIPSecInvalidSANotification NOTIFICATION-TYPE
+   OBJECTS {
+		spdIPSourceType,
+		spdIPSourceAddress,
+		spdIPDestinationType,
+		spdIPDestinationAddress,
+		brcdIPSecSPIValue
+	   }
+   STATUS current
+   DESCRIPTION
+         "The SNMP trap that is generated when no valid Security
+          Association exists for a session."
+         --#TYPE "Brocade Trap: No valid Security Association exists for a session."
+         --#SUMMARY "I:ESP: No IPsec SA Found for Received Packet with Source
+		      -- address type %u Source %s Destination address type %u Destination %s
+              -- SPI %s."
+         --#ARGUMENTS {0, 1, 2, 3, 4}
+         --#SEVERITY INFORMATIONAL
+         --#STATE OPERATIONAL
+    ::= {brcdIPSecMIBNotification 1 }
+
+brcdIPSecFragmentedPacketNotification NOTIFICATION-TYPE
+   OBJECTS {
+		spdIPSourceType,
+		spdIPSourceAddress,
+		spdIPDestinationType,
+		spdIPDestinationAddress,
+		brcdIPSecSPIValue
+	   }
+   STATUS current
+   DESCRIPTION
+         "The SNMP trap that is generated when a packet offered to ESP
+          for processing appears to be an IP fragment, i.e., the OFFSET
+          field is non-zero or the MORE FRAGMENTS flag is set."
+          --#TYPE "Brocade Trap: Received Fragmented Packet with SPI ."
+          --#SUMMARY "I:ESP: Received Fragmented Packet with Source
+		       -- Address type %u Source %s Destination address type %u
+		       -- Destination %s SPI %s."
+         --#ARGUMENTS  {0, 1, 2, 3, 4}
+         --#SEVERITY INFORMATIONAL
+         --#STATE OPERATIONAL
+    ::= {brcdIPSecMIBNotification 2 }
+
+brcdIPSecSequenceOverflowNotification NOTIFICATION-TYPE
+   OBJECTS {
+		spdIPSourceType,
+		spdIPSourceAddress,
+		spdIPDestinationType,
+		spdIPDestinationAddress,
+        brcdIPSecSPIValue
+	   }
+   STATUS current
+   DESCRIPTION
+         "The SNMP trap that is generated when  there is an attempt to
+          transmit a packet that would result in Sequence Number
+          overflow."
+         --#TYPE "Brocade Trap: Sequence Number Overflow."
+         --#SUMMARY "I:ESP: Sequence Number Overflow when Trying to Send Packet
+		      -- with with SPI %s Source address type %u Source %s Destination
+		      -- address type %u Destination %s."
+         --#ARGUMENTS { 4, 0, 1, 2, 3}
+         --#SEVERITY INFORMATIONAL
+         --#STATE OPERATIONAL
+    ::= {brcdIPSecMIBNotification 3 }
+
+brcdIPSecFailedAntiReplayCheckNotification NOTIFICATION-TYPE
+   OBJECTS {
+		spdIPSourceType,
+		spdIPSourceAddress,
+		spdIPDestinationType,
+		spdIPDestinationAddress,
+        brcdIPSecSPIValue,
+		brcdIPSecSequenceNumber
+	   }
+   STATUS current
+   DESCRIPTION
+         "The SNMP trap that is generated when the received packet
+          fails the anti-replay checks."
+         --#TYPE "Brocade Trap: received packet fails the anti-replay check."
+         --#SUMMARY "I:ESP: Anti-Replay Check Failed for Received Packet with 
+		      -- Source address type %u Source %s Destination address type %u
+              -- Destination %s SPI %s Sequence Number %u."
+         --#ARGUMENTS {0, 1, 2, 3, 4, 5}
+         --#SEVERITY INFORMATIONAL
+         --#STATE OPERATIONAL
+    ::= {brcdIPSecMIBNotification 4 }
+
+brcdIPSecFailedIntegrityCheckNotification NOTIFICATION-TYPE
+   OBJECTS {
+		spdIPSourceType,
+		spdIPSourceAddress,
+		spdIPDestinationType,
+		spdIPDestinationAddress,
+		brcdIPSecSPIValue,
+		brcdIPSecSequenceNumber
+	   }
+   STATUS current
+   DESCRIPTION
+         "The SNMP trap that is generated when the  received packet
+          fails integrity check."
+         --#TYPE "Brocade Trap: received packet fails integrity check."
+         --#SUMMARY "I:ESP: Integrity Check Failed for Received Packet with 
+		      -- Source address type %u Source %s Destination address type %u
+		      -- Destination %s SPI %s Sequence Number %u."
+         --#ARGUMENTS {0, 1, 2, 3, 4, 5}
+         --#SEVERITY INFORMATIONAL
+         --#STATE OPERATIONAL
+    ::= {brcdIPSecMIBNotification 5 }
+
+brcdIPSecDeencapsulationFailedNotification NOTIFICATION-TYPE
+   OBJECTS {
+		spdIPSourceType,
+		spdIPSourceAddress,
+		spdIPDestinationType,
+		spdIPDestinationAddress,
+		brcdIPSecSPIValue,
+		brcdIPSecSequenceNumber
+	   }
+   STATUS current
+   DESCRIPTION
+         "The SNMP trap that is generated when the deencapsulation of
+          received packet failed."
+         --#TYPE "Brocade Trap: deencapsulation of received packet failed."
+         --#SUMMARY "I:ESP: Deencapsulation Failed for Received Packet with 
+		      -- Source address type %u Source %s Destination address type %u
+              -- Destination %s SPI %s Sequence Number %u."
+         --#ARGUMENTS { 0, 1, 2, 3, 4, 5}
+         --#SEVERITY INFORMATIONAL
+         --#STATE OPERATIONAL
+    ::= {brcdIPSecMIBNotification 6 }
+
+brcdIPSecLengthErrorNotification NOTIFICATION-TYPE
+   OBJECTS {
+		spdIPSourceType,
+		spdIPSourceAddress,
+		spdIPDestinationType,
+		spdIPDestinationAddress,
+        brcdIPSecSPIValue
+	   }
+   STATUS current
+   DESCRIPTION
+         "The SNMP trap that is generated when the check on IP packet
+          length fails for the received packet."
+         --#TYPE "Brocade Trap: Length Error Detected."
+         --#SUMMARY "I:ESP: Length Error Detected for
+		      -- Received Packet with SPI %s  Source address type %u
+		      -- Source %s Destination address type %u Destination %s."
+         --#ARGUMENTS {4, 0, 1, 2, 3}
+         --#SEVERITY INFORMATIONAL
+         --#STATE OPERATIONAL
+    ::= {brcdIPSecMIBNotification 7 }
+
+brcdIKEInvalidMsgTypeNotification NOTIFICATION-TYPE
+   OBJECTS {
+		spdIPSourceType,
+		spdIPSourceAddress,
+		spdIPDestinationType,
+		spdIPDestinationAddress,
+		brcdIPSecSPIValue,
+		brcdIKEMessageType
+	   }
+   STATUS current
+   DESCRIPTION
+         "The SNMP trap that is generated when an invalid IKE message
+          Type is received."
+         --#TYPE "Brocade Trap: Invalid IKE Message Type received."
+         --#SUMMARY "I:IKEv2: Invalid Message Type Received with 
+		      -- Source address type %u Source %s Destination address type %u
+  		      -- Destination %s SPI %s Message Type %u.
+         --#ARGUMENTS {0, 1, 2, 3, 4, 5}
+         --#SEVERITY INFORMATIONAL
+         --#STATE OPERATIONAL
+    ::= {brcdIPSecMIBNotification 8 }
+
+brcdIKEInvalidPayloadNotification NOTIFICATION-TYPE
+   OBJECTS {
+		spdIPSourceType,
+		spdIPSourceAddress,
+		spdIPDestinationType,
+		spdIPDestinationAddress,
+		brcdIPSecSPIValue,
+		brcdIKEPayloadType
+	   }
+   STATUS current
+   DESCRIPTION
+         "The SNMP trap that is generated when an invalid IKE payload
+          is received."
+         --#TYPE "Brocade Trap: Invalid IKE Payload Received."
+         --#SUMMARY "I:IKEv2: Invalid Payload Type Received with
+		      -- Source address type %u Source %s Destination address type %u
+		      -- Destination %s SPI %s Payload Type %u."
+         --#ARGUMENTS {0, 1, 2, 3, 4, 5}
+         --#SEVERITY INFORMATIONAL
+         --#STATE OPERATIONAL
+    ::= {brcdIPSecMIBNotification 9 }
+
+brcdIKEMaxPeerReachedNotification NOTIFICATION-TYPE
+   OBJECTS {
+		brcdIPSecSlotNumber
+	   }
+   STATUS current
+   DESCRIPTION
+         "The SNMP trap that is generated when maximum IKE peer limit
+          is reached."
+          --#TYPE "Brocade Trap: Max IKE peers limit reached."
+          --#SUMMARY "W:IKEv2: Maximum IKE Peers Limit Reached."
+          --#ARGUMENTS {0}
+          --#SEVERITY WARNING
+          --#STATE OPERATIONAL
+    ::= {brcdIPSecMIBNotification 10 }
+
+brcdIKERecoveredMaxPeerLimitNotification NOTIFICATION-TYPE
+   OBJECTS {
+		brcdIPSecSlotNumber
+	   }
+   STATUS current
+   DESCRIPTION
+         "The SNMP trap that is generated when the system recovers from
+		  the maximum IKE peer limit condition."
+         --#TYPE "Brocade Trap: Recovered Max IKE peers limit condition."
+         --#SUMMARY "W:IKEv2: Recovered from Maximum IKE Peers Limit
+		      -- Condition."
+         --#ARGUMENTS {0}
+         --#SEVERITY WARNING
+         --#STATE OPERATIONAL
+    ::= {brcdIPSecMIBNotification 11 }
+
+brcdIPSecSessionNotification NOTIFICATION-TYPE
+   OBJECTS {
+        brcdIPSecSessionState,
+	spdIPSourceType,
+	spdIPSourceAddress,
+	spdIPDestinationType,
+	spdIPDestinationAddress,
+        brcdIPSecVRFValue,
+	brcdIPSecSPIValue,
+        spdPacketDirection
+	   }
+   STATUS current
+   DESCRIPTION
+       "The SNMP trap that is generated when IPsec session state
+        is changed."
+       --#TYPE "Brocade Trap: IPsec session state."
+       --#SUMMARY "I:IPsec: IPsec session Source address type %u 
+		   -- Source %s Destination address type %u Destination %s
+  	          -- VRF %u SPI %u Direction %s.
+       --#ARGUMENTS {0, 1, 2, 3, 4, 5, 6, 7}
+       --#SEVERITY INFORMATIONAL
+       --#STATE OPERATIONAL
+    ::= {brcdIPSecMIBNotification 12 }
+
+brcdIKESessionNotification NOTIFICATION-TYPE
+   OBJECTS {
+        brcdIPSecSessionState,
+	spdIPSourceType,
+	spdIPSourceAddress,
+	spdIPDestinationType,
+	spdIPDestinationAddress,	
+        brcdIPSecVRFValue,
+	brcdIPSecSPIValue
+	   }
+   STATUS current
+   DESCRIPTION
+         "The SNMP trap that is generated when IKEv2 session state
+          is changed."
+         --#TYPE "Brocade Trap: IKEv2 session state."
+         --#SUMMARY "I:IKEv2: IKEv2 session %s Source address type %u 
+		   -- Source %s Destination address type %u Destination %s
+  	          -- VRF %u SPI %u.
+         --#ARGUMENTS {0, 1, 2, 3, 4, 5, 6}
+         --#SEVERITY INFORMATIONAL
+         --#STATE OPERATIONAL
+    ::= {brcdIPSecMIBNotification 13 }
+
+brcdIPSecModuleNotification NOTIFICATION-TYPE
+   OBJECTS {
+        brcdIPSecSlotNumber,
+        brcdIPSecUnitNumber,
+        brcdIPSecModuleState
+	   }
+   STATUS current
+   DESCRIPTION
+         "The SNMP trap that is generated when IPsec module state
+          is changed."
+         --#TYPE "Brocade Trap: IPsec module state."
+         --#SUMMARY "I:IPsec: IPsec module %u on unit %u is %s.
+         --#ARGUMENTS {0, 1, 2}
+         --#SEVERITY INFORMATIONAL
+         --#STATE OPERATIONAL
+    ::= {brcdIPSecMIBNotification 14 }
+    
+brcdIKEMaxPeerReachedStackingNotification NOTIFICATION-TYPE
+   STATUS current
+   DESCRIPTION
+         "The SNMP trap that is generated when maximum IKE peer limit
+          is reached."
+         --#TYPE "Brocade Trap: Max IKE peers limit reached."
+         --#SUMMARY "W:IKEv2: Maximum IKE Peers Limit Reached."
+         --#ARGUMENTS { }
+         --#SEVERITY WARNING
+         --#STATE OPERATIONAL
+    ::= {brcdIPSecMIBNotification 15 }
+
+brcdIKERecoveredMaxPeerLimitStackingNotification NOTIFICATION-TYPE
+   STATUS current
+   DESCRIPTION
+         "The SNMP trap that is generated when the system recovers from
+		 the maximum IKE peer limit condition."
+         --#TYPE "Brocade Trap: Recovered Max IKE peers limit condition."
+         --#SUMMARY "W:IKEv2: Recovered from Maximum IKE Peers LimitCondition."
+         --#ARGUMENTS { }
+         --#SEVERITY WARNING
+         --#STATE OPERATIONAL
+    ::= {brcdIPSecMIBNotification 16 }
+    
+
+END
+

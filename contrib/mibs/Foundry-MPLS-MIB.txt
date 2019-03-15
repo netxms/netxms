@@ -1,0 +1,295 @@
+Foundry-MPLS-MIB DEFINITIONS ::= BEGIN
+-- Foundry SnSwitch Group MIB Release 2.0.0
+-- Revision 1: 04/13/05
+--
+-- Copyright Foundry Networks, Inc.
+-- All rights reserved.
+-- This Foundry Networks SNMP Management Information Base Specification
+-- (Specification) embodies Foundry Networks' confidential and
+-- proprietary intellectual property. Foundry Networks retains all
+-- title and ownership in the Specification, including any
+-- revisions.
+--
+-- This Specification is supplied "AS IS," and Foundry Networks makes
+-- no warranty, either express or implied, as to the use,
+-- operation, condition, or performance of the Specification.
+
+-- SECTION 1: Top Level Definitions
+
+-- Imports
+
+IMPORTS
+    MODULE-IDENTITY, OBJECT-TYPE, NOTIFICATION-TYPE,
+    Unsigned32, Counter32, Counter64, IpAddress
+        FROM SNMPv2-SMI
+    DisplayString, TimeStamp
+        FROM SNMPv2-TC
+    snMpls, snTraps
+        FROM FOUNDRY-SN-ROOT-MIB;
+
+
+mpls MODULE-IDENTITY
+    LAST-UPDATED "200504140000Z"
+    ORGANIZATION "Foundry Networks, Inc."
+    CONTACT-INFO
+            "     Foundry Networks, Inc.
+                  2100 Gold Street, PO Box 649100,
+                  San Jose, CA 95164"
+    DESCRIPTION
+        "The Foundry proprietary MIB module for Multi-Protocol Label Switched Paths."
+    REVISION      "200802060000Z"		-- Feb 6, 2008
+    DESCRIPTION
+        "Add support for proprietary extensions to the VLL and VPLS mib."
+    ::= { snMpls 1 }
+
+mplsLspNotifications     OBJECT IDENTIFIER ::= { mpls 0 }
+mplsInfo      OBJECT IDENTIFIER ::= { mpls 1 }
+mplsLspInfo   OBJECT IDENTIFIER ::= { mpls 2 }
+mplsVllInfo   OBJECT IDENTIFIER ::= { mpls 3 }
+mplsVplsInfo   OBJECT IDENTIFIER ::= { mpls 4 }
+
+mplsVersion OBJECT-TYPE
+    SYNTAX     Unsigned32
+    MAX-ACCESS read-only
+    STATUS     current
+    DESCRIPTION "MPLS version number."
+    ::= { mplsInfo 1 }
+
+mplsConfiguredLsps OBJECT-TYPE
+    SYNTAX     Unsigned32
+    MAX-ACCESS read-only
+    STATUS     deprecated
+    DESCRIPTION "Number of configured LSPs. Sum of RSVP and static configured LSPs.
+                    DEPRECATED BY mplsTunnelConfigured IN rfc3812-MPLS-TE-STD-MIB."
+    ::= { mplsLspInfo 1 }
+
+mplsActiveLsps OBJECT-TYPE
+    SYNTAX     Unsigned32
+    MAX-ACCESS read-only
+    STATUS     deprecated
+    DESCRIPTION "Number of active LSPs. Sum of RSVP, LDP and static LSPs.
+                    DEPRECATED BY mplsTunnelActive IN rfc3812-MPLS-TE-STD-MIB."
+    ::= { mplsLspInfo 2 }
+
+mplsLspTable OBJECT-TYPE
+    SYNTAX     SEQUENCE OF MplsLspEntry
+    MAX-ACCESS not-accessible
+    STATUS     current
+    DESCRIPTION "List of Configured Label Switched Paths."
+    ::= { mplsLspInfo 3 }
+
+mplsLspEntry OBJECT-TYPE
+    SYNTAX     MplsLspEntry
+    MAX-ACCESS not-accessible
+    STATUS     current
+    DESCRIPTION
+        "Entry containing information about a particular
+         Label Switched Path."
+    INDEX { mplsLspSignalingProto, mplsLspIndex }
+    ::= { mplsLspTable 1 }
+
+MplsLspEntry ::=
+    SEQUENCE {
+        mplsLspSignalingProto      INTEGER,
+        mplsLspIndex            Unsigned32,
+        mplsLspName             DisplayString,
+        mplsLspState            INTEGER,
+        mplsLspPackets          Counter64,
+        mplsLspAge              TimeStamp,
+        mplsLspTimeUp           TimeStamp,
+        mplsLspPrimaryTimeUp    TimeStamp,
+        mplsLspTransitions      Counter32,
+        mplsLspLastTransition   TimeStamp,
+        mplsLspFrom             IpAddress,
+        mplsLspTo               IpAddress,
+        mplsPathName            DisplayString,
+        mplsPathType            INTEGER
+}
+
+mplsLspSignalingProto OBJECT-TYPE
+    SYNTAX     INTEGER {
+        ldp(1),
+        rsvp(2)
+    }
+    MAX-ACCESS not-accessible
+    STATUS     current
+    DESCRIPTION "MPLS signaling protocol used by this LSP."
+    ::= { mplsLspEntry 1 }
+
+mplsLspIndex OBJECT-TYPE
+    SYNTAX     Unsigned32
+    MAX-ACCESS not-accessible
+    STATUS     current
+    DESCRIPTION "The unique index of the LSP in the system for a given signaling protocol."
+    ::= { mplsLspEntry 2 }
+
+mplsLspName OBJECT-TYPE
+    SYNTAX     DisplayString (SIZE (0..32))
+    MAX-ACCESS read-only
+    STATUS     current
+    DESCRIPTION "Name of the Label Switched Path."
+    ::= { mplsLspEntry 3 }
+
+mplsLspState OBJECT-TYPE
+    SYNTAX     INTEGER {
+               unknown(1),
+               up(2),
+               down(3)
+    }
+    MAX-ACCESS read-only
+    STATUS     current
+    DESCRIPTION "The operational state of the LSP."
+    ::= { mplsLspEntry 4 }
+
+mplsLspPackets OBJECT-TYPE
+    SYNTAX     Counter64
+    MAX-ACCESS read-only
+    STATUS     current
+    DESCRIPTION
+        "The number of packets that have been forwarded
+         over current LSP active path."
+    ::= { mplsLspEntry 5 }
+
+mplsLspAge OBJECT-TYPE
+    SYNTAX     TimeStamp
+    MAX-ACCESS read-only
+    STATUS     current
+    DESCRIPTION
+        "The age, since creation of this LSP in 10-millisecond periods."
+    ::= { mplsLspEntry 6 }
+
+mplsLspTimeUp OBJECT-TYPE
+    SYNTAX     TimeStamp
+    MAX-ACCESS read-only
+    STATUS     current
+    DESCRIPTION
+        "The total time in 10-millisecond units that this
+         LSP has been operational. The percentage up time
+         can be determined by computing
+         (mplsLspTimeUp/mplsLspAge * 100 %)."
+    ::= { mplsLspEntry 7 }
+
+mplsLspPrimaryTimeUp OBJECT-TYPE
+    SYNTAX     TimeStamp
+    MAX-ACCESS read-only
+    STATUS     current
+    DESCRIPTION
+        "The total time in 10-millisecond units that this
+         LSP's primary path has been operational. The 
+         percentage contribution of the primary
+         path to the operational time is given by
+         (mplsLspPrimaryTimeUp/mplsLspTimeUp * 100) %."
+    ::= { mplsLspEntry 8 }
+
+mplsLspTransitions OBJECT-TYPE
+    SYNTAX     Counter32
+    MAX-ACCESS read-only
+    STATUS     current
+    DESCRIPTION
+        "The number of state transitions (up -> down and
+         down -> up) this LSP has undergone."
+    ::= { mplsLspEntry 9 }
+
+mplsLspLastTransition OBJECT-TYPE
+    SYNTAX     TimeStamp
+    MAX-ACCESS read-only
+    STATUS     current
+    DESCRIPTION
+        "The time in 10-millisecond units since the last
+         transition occurred on this LSP."
+    ::= { mplsLspEntry 10 }
+
+mplsLspFrom OBJECT-TYPE
+    SYNTAX     IpAddress
+    MAX-ACCESS read-only
+    STATUS     current
+    DESCRIPTION
+        "Source IP address of this LSP."
+    ::= { mplsLspEntry 11 }
+
+mplsLspTo OBJECT-TYPE
+    SYNTAX     IpAddress
+    MAX-ACCESS read-only
+    STATUS     current
+    DESCRIPTION
+        "Destination IP address of this LSP."
+    ::= { mplsLspEntry 12 }
+
+mplsPathName OBJECT-TYPE
+    SYNTAX     DisplayString (SIZE(0..16))
+    MAX-ACCESS read-only
+    STATUS     current
+    DESCRIPTION
+        "The name of the active path for this LSP, if
+         any.  If there is none, the name should be
+         empty; in that case, the rest of the fields
+         in mplsLspEntry are meaningless."
+    ::= { mplsLspEntry 13 }
+
+mplsPathType OBJECT-TYPE
+    SYNTAX     INTEGER {
+        other(1),
+        primary(2),
+        standby(3),
+        secondary(4)
+    }
+    MAX-ACCESS read-only
+    STATUS     current
+    DESCRIPTION
+        "The type of path that is active, i.e., a
+         primary path, a standby path, or a generic
+         secondary path. This field is meaningless
+         unless mplsPathName is not empty"
+    ::= { mplsLspEntry 14 }
+
+-- definition of MPLS traps
+--
+snMplsLspUp NOTIFICATION-TYPE
+OBJECTS { mplsLspName,
+          mplsPathName } -- LspPath
+STATUS current
+DESCRIPTION
+     "An mplsLspUp trap signifies that the 
+     specified LSP is up. The current active
+     path for the LSP is mplsPathName."
+--#TYPE "Foundry Trap: MPLS LSP Up"
+--#SUMMARY "LSP %s using path %s is up."
+--#ARGUMENTS { 0, 1 }
+--#SEVERITY INFORMATIONAL
+--#STATE OPERATIONAL
+::= { snTraps 1010 }
+
+
+snMplsLspDown NOTIFICATION-TYPE
+OBJECTS { mplsLspName,
+          mplsPathName } -- LspPath
+STATUS current
+DESCRIPTION
+     "An mplsLspDown trap signifies that the 
+     specified LSP is down, because the current
+     active path mplsPathName went down."
+--#TYPE "Foundry Trap: MPLS LSP Down"
+--#SUMMARY "LSP %s using path %s is down."
+--#ARGUMENTS { 0, 1 }
+--#SEVERITY INFORMATIONAL
+--#STATE OPERATIONAL
+::= { snTraps 1011 }
+
+
+snMplsLspChange NOTIFICATION-TYPE
+OBJECTS { mplsLspName,
+          mplsPathName } -- LspPath
+STATUS current
+DESCRIPTION
+     "An mplsLspChange trap signifies that the
+     the specified LSP has switched traffic to 
+     the new active path 'toLspPath'. The LSP maintains
+     up state before and after the switch over" 
+--#TYPE "Foundry Trap: MPLS LSP Change"
+--#SUMMARY "LSP %s switches to new active path %s."
+--#ARGUMENTS { 0, 1 }
+--#SEVERITY INFORMATIONAL
+--#STATE OPERATIONAL
+::= { snTraps 1012 }
+
+END
