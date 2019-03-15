@@ -2,7 +2,7 @@
 
 . ./set_build_number.sh
 #version=2.0-RC2-$build_number
-version=3.0-M0-1500
+version=3.0-M0-1549
 
 cd win32.win32.x86
 zip -r nxmc-$version-win32-x86.zip nxmc

@@ -8,7 +8,7 @@
       <text>
          NetXMS Management Console
 
-Version 3.0-M0-1500
+Version 3.0-M0-1549
 Copyright (c) 2003-2019 Raden Solutions
       </text>
    </aboutInfo>
@@ -40,6 +40,7 @@ Copyright (c) 2003-2019 Raden Solutions
          <bmp/>
       </win>
    </launcher>
+
 
    <vm>
    </vm>
