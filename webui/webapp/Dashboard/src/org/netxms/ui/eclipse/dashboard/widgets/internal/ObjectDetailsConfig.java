@@ -40,6 +40,9 @@ public class ObjectDetailsConfig extends DashboardElementConfig
    @Element(required=false)
    private int refreshRate = 60; 
    
+   @Element(required=false)
+   private int recordLimit = 0; 
+   
    /**
     * Create "object details" settings object from XML document
     * 
@@ -99,6 +102,22 @@ public class ObjectDetailsConfig extends DashboardElementConfig
    public void setRefreshRate(int refreshRate)
    {
       this.refreshRate = refreshRate;
+   }
+
+   /**
+    * @return the recordLimit
+    */
+   public int getRecordLimit()
+   {
+      return recordLimit;
+   }
+
+   /**
+    * @param recordLimit the recordLimit to set
+    */
+   public void setRecordLimit(int recordLimit)
+   {
+      this.recordLimit = recordLimit;
    }
 
    /**

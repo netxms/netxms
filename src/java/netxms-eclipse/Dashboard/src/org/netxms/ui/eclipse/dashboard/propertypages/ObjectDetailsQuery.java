@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2018 Victor Kirhenshtein
+ * Copyright (C) 2003-2019 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,6 +27,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.ObjectDetailsConfig;
 import org.netxms.ui.eclipse.nxsl.widgets.ScriptEditor;
+import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledSpinner;
 
 /**
@@ -37,6 +38,7 @@ public class ObjectDetailsQuery extends PropertyPage
    private ObjectDetailsConfig config;
    private ScriptEditor query;
    private LabeledSpinner refreshInterval;
+   private LabeledSpinner recordLimit;
    
    /* (non-Javadoc)
     * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -48,6 +50,9 @@ public class ObjectDetailsQuery extends PropertyPage
       
       Composite dialogArea = new Composite(parent, SWT.NONE);
       GridLayout layout = new GridLayout();
+      layout.numColumns = 2;
+      layout.makeColumnsEqualWidth = true;
+      layout.horizontalSpacing = WidgetHelper.DIALOG_SPACING;
       dialogArea.setLayout(layout);
 
       Label label = new Label(dialogArea, SWT.NONE);
@@ -63,12 +68,20 @@ public class ObjectDetailsQuery extends PropertyPage
       gd.verticalAlignment = SWT.FILL;
       gd.widthHint = 300;
       gd.heightHint = 300;
+      gd.horizontalSpan = 2;
       query.setLayoutData(gd);
 
       refreshInterval = new LabeledSpinner(dialogArea, SWT.NONE);
       refreshInterval.setLabel("Refresh interval (seconds)");
       refreshInterval.setRange(1, 100000);
       refreshInterval.setSelection(config.getRefreshRate());
+      refreshInterval.setLayoutData(new GridData(SWT.FILL, SWT.BOTTOM, false, false));
+      
+      recordLimit = new LabeledSpinner(dialogArea, SWT.NONE);
+      recordLimit.setLabel("Record limit (0 to disable)");
+      recordLimit.setRange(0, 10000);
+      recordLimit.setSelection(config.getRecordLimit());
+      recordLimit.setLayoutData(new GridData(SWT.FILL, SWT.BOTTOM, false, false));
       
       return dialogArea;
    }
@@ -82,6 +95,7 @@ public class ObjectDetailsQuery extends PropertyPage
    {
       config.setQuery(query.getText());
       config.setRefreshRate(refreshInterval.getSelection());
+      config.setRecordLimit(recordLimit.getSelection());
       return true;
    }
 }
