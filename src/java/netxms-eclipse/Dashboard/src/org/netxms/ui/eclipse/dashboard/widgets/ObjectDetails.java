@@ -112,6 +112,7 @@ public class ObjectDetails extends ElementWidget
                   break;
                default:
                   result = v1.compareToIgnoreCase(v2);
+                  break;
             }
             return (((SortableTableViewer)viewer).getTable().getSortDirection() == SWT.UP) ? result : -result;
          }

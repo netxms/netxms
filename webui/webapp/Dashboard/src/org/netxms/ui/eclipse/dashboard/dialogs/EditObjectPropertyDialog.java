@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2018 Victor Kirhenshtein
+ * Copyright (C) 2003-2019 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -81,6 +81,7 @@ public class EditObjectPropertyDialog extends Dialog
       gd.grabExcessHorizontalSpace = true;
       gd.widthHint = 350;
       name.setLayoutData(gd);
+      name.setText(property.name);
 
       displayName = new LabeledText(dialogArea, SWT.NONE);
       displayName.setLabel("Display name");
@@ -90,6 +91,7 @@ public class EditObjectPropertyDialog extends Dialog
       gd.grabExcessHorizontalSpace = true;
       gd.widthHint = 350;
       displayName.setLayoutData(gd);
+      displayName.setText(property.displayName);
 
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
