@@ -29,6 +29,7 @@ import org.netxms.ui.eclipse.dashboard.widgets.internal.ObjectDetailsConfig;
 import org.netxms.ui.eclipse.nxsl.widgets.ScriptEditor;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledSpinner;
+import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
  * Properties for "Object details" dashboard element ("Query" page)
@@ -37,6 +38,7 @@ public class ObjectDetailsQuery extends PropertyPage
 {
    private ObjectDetailsConfig config;
    private ScriptEditor query;
+   private LabeledText orderingProperties;
    private LabeledSpinner refreshInterval;
    private LabeledSpinner recordLimit;
    
@@ -70,6 +72,11 @@ public class ObjectDetailsQuery extends PropertyPage
       gd.heightHint = 300;
       gd.horizontalSpan = 2;
       query.setLayoutData(gd);
+      
+      orderingProperties = new LabeledText(dialogArea, SWT.NONE);
+      orderingProperties.setLabel("Order by");
+      orderingProperties.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 2, 1));
+      orderingProperties.setText(config.getOrderingPropertiesAsText());
 
       refreshInterval = new LabeledSpinner(dialogArea, SWT.NONE);
       refreshInterval.setLabel("Refresh interval (seconds)");
@@ -86,7 +93,6 @@ public class ObjectDetailsQuery extends PropertyPage
       return dialogArea;
    }
 
-
    /* (non-Javadoc)
     * @see org.eclipse.jface.preference.PreferencePage#performOk()
     */
@@ -95,6 +101,7 @@ public class ObjectDetailsQuery extends PropertyPage
    {
       config.setQuery(query.getText());
       config.setRefreshRate(refreshInterval.getSelection());
+      config.setOrderingProperties(orderingProperties.getText().trim());
       config.setRecordLimit(recordLimit.getSelection());
       return true;
    }

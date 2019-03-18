@@ -243,6 +243,23 @@ void Array::clear()
 }
 
 /**
+ * Shrink array to given size
+ */
+void Array::shrinkTo(int size)
+{
+   if ((size < 0) || (size >= m_size))
+      return;
+
+   if (m_objectOwner)
+   {
+      for(int i = size; i < m_size; i++)
+         destroyObject(m_data[i]);
+   }
+
+   m_size = size;
+}
+
+/**
  * Get index of given element
  */
 int Array::indexOf(void *element) const

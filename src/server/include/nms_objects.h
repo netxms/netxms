@@ -3342,6 +3342,28 @@ struct DependentNode
 };
 
 /**
+ * Object query result
+ */
+struct ObjectQueryResult
+{
+   NetObj *object;
+   StringList *values;
+
+   ObjectQueryResult(NetObj *_object, StringList *_values)
+   {
+      object = _object;
+      object->incRefCount();
+      values = _values;
+   }
+
+   ~ObjectQueryResult()
+   {
+      object->decRefCount();
+      delete values;
+   }
+};
+
+/**
  * Functions
  */
 void ObjectsInit();
@@ -3385,8 +3407,9 @@ Zone NXCORE_EXPORTABLE *FindZoneByUIN(UINT32 zoneUIN);
 UINT32 FindUnusedZoneUIN();
 bool NXCORE_EXPORTABLE IsClusterIP(UINT32 zoneUIN, const InetAddress& ipAddr);
 bool NXCORE_EXPORTABLE IsParentObject(UINT32 object1, UINT32 object2);
-ObjectArray<NetObj> *QueryObjects(const TCHAR *query, UINT32 userId, TCHAR *errorMessage,
-         size_t errorMessageLen, StringList *fields = NULL, ObjectArray<StringList> *values = NULL);
+ObjectArray<ObjectQueryResult> *QueryObjects(const TCHAR *query, UINT32 userId, TCHAR *errorMessage,
+         size_t errorMessageLen, const StringList *fields = NULL, const StringList *orderBy = NULL,
+         UINT32 limit = 0);
 StructArray<DependentNode> *GetNodeDependencies(UINT32 nodeId);
 
 BOOL LoadObjects();

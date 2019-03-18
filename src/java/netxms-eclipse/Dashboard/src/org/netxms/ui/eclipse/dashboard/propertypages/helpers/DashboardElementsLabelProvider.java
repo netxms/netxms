@@ -60,7 +60,7 @@ public class DashboardElementsLabelProvider extends LabelProvider implements ITa
       "Service component map",
       "Rack diagram",
       "Object tools",
-      "Object details",
+      "Object query",
       "Port view"
 	};
 	

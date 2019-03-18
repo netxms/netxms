@@ -2448,16 +2448,89 @@ static int FilterObject(NXSL_VM *vm, NetObj *object, NXSL_VariableSystem **globa
 }
 
 /**
+ * Filter objects accessible by given user
+ */
+static bool FilterAccessibleObjects(NetObj *object, void *data)
+{
+   return object->checkAccessRights(CAST_FROM_POINTER(data, UINT32), OBJECT_ACCESS_READ);
+}
+
+/**
+ * Query result comparator data
+ */
+struct ObjectQueryComparatorData
+{
+   const StringList *orderBy;
+   const StringList *fields;
+};
+
+/**
+ * Query result comparator
+ */
+static int ObjectQueryComparator(const ObjectQueryResult **object1, const ObjectQueryResult **object2, ObjectQueryComparatorData *data)
+{
+   for(int i = 0; i < data->orderBy->size(); i++)
+   {
+      bool descending = false;
+      const TCHAR *attr = data->orderBy->get(i);
+      if (*attr == _T('-'))
+      {
+         descending = true;
+         attr++;
+      }
+      else if (*attr == _T('+'))
+      {
+         attr++;
+      }
+
+      int attrIndex = data->fields->indexOf(attr);
+      if (attrIndex < 0)
+      {
+         nxlog_debug(7, _T("ObjectQueryComparator: invalid attribute \"%s\""), attr);
+         continue;
+      }
+
+      const TCHAR *v1 = (*object1)->values->get(attrIndex);
+      const TCHAR *v2 = (*object2)->values->get(attrIndex);
+
+      // Try to compare as numbers
+      if ((v1 != NULL) && (v2 != NULL))
+      {
+         TCHAR *eptr;
+         double d1 = _tcstod(v1, &eptr);
+         if (*eptr == 0)
+         {
+            double d2 = _tcstod(v2, &eptr);
+            if (*eptr == 0)
+            {
+               if (d1 < d2)
+                  return descending ? 1 : -1;
+               if (d1 > d2)
+                  return descending ? -1 : 1;
+               continue;
+            }
+         }
+      }
+
+      // Compare as text if at least one value is not a number
+      int rc = _tcsicmp(CHECK_NULL_EX(v1), CHECK_NULL_EX(v2));
+      if (rc != 0)
+         return descending ? -rc : rc;
+   }
+   return 0;
+}
+
+/**
  * Query objects
  */
-ObjectArray<NetObj> *QueryObjects(const TCHAR *query, UINT32 userId, TCHAR *errorMessage,
-         size_t errorMessageLen, StringList *fields, ObjectArray<StringList> *values)
+ObjectArray<ObjectQueryResult> *QueryObjects(const TCHAR *query, UINT32 userId, TCHAR *errorMessage,
+         size_t errorMessageLen, const StringList *fields, const StringList *orderBy, UINT32 limit)
 {
    NXSL_VM *vm = NXSLCompileAndCreateVM(query, errorMessage, errorMessageLen, new NXSL_ServerEnv());
    if (vm == NULL)
       return NULL;
 
-   bool readFields = (fields != NULL) && (values != NULL);
+   bool readFields = (fields != NULL);
 
    // Set class constants
    vm->addConstant("ACCESSPOINT", vm->createValue(OBJECT_ACCESSPOINT));
@@ -2491,21 +2564,17 @@ ObjectArray<NetObj> *QueryObjects(const TCHAR *query, UINT32 userId, TCHAR *erro
    vm->addConstant("VPNCONNECTOR", vm->createValue(OBJECT_VPNCONNECTOR));
    vm->addConstant("ZONE", vm->createValue(OBJECT_ZONE));
 
-   ObjectArray<NetObj> *objects = g_idxObjectById.getObjects(true);
-   ObjectArray<NetObj> *resultSet = new ObjectArray<NetObj>(64, 64, false);
+   ObjectArray<NetObj> *objects = g_idxObjectById.getObjects(true, FilterAccessibleObjects);
+   ObjectArray<ObjectQueryResult> *resultSet = new ObjectArray<ObjectQueryResult>(64, 64, true);
    for(int i = 0; i < objects->size(); i++)
    {
       NetObj *curr = objects->get(i);
-      if (!curr->checkAccessRights(userId, OBJECT_ACCESS_READ))
-         continue;
 
       NXSL_VariableSystem *globals = NULL;
       int rc = FilterObject(vm, curr, readFields ? &globals : NULL);
       if (rc < 0)
       {
          _tcslcpy(errorMessage, vm->getErrorText(), errorMessageLen);
-         for(int j = 0; j < resultSet->size(); j++)
-            resultSet->get(j)->decRefCount();
          delete_and_null(resultSet);
          delete globals;
          break;
@@ -2513,11 +2582,10 @@ ObjectArray<NetObj> *QueryObjects(const TCHAR *query, UINT32 userId, TCHAR *erro
 
       if (rc > 0)
       {
-         curr->incRefCount();
-         resultSet->add(curr);
+         StringList *objectData;
          if (readFields)
          {
-            StringList *objectData = new StringList();
+            objectData = new StringList();
             NXSL_Value *objectValue = curr->createNXSLObject(vm);
             NXSL_Object *object = objectValue->getValueAsObject();
             for(int j = 0; j < fields->size(); j++)
@@ -2549,8 +2617,12 @@ ObjectArray<NetObj> *QueryObjects(const TCHAR *query, UINT32 userId, TCHAR *erro
                }
             }
             vm->destroyValue(objectValue);
-            values->add(objectData);
          }
+         else
+         {
+            objectData = NULL;
+         }
+         resultSet->add(new ObjectQueryResult(curr, objectData));
       }
       delete globals;
    }
@@ -2559,6 +2631,19 @@ ObjectArray<NetObj> *QueryObjects(const TCHAR *query, UINT32 userId, TCHAR *erro
    for(int i = 0; i < objects->size(); i++)
       objects->get(i)->decRefCount();
    delete objects;
+
+   // Sort result set and apply limit
+   if ((orderBy != NULL) && !orderBy->isEmpty())
+   {
+      ObjectQueryComparatorData cd;
+      cd.fields = fields;
+      cd.orderBy = orderBy;
+      resultSet->sort(ObjectQueryComparator, &cd);
+   }
+   if (limit > 0)
+   {
+      resultSet->shrinkTo((int)limit);
+   }
 
    return resultSet;
 }

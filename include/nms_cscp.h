@@ -1258,6 +1258,8 @@ typedef struct
 #define VID_POLICY_COUNT            ((UINT32)629)
 #define VID_NEW_POLICY_TYPE         ((UINT32)630)
 #define VID_USERAGENT               ((UINT32)631)
+#define VID_ORDER_FIELDS            ((UINT32)632)
+#define VID_RECORD_LIMIT            ((UINT32)633)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)
@@ -1358,6 +1360,7 @@ typedef struct
 #define VID_ROW_DATA_BASE           ((UINT32)0x30000000)
 #define VID_COLUMN_INFO_BASE        ((UINT32)0x10000000)
 #define VID_FIELD_LIST_BASE         ((UINT32)0x70000000)
+#define VID_ORDER_FIELD_LIST_BASE   ((UINT32)0x78000000)
 
 // Base value for event log records
 #define VID_EVENTLOG_MSG_BASE       ((UINT32)0x10000000)
