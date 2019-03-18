@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -89,7 +89,11 @@ StringList::StringList(const NXCPMessage *msg, UINT32 baseId, UINT32 countId)
    m_values = m_pool.allocateArray<TCHAR*>(m_allocated);
    UINT32 fieldId = baseId;
    for(int i = 0; i < m_count; i++)
+   {
       m_values[i] = msg->getFieldAsString(fieldId++, &m_pool);
+      if (m_values[i] == NULL)
+         m_values[i] = m_pool.copyString(_T(""));
+   }
 }
 
 /**
