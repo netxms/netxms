@@ -7117,7 +7117,7 @@ NetworkMapObjectList *Node::getL2Topology()
    NetworkMapObjectList *pResult;
    UINT32 dwExpTime;
 
-   dwExpTime = ConfigReadULong(_T("TopologyExpirationTime"), 900);
+   dwExpTime = ConfigReadULong(_T("Topology.AdHocRequest.ExpirationTime"), 900);
    MutexLock(m_mutexTopoAccess);
    if ((m_topology == NULL) || (m_topologyRebuildTimestamp + (time_t)dwExpTime < time(NULL)))
    {
@@ -7137,7 +7137,7 @@ NetworkMapObjectList *Node::getL2Topology()
 NetworkMapObjectList *Node::buildL2Topology(UINT32 *pdwStatus, int radius, bool includeEndNodes)
 {
    NetworkMapObjectList *result;
-   int nDepth = (radius < 0) ? ConfigReadInt(_T("TopologyDiscoveryRadius"), 5) : radius;
+   int nDepth = (radius < 0) ? ConfigReadInt(_T("Topology.DefaultDiscoveryRadius"), 5) : radius;
 
    MutexLock(m_mutexTopoAccess);
    if (m_linkLayerNeighbors != NULL)
@@ -7167,7 +7167,7 @@ NetworkMapObjectList *Node::buildL2Topology(UINT32 *pdwStatus, int radius, bool 
  */
 NetworkMapObjectList *Node::buildIPTopology(UINT32 *pdwStatus, int radius, bool includeEndNodes)
 {
-   int nDepth = (radius < 0) ? ConfigReadInt(_T("TopologyDiscoveryRadius"), 5) : radius;
+   int nDepth = (radius < 0) ? ConfigReadInt(_T("Topology.DefaultDiscoveryRadius"), 5) : radius;
    NetworkMapObjectList *pResult = new NetworkMapObjectList();
    buildIPTopologyInternal(*pResult, nDepth, 0, false, includeEndNodes);
    return pResult;

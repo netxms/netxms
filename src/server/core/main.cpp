@@ -323,7 +323,7 @@ static void LoadGlobalConfig()
 	g_dwConfigurationPollingInterval = ConfigReadInt(_T("ConfigurationPollingInterval"), 3600);
 	g_instancePollingInterval = ConfigReadInt(_T("InstancePollingInterval"), 600);
 	g_dwRoutingTableUpdateInterval = ConfigReadInt(_T("RoutingTableUpdateInterval"), 300);
-	g_dwTopologyPollingInterval = ConfigReadInt(_T("TopologyPollingInterval"), 1800);
+	g_dwTopologyPollingInterval = ConfigReadInt(_T("Topology.PollingInterval"), 1800);
 	g_dwConditionPollingInterval = ConfigReadInt(_T("ConditionPollingInterval"), 60);
 	g_slmPollingInterval = ConfigReadInt(_T("SlmPollingInterval"), 60);
 	DCObject::m_defaultPollingInterval = ConfigReadInt(_T("DefaultDCIPollingInterval"), 60);
