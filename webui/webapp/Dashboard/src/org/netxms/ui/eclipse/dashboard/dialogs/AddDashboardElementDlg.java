@@ -83,7 +83,7 @@ public class AddDashboardElementDlg extends Dialog
       elementTypeSelector.add("Service components map");
       elementTypeSelector.add("Rack diagram");
       elementTypeSelector.add("Object tools");
-      elementTypeSelector.add("Object details");
+      elementTypeSelector.add("Object query");
       elementTypeSelector.add("Port view");
 		elementTypeSelector.select(1);
 		

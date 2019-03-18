@@ -116,7 +116,7 @@ public class DashboardElementAdapterFactory implements IAdapterFactory
 						return LineChartConfig.createFromXml(element.getData());
 					case DashboardElement.NETWORK_MAP:
 						return NetworkMapConfig.createFromXml(element.getData());
-               case DashboardElement.OBJECT_DETAILS:
+               case DashboardElement.OBJECT_QUERY:
                   return ObjectDetailsConfig.createFromXml(element.getData());
                case DashboardElement.OBJECT_TOOLS:
                   return ObjectToolsConfig.createFromXml(element.getData());

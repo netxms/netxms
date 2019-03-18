@@ -174,8 +174,8 @@ public class DashboardControl extends Composite
          case DashboardElement.NETWORK_MAP:
          	w = new NetworkMapElement(this, e, viewPart);
          	break;
-         case DashboardElement.OBJECT_DETAILS:
-            w = new ObjectDetails(this, e, viewPart);
+         case DashboardElement.OBJECT_QUERY:
+            w = new ObjectQuery(this, e, viewPart);
             break;
          case DashboardElement.OBJECT_TOOLS:
             w = new ObjectTools(this, e, viewPart);

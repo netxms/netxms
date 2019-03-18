@@ -3132,15 +3132,20 @@ public class NXCSession
     * 
     * @param query query to execute
     * @param properties object properties to read
+    * @param orderBy list of properties for ordering result set (can be null)
+    * @param limit limit number of records (0 for unlimited)
     * @return list of matching objects
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public List<ObjectQueryResult> queryObjectDetails(String query, List<String> properties) throws IOException, NXCException
+   public List<ObjectQueryResult> queryObjectDetails(String query, List<String> properties, List<String> orderBy, int limit) throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_QUERY_OBJECT_DETAILS);
       msg.setField(NXCPCodes.VID_QUERY, query);
       msg.setFieldsFromStringCollection(properties, NXCPCodes.VID_FIELD_LIST_BASE, NXCPCodes.VID_FIELDS);
+      if (orderBy != null)
+         msg.setFieldsFromStringCollection(orderBy, NXCPCodes.VID_ORDER_FIELD_LIST_BASE, NXCPCodes.VID_ORDER_FIELDS);
+      msg.setFieldInt32(NXCPCodes.VID_RECORD_LIMIT, limit);
       sendMessage(msg);
       
       NXCPMessage response = waitForRCC(msg.getMessageId());

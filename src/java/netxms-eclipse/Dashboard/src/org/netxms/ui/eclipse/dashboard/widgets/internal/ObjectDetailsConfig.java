@@ -18,6 +18,7 @@
  */
 package org.netxms.ui.eclipse.dashboard.widgets.internal;
 
+import java.util.ArrayList;
 import java.util.List;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -39,6 +40,9 @@ public class ObjectDetailsConfig extends DashboardElementConfig
    
    @Element(required=false)
    private int refreshRate = 60; 
+   
+   @ElementList(required=false)
+   private List<String> orderingProperties = null;
    
    @Element(required=false)
    private int recordLimit = 0; 
@@ -86,6 +90,66 @@ public class ObjectDetailsConfig extends DashboardElementConfig
    public void setProperties(List<ObjectProperty> properties)
    {
       this.properties = properties;
+   }
+
+   /**
+    * @return the orderingProperties
+    */
+   public List<String> getOrderingProperties()
+   {
+      return orderingProperties;
+   }
+   
+   /**
+    * Get ordering properties as comma separated list
+    * 
+    * @return ordering properties as comma separated list
+    */
+   public String getOrderingPropertiesAsText()
+   {
+      if ((orderingProperties == null) || orderingProperties.isEmpty())
+         return "";
+      StringBuilder sb = new StringBuilder(orderingProperties.get(0));
+      for(int i = 1; i < orderingProperties.size(); i++)
+      {
+         sb.append(',');
+         sb.append(orderingProperties.get(i));
+      }
+      return sb.toString();
+   }
+
+   /**
+    * Set ordering properties
+    * 
+    * @param orderingProperties ordering properties
+    */
+   public void setOrderingProperties(List<String> orderingProperties)
+   {
+      this.orderingProperties = orderingProperties;
+   }
+
+   /**
+    * Set ordering properties
+    * 
+    * @param orderingProperties ordering properties
+    */
+   public void setOrderingProperties(String orderingProperties)
+   {
+      if ((orderingProperties == null) || orderingProperties.isEmpty())
+      {
+         this.orderingProperties = null;
+      }
+      else
+      {
+         String[] parts = orderingProperties.split(",");
+         this.orderingProperties = new ArrayList<String>(parts.length);
+         for(String p : parts)
+         {
+            p = p.trim();
+            if (!p.isEmpty())
+               this.orderingProperties.add(p);
+         }
+      }
    }
 
    /**

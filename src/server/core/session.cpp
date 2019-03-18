@@ -2329,14 +2329,13 @@ void ClientSession::queryObjects(NXCPMessage *request)
 
    TCHAR *query = request->getFieldAsString(VID_QUERY);
    TCHAR errorMessage[1024];
-   ObjectArray<NetObj> *objects = QueryObjects(query, m_dwUserId, errorMessage, 1024);
+   ObjectArray<ObjectQueryResult> *objects = QueryObjects(query, m_dwUserId, errorMessage, 1024);
    if (objects != NULL)
    {
       UINT32 *idList = new UINT32[objects->size()];
       for(int i = 0; i < objects->size(); i++)
       {
-         idList[i] = objects->get(i)->getId();
-         objects->get(i)->decRefCount();
+         idList[i] = objects->get(i)->object->getId();
       }
       msg.setFieldFromInt32Array(VID_OBJECT_LIST, objects->size(), idList);
       delete[] idList;
@@ -2347,7 +2346,7 @@ void ClientSession::queryObjects(NXCPMessage *request)
       msg.setField(VID_RCC, RCC_NXSL_EXECUTION_ERROR);
       msg.setField(VID_ERROR_TEXT, errorMessage);
    }
-   free(query);
+   MemFree(query);
 
    sendMessage(&msg);
 }
@@ -2360,21 +2359,21 @@ void ClientSession::queryObjectDetails(NXCPMessage *request)
    NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
 
    TCHAR *query = request->getFieldAsString(VID_QUERY);
-   StringList *fields = new StringList(request, VID_FIELD_LIST_BASE, VID_FIELDS);
+   StringList fields(request, VID_FIELD_LIST_BASE, VID_FIELDS);
+   StringList orderBy(request, VID_ORDER_FIELD_LIST_BASE, VID_ORDER_FIELDS);
    TCHAR errorMessage[1024];
-   ObjectArray<StringList> values(128, 128, true);
-   ObjectArray<NetObj> *objects = QueryObjects(query, m_dwUserId, errorMessage, 1024, fields, &values);
+   ObjectArray<ObjectQueryResult> *objects = QueryObjects(query, m_dwUserId, errorMessage, 1024,
+            &fields, &orderBy, request->getFieldAsUInt32(VID_RECORD_LIMIT));
    if (objects != NULL)
    {
       UINT32 *idList = new UINT32[objects->size()];
       UINT32 fieldId = VID_ELEMENT_LIST_BASE;
       for(int i = 0; i < objects->size(); i++)
       {
-         idList[i] = objects->get(i)->getId();
-         objects->get(i)->decRefCount();
-         StringList *v = values.get(i);
-         v->fillMessage(&msg, fieldId + 1, fieldId);
-         fieldId += v->size() + 1;
+         ObjectQueryResult *curr = objects->get(i);
+         idList[i] = curr->object->getId();
+         curr->values->fillMessage(&msg, fieldId + 1, fieldId);
+         fieldId += curr->values->size() + 1;
       }
       msg.setFieldFromInt32Array(VID_OBJECT_LIST, objects->size(), idList);
       delete[] idList;
@@ -2385,8 +2384,7 @@ void ClientSession::queryObjectDetails(NXCPMessage *request)
       msg.setField(VID_RCC, RCC_NXSL_EXECUTION_ERROR);
       msg.setField(VID_ERROR_TEXT, errorMessage);
    }
-   delete fields;
-   free(query);
+   MemFree(query);
 
    sendMessage(&msg);
 }

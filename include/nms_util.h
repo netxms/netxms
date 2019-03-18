@@ -958,11 +958,13 @@ public:
 	Array(int initial = 0, int grow = 16, bool owner = false);
 	virtual ~Array();
 
-	int add(void *element);
    void *get(int index) const { return ((index >= 0) && (index < m_size)) ? (m_storePointers ? m_data[index] : (void *)((char *)m_data + index * m_elementSize)): NULL; }
    void *first() const { return get(0); }
    void *last() const { return get(m_size - 1); }
    int indexOf(void *element) const;
+   void *find(const void *key, int (*cb)(const void *, const void *)) const;
+
+	int add(void *element);
 	void set(int index, void *element);
 	void replace(int index, void *element);
    void insert(int index, void *element);
@@ -970,10 +972,11 @@ public:
    void remove(void *element) { internalRemove(indexOf(element), true); }
 	void unlink(int index) { internalRemove(index, false); }
 	void unlink(void *element) { internalRemove(indexOf(element), false); }
-	void clear();
+   void clear();
+	void shrinkTo(int size);
+	void shrinkBy(int count) { if (count >= m_size) clear(); else shrinkTo(m_size - count); }
    void sort(int (*cb)(const void *, const void *));
    void sort(int (*cb)(const void *, const void *, void *), void *context);
-   void *find(const void *key, int (*cb)(const void *, const void *)) const;
 
 	int size() const { return m_size; }
 	bool isEmpty() const { return m_size == 0; }

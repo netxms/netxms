@@ -1026,6 +1026,13 @@ public class NXCPCodes
    public static final long VID_VLAN_LIST = 622;
    public static final long VID_TASK_KEY = 623;
    public static final long VID_TIMER_COUNT = 624;
+   public static final long VID_AUTOBIND_FLAG = 625;
+   public static final long VID_AUTOUNBIND_FLAG = 626;
+   public static final long VID_POLICY_COUNT = 629;
+   public static final long VID_NEW_POLICY_TYPE = 630;
+   public static final long VID_USERAGENT = 631;
+   public static final long VID_ORDER_FIELDS = 632;
+   public static final long VID_RECORD_LIMIT = 633;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;
@@ -1068,6 +1075,7 @@ public class NXCPCodes
 	public static final long VID_COLUMN_FMT_BASE = 0x20000000L;
 	public static final long VID_ROW_DATA_BASE = 0x30000000L;
    public static final long VID_FIELD_LIST_BASE = 0x70000000L;
+   public static final long VID_ORDER_FIELD_LIST_BASE = 0x78000000L;
 	public static final long VID_LPP_RULE_BASE = 0x10000000L;
 	public static final long VID_LPP_LIST_BASE = 0x10000000L;
 	public static final long VID_LPPGROUP_LIST_BASE = 0x20000000L;

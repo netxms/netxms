@@ -55,9 +55,9 @@ import org.netxms.ui.eclipse.tools.ViewRefreshController;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
- * "Object details" dashboard element
+ * "Object query" dashboard element
  */
-public class ObjectDetails extends ElementWidget
+public class ObjectQuery extends ElementWidget
 {
    private ObjectDetailsConfig config;
    private ViewRefreshController refreshController;
@@ -72,7 +72,7 @@ public class ObjectDetails extends ElementWidget
     * @param element
     * @param viewPart
     */
-   public ObjectDetails(DashboardControl parent, DashboardElement element, IViewPart viewPart)
+   public ObjectQuery(DashboardControl parent, DashboardElement element, IViewPart viewPart)
    {
       super(parent, element, viewPart);
       session = ConsoleSharedData.getSession();
@@ -158,7 +158,7 @@ public class ObjectDetails extends ElementWidget
          @Override
          public void run()
          {
-            if (ObjectDetails.this.isDisposed())
+            if (ObjectQuery.this.isDisposed())
                return;
             
             refreshData();
@@ -244,7 +244,7 @@ public class ObjectDetails extends ElementWidget
       
       updateInProgress = true;
       
-      ConsoleJob job = new ConsoleJob("Update object details", viewPart, Activator.PLUGIN_ID, null) {
+      ConsoleJob job = new ConsoleJob("Run object query", viewPart, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
@@ -252,7 +252,7 @@ public class ObjectDetails extends ElementWidget
             List<String> names = new ArrayList<String>(properties.size());
             for(ObjectProperty p : properties)
                names.add(p.name);
-            final List<ObjectQueryResult> objects = session.queryObjectDetails(config.getQuery(), names);
+            final List<ObjectQueryResult> objects = session.queryObjectDetails(config.getQuery(), names, config.getOrderingProperties(), config.getRecordLimit());
             runInUIThread(new Runnable() {
                @Override
                public void run()

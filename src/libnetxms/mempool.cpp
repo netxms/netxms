@@ -77,6 +77,8 @@ void *MemoryPool::allocate(size_t size)
  */
 TCHAR *MemoryPool::copyString(const TCHAR *s)
 {
+   if (s == NULL)
+      return NULL;
    size_t l = _tcslen(s) + 1;
    TCHAR *p = static_cast<TCHAR*>(allocate(l * sizeof(TCHAR)));
    memcpy(p, s, l * sizeof(TCHAR));
