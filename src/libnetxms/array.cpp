@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -272,6 +272,14 @@ int Array::indexOf(void *element) const
 void Array::sort(int (*cb)(const void *, const void *))
 {
    qsort(m_data, m_size, m_elementSize, cb);
+}
+
+/**
+ * Sort array elements with context
+ */
+void Array::sort(int (*cb)(const void *, const void *, void *), void *context)
+{
+   QSortEx(m_data, m_size, m_elementSize, context, cb);
 }
 
 /**

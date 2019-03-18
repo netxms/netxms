@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -972,6 +972,7 @@ public:
 	void unlink(void *element) { internalRemove(indexOf(element), false); }
 	void clear();
    void sort(int (*cb)(const void *, const void *));
+   void sort(int (*cb)(const void *, const void *, void *), void *context);
    void *find(const void *key, int (*cb)(const void *, const void *)) const;
 
 	int size() const { return m_size; }
@@ -1029,6 +1030,7 @@ public:
    void unlink(T *object) { Array::unlink((void *)object); }
 
    void sort(int (*cb)(const T **, const T **)) { Array::sort((int (*)(const void *, const void *))cb); }
+   template<typename C> void sort(int (*cb)(const T **, const T **, C *), C *context) { Array::sort((int (*)(const void *, const void *, void *))cb, (void *)context); }
    T *find(const T *key, int (*cb)(const T **, const T **)) const
    {
       T **result = (T **)Array::find(&key, (int (*)(const void *, const void *))cb);
