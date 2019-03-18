@@ -24,11 +24,23 @@
 #include <nxevent.h>
 
 /**
- * Upgrade from 22.46 to 30.0
+ * Upgrade from 22.47 to 30.0
+ */
+static bool H_UpgradeFromV47()
+{
+   CHK_EXEC(SetMajorSchemaVersion(30, 0));
+   return true;
+}
+
+/**
+ * Upgrade from 22.46 to 22.47
  */
 static bool H_UpgradeFromV46()
 {
-   CHK_EXEC(SetMajorSchemaVersion(30, 0));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET var_name='Topology.AdHocRequest.ExpirationTime',description='Ad-hoc network topology request expiration time. Server will use cached result of previous request if it is newer than given interval.' WHERE var_name='TopologyExpirationTime'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET var_name='Topology.DefaultDiscoveryRadius',default_value='5',description='Default number of hops from seed node to be added to topology map.' WHERE var_name='TopologyDiscoveryRadius'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET var_name='Topology.PollingInterval' WHERE var_name='TopologyPollingInterval'")));
+   CHK_EXEC(SetMinorSchemaVersion(47));
    return true;
 }
 
@@ -907,7 +919,8 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
-   { 46, 30, 0,  H_UpgradeFromV46 },
+   { 47, 30, 0,  H_UpgradeFromV47 },
+   { 46, 22, 47, H_UpgradeFromV46 },
    { 45, 22, 46, H_UpgradeFromV45 },
    { 44, 22, 45, H_UpgradeFromV44 },
    { 43, 22, 44, H_UpgradeFromV43 },
