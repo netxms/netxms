@@ -95,7 +95,7 @@ public abstract class AbstractHandler extends ServerResource
       if (entity == null)
       {
          log.warn("No POST data in call");
-         return new StringRepresentation(createErrorResponse(RCC.ACCESS_DENIED).toString(), MediaType.APPLICATION_JSON);
+         return new StringRepresentation(createErrorResponse(RCC.INVALID_ARGUMENT).toString(), MediaType.APPLICATION_JSON);
       }
       
       JSONObject data = new JsonRepresentation(entity).getJsonObject();
@@ -122,7 +122,7 @@ public abstract class AbstractHandler extends ServerResource
       if (entity == null)
       {
          log.warn("No PUT data in call");
-         return new StringRepresentation(createErrorResponse(RCC.ACCESS_DENIED).toString(), MediaType.APPLICATION_JSON);
+         return new StringRepresentation(createErrorResponse(RCC.INVALID_ARGUMENT).toString(), MediaType.APPLICATION_JSON);
       }
       
       JSONObject data = new JsonRepresentation(entity).getJsonObject();
