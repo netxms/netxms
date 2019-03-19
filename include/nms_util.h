@@ -1774,8 +1774,10 @@ public:
 	int fillMessage(NXCPMessage &msg, int offset, int rowLimit);
 	void updateFromMessage(NXCPMessage *msg);
 
-   void addAll(Table *src);
-   void copyRow(Table *src, int row);
+   void addAll(const Table *src);
+   void copyRow(const Table *src, int row);
+   void merge(const Table *src);
+   void mergeRow(const Table *src, int row);
 
    int getNumRows() const { return m_data->size(); }
    int getNumColumns() const { return m_columns->size(); }
@@ -1836,6 +1838,8 @@ public:
 
    void buildInstanceString(int row, TCHAR *buffer, size_t bufLen);
    int findRowByInstance(const TCHAR *instance);
+
+   int findRow(void *key, bool (*comparator)(const TableRow *, void *));
 
    UINT32 getObjectId(int row) const { const TableRow *r = m_data->get(row); return (r != NULL) ? r->getObjectId() : 0; }
    void setObjectIdAt(int row, UINT32 id) { TableRow *r = m_data->get(row); if (r != NULL) r->setObjectId(id); }

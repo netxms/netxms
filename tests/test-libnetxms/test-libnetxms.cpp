@@ -1273,8 +1273,49 @@ static void TestTable()
    AssertTrue(!_tcscmp(table2->getAsString(15, 0), table->getAsString(15, 0)));
    EndTest(GetCurrentTimeMs() - start);
 
+   StartTest(_T("Table: merge"));
+   Table *table3 = new Table();
+   table3->addColumn(_T("NAME"));
+   table3->addColumn(_T("VALUE"));
+   table3->addColumn(_T("DATA5"));
+
+   table3->addRow();
+   table3->set(0, _T("T3R1"));
+   table3->set(1, 101);
+   table3->set(2, _T("Data5-1"));
+
+   table3->addRow();
+   table3->set(0, _T("T3R2"));
+   table3->set(1, 102);
+   table3->set(2, _T("Data5-2"));
+
+   table->merge(table3);
+   AssertEquals(table->getNumRows(), 53);
+   AssertEquals(table->getNumColumns(), 7);
+   AssertNotEquals(table->getColumnIndex(_T("DATA5")), -1);
+   AssertTrue(!_tcscmp(table->getAsString(52, table->getColumnIndex(_T("DATA5")), _T("")), _T("Data5-2")));
+   EndTest();
+
+   StartTest(_T("Table: merge row"));
+   Table *table4 = new Table();
+   table4->addColumn(_T("NAME"));
+   table4->addColumn(_T("DATA6"));
+
+   table4->addRow();
+   table4->set(0, _T("T4R1"));
+   table4->set(2, _T("Data6-1"));
+
+   table->mergeRow(table4, 0);
+   table->mergeRow(table4, 1);
+   AssertEquals(table->getNumRows(), 54);
+   AssertEquals(table->getNumColumns(), 8);
+   AssertNotEquals(table->getColumnIndex(_T("DATA6")), -1);
+   AssertTrue(!_tcscmp(table->getAsString(53, table->getColumnIndex(_T("DATA6")), _T("")), _T("Data6-1")));
+   EndTest();
+
    delete table;
    delete table2;
+   delete table3;
 }
 
 /**
