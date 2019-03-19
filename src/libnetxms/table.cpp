@@ -800,7 +800,7 @@ void Table::setBaseRowAt(int row, int baseRow)
  *
  * @param src source table
  */
-void Table::addAll(Table *src)
+void Table::addAll(const Table *src)
 {
    int numColumns = std::min(m_columns->size(), src->m_columns->size());
    for(int i = 0; i < src->m_data->size(); i++)
@@ -818,7 +818,7 @@ void Table::addAll(Table *src)
 /**
  * Copy one row from source table
  */
-void Table::copyRow(Table *src, int row)
+void Table::copyRow(const Table *src, int row)
 {
    TableRow *srcRow = src->m_data->get(row);
    if (srcRow == NULL)
@@ -833,6 +833,84 @@ void Table::copyRow(Table *src, int row)
    }
 
    m_data->add(dstRow);
+}
+
+/**
+ * Merge given table - add missing columns as necessary and place data into columns by column name
+ */
+void Table::merge(const Table *src)
+{
+   // Create column index translation and add missing columns
+   int numSrcColumns = src->m_columns->size();
+#if HAVE_ALLOCA
+   int *tran = (int *)alloca(numSrcColumns * sizeof(int));
+#else
+   int *tran = MemAllocArray<int>(numSrcColumns);
+#endif
+   for(int i = 0; i < numSrcColumns; i++)
+   {
+      TableColumnDefinition *sc = src->m_columns->get(i);
+      int idx = getColumnIndex(sc->getName());
+      if (idx == -1)
+      {
+         idx = addColumn(sc);
+      }
+      tran[i] = idx;
+   }
+
+   for(int r = 0; r < src->m_data->size(); r++)
+   {
+      TableRow *dstRow = new TableRow(m_columns->size());
+      TableRow *srcRow = src->m_data->get(r);
+      for(int c = 0; c < numSrcColumns; c++)
+      {
+         dstRow->set(tran[c], srcRow->getValue(c), srcRow->getStatus(c), srcRow->getCellObjectId(c));
+      }
+      m_data->add(dstRow);
+   }
+
+#if !HAVE_ALLOCA
+   MemFree(tran);
+#endif
+}
+
+/**
+ * Merge single row from given table - add missing columns as necessary and place data into columns by column name
+ */
+void Table::mergeRow(const Table *src, int row)
+{
+   TableRow *srcRow = src->m_data->get(row);
+   if (srcRow == NULL)
+      return;
+
+   // Create column index translation and add missing columns
+   int numSrcColumns = src->m_columns->size();
+#if HAVE_ALLOCA
+   int *tran = (int *)alloca(numSrcColumns * sizeof(int));
+#else
+   int *tran = MemAllocArray<int>(numSrcColumns);
+#endif
+   for(int i = 0; i < numSrcColumns; i++)
+   {
+      TableColumnDefinition *sc = src->m_columns->get(i);
+      int idx = getColumnIndex(sc->getName());
+      if (idx == -1)
+      {
+         idx = addColumn(sc);
+      }
+      tran[i] = idx;
+   }
+
+   TableRow *dstRow = new TableRow(m_columns->size());
+   for(int c = 0; c < numSrcColumns; c++)
+   {
+      dstRow->set(tran[c], srcRow->getValue(c), srcRow->getStatus(c), srcRow->getCellObjectId(c));
+   }
+   m_data->add(dstRow);
+
+#if !HAVE_ALLOCA
+   MemFree(tran);
+#endif
 }
 
 /**
@@ -887,6 +965,19 @@ int Table::findRowByInstance(const TCHAR *instance)
 }
 
 /**
+ * Find row using given comparator and key
+ */
+int Table::findRow(void *key, bool (*comparator)(const TableRow *, void *))
+{
+   for(int i = 0; i < m_data->size(); i++)
+   {
+      if (comparator(m_data->get(i), key))
+         return i;
+   }
+   return -1;
+}
+
+/**
  * Display table on terminal
  */
 void Table::writeToTerminal()
@@ -899,7 +990,7 @@ void Table::writeToTerminal()
       widths[c] = (int)_tcslen(getColumnName(c));
       for(int i = 0; i < m_data->size(); i++)
       {
-         int len = (int)_tcslen(getAsString(i, c));
+         int len = (int)_tcslen(getAsString(i, c, _T("")));
          if (len > widths[c])
             widths[c] = len;
       }
@@ -913,13 +1004,13 @@ void Table::writeToTerminal()
       for(int j = 0; j < m_columns->size(); j++)
       {
          if (m_columns->get(j)->isInstanceColumn())
-            WriteToTerminalEx(_T(" \x1b[32;1m%*s\x1b[0m \x1b[1m|\x1b[0m"), -widths[j], getAsString(i, j));
+            WriteToTerminalEx(_T(" \x1b[32;1m%*s\x1b[0m \x1b[1m|\x1b[0m"), -widths[j], getAsString(i, j, _T("")));
          else
-            WriteToTerminalEx(_T(" %*s \x1b[1m|\x1b[0m"), -widths[j], getAsString(i, j));
+            WriteToTerminalEx(_T(" %*s \x1b[1m|\x1b[0m"), -widths[j], getAsString(i, j, _T("")));
       }
       WriteToTerminal(_T("\n"));
    }
-   free(widths);
+   MemFree(widths);
 }
 
 /**
