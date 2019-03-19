@@ -126,13 +126,26 @@ PolicyInstallJob::~PolicyInstallJob()
  */
 ServerJobResult PolicyInstallJob::run()
 {
-   ServerJobResult result = JOB_RESULT_FAILED;
-   GenericAgentPolicy *policy = NULL;
-   NetObj *obj = FindObjectById(m_templateId);
-   if (obj != NULL && obj->getObjectClass() == OBJECT_TEMPLATE)
+   Template *t = static_cast<Template*>(FindObjectById(m_templateId, OBJECT_TEMPLATE));
+   if (t == NULL)
    {
-      policy = ((Template *)obj)->getAgentPolicyCopy(m_policyGuid);
+      TCHAR msg[256];
+      _sntprintf(msg, 256, _T("Template object [%u] does not exist"), m_templateId);
+      setFailureMessage(msg);
+      return JOB_RESULT_FAILED;
    }
+
+   GenericAgentPolicy *policy = t->getAgentPolicyCopy(m_policyGuid);
+   if (policy == NULL)
+   {
+      TCHAR msg[256], guid[64];
+      _sntprintf(msg, 256, _T("Policy %s within template %s [%u] does not exist"),
+               m_policyGuid.toString(guid), t->getName(), t->getId());
+      setFailureMessage(msg);
+      return JOB_RESULT_FAILED;
+   }
+
+   ServerJobResult result = JOB_RESULT_FAILED;
 
    TCHAR jobName[1024];
    _sntprintf(jobName, 1024, _T("Deploy policy %s"), policy->getName());
