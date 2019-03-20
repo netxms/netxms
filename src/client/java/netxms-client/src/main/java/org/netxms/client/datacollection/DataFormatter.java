@@ -95,10 +95,9 @@ public class DataFormatter
                
                final String f = "%" + new String(Arrays.copyOfRange(format, i, j + 1));
                i = j;
-               
                try
                {
-                  Value v = getValueForFormat(value, useMultipliers, format[j] == 's');
+                  Value v = getValueForFormat(value, useMultipliers, format[j] == 's', format[j] == 'd');
                   sb.append(String.format(f, v.value));
                   sb.append(v.suffix);
                }
@@ -128,7 +127,7 @@ public class DataFormatter
     * @param useMultipliers
     * @return
     */
-   private Value getValueForFormat(String value, boolean useMultipliers, boolean stringOutput)
+   private Value getValueForFormat(String value, boolean useMultipliers, boolean stringOutput, boolean decimalOutput)
    {
       Value v = new Value();
       
@@ -196,6 +195,10 @@ public class DataFormatter
       {
          v.value = value;
       }
+      
+      if(decimalOutput && v.value instanceof Double)
+         v.value = ((Double)v.value).longValue();
+      
       return v;
    }
    
