@@ -1303,7 +1303,7 @@ static void TestTable()
 
    table4->addRow();
    table4->set(0, _T("T4R1"));
-   table4->set(2, _T("Data6-1"));
+   table4->set(1, _T("Data6-1"));
 
    table->mergeRow(table4, 0);
    table->mergeRow(table4, 1);
