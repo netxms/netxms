@@ -35,6 +35,11 @@ NETXMS_EXECUTABLE_HEADER(nxget)
 #define MAX_LINE_SIZE      4096
 
 /**
+ * Table output delimiter
+ */
+static TCHAR s_tableOutputDelimiter = 0;
+
+/**
  * Operations
  */
 enum Operation
@@ -112,7 +117,10 @@ static int GetTable(AgentConnection *pConn, const TCHAR *pszParam)
    UINT32 rcc = pConn->getTable(pszParam, &table);
    if (rcc == ERR_SUCCESS)
    {
-      table->writeToTerminal();
+      if (s_tableOutputDelimiter != 0)
+         table->dump(stdout, true, s_tableOutputDelimiter);
+      else
+         table->writeToTerminal();
 		delete table;
    }
    else
@@ -273,7 +281,7 @@ int main(int argc, char *argv[])
 
    // Parse command line
    opterr = 1;
-   while((ch = getopt(argc, argv, "a:A:bCD:e:Ehi:IK:lno:O:p:P:r:R:s:S:t:Tvw:W:X:Z:")) != -1)
+   while((ch = getopt(argc, argv, "a:A:bCd:D:e:Ehi:IK:lno:O:p:P:r:R:s:S:t:Tvw:W:X:Z:")) != -1)
    {
       switch(ch)
       {
@@ -285,6 +293,7 @@ int main(int argc, char *argv[])
                      _T("   -A auth      : Authentication method for proxy agent.\n")
                      _T("   -b           : Batch mode - get all parameters listed on command line.\n")
                      _T("   -C           : Get agent's configuration file\n")
+                     _T("   -d delimiter : Print table content as delimited text.\n")
                      _T("   -D level     : Set debug level (default is 0).\n")
 #ifdef _WITH_ENCRYPTION
                      _T("   -e policy    : Set encryption policy. Possible values are:\n")
@@ -349,6 +358,9 @@ int main(int argc, char *argv[])
             break;
          case 'b':   // Batch mode
             batchMode = TRUE;
+            break;
+         case 'd':   // Dump table
+            s_tableOutputDelimiter = *optarg;
             break;
          case 'D':   // debug level
             nxlog_set_debug_level((int)strtol(optarg, NULL, 0));
