@@ -3,8 +3,9 @@
 *
 
 - Updated default MIB collection
+- nxget command line option to print table as delimited text
 - Fixed issues:
-   NX-1537 ("Hidden" flag for DCI)
+	NX-1537 ("Hidden" flag for DCI)
 	NX-1574 (Add hasActiveThreshold attribute/method to DCI object accessible in NXSL)
 	NX-1577 (Rename server configuration parameter 'TopologyExpirationTime' to 'Topology.AdHocRequest.ExpirationTime')
 	NX-1580 (Updated FOUNDRY MIB // Updated CPQHOST MIB)

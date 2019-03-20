@@ -597,8 +597,7 @@ int Table::getColumnIndex(const TCHAR *name) const
  */
 int Table::addRow()
 {
-   m_data->add(new TableRow(m_columns->size()));
-	return m_data->size() - 1;
+   return m_data->add(new TableRow(m_columns->size()));
 }
 
 /**
@@ -818,11 +817,11 @@ void Table::addAll(const Table *src)
 /**
  * Copy one row from source table
  */
-void Table::copyRow(const Table *src, int row)
+int Table::copyRow(const Table *src, int row)
 {
    TableRow *srcRow = src->m_data->get(row);
    if (srcRow == NULL)
-      return;
+      return -1;
 
    int numColumns = std::min(m_columns->size(), src->m_columns->size());
    TableRow *dstRow = new TableRow(m_columns->size());
@@ -832,7 +831,7 @@ void Table::copyRow(const Table *src, int row)
       dstRow->set(j, srcRow->getValue(j), srcRow->getStatus(j), srcRow->getCellObjectId(j));
    }
 
-   m_data->add(dstRow);
+   return m_data->add(dstRow);
 }
 
 /**
@@ -877,11 +876,11 @@ void Table::merge(const Table *src)
 /**
  * Merge single row from given table - add missing columns as necessary and place data into columns by column name
  */
-void Table::mergeRow(const Table *src, int row)
+int Table::mergeRow(const Table *src, int row)
 {
    TableRow *srcRow = src->m_data->get(row);
    if (srcRow == NULL)
-      return;
+      return -1;
 
    // Create column index translation and add missing columns
    int numSrcColumns = src->m_columns->size();
@@ -906,11 +905,12 @@ void Table::mergeRow(const Table *src, int row)
    {
       dstRow->set(tran[c], srcRow->getValue(c), srcRow->getStatus(c), srcRow->getCellObjectId(c));
    }
-   m_data->add(dstRow);
 
 #if !HAVE_ALLOCA
    MemFree(tran);
 #endif
+
+   return m_data->add(dstRow);
 }
 
 /**
@@ -1011,6 +1011,37 @@ void Table::writeToTerminal()
       WriteToTerminal(_T("\n"));
    }
    MemFree(widths);
+}
+
+/**
+ * Dump table using given output stream
+ */
+void Table::dump(FILE *out, bool withHeader, TCHAR delimiter)
+{
+   if (m_columns->isEmpty())
+      return;
+
+   if (withHeader)
+   {
+      _fputts(getColumnName(0), out);
+      for(int c = 1; c < m_columns->size(); c++)
+      {
+         _fputtc(delimiter, out);
+         _fputts(getColumnName(c), out);
+      }
+      _fputtc(_T('\n'), out);
+   }
+
+   for(int i = 0; i < m_data->size(); i++)
+   {
+      _fputts(getAsString(i, 0, _T("")), out);
+      for(int j = 1; j < m_columns->size(); j++)
+      {
+         _fputtc(delimiter, out);
+         _fputts(getAsString(i, j, _T("")), out);
+      }
+      _fputtc(_T('\n'), out);
+   }
 }
 
 /**

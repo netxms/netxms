@@ -1787,9 +1787,9 @@ public:
 	void updateFromMessage(NXCPMessage *msg);
 
    void addAll(const Table *src);
-   void copyRow(const Table *src, int row);
+   int copyRow(const Table *src, int row);
    void merge(const Table *src);
-   void mergeRow(const Table *src, int row);
+   int mergeRow(const Table *src, int row);
 
    int getNumRows() const { return m_data->size(); }
    int getNumColumns() const { return m_columns->size(); }
@@ -1866,6 +1866,7 @@ public:
    int getBaseRow(int row) const { const TableRow *r = m_data->get(row); return (r != NULL) ? r->getBaseRow() : 0; }
 
    void writeToTerminal();
+   void dump(FILE *out, bool withHeader = true, TCHAR delimiter = _T(','));
 
    static Table *createFromXML(const char *xml);
    TCHAR *createXML() const;

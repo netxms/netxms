@@ -149,6 +149,7 @@
 #define _tpopen   wpopen
 #define _fgetts   fgetws
 #define _fputts   fputws
+#define _fputtc   fputwc
 #if HAVE_DECL_PUTWS && HAVE_PUTWS
 #define _putts    putws
 #else
@@ -247,6 +248,7 @@
 #define _tpopen   popen
 #define _fgetts   fgets
 #define _fputts   fputs
+#define _fputtc   fputc
 #define _putts    puts
 #define _puttc    putc
 #define _tcstol   strtol
