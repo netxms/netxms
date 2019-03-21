@@ -494,7 +494,11 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const TCHAR *attr)
    }
    else if (!_tcscmp(attr, _T("components")))
    {
-      value = new NXSL_Value(new NXSL_Object(&g_nxslComponentClass, node->getComponents()->getRoot()));
+      ComponentTree *components = node->getComponents();
+      if (components != NULL)
+         value = new NXSL_Value(new NXSL_Object(&g_nxslComponentClass, components->getRoot()));
+      else
+         value = new NXSL_Value();
    }
    else if (!_tcscmp(attr, _T("dependentNodes")))
    {
