@@ -161,6 +161,7 @@ import org.netxms.client.objects.Zone;
 import org.netxms.client.objecttools.ObjectContextBase;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.client.objecttools.ObjectToolDetails;
+import org.netxms.client.objecttools.ObjectToolFolder;
 import org.netxms.client.packages.PackageDeploymentListener;
 import org.netxms.client.packages.PackageInfo;
 import org.netxms.client.reporting.ReportDefinition;
@@ -7662,6 +7663,47 @@ public class NXCSession
       }
 
       return list;
+   }
+   
+   /**
+    * Create object tool tree
+    * 
+    * @param tools list of object tools
+    * @return the root folder of the tree
+    */
+   public ObjectToolFolder createToolTree(List<ObjectTool> tools)
+   {
+      ObjectToolFolder root = new ObjectToolFolder("[root]");
+      Map<String, ObjectToolFolder> folders = new HashMap<String, ObjectToolFolder>();
+      for(ObjectTool t : tools)
+      {
+         ObjectToolFolder folder = root;
+         String[] path = t.getName().split("\\-\\>");
+         for(int i = 0; i < path.length - 1; i++)
+         {
+            String key = folder.hashCode() + "@" + path[i].replace("&", "");
+            ObjectToolFolder curr = folders.get(key);
+            if (curr == null)
+            {
+               curr = new ObjectToolFolder(path[i]);
+               folders.put(key, curr);
+               folder.addFolder(curr);
+            }
+            folder = curr;
+         }
+         folder.addTool(t);
+      }
+      return root;
+   }
+   
+   /**
+    * @return root object tool folder
+    * @throws IOException if socker or file I/O error occours
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public ObjectToolFolder getObjectToolsAsTree() throws IOException, NXCException
+   {
+      return createToolTree(getObjectTools());
    }
 
    /**

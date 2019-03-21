@@ -19,11 +19,6 @@
 
 package org.netxms.websvc.handlers;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.netxms.client.NXCException;
@@ -33,6 +28,7 @@ import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.client.objecttools.ObjectToolDetails;
+import org.netxms.client.objecttools.ObjectToolFolder;
 import org.netxms.websvc.ObjectToolExecutor;
 import org.netxms.websvc.ObjectToolOutputListener;
 import org.netxms.websvc.json.ResponseContainer;
@@ -41,9 +37,15 @@ import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.Representation;
 import org.restlet.representation.StringRepresentation;
 import org.restlet.resource.Post;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.*;
 
 public class ObjectTools extends AbstractObjectHandler
 {
+   private Logger log = LoggerFactory.getLogger(ObjectTools.class);
+
    /* (non-Javadoc)
     * @see org.netxms.websvc.handlers.AbstractHandler#getCollection(java.util.Map)
     */
@@ -55,12 +57,40 @@ public class ObjectTools extends AbstractObjectHandler
          throw new NXCException(RCC.INVALID_OBJECT_ID);
 
       List<ObjectTool> objectTools = session.getObjectTools();
-      List<ObjectTool> result = new ArrayList<ObjectTool>();
-      for(ObjectTool t : objectTools)
-         if (t.isApplicableForNode((AbstractNode)object))
-            result.add(t);
+      objectTools.removeIf(tool -> !tool.isApplicableForNode((AbstractNode)object));
 
-      return new ResponseContainer("objectTools", result);
+      return new ResponseContainer("root", createToolTree(objectTools));
+   }
+
+   /**
+    * Create object tool tree
+    *
+    * @param tools list of object tools
+    * @return the root folder of the tree
+    */
+   public ObjectToolFolder createToolTree(List<ObjectTool> tools)
+   {
+      ObjectToolFolder root = new ObjectToolFolder("[root]");
+      Map<String, ObjectToolFolder> folders = new HashMap<String, ObjectToolFolder>();
+      for(ObjectTool t : tools)
+      {
+         ObjectToolFolder folder = root;
+         String[] path = t.getName().split("\\-\\>");
+         for(int i = 0; i < path.length - 1; i++)
+         {
+            String key = folder.hashCode() + "@" + path[i].replace("&", "");
+            ObjectToolFolder curr = folders.get(key);
+            if (curr == null)
+            {
+               curr = new ObjectToolFolder(path[i]);
+               folders.put(key, curr);
+               folder.addFolder(curr);
+            }
+            folder = curr;
+         }
+         folder.addTool(t);
+      }
+      return root;
    }
 
    /* (non-Javadoc)
@@ -109,6 +139,7 @@ public class ObjectTools extends AbstractObjectHandler
 
             JSONObject response = new JSONObject();
             response.put("UUID", uuid);
+            response.put("toolId", id);
             return new StringRepresentation(response.toString(), MediaType.APPLICATION_JSON);
          }
          else
