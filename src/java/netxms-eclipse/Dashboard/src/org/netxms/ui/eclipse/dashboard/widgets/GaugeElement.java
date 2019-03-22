@@ -86,6 +86,7 @@ public class GaugeElement extends ComparisonChartElement
 		((Gauge)chart).setFontName(config.getFontName());
 		((Gauge)chart).setColorMode(GaugeColorMode.getByValue(config.getColorMode()));
 		((Gauge)chart).setCustomColor(ColorConverter.rgbFromInt(config.getCustomColor()));
+      ((Gauge)chart).setDrillDownObjectId(config.getDrillDownObjectId());
 		
 		int index = 0;
 		for(ChartDciConfig dci : config.getDciList())

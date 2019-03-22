@@ -26,6 +26,8 @@ import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.ControlListener;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.events.MouseEvent;
+import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.graphics.Color;
@@ -35,16 +37,25 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.ui.IWorkbenchPage;
+import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.PlatformUI;
 import org.netxms.client.datacollection.DataFormatter;
 import org.netxms.client.datacollection.DciDataRow;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.datacollection.Threshold;
+import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.Dashboard;
+import org.netxms.client.objects.NetworkMap;
 import org.netxms.ui.eclipse.charts.Activator;
 import org.netxms.ui.eclipse.charts.api.ChartColor;
 import org.netxms.ui.eclipse.charts.api.Gauge;
 import org.netxms.ui.eclipse.charts.api.GaugeColorMode;
 import org.netxms.ui.eclipse.charts.widgets.internal.DataComparisonElement;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.ColorCache;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
  * Abstract gauge widget
@@ -76,8 +87,10 @@ public abstract class GaugeWidget extends GenericChart implements Gauge, PaintLi
    protected String fontName = "Verdana"; //$NON-NLS-1$
    protected GaugeColorMode colorMode = GaugeColorMode.ZONE;
    protected RGB customColor = new RGB(0, 0, 0);
+   protected long drillDownObjectId = 0;
 
    private boolean fontsCreated = false;
+   private boolean mouseDown = false;
 
    /**
     * @param parent
@@ -105,6 +118,31 @@ public abstract class GaugeWidget extends GenericChart implements Gauge, PaintLi
          @Override
          public void controlMoved(ControlEvent e)
          {
+         }
+      });
+      addMouseListener(new MouseListener() {
+         @Override
+         public void mouseDown(MouseEvent e)
+         {
+            if (e.button == 1)
+               mouseDown = true;
+         }
+
+         @Override
+         public void mouseUp(MouseEvent e)
+         {
+            if ((e.button == 1) && mouseDown)
+            {
+               mouseDown = false;
+               if (drillDownObjectId != 0)
+                  openDrillDownObject();
+            }
+         }
+
+         @Override
+         public void mouseDoubleClick(MouseEvent e)
+         {
+            mouseDown = false;
          }
       });
    }
@@ -789,6 +827,53 @@ public abstract class GaugeWidget extends GenericChart implements Gauge, PaintLi
    public void setCustomColor(RGB color)
    {
       customColor = color;
+   }
+
+   /* (non-Javadoc)
+    * @see org.netxms.ui.eclipse.charts.api.Gauge#getDrillDownObjectId()
+    */
+   @Override
+   public long getDrillDownObjectId()
+   {
+      return drillDownObjectId;
+   }
+
+   /* (non-Javadoc)
+    * @see org.netxms.ui.eclipse.charts.api.Gauge#setDrillDownObjectId(long)
+    */
+   @Override
+   public void setDrillDownObjectId(long drillDownObjectId)
+   {
+      this.drillDownObjectId = drillDownObjectId;
+      setCursor(getDisplay().getSystemCursor((drillDownObjectId != 0) ? SWT.CURSOR_HAND : SWT.CURSOR_ARROW));
+   }
+   
+   /**
+    * Open drill-down object
+    */
+   void openDrillDownObject()
+   {
+      AbstractObject object = ConsoleSharedData.getSession().findObjectById(drillDownObjectId);
+      if (object == null)
+         return;
+      
+      if (!(object instanceof Dashboard) && !(object instanceof NetworkMap))
+         return;
+      
+      final IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+      try
+      {
+         window.getActivePage().showView(
+               (object instanceof Dashboard) ? "org.netxms.ui.eclipse.dashboard.views.DashboardView" : "org.netxms.ui.eclipse.networkmaps.views.PredefinedMap",
+                     Long.toString(object.getObjectId()), IWorkbenchPage.VIEW_ACTIVATE);
+      }
+      catch(PartInitException e)
+      {
+         MessageDialogHelper.openError(window.getShell(), "Error", 
+               String.format("Cannot open %s view \"%s\" (%s)",
+                     (object instanceof Dashboard) ? "dashboard" : "network map",
+                     object.getObjectName(), e.getMessage()));
+      }
    }
 
    /* (non-Javadoc)
