@@ -84,6 +84,18 @@ public class DciDataRow
 		if (value instanceof Double)
 			return ((Double)value).longValue();
 		
+      if (value instanceof String)
+      {
+         try
+         {
+            return Long.parseLong((String)value);
+         }
+         catch(NumberFormatException e)
+         {
+            return 0;
+         }
+      }
+      
 		return 0;
 	}
 
@@ -97,6 +109,18 @@ public class DciDataRow
 
 		if (value instanceof Double)
 			return ((Double)value).doubleValue();
+		
+      if (value instanceof String)
+      {
+         try
+         {
+            return Double.parseDouble((String)value);
+         }
+         catch(NumberFormatException e)
+         {
+            return 0;
+         }
+      }
 		
 		return 0;
 	}

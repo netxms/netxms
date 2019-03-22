@@ -123,7 +123,10 @@ public abstract class ComparisonChartElement extends ElementWidget
                thresholds = new Threshold[dciList.length][];
                for(int i = 0; i < dciList.length; i++)
                {
-                  thresholds[i] = session.getThresholds(dciList[i].nodeId, dciList[i].dciId);
+                  if (dciList[i].type == ChartDciConfig.ITEM)
+                     thresholds[i] = session.getThresholds(dciList[i].nodeId, dciList[i].dciId);
+                  else
+                     thresholds[i] = new Threshold[0];
                }
             }
             else
