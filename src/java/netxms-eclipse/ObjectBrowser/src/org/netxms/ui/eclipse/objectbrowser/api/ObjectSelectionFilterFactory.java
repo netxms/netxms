@@ -272,6 +272,7 @@ public class ObjectSelectionFilterFactory
 	{
 	   HashSet<Integer> classFilter = new HashSet<Integer>(5);
 	   classFilter.add(AbstractObject.OBJECT_DASHBOARD);
+      classFilter.add(AbstractObject.OBJECT_DASHBOARDGROUP);
 	   classFilter.add(AbstractObject.OBJECT_DASHBOARDROOT);
 	   classFilter.add(AbstractObject.OBJECT_NETWORKMAP);
 	   classFilter.add(AbstractObject.OBJECT_NETWORKMAPGROUP);
