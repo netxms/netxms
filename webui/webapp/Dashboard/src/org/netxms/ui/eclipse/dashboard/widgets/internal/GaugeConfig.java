@@ -57,6 +57,9 @@ public class GaugeConfig extends AbstractChartConfig
    @Element(required=false)
    private int customColor = 0;
    
+   @Element(required=false)
+   private long drillDownObjectId = 0;
+   
 	/**
 	 * Create dial chart settings object from XML document
 	 * 
@@ -276,5 +279,21 @@ public class GaugeConfig extends AbstractChartConfig
    public void setCustomColor(int customColor)
    {
       this.customColor = customColor;
+   }
+
+   /**
+    * @return the drillDownObjectId
+    */
+   public long getDrillDownObjectId()
+   {
+      return drillDownObjectId;
+   }
+
+   /**
+    * @param drillDownObjectId the drillDownObjectId to set
+    */
+   public void setDrillDownObjectId(long drillDownObjectId)
+   {
+      this.drillDownObjectId = drillDownObjectId;
    }
 }

@@ -29,9 +29,12 @@ import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.dialogs.PropertyPage;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.charts.api.GaugeColorMode;
 import org.netxms.ui.eclipse.dashboard.Messages;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.GaugeConfig;
+import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
+import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
 import org.netxms.ui.eclipse.tools.ColorConverter;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -56,6 +59,7 @@ public class Gauge extends PropertyPage
 	private LabeledText rightRedZone;
 	private Combo colorMode;
 	private ColorSelector customColor;
+	private ObjectSelector drillDownObject;
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -165,6 +169,17 @@ public class Gauge extends PropertyPage
       gd.horizontalAlignment = SWT.LEFT;
       customColor = WidgetHelper.createLabeledColorSelector(dialogArea, Messages.get().Gauge_CustomColor, gd); 
       customColor.setColorValue(ColorConverter.rgbFromInt(config.getCustomColor()));
+      
+      drillDownObject = new ObjectSelector(dialogArea, SWT.NONE, true);
+      drillDownObject.setLabel("Drill-down object");
+      drillDownObject.setObjectClass(AbstractObject.class);
+      drillDownObject.setClassFilter(ObjectSelectionDialog.createDashboardAndNetworkMapSelectionFilter());
+      drillDownObject.setObjectId(config.getDrillDownObjectId());
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalSpan = 2;
+      drillDownObject.setLayoutData(gd);
 		
 		checkLegendInside = new Button(dialogArea, SWT.CHECK);
 		checkLegendInside.setText(Messages.get().DialChart_LegendInside);
@@ -232,6 +247,7 @@ public class Gauge extends PropertyPage
 		config.setElementBordersVisible(checkElementBorders.getSelection());
 		config.setColorMode(colorMode.getSelectionIndex());
 		config.setCustomColor(ColorConverter.rgbToInt(customColor.getColorValue()));
+		config.setDrillDownObjectId(drillDownObject.getObjectId());
 		return true;
 	}
 	

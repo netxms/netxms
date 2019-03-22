@@ -156,4 +156,16 @@ public interface Gauge extends DataComparisonChart
 	 * @param color
 	 */
 	public void setCustomColor(RGB color);
+	
+   /**
+    * Get ID of drill-down object for this gauge (dashboard or network map)
+    */
+	public long getDrillDownObjectId();
+	
+	/**
+	 * Set ID of drill-down object for this gauge (dashboard or network map)
+	 * 
+	 * @param objectId ID of drill-down object or 0 to disable drill-down functionality
+	 */
+	public void setDrillDownObjectId(long objectId);
 }
