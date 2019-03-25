@@ -37,10 +37,54 @@
    _T("ack_timeout,dci_id,alarm_category_ids")
 
 /**
+ * Alarm list
+ */
+class AlarmList
+{
+private:
+   Mutex m_lock;
+   ObjectArray<Alarm> m_list;
+   StringObjectMap<Alarm> m_keyIndex;
+
+public:
+   AlarmList() : m_list(256, 256, true), m_keyIndex(false) { }
+   ~AlarmList() { }
+
+   void lock() { m_lock.lock(); }
+   void unlock() { m_lock.unlock(); }
+
+   int size() { return m_list.size(); }
+
+   Alarm *get(int index) { return m_list.get(index); }
+   Alarm *get(const TCHAR *key) { return m_keyIndex.get(key); }
+
+   void add(Alarm *alarm)
+   {
+      m_list.add(alarm);
+      if (*alarm->getKey() != 0)
+         m_keyIndex.set(alarm->getKey(), alarm);
+   }
+
+   void remove(int index)
+   {
+      Alarm *alarm = m_list.get(index);
+      if (*alarm->getKey() != 0)
+         m_keyIndex.remove(alarm->getKey());
+      m_list.remove(index);
+   }
+
+   void remove(Alarm *alarm)
+   {
+      if (*alarm->getKey() != 0)
+         m_keyIndex.remove(alarm->getKey());
+      m_list.remove(alarm);
+   }
+};
+
+/**
  * Global instance of alarm manager
  */
-static ObjectArray<Alarm> s_alarmList(256, 256, true);
-static Mutex s_alarmListLock;
+static AlarmList s_alarmList;
 static Condition s_shutdown(true);
 static THREAD s_watchdogThread = INVALID_THREAD_HANDLE;
 static UINT32 s_resolveExpirationTime = 0;
@@ -538,7 +582,7 @@ void Alarm::updateFromEvent(Event *event, int state, int severity, UINT32 timeou
    m_timeoutEvent = timeoutEvent;
    if ((m_state & ALARM_STATE_STICKY) == 0)
       m_ackTimeout = ackTimeout;
-   nx_strncpy(m_message, message, MAX_EVENT_MSG_LENGTH);
+   _tcslcpy(m_message, message, MAX_EVENT_MSG_LENGTH);
    delete m_alarmCategoryList;
    m_alarmCategoryList = new IntegerArray<UINT32>(alarmCategoryList);
 
@@ -563,30 +607,26 @@ UINT32 NXCORE_EXPORTABLE CreateNewAlarm(TCHAR *message, TCHAR *key, int state, i
    // Check if we have a duplicate alarm
    if (((state & ALARM_STATE_MASK) != ALARM_STATE_TERMINATED) && (*pszExpKey != 0))
    {
-      s_alarmListLock.lock();
+      s_alarmList.lock();
 
-      for(int i = 0; i < s_alarmList.size(); i++)
+      Alarm *alarm = s_alarmList.get(pszExpKey);
+      if (alarm != NULL)
       {
-         Alarm *alarm = s_alarmList.get(i);
-			if (!_tcscmp(pszExpKey, alarm->getKey()))
+         alarm->updateFromEvent(event, state, severity, timeout, timeoutEvent, ackTimeout, pszExpMsg, alarmCategoryList);
+         if (!alarm->isEventRelated(event->getId()))
          {
-			   alarm->updateFromEvent(event, state, severity, timeout, timeoutEvent, ackTimeout, pszExpMsg, alarmCategoryList);
-            if (!alarm->isEventRelated(event->getId()))
-            {
-               alarmId = alarm->getAlarmId();		// needed for correct update of related events
-               updateRelatedEvent = true;
-               alarm->addRelatedEvent(event->getId());
-            }
-            // Open helpdesk issue
-            if (openHelpdeskIssue)
-               alarm->openHelpdeskIssue(NULL);
-
-            newAlarm = false;
-            break;
+            alarmId = alarm->getAlarmId();      // needed for correct update of related events
+            updateRelatedEvent = true;
+            alarm->addRelatedEvent(event->getId());
          }
+
+         if (openHelpdeskIssue)
+            alarm->openHelpdeskIssue(NULL);
+
+         newAlarm = false;
       }
 
-      s_alarmListLock.unlock();
+      s_alarmList.unlock();
    }
 
    if (newAlarm)
@@ -602,10 +642,10 @@ UINT32 NXCORE_EXPORTABLE CreateNewAlarm(TCHAR *message, TCHAR *key, int state, i
       // Add new alarm to active alarm list if needed
 		if ((alarm->getState() & ALARM_STATE_MASK) != ALARM_STATE_TERMINATED)
       {
-         s_alarmListLock.lock();
+         s_alarmList.lock();
          nxlog_debug_tag(DEBUG_TAG, 7, _T("AlarmManager: adding new active alarm, current alarm count %d"), s_alarmList.size());
          s_alarmList.add(alarm);
-         s_alarmListLock.unlock();
+         s_alarmList.unlock();
       }
 
 		alarm->createInDatabase();
@@ -635,8 +675,8 @@ UINT32 NXCORE_EXPORTABLE CreateNewAlarm(TCHAR *message, TCHAR *key, int state, i
                       8, sqlTypes, values);
    }
 
-	free(pszExpMsg);
-   free(pszExpKey);
+	MemFree(pszExpMsg);
+   MemFree(pszExpKey);
    return alarmId;
 }
 
@@ -674,7 +714,7 @@ UINT32 NXCORE_EXPORTABLE AckAlarmById(UINT32 alarmId, ClientSession *session, bo
 {
    UINT32 dwObject, dwRet = RCC_INVALID_ALARM_ID;
 
-   s_alarmListLock.lock();
+   s_alarmList.lock();
    for(int i = 0; i < s_alarmList.size(); i++)
    {
       Alarm *alarm = s_alarmList.get(i);
@@ -685,7 +725,7 @@ UINT32 NXCORE_EXPORTABLE AckAlarmById(UINT32 alarmId, ClientSession *session, bo
          break;
       }
    }
-   s_alarmListLock.unlock();
+   s_alarmList.unlock();
 
    if (dwRet == RCC_SUCCESS)
       UpdateObjectStatus(dwObject);
@@ -699,7 +739,7 @@ UINT32 NXCORE_EXPORTABLE AckAlarmByHDRef(const TCHAR *hdref, ClientSession *sess
 {
    UINT32 dwObject, dwRet = RCC_INVALID_ALARM_ID;
 
-   s_alarmListLock.lock();
+   s_alarmList.lock();
    for(int i = 0; i < s_alarmList.size(); i++)
    {
       Alarm *alarm = s_alarmList.get(i);
@@ -710,7 +750,7 @@ UINT32 NXCORE_EXPORTABLE AckAlarmByHDRef(const TCHAR *hdref, ClientSession *sess
          break;
       }
    }
-   s_alarmListLock.unlock();
+   s_alarmList.unlock();
 
    if (dwRet == RCC_SUCCESS)
       UpdateObjectStatus(dwObject);
@@ -782,7 +822,7 @@ void NXCORE_EXPORTABLE ResolveAlarmsById(IntegerArray<UINT32> *alarmIds, Integer
 {
    IntegerArray<UINT32> processedAlarms, updatedObjects;
 
-   s_alarmListLock.lock();
+   s_alarmList.lock();
    time_t changeTime = time(NULL);
    for(int i = 0; i < alarmIds->size(); i++)
    {
@@ -843,7 +883,7 @@ void NXCORE_EXPORTABLE ResolveAlarmsById(IntegerArray<UINT32> *alarmIds, Integer
          failCodes->add(RCC_INVALID_ALARM_ID);
       }
    }
-   s_alarmListLock.unlock();
+   s_alarmList.unlock();
 
    NXCPMessage notification;
    notification.setCode(CMD_BULK_ALARM_STATE_CHANGE);
@@ -862,44 +902,70 @@ void NXCORE_EXPORTABLE ResolveAlarmsById(IntegerArray<UINT32> *alarmIds, Integer
  */
 void NXCORE_EXPORTABLE ResolveAlarmByKey(const TCHAR *pszKey, bool useRegexp, bool terminate, Event *pEvent)
 {
-   IntegerArray<UINT32> objectList;
-
-   s_alarmListLock.lock();
-   for(int i = 0; i < s_alarmList.size(); i++)
+   if (useRegexp)
    {
-      Alarm *alarm = s_alarmList.get(i);
-		if ((useRegexp ? RegexpMatch(alarm->getKey(), pszKey, true) : !_tcscmp(pszKey, alarm->getKey())) &&
+      IntegerArray<UINT32> objectList;
+      s_alarmList.lock();
+      for(int i = 0; i < s_alarmList.size(); i++)
+      {
+         Alarm *alarm = s_alarmList.get(i);
+         if (RegexpMatch(alarm->getKey(), pszKey, true) &&
+             ((alarm->getHelpDeskState() != ALARM_HELPDESK_OPEN) || ConfigReadBoolean(_T("Alarms.IgnoreHelpdeskState"), false)) &&
+             (terminate || (alarm->getState() != ALARM_STATE_RESOLVED)))
+         {
+            // Add alarm's source object to update list
+            if (!objectList.contains(alarm->getSourceObject()))
+               objectList.add(alarm->getSourceObject());
+
+            // Resolve or terminate alarm
+            alarm->resolve(0, pEvent, terminate, true);
+            if (terminate)
+            {
+               s_alarmList.remove(i);
+               i--;
+            }
+         }
+      }
+      s_alarmList.unlock();
+
+      // Update status of objects
+      for(int i = 0; i < objectList.size(); i++)
+         UpdateObjectStatus(objectList.get(i));
+   }
+   else
+   {
+      UINT32 objectId = 0;
+      s_alarmList.lock();
+      Alarm *alarm = s_alarmList.get(pszKey);
+      if ((alarm != NULL) &&
           ((alarm->getHelpDeskState() != ALARM_HELPDESK_OPEN) || ConfigReadBoolean(_T("Alarms.IgnoreHelpdeskState"), false)) &&
           (terminate || (alarm->getState() != ALARM_STATE_RESOLVED)))
       {
          // Add alarm's source object to update list
-         if (!objectList.contains(alarm->getSourceObject()))
-            objectList.add(alarm->getSourceObject());
+         objectId = alarm->getSourceObject();
 
          // Resolve or terminate alarm
          alarm->resolve(0, pEvent, terminate, true);
-			if (terminate)
-			{
-            s_alarmList.remove(i);
-				i--;
-			}
+         if (terminate)
+         {
+            s_alarmList.remove(alarm);
+         }
       }
-   }
-   s_alarmListLock.unlock();
+      s_alarmList.unlock();
 
-   // Update status of objects
-   for(int i = 0; i < objectList.size(); i++)
-      UpdateObjectStatus(objectList.get(i));
+      if (objectId != 0)
+         UpdateObjectStatus(objectId);
+   }
 }
 
 /**
- * Resolve and possibly terminate all alarms related to given data collection obejct
+ * Resolve and possibly terminate all alarms related to given data collection object
  */
 void NXCORE_EXPORTABLE ResolveAlarmByDCObjectId(UINT32 dciId, bool terminate)
 {
    IntegerArray<UINT32> objectList;
 
-   s_alarmListLock.lock();
+   s_alarmList.lock();
    for(int i = 0; i < s_alarmList.size(); i++)
    {
       Alarm *alarm = s_alarmList.get(i);
@@ -920,7 +986,7 @@ void NXCORE_EXPORTABLE ResolveAlarmByDCObjectId(UINT32 dciId, bool terminate)
          }
       }
    }
-   s_alarmListLock.unlock();
+   s_alarmList.unlock();
 
    // Update status of objects
    for (int i = 0; i < objectList.size(); i++)
@@ -936,7 +1002,7 @@ UINT32 NXCORE_EXPORTABLE ResolveAlarmByHDRef(const TCHAR *hdref, ClientSession *
    UINT32 objectId = 0;
    UINT32 rcc = RCC_INVALID_ALARM_ID;
 
-   s_alarmListLock.lock();
+   s_alarmList.lock();
    for(int i = 0; i < s_alarmList.size(); i++)
    {
       Alarm *alarm = s_alarmList.get(i);
@@ -967,7 +1033,7 @@ UINT32 NXCORE_EXPORTABLE ResolveAlarmByHDRef(const TCHAR *hdref, ClientSession *
          break;
       }
    }
-   s_alarmListLock.unlock();
+   s_alarmList.unlock();
 
    if (objectId != 0)
       UpdateObjectStatus(objectId);
@@ -1001,18 +1067,18 @@ UINT32 Alarm::openHelpdeskIssue(TCHAR *hdref)
    {
       /* TODO: unlock alarm list before call */
       const TCHAR *nodeName = GetObjectName(m_sourceObject, _T("[unknown]"));
-      int messageLen = (int)(_tcslen(nodeName) + _tcslen(m_message) + 32) * sizeof(TCHAR);
-      TCHAR *message = (TCHAR *)malloc(messageLen);
+      size_t messageLen = _tcslen(nodeName) + _tcslen(m_message) + 32;
+      TCHAR *message = MemAllocArrayNoInit<TCHAR>(messageLen);
       _sntprintf(message, messageLen, _T("%s: %s"), nodeName, m_message);
       rcc = CreateHelpdeskIssue(message, m_helpDeskRef);
-      free(message);
+      MemFree(message);
       if (rcc == RCC_SUCCESS)
       {
          m_helpDeskState = ALARM_HELPDESK_OPEN;
          NotifyClients(NX_NOTIFY_ALARM_CHANGED, this);
          updateInDatabase();
          if (hdref != NULL)
-            nx_strncpy(hdref, m_helpDeskRef, MAX_HELPDESK_REF_LEN);
+            _tcslcpy(hdref, m_helpDeskRef, MAX_HELPDESK_REF_LEN);
          nxlog_debug_tag(DEBUG_TAG, 5, _T("Helpdesk issue created for alarm %d, reference \"%s\""), m_alarmId, m_helpDeskRef);
       }
    }
@@ -1031,7 +1097,7 @@ UINT32 OpenHelpdeskIssue(UINT32 alarmId, ClientSession *session, TCHAR *hdref)
    UINT32 rcc = RCC_INVALID_ALARM_ID;
    *hdref = 0;
 
-   s_alarmListLock.lock();
+   s_alarmList.lock();
    for(int i = 0; i < s_alarmList.size(); i++)
    {
       Alarm *alarm = s_alarmList.get(i);
@@ -1044,7 +1110,7 @@ UINT32 OpenHelpdeskIssue(UINT32 alarmId, ClientSession *session, TCHAR *hdref)
          break;
       }
    }
-   s_alarmListLock.unlock();
+   s_alarmList.unlock();
    return rcc;
 }
 
@@ -1055,7 +1121,7 @@ UINT32 GetHelpdeskIssueUrlFromAlarm(UINT32 alarmId, UINT32 userId, TCHAR *url, s
 {
    UINT32 rcc = RCC_INVALID_ALARM_ID;
 
-   s_alarmListLock.lock();
+   s_alarmList.lock();
    for(int i = 0; i < s_alarmList.size(); i++)
    {
       if (s_alarmList.get(i)->getAlarmId() == alarmId)
@@ -1070,16 +1136,15 @@ UINT32 GetHelpdeskIssueUrlFromAlarm(UINT32 alarmId, UINT32 userId, TCHAR *url, s
             {
                rcc = RCC_OUT_OF_STATE_REQUEST;
             }
-            break;
          }
          else
          {
             rcc = RCC_ACCESS_DENIED;
-            break;
          }
+         break;
       }
    }
-   s_alarmListLock.unlock();
+   s_alarmList.unlock();
    return rcc;
 }
 
@@ -1090,7 +1155,7 @@ UINT32 UnlinkHelpdeskIssueById(UINT32 alarmId, ClientSession *session)
 {
    UINT32 rcc = RCC_INVALID_ALARM_ID;
 
-   s_alarmListLock.lock();
+   s_alarmList.lock();
    for(int i = 0; i < s_alarmList.size(); i++)
    {
       Alarm *alarm = s_alarmList.get(i);
@@ -1110,7 +1175,7 @@ UINT32 UnlinkHelpdeskIssueById(UINT32 alarmId, ClientSession *session)
          break;
       }
    }
-   s_alarmListLock.unlock();
+   s_alarmList.unlock();
 
    return rcc;
 }
@@ -1122,7 +1187,7 @@ UINT32 UnlinkHelpdeskIssueByHDRef(const TCHAR *hdref, ClientSession *session)
 {
    UINT32 rcc = RCC_INVALID_ALARM_ID;
 
-   s_alarmListLock.lock();
+   s_alarmList.lock();
    for(int i = 0; i < s_alarmList.size(); i++)
    {
       Alarm *alarm = s_alarmList.get(i);
@@ -1142,7 +1207,7 @@ UINT32 UnlinkHelpdeskIssueByHDRef(const TCHAR *hdref, ClientSession *session)
          break;
       }
    }
-   s_alarmListLock.unlock();
+   s_alarmList.unlock();
 
    return rcc;
 }
@@ -1156,7 +1221,7 @@ void NXCORE_EXPORTABLE DeleteAlarm(UINT32 alarmId, bool objectCleanup)
 
    // Delete alarm from in-memory list
    if (!objectCleanup)  // otherwise already locked
-      s_alarmListLock.lock();
+      s_alarmList.lock();
    for(int i = 0; i < s_alarmList.size(); i++)
    {
       Alarm *alarm = s_alarmList.get(i);
@@ -1169,7 +1234,7 @@ void NXCORE_EXPORTABLE DeleteAlarm(UINT32 alarmId, bool objectCleanup)
       }
    }
    if (!objectCleanup)
-      s_alarmListLock.unlock();
+      s_alarmList.unlock();
 
    // Delete from database
    if (!objectCleanup)
@@ -1195,7 +1260,7 @@ void NXCORE_EXPORTABLE DeleteAlarm(UINT32 alarmId, bool objectCleanup)
  */
 bool DeleteObjectAlarms(UINT32 objectId, DB_HANDLE hdb)
 {
-	s_alarmListLock.lock();
+	s_alarmList.lock();
 
 	// go through from end because s_alarmList.size() is decremented by DeleteAlarm()
 	for(int i = s_alarmList.size() - 1; i >= 0; i--)
@@ -1207,7 +1272,7 @@ bool DeleteObjectAlarms(UINT32 objectId, DB_HANDLE hdb)
       }
 	}
 
-	s_alarmListLock.unlock();
+	s_alarmList.unlock();
 
    // Delete all object alarms from database
    bool success = false;
@@ -1256,22 +1321,21 @@ void SendAlarmsToClient(UINT32 dwRqId, ClientSession *pSession)
    msg.setCode(CMD_ALARM_DATA);
    msg.setId(dwRqId);
 
-   s_alarmListLock.lock();
+   s_alarmList.lock();
    for(int i = 0; i < s_alarmList.size(); i++)
    {
       Alarm *alarm = s_alarmList.get(i);
-      NetObj *pObject = FindObjectById(alarm->getSourceObject());
-      if (pObject != NULL)
+      NetObj *object = FindObjectById(alarm->getSourceObject());
+      if ((object != NULL) &&
+          object->checkAccessRights(dwUserId, OBJECT_ACCESS_READ_ALARMS) &&
+          alarm->checkCategoryAccess(pSession))
       {
-         if (pObject->checkAccessRights(dwUserId, OBJECT_ACCESS_READ_ALARMS) && alarm->checkCategoryAccess(pSession))
-         {
-            alarm->fillMessage(&msg);
-            pSession->sendMessage(&msg);
-            msg.deleteAllFields();
-         }
+         alarm->fillMessage(&msg);
+         pSession->sendMessage(&msg);
+         msg.deleteAllFields();
       }
    }
-   s_alarmListLock.unlock();
+   s_alarmList.unlock();
 
    // Send end-of-list indicator
    msg.setField(VID_ALARM_ID, (UINT32)0);
@@ -1286,7 +1350,7 @@ UINT32 NXCORE_EXPORTABLE GetAlarm(UINT32 alarmId, UINT32 userId, NXCPMessage *ms
 {
    UINT32 rcc = RCC_INVALID_ALARM_ID;
 
-   s_alarmListLock.lock();
+   s_alarmList.lock();
    for(int i = 0; i < s_alarmList.size(); i++)
    {
       Alarm *alarm = s_alarmList.get(i);
@@ -1304,7 +1368,7 @@ UINT32 NXCORE_EXPORTABLE GetAlarm(UINT32 alarmId, UINT32 userId, NXCPMessage *ms
          break;
       }
    }
-   s_alarmListLock.unlock();
+   s_alarmList.unlock();
 
    return rcc;
 }
@@ -1317,7 +1381,7 @@ UINT32 NXCORE_EXPORTABLE GetAlarmEvents(UINT32 alarmId, UINT32 userId, NXCPMessa
 {
    UINT32 dwRet = RCC_INVALID_ALARM_ID;
 
-   s_alarmListLock.lock();
+   s_alarmList.lock();
    for(int i = 0; i < s_alarmList.size(); i++)
    {
       if (s_alarmList.get(i)->getAlarmId() == alarmId)
@@ -1325,17 +1389,16 @@ UINT32 NXCORE_EXPORTABLE GetAlarmEvents(UINT32 alarmId, UINT32 userId, NXCPMessa
          if (s_alarmList.get(i)->checkCategoryAccess(session))
          {
             dwRet = RCC_SUCCESS;
-            break;
          }
          else
          {
             dwRet = RCC_ACCESS_DENIED;
-            break;
          }
+         break;
       }
    }
 
-   s_alarmListLock.unlock();
+   s_alarmList.unlock();
 
 	// we don't call FillAlarmEventsMessage from within loop
 	// to prevent alarm list lock for a long time
@@ -1353,7 +1416,7 @@ NetObj NXCORE_EXPORTABLE *GetAlarmSourceObject(UINT32 alarmId, bool alreadyLocke
    UINT32 dwObjectId = 0;
 
    if (!alreadyLocked)
-      s_alarmListLock.lock();
+      s_alarmList.lock();
    for(int i = 0; i < s_alarmList.size(); i++)
    {
       Alarm *alarm = s_alarmList.get(i);
@@ -1365,7 +1428,7 @@ NetObj NXCORE_EXPORTABLE *GetAlarmSourceObject(UINT32 alarmId, bool alreadyLocke
    }
 
    if (!alreadyLocked)
-      s_alarmListLock.unlock();
+      s_alarmList.unlock();
    return (dwObjectId != 0) ? FindObjectById(dwObjectId) : NULL;
 }
 
@@ -1376,7 +1439,7 @@ NetObj NXCORE_EXPORTABLE *GetAlarmSourceObject(const TCHAR *hdref)
 {
    UINT32 dwObjectId = 0;
 
-   s_alarmListLock.lock();
+   s_alarmList.lock();
    for(int i = 0; i < s_alarmList.size(); i++)
    {
       Alarm *alarm = s_alarmList.get(i);
@@ -1386,7 +1449,7 @@ NetObj NXCORE_EXPORTABLE *GetAlarmSourceObject(const TCHAR *hdref)
          break;
       }
    }
-   s_alarmListLock.unlock();
+   s_alarmList.unlock();
    return (dwObjectId != 0) ? FindObjectById(dwObjectId) : NULL;
 }
 
@@ -1396,21 +1459,21 @@ NetObj NXCORE_EXPORTABLE *GetAlarmSourceObject(const TCHAR *hdref)
  */
 int GetMostCriticalStatusForObject(UINT32 dwObjectId)
 {
-   int iStatus = STATUS_UNKNOWN;
+   int status = STATUS_UNKNOWN;
 
-   s_alarmListLock.lock();
-   for(int i = 0; i < s_alarmList.size(); i++)
+   s_alarmList.lock();
+   for(int i = 0; (i < s_alarmList.size()) && (status != STATUS_CRITICAL); i++)
    {
       Alarm *alarm = s_alarmList.get(i);
       if ((alarm->getSourceObject() == dwObjectId) &&
 			 ((alarm->getState() & ALARM_STATE_MASK) < ALARM_STATE_RESOLVED) &&
-          ((alarm->getCurrentSeverity() > iStatus) || (iStatus == STATUS_UNKNOWN)))
+          ((alarm->getCurrentSeverity() > status) || (status == STATUS_UNKNOWN)))
       {
-         iStatus = (int)alarm->getCurrentSeverity();
+         status = (int)alarm->getCurrentSeverity();
       }
    }
-   s_alarmListLock.unlock();
-   return iStatus;
+   s_alarmList.unlock();
+   return status;
 }
 
 /**
@@ -1420,12 +1483,12 @@ void GetAlarmStats(NXCPMessage *pMsg)
 {
    UINT32 dwCount[5];
 
-   s_alarmListLock.lock();
+   s_alarmList.lock();
    pMsg->setField(VID_NUM_ALARMS, s_alarmList.size());
    memset(dwCount, 0, sizeof(UINT32) * 5);
    for(int i = 0; i < s_alarmList.size(); i++)
       dwCount[s_alarmList.get(i)->getCurrentSeverity()]++;
-   s_alarmListLock.unlock();
+   s_alarmList.unlock();
    pMsg->setFieldFromInt32Array(VID_ALARMS_BY_SEVERITY, 5, dwCount);
 }
 
@@ -1434,9 +1497,9 @@ void GetAlarmStats(NXCPMessage *pMsg)
  */
 int GetAlarmCount()
 {
-   s_alarmListLock.lock();
+   s_alarmList.lock();
    int count = s_alarmList.size();
-   s_alarmListLock.unlock();
+   s_alarmList.unlock();
    return count;
 }
 
@@ -1455,7 +1518,7 @@ static THREAD_RESULT THREAD_CALL WatchdogThread(void *arg)
 		if (!(g_flags & AF_SERVER_INITIALIZED))
 		   continue;   // Server not initialized yet
 
-		s_alarmListLock.lock();
+		s_alarmList.lock();
 		time_t now = time(NULL);
 	   for(int i = 0; i < s_alarmList.size(); i++)
 		{
@@ -1504,7 +1567,7 @@ static THREAD_RESULT THREAD_CALL WatchdogThread(void *arg)
             i--;
 			}
 		}
-		s_alarmListLock.unlock();
+		s_alarmList.unlock();
 	}
    return THREAD_OK;
 }
@@ -1611,7 +1674,7 @@ UINT32 AddAlarmComment(const TCHAR *hdref, const TCHAR *text, UINT32 userId)
 {
    UINT32 rcc = RCC_INVALID_ALARM_ID;
 
-   s_alarmListLock.lock();
+   s_alarmList.lock();
    for(int i = 0; i < s_alarmList.size(); i++)
    {
       Alarm *alarm = s_alarmList.get(i);
@@ -1621,7 +1684,7 @@ UINT32 AddAlarmComment(const TCHAR *hdref, const TCHAR *text, UINT32 userId)
          break;
       }
    }
-   s_alarmListLock.unlock();
+   s_alarmList.unlock();
 
    return rcc;
 }
@@ -1633,7 +1696,7 @@ UINT32 UpdateAlarmComment(UINT32 alarmId, UINT32 noteId, const TCHAR *text, UINT
 {
    UINT32 rcc = RCC_INVALID_ALARM_ID;
 
-   s_alarmListLock.lock();
+   s_alarmList.lock();
    for(int i = 0; i < s_alarmList.size(); i++)
    {
       Alarm *alarm = s_alarmList.get(i);
@@ -1643,7 +1706,7 @@ UINT32 UpdateAlarmComment(UINT32 alarmId, UINT32 noteId, const TCHAR *text, UINT
          break;
       }
    }
-   s_alarmListLock.unlock();
+   s_alarmList.unlock();
 
    return rcc;
 }
@@ -1689,7 +1752,7 @@ UINT32 DeleteAlarmCommentByID(UINT32 alarmId, UINT32 noteId)
 {
    UINT32 rcc = RCC_INVALID_ALARM_ID;
 
-   s_alarmListLock.lock();
+   s_alarmList.lock();
    for(int i = 0; i < s_alarmList.size(); i++)
    {
       Alarm *alarm = s_alarmList.get(i);
@@ -1699,7 +1762,7 @@ UINT32 DeleteAlarmCommentByID(UINT32 alarmId, UINT32 noteId)
          break;
       }
    }
-   s_alarmListLock.unlock();
+   s_alarmList.unlock();
 
    return rcc;
 }
@@ -1770,7 +1833,7 @@ ObjectArray<Alarm> NXCORE_EXPORTABLE *GetAlarms(UINT32 objectId, bool recursive)
 {
    ObjectArray<Alarm> *result = new ObjectArray<Alarm>(16, 16, true);
 
-   s_alarmListLock.lock();
+   s_alarmList.lock();
    for(int i = 0; i < s_alarmList.size(); i++)
    {
       Alarm *alarm = s_alarmList.get(i);
@@ -1780,7 +1843,7 @@ ObjectArray<Alarm> NXCORE_EXPORTABLE *GetAlarms(UINT32 objectId, bool recursive)
          result->add(new Alarm(alarm, true));
       }
    }
-   s_alarmListLock.unlock();
+   s_alarmList.unlock();
    return result;
 }
 
@@ -1809,17 +1872,13 @@ int F_FindAlarmByKey(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *
    const TCHAR *key = argv[0]->getValueAsCString();
    Alarm *alarm = NULL;
 
-   s_alarmListLock.lock();
-   for(int i = 0; i < s_alarmList.size(); i++)
+   s_alarmList.lock();
+   Alarm *a = s_alarmList.get(key);
+   if (a != NULL)
    {
-      Alarm *a = s_alarmList.get(i);
-      if (!_tcscmp(a->getKey(), key))
-      {
-         alarm = new Alarm(a, false);
-         break;
-      }
+      alarm = new Alarm(a, false);
    }
-   s_alarmListLock.unlock();
+   s_alarmList.unlock();
 
    *result = (alarm != NULL) ? new NXSL_Value(new NXSL_Object(&g_nxslAlarmClass, alarm)) : new NXSL_Value();
    return 0;
@@ -1836,7 +1895,7 @@ int F_FindAlarmByKeyRegex(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL
    const TCHAR *key = argv[0]->getValueAsCString();
    Alarm *alarm = NULL;
 
-   s_alarmListLock.lock();
+   s_alarmList.lock();
    for(int i = 0; i < s_alarmList.size(); i++)
    {
       Alarm *a = s_alarmList.get(i);
@@ -1846,7 +1905,7 @@ int F_FindAlarmByKeyRegex(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL
          break;
       }
    }
-   s_alarmListLock.unlock();
+   s_alarmList.unlock();
 
    *result = (alarm != NULL) ? new NXSL_Value(new NXSL_Object(&g_nxslAlarmClass, alarm)) : new NXSL_Value();
    return 0;
@@ -1861,7 +1920,7 @@ Alarm NXCORE_EXPORTABLE *FindAlarmById(UINT32 alarmId)
       return NULL;
 
    Alarm *alarm = NULL;
-   s_alarmListLock.lock();
+   s_alarmList.lock();
    for(int i = 0; i < s_alarmList.size(); i++)
    {
       if (s_alarmList.get(i)->getAlarmId() == alarmId)
@@ -1870,7 +1929,7 @@ Alarm NXCORE_EXPORTABLE *FindAlarmById(UINT32 alarmId)
          break;
       }
    }
-   s_alarmListLock.unlock();
+   s_alarmList.unlock();
    return alarm;
 }
 
