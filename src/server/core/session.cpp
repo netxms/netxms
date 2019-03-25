@@ -3526,7 +3526,8 @@ void ClientSession::modifyNodeDCI(NXCPMessage *request)
                      {
                         msg.setField(VID_RCC, RCC_SUCCESS);
                         DCObject* dco = ((DataCollectionOwner *)object)->getDCObjectById(itemId, getUserId(), true);
-                        NotifyClientDCIUpdate((DataCollectionOwner *)object, dco);
+                        if(dco != NULL)
+                           NotifyClientDCIUpdate((DataCollectionOwner *)object, dco);
 
                         // Send index to id mapping for newly created thresholds to client
                         if (dcObjectType == DCO_TYPE_ITEM)
