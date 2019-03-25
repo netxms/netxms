@@ -136,9 +136,11 @@ static THREAD_RESULT THREAD_CALL EventLogger(void *arg)
          query.append(_T(','));
          query.append(DBPrepareString(hdb, pEvent->getUserTag(), 63));
          query.append(_T(','));
-         char *json = json_dumps(pEvent->toJson(), JSON_INDENT(3) | JSON_EMBED);
-         query.append(DBPrepareStringUTF8(hdb, json));
-         MemFree(json);
+         json_t *json = pEvent->toJson();
+         char *jsonText = json_dumps(json, JSON_INDENT(3) | JSON_EMBED);
+         query.append(DBPrepareStringUTF8(hdb, jsonText));
+         MemFree(jsonText);
+         json_decref(json);
          query.append(_T(')'));
 
 			DBQuery(hdb, query);
