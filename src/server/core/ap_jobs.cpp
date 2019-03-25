@@ -225,14 +225,14 @@ void ScheduleUninstallPolicy(const ScheduledTaskParameters *parameters)
 /**
  * Constructor
  */
-PolicyUninstallJob::PolicyUninstallJob(DataCollectionTarget *node, const TCHAR *policyType, uuid policyGuid, UINT32 userId)
+PolicyUninstallJob::PolicyUninstallJob(DataCollectionTarget *node, const TCHAR *policyType, const uuid& policyGuid, UINT32 userId)
                    : ServerJob(_T("UNINSTALL_AGENT_POLICY"), _T("Uninstall agent policy"), node->getId(), userId, false, 0)
 {
    m_policyGuid = policyGuid;
-   _tcsncpy(m_policyType, policyType, 32);
+   _tcslcpy(m_policyType, policyType, 32);
 
-	TCHAR buffer[1024];
-	_sntprintf(buffer, 1024, _T("Uninstall policy %s"), (const TCHAR *)policyGuid.toString());
+	TCHAR buffer[256], guidText[64];
+	_sntprintf(buffer, 256, _T("Uninstall policy %s"), policyGuid.toString(guidText));
 	setDescription(buffer);
 
    setAutoCancelDelay(getRetryDelay() + 30);
@@ -241,7 +241,7 @@ PolicyUninstallJob::PolicyUninstallJob(DataCollectionTarget *node, const TCHAR *
 /**
  * Constructor
  */
-PolicyUninstallJob::PolicyUninstallJob(const TCHAR* params, UINT32 node, UINT32 userId)
+PolicyUninstallJob::PolicyUninstallJob(const TCHAR *params, UINT32 node, UINT32 userId)
                     : ServerJob(_T("DEPLOY_AGENT_POLICY"), _T("Deploy agent policy"), node, userId, false, 0)
 {
    StringList paramList(params, _T(","));

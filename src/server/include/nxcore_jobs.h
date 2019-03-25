@@ -301,7 +301,7 @@ protected:
 	virtual const String serializeParameters();
 
 public:
-	PolicyUninstallJob(DataCollectionTarget *node, const TCHAR *m_policyType, uuid policyGuid, UINT32 userId);
+	PolicyUninstallJob(DataCollectionTarget *node, const TCHAR *policyType, const uuid& policyGuid, UINT32 userId);
    PolicyUninstallJob(const TCHAR *params, UINT32 nodeId, UINT32 userId);
 	virtual ~PolicyUninstallJob();
 };

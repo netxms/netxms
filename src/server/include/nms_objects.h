@@ -1147,10 +1147,10 @@ public:
 
    void createExportRecord(String &str);
 
-   GenericAgentPolicy *getAgentPolicyCopy(uuid guid);
-   bool hasPolicy(uuid guid);
+   GenericAgentPolicy *getAgentPolicyCopy(const uuid& guid);
+   bool hasPolicy(const uuid& guid);
    uuid updatePolicyFromMessage(NXCPMessage *request);
-   bool removePolicy(uuid guid);
+   bool removePolicy(const uuid& guid);
    void fillPolicyMessage(NXCPMessage *pMsg);
    void applyPolicyChanges();
    void forceApplyPolicyChanges();

@@ -46,7 +46,7 @@ static GenericAgentPolicy *CreatePolicy(uuid guid, UINT32 m_id, const TCHAR *typ
    return obj;
 }
 
-static GenericAgentPolicy *CreatePolicy(const TCHAR *name,const TCHAR *type, UINT32 m_id)
+static GenericAgentPolicy *CreatePolicy(const TCHAR *name, const TCHAR *type, UINT32 m_id)
 {
    GenericAgentPolicy *obj;
    //add special rules for other than existing example: FileUpload
@@ -56,7 +56,7 @@ static GenericAgentPolicy *CreatePolicy(const TCHAR *name,const TCHAR *type, UIN
 
 Template::Template() : super(), AutoBindTarget(this), VersionableObject(this)
 {
-   m_policyList = new HashMap<uuid, GenericAgentPolicy>(false);
+   m_policyList = new HashMap<uuid, GenericAgentPolicy>(true);
    m_deletedPolicyList = new ObjectArray<GenericAgentPolicy>(true);
 }
 
@@ -75,7 +75,7 @@ Template::Template(ConfigEntry *config) : super(config), AutoBindTarget(this, co
       flags &= !(AAF_AUTO_APPLY | AAF_AUTO_REMOVE);
    }
 
-   m_policyList = new HashMap<uuid, GenericAgentPolicy>(false);
+   m_policyList = new HashMap<uuid, GenericAgentPolicy>(true);
    m_deletedPolicyList = new ObjectArray<GenericAgentPolicy>(true);
    ObjectArray<ConfigEntry> *dcis = config->getSubEntries(_T("agentPolicy#*"));
    for(int i = 0; i < dcis->size(); i++)
@@ -88,25 +88,23 @@ Template::Template(ConfigEntry *config) : super(config), AutoBindTarget(this, co
    }
    delete dcis;
 
-   nx_strncpy(m_name, config->getSubEntryValue(_T("name"), 0, _T("Unnamed Template")), MAX_OBJECT_NAME);
+   _tcslcpy(m_name, config->getSubEntryValue(_T("name"), 0, _T("Unnamed Template")), MAX_OBJECT_NAME);
 }
 
+/**
+ * Create new template
+ */
 Template::Template(const TCHAR *pszName) : super(pszName), AutoBindTarget(this), VersionableObject(this)
 {
-   m_policyList = new HashMap<uuid, GenericAgentPolicy>(false);
+   m_policyList = new HashMap<uuid, GenericAgentPolicy>(true);
    m_deletedPolicyList = new ObjectArray<GenericAgentPolicy>(true);
 }
 
+/**
+ * Destructor
+ */
 Template::~Template()
 {
-   Iterator<GenericAgentPolicy> *it = m_policyList->iterator();
-   while(it->hasNext())
-   {
-      GenericAgentPolicy *object = it->next();
-      m_policyList->remove(object->getGuid());
-      delete object;
-   }
-   delete it;
    delete m_policyList;
    delete m_deletedPolicyList;
 }
@@ -483,7 +481,7 @@ void Template::prepareForDeletion()
 /**
  * Check policy exist
  */
-bool Template::hasPolicy(uuid guid)
+bool Template::hasPolicy(const uuid& guid)
 {
    lockProperties();
    bool hasPolicy = m_policyList->contains(guid);
@@ -494,12 +492,12 @@ bool Template::hasPolicy(uuid guid)
 /**
  * Get agent policy copy
  */
-GenericAgentPolicy *Template::getAgentPolicyCopy(uuid guid)
+GenericAgentPolicy *Template::getAgentPolicyCopy(const uuid& guid)
 {
    GenericAgentPolicy *policy = NULL;
    lockProperties();
    policy = m_policyList->get(guid);
-   if(policy != NULL)
+   if (policy != NULL)
       policy = new GenericAgentPolicy(policy);
    unlockProperties();
    return policy;
@@ -511,14 +509,14 @@ GenericAgentPolicy *Template::getAgentPolicyCopy(uuid guid)
 void Template::fillPolicyMessage(NXCPMessage *pMsg)
 {
    lockProperties();
-   UINT32 baseId = VID_AGENT_POLICY_BASE;
+   UINT32 fieldId = VID_AGENT_POLICY_BASE;
    Iterator<GenericAgentPolicy> *it = m_policyList->iterator();
    int count = 0;
    while(it->hasNext())
    {
       GenericAgentPolicy *object = it->next();
-      object->fillMessage(pMsg, baseId);
-      baseId+=100;
+      object->fillMessage(pMsg, fieldId);
+      fieldId += 100;
       count++;
    }
    delete it;
@@ -541,24 +539,25 @@ uuid Template::updatePolicyFromMessage(NXCPMessage *request)
    TCHAR name[MAX_DB_STRING];
    TCHAR policyType[32];
 
-   if(!request->isFieldExist(VID_GUID))
+   if (request->isFieldExist(VID_GUID))
    {
-      GenericAgentPolicy *curr = CreatePolicy(request->getFieldAsString(VID_NAME, name, MAX_DB_STRING), request->getFieldAsString(VID_POLICY_TYPE, policyType, 32), m_id);
-      m_policyList->set(curr->getGuid(), curr);
-      curr->fillUpdateMessage(&msg);
-      guid = curr->getGuid();
-   }
-   else
-   {
-      if(m_policyList->contains(guid))
+      GenericAgentPolicy *policy = m_policyList->get(guid);
+      if (policy != NULL)
       {
-         m_policyList->get(guid)->modifyFromMessage(request);
-         m_policyList->get(guid)->fillUpdateMessage(&msg);
+         policy->modifyFromMessage(request);
+         policy->fillUpdateMessage(&msg);
       }
       else
       {
          guid = uuid::NULL_UUID;
       }
+   }
+   else
+   {
+      GenericAgentPolicy *curr = CreatePolicy(request->getFieldAsString(VID_NAME, name, MAX_DB_STRING), request->getFieldAsString(VID_POLICY_TYPE, policyType, 32), m_id);
+      m_policyList->set(curr->getGuid(), curr);
+      curr->fillUpdateMessage(&msg);
+      guid = curr->getGuid();
    }
    updateVersion();
 
@@ -571,28 +570,30 @@ uuid Template::updatePolicyFromMessage(NXCPMessage *request)
 /**
  * Remove policy by uuid
  */
-bool Template::removePolicy(uuid guid)
+bool Template::removePolicy(const uuid& guid)
 {
    lockProperties();
    bool success = false;
-   GenericAgentPolicy *obj = m_policyList->get(guid);
-   if(obj != NULL)
+   GenericAgentPolicy *policy = m_policyList->get(guid);
+   if (policy != NULL)
    {
       lockChildList(false);
       for(int i = 0; i < m_childList->size(); i++)
       {
          NetObj *object = m_childList->get(i);
-         if(object->getObjectClass() == OBJECT_NODE)
+         if (object->getObjectClass() == OBJECT_NODE)
          {
-            ServerJob *job = new PolicyUninstallJob((Node *)object, obj->getType(), guid, 0);
-            if(!AddJob(job))
+            ServerJob *job = new PolicyUninstallJob((Node *)object, policy->getType(), guid, 0);
+            if (!AddJob(job))
                delete job;
          }
       }
       unlockChildList();
-      m_policyList->remove(guid);
-      m_deletedPolicyList->add(obj);
+
+      m_policyList->unlink(guid);
+      m_deletedPolicyList->add(policy);
       updateVersion();
+
       NotifyClientPolicyDelete(guid, this);
       setModified(MODIFY_POLICY, false);
       success = true;
