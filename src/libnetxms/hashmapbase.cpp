@@ -144,7 +144,7 @@ void *HashMapBase::_get(const void *key) const
 /**
  * Delete value
  */
-void HashMapBase::_remove(const void *key)
+void HashMapBase::_remove(const void *key, bool destroyValue)
 {
    HashMapEntry *entry;
    HASH_FIND(hh, m_data, key, m_keylen, entry);
@@ -152,7 +152,7 @@ void HashMapBase::_remove(const void *key)
    {
       HASH_DEL(m_data, entry);
       DELETE_KEY(this, entry);
-		if (m_objectOwner)
+		if (m_objectOwner && destroyValue)
          destroyObject(entry->value);
       MemFree(entry);
    }

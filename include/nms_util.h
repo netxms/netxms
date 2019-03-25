@@ -1443,7 +1443,7 @@ protected:
 
 	void *_get(const void *key) const;
 	void _set(const void *key, void *value);
-	void _remove(const void *key);
+	void _remove(const void *key, bool destroyValue);
 
    bool _contains(const void *key) const { return find(key) != NULL; }
 
@@ -1492,7 +1492,8 @@ public:
 
 	V *get(const K& key) { return (V*)_get(&key); }
 	void set(const K& key, V *value) { _set(&key, (void *)value); }
-   void remove(const K& key) { _remove(&key); }
+   void remove(const K& key) { _remove(&key, true); }
+   void unlink(const K& key) { _remove(&key, false); }
    bool contains(const K& key) { return _contains(&key); }
 
    Iterator<V> *iterator() { return new Iterator<V>(new HashMapIterator(this)); }
@@ -1512,7 +1513,8 @@ public:
    V *get(const K& key) { V *v = (V*)_get(&key); if (v != NULL) v->incRefCount(); return v; }
    V *peek(const K& key) { return (V*)_get(&key); }
    void set(const K& key, V *value) { if (value != NULL) value->incRefCount(); _set(&key, (void *)value); }
-   void remove(const K& key) { _remove(&key); }
+   void remove(const K& key) { _remove(&key, true); }
+   void unlink(const K& key) { _remove(&key, false); }
    bool contains(const K& key) { return _contains(&key); }
 
    Iterator<V> *iterator() { return new Iterator<V>(new HashMapIterator(this)); }
