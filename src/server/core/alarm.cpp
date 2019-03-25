@@ -790,7 +790,6 @@ void NXCORE_EXPORTABLE ResolveAlarmsById(IntegerArray<UINT32> *alarmIds, Integer
       for(n = 0; n < s_alarmList.size(); n++)
       {
          Alarm *alarm = s_alarmList.get(n);
-         NetObj *object = GetAlarmSourceObject(alarmIds->get(i), true);
          if (alarm->getAlarmId() == alarmIds->get(i))
          {
             // If alarm is open in helpdesk, it cannot be terminated
@@ -798,6 +797,7 @@ void NXCORE_EXPORTABLE ResolveAlarmsById(IntegerArray<UINT32> *alarmIds, Integer
             {
                if (terminate || (alarm->getState() != ALARM_STATE_RESOLVED))
                {
+                  NetObj *object = GetAlarmSourceObject(alarmIds->get(i), true);
                   if (session != NULL)
                   {
                      // If user does not have the required object access rights, the alarm cannot be terminated
