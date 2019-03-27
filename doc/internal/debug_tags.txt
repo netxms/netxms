@@ -46,6 +46,8 @@ obj.locks.*	Locks
 obj.netmap	Network maps
 obj.sync	Object synchronization
 
+pdsdrv.*	Performance data storage drivers
+
 poll.*		Polling
 poll.conf	Configuration poll
 poll.discovery	Network discovery

@@ -26,7 +26,7 @@
 
 #define MAX_PDS_DRIVERS		8
 
-#define DEBUG_TAG _T("pds")
+#define DEBUG_TAG _T("pdsdrv")
 
 /**
  * Drivers to load
