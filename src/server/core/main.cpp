@@ -177,9 +177,11 @@ Condition g_dbPasswordReady(true);
 /**
  * Static data
  */
-static CONDITION m_condShutdown = INVALID_CONDITION_HANDLE;
-static THREAD m_thPollManager = INVALID_THREAD_HANDLE;
-static THREAD m_thSyncer = INVALID_THREAD_HANDLE;
+static CONDITION s_shutdownCondition = INVALID_CONDITION_HANDLE;
+static THREAD s_pollManagerThread = INVALID_THREAD_HANDLE;
+static THREAD s_syncerThread = INVALID_THREAD_HANDLE;
+static THREAD s_clientListenerThread = INVALID_THREAD_HANDLE;
+static THREAD s_mobileDeviceListenerThread = INVALID_THREAD_HANDLE;
 static THREAD s_tunnelListenerThread = INVALID_THREAD_HANDLE;
 static THREAD s_eventProcessorThread = INVALID_THREAD_HANDLE;
 static int m_nShutdownReason = SHUTDOWN_DEFAULT;
@@ -229,7 +231,7 @@ void FillComponentsMessage(NXCPMessage *msg)
  */
 bool NXCORE_EXPORTABLE SleepAndCheckForShutdown(int seconds)
 {
-	return ConditionWait(m_condShutdown, seconds * 1000);
+	return ConditionWait(s_shutdownCondition, seconds * 1000);
 }
 
 /**
@@ -937,7 +939,7 @@ retry_db_lock:
 #endif
 
 	// Create synchronization stuff
-	m_condShutdown = ConditionCreate(TRUE);
+	s_shutdownCondition = ConditionCreate(TRUE);
 
    // Create thread pools
 	nxlog_debug(2, _T("Creating thread pools"));
@@ -1059,10 +1061,10 @@ retry_db_lock:
 	ThreadCreate(WatchdogThread, 0, NULL);
 	ThreadCreate(NodePoller, 0, NULL);
 	ThreadCreate(JobManagerThread, 0, NULL);
-	m_thSyncer = ThreadCreateEx(Syncer, 0, NULL);
+	s_syncerThread = ThreadCreateEx(Syncer, 0, NULL);
 
 	CONDITION pollManagerInitialized = ConditionCreate(true);
-	m_thPollManager = ThreadCreateEx(PollManager, 0, pollManagerInitialized);
+	s_pollManagerThread = ThreadCreateEx(PollManager, 0, pollManagerInitialized);
 
    StartHouseKeeper();
 
@@ -1129,15 +1131,11 @@ retry_db_lock:
    else
       DeleteScheduledTaskByHandlerId(ALARM_SUMMARY_EMAIL_TASK_ID);
 
-	// Allow clients to connect
-	ThreadCreate(ClientListenerThread, 0, NULL);
-
-	// Allow mobile devices to connect
-	InitMobileDeviceListeners();
-	ThreadCreate(MobileDeviceListenerThread, 0, NULL);
-
-	// Agent tunnels
+	// Start listeners
    s_tunnelListenerThread = ThreadCreateEx(TunnelListenerThread, 0, NULL);
+	s_clientListenerThread = ThreadCreateEx(ClientListenerThread, 0, NULL);
+	InitMobileDeviceListeners();
+	s_mobileDeviceListenerThread = ThreadCreateEx(MobileDeviceListenerThread, 0, NULL);
 
 	// Start uptime calculator for SLM
 	ThreadCreate(UptimeCalculator, 0, NULL);
@@ -1176,7 +1174,7 @@ void NXCORE_EXPORTABLE Shutdown()
 
 	nxlog_write(MSG_SERVER_STOPPED, EVENTLOG_INFORMATION_TYPE, NULL);
 	g_flags |= AF_SHUTDOWN;     // Set shutdown flag
-	ConditionSet(m_condShutdown);
+	ConditionSet(s_shutdownCondition);
 
    // Call shutdown functions for the modules
    // CALL_ALL_MODULES cannot be used here because it checks for shutdown flag
@@ -1194,12 +1192,15 @@ void NXCORE_EXPORTABLE Shutdown()
 
    StopObjectMaintenanceThreads();
    StopDataCollection();
-   ShutdownPerfDataStorageDrivers();
 
    // Wait for critical threads
-   ThreadJoin(m_thPollManager);
-   ThreadJoin(m_thSyncer);
+   ThreadJoin(s_pollManagerThread);
+   ThreadJoin(s_syncerThread);
+
+   nxlog_debug(2, _T("Waiting for listener threads to stop"));
    ThreadJoin(s_tunnelListenerThread);
+   ThreadJoin(s_clientListenerThread);
+   ThreadJoin(s_mobileDeviceListenerThread);
 
    CloseAgentTunnels();
    StopSyslogServer();
@@ -1244,22 +1245,24 @@ void NXCORE_EXPORTABLE Shutdown()
 	CleanupUsers();
 	PersistentStorageDestroy();
 
+   ShutdownPerfDataStorageDrivers();
+
+   CleanupActions();
+   ShutdownEventSubsystem();
+   ShutdownAlarmManager();
+   nxlog_debug(1, _T("Event processing stopped"));
+
+   ThreadPoolDestroy(g_clientThreadPool);
+   ThreadPoolDestroy(g_agentConnectionThreadPool);
+   ThreadPoolDestroy(g_mainThreadPool);
+   WatchdogShutdown();
+
 	// Remove database lock
 	UnlockDB();
 
 	DBConnectionPoolShutdown();
 	DBUnloadDriver(g_dbDriver);
 	nxlog_debug(1, _T("Database driver unloaded"));
-
-	CleanupActions();
-	ShutdownEventSubsystem();
-   ShutdownAlarmManager();
-   nxlog_debug(1, _T("Event processing stopped"));
-
-   ThreadPoolDestroy(g_clientThreadPool);
-	ThreadPoolDestroy(g_agentConnectionThreadPool);
-   ThreadPoolDestroy(g_mainThreadPool);
-   WatchdogShutdown();
 
 #if WITH_PYTHON
    if (g_flags & AF_ENABLE_EMBEDDED_PYTHON)
@@ -1268,6 +1271,8 @@ void NXCORE_EXPORTABLE Shutdown()
 
 	nxlog_debug(1, _T("Server shutdown complete"));
 	nxlog_close();
+
+	ConditionDestroy(s_shutdownCondition);
 
 	// Remove PID file
 #ifndef _WIN32
@@ -1291,7 +1296,7 @@ void NXCORE_EXPORTABLE FastShutdown()
    DbgPrintf(1, _T("Using fast shutdown procedure"));
 
 	g_flags |= AF_SHUTDOWN;     // Set shutdown flag
-	ConditionSet(m_condShutdown);
+	ConditionSet(s_shutdownCondition);
 
 	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 	SaveObjects(hdb, INVALID_INDEX, true);
@@ -1367,7 +1372,7 @@ THREAD_RESULT NXCORE_EXPORTABLE THREAD_CALL SignalHandler(void *pArg)
                   if (IsStandalone())
                      Shutdown(); // will never return
                   else
-                     ConditionSet(m_condShutdown);
+                     ConditionSet(s_shutdownCondition);
 				   }
 				   break;
 				case SIGSEGV:
@@ -1502,13 +1507,13 @@ THREAD_RESULT NXCORE_EXPORTABLE THREAD_CALL Main(void *pArg)
 #else
          _tprintf(_T("Server running. Press Ctrl+C to shutdown.\n"));
          // Shutdown will be called from signal handler
-   		ConditionWait(m_condShutdown, INFINITE);
+   		ConditionWait(s_shutdownCondition, INFINITE);
 #endif
       }
 	}
 	else
 	{
-		ConditionWait(m_condShutdown, INFINITE);
+		ConditionWait(s_shutdownCondition, INFINITE);
 		// On Win32, Shutdown() will be called by service control handler
 #ifndef _WIN32
 		Shutdown();

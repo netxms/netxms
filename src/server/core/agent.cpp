@@ -806,6 +806,12 @@ UINT32 AgentConnectionEx::processBulkCollectedData(NXCPMessage *request, NXCPMes
          startTime = GetCurrentTimeMs();
       }
 
+      if (IsShutdownInProgress())
+      {
+         status[i] = BULK_DATA_REC_RETRY;
+         continue;
+      }
+
       int origin = request->getFieldAsInt16(fieldId + 1);
       if ((origin != DS_NATIVE_AGENT) && (origin != DS_SNMP_AGENT))
       {
