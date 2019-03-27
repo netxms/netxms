@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -25,6 +25,8 @@
 #include <pdsdrv.h>
 
 #define MAX_PDS_DRIVERS		8
+
+#define DEBUG_TAG _T("pds")
 
 /**
  * Drivers to load
@@ -68,7 +70,7 @@ const TCHAR *PerfDataStorageDriver::getVersion()
 }
 
 /**
- * Init driver. Default implementation always returns true.
+ * Initialize driver. Default implementation always returns true.
  */
 bool PerfDataStorageDriver::init()
 {
@@ -201,13 +203,13 @@ static void LoadDriver(const TCHAR *file)
 }
 
 /**
- * Load all available device drivers
+ * Load all available performance data storage drivers
  */
 void LoadPerfDataStorageDrivers()
 {
 	memset(s_drivers, 0, sizeof(PerfDataStorageDriver *) * MAX_PDS_DRIVERS);
 
-	DbgPrintf(1, _T("Loading performance data storage drivers"));
+	nxlog_debug_tag(DEBUG_TAG, 1, _T("Loading performance data storage drivers"));
 	for(TCHAR *curr = g_pdsLoadList, *next = NULL; curr != NULL; curr = next)
    {
 		next = _tcschr(curr, _T('\n'));
@@ -226,5 +228,19 @@ void LoadPerfDataStorageDrivers()
    }
    if (s_numDrivers > 0)
       g_flags |= AF_PERFDATA_STORAGE_DRIVER_LOADED;
-	DbgPrintf(1, _T("%d performance data storage drivers loaded"), s_numDrivers);
+   nxlog_debug_tag(DEBUG_TAG, 1, _T("%d performance data storage drivers loaded"), s_numDrivers);
+}
+
+/**
+ * Shutdown performance data storage drivers
+ */
+void ShutdownPerfDataStorageDrivers()
+{
+   for(int i = 0; i < s_numDrivers; i++)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 2, _T("Executing shutdown handler for driver %s"), s_drivers[i]->getName());
+      s_drivers[i]->shutdown();
+      delete s_drivers[i];
+   }
+   nxlog_debug_tag(DEBUG_TAG, 1, _T("All performance data storage drivers unloaded"));
 }
