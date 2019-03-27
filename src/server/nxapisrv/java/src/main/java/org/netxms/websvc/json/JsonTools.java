@@ -53,11 +53,15 @@ public class JsonTools
     */
    public static String jsonFromObject(Object object, Set<String> fields)
    {
+      if (object == null)
+         return "{ }"; 
+               
       if ((object instanceof JsonObject) || 
           (object instanceof JsonArray) ||
           (object instanceof JSONObject) ||
           (object instanceof JSONArray))
          return JsonFilter.createFilter(object, fields).filter().toString();
+      
       if (object instanceof ResponseContainer)
          return ((ResponseContainer)object).toJson(fields);
       

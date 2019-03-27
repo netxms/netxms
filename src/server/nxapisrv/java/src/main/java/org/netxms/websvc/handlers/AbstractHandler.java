@@ -25,7 +25,6 @@ import java.util.Set;
 import java.util.UUID;
 import javax.servlet.ServletContext;
 import org.apache.commons.codec.binary.Base64;
-import org.json.JSONException;
 import org.json.JSONObject;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.RCC;
@@ -102,7 +101,8 @@ public abstract class AbstractHandler extends ServerResource
       log.debug("POST: data = " + data);
       if (attachToSession())
       {
-         return new StringRepresentation(JsonTools.jsonFromObject(create(data), null), MediaType.APPLICATION_JSON);
+         String command = getRequest().getResourceRef().getQueryAsForm().getValuesMap().get("command");
+         return new StringRepresentation(JsonTools.jsonFromObject((command != null) ? executeCommand(command, data) : create(data), null), MediaType.APPLICATION_JSON);
       }
       else
       {
@@ -287,19 +287,29 @@ public abstract class AbstractHandler extends ServerResource
    }
    
    /**
-    * Create error response.
+    * Create error response. Also sets appropriate HTTP status code.
     *
-    * @param rcc
-    * @return
-    * @throws JSONException
+    * @param rcc request completion code
+    * @return new error response object
     */
-   protected JsonObject createErrorResponse(int rcc) throws JSONException
+   protected JsonObject createErrorResponse(int rcc)
    {
       setStatus(WebSvcStatusService.getStatusFromRCC(rcc));
       JsonObject response = new JsonObject();
       response.addProperty("error", rcc);
       response.addProperty("description", WebSvcStatusService.getMessageFromRCC(rcc));
       return response;
+   }
+   
+   /**
+    * Create string representation of error response for given RCC.  Also sets appropriate HTTP status code.
+    * 
+    * @param rcc request completion code
+    * @return new string representation of error response for given RCC
+    */
+   protected Representation createErrorResponseRepresentation(int rcc)
+   {
+      return new StringRepresentation(createErrorResponse(rcc).toString(), MediaType.APPLICATION_JSON);
    }
    
    /**
@@ -358,6 +368,19 @@ public abstract class AbstractHandler extends ServerResource
     * @throws Exception
     */
    protected Object delete(String id) throws Exception
+   {
+      return createErrorResponse(RCC.INCOMPATIBLE_OPERATION);
+   }
+   
+   /**
+    * Execute command.
+    * 
+    * @param command command name
+    * @param data command data
+    * @return command execution results
+    * @throws Exception
+    */
+   protected Object executeCommand(String command, JSONObject data) throws Exception
    {
       return createErrorResponse(RCC.INCOMPATIBLE_OPERATION);
    }

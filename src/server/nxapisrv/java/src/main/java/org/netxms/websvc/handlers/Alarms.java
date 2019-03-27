@@ -19,7 +19,6 @@
 package org.netxms.websvc.handlers;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.UUID;
@@ -31,17 +30,13 @@ import org.netxms.client.constants.RCC;
 import org.netxms.client.events.Alarm;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.websvc.json.ResponseContainer;
-import org.restlet.data.MediaType;
-import org.restlet.ext.json.JsonRepresentation;
-import org.restlet.representation.Representation;
-import org.restlet.representation.StringRepresentation;
-import org.restlet.resource.Post;
 
 /**
  * Handler for alarm management
  */
 public class Alarms extends AbstractHandler
 {
+   private static final int UNDEFINED = -1;
    private static final int TERMINATE = 0;
    private static final int ACKNOWLEDGE = 1;
    private static final int STICKY_ACKNOWLEDGE = 2;
@@ -56,7 +51,7 @@ public class Alarms extends AbstractHandler
       NXCSession session = getSession();
       Collection<Alarm> alarms = session.getAlarms().values();
       String queryGuid = query.get("objectGuid");
-      if(queryGuid != null)
+      if (queryGuid != null)
       {         
          UUID objectGuid = UUID.fromString(queryGuid);
          if (!session.isObjectsSynchronized())
@@ -80,50 +75,59 @@ public class Alarms extends AbstractHandler
       return new ResponseContainer("alarms", alarms);
    }
    
-   @Post
-   public Representation onPost(Representation entity) throws Exception
+   /* (non-Javadoc)
+    * @see org.netxms.websvc.handlers.AbstractHandler#executeCommand(java.lang.String, org.json.JSONObject)
+    */
+   @Override
+   protected Object executeCommand(String command, JSONObject data) throws Exception
    {
-      if (entity == null || !attachToSession())
+      int action = UNDEFINED;
+      int timeout = 0;
+      if (command.equals("terminate"))
       {
-         return new StringRepresentation(createErrorResponse(RCC.ACCESS_DENIED).toString(), MediaType.APPLICATION_JSON);
+         action = TERMINATE;
+      }
+      else if (command.equals("acknowledge"))
+      {
+         action = ACKNOWLEDGE;
+      }
+      else if (command.equals("sticky_acknowledge"))
+      {
+         action = STICKY_ACKNOWLEDGE;
+         if (data.has("timeout"))
+            timeout = data.getInt("timeout");
+      }
+      else if (command.equals("resolve"))
+      {
+         action = RESOLVE;
       }
       
+      if (!data.has("alarms") || (action == UNDEFINED))
+         return createErrorResponse(RCC.INVALID_ARGUMENT);
+ 
       NXCSession session = getSession();
-      HashMap<Long, Alarm> alarms = session.getAlarms();
       
-      JSONObject data = new JsonRepresentation(entity).getJsonObject();
-      if (data.has("alarmList"))
+      JSONArray alarmList = data.getJSONArray("alarms");
+      for(int i = 0; i < alarmList.length(); i++)
       {
-         JSONArray alarmList = data.getJSONArray("alarmList");
-         
-         for(int i = 0; i < alarmList.length(); i++)
+         long alarmId = alarmList.getLong(i);
+         switch(action)
          {
-            JSONObject alarmData = alarmList.getJSONObject(i);
-            Alarm a = alarms.get(alarmData.getLong("alarmId"));
-            if (a != null)
-            {
-               switch (alarmData.getInt("action"))
-               {
-                  case TERMINATE:
-                     session.terminateAlarm(a.getId());
-                     break;
-                  case ACKNOWLEDGE:
-                     session.acknowledgeAlarm(a.getId());
-                     break;
-                  case STICKY_ACKNOWLEDGE:
-                     if (alarmData.has("timeout"))
-                        session.acknowledgeAlarm(a.getId(), true, alarmData.getInt("timeout"));
-                     break;
-                  case RESOLVE:
-                     session.resolveAlarm(a.getId());
-                     break;
-               }
-            }
+            case TERMINATE:
+               session.terminateAlarm(alarmId);
+               break;
+            case ACKNOWLEDGE:
+               session.acknowledgeAlarm(alarmId);
+               break;
+            case STICKY_ACKNOWLEDGE:
+               session.acknowledgeAlarm(alarmId, true, timeout);
+               break;
+            case RESOLVE:
+               session.resolveAlarm(alarmId);
+               break;
          }
       }
-      else
-         return new StringRepresentation(createErrorResponse(RCC.INTERNAL_ERROR).toString(), MediaType.APPLICATION_JSON);
       
-      return new StringRepresentation(createErrorResponse(RCC.SUCCESS).toString(), MediaType.APPLICATION_JSON);
+      return null;
    }
 }
