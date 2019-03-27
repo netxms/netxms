@@ -3525,7 +3525,7 @@ void ClientSession::modifyNodeDCI(NXCPMessage *request)
                      if (success)
                      {
                         msg.setField(VID_RCC, RCC_SUCCESS);
-                        DCObject* dco = ((DataCollectionOwner *)object)->getDCObjectById(itemId, getUserId(), true);
+                        DCObject* dco = ((DataCollectionOwner *)object)->getDCObjectById(itemId, 0, true);
                         if(dco != NULL)
                            NotifyClientDCIUpdate((DataCollectionOwner *)object, dco);
 
