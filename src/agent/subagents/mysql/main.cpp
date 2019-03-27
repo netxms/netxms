@@ -20,6 +20,8 @@
 
 #include "mysql_subagent.h"
 
+#define DEBUG_TAG _T("mysql")
+
 /**
  * Driver handle
  */
@@ -116,44 +118,60 @@ static bool SubAgentInit(Config *config)
 	_tcscpy(s_dbInfo.id, _T("localdb"));
    _tcscpy(s_dbInfo.server, _T("127.0.0.1"));
    _tcscpy(s_dbInfo.name, _T("information_schema"));
-	if (config->parseTemplate(_T("MYSQL"), s_configTemplate))
-	{
-		if (s_dbInfo.name[0] != 0)
-		{
-			if (s_dbInfo.id[0] == 0)
-				_tcscpy(s_dbInfo.id, s_dbInfo.name);
+   _tcscpy(s_dbInfo.login, _T("netxms"));
+   if(config->getEntry(_T("/mysql/id")) != NULL || config->getEntry(_T("/mysql/name")) != NULL ||
+         config->getEntry(_T("mysql/server")) != NULL || config->getEntry(_T("/mysql/login")) != NULL  ||
+         config->getEntry(_T("/mysql/password")) != NULL)
+   {
+      if (config->parseTemplate(_T("MYSQL"), s_configTemplate))
+      {
+         if (s_dbInfo.name[0] != 0)
+         {
+            if (s_dbInfo.id[0] == 0)
+               _tcscpy(s_dbInfo.id, s_dbInfo.name);
 
-         DecryptPassword(s_dbInfo.login, s_dbInfo.password, s_dbInfo.password, MAX_DB_PASSWORD);
-         s_instances->add(new DatabaseInstance(&s_dbInfo));
-		}
-	}
+            DecryptPassword(s_dbInfo.login, s_dbInfo.password, s_dbInfo.password, MAX_DB_PASSWORD);
+            s_instances->add(new DatabaseInstance(&s_dbInfo));
+         }
+      }
+   }
 
 	// Load full-featured XML configuration
-	for(i = 1; i <= 64; i++)
-	{
-		TCHAR section[MAX_DB_STRING];
-		memset(&s_dbInfo, 0, sizeof(s_dbInfo));
-		s_dbInfo.connectionTTL = 3600;
-	   _tcscpy(s_dbInfo.name, _T("information_schema"));
-		_sntprintf(section, MAX_DB_STRING, _T("mysql/databases/database#%d"), i);
-		if (!config->parseTemplate(section, s_configTemplate))
-		{
-			AgentWriteLog(NXLOG_WARNING, _T("MYSQL: error parsing configuration template %d"), i);
-         continue;
-		}
+	ConfigEntry *metricRoot = config->getEntry(_T("/mysql/databases"));
+   if (metricRoot != NULL)
+   {
+      ObjectArray<ConfigEntry> *metrics = metricRoot->getSubEntries(_T("*"));
+      for(int i = 0; i < metrics->size(); i++)
+      {
+         TCHAR section[MAX_DB_STRING];
+         ConfigEntry *e = metrics->get(i);
+         s_dbInfo.connectionTTL = 3600;
+         _tcscpy(s_dbInfo.id, e->getName());
+         _tcscpy(s_dbInfo.server, _T("127.0.0.1"));
+         _tcscpy(s_dbInfo.name, _T("information_schema"));
+         _tcscpy(s_dbInfo.login, _T("netxms"));
 
-		if (s_dbInfo.id[0] == 0)
-			continue;
+         _sntprintf(section, MAX_DB_STRING, _T("mysql/databases/%s"), e->getName());//Previous version: mysql/databases/database#%d
+         if (!config->parseTemplate(section, s_configTemplate))
+         {
+            nxlog_debug_tag(DEBUG_TAG, NXLOG_WARNING, _T("MYSQL: error parsing configuration template %s"), e->getName());
+            continue;
+         }
 
-      DecryptPassword(s_dbInfo.login, s_dbInfo.password, s_dbInfo.password, MAX_DB_PASSWORD);
+         if (s_dbInfo.id[0] == 0)
+            continue;
 
-      s_instances->add(new DatabaseInstance(&s_dbInfo));
-	}
+         DecryptPassword(s_dbInfo.login, s_dbInfo.password, s_dbInfo.password, MAX_DB_PASSWORD);
+
+         s_instances->add(new DatabaseInstance(&s_dbInfo));
+      }
+      delete metrics;
+   }
 
 	// Exit if no usable configuration found
    if (s_instances->size() == 0)
 	{
-      AgentWriteLog(NXLOG_WARNING, _T("MYSQL: no databases to monitor, exiting"));
+      nxlog_debug_tag(DEBUG_TAG, NXLOG_WARNING, _T("MYSQL: no databases to monitor, exiting"));
       delete s_instances;
       return false;
 	}
@@ -170,11 +188,11 @@ static bool SubAgentInit(Config *config)
  */
 static void SubAgentShutdown()
 {
-	AgentWriteDebugLog(1, _T("MYSQL: stopping pollers"));
+   nxlog_debug_tag(DEBUG_TAG, 1, _T("MYSQL: stopping pollers"));
    for(int i = 0; i < s_instances->size(); i++)
       s_instances->get(i)->stop();
    delete s_instances;
-	AgentWriteDebugLog(1, _T("MYSQL: stopped"));
+   nxlog_debug_tag(DEBUG_TAG, 1, _T("MYSQL: stopped"));
 }
 
 /**

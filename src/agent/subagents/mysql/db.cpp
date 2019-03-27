@@ -20,6 +20,8 @@
 
 #include "mysql_subagent.h"
 
+#define DEBUG_TAG _T("mysql")
+
 /**
  * Data to query
  */
@@ -450,7 +452,7 @@ THREAD_RESULT THREAD_CALL DatabaseInstance::pollerThreadStarter(void *arg)
  */
 void DatabaseInstance::pollerThread()
 {
-   AgentWriteDebugLog(3, _T("MYSQL: poller thread for database %s started"), m_info.id);
+   nxlog_debug_tag(DEBUG_TAG, 3, _T("MYSQL: poller thread for database %s started"), m_info.id);
    INT64 connectionTTL = (INT64)m_info.connectionTTL * _LL(1000);
    do
    {
@@ -462,7 +464,7 @@ reconnect:
       if (m_session == NULL)
       {
          MutexUnlock(m_sessionLock);
-         AgentWriteDebugLog(6, _T("MYSQL: cannot connect to database %s: %s"), m_info.id, errorText);
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("MYSQL: cannot connect to database %s: %s"), m_info.id, errorText);
          continue;
       }
 
@@ -485,7 +487,7 @@ reconnect:
          INT64 currTime = GetCurrentTimeMs();
          if (currTime - pollerLoopStartTime > connectionTTL)
          {
-            AgentWriteDebugLog(4, _T("MYSQL: planned connection reset"));
+            nxlog_debug_tag(DEBUG_TAG, 4, _T("MYSQL: planned connection reset"));
             MutexLock(m_sessionLock);
             m_connected = false;
             DBDisconnect(m_session);
@@ -505,7 +507,7 @@ reconnect:
       MutexUnlock(m_sessionLock);
    }
    while(!ConditionWait(m_stopCondition, 60000));   // reconnect every 60 seconds
-   AgentWriteDebugLog(3, _T("MYSQL: poller thread for database %s stopped"), m_info.id);
+   nxlog_debug_tag(DEBUG_TAG, 3, _T("MYSQL: poller thread for database %s stopped"), m_info.id);
 }
 
 /**
