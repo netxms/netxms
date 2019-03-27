@@ -18,6 +18,8 @@
  */
 package org.netxms.websvc;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -96,10 +98,17 @@ public class SessionToken
     * @return notification
     * @throws InterruptedException 
     */
-   public SessionNotification pollNotificationQueue(long timeout) throws InterruptedException
+   public List<SessionNotification> pollNotificationQueue(long timeout) throws InterruptedException
    {
-      SessionNotification n = notificationQueue.poll(timeout, TimeUnit.SECONDS);
+      List<SessionNotification> notifications = new ArrayList<SessionNotification>();
+      notificationQueue.drainTo(notifications);
+      if (notifications.isEmpty())
+      {
+         SessionNotification n = notificationQueue.poll(timeout, TimeUnit.SECONDS);
+         if (n != null)
+            notifications.add(n);
+      }
       updateActivityTimestamp();
-      return n;
+      return notifications;
    }
 }

@@ -22,7 +22,7 @@ public class ObjectToolOutputHandler extends AbstractHandler
    public Representation onGet() throws Exception
    {
       if (!attachToSession())
-         return new StringRepresentation(createErrorResponse(RCC.ACCESS_DENIED).toString(), MediaType.APPLICATION_JSON);
+         return createErrorResponseRepresentation(RCC.ACCESS_DENIED);
 
       String id = getEntityId();
       ObjectToolOutputListener listener = listenerMap.get(UUID.fromString(id));
@@ -35,7 +35,7 @@ public class ObjectToolOutputHandler extends AbstractHandler
          response.put("completed", listener.isCompleted());
          return new StringRepresentation(response.toString(), MediaType.APPLICATION_JSON);
       }
-      return new StringRepresentation(createErrorResponse(RCC.ACCESS_DENIED).toString(), MediaType.APPLICATION_JSON);
+      return createErrorResponseRepresentation(RCC.ACCESS_DENIED);
    }
 
    public static void addListener(UUID uuid, ObjectToolOutputListener listener)
@@ -53,7 +53,7 @@ public class ObjectToolOutputHandler extends AbstractHandler
    {
       if (entity == null || !attachToSession())
       {
-         return new StringRepresentation(createErrorResponse(RCC.ACCESS_DENIED).toString(), MediaType.APPLICATION_JSON);
+         return createErrorResponseRepresentation(RCC.ACCESS_DENIED);
       }
 
       JSONObject json = new JsonRepresentation(entity).getJsonObject();
@@ -65,7 +65,7 @@ public class ObjectToolOutputHandler extends AbstractHandler
 
          NXCSession session = getSession();
          session.stopServerCommand(streamId);
-         return new StringRepresentation(createErrorResponse(RCC.SUCCESS).toString(), MediaType.APPLICATION_JSON);
+         return createErrorResponseRepresentation(RCC.SUCCESS);
       }
       else
          return new StringRepresentation(createErrorResponse(RCC.INTERNAL_ERROR).toString(), MediaType.APPLICATION_JSON);

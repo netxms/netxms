@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2018 Raden Solutions
+ * Copyright (C) 2003-2019 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,39 +18,28 @@
  */
 package org.netxms.websvc.handlers;
 
-import org.json.JSONObject;
+import java.util.List;
+import java.util.Map;
 import org.netxms.client.SessionNotification;
 import org.netxms.client.constants.RCC;
-import org.restlet.data.MediaType;
-import org.restlet.representation.Representation;
-import org.restlet.representation.StringRepresentation;
-import org.restlet.resource.Get;
+import org.netxms.websvc.json.ResponseContainer;
 
 /**
  * Notification handler
  */
 public class NotificationHandler extends AbstractHandler
 {
-   
    /* (non-Javadoc)
-    * @see org.netxms.websvc.handlers.AbstractHandler#onGet()
+    * @see org.netxms.websvc.handlers.AbstractHandler#getCollection(java.util.Map)
     */
    @Override
-   @Get
-   public Representation onGet() throws Exception
+   protected Object getCollection(Map<String, String> query) throws Exception
    {
-      if (!attachToSession())
-         return new StringRepresentation(createErrorResponse(RCC.ACCESS_DENIED).toString(), MediaType.APPLICATION_JSON);
-      
-      SessionNotification n = getSessionToken().pollNotificationQueue(60);
+      List<SessionNotification> notifications = getSessionToken().pollNotificationQueue(60);
       if (!getSession().isConnected())
-         return new StringRepresentation(createErrorResponse(RCC.CONNECTION_BROKEN).toString(), MediaType.APPLICATION_JSON);         
-      else if (n == null)
-         return new StringRepresentation(createErrorResponse(RCC.TIMEOUT).toString(), MediaType.APPLICATION_JSON);
-
-      JSONObject response = new JSONObject();
-      response.put("code", n.getCode());
-      response.put("subcode", n.getSubCode());
-      return new StringRepresentation(response.toString(), MediaType.APPLICATION_JSON);
+         return createErrorResponseRepresentation(RCC.CONNECTION_BROKEN);
+      if (notifications.isEmpty())
+         return createErrorResponseRepresentation(RCC.TIMEOUT);
+      return new ResponseContainer("notifications", notifications);
    }
 }

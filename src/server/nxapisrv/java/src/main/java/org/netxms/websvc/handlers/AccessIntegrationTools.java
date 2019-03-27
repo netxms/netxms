@@ -22,10 +22,8 @@ import org.json.JSONObject;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.RCC;
 import org.netxms.client.constants.UserAccessRights;
-import org.restlet.data.MediaType;
 import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.Representation;
-import org.restlet.representation.StringRepresentation;
 import org.restlet.resource.Post;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -73,6 +71,6 @@ public class AccessIntegrationTools extends AbstractHandler
          rc = RCC.INVALID_REQUEST;
       }
 
-      return new StringRepresentation(createErrorResponse(rc).toString(), MediaType.APPLICATION_JSON);
+      return createErrorResponseRepresentation(rc);
    }
 }
