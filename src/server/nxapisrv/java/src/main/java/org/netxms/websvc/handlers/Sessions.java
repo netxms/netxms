@@ -20,6 +20,7 @@ package org.netxms.websvc.handlers;
 
 import org.json.JSONObject;
 import org.netxms.client.NXCException;
+import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
 import org.netxms.client.constants.RCC;
@@ -36,10 +37,7 @@ import org.restlet.resource.Get;
 import org.restlet.resource.Post;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import java.io.IOException;
-
-import static org.netxms.client.NXCSession.CHANNEL_ALARMS;
 
 /**
  * Session requests handler
@@ -155,17 +153,10 @@ public class Sessions extends AbstractHandler
          @Override
          public void notificationHandler(SessionNotification n)
          {
-            switch(n.getCode())
-            {
-               case SessionNotification.MULTIPLE_ALARMS_RESOLVED:
-               case SessionNotification.MULTIPLE_ALARMS_TERMINATED:
-               case SessionNotification.NEW_ALARM:
-               case SessionNotification.OBJECT_CHANGED:
-                  token.addNotificationToQueue(n);
-            }
+            token.addNotificationToQueue(n);
          }
       };
       token.getSession().addListener(listener);
-      token.getSession().subscribe(CHANNEL_ALARMS);
+      token.getSession().subscribe(NXCSession.CHANNEL_ALARMS);
    }
 }
