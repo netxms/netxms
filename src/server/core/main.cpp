@@ -80,6 +80,7 @@ bool LoadServerCertificate(RSA **serverKey);
 void InitUsers();
 void CleanupUsers();
 void LoadPerfDataStorageDrivers();
+void ShutdownPerfDataStorageDrivers();
 void ImportLocalConfiguration();
 void RegisterPredictionEngines();
 void ExecuteStartupScripts();
@@ -1191,8 +1192,9 @@ void NXCORE_EXPORTABLE Shutdown()
    // Stop DCI cache loading thread
    g_dciCacheLoaderQueue.setShutdownMode();
 
-   StopDataCollection();
    StopObjectMaintenanceThreads();
+   StopDataCollection();
+   ShutdownPerfDataStorageDrivers();
 
    // Wait for critical threads
    ThreadJoin(m_thPollManager);
