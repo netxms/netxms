@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Log Parsing Library
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -532,6 +532,8 @@ bool LogParser::monitorFile(bool readFromCurrPos)
 		ExpandFileName(getFileName(), fname, MAX_PATH, true);
 		if (CALL_STAT(fname, &st) != 0)
       {
+         if (errno == ENOENT)
+            readFromStart = true;
          setStatus(LPS_NO_FILE);
          if (ConditionWait(m_stopCondition, 10000))
             break;
@@ -722,6 +724,8 @@ bool LogParser::monitorFile2(bool readFromCurrPos)
       NX_STAT_STRUCT st;
       if (CALL_STAT(fname, &st) != 0)
       {
+         if (errno == ENOENT)
+            readFromStart = true;
          setStatus(LPS_NO_FILE);
          if (ConditionWait(m_stopCondition, 10000))
             break;
@@ -766,9 +770,9 @@ bool LogParser::monitorFile2(bool readFromCurrPos)
       nxlog_debug_tag(DEBUG_TAG, 7, _T("File \"%s\" (pattern \"%s\") successfully opened"), fname, m_fileName);
 
 #ifdef _WIN32
-      if ((size > static_cast<size_t>(st.st_size)) || (ctime != st.st_ctime))
+      if (!readFromStart && ((size > static_cast<size_t>(st.st_size)) || (ctime != st.st_ctime)))
 #else
-      if (size > static_cast<size_t>(st.st_size))
+      if (!readFromStart && (size > static_cast<size_t>(st.st_size)))
 #endif
       {
 #ifdef _WIN32
