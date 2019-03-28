@@ -854,7 +854,10 @@ bool DCObject::saveToDatabase(DB_HANDLE hdb)
    }
 
    // Save access list
-   success = ExecuteQueryOnObject(hdb, m_id, _T("DELETE FROM dci_access WHERE dci_id=?"));
+	if (success)
+	{
+	   success = ExecuteQueryOnObject(hdb, m_id, _T("DELETE FROM dci_access WHERE dci_id=?"));
+	}
    if (success && !m_accessList->isEmpty())
    {
       DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO dci_access (dci_id,user_id) VALUES (?,?)"));
