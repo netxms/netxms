@@ -455,7 +455,7 @@ void ExecuteScheduledScript(const ScheduledTaskParameters *parameters)
          if (object->getObjectClass() == OBJECT_NODE)
             vm->setGlobalVariable(_T("$node"), object->createNXSLObject());
       }
-      if (vm->run(&args))
+      if (vm->run(args))
       {
          if (object != NULL)
             nxlog_debug(4, _T("ExecuteScheduledScript(%s): Script executed successfully on object \"%s\" [%d]"),

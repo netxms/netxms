@@ -256,14 +256,14 @@ bool NXSL_VM::run(int argc, NXSL_Value **argv, NXSL_VariableSystem **globals,
    ObjectArray<NXSL_Value> args(argc, 8, false);
    for(int i = 0; i < argc; i++)
       args.add(argv[i]);
-   return run(&args, globals, expressionVariables, constants, entryPoint);
+   return run(args, globals, expressionVariables, constants, entryPoint);
 }
 
 /**
  * Run program
  * Returns true on success and false on error
  */
-bool NXSL_VM::run(ObjectArray<NXSL_Value> *args, NXSL_VariableSystem **globals,
+bool NXSL_VM::run(const ObjectArray<NXSL_Value>& args, NXSL_VariableSystem **globals,
          NXSL_VariableSystem **expressionVariables, NXSL_VariableSystem *constants, const TCHAR *entryPoint)
 {
    NXSL_Value *pValue;
@@ -281,11 +281,11 @@ bool NXSL_VM::run(ObjectArray<NXSL_Value> *args, NXSL_VariableSystem **globals,
 
    // Create local variable system for main() and bind arguments
    m_localVariables = new NXSL_VariableSystem();
-   for(int i = 0; i < args->size(); i++)
+   for(int i = 0; i < args.size(); i++)
    {
       TCHAR name[32];
       _sntprintf(name, 32, _T("$%d"), i + 1);
-      m_localVariables->create(name, args->get(i));
+      m_localVariables->create(name, args.get(i));
    }
 
    // Preserve original global variables and constants

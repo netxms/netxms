@@ -2497,7 +2497,7 @@ static int FilterObject(NXSL_VM *vm, NetObj *object, NXSL_VariableSystem **globa
    vm->setContextObject(object->createNXSLObject());
    NXSL_VariableSystem *expressionVariables = NULL;
    ObjectArray<NXSL_Value> args(0);
-   if (!vm->run(&args, globalVariables, &expressionVariables))
+   if (!vm->run(args, globalVariables, &expressionVariables))
    {
       delete expressionVariables;
       return -1;

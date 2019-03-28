@@ -722,7 +722,7 @@ NXSL_VM *DataCollectionTarget::runDataCollectionScript(const TCHAR *param, DataC
       {
          vm->setGlobalVariable(_T("$targetObject"), targetObject->createNXSLObject());
       }
-      if (!vm->run(&args))
+      if (!vm->run(args))
       {
          DbgPrintf(6, _T("DataCollectionTarget(%s)->runDataCollectionScript(%s): Script execution error: %s"), m_name, param, vm->getErrorText());
          time_t now = time(NULL);
@@ -871,7 +871,7 @@ UINT32 DataCollectionTarget::getStringMapFromScript(const TCHAR *param, StringMa
       {
          vm->setGlobalVariable(_T("$targetObject"), targetObject->createNXSLObject());
       }
-      if (vm->run(&args))
+      if (vm->run(args))
       {
          rc = DCE_SUCCESS;
          NXSL_Value *value = vm->getResult();

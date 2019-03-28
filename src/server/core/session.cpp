@@ -10946,7 +10946,7 @@ static void ExecuteLibraryScript(void *arg)
 {
    LibraryScriptExecutionData *d = (LibraryScriptExecutionData *)arg;
    nxlog_debug(6, _T("Starting background execution of library script %s"), d->name);
-   if (d->vm->run(&d->args))
+   if (d->vm->run(d->args))
    {
       nxlog_debug(6, _T("Background execution of library script %s completed"), d->name);
    }
@@ -11073,7 +11073,7 @@ void ClientSession::executeLibraryScript(NXCPMessage *request)
          for(int i = 1; i < args->size(); i++)
             sargs.add(new NXSL_Value(args->get(i)));
          msg.setCode(CMD_EXECUTE_SCRIPT_UPDATE);
-         if (vm->run(&sargs))
+         if (vm->run(sargs))
          {
             TCHAR buffer[1024];
             const TCHAR *value = vm->getResult()->getValueAsCString();
