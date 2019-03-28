@@ -744,7 +744,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
       }
       else if (IsCommand(_T("HEAP"), szBuffer, 1))
       {
-         pArg = ExtractWord(pArg, szBuffer);
+         ExtractWord(pArg, szBuffer);
          if (IsCommand(_T("DETAILS"), szBuffer, 1))
          {
             TCHAR *text = GetHeapInfo();

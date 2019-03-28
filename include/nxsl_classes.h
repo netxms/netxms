@@ -1085,13 +1085,13 @@ public:
 	void setContextObject(NXSL_Value *value);
 
    bool load(const NXSL_Program *program);
-   bool run(ObjectRefArray<NXSL_Value> *args, NXSL_VariableSystem **globals = NULL,
+   bool run(const ObjectRefArray<NXSL_Value>& args, NXSL_VariableSystem **globals = NULL,
             NXSL_VariableSystem **expressionVariables = NULL,
             NXSL_VariableSystem *constants = NULL, const char *entryPoint = NULL);
    bool run(int argc, NXSL_Value **argv, NXSL_VariableSystem **globals = NULL,
             NXSL_VariableSystem **expressionVariables = NULL,
             NXSL_VariableSystem *pConstants = NULL, const char *entryPoint = NULL);
-   bool run() { ObjectRefArray<NXSL_Value> args(1, 1); return run(&args); }
+   bool run() { ObjectRefArray<NXSL_Value> args(1, 1); return run(args); }
 
    UINT32 getCodeSize() { return m_instructionSet->size(); }
 

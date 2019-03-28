@@ -249,7 +249,8 @@ void DataCollector(void *arg)
                   pItem->getId(), pItem->getName(), (target != NULL) ? (int)target->getId() : -1);
       pItem->deleteFromDatabase();
       delete pItem;
-      target->decRefCount();
+      if (target != NULL)
+         target->decRefCount();
       return;
    }
 

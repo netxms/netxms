@@ -257,14 +257,14 @@ bool NXSL_VM::run(int argc, NXSL_Value **argv, NXSL_VariableSystem **globals,
    ObjectRefArray<NXSL_Value> args(argc, 8);
    for(int i = 0; i < argc; i++)
       args.add(argv[i]);
-   return run(&args, globals, expressionVariables, constants, entryPoint);
+   return run(args, globals, expressionVariables, constants, entryPoint);
 }
 
 /**
  * Run program
  * Returns true on success and false on error
  */
-bool NXSL_VM::run(ObjectRefArray<NXSL_Value> *args, NXSL_VariableSystem **globals,
+bool NXSL_VM::run(const ObjectRefArray<NXSL_Value>& args, NXSL_VariableSystem **globals,
          NXSL_VariableSystem **expressionVariables, NXSL_VariableSystem *constants, const char *entryPoint)
 {
 	m_cp = INVALID_ADDRESS;
@@ -280,11 +280,11 @@ bool NXSL_VM::run(ObjectRefArray<NXSL_Value> *args, NXSL_VariableSystem **global
 
    // Create local variable system for main() and bind arguments
    m_localVariables = new NXSL_VariableSystem(this);
-   for(int i = 0; i < args->size(); i++)
+   for(int i = 0; i < args.size(); i++)
    {
       char name[32];
       snprintf(name, 32, "$%d", i + 1);
-      m_localVariables->create(name, args->get(i));
+      m_localVariables->create(name, args.get(i));
    }
 
    // Preserve original global variables and constants
