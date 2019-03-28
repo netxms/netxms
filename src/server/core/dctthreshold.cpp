@@ -787,7 +787,7 @@ EnumerationCallbackResult EventGenerationCB(const TCHAR *key, const void *value,
             "ssids", paramNames, cbTh->table->getName(), cbTh->table->getDescription(), cbTh->table->getId(),
             was->getRow(), key);
    }
-   else
+   else if ((was == NULL || !was->isActive()) && is != NULL && is->isActive())
    {
       PostDciEventWithNames(cbTh->threshold->getActivationEvent(), cbTh->table->getOwnerId(), cbTh->table->getId(),
             "ssids", paramNames, cbTh->table->getName(), cbTh->table->getDescription(), cbTh->table->getId(),
