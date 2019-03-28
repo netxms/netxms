@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -37,7 +37,7 @@ StringMap::StringMap(const StringMap &src) : StringMapBase(true)
    StringMapEntry *entry, *tmp;
    HASH_ITER(hh, src.m_data, entry, tmp)
    {
-      setObject(_tcsdup(m_ignoreCase ? entry->originalKey : entry->key), _tcsdup((TCHAR *)entry->value), true);
+      setObject(MemCopyString(m_ignoreCase ? entry->originalKey : entry->key), MemCopyString((TCHAR *)entry->value), true);
    }
 }
 
@@ -62,7 +62,7 @@ StringMap& StringMap::operator =(const StringMap &src)
    StringMapEntry *entry, *tmp;
    HASH_ITER(hh, src.m_data, entry, tmp)
    {
-      setObject(_tcsdup(m_ignoreCase ? entry->originalKey : entry->key), _tcsdup((TCHAR *)entry->value), true);
+      setObject(MemCopyString(m_ignoreCase ? entry->originalKey : entry->key), MemCopyString((TCHAR *)entry->value), true);
    }
 	return *this;
 }
@@ -75,7 +75,7 @@ void StringMap::addAll(const StringMap *src)
    StringMapEntry *entry, *tmp;
    HASH_ITER(hh, src->m_data, entry, tmp)
    {
-      setObject(_tcsdup(src->m_ignoreCase ? entry->originalKey : entry->key), _tcsdup((TCHAR *)entry->value), true);
+      setObject(MemCopyString(src->m_ignoreCase ? entry->originalKey : entry->key), MemCopyString((TCHAR *)entry->value), true);
    }
 }
 

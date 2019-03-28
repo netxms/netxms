@@ -77,7 +77,7 @@ void KeyValueOutputProcessExecutor::onOutput(const char *text)
 
       if (m_buffer.length() > 1)
       {
-         eqPtr = _tcschr(m_buffer.getBuffer(), _T('='));
+         eqPtr = _tcschr(m_buffer.getBuffer(), m_separator);
          if (eqPtr != NULL)
          {
             *eqPtr = 0;
