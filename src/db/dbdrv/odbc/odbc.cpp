@@ -468,7 +468,7 @@ extern "C" void __EXPORT DrvBind(ODBCDRV_STATEMENT *stmt, int pos, int sqlType, 
 				{
 					sqlBuffer = UCS2StringFromUCS4String((NETXMS_WCHAR *)buffer);
 				}
-            if (cType == DB_CTYPE_UTF8_STRING)
+				else if (cType == DB_CTYPE_UTF8_STRING)
             {
                sqlBuffer = UCS2StringFromUTF8String((char *)buffer);
                length = (int)ucs2_strlen((UCS2CHAR *)sqlBuffer) + 1;
