@@ -44,10 +44,19 @@ String::String()
  */
 String::String(const String &src)
 {
-   m_length = src.m_length;
-   m_allocated = src.m_length + 1;
+   if ((src.m_length > 0) && (src.m_buffer != NULL))
+   {
+      m_length = src.m_length;
+      m_allocated = src.m_length + 1;
+      m_buffer = static_cast<TCHAR*>(MemCopyBlock(src.m_buffer, m_allocated * sizeof(TCHAR)));
+   }
+   else
+   {
+      m_length = 0;
+      m_allocated = 0;
+      m_buffer = NULL;
+   }
    m_allocationStep = src.m_allocationStep;
-	m_buffer = ((src.m_buffer != NULL) && (src.m_length > 0)) ? (TCHAR *)nx_memdup(src.m_buffer, m_allocated * sizeof(TCHAR)) : NULL;
 }
 
 /**
@@ -55,7 +64,7 @@ String::String(const String &src)
  */
 String::String(const TCHAR *init)
 {
-   m_buffer = _tcsdup(init);
+   m_buffer = MemCopyString(init);
    m_length = _tcslen(init);
    m_allocated = m_length + 1;
    m_allocationStep = 256;
@@ -66,7 +75,7 @@ String::String(const TCHAR *init)
  */
 String::~String()
 {
-   free(m_buffer);
+   MemFree(m_buffer);
 }
 
 /**
@@ -74,9 +83,9 @@ String::~String()
  */
 String& String::operator =(const TCHAR *str)
 {
-   free(m_buffer);
-   m_buffer = _tcsdup(CHECK_NULL_EX(str));
-   m_length = _tcslen(CHECK_NULL_EX(str));
+   MemFree(m_buffer);
+   m_buffer = MemCopyString(CHECK_NULL_EX(str));
+   m_length = _tcslen(m_buffer);
    m_allocated = m_length + 1;
    return *this;
 }
@@ -89,10 +98,19 @@ String& String::operator =(const String &src)
 	if (&src == this)
 		return *this;
    MemFree(m_buffer);
-	m_length = src.m_length;
-   m_allocated = src.m_length + 1;
+   if ((src.m_length > 0) && (src.m_buffer != NULL))
+   {
+      m_length = src.m_length;
+      m_allocated = src.m_length + 1;
+      m_buffer = static_cast<TCHAR*>(MemCopyBlock(src.m_buffer, m_allocated * sizeof(TCHAR)));
+   }
+   else
+   {
+      m_length = 0;
+      m_allocated = 0;
+      m_buffer = NULL;
+   }
    m_allocationStep = src.m_allocationStep;
-	m_buffer = ((src.m_buffer != NULL) && (src.m_length > 0)) ? (TCHAR *)nx_memdup(src.m_buffer, m_allocated * sizeof(TCHAR)) : NULL;
    return *this;
 }
 
@@ -107,7 +125,7 @@ String& String::operator +=(const TCHAR *str)
       if (m_length + len >= m_allocated)
       {
          m_allocated += std::max(m_allocationStep, len + 1);
-      	m_buffer = (TCHAR *)MemRealloc(m_buffer, m_allocated * sizeof(TCHAR));
+      	m_buffer = MemReallocArray(m_buffer, m_allocated);
       }
    	_tcscpy(&m_buffer[m_length], str);
    	m_length += len;
@@ -125,7 +143,7 @@ String& String::operator +=(const String &str)
       if (m_length + str.m_length >= m_allocated)
       {
          m_allocated += std::max(m_allocationStep, str.m_length + 1);
-      	m_buffer = (TCHAR *)MemRealloc(m_buffer, m_allocated * sizeof(TCHAR));
+      	m_buffer = MemReallocArray(m_buffer, m_allocated);
       }
       memcpy(&m_buffer[m_length], str.m_buffer, (str.m_length + 1) * sizeof(TCHAR));
 	   m_length += str.m_length;
