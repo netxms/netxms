@@ -234,15 +234,15 @@ void *HashMapIterator::next()
 
    if (m_curr == NULL)  // iteration not started
    {
-      HASH_ITER_START(hh, m_hashMap->m_data, m_curr, m_next);
+      m_curr = m_hashMap->m_data;
    }
    else
    {
       if (m_next == NULL)
          return NULL;
-
-      HASH_ITER_NEXT(hh, m_curr, m_next);
+      m_curr = m_next;
    }
+   m_next = static_cast<HashMapEntry*>(m_curr->hh.next);
    return m_curr->value;
 }
 
