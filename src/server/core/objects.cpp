@@ -2633,16 +2633,19 @@ ObjectArray<ObjectQueryResult> *QueryObjects(const TCHAR *query, UINT32 userId, 
    delete objects;
 
    // Sort result set and apply limit
-   if ((orderBy != NULL) && !orderBy->isEmpty())
+   if (resultSet != NULL)
    {
-      ObjectQueryComparatorData cd;
-      cd.fields = fields;
-      cd.orderBy = orderBy;
-      resultSet->sort(ObjectQueryComparator, &cd);
-   }
-   if (limit > 0)
-   {
-      resultSet->shrinkTo((int)limit);
+      if ((orderBy != NULL) && !orderBy->isEmpty())
+      {
+         ObjectQueryComparatorData cd;
+         cd.fields = fields;
+         cd.orderBy = orderBy;
+         resultSet->sort(ObjectQueryComparator, &cd);
+      }
+      if (limit > 0)
+      {
+         resultSet->shrinkTo((int)limit);
+      }
    }
 
    return resultSet;
