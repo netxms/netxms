@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -29,7 +29,7 @@
  */
 static void ObjectDestructor(void *object, StringMapBase *map)
 {
-	free(object);
+	MemFree(object);
 }
 
 /**
@@ -60,11 +60,11 @@ void StringMapBase::clear()
    HASH_ITER(hh, m_data, entry, tmp)
    {
       HASH_DEL(m_data, entry);
-      free(entry->key);
+      MemFree(entry->key);
       MemFree(entry->originalKey);
       if (m_objectOwner)
          destroyObject(entry->value);
-      free(entry);
+      MemFree(entry);
    }
 }
 
@@ -82,14 +82,14 @@ StringMapEntry *StringMapBase::find(const TCHAR *key, size_t keyLen) const
 #if HAVE_ALLOCA
       TCHAR *ukey = (TCHAR *)alloca(keyLen + sizeof(TCHAR));
 #else
-      TCHAR *ukey = (TCHAR *)malloc(keyLen + sizeof(TCHAR));
+      TCHAR *ukey = (TCHAR *)MemAlloc(keyLen + sizeof(TCHAR));
 #endif
       memcpy(ukey, key, keyLen);
       *((TCHAR *)((BYTE *)ukey + keyLen)) = 0;
       _tcsupr(ukey);
       HASH_FIND(hh, m_data, ukey, (unsigned int)keyLen, entry);
 #if !HAVE_ALLOCA
-      free(ukey);
+      MemFree(ukey);
 #endif
    }
    else
@@ -118,18 +118,18 @@ void StringMapBase::setObject(TCHAR *key, void *value, bool keyPreAllocated)
       {
          if (m_ignoreCase)
          {
-            free(entry->originalKey);
+            MemFree(entry->originalKey);
             entry->originalKey = key;
          }
          else
          {
-			   free(key);
+            MemFree(key);
          }
       }
       else if (m_ignoreCase)
       {
-         free(entry->originalKey);
-         entry->originalKey = _tcsdup(key);
+         MemFree(entry->originalKey);
+         entry->originalKey = MemCopyString(key);
       }
 		if (m_objectOwner)
          destroyObject(entry->value);
@@ -137,11 +137,11 @@ void StringMapBase::setObject(TCHAR *key, void *value, bool keyPreAllocated)
 	}
 	else
 	{
-      entry = (StringMapEntry *)malloc(sizeof(StringMapEntry));
-      entry->key = keyPreAllocated ? key : _tcsdup(key);
+      entry = MemAllocStruct<StringMapEntry>();
+      entry->key = keyPreAllocated ? key : MemCopyString(key);
       if (m_ignoreCase)
       {
-         entry->originalKey = _tcsdup(entry->key);
+         entry->originalKey = MemCopyString(entry->key);
          _tcsupr(entry->key);
       }
       else
@@ -185,11 +185,11 @@ void StringMapBase::remove(const TCHAR *key)
    if (entry != NULL)
    {
       HASH_DEL(m_data, entry);
-      free(entry->key);
-      free(entry->originalKey);
+      MemFree(entry->key);
+      MemFree(entry->originalKey);
 		if (m_objectOwner)
          destroyObject(entry->value);
-      free(entry);
+      MemFree(entry);
    }
 }
 
@@ -241,11 +241,11 @@ void StringMapBase::filterElements(bool (*filter)(const TCHAR *, const void *, v
       if (!filter(m_ignoreCase ? entry->originalKey : entry->key, entry->value, userData))
       {
          HASH_DEL(m_data, entry);
-         free(entry->key);
+         MemFree(entry->key);
          MemFree(entry->originalKey);
          if (m_objectOwner)
             destroyObject(entry->value);
-         free(entry);
+         MemFree(entry);
       }
    }
 }
@@ -321,7 +321,7 @@ void StringMapBase::setIgnoreCase(bool ignore)
       HASH_ITER(hh, m_data, entry, tmp)
       {
          HASH_DEL(m_data, entry);
-         entry->originalKey = _tcsdup(entry->key);
+         entry->originalKey = MemCopyString(entry->key);
          _tcsupr(entry->key);
          int keyLen = (int)(_tcslen(entry->key) * sizeof(TCHAR));
          HASH_ADD_KEYPTR(hh, data, entry->key, keyLen, entry);
@@ -333,7 +333,7 @@ void StringMapBase::setIgnoreCase(bool ignore)
       HASH_ITER(hh, m_data, entry, tmp)
       {
          HASH_DEL(m_data, entry);
-         free(entry->key);
+         MemFree(entry->key);
          entry->key = entry->originalKey;
          entry->originalKey = NULL;
          int keyLen = (int)(_tcslen(entry->key) * sizeof(TCHAR));
