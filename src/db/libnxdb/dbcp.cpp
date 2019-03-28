@@ -290,7 +290,6 @@ void LIBNXDB_EXPORTABLE DBConnectionPoolReset()
 {
    MutexLock(m_poolAccessMutex);
 
-   time_t now = time(NULL);
    for(int i = 0; i < m_connections.size(); i++)
    {
       PoolConnectionInfo *conn = m_connections.get(i);

@@ -1620,7 +1620,7 @@ int F_Base64Encode(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm
    }
 
    char *out = NULL;
-   size_t olen = base64_encode_alloc(in, ilen, &out);
+   base64_encode_alloc(in, ilen, &out);
    *result = vm->createValue(CHECK_NULL_EX_A(out));
 
    if (in != (char *)argv[0]->getValueAsCString())
