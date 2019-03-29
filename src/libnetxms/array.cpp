@@ -294,9 +294,9 @@ void Array::sort(int (*cb)(const void *, const void *))
 /**
  * Sort array elements with context
  */
-void Array::sort(int (*cb)(const void *, const void *, void *), void *context)
+void Array::sort(int (*cb)(void *, const void *, const void *), void *context)
 {
-   QSortEx(m_data, m_size, m_elementSize, context, cb);
+   qsort_s(m_data, m_size, m_elementSize, cb, context);
 }
 
 /**

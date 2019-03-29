@@ -964,7 +964,7 @@ public:
 	void shrinkTo(int size);
 	void shrinkBy(int count) { if (count >= m_size) clear(); else shrinkTo(m_size - count); }
    void sort(int (*cb)(const void *, const void *));
-   void sort(int (*cb)(const void *, const void *, void *), void *context);
+   void sort(int (*cb)(void *, const void *, const void *), void *context);
 
 	int size() const { return m_size; }
 	bool isEmpty() const { return m_size == 0; }
@@ -1021,7 +1021,7 @@ public:
    void unlink(T *object) { Array::unlink((void *)object); }
 
    void sort(int (*cb)(const T **, const T **)) { Array::sort((int (*)(const void *, const void *))cb); }
-   template<typename C> void sort(int (*cb)(const T **, const T **, C *), C *context) { Array::sort((int (*)(const void *, const void *, void *))cb, (void *)context); }
+   template<typename C> void sort(int (*cb)(C *, const T **, const T **), C *context) { Array::sort((int (*)(void *, const void *, const void *))cb, (void *)context); }
    T *find(const T *key, int (*cb)(const T **, const T **)) const
    {
       T **result = (T **)Array::find(&key, (int (*)(const void *, const void *))cb);
@@ -2448,8 +2448,9 @@ void LIBNETXMS_EXPORTABLE __strupr(char *in);
 #define strupr __strupr
 #endif   /* _WIN32 */
 
-void LIBNETXMS_EXPORTABLE QSortEx(void *base, size_t nmemb, size_t size, void *arg,
-												 int (*compare)(const void *, const void *, void *));
+#if !defined(_WIN32)
+void LIBNETXMS_EXPORTABLE qsort_s(void *base, size_t nmemb, size_t size, int (*compare)(void *, const void *, const void *), void *context);
+#endif
 
 INT64 LIBNETXMS_EXPORTABLE GetCurrentTimeMs();
 
