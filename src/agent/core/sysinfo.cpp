@@ -113,7 +113,7 @@ static LONG GetDirInfo(const char *path, const char *pattern, bool bRecursive, u
    }
 
    // if this is just a file than simply return statistics
-	// Filters ignored in this case
+   // Filters ignored in this case
    if (!S_ISDIR(fileInfo.st_mode))
    {
       llFileSize += (UINT64)fileInfo.st_size;
@@ -174,7 +174,7 @@ static LONG GetDirInfo(const char *path, const char *pattern, bool bRecursive, u
          // skip symlinks
 #ifndef _WIN32
          if (S_ISLNK(fileInfo.st_mode))
-         	continue;
+            continue;
 #endif
 
          if (S_ISDIR(fileInfo.st_mode) && bRecursive)
@@ -191,7 +191,11 @@ static LONG GetDirInfo(const char *path, const char *pattern, bool bRecursive, u
              uFileCount++;
          }
       }
+#ifdef _WIN32
+      wclosedir(dir);
+#else
       closedir(dir);
+#endif
    }
 
    return nRet;

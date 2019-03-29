@@ -23,6 +23,7 @@
 
 #include "libnxlp.h"
 #include <nxstat.h>
+#include <errno.h>
 
 #define DEBUG_TAG    _T("logwatch")
 
