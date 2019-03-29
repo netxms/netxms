@@ -225,7 +225,6 @@
     <ClCompile Include="nxcp.cpp" />
     <ClCompile Include="pa.cpp" />
     <ClCompile Include="procexec.cpp" />
-    <ClCompile Include="qsort.c" />
     <ClCompile Include="queue.cpp" />
     <ClCompile Include="rbuffer.cpp" />
     <ClCompile Include="rwlock.cpp" />

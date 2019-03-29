@@ -2530,7 +2530,7 @@ struct ObjectQueryComparatorData
 /**
  * Query result comparator
  */
-static int ObjectQueryComparator(const ObjectQueryResult **object1, const ObjectQueryResult **object2, ObjectQueryComparatorData *data)
+static int ObjectQueryComparator(ObjectQueryComparatorData *data, const ObjectQueryResult **object1, const ObjectQueryResult **object2)
 {
    for(int i = 0; i < data->orderBy->size(); i++)
    {

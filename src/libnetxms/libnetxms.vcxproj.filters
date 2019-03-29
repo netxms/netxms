@@ -111,9 +111,6 @@
     <ClCompile Include="pa.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="qsort.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="queue.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
