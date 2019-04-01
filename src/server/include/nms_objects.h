@@ -812,6 +812,7 @@ public:
    void deleteParent(NetObj *object); // Delete reference to parent object
 
    void deleteObject(NetObj *initiator = NULL);     // Prepare object for deletion
+   void destroy();   // Destroy partially loaded object
 
    bool isHidden() { return m_isHidden; }
    void hide();

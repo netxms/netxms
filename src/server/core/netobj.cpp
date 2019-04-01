@@ -905,6 +905,32 @@ void NetObj::onObjectDelete(UINT32 objectId)
 }
 
 /**
+ * Destroy partially loaded object
+ */
+void NetObj::destroy()
+{
+   // Delete references to this object from child objects
+   for(int i = 0; i < m_childList->size(); i++)
+   {
+      NetObj *o = m_childList->get(i);
+      o->deleteParent(this);
+      if (o->getParentCount() == 0)
+      {
+         // last parent, delete object
+         o->destroy();
+      }
+   }
+
+   // Remove references to this object from parent objects
+   for(int i = 0; i < m_parentList->size(); i++)
+   {
+      m_parentList->get(i)->deleteChild(this);
+   }
+
+   delete this;
+}
+
+/**
  * Get childs IDs in printable form
  */
 const TCHAR *NetObj::dbgGetChildList(TCHAR *szBuffer)

@@ -1383,7 +1383,7 @@ BOOL LoadObjects()
             }
             else     // Object load failed
             {
-               delete pZone;
+               pZone->destroy();
                nxlog_write(MSG_ZONE_LOAD_FAILED, NXLOG_ERROR, "d", id);
             }
          }
@@ -1410,7 +1410,7 @@ BOOL LoadObjects()
          }
          else     // Object load failed
          {
-            delete condition;
+            condition->destroy();
             nxlog_write(MSG_CONDITION_LOAD_FAILED, NXLOG_ERROR, "d", id);
          }
       }
@@ -1447,7 +1447,7 @@ BOOL LoadObjects()
          }
          else     // Object load failed
          {
-            delete subnet;
+            subnet->destroy();
             nxlog_write(MSG_SUBNET_LOAD_FAILED, NXLOG_ERROR, "d", id);
          }
       }
@@ -1472,7 +1472,7 @@ BOOL LoadObjects()
          else     // Object load failed
          {
             nxlog_write(MSG_RACK_LOAD_FAILED, NXLOG_ERROR, "d", id);
-            delete rack;
+            rack->destroy();
          }
       }
       DBFreeResult(hResult);
@@ -1495,7 +1495,7 @@ BOOL LoadObjects()
          else     // Object load failed
          {
             nxlog_write(MSG_CHASSIS_LOAD_FAILED, NXLOG_ERROR, "d", id);
-            delete chassis;
+            chassis->destroy();
          }
       }
       DBFreeResult(hResult);
@@ -1518,7 +1518,7 @@ BOOL LoadObjects()
          }
          else     // Object load failed
          {
-            delete md;
+            md->destroy();
             nxlog_write(MSG_MOBILEDEVICE_LOAD_FAILED, NXLOG_ERROR, "d", id);
          }
       }
@@ -1542,7 +1542,7 @@ BOOL LoadObjects()
          }
          else     // Object load failed
          {
-            delete sensor;
+            sensor->destroy();
             nxlog_write(MSG_SENSOR_LOAD_FAILED, NXLOG_ERROR, "d", id);
          }
       }
@@ -1566,7 +1566,7 @@ BOOL LoadObjects()
          }
          else     // Object load failed
          {
-            delete node;
+            node->destroy();
             nxlog_write(MSG_NODE_LOAD_FAILED, NXLOG_ERROR, "d", id);
          }
       }
@@ -1591,7 +1591,7 @@ BOOL LoadObjects()
          else     // Object load failed
          {
             nxlog_write(MSG_AP_LOAD_FAILED, NXLOG_ERROR, "d", id);
-            delete ap;
+            ap->destroy();
          }
       }
       DBFreeResult(hResult);
@@ -1615,7 +1615,7 @@ BOOL LoadObjects()
          else     // Object load failed
          {
             nxlog_write(MSG_INTERFACE_LOAD_FAILED, NXLOG_ERROR, "d", id);
-            delete iface;
+            iface->destroy();
          }
       }
       DBFreeResult(hResult);
@@ -1637,7 +1637,7 @@ BOOL LoadObjects()
          }
          else     // Object load failed
          {
-            delete service;
+            service->destroy();
             nxlog_write(MSG_NETSRV_LOAD_FAILED, NXLOG_ERROR, "d", id);
          }
       }
@@ -1660,7 +1660,7 @@ BOOL LoadObjects()
          }
          else     // Object load failed
          {
-            delete connector;
+            connector->destroy();
             nxlog_write(MSG_VPNC_LOAD_FAILED, NXLOG_ERROR, "d", id);
          }
       }
@@ -1683,7 +1683,7 @@ BOOL LoadObjects()
          }
          else     // Object load failed
          {
-            delete cluster;
+            cluster->destroy();
             nxlog_write(MSG_CLUSTER_LOAD_FAILED, NXLOG_ERROR, "d", id);
          }
       }
@@ -1712,7 +1712,7 @@ BOOL LoadObjects()
          }
          else     // Object load failed
          {
-            delete tmpl;
+            tmpl->destroy();
             nxlog_write(MSG_TEMPLATE_LOAD_FAILED, NXLOG_ERROR, "d", id);
          }
       }
@@ -1735,7 +1735,7 @@ BOOL LoadObjects()
          }
          else     // Object load failed
          {
-            delete map;
+            map->destroy();
             nxlog_write(MSG_NETMAP_LOAD_FAILED, NXLOG_ERROR, "d", id);
          }
       }
@@ -1763,7 +1763,7 @@ BOOL LoadObjects()
          }
          else     // Object load failed
          {
-            delete pContainer;
+            pContainer->destroy();
             nxlog_write(MSG_CONTAINER_LOAD_FAILED, NXLOG_ERROR, "d", id);
          }
       }
@@ -1789,7 +1789,7 @@ BOOL LoadObjects()
          }
          else     // Object load failed
          {
-            delete pGroup;
+            pGroup->destroy();
             nxlog_write(MSG_TG_LOAD_FAILED, NXLOG_ERROR, "d", id);
          }
       }
@@ -1813,7 +1813,7 @@ BOOL LoadObjects()
          }
          else     // Object load failed
          {
-            delete group;
+            group->destroy();
             nxlog_write(MSG_MG_LOAD_FAILED, NXLOG_ERROR, "d", id);
          }
       }
@@ -1836,7 +1836,7 @@ BOOL LoadObjects()
          }
          else     // Object load failed
          {
-            delete dashboard;
+            dashboard->destroy();
             nxlog_write(MSG_DASHBOARD_LOAD_FAILED, NXLOG_ERROR, "d", id);
          }
       }
@@ -1860,7 +1860,7 @@ BOOL LoadObjects()
          }
          else     // Object load failed
          {
-            delete group;
+            group->destroy();
             nxlog_write(MSG_MG_LOAD_FAILED, NXLOG_ERROR, "d", id);
          }
       }
@@ -1884,7 +1884,7 @@ BOOL LoadObjects()
 		   }
 		   else     // Object load failed
 		   {
-			   delete service;
+			   service->destroy();
 			   nxlog_write(MSG_BUSINESS_SERVICE_LOAD_FAILED, NXLOG_ERROR, "d", id);
 		   }
 	   }
@@ -1908,7 +1908,7 @@ BOOL LoadObjects()
 		   }
 		   else     // Object load failed
 		   {
-			   delete nl;
+			   nl->destroy();
 			   nxlog_write(MSG_NODE_LINK_LOAD_FAILED, NXLOG_ERROR, "d", id);
 		   }
 	   }
@@ -1931,7 +1931,7 @@ BOOL LoadObjects()
          }
          else     // Object load failed
          {
-            delete check;
+            check->destroy();
             nxlog_write(MSG_SERVICE_CHECK_LOAD_FAILED, NXLOG_ERROR, "d", id);
          }
       }
