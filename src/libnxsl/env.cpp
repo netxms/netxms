@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -74,6 +74,7 @@ int F_trim(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_typeof(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_udpConnector(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_upper(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
+int F_weierstrass(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_x2d(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_AddrInRange(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_AddrInSubnet(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
@@ -151,6 +152,7 @@ static NXSL_ExtFunction s_builtinFunctions[] =
 	{ "trim", F_trim, 1 },
    { "typeof", F_typeof, 1 },
    { "upper", F_upper, 1 },
+   { "weierstrass", F_weierstrass, 3 },
    { "x2d", F_x2d, 1 },
    { "AddrInRange", F_AddrInRange, 3 },
    { "AddrInSubnet", F_AddrInSubnet, 3 },
