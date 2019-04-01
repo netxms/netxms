@@ -294,6 +294,7 @@ Node::~Node()
    delete m_wirelessStations;
    if (m_components != NULL)
       m_components->decRefCount();
+   MemFree(m_lldpNodeId);
    delete m_lldpLocalPortInfo;
    delete m_softwarePackages;
    delete m_winPerfObjects;
@@ -3454,7 +3455,7 @@ bool Node::confPollSnmp(UINT32 rqId)
          lockProperties();
          if ((m_lldpNodeId == NULL) || _tcscmp(m_lldpNodeId, szBuffer))
          {
-            free(m_lldpNodeId);
+            MemFree(m_lldpNodeId);
             m_lldpNodeId = _tcsdup(szBuffer);
             hasChanges = true;
             sendPollerMsg(rqId, _T("   LLDP node ID changed to %s\r\n"), m_lldpNodeId);
