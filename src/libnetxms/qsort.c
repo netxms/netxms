@@ -294,7 +294,7 @@ typedef struct { char * first; char * last; } stack_entry;
 
 /* ---------------------------------------------------------------------- */
 
-static char * pivot_big(char *first, char *mid, char *last, size_t size, void *context, int (*compare)(const void *, const void *, void *)) 
+static char * pivot_big(char *first, char *mid, char *last, size_t size, void *context, int (*compare)(void *, const void *, const void *))
 {
    size_t d = (((last - first) / size) >> 3)*size;
 #ifdef DEBUG_QSORT
@@ -335,7 +335,7 @@ static char * pivot_big(char *first, char *mid, char *last, size_t size, void *c
 
 /* ---------------------------------------------------------------------- */
 
-static void qsort_nonaligned(void *base, size_t nmemb, size_t size, void *context, int (*compare)(const void *, const void *, void *))
+static void qsort_nonaligned(void *base, size_t nmemb, size_t size, void *context, int (*compare)(void *, const void *, const void *))
 {
    stack_entry stack[STACK_SIZE];
    int stacktop = 0;
@@ -370,7 +370,7 @@ static void qsort_nonaligned(void *base, size_t nmemb, size_t size, void *contex
 #endif
 }
 
-static void qsort_aligned(void *base, size_t nmemb, size_t size, void *context, int (*compare)(const void *, const void *, void *))
+static void qsort_aligned(void *base, size_t nmemb, size_t size, void *context, int (*compare)(void *, const void *, const void *))
 {
    stack_entry stack[STACK_SIZE];
    int stacktop = 0;
