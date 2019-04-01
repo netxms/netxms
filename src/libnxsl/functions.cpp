@@ -155,20 +155,121 @@ int F_log10(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 /**
  * Calculates x raised to the power of e
  */
-int F_exp(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+int F_exp(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
-   int nRet;
+   if (!argv[0]->isNumeric())
+      return NXSL_ERR_NOT_NUMBER;
 
-   if (argv[0]->isNumeric())
-   {
-      *ppResult = vm->createValue(exp(argv[0]->getValueAsReal()));
-      nRet = 0;
-   }
-   else
-   {
-      nRet = NXSL_ERR_NOT_NUMBER;
-   }
-   return nRet;
+   *result = vm->createValue(exp(argv[0]->getValueAsReal()));
+   return 0;
+}
+
+/**
+ * Calculates sine x
+ */
+int F_sin(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   if (!argv[0]->isNumeric())
+      return NXSL_ERR_NOT_NUMBER;
+
+   *result = vm->createValue(sin(argv[0]->getValueAsReal()));
+   return 0;
+}
+
+/**
+ * Calculates cosine x
+ */
+int F_cos(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   if (!argv[0]->isNumeric())
+      return NXSL_ERR_NOT_NUMBER;
+
+   *result = vm->createValue(cos(argv[0]->getValueAsReal()));
+   return 0;
+}
+
+/**
+ * Calculates tangent x
+ */
+int F_tan(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   if (!argv[0]->isNumeric())
+      return NXSL_ERR_NOT_NUMBER;
+
+   *result = vm->createValue(tan(argv[0]->getValueAsReal()));
+   return 0;
+}
+
+/**
+ * Calculates hyperbolic sine x
+ */
+int F_sinh(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   if (!argv[0]->isNumeric())
+      return NXSL_ERR_NOT_NUMBER;
+
+   *result = vm->createValue(sinh(argv[0]->getValueAsReal()));
+   return 0;
+}
+
+/**
+ * Calculates hyperbolic cosine x
+ */
+int F_cosh(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   if (!argv[0]->isNumeric())
+      return NXSL_ERR_NOT_NUMBER;
+
+   *result = vm->createValue(cosh(argv[0]->getValueAsReal()));
+   return 0;
+}
+
+/**
+ * Calculates hyperbolic tangent x
+ */
+int F_tanh(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   if (!argv[0]->isNumeric())
+      return NXSL_ERR_NOT_NUMBER;
+
+   *result = vm->createValue(tanh(argv[0]->getValueAsReal()));
+   return 0;
+}
+
+/**
+ * Calculates arc sine x
+ */
+int F_asin(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   if (!argv[0]->isNumeric())
+      return NXSL_ERR_NOT_NUMBER;
+
+   *result = vm->createValue(asin(argv[0]->getValueAsReal()));
+   return 0;
+}
+
+/**
+ * Calculates arc cosine x
+ */
+int F_acos(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   if (!argv[0]->isNumeric())
+      return NXSL_ERR_NOT_NUMBER;
+
+   *result = vm->createValue(acos(argv[0]->getValueAsReal()));
+   return 0;
+}
+
+/**
+ * Calculates arc tangent x
+ */
+int F_atan(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   if (!argv[0]->isNumeric())
+      return NXSL_ERR_NOT_NUMBER;
+
+   *result = vm->createValue(atan(argv[0]->getValueAsReal()));
+   return 0;
 }
 
 /**
@@ -1648,7 +1749,7 @@ int F_weierstrass(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
    // if a = 0.9, pow(a, 100) is around 0.000027, so that term adds little to the total.
    // Because terms with larger values of n don't contribute much to the total, only
    // first 100 terms are used.
-   double y;
+   double y = 0;
    for(int n = 0; n < 100; n++)
    {
       double c = cos(pow(b, n) * 3.1415926535 * x);
