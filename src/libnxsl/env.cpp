@@ -27,10 +27,15 @@
  * Externals
  */
 int F_abs(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
+int F_acos(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_asin(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_assert(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_atan(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_ceil(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_chr(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_classof(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
+int F_cos(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_cosh(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_d2x(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_exit(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_exp(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
@@ -61,11 +66,14 @@ int F_round(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_rtrim(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_sha1(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_sha256(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
+int F_sin(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_sinh(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_sleep(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_strftime(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_substr(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_sys(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
-int F_Table(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_tan(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_tanh(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_tcpConnector(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_time(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_TIME(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
@@ -86,6 +94,7 @@ int F_InetAddress(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 int F_ReadPersistentStorage(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_SecondsToUptime(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_SplitString(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_Table(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_WritePersistentStorage(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 
 int F_CopyFile(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
@@ -110,10 +119,15 @@ static NXSL_ExtFunction s_builtinFunctions[] =
    { _T("__new@TIME"), F_TIME, 0 },
    { _T("_exit"), F_exit, -1 },
    { _T("abs"), F_abs, 1 },
+   { _T("asin"), F_asin, 1 },
+   { _T("acos"), F_acos, 1 },
    { _T("assert"), F_assert, 1 },
+   { _T("atan"), F_atan, 1 },
    { _T("ceil"), F_ceil, 1 },
    { _T("chr"), F_chr, 1 },
    { _T("classof"), F_classof, 1 },
+   { _T("cos"), F_cos, 1 },
+   { _T("cosh"), F_cosh, 1 },
    { _T("d2x"), F_d2x, -1 },
    { _T("exp"), F_exp, 1 },
    { _T("gethostbyaddr"), F_gethostbyaddr, 1 },
@@ -140,14 +154,18 @@ static NXSL_ExtFunction s_builtinFunctions[] =
    { _T("right"), F_right, -1 },
    { _T("rindex"), F_rindex, -1 },
    { _T("round"), F_round, -1 },
-	{ _T("rtrim"), F_rtrim, 1 },
-	{ _T("sha1"), F_sha1, 1 },
-	{ _T("sha256"), F_sha256, 1 },
-	{ _T("sleep"), F_sleep, 1 },
-	{ _T("strftime"), F_strftime, -1 },
-	{ _T("substr"), F_substr, -1 },
-	{ _T("sys"), F_sys, 1 },
-	{ _T("time"), F_time, 0 },
+   { _T("rtrim"), F_rtrim, 1 },
+   { _T("sha1"), F_sha1, 1 },
+   { _T("sha256"), F_sha256, 1 },
+   { _T("sin"), F_sin, 1 },
+   { _T("sinh"), F_sinh, 1 },
+   { _T("sleep"), F_sleep, 1 },
+   { _T("strftime"), F_strftime, -1 },
+   { _T("substr"), F_substr, -1 },
+   { _T("sys"), F_sys, 1 },
+   { _T("tan"), F_tan, 1 },
+   { _T("tanh"), F_tanh, 1 },
+   { _T("time"), F_time, 0 },
    { _T("trace"), F_trace, 2 },
    { _T("trim"), F_trim, 1 },
    { _T("typeof"), F_typeof, 1 },
