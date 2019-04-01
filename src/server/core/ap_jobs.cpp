@@ -100,10 +100,6 @@ PolicyInstallJob::PolicyInstallJob(const TCHAR *params, UINT32 nodeId, UINT32 us
 	   _tcscpy(name,policy->getName());
 	   delete policy;
 	}
-	else
-	{
-
-	}
 
    m_retryCount = (paramList.size() >= 2) ? _tcstol(paramList.get(2), NULL, 0) : 0;
 
@@ -169,6 +165,7 @@ ServerJobResult PolicyInstallJob::run()
    {
       setFailureMessage(_T("Agent connection not available"));
    }
+   delete policy;
 
    if ((result == JOB_RESULT_FAILED) && (m_retryCount-- > 0))
    {
