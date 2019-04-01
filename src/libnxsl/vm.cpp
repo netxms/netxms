@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -127,6 +127,21 @@ static int SelectResultType(int nType1, int nType2, int nOp)
 }
 
 /**
+ * Security context destructor
+ */
+NXSL_SecurityContext::~NXSL_SecurityContext()
+{
+}
+
+/**
+ * Validate access with security context
+ */
+bool NXSL_SecurityContext::validateAccess(int accessType, const void *object)
+{
+   return true;
+}
+
+/**
  * Constructor
  */
 NXSL_VM::NXSL_VM(NXSL_Environment *env, NXSL_Storage *storage) : NXSL_ValueManager()
@@ -145,6 +160,7 @@ NXSL_VM::NXSL_VM(NXSL_Environment *env, NXSL_Storage *storage) : NXSL_ValueManag
    m_expressionVariables = NULL;
    m_exportedExpressionVariables = NULL;
    m_context = NULL;
+   m_securityContext = NULL;
    m_functions = NULL;
    m_modules = new ObjectArray<NXSL_Module>(4, 4, true);
    m_dwSubLevel = 0;    // Level of current subroutine
@@ -180,6 +196,7 @@ NXSL_VM::~NXSL_VM()
    delete m_localVariables;
    delete m_expressionVariables;
    destroyValue(m_context);
+   delete m_securityContext;
 
    delete m_localStorage;
 
@@ -2573,4 +2590,13 @@ void NXSL_VM::setContextObject(NXSL_Value *value)
       m_context = NULL;
       destroyValue(value);
    }
+}
+
+/**
+ * Set security context
+ */
+void NXSL_VM::setSecurityContext(NXSL_SecurityContext *context)
+{
+   delete m_securityContext;
+   m_securityContext = context;
 }

@@ -640,6 +640,18 @@ struct NXSL_ModuleImport
    int lineNumber;   // line number in source code where module was referenced
 };
 
+/**
+ * NXSL security context
+ */
+class LIBNXSL_EXPORTABLE NXSL_SecurityContext
+{
+public:
+   NXSL_SecurityContext() { }
+   virtual ~NXSL_SecurityContext();
+
+   virtual bool validateAccess(int accessType, const void *object);
+};
+
 class NXSL_Library;
 
 /**
@@ -1038,6 +1050,8 @@ protected:
    ObjectArray<NXSL_Function> *m_functions;
    ObjectArray<NXSL_Module> *m_modules;
 
+   NXSL_SecurityContext *m_securityContext;
+
    NXSL_Value *m_pRetValue;
    int m_errorCode;
    int m_errorLine;
@@ -1101,6 +1115,9 @@ public:
    int getErrorLine() { return m_errorLine; }
    const TCHAR *getErrorText() { return CHECK_NULL_EX(m_errorText); }
    NXSL_Value *getResult() { return m_pRetValue; }
+
+   void setSecurityContext(NXSL_SecurityContext *context);
+   bool validateAccess(int accessType, const void *object) { return (m_securityContext != NULL) ? m_securityContext->validateAccess(accessType, object) : false; }
 
 	void *getUserData() { return m_userData; }
 	void setUserData(void *data) { m_userData = data; }
