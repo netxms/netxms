@@ -720,28 +720,29 @@ DataCollectionError DataCollectionTarget::getInternalItem(const TCHAR *param, si
 NXSL_VM *DataCollectionTarget::runDataCollectionScript(const TCHAR *param, DataCollectionTarget *targetObject)
 {
    TCHAR name[256];
-   nx_strncpy(name, param, 256);
+   _tcslcpy(name, param, 256);
    Trim(name);
+
+   // Can be in form parameter(arg1, arg2, ... argN)
+   TCHAR *p = _tcschr(name, _T('('));
+   if (p != NULL)
+   {
+      if (name[_tcslen(name) - 1] != _T(')'))
+         return NULL;
+      name[_tcslen(name) - 1] = 0;
+      *p = 0;
+   }
 
    NXSL_VM *vm = CreateServerScriptVM(name, this);
    if (vm != NULL)
    {
       ObjectRefArray<NXSL_Value> args(16, 16);
-
-      // Can be in form parameter(arg1, arg2, ... argN)
-      TCHAR *p = _tcschr(name, _T('('));
-      if (p != NULL)
+      if ((p != NULL) && !ParseValueList(vm, &p, args))
       {
-         if (name[_tcslen(name) - 1] != _T(')'))
-            return NULL;
-         name[_tcslen(name) - 1] = 0;
-
-         if (!ParseValueList(vm, &p, args))
-         {
-            // argument parsing error
-            delete vm;
-            return NULL;
-         }
+         // argument parsing error
+         nxlog_debug(6, _T("DataCollectionTarget(%s)->runDataCollectionScript(%s): Argument parsing error"), m_name, param);
+         delete vm;
+         return NULL;
       }
 
       if (targetObject != NULL)
@@ -750,7 +751,7 @@ NXSL_VM *DataCollectionTarget::runDataCollectionScript(const TCHAR *param, DataC
       }
       if (!vm->run(args))
       {
-         DbgPrintf(6, _T("DataCollectionTarget(%s)->runDataCollectionScript(%s): Script execution error: %s"), m_name, param, vm->getErrorText());
+         nxlog_debug(6, _T("DataCollectionTarget(%s)->runDataCollectionScript(%s): Script execution error: %s"), m_name, param, vm->getErrorText());
          time_t now = time(NULL);
          time_t lastReport = static_cast<time_t>(m_scriptErrorReports->getInt64(param, 0));
          if (lastReport + ConfigReadInt(_T("DataCollection.ScriptErrorReportInterval"), 86400) < now)
@@ -760,6 +761,10 @@ NXSL_VM *DataCollectionTarget::runDataCollectionScript(const TCHAR *param, DataC
          }
          delete_and_null(vm);
       }
+   }
+   else
+   {
+      nxlog_debug(6, _T("DataCollectionTarget(%s)->runDataCollectionScript(%s): VM load error"), m_name, param);
    }
    nxlog_debug(7, _T("DataCollectionTarget(%s)->runDataCollectionScript(%s): %s"), m_name, param, (vm != NULL) ? _T("success") : _T("failure"));
    return vm;
