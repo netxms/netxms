@@ -930,11 +930,9 @@ int F_trim(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 	return 0;
 }
 
-
-//
-// Trim trailing whitespace characters from the string
-//
-
+/**
+ * Trim trailing whitespace characters from the string
+ */
 int F_rtrim(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
 	if (!argv[0]->isString())
@@ -950,11 +948,9 @@ int F_rtrim(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 	return 0;
 }
 
-
-//
-// Trim leading whitespace characters from the string
-//
-
+/**
+ * Trim leading whitespace characters from the string
+ */
 int F_ltrim(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
 	if (!argv[0]->isString())
@@ -1627,5 +1623,37 @@ int F_Base64Encode(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm
       MemFree(in);
    MemFree(out);
 
+   return 0;
+}
+
+/**
+ * Calculate Weierstrass function for given x, a, and b
+ */
+int F_weierstrass(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   if (!argv[0]->isNumeric() || !argv[1]->isNumeric() || !argv[2]->isNumeric())
+      return NXSL_ERR_NOT_NUMBER;
+
+   double a = argv[0]->getValueAsReal();
+   double b = argv[1]->getValueAsReal();
+   double x = argv[2]->getValueAsReal();
+
+   if (b < 7)
+      b = 7;
+
+   // Because 0 < a < 1, that value becomes smaller as n grows larger. For example,
+   // if a = 0.9, pow(a, 100) is around 0.000027, so that term adds little to the total.
+   // Because terms with larger values of n don't contribute much to the total, only
+   // first 100 terms are used.
+   double y;
+   for(int n = 0; n < 100; n++)
+   {
+      double c = cos(pow(b, n) * 3.1415926535 * x);
+      if ((c > 1) || (c < -1))
+         c = 0;
+      y += pow(a, n) * c;
+   }
+
+   *result = new NXSL_Value(y);
    return 0;
 }
