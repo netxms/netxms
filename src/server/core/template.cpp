@@ -72,7 +72,7 @@ Template::Template(ConfigEntry *config) : super(config), AutoBindTarget(this, co
          m_autoBindFlag = true;
       if(flags & AAF_AUTO_REMOVE)
          m_autoUnbindFlag = true;
-      flags &= !(AAF_AUTO_APPLY | AAF_AUTO_REMOVE);
+      m_flags &= !(AAF_AUTO_APPLY | AAF_AUTO_REMOVE);
    }
 
    m_policyList = new HashMap<uuid, GenericAgentPolicy>(true);
@@ -618,7 +618,8 @@ void Template::applyPolicyChanges()
          if(conn != NULL)
          {
             UINT32 rcc = conn->getPolicyInventory(&ap);
-            checkPolicyBind((Node *)object, ap, NULL, NULL);
+            if(rcc == RCC_SUCCESS)
+               checkPolicyBind((Node *)object, ap, NULL, NULL);
          }
       }
    }
@@ -665,7 +666,8 @@ void Template::applyPolicyChanges(DataCollectionTarget *object)
       if(conn != NULL)
       {
          UINT32 rcc = conn->getPolicyInventory(&ap);
-         checkPolicyBind((Node *)object, ap, NULL, NULL);
+         if(rcc == RCC_SUCCESS)
+            checkPolicyBind((Node *)object, ap, NULL, NULL);
       }
    }
    unlockChildList();
