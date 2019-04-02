@@ -646,7 +646,7 @@ void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, UINT32 zoneUIN, int 
    else if (g_flags & AF_SNMP_TRAP_DISCOVERY)  // unknown node, discovery enabled
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("ProcessTrap: trap not matched to node, adding new IP address %s for discovery"), srcAddr.toString(buffer));
-      CheckPotentialNode(srcAddr, zoneUIN);
+      CheckPotentialNode(srcAddr, zoneUIN, DA_SRC_SNMP_TRAP, 0);
    }
    else  // unknown node, discovery disabled
    {

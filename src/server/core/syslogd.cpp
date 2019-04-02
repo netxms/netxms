@@ -492,7 +492,7 @@ static void ProcessSyslogMessage(QueuedSyslogMessage *msg)
 	   if ((record.dwSourceObject == 0) && (g_flags & AF_SYSLOG_DISCOVERY))  // unknown node, discovery enabled
 	   {
 	      nxlog_debug_tag(DEBUG_TAG, 4, _T("ProcessSyslogMessage: source not matched to node, adding new IP address %s for discovery"), msg->sourceAddr.toString(ipAddr));
-	      CheckPotentialNode(msg->sourceAddr, msg->zoneUIN);
+	      CheckPotentialNode(msg->sourceAddr, msg->zoneUIN, DA_SRC_SYSLOG, 0);
 	   }
    }
 	else
