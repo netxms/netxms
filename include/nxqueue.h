@@ -31,6 +31,11 @@
 typedef bool (*QueueComparator)(const void *key, const void *object);
 
 /**
+ * Callback for queue element enumeration
+ */
+typedef EnumerationCallbackResult (*QueueEnumerationCallback)(const void *object, void *context);
+
+/**
  * Queue class
  */
 class LIBNETXMS_EXPORTABLE Queue
@@ -67,8 +72,12 @@ public:
    void clear();
 	void *find(const void *key, QueueComparator comparator);
 	bool remove(const void *key, QueueComparator comparator);
+	void forEach(QueueEnumerationCallback callback, void *context);
 };
 
+/**
+ * Object queue
+ */
 template<typename T> class ObjectQueue : public Queue
 {
 public:
@@ -78,8 +87,9 @@ public:
 
    T *get() { return (T*)Queue::get(); }
    T *getOrBlock(UINT32 timeout = INFINITE) { return (T*)Queue::getOrBlock(timeout); }
-   void *find(const void *key, bool (*comparator)(const void *key, const T *object)) { return Queue::find(key, (QueueComparator)comparator); }
-   bool remove(const void *key, bool (*comparator)(const void *key, const T *object)) { return Queue::remove(key, (QueueComparator)comparator); }
+   void *find(const void *key, bool (*comparator)(const void *, const T *)) { return Queue::find(key, (QueueComparator)comparator); }
+   bool remove(const void *key, bool (*comparator)(const void *, const T *)) { return Queue::remove(key, (QueueComparator)comparator); }
+   void forEach(EnumerationCallbackResult (*callback)(const T *, void *), void *context) { Queue::forEach((QueueEnumerationCallback)callback, context); }
 };
 
 #endif    /* _nxqueue_h_ */
