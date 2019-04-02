@@ -506,8 +506,20 @@ int F_SecondsToUptime(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_V
    arg -= h * 3600;
    n = (UINT32)(arg / 60);
    arg -= n * 60;
-   if (arg > 0)
+   if (arg >= 30)
+   {
        n++;
+       if (n == 60)
+       {
+          n = 0;
+          h++;
+          if (h == 24)
+          {
+             h = 0;
+             d++;
+          }
+       }
+   }
 
    TCHAR result[128];
    _sntprintf(result, 128, _T("%u days, %2u:%02u"), d, h, n);
