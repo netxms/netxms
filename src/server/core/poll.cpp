@@ -244,7 +244,7 @@ static bool PollerQueueElementComparator(const void *key, const DiscoveredAddres
 /**
  * Check potential new node from sysog, SNMP trap, or address range scan
  */
-void CheckPotentialNode(const InetAddress& ipAddr, UINT32 zoneUIN)
+void CheckPotentialNode(const InetAddress& ipAddr, UINT32 zoneUIN, DiscoveredAddressSourceType sourceType, UINT32 sourceNodeId)
 {
 	TCHAR buffer[64];
 	nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Checking address %s in zone %d"), ipAddr.toString(buffer), zoneUIN);
@@ -285,6 +285,8 @@ void CheckPotentialNode(const InetAddress& ipAddr, UINT32 zoneUIN)
          nodeInfo->zoneUIN = zoneUIN;
          nodeInfo->ignoreFilter = FALSE;
          memset(nodeInfo->bMacAddr, 0, MAC_ADDR_LENGTH);
+         nodeInfo->sourceType = sourceType;
+         nodeInfo->sourceNodeId = sourceNodeId;
          nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 5, _T("New node queued: %s/%d"), nodeInfo->ipAddr.toString(buffer), nodeInfo->ipAddr.getMaskBits());
          g_nodePollerQueue.put(nodeInfo);
       }
@@ -300,6 +302,8 @@ void CheckPotentialNode(const InetAddress& ipAddr, UINT32 zoneUIN)
       nodeInfo->zoneUIN = zoneUIN;
       nodeInfo->ignoreFilter = FALSE;
       memset(nodeInfo->bMacAddr, 0, MAC_ADDR_LENGTH);
+      nodeInfo->sourceType = sourceType;
+      nodeInfo->sourceNodeId = sourceNodeId;
       nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 5, _T("New node queued: %s/%d"), nodeInfo->ipAddr.toString(buffer), nodeInfo->ipAddr.getMaskBits());
       g_nodePollerQueue.put(nodeInfo);
    }
@@ -308,7 +312,8 @@ void CheckPotentialNode(const InetAddress& ipAddr, UINT32 zoneUIN)
 /**
  * Check potential new node from ARP cache or routing table
  */
-static void CheckPotentialNode(Node *node, const InetAddress& ipAddr, UINT32 ifIndex, const BYTE *macAddr = NULL)
+static void CheckPotentialNode(Node *node, const InetAddress& ipAddr, UINT32 ifIndex, const BYTE *macAddr,
+         DiscoveredAddressSourceType sourceType, UINT32 sourceNodeId)
 {
    TCHAR buffer[64];
    nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Checking potential node %s at %s:%d"), ipAddr.toString(buffer), node->getName(), ifIndex);
@@ -357,6 +362,8 @@ static void CheckPotentialNode(Node *node, const InetAddress& ipAddr, UINT32 ifI
                memset(pInfo->bMacAddr, 0, MAC_ADDR_LENGTH);
             else
                memcpy(pInfo->bMacAddr, macAddr, MAC_ADDR_LENGTH);
+            pInfo->sourceType = sourceType;
+            pInfo->sourceNodeId = sourceNodeId;
             nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 5, _T("New node queued: %s/%d"),
                       pInfo->ipAddr.toString(buffer), pInfo->ipAddr.getMaskBits());
             g_nodePollerQueue.put(pInfo);
@@ -390,7 +397,7 @@ static void CheckHostRoute(Node *node, ROUTE *route)
 	iface = node->findInterfaceByIndex(route->dwIfIndex);
 	if ((iface != NULL) && iface->getIpAddressList()->findSameSubnetAddress(route->dwDestAddr).isValidUnicast())
 	{
-		CheckPotentialNode(node, route->dwDestAddr, route->dwIfIndex);
+		CheckPotentialNode(node, route->dwDestAddr, route->dwIfIndex, NULL, DA_SRC_ROUTING_TABLE, node->getId());
 	}
 	else
 	{
@@ -431,7 +438,7 @@ static void DiscoveryPoller(void *arg)
       {
          const ArpEntry *e = pArpCache->get(i);
 			if (!e->macAddr.isBroadcast())	// Ignore broadcast addresses
-				CheckPotentialNode(node, e->ipAddr, e->ifIndex, e->macAddr.value());
+				CheckPotentialNode(node, e->ipAddr, e->ifIndex, e->macAddr.value(), DA_SRC_ARP_CACHE, node->getId());
       }
       pArpCache->decRefCount();
    }
@@ -444,7 +451,7 @@ static void DiscoveryPoller(void *arg)
 	{
 		for(int i = 0; i < rt->iNumEntries; i++)
 		{
-			CheckPotentialNode(node, rt->pRoutes[i].dwNextHop, rt->pRoutes[i].dwIfIndex);
+			CheckPotentialNode(node, rt->pRoutes[i].dwNextHop, rt->pRoutes[i].dwIfIndex, NULL, DA_SRC_ROUTING_TABLE, node->getId());
 			if ((rt->pRoutes[i].dwDestMask == 0xFFFFFFFF) && (rt->pRoutes[i].dwDestAddr != 0))
 				CheckHostRoute(node, &rt->pRoutes[i]);
 		}
@@ -465,7 +472,7 @@ static void DiscoveryPoller(void *arg)
 static void RangeScanCallback(const InetAddress& addr, UINT32 rtt, void *context)
 {
    nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 5, _T("Active discovery - node %s responded to ICMP ping"), (const TCHAR *)addr.toString());
-   CheckPotentialNode(addr, 0);
+   CheckPotentialNode(addr, 0, DA_SRC_ACTIVE_DISCOVERY, 0);
 }
 
 /**
@@ -544,7 +551,7 @@ static void CheckRange(const InetAddressListElement& range)
             {
                nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 5, _T("Active discovery - node %s responded to ICMP ping via proxy %s [%u]"),
                         list->get(i), proxy->getName(), proxy->getId());
-               CheckPotentialNode(InetAddress::parse(list->get(i)), range.getZoneUIN());
+               CheckPotentialNode(InetAddress::parse(list->get(i)), range.getZoneUIN(), DA_SRC_ACTIVE_DISCOVERY, proxy->getId());
             }
             delete list;
          }

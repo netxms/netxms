@@ -132,6 +132,27 @@ static void ScanCallback(const InetAddress& addr, UINT32 rtt, void *arg)
 }
 
 /**
+ * Callback for enumerating discovery queue
+ */
+static EnumerationCallbackResult ShowDiscoveryQueueElement(const DiscoveredAddress *address, void *context)
+{
+   static const TCHAR *sourceTypes[] = { _T("arp"), _T("route"), _T("agent reg"), _T("snmp trap"), _T("syslog"), _T("active") };
+   TCHAR ipAddrText[48], nodeInfo[256];
+   if (address->sourceNodeId != 0)
+   {
+      Node *node = static_cast<Node*>(FindObjectById(address->sourceNodeId, OBJECT_NODE));
+      _sntprintf(nodeInfo, 256, _T("%s [%u]"), (node != NULL) ? node->getName() : _T("<unknown>"), address->sourceNodeId);
+   }
+   else
+   {
+      nodeInfo[0] = 0;
+   }
+   ConsolePrintf(static_cast<CONSOLE_CTX>(context), _T("%-40s %-10s %s\n"),
+            address->ipAddr.toString(ipAddrText), sourceTypes[address->sourceType], nodeInfo);
+   return _CONTINUE;
+}
+
+/**
  * Process command entered from command line in standalone mode
  * Return TRUE if command was _T("down")
  */
@@ -624,6 +645,18 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
          ConsolePrintf(pCtx, _T("   DCI data ....... ") INT64_FMT _T("\n"), g_idataWriteRequests);
          ConsolePrintf(pCtx, _T("   DCI raw data ... ") INT64_FMT _T("\n"), g_rawDataWriteRequests);
          ConsolePrintf(pCtx, _T("   Others ......... ") INT64_FMT _T("\n"), g_otherWriteRequests);
+      }
+      else if (IsCommand(_T("DISCOVERY"), szBuffer, 2))
+      {
+         ExtractWord(pArg, szBuffer);
+         if (IsCommand(_T("QUEUE"), szBuffer, 1))
+         {
+            g_nodePollerQueue.forEach(ShowDiscoveryQueueElement, pCtx);
+         }
+         else
+         {
+            ConsoleWrite(pCtx, _T("Invalid subcommand\n"));
+         }
       }
       else if (IsCommand(_T("FDB"), szBuffer, 3))
       {
@@ -1358,6 +1391,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
             _T("   show components <node>            - Show physical components of given node\n")
             _T("   show dbcp                         - Show active sessions in database connection pool\n")
             _T("   show dbstats                      - Show DB library statistics\n")
+            _T("   show discovery queue              - Show content of network discovery queue\n")
             _T("   show fdb <node>                   - Show forwarding database for node\n")
             _T("   show flags                        - Show internal server flags\n")
             _T("   show heap details                 - Show detailed heap information\n")

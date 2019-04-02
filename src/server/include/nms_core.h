@@ -230,6 +230,19 @@ enum CertificateOperation
 #include "nms_alarm.h"
 
 /**
+ * Source type for discovered address
+ */
+enum DiscoveredAddressSourceType
+{
+   DA_SRC_ARP_CACHE = 0,
+   DA_SRC_ROUTING_TABLE = 1,
+   DA_SRC_AGENT_REGISTRATION = 2,
+   DA_SRC_SNMP_TRAP = 3,
+   DA_SRC_SYSLOG = 4,
+   DA_SRC_ACTIVE_DISCOVERY = 5
+};
+
+/**
  * Discovered address information
  */
 struct DiscoveredAddress
@@ -238,6 +251,8 @@ struct DiscoveredAddress
 	UINT32 zoneUIN;
 	bool ignoreFilter;
 	BYTE bMacAddr[MAC_ADDR_LENGTH];
+	DiscoveredAddressSourceType sourceType;
+   UINT32 sourceNodeId;
 };
 
 /**
@@ -1007,7 +1022,8 @@ void PerfDataStorageRequest(DCTable *dci, time_t timestamp, Table *value);
 void DecodeSQLStringAndSetVariable(NXCPMessage *pMsg, UINT32 dwVarId, TCHAR *pszStr);
 
 bool SnmpTestRequest(SNMP_Transport *snmp, StringList *testOids);
-SNMP_Transport *SnmpCheckCommSettings(UINT32 snmpProxy, const InetAddress& ipAddr, INT16 *version, UINT16 originalPort, SNMP_SecurityContext *originalContext, StringList *customTestOids);
+SNMP_Transport *SnmpCheckCommSettings(UINT32 snmpProxy, const InetAddress& ipAddr, INT16 *version,
+         UINT16 originalPort, SNMP_SecurityContext *originalContext, StringList *customTestOids);
 
 void InitLocalNetInfo();
 
@@ -1024,7 +1040,7 @@ void AddDriverSpecificOids(StringList *list);
 bool LookupDevicePortLayout(const SNMP_ObjectId& objectId, NDD_MODULE_LAYOUT *layout);
 
 void CheckForMgmtNode();
-void CheckPotentialNode(const InetAddress& ipAddr, UINT32 zoneUIN);
+void CheckPotentialNode(const InetAddress& ipAddr, UINT32 zoneUIN, DiscoveredAddressSourceType sourceType, UINT32 sourceNodeId);
 Node NXCORE_EXPORTABLE *PollNewNode(NewNodeData *newNodeData);
 
 void NXCORE_EXPORTABLE EnumerateClientSessions(void (*pHandler)(ClientSession *, void *), void *pArg);

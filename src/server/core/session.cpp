@@ -10536,6 +10536,8 @@ void ClientSession::registerAgent(NXCPMessage *pRequest)
          info->ipAddr = m_clientAddr;
          info->zoneUIN = 0;	// Add to default zone
          info->ignoreFilter = TRUE;		// Ignore discovery filters and add node anyway
+         info->sourceType = DA_SRC_AGENT_REGISTRATION;
+         info->sourceNodeId = 0;
          g_nodePollerQueue.put(info);
       }
       msg.setField(VID_RCC, RCC_SUCCESS);
