@@ -167,7 +167,7 @@ public class InstanceDiscovery extends DCIPropertyPageDialog
 			public Control createControl(Composite parent, int style)
 			{
 				return new ScriptEditor(parent, style, SWT.H_SCROLL | SWT.V_SCROLL, false, 
-				      "Variables:\r\n\t$1\tInstance to test\r\n\r\nReturn value:\r\n\ttrue/false to accept or reject instance without additional changes or\r\n\tarray of two or three elements to modify instance:\r\n\t\t1st element - true/false to indicate acceptance;\r\n\t\t2nd element - new instance name;\r\n\t\t3rd element - new instance display name.");
+				      "Variables:\r\n\t$1\t\t\tInstance to test;\r\n\t$2\t\t\tInstance data (value for given OID for SNMP Walk - OIDs method, secondary value for Script method);\r\n\t$dci\t\tthis DCI object;\r\n\t$isCluster\ttrue if DCI is on cluster;\r\n\t$node\t\tcurrent node object (null if DCI is not on the node);\r\n\t$object\t\tcurrent object.\r\n\r\nReturn value:\r\n\ttrue/false to accept or reject instance without additional changes or\r\n\tarray of two or three elements to modify instance:\r\n\t\t1st element - true/false to indicate acceptance;\r\n\t\t2nd element - new instance name;\r\n\t\t3rd element - new instance display name.");
 			}
       };
       filterScript = (ScriptEditor)WidgetHelper.createLabeledControl(dialogArea, SWT.BORDER,
