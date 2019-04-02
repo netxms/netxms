@@ -12,6 +12,7 @@
 	NX-1577 (Rename server configuration parameter 'TopologyExpirationTime' to 'Topology.AdHocRequest.ExpirationTime')
 	NX-1580 (Updated FOUNDRY MIB // Updated CPQHOST MIB)
 	NX-1588 (Object load error can cause server crash)
+	NX-1590 (SecondsToUptime function: Incorrect display in some cases)
 
 
 *
