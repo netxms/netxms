@@ -244,6 +244,26 @@ bool Queue::remove(const void *key, QueueComparator comparator)
 }
 
 /**
+ * Enumerate queue elements
+ */
+void Queue::forEach(QueueEnumerationCallback callback, void *context)
+{
+   lock();
+   for(size_t i = 0, pos = m_first; i < m_numElements; i++)
+   {
+      if (m_elements[pos] != NULL)
+      {
+         if (callback(m_elements[pos], context) == _STOP)
+            break;
+      }
+      pos++;
+      if (pos == m_bufferSize)
+         pos = 0;
+   }
+   unlock();
+}
+
+/**
  * Shrink queue if possible
  */
 void Queue::shrink()
