@@ -34,7 +34,7 @@ class Config;
  */
 class LIBNETXMS_EXPORTABLE ConfigEntry
 {
-   DISABLE_COPY_CTOR(ConfigEntry);
+   DISABLE_COPY_CTOR(ConfigEntry)
 
 private:
 	TCHAR *m_name;
@@ -128,7 +128,7 @@ typedef ConfigEntry *(*ConfigMergeStrategy)(ConfigEntry *parent, const TCHAR *na
  */
 class LIBNETXMS_EXPORTABLE Config
 {
-   DISABLE_COPY_CTOR(Config);
+   DISABLE_COPY_CTOR(Config)
 
 private:
 	ConfigEntry *m_root;
