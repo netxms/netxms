@@ -124,17 +124,6 @@ public:
 };
 
 /**
- * NXSL "Sensor" class
- */
-class NXSL_SensorClass : public NXSL_DCTargetClass
-{
-public:
-   NXSL_SensorClass();
-
-   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr);
-};
-
-/**
  * NXSL "Event" class
  */
 class NXSL_EventClass : public NXSL_Class
