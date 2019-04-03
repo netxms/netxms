@@ -3021,7 +3021,8 @@ DuplicateCheckResult Node::checkForDuplicates(Node **duplicate)
 bool Node::isDuplicateOf(Node *node)
 {
    // Check if primary IP is on one of other node's interfaces
-   if (!(m_flags & NF_REMOTE_AGENT))
+   if (!(m_flags & NF_REMOTE_AGENT) && m_ipAddress.isValidUnicast() &&
+       !(node->getFlags() &  NF_REMOTE_AGENT) && node->getIpAddress().isValidUnicast())
    {
       Interface *iface = node->findInterfaceByIP(m_ipAddress);
       if (iface != NULL)
