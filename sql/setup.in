@@ -105,7 +105,7 @@ INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_rest
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('Housekeeper.Throttle.LowWatermark','50000','50000',1,0,'I','Low watermark for housekeeper throttling','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('IcmpPingSize','46','46',1,1,'I','Size of ICMP packets (in bytes, excluding IP header size) used for status polls.','size');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('IcmpPingTimeout','1500','1500',1,1,'I','Timeout for ICMP ping used for status polls (in milliseconds).','milliseconds');
-INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('ImportConfigurationOnStartup','1','1',1,1,'B','Import configuration from local files on server startup.','');
+INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('ImportConfigurationOnStartup','1','1',1,1,'C','Import configuration from local files on server startup.','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('InstancePollingInterval','600','600',1,1,'I','Instance polling interval (in seconds).','seconds');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('InstanceRetentionTime','0','0',1,1,'I','Default retention time (in days) for missing DCI instances','days');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('InternalCA','0','0',1,1,'B','Enable/disable internal certificate authority.','');
@@ -258,6 +258,9 @@ INSERT INTO config_values (var_name,var_value,var_description) VALUES ('DefaultE
 INSERT INTO config_values (var_name,var_value,var_description) VALUES ('DefaultEncryptionPolicy','1','Allowed');
 INSERT INTO config_values (var_name,var_value,var_description) VALUES ('DefaultEncryptionPolicy','2','Preferred');
 INSERT INTO config_values (var_name,var_value,var_description) VALUES ('DefaultEncryptionPolicy','3','Required');
+INSERT INTO config_values (var_name,var_value,var_description) VALUES ('ImportConfigurationOnStartup','0','Never');
+INSERT INTO config_values (var_name,var_value,var_description) VALUES ('ImportConfigurationOnStartup','1','Only missing elements');
+INSERT INTO config_values (var_name,var_value,var_description) VALUES ('ImportConfigurationOnStartup','2','Always');
 INSERT INTO config_values (var_name,var_value,var_description) VALUES ('StatusPropagationAlgorithm','0','Default');
 INSERT INTO config_values (var_name,var_value,var_description) VALUES ('StatusPropagationAlgorithm','1','Unchanged');
 INSERT INTO config_values (var_name,var_value,var_description) VALUES ('StatusPropagationAlgorithm','2','Fixed');

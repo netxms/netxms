@@ -1191,7 +1191,7 @@ void EventPolicy::exportRule(String& str, const uuid& guid) const
 /**
  * Import rule
  */
-void EventPolicy::importRule(EPRule *rule)
+void EventPolicy::importRule(EPRule *rule, bool overwrite)
 {
    writeLock();
 
@@ -1201,8 +1201,15 @@ void EventPolicy::importRule(EPRule *rule)
    {
       if (rule->getGuid().equals(m_rules.get(i)->getGuid()))
       {
-         rule->setId(i);
-         m_rules.set(i, rule);
+         if (overwrite)
+         {
+            rule->setId(i);
+            m_rules.set(i, rule);
+         }
+         else
+         {
+            delete rule;
+         }
          newRule = false;
          break;
       }

@@ -319,7 +319,7 @@ public:
    void sendToClient(ClientSession *pSession, UINT32 dwRqId) const;
    void replacePolicy(UINT32 dwNumRules, EPRule **ppRuleList);
    void exportRule(String& str, const uuid& guid) const;
-   void importRule(EPRule *rule);
+   void importRule(EPRule *rule, bool overwrite);
    void removeRuleCategory (UINT32 categoryId);
    json_t *toJson() const;
 

@@ -766,7 +766,7 @@ UINT32 FindActionByGUID(const uuid& guid)
 /**
  * Import action configuration
  */
-bool ImportAction(ConfigEntry *config)
+bool ImportAction(ConfigEntry *config, bool overwrite)
 {
    if (config->getSubEntryValue(_T("name")) == NULL)
    {
@@ -799,6 +799,12 @@ bool ImportAction(ConfigEntry *config)
    else
    {
       TCHAR guidText[64];
+      if (!overwrite)
+      {
+         nxlog_debug_tag(_T("import"), 4, _T("ImportAction: found existing action \"%s\" with GUID %s (skipping)"),
+                  action->name, action->guid.toString(guidText));
+         return true;
+      }
       nxlog_debug_tag(_T("import"), 4, _T("ImportAction: found existing action \"%s\" with GUID %s"), action->name, action->guid.toString(guidText));
       _tcslcpy(action->name, config->getSubEntryValue(_T("name")), MAX_OBJECT_NAME);
       m_dwUpdateCode = NX_NOTIFY_ACTION_MODIFIED;

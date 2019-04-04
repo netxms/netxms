@@ -26,6 +26,7 @@
 - nxget command line option to print table as delimited text
 - Drill down dashboard or network map for "Gauge" dashboard element
 - Added trigonometric functions (sin, cos, tan, asin, acos, atan, sinh, cosh, tanh) to NXSL
+- Improved configuration import
 - Fixed issues:
 	NX-1537 ("Hidden" flag for DCI)
 	NX-1574 (Add hasActiveThreshold attribute/method to DCI object accessible in NXSL)

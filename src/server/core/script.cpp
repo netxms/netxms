@@ -381,7 +381,7 @@ void CreateScriptExportRecord(String &xml, UINT32 id)
 /**
  * Import script
  */
-void ImportScript(ConfigEntry *config)
+void ImportScript(ConfigEntry *config, bool overwrite)
 {
    const TCHAR *name = config->getSubEntryValue(_T("name"));
    if (name == NULL)
@@ -418,7 +418,14 @@ void ImportScript(ConfigEntry *config)
          newScript = true;
       }
       else // Update existing script
+      {
+         if (!overwrite)
+         {
+            DBConnectionPoolReleaseConnection(hdb);
+            return;
+         }
          hStmt = DBPrepare(hdb, _T("UPDATE script_library SET script_name=?,script_code=? WHERE script_id=?"));
+      }
 
       if (hStmt != NULL)
       {

@@ -24,11 +24,27 @@
 #include <nxevent.h>
 
 /**
- * Upgrade from 22.47 to 30.0
+ * Upgrade from 22.48 to 30.0
+ */
+static bool H_UpgradeFromV48()
+{
+   CHK_EXEC(SetMajorSchemaVersion(30, 0));
+   return true;
+}
+
+/**
+ * Upgrade from 22.47 to 22.48
  */
 static bool H_UpgradeFromV47()
 {
-   CHK_EXEC(SetMajorSchemaVersion(30, 0));
+   static const TCHAR *batch =
+      _T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('ImportConfigurationOnStartup','0','Never')\n")
+      _T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('ImportConfigurationOnStartup','1','Only missing elements')\n")
+      _T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('ImportConfigurationOnStartup','2','Always')\n")
+      _T("UPDATE config SET data_type='C' WHERE var_name='ImportConfigurationOnStartup'\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(SetMinorSchemaVersion(48));
    return true;
 }
 
@@ -919,7 +935,8 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
-   { 47, 30, 0,  H_UpgradeFromV47 },
+   { 48, 30, 0,  H_UpgradeFromV48 },
+   { 47, 22, 48, H_UpgradeFromV47 },
    { 46, 22, 47, H_UpgradeFromV46 },
    { 45, 22, 46, H_UpgradeFromV45 },
    { 44, 22, 45, H_UpgradeFromV44 },

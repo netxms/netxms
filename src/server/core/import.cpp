@@ -22,6 +22,8 @@
 
 #include "nxcore.h"
 
+#define DEBUG_TAG _T("import")
+
 /**
  * Check if given event exist either in server configuration or in configuration being imported
  */
@@ -93,7 +95,7 @@ static bool ValidateDci(Config *config, ConfigEntry *dci, const TCHAR *templateN
  */
 static bool ValidateTemplate(Config *config, ConfigEntry *root, TCHAR *errorText, int errorTextLen)
 {
-	DbgPrintf(6, _T("ValidateConfig(): validating template \"%s\""), root->getSubEntryValue(_T("name"), 0, _T("<unnamed>")));
+	nxlog_debug_tag(DEBUG_TAG, 6, _T("ValidateConfig(): validating template \"%s\""), root->getSubEntryValue(_T("name"), 0, _T("<unnamed>")));
 
 	ConfigEntry *dcRoot = root->findEntry(_T("dataCollection"));
 	if (dcRoot == NULL)
@@ -140,7 +142,7 @@ bool ValidateConfig(Config *config, UINT32 flags, TCHAR *errorText, int errorTex
 	ConfigEntry *eventsRoot, *trapsRoot, *templatesRoot;
    bool success = false;
 
-	DbgPrintf(4, _T("ValidateConfig() called, flags = 0x%04X"), flags);
+	nxlog_debug_tag(DEBUG_TAG, 4, _T("ValidateConfig() called, flags = 0x%04X"), flags);
 
    // Validate events
 	eventsRoot = config->getEntry(_T("/events"));
@@ -150,44 +152,16 @@ bool ValidateConfig(Config *config, UINT32 flags, TCHAR *errorText, int errorTex
 		for(i = 0; i < events->size(); i++)
 		{
 			ConfigEntry *event = events->get(i);
-			DbgPrintf(6, _T("ValidateConfig(): validating event %s"), event->getSubEntryValue(_T("name"), 0, _T("<unnamed>")));
+			nxlog_debug_tag(DEBUG_TAG, 6, _T("ValidateConfig(): validating event %s"), event->getSubEntryValue(_T("name"), 0, _T("<unnamed>")));
 
 			UINT32 code = event->getSubEntryValueAsUInt(_T("code"));
 			if ((code >= FIRST_USER_EVENT_ID) || (code == 0))
 			{
 				ConfigEntry *e = event->findEntry(_T("name"));
-				if (e != NULL)
-				{
-				   EventObject *eventObject = FindEventObjectByName(e->getValue());
-					if (eventObject != NULL)
-					{
-					   eventObject->decRefCount();
-						if (!(flags & CFG_IMPORT_REPLACE_EVENT_BY_NAME))
-						{
-							_sntprintf(errorText, errorTextLen, _T("Event with name %s already exist"), e->getValue());
-							goto stop_processing;
-						}
-					}
-				}
-				else
+				if (e == NULL)
 				{
 					_sntprintf(errorText, errorTextLen, _T("Mandatory attribute \"name\" missing for entry %s"), event->getName());
 					goto stop_processing;
-				}
-			}
-			else
-			{
-			   EventObject *eventObject = FindEventObjectByCode(code);
-				if (eventObject != NULL)
-				{
-					if (!(flags & CFG_IMPORT_REPLACE_EVENT_BY_CODE))
-					{
-						_sntprintf(errorText, errorTextLen, _T("Event with code %d already exist (existing event name: %s; new event name: %s)"),
-						         eventObject->getCode(), eventObject->getName(), event->getSubEntryValue(_T("name"), 0, _T("<unnamed>")));
-						eventObject->decRefCount();
-						goto stop_processing;
-					}
-					eventObject->decRefCount();
 				}
 			}
 		}
@@ -201,7 +175,7 @@ bool ValidateConfig(Config *config, UINT32 flags, TCHAR *errorText, int errorTex
 		for(i = 0; i < traps->size(); i++)
 		{
 			ConfigEntry *trap = traps->get(i);
-			DbgPrintf(6, _T("ValidateConfig(): validating trap \"%s\""), trap->getSubEntryValue(_T("description"), 0, _T("<unnamed>")));
+			nxlog_debug_tag(DEBUG_TAG, 6, _T("ValidateConfig(): validating trap \"%s\""), trap->getSubEntryValue(_T("description"), 0, _T("<unnamed>")));
 			if (!IsEventExist(trap->getSubEntryValue(_T("event")), config))
 			{
 				_sntprintf(errorText, errorTextLen, _T("Trap \"%s\" references unknown event"), trap->getSubEntryValue(_T("description"), 0, _T("")));
@@ -229,16 +203,16 @@ stop_processing:
 	delete traps;
 	delete templates;
 
-	DbgPrintf(4, _T("ValidateConfig() finished, status = %d"), success);
+	nxlog_debug_tag(DEBUG_TAG, 4, _T("ValidateConfig() finished, status = %d"), success);
 	if (!success)
-		DbgPrintf(4, _T("ValidateConfig(): %s"), errorText);
+		nxlog_debug_tag(DEBUG_TAG, 4, _T("ValidateConfig(): %s"), errorText);
    return success;
 }
 
 /**
  * Import event
  */
-static UINT32 ImportEvent(ConfigEntry *event)
+static UINT32 ImportEvent(ConfigEntry *event, bool overwrite)
 {
 	const TCHAR *name = event->getSubEntryValue(_T("name"));
 	if (name == NULL)
@@ -266,11 +240,11 @@ static UINT32 ImportEvent(ConfigEntry *event)
 	   DBFreeStatement(hStmt);
 	   if (code != 0)
 	   {
-         nxlog_debug(4, _T("ImportEvent: found existing event with GUID %s (code=%d)"), (const TCHAR *)guid.toString(), code);
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("ImportEvent: found existing event with GUID %s (code=%d)"), (const TCHAR *)guid.toString(), code);
 	   }
 	   else
 	   {
-         nxlog_debug(4, _T("ImportEvent: event with GUID %s not found"), (const TCHAR *)guid.toString());
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("ImportEvent: event with GUID %s not found"), (const TCHAR *)guid.toString());
 	   }
 	}
 	else
@@ -279,11 +253,11 @@ static UINT32 ImportEvent(ConfigEntry *event)
 	   if (code >= FIRST_USER_EVENT_ID)
 	   {
 	      code = 0;
-         nxlog_debug(4, _T("ImportEvent: event without GUID and code not in system range"));
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("ImportEvent: event without GUID and code not in system range"));
 	   }
 	   else
 	   {
-         nxlog_debug(4, _T("ImportEvent: using provided event code %d"), code);
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("ImportEvent: using provided event code %d"), code);
 	   }
 	}
 
@@ -293,19 +267,33 @@ static UINT32 ImportEvent(ConfigEntry *event)
 	TCHAR query[8192];
    if ((code != 0) && IsDatabaseRecordExist(hdb, _T("event_cfg"), _T("event_code"), code))
    {
-      nxlog_debug(4, _T("ImportEvent: found existing event with code %d"), code);
-      _sntprintf(query, 8192, _T("UPDATE event_cfg SET event_name=%s,severity=%d,flags=%d,message=%s,description=%s WHERE event_code=%d"),
-                 (const TCHAR *)DBPrepareString(hdb, name), event->getSubEntryValueAsInt(_T("severity")),
-					  event->getSubEntryValueAsInt(_T("flags")), (const TCHAR *)DBPrepareString(hdb, msg),
-					  (const TCHAR *)DBPrepareString(hdb, descr), code);
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("ImportEvent: found existing event with code %d (%s)"), code, overwrite ? _T("updating") : _T("skipping"));
+      if (overwrite)
+      {
+         _sntprintf(query, 8192, _T("UPDATE event_cfg SET event_name=%s,severity=%d,flags=%d,message=%s,description=%s WHERE event_code=%d"),
+                    (const TCHAR *)DBPrepareString(hdb, name), event->getSubEntryValueAsInt(_T("severity")),
+                    event->getSubEntryValueAsInt(_T("flags")), (const TCHAR *)DBPrepareString(hdb, msg),
+                    (const TCHAR *)DBPrepareString(hdb, descr), code);
+      }
+      else
+      {
+         query[0] = 0;
+      }
    }
    else if (IsDatabaseRecordExist(hdb, _T("event_cfg"), _T("event_name"), name))
    {
-      nxlog_debug(4, _T("ImportEvent: found existing event with name %s"), name);
-      _sntprintf(query, 8192, _T("UPDATE event_cfg SET severity=%d,flags=%d,message=%s,description=%s WHERE event_name=%s"),
-                 event->getSubEntryValueAsInt(_T("severity")),
-                 event->getSubEntryValueAsInt(_T("flags")), (const TCHAR *)DBPrepareString(hdb, msg),
-                 (const TCHAR *)DBPrepareString(hdb, descr), (const TCHAR *)DBPrepareString(hdb, name));
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("ImportEvent: found existing event with name %s (%s)"), name, overwrite ? _T("updating") : _T("skipping"));
+      if (overwrite)
+      {
+         _sntprintf(query, 8192, _T("UPDATE event_cfg SET severity=%d,flags=%d,message=%s,description=%s WHERE event_name=%s"),
+                    event->getSubEntryValueAsInt(_T("severity")),
+                    event->getSubEntryValueAsInt(_T("flags")), (const TCHAR *)DBPrepareString(hdb, msg),
+                    (const TCHAR *)DBPrepareString(hdb, descr), (const TCHAR *)DBPrepareString(hdb, name));
+      }
+      else
+      {
+         query[0] = 0;
+      }
    }
    else
    {
@@ -318,9 +306,9 @@ static UINT32 ImportEvent(ConfigEntry *event)
                  code, (const TCHAR *)DBPrepareString(hdb, name), event->getSubEntryValueAsInt(_T("severity")),
 					  event->getSubEntryValueAsInt(_T("flags")), (const TCHAR *)DBPrepareString(hdb, msg),
 					  (const TCHAR *)DBPrepareString(hdb, descr), (const TCHAR *)guid.toString());
-      nxlog_debug(4, _T("ImportEvent: added new event: code=%d, name=%s, guid=%s"), code, name, (const TCHAR *)guid.toString());
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("ImportEvent: added new event: code=%d, name=%s, guid=%s"), code, name, (const TCHAR *)guid.toString());
    }
-	UINT32 rcc = DBQuery(hdb, query) ? RCC_SUCCESS : RCC_DB_FAILURE;
+	UINT32 rcc = (query[0] != 0) ? (DBQuery(hdb, query) ? RCC_SUCCESS : RCC_DB_FAILURE) : RCC_SUCCESS;
 
 	DBConnectionPoolReleaseConnection(hdb);
 	return rcc;
@@ -329,7 +317,7 @@ static UINT32 ImportEvent(ConfigEntry *event)
 /**
  * Import SNMP trap configuration
  */
-static UINT32 ImportTrap(ConfigEntry *trap) // TODO transactions needed?
+static UINT32 ImportTrap(ConfigEntry *trap, bool overwrite) // TODO transactions needed?
 {
    UINT32 rcc = RCC_INTERNAL_ERROR;
 	EventTemplate *eventTemplate = FindEventTemplateByName(trap->getSubEntryValue(_T("event"), 0, _T("")));
@@ -340,9 +328,15 @@ static UINT32 ImportTrap(ConfigEntry *trap) // TODO transactions needed?
    if (guid.isNull())
    {
       guid = uuid::generate();
-      nxlog_debug(4, _T("ImportTrap: GUID not found in config, generated GUID %s"), (const TCHAR *)guid.toString());
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("ImportTrap: GUID not found in config, generated GUID %s"), (const TCHAR *)guid.toString());
    }
    UINT32 id = ResolveTrapGuid(guid);
+   if ((id != 0) && !overwrite)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("ImportTrap: skipping existing entry with GUID %s"), (const TCHAR *)guid.toString());
+      return RCC_SUCCESS;
+   }
+
 	SNMPTrapConfiguration *trapCfg = new SNMPTrapConfiguration(trap, guid, id, eventTemplate->getCode());
 	eventTemplate->decRefCount();
 
@@ -441,17 +435,17 @@ UINT32 ImportConfig(Config *config, UINT32 flags)
 	UINT32 rcc = RCC_SUCCESS;
 	int i;
 
-   DbgPrintf(4, _T("ImportConfig() called, flags=0x%04X"), flags);
+   nxlog_debug_tag(DEBUG_TAG, 4, _T("ImportConfig() called, flags=0x%04X"), flags);
 
    // Import events
 	eventsRoot = config->getEntry(_T("/events"));
 	if (eventsRoot != NULL)
 	{
 		events = eventsRoot->getSubEntries(_T("event#*"));
-		DbgPrintf(5, _T("ImportConfig(): %d events to import"), events->size());
+		nxlog_debug_tag(DEBUG_TAG, 5, _T("ImportConfig(): %d events to import"), events->size());
 		for(i = 0; i < events->size(); i++)
 		{
-			rcc = ImportEvent(events->get(i));
+			rcc = ImportEvent(events->get(i), (flags & CFG_IMPORT_REPLACE_EVENTS) != 0);
 			if (rcc != RCC_SUCCESS)
 				goto stop_processing;
 		}
@@ -461,7 +455,7 @@ UINT32 ImportConfig(Config *config, UINT32 flags)
 			ReloadEvents();
 			NotifyClientSessions(NX_NOTIFY_RELOAD_EVENT_DB, 0);
 		}
-		DbgPrintf(5, _T("ImportConfig(): events imported"));
+		nxlog_debug_tag(DEBUG_TAG, 5, _T("ImportConfig(): events imported"));
 	}
 
 	// Import traps
@@ -469,14 +463,14 @@ UINT32 ImportConfig(Config *config, UINT32 flags)
 	if (trapsRoot != NULL)
 	{
 		traps = trapsRoot->getSubEntries(_T("trap#*"));
-		DbgPrintf(5, _T("ImportConfig(): %d SNMP traps to import"), traps->size());
+		nxlog_debug_tag(DEBUG_TAG, 5, _T("ImportConfig(): %d SNMP traps to import"), traps->size());
 		for(i = 0; i < traps->size(); i++)
 		{
-			rcc = ImportTrap(traps->get(i));
+			rcc = ImportTrap(traps->get(i), (flags & CFG_IMPORT_REPLACE_TRAPS) != 0);
 			if (rcc != RCC_SUCCESS)
 				goto stop_processing;
 		}
-		DbgPrintf(5, _T("ImportConfig(): SNMP traps imported"));
+		nxlog_debug_tag(DEBUG_TAG, 5, _T("ImportConfig(): SNMP traps imported"));
 	}
 
 	// Import templates
@@ -491,12 +485,19 @@ UINT32 ImportConfig(Config *config, UINT32 flags)
 		   Template *object = (Template *)FindObjectByGUID(guid, OBJECT_TEMPLATE);
 		   if (object != NULL)
 		   {
-		      DbgPrintf(5, _T("ImportConfig(): found existing template %s [%d] with GUID %s"), object->getName(), object->getId(), (const TCHAR *)guid.toString());
-		      object->updateFromImport(tc);
+		      if (flags & CFG_IMPORT_REPLACE_TEMPLATES)
+		      {
+	            nxlog_debug_tag(DEBUG_TAG, 5, _T("ImportConfig(): updating existing template %s [%d] with GUID %s"), object->getName(), object->getId(), (const TCHAR *)guid.toString());
+		         object->updateFromImport(tc);
+		      }
+		      else
+		      {
+	            nxlog_debug_tag(DEBUG_TAG, 5, _T("ImportConfig(): existing template %s [%d] with GUID %s skipped"), object->getName(), object->getId(), (const TCHAR *)guid.toString());
+		      }
 		   }
 		   else
 		   {
-            DbgPrintf(5, _T("ImportConfig(): template with GUID %s not found"), (const TCHAR *)guid.toString());
+            nxlog_debug_tag(DEBUG_TAG, 5, _T("ImportConfig(): template with GUID %s not found"), (const TCHAR *)guid.toString());
             NetObj *parent = FindTemplateRoot(tc);
             object = new Template(tc);
             NetObjInsert(object, true, true);
@@ -505,7 +506,7 @@ UINT32 ImportConfig(Config *config, UINT32 flags)
             object->unhide();
 		   }
 		}
-		DbgPrintf(5, _T("ImportConfig(): templates imported"));
+		nxlog_debug_tag(DEBUG_TAG, 5, _T("ImportConfig(): templates imported"));
 	}
 
    // Import actions
@@ -515,9 +516,9 @@ UINT32 ImportConfig(Config *config, UINT32 flags)
       actions = actionsRoot->getSubEntries(_T("action#*"));
       for(i = 0; i < actions->size(); i++)
       {
-         ImportAction(actions->get(i));
+         ImportAction(actions->get(i), (flags & CFG_IMPORT_REPLACE_ACTIONS) != 0);
       }
-      DbgPrintf(5, _T("ImportConfig(): Actions imported"));
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("ImportConfig(): Actions imported"));
    }
 
 	// Import rules
@@ -530,16 +531,16 @@ UINT32 ImportConfig(Config *config, UINT32 flags)
          for(i = 0; i < rules->size(); i++)
          {
             EPRule *rule = new EPRule(rules->get(i));
-            g_pEventPolicy->importRule(rule);
+            g_pEventPolicy->importRule(rule, (flags & CFG_IMPORT_REPLACE_EPP_RULES) != 0);
          }
-         if(!g_pEventPolicy->saveToDB())
+         if (!g_pEventPolicy->saveToDB())
          {
-            DbgPrintf(5, _T("ImportConfig(): unable to import event processing policy rules"));
+            nxlog_debug_tag(DEBUG_TAG, 5, _T("ImportConfig(): unable to import event processing policy rules"));
             rcc = RCC_DB_FAILURE;
             goto stop_processing;
          }
 		}
-		DbgPrintf(5, _T("ImportConfig(): event processing policy rules imported"));
+		nxlog_debug_tag(DEBUG_TAG, 5, _T("ImportConfig(): event processing policy rules imported"));
 	}
 
 	// Import scripts
@@ -549,9 +550,9 @@ UINT32 ImportConfig(Config *config, UINT32 flags)
 		scripts = scriptsRoot->getSubEntries(_T("script#*"));
 		for(i = 0; i < scripts->size(); i++)
 		{
-         ImportScript(scripts->get(i));
+         ImportScript(scripts->get(i), (flags & CFG_IMPORT_REPLACE_SCRIPTS) != 0);
 		}
-		DbgPrintf(5, _T("ImportConfig(): scripts imported"));
+		nxlog_debug_tag(DEBUG_TAG, 5, _T("ImportConfig(): scripts imported"));
 	}
 
 	// Import object tools
@@ -561,9 +562,9 @@ UINT32 ImportConfig(Config *config, UINT32 flags)
 		objectTools = objectToolsRoot->getSubEntries(_T("objectTool#*"));
 		for(i = 0; i < objectTools->size(); i++)
 		{
-         ImportObjectTool(objectTools->get(i));
+         ImportObjectTool(objectTools->get(i), (flags & CFG_IMPORT_REPLACE_OBJECT_TOOLS) != 0);
 		}
-		DbgPrintf(5, _T("ImportConfig(): object tools imported"));
+		nxlog_debug_tag(DEBUG_TAG, 5, _T("ImportConfig(): object tools imported"));
 	}
 
 	// Import summary tables
@@ -573,9 +574,9 @@ UINT32 ImportConfig(Config *config, UINT32 flags)
 		summaryTables = summaryTablesRoot->getSubEntries(_T("table#*"));
 		for(i = 0; i < summaryTables->size(); i++)
 		{
-         ImportSummaryTable(summaryTables->get(i));
+         ImportSummaryTable(summaryTables->get(i), (flags & CFG_IMPORT_REPLACE_SUMMARY_TABLES) != 0);
 		}
-		DbgPrintf(5, _T("ImportConfig(): DCI summary tables imported"));
+		nxlog_debug_tag(DEBUG_TAG, 5, _T("ImportConfig(): DCI summary tables imported"));
 	}
 
 stop_processing:
@@ -588,21 +589,21 @@ stop_processing:
    delete summaryTables;
    delete actions;
 
-	DbgPrintf(4, _T("ImportConfig() finished, rcc = %d"), rcc);
+	nxlog_debug_tag(DEBUG_TAG, 4, _T("ImportConfig() finished, rcc = %d"), rcc);
 	return rcc;
 }
 
 /**
  * Import local configuration (configuration files stored on server)
  */
-void ImportLocalConfiguration()
+void ImportLocalConfiguration(bool overwrite)
 {
    TCHAR path[MAX_PATH];
    GetNetXMSDirectory(nxDirShare, path);
    _tcscat(path, SDIR_TEMPLATES);
 
    int count = 0;
-   DbgPrintf(1, _T("Import configuration files from %s"), path);
+   nxlog_debug_tag(DEBUG_TAG, 1, _T("Import configuration files from %s"), path);
    _TDIR *dir = _topendir(path);
    if (dir != NULL)
    {
@@ -618,16 +619,16 @@ void ImportLocalConfiguration()
             Config *config = new Config(false);
             if (config->loadXmlConfig(path, "configuration"))
             {
-               ImportConfig(config, CFG_IMPORT_REPLACE_EVENT_BY_CODE | CFG_IMPORT_REPLACE_EVENT_BY_NAME);
+               ImportConfig(config, overwrite ? CFG_IMPORT_REPLACE_EVERYTHING : 0);
             }
             else
             {
-               DbgPrintf(1, _T("Error loading configuration from %s"), path);
+               nxlog_debug_tag(DEBUG_TAG, 1, _T("Error loading configuration from %s"), path);
             }
             delete config;
          }
       }
       _tclosedir(dir);
    }
-   DbgPrintf(1, _T("%d configuration files processed"), count);
+   nxlog_debug_tag(DEBUG_TAG, 1, _T("%d configuration files processed"), count);
 }

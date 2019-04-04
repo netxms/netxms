@@ -56,7 +56,7 @@ UINT32 DeleteAction(UINT32 dwActionId);
 UINT32 ModifyActionFromMessage(NXCPMessage *pMsg);
 void SendActionsToClient(ClientSession *pSession, UINT32 dwRqId);
 void CreateActionExportRecord(String &xml, UINT32 id);
-bool ImportAction(ConfigEntry *config);
+bool ImportAction(ConfigEntry *config, bool overwrite);
 bool IsValidActionId(UINT32 id);
 uuid GetActionGUID(UINT32 id);
 UINT32 FindActionByGUID(const uuid& guid);
