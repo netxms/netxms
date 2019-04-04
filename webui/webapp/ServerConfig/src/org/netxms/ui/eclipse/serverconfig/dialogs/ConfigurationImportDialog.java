@@ -44,8 +44,14 @@ public class ConfigurationImportDialog extends Dialog
 {
 	private Text textFileName;
 	private Button browseButton;
-	private Button overrideEventsByName;
-	private Button overrideEventsByCode;
+	private Button replaceEvents;
+	private Button replaceActions;
+   private Button replaceTemplates;
+   private Button replaceTraps;
+   private Button replaceScripts;
+   private Button replaceSummaryTables;
+   private Button replaceObjectTools;
+   private Button replaceRules;
 	
 	private String fileName;
 	private int flags;
@@ -107,11 +113,29 @@ public class ConfigurationImportDialog extends Dialog
       gd.grabExcessHorizontalSpace = true;
       options.setLayoutData(gd);
       
-      overrideEventsByName = new Button(options, SWT.CHECK);
-      overrideEventsByName.setText(Messages.get().ConfigurationImportDialog_ReplaceByName);
+      replaceActions = new Button(options, SWT.CHECK);
+      replaceActions.setText("Replace existing &actions");
       
-      overrideEventsByCode = new Button(options, SWT.CHECK);
-      overrideEventsByCode.setText(Messages.get().ConfigurationImportDialog_ReplaceByCode);
+      replaceSummaryTables = new Button(options, SWT.CHECK);
+      replaceSummaryTables.setText("Replace existing &DCI summary tables");
+      
+      replaceRules = new Button(options, SWT.CHECK);
+      replaceRules.setText("Replace existing EPP &rules");
+      
+      replaceEvents = new Button(options, SWT.CHECK);
+      replaceEvents.setText("Replace existing &events");
+      
+      replaceScripts = new Button(options, SWT.CHECK);
+      replaceScripts.setText("Replace existing library &scripts");
+      
+      replaceObjectTools = new Button(options, SWT.CHECK);
+      replaceObjectTools.setText("Replace existing &object tools");
+      
+      replaceTraps = new Button(options, SWT.CHECK);
+      replaceTraps.setText("Replace existing S&NMP traps");
+      
+      replaceTemplates = new Button(options, SWT.CHECK);
+      replaceTemplates.setText("Replace existing &templates");
       
       return dialogArea;
 	}
@@ -125,10 +149,22 @@ public class ConfigurationImportDialog extends Dialog
 		fileName = textFileName.getText();
 		
 		flags = 0;
-		if (overrideEventsByName.getSelection())
-			flags |= NXCSession.CFG_IMPORT_REPLACE_EVENT_BY_NAME;
-		if (overrideEventsByCode.getSelection())
-			flags |= NXCSession.CFG_IMPORT_REPLACE_EVENT_BY_CODE;
+		if (replaceActions.getSelection())
+			flags |= NXCSession.CFG_IMPORT_REPLACE_ACTIONS;
+      if (replaceEvents.getSelection())
+         flags |= NXCSession.CFG_IMPORT_REPLACE_EVENTS;
+      if (replaceObjectTools.getSelection())
+         flags |= NXCSession.CFG_IMPORT_REPLACE_OBJECT_TOOLS;
+      if (replaceRules.getSelection())
+         flags |= NXCSession.CFG_IMPORT_REPLACE_EPP_RULES;
+      if (replaceScripts.getSelection())
+         flags |= NXCSession.CFG_IMPORT_REPLACE_SCRIPTS;
+      if (replaceSummaryTables.getSelection())
+         flags |= NXCSession.CFG_IMPORT_REPLACE_SUMMARY_TABLES;
+      if (replaceTemplates.getSelection())
+         flags |= NXCSession.CFG_IMPORT_REPLACE_TEMPLATES;
+      if (replaceTraps.getSelection())
+         flags |= NXCSession.CFG_IMPORT_REPLACE_TRAPS;
 		
 		super.okPressed();
 	}

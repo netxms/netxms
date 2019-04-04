@@ -1090,7 +1090,7 @@ UINT32 DeleteObjectToolFromDB(UINT32 dwToolId);
 UINT32 ChangeObjectToolStatus(UINT32 toolId, bool enabled);
 UINT32 UpdateObjectToolFromMessage(NXCPMessage *pMsg);
 void CreateObjectToolExportRecord(String &xml, UINT32 id);
-bool ImportObjectTool(ConfigEntry *config);
+bool ImportObjectTool(ConfigEntry *config, bool overwrite);
 UINT32 GetObjectToolsIntoMessage(NXCPMessage *msg, UINT32 userId, bool fullAccess);
 UINT32 GetObjectToolDetailsIntoMessage(UINT32 toolId, NXCPMessage *msg);
 
@@ -1098,7 +1098,7 @@ UINT32 ModifySummaryTable(NXCPMessage *msg, LONG *newId);
 UINT32 DeleteSummaryTable(LONG tableId);
 Table *QuerySummaryTable(LONG tableId, SummaryTable *adHocDefinition, UINT32 baseObjectId, UINT32 userId, UINT32 *rcc);
 bool CreateSummaryTableExportRecord(INT32 id, String &xml);
-bool ImportSummaryTable(ConfigEntry *config);
+bool ImportSummaryTable(ConfigEntry *config, bool overwrite);
 
 void CreateMessageFromSyslogMsg(NXCPMessage *pMsg, NX_SYSLOG_RECORD *pRec);
 void ReinitializeSyslogParser();

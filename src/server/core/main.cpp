@@ -80,7 +80,7 @@ void InitUsers();
 void CleanupUsers();
 void LoadPerfDataStorageDrivers();
 void ShutdownPerfDataStorageDrivers();
-void ImportLocalConfiguration();
+void ImportLocalConfiguration(bool overwrite);
 void RegisterPredictionEngines();
 void ExecuteStartupScripts();
 void CloseAgentTunnels();
@@ -1022,8 +1022,9 @@ retry_db_lock:
 	InitMappingTables();
 
    InitClientListeners();
-	if (ConfigReadBoolean(_T("ImportConfigurationOnStartup"), false))
-	   ImportLocalConfiguration();
+   int importMode = ConfigReadInt(_T("ImportConfigurationOnStartup"), 1);
+	if (importMode > 0)
+	   ImportLocalConfiguration(importMode == 2);
 
 	// Check if management node object presented in database
 	CheckForMgmtNode();

@@ -260,7 +260,7 @@ void ReloadScript(UINT32 scriptId);
 bool IsValidScriptId(UINT32 id);
 UINT32 ResolveScriptName(const TCHAR *name);
 void CreateScriptExportRecord(String &xml, UINT32 id);
-void ImportScript(ConfigEntry *config);
+void ImportScript(ConfigEntry *config, bool overwrite);
 NXSL_VM *FindHookScript(const TCHAR *hookName);
 bool ParseValueList(TCHAR **start, ObjectArray<NXSL_Value> &args);
 

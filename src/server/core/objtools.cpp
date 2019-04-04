@@ -860,7 +860,7 @@ static bool ImportFailure(DB_HANDLE hdb, DB_STATEMENT hStmt)
 /**
  * Import object tool
  */
-bool ImportObjectTool(ConfigEntry *config)
+bool ImportObjectTool(ConfigEntry *config, bool overwrite)
 {
    const TCHAR *guid = config->getSubEntryValue(_T("guid"));
    if (guid == NULL)
@@ -903,6 +903,12 @@ bool ImportObjectTool(ConfigEntry *config)
    }
    DBFreeResult(hResult);
    DBFreeStatement(hStmt);
+
+   if ((toolId != 0) && !overwrite)
+   {
+      DBConnectionPoolReleaseConnection(hdb);
+      return true;
+   }
 
    // Step 2: create or update tool record
 	if (!DBBegin(hdb))

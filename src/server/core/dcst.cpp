@@ -505,7 +505,7 @@ static bool ImportFailure(DB_HANDLE hdb, DB_STATEMENT hStmt)
 /**
  * Import summary table
  */
-bool ImportSummaryTable(ConfigEntry *config)
+bool ImportSummaryTable(ConfigEntry *config, bool overwrite)
 {
    const TCHAR *guid = config->getSubEntryValue(_T("guid"));
    if (guid == NULL)
@@ -557,6 +557,11 @@ bool ImportSummaryTable(ConfigEntry *config)
    }
    else
    {
+      if (!overwrite)
+      {
+         DBConnectionPoolReleaseConnection(hdb);
+         return true;
+      }
       hStmt = DBPrepare(hdb, _T("UPDATE dci_summary_tables SET menu_path=?,title=?,node_filter=?,flags=?,columns=?,guid=? WHERE id=?"));
    }
    if (hStmt == NULL)
