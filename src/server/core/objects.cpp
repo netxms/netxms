@@ -2081,12 +2081,12 @@ static void DumpObjectCallback(NetObj *object, void *data)
 
 	CONSOLE_CTX pCtx = dd->console;
 
-	ConsolePrintf(pCtx, _T("Object ID %d \"%s\"\n")
-                       _T("   Class: %s  Status: %s  IsModified: %d  IsDeleted: %d\n"),
+	ConsolePrintf(pCtx, _T("\x1b[1mObject ID %d \"%s\"\x1b[0m\n")
+                       _T("   Class: %s  Status: %s  IsModified: %d  IsDeleted: %d  RefCount: %d\n"),
 					  object->getId(), object->getName(), object->getObjectClassName(),
                  GetStatusAsText(object->getStatus(), true),
-                 object->isModified(), object->isDeleted());
-   ConsolePrintf(pCtx, _T("   Parents: <%s>\n   Childs: <%s>\n"),
+                 object->isModified(), object->isDeleted(), object->getRefCount());
+   ConsolePrintf(pCtx, _T("   Parents: <%s>\n   Children: <%s>\n"),
                  object->dbgGetParentList(dd->buffer), object->dbgGetChildList(&dd->buffer[4096]));
 	time_t t = object->getTimeStamp();
 #if HAVE_LOCALTIME_R
@@ -2100,8 +2100,9 @@ static void DumpObjectCallback(NetObj *object, void *data)
    switch(object->getObjectClass())
    {
       case OBJECT_NODE:
-         ConsolePrintf(pCtx, _T("   Primary IP: %s\n   IsSNMP: %d IsAgent: %d IsLocal: %d OID: %s\n"),
+         ConsolePrintf(pCtx, _T("   Primary IP: %s\n   Primary hostname: %s\n   IsSNMP: %d IsAgent: %d IsLocal: %d OID: %s\n"),
                        ((Node *)object)->getIpAddress().toString(dd->buffer),
+                       ((Node *)object)->getPrimaryName(),
                        ((Node *)object)->isSNMPSupported(),
                        ((Node *)object)->isNativeAgent(),
                        ((Node *)object)->isLocalManagement(),

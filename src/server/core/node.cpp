@@ -2785,7 +2785,10 @@ DuplicateCheckResult Node::checkForDuplicates(Node **duplicate)
    {
       Node *node = static_cast<Node*>(nodes->get(i));
       if (node->m_id == m_id)
+      {
+         node->decRefCount();
          continue;
+      }
 
       if (isDuplicateOf(node))
       {
