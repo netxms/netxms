@@ -315,6 +315,10 @@ extern "C" DBDRV_CONNECTION __EXPORT DrvConnect(const char *host, const char *lo
    // Switch to UTF-8 encoding
    mysql_set_character_set(pMySQL, "utf8");
 
+   // Disable truncation reporting
+   my_bool v = 0;
+   mysql_options(pMySQL, MYSQL_REPORT_DATA_TRUNCATION, &v);
+
    char connectorVersion[64];
    if (GetConnectorVersion(pMySQL, connectorVersion))
    {
@@ -1163,18 +1167,18 @@ static void *GetFieldUnbufferedInternal(MARIADB_UNBUFFERED_RESULT *hResult, int 
    }
    else
    {
-      int iLen = std::min((int)hResult->lengthFields[iColumn], iBufSize - 1);
-      if (iLen > 0)
+      if (hResult->lengthFields[iColumn] > 0)
       {
          if (utf8)
          {
-            memcpy(pBuffer, hResult->pCurrRow[iColumn], iLen);
-            ((char *)pBuffer)[iLen] = 0;
+            int l = std::min((int)hResult->lengthFields[iColumn], iBufSize - 1);
+            memcpy(pBuffer, hResult->pCurrRow[iColumn], l);
+            ((char *)pBuffer)[l] = 0;
          }
          else
          {
-            MultiByteToWideChar(CP_UTF8, 0, hResult->pCurrRow[iColumn], iLen, (WCHAR *)pBuffer, iBufSize);
-            ((WCHAR *)pBuffer)[iLen] = 0;
+            int l = MultiByteToWideChar(CP_UTF8, 0, hResult->pCurrRow[iColumn], hResult->lengthFields[iColumn], (WCHAR *)pBuffer, iBufSize);
+            ((WCHAR *)pBuffer)[l] = 0;
          }
       }
       else
