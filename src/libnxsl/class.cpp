@@ -130,7 +130,8 @@ NXSL_Object::~NXSL_Object()
 	m_data->refCount--;
 	if (m_data->refCount == 0)
 	{
-		m_class->onObjectDelete(this);
+	   if(!m_data->constant)
+	      m_class->onObjectDelete(this);
 		MemFree(m_data);
 	}
 }
