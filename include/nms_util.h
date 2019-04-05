@@ -1209,7 +1209,7 @@ public:
    void set(const TCHAR *key, INT64 value);
    void set(const TCHAR *key, UINT64 value);
 
-   void addAll(const StringMap *src);
+   void addAll(const StringMap *src, bool (*filter)(const TCHAR *, const TCHAR *, void *) = NULL, void *context = NULL);
 
 	const TCHAR *get(const TCHAR *key) const { return (const TCHAR *)getObject(key); }
    const TCHAR *get(const TCHAR *key, size_t len) const { return (const TCHAR *)getObject(key, len); }

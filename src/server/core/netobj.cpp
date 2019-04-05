@@ -2394,6 +2394,19 @@ TCHAR *NetObj::getCustomAttributeCopy(const TCHAR *name) const
 }
 
 /**
+ * Get all custom attributes matching given filter. Filter can be NULL to return all attributes.
+ * Filter arguments: attribute name, attribute value, context
+ */
+StringMap *NetObj::getCustomAttributes(bool (*filter)(const TCHAR *, const TCHAR *, void *), void *context) const
+{
+   StringMap *attributes = new StringMap();
+   lockProperties();
+   attributes->addAll(&m_customAttributes, filter, context);
+   unlockProperties();
+   return attributes;
+}
+
+/**
  * Get custom attribute as NXSL value
  */
 NXSL_Value *NetObj::getCustomAttributeForNXSL(const TCHAR *name) const
