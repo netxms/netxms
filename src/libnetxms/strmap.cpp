@@ -70,12 +70,16 @@ StringMap& StringMap::operator =(const StringMap &src)
 /**
  * Add all values from another string map
  */
-void StringMap::addAll(const StringMap *src)
+void StringMap::addAll(const StringMap *src, bool (*filter)(const TCHAR *, const TCHAR *, void *), void *context)
 {
    StringMapEntry *entry, *tmp;
    HASH_ITER(hh, src->m_data, entry, tmp)
    {
-      setObject(MemCopyString(src->m_ignoreCase ? entry->originalKey : entry->key), MemCopyString((TCHAR *)entry->value), true);
+      const TCHAR *k = src->m_ignoreCase ? entry->originalKey : entry->key;
+      if ((filter == NULL) || filter(k, static_cast<TCHAR*>(entry->value), context))
+      {
+         setObject(MemCopyString(k), MemCopyString(static_cast<TCHAR*>(entry->value)), true);
+      }
    }
 }
 

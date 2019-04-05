@@ -855,6 +855,7 @@ public:
 
    TCHAR *getCustomAttribute(const TCHAR *name, TCHAR *buffer, size_t size) const;
    TCHAR *getCustomAttributeCopy(const TCHAR *name) const;
+   StringMap *getCustomAttributes(bool (*filter)(const TCHAR *, const TCHAR *, void *) = NULL, void *context = NULL) const;
    NXSL_Value *getCustomAttributeForNXSL(NXSL_VM *vm, const TCHAR *name) const;
    NXSL_Value *getCustomAttributesForNXSL(NXSL_VM *vm) const;
    void setCustomAttribute(const TCHAR *name, const TCHAR *value);
