@@ -165,6 +165,7 @@ DCTable::DCTable(UINT32 id, const TCHAR *name, int source, int pollingInterval, 
  */
 DCTable::DCTable(DB_HANDLE hdb, DB_RESULT hResult, int iRow, Template *pNode) : DCObject()
 {
+   m_owner = pNode;
    m_id = DBGetFieldULong(hResult, iRow, 0);
    m_dwTemplateId = DBGetFieldULong(hResult, iRow, 1);
    m_dwTemplateItemId = DBGetFieldULong(hResult, iRow, 2);
@@ -184,19 +185,18 @@ DCTable::DCTable(DB_HANDLE hdb, DB_RESULT hResult, int iRow, Template *pNode) : 
    m_comments = DBGetField(hResult, iRow, 16, NULL, 0);
    m_guid = DBGetFieldGUID(hResult, iRow, 17);
    setTransformationScript(pszTmp);
-   free(pszTmp);
+   MemFree(pszTmp);
    m_instanceDiscoveryMethod = (WORD)DBGetFieldLong(hResult, iRow, 18);
    m_instanceDiscoveryData = DBGetField(hResult, iRow, 19, NULL, 0);
    m_instanceFilterSource = NULL;
    m_instanceFilter = NULL;
    pszTmp = DBGetField(hResult, iRow, 20, NULL, 0);
    setInstanceFilter(pszTmp);
-   free(pszTmp);
+   MemFree(pszTmp);
    DBGetField(hResult, iRow, 21, m_instance, MAX_DB_STRING);
    m_instanceRetentionTime = DBGetFieldLong(hResult, iRow, 22);
    m_instanceGracePeriodStart = DBGetFieldLong(hResult, iRow, 23);
 
-   m_owner = pNode;
 	m_columns = new ObjectArray<DCTableColumn>(8, 8, true);
 	m_lastValue = NULL;
 

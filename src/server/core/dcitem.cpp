@@ -114,6 +114,7 @@ DCItem::DCItem(const DCItem *src, bool shadowCopy) : DCObject(src, shadowCopy)
  */
 DCItem::DCItem(DB_HANDLE hdb, DB_RESULT hResult, int iRow, Template *pNode) : DCObject()
 {
+   m_owner = pNode;
    m_id = DBGetFieldULong(hResult, iRow, 0);
    DBGetField(hResult, iRow, 1, m_name, MAX_ITEM_NAME);
    m_source = (BYTE)DBGetFieldLong(hResult, iRow, 2);
@@ -124,13 +125,12 @@ DCItem::DCItem(DB_HANDLE hdb, DB_RESULT hResult, int iRow, Template *pNode) : DC
    m_deltaCalculation = (BYTE)DBGetFieldLong(hResult, iRow, 7);
    TCHAR *pszTmp = DBGetField(hResult, iRow, 8, NULL, 0);
    setTransformationScript(pszTmp);
-   free(pszTmp);
+   MemFree(pszTmp);
    m_dwTemplateId = DBGetFieldULong(hResult, iRow, 9);
    DBGetField(hResult, iRow, 10, m_description, MAX_DB_STRING);
    DBGetField(hResult, iRow, 11, m_instance, MAX_DB_STRING);
    m_dwTemplateItemId = DBGetFieldULong(hResult, iRow, 12);
    m_thresholds = NULL;
-   m_owner = pNode;
    m_cacheSize = 0;
    m_requiredCacheSize = 0;
    m_ppValueCache = NULL;
@@ -152,7 +152,7 @@ DCItem::DCItem(DB_HANDLE hdb, DB_RESULT hResult, int iRow, Template *pNode) : DC
    m_instanceFilter = NULL;
    pszTmp = DBGetField(hResult, iRow, 25, NULL, 0);
 	setInstanceFilter(pszTmp);
-   free(pszTmp);
+   MemFree(pszTmp);
 	m_sampleCount = DBGetFieldLong(hResult, iRow, 26);
    m_comments = DBGetField(hResult, iRow, 27, NULL, 0);
    m_guid = DBGetFieldGUID(hResult, iRow, 28);
@@ -256,7 +256,7 @@ DCItem::DCItem(ConfigEntry *config, Template *owner) : DCObject(config, owner)
 DCItem::~DCItem()
 {
 	delete m_thresholds;
-	free(m_customUnitName);
+	MemFree(m_customUnitName);
    clearCache();
 }
 
