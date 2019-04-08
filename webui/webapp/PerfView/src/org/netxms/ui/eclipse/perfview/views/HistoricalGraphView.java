@@ -48,6 +48,7 @@ import org.netxms.client.AccessListElement;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.DataType;
+import org.netxms.client.constants.HistoricalDataType;
 import org.netxms.client.constants.RCC;
 import org.netxms.client.datacollection.ChartConfig;
 import org.netxms.client.datacollection.ChartDciConfig;
@@ -173,12 +174,14 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
                   
                   // Extra fields
                   if (subfields.length >= 6)
-                     dci.invertValues = (Integer.parseInt(subfields[5]) & GraphItemStyle.INVERTED) > 0 ? true : false;
+                     dci.useRawValues = Boolean.parseBoolean(subfields[5]); 
                   if (subfields.length >= 7)
-                     dci.area = Integer.parseInt(subfields[6]) == GraphItemStyle.AREA ? true : false;
+                     dci.invertValues = (Integer.parseInt(subfields[6]) & GraphItemStyle.INVERTED) > 0 ? true : false;
                   if (subfields.length >= 8)
-                     dci.color = "0x" + Integer.toHexString(Integer.parseInt(subfields[7]) );
-                     
+                     dci.area = Integer.parseInt(subfields[7]) == GraphItemStyle.AREA ? true : false;
+                  if (subfields.length >= 9)
+                     dci.color = "0x" + Integer.toHexString(Integer.parseInt(subfields[8]));
+                  
                   items.add(dci);
                }
                catch(NumberFormatException e)
@@ -470,7 +473,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
                if (currentItem.type == ChartDciConfig.ITEM)
                {
                   data[i] = session.getCollectedData(currentItem.nodeId, currentItem.dciId, settings.getTimeFrom(),
-                        settings.getTimeTo(), 0, false);
+                        settings.getTimeTo(), 0, currentItem.useRawValues ? HistoricalDataType.RAW : HistoricalDataType.PROCESSED);
                   thresholds[i] = session.getThresholds(currentItem.nodeId, currentItem.dciId);
                }
                else

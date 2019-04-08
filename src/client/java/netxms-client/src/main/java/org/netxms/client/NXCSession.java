@@ -73,6 +73,7 @@ import org.netxms.client.agent.config.ConfigListElement;
 import org.netxms.client.constants.AggregationFunction;
 import org.netxms.client.constants.AuthenticationType;
 import org.netxms.client.constants.DataType;
+import org.netxms.client.constants.HistoricalDataType;
 import org.netxms.client.constants.NodePollType;
 import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.constants.RCC;
@@ -4491,7 +4492,7 @@ public class NXCSession
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    private DciData getCollectedDataInternal(long nodeId, long dciId, String instance, String dataColumn, Date from, Date to,
-         int maxRows, boolean includeRawValues) throws IOException, NXCException
+         int maxRows, HistoricalDataType valueType) throws IOException, NXCException
    {
       NXCPMessage msg;
       if (instance != null) // table DCI
@@ -4506,7 +4507,7 @@ public class NXCSession
       }
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
       msg.setFieldInt32(NXCPCodes.VID_DCI_ID, (int) dciId);
-      msg.setField(NXCPCodes.VID_INCLUDE_RAW_VALUES, includeRawValues);
+      msg.setFieldInt16(NXCPCodes.VID_HISTORICAL_DATA_TYPE, valueType.getValue());
 
       DciData data = new DciData(nodeId, dciId);
 
@@ -4568,10 +4569,10 @@ public class NXCSession
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public DciData getCollectedData(long nodeId, long dciId, Date from, Date to, int maxRows, boolean includeRawValues)
+   public DciData getCollectedData(long nodeId, long dciId, Date from, Date to, int maxRows, HistoricalDataType valueType)
          throws IOException, NXCException
    {
-      return getCollectedDataInternal(nodeId, dciId, null, null, from, to, maxRows, includeRawValues);
+      return getCollectedDataInternal(nodeId, dciId, null, null, from, to, maxRows, valueType);
    }
 
    /**
@@ -4594,7 +4595,7 @@ public class NXCSession
    {
       if (instance == null || dataColumn == null) 
          throw new NXCException(RCC.INVALID_ARGUMENT);
-      return getCollectedDataInternal(nodeId, dciId, instance, dataColumn, from, to, maxRows, false);
+      return getCollectedDataInternal(nodeId, dciId, instance, dataColumn, from, to, maxRows, HistoricalDataType.PROCESSED);
    }
 
    /**

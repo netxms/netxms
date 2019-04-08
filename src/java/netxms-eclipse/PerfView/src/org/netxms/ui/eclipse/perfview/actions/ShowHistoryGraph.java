@@ -78,7 +78,8 @@ public class ShowHistoryGraph implements IObjectActionDelegate
                sb.append("@");
                try
                {
-                  sb.append(URLEncoder.encode(((DciValue)currentSelection[i]).getDescription(), "UTF-8"));
+                  sb.append(URLEncoder.encode(((DciValue)currentSelection[i]).getDescription() + 
+                        (showRawValues() ? " (raw)" : ""), "UTF-8"));
                }
                catch(UnsupportedEncodingException e)
                {
@@ -93,6 +94,8 @@ public class ShowHistoryGraph implements IObjectActionDelegate
                {
                   sb.append("<name unavailable>");
                }
+               sb.append("@");
+               sb.append(showRawValues());
             }
             else if (currentSelection[i] instanceof DataCollectionItem)
             {
@@ -105,7 +108,8 @@ public class ShowHistoryGraph implements IObjectActionDelegate
                sb.append("@");
                try
                {
-                  sb.append(URLEncoder.encode(((DataCollectionItem)currentSelection[i]).getDescription(), "UTF-8"));
+                  sb.append(URLEncoder.encode(((DataCollectionItem)currentSelection[i]).getDescription() + 
+                        (showRawValues() ? " (raw)" : ""), "UTF-8"));
                }
                catch(UnsupportedEncodingException e)
                {
@@ -120,6 +124,8 @@ public class ShowHistoryGraph implements IObjectActionDelegate
                {
                   sb.append("<name unavailable>");
                }
+               sb.append("@");
+               sb.append(showRawValues());
             }
          }
 			
@@ -136,6 +142,11 @@ public class ShowHistoryGraph implements IObjectActionDelegate
 				MessageDialogHelper.openError(window.getShell(), Messages.get().ShowHistoryGraph_Error, String.format(Messages.get().ShowHistoryGraph_ErrorOpeningView, e.getLocalizedMessage()));
 			}
 		}
+	}
+	
+	protected boolean showRawValues()
+	{
+	   return false;
 	}
 
 	/* (non-Javadoc)

@@ -42,6 +42,7 @@ import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
+import org.netxms.client.constants.HistoricalDataType;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.DciDataRow;
 import org.netxms.client.objects.AbstractNode;
@@ -290,7 +291,7 @@ public class HistoricalDataView extends ViewPart
 			   if (subparts != null)
 			      data = session.getCollectedTableData(nodeId, dciId, instance, column, timeFrom, timeTo, recordLimit);
 			   else
-			      data = session.getCollectedData(nodeId, dciId, timeFrom, timeTo, recordLimit, true);
+			      data = session.getCollectedData(nodeId, dciId, timeFrom, timeTo, recordLimit, HistoricalDataType.BOTH);
 			   
 				runInUIThread(new Runnable() {
 					@Override
@@ -344,7 +345,7 @@ public class HistoricalDataView extends ViewPart
             if (subparts != null)
                data = session.getCollectedTableData(nodeId, dciId, instance, column, timeFrom, timeTo, recordLimit);
             else
-               data = session.getCollectedData(nodeId, dciId, timeFrom, timeTo, recordLimit, true);
+               data = session.getCollectedData(nodeId, dciId, timeFrom, timeTo, recordLimit, HistoricalDataType.BOTH);
             
             runInUIThread(new Runnable() {
                @Override

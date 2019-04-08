@@ -799,6 +799,13 @@ enum SessionState
 #define DCO_TYPE_TABLE     2
 #define DCO_TYPE_LIST      3
 
+enum HistoricalDataType
+{
+   DCO_TYPE_PROCESSED = 0,
+   DCO_TYPE_RAW = 1,
+   DCO_TYPE_BOTH = 2
+};
+
 /**
  * DCI flags
  */

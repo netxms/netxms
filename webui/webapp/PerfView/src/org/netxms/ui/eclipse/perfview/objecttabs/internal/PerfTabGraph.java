@@ -41,6 +41,7 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.DataType;
+import org.netxms.client.constants.HistoricalDataType;
 import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.GraphItem;
@@ -245,7 +246,7 @@ public class PerfTabGraph extends DashboardComposite
 					for(int i = 0; i < data.length; i++)
 					{
 						currentDci = items.get(i);
-						data[i] = session.getCollectedData(nodeId, currentDci.getId(), from, to, 0, false);
+						data[i] = session.getCollectedData(nodeId, currentDci.getId(), from, to, 0, HistoricalDataType.PROCESSED);
 					}
 					runInUIThread(new Runnable() {
 						@Override
@@ -320,6 +321,8 @@ public class PerfTabGraph extends DashboardComposite
          }
          sb.append("@");
          sb.append("");
+         sb.append("@");
+         sb.append(false);
          sb.append("@");
          sb.append(chart.getItemStyles().get(i).getFlags());
          sb.append("@");

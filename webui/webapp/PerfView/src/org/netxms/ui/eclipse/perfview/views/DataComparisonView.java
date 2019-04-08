@@ -44,6 +44,7 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.DataType;
+import org.netxms.client.constants.HistoricalDataType;
 import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.DciDataRow;
@@ -641,7 +642,7 @@ public class DataComparisonView extends ViewPart
 				{
 					GraphItem item = items.get(i);
 					DciData data = (item.getType() == DataCollectionObject.DCO_TYPE_ITEM) ? 
-							session.getCollectedData(item.getNodeId(), item.getDciId(), null, null, 1, false) :
+							session.getCollectedData(item.getNodeId(), item.getDciId(), null, null, 1, HistoricalDataType.PROCESSED) :
 							session.getCollectedTableData(item.getNodeId(), item.getDciId(), item.getInstance(), item.getDataColumn(), null, null, 1);
 					DciDataRow value = data.getLastValue();
 					values[i] = (value != null) ? value.getValueAsDouble() : 0.0;

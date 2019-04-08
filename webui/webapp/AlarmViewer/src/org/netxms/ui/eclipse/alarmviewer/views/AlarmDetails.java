@@ -65,6 +65,7 @@ import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.DataType;
+import org.netxms.client.constants.HistoricalDataType;
 import org.netxms.client.constants.RCC;
 import org.netxms.client.constants.Severity;
 import org.netxms.client.datacollection.DciData;
@@ -800,7 +801,7 @@ public class AlarmDetails extends ViewPart
             {
                final Date from = new Date(System.currentTimeMillis() - 86400000);
                final Date to = new Date(System.currentTimeMillis());
-               final DciData data = session.getCollectedData(nodeId, dciId, from, to, 0, false);
+               final DciData data = session.getCollectedData(nodeId, dciId, from, to, 0, HistoricalDataType.PROCESSED);
                runInUIThread(new Runnable() {
                   @Override
                   public void run()
@@ -817,7 +818,7 @@ public class AlarmDetails extends ViewPart
             }
             else
             {
-               final DciData data = session.getCollectedData(nodeId, dciId, null, null, 20, false);
+               final DciData data = session.getCollectedData(nodeId, dciId, null, null, 20, HistoricalDataType.PROCESSED);
                runInUIThread(new Runnable() {
                   @Override
                   public void run()

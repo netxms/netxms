@@ -1015,7 +1015,7 @@ public class NXCPCodes
    public static final long VID_EXPAND_STRING = 605;
    public static final long VID_ACTION_LIST = 606;
    public static final long VID_ZONE_SNMP_PORT_COUNT = 607;
-   public static final long VID_INCLUDE_RAW_VALUES = 608;
+   public static final long VID_HISTORICAL_DATA_TYPE = 608;
    public static final long VID_JOB_CANCELED = 609;
    public static final long VID_INSTANCE_RETENTION = 610;
    public static final long VID_RACK_ORIENTATION = 611;

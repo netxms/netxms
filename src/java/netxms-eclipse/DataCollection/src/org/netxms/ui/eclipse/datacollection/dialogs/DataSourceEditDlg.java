@@ -55,6 +55,7 @@ public class DataSourceEditDlg extends Dialog
 	private Combo displayType;
 	private Button checkShowThresholds;
 	private Button checkInvertValues;
+   private Button checkRawValues;
    private Button checkMultipeMatch;
 	private LabeledText instance;
 	private LabeledText dataColumn;
@@ -209,6 +210,10 @@ public class DataSourceEditDlg extends Dialog
       checkInvertValues.setText(Messages.get().DataSourceEditDlg_InvertValues);
       checkInvertValues.setSelection(dci.invertValues);
       
+      checkRawValues = new Button(optionsGroup, SWT.CHECK);
+      checkRawValues.setText("Raw values");
+      checkRawValues.setSelection(dci.useRawValues);
+      
       if(graphIsTemplate)
       {
          checkMultipeMatch = new Button(optionsGroup, SWT.CHECK);
@@ -308,6 +313,7 @@ public class DataSourceEditDlg extends Dialog
 		dci.displayType = displayType.getSelectionIndex();
 		dci.showThresholds = checkShowThresholds.getSelection();
 		dci.invertValues = checkInvertValues.getSelection();
+      dci.useRawValues = checkRawValues.getSelection();
 		if (dci.type == ChartDciConfig.TABLE)
 		{
 			dci.column = dataColumn.getText().trim();

@@ -4005,10 +4005,12 @@ void ClientSession::sendDCIThresholds(NXCPMessage *request)
    sendMessage(&msg);
 }
 
+#define SELECTION_COLUMNS (historicalDataType != DCO_TYPE_RAW) ? tablePrefix : _T(""), (historicalDataType == DCO_TYPE_BOTH) ? _T("_value,raw_value") : (historicalDataType == DCO_TYPE_PROCESSED) ?  _T("_value") : _T("raw_value")
+
 /**
  * Prepare statement for reading data from idata/tdata table
  */
-static DB_STATEMENT PrepareDataSelect(DB_HANDLE hdb, UINT32 nodeId, int dciType, UINT32 maxRows, bool withRawValues, const TCHAR *condition)
+static DB_STATEMENT PrepareDataSelect(DB_HANDLE hdb, UINT32 nodeId, int dciType, UINT32 maxRows, HistoricalDataType historicalDataType, const TCHAR *condition)
 {
    const TCHAR *tablePrefix = (dciType == DCO_TYPE_ITEM) ? _T("idata") : _T("tdata");
 	TCHAR query[512];
@@ -4017,26 +4019,26 @@ static DB_STATEMENT PrepareDataSelect(DB_HANDLE hdb, UINT32 nodeId, int dciType,
       switch(g_dbSyntax)
       {
          case DB_SYNTAX_MSSQL:
-            _sntprintf(query, 512, _T("SELECT TOP %d %s_timestamp,%s_value%s FROM %s WHERE node_id=? AND item_id=?%s ORDER BY %s_timestamp DESC"),
-                     (int)maxRows, tablePrefix, tablePrefix, withRawValues ? _T(",raw_value") : _T(""),
+            _sntprintf(query, 512, _T("SELECT TOP %d %s_timestamp,%s%s FROM %s WHERE node_id=? AND item_id=?%s ORDER BY %s_timestamp DESC"),
+                     (int)maxRows, tablePrefix, SELECTION_COLUMNS,
                      tablePrefix, condition, tablePrefix);
             break;
          case DB_SYNTAX_ORACLE:
-            _sntprintf(query, 512, _T("SELECT * FROM (SELECT %s_timestamp,%s_value%s FROM %s WHERE node_id=? AND item_id=?%s ORDER BY %s_timestamp DESC) WHERE ROWNUM<=%d"),
-                     tablePrefix, tablePrefix, withRawValues ? _T(",raw_value") : _T(""),
+            _sntprintf(query, 512, _T("SELECT * FROM (SELECT %s_timestamp,%s%s FROM %s WHERE node_id=? AND item_id=?%s ORDER BY %s_timestamp DESC) WHERE ROWNUM<=%d"),
+                     tablePrefix, SELECTION_COLUMNS,
                      tablePrefix, condition, tablePrefix, (int)maxRows);
             break;
          case DB_SYNTAX_MYSQL:
          case DB_SYNTAX_PGSQL:
          case DB_SYNTAX_SQLITE:
          case DB_SYNTAX_TSDB:
-            _sntprintf(query, 512, _T("SELECT %s_timestamp,%s_value%s FROM %s WHERE node_id=? AND item_id=?%s ORDER BY %s_timestamp DESC LIMIT %d"),
-                     tablePrefix, tablePrefix, withRawValues ? _T(",raw_value") : _T(""),
+            _sntprintf(query, 512, _T("SELECT %s_timestamp,%s%s FROM %s WHERE node_id=? AND item_id=?%s ORDER BY %s_timestamp DESC LIMIT %d"),
+                     tablePrefix, SELECTION_COLUMNS,
                      tablePrefix, condition, tablePrefix, (int)maxRows);
             break;
          case DB_SYNTAX_DB2:
-            _sntprintf(query, 512, _T("SELECT %s_timestamp,%s_value%s FROM %s WHERE node_id=? AND item_id=?%s ORDER BY %s_timestamp DESC FETCH FIRST %d ROWS ONLY"),
-                     tablePrefix, tablePrefix, withRawValues ? _T(",raw_value") : _T(""),
+            _sntprintf(query, 512, _T("SELECT %s_timestamp,%s%s FROM %s WHERE node_id=? AND item_id=?%s ORDER BY %s_timestamp DESC FETCH FIRST %d ROWS ONLY"),
+                     tablePrefix, SELECTION_COLUMNS,
                      tablePrefix, condition, tablePrefix, (int)maxRows);
             break;
          default:
@@ -4049,26 +4051,26 @@ static DB_STATEMENT PrepareDataSelect(DB_HANDLE hdb, UINT32 nodeId, int dciType,
       switch(g_dbSyntax)
       {
          case DB_SYNTAX_MSSQL:
-            _sntprintf(query, 512, _T("SELECT TOP %d %s_timestamp,%s_value%s FROM %s_%d WHERE item_id=?%s ORDER BY %s_timestamp DESC"),
-                     (int)maxRows, tablePrefix, tablePrefix, withRawValues ? _T(",raw_value") : _T(""),
+            _sntprintf(query, 512, _T("SELECT TOP %d %s_timestamp,%s%s FROM %s_%d WHERE item_id=?%s ORDER BY %s_timestamp DESC"),
+                     (int)maxRows, tablePrefix, tablePrefix, SELECTION_COLUMNS,
                      tablePrefix, (int)nodeId, condition, tablePrefix);
             break;
          case DB_SYNTAX_ORACLE:
-            _sntprintf(query, 512, _T("SELECT * FROM (SELECT %s_timestamp,%s_value%s FROM %s_%d WHERE item_id=?%s ORDER BY %s_timestamp DESC) WHERE ROWNUM<=%d"),
-                     tablePrefix, tablePrefix, withRawValues ? _T(",raw_value") : _T(""),
+            _sntprintf(query, 512, _T("SELECT * FROM (SELECT %s_timestamp,%s%s FROM %s_%d WHERE item_id=?%s ORDER BY %s_timestamp DESC) WHERE ROWNUM<=%d"),
+                     tablePrefix, SELECTION_COLUMNS,
                      tablePrefix, (int)nodeId, condition, tablePrefix, (int)maxRows);
             break;
          case DB_SYNTAX_MYSQL:
          case DB_SYNTAX_PGSQL:
          case DB_SYNTAX_SQLITE:
          case DB_SYNTAX_TSDB:
-            _sntprintf(query, 512, _T("SELECT %s_timestamp,%s_value%s FROM %s_%d WHERE item_id=?%s ORDER BY %s_timestamp DESC LIMIT %d"),
-                     tablePrefix, tablePrefix, withRawValues ? _T(",raw_value") : _T(""),
+            _sntprintf(query, 512, _T("SELECT %s_timestamp,%s%s FROM %s_%d WHERE item_id=?%s ORDER BY %s_timestamp DESC LIMIT %d"),
+                     tablePrefix, SELECTION_COLUMNS,
                      tablePrefix, (int)nodeId, condition, tablePrefix, (int)maxRows);
             break;
          case DB_SYNTAX_DB2:
-            _sntprintf(query, 512, _T("SELECT %s_timestamp,%s_value%s FROM %s_%d WHERE item_id=?%s ORDER BY %s_timestamp DESC FETCH FIRST %d ROWS ONLY"),
-                     tablePrefix, tablePrefix, withRawValues ? _T(",raw_value") : _T(""),
+            _sntprintf(query, 512, _T("SELECT %s_timestamp,%s%s FROM %s_%d WHERE item_id=?%s ORDER BY %s_timestamp DESC FETCH FIRST %d ROWS ONLY"),
+                     tablePrefix, SELECTION_COLUMNS,
                      tablePrefix, (int)nodeId, condition, tablePrefix, (int)maxRows);
             break;
          default:
@@ -4082,7 +4084,7 @@ static DB_STATEMENT PrepareDataSelect(DB_HANDLE hdb, UINT32 nodeId, int dciType,
 /**
  * Get collected data for table or simple DCI
  */
-bool ClientSession::getCollectedDataFromDB(NXCPMessage *request, NXCPMessage *response, DataCollectionTarget *dcTarget, int dciType, bool withRawValues)
+bool ClientSession::getCollectedDataFromDB(NXCPMessage *request, NXCPMessage *response, DataCollectionTarget *dcTarget, int dciType, HistoricalDataType historicalDataType)
 {
    static UINT32 s_rowSize[] = { 8, 8, 16, 16, 516, 16, 8, 8, 16 };
 
@@ -4126,7 +4128,7 @@ bool ClientSession::getCollectedDataFromDB(NXCPMessage *request, NXCPMessage *re
    DCI_DATA_ROW *pCurr;
 
 	// If only last value requested, try to get it from cache first
-	if ((maxRows == 1) && (timeTo == 0) && !withRawValues)
+	if ((maxRows == 1) && (timeTo == 0) && (historicalDataType == DCO_TYPE_PROCESSED))
 	{
 	   debugPrintf(7, _T("getCollectedDataFromDB: maxRows set to 1, will try to read cached value"));
 
@@ -4266,7 +4268,7 @@ read_from_db:
 
 	bool success = false;
 	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-	DB_STATEMENT hStmt = PrepareDataSelect(hdb, dcTarget->getId(), dciType, maxRows, withRawValues, condition);
+	DB_STATEMENT hStmt = PrepareDataSelect(hdb, dcTarget->getId(), dciType, maxRows, historicalDataType, condition);
 	if (hStmt != NULL)
 	{
 		TCHAR dataColumn[MAX_COLUMN_NAME] = _T("");
@@ -4366,7 +4368,7 @@ read_from_db:
                      break;
                }
 
-               if (withRawValues)
+               if (historicalDataType == DCO_TYPE_BOTH)
                {
                   pCurr = (DCI_DATA_ROW *)(((char *)pCurr) + s_rowSize[dataType]);
                   if (rows == allocated)
@@ -4508,7 +4510,7 @@ void ClientSession::getCollectedData(NXCPMessage *request)
 				if (!(g_flags & AF_DB_CONNECTION_LOST))
 				{
 					success = getCollectedDataFromDB(request, &msg, (DataCollectionTarget *)object,
-					         DCO_TYPE_ITEM, request->getFieldAsBoolean(VID_INCLUDE_RAW_VALUES));
+					         DCO_TYPE_ITEM, static_cast<HistoricalDataType>(request->getFieldAsInt16(VID_HISTORICAL_DATA_TYPE)));
 				}
 				else
 				{
@@ -4556,7 +4558,7 @@ void ClientSession::getTableCollectedData(NXCPMessage *request)
 			{
 				if (!(g_flags & AF_DB_CONNECTION_LOST))
 				{
-					success = getCollectedDataFromDB(request, &msg, (DataCollectionTarget *)object, DCO_TYPE_TABLE, false);
+					success = getCollectedDataFromDB(request, &msg, (DataCollectionTarget *)object, DCO_TYPE_TABLE, DCO_TYPE_PROCESSED);
 				}
 				else
 				{

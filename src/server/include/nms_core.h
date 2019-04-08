@@ -559,7 +559,7 @@ private:
    void applyTemplate(NXCPMessage *pRequest);
    void getCollectedData(NXCPMessage *pRequest);
    void getTableCollectedData(NXCPMessage *pRequest);
-	bool getCollectedDataFromDB(NXCPMessage *request, NXCPMessage *response, DataCollectionTarget *object, int dciType, bool withRawValues);
+	bool getCollectedDataFromDB(NXCPMessage *request, NXCPMessage *response, DataCollectionTarget *object, int dciType, HistoricalDataType historicalDataType);
 	void clearDCIData(NXCPMessage *pRequest);
 	void deleteDCIEntry(NXCPMessage *request);
 	void forceDCIPoll(NXCPMessage *pRequest);

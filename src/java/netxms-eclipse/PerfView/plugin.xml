@@ -86,6 +86,13 @@
                label="%action.label.History"
                menubarPath="additions">
          </action>
+         <action
+               class="org.netxms.ui.eclipse.perfview.actions.ShowRawHistoryGraph"
+               icon="icons/chart_line.png"
+               id="org.netxms.ui.eclipse.perfview.popupActions.ShowHistoryGraph_DataCollectionItem"
+               label="Raw Data Line Chart"
+               menubarPath="additions">
+         </action>
       </objectContribution>
       <objectContribution
             adaptable="false"
@@ -128,6 +135,13 @@
                icon="icons/data_history.gif"
                id="org.netxms.ui.eclipse.perfview.popupActions.ShowHistoryData_DataCollectionItem"
                label="%action.label.History"
+               menubarPath="additions">
+         </action>
+         <action
+               class="org.netxms.ui.eclipse.perfview.actions.ShowRawHistoryGraph"
+               icon="icons/chart_line.png"
+               id="org.netxms.ui.eclipse.perfview.popupActions.ShowHistoryGraph_DataCollectionItem"
+               label="Raw Data Line Chart"
                menubarPath="additions">
          </action>
       </objectContribution>

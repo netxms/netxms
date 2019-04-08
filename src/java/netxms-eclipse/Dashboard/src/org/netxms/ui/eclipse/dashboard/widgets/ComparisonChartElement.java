@@ -30,6 +30,7 @@ import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Widget;
 import org.eclipse.ui.IViewPart;
 import org.netxms.client.NXCSession;
+import org.netxms.client.constants.HistoricalDataType;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.DciData;
@@ -112,7 +113,7 @@ public abstract class ComparisonChartElement extends ElementWidget
 				for(int i = 0; i < dciList.length; i++)
 				{
 					if (dciList[i].type == ChartDciConfig.ITEM)
-						data[i] = session.getCollectedData(dciList[i].nodeId, dciList[i].dciId, null, null, 1, false);
+						data[i] = session.getCollectedData(dciList[i].nodeId, dciList[i].dciId, null, null, 1, HistoricalDataType.PROCESSED);
 					else
 						data[i] = session.getCollectedTableData(dciList[i].nodeId, dciList[i].dciId, dciList[i].instance, dciList[i].column, null, null, 1);
 				}

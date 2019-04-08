@@ -75,6 +75,9 @@ public class ChartDciConfig
    public boolean invertValues;
 
    @Element(required=false)
+   public boolean useRawValues;
+
+   @Element(required=false)
    public boolean multiMatch;
 
 	@Element(required=false)
@@ -128,6 +131,7 @@ public class ChartDciConfig
 		this.area = src.area;
 		this.showThresholds = src.showThresholds;
 		this.invertValues = src.invertValues;
+		this.useRawValues = src.useRawValues;
 		this.multiMatch = src.multiMatch;
 		this.instance = src.instance;
 		this.column = src.column;
@@ -152,6 +156,7 @@ public class ChartDciConfig
 		area = false;
 		showThresholds = false;
 		invertValues = false;
+		useRawValues = false;
 		multiMatch = false;
 		instance = ""; //$NON-NLS-1$
 		column = ""; //$NON-NLS-1$
