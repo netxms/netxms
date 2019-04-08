@@ -125,7 +125,7 @@ static bool H_UpgradeFromV57()
 {
    if (GetSchemaLevelForMajorVersion(22) < 44)
    {
-      CHK_EXEC(CreateConfigParam(_T("NetworkDiscovery.MergeDuplicateNodes"), _T("1"),
+      CHK_EXEC(CreateConfigParam(_T("NetworkDiscovery.MergeDuplicateNodes"), _T("0"),
                _T("Enable/disable merge of duplicate nodes. When enabled, configuration of duplicate node(s) will be merged into original node and duplicate(s) will be deleted."),
                NULL, 'B', true, false, false, false));
       CHK_EXEC(SetSchemaLevelForMajorVersion(22, 44));
