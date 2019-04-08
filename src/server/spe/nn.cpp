@@ -43,8 +43,8 @@ NeuralNetworkNode::NeuralNetworkNode(int nextLevelSize)
  */
 NeuralNetworkNode::~NeuralNetworkNode()
 {
-   delete weights;
-   delete weightGradients;
+   delete[] weights;
+   delete[] weightGradients;
 }
 
 /**
