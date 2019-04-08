@@ -84,7 +84,7 @@ void WinPerfCounterSet::collectorThread()
 		AgentWriteDebugLog(2, _T("WINPERF: %s waiting for set change"), szFName);
 
 		HANDLE handles[2];
-      handles[0] = AgentGetShutdownCondition();
+      handles[0] = GetShutdownConditionObject();
 		handles[1] = m_changeCondition;
       DWORD waitStatus = WaitForMultipleObjects(2, handles, FALSE, INFINITE);
 		if (waitStatus == WAIT_OBJECT_0)
@@ -136,7 +136,7 @@ void WinPerfCounterSet::collectorThread()
 		while(1)
 		{
 			HANDLE handles[2];
-         handles[0] = AgentGetShutdownCondition();
+         handles[0] = GetShutdownConditionObject();
 			handles[1] = m_changeCondition;
 			waitStatus = WaitForMultipleObjects(2, handles, FALSE, m_interval);
 			if (waitStatus == WAIT_OBJECT_0)

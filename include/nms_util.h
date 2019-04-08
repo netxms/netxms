@@ -2442,18 +2442,19 @@ char LIBNETXMS_EXPORTABLE *Ip6ToStrA(const BYTE *addr, char *buffer);
 #endif
 TCHAR LIBNETXMS_EXPORTABLE *SockaddrToStr(struct sockaddr *addr, TCHAR *buffer);
 
+void LIBNETXMS_EXPORTABLE InitNetXMSProcess(bool commandLineTool);
+void LIBNETXMS_EXPORTABLE InitiateProcessShutdown();
+bool LIBNETXMS_EXPORTABLE SleepAndCheckForShutdown(UINT32 seconds);
+bool LIBNETXMS_EXPORTABLE SleepAndCheckForShutdownEx(UINT32 milliseconds);
+bool LIBNETXMS_EXPORTABLE IsShutdownInProgress();
+CONDITION LIBNETXMS_EXPORTABLE GetShutdownConditionObject();
+
 #endif   /* __cplusplus */
 
 #ifdef __cplusplus
 extern "C"
 {
 #endif
-
-void LIBNETXMS_EXPORTABLE InitNetXMSProcess(bool commandLineTool);
-void LIBNETXMS_EXPORTABLE InitiateProcessShutdown();
-bool LIBNETXMS_EXPORTABLE SleepAndCheckForShutdown(UINT32 seconds);
-bool LIBNETXMS_EXPORTABLE SleepAndCheckForShutdownEx(UINT32 milliseconds);
-bool LIBNETXMS_EXPORTABLE IsShutdownInProgress();
 
 #ifndef _WIN32
 #if defined(UNICODE_UCS2) || defined(UNICODE_UCS4)
