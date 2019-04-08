@@ -1013,8 +1013,6 @@ THREAD_RESULT NXCORE_EXPORTABLE THREAD_CALL Main(void *);
 void NXCORE_EXPORTABLE ShutdownDB();
 void InitiateShutdown();
 
-bool NXCORE_EXPORTABLE SleepAndCheckForShutdown(int iSeconds);
-
 int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx);
 
 void SaveObjects(DB_HANDLE hdb, UINT32 watchdogId, bool saveRuntimeData);

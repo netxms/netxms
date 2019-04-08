@@ -32,7 +32,6 @@ static AbstractCommSession *(* s_fpFindServerSession)(UINT64) = NULL;
 static bool (* s_fpEnumerateSessions)(EnumerationCallbackResult (*)(AbstractCommSession *, void *), void *) = NULL;
 static bool (* s_fpSendFile)(void *, UINT32, const TCHAR *, long, bool, VolatileCounter *) = NULL;
 static bool (* s_fpPushData)(const TCHAR *, const TCHAR *, UINT32, time_t) = NULL;
-static CONDITION s_agentShutdownCondition = INVALID_CONDITION_HANDLE;
 static const TCHAR *s_dataDirectory = NULL;
 static DB_HANDLE (*s_fpGetLocalDatabaseHandle)() = NULL;
 static void (* s_fpExecuteAction)(const TCHAR *, const StringList *);
@@ -48,7 +47,7 @@ void LIBNXAGENT_EXPORTABLE InitSubAgentAPI(void (* writeLog)(int, int, const TCH
                                            bool (* sendFile)(void *, UINT32, const TCHAR *, long, bool, VolatileCounter *),
                                            bool (* pushData)(const TCHAR *, const TCHAR *, UINT32, time_t),
                                            DB_HANDLE (* getLocalDatabaseHandle)(),
-                                           CONDITION shutdownCondition, const TCHAR *dataDirectory, void (* executeAction)(const TCHAR *, const StringList*))
+                                           const TCHAR *dataDirectory, void (* executeAction)(const TCHAR *, const StringList *))
 {
    s_fpWriteLog = writeLog;
 	s_fpSendTrap1 = sendTrap1;
@@ -57,7 +56,6 @@ void LIBNXAGENT_EXPORTABLE InitSubAgentAPI(void (* writeLog)(int, int, const TCH
    s_fpFindServerSession = findServerSession;
 	s_fpSendFile = sendFile;
 	s_fpPushData = pushData;
-   s_agentShutdownCondition = shutdownCondition;
    s_dataDirectory = dataDirectory;
    s_fpGetLocalDatabaseHandle = getLocalDatabaseHandle;
    s_fpExecuteAction = executeAction;
@@ -238,22 +236,6 @@ bool LIBNXAGENT_EXPORTABLE AgentPushParameterDataDouble(const TCHAR *parameter, 
 
 	_sntprintf(buffer, sizeof(buffer), _T("%f"), value);
 	return AgentPushParameterData(parameter, buffer);
-}
-
-/**
- * Get shutdown condition
- */
-CONDITION LIBNXAGENT_EXPORTABLE AgentGetShutdownCondition()
-{
-   return s_agentShutdownCondition;
-}
-
-/**
- * Sleep and check for agent shutdown
- */
-bool LIBNXAGENT_EXPORTABLE AgentSleepAndCheckForShutdown(UINT32 sleepTime)
-{
-   return ConditionWait(s_agentShutdownCondition, sleepTime);
 }
 
 /**

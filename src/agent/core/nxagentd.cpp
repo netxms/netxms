@@ -107,7 +107,7 @@ void LIBNXAGENT_EXPORTABLE InitSubAgentAPI(void (* writeLog)(int, int, const TCH
                                            bool (* sendFile)(void *, UINT32, const TCHAR *, long, bool, VolatileCounter *),
                                            bool (* pushData)(const TCHAR *, const TCHAR *, UINT32, time_t),
                                            DB_HANDLE (* getLocalDatabaseHandle)(),
-                                           CONDITION shutdownCondition, const TCHAR *dataDirectory, void (* executeAction)(const TCHAR *, const StringList *));
+                                           const TCHAR *dataDirectory, void (* executeAction)(const TCHAR *, const StringList *));
 
 int CreateConfig(bool forceCreate, const char *pszServer, const char *pszLogFile, const char *pszFileStore,
    const char *configIncludeDir, int iNumSubAgents, char **ppszSubAgentList, const char *extraValues);
@@ -245,7 +245,6 @@ static TCHAR s_executableName[MAX_PATH];
 static UINT32 s_debugLevel = (UINT32)NXCONFIG_UNINITIALIZED_VALUE;
 static TCHAR *s_debugTags = NULL;
 
-static CONDITION s_subAgentsStopCondition = INVALID_CONDITION_HANDLE;
 #if defined(_WIN32)
 static CONDITION s_shutdownCondition = INVALID_CONDITION_HANDLE;
 #endif
@@ -844,14 +843,12 @@ BOOL Initialize()
 #endif
 
    // Initialize API for subagents
-   s_subAgentsStopCondition = ConditionCreate(TRUE);
    InitSubAgentAPI(WriteSubAgentMsg, SendTrap, SendTrap, EnumerateSessions, FindServerSessionByServerId,
-      SendFileToServer, PushData, GetLocalDatabaseHandle, s_subAgentsStopCondition, g_szDataDirectory, ExecuteAction);
+      SendFileToServer, PushData, GetLocalDatabaseHandle, g_szDataDirectory, ExecuteAction);
    nxlog_debug(1, _T("Subagent API initialized"));
 
    g_executorThreadPool = ThreadPoolCreate(_T("PROCEXEC"), 1, 32);
 
-   // Initialize cryptografy
    if (!InitCryptoLib(s_enabledCiphers))
    {
       nxlog_write(MSG_INIT_CRYPTO_FAILED, EVENTLOG_ERROR_TYPE, "e", WSAGetLastError());
@@ -1218,7 +1215,7 @@ void Shutdown()
 		StopWatchdog();
 
    g_dwFlags |= AF_SHUTDOWN;
-   ConditionSet(s_subAgentsStopCondition);
+   InitiateProcessShutdown();
 
    ShutdownTrapSender();
 	if (g_dwFlags & AF_SUBAGENT_LOADER)
