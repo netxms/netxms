@@ -2412,7 +2412,11 @@ StringMap *NetObj::getCustomAttributes(bool (*filter)(const TCHAR *, const TCHAR
  */
 static bool RegExpAttrFilter(const TCHAR *name, const TCHAR *value, void *context)
 {
+#ifdef UNICODE
    return tre_regwexec(static_cast<regex_t*>(context), name, 0, NULL, 0) == 0;
+#else
+   return tre_regexec(static_cast<regex_t*>(context), name, 0, NULL, 0) == 0;
+#endif
 }
 
 /**
@@ -2425,8 +2429,13 @@ StringMap *NetObj::getCustomAttributes(const TCHAR *regexp) const
       return getCustomAttributes(NULL, NULL);
 
    regex_t preg;
+#ifdef UNICODE
    if (tre_regwcomp(&preg, regexp, REG_EXTENDED | REG_NOSUB) != 0)
       return new StringMap();
+#else
+   if (tre_regcomp(&preg, regexp, REG_EXTENDED | REG_NOSUB) != 0)
+      return new StringMap();
+#endif
 
    StringMap *attributes = new StringMap();
    lockProperties();
