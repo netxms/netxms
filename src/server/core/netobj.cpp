@@ -21,6 +21,7 @@
 **/
 
 #include "nxcore.h"
+#include <netxms-regex.h>
 
 /**
  * Class names
@@ -2403,6 +2404,35 @@ StringMap *NetObj::getCustomAttributes(bool (*filter)(const TCHAR *, const TCHAR
    lockProperties();
    attributes->addAll(&m_customAttributes, filter, context);
    unlockProperties();
+   return attributes;
+}
+
+/**
+ * Callback filter for matching attribute name by regular expression
+ */
+static bool RegExpAttrFilter(const TCHAR *name, const TCHAR *value, void *context)
+{
+   return tre_regwexec(static_cast<regex_t*>(context), name, 0, NULL, 0) == 0;
+}
+
+/**
+ * Get all custom attributes matching given regular expression. Regular expression can be NULL to return all attributes.
+ * Filter arguments: attribute name, attribute value, context
+ */
+StringMap *NetObj::getCustomAttributes(const TCHAR *regexp) const
+{
+   if (regexp == NULL)
+      return getCustomAttributes(NULL, NULL);
+
+   regex_t preg;
+   if (tre_regwcomp(&preg, regexp, REG_EXTENDED | REG_NOSUB) != 0)
+      return new StringMap();
+
+   StringMap *attributes = new StringMap();
+   lockProperties();
+   attributes->addAll(&m_customAttributes, RegExpAttrFilter, &preg);
+   unlockProperties();
+   regfree(&preg);
    return attributes;
 }
 
