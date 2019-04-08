@@ -168,6 +168,14 @@ bool LIBNETXMS_EXPORTABLE SleepAndCheckForShutdownEx(UINT32 milliseconds)
 }
 
 /**
+ * Get condition object to wait for shutdown
+ */
+CONDITION LIBNETXMS_EXPORTABLE GetShutdownConditionObject()
+{
+   return s_shutdownCondition;
+}
+
+/**
  * Check if process shutdown is in progress
  */
 bool LIBNETXMS_EXPORTABLE IsShutdownInProgress()
