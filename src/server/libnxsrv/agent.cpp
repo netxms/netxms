@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Server Library
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -93,7 +93,7 @@ AgentConnection::AgentConnection(const InetAddress& addr, WORD port, int authMet
 		WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, secret, -1, m_szSecret, MAX_SECRET_LENGTH, NULL, NULL);
 		m_szSecret[MAX_SECRET_LENGTH - 1] = 0;
 #else
-      nx_strncpy(m_szSecret, secret, MAX_SECRET_LENGTH);
+      strlcpy(m_szSecret, secret, MAX_SECRET_LENGTH);
 #endif
    }
    else
@@ -183,13 +183,13 @@ void AgentConnection::receiverThread()
    UINT32 msgBufferSize = 1024;
 
    // Initialize raw message receiving function
-   NXCP_BUFFER *msgBuffer = (NXCP_BUFFER *)malloc(sizeof(NXCP_BUFFER));
+   NXCP_BUFFER *msgBuffer = (NXCP_BUFFER *)MemAlloc(sizeof(NXCP_BUFFER));
    NXCPInitBuffer(msgBuffer);
 
    // Allocate space for raw message
-   NXCP_MESSAGE *rawMsg = (NXCP_MESSAGE *)malloc(msgBufferSize);
+   NXCP_MESSAGE *rawMsg = (NXCP_MESSAGE *)MemAlloc(msgBufferSize);
 #ifdef _WITH_ENCRYPTION
-   BYTE *decryptionBuffer = (BYTE *)malloc(msgBufferSize);
+   BYTE *decryptionBuffer = (BYTE *)MemAlloc(msgBufferSize);
 #else
    BYTE *decryptionBuffer = NULL;
 #endif
@@ -200,9 +200,9 @@ void AgentConnection::receiverThread()
       if (msgBufferSize > 131072)
       {
          msgBufferSize = 131072;
-         rawMsg = (NXCP_MESSAGE *)realloc(rawMsg, msgBufferSize);
+         rawMsg = MemRealloc(rawMsg, msgBufferSize);
          if (decryptionBuffer != NULL)
-            decryptionBuffer = (BYTE *)realloc(decryptionBuffer, msgBufferSize);
+            decryptionBuffer = MemRealloc(decryptionBuffer, msgBufferSize);
       }
 
       // Receive raw message
@@ -215,6 +215,12 @@ void AgentConnection::receiverThread()
             debugPrintf(6, _T("AgentConnection::ReceiverThread(): RecvNXCPMessage() failed: error=%d, socket_error=%d"), rc, WSAGetLastError());
          else
             debugPrintf(6, _T("AgentConnection::ReceiverThread(): communication channel shutdown"));
+         break;
+      }
+
+      if (IsShutdownInProgress())
+      {
+         debugPrintf(6, _T("AgentConnection::ReceiverThread(): process shutdown"));
          break;
       }
 
@@ -480,10 +486,10 @@ void AgentConnection::receiverThread()
    m_isConnected = false;
    unlock();
 
-   free(rawMsg);
-   free(msgBuffer);
+   MemFree(rawMsg);
+   MemFree(msgBuffer);
 #ifdef _WITH_ENCRYPTION
-   free(decryptionBuffer);
+   MemFree(decryptionBuffer);
 #endif
 
    debugPrintf(6, _T("Receiver thread stopped"));

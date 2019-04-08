@@ -834,8 +834,6 @@ bool LIBNXAGENT_EXPORTABLE AgentPushParameterDataInt64(const TCHAR *parameter, I
 bool LIBNXAGENT_EXPORTABLE AgentPushParameterDataUInt64(const TCHAR *parameter, QWORD value);
 bool LIBNXAGENT_EXPORTABLE AgentPushParameterDataDouble(const TCHAR *parameter, double value);
 
-CONDITION LIBNXAGENT_EXPORTABLE AgentGetShutdownCondition();
-bool LIBNXAGENT_EXPORTABLE AgentSleepAndCheckForShutdown(UINT32 sleepTime);
 const TCHAR LIBNXAGENT_EXPORTABLE *AgentGetDataDirectory();
 
 DB_HANDLE LIBNXAGENT_EXPORTABLE AgentGetLocalDatabaseHandle();
@@ -857,5 +855,13 @@ LONG LIBNXAGENT_EXPORTABLE SMBIOS_MemDevParameterHandler(const TCHAR *cmd, const
 LONG LIBNXAGENT_EXPORTABLE SMBIOS_ProcessorParameterHandler(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG LIBNXAGENT_EXPORTABLE SMBIOS_ListHandler(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
 LONG LIBNXAGENT_EXPORTABLE SMBIOS_TableHandler(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *session);
+
+/**
+ * Wrapper for SleepAndCheckForShutdownEx (for backward compatibility)
+ */
+inline bool AgentSleepAndCheckForShutdown(UINT32 milliseconds)
+{
+   return SleepAndCheckForShutdownEx(milliseconds);
+}
 
 #endif   /* _nms_agent_h_ */

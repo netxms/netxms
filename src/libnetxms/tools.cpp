@@ -61,11 +61,22 @@ HRESULT (WINAPI *imp_SetThreadDescription)(HANDLE, PCWSTR) = NULL;
 #endif
 
 /**
+ * Process shutdown condition
+ */
+static CONDITION s_shutdownCondition = INVALID_CONDITION_HANDLE;
+
+/**
+ * Process shutdown flag
+ */
+static bool s_shutdownFlag = false;
+
+/**
  * Process exit handler
  */
 static void OnProcessExit()
 {
    MsgWaitQueue::shutdown();
+   ConditionDestroy(s_shutdownCondition);
 }
 
 /**
@@ -76,6 +87,8 @@ static void OnProcessExit()
 void LIBNETXMS_EXPORTABLE InitNetXMSProcess(bool commandLineTool)
 {
    InitThreadLibrary();
+
+   s_shutdownCondition = ConditionCreate(true);
 
    // Set locale to C. It shouldn't be needed, according to
    // documentation, but I've seen the cases when agent formats
@@ -118,6 +131,47 @@ void LIBNETXMS_EXPORTABLE InitNetXMSProcess(bool commandLineTool)
    srand(static_cast<unsigned int>(time(NULL)));
 
    atexit(OnProcessExit);
+}
+
+/**
+ * Initiate shutdown of NetXMS process
+ */
+void LIBNETXMS_EXPORTABLE InitiateProcessShutdown()
+{
+   s_shutdownFlag = true;
+   ConditionSet(s_shutdownCondition);
+}
+
+/**
+ * Sleep for specified number of seconds or until system shutdown arrives
+ * Function will return TRUE if shutdown event occurs
+ *
+ * @param seconds seconds to sleep
+ * @return true if server is shutting down
+ */
+bool LIBNETXMS_EXPORTABLE SleepAndCheckForShutdown(UINT32 seconds)
+{
+   return ConditionWait(s_shutdownCondition, (seconds != INFINITE) ? seconds * 1000 : INFINITE);
+}
+
+/**
+ * Sleep for specified number of milliseconds or until system shutdown arrives
+ * Function will return TRUE if shutdown event occurs
+ *
+ * @param milliseconds milliseconds to sleep
+ * @return true if server is shutting down
+ */
+bool LIBNETXMS_EXPORTABLE SleepAndCheckForShutdownEx(UINT32 milliseconds)
+{
+   return ConditionWait(s_shutdownCondition, milliseconds);
+}
+
+/**
+ * Check if process shutdown is in progress
+ */
+bool LIBNETXMS_EXPORTABLE IsShutdownInProgress()
+{
+   return s_shutdownFlag;
 }
 
 /**

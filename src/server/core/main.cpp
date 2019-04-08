@@ -176,7 +176,6 @@ Condition g_dbPasswordReady(true);
 /**
  * Static data
  */
-static CONDITION s_shutdownCondition = INVALID_CONDITION_HANDLE;
 static THREAD s_pollManagerThread = INVALID_THREAD_HANDLE;
 static THREAD s_syncerThread = INVALID_THREAD_HANDLE;
 static THREAD s_clientListenerThread = INVALID_THREAD_HANDLE;
@@ -219,18 +218,6 @@ void FillComponentsMessage(NXCPMessage *msg)
       msg->setField(fieldId++, it->next());
    }
    delete it;
-}
-
-/**
- * Sleep for specified number of seconds or until system shutdown arrives
- * Function will return TRUE if shutdown event occurs
- *
- * @param seconds seconds to sleep
- * @return true if server is shutting down
- */
-bool NXCORE_EXPORTABLE SleepAndCheckForShutdown(int seconds)
-{
-	return ConditionWait(s_shutdownCondition, seconds * 1000);
 }
 
 /**
@@ -928,9 +915,6 @@ retry_db_lock:
 	   return FALSE;
 #endif
 
-	// Create synchronization stuff
-	s_shutdownCondition = ConditionCreate(TRUE);
-
    // Create thread pools
 	nxlog_debug(2, _T("Creating thread pools"));
 	g_mainThreadPool = ThreadPoolCreate(_T("MAIN"),
@@ -1164,8 +1148,8 @@ void NXCORE_EXPORTABLE Shutdown()
 	NotifyClientSessions(NX_NOTIFY_SHUTDOWN, 0);
 
 	nxlog_write(MSG_SERVER_STOPPED, EVENTLOG_INFORMATION_TYPE, NULL);
-	g_flags |= AF_SHUTDOWN;     // Set shutdown flag
-	ConditionSet(s_shutdownCondition);
+   g_flags |= AF_SHUTDOWN;     // Set shutdown flag
+	InitiateProcessShutdown();
 
    // Call shutdown functions for the modules
    // CALL_ALL_MODULES cannot be used here because it checks for shutdown flag
@@ -1258,8 +1242,6 @@ void NXCORE_EXPORTABLE Shutdown()
 	nxlog_debug(1, _T("Server shutdown complete"));
 	nxlog_close();
 
-	ConditionDestroy(s_shutdownCondition);
-
 	// Remove PID file
 #ifndef _WIN32
 	_tremove(g_szPIDFile);
@@ -1282,7 +1264,7 @@ void NXCORE_EXPORTABLE FastShutdown()
    DbgPrintf(1, _T("Using fast shutdown procedure"));
 
 	g_flags |= AF_SHUTDOWN;     // Set shutdown flag
-	ConditionSet(s_shutdownCondition);
+	InitiateProcessShutdown();
 
 	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 	SaveObjects(hdb, INVALID_INDEX, true);
@@ -1356,9 +1338,13 @@ THREAD_RESULT NXCORE_EXPORTABLE THREAD_CALL SignalHandler(void *pArg)
 				   {
                   m_nShutdownReason = SHUTDOWN_BY_SIGNAL;
                   if (IsStandalone())
+                  {
                      Shutdown(); // will never return
+                  }
                   else
-                     ConditionSet(s_shutdownCondition);
+                  {
+                     InitiateProcessShutdown();
+                  }
 				   }
 				   break;
 				case SIGSEGV:
@@ -1493,13 +1479,13 @@ THREAD_RESULT NXCORE_EXPORTABLE THREAD_CALL Main(void *pArg)
 #else
          _tprintf(_T("Server running. Press Ctrl+C to shutdown.\n"));
          // Shutdown will be called from signal handler
-   		ConditionWait(s_shutdownCondition, INFINITE);
+         SleepAndCheckForShutdown(INFINITE);
 #endif
       }
 	}
 	else
 	{
-		ConditionWait(s_shutdownCondition, INFINITE);
+      SleepAndCheckForShutdown(INFINITE);
 		// On Win32, Shutdown() will be called by service control handler
 #ifndef _WIN32
 		Shutdown();

@@ -786,9 +786,4 @@ inline bool IsZoningEnabled()
 	return (g_flags & AF_ENABLE_ZONING) ? true : false;
 }
 
-inline bool IsShutdownInProgress()
-{
-	return (g_flags & AF_SHUTDOWN) ? true : false;
-}
-
 #endif   /* _nxsrvapi_h_ */
