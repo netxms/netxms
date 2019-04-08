@@ -69,15 +69,11 @@ LONG H_SysProcessCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, 
  */
 static struct pst_status *GetProcessList(int *pnNumProcs)
 {
-	int nSize = 0, nCount;
-	struct pst_status *pBuffer = NULL;
-   time_t now;
-
    MutexLock(m_processListLock);
 
+   time_t now = time(NULL);
    if (m_processList != NULL)
    {
-      now = time(NULL);
       if (now < m_processListUpdated + EXPIRATION)
       {
          *pnNumProcs = m_processCount;
@@ -86,22 +82,22 @@ static struct pst_status *GetProcessList(int *pnNumProcs)
       }
       else
       {
-         free(m_processList);
-         m_processList = NULL;
+         MemFreeAndNull(m_processList);
       }
    }
 	
+	int nSize = 0, nCount;
+	struct pst_status *pBuffer = NULL;
 	do
 	{
-		nSize += 1000;
-		pBuffer = (pst_status *)realloc(pBuffer, sizeof(struct pst_status) * nSize);
+		nSize += 1024;
+		pBuffer = MemReallocArray(pBuffer, nSize);
 		nCount = pstat_getproc(pBuffer, sizeof(struct pst_status), nSize, 0);
 	} while(nCount == nSize);
 
 	if (nCount <= 0)
 	{
-		free(pBuffer);
-		pBuffer = NULL;
+		MemFreeAndNull(pBuffer);
 	}
 	else
 	{
