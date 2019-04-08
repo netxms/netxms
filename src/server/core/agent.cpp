@@ -715,10 +715,10 @@ UINT32 AgentConnectionEx::processCollectedData(NXCPMessage *msg)
          switch(type)
          {
             case DCO_TYPE_ITEM:
-               free(value);
+               MemFree(value);
                break;
             case DCO_TYPE_LIST:
-               delete (StringList *)value;
+               delete static_cast<StringList*>(value);
                break;
             case DCO_TYPE_TABLE:
                // DCTable will keep ownership of created table

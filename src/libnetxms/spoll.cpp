@@ -124,7 +124,7 @@ int SocketPoller::poll(UINT32 timeout)
          tv.tv_sec = timeout / 1000;
          tv.tv_usec = (timeout % 1000) * 1000;
          INT64 startTime = GetCurrentTimeMs();
-         int rc = select(m_maxfd + 1, m_write ? NULL : &m_sockets, m_write ? &m_sockets : NULL, NULL, &tv);
+         rc = select(m_maxfd + 1, m_write ? NULL : &m_sockets, m_write ? &m_sockets : NULL, NULL, &tv);
          if ((rc != -1) || (errno != EINTR))
             break;
          UINT32 elapsed = (UINT32)(GetCurrentTimeMs() - startTime);
