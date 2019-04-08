@@ -102,7 +102,7 @@ static bool H_UpgradeFromV44()
  */
 static bool H_UpgradeFromV43()
 {
-   CHK_EXEC(CreateConfigParam(_T("NetworkDiscovery.MergeDuplicateNodes"), _T("1"),
+   CHK_EXEC(CreateConfigParam(_T("NetworkDiscovery.MergeDuplicateNodes"), _T("0"),
             _T("Enable/disable merge of duplicate nodes. When enabled, configuration of duplicate node(s) will be merged into original node and duplicate(s) will be deleted."),
             'B', true, false, false, false));
    CHK_EXEC(SetMinorSchemaVersion(44));
