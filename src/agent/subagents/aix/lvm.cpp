@@ -86,17 +86,16 @@ public:
    PhysicalVolume(struct querypv *pv, struct unique_id *id)
    {
       // read volume name
-      char query[128], buffer[32];
+      char query[128], buffer[64];
       sprintf(query, "attribute='pvid' and value='%s'", UniqueIdToText(id, buffer));
       struct CuAt object;
       long rc = CAST_FROM_POINTER(odm_get_first(CuAt_CLASS, query, &object), long);
       if ((rc != 0) && (rc != -1))
       {
          strlcpy(m_name, object.name, 64);
-         m_name[63] = 0;
       }
       else
-         {
+      {
          UniqueIdToText(id, m_name);
       }
       
