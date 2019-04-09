@@ -24,11 +24,35 @@
 #include <nxevent.h>
 
 /**
- * Upgrade from 22.48 to 30.0
+ * Upgrade from 22.49 to 30.0
+ */
+static bool H_UpgradeFromV49()
+{
+   CHK_EXEC(SetMajorSchemaVersion(30, 0));
+   return true;
+}
+
+/**
+ * Upgrade from 22.48 to 22.49
  */
 static bool H_UpgradeFromV48()
 {
-   CHK_EXEC(SetMajorSchemaVersion(30, 0));
+   DB_RESULT hResult = SQLSelect(_T("SELECT system_access FROM user_groups WHERE id=-2147483647"));
+   if (hResult != NULL)
+   {
+      if (DBGetNumRows(hResult) != 0)
+      {
+         UINT64 accessRights = DBGetFieldUInt64(hResult, 0, 0);
+         accessRights |= SYSTEM_ACCESS_IMPORT_CONFIGURATION;
+
+         TCHAR query[256];
+         _sntprintf(query, 256, _T("UPDATE user_groups SET system_access=") UINT64_FMT _T(" WHERE id=-2147483647"), accessRights);
+         CHK_EXEC(SQLQuery(query));
+      }
+      DBFreeResult(hResult);
+   }
+
+   CHK_EXEC(SetMinorSchemaVersion(49));
    return true;
 }
 
@@ -935,7 +959,8 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
-   { 48, 30, 0,  H_UpgradeFromV48 },
+   { 49, 30, 0,  H_UpgradeFromV49 },
+   { 48, 22, 49, H_UpgradeFromV48 },
    { 47, 22, 48, H_UpgradeFromV47 },
    { 46, 22, 47, H_UpgradeFromV46 },
    { 45, 22, 46, H_UpgradeFromV45 },

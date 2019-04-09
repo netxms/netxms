@@ -35,6 +35,7 @@
 	NX-1580 (Updated FOUNDRY MIB // Updated CPQHOST MIB)
 	NX-1588 (Object load error can cause server crash)
 	NX-1590 (SecondsToUptime function: Incorrect display in some cases)
+	NX-1593 (Create separate access right for configuration import)
 
 
 *

@@ -9783,7 +9783,7 @@ void ClientSession::importConfiguration(NXCPMessage *pRequest)
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(pRequest->getId());
 
-   if (checkSysAccessRights(SYSTEM_ACCESS_CONFIGURE_TRAPS | SYSTEM_ACCESS_EDIT_EVENT_DB | SYSTEM_ACCESS_EPP))
+   if (checkSysAccessRights(SYSTEM_ACCESS_IMPORT_CONFIGURATION))
    {
       char *content = pRequest->getFieldAsUtf8String(VID_NXMP_CONTENT);
       if (content != NULL)
