@@ -100,6 +100,7 @@ public class SystemRights extends PropertyPage
       addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_SCHEDULE_MAINTENANCE, Messages.get().SystemRights_ScheduleObjectMaint);
       addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_EXTERNAL_INTEGRATION, "External tool integration account"); 
       addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_SETUP_TCP_PROXY, "Initiate TCP proxy sessions"); 
+      addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_IMPORT_CONFIGURATION, "Import configuration"); 
 		
 		return dialogArea;
 	}
