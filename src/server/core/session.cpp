@@ -3183,7 +3183,9 @@ void ClientSession::enterMaintenanceMode(NXCPMessage *request)
              (object->getObjectClass() == OBJECT_SERVICEROOT)||
              (object->getObjectClass() == OBJECT_SENSOR))
          {
-            object->enterMaintenanceMode();
+            TCHAR *comments = request->getFieldAsString(VID_COMMENTS);
+            object->enterMaintenanceMode(comments);
+            MemFree(comments);
             msg.setField(VID_RCC, RCC_SUCCESS);
             WriteAuditLog(AUDIT_OBJECTS, TRUE, m_dwUserId, m_workstation, m_id, object->getId(),
                _T("Requested maintenance mode enter for object %s [%d]"), object->getName(), object->getId());

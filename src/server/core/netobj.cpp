@@ -2352,7 +2352,7 @@ void NetObj::setGeoLocation(const GeoLocation& geoLocation)
 /**
  * Enter maintenance mode
  */
-void NetObj::enterMaintenanceMode()
+void NetObj::enterMaintenanceMode(const TCHAR *comments)
 {
    DbgPrintf(4, _T("Entering maintenance mode for object %s [%d] (%s)"), m_name, m_id, getObjectClassName());
 
@@ -2361,7 +2361,7 @@ void NetObj::enterMaintenanceMode()
    {
       NetObj *object = m_childList->get(i);
       if (object->getStatus() != STATUS_UNMANAGED)
-         object->enterMaintenanceMode();
+         object->enterMaintenanceMode(comments);
    }
    unlockChildList();
 }

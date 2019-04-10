@@ -70,24 +70,27 @@ public:
    UINT32 m_userId;
    UINT32 m_objectId;
    TCHAR *m_persistentData;
+   TCHAR *m_comments;
    ScheduledTaskTransientData *m_transientData;
 
-   ScheduledTaskParameters(const TCHAR *taskKey, UINT32 userId, UINT32 objectId, const TCHAR *persistentData = NULL, ScheduledTaskTransientData *transientData = NULL)
+   ScheduledTaskParameters(const TCHAR *taskKey, UINT32 userId, UINT32 objectId, const TCHAR *persistentData = NULL, ScheduledTaskTransientData *transientData = NULL, const TCHAR *comments = NULL)
    {
       m_taskKey = MemCopyString(taskKey);
       m_userId = userId;
       m_objectId = objectId;
       m_persistentData = MemCopyString(persistentData);
       m_transientData = transientData;
+      m_comments = MemCopyString(comments);
    }
 
-   ScheduledTaskParameters(UINT32 userId, UINT32 objectId, const TCHAR *persistentData = NULL, ScheduledTaskTransientData *transientData = NULL)
+   ScheduledTaskParameters(UINT32 userId, UINT32 objectId, const TCHAR *persistentData = NULL, ScheduledTaskTransientData *transientData = NULL, const TCHAR *comments = NULL)
    {
       m_taskKey = NULL;
       m_userId = userId;
       m_objectId = objectId;
       m_persistentData = MemCopyString(persistentData);
       m_transientData = transientData;
+      m_comments = MemCopyString(comments);
    }
 
    ScheduledTaskParameters()
@@ -97,12 +100,14 @@ public:
       m_objectId = 0;
       m_persistentData = NULL;
       m_transientData = NULL;
+      m_comments = NULL;
    }
 
    ~ScheduledTaskParameters()
    {
       MemFree(m_taskKey);
       MemFree(m_persistentData);
+      MemFree(m_comments);
       delete m_transientData;
    }
 };
@@ -117,16 +122,15 @@ private:
    TCHAR *m_taskHandlerId;
    TCHAR *m_schedule;
    ScheduledTaskParameters *m_parameters;
-   TCHAR *m_comments;
    time_t m_executionTime;
    time_t m_lastExecution;
    UINT32 m_flags;
 
 public:
    ScheduledTask(int id, const TCHAR *taskHandlerId, const TCHAR *schedule,
-            ScheduledTaskParameters *params, const TCHAR *comments, UINT32 flags = 0);
+            ScheduledTaskParameters *params, UINT32 flags = 0);
    ScheduledTask(int id, const TCHAR *taskHandlerId, time_t executionTime,
-            ScheduledTaskParameters *params, const TCHAR *comments, UINT32 flags = 0);
+            ScheduledTaskParameters *params, UINT32 flags = 0);
    ScheduledTask(DB_RESULT hResult, int row);
    ~ScheduledTask();
 
@@ -148,8 +152,8 @@ public:
 
    void run(SchedulerCallback *callback);
 
-   void update(const TCHAR *taskHandlerId, const TCHAR *schedule, ScheduledTaskParameters *params, const TCHAR *comments, UINT32 flags);
-   void update(const TCHAR *taskHandlerId, time_t nextExecution, ScheduledTaskParameters *params, const TCHAR *comments, UINT32 flags);
+   void update(const TCHAR *taskHandlerId, const TCHAR *schedule, ScheduledTaskParameters *params, UINT32 flags);
+   void update(const TCHAR *taskHandlerId, time_t nextExecution, ScheduledTaskParameters *params, UINT32 flags);
 
    void saveToDatabase(bool newObject) const;
    void fillMessage(NXCPMessage *msg) const;

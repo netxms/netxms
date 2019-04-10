@@ -858,7 +858,7 @@ static int F_UnmanageObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, 
 /**
  * EnterMaintenance object (set to unmanaged state)
  * Syntax:
- *    EnterMaintenance(object)
+ *    EnterMaintenance(object, comments)
  * where:
  *     object - NetXMS object (Node, Interface, or NetObj)
  * Return value:
@@ -866,14 +866,20 @@ static int F_UnmanageObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, 
  */
 static int F_EnterMaintenance(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
+   if ((argc < 1) || (argc > 2))
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
 	if (!argv[0]->isObject())
 		return NXSL_ERR_NOT_OBJECT;
+
+   if ((argc > 1) && !argv[1]->isString())
+      return NXSL_ERR_NOT_STRING;
 
 	NXSL_Object *object = argv[0]->getValueAsObject();
    if (!object->getClass()->instanceOf(g_nxslNetObjClass.getName()))
 		return NXSL_ERR_BAD_CLASS;
 
-	((NetObj *)object->getData())->enterMaintenanceMode();
+	static_cast<NetObj*>(object->getData())->enterMaintenanceMode((argc > 1) ? argv[1]->getValueAsCString() : NULL);
 
 	*ppResult = vm->createValue();
 	return 0;
@@ -1599,7 +1605,7 @@ static NXSL_ExtFunction m_nxslServerFunctions[] =
    { "CurrencyName", F_CurrencyName, 1 },
 	{ "DeleteCustomAttribute", F_DeleteCustomAttribute, 2 },
    { "DriverReadParameter", F_DriverReadParameter, 2 },
-   { "EnterMaintenance", F_EnterMaintenance, 1 },
+   { "EnterMaintenance", F_EnterMaintenance, -1 },
    { "EventNameFromCode", F_EventNameFromCode, 1 },
    { "EventCodeFromName", F_EventCodeFromName, 1 },
    { "GetAllNodes", F_GetAllNodes, -1 },

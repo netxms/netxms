@@ -67,13 +67,12 @@ ScheduledTaskTransientData::~ScheduledTaskTransientData()
  * Create recurrent task object
  */
 ScheduledTask::ScheduledTask(int id, const TCHAR *taskHandlerId, const TCHAR *schedule,
-         ScheduledTaskParameters *parameters, const TCHAR *comments, UINT32 flags)
+         ScheduledTaskParameters *parameters, UINT32 flags)
 {
    m_id = id;
    m_taskHandlerId = MemCopyString(CHECK_NULL_EX(taskHandlerId));
    m_schedule = MemCopyString(CHECK_NULL_EX(schedule));
    m_parameters = parameters;
-   m_comments = MemCopyString(CHECK_NULL_EX(comments));
    m_executionTime = NEVER;
    m_lastExecution = NEVER;
    m_flags = flags;
@@ -83,13 +82,12 @@ ScheduledTask::ScheduledTask(int id, const TCHAR *taskHandlerId, const TCHAR *sc
  * Create one-time execution task object
  */
 ScheduledTask::ScheduledTask(int id, const TCHAR *taskHandlerId, time_t executionTime,
-         ScheduledTaskParameters *parameters, const TCHAR *comments, UINT32 flags)
+         ScheduledTaskParameters *parameters, UINT32 flags)
 {
    m_id = id;
    m_taskHandlerId = MemCopyString(CHECK_NULL_EX(taskHandlerId));
    m_schedule = MemCopyString(_T(""));
    m_parameters = parameters;
-   m_comments = MemCopyString(CHECK_NULL_EX(comments));
    m_executionTime = executionTime;
    m_lastExecution = NEVER;
    m_flags = flags;
@@ -97,6 +95,7 @@ ScheduledTask::ScheduledTask(int id, const TCHAR *taskHandlerId, time_t executio
 
 /**
  * Create task object from database record
+ * Expected field order: id,taskid,schedule,params,execution_time,last_execution_time,flags,owner,object_id,comments,task_key
  */
 ScheduledTask::ScheduledTask(DB_RESULT hResult, int row)
 {
@@ -106,15 +105,15 @@ ScheduledTask::ScheduledTask(DB_RESULT hResult, int row)
    m_executionTime = DBGetFieldULong(hResult, row, 4);
    m_lastExecution = DBGetFieldULong(hResult, row, 5);
    m_flags = DBGetFieldULong(hResult, row, 6);
-   m_comments = DBGetField(hResult, row, 9, NULL, 0);
 
    TCHAR persistentData[1024];
    DBGetField(hResult, row, 3, persistentData, 1024);
    UINT32 userId = DBGetFieldULong(hResult, row, 7);
    UINT32 objectId = DBGetFieldULong(hResult, row, 8);
-   TCHAR key[256];
-   DBGetField(hResult, row, 9, key, 256);
-   m_parameters = new ScheduledTaskParameters(key, userId, objectId, persistentData);
+   TCHAR key[256], comments[256];
+   DBGetField(hResult, row, 9, comments, 256);
+   DBGetField(hResult, row, 10, key, 256);
+   m_parameters = new ScheduledTaskParameters(key, userId, objectId, persistentData, NULL, comments);
 }
 
 /**
@@ -124,14 +123,13 @@ ScheduledTask::~ScheduledTask()
 {
    MemFree(m_taskHandlerId);
    MemFree(m_schedule);
-   MemFree(m_comments);
    delete m_parameters;
 }
 
 /**
  * Update task
  */
-void ScheduledTask::update(const TCHAR *taskHandlerId, const TCHAR *schedule, ScheduledTaskParameters *parameters, const TCHAR *comments, UINT32 flags)
+void ScheduledTask::update(const TCHAR *taskHandlerId, const TCHAR *schedule, ScheduledTaskParameters *parameters, UINT32 flags)
 {
    MemFree(m_taskHandlerId);
    m_taskHandlerId = MemCopyString(CHECK_NULL_EX(taskHandlerId));
@@ -139,15 +137,13 @@ void ScheduledTask::update(const TCHAR *taskHandlerId, const TCHAR *schedule, Sc
    m_schedule = MemCopyString(CHECK_NULL_EX(schedule));
    delete m_parameters;
    m_parameters = parameters;
-   MemFree(m_comments);
-   m_comments = MemCopyString(CHECK_NULL_EX(comments));
    m_flags = flags;
 }
 
 /**
  * Update task
  */
-void ScheduledTask::update(const TCHAR *taskHandlerId, time_t nextExecution, ScheduledTaskParameters *parameters, const TCHAR *comments, UINT32 flags)
+void ScheduledTask::update(const TCHAR *taskHandlerId, time_t nextExecution, ScheduledTaskParameters *parameters, UINT32 flags)
 {
    MemFree(m_taskHandlerId);
    m_taskHandlerId = MemCopyString(CHECK_NULL_EX(taskHandlerId));
@@ -155,8 +151,6 @@ void ScheduledTask::update(const TCHAR *taskHandlerId, time_t nextExecution, Sch
    m_schedule = MemCopyString(_T(""));
    delete m_parameters;
    m_parameters = parameters;
-   MemFree(m_comments);
-   m_comments = MemCopyString(CHECK_NULL_EX(comments));
    m_executionTime = nextExecution;
    m_flags = flags;
 }
@@ -193,7 +187,7 @@ void ScheduledTask::saveToDatabase(bool newObject) const
       DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, (LONG)m_flags);
       DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, m_parameters->m_userId);
       DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, m_parameters->m_objectId);
-      DBBind(hStmt, 9, DB_SQLTYPE_VARCHAR, m_comments, DB_BIND_STATIC);
+      DBBind(hStmt, 9, DB_SQLTYPE_VARCHAR, m_parameters->m_comments, DB_BIND_STATIC, 255);
       DBBind(hStmt, 10, DB_SQLTYPE_VARCHAR, m_parameters->m_taskKey, DB_BIND_STATIC, 255);
       DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, (LONG)m_id);
 
@@ -270,7 +264,7 @@ void ScheduledTask::fillMessage(NXCPMessage *msg) const
    msg->setField(VID_FLAGS, (UINT32)m_flags);
    msg->setField(VID_OWNER, m_parameters->m_userId);
    msg->setField(VID_OBJECT_ID, m_parameters->m_objectId);
-   msg->setField(VID_COMMENTS, m_comments);
+   msg->setField(VID_COMMENTS, m_parameters->m_comments);
    msg->setField(VID_TASK_KEY, m_parameters->m_taskKey);
 }
 
@@ -288,7 +282,7 @@ void ScheduledTask::fillMessage(NXCPMessage *msg, UINT32 base) const
    msg->setField(base + 6, m_flags);
    msg->setField(base + 7, m_parameters->m_userId);
    msg->setField(base + 8, m_parameters->m_objectId);
-   msg->setField(base + 9, m_comments);
+   msg->setField(base + 9, m_parameters->m_comments);
    msg->setField(base + 10, m_parameters->m_taskKey);
 }
 
@@ -333,7 +327,7 @@ UINT32 NXCORE_EXPORTABLE AddRecurrentScheduledTask(const TCHAR *task, const TCHA
    DbgPrintf(7, _T("AddSchedule: Add cron schedule %s, %s, %s"), task, schedule, persistentData);
    s_cronScheduleLock.lock();
    ScheduledTask *sh = new ScheduledTask(CreateUniqueId(IDG_SCHEDULED_TASK), task, schedule,
-            new ScheduledTaskParameters(key, owner, objectId, persistentData, transientData), comments, flags);
+            new ScheduledTaskParameters(key, owner, objectId, persistentData, transientData, comments), flags);
    sh->saveToDatabase(true);
    s_cronSchedules.add(sh);
    s_cronScheduleLock.unlock();
@@ -352,7 +346,7 @@ UINT32 NXCORE_EXPORTABLE AddOneTimeScheduledTask(const TCHAR *task, time_t nextE
    DbgPrintf(5, _T("AddOneTimeAction: Add one time schedule %s, %d, %s"), task, nextExecutionTime, persistentData);
    s_oneTimeScheduleLock.lock();
    ScheduledTask *sh = new ScheduledTask(CreateUniqueId(IDG_SCHEDULED_TASK), task, nextExecutionTime,
-            new ScheduledTaskParameters(key, owner, objectId, persistentData, transientData), comments, flags);
+            new ScheduledTaskParameters(key, owner, objectId, persistentData, transientData, comments), flags);
    sh->saveToDatabase(true);
    s_oneTimeSchedules.add(sh);
    s_oneTimeSchedules.sort(ScheduledTaskComparator);
@@ -382,7 +376,7 @@ UINT32 NXCORE_EXPORTABLE UpdateRecurrentScheduledTask(int id, const TCHAR *task,
             break;
          }
          s_cronSchedules.get(i)->update(task, schedule,
-                  new ScheduledTaskParameters(key, owner, objectId, persistentData, transientData), comments, flags);
+                  new ScheduledTaskParameters(key, owner, objectId, persistentData, transientData, comments), flags);
          s_cronSchedules.get(i)->saveToDatabase(false);
          found = true;
          break;
@@ -407,7 +401,7 @@ UINT32 NXCORE_EXPORTABLE UpdateRecurrentScheduledTask(int id, const TCHAR *task,
             st = s_oneTimeSchedules.get(i);
             s_oneTimeSchedules.unlink(i);
             s_oneTimeSchedules.sort(ScheduledTaskComparator);
-            st->update(task, schedule, new ScheduledTaskParameters(key, owner, objectId, persistentData, transientData), comments, flags);
+            st->update(task, schedule, new ScheduledTaskParameters(key, owner, objectId, persistentData, transientData, comments), flags);
             st->saveToDatabase(false);
             found = true;
             break;
@@ -446,7 +440,7 @@ UINT32 NXCORE_EXPORTABLE UpdateOneTimeScheduledTask(int id, const TCHAR *task, t
             break;
          }
          s_oneTimeSchedules.get(i)->update(task, nextExecutionTime,
-                  new ScheduledTaskParameters(key, owner, objectId, persistentData, transientData), comments, flags);
+                  new ScheduledTaskParameters(key, owner, objectId, persistentData, transientData, comments), flags);
          s_oneTimeSchedules.get(i)->saveToDatabase(false);
          s_oneTimeSchedules.sort(ScheduledTaskComparator);
          found = true;
@@ -471,7 +465,7 @@ UINT32 NXCORE_EXPORTABLE UpdateOneTimeScheduledTask(int id, const TCHAR *task, t
             }
             st = s_cronSchedules.get(i);
             s_cronSchedules.unlink(i);
-            st->update(task, nextExecutionTime, new ScheduledTaskParameters(key, owner, objectId, persistentData, transientData), comments, flags);
+            st->update(task, nextExecutionTime, new ScheduledTaskParameters(key, owner, objectId, persistentData, transientData, comments), flags);
             st->saveToDatabase(false);
             found = true;
             break;

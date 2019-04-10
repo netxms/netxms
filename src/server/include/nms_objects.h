@@ -833,7 +833,7 @@ public:
 
    bool isInMaintenanceMode() const { return m_maintenanceEventId != 0; }
    UINT64 getMaintenanceEventId() const { return m_maintenanceEventId; }
-   virtual void enterMaintenanceMode();
+   virtual void enterMaintenanceMode(const TCHAR *comments);
    virtual void leaveMaintenanceMode();
 
    void fillMessage(NXCPMessage *msg, UINT32 userId);
@@ -1464,8 +1464,8 @@ public:
    virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
    virtual bool isDataCollectionTarget();
 
-   virtual void enterMaintenanceMode();
-   virtual void leaveMaintenanceMode();
+   virtual void enterMaintenanceMode(const TCHAR *comments) OVERRIDE;
+   virtual void leaveMaintenanceMode() OVERRIDE;
 
    virtual DataCollectionError getInternalItem(const TCHAR *param, size_t bufSize, TCHAR *buffer);
    virtual DataCollectionError getScriptItem(const TCHAR *param, size_t bufSize, TCHAR *buffer, DataCollectionTarget *targetObject);

@@ -251,7 +251,7 @@ Node NXCORE_EXPORTABLE *PollNewNode(NewNodeData *newNodeData)
    NetObjInsert(pNode, true, false);
 
    if (newNodeData->creationFlags & NXC_NCF_ENTER_MAINTENANCE)
-      pNode->enterMaintenanceMode();
+      pNode->enterMaintenanceMode(_T("Automatic maintenance for new node"));
 
 	// Use DNS name as primary name if required
 	if ((newNodeData->origin == NODE_ORIGIN_NETWORK_DISCOVERY) && ConfigReadBoolean(_T("UseDNSNameForDiscoveredNodes"), false))
