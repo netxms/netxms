@@ -43,8 +43,8 @@ public class ScheduleMaintenance extends AbstractHandler
             {
                if (o instanceof AbstractObject)
                {
-                  ScheduledTask taskStart = new ScheduledTask("Maintenance.Enter", "", "", "", dialog.getStartDate(), ScheduledTask.SYSTEM, ((AbstractObject)o).getObjectId()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-                  ScheduledTask taskEnd = new ScheduledTask("Maintenance.Leave", "", "", "", dialog.getEndDate(), ScheduledTask.SYSTEM, ((AbstractObject)o).getObjectId()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+                  ScheduledTask taskStart = new ScheduledTask("Maintenance.Enter", "", "", dialog.getComments(), dialog.getStartDate(), ScheduledTask.SYSTEM, ((AbstractObject)o).getObjectId()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+                  ScheduledTask taskEnd = new ScheduledTask("Maintenance.Leave", "", "", dialog.getComments(), dialog.getEndDate(), ScheduledTask.SYSTEM, ((AbstractObject)o).getObjectId()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
                   session.addScheduledTask(taskStart);
                   session.addScheduledTask(taskEnd);                  
                }

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2019 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,8 +22,10 @@ import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jface.dialogs.InputDialog;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.window.Window;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.handlers.HandlerUtil;
 import org.netxms.client.NXCSession;
@@ -39,15 +41,15 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 class SetObjectMaintenanceState extends AbstractHandler
 {
-   private boolean maintained;
+   private boolean enter;
    
    /**
     * @param manage
     */
-   protected SetObjectMaintenanceState(boolean maintained)
+   protected SetObjectMaintenanceState(boolean enter)
    {
       super();
-      this.maintained = maintained;
+      this.enter = enter;
    }
    
    /* (non-Javadoc)
@@ -61,6 +63,19 @@ class SetObjectMaintenanceState extends AbstractHandler
       if ((selection == null) || !(selection instanceof IStructuredSelection) || selection.isEmpty())
          return null;
       
+      final String comments; 
+      if (enter)
+      {
+         InputDialog dlg = new InputDialog(null, "Enter Maintenance", "Additional comments", "", null);
+         if (dlg.open() != Window.OK)
+            return null;
+         comments = dlg.getValue().trim();
+      }
+      else
+      {
+         comments = null;
+      }
+      
       final Object[] objects = ((IStructuredSelection)selection).toArray();
       final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
       new ConsoleJob(Messages.get().SetObjectManagementState_JobTitle, null, Activator.PLUGIN_ID, null) {
@@ -70,9 +85,9 @@ class SetObjectMaintenanceState extends AbstractHandler
             for(Object o : objects)
             {
                if (o instanceof AbstractObject)
-                  session.setObjectMaintenanceMode(((AbstractObject)o).getObjectId(), maintained);
+                  session.setObjectMaintenanceMode(((AbstractObject)o).getObjectId(), enter, comments);
                else if (o instanceof ObjectWrapper)
-                  session.setObjectMaintenanceMode(((ObjectWrapper)o).getObjectId(), maintained);
+                  session.setObjectMaintenanceMode(((ObjectWrapper)o).getObjectId(), enter, comments);
             }
          }
          
