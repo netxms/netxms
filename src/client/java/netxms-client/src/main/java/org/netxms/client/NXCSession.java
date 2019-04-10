@@ -10050,15 +10050,31 @@ public class NXCSession
     * 
     * @param objectId object ID
     * @param inMaintenance new maintenance mode setting (true = on, false = off)
+    * @param comments comments for entering maintenance
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void setObjectMaintenanceMode(long objectId, boolean inMaintenance, String comments) throws NXCException, IOException
+   {
+      final NXCPMessage msg = newMessage(inMaintenance ? NXCPCodes.CMD_ENTER_MAINT_MODE : NXCPCodes.CMD_LEAVE_MAINT_MODE); 
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)objectId);
+      if (comments != null)
+         msg.setField(NXCPCodes.VID_COMMENTS, comments);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
+
+   /**
+    * Set maintenance mode for object
+    * 
+    * @param objectId object ID
+    * @param inMaintenance new maintenance mode setting (true = on, false = off)
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public void setObjectMaintenanceMode(long objectId, boolean inMaintenance) throws NXCException, IOException
    {
-      final NXCPMessage msg = newMessage(inMaintenance ? NXCPCodes.CMD_ENTER_MAINT_MODE : NXCPCodes.CMD_LEAVE_MAINT_MODE); 
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)objectId);
-      sendMessage(msg);
-      waitForRCC(msg.getMessageId());
+      setObjectMaintenanceMode(objectId, inMaintenance, null);
    }
    
    /**
