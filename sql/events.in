@@ -918,7 +918,9 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
       EVENT_MAINTENANCE_MODE_ENTERED, 'SYS_MAINTENANCE_MODE_ENTERED', '5f6c8b1c-f162-413e-8028-80e7ad2c362d',
       EVENT_SEVERITY_NORMAL, 1,
       'Entered maintenance mode',
-      'Generated when node, cluster, or mobile device entered maintenance mode.'
+      'Generated when node, cluster, or mobile device entered maintenance mode.' CONCAT CRLF CONCAT
+      'Parameters:' CONCAT CRLF CONCAT
+      '   1) Comments'
    );
 
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES

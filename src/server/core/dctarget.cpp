@@ -1134,10 +1134,10 @@ void DataCollectionTarget::updatePingData()
 /**
  * Enter maintenance mode
  */
-void DataCollectionTarget::enterMaintenanceMode()
+void DataCollectionTarget::enterMaintenanceMode(const TCHAR *comments)
 {
    DbgPrintf(4, _T("Entering maintenance mode for %s [%d]"), m_name, m_id);
-   UINT64 eventId = PostEvent2(EVENT_MAINTENANCE_MODE_ENTERED, m_id, NULL);
+   UINT64 eventId = PostEvent2(EVENT_MAINTENANCE_MODE_ENTERED, m_id, "s", CHECK_NULL_EX(comments));
 
    lockDciAccess(false);
    for(int i = 0; i < m_dcObjects->size(); i++)

@@ -24,6 +24,16 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 22.49 to 22.50
+ */
+static bool H_UpgradeFromV49()
+{
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET description='Generated when node, cluster, or mobile device entered maintenance mode.\r\nParameters:\r\n   1) Comments' WHERE guid='5f6c8b1c-f162-413e-8028-80e7ad2c362d'")));
+   CHK_EXEC(SetMinorSchemaVersion(50));
+   return true;
+}
+
+/**
  * Upgrade from 22.48 to 22.49
  */
 static bool H_UpgradeFromV48()
@@ -950,6 +960,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 49, 22, 50, H_UpgradeFromV49 },
    { 48, 22, 49, H_UpgradeFromV48 },
    { 47, 22, 48, H_UpgradeFromV47 },
    { 46, 22, 47, H_UpgradeFromV46 },

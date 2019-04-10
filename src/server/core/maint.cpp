@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2015 Alex Kirhenshtein
+** Copyright (C) 2015-2019 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,9 +22,12 @@
 
 #include "nxcore.h"
 
+/**
+ * Execute scheduled maintenance task
+ */
 static void ScheduledMaintenance(const ScheduledTaskParameters *params, bool enter)
 {
-   if(params->m_objectId == 0)
+   if (params->m_objectId == 0)
    {
       DbgPrintf(4, _T("MaintenanceJob: object ID is 0"));
       return;
@@ -37,7 +40,7 @@ static void ScheduledMaintenance(const ScheduledTaskParameters *params, bool ent
       {
          if (enter)
          {
-            object->enterMaintenanceMode();
+            object->enterMaintenanceMode(params->m_comments);
          }
          else
          {
