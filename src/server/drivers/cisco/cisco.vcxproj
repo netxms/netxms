@@ -145,6 +145,7 @@
     <ClCompile Include="catalyst.cpp" />
     <ClCompile Include="cisco.cpp" />
     <ClCompile Include="esw.cpp" />
+    <ClCompile Include="generic.cpp" />
     <ClCompile Include="sb.cpp" />
   </ItemGroup>
   <ItemGroup>
