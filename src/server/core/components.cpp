@@ -96,7 +96,7 @@ UINT32 Component::updateFromSnmp(SNMP_Transport *snmp)
 	if ((rc = SnmpGet(snmp->getSnmpVersion(), snmp, NULL, oid, 13, &m_parentIndex, sizeof(UINT32), 0)) != SNMP_ERR_SUCCESS)
 		return rc;
 
-	oid[11] = 7;	// entPhysicalDescr
+	oid[11] = 2;	// entPhysicalDescr
 	if (SnmpGet(snmp->getSnmpVersion(), snmp, NULL, oid, 13, buffer, sizeof(buffer), 0) == SNMP_ERR_SUCCESS)
 	   m_description = _tcsdup(buffer);
 	else
@@ -126,6 +126,21 @@ UINT32 Component::updateFromSnmp(SNMP_Transport *snmp)
 	else
 	   m_firmware = _tcsdup(_T(""));
 
+	// Read entAliasMappingIdentifier
+	oid[8] = 3;
+	oid[9] = 2;
+	oid[10] = 1;
+   oid[11] = 2;
+	oid[12] = m_index;
+	oid[13] = 0;
+   if (SnmpGet(snmp->getSnmpVersion(), snmp, NULL, oid, 14, buffer, sizeof(buffer), SG_STRING_RESULT) == SNMP_ERR_SUCCESS)
+   {
+      if (!_tcsncmp(buffer, _T(".1.3.6.1.2.1.2.2.1.1."), 21))
+      {
+         m_ifIndex = _tcstoul(&buffer[21], NULL, 10);
+      }
+   }
+
 	return SNMP_ERR_SUCCESS;
 }
 
@@ -150,7 +165,13 @@ void Component::buildTree(ObjectArray<Component> *elements)
  */
 void Component::print(CONSOLE_CTX console, int level)
 {
-	ConsolePrintf(console, _T("%*s\x1b[1m%d\x1b[0m \x1b[32;1m%-32s\x1b[0m %s\n"), level * 4, _T(""), (int)m_index, m_name, m_description);
+   TCHAR ifInfo[128] = _T("");
+   if (m_ifIndex != 0)
+   {
+      _sntprintf(ifInfo, 128, _T(" \x1b[33;1m[ifIndex=%u]\x1b[0m"), m_ifIndex);
+   }
+   ConsolePrintf(console, _T("%*s\x1b[1m%d\x1b[0m \x1b[32;1m%-32s\x1b[0m %s%s\n"),
+            level * 4, _T(""), (int)m_index, m_name, m_description, ifInfo);
 	for(int i = 0; i < m_children.size(); i++)
 	   m_children.get(i)->print(console, level + 1);
 }
