@@ -31,14 +31,6 @@ const TCHAR *CiscoSbDriver::getName()
 }
 
 /**
- * Get driver version
- */
-const TCHAR *CiscoSbDriver::getVersion()
-{
-   return NETXMS_BUILD_TAG;
-}
-
-/**
  * Check if given device can be potentially supported by driver
  *
  * @param oid Device OID
