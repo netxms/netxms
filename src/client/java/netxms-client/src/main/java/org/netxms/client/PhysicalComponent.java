@@ -86,6 +86,16 @@ public class PhysicalComponent
 		}
 		nextVarId = varId;
 	}
+	
+	/**
+	 * Get display name for component. Returns description if name is empty.
+	 * 
+	 * @return display name for component
+	 */
+	public String getDisplayName()
+	{
+	   return name.isEmpty() ? (description.isEmpty() ? String.format("[%d]", index) : description) : name;
+	}
 
 	/**
 	 * @return the index

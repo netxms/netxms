@@ -22,6 +22,8 @@ import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
 import org.netxms.client.PhysicalComponent;
+import org.netxms.client.objects.AbstractNode;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.objectview.Messages;
 import org.netxms.ui.eclipse.objectview.objecttabs.ComponentsTab;
 
@@ -44,6 +46,8 @@ public class ComponentTreeLabelProvider extends LabelProvider implements ITableL
 	   Messages.get().ComponentTreeLabelProvider_ClassPort, 
 	   Messages.get().ComponentTreeLabelProvider_ClassStack 
 	};
+	
+	private AbstractNode node = null;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
@@ -72,17 +76,39 @@ public class ComponentTreeLabelProvider extends LabelProvider implements ITableL
 				{
 					return className[PhysicalComponent.UNKNOWN];
 				}
+         case ComponentsTab.COLUMN_DESCRIPTION:
+            return c.getDescription();
+         case ComponentsTab.COLUMN_INTERFACE:
+            return getInterfaceName(c);
 			case ComponentsTab.COLUMN_FIRMWARE:
 				return c.getFirmware();
 			case ComponentsTab.COLUMN_MODEL:
 				return c.getModel();
 			case ComponentsTab.COLUMN_NAME:
-				return c.getName();
+				return c.getDisplayName();
 			case ComponentsTab.COLUMN_SERIAL:
 				return c.getSerialNumber();
 			case ComponentsTab.COLUMN_VENDOR:
 				return c.getVendor();
 		}
 		return null;
+	}
+	
+	/**
+	 * Get corresponding interface name
+	 * 
+	 * @param c component
+	 * @return interface name or empty string
+	 */
+	private String getInterfaceName(PhysicalComponent c)
+	{
+	   if (node == null)
+	      return "";
+	   
+	   int ifIndex = c.getIfIndex();
+	   if (ifIndex <= 0)
+	      return "";
+	   
+	   return ""; // FIXME
 	}
 }
