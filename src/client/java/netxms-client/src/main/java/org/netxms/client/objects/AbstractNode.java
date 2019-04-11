@@ -699,7 +699,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements RackE
 	 */
 	public MacAddress getPrimaryMAC()
 	{
-		for(AbstractObject o : getAllChilds(AbstractObject.OBJECT_INTERFACE))
+		for(AbstractObject o : getAllChildren(AbstractObject.OBJECT_INTERFACE))
 		{
 			Interface iface = (Interface)o;
 			if (iface.isLoopback() || (iface.getMacAddress() == null))
@@ -836,6 +836,22 @@ public abstract class AbstractNode extends DataCollectionTarget implements RackE
    public int getPortNumberingScheme()
    {
       return portNumberingScheme;
+   }
+   
+   /**
+    * Get node's interface by interface index
+    * 
+    * @param ifIndex interface index
+    * @return corresponding interface object or null
+    */
+   public Interface getInterfaceByIndex(int ifIndex)
+   {
+      for(AbstractObject i : getAllChildren(AbstractObject.OBJECT_INTERFACE))
+      {
+         if (((Interface)i).getIfIndex() == ifIndex)
+            return (Interface)i;
+      }
+      return null;
    }
 
    /* (non-Javadoc)

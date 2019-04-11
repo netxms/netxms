@@ -40,7 +40,7 @@ public class ObjectAdapter implements IWorkbenchAdapter
 	@Override
 	public Object[] getChildren(Object o)
 	{
-		return ((AbstractObject)o).getChildsAsArray();
+		return ((AbstractObject)o).getChildrenAsArray();
 	}
 
 	/* (non-Javadoc)

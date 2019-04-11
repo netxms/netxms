@@ -116,7 +116,7 @@ public class Rack extends GenericObject
 	public List<RackElement> getUnits()
 	{
 	   List<RackElement> units = new ArrayList<RackElement>();
-	   for(AbstractObject o : getChildsAsArray())
+	   for(AbstractObject o : getChildrenAsArray())
 	   {
 	      if (o instanceof RackElement)
 	         units.add((RackElement)o);

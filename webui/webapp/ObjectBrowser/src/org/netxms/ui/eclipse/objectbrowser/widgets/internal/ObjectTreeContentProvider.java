@@ -51,7 +51,7 @@ public class ObjectTreeContentProvider extends TreeNodeContentProvider
 	@Override
 	public Object[] getChildren(Object parentElement)
 	{
-		return ((AbstractObject)parentElement).getChildsAsArray();
+		return ((AbstractObject)parentElement).getChildrenAsArray();
 	}
 
 	/* (non-Javadoc)

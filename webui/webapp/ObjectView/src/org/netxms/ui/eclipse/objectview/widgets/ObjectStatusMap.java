@@ -135,7 +135,7 @@ public class ObjectStatusMap extends AbstractObjectStatusMap
 			return;
 		
 		List<AbstractObject> objects = 
-		      new ArrayList<AbstractObject>(root.getAllChilds(new int[] { AbstractObject.OBJECT_NODE, AbstractObject.OBJECT_CLUSTER, AbstractObject.OBJECT_MOBILEDEVICE }));
+		      new ArrayList<AbstractObject>(root.getAllChildren(new int[] { AbstractObject.OBJECT_NODE, AbstractObject.OBJECT_CLUSTER, AbstractObject.OBJECT_MOBILEDEVICE }));
 		filterObjects(objects);
 		Collections.sort(objects, new Comparator<AbstractObject>() {
 			@Override
@@ -180,7 +180,7 @@ public class ObjectStatusMap extends AbstractObjectStatusMap
 		if ((root == null) || !((root instanceof Container) || (root instanceof ServiceRoot) || (root instanceof Cluster)))
 			return;
 		
-		List<AbstractObject> objects = new ArrayList<AbstractObject>(Arrays.asList(root.getChildsAsArray()));
+		List<AbstractObject> objects = new ArrayList<AbstractObject>(Arrays.asList(root.getChildrenAsArray()));
 		Collections.sort(objects, new Comparator<AbstractObject>() {
 			@Override
 			public int compare(AbstractObject o1, AbstractObject o2)

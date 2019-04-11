@@ -128,7 +128,7 @@ public class ObjectStatusRadialWidget extends Canvas implements PaintListener
       gc.setAlpha(255);
 
       float objectSize = 0;
-	   for(AbstractObject obj : object.getChildsAsArray())
+	   for(AbstractObject obj : object.getChildrenAsArray())
 	   {	      
 	      float currObjsize = 0;	      
 	      if (AbstractObjectStatusMap.isContainerObject(obj))
@@ -252,7 +252,7 @@ public class ObjectStatusRadialWidget extends Canvas implements PaintListener
    {     
       int objectCount = 0;
       int foundObjectsCount = 0;
-      AbstractObject[] objSet = object.getChildsAsArray();
+      AbstractObject[] objSet = object.getChildrenAsArray();
       for(AbstractObject obj : objSet)
       {
          if (objects != null)            
@@ -311,7 +311,7 @@ public class ObjectStatusRadialWidget extends Canvas implements PaintListener
    private int calculateLayerSize(AbstractObject object, int lvl, GC gc)
    {
       int objCount = 0;
-      AbstractObject[] objSet = object.getChildsAsArray();
+      AbstractObject[] objSet = object.getChildrenAsArray();
       gc.setFont(valueFonts[0]);//set minimal font
       for(AbstractObject obj : objSet )
       {
@@ -372,7 +372,7 @@ public class ObjectStatusRadialWidget extends Canvas implements PaintListener
    private int calculateLayerFontSize(AbstractObject object, int lvl, GC gc)
    {     
       int objCount = 0;
-      AbstractObject[] objSet = object.getChildsAsArray();
+      AbstractObject[] objSet = object.getChildrenAsArray();
       for(AbstractObject obj : objSet )
       {
          int contSize; 

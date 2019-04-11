@@ -193,7 +193,7 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 			}
 			else if ((o instanceof Container) || (o instanceof ServiceRoot) || (o instanceof Subnet) || (o instanceof Cluster))
 			{
-				for(AbstractObject n : ((AbstractObject)o).getAllChilds(AbstractObject.OBJECT_NODE))
+				for(AbstractObject n : ((AbstractObject)o).getAllChildren(AbstractObject.OBJECT_NODE))
 					nodes.add(new ObjectContext((AbstractNode)n, null));
 			}
 			else if (o instanceof Alarm)

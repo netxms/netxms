@@ -18,12 +18,15 @@
  */
 package org.netxms.ui.eclipse.objectview.objecttabs.helpers;
 
+import java.util.HashMap;
+import java.util.Map;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
 import org.netxms.client.PhysicalComponent;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.Interface;
 import org.netxms.ui.eclipse.objectview.Messages;
 import org.netxms.ui.eclipse.objectview.objecttabs.ComponentsTab;
 
@@ -47,9 +50,29 @@ public class ComponentTreeLabelProvider extends LabelProvider implements ITableL
 	   Messages.get().ComponentTreeLabelProvider_ClassStack 
 	};
 	
-	private AbstractNode node = null;
+	private Map<Integer, Interface> interfaces = new HashMap<Integer, Interface>();
 	
-	/* (non-Javadoc)
+	/**
+	 * Set current node
+	 * 
+    * @param node new node object
+    */
+   public void setNode(AbstractNode node)
+   {
+      interfaces.clear();
+      if (node != null)
+      {
+         for(AbstractObject i : node.getAllChildren(AbstractObject.OBJECT_INTERFACE))
+         {
+            if (((Interface)i).getIfIndex() > 0)
+            {
+               interfaces.put(((Interface)i).getIfIndex(), (Interface)i);
+            }
+         }
+      }
+   }
+
+   /* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
 	 */
 	@Override
@@ -102,13 +125,11 @@ public class ComponentTreeLabelProvider extends LabelProvider implements ITableL
 	 */
 	private String getInterfaceName(PhysicalComponent c)
 	{
-	   if (node == null)
-	      return "";
-	   
 	   int ifIndex = c.getIfIndex();
 	   if (ifIndex <= 0)
 	      return "";
 	   
-	   return ""; // FIXME
+	   Interface iface = interfaces.get(ifIndex);
+	   return (iface != null) ? iface.getObjectName() : null;
 	}
 }

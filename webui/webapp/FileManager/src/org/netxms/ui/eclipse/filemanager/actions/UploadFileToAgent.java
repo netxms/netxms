@@ -152,7 +152,7 @@ public class UploadFileToAgent implements IObjectActionDelegate
 			else if ((object instanceof Container) || (object instanceof ServiceRoot) || 
 			         (object instanceof Subnet)  || (object instanceof EntireNetwork))
 			{
-				Set<AbstractObject> set = ((AbstractObject)object).getAllChilds(AbstractObject.OBJECT_NODE);
+				Set<AbstractObject> set = ((AbstractObject)object).getAllChildren(AbstractObject.OBJECT_NODE);
 				for(AbstractObject o : set)
 					nodes.add(o.getObjectId());
 			}

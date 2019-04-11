@@ -1,7 +1,7 @@
 /**
  * NetXMS - open source network management system
  * Copyright (C) 2003-2014 Victor Kirhenshtein
- * 
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -232,7 +232,7 @@ public class RadioInterfaces extends ViewPart
 			return;
 		
 		List<RadioInterface> list = new ArrayList<RadioInterface>();
-		for(AbstractObject o : node.getAllChilds(AbstractObject.OBJECT_ACCESSPOINT))
+		for(AbstractObject o : node.getAllChildren(AbstractObject.OBJECT_ACCESSPOINT))
 		{
 			if (o instanceof AccessPoint)
 			{

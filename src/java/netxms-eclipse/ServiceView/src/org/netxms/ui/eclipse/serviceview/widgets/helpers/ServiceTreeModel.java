@@ -51,7 +51,7 @@ public class ServiceTreeModel
 	{
 		final ServiceTreeElement element = new ServiceTreeElement(parent, object);
 		elements.add(element);
-		for(AbstractObject o : object.getChildsAsArray())
+		for(AbstractObject o : object.getChildrenAsArray())
 		{
 			if ((o instanceof Container) || (o instanceof Node) || (o instanceof Cluster) || (o instanceof Condition))
 			{

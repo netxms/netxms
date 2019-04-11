@@ -244,7 +244,7 @@ public class Dot1xStatusView extends ViewPart
 		
 		if ((object instanceof Node) && !nodeList.contains(object.getObjectId()))
 		{
-			for(AbstractObject o : object.getAllChilds(AbstractObject.OBJECT_INTERFACE))
+			for(AbstractObject o : object.getAllChildren(AbstractObject.OBJECT_INTERFACE))
 			{
 				if ((((Interface)o).getFlags() & Interface.IF_PHYSICAL_PORT) != 0)
 					portList.add(new Dot1xPortSummary((Node)object, (Interface)o));

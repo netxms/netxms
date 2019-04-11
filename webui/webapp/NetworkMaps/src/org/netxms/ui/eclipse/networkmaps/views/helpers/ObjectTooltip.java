@@ -201,7 +201,7 @@ public class ObjectTooltip extends Figure
 	 */
 	private void collectData(int[] objectCount, AbstractObject root)
 	{
-		for(AbstractObject o : root.getAllChilds(AbstractObject.OBJECT_NODE))
+		for(AbstractObject o : root.getAllChildren(AbstractObject.OBJECT_NODE))
 		{
 			if (o.getStatus().compareTo(ObjectStatus.UNKNOWN) <= 0)
 				objectCount[o.getStatus().getValue()]++;

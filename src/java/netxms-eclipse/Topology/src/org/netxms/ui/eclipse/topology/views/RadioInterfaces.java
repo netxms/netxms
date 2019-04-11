@@ -232,7 +232,7 @@ public class RadioInterfaces extends ViewPart
 			return;
 		
 		List<RadioInterface> list = new ArrayList<RadioInterface>();
-		for(AbstractObject o : node.getAllChilds(AbstractObject.OBJECT_ACCESSPOINT))
+		for(AbstractObject o : node.getAllChildren(AbstractObject.OBJECT_ACCESSPOINT))
 		{
 			if (o instanceof AccessPoint)
 			{

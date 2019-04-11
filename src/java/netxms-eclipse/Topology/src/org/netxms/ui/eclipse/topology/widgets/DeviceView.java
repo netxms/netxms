@@ -137,7 +137,7 @@ public class DeviceView extends DashboardComposite
 		}
 		
 		List<Interface> interfaces = new ArrayList<Interface>();
-		for(AbstractObject o: object.getAllChilds(AbstractObject.OBJECT_INTERFACE))
+		for(AbstractObject o: object.getAllChildren(AbstractObject.OBJECT_INTERFACE))
 		{
 			if (((Interface)o).isPhysicalPort())
 				interfaces.add((Interface)o);

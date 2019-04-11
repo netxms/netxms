@@ -1219,7 +1219,7 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 			{
 			   if (o instanceof TemplateGroup)
 			   {
-			      Set<AbstractObject> children = ((TemplateGroup)o).getAllChilds(AbstractObject.OBJECT_TEMPLATE);
+			      Set<AbstractObject> children = ((TemplateGroup)o).getAllChildren(AbstractObject.OBJECT_TEMPLATE);
 			      for(AbstractObject child : children)
 			      {
 		            templates.put(((Template)child).getObjectId(), (Template)child);

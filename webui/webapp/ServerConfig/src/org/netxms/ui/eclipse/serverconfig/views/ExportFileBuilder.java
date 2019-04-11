@@ -1025,7 +1025,7 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 	}
 
 	/**
-	 * Save settings
+	 * Save exported configuration to file
 	 */
 	private void save()
 	{
@@ -1212,18 +1212,18 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 			{
 			   if (o instanceof TemplateGroup)
 			   {
-			      Set<AbstractObject> children = ((TemplateGroup)o).getAllChilds(AbstractObject.OBJECT_TEMPLATE);
+			      Set<AbstractObject> children = ((TemplateGroup)o).getAllChildren(AbstractObject.OBJECT_TEMPLATE);
 			      for(AbstractObject child : children)
 			      {
 		            templates.put(((Template)child).getObjectId(), (Template)child);
 		            idList.add(child.getObjectId());
 			      }
 			   }
-				else if (o instanceof Template)
-				{
-					templates.put(((Template)o).getObjectId(), (Template)o);
-					idList.add(o.getObjectId());
-				}
+			   else if (o instanceof Template)
+			   {
+   				templates.put(((Template)o).getObjectId(), (Template)o);
+   				idList.add(o.getObjectId());
+			   }
 			}
 			templateViewer.setInput(templates.values().toArray());
 			setModified();

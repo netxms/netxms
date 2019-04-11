@@ -130,7 +130,7 @@ public class ClusterTab extends ObjectTab
 		
 		page.addElement(new NetworkMapObject(id++, cluster.getObjectId()));
 		
-		for(AbstractObject o : cluster.getAllChilds(AbstractObject.OBJECT_NODE))
+		for(AbstractObject o : cluster.getAllChildren(AbstractObject.OBJECT_NODE))
 		{
 			page.addElement(new NetworkMapObject(id, o.getObjectId()));
 			page.addLink(new NetworkMapLink(0, 1, id));

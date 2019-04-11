@@ -60,7 +60,7 @@ public class ObjectStatusMapRadial extends AbstractObjectStatusMap
    protected Collection<AbstractObject> createFilteredList(AbstractObject root)
    {
       Map<Long, AbstractObject> acceptedlist = new HashMap<Long, AbstractObject>();
-      for(AbstractObject obj : root.getAllChilds(-1))
+      for(AbstractObject obj : root.getAllChildren(-1))
       {
          if ((isContainerObject(obj) || isLeafObject(obj)) && isAcceptedByFilter(obj))
             acceptedlist.put(obj.getObjectId(), obj);

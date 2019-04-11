@@ -139,7 +139,7 @@ public class ObjectTools extends ElementWidget
       }
       else if ((object instanceof Container) || (object instanceof ServiceRoot) || (object instanceof Subnet) || (object instanceof Cluster))
       {
-         for(AbstractObject n : object.getAllChilds(AbstractObject.OBJECT_NODE))
+         for(AbstractObject n : object.getAllChildren(AbstractObject.OBJECT_NODE))
             nodes.add(new ObjectContext((AbstractNode)n, null));
       }
       
