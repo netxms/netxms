@@ -110,7 +110,7 @@ public class ObjectStatusChartElement extends ComparisonChartElement
 	 */
 	private void collectData(int[] objectCount, AbstractObject root)
 	{
-		for(AbstractObject o : root.getAllChilds(-1))
+		for(AbstractObject o : root.getAllChildren(-1))
 		{
          if ((o.getStatus().compareTo(ObjectStatus.UNKNOWN) <= 0) && filterObject(o))
 				objectCount[o.getStatus().getValue()]++;

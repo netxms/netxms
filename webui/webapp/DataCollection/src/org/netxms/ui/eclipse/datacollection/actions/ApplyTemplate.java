@@ -19,6 +19,7 @@
 
 import java.util.ArrayList;
 import java.util.List;
+
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.viewers.ISelection;
@@ -80,25 +81,27 @@ public class ApplyTemplate implements IObjectActionDelegate
 				{
 					List<AbstractObject> objects = dlg.getSelectedObjects();
 					for(AbstractObject o : objects)
+					{
 					   if (parentId == null)
-                  {
+					   {
                      session.applyTemplate(0, o.getObjectId());
-                  }
-                  else
-                  {
-                     for (Long l : parentId)
-                     {
-                        if (o instanceof Container)
-                        {
-                           for(AbstractObject obj : ((Container)o).getAllChilds(AbstractObject.OBJECT_NODE))
-                           {
-                              session.applyTemplate(l, obj.getObjectId());
-                           }
-                        }
-                        else
-                           session.applyTemplate(l, o.getObjectId());
-                     }
-                  }
+					   }
+					   else
+					   {
+   					   for (Long l : parentId)
+   					   {
+   		               if (o instanceof Container)
+		                  {
+		                     for(AbstractObject obj : ((Container)o).getAllChildren(AbstractObject.OBJECT_NODE))
+		                     {
+		                        session.applyTemplate(l, obj.getObjectId());
+		                     }
+		                  }
+   		               else
+   		                  session.applyTemplate(l, o.getObjectId());
+   					   }
+					   }
+					}
 				}
 			}.start();
 		}

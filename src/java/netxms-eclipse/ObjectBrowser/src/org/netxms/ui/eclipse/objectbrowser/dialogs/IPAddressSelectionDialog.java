@@ -124,7 +124,7 @@ public class IPAddressSelectionDialog extends Dialog
 		tc.setWidth(150);
 		
 		Set<AddressListElement> addrList = new HashSet<AddressListElement>();
-		for(AbstractObject o : node.getChildsAsArray())
+		for(AbstractObject o : node.getChildrenAsArray())
 		{
 			if (o instanceof Interface)
 			{

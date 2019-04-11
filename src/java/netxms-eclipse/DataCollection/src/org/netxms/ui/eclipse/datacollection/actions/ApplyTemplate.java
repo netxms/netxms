@@ -92,7 +92,7 @@ public class ApplyTemplate implements IObjectActionDelegate
    					   {
    		               if (o instanceof Container)
 		                  {
-		                     for(AbstractObject obj : ((Container)o).getAllChilds(AbstractObject.OBJECT_NODE))
+		                     for(AbstractObject obj : ((Container)o).getAllChildren(AbstractObject.OBJECT_NODE))
 		                     {
 		                        session.applyTemplate(l, obj.getObjectId());
 		                     }

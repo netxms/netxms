@@ -162,7 +162,7 @@ public class SoftwareInventory extends Composite
 				else
 				{
 					final List<SoftwareInventoryNode> nodes = new ArrayList<SoftwareInventoryNode>();
-					for(final AbstractObject o : object.getAllChilds(AbstractObject.OBJECT_NODE))
+					for(final AbstractObject o : object.getAllChildren(AbstractObject.OBJECT_NODE))
 					{
 						try
 						{

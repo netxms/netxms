@@ -844,7 +844,7 @@ public class ObjectFinder extends ViewPart
                      }
                      else if (object instanceof GenericObject  && !zoneFilter.isEmpty())
                      {
-                        AbstractObject children[] = ((GenericObject)object).getChildsAsArray();
+                        AbstractObject children[] = ((GenericObject)object).getChildrenAsArray();
                         boolean match = false;
                         for(AbstractObject o : children)
                         {
@@ -920,7 +920,7 @@ public class ObjectFinder extends ViewPart
       if (object instanceof AbstractNode)
       {
          addrList.add(((AbstractNode)object).getPrimaryIP());
-         for(AbstractObject o : object.getAllChilds(AbstractObject.OBJECT_INTERFACE))
+         for(AbstractObject o : object.getAllChildren(AbstractObject.OBJECT_INTERFACE))
          {
             addrList.addAll(((Interface)o).getIpAddressList());
          }

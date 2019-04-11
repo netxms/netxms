@@ -135,7 +135,7 @@ public class ChildObjectListDialog extends Dialog
 		Composite dialogArea = (Composite)super.createDialogArea(parent);
 		
 		AbstractObject object = ((NXCSession)ConsoleSharedData.getSession()).findObjectById(parentObject);
-		AbstractObject[] sourceObjects = (object != null) ? object.getChildsAsArray() : new AbstractObject[0];
+		AbstractObject[] sourceObjects = (object != null) ? object.getChildrenAsArray() : new AbstractObject[0];
 		
 		GridLayout layout = new GridLayout();
 		layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;

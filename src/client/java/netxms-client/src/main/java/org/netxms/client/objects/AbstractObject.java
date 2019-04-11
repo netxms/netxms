@@ -420,30 +420,19 @@ public abstract class AbstractObject
 	 */
 	public boolean isChildOf(final long objectId)
 	{
-		boolean rc = false;
-		
-		synchronized(parents)
+		for (Long id : parents)
 		{
-			for (Long id : parents)
+			if (id == objectId)
+			   return true;
+			
+			AbstractObject object = session.findObjectById(id);
+			if (object != null)
 			{
-				if (id == objectId)
-				{
-					// Direct parent
-					rc = true;
-					break;
-				}
-				AbstractObject object = session.findObjectById(id);
-				if (object != null)
-				{
-					if (object.isChildOf(objectId))
-					{
-						rc = true;
-						break;
-					}
-				}
+				if (object.isChildOf(objectId))
+				   return true;
 			}
-		}		
-		return rc;
+		}
+		return false;
 	}
 
 	/**
@@ -452,7 +441,7 @@ public abstract class AbstractObject
 	 */
 	public boolean isChildOf(final long[] objects)
 	{
-		for (long object : objects)
+		for(long object : objects)
 		{
 			if (isChildOf(object))
 			{
@@ -469,21 +458,12 @@ public abstract class AbstractObject
 	 */
 	public boolean isDirectChildOf(final long objectId)
 	{
-		boolean rc = false;
-		
-		synchronized(parents)
+		for(Long id : parents)
 		{
-			for (Long id : parents)
-			{
-				if (id == objectId)
-				{
-					// Direct parent
-					rc = true;
-					break;
-				}
-			}
-		}		
-		return rc;
+			if (id == objectId)
+			   return true;
+		}
+		return false;
 	}
 
 	/**
@@ -491,17 +471,13 @@ public abstract class AbstractObject
 	 */
 	public AbstractObject[] getParentsAsArray()
 	{
-		final Set<AbstractObject> list;
-		synchronized(parents)
+		final Set<AbstractObject> list = new HashSet<AbstractObject>(parents.size());
+		for (Long parent : parents)
 		{
-			list = new HashSet<AbstractObject>(children.size());
-			for (Long parent : parents)
+			AbstractObject obj = session.findObjectById(parent);
+			if (obj != null)
 			{
-				AbstractObject obj = session.findObjectById(parent);
-				if (obj != null)
-				{
-					list.add(obj);
-				}
+				list.add(obj);
 			}
 		}
 		return list.toArray(new AbstractObject[list.size()]);
@@ -510,19 +486,15 @@ public abstract class AbstractObject
 	/**
 	 * @return List of child objects
 	 */
-	public AbstractObject[] getChildsAsArray()
+	public AbstractObject[] getChildrenAsArray()
 	{
-		final Set<AbstractObject> list;
-		synchronized(children)
+		final Set<AbstractObject> list = new HashSet<AbstractObject>(children.size());
+		for(Long id : children)
 		{
-			list = new HashSet<AbstractObject>(children.size());
-			for (Long aChildren : children)
+			AbstractObject obj = session.findObjectById(id);
+			if (obj != null)
 			{
-				AbstractObject obj = session.findObjectById(aChildren);
-				if (obj != null)
-				{
-					list.add(obj);
-				}
+				list.add(obj);
 			}
 		}
 		return list.toArray(new AbstractObject[list.size()]);
@@ -535,14 +507,10 @@ public abstract class AbstractObject
 	 */
 	public long[] getChildIdList()
 	{
-		long[] list;
-		synchronized(children)
-		{
-			list = new long[children.size()];
-			int i = 0;
-			for(Long id : children)
-				list[i++] = id;
-		}
+		long[] list = new long[children.size()];
+		int i = 0;
+		for(Long id : children)
+			list[i++] = id;
 		return list;
 	}
 
@@ -553,14 +521,10 @@ public abstract class AbstractObject
 	 */
 	public long[] getParentIdList()
 	{
-		long[] list;
-		synchronized(parents)
-		{
-			list = new long[parents.size()];
-			int i = 0;
-			for(Long id : parents)
-				list[i++] = id;
-		}
+		long[] list = new long[parents.size()];
+		int i = 0;
+		for(Long id : parents)
+			list[i++] = id;
 		return list;
 	}
 	
@@ -569,33 +533,38 @@ public abstract class AbstractObject
 	 * @param classFilter class filter
 	 * @param set result set
 	 */
-	private void getAllChildsInternal(int[] classFilter, Set<AbstractObject> set)
+	private void getAllChildrenInternal(int[] classFilter, Set<AbstractObject> set)
 	{
-		synchronized(children)
+		for (Long child : children)
 		{
-			for (Long child : children) {
-				AbstractObject obj = session.findObjectById(child);
-				if (obj != null) {
-					if (matchClassFilter(classFilter, obj.getObjectClass())) {
-						set.add(obj);
-					}
-					obj.getAllChildsInternal(classFilter, set);
+			AbstractObject obj = session.findObjectById(child);
+			if (obj != null)
+			{
+				if (matchClassFilter(classFilter, obj.getObjectClass()))
+				{
+					set.add(obj);
 				}
+				obj.getAllChildrenInternal(classFilter, set);
 			}
 		}
 	}
 
+	/**
+	 * Match class filter
+	 * 
+	 * @param classFilter class filter (list of class IDs)
+	 * @param objectClass class to test
+	 * @return true if matched
+	 */
 	private boolean matchClassFilter(int[] classFilter, int objectClass)
 	{
 		if (classFilter == null)
-		{
 			return true;
-		}
-		for (int filter : classFilter) {
-			if (objectClass == filter)
-			{
+		
+		for(int c : classFilter)
+		{
+			if (objectClass == c)
 				return true;
-			}
 		}
 		return false;
 	}
@@ -606,10 +575,10 @@ public abstract class AbstractObject
 	 * @param classFilter -1 to get all childs, or NetXMS class id to retrieve objects of given class
 	 * @return set of child objects
 	 */
-	public Set<AbstractObject> getAllChilds(int classFilter)
+	public Set<AbstractObject> getAllChildren(int classFilter)
 	{
 		Set<AbstractObject> result = new HashSet<AbstractObject>();
-		getAllChildsInternal((classFilter < 0) ? null : new int[] { classFilter }, result);
+		getAllChildrenInternal((classFilter < 0) ? null : new int[] { classFilter }, result);
 		return result;
 	}
 
@@ -619,10 +588,10 @@ public abstract class AbstractObject
     * @param classFilter null to get all childs, or NetXMS class id(s) to retrieve objects of given class(es)
     * @return set of child objects
     */
-   public Set<AbstractObject> getAllChilds(int[] classFilter)
+   public Set<AbstractObject> getAllChildren(int[] classFilter)
    {
       Set<AbstractObject> result = new HashSet<AbstractObject>();
-      getAllChildsInternal(classFilter, result);
+      getAllChildrenInternal(classFilter, result);
       return result;
    }
 
@@ -633,18 +602,16 @@ public abstract class AbstractObject
 	 */
 	private void getAllParentsInternal(int[] classFilter, Set<AbstractObject> set)
 	{
-		synchronized(parents)
+		for (Long parent : parents)
 		{
-			for (Long parent : parents) {
-				AbstractObject obj = session.findObjectById(parent);
-				if (obj != null)
+			AbstractObject obj = session.findObjectById(parent);
+			if (obj != null)
+			{
+				if (matchClassFilter(classFilter, obj.getObjectClass()))
 				{
-					if (matchClassFilter(classFilter, obj.getObjectClass()))
-					{
-						set.add(obj);
-					}
-					obj.getAllParentsInternal(classFilter, set);
+					set.add(obj);
 				}
+				obj.getAllParentsInternal(classFilter, set);
 			}
 		}
 	}
@@ -680,21 +647,18 @@ public abstract class AbstractObject
 	 */
 	public AbstractObject[] getTrustedNodes()
 	{
-		synchronized(trustedNodes)
+      final AbstractObject[] list = new AbstractObject[trustedNodes.size()];
+		final Iterator<Long> it = trustedNodes.iterator();
+		for(int i = 0; it.hasNext(); i++)
 		{
-	      final AbstractObject[] list = new AbstractObject[trustedNodes.size()];
-			final Iterator<Long> it = trustedNodes.iterator();
-			for(int i = 0; it.hasNext(); i++)
-			{
-			   long id = it.next();
-				AbstractObject o = session.findObjectById(id);
-				if (o != null)
-				   list[i] = o;
-				else
-				   list[i] = new UnknownObject(id, session);
-			}
-	      return list;
+		   long id = it.next();
+			AbstractObject o = session.findObjectById(id);
+			if (o != null)
+			   list[i] = o;
+			else
+			   list[i] = new UnknownObject(id, session);
 		}
+      return list;
 	}
 
    /**
@@ -705,19 +669,16 @@ public abstract class AbstractObject
     */
    public List<AbstractObject> getDashboards(boolean accessibleOnly)
    {
-      synchronized(dashboards)
+      final List<AbstractObject> list = new ArrayList<AbstractObject>();
+      for(Long id : dashboards)
       {
-         final List<AbstractObject> list = new ArrayList<AbstractObject>();
-         for(Long id : dashboards)
-         {
-            AbstractObject o = session.findObjectById(id);
-            if (o != null)
-               list.add(o);
-            else if (!accessibleOnly)
-               list.add(new UnknownObject(id, session));
-         }
-         return list;
+         AbstractObject o = session.findObjectById(id);
+         if (o != null)
+            list.add(o);
+         else if (!accessibleOnly)
+            list.add(new UnknownObject(id, session));
       }
+      return list;
    }
 
 	/**

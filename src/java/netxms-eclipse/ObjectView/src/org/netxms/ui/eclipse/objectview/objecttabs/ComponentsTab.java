@@ -39,6 +39,7 @@ import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.PhysicalComponent;
 import org.netxms.client.constants.RCC;
+import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
@@ -65,6 +66,7 @@ public class ComponentsTab extends ObjectTab
    public static final int COLUMN_INTERFACE = 7;
 	
 	private TreeViewer viewer;
+	private ComponentTreeLabelProvider labelProvider;
 	private Action actionCopy;
 	private Action actionCopyName;
 	private Action actionCopyModel;
@@ -87,7 +89,8 @@ public class ComponentsTab extends ObjectTab
 		addColumn(Messages.get().ComponentsTab_ColSerial, 150);
 		addColumn(Messages.get().ComponentsTab_ColVendor, 150);
       addColumn(Messages.get().ComponentsTab_ColInterface, 150);
-		viewer.setLabelProvider(new ComponentTreeLabelProvider());
+      labelProvider = new ComponentTreeLabelProvider();
+		viewer.setLabelProvider(labelProvider);
 		viewer.setContentProvider(new ComponentTreeContentProvider());
 		viewer.getTree().setHeaderVisible(true);
 		viewer.getTree().setLinesVisible(true);
@@ -268,6 +271,7 @@ public class ComponentsTab extends ObjectTab
 							if ((ComponentsTab.this.getObject() != null) &&
 							    (ComponentsTab.this.getObject().getObjectId() == object.getObjectId()))
 							{
+							   labelProvider.setNode((AbstractNode)object);
 								viewer.setInput(new Object[] { root });
 								viewer.expandAll();
 							}
@@ -288,6 +292,7 @@ public class ComponentsTab extends ObjectTab
 							if ((ComponentsTab.this.getObject() != null) &&
 							    (ComponentsTab.this.getObject().getObjectId() == object.getObjectId()))
 							{
+							   labelProvider.setNode(null);
 								viewer.setInput(new Object[0]);
 							}
 						}

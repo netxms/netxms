@@ -219,7 +219,7 @@ public class PortViewElement extends ElementWidget
       }
       else
       {
-         List<AbstractObject> nodes = new ArrayList<AbstractObject>(root.getAllChilds(AbstractObject.OBJECT_NODE));
+         List<AbstractObject> nodes = new ArrayList<AbstractObject>(root.getAllChildren(AbstractObject.OBJECT_NODE));
          Collections.sort(nodes, new Comparator<AbstractObject>() {
             @Override
             public int compare(AbstractObject o1, AbstractObject o2)
@@ -245,7 +245,7 @@ public class PortViewElement extends ElementWidget
          return (!deviceViews.containsKey(root.getObjectId()) && ((Node)root).isBridge()) ||
                (deviceViews.containsKey(root.getObjectId()) && !((Node)root).isBridge());
       
-      Set<AbstractObject> nodes = root.getAllChilds(AbstractObject.OBJECT_NODE);
+      Set<AbstractObject> nodes = root.getAllChildren(AbstractObject.OBJECT_NODE);
       for(AbstractObject o : nodes)
       {
          if (((Node)o).isBridge())
