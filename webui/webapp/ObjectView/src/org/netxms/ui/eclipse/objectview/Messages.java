@@ -61,7 +61,9 @@ public class Messages extends NLS
    public String ComponentsTab_ActionCopySerial;
    public String ComponentsTab_ActionExpandAll;
    public String ComponentsTab_ColClass;
+   public String ComponentsTab_ColDescription;
    public String ComponentsTab_ColFirmware;
+   public String ComponentsTab_ColInterface;
    public String ComponentsTab_ColModel;
    public String ComponentsTab_ColName;
    public String ComponentsTab_ColSerial;

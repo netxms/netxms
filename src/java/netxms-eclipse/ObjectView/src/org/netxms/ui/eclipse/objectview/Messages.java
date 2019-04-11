@@ -57,7 +57,9 @@ public class Messages extends NLS
    public static String ComponentsTab_ActionCopySerial;
    public static String ComponentsTab_ActionExpandAll;
    public static String ComponentsTab_ColClass;
+   public static String ComponentsTab_ColDescription;
    public static String ComponentsTab_ColFirmware;
+   public static String ComponentsTab_ColInterface;
    public static String ComponentsTab_ColModel;
    public static String ComponentsTab_ColName;
    public static String ComponentsTab_ColSerial;

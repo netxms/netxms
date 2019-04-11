@@ -63,5 +63,4 @@ public class ComponentTreeContentProvider implements ITreeContentProvider
 	{
 		return ((PhysicalComponent)element).getSubcomponents().size() > 0;
 	}
-
 }

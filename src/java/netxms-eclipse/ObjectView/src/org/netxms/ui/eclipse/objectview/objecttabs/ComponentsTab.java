@@ -57,10 +57,12 @@ public class ComponentsTab extends ObjectTab
 {
 	public static final int COLUMN_NAME = 0;
 	public static final int COLUMN_CLASS = 1;
-	public static final int COLUMN_MODEL = 2;
-	public static final int COLUMN_FIRMWARE = 3;
-	public static final int COLUMN_SERIAL = 4;
-	public static final int COLUMN_VENDOR = 5;
+   public static final int COLUMN_DESCRIPTION = 2;
+	public static final int COLUMN_MODEL = 3;
+	public static final int COLUMN_FIRMWARE = 4;
+	public static final int COLUMN_SERIAL = 5;
+	public static final int COLUMN_VENDOR = 6;
+   public static final int COLUMN_INTERFACE = 7;
 	
 	private TreeViewer viewer;
 	private Action actionCopy;
@@ -79,10 +81,12 @@ public class ComponentsTab extends ObjectTab
 		viewer = new TreeViewer(parent, SWT.FULL_SELECTION | SWT.MULTI);
 		addColumn(Messages.get().ComponentsTab_ColName, 200);
 		addColumn(Messages.get().ComponentsTab_ColClass, 100);
+      addColumn(Messages.get().ComponentsTab_ColDescription, 250);
 		addColumn(Messages.get().ComponentsTab_ColModel, 150);
 		addColumn(Messages.get().ComponentsTab_ColFirmware, 100);
 		addColumn(Messages.get().ComponentsTab_ColSerial, 150);
 		addColumn(Messages.get().ComponentsTab_ColVendor, 150);
+      addColumn(Messages.get().ComponentsTab_ColInterface, 150);
 		viewer.setLabelProvider(new ComponentTreeLabelProvider());
 		viewer.setContentProvider(new ComponentTreeContentProvider());
 		viewer.getTree().setHeaderVisible(true);
