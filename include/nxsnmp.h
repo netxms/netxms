@@ -778,6 +778,8 @@ UINT32 LIBNXSNMP_EXPORTABLE SnmpWalk(SNMP_Transport *transport, const TCHAR *roo
 UINT32 LIBNXSNMP_EXPORTABLE SnmpWalk(SNMP_Transport *transport, const UINT32 *rootOid, size_t rootOidLen,
                                      UINT32 (* handler)(SNMP_Variable *, SNMP_Transport *, void *),
                                      void *userArg, bool logErrors = false);
+int LIBNXSNMP_EXPORTABLE SnmpWalkCount(SNMP_Transport *transport, const UINT32 *rootOid, size_t rootOidLen);
+int LIBNXSNMP_EXPORTABLE SnmpWalkCount(SNMP_Transport *transport, const TCHAR *rootOid);
 
 /**
  * Wrapper data for SnmpWalk

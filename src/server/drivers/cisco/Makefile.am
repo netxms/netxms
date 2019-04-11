@@ -1,7 +1,7 @@
 DRIVER = cisco
 
 pkglib_LTLIBRARIES = cisco.la
-cisco_la_SOURCES = cat2900xl.cpp catalyst.cpp cisco.cpp esw.cpp sb.cpp
+cisco_la_SOURCES = cat2900xl.cpp catalyst.cpp cisco.cpp esw.cpp generic.cpp sb.cpp
 cisco_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include
 cisco_la_LDFLAGS = -module -avoid-version
 cisco_la_LIBADD = ../../../libnetxms/libnetxms.la \

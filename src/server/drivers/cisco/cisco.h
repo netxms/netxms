@@ -38,6 +38,18 @@ public:
 };
 
 /**
+ * Generic driver
+ */
+class GenericCiscoDriver : public CiscoDeviceDriver
+{
+public:
+   virtual const TCHAR *getName();
+
+   virtual int isPotentialDevice(const TCHAR *oid);
+   virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid);
+};
+
+/**
  * Catalyst driver
  */
 class CatalystDriver : public CiscoDeviceDriver
@@ -70,7 +82,6 @@ class CiscoEswDriver : public NetworkDeviceDriver
 {
 public:
    virtual const TCHAR *getName();
-   virtual const TCHAR *getVersion();
 
    virtual int isPotentialDevice(const TCHAR *oid);
    virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid);
@@ -84,7 +95,6 @@ class CiscoSbDriver : public NetworkDeviceDriver
 {
 public:
    virtual const TCHAR *getName();
-   virtual const TCHAR *getVersion();
 
    virtual int isPotentialDevice(const TCHAR *oid);
    virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid);

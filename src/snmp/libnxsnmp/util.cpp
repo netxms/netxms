@@ -356,3 +356,34 @@ UINT32 LIBNXSNMP_EXPORTABLE SnmpWalk(SNMP_Transport *transport, const UINT32 *ro
    }
    return dwResult;
 }
+
+/**
+ * Handler for counting walk
+ */
+static UINT32 WalkCountHandler(SNMP_Variable *var, SNMP_Transport *transport, void *context)
+{
+   (*static_cast<int*>(context))++;
+   return SNMP_ERR_SUCCESS;
+}
+
+/**
+ * Count number of objects under given root. Returns -1 on error.
+ */
+int LIBNXSNMP_EXPORTABLE SnmpWalkCount(SNMP_Transport *transport, const UINT32 *rootOid, size_t rootOidLen)
+{
+   int count = 0;
+   if (SnmpWalk(transport, rootOid, rootOidLen, WalkCountHandler, &count) != SNMP_ERR_SUCCESS)
+      return -1;
+   return count;
+}
+
+/**
+ * Count number of objects under given root. Returns -1 on error.
+ */
+int LIBNXSNMP_EXPORTABLE SnmpWalkCount(SNMP_Transport *transport, const TCHAR *rootOid)
+{
+   int count = 0;
+   if (SnmpWalk(transport, rootOid, WalkCountHandler, &count) != SNMP_ERR_SUCCESS)
+      return -1;
+   return count;
+}
