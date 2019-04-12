@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.netxms.client.NXCException;
+import org.netxms.client.constants.HistoricalDataType;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.DciDataRow;
 import org.netxms.client.datacollection.DciValue;
@@ -99,7 +100,7 @@ public class GrafanaDataCollection extends AbstractHandler
             continue;
          
          DciData data = getSession().getCollectedData(Long.parseLong(dciTarget.get("id").getAsString()),
-                                                      Long.parseLong(dci.get("id").getAsString()), from, to, 0, false);
+                                                      Long.parseLong(dci.get("id").getAsString()), from, to, 0, HistoricalDataType.PROCESSED);
          root = new JsonObject();
          JsonArray datapoints = new JsonArray();
          JsonArray datapoint;

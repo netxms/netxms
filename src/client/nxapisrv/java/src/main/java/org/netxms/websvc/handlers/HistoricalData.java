@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.Map;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
+import org.netxms.client.constants.HistoricalDataType;
 import org.netxms.client.constants.RCC;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.GraphSettings;
@@ -66,23 +67,25 @@ public class HistoricalData extends AbstractObjectHandler
       
       if (timeFrom != null || timeTo != null)
       {
-         data = session.getCollectedData(obj.getObjectId(), dciId, new Date(parseLong(timeFrom, 0) * 1000), new Date(parseLong(timeTo, System.currentTimeMillis() / 1000) * 1000), parseInt(itemCount, 0), false);
+         data = session.getCollectedData(obj.getObjectId(), dciId,
+               new Date(parseLong(timeFrom, 0) * 1000), new Date(parseLong(timeTo, System.currentTimeMillis() / 1000) * 1000),
+               parseInt(itemCount, 0), HistoricalDataType.PROCESSED);
       }
       else if (timeInteval != null)
       {
          Date now = new Date();
          long from = now.getTime() - parseLong(timeInteval, 0) * 1000;
-         data  = session.getCollectedData(obj.getObjectId(), dciId, new Date(from), new Date(), parseInt(itemCount, 0), false);         
+         data  = session.getCollectedData(obj.getObjectId(), dciId, new Date(from), new Date(), parseInt(itemCount, 0), HistoricalDataType.PROCESSED);         
       }
       else if (itemCount != null)
       {         
-         data  = session.getCollectedData(obj.getObjectId(), dciId, null, null, parseInt(itemCount, 0), false);
+         data  = session.getCollectedData(obj.getObjectId(), dciId, null, null, parseInt(itemCount, 0), HistoricalDataType.PROCESSED);
       }  
       else
       {
          Date now = new Date();
          long from = now.getTime() - 3600000; // one hour
-         data  = session.getCollectedData(obj.getObjectId(), dciId, new Date(from), now, parseInt(itemCount, 0), false);           
+         data  = session.getCollectedData(obj.getObjectId(), dciId, new Date(from), now, parseInt(itemCount, 0), HistoricalDataType.PROCESSED);           
       }
       
       return new ResponseContainer("values", data);
@@ -115,15 +118,16 @@ public class HistoricalData extends AbstractObjectHandler
          String timeInterval = dciPairs[4];
          String timeUnit = dciPairs[5];
 
-         if(dciId == null || nodeId == null || !(session.findObjectById(parseInt(nodeId, 0)) instanceof DataCollectionTarget))
+         if(dciId == null || nodeId == null || !(session.findObjectById(parseLong(nodeId, 0)) instanceof DataCollectionTarget))
             throw new NXCException(RCC.INVALID_OBJECT_ID);
 
          DciData collectedData = null;
 
          if (!timeFrom.equals("0") || !timeTo.equals("0"))
          {
-            collectedData = session.getCollectedData(parseInt(nodeId, 0), parseInt(dciId, 0), new Date(parseLong(timeFrom, 0) * 1000), new Date(parseLong(timeTo, System.currentTimeMillis() / 1000) * 1000), 0, false
-            );
+            collectedData = session.getCollectedData(parseLong(nodeId, 0), parseLong(dciId, 0),
+                  new Date(parseLong(timeFrom, 0) * 1000), new Date(parseLong(timeTo, System.currentTimeMillis() / 1000) * 1000),
+                  0, HistoricalDataType.PROCESSED);
          }
          else if (!timeInterval.equals("0"))
          {
@@ -136,13 +140,13 @@ public class HistoricalData extends AbstractObjectHandler
             else
                from = now.getTime() - parseLong(timeInterval, 0) * 60000;
 
-            collectedData = session.getCollectedData(parseInt(nodeId, 0), parseInt(dciId, 0), new Date(from), new Date(), 0, false);
+            collectedData = session.getCollectedData(parseInt(nodeId, 0), parseInt(dciId, 0), new Date(from), new Date(), 0, HistoricalDataType.PROCESSED);
          }
          else
          {
             Date now = new Date();
             long from = now.getTime() - 3600000; // one hour
-            collectedData = session.getCollectedData(parseInt(nodeId, 0), parseInt(dciId, 0), new Date(from), now, 0, false);
+            collectedData = session.getCollectedData(parseInt(nodeId, 0), parseInt(dciId, 0), new Date(from), now, 0, HistoricalDataType.PROCESSED);
          }
          
          dciData.put((long)parseInt(dciId, 0), collectedData);

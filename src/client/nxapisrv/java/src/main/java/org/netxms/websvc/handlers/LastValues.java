@@ -24,7 +24,6 @@ import java.util.Map;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.RCC;
-import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.DataCollectionTarget;
@@ -46,7 +45,7 @@ public class LastValues extends AbstractObjectHandler
       List<DciValue[]> values = new ArrayList<DciValue[]>();
       if (!(obj instanceof DataCollectionTarget) || obj.getObjectClass() == AbstractObject.OBJECT_CONTAINER)
       {
-         AbstractObject[] children = obj.getChildsAsArray();
+         AbstractObject[] children = obj.getChildrenAsArray();
          for(AbstractObject child : children)
          {
             if (child instanceof DataCollectionTarget)
