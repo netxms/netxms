@@ -86,7 +86,7 @@ public class InstallPolicy implements IObjectActionDelegate
 					{
 						final AbstractObject[] nodeList =
 								(dlg.getInstallMode() == SelectInstallTargetDialog.INSTALL_ON_SELECTED) ?
-									dlg.getSelectedObjects() : policy.getChildsAsArray();
+									dlg.getSelectedObjects() : policy.getChildrenAsArray();
 						StringBuilder sb = new StringBuilder();
 						for(int i = 0; i < nodeList.length; i++)
 						{
