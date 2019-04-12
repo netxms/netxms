@@ -1,7 +1,28 @@
+/**
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2019 Raden Solutions
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
 package org.netxms.websvc;
 
 import org.netxms.client.TextOutputListener;
 
+/**
+ * Object tool output listener
+ */
 public class ObjectToolOutputListener implements TextOutputListener
 {
    private Object mutex = new Object();
@@ -9,6 +30,9 @@ public class ObjectToolOutputListener implements TextOutputListener
    private boolean completed = false;
    private Long streamId = 0L;
 
+   /* (non-Javadoc)
+    * @see org.netxms.client.TextOutputListener#messageReceived(java.lang.String)
+    */
    @Override
    public void messageReceived(String text)
    {
@@ -19,12 +43,20 @@ public class ObjectToolOutputListener implements TextOutputListener
       }
    }
 
+   /* (non-Javadoc)
+    * @see org.netxms.client.TextOutputListener#setStreamId(long)
+    */
    @Override
    public void setStreamId(long streamId)
    {
       this.streamId = streamId;
    }
 
+   /**
+    * Get stream ID
+    * 
+    * @return stream ID
+    */
    public long getStreamId()
    {
       return streamId;
@@ -48,6 +80,9 @@ public class ObjectToolOutputListener implements TextOutputListener
       return data;
    }
 
+   /**
+    * Completion handler
+    */
    public void onComplete()
    {
       synchronized(mutex)
@@ -57,6 +92,11 @@ public class ObjectToolOutputListener implements TextOutputListener
       }
    }
 
+   /**
+    * Check if tool is completed
+    * 
+    * @return true if tool is completed
+    */
    public boolean isCompleted()
    {
       return completed;

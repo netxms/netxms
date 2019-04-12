@@ -1,3 +1,21 @@
+/**
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2019 Raden Solutions
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
 package org.netxms.websvc;
 
 import org.netxms.client.NXCSession;
@@ -7,6 +25,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.Map;
 
+/**
+ * Object tool execution thread
+ */
 public class ObjectToolExecutor extends Thread
 {
    private Logger log = LoggerFactory.getLogger(ObjectToolExecutor.class);
@@ -15,7 +36,17 @@ public class ObjectToolExecutor extends Thread
    private Map<String, String> inputFields;
    private ObjectToolOutputListener listener;
    private NXCSession session;
+   private boolean generateOutput;
 
+   /**
+    * Create and start new object tool execution thread
+    * 
+    * @param details
+    * @param objectId
+    * @param inputFields
+    * @param listener
+    * @param session
+    */
    public ObjectToolExecutor(ObjectToolDetails details, long objectId, Map<String, String> inputFields,
          ObjectToolOutputListener listener, NXCSession session)
    {
@@ -24,10 +55,19 @@ public class ObjectToolExecutor extends Thread
       this.inputFields = inputFields;
       this.listener = listener;
       this.session = session;
+      generateOutput = (details.getFlags() & ObjectTool.GENERATES_OUTPUT) != 0;
       setDaemon(true);
       start();
    }
 
+   /**
+    * Create and start new object tool execution thread
+    * 
+    * @param details
+    * @param objectId
+    * @param inputFields
+    * @param session
+    */
    public ObjectToolExecutor(ObjectToolDetails details, long objectId, Map<String, String> inputFields, NXCSession session)
    {
       this.details = details;
@@ -35,6 +75,7 @@ public class ObjectToolExecutor extends Thread
       this.inputFields = inputFields;
       this.listener = null;
       this.session = session;
+      generateOutput = (details.getFlags() & ObjectTool.GENERATES_OUTPUT) != 0;
       setDaemon(true);
       start();
    }
@@ -48,11 +89,13 @@ public class ObjectToolExecutor extends Thread
       {
          case ObjectTool.TYPE_ACTION:
             executeAgentAction();
+            break;
          /*case ObjectTool.TYPE_FILE_DOWNLOAD:
             executeFileDownload(node, tool, inputValues);
             break;*/
          case ObjectTool.TYPE_SERVER_COMMAND:
             executeServerCommand();
+            break;
          /*case ObjectTool.TYPE_SERVER_SCRIPT:
             executeServerScript(node, tool, inputValues);
             break;
@@ -64,6 +107,11 @@ public class ObjectToolExecutor extends Thread
             openURL(node, tool, inputValues, expandedValue);
             break;*/
       }
+      
+      if (generateOutput && (listener != null))
+      {
+         listener.onComplete();
+      }
    }
 
    /**
@@ -71,27 +119,13 @@ public class ObjectToolExecutor extends Thread
     */
    private void executeAgentAction()
    {
-      if ((details.getFlags() & ObjectTool.GENERATES_OUTPUT) == 0)
+      try
       {
-         try
-         {
-            final String s = session.executeActionWithExpansion(objectId, 0, details.getData(), inputFields);
-         }
-         catch(Exception e)
-         {
-            log.error(e.getLocalizedMessage());
-         }
+         session.executeActionWithExpansion(objectId, 0, details.getData(), generateOutput, inputFields, listener, null);
       }
-      else
+      catch(Exception e)
       {
-         try
-         {
-            final String s = session.executeActionWithExpansion(objectId, 0, details.getData(), true, inputFields, listener, null);
-         }
-         catch(Exception e)
-         {
-            log.error(e.getLocalizedMessage());
-         }
+         log.error(e.getMessage(), e);
       }
    }
 
@@ -100,28 +134,13 @@ public class ObjectToolExecutor extends Thread
     */
    private void executeServerCommand()
    {
-      if ((details.getFlags() & ObjectTool.GENERATES_OUTPUT) == 0)
+      try
       {
-         try
-         {
-            session.executeServerCommand(objectId, details.getData(), inputFields);
-         }
-         catch(Exception e)
-         {
-            log.error(e.getLocalizedMessage());
-         }
+         session.executeServerCommand(objectId, details.getData(), inputFields, generateOutput, listener, null);
       }
-      else
+      catch(Exception e)
       {
-         try
-         {
-            session.executeServerCommand(objectId, details.getData(), inputFields, true, listener, null);
-         }
-         catch(Exception e)
-         {
-            log.error(e.getLocalizedMessage());
-         }
-         listener.onComplete();
+         log.error(e.getMessage(), e);
       }
    }
 }
