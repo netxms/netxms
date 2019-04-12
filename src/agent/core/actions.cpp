@@ -95,7 +95,7 @@ AgentActionExecutor *AgentActionExecutor::createAgentExecutor(NXCPMessage *reque
 
    if (*rcc == ERR_SUCCESS)
    {
-      delete(executor);
+      delete executor;
       return NULL;
    }
 
@@ -107,7 +107,7 @@ UINT32 AgentActionExecutor::findAgentAction()
    UINT32 rcc = ERR_UNKNOWN_PARAMETER;
    for(UINT32 i = 0; i < m_dwNumActions; i++)
    {
-      if (m_cmd != NULL && !_tcsicmp(m_pActionList[i].szName, m_cmd))
+      if (!_tcsicmp(m_pActionList[i].szName, m_cmd))
       {
          MemFree(m_cmd);
          m_cmd = MemCopyString(m_pActionList[i].handler.pszCmdLine);
@@ -157,7 +157,7 @@ void AgentActionExecutor::substituteArgs()
       TCHAR macro[3];
       for(int i = 0; i < m_args->size() && i <= 9; i++)
       {
-         _sntprintf(macro, 3, _T("$%d"), i+1);
+         _sntprintf(macro, 3, _T("$%d"), i + 1);
          cmd.replace(macro, m_args->get(i));
       }
       MemFree(m_cmd);
@@ -177,7 +177,7 @@ void AgentActionExecutor::onOutput(const char *text)
    TCHAR *buffer = WideStringFromMBStringSysLocale(text);
    msg.setField(VID_MESSAGE, buffer);
    m_session->sendMessage(&msg);
-   free(buffer);
+   MemFree(buffer);
 #else
    msg.setField(VID_MESSAGE, text);
    m_session->sendMessage(&msg);
