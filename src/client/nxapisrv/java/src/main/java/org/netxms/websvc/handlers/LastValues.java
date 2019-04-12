@@ -45,7 +45,7 @@ public class LastValues extends AbstractObjectHandler
       List<DciValue[]> values = new ArrayList<DciValue[]>();
       if (!(obj instanceof DataCollectionTarget) || obj.getObjectClass() == AbstractObject.OBJECT_CONTAINER)
       {
-         AbstractObject[] children = obj.getChildsAsArray();
+         AbstractObject[] children = obj.getChildrenAsArray();
          for(AbstractObject child : children)
          {
             if (child instanceof DataCollectionTarget)
