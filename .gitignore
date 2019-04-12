@@ -157,6 +157,10 @@ target
 /src/client/java/netxms-client/.project
 /src/client/java/netxms-client/.settings
 /src/client/nxalarm/nxalarm
+/src/client/nxapisrv/java/.classpath
+/src/client/nxapisrv/java/.project
+/src/client/nxapisrv/java/.settings
+/src/client/nxapisrv/java/local
 /src/client/nxevent/nxevent
 /src/client/nxpush/nxpush
 /src/client/nxshell/nxshell
@@ -222,10 +226,6 @@ target
 /src/server/libnxsrv/messages.c
 /src/server/libnxsrv/messages.h
 /src/server/netxmsd/netxmsd
-/src/server/nxapisrv/java/.classpath
-/src/server/nxapisrv/java/.project
-/src/server/nxapisrv/java/.settings
-/src/server/nxapisrv/java/local
 /src/server/nxreportd/java/.classpath
 /src/server/nxreportd/java/.project
 /src/server/nxreportd/java/.settings
