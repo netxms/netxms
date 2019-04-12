@@ -8591,10 +8591,12 @@ public class NXCSession
       {
          waitForRCC(msg.getMessageId());
       }
-      catch (Exception e) {
+      catch(NXCException e) 
+      {
          removeMessageSubscription(NXCPCodes.CMD_POLLING_INFO, msg.getMessageId());
          throw e;
       }
+      
       synchronized(handler)
       {
          try

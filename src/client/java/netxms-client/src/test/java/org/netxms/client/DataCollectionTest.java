@@ -88,14 +88,13 @@ public class DataCollectionTest extends AbstractSessionTest
 		final Lock mutex = new ReentrantLock(true);
       mutex.lock();
 		DataCollectionConfiguration dc = session.openDataCollectionConfiguration(TestConstants.NODE_ID, new DCONotificationCallback() {
-         
          @Override
          public void notifyDCOChange()
          {
             mutex.unlock();
          }
       });
-      final long dciId = dc.createItem(null);
+      final long dciId = dc.modifyObject(new DataCollectionItem(dc, 0));
       mutex.lock();
 		DataCollectionItem dci = (DataCollectionItem)dc.findItem(dciId, DataCollectionItem.class);
       

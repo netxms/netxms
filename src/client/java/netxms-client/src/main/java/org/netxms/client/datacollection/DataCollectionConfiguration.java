@@ -220,7 +220,7 @@ public class DataCollectionConfiguration
 	}
 	
 	/**
-	 * Create new data collection item.
+	 * Create new data collection item. This method is deprecated - new code should call modifyObject().
 	 * 
 	 * @param object The DataCollectionObject to create
 	 * @return Identifier assigned to created item
@@ -233,11 +233,11 @@ public class DataCollectionConfiguration
       if (object != null)
          return modifyObject(object);
       else
-         return modifyObject(new DataCollectionItem(null, 0));
+         return modifyObject(new DataCollectionItem(this, 0));
 	}
 	
 	/**
-	 * Create new data collection table.
+	 * Create new data collection table. This method is deprecated - new code should call modifyObject().
 	 * 
 	 * @param object The DataCollectionObject to create
 	 * @return Identifier assigned to created item
@@ -250,7 +250,7 @@ public class DataCollectionConfiguration
 	   if (object != null)
 	      return modifyObject(object);
 	   else
-	      return modifyObject(new DataCollectionTable(null, 0));
+	      return modifyObject(new DataCollectionTable(this, 0));
 	}
 	
 	/**
