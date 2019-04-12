@@ -153,7 +153,7 @@ public class ObjectTest extends AbstractSessionTest
 			System.out.print(' ');
 		System.out.println(object.getObjectName());
 		
-		for(AbstractObject o : object.getChildsAsArray())
+		for(AbstractObject o : object.getChildrenAsArray())
 			printObject(o, level + 2);
 	}
 	
@@ -182,7 +182,7 @@ public class ObjectTest extends AbstractSessionTest
       assertNotNull(object);
       assertEquals(1, object.getObjectId());
 
-      Set<AbstractObject> subnets = object.getAllChilds(AbstractObject.OBJECT_SUBNET);
+      Set<AbstractObject> subnets = object.getAllChildren(AbstractObject.OBJECT_SUBNET);
       for(AbstractObject s : subnets)
       {
          System.out.println(s.getObjectName() + ": " + ((Subnet)s).getNetworkAddress().toString());
