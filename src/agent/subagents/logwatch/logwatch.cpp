@@ -170,7 +170,9 @@ static void LogParserMatch(UINT32 eventCode, const TCHAR *eventName, const TCHAR
          list[i++] = variables->get(j);
    }
 
-   AgentExecuteAction(agentAction, agentActionArgs);
+   if (agentAction != NULL)
+      AgentExecuteAction(agentAction, agentActionArgs);
+
    AgentSendTrap2(eventCode, eventName, count, list);
    free(list);
 }

@@ -101,7 +101,6 @@ void ExecuteAction(NXCPMessage *request, NXCPMessage *response, AbstractCommSess
 
 void ExecuteAction(const TCHAR *cmd, const StringList *args)
 {
-   VirtualSession *session = new VirtualSession(0);
    AgentActionExecutor *executor = AgentActionExecutor::createAgentExecutor(cmd, args);
    if (executor != NULL && executor->execute())
       ThreadPoolScheduleRelative(g_executorThreadPool, g_execTimeout, AgentActionExecutor::stopAction, executor);

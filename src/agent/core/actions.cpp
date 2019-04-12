@@ -107,7 +107,7 @@ UINT32 AgentActionExecutor::findAgentAction()
    UINT32 rcc = ERR_UNKNOWN_PARAMETER;
    for(UINT32 i = 0; i < m_dwNumActions; i++)
    {
-      if (!_tcsicmp(m_pActionList[i].szName, m_cmd))
+      if (m_cmd != NULL && !_tcsicmp(m_pActionList[i].szName, m_cmd))
       {
          MemFree(m_cmd);
          m_cmd = MemCopyString(m_pActionList[i].handler.pszCmdLine);
