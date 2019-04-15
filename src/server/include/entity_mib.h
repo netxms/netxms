@@ -48,7 +48,7 @@ protected:
 
 public:
    Component(UINT32 index, const TCHAR *name);
-   virtual ~Component();
+   ~Component();
 
    UINT32 updateFromSnmp(SNMP_Transport *snmp);
    void buildTree(ObjectArray<Component> *elements);
@@ -59,6 +59,7 @@ public:
 
    UINT32 getClass() const { return m_class; }
    const TCHAR *getDescription() const { return m_description; }
+   UINT32 getIfIndex() const { return m_ifIndex; }
    const TCHAR *getFirmware() const { return m_firmware; }
    const TCHAR *getModel() const { return m_model; }
    const TCHAR *getName() const { return m_name; }
@@ -102,7 +103,7 @@ class NXSL_ComponentClass : public NXSL_Class
 public:
    NXSL_ComponentClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr);
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr) override;
 };
 
 /**

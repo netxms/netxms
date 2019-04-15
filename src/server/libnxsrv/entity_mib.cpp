@@ -309,6 +309,10 @@ NXSL_Value *NXSL_ComponentClass::getAttr(NXSL_Object *object, const char *attr)
    {
       value = vm->createValue(component->getDescription());
    }
+   else if (!strcmp(attr, "ifIndex"))
+   {
+      value = vm->createValue(component->getIfIndex());
+   }
    else if (!strcmp(attr, "firmware"))
    {
       value = vm->createValue(component->getFirmware());
