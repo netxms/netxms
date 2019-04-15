@@ -198,7 +198,6 @@
       <plugin id="org.netxms.ui.eclipse.objectview"/>
       <plugin id="org.netxms.ui.eclipse.osm"/>
       <plugin id="org.netxms.ui.eclipse.perfview"/>
-      <plugin id="org.netxms.ui.eclipse.policymanager"/>
       <plugin id="org.netxms.ui.eclipse.reporter"/>
       <plugin id="org.netxms.ui.eclipse.serverconfig"/>
       <plugin id="org.netxms.ui.eclipse.serverjobmanager"/>
@@ -287,7 +286,6 @@
       <plugin id="org.netxms.ui.eclipse.objectview" autoStart="true" startLevel="0" />
       <plugin id="org.netxms.ui.eclipse.osm" autoStart="true" startLevel="0" />
       <plugin id="org.netxms.ui.eclipse.perfview" autoStart="true" startLevel="0" />
-      <plugin id="org.netxms.ui.eclipse.policymanager" autoStart="true" startLevel="0" />
       <plugin id="org.netxms.ui.eclipse.reporter" autoStart="true" startLevel="0" />
       <plugin id="org.netxms.ui.eclipse.serverconfig" autoStart="true" startLevel="0" />
       <plugin id="org.netxms.ui.eclipse.serverjobmanager" autoStart="true" startLevel="0" />
