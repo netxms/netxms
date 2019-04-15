@@ -21,6 +21,7 @@
 **/
 
 #include "nxcore.h"
+#include <entity_mib.h>
 
 /**
  * clearGeoLocation()
@@ -1697,59 +1698,6 @@ void NXSL_SNMPVarBindClass::onObjectDelete(NXSL_Object *object)
 }
 
 /**
- * NXSL class ComponentClass: constructor
- */
-NXSL_ComponentClass::NXSL_ComponentClass() : NXSL_Class()
-{
-   setName(_T("Component"));
-}
-
-/**
- * NXSL class ComponentClass: get attribute
- */
-NXSL_Value *NXSL_ComponentClass::getAttr(NXSL_Object *object, const TCHAR *attr)
-{
-   const UINT32 classCount = 12;
-   static const TCHAR *className[classCount] = { _T(""), _T("other"), _T("unknown"), _T("chassis"), _T("backplane"),
-                                                 _T("container"), _T("power supply"), _T("fan"), _T("sensor"),
-                                                 _T("module"), _T("port"), _T("stack") };
-   NXSL_Value *value = NULL;
-   Component *component = (Component *)object->getData();
-   if (!_tcscmp(attr, _T("class")))
-   {
-      if (component->getClass() >= classCount)
-         value = new NXSL_Value(className[2]); // Unknown class
-      else
-         value = new NXSL_Value(className[component->getClass()]);
-   }
-   else if (!_tcscmp(attr, _T("children")))
-   {
-      value = new NXSL_Value(component->getChildrenForNXSL());
-   }
-   else if (!_tcscmp(attr, _T("firmware")))
-   {
-      value = new NXSL_Value(component->getFirmware());
-   }
-   else if (!_tcscmp(attr, _T("model")))
-   {
-      value = new NXSL_Value(component->getModel());
-   }
-   else if (!_tcscmp(attr, _T("name")))
-   {
-      value = new NXSL_Value(component->getName());
-   }
-   else if (!_tcscmp(attr, _T("serial")))
-   {
-      value = new NXSL_Value(component->getSerial());
-   }
-   else if (!_tcscmp(attr, _T("vendor")))
-   {
-      value = new NXSL_Value(component->getVendor());
-   }
-   return value;
-}
-
-/**
  * NXSL class NodeDependency: constructor
  */
 NXSL_NodeDependencyClass::NXSL_NodeDependencyClass() : NXSL_Class()
@@ -1806,7 +1754,6 @@ void NXSL_NodeDependencyClass::onObjectDelete(NXSL_Object *object)
 NXSL_AlarmClass g_nxslAlarmClass;
 NXSL_ChassisClass g_nxslChassisClass;
 NXSL_ClusterClass g_nxslClusterClass;
-NXSL_ComponentClass g_nxslComponentClass;
 NXSL_ContainerClass g_nxslContainerClass;
 NXSL_DciClass g_nxslDciClass;
 NXSL_EventClass g_nxslEventClass;

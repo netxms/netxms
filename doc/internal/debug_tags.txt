@@ -62,6 +62,7 @@ sa.freebsd	FreeBSD platform subagent messages
 sa.ping		Ping subagent
 
 snmp.*		SNMP related messages
+snmp.entity	Entity MIB processing
 snmp.trap	SNMP trap processing
 
 sync		Syncer messages

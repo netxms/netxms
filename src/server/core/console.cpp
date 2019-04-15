@@ -21,6 +21,7 @@
 **/
 
 #include "nxcore.h"
+#include <entity_mib.h>
 
 /**
  * Externals
