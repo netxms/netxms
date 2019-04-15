@@ -80,6 +80,32 @@ UINT32 BindAgentTunnel(UINT32 tunnelId, UINT32 nodeId, UINT32 userId);
 UINT32 UnbindAgentTunnel(UINT32 nodeId, UINT32 userId);
 
 /**
+ * Client session console constructor
+ */
+ClientSessionConsole::ClientSessionConsole(ClientSession *session, UINT16 msgCode)
+{
+   m_session = session;
+   m_messageCode = msgCode;
+}
+
+/**
+ * Client session console destructor
+ */
+ClientSessionConsole::~ClientSessionConsole()
+{
+}
+
+/**
+ * Client session console constructor
+ */
+void ClientSessionConsole::write(const TCHAR *text)
+{
+   NXCPMessage msg(m_messageCode, 0);
+   msg.setField(VID_MESSAGE, text);
+   m_session->postMessage(&msg);
+}
+
+/**
  * Node poller start data
  */
 typedef struct
@@ -210,11 +236,8 @@ ClientSession::~ClientSession()
    if (m_condEncryptionSetup != INVALID_CONDITION_HANDLE)
       ConditionDestroy(m_condEncryptionSetup);
 
-	if (m_console != NULL)
-	{
-		delete m_console->pMsg;
-		free(m_console);
-	}
+	delete m_console;
+
    m_musicTypeList.clear();
    if (m_agentConn.size() > 0)
    {
@@ -12479,15 +12502,12 @@ void ClientSession::openConsole(UINT32 rqId)
 
 	if (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONSOLE)
 	{
-		m_dwFlags |= CSF_CONSOLE_OPEN;
-		m_console = (CONSOLE_CTX)MemAlloc(sizeof(struct __console_ctx));
-		m_console->hSocket = -1;
-		m_console->socketMutex = INVALID_MUTEX_HANDLE;
-		m_console->pMsg = new NXCPMessage;
-		m_console->pMsg->setCode(CMD_ADM_MESSAGE);
-		m_console->session = this;
-      m_console->output = NULL;
-		msg.setField(VID_RCC, RCC_SUCCESS);
+      if (!(m_dwFlags & CSF_CONSOLE_OPEN))
+      {
+         m_dwFlags |= CSF_CONSOLE_OPEN;
+         m_console = new ClientSessionConsole(this);
+      }
+      msg.setField(VID_RCC, RCC_SUCCESS);
 	}
 	else
 	{
@@ -12512,8 +12532,7 @@ void ClientSession::closeConsole(UINT32 rqId)
 		if (m_dwFlags & CSF_CONSOLE_OPEN)
 		{
 			m_dwFlags &= ~CSF_CONSOLE_OPEN;
-			delete m_console->pMsg;
-			MemFreeAndNull(m_console);
+			delete_and_null(m_console);
 			msg.setField(VID_RCC, RCC_SUCCESS);
 		}
 		else

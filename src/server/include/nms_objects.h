@@ -102,16 +102,16 @@ protected:
    AgentTunnel *m_proxyTunnel;
    ClientSession *m_tcpProxySession;
 
-   virtual AbstractCommChannel *createChannel() OVERRIDE;
-   virtual void onTrap(NXCPMessage *msg) OVERRIDE;
-   virtual void onSyslogMessage(NXCPMessage *pMsg) OVERRIDE;
-   virtual void onDataPush(NXCPMessage *msg) OVERRIDE;
-   virtual void onFileMonitoringData(NXCPMessage *msg) OVERRIDE;
-   virtual void onSnmpTrap(NXCPMessage *pMsg) OVERRIDE;
-   virtual UINT32 processCollectedData(NXCPMessage *msg) OVERRIDE;
-   virtual UINT32 processBulkCollectedData(NXCPMessage *request, NXCPMessage *response) OVERRIDE;
-   virtual bool processCustomMessage(NXCPMessage *msg) OVERRIDE;
-   virtual void processTcpProxyData(UINT32 channelId, const void *data, size_t size) OVERRIDE;
+   virtual AbstractCommChannel *createChannel() override;
+   virtual void onTrap(NXCPMessage *msg) override;
+   virtual void onSyslogMessage(NXCPMessage *pMsg) override;
+   virtual void onDataPush(NXCPMessage *msg) override;
+   virtual void onFileMonitoringData(NXCPMessage *msg) override;
+   virtual void onSnmpTrap(NXCPMessage *pMsg) override;
+   virtual UINT32 processCollectedData(NXCPMessage *msg) override;
+   virtual UINT32 processBulkCollectedData(NXCPMessage *request, NXCPMessage *response) override;
+   virtual bool processCustomMessage(NXCPMessage *msg) override;
+   virtual void processTcpProxyData(UINT32 channelId, const void *data, size_t size) override;
 
    virtual ~AgentConnectionEx();
 
@@ -1464,8 +1464,8 @@ public:
    virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
    virtual bool isDataCollectionTarget();
 
-   virtual void enterMaintenanceMode(const TCHAR *comments) OVERRIDE;
-   virtual void leaveMaintenanceMode() OVERRIDE;
+   virtual void enterMaintenanceMode(const TCHAR *comments) override;
+   virtual void leaveMaintenanceMode() override;
 
    virtual DataCollectionError getInternalItem(const TCHAR *param, size_t bufSize, TCHAR *buffer);
    virtual DataCollectionError getScriptItem(const TCHAR *param, size_t bufSize, TCHAR *buffer, DataCollectionTarget *targetObject);
@@ -1702,13 +1702,13 @@ public:
    AccessPoint(const TCHAR *name, UINT32 index, const BYTE *macAddr);
    virtual ~AccessPoint();
 
-   virtual int getObjectClass() const OVERRIDE { return OBJECT_ACCESSPOINT; }
+   virtual int getObjectClass() const override { return OBJECT_ACCESSPOINT; }
 
    virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
    virtual bool saveToDatabase(DB_HANDLE hdb);
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
 
-   virtual json_t *toJson() OVERRIDE;
+   virtual json_t *toJson() override;
 
    void statusPollFromController(ClientSession *session, UINT32 rqId, Queue *eventQueue, Node *controller, SNMP_Transport *snmpTransport);
 
@@ -1727,9 +1727,9 @@ public:
 	void updateInfo(const TCHAR *vendor, const TCHAR *model, const TCHAR *serialNumber);
    void updateState(AccessPointState state);
 
-   virtual bool isReadyForStatusPoll() OVERRIDE { return false; }
-   virtual bool isReadyForConfigurationPoll() OVERRIDE { return false; }
-   virtual bool isReadyForInstancePoll() OVERRIDE { return false; }
+   virtual bool isReadyForStatusPoll() override { return false; }
+   virtual bool isReadyForConfigurationPoll() override { return false; }
+   virtual bool isReadyForInstancePoll() override { return false; }
 };
 
 /**
@@ -1747,13 +1747,13 @@ protected:
 	CLUSTER_RESOURCE *m_pResourceList;
 	UINT32 m_zoneUIN;
 
-   virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId) OVERRIDE;
-   virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest) OVERRIDE;
+   virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId) override;
+   virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest) override;
 
-   virtual void onDataCollectionChange() OVERRIDE;
+   virtual void onDataCollectionChange() override;
 
-   virtual void statusPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) OVERRIDE;
-   virtual void configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) OVERRIDE;
+   virtual void statusPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) override;
+   virtual void configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) override;
 
    UINT32 getResourceOwnerInternal(UINT32 id, const TCHAR *name);
 
@@ -1762,19 +1762,19 @@ public:
    Cluster(const TCHAR *pszName, UINT32 zoneUIN);
 	virtual ~Cluster();
 
-   virtual int getObjectClass() const OVERRIDE { return OBJECT_CLUSTER; }
-   virtual bool saveToDatabase(DB_HANDLE hdb) OVERRIDE;
-   virtual bool deleteFromDatabase(DB_HANDLE hdb) OVERRIDE;
-   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) OVERRIDE;
-   virtual bool showThresholdSummary() OVERRIDE;
+   virtual int getObjectClass() const override { return OBJECT_CLUSTER; }
+   virtual bool saveToDatabase(DB_HANDLE hdb) override;
+   virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
+   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
+   virtual bool showThresholdSummary() override;
 
-   virtual bool isReadyForInstancePoll() OVERRIDE { return false; }
+   virtual bool isReadyForInstancePoll() override { return false; }
 
-   virtual void unbindFromTemplate(UINT32 dwTemplateId, bool removeDCI) OVERRIDE;
+   virtual void unbindFromTemplate(UINT32 dwTemplateId, bool removeDCI) override;
 
-   virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) OVERRIDE;
+   virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
 
-   virtual json_t *toJson() OVERRIDE;
+   virtual json_t *toJson() override;
 
 	bool isSyncAddr(const InetAddress& addr);
 	bool isVirtualAddr(const InetAddress& addr);
@@ -1830,17 +1830,17 @@ public:
    Chassis(const TCHAR *name, UINT32 controllerId);
    virtual ~Chassis();
 
-   virtual int getObjectClass() const OVERRIDE { return OBJECT_CHASSIS; }
-   virtual bool saveToDatabase(DB_HANDLE hdb) OVERRIDE;
-   virtual bool deleteFromDatabase(DB_HANDLE hdb) OVERRIDE;
-   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) OVERRIDE;
-   virtual void linkObjects() OVERRIDE;
-   virtual bool showThresholdSummary() OVERRIDE;
-   virtual UINT32 getEffectiveSourceNode(DCObject *dco) OVERRIDE;
+   virtual int getObjectClass() const override { return OBJECT_CHASSIS; }
+   virtual bool saveToDatabase(DB_HANDLE hdb) override;
+   virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
+   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
+   virtual void linkObjects() override;
+   virtual bool showThresholdSummary() override;
+   virtual UINT32 getEffectiveSourceNode(DCObject *dco) override;
 
-   virtual bool isReadyForStatusPoll() OVERRIDE { return false; }
-   virtual bool isReadyForConfigurationPoll() OVERRIDE { return false; }
-   virtual bool isReadyForInstancePoll() OVERRIDE { return false; }
+   virtual bool isReadyForStatusPoll() override { return false; }
+   virtual bool isReadyForConfigurationPoll() override { return false; }
+   virtual bool isReadyForInstancePoll() override { return false; }
 
    virtual NXSL_Value *createNXSLObject(NXSL_VM *vm);
 

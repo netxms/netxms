@@ -324,7 +324,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
    }
    else if (IsCommand(_T("EXIT"), szBuffer, 4))
    {
-      if ((pCtx->hSocket != -1) || (pCtx->session != NULL))
+      if (pCtx->isRemote())
       {
          ConsoleWrite(pCtx, _T("Closing session...\n"));
          nExitCode = CMD_EXIT_CLOSE_SESSION;

@@ -681,11 +681,11 @@ public:
 
    virtual int readMessage(SNMP_PDU **ppData, UINT32 dwTimeout = INFINITE,
                            struct sockaddr *pSender = NULL, socklen_t *piAddrSize = NULL,
-	                        SNMP_SecurityContext* (*contextFinder)(struct sockaddr *, socklen_t) = NULL) OVERRIDE;
-   virtual int sendMessage(SNMP_PDU *pdu) OVERRIDE;
-   virtual InetAddress getPeerIpAddress() OVERRIDE;
-   virtual UINT16 getPort() OVERRIDE;
-   virtual bool isProxyTransport() OVERRIDE;
+	                        SNMP_SecurityContext* (*contextFinder)(struct sockaddr *, socklen_t) = NULL) override;
+   virtual int sendMessage(SNMP_PDU *pdu) override;
+   virtual InetAddress getPeerIpAddress() override;
+   virtual UINT16 getPort() override;
+   virtual bool isProxyTransport() override;
 
    void setWaitForResponse(bool wait) { m_waitForResponse = wait; }
 };

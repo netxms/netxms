@@ -1332,10 +1332,8 @@ enum VirtualizationType
 /**
  * Override specifier if compiler supports it
  */
-#if HAVE_OVERRIDE_SPECIFIER
-#define OVERRIDE override
-#else
-#define OVERRIDE
+#if !HAVE_OVERRIDE_SPECIFIER
+#define override
 #endif
 
 #endif

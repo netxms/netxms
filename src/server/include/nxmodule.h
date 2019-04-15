@@ -26,7 +26,7 @@
 #ifndef MODULE_NXDBMGR_EXTENSION
 
 #include <nxdbapi.h>
-#include "nxcore_console.h"
+#include "server_console.h"
 
 /**
  * Forward declaration of server classes

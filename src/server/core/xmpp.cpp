@@ -157,17 +157,11 @@ static int MessageHandler(xmpp_conn_t * const conn, xmpp_stanza_t * const stanza
       if (eol != NULL)
          *eol = 0;
 
-      struct __console_ctx console;
-      console.hSocket = -1;
-	   console.socketMutex = MutexCreate();
-      console.pMsg = NULL;
-	   console.session = NULL;
-      console.output = new String();
+      StringBufferConsole console;
       ProcessConsoleCommand(cmd, &console);
       free(cmd);
-      MutexDestroy(console.socketMutex);
 
-      if (!console.output->isEmpty())
+      if (!console.getOutput().isEmpty())
       {
 	      xmpp_stanza_t *reply = xmpp_stanza_new(ctx);
 	      xmpp_stanza_set_name(reply, "message");
@@ -178,16 +172,15 @@ static int MessageHandler(xmpp_conn_t * const conn, xmpp_stanza_t * const stanza
 	      xmpp_stanza_set_name(body, "body");
 
 	      xmpp_stanza_t *text = xmpp_stanza_new(ctx);
-         char *response = console.output->getUTF8String();
+         char *response = console.getOutput().getUTF8String();
 	      xmpp_stanza_set_text(text, response);
-         free(response);
+         MemFree(response);
 	      xmpp_stanza_add_child_ex(body, text, FALSE);
 	      xmpp_stanza_add_child_ex(reply, body, FALSE);
 
 	      xmpp_send(conn, reply);
 	      xmpp_stanza_release(reply);
       }
-      delete console.output;
    }
    else
    {
