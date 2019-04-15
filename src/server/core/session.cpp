@@ -24,6 +24,7 @@
 #include <netxms_mt.h>
 #include <nxtools.h>
 #include <nxstat.h>
+#include <entity_mib.h>
 
 #ifdef _WIN32
 #include <psapi.h>

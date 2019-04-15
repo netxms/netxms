@@ -37,6 +37,7 @@ class ClientSession;
 class Queue;
 class DataCollectionTarget;
 class Cluster;
+class ComponentTree;
 
 /**
  * Global variables used by inline methods
@@ -356,66 +357,6 @@ public:
 	ObjectArray<NetObj> *getObjects(bool updateRefCount, bool (*filter)(NetObj *, void *) = NULL, void *userData = NULL);
 
 	void forEach(void (*callback)(const InetAddress&, NetObj *, void *), void *data);
-};
-
-/**
- * Node component
- */
-class Component
-{
-protected:
-	UINT32 m_index;
-	UINT32 m_class;
-	UINT32 m_ifIndex;
-	TCHAR *m_name;
-	TCHAR *m_description;
-	TCHAR *m_model;
-	TCHAR *m_serial;
-	TCHAR *m_vendor;
-	TCHAR *m_firmware;
-	UINT32 m_parentIndex;
-	ObjectArray<Component> m_children;
-
-public:
-	Component(UINT32 index, const TCHAR *name);
-	virtual ~Component();
-
-	UINT32 updateFromSnmp(SNMP_Transport *snmp);
-	void buildTree(ObjectArray<Component> *elements);
-
-	UINT32 getIndex() { return m_index; }
-	UINT32 getParentIndex() { return m_parentIndex; }
-	NXSL_Array *getChildrenForNXSL(NXSL_VM *vm);
-
-	UINT32 getClass() { return m_class; }
-	const TCHAR *getFirmware() { return m_firmware; }
-   const TCHAR *getModel() { return m_model; }
-   const TCHAR *getName() { return m_name; }
-   const TCHAR *getSerial() { return m_serial; }
-   const TCHAR *getVendor() { return m_vendor; }
-
-	UINT32 fillMessage(NXCPMessage *msg, UINT32 baseId);
-
-	void print(CONSOLE_CTX console, int level);
-};
-
-/**
- * Node component tree
- */
-class ComponentTree : public RefCountObject
-{
-private:
-	Component *m_root;
-
-public:
-	ComponentTree(Component *root);
-	virtual ~ComponentTree();
-
-	void fillMessage(NXCPMessage *msg, UINT32 baseId);
-	void print(CONSOLE_CTX console) { if (m_root != NULL) m_root->print(console, 0); }
-
-	bool isEmpty() { return m_root == NULL; }
-	Component *getRoot() { return m_root; }
 };
 
 /**
@@ -3376,7 +3317,6 @@ void NetObjDeleteFromIndexes(NetObj *object);
 void NetObjDelete(NetObj *object);
 
 void UpdateInterfaceIndex(const InetAddress& oldIpAddr, const InetAddress& newIpAddr, Interface *iface);
-ComponentTree *BuildComponentTree(Node *node, SNMP_Transport *snmp);
 
 void NXCORE_EXPORTABLE MacDbAddAccessPoint(AccessPoint *ap);
 void NXCORE_EXPORTABLE MacDbAddInterface(Interface *iface);

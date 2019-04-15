@@ -194,17 +194,6 @@ public:
 };
 
 /**
- * NXSL "Component" class
- */
-class NXSL_ComponentClass : public NXSL_Class
-{
-public:
-   NXSL_ComponentClass();
-
-   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr);
-};
-
-/**
  * NXSL "NodeDependency" class
  */
 class NXSL_NodeDependencyClass : public NXSL_Class
@@ -326,7 +315,6 @@ bool ParseValueList(NXSL_VM *vm, TCHAR **start, ObjectRefArray<NXSL_Value> &args
 extern NXSL_AlarmClass g_nxslAlarmClass;
 extern NXSL_ChassisClass g_nxslChassisClass;
 extern NXSL_ClusterClass g_nxslClusterClass;
-extern NXSL_ComponentClass g_nxslComponentClass;
 extern NXSL_ContainerClass g_nxslContainerClass;
 extern NXSL_DciClass g_nxslDciClass;
 extern NXSL_EventClass g_nxslEventClass;

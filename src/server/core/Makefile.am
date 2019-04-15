@@ -9,7 +9,7 @@ libnxcore_la_SOURCES = abind_target.cpp accesspoint.cpp acl.cpp actions.cpp addr
 			ap_jobs.cpp beacon.cpp bizservice.cpp \
 			bizsvcroot.cpp bridge.cpp cas_validator.cpp ccy.cpp cdp.cpp \
 			cert.cpp chassis.cpp client.cpp cluster.cpp columnfilter.cpp \
-			components.cpp condition.cpp config.cpp console.cpp \
+			condition.cpp config.cpp console.cpp \
 			container.cpp correlate.cpp dashboard.cpp datacoll.cpp dbwrite.cpp \
 			dc_nxsl.cpp dci_recalc.cpp dcitem.cpp dcithreshold.cpp dcivalue.cpp \
 			dcobject.cpp dcowner.cpp dcst.cpp dctable.cpp dctarget.cpp \

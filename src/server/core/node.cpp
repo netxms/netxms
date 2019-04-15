@@ -22,6 +22,7 @@
 
 #include "nxcore.h"
 #include <agent_tunnel.h>
+#include <entity_mib.h>
 
 #define DEBUG_TAG_CONF_POLL   _T("poll.conf")
 #define DEBUG_TAG_AGENT       _T("node.agent")
@@ -3562,7 +3563,9 @@ bool Node::confPollSnmp(UINT32 rqId)
       m_capabilities |= NC_HAS_ENTITY_MIB;
       unlockProperties();
 
-      ComponentTree *components = BuildComponentTree(this, pTransport);
+      TCHAR debugInfo[256];
+      _sntprintf(debugInfo, 256, _T("%s [%u"), m_name, m_id);
+      ComponentTree *components = BuildComponentTree(pTransport, debugInfo);
       lockProperties();
       if (m_components != NULL)
          m_components->decRefCount();

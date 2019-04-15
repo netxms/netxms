@@ -21,6 +21,7 @@
 **/
 
 #include "nxcore.h"
+#include <entity_mib.h>
 
 /**
  * clearGeoLocation()
@@ -1793,61 +1794,6 @@ void NXSL_SNMPVarBindClass::onObjectDelete(NXSL_Object *object)
 }
 
 /**
- * NXSL class ComponentClass: constructor
- */
-NXSL_ComponentClass::NXSL_ComponentClass() : NXSL_Class()
-{
-   setName(_T("Component"));
-}
-
-/**
- * NXSL class ComponentClass: get attribute
- */
-NXSL_Value *NXSL_ComponentClass::getAttr(NXSL_Object *object, const char *attr)
-{
-   const UINT32 classCount = 12;
-   static const TCHAR *className[classCount] = { _T(""), _T("other"), _T("unknown"), _T("chassis"), _T("backplane"),
-                                                 _T("container"), _T("power supply"), _T("fan"), _T("sensor"),
-                                                 _T("module"), _T("port"), _T("stack") };
-
-   NXSL_VM *vm = object->vm();
-   NXSL_Value *value = NULL;
-   Component *component = (Component *)object->getData();
-   if (!strcmp(attr, "class"))
-   {
-      if (component->getClass() >= classCount)
-         value = vm->createValue(className[2]); // Unknown class
-      else
-         value = vm->createValue(className[component->getClass()]);
-   }
-   else if (!strcmp(attr, "children"))
-   {
-      value = vm->createValue(component->getChildrenForNXSL(vm));
-   }
-   else if (!strcmp(attr, "firmware"))
-   {
-      value = vm->createValue(component->getFirmware());
-   }
-   else if (!strcmp(attr, "model"))
-   {
-      value = vm->createValue(component->getModel());
-   }
-   else if (!strcmp(attr, "name"))
-   {
-      value = vm->createValue(component->getName());
-   }
-   else if (!strcmp(attr, "serial"))
-   {
-      value = vm->createValue(component->getSerial());
-   }
-   else if (!strcmp(attr, "vendor"))
-   {
-      value = vm->createValue(component->getVendor());
-   }
-   return value;
-}
-
-/**
  * NXSL class UserDBObjectClass: constructor
  */
 NXSL_UserDBObjectClass::NXSL_UserDBObjectClass() : NXSL_Class()
@@ -2094,7 +2040,6 @@ void NXSL_NodeDependencyClass::onObjectDelete(NXSL_Object *object)
 NXSL_AlarmClass g_nxslAlarmClass;
 NXSL_ChassisClass g_nxslChassisClass;
 NXSL_ClusterClass g_nxslClusterClass;
-NXSL_ComponentClass g_nxslComponentClass;
 NXSL_ContainerClass g_nxslContainerClass;
 NXSL_DciClass g_nxslDciClass;
 NXSL_EventClass g_nxslEventClass;

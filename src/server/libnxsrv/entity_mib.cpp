@@ -20,7 +20,10 @@
 **
 **/
 
-#include "nxcore.h"
+#include "libnxsrv.h"
+#include <entity_mib.h>
+
+#define DEBUG_TAG _T("snmp.entity")
 
 /**
  * Component tree constructor
@@ -41,7 +44,7 @@ ComponentTree::~ComponentTree()
 /**
  * Fill NXCP message with tree data
  */
-void ComponentTree::fillMessage(NXCPMessage *msg, UINT32 baseId)
+void ComponentTree::fillMessage(NXCPMessage *msg, UINT32 baseId) const
 {
 	if (m_root != NULL)
 		m_root->fillMessage(msg, baseId);
@@ -55,7 +58,7 @@ Component::Component(UINT32 index, const TCHAR *name) : m_children(0, 16, true)
 	m_index = index;
 	m_class = 2; // unknown
 	m_ifIndex = 0;
-	m_name = _tcsdup(name);
+	m_name = MemCopyString(name);
 	m_description = NULL;
 	m_model = NULL;
 	m_serial = NULL;
@@ -69,12 +72,12 @@ Component::Component(UINT32 index, const TCHAR *name) : m_children(0, 16, true)
  */
 Component::~Component()
 {
-	free(m_name);
-	free(m_description);
-	free(m_model);
-	free(m_serial);
-	free(m_vendor);
-	free(m_firmware);
+	MemFree(m_name);
+	MemFree(m_description);
+	MemFree(m_model);
+	MemFree(m_serial);
+	MemFree(m_vendor);
+	MemFree(m_firmware);
 }
 
 /**
@@ -98,33 +101,33 @@ UINT32 Component::updateFromSnmp(SNMP_Transport *snmp)
 
 	oid[11] = 2;	// entPhysicalDescr
 	if (SnmpGet(snmp->getSnmpVersion(), snmp, NULL, oid, 13, buffer, sizeof(buffer), 0) == SNMP_ERR_SUCCESS)
-	   m_description = _tcsdup(buffer);
+	   m_description = MemCopyString(buffer);
 	else
-      m_description = _tcsdup(_T(""));
+      m_description = MemCopyString(_T(""));
 
 	oid[11] = 13;	// entPhysicalModelName
 	if (SnmpGet(snmp->getSnmpVersion(), snmp, NULL, oid, 13, buffer, sizeof(buffer), 0) == SNMP_ERR_SUCCESS)
-	   m_model = _tcsdup(buffer);
+	   m_model = MemCopyString(buffer);
 	else
-      m_model = _tcsdup(_T(""));
+      m_model = MemCopyString(_T(""));
 
 	oid[11] = 11;	// entPhysicalSerialNum
 	if (SnmpGet(snmp->getSnmpVersion(), snmp, NULL, oid, 13, buffer, sizeof(buffer), 0) == SNMP_ERR_SUCCESS)
-	   m_serial = _tcsdup(buffer);
+	   m_serial = MemCopyString(buffer);
 	else
-      m_serial = _tcsdup(_T(""));
+      m_serial = MemCopyString(_T(""));
 
 	oid[11] = 12;	// entPhysicalMfgName
 	if (SnmpGet(snmp->getSnmpVersion(), snmp, NULL, oid, 13, buffer, sizeof(buffer), 0) == SNMP_ERR_SUCCESS)
-	   m_vendor = _tcsdup(buffer);
+	   m_vendor = MemCopyString(buffer);
 	else
-      m_vendor = _tcsdup(_T(""));
+      m_vendor = MemCopyString(_T(""));
 
 	oid[11] = 9;	// entPhysicalFirmwareRev
 	if (SnmpGet(snmp->getSnmpVersion(), snmp, NULL, oid, 13, buffer, sizeof(buffer), 0) == SNMP_ERR_SUCCESS)
-	   m_firmware = _tcsdup(buffer);
+	   m_firmware = MemCopyString(buffer);
 	else
-	   m_firmware = _tcsdup(_T(""));
+	   m_firmware = MemCopyString(_T(""));
 
 	// Read entAliasMappingIdentifier
 	oid[8] = 3;
@@ -163,14 +166,14 @@ void Component::buildTree(ObjectArray<Component> *elements)
 /**
  * Print element tree to given console
  */
-void Component::print(CONSOLE_CTX console, int level)
+void Component::print(ServerConsole *console, int level) const
 {
    TCHAR ifInfo[128] = _T("");
    if (m_ifIndex != 0)
    {
       _sntprintf(ifInfo, 128, _T(" \x1b[33;1m[ifIndex=%u]\x1b[0m"), m_ifIndex);
    }
-   ConsolePrintf(console, _T("%*s\x1b[1m%d\x1b[0m \x1b[32;1m%-32s\x1b[0m %s%s\n"),
+   console->printf(_T("%*s\x1b[1m%d\x1b[0m \x1b[32;1m%-32s\x1b[0m %s%s\n"),
             level * 4, _T(""), (int)m_index, m_name, m_description, ifInfo);
 	for(int i = 0; i < m_children.size(); i++)
 	   m_children.get(i)->print(console, level + 1);
@@ -179,7 +182,7 @@ void Component::print(CONSOLE_CTX console, int level)
 /**
  * Fill NXCP message
  */
-UINT32 Component::fillMessage(NXCPMessage *msg, UINT32 baseId)
+UINT32 Component::fillMessage(NXCPMessage *msg, UINT32 baseId) const
 {
 	msg->setField(baseId, m_index);
 	msg->setField(baseId + 1, m_parentIndex);
@@ -203,15 +206,13 @@ UINT32 Component::fillMessage(NXCPMessage *msg, UINT32 baseId)
 /*
  * Get child components as NXSL Array
  */
-NXSL_Array *Component::getChildrenForNXSL(NXSL_VM *vm)
+NXSL_Array *Component::getChildrenForNXSL(NXSL_VM *vm) const
 {
    NXSL_Array *components = new NXSL_Array(vm);
-
    for(int i = 0; i < m_children.size(); i++)
    {
       components->set(i, vm->createValue(new NXSL_Object(vm, &g_nxslComponentClass, m_children.get(i))));
    }
-
    return components;
 }
 
@@ -235,14 +236,14 @@ static UINT32 EntityWalker(SNMP_Variable *var, SNMP_Transport *transport, void *
 /**
  * Build components tree for given node
  */
-ComponentTree *BuildComponentTree(Node *node, SNMP_Transport *snmp)
+ComponentTree LIBNXSRV_EXPORTABLE *BuildComponentTree(SNMP_Transport *snmp, const TCHAR *debugInfo)
 {
-	DbgPrintf(5, _T("Building component tree for node %s [%d]"), node->getName(), (int)node->getId());
+	nxlog_debug_tag(DEBUG_TAG, 5, _T("Building component tree for %s"), debugInfo);
 	ObjectArray<Component> elements(16, 16);
 	ComponentTree *tree = NULL;
 	if (SnmpWalk(snmp, _T(".1.3.6.1.2.1.47.1.1.1.1.7"), EntityWalker, &elements) == SNMP_ERR_SUCCESS)
 	{
-		DbgPrintf(6, _T("BuildComponentTree(%s [%d]): %d elements found"), node->getName(), (int)node->getId(), elements.size());
+	   nxlog_debug_tag(DEBUG_TAG, 6, _T("BuildComponentTree(%s): %d elements found"), debugInfo, elements.size());
 
 		Component *root = NULL;
 		for(int i = 0; i < elements.size(); i++)
@@ -259,15 +260,79 @@ ComponentTree *BuildComponentTree(Node *node, SNMP_Transport *snmp)
 		}
 		else
 		{
-			DbgPrintf(6, _T("BuildComponentTree(%s [%d]): root element not found"), node->getName(), (int)node->getId());
+		   nxlog_debug_tag(DEBUG_TAG, 6, _T("BuildComponentTree(%s): root element not found"), debugInfo);
 			elements.setOwner(true);	// cause element destruction on exit
 		}
 	}
 	else
 	{
-		DbgPrintf(6, _T("BuildComponentTree(%s [%d]): SNMP WALK failed"), node->getName(), (int)node->getId());
+	   nxlog_debug_tag(DEBUG_TAG, 6, _T("BuildComponentTree(%s): SNMP WALK failed"), debugInfo);
 		elements.setOwner(true);	// cause element destruction on exit
 	}
-	DbgPrintf(5, _T("BuildComponentTree(%s [%d]): %p"), node->getName(), (int)node->getId(), tree);
+	nxlog_debug_tag(DEBUG_TAG, 5, _T("BuildComponentTree(%s [%d]): %p"), debugInfo, tree);
 	return tree;
 }
+
+/**
+ * NXSL class ComponentClass: constructor
+ */
+NXSL_ComponentClass::NXSL_ComponentClass() : NXSL_Class()
+{
+   setName(_T("Component"));
+}
+
+/**
+ * NXSL class ComponentClass: get attribute
+ */
+NXSL_Value *NXSL_ComponentClass::getAttr(NXSL_Object *object, const char *attr)
+{
+   const UINT32 classCount = 12;
+   static const TCHAR *className[classCount] = { _T(""), _T("other"), _T("unknown"), _T("chassis"), _T("backplane"),
+                                                 _T("container"), _T("power supply"), _T("fan"), _T("sensor"),
+                                                 _T("module"), _T("port"), _T("stack") };
+
+   NXSL_VM *vm = object->vm();
+   NXSL_Value *value = NULL;
+   Component *component = (Component *)object->getData();
+   if (!strcmp(attr, "class"))
+   {
+      if (component->getClass() >= classCount)
+         value = vm->createValue(className[2]); // Unknown class
+      else
+         value = vm->createValue(className[component->getClass()]);
+   }
+   else if (!strcmp(attr, "children"))
+   {
+      value = vm->createValue(component->getChildrenForNXSL(vm));
+   }
+   else if (!strcmp(attr, "description"))
+   {
+      value = vm->createValue(component->getDescription());
+   }
+   else if (!strcmp(attr, "firmware"))
+   {
+      value = vm->createValue(component->getFirmware());
+   }
+   else if (!strcmp(attr, "model"))
+   {
+      value = vm->createValue(component->getModel());
+   }
+   else if (!strcmp(attr, "name"))
+   {
+      value = vm->createValue(component->getName());
+   }
+   else if (!strcmp(attr, "serial"))
+   {
+      value = vm->createValue(component->getSerial());
+   }
+   else if (!strcmp(attr, "vendor"))
+   {
+      value = vm->createValue(component->getVendor());
+   }
+   return value;
+}
+
+/**
+ * NXSL class "Component" instance
+ */
+NXSL_ComponentClass LIBNXSRV_EXPORTABLE g_nxslComponentClass;
