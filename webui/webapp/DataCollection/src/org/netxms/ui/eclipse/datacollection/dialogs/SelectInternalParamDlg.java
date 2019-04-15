@@ -67,12 +67,14 @@ public class SelectInternalParamDlg extends AbstractSelectParamDlg
 		
 		if ((object instanceof Template) || ((object instanceof AbstractNode) && ((AbstractNode)object).isManagementServer()))
 		{
+         list.add(new AgentParameter("Server.AverageDataCollectorQueueSize", Messages.get().SelectInternalParamDlg_DCI_AvgDCQueue, DataType.FLOAT)); //$NON-NLS-1$
 			list.add(new AgentParameter("Server.AverageDBWriterQueueSize", Messages.get().SelectInternalParamDlg_DCI_AvgDBWriterQueue, DataType.FLOAT)); //$NON-NLS-1$
          list.add(new AgentParameter("Server.AverageDBWriterQueueSize.IData", "Database writer's request queue (DCI data) for last minute", DataType.FLOAT)); //$NON-NLS-1$
          list.add(new AgentParameter("Server.AverageDBWriterQueueSize.Other", "Database writer's request queue (other queries) for last minute", DataType.FLOAT)); //$NON-NLS-1$
          list.add(new AgentParameter("Server.AverageDBWriterQueueSize.RawData", "Database writer's request queue (raw DCI data) for last minute", DataType.FLOAT)); //$NON-NLS-1$
 			list.add(new AgentParameter("Server.AverageDCIQueuingTime", Messages.get().SelectInternalParamDlg_DCI_AvgDCIQueueTime, DataType.UINT32)); //$NON-NLS-1$
-			list.add(new AgentParameter("Server.AverageDCPollerQueueSize", Messages.get().SelectInternalParamDlg_DCI_AvgDCQueue, DataType.FLOAT)); //$NON-NLS-1$
+         list.add(new AgentParameter("Server.AverageEventWriterQueueSize", "Average event writer queue size for last minute", DataType.FLOAT)); //$NON-NLS-1$
+         list.add(new AgentParameter("Server.AveragePollerQueueSize", "Average poller queue size for last minute", DataType.FLOAT)); //$NON-NLS-1$
          list.add(new AgentParameter("Server.AverageSyslogProcessingQueueSize", Messages.get().SelectInternalParamDlg_SyslogProcessingQueue, DataType.FLOAT)); //$NON-NLS-1$
          list.add(new AgentParameter("Server.AverageSyslogWriterQueueSize", Messages.get().SelectInternalParamDlg_SyslogWriterQueue, DataType.FLOAT)); //$NON-NLS-1$
          list.add(new AgentParameter("Server.DB.Queries.Failed", "Failed DB queries", DataType.UINT64)); //$NON-NLS-1$
@@ -83,6 +85,9 @@ public class SelectInternalParamDlg extends AbstractSelectParamDlg
          list.add(new AgentParameter("Server.DBWriter.Requests.IData", "DB writer requests (DCI data)", DataType.UINT64)); //$NON-NLS-1$
          list.add(new AgentParameter("Server.DBWriter.Requests.Other", "DB writer requests (other queries)", DataType.UINT64)); //$NON-NLS-1$
          list.add(new AgentParameter("Server.DBWriter.Requests.RawData", "DB writer requests (raw DCI data)", DataType.UINT64)); //$NON-NLS-1$
+         list.add(new AgentParameter("Server.Heap.Active", "Active server heap memory", DataType.UINT64)); //$NON-NLS-1$
+         list.add(new AgentParameter("Server.Heap.Allocated", "Allocated server heap memory", DataType.UINT64)); //$NON-NLS-1$
+         list.add(new AgentParameter("Server.Heap.Mapped", "Mapped server heap memory", DataType.UINT64)); //$NON-NLS-1$
          list.add(new AgentParameter("Server.ReceivedSNMPTraps", "SNMP traps received since server start", DataType.UINT64)); //$NON-NLS-1$
          list.add(new AgentParameter("Server.ReceivedSyslogMessages", "Syslog messages received since server start", DataType.UINT64)); //$NON-NLS-1$
          list.add(new AgentParameter("Server.ThreadPool.ActiveRequests(*)", "Thread pool {instance}: active requests", DataType.INT32)); //$NON-NLS-1$
