@@ -83,7 +83,7 @@
 /**
  * Server includes
  */
-#include "nxcore_console.h"
+#include "server_console.h"
 #include "nms_dcoll.h"
 #include "nms_users.h"
 #include "nxcore_winperf.h"
@@ -451,6 +451,23 @@ struct TcpProxy
 };
 
 /**
+ * Client session console
+ */
+class NXCORE_EXPORTABLE ClientSessionConsole : public ServerConsole
+{
+private:
+   ClientSession *m_session;
+   UINT16 m_messageCode;
+
+protected:
+   virtual void write(const TCHAR *text) override;
+
+public:
+   ClientSessionConsole(ClientSession *session, UINT16 msgCode = CMD_ADM_MESSAGE);
+   virtual ~ClientSessionConsole();
+};
+
+/**
  * Client (user) session
  */
 class NXCORE_EXPORTABLE ClientSession
@@ -487,7 +504,7 @@ private:
    UINT32 m_dwEncryptionRqId;
    UINT32 m_dwEncryptionResult;
    CONDITION m_condEncryptionSetup;
-	CONSOLE_CTX m_console;			// Server console context
+	ClientSessionConsole *m_console;			// Server console context
 	StringList m_musicTypeList;
 	ObjectIndex m_agentConn;
 	StringObjectMap<UINT32> *m_subscriptions;

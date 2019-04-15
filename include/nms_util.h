@@ -839,7 +839,7 @@ public:
    bool operator ==(const String &s) const { return equals(s); }
    bool operator !=(const String &s) const { return !equals(s); }
 
-	char *getUTF8String();
+	char *getUTF8String() const;
 
    void append(const TCHAR *str) { if (str != NULL) append(str, _tcslen(str)); }
 	void append(const TCHAR *str, size_t len);
@@ -999,9 +999,9 @@ private:
 public:
    ArrayIterator(Array *array);
 
-   virtual bool hasNext() OVERRIDE;
-   virtual void *next() OVERRIDE;
-   virtual void remove() OVERRIDE;
+   virtual bool hasNext() override;
+   virtual void *next() override;
+   virtual void remove() override;
 };
 
 /**
@@ -1341,9 +1341,9 @@ private:
 public:
    StringSetIterator(StringSet *stringSet);
 
-   virtual bool hasNext() OVERRIDE;
-   virtual void *next() OVERRIDE;
-   virtual void remove() OVERRIDE;
+   virtual bool hasNext() override;
+   virtual void *next() override;
+   virtual void remove() override;
 };
 
 /**
@@ -1486,9 +1486,9 @@ private:
 public:
    HashMapIterator(HashMapBase *hashMap);
 
-   virtual bool hasNext() OVERRIDE;
-   virtual void *next() OVERRIDE;
-   virtual void remove() OVERRIDE;
+   virtual bool hasNext() override;
+   virtual void *next() override;
+   virtual void remove() override;
 };
 
 /**
@@ -2187,7 +2187,7 @@ public:
 	static TelnetConnection *createConnection(const TCHAR *hostName, WORD port, UINT32 timeout);
    static TelnetConnection *createConnection(const InetAddress& ip, WORD port, UINT32 timeout);
 
-	virtual int read(char *pBuff, int nSize, UINT32 timeout = INFINITE) OVERRIDE;
+	virtual int read(char *pBuff, int nSize, UINT32 timeout = INFINITE) override;
 	int readLine(char *buffer, int size, UINT32 timeout = INFINITE);
 };
 
@@ -2293,11 +2293,11 @@ protected:
 public:
    SocketCommChannel(SOCKET socket, bool owner = true);
 
-   virtual int send(const void *data, size_t size, MUTEX mutex = INVALID_MUTEX_HANDLE) OVERRIDE;
-   virtual int recv(void *buffer, size_t size, UINT32 timeout = INFINITE) OVERRIDE;
-   virtual int poll(UINT32 timeout, bool write = false) OVERRIDE;
-   virtual int shutdown() OVERRIDE;
-   virtual void close() OVERRIDE;
+   virtual int send(const void *data, size_t size, MUTEX mutex = INVALID_MUTEX_HANDLE) override;
+   virtual int recv(void *buffer, size_t size, UINT32 timeout = INFINITE) override;
+   virtual int poll(UINT32 timeout, bool write = false) override;
+   virtual int shutdown() override;
+   virtual void close() override;
 };
 
 #endif   /* __cplusplus */

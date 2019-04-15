@@ -1387,16 +1387,11 @@ THREAD_RESULT NXCORE_EXPORTABLE THREAD_CALL Main(void *pArg)
       if (!(g_flags & AF_DEBUG_CONSOLE_DISABLED))
 	   {
 		   char *ptr, szCommand[256];
-		   struct __console_ctx ctx;
+		   LocalTerminalConsole ctx;
 #ifdef UNICODE
    		WCHAR wcCommand[256];
 #endif
 
-		   ctx.hSocket = -1;
-		   ctx.socketMutex = INVALID_MUTEX_HANDLE;
-		   ctx.pMsg = NULL;
-		   ctx.session = NULL;
-         ctx.output = NULL;
 		   WriteToTerminal(_T("\nNetXMS Server V") NETXMS_VERSION_STRING _T(" Build ") NETXMS_VERSION_BUILD_STRING IS_UNICODE_BUILD_STRING _T(" Ready\n")
 				             _T("Enter \"\x1b[1mhelp\x1b[0m\" for command list or \"\x1b[1mdown\x1b[0m\" for server shutdown\n")
 				             _T("System Console\n\n"));

@@ -549,7 +549,7 @@ void String::clear()
 /**
  * Get content as dynamically allocated UTF-8 string
  */
-char *String::getUTF8String()
+char *String::getUTF8String() const
 {
 #ifdef UNICODE
 	return UTF8StringFromWideString(m_buffer);

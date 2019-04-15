@@ -28,7 +28,6 @@ serverinclude_HEADERS = \
 	nms_topo.h \
 	nms_users.h \
 	npe.h \
-	nxcore_console.h \
 	nxcore_jobs.h \
 	nxcore_logs.h \
 	nxcore_schedule.h \
@@ -39,4 +38,5 @@ serverinclude_HEADERS = \
 	nxmodule.h \
 	nxsrvapi.h \
 	pdsdrv.h \
+	server_console.h \
 	zeromq.h

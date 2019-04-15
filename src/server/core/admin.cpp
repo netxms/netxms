@@ -42,13 +42,7 @@ static THREAD_RESULT THREAD_CALL ProcessingThread(void *pArg)
 
    SOCKET sock = CAST_FROM_POINTER(pArg, SOCKET);
 
-   struct __console_ctx ctx;
-   ctx.hSocket = sock;
-	ctx.socketMutex = MutexCreate();
-   ctx.pMsg = NULL;
-	ctx.session = NULL;
-   ctx.output = NULL;
-
+   SocketConsole console(sock);
    SocketMessageReceiver receiver(sock, 4096, MAX_MSG_SIZE);
    while(true)
    {
@@ -71,14 +65,12 @@ static THREAD_RESULT THREAD_CALL ProcessingThread(void *pArg)
          break;
       }
 
-      NXCPMessage response(CMD_ADM_MESSAGE, request->getId());
       if (request->getCode() == CMD_ADM_REQUEST)
       {
          TCHAR command[256];
          request->getFieldAsString(VID_COMMAND, command, 256);
 
-         ctx.pMsg = &response;
-         int exitCode = ProcessConsoleCommand(command, &ctx);
+         int exitCode = ProcessConsoleCommand(command, &console);
          switch(exitCode)
          {
             case CMD_EXIT_SHUTDOWN:
@@ -98,17 +90,16 @@ static THREAD_RESULT THREAD_CALL ProcessingThread(void *pArg)
          g_dbPasswordReady.set();
       }
 
-      response.setCode(CMD_REQUEST_COMPLETED);
+      NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
       NXCP_MESSAGE *rawMsgOut = response.serialize();
-		SendEx(sock, rawMsgOut, ntohl(rawMsgOut->size), 0, ctx.socketMutex);
-      free(rawMsgOut);
+		SendEx(sock, rawMsgOut, ntohl(rawMsgOut->size), 0, console.getMutex());
+      MemFree(rawMsgOut);
       delete request;
    }
 
 close_session:
    shutdown(sock, 2);
    closesocket(sock);
-	MutexDestroy(ctx.socketMutex);
    return THREAD_OK;
 }
 
