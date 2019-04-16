@@ -216,7 +216,6 @@
     <ClCompile Include="client.cpp" />
     <ClCompile Include="cluster.cpp" />
     <ClCompile Include="columnfilter.cpp" />
-    <ClCompile Include="components.cpp" />
     <ClCompile Include="condition.cpp" />
     <ClCompile Include="config.cpp" />
     <ClCompile Include="console.cpp" />

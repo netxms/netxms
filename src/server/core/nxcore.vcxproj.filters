@@ -84,9 +84,6 @@
     <ClCompile Include="columnfilter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="components.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="condition.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

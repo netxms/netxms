@@ -53,7 +53,7 @@ void ComponentTree::fillMessage(NXCPMessage *msg, UINT32 baseId) const
 /**
  * Constructor
  */
-Component::Component(UINT32 index, const TCHAR *name) : m_children(0, 16, true)
+Component::Component(UINT32 index, const TCHAR *name)
 {
 	m_index = index;
 	m_class = 2; // unknown
@@ -65,6 +65,7 @@ Component::Component(UINT32 index, const TCHAR *name) : m_children(0, 16, true)
 	m_vendor = NULL;
 	m_firmware = NULL;
 	m_parentIndex = 0;
+   m_children = new ObjectArray<Component>(0, 16, true);
 }
 
 /**
@@ -78,6 +79,7 @@ Component::~Component()
 	MemFree(m_serial);
 	MemFree(m_vendor);
 	MemFree(m_firmware);
+   delete m_children;
 }
 
 /**
@@ -157,7 +159,7 @@ void Component::buildTree(ObjectArray<Component> *elements)
 		Component *e = elements->get(i);
 		if (e->m_parentIndex == m_index)
 		{
-		   m_children.add(e);
+		   m_children->add(e);
 			e->buildTree(elements);
 		}
 	}
@@ -175,8 +177,8 @@ void Component::print(ServerConsole *console, int level) const
    }
    console->printf(_T("%*s\x1b[1m%d\x1b[0m \x1b[32;1m%-32s\x1b[0m %s%s\n"),
             level * 4, _T(""), (int)m_index, m_name, m_description, ifInfo);
-	for(int i = 0; i < m_children.size(); i++)
-	   m_children.get(i)->print(console, level + 1);
+	for(int i = 0; i < m_children->size(); i++)
+	   m_children->get(i)->print(console, level + 1);
 }
 
 /**
@@ -194,11 +196,11 @@ UINT32 Component::fillMessage(NXCPMessage *msg, UINT32 baseId) const
 	msg->setField(baseId + 7, m_serial);
 	msg->setField(baseId + 8, m_vendor);
 	msg->setField(baseId + 9, m_firmware);
-	msg->setField(baseId + 10, (UINT32)m_children.size());
+	msg->setField(baseId + 10, (UINT32)m_children->size());
 
 	UINT32 varId = baseId + 11;
-	for(int i = 0; i < m_children.size(); i++)
-		varId = m_children.get(i)->fillMessage(msg, varId);
+	for(int i = 0; i < m_children->size(); i++)
+		varId = m_children->get(i)->fillMessage(msg, varId);
 
 	return varId;
 }
@@ -209,9 +211,9 @@ UINT32 Component::fillMessage(NXCPMessage *msg, UINT32 baseId) const
 NXSL_Array *Component::getChildrenForNXSL(NXSL_VM *vm) const
 {
    NXSL_Array *components = new NXSL_Array(vm);
-   for(int i = 0; i < m_children.size(); i++)
+   for(int i = 0; i < m_children->size(); i++)
    {
-      components->set(i, vm->createValue(new NXSL_Object(vm, &g_nxslComponentClass, m_children.get(i))));
+      components->set(i, vm->createValue(new NXSL_Object(vm, &g_nxslComponentClass, m_children->get(i))));
    }
    return components;
 }
