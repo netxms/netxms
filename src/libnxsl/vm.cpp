@@ -267,7 +267,6 @@ bool NXSL_VM::run(const ObjectArray<NXSL_Value>& args, NXSL_VariableSystem **glo
          NXSL_VariableSystem **expressionVariables, NXSL_VariableSystem *constants, const TCHAR *entryPoint)
 {
    NXSL_Value *pValue;
-   TCHAR szBuffer[32];
 
 	m_cp = INVALID_ADDRESS;
 

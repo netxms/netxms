@@ -336,7 +336,7 @@ void NXSL_Program::dump(FILE *fp, const ObjectArray<NXSL_Instruction> *instructi
             _ftprintf(fp, _T("(%s), %04X\n"), instr->m_operand.m_pszString, instr->m_addr2);
             break;
          case OPCODE_UPDATE_EXPRVAR:
-            _ftprintf(fp, _T("(%hs)\n"), instr->m_operand.m_pszString);
+            _ftprintf(fp, _T("(%s)\n"), instr->m_operand.m_pszString);
             break;
          case OPCODE_PUSH_CONSTANT:
 			case OPCODE_CASE:
