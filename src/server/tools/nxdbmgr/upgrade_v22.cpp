@@ -24,6 +24,15 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 22.50 to 22.51
+ */
+static bool H_UpgradeFromV50()
+{
+   CHK_EXEC(SQLQuery(_T("ALTER TABLE thresholds ADD last_checked_value varchar(255)")));
+   CHK_EXEC(SetMinorSchemaVersion(51));
+   return true;
+}
+/**
  * Upgrade from 22.49 to 22.50
  */
 static bool H_UpgradeFromV49()
@@ -960,6 +969,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 50, 22, 51, H_UpgradeFromV50 },
    { 49, 22, 50, H_UpgradeFromV49 },
    { 48, 22, 49, H_UpgradeFromV48 },
    { 47, 22, 48, H_UpgradeFromV47 },

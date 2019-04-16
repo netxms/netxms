@@ -104,7 +104,8 @@ Threshold::Threshold(Threshold *src, bool shadowCopy)
  * This constructor assumes that SELECT query look as following:
  * SELECT threshold_id,fire_value,rearm_value,check_function,check_operation,
  *        sample_count,script,event_code,current_state,rearm_event_code,
- *        repeat_interval,current_severity,last_event_timestamp,match_count,state_before_maint FROM thresholds
+ *        repeat_interval,current_severity,last_event_timestamp,match_count,
+ *        state_before_maint,last_checked_value FROM thresholds
  */
 Threshold::Threshold(DB_RESULT hResult, int iRow, DCItem *pRelatedItem)
 {
@@ -133,6 +134,8 @@ Threshold::Threshold(DB_RESULT hResult, int iRow, DCItem *pRelatedItem)
 	m_currentSeverity = (BYTE)DBGetFieldLong(hResult, iRow, 11);
 	m_lastEventTimestamp = (time_t)DBGetFieldULong(hResult, iRow, 12);
 	m_numMatches = DBGetFieldLong(hResult, iRow, 13);
+   DBGetField(hResult, iRow, 14, szBuffer, MAX_DB_STRING);
+   m_lastCheckValue = szBuffer;
 }
 
 /**
@@ -193,8 +196,8 @@ BOOL Threshold::saveToDB(DB_HANDLE hdb, UINT32 dwIndex)
 			_T("INSERT INTO thresholds (item_id,fire_value,rearm_value,")
 			_T("check_function,check_operation,sample_count,script,event_code,")
 			_T("sequence_number,current_state,state_before_maint,rearm_event_code,repeat_interval,")
-			_T("current_severity,last_event_timestamp,match_count,threshold_id) ")
-			_T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
+			_T("current_severity,last_event_timestamp,match_count,last_checked_value,threshold_id) ")
+			_T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
 	}
 	else
 	{
@@ -203,7 +206,7 @@ BOOL Threshold::saveToDB(DB_HANDLE hdb, UINT32 dwIndex)
          _T("check_operation=?,sample_count=?,script=?,event_code=?,")
          _T("sequence_number=?,current_state=?,state_before_maint=?,rearm_event_code=?,")
 			_T("repeat_interval=?,current_severity=?,last_event_timestamp=?,")
-         _T("match_count=? WHERE threshold_id=?"));
+         _T("match_count=?,last_checked_value=? WHERE threshold_id=?"));
 	}
 	if (hStmt == NULL)
 		return FALSE;
@@ -224,7 +227,8 @@ BOOL Threshold::saveToDB(DB_HANDLE hdb, UINT32 dwIndex)
 	DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, (INT32)m_currentSeverity);
 	DBBind(hStmt, 15, DB_SQLTYPE_INTEGER, (INT32)m_lastEventTimestamp);
 	DBBind(hStmt, 16, DB_SQLTYPE_INTEGER, (INT32)m_numMatches);
-	DBBind(hStmt, 17, DB_SQLTYPE_INTEGER, (INT32)m_id);
+   DBBind(hStmt, 17, DB_SQLTYPE_VARCHAR, m_lastCheckValue.getString(), DB_BIND_STATIC);
+	DBBind(hStmt, 18, DB_SQLTYPE_INTEGER, (INT32)m_id);
 
 	BOOL success = DBExecute(hStmt);
 	DBFreeStatement(hStmt);
