@@ -96,6 +96,7 @@ private:
    UINT32 m_eventCode;      // Event code to be generated
    UINT32 m_rearmEventCode;
    ItemValue m_value;
+   ItemValue m_lastCheckValue;
    BYTE m_function;          // Function code
    BYTE m_operation;         // Comparision operation code
    BYTE m_dataType;          // Related item data type
@@ -137,6 +138,8 @@ public:
    BOOL isReached() { return m_isReached; }
    BOOL wasReachedBeforeMaintenance() { return m_wasReachedBeforeMaint; }
    void updateBeforeMaintenanceState() { m_wasReachedBeforeMaint = m_isReached; }
+   const ItemValue& getLastCheckValue() { return m_lastCheckValue; }
+   void setLastCheckedValue(const ItemValue &value) { m_lastCheckValue  = value; }
 
 	int getRepeatInterval() { return m_repeatInterval; }
 	time_t getLastEventTimestamp() { return m_lastEventTimestamp; }

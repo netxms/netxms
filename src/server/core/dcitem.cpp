@@ -296,7 +296,8 @@ bool DCItem::loadThresholdsFromDB(DB_HANDLE hdb)
 	           _T("SELECT threshold_id,fire_value,rearm_value,check_function,")
               _T("check_operation,sample_count,script,event_code,current_state,")
               _T("rearm_event_code,repeat_interval,current_severity,")
-				  _T("last_event_timestamp,match_count,state_before_maint FROM thresholds WHERE item_id=? ")
+				  _T("last_event_timestamp,match_count,state_before_maint,")
+				  _T("last_checked_value FROM thresholds WHERE item_id=? ")
               _T("ORDER BY sequence_number"));
 	if (hStmt != NULL)
 	{
@@ -441,6 +442,7 @@ void DCItem::checkThresholds(ItemValue &value)
 		Threshold *t = m_thresholds->get(i);
       ItemValue checkValue;
       ThresholdCheckResult result = t->check(value, m_ppValueCache, checkValue, m_owner, this);
+      t->setLastCheckedValue(checkValue);
       switch(result)
       {
          case ACTIVATED:
@@ -867,22 +869,24 @@ void DCItem::updateThresholdsBeforeMaintenanceState()
 void DCItem::generateEventsBasedOnThrDiff()
 {
    lock();
-   for(int i = 0; i < getThresholdCount(); i++)
+   int trCount = getThresholdCount() - 1;
+   for(int i = trCount; i >= 0; i--)//go backwards to generate events in correct order
    {
-
       Threshold *t = m_thresholds->get(i);
-      if(t->isReached() != m_thresholds->get(i)->wasReachedBeforeMaintenance())
+      if(t->isReached() != t->wasReachedBeforeMaintenance())
       {
          if(t->isReached())
          {
             PostDciEventWithNames(t->getEventCode(), m_owner->getId(), m_id, "ssssisds",
-                              s_paramNamesReach, m_name, m_description, _T(""), _T(""),
-                              m_id, m_instance, 0, _T(""));
+                              s_paramNamesReach, m_name, m_description, t->getStringValue(),
+                              (const TCHAR *)t->getLastCheckValue(), m_id, m_instance, 0,
+                              (const TCHAR *)(*m_ppValueCache[0]));
          }
          else
          {
             PostDciEventWithNames(t->getRearmEventCode(), m_owner->getId(), m_id, "ssissss",
-               s_paramNamesRearm, m_name, m_description, m_id, m_instance, _T(""), _T(""), _T(""));
+                              s_paramNamesRearm, m_name, m_description, m_id, m_instance, t->getStringValue(),
+                              (const TCHAR *)t->getLastCheckValue(), (const TCHAR *)(*m_ppValueCache[0]));
          }
       }
    }

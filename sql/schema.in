@@ -694,6 +694,7 @@ CREATE TABLE thresholds
   sequence_number integer not null,
   fire_value varchar(255) null,
   rearm_value varchar(255) null,
+  last_checked_value varchar(255) null,
   check_function integer not null,
   check_operation integer not null,
   sample_count integer not null,
