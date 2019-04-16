@@ -2,7 +2,8 @@
 
 my $file_prefix = shift || "netxms";
 my $define_prefix = shift || "NETXMS";
-my $file = shift || $file_prefix . "-build-tag.h";
+my $h_file = shift || $file_prefix . "-build-tag.h";
+my $iss_file = shift || $file_prefix . "-build-tag.iss";
 
 my $tag = `git describe --always`;
 chomp $tag;
@@ -20,29 +21,9 @@ if ($tag =~ /(.*)-([0-9]+)-g.*/)
    $build_number = $2;
 }
 
-my $update = 1;
-
-if (open(IN, "<$file"))
+if (IsUpdateNeeded($h_file, $tag) == 1)
 {
-	while(<IN>) 
-	{
-		chomp;
-		my $in = $_;
-		if ($in =~ /\* BUILDTAG:(.*) \*/)
-		{
-			print "Build tag: $1\n";
-			if ($1 eq $tag)
-			{
-				$update = 0;
-			}
-		}
-	}
-	close IN;
-}
-
-if ($update == 1)
-{
-	open(OUT, ">$file") or die "Cannot open output file: $!";
+	open(OUT, ">$h_file") or die "Cannot open output file: $!";
 	print OUT "/* BUILDTAG:$tag */\n";
 	print OUT "#ifndef _" . $file_prefix . "_build_tag_h_\n";
 	print OUT "#define _" . $file_prefix . "_build_tag_h_\n";
@@ -54,5 +35,42 @@ if ($update == 1)
 	print OUT "#endif\n";
 	close OUT;
 
-	print "Build tag updated\n";
+	print "Build tag updated in $h_file\n";
+}
+
+if (IsUpdateNeeded($iss_file, $tag) == 1)
+{
+	open(OUT, ">$iss_file") or die "Cannot open output file: $!";
+	print OUT ";* BUILDTAG:$tag *\n";
+	print OUT "#define VersionString \"$version_string\"\n";
+	print OUT "#define BuildTag \"$tag\"\n";
+	close OUT;
+
+	print "Build tag updated in $iss_file\n";
+}
+
+sub IsUpdateNeeded
+{
+   my $file = $_[0];
+   my $tag = $_[1];
+   my $update = 1;
+   if (open(IN, "<$file"))
+   {
+      while(<IN>) 
+      {
+         chomp;
+         my $in = $_;
+         if ($in =~ /\* BUILDTAG:(.*) \*/)
+         {
+            print "Build tag in $file: $1\n";
+            if ($1 eq $tag)
+            {
+               $update = 0;
+            }
+         }
+      }
+      close IN;
+   }
+
+   return $update;
 }

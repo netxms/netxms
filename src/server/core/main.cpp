@@ -25,7 +25,6 @@
 #include <netxms_mt.h>
 #include <hdlink.h>
 #include <agent_tunnel.h>
-#include <nxpython.h>
 
 #if !defined(_WIN32) && HAVE_READLINE_READLINE_H && HAVE_READLINE && !defined(UNICODE)
 #include <readline/readline.h>
@@ -364,10 +363,6 @@ static void LoadGlobalConfig()
       g_flags |= AF_ENABLE_NXSL_FILE_IO_FUNCTIONS;
       nxlog_debug(3, _T("NXSL file I/O functions enabled"));
    }
-#if WITH_PYTHON
-   if (ConfigReadBoolean(_T("Python.EnableEmbeddedInterpreter"), true))
-      g_flags |= AF_ENABLE_EMBEDDED_PYTHON;
-#endif
    if (ConfigReadBoolean(_T("UseFQDNForNodeNames"), true))
       g_flags |= AF_USE_FQDN_FOR_NODE_NAMES;
    if (ConfigReadBoolean(_T("ApplyDCIFromTemplateToDisabledDCI"), true))
@@ -914,11 +909,6 @@ retry_db_lock:
 	// Initialize certificate store and CA
 	InitCertificates();
 
-#if WITH_PYTHON
-   if (g_flags & AF_ENABLE_EMBEDDED_PYTHON)
-      InitializeEmbeddedPython();
-#endif
-
 	// Call custom initialization code
 #ifdef CUSTOM_INIT_CODE
 	if (!ServerCustomInit())
@@ -1248,11 +1238,6 @@ void NXCORE_EXPORTABLE Shutdown()
 	DBConnectionPoolShutdown();
 	DBUnloadDriver(g_dbDriver);
 	nxlog_debug(1, _T("Database driver unloaded"));
-
-#if WITH_PYTHON
-   if (g_flags & AF_ENABLE_EMBEDDED_PYTHON)
-      ShutdownEmbeddedPython();
-#endif
 
 	nxlog_debug(1, _T("Server shutdown complete"));
 	nxlog_close();

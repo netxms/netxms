@@ -1,8 +1,10 @@
+#include "..\..\..\include\netxms-build-tag.iss"
+
 AppName=NetXMS Agent
-AppVerName=NetXMS Agent 3.0-M0
-AppVersion=3.0-M0
-VersionInfoVersion=3.0.0
-VersionInfoTextVersion=3.0-M0
+AppVerName=NetXMS Agent {#VersionString}
+AppVersion={#VersionString}
+VersionInfoVersion={#VersionString}
+VersionInfoTextVersion={#VersionString}
 AppPublisher=Raden Solutions
 AppPublisherURL=http://www.radensolutions.com
 AppCopyright=© 2003-2018 Raden Solutions

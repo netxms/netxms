@@ -3,8 +3,7 @@
 
 [Setup]
 #include "setup.iss"
-VersionInfoDescription=NPI(name=nxagent;platform=windows-i386)
-OutputBaseFilename=nxagent-3.0-M0
+OutputBaseFilename=nxagent-{#VersionString}
 
 [Files]
 Source: "..\..\..\Release\libnetxms.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce

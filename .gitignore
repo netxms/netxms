@@ -43,8 +43,8 @@ target
 .vs
 
 /netxms-build-tag.h
-/build/netxms-build-tag.h
 /include/netxms-build-tag.h
+/include/netxms-build-tag.iss
 
 /netxms-*.tar.gz
 /*.apkg

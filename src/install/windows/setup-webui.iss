@@ -1,7 +1,9 @@
+#include "..\..\..\include\netxms-build-tag.iss"
+
 [Setup]
 AppName=NetXMS WebUI
-AppVerName=NetXMS WebUI 3.0-M0
-AppVersion=3.0-M0
+AppVerName=NetXMS WebUI {#VersionString}
+AppVersion={#VersionString}
 AppPublisher=Raden Solutions
 AppPublisherURL=http://www.radensolutions.com
 AppSupportURL=http://www.netxms.org

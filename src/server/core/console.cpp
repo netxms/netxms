@@ -22,7 +22,6 @@
 
 #include "nxcore.h"
 #include <entity_mib.h>
-#include <nxpython.h>
 
 /**
  * Externals
@@ -1293,39 +1292,6 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
       }
       if (libraryLocked)
          scriptLibrary->unlock();
-   }
-   else if (IsCommand(_T("PYTHON"), szBuffer, 2))
-   {
-#if WITH_PYTHON
-      pArg = ExtractWord(pArg, szBuffer);
-      if (IsCommand(_T("EXEC"), szBuffer, 3))
-      {
-         PythonInterpreter *p = PythonInterpreter::create();
-         if (p != NULL)
-         {
-            pArg = ExtractWord(pArg, szBuffer);
-            if (!p->loadMainModuleFromFile(szBuffer))
-            {
-               ConsolePrintf(pCtx, _T("ERROR: Cannot load and execute script\n\n"));
-            }
-            delete p;
-         }
-         else
-         {
-            ConsolePrintf(pCtx, _T("ERROR: Cannot create Python interpreter\n\n"));
-         }
-      }
-      else if (IsCommand(_T("INFO"), szBuffer, 1))
-      {
-         ConsolePrintf(pCtx, _T("Python version %hs\nInterpreter is %sinitialized\n"), Py_GetVersion(), Py_IsInitialized() ? _T("") : _T("not "));
-      }
-      else
-      {
-         ConsolePrintf(pCtx, _T("ERROR: invalid subcommand\n\n"));
-      }
-#else
-      ConsolePrintf(pCtx, _T("ERROR: server was built without Python support\n\n"));
-#endif
    }
    else if (IsCommand(_T("TRACE"), szBuffer, 1))
    {
