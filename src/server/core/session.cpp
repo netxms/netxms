@@ -4078,7 +4078,7 @@ static DB_STATEMENT PrepareDataSelect(DB_HANDLE hdb, UINT32 nodeId, int dciType,
       {
          case DB_SYNTAX_MSSQL:
             _sntprintf(query, 512, _T("SELECT TOP %d %s_timestamp,%s%s FROM %s_%d WHERE item_id=?%s ORDER BY %s_timestamp DESC"),
-                     (int)maxRows, tablePrefix, tablePrefix, SELECTION_COLUMNS,
+                     (int)maxRows, tablePrefix, SELECTION_COLUMNS,
                      tablePrefix, (int)nodeId, condition, tablePrefix);
             break;
          case DB_SYNTAX_ORACLE:
