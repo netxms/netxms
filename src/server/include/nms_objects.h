@@ -165,7 +165,7 @@ public:
    const TCHAR *getStatus() const { return m_status; }
 
    void startExecution() { _tcscpy(m_status, _T("started")); }
-   void setStatus(const TCHAR *status) { nx_strncpy(m_status, status, 128); }
+   void setStatus(const TCHAR *status) { _tcslcpy(m_status, status, 128); }
 };
 
 /**
@@ -824,7 +824,7 @@ public:
 	virtual NXSL_Array *getParentsForNXSL(NXSL_VM *vm);
 	virtual NXSL_Array *getChildrenForNXSL(NXSL_VM *vm);
 
-	virtual bool showThresholdSummary();
+   virtual bool showThresholdSummary();
    virtual bool isEventSource();
    virtual bool isDataCollectionTarget();
    virtual bool isAgentPolicy();
@@ -954,10 +954,10 @@ protected:
    TCHAR m_szCurrDCIOwner[MAX_SESSION_NAME];
 	RWLOCK m_dciAccessLock;
 
-   virtual void prepareForDeletion();
+   virtual void prepareForDeletion() override;
 
-   virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId);
-   virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
+   virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId) override;
+   virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest) override;
 
    virtual void onDataCollectionChange() {}
 
@@ -977,13 +977,13 @@ public:
    DataCollectionOwner(ConfigEntry *config);
    virtual ~DataCollectionOwner();
 
-   virtual bool saveToDatabase(DB_HANDLE hdb);
-   virtual bool deleteFromDatabase(DB_HANDLE hdb);
-   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
+   virtual bool saveToDatabase(DB_HANDLE hdb) override;
+   virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
+   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
 
-   virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
+   virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE) override;
 
-   virtual json_t *toJson();
+   virtual json_t *toJson() override;
 
    int getItemCount() { return m_dcObjects->size(); }
    bool addDCObject(DCObject *object, bool alreadyLocked = false, bool notify = true);
@@ -1066,11 +1066,11 @@ protected:
    HashMap<uuid, GenericAgentPolicy> *m_policyList;
    ObjectArray<GenericAgentPolicy> *m_deletedPolicyList;
 
-   virtual void prepareForDeletion();
-   virtual void onDataCollectionChange();
+   virtual void prepareForDeletion() override;
+   virtual void onDataCollectionChange() override;
 
-   virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId);
-   virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
+   virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId) override;
+   virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest) override;
 
 public:
    Template();
@@ -1078,16 +1078,16 @@ public:
    Template(const TCHAR *pszName);
    ~Template();
 
-   virtual int getObjectClass() const { return OBJECT_TEMPLATE; }
+   virtual int getObjectClass() const override { return OBJECT_TEMPLATE; }
 
-   virtual bool saveToDatabase(DB_HANDLE hdb);
-   virtual bool deleteFromDatabase(DB_HANDLE hdb);
-   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
-   virtual void applyDCIChanges();
-   virtual BOOL applyToTarget(DataCollectionTarget *pNode);
+   virtual bool saveToDatabase(DB_HANDLE hdb) override;
+   virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
+   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
+   virtual void applyDCIChanges() override;
+   virtual BOOL applyToTarget(DataCollectionTarget *pNode) override;
 
-   virtual void updateFromImport(ConfigEntry *config);
-   virtual json_t *toJson();
+   virtual void updateFromImport(ConfigEntry *config) override;
+   virtual json_t *toJson() override;
 
    void createExportRecord(String &str);
 
@@ -1149,10 +1149,10 @@ protected:
 	void paeStatusPoll(UINT32 rqId, SNMP_Transport *pTransport, Node *node);
 
 protected:
-   virtual void onObjectDelete(UINT32 objectId);
+   virtual void onObjectDelete(UINT32 objectId) override;
 
-	virtual void fillMessageInternal(NXCPMessage *msg, UINT32 userId);
-   virtual UINT32 modifyFromMessageInternal(NXCPMessage *request);
+	virtual void fillMessageInternal(NXCPMessage *msg, UINT32 userId) override;
+   virtual UINT32 modifyFromMessageInternal(NXCPMessage *request) override;
 
    void setExpectedStateInternal(int state);
 
@@ -1162,14 +1162,14 @@ public:
    Interface(const TCHAR *name, const TCHAR *descr, UINT32 index, const InetAddressList& addrList, UINT32 ifType, UINT32 zoneUIN);
    virtual ~Interface();
 
-   virtual int getObjectClass() const { return OBJECT_INTERFACE; }
-   virtual bool saveToDatabase(DB_HANDLE hdb);
-   virtual bool deleteFromDatabase(DB_HANDLE hdb);
-   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
+   virtual int getObjectClass() const override { return OBJECT_INTERFACE; }
+   virtual bool saveToDatabase(DB_HANDLE hdb) override;
+   virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
+   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
 
-   virtual NXSL_Value *createNXSLObject(NXSL_VM *vm);
+   virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
 
-   virtual json_t *toJson();
+   virtual json_t *toJson() override;
 
    Node *getParentNode();
    UINT32 getParentNodeId();
@@ -1268,10 +1268,10 @@ protected:
 	UINT32 m_requiredPollCount;
    UINT32 m_responseTime;  // Response time from last poll
 
-   virtual void onObjectDelete(UINT32 objectId);
+   virtual void onObjectDelete(UINT32 objectId) override;
 
-   virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId);
-   virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
+   virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId) override;
+   virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest) override;
 
 public:
    NetworkService();
@@ -1280,13 +1280,13 @@ public:
                   Node *pHostNode = NULL, UINT32 dwPollerNode = 0);
    virtual ~NetworkService();
 
-   virtual int getObjectClass() const { return OBJECT_NETWORKSERVICE; }
+   virtual int getObjectClass() const override { return OBJECT_NETWORKSERVICE; }
 
-   virtual json_t *toJson();
+   virtual json_t *toJson() override;
 
-   virtual bool saveToDatabase(DB_HANDLE hdb);
-   virtual bool deleteFromDatabase(DB_HANDLE hdb);
-   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
+   virtual bool saveToDatabase(DB_HANDLE hdb) override;
+   virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
+   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
 
    void statusPoll(ClientSession *session, UINT32 rqId, Node *pollerNode, Queue *eventQueue);
 
@@ -1306,8 +1306,8 @@ protected:
    ObjectArray<InetAddress> *m_localNetworks;
    ObjectArray<InetAddress> *m_remoteNetworks;
 
-   virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId);
-   virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
+   virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId) override;
+   virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest) override;
 
    Node *getParentNode();
 
@@ -1316,13 +1316,13 @@ public:
    VPNConnector(bool hidden);
    virtual ~VPNConnector();
 
-   virtual int getObjectClass() const { return OBJECT_VPNCONNECTOR; }
+   virtual int getObjectClass() const override { return OBJECT_VPNCONNECTOR; }
 
-   virtual json_t *toJson();
+   virtual json_t *toJson() override;
 
-   virtual bool saveToDatabase(DB_HANDLE hdb);
-   virtual bool deleteFromDatabase(DB_HANDLE hdb);
-   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
+   virtual bool saveToDatabase(DB_HANDLE hdb) override;
+   virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
+   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
 
    bool isLocalAddr(const InetAddress& addr);
    bool isRemoteAddr(const InetAddress& addr);
@@ -1362,9 +1362,9 @@ protected:
    time_t m_lastInstancePoll;
    MUTEX m_hPollerMutex;
 
-	virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId);
-	virtual void fillMessageInternalStage2(NXCPMessage *pMsg, UINT32 userId);
-   virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
+	virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId) override;
+	virtual void fillMessageInternalStage2(NXCPMessage *pMsg, UINT32 userId) override;
+   virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest) override;
 
 	virtual bool isDataCollectionDisabled();
    virtual void updatePingData();
@@ -1400,10 +1400,10 @@ public:
    DataCollectionTarget(const TCHAR *name);
    virtual ~DataCollectionTarget();
 
-   virtual bool deleteFromDatabase(DB_HANDLE hdb);
+   virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
 
-   virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
-   virtual bool isDataCollectionTarget();
+   virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE) override;
+   virtual bool isDataCollectionTarget() override;
 
    virtual void enterMaintenanceMode(const TCHAR *comments) override;
    virtual void leaveMaintenanceMode() override;
@@ -1414,7 +1414,7 @@ public:
 
    virtual UINT32 getEffectiveSourceNode(DCObject *dco);
 
-   virtual json_t *toJson();
+   virtual json_t *toJson() override;
 
    UINT32 getListFromScript(const TCHAR *param, StringList **list, DataCollectionTarget *targetObject);
    UINT32 getStringMapFromScript(const TCHAR *param, StringMap **map, DataCollectionTarget *targetObject);
@@ -1438,7 +1438,7 @@ public:
    void cleanDeletedTemplateItems(UINT32 dwTemplateId, UINT32 dwNumItems, UINT32 *pdwItemList);
    virtual void unbindFromTemplate(UINT32 dwTemplateId, bool removeDCI);
 
-   virtual bool isEventSource();
+   virtual bool isEventSource() override;
 
    int getMostCriticalDCIStatus();
 
@@ -1574,25 +1574,25 @@ protected:
 	LONG m_batteryLevel;
    InetAddress m_ipAddress;
 
-	virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId);
-   virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
+	virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId) override;
+   virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest) override;
 
 public:
    MobileDevice();
    MobileDevice(const TCHAR *name, const TCHAR *deviceId);
    virtual ~MobileDevice();
 
-   virtual int getObjectClass() const { return OBJECT_MOBILEDEVICE; }
+   virtual int getObjectClass() const override { return OBJECT_MOBILEDEVICE; }
 
-   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
-   virtual bool saveToDatabase(DB_HANDLE hdb);
-   virtual bool deleteFromDatabase(DB_HANDLE hdb);
+   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
+   virtual bool saveToDatabase(DB_HANDLE hdb) override;
+   virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
 
-   virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
+   virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE) override;
 
-   virtual NXSL_Value *createNXSLObject(NXSL_VM *vm);
+   virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
 
-   virtual json_t *toJson();
+   virtual json_t *toJson() override;
 
 	void updateSystemInfo(NXCPMessage *msg);
 	void updateStatus(NXCPMessage *msg);
@@ -1606,11 +1606,11 @@ public:
 	const TCHAR *getUserId() { return CHECK_NULL_EX(m_userId); }
 	LONG getBatteryLevel() { return m_batteryLevel; }
 
-	virtual DataCollectionError getInternalItem(const TCHAR *param, size_t bufSize, TCHAR *buffer);
+	virtual DataCollectionError getInternalItem(const TCHAR *param, size_t bufSize, TCHAR *buffer) override;
 
-	virtual bool isReadyForStatusPoll() { return false; }
-	virtual bool isReadyForConfigurationPoll() { return false; }
-	virtual bool isReadyForInstancePoll() { return false; }
+	virtual bool isReadyForStatusPoll() override { return false; }
+	virtual bool isReadyForConfigurationPoll() override { return false; }
+	virtual bool isReadyForInstancePoll() override { return false; }
 };
 
 /**
@@ -1633,10 +1633,10 @@ protected:
    AccessPointState m_apState;
    AccessPointState m_prevState;
 
-	virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId);
-   virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
+	virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId) override;
+   virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest) override;
 
-   virtual void updatePingData();
+   virtual void updatePingData() override;
 
 public:
    AccessPoint();
@@ -1645,9 +1645,9 @@ public:
 
    virtual int getObjectClass() const override { return OBJECT_ACCESSPOINT; }
 
-   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
-   virtual bool saveToDatabase(DB_HANDLE hdb);
-   virtual bool deleteFromDatabase(DB_HANDLE hdb);
+   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
+   virtual bool saveToDatabase(DB_HANDLE hdb) override;
+   virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
 
    virtual json_t *toJson() override;
 
@@ -1757,11 +1757,11 @@ protected:
    uuid m_rackImageRear;
    RackOrientation m_rackOrientation;
 
-   virtual void fillMessageInternal(NXCPMessage *msg, UINT32 userId);
-   virtual UINT32 modifyFromMessageInternal(NXCPMessage *request);
+   virtual void fillMessageInternal(NXCPMessage *msg, UINT32 userId) override;
+   virtual UINT32 modifyFromMessageInternal(NXCPMessage *request) override;
 
-   virtual void onDataCollectionChange();
-   virtual void collectProxyInfo(ProxyInfo *info);
+   virtual void onDataCollectionChange() override;
+   virtual void collectProxyInfo(ProxyInfo *info) override;
 
    void updateRackBinding();
    void updateControllerBinding();
@@ -1785,7 +1785,7 @@ public:
 
    virtual NXSL_Value *createNXSLObject(NXSL_VM *vm);
 
-   virtual json_t *toJson();
+   virtual json_t *toJson() override;
 
    UINT32 getControllerId() const { return m_controllerId; }
    UINT32 getRackId() const { return m_rackId; }
@@ -1839,13 +1839,13 @@ protected:
    UINT32 m_frequency; //*10 from origin number // 0 when no value
    UINT32 m_proxyNodeId;
 
-	virtual void fillMessageInternal(NXCPMessage *msg, UINT32 userId);
-   virtual UINT32 modifyFromMessageInternal(NXCPMessage *request);
+	virtual void fillMessageInternal(NXCPMessage *msg, UINT32 userId) override;
+   virtual UINT32 modifyFromMessageInternal(NXCPMessage *request) override;
 
-   virtual void statusPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId);
-   virtual void configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId);
+   virtual void statusPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) override;
+   virtual void configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) override;
 
-   virtual StringMap *getInstanceList(DCObject *dco);
+   virtual StringMap *getInstanceList(DCObject *dco) override;
 
    void calculateStatus(BOOL bForcedRecalc = FALSE);
 
@@ -1862,16 +1862,16 @@ public:
    virtual ~Sensor();
    static Sensor *createSensor(TCHAR *name, NXCPMessage *msg);
 
-   virtual int getObjectClass() const { return OBJECT_SENSOR; }
+   virtual int getObjectClass() const override { return OBJECT_SENSOR; }
 
-   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
-   virtual bool saveToDatabase(DB_HANDLE hdb);
-   virtual bool deleteFromDatabase(DB_HANDLE hdb);
-   virtual void prepareForDeletion();
+   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
+   virtual bool saveToDatabase(DB_HANDLE hdb) override;
+   virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
+   virtual void prepareForDeletion() override;
 
-   virtual NXSL_Value *createNXSLObject(NXSL_VM *vm);
+   virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
 
-   virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
+   virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE) override;
 
    const TCHAR *getXmlConfig() const { return m_xmlConfig; }
    const TCHAR *getXmlRegConfig() const { return m_xmlRegConfig; }
@@ -2118,25 +2118,25 @@ protected:
 	UINT32 m_portRowCount;
 	RackOrientation m_rackOrientation;
 
-   virtual void statusPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId);
-   virtual void configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId);
+   virtual void statusPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) override;
+   virtual void configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) override;
    virtual void topologyPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId);
    virtual void routingTablePoll(PollerInfo *poller, ClientSession *session, UINT32 rqId);
 
-   virtual bool isDataCollectionDisabled();
-   virtual void collectProxyInfo(ProxyInfo *info);
+   virtual bool isDataCollectionDisabled() override;
+   virtual void collectProxyInfo(ProxyInfo *info) override;
 
-   virtual void prepareForDeletion();
-   virtual void onObjectDelete(UINT32 objectId);
+   virtual void prepareForDeletion() override;
+   virtual void onObjectDelete(UINT32 objectId) override;
 
-   virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId);
-   virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
+   virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId) override;
+   virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest) override;
 
-   virtual void updatePingData();
+   virtual void updatePingData() override;
 
-   virtual void onDataCollectionChange();
+   virtual void onDataCollectionChange() override;
 
-   virtual StringMap *getInstanceList(DCObject *dco);
+   virtual StringMap *getInstanceList(DCObject *dco) override;
 
    void agentLock() { MutexLock(m_hAgentAccessMutex); }
    void agentUnlock() { MutexUnlock(m_hAgentAccessMutex); }
@@ -2198,21 +2198,21 @@ public:
    Node(const NewNodeData *newNodeData, UINT32 flags);
    virtual ~Node();
 
-   virtual int getObjectClass() const { return OBJECT_NODE; }
+   virtual int getObjectClass() const override { return OBJECT_NODE; }
 
-   virtual bool saveToDatabase(DB_HANDLE hdb);
-   virtual bool saveRuntimeData(DB_HANDLE hdb);
-   virtual bool deleteFromDatabase(DB_HANDLE hdb);
-   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
+   virtual bool saveToDatabase(DB_HANDLE hdb) override;
+   virtual bool saveRuntimeData(DB_HANDLE hdb) override;
+   virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
+   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
 
-   virtual bool isReadyForStatusPoll();
+   virtual bool isReadyForStatusPoll() override;
    virtual bool isReadyForDiscoveryPoll();
    virtual bool isReadyForRoutePoll();
    virtual bool isReadyForTopologyPoll();
 
-   virtual NXSL_Value *createNXSLObject(NXSL_VM *vm);
+   virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
 
-   virtual json_t *toJson();
+   virtual json_t *toJson() override;
 
 	Cluster *getMyCluster();
 
@@ -2340,7 +2340,7 @@ public:
    void lockForTopologyPoll();
 	void forceConfigurationPoll() { m_runtimeFlags |= DCDF_FORCE_CONFIGURATION_POLL; }
 
-   virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
+   virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE) override;
 
 	bool checkAgentTrapId(UINT64 id);
 	bool checkSNMPTrapId(UINT32 id);
@@ -2349,7 +2349,7 @@ public:
 
    bool connectToSMCLP();
 
-	virtual DataCollectionError getInternalItem(const TCHAR *param, size_t bufSize, TCHAR *buffer);
+   virtual DataCollectionError getInternalItem(const TCHAR *param, size_t bufSize, TCHAR *buffer) override;
 
    DataCollectionError getItemFromSNMP(WORD port, const TCHAR *param, size_t bufSize, TCHAR *buffer, int interpretRawValue);
    DataCollectionError getTableFromSNMP(WORD port, const TCHAR *oid, ObjectArray<DCTableColumn> *columns, Table **table);
@@ -2365,11 +2365,11 @@ public:
    UINT32 getItemForClient(int iOrigin, UINT32 userId, const TCHAR *pszParam, TCHAR *pszBuffer, UINT32 dwBufSize);
    UINT32 getTableForClient(const TCHAR *name, Table **table);
 
-	virtual NXSL_Array *getParentsForNXSL(NXSL_VM *vm);
+	virtual NXSL_Array *getParentsForNXSL(NXSL_VM *vm) override;
 	virtual NXSL_Array *getTemplatesForNXSL(NXSL_VM *vm);
 	NXSL_Array *getInterfacesForNXSL(NXSL_VM *vm);
 
-	ObjectArray<AgentParameterDefinition> *openParamList(int origin);
+   ObjectArray<AgentParameterDefinition> *openParamList(int origin);
    void closeParamList() { unlockProperties(); }
 
    ObjectArray<AgentTableDefinition> *openTableList();
@@ -2531,9 +2531,9 @@ protected:
    UINT32 m_zoneUIN;
 	bool m_bSyntheticMask;
 
-   virtual void prepareForDeletion();
+   virtual void prepareForDeletion() override;
 
-   virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId);
+   virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId) override;
 
    void buildIPTopologyInternal(NetworkMapObjectList &topology, int nDepth, UINT32 seedNode, bool includeEndNodes);
 
@@ -2542,17 +2542,17 @@ public:
    Subnet(const InetAddress& addr, UINT32 zoneUIN, bool bSyntheticMask);
    virtual ~Subnet();
 
-   virtual int getObjectClass() const { return OBJECT_SUBNET; }
+   virtual int getObjectClass() const override { return OBJECT_SUBNET; }
 
-   virtual bool saveToDatabase(DB_HANDLE hdb);
-   virtual bool deleteFromDatabase(DB_HANDLE hdb);
-   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
+   virtual bool saveToDatabase(DB_HANDLE hdb) override;
+   virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
+   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
 
-   virtual json_t *toJson();
+   virtual json_t *toJson() override;
 
    void addNode(Node *node) { addChild(node); node->addParent(this); calculateCompoundStatus(TRUE); }
 
-	virtual bool showThresholdSummary();
+   virtual bool showThresholdSummary() override;
 
    const InetAddress& getIpAddress() const { return m_ipAddress; }
    UINT32 getZoneUIN() const { return m_zoneUIN; }
@@ -2579,9 +2579,9 @@ public:
    UniversalRoot();
    virtual ~UniversalRoot();
 
-   virtual bool saveToDatabase(DB_HANDLE hdb);
+   virtual bool saveToDatabase(DB_HANDLE hdb) override;
    void loadFromDatabase(DB_HANDLE hdb);
-   virtual void linkObjects();
+   virtual void linkObjects() override;
    void linkObject(NetObj *pObject) { addChild(pObject); pObject->addParent(this); }
 };
 
@@ -2597,9 +2597,9 @@ public:
    ServiceRoot();
    virtual ~ServiceRoot();
 
-   virtual int getObjectClass() const { return OBJECT_SERVICEROOT; }
+   virtual int getObjectClass() const override { return OBJECT_SERVICEROOT; }
 
-	virtual bool showThresholdSummary();
+   virtual bool showThresholdSummary() override;
 };
 
 /**
@@ -2614,8 +2614,8 @@ public:
    TemplateRoot();
    virtual ~TemplateRoot();
 
-   virtual int getObjectClass() const { return OBJECT_TEMPLATEROOT; }
-   virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
+   virtual int getObjectClass() const override { return OBJECT_TEMPLATEROOT; }
+   virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE) override;
 };
 
 /**
@@ -2630,22 +2630,22 @@ private:
    UINT32 m_dwChildIdListSize;
 
 protected:
-   virtual void fillMessageInternal(NXCPMessage *msg, UINT32 userId);
-   virtual UINT32 modifyFromMessageInternal(NXCPMessage *request);
+   virtual void fillMessageInternal(NXCPMessage *msg, UINT32 userId) override;
+   virtual UINT32 modifyFromMessageInternal(NXCPMessage *request) override;
 
 public:
    AbstractContainer();
    AbstractContainer(const TCHAR *pszName, UINT32 dwCategory);
    virtual ~AbstractContainer();
 
-   virtual bool saveToDatabase(DB_HANDLE hdb);
-   virtual bool deleteFromDatabase(DB_HANDLE hdb);
-   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
-   virtual void linkObjects();
+   virtual bool saveToDatabase(DB_HANDLE hdb) override;
+   virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
+   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
+   virtual void linkObjects() override;
 
-   virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
+   virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE) override;
 
-   virtual json_t *toJson();
+   virtual json_t *toJson() override;
 
    void linkObject(NetObj *pObject) { addChild(pObject); pObject->addParent(this); }
 };
@@ -2687,10 +2687,10 @@ public:
    TemplateGroup(const TCHAR *pszName) : super(pszName, 0) { m_status = STATUS_NORMAL; }
    virtual ~TemplateGroup() { }
 
-   virtual int getObjectClass() const { return OBJECT_TEMPLATEGROUP; }
-   virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
+   virtual int getObjectClass() const override { return OBJECT_TEMPLATEGROUP; }
+   virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE) override;
 
-	virtual bool showThresholdSummary();
+   virtual bool showThresholdSummary() override;
 };
 
 /**
@@ -2706,21 +2706,21 @@ protected:
 	bool m_topBottomNumbering;
 	TCHAR *m_passiveElements;
 
-   virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId);
-   virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
+   virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId) override;
+   virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest) override;
 
 public:
    Rack();
    Rack(const TCHAR *name, int height);
    virtual ~Rack();
 
-   virtual int getObjectClass() const { return OBJECT_RACK; }
+   virtual int getObjectClass() const override { return OBJECT_RACK; }
 
-   virtual bool saveToDatabase(DB_HANDLE hdb);
-   virtual bool deleteFromDatabase(DB_HANDLE hdb);
-   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
+   virtual bool saveToDatabase(DB_HANDLE hdb) override;
+   virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
+   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
 
-   virtual json_t *toJson();
+   virtual json_t *toJson() override;
 };
 
 /**
@@ -2739,25 +2739,25 @@ protected:
 	InetAddressIndex *m_idxSubnetByAddr;
 	StringList m_snmpPorts;
 
-   virtual void fillMessageInternal(NXCPMessage *msg, UINT32 userId);
-   virtual UINT32 modifyFromMessageInternal(NXCPMessage *request);
+   virtual void fillMessageInternal(NXCPMessage *msg, UINT32 userId) override;
+   virtual UINT32 modifyFromMessageInternal(NXCPMessage *request) override;
 
 public:
    Zone();
    Zone(UINT32 uin, const TCHAR *name);
    virtual ~Zone();
 
-   virtual int getObjectClass() const { return OBJECT_ZONE; }
+   virtual int getObjectClass() const override { return OBJECT_ZONE; }
 
-   virtual bool saveToDatabase(DB_HANDLE hdb);
-   virtual bool deleteFromDatabase(DB_HANDLE hdb);
-   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
+   virtual bool saveToDatabase(DB_HANDLE hdb) override;
+   virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
+   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
 
-	virtual bool showThresholdSummary();
+   virtual bool showThresholdSummary() override;
 
-   virtual NXSL_Value *createNXSLObject(NXSL_VM *vm);
+   virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
 
-   virtual json_t *toJson();
+   virtual json_t *toJson() override;
 
    UINT32 getUIN() const { return m_uin; }
 	UINT32 getProxyNodeId() const { return m_proxyNodeId; }
@@ -2802,10 +2802,10 @@ public:
    Network();
    virtual ~Network();
 
-   virtual int getObjectClass() const { return OBJECT_NETWORK; }
-   virtual bool saveToDatabase(DB_HANDLE hdb);
+   virtual int getObjectClass() const override { return OBJECT_NETWORK; }
+   virtual bool saveToDatabase(DB_HANDLE hdb) override;
 
-	virtual bool showThresholdSummary();
+   virtual bool showThresholdSummary() override;
 
    void AddSubnet(Subnet *pSubnet) { addChild(pSubnet); pSubnet->addParent(this); }
    void AddZone(Zone *pZone) { addChild(pZone); pZone->addParent(this); }
@@ -2834,21 +2834,21 @@ protected:
    time_t m_lastPoll;
    bool m_queuedForPolling;
 
-   virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId);
-   virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
+   virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId) override;
+   virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest) override;
 
 public:
    ConditionObject();
    ConditionObject(bool hidden);
    virtual ~ConditionObject();
 
-   virtual int getObjectClass() const { return OBJECT_CONDITION; }
+   virtual int getObjectClass() const override { return OBJECT_CONDITION; }
 
-   virtual bool saveToDatabase(DB_HANDLE hdb);
-   virtual bool deleteFromDatabase(DB_HANDLE hdb);
-   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
+   virtual bool saveToDatabase(DB_HANDLE hdb) override;
+   virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
+   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
 
-   virtual json_t *toJson();
+   virtual json_t *toJson() override;
 
    void lockForPoll();
    void doPoll(PollerInfo *poller);
@@ -2876,8 +2876,8 @@ public:
    NetworkMapRoot();
    virtual ~NetworkMapRoot();
 
-   virtual int getObjectClass() const { return OBJECT_NETWORKMAPROOT; }
-   virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
+   virtual int getObjectClass() const override { return OBJECT_NETWORKMAPROOT; }
+   virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE) override;
 };
 
 /**
@@ -2893,10 +2893,10 @@ public:
    NetworkMapGroup(const TCHAR *pszName) : super(pszName, 0) { }
    virtual ~NetworkMapGroup() { }
 
-   virtual int getObjectClass() const { return OBJECT_NETWORKMAPGROUP; }
-   virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
+   virtual int getObjectClass() const override { return OBJECT_NETWORKMAPGROUP; }
+   virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE) override;
 
-	virtual bool showThresholdSummary();
+   virtual bool showThresholdSummary() override;
 };
 
 /**
@@ -2926,8 +2926,8 @@ protected:
 	TCHAR *m_filterSource;
 	NXSL_VM *m_filter;
 
-   virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId);
-   virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
+   virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId) override;
+   virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest) override;
 
 	void updateObjects(NetworkMapObjectList *objects);
 	UINT32 objectIdFromElementId(UINT32 eid);
@@ -2940,16 +2940,16 @@ public:
 	NetworkMap(int type, IntegerArray<UINT32> *seeds);
    virtual ~NetworkMap();
 
-   virtual int getObjectClass() const { return OBJECT_NETWORKMAP; }
-   virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
+   virtual int getObjectClass() const override { return OBJECT_NETWORKMAP; }
+   virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE) override;
 
-	virtual bool saveToDatabase(DB_HANDLE hdb);
-   virtual bool deleteFromDatabase(DB_HANDLE hdb);
-   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
+	virtual bool saveToDatabase(DB_HANDLE hdb) override;
+   virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
+   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
 
-   virtual void onObjectDelete(UINT32 objectId);
+   virtual void onObjectDelete(UINT32 objectId) override;
 
-   virtual json_t *toJson();
+   virtual json_t *toJson() override;
 
    void updateContent();
 
@@ -2971,8 +2971,8 @@ public:
    DashboardRoot();
    virtual ~DashboardRoot();
 
-   virtual int getObjectClass() const { return OBJECT_DASHBOARDROOT; }
-   virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
+   virtual int getObjectClass() const override { return OBJECT_DASHBOARDROOT; }
+   virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE) override;
 };
 
 /**
@@ -3011,24 +3011,24 @@ protected:
 	UINT32 m_options;
 	ObjectArray<DashboardElement> *m_elements;
 
-   virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId);
-   virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
+   virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId) override;
+   virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest) override;
 
 public:
    Dashboard();
    Dashboard(const TCHAR *name);
    virtual ~Dashboard();
 
-   virtual int getObjectClass() const { return OBJECT_DASHBOARD; }
-   virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
+   virtual int getObjectClass() const override { return OBJECT_DASHBOARD; }
+   virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE) override;
 
-	virtual bool saveToDatabase(DB_HANDLE hdb);
-   virtual bool deleteFromDatabase(DB_HANDLE hdb);
-   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
+   virtual bool saveToDatabase(DB_HANDLE hdb) override;
+   virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
+   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
 
-   virtual json_t *toJson();
+   virtual json_t *toJson() override;
 
-	virtual bool showThresholdSummary();
+   virtual bool showThresholdSummary() override;
 };
 
 /**
@@ -3044,10 +3044,10 @@ public:
    DashboardGroup(const TCHAR *pszName) : super(pszName, 0) { }
    virtual ~DashboardGroup() { }
 
-   virtual int getObjectClass() const { return OBJECT_DASHBOARDGROUP; }
-   virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
+   virtual int getObjectClass() const override { return OBJECT_DASHBOARDGROUP; }
+   virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE) override;
 
-   virtual bool showThresholdSummary();
+   virtual bool showThresholdSummary() override;
 };
 
 /**
@@ -3068,10 +3068,10 @@ protected:
 	UINT32 m_templateId;
 	UINT32 m_currentTicketId;
 
-   virtual void onObjectDelete(UINT32 objectId);
+   virtual void onObjectDelete(UINT32 objectId) override;
 
-	virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId);
-	virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
+	virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId) override;
+	virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest) override;
 
    void setScript(const TCHAR *script);
 	UINT32 getOwnerId();
@@ -3087,13 +3087,13 @@ public:
 	SlmCheck(SlmCheck *tmpl);
 	virtual ~SlmCheck();
 
-	virtual int getObjectClass() const { return OBJECT_SLMCHECK; }
+   virtual int getObjectClass() const override { return OBJECT_SLMCHECK; }
 
-	virtual bool saveToDatabase(DB_HANDLE hdb);
-	virtual bool deleteFromDatabase(DB_HANDLE hdb);
-	virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
+	virtual bool saveToDatabase(DB_HANDLE hdb) override;
+	virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
+	virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
 
-	virtual void postModify();
+	virtual void postModify() override;
 
 	void execute();
 	void updateFromTemplate(SlmCheck *tmpl);
@@ -3131,8 +3131,8 @@ protected:
 	static INT32 getSecondsInPeriod(Period period) { return period == MONTH ? getSecondsInMonth() : (period == WEEK ? (3600 * 24 * 7) : (3600 * 24)); }
 	static INT32 getSecondsSinceBeginningOf(Period period, time_t *beginTime = NULL);
 
-	virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId);
-	virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
+	virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId) override;
+	virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest) override;
 
 	void initServiceContainer();
 	BOOL addHistoryRecord();
@@ -3142,14 +3142,15 @@ public:
 	ServiceContainer();
 	ServiceContainer(const TCHAR *pszName);
 
-	virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
-	virtual bool saveToDatabase(DB_HANDLE hdb);
-	virtual bool deleteFromDatabase(DB_HANDLE hdb);
+	virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
+	virtual bool saveToDatabase(DB_HANDLE hdb) override;
+	virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
 
-	virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
-	virtual void setStatus(int newStatus);
+	virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE) override;
 
-	virtual bool showThresholdSummary();
+	virtual bool showThresholdSummary() override;
+
+	void setStatus(int newStatus);
 
 	void initUptimeStats();
 	void updateUptimeStats(time_t currentTime = 0, BOOL updateChilds = FALSE);
@@ -3169,12 +3170,12 @@ public:
 	BusinessServiceRoot();
 	virtual ~BusinessServiceRoot();
 
-	virtual int getObjectClass() const { return OBJECT_BUSINESSSERVICEROOT; }
+	virtual int getObjectClass() const override { return OBJECT_BUSINESSSERVICEROOT; }
 
-	virtual bool saveToDatabase(DB_HANDLE hdb);
+	virtual bool saveToDatabase(DB_HANDLE hdb) override;
    void loadFromDatabase(DB_HANDLE hdb);
 
-   virtual void linkObjects();
+   virtual void linkObjects() override;
 
    void linkObject(NetObj *pObject) { addChild(pObject); pObject->addParent(this); }
 };
@@ -3193,21 +3194,21 @@ protected:
 	time_t m_lastPollTime;
 	int m_lastPollStatus;
 
-   virtual void prepareForDeletion();
+   virtual void prepareForDeletion() override;
 
-	virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId);
-	virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
+	virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId) override;
+	virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest) override;
 
 public:
 	BusinessService();
 	BusinessService(const TCHAR *name);
 	virtual ~BusinessService();
 
-	virtual int getObjectClass() const { return OBJECT_BUSINESSSERVICE; }
+	virtual int getObjectClass() const override { return OBJECT_BUSINESSSERVICE; }
 
-	virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
-	virtual bool saveToDatabase(DB_HANDLE hdb);
-	virtual bool deleteFromDatabase(DB_HANDLE hdb);
+	virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
+	virtual bool saveToDatabase(DB_HANDLE hdb) override;
+	virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
 
 	bool isReadyForPolling();
 	void lockForPolling();
@@ -3228,10 +3229,10 @@ protected:
 protected:
 	UINT32 m_nodeId;
 
-   virtual void onObjectDelete(UINT32 dwObjectId);
+   virtual void onObjectDelete(UINT32 dwObjectId) override;
 
-	virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId);
-	virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
+	virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId) override;
+	virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest) override;
 
 	void applyTemplate(SlmCheck *tmpl);
 
@@ -3240,11 +3241,11 @@ public:
 	NodeLink(const TCHAR *name, UINT32 nodeId);
 	virtual ~NodeLink();
 
-	virtual int getObjectClass() const { return OBJECT_NODELINK; }
+	virtual int getObjectClass() const override { return OBJECT_NODELINK; }
 
-	virtual bool saveToDatabase(DB_HANDLE hdb);
-	virtual bool deleteFromDatabase(DB_HANDLE hdb);
-	virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
+	virtual bool saveToDatabase(DB_HANDLE hdb) override;
+	virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
+	virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
 
 	void execute();
 	void applyTemplates();
