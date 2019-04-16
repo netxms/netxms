@@ -542,7 +542,7 @@ stop_search:
 
          if (!strcmp(driver, "odbc") || !strcmp(driver, "pgsql"))
          {
-            if (!isatty(fileno(stdin)))
+            if (!_isatty(fileno(stdin)))
             {
                _tprintf(_T("Cannot determine database type from driver name\n"));
                return 7;

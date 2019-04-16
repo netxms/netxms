@@ -676,20 +676,21 @@ FILE *open_memstream(char **, size_t *);
 #ifdef __cplusplus
 
 inline int _access(const char *pathname, int mode) { return ::access(pathname, mode); }
+inline int _close(int fd) { return ::close(fd); }
+inline int _isatty(int fd) { return ::isatty(fd); }
 inline int _open(const char *pathname, int flags) { return ::open(pathname, flags); }
 inline int _open(const char *pathname, int flags, mode_t mode) { return ::open(pathname, flags, mode); }
 inline ssize_t _read(int fd, void *buf, size_t count) { return ::read(fd, buf, count); }
 inline ssize_t _write(int fd, const void *buf, size_t count) { return ::write(fd, buf, count); }
-inline int _close(int fd) { return ::close(fd); }
 
 #else
 
 #define _access(p, m)      access((p), (m))
-#define _open              open
 #define _close(f)          close(f)
+#define _isatty(f)         isatty(f)
+#define _open              open
 #define _read(f, b, l)     read((f), (b), (l))
 #define _write(f, b, l)    write((f), (b), (l))
-#define _close(f)          close(f)
 
 #endif
 
