@@ -19,7 +19,7 @@ BUILD_TAG=`git describe --always 2>/dev/null`
 
 [ -z $BUILD_TAG ] && BUILD_TAG=UNKNOWN
 BUILD_TAG=`echo $BUILD_TAG | sed 's/^Release-//'`
-VERSION_STRING=`echo $BUILD_TAG | sed 's/-g.*//' | sed 's/-/./;t;s/$/.0/'`
+VERSION_STRING=`echo $BUILD_TAG | sed 's/-g.*//' | sed 's/-/./;/^[0-9][0-9]*\.[0-9][0-9]*$/ s/$/.0/'`
 BUILD_NUMBER=`echo $VERSION_STRING | cut -d . -f 3`
 
 grep "BUILDTAG:$BUILD_TAG" $HEADER >/dev/null 2>&1
