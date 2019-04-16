@@ -5,8 +5,8 @@
 #
 
 m4_ifdef([m4_esyscmd_s],
-	[AC_INIT([NetXMS], m4_esyscmd_s([git describe --tags --always | sed 's/^Release-//']), [bugs@netxms.org])],
-	[AC_INIT([NetXMS], [3.0-M0], [bugs@netxms.org])])
+	[AC_INIT([NetXMS], m4_esyscmd_s([git describe --tags --always | sed 's/^Release-//' | sed 's/-g.*//' | sed 's/-/./;t;s/$/.0/']), [bugs@netxms.org])],
+	[AC_INIT([NetXMS], [3.0.0], [bugs@netxms.org])])
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_HEADERS(config.h)
 AM_INIT_AUTOMAKE
