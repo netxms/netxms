@@ -12,8 +12,8 @@ EXTRA_DIST = \
 	common.iss \
 	icons.iss \
 	icons-minimal.iss \
-	netxms.iss \
-	netxms-minimal.iss \
 	netxms-x64.iss \
 	netxms-x64-minimal.iss \
-	setup.iss
+	setup.iss \
+	setup-webui.iss \
+	webui-x64.iss
