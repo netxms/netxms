@@ -324,6 +324,9 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "nxcsum", "src\tools\nxcsum\
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libnxpython", "src\libnxpython\libnxpython.vcxproj", "{DA59E33C-7B90-41DB-925A-22C9E7156E3C}"
+	ProjectSection(ProjectDependencies) = postProject
+		{B1745870-F3ED-4ACB-B813-0C4F47EF0793} = {B1745870-F3ED-4ACB-B813-0C4F47EF0793}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

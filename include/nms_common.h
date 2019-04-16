@@ -212,6 +212,7 @@ typedef int bool;
 #define EPOCHFILETIME           (116444736000000000i64)
 
 #define WITH_IPV6               1
+#define WITH_PYTHON             1
 
 #define USE_BUNDLED_LIBTRE      1
 #define USE_BUNDLED_GETOPT      1
