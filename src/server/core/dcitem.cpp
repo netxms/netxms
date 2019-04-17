@@ -162,7 +162,7 @@ DCItem::DCItem(DB_HANDLE hdb, DB_RESULT hResult, int iRow, Template *pNode) : DC
 
    // Load last raw value from database
 	TCHAR szQuery[256];
-   _sntprintf(szQuery, 256, _T("SELECT raw_value,last_poll_time,last_ FROM raw_dci_values WHERE item_id=%d"), m_id);
+   _sntprintf(szQuery, 256, _T("SELECT raw_value,last_poll_time FROM raw_dci_values WHERE item_id=%d"), m_id);
    DB_RESULT hTempResult = DBSelect(hdb, szQuery);
    if (hTempResult != NULL)
    {
