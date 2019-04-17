@@ -278,7 +278,7 @@ Node::~Node()
    delete m_agentParameters;
    delete m_agentTables;
    delete m_driverParameters;
-   free(m_sysDescription);
+   MemFree(m_sysDescription);
    DestroyRoutingTable(m_pRoutingTable);
    if (m_arpCache != NULL)
       m_arpCache->decRefCount();
@@ -464,65 +464,155 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    DBFreeResult(hResult);
    DBFreeStatement(hStmt);
 
-   if (!m_isDeleted)
+   if (m_isDeleted)
+      return true;
+
+   // Link node to subnets
+   hStmt = DBPrepare(hdb, _T("SELECT subnet_id FROM nsmap WHERE node_id=?"));
+   if (hStmt == NULL)
+      return false;
+
+   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+   hResult = DBSelectPrepared(hStmt);
+   if (hResult == NULL)
    {
-      // Link node to subnets
-      hStmt = DBPrepare(hdb, _T("SELECT subnet_id FROM nsmap WHERE node_id=?"));
-      if (hStmt == NULL)
-         return false;
+      DBFreeStatement(hStmt);
+      return false;     // Query failed
+   }
 
-      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
-      hResult = DBSelectPrepared(hStmt);
-      if (hResult == NULL)
+   iNumRows = DBGetNumRows(hResult);
+   for(i = 0; i < iNumRows; i++)
+   {
+      dwSubnetId = DBGetFieldULong(hResult, i, 0);
+      pObject = FindObjectById(dwSubnetId, OBJECT_SUBNET);
+      if (pObject == NULL)
       {
-         DBFreeStatement(hStmt);
-         return false;     // Query failed
+         nxlog_write(MSG_INVALID_SUBNET_ID, EVENTLOG_ERROR_TYPE, "dd", dwId, dwSubnetId);
+         break;
       }
-
-      iNumRows = DBGetNumRows(hResult);
-      for(i = 0; i < iNumRows; i++)
+      else
       {
-         dwSubnetId = DBGetFieldULong(hResult, i, 0);
-         pObject = FindObjectById(dwSubnetId, OBJECT_SUBNET);
-         if (pObject == NULL)
+         pObject->addChild(this);
+         addParent(pObject);
+      }
+   }
+
+   DBFreeResult(hResult);
+   DBFreeStatement(hStmt);
+
+   loadItemsFromDB(hdb);
+   loadACLFromDB(hdb);
+
+   // Walk through all items in the node and load appropriate thresholds
+   bResult = true;
+   for(i = 0; i < m_dcObjects->size(); i++)
+   {
+      if (!m_dcObjects->get(i)->loadThresholdsFromDB(hdb))
+      {
+         DbgPrintf(3, _T("Cannot load thresholds for DCI %d of node %d (%s)"),
+                   m_dcObjects->get(i)->getId(), dwId, m_name);
+         bResult = false;
+      }
+   }
+
+   updatePhysicalContainerBinding(OBJECT_RACK, m_rackId);
+   updatePhysicalContainerBinding(OBJECT_CHASSIS, m_chassisId);
+
+   if (bResult)
+   {
+      // Load components
+      hStmt = DBPrepare(hdb, _T("SELECT component_index,parent_index,position,component_class,if_index,name,description,model,serial_number,vendor,firmware FROM node_components WHERE node_id=?"));
+      if (hStmt != NULL)
+      {
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+         hResult = DBSelectPrepared(hStmt);
+         if (hResult != NULL)
          {
-            nxlog_write(MSG_INVALID_SUBNET_ID, EVENTLOG_ERROR_TYPE, "dd", dwId, dwSubnetId);
-            break;
+            int count = DBGetNumRows(hResult);
+            if (count > 0)
+            {
+               ObjectArray<Component> elements(count);
+               for(int i = 0; i < count; i++)
+               {
+                  TCHAR name[256], description[256], model[256], serial[64], vendor[64], firmware[128];
+                  elements.add(new Component(
+                           DBGetFieldULong(hResult, i, 0), // index
+                           DBGetFieldULong(hResult, i, 3), // class
+                           DBGetFieldULong(hResult, i, 1), // parent index
+                           DBGetFieldULong(hResult, i, 2), // position
+                           DBGetFieldULong(hResult, i, 4), // ifIndex
+                           DBGetField(hResult, i, 5, name, 256),
+                           DBGetField(hResult, i, 6, description, 256),
+                           DBGetField(hResult, i, 7, model, 256),
+                           DBGetField(hResult, i, 8, serial, 64),
+                           DBGetField(hResult, i, 9, vendor, 64),
+                           DBGetField(hResult, i, 10, firmware, 128)
+                           ));
+               }
+
+               Component *root = NULL;
+               for(int i = 0; i < elements.size(); i++)
+                  if (elements.get(i)->getParentIndex() == 0)
+                  {
+                     root = elements.get(i);
+                     break;
+                  }
+
+               if (root != NULL)
+               {
+                  root->buildTree(&elements);
+                  m_components = new ComponentTree(root);
+               }
+               else
+               {
+                  nxlog_debug(6, _T("Node::loadFromDatabase(%s [%u]): root element for component tree not found"), m_name, m_id);
+                  elements.setOwner(true);   // cause element destruction on exit
+               }
+            }
+            DBFreeResult(hResult);
          }
          else
          {
-            pObject->addChild(this);
-            addParent(pObject);
-         }
-      }
-
-      DBFreeResult(hResult);
-      DBFreeStatement(hStmt);
-
-      loadItemsFromDB(hdb);
-      loadACLFromDB(hdb);
-
-      // Walk through all items in the node and load appropriate thresholds
-      bResult = true;
-      for(i = 0; i < m_dcObjects->size(); i++)
-      {
-         if (!m_dcObjects->get(i)->loadThresholdsFromDB(hdb))
-         {
-            DbgPrintf(3, _T("Cannot load thresholds for DCI %d of node %d (%s)"),
-                      m_dcObjects->get(i)->getId(), dwId, m_name);
             bResult = false;
          }
+         DBFreeStatement(hStmt);
+      }
+      else
+      {
+         bResult = false;
       }
 
-      updatePhysicalContainerBinding(OBJECT_RACK, m_rackId);
-      updatePhysicalContainerBinding(OBJECT_CHASSIS, m_chassisId);
-   }
-   else
-   {
-      bResult = true;
+      if (!bResult)
+         DbgPrintf(3, _T("Cannot load components for node %d (%s)"), m_id, m_name);
    }
 
    return bResult;
+}
+
+/**
+ * Save component
+ */
+static bool SaveComponent(DB_STATEMENT hStmt, const Component *component)
+{
+   DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, component->getIndex());
+   DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, component->getParentIndex());
+   DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, component->getPosition());
+   DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, component->getClass());
+   DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, component->getIfIndex());
+   DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, component->getName(), DB_BIND_STATIC);
+   DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, component->getDescription(), DB_BIND_STATIC);
+   DBBind(hStmt, 9, DB_SQLTYPE_VARCHAR, component->getModel(), DB_BIND_STATIC);
+   DBBind(hStmt, 10, DB_SQLTYPE_VARCHAR, component->getSerial(), DB_BIND_STATIC);
+   DBBind(hStmt, 11, DB_SQLTYPE_VARCHAR, component->getVendor(), DB_BIND_STATIC);
+   DBBind(hStmt, 12, DB_SQLTYPE_VARCHAR, component->getFirmware(), DB_BIND_STATIC);
+   if (!DBExecute(hStmt))
+      return false;
+
+   const ObjectArray<Component> *children = component->getChildren();
+   for(int i = 0; i < children->size(); i++)
+      if (!SaveComponent(hStmt, children->get(i)))
+         return false;
+   return true;
 }
 
 /**
@@ -640,6 +730,29 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
    // Save access list
    if (success)
       success = saveACLToDB(hdb);
+
+   if (success && (m_modified & MODIFY_COMPONENTS))
+   {
+      success = executeQueryOnObject(hdb, _T("DELETE FROM node_components WHERE node_id=?"));
+      if (success && (m_components != NULL))
+      {
+         const Component *root = m_components->getRoot();
+         if (root != NULL)
+         {
+            DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO node_components (node_id,component_index,parent_index,position,component_class,if_index,name,description,model,serial_number,vendor,firmware) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)"));
+            if (hStmt != NULL)
+            {
+               DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+               success = SaveComponent(hStmt, root);
+               DBFreeStatement(hStmt);
+            }
+            else
+            {
+               success = false;
+            }
+         }
+      }
+   }
 
    unlockProperties();
 
@@ -3038,7 +3151,7 @@ bool Node::confPollAgent(UINT32 dwRqId)
          if (pAgentConn->connect(g_pServerKey, &rcc))
          {
             m_agentAuthMethod = AUTH_SHA1_HASH;
-            nx_strncpy(m_szSharedSecret, secret, MAX_SECRET_LENGTH);
+            _tcslcpy(m_szSharedSecret, secret, MAX_SECRET_LENGTH);
             nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): checking for NetXMS agent - shared secret changed to system default"), m_name);
          }
       }
@@ -3385,7 +3498,17 @@ bool Node::confPollSnmp(UINT32 rqId)
       ComponentTree *components = BuildComponentTree(pTransport, debugInfo);
       lockProperties();
       if (m_components != NULL)
+      {
+         if ((components == NULL) || !components->equals(m_components))
+         {
+            setModified(MODIFY_COMPONENTS, false);
+         }
          m_components->decRefCount();
+      }
+      else if (components != NULL)
+      {
+         setModified(MODIFY_COMPONENTS, false);
+      }
       m_components = components;
       unlockProperties();
    }
@@ -5049,7 +5172,7 @@ DataCollectionError Node::getItemFromSMCLP(const TCHAR *param, TCHAR *buffer, si
    {
       // Get parameter
       TCHAR path[MAX_PARAM_NAME];
-      nx_strncpy(path, param, MAX_PARAM_NAME);
+      _tcslcpy(path, param, MAX_PARAM_NAME);
       TCHAR *attr = _tcsrchr(path, _T('/'));
       if (attr != NULL)
       {
@@ -6571,7 +6694,7 @@ bool Node::getNextHop(const InetAddress& srcAddr, const InetAddress& destAddr, I
             *route = InetAddress::INVALID;
             *ifIndex = object->getId();
             *isVpn = true;
-            nx_strncpy(name, object->getName(), MAX_OBJECT_NAME);
+            _tcslcpy(name, object->getName(), MAX_OBJECT_NAME);
             nextHopFound = true;
             break;
          }
@@ -6583,7 +6706,7 @@ bool Node::getNextHop(const InetAddress& srcAddr, const InetAddress& destAddr, I
          *route = InetAddress::INVALID;
          *ifIndex = ((Interface *)object)->getIfIndex();
          *isVpn = false;
-         nx_strncpy(name, object->getName(), MAX_OBJECT_NAME);
+         _tcslcpy(name, object->getName(), MAX_OBJECT_NAME);
          if ((((Interface *)object)->getAdminState() == IF_ADMIN_STATE_UP) &&
              (((Interface *)object)->getOperState() == IF_OPER_STATE_UP))
          {
@@ -6627,7 +6750,7 @@ bool Node::getNextHop(const InetAddress& srcAddr, const InetAddress& destAddr, I
             *isVpn = false;
             if (iface != NULL)
             {
-               nx_strncpy(name, iface->getName(), MAX_OBJECT_NAME);
+               _tcslcpy(name, iface->getName(), MAX_OBJECT_NAME);
             }
             else
             {
