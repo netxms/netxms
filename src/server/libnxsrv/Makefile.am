@@ -5,7 +5,7 @@ libnxsrv_la_SOURCES = messages.c agent.cpp apinfo.cpp arp.cpp console.cpp \
 libnxsrv_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include -DLIBNXSRV_EXPORTS
 libnxsrv_la_LDFLAGS = -version-info $(NETXMS_LIBRARY_VERSION)
 libnxsrv_la_LIBADD = \
-	../../libnxsl/libnxsl.la
+	../../libnxsl/libnxsl.la \
 	../../snmp/libnxsnmp/libnxsnmp.la \
 	../../libnetxms/libnetxms.la
 
