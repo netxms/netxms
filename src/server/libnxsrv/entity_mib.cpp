@@ -82,6 +82,27 @@ Component::Component(UINT32 index, const TCHAR *name)
 }
 
 /**
+ * Constructor for creating from scratch
+ */
+Component::Component(UINT32 index, UINT32 pclass, UINT32 parentIndex, UINT32 position, UINT32 ifIndex,
+         const TCHAR *name, const TCHAR *description, const TCHAR *model, const TCHAR *serial,
+         const TCHAR *vendor, const TCHAR *firmware)
+{
+   m_index = index;
+   m_class = pclass;
+   m_ifIndex = ifIndex;
+   m_name = MemCopyString(name);
+   m_description = MemCopyString(description);
+   m_model = MemCopyString(model);
+   m_serial = MemCopyString(serial);
+   m_vendor = MemCopyString(vendor);
+   m_firmware = MemCopyString(firmware);
+   m_parentIndex = parentIndex;
+   m_position = position;
+   m_children = new ObjectArray<Component>(0, 16, true);
+}
+
+/**
  * Destructor
  */
 Component::~Component()

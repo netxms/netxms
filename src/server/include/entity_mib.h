@@ -49,6 +49,9 @@ protected:
 
 public:
    Component(UINT32 index, const TCHAR *name);
+   Component(UINT32 index, UINT32 pclass, UINT32 parentIndex, UINT32 position, UINT32 ifIndex,
+            const TCHAR *name, const TCHAR *description, const TCHAR *model, const TCHAR *serial,
+            const TCHAR *vendor, const TCHAR *firmware);
    ~Component();
 
    UINT32 updateFromSnmp(SNMP_Transport *snmp);
@@ -57,6 +60,7 @@ public:
    UINT32 getIndex() const { return m_index; }
    UINT32 getParentIndex() const { return m_parentIndex; }
    INT32 getPosition() const { return m_position; }
+   const ObjectArray<Component> *getChildren() const { return m_children; }
    NXSL_Array *getChildrenForNXSL(NXSL_VM *vm) const;
 
    UINT32 getClass() const { return m_class; }

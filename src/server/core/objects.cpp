@@ -1303,6 +1303,7 @@ BOOL LoadObjects()
                DBCacheTable(cachedb, mainDB, _T("network_map_elements"), _T("map_id,element_id"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("network_map_links"), NULL, _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("network_map_seed_nodes"), _T("map_id,seed_node_id"), _T("*")) &&
+               DBCacheTable(cachedb, mainDB, _T("node_components"), _T("node_id,component_index"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("object_containers"), _T("id"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("container_members"), _T("container_id,object_id"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("dashboards"), _T("id"), _T("*")) &&

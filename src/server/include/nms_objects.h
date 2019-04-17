@@ -496,8 +496,9 @@ struct NXCORE_EXPORTABLE NewNodeData
 #define MODIFY_SENSOR_PROPERTIES    0x0400
 #define MODIFY_MODULE_DATA          0x0800
 #define MODIFY_POLICY               0x1000
-#define MODIFY_SOFTWARE_INV         0x2000
-#define MODIFY_HARDWARE             0x4000
+#define MODIFY_SOFTWARE_INVENTORY   0x2000
+#define MODIFY_HARDWARE_INVENTORY   0x4000
+#define MODIFY_COMPONENTS           0x8000
 #define MODIFY_ALL                  0xFFFF
 
 /**
