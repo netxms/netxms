@@ -303,12 +303,12 @@ Node::~Node()
    delete m_softwarePackages;
    delete m_hardwareComponents;
    delete m_winPerfObjects;
-   free(m_sysName);
-   free(m_sysContact);
-   free(m_sysLocation);
+   MemFree(m_sysName);
+   MemFree(m_sysContact);
+   MemFree(m_sysLocation);
    delete m_routingLoopEvents;
-   free(m_agentCertSubject);
-   free(m_hypervisorInfo);
+   MemFree(m_agentCertSubject);
+   MemFree(m_hypervisorInfo);
 }
 
 /**
@@ -2530,6 +2530,9 @@ static ObjectArray<SoftwarePackage> *CalculatePackageChanges(ObjectArray<Softwar
    return changes;
 }
 
+/**
+ * Comparator for hardware components
+ */
 static int HardwareSerialComparator(const HardwareComponent **c1, const HardwareComponent **c2)
 {
    return _tcscmp((*c1)->getSerial(), (*c2)->getSerial());

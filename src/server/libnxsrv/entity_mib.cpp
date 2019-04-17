@@ -51,6 +51,18 @@ void ComponentTree::fillMessage(NXCPMessage *msg, UINT32 baseId) const
 }
 
 /**
+ * Check if two component trees are equal
+ */
+bool ComponentTree::equals(const ComponentTree *t) const
+{
+   if (m_root == NULL)
+      return t->m_root == NULL;
+   if (t->m_root == NULL)
+      return false;
+   return m_root->equals(t->m_root);
+}
+
+/**
  * Constructor
  */
 Component::Component(UINT32 index, const TCHAR *name)
@@ -65,6 +77,7 @@ Component::Component(UINT32 index, const TCHAR *name)
 	m_vendor = NULL;
 	m_firmware = NULL;
 	m_parentIndex = 0;
+	m_position = -1;
    m_children = new ObjectArray<Component>(0, 16, true);
 }
 
@@ -100,6 +113,10 @@ UINT32 Component::updateFromSnmp(SNMP_Transport *snmp)
 	oid[11] = 4;	// entPhysicalContainedIn
 	if ((rc = SnmpGet(snmp->getSnmpVersion(), snmp, NULL, oid, 13, &m_parentIndex, sizeof(UINT32), 0)) != SNMP_ERR_SUCCESS)
 		return rc;
+
+   oid[11] = 6;   // entPhysicalParentRelPos
+   if ((rc = SnmpGet(snmp->getSnmpVersion(), snmp, NULL, oid, 13, &m_position, sizeof(INT32), 0)) != SNMP_ERR_SUCCESS)
+      return rc;
 
 	oid[11] = 2;	// entPhysicalDescr
 	if (SnmpGet(snmp->getSnmpVersion(), snmp, NULL, oid, 13, buffer, sizeof(buffer), 0) == SNMP_ERR_SUCCESS)
@@ -150,6 +167,14 @@ UINT32 Component::updateFromSnmp(SNMP_Transport *snmp)
 }
 
 /**
+ * Compare components by position within parent
+ */
+static int ComponentComparator(const Component **c1, const Component **c2)
+{
+   return (*c1)->getPosition() - (*c2)->getPosition();
+}
+
+/**
  * Build element tree
  */
 void Component::buildTree(ObjectArray<Component> *elements)
@@ -163,6 +188,7 @@ void Component::buildTree(ObjectArray<Component> *elements)
 			e->buildTree(elements);
 		}
 	}
+	m_children->sort(ComponentComparator);
 }
 
 /**
@@ -188,21 +214,48 @@ UINT32 Component::fillMessage(NXCPMessage *msg, UINT32 baseId) const
 {
 	msg->setField(baseId, m_index);
 	msg->setField(baseId + 1, m_parentIndex);
-	msg->setField(baseId + 2, m_class);
-	msg->setField(baseId + 3, m_ifIndex);
-	msg->setField(baseId + 4, m_name);
-	msg->setField(baseId + 5, m_description);
-	msg->setField(baseId + 6, m_model);
-	msg->setField(baseId + 7, m_serial);
-	msg->setField(baseId + 8, m_vendor);
-	msg->setField(baseId + 9, m_firmware);
-	msg->setField(baseId + 10, (UINT32)m_children->size());
+   msg->setField(baseId + 2, m_position);
+	msg->setField(baseId + 3, m_class);
+	msg->setField(baseId + 4, m_ifIndex);
+	msg->setField(baseId + 5, m_name);
+	msg->setField(baseId + 6, m_description);
+	msg->setField(baseId + 7, m_model);
+	msg->setField(baseId + 8, m_serial);
+	msg->setField(baseId + 9, m_vendor);
+	msg->setField(baseId + 10, m_firmware);
 
-	UINT32 varId = baseId + 11;
+	msg->setField(baseId + 19, (UINT32)m_children->size());
+	UINT32 varId = baseId + 20;
 	for(int i = 0; i < m_children->size(); i++)
 		varId = m_children->get(i)->fillMessage(msg, varId);
 
 	return varId;
+}
+
+/**
+ * Check if two components are equal
+ */
+bool Component::equals(const Component *c) const
+{
+   if ((m_index != c->m_index) ||
+       (m_position != c->m_position) ||
+       (m_class != c->m_class) ||
+       (m_ifIndex != c->m_ifIndex) ||
+       (m_parentIndex != c->m_parentIndex) ||
+       (m_children->size() != c->m_children->size()) ||
+       _tcscmp(CHECK_NULL_EX(m_name), CHECK_NULL_EX(c->m_name)) ||
+       _tcscmp(CHECK_NULL_EX(m_description), CHECK_NULL_EX(c->m_description)) ||
+       _tcscmp(CHECK_NULL_EX(m_model), CHECK_NULL_EX(c->m_model)) ||
+       _tcscmp(CHECK_NULL_EX(m_serial), CHECK_NULL_EX(c->m_serial)) ||
+       _tcscmp(CHECK_NULL_EX(m_vendor), CHECK_NULL_EX(c->m_vendor)) ||
+       _tcscmp(CHECK_NULL_EX(m_firmware), CHECK_NULL_EX(c->m_firmware)))
+      return false;
+
+   for(int i = 0; i < m_children->size(); i++)
+      if (!m_children->get(i)->equals(c->m_children->get(i)))
+         return false;
+
+   return true;
 }
 
 /*

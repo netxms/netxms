@@ -363,9 +363,9 @@ CREATE TABLE software_inventory
   PRIMARY KEY(node_id,version,name)
 ) TABLE_TYPE;
 
-/*
-** Node hardware inventory
-*/
+/**
+ * Node hardware inventory
+ */
 CREATE TABLE hardware_inventory
 (
   node_id integer not null,
@@ -378,10 +378,29 @@ CREATE TABLE hardware_inventory
   PRIMARY KEY(node_id,component_type,component_index)
 ) TABLE_TYPE;
 
-/*
-** Clusters information
-*/
+/**
+ * Node components (Entity MIB)
+ */
+CREATE TABLE node_components
+(
+  node_id integer not null,
+  component_index integer not null,
+  parent_index integer not null,
+  position integer not null,
+  component_class integer not null,
+  if_index integer not null,
+  name varchar(255) null,
+  description varchar(255) null,
+  model varchar(255) null,
+  serial_number varchar(63) null,
+  vendor varchar(63) null,
+  firmware varchar(127) null,
+  PRIMARY KEY(node_id,component_index)
+) TABLE_TYPE;
 
+/**
+ * Clusters information
+ */
 CREATE TABLE clusters
 (
   id integer not null,

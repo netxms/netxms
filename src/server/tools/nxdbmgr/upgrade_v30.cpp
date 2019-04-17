@@ -24,6 +24,36 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 30.65 to 30.66 (changes also included into 22.52)
+ */
+static bool H_UpgradeFromV65()
+{
+   if (GetSchemaLevelForMajorVersion(22) < 52)
+   {
+      CHK_EXEC(CreateTable(
+         _T("CREATE TABLE node_components (")
+         _T("   node_id integer not null,")
+         _T("   component_index integer not null,")
+         _T("   parent_index integer not null,")
+         _T("   position integer not null,")
+         _T("   component_class integer not null,")
+         _T("   if_index integer not null,")
+         _T("   name varchar(255) null,")
+         _T("   description varchar(255) null,")
+         _T("   model varchar(255) null,")
+         _T("   serial_number varchar(63) null,")
+         _T("   vendor varchar(63) null,")
+         _T("   firmware varchar(127) null,")
+         _T("PRIMARY KEY(node_id,component_index))")));
+
+      CHK_EXEC(SetSchemaLevelForMajorVersion(22, 52));
+   }
+
+   CHK_EXEC(SetMinorSchemaVersion(66));
+   return true;
+}
+
+/**
  * Upgrade from 30.64 to 30.65 (changes also included into 22.51)
  */
 static bool H_UpgradeFromV64()
@@ -2228,6 +2258,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 65, 30, 66, H_UpgradeFromV65 },
    { 64, 30, 65, H_UpgradeFromV64 },
    { 63, 30, 64, H_UpgradeFromV63 },
    { 62, 30, 63, H_UpgradeFromV62 },
