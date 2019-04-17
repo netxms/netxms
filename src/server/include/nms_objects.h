@@ -1783,7 +1783,7 @@ public:
    virtual bool isReadyForConfigurationPoll() override { return false; }
    virtual bool isReadyForInstancePoll() override { return false; }
 
-   virtual NXSL_Value *createNXSLObject(NXSL_VM *vm);
+   virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
 
    virtual json_t *toJson() override;
 
@@ -1892,7 +1892,7 @@ public:
 
    void setProvisoned() { m_state |= SSF_PROVISIONED; }
 
-   virtual json_t *toJson();
+   virtual json_t *toJson() override;
 
    AgentConnectionEx *getAgentConnection();
 
