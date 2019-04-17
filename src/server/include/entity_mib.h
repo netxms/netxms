@@ -34,16 +34,17 @@
 class LIBNXSRV_EXPORTABLE Component
 {
 protected:
-   UINT32 m_index;
-   UINT32 m_class;
-   UINT32 m_ifIndex;
+   UINT32 m_index;         // Unique index of this component
+   UINT32 m_class;         // Component class
+   UINT32 m_ifIndex;       // Interface index if component represents network interface
    TCHAR *m_name;
    TCHAR *m_description;
    TCHAR *m_model;
    TCHAR *m_serial;
    TCHAR *m_vendor;
    TCHAR *m_firmware;
-   UINT32 m_parentIndex;
+   UINT32 m_parentIndex;   // Index of parent component or 0 for root
+   INT32 m_position;       // Component relative position within parent
    ObjectArray<Component> *m_children;
 
 public:
@@ -55,6 +56,7 @@ public:
 
    UINT32 getIndex() const { return m_index; }
    UINT32 getParentIndex() const { return m_parentIndex; }
+   INT32 getPosition() const { return m_position; }
    NXSL_Array *getChildrenForNXSL() const;
 
    UINT32 getClass() const { return m_class; }
@@ -65,6 +67,8 @@ public:
    const TCHAR *getName() const { return m_name; }
    const TCHAR *getSerial() const { return m_serial; }
    const TCHAR *getVendor() const { return m_vendor; }
+
+   bool equals(const Component *c) const;
 
    UINT32 fillMessage(NXCPMessage *msg, UINT32 baseId) const;
 
@@ -88,6 +92,7 @@ public:
 
    bool isEmpty() const { return m_root == NULL; }
    const Component *getRoot() const { return m_root; }
+   bool equals(const ComponentTree *t) const;
 };
 
 /**

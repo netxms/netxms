@@ -299,12 +299,12 @@ Node::~Node()
    delete m_lldpLocalPortInfo;
    delete m_softwarePackages;
    delete m_winPerfObjects;
-   free(m_sysName);
-   free(m_sysContact);
-   free(m_sysLocation);
+   MemFree(m_sysName);
+   MemFree(m_sysContact);
+   MemFree(m_sysLocation);
    delete m_routingLoopEvents;
-   free(m_agentCertSubject);
-   free(m_hypervisorInfo);
+   MemFree(m_agentCertSubject);
+   MemFree(m_hypervisorInfo);
 }
 
 /**

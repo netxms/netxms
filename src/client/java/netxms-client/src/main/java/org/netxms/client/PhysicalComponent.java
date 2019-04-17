@@ -41,6 +41,7 @@ public class PhysicalComponent
 	
 	private int index;
 	private int parentIndex;
+	private int position;
 	private int ifIndex;
 	private int phyClass;
 	private String name;
@@ -66,18 +67,19 @@ public class PhysicalComponent
 		
 		index = msg.getFieldAsInt32(baseId);
 		parentIndex = msg.getFieldAsInt32(baseId + 1);
-		phyClass = msg.getFieldAsInt32(baseId + 2);
-		ifIndex = msg.getFieldAsInt32(baseId + 3);
-		name = msg.getFieldAsString(baseId + 4);
-		description = msg.getFieldAsString(baseId + 5);
-		model = msg.getFieldAsString(baseId + 6);
-		serialNumber = msg.getFieldAsString(baseId + 7);
-		vendor = msg.getFieldAsString(baseId + 8);
-		firmware = msg.getFieldAsString(baseId + 9);
+      position = msg.getFieldAsInt32(baseId + 2);
+		phyClass = msg.getFieldAsInt32(baseId + 3);
+		ifIndex = msg.getFieldAsInt32(baseId + 4);
+		name = msg.getFieldAsString(baseId + 5);
+		description = msg.getFieldAsString(baseId + 6);
+		model = msg.getFieldAsString(baseId + 7);
+		serialNumber = msg.getFieldAsString(baseId + 8);
+		vendor = msg.getFieldAsString(baseId + 9);
+		firmware = msg.getFieldAsString(baseId + 10);
 		
-		int count = msg.getFieldAsInt32(baseId + 10);
+		int count = msg.getFieldAsInt32(baseId + 19);
 		subcomponents = new ArrayList<PhysicalComponent>(count);
-		long varId = baseId + 11;
+		long varId = baseId + 20;
 		for(int i = 0; i < count; i++)
 		{
 			final PhysicalComponent c = new PhysicalComponent(msg, varId, this);
@@ -98,7 +100,9 @@ public class PhysicalComponent
 	}
 
 	/**
-	 * @return the index
+	 * Get unique index of this component.
+	 * 
+	 * @return unique index of this component
 	 */
 	public int getIndex()
 	{
@@ -106,7 +110,9 @@ public class PhysicalComponent
 	}
 
 	/**
-	 * @return the parentIndex
+	 * Get index of parent component.
+	 * 
+	 * @return index of parent component or 0 for root component
 	 */
 	public int getParentIndex()
 	{
@@ -114,6 +120,16 @@ public class PhysicalComponent
 	}
 
 	/**
+	 * Get relative position within parent.
+	 * 
+    * @return relative position within parent
+    */
+   public int getPosition()
+   {
+      return position;
+   }
+
+   /**
 	 * @return the ifIndex
 	 */
 	public int getIfIndex()
