@@ -24,6 +24,21 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 30.66 to 30.67 (changes also included into 22.53)
+ */
+static bool H_UpgradeFromV66()
+{
+   if (GetSchemaLevelForMajorVersion(22) < 53)
+   {
+      CHK_EXEC(DBDropColumn(g_dbHandle, _T("config"), _T("possible_values")));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(22, 53));
+   }
+
+   CHK_EXEC(SetMinorSchemaVersion(67));
+   return true;
+}
+
+/**
  * Upgrade from 30.65 to 30.66 (changes also included into 22.52)
  */
 static bool H_UpgradeFromV65()
@@ -259,10 +274,7 @@ static bool H_UpgradeFromV56()
  */
 static bool H_UpgradeFromV55()
 {
-
-   //Rename old ap_common
    DBRenameTable(g_dbHandle, _T("ap_common"), _T("ap_common_old"));
-   //create new ap_common
    CHK_EXEC(CreateTable(
       _T("CREATE TABLE ap_common (")
       _T("   policy_name varchar(63) not null,")
@@ -2258,6 +2270,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 66, 30, 67, H_UpgradeFromV66 },
    { 65, 30, 66, H_UpgradeFromV65 },
    { 64, 30, 65, H_UpgradeFromV64 },
    { 63, 30, 64, H_UpgradeFromV63 },
