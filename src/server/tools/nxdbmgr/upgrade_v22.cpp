@@ -24,6 +24,16 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 22.52 to 22.53
+ */
+static bool H_UpgradeFromV52()
+{
+   CHK_EXEC(DBDropColumn(g_dbHandle, _T("config"), _T("possible_values")));
+   CHK_EXEC(SetMinorSchemaVersion(53));
+   return true;
+}
+
+/**
  * Upgrade from 22.51 to 22.52
  */
 static bool H_UpgradeFromV51()
@@ -995,6 +1005,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 52, 22, 53, H_UpgradeFromV52 },
    { 51, 22, 52, H_UpgradeFromV51 },
    { 50, 22, 51, H_UpgradeFromV50 },
    { 49, 22, 50, H_UpgradeFromV49 },
