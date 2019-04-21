@@ -565,6 +565,10 @@ stop_search:
             }
             strcpy(driver, dbType);
          }
+         else if (!strcmp(driver, "mariadb"))
+         {
+            strcpy(driver, "mysql");
+         }
 
          String initFile = shareDir;
          initFile.append(FS_PATH_SEPARATOR _T("sql") FS_PATH_SEPARATOR _T("dbinit_"));
