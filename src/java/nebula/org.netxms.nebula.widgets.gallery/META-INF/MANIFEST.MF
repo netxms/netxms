@@ -2,10 +2,10 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Nebula Gallery widget (incubation)
 Bundle-SymbolicName: org.netxms.nebula.widgets.gallery
-Bundle-Version: 0.5.3.qualifier
-Bundle-RequiredExecutionEnvironment: JavaSE-1.6
-Require-Bundle: org.eclipse.swt,
- org.eclipse.jface;resolution:=optional
+Bundle-Version: 0.5.4
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Require-Bundle: org.eclipse.swt;bundle-version="3.110.0",
+ org.eclipse.jface;bundle-version="3.15.100"
 Export-Package: org.netxms.nebula.animation,
  org.netxms.nebula.animation.effects,
  org.netxms.nebula.animation.movement,

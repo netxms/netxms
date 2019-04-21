@@ -5,5 +5,5 @@ Bundle-SymbolicName: org.netxms.ui.eclipse.objectbrowser.adapterfactory;singleto
 Bundle-Version: 3.0.0
 Bundle-Vendor: netxms.org
 Fragment-Host: org.netxms.ui.eclipse.objectbrowser;bundle-version="3.0.0"
-Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Automatic-Module-Name: org.netxms.ui.eclipse.objectbrowser.adapterfactory

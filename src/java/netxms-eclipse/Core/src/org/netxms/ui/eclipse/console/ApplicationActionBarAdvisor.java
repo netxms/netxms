@@ -362,6 +362,16 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor
 		helpMenu.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 		helpMenu.add((BrandingManager.getInstance().getAboutDialog(null) != null) ? actionAboutCustom : actionAbout);
 	}
+	
+	private void addToolBar(ICoolBarManager coolBar, String id)
+	{
+	   if (coolBar.find(id) != null)
+	      return;
+	   
+      IToolBarManager toolbar = new ToolBarManager(SWT.FLAT | SWT.TRAIL);
+      toolbar.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
+      coolBar.add(new ToolBarContributionItem(toolbar, id));
+	}
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.application.ActionBarAdvisor#fillCoolBar(org.eclipse.jface.action.ICoolBarManager)
@@ -369,32 +379,23 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor
 	@Override
 	protected void fillCoolBar(ICoolBarManager coolBar)
 	{
-		IToolBarManager toolbar = new ToolBarManager(SWT.FLAT | SWT.TRAIL);
-		toolbar.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
-		coolBar.add(new ToolBarContributionItem(toolbar, "product")); //$NON-NLS-1$
-
-		toolbar = new ToolBarManager(SWT.FLAT | SWT.TRAIL);
-		toolbar.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
-		coolBar.add(new ToolBarContributionItem(toolbar, "view")); //$NON-NLS-1$
-
-		toolbar = new ToolBarManager(SWT.FLAT | SWT.TRAIL);
-		toolbar.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
-		coolBar.add(new ToolBarContributionItem(toolbar, "logs")); //$NON-NLS-1$
-
-		toolbar = new ToolBarManager(SWT.FLAT | SWT.TRAIL);
-		toolbar.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
-		coolBar.add(new ToolBarContributionItem(toolbar, "tools")); //$NON-NLS-1$
-
-		toolbar = new ToolBarManager(SWT.FLAT | SWT.TRAIL);
-		toolbar.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
-		coolBar.add(new ToolBarContributionItem(toolbar, "config")); //$NON-NLS-1$
+		addToolBar(coolBar, "product"); //$NON-NLS-1$
+		addToolBar(coolBar, "view"); //$NON-NLS-1$
+		addToolBar(coolBar, "logs"); //$NON-NLS-1$
+		addToolBar(coolBar, "tools"); //$NON-NLS-1$
+		addToolBar(coolBar, "config"); //$NON-NLS-1$
 
 		if (Activator.getDefault().getPreferenceStore().getBoolean("SHOW_SERVER_CLOCK")) //$NON-NLS-1$
 		{
-		   coolBar.add(new ServerClockContributionItem());
+		   if (coolBar.find(ServerClockContributionItem.ID) == null)
+		      coolBar.add(new ServerClockContributionItem());
 		}
-		ConsoleSharedData.setProperty("CoolBarManager", coolBar); //$NON-NLS-1$
+		else
+		{
+		   coolBar.remove(ServerClockContributionItem.ID);
+		}
 		
+		ConsoleSharedData.setProperty("CoolBarManager", coolBar); //$NON-NLS-1$
 		coolBar.setLockLayout(true);
 	}
 

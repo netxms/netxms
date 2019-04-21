@@ -9,7 +9,7 @@
     </parent>
     <groupId>com.netxms.nxmc</groupId>
     <artifactId>org.netxms.ui.eclipse.product</artifactId>
-    <version>2.0.0.M5</version>
+    <version>3.0.0</version>
     <packaging>eclipse-repository</packaging>
     <build>
         <plugins>   

@@ -48,19 +48,14 @@
     </modules>
 
     <properties>
-        <tycho.version>0.23.1</tycho.version>
+        <tycho.version>1.4.0</tycho.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>  
 	    <tycho.groupid>org.eclipse.tycho</tycho.groupid>
-         <maven.compiler.source>1.7</maven.compiler.source>
-         <maven.compiler.target>1.7</maven.compiler.target>
+         <maven.compiler.source>1.8</maven.compiler.source>
+         <maven.compiler.target>1.8</maven.compiler.target>
     </properties>
 
 <repositories>
-        <repository>
-            <id>eclipse-Draw2D</id>
-            <url>http://download.eclipse.org/tools/gef/updates/legacy/releases/</url>
-            <layout>p2</layout>
-        </repository>
         <repository>
             <id>Babel-project</id>
             <url>https://download.eclipse.org/technology/babel/update-site/R0.16.1/2018-12/</url>
@@ -72,32 +67,21 @@
             <layout>p2</layout>
         </repository>
         <repository>
-            <id>Birt</id>
-            <url>http://download.eclipse.org/tools/gef/updates/legacy/releases/</url>
-            <layout>p2</layout>
-        </repository>
-        <repository>
-            <id>eclipse-18-09</id>
-            <url>http://download.eclipse.org/releases/2018-09</url>
+            <id>eclipse-19-03</id>
+            <url>http://download.eclipse.org/releases/2019-03</url>
             <layout>p2</layout>
         </repository>  
         <repository>
-            <id>eclipse-18-09-update</id>
-            <url>http://download.eclipse.org/eclipse/updates/4.9</url>
+            <id>eclipse-19-03-update</id>
+            <url>http://download.eclipse.org/eclipse/updates/4.11</url>
             <layout>p2</layout>
         </repository>   
-        <repository>
-            <id>emf</id>
-            <url>http://download.eclipse.org/modeling/emf/updates/releases</url>
-            <layout>p2</layout>
-        </repository>
         <repository>
             <id>tm-terminalr</id>
             <url>http://download.eclipse.org/tm/terminal/updates/4.4milestones/20180611</url>
             <layout>p2</layout>
         </repository>
     </repositories> 
-
 
     <build>
         <plugins>
@@ -135,20 +119,10 @@
                 <version>${tycho.version}</version>
                 <configuration>
                     <environments>
-                            <environment>
-                            <os>linux</os>
-                            <ws>gtk</ws>
-                            <arch>x86</arch>
-                        </environment>
                         <environment>
                             <os>linux</os>
                             <ws>gtk</ws>
                             <arch>x86_64</arch>
-                        </environment>
-                        <environment>
-                            <os>win32</os>
-                            <ws>win32</ws>
-                            <arch>x86</arch>
                         </environment>
                         <environment>
                             <os>win32</os>

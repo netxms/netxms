@@ -62,7 +62,7 @@
          </property>
          <property
                name="aboutText"
-               value="NetXMS Management Console&#x0A;&#x0A;Version 3.0-M0-1549&#x0A;Copyright (c) 2003-2019 Raden Solutions">
+               value="NetXMS Management Console&#x0A;&#x0A;Version 3.0.1669&#x0A;Copyright (c) 2003-2019 Raden Solutions">
          </property>
          <property
                name="startupForegroundColor"
