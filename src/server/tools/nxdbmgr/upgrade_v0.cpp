@@ -7490,16 +7490,14 @@ static BOOL H_UpgradeFromV91(int currVersion, int newVersion)
    return TRUE;
 }
 
-
-//
-// Upgrade from V90 to V91
-//
-
+/**
+ * Upgrade from V90 to V91
+ */
 static BOOL H_UpgradeFromV90(int currVersion, int newVersion)
 {
 	if (!CreateTable(_T("CREATE TABLE userdb_custom_attributes (")
 		              _T("object_id integer not null,")
-	                 _T("attr_name varchar(255) not null,")
+	                 _T("attr_name varchar(127) not null,")
 						  _T("attr_value $SQL:TEXT not null,")
 						  _T("PRIMARY KEY(object_id,attr_name))")))
 		if (!g_ignoreErrors)
@@ -7512,11 +7510,9 @@ static BOOL H_UpgradeFromV90(int currVersion, int newVersion)
    return TRUE;
 }
 
-
-//
-// Upgrade from V89 to V90
-//
-
+/**
+ * Upgrade from V89 to V90
+ */
 static BOOL H_UpgradeFromV89(int currVersion, int newVersion)
 {
 	static TCHAR m_szBatch[] =

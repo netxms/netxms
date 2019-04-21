@@ -116,10 +116,9 @@ CREATE TABLE user_group_members
   PRIMARY KEY(group_id,user_id)
 ) TABLE_TYPE;
 
-/*
-** User profiles
-*/
-
+/**
+ * User profiles
+ */
 CREATE TABLE user_profiles
 (
   user_id integer not null,
@@ -128,22 +127,20 @@ CREATE TABLE user_profiles
   PRIMARY KEY(user_id,var_name)
 ) TABLE_TYPE;
 
-/*
-** Custom attributes for user database objects
-*/
-
+/**
+ * Custom attributes for user database objects
+ */
 CREATE TABLE userdb_custom_attributes
 (
   object_id integer not null,
-  attr_name varchar(255) not null,
+  attr_name varchar(127) not null,
   attr_value SQL_TEXT not null,
   PRIMARY KEY(object_id,attr_name)
 ) TABLE_TYPE;
 
-/*
-** Common object properties
-*/
-
+/**
+ * Common object properties 
+ */
 CREATE TABLE object_properties
 (
   object_id integer not null,
