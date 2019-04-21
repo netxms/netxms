@@ -569,6 +569,7 @@ int main(int argc, char *argv[])
    bool skipEvent = false;
    bool skipSysLog = false;
    bool skipTrapLog = false;
+	TCHAR fallbackSyntax[32] = _T("");
    int ch;
 
    InitNetXMSProcess(true);
@@ -636,7 +637,7 @@ stop_search:
 
    // Parse command line
    opterr = 1;
-   while((ch = getopt(argc, argv, "Ac:dDEfGhILMNqRsStT:vXY")) != -1)
+   while((ch = getopt(argc, argv, "Ac:dDEfF:GhILMNqRsStT:vXY")) != -1)
    {
       switch(ch)
       {
@@ -663,6 +664,7 @@ stop_search:
                      _T("   -D          : Migrate only collected data.\n")
                      _T("   -E          : Skip export of event log\n")
                      _T("   -f          : Force repair - do not ask for confirmation.\n")
+                     _T("   -F <syntax> : Fallback database syntax to use if not set in metadata.\n")
 #ifdef _WIN32
 				         _T("   -G          : GUI mode.\n")
 #endif
@@ -709,6 +711,14 @@ stop_search:
             break;
          case 'f':
             m_bForce = TRUE;
+            break;
+         case 'F':
+#ifdef UNICODE
+	         MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, fallbackSyntax, 32);
+				fallbackSyntax[31] = 0;
+#else
+            nx_strncpy(fallbackSyntax, optarg, 32);
+#endif
             break;
 			case 'G':
 				g_isGuiMode = true;
@@ -850,9 +860,9 @@ stop_search:
    else
    {
       // Get database syntax
-		g_dbSyntax = DBGetSyntax(g_hCoreDB);
-		if (g_dbSyntax == DB_SYNTAX_UNKNOWN)
-		{
+      g_dbSyntax = DBGetSyntax(g_hCoreDB, fallbackSyntax);
+      if (g_dbSyntax == DB_SYNTAX_UNKNOWN)
+      {
          _tprintf(_T("Unable to determine database syntax\n"));
          DBDisconnect(g_hCoreDB);
          DBUnloadDriver(s_driver);
