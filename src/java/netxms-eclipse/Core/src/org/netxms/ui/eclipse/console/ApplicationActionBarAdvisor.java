@@ -390,10 +390,6 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor
 		   if (coolBar.find(ServerClockContributionItem.ID) == null)
 		      coolBar.add(new ServerClockContributionItem());
 		}
-		else
-		{
-		   coolBar.remove(ServerClockContributionItem.ID);
-		}
 		
 		ConsoleSharedData.setProperty("CoolBarManager", coolBar); //$NON-NLS-1$
 		coolBar.setLockLayout(true);
