@@ -275,7 +275,7 @@ bool LIBNXDB_EXPORTABLE DBGetSchemaVersion(DB_HANDLE conn, INT32 *major, INT32 *
 /**
  * Get database syntax
  */
-int LIBNXDB_EXPORTABLE DBGetSyntax(DB_HANDLE conn)
+int LIBNXDB_EXPORTABLE DBGetSyntax(DB_HANDLE conn, const TCHAR *fallback)
 {
 	DB_RESULT hResult;
 	TCHAR syntaxId[256] = _T("");
@@ -308,6 +308,7 @@ int LIBNXDB_EXPORTABLE DBGetSyntax(DB_HANDLE conn)
 			if (DBGetNumRows(hResult) > 0)
 			{
 				DBGetField(hResult, 0, 0, syntaxId, sizeof(syntaxId) / sizeof(TCHAR));
+            read = true;
 			}
 			else
 			{
@@ -316,6 +317,10 @@ int LIBNXDB_EXPORTABLE DBGetSyntax(DB_HANDLE conn)
 			DBFreeResult(hResult);
 		}
 	}
+
+	// Use fallback if cannot read syntax from database
+	if (!read && (fallback != NULL))
+      _tcslcpy(syntaxId, fallback, 256);
 
    if (!_tcscmp(syntaxId, _T("MYSQL")))
    {
