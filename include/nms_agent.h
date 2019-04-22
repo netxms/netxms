@@ -183,6 +183,7 @@
 #define DCIDESC_AGENT_PROXY_ACTIVESESSIONS           _T("Number of active proxy sessions")
 #define DCIDESC_AGENT_PROXY_CONNECTIONREQUESTS       _T("Number of proxy connection requests")
 #define DCIDESC_AGENT_PROXY_ISENABLED                _T("Check if agent proxy is enabled")
+#define DCIDESC_AGENT_PUSH_VALUE                     _T("Cached value of push parameter {instance}")
 #define DCIDESC_AGENT_REGISTRAR                      _T("Registrar server address set on agent startup")
 #define DCIDESC_AGENT_REJECTEDCONNECTIONS            _T("Number of connections rejected by agent")
 #define DCIDESC_AGENT_SENT_TRAPS                     _T("Number of traps successfully sent to server")

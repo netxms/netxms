@@ -2,6 +2,8 @@
 * 2.2.14
 *
 
+- Local cache on agent side for data pushed with nxapush
+- Support for statsite sink format in nxapush
 - Updated default MIB collection
 - nxget command line option to print table as delimited text
 - Drill down dashboard or network map for "Gauge" dashboard element
