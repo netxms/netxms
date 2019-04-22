@@ -1,7 +1,7 @@
 /* 
 ** nxapush - command line tool used to push DCI values to NetXMS server
 **           via local NetXMS agent
-** Copyright (C) 2006-2016 Raden Solutions
+** Copyright (C) 2006-2019 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -47,17 +47,63 @@ static StringMap *s_data = new StringMap;
 static int s_optVerbose = 1;
 static UINT32 s_optObjectId = 0;
 static time_t s_timestamp = 0;
+static bool s_localCache = false;
+static bool s_statsiteFormat = false;
+
+/**
+ * Values parser (statsite format)
+ */
+static bool AddValueStatSite(TCHAR *input)
+{
+   bool ret = FALSE;
+   TCHAR *p = input;
+   TCHAR *value = NULL;
+   TCHAR *timestamp = NULL;
+
+   for(; *p != 0; p++)
+   {
+      if (*p == _T('|'))
+      {
+         if (value == NULL)
+         {
+            value = p;
+         }
+         else if (timestamp == NULL)
+         {
+            timestamp = p;
+         }
+      }
+      if (*p == 0x0D || *p == 0x0A)
+      {
+         *p = 0;
+         break;
+      }
+   }
+
+   if (timestamp != NULL)
+   {
+      *timestamp++ = 0;
+   }
+   if (value != NULL)
+   {
+      *value++ = 0;
+      s_data->set(input, value);
+      ret = TRUE;
+   }
+
+   return ret;
+}
 
 /**
  * Values parser - clean string and split by '='
  */
-static BOOL AddValue(TCHAR *pair)
+static bool AddValueNative(TCHAR *pair)
 {
-	BOOL ret = FALSE;
+	bool ret = false;
 	TCHAR *p = pair;
 	TCHAR *value = NULL;
 
-	for (p = pair; *p != 0; p++)
+	for(; *p != 0; p++)
 	{
 		if (*p == _T('=') && value == NULL)
 		{
@@ -74,10 +120,18 @@ static BOOL AddValue(TCHAR *pair)
 	{
 		*value++ = 0;
 		s_data->set(pair, value);
-		ret = TRUE;
+		ret = true;
 	}
 
 	return ret;
+}
+
+/**
+ * Add value
+ */
+inline bool AddValue(TCHAR *input)
+{
+   return s_statsiteFormat ? AddValueStatSite(input) : AddValueNative(input);
 }
 
 /**
@@ -107,6 +161,7 @@ static bool Send()
 	NXCPMessage msg;
 	msg.setCode(CMD_PUSH_DCI_DATA);
    msg.setField(VID_OBJECT_ID, s_optObjectId);
+   msg.setField(VID_LOCAL_CACHE, s_localCache);
    msg.setFieldFromTime(VID_TIMESTAMP, s_timestamp);
    s_data->fillMessage(&msg, VID_NUM_ITEMS, VID_PUSH_DCI_DATA_BASE);
 
@@ -114,20 +169,20 @@ static bool Send()
 	NXCP_MESSAGE *rawMsg = msg.serialize();
 	bool success = s_pipe->write(rawMsg, ntohl(rawMsg->size));
 
-	free(rawMsg);
+	MemFree(rawMsg);
 	return success;
 }
 
 /**
  * Disconnect and cleanup
  */
-static BOOL Teardown()
+static bool Teardown()
 {
 	delete s_pipe;
 	delete s_data;
 	if (s_optVerbose > 2)
 		_tprintf(_T("Disconnected from NetXMS agent\n"));
-	return TRUE;
+	return true;
 }
 
 /**
@@ -137,8 +192,10 @@ static BOOL Teardown()
 static struct option longOptions[] =
 {
 	{ (char *)"help",           no_argument,       NULL,        'h'},
+   { (char *)"local-cache",    no_argument,       NULL,        'l'},
 	{ (char *)"object",         required_argument, NULL,        'o'},
 	{ (char *)"quiet",          no_argument,       NULL,        'q'},
+   { (char *)"statsite",       no_argument,       NULL,        's'},
 	{ (char *)"timestamp-unix", required_argument, NULL,        't'},
 	{ (char *)"timestamp-text", required_argument, NULL,        'T'},
 	{ (char *)"verbose",        no_argument,       NULL,        'v'},
@@ -147,7 +204,7 @@ static struct option longOptions[] =
 };
 #endif
 
-#define SHORT_OPTIONS "ho:qt:T:vV"
+#define SHORT_OPTIONS "hlo:qst:T:vV"
 
 /**
  * Show online help
@@ -158,37 +215,45 @@ static void usage(char *argv0)
 _T("NetXMS Agent PUSH  Version ") NETXMS_VERSION_STRING _T("\n")
 _T("Copyright (c) 2006-2013 Raden Solutions\n\n")
 _T("Usage: %hs [OPTIONS] [@batch_file] [values]\n")
+_T("       %hs [OPTIONS] -\n")
 _T("  \n")
 _T("Options:\n")
 #if HAVE_GETOPT_LONG
 _T("  -h, --help                  Display this help message.\n")
+_T("  -l, --local-cache           Push to agent's local cache.\n")
 _T("  -o, --object <id>           Push data on behalf of object with given id.\n")
 _T("  -q, --quiet                 Suppress all messages.\n")
+_T("  -s, --statsite              Use statsite sink format.\n")
 _T("  -t, --timestamp-unix <time> Specify timestamp for data as UNIX timestamp.\n")
 _T("  -T, --timestamp-text <time> Specify timestamp for data as YYYYMMDDhhmmss.\n")
 _T("  -v, --verbose               Enable verbose messages. Add twice for debug\n")
 _T("  -V, --version               Display version information.\n\n")
 #else
 _T("  -h             Display this help message.\n")
+_T("  -l             Push to agent's local cache.\n")
 _T("  -o <id>        Push data on behalf of object with given id.\n")
 _T("  -q             Suppress all messages.\n")
+_T("  -s             Use statsite sink format.\n")
 _T("  -t <time>      Specify timestamp for data as UNIX timestamp.\n")
 _T("  -T <time>      Specify timestamp for data as YYYYMMDDhhmmss.\n")
 _T("  -v             Enable verbose messages. Add twice for debug\n")
 _T("  -V             Display version information.\n\n")
 #endif
 _T("Notes:\n")
-_T("  * Values should be given in the following format:\n")
+_T("  * Values should be given in format\n")
 _T("    dci=value\n")
+_T("    or (if statsite sink format is selected):\n")
+_T("    dci|value|timestamp\n")
 _T("    where dci can be specified by it's name\n")
 _T("  * Name of batch file cannot contain character = (equality sign)\n")
+_T("  * Use - character in place of values to read from standard input\n")
 _T("\n")
 _T("Examples:\n")
 _T("  Push two values:\n")
 _T("      nxapush PushParam1=1 PushParam2=4\n\n")
 _T("  Push values from file:\n")
 _T("      nxapush @file\n")
-	, argv0);
+	, argv0, argv0);
 }
 
 /**
@@ -226,12 +291,18 @@ int main(int argc, char *argv[])
 			   usage(argv[0]);
 			   exit(0);
 			   break;
+         case 'l': // local cache
+            s_localCache = true;
+            break;
 		   case 'o': // object ID
 			   s_optObjectId = strtoul(optarg, NULL, 0);
 			   break;
 		   case 'q': // quiet
 			   s_optVerbose = 0;
 			   break;
+         case 's': // statsite sink format
+            s_statsiteFormat = true;
+            break;
 		   case 't': // timestamp as UNIX time
 			   s_timestamp = (time_t)strtoull(optarg, NULL, 0);
 			   break;
@@ -287,12 +358,12 @@ int main(int argc, char *argv[])
 				{
 					char buffer[1024];
 
-					while (fgets(buffer, sizeof(buffer), fileHandle) != NULL)
+					while(fgets(buffer, sizeof(buffer), fileHandle) != NULL)
 					{
 #ifdef UNICODE
-						WCHAR *wvalue = WideStringFromMBString(buffer);
+						WCHAR *wvalue = WideStringFromMBStringSysLocale(buffer);
 						AddValue(wvalue);
-						free(wvalue);
+						MemFree(wvalue);
 #else
 						AddValue(buffer);
 #endif
@@ -314,9 +385,9 @@ int main(int argc, char *argv[])
 			else
 			{
 #ifdef UNICODE
-				WCHAR *wvalue = WideStringFromMBString(argv[optind]);
+				WCHAR *wvalue = WideStringFromMBStringSysLocale(argv[optind]);
 				AddValue(wvalue);
-				free(wvalue);
+				MemFree(wvalue);
 #else
 				AddValue(argv[optind]);
 #endif

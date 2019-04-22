@@ -36,7 +36,7 @@ bool PushData(const TCHAR *parameter, const TCHAR *value, UINT32 objectId, time_
 	NXCPMessage msg;
 	bool success = false;
 
-	AgentWriteDebugLog(6, _T("PushData: \"%s\" = \"%s\""), parameter, value);
+	nxlog_debug(6, _T("PushData: \"%s\" = \"%s\""), parameter, value);
 
 	msg.setCode(CMD_PUSH_DCI_DATA);
 	msg.setField(VID_NAME, parameter);
@@ -65,6 +65,39 @@ bool PushData(const TCHAR *parameter, const TCHAR *value, UINT32 objectId, time_
 }
 
 /**
+ * Pushed value
+ */
+struct PushDataEntry
+{
+   time_t timestamp;
+   TCHAR value[MAX_RESULT_LENGTH];
+
+   PushDataEntry(time_t t, const TCHAR *v)
+   {
+      timestamp = t;
+      _tcscpy(value, v);
+   }
+};
+
+/**
+ * Local cache
+ */
+static ObjectMemoryPool<PushDataEntry> s_localCachePool;
+static StringObjectMap<PushDataEntry> s_localCache(false);
+static Mutex s_localCacheLock;
+
+/**
+ * Store pushed data locally
+ */
+static void StoreLocalData(const TCHAR *parameter, const TCHAR *value, UINT32 objectId, time_t timestamp)
+{
+   nxlog_debug(6, _T("StoreLocalData: \"%s\" = \"%s\""), parameter, value);
+   s_localCacheLock.lock();
+   s_localCache.set(parameter, new(s_localCachePool.allocate()) PushDataEntry(timestamp, value));
+   s_localCacheLock.unlock();
+}
+
+/**
  * Process push request
  */
 static void ProcessPushRequest(NamedPipe *pipe, void *arg)
@@ -85,13 +118,17 @@ static void ProcessPushRequest(NamedPipe *pipe, void *arg)
          UINT32 objectId = msg->getFieldAsUInt32(VID_OBJECT_ID);
 			UINT32 count = msg->getFieldAsUInt32(VID_NUM_ITEMS);
          time_t timestamp = msg->getFieldAsTime(VID_TIMESTAMP);
+         bool localCache = msg->getFieldAsBoolean(VID_LOCAL_CACHE);
 			UINT32 varId = VID_PUSH_DCI_DATA_BASE;
 			for(DWORD i = 0; i < count; i++)
 			{
 				TCHAR name[MAX_RUNTIME_PARAM_NAME], value[MAX_RESULT_LENGTH];
 				msg->getFieldAsString(varId++, name, MAX_RUNTIME_PARAM_NAME);
 				msg->getFieldAsString(varId++, value, MAX_RESULT_LENGTH);
-				PushData(name, value, objectId, timestamp);
+				if (localCache)
+				   StoreLocalData(name, value, objectId, timestamp);
+				else
+				   PushData(name, value, objectId, timestamp);
 			}
 		}
 		delete msg;
@@ -120,4 +157,35 @@ void StartPushConnector()
             (user != NULL) && (user[0] != 0) && _tcscmp(user, _T("*")) ? user : NULL);
    if (s_listener != NULL)
       s_listener->start();
+}
+
+/**
+ * Retrieve push value from local cache
+ */
+LONG H_PushValue(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   TCHAR key[MAX_RUNTIME_PARAM_NAME];
+   if (!AgentGetParameterArg(cmd, 1, key, MAX_RUNTIME_PARAM_NAME))
+      return SYSINFO_RC_UNSUPPORTED;
+
+   LONG rc;
+   s_localCacheLock.lock();
+   const PushDataEntry *v = s_localCache.get(key);
+   if (v != NULL)
+      _tcscpy(value, v->value);
+   s_localCacheLock.unlock();
+   return (v != NULL) ? SYSINFO_RC_SUCCESS : SYSINFO_RC_NO_SUCH_INSTANCE;
+}
+
+/**
+ * Get list of all available push values
+ */
+LONG H_PushValues(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session)
+{
+   s_localCacheLock.lock();
+   StringList *keys = s_localCache.keys();
+   value->addAll(keys);
+   s_localCacheLock.unlock();
+   delete keys;
+   return SYSINFO_RC_SUCCESS;
 }

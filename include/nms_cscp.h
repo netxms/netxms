@@ -1260,6 +1260,7 @@ typedef struct
 #define VID_USERAGENT               ((UINT32)631)
 #define VID_ORDER_FIELDS            ((UINT32)632)
 #define VID_RECORD_LIMIT            ((UINT32)633)
+#define VID_LOCAL_CACHE             ((UINT32)634)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)
