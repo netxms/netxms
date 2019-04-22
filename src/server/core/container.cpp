@@ -263,7 +263,7 @@ bool Container::saveToDatabase(DB_HANDLE hdb)
       }
    }
 
-   if(success && (m_modified & MODIFY_OTHER))
+   if (success && (m_modified & MODIFY_OTHER))
       success = AutoBindTarget::saveToDatabase(hdb);
 
    lockProperties();

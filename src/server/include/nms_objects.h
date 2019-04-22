@@ -882,35 +882,43 @@ inline void NetObj::decRefCount()
    MutexUnlock(m_mutexRefCount);
 }
 
+/**
+ * Generic versionable object
+ */
 class NXCORE_EXPORTABLE VersionableObject
 {
 protected:
+   NetObj *m_this;
    VolatileCounter m_version;
-   NetObj *m_parent;
 
    void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId);
 
-public:
-   VersionableObject(NetObj *parent);
-   VersionableObject(NetObj *parent, ConfigEntry *config);
-   void updateVersion() { InterlockedIncrement(&m_version); }
-   UINT32 getVersion() { return m_version; }
-   virtual void updateFromImport(ConfigEntry *config);
+   bool saveToDatabase(DB_HANDLE hdb);
+   bool deleteFromDatabase(DB_HANDLE hdb);
+   bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
 
-   virtual bool saveToDatabase(DB_HANDLE hdb);
-   virtual bool deleteFromDatabase(DB_HANDLE hdb);
-   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
-   virtual void toJson(json_t *root);
+   void toJson(json_t *root);
+   void updateFromImport(ConfigEntry *config);
+
+public:
+   VersionableObject(NetObj *_this);
+   VersionableObject(NetObj *_this, ConfigEntry *config);
+
+   void updateVersion() { InterlockedIncrement(&m_version); }
+   UINT32 getVersion() const { return m_version; }
 };
 
+/**
+ * Generic auto-bind target. Intended to be used only as secondary class in multi-inheritance with primary class derived from NetObj.
+ */
 class NXCORE_EXPORTABLE AutoBindTarget
 {
 protected:
+   NetObj *m_this;
    TCHAR *m_bindFilterSource;
    NXSL_Program *m_bindFilter;
    bool m_autoBindFlag;
    bool m_autoUnbindFlag;
-   NetObj *m_parent;
    MUTEX m_mutexProperties;
 
    void internalLock() const { MutexLock(m_mutexProperties); }
@@ -919,15 +927,18 @@ protected:
    UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
    void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId);
 
-public:
-   AutoBindTarget(NetObj *parent);
-   AutoBindTarget(NetObj *parent, ConfigEntry *config);
-   virtual ~AutoBindTarget();
+   bool saveToDatabase(DB_HANDLE hdb);
+   bool deleteFromDatabase(DB_HANDLE hdb);
+   bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
+   void updateFromImport(ConfigEntry *config);
 
-   virtual bool saveToDatabase(DB_HANDLE hdb);
-   virtual bool deleteFromDatabase(DB_HANDLE hdb);
-   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
-   virtual void updateFromImport(ConfigEntry *config);
+   void toJson(json_t *root);
+   void createExportRecord(String &str);
+
+public:
+   AutoBindTarget(NetObj *_this);
+   AutoBindTarget(NetObj *_thist, ConfigEntry *config);
+   virtual ~AutoBindTarget();
 
    AutoBindDecision isApplicable(DataCollectionTarget *object);
    bool isAutoBindEnabled() { return m_autoBindFlag; }
@@ -936,9 +947,6 @@ public:
    void setAutoBindMode(bool doBind, bool doUnbind);
 
    const TCHAR *getAutoBindScriptSource() const { return m_bindFilterSource; }
-
-   void toJson(json_t *root);
-   void createExportRecord(String &str);
 };
 
 /**
@@ -982,6 +990,8 @@ public:
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
    virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
 
+   virtual void updateFromImport(ConfigEntry *config);
+
    virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE) override;
 
    virtual json_t *toJson() override;
@@ -1007,9 +1017,6 @@ public:
 
    void queueUpdate();
    void queueRemoveFromTarget(UINT32 targetId, bool removeDCI);
-
-   void createExportRecord(String &str);
-   void updateFromImport(ConfigEntry *config);
 
 	bool enumDCObjects(bool (* pfCallback)(DCObject *, UINT32, void *), void *pArg);
 	void associateItems();
@@ -2651,6 +2658,9 @@ public:
    void linkObject(NetObj *pObject) { addChild(pObject); pObject->addParent(this); }
 };
 
+/**
+ * Object container
+ */
 class NXCORE_EXPORTABLE Container : public AbstractContainer, public AutoBindTarget
 {
 protected:

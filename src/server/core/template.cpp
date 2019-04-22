@@ -155,9 +155,9 @@ bool Template::saveToDatabase(DB_HANDLE hdb)
       unlockChildList();
    }
 
-   if(success && (m_modified & MODIFY_OTHER))
+   if (success && (m_modified & MODIFY_OTHER))
       success = AutoBindTarget::saveToDatabase(hdb);
-   if(success && (m_modified & MODIFY_OTHER))
+   if (success && (m_modified & MODIFY_OTHER))
       success = VersionableObject::saveToDatabase(hdb);
 
    if(success && (m_modified & MODIFY_POLICY))
@@ -342,7 +342,6 @@ void Template::createExportRecord(String &str)
    str.append(_T("\t\t</template>\n"));
 }
 
-
 /**
  * Apply template to data collection target
  */
@@ -416,6 +415,9 @@ UINT32 Template::modifyFromMessageInternal(NXCPMessage *pRequest)
    return super::modifyFromMessageInternal(pRequest);
 }
 
+/**
+ * Update object from imported configuration
+ */
 void Template::updateFromImport(ConfigEntry *config)
 {
    super::updateFromImport(config);

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -25,9 +25,9 @@
 /**
  * Auto bind object constructor
  */
-AutoBindTarget::AutoBindTarget(NetObj *parent)
+AutoBindTarget::AutoBindTarget(NetObj *_this)
 {
-   m_parent = parent;
+   m_this = _this;
    m_bindFilter = NULL;
    m_bindFilterSource = NULL;
    m_mutexProperties = MutexCreate();
@@ -38,9 +38,9 @@ AutoBindTarget::AutoBindTarget(NetObj *parent)
 /**
  * Auto bind object constructor
  */
-AutoBindTarget::AutoBindTarget(NetObj *parent, ConfigEntry *config)
+AutoBindTarget::AutoBindTarget(NetObj *_this, ConfigEntry *config)
 {
-   m_parent = parent;
+   m_this = _this;
    m_bindFilter = NULL;
    m_bindFilterSource = NULL;
    m_mutexProperties = MutexCreate();
@@ -75,7 +75,7 @@ void AutoBindTarget::setAutoBindMode(bool doBind, bool doUnbind)
    m_autoBindFlag = doBind;
    m_autoUnbindFlag = doUnbind;
 
-   m_parent->markAsModified(MODIFY_OTHER);
+   m_this->markAsModified(MODIFY_OTHER);
    internalUnlock();
 }
 
@@ -98,9 +98,9 @@ void AutoBindTarget::setAutoBindFilter(const TCHAR *filter)
       if (m_bindFilter == NULL)
       {
          TCHAR buffer[1024];
-         _sntprintf(buffer, 1024, _T("%s::%s::%d"), m_parent->getObjectClassName(), m_parent->getName(), m_parent->getId());
-         PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, error, m_parent->getId());
-         nxlog_write(MSG_TEMPLATE_SCRIPT_COMPILATION_ERROR, NXLOG_WARNING, "dss", m_parent->getId(), m_parent->getName(), error);
+         _sntprintf(buffer, 1024, _T("%s::%s::%d"), m_this->getObjectClassName(), m_this->getName(), m_this->getId());
+         PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, error, m_this->getId());
+         nxlog_write(MSG_TEMPLATE_SCRIPT_COMPILATION_ERROR, NXLOG_WARNING, "dss", m_this->getId(), m_this->getName(), error);
       }
    }
    else
@@ -179,7 +179,7 @@ bool AutoBindTarget::saveToDatabase(DB_HANDLE hdb)
    bool success = false;
 
    DB_STATEMENT hStmt;
-   if (IsDatabaseRecordExist(hdb, _T("auto_bind_target"), _T("object_id"), m_parent->getId()))
+   if (IsDatabaseRecordExist(hdb, _T("auto_bind_target"), _T("object_id"), m_this->getId()))
    {
       hStmt = DBPrepare(hdb, _T("UPDATE auto_bind_target SET bind_filter=?,bind_flag=?,unbind_flag=? WHERE object_id=?"));
    }
@@ -193,7 +193,7 @@ bool AutoBindTarget::saveToDatabase(DB_HANDLE hdb)
       DBBind(hStmt, 1, DB_SQLTYPE_TEXT, m_bindFilterSource, DB_BIND_STATIC);
       DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, (m_autoBindFlag?_T("1"):_T("0")), DB_BIND_STATIC);
       DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, (m_autoUnbindFlag?_T("1"):_T("0")), DB_BIND_STATIC);
-      DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, m_parent->getId());
+      DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, m_this->getId());
       success = DBExecute(hStmt);
       internalUnlock();
       DBFreeStatement(hStmt);
@@ -207,7 +207,7 @@ bool AutoBindTarget::saveToDatabase(DB_HANDLE hdb)
  */
 bool AutoBindTarget::deleteFromDatabase(DB_HANDLE hdb)
 {
-   return ExecuteQueryOnObject(hdb, m_parent->getId(), _T("DELETE FROM auto_bind_target WHERE object_id=?"));
+   return ExecuteQueryOnObject(hdb, m_this->getId(), _T("DELETE FROM auto_bind_target WHERE object_id=?"));
 }
 
 /**
@@ -227,9 +227,9 @@ AutoBindDecision AutoBindTarget::isApplicable(DataCollectionTarget *target)
       if (filter == NULL)
       {
          TCHAR buffer[1024];
-         _sntprintf(buffer, 1024, _T("%s::%s::%d"), m_parent->getObjectClassName(), m_parent->getName(), m_parent->getId());
-         PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, _T("Script load error"), m_parent->getId());
-         nxlog_write(MSG_TEMPLATE_SCRIPT_EXECUTION_ERROR, EVENTLOG_WARNING_TYPE, "dss", m_parent->getId(), m_parent->getName(), _T("Script load error"));
+         _sntprintf(buffer, 1024, _T("%s::%s::%d"), m_this->getObjectClassName(), m_this->getName(), m_this->getId());
+         PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, _T("Script load error"), m_this->getId());
+         nxlog_write(MSG_TEMPLATE_SCRIPT_EXECUTION_ERROR, EVENTLOG_WARNING_TYPE, "dss", m_this->getId(), m_this->getName(), _T("Script load error"));
       }
    }
    internalUnlock();
@@ -247,9 +247,9 @@ AutoBindDecision AutoBindTarget::isApplicable(DataCollectionTarget *target)
    {
       internalLock();
       TCHAR buffer[1024];
-      _sntprintf(buffer, 1024, _T("%s::%s::%d"), m_parent->getObjectClassName(), m_parent->getName(), m_parent->getId());
-      PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, filter->getErrorText(), m_parent->getId());
-      nxlog_write(MSG_TEMPLATE_SCRIPT_EXECUTION_ERROR, EVENTLOG_WARNING_TYPE, "dss", m_parent->getId(), m_parent->getName(), filter->getErrorText());
+      _sntprintf(buffer, 1024, _T("%s::%s::%d"), m_this->getObjectClassName(), m_this->getName(), m_this->getId());
+      PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, filter->getErrorText(), m_this->getId());
+      nxlog_write(MSG_TEMPLATE_SCRIPT_EXECUTION_ERROR, EVENTLOG_WARNING_TYPE, "dss", m_this->getId(), m_this->getName(), filter->getErrorText());
       internalUnlock();
    }
    delete filter;

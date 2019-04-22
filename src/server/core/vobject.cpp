@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -25,18 +25,18 @@
 /**
  * Versionable object constructor
  */
-VersionableObject::VersionableObject(NetObj *parent)
+VersionableObject::VersionableObject(NetObj *_this)
 {
-   m_parent = parent;
+   m_this = _this;
    m_version = 0;
 }
 
 /**
  * Versionable object constructor
  */
-VersionableObject::VersionableObject(NetObj *parent, ConfigEntry *config)
+VersionableObject::VersionableObject(NetObj *_this, ConfigEntry *config)
 {
-   m_parent = parent;
+   m_this = _this;
    m_version = config->getSubEntryValueAsUInt(_T("version"), 0, 0x00010000);
 }
 
@@ -48,13 +48,15 @@ void VersionableObject::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
    pMsg->setField(VID_VERSION, m_version);
 }
 
-
+/**
+ * Save object to database
+ */
 bool VersionableObject::saveToDatabase(DB_HANDLE hdb)
 {
    bool success = false;
 
    DB_STATEMENT hStmt;
-   if (IsDatabaseRecordExist(hdb, _T("versionable_object"), _T("object_id"), m_parent->getId()))
+   if (IsDatabaseRecordExist(hdb, _T("versionable_object"), _T("object_id"), m_this->getId()))
    {
       hStmt = DBPrepare(hdb, _T("UPDATE versionable_object SET version=? WHERE object_id=?"));
    }
@@ -65,7 +67,7 @@ bool VersionableObject::saveToDatabase(DB_HANDLE hdb)
    if (hStmt != NULL)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_version);
-      DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_parent->getId());
+      DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_this->getId());
       success = DBExecute(hStmt);
       DBFreeStatement(hStmt);
    }
@@ -73,16 +75,22 @@ bool VersionableObject::saveToDatabase(DB_HANDLE hdb)
    return success;
 }
 
+/**
+ * Delete object from database
+ */
 bool VersionableObject::deleteFromDatabase(DB_HANDLE hdb)
 {
-   return ExecuteQueryOnObject(hdb, m_parent->getId(), _T("DELETE FROM versionable_object WHERE object_id=?"));
+   return ExecuteQueryOnObject(hdb, m_this->getId(), _T("DELETE FROM versionable_object WHERE object_id=?"));
 }
 
+/**
+ * Load object from database
+ */
 bool VersionableObject::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
 {
    TCHAR szQuery[256];
 
-   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT version FROM versionable_object WHERE object_id=%d"), m_parent->getId());
+   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT version FROM versionable_object WHERE object_id=%d"), m_this->getId());
    DB_RESULT hResult = DBSelect(hdb, szQuery);
    if (hResult == NULL)
       return false;
@@ -92,6 +100,9 @@ bool VersionableObject::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
    return true;
 }
 
+/**
+ * Update object from imported configuration
+ */
 void VersionableObject::updateFromImport(ConfigEntry *config)
 {
    m_version = config->getSubEntryValueAsUInt(_T("version"), 0, m_version);
