@@ -47,7 +47,6 @@ libnxcore_la_LIBADD = \
 	../../db/libnxdb/libnxdb.la \
 	../../libnxsl/libnxsl.la \
 	../../agent/libnxagent/libnxagent.la \
-	../../libnxjava/libnxjava.la \
 	../../libnetxms/libnetxms.la \
 	@SERVER_LIBS@
 if PYTHON_SUPPORT

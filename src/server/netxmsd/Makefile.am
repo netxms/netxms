@@ -10,7 +10,6 @@ netxmsd_LDADD = \
 	../../libnxlp/libnxlp.la \
 	../../db/libnxdb/libnxdb.la \
 	../../agent/libnxagent/libnxagent.la \
-	../../libnxjava/libnxjava.la \
 	../../libnetxms/libnetxms.la \
    @SERVER_LIBS@ @EXEC_LIBS@
 

@@ -22,7 +22,6 @@
 
 #include "nxcore.h"
 #include <nxconfig.h>
-#include <nxjava.h>
 
 /**
  * Externals
