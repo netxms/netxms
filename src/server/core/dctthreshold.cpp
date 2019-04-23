@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -585,16 +585,26 @@ DCTableThreshold::~DCTableThreshold()
 }
 
 /**
+ * Data for save threshold instances callback
+ */
+struct SaveThresholdInstancesCallbackData
+{
+   DB_STATEMENT hStmt;
+   UINT32 instanceId;
+};
+
+/**
  * Enumeration callback for saving threshold instances
  */
 static EnumerationCallbackResult SaveThresholdInstancesCallback(const TCHAR *key, const void *value, void *arg)
 {
-   DB_STATEMENT hStmt = (DB_STATEMENT)arg;
+   DB_STATEMENT hStmt = static_cast<SaveThresholdInstancesCallbackData*>(arg)->hStmt;
    const DCTableThresholdInstance *i = (const DCTableThresholdInstance *)value;
-   DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, i->getName(), DB_BIND_STATIC);
-   DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, i->getMatchCount());
-   DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, i->isActive() ? _T("1") : _T("0"), DB_BIND_STATIC);
-   DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, i->getRow());
+   DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, static_cast<SaveThresholdInstancesCallbackData*>(arg)->instanceId++);
+   DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, i->getName(), DB_BIND_STATIC);
+   DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, i->getMatchCount());
+   DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, i->isActive() ? _T("1") : _T("0"), DB_BIND_STATIC);
+   DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, i->getRow());
    DBExecute(hStmt);
    return _CONTINUE;
 }
@@ -641,29 +651,27 @@ bool DCTableThreshold::saveToDatabase(DB_HANDLE hdb, UINT32 tableId, int seq)
       DBFreeStatement(hStmt);
    }
 
-   if (m_instances->size() > 0)
+   if ((m_instances->size() > 0) || (m_instancesBeforeMaint->size() > 0))
    {
-      hStmt = DBPrepare(hdb, _T("INSERT INTO dct_threshold_instances (threshold_id,instance,match_count,is_active,tt_row_number,maint_copy) VALUES (?,?,?,?,?,?)"));
+      hStmt = DBPrepare(hdb, _T("INSERT INTO dct_threshold_instances (threshold_id,instance_id,instance,match_count,is_active,tt_row_number,maint_copy) VALUES (?,?,?,?,?,?,?)"));
       if (hStmt == NULL)
          return false;
 
+      SaveThresholdInstancesCallbackData data;
+      data.hStmt = hStmt;
+      data.instanceId = 1;
+
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
-      DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, _T("0"), DB_BIND_STATIC);
-      m_instances->forEach(SaveThresholdInstancesCallback, hStmt);
+
+      DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, _T("0"), DB_BIND_STATIC);
+      m_instances->forEach(SaveThresholdInstancesCallback, &data);
+
+      DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, _T("1"), DB_BIND_STATIC);
+      m_instancesBeforeMaint->forEach(SaveThresholdInstancesCallback, &data);
+
       DBFreeStatement(hStmt);
    }
 
-   if (m_instances->size() > 0)
-   {
-      hStmt = DBPrepare(hdb, _T("INSERT INTO dct_threshold_instances (threshold_id,instance,match_count,is_active,tt_row_number,maint_copy) VALUES (?,?,?,?,?,?)"));
-      if (hStmt == NULL)
-         return false;
-
-      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
-      DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, _T("1"), DB_BIND_STATIC);
-      m_instancesBeforeMaint->forEach(SaveThresholdInstancesCallback, hStmt);
-      DBFreeStatement(hStmt);
-   }
    return true;
 }
 

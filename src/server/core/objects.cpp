@@ -1307,7 +1307,7 @@ BOOL LoadObjects()
                DBCacheTable(cachedb, mainDB, _T("dct_column_names"), _T("column_id"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("dct_thresholds"), _T("id"), _T("*"), intColumns) &&
                DBCacheTable(cachedb, mainDB, _T("dct_threshold_conditions"), _T("threshold_id,group_id,sequence_number"), _T("*")) &&
-               DBCacheTable(cachedb, mainDB, _T("dct_threshold_instances"), _T("threshold_id,instance"), _T("*")) &&
+               DBCacheTable(cachedb, mainDB, _T("dct_threshold_instances"), _T("threshold_id,instance_id"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("dct_node_map"), _T("template_id,node_id"), _T("*"), intColumns) &&
                DBCacheTable(cachedb, mainDB, _T("dci_schedules"), _T("item_id,schedule_id"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("dci_access"), _T("dci_id,user_id"), _T("*")) &&
