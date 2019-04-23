@@ -283,6 +283,7 @@ static LONG H_PollResult(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue
          t->cumulativeMinRTT = 0x7FFFFFFF;
          t->movingAvgRTT = 0x7FFFFFFF;
          t->automatic = true;
+         t->lastDataRead = time(NULL);
 
          s_targetLock.lock();
          s_targets.add(t);
