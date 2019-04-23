@@ -19,6 +19,7 @@
 	NX-1588 (Object load error can cause server crash)
 	NX-1590 (SecondsToUptime function: Incorrect display in some cases)
 	NX-1593 (Create separate access right for configuration import)
+	NX-1604 (ICMP sub-agent automatic targets may be deleted immediately after creation)
 
 
 *
