@@ -24,11 +24,69 @@
 #include <nxevent.h>
 
 /**
- * Upgrade from 22.53 to 30.0
+ * Upgrade from 22.54 to 30.0
+ */
+static bool H_UpgradeFromV54()
+{
+   CHK_EXEC(SetMajorSchemaVersion(30, 0));
+   return true;
+}
+
+/**
+ * Upgrade from 22.53 to 22.54
  */
 static bool H_UpgradeFromV53()
 {
-   CHK_EXEC(SetMajorSchemaVersion(30, 0));
+   CHK_EXEC(SQLQuery(_T("ALTER TABLE dct_threshold_instances ADD instance_id integer")));
+
+   DB_RESULT hResult = SQLSelect(_T("SELECT threshold_id,instance,maint_copy FROM dct_threshold_instances"));
+   if (hResult != NULL)
+   {
+      int count = DBGetNumRows(hResult);
+      if (count > 0)
+      {
+         DB_STATEMENT hStmt = DBPrepare(g_dbHandle, _T("UPDATE dct_threshold_instances SET instance_id=? WHERE threshold_id=? AND instance=? AND maint_copy=?"));
+         if (hStmt != NULL)
+         {
+            TCHAR instance[256];
+            UINT32 instanceId = 1;
+            for(int i = 0; i < count; i++)
+            {
+               UINT32 thresholdId = DBGetFieldULong(hResult, i, 0);
+               DBGetField(hResult, i, 1, instance, 256);
+               int maintCopy = DBGetFieldLong(hResult, i, 2);
+
+               DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, instanceId++);
+               DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, thresholdId);
+               DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, instance, DB_BIND_STATIC);
+               DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, maintCopy ? _T("1") : _T("0"), DB_BIND_STATIC);
+               if (!SQLExecute(hStmt) && !g_ignoreErrors)
+               {
+                  DBFreeStatement(hStmt);
+                  DBFreeResult(hResult);
+                  return false;
+               }
+            }
+            DBFreeStatement(hStmt);
+         }
+         else if (!g_ignoreErrors)
+         {
+            DBFreeResult(hResult);
+            return false;
+         }
+      }
+      DBFreeResult(hResult);
+   }
+   else if (!g_ignoreErrors)
+   {
+      return false;
+   }
+
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("dct_threshold_instances"), _T("instance_id")));
+   CHK_EXEC(DBDropPrimaryKey(g_dbHandle, _T("dct_threshold_instances")));
+   CHK_EXEC(DBAddPrimaryKey(g_dbHandle, _T("dct_threshold_instances"), _T("threshold_id,instance_id")));
+
+   CHK_EXEC(SetMinorSchemaVersion(54));
    return true;
 }
 
@@ -1014,7 +1072,8 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
-   { 53, 30, 0,  H_UpgradeFromV53 },
+   { 54, 30, 0,  H_UpgradeFromV54 },
+   { 53, 22, 54, H_UpgradeFromV53 },
    { 52, 22, 53, H_UpgradeFromV52 },
    { 51, 22, 52, H_UpgradeFromV51 },
    { 50, 22, 51, H_UpgradeFromV50 },

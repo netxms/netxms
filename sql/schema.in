@@ -822,12 +822,13 @@ CREATE TABLE dct_threshold_conditions
 CREATE TABLE dct_threshold_instances
 (
   threshold_id integer not null,
+  instance_id integer not null,
   instance varchar(255) not null,
   match_count integer not null,
   is_active char(1) not null,
   tt_row_number integer not null,
   maint_copy char(1) not null,
-  PRIMARY KEY(threshold_id,instance,maint_copy)
+  PRIMARY KEY(threshold_id,instance_id)
 ) TABLE_TYPE;
 
 /*
