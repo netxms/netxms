@@ -63,6 +63,9 @@ static TCHAR help_text[] = _T("NetXMS Server Version ") NETXMS_VERSION_STRING _T
 #ifdef _WIN32
                            _T("   -I          : Install Windows service\n")
                            _T("   -L <user>   : Login name for service account.\n")
+#endif
+                           _T("   -l          : Get log file location.\n")
+#ifdef _WIN32
                            _T("   -m          : Ignore service start command if service is configured for manual start\n")
                            _T("   -M          : Create service with manual start\n")
                            _T("   -P <passwd> : Password for service account.\n")
@@ -180,9 +183,9 @@ static void CreateMiniDump(DWORD pid)
 #endif
 
 #ifdef _WIN32
-#define VALID_OPTIONS   "c:CdD:ehIL:mMP:qRsSv"
+#define VALID_OPTIONS   "c:CdD:ehIlL:mMP:qRsSv"
 #else
-#define VALID_OPTIONS   "c:CdD:ehp:qSv"
+#define VALID_OPTIONS   "c:CdD:ehlp:qSv"
 #endif
 
 /**
@@ -292,6 +295,12 @@ static BOOL ParseCommandLine(int argc, char *argv[])
 #endif
 				useLogin = TRUE;
 				break;
+#endif
+         case 'l':
+            LoadConfig(&s_debugLevel);
+            _tprintf(_T("%s\n"), g_szLogFile);
+            return FALSE;
+#ifdef _WIN32
          case 'm':
             ignoreManualStartService = true;
             break;
