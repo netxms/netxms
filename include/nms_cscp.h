@@ -612,6 +612,7 @@ typedef struct
 #define CMD_POLICY_EDITOR_CLOSED          0x0179
 #define CMD_POLICY_FORCE_APPLY            0x017A
 #define CMD_GET_NODE_HARDWARE             0x017B
+#define CMD_GET_MATCHING_DCI              0x017C
 
 #define CMD_RS_LIST_REPORTS            0x1100
 #define CMD_RS_GET_REPORT              0x1101

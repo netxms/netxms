@@ -782,6 +782,8 @@ private:
    void getPolicyList(NXCPMessage *request);
    void onPolicyEditorClose(NXCPMessage *request);
    void forcApplyPolicy(NXCPMessage *pRequest);
+   void getMatchingDCI(NXCPMessage *request);
+   ObjectArray<DCObject> *resolveDCOsByRegex(UINT32 objectId, const TCHAR *objectNameRegex, const TCHAR *dciRegex, bool searchByName);
 #ifdef WITH_ZMQ
    void zmqManageSubscription(NXCPMessage *request, zmq::SubscriptionType type, bool subscribe);
    void zmqListSubscriptions(NXCPMessage *request, zmq::SubscriptionType type);

@@ -1110,6 +1110,11 @@ enum AggregationFunction
 
 #define TRAP_VARBIND_FORCE_TEXT     0x0001
 
+/**
+ * DCI resolve flags
+ */
+#define DCI_RES_SEARCH_NAME   0x01
+
 #ifdef __cplusplus
 
 /**

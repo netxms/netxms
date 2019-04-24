@@ -1338,6 +1338,9 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_POLICY_FORCE_APPLY:
          forcApplyPolicy(request);
          break;
+      case CMD_GET_MATCHING_DCI:
+         getMatchingDCI(request);
+         break;
 #ifdef WITH_ZMQ
       case CMD_ZMQ_SUBSCRIBE_EVENT:
          zmqManageSubscription(request, zmq::EVENT, true);
@@ -14587,6 +14590,111 @@ void ClientSession::forcApplyPolicy(NXCPMessage *pRequest)
    }
 
    // Send response
+   sendMessage(&msg);
+}
+
+/**
+ * Resolve object DCO's by regex, if objectNameRegex is NULL, objectId will be used instead
+ *
+ * @param objectId for single object
+ * @param objectNameRegex for multiple objects
+ * @param dciRegex
+ * @param searchByName
+ * @return
+ */
+ObjectArray<DCObject> *ClientSession::resolveDCOsByRegex(UINT32 objectId, const TCHAR *objectNameRegex, const TCHAR *dciRegex, bool searchByName)
+{
+   if (dciRegex == NULL || dciRegex[0] == 0)
+      return NULL;
+
+   ObjectArray<DCObject> *dcoList = NULL;
+   Node *node = NULL;
+
+   if (objectNameRegex == NULL || objectNameRegex[0] == 0)
+   {
+      node = static_cast<Node *>(FindObjectById(objectId, OBJECT_NODE));
+      if (node != NULL && node->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+         dcoList = node->getDCObjectsByRegex(dciRegex, searchByName, m_dwUserId);
+   }
+   else
+   {
+      ObjectArray<NetObj> *objects = FindObjectsByRegex(objectNameRegex, OBJECT_NODE);
+      if (objects != NULL)
+      {
+         dcoList = new ObjectArray<DCObject>();
+         for(int i = 0; i < objects->size(); i++)
+         {
+            node = static_cast<Node *>(objects->get(i));
+            if (node->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+            {
+               ObjectArray<DCObject> *nodeDcoList = node->getDCObjectsByRegex(dciRegex, searchByName, m_dwUserId);
+               if (nodeDcoList != NULL)
+               {
+                  for(int n = 0; n < nodeDcoList->size(); n++)
+                  {
+                     dcoList->add(nodeDcoList->get(n));
+                  }
+                  delete(nodeDcoList);
+               }
+            }
+            node->decRefCount();
+         }
+         delete(objects);
+      }
+   }
+
+   return dcoList;
+}
+
+/**
+ * Get a list of dci's matched by regex
+ *
+ * @param request
+ */
+void ClientSession::getMatchingDCI(NXCPMessage *request)
+{
+   NXCPMessage msg;
+   msg.setCode(CMD_REQUEST_COMPLETED);
+   msg.setId(request->getId());
+
+   TCHAR objectName[MAX_OBJECT_NAME], dciName[MAX_OBJECT_NAME];
+   objectName[0] = 0, dciName[0] = 0;
+   UINT32 objectId = 0;
+
+   if (request->isFieldExist(VID_OBJECT_NAME))
+      request->getFieldAsString(VID_OBJECT_NAME, objectName, MAX_OBJECT_NAME);
+   else
+      objectId = request->getFieldAsUInt32(VID_OBJECT_ID);
+   UINT32 flags = request->getFieldAsInt32(VID_FLAGS);
+   request->getFieldAsString(VID_DCI_NAME, dciName, MAX_OBJECT_NAME);
+
+   ObjectArray<DCObject> *dcoList = resolveDCOsByRegex(objectId, objectName, dciName, (flags & DCI_RES_SEARCH_NAME));
+   if (dcoList != NULL)
+   {
+      UINT32 dciBase = VID_DCI_VALUES_BASE, count = 0;
+      for(int i = 0; i < dcoList->size(); i++)
+      {
+         if (dcoList->get(i)->getType() == DCO_TYPE_ITEM)
+         {
+            DCItem *item = static_cast<DCItem *>(dcoList->get(i));
+            msg.setField(dciBase + 1, item->getId());
+            msg.setField(dciBase + 2, CHECK_NULL_EX(item->getLastValue()));
+            msg.setField(dciBase + 3, item->getType());
+            msg.setField(dciBase + 4, item->getStatus());
+            msg.setField(dciBase + 5, item->getOwnerId());
+            msg.setField(dciBase + 6, item->getDataSource());
+            msg.setField(dciBase + 7, item->getName());
+            msg.setField(dciBase + 8, item->getDescription());
+            dciBase += 10;
+            count++;
+         }
+      }
+      msg.setField(VID_NUM_ITEMS, count);
+      delete(dcoList);
+   }
+   else
+      msg.setField(VID_RCC, RCC_INVALID_ARGUMENT);
+
    sendMessage(&msg);
 }
 
