@@ -27,7 +27,7 @@
  */
 DCTableThresholdInstance::DCTableThresholdInstance(const TCHAR *name, int matchCount, bool active, int row)
 {
-   m_name = _tcsdup(name);
+   m_name = MemCopyString(name);
    m_matchCount = matchCount;
    m_active = active;
    m_row = row;
@@ -38,7 +38,7 @@ DCTableThresholdInstance::DCTableThresholdInstance(const TCHAR *name, int matchC
  */
 DCTableThresholdInstance::DCTableThresholdInstance(const DCTableThresholdInstance *src)
 {
-   m_name = _tcsdup(src->m_name);
+   m_name = MemCopyString(src->m_name);
    m_matchCount = src->m_matchCount;
    m_active = src->m_active;
    m_row = src->m_row;
@@ -49,7 +49,7 @@ DCTableThresholdInstance::DCTableThresholdInstance(const DCTableThresholdInstanc
  */
 DCTableThresholdInstance::~DCTableThresholdInstance()
 {
-   free(m_name);
+   MemFree(m_name);
 }
 
 /**
@@ -57,7 +57,7 @@ DCTableThresholdInstance::~DCTableThresholdInstance()
  */
 DCTableCondition::DCTableCondition(const TCHAR *column, int operation, const TCHAR *value)
 {
-   m_column = _tcsdup(CHECK_NULL_EX(column));
+   m_column = MemCopyString(CHECK_NULL_EX(column));
    m_operation = operation;
    m_value = value;
 }
@@ -67,7 +67,7 @@ DCTableCondition::DCTableCondition(const TCHAR *column, int operation, const TCH
  */
 DCTableCondition::DCTableCondition(DCTableCondition *src)
 {
-   m_column = _tcsdup(src->m_column);
+   m_column = MemCopyString(src->m_column);
    m_operation = src->m_operation;
    m_value = src->m_value;
 }
@@ -77,7 +77,7 @@ DCTableCondition::DCTableCondition(DCTableCondition *src)
  */
 DCTableCondition::~DCTableCondition()
 {
-   free(m_column);
+   MemFree(m_column);
 }
 
 /**

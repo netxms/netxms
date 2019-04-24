@@ -1435,7 +1435,7 @@ CREATE TABLE audit_log
  */
 CREATE TABLE persistent_storage
 (
-  entry_key varchar(255) not null,
+  entry_key varchar(127) not null,
   value varchar(2000) null,
   PRIMARY KEY(entry_key)
 ) TABLE_TYPE;
@@ -1867,7 +1867,7 @@ CREATE TABLE config_repositories
  */
 CREATE TABLE port_layouts
 (
-   device_oid varchar(255) not null,
+   device_oid varchar(127) not null,
    numbering_scheme char(1) not null,
    row_count char(1) not null,
    layout_data varchar(4000) null,

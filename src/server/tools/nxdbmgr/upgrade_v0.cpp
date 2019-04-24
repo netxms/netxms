@@ -685,7 +685,7 @@ static BOOL H_UpgradeFromV446(int currVersion, int newVersion)
 {
    CHK_EXEC(CreateTable(
       _T("CREATE TABLE port_layouts (")
-      _T("  device_oid varchar(255) not null,")
+      _T("  device_oid varchar(127) not null,")
       _T("  numbering_scheme char(1) not null,")
       _T("  row_count char(1) not null,")
       _T("  layout_data varchar(4000) null,")
@@ -1072,7 +1072,7 @@ static BOOL H_UpgradeFromV429(int currVersion, int newVersion)
 
    CHK_EXEC(CreateTable(
             _T("CREATE TABLE persistent_storage (")
-            _T("entry_key varchar(255) not null,")
+            _T("entry_key varchar(127) not null,")
             _T("value varchar(2000) null,")
             _T("PRIMARY KEY(entry_key))")));
 

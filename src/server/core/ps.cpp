@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2017 Raden Solutions
+** Copyright (C) 2003-2019 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -63,6 +63,9 @@ void PersistentStorageInit()
    DBConnectionPoolReleaseConnection(hdb);
 }
 
+/**
+ * Destroy NXSL persistent storage
+ */
 void PersistentStorageDestroy()
 {
    MutexDestroy(s_lockPStorage);
@@ -76,11 +79,19 @@ void PersistentStorageDestroy()
  */
 void SetPersistentStorageValue(const TCHAR *key, const TCHAR *value)
 {
-   if(key == NULL)
+   if (key == NULL)
       return;
+
+   TCHAR tempKey[128];
+   if (_tcslen(key) > 127)
+   {
+      _tcslcpy(tempKey, key, 128);
+      key = tempKey;
+   }
+
    MutexLock(s_lockPStorage);
-   s_persistentStorage.set(key, value == NULL ? _T("") : value);
-   s_valueSetList->set(key, value == NULL ? _T("") : value);
+   s_persistentStorage.set(key, CHECK_NULL_EX(value));
+   s_valueSetList->set(key, CHECK_NULL_EX(value));
    s_valueDeleteList->remove(key);
    MutexUnlock(s_lockPStorage);
 }
@@ -90,16 +101,23 @@ void SetPersistentStorageValue(const TCHAR *key, const TCHAR *value)
  */
 bool DeletePersistentStorageValue(const TCHAR *key)
 {
-   if(key == NULL)
+   if (key == NULL)
       return false;
+
+   TCHAR tempKey[128];
+   if (_tcslen(key) > 127)
+   {
+      _tcslcpy(tempKey, key, 128);
+      key = tempKey;
+   }
+
    MutexLock(s_lockPStorage);
    bool success = s_persistentStorage.contains(key);
-   if(success)
+   if (success)
    {
       s_persistentStorage.remove(key);
       s_valueSetList->remove(key);
       s_valueDeleteList->set(key, _T(""));
-
    }
    MutexUnlock(s_lockPStorage);
    return success;
@@ -110,8 +128,16 @@ bool DeletePersistentStorageValue(const TCHAR *key)
  */
 const TCHAR *GetPersistentStorageValue(const TCHAR *key)
 {
-   if(key == NULL)
+   if (key == NULL)
       return NULL;
+
+   TCHAR tempKey[128];
+   if (_tcslen(key) > 127)
+   {
+      _tcslcpy(tempKey, key, 128);
+      key = tempKey;
+   }
+
    MutexLock(s_lockPStorage);
    const TCHAR *value = s_persistentStorage.get(key);
    MutexUnlock(s_lockPStorage);
@@ -152,47 +178,23 @@ static EnumerationCallbackResult SetPSValueCB(const TCHAR *key, const void *valu
 {
    WatchdogNotify(((PsCbContainer *)data)->watchdogId);
    DB_HANDLE hdb = (DB_HANDLE)((PsCbContainer *)data)->ptr;
-   bool success = true;
-   bool isNew = true;
-   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT value FROM persistent_storage WHERE entry_key=?"));
+
+   DB_STATEMENT hStmt =
+      IsDatabaseRecordExist(hdb, _T("persistent_storage"), _T("entry_key"), key) ?
+         DBPrepare(hdb, _T("INSERT INTO persistent_storage (value,entry_key) VALUES (?,?)")) :
+         DBPrepare(hdb, _T("UPDATE persistent_storage SET value=? WHERE entry_key=?"));
+
+   bool success;
    if (hStmt != NULL)
    {
-      DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, key, DB_BIND_STATIC);
-      DB_RESULT result = DBSelectPrepared(hStmt);
-      if(result != NULL)
-      {
-         isNew = DBGetNumRows(result) == 0;
-         DBFreeResult(result);
-      }
-      else
-      {
-         success = false;
-      }
+      DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, static_cast<const TCHAR*>(value), DB_BIND_STATIC);
+      DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, key, DB_BIND_STATIC);
+      success = DBExecute(hStmt);
       DBFreeStatement(hStmt);
    }
    else
    {
       success = false;
-   }
-
-   if (success)
-   {
-      if (isNew)
-         hStmt = DBPrepare(hdb, _T("INSERT INTO persistent_storage (value,entry_key) VALUES (?,?)"));
-      else
-         hStmt = DBPrepare(hdb, _T("UPDATE persistent_storage SET value=? WHERE entry_key=?"));
-
-      if (hStmt != NULL)
-      {
-         DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, (TCHAR *)value, DB_BIND_STATIC);
-         DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, key, DB_BIND_STATIC);
-         success = DBExecute(hStmt);
-         DBFreeStatement(hStmt);
-      }
-      else
-      {
-         success = false;
-      }
    }
 
    return success ? _CONTINUE : _STOP;
@@ -214,7 +216,7 @@ static EnumerationCallbackResult MoveToPreviousListCB(const TCHAR *key, const vo
  */
 void UpdatePStorageDatabase(DB_HANDLE hdb, UINT32 watchdogId)
 {
-   if (s_valueDeleteList->size() == 0 && s_valueSetList->size() == 0) //do nothing if there are no updates
+   if (s_valueDeleteList->isEmpty() && s_valueSetList->isEmpty()) //do nothing if there are no updates
       return;
 
    DBBegin(hdb);
@@ -229,7 +231,7 @@ void UpdatePStorageDatabase(DB_HANDLE hdb, UINT32 watchdogId)
    s_valueSetList = new StringMap();
    MutexUnlock(s_lockPStorage);
 
-   if (tmpDeleteList->size()> 0)
+   if (!tmpDeleteList->isEmpty())
    {
       DB_STATEMENT hStmt = DBPrepare(hdb, _T("DELETE FROM persistent_storage WHERE entry_key=?"));
       if (hStmt != NULL)
@@ -246,7 +248,7 @@ void UpdatePStorageDatabase(DB_HANDLE hdb, UINT32 watchdogId)
       }
    }
 
-   if (tmpSetList->size() > 0)
+   if (!tmpSetList->isEmpty())
    {
       PsCbContainer container;
       container.watchdogId = watchdogId;
@@ -276,10 +278,9 @@ void UpdatePStorageDatabase(DB_HANDLE hdb, UINT32 watchdogId)
  * NXSL persistent storage implementation
  *****************************************/
 
-
 void NXSL_PersistentStorage::write(const TCHAR *name, NXSL_Value *value)
 {
-   if(!value->isNull())
+   if (!value->isNull())
    {
       SetPersistentStorageValue(name, value->getValueAsCString());
    }
@@ -307,16 +308,17 @@ void NXSL_PersistentStorage::remove(const TCHAR *name)
 /**
  * Situation info
  */
-class SistuationInfo
+class SituationInfo
 {
 private:
-   TCHAR *situationName;
-   TCHAR *instanceName;
+   TCHAR *m_situationName;
+   TCHAR *m_instanceName;
+
 public:
-   ~SistuationInfo() { free(situationName);  free(instanceName); }
-   SistuationInfo(const TCHAR *situation, const TCHAR *instance) { situationName  = _tcsdup(situation); instanceName = _tcsdup(instance); }
-   const TCHAR *getSituationName() { return situationName; }
-   const TCHAR *getInstanceName() { return instanceName; }
+   ~SituationInfo() { MemFree(m_situationName); MemFree(m_instanceName); }
+   SituationInfo(const TCHAR *situation, const TCHAR *instance) { m_situationName = MemCopyString(situation); m_instanceName = MemCopyString(instance); }
+   const TCHAR *getSituationName() const { return m_situationName; }
+   const TCHAR *getInstanceName() const { return m_instanceName; }
 };
 
 /**
@@ -343,15 +345,13 @@ NXSL_SituationClass::NXSL_SituationClass()
 
 void NXSL_SituationClass::onObjectDelete(NXSL_Object *object)
 {
-   delete (SistuationInfo *)object->getData();
+   delete static_cast<SituationInfo*>(object->getData());
 }
 
 NXSL_Value *NXSL_SituationClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
 {
-   SistuationInfo *info;
    NXSL_Value *value = NULL;
-
-   info = (SistuationInfo *)pObject->getData();
+   SituationInfo *info = static_cast<SituationInfo*>(pObject->getData());
    if (!_tcscmp(pszAttr, _T("name")))
    {
       value = new NXSL_Value(info->getSituationName());
@@ -387,7 +387,6 @@ NXSL_Value *NXSL_SituationClass::getAttr(NXSL_Object *pObject, const TCHAR *pszA
  */
 static NXSL_SituationClass m_nxslSituationClass;
 
-
 /**
  * NXSL function for finding situation
  */
@@ -401,7 +400,7 @@ static int F_FindSituation(int argc, NXSL_Value **argv, NXSL_Value **ppResult, N
 
    if (situationName != NULL && instanceName != NULL)
    {
-      *ppResult = new NXSL_Value(new NXSL_Object(&m_nxslSituationClass, new SistuationInfo(situationName, instanceName)));
+      *ppResult = new NXSL_Value(new NXSL_Object(&m_nxslSituationClass, new SituationInfo(situationName, instanceName)));
    }
    else
    {
@@ -410,7 +409,6 @@ static int F_FindSituation(int argc, NXSL_Value **argv, NXSL_Value **ppResult, N
 
    return 0;
 }
-
 
 /**
  * NXSL function: get situation instance attribute
@@ -429,7 +427,7 @@ static int F_GetSituationAttribute(int argc, NXSL_Value **argv, NXSL_Value **ppR
 	if (_tcscmp(object->getClass()->getName(), m_nxslSituationClass.getName()))
 		return NXSL_ERR_BAD_CLASS;
 
-	SistuationInfo *info = ((SistuationInfo *)object->getData());
+	SituationInfo *info = static_cast<SituationInfo*>(object->getData());
 	String key;
 	key.append(info->getSituationName());
 	key.append(_T("."));
@@ -442,7 +440,6 @@ static int F_GetSituationAttribute(int argc, NXSL_Value **argv, NXSL_Value **ppR
 	return 0;
 }
 
-
 /**
  * NXSL function set
  */
@@ -452,4 +449,3 @@ NXSL_ExtFunction g_nxslSituationFunctions[] =
    { _T("GetSituationAttribute"), F_GetSituationAttribute, 2 }
 };
 UINT32 g_nxslNumSituationFunctions = sizeof(g_nxslSituationFunctions) / sizeof(NXSL_ExtFunction);
-
