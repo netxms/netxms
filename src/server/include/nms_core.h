@@ -768,6 +768,8 @@ private:
    void closeTcpProxy(NXCPMessage *request);
    void getPredictionEngines(NXCPMessage *request);
    void getPredictedData(NXCPMessage *request);
+   ObjectArray<DCObject> *resolveDCOsByRegex(UINT32 objectId, const TCHAR *objectNameRegex, const TCHAR *dciRegex, bool searchByName);
+   void getMatchingDCI(NXCPMessage *request);
 #ifdef WITH_ZMQ
    void zmqManageSubscription(NXCPMessage *request, zmq::SubscriptionType type, bool subscribe);
    void zmqListSubscriptions(NXCPMessage *request, zmq::SubscriptionType type);

@@ -388,6 +388,13 @@ public class NXCPCodes
    public static final int CMD_GET_ACTIVE_THRESHOLDS = 0x0171;
    public static final int CMD_QUERY_INTERNAL_TOPOLOGY = 0x0172;
    public static final int CMD_GET_GRAPH = 0x0175;
+   public static final int CMD_UPDATE_AGENT_POLICY = 0x0176;
+   public static final int CMD_DELETE_AGENT_POLICY = 0x0177;
+   public static final int CMD_GET_AGENT_POLICY = 0x0178;
+   public static final int CMD_POLICY_EDITOR_CLOSED = 0x0179;
+   public static final int CMD_POLICY_FORCE_APPLY = 0x017A;
+   public static final int CMD_GET_NODE_HARDWARE = 0x017B;
+   public static final int CMD_GET_MATCHING_DCI = 0x017C;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;

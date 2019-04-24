@@ -923,6 +923,7 @@ public:
    DCObject *getDCObjectByTemplateId(UINT32 tmplItemId, UINT32 userId);
    DCObject *getDCObjectByName(const TCHAR *name, UINT32 userId);
    DCObject *getDCObjectByDescription(const TCHAR *description, UINT32 userId);
+   ObjectArray<DCObject> *getDCObjectsByRegex(const TCHAR *regex, bool searchName, UINT32 userId) const;
    NXSL_Value *getAllDCObjectsForNXSL(const TCHAR *name, const TCHAR *description, UINT32 userId);
    bool lockDCIList(int sessionId, const TCHAR *pszNewOwner, TCHAR *pszCurrOwner);
    bool unlockDCIList(int sessionId);
@@ -3043,6 +3044,7 @@ NetObj NXCORE_EXPORTABLE *FindObjectById(UINT32 dwId, int objClass = -1);
 NetObj NXCORE_EXPORTABLE *FindObjectByName(const TCHAR *name, int objClass = -1);
 NetObj NXCORE_EXPORTABLE *FindObjectByGUID(const uuid& guid, int objClass = -1);
 NetObj NXCORE_EXPORTABLE *FindObject(bool (* comparator)(NetObj *, void *), void *userData, int objClass = -1);
+ObjectArray<NetObj> NXCORE_EXPORTABLE *FindObjectsByRegex(const TCHAR *regex, int objClass = -1);
 const TCHAR NXCORE_EXPORTABLE *GetObjectName(DWORD id, const TCHAR *defaultName);
 Template NXCORE_EXPORTABLE *FindTemplateByName(const TCHAR *pszName);
 Node NXCORE_EXPORTABLE *FindNodeByIP(UINT32 zoneUIN, const InetAddress& ipAddr);

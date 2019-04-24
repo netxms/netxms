@@ -21,6 +21,7 @@
 **/
 
 #include "nxcore.h"
+#include <netxms-regex.h>
 
 /**
  * Global data
@@ -1048,6 +1049,74 @@ NetObj NXCORE_EXPORTABLE *FindObjectById(UINT32 dwId, int objClass)
 	if ((object == NULL) || (objClass == -1))
 		return object;
 	return (objClass == object->getObjectClass()) ? object : NULL;
+}
+
+/**
+ * Object name regex and class matching data
+ */
+struct OBJECT_NAME_REGEX_CLASS_DATA
+{
+   int objClass;
+   regex_t *nameRegex;
+};
+
+/**
+ * Filter for matching object name by regex and its class
+ *
+ * @param object
+ * @param userData
+ * @return
+ */
+static bool ObjectNameRegexAndClassFilter(NetObj *object, void *userData)
+{
+   OBJECT_NAME_REGEX_CLASS_DATA *data = static_cast<OBJECT_NAME_REGEX_CLASS_DATA *>(userData);
+   return !object->isDeleted() && (object->getObjectClass() == data->objClass) && (_tregexec(data->nameRegex, object->getName(), 0, NULL, 0) == 0);
+}
+
+/**
+ * Find objects whose name matches the regex
+ * (refCounter is increased for each object)
+ *
+ * @param regex for matching object name
+ * @param objClass
+ * @return
+ */
+ObjectArray<NetObj> NXCORE_EXPORTABLE *FindObjectsByRegex(const TCHAR *regex, int objClass)
+{
+   regex_t preg;
+   if (_tregcomp(&preg, regex, REG_EXTENDED | REG_NOSUB) != 0)
+      return NULL;
+
+   ObjectIndex *index;
+   switch(objClass)
+   {
+      case OBJECT_ACCESSPOINT:
+         index = &g_idxAccessPointById;
+         break;
+      case OBJECT_CLUSTER:
+         index = &g_idxClusterById;
+         break;
+      case OBJECT_MOBILEDEVICE:
+         index = &g_idxMobileDeviceById;
+         break;
+      case OBJECT_NODE:
+         index = &g_idxNodeById;
+         break;
+      case OBJECT_SUBNET:
+         index = &g_idxSubnetById;
+         break;
+      default:
+         index = &g_idxObjectById;
+         break;
+   }
+
+   OBJECT_NAME_REGEX_CLASS_DATA data;
+   data.nameRegex = &preg;
+   data.objClass = objClass;
+
+   ObjectArray<NetObj> *result = index->getObjects(true, ObjectNameRegexAndClassFilter, &data);
+   regfree(&preg);
+   return result;
 }
 
 /**

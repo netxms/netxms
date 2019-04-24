@@ -40,7 +40,7 @@ public class NXCSessionAdapter extends TypeAdapter<NXCSession>
          writer.nullValue();
          return;
       }
-      
+
       writer.beginObject();
 
       writer.name("server");
@@ -48,6 +48,9 @@ public class NXCSessionAdapter extends TypeAdapter<NXCSession>
 
       writer.name("address");
       writer.value(value.getServerAddress());
+
+      writer.name("serverName");
+      writer.value(value.getServerName());
       
       writer.name("version");
       writer.value(value.getServerVersion());

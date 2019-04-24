@@ -196,6 +196,9 @@ import com.jcraft.jzlib.JZlib;
  */
 public class NXCSession
 {
+   // DCI resolve flags
+   public static final int DCI_RES_SEARCH_NAME = 0x01;
+   
    // Various public constants
    public static final int DEFAULT_CONN_PORT = 4701;
 
@@ -2727,6 +2730,30 @@ public class NXCSession
          syncObjectSet(syncList, syncComments, options);
       }
    }
+   
+   /**
+    * Find object by regex
+    * 
+    * @param regex for object name
+    * @return list of matching objects
+    */
+   public List<AbstractObject> findObjectByRegex(String regex)
+   {
+      List<AbstractObject> objects = new ArrayList<AbstractObject>();
+      Matcher matcher = Pattern.compile(regex).matcher("");
+      
+      synchronized(objectList)
+      {
+         for(AbstractObject o : objectList.values())
+         {
+            matcher.reset(o.getObjectName());
+            if (matcher.matches())
+               objects.add(o);
+         }
+      }
+      
+      return objects;
+   }   
 
    /**
     * Find NetXMS object by it's identifier.
@@ -4091,6 +4118,43 @@ public class NXCSession
       sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());
       return response.getFieldAsString(NXCPCodes.VID_VALUE);
+   }
+   
+   /**
+    * Resolve list of last values by regex
+    * 
+    * @param objectId if specific object needed
+    * @param objectName as regex
+    * @param dciName as regex
+    * @param flags
+    * @return list of all resolved last values
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public List<DciValue> findMatchingDCI(long objectId, String objectName, String dciName, int flags) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_MATCHING_DCI);
+      
+      if (objectId != 0)
+         msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)objectId);
+      else
+         msg.setField(NXCPCodes.VID_OBJECT_NAME, objectName);
+      msg.setField(NXCPCodes.VID_DCI_NAME, dciName);
+      msg.setFieldInt32(NXCPCodes.VID_FLAGS, flags);
+      sendMessage(msg);
+      
+      final NXCPMessage response = waitForRCC(msg.getMessageId());
+      
+      int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_ITEMS);
+      List<DciValue> result = new ArrayList<DciValue>(count);
+      
+      Long base = NXCPCodes.VID_DCI_VALUES_BASE;
+      for(int i = 0; i < count; i++, base += 10)
+      {
+         result.add(new SimpleDciValue(response, base));
+      }
+      
+      return result;
    }
 
    /**

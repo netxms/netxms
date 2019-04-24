@@ -21,6 +21,7 @@
 **/
 
 #include "nxcore.h"
+#include <netxms-regex.h>
 
 /**
  * Redefined status calculation for template group
@@ -1489,5 +1490,36 @@ bool Template::isDataCollectionSource(UINT32 nodeId)
       }
    }
    unlockDciAccess();
+   return result;
+}
+
+/**
+ * Find DCObject by regex
+ *
+ * @param regex
+ * @param searchName set to true if search by DCO name required
+ * @param userId to check user access
+ * @return list of matching DCOs
+ */
+ObjectArray<DCObject> *Template::getDCObjectsByRegex(const TCHAR *regex, bool searchName, UINT32 userId) const
+{
+   regex_t preg;
+   if (_tregcomp(&preg, regex, REG_EXTENDED | REG_NOSUB) != 0)
+      return NULL;
+
+   ObjectArray<DCObject> *result = new ObjectArray<DCObject>();
+
+   for(int i = 0; i < m_dcObjects->size(); i++)
+   {
+      DCObject *o = m_dcObjects->get(i);
+      if (!o->hasAccess(userId))
+         continue;
+      if (!searchName && _tregexec(&preg, o->getDescription(), 0, NULL, 0) == 0)
+         result->add(o);
+      else if (_tregexec(&preg, o->getName(), 0, NULL, 0) == 0)
+         result->add(o);
+   }
+
+   regfree(&preg);
    return result;
 }
