@@ -133,9 +133,9 @@ extern const TCHAR *g_szMessages[];
  * Valid options for getopt()
  */
 #if defined(_WIN32)
-#define VALID_OPTIONS   "c:CdD:e:EfFG:hHiIKM:n:N:P:r:RsSUvW:X:Z:z:"
+#define VALID_OPTIONS   "c:CdD:e:EfFG:hHiIKlM:n:N:P:r:RsSUvW:X:Z:z:"
 #else
-#define VALID_OPTIONS   "c:CdD:fFg:G:hKM:p:P:r:u:vW:X:Z:z:"
+#define VALID_OPTIONS   "c:CdD:fFg:G:hKlM:p:P:r:u:vW:X:Z:z:"
 #endif
 
 /**
@@ -154,6 +154,7 @@ extern const TCHAR *g_szMessages[];
 #define ACTION_HELP							10
 #define ACTION_RUN_WATCHDOG            11
 #define ACTION_SHUTDOWN_EXT_AGENTS     12
+#define ACTION_GET_LOG_LOCATION        13
 
 /**
  * Global variables
@@ -355,6 +356,7 @@ static TCHAR m_szHelpText[] =
    _T("   -I         : Install Windows service\n")
 #endif
    _T("   -K         : Shutdown all connected external sub-agents\n")
+   _T("   -l         : Get log file location\n")
    _T("   -M <addr>  : Download config from management server <addr>\n")
 #ifdef _WIN32
    _T("   -n <name>  : Service name\n")
@@ -1569,6 +1571,9 @@ int main(int argc, char *argv[])
          case 'K':   // Shutdown external sub-agents
             iAction = ACTION_SHUTDOWN_EXT_AGENTS;
             break;
+         case 'l':
+            iAction = ACTION_GET_LOG_LOCATION;
+            break;
 #ifndef _WIN32
          case 'p':   // PID file
 #ifdef UNICODE
@@ -2025,6 +2030,28 @@ int main(int argc, char *argv[])
       case ACTION_SHUTDOWN_EXT_AGENTS:
          InitiateExtSubagentShutdown();
          iExitCode = 0;
+         break;
+      case ACTION_GET_LOG_LOCATION:
+         {
+            if (LoadConfig())
+            {
+               if (g_config->parseTemplate(configSection, m_cfgTemplate))
+               {
+
+                  _tprintf(_T("%s\n"), g_szLogFile);
+               }
+               else
+               {
+                  ConsolePrintf(_T("Configuration file parsing failed\n"));
+                  iExitCode = 2;
+               }
+            }
+            else
+            {
+               ConsolePrintf(_T("Configuration file load failed\n"));
+               iExitCode = 2;
+            }
+         }
          break;
 #ifdef _WIN32
       case ACTION_INSTALL_SERVICE:
