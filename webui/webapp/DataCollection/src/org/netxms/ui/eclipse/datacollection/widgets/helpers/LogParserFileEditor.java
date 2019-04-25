@@ -56,6 +56,7 @@ public class LogParserFileEditor extends DashboardComposite
    private Button checkSnapshot;
    private Button checkKeepOpen;
    private Button checkIgnoreModificationTime;
+   private Button checkRescan;
 
 	/**
 	 * @param parent
@@ -121,7 +122,7 @@ public class LogParserFileEditor extends DashboardComposite
       gd.horizontalAlignment = SWT.LEFT;
       checkboxBar.setLayoutData(gd);
             
-      checkPreallocated = toolkit.createButton(checkboxBar, "Preallocated", SWT.CHECK);
+      checkPreallocated = toolkit.createButton(checkboxBar, "&Preallocated", SWT.CHECK);
       checkPreallocated.setSelection(file.getPreallocated());
       checkPreallocated.addSelectionListener(new SelectionAdapter() {
          @Override
@@ -131,7 +132,7 @@ public class LogParserFileEditor extends DashboardComposite
          }
       }); 
       
-      checkSnapshot = toolkit.createButton(checkboxBar, "Use Snapshot", SWT.CHECK);
+      checkSnapshot = toolkit.createButton(checkboxBar, "Use &snapshot", SWT.CHECK);
       checkSnapshot.setSelection(file.getSnapshot());
       checkSnapshot.addSelectionListener(new SelectionAdapter() {
          @Override
@@ -141,7 +142,7 @@ public class LogParserFileEditor extends DashboardComposite
          }
       }); 
       
-      checkKeepOpen = toolkit.createButton(checkboxBar, "Keep open", SWT.CHECK);
+      checkKeepOpen = toolkit.createButton(checkboxBar, "&Keep open", SWT.CHECK);
       checkKeepOpen.setSelection(file.getKeepOpen());
       checkKeepOpen.addSelectionListener(new SelectionAdapter() {
          @Override
@@ -151,9 +152,19 @@ public class LogParserFileEditor extends DashboardComposite
          }
       }); 
       
-      checkIgnoreModificationTime = toolkit.createButton(checkboxBar, "Ignore modification time", SWT.CHECK);
+      checkIgnoreModificationTime = toolkit.createButton(checkboxBar, "Ignore &modification time", SWT.CHECK);
       checkIgnoreModificationTime.setSelection(file.getIgnoreModificationTime());
       checkIgnoreModificationTime.addSelectionListener(new SelectionAdapter() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            editor.fireModifyListeners();
+         }
+      }); 
+      
+      checkRescan = toolkit.createButton(checkboxBar, "&Rescan", SWT.CHECK);
+      checkRescan.setSelection(file.getRescan());
+      checkRescan.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
          {
@@ -194,6 +205,7 @@ public class LogParserFileEditor extends DashboardComposite
 	   file.setSnapshot(checkSnapshot.getSelection());
 	   file.setKeepOpen(checkKeepOpen.getSelection());
 	   file.setIgnoreModificationTime(checkIgnoreModificationTime.getSelection());
+	   file.setRescan(checkRescan.getSelection());
 	}
 
    /**
@@ -204,6 +216,11 @@ public class LogParserFileEditor extends DashboardComposite
       return editor.isSyslogParser();
    }
    
+   /**
+    * Get file name
+    * 
+    * @return file name
+    */
    public String getFile()
    {
       return labelFileName.getText();

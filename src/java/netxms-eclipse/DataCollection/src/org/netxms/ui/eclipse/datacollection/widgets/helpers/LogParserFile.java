@@ -44,6 +44,9 @@ public class LogParserFile
    @Attribute(required=false)
    private String ignoreModificationTime = null;
    
+   @Attribute(required=false)
+   private String rescan = null;
+   
    private LogParserFileEditor editor;
 
    /**
@@ -140,6 +143,26 @@ public class LogParserFile
    public void setIgnoreModificationTime(boolean ignoreModificationTime)
    {
       this.ignoreModificationTime = LogParser.booleanToString(ignoreModificationTime);
+   }
+
+   /**
+    * Get value of "rescan" flag.
+    * 
+    * @return value of "rescan" flag
+    */
+   public boolean getRescan()
+   {
+      return LogParser.stringToBoolean(rescan);
+   }
+
+   /**
+    * Set value of "rescan" flag.
+    * 
+    * @param value new value of "rescan" flag
+    */
+   public void setRescan(boolean value)
+   {
+      this.rescan = LogParser.booleanToString(value);
    }
 
    /**

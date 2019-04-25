@@ -194,33 +194,49 @@ public class LogParser
       this.name = name;
    }
 
+   /**
+    * Convert string attribute value to boolean
+    * 
+    * @param value string value
+    * @return boolean value
+    */
    public static boolean stringToBoolean(final String value)
 	{
-	   if(value != null)
+	   if (value != null)
       {
 	      try
 	      {
-	         if(Integer.parseInt(value) > 0)
+	         if (Integer.parseInt(value) != 0)
 	         {
 	            return true;
 	         }
 	      }
-         catch(Exception ex)
+         catch(Exception e)
          {
-            {
-               if(value.equalsIgnoreCase("true") || value.equalsIgnoreCase("yes"))
-                  return true;
-            }
+            if (value.equalsIgnoreCase("true") || value.equalsIgnoreCase("yes"))
+               return true;
          }
       }
       return false;
 	}
 	
+	/**
+	 * Convert boolean to string value for attribute
+	 * 
+	 * @param value boolean value
+	 * @return corresponding string
+	 */
 	public static String booleanToString(boolean value)
 	{
 	   return value ? "true" : null;
 	}
 	
+	/**
+    * Convert integer to string value for attribute
+    * 
+	 * @param value integer value
+	 * @return corresponding string
+	 */
 	public static String integerToString(Integer value)
 	{
 	   return value == null ? "" : Integer.toString(value);
