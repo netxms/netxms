@@ -254,7 +254,6 @@ bool SlmCheck::saveToDatabase(DB_HANDLE hdb)
    if (success)
       success = saveACLToDB(hdb);
 
-   m_modified = 0;
 	unlockProperties();
 	return success;
 }

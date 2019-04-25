@@ -765,11 +765,6 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
       unlockDciAccess();
    }
 
-   // Clear modifications flag
-   lockProperties();
-   m_modified = 0;
-   unlockProperties();
-
    return success;
 }
 

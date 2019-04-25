@@ -477,14 +477,11 @@ bool Interface::saveToDatabase(DB_HANDLE hdb)
       success = true;
    }
 
+   unlockProperties();
+
    // Save access list
 	if (success)
 		success = saveACLToDB(hdb);
-
-   // Clear modifications flag and unlock object
-	if (success)
-		m_modified = 0;
-   unlockProperties();
 
    return success;
 }

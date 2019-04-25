@@ -179,8 +179,6 @@ bool VPNConnector::saveToDatabase(DB_HANDLE hdb)
    if (success)
       success = saveACLToDB(hdb);
 
-   // Clear modifications flag and unlock object
-   m_modified = 0;
    unlockProperties();
 
    return success;

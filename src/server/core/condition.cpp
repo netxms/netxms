@@ -164,9 +164,9 @@ bool ConditionObject::saveToDatabase(DB_HANDLE hdb)
 
    lockProperties();
 
-   saveCommonProperties(hdb);
+   bool success = saveCommonProperties(hdb);
 
-   if (m_modified & MODIFY_OTHER)
+   if (success && (m_modified & MODIFY_OTHER))
    {
       pszEscScript = EncodeSQLString(CHECK_NULL_EX(m_scriptSource));
       size_t qlen = _tcslen(pszEscScript) + 1024;
@@ -219,12 +219,11 @@ bool ConditionObject::saveToDatabase(DB_HANDLE hdb)
    }
 
    // Save access list
-   saveACLToDB(hdb);
+   if (success)
+      success = saveACLToDB(hdb);
 
-   // Unlock object and clear modification flag
-   m_modified = 0;
    unlockProperties();
-   return true;
+   return success;
 }
 
 /**

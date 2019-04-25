@@ -73,6 +73,7 @@ static void SaveObject(NetObj *object)
    if (object->saveToDatabase(hdb))
    {
       DBCommit(hdb);
+      object->markAsSaved();
    }
    else
    {
@@ -136,6 +137,7 @@ void SaveObjects(DB_HANDLE hdb, UINT32 watchdogId, bool saveRuntimeData)
             if (object->saveToDatabase(hdb))
             {
                DBCommit(hdb);
+               object->markAsSaved();
             }
             else
             {

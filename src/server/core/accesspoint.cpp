@@ -180,10 +180,6 @@ bool AccessPoint::saveToDatabase(DB_HANDLE hdb)
 
    // Save access list
    saveACLToDB(hdb);
-
-   // Clear modifications flag and unlock object
-	if (bResult)
-		m_modified = 0;
    unlockProperties();
 
    return bResult;
