@@ -27,6 +27,11 @@ DECLARE_DRIVER_HEADER("MARIADB")
 #define DEBUG_TAG _T("db.drv.mariadb")
 
 /**
+ * TLS enforcement option
+ */
+static bool s_enforceTLS = true;
+
+/**
  * Convert wide character string to UTF-8 using internal buffer when possible
  */
 inline char *WideStringToUTF8(const WCHAR *str, char *localBuffer, size_t size)
@@ -225,6 +230,7 @@ extern "C" bool __EXPORT DrvInit(const char *cmdLine)
 	if (mysql_library_init(0, NULL, NULL) != 0)
 	   return false;
 	nxlog_debug_tag(DEBUG_TAG, 4, _T("MariaDB client library version %hs"), mysql_get_client_info());
+	s_enforceTLS = ExtractNamedOptionValueAsBoolA(cmdLine, "enforceTLS", true);
 	return true;
 }
 
@@ -292,6 +298,11 @@ extern "C" DBDRV_CONNECTION __EXPORT DrvConnect(const char *host, const char *lo
 		pSocket += 7;
 	}
 
+   // Set TLS enforcement option
+	// If set to 0 connector will not setup TLS connection even if server requires it
+   my_bool v = s_enforceTLS ? 1 : 0;
+   mysql_options(pMySQL, MYSQL_OPT_SSL_ENFORCE, &v);
+
 	if (!mysql_real_connect(
 		pMySQL, // MYSQL *
 		pHost, // host
@@ -316,7 +327,7 @@ extern "C" DBDRV_CONNECTION __EXPORT DrvConnect(const char *host, const char *lo
    mysql_set_character_set(pMySQL, "utf8");
 
    // Disable truncation reporting
-   my_bool v = 0;
+   v = 0;
    mysql_options(pMySQL, MYSQL_REPORT_DATA_TRUNCATION, &v);
 
    char connectorVersion[64];

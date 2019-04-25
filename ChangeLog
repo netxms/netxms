@@ -20,6 +20,7 @@
 	NX-1590 (SecondsToUptime function: Incorrect display in some cases)
 	NX-1593 (Create separate access right for configuration import)
 	NX-1604 (ICMP sub-agent automatic targets may be deleted immediately after creation)
+	NX-1605 (MariaDB driver - TLS connections don't work)
 
 
 *
