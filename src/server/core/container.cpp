@@ -192,16 +192,25 @@ bool AbstractContainer::saveToDatabase(DB_HANDLE hdb)
 
    if (success && (m_modified & MODIFY_RELATIONS))
    {
-      TCHAR query[256];
-
-      // Update members list
-      _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("DELETE FROM container_members WHERE container_id=%d"), m_id);
-      DBQuery(hdb, query);
+      success = executeQueryOnObject(hdb, _T("DELETE FROM container_members WHERE container_id=?"));
       lockChildList(false);
-      for(int i = 0; i < m_childList->size(); i++)
+      if (success && !m_childList->isEmpty())
       {
-         _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("INSERT INTO container_members (container_id,object_id) VALUES (%d,%d)"), m_id, m_childList->get(i)->getId());
-         DBQuery(hdb, query);
+         DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO container_members (container_id,object_id) VALUES (?,?)"));
+         if (hStmt != NULL)
+         {
+            DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+            for(int i = 0; (i < m_childList->size()) && success; i++)
+            {
+               DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_childList->get(i)->getId());
+               success = DBExecute(hStmt);
+            }
+            DBFreeStatement(hStmt);
+         }
+         else
+         {
+            success = false;
+         }
       }
       unlockChildList();
    }

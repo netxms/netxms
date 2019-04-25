@@ -160,10 +160,10 @@ bool Template::saveToDatabase(DB_HANDLE hdb)
    if (success && (m_modified & MODIFY_OTHER))
       success = VersionableObject::saveToDatabase(hdb);
 
-   if(success && (m_modified & MODIFY_POLICY))
+   if (success && (m_modified & MODIFY_POLICY))
    {
-      for(int i=0; i < m_deletedPolicyList->size(); i++)
-         m_deletedPolicyList->get(i)->deleteFromDatabase(hdb);
+      for(int i = 0; (i < m_deletedPolicyList->size()) && success; i++)
+         success = m_deletedPolicyList->get(i)->deleteFromDatabase(hdb);
 
       Iterator<GenericAgentPolicy> *it = m_policyList->iterator();
       while(it->hasNext() && success)
@@ -188,15 +188,15 @@ bool Template::saveToDatabase(DB_HANDLE hdb)
 bool Template::deleteFromDatabase(DB_HANDLE hdb)
 {
    bool success = super::deleteFromDatabase(hdb);
-   if(success)
+   if (success)
       success = executeQueryOnObject(hdb, _T("DELETE FROM templates WHERE id=?"));
    if (success)
       success = executeQueryOnObject(hdb, _T("DELETE FROM dct_node_map WHERE template_id=?"));
-   if(success)
+   if (success)
       success = AutoBindTarget::deleteFromDatabase(hdb);
-   if(success)
+   if (success)
       success = VersionableObject::deleteFromDatabase(hdb);
-   if(success)
+   if (success)
    {
       Iterator<GenericAgentPolicy> *it = m_policyList->iterator();
       while(it->hasNext() && success)
