@@ -158,26 +158,34 @@ bool Container::saveToDatabase(DB_HANDLE hdb)
 
 	if (success && (m_modified & MODIFY_RELATIONS))
 	{
-		TCHAR query[256];
-
-		// Update members list
-		_sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("DELETE FROM container_members WHERE container_id=%d"), m_id);
-		DBQuery(hdb, query);
-		lockChildList(false);
-		for(int i = 0; i < m_childList->size(); i++)
-		{
-			_sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("INSERT INTO container_members (container_id,object_id) VALUES (%d,%d)"), m_id, m_childList->get(i)->getId());
-			DBQuery(hdb, query);
-		}
-		unlockChildList();
+      // Update members list
+      success = executeQueryOnObject(hdb, _T("DELETE FROM dct_node_map WHERE template_id=?"));
+      lockChildList(false);
+      if (success && !m_childList->isEmpty())
+      {
+         DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO dct_node_map (template_id,node_id) VALUES (?,?)"), m_childList->size() > 1);
+         if (hStmt != NULL)
+         {
+            DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+            for(int i = 0; success && (i < m_childList->size()); i++)
+            {
+               DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_childList->get(i)->getId());
+               success = DBExecute(hStmt);
+            }
+            DBFreeStatement(hStmt);
+         }
+         else
+         {
+            success = false;
+         }
+      }
+      unlockChildList();
 	}
 
    // Save access list
 	if (success)
 		success = saveACLToDB(hdb);
 
-   // Clear modifications flag and unlock object
-   m_modified = 0;
    unlockProperties();
    return success;
 }
