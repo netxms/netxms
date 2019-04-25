@@ -72,6 +72,7 @@ struct LogParser_XmlParserState
    IntegerArray<INT32> snapshotFlags;
    IntegerArray<INT32> keepOpenFlags;
    IntegerArray<INT32> ignoreMTimeFlags;
+   IntegerArray<INT32> rescanFlags;
    String id;
 	String level;
 	String source;
@@ -117,6 +118,7 @@ LogParser::LogParser()
 	m_fileName = NULL;
 	m_fileEncoding = LP_FCP_ACP;
 	m_preallocatedFile = false;
+	m_detectBrokenPrealloc = false;
 	m_eventNameList = NULL;
 	m_eventResolver = NULL;
 	m_thread = INVALID_THREAD_HANDLE;
@@ -127,6 +129,7 @@ LogParser::LogParser()
    m_suspended = false;
    m_keepFileOpen = true;
    m_ignoreMTime = false;
+   m_rescan = false;
 	m_traceLevel = 0;
 	m_status = LPS_INIT;
 #ifdef _WIN32
@@ -154,6 +157,7 @@ LogParser::LogParser(const LogParser *src)
 	m_fileName = MemCopyString(src->m_fileName);
 	m_fileEncoding = src->m_fileEncoding;
 	m_preallocatedFile = src->m_preallocatedFile;
+	m_detectBrokenPrealloc = src->m_detectBrokenPrealloc;
 
 	if (src->m_eventNameList != NULL)
 	{
@@ -175,6 +179,7 @@ LogParser::LogParser(const LogParser *src)
    m_suspended = src->m_suspended;
    m_keepFileOpen = src->m_keepFileOpen;
    m_ignoreMTime = src->m_ignoreMTime;
+   m_rescan = src->m_rescan;
 	m_traceLevel = src->m_traceLevel;
 	m_status = LPS_INIT;
 #ifdef _WIN32
@@ -472,6 +477,7 @@ static void StartElement(void *userData, const char *name, const char **attrs)
       ps->snapshotFlags.add(XMLGetAttrBoolean(attrs, "snapshot", false) ? 1 : 0);
       ps->keepOpenFlags.add(XMLGetAttrBoolean(attrs, "keepOpen", true) ? 1 : 0);
       ps->ignoreMTimeFlags.add(XMLGetAttrBoolean(attrs, "ignoreModificationTime", false) ? 1 : 0);
+      ps->rescanFlags.add(XMLGetAttrBoolean(attrs, "rescan", false) ? 1 : 0);
    }
 	else if (!strcmp(name, "macros"))
 	{
@@ -855,6 +861,7 @@ ObjectArray<LogParser> *LogParser::createFromXml(const char *xml, int xmlLen, TC
 				p->m_detectBrokenPrealloc = (state.detectBrokenPreallocFlags.get(i) != 0);
 				p->m_keepFileOpen = (state.keepOpenFlags.get(i) != 0);
 				p->m_ignoreMTime = (state.ignoreMTimeFlags.get(i) != 0);
+            p->m_rescan = (state.rescanFlags.get(i) != 0);
 #ifdef _WIN32
             p->m_useSnapshot = (state.snapshotFlags.get(i) != 0);
 #endif

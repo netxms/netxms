@@ -239,6 +239,7 @@ private:
    bool m_detectBrokenPrealloc;
    bool m_keepFileOpen;
    bool m_ignoreMTime;
+   bool m_rescan;
 	bool m_processAllRules;
    bool m_suspended;
 	int m_traceLevel;
@@ -260,12 +261,12 @@ private:
 
    void setStatus(LogParserStatus status) { m_status = status; }
 
-   bool monitorFile2(bool readFromCurrPos);
+   bool monitorFile2();
 
 #ifdef _WIN32
    void parseEvent(EVENTLOGRECORD *rec);
 
-   bool monitorFileWithSnapshot(bool readFromCurrPos);
+   bool monitorFileWithSnapshot();
    bool monitorEventLogV6();
 	bool monitorEventLogV4();
 
@@ -332,7 +333,7 @@ public:
 	int getTraceLevel() const { return m_traceLevel; }
 	void setTraceLevel(int level) { m_traceLevel = level; }
 
-	bool monitorFile(bool readFromCurrPos = true);
+	bool monitorFile();
 #ifdef _WIN32
    bool monitorEventLog(const TCHAR *markerPrefix);
    void saveLastProcessedRecordTimestamp(time_t timestamp);
