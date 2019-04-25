@@ -44,14 +44,12 @@ Network::~Network()
 bool Network::saveToDatabase(DB_HANDLE hdb)
 {
    lockProperties();
-
    bool success = saveCommonProperties(hdb);
+   unlockProperties();
+
    if (success)
       success = saveACLToDB(hdb);
 
-   // Unlock object and clear modification flag
-   m_modified = 0;
-   unlockProperties();
    return success;
 }
 

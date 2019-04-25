@@ -258,7 +258,7 @@ bool Container::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 bool Container::saveToDatabase(DB_HANDLE hdb)
 {
    bool success = super::saveToDatabase(hdb);
-   if(success)
+   if (success)
    {
       if (!IsDatabaseRecordExist(hdb, _T("object_containers"), _T("id"), m_id))
       {
@@ -274,11 +274,6 @@ bool Container::saveToDatabase(DB_HANDLE hdb)
 
    if (success && (m_modified & MODIFY_OTHER))
       success = AutoBindTarget::saveToDatabase(hdb);
-
-   lockProperties();
-   // Clear modifications flag and unlock object
-   m_modified = 0;
-   unlockProperties();
 
    return success;
 }

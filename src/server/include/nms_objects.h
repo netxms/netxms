@@ -760,6 +760,7 @@ public:
    void hide();
    void unhide();
    void markAsModified(UINT32 flags) { lockProperties(); setModified(flags); unlockProperties(); }  // external API to mark object as modified
+   void markAsSaved() { lockProperties(); m_modified = 0; unlockProperties(); }
 
    virtual bool saveToDatabase(DB_HANDLE hdb);
    virtual bool saveRuntimeData(DB_HANDLE hdb);

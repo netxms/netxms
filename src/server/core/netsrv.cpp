@@ -128,8 +128,6 @@ bool NetworkService::saveToDatabase(DB_HANDLE hdb)
    if (success)
       success = saveACLToDB(hdb);
 
-   // Unlock object and clear modification flag
-   m_modified = 0;
    unlockProperties();
    return success;
 }

@@ -376,8 +376,6 @@ bool NetworkMap::saveToDatabase(DB_HANDLE hdb)
       }
    }
 
-   m_modified = 0;
-
    unlockProperties();
 	return success;
 }

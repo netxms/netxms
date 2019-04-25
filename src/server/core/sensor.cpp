@@ -314,14 +314,11 @@ bool Sensor::saveToDatabase(DB_HANDLE hdb)
 		unlockDciAccess();
    }
 
+   unlockProperties();
+
    // Save access list
    if (success)
       saveACLToDB(hdb);
-
-   // Clear modifications flag and unlock object
-	if (success)
-	    m_modified = 0;
-   unlockProperties();
 
    return success;
 }

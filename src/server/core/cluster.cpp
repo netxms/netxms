@@ -347,10 +347,6 @@ bool Cluster::saveToDatabase(DB_HANDLE hdb)
 		}
    }
 
-   // Clear modifications flag
-   lockProperties();
-   m_modified = 0;
-   unlockProperties();
    return success;
 }
 

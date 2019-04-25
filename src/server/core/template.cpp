@@ -174,11 +174,6 @@ bool Template::saveToDatabase(DB_HANDLE hdb)
       delete it;
    }
 
-   // Clear modifications flag
-   lockProperties();
-   m_modified = 0;
-   unlockProperties();
-
    return success;
 }
 

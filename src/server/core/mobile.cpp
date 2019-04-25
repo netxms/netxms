@@ -158,9 +158,6 @@ bool MobileDevice::saveToDatabase(DB_HANDLE hdb)
    if (success)
       success = saveACLToDB(hdb);
 
-   // Clear modifications flag and unlock object
-	if (success)
-		m_modified = 0;
    unlockProperties();
 
    return success;

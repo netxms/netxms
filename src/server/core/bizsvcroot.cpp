@@ -45,29 +45,30 @@ BusinessServiceRoot::~BusinessServiceRoot()
  */
 bool BusinessServiceRoot::saveToDatabase(DB_HANDLE hdb)
 {
-   TCHAR szQuery[1024];
-
    lockProperties();
 
-   saveCommonProperties(hdb);
-
-   // Update members list
-   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM container_members WHERE container_id=%d"), m_id);
-   DBQuery(hdb, szQuery);
-   lockChildList(false);
-   for(int i = 0; i < m_childList->size(); i++)
+   bool success = saveCommonProperties(hdb);
+   if (success)
    {
-      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("INSERT INTO container_members (container_id,object_id) VALUES (%d,%d)"), m_id, m_childList->get(i)->getId());
-      DBQuery(hdb, szQuery);
+      // Update members list
+      success = executeQueryOnObject(hdb, _T("DELETE FROM container_members WHERE container_id=?"));
+      lockChildList(false);
+      if (success && !m_childList->isEmpty())
+      {
+         TCHAR szQuery[1024];
+         for(int i = 0; (i < m_childList->size()) && success; i++)
+         {
+            _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("INSERT INTO container_members (container_id,object_id) VALUES (%d,%d)"), m_id, m_childList->get(i)->getId());
+            success = DBQuery(hdb, szQuery);
+         }
+      }
+      unlockChildList();
    }
-   unlockChildList();
 
-   // Save access list
-   saveACLToDB(hdb);
+   if (success)
+      success = saveACLToDB(hdb);
 
-   // Unlock object and clear modification flag
    unlockProperties();
-   m_modified = 0;
    return true;
 }
 
