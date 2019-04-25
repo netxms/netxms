@@ -2074,8 +2074,8 @@ public:
 
    struct sockaddr *fillSockAddr(SockAddrBuffer *buffer, UINT16 port = 0) const;
 
-   static InetAddress resolveHostName(const WCHAR *hostname, int af = AF_INET);
-   static InetAddress resolveHostName(const char *hostname, int af = AF_INET);
+   static InetAddress resolveHostName(const WCHAR *hostname, int af = AF_UNSPEC);
+   static InetAddress resolveHostName(const char *hostname, int af = AF_UNSPEC);
    static InetAddress parse(const WCHAR *str);
    static InetAddress parse(const char *str);
    static InetAddress createFromSockaddr(struct sockaddr *s);
@@ -2122,6 +2122,9 @@ public:
    void fillMessage(NXCPMessage *msg, UINT32 sizeFieldId, UINT32 baseFieldId) const;
 
    json_t *toJson() const { return json_object_array(m_list); }
+
+   static InetAddressList *resolveHostName(const WCHAR *hostname);
+   static InetAddressList *resolveHostName(const char *hostname);
 };
 
 /**

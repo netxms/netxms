@@ -447,7 +447,9 @@ InetAddress InetAddress::resolveHostName(const WCHAR *hostname, int af)
 }
 
 /**
- * Resolve hostname
+ * Resolve hostname. Address family could be set to AF_UNSPEC to allow any
+ * valid address to be returned, or to AF_INET or AF_INET6 so limit possible
+ * protocols.
  */
 InetAddress InetAddress::resolveHostName(const char *hostname, int af)
 {
@@ -457,8 +459,10 @@ InetAddress InetAddress::resolveHostName(const char *hostname, int af)
 
    // Not a valid IP address, resolve hostname
 #if HAVE_GETADDRINFO
-   struct addrinfo *ai;
-   if (getaddrinfo(hostname, NULL, NULL, &ai) == 0)
+   struct addrinfo *ai, hints;
+   memset(&hints, 0, sizeof(hints));
+   hints.ai_family = af;
+   if (getaddrinfo(hostname, NULL, &hints, &ai) == 0)
    {
       addr = InetAddress::createFromSockaddr(ai->ai_addr);
       freeaddrinfo(ai);
@@ -469,17 +473,17 @@ InetAddress InetAddress::resolveHostName(const char *hostname, int af)
    struct hostent h, *hs = NULL;
    char buffer[1024];
    int err;
-   gethostbyname2_r(hostname, af, &h, buffer, 1024, &hs, &err);
+   gethostbyname2_r(hostname, (af != AF_UNSPEC) ? af : AF_INET, &h, buffer, 1024, &hs, &err);
 #else
    struct hostent *hs = gethostbyname(hostname);
 #endif
    if (hs != NULL)
    {
-      if (hs->h_addrtype == AF_INET)
+      if ((hs->h_addrtype == AF_INET) && ((af == AF_UNSPEC) || (af == AF_INET)))
       {
          return InetAddress(ntohl(*((UINT32 *)hs->h_addr)));
       }
-      else if (hs->h_addrtype == AF_INET6)
+      else if ((hs->h_addrtype == AF_INET6) && ((af == AF_UNSPEC) || (af == AF_INET6)))
       {
          return InetAddress((BYTE *)hs->h_addr);
       }
@@ -691,4 +695,90 @@ void InetAddressList::fillMessage(NXCPMessage *msg, UINT32 sizeFieldId, UINT32 b
    {
       msg->setField(fieldId++, *m_list->get(i));
    }
+}
+
+/**
+ * Resolve host name to address list
+ */
+InetAddressList *InetAddressList::resolveHostName(const WCHAR *hostname)
+{
+   char mbName[256];
+   WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, hostname, -1, mbName, 256, NULL, NULL);
+   return resolveHostName(mbName);
+}
+
+/**
+ * Resolve host name to address list
+ */
+InetAddressList *InetAddressList::resolveHostName(const char *hostname)
+{
+   InetAddressList *result = new InetAddressList();
+
+   InetAddress addr = InetAddress::parse(hostname);
+   if (addr.isValid())
+   {
+      result->add(addr);
+      return result;
+   }
+
+   // Not a valid IP address, resolve hostname
+#if HAVE_GETADDRINFO
+   struct addrinfo *ai;
+   if (getaddrinfo(hostname, NULL, NULL, &ai) == 0)
+   {
+      for(struct addrinfo *p = ai; p->ai_next != NULL; p = p->ai_next)
+         result->add(InetAddress::createFromSockaddr(p->ai_addr));
+      freeaddrinfo(ai);
+   }
+#elif HAVE_GETHOSTBYNAME2_R
+   struct hostent h, *hs = NULL;
+   char buffer[4096];
+   int err;
+   gethostbyname2_r(hostname, AF_INET, &h, buffer, 4096, &hs, &err);
+   if (hs != NULL)
+   {
+      if (hs->h_addrtype == AF_INET)
+      {
+         for(int i = 0; hs->h_addr_list[i] != NULL; i++)
+            result->add(InetAddress(ntohl(*((UINT32 *)hs->h_addr_list[i])));
+      }
+      else if (hs->h_addrtype == AF_INET6)
+      {
+         for(int i = 0; hs->h_addr_list[i] != NULL; i++)
+            result->add(InetAddress((BYTE *)hs->h_addr_list[i]));
+      }
+   }
+
+   hs = NULL;
+   gethostbyname2_r(hostname, AF_INET6, &h, buffer, 4096, &hs, &err);
+   if (hs != NULL)
+   {
+      if (hs->h_addrtype == AF_INET)
+      {
+         for(int i = 0; hs->h_addr_list[i] != NULL; i++)
+            result->add(InetAddress(ntohl(*((UINT32 *)hs->h_addr_list[i])));
+      }
+      else if (hs->h_addrtype == AF_INET6)
+      {
+         for(int i = 0; hs->h_addr_list[i] != NULL; i++)
+            result->add(InetAddress((BYTE *)hs->h_addr_list[i]));
+      }
+   }
+#else
+   struct hostent *hs = gethostbyname(hostname);
+   if (hs != NULL)
+   {
+      if (hs->h_addrtype == AF_INET)
+      {
+         for(int i = 0; hs->h_addr_list[i] != NULL; i++)
+            result->add(InetAddress(ntohl(*((UINT32 *)hs->h_addr_list[i])));
+      }
+      else if (hs->h_addrtype == AF_INET6)
+      {
+         for(int i = 0; hs->h_addr_list[i] != NULL; i++)
+            result->add(InetAddress((BYTE *)hs->h_addr_list[i]));
+      }
+   }
+#endif /* HAVE_GETADDRINFO */
+   return result;
 }
