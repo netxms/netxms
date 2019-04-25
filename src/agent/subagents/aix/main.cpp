@@ -170,6 +170,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("Process.Threads(*)"), H_ProcessInfo, (TCHAR *)PROCINFO_THREADS, DCI_DT_UINT64, DCIDESC_PROCESS_THREADS },
    { _T("Process.UserTime(*)"), H_ProcessInfo, (TCHAR *)PROCINFO_UTIME, DCI_DT_UINT64, DCIDESC_PROCESS_USERTIME },
    { _T("Process.VMSize(*)"), H_ProcessInfo, (TCHAR *)PROCINFO_VMSIZE, DCI_DT_UINT64, DCIDESC_PROCESS_VMSIZE },
+   { _T("Process.WkSet(*)"), H_ProcessInfo, (TCHAR *)PROCINFO_WKSET, DCI_DT_UINT64, DCIDESC_PROCESS_WKSET },
    { _T("System.CPU.Count"), H_CpuCount, NULL, DCI_DT_UINT, DCIDESC_SYSTEM_CPU_COUNT },
    { _T("System.CPU.LoadAvg"), H_LoadAvg, _T("0"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_LOADAVG },
    { _T("System.CPU.LoadAvg5"), H_LoadAvg, _T("1"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_LOADAVG5 },

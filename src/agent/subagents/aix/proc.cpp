@@ -266,7 +266,9 @@ LONG H_ProcessInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abst
 					case PROCINFO_VMSIZE:
 						qwCurrVal = pList[i].pi_size * getpagesize();
 						break;
-//					case PROCINFO_WKSET:
+					case PROCINFO_WKSET:
+						qwCurrVal = (pList[i].pi_drss + pList[i].pi_trss) * getpagesize();
+						break;
 					default:
 						nRet = SYSINFO_RC_UNSUPPORTED;
 						break;
