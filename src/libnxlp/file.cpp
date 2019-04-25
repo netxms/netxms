@@ -478,13 +478,12 @@ static void SeekToZero(int fh, int chsize, bool detectBrokenPrealloc)
 /**
  * File parser thread
  */
-bool LogParser::monitorFile(bool readFromCurrPos)
+bool LogParser::monitorFile()
 {
 	TCHAR fname[MAX_PATH], temp[MAX_PATH];
 	NX_STAT_STRUCT st, stn;
-	size_t size;
 	int fh;
-	bool readFromStart = !readFromCurrPos;
+	bool readFromStart = m_rescan;
 
 	if (m_fileName == NULL)
 	{
@@ -496,14 +495,14 @@ bool LogParser::monitorFile(bool readFromCurrPos)
    if (m_useSnapshot)
    {
 	   nxlog_debug_tag(DEBUG_TAG, 0, _T("Using VSS snapshots for file \"%s\""), m_fileName);
-      return monitorFileWithSnapshot(readFromCurrPos);
+      return monitorFileWithSnapshot();
    }
 #endif
 
    if (!m_keepFileOpen)
    {
 	   nxlog_debug_tag(DEBUG_TAG, 0, _T("LogParser: \"keep open\" option disabled for file \"%s\""), m_fileName);
-      return monitorFile2(readFromCurrPos);
+      return monitorFile2();
    }
 
 	nxlog_debug_tag(DEBUG_TAG, 0, _T("Parser thread for file \"%s\" started"), m_fileName);
@@ -562,7 +561,8 @@ bool LogParser::monitorFile(bool readFromCurrPos)
          lseek(fh, 0, SEEK_SET);
       }
 
-		size = (size_t)st.st_size;
+		size_t size = (size_t)st.st_size;
+		time_t mtime = st.st_mtime;
 		if (readFromStart)
 		{
 			nxlog_debug_tag(DEBUG_TAG, 5, _T("Parsing existing records in file \"%s\""), fname);
@@ -622,15 +622,18 @@ bool LogParser::monitorFile(bool readFromCurrPos)
 			}
 #endif
 
-			if ((size_t)st.st_size != size)
+			if (((size_t)st.st_size != size) ||
+			    (!m_ignoreMTime && m_rescan && (mtime != st.st_mtime)))
 			{
-				if ((size_t)st.st_size < size)
+				if (((size_t)st.st_size < size) || m_rescan)
 				{
 					// File was cleared, start from the beginning
 					lseek(fh, 0, SEEK_SET);
-					nxlog_debug_tag(DEBUG_TAG, 3, _T("File \"%s\" st_size < size, assume file rotation"), fname);
+					if (!m_rescan)
+					   nxlog_debug_tag(DEBUG_TAG, 3, _T("File \"%s\" st_size < size, assume file rotation"), fname);
 				}
 				size = (size_t)st.st_size;
+				mtime = st.st_mtime;
 				nxlog_debug_tag(DEBUG_TAG, 6, _T("New data available in file \"%s\""), fname);
 				off_t resetPos = ParseNewRecords(this, fh);
 				lseek(fh, resetPos, SEEK_SET);
@@ -684,7 +687,7 @@ stop_parser:
 /**
  * File parser thread (do not keep it open)
  */
-bool LogParser::monitorFile2(bool readFromCurrPos)
+bool LogParser::monitorFile2()
 {
    size_t size = 0;
    time_t mtime = 0;
@@ -692,7 +695,7 @@ bool LogParser::monitorFile2(bool readFromCurrPos)
    time_t ctime = 0; // creation time on Windows
 #endif
    off_t lastPos = 0;
-   bool readFromStart = !readFromCurrPos;
+   bool readFromStart = m_rescan;
    bool firstRead = true;
 
    nxlog_debug_tag(DEBUG_TAG, 0, _T("Parser thread for file \"%s\" started (\"keep open\" option disabled)"), m_fileName);
@@ -792,7 +795,7 @@ bool LogParser::monitorFile2(bool readFromCurrPos)
          lseek(fh, 0, SEEK_SET);
       }
 
-      if (!readFromStart)
+      if (!readFromStart && !m_rescan)
       {
          if (firstRead)
          {
@@ -849,7 +852,7 @@ bool LogParser::monitorFile2(bool readFromCurrPos)
 /**
  * File parser thread (using VSS snapshots)
  */
-bool LogParser::monitorFileWithSnapshot(bool readFromCurrPos)
+bool LogParser::monitorFileWithSnapshot()
 {
    HRESULT hr = CoInitializeEx(NULL, COINIT_MULTITHREADED);
    if (FAILED(hr))
@@ -863,7 +866,7 @@ bool LogParser::monitorFileWithSnapshot(bool readFromCurrPos)
    time_t mtime = 0;
    time_t ctime = 0;
    off_t lastPos = 0;
-   bool readFromStart = !readFromCurrPos;
+   bool readFromStart = m_rescan;
    bool firstRead = true;
 
    nxlog_debug_tag(DEBUG_TAG, 0, _T("Parser thread for file \"%s\" started (using VSS snapshots)"), m_fileName);
@@ -947,7 +950,7 @@ bool LogParser::monitorFileWithSnapshot(bool readFromCurrPos)
          lseek(fh, 0, SEEK_SET);
       }
 
-      if (!readFromStart)
+      if (!readFromStart && !m_rescan)
       {
          if (firstRead)
          {
