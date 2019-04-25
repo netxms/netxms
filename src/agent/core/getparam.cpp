@@ -51,6 +51,7 @@ LONG H_PlatformName(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCo
 LONG H_PushValue(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_PushValues(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
 LONG H_ResolverAddrByName(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_ResolverAddrByNameList(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
 LONG H_ResolverNameByAddr(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_SessionAgents(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *session);
 LONG H_SHA1Hash(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
@@ -448,7 +449,8 @@ static NETXMS_SUBAGENT_LIST m_stdLists[] =
    { _T("Agent.SupportedParameters"), H_ParamList, NULL },
    { _T("Agent.SupportedPushParameters"), H_PushParamList, NULL },
    { _T("Agent.SupportedTables"), H_TableList, NULL },
-   { _T("Agent.ThreadPools"), H_ThreadPoolList, NULL }
+   { _T("Agent.ThreadPools"), H_ThreadPoolList, NULL },
+   { _T("Net.Resolver.AddressByName(*)"), H_ResolverAddrByNameList, NULL },
 };
 
 /**

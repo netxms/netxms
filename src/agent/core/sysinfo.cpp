@@ -494,8 +494,41 @@ LONG H_ResolverAddrByName(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, Abst
    if (!AgentGetParameterArg(cmd, 1, name, 256))
       return SYSINFO_RC_UNSUPPORTED;
 
-   InetAddress addr = InetAddress::resolveHostName(name);
+   TCHAR family[32] = _T("");
+   if (!AgentGetParameterArg(cmd, 2, family, 32))
+      return SYSINFO_RC_UNSUPPORTED;
+   _tcslwr(family);
+   int af = AF_UNSPEC;
+   if (!_tcscmp(family, _T("ipv4")) || !_tcscmp(family, _T("ip4")) || !_tcscmp(family, _T("4")))
+      af = AF_INET;
+   else if (!_tcscmp(family, _T("ipv6")) || !_tcscmp(family, _T("ip6")) || !_tcscmp(family, _T("6")))
+      af = AF_INET6;
+
+   InetAddress addr = InetAddress::resolveHostName(name, af);
    addr.toString(value);
+   return SYSINFO_RC_SUCCESS;
+}
+
+/**
+ * Handler for Net.Resolver.AddressByName list
+ */
+LONG H_ResolverAddrByNameList(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session)
+{
+   TCHAR name[256];
+   if (!AgentGetParameterArg(cmd, 1, name, 256))
+      return SYSINFO_RC_UNSUPPORTED;
+
+   InetAddressList *list = InetAddressList::resolveHostName(name);
+   if (list == NULL)
+      return SYSINFO_RC_ERROR;
+
+   TCHAR buffer[64];
+   for(int i = 0; i < list->size(); i++)
+   {
+      value->add(list->get(i).toString(buffer));
+   }
+   delete list;
+
    return SYSINFO_RC_SUCCESS;
 }
 
