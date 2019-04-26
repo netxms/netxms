@@ -4136,6 +4136,7 @@ AC_CONFIG_FILES([
 	src/server/tools/nxget/Makefile
 	src/server/tools/nxminfo/Makefile
 	src/server/tools/nxupload/Makefile
+	src/server/tools/scripts/Makefile
 	src/smsdrv/Makefile
 	src/smsdrv/anysms/Makefile
 	src/smsdrv/dbemu/Makefile
