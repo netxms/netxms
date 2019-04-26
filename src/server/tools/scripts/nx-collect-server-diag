@@ -1,59 +1,81 @@
 #!/bin/sh
 
+print_header() {
+	echo "" >> $CURRENT_LOG
+	echo "********** $1 **********" >> $CURRENT_LOG
+	echo "" >> $CURRENT_LOG
+}
+
+check_command() {
+	command -v $1 >/dev/null 2>&1
+	return $?
+}
+
 #create folder
 
 TS=`date +%Y%m%d-%H%M%S`
 LOG_DIR=/tmp/netxms.info.$TS
 mkdir $LOG_DIR
 
-#OS level information:
-OS_LOG=$LOG_DIR/os.lvl
+# Error log
+ERROR_LOG=$LOG_DIR/stderr.txt
+
+
+####################################
+# OS level information:
+
+OS_LOG=$LOG_DIR/os.txt
+CURRENT_LOG=$OS_LOG
+
 touch $OS_LOG
+
 #Host name
-echo "Host name:" >> $OS_LOG
+print_header "Host name"
 uname -a >> $OS_LOG
 #OS version
-echo "OS version:" >> $OS_LOG
-if command -v oslevel; then
+print_header "OS version"
+if check_command oslevel; then
     oslevel -s >> $OS_LOG
 fi
-if command -v  machinfo; then
+if check_command  machinfo; then
     machinfo >> $OS_LOG  
 fi 
-if command -v lsb_release; then
+if check_command lsb_release; then
     lsb_release -idr >> $OS_LOG   
 fi
 if [ -f /etc/release ]; then
     cat /etc/release >> $OS_LOG 
 fi
+
 #Memory usage
 echo "Memory usage:"  >> $OS_LOG
-if command -v free; then
+if check_command free; then
     free -m >> $OS_LOG
 fi
-if command -v svmon; then
+if check_command svmon; then
     svmon -P >> $OS_LOG
 fi
-if command -v top; then
+if check_command top; then
     top -b -n1 >> $OS_LOG
     if [ $? -ne 0 ]; then
         top -b >> $OS_LOG
     fi
 fi
+
 #Uptime
-echo "Uptime:"  >> $OS_LOG
+print_header "Uptime"
 uptime >> $OS_LOG
+
 #Process list
-echo "Process list:"  >> $OS_LOG
+print_header "Process list"
 ps -e >> $OS_LOG
+
 #Open files (lsof output)
-echo "Open files:"  >> $OS_LOG
-SERVER_PID=-1
-AGENT_PID=-1
-if command -v pidof; then
+print_header "Open files"
+if check_command pidof; then
     SERVER_PID=`pidof netxmsd`   
     AGENT_PID=`pidof nxagentd`   
-elif command -v pgrep; then
+elif check_command pgrep; then
     SERVER_PID=`pgrep -x netxmsd`
     AGENT_PID=`pgrep -x nxagentd`
 else
@@ -61,15 +83,15 @@ else
     SERVER_PID=$(ps -eo pid,comm | awk '$2 == "nxagentd" {print $1}')
 fi
 
-if command -v lsof; then
-    lsof -p $SERVER_PID >> $OS_LOG
-    lsof -p $AGENT_PID >> $OS_LOG
-elif command -v pfiles; then
-    pfiles $SERVER_PID >> $OS_LOG
-    pfiles $AGENT_PID >> $OS_LOG
-elif command -v procfiles; then
-    procfiles $SERVER_PID >> $OS_LOG
-    procfiles $AGENT_PID >> $OS_LOG
+if check_command lsof; then
+    lsof -p $SERVER_PID >> $OS_LOG 2>>$ERROR_LOG
+    lsof -p $AGENT_PID >> $OS_LOG 2>>$ERROR_LOG
+elif check_command pfiles; then
+    pfiles $SERVER_PID >> $OS_LOG 2>>$ERROR_LOG
+    pfiles $AGENT_PID >> $OS_LOG 2>>$ERROR_LOG
+elif check_command procfiles; then
+    procfiles $SERVER_PID >> $OS_LOG 2>>$ERROR_LOG
+    procfiles $AGENT_PID >> $OS_LOG 2>>$ERROR_LOG
 else
     if [ -f /proc/$SERVER_PID/fd ]; then
         ls -l /proc/$SERVER_PID/fd >> $OS_LOG
@@ -78,30 +100,39 @@ else
         ls -l /proc/$AGENT_PID/fd >> $OS_LOG
     fi    
 fi
+
 #interfaces ifconfig
-echo "Interfaces:"  >> $OS_LOG
-if command -v ifconfig; then
+print_header "Interfaces"
+if check_command ifconfig; then
     ifconfig -a >> $OS_LOG
-elif command -v ip; then
+elif check_command ip; then
     ip address >> $OS_LOG
 fi
-#iprouts
-echo "route:"  >> $OS_LOG
-if command -v route; then
+
+# IP routes
+print_header "IP routes"
+if check_command route; then
     route -n >> $OS_LOG
 fi
-if command -v netstat; then
+if check_command netstat; then
     netstat -rn >> $OS_LOG
 fi
-#arpcache
-echo "arpcache:"  >> $OS_LOG
+
+# ARP cache
+print_header "ARP cache"
 arp -a  >> $OS_LOG
 
-#Output of nxadm commands:
-NXADM_LOG=$LOG_DIR/nxadm.lvl
+
+####################################
+### Output of nxadm commands:
+
+NXADM_LOG=$LOG_DIR/nxadm.txt
+CURRENT_LOG=$NXADM_LOG
+
 touch $NXADM_LOG
+
 #debug
-echo "debug:"  >> $NXADM_LOG
+print_header "debug"
 ./nxadm -c "debug"  >> $NXADM_LOG
 #show dbcp
 echo "show dbcp:"  >> $NXADM_LOG
@@ -174,5 +205,8 @@ netxmsLog=`./nxagentd -l | tail -1`
 cp $netxmsLog $LOG_DIR/
 
 #zipDeleteFolder
-tar -cvf $LOG_DIR.tar  $LOG_DIR
+tar cvf $LOG_DIR.tar $LOG_DIR
+gzip $LOG_DIR.tar
 rm -rf $LOG_DIR
+
+echo "Diagnostic file: $LOG_DIR.tar.gz"
