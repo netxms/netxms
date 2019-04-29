@@ -38,6 +38,17 @@ public:
 };
 
 /**
+ * NXSL "Subnet" class
+ */
+class NXSL_SubnetClass : public NXSL_NetObjClass
+{
+public:
+   NXSL_SubnetClass();
+
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr);
+};
+
+/**
  * NXSL "DataCollectionTarget" class
  */
 class NXSL_DCTargetClass : public NXSL_NetObjClass
@@ -326,6 +337,7 @@ extern NXSL_NodeDependencyClass g_nxslNodeDependencyClass;
 extern NXSL_SensorClass g_nxslSensorClass;
 extern NXSL_SNMPTransportClass g_nxslSnmpTransportClass;
 extern NXSL_SNMPVarBindClass g_nxslSnmpVarBindClass;
+extern NXSL_SubnetClass g_nxslSubnetClass;
 extern NXSL_UserDBObjectClass g_nxslUserDBObjectClass;
 extern NXSL_UserClass g_nxslUserClass;
 extern NXSL_UserGroupClass g_nxslUserGroupClass;

@@ -24,11 +24,30 @@
 #include <nxevent.h>
 
 /**
- * Upgrade from 22.54 to 30.0
+ * Upgrade from 22.55 to 30.0
+ */
+static bool H_UpgradeFromV55()
+{
+   CHK_EXEC(SetMajorSchemaVersion(30, 0));
+   return true;
+}
+
+/**
+ * Upgrade 22.54 to 22.55
  */
 static bool H_UpgradeFromV54()
 {
-   CHK_EXEC(SetMajorSchemaVersion(30, 0));
+   CHK_EXEC(SQLQuery(
+            _T("INSERT INTO script_library (guid,script_id,script_name,script_code) ")
+            _T("VALUES ('4ec1a7bc-d46f-4df3-b846-e9dfd66571dc',19,'Hook::CreateSubnet',")
+            _T("'/* Available global variables:\r\n *  $node - current node, object of ''Node'' class\r\n")
+            _T(" *  $1 - current subnet, object of ''Subnet'' class\r\n")
+            _T(" *\r\n * Expected return value:\r\n")
+            _T(" *  true/false - boolean - whether subnet should be created\r\n")
+            _T(" */\r\nreturn true;\r\n')")
+         ));
+
+   CHK_EXEC(SetMinorSchemaVersion(55));
    return true;
 }
 
@@ -1072,7 +1091,8 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
-   { 54, 30, 0,  H_UpgradeFromV54 },
+   { 55, 30, 0,  H_UpgradeFromV55 },
+   { 54, 22, 55, H_UpgradeFromV54 },
    { 53, 22, 54, H_UpgradeFromV53 },
    { 52, 22, 53, H_UpgradeFromV52 },
    { 51, 22, 52, H_UpgradeFromV51 },

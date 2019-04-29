@@ -7724,28 +7724,60 @@ Subnet *Node::createSubnet(InetAddress& baseAddr, bool syntheticMask)
          return NULL;
    }
 
-   Subnet *s = new Subnet(addr, m_zoneUIN, syntheticMask);
-   NetObjInsert(s, true, false);
-   if (g_flags & AF_ENABLE_ZONING)
+   Subnet *subnet = new Subnet(addr, m_zoneUIN, syntheticMask);
+
+   NXSL_VM *vm = CreateServerScriptVM(_T("Hook::CreateSubnet"), this);
+   if (vm != NULL)
    {
-      Zone *zone = FindZoneByUIN(m_zoneUIN);
-      if (zone != NULL)
+      bool pass = true;
+      NXSL_Value *argv = vm->createValue(new NXSL_Object(vm, &g_nxslSubnetClass, subnet));
+      if (vm->run(1, &argv))
       {
-         zone->addSubnet(s);
+         NXSL_Value *result = vm->getResult();
+         if ((result != NULL) && result->isInteger())
+         {
+            pass = (result->getValueAsInt32() != 0);
+         }
       }
       else
       {
-         DbgPrintf(1, _T("Node::createSubnet(): Inconsistent configuration - zone %d does not exist"), (int)m_zoneUIN);
+         nxlog_debug(4, _T("Node::createSubnet(%s [%u]): hook script execution error: %s"), m_name, m_id, vm->getErrorText());
       }
+      delete vm;
+      DbgPrintf(6, _T("Node::createSubnet(%s [%u]): subnet \"%s\" %s by filter"),
+                m_name, m_id, subnet->getName(), pass ? _T("accepted") : _T("rejected"));
+      if (!pass)
+         delete_and_null(subnet);
    }
    else
    {
-      g_pEntireNet->AddSubnet(s);
+      nxlog_debug(7, _T("Node::createSubnet(%s [%u]): hook script \"Hook::CreateSubnet\" not found"), m_name, m_id);
    }
-   s->addNode(this);
-   DbgPrintf(4, _T("Node::createSubnet(): Created new subnet %s [%d] for node %s [%d]"),
-             s->getName(), s->getId(), m_name, m_id);
-   return s;
+
+   if (subnet != NULL)
+   {
+      NetObjInsert(subnet, true, false);
+      if (g_flags & AF_ENABLE_ZONING)
+      {
+         Zone *zone = FindZoneByUIN(m_zoneUIN);
+         if (zone != NULL)
+         {
+            zone->addSubnet(subnet);
+         }
+         else
+         {
+            DbgPrintf(1, _T("Node::createSubnet(): Inconsistent configuration - zone %d does not exist"), (int)m_zoneUIN);
+         }
+      }
+      else
+      {
+         g_pEntireNet->AddSubnet(subnet);
+      }
+      subnet->addNode(this);
+      nxlog_debug(4, _T("Node::createSubnet(): Created new subnet %s [%d] for node %s [%d]"),
+               subnet->getName(), subnet->getId(), m_name, m_id);
+   }
+   return subnet;
 }
 
 /**

@@ -326,5 +326,3 @@ NXSL_Value *Container::createNXSLObject(NXSL_VM *vm)
 {
    return vm->createValue(new NXSL_Object(vm, &g_nxslContainerClass, this));
 }
-
-
