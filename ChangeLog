@@ -10,6 +10,7 @@
 - Added trigonometric functions (sin, cos, tan, asin, acos, atan, sinh, cosh, tanh) to NXSL
 - Improved configuration import
 - Implemented parameter Process.WkSet on AIX
+- Interface object properties can be changed inside interface creation hook
 - Fixed issues:
 	NX-1537 ("Hidden" flag for DCI)
 	NX-1574 (Add hasActiveThreshold attribute/method to DCI object accessible in NXSL)
