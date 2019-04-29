@@ -281,17 +281,28 @@ UINT32 *Subnet::buildAddressMap(int *length)
    *length = 1 << (32 - m_ipAddress.getMaskBits());
    if ((*length < 2) || (*length > 65536))
       return NULL;
-   UINT32 *map = (UINT32 *)malloc(*length * sizeof(UINT32));
+   UINT32 *map = MemAllocArrayNoInit<UINT32>(*length);
 
-   map[0] = 0xFFFFFFFF; // subnet
-   map[*length - 1] = 0xFFFFFFFF;   // broadcast
-   UINT32 addr = m_ipAddress.getAddressV4() + 1;
-   for(int i = 1; i < *length - 1; i++, addr++)
+   if (m_ipAddress.getHostBits() > 1)
    {
-      Node *node = FindNodeByIP(m_zoneUIN, addr);
-      map[i] = (node != NULL) ? node->getId() : 0;
+      map[0] = 0xFFFFFFFF; // subnet
+      map[*length - 1] = 0xFFFFFFFF;   // broadcast
+      UINT32 addr = m_ipAddress.getAddressV4() + 1;
+      for(int i = 1; i < *length - 1; i++, addr++)
+      {
+         Node *node = FindNodeByIP(m_zoneUIN, addr);
+         map[i] = (node != NULL) ? node->getId() : 0;
+      }
    }
-
+   else
+   {
+      UINT32 addr = m_ipAddress.getAddressV4();
+      for(int i = 0; i < 2; i++)
+      {
+         Node *node = FindNodeByIP(m_zoneUIN, addr++);
+         map[i] = (node != NULL) ? node->getId() : 0;
+      }
+   }
    return map;
 }
 

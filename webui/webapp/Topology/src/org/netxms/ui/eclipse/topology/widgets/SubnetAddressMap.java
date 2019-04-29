@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2019 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -306,11 +306,11 @@ public class SubnetAddressMap extends Canvas implements PaintListener, MouseTrac
       {
          setToolTipText(null);
       }
-      else if (index == 0)
+      else if ((index == 0) && !subnet.isPointToPoint())
       {
          setToolTipText(Messages.get().SubnetAddressMap_SubnetAddress);
       }
-      else if (index == addressMap.length - 1)
+      else if ((index == addressMap.length - 1) && !subnet.isPointToPoint())
       {
          setToolTipText(Messages.get().SubnetAddressMap_BroadcastAddress);
       }
