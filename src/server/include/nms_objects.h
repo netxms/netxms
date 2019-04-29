@@ -2194,6 +2194,8 @@ public:
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
    virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
 
+   virtual NXSL_Value *createNXSLObject() override;
+
    virtual json_t *toJson() override;
 
    void addNode(Node *node) { addChild(node); node->addParent(this); calculateCompoundStatus(TRUE); }

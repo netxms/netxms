@@ -303,6 +303,58 @@ NXSL_Value *NXSL_NetObjClass::getAttr(NXSL_Object *_object, const TCHAR *attr)
 }
 
 /**
+ * NXSL class Zone: constructor
+ */
+NXSL_SubnetClass::NXSL_SubnetClass() : NXSL_NetObjClass()
+{
+   setName(_T("Subnet"));
+}
+
+/**
+ * NXSL class Zone: get attribute
+ */
+NXSL_Value *NXSL_SubnetClass::getAttr(NXSL_Object *object, const TCHAR *attr)
+{
+   NXSL_Value *value = NXSL_NetObjClass::getAttr(object, attr);
+   if (value != NULL)
+      return value;
+
+   Subnet *subnet = static_cast<Subnet*>(object->getData());
+   if (!_tcscmp(attr, _T("ipNetMask")))
+   {
+      value = new NXSL_Value(subnet->getIpAddress().getMaskBits());
+   }
+   else if (!_tcscmp(attr, _T("isSyntheticMask")))
+   {
+      value = new NXSL_Value(subnet->isSyntheticMask());
+   }
+   else if (!_tcscmp(attr, _T("zone")))
+   {
+      if (g_flags & AF_ENABLE_ZONING)
+      {
+         Zone *zone = FindZoneByUIN(subnet->getZoneUIN());
+         if (zone != NULL)
+         {
+            value = new NXSL_Value(new NXSL_Object(&g_nxslZoneClass, zone));
+         }
+         else
+         {
+            value = new NXSL_Value();
+         }
+      }
+      else
+      {
+         value = new NXSL_Value();
+      }
+   }
+   else if (!_tcscmp(attr, _T("zoneUIN")))
+   {
+      value = new NXSL_Value(subnet->getZoneUIN());
+   }
+   return value;
+}
+
+/**
  * readInternalParameter(name) method
  */
 NXSL_METHOD_DEFINITION(DataCollectionTarget, readInternalParameter)
@@ -1764,4 +1816,5 @@ NXSL_NodeClass g_nxslNodeClass;
 NXSL_NodeDependencyClass g_nxslNodeDependencyClass;
 NXSL_SNMPTransportClass g_nxslSnmpTransportClass;
 NXSL_SNMPVarBindClass g_nxslSnmpVarBindClass;
+NXSL_SubnetClass g_nxslSubnetClass;
 NXSL_ZoneClass g_nxslZoneClass;

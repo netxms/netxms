@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -325,4 +325,12 @@ json_t *Subnet::toJson()
    json_object_set_new(root, "zoneUIN", json_integer(m_zoneUIN));
    json_object_set_new(root, "syntheticMask", json_boolean(m_bSyntheticMask));
    return root;
+}
+
+/**
+ * Create NXSL object for this object
+ */
+NXSL_Value *Subnet::createNXSLObject()
+{
+   return new NXSL_Value(new NXSL_Object(&g_nxslSubnetClass, this));
 }

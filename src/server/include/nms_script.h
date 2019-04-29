@@ -31,10 +31,21 @@ class NXSL_NetObjClass : public NXSL_Class
 public:
    NXSL_NetObjClass();
 
-   virtual void onObjectCreate(NXSL_Object *object);
-   virtual void onObjectDelete(NXSL_Object *object);
+   virtual void onObjectCreate(NXSL_Object *object) override;
+   virtual void onObjectDelete(NXSL_Object *object) override;
 
-   virtual NXSL_Value *getAttr(NXSL_Object *object, const TCHAR *attr);
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const TCHAR *attr) override;
+};
+
+/**
+ * NXSL "Subnet" class
+ */
+class NXSL_SubnetClass : public NXSL_NetObjClass
+{
+public:
+   NXSL_SubnetClass();
+
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const TCHAR *attr) override;
 };
 
 /**
@@ -54,7 +65,7 @@ class NXSL_NodeClass : public NXSL_DCTargetClass
 public:
    NXSL_NodeClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *object, const TCHAR *attr);
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const TCHAR *attr) override;
 };
 
 /**
@@ -65,7 +76,7 @@ class NXSL_InterfaceClass : public NXSL_NetObjClass
 public:
    NXSL_InterfaceClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *object, const TCHAR *attr);
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const TCHAR *attr) override;
 };
 
 /**
@@ -76,7 +87,7 @@ class NXSL_MobileDeviceClass : public NXSL_DCTargetClass
 public:
    NXSL_MobileDeviceClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *object, const TCHAR *attr);
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const TCHAR *attr) override;
 };
 
 /**
@@ -87,7 +98,7 @@ class NXSL_ChassisClass : public NXSL_NetObjClass
 public:
    NXSL_ChassisClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *object, const TCHAR *attr);
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const TCHAR *attr) override;
 };
 
 /**
@@ -98,7 +109,7 @@ class NXSL_ClusterClass : public NXSL_DCTargetClass
 public:
    NXSL_ClusterClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *object, const TCHAR *attr);
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const TCHAR *attr) override;
 };
 
 /**
@@ -109,7 +120,7 @@ class NXSL_ContainerClass : public NXSL_NetObjClass
 public:
    NXSL_ContainerClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *object, const TCHAR *attr);
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const TCHAR *attr) override;
 };
 
 /**
@@ -120,7 +131,7 @@ class NXSL_ZoneClass : public NXSL_NetObjClass
 public:
    NXSL_ZoneClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *object, const TCHAR *attr);
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const TCHAR *attr) override;
 };
 
 /**
@@ -131,7 +142,7 @@ class NXSL_EventClass : public NXSL_Class
 public:
    NXSL_EventClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *object, const TCHAR *attr);
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const TCHAR *attr) override;
 };
 
 /**
@@ -142,8 +153,8 @@ class NXSL_AlarmClass : public NXSL_Class
 public:
    NXSL_AlarmClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *object, const TCHAR *attr);
-	virtual void onObjectDelete(NXSL_Object *object);
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const TCHAR *attr) override;
+   virtual void onObjectDelete(NXSL_Object *object) override;
 };
 
 /**
@@ -154,8 +165,8 @@ class NXSL_DciClass : public NXSL_Class
 public:
    NXSL_DciClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *object, const TCHAR *attr);
-   virtual void onObjectDelete(NXSL_Object *object);
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const TCHAR *attr) override;
+   virtual void onObjectDelete(NXSL_Object *object) override;
 };
 
 /**
@@ -164,10 +175,10 @@ public:
 class NXSL_SNMPTransportClass : public NXSL_Class
 {
 public:
-	NXSL_SNMPTransportClass();
+   NXSL_SNMPTransportClass();
 
-	virtual NXSL_Value *getAttr(NXSL_Object *object, const TCHAR *attr);
-	virtual void onObjectDelete(NXSL_Object *object);
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const TCHAR *attr) override;
+   virtual void onObjectDelete(NXSL_Object *object) override;
 };
 
 /**
@@ -176,10 +187,10 @@ public:
 class NXSL_SNMPVarBindClass : public NXSL_Class
 {
 public:
-	NXSL_SNMPVarBindClass();
+   NXSL_SNMPVarBindClass();
 
-	virtual NXSL_Value *getAttr(NXSL_Object *object, const TCHAR *attr);
-	virtual void onObjectDelete(NXSL_Object *object);
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const TCHAR *attr) override;
+   virtual void onObjectDelete(NXSL_Object *object) override;
 };
 
 /**
@@ -190,8 +201,8 @@ class NXSL_NodeDependencyClass : public NXSL_Class
 public:
    NXSL_NodeDependencyClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *object, const TCHAR *attr);
-   virtual void onObjectDelete(NXSL_Object *object);
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const TCHAR *attr) override;
+   virtual void onObjectDelete(NXSL_Object *object) override;
 };
 
 /**
@@ -200,17 +211,17 @@ public:
 class NXSL_ServerEnv : public NXSL_Environment
 {
 protected:
-	CONSOLE_CTX m_console;
+   CONSOLE_CTX m_console;
 
 public:
-	NXSL_ServerEnv();
+   NXSL_ServerEnv();
 
-	virtual void print(NXSL_Value *value);
-	virtual void trace(int level, const TCHAR *text);
+   virtual void print(NXSL_Value *value) override;
+   virtual void trace(int level, const TCHAR *text) override;
 
-	virtual void configureVM(NXSL_VM *vm);
+   virtual void configureVM(NXSL_VM *vm) override;
 
-	void setConsole(CONSOLE_CTX console) { m_console = console; }
+   void setConsole(CONSOLE_CTX console) { m_console = console; }
 };
 
 /**
@@ -219,14 +230,14 @@ public:
 class NXSL_ClientSessionEnv : public NXSL_ServerEnv
 {
 protected:
-	ClientSession *m_session;
-	NXCPMessage *m_response;
+   ClientSession *m_session;
+   NXCPMessage *m_response;
 
 public:
-	NXSL_ClientSessionEnv(ClientSession *session, NXCPMessage *response);
+   NXSL_ClientSessionEnv(ClientSession *session, NXCPMessage *response);
 
-	virtual void print(NXSL_Value *value);
-	virtual void trace(int level, const TCHAR *text);
+   virtual void print(NXSL_Value *value) override;
+   virtual void trace(int level, const TCHAR *text) override;
 };
 
 class ScheduleParameters;
@@ -269,6 +280,7 @@ extern NXSL_NodeClass g_nxslNodeClass;
 extern NXSL_NodeDependencyClass g_nxslNodeDependencyClass;
 extern NXSL_SNMPTransportClass g_nxslSnmpTransportClass;
 extern NXSL_SNMPVarBindClass g_nxslSnmpVarBindClass;
+extern NXSL_SubnetClass g_nxslSubnetClass;
 extern NXSL_ZoneClass g_nxslZoneClass;
 
 #endif
