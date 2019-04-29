@@ -42,6 +42,7 @@
 	NX-1593 (Create separate access right for configuration import)
 	NX-1604 (ICMP sub-agent automatic targets may be deleted immediately after creation)
 	NX-1605 (MariaDB driver - TLS connections don't work)
+	NX-1608 (Support for PtP subnets /31 and /127)
 	NX-1614 (Improvements to DNS monitoring / resolving)
 
 

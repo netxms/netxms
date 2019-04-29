@@ -1453,7 +1453,7 @@ Interface *Node::createNewInterface(InterfaceInfo *info, bool manuallyCreated, b
                }
 
                // Create new subnet object
-               if (addr.getHostBits() >= 2)
+               if (addr.getHostBits() > 0)
                {
                   pSubnet = createSubnet(addr, bSyntheticMask);
                   if (bSyntheticMask)
@@ -7726,7 +7726,7 @@ Subnet *Node::createSubnet(InetAddress& baseAddr, bool syntheticMask)
       }
 
       // Do not create subnet if there are no address space for it
-      if (baseAddr.getHostBits() < 2)
+      if (baseAddr.getHostBits() == 0)
          return NULL;
    }
 
@@ -7771,7 +7771,7 @@ void Node::checkSubnetBinding()
       if (m_childList->get(n)->getObjectClass() != OBJECT_INTERFACE)
          continue;
       Interface *iface = (Interface *)m_childList->get(n);
-      if (iface->isLoopback() || iface->isExcludedFromTopology())
+      if (iface->isExcludedFromTopology())
          continue;
       for(int m = 0; m < iface->getIpAddressList()->size(); m++)
       {
@@ -7844,8 +7844,7 @@ void Node::checkSubnetBinding()
             addr.toString(buffer), addr.getMaskBits(), iface->getName(), iface->getIfIndex());
 
          // Ignore mask 255.255.255.255 - some point-to-point interfaces can have such mask
-         // Ignore mask 255.255.255.254 - it's invalid
-         if (addr.getHostBits() >= 2)
+         if (addr.getHostBits() > 0)
          {
             if (addr.getMaskBits() > 0)
             {
