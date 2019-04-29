@@ -37,9 +37,9 @@
 /**
  * Housekeeper data
  */
-Mutex __EXPORT MsgWaitQueue::m_housekeeperLock;
+MUTEX __EXPORT MsgWaitQueue::m_housekeeperLock = MutexCreate();
 HashMap<UINT64, MsgWaitQueue> __EXPORT *MsgWaitQueue::m_activeQueues = new HashMap<UINT64, MsgWaitQueue>(false);
-Condition __EXPORT MsgWaitQueue::m_shutdownCondition(true);
+CONDITION __EXPORT MsgWaitQueue::m_shutdownCondition = ConditionCreate(true);
 THREAD __EXPORT MsgWaitQueue::m_housekeeperThread = INVALID_THREAD_HANDLE;
 
 /**
@@ -66,14 +66,14 @@ MsgWaitQueue::MsgWaitQueue()
 #endif
 
    // register new queue
-   m_housekeeperLock.lock();
+   MutexLock(m_housekeeperLock);
    if (m_activeQueues != NULL)
       m_activeQueues->set(CAST_FROM_POINTER(this, UINT64), this);
    if (m_housekeeperThread == INVALID_THREAD_HANDLE)
    {
       m_housekeeperThread = ThreadCreateEx(MsgWaitQueue::housekeeperThread, 0, NULL);
    }
-   m_housekeeperLock.unlock();
+   MutexUnlock(m_housekeeperLock);
 }
 
 /**
@@ -82,10 +82,10 @@ MsgWaitQueue::MsgWaitQueue()
 MsgWaitQueue::~MsgWaitQueue()
 {
    // unregister queue
-   m_housekeeperLock.lock();
+   MutexLock(m_housekeeperLock);
    if (m_activeQueues != NULL)
       m_activeQueues->remove(CAST_FROM_POINTER(this, UINT64));
-   m_housekeeperLock.unlock();
+   MutexUnlock(m_housekeeperLock);
 
    clear();
 
@@ -382,11 +382,11 @@ EnumerationCallbackResult MsgWaitQueue::houseKeeperCallback(const void *key, con
 THREAD_RESULT THREAD_CALL MsgWaitQueue::housekeeperThread(void *arg)
 {
    ThreadSetName("MsgWaitQueue");
-   while(!m_shutdownCondition.wait(TTL_CHECK_INTERVAL))
+   while(!ConditionWait(m_shutdownCondition, TTL_CHECK_INTERVAL))
    {
-      m_housekeeperLock.lock();
+      MutexLock(m_housekeeperLock);
       m_activeQueues->forEach(MsgWaitQueue::houseKeeperCallback, NULL);
-      m_housekeeperLock.unlock();
+      MutexUnlock(m_housekeeperLock);
    }
    return THREAD_OK;
 }
@@ -396,12 +396,14 @@ THREAD_RESULT THREAD_CALL MsgWaitQueue::housekeeperThread(void *arg)
  */
 void MsgWaitQueue::shutdown()
 {
-   m_shutdownCondition.set();
+   ConditionSet(m_shutdownCondition);
    ThreadJoin(m_housekeeperThread);
-   m_housekeeperLock.lock();
+   MutexLock(m_housekeeperLock);
    m_housekeeperThread = INVALID_THREAD_HANDLE;
    delete_and_null(m_activeQueues);
-   m_housekeeperLock.unlock();
+   MutexUnlock(m_housekeeperLock);
+   ConditionDestroy(m_shutdownCondition);
+   MutexDestroy(m_housekeeperLock);
 }
 
 /**
@@ -422,7 +424,7 @@ EnumerationCallbackResult MsgWaitQueue::diagInfoCallback(const void *key, const 
 String MsgWaitQueue::getDiagInfo()
 {
    String out;
-   m_housekeeperLock.lock();
+   MutexLock(m_housekeeperLock);
    out.append(m_activeQueues->size());
    out.append(_T(" active queues\nHousekeeper thread state is "));
    out.append((m_housekeeperThread != INVALID_THREAD_HANDLE) ? _T("RUNNING\n") : _T("STOPPED\n"));
@@ -431,6 +433,6 @@ String MsgWaitQueue::getDiagInfo()
       out.append(_T("Active queues:\n"));
       m_activeQueues->forEach(MsgWaitQueue::diagInfoCallback, &out);
    }
-   m_housekeeperLock.unlock();
+   MutexUnlock(m_housekeeperLock);
    return out;
 }
