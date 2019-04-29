@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2019 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -69,7 +69,17 @@ public class Subnet extends GenericObject implements ZoneMember
 	{
 	   return networkAddress.getMask();
 	}
-	
+
+	/**
+	 * Check if this subnet is a point-to-point subnet as defined by RFC 3021.
+	 * 
+	 * @return true if this subnet is point-to-point subnet
+	 */
+	public boolean isPointToPoint()
+	{
+	   return networkAddress.getHostBits() == 1;
+	}
+
 	/* (non-Javadoc)
 	 * @see org.netxms.client.NXCObject#getObjectClassName()
 	 */

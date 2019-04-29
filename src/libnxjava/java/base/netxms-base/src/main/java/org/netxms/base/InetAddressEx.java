@@ -19,6 +19,7 @@
 package org.netxms.base;
 
 import java.net.Inet4Address;
+import java.net.Inet6Address;
 import java.net.InetAddress;
 
 /**
@@ -160,6 +161,20 @@ public class InetAddressEx
    public byte[] getAddressBytes()
    {
       return (address != null) ? address.getAddress() : new byte[0];
+   }
+   
+   /**
+    * Get number of bits in host part of the address (address length - mask length).
+    * 
+    * @return number of bits in host part of the address
+    */
+   public int getHostBits()
+   {
+      if (address instanceof Inet4Address)
+         return 32 - mask;
+      if (address instanceof Inet6Address)
+         return 128 - mask;
+      return 0;
    }
 
    /* (non-Javadoc)

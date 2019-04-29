@@ -13347,7 +13347,7 @@ void ClientSession::getSubnetAddressMap(NXCPMessage *request)
 			{
 				msg.setField(VID_RCC, RCC_SUCCESS);
             msg.setFieldFromInt32Array(VID_ADDRESS_MAP, (UINT32)length, map);
-            free(map);
+            MemFree(map);
 			}
 			else
 			{
