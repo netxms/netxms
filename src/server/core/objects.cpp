@@ -979,6 +979,23 @@ Subnet NXCORE_EXPORTABLE *FindSubnetForNode(UINT32 zoneUIN, const InetAddress& n
 }
 
 /**
+ * Adjust base address for new subnet to avoid overlapping with existing subnet objects.
+ * Returns false if new subnet cannot be created.
+ */
+bool AdjustSubnetBaseAddress(InetAddress& baseAddr, UINT32 zoneUIN)
+{
+   InetAddress addr = baseAddr.getSubnetAddress();
+   while(FindSubnetByIP(zoneUIN, addr) != NULL)
+   {
+      baseAddr.setMaskBits(baseAddr.getMaskBits() + 1);
+      addr = baseAddr.getSubnetAddress();
+   }
+
+   // Do not create subnet if there are no address space for it
+   return baseAddr.getHostBits() > 0;
+}
+
+/**
  * Find object by ID
  */
 NetObj NXCORE_EXPORTABLE *FindObjectById(UINT32 dwId, int objClass)

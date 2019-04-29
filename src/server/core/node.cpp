@@ -1344,17 +1344,11 @@ bool Node::isMyIP(const InetAddress& addr)
 }
 
 /**
- * Filter interface - should return true if system should proceed with interface creation
+ * Create interface object. Can return NULL if interface creation hook
+ * blocks interface creation.
  */
-bool Node::filterInterface(InterfaceInfo *info)
+Interface *Node::createInterfaceObject(InterfaceInfo *info, bool manuallyCreated, bool fakeInterface, bool syntheticMask)
 {
-   NXSL_VM *vm = CreateServerScriptVM(_T("Hook::CreateInterface"), this);
-   if (vm == NULL)
-   {
-      DbgPrintf(7, _T("Node::filterInterface(%s [%u]): hook script \"Hook::CreateInterface\" not found"), m_name, m_id);
-      return true;
-   }
-
    Interface *iface;
    if (info->name[0] != 0)
    {
@@ -1363,39 +1357,64 @@ bool Node::filterInterface(InterfaceInfo *info)
    }
    else
    {
-      iface = new Interface(info->ipAddrList, m_zoneUIN, false);
+      iface = new Interface(info->ipAddrList, m_zoneUIN, syntheticMask);
    }
    iface->setMacAddr(info->macAddr, false);
    iface->setBridgePortNumber(info->bridgePort);
    iface->setSlotNumber(info->slot);
    iface->setPortNumber(info->port);
    iface->setPhysicalPortFlag(info->isPhysicalPort);
-   iface->setManualCreationFlag(false);
+   iface->setManualCreationFlag(manuallyCreated);
    iface->setSystemFlag(info->isSystem);
    iface->setMTU(info->mtu);
    iface->setSpeed(info->speed);
    iface->setIfTableSuffix(info->ifTableSuffixLength, info->ifTableSuffix);
 
-   bool pass = true;
-   NXSL_Value *argv = vm->createValue(new NXSL_Object(vm, &g_nxslInterfaceClass, iface));
-   if (vm->run(1, &argv))
+   int defaultExpectedState = ConfigReadInt(_T("DefaultInterfaceExpectedState"), IF_DEFAULT_EXPECTED_STATE_UP);
+   switch(defaultExpectedState)
    {
-      NXSL_Value *result = vm->getResult();
-      if ((result != NULL) && result->isInteger())
-      {
-         pass = (result->getValueAsInt32() != 0);
-      }
+      case IF_DEFAULT_EXPECTED_STATE_AUTO:
+         iface->setExpectedState(fakeInterface ? IF_EXPECTED_STATE_UP : IF_EXPECTED_STATE_AUTO);
+         break;
+      case IF_DEFAULT_EXPECTED_STATE_IGNORE:
+         iface->setExpectedState(IF_EXPECTED_STATE_IGNORE);
+         break;
+      default:
+         iface->setExpectedState(IF_EXPECTED_STATE_UP);
+         break;
    }
-   else
-   {
-      DbgPrintf(4, _T("Node::filterInterface(%s [%u]): hook script execution error: %s"), m_name, m_id, vm->getErrorText());
-   }
-   delete vm;
-   delete iface;
 
-   DbgPrintf(6, _T("Node::filterInterface(%s [%u]): interface \"%s\" (ifIndex=%d) %s by filter"),
-             m_name, m_id, info->name, info->index, pass ? _T("accepted") : _T("rejected"));
-   return pass;
+   // Call hook script if interface is automatically created
+   if (!manuallyCreated)
+   {
+      NXSL_VM *vm = CreateServerScriptVM(_T("Hook::CreateInterface"), this);
+      if (vm == NULL)
+      {
+         DbgPrintf(7, _T("Node::createInterfaceObject(%s [%u]): hook script \"Hook::CreateInterface\" not found"), m_name, m_id);
+         return iface;
+      }
+
+      bool pass = true;
+      NXSL_Value *argv = vm->createValue(new NXSL_Object(vm, &g_nxslInterfaceClass, iface));
+      if (vm->run(1, &argv))
+      {
+         NXSL_Value *result = vm->getResult();
+         if ((result != NULL) && result->isInteger())
+         {
+            pass = (result->getValueAsInt32() != 0);
+         }
+      }
+      else
+      {
+         DbgPrintf(4, _T("Node::createInterfaceObject(%s [%u]): hook script execution error: %s"), m_name, m_id, vm->getErrorText());
+      }
+      delete vm;
+      DbgPrintf(6, _T("Node::createInterfaceObject(%s [%u]): interface \"%s\" (ifIndex=%d) %s by filter"),
+                m_name, m_id, info->name, info->index, pass ? _T("accepted") : _T("rejected"));
+      if (!pass)
+         delete_and_null(iface);
+   }
+   return iface;
 }
 
 /**
@@ -1426,7 +1445,10 @@ Interface *Node::createNewInterface(InterfaceInfo *info, bool manuallyCreated, b
       DbgPrintf(5, _T("Node::createNewInterface(%s): IP address %s/%d"), info->name, addr.toString(buffer), addr.getMaskBits());
    }
 
-   // Find subnet to place interface object to
+   ObjectArray<Subnet> bindList(16, 16, false);
+   InetAddressList createList;
+
+   // Find subnet(s) to place this node to
    if (info->type != IFTYPE_SOFTWARE_LOOPBACK)
    {
       Cluster *pCluster = getMyCluster();
@@ -1455,11 +1477,10 @@ Interface *Node::createNewInterface(InterfaceInfo *info, bool manuallyCreated, b
                // Create new subnet object
                if (addr.getHostBits() > 0)
                {
-                  pSubnet = createSubnet(addr, bSyntheticMask);
-                  if (bSyntheticMask)
+                  if (AdjustSubnetBaseAddress(addr, m_zoneUIN))
                   {
-                     // createSubnet may adjust address mask bits
-                     info->ipAddrList.replace(addr);
+                     info->ipAddrList.replace(addr);  // mask could be adjusted
+                     createList.add(addr);
                   }
                }
             }
@@ -1475,45 +1496,17 @@ Interface *Node::createNewInterface(InterfaceInfo *info, bool manuallyCreated, b
             }
             if (pSubnet != NULL)
             {
-               pSubnet->addNode(this);
+               bindList.add(pSubnet);
             }
          }  // addToSubnet
       } // loop by address list
    }
 
-   // Create interface object
-   Interface *iface;
-   if (info->name[0] != 0)
-      iface = new Interface(info->name, (info->description[0] != 0) ? info->description : info->name,
-                                 info->index, info->ipAddrList, info->type, m_zoneUIN);
-   else
-      iface = new Interface(info->ipAddrList, m_zoneUIN, bSyntheticMask);
-   iface->setMacAddr(info->macAddr, false);
-   iface->setBridgePortNumber(info->bridgePort);
-   iface->setSlotNumber(info->slot);
-   iface->setPortNumber(info->port);
-   iface->setPhysicalPortFlag(info->isPhysicalPort);
-   iface->setManualCreationFlag(manuallyCreated);
-   iface->setSystemFlag(info->isSystem);
-   iface->setMTU(info->mtu);
-   iface->setSpeed(info->speed);
-   iface->setIfTableSuffix(info->ifTableSuffixLength, info->ifTableSuffix);
-
-   int defaultExpectedState = ConfigReadInt(_T("DefaultInterfaceExpectedState"), IF_DEFAULT_EXPECTED_STATE_UP);
-   switch(defaultExpectedState)
-   {
-      case IF_DEFAULT_EXPECTED_STATE_AUTO:
-         iface->setExpectedState(fakeInterface ? IF_EXPECTED_STATE_UP : IF_EXPECTED_STATE_AUTO);
-         break;
-      case IF_DEFAULT_EXPECTED_STATE_IGNORE:
-         iface->setExpectedState(IF_EXPECTED_STATE_IGNORE);
-         break;
-      default:
-         iface->setExpectedState(IF_EXPECTED_STATE_UP);
-         break;
-   }
-
    // Insert to objects' list and generate event
+   Interface *iface = createInterfaceObject(info, manuallyCreated, fakeInterface, bSyntheticMask);
+   if (iface == NULL)
+      return NULL;
+
    NetObjInsert(iface, true, false);
    addInterface(iface);
    if (!m_isHidden)
@@ -1523,6 +1516,15 @@ Interface *Node::createNewInterface(InterfaceInfo *info, bool manuallyCreated, b
       const InetAddress& addr = iface->getFirstIpAddress();
       PostEvent(EVENT_INTERFACE_ADDED, m_id, "dsAdd", iface->getId(),
                 iface->getName(), &addr, addr.getMaskBits(), iface->getIfIndex());
+   }
+
+   for(int i = 0; i < bindList.size(); i++)
+      bindList.get(i)->addNode(this);
+
+   for(int i = 0; i < createList.size(); i++)
+   {
+      InetAddress addr = InetAddress(createList.get(i));
+      createSubnet(addr, bSyntheticMask);
    }
 
    return iface;
@@ -4209,9 +4211,8 @@ bool Node::updateInterfaceConfiguration(UINT32 rqid, int maskBits)
          {
             // New interface
             sendPollerMsg(rqid, POLLER_INFO _T("   Found new interface \"%s\"\r\n"), ifInfo->name);
-            if (filterInterface(ifInfo))
+            if (createNewInterface(ifInfo, false, false) != NULL)
             {
-               createNewInterface(ifInfo, false, false);
                hasChanges = true;
             }
             else
@@ -7719,14 +7720,7 @@ Subnet *Node::createSubnet(InetAddress& baseAddr, bool syntheticMask)
    InetAddress addr = baseAddr.getSubnetAddress();
    if (syntheticMask)
    {
-      while(FindSubnetByIP(m_zoneUIN, addr) != NULL)
-      {
-         baseAddr.setMaskBits(baseAddr.getMaskBits() + 1);
-         addr = baseAddr.getSubnetAddress();
-      }
-
-      // Do not create subnet if there are no address space for it
-      if (baseAddr.getHostBits() == 0)
+      if (AdjustSubnetBaseAddress(baseAddr, m_zoneUIN))
          return NULL;
    }
 
@@ -7856,7 +7850,6 @@ void Node::checkSubnetBinding()
                addr.setMaskBits((addr.getFamily() == AF_INET) ? ConfigReadInt(_T("DefaultSubnetMaskIPv4"), 24) : ConfigReadInt(_T("DefaultSubnetMaskIPv6"), 64));
                pSubnet = createSubnet(addr, true);
             }
-            pSubnet->addNode(this);
          }
          else
          {
