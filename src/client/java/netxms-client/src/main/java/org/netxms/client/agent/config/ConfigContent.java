@@ -45,26 +45,32 @@ public class ConfigContent
    }
 
    /**
-    * Constructs object from message
+    * Constructs object from incoming message
+    *
+    * @param id Configuration policy ID
+    * @param msg Incoming message to be parsed
     */
-   public ConfigContent(long id, NXCPMessage response)
+   public ConfigContent(long id, NXCPMessage msg)
    {
       this.id = id;
-      name = response.getFieldAsString(NXCPCodes.VID_NAME) == null ? "" : response.getFieldAsString(NXCPCodes.VID_NAME);
-      config = response.getFieldAsString(NXCPCodes.VID_CONFIG_FILE) == null ?
-            "" :
-            response.getFieldAsString(NXCPCodes.VID_CONFIG_FILE);
-      filter = response.getFieldAsString(NXCPCodes.VID_FILTER) == null ? "" : response.getFieldAsString(NXCPCodes.VID_FILTER);
-      sequenceNumber = response.getFieldAsInt64(NXCPCodes.VID_SEQUENCE_NUMBER);
+      name = msg.getFieldAsString(NXCPCodes.VID_NAME) == null ? "" : msg.getFieldAsString(NXCPCodes.VID_NAME);
+      config = msg.getFieldAsString(NXCPCodes.VID_CONFIG_FILE) == null ? "" : msg.getFieldAsString(NXCPCodes.VID_CONFIG_FILE);
+      filter = msg.getFieldAsString(NXCPCodes.VID_FILTER) == null ? "" : msg.getFieldAsString(NXCPCodes.VID_FILTER);
+      sequenceNumber = msg.getFieldAsInt64(NXCPCodes.VID_SEQUENCE_NUMBER);
    }
 
-   public void fillMessage(NXCPMessage request)
+   /**
+    * TODO
+    *
+    * @param message TODO
+    */
+   public void fillMessage(NXCPMessage message)
    {
-      request.setFieldInt32(NXCPCodes.VID_CONFIG_ID, (int)id);
-      request.setField(NXCPCodes.VID_NAME, name);
-      request.setField(NXCPCodes.VID_CONFIG_FILE, config);
-      request.setField(NXCPCodes.VID_FILTER, filter);
-      request.setFieldInt32(NXCPCodes.VID_SEQUENCE_NUMBER, (int)sequenceNumber);
+      message.setFieldInt32(NXCPCodes.VID_CONFIG_ID, (int)id);
+      message.setField(NXCPCodes.VID_NAME, name);
+      message.setField(NXCPCodes.VID_CONFIG_FILE, config);
+      message.setField(NXCPCodes.VID_FILTER, filter);
+      message.setFieldInt32(NXCPCodes.VID_SEQUENCE_NUMBER, (int)sequenceNumber);
    }
 
    /**

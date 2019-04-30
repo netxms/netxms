@@ -17,6 +17,9 @@ public class ReceivedFile
 
    /**
     * Create new received file handle
+    *
+    * @param f      TODO
+    * @param status TODO
     */
    public ReceivedFile(File f, int status)
    {

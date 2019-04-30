@@ -98,16 +98,18 @@ import org.simpleframework.xml.Serializer;
 
    /**
     * Returns DCI array as a list
+    *
+    * @return TODO
     */
    public List<DCIImageRule> getRulesAsList()
    {
-      List<DCIImageRule> ruleLisr = new ArrayList<DCIImageRule>();
+      List<DCIImageRule> rules = new ArrayList<DCIImageRule>();
       if (containRuleList())
       {
          for(DCIImageRule dci : dciRuleList)
-            ruleLisr.add(dci);
+            rules.add(dci);
       }
-      return ruleLisr;
+      return rules;
    }
 
    /**

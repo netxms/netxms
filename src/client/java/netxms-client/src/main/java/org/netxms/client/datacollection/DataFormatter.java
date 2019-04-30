@@ -56,7 +56,10 @@ public class DataFormatter
    }
 
    /**
-    * @param formatString The format
+    * TODO
+    *
+    * @param precision    TODO
+    * @param formatString TODO
     */
    public DataFormatter(int precision, String formatString)
    {
@@ -224,8 +227,9 @@ public class DataFormatter
    /**
     * Get rounded value for char labels
     *
-    * @param value to round
-    * @param step  of label
+    * @param value        to round
+    * @param step         of label
+    * @param maxPrecision desired precision
     * @return rounded value
     */
    public static String roundDecimalValue(double value, double step, int maxPrecision)

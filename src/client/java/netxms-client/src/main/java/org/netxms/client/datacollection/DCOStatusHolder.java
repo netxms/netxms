@@ -11,8 +11,8 @@ public class DCOStatusHolder
    /**
     * Status holder constructor
     *
-    * @param dciId
-    * @param status
+    * @param items TODO
+    * @param status TODO
     */
    public DCOStatusHolder(long[] items, int status)
    {
@@ -30,7 +30,9 @@ public class DCOStatusHolder
    }
 
    /**
-    * @param dciId the dciId to set
+    * TODO
+    *
+    * @param items TODO
     */
    public void setDciIdArray(long[] items)
    {

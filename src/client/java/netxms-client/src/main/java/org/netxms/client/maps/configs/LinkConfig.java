@@ -76,11 +76,20 @@ public class LinkConfig
       useActiveThresholds = false;
       isLocked = false;
    }
-   
+
    /**
     * Constructor for creating XML
+    *
+    * @param dciList
+    * @param objectStatusList
+    * @param colorSource
+    * @param color
+    * @param routing
+    * @param bendPoints
+    * @param useActiveThresholds
+    * @param isLocked
     */
-   public LinkConfig(SingleDciConfig[] dciList, List<Long> objectStatusList, 
+   public LinkConfig(SingleDciConfig[] dciList, List<Long> objectStatusList,
          int colorSource, int color, int routing,
          long[] bendPoints, boolean useActiveThresholds, boolean isLocked)
    {

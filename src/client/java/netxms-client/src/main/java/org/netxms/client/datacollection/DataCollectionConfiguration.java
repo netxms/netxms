@@ -57,6 +57,7 @@ public class DataCollectionConfiguration
    /**
     * Open data collection configuration.
     *
+    * @param notifyDCOChangeCB change callback
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
@@ -176,9 +177,9 @@ public class DataCollectionConfiguration
    }
 
    /**
-    * Add or update data collection item from the list by ID from notification
+    * TODO
     *
-    * @param id DCI ID
+    * @param dco
     */
    public void updateItemFromNotification(DataCollectionObject dco)
    {
@@ -192,9 +193,10 @@ public class DataCollectionConfiguration
    }
 
    /**
-    * Update data collection item status from the list by ID from notification
+    * TODO
     *
-    * @param id DCI ID
+    * @param idArr  TODO
+    * @param status TODO
     */
    public void updateItemStatusFromNotification(long[] idArr, int status)
    {

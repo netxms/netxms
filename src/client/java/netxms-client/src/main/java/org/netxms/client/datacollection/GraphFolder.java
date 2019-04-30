@@ -69,7 +69,7 @@ public class GraphFolder
    }
 
    /**
-    * Get display name (name with & shortcut marks removed)
+    * Get display name (name with &amp; shortcut marks removed)
     *
     * @return display name
     */

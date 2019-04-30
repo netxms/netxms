@@ -1636,6 +1636,7 @@ public class NXCObjectModificationData
     * @param rackImageRear  The rear rack image to set
     * @param rackPosition   The rack position to set
     * @param rackHeight     the rack height to set
+    * @param rackOrientation Rack orientation (front/rear)
     */
    public void setRackPlacement(long rackId, UUID rackImageFront, UUID rackImageRear, short rackPosition, short rackHeight,
          RackOrientation rackOrientation)
@@ -2013,8 +2014,8 @@ public class NXCObjectModificationData
    /**
     * Set abuto bind/remove options
     *
-    * @param autoApply
-    * @param autoUnbind
+    * @param autoApply  TODO
+    * @param autoUnbind TODO
     */
    public void setAutoBindFlags(boolean autoApply, boolean autoUnbind)
    {

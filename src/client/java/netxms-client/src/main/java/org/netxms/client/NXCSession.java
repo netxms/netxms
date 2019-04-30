@@ -2979,6 +2979,7 @@ public class NXCSession
     * is case-insensitive.
     *
     * @param name object name to find
+    * @param filter TODO
     * @return object with matching name or null
     */
    public AbstractObject findObjectByName(final String name, ObjectFilter filter)
@@ -4088,7 +4089,7 @@ public class NXCSession
    /**
     * Detach user from LDAP
     *
-    * @param id user ID
+    * @param userId user ID
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
@@ -4282,8 +4283,8 @@ public class NXCSession
     *
     * @param dciConfig Dci config
     * @return list of active thresholds
-    * @throws IOException
-    * @throws NXCException
+    * @throws IOException TODO
+    * @throws NXCException TODO
     */
    public List<Threshold> getActiveThresholds(List<SingleDciConfig> dciConfig) throws IOException, NXCException
    {
@@ -4478,14 +4479,14 @@ public class NXCSession
     * Get collected DCI data from server. Please note that you should specify
     * either row count limit or time from/to limit.
     *
-    * @param nodeId           Node ID
-    * @param dciId            DCI ID
-    * @param instance         instance value (for table DCI only)
-    * @param dataColumn       name of column to retrieve data from (for table DCI only)
-    * @param from             Start of time range or null for no limit
-    * @param to               End of time range or null for no limit
-    * @param maxRows          Maximum number of rows to retrieve or 0 for no limit
-    * @param includeRawValues if true raw DCI values will be included into set
+    * @param nodeId     Node ID
+    * @param dciId      DCI ID
+    * @param instance   instance value (for table DCI only)
+    * @param dataColumn name of column to retrieve data from (for table DCI only)
+    * @param from       Start of time range or null for no limit
+    * @param to         End of time range or null for no limit
+    * @param maxRows    Maximum number of rows to retrieve or 0 for no limit
+    * @param valueType  TODO
     * @return DCI data set
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
@@ -4557,12 +4558,12 @@ public class NXCSession
     * Get collected DCI data from server. Please note that you should specify
     * either row count limit or time from/to limit.
     *
-    * @param nodeId           Node ID
-    * @param dciId            DCI ID
-    * @param from             Start of time range or null for no limit
-    * @param to               End of time range or null for no limit
-    * @param maxRows          Maximum number of rows to retrieve or 0 for no limit
-    * @param includeRawValues if true raw values will be included into result set
+    * @param nodeId    Node ID
+    * @param dciId     DCI ID
+    * @param from      Start of time range or null for no limit
+    * @param to        End of time range or null for no limit
+    * @param maxRows   Maximum number of rows to retrieve or 0 for no limit
+    * @param valueType TODO
     * @return DCI data set
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
@@ -7407,6 +7408,7 @@ public class NXCSession
     * @param scripts          List of library script identifiers
     * @param objectTools      List of object tool identifiers
     * @param dciSummaryTables List of DCI summary table identifiers
+    * @param actions          TODO
     * @return resulting XML document
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
@@ -8101,6 +8103,9 @@ public class NXCSession
     * Get predefined graph infromation by graph id
     *
     * @param graphId graph id
+    * @return TODO
+    * @throws IOException  TODO
+    * @throws NXCException TODO
     */
    public GraphSettings getPredefinedGraph(long graphId) throws IOException, NXCException
    {
@@ -8848,11 +8853,12 @@ public class NXCSession
     * @param nodeId         node object ID
     * @param localFile      local file
     * @param remoteFileName remote file name (can be null or empty)
+    * @param overwrite      TODO
     * @param listener       progress listener (can be null)
     * @throws IOException  if socket or file I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void uploadLocalFileToAgent(long nodeId, File localFile, String remoteFileName, boolean overvrite,
+   public void uploadLocalFileToAgent(long nodeId, File localFile, String remoteFileName, boolean overwrite,
          ProgressListener listener) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_FILEMGR_UPLOAD);
@@ -8863,7 +8869,7 @@ public class NXCSession
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
       msg.setField(NXCPCodes.VID_FILE_NAME, remoteFileName);
       msg.setField(NXCPCodes.VID_MODIFICATION_TIME, new Date(localFile.lastModified()));
-      msg.setField(NXCPCodes.VID_OVERWRITE, overvrite);
+      msg.setField(NXCPCodes.VID_OVERWRITE, overwrite);
       sendMessage(msg);
       NXCPMessage response = waitForRCC(msg.getMessageId());
       sendFile(msg.getMessageId(), localFile, listener, response.getFieldAsBoolean(NXCPCodes.VID_ENABLE_COMPRESSION));

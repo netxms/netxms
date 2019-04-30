@@ -46,8 +46,11 @@ public class TcpProxy
    private Timer sendTimer = new Timer(true);
 
    /**
-    * @throws IOException
+    * TODO
     *
+    * @param session   TODO
+    * @param channelId TODO
+    * @throws IOException TODO
     */
    protected TcpProxy(NXCSession session, int channelId) throws IOException
    {
@@ -172,8 +175,8 @@ public class TcpProxy
     * Send data to destination
     *
     * @param data data block
-    * @throws IOException
-    * @throws NXCException
+    * @throws IOException  TODO
+    * @throws NXCException TODO
     */
    public synchronized void send(byte[] data) throws IOException, NXCException
    {
