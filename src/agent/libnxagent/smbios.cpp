@@ -930,13 +930,6 @@ static void ParseBatteryInformation(TableHeader *t)
    b.voltage = WORD_AT(t, 0x0C);
    if (t->fixedLength >= 0x16)   // 2.2+
    {
-      GetStringByIndex(t, BYTE_AT(t, 0x06), b.manufactureDate, sizeof(b.manufactureDate));
-      GetStringByIndex(t, BYTE_AT(t, 0x07), b.serial, sizeof(b.serial));
-      DecodeBatteryChemistry(BYTE_AT(t, 0x09), b.chemistry, sizeof(b.chemistry));
-      b.capacity = WORD_AT(t, 0x0A);
-   }
-   else
-   {
       if (BYTE_AT(t, 0x07) == 0)
          snprintf(b.serial, sizeof(b.serial), "%04X", WORD_AT(t, 0x10));
       else
@@ -946,7 +939,7 @@ static void ParseBatteryInformation(TableHeader *t)
       {
          UINT32 d = WORD_AT(t, 0x12);
          snprintf(b.manufactureDate, sizeof(b.manufactureDate), "%04d.%02d.%02d", 
-            (d >> 8) + 1980, (d >> 4) & 0x000F, d & 0x000F);
+            (d >> 9) + 1980, (d >> 5) & 0x000F, d & 0x001F);
       }
       else
       {
@@ -959,6 +952,13 @@ static void ParseBatteryInformation(TableHeader *t)
          DecodeBatteryChemistry(BYTE_AT(t, 0x09), b.chemistry, sizeof(b.chemistry));
 
       b.capacity = static_cast<UINT32>(WORD_AT(t, 0x0A)) * static_cast<UINT32>(BYTE_AT(t, 0x15));
+   }
+   else
+   {
+      GetStringByIndex(t, BYTE_AT(t, 0x06), b.manufactureDate, sizeof(b.manufactureDate));
+      GetStringByIndex(t, BYTE_AT(t, 0x07), b.serial, sizeof(b.serial));
+      DecodeBatteryChemistry(BYTE_AT(t, 0x09), b.chemistry, sizeof(b.chemistry));
+      b.capacity = WORD_AT(t, 0x0A);
    }
    s_batteries.add(&b);
 }
