@@ -5,6 +5,7 @@ import com.radensolutions.reporting.service.ServerSettings;
 import org.hibernate.SessionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
@@ -14,7 +15,6 @@ import org.springframework.orm.hibernate5.HibernateTransactionManager;
 import org.springframework.orm.hibernate5.LocalSessionFactoryBuilder;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
-import javax.annotation.PostConstruct;
 import javax.sql.DataSource;
 import java.beans.PropertyVetoException;
 import java.util.Properties;
@@ -22,15 +22,15 @@ import java.util.Properties;
 @Configuration
 @ComponentScan("com.radensolutions.reporting")
 @EnableTransactionManagement
-public class DaoContextConfig {
+public class DaoContextConfig implements InitializingBean {
 
     private static final Logger log = LoggerFactory.getLogger(DaoContextConfig.class);
 
     @Autowired
     private ServerSettings settings;
 
-    @PostConstruct
-    public void init() {
+    @Override
+    public void afterPropertiesSet() throws Exception {
         log.debug("DaoContextConfig initialized.");
     }
 

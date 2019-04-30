@@ -31,7 +31,7 @@ public abstract class NXCLDataSource implements JRDataSource {
         try {
             session.connect(PROTOCOL_COMPONENTS);
             session.login(login, password);
-            session.syncEventTemplates();
+            session.syncEventObjects();
             session.syncObjects();
             loadData(session);
         } catch (Exception e) {
