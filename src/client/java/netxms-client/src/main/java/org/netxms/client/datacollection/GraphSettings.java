@@ -139,7 +139,6 @@ public class GraphSettings extends ChartConfig implements ObjectAction
     * Create copy of provided settings
     *
     * @param src source object
-    * @param name new name
     */
    public GraphSettings(GraphSettings src)
    {
@@ -290,7 +289,7 @@ public class GraphSettings extends ChartConfig implements ObjectAction
    }
 
    /**
-    * Get short name (last part of full path separated by ->)
+    * Get short name (last part of full path separated by "-&gt;")
     *
     * @return short name
     */
@@ -300,7 +299,7 @@ public class GraphSettings extends ChartConfig implements ObjectAction
    }
 
    /**
-    * Get display name (short name with & shortcut marks removed)
+    * Get display name (short name with &amp; shortcut marks removed)
     *
     * @return display name
     */

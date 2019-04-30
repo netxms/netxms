@@ -223,8 +223,9 @@ public class DataFormatter
    /**
     * Get rounded value for char labels
     *
-    * @param value to round
-    * @param step of label
+    * @param value        to round
+    * @param step         of label
+    * @param maxPrecision desired precision
     * @return rounded value
     */
    public static String roundDecimalValue(double value, double step, int maxPrecision)

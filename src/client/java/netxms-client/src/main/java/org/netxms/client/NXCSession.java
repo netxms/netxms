@@ -4019,7 +4019,7 @@ public class NXCSession
    /**
     * Detach user from LDAP
     *
-    * @param id user ID
+    * @param userId user ID
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */

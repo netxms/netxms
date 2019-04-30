@@ -34,11 +34,15 @@ public class ObjectQueryResult
 
    /**
     * Create new result
+    *
+    * @param object     TODO
+    * @param properties TODO
+    * @param values     TODO
     */
    protected ObjectQueryResult(AbstractObject object, List<String> properties, List<String> values)
    {
       this.object = object;
-      this.properties = new HashMap<String, String>();
+      this.properties = new HashMap<>();
       for(int i = 0; i < properties.size(); i++)
       {
          this.properties.put(properties.get(i), values.get(i));

@@ -46,18 +46,24 @@ public class ConfigContent
 
    /**
     * Constructs object from message
+    *
+    * @param id  Configuration policy ID
+    * @param msg Incoming message to be parsed
     */
-   public ConfigContent(long id, NXCPMessage response)
+   public ConfigContent(long id, NXCPMessage msg)
    {
       this.id = id;
-      name = response.getFieldAsString(NXCPCodes.VID_NAME) == null ? "" : response.getFieldAsString(NXCPCodes.VID_NAME);
-      config = response.getFieldAsString(NXCPCodes.VID_CONFIG_FILE) == null ?
-            "" :
-            response.getFieldAsString(NXCPCodes.VID_CONFIG_FILE);
-      filter = response.getFieldAsString(NXCPCodes.VID_FILTER) == null ? "" : response.getFieldAsString(NXCPCodes.VID_FILTER);
-      sequenceNumber = response.getFieldAsInt64(NXCPCodes.VID_SEQUENCE_NUMBER);
+      name = msg.getFieldAsString(NXCPCodes.VID_NAME) == null ? "" : msg.getFieldAsString(NXCPCodes.VID_NAME);
+      config = msg.getFieldAsString(NXCPCodes.VID_CONFIG_FILE) == null ? "" : msg.getFieldAsString(NXCPCodes.VID_CONFIG_FILE);
+      filter = msg.getFieldAsString(NXCPCodes.VID_FILTER) == null ? "" : msg.getFieldAsString(NXCPCodes.VID_FILTER);
+      sequenceNumber = msg.getFieldAsInt64(NXCPCodes.VID_SEQUENCE_NUMBER);
    }
 
+   /**
+    * TODO
+    *
+    * @param request TODO
+    */
    public void fillMessage(NXCPMessage request)
    {
       request.setFieldInt32(NXCPCodes.VID_CONFIG_ID, (int)id);

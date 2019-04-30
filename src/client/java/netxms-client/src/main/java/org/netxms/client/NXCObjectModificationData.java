@@ -1629,6 +1629,7 @@ public class NXCObjectModificationData
     * @param rackImageRear The rear rack image to set
     * @param rackPosition The rack position to set
     * @param rackHeight the rack height to set
+    * @param rackOrientation Rack orientation (front/rear)
     */
    public void setRackPlacement(long rackId, UUID rackImageFront, UUID rackImageRear, short rackPosition, short rackHeight,
          RackOrientation rackOrientation)

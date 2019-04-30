@@ -46,8 +46,11 @@ public class TcpProxy
    private Timer sendTimer = new Timer(true);
 
    /**
-    * @throws IOException
+    * TODO
     *
+    * @param session   TODO
+    * @param channelId TODO
+    * @throws IOException TODO
     */
    protected TcpProxy(NXCSession session, int channelId) throws IOException
    {
