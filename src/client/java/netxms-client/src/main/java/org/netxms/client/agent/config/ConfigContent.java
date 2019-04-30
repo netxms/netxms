@@ -1,17 +1,17 @@
 /**
  * NetXMS - open source network management system
  * Copyright (C) 2003-2014 Raden Solutions
- *
+ * <p>
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- *
+ * <p>
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- *
+ * <p>
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
@@ -31,7 +31,7 @@ public class ConfigContent
    private String filter;
    private String name;
    private long sequenceNumber;
-   
+
    /**
     * Default constructior
     */
@@ -43,7 +43,7 @@ public class ConfigContent
       name = "New config";
       sequenceNumber = -1;
    }
-   
+
    /**
     * Constructs object from message
     */
@@ -51,11 +51,13 @@ public class ConfigContent
    {
       this.id = id;
       name = response.getFieldAsString(NXCPCodes.VID_NAME) == null ? "" : response.getFieldAsString(NXCPCodes.VID_NAME);
-      config = response.getFieldAsString(NXCPCodes.VID_CONFIG_FILE) == null ? "" : response.getFieldAsString(NXCPCodes.VID_CONFIG_FILE);
+      config = response.getFieldAsString(NXCPCodes.VID_CONFIG_FILE) == null ?
+            "" :
+            response.getFieldAsString(NXCPCodes.VID_CONFIG_FILE);
       filter = response.getFieldAsString(NXCPCodes.VID_FILTER) == null ? "" : response.getFieldAsString(NXCPCodes.VID_FILTER);
       sequenceNumber = response.getFieldAsInt64(NXCPCodes.VID_SEQUENCE_NUMBER);
    }
-   
+
    public void fillMessage(NXCPMessage request)
    {
       request.setFieldInt32(NXCPCodes.VID_CONFIG_ID, (int)id);
@@ -64,7 +66,7 @@ public class ConfigContent
       request.setField(NXCPCodes.VID_FILTER, filter);
       request.setFieldInt32(NXCPCodes.VID_SEQUENCE_NUMBER, (int)sequenceNumber);
    }
-   
+
    /**
     * @return the id
     */
@@ -72,7 +74,7 @@ public class ConfigContent
    {
       return id;
    }
-   
+
    /**
     * @param id the id to set
     */

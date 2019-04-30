@@ -1,17 +1,17 @@
 /**
  * NetXMS - open source network management system
  * Copyright (C) 2003-2012 Victor Kirhenshtein
- *
+ * <p>
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- *
+ * <p>
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- *
+ * <p>
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
@@ -21,6 +21,7 @@ package org.netxms.client.events;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+
 import org.netxms.base.NXCPMessage;
 
 /**
@@ -28,130 +29,130 @@ import org.netxms.base.NXCPMessage;
  */
 public class EventInfo
 {
-	private long id;
-	private Date timeStamp;
-	private long sourceObjectId;
-	private int code;
-	private String name;
-	private int severity;
-	private String message;
-	private EventInfo parent;
-	private List<EventInfo> children;
-	
-	/**
-	 * Create from NXCP message.
-	 * 
-	 * @param msg
-	 * @param baseId
-	 */
-	public EventInfo(NXCPMessage msg, long baseId, EventInfo parent)
-	{
-		this.parent = parent;
-		if (parent != null)
-			parent.addChild(this);
-		children = null;
-		id = msg.getFieldAsInt64(baseId);
-		code = msg.getFieldAsInt32(baseId + 2);
-		name = msg.getFieldAsString(baseId + 3);
-		severity = msg.getFieldAsInt32(baseId + 4);
-		sourceObjectId = msg.getFieldAsInt64(baseId + 5);
-		timeStamp = msg.getFieldAsDate(baseId + 6);
-		message = msg.getFieldAsString(baseId + 7);
-	}
-	
-	/**
-	 * Add child event
-	 * 
-	 * @param e
-	 */
-	private void addChild(EventInfo e)
-	{
-		if (children == null)
-			children = new ArrayList<EventInfo>();
-		children.add(e);
-	}
+   private long id;
+   private Date timeStamp;
+   private long sourceObjectId;
+   private int code;
+   private String name;
+   private int severity;
+   private String message;
+   private EventInfo parent;
+   private List<EventInfo> children;
 
-	/**
-	 * @return the id
-	 */
-	public long getId()
-	{
-		return id;
-	}
+   /**
+    * Create from NXCP message.
+    *
+    * @param msg
+    * @param baseId
+    */
+   public EventInfo(NXCPMessage msg, long baseId, EventInfo parent)
+   {
+      this.parent = parent;
+      if (parent != null)
+         parent.addChild(this);
+      children = null;
+      id = msg.getFieldAsInt64(baseId);
+      code = msg.getFieldAsInt32(baseId + 2);
+      name = msg.getFieldAsString(baseId + 3);
+      severity = msg.getFieldAsInt32(baseId + 4);
+      sourceObjectId = msg.getFieldAsInt64(baseId + 5);
+      timeStamp = msg.getFieldAsDate(baseId + 6);
+      message = msg.getFieldAsString(baseId + 7);
+   }
 
-	/**
-	 * @return parent event or null
-	 */
-	public EventInfo getParent()
-	{
-		return parent;
-	}
+   /**
+    * Add child event
+    *
+    * @param e
+    */
+   private void addChild(EventInfo e)
+   {
+      if (children == null)
+         children = new ArrayList<EventInfo>();
+      children.add(e);
+   }
 
-	/**
-	 * @return the timeStamp
-	 */
-	public Date getTimeStamp()
-	{
-		return timeStamp;
-	}
+   /**
+    * @return the id
+    */
+   public long getId()
+   {
+      return id;
+   }
 
-	/**
-	 * @return the sourceObjectId
-	 */
-	public long getSourceObjectId()
-	{
-		return sourceObjectId;
-	}
+   /**
+    * @return parent event or null
+    */
+   public EventInfo getParent()
+   {
+      return parent;
+   }
 
-	/**
-	 * @return the code
-	 */
-	public int getCode()
-	{
-		return code;
-	}
+   /**
+    * @return the timeStamp
+    */
+   public Date getTimeStamp()
+   {
+      return timeStamp;
+   }
 
-	/**
-	 * Get event name
-	 * 
-	 * @return event name
-	 */
-	public String getName()
-	{
-		return name;
-	}
+   /**
+    * @return the sourceObjectId
+    */
+   public long getSourceObjectId()
+   {
+      return sourceObjectId;
+   }
 
-	/**
-	 * @return the severity
-	 */
-	public int getSeverity()
-	{
-		return severity;
-	}
+   /**
+    * @return the code
+    */
+   public int getCode()
+   {
+      return code;
+   }
 
-	/**
-	 * @return the message
-	 */
-	public String getMessage()
-	{
-		return message;
-	}
+   /**
+    * Get event name
+    *
+    * @return event name
+    */
+   public String getName()
+   {
+      return name;
+   }
 
-	/**
-	 * @return the children
-	 */
-	public EventInfo[] getChildren()
-	{
-		return (children != null) ? children.toArray(new EventInfo[children.size()]) : new EventInfo[0];
-	}
-	
-	/**
-	 * Check if this object has children
-	 * 
-	 * @return true if this object has children
-	 */
-	public boolean hasChildren()
-	{
-		return (children != null) && (children.size() > 0);
-	}
+   /**
+    * @return the severity
+    */
+   public int getSeverity()
+   {
+      return severity;
+   }
+
+   /**
+    * @return the message
+    */
+   public String getMessage()
+   {
+      return message;
+   }
+
+   /**
+    * @return the children
+    */
+   public EventInfo[] getChildren()
+   {
+      return (children != null) ? children.toArray(new EventInfo[children.size()]) : new EventInfo[0];
+   }
+
+   /**
+    * Check if this object has children
+    *
+    * @return true if this object has children
+    */
+   public boolean hasChildren()
+   {
+      return (children != null) && (children.size() > 0);
+   }
 }

@@ -1,17 +1,17 @@
 /**
  * NetXMS - open source network management system
  * Copyright (C) 2003-2019 Victor Kirhenshtein
- *
+ * <p>
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- *
+ * <p>
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- *
+ * <p>
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
@@ -56,6 +56,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 import org.netxms.base.EncryptionContext;
 import org.netxms.base.GeoLocation;
 import org.netxms.base.InetAddressEx;
@@ -289,13 +290,13 @@ public class NXCSession
    private Set<SessionListener> listeners = new HashSet<SessionListener>(0);
    private Set<ServerConsoleListener> consoleListeners = new HashSet<ServerConsoleListener>(0);
    private Map<Long, ProgressListener> progressListeners = new HashMap<Long, ProgressListener>(0);
-   
+
    // Message subscriptions
    private Map<MessageSubscription, MessageHandler> messageSubscriptions = new HashMap<MessageSubscription, MessageHandler>(0);
 
    // Received files
    private Map<Long, NXCReceivedFile> receivedFiles = new HashMap<Long, NXCReceivedFile>();
-   
+
    // Received file updates(for file monitoring)
    private Map<String, String> receivedFileUpdates = new HashMap<String, String>();
 
@@ -324,7 +325,7 @@ public class NXCSession
 
    // Configuration hints
    private Map<String, String> clientConfigurationHints = new HashMap<String, String>();
-   
+
    // Objects
    private Map<Long, AbstractObject> objectList = new HashMap<Long, AbstractObject>();
    private Map<UUID, AbstractObject> objectListGUID = new HashMap<UUID, AbstractObject>();
@@ -339,17 +340,17 @@ public class NXCSession
    // Event templates
    private Map<Long, EventTemplate> eventTemplates = new HashMap<Long, EventTemplate>();
    private boolean eventTemplatesNeedSync = false;
-   
+
    // Alarm categories
    private Map<Long, AlarmCategory> alarmCategories = new HashMap<Long, AlarmCategory>();
    private boolean alarmCategoriesNeedSync = false;
-   
+
    // Message of the day
    private String messageOfTheDay;
-   
+
    // TCP proxies
    private Map<Integer, TcpProxy> tcpProxies = new HashMap<Integer, TcpProxy>();
-   
+
    /**
     * Message subscription class
     */
@@ -357,7 +358,7 @@ public class NXCSession
    {
       protected int messageCode;
       protected long messageId;
-      
+
       /**
        * @param messageCode The message code
        * @param messageId The message ID
@@ -367,7 +368,7 @@ public class NXCSession
          this.messageCode = messageCode;
          this.messageId = messageId;
       }
-      
+
       /* (non-Javadoc)
        * @see java.lang.Object#hashCode()
        */
@@ -521,8 +522,7 @@ public class NXCSession
                      break;
                   case NXCPCodes.CMD_ALARM_UPDATE:
                      sendNotification(new SessionNotification(
-                        msg.getFieldAsInt32(NXCPCodes.VID_NOTIFICATION_CODE) + SessionNotification.NOTIFY_BASE,
-                        new Alarm(msg)));
+                           msg.getFieldAsInt32(NXCPCodes.VID_NOTIFICATION_CODE) + SessionNotification.NOTIFY_BASE, new Alarm(msg)));
                      break;
                   case NXCPCodes.CMD_BULK_ALARM_STATE_CHANGE:
                      processBulkAlarmStateChange(msg);
@@ -589,7 +589,7 @@ public class NXCSession
                         MessageSubscription s = new MessageSubscription(msg.getMessageCode(), msg.getMessageId());
                         MessageHandler handler = messageSubscriptions.get(s);
                         if (handler != null)
-                        { 
+                        {
                            if (handler.processMessage(msg))
                               msg = null;
                            if (handler.isComplete())
@@ -616,11 +616,13 @@ public class NXCSession
             }
             catch(NXCPException e)
             {
-               if (e.getErrorCode() == NXCPException.SESSION_CLOSED) break;
+               if (e.getErrorCode() == NXCPException.SESSION_CLOSED)
+                  break;
             }
             catch(NXCException e)
             {
-               if (e.getErrorCode() == RCC.ENCRYPTION_ERROR) break;
+               if (e.getErrorCode() == RCC.ENCRYPTION_ERROR)
+                  break;
             }
          }
       }
@@ -692,10 +694,10 @@ public class NXCSession
             sendNotification(new SessionNotification(SessionNotification.NEW_SYSLOG_RECORD, order, record));
          }
       }
-      
+
       /**
        * Process CMD_BULK_ALARM_STATE_CHANGE notification message
-       * 
+       *
        * @param msg NXCP message
        */
       private void processBulkAlarmStateChange(final NXCPMessage msg)
@@ -715,7 +717,7 @@ public class NXCSession
          if (shiftCode)
             code += SessionNotification.NOTIFY_BASE;
          long data = msg.getFieldAsInt64(NXCPCodes.VID_NOTIFICATION_DATA);
-         
+
          switch(code)
          {
             case SessionNotification.ALARM_STATUS_FLOW_CHANGED:
@@ -733,10 +735,10 @@ public class NXCSession
                backgroundDisconnect(code);
                return;  // backgroundDisconnect will send disconnect notification
          }
-         
+
          sendNotification(new SessionNotification(code, data));
       }
-      
+
       /**
        * Process CMD_FILE_MONITORING message
        *
@@ -746,7 +748,7 @@ public class NXCSession
       {
          String fileName = msg.getFieldAsString(NXCPCodes.VID_FILE_NAME);
          String fileContent = msg.getFieldAsString(NXCPCodes.VID_FILE_DATA);
-         
+
          synchronized(receivedFileUpdates)
          {
             receivedFileUpdates.put(fileName, fileContent);
@@ -792,7 +794,7 @@ public class NXCSession
       private void processFileTransferError(final NXCPMessage msg)
       {
          long id = msg.getMessageId();
-         
+
          NXCReceivedFile file;
          synchronized(receivedFiles)
          {
@@ -844,7 +846,7 @@ public class NXCSession
 
          // Send notification if changed object was found in local database copy
          // or added to it and notification code was known
-         if (object != null) 
+         if (object != null)
             sendNotification(new SessionNotification(SessionNotification.USER_DB_CHANGED, code, object));
       }
 
@@ -900,7 +902,7 @@ public class NXCSession
          }
          sendNotification(new SessionNotification(code, eventCode, et));
       }
-      
+
       /**
        * Process server notification on image library change
        *
@@ -911,9 +913,9 @@ public class NXCSession
          final UUID imageGuid = msg.getFieldAsUUID(NXCPCodes.VID_GUID);
          final int flags = msg.getFieldAsInt32(NXCPCodes.VID_FLAGS);
          sendNotification(new SessionNotification(SessionNotification.IMAGE_LIBRARY_CHANGED,
-            flags == 0 ? SessionNotification.IMAGE_UPDATED : SessionNotification.IMAGE_DELETED, imageGuid));
+               flags == 0 ? SessionNotification.IMAGE_UPDATED : SessionNotification.IMAGE_DELETED, imageGuid));
       }
-      
+
       /**
        * Process server notification on alarm category configuration change
        *
@@ -923,7 +925,9 @@ public class NXCSession
       {
          int code = msg.getFieldAsInt32(NXCPCodes.VID_NOTIFICATION_CODE) + SessionNotification.NOTIFY_BASE;
          long categoryId = msg.getFieldAsInt64(NXCPCodes.VID_ELEMENT_LIST_BASE);
-         AlarmCategory ac = (code != SessionNotification.ALARM_CATEGORY_DELETED) ? new AlarmCategory(msg, NXCPCodes.VID_ELEMENT_LIST_BASE) : null;
+         AlarmCategory ac = (code != SessionNotification.ALARM_CATEGORY_DELETED) ?
+               new AlarmCategory(msg, NXCPCodes.VID_ELEMENT_LIST_BASE) :
+               null;
          if (alarmCategoriesNeedSync)
          {
             synchronized(alarmCategories)
@@ -940,10 +944,10 @@ public class NXCSession
          }
          sendNotification(new SessionNotification(code, categoryId, ac));
       }
-      
+
       /**
        * Process TCP proxy data
-       * 
+       *
        * @param channelId proxy channel ID
        * @param data received data block
        */
@@ -957,10 +961,10 @@ public class NXCSession
          if (proxy != null)
             proxy.processRemoteData(data);
       }
-      
+
       /**
        * Process TCP proxy closure.
-       * 
+       *
        * @param channelId proxy channel ID
        */
       private void processTcpProxyClosure(int channelId)
@@ -992,7 +996,7 @@ public class NXCSession
 
       /*
        * (non-Javadoc)
-       * 
+       *
        * @see java.lang.Thread#run()
        */
       @Override
@@ -1024,7 +1028,7 @@ public class NXCSession
                   }
                }
             }
-            
+
             // Check timeouts on message subscriptions
             synchronized(messageSubscriptions)
             {
@@ -1052,14 +1056,14 @@ public class NXCSession
          this.stopFlag = stopFlag;
       }
    }
-   
+
    /**
     * Notification processor
     */
    private class NotificationProcessor extends Thread
    {
       private SessionListener[] cachedListenerList = new SessionListener[0];
-      
+
       NotificationProcessor()
       {
          setName("Session Notification Processor");
@@ -1084,10 +1088,10 @@ public class NXCSession
             {
                continue;
             }
-            
+
             if (n.getCode() == SessionNotification.STOP_PROCESSING_THREAD)
                break;
-            
+
             if (n.getCode() == SessionNotification.UPDATE_LISTENER_LIST)
             {
                synchronized(listeners)
@@ -1176,7 +1180,7 @@ public class NXCSession
       final int objectClass = msg.getFieldAsInt32(NXCPCodes.VID_OBJECT_CLASS);
 
       AbstractObject object = createCustomObjectFromMessage(objectClass, msg);
-      if (object != null) 
+      if (object != null)
          return object;
 
       switch(objectClass)
@@ -1309,7 +1313,8 @@ public class NXCSession
          response.setFieldInt16(NXCPCodes.VID_KEY_LENGTH, encryptionContext.getKeyLength());
          response.setFieldInt16(NXCPCodes.VID_IV_LENGTH, encryptionContext.getIvLength());
          response.setFieldInt32(NXCPCodes.VID_RCC, RCC.SUCCESS);
-         Logger.debug("NXCSession.setupEncryption", "Cipher selected: " + EncryptionContext.getCipherName(encryptionContext.getCipher()));
+         Logger.debug("NXCSession.setupEncryption",
+               "Cipher selected: " + EncryptionContext.getCipherName(encryptionContext.getCipher()));
       }
       catch(Exception e)
       {
@@ -1318,7 +1323,7 @@ public class NXCSession
 
       sendMessage(response);
    }
-   
+
    /**
     * Wait for synchronization completion
     */
@@ -1350,7 +1355,8 @@ public class NXCSession
             }
             actualTimeout -= System.currentTimeMillis() - startTime;
          }
-         if (!success) throw new NXCException(RCC.TIMEOUT);
+         if (!success)
+            throw new NXCException(RCC.TIMEOUT);
       }
    }
 
@@ -1366,7 +1372,7 @@ public class NXCSession
 
    /**
     * Add notification listener
-    * 
+    *
     * @param listener Listener to add
     */
    public void addListener(SessionListener listener)
@@ -1382,7 +1388,7 @@ public class NXCSession
 
    /**
     * Remove notification listener
-    * 
+    *
     * @param listener Listener to remove
     */
    public void removeListener(SessionListener listener)
@@ -1421,10 +1427,10 @@ public class NXCSession
          consoleListeners.remove(listener);
       }
    }
-   
+
    /**
     * Subscribe to specific messages
-    * 
+    *
     * @param messageCode The message code
     * @param messageId  The message ID
     * @param handler The message handler
@@ -1436,10 +1442,10 @@ public class NXCSession
          messageSubscriptions.put(new MessageSubscription(messageCode, messageId), handler);
       }
    }
-   
+
    /**
     * Remove message subscription
-    * 
+    *
     * @param messageCode The message code
     * @param messageId The message ID
     */
@@ -1450,7 +1456,7 @@ public class NXCSession
          messageSubscriptions.remove(new MessageSubscription(messageCode, messageId));
       }
    }
-   
+
    /**
     * Call notification handlers on all registered listeners
     *
@@ -1507,9 +1513,10 @@ public class NXCSession
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   protected void sendFile(final long requestId, final File file, ProgressListener listener, boolean allowStreamCompression) throws IOException, NXCException
+   protected void sendFile(final long requestId, final File file, ProgressListener listener, boolean allowStreamCompression)
+         throws IOException, NXCException
    {
-      if (listener != null) 
+      if (listener != null)
          listener.setTotalWorkAmount(file.length());
       final InputStream inputStream = new BufferedInputStream(new FileInputStream(file));
       sendFileStream(requestId, inputStream, listener, allowStreamCompression);
@@ -1526,9 +1533,10 @@ public class NXCSession
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   protected void sendFile(final long requestId, final byte[] data, ProgressListener listener, boolean allowStreamCompression) throws IOException, NXCException
+   protected void sendFile(final long requestId, final byte[] data, ProgressListener listener, boolean allowStreamCompression)
+         throws IOException, NXCException
    {
-      if (listener != null) 
+      if (listener != null)
          listener.setTotalWorkAmount(data.length);
       final InputStream inputStream = new ByteArrayInputStream(data);
       sendFileStream(requestId, inputStream, listener, allowStreamCompression);
@@ -1546,11 +1554,12 @@ public class NXCSession
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   private void sendFileStream(final long requestId, final InputStream inputStream, ProgressListener listener, boolean allowStreamCompression) throws IOException, NXCException
+   private void sendFileStream(final long requestId, final InputStream inputStream, ProgressListener listener,
+         boolean allowStreamCompression) throws IOException, NXCException
    {
       NXCPMessage msg = new NXCPMessage(NXCPCodes.CMD_FILE_DATA, requestId);
       msg.setBinaryMessage(true);
-      
+
       Deflater compressor = allowStreamCompression ? new Deflater(9) : null;
       msg.setStream(true, allowStreamCompression);
 
@@ -1558,7 +1567,7 @@ public class NXCSession
       final byte[] buffer = new byte[FILE_BUFFER_SIZE];
       long bytesSent = 0;
       while(true)
-      {         
+      {
          final int bytesRead = inputStream.read(buffer);
          if (bytesRead < FILE_BUFFER_SIZE)
          {
@@ -1587,7 +1596,7 @@ public class NXCSession
          sendMessage(msg);
 
          bytesSent += (bytesRead == -1) ? 0 : bytesRead;
-         if (listener != null) 
+         if (listener != null)
             listener.markProgress(bytesSent);
 
          if (bytesRead < FILE_BUFFER_SIZE)
@@ -1610,7 +1619,7 @@ public class NXCSession
 
    /**
     * Wait for message with specific code and id.
-    * 
+    *
     * @param code
     *           Message code
     * @param id
@@ -1624,14 +1633,14 @@ public class NXCSession
    public NXCPMessage waitForMessage(final int code, final long id, final int timeout) throws NXCException
    {
       final NXCPMessage msg = msgWaitQueue.waitForMessage(code, id, timeout);
-      if (msg == null) 
+      if (msg == null)
          throw new NXCException(RCC.TIMEOUT);
       return msg;
    }
 
    /**
     * Wait for message with specific code and id.
-    * 
+    *
     * @param code
     *           Message code
     * @param id
@@ -1643,14 +1652,14 @@ public class NXCSession
    public NXCPMessage waitForMessage(final int code, final long id) throws NXCException
    {
       final NXCPMessage msg = msgWaitQueue.waitForMessage(code, id);
-      if (msg == null) 
+      if (msg == null)
          throw new NXCException(RCC.TIMEOUT);
       return msg;
    }
 
    /**
     * Wait for CMD_REQUEST_COMPLETED message with given id using default timeout
-    * 
+    *
     * @param id
     *           Message id
     * @return received message
@@ -1664,7 +1673,7 @@ public class NXCSession
 
    /**
     * Wait for CMD_REQUEST_COMPLETED message with given id
-    * 
+    *
     * @param id
     *           Message id
     * @param timeout Timeout in milliseconds
@@ -1700,7 +1709,7 @@ public class NXCSession
 
    /**
     * Create new NXCP message with unique id
-    * 
+    *
     * @param code
     *           Message code
     * @return New message object
@@ -1732,7 +1741,7 @@ public class NXCSession
             {
                if (rf.getStatus() != NXCReceivedFile.OPEN)
                {
-                  if (rf.getStatus() == NXCReceivedFile.RECEIVED) 
+                  if (rf.getStatus() == NXCReceivedFile.RECEIVED)
                   {
                      file = rf.getFile();
                      status = ReceivedFile.SUCCESS;
@@ -1754,7 +1763,7 @@ public class NXCSession
       }
       return new ReceivedFile(file, timeRemaining <= 0 ? ReceivedFile.TIMEOUT : status);
    }
-   
+
    /**
     * Wait for specific file tail to arrive
     *
@@ -1790,7 +1799,7 @@ public class NXCSession
          }
       }
       return tail;
-   }   
+   }
 
    /**
     * Execute simple commands (without arguments and only returning RCC)
@@ -1830,7 +1839,7 @@ public class NXCSession
     * Connect to NetMS server. Establish connection with the server and set up encryption if required.
     * Only base protocol version check will be performed. Login must be performed before using session
     * after successful connect.
-    * 
+    *
     * @throws IOException  if socket I/O error occurs
     * @throws UnknownHostException if the host is unknown
     * @throws NXCException if NetXMS server returns an error or operation was timed out
@@ -1840,12 +1849,12 @@ public class NXCSession
    {
       connect(null);
    }
-   
+
    /**
     * Connect to NetMS server. Establish connection with the server and set up encryption if required.
     * Versions of protocol components given in *componentVersions* will be validated. Login must be 
     * performed before using session after successful connect.
-    * 
+    *
     * @param componentVersions The versions of the components
     * @throws IOException  if socket I/O error occurs
     * @throws UnknownHostException if the host is unknown
@@ -1859,7 +1868,7 @@ public class NXCSession
 
       if (disconnected)
          throw new IllegalStateException("Session already disconnected and cannot be reused");
-      
+
       encryptionContext = null;
       Logger.info("NXCSession.connect", "Connecting to " + connAddress + ":" + connPort);
       try
@@ -1880,8 +1889,8 @@ public class NXCSession
          protocolVersion = new ProtocolVersion(response);
          if (!ignoreProtocolVersion)
          {
-            if (!protocolVersion.isCorrectVersion(ProtocolVersion.INDEX_BASE) ||
-                ((componentVersions != null) && !validateProtocolVersions(componentVersions)))
+            if (!protocolVersion.isCorrectVersion(ProtocolVersion.INDEX_BASE) || ((componentVersions != null)
+                  && !validateProtocolVersions(componentVersions)))
             {
                Logger.warning("NXCSession.connect", "connection failed (" + protocolVersion.toString() + ")");
                throw new NXCException(RCC.BAD_PROTOCOL, protocolVersion.toString());
@@ -1902,7 +1911,8 @@ public class NXCSession
          tileServerURL = response.getFieldAsString(NXCPCodes.VID_TILE_SERVER_URL);
          if (tileServerURL != null)
          {
-            if (!tileServerURL.endsWith("/")) tileServerURL = tileServerURL.concat("/");
+            if (!tileServerURL.endsWith("/"))
+               tileServerURL = tileServerURL.concat("/");
          }
          else
          {
@@ -1910,17 +1920,17 @@ public class NXCSession
          }
 
          dateFormat = response.getFieldAsString(NXCPCodes.VID_DATE_FORMAT);
-         if ((dateFormat == null) || (dateFormat.length() == 0)) 
+         if ((dateFormat == null) || (dateFormat.length() == 0))
             dateFormat = "dd.MM.yyyy";
 
          timeFormat = response.getFieldAsString(NXCPCodes.VID_TIME_FORMAT);
-         if ((timeFormat == null) || (timeFormat.length() == 0)) 
+         if ((timeFormat == null) || (timeFormat.length() == 0))
             timeFormat = "HH:mm:ss";
 
          shortTimeFormat = response.getFieldAsString(NXCPCodes.VID_SHORT_TIME_FORMAT);
-         if ((shortTimeFormat == null) || (shortTimeFormat.length() == 0)) 
+         if ((shortTimeFormat == null) || (shortTimeFormat.length() == 0))
             shortTimeFormat = "HH:mm";
-         
+
          int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_COMPONENTS);
          long fieldId = NXCPCodes.VID_COMPONENT_LIST_BASE;
          for(int i = 0; i < count; i++)
@@ -1940,14 +1950,14 @@ public class NXCSession
       }
       finally
       {
-         if (!connected) 
+         if (!connected)
             disconnect(SessionNotification.USER_DISCONNECT);
       }
    }
-   
+
    /**
     * Login to server using login name and password.
-    * 
+    *
     * @param login login name
     * @param password password
     * @throws IOException  if socket I/O error occurs
@@ -1958,10 +1968,10 @@ public class NXCSession
    {
       login(AuthenticationType.PASSWORD, login, password, null, null);
    }
-   
+
    /**
     * Login to server using certificate.
-    * 
+    *
     * @param login login name
     * @param certificate user's certificate
     * @param signature user's digital signature
@@ -1969,14 +1979,15 @@ public class NXCSession
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     * @throws IllegalStateException if the state is illegal
     */
-   public void login(String login, Certificate certificate, Signature signature) throws NXCException, IOException, IllegalStateException
+   public void login(String login, Certificate certificate, Signature signature)
+         throws NXCException, IOException, IllegalStateException
    {
       login(AuthenticationType.CERTIFICATE, login, null, certificate, signature);
    }
-   
+
    /**
     * Login to server.
-    * 
+    *
     * @param authType authentication type
     * @param login login name
     * @param password password
@@ -1986,17 +1997,18 @@ public class NXCSession
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     * @throws IllegalStateException if the state is illegal
     */
-   public void login(AuthenticationType authType, String login, String password, Certificate certificate, Signature signature) throws NXCException, IOException, IllegalStateException
+   public void login(AuthenticationType authType, String login, String password, Certificate certificate, Signature signature)
+         throws NXCException, IOException, IllegalStateException
    {
       if (!connected)
          throw new IllegalStateException("Session not connected");
 
       if (disconnected)
          throw new IllegalStateException("Session already disconnected and cannot be reused");
-      
+
       authenticationMethod = authType;
       userName = login;
-      
+
       final NXCPMessage request = newMessage(NXCPCodes.CMD_LOGIN);
       request.setFieldInt16(NXCPCodes.VID_AUTH_TYPE, authType.getValue());
       request.setField(NXCPCodes.VID_LOGIN_NAME, login);
@@ -2027,13 +2039,13 @@ public class NXCSession
       request.setField(NXCPCodes.VID_CLIENT_INFO, connClientInfo);
       request.setField(NXCPCodes.VID_OS_INFO, System.getProperty("os.name") + " " + System.getProperty("os.version"));
       request.setFieldInt16(NXCPCodes.VID_CLIENT_TYPE, clientType);
-      if (clientAddress != null) 
+      if (clientAddress != null)
          request.setField(NXCPCodes.VID_CLIENT_ADDRESS, clientAddress);
       if (clientLanguage != null)
          request.setField(NXCPCodes.VID_LANGUAGE, clientLanguage);
       request.setFieldInt16(NXCPCodes.VID_ENABLE_COMPRESSION, 1);
       sendMessage(request);
-      
+
       final NXCPMessage response = waitForMessage(NXCPCodes.CMD_LOGIN_RESP, request.getMessageId());
       int rcc = response.getFieldAsInt32(NXCPCodes.VID_RCC);
       Logger.debug("NXCSession.login", "CMD_LOGIN_RESP received, RCC=" + rcc);
@@ -2051,20 +2063,20 @@ public class NXCSession
       helpdeskLinkActive = response.getFieldAsBoolean(NXCPCodes.VID_HELPDESK_LINK_ACTIVE);
 
       defaultDciPollingInterval = response.getFieldAsInt32(NXCPCodes.VID_POLLING_INTERVAL);
-      if (defaultDciPollingInterval == 0) 
+      if (defaultDciPollingInterval == 0)
          defaultDciPollingInterval = 60;
 
       defaultDciRetentionTime = response.getFieldAsInt32(NXCPCodes.VID_RETENTION_TIME);
-      if (defaultDciRetentionTime == 0) 
+      if (defaultDciRetentionTime == 0)
          defaultDciRetentionTime = 30;
-      
+
       minViewRefreshInterval = response.getFieldAsInt32(NXCPCodes.VID_VIEW_REFRESH_INTERVAL);
       if (minViewRefreshInterval <= 0)
          minViewRefreshInterval = 200;
 
       strictAlarmStatusFlow = response.getFieldAsBoolean(NXCPCodes.VID_ALARM_STATUS_FLOW_STATE);
       timedAlarmAckEnabled = response.getFieldAsBoolean(NXCPCodes.VID_TIMED_ALARM_ACK_ENABLED);
-      
+
       serverCommandOutputTimeout = response.getFieldAsInt32(NXCPCodes.VID_SERVER_COMMAND_TIMEOUT) * 1000;
       serverColor = response.getFieldAsString(NXCPCodes.VID_SERVER_COLOR);
       serverName = response.getFieldAsString(NXCPCodes.VID_SERVER_NAME);
@@ -2074,7 +2086,7 @@ public class NXCSession
       // compatibility with 2.2.x before 2.2.6
       int count = response.getFieldAsInt32(NXCPCodes.VID_ALARM_LIST_DISP_LIMIT);
       clientConfigurationHints.put("AlarmList.DisplayLimit", Integer.toString(count));
-      
+
       count = response.getFieldAsInt32(NXCPCodes.VID_CONFIG_HINT_COUNT);
       if (count > 0)
       {
@@ -2091,18 +2103,19 @@ public class NXCSession
       messageOfTheDay = response.getFieldAsString(NXCPCodes.VID_MESSAGE_OF_THE_DAY);
 
       allowCompression = response.getFieldAsBoolean(NXCPCodes.VID_ENABLE_COMPRESSION);
-      
+
       Logger.info("NXCSession.login", "succesfully logged in, userId=" + userId);
    }
-   
+
    /**
     * Disconnect session in background
-    * 
+    *
     * @param reason disconnect reason (appropriate session notification code)
     */
    private void backgroundDisconnect(final int reason)
    {
-      Thread t = new Thread(new Runnable() {
+      Thread t = new Thread(new Runnable()
+      {
          @Override
          public void run()
          {
@@ -2115,14 +2128,14 @@ public class NXCSession
 
    /**
     * Disconnect from server.
-    * 
+    *
     * @param reason disconnect reason (appropriate session notification code)
     */
    synchronized private void disconnect(int reason)
    {
       if (disconnected)
          return;
-      
+
       if (socket != null)
       {
          try
@@ -2142,7 +2155,7 @@ public class NXCSession
          {
          }
       }
-      
+
       // cause notification processing thread to stop
       notificationQueue.clear();
       if (reason != SessionNotification.USER_DISCONNECT)
@@ -2189,7 +2202,7 @@ public class NXCSession
       connected = false;
       disconnected = true;
       socket = null;
-      
+
       listeners.clear();
       consoleListeners.clear();
       messageSubscriptions.clear();
@@ -2204,7 +2217,7 @@ public class NXCSession
       alarmCategories.clear();
       tcpProxies.clear();
    }
-   
+
    /**
     * Disconnect from server.
     */
@@ -2224,7 +2237,7 @@ public class NXCSession
 
    /**
     * Get encryption state for current session.
-    * 
+    *
     * @return true if session is encrypted
     */
    public boolean isEncrypted()
@@ -2234,7 +2247,7 @@ public class NXCSession
 
    /**
     * Get the state of protocol version check
-    * 
+    *
     * @return true if protocol version should not be checked
     */
    public boolean isIgnoreProtocolVersion()
@@ -2251,10 +2264,10 @@ public class NXCSession
    {
       this.ignoreProtocolVersion = ignoreProtocolVersion;
    }
-   
+
    /**
     * Validate protocol versions
-    * 
+    *
     * @param versions the protocol versions
     * @return true if protocol versions are valid
     */
@@ -2270,7 +2283,7 @@ public class NXCSession
 
    /**
     * Get default receiver buffer size.
-    * 
+    *
     * @return Default receiver buffer size in bytes.
     */
    public int getDefaultRecvBufferSize()
@@ -2280,7 +2293,7 @@ public class NXCSession
 
    /**
     * Get max receiver buffer size.
-    * 
+    *
     * @return Max receiver buffer size in bytes.
     */
    public int getMaxRecvBufferSize()
@@ -2291,7 +2304,7 @@ public class NXCSession
    /**
     * Set receiver buffer size. This method should be called before connect(). It will not have any effect after
     * connect().
-    * 
+    *
     * @param defaultBufferSize default size of receiver buffer in bytes.
     * @param maxBufferSize max size of receiver buffer in bytes.
     */
@@ -2303,7 +2316,7 @@ public class NXCSession
 
    /**
     * Get server address
-    * 
+    *
     * @return Server address
     */
    public String getServerAddress()
@@ -2313,7 +2326,7 @@ public class NXCSession
 
    /**
     * Get NetXMS server version.
-    * 
+    *
     * @return Server version
     */
    public String getServerVersion()
@@ -2323,7 +2336,7 @@ public class NXCSession
 
    /**
     * Get NetXMS server UID.
-    * 
+    *
     * @return Server UID
     */
    public long getServerId()
@@ -2333,7 +2346,7 @@ public class NXCSession
 
    /**
     * Get server time zone.
-    * 
+    *
     * @return server's time zone string
     */
    public String getServerTimeZone()
@@ -2343,7 +2356,7 @@ public class NXCSession
 
    /**
     * Get server name
-    * 
+    *
     * @return the serverName
     */
    public String getServerName()
@@ -2353,7 +2366,7 @@ public class NXCSession
 
    /**
     * Get server identification colour
-    * 
+    *
     * @return the serverColor
     */
    public String getServerColor()
@@ -2363,7 +2376,7 @@ public class NXCSession
 
    /**
     * Get server time
-    * 
+    *
     * @return the serverTime
     */
    public long getServerTime()
@@ -2371,7 +2384,7 @@ public class NXCSession
       long offset = System.currentTimeMillis() - serverTimeRecvTime;
       return serverTime + offset;
    }
-   
+
    /**
     * @return the serverChallenge
     */
@@ -2379,10 +2392,10 @@ public class NXCSession
    {
       return serverChallenge;
    }
-   
+
    /**
     * Check if server component with given id is registered
-    * 
+    *
     * @param componentId The component ID
     * @return true if server component is registered
     */
@@ -2390,10 +2403,10 @@ public class NXCSession
    {
       return serverComponents.contains(componentId);
    }
-   
+
    /**
     * Get list of registered server components
-    * 
+    *
     * @return Array of registered server components
     */
    public String[] getRegisteredServerComponents()
@@ -2403,7 +2416,7 @@ public class NXCSession
 
    /**
     * Get server URL
-    * 
+    *
     * @return the tileServerURL
     */
    public String getTileServerURL()
@@ -2413,7 +2426,7 @@ public class NXCSession
 
    /**
     * Get the state of zoning
-    * 
+    *
     * @return true if zoning is enabled
     */
    public boolean isZoningEnabled()
@@ -2423,7 +2436,7 @@ public class NXCSession
 
    /**
     * Get status of helpdesk integration module on server.
-    * 
+    *
     * @return true if helpdesk integration module loaded on server
     */
    public boolean isHelpdeskLinkActive()
@@ -2433,7 +2446,7 @@ public class NXCSession
 
    /**
     * Get client information string
-    * 
+    *
     * @return The client information
     */
    public String getClientInfo()
@@ -2443,7 +2456,7 @@ public class NXCSession
 
    /**
     * Set client information string
-    * 
+    *
     * @param connClientInfo The client info to set
     */
    public void setClientInfo(final String connClientInfo)
@@ -2453,7 +2466,7 @@ public class NXCSession
 
    /**
     * Set command execution timeout.
-    * 
+    *
     * @param commandTimeout
     *           New command timeout
     */
@@ -2464,7 +2477,7 @@ public class NXCSession
 
    /**
     * Set connect call timeout (must be set before connect call)
-    * 
+    *
     * @param connectTimeout connect timeout in milliseconds
     */
    public void setConnectTimeout(int connectTimeout)
@@ -2474,7 +2487,7 @@ public class NXCSession
 
    /**
     * Get identifier of logged in user.
-    * 
+    *
     * @return Identifier of logged in user
     */
    public int getUserId()
@@ -2484,7 +2497,7 @@ public class NXCSession
 
    /**
     * Get the current user name
-    * 
+    *
     * @return the userName
     */
    public String getUserName()
@@ -2494,7 +2507,7 @@ public class NXCSession
 
    /**
     * Get the current authentication method
-    * 
+    *
     * @return the authenticationMethod
     */
    public AuthenticationType getAuthenticationMethod()
@@ -2504,14 +2517,14 @@ public class NXCSession
 
    /**
     * Get system-wide rights of currently logged in user.
-    * 
+    *
     * @return System-wide rights of currently logged in user
     */
    public long getUserSystemRights()
    {
       return userSystemRights;
    }
-   
+
    /** Get message of the day if server config is set
     * @return Message of the day
     */
@@ -2522,37 +2535,37 @@ public class NXCSession
 
    /**
     * Check if password is expired for currently logged in user.
-    * 
+    *
     * @return true if password is expired
     */
    public boolean isPasswordExpired()
    {
       return passwordExpired;
    }
-   
+
    /**
     * Get number of remaining grace logins
-    * 
+    *
     * @return number of remaining grace logins
     */
    public int getGraceLogins()
    {
       return graceLogins;
    }
-   
+
    /**
     * Get maximum number of records allowed to be displayed in alarm list
-    * 
+    *
     * @return The limit of alarms displayed
     */
    public int getAlarmListDisplayLimit()
    {
-		return getClientConfigurationHintAsInt("AlarmList.DisplayLimit", 4096);
+      return getClientConfigurationHintAsInt("AlarmList.DisplayLimit", 4096);
    }
-   
+
    /**
     * Get client configuration hint as string
-    * 
+    *
     * @param name hint name
     * @param defaultValue default value (returned if given hint was not provided by server)
     * @return hint value as provided by server or default value
@@ -2565,7 +2578,7 @@ public class NXCSession
 
    /**
     * Get client configuration hint as string
-    * 
+    *
     * @param name hint name
     * @return hint value as provided by server or null
     */
@@ -2573,10 +2586,10 @@ public class NXCSession
    {
       return getClientConfigurationHint(name, null);
    }
-   
+
    /**
     * Get client configuration hint as integer
-    * 
+    *
     * @param name hint name
     * @param defaultValue default value (returned if given hint was not provided by server or is not valid integer)
     * @return hint value as provided by server or default value
@@ -2595,10 +2608,10 @@ public class NXCSession
          return defaultValue;
       }
    }
-   
+
    /**
     * Get client configuration hint as boolean
-    * 
+    *
     * @param name hint name
     * @param defaultValue default value (returned if given hint was not provided by server or is not valid boolean)
     * @return hint value as provided by server or default value
@@ -2621,7 +2634,7 @@ public class NXCSession
          return defaultValue;
       }
    }
-   
+
    /**
     * Synchronizes NetXMS objects between server and client. After successful
     * sync, subscribe client to object change notifications.
@@ -2676,7 +2689,8 @@ public class NXCSession
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
 
-      if ((options & OBJECT_SYNC_WAIT) != 0) waitForRCC(msg.getMessageId());
+      if ((options & OBJECT_SYNC_WAIT) != 0)
+         waitForRCC(msg.getMessageId());
    }
 
    /**
@@ -2773,7 +2787,8 @@ public class NXCSession
     * @param returnUnknown if true, this method will return UnknownObject placeholders for unknown object identifiers
     * @return list of found objects
     */
-   public List<AbstractObject> findMultipleObjects(final long[] idList, Class<? extends AbstractObject> classFilter, boolean returnUnknown)
+   public List<AbstractObject> findMultipleObjects(final long[] idList, Class<? extends AbstractObject> classFilter,
+         boolean returnUnknown)
    {
       List<AbstractObject> result = new ArrayList<AbstractObject>(idList.length);
 
@@ -2816,7 +2831,8 @@ public class NXCSession
     * @param returnUnknown if true, this method will return UnknownObject placeholders for unknown object identifiers
     * @return array of found objects
     */
-   public List<AbstractObject> findMultipleObjects(final Long[] idList, Class<? extends AbstractObject> classFilter, boolean returnUnknown)
+   public List<AbstractObject> findMultipleObjects(final Long[] idList, Class<? extends AbstractObject> classFilter,
+         boolean returnUnknown)
    {
       List<AbstractObject> result = new ArrayList<AbstractObject>(idList.length);
 
@@ -2881,10 +2897,10 @@ public class NXCSession
          return zoneList.get(zoneUIN);
       }
    }
-   
+
    /**
     * Get all accessible zone objects
-    * 
+    *
     * @return list of all accessible zone objects
     */
    public List<Zone> getAllZones()
@@ -2894,7 +2910,7 @@ public class NXCSession
          return new ArrayList<Zone>(zoneList.values());
       }
    }
-   
+
    /**
     * Find object by name. If multiple objects with same name exist,
     * it is not determined what object will be returned. Name comparison
@@ -2919,7 +2935,7 @@ public class NXCSession
       }
       return result;
    }
-   
+
    /**
     * Find object by name with object filter. Name comparison
     * is case-insensitive.
@@ -2969,10 +2985,10 @@ public class NXCSession
       }
       return result;
    }
-   
+
    /**
     * Generic object find using filter. WIll return first object matching given filter.
-    * 
+    *
     * @param filter ObjectFilter to filter the result
     * @return first matching object or null
     */
@@ -2995,7 +3011,7 @@ public class NXCSession
 
    /**
     * Find all objects matching given filter.
-    * 
+    *
     * @param filter ObjectFilter to filter the result
     * @return list of matching objects (empty list if nothing found)
     */
@@ -3030,7 +3046,8 @@ public class NXCSession
       {
          for(AbstractObject object : objectList.values())
          {
-            if ((classFilter != null) && !classFilter.contains(object.getObjectClass())) continue;
+            if ((classFilter != null) && !classFilter.contains(object.getObjectClass()))
+               continue;
 
             if (!object.hasParents())
             {
@@ -3061,7 +3078,8 @@ public class NXCSession
                      }
                   }
                }
-               if (!hasParents) list.add(object);
+               if (!hasParents)
+                  list.add(object);
             }
          }
       }
@@ -3103,10 +3121,10 @@ public class NXCSession
       AbstractObject object = findObjectById(objectId);
       return (object != null) ? object.getObjectName() : ("[" + Long.toString(objectId) + "]");
    }
-   
+
    /**
     * Get zone name by UIN
-    * 
+    *
     * @param zoneUIN zone UIN
     * @return zone name
     */
@@ -3115,10 +3133,10 @@ public class NXCSession
       Zone zone = findZone(zoneUIN);
       return (zone != null) ? zone.getObjectName() : ("[" + Long.toString(zoneUIN) + "]");
    }
-   
+
    /**
     * Query objects on server side
-    * 
+    *
     * @param query query to execute
     * @return list of matching objects
     * @throws IOException  if socket I/O error occurs
@@ -3136,7 +3154,7 @@ public class NXCSession
    /**
     * Query objects on server side and read certain object properties. Available properties are the same as
     * in corresponding NXSL objects or calculated properties set using "with" statement in query.
-    * 
+    *
     * @param query query to execute
     * @param properties object properties to read
     * @param orderBy list of properties for ordering result set (can be null)
@@ -3145,7 +3163,8 @@ public class NXCSession
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public List<ObjectQueryResult> queryObjectDetails(String query, List<String> properties, List<String> orderBy, int limit) throws IOException, NXCException
+   public List<ObjectQueryResult> queryObjectDetails(String query, List<String> properties, List<String> orderBy, int limit)
+         throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_QUERY_OBJECT_DETAILS);
       msg.setField(NXCPCodes.VID_QUERY, query);
@@ -3154,7 +3173,7 @@ public class NXCSession
          msg.setFieldsFromStringCollection(orderBy, NXCPCodes.VID_ORDER_FIELD_LIST_BASE, NXCPCodes.VID_ORDER_FIELDS);
       msg.setFieldInt32(NXCPCodes.VID_RECORD_LIMIT, limit);
       sendMessage(msg);
-      
+
       NXCPMessage response = waitForRCC(msg.getMessageId());
       long[] objects = response.getFieldAsUInt32Array(NXCPCodes.VID_OBJECT_LIST);
       List<ObjectQueryResult> results = new ArrayList<ObjectQueryResult>(objects.length);
@@ -3190,7 +3209,7 @@ public class NXCSession
       {
          msg = waitForMessage(NXCPCodes.CMD_ALARM_DATA, rqId);
          long alarmId = msg.getFieldAsInt32(NXCPCodes.VID_ALARM_ID);
-         if (alarmId == 0) 
+         if (alarmId == 0)
             break; // ALARM_ID == 0 indicates end of list
          alarmList.put(alarmId, new Alarm(msg));
       }
@@ -3209,7 +3228,7 @@ public class NXCSession
    public Alarm getAlarm(long alarmId) throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_ALARM);
-      msg.setFieldInt32(NXCPCodes.VID_ALARM_ID, (int) alarmId);
+      msg.setFieldInt32(NXCPCodes.VID_ALARM_ID, (int)alarmId);
       sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());
       return new Alarm(response);
@@ -3227,7 +3246,7 @@ public class NXCSession
    public List<EventInfo> getAlarmEvents(long alarmId) throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_ALARM_EVENTS);
-      msg.setFieldInt32(NXCPCodes.VID_ALARM_ID, (int) alarmId);
+      msg.setFieldInt32(NXCPCodes.VID_ALARM_ID, (int)alarmId);
       sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());
 
@@ -3267,7 +3286,7 @@ public class NXCSession
    public void acknowledgeAlarm(final long alarmId, boolean sticky, int time) throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_ACK_ALARM);
-      msg.setFieldInt32(NXCPCodes.VID_ALARM_ID, (int) alarmId);
+      msg.setFieldInt32(NXCPCodes.VID_ALARM_ID, (int)alarmId);
       msg.setFieldInt16(NXCPCodes.VID_STICKY_FLAG, sticky ? 1 : 0);
       msg.setFieldInt32(NXCPCodes.VID_TIMESTAMP, time);
       sendMessage(msg);
@@ -3330,7 +3349,7 @@ public class NXCSession
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
-   
+
    /**
     * Terminate alarm.
     *
@@ -3345,7 +3364,7 @@ public class NXCSession
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
-   
+
    /**
     * Terminate alarm by helpdesk reference.
     *
@@ -3360,28 +3379,27 @@ public class NXCSession
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
-   
+
    private Map<Long, Integer> bulkAlarmOperation(int cmd, List<Long> alarmIds) throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(cmd);
       msg.setField(NXCPCodes.VID_ALARM_ID_LIST, alarmIds.toArray(new Long[alarmIds.size()]));
       sendMessage(msg);
-      
+
       final NXCPMessage response = waitForRCC(msg.getMessageId());
-      
+
       Map<Long, Integer> operationFails = new HashMap<Long, Integer>();
-      
+
       // Returned alarm ID`s if there were any failed operations
       if (response.findField(NXCPCodes.VID_ALARM_ID_LIST) != null)
       {
          for(int i = 0; i < response.getFieldAsUInt32ArrayEx(NXCPCodes.VID_ALARM_ID_LIST).length; i++)
          {
-            operationFails.put(response.getFieldAsUInt32ArrayEx(NXCPCodes.VID_ALARM_ID_LIST)[i], 
+            operationFails.put(response.getFieldAsUInt32ArrayEx(NXCPCodes.VID_ALARM_ID_LIST)[i],
                   (Integer)response.getFieldAsUInt32ArrayEx(NXCPCodes.VID_FAIL_CODE_LIST)[i].intValue());
          }
       }
-      
-      
+
       return operationFails;
    }
 
@@ -3421,7 +3439,7 @@ public class NXCSession
    public void deleteAlarm(final long alarmId) throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_ALARM);
-      msg.setFieldInt32(NXCPCodes.VID_ALARM_ID, (int) alarmId);
+      msg.setFieldInt32(NXCPCodes.VID_ALARM_ID, (int)alarmId);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
@@ -3441,10 +3459,10 @@ public class NXCSession
       sendMessage(msg);
       return waitForRCC(msg.getMessageId()).getFieldAsString(NXCPCodes.VID_HELPDESK_REF);
    }
-   
+
    /**
     * Get URL for helpdesk issue associated with given alarm
-    * 
+    *
     * @param alarmId The ID of alarm
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
@@ -3457,11 +3475,11 @@ public class NXCSession
       sendMessage(msg);
       return waitForRCC(msg.getMessageId()).getFieldAsString(NXCPCodes.VID_URL);
    }
-   
+
    /**
     * Unlink helpdesk issue from alarm. User must have OBJECT_ACCESS_UPDATE_ALARMS access right
     * on alarm's source object and SYSTEM_ACCESS_UNLINK_ISSUES system wide access right.
-    * 
+    *
     * @param helpdeskReference The helpdesk reference
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
@@ -3477,7 +3495,7 @@ public class NXCSession
    /**
     * Unlink helpdesk issue from alarm. User must have OBJECT_ACCESS_UPDATE_ALARMS access right
     * on alarm's source object and SYSTEM_ACCESS_UNLINK_ISSUES system wide access right.
-    * 
+    *
     * @param alarmId alarm id
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
@@ -3501,7 +3519,7 @@ public class NXCSession
    public List<AlarmComment> getAlarmComments(long alarmId) throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_ALARM_COMMENTS);
-      msg.setFieldInt32(NXCPCodes.VID_ALARM_ID, (int) alarmId);
+      msg.setFieldInt32(NXCPCodes.VID_ALARM_ID, (int)alarmId);
       sendMessage(msg);
 
       final NXCPMessage response = waitForRCC(msg.getMessageId());
@@ -3527,34 +3545,34 @@ public class NXCSession
    public void deleteAlarmComment(long alarmId, long commentId) throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_ALARM_COMMENT);
-      msg.setFieldInt32(NXCPCodes.VID_ALARM_ID, (int) alarmId);
-      msg.setFieldInt32(NXCPCodes.VID_COMMENT_ID, (int) commentId);
+      msg.setFieldInt32(NXCPCodes.VID_ALARM_ID, (int)alarmId);
+      msg.setFieldInt32(NXCPCodes.VID_COMMENT_ID, (int)commentId);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
-   
+
    /**
     * Create alarm comment.
-    * 
+    *
     * @param alarmId The alarm ID
     * @param text The comment text
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void createAlarmComment(long alarmId, String text) throws IOException, NXCException 
+   public void createAlarmComment(long alarmId, String text) throws IOException, NXCException
    {
-   	updateAlarmComment(alarmId, 0, text);
+      updateAlarmComment(alarmId, 0, text);
    }
 
    /**
     * Create alarm comment by helpdesk reference.
-    * 
+    *
     * @param helpdeskReference The helpdesk reference
     * @param text The reference text
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void createAlarmComment(final String helpdeskReference, String text) throws IOException, NXCException 
+   public void createAlarmComment(final String helpdeskReference, String text) throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_UPDATE_ALARM_COMMENT);
       msg.setFieldInt32(NXCPCodes.VID_ALARM_ID, 0);
@@ -3577,17 +3595,17 @@ public class NXCSession
    public void updateAlarmComment(long alarmId, long commentId, String text) throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_UPDATE_ALARM_COMMENT);
-      msg.setFieldInt32(NXCPCodes.VID_ALARM_ID, (int) alarmId);
-      msg.setFieldInt32(NXCPCodes.VID_COMMENT_ID, (int) commentId);
+      msg.setFieldInt32(NXCPCodes.VID_ALARM_ID, (int)alarmId);
+      msg.setFieldInt32(NXCPCodes.VID_COMMENT_ID, (int)commentId);
       msg.setField(NXCPCodes.VID_COMMENTS, text);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
-   
+
    /**
     * Changes state of alarm status flow. Strict or not - terminate state can be set only after 
     * resolve state or after any state. 
-    * 
+    *
     * @param state state of alarm status flow - strict or not (1 or 0)
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
@@ -3602,7 +3620,7 @@ public class NXCSession
 
    /**
     * Get server configuration variables
-    * 
+    *
     * @return The server variables
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
@@ -3623,7 +3641,7 @@ public class NXCSession
          ServerVariable v = new ServerVariable(response, id);
          varList.put(v.getName(), v);
       }
-      
+
       count = response.getFieldAsInt32(NXCPCodes.VID_NUM_VALUES);
       for(int i = 0; i < count; i++)
       {
@@ -3635,10 +3653,10 @@ public class NXCSession
 
       return varList;
    }
-   
+
    /**
     * Get server public configuration variable
-    * 
+    *
     * @param name configuration variable name
     * @return value of requested configuration variable
     * @throws IOException  if socket I/O error occurs
@@ -3652,10 +3670,10 @@ public class NXCSession
       NXCPMessage response = waitForRCC(msg.getMessageId());
       return response.getFieldAsString(NXCPCodes.VID_VALUE);
    }
-   
+
    /**
     * Get server public configuration variable as a int
-    * 
+    *
     * @param name configuration variable name
     * @return value of requested configuration variable
     * @throws IOException  if socket I/O error occurs
@@ -3668,7 +3686,7 @@ public class NXCSession
 
    /**
     * Get server public configuration variable as boolen value
-    * 
+    *
     * @param name configuration variable name
     * @return value of requested configuration variable
     * @throws IOException  if socket I/O error occurs
@@ -3691,10 +3709,10 @@ public class NXCSession
          return false;
       }
    }
-   
+
    /**
     * Set server configuration variable
-    * 
+    *
     * @param name The name of the variable
     * @param value The value of the variable
     * @throws IOException  if socket I/O error occurs
@@ -3711,7 +3729,7 @@ public class NXCSession
 
    /**
     * Delete server configuration variable
-    * 
+    *
     * @param name The name of the variable
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
@@ -3726,7 +3744,7 @@ public class NXCSession
 
    /**
     * Set server configuration variables to default
-    * 
+    *
     * @param varList The list of variables
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
@@ -3775,7 +3793,7 @@ public class NXCSession
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
-   
+
    /**
     * Subscribe to notification channel. Each subscribe call should be matched by unsubscribe call.
     * Calling subscribe on already subscribed channel will increase internal counter, and subscription
@@ -3812,7 +3830,7 @@ public class NXCSession
 
    /**
     * Synchronize user database and subscribe to user change notifications
-    * 
+    *
     * @throws IOException
     *            if socket I/O error occurs
     * @throws NXCException
@@ -3828,10 +3846,10 @@ public class NXCSession
       userDatabaseSynchronized = true;
       subscribe(CHANNEL_USERDB);
    }
-   
+
    /**
     * Check if user database is synchronized with client
-    * 
+    *
     * @return true if user database is synchronized with client
     */
    public boolean isUserDatabaseSynchronized()
@@ -3841,7 +3859,7 @@ public class NXCSession
 
    /**
     * Find user or group by ID
-    * 
+    *
     * @param id The user DBObject Id
     * @return User object with given ID or null if such user does not exist
     */
@@ -3855,7 +3873,7 @@ public class NXCSession
 
    /**
     * Find user or group by GUID
-    * 
+    *
     * @param guid The user DBObject GUID
     * @return User object with given GUID or null if such user does not exist
     */
@@ -3869,7 +3887,7 @@ public class NXCSession
 
    /**
     * Get list of all user database objects
-    * 
+    *
     * @return List of all user database objects
     */
    public AbstractUserObject[] getUserDatabaseObjects()
@@ -3905,7 +3923,7 @@ public class NXCSession
 
    /**
     * Create user on server
-    * 
+    *
     * @param name
     *           Login name for new user
     * @return ID assigned to newly created user
@@ -3921,7 +3939,7 @@ public class NXCSession
 
    /**
     * Create user group on server
-    * 
+    *
     * @param name
     *           Name for new user group
     * @return ID assigned to newly created user group
@@ -3937,7 +3955,7 @@ public class NXCSession
 
    /**
     * Delete user or group on server
-    * 
+    *
     * @param id
     *           User or group ID
     * @throws IOException
@@ -3948,14 +3966,14 @@ public class NXCSession
    public void deleteUserDBObject(final long id) throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_USER);
-      msg.setFieldInt32(NXCPCodes.VID_USER_ID, (int) id);
+      msg.setFieldInt32(NXCPCodes.VID_USER_ID, (int)id);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
 
    /**
     * Set password for user
-    * 
+    *
     * @param id User ID
     * @param newPassword New password
     * @param oldPassword Old password
@@ -3965,17 +3983,17 @@ public class NXCSession
    public void setUserPassword(final long id, final String newPassword, final String oldPassword) throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_SET_PASSWORD);
-      msg.setFieldInt32(NXCPCodes.VID_USER_ID, (int) id);
+      msg.setFieldInt32(NXCPCodes.VID_USER_ID, (int)id);
       msg.setField(NXCPCodes.VID_PASSWORD, newPassword);
-      if (oldPassword != null) 
+      if (oldPassword != null)
          msg.setField(NXCPCodes.VID_OLD_PASSWORD, oldPassword);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
-   
+
    /**
     * Validate password for currently logged in user
-    * 
+    *
     * @param password password to validate
     * @return true if password is valid
     * @throws IOException if socket I/O error occurs
@@ -3992,7 +4010,7 @@ public class NXCSession
 
    /**
     * Modify user database object
-    * 
+    *
     * @param object User data
     * @param fields bit mask indicating fields to modify
     * @throws IOException
@@ -4011,7 +4029,7 @@ public class NXCSession
 
    /**
     * Modify user database object
-    * 
+    *
     * @param object User data
     * @throws IOException
     *            if socket I/O error occurs
@@ -4025,7 +4043,7 @@ public class NXCSession
 
    /**
     * Detach user from LDAP
-    * 
+    *
     * @param id user ID
     * @throws IOException
     *            if socket I/O error occurs
@@ -4039,10 +4057,10 @@ public class NXCSession
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
-   
+
    /**
     * Lock user database
-    * 
+    *
     * @throws IOException
     *            if socket I/O error occurs
     * @throws NXCException
@@ -4057,7 +4075,7 @@ public class NXCSession
 
    /**
     * Unlock user database
-    * 
+    *
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
@@ -4071,7 +4089,7 @@ public class NXCSession
    /**
     * Set custom attribute for currently logged in user. Server will allow to change
     * only attributes whose name starts with dot.
-    * 
+    *
     * @param name Attribute's name
     * @param value New attribute's value
     * @throws IOException if socket I/O error occurs
@@ -4089,7 +4107,7 @@ public class NXCSession
    /**
     * Get custom attribute for currently logged in user. If attribute is not set, empty string will
     * be returned.
-    * 
+    *
     * @param name Attribute's name
     * @return Attribute's value
     * @throws IOException if socket I/O error occurs
@@ -4115,15 +4133,16 @@ public class NXCSession
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public DciValue[] getLastValues(final long nodeId, boolean objectTooltipOnly, boolean overviewOnly, boolean includeNoValueObjects) throws IOException, NXCException
+   public DciValue[] getLastValues(final long nodeId, boolean objectTooltipOnly, boolean overviewOnly,
+         boolean includeNoValueObjects) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_LAST_VALUES);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
       msg.setField(NXCPCodes.VID_OBJECT_TOOLTIP_ONLY, objectTooltipOnly);
       msg.setField(NXCPCodes.VID_OVERVIEW_ONLY, overviewOnly);
       msg.setField(NXCPCodes.VID_INCLUDE_NOVALUE_OBJECTS, includeNoValueObjects);
       sendMessage(msg);
-      
+
       final NXCPMessage response = waitForRCC(msg.getMessageId());
 
       int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_ITEMS);
@@ -4149,7 +4168,7 @@ public class NXCSession
    {
       return getLastValues(nodeId, false, false, false);
    }
-   
+
    /**
     * Get last DCI values for given Map DCI Instance list
     *
@@ -4171,7 +4190,7 @@ public class NXCSession
 
       return sendLastValuesMsg(msg);
    }
-   
+
    /**
     * Get last DCI values for given Single Dci Config list
     *
@@ -4193,10 +4212,10 @@ public class NXCSession
 
       return sendLastValuesMsg(msg);
    }
-   
+
    /**
     * Send msg containing list of dci configurations
-    * 
+    *
     * @param msg The NXCPMessage to send
     * @return The DCI values
     * @throws IOException if socket I/O error occurs
@@ -4217,10 +4236,10 @@ public class NXCSession
 
       return list;
    }
-   
+
    /**
     * Get active thresholds
-    * 
+    *
     * @param dciConfig Dci config
     * @return list of active thresholds
     * @throws IOException
@@ -4263,8 +4282,8 @@ public class NXCSession
    public Table getTableLastValues(final long nodeId, final long dciId) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_TABLE_LAST_VALUES);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
-      msg.setFieldInt32(NXCPCodes.VID_DCI_ID, (int) dciId);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+      msg.setFieldInt32(NXCPCodes.VID_DCI_ID, (int)dciId);
       sendMessage(msg);
 
       final NXCPMessage response = waitForRCC(msg.getMessageId());
@@ -4283,7 +4302,7 @@ public class NXCSession
    public PerfTabDci[] getPerfTabItems(final long nodeId) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_PERFTAB_DCI_LIST);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
       sendMessage(msg);
 
       final NXCPMessage response = waitForRCC(msg.getMessageId());
@@ -4311,7 +4330,7 @@ public class NXCSession
    public List<ThresholdViolationSummary> getThresholdSummary(final long objectId) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_THRESHOLD_SUMMARY);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int) objectId);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)objectId);
       sendMessage(msg);
 
       final NXCPMessage response = waitForRCC(msg.getMessageId());
@@ -4414,7 +4433,8 @@ public class NXCSession
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   private DciData getCollectedDataInternal(long nodeId, long dciId, String instance, String dataColumn, Date from, Date to, int maxRows) throws IOException, NXCException
+   private DciData getCollectedDataInternal(long nodeId, long dciId, String instance, String dataColumn, Date from, Date to,
+         int maxRows) throws IOException, NXCException
    {
       NXCPMessage msg;
       if (instance != null) // table DCI
@@ -4427,14 +4447,14 @@ public class NXCSession
       {
          msg = newMessage(NXCPCodes.CMD_GET_DCI_DATA);
       }
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
-      msg.setFieldInt32(NXCPCodes.VID_DCI_ID, (int) dciId);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+      msg.setFieldInt32(NXCPCodes.VID_DCI_ID, (int)dciId);
 
       DciData data = new DciData(nodeId, dciId);
 
       int rowsReceived, rowsRemaining = maxRows;
-      int timeFrom = (from != null) ? (int) (from.getTime() / 1000) : 0;
-      int timeTo = (to != null) ? (int) (to.getTime() / 1000) : 0;
+      int timeFrom = (from != null) ? (int)(from.getTime() / 1000) : 0;
+      int timeTo = (to != null) ? (int)(to.getTime() / 1000) : 0;
 
       do
       {
@@ -4447,14 +4467,15 @@ public class NXCSession
          waitForRCC(msg.getMessageId());
 
          NXCPMessage response = waitForMessage(NXCPCodes.CMD_DCI_DATA, msg.getMessageId());
-         if (!response.isBinaryMessage()) 
+         if (!response.isBinaryMessage())
             throw new NXCException(RCC.INTERNAL_ERROR);
 
          rowsReceived = parseDataRows(response.getBinaryData(), data);
          if (((rowsRemaining == 0) || (rowsRemaining > MAX_DCI_DATA_ROWS)) && (rowsReceived == MAX_DCI_DATA_ROWS))
          {
             // adjust boundaries for next request
-            if (rowsRemaining > 0) rowsRemaining -= rowsReceived;
+            if (rowsRemaining > 0)
+               rowsRemaining -= rowsReceived;
 
             // Rows goes in newest to oldest order, so if we need to
             // retrieve additional data, we should update timeTo limit
@@ -4465,12 +4486,11 @@ public class NXCSession
                {
                   // There should be only one value per second, so we set
                   // last row's timestamp - 1 second as new boundary
-                  timeTo = (int) (row.getTimestamp().getTime() / 1000) - 1;
+                  timeTo = (int)(row.getTimestamp().getTime() / 1000) - 1;
                }
             }
          }
-      }
-      while(rowsReceived == MAX_DCI_DATA_ROWS);
+      } while(rowsReceived == MAX_DCI_DATA_ROWS);
 
       return data;
    }
@@ -4508,11 +4528,10 @@ public class NXCSession
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public DciData getCollectedTableData(
-      long nodeId, long dciId, String instance, String dataColumn, Date from, Date to, int maxRows)
-      throws IOException, NXCException
+   public DciData getCollectedTableData(long nodeId, long dciId, String instance, String dataColumn, Date from, Date to,
+         int maxRows) throws IOException, NXCException
    {
-      if (instance == null || dataColumn == null) 
+      if (instance == null || dataColumn == null)
          throw new NXCException(RCC.INVALID_ARGUMENT);
       return getCollectedDataInternal(nodeId, dciId, instance, dataColumn, from, to, maxRows);
    }
@@ -4528,12 +4547,12 @@ public class NXCSession
    public void clearCollectedData(long nodeId, long dciId) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_CLEAR_DCI_DATA);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
-      msg.setFieldInt32(NXCPCodes.VID_DCI_ID, (int) dciId);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+      msg.setFieldInt32(NXCPCodes.VID_DCI_ID, (int)dciId);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
-   
+
    /**
     * Delete collected data entry for given DCI
     *
@@ -4546,8 +4565,8 @@ public class NXCSession
    public void deleteDciEntry(long nodeId, long dciId, long timestamp) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_DCI_ENTRY);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
-      msg.setFieldInt32(NXCPCodes.VID_DCI_ID, (int) dciId);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+      msg.setFieldInt32(NXCPCodes.VID_DCI_ID, (int)dciId);
       msg.setFieldInt32(NXCPCodes.VID_TIMESTAMP, (int)timestamp);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
@@ -4564,8 +4583,8 @@ public class NXCSession
    public void forceDCIPoll(long nodeId, long dciId) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_FORCE_DCI_POLL);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
-      msg.setFieldInt32(NXCPCodes.VID_DCI_ID, (int) dciId);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+      msg.setFieldInt32(NXCPCodes.VID_DCI_ID, (int)dciId);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
@@ -4582,8 +4601,8 @@ public class NXCSession
    public Threshold[] getThresholds(final long nodeId, final long dciId) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_DCI_THRESHOLDS);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
-      msg.setFieldInt32(NXCPCodes.VID_DCI_ID, (int) dciId);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+      msg.setFieldInt32(NXCPCodes.VID_DCI_ID, (int)dciId);
       sendMessage(msg);
 
       final NXCPMessage response = waitForRCC(msg.getMessageId());
@@ -4611,7 +4630,8 @@ public class NXCSession
     */
    public String[] dciIdsToNames(long[] nodeIds, long[] dciIds) throws IOException, NXCException
    {
-      if (nodeIds.length == 0) return new String[0];
+      if (nodeIds.length == 0)
+         return new String[0];
 
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_RESOLVE_DCI_NAMES);
       msg.setFieldInt32(NXCPCodes.VID_NUM_ITEMS, nodeIds.length);
@@ -4662,13 +4682,13 @@ public class NXCSession
     */
    public long dciNameToId(long nodeId, String dciName) throws IOException, NXCException
    {
-      if (nodeId == 0 || dciName == null || dciName.isEmpty()) 
+      if (nodeId == 0 || dciName == null || dciName.isEmpty())
          return 0;
-      
+
       DciValue[] list = getLastValues(nodeId);
       for(DciValue dciValue : list)
       {
-         if(dciValue.getName().equals(dciName))
+         if (dciValue.getName().equals(dciName))
             return dciValue.getId();
       }
       return 0;
@@ -4689,7 +4709,7 @@ public class NXCSession
    public String queryParameter(long nodeId, int origin, String name) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_QUERY_PARAMETER);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
       msg.setFieldInt16(NXCPCodes.VID_DCI_SOURCE_TYPE, origin);
       msg.setField(NXCPCodes.VID_NAME, name);
       sendMessage(msg);
@@ -4712,7 +4732,7 @@ public class NXCSession
    public Table queryAgentTable(long nodeId, String name) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_QUERY_TABLE);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
       msg.setField(NXCPCodes.VID_NAME, name);
       sendMessage(msg);
 
@@ -4746,11 +4766,12 @@ public class NXCSession
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_CREATE_OBJECT);
 
       // Common attributes
-      msg.setFieldInt32(NXCPCodes.VID_PARENT_ID, (int) data.getParentId());
+      msg.setFieldInt32(NXCPCodes.VID_PARENT_ID, (int)data.getParentId());
       msg.setFieldInt16(NXCPCodes.VID_OBJECT_CLASS, data.getObjectClass());
       msg.setField(NXCPCodes.VID_OBJECT_NAME, data.getName());
       msg.setFieldInt32(NXCPCodes.VID_ZONE_UIN, (int)data.getZoneUIN());
-      if (data.getComments() != null) msg.setField(NXCPCodes.VID_COMMENTS, data.getComments());
+      if (data.getComments() != null)
+         msg.setField(NXCPCodes.VID_COMMENTS, data.getComments());
 
       // Class-specific attributes
       switch(data.getObjectClass())
@@ -4771,7 +4792,7 @@ public class NXCSession
             msg.setField(NXCPCodes.VID_DEVICE_ID, data.getDeviceId());
             break;
          case AbstractObject.OBJECT_NODE:
-            if (data.getPrimaryName() != null) 
+            if (data.getPrimaryName() != null)
                msg.setField(NXCPCodes.VID_PRIMARY_NAME, data.getPrimaryName());
             msg.setField(NXCPCodes.VID_IP_ADDRESS, data.getIpAddress());
             msg.setFieldInt16(NXCPCodes.VID_AGENT_PORT, data.getAgentPort());
@@ -4788,7 +4809,7 @@ public class NXCSession
          case AbstractObject.OBJECT_NETWORKMAP:
             msg.setFieldInt16(NXCPCodes.VID_MAP_TYPE, data.getMapType());
             msg.setField(NXCPCodes.VID_SEED_OBJECTS, data.getSeedObjectIds());
-            msg.setFieldInt32(NXCPCodes.VID_FLAGS, (int) data.getFlags());
+            msg.setFieldInt32(NXCPCodes.VID_FLAGS, (int)data.getFlags());
             break;
          case AbstractObject.OBJECT_NETWORKSERVICE:
             msg.setFieldInt16(NXCPCodes.VID_SERVICE_TYPE, data.getServiceType());
@@ -4799,7 +4820,7 @@ public class NXCSession
             msg.setFieldInt16(NXCPCodes.VID_CREATE_STATUS_DCI, data.isCreateStatusDci() ? 1 : 0);
             break;
          case AbstractObject.OBJECT_NODELINK:
-            msg.setFieldInt32(NXCPCodes.VID_NODE_ID, (int) data.getLinkedNodeId());
+            msg.setFieldInt32(NXCPCodes.VID_NODE_ID, (int)data.getLinkedNodeId());
             break;
          case AbstractObject.OBJECT_RACK:
             msg.setFieldInt16(NXCPCodes.VID_HEIGHT, data.getHeight());
@@ -4809,7 +4830,8 @@ public class NXCSession
             break;
       }
 
-      if (userData != null) createCustomObject(data, userData, msg);
+      if (userData != null)
+         createCustomObject(data, userData, msg);
 
       sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());
@@ -4839,7 +4861,7 @@ public class NXCSession
    public void deleteObject(final long objectId) throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_OBJECT);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int) objectId);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)objectId);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
 
@@ -4859,10 +4881,10 @@ public class NXCSession
       }
       sendNotification(new SessionNotification(SessionNotification.OBJECT_DELETED, objectId));
    }
-   
+
    /**
     * Remove orphaned objects (with last parent left)
-    * 
+    *
     * @param parent
     */
    private void removeOrphanedObjects(AbstractObject parent)
@@ -4906,7 +4928,7 @@ public class NXCSession
    public void modifyObject(final NXCObjectModificationData data, final Object userData) throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_MODIFY_OBJECT);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int) data.getObjectId());
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)data.getObjectId());
 
       // Object name
       if (data.isFieldSet(NXCObjectModificationData.NAME))
@@ -4931,7 +4953,7 @@ public class NXCSession
          long id2 = NXCPCodes.VID_ACL_RIGHTS_BASE;
          for(int i = 0; i < acl.length; i++)
          {
-            msg.setFieldInt32(id1++, (int) acl[i].getUserId());
+            msg.setFieldInt32(id1++, (int)acl[i].getUserId());
             msg.setFieldInt32(id2++, acl[i].getAccessRights());
          }
       }
@@ -4986,7 +5008,7 @@ public class NXCSession
 
       if (data.isFieldSet(NXCObjectModificationData.AGENT_PROXY))
       {
-         msg.setFieldInt32(NXCPCodes.VID_AGENT_PROXY, (int) data.getAgentProxy());
+         msg.setFieldInt32(NXCPCodes.VID_AGENT_PROXY, (int)data.getAgentProxy());
       }
 
       if (data.isFieldSet(NXCObjectModificationData.AGENT_AUTH))
@@ -5018,7 +5040,7 @@ public class NXCSession
 
       if (data.isFieldSet(NXCObjectModificationData.SNMP_PROXY))
       {
-         msg.setFieldInt32(NXCPCodes.VID_SNMP_PROXY, (int) data.getSnmpProxy());
+         msg.setFieldInt32(NXCPCodes.VID_SNMP_PROXY, (int)data.getSnmpProxy());
       }
 
       if (data.isFieldSet(NXCObjectModificationData.SNMP_PORT))
@@ -5028,7 +5050,7 @@ public class NXCSession
 
       if (data.isFieldSet(NXCObjectModificationData.ICMP_PROXY))
       {
-         msg.setFieldInt32(NXCPCodes.VID_ICMP_PROXY, (int) data.getIcmpProxy());
+         msg.setFieldInt32(NXCPCodes.VID_ICMP_PROXY, (int)data.getIcmpProxy());
       }
 
       if (data.isFieldSet(NXCObjectModificationData.GEOLOCATION))
@@ -5126,7 +5148,7 @@ public class NXCSession
 
       if (data.isFieldSet(NXCObjectModificationData.SOURCE_OBJECT))
       {
-         msg.setFieldInt32(NXCPCodes.VID_SOURCE_OBJECT, (int) data.getSourceObject());
+         msg.setFieldInt32(NXCPCodes.VID_SOURCE_OBJECT, (int)data.getSourceObject());
       }
 
       if (data.isFieldSet(NXCObjectModificationData.ACTIVE_STATUS))
@@ -5146,8 +5168,8 @@ public class NXCSession
          long varId = NXCPCodes.VID_DCI_LIST_BASE;
          for(ConditionDciInfo dci : dciList)
          {
-            msg.setFieldInt32(varId++, (int) dci.getDciId());
-            msg.setFieldInt32(varId++, (int) dci.getNodeId());
+            msg.setFieldInt32(varId++, (int)dci.getDciId());
+            msg.setFieldInt32(varId++, (int)dci.getNodeId());
             msg.setFieldInt16(varId++, dci.getFunction());
             msg.setFieldInt16(varId++, dci.getPolls());
             varId += 6;
@@ -5156,7 +5178,7 @@ public class NXCSession
 
       if (data.isFieldSet(NXCObjectModificationData.DRILL_DOWN_OBJECT_ID))
       {
-         msg.setFieldInt32(NXCPCodes.VID_DRILL_DOWN_OBJECT_ID, (int) data.getDrillDownObjectId());
+         msg.setFieldInt32(NXCPCodes.VID_DRILL_DOWN_OBJECT_ID, (int)data.getDrillDownObjectId());
       }
 
       if (data.isFieldSet(NXCObjectModificationData.SERVICE_TYPE))
@@ -5181,7 +5203,7 @@ public class NXCSession
 
       if (data.isFieldSet(NXCObjectModificationData.POLLER_NODE))
       {
-         msg.setFieldInt32(NXCPCodes.VID_POLLER_NODE_ID, (int) data.getPollerNode());
+         msg.setFieldInt32(NXCPCodes.VID_POLLER_NODE_ID, (int)data.getPollerNode());
       }
 
       if (data.isFieldSet(NXCObjectModificationData.REQUIRED_POLLS))
@@ -5221,7 +5243,7 @@ public class NXCSession
          long varId = NXCPCodes.VID_RESOURCE_LIST_BASE;
          for(ClusterResource r : data.getResourceList())
          {
-            msg.setFieldInt32(varId++, (int) r.getId());
+            msg.setFieldInt32(varId++, (int)r.getId());
             msg.setField(varId++, r.getName());
             msg.setField(varId++, r.getVirtualAddress());
             varId += 7;
@@ -5300,7 +5322,7 @@ public class NXCSession
 
       if (data.isFieldSet(NXCObjectModificationData.VPN_NETWORKS))
       {
-         long fieldId = NXCPCodes.VID_VPN_NETWORK_BASE;         
+         long fieldId = NXCPCodes.VID_VPN_NETWORK_BASE;
 
          msg.setFieldInt32(NXCPCodes.VID_NUM_LOCAL_NETS, data.getLocalNetworks().size());
          for(InetAddressEx a : data.getLocalNetworks())
@@ -5314,27 +5336,27 @@ public class NXCSession
             msg.setField(fieldId++, a);
          }
       }
-      
+
       if (data.isFieldSet(NXCObjectModificationData.POSTAL_ADDRESS))
       {
          data.getPostalAddress().fillMessage(msg);
       }
-      
+
       if (data.isFieldSet(NXCObjectModificationData.AGENT_CACHE_MODE))
       {
          msg.setFieldInt16(NXCPCodes.VID_AGENT_CACHE_MODE, data.getAgentCacheMode().getValue());
       }
-      
+
       if (data.isFieldSet(NXCObjectModificationData.AGENT_COMPRESSION_MODE))
       {
          msg.setFieldInt16(NXCPCodes.VID_AGENT_COMPRESSION_MODE, data.getAgentCompressionMode().getValue());
       }
-      
+
       if (data.isFieldSet(NXCObjectModificationData.MAPOBJ_DISP_MODE))
       {
          msg.setFieldInt16(NXCPCodes.VID_DISPLAY_MODE, data.getMapObjectDisplayMode().getValue());
       }
-      
+
       if (data.isFieldSet(NXCObjectModificationData.RACK_PLACEMENT))
       {
          msg.setFieldInt32(NXCPCodes.VID_RACK_ID, (int)data.getRackId());
@@ -5349,27 +5371,27 @@ public class NXCSession
       {
          msg.setField(NXCPCodes.VID_DASHBOARDS, data.getDashboards());
       }
-      
+
       if (data.isFieldSet(NXCObjectModificationData.CHASSIS_ID))
       {
          msg.setFieldInt32(NXCPCodes.VID_CHASSIS_ID, (int)data.getChassisId());
       }
-      
+
       if (data.isFieldSet(NXCObjectModificationData.CONTROLLER_ID))
       {
          msg.setFieldInt32(NXCPCodes.VID_CONTROLLER_ID, (int)data.getControllerId());
       }
-      
+
       if (data.isFieldSet(NXCObjectModificationData.SSH_PROXY))
       {
          msg.setFieldInt32(NXCPCodes.VID_SSH_PROXY, (int)data.getSshProxy());
       }
-      
+
       if (data.isFieldSet(NXCObjectModificationData.SSH_LOGIN))
       {
          msg.setField(NXCPCodes.VID_SSH_LOGIN, data.getSshLogin());
       }
-      
+
       if (data.isFieldSet(NXCObjectModificationData.SSH_PASSWORD))
       {
          msg.setField(NXCPCodes.VID_SSH_PASSWORD, data.getSshPassword());
@@ -5379,17 +5401,17 @@ public class NXCSession
       {
          msg.setFieldInt32(NXCPCodes.VID_ZONE_PROXY, (int)data.getZoneProxy());
       }
-      
+
       if (data.isFieldSet(NXCObjectModificationData.SEED_OBJECTS))
       {
          msg.setField(NXCPCodes.VID_SEED_OBJECTS, data.getSeedObjectIds());
       }
-      
+
       if (data.isFieldSet(NXCObjectModificationData.PASSIVE_ELEMENTS))
       {
          msg.setField(NXCPCodes.VID_PASSIVE_ELEMENTS, data.getPassiveElements());
       }
-            
+
       modifyCustomObject(data, userData, msg);
 
       sendMessage(msg);
@@ -5426,14 +5448,13 @@ public class NXCSession
 
    /**
     * Change object's custom attributes (wrapper for modifyObject())
-    * 
+    *
     * @param objectId The object ID
     * @param attrList The attribute list
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void setObjectCustomAttributes(final long objectId, final Map<String, String> attrList)
-      throws IOException, NXCException
+   public void setObjectCustomAttributes(final long objectId, final Map<String, String> attrList) throws IOException, NXCException
    {
       NXCObjectModificationData data = new NXCObjectModificationData(objectId);
       data.setCustomAttributes(attrList);
@@ -5450,14 +5471,14 @@ public class NXCSession
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public void setObjectACL(final long objectId, final AccessListElement[] acl, final boolean inheritAccessRights)
-      throws IOException, NXCException
+         throws IOException, NXCException
    {
       NXCObjectModificationData data = new NXCObjectModificationData(objectId);
       data.setACL(acl);
       data.setInheritAccessRights(inheritAccessRights);
       modifyObject(data);
    }
-   
+
    /**
     * Move object to different zone. Only nodes and clusters can be moved
     * between zones.
@@ -5487,7 +5508,7 @@ public class NXCSession
    public void updateObjectComments(final long objectId, final String comments) throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_UPDATE_OBJECT_COMMENTS);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int) objectId);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)objectId);
       msg.setField(NXCPCodes.VID_COMMENTS, comments);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
@@ -5504,7 +5525,7 @@ public class NXCSession
    public void setObjectManaged(final long objectId, final boolean isManaged) throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_SET_OBJECT_MGMT_STATUS);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int) objectId);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)objectId);
       msg.setFieldInt16(NXCPCodes.VID_MGMT_STATUS, isManaged ? 1 : 0);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
@@ -5512,7 +5533,7 @@ public class NXCSession
 
    /**
     * Get effective rights of currently logged in user to given object.
-    * 
+    *
     * @param objectId The object ID
     * @return The effective rights
     * @throws IOException  if socket I/O error occurs
@@ -5521,7 +5542,7 @@ public class NXCSession
    public int getEffectiveRights(final long objectId) throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_EFFECTIVE_RIGHTS);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int) objectId);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)objectId);
       sendMessage(msg);
       return waitForRCC(msg.getMessageId()).getFieldAsInt32(NXCPCodes.VID_EFFECTIVE_RIGHTS);
    }
@@ -5538,12 +5559,11 @@ public class NXCSession
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   private void changeObjectBinding(long parentId, long childId, boolean bind, boolean removeDci)
-      throws IOException, NXCException
+   private void changeObjectBinding(long parentId, long childId, boolean bind, boolean removeDci) throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(bind ? NXCPCodes.CMD_BIND_OBJECT : NXCPCodes.CMD_UNBIND_OBJECT);
-      msg.setFieldInt32(NXCPCodes.VID_PARENT_ID, (int) parentId);
-      msg.setFieldInt32(NXCPCodes.VID_CHILD_ID, (int) childId);
+      msg.setFieldInt32(NXCPCodes.VID_PARENT_ID, (int)parentId);
+      msg.setFieldInt32(NXCPCodes.VID_CHILD_ID, (int)childId);
       msg.setFieldInt16(NXCPCodes.VID_REMOVE_DCI, removeDci ? 1 : 0);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
@@ -5584,8 +5604,7 @@ public class NXCSession
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void removeTemplate(final long templateId, final long nodeId, final boolean removeDci)
-      throws IOException, NXCException
+   public void removeTemplate(final long templateId, final long nodeId, final boolean removeDci) throws IOException, NXCException
    {
       changeObjectBinding(templateId, nodeId, false, removeDci);
    }
@@ -5601,8 +5620,8 @@ public class NXCSession
    public void applyTemplate(long templateId, long nodeId) throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_APPLY_TEMPLATE);
-      msg.setFieldInt32(NXCPCodes.VID_SOURCE_OBJECT_ID, (int) templateId);
-      msg.setFieldInt32(NXCPCodes.VID_DESTINATION_OBJECT_ID, (int) nodeId);
+      msg.setFieldInt32(NXCPCodes.VID_SOURCE_OBJECT_ID, (int)templateId);
+      msg.setFieldInt32(NXCPCodes.VID_DESTINATION_OBJECT_ID, (int)nodeId);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
@@ -5618,8 +5637,8 @@ public class NXCSession
    public void addClusterNode(final long clusterId, final long nodeId) throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_ADD_CLUSTER_NODE);
-      msg.setFieldInt32(NXCPCodes.VID_PARENT_ID, (int) clusterId);
-      msg.setFieldInt32(NXCPCodes.VID_CHILD_ID, (int) nodeId);
+      msg.setFieldInt32(NXCPCodes.VID_PARENT_ID, (int)clusterId);
+      msg.setFieldInt32(NXCPCodes.VID_CHILD_ID, (int)nodeId);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
@@ -5648,14 +5667,14 @@ public class NXCSession
    public NetworkMapPage queryLayer2Topology(final long nodeId) throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_QUERY_L2_TOPOLOGY);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
       sendMessage(msg);
 
       final NXCPMessage response = waitForRCC(msg.getMessageId());
 
       int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_OBJECTS);
       long[] idList = response.getFieldAsUInt32Array(NXCPCodes.VID_OBJECT_LIST);
-      if (idList.length != count) 
+      if (idList.length != count)
          throw new NXCException(RCC.INTERNAL_ERROR);
 
       NetworkMapPage page = new NetworkMapPage(msg.getMessageId() + ".L2Topology");
@@ -5708,13 +5727,14 @@ public class NXCSession
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void executeAction(long nodeId, String action, String[] args, boolean receiveOutput, final TextOutputListener listener, final Writer writer) throws IOException, NXCException
+   public void executeAction(long nodeId, String action, String[] args, boolean receiveOutput, final TextOutputListener listener,
+         final Writer writer) throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_EXECUTE_ACTION);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
       msg.setField(NXCPCodes.VID_ACTION_NAME, action);
       msg.setField(NXCPCodes.VID_RECEIVE_OUTPUT, receiveOutput);
-      
+
       if (args != null)
       {
          msg.setFieldInt16(NXCPCodes.VID_NUM_ARGS, args.length);
@@ -5726,8 +5746,9 @@ public class NXCSession
       {
          msg.setFieldInt16(NXCPCodes.VID_NUM_ARGS, 0);
       }
-      
-      MessageHandler handler = receiveOutput ? new MessageHandler() {
+
+      MessageHandler handler = receiveOutput ? new MessageHandler()
+      {
          @Override
          public boolean processMessage(NXCPMessage m)
          {
@@ -5754,7 +5775,7 @@ public class NXCSession
       } : null;
       if (receiveOutput)
          addMessageSubscription(NXCPCodes.CMD_COMMAND_OUTPUT, msg.getMessageId(), handler);
-      
+
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
 
@@ -5772,9 +5793,9 @@ public class NXCSession
          }
          if (handler.isTimeout())
             throw new NXCException(RCC.TIMEOUT);
-      }      
+      }
    }
-   
+
    /**
     * Wakeup node by sending wake-on-LAN magic packet. Either node ID or
     * interface ID may be given. If node ID is given, system will send wakeup
@@ -5787,7 +5808,7 @@ public class NXCSession
    public void wakeupNode(final long objectId) throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_WAKEUP_NODE);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int) objectId);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)objectId);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
@@ -5803,7 +5824,7 @@ public class NXCSession
    public PhysicalComponent getNodePhysicalComponents(long nodeId) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_NODE_COMPONENTS);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
       sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());
       return new PhysicalComponent(response, NXCPCodes.VID_COMPONENT_LIST_BASE, null);
@@ -5821,7 +5842,7 @@ public class NXCSession
    public List<WinPerfObject> getNodeWinPerfObjects(long nodeId) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_WINPERF_OBJECTS);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
       sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());
       return WinPerfObject.createListFromMessage(response);
@@ -5838,7 +5859,7 @@ public class NXCSession
    public List<SoftwarePackage> getNodeSoftwarePackages(long nodeId) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_NODE_SOFTWARE);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
       sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());
       int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_ELEMENTS);
@@ -5851,11 +5872,11 @@ public class NXCSession
       }
       return packages;
    }
-   
+
    /**
     * Get list of dependent nodes for given node. Node is considered dependent if it use given node
     * as any type of proxy or as data collection source for at least one DCI.
-    * 
+    *
     * @param nodeId node object ID
     * @return list of dependent node descriptors
     * @throws IOException  if socket I/O error occurs
@@ -5866,15 +5887,15 @@ public class NXCSession
       NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_DEPENDENT_NODES);
       msg.setFieldInt32(NXCPCodes.VID_NODE_ID, (int)nodeId);
       sendMessage(msg);
-      
+
       final NXCPMessage response = waitForRCC(msg.getMessageId());
-      
+
       int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_ELEMENTS);
       List<DependentNode> nodes = new ArrayList<DependentNode>(count);
       long fieldId = NXCPCodes.VID_ELEMENT_LIST_BASE;
       for(int i = 0; i < count; i++, fieldId += 10)
          nodes.add(new DependentNode(msg, fieldId));
-       return nodes;
+      return nodes;
    }
 
    /**
@@ -5912,7 +5933,7 @@ public class NXCSession
    public void cancelServerJob(long jobId) throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_CANCEL_JOB);
-      msg.setFieldInt32(NXCPCodes.VID_JOB_ID, (int) jobId);
+      msg.setFieldInt32(NXCPCodes.VID_JOB_ID, (int)jobId);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
@@ -5927,7 +5948,7 @@ public class NXCSession
    public void holdServerJob(long jobId) throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_HOLD_JOB);
-      msg.setFieldInt32(NXCPCodes.VID_JOB_ID, (int) jobId);
+      msg.setFieldInt32(NXCPCodes.VID_JOB_ID, (int)jobId);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
@@ -5942,7 +5963,7 @@ public class NXCSession
    public void unholdServerJob(long jobId) throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_UNHOLD_JOB);
-      msg.setFieldInt32(NXCPCodes.VID_JOB_ID, (int) jobId);
+      msg.setFieldInt32(NXCPCodes.VID_JOB_ID, (int)jobId);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
@@ -5958,8 +5979,8 @@ public class NXCSession
    public void deployAgentPolicy(final long policyId, final long nodeId) throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_DEPLOY_AGENT_POLICY);
-      msg.setFieldInt32(NXCPCodes.VID_POLICY_ID, (int) policyId);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
+      msg.setFieldInt32(NXCPCodes.VID_POLICY_ID, (int)policyId);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
@@ -5975,8 +5996,8 @@ public class NXCSession
    public void uninstallAgentPolicy(final long policyId, final long nodeId) throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_UNINSTALL_AGENT_POLICY);
-      msg.setFieldInt32(NXCPCodes.VID_POLICY_ID, (int) policyId);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
+      msg.setFieldInt32(NXCPCodes.VID_POLICY_ID, (int)policyId);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
@@ -6002,7 +6023,7 @@ public class NXCSession
       for(int i = 0; i < numRules; i++)
       {
          response = waitForMessage(NXCPCodes.CMD_EPP_RECORD, msg.getMessageId());
-         policy.addRule(new EventProcessingPolicyRule(response, i+1));
+         policy.addRule(new EventProcessingPolicyRule(response, i + 1));
       }
 
       return policy;
@@ -6063,7 +6084,8 @@ public class NXCSession
       }
 
       // Wait for final confirmation if there was some rules
-      if (rules.size() > 0) waitForRCC(msgId);
+      if (rules.size() > 0)
+         waitForRCC(msgId);
    }
 
    /**
@@ -6097,7 +6119,7 @@ public class NXCSession
       cfg.open();
       return cfg;
    }
-   
+
    /**
     * Clear data collection configuration on agent. Will wipe out all configuration and collected data.
     *
@@ -6108,11 +6130,10 @@ public class NXCSession
    public void clearAgentDataCollectionConfiguration(final long nodeId) throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_CLEAN_AGENT_DCI_CONF);
-      msg.setFieldInt32(NXCPCodes.VID_NODE_ID, (int) nodeId);
+      msg.setFieldInt32(NXCPCodes.VID_NODE_ID, (int)nodeId);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
-   
 
    /**
     * Force re-synchronization of data collection configuration with agent.
@@ -6124,11 +6145,11 @@ public class NXCSession
    public void resyncAgentDataCollectionConfiguration(final long nodeId) throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_RESYNC_AGENT_DCI_CONF);
-      msg.setFieldInt32(NXCPCodes.VID_NODE_ID, (int) nodeId);
+      msg.setFieldInt32(NXCPCodes.VID_NODE_ID, (int)nodeId);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
-   
+
    /**
     * Test DCI transformation script.
     *
@@ -6140,11 +6161,11 @@ public class NXCSession
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public TransformationTestResult testTransformationScript(long nodeId, String script, String inputValue, DataCollectionObject dcObject)
-      throws IOException, NXCException
+   public TransformationTestResult testTransformationScript(long nodeId, String script, String inputValue,
+         DataCollectionObject dcObject) throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_TEST_DCI_TRANSFORMATION);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
       msg.setField(NXCPCodes.VID_SCRIPT, script);
       msg.setField(NXCPCodes.VID_VALUE, inputValue);
       if (dcObject != null)
@@ -6158,10 +6179,10 @@ public class NXCSession
       r.result = response.getFieldAsString(NXCPCodes.VID_EXECUTION_RESULT);
       return r;
    }
-   
+
    /**
     * Process server script execution.
-    * 
+    *
     * @param msg prepared request message
     * @param listener script output listener or null if caller not interested in script output
     * @throws IOException if socket I/O error occurs
@@ -6172,7 +6193,8 @@ public class NXCSession
       MessageHandler handler = null;
       if (listener != null)
       {
-         handler = new MessageHandler() {
+         handler = new MessageHandler()
+         {
             @Override
             public boolean processMessage(NXCPMessage m)
             {
@@ -6184,13 +6206,13 @@ public class NXCSession
                      listener.messageReceived(errorMessage + "\n\n");
                   }
                }
-               
+
                String text = m.getFieldAsString(NXCPCodes.VID_MESSAGE);
                if ((text != null) && (listener != null))
                {
                   listener.messageReceived(text);
                }
-               
+
                if (m.isEndOfSequence())
                   setComplete();
                return true;
@@ -6219,11 +6241,11 @@ public class NXCSession
             throw new NXCException(RCC.TIMEOUT);
       }
    }
-   
+
    /**
     * Execute library script on object. Script name interpreted as command line with server-side macro substitution. Map inputValues
     * can be used to pass data for %() macros.
-    * 
+    *
     * @param nodeId node ID to execute script on
     * @param script script name and parameters
     * @param inputFields input values map for %() macro substitution (can be null)
@@ -6231,7 +6253,8 @@ public class NXCSession
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void executeLibraryScript(long nodeId, String script, Map<String, String> inputFields, final TextOutputListener listener) throws IOException, NXCException
+   public void executeLibraryScript(long nodeId, String script, Map<String, String> inputFields, final TextOutputListener listener)
+         throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_EXECUTE_LIBRARY_SCRIPT);
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
@@ -6249,7 +6272,7 @@ public class NXCSession
       }
       processScriptExecution(msg, listener);
    }
-   
+
    /**
     * Execute script.
     *
@@ -6270,7 +6293,7 @@ public class NXCSession
    /**
     * Compile NXSL script on server. Field *success* in compilation result object will indicate compilation status.
     * If compilation fails, field *errorMessage* will contain compilation error message.
-    * 
+    *
     * @param source script source
     * @param serialize flag to indicate if compiled script should be serialized and sent back to client
     * @return script compilation result object
@@ -6306,7 +6329,7 @@ public class NXCSession
 
    /**
     * Get alarm categories from server
-    * 
+    *
     * @return List of configured alarm categories
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
@@ -6326,10 +6349,10 @@ public class NXCSession
       }
       return list;
    }
-   
+
    /**
     * Add or update alarm category in DB
-    * 
+    *
     * @param object alarm category
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
@@ -6345,7 +6368,7 @@ public class NXCSession
       NXCPMessage response = waitForRCC(msg.getMessageId());
       return response.getFieldAsInt32(NXCPCodes.VID_CATEGORY_ID);
    }
-   
+
    /**
     * Delete alarm category in DB
     * @param id of alarm category
@@ -6359,15 +6382,15 @@ public class NXCSession
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
-   
+
    /**
     * Synchronize alarm category configuration. After call to this method
     * session object will maintain internal list of configured alarm categories
-    * 
+    *
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   
+
    public void syncAlarmCategories() throws IOException, NXCException
    {
       List<AlarmCategory> categories = getAlarmCategories();
@@ -6381,7 +6404,7 @@ public class NXCSession
          alarmCategoriesNeedSync = true;
       }
    }
-   
+
    /**
     * Find alarm category by id in alarm category database internally
     * maintained by session object. You must call
@@ -6398,7 +6421,7 @@ public class NXCSession
          return alarmCategories.get(id);
       }
    }
-   
+
    /**
     * Find alarm category by name in alarm category database internally
     * maintained by session object. You must call
@@ -6412,7 +6435,7 @@ public class NXCSession
    {
       synchronized(alarmCategories)
       {
-         for (Map.Entry<Long, AlarmCategory> c : alarmCategories.entrySet())
+         for(Map.Entry<Long, AlarmCategory> c : alarmCategories.entrySet())
          {
             if (((AlarmCategory)c.getValue()).getName().equals(name))
                return (AlarmCategory)c.getValue();
@@ -6420,7 +6443,7 @@ public class NXCSession
          return null;
       }
    }
-   
+
    /**
     * Find multiple alarm categories by category id`s in alarm category database
     * internally maintained by session object. You must call
@@ -6438,12 +6461,13 @@ public class NXCSession
          for(Long id : ids)
          {
             AlarmCategory e = alarmCategories.get(id);
-            if (e != null) list.add(e);
+            if (e != null)
+               list.add(e);
          }
       }
       return list;
    }
-   
+
    /**
     * Synchronize event templates configuration. After call to this method
     * session object will maintain internal list of configured event templates.
@@ -6464,13 +6488,14 @@ public class NXCSession
          eventTemplatesNeedSync = true;
       }
    }
-   
+
    /**
     * Re-synchronize event templaytes in background
     */
    private void resyncEventTemplates()
    {
-      new Thread(new Runnable() {
+      new Thread(new Runnable()
+      {
          @Override
          public void run()
          {
@@ -6526,10 +6551,10 @@ public class NXCSession
       }
       return result;
    }
-   
+
    /**
     * Get event name from event code
-    * 
+    *
     * @param code event code
     * @return event name or event code as string if event not found
     */
@@ -6576,7 +6601,8 @@ public class NXCSession
          for(long code : codes)
          {
             EventTemplate e = eventTemplates.get(code);
-            if (e != null) list.add(e);
+            if (e != null)
+               list.add(e);
          }
       }
       return list;
@@ -6599,7 +6625,8 @@ public class NXCSession
          for(long code : codes)
          {
             EventTemplate e = eventTemplates.get(code);
-            if (e != null) list.add(e);
+            if (e != null)
+               list.add(e);
          }
       }
       return list;
@@ -6621,7 +6648,7 @@ public class NXCSession
       while(true)
       {
          final NXCPMessage response = waitForMessage(NXCPCodes.CMD_EVENT_DB_RECORD, msg.getMessageId());
-         if (response.isEndOfSequence()) 
+         if (response.isEndOfSequence())
             break;
          list.add(new EventTemplate(response));
       }
@@ -6653,7 +6680,7 @@ public class NXCSession
    public void deleteEventTemplate(long eventCode) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_EVENT_TEMPLATE);
-      msg.setFieldInt32(NXCPCodes.VID_EVENT_CODE, (int) eventCode);
+      msg.setFieldInt32(NXCPCodes.VID_EVENT_CODE, (int)eventCode);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
@@ -6668,7 +6695,7 @@ public class NXCSession
    public void modifyEventTemplate(EventTemplate evt) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_SET_EVENT_INFO);
-      msg.setFieldInt32(NXCPCodes.VID_EVENT_CODE, (int) evt.getCode());
+      msg.setFieldInt32(NXCPCodes.VID_EVENT_CODE, (int)evt.getCode());
       msg.setFieldInt32(NXCPCodes.VID_SEVERITY, evt.getSeverity().getValue());
       msg.setFieldInt32(NXCPCodes.VID_FLAGS, evt.getFlags());
       msg.setField(NXCPCodes.VID_NAME, evt.getName());
@@ -6693,12 +6720,13 @@ public class NXCSession
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public void sendEvent(long eventCode, String eventName, long objectId, String[] parameters, String userTag)
-      throws IOException, NXCException
+         throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_TRAP);
-      msg.setFieldInt32(NXCPCodes.VID_EVENT_CODE, (int) eventCode);
-      if (eventName != null) msg.setField(NXCPCodes.VID_EVENT_NAME, eventName);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int) objectId);
+      msg.setFieldInt32(NXCPCodes.VID_EVENT_CODE, (int)eventCode);
+      if (eventName != null)
+         msg.setField(NXCPCodes.VID_EVENT_NAME, eventName);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)objectId);
       msg.setField(NXCPCodes.VID_USER_TAG, (userTag != null) ? userTag : "");
       msg.setFieldInt16(NXCPCodes.VID_NUM_ARGS, parameters.length);
       long varId = NXCPCodes.VID_EVENT_ARG_BASE;
@@ -6842,7 +6870,7 @@ public class NXCSession
    public String getAgentConfig(long nodeId) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_AGENT_CONFIG);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
       sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());
       return response.getFieldAsString(NXCPCodes.VID_CONFIG_FILE);
@@ -6861,7 +6889,7 @@ public class NXCSession
    public void updateAgentConfig(long nodeId, String config, boolean apply) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_UPDATE_AGENT_CONFIG);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
       msg.setField(NXCPCodes.VID_CONFIG_FILE, config);
       msg.setFieldInt16(NXCPCodes.VID_APPLY_FLAG, apply ? 1 : 0);
       sendMessage(msg);
@@ -6880,7 +6908,7 @@ public class NXCSession
    public List<AgentParameter> getSupportedParameters(long nodeId, int origin) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_PARAMETER_LIST);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
       msg.setFieldInt16(NXCPCodes.VID_FLAGS, 0x01); // Indicates request for parameters list
       msg.setFieldInt16(NXCPCodes.VID_DCI_SOURCE_TYPE, origin);
       sendMessage(msg);
@@ -6896,7 +6924,7 @@ public class NXCSession
       }
       return list;
    }
-   
+
    /**
     * Get list of parameters supported by agent running on given node.
     *
@@ -6921,7 +6949,7 @@ public class NXCSession
    public List<AgentTable> getSupportedTables(long nodeId) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_PARAMETER_LIST);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
       msg.setFieldInt16(NXCPCodes.VID_FLAGS, 0x02); // Indicates request for table list
       msg.setFieldInt16(NXCPCodes.VID_DCI_SOURCE_TYPE, DataCollectionObject.AGENT);
       sendMessage(msg);
@@ -6952,7 +6980,7 @@ public class NXCSession
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)objectId);
       sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());
-      if (response.getFieldAsInt32(NXCPCodes.VID_NUM_EVENTS) == 0) 
+      if (response.getFieldAsInt32(NXCPCodes.VID_NUM_EVENTS) == 0)
          return new long[0];
       return response.getFieldAsUInt32Array(NXCPCodes.VID_EVENT_LIST);
    }
@@ -6968,7 +6996,7 @@ public class NXCSession
    public List<Script> getDataCollectionScripts(long objectId) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_DCI_SCRIPT_LIST);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int) objectId);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)objectId);
       sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());
       int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_SCRIPTS);
@@ -6999,7 +7027,7 @@ public class NXCSession
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public String exportConfiguration(String description, long[] events, long[] traps, long[] templates, UUID[] rules, 
+   public String exportConfiguration(String description, long[] events, long[] traps, long[] templates, UUID[] rules,
          long[] scripts, long[] objectTools, long[] dciSummaryTables, long[] actions) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_EXPORT_CONFIGURATION);
@@ -7114,7 +7142,8 @@ public class NXCSession
       while(true)
       {
          final NXCPMessage response = waitForMessage(NXCPCodes.CMD_ACTION_DATA, msg.getMessageId());
-         if (response.getFieldAsInt64(NXCPCodes.VID_ACTION_ID) == 0) break; // End of list
+         if (response.getFieldAsInt64(NXCPCodes.VID_ACTION_ID) == 0)
+            break; // End of list
          actions.add(new ServerAction(response));
       }
 
@@ -7163,11 +7192,11 @@ public class NXCSession
    public void deleteAction(long actionId) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_ACTION);
-      msg.setFieldInt32(NXCPCodes.VID_ACTION_ID, (int) actionId);
+      msg.setFieldInt32(NXCPCodes.VID_ACTION_ID, (int)actionId);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
-   
+
    /**
     * Get list of certificates
     *
@@ -7193,7 +7222,7 @@ public class NXCSession
 
       return list;
    }
-   
+
    /**
     * Create new certificate
     *
@@ -7211,7 +7240,7 @@ public class NXCSession
 
       waitForRCC(msg.getMessageId());
    }
-   
+
    /**
     * Delete certificate
     *
@@ -7227,7 +7256,7 @@ public class NXCSession
 
       waitForRCC(msg.getMessageId());
    }
-   
+
    /**
     * Update certificate
     *
@@ -7271,10 +7300,10 @@ public class NXCSession
 
       return list;
    }
-   
+
    /**
     * Create object tool tree
-    * 
+    *
     * @param tools list of object tools
     * @return the root folder of the tree
     */
@@ -7302,7 +7331,7 @@ public class NXCSession
       }
       return root;
    }
-   
+
    /**
     * @return root object tool folder
     * @throws IOException if socker or file I/O error occours
@@ -7324,7 +7353,7 @@ public class NXCSession
    public ObjectToolDetails getObjectToolDetails(long toolId) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_OBJECT_TOOL_DETAILS);
-      msg.setFieldInt32(NXCPCodes.VID_TOOL_ID, (int) toolId);
+      msg.setFieldInt32(NXCPCodes.VID_TOOL_ID, (int)toolId);
       sendMessage(msg);
 
       final NXCPMessage response = waitForRCC(msg.getMessageId());
@@ -7371,11 +7400,11 @@ public class NXCSession
    public void deleteObjectTool(long toolId) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_OBJECT_TOOL);
-      msg.setFieldInt32(NXCPCodes.VID_TOOL_ID, (int) toolId);
+      msg.setFieldInt32(NXCPCodes.VID_TOOL_ID, (int)toolId);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
-   
+
    /**
     * Delete object tool.
     *
@@ -7387,7 +7416,7 @@ public class NXCSession
    public void changeObjecToolDisableStatuss(long toolId, boolean enable) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_CHANGE_OBJECT_TOOL_STATUS);
-      msg.setFieldInt32(NXCPCodes.VID_TOOL_ID, (int) toolId);
+      msg.setFieldInt32(NXCPCodes.VID_TOOL_ID, (int)toolId);
       msg.setFieldInt32(NXCPCodes.VID_STATE, enable ? 1 : 0);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
@@ -7405,8 +7434,8 @@ public class NXCSession
    public Table executeTableTool(long toolId, long nodeId) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_EXEC_TABLE_TOOL);
-      msg.setFieldInt32(NXCPCodes.VID_TOOL_ID, (int) toolId);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
+      msg.setFieldInt32(NXCPCodes.VID_TOOL_ID, (int)toolId);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
       sendMessage(msg);
 
       waitForRCC(msg.getMessageId());
@@ -7427,7 +7456,7 @@ public class NXCSession
    {
       executeServerCommand(objectId, command, inputFields, false, null, null);
    }
-   
+
    /**
     * Execute server command related to given object (usually defined as object tool)
     *
@@ -7440,10 +7469,11 @@ public class NXCSession
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void executeServerCommand(long objectId, String command, Map<String, String> inputFields, boolean receiveOutput, final TextOutputListener listener, final Writer writer) throws IOException, NXCException
+   public void executeServerCommand(long objectId, String command, Map<String, String> inputFields, boolean receiveOutput,
+         final TextOutputListener listener, final Writer writer) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_EXECUTE_SERVER_COMMAND);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int) objectId);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)objectId);
       msg.setField(NXCPCodes.VID_COMMAND, command);
       msg.setField(NXCPCodes.VID_RECEIVE_OUTPUT, receiveOutput);
       if (inputFields != null)
@@ -7456,8 +7486,9 @@ public class NXCSession
             msg.setField(fieldId++, e.getValue());
          }
       }
-      
-      MessageHandler handler = receiveOutput ? new MessageHandler() {
+
+      MessageHandler handler = receiveOutput ? new MessageHandler()
+      {
          @Override
          public boolean processMessage(NXCPMessage m)
          {
@@ -7489,7 +7520,7 @@ public class NXCSession
          handler.setMessageWaitTimeout(serverCommandOutputTimeout);
          addMessageSubscription(NXCPCodes.CMD_COMMAND_OUTPUT, msg.getMessageId(), handler);
       }
-      
+
       sendMessage(msg);
       NXCPMessage response = waitForRCC(msg.getMessageId());
 
@@ -7497,7 +7528,7 @@ public class NXCSession
       {
          if (listener != null)
             listener.setStreamId(response.getFieldAsInt64(NXCPCodes.VID_COMMAND_ID));
-         
+
          synchronized(handler)
          {
             try
@@ -7512,10 +7543,10 @@ public class NXCSession
             throw new NXCException(RCC.TIMEOUT);
       }
    }
-   
+
    /**
     * Stop server command
-    * 
+    *
     * @param commandId The command ID
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
@@ -7570,7 +7601,8 @@ public class NXCSession
       while(true)
       {
          final NXCPMessage response = waitForMessage(NXCPCodes.CMD_TRAP_CFG_RECORD, msg.getMessageId());
-         if (response.getFieldAsInt64(NXCPCodes.VID_TRAP_ID) == 0) break; // end of list
+         if (response.getFieldAsInt64(NXCPCodes.VID_TRAP_ID) == 0)
+            break; // end of list
          traps.add(new SnmpTrap(response));
       }
       return traps;
@@ -7601,7 +7633,7 @@ public class NXCSession
    public void deleteSnmpTrapConfiguration(long trapId) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_TRAP);
-      msg.setFieldInt32(NXCPCodes.VID_TRAP_ID, (int) trapId);
+      msg.setFieldInt32(NXCPCodes.VID_TRAP_ID, (int)trapId);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
@@ -7670,21 +7702,20 @@ public class NXCSession
             }
          }
          ttw--;
-      }
-      while(ttw > 0);
+      } while(ttw > 0);
 
-      if (ttw == 0) 
+      if (ttw == 0)
          throw new NXCException(RCC.TIMEOUT);
 
-      if (file.getStatus() == NXCReceivedFile.FAILED) 
+      if (file.getStatus() == NXCReceivedFile.FAILED)
          throw file.getException();
 
       return file.getFile();
    }
-   
+
    /**
     * Get predefined graph infromation by graph id
-    * 
+    *
     * @param graphId graph id
     */
    public GraphSettings getPredefinedGraph(long graphId) throws IOException, NXCException
@@ -7695,7 +7726,6 @@ public class NXCSession
       final NXCPMessage response = waitForRCC(msg.getMessageId());
       return GraphSettings.createGraphSettings(response, NXCPCodes.VID_GRAPH_LIST_BASE);
    }
-
 
    /**
     * Get list of predefined graphs or graph templates
@@ -7721,10 +7751,10 @@ public class NXCSession
       }
       return list;
    }
-   
+
    /**
     * Create graph tree from list
-    * 
+    *
     * @param graphs list of predefined graphs
     * @return graph tree
     */
@@ -7752,17 +7782,17 @@ public class NXCSession
       }
       return root;
    }
-   
+
    /**
-	 * @return root graph folder
+    * @return root graph folder
     * @throws IOException  if socket or file I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
-	 */
+    */
    public GraphFolder getPredefinedGraphsAsTree() throws IOException, NXCException
    {
       return createGraphTree(getPredefinedGraphs(false));
    }
-   
+
    /**
     * Checks if graph with specified name can be created/overwritten and creates/overwrites it in DB. 
     * If graph id is set to 0 it checks if graph with the same name exists, and if yes checks overwrite parameter. If it is
@@ -7771,7 +7801,7 @@ public class NXCSession
     * If id is set it checks that provided name is assigned only to this graph and overwrites it or throws error is the 
     * same name was already used. 
     * Also check if user have permissions to overwrite graph. 
-    *   
+    *
     * If it can, then it returns 1.
     * If graph with this name already exists, but can be overwritten by current user function returns 2.
     * If graph with this name already exists, but can not be overwritten by current user function returns 0.
@@ -7802,14 +7832,14 @@ public class NXCSession
    public void deletePredefinedGraph(long graphId) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_GRAPH);
-      msg.setFieldInt32(NXCPCodes.VID_GRAPH_ID, (int) graphId);
+      msg.setFieldInt32(NXCPCodes.VID_GRAPH_ID, (int)graphId);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
 
    /**
     * Get list of all scripts in script library.
-    * 
+    *
     * @return ID/name pairs for scripts in script library
     * @throws IOException if socket or file I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
@@ -7822,7 +7852,7 @@ public class NXCSession
       int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_SCRIPTS);
       List<Script> scripts = new ArrayList<Script>(count);
       long varId = NXCPCodes.VID_SCRIPT_LIST_BASE;
-      for(int i = 0; i < count; i++, varId +=2)
+      for(int i = 0; i < count; i++, varId += 2)
       {
          scripts.add(new Script(response, varId));
       }
@@ -7831,7 +7861,7 @@ public class NXCSession
 
    /**
     * Get script from library
-    * 
+    *
     * @param scriptId script ID
     * @return script source code
     * @throws IOException if socket or file I/O error occurs
@@ -7840,7 +7870,7 @@ public class NXCSession
    public Script getScript(long scriptId) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_SCRIPT);
-      msg.setFieldInt32(NXCPCodes.VID_SCRIPT_ID, (int) scriptId);
+      msg.setFieldInt32(NXCPCodes.VID_SCRIPT_ID, (int)scriptId);
       sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());
       return new Script(response);
@@ -7848,7 +7878,7 @@ public class NXCSession
 
    /**
     * Modify script. If scriptId is 0, new script will be created in library.
-    * 
+    *
     * @param scriptId script ID
     * @param name script name
     * @param source script source code
@@ -7859,7 +7889,7 @@ public class NXCSession
    public long modifyScript(long scriptId, String name, String source) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_UPDATE_SCRIPT);
-      msg.setFieldInt32(NXCPCodes.VID_SCRIPT_ID, (int) scriptId);
+      msg.setFieldInt32(NXCPCodes.VID_SCRIPT_ID, (int)scriptId);
       msg.setField(NXCPCodes.VID_NAME, name);
       msg.setField(NXCPCodes.VID_SCRIPT_CODE, source);
       sendMessage(msg);
@@ -7869,7 +7899,7 @@ public class NXCSession
 
    /**
     * Rename script in script library.
-    * 
+    *
     * @param scriptId script ID
     * @param name new script name
     * @throws IOException if socket or file I/O error occurs
@@ -7878,7 +7908,7 @@ public class NXCSession
    public void renameScript(long scriptId, String name) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_RENAME_SCRIPT);
-      msg.setFieldInt32(NXCPCodes.VID_SCRIPT_ID, (int) scriptId);
+      msg.setFieldInt32(NXCPCodes.VID_SCRIPT_ID, (int)scriptId);
       msg.setField(NXCPCodes.VID_NAME, name);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
@@ -7886,7 +7916,7 @@ public class NXCSession
 
    /**
     * Delete script from library
-    * 
+    *
     * @param scriptId script ID
     * @throws IOException if socket or file I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
@@ -7894,7 +7924,7 @@ public class NXCSession
    public void deleteScript(long scriptId) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_SCRIPT);
-      msg.setFieldInt32(NXCPCodes.VID_SCRIPT_ID, (int) scriptId);
+      msg.setFieldInt32(NXCPCodes.VID_SCRIPT_ID, (int)scriptId);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
@@ -7912,7 +7942,7 @@ public class NXCSession
    public ConnectionPoint findConnectionPoint(long objectId) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_FIND_NODE_CONNECTION);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int) objectId);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)objectId);
       sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());
       return response.isFieldPresent(NXCPCodes.VID_CONNECTION_TYPE) ? new ConnectionPoint(response) : null;
@@ -7957,7 +7987,7 @@ public class NXCSession
       final NXCPMessage response = waitForRCC(msg.getMessageId());
       return response.isFieldPresent(NXCPCodes.VID_CONNECTION_TYPE) ? new ConnectionPoint(response) : null;
    }
-   
+
    /**
     * Find all nodes that contain the primary hostname
     *
@@ -7973,12 +8003,12 @@ public class NXCSession
       msg.setFieldInt32(NXCPCodes.VID_ZONE_UIN, zoneId);
       msg.setField(NXCPCodes.VID_HOSTNAME, hostname);
       sendMessage(msg);
-      
+
       final NXCPMessage response = waitForRCC(msg.getMessageId());
       int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_ELEMENTS);
       long base = NXCPCodes.VID_ELEMENT_LIST_BASE;
       List<AbstractNode> nodes = new ArrayList<AbstractNode>();
-      
+
       for(int i = 0; i < count; i++)
       {
          nodes.add((AbstractNode)findObjectById(response.getFieldAsInt32(base++)));
@@ -7991,14 +8021,14 @@ public class NXCSession
     * If connection is broken, session notification with code CONNECTION_BROKEN
     * will be sent to all subscribers. Note that this function will not throw exception
     * in case of error. 
-    * 
+    *
     * @return true if connection is fine
     */
    public boolean checkConnection()
    {
       if (!connected)
          return false;
-      
+
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_KEEPALIVE);
       try
       {
@@ -8015,7 +8045,7 @@ public class NXCSession
 
    /**
     * Get the whole image library
-    * 
+    *
     * @return List of library images
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
@@ -8027,7 +8057,7 @@ public class NXCSession
 
    /**
     * Get the image library of specific category
-    * 
+    *
     * @param category The name of the category
     * @return List of library images
     * @throws IOException  if socket I/O error occurs
@@ -8062,7 +8092,7 @@ public class NXCSession
 
    /**
     * Get an image from the library
-    * 
+    *
     * @param guid UUID of the image
     * @return The image
     * @throws IOException  if socket I/O error occurs
@@ -8075,13 +8105,14 @@ public class NXCSession
       sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());
       final ReceivedFile imageFile = waitForFile(msg.getMessageId(), 600000);
-      if (imageFile.isFailed()) throw new NXCException(RCC.IO_ERROR);
+      if (imageFile.isFailed())
+         throw new NXCException(RCC.IO_ERROR);
       return new LibraryImage(response, imageFile.getFile());
    }
 
    /**
     * Create an image
-    * 
+    *
     * @param image The Image
     * @param listener The ProgressListener
     * @return The image created
@@ -8106,7 +8137,7 @@ public class NXCSession
 
    /**
     * Delete an image
-    * 
+    *
     * @param image The image to delete
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
@@ -8126,7 +8157,7 @@ public class NXCSession
 
    /**
     * Modify an image
-    * 
+    *
     * @param image The image to modify
     * @param listener The ProgressListener
     * @throws IOException  if socket I/O error occurs
@@ -8163,10 +8194,11 @@ public class NXCSession
    public void pollNode(long nodeId, NodePollType pollType, final TextOutputListener listener) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_POLL_NODE);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
       msg.setFieldInt16(NXCPCodes.VID_POLL_TYPE, pollType.getValue());
 
-      MessageHandler handler = new MessageHandler() {
+      MessageHandler handler = new MessageHandler()
+      {
          @Override
          public boolean processMessage(NXCPMessage m)
          {
@@ -8210,10 +8242,10 @@ public class NXCSession
       if (handler.isTimeout())
          throw new NXCException(RCC.TIMEOUT);
    }
-   
+
    /**
     * Get list of all values in persistent storage
-    * 
+    *
     * @return Hash map wit persistent storage key, value
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
@@ -8222,9 +8254,9 @@ public class NXCSession
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_PERSISTENT_STORAGE);
       sendMessage(msg);
-      
+
       NXCPMessage response = waitForRCC(msg.getMessageId());
-      int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_PSTORAGE);      
+      int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_PSTORAGE);
       HashMap<String, String> map = new HashMap<String, String>();
       long base = NXCPCodes.VID_PSTORAGE_LIST_BASE;
       for(int i = 0; i < count; i++)
@@ -8233,10 +8265,10 @@ public class NXCSession
       }
       return map;
    }
-   
+
    /**
     * Set persistent storage value. Will create new or update existing
-    * 
+    *
     * @param key unique key of persistent storage value
     * @param value value
     * @throws IOException  if socket I/O error occurs
@@ -8249,10 +8281,10 @@ public class NXCSession
       msg.setField(NXCPCodes.VID_PSTORAGE_VALUE, value);
       sendMessage(msg);
    }
-   
+
    /**
     * Delete persistent storage value
-    * 
+    *
     * @param key unique key of persistent storage value
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
@@ -8261,7 +8293,7 @@ public class NXCSession
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_PSTORAGE_VALUE);
       msg.setField(NXCPCodes.VID_PSTORAGE_KEY, key);
-      sendMessage(msg);      
+      sendMessage(msg);
    }
 
    /**
@@ -8275,10 +8307,10 @@ public class NXCSession
    {
       return listServerFiles(null);
    }
-   
+
    /**
     * List files in server's file store.
-    * 
+    *
     * @param filter array with required extension. Will be used as file filter. Give empty array or null if no filter should be
     *           applyed.
     * @return list of files in server's file store
@@ -8288,7 +8320,7 @@ public class NXCSession
    public ServerFile[] listServerFiles(String[] filter) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_LIST_SERVER_FILES);
-      if(filter != null)
+      if (filter != null)
       {
          msg.setFieldInt32(NXCPCodes.VID_EXTENSION_COUNT, filter.length);
          int i = 0;
@@ -8314,10 +8346,10 @@ public class NXCSession
       }
       return files;
    }
-   
+
    /**
     * List files on agent file store.
-    * 
+    *
     * @param file parent of new coomming list
     * @param fullPath path that will be used on an agent to get list of subfiles
     * @param objectId the ID of the node 
@@ -8333,7 +8365,7 @@ public class NXCSession
       msg.setFieldInt16(NXCPCodes.VID_ROOT, file == null ? 1 : 0);
       msg.setFieldInt16(NXCPCodes.VID_ALLOW_MULTIPART, 1);
       sendMessage(msg);
- 
+
       List<AgentFile> files = new ArrayList<AgentFile>(64);
       while(true)
       {
@@ -8353,10 +8385,10 @@ public class NXCSession
       waitForRCC(msg.getMessageId());
       return files;
    }
-   
+
    /**
     * Return information about agent file
-    * 
+    *
     * @param file The AgentFile in question
     * @return AgentFileInfo object
     * @throws IOException  if socket I/O error occurs
@@ -8366,13 +8398,14 @@ public class NXCSession
    {
       if (!file.isDirectory())
          return new AgentFileInfo(file.getName(), 0, file.getSize());
-      
+
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_FOLDER_SIZE);
       msg.setField(NXCPCodes.VID_FILE_NAME, file.getFullName());
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)(file.getNodeId()));
       sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());
-      return new AgentFileInfo(file.getName(), response.getFieldAsInt64(NXCPCodes.VID_FILE_COUNT), response.getFieldAsInt64(NXCPCodes.VID_FOLDER_SIZE));
+      return new AgentFileInfo(file.getName(), response.getFieldAsInt64(NXCPCodes.VID_FILE_COUNT),
+            response.getFieldAsInt64(NXCPCodes.VID_FOLDER_SIZE));
    }
 
    /**
@@ -8388,10 +8421,10 @@ public class NXCSession
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public long uploadFileToAgent(long nodeId, String serverFileName, String remoteFileName, boolean jobOnHold)
-      throws IOException, NXCException
+         throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_UPLOAD_FILE_TO_AGENT);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
       msg.setField(NXCPCodes.VID_FILE_NAME, serverFileName);
       if (remoteFileName != null)
          msg.setField(NXCPCodes.VID_DESTINATION_FILE_NAME, remoteFileName);
@@ -8410,8 +8443,7 @@ public class NXCSession
     * @throws IOException  if socket or file I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void uploadFileToServer(File localFile, String serverFileName, ProgressListener listener)
-      throws IOException, NXCException
+   public void uploadFileToServer(File localFile, String serverFileName, ProgressListener listener) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_UPLOAD_FILE);
       if ((serverFileName == null) || serverFileName.isEmpty())
@@ -8424,7 +8456,7 @@ public class NXCSession
       waitForRCC(msg.getMessageId());
       sendFile(msg.getMessageId(), localFile, listener, allowCompression);
    }
-   
+
    /**
     * Upload local file to remote node via agent. If remote file name is not provided
     * local file name will be used.
@@ -8436,15 +8468,15 @@ public class NXCSession
     * @throws IOException  if socket or file I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void uploadLocalFileToAgent(long nodeId, File localFile, String remoteFileName, boolean overvrite, ProgressListener listener)
-      throws IOException, NXCException
+   public void uploadLocalFileToAgent(long nodeId, File localFile, String remoteFileName, boolean overvrite,
+         ProgressListener listener) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_FILEMGR_UPLOAD);
       if ((remoteFileName == null) || remoteFileName.isEmpty())
       {
          remoteFileName = localFile.getName();
       }
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
       msg.setField(NXCPCodes.VID_FILE_NAME, remoteFileName);
       msg.setField(NXCPCodes.VID_MODIFICATION_TIME, new Date(localFile.lastModified()));
       msg.setField(NXCPCodes.VID_OVERWRITE, overvrite);
@@ -8464,7 +8496,7 @@ public class NXCSession
    public void createFolderOnAgent(long nodeId, String folder) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_FILEMGR_CREATE_FOLDER);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
       msg.setField(NXCPCodes.VID_FILE_NAME, folder);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
@@ -8484,7 +8516,7 @@ public class NXCSession
             listener.markProgress(length);
       }
    }
-   
+
    /**
     * Remove progress listener when download is done
     * @param id
@@ -8496,7 +8528,7 @@ public class NXCSession
          progressListeners.remove(id);
       }
    }
-   
+
    /**
     * Download file from remote host via agent.
     *
@@ -8510,12 +8542,12 @@ public class NXCSession
     * @throws IOException  if socket or file I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public AgentFileData downloadFileFromAgent(long nodeId, String remoteFileName, long maxFileSize, boolean follow, 
+   public AgentFileData downloadFileFromAgent(long nodeId, String remoteFileName, long maxFileSize, boolean follow,
          ProgressListener listener, ServerJobIdUpdater updateServerJobId) throws IOException, NXCException
    {
       return downloadFileFromAgent(nodeId, remoteFileName, false, 0, null, maxFileSize, follow, listener, updateServerJobId);
    }
-   
+
    /**
     * Download file from remote host via agent.
     *
@@ -8532,12 +8564,12 @@ public class NXCSession
     * @throws IOException  if socket or file I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public AgentFileData downloadFileFromAgent(long nodeId, String remoteFileName, boolean expandMacros, 
-         long alarmId, Map<String, String> inputFields, long maxFileSize, boolean follow, ProgressListener listener, 
+   public AgentFileData downloadFileFromAgent(long nodeId, String remoteFileName, boolean expandMacros, long alarmId,
+         Map<String, String> inputFields, long maxFileSize, boolean follow, ProgressListener listener,
          ServerJobIdUpdater updateServerJobId) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_AGENT_FILE);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
       msg.setField(NXCPCodes.VID_FILE_NAME, remoteFileName);
       msg.setFieldInt32(NXCPCodes.VID_FILE_SIZE_LIMIT, (int)maxFileSize);
       msg.setField(NXCPCodes.VID_FILE_FOLLOW, follow);
@@ -8568,11 +8600,11 @@ public class NXCSession
             progressListeners.put(msg.getMessageId(), listener);
          }
       }
-      
+
       ReceivedFile remoteFile = waitForFile(msg.getMessageId(), 36000000);
       if (remoteFile == null)
          throw new NXCException(RCC.AGENT_FILE_DOWNLOAD_ERROR);
-      AgentFileData file =  new AgentFileData(id, remoteFileName, remoteFile.getFile());
+      AgentFileData file = new AgentFileData(id, remoteFileName, remoteFile.getFile());
 
       try
       {
@@ -8584,7 +8616,7 @@ public class NXCSession
       }
       return file;
    }
-   
+
    /**
     * Download file from server file storage.
     *
@@ -8593,7 +8625,7 @@ public class NXCSession
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     * @return The downloaded file
     */
-   public File downloadFileFromServer( String remoteFileName) throws IOException, NXCException
+   public File downloadFileFromServer(String remoteFileName) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_SERVER_FILE);
       msg.setField(NXCPCodes.VID_FILE_NAME, remoteFileName);
@@ -8601,7 +8633,7 @@ public class NXCSession
       waitForRCC(msg.getMessageId());
       return waitForFile(msg.getMessageId(), 3600000).getFile();
    }
-   
+
    /**
     * Cancel file monitoring
     *
@@ -8613,7 +8645,7 @@ public class NXCSession
    public void cancelFileMonitoring(long nodeId, String remoteFileName) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_CANCEL_FILE_MONITORING);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
       msg.setField(NXCPCodes.VID_FILE_NAME, remoteFileName);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
@@ -8633,7 +8665,7 @@ public class NXCSession
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
-   
+
    /**
     * Delete file from agent
     *
@@ -8645,12 +8677,12 @@ public class NXCSession
    public void deleteAgentFile(long nodeId, String fileName) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_FILEMGR_DELETE_FILE);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
       msg.setField(NXCPCodes.VID_FILE_NAME, fileName);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
-   
+
    /**
     * Rename agent's file
     *
@@ -8664,14 +8696,14 @@ public class NXCSession
    public void renameAgentFile(long nodeId, String oldName, String newFileName, boolean overwrite) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_FILEMGR_RENAME_FILE);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
       msg.setField(NXCPCodes.VID_FILE_NAME, oldName);
       msg.setField(NXCPCodes.VID_NEW_FILE_NAME, newFileName);
       msg.setField(NXCPCodes.VID_OVERWRITE, overwrite);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
-   
+
    /**
     * Move file from agent
     *
@@ -8685,14 +8717,14 @@ public class NXCSession
    public void moveAgentFile(long nodeId, String oldName, String newFileName, boolean overwrite) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_FILEMGR_MOVE_FILE);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
       msg.setField(NXCPCodes.VID_FILE_NAME, oldName);
       msg.setField(NXCPCodes.VID_NEW_FILE_NAME, newFileName);
       msg.setField(NXCPCodes.VID_OVERWRITE, overwrite);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
-   
+
    /**
     * Copy file from agent
     *
@@ -8706,7 +8738,7 @@ public class NXCSession
    public void copyAgentFile(long nodeId, String oldName, String newFileName, boolean overwrite) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_FILEMGR_COPY_FILE);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
       msg.setField(NXCPCodes.VID_FILE_NAME, oldName);
       msg.setField(NXCPCodes.VID_NEW_FILE_NAME, newFileName);
       msg.setField(NXCPCodes.VID_OVERWRITE, overwrite);
@@ -8782,7 +8814,7 @@ public class NXCSession
    public void snmpWalk(long nodeId, String rootOid, SnmpWalkListener listener) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_START_SNMP_WALK);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
       msg.setField(NXCPCodes.VID_SNMP_OID, rootOid);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
@@ -8800,7 +8832,8 @@ public class NXCSession
             data.add(new SnmpValue(name, type, value, nodeId));
          }
          listener.onSnmpWalkData(data);
-         if (response.isEndOfSequence()) break;
+         if (response.isEndOfSequence())
+            break;
       }
    }
 
@@ -8815,7 +8848,7 @@ public class NXCSession
    public List<VlanInfo> getVlans(long nodeId) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_VLANS);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
       sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());
       int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_VLANS);
@@ -8916,16 +8949,16 @@ public class NXCSession
    public NetworkPath getNetworkPath(long node1, long node2) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_NETWORK_PATH);
-      msg.setFieldInt32(NXCPCodes.VID_SOURCE_OBJECT_ID, (int) node1);
-      msg.setFieldInt32(NXCPCodes.VID_DESTINATION_OBJECT_ID, (int) node2);
+      msg.setFieldInt32(NXCPCodes.VID_SOURCE_OBJECT_ID, (int)node1);
+      msg.setFieldInt32(NXCPCodes.VID_DESTINATION_OBJECT_ID, (int)node2);
       sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());
       return new NetworkPath(response);
    }
-   
+
    /**
     * Get routing table from node
-    * 
+    *
     * @param nodeId node object ID
     * @return list of routing table entries
     * @throws IOException  if socket or file I/O error occurs
@@ -8934,7 +8967,7 @@ public class NXCSession
    public List<Route> getRoutingTable(long nodeId) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_ROUTING_TABLE);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
       sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());
       int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_ELEMENTS);
@@ -8950,7 +8983,7 @@ public class NXCSession
 
    /**
     * Get switch forwarding database (MAC address table) from node
-    * 
+    *
     * @param nodeId node object ID
     * @return list of switch forwarding database entries
     * @throws IOException  if socket or file I/O error occurs
@@ -8959,7 +8992,7 @@ public class NXCSession
    public List<FdbEntry> getSwitchForwardingDatabase(long nodeId) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_SWITCH_FDB);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
       sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());
       int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_ELEMENTS);
@@ -8984,7 +9017,7 @@ public class NXCSession
    public List<WirelessStation> getWirelessStations(long nodeId) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_WIRELESS_STATIONS);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
       sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());
       int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_ELEMENTS);
@@ -9008,7 +9041,7 @@ public class NXCSession
    public void removePackage(long packageId) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_REMOVE_PACKAGE);
-      msg.setFieldInt32(NXCPCodes.VID_PACKAGE_ID, (int) packageId);
+      msg.setFieldInt32(NXCPCodes.VID_PACKAGE_ID, (int)packageId);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
@@ -9023,8 +9056,7 @@ public class NXCSession
     * @throws IOException  if socket or file I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public long installPackage(PackageInfo info, File pkgFile, ProgressListener listener)
-      throws IOException, NXCException
+   public long installPackage(PackageInfo info, File pkgFile, ProgressListener listener) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_INSTALL_PACKAGE);
       info.fillMessage(msg);
@@ -9053,7 +9085,8 @@ public class NXCSession
       while(true)
       {
          final NXCPMessage response = waitForMessage(NXCPCodes.CMD_PACKAGE_INFO, msg.getMessageId());
-         if (response.getFieldAsInt64(NXCPCodes.VID_PACKAGE_ID) == 0) break;
+         if (response.getFieldAsInt64(NXCPCodes.VID_PACKAGE_ID) == 0)
+            break;
          list.add(new PackageInfo(response));
       }
       return list;
@@ -9068,23 +9101,24 @@ public class NXCSession
     * @throws IOException  if socket or file I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void deployPackage(long packageId, Long[] nodeList, PackageDeploymentListener listener)
-      throws IOException, NXCException
+   public void deployPackage(long packageId, Long[] nodeList, PackageDeploymentListener listener) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_DEPLOY_PACKAGE);
-      msg.setFieldInt32(NXCPCodes.VID_PACKAGE_ID, (int) packageId);
+      msg.setFieldInt32(NXCPCodes.VID_PACKAGE_ID, (int)packageId);
       msg.setFieldInt32(NXCPCodes.VID_NUM_OBJECTS, nodeList.length);
       msg.setField(NXCPCodes.VID_OBJECT_LIST, nodeList);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
 
-      if (listener != null) listener.deploymentStarted();
+      if (listener != null)
+         listener.deploymentStarted();
 
       while(true)
       {
          final NXCPMessage response = waitForMessage(NXCPCodes.CMD_INSTALLER_INFO, msg.getMessageId(), 600000);
          final int status = response.getFieldAsInt32(NXCPCodes.VID_DEPLOYMENT_STATUS);
-         if (status == PackageDeploymentListener.FINISHED) break;
+         if (status == PackageDeploymentListener.FINISHED)
+            break;
 
          if (listener != null)
          {
@@ -9093,7 +9127,7 @@ public class NXCSession
             if (status == PackageDeploymentListener.FAILED)
             {
                listener.statusUpdate(response.getFieldAsInt64(NXCPCodes.VID_OBJECT_ID), status,
-                  response.getFieldAsString(NXCPCodes.VID_ERROR_MESSAGE));
+                     response.getFieldAsString(NXCPCodes.VID_ERROR_MESSAGE));
             }
             else
             {
@@ -9102,7 +9136,8 @@ public class NXCSession
          }
       }
 
-      if (listener != null) listener.deploymentComplete();
+      if (listener != null)
+         listener.deploymentComplete();
    }
 
    /**
@@ -9136,10 +9171,12 @@ public class NXCSession
       long varId = NXCPCodes.VID_PUSH_DCI_DATA_BASE;
       for(DciPushData d : data)
       {
-         msg.setFieldInt32(varId++, (int) d.nodeId);
-         if (d.nodeId == 0) msg.setField(varId++, d.nodeName);
-         msg.setFieldInt32(varId++, (int) d.dciId);
-         if (d.dciId == 0) msg.setField(varId++, d.dciName);
+         msg.setFieldInt32(varId++, (int)d.nodeId);
+         if (d.nodeId == 0)
+            msg.setField(varId++, d.nodeName);
+         msg.setFieldInt32(varId++, (int)d.dciId);
+         if (d.dciId == 0)
+            msg.setField(varId++, d.dciName);
          msg.setField(varId++, d.value);
       }
 
@@ -9158,7 +9195,7 @@ public class NXCSession
     */
    public void pushDciData(long nodeId, long dciId, String value) throws IOException, NXCException
    {
-      pushDciData(new DciPushData[]{new DciPushData(nodeId, dciId, value)});
+      pushDciData(new DciPushData[] { new DciPushData(nodeId, dciId, value) });
    }
 
    /**
@@ -9172,7 +9209,7 @@ public class NXCSession
     */
    public void pushDciData(String nodeName, String dciName, String value) throws IOException, NXCException
    {
-      pushDciData(new DciPushData[]{new DciPushData(nodeName, dciName, value)});
+      pushDciData(new DciPushData[] { new DciPushData(nodeName, dciName, value) });
    }
 
    /**
@@ -9201,7 +9238,7 @@ public class NXCSession
 
    /**
     * Get default date format provided by server
-    * 
+    *
     * @return The current date format
     */
    public String getDateFormat()
@@ -9211,7 +9248,7 @@ public class NXCSession
 
    /**
     * Get default time format provided by server
-    * 
+    *
     * @return The current time format
     */
    public String getTimeFormat()
@@ -9221,14 +9258,14 @@ public class NXCSession
 
    /**
     * Get time format for short form (usually without seconds).
-    * 
+    *
     * @return The current short time format
     */
    public String getShortTimeFormat()
    {
       return shortTimeFormat;
    }
-   
+
    /**
     * Handover object cache to new session. After call to this method,
     * object cache of this session invalidated and should not be used.
@@ -9261,7 +9298,7 @@ public class NXCSession
 
    /**
     * Get list of all configured mapping tables.
-    * 
+    *
     * @return List of MappingTableDescriptor objects
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
@@ -9284,7 +9321,7 @@ public class NXCSession
 
    /**
     * Get list of specific mapping table
-    * 
+    *
     * @param id The ID of mapping table
     * @return The MappingTable
     * @throws IOException if socket I/O error occurs
@@ -9300,7 +9337,7 @@ public class NXCSession
 
    /**
     * Create new mapping table.
-    * 
+    *
     * @param name name of new table
     * @param description description for new table
     * @param flags flags for new table
@@ -9317,7 +9354,7 @@ public class NXCSession
 
    /**
     * Create or update mapping table. If table ID is 0, new table will be created on server.
-    * 
+    *
     * @param table mapping table
     * @return ID of new table object
     * @throws IOException if socket I/O error occurs
@@ -9334,7 +9371,7 @@ public class NXCSession
 
    /**
     * Delete mapping table
-    * 
+    *
     * @param id mapping table ID
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
@@ -9349,7 +9386,7 @@ public class NXCSession
 
    /**
     * Get the default DCI retention time
-    * 
+    *
     * @return the default DCI retention time in days
     */
    public final int getDefaultDciRetentionTime()
@@ -9359,17 +9396,17 @@ public class NXCSession
 
    /**
     * Get the default DCI polling interval
-    * 
+    *
     * @return the default DCI polling interval in seconds
     */
    public final int getDefaultDciPollingInterval()
    {
       return defaultDciPollingInterval;
    }
-   
+
    /**
     * Get the minimal view refresh interval
-    * 
+    *
     * @return the minViewRefreshInterval
     */
    public int getMinViewRefreshInterval()
@@ -9379,7 +9416,7 @@ public class NXCSession
 
    /**
     * Get the state of alarm status flow
-    * 
+    *
     * @return true if alarm status flow set to "strict" mode
     */
    public final boolean isStrictAlarmStatusFlow()
@@ -9479,7 +9516,7 @@ public class NXCSession
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_QUERY_SUMMARY_TABLE);
       msg.setFieldInt32(NXCPCodes.VID_SUMMARY_TABLE_ID, tableId);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int) baseObjectId);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)baseObjectId);
       sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());
       return new Table(response);
@@ -9498,7 +9535,8 @@ public class NXCSession
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public Table queryAdHocDciSummaryTable(long baseObjectId, List<DciSummaryTableColumn> columns, AggregationFunction function, Date periodStart, Date periodEnd, boolean multiInstance) throws IOException, NXCException
+   public Table queryAdHocDciSummaryTable(long baseObjectId, List<DciSummaryTableColumn> columns, AggregationFunction function,
+         Date periodStart, Date periodEnd, boolean multiInstance) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_QUERY_ADHOC_SUMMARY_TABLE);
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)baseObjectId);
@@ -9520,7 +9558,7 @@ public class NXCSession
 
    /**
     * List reports
-    * 
+    *
     * @return List of report UUIDs
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
@@ -9542,7 +9580,7 @@ public class NXCSession
 
    /**
     * Get the report definition
-    * 
+    *
     * @param reportId The UUID of the report
     * @return The ReportDefinition object
     * @throws IOException  if socket I/O error occurs
@@ -9559,7 +9597,7 @@ public class NXCSession
 
    /**
     * Execute a report
-    * 
+    *
     * @param reportId The report UUID
     * @param parameters The parameters to set
     * @return the UUID of the report
@@ -9584,7 +9622,7 @@ public class NXCSession
 
    /**
     * List report results
-    * 
+    *
     * @param reportId The report UUID
     * @return List of ReportResult objects
     * @throws IOException  if socket I/O error occurs
@@ -9611,7 +9649,7 @@ public class NXCSession
 
    /**
     * Delete report result
-    * 
+    *
     * @param reportId The report UUID
     * @param jobId The job UUID
     * @throws IOException  if socket I/O error occurs
@@ -9628,7 +9666,7 @@ public class NXCSession
 
    /**
     * Render report
-    * 
+    *
     * @param reportId The report UUID
     * @param jobId The job UUID
     * @param format The format of the render
@@ -9652,38 +9690,38 @@ public class NXCSession
       return file.getFile();
    }
 
-	/**
-	 * Schedule a report
-	 * 
-	 * @param job The ReportingJob
-	 * @param parameters The parameters to set
+   /**
+    * Schedule a report
+    *
+    * @param job The ReportingJob
+    * @param parameters The parameters to set
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
-	 */
-	public void scheduleReport(ReportingJob job, Map<String, String> parameters) throws NXCException, IOException
-	{
-		NXCPMessage msg = newMessage(NXCPCodes.CMD_RS_SCHEDULE_EXECUTION);
-		msg.setField(NXCPCodes.VID_REPORT_DEFINITION, job.getReportId());
-		msg.setField(NXCPCodes.VID_RS_JOB_ID, job.getJobId());
-		msg.setFieldInt32(NXCPCodes.VID_RS_JOB_TYPE, job.getType());
-		msg.setFieldInt64(NXCPCodes.VID_TIMESTAMP, job.getStartTime().getTime());
-		msg.setFieldInt32(NXCPCodes.VID_DAY_OF_WEEK, job.getDaysOfWeek());
-		msg.setFieldInt32(NXCPCodes.VID_DAY_OF_MONTH, job.getDaysOfMonth());
-		msg.setField(NXCPCodes.VID_COMMENTS, job.getComments());
+    */
+   public void scheduleReport(ReportingJob job, Map<String, String> parameters) throws NXCException, IOException
+   {
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_RS_SCHEDULE_EXECUTION);
+      msg.setField(NXCPCodes.VID_REPORT_DEFINITION, job.getReportId());
+      msg.setField(NXCPCodes.VID_RS_JOB_ID, job.getJobId());
+      msg.setFieldInt32(NXCPCodes.VID_RS_JOB_TYPE, job.getType());
+      msg.setFieldInt64(NXCPCodes.VID_TIMESTAMP, job.getStartTime().getTime());
+      msg.setFieldInt32(NXCPCodes.VID_DAY_OF_WEEK, job.getDaysOfWeek());
+      msg.setFieldInt32(NXCPCodes.VID_DAY_OF_MONTH, job.getDaysOfMonth());
+      msg.setField(NXCPCodes.VID_COMMENTS, job.getComments());
 
-		msg.setFieldInt32(NXCPCodes.VID_NUM_PARAMETERS, parameters.size());
-		long varId = NXCPCodes.VID_PARAM_LIST_BASE;
-		for(Entry<String, String> e : parameters.entrySet())
-		{
-			msg.setField(varId++, e.getKey());
-			msg.setField(varId++, e.getValue());
-		}
-		sendMessage(msg);
-		waitForRCC(msg.getMessageId());
+      msg.setFieldInt32(NXCPCodes.VID_NUM_PARAMETERS, parameters.size());
+      long varId = NXCPCodes.VID_PARAM_LIST_BASE;
+      for(Entry<String, String> e : parameters.entrySet())
+      {
+         msg.setField(varId++, e.getKey());
+         msg.setField(varId++, e.getValue());
+      }
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
 
-		// FIXME: combine into one message
-		if (job.isNotifyOnCompletion())
-		{
+      // FIXME: combine into one message
+      if (job.isNotifyOnCompletion())
+      {
          msg = newMessage(NXCPCodes.CMD_RS_ADD_REPORT_NOTIFY);
          msg.setField(NXCPCodes.VID_RS_JOB_ID, job.getJobId());
          msg.setFieldInt32(NXCPCodes.VID_RENDER_FORMAT, job.getRenderFormat().getCode());
@@ -9694,12 +9732,12 @@ public class NXCSession
             msg.setField(varId++, s);
          sendMessage(msg);
          waitForRCC(msg.getMessageId());
-		}
-	}
+      }
+   }
 
    /**
     * List scheduled jobs
-    * 
+    *
     * @param reportId The report UUID
     * @return List of ReportingJob objects
     * @throws IOException  if socket I/O error occurs
@@ -9711,21 +9749,21 @@ public class NXCSession
       msg.setField(NXCPCodes.VID_REPORT_DEFINITION, reportId);
       sendMessage(msg);
       NXCPMessage response = waitForRCC(msg.getMessageId());
-		
+
       List<ReportingJob> result = new ArrayList<ReportingJob>();
       long varId = NXCPCodes.VID_ROW_DATA_BASE;
       int num = response.getFieldAsInt32(NXCPCodes.VID_NUM_ITEMS);
-      for (int i = 0; i < num; i++)
+      for(int i = 0; i < num; i++)
       {
          result.add(new ReportingJob(response, varId));
          varId += 20;
       }
       return result;
    }
-   
+
    /**
     * Delete report schedule
-    * 
+    *
     * @param reportId The report UUID
     * @param jobId The job UUID
     * @throws IOException  if socket I/O error occurs
@@ -9739,10 +9777,10 @@ public class NXCSession
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
-   
+
    /**
     * Set the client address
-    * 
+    *
     * @param clientAddress the clientAddress to set
     */
    public void setClientAddress(String clientAddress)
@@ -9752,7 +9790,7 @@ public class NXCSession
 
    /**
     * Sign a challange
-    * 
+    *
     * @param signature user's signature
     * @param challenge challenge string received from server
     * @return signed server challenge
@@ -9774,10 +9812,10 @@ public class NXCSession
 
       return signed;
    }
-   
+
    /**
     * Get the client`s language
-    * 
+    *
     * @return the clientLanguage
     */
    public String getClientLanguage()
@@ -9787,7 +9825,7 @@ public class NXCSession
 
    /**
     * Set client`s language
-    * 
+    *
     * @param clientLanguage the clientLanguage to set
     */
    public void setClientLanguage(String clientLanguage)
@@ -9799,7 +9837,7 @@ public class NXCSession
     * Get address map for subnet. Returned array contains one entry for each IP address
     * in a subnet. Element value could be eithet ID of the node with that IP address,
     * 0 for unused addresses, and 0xFFFFFFFF for subnet and broadcast addresses.
-    * 
+    *
     * @param subnetId The subnet ID
     * @return Address map
     * @throws IOException  if socket I/O error occurs
@@ -9813,21 +9851,21 @@ public class NXCSession
       NXCPMessage response = waitForRCC(msg.getMessageId());
       return response.getFieldAsUInt32Array(NXCPCodes.VID_ADDRESS_MAP);
    }
-   
+
    /**
     * Gets the list of configuration files.(Config id, name and sequence number)
-    * 
+    *
     * @return the list of configuration files in correct sequence
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public List <ConfigListElement> getConfigList() throws NXCException, IOException
+   public List<ConfigListElement> getConfigList() throws NXCException, IOException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_AGENT_CFG_LIST);
       sendMessage(msg);
       NXCPMessage response = waitForRCC(msg.getMessageId());
       int size = response.getFieldAsInt32(NXCPCodes.VID_NUM_RECORDS);
-      List <ConfigListElement> elements = new ArrayList<ConfigListElement>(size);
+      List<ConfigListElement> elements = new ArrayList<ConfigListElement>(size);
       long i, base;
       for(i = 0, base = NXCPCodes.VID_AGENT_CFG_LIST_BASE; i < size; i++, base += 10)
       {
@@ -9836,10 +9874,10 @@ public class NXCSession
       Collections.sort(elements);
       return elements;
    }
-   
+
    /**
     * Saves existing config 
-    *  
+    *
     * @param id config id
     * @return content of requested by id configurations file
     * @throws IOException  if socket I/O error occurs
@@ -9850,15 +9888,15 @@ public class NXCSession
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_OPEN_AGENT_CONFIG);
       msg.setFieldInt32(NXCPCodes.VID_CONFIG_ID, (int)id);
       sendMessage(msg);
-      
-      NXCPMessage response = waitForRCC(msg.getMessageId());      
+
+      NXCPMessage response = waitForRCC(msg.getMessageId());
       ConfigContent content = new ConfigContent(id, response);
       return content;
    }
-   
+
    /**
     * Saves or creates new agent's config 
-    * 
+    *
     * @param conf contents of config
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
@@ -9870,10 +9908,10 @@ public class NXCSession
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
-   
+
    /**
     * Delete config with given id. Does not change sequence number of following elements.
-    * 
+    *
     * @param id agent configuration ID
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
@@ -9885,10 +9923,10 @@ public class NXCSession
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
-   
+
    /**
     * Swaps 2 configs sequence numbers
-    * 
+    *
     * @param id1 The id of first config
     * @param id2 The id of second config
     * @throws IOException  if socket I/O error occurs
@@ -9902,10 +9940,10 @@ public class NXCSession
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
-   
+
    /**
     * Get location history for given object.
-    * 
+    *
     * @param objectId The object ID
     * @param from The date from
     * @param to The date to
@@ -9921,16 +9959,17 @@ public class NXCSession
       msg.setField(NXCPCodes.VID_TIME_FROM, from);
       msg.setField(NXCPCodes.VID_TIME_TO, to);
       sendMessage(msg);
-      
+
       NXCPMessage response = waitForRCC(msg.getMessageId());
       int size = response.getFieldAsInt32(NXCPCodes.VID_NUM_RECORDS);
-      List <GeoLocation> elements = new ArrayList<GeoLocation>();
+      List<GeoLocation> elements = new ArrayList<GeoLocation>();
       long fieldId = NXCPCodes.VID_LOC_LIST_BASE;
       for(int i = 0; i < size; i++, fieldId += 10)
       {
          elements.add(new GeoLocation(response, fieldId));
       }
-      Collections.sort(elements, new Comparator<GeoLocation>() {
+      Collections.sort(elements, new Comparator<GeoLocation>()
+      {
          @Override
          public int compare(GeoLocation l1, GeoLocation l2)
          {
@@ -9939,12 +9978,12 @@ public class NXCSession
       });
       return elements;
    }
-   
+
    /**
     * Take screenshot from given node. Session to take screenshot from
     * can be identified either by ID or name. If ID is used name must
     * be set to null.
-    * 
+    *
     * @param nodeId node object ID
     * @param sessionName session name for session to take screenshot from
     * @return Screenshot as PNG image
@@ -9958,14 +9997,14 @@ public class NXCSession
       if (sessionName != null)
          msg.setField(NXCPCodes.VID_NAME, sessionName);
       sendMessage(msg);
-      
+
       NXCPMessage response = waitForRCC(msg.getMessageId(), msgWaitQueue.getDefaultTimeout() + 60000);
       return response.getFieldAsBinary(NXCPCodes.VID_FILE_DATA);
    }
-   
+
    /**
     * Get list of available scheduled task handlers.
-    * 
+    *
     * @return list of available scheduled task handlers.
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
@@ -9974,13 +10013,13 @@ public class NXCSession
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_LIST_SCHEDULE_CALLBACKS);
       sendMessage(msg);
-      NXCPMessage response = waitForRCC(msg.getMessageId()); 
+      NXCPMessage response = waitForRCC(msg.getMessageId());
       return response.getStringListFromFields(NXCPCodes.VID_CALLBACK_BASE, NXCPCodes.VID_CALLBACK_COUNT);
    }
-   
+
    /**
     * Get list of scheduled tasks.
-    * 
+    *
     * @return list of scheduled tasks
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
@@ -9989,8 +10028,8 @@ public class NXCSession
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_LIST_SCHEDULES);
       sendMessage(msg);
-      NXCPMessage response = waitForRCC(msg.getMessageId());  
-      
+      NXCPMessage response = waitForRCC(msg.getMessageId());
+
       int size = response.getFieldAsInt32(NXCPCodes.VID_SCHEDULE_COUNT);
       long i, base;
       ArrayList<ScheduledTask> list = new ArrayList<ScheduledTask>(size);
@@ -9998,13 +10037,13 @@ public class NXCSession
       {
          list.add(new ScheduledTask(response, base));
       }
-      
+
       return list;
    }
-   
+
    /**
     * Add new scheduled task
-    * 
+    *
     * @param task new scheduled task
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
@@ -10014,12 +10053,12 @@ public class NXCSession
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_ADD_SCHEDULE);
       task.fillMessage(msg);
       sendMessage(msg);
-      waitForRCC(msg.getMessageId());      
+      waitForRCC(msg.getMessageId());
    }
-   
+
    /**
     * Update existing scheduled task.
-    * 
+    *
     * @param task updated scheduled task
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
@@ -10031,10 +10070,10 @@ public class NXCSession
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
-   
+
    /**
     * Delete scheduled task.
-    * 
+    *
     * @param taskId scheduled task ID
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
@@ -10046,10 +10085,10 @@ public class NXCSession
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
-   
+
    /**
     * Set maintenance mode for object
-    * 
+    *
     * @param objectId object ID
     * @param inMaintenance new maintenance mode setting (true = on, false = off)
     * @param comments comments for entering maintenance
@@ -10058,7 +10097,7 @@ public class NXCSession
     */
    public void setObjectMaintenanceMode(long objectId, boolean inMaintenance, String comments) throws NXCException, IOException
    {
-      final NXCPMessage msg = newMessage(inMaintenance ? NXCPCodes.CMD_ENTER_MAINT_MODE : NXCPCodes.CMD_LEAVE_MAINT_MODE); 
+      final NXCPMessage msg = newMessage(inMaintenance ? NXCPCodes.CMD_ENTER_MAINT_MODE : NXCPCodes.CMD_LEAVE_MAINT_MODE);
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)objectId);
       if (comments != null)
          msg.setField(NXCPCodes.VID_COMMENTS, comments);
@@ -10068,7 +10107,7 @@ public class NXCSession
 
    /**
     * Set maintenance mode for object
-    * 
+    *
     * @param objectId object ID
     * @param inMaintenance new maintenance mode setting (true = on, false = off)
     * @throws IOException  if socket I/O error occurs
@@ -10078,10 +10117,10 @@ public class NXCSession
    {
       setObjectMaintenanceMode(objectId, inMaintenance, null);
    }
-   
+
    /**
     * Manage subscription for ZMQ event forwarder
-    * 
+    *
     * @param objectId Node id
     * @param dciId DCI ID. 0 means "disabled DCI source filter for events"
     * @param subscribe If true, the event will be subscribed to
@@ -10090,24 +10129,24 @@ public class NXCSession
     */
    public void updateZmqEventSubscription(final long objectId, final long dciId, boolean subscribe) throws IOException, NXCException
    {
-       final NXCPMessage msg;
-       if (subscribe)
-       {
-	   msg = newMessage(NXCPCodes.CMD_ZMQ_SUBSCRIBE_EVENT);
-       }
-       else
-       {
-	   msg = newMessage(NXCPCodes.CMD_ZMQ_UNSUBSCRIBE_EVENT);
-       }
-       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)objectId);
-       msg.setFieldInt32(NXCPCodes.VID_DCI_ID, (int) dciId);
-       sendMessage(msg);
-       waitForRCC(msg.getMessageId());
+      final NXCPMessage msg;
+      if (subscribe)
+      {
+         msg = newMessage(NXCPCodes.CMD_ZMQ_SUBSCRIBE_EVENT);
+      }
+      else
+      {
+         msg = newMessage(NXCPCodes.CMD_ZMQ_UNSUBSCRIBE_EVENT);
+      }
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)objectId);
+      msg.setFieldInt32(NXCPCodes.VID_DCI_ID, (int)dciId);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
    }
 
    /**
     * Manage subscription for ZMQ data forwarder
-    * 
+    *
     * @param objectId The object ID
     * @param dciId The DCI ID
     * @param subscribe If true, the event will be subscribed to
@@ -10116,24 +10155,24 @@ public class NXCSession
     */
    public void updateZmqDataSubscription(final long objectId, final long dciId, boolean subscribe) throws IOException, NXCException
    {
-       final NXCPMessage msg;
-       if (subscribe)
-       {
-	   msg = newMessage(NXCPCodes.CMD_ZMQ_SUBSCRIBE_DATA);
-       }
-       else
-       {
-	   msg = newMessage(NXCPCodes.CMD_ZMQ_UNSUBSCRIBE_DATA);
-       }
-       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)objectId);
-       msg.setFieldInt32(NXCPCodes.VID_DCI_ID, (int) dciId);
-       sendMessage(msg);
-       waitForRCC(msg.getMessageId());
+      final NXCPMessage msg;
+      if (subscribe)
+      {
+         msg = newMessage(NXCPCodes.CMD_ZMQ_SUBSCRIBE_DATA);
+      }
+      else
+      {
+         msg = newMessage(NXCPCodes.CMD_ZMQ_UNSUBSCRIBE_DATA);
+      }
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)objectId);
+      msg.setFieldInt32(NXCPCodes.VID_DCI_ID, (int)dciId);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
    }
-   
+
    /**
     * Get subscriptions for ZMQ data forwarder
-    * 
+    *
     * @param type Subscription type
     * @return List of subscriptions
     * @throws IOException  if socket I/O error occurs
@@ -10141,8 +10180,8 @@ public class NXCSession
     */
    public List<ZmqSubscription> getZmqSubscriptions(ZmqSubscriptionType type) throws IOException, NXCException
    {
-      final NXCPMessage msg = newMessage(type == ZmqSubscriptionType.EVENT ? NXCPCodes.CMD_ZMQ_GET_EVT_SUBSCRIPTIONS
-            : NXCPCodes.CMD_ZMQ_GET_DATA_SUBSCRIPTIONS);
+      final NXCPMessage msg = newMessage(
+            type == ZmqSubscriptionType.EVENT ? NXCPCodes.CMD_ZMQ_GET_EVT_SUBSCRIPTIONS : NXCPCodes.CMD_ZMQ_GET_DATA_SUBSCRIPTIONS);
       sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());
 
@@ -10169,7 +10208,7 @@ public class NXCSession
 
    /**
     * Get list of configured repositories
-    * 
+    *
     * @return list of configured repositories
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
@@ -10179,7 +10218,7 @@ public class NXCSession
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_REPOSITORIES);
       sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());
-      
+
       int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_ELEMENTS);
       List<Repository> list = new ArrayList<Repository>(count);
       long fieldId = NXCPCodes.VID_ELEMENT_LIST_BASE;
@@ -10190,10 +10229,10 @@ public class NXCSession
       }
       return list;
    }
-   
+
    /**
     * Add repository. Will update given repository object with assigned ID.
-    * 
+    *
     * @param r The repository
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
@@ -10209,7 +10248,7 @@ public class NXCSession
 
    /**
     * Modify repository.
-    * 
+    *
     * @param r The repository
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
@@ -10224,7 +10263,7 @@ public class NXCSession
 
    /**
     * Delete repository.
-    * 
+    *
     * @param id The id
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
@@ -10239,7 +10278,7 @@ public class NXCSession
 
    /**
     * Get list of registered prediction engines
-    * 
+    *
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     * @return List of PredictionEngine objects
@@ -10293,7 +10332,7 @@ public class NXCSession
          waitForRCC(msg.getMessageId());
 
          NXCPMessage response = waitForMessage(NXCPCodes.CMD_DCI_DATA, msg.getMessageId());
-         if (!response.isBinaryMessage()) 
+         if (!response.isBinaryMessage())
             throw new NXCException(RCC.INTERNAL_ERROR);
 
          rowsReceived = parseDataRows(response.getBinaryData(), data);
@@ -10309,14 +10348,13 @@ public class NXCSession
                timeTo = (int)(row.getTimestamp().getTime() / 1000) - 1;
             }
          }
-      }
-      while((rowsReceived == MAX_DCI_DATA_ROWS) && (timeTo > timeFrom));
+      } while((rowsReceived == MAX_DCI_DATA_ROWS) && (timeTo > timeFrom));
       return data;
    }
-   
+
    /**
     * Get list of agent tunnels
-    * 
+    *
     * @return list of agent tunnels
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
@@ -10336,10 +10374,10 @@ public class NXCSession
       }
       return tunnels;
    }
-   
+
    /**
     * Bind agent tunnel to node
-    * 
+    *
     * @param tunnelId tunnel ID
     * @param nodeId node ID
     * @throws IOException if socket I/O error occurs
@@ -10356,7 +10394,7 @@ public class NXCSession
 
    /**
     * Unbind agent tunnel to node
-    * 
+    *
     * @param nodeId node ID
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
@@ -10368,10 +10406,10 @@ public class NXCSession
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
-   
+
    /**
     * Setup new TCP proxy channel. Proxy object should be disposed with TcpProxy.close() call when no longer needed.
-    * 
+    *
     * @param nodeId proxy node ID (node that will initiate TCP connection to target)
     * @param address target IP address
     * @param port target TCP port
@@ -10394,10 +10432,10 @@ public class NXCSession
       }
       return proxy;
    }
-   
+
    /**
     * Close TCP proxy channel.
-    * 
+    *
     * @param channelId proxy channel ID
     */
    protected void closeTcpProxy(int channelId)
