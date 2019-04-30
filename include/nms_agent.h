@@ -232,6 +232,14 @@
 #define DCIDESC_HARDWARE_BASEBOARD_SERIALNUMBER      _T("Hardware: baseboard serial number")
 #define DCIDESC_HARDWARE_BASEBOARD_TYPE              _T("Hardware: baseboard type")
 #define DCIDESC_HARDWARE_BASEBOARD_VERSION           _T("Hardware: baseboard version")
+#define DCIDESC_HARDWARE_BATTERY_CAPACITY            _T("Hardware: battery {instance} capacity")
+#define DCIDESC_HARDWARE_BATTERY_CHEMISTRY           _T("Hardware: battery {instance} chemistry")
+#define DCIDESC_HARDWARE_BATTERY_LOCATION            _T("Hardware: battery {instance} location")
+#define DCIDESC_HARDWARE_BATTERY_MANUFACTURE_DATE    _T("Hardware: battery {instance} manufacture date")
+#define DCIDESC_HARDWARE_BATTERY_MANUFACTURER        _T("Hardware: battery {instance} manufacturer")
+#define DCIDESC_HARDWARE_BATTERY_NAME                _T("Hardware: battery {instance} name")
+#define DCIDESC_HARDWARE_BATTERY_SERIALNUMBER        _T("Hardware: battery {instance} serial number")
+#define DCIDESC_HARDWARE_BATTERY_VOLTAGE             _T("Hardware: battery {instance} voltage")
 #define DCIDESC_HARDWARE_MEMORYDEVICE_BANK           _T("Hardware: memory device {instance} bank")
 #define DCIDESC_HARDWARE_MEMORYDEVICE_CONFSPEED      _T("Hardware: memory device {instance} configured speed")
 #define DCIDESC_HARDWARE_MEMORYDEVICE_FORMFACTOR     _T("Hardware: memory device {instance} form factor")
@@ -537,6 +545,7 @@
 #define DCTDESC_AGENT_SESSION_AGENTS                 _T("Registered session agents")
 #define DCTDESC_AGENT_SUBAGENTS                      _T("Loaded subagents")
 #define DCTDESC_FILESYSTEM_VOLUMES                   _T("File system volumes")
+#define DCTDESC_HARDWARE_BATTERIES                   _T("Hardware: batteries")
 #define DCTDESC_HARDWARE_MEMORY_DEVICES              _T("Hardware: memory devices")
 #define DCTDESC_HARDWARE_PROCESSORS                  _T("Hardware: processors")
 #define DCTDESC_HARDWARE_STORAGE_DEVICES             _T("Hardware: storage devices")
@@ -852,6 +861,7 @@ const char LIBNXAGENT_EXPORTABLE *SMBIOS_GetHardwareProduct();
 LIBNXAGENT_EXPORTABLE const char * const *SMBIOS_GetOEMStrings();
 bool LIBNXAGENT_EXPORTABLE SMBIOS_Parse(BYTE *(*reader)(size_t*));
 LONG LIBNXAGENT_EXPORTABLE SMBIOS_ParameterHandler(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG LIBNXAGENT_EXPORTABLE SMBIOS_BatteryParameterHandler(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG LIBNXAGENT_EXPORTABLE SMBIOS_MemDevParameterHandler(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG LIBNXAGENT_EXPORTABLE SMBIOS_ProcessorParameterHandler(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG LIBNXAGENT_EXPORTABLE SMBIOS_ListHandler(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
