@@ -24,6 +24,33 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 30.56 to 30.57
+ */
+static bool H_UpgradeFromV69()
+{
+   if (DBIsTableExist(g_dbHandle, _T("hardware_inventory")))
+      CHK_EXEC(SQLQuery(_T("DROP TABLE hardware_inventory")));
+
+   CHK_EXEC(CreateTable(
+         _T("CREATE TABLE hardware_inventory (")
+         _T("   node_id integer not null,")
+         _T("   category integer not null,")
+         _T("   component_index integer not null,")
+         _T("   hw_type varchar(47) null,")
+         _T("   vendor varchar(63) null,")
+         _T("   model varchar(63) null,")
+         _T("   location varchar(63) null,")
+         _T("   capacity $SQL:INT64 null,")
+         _T("   part_number varchar(63) null,")
+         _T("   serial_number varchar(63) null,")
+         _T("   description varchar(255) null,")
+         _T("   PRIMARY KEY(node_id,category,component_index))")));
+
+   CHK_EXEC(SetMinorSchemaVersion(70));
+   return true;
+}
+
+/**
  * Upgrade from 30.68 to 30.69 (changes also included into 22.55)
  */
 static bool H_UpgradeFromV68()
@@ -331,24 +358,13 @@ static bool H_UpgradeFromV56()
    CHK_EXEC(CreateTable(
          _T("CREATE TABLE software_inventory (")
          _T("   node_id integer not null,")
-         _T("   name varchar(255) not null,")
-         _T("   version varchar(63) not null,")
+         _T("   name varchar(127) not null,")
+         _T("   version varchar(47) not null,")
          _T("   vendor varchar(63) null,")
          _T("   install_date integer not null,")
          _T("   url varchar(255) null,")
          _T("   description varchar(255) null,")
-         _T("   PRIMARY KEY(node_id,version,name))")));
-
-   CHK_EXEC(CreateTable(
-         _T("CREATE TABLE hardware_inventory (")
-         _T("   node_id integer not null,")
-         _T("   component_type varchar(63) not null,")
-         _T("   component_index integer not null,")
-         _T("   vendor varchar(63) null,")
-         _T("   model varchar(63) null,")
-         _T("   capacity integer not null,")
-         _T("   serial_number varchar(63) null,")
-         _T("   PRIMARY KEY(node_id,component_type,component_index))")));
+         _T("   PRIMARY KEY(node_id,name,version))")));
 
    CHK_EXEC(SetMinorSchemaVersion(57));
    return true;
@@ -2355,6 +2371,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 69, 30, 70, H_UpgradeFromV69 },
    { 68, 30, 69, H_UpgradeFromV68 },
    { 67, 30, 68, H_UpgradeFromV67 },
    { 66, 30, 67, H_UpgradeFromV66 },

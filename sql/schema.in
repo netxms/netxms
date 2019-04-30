@@ -351,13 +351,13 @@ CREATE TABLE nodes
 CREATE TABLE software_inventory
 (
   node_id integer not null,
-  name varchar(255) not null,
-  version varchar(63) not null,
+  name varchar(127) not null,
+  version varchar(47) not null,
   vendor varchar(63) null,
   install_date integer not null,
   url varchar(255) null,
   description varchar(255) null,
-  PRIMARY KEY(node_id,version,name)
+  PRIMARY KEY(node_id,name,version)
 ) TABLE_TYPE;
 
 /**
@@ -366,13 +366,17 @@ CREATE TABLE software_inventory
 CREATE TABLE hardware_inventory
 (
   node_id integer not null,
-  component_type integer not null,
+  category integer not null,
   component_index integer not null,
+  hw_type varchar(47) null,
   vendor varchar(63) null,
   model varchar(63) null,
-  capacity integer null,
-  serial_number varchar(63) null,
-  PRIMARY KEY(node_id,component_type,component_index)
+  location varchar(63) null,
+  capacity SQL_INT64 null,
+  part_number varchar(31) null,
+  serial_number varchar(31) null,
+  description varchar(255) null,
+  PRIMARY KEY(node_id,category,component_index)
 ) TABLE_TYPE;
 
 /**

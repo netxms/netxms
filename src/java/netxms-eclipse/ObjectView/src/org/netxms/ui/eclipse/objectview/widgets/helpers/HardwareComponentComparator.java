@@ -45,16 +45,28 @@ public class HardwareComponentComparator extends ViewerComparator
       switch(column)
       {
          case HardwareInventory.COLUMN_CAPACITY:
-            result = Integer.signum(c1.getCapacity() - c2.getCapacity());
+            result = Long.signum(c1.getCapacity() - c2.getCapacity());
+            break;
+         case HardwareInventory.COLUMN_CATEGORY:
+            result = c1.getCategory().getValue() - c2.getCategory().getValue();
+            break;
+         case HardwareInventory.COLUMN_DESCRIPTION:
+            result = c1.getDescription().compareToIgnoreCase(c2.getDescription());
             break;
          case HardwareInventory.COLUMN_INDEX:
             result = Integer.signum(c1.getIndex() - c2.getIndex());
             break;
+         case HardwareInventory.COLUMN_LOCATION:
+            result = c1.getLocation().compareToIgnoreCase(c2.getLocation());
+            break;
          case HardwareInventory.COLUMN_MODEL:
             result = c1.getModel().compareToIgnoreCase(c2.getModel());
             break;
-         case HardwareInventory.COLUMN_SERIAL:
-            result = c1.getSerial().compareToIgnoreCase(c2.getSerial());
+         case HardwareInventory.COLUMN_PART_NUMBER:
+            result = c1.getPartNumber().compareToIgnoreCase(c2.getPartNumber());
+            break;
+         case HardwareInventory.COLUMN_SERIAL_NUMBER:
+            result = c1.getSerialNumber().compareToIgnoreCase(c2.getSerialNumber());
             break;
          case HardwareInventory.COLUMN_TYPE:
             result = c1.getType().compareToIgnoreCase(c2.getType());
@@ -64,7 +76,6 @@ public class HardwareComponentComparator extends ViewerComparator
             break;
       }
       
-
       return (((SortableTableViewer)viewer).getTable().getSortDirection() == SWT.UP) ? result : -result;
    }
    

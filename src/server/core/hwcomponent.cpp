@@ -23,88 +23,196 @@
 #include "nxcore.h"
 
 /**
- * Default constructor
+ * Comparator for hardware components
  */
-HardwareComponent::HardwareComponent()
+int HardwareComponentComparator(const HardwareComponent **c1, const HardwareComponent **c2)
 {
-   m_type[0] = 0;
-   m_changeCode = CHANGE_NONE;
-   m_index = 0;
-   m_vendor[0] = 0;
-   m_model[0] = 0;
-   m_capacity = 0;
-   m_serial[0] = 0;
+   int rc = static_cast<int>((*c1)->getCategory()) - static_cast<int>((*c2)->getCategory());
+   if (rc != 0)
+      return rc;
+   if ((*c1)->getIndex() != (*c2)->getIndex())
+      return (*c1)->getIndex() < (*c2)->getIndex() ? -1 : 1;
+   rc = _tcscmp((*c1)->getSerialNumber(), (*c2)->getSerialNumber());
+   if (rc != 0)
+      return rc;
+   rc = _tcscmp((*c1)->getPartNumber(), (*c2)->getPartNumber());
+   if (rc != 0)
+      return rc;
+   rc = _tcscmp((*c1)->getModel(), (*c2)->getModel());
+   if (rc != 0)
+      return rc;
+   rc = _tcscmp((*c1)->getLocation(), (*c2)->getLocation());
+   if (rc != 0)
+      return rc;
+   return _tcscmp((*c1)->getVendor(), (*c2)->getVendor());
 }
 
 /**
- * Create hardware component form database
+ * Calculate hardware changes
  */
-HardwareComponent::HardwareComponent(DB_RESULT result, int row)
+ObjectArray<HardwareComponent> *CalculateHardwareChanges(ObjectArray<HardwareComponent> *oldSet, ObjectArray<HardwareComponent> *newSet)
 {
-   DBGetField(result, row, 0, m_type, MAX_HARDWARE_NAME);
-   m_index = DBGetFieldULong(result, row, 1);
-   DBGetField(result, row, 2, m_vendor, MAX_HARDWARE_NAME);
-   DBGetField(result, row, 3, m_model, MAX_HARDWARE_NAME);
-   m_capacity = DBGetFieldULong(result, row, 4);
-   DBGetField(result, row, 5, m_serial, MAX_HARDWARE_NAME);
+   HardwareComponent *nc = NULL, *oc = NULL;
+   int i;
+   ObjectArray<HardwareComponent> *changes = new ObjectArray<HardwareComponent>(16, 16);
+
+   for(i = 0; i < newSet->size(); i++)
+   {
+      nc = newSet->get(i);
+      oc = oldSet->find(nc, HardwareComponentComparator);
+      if (oc == NULL)
+      {
+         nc->setChangeCode(CHANGE_ADDED);
+         changes->add(nc);
+      }
+   }
+
+   for(i = 0; i < oldSet->size(); i++)
+   {
+      oc = oldSet->get(i);
+      nc = newSet->find(oc, HardwareComponentComparator);
+      if (nc == NULL)
+      {
+         oc->setChangeCode(CHANGE_REMOVED);
+         changes->add(oc);
+      }
+   }
+
+   return changes;
+}
+
+/**
+ * Create hardware component
+ */
+HardwareComponent::HardwareComponent(HardwareComponentCategory category, UINT32 index, const TCHAR *type,
+         const TCHAR *vendor, const TCHAR *model, const TCHAR *partNumber, const TCHAR *serialNumber)
+{
+   m_category = category;
+   m_index = index;
+   m_type = MemCopyString(type);
+   m_vendor = MemCopyString(vendor);
+   m_model = MemCopyString(model);
+   m_location = NULL;
+   m_capacity = 0;
+   m_partNumber = MemCopyString(partNumber);
+   m_serialNumber = MemCopyString(serialNumber);
+   m_description = NULL;
    m_changeCode = CHANGE_NONE;
 }
 
-HardwareComponent::HardwareComponent(const Table *table, int row)
+/**
+ * Create hardware component from database
+ * Expected field order: category,component_index,hw_type,vendor,model,location,capacity,part_number,serial_number,description
+ */
+HardwareComponent::HardwareComponent(DB_RESULT result, int row)
 {
+   m_category = static_cast<HardwareComponentCategory>(DBGetFieldLong(result, row, 0));
+   m_index = DBGetFieldULong(result, row, 1);
+   m_type = DBGetField(result, row, 2, NULL, 0);
+   m_vendor = DBGetField(result, row, 3, NULL, 0);
+   m_model = DBGetField(result, row, 4, NULL, 0);
+   m_location = DBGetField(result, row, 5, NULL, 0);
+   m_capacity = DBGetFieldUInt64(result, row, 6);
+   m_partNumber = DBGetField(result, row, 7, NULL, 0);
+   m_serialNumber = DBGetField(result, row, 8, NULL, 0);
+   m_description = DBGetField(result, row, 9, NULL, 0);
+   m_changeCode = CHANGE_NONE;
+}
+
+/**
+ * Create hardware component from table row
+ */
+HardwareComponent::HardwareComponent(HardwareComponentCategory category, const Table *table, int row)
+{
+   m_category = category;
+   m_index = 0;
+   m_type = NULL;
+   m_vendor = NULL;
+   m_model = NULL;
+   m_location = NULL;
+   m_capacity = 0;
+   m_partNumber = NULL;
+   m_serialNumber = NULL;
+   m_description = NULL;
+
    for(int i = 0; i < table->getNumColumns(); i++)
    {
-      if (!_tcsicmp(table->getColumnName(i), _T("TYPE")))
-         _tcslcpy(m_type, table->getAsString(row, i), MAX_HARDWARE_NAME);
-      else if (!_tcsicmp(table->getColumnName(i), _T("HANDLE")))
+      const TCHAR *cname = table->getColumnName(i);
+      if (!_tcsicmp(cname, _T("HANDLE")))
          m_index = table->getAsUInt(row, i);
-      else if (!_tcsicmp(table->getColumnName(i), _T("MANUFACTURER")))
-         _tcslcpy(m_vendor, table->getAsString(row, i), MAX_HARDWARE_NAME);
+      else if (!_tcsicmp(cname, _T("LOCATION")))
+         m_location = MemCopyString(table->getAsString(row, i));
+      else if (!_tcsicmp(cname, _T("MANUFACTURER")))
+         m_vendor = MemCopyString(table->getAsString(row, i));
+      else if (!_tcsicmp(table->getColumnName(i), _T("NAME")) ||
+               !_tcsicmp(table->getColumnName(i), _T("VERSION")) ||
+               !_tcsicmp(table->getColumnName(i), _T("FORM_FACTOR")) ||
+               !_tcsicmp(table->getColumnName(i), _T("PRODUCT")))
+         m_model = MemCopyString(table->getAsString(row, i));
       else if (!_tcsicmp(table->getColumnName(i), _T("PART_NUMBER")))
-         _tcslcpy(m_model, table->getAsString(row, i), MAX_HARDWARE_NAME);
-      else if (!_tcsicmp(table->getColumnName(i), _T("MAX_SPEED")))
-         m_capacity = table->getAsUInt(row, i);
+         m_partNumber = MemCopyString(table->getAsString(row, i));
+      else if (!_tcsicmp(table->getColumnName(i), _T("CAPACITY")) ||
+               !_tcsicmp(table->getColumnName(i), _T("CURR_SPEED")) ||
+               !_tcsicmp(table->getColumnName(i), _T("SIZE")))
+         m_capacity = table->getAsUInt64(row, i);
       else if (!_tcsicmp(table->getColumnName(i), _T("SERIAL_NUMBER")))
-         _tcslcpy(m_serial, table->getAsString(row, i), MAX_HARDWARE_NAME);
+         m_serialNumber = MemCopyString(table->getAsString(row, i));
+      else if ((!_tcsicmp(table->getColumnName(i), _T("TYPE")) && (category != HWC_STORAGE)) ||
+               !_tcsicmp(table->getColumnName(i), _T("TYPE_DESCRIPTION")) ||
+               !_tcsicmp(table->getColumnName(i), _T("CHEMISTRY")))
+         m_type = MemCopyString(table->getAsString(row, i));
    }
 
    m_changeCode = CHANGE_NONE;
 }
+
+/**
+ * Destructor
+ */
+HardwareComponent::~HardwareComponent()
+{
+   MemFree(m_type);
+   MemFree(m_vendor);
+   MemFree(m_model);
+   MemFree(m_partNumber);
+   MemFree(m_serialNumber);
+   MemFree(m_location);
+   MemFree(m_description);
+}
+
 /**
  * Fill NXCPMessage
  */
 void HardwareComponent::fillMessage(NXCPMessage *msg, UINT32 baseId) const
 {
-   UINT32 varId = baseId;
-   msg->setField(varId++, m_type);
-   msg->setField(varId++, m_index);
-   msg->setField(varId++, m_vendor);
-   msg->setField(varId++, m_model);
-   msg->setField(varId++, m_capacity);
-   msg->setField(varId++, m_serial);
+   UINT32 fieldId = baseId;
+   msg->setField(fieldId++, static_cast<INT16>(m_category));
+   msg->setField(fieldId++, m_index);
+   msg->setField(fieldId++, CHECK_NULL_EX(m_type));
+   msg->setField(fieldId++, CHECK_NULL_EX(m_vendor));
+   msg->setField(fieldId++, CHECK_NULL_EX(m_model));
+   msg->setField(fieldId++, CHECK_NULL_EX(m_location));
+   msg->setField(fieldId++, m_capacity);
+   msg->setField(fieldId++, CHECK_NULL_EX(m_partNumber));
+   msg->setField(fieldId++, CHECK_NULL_EX(m_serialNumber));
+   msg->setField(fieldId++, CHECK_NULL_EX(m_description));
 }
 
 /**
  * Save to database
+ * Field oerder: node_id,category,component_index,hw_type,vendor,model,location,capacity,part_number,serial_number,description
  */
-bool HardwareComponent::saveToDatabase(DB_HANDLE hdb, UINT32 nodeId) const
+bool HardwareComponent::saveToDatabase(DB_STATEMENT hStmt) const
 {
-   bool result = false;
-
-   DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO hardware_inventory (component_type,component_index,vendor,model,capacity,serial_number,node_id) VALUES (?,?,?,?,?,?,?)"));
-   if (hStmt != NULL)
-   {
-      DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_type, DB_BIND_STATIC);
-      DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_index);
-      DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_vendor, DB_BIND_STATIC);
-      DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, m_model, DB_BIND_STATIC);
-      DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, m_capacity);
-      DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, m_serial, DB_BIND_STATIC);
-      DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, nodeId);
-
-      result = DBExecute(hStmt);
-      DBFreeStatement(hStmt);
-   }
-
-   return result;
+   DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_category);
+   DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_index);
+   DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, m_type, DB_BIND_STATIC);
+   DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, m_vendor, DB_BIND_STATIC);
+   DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, m_model, DB_BIND_STATIC);
+   DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, m_location, DB_BIND_STATIC);
+   DBBind(hStmt, 8, DB_SQLTYPE_BIGINT, m_capacity);
+   DBBind(hStmt, 9, DB_SQLTYPE_VARCHAR, m_partNumber, DB_BIND_STATIC);
+   DBBind(hStmt, 10, DB_SQLTYPE_VARCHAR, m_serialNumber, DB_BIND_STATIC);
+   DBBind(hStmt, 11, DB_SQLTYPE_VARCHAR, m_description, DB_BIND_STATIC);
+   return DBExecute(hStmt);
 }

@@ -19,18 +19,23 @@
 package org.netxms.client;
 
 import org.netxms.base.NXCPMessage;
+import org.netxms.client.constants.HardwareComponentCategory;
 
 /**
  * Hardware component information
  */
 public class HardwareComponent
 {
-   private String type;
+   private HardwareComponentCategory category;
    private int index;
+   private long capacity;
+   private String type;
    private String vendor;
    private String model;
-   private int capacity;
-   private String serial;
+   private String partNumber;
+   private String serialNumber;
+   private String location;
+   private String description;
    
    /**
     * Create hardware component from NXCPMessage
@@ -40,24 +45,32 @@ public class HardwareComponent
     */
    public HardwareComponent(NXCPMessage msg, long baseId)
    {
-      type = msg.getFieldAsString(baseId);
+      category = HardwareComponentCategory.getByValue(msg.getFieldAsInt32(baseId));
       index = msg.getFieldAsInt32(baseId + 1);
-      vendor = msg.getFieldAsString(baseId + 2);
-      model = msg.getFieldAsString(baseId + 3);
-      capacity = msg.getFieldAsInt32(baseId + 4);
-      serial = msg.getFieldAsString(baseId + 5);
+      type = msg.getFieldAsString(baseId + 2);
+      vendor = msg.getFieldAsString(baseId + 3);
+      model = msg.getFieldAsString(baseId + 4);
+      location = msg.getFieldAsString(baseId + 5);
+      capacity = msg.getFieldAsInt64(baseId + 6);
+      partNumber = msg.getFieldAsString(baseId + 7);
+      serialNumber = msg.getFieldAsString(baseId + 8);
+      description = msg.getFieldAsString(baseId + 9);
    }
    
    /**
-    * @return the type
+    * Get component category.
+    * 
+    * @return component category
     */
-   public String getType()
+   public HardwareComponentCategory getCategory()
    {
-      return type;
+      return category;
    }
-   
+
    /**
-    * @return the index
+    * Get component index (handle).
+    * 
+    * @return component index
     */
    public int getIndex()
    {
@@ -65,7 +78,19 @@ public class HardwareComponent
    }
    
    /**
-    * @return the vendor
+    * Get component type.
+    * 
+    * @return component type
+    */
+   public String getType()
+   {
+      return type;
+   }
+   
+   /**
+    * Get component's vendor name.
+    * 
+    * @return component's vendor name
     */
    public String getVendor()
    {
@@ -73,7 +98,9 @@ public class HardwareComponent
    }
    
    /**
-    * @return the model
+    * Get component's mode name.
+    * 
+    * @return component's mode name
     */
    public String getModel()
    {
@@ -81,18 +108,55 @@ public class HardwareComponent
    }
    
    /**
-    * @return capacity
+    * Get component's capacity. Actual meaning depends on component category:
+    * <p>Capacity in bytes for storage and memory devices
+    * <p>Speed in kHz for processors
+    * <p>Capacity in mWh for batteries
+    * 
+    * @return component's capacity
     */
-   public int getCapacity()
+   public long getCapacity()
    {
       return capacity;
    }
    
    /**
-    * @return serial
+    * Get component's serial number.
+    * 
+    * @return component's serial number
     */
-   public String getSerial()
+   public String getSerialNumber()
    {
-      return serial;
+      return serialNumber;
+   }
+
+   /**
+    * Get component's part number.
+    * 
+    * @return component's part number
+    */
+   public String getPartNumber()
+   {
+      return partNumber;
+   }
+
+   /**
+    * Get component's location within chassis or parent component.
+    * 
+    * @return component's location
+    */
+   public String getLocation()
+   {
+      return location;
+   }
+
+   /**
+    * Get category specific component description.
+    *  
+    * @return component's description
+    */
+   public String getDescription()
+   {
+      return description;
    }
 }

@@ -23,6 +23,87 @@
 #include "nxcore.h"
 
 /**
+ * Comparator for package names and versions
+ */
+int PackageNameVersionComparator(const SoftwarePackage **p1, const SoftwarePackage **p2)
+{
+   int rc = _tcscmp((*p1)->getName(), (*p2)->getName());
+   if (rc == 0)
+      rc = _tcscmp((*p1)->getVersion(), (*p2)->getVersion());
+   return rc;
+}
+
+/**
+ * Comparator for package names
+ */
+static int PackageNameComparator(const SoftwarePackage **p1, const SoftwarePackage **p2)
+{
+   return _tcscmp((*p1)->getName(), (*p2)->getName());
+}
+
+/**
+ * Calculate package changes
+ */
+ObjectArray<SoftwarePackage> *CalculatePackageChanges(ObjectArray<SoftwarePackage> *oldSet, ObjectArray<SoftwarePackage> *newSet)
+{
+   ObjectArray<SoftwarePackage> *changes = new ObjectArray<SoftwarePackage>(32, 32, false);
+   for(int i = 0; i < oldSet->size(); i++)
+   {
+      SoftwarePackage *p = oldSet->get(i);
+      SoftwarePackage *np = newSet->find(p, PackageNameComparator);
+      if (np == NULL)
+      {
+         p->setChangeCode(CHANGE_REMOVED);
+         changes->add(p);
+         continue;
+      }
+
+      if (!_tcscmp(p->getVersion(), np->getVersion()))
+         continue;
+
+      if (newSet->find(p, PackageNameVersionComparator) != NULL)
+         continue;
+
+      // multiple versions of same package could be installed
+      // (example is gpg-pubkey package on RedHat)
+      // if this is the case consider all version changes
+      // to be either install or remove
+      SoftwarePackage *prev = oldSet->get(i - 1);
+      SoftwarePackage *next = oldSet->get(i + 1);
+      bool multipleVersions =
+               ((prev != NULL) && !_tcscmp(prev->getName(), p->getName())) ||
+               ((next != NULL) && !_tcscmp(next->getName(), p->getName()));
+
+      if (multipleVersions)
+      {
+         p->setChangeCode(CHANGE_REMOVED);
+      }
+      else
+      {
+         p->setChangeCode(CHANGE_UPDATED);
+         np->setChangeCode(CHANGE_UPDATED);
+         changes->add(np);
+      }
+      changes->add(p);
+   }
+
+   // Check for new packages
+   for(int i = 0; i < newSet->size(); i++)
+   {
+      SoftwarePackage *p = newSet->get(i);
+      if (p->getChangeCode() == CHANGE_UPDATED)
+         continue;   // already marked as upgrade for some existing package
+      if (oldSet->find(p, PackageNameVersionComparator) != NULL)
+         continue;
+
+      p->setChangeCode(CHANGE_ADDED);
+      changes->add(p);
+   }
+
+   return changes;
+}
+
+/**
  * Extract value from source table cell
  */
 #define EXTRACT_VALUE(name, field) \
@@ -86,7 +167,7 @@ SoftwarePackage::SoftwarePackage()
  * Constructor to load from database
  *
  * @param database query result
- * @param row id
+ * @param row row number
  */
 SoftwarePackage::SoftwarePackage(DB_RESULT result, int row)
 {
@@ -104,11 +185,11 @@ SoftwarePackage::SoftwarePackage(DB_RESULT result, int row)
  */
 SoftwarePackage::~SoftwarePackage()
 {
-	free(m_name);
-	free(m_version);
-	free(m_vendor);
-	free(m_url);
-	free(m_description);
+	MemFree(m_name);
+	MemFree(m_version);
+	MemFree(m_vendor);
+	MemFree(m_url);
+	MemFree(m_description);
 }
 
 /**
@@ -128,24 +209,13 @@ void SoftwarePackage::fillMessage(NXCPMessage *msg, UINT32 baseId) const
 /**
  * Save software package data to database
  */
-bool SoftwarePackage::saveToDatabase(DB_HANDLE hdb, UINT32 nodeId) const
+bool SoftwarePackage::saveToDatabase(DB_STATEMENT hStmt) const
 {
-   bool result = false;
-
-   DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO software_inventory (name,version,vendor,install_date,url,description,node_id) VALUES (?,?,?,?,?,?,?)"));
-   if (hStmt != NULL)
-   {
-      DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_name, DB_BIND_STATIC);
-      DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_version, DB_BIND_STATIC);
-      DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_vendor, DB_BIND_STATIC);
-      DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, static_cast<UINT32>(m_date));
-      DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, m_url, DB_BIND_STATIC);
-      DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, m_description, DB_BIND_STATIC);
-      DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, nodeId);
-
-      result = DBExecute(hStmt);
-      DBFreeStatement(hStmt);
-   }
-
-   return result;
+   DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_name, DB_BIND_STATIC);
+   DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_version, DB_BIND_STATIC);
+   DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, m_vendor, DB_BIND_STATIC);
+   DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, static_cast<UINT32>(m_date));
+   DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, m_url, DB_BIND_STATIC);
+   DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, m_description, DB_BIND_STATIC);
+   return DBExecute(hStmt);
 }

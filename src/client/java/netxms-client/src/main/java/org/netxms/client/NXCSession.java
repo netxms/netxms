@@ -6190,7 +6190,7 @@ public class NXCSession
       for(int i = 0; i < count; i++)
       {
          components.add(new HardwareComponent(response, baseId));
-         baseId += 10;
+         baseId += 64;
       }
       return components;
    }

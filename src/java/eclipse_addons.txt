@@ -1,9 +1,8 @@
 Eclipse addons required for NetXMS development:
 
-* -- dependency of BIRT 4.7 -- Draw2D: http://download.eclipse.org/tools/gef/updates/legacy/releases/
 * NetXMS Zest fork: http://www.netxms.org/eclipse/zest-rcp
 * Properties Editor: http://propedit.sourceforge.jp/eclipse/updates
 * "TM Terminal Control SDK" from "Target Management Project 4.4". Update site: http://download.eclipse.org/tm/terminal/updates/4.4milestones/20180611
-* BIRT Charting: http://download.eclipse.org/releases/2018-12
+* BIRT Charting: http://download.eclipse.org/releases/2019-03
 * Babel Project: http://download.eclipse.org/technology/babel/update-site/R0.14.1/mars
 	Required locales: chinese (both), czech, french, german, russian, portuguese, spanish

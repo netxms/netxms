@@ -62,7 +62,6 @@ bool NXCORE_EXPORTABLE ExecuteQueryOnObject(DB_HANDLE hdb, UINT32 objectId, cons
 #define MAX_INTERFACES        4096
 #define MAX_ATTR_NAME_LEN     128
 #define INVALID_INDEX         0xFFFFFFFF
-#define MAX_HARDWARE_NAME     64
 
 /**
  * Last events
@@ -391,7 +390,7 @@ public:
 	~SoftwarePackage();
 
 	void fillMessage(NXCPMessage *msg, UINT32 baseId) const;
-	bool saveToDatabase(DB_HANDLE hdb, UINT32 nodeId) const;
+	bool saveToDatabase(DB_STATEMENT hStmt) const;
 
 	const TCHAR *getName() const { return m_name; }
 	const TCHAR *getVersion() const { return m_version; }
@@ -403,30 +402,59 @@ public:
 };
 
 /**
+ * Hardware component categories
+ */
+enum HardwareComponentCategory
+{
+   HWC_OTHER = 0,
+   HWC_BASEBOARD = 1,
+   HWC_PROCESSOR = 2,
+   HWC_MEMORY = 3,
+   HWC_STORAGE = 4,
+   HWC_BATTERY = 5
+};
+
+/**
  * Hardware component information
  */
 class HardwareComponent
 {
 private:
-   TCHAR m_type[MAX_HARDWARE_NAME];
+   HardwareComponentCategory m_category;
    ChangeCode m_changeCode;
    UINT32 m_index;
-   TCHAR m_vendor[MAX_HARDWARE_NAME];
-   TCHAR m_model[MAX_HARDWARE_NAME];
    UINT64 m_capacity;
-   TCHAR m_serial[MAX_HARDWARE_NAME];
+   TCHAR *m_type;
+   TCHAR *m_vendor;
+   TCHAR *m_model;
+   TCHAR *m_partNumber;
+   TCHAR *m_serialNumber;
+   TCHAR *m_location;
+   TCHAR *m_description;
 
 public:
-   HardwareComponent();
+   HardwareComponent(HardwareComponentCategory category, UINT32 index, const TCHAR *type,
+            const TCHAR *vendor, const TCHAR *model, const TCHAR *partNumber, const TCHAR *serialNumber);
    HardwareComponent(DB_RESULT result, int row);
-   HardwareComponent(const Table *table, int row);
+   HardwareComponent(HardwareComponentCategory category, const Table *table, int row);
+   ~HardwareComponent();
 
    void fillMessage(NXCPMessage *msg, UINT32 baseId) const;
-   bool saveToDatabase(DB_HANDLE hdb, UINT32 nodeId) const;
+   bool saveToDatabase(DB_STATEMENT hStmt) const;
+
    ChangeCode getChangeCode() const { return m_changeCode; };
+   HardwareComponentCategory getCategory() const { return m_category; };
+   UINT32 getIndex() const { return m_index; }
+   UINT64 getCapacity() const { return m_capacity; }
+   const TCHAR *getType() const { return CHECK_NULL_EX(m_type); };
+   const TCHAR *getVendor() const { return CHECK_NULL_EX(m_vendor); };
+   const TCHAR *getModel() const { return CHECK_NULL_EX(m_model); };
+   const TCHAR *getLocation() const { return CHECK_NULL_EX(m_location); };
+   const TCHAR *getPartNumber() const { return CHECK_NULL_EX(m_partNumber); };
+   const TCHAR *getSerialNumber() const { return CHECK_NULL_EX(m_serialNumber); };
+   const TCHAR *getDescription() const { return CHECK_NULL_EX(m_description); };
+
    void setChangeCode(ChangeCode code) { m_changeCode = code; }
-   const TCHAR *getSerial() const { return m_serial; };
-   const TCHAR *getType() const { return m_type; };
 };
 
 /**

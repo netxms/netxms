@@ -40,6 +40,18 @@ extern VolatileCounter64 g_snmpTrapsReceived;
 extern ThreadPool *g_pollerThreadPool;
 
 /**
+ * Software package management functions
+ */
+int PackageNameVersionComparator(const SoftwarePackage **p1, const SoftwarePackage **p2);
+ObjectArray<SoftwarePackage> *CalculatePackageChanges(ObjectArray<SoftwarePackage> *oldSet, ObjectArray<SoftwarePackage> *newSet);
+
+/**
+ * Hardware inventory management functions
+ */
+int HardwareComponentComparator(const HardwareComponent **c1, const HardwareComponent **c2);
+ObjectArray<HardwareComponent> *CalculateHardwareChanges(ObjectArray<HardwareComponent> *oldSet, ObjectArray<HardwareComponent> *newSet);
+
+/**
  * Node class default constructor
  */
 Node::Node() : super()
@@ -603,12 +615,14 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
          hResult = DBSelectPrepared(hStmt);
          if (hResult != NULL)
          {
-            int nRows = DBGetNumRows(hResult);
-            m_softwarePackages = new ObjectArray<SoftwarePackage>(nRows, 16, true);
-
-            for(int i = 0; i < nRows; i++)
-               m_softwarePackages->add(new SoftwarePackage(hResult, i));
-
+            int count = DBGetNumRows(hResult);
+            if (count > 0)
+            {
+               m_softwarePackages = new ObjectArray<SoftwarePackage>(count, 64, true);
+               for(int i = 0; i < count; i++)
+                  m_softwarePackages->add(new SoftwarePackage(hResult, i));
+               m_softwarePackages->sort(PackageNameVersionComparator);
+            }
             DBFreeResult(hResult);
          }
          else
@@ -629,19 +643,21 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    if (bResult)
    {
       // Load hardware components
-      hStmt = DBPrepare(hdb, _T("SELECT component_type,component_index,vendor,model,capacity,serial_number FROM hardware_inventory WHERE node_id=?"));
+      hStmt = DBPrepare(hdb, _T("SELECT category,component_index,hw_type,vendor,model,location,capacity,part_number,serial_number,description FROM hardware_inventory WHERE node_id=?"));
       if (hStmt != NULL)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
          hResult = DBSelectPrepared(hStmt);
          if (hResult != NULL)
          {
-            int nRows = DBGetNumRows(hResult);
-            m_hardwareComponents = new ObjectArray<HardwareComponent>(nRows, 16, true);
-
-            for(int i = 0; i < nRows; i++)
-               m_hardwareComponents->add(new HardwareComponent(hResult, i));
-
+            int count = DBGetNumRows(hResult);
+            if (count > 0)
+            {
+               m_hardwareComponents = new ObjectArray<HardwareComponent>(count, 16, true);
+               for(int i = 0; i < count; i++)
+                  m_hardwareComponents->add(new HardwareComponent(hResult, i));
+               m_hardwareComponents->sort(HardwareComponentComparator);
+            }
             DBFreeResult(hResult);
          }
          else
@@ -829,20 +845,40 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
    if (success && (m_modified & MODIFY_SOFTWARE_INVENTORY))
    {
       success = executeQueryOnObject(hdb, _T("DELETE FROM software_inventory WHERE node_id=?"));
-      if (m_softwarePackages != NULL)
+      if ((m_softwarePackages != NULL) && !m_softwarePackages->isEmpty())
       {
-         for(int i = 0; success && i < m_softwarePackages->size(); i++)
-            success = m_softwarePackages->get(i)->saveToDatabase(hdb, m_id);
+         DB_STATEMENT hStmt = DBPrepare(hdb,
+                  _T("INSERT INTO software_inventory (node_id,name,version,vendor,install_date,url,description) VALUES (?,?,?,?,?,?,?)"),
+                  m_softwarePackages->size() > 1);
+         if (hStmt != NULL)
+         {
+            DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+            for(int i = 0; success && (i < m_softwarePackages->size()); i++)
+               success = m_softwarePackages->get(i)->saveToDatabase(hStmt);
+            DBFreeStatement(hStmt);
+         }
+         else
+         {
+            success = false;
+         }
       }
    }
 
    if (success && (m_modified & MODIFY_HARDWARE_INVENTORY))
    {
       success = executeQueryOnObject(hdb, _T("DELETE FROM hardware_inventory WHERE node_id=?"));
-      if (m_hardwareComponents != NULL)
+      if ((m_hardwareComponents != NULL) && !m_hardwareComponents->isEmpty())
       {
-         for(int i = 0; success && i < m_hardwareComponents->size(); i++)
-            success = m_hardwareComponents->get(i)->saveToDatabase(hdb, m_id);
+         DB_STATEMENT hStmt = DBPrepare(hdb,
+                  _T("INSERT INTO hardware_inventory (node_id,category,component_index,hw_type,vendor,model,location,capacity,part_number,serial_number,description) VALUES (?,?,?,?,?,?,?,?,?,?,?)"),
+                  m_hardwareComponents->size() > 1);
+         if (hStmt != NULL)
+         {
+            DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+            for(int i = 0; success && i < m_hardwareComponents->size(); i++)
+               success = m_hardwareComponents->get(i)->saveToDatabase(hStmt);
+            DBFreeStatement(hStmt);
+         }
       }
    }
 
@@ -2538,129 +2574,51 @@ void Node::updatePrimaryIpAddr()
 }
 
 /**
- * Comparator for package names and versions
+ * Read baseboard information from agent
  */
-static int PackageNameVersionComparator(const SoftwarePackage **p1, const SoftwarePackage **p2)
+static int ReadBaseboardInformation(Node *node, ObjectArray<HardwareComponent> *components)
 {
-   int rc = _tcscmp((*p1)->getName(), (*p2)->getName());
-   if (rc == 0)
-      rc = _tcscmp((*p1)->getVersion(), (*p2)->getVersion());
-   return rc;
+   TCHAR buffer[256 * 4];
+   memset(buffer, 0, sizeof(buffer));
+
+   static const TCHAR *metrics[4] =
+   {
+      _T("Hardware.Baseboard.Manufacturer"),
+      _T("Hardware.Baseboard.Product"),
+      _T("Hardware.Baseboard.SerialNumber"),
+      _T("Hardware.Baseboard.Type")
+   };
+
+   int readCount = 0;
+   for(int i = 0; i < 5; i++)
+   {
+      if (node->getItemFromAgent(metrics[i], 256, &buffer[i * 256]) == ERR_SUCCESS)
+         readCount++;
+   }
+
+   if (readCount > 0)
+   {
+      components->add(new HardwareComponent(HWC_BASEBOARD, 0, &buffer[256 * 3], buffer, &buffer[256], NULL, &buffer[512]));
+   }
+   return readCount;
 }
 
 /**
- * Comparator for package names
+ * Read hardware component information using given table
  */
-static int PackageNameComparator(const SoftwarePackage **p1, const SoftwarePackage **p2)
+static int ReadHardwareInformation(Node *node, ObjectArray<HardwareComponent> *components, HardwareComponentCategory category, const TCHAR *tableName)
 {
-   return _tcscmp((*p1)->getName(), (*p2)->getName());
+   Table *table;
+   if (node->getTableFromAgent(tableName, &table) != DCE_SUCCESS)
+      return 0;
+
+   for(int i = 0; i < table->getNumRows(); i++)
+      components->add(new HardwareComponent(category, table, i));
+   delete table;
+   return 1;
 }
 
 /**
- * Calculate package changes
- */
-static ObjectArray<SoftwarePackage> *CalculatePackageChanges(ObjectArray<SoftwarePackage> *oldSet, ObjectArray<SoftwarePackage> *newSet)
-{
-   ObjectArray<SoftwarePackage> *changes = new ObjectArray<SoftwarePackage>(32, 32, false);
-   for(int i = 0; i < oldSet->size(); i++)
-   {
-      SoftwarePackage *p = oldSet->get(i);
-      SoftwarePackage *np = (SoftwarePackage *)newSet->find(p, PackageNameComparator);
-      if (np == NULL)
-      {
-         p->setChangeCode(CHANGE_REMOVED);
-         changes->add(p);
-         continue;
-      }
-
-      if (!_tcscmp(p->getVersion(), np->getVersion()))
-         continue;
-
-      if (newSet->find(p, PackageNameVersionComparator) != NULL)
-         continue;
-
-      // multiple versions of same package could be installed
-      // (example is gpg-pubkey package on RedHat)
-      // if this is the case consider all version changes
-      // to be either install or remove
-      SoftwarePackage *prev = oldSet->get(i - 1);
-      SoftwarePackage *next = oldSet->get(i + 1);
-      bool multipleVersions =
-               ((prev != NULL) && !_tcscmp(prev->getName(), p->getName())) ||
-               ((next != NULL) && !_tcscmp(next->getName(), p->getName()));
-
-      if (multipleVersions)
-      {
-         p->setChangeCode(CHANGE_REMOVED);
-      }
-      else
-      {
-         p->setChangeCode(CHANGE_UPDATED);
-         np->setChangeCode(CHANGE_UPDATED);
-         changes->add(np);
-      }
-      changes->add(p);
-   }
-
-   // Check for new packages
-   for(int i = 0; i < newSet->size(); i++)
-   {
-      SoftwarePackage *p = newSet->get(i);
-      if (p->getChangeCode() == CHANGE_UPDATED)
-         continue;   // already marked as upgrade for some existig package
-      if (oldSet->find(p, PackageNameVersionComparator) != NULL)
-         continue;
-
-      p->setChangeCode(CHANGE_ADDED);
-      changes->add(p);
-   }
-
-   return changes;
-}
-
-/**
- * Comparator for hardware components
- */
-static int HardwareSerialComparator(const HardwareComponent **c1, const HardwareComponent **c2)
-{
-   return _tcscmp((*c1)->getSerial(), (*c2)->getSerial());
-}
-
-/**
- * Calculate hardware changes
- */
-static ObjectArray<HardwareComponent> *CalculateHardwareChanges(ObjectArray<HardwareComponent> *oldSet, ObjectArray<HardwareComponent> *newSet)
-{
-   HardwareComponent *nc = NULL, *oc = NULL;
-   int i;
-   ObjectArray<HardwareComponent> *changes = new ObjectArray<HardwareComponent>(16, 16);
-
-   for(i = 0; i < newSet->size(); i++)
-   {
-      nc = newSet->get(i);
-      oc = oldSet->find(nc, HardwareSerialComparator);
-      if (oc == NULL)
-      {
-         nc->setChangeCode(CHANGE_ADDED);
-         changes->add(nc);
-      }
-   }
-
-   for(i = 0; i < oldSet->size(); i++)
-   {
-      oc = oldSet->get(i);
-      nc = newSet->find(oc, HardwareSerialComparator);
-      if (nc == NULL)
-      {
-         oc->setChangeCode(CHANGE_REMOVED);
-         changes->add(oc);
-      }
-   }
-
-   return changes;
-}
-
-/*
  * Update list of hardware components for node
  */
 bool Node::updateHardwareComponents(PollerInfo *poller, UINT32 requestId)
@@ -2670,23 +2628,19 @@ bool Node::updateHardwareComponents(PollerInfo *poller, UINT32 requestId)
    poller->setStatus(_T("hardware check"));
    sendPollerMsg(requestId, _T("Reading list of installed hardware components\r\n"));
 
-   Table *tableMem, *tableProc;
-   if ((getTableFromAgent(_T("Hardware.MemoryDevices"), &tableMem) != DCE_SUCCESS) ||
-       (getTableFromAgent(_T("Hardware.Processors"), &tableProc) != DCE_SUCCESS))
+   ObjectArray<HardwareComponent> *components = new ObjectArray<HardwareComponent>(16, 16, true);
+   int readCount = ReadBaseboardInformation(this, components);
+   readCount += ReadHardwareInformation(this, components, HWC_PROCESSOR, _T("Hardware.Processors"));
+   readCount += ReadHardwareInformation(this, components, HWC_MEMORY, _T("Hardware.MemoryDevices"));
+   readCount += ReadHardwareInformation(this, components, HWC_STORAGE, _T("Hardware.StorageDevices"));
+   readCount += ReadHardwareInformation(this, components, HWC_BATTERY, _T("Hardware.Batteries"));
+
+   if (readCount == 0)
    {
-      sendPollerMsg(requestId, POLLER_WARNING _T("Unable to get installed hardware information\r\n"));
+      sendPollerMsg(requestId, POLLER_WARNING _T("Cannot read hardware component information\r\n"));
       return false;
    }
-
-   ObjectArray<HardwareComponent> *components = new ObjectArray<HardwareComponent>((tableMem->getNumRows() + tableProc->getNumRows()), 16, true);
-   for(int i = 0; i < tableMem->getNumRows(); i++)
-      components->add(new HardwareComponent(tableMem, i));
-   for(int i = 0; i < tableProc->getNumRows(); i++)
-      components->add(new HardwareComponent(tableProc, i));
-   delete tableMem;
-   delete tableProc;
-
-   sendPollerMsg(requestId, POLLER_INFO _T("Received information on %d installed hardware components\r\n"), components->size());
+   sendPollerMsg(requestId, POLLER_INFO _T("Received information on %d hardware components\r\n"), components->size());
 
    lockProperties();
    if (m_hardwareComponents != NULL)
@@ -2700,14 +2654,14 @@ bool Node::updateHardwareComponents(PollerInfo *poller, UINT32 requestId)
             case CHANGE_NONE:
                break;
             case CHANGE_ADDED:
-               nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): new hardware of type: %s, serial: %s added"), m_name, c->getType(), c->getSerial());
-               sendPollerMsg(requestId, _T("   New hardware component, type: %s, serial: %s\r\n"), c->getType(), c->getSerial());
-               PostEventWithNames(EVENT_HARDWARE_ADDED, m_id, "ss", eventParamNames, c->getType(), c->getSerial());
+               nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): new hardware component of type: %s, serial: %s added"), m_name, c->getType(), c->getSerialNumber());
+               sendPollerMsg(requestId, _T("   New hardware component, type: %s, serial: %s\r\n"), c->getType(), c->getSerialNumber());
+               PostEventWithNames(EVENT_HARDWARE_ADDED, m_id, "ss", eventParamNames, c->getType(), c->getSerialNumber());
                break;
             case CHANGE_REMOVED:
-               nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): hardware of type: %s, serial: %s removed"), m_name, c->getType(), c->getSerial());
-               sendPollerMsg(requestId, _T("   Hardware component, type: %s, serial: %s removed\r\n"), c->getType(), c->getSerial());
-               PostEventWithNames(EVENT_HARDWARE_ADDED, m_id, "ss", eventParamNames, c->getType(), c->getSerial());
+               nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): hardware of type: %s, serial: %s removed"), m_name, c->getType(), c->getSerialNumber());
+               sendPollerMsg(requestId, _T("   Hardware component, type: %s, serial: %s removed\r\n"), c->getType(), c->getSerialNumber());
+               PostEventWithNames(EVENT_HARDWARE_ADDED, m_id, "ss", eventParamNames, c->getType(), c->getSerialNumber());
                break;
          }
       }
@@ -8318,7 +8272,7 @@ void Node::writeHardwareListToMessage(NXCPMessage *msg)
       for(int i = 0; i < m_hardwareComponents->size(); i++)
       {
          m_hardwareComponents->get(i)->fillMessage(msg, varId);
-         varId += 10;
+         varId += 64;
       }
       msg->setField(VID_RCC, RCC_SUCCESS);
    }
