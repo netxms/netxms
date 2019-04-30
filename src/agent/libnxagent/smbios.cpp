@@ -190,6 +190,22 @@ struct Processor
 };
 
 /**
+ * Battery information
+ */
+struct Battery
+{
+   char name[64];
+   char chemistry[32];
+   UINT32 capacity;
+   UINT16 voltage;
+   char location[64];
+   char manufacturer[64];
+   char manufactureDate[32];
+   char serial[32];
+   UINT16 handle;
+};
+
+/**
  * BIOS and system information
  */
 static char s_baseboardManufacturer[128] = "";
@@ -209,6 +225,7 @@ static char s_systemWakeUpEvent[32] = "Unknown";
 static char *s_oemStrings[64];
 static StructArray<MemoryDevice> s_memoryDevices;
 static StructArray<Processor> s_processors;
+static StructArray<Battery> s_batteries;
 
 /**
  * Get hardware manufacturer
@@ -235,6 +252,62 @@ LIBNXAGENT_EXPORTABLE const char * const *SMBIOS_GetOEMStrings()
 }
 
 #define RETURN_BIOS_DATA(p) do { if (*p == 0) return SYSINFO_RC_UNSUPPORTED; ret_mbstring(value, p); } while(0)
+
+/**
+ * Handler for battery parameters
+ */
+LONG LIBNXAGENT_EXPORTABLE SMBIOS_BatteryParameterHandler(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   TCHAR instanceText[64];
+   if (!AgentGetParameterArg(cmd, 1, instanceText, 64))
+      return SYSINFO_RC_UNSUPPORTED;
+
+   Battery *b = NULL;
+   UINT16 instance = static_cast<UINT16>(_tcstol(instanceText, NULL, 0));
+   for (int i = 0; i < s_batteries.size(); i++)
+   {
+      if (s_batteries.get(i)->handle == instance)
+      {
+         b = s_batteries.get(i);
+         break;
+      }
+   }
+
+   if (b == NULL)
+      return SYSINFO_RC_NO_SUCH_INSTANCE;
+
+   switch (*arg)
+   {
+      case 'C':
+         ret_mbstring(value, b->chemistry);
+         break;
+      case 'c':
+         ret_uint(value, b->capacity);
+         break;
+      case 'D':
+         ret_mbstring(value, b->manufactureDate);
+         break;
+      case 'L':
+         ret_mbstring(value, b->location);
+         break;
+      case 'M':
+         ret_mbstring(value, b->manufacturer);
+         break;
+      case 'N':
+         ret_mbstring(value, b->name);
+         break;
+      case 's':
+         ret_mbstring(value, b->serial);
+         break;
+      case 'V':
+         ret_uint(value, b->voltage);
+         break;
+      default:
+         return SYSINFO_RC_UNSUPPORTED;
+   }
+
+   return SYSINFO_RC_SUCCESS;
+}
 
 /**
  * Handler for memory device parameters
@@ -443,6 +516,12 @@ LONG LIBNXAGENT_EXPORTABLE SMBIOS_ListHandler(const TCHAR *cmd, const TCHAR *arg
 {
    switch(*arg)
    {
+      case 'B':   // batteries
+         for (int i = 0; i < s_batteries.size(); i++)
+         {
+            value->add(s_batteries.get(i)->handle);
+         }
+         break;
       case 'M':   // memory devices
          for(int i = 0; i < s_memoryDevices.size(); i++)
          {
@@ -468,6 +547,30 @@ LONG LIBNXAGENT_EXPORTABLE SMBIOS_TableHandler(const TCHAR *cmd, const TCHAR *ar
 {
    switch(*arg)
    {
+      case 'B':   // batteries
+         value->addColumn(_T("HANDLE"), DCI_DT_INT, _T("Handle"), true);
+         value->addColumn(_T("NAME"), DCI_DT_STRING, _T("Name"));
+         value->addColumn(_T("LOCATION"), DCI_DT_STRING, _T("Location"));
+         value->addColumn(_T("CAPACITY"), DCI_DT_UINT, _T("Capacity"));
+         value->addColumn(_T("VOLTAGE"), DCI_DT_UINT, _T("Voltage"));
+         value->addColumn(_T("CHEMISTRY"), DCI_DT_STRING, _T("Chemistry"));
+         value->addColumn(_T("MANUFACTURER"), DCI_DT_STRING, _T("Manufacturer"));
+         value->addColumn(_T("MANUFACTURE_DATE"), DCI_DT_STRING, _T("Manufacture Date"));
+         value->addColumn(_T("SERIAL_NUMBER"), DCI_DT_STRING, _T("Serial Number"));
+         for(int i = 0; i < s_batteries.size(); i++)
+         {
+            value->addRow();
+            value->set(0, s_batteries.get(i)->handle);
+            value->set(1, s_batteries.get(i)->name);
+            value->set(2, s_batteries.get(i)->location);
+            value->set(3, s_batteries.get(i)->capacity);
+            value->set(4, s_batteries.get(i)->voltage);
+            value->set(5, s_batteries.get(i)->chemistry);
+            value->set(6, s_batteries.get(i)->manufacturer);
+            value->set(7, s_batteries.get(i)->manufactureDate);
+            value->set(8, s_batteries.get(i)->serial);
+         }
+         break;
       case 'M':   // memory devices
          value->addColumn(_T("HANDLE"), DCI_DT_INT, _T("Handle"), true);
          value->addColumn(_T("LOCATION"), DCI_DT_STRING, _T("Location"));
@@ -480,7 +583,7 @@ LONG LIBNXAGENT_EXPORTABLE SMBIOS_TableHandler(const TCHAR *cmd, const TCHAR *ar
          value->addColumn(_T("MANUFACTURER"), DCI_DT_STRING, _T("Manufacturer"));
          value->addColumn(_T("PART_NUMBER"), DCI_DT_STRING, _T("Part Number"));
          value->addColumn(_T("SERIAL_NUMBER"), DCI_DT_STRING, _T("Serial Number"));
-         for(int i = 0; i < s_memoryDevices.size(); i++)
+         for (int i = 0; i < s_memoryDevices.size(); i++)
          {
             value->addRow();
             value->set(0, s_memoryDevices.get(i)->handle);
@@ -561,6 +664,8 @@ struct TableHeader
  */
 static const char *GetStringByIndex(TableHeader *t, int index, char *buffer, size_t size)
 {
+   memset(buffer, 0, size);
+
    if (index < 1)
       return NULL;
 
@@ -800,6 +905,65 @@ static void ParseMemoryDeviceInformation(TableHeader *t)
 }
 
 /**
+ * Decode battery chemistry enum
+ */
+void DecodeBatteryChemistry(BYTE code, char *buffer, size_t size)
+{
+   static const char *values[] = {
+      "Other", "Unknown", "Lead Acid", "NiCd", "NiMH", "Li-ion", "Zinc-air", "LiPo"
+   };
+   if ((code < 1) || (code > 8))
+      code = 2;
+   strlcpy(buffer, values[code - 1], size);
+}
+
+/**
+ * Parse battery information (type 22)
+ */
+static void ParseBatteryInformation(TableHeader *t)
+{
+   Battery b;
+   b.handle = WORD_AT(t, 0x02);
+   GetStringByIndex(t, BYTE_AT(t, 0x04), b.location, sizeof(b.location));
+   GetStringByIndex(t, BYTE_AT(t, 0x05), b.manufacturer, sizeof(b.manufacturer));
+   GetStringByIndex(t, BYTE_AT(t, 0x08), b.name, sizeof(b.name));
+   b.voltage = WORD_AT(t, 0x0C);
+   if (t->fixedLength >= 0x16)   // 2.2+
+   {
+      GetStringByIndex(t, BYTE_AT(t, 0x06), b.manufactureDate, sizeof(b.manufactureDate));
+      GetStringByIndex(t, BYTE_AT(t, 0x07), b.serial, sizeof(b.serial));
+      DecodeBatteryChemistry(BYTE_AT(t, 0x09), b.chemistry, sizeof(b.chemistry));
+      b.capacity = WORD_AT(t, 0x0A);
+   }
+   else
+   {
+      if (BYTE_AT(t, 0x07) == 0)
+         snprintf(b.serial, sizeof(b.serial), "%04X", WORD_AT(t, 0x10));
+      else
+         GetStringByIndex(t, BYTE_AT(t, 0x07), b.serial, sizeof(b.serial));
+
+      if (BYTE_AT(t, 0x06) == 0)
+      {
+         UINT32 d = WORD_AT(t, 0x12);
+         snprintf(b.manufactureDate, sizeof(b.manufactureDate), "%04d.%02d.%02d", 
+            (d >> 8) + 1980, (d >> 4) & 0x000F, d & 0x000F);
+      }
+      else
+      {
+         GetStringByIndex(t, BYTE_AT(t, 0x06), b.manufactureDate, sizeof(b.manufactureDate));
+      }
+
+      if (BYTE_AT(t, 0x09) == 2)
+         GetStringByIndex(t, BYTE_AT(t, 0x14), b.chemistry, sizeof(b.chemistry));
+      else
+         DecodeBatteryChemistry(BYTE_AT(t, 0x09), b.chemistry, sizeof(b.chemistry));
+
+      b.capacity = static_cast<UINT32>(WORD_AT(t, 0x0A)) * static_cast<UINT32>(BYTE_AT(t, 0x15));
+   }
+   s_batteries.add(&b);
+}
+
+/**
  * Parse SMBIOS data
  */
 bool LIBNXAGENT_EXPORTABLE SMBIOS_Parse(BYTE *(*reader)(size_t *size))
@@ -836,6 +1000,9 @@ bool LIBNXAGENT_EXPORTABLE SMBIOS_Parse(BYTE *(*reader)(size_t *size))
             break;
          case 17:
             ParseMemoryDeviceInformation(curr);
+            break;
+         case 22:
+            ParseBatteryInformation(curr);
             break;
          default:
             break;
