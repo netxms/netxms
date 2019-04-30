@@ -11,6 +11,15 @@ check_command() {
 	return $?
 }
 
+DIR=$(dirname "$0")
+
+#check netxmsd, nxadm and nxagentd 
+
+if [ ! -f $DIR/netxmsd ] || [ ! -f $DIR/nxadm ] || [ ! -f $DIR/nxagentd ]; then
+    echo "Error: No netxms binaries found in current directory"
+    exit 1
+fi
+
 #create folder
 
 TS=`date +%Y%m%d-%H%M%S`
@@ -35,30 +44,30 @@ uname -a >> $OS_LOG
 #OS version
 print_header "OS version"
 if check_command oslevel; then
-    oslevel -s >> $OS_LOG
+    oslevel -s >> $OS_LOG 2>>$ERROR_LOG
 fi
 if check_command  machinfo; then
-    machinfo >> $OS_LOG  
+    machinfo >> $OS_LOG 2>>$ERROR_LOG
 fi 
 if check_command lsb_release; then
-    lsb_release -idr >> $OS_LOG   
+    lsb_release -idr >> $OS_LOG 2>>$ERROR_LOG
 fi
 if [ -f /etc/release ]; then
     cat /etc/release >> $OS_LOG 
 fi
 
 #Memory usage
-echo "Memory usage:"  >> $OS_LOG
+print_header "Memory usage:"  
 if check_command free; then
-    free -m >> $OS_LOG
+    free -m >> $OS_LOG 2>>$ERROR_LOG
 fi
 if check_command svmon; then
-    svmon -P >> $OS_LOG
+    svmon -P >> $OS_LOG 2>>$ERROR_LOG
 fi
 if check_command top; then
-    top -b -n1 >> $OS_LOG
+    top -b -n1 >> $OS_LOG 2>>$ERROR_LOG
     if [ $? -ne 0 ]; then
-        top -b >> $OS_LOG
+        top -b >> $OS_LOG 2>>$ERROR_LOG
     fi
 fi
 
@@ -94,10 +103,10 @@ elif check_command procfiles; then
     procfiles $AGENT_PID >> $OS_LOG 2>>$ERROR_LOG
 else
     if [ -f /proc/$SERVER_PID/fd ]; then
-        ls -l /proc/$SERVER_PID/fd >> $OS_LOG
+        ls -l /proc/$SERVER_PID/fd >> $OS_LOG 2>>$ERROR_LOG
     fi
     if [ -f /proc/$AGENT_PID/fd ]; then
-        ls -l /proc/$AGENT_PID/fd >> $OS_LOG
+        ls -l /proc/$AGENT_PID/fd >> $OS_LOG 2>>$ERROR_LOG
     fi    
 fi
 
@@ -112,15 +121,15 @@ fi
 # IP routes
 print_header "IP routes"
 if check_command route; then
-    route -n >> $OS_LOG
+    route -n >> $OS_LOG 2>>$ERROR_LOG
 fi
 if check_command netstat; then
-    netstat -rn >> $OS_LOG
+    netstat -rn >> $OS_LOG 2>>$ERROR_LOG
 fi
 
 # ARP cache
 print_header "ARP cache"
-arp -a  >> $OS_LOG
+arp -a  >> $OS_LOG 2>>$ERROR_LOG
 
 
 ####################################
@@ -133,79 +142,88 @@ touch $NXADM_LOG
 
 #debug
 print_header "debug"
-./nxadm -c "debug"  >> $NXADM_LOG
+$DIR/nxadm -c "debug"  >> $NXADM_LOG
 #show dbcp
-echo "show dbcp:"  >> $NXADM_LOG
-./nxadm -c "show dbcp"  >> $NXADM_LOG
+print_header "show dbcp:"  >> $NXADM_LOG
+$DIR/nxadm -c "show dbcp"  >> $NXADM_LOG
 #show dbstats
-echo "show dbstats:"  >> $NXADM_LOG
-./nxadm -c "show dbstats"  >> $NXADM_LOG
+print_header "show dbstats:"  >> $NXADM_LOG
+$DIR/nxadm -c "show dbstats"  >> $NXADM_LOG
 #show flags
-echo "show flags:"  >> $NXADM_LOG
-./nxadm -c "show flags"  >> $NXADM_LOG
+print_header "show flags:"  >> $NXADM_LOG
+$DIR/nxadm -c "show flags"  >> $NXADM_LOG
 #show heap details
-echo "show heap details:"  >> $NXADM_LOG
-./nxadm -c "show heap details"  >> $NXADM_LOG
+print_header "show heap details:"  >> $NXADM_LOG
+$DIR/nxadm -c "show heap details"  >> $NXADM_LOG
 #show heap summary
-echo "show heap summary:"  >> $NXADM_LOG
-./nxadm -c "show heap summary"  >> $NXADM_LOG
+print_header "show heap summary:"  >> $NXADM_LOG
+$DIR/nxadm -c "show heap summary"  >> $NXADM_LOG
 #show index id
-echo "show index id:"  >> $NXADM_LOG
-./nxadm -c "show index id"  >> $NXADM_LOG
+print_header "show index id:"  >> $NXADM_LOG
+$DIR/nxadm -c "show index id"  >> $NXADM_LOG
 #show index interface
-echo "show index interface:"  >> $NXADM_LOG
-./nxadm -c "show index interface"  >> $NXADM_LOG
+print_header "show index interface:"  >> $NXADM_LOG
+$DIR/nxadm -c "show index interface"  >> $NXADM_LOG
 #show index nodeaddr
-echo "show index nodeaddr:"  >> $NXADM_LOG
-./nxadm -c "show index nodeaddr"  >> $NXADM_LOG
+print_header "show index nodeaddr:"  >> $NXADM_LOG
+$DIR/nxadm -c "show index nodeaddr"  >> $NXADM_LOG
 #show index subnet
-echo "show index subnet:"  >> $NXADM_LOG
-./nxadm -c "show index subnet"  >> $NXADM_LOG
+print_header "show index subnet:"  >> $NXADM_LOG
+$DIR/nxadm -c "show index subnet"  >> $NXADM_LOG
 #show index zone
-echo "show index zone:"  >> $NXADM_LOG
-./nxadm -c "show index zone"  >> $NXADM_LOG
+print_header "show index zone:"  >> $NXADM_LOG
+$DIR/nxadm -c "show index zone"  >> $NXADM_LOG
 #show modules
-echo "show modules:"  >> $NXADM_LOG
-./nxadm -c "show modules"  >> $NXADM_LOG
+print_header "show modules:"  >> $NXADM_LOG
+$DIR/nxadm -c "show modules"  >> $NXADM_LOG
 #show msgwq
-echo "show msgwq:"  >> $NXADM_LOG
-./nxadm -c "show msgwq"  >> $NXADM_LOG
+print_header "show msgwq:"  >> $NXADM_LOG
+$DIR/nxadm -c "show msgwq"  >> $NXADM_LOG
 #show objects
-echo "show objects:"  >> $NXADM_LOG
-./nxadm -c "show objects"  >> $NXADM_LOG
+print_header "show objects:"  >> $NXADM_LOG
+$DIR/nxadm -c "show objects"  >> $NXADM_LOG
 #show pe
-echo "show pe:"  >> $NXADM_LOG
-./nxadm -c "show pe"  >> $NXADM_LOG
+print_header "show pe:"  >> $NXADM_LOG
+$DIR/nxadm -c "show pe"  >> $NXADM_LOG
 #show pollers
-echo "show pollers:"  >> $NXADM_LOG
-./nxadm -c "show pollers"  >> $NXADM_LOG
+print_header "show pollers:"  >> $NXADM_LOG
+$DIR/nxadm -c "show pollers"  >> $NXADM_LOG
 #show queues
-echo "show queues:"  >> $NXADM_LOG
-./nxadm -c "show queues"  >> $NXADM_LOG
+print_header "show queues:"  >> $NXADM_LOG
+$DIR/nxadm -c "show queues"  >> $NXADM_LOG
 #show sessions
-echo "show sessions:"  >> $NXADM_LOG
-./nxadm -c "show sessions"  >> $NXADM_LOG
+print_header "show sessions:"  >> $NXADM_LOG
+$DIR/nxadm -c "show sessions"  >> $NXADM_LOG
 #show stats
-echo "show stats:"  >> $NXADM_LOG
-./nxadm -c "show stats"  >> $NXADM_LOG
+print_header "show stats:"  >> $NXADM_LOG
+$DIR/nxadm -c "show stats"  >> $NXADM_LOG
 #show tunnels
-echo "show tunnels:"  >> $NXADM_LOG
-./nxadm -c "show tunnels"  >> $NXADM_LOG
+print_header "show tunnels:"  >> $NXADM_LOG
+$DIR/nxadm -c "show tunnels"  >> $NXADM_LOG
 #show users
-echo "show users:"  >> $NXADM_LOG
-./nxadm -c "show users"  >> $NXADM_LOG
+print_header "show users:"  >> $NXADM_LOG
+$DIR/nxadm -c "show users"  >> $NXADM_LOG
 #show watchdog
-echo "show watchdog:"  >> $NXADM_LOG
-./nxadm -c "show watchdog"  >> $NXADM_LOG
+print_header "show watchdog:"  >> $NXADM_LOG
+$DIR/nxadm -c "show watchdog"  >> $NXADM_LOG
 
 #netxmsd, nxagentd log files
-netxmsLog=`./netxmsd -l | tail -1`
-cp $netxmsLog $LOG_DIR/
-netxmsLog=`./nxagentd -l | tail -1`
-cp $netxmsLog $LOG_DIR/
+NETXMS_LOG=`$DIR/netxmsd -l | tail -1`
+if [ "{syslog}" != "$NETXMS_LOG" ]; then
+    cp $NETXMS_LOG $LOG_DIR/ 2>>$ERROR_LOG
+else
+    echo "Server log in syslog">>$ERROR_LOG
+fi
+
+NETXMS_LOG=`$DIR/nxagentd -l | tail -1`
+if [ "{syslog}" != "$NETXMS_LOG" ]; then
+    cp $NETXMS_LOG $LOG_DIR/ 2>>$ERROR_LOG
+else
+    echo "Agent log in syslog">>$ERROR_LOG
+fi
 
 #zipDeleteFolder
-tar cvf $LOG_DIR.tar $LOG_DIR
+tar cf $LOG_DIR.tar $LOG_DIR 2>>$ERROR_LOG
 gzip $LOG_DIR.tar
 rm -rf $LOG_DIR
 
