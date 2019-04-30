@@ -1,17 +1,17 @@
 /**
  * NetXMS - open source network management system
  * Copyright (C) 2003-2013 Victor Kirhenshtein
- *
+ * <p>
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- *
+ * <p>
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- *
+ * <p>
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
@@ -21,6 +21,7 @@ package org.netxms.client.maps;
 
 import java.util.HashSet;
 import java.util.Set;
+
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.datacollection.DataCollectionItem;
 
@@ -39,7 +40,7 @@ public class MapDCIInstance
 
    /**
     * Constructor for MapDCIInstance for table DCI
-    * 
+    *
     * @param dciID id of required DCI
     * @param nodeID id of associated node. Is collected to fully fill DciValue instances
     * @param column column if DCI is a table DCI
@@ -58,7 +59,7 @@ public class MapDCIInstance
 
    /**
     * Constructor for MapDCIInstance for simple DCI
-    * 
+    *
     * @param dciID id of required DCI
     * @param nodeID id of associated node. Is collected to fully fill DciValue instances
     * @param type type of DCI
@@ -156,7 +157,7 @@ public class MapDCIInstance
    /**
     * This method fills message with data if all required data present. In case of table DCI if column or/and instance are not
     * present, then this DCI value will not be requested.
-    * 
+    *
     * @param msg Message that should be populated with data
     * @param base the base of this data
     */
@@ -168,26 +169,26 @@ public class MapDCIInstance
       }
       msg.setFieldInt32(base++, (int)nodeID);
       msg.setFieldInt32(base++, (int)dciID);
-      if(type == DataCollectionItem.DCO_TYPE_TABLE)
+      if (type == DataCollectionItem.DCO_TYPE_TABLE)
       {
          msg.setField(base++, column);
-         msg.setField(base++, instance);         
+         msg.setField(base++, instance);
       }
-   }  
+   }
 
    /**
     * Add map reference
-    * 
+    *
     * @param id map ID
     */
    public void addMap(String id)
    {
       mapList.add(id);
    }
-   
+
    /**
     * Remove map reference
-    * 
+    *
     * @param id map ID
     * @return true if last map reference was removed
     */
@@ -198,7 +199,7 @@ public class MapDCIInstance
          return true;
       return false;
    }
-   
+
    /* (non-Javadoc)
     * @see java.lang.Object#hashCode()
     */
@@ -223,21 +224,21 @@ public class MapDCIInstance
    {
       if (object == this)
          return true;
-      
+
       if ((object == null) || !(object instanceof MapDCIInstance))
          return false;
-      
+
       MapDCIInstance i = (MapDCIInstance)object;
       if (i.type != type)
          return false;
-      
+
       boolean result = (i.dciID == dciID);
-    
+
       if (result && (i.type == DataCollectionItem.DCO_TYPE_TABLE))
       {
          result = i.column.equals(column) && i.instance.equals(instance);
       }
-      
+
       return result;
    }
 }

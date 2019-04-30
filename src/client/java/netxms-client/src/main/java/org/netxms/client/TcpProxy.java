@@ -1,17 +1,17 @@
 /**
  * NetXMS - open source network management system
  * Copyright (C) 2003-2018 Victor Kirhenshtein
- *
+ * <p>
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- *
+ * <p>
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- *
+ * <p>
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
@@ -26,6 +26,7 @@ import java.io.PipedOutputStream;
 import java.util.Arrays;
 import java.util.Timer;
 import java.util.TimerTask;
+
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 
@@ -43,22 +44,22 @@ public class TcpProxy
    private byte[] sendBuffer = new byte[256];
    private int pendingBytes = 0;
    private Timer sendTimer = new Timer(true);
-   
+
    /**
-    * @throws IOException 
-    * 
+    * @throws IOException
+    *
     */
    protected TcpProxy(NXCSession session, int channelId) throws IOException
    {
       this.session = session;
       this.channelId = channelId;
-      
+
       localInputStream = new PipedInputStream();
       remoteOutputStream = new PipedOutputStream(localInputStream);
-      
+
       localOutputStream = new ProxyOutputStream();
    }
-   
+
    /**
     * Close proxy session. Calling this method will also close both input and output streams.
     */
@@ -66,11 +67,11 @@ public class TcpProxy
    {
       if (session == null)
          return;
-      
+
       session.closeTcpProxy(channelId);
       localClose();
    }
-   
+
    /**
     * Close local resources associated with proxy session.
     * Should only be called by remote proxy session closure notification handler.
@@ -86,36 +87,36 @@ public class TcpProxy
          remoteOutputStream.close();
       }
       catch(Exception e)
-      { 
+      {
       }
       localInputStream = null;
       localOutputStream = null;
       remoteOutputStream = null;
    }
-   
+
    /**
     * Check if proxy session is closed.
-    * 
+    *
     * @return true if proxy session is closed
     */
    public boolean isClosed()
    {
       return session == null;
    }
-   
+
    /**
     * Get input stream for this TCP proxy.
-    * 
+    *
     * @return input stream for this TCP proxy
     */
    public InputStream getInputStream()
    {
       return localInputStream;
    }
-   
+
    /**
     * Get output stream for this TCP proxy.
-    * 
+    *
     * @return output stream for this TCP proxy
     */
    public OutputStream getOutputStream()
@@ -125,17 +126,17 @@ public class TcpProxy
 
    /**
     * Get channel ID
-    * 
+    *
     * @return channel ID
     */
    protected int getChannelId()
    {
       return channelId;
    }
-   
+
    /**
     * Get current size threshold.
-    * 
+    *
     * @return current size threshold
     */
    public int getSizeThreshold()
@@ -145,7 +146,7 @@ public class TcpProxy
 
    /**
     * Get current time threshold.
-    * 
+    *
     * @return current time threshold
     */
    public int getTimeThreshold()
@@ -157,7 +158,7 @@ public class TcpProxy
     * Set write buffering thresholds. If these parameters are non-zero,
     * proxy object will buffer outgoing data until it reach size threshold,
     * but not longer that time threshold.
-    *  
+    *
     * @param sizeThreshold data size threshold in bytes
     * @param timeThreshold time threshold in milliseconds
     */
@@ -166,10 +167,10 @@ public class TcpProxy
       this.sendBuffer = new byte[sizeThreshold];
       this.timeThreshold = timeThreshold;
    }
-   
+
    /**
     * Send data to destination
-    * 
+    *
     * @param data data block
     * @throws IOException
     * @throws NXCException
@@ -181,7 +182,8 @@ public class TcpProxy
          appendBytes(sendBuffer, pendingBytes, data, data.length);
          if (pendingBytes == 0)
          {
-            sendTimer.schedule(new TimerTask() {
+            sendTimer.schedule(new TimerTask()
+            {
                @Override
                public void run()
                {
@@ -192,7 +194,7 @@ public class TcpProxy
          pendingBytes += data.length;
          return;
       }
-      
+
       NXCPMessage msg = new NXCPMessage(NXCPCodes.CMD_TCP_PROXY_DATA, channelId);
       msg.setBinaryMessage(true);
       if (pendingBytes > 0)
@@ -218,7 +220,7 @@ public class TcpProxy
       }
       session.sendMessage(msg);
    }
-   
+
    /**
     * Flush send buffer
     */
@@ -226,7 +228,7 @@ public class TcpProxy
    {
       if (pendingBytes == 0)
          return;
-      
+
       NXCPMessage msg = new NXCPMessage(NXCPCodes.CMD_TCP_PROXY_DATA, channelId);
       msg.setBinaryMessage(true);
       msg.setBinaryData((pendingBytes == sendBuffer.length) ? sendBuffer : Arrays.copyOfRange(sendBuffer, 0, pendingBytes));
@@ -239,10 +241,10 @@ public class TcpProxy
       }
       pendingBytes = 0;
    }
-   
+
    /**
     * Process data received from remote end
-    * 
+    *
     * @param data data received
     */
    protected void processRemoteData(byte data[])
@@ -255,10 +257,10 @@ public class TcpProxy
       {
       }
    }
-   
+
    /**
     * Append bytes from one byte array to another
-    * 
+    *
     * @param target target array
     * @param offset offset within target array
     * @param source source array
@@ -269,7 +271,7 @@ public class TcpProxy
       for(int i = 0, j = offset; i < len; i++, j++)
          target[j] = source[i];
    }
-   
+
    /**
     * Proxy output stream
     */

@@ -7,11 +7,10 @@ public class DCOStatusHolder
 {
    private long[] items;
    private int status;
-   
-   
+
    /**
     * Status holder constructor
-    * 
+    *
     * @param dciId
     * @param status
     */
@@ -22,7 +21,6 @@ public class DCOStatusHolder
       this.status = status;
    }
 
-
    /**
     * @return the dciId
     */
@@ -30,7 +28,6 @@ public class DCOStatusHolder
    {
       return items;
    }
-
 
    /**
     * @param dciId the dciId to set
@@ -40,7 +37,6 @@ public class DCOStatusHolder
       this.items = items;
    }
 
-
    /**
     * @return the status
     */
@@ -49,7 +45,6 @@ public class DCOStatusHolder
       return status;
    }
 
-
    /**
     * @param status the status to set
     */
@@ -57,6 +52,5 @@ public class DCOStatusHolder
    {
       this.status = status;
    }
-   
-   
+
 }

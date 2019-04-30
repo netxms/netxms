@@ -1,17 +1,17 @@
 /**
  * NetXMS - open source network management system
  * Copyright (C) 2016 RadenSolutions
- *
+ * <p>
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- *
+ * <p>
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- *
+ * <p>
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
@@ -29,7 +29,7 @@ public class AlarmCategory
    // Alarm category fields
    public static final int MODIFY_ALARM_CATEGORY = 0x0001;
    public static final int MODIFY_ACCESS_CONTROL = 0x0002;
-   
+
    private long id;
    private String name;
    private String description;
@@ -48,7 +48,7 @@ public class AlarmCategory
 
    /**
     * Create alarm category from NXCP message
-    * 
+    *
     * @param msg NXCP message
     */
    public AlarmCategory(final NXCPMessage msg, long baseId)
@@ -58,10 +58,10 @@ public class AlarmCategory
       description = msg.getFieldAsString(baseId + 2);
       accessControl = msg.getFieldAsUInt32ArrayEx(baseId + 3);
    }
-   
+
    /**
     * Copy constructor for alarm category object.
-    * 
+    *
     * @param src Original alarm category object
     */
    public AlarmCategory(final AlarmCategory src)
@@ -85,7 +85,7 @@ public class AlarmCategory
 
    /**
     * Set all attributes from another alarm category object.
-    * 
+    *
     * @param src Original alarm category object
     */
    public void setAll(final AlarmCategory src)
@@ -135,7 +135,7 @@ public class AlarmCategory
    {
       return id;
    }
-   
+
    /**
     * @param id to set
     */
@@ -151,7 +151,7 @@ public class AlarmCategory
    {
       return accessControl;
    }
-   
+
    /**
     * @param accessControl the access control to set
     */
