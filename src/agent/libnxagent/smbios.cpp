@@ -748,7 +748,7 @@ static void ParseBaseBoardInformation(TableHeader *t)
    GetStringByIndex(t, BYTE_AT(t, 0x04), s_baseboardManufacturer, sizeof(s_baseboardManufacturer));
    GetStringByIndex(t, BYTE_AT(t, 0x05), s_baseboardProduct, sizeof(s_baseboardProduct));
    GetStringByIndex(t, BYTE_AT(t, 0x06), s_baseboardVersion, sizeof(s_baseboardVersion));
-   GetStringByIndex(t, BYTE_AT(t, 0x04), s_baseboardSerialNumber, sizeof(s_baseboardSerialNumber));
+   GetStringByIndex(t, BYTE_AT(t, 0x07), s_baseboardSerialNumber, sizeof(s_baseboardSerialNumber));
 
    switch(BYTE_AT(t, 0x0D))
    {
