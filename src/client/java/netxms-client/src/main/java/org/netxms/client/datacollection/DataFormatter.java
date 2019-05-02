@@ -1,6 +1,7 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2016 Victor Kirhenshtein
+ * Copyright (C) 2003-2019 Victor Kirhenshtein
+ *
  * <p>
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,9 +34,11 @@ public class DataFormatter
    private int dataType;
 
    /**
-    * @param formatString The format
-    * @param dataType The data type
-    * @param useBinaryMultipliers true if multipliers should be used
+    * Create new data formatter.
+    * 
+    * @param formatString format string
+    * @param dataType data type
+    * @param useBinaryMultipliers true if binary (Ki/Mi/Gi/...) multipliers should be used
     */
    public DataFormatter(String formatString, int dataType, boolean useBinaryMultipliers)
    {
@@ -45,20 +48,14 @@ public class DataFormatter
    }
 
    /**
-    * @param formatString The format
-    * @param dataType The data type
+    * Create new data formatter with binary multipliers option set to off.
+    * 
+    * @param formatString format string
+    * @param dataType data type
     */
    public DataFormatter(String formatString, int dataType)
    {
       this(formatString, dataType, false);
-   }
-
-   /**
-    * @param formatString The format
-    */
-   public DataFormatter(int precision, String formatString)
-   {
-      this(formatString, DataCollectionObject.DT_STRING, false);
    }
 
    /**
@@ -118,9 +115,10 @@ public class DataFormatter
       return sb.toString();
    }
 
-   private static final long[] DECIMAL_MULTIPLIERS = { 1L, 1000L, 1000000L, 1000000000L, 1000000000000L, 1000000000000000L };
-   private static final long[] BINARY_MULTIPLIERS = { 0x400L, 0x100000L, 0x40000000L, 0x10000000000L, 0x1000000000000000L };
-   private static final String[] SUFFIX = { "", " k", " M", " G", " T", " P" };
+   private static final long[] DECIMAL_MULTIPLIERS = { 1L, 1000L, 1000000L, 1000000000L, 1000000000000L, 1000000000000000L }; 
+   private static final long[] BINARY_MULTIPLIERS = { 1L, 0x400L, 0x100000L, 0x40000000L, 0x10000000000L, 0x1000000000000000L };
+   private static final String[] SUFFIX = { "", " k", " M", " G", " T", " P" }; 
+   private static final String[] BINARY_SUFFIX = { "", " Ki", " Mi", " Gi", " Ti", " Pi" }; 
 
    /**
     * Get value ready for formatter
@@ -164,7 +162,7 @@ public class DataFormatter
                {
                   v.value = Double.valueOf(d / (double)multipliers[i]);
                }
-               v.suffix = SUFFIX[i];
+               v.suffix = useBinaryMultipliers ? BINARY_SUFFIX[i] : SUFFIX[i];
             }
             else if (stringOutput)
             {
@@ -194,8 +192,8 @@ public class DataFormatter
       {
          v.value = value;
       }
-
-      if (decimalOutput && v.value instanceof Double)
+      
+      if (decimalOutput && (v.value instanceof Double))
          v.value = ((Double)v.value).longValue();
 
       return v;
