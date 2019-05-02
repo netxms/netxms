@@ -89,7 +89,7 @@ elif check_command pgrep; then
     AGENT_PID=`pgrep -x nxagentd`
 else
     SERVER_PID=$(ps -eo pid,comm | awk '$2 == "netxmsd" {print $1}')
-    SERVER_PID=$(ps -eo pid,comm | awk '$2 == "nxagentd" {print $1}')
+    AGENT_PID=$(ps -eo pid,comm | awk '$2 == "nxagentd" {print $1}')
 fi
 
 if check_command lsof; then
@@ -122,14 +122,15 @@ fi
 print_header "IP routes"
 if check_command route; then
     route -n >> $OS_LOG 2>>$ERROR_LOG
-fi
-if check_command netstat; then
+elif check_command netstat; then
     netstat -rn >> $OS_LOG 2>>$ERROR_LOG
+elif check_command ip; then
+    ip route >> $OS_LOG 2>>$ERROR_LOG
 fi
 
 # ARP cache
 print_header "ARP cache"
-arp -a  >> $OS_LOG 2>>$ERROR_LOG
+arp -an >> $OS_LOG 2>>$ERROR_LOG
 
 
 ####################################
