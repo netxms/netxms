@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -1550,7 +1550,21 @@ BOOL LIBNETXMS_EXPORTABLE GetWindowsVersionString(TCHAR *versionString, int strS
 			switch(ver.dwMinorVersion)
 			{
 				case 0:
-					_tcscpy(buffer, (ver.wProductType == VER_NT_WORKSTATION) ? _T("10") : _T("Server 2016"));
+               if (ver.wProductType == VER_NT_WORKSTATION)
+               {
+                  _tcscpy(buffer, _T("10"));
+               }
+               else
+               {
+                  // Useful topic regarding Windows Server 2016/2019 version detection:
+                  // https://techcommunity.microsoft.com/t5/Windows-Server-Insiders/Windows-Server-2019-version-info/td-p/234472
+                  if (ver.dwBuildNumber <= 14393)
+                     _tcscpy(buffer, _T("Server 2016"));
+                  else if (ver.dwBuildNumber <= 17763)
+                     _tcscpy(buffer, _T("Server 2019"));
+                  else
+                     _sntprintf(buffer, 256, _T("Server %d.%d.%d"), ver.dwMajorVersion, ver.dwMinorVersion, ver.dwBuildNumber);
+               }
 					break;
 				default:
 					_sntprintf(buffer, 256, _T("NT %d.%d"), ver.dwMajorVersion, ver.dwMinorVersion);
