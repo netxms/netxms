@@ -212,9 +212,19 @@ CREATE TABLE zones
 (
   id integer not null,    // Zone object ID
   zone_guid integer not null, // Globally unique ID for zone
-  proxy_node integer not null,
   snmp_ports varchar(512) null,
   PRIMARY KEY(id)
+) TABLE_TYPE;
+
+
+/*
+** Zone proxy nodes objects
+*/
+CREATE TABLE zone_proxies
+(
+  object_id integer not null,    // Zone object ID
+  proxy_node integer not null,
+  PRIMARY KEY(object_id,proxy_node)
 ) TABLE_TYPE;
 
 /*

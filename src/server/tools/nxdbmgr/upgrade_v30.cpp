@@ -23,8 +23,65 @@
 #include "nxdbmgr.h"
 #include <nxevent.h>
 
+
 /**
- * Upgrade from 30.56 to 30.57
+ * Upgrade from 30.70 to 30.71 (changes also included into 22.56)
+ */
+static bool H_UpgradeFromV70()
+{
+   if (GetSchemaLevelForMajorVersion(22) < 56)
+   {
+      CHK_EXEC(CreateTable(
+         _T("CREATE TABLE zone_proxies (")
+         _T("   object_id integer not null,")
+         _T("   proxy_node integer not null,")
+         _T("PRIMARY KEY(object_id,proxy_node))")));
+
+      DB_RESULT hResult = SQLSelect(_T("SELECT id,proxy_node FROM zones"));
+      if (hResult != NULL)
+      {
+         int count = DBGetNumRows(hResult);
+         if (count > 0)
+         {
+            DB_STATEMENT hStmt = DBPrepare(g_dbHandle, _T("INSERT INTO zone_proxies (object_id,proxy_node) VALUES (?,?)"));
+            if (hStmt != NULL)
+            {
+               for(int i = 0; i < count; i++)
+               {
+                  DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, DBGetFieldULong(hResult, i, 0));
+                  DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, DBGetFieldULong(hResult, i, 1));
+                  if (!SQLExecute(hStmt) && !g_ignoreErrors)
+                  {
+                     DBFreeStatement(hStmt);
+                     DBFreeResult(hResult);
+                     return false;
+                  }
+               }
+               DBFreeStatement(hStmt);
+            }
+            else if (!g_ignoreErrors)
+            {
+               DBFreeResult(hResult);
+               return false;
+            }
+         }
+         DBFreeResult(hResult);
+      }
+      else if (!g_ignoreErrors)
+      {
+         return false;
+      }
+
+      CHK_EXEC(DBDropColumn(g_dbHandle, _T("zones"), _T("proxy_node")));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(22, 56));
+   }
+
+   CHK_EXEC(SetMinorSchemaVersion(71));
+   return true;
+}
+
+/**
+ * Upgrade from 30.69 to 30.70
  */
 static bool H_UpgradeFromV69()
 {
@@ -2371,6 +2428,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 70, 30, 71, H_UpgradeFromV70 },
    { 69, 30, 70, H_UpgradeFromV69 },
    { 68, 30, 69, H_UpgradeFromV68 },
    { 67, 30, 68, H_UpgradeFromV67 },

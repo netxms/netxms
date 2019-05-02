@@ -24,11 +24,62 @@
 #include <nxevent.h>
 
 /**
- * Upgrade from 22.55 to 30.0
+ * Upgrade from 22.56 to 30.0
+ */
+static bool H_UpgradeFromV56()
+{
+   CHK_EXEC(SetMajorSchemaVersion(30, 0));
+   return true;
+}
+
+/**
+ * Upgrade 22.55 to 22.56
  */
 static bool H_UpgradeFromV55()
 {
-   CHK_EXEC(SetMajorSchemaVersion(30, 0));
+   CHK_EXEC(CreateTable(
+      _T("CREATE TABLE zone_proxies (")
+      _T("   object_id integer not null,")
+      _T("   proxy_node integer not null,")
+      _T("PRIMARY KEY(object_id,proxy_node))")));
+
+   DB_RESULT hResult = SQLSelect(_T("SELECT id,proxy_node FROM zones"));
+   if (hResult != NULL)
+   {
+      int count = DBGetNumRows(hResult);
+      if (count > 0)
+      {
+         DB_STATEMENT hStmt = DBPrepare(g_dbHandle, _T("INSERT INTO zone_proxies (object_id,proxy_node) VALUES (?,?)"));
+         if (hStmt != NULL)
+         {
+            for(int i = 0; i < count; i++)
+            {
+               DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, DBGetFieldULong(hResult, i, 0));
+               DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, DBGetFieldULong(hResult, i, 1));
+               if (!SQLExecute(hStmt) && !g_ignoreErrors)
+               {
+                  DBFreeStatement(hStmt);
+                  DBFreeResult(hResult);
+                  return false;
+               }
+            }
+            DBFreeStatement(hStmt);
+         }
+         else if (!g_ignoreErrors)
+         {
+            DBFreeResult(hResult);
+            return false;
+         }
+      }
+      DBFreeResult(hResult);
+   }
+   else if (!g_ignoreErrors)
+   {
+      return false;
+   }
+
+   CHK_EXEC(DBDropColumn(g_dbHandle, _T("zones"), _T("proxy_node")));
+   CHK_EXEC(SetMinorSchemaVersion(56));
    return true;
 }
 
@@ -1091,7 +1142,8 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
-   { 55, 30, 0,  H_UpgradeFromV55 },
+   { 56, 30, 0,  H_UpgradeFromV56 },
+   { 55, 22, 56, H_UpgradeFromV55 },
    { 54, 22, 55, H_UpgradeFromV54 },
    { 53, 22, 54, H_UpgradeFromV53 },
    { 52, 22, 53, H_UpgradeFromV52 },
