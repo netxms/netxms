@@ -9,4 +9,4 @@
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 bin_SCRIPTS = nx-collect-server-diag
-EXTRA_DIST = nx-collect-server-diag.bat zip.vbs
+EXTRA_DIST = nx-collect-server-diag.cmd zip.ps1
