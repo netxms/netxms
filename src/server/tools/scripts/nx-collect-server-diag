@@ -144,67 +144,67 @@ touch $NXADM_LOG
 print_header "debug"
 $DIR/nxadm -c "debug"  >> $NXADM_LOG
 #show dbcp
-print_header "show dbcp:"  >> $NXADM_LOG
+print_header "show dbcp:"  
 $DIR/nxadm -c "show dbcp"  >> $NXADM_LOG
 #show dbstats
-print_header "show dbstats:"  >> $NXADM_LOG
+print_header "show dbstats:" 
 $DIR/nxadm -c "show dbstats"  >> $NXADM_LOG
 #show flags
-print_header "show flags:"  >> $NXADM_LOG
+print_header "show flags:"
 $DIR/nxadm -c "show flags"  >> $NXADM_LOG
 #show heap details
-print_header "show heap details:"  >> $NXADM_LOG
+print_header "show heap details:"
 $DIR/nxadm -c "show heap details"  >> $NXADM_LOG
 #show heap summary
-print_header "show heap summary:"  >> $NXADM_LOG
+print_header "show heap summary:"
 $DIR/nxadm -c "show heap summary"  >> $NXADM_LOG
 #show index id
-print_header "show index id:"  >> $NXADM_LOG
+print_header "show index id:" 
 $DIR/nxadm -c "show index id"  >> $NXADM_LOG
 #show index interface
-print_header "show index interface:"  >> $NXADM_LOG
+print_header "show index interface:" 
 $DIR/nxadm -c "show index interface"  >> $NXADM_LOG
 #show index nodeaddr
-print_header "show index nodeaddr:"  >> $NXADM_LOG
+print_header "show index nodeaddr:" 
 $DIR/nxadm -c "show index nodeaddr"  >> $NXADM_LOG
 #show index subnet
-print_header "show index subnet:"  >> $NXADM_LOG
+print_header "show index subnet:" 
 $DIR/nxadm -c "show index subnet"  >> $NXADM_LOG
 #show index zone
-print_header "show index zone:"  >> $NXADM_LOG
+print_header "show index zone:" 
 $DIR/nxadm -c "show index zone"  >> $NXADM_LOG
 #show modules
-print_header "show modules:"  >> $NXADM_LOG
+print_header "show modules:" 
 $DIR/nxadm -c "show modules"  >> $NXADM_LOG
 #show msgwq
-print_header "show msgwq:"  >> $NXADM_LOG
+print_header "show msgwq:"
 $DIR/nxadm -c "show msgwq"  >> $NXADM_LOG
 #show objects
-print_header "show objects:"  >> $NXADM_LOG
+print_header "show objects:"
 $DIR/nxadm -c "show objects"  >> $NXADM_LOG
 #show pe
-print_header "show pe:"  >> $NXADM_LOG
+print_header "show pe:" 
 $DIR/nxadm -c "show pe"  >> $NXADM_LOG
 #show pollers
-print_header "show pollers:"  >> $NXADM_LOG
+print_header "show pollers:" 
 $DIR/nxadm -c "show pollers"  >> $NXADM_LOG
 #show queues
-print_header "show queues:"  >> $NXADM_LOG
+print_header "show queues:" 
 $DIR/nxadm -c "show queues"  >> $NXADM_LOG
 #show sessions
-print_header "show sessions:"  >> $NXADM_LOG
+print_header "show sessions:" 
 $DIR/nxadm -c "show sessions"  >> $NXADM_LOG
 #show stats
-print_header "show stats:"  >> $NXADM_LOG
+print_header "show stats:"
 $DIR/nxadm -c "show stats"  >> $NXADM_LOG
 #show tunnels
-print_header "show tunnels:"  >> $NXADM_LOG
+print_header "show tunnels:"
 $DIR/nxadm -c "show tunnels"  >> $NXADM_LOG
 #show users
-print_header "show users:"  >> $NXADM_LOG
+print_header "show users:"
 $DIR/nxadm -c "show users"  >> $NXADM_LOG
 #show watchdog
-print_header "show watchdog:"  >> $NXADM_LOG
+print_header "show watchdog:"
 $DIR/nxadm -c "show watchdog"  >> $NXADM_LOG
 
 #netxmsd, nxagentd log files
