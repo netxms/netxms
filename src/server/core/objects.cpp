@@ -1297,6 +1297,7 @@ BOOL LoadObjects()
                DBCacheTable(cachedb, mainDB, _T("object_urls"), _T("object_id,url_id"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("nodes"), _T("id"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("zones"), _T("id"), _T("*")) &&
+               DBCacheTable(cachedb, mainDB, _T("zone_proxies"), _T("object_id,proxy_node"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("conditions"), _T("id"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("cond_dci_map"), _T("condition_id,sequence_number"), _T("*"), intColumns) &&
                DBCacheTable(cachedb, mainDB, _T("subnets"), _T("id"), _T("*")) &&

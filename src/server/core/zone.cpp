@@ -76,10 +76,12 @@ bool Zone::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
       return false;
 
    TCHAR szQuery[256];
-   _sntprintf(szQuery, 256, _T("SELECT zone_guid,proxy_node FROM zones WHERE id=%d"), dwId);
+   _sntprintf(szQuery, 256, _T("SELECT zone_guid FROM zones WHERE id=%d"), dwId);
    DB_RESULT hResult = DBSelect(hdb, szQuery);
    if (hResult == NULL)
       return false;     // Query failed
+
+   bool success = false;
 
    if (DBGetNumRows(hResult) == 0)
    {
@@ -95,9 +97,29 @@ bool Zone::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
          return false;
       }
    }
+   else
+   {
+      m_uin = DBGetFieldULong(hResult, 0, 0);
 
-   m_uin = DBGetFieldULong(hResult, 0, 0);
-   m_proxyNodeId = DBGetFieldULong(hResult, 0, 1);
+      DB_STATEMENT zoneProxyStmt = DBPrepare(hdb, _T("SELECT proxy_node FROM zone_proxies WHERE object_id=?"));
+      if (zoneProxyStmt != NULL)
+      {
+         DBBind(zoneProxyStmt, 1, DB_SQLTYPE_INTEGER, dwId);
+         DB_RESULT zoneProxyResult = DBSelectPrepared(zoneProxyStmt);
+         if (zoneProxyResult != NULL)
+         {
+            if (DBGetNumRows(zoneProxyResult) > 0)
+            {
+               m_proxyNodeId = DBGetFieldULong(zoneProxyResult, 0, 0);
+               success = true;
+            }
+            else if (dwId == BUILTIN_OID_ZONE0)
+            {
+               success = true;
+            }
+         }
+      }
+   }
 
    DBFreeResult(hResult);
 
@@ -120,17 +142,16 @@ bool Zone::saveToDatabase(DB_HANDLE hdb)
       DB_STATEMENT hStmt;
       if (IsDatabaseRecordExist(hdb, _T("zones"), _T("id"), m_id))
       {
-         hStmt = DBPrepare(hdb, _T("UPDATE zones SET zone_guid=?,proxy_node=? WHERE id=?"));
+         hStmt = DBPrepare(hdb, _T("UPDATE zones SET zone_guid=? WHERE id=?"));
       }
       else
       {
-         hStmt = DBPrepare(hdb, _T("INSERT INTO zones (zone_guid,proxy_node,id) VALUES (?,?,?)"));
+         hStmt = DBPrepare(hdb, _T("INSERT INTO zones (zone_guid,id) VALUES (?,?)"));
       }
       if (hStmt != NULL)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_uin);
-         DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_proxyNodeId);
-         DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_id);
+         DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_id);
          success = DBExecute(hStmt);
          DBFreeStatement(hStmt);
       }
@@ -138,6 +159,18 @@ bool Zone::saveToDatabase(DB_HANDLE hdb)
       {
          success = false;
       }
+   }
+   if(success)
+   {
+      success = executeQueryOnObject(hdb, _T("DELETE FROM zone_proxies WHERE object_id=?"));
+   }
+   if(success)
+   {
+      DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO zone_proxies (object_id,proxy_node) VALUES (?,?)"));
+      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+      DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_proxyNodeId);
+      success = DBExecute(hStmt);
+      DBFreeStatement(hStmt);
    }
 
    if (success)
