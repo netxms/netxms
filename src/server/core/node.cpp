@@ -51,6 +51,11 @@ ObjectArray<SoftwarePackage> *CalculatePackageChanges(ObjectArray<SoftwarePackag
 int HardwareComponentComparator(const HardwareComponent **c1, const HardwareComponent **c2);
 ObjectArray<HardwareComponent> *CalculateHardwareChanges(ObjectArray<HardwareComponent> *oldSet, ObjectArray<HardwareComponent> *newSet);
 
+#define POLL_CANCELLATION_CHECKPOINT \
+         do { if (g_flags & AF_SHUTDOWN) { pollerUnlock(); return; } } while(0)
+#define POLL_CANCELLATION_CHECKPOINT_EX(code) \
+         do { if (g_flags & AF_SHUTDOWN) { code; pollerUnlock(); return; } } while(0)
+
 /**
  * Node class default constructor
  */
@@ -1646,21 +1651,12 @@ void Node::statusPoll(PollerInfo *poller, ClientSession *pSession, UINT32 rqId)
 
    UINT32 oldCapabilities = m_capabilities;
    UINT32 oldState = m_state;
-   NetObj *pPollerNode = NULL, **ppPollList;
-   SNMP_Transport *pTransport;
-   Cluster *pCluster;
-   time_t tNow, tExpire;
 
    Queue *pQueue = new Queue;     // Delayed event queue
    poller->setStatus(_T("wait for lock"));
    pollerLock();
 
-   if (IsShutdownInProgress())
-   {
-      delete pQueue;
-      pollerUnlock();
-      return;
-   }
+   POLL_CANCELLATION_CHECKPOINT_EX(delete pQueue);
 
    poller->setStatus(_T("preparing"));
    m_pollRequestor = pSession;
@@ -1668,8 +1664,8 @@ void Node::statusPoll(PollerInfo *poller, ClientSession *pSession, UINT32 rqId)
    nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("Starting status poll for node %s (ID: %d)"), m_name, m_id);
 
    // Read capability expiration time and current time
-   tExpire = (time_t)ConfigReadULong(_T("CapabilityExpirationTime"), 604800);
-   tNow = time(NULL);
+   time_t tExpire = (time_t)ConfigReadULong(_T("CapabilityExpirationTime"), 604800);
+   time_t tNow = time(NULL);
 
    bool agentConnected = false;
 
@@ -1691,7 +1687,7 @@ restart_agent_check:
       UINT32 dwResult;
 
       nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): check SNMP"), m_name);
-      pTransport = createSnmpTransport();
+      SNMP_Transport *pTransport = createSnmpTransport();
       if (pTransport != NULL)
       {
          poller->setStatus(_T("check SNMP"));
@@ -1789,6 +1785,8 @@ restart_agent_check:
       nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): SNMP check finished"), m_name);
    }
 
+   POLL_CANCELLATION_CHECKPOINT_EX(delete pQueue);
+
    // Check native agent connectivity
    if ((m_capabilities & NC_IS_NATIVE_AGENT) && (!(m_flags & NF_DISABLE_NXCP)))
    {
@@ -1876,13 +1874,16 @@ restart_agent_check:
 
    poller->setStatus(_T("prepare polling list"));
 
+   POLL_CANCELLATION_CHECKPOINT_EX(delete pQueue);
+
    // Find service poller node object
+   Node *pollerNode = NULL;
    lockProperties();
    if (m_pollerNode != 0)
    {
       UINT32 id = m_pollerNode;
       unlockProperties();
-      pPollerNode = FindObjectById(id, OBJECT_NODE);
+      pollerNode = static_cast<Node*>(FindObjectById(id, OBJECT_NODE));
    }
    else
    {
@@ -1890,28 +1891,27 @@ restart_agent_check:
    }
 
    // If nothing found, use management server
-   if (pPollerNode == NULL)
+   if (pollerNode == NULL)
    {
-      pPollerNode = FindObjectById(g_dwMgmtNode, OBJECT_NODE);
-      if (pPollerNode != NULL)
-         pPollerNode->incRefCount();
+      pollerNode = static_cast<Node*>(FindObjectById(g_dwMgmtNode, OBJECT_NODE));
+      if (pollerNode != NULL)
+         pollerNode->incRefCount();
    }
    else
    {
-      pPollerNode->incRefCount();
+      pollerNode->incRefCount();
    }
 
    // Create polling list
-   ppPollList = (NetObj **)malloc(sizeof(NetObj *) * m_childList->size());
+   ObjectArray<NetObj> pollList(32, 32, false);
    lockChildList(false);
-   int pollListSize = 0;
    for(int i = 0; i < m_childList->size(); i++)
    {
       NetObj *curr = m_childList->get(i);
       if (curr->getStatus() != STATUS_UNMANAGED)
       {
          curr->incRefCount();
-         ppPollList[pollListSize++] = curr;
+         pollList.add(curr);
       }
    }
    unlockChildList();
@@ -1919,32 +1919,36 @@ restart_agent_check:
    // Poll interfaces and services
    poller->setStatus(_T("child poll"));
    DbgPrintf(7, _T("StatusPoll(%s): starting child object poll"), m_name);
-   pCluster = getMyCluster();
-   pTransport = createSnmpTransport();
-   for(int i = 0; i < pollListSize; i++)
+   Cluster *cluster = getMyCluster();
+   SNMP_Transport *snmp = createSnmpTransport();
+   for(int i = 0; i < pollList.size(); i++)
    {
-      switch(ppPollList[i]->getObjectClass())
+      NetObj *curr = pollList.get(i);
+      switch(curr->getObjectClass())
       {
          case OBJECT_INTERFACE:
-            DbgPrintf(7, _T("StatusPoll(%s): polling interface %d [%s]"), m_name, ppPollList[i]->getId(), ppPollList[i]->getName());
-            ((Interface *)ppPollList[i])->statusPoll(pSession, rqId, pQueue, pCluster, pTransport, m_icmpProxy);
+            DbgPrintf(7, _T("StatusPoll(%s): polling interface %d [%s]"), m_name, curr->getId(), curr->getName());
+            static_cast<Interface*>(curr)->statusPoll(pSession, rqId, pQueue, cluster, snmp, m_icmpProxy);
             break;
          case OBJECT_NETWORKSERVICE:
-            DbgPrintf(7, _T("StatusPoll(%s): polling network service %d [%s]"), m_name, ppPollList[i]->getId(), ppPollList[i]->getName());
-            ((NetworkService *)ppPollList[i])->statusPoll(pSession, rqId, (Node *)pPollerNode, pQueue);
+            DbgPrintf(7, _T("StatusPoll(%s): polling network service %d [%s]"), m_name, curr->getId(), curr->getName());
+            static_cast<NetworkService*>(curr)->statusPoll(pSession, rqId, pollerNode, pQueue);
             break;
          case OBJECT_ACCESSPOINT:
-            DbgPrintf(7, _T("StatusPoll(%s): polling access point %d [%s]"), m_name, ppPollList[i]->getId(), ppPollList[i]->getName());
-            ((AccessPoint *)ppPollList[i])->statusPollFromController(pSession, rqId, pQueue, this, pTransport);
+            DbgPrintf(7, _T("StatusPoll(%s): polling access point %d [%s]"), m_name, curr->getId(), curr->getName());
+            static_cast<AccessPoint*>(curr)->statusPollFromController(pSession, rqId, pQueue, this, snmp);
             break;
          default:
-            DbgPrintf(7, _T("StatusPoll(%s): skipping object %d [%s] class %d"), m_name, ppPollList[i]->getId(), ppPollList[i]->getName(), ppPollList[i]->getObjectClass());
+            DbgPrintf(7, _T("StatusPoll(%s): skipping object %d [%s] class %d"), m_name, curr->getId(), curr->getName(), curr->getObjectClass());
             break;
       }
-      ppPollList[i]->decRefCount();
+      curr->decRefCount();
+
+      POLL_CANCELLATION_CHECKPOINT_EX({ for(i++; i < pollList.size(); i++) pollList.get(i)->decRefCount(); delete pQueue; delete snmp; });
    }
-   delete pTransport;
-   free(ppPollList);
+   delete snmp;
+   if (pollerNode != NULL)
+      pollerNode->decRefCount();
    DbgPrintf(7, _T("StatusPoll(%s): finished child object poll"), m_name);
 
    // Check if entire node is down
@@ -2048,6 +2052,8 @@ restart_agent_check:
          }
       }
    }
+
+   POLL_CANCELLATION_CHECKPOINT_EX(delete pQueue);
 
    // Get uptime and update boot time
    if (!(m_state & DCSF_UNREACHABLE))
@@ -2157,6 +2163,8 @@ restart_agent_check:
       delete pQueue;
    }
 
+   POLL_CANCELLATION_CHECKPOINT;
+
    // Call hooks in loaded modules
    for(UINT32 i = 0; i < g_dwNumModules; i++)
    {
@@ -2172,8 +2180,6 @@ restart_agent_check:
    executeHookScript(_T("StatusPoll"));
 
    poller->setStatus(_T("cleanup"));
-   if (pPollerNode != NULL)
-      pPollerNode->decRefCount();
 
    if (oldCapabilities != m_capabilities)
       PostEvent(EVENT_NODE_CAPABILITIES_CHANGED, m_id, "xx", oldCapabilities, m_capabilities);
@@ -2252,6 +2258,9 @@ bool Node::checkNetworkPathElement(UINT32 nodeId, const TCHAR *nodeType, bool is
  */
 bool Node::checkNetworkPathLayer2(UINT32 requestId, bool secondPass)
 {
+   if (IsShutdownInProgress())
+      return false;
+
    time_t now = time(NULL);
 
    // Check proxy node(s)
@@ -2350,6 +2359,9 @@ bool Node::checkNetworkPathLayer2(UINT32 requestId, bool secondPass)
  */
 bool Node::checkNetworkPathLayer3(UINT32 requestId, bool secondPass)
 {
+   if (IsShutdownInProgress())
+      return false;
+
    Node *mgmtNode = (Node *)FindObjectById(g_dwMgmtNode, OBJECT_NODE);
    if (mgmtNode == NULL)
    {
@@ -2543,7 +2555,7 @@ void Node::checkAgentPolicyBinding(AgentConnection *conn)
  */
 void Node::updatePrimaryIpAddr()
 {
-   if (m_primaryName[0] == 0)
+   if ((m_primaryName[0] == 0) || IsShutdownInProgress())
       return;
 
    InetAddress ipAddr = ResolveHostName(m_zoneUIN, m_primaryName);
@@ -2765,11 +2777,7 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
    poller->setStatus(_T("wait for lock"));
    pollerLock();
 
-   if (IsShutdownInProgress())
-   {
-      pollerUnlock();
-      return;
-   }
+   POLL_CANCELLATION_CHECKPOINT;
 
    m_pollRequestor = session;
    sendPollerMsg(rqId, _T("Starting configuration poll for node %s\r\n"), m_name);
@@ -2807,8 +2815,13 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
 
       if (confPollAgent(rqId))
          modified |= MODIFY_NODE_PROPERTIES;
+
+      POLL_CANCELLATION_CHECKPOINT;
+
       if (confPollSnmp(rqId))
          modified |= MODIFY_NODE_PROPERTIES;
+
+      POLL_CANCELLATION_CHECKPOINT;
 
       // Check for CheckPoint SNMP agent on port 260
       if (ConfigReadBoolean(_T("EnableCheckPointSNMP"), false))
@@ -2844,6 +2857,8 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
 
       if (updateInterfaceConfiguration(rqId, 0)) // maskBits
          modified |= MODIFY_NODE_PROPERTIES;
+
+      POLL_CANCELLATION_CHECKPOINT;
 
       if (g_flags & AF_MERGE_DUPLICATE_NODES)
       {
@@ -2913,11 +2928,17 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
          }
       }
 
+      POLL_CANCELLATION_CHECKPOINT;
+
       updateSoftwarePackages(poller, rqId);
       updateHardwareComponents(poller, rqId);
 
+      POLL_CANCELLATION_CHECKPOINT;
+
       applyUserTemplates();
       updateContainerMembership();
+
+      POLL_CANCELLATION_CHECKPOINT;
 
       // Call hooks in loaded modules
       for(UINT32 i = 0; i < g_dwNumModules; i++)
@@ -2929,6 +2950,8 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
                modified |= MODIFY_ALL;   // FIXME: change module call to get exact modifications
          }
       }
+
+      POLL_CANCELLATION_CHECKPOINT;
 
       // Setup permanent connection to agent if not present (needed for proper configuration re-sync)
       if (m_capabilities & NC_IS_NATIVE_AGENT)
@@ -2965,6 +2988,8 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
          m_hypervisorInfo = MemCopyString(hypervisorInfo);
       }
       unlockProperties();
+
+      POLL_CANCELLATION_CHECKPOINT;
 
       // Execute hook script
       poller->setStatus(_T("hook"));
@@ -3488,7 +3513,6 @@ bool Node::confPollSnmp(UINT32 rqId)
       return false;
    }
 
-ThreadSleep(30);
    lockProperties();
    m_snmpPort = pTransport->getPort();
    delete m_snmpSecurity;
@@ -6923,7 +6947,7 @@ UINT32 Node::getEffectiveZoneProxy() const
  */
 SNMP_Transport *Node::createSnmpTransport(WORD port, const TCHAR *context)
 {
-   if ((m_flags & NF_DISABLE_SNMP) || (m_status == STATUS_UNMANAGED))
+   if ((m_flags & NF_DISABLE_SNMP) || (m_status == STATUS_UNMANAGED) || (g_flags & AF_SHUTDOWN))
       return NULL;
 
    SNMP_Transport *pTransport = NULL;
@@ -7271,11 +7295,7 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, UINT32 rqId
    poller->setStatus(_T("wait for lock"));
    pollerLock();
 
-   if (IsShutdownInProgress())
-   {
-      pollerUnlock();
-      return;
-   }
+   POLL_CANCELLATION_CHECKPOINT;
 
    m_pollRequestor = pSession;
    sendPollerMsg(rqId, _T("Starting topology poll for node %s\r\n"), m_name);
@@ -7336,6 +7356,8 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, UINT32 rqId
       }
    }
 
+   POLL_CANCELLATION_CHECKPOINT;
+
    poller->setStatus(_T("reading FDB"));
    ForwardingDatabase *fdb = GetSwitchForwardingDatabase(this);
    MutexLock(m_mutexTopoAccess);
@@ -7353,6 +7375,8 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, UINT32 rqId
       DbgPrintf(4, _T("Failed to get switch forwarding database from node %s [%d]"), m_name, m_id);
       sendPollerMsg(rqId, POLLER_WARNING _T("Failed to get switch forwarding database\r\n"));
    }
+
+   POLL_CANCELLATION_CHECKPOINT;
 
    poller->setStatus(_T("building neighbor list"));
    LinkLayerNeighbors *nbs = BuildLinkLayerNeighborList(this);
@@ -7477,6 +7501,8 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, UINT32 rqId
       sendPollerMsg(rqId, POLLER_ERROR _T("Cannot get link layer topology\r\n"));
    }
 
+   POLL_CANCELLATION_CHECKPOINT;
+
    // Read list of associated wireless stations
    if ((m_driver != NULL) && (m_capabilities & NC_IS_WIFI_CONTROLLER))
    {
@@ -7527,6 +7553,8 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, UINT32 rqId
       }
    }
 
+   POLL_CANCELLATION_CHECKPOINT;
+
    // Call hooks in loaded modules
    poller->setStatus(_T("calling modules"));
    for(UINT32 i = 0; i < g_dwNumModules; i++)
@@ -7537,6 +7565,8 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, UINT32 rqId
          g_pModuleList[i].pfTopologyPollHook(this, pSession, rqId, poller);
       }
    }
+
+   POLL_CANCELLATION_CHECKPOINT;
 
    // Execute hook script
    poller->setStatus(_T("hook"));

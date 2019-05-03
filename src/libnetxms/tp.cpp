@@ -146,6 +146,13 @@ static THREAD_RESULT THREAD_CALL WorkerThread(void *arg)
 
       if (rq == NULL)
       {
+         if (p->shutdownMode)
+         {
+            // If pool shutdown already activated ignore timeout and wait for stop request
+            nxlog_debug_tag(DEBUG_TAG, 2, _T("Worker thread timeout during shutdown in thread pool %s"), p->name);
+            continue;
+         }
+
          MutexLock(p->mutex);
          if ((p->threads->size() <= p->minThreads) || (p->averageWaitTime / EMA_FP_1 > s_waitTimeLowWatermark))
          {
@@ -158,7 +165,7 @@ static THREAD_RESULT THREAD_CALL WorkerThread(void *arg)
 
          nxlog_debug_tag(DEBUG_TAG, 5, _T("Stopping worker thread in thread pool %s due to inactivity"), p->name);
 
-         free(rq);
+         MemFree(rq);
          rq = MemAllocStruct<WorkRequest>();
          rq->func = JoinWorkerThread;
          rq->arg = arg;
@@ -180,6 +187,8 @@ static THREAD_RESULT THREAD_CALL WorkerThread(void *arg)
       MemFree(rq);
       InterlockedDecrement(&p->activeRequests);
    }
+
+   nxlog_debug_tag(DEBUG_TAG, 8, _T("Worker thread in thread pool %s stopped"), p->name);
    return THREAD_OK;
 }
 
@@ -376,9 +385,7 @@ void LIBNETXMS_EXPORTABLE ThreadPoolDestroy(ThreadPool *p)
    s_registry.remove(p->name);
    s_registryLock.unlock();
 
-   MutexLock(p->mutex);
    p->shutdownMode = true;
-   MutexUnlock(p->mutex);
 
    ConditionSet(p->maintThreadWakeup);
    ThreadJoin(p->maintThread);
@@ -387,8 +394,12 @@ void LIBNETXMS_EXPORTABLE ThreadPoolDestroy(ThreadPool *p)
    WorkRequest rq;
    rq.func = NULL;
    rq.queueTime = GetCurrentTimeMs();
-   for(int i = 0; i < p->threads->size(); i++)
+   MutexLock(p->mutex);
+   int count = p->threads->size();
+   for(int i = 0; i < count; i++)
       p->queue->put(&rq);
+   MutexUnlock(p->mutex);
+
    p->threads->forEach(ThreadPoolDestroyCallback, NULL);
 
    nxlog_debug_tag(DEBUG_TAG, 1, _T("Thread pool %s destroyed"), p->name);
@@ -411,6 +422,9 @@ void LIBNETXMS_EXPORTABLE ThreadPoolDestroy(ThreadPool *p)
  */
 void LIBNETXMS_EXPORTABLE ThreadPoolExecute(ThreadPool *p, ThreadPoolWorkerFunction f, void *arg)
 {
+   if (p->shutdownMode)
+      return;
+
    InterlockedIncrement(&p->activeRequests);
    InterlockedIncrement64(&p->taskExecutionCount);
    WorkRequest *rq = MemAllocStruct<WorkRequest>();
@@ -452,7 +466,7 @@ static void ProcessSerializedRequests(RequestSerializationData *data)
       rq->func(rq->arg);
       MemFree(rq);
    }
-   free(data->key);
+   MemFree(data->key);
    delete data;
 }
 
@@ -461,6 +475,9 @@ static void ProcessSerializedRequests(RequestSerializationData *data)
  */
 void LIBNETXMS_EXPORTABLE ThreadPoolExecuteSerialized(ThreadPool *p, const TCHAR *key, ThreadPoolWorkerFunction f, void *arg)
 {
+   if (p->shutdownMode)
+      return;
+
    MutexLock(p->serializationLock);
    
    SerializationQueue *q = p->serializationQueues->get(key);
@@ -500,6 +517,9 @@ static int ScheduledRequestsComparator(const WorkRequest **e1, const WorkRequest
  */
 void LIBNETXMS_EXPORTABLE ThreadPoolScheduleAbsoluteMs(ThreadPool *p, INT64 runTime, ThreadPoolWorkerFunction f, void *arg)
 {
+   if (p->shutdownMode)
+      return;
+
    WorkRequest *rq = MemAllocStruct<WorkRequest>();
    rq->func = f;
    rq->arg = arg;
