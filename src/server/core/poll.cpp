@@ -751,6 +751,7 @@ THREAD_RESULT THREAD_CALL PollManager(void *arg)
    }
    g_nodePollerQueue.put(INVALID_POINTER_VALUE);
 
+   nxlog_debug_tag(DEBUG_TAG_POLL_MANAGER, 2, _T("Waiting for outstanding poll requests"));
    ThreadPoolDestroy(g_pollerThreadPool);
    nxlog_debug_tag(DEBUG_TAG_POLL_MANAGER, 1, _T("Poll manager main thread terminated"));
    return THREAD_OK;
