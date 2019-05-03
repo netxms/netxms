@@ -2590,7 +2590,7 @@ static int ReadBaseboardInformation(Node *node, ObjectArray<HardwareComponent> *
    };
 
    int readCount = 0;
-   for(int i = 0; i < 5; i++)
+   for(int i = 0; i < 4; i++)
    {
       if (node->getItemFromAgent(metrics[i], 256, &buffer[i * 256]) == ERR_SUCCESS)
          readCount++;
@@ -3488,6 +3488,7 @@ bool Node::confPollSnmp(UINT32 rqId)
       return false;
    }
 
+ThreadSleep(30);
    lockProperties();
    m_snmpPort = pTransport->getPort();
    delete m_snmpSecurity;
