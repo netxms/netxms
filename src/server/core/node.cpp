@@ -51,10 +51,17 @@ ObjectArray<SoftwarePackage> *CalculatePackageChanges(ObjectArray<SoftwarePackag
 int HardwareComponentComparator(const HardwareComponent **c1, const HardwareComponent **c2);
 ObjectArray<HardwareComponent> *CalculateHardwareChanges(ObjectArray<HardwareComponent> *oldSet, ObjectArray<HardwareComponent> *newSet);
 
+/**
+ * Poll cancellation checkpoint
+ */
 #define POLL_CANCELLATION_CHECKPOINT \
          do { if (g_flags & AF_SHUTDOWN) { pollerUnlock(); return; } } while(0)
-#define POLL_CANCELLATION_CHECKPOINT_EX(code) \
-         do { if (g_flags & AF_SHUTDOWN) { code; pollerUnlock(); return; } } while(0)
+
+/**
+ * Poll cancellation checkpoint with additional hook
+ */
+#define POLL_CANCELLATION_CHECKPOINT_EX(hook) \
+         do { if (g_flags & AF_SHUTDOWN) { hook; pollerUnlock(); return; } } while(0)
 
 /**
  * Node class default constructor
