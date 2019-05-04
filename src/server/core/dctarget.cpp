@@ -1250,7 +1250,7 @@ bool DataCollectionTarget::isDataCollectionTarget()
 /**
  * Add data collection element to proxy info structure
  */
-void DataCollectionTarget::addProxyDataCollectionElement(ProxyInfo *info, const DCObject *dco)
+void DataCollectionTarget::addProxyDataCollectionElement(ProxyInfo *info, const DCObject *dco, UINT32 primaryProxyId)
 {
    info->msg->setField(info->fieldId++, dco->getId());
    info->msg->setField(info->fieldId++, (INT16)dco->getType());
@@ -1264,7 +1264,7 @@ void DataCollectionTarget::addProxyDataCollectionElement(ProxyInfo *info, const 
       info->msg->setField(info->fieldId++, ((DCItem *)dco)->getSnmpRawValueType());
    else
       info->msg->setField(info->fieldId++, (INT16)0);
-   info->fieldId += 1;
+   info->msg->setField(info->fieldId++, primaryProxyId);
    info->count++;
 }
 
@@ -1304,7 +1304,7 @@ void DataCollectionTarget::collectProxyInfo(ProxyInfo *info)
       if ((dco->getDataSource() == DS_NATIVE_AGENT) && (dco->getSourceNode() == info->proxyId) &&
           dco->hasValue() && (dco->getAgentCacheMode() == AGENT_CACHE_ON))
       {
-         addProxyDataCollectionElement(info, dco);
+         addProxyDataCollectionElement(info, dco, 0);
       }
    }
    unlockDciAccess();
@@ -1315,7 +1315,7 @@ void DataCollectionTarget::collectProxyInfo(ProxyInfo *info)
  */
 void DataCollectionTarget::collectProxyInfoCallback(NetObj *object, void *data)
 {
-   ((DataCollectionTarget *)object)->collectProxyInfo((ProxyInfo *)data);
+   static_cast<DataCollectionTarget*>(object)->collectProxyInfo(static_cast<ProxyInfo*>(data));
 }
 
 /**

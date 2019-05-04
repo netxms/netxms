@@ -1176,7 +1176,7 @@ typedef struct
 #define VID_SSH_LOGIN               ((UINT32)546)
 #define VID_SSH_PASSWORD            ((UINT32)547)
 #define VID_SSH_PROXY               ((UINT32)548)
-#define VID_ZONE_PROXY              ((UINT32)549)
+#define VID_ZONE_PROXY_COUNT        ((UINT32)549)
 #define VID_MESSAGE_LENGTH          ((UINT32)550)
 #define VID_LDAP_DN                 ((UINT32)551)
 #define VID_LDAP_ID                 ((UINT32)552)
@@ -1263,6 +1263,10 @@ typedef struct
 #define VID_RECORD_LIMIT            ((UINT32)633)
 #define VID_LOCAL_CACHE             ((UINT32)634)
 #define VID_RESTART                 ((UINT32)635)
+#define VID_THIS_PROXY_ID           ((UINT32)636)
+#define VID_ZONE_PROXY_LIST         ((UINT32)637)
+#define VID_PRIMARY_ZONE_PROXY_ID   ((UINT32)638)
+#define VID_BACKUP_ZONE_PROXY_ID    ((UINT32)639)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)
@@ -1474,6 +1478,8 @@ typedef struct
 #define VID_ZMQ_SUBSCRIPTION_BASE   ((UINT32)0x10000000)
 
 #define VID_CONFIG_HINT_LIST_BASE   ((UINT32)0x10000000)
+
+#define VID_ZONE_PROXY_BASE         ((UINT32)0x70000000)
 
 // base value for SNMP community strings
 #define VID_COMMUNITY_STRING_LIST_BASE       ((UINT32)0x10000000)

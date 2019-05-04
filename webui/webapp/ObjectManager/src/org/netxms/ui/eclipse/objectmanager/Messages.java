@@ -420,9 +420,9 @@ public class Messages extends NLS
    public String VPNSubnets_LocalNetworks;
    public String VPNSubnets_PeerGateway;
    public String VPNSubnets_RemoteNetworks;
-   public String ZoneCommunications_DefaultProxy;
    public String ZoneCommunications_JobError;
    public String ZoneCommunications_JobName;
+   public String ZoneCommunications_ProxyNodes;
    public String ZoneSelectionDialog_EmptySelectionWarning;
    public String ZoneSelectionDialog_Title;
    public String ZoneSelectionDialog_Warning;

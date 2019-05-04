@@ -662,6 +662,8 @@ protected:
 	UINT32 m_submapId;				// Map object which should be open on drill-down request
 	IntegerArray<UINT32> *m_dashboards; // Dashboards associated with this object
 	ObjectArray<ObjectUrl> *m_urls;  // URLs associated with this object
+	UINT32 m_primaryZoneProxyId;     // ID of assigned primary zone proxy node
+   UINT32 m_backupZoneProxyId;      // ID of assigned backup zone proxy node
 
    ObjectArray<NetObj> *m_childList;     // Array of pointers to child objects
    ObjectArray<NetObj> *m_parentList;    // Array of pointers to parent objects
@@ -834,6 +836,9 @@ public:
    void setCustomAttribute(const TCHAR *name, const TCHAR *value);
    void setCustomAttributePV(const TCHAR *name, TCHAR *value);
    void deleteCustomAttribute(const TCHAR *name);
+
+   UINT32 getAssignedZoneProxyId(bool backup = false) const { return backup ? m_backupZoneProxyId : m_primaryZoneProxyId; }
+   void setAssignedZoneProxyId(UINT32 id, bool backup) { if (backup) m_backupZoneProxyId = id; else m_primaryZoneProxyId = id; }
 
    virtual NXSL_Value *createNXSLObject(NXSL_VM *vm);
 
@@ -1429,7 +1434,7 @@ protected:
    void getItemDciValuesSummary(SummaryTable *tableDefinition, Table *tableData, UINT32 userId);
    void getTableDciValuesSummary(SummaryTable *tableDefinition, Table *tableData, UINT32 userId);
 
-   void addProxyDataCollectionElement(ProxyInfo *info, const DCObject *dco);
+   void addProxyDataCollectionElement(ProxyInfo *info, const DCObject *dco, UINT32 primaryProxyId);
    void addProxySnmpTarget(ProxyInfo *info, const Node *node);
    virtual void collectProxyInfo(ProxyInfo *info);
    static void collectProxyInfoCallback(NetObj *object, void *data);
@@ -2401,6 +2406,12 @@ public:
    DataCollectionError getItemFromSMCLP(const TCHAR *param, TCHAR *buffer, size_t size);
    DataCollectionError getItemFromDeviceDriver(const TCHAR *param, TCHAR *buffer, size_t size);
 
+   double getMetricFromAgentAsDouble(const TCHAR *name, double defaultValue = 0);
+   INT32 getMetricFromAgentAsInt32(const TCHAR *name, INT32 defaultValue = 0);
+   UINT32 getMetricFromAgentAsUInt32(const TCHAR *name, UINT32 defaultValue = 0);
+   INT64 getMetricFromAgentAsInt64(const TCHAR *name, INT64 defaultValue = 0);
+   UINT64 getMetricFromAgentAsUInt64(const TCHAR *name, UINT64 defaultValue = 0);
+
    UINT32 getItemForClient(int iOrigin, UINT32 userId, const TCHAR *pszParam, TCHAR *pszBuffer, UINT32 dwBufSize);
    UINT32 getTableForClient(const TCHAR *name, Table **table);
 
@@ -2417,15 +2428,13 @@ public:
    AgentConnectionEx *createAgentConnection(bool sendServerId = false);
    AgentConnectionEx *getAgentConnection(bool forcePrimary = false);
    AgentConnectionEx *acquireProxyConnection(ProxyType type, bool validate = false);
-   AgentConnectionEx *getConnectionToZoneNodeProxy(bool validate = false);
 	SNMP_Transport *createSnmpTransport(WORD port = 0, const TCHAR *context = NULL);
 	SNMP_SecurityContext *getSnmpSecurityContext() const;
 
-	UINT32 getEffectiveSnmpProxy() const;
-   UINT32 getEffectiveSshProxy() const;
-   UINT32 getEffectiveIcmpProxy() const;
-   UINT32 getEffectiveAgentProxy() const;
-   UINT32 getEffectiveZoneProxy() const;
+	UINT32 getEffectiveSnmpProxy(bool backup = false);
+   UINT32 getEffectiveSshProxy();
+   UINT32 getEffectiveIcmpProxy();
+   UINT32 getEffectiveAgentProxy();
 
    void writeParamListToMessage(NXCPMessage *pMsg, int origin, WORD flags);
 	void writeWinPerfObjectsToMessage(NXCPMessage *msg);
@@ -2769,6 +2778,32 @@ public:
 };
 
 /**
+ * Zone proxy information
+ */
+struct ZoneProxy
+{
+   UINT32 nodeId;
+   bool isAvailable;     // True if proxy is available
+   UINT32 assignments;   // Number of objects where this proxy is assigned
+   double loadAverage;
+
+   ZoneProxy(UINT32 _nodeId)
+   {
+      nodeId = _nodeId;
+      isAvailable = false;
+      assignments = 0;
+      loadAverage = 0;
+   }
+
+   json_t *toJson() const
+   {
+      json_t *root = json_object();
+      json_object_set_new(root, "nodeId", json_integer(nodeId));
+      return root;
+   }
+};
+
+/**
  * Zone object
  */
 class NXCORE_EXPORTABLE Zone : public NetObj
@@ -2778,7 +2813,8 @@ protected:
 
 protected:
    UINT32 m_uin;
-   UINT32 m_proxyNodeId;
+   ObjectArray<ZoneProxy> *m_proxyNodes;
+   BYTE m_proxyAuthKey[ZONE_PROXY_KEY_LENGTH];
 	InetAddressIndex *m_idxNodeByAddr;
 	InetAddressIndex *m_idxInterfaceByAddr;
 	InetAddressIndex *m_idxSubnetByAddr;
@@ -2805,11 +2841,18 @@ public:
    virtual json_t *toJson() override;
 
    UINT32 getUIN() const { return m_uin; }
-	UINT32 getProxyNodeId() const { return m_proxyNodeId; }
+   const StringList *getSnmpPortList() const { return &m_snmpPorts; }
+
+   UINT32 getProxyNodeId(NetObj *object, bool backup = false);
+	bool isProxyNode(UINT32 nodeId) const;
+	IntegerArray<UINT32> *getAllProxyNodes() const;
+	void fillAgentConfigurationMessage(NXCPMessage *msg) const;
+
+   AgentConnectionEx *acquireConnectionToProxy(bool validate = false);
+
+   void updateProxyStatus(Node *node, bool activeMode);
 
    void addSubnet(Subnet *pSubnet) { addChild(pSubnet); pSubnet->addParent(this); }
-
-   const StringList *getSnmpPortList() const { return &m_snmpPorts; }
 
 	void addToIndex(Subnet *subnet) { m_idxSubnetByAddr->put(subnet->getIpAddress(), subnet); }
    void addToIndex(Interface *iface) { m_idxInterfaceByAddr->put(iface->getIpAddressList(), iface); }
@@ -2828,9 +2871,11 @@ public:
 	Node *findNode(bool (*comparator)(NetObj *, void *), void *data) { return (Node *)m_idxNodeByAddr->find(comparator, data); }
    void forEachSubnet(void (*callback)(const InetAddress& addr, NetObj *, void *), void *data) { m_idxSubnetByAddr->forEach(callback, data); }
    ObjectArray<NetObj> *getSubnets(bool updateRefCount) { return m_idxSubnetByAddr->getObjects(updateRefCount); }
-   void dumpInterfaceIndex(CONSOLE_CTX console);
-   void dumpNodeIndex(CONSOLE_CTX console);
-   void dumpSubnetIndex(CONSOLE_CTX console);
+
+   void dumpState(ServerConsole *console);
+   void dumpInterfaceIndex(ServerConsole *console);
+   void dumpNodeIndex(ServerConsole *console);
+   void dumpSubnetIndex(ServerConsole *console);
 };
 
 /**
@@ -3395,6 +3440,7 @@ MobileDevice NXCORE_EXPORTABLE *FindMobileDeviceByDeviceID(const TCHAR *deviceId
 AccessPoint NXCORE_EXPORTABLE *FindAccessPointByMAC(const BYTE *macAddr);
 UINT32 NXCORE_EXPORTABLE FindLocalMgmtNode();
 Zone NXCORE_EXPORTABLE *FindZoneByUIN(UINT32 zoneUIN);
+Zone NXCORE_EXPORTABLE *FindZoneByProxyId(UINT32 proxyId);
 UINT32 FindUnusedZoneUIN();
 bool NXCORE_EXPORTABLE IsClusterIP(UINT32 zoneUIN, const InetAddress& ipAddr);
 bool NXCORE_EXPORTABLE IsParentObject(UINT32 object1, UINT32 object2);

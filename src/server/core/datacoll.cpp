@@ -121,30 +121,14 @@ static void *GetItemData(DataCollectionTarget *dcTarget, DCItem *pItem, TCHAR *p
          case DS_SSH:
             if (dcTarget->getObjectClass() == OBJECT_NODE)
             {
-               UINT32 proxyId = ((Node *)dcTarget)->getSshProxy();
-               if (proxyId == 0)
-               {
-                  if (IsZoningEnabled())
-                  {
-                     Zone *zone = FindZoneByUIN(static_cast<Node*>(dcTarget)->getZoneUIN());
-                     if ((zone != NULL) && (zone->getProxyNodeId() != 0))
-                        proxyId = zone->getProxyNodeId();
-                     else
-                        proxyId = g_dwMgmtNode;
-                  }
-                  else
-                  {
-                     proxyId = g_dwMgmtNode;
-                  }
-               }
-               Node *proxy = (Node *)FindObjectById(proxyId, OBJECT_NODE);
+               Node *proxy = (Node *)FindObjectById(static_cast<Node*>(dcTarget)->getEffectiveSshProxy(), OBJECT_NODE);
                if (proxy != NULL)
                {
                   TCHAR name[MAX_PARAM_NAME], ipAddr[64];
                   _sntprintf(name, MAX_PARAM_NAME, _T("SSH.Command(%s,\"%s\",\"%s\",\"%s\")"),
                              ((Node *)dcTarget)->getIpAddress().toString(ipAddr),
-                             (const TCHAR *)EscapeStringForAgent(((Node *)dcTarget)->getSshLogin()),
-                             (const TCHAR *)EscapeStringForAgent(((Node *)dcTarget)->getSshPassword()),
+                             (const TCHAR *)EscapeStringForAgent(static_cast<Node*>(dcTarget)->getSshLogin()),
+                             (const TCHAR *)EscapeStringForAgent(static_cast<Node*>(dcTarget)->getSshPassword()),
                              (const TCHAR *)EscapeStringForAgent(pItem->getName()));
                   *error = proxy->getItemFromAgent(name, MAX_LINE_SIZE, pBuffer);
                }

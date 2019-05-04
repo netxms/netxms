@@ -759,7 +759,7 @@ void Interface::updatePingData()
       Zone *zone = FindZoneByUIN(m_zoneUIN);
       if (zone != NULL)
       {
-         icmpProxy = zone->getProxyNodeId();
+         icmpProxy = zone->getProxyNodeId(getParentNode());
       }
    }
 
@@ -849,7 +849,7 @@ void Interface::icmpStatusPoll(UINT32 rqId, UINT32 nodeIcmpProxy, Cluster *clust
 		Zone *zone = FindZoneByUIN(m_zoneUIN);
 		if (zone != NULL)
 		{
-			icmpProxy = zone->getProxyNodeId();
+			icmpProxy = zone->getProxyNodeId(getParentNode());
 		}
 	}
 

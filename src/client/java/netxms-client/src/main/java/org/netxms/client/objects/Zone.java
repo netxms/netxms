@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2019 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,7 +30,7 @@ import org.netxms.client.NXCSession;
 public class Zone extends GenericObject
 {
 	private long uin;
-	private long proxyNodeId;
+	private long[] proxyNodes;
 	private List<String> snmpPorts;
 	
 	/**
@@ -43,12 +43,11 @@ public class Zone extends GenericObject
 	{
 		super(msg, session);
 		uin = msg.getFieldAsInt64(NXCPCodes.VID_ZONE_UIN);
-		proxyNodeId = msg.getFieldAsInt64(NXCPCodes.VID_ZONE_PROXY);
+		proxyNodes = msg.getFieldAsUInt32Array(NXCPCodes.VID_ZONE_PROXY_LIST);
+		
 		snmpPorts = new ArrayList<String>(msg.getFieldAsInt32(NXCPCodes.VID_ZONE_SNMP_PORT_COUNT));
 		for(int i = 0; i < msg.getFieldAsInt32(NXCPCodes.VID_ZONE_SNMP_PORT_COUNT); i++)
-		{
 		   snmpPorts.add(msg.getFieldAsString(NXCPCodes.VID_ZONE_SNMP_PORT_LIST_BASE + i));
-		}
 	}
 
 	/* (non-Javadoc)
@@ -80,11 +79,13 @@ public class Zone extends GenericObject
 	}
 	
    /**
-    * @return the proxyNodeId
+    * Get list of proxy nodes
+    * 
+    * @return list of proxy nodes
     */
-   public long getProxyNodeId()
+   public List<AbstractObject> getProxyNodes()
    {
-      return proxyNodeId;
+      return session.findMultipleObjects(proxyNodes, true);
    }
 
    /* (non-Javadoc)

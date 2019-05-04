@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -63,6 +63,8 @@ LONG H_SystemTime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractComm
 LONG H_ThreadPoolInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_ThreadPoolList(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session);
 LONG H_LineCount(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_ZoneConfigurations(const TCHAR *param, const TCHAR *arg, Table *value, AbstractCommSession *session);
+LONG H_ZoneProxies(const TCHAR *param, const TCHAR *arg, Table *value, AbstractCommSession *session);
 
 #ifdef _WIN32
 LONG H_PhysicalDiskInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *pValue, AbstractCommSession *session);
@@ -458,8 +460,10 @@ static NETXMS_SUBAGENT_LIST m_stdLists[] =
  */
 static NETXMS_SUBAGENT_TABLE m_stdTables[] =
 {
-   { _T("Agent.SessionAgents"), H_SessionAgents, NULL, _T("SESSION_ID"), DCTDESC_AGENT_SUBAGENTS },
-   { _T("Agent.SubAgents"), H_SubAgentTable, NULL, _T("NAME"), DCTDESC_AGENT_SUBAGENTS }
+   { _T("Agent.SessionAgents"), H_SessionAgents, NULL, _T("SESSION_ID"), DCTDESC_AGENT_SESSION_AGENTS },
+   { _T("Agent.SubAgents"), H_SubAgentTable, NULL, _T("NAME"), DCTDESC_AGENT_SUBAGENTS },
+   { _T("Agent.ZoneConfigurations"), H_ZoneConfigurations, NULL, _T("SERVER_ID"), DCTDESC_AGENT_ZONE_CONFIGURATIONS },
+   { _T("Agent.ZoneProxies"), H_ZoneProxies, NULL, _T("SERVER_ID,PROXY_ID"), DCTDESC_AGENT_ZONE_PROXIES }
 };
 
 /**

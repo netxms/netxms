@@ -31,8 +31,8 @@ public class Messages extends NLS
 	public String ObjectBrowser_MoveTemplate;
 	public String ObjectBrowser_ShowFilter;
 	public String ObjectBrowser_ShowStatusIndicator;
-	public String ObjectList_Filter;
-	public String ObjectList_JobTitle;
+	public String ObjectList_Add;
+	public String ObjectList_Delete;
 	public String ObjectSelectionDialog_SameObjecsAstargetAndSourceWarning;
    public String ObjectSelectionDialog_Title;
 	public String ObjectSelectionDialog_Warning;

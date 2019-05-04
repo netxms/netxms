@@ -516,10 +516,10 @@ static void CheckRange(const InetAddressListElement& range)
             nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("Invalid zone UIN for address range %s"), (const TCHAR *)range.toString());
             return;
          }
-         proxyId = zone->getProxyNodeId();
+         proxyId = zone->getProxyNodeId(NULL);
       }
 
-      Node *proxy = (Node *)FindObjectById(proxyId, OBJECT_NODE);
+      Node *proxy = static_cast<Node*>(FindObjectById(proxyId, OBJECT_NODE));
       if (proxy == NULL)
       {
          nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("Cannot find zone proxy node for address range %s"), (const TCHAR *)range.toString());

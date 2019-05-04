@@ -26,7 +26,7 @@
 /**
  * Constructor
  */
-SocketListener::SocketListener(UINT16 port, bool allowV4, bool allowV6)
+GenericSocketListener::GenericSocketListener(int type, UINT16 port, bool allowV4, bool allowV6)
 {
    m_listenAddress = NULL;
    m_port = port;
@@ -38,12 +38,13 @@ SocketListener::SocketListener(UINT16 port, bool allowV4, bool allowV6)
    m_acceptErrors = 0;
    m_acceptedConnections = 0;
    m_rejectedConnections = 0;
+   m_type = type;
 }
 
 /**
  * Destructor
  */
-SocketListener::~SocketListener()
+GenericSocketListener::~GenericSocketListener()
 {
    shutdown();
    if (m_socketV4 != INVALID_SOCKET)
@@ -62,12 +63,12 @@ SocketListener::~SocketListener()
 /**
  * Initialize listener
  */
-bool SocketListener::initialize()
+bool GenericSocketListener::initialize()
 {
    // Create socket(s)
-   m_socketV4 = m_allowV4 ? socket(AF_INET, SOCK_STREAM, 0) : INVALID_SOCKET;
+   m_socketV4 = m_allowV4 ? socket(AF_INET, m_type, 0) : INVALID_SOCKET;
 #ifdef WITH_IPV6
-   m_socketV6 = m_allowV6 ? socket(AF_INET6, SOCK_STREAM, 0) : INVALID_SOCKET;
+   m_socketV6 = m_allowV6 ? socket(AF_INET6, m_type, 0) : INVALID_SOCKET;
 #endif
    if (((m_socketV4 == INVALID_SOCKET) && m_allowV4)
 #ifdef WITH_IPV6
@@ -156,7 +157,9 @@ bool SocketListener::initialize()
    int bindFailures = 0;
    if (m_allowV4)
    {
-      nxlog_debug(1, _T("SocketListener/%s: Trying to bind on %s:%d"), m_name, SockaddrToStr((struct sockaddr *)&servAddr, buffer), ntohs(servAddr.sin_port));
+      nxlog_debug(1, _T("SocketListener/%s: Trying to bind on %s:%d/%s"), m_name,
+               SockaddrToStr((struct sockaddr *)&servAddr, buffer), ntohs(servAddr.sin_port),
+               (m_type == SOCK_STREAM) ? _T("tcp") : _T("udp"));
       if (bind(m_socketV4, (struct sockaddr *)&servAddr, sizeof(struct sockaddr_in)) != 0)
       {
          nxlog_write_generic(NXLOG_ERROR, _T("SocketListener/%s: cannot bind IPv4 socket (%s)"), m_name, GetLastSocketErrorText(buffer, 256));
@@ -171,7 +174,9 @@ bool SocketListener::initialize()
 #ifdef WITH_IPV6
    if (m_allowV6)
    {
-      nxlog_debug(1, _T("SocketListener/%s: Trying to bind on [%s]:%d"), m_name, SockaddrToStr((struct sockaddr *)&servAddr6, buffer), ntohs(servAddr6.sin6_port));
+      nxlog_debug(1, _T("SocketListener/%s: Trying to bind on [%s]:%d/%s"), m_name,
+               SockaddrToStr((struct sockaddr *)&servAddr6, buffer), ntohs(servAddr6.sin6_port),
+               (m_type == SOCK_STREAM) ? _T("tcp") : _T("udp"));
       if (bind(m_socketV6, (struct sockaddr *)&servAddr6, sizeof(struct sockaddr_in6)) != 0)
       {
          nxlog_write_generic(NXLOG_ERROR, _T("SocketListener/%s: cannot bind IPv6 socket (%s)"), m_name, GetLastSocketErrorText(buffer, 256));
@@ -190,40 +195,67 @@ bool SocketListener::initialize()
       return false;
 
    // Set up queue
-   if (m_allowV4)
+   if (m_type == SOCK_STREAM)
    {
-      if (listen(m_socketV4, SOMAXCONN) == 0)
+      if (m_allowV4)
       {
-         nxlog_write_generic(NXLOG_INFO, _T("SocketListener/%s: listening on %s:%d"), m_name, SockaddrToStr((struct sockaddr *)&servAddr, buffer), (int)m_port);
+         if (listen(m_socketV4, SOMAXCONN) == 0)
+         {
+            nxlog_write_generic(NXLOG_INFO, _T("SocketListener/%s: listening on %s:%d"), m_name, SockaddrToStr((struct sockaddr *)&servAddr, buffer), (int)m_port);
+         }
+         else
+         {
+            closesocket(m_socketV4);
+            m_socketV4 = INVALID_SOCKET;
+         }
       }
-      else
-      {
-         closesocket(m_socketV4);
-         m_socketV4 = INVALID_SOCKET;
-      }
-   }
 #ifdef WITH_IPV6
-   if (m_allowV6)
-   {
-      if (listen(m_socketV6, SOMAXCONN) == 0)
+      if (m_allowV6)
       {
-         nxlog_write_generic(NXLOG_INFO, _T("SocketListener/%s: listening on [%s]:%d"), m_name, SockaddrToStr((struct sockaddr *)&servAddr, buffer), (int)m_port);
+         if (listen(m_socketV6, SOMAXCONN) == 0)
+         {
+            nxlog_write_generic(NXLOG_INFO, _T("SocketListener/%s: listening on [%s]:%d"), m_name, SockaddrToStr((struct sockaddr *)&servAddr, buffer), (int)m_port);
+         }
+         else
+         {
+            closesocket(m_socketV6);
+            m_socketV6 = INVALID_SOCKET;
+         }
       }
-      else
-      {
-         closesocket(m_socketV6);
-         m_socketV6 = INVALID_SOCKET;
-      }
-   }
 #endif
+   }
 
    return true;
 }
 
 /**
- * Main listener loop
+ * Shutdown listener
  */
-void SocketListener::mainLoop()
+void GenericSocketListener::shutdown()
+{
+   m_stop = true;
+}
+
+/**
+ * Check if external stop condition is reached
+ */
+bool GenericSocketListener::isStopConditionReached()
+{
+   return false;
+}
+
+/**
+ * Check if incoming connection is allowed
+ */
+bool StreamSocketListener::isConnectionAllowed(const InetAddress& peer)
+{
+   return true;
+}
+
+/**
+ * Main socket listener loop
+ */
+void StreamSocketListener::mainLoop()
 {
    SocketPoller sp;
    int errorCount = 0;
@@ -317,33 +349,42 @@ void SocketListener::mainLoop()
 }
 
 /**
- * Shutdown listener
+ * Main datagram listener loop
  */
-void SocketListener::shutdown()
+void DatagramSocketListener::mainLoop()
 {
-   m_stop = true;
-}
+   SocketPoller sp;
+   int errorCount = 0;
+   while(!m_stop && !isStopConditionReached())
+   {
+      sp.reset();
+      if (m_socketV4 != INVALID_SOCKET)
+         sp.add(m_socketV4);
+#ifdef WITH_IPV6
+      if (m_socketV6 != INVALID_SOCKET)
+         sp.add(m_socketV6);
+#endif
 
-/**
- * Check if incoming connection is allowed
- */
-bool SocketListener::isConnectionAllowed(const InetAddress& peer)
-{
-   return true;
-}
+      int nRet = sp.poll(1000);
+      if ((nRet > 0) && !m_stop && !isStopConditionReached())
+      {
+         processDatagram(sp.isSet(m_socketV4) ? m_socketV4 : m_socketV6);
+      }
+      else if (nRet == -1)
+      {
+         int error = WSAGetLastError();
 
-/**
- * Process incoming connection
- */
-ConnectionProcessingResult SocketListener::processConnection(SOCKET s, const InetAddress& peer)
-{
-   return CPR_COMPLETED;
-}
-
-/**
- * Check if external stop condition is reached
- */
-bool SocketListener::isStopConditionReached()
-{
-   return false;
+         // On AIX, select() returns ENOENT after SIGINT for unknown reason
+#ifdef _WIN32
+         if (error != WSAEINTR)
+#else
+         if ((error != EINTR) && (error != ENOENT))
+#endif
+         {
+            TCHAR buffer[256];
+            nxlog_write_generic(NXLOG_ERROR, _T("SocketListener/%s: select() call failed (%s)"), m_name, GetLastSocketErrorText(buffer, 256));
+            ThreadSleepMs(100);
+         }
+      }
+   }
 }

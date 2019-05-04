@@ -603,6 +603,99 @@ public:
    void writeSocket(const BYTE *data, size_t size);
 };
 
+#define PROXY_CHALLENGE_SIZE 8
+
+#ifdef __HP_aCC
+#pragma pack 1
+#else
+#pragma pack(1)
+#endif
+
+/**
+ * Data collection proxy key
+ */
+struct ProxyKey
+{
+   UINT64 serverId;
+   UINT32 proxyId;
+
+   ProxyKey(UINT64 _serverId, UINT32 _proxyId)
+   {
+      serverId = _serverId;
+      proxyId = _proxyId;
+   }
+};
+
+/**
+ * Data collection proxy message
+ */
+struct ProxyMsg
+{
+   BYTE challenge[PROXY_CHALLENGE_SIZE];
+   UINT64 serverId;
+   UINT32 proxyIdDest;
+   UINT32 proxyIdSelf;
+   UINT32 zoneUin;
+   BYTE hmac[SHA256_DIGEST_SIZE];
+};
+
+#ifdef __HP_aCC
+#pragma pack
+#else
+#pragma pack()
+#endif
+
+/**
+ * Zone configuration
+ */
+class ZoneConfiguration
+{
+private:
+   UINT64 m_serverId;
+   UINT32 m_thisNodeId;
+   UINT32 m_zoneUin;
+   BYTE m_sharedSecret[ZONE_PROXY_KEY_LENGTH];
+
+public:
+   ZoneConfiguration(UINT64 serverId, UINT32 thisNodeId, UINT32 zoneUin, BYTE *sharedSecret);
+   ZoneConfiguration(const ZoneConfiguration *cfg);
+
+   void update(const ZoneConfiguration *cfg);
+
+   UINT64 getServerId() const { return m_serverId; }
+   UINT32 getThisNodeId() const { return m_thisNodeId; }
+   UINT32 getZoneUIN() const { return m_zoneUin; }
+   const BYTE *getSharedSecret() const { return m_sharedSecret; }
+};
+
+/**
+ * Data collection proxy information
+ */
+class DataCollectionProxy
+{
+private:
+   UINT64 m_serverId;
+   UINT32 m_proxyId;
+   InetAddress m_address;
+   bool m_connected;
+   bool m_inUse;
+
+public:
+   DataCollectionProxy(UINT64 serverId, UINT32 proxyId, const InetAddress& address);
+   DataCollectionProxy(const DataCollectionProxy *src);
+
+   void checkConnection();
+   void update(const DataCollectionProxy *src);
+   void setInUse(bool inUse) { m_inUse = inUse; }
+
+   ProxyKey getKey() const { return ProxyKey(m_serverId, m_proxyId); }
+   bool isConnected() const { return m_connected; }
+   bool isInUse() const { return m_inUse; }
+   const InetAddress &getAddress() const { return m_address; }
+   UINT64 getServerId() const { return m_serverId; }
+   UINT32 getProxyId() const { return m_proxyId; }
+};
+
 /**
  * Functions
  */

@@ -121,14 +121,14 @@ void InitClientListeners()
 /**
  * Client listener class
  */
-class ClientListener : public SocketListener
+class ClientListener : public StreamSocketListener
 {
 protected:
    virtual ConnectionProcessingResult processConnection(SOCKET s, const InetAddress& peer);
    virtual bool isStopConditionReached();
 
 public:
-   ClientListener(UINT16 port) : SocketListener(port) { setName(_T("Clients")); }
+   ClientListener(UINT16 port) : StreamSocketListener(port) { setName(_T("Clients")); }
 };
 
 /**

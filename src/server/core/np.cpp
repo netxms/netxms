@@ -226,80 +226,84 @@ static NXSL_DiscoveryClass m_nxslDiscoveryClass;
  */
 Node NXCORE_EXPORTABLE *PollNewNode(NewNodeData *newNodeData)
 {
-   Node *pNode;
-   TCHAR szIpAddr[64];
-   UINT32 dwFlags = 0;
-
-   nxlog_debug_tag(DEBUG_TAG, 4, _T("PollNode(%s/%d) zone %d"), newNodeData->ipAddr.toString(szIpAddr),
+   TCHAR ipAddrText[64];
+   nxlog_debug_tag(DEBUG_TAG, 4, _T("PollNode(%s/%d) zone %d"), newNodeData->ipAddr.toString(ipAddrText),
                                                newNodeData->ipAddr.getMaskBits(),
                                                (int)newNodeData->zoneUIN);
+
    // Check for node existence
    if ((FindNodeByIP(newNodeData->zoneUIN, newNodeData->ipAddr) != NULL) ||
        (FindSubnetByIP(newNodeData->zoneUIN, newNodeData->ipAddr) != NULL))
    {
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("PollNode: Node %s already exist in database"), szIpAddr);
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("PollNode: Node %s already exist in database"), ipAddrText);
       return NULL;
    }
 
+   UINT32 flags = 0;
    if (newNodeData->creationFlags & NXC_NCF_DISABLE_ICMP)
-      dwFlags |= NF_DISABLE_ICMP;
+      flags |= NF_DISABLE_ICMP;
    if (newNodeData->creationFlags & NXC_NCF_DISABLE_SNMP)
-      dwFlags |= NF_DISABLE_SNMP;
+      flags |= NF_DISABLE_SNMP;
    if (newNodeData->creationFlags & NXC_NCF_DISABLE_NXCP)
-      dwFlags |= NF_DISABLE_NXCP;
-   pNode = new Node(newNodeData, dwFlags);
-   NetObjInsert(pNode, true, false);
+      flags |= NF_DISABLE_NXCP;
+   Node *node = new Node(newNodeData, flags);
+   NetObjInsert(node, true, false);
 
    if (newNodeData->creationFlags & NXC_NCF_ENTER_MAINTENANCE)
-      pNode->enterMaintenanceMode(_T("Automatic maintenance for new node"));
+      node->enterMaintenanceMode(_T("Automatic maintenance for new node"));
 
 	// Use DNS name as primary name if required
 	if ((newNodeData->origin == NODE_ORIGIN_NETWORK_DISCOVERY) && ConfigReadBoolean(_T("UseDNSNameForDiscoveredNodes"), false))
 	{
       TCHAR dnsName[MAX_DNS_NAME];
-      TCHAR *tmp;
+      bool addressResolved = false;
 	   if (IsZoningEnabled() && (newNodeData->zoneUIN != 0))
 	   {
-	      AgentConnectionEx *conn = pNode->getConnectionToZoneNodeProxy();
-	      tmp = conn != NULL ? conn->getHostByAddr(newNodeData->ipAddr, dnsName, MAX_DNS_NAME) : NULL;
+	      Zone *zone = FindZoneByUIN(newNodeData->zoneUIN);
+	      if (zone != NULL)
+	      {
+            AgentConnectionEx *conn = zone->acquireConnectionToProxy();
+            if (conn != NULL)
+            {
+               addressResolved = (conn->getHostByAddr(newNodeData->ipAddr, dnsName, MAX_DNS_NAME) != NULL);
+               conn->decRefCount();
+            }
+	      }
 	   }
 	   else
 		{
-	      tmp = newNodeData->ipAddr.getHostByAddr(dnsName, MAX_DNS_NAME);
+	      addressResolved = (newNodeData->ipAddr.getHostByAddr(dnsName, MAX_DNS_NAME) != NULL);
 		}
 
-      if (tmp != NULL)
+      if (addressResolved && ResolveHostName(newNodeData->zoneUIN, dnsName).equals(newNodeData->ipAddr))
       {
-         if (ResolveHostName(newNodeData->zoneUIN, dnsName).equals(newNodeData->ipAddr))
-         {
-            // We have valid DNS name which resolves back to node's IP address, use it as primary name
-            pNode->setPrimaryName(dnsName);
-            nxlog_debug_tag(DEBUG_TAG, 4, _T("PollNode: Using DNS name %s as primary name for node %s"), dnsName, szIpAddr);
-         }
+         // We have valid DNS name which resolves back to node's IP address, use it as primary name
+         node->setPrimaryName(dnsName);
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("PollNode: Using DNS name %s as primary name for node %s"), dnsName, ipAddrText);
       }
 	}
 
 	// Bind node to cluster before first configuration poll
 	if (newNodeData->cluster != NULL)
 	{
-	   newNodeData->cluster->applyToTarget(pNode);
+	   newNodeData->cluster->applyToTarget(node);
 	}
 
    if (newNodeData->creationFlags & NXC_NCF_CREATE_UNMANAGED)
    {
-      pNode->setMgmtStatus(FALSE);
-      pNode->checkSubnetBinding();
+      node->setMgmtStatus(FALSE);
+      node->checkSubnetBinding();
    }
 
 	if (newNodeData->doConfPoll)
    {
-	   pNode->configurationPollWorkerEntry(RegisterPoller(POLLER_TYPE_CONFIGURATION, pNode));
+	   node->configurationPollWorkerEntry(RegisterPoller(POLLER_TYPE_CONFIGURATION, node));
    }
 
-   pNode->unhide();
-   PostEvent(EVENT_NODE_ADDED, pNode->getId(), "d", static_cast<int>(newNodeData->origin));
+   node->unhide();
+   PostEvent(EVENT_NODE_ADDED, node->getId(), "d", static_cast<int>(newNodeData->origin));
 
-   return pNode;
+   return node;
 }
 
 /**
@@ -364,25 +368,21 @@ static bool HostIsReachable(const InetAddress& ipAddr, UINT32 zoneUIN, bool full
 	if (agentConn != NULL)
 		*agentConn = NULL;
 
-	UINT32 agentProxy = 0;
-	UINT32 icmpProxy = 0;
-	UINT32 snmpProxy = 0;
+	UINT32 zoneProxy = 0;
 
 	if (IsZoningEnabled() && (zoneUIN != 0))
 	{
 		Zone *zone = FindZoneByUIN(zoneUIN);
 		if (zone != NULL)
 		{
-			agentProxy = zone->getProxyNodeId();
-			icmpProxy = zone->getProxyNodeId();
-			snmpProxy = zone->getProxyNodeId();
+			zoneProxy = zone->getProxyNodeId(NULL);
 		}
 	}
 
 	// *** ICMP PING ***
-	if (icmpProxy != 0)
+	if (zoneProxy != 0)
 	{
-		Node *proxyNode = (Node *)g_idxNodeById.get(icmpProxy);
+		Node *proxyNode = (Node *)g_idxNodeById.get(zoneProxy);
 		if ((proxyNode != NULL) && proxyNode->isNativeAgent() && !proxyNode->isDown())
 		{
 			AgentConnection *conn = proxyNode->createAgentConnection();
@@ -418,9 +418,9 @@ static bool HostIsReachable(const InetAddress& ipAddr, UINT32 zoneUIN, bool full
 
 	// *** NetXMS agent ***
    AgentConnection *pAgentConn = new AgentConnectionEx(0, ipAddr, AGENT_LISTEN_PORT, AUTH_NONE, _T(""));
-	if (agentProxy != 0)
+	if (zoneProxy != 0)
 	{
-		Node *proxyNode = (Node *)g_idxNodeById.get(agentProxy);
+		Node *proxyNode = (Node *)g_idxNodeById.get(zoneProxy);
       if (proxyNode != NULL)
       {
          pAgentConn->setProxy(proxyNode->getIpAddress(), proxyNode->getAgentPort(),
@@ -463,7 +463,7 @@ static bool HostIsReachable(const InetAddress& ipAddr, UINT32 zoneUIN, bool full
    oids.add(_T(".1.3.6.1.2.1.1.2.0"));
    oids.add(_T(".1.3.6.1.2.1.1.1.0"));
    AddDriverSpecificOids(&oids);
-   SNMP_Transport *pTransport = SnmpCheckCommSettings(snmpProxy, ipAddr, &version, 0, NULL, &oids, zoneUIN);
+   SNMP_Transport *pTransport = SnmpCheckCommSettings(zoneProxy, ipAddr, &version, 0, NULL, &oids, zoneUIN);
    if (pTransport != NULL)
    {
       if (transport != NULL)

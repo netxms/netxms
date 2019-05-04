@@ -1158,14 +1158,14 @@ static Mutex s_tunnelListenerLock;
 /**
  * Client listener class
  */
-class TunnelListener : public SocketListener
+class TunnelListener : public StreamSocketListener
 {
 protected:
    virtual ConnectionProcessingResult processConnection(SOCKET s, const InetAddress& peer);
    virtual bool isStopConditionReached();
 
 public:
-   TunnelListener(UINT16 port) : SocketListener(port) { setName(_T("AgentTunnels")); }
+   TunnelListener(UINT16 port) : StreamSocketListener(port) { setName(_T("AgentTunnels")); }
 };
 
 /**

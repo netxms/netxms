@@ -74,3 +74,6 @@ threads.*	Thread related
 
 topo.*		Topology related
 topo.ipv4	IPv4 topology
+
+zone.*		Zone related
+zone.proxy	Zone proxy related

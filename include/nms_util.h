@@ -1400,7 +1400,7 @@ public:
 
    void clear();
 
-   EnumerationCallbackResult forEach(EnumerationCallbackResult (*cb)(const void *, void *), void *userData) const;
+   EnumerationCallbackResult forEach(EnumerationCallbackResult (*cb)(const void *, void *), void *context) const;
 };
 
 /**
@@ -1414,6 +1414,11 @@ public:
    void put(const K& key) { _put(&key); }
    void remove(const K& key) { _remove(&key); }
    bool contains(const K& key) { return _contains(&key); }
+
+   EnumerationCallbackResult forEach(EnumerationCallbackResult (*cb)(const K *, void *), void *context) const
+   {
+      return HashSetBase::forEach(reinterpret_cast<EnumerationCallbackResult (*)(const void *, void *)>(cb), context);
+   }
 };
 
 /**
@@ -2595,8 +2600,8 @@ void LIBNETXMS_EXPORTABLE SHA256Init(SHA256_STATE *state);
 void LIBNETXMS_EXPORTABLE SHA256Update(SHA256_STATE *state, const BYTE *data, size_t size);
 void LIBNETXMS_EXPORTABLE SHA256Finish(SHA256_STATE *state, BYTE *hash);
 
-void LIBNETXMS_EXPORTABLE SignMessage(const BYTE *message, size_t mlen, const BYTE *key, size_t klen, BYTE *signature);
-bool LIBNETXMS_EXPORTABLE ValidateMessageSignature(const BYTE *message, size_t mlen, const BYTE *key, size_t klen, const BYTE *signature);
+void LIBNETXMS_EXPORTABLE SignMessage(const void *message, size_t mlen, const BYTE *key, size_t klen, BYTE *signature);
+bool LIBNETXMS_EXPORTABLE ValidateMessageSignature(const void *message, size_t mlen, const BYTE *key, size_t klen, const BYTE *signature);
 
 void LIBNETXMS_EXPORTABLE GenerateRandomBytes(BYTE *buffer, size_t size);
 

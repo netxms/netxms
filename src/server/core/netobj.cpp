@@ -86,6 +86,8 @@ NetObj::NetObj()
    m_postalAddress = new PostalAddress();
    m_dashboards = new IntegerArray<UINT32>();
    m_urls = new ObjectArray<ObjectUrl>(4, 4, true);
+   m_primaryZoneProxyId = 0;
+   m_backupZoneProxyId = 0;
    m_state = 0;
    m_stateBeforeMaintenance = 0;
    m_runtimeFlags = 0;
@@ -1219,6 +1221,8 @@ void NetObj::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
    pMsg->setField(VID_IS_SYSTEM, (INT16)(m_isSystem ? 1 : 0));
    pMsg->setField(VID_MAINTENANCE_MODE, (INT16)(m_maintenanceEventId ? 1 : 0));
    pMsg->setField(VID_FLAGS, m_flags);
+   pMsg->setField(VID_PRIMARY_ZONE_PROXY_ID, m_primaryZoneProxyId);
+   pMsg->setField(VID_BACKUP_ZONE_PROXY_ID, m_backupZoneProxyId);
 
    pMsg->setField(VID_INHERIT_RIGHTS, m_inheritAccessRights);
    pMsg->setField(VID_STATUS_CALCULATION_ALG, (WORD)m_statusCalcAlg);

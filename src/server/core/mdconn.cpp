@@ -71,14 +71,14 @@ void InitMobileDeviceListeners()
 /**
  * Mobile device listener class
  */
-class MobileDeviceListener : public SocketListener
+class MobileDeviceListener : public StreamSocketListener
 {
 protected:
    virtual ConnectionProcessingResult processConnection(SOCKET s, const InetAddress& peer);
    virtual bool isStopConditionReached();
 
 public:
-   MobileDeviceListener(UINT16 port) : SocketListener(port) { setName(_T("MobileDevices")); }
+   MobileDeviceListener(UINT16 port) : StreamSocketListener(port) { setName(_T("MobileDevices")); }
 };
 
 /**

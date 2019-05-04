@@ -2199,6 +2199,16 @@ restart_agent_check:
    }
 
    calculateCompoundStatus();
+
+   if (IsZoningEnabled())
+   {
+      Zone *zone = FindZoneByProxyId(m_id);
+      if (zone != NULL)
+      {
+         zone->updateProxyStatus(this, true);
+      }
+   }
+
    m_lastStatusPoll = time(NULL);
    sendPollerMsg(rqId, _T("Finished status poll for node %s\r\n"), m_name);
    sendPollerMsg(rqId, _T("Node status after poll is %s\r\n"), GetStatusAsText(m_status, true));
@@ -2274,9 +2284,9 @@ bool Node::checkNetworkPathLayer2(UINT32 requestId, bool secondPass)
    if (IsZoningEnabled() && (m_zoneUIN != 0))
    {
       Zone *zone = FindZoneByUIN(m_zoneUIN);
-      if ((zone != NULL) && (zone->getProxyNodeId() != 0) && (zone->getProxyNodeId() != m_id))
+      if ((zone != NULL) && !zone->isProxyNode(m_id))
       {
-         if (checkNetworkPathElement(zone->getProxyNodeId(), _T("zone proxy"), true, requestId, secondPass))
+         if (checkNetworkPathElement(zone->getProxyNodeId(this), _T("zone proxy"), true, requestId, secondPass))
             return true;
       }
    }
@@ -4943,6 +4953,76 @@ end_loop:
 }
 
 /**
+ * Helper function to get metric from agent as double
+ */
+double Node::getMetricFromAgentAsDouble(const TCHAR *name, double defaultValue)
+{
+   TCHAR buffer[MAX_RESULT_LENGTH];
+   if (getItemFromAgent(name, MAX_RESULT_LENGTH, buffer) != DCE_SUCCESS)
+      return defaultValue;
+
+   TCHAR *eptr;
+   double v = _tcstod(buffer, &eptr);
+   return (*eptr == 0) ? v : defaultValue;
+}
+
+/**
+ * Helper function to get metric from agent as INT32
+ */
+INT32 Node::getMetricFromAgentAsInt32(const TCHAR *name, INT32 defaultValue)
+{
+   TCHAR buffer[MAX_RESULT_LENGTH];
+   if (getItemFromAgent(name, MAX_RESULT_LENGTH, buffer) != DCE_SUCCESS)
+      return defaultValue;
+
+   TCHAR *eptr;
+   INT32 v = _tcstol(buffer, &eptr, 0);
+   return (*eptr == 0) ? v : defaultValue;
+}
+
+/**
+ * Helper function to get metric from agent as UINT32
+ */
+UINT32 Node::getMetricFromAgentAsUInt32(const TCHAR *name, UINT32 defaultValue)
+{
+   TCHAR buffer[MAX_RESULT_LENGTH];
+   if (getItemFromAgent(name, MAX_RESULT_LENGTH, buffer) != DCE_SUCCESS)
+      return defaultValue;
+
+   TCHAR *eptr;
+   UINT32 v = _tcstoul(buffer, &eptr, 0);
+   return (*eptr == 0) ? v : defaultValue;
+}
+
+/**
+ * Helper function to get metric from agent as INT64
+ */
+INT64 Node::getMetricFromAgentAsInt64(const TCHAR *name, INT64 defaultValue)
+{
+   TCHAR buffer[MAX_RESULT_LENGTH];
+   if (getItemFromAgent(name, MAX_RESULT_LENGTH, buffer) != DCE_SUCCESS)
+      return defaultValue;
+
+   TCHAR *eptr;
+   INT64 v = _tcstoll(buffer, &eptr, 0);
+   return (*eptr == 0) ? v : defaultValue;
+}
+
+/**
+ * Helper function to get metric from agent as UINT64
+ */
+UINT64 Node::getMetricFromAgentAsUInt64(const TCHAR *name, UINT64 defaultValue)
+{
+   TCHAR buffer[MAX_RESULT_LENGTH];
+   if (getItemFromAgent(name, MAX_RESULT_LENGTH, buffer) != DCE_SUCCESS)
+      return defaultValue;
+
+   TCHAR *eptr;
+   UINT64 v = _tcstoull(buffer, &eptr, 0);
+   return (*eptr == 0) ? v : defaultValue;
+}
+
+/**
  * Get table from agent
  */
 DataCollectionError Node::getTableFromAgent(const TCHAR *name, Table **table)
@@ -6329,29 +6409,6 @@ AgentConnectionEx *Node::acquireProxyConnection(ProxyType type, bool validate)
 }
 
 /**
- * Get connection to zone proxy node of this node
- */
-AgentConnectionEx *Node::getConnectionToZoneNodeProxy(bool validate)
-{
-   Zone *zone = FindZoneByUIN(m_zoneUIN);
-   if (zone == NULL)
-   {
-     DbgPrintf(1, _T("Internal error: zone is NULL in Node::getZoneProxyConnection (zone ID = %d)"), (int)m_zoneUIN);
-     return NULL;
-   }
-
-   UINT32 zoneProxyNodeId = zone->getProxyNodeId();
-   Node *zoneNode = (Node *)FindObjectById(zoneProxyNodeId, OBJECT_NODE);
-   if(zoneNode == NULL)
-   {
-      DbgPrintf(1, _T("Internal error: zone proxy node is NULL in Node::getZoneProxyConnection (zone ID = %d, node ID = %d)"), (int)m_zoneUIN, (int)zoneProxyNodeId);
-      return NULL;
-   }
-
-   return zoneNode->acquireProxyConnection(ZONE_PROXY, validate);
-}
-
-/**
  * Set node's primary IP address.
  * Assumed that all necessary locks already in place
  */
@@ -6770,9 +6827,9 @@ bool Node::setAgentProxy(AgentConnectionEx *conn)
    if (IsZoningEnabled() && (proxyNode == 0) && (m_zoneUIN != 0))
    {
       Zone *zone = FindZoneByUIN(m_zoneUIN);
-      if ((zone != NULL) && (zone->getProxyNodeId() != m_id))
+      if ((zone != NULL) && !zone->isProxyNode(m_id))
       {
-         proxyNode = zone->getProxyNodeId();
+         proxyNode = zone->getProxyNodeId(this);
       }
    }
 
@@ -6877,16 +6934,16 @@ Cluster *Node::getMyCluster()
 /**
  * Get effective SNMP proxy for this node
  */
-UINT32 Node::getEffectiveSnmpProxy() const
+UINT32 Node::getEffectiveSnmpProxy(bool backup)
 {
-   UINT32 snmpProxy = m_snmpProxy;
+   UINT32 snmpProxy = backup ? 0 : m_snmpProxy;
    if (IsZoningEnabled() && (snmpProxy == 0) && (m_zoneUIN != 0))
    {
       // Use zone default proxy if set
       Zone *zone = FindZoneByUIN(m_zoneUIN);
-      if (zone != NULL)
+      if ((zone != NULL) && !zone->isProxyNode(m_id))
       {
-         snmpProxy = zone->getProxyNodeId();
+         snmpProxy = zone->getProxyNodeId(this, backup);
       }
    }
    return snmpProxy;
@@ -6895,25 +6952,25 @@ UINT32 Node::getEffectiveSnmpProxy() const
 /**
  * Get effective SSH proxy for this node
  */
-UINT32 Node::getEffectiveSshProxy() const
+UINT32 Node::getEffectiveSshProxy()
 {
    UINT32 sshProxy = m_sshProxy;
    if (IsZoningEnabled() && (sshProxy == 0) && (m_zoneUIN != 0))
    {
       // Use zone default proxy if set
       Zone *zone = FindZoneByUIN(m_zoneUIN);
-      if (zone != NULL)
+      if ((zone != NULL) && !zone->isProxyNode(m_id))
       {
-         sshProxy = zone->getProxyNodeId();
+         sshProxy = zone->getProxyNodeId(this);
       }
    }
-   return sshProxy;
+   return (sshProxy != 0) ? sshProxy : g_dwMgmtNode;
 }
 
 /**
  * Get effective ICMP proxy for this node
  */
-UINT32 Node::getEffectiveIcmpProxy() const
+UINT32 Node::getEffectiveIcmpProxy()
 {
    UINT32 icmpProxy = m_icmpProxy;
    if (IsZoningEnabled() && (icmpProxy == 0) && (m_zoneUIN != 0))
@@ -6922,7 +6979,7 @@ UINT32 Node::getEffectiveIcmpProxy() const
       Zone *zone = FindZoneByUIN(m_zoneUIN);
       if (zone != NULL)
       {
-         icmpProxy = zone->getProxyNodeId();
+         icmpProxy = zone->isProxyNode(m_id) ? m_id : zone->getProxyNodeId(this);
       }
    }
    return icmpProxy;
@@ -6931,37 +6988,19 @@ UINT32 Node::getEffectiveIcmpProxy() const
 /**
  * Get effective Agent proxy for this node
  */
-UINT32 Node::getEffectiveAgentProxy() const
+UINT32 Node::getEffectiveAgentProxy()
 {
    UINT32 agentProxy = m_agentProxy;
    if (IsZoningEnabled() && (agentProxy == 0) && (m_zoneUIN != 0))
    {
       // Use zone default proxy if set
       Zone *zone = FindZoneByUIN(m_zoneUIN);
-      if (zone != NULL)
+      if ((zone != NULL) && !zone->isProxyNode(m_id))
       {
-         agentProxy = zone->getProxyNodeId();
+         agentProxy = zone->getProxyNodeId(this);
       }
    }
    return agentProxy;
-}
-
-/**
- * Get effective Zone proxy for this node
- */
-UINT32 Node::getEffectiveZoneProxy() const
-{
-   UINT32 zoneProxy = 0;
-   if (IsZoningEnabled() && (m_zoneUIN != 0))
-   {
-      // Use zone default proxy if set
-      Zone *zone = FindZoneByUIN(m_zoneUIN);
-      if (zone != NULL)
-      {
-         zoneProxy = zone->getProxyNodeId();
-      }
-   }
-   return zoneProxy;
 }
 
 /**
@@ -7050,16 +7089,18 @@ BOOL Node::resolveName(BOOL useOnlyDNS)
    BOOL bNameTruncated = FALSE;
    TCHAR szBuffer[256];
 
-   DbgPrintf(4, _T("Resolving name for node %d [%s]..."), m_id, m_name);
+   DbgPrintf(4, _T("Resolving name for node %d [%s]"), m_id, m_name);
 
    TCHAR name[MAX_OBJECT_NAME];
    bool nameResolved = false;
-   if(m_zoneUIN != 0)
+   if (m_zoneUIN != 0)
    {
-      AgentConnectionEx *conn = getConnectionToZoneNodeProxy();
+      Zone *zone = FindZoneByUIN(m_zoneUIN);
+      AgentConnectionEx *conn = (zone != NULL) ? zone->acquireConnectionToProxy() : NULL;
       if (conn != NULL)
       {
-         nameResolved = (conn->getHostByAddr(m_ipAddress, name, MAX_DNS_NAME) != NULL);
+         nameResolved = (conn->getHostByAddr(m_ipAddress, name, MAX_OBJECT_NAME) != NULL);
+         conn->decRefCount();
       }
    }
    else
@@ -7108,7 +7149,7 @@ BOOL Node::resolveName(BOOL useOnlyDNS)
       // Try to get hostname from agent if address resolution fails
       if (!(bSuccess || useOnlyDNS))
       {
-         DbgPrintf(4, _T("Resolving name for node %d [%s] via agent..."), m_id, m_name);
+         DbgPrintf(4, _T("Resolving name for node %d [%s] via agent"), m_id, m_name);
          if (getItemFromAgent(_T("System.Hostname"), 256, szBuffer) == DCE_SUCCESS)
          {
             StrStrip(szBuffer);
@@ -7123,7 +7164,7 @@ BOOL Node::resolveName(BOOL useOnlyDNS)
       // Try to get hostname from SNMP if other methods fails
       if (!(bSuccess || useOnlyDNS))
       {
-         DbgPrintf(4, _T("Resolving name for node %d [%s] via SNMP..."), m_id, m_name);
+         DbgPrintf(4, _T("Resolving name for node %d [%s] via SNMP"), m_id, m_name);
          if (getItemFromSNMP(0, _T(".1.3.6.1.2.1.1.5.0"), 256, szBuffer, SNMP_RAWTYPE_NONE) == DCE_SUCCESS)
          {
             StrStrip(szBuffer);
@@ -8401,7 +8442,7 @@ void Node::updatePingData()
       Zone *zone = FindZoneByUIN(m_zoneUIN);
       if (zone != NULL)
       {
-         icmpProxy = zone->getProxyNodeId();
+         icmpProxy = zone->isProxyNode(m_id) ? m_id : zone->getProxyNodeId(this);
       }
    }
 
@@ -8478,6 +8519,16 @@ void Node::syncDataCollectionWithAgent(AgentConnectionEx *conn)
    NXCPMessage msg(conn->getProtocolVersion());
    msg.setCode(CMD_DATA_COLLECTION_CONFIG);
    msg.setId(conn->generateRequestId());
+
+   if (IsZoningEnabled())
+   {
+      Zone *zone = FindZoneByProxyId(m_id);
+      if (zone != NULL)
+      {
+         msg.setField(VID_THIS_PROXY_ID, m_id);
+         zone->fillAgentConfigurationMessage(&msg);
+      }
+   }
 
    UINT32 count = 0;
    UINT32 fieldId = VID_ELEMENT_LIST_BASE;
@@ -8565,7 +8616,7 @@ void Node::clearDataCollectionConfigFromAgent(AgentConnectionEx *conn)
  */
 void Node::onDataCollectionChangeAsyncCallback(void *arg)
 {
-   Node *node = (Node *)arg;
+   Node *node = static_cast<Node*>(arg);
    node->agentLock();
    bool newConnection;
    if (node->connectToAgent(NULL, NULL, &newConnection))
@@ -8588,13 +8639,25 @@ void Node::onDataCollectionChange()
       ThreadPoolExecute(g_mainThreadPool, Node::onDataCollectionChangeAsyncCallback, this);
    }
 
-   UINT32 snmpProxyId = getEffectiveSnmpProxy();
+   UINT32 snmpProxyId = getEffectiveSnmpProxy(false);
    if (snmpProxyId != 0)
    {
       Node *snmpProxy = (Node *)FindObjectById(snmpProxyId, OBJECT_NODE);
       if (snmpProxy != NULL)
       {
          DbgPrintf(5, _T("Node::onDataCollectionChange(%s [%d]): executing data collection sync for SNMP proxy %s [%d]"),
+                   m_name, m_id, snmpProxy->getName(), snmpProxy->getId());
+         ThreadPoolExecute(g_mainThreadPool, Node::onDataCollectionChangeAsyncCallback, snmpProxy);
+      }
+   }
+
+   snmpProxyId = getEffectiveSnmpProxy(true);
+   if (snmpProxyId != 0)
+   {
+      Node *snmpProxy = (Node *)FindObjectById(snmpProxyId, OBJECT_NODE);
+      if (snmpProxy != NULL)
+      {
+         DbgPrintf(5, _T("Node::onDataCollectionChange(%s [%d]): executing data collection sync for backup SNMP proxy %s [%d]"),
                    m_name, m_id, snmpProxy->getName(), snmpProxy->getId());
          ThreadPoolExecute(g_mainThreadPool, Node::onDataCollectionChangeAsyncCallback, snmpProxy);
       }
@@ -8692,7 +8755,9 @@ void Node::incSnmpTrapCount()
  */
 void Node::collectProxyInfo(ProxyInfo *info)
 {
-   bool snmpProxy = (getEffectiveSnmpProxy() == info->proxyId);
+   UINT32 primarySnmpProxy = getEffectiveSnmpProxy(false);
+   bool snmpProxy = (primarySnmpProxy == info->proxyId);
+   bool backupSnmpProxy = (getEffectiveSnmpProxy(true) == info->proxyId);
    bool isTarget = false;
 
    lockDciAccess(false);
@@ -8702,11 +8767,11 @@ void Node::collectProxyInfo(ProxyInfo *info)
       if (dco->getStatus() == ITEM_STATUS_DISABLED)
          continue;
 
-      if (((snmpProxy && (dco->getDataSource() == DS_SNMP_AGENT) && (dco->getSourceNode() == 0)) ||
+      if ((((snmpProxy || backupSnmpProxy) && (dco->getDataSource() == DS_SNMP_AGENT) && (dco->getSourceNode() == 0)) ||
            ((dco->getDataSource() == DS_NATIVE_AGENT) && (dco->getSourceNode() == info->proxyId))) &&
           dco->hasValue() && (dco->getAgentCacheMode() == AGENT_CACHE_ON))
       {
-         addProxyDataCollectionElement(info, dco);
+         addProxyDataCollectionElement(info, dco, backupSnmpProxy && (dco->getDataSource() == DS_SNMP_AGENT) ? primarySnmpProxy : 0);
          if (dco->getDataSource() == DS_SNMP_AGENT)
             isTarget = true;
       }
@@ -8818,8 +8883,15 @@ NetworkMapObjectList *Node::buildInternalConnectionTopology()
  */
 bool Node::checkProxyAndLink(NetworkMapObjectList *topology, UINT32 seedNode, UINT32 proxyId, UINT32 linkType, const TCHAR *linkName, bool checkAllProxies)
 {
-   if ((proxyId == 0) || (IsZoningEnabled() && (getEffectiveZoneProxy() == proxyId) && (linkType != LINK_TYPE_ZONE_PROXY)))
+   if ((proxyId == 0) || (proxyId == g_dwMgmtNode))
       return false;
+
+   if (IsZoningEnabled() && (m_zoneUIN != 0) && (linkType != LINK_TYPE_ZONE_PROXY))
+   {
+      Zone *zone = FindZoneByUIN(m_zoneUIN);
+      if ((zone != NULL) && zone->isProxyNode(proxyId))
+         return false;
+   }
 
    Node *proxy = reinterpret_cast<Node *>(FindObjectById(proxyId, OBJECT_NODE));
    if (proxy != NULL && proxy->getId() != m_id)
@@ -8844,8 +8916,19 @@ void Node::buildInternalConnectionTopologyInternal(NetworkMapObjectList *topolog
       return;
    topology->addObject(m_id);
 
-   if (IsZoningEnabled())
-      checkProxyAndLink(topology, seedNode, getEffectiveZoneProxy(), LINK_TYPE_ZONE_PROXY, _T("Zone proxy"), checkAllProxies);
+   if (IsZoningEnabled() && (m_zoneUIN != 0))
+   {
+      Zone *zone = FindZoneByUIN(m_zoneUIN);
+      if (zone != NULL)
+      {
+         IntegerArray<UINT32> *proxies = zone->getAllProxyNodes();
+         for(int i = 0; i < proxies->size(); i++)
+         {
+            checkProxyAndLink(topology, seedNode, proxies->get(i), LINK_TYPE_ZONE_PROXY, _T("Zone proxy"), checkAllProxies);
+         }
+         delete proxies;
+      }
+   }
 
    String protocols;
 	if (!m_tunnelId.equals(uuid::NULL_UUID))

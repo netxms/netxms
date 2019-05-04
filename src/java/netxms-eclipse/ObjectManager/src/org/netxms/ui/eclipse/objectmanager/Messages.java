@@ -417,9 +417,9 @@ public class Messages extends NLS
    public static String VPNSubnets_LocalNetworks;
    public static String VPNSubnets_PeerGateway;
    public static String VPNSubnets_RemoteNetworks;
-   public static String ZoneCommunications_DefaultProxy;
    public static String ZoneCommunications_JobError;
    public static String ZoneCommunications_JobName;
+   public static String ZoneCommunications_ProxyNodes;
    public static String ZoneSelectionDialog_EmptySelectionWarning;
    public static String ZoneSelectionDialog_Title;
    public static String ZoneSelectionDialog_Warning;

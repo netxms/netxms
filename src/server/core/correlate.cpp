@@ -83,9 +83,9 @@ static void C_SysNodeDown(Node *pNode, Event *pEvent)
 	if (IsZoningEnabled() && (pNode->getZoneUIN() != 0))
 	{
 		Zone *zone = FindZoneByUIN(pNode->getZoneUIN());
-		if ((zone != NULL) && (zone->getProxyNodeId() != 0) && (zone->getProxyNodeId() != pNode->getId()))
+		if ((zone != NULL) && !zone->isProxyNode(pNode->getId()) && (pNode->getAssignedZoneProxyId() != 0))
 		{
-		   if (CheckAgentDown(pNode, pEvent, zone->getProxyNodeId(), _T("zone proxy")))
+		   if (CheckAgentDown(pNode, pEvent, pNode->getAssignedZoneProxyId(), _T("zone proxy")))
 		      return;
 			pEvent->setRootId(0);
 		}
@@ -156,7 +156,7 @@ static void C_SysNodeDown(Node *pNode, Event *pEvent)
    if ((sourceNodeId == 0) && !(pNode->getFlags() & NF_DISABLE_SNMP))
       sourceNodeId = pNode->getSNMPProxy();
    if (sourceNodeId == 0)
-      sourceNodeId = pNode->getEffectiveZoneProxy();
+      sourceNodeId = pNode->getAssignedZoneProxyId();
    Node *sourceNode = static_cast<Node*>(FindObjectById((sourceNodeId != 0) ? sourceNodeId : g_dwMgmtNode, OBJECT_NODE));
    if (sourceNode == NULL)
 	{

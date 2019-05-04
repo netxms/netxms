@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -35,6 +35,14 @@
 void UpdateSnmpTarget(SNMPTarget *target);
 UINT32 GetSnmpValue(const uuid& target, UINT16 port, const TCHAR *oid, TCHAR *value, int interpretRawValue);
 
+void LoadProxyConfiguration();
+void UpdateProxyConfiguration(UINT64 serverId, HashMap<ProxyKey, DataCollectionProxy> *proxyList, const ZoneConfiguration *zone);
+void ProxyConnectionChecker(void *arg);
+THREAD_RESULT THREAD_CALL ProxyListenerThread(void *arg);
+
+extern HashMap<ProxyKey, DataCollectionProxy> g_proxyList;
+extern Mutex g_proxyListMutex;
+
 extern UINT32 g_dcReconciliationBlockSize;
 extern UINT32 g_dcReconciliationTimeout;
 extern UINT32 g_dcMaxCollectorPoolSize;
@@ -67,6 +75,7 @@ private:
    BYTE m_busy;
 	uuid m_snmpTargetGuid;
    time_t m_lastPollTime;
+   UINT32 m_backupProxyId;
 
 public:
    DataCollectionItem(UINT64 serverId, NXCPMessage *msg, UINT32 baseId);
@@ -84,6 +93,7 @@ public:
    int getSnmpRawValueType() const { return (int)m_snmpRawValueType; }
    UINT32 getPollingInterval() const { return (UINT32)m_pollingInterval; }
    time_t getLastPollTime() { return m_lastPollTime; }
+   UINT32 getBackupProxyId() const { return m_backupProxyId; }
 
    bool equals(const DataCollectionItem *item) const { return (m_serverId == item->m_serverId) && (m_id == item->m_id); }
 
@@ -119,6 +129,7 @@ DataCollectionItem::DataCollectionItem(UINT64 serverId, NXCPMessage *msg, UINT32
    m_snmpTargetGuid = msg->getFieldAsGUID(baseId + 6);
    m_snmpPort = msg->getFieldAsUInt16(baseId + 7);
    m_snmpRawValueType = (BYTE)msg->getFieldAsUInt16(baseId + 8);
+   m_backupProxyId = msg->getFieldAsInt32(baseId + 9);
    m_busy = 0;
 }
 
@@ -137,6 +148,7 @@ DataCollectionItem::DataCollectionItem(DB_RESULT hResult, int row)
    m_snmpPort = DBGetFieldULong(hResult, row, 7);
    m_snmpTargetGuid = DBGetFieldGUID(hResult, row, 8);
    m_snmpRawValueType = (BYTE)DBGetFieldULong(hResult, row, 9);
+   m_backupProxyId = DBGetFieldULong(hResult, row, 10);
    m_busy = 0;
 }
 
@@ -155,6 +167,7 @@ DataCollectionItem::DataCollectionItem(DB_RESULT hResult, int row)
    m_snmpTargetGuid = item->m_snmpTargetGuid;
    m_snmpPort = item->m_snmpPort;
    m_snmpRawValueType = item->m_snmpRawValueType;
+   m_backupProxyId = item->m_backupProxyId;
    m_busy = 0;
  }
 
@@ -175,7 +188,8 @@ void DataCollectionItem::updateAndSave(const DataCollectionItem *item)
    // if at least one of fields changed - set all fields and save to DB
    if ((m_type != item->m_type) || (m_origin != item->m_origin) || _tcscmp(m_name, item->m_name) ||
        (m_pollingInterval != item->m_pollingInterval) || m_snmpTargetGuid.compare(item->m_snmpTargetGuid) ||
-       (m_snmpPort != item->m_snmpPort) || (m_snmpRawValueType != item->m_snmpRawValueType) || (m_lastPollTime < item->m_lastPollTime))
+       (m_snmpPort != item->m_snmpPort) || (m_snmpRawValueType != item->m_snmpRawValueType) ||
+       (m_lastPollTime < item->m_lastPollTime) || m_backupProxyId != item->m_backupProxyId)
    {
       m_type = item->m_type;
       m_origin = item->m_origin;
@@ -186,6 +200,7 @@ void DataCollectionItem::updateAndSave(const DataCollectionItem *item)
       m_snmpTargetGuid = item->m_snmpTargetGuid;
       m_snmpPort = item->m_snmpPort;
       m_snmpRawValueType = item->m_snmpRawValueType;
+      m_backupProxyId = item->m_backupProxyId;
       saveToDatabase(false);
    }
 }
@@ -204,15 +219,15 @@ void DataCollectionItem::saveToDatabase(bool newObject)
    {
 		hStmt = DBPrepare(db,
                     _T("INSERT INTO dc_config (type,origin,name,polling_interval,")
-                    _T("last_poll,snmp_port,snmp_target_guid,snmp_raw_type,server_id,dci_id)")
-                    _T("VALUES (?,?,?,?,?,?,?,?,?,?)"));
+                    _T("last_poll,snmp_port,snmp_target_guid,snmp_raw_type,backup_proxy_id,server_id,dci_id)")
+                    _T("VALUES (?,?,?,?,?,?,?,?,?,?,?)"));
    }
    else
    {
       hStmt = DBPrepare(db,
                     _T("UPDATE dc_config SET type=?,origin=?,name=?,")
                     _T("polling_interval=?,last_poll=?,snmp_port=?,")
-                    _T("snmp_target_guid=?,snmp_raw_type=? WHERE server_id=? AND dci_id=?"));
+                    _T("snmp_target_guid=?,snmp_raw_type=?,backup_proxy_id=? WHERE server_id=? AND dci_id=?"));
    }
 
 	if (hStmt == NULL)
@@ -226,8 +241,9 @@ void DataCollectionItem::saveToDatabase(bool newObject)
 	DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, (LONG)m_snmpPort);
    DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, m_snmpTargetGuid);
 	DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, (LONG)m_snmpRawValueType);
-	DBBind(hStmt, 9, DB_SQLTYPE_BIGINT, m_serverId);
-	DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, (LONG)m_id);
+   DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, (LONG)m_backupProxyId);
+	DBBind(hStmt, 10, DB_SQLTYPE_BIGINT, m_serverId);
+	DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, (LONG)m_id);
 
    DBExecute(hStmt);
    DBFreeStatement(hStmt);
@@ -921,7 +937,7 @@ static void SnmpDataCollectionCallback(void *arg)
 /**
  * Data collectors thread pool
  */
-static ThreadPool *s_dataCollectorPool = NULL;
+ThreadPool *g_dataCollectorPool = NULL;
 
 /**
  * Single data collection scheduler run - schedule data collection if needed and calculate sleep time
@@ -938,27 +954,42 @@ static UINT32 DataCollectionSchedulerRun()
       UINT32 timeToPoll = dci->getTimeToNextPoll(now);
       if (timeToPoll == 0)
       {
-         nxlog_debug_tag(DEBUG_TAG, 7, _T("DataCollector: polling DCI %d \"%s\""), dci->getId(), dci->getName());
-
-         if (dci->getOrigin() == DS_NATIVE_AGENT)
+         bool schedule;
+         if (dci->getBackupProxyId() == 0)
          {
-            dci->startDataCollection();
-            ThreadPoolExecute(s_dataCollectorPool, LocalDataCollectionCallback, dci);
-         }
-         else if (dci->getOrigin() == DS_SNMP_AGENT)
-         {
-            dci->startDataCollection();
-            TCHAR key[64];
-            ThreadPoolExecuteSerialized(s_dataCollectorPool, dci->getSnmpTargetGuid().toString(key), SnmpDataCollectionCallback, dci);
+            schedule = true;
          }
          else
          {
-            DebugPrintf(7, _T("DataCollector: unsupported origin %d"), dci->getOrigin());
+            g_proxyListMutex.lock();
+            DataCollectionProxy *proxy = g_proxyList.get(ProxyKey(dci->getServerId(), dci->getBackupProxyId()));
+            schedule = ((proxy != NULL) && !proxy->isConnected());
+            g_proxyListMutex.unlock();
          }
 
-         timeToPoll = dci->getPollingInterval();
-      }
+         if (schedule)
+         {
+            nxlog_debug_tag(DEBUG_TAG, 7, _T("DataCollector: polling DCI %d \"%s\""), dci->getId(), dci->getName());
 
+            if (dci->getOrigin() == DS_NATIVE_AGENT)
+            {
+               dci->startDataCollection();
+               ThreadPoolExecute(g_dataCollectorPool, LocalDataCollectionCallback, dci);
+            }
+            else if (dci->getOrigin() == DS_SNMP_AGENT)
+            {
+               dci->startDataCollection();
+               TCHAR key[64];
+               ThreadPoolExecuteSerialized(g_dataCollectorPool, dci->getSnmpTargetGuid().toString(key), SnmpDataCollectionCallback, dci);
+            }
+            else
+            {
+               DebugPrintf(7, _T("DataCollector: unsupported origin %d"), dci->getOrigin());
+            }
+
+            timeToPoll = dci->getPollingInterval();
+         }
+      }
       if (sleepTime > timeToPoll)
          sleepTime = timeToPoll;
    }
@@ -980,7 +1011,7 @@ static THREAD_RESULT THREAD_CALL DataCollectionScheduler(void *arg)
       DebugPrintf(7, _T("DataCollector: sleeping for %d seconds"), sleepTime);
    }
 
-   ThreadPoolDestroy(s_dataCollectorPool);
+   ThreadPoolDestroy(g_dataCollectorPool);
    DebugPrintf(1, _T("Data collection scheduler thread stopped"));
    return THREAD_OK;
 }
@@ -1016,6 +1047,22 @@ void ConfigureDataCollection(UINT64 serverId, NXCPMessage *msg)
    }
    DebugPrintf(4, _T("%d SNMP targets received from server ") UINT64X_FMT(_T("016")), count, serverId);
 
+   //Read proxy list if exists
+   HashMap<ProxyKey, DataCollectionProxy> *proxyList = new HashMap<ProxyKey, DataCollectionProxy>(true);
+   count = msg->getFieldAsInt32(VID_ZONE_PROXY_COUNT);
+   if (count > 0)
+   {
+      UINT32 fieldId = VID_ZONE_PROXY_BASE;
+      for(int i = 0; i < count; i++)
+      {
+         UINT32 proxyId = msg->getFieldAsInt32(fieldId);
+         proxyList->set(ProxyKey(serverId, proxyId),
+               new DataCollectionProxy(serverId, proxyId, msg->getFieldAsInetAddress(fieldId + 1)));
+         fieldId += 10;
+      }
+   }
+   DebugPrintf(4, _T("%d proxies received from server ") UINT64X_FMT(_T("016")), count, serverId);
+
    ObjectArray<DataCollectionItem> config(32, 32, true);
 
    count = msg->getFieldAsInt32(VID_NUM_ELEMENTS);
@@ -1044,6 +1091,7 @@ void ConfigureDataCollection(UINT64 serverId, NXCPMessage *msg)
             exist = true;
          }
       }
+
       if (!exist)
       {
          DataCollectionItem *newItem = new DataCollectionItem(item);
@@ -1054,6 +1102,20 @@ void ConfigureDataCollection(UINT64 serverId, NXCPMessage *msg)
             txnOpen = true;
          }
          newItem->saveToDatabase(true);
+      }
+
+      if (item->getBackupProxyId() != 0)
+      {
+         DataCollectionProxy *proxy = proxyList->get(ProxyKey(serverId, item->getBackupProxyId()));
+         if (proxy != NULL)
+         {
+            proxy->setInUse(true);
+         }
+         else
+         {
+            DebugPrintf(4, _T("No proxy found for ServerID=") UINT64X_FMT(_T("016")) _T(", ProxyID=%u, ItemID=%u"),
+                  serverId, item->getBackupProxyId(), item->getId());
+         }
       }
    }
 
@@ -1090,6 +1152,16 @@ void ConfigureDataCollection(UINT64 serverId, NXCPMessage *msg)
       DBCommit(hdb);
 
    s_itemLock.unlock();
+
+   if (msg->isFieldExist(VID_THIS_PROXY_ID))
+   {
+      // FIXME: delete configuration if not set?
+      BYTE sharedSecret[ZONE_PROXY_KEY_LENGTH];
+      msg->getFieldAsBinary(VID_SHARED_SECRET, sharedSecret, ZONE_PROXY_KEY_LENGTH);
+      ZoneConfiguration cfg(serverId, msg->getFieldAsUInt32(VID_THIS_PROXY_ID), msg->getFieldAsUInt32(VID_ZONE_UIN), sharedSecret);
+      UpdateProxyConfiguration(serverId, proxyList, &cfg);
+   }
+   delete proxyList;
 
    DebugPrintf(4, _T("Data collection for server ") UINT64X_FMT(_T("016")) _T(" reconfigured"), serverId);
 }
@@ -1148,6 +1220,8 @@ static void LoadState()
       }
       DBFreeResult(hResult);
    }
+
+   LoadProxyConfiguration();
 }
 
 /**
@@ -1215,7 +1289,7 @@ static void ClearStalledOfflineData(void *arg)
       }
    }
 
-   ThreadPoolScheduleRelative(s_dataCollectorPool, STALLED_DATA_CHECK_INTERVAL, ClearStalledOfflineData, NULL);
+   ThreadPoolScheduleRelative(g_dataCollectorPool, STALLED_DATA_CHECK_INTERVAL, ClearStalledOfflineData, NULL);
 }
 
 /**
@@ -1225,6 +1299,7 @@ static THREAD s_dataCollectionSchedulerThread = INVALID_THREAD_HANDLE;
 static THREAD s_dataSenderThread = INVALID_THREAD_HANDLE;
 static THREAD s_databaseWriterThread = INVALID_THREAD_HANDLE;
 static THREAD s_reconciliationThread = INVALID_THREAD_HANDLE;
+static THREAD s_proxyListennerThread = INVALID_THREAD_HANDLE;
 
 /**
  * Initialize and start local data collector
@@ -1262,12 +1337,14 @@ void StartLocalDataCollector()
 
    LoadState();
 
-   s_dataCollectorPool = ThreadPoolCreate(_T("DATACOLL"), 1, g_dcMaxCollectorPoolSize);
+   g_dataCollectorPool = ThreadPoolCreate(_T("DATACOLL"), 1, g_dcMaxCollectorPoolSize);
    s_dataCollectionSchedulerThread = ThreadCreateEx(DataCollectionScheduler, 0, NULL);
    s_dataSenderThread = ThreadCreateEx(DataSender, 0, NULL);
    s_databaseWriterThread = ThreadCreateEx(DatabaseWriter, 0, NULL);
    s_reconciliationThread = ThreadCreateEx(ReconciliationThread, 0, NULL);
-   ThreadPoolScheduleRelative(s_dataCollectorPool, STALLED_DATA_CHECK_INTERVAL, ClearStalledOfflineData, NULL);
+   s_proxyListennerThread = ThreadCreateEx(ProxyListenerThread, 0 ,NULL);
+   ThreadPoolScheduleRelative(g_dataCollectorPool, STALLED_DATA_CHECK_INTERVAL, ClearStalledOfflineData, NULL);
+   ThreadPoolScheduleRelative(g_dataCollectorPool, 0, ProxyConnectionChecker, NULL);
 
    s_dataCollectorStarted = true;
 }
@@ -1301,6 +1378,9 @@ void ShutdownLocalDataCollector()
 
    DebugPrintf(5, _T("Waiting for data reconciliation thread termination"));
    ThreadJoin(s_reconciliationThread);
+
+   DebugPrintf(5, _T("Waiting for proxy heartbeat listening thread"));
+   ThreadJoin(s_proxyListennerThread);
 }
 
 /**

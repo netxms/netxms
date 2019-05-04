@@ -8,7 +8,7 @@ import functools
 
 JAVA_DICTIONARY_PATTERN = re.compile(r".* ([a-zA-Z0-9_\\-]+);.*")
 JAVA_DICTIONARY_LINE_START = re.compile(r".*public static String .*")
-locales = ['ar', 'cs', 'de', 'es', 'fr', 'pt', 'ru', 'zh_CN']
+locales = ['ar', 'cs', 'de', 'es', 'fr', 'pt_BR', 'ru', 'zh_CN']
 
 def getValue(line, isJavaFile):
     if isJavaFile:

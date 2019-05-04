@@ -422,14 +422,24 @@ NXSL_Value *NXSL_ZoneClass::getAttr(NXSL_Object *object, const char *attr)
 
    NXSL_VM *vm = object->vm();
    Zone *zone = (Zone *)object->getData();
-   if (!strcmp(attr, "proxyNode"))
+   if (!strcmp(attr, "proxyNodes"))
    {
-      Node *node = (Node *)FindObjectById(zone->getProxyNodeId(), OBJECT_NODE);
-      value = (node != NULL) ? vm->createValue(new NXSL_Object(vm, &g_nxslNodeClass, node)) : vm->createValue();
+      NXSL_Array *array = new NXSL_Array(vm);
+      IntegerArray<UINT32> *proxies = zone->getAllProxyNodes();
+      for(int i = 0; i < proxies->size(); i++)
+      {
+         Node *node = static_cast<Node*>(FindObjectById(proxies->get(i), OBJECT_NODE));
+         array->append(node->createNXSLObject(vm));
+      }
+      value = vm->createValue(array);
    }
-   else if (!strcmp(attr, "proxyNodeId"))
+   else if (!strcmp(attr, "proxyNodeIds"))
    {
-      value = vm->createValue(zone->getProxyNodeId());
+      NXSL_Array *array = new NXSL_Array(vm);
+      IntegerArray<UINT32> *proxies = zone->getAllProxyNodes();
+      for(int i = 0; i < proxies->size(); i++)
+         array->append(vm->createValue(proxies->get(i)));
+      value = vm->createValue(array);
    }
    else if (!strcmp(attr, "uin"))
    {

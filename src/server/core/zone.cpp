@@ -22,6 +22,8 @@
 
 #include "nxcore.h"
 
+#define DEBUG_TAG_ZONE_PROXY  _T("zone.proxy")
+
 /**
  * Dump index to console
  */
@@ -35,7 +37,8 @@ Zone::Zone() : super()
    m_id = 0;
    m_uin = 0;
    _tcscpy(m_name, _T("Default"));
-   m_proxyNodeId = 0;
+   m_proxyNodes = new ObjectArray<ZoneProxy>(0, 16, true);
+   GenerateRandomBytes(m_proxyAuthKey, ZONE_PROXY_KEY_LENGTH);
 	m_idxNodeByAddr = new InetAddressIndex;
 	m_idxInterfaceByAddr = new InetAddressIndex;
 	m_idxSubnetByAddr = new InetAddressIndex;
@@ -49,7 +52,8 @@ Zone::Zone(UINT32 uin, const TCHAR *name) : super()
    m_id = 0;
    m_uin = uin;
    _tcslcpy(m_name, name, MAX_OBJECT_NAME);
-   m_proxyNodeId = 0;
+   m_proxyNodes = new ObjectArray<ZoneProxy>(0, 16, true);
+   GenerateRandomBytes(m_proxyAuthKey, ZONE_PROXY_KEY_LENGTH);
 	m_idxNodeByAddr = new InetAddressIndex;
 	m_idxInterfaceByAddr = new InetAddressIndex;
 	m_idxSubnetByAddr = new InetAddressIndex;
@@ -60,6 +64,7 @@ Zone::Zone(UINT32 uin, const TCHAR *name) : super()
  */
 Zone::~Zone()
 {
+   delete m_proxyNodes;
 	delete m_idxNodeByAddr;
 	delete m_idxInterfaceByAddr;
 	delete m_idxSubnetByAddr;
@@ -119,8 +124,10 @@ bool Zone::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, dwId);
          hResult = DBSelectPrepared(hStmt);
          if (hResult != NULL)
-         {
-            m_proxyNodeId = DBGetFieldULong(hResult, 0, 0);
+         { 
+            int count = DBGetNumRows(hResult);
+            for(int i = 0; i < count; i++)
+               m_proxyNodes->add(new ZoneProxy(DBGetFieldULong(hResult, i, 0)));
             DBFreeResult(hResult);
             success = true;
          }
@@ -176,9 +183,12 @@ bool Zone::saveToDatabase(DB_HANDLE hdb)
       DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO zone_proxies (object_id,proxy_node) VALUES (?,?)"));
       if (hStmt != NULL)
       {
-         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
-         DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_proxyNodeId);
-         success = DBExecute(hStmt);
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);         
+         for (int i = 0; i < m_proxyNodes->size() && success; i++)
+         {
+            DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_proxyNodes->get(i)->nodeId);
+            success = DBExecute(hStmt);
+         }
          DBFreeStatement(hStmt);
       }
       else
@@ -214,8 +224,19 @@ void Zone::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
 {
    super::fillMessageInternal(msg, userId);
    msg->setField(VID_ZONE_UIN, m_uin);
-   msg->setField(VID_ZONE_PROXY, m_proxyNodeId);
    m_snmpPorts.fillMessage(msg, VID_ZONE_SNMP_PORT_LIST_BASE, VID_ZONE_SNMP_PORT_COUNT);
+
+#if HAVE_ALLOCA
+   UINT32 *idList = static_cast<UINT32*>(alloca(m_proxyNodes->size() * sizeof(UINT32)));
+#else
+   UINT32 *idList = MemAllocArrayNoInit<UINT32>(m_proxyNodes->size());
+#endif
+   for (int i = 0; i < m_proxyNodes->size(); i++)
+      idList[i] = m_proxyNodes->get(i)->nodeId;
+   msg->setFieldFromInt32Array(VID_ZONE_PROXY_LIST, m_proxyNodes->size(), idList);
+#if !HAVE_ALLOCA
+   MemFree(idList);
+#endif
 }
 
 /**
@@ -223,8 +244,38 @@ void Zone::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
  */
 UINT32 Zone::modifyFromMessageInternal(NXCPMessage *request)
 {
-	if (request->isFieldExist(VID_ZONE_PROXY))
-		m_proxyNodeId = request->getFieldAsUInt32(VID_ZONE_PROXY);
+   if(request->isFieldExist(VID_ZONE_PROXY_LIST))
+   {
+      IntegerArray<UINT32> newProxyList;
+      request->getFieldAsInt32Array(VID_ZONE_PROXY_LIST, &newProxyList);
+      for (int i = 0; i < newProxyList.size(); i++)
+      {
+         int j;
+         for(j = 0; j < m_proxyNodes->size(); j++)
+         {
+            if (m_proxyNodes->get(j)->nodeId == newProxyList.get(i))
+               break;
+         }
+         if (j == m_proxyNodes->size())
+            m_proxyNodes->add(new ZoneProxy(newProxyList.get(i)));
+      }
+
+      Iterator<ZoneProxy> *it = m_proxyNodes->iterator();
+      while(it->hasNext())
+      {
+         ZoneProxy *proxy = it->next();
+
+         int j;
+         for(j = 0; j < newProxyList.size(); j++)
+         {
+            if (proxy->nodeId == newProxyList.get(j))
+               break;
+         }
+         if (j == newProxyList.size())
+            it->remove();
+      }
+      delete it;
+   }
 
 	if (request->isFieldExist(VID_ZONE_SNMP_PORT_LIST_BASE) && request->isFieldExist(VID_ZONE_SNMP_PORT_COUNT))
 	{
@@ -278,6 +329,209 @@ void Zone::removeFromIndex(Interface *iface)
 }
 
 /**
+ * Callback for processing zone configuration synchronization
+ */
+static EnumerationCallbackResult ForceConfigurationSync(const UINT32 *nodeId, void *arg)
+{
+   Node *node = static_cast<Node*>(FindObjectById(*nodeId, OBJECT_NODE));
+   if (node != NULL)
+      node->forceSyncDataCollectionConfig();
+   return _CONTINUE;
+}
+
+/**
+ * Get proxy node for given object. Always prefers proxy that is already assigned to the object
+ * and will update assigned proxy property if changed.
+ */
+UINT32 Zone::getProxyNodeId(NetObj *object, bool backup)
+{
+   ZoneProxy *proxy = NULL;
+   HashSet<UINT32> syncSet;
+
+   lockProperties();
+
+   if ((object != NULL) && (object->getAssignedZoneProxyId(backup) != 0))
+   {
+      for(int i = 0; i < m_proxyNodes->size(); i++)
+      {
+         ZoneProxy *p = m_proxyNodes->get(i);
+         if (p->nodeId == object->getAssignedZoneProxyId(backup))
+         {
+            if (p->isAvailable)
+            {
+               proxy = p;
+            }
+            else
+            {
+               p->assignments--;
+               syncSet.put(p->nodeId);
+
+               UINT32 otherProxy = object->getAssignedZoneProxyId(!backup);
+               if (otherProxy != 0)
+                  syncSet.put(otherProxy);
+            }
+            break;
+         }
+      }
+   }
+
+   if (proxy == NULL)
+   {
+      if (m_proxyNodes->size() > (backup ? 1 : 0))
+      {
+         if (!backup)
+            proxy = m_proxyNodes->get(0);
+         for(int i = 0; i < m_proxyNodes->size(); i++)
+         {
+            ZoneProxy *p = m_proxyNodes->get(i);
+            if (!p->isAvailable)
+               continue;
+
+            if ((object != NULL) && (p->nodeId == object->getAssignedZoneProxyId(!backup)))
+               continue;
+
+            if ((proxy == NULL) || (p->loadAverage < proxy->loadAverage) || !proxy->isAvailable)
+               proxy = p;
+         }
+      }
+      if (object != NULL)
+      {
+         if (proxy != NULL)
+         {
+            object->setAssignedZoneProxyId(proxy->nodeId, backup);
+            proxy->assignments++;
+            syncSet.put(proxy->nodeId);
+
+            UINT32 otherProxy = object->getAssignedZoneProxyId(!backup);
+            if (otherProxy != 0)
+               syncSet.put(otherProxy);
+         }
+         else
+         {
+            object->setAssignedZoneProxyId(0, backup);
+         }
+      }
+   }
+
+   UINT32 id = (proxy != NULL) ? proxy->nodeId : 0;
+   nxlog_debug_tag(DEBUG_TAG_ZONE_PROXY, 8, _T("Zone::getProxyNodeId: selected %s proxy [%u] for object %s [%u] in zone %s [uin=%u]"),
+            backup ? _T("backup") : _T("primary"),
+            id, (object != NULL) ? object->getName() : _T("(null)"), (object != NULL) ? object->getId() : 0,
+            m_name, m_uin);
+
+   unlockProperties();
+
+   syncSet.forEach(ForceConfigurationSync, NULL);
+   return id;
+}
+
+/**
+ * Check if given node is a proxy for this zone
+ */
+bool Zone::isProxyNode(UINT32 nodeId) const
+{
+   bool result = false;
+   lockProperties();
+   for(int i = 0; i < m_proxyNodes->size(); i++)
+      if (m_proxyNodes->get(i)->nodeId == nodeId)
+      {
+         result = true;
+         break;
+      }
+   unlockProperties();
+   return result;
+}
+
+/**
+ * Get all proxy nodes. Returned array must be destroyed by the caller.
+ */
+IntegerArray<UINT32> *Zone::getAllProxyNodes() const
+{
+   lockProperties();
+   IntegerArray<UINT32> *nodes = new IntegerArray<UINT32>(m_proxyNodes->size());
+   for(int i = 0; i < m_proxyNodes->size(); i++)
+      nodes->add(m_proxyNodes->get(i)->nodeId);
+   unlockProperties();
+   return nodes;
+}
+
+/**
+ * Fill configuration message for agent
+ */
+void Zone::fillAgentConfigurationMessage(NXCPMessage *msg) const
+{
+   lockProperties();
+   msg->setField(VID_ZONE_UIN, m_uin);
+   msg->setField(VID_SHARED_SECRET, m_proxyAuthKey, ZONE_PROXY_KEY_LENGTH);
+
+   UINT32 fieldId = VID_ZONE_PROXY_BASE, count = 0;
+   for(int i = 0; i < m_proxyNodes->size(); i++)
+   {
+      ZoneProxy *p = m_proxyNodes->get(i);
+      Node *node = static_cast<Node*>(FindObjectById(p->nodeId, OBJECT_NODE));
+      if (node != NULL)
+      {
+         msg->setField(fieldId++, p->nodeId);
+         msg->setField(fieldId++, node->getIpAddress());
+         fieldId += 8;
+         count++;
+      }
+   }
+   msg->setField(VID_ZONE_PROXY_COUNT, count);
+
+   unlockProperties();
+}
+
+/**
+ * Acquire connection to any available proxy node
+ */
+AgentConnectionEx *Zone::acquireConnectionToProxy(bool validate)
+{
+   UINT32 nodeId = getProxyNodeId(NULL);
+   if (nodeId == 0)
+   {
+      nxlog_debug_tag(DEBUG_TAG_ZONE_PROXY, 7, _T("Zone::acquireConnectionToProxy: no active proxy in zone %s [uin=%u]"), m_name, m_uin);
+      return NULL;
+   }
+
+   Node *node = static_cast<Node*>(FindObjectById(nodeId, OBJECT_NODE));
+   return (node != NULL) ? node->acquireProxyConnection(ZONE_PROXY, validate) : NULL;
+}
+
+/**
+ * Update proxy status. Passive mode should be used when actual communication with the proxy
+ * should be avoided (for example during server startup).
+ */
+void Zone::updateProxyStatus(Node *node, bool activeMode)
+{
+   lockProperties();
+   for(int i = 0; i < m_proxyNodes->size(); i++)
+   {
+      ZoneProxy *p = m_proxyNodes->get(i);
+      if (p->nodeId == node->getId())
+      {
+         bool isAvailable = node->isNativeAgent() &&
+                  ((node->getState() & NSF_AGENT_UNREACHABLE) == 0) &&
+                  ((node->getState() & DCSF_UNREACHABLE) == 0) &&
+                  (node->getStatus() != STATUS_UNMANAGED) &&
+                  ((node->getFlags() & NF_DISABLE_NXCP) == 0);
+         if (isAvailable != p->isAvailable)
+         {
+            nxlog_debug_tag(DEBUG_TAG_ZONE_PROXY, 4, _T("Zone %s [uin=%u] proxy %s [%u] availability changed to %s"),
+                     m_name, m_uin, node->getName(), node->getId(), isAvailable ? _T("YES") : _T("NO"));
+            p->isAvailable = isAvailable;
+         }
+         if (isAvailable && activeMode)
+         {
+            p->loadAverage = node->getMetricFromAgentAsDouble(_T("System.CPU.LoadAvg15"), p->loadAverage);
+         }
+         break;
+      }
+   }
+   unlockProperties();
+}
+
+/**
  * Create NXSL object for this object
  */
 NXSL_Value *Zone::createNXSLObject(NXSL_VM *vm)
@@ -288,7 +542,7 @@ NXSL_Value *Zone::createNXSLObject(NXSL_VM *vm)
 /**
  * Dump interface index to console
  */
-void Zone::dumpInterfaceIndex(CONSOLE_CTX console)
+void Zone::dumpInterfaceIndex(ServerConsole *console)
 {
    DumpIndex(console, m_idxInterfaceByAddr);
 }
@@ -296,7 +550,7 @@ void Zone::dumpInterfaceIndex(CONSOLE_CTX console)
 /**
  * Dump node index to console
  */
-void Zone::dumpNodeIndex(CONSOLE_CTX console)
+void Zone::dumpNodeIndex(ServerConsole *console)
 {
    DumpIndex(console, m_idxNodeByAddr);
 }
@@ -304,9 +558,32 @@ void Zone::dumpNodeIndex(CONSOLE_CTX console)
 /**
  * Dump subnet index to console
  */
-void Zone::dumpSubnetIndex(CONSOLE_CTX console)
+void Zone::dumpSubnetIndex(ServerConsole *console)
 {
    DumpIndex(console, m_idxSubnetByAddr);
+}
+
+/**
+ * Dump internal state to console
+ */
+void Zone::dumpState(ServerConsole *console)
+{
+   lockProperties();
+   if (!m_proxyNodes->isEmpty())
+   {
+      console->print(_T("   Proxies:\n"));
+      for(int i = 0; i < m_proxyNodes->size(); i++)
+      {
+         ZoneProxy *p = m_proxyNodes->get(i);
+         console->printf(_T("      [\x1b[33;1m%7u\x1b[0m] assignments=%u available=\x1b[%s\x1b[0m load=%f\n"), p->nodeId, p->assignments,
+                  p->isAvailable ? _T("32;1myes") : _T("31;1mno"), p->loadAverage);
+      }
+   }
+   else
+   {
+      console->print(_T("   No proxy nodes defined\n"));
+   }
+   unlockProperties();
 }
 
 /**
@@ -316,6 +593,6 @@ json_t *Zone::toJson()
 {
    json_t *root = super::toJson();
    json_object_set_new(root, "uin", json_integer(m_uin));
-   json_object_set_new(root, "proxyNodeId", json_integer(m_proxyNodeId));
+   json_object_set_new(root, "proxyNodeId", json_object_array(m_proxyNodes));
    return root;
 }

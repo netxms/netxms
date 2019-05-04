@@ -343,7 +343,9 @@ void Chassis::collectProxyInfo(ProxyInfo *info)
       return;
    }
 
-   bool snmpProxy = (controller->getEffectiveSnmpProxy() == info->proxyId);
+   UINT32 primarySnmpProxy = controller->getEffectiveSnmpProxy(false);
+   bool snmpProxy = (primarySnmpProxy == info->proxyId);
+   bool backupSnmpProxy = (controller->getEffectiveSnmpProxy(true) == info->proxyId);
    bool isTarget = false;
 
    lockDciAccess(false);
@@ -353,11 +355,11 @@ void Chassis::collectProxyInfo(ProxyInfo *info)
       if (dco->getStatus() == ITEM_STATUS_DISABLED)
          continue;
 
-      if (((snmpProxy && (dco->getDataSource() == DS_SNMP_AGENT) && (dco->getSourceNode() == 0)) ||
+      if ((((snmpProxy || backupSnmpProxy) && (dco->getDataSource() == DS_SNMP_AGENT) && (dco->getSourceNode() == 0)) ||
            ((dco->getDataSource() == DS_NATIVE_AGENT) && (dco->getSourceNode() == info->proxyId))) &&
           dco->hasValue() && (dco->getAgentCacheMode() == AGENT_CACHE_ON))
       {
-         addProxyDataCollectionElement(info, dco);
+         addProxyDataCollectionElement(info, dco, backupSnmpProxy && (dco->getDataSource() == DS_SNMP_AGENT) ? primarySnmpProxy : 0);
          if (dco->getDataSource() == DS_SNMP_AGENT)
             isTarget = true;
       }
