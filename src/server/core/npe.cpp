@@ -192,6 +192,15 @@ void RegisterPredictionEngines()
 }
 
 /**
+ * Shutdown prediction engines
+ */
+void ShutdownPredictionEngines()
+{
+   ThreadPoolDestroy(g_npeThreadPool);
+   s_engines.clear();
+}
+
+/**
  * Callback for ShowPredictionEngines
  */
 static EnumerationCallbackResult ShowEngineDetails(const TCHAR *key, const void *value, void *data)

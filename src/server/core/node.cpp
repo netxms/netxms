@@ -2657,6 +2657,7 @@ bool Node::updateHardwareComponents(PollerInfo *poller, UINT32 requestId)
    if (readCount == 0)
    {
       sendPollerMsg(requestId, POLLER_WARNING _T("Cannot read hardware component information\r\n"));
+      delete components;
       return false;
    }
    sendPollerMsg(requestId, POLLER_INFO _T("Received information on %d hardware components\r\n"), components->size());

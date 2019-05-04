@@ -603,7 +603,7 @@ static THREAD_RESULT THREAD_CALL ActiveDiscoveryPoller(void *arg)
 }
 
 /**
- * Callback for queueing objects for polling
+ * Callback for queuing objects for polling
  */
 static void QueueForPolling(NetObj *object, void *data)
 {

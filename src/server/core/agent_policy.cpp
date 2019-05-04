@@ -35,11 +35,13 @@ GenericAgentPolicy::GenericAgentPolicy(uuid guid, UINT32 ownerId)
    m_version = 1;
 }
 
-
+/**
+ * Copy constructor
+ */
 GenericAgentPolicy::GenericAgentPolicy(GenericAgentPolicy *policy)
 {
-   nx_strncpy(m_name, policy->m_name, MAX_OBJECT_NAME);
-   nx_strncpy(m_policyType, policy->m_policyType, MAX_OBJECT_NAME);
+   _tcslcpy(m_name, policy->m_name, MAX_OBJECT_NAME);
+   _tcslcpy(m_policyType, policy->m_policyType, MAX_OBJECT_NAME);
    m_guid = policy->m_guid;
    m_ownerId = policy->m_ownerId;
    m_fileContent = MemCopyString(policy->m_fileContent);
@@ -51,8 +53,8 @@ GenericAgentPolicy::GenericAgentPolicy(GenericAgentPolicy *policy)
  */
 GenericAgentPolicy::GenericAgentPolicy(const TCHAR *name, const TCHAR *type, UINT32 ownerId)
 {
-	nx_strncpy(m_name, name, MAX_OBJECT_NAME);
-   nx_strncpy(m_policyType, type, MAX_OBJECT_NAME);
+   _tcslcpy(m_name, name, MAX_OBJECT_NAME);
+   _tcslcpy(m_policyType, type, MAX_OBJECT_NAME);
    m_guid = uuid::generate();
    m_ownerId = ownerId;
    m_fileContent = NULL;
@@ -72,26 +74,23 @@ GenericAgentPolicy::~GenericAgentPolicy()
  */
 bool GenericAgentPolicy::saveToDatabase(DB_HANDLE hdb)
 {
-   bool success = false;
    DB_STATEMENT hStmt;
    if (!IsDatabaseRecordExist(hdb, _T("ap_common"), _T("guid"), m_guid)) //Policy can be only created. Policy type can't be changed.
       hStmt = DBPrepare(hdb, _T("INSERT INTO ap_common (policy_name,owner_id,policy_type,file_content,version,guid) VALUES (?,?,?,?,?,?)"));
    else
       hStmt = DBPrepare(hdb, _T("UPDATE ap_common SET policy_name=?,owner_id=?,policy_type=?,file_content=?,version=? WHERE guid=?"));
 
-   if(hStmt != NULL)
-   {
-      DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_name, DB_BIND_STATIC);
-      DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_ownerId);
-      DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_policyType, DB_BIND_STATIC);
-      DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, CHECK_NULL_EX(m_fileContent), DB_BIND_STATIC);
-      DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, m_version);
-      DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, m_guid);
-      success = DBExecute(hStmt);
-      DBFreeStatement(hStmt);
-   }
-   else
-      success = false;
+   if (hStmt == NULL)
+      return false;
+
+   DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_name, DB_BIND_STATIC);
+   DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_ownerId);
+   DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_policyType, DB_BIND_STATIC);
+   DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, m_fileContent, DB_BIND_STATIC);
+   DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, m_version);
+   DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, m_guid);
+   bool success = DBExecute(hStmt);
+   DBFreeStatement(hStmt);
 
    return success;
 }
@@ -111,23 +110,26 @@ bool GenericAgentPolicy::deleteFromDatabase(DB_HANDLE hdb)
  */
 bool GenericAgentPolicy::loadFromDatabase(DB_HANDLE hdb)
 {
-   TCHAR query[256];
    bool success = false;
-   // Load related nodes list
+
+   TCHAR query[256];
    _sntprintf(query, 256, _T("SELECT policy_name,owner_id,policy_type,file_content,version FROM ap_common WHERE guid='%s'"), (const TCHAR *)m_guid.toString());
    DB_RESULT hResult = DBSelect(hdb, query);
-   if (hResult != NULL && DBGetNumRows(hResult) > 0)
+   if (hResult != NULL)
    {
-      DBGetField(hResult, 0, 0, m_name, MAX_DB_STRING);
-      m_ownerId = DBGetFieldLong(hResult, 0, 1);
-      DBGetField(hResult, 0, 2, m_policyType, 32);
-      m_fileContent = DBGetField(hResult, 0, 3, NULL, 0);
-      m_version = DBGetFieldLong(hResult, 0, 4);
+      if (DBGetNumRows(hResult) > 0)
+      {
+         DBGetField(hResult, 0, 0, m_name, MAX_DB_STRING);
+         m_ownerId = DBGetFieldLong(hResult, 0, 1);
+         DBGetField(hResult, 0, 2, m_policyType, 32);
+         m_fileContent = DBGetField(hResult, 0, 3, NULL, 0);
+         m_version = DBGetFieldLong(hResult, 0, 4);
+         success = true;
+      }
       DBFreeResult(hResult);
-      success = true;
    }
 
-	return success;
+   return success;
 }
 
 /**
@@ -136,9 +138,9 @@ bool GenericAgentPolicy::loadFromDatabase(DB_HANDLE hdb)
 void GenericAgentPolicy::fillMessage(NXCPMessage *msg, UINT32 baseId)
 {
    msg->setField(baseId, m_guid);
-   msg->setField(baseId+1, m_policyType);
-   msg->setField(baseId+2, m_name);
-   msg->setField(baseId+3, CHECK_NULL_EX(m_fileContent));
+   msg->setField(baseId + 1, m_policyType);
+   msg->setField(baseId + 2, m_name);
+   msg->setField(baseId + 3, CHECK_NULL_EX(m_fileContent));
 }
 
 /**
@@ -151,7 +153,6 @@ void GenericAgentPolicy::fillUpdateMessage(NXCPMessage *msg)
    msg->setField(VID_POLICY_TYPE, m_policyType);
    msg->setField(VID_CONFIG_FILE_DATA, CHECK_NULL_EX(m_fileContent));
 }
-
 
 /**
  * Modify policy from message
@@ -180,12 +181,12 @@ bool GenericAgentPolicy::createDeploymentMessage(NXCPMessage *msg, bool supportN
 #ifdef UNICODE
    char *fd = MBStringFromWideStringSysLocale(m_fileContent);
    msg->setField(VID_CONFIG_FILE_DATA, (BYTE *)fd, (UINT32)strlen(fd));
-   free(fd);
+   MemFree(fd);
 #else
    msg->setField(VID_CONFIG_FILE_DATA, (BYTE *)m_fileContent, (UINT32)strlen(m_fileContent));
 #endif
 
-   if(supportNewTypeFormat)
+   if (supportNewTypeFormat)
    {
       msg->setField(VID_POLICY_TYPE, m_policyType);
    }
@@ -203,7 +204,7 @@ bool GenericAgentPolicy::createDeploymentMessage(NXCPMessage *msg, bool supportN
    msg->setField(VID_GUID, m_guid);
    msg->setField(VID_VERSION, m_version);
 
-	return true;
+   return true;
 }
 
 /**
@@ -219,15 +220,21 @@ json_t *GenericAgentPolicy::toJson()
    return root;
 }
 
+/**
+ * Update policy from imported configuration
+ */
 void GenericAgentPolicy::updateFromImport(ConfigEntry *config)
 {
-   nx_strncpy(m_name, config->getSubEntryValue(_T("name"), 0, _T("unnamed")), MAX_ITEM_NAME);
-   nx_strncpy(m_policyType, config->getSubEntryValue(_T("policyType"), 0, _T("none")), MAX_DB_STRING);
-   const TCHAR *fileContent=config->getSubEntryValue(_T("fileContent"), 0, _T(""));
+   _tcslcpy(m_name, config->getSubEntryValue(_T("name"), 0, _T("unnamed")), MAX_ITEM_NAME);
+   _tcslcpy(m_policyType, config->getSubEntryValue(_T("policyType"), 0, _T("none")), MAX_DB_STRING);
+   const TCHAR *fileContent = config->getSubEntryValue(_T("fileContent"), 0, _T(""));
    MemFree(m_fileContent);
    m_fileContent = MemCopyString(fileContent);
 }
 
+/**
+ * Create export record
+ */
 void GenericAgentPolicy::createExportRecord(String &str)
 {
 

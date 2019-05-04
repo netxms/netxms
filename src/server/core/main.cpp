@@ -82,6 +82,7 @@ void LoadPerfDataStorageDrivers();
 void ShutdownPerfDataStorageDrivers();
 void ImportLocalConfiguration(bool overwrite);
 void RegisterPredictionEngines();
+void ShutdownPredictionEngines();
 void ExecuteStartupScripts();
 void CloseAgentTunnels();
 void StopDataCollection();
@@ -1165,6 +1166,7 @@ void NXCORE_EXPORTABLE Shutdown()
    // Stop DCI cache loading thread
    g_dciCacheLoaderQueue.setShutdownMode();
 
+	ShutdownPredictionEngines();
    StopObjectMaintenanceThreads();
    StopDataCollection();
 
