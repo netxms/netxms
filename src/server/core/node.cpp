@@ -2642,8 +2642,6 @@ static int ReadHardwareInformation(Node *node, ObjectArray<HardwareComponent> *c
  */
 bool Node::updateHardwareComponents(PollerInfo *poller, UINT32 requestId)
 {
-   static const TCHAR *eventParamNames[] = { _T("type"), _T("serial") };
-
    poller->setStatus(_T("hardware check"));
    sendPollerMsg(requestId, _T("Reading list of installed hardware components\r\n"));
 
@@ -2662,6 +2660,12 @@ bool Node::updateHardwareComponents(PollerInfo *poller, UINT32 requestId)
    }
    sendPollerMsg(requestId, POLLER_INFO _T("Received information on %d hardware components\r\n"), components->size());
 
+   static const TCHAR *eventParamNames[] =
+            { _T("category"), _T("type"), _T("vendor"), _T("model"),
+              _T("location"), _T("partNumber"), _T("serialNumber"),
+              _T("capacity"), _T("description") };
+   static const TCHAR *categoryNames[] = { _T("Other"), _T("Baseboard"), _T("Processor"), _T("Memory device"), _T("Storage device"), _T("Battery") };
+
    lockProperties();
    if (m_hardwareComponents != NULL)
    {
@@ -2672,16 +2676,25 @@ bool Node::updateHardwareComponents(PollerInfo *poller, UINT32 requestId)
          switch(c->getChangeCode())
          {
             case CHANGE_NONE:
+            case CHANGE_UPDATED: // should not be set for hardware component
                break;
             case CHANGE_ADDED:
-               nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): new hardware component of type: %s, serial: %s added"), m_name, c->getType(), c->getSerialNumber());
-               sendPollerMsg(requestId, _T("   New hardware component, type: %s, serial: %s\r\n"), c->getType(), c->getSerialNumber());
-               PostEventWithNames(EVENT_HARDWARE_ADDED, m_id, "ss", eventParamNames, c->getType(), c->getSerialNumber());
+               nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): new hardware component \"%s %s (%s)\" serial number %s added"),
+                        m_name, categoryNames[c->getCategory()], c->getModel(), c->getType(), c->getSerialNumber());
+               sendPollerMsg(requestId, _T("   %s %s (%s) added, serial number %s\r\n"),
+                        categoryNames[c->getCategory()], c->getModel(), c->getType(), c->getSerialNumber());
+               PostEventWithNames(EVENT_HARDWARE_COMPONENT_ADDED, m_id, "sssssssDs", eventParamNames, categoryNames[c->getCategory()],
+                        c->getType(), c->getVendor(), c->getModel(), c->getLocation(), c->getPartNumber(),
+                        c->getSerialNumber(), c->getCapacity(), c->getDescription());
                break;
             case CHANGE_REMOVED:
-               nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): hardware of type: %s, serial: %s removed"), m_name, c->getType(), c->getSerialNumber());
-               sendPollerMsg(requestId, _T("   Hardware component, type: %s, serial: %s removed\r\n"), c->getType(), c->getSerialNumber());
-               PostEventWithNames(EVENT_HARDWARE_ADDED, m_id, "ss", eventParamNames, c->getType(), c->getSerialNumber());
+               nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): hardware component \"%s %s (%s)\" serial number %s removed"),
+                        m_name, categoryNames[c->getCategory()], c->getModel(), c->getType(), c->getSerialNumber());
+               sendPollerMsg(requestId, _T("   %s %s (%s) removed, serial number %s\r\n"),
+                        categoryNames[c->getCategory()], c->getModel(), c->getType(), c->getSerialNumber());
+               PostEventWithNames(EVENT_HARDWARE_COMPONENT_REMOVED, m_id, "sssssssDs", eventParamNames, categoryNames[c->getCategory()],
+                        c->getType(), c->getVendor(), c->getModel(), c->getLocation(), c->getPartNumber(),
+                        c->getSerialNumber(), c->getCapacity(), c->getDescription());
                break;
          }
       }

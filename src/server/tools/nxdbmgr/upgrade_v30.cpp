@@ -23,6 +23,46 @@
 #include "nxdbmgr.h"
 #include <nxevent.h>
 
+/**
+ * Upgrade from 30.71 to 30.72
+ */
+static bool H_UpgradeFromV71()
+{
+   CHK_EXEC(CreateEventTemplate(EVENT_HARDWARE_COMPONENT_ADDED, _T("SYS_HARDWARE_COMPONENT_ADDED"),
+            SEVERITY_NORMAL, EF_LOG, _T("3677d317-d5fc-4ba7-83a9-890db4aa7112"),
+            _T("%1 %4 (%2) added"),
+            _T("Generated when new hardware component is found.\r\n")
+            _T("Parameters:\r\n")
+            _T("   1) Category\r\n")
+            _T("   2) Type\r\n")
+            _T("   3) Vendor\r\n")
+            _T("   4) Model\r\n")
+            _T("   5) Location\r\n")
+            _T("   6) Part number\r\n")
+            _T("   7) Serial number\r\n")
+            _T("   8) Capacity\r\n")
+            _T("   9) Description")
+            ));
+
+   CHK_EXEC(CreateEventTemplate(EVENT_HARDWARE_COMPONENT_REMOVED, _T("SYS_HARDWARE_COMPONENT_REMOVED"),
+            SEVERITY_NORMAL, EF_LOG, _T("72904936-1d42-40c4-810c-e226ae44d7f1"),
+            _T("%1 %4 (%2) removed"),
+            _T("Generated when hardware component removal is detecetd.\r\n")
+            _T("Parameters:\r\n")
+            _T("   1) Category\r\n")
+            _T("   2) Type\r\n")
+            _T("   3) Vendor\r\n")
+            _T("   4) Model\r\n")
+            _T("   5) Location\r\n")
+            _T("   6) Part number\r\n")
+            _T("   7) Serial number\r\n")
+            _T("   8) Capacity\r\n")
+            _T("   9) Description")
+            ));
+
+   CHK_EXEC(SetMinorSchemaVersion(72));
+   return true;
+}
 
 /**
  * Upgrade from 30.70 to 30.71 (changes also included into 22.56)
@@ -2428,6 +2468,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 71, 30, 72, H_UpgradeFromV71 },
    { 70, 30, 71, H_UpgradeFromV70 },
    { 69, 30, 70, H_UpgradeFromV69 },
    { 68, 30, 69, H_UpgradeFromV68 },

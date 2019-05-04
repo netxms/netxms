@@ -1170,6 +1170,41 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Generated when server initialization is completed.'
 	);
 
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
+		EVENT_HARDWARE_COMPONENT_ADDED, 'SYS_HARDWARE_COMPONENT_ADDED', '3677d317-d5fc-4ba7-83a9-890db4aa7112',
+		EVENT_SEVERITY_NORMAL, 1,
+		'%1 %4 (%2) added',
+		'Generated when new hardware component is found.' CONCAT CRLF CONCAT
+		'Parameters:' CONCAT CRLF CONCAT
+		'   1) Category' CONCAT CRLF CONCAT
+		'   2) Type' CONCAT CRLF CONCAT
+		'   3) Vendor' CONCAT CRLF CONCAT
+		'   4) Model' CONCAT CRLF CONCAT
+		'   5) Location' CONCAT CRLF CONCAT
+		'   6) Part number' CONCAT CRLF CONCAT
+		'   7) Serial number' CONCAT CRLF CONCAT
+		'   8) Capacity' CONCAT CRLF CONCAT
+		'   9) Description'
+	);
+
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
+		EVENT_HARDWARE_COMPONENT_REMOVED, 'SYS_HARDWARE_COMPONENT_REMOVED', '72904936-1d42-40c4-810c-e226ae44d7f1',
+		EVENT_SEVERITY_NORMAL, 1,
+		'%1 %4 (%2) removed',
+		'Generated when hardware component removal is detecetd.' CONCAT CRLF CONCAT
+		'Parameters:' CONCAT CRLF CONCAT
+		'   1) Category' CONCAT CRLF CONCAT
+		'   2) Type' CONCAT CRLF CONCAT
+		'   3) Vendor' CONCAT CRLF CONCAT
+		'   4) Model' CONCAT CRLF CONCAT
+		'   5) Location' CONCAT CRLF CONCAT
+		'   6) Part number' CONCAT CRLF CONCAT
+		'   7) Serial number' CONCAT CRLF CONCAT
+		'   8) Capacity' CONCAT CRLF CONCAT
+		'   9) Description'
+	);
 
 /*
 ** SNMP traps
