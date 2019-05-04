@@ -664,22 +664,26 @@ static void TestObjectArray()
    array->add(new String(_T("value 2")));
    array->add(new String(_T("value 3")));
    array->add(new String(_T("value 4")));
-   AssertEquals(array->size(), 4);
-   AssertNull(array->get(4));
+   array->add(new String(_T("value 5")));
+   AssertEquals(array->size(), 5);
+   AssertNull(array->get(5));
    AssertNotNull(array->get(1));
    AssertTrue(!_tcscmp(array->get(1)->getBuffer(), _T("value 2")));
    EndTest();
 
    StartTest(_T("ObjectArray: replace"));
    array->replace(0, new String(_T("replace")));
-   AssertEquals(array->size(), 4);
+   AssertEquals(array->size(), 5);
    AssertTrue(!_tcscmp(array->get(0)->getBuffer(), _T("replace")));
    EndTest();
 
    StartTest(_T("ObjectArray: remove"));
    array->remove(0);
-   AssertEquals(array->size(), 3);
+   AssertEquals(array->size(), 4);
    AssertTrue(!_tcscmp(array->get(0)->getBuffer(), _T("value 2")));
+   array->remove(3);
+   AssertEquals(array->size(), 3);
+   AssertTrue(!_tcscmp(array->get(2)->getBuffer(), _T("value 4")));
    EndTest();
 
    StartTest(_T("ObjectArray: iterator"));
@@ -694,6 +698,23 @@ static void TestObjectArray()
    s = it->next();
    AssertNull(s);
    delete it;
+   EndTest();
+
+   StartTest(_T("ObjectArray: remove with iterator"));
+   it = array->iterator();
+   AssertTrue(it->hasNext());
+   while(it->hasNext())
+   {
+      String *s = it->next();
+      if (!_tcscmp(s->getBuffer(), _T("value 4")))
+      {
+         it->remove();
+      }
+   }
+   delete it;
+   AssertEquals(array->size(), 2);
+   AssertTrue(!_tcscmp(array->get(0)->getBuffer(), _T("value 2")));
+   AssertTrue(!_tcscmp(array->get(1)->getBuffer(), _T("value 3")));
    EndTest();
 
    delete array;

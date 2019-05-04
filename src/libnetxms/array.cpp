@@ -316,7 +316,7 @@ void *ArrayIterator::next()
  */
 void ArrayIterator::remove()
 {
-   if (((m_pos + 1) >= m_array->size()) || (m_pos < 0))
+   if ((m_pos >= m_array->size()) || (m_pos < 0))
       return;
 
    m_array->remove(m_pos);
