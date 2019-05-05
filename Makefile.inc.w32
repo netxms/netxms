@@ -113,7 +113,7 @@ CPPFLAGS = $(CPPFLAGS) /MD /O2 /Gd /EHs- /GR- \
 	/I "$(CURL_BASE)\$(ARCH)\include" \
 	/I "$(OPENSSL_BASE)\$(ARCH)\include" \
 	/I "$(LIBMOSQUITTO_BASE)\include" \
-	/D_MT /DUNICODE /D_USING_V110_SDK71_
+	/D_MT /DUNICODE /D_UNICODE /D_USING_V110_SDK71_
 
 # Common linker flags
 MANIFEST = $(TARGET).intermediate.manifest

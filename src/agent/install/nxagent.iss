@@ -6,6 +6,9 @@
 OutputBaseFilename=nxagent-2.2.13
 
 [Files]
+; Installer helpers
+Source: "..\..\..\Release\nxreload.exe"; DestDir: "{tmp}"; Flags: dontcopy signonce
+; Agent
 Source: "..\..\..\Release\libnetxms.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\Release\libnxagent.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\Release\libnxdb.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce

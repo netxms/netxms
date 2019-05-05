@@ -2548,6 +2548,8 @@ bool LIBNETXMS_EXPORTABLE SetLastModificationTime(TCHAR *fileName, time_t lastMo
 BOOL LIBNETXMS_EXPORTABLE CopyFileOrDirectory(const TCHAR *oldName, const TCHAR *newName);
 BOOL LIBNETXMS_EXPORTABLE MoveFileOrDirectory(const TCHAR *oldName, const TCHAR *newName);
 
+bool LIBNETXMS_EXPORTABLE VerifyFileSignature(const TCHAR *file);
+
 bool LIBNETXMS_EXPORTABLE MatchStringA(const char *pattern, const char *str, bool matchCase);
 bool LIBNETXMS_EXPORTABLE MatchStringW(const WCHAR *pattern, const WCHAR *str, bool matchCase);
 #ifdef UNICODE

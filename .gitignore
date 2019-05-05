@@ -42,6 +42,8 @@ target
 .idea
 .vs
 
+/build/netxms-build-tag.iss
+/build/netxms-build-tag.h
 /netxms-build-tag.h
 /build/netxms-build-tag.h
 /include/netxms-build-tag.h

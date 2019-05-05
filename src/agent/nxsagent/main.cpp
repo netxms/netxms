@@ -49,6 +49,11 @@ static MUTEX s_socketLock = MutexCreate();
 static NXCP_BUFFER s_msgBuffer;
 
 /**
+ * "Hide console" flag
+ */
+static bool s_hideConsole = false;
+
+/**
  * Connect to master agent
  */
 static bool ConnectToMasterAgent()
@@ -90,7 +95,7 @@ static bool SendMsg(NXCPMessage *msg)
 
    NXCP_MESSAGE *rawMsg = msg->serialize();
    bool success = (SendEx(s_socket, rawMsg, ntohl(rawMsg->size), 0, s_socketLock) == ntohl(rawMsg->size));
-   free(rawMsg);
+   MemFree(rawMsg);
    return success;
 }
 
@@ -169,6 +174,53 @@ static void Login()
 }
 
 /**
+ * Shutdown session agent
+ */
+static void ShutdownAgent(bool restart)
+{
+   _tprintf(_T("Shutdown request with restart option %s\n"), restart ? _T("ON") : _T("OFF"));
+
+   if (restart)
+   {
+      TCHAR path[MAX_PATH];
+      GetNetXMSDirectory(nxDirBin, path);
+
+      TCHAR exe[MAX_PATH];
+      _tcscpy(exe, path);
+      _tcslcat(exe, _T("\\nxreload.exe"), MAX_PATH);
+      if (VerifyFileSignature(exe))
+      {
+         String command;
+         command.append(_T('"'));
+         command.append(exe);
+         command.append(_T("\" -- \""));
+         GetModuleFileName(NULL, path, MAX_PATH);
+         command.append(path);
+         command.append(_T('"'));
+         if (s_hideConsole)
+            command.append(_T(" -H"));
+
+         PROCESS_INFORMATION pi;
+         STARTUPINFO si;
+         memset(&si, 0, sizeof(STARTUPINFO));
+         si.cb = sizeof(STARTUPINFO);
+
+         _tprintf(_T("Starting reload helper:\n%s\n"), command.getBuffer());
+         if (CreateProcess(NULL, command.getBuffer(), NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
+         {
+            CloseHandle(pi.hThread);
+            CloseHandle(pi.hProcess);
+         }
+      }
+      else
+      {
+         _tprintf(_T("Cannot verify signature of reload helper %s"), exe);
+      }
+   }
+   ExitProcess(0);
+}
+
+/**
  * Process request from master agent
  */
 static void ProcessRequest(NXCPMessage *request)
@@ -185,6 +237,9 @@ static void ProcessRequest(NXCPMessage *request)
          break;
       case CMD_TAKE_SCREENSHOT:
          TakeScreenshot(&msg);
+         break;
+      case CMD_SHUTDOWN:
+         ShutdownAgent(request->getFieldAsBoolean(VID_RESTART));
          break;
       default:
          msg.setField(VID_RCC, ERR_UNKNOWN_COMMAND);
@@ -248,7 +303,7 @@ static void ProcessMessages()
          }
       }
    }
-   free(rawMsg);
+   MemFree(rawMsg);
 }
 
 #ifdef _WIN32
@@ -343,8 +398,6 @@ int main(int argc, char *argv[])
 {
    InitNetXMSProcess(true);
 
-   bool hideConsole = false;
-
    int ch;
    while((ch = getopt(argc, argv, "c:Hv")) != -1)
    {
@@ -353,7 +406,7 @@ int main(int argc, char *argv[])
          case 'c':   // config
             break;
          case 'H':   // hide console
-            hideConsole = true;
+            s_hideConsole = true;
             break;
 		   case 'v':   // version
             _tprintf(_T("NetXMS Session Agent Version ") NETXMS_VERSION_STRING _T(" Build ") NETXMS_VERSION_BUILD_STRING _T("\n"));
@@ -375,7 +428,7 @@ int main(int argc, char *argv[])
 
    ThreadCreate(EventHandler, 0, NULL);
 
-   if (hideConsole)
+   if (s_hideConsole)
    {
       HWND hWnd = GetConsoleHWND();
       if (hWnd != NULL)

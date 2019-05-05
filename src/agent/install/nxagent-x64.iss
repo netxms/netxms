@@ -8,6 +8,9 @@ ArchitecturesInstallIn64BitMode=x64
 ArchitecturesAllowed=x64
 
 [Files]
+; Installer helpers
+Source: "..\..\..\x64\release\nxreload.exe"; DestDir: "{tmp}"; Flags: dontcopy signonce
+; Agent
 Source: "..\..\..\x64\release\libnetxms.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\x64\release\libnxagent.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\x64\release\libnxdb.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
