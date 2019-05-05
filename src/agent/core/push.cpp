@@ -168,7 +168,6 @@ LONG H_PushValue(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommS
    if (!AgentGetParameterArg(cmd, 1, key, MAX_RUNTIME_PARAM_NAME))
       return SYSINFO_RC_UNSUPPORTED;
 
-   LONG rc;
    s_localCacheLock.lock();
    const PushDataEntry *v = s_localCache.get(key);
    if (v != NULL)

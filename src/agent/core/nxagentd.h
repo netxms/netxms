@@ -252,7 +252,7 @@ public:
 	void listTables(StringList *list);
 	void listActions(NXCPMessage *msg, UINT32 *baseId, UINT32 *count);
 	void listActions(StringList *list);
-   void shutdown();
+   void shutdown(bool restart);
    void restart();
 };
 
@@ -539,6 +539,7 @@ public:
    bool testConnection();
    void takeScreenshot(NXCPMessage *msg);
    void sendUserAgentConfig();
+   void shutdown(bool restart);
 };
 
 /**
@@ -678,7 +679,7 @@ void ListActionsFromExtSubagents(NXCPMessage *msg, UINT32 *baseId, UINT32 *count
 void ListActionsFromExtSubagents(StringList *list);
 bool SendMessageToMasterAgent(NXCPMessage *msg);
 bool SendRawMessageToMasterAgent(NXCP_MESSAGE *msg);
-void ShutdownExtSubagents();
+void ShutdownExtSubagents(bool restart);
 void RestartExtSubagents();
 void ExecuteAction(const TCHAR *cmd, const StringList *args);
 void ExecuteAction(NXCPMessage *request, NXCPMessage *response, AbstractCommSession *session);
@@ -703,6 +704,7 @@ bool SendControlMessage(NXCPMessage *msg);
 
 void StartSessionAgentConnector();
 SessionAgentConnector *AcquireSessionAgentConnector(const TCHAR *sessionName);
+void ShutdownSessionAgents(bool restart);
 
 UINT32 GenerateMessageId();
 

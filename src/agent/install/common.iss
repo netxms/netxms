@@ -20,6 +20,7 @@ Root: HKLM; Subkey: "SOFTWARE\Microsoft\Windows\CurrentVersion\Run"; ValueType: 
 Filename: "{app}\bin\nxagentd.exe"; Parameters: "-Z ""{app}\etc\nxagentd.conf"" {code:GetForceCreateConfigFlag} ""{code:GetMasterServer}"" ""{code:GetLogFile}"" ""{code:GetFileStore}"" ""{code:GetConfigIncludeDir}"" {code:GetSubagentList} {code:GetExtraConfigValues}"; WorkingDir: "{app}\bin"; StatusMsg: "Creating agent's config..."; Flags: runhidden
 Filename: "{app}\bin\nxagentd.exe"; Parameters: "-c ""{app}\etc\nxagentd.conf"" {code:GetCentralConfigOption} {code:GetCustomCmdLine} -I"; WorkingDir: "{app}\bin"; StatusMsg: "Installing service..."; Flags: runhidden
 Filename: "{app}\bin\nxagentd.exe"; Parameters: "-s"; WorkingDir: "{app}\bin"; StatusMsg: "Starting service..."; Flags: runhidden
+Filename: "{tmp}\nxreload.exe"; Parameters: "-finish"; WorkingDir: "{tmp}"; StatusMsg: "Waiting for external processes..."; Flags: runhidden waituntilterminated
 
 [UninstallRun]
 Filename: "{app}\bin\nxagentd.exe"; Parameters: "-K"; StatusMsg: "Stopping external subagents..."; RunOnceId: "StopExternalAgents"; Flags: runhidden
@@ -67,7 +68,10 @@ Begin
   If FileExists(strExecName) Then
   Begin
     Log('Stopping agent service');
-    ExecAndLog(strExecName, '-K', ExpandConstant('{app}\bin'));
+    RegDeleteValue(HKEY_LOCAL_MACHINE, 'Software\NetXMS\Agent', 'ReloadFlag');
+    ExtractTemporaryFile('nxreload.exe');
+    FileCopy(ExpandConstant('{tmp}\nxreload.exe'), ExpandConstant('{app}\bin\nxreload.exe'), False);
+    ExecAndLog(strExecName, '-k', ExpandConstant('{app}\bin'));
     ExecAndLog(strExecName, '-S', ExpandConstant('{app}\bin'));
     ExecAndLog('taskkill.exe', '/IM nxagentd.exe /F', ExpandConstant('{app}\bin'));
     ExecAndLog('taskkill.exe', '/IM nxsagent.exe /F', ExpandConstant('{app}\bin'));
@@ -398,17 +402,5 @@ Procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
 Begin
   If CurUninstallStep = usPostUninstall Then Begin
      RemoveFirewallException(ExpandConstant('{app}')+'\bin\nxagentd.exe');
-  End;
-End;
-
-Procedure DeinitializeSetup();
-Var
-  strExecName : String;
-Begin
-  strExecName := ExpandConstant('{app}\bin\nxagentd.exe');
-  If FileExists(strExecName) Then
-  Begin
-    Log('Starting agent service');
-    ExecAndLog(strExecName, '-s', ExpandConstant('{app}\bin'));
   End;
 End;

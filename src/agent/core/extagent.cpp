@@ -172,11 +172,12 @@ void ExternalSubagent::connect(NamedPipe *pipe)
 }
 
 /**
- * Send shutdown command
+ * Send shutdown command with optional delayed restart
  */
-void ExternalSubagent::shutdown()
+void ExternalSubagent::shutdown(bool restart)
 {
 	NXCPMessage msg(CMD_SHUTDOWN, m_requestId++);
+   msg.setField(VID_RESTART, restart);
 	sendMessage(&msg);
 }
 
@@ -850,14 +851,14 @@ UINT32 ExecuteActionByExtSubagent(const TCHAR *name, const StringList *args, Abs
 /**
  * Shutdown all connected external subagents
  */
-void ShutdownExtSubagents()
+void ShutdownExtSubagents(bool restart)
 {
 	for(int i = 0; i < s_subagents.size(); i++)
 	{
 		if (s_subagents.get(i)->isConnected())
 		{
          nxlog_debug(1, _T("Sending SHUTDOWN command to external subagent %s"), s_subagents.get(i)->getName());
-         s_subagents.get(i)->shutdown();
+         s_subagents.get(i)->shutdown(restart);
 		}
 	}
 }

@@ -28,6 +28,11 @@
 LONG RestartAgent();
 
 /**
+ * Schedule delayed restart
+ */
+void ScheduleDelayedRestart();
+
+/**
  * Handler for CMD_GET_PARAMETER command
  */
 static void H_GetParameter(NXCPMessage *pRequest, NXCPMessage *pMsg)
@@ -182,6 +187,8 @@ THREAD_RESULT THREAD_CALL MasterAgentListener(void *arg)
 						GetActionList(&response);
 						break;
                case CMD_SHUTDOWN:
+                  if (msg->getFieldAsBoolean(VID_RESTART))
+                     ScheduleDelayedRestart();
                   Shutdown();
                   ThreadSleep(10);
                   exit(0);

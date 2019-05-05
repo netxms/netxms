@@ -40,7 +40,9 @@ static void ProcessControlRequest(HPIPE hPipe)
 		AgentWriteDebugLog(6, _T("ProcessControlRequest: received message %s"), NXCPMessageCodeName(msg->getCode(), buffer));
 		if (msg->getCode() == CMD_SHUTDOWN)
 		{
-         ShutdownExtSubagents();
+         bool restart = msg->getFieldAsBoolean(VID_RESTART);
+         ShutdownExtSubagents(restart);
+         ShutdownSessionAgents(restart);
 		}
 		delete msg;
 	}
@@ -56,18 +58,10 @@ static THREAD_RESULT THREAD_CALL ControlConnector(void *arg)
 {
 	SECURITY_ATTRIBUTES sa;
 	PSECURITY_DESCRIPTOR sd = NULL;
-	SID_IDENTIFIER_AUTHORITY sidAuthWorld = SECURITY_WORLD_SID_AUTHORITY;
 	EXPLICIT_ACCESS ea;
-	PSID sidEveryone = NULL;
+	PSID sidGroup = NULL;
 	ACL *acl = NULL;
 	TCHAR errorText[1024];
-
-	// Create a well-known SID for the Everyone group.
-	if(!AllocateAndInitializeSid(&sidAuthWorld, 1, SECURITY_WORLD_RID, 0, 0, 0, 0, 0, 0, 0, &sidEveryone))
-	{
-		AgentWriteDebugLog(2, _T("ControlConnector: AllocateAndInitializeSid failed (%s)"), GetSystemErrorText(GetLastError(), errorText, 1024));
-		goto cleanup;
-	}
 
 	// Initialize an EXPLICIT_ACCESS structure for an ACE.
 	// The ACE will allow either Everyone or given user to access pipe
@@ -75,14 +69,36 @@ static THREAD_RESULT THREAD_CALL ControlConnector(void *arg)
 	ea.grfAccessPermissions = (FILE_GENERIC_READ | FILE_GENERIC_WRITE) & ~FILE_CREATE_PIPE_INSTANCE;
 	ea.grfAccessMode = SET_ACCESS;
 	ea.grfInheritance = NO_INHERITANCE;
-	const TCHAR *user = g_config->getValue(_T("/%agent/ControlUser"), _T("*"));
-	if ((user[0] == 0) || !_tcscmp(user, _T("*")))
+	const TCHAR *user = g_config->getValue(_T("/%agent/ControlUser"), _T("!"));   // * for everyone, ! for Administrators group members
+	if ((user[0] == 0) || !_tcscmp(user, _T("!")))
 	{
-		ea.Trustee.TrusteeForm = TRUSTEE_IS_SID;
+      // Create a well-known SID for the Administrators group.
+      SID_IDENTIFIER_AUTHORITY sidAuthNT = SECURITY_NT_AUTHORITY;
+      if (!AllocateAndInitializeSid(&sidAuthNT, 2, SECURITY_BUILTIN_DOMAIN_RID, DOMAIN_ALIAS_RID_ADMINS, 0, 0, 0, 0, 0, 0, &sidGroup))
+      {
+         AgentWriteDebugLog(2, _T("ControlConnector: AllocateAndInitializeSid failed (%s)"), GetSystemErrorText(GetLastError(), errorText, 1024));
+         goto cleanup;
+      }
+
+      ea.Trustee.TrusteeForm = TRUSTEE_IS_SID;
 		ea.Trustee.TrusteeType = TRUSTEE_IS_WELL_KNOWN_GROUP;
-		ea.Trustee.ptstrName  = (LPTSTR)sidEveryone;
+		ea.Trustee.ptstrName  = (LPTSTR)sidGroup;
 	}
-	else
+   else if (!_tcscmp(user, _T("*")))
+   {
+      // Create a well-known SID for the Everyone group.
+      SID_IDENTIFIER_AUTHORITY sidAuthWorld = SECURITY_WORLD_SID_AUTHORITY;
+      if (!AllocateAndInitializeSid(&sidAuthWorld, 1, SECURITY_WORLD_RID, 0, 0, 0, 0, 0, 0, 0, &sidGroup))
+      {
+         AgentWriteDebugLog(2, _T("ControlConnector: AllocateAndInitializeSid failed (%s)"), GetSystemErrorText(GetLastError(), errorText, 1024));
+         goto cleanup;
+      }
+
+      ea.Trustee.TrusteeForm = TRUSTEE_IS_SID;
+      ea.Trustee.TrusteeType = TRUSTEE_IS_WELL_KNOWN_GROUP;
+      ea.Trustee.ptstrName = (LPTSTR)sidGroup;
+   }
+   else
 	{
 		ea.Trustee.TrusteeForm = TRUSTEE_IS_NAME;
 		ea.Trustee.TrusteeType = TRUSTEE_IS_USER;
@@ -157,8 +173,8 @@ cleanup:
 	if (acl != NULL)
 		LocalFree(acl);
 
-	if (sidEveryone != NULL)
-		FreeSid(sidEveryone);
+	if (sidGroup != NULL)
+		FreeSid(sidGroup);
 
 	AgentWriteDebugLog(2, _T("ControlConnector: listener thread stopped"));
 	return THREAD_OK;
@@ -226,7 +242,6 @@ cleanup:
 /**
  * Start control connector
  */
-
 void StartControlConnector()
 {
 	ThreadCreate(ControlConnector, 0, NULL);
