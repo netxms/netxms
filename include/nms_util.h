@@ -2143,6 +2143,8 @@ const TCHAR LIBNETXMS_EXPORTABLE *ExpandFileName(const TCHAR *name, TCHAR *buffe
 BOOL LIBNETXMS_EXPORTABLE CreateFolder(const TCHAR *directory);
 bool LIBNETXMS_EXPORTABLE SetLastModificationTime(TCHAR *fileName, time_t lastModDate);
 
+bool LIBNETXMS_EXPORTABLE VerifyFileSignature(const TCHAR *file);
+
 bool LIBNETXMS_EXPORTABLE MatchStringA(const char *pattern, const char *str, bool matchCase);
 bool LIBNETXMS_EXPORTABLE MatchStringW(const WCHAR *pattern, const WCHAR *str, bool matchCase);
 #ifdef UNICODE

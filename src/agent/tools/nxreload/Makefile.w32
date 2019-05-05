@@ -1,0 +1,9 @@
+TARGET = nxreload.exe
+TYPE = exe
+SOURCES = nxreload.cpp
+
+CPPFLAGS = /GS- /D_NO_CRT_STDIO_INLINE
+LDFLAGS = /NODEFAULTLIB
+LIBS = msvcrt_sys.lib psapi.lib
+	  
+include ..\..\..\..\Makefile.inc.w32

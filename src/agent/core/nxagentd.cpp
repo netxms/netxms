@@ -128,9 +128,9 @@ extern const TCHAR *g_szMessages[];
  * Valid options for getopt()
  */
 #if defined(_WIN32)
-#define VALID_OPTIONS   "c:CdD:e:EfG:hHiIKM:n:N:P:r:RsSUvW:X:Z:"
+#define VALID_OPTIONS   "c:CdD:e:EfG:hHiIkKM:n:N:P:r:RsSUvW:X:Z:"
 #else
-#define VALID_OPTIONS   "c:CdD:fg:G:hKM:p:P:r:u:vW:X:Z:"
+#define VALID_OPTIONS   "c:CdD:fg:G:hkKM:p:P:r:u:vW:X:Z:"
 #endif
 
 /**
@@ -154,7 +154,11 @@ extern const TCHAR *g_szMessages[];
  * Global variables
  */
 uuid g_agentId;
-UINT32 g_dwFlags = AF_ENABLE_ACTIONS | AF_ENABLE_AUTOLOAD | AF_WRITE_FULL_DUMP;
+#ifdef _WIN32
+UINT32 g_dwFlags = AF_ENABLE_ACTIONS | AF_ENABLE_AUTOLOAD | AF_WRITE_FULL_DUMP | AF_ENABLE_CONTROL_CONNECTOR;
+#else
+UINT32 g_dwFlags = AF_ENABLE_ACTIONS | AF_ENABLE_AUTOLOAD;
+#endif
 UINT32 g_failFlags = 0;
 TCHAR g_szLogFile[MAX_PATH] = AGENT_DEFAULT_LOG;
 TCHAR g_szSharedSecret[MAX_SECRET_LENGTH] = _T("admin");
@@ -487,6 +491,106 @@ static THREAD_RESULT THREAD_CALL ShutdownThread(void *pArg)
 #endif   /* _WIN32 */
 
 /**
+ * Build command line for agent restart
+ */
+static String BuildRestartCommandLine(bool withWaitPid)
+{
+   String command;
+   command.append(_T('"'));
+   command.append(s_executableName);
+   command.append(_T("\" -c \""));
+   command.append(g_szConfigFile);
+   command.append(_T("\" -D "));
+   command.append(s_debugLevel);
+
+   if (g_szPlatformSuffix[0] != 0)
+   {
+      command.append(_T(" -P \""));
+      command.append(g_szPlatformSuffix);
+      command.append(_T('"'));
+   }
+
+   const TCHAR *configSection = g_config->getAlias(_T("agent"));
+   if ((configSection != NULL) && (*configSection != 0))
+   {
+      command.append(_T(" -G "));
+      command.append(configSection);
+   }
+
+   if (g_dwFlags & AF_DAEMON)
+      command.append(_T(" -d"));
+   if (g_dwFlags & AF_CENTRAL_CONFIG)
+   {
+      command.append(_T(" -M "));
+      command.append(g_szConfigServer);
+   }
+
+#ifdef _WIN32
+   if (g_dwFlags & AF_HIDE_WINDOW)
+      command.append(_T(" -H"));
+
+   command.append(_T(" -n \""));
+   command.append(g_windowsServiceName);
+   command.append(_T("\" -e \""));
+   command.append(g_windowsEventSourceName);
+   command.append(_T('"'));
+
+   if (withWaitPid)
+   {
+      command.append(_T(" -X "));
+      command.append((g_dwFlags & AF_DAEMON) ? 0 : static_cast<UINT32>(GetCurrentProcessId()));
+   }
+#else
+   if (withWaitPid)
+   {
+      command.append(_T(" -X "));
+      command.append(s_pid);
+   }
+#endif
+
+   return command;
+}
+
+/**
+ * Schedule delayed restart (intended only for use by Windows installer)
+ */
+void ScheduleDelayedRestart()
+{
+#ifdef _WIN32
+   TCHAR path[MAX_PATH];
+   GetNetXMSDirectory(nxDirBin, path);
+
+   TCHAR exe[MAX_PATH];
+   _tcscpy(exe, path);
+   _tcslcat(exe, _T("\\nxreload.exe"), MAX_PATH);
+   if (VerifyFileSignature(exe))
+   {
+      String command;
+      command.append(_T('"'));
+      command.append(exe);
+      command.append(_T("\" -- "));
+      command.append(BuildRestartCommandLine(false));
+
+      PROCESS_INFORMATION pi;
+      STARTUPINFO si;
+      memset(&si, 0, sizeof(STARTUPINFO));
+      si.cb = sizeof(STARTUPINFO);
+
+      nxlog_debug(1, _T("Starting reload helper:\n%s\n"), command.getBuffer());
+      if (CreateProcess(NULL, command.getBuffer(), NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
+      {
+         CloseHandle(pi.hThread);
+         CloseHandle(pi.hProcess);
+      }
+   }
+   else
+   {
+      nxlog_debug(1, _T("Cannot verify signature of reload helper %s"), exe);
+   }
+#endif
+}
+
+/**
  * Restart agent
  */
 LONG RestartAgent()
@@ -495,39 +599,9 @@ LONG RestartAgent()
 
 	RestartExtSubagents();
 
-   TCHAR platformSuffixOption[MAX_PSUFFIX_LENGTH + 16];
-	if (g_szPlatformSuffix[0] != 0)
-	{
-		_sntprintf(platformSuffixOption, MAX_PSUFFIX_LENGTH + 16, _T("-P \"%s\" "), g_szPlatformSuffix);
-	}
-	else
-	{
-	   platformSuffixOption[0] = 0;
-	}
-
-	const TCHAR *configSection = g_config->getAlias(_T("agent"));
-	TCHAR configSectionOption[256];
-	if ((configSection != NULL) && (*configSection != 0))
-	{
-	   _sntprintf(configSectionOption, 256, _T("-G %s "), configSection);
-	}
-	else
-	{
-	   configSectionOption[0] = 0;
-	}
-
-   TCHAR szCmdLine[4096];
+   String command = BuildRestartCommandLine(true);
 #ifdef _WIN32
-   _sntprintf(szCmdLine, 4096, _T("\"%s\" -c \"%s\" -n \"%s\" -e \"%s\" %s%s%s%s%s-D %d %s%s-X %u"), s_executableName,
-              g_szConfigFile, g_windowsServiceName, g_windowsEventSourceName,
-				  (g_dwFlags & AF_DAEMON) ? _T("-d ") : _T(""),
-              (g_dwFlags & AF_HIDE_WINDOW) ? _T("-H ") : _T(""),
-				  (g_dwFlags & AF_CENTRAL_CONFIG) ? _T("-M ") : _T(""),
-				  (g_dwFlags & AF_CENTRAL_CONFIG) ? g_szConfigServer : _T(""),
-				  (g_dwFlags & AF_CENTRAL_CONFIG) ? _T(" ") : _T(""),
-				  s_debugLevel, platformSuffixOption, configSectionOption,
-              (g_dwFlags & AF_DAEMON) ? 0 : GetCurrentProcessId());
-	DebugPrintf(1, _T("Restarting agent with command line '%s'"), szCmdLine);
+	nxlog_debug(1, _T("Restarting agent with command line '%s'"), command.getBuffer());
 
    DWORD dwResult;
    STARTUPINFO si;
@@ -538,11 +612,11 @@ LONG RestartAgent()
    si.cb = sizeof(STARTUPINFO);
 
    // Create new process
-   if (!CreateProcess(NULL, szCmdLine, NULL, NULL, FALSE,
+   if (!CreateProcess(NULL, command.getBuffer(), NULL, NULL, FALSE,
                       (g_dwFlags & AF_DAEMON) ? (CREATE_NO_WINDOW | DETACHED_PROCESS) : (CREATE_NEW_CONSOLE),
                       NULL, NULL, &si, &pi))
    {
-      nxlog_write(MSG_CREATE_PROCESS_FAILED, EVENTLOG_ERROR_TYPE, "se", szCmdLine, GetLastError());
+      nxlog_write(MSG_CREATE_PROCESS_FAILED, EVENTLOG_ERROR_TYPE, "se", command.getBuffer(), GetLastError());
       dwResult = ERR_EXEC_FAILED;
    }
    else
@@ -565,15 +639,8 @@ LONG RestartAgent()
    }
    return dwResult;
 #else
-   _sntprintf(szCmdLine, 4096, _T("\"%s\" -c \"%s\" %s%s%s%s-D %d %s%s-X %lu"), s_executableName,
-              g_szConfigFile, (g_dwFlags & AF_DAEMON) ? _T("-d ") : _T(""),
-				  (g_dwFlags & AF_CENTRAL_CONFIG) ? _T("-M ") : _T(""),
-				  (g_dwFlags & AF_CENTRAL_CONFIG) ? g_szConfigServer : _T(""),
-				  (g_dwFlags & AF_CENTRAL_CONFIG) ? _T(" ") : _T(""),
-				  (int)s_debugLevel, platformSuffixOption, configSectionOption,
-              (unsigned long)s_pid);
-	DebugPrintf(1, _T("Restarting agent with command line '%s'"), szCmdLine);
-   return ExecuteCommand(szCmdLine, NULL, NULL);
+	nxlog_debug(1, _T("Restarting agent with command line '%s'"), command.getBuffer());
+   return ExecuteCommand(command.getBuffer(), NULL, NULL);
 #endif
 }
 
@@ -1380,12 +1447,13 @@ static void InitConfig(const TCHAR *configSection)
 }
 
 /**
- * Initiate shutdown of connected external subagents
+ * Initiate shutdown of connected external subagents and session agents
  */
-static void InitiateExtSubagentShutdown()
+static void InitiateExternalProcessShutdown(bool restart)
 {
    NXCPMessage msg;
    msg.setCode(CMD_SHUTDOWN);
+   msg.setField(VID_RESTART, restart);
    if (SendControlMessage(&msg))
       _tprintf(_T("Control message sent successfully to master agent\n"));
    else
@@ -1484,6 +1552,7 @@ int main(int argc, char *argv[])
    UINT32 dwOldPID, dwMainPID;
 	char *eptr;
    TCHAR configSection[MAX_DB_STRING] = DEFAULT_CONFIG_SECTION;
+   bool restartExternalProcesses = false;
 #ifdef _WIN32
    TCHAR szModuleName[MAX_PATH];
    HKEY hKey;
@@ -1508,11 +1577,11 @@ int main(int argc, char *argv[])
 #else
    pszEnv = _tgetenv(_T("NXAGENTD_CONFIG"));
    if (pszEnv != NULL)
-      nx_strncpy(g_szConfigFile, pszEnv, MAX_PATH);
+      _tcslcpy(g_szConfigFile, pszEnv, MAX_PATH);
 
 	pszEnv = _tgetenv(_T("NXAGENTD_CONFIG_D"));
    if (pszEnv != NULL)
-      nx_strncpy(g_szConfigIncludeDir, pszEnv, MAX_PATH);
+      _tcslcpy(g_szConfigIncludeDir, pszEnv, MAX_PATH);
 #endif
 
    // Parse command line
@@ -1528,7 +1597,7 @@ int main(int argc, char *argv[])
 				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, g_szConfigFile, MAX_PATH);
 				g_szConfigFile[MAX_PATH - 1] = 0;
 #else
-            nx_strncpy(g_szConfigFile, optarg, MAX_PATH);
+            strlcpy(g_szConfigFile, optarg, MAX_PATH);
 #endif
             break;
          case 'C':   // Configuration check only
@@ -1570,7 +1639,11 @@ int main(int argc, char *argv[])
             g_dwFlags |= AF_HIDE_WINDOW;
             break;
 #endif
-         case 'K':   // Shutdown external sub-agents
+         case 'k':   // Delayed restart of external sub-agents and session agents
+            restartExternalProcesses = true;
+            iAction = ACTION_SHUTDOWN_EXT_AGENTS;
+            break;
+         case 'K':   // Shutdown external sub-agents and session agents
             iAction = ACTION_SHUTDOWN_EXT_AGENTS;
             break;
 #ifndef _WIN32
@@ -1579,7 +1652,7 @@ int main(int argc, char *argv[])
 				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, g_szPidFile, MAX_PATH);
 				g_szPidFile[MAX_PATH - 1] = 0;
 #else
-            nx_strncpy(g_szPidFile, optarg, MAX_PATH);
+            strlcpy(g_szPidFile, optarg, MAX_PATH);
 #endif
             break;
 #endif
@@ -1589,7 +1662,7 @@ int main(int argc, char *argv[])
 				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, g_szConfigServer, MAX_DB_STRING);
 				g_szConfigServer[MAX_DB_STRING - 1] = 0;
 #else
-            nx_strncpy(g_szConfigServer, optarg, MAX_DB_STRING);
+            strlcpy(g_szConfigServer, optarg, MAX_DB_STRING);
 #endif
             break;
          case 'r':
@@ -1598,7 +1671,7 @@ int main(int argc, char *argv[])
 				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, g_szRegistrar, MAX_DB_STRING);
 				g_szRegistrar[MAX_DB_STRING - 1] = 0;
 #else
-            nx_strncpy(g_szRegistrar, optarg, MAX_DB_STRING);
+            strlcpy(g_szRegistrar, optarg, MAX_DB_STRING);
 #endif
             break;
          case 'P':   // Platform suffix
@@ -1606,7 +1679,7 @@ int main(int argc, char *argv[])
 				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, g_szPlatformSuffix, MAX_PSUFFIX_LENGTH);
 				g_szPlatformSuffix[MAX_PSUFFIX_LENGTH - 1] = 0;
 #else
-            nx_strncpy(g_szPlatformSuffix, optarg, MAX_PSUFFIX_LENGTH);
+            strlcpy(g_szPlatformSuffix, optarg, MAX_PSUFFIX_LENGTH);
 #endif
             break;
 #ifndef _WIN32
@@ -1632,7 +1705,7 @@ int main(int argc, char *argv[])
 				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, g_szConfigFile, MAX_PATH);
 				g_szConfigFile[MAX_PATH - 1] = 0;
 #else
-            nx_strncpy(g_szConfigFile, optarg, MAX_PATH);
+            strlcpy(g_szConfigFile, optarg, MAX_PATH);
 #endif
             break;
 #ifdef _WIN32
@@ -1662,7 +1735,7 @@ int main(int argc, char *argv[])
 				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, g_windowsEventSourceName, MAX_PATH);
 				g_windowsEventSourceName[MAX_PATH - 1] = 0;
 #else
-            nx_strncpy(g_windowsEventSourceName, optarg, MAX_PATH);
+            strlcpy(g_windowsEventSourceName, optarg, MAX_PATH);
 #endif
             break;
          case 'n':   // Service name
@@ -1670,7 +1743,7 @@ int main(int argc, char *argv[])
 				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, g_windowsServiceName, MAX_PATH);
 				g_windowsServiceName[MAX_PATH - 1] = 0;
 #else
-            nx_strncpy(g_windowsServiceName, optarg, MAX_PATH);
+            strlcpy(g_windowsServiceName, optarg, MAX_PATH);
 #endif
             break;
          case 'N':   // Service display name
@@ -1678,7 +1751,7 @@ int main(int argc, char *argv[])
 				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, g_windowsServiceDisplayName, MAX_PATH);
 				g_windowsServiceDisplayName[MAX_PATH - 1] = 0;
 #else
-            nx_strncpy(g_windowsServiceDisplayName, optarg, MAX_PATH);
+            strlcpy(g_windowsServiceDisplayName, optarg, MAX_PATH);
 #endif
             break;
 #endif
@@ -2062,7 +2135,7 @@ int main(int argc, char *argv[])
 			                         argc - optind - 4, &argv[optind + 4]);
          break;
       case ACTION_SHUTDOWN_EXT_AGENTS:
-         InitiateExtSubagentShutdown();
+         InitiateExternalProcessShutdown(restartExternalProcesses);
          iExitCode = 0;
          break;
 #ifdef _WIN32

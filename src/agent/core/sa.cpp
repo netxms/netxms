@@ -109,7 +109,7 @@ void SessionAgentConnector::run()
  */
 void SessionAgentConnector::disconnect()
 {
-   shutdown(m_socket, SHUT_RDWR);
+   ::shutdown(m_socket, SHUT_RDWR);
 }
 
 /**
@@ -221,6 +221,18 @@ bool SessionAgentConnector::testConnection()
 
    delete response;
    return true;
+}
+
+/**
+ * Shutdown session agent with optional delayed restart
+ */
+void SessionAgentConnector::shutdown(bool restart)
+{
+   NXCPMessage msg;
+   msg.setCode(CMD_SHUTDOWN);
+   msg.setId(nextRequestId());
+   msg.setField(VID_RESTART, restart);
+   sendMessage(&msg);
 }
 
 /**
@@ -455,4 +467,17 @@ LONG H_SessionAgents(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractC
    RWLockUnlock(s_lock);
 
    return SYSINFO_RC_SUCCESS;
+}
+
+/**
+ * Shutdown session agent with optional delayed restart
+ */
+void ShutdownSessionAgents(bool restart)
+{
+   RWLockReadLock(s_lock, INFINITE);
+   for (int i = 0; i < s_agents.size(); i++)
+   {
+      s_agents.get(i)->shutdown(restart);
+   }
+   RWLockUnlock(s_lock);
 }

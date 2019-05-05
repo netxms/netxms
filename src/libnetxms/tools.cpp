@@ -29,6 +29,8 @@
 
 #ifdef _WIN32
 #include <psapi.h>
+#include <wintrust.h>
+#include <Softpub.h>
 #endif
 
 #if !defined(_WIN32) && !defined(UNDER_CE)
@@ -3075,3 +3077,43 @@ int LIBNETXMS_EXPORTABLE _statw32(const TCHAR *file, struct _stati64 *st)
 }
 
 #endif   /* _WIN32 */
+
+/**
+ * Verify file signature
+ */
+bool LIBNETXMS_EXPORTABLE VerifyFileSignature(const TCHAR *file)
+{
+#ifdef _WIN32
+   WINTRUST_FILE_INFO fi;
+   fi.cbStruct = sizeof(WINTRUST_FILE_INFO);
+#ifdef UNICODE
+   fi.pcwszFilePath = file;
+#else
+   WCHAR wfile[MAX_PATH];
+   MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, file, -1, wfile, MAX_PATH);
+   fi.pcwszFilePath = wfile;
+#endif
+   fi.hFile = NULL;
+   fi.pgKnownSubject = NULL;
+
+   GUID action = WINTRUST_ACTION_GENERIC_VERIFY_V2;
+
+   WINTRUST_DATA wd;
+   memset(&wd, 0, sizeof(WINTRUST_DATA));
+   wd.cbStruct = sizeof(WINTRUST_DATA);
+   wd.dwUIChoice = WTD_UI_NONE;
+   wd.fdwRevocationChecks = WTD_REVOKE_NONE;
+   wd.dwUnionChoice = WTD_CHOICE_FILE;
+   wd.dwStateAction = WTD_STATEACTION_VERIFY;
+   wd.pFile = &fi;
+
+   LONG status = WinVerifyTrust((HWND)INVALID_HANDLE_VALUE, &action, &wd);
+
+   wd.dwStateAction = WTD_STATEACTION_CLOSE;
+   WinVerifyTrust((HWND)INVALID_HANDLE_VALUE, &action, &wd);
+
+   return status == 0;
+#else
+   return false;
+#endif
+}
