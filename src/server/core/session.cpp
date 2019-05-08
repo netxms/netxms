@@ -4678,7 +4678,6 @@ void ClientSession::getLastValuesByDciId(NXCPMessage *pRequest)
    for(int i = 0; i < size; i++, incomingIndex += 10)
    {
       TCHAR *value;
-      UINT32 type, status;
 
       object = FindObjectById(pRequest->getFieldAsUInt32(incomingIndex));
       if (object != NULL)
@@ -4689,15 +4688,18 @@ void ClientSession::getLastValuesByDciId(NXCPMessage *pRequest)
             {
                UINT32 dciID = pRequest->getFieldAsUInt32(incomingIndex+1);
                dcoObj = ((DataCollectionTarget *)object)->getDCObjectById(dciID, m_dwUserId);
-               if(dcoObj == NULL)
+               if (dcoObj == NULL)
                   continue;
 
+               INT16 type;
                if (dcoObj->getType() == DCO_TYPE_TABLE)
                {
-                  TCHAR * column = pRequest->getFieldAsString(incomingIndex+2);
-                  TCHAR * instance = pRequest->getFieldAsString(incomingIndex+3);
-                  if(column == NULL || instance == NULL || _tcscmp(column, _T("")) == 0 || _tcscmp(instance, _T("")) == 0)
+                  TCHAR *column = pRequest->getFieldAsString(incomingIndex + 2);
+                  TCHAR *instance = pRequest->getFieldAsString(incomingIndex + 3);
+                  if ((column == NULL) || (instance == NULL) || (column[0] == 0) || (instance[0] == 0))
                   {
+                     MemFree(column);
+                     MemFree(instance);
                      continue;
                   }
 
@@ -4711,26 +4713,22 @@ void ClientSession::getLastValuesByDciId(NXCPMessage *pRequest)
                   MemFree(column);
                   MemFree(instance);
                }
+               else if (dcoObj->getType() == DCO_TYPE_ITEM)
+               {
+                  type = ((DCItem *)dcoObj)->getDataType();
+                  value = MemCopyString(((DCItem *)dcoObj)->getLastValue());
+               }
                else
                {
-                  if (dcoObj->getType() == DCO_TYPE_ITEM)
-                  {
-                     type = (WORD)((DCItem *)dcoObj)->getDataType();
-                     value = MemCopyString(((DCItem *)dcoObj)->getLastValue());
-                  }
-                  else
-                     continue;
+                  continue;
                }
-
-
-               status = dcoObj->getStatus();
 
                msg.setField(outgoingIndex + 1, dciID);
                msg.setField(outgoingIndex + 2, CHECK_NULL_EX(value));
                msg.setField(outgoingIndex + 3, type);
-               msg.setField(outgoingIndex + 4, status);
+               msg.setField(outgoingIndex + 4, static_cast<INT16>(dcoObj->getStatus()));
                msg.setField(outgoingIndex + 5, object->getId());
-               msg.setField(outgoingIndex + 6, dcoObj->getDataSource());
+               msg.setField(outgoingIndex + 6, static_cast<INT16>(dcoObj->getDataSource()));
                msg.setField(outgoingIndex + 7, dcoObj->getName());
                msg.setField(outgoingIndex + 8, dcoObj->getDescription());
                MemFree(value);
@@ -4739,10 +4737,10 @@ void ClientSession::getLastValuesByDciId(NXCPMessage *pRequest)
          }
       }
    }
-   // Set result
+
    msg.setField(VID_NUM_ITEMS, (outgoingIndex - VID_DCI_VALUES_BASE) / 10);
    msg.setField(VID_RCC, RCC_SUCCESS);
-   // Send response
+
    sendMessage(&msg);
 }
 
