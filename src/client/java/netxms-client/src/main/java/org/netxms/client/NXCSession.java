@@ -4159,7 +4159,7 @@ public class NXCSession
          base += 10;
       }
 
-      return sendLastValuesMsg(msg);
+      return doLastValuesRequest(msg);
    }
 
    /**
@@ -4181,18 +4181,18 @@ public class NXCSession
          base += 10;
       }
 
-      return sendLastValuesMsg(msg);
+      return doLastValuesRequest(msg);
    }
 
    /**
-    * Send msg containing list of dci configurations
+    * Send request for last values using prepared message
     *
-    * @param msg The NXCPMessage to send
+    * @param msg NXCP message to send
     * @return The DCI values
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public DciValue[] sendLastValuesMsg(NXCPMessage msg) throws IOException, NXCException
+   private DciValue[] doLastValuesRequest(NXCPMessage msg) throws IOException, NXCException
    {
       sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());
