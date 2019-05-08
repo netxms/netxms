@@ -4049,6 +4049,7 @@ AC_CONFIG_FILES([
 	src/agent/tools/Makefile
 	src/agent/tools/nxappget/Makefile
 	src/agent/tools/nxapush/Makefile
+	src/agent/tools/nxreload/Makefile
 	src/appagent/Makefile
 	src/client/Makefile
 	src/client/install/Makefile
