@@ -93,7 +93,7 @@ static bool SendMsg(NXCPMessage *msg)
 
    NXCP_MESSAGE *rawMsg = msg->serialize();
    bool success = (SendEx(s_socket, rawMsg, ntohl(rawMsg->size), 0, s_socketLock) == ntohl(rawMsg->size));
-   MemFree(rawMsg);
+   free(rawMsg);
    return success;
 }
 
@@ -301,7 +301,7 @@ static void ProcessMessages()
          }
       }
    }
-   MemFree(rawMsg);
+   free(rawMsg);
 }
 
 #ifdef _WIN32
