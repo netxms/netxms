@@ -229,6 +229,15 @@ static bool CheckDatabaseStructure()
 }
 
 /**
+ * Custom database syntax reader
+ */
+static bool SyntaxReader(DB_HANDLE hdb, TCHAR *syntaxId)
+{
+   _tcscpy(syntaxId, _T("SQLITE"));
+   return true;
+}
+
+/**
  * Open local agent database
  */
 bool OpenLocalDatabase()
@@ -243,8 +252,10 @@ bool OpenLocalDatabase()
       return false;
    }
 
+   DBSetSyntaxReader(SyntaxReader);
+
    TCHAR dbFile[MAX_PATH];
-	nx_strncpy(dbFile, g_szDataDirectory, MAX_PATH - 12);
+	_tcslcpy(dbFile, g_szDataDirectory, MAX_PATH - 12);
 	if (dbFile[_tcslen(dbFile) - 1] != FS_PATH_SEPARATOR_CHAR)
 		_tcscat(dbFile, FS_PATH_SEPARATOR);
 	_tcscat(dbFile, _T("nxagentd.db"));
