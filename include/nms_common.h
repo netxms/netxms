@@ -198,6 +198,8 @@ typedef int bool;
 
 #define _Noreturn __declspec(noreturn)
 
+#define CAN_DELETE_COPY_CTOR    1
+
 // Disable some warnings:
 //   4577 -  'noexcept' used with no exception handling mode specified
 #pragma warning(disable: 4577)
