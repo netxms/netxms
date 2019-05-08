@@ -3307,7 +3307,7 @@ if test $? = 0; then
  			AC_MSG_ERROR(libmariadb is requred for MariaDB support)
 		])
 
-	AC_CHECK_DECLS([MYSQL_OPT_CONNECT_ATTRS, mysql_get_optionv],,,[
+	AC_CHECK_DECLS([MYSQL_OPT_CONNECT_ATTRS, MYSQL_OPT_SSL_ENFORCE, mysql_get_optionv],,,[
 #include <mysql.h>
 		])
 

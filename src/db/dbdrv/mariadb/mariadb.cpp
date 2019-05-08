@@ -281,6 +281,7 @@ extern "C" DBDRV_CONNECTION __EXPORT DrvConnect(const char *host, const char *lo
 {
 	MYSQL *pMySQL;
 	MARIADB_CONN *pConn;
+	my_bool v;
 	const char *pHost = host;
 	const char *pSocket = NULL;
 	
@@ -300,8 +301,10 @@ extern "C" DBDRV_CONNECTION __EXPORT DrvConnect(const char *host, const char *lo
 
    // Set TLS enforcement option
 	// If set to 0 connector will not setup TLS connection even if server requires it
-   my_bool v = s_enforceTLS ? 1 : 0;
+#if HAVE_DECL_MYSQL_OPT_SSL_ENFORCE
+   v = s_enforceTLS ? 1 : 0;
    mysql_options(pMySQL, MYSQL_OPT_SSL_ENFORCE, &v);
+#endif
 
 	if (!mysql_real_connect(
 		pMySQL, // MYSQL *
