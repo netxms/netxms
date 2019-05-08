@@ -246,36 +246,51 @@ bool LIBNXDB_EXPORTABLE DBGetSchemaVersion(DB_HANDLE conn, INT32 *major, INT32 *
 }
 
 /**
+ * Custom syntax reader
+ */
+static bool (*s_syntaxReader)(DB_HANDLE, TCHAR *) = NULL;
+
+/**
+ * Set custom syntax reader
+ */
+void LIBNXDB_EXPORTABLE DBSetSyntaxReader(bool (*reader)(DB_HANDLE, TCHAR *))
+{
+   s_syntaxReader = reader;
+}
+
+/**
  * Get database syntax
  */
 int LIBNXDB_EXPORTABLE DBGetSyntax(DB_HANDLE conn, const TCHAR *fallback)
 {
-	DB_RESULT hResult;
 	TCHAR syntaxId[256] = _T("");
 	bool read = false;
-	int syntax;
 
-   // Get database syntax
-   hResult = DBSelect(conn, _T("SELECT var_value FROM metadata WHERE var_name='Syntax'"));
-   if (hResult != NULL)
-   {
-      if (DBGetNumRows(hResult) > 0)
+	if (s_syntaxReader != NULL)
+	{
+	   read = s_syntaxReader(conn, syntaxId);
+	}
+
+	// Get syntax from metadata table
+	if (!read)
+	{
+      DB_RESULT hResult = DBSelect(conn, _T("SELECT var_value FROM metadata WHERE var_name='Syntax'"));
+      if (hResult != NULL)
       {
-         DBGetField(hResult, 0, 0, syntaxId, sizeof(syntaxId) / sizeof(TCHAR));
-			read = true;
+         if (DBGetNumRows(hResult) > 0)
+         {
+            DBGetField(hResult, 0, 0, syntaxId, sizeof(syntaxId) / sizeof(TCHAR));
+            read = true;
+         }
+         DBFreeResult(hResult);
       }
-      else
-      {
-         _tcscpy(syntaxId, _T("UNKNOWN"));
-      }
-      DBFreeResult(hResult);
-   }
+	}
 
 	// If database schema version is less than 87, syntax
 	// will be stored in 'config' table, so try it
 	if (!read)
 	{
-		hResult = DBSelect(conn, _T("SELECT var_value FROM config WHERE var_name='DBSyntax'"));
+		DB_RESULT hResult = DBSelect(conn, _T("SELECT var_value FROM config WHERE var_name='DBSyntax'"));
 		if (hResult != NULL)
 		{
 			if (DBGetNumRows(hResult) > 0)
@@ -283,18 +298,15 @@ int LIBNXDB_EXPORTABLE DBGetSyntax(DB_HANDLE conn, const TCHAR *fallback)
 				DBGetField(hResult, 0, 0, syntaxId, sizeof(syntaxId) / sizeof(TCHAR));
             read = true;
 			}
-			else
-			{
-				_tcscpy(syntaxId, _T("UNKNOWN"));
-			}
 			DBFreeResult(hResult);
 		}
 	}
 
 	// Use fallback if cannot read syntax from database
-	if (!read && (fallback != NULL))
-      _tcslcpy(syntaxId, fallback, 256);
+	if (!read)
+      _tcslcpy(syntaxId, (fallback != NULL) ? fallback : _T("UNKNOWN"), 256);
 
+   int syntax;
    if (!_tcscmp(syntaxId, _T("MYSQL")))
    {
       syntax = DB_SYNTAX_MYSQL;
