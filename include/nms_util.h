@@ -2657,6 +2657,7 @@ int LIBNETXMS_EXPORTABLE CodeFromText(const TCHAR *text, CODE_TO_TEXT *translato
 #ifdef _WIN32
 TCHAR LIBNETXMS_EXPORTABLE *GetSystemErrorText(UINT32 error, TCHAR *buffer, size_t size);
 BOOL LIBNETXMS_EXPORTABLE GetWindowsVersionString(TCHAR *versionString, int strSize);
+void LIBNETXMS_EXPORTABLE WindowsProductNameFromVersion(OSVERSIONINFOEX *ver, TCHAR *buffer);
 INT64 LIBNETXMS_EXPORTABLE GetProcessRSS();
 #endif
 

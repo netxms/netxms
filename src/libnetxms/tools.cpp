@@ -1498,61 +1498,54 @@ void LIBNETXMS_EXPORTABLE GetOSVersionString(TCHAR *pszBuffer, int nBufSize)
 #ifdef _WIN32
 
 /**
- * Get more specific Windows version string
+ * Get Windows product name from version number
  */
-BOOL LIBNETXMS_EXPORTABLE GetWindowsVersionString(TCHAR *versionString, int strSize)
+void LIBNETXMS_EXPORTABLE WindowsProductNameFromVersion(OSVERSIONINFOEX *ver, TCHAR *buffer)
 {
-	OSVERSIONINFOEX ver;
-	TCHAR buffer[256];
-
-	ver.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
-	if (!GetVersionEx((OSVERSIONINFO *)&ver))
-		return FALSE;
-
-	switch(ver.dwMajorVersion)
-	{
-		case 5:
-			switch(ver.dwMinorVersion)
-			{
-				case 0:
-					_tcscpy(buffer, _T("2000"));
-					break;
-				case 1:
-					_tcscpy(buffer, _T("XP"));
-					break;
-				case 2:
-					_tcscpy(buffer, (GetSystemMetrics(SM_SERVERR2) != 0) ? _T("Server 2003 R2") : _T("Server 2003"));
-					break;
-				default:
-					_sntprintf(buffer, 256, _T("NT %d.%d"), ver.dwMajorVersion, ver.dwMinorVersion);
-					break;
-			}
-			break;
-		case 6:
-			switch(ver.dwMinorVersion)
-			{
-				case 0:
-					_tcscpy(buffer, (ver.wProductType == VER_NT_WORKSTATION) ? _T("Vista") : _T("Server 2008"));
-					break;
-				case 1:
-					_tcscpy(buffer, (ver.wProductType == VER_NT_WORKSTATION) ? _T("7") : _T("Server 2008 R2"));
-					break;
-				case 2:
-					_tcscpy(buffer, (ver.wProductType == VER_NT_WORKSTATION) ? _T("8") : _T("Server 2012"));
-					break;
-				case 3:
-					_tcscpy(buffer, (ver.wProductType == VER_NT_WORKSTATION) ? _T("8.1") : _T("Server 2012 R2"));
-					break;
-				default:
-					_sntprintf(buffer, 256, _T("NT %d.%d"), ver.dwMajorVersion, ver.dwMinorVersion);
-					break;
-			}
-			break;
-		case 10:
-			switch(ver.dwMinorVersion)
-			{
-				case 0:
-               if (ver.wProductType == VER_NT_WORKSTATION)
+   switch(ver->dwMajorVersion)
+   {
+      case 5:
+         switch(ver->dwMinorVersion)
+         {
+            case 0:
+               _tcscpy(buffer, _T("2000"));
+               break;
+            case 1:
+               _tcscpy(buffer, _T("XP"));
+               break;
+            case 2:
+               _tcscpy(buffer, (GetSystemMetrics(SM_SERVERR2) != 0) ? _T("Server 2003 R2") : _T("Server 2003"));
+               break;
+            default:
+               _sntprintf(buffer, 256, _T("NT %u.%u"), ver->dwMajorVersion, ver->dwMinorVersion);
+               break;
+         }
+         break;
+      case 6:
+         switch(ver->dwMinorVersion)
+         {
+            case 0:
+               _tcscpy(buffer, (ver->wProductType == VER_NT_WORKSTATION) ? _T("Vista") : _T("Server 2008"));
+               break;
+            case 1:
+               _tcscpy(buffer, (ver->wProductType == VER_NT_WORKSTATION) ? _T("7") : _T("Server 2008 R2"));
+               break;
+            case 2:
+               _tcscpy(buffer, (ver->wProductType == VER_NT_WORKSTATION) ? _T("8") : _T("Server 2012"));
+               break;
+            case 3:
+               _tcscpy(buffer, (ver->wProductType == VER_NT_WORKSTATION) ? _T("8.1") : _T("Server 2012 R2"));
+               break;
+            default:
+               _sntprintf(buffer, 256, _T("NT %d.%d"), ver->dwMajorVersion, ver->dwMinorVersion);
+               break;
+         }
+         break;
+      case 10:
+         switch(ver->dwMinorVersion)
+         {
+            case 0:
+               if (ver->wProductType == VER_NT_WORKSTATION)
                {
                   _tcscpy(buffer, _T("10"));
                }
@@ -1560,23 +1553,37 @@ BOOL LIBNETXMS_EXPORTABLE GetWindowsVersionString(TCHAR *versionString, int strS
                {
                   // Useful topic regarding Windows Server 2016/2019 version detection:
                   // https://techcommunity.microsoft.com/t5/Windows-Server-Insiders/Windows-Server-2019-version-info/td-p/234472
-                  if (ver.dwBuildNumber <= 14393)
+                  if (ver->dwBuildNumber <= 14393)
                      _tcscpy(buffer, _T("Server 2016"));
-                  else if (ver.dwBuildNumber <= 17763)
+                  else if (ver->dwBuildNumber <= 17763)
                      _tcscpy(buffer, _T("Server 2019"));
                   else
-                     _sntprintf(buffer, 256, _T("Server %d.%d.%d"), ver.dwMajorVersion, ver.dwMinorVersion, ver.dwBuildNumber);
+                     _sntprintf(buffer, 256, _T("Server %d.%d.%d"), ver->dwMajorVersion, ver->dwMinorVersion, ver->dwBuildNumber);
                }
-					break;
-				default:
-					_sntprintf(buffer, 256, _T("NT %d.%d"), ver.dwMajorVersion, ver.dwMinorVersion);
-					break;
-			}
-			break;
-		default:
-			_sntprintf(buffer, 256, _T("NT %d.%d"), ver.dwMajorVersion, ver.dwMinorVersion);
-			break;
-	}
+               break;
+            default:
+               _sntprintf(buffer, 256, _T("NT %d.%d"), ver->dwMajorVersion, ver->dwMinorVersion);
+               break;
+         }
+         break;
+      default:
+         _sntprintf(buffer, 256, _T("NT %d.%d"), ver->dwMajorVersion, ver->dwMinorVersion);
+         break;
+   }
+}
+
+/**
+ * Get more specific Windows version string
+ */
+BOOL LIBNETXMS_EXPORTABLE GetWindowsVersionString(TCHAR *versionString, int strSize)
+{
+	OSVERSIONINFOEX ver;
+	ver.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
+	if (!GetVersionEx((OSVERSIONINFO *)&ver))
+		return FALSE;
+
+   TCHAR buffer[256];
+   WindowsProductNameFromVersion(&ver, buffer);
 
 	_sntprintf(versionString, strSize, _T("Windows %s Build %d %s"), buffer, ver.dwBuildNumber, ver.szCSDVersion);
 	StrStrip(versionString);

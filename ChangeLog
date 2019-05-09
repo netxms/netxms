@@ -30,6 +30,7 @@
 - Added trigonometric functions (sin, cos, tan, asin, acos, atan, sinh, cosh, tanh) to NXSL
 - Improved configuration import
 - Implemented parameter Process.WkSet on AIX
+- Additional system information parameters on Windows
 - Added NXSL hook for subnet creation
 - Interface object properties can be changed inside interface creation hook
 - Fixed issues:
