@@ -45,15 +45,19 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
  */
 public class HardwareInventory extends Composite
 {
-   public static final int COLUMN_TYPE = 0;
+   public static final int COLUMN_CATEGORY = 0;
    public static final int COLUMN_INDEX = 1;
-   public static final int COLUMN_VENDOR = 2;
-   public static final int COLUMN_MODEL = 3;
-   public static final int COLUMN_CAPACITY = 4;
-   public static final int COLUMN_SERIAL = 5;
+   public static final int COLUMN_TYPE = 2;
+   public static final int COLUMN_VENDOR = 3;
+   public static final int COLUMN_MODEL = 4;
+   public static final int COLUMN_CAPACITY = 5;
+   public static final int COLUMN_PART_NUMBER = 6;
+   public static final int COLUMN_SERIAL_NUMBER = 7;
+   public static final int COLUMN_LOCATION = 8;
+   public static final int COLUMN_DESCRIPTION = 9;
    
-   private static final String[] names = { "Type", "Index", "Vendor", "Model", "Capacity", "Serial" };
-   private static final int[] widths = { 100, 100, 200, 200, 300, 200 };
+   private static final String[] names = { "Category", "Index", "Type", "Vendor", "Model", "Capacity", "Part number", "Serial number", "Location", "Description" };
+   private static final int[] widths = { 100, 70, 100, 200, 200, 90, 130, 130, 200, 300 };
    
    private IViewPart viewPart;
    private long rootObjectId;
