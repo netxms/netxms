@@ -237,6 +237,7 @@ target
 /src/server/tools/nxget/nxget
 /src/server/tools/nxminfo/nxminfo
 /src/server/tools/nxupload/nxupload
+/src/server/tools/scripts/nx-collect-server-diag
 /src/snmp/nxmibc/lex.mp.c
 /src/snmp/nxmibc/lex.parser.cpp
 /src/snmp/nxmibc/nxmibc

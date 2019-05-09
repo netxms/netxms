@@ -11,13 +11,14 @@ check_command() {
 	return $?
 }
 
-DIR=$(dirname "$0")
-
 #check netxmsd, nxadm and nxagentd 
-
-if [ ! -f $DIR/netxmsd ] || [ ! -f $DIR/nxadm ] || [ ! -f $DIR/nxagentd ]; then
-    echo "Error: No netxms binaries found in current directory"
-    exit 1
+DIR="~BINDIR~"
+if [ ! -f "$DIR/netxmsd" ] || [ ! -f "$DIR/nxadm" ] || [ ! -f "$DIR/nxagentd" ]; then
+    DIR=$(dirname "$0")
+    if [ ! -f "$DIR/netxmsd" ] || [ ! -f "$DIR/nxadm" ] || [ ! -f "$DIR/nxagentd" ]; then
+        echo "Error: required NetXMS binaries not found"
+        exit 1
+    fi
 fi
 
 #create folder
@@ -136,10 +137,10 @@ arp -an >> $OS_LOG 2>>$ERROR_LOG
 ####################################
 ### Output of nxadm commands:
 
-NXADM_LOG=$LOG_DIR/nxadm.txt
-CURRENT_LOG=$NXADM_LOG
+NXADM_LOG="$LOG_DIR/nxadm.txt"
+CURRENT_LOG="$NXADM_LOG"
 
-touch $NXADM_LOG
+touch "$NXADM_LOG"
 
 #debug
 print_header "debug"
