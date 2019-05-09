@@ -27,6 +27,7 @@ Filename: "{app}\bin\nxagentd.exe"; Parameters: "-K"; StatusMsg: "Stopping exter
 Filename: "{app}\bin\nxagentd.exe"; Parameters: "-S"; StatusMsg: "Stopping service..."; RunOnceId: "StopService"; Flags: runhidden
 Filename: "taskkill.exe"; Parameters: "/F /IM nxagentd.exe /T"; StatusMsg: "Killing agent processes..."; RunOnceId: "KillProcess"; Flags: runhidden
 Filename: "taskkill.exe"; Parameters: "/F /IM nxsagent.exe /T"; StatusMsg: "Killing session agent processes..."; RunOnceId: "KillSessionAgentProcess"; Flags: runhidden
+Filename: "taskkill.exe"; Parameters: "/F /IM nxuseragent.exe /T"; StatusMsg: "Killing user agent processes..."; RunOnceId: "KillUserAgentProcess"; Flags: runhidden
 Filename: "{app}\bin\nxagentd.exe"; Parameters: "-R"; StatusMsg: "Uninstalling service..."; RunOnceId: "DelService"; Flags: runhidden
 
 [UninstallDelete]
@@ -75,6 +76,7 @@ Begin
     ExecAndLog(strExecName, '-S', ExpandConstant('{app}\bin'));
     ExecAndLog('taskkill.exe', '/IM nxagentd.exe /F', ExpandConstant('{app}\bin'));
     ExecAndLog('taskkill.exe', '/IM nxsagent.exe /F', ExpandConstant('{app}\bin'));
+    ExecAndLog('taskkill.exe', '/IM nxuseragent.exe /F', ExpandConstant('{app}\bin'));
   End;
 End;
 
