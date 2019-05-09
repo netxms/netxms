@@ -66,7 +66,10 @@ LONG H_StorageDeviceInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, Abstr
 LONG H_StorageDeviceList(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
 LONG H_StorageDeviceSize(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_StorageDeviceTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *session);
+LONG H_SystemArchitecture(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_SystemProductInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_SystemUname(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_SystemVersionInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_SysUpdateTime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_ThreadCount(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_WindowStations(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
@@ -349,6 +352,7 @@ static NETXMS_SUBAGENT_PARAM s_parameters[] =
 	{ _T("Process.WkSet(*)"), H_ProcInfo, (TCHAR *)PROCINFO_WKSET, DCI_DT_UINT64, DCIDESC_PROCESS_WKSET },
 
 	{ _T("System.AppAddressSpace"), H_AppAddressSpace, NULL, DCI_DT_UINT, DCIDESC_SYSTEM_APPADDRESSSPACE },
+   { _T("System.Architecture"), H_SystemArchitecture, NULL, DCI_DT_STRING, DCIDESC_SYSTEM_ARCHITECTURE },
    { _T("System.BIOS.Date"), SMBIOS_ParameterHandler, _T("BD"), DCI_DT_STRING, DCIDESC_SYSTEM_BIOS_DATE },
    { _T("System.BIOS.Vendor"), SMBIOS_ParameterHandler, _T("Bv"), DCI_DT_STRING, DCIDESC_SYSTEM_BIOS_VENDOR },
    { _T("System.BIOS.Version"), SMBIOS_ParameterHandler, _T("BV"), DCI_DT_STRING, DCIDESC_SYSTEM_BIOS_VERSION },
@@ -426,6 +430,14 @@ static NETXMS_SUBAGENT_PARAM s_parameters[] =
    { _T("System.Memory.Virtual.Total"), H_MemoryInfo, (TCHAR *)MEMINFO_VIRTUAL_TOTAL, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_VIRTUAL_TOTAL },
    { _T("System.Memory.Virtual.Used"), H_MemoryInfo, (TCHAR *)MEMINFO_VIRTUAL_USED, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_VIRTUAL_USED },
    { _T("System.Memory.Virtual.UsedPerc"), H_MemoryInfo, (TCHAR *)MEMINFO_VIRTUAL_USED_PCT, DCI_DT_FLOAT, DCIDESC_SYSTEM_MEMORY_VIRTUAL_USED_PCT },
+
+   { _T("System.OS.Build"), H_SystemVersionInfo, _T("B"), DCI_DT_STRING, DCIDESC_SYSTEM_OS_BUILD },
+   { _T("System.OS.LicenseKey"), H_SystemProductInfo, _T("DigitalProductId"), DCI_DT_STRING, DCIDESC_SYSTEM_OS_LICENSE_KEY },
+   { _T("System.OS.ProductId"), H_SystemProductInfo, _T("ProductId"), DCI_DT_STRING, DCIDESC_SYSTEM_OS_PRODUCT_ID },
+   { _T("System.OS.ProductName"), H_SystemProductInfo, _T("ProductName"), DCI_DT_STRING, DCIDESC_SYSTEM_OS_PRODUCT_NAME },
+   { _T("System.OS.ProductType"), H_SystemVersionInfo, _T("T"), DCI_DT_STRING, DCIDESC_SYSTEM_OS_PRODUCT_TYPE },
+   { _T("System.OS.ServicePack"), H_SystemVersionInfo, _T("S"), DCI_DT_STRING, DCIDESC_SYSTEM_OS_SERVICE_PACK },
+   { _T("System.OS.Version"), H_SystemVersionInfo, _T("V"), DCI_DT_STRING, DCIDESC_SYSTEM_OS_VERSION },
 
    { _T("System.ProcessCount"), H_ProcCount, NULL, DCI_DT_UINT, DCIDESC_SYSTEM_PROCESSCOUNT },
 	{ _T("System.ServiceState(*)"), H_ServiceState, NULL, DCI_DT_INT, DCIDESC_SYSTEM_SERVICESTATE },

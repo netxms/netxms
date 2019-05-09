@@ -534,7 +534,7 @@ LONG H_SystemUname(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCom
    TCHAR osVersion[256];
    if (!GetWindowsVersionString(osVersion, 256))
    {
-      switch (versionInfo.dwPlatformId)
+      switch(versionInfo.dwPlatformId)
       {
          case VER_PLATFORM_WIN32_WINDOWS:
             _sntprintf(osVersion, 256, _T("Windows %s-%s"), versionInfo.dwMinorVersion == 0 ? _T("95") :
@@ -585,6 +585,184 @@ LONG H_SystemUname(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCom
    _sntprintf(value, MAX_RESULT_LENGTH, _T("Windows %s %d.%d.%d %s %s"), computerName, versionInfo.dwMajorVersion,
       versionInfo.dwMinorVersion, versionInfo.dwBuildNumber, osVersion, cpuType);
    return SYSINFO_RC_SUCCESS;
+}
+
+/**
+ * Handler for System.Architecture parameter
+ */
+LONG H_SystemArchitecture(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   SYSTEM_INFO sysInfo;
+   GetSystemInfo(&sysInfo);
+   switch (sysInfo.wProcessorArchitecture)
+   {
+      case PROCESSOR_ARCHITECTURE_INTEL:
+         ret_string(value, _T("i686"));
+         break;
+      case PROCESSOR_ARCHITECTURE_MIPS:
+         ret_string(value, _T("mips"));
+         break;
+      case PROCESSOR_ARCHITECTURE_ALPHA:
+         ret_string(value, _T("alpha"));
+         break;
+      case PROCESSOR_ARCHITECTURE_PPC:
+         ret_string(value, _T("ppc"));
+         break;
+      case PROCESSOR_ARCHITECTURE_IA64:
+         ret_string(value, _T("ia64"));
+         break;
+      case PROCESSOR_ARCHITECTURE_IA32_ON_WIN64:
+      case PROCESSOR_ARCHITECTURE_AMD64:
+         ret_string(value, _T("amd64"));
+         break;
+      default:
+         ret_string(value, _T("unknown"));
+         break;
+   }
+   return SYSINFO_RC_SUCCESS;
+}
+
+/**
+ * Handler for System.OS.* parameters
+ */
+LONG H_SystemVersionInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   OSVERSIONINFOEX versionInfo;
+   versionInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
+   if (!GetVersionEx(reinterpret_cast<OSVERSIONINFO*>(&versionInfo)))
+      return SYSINFO_RC_ERROR;
+
+   switch(*arg)
+   {
+      case 'B':
+         ret_uint(value, versionInfo.dwBuildNumber);
+         break;
+      case 'S':
+         _sntprintf(value, MAX_RESULT_LENGTH, _T("%u.%u"), versionInfo.wServicePackMajor, versionInfo.wServicePackMinor);
+         break;
+      case 'T':
+         ret_string(value, versionInfo.wProductType == VER_NT_WORKSTATION ? _T("Workstation") : _T("Server"));
+         break;
+      case 'V':
+         _sntprintf(value, MAX_RESULT_LENGTH, _T("%u.%u.%u"), versionInfo.dwMajorVersion, versionInfo.dwMinorVersion, versionInfo.dwBuildNumber);
+         break;
+   }
+
+   return SYSINFO_RC_SUCCESS;
+}
+
+/**
+ * Decode product key for Windows 7 and below
+ */
+static void DecodeProductKeyWin7(const BYTE *digitalProductId, TCHAR *decodedKey)
+{
+   static const char digits[] = "BCDFGHJKMPQRTVWXY2346789";
+
+   BYTE pid[16];
+   memcpy(pid, &digitalProductId[52], 16);
+   for(int i = 28; i >= 0; i--)
+   {
+      if ((i + 1) % 6 == 0) // Every sixth char is a separator.
+      {
+         decodedKey[i] = '-';
+      }
+      else
+      {
+         int digitMapIndex = 0;
+         for(int j = 14; j >= 0; j--)
+         {
+            int byteValue = (digitMapIndex << 8) | pid[j];
+            pid[j] = (BYTE)(byteValue / 24);
+            digitMapIndex = byteValue % 24;
+            decodedKey[i] = digits[digitMapIndex];
+         }
+      }
+   }
+   decodedKey[29] = 0;
+}
+
+/**
+ * Decode product key for Windows 8 and above
+ */
+static void DecodeProductKeyWin8(const BYTE *digitalProductId, TCHAR *decodedKey)
+{
+   static const char digits[] = "BCDFGHJKMPQRTVWXY2346789";
+
+   BYTE pid[16];
+   memcpy(pid, &digitalProductId[52], 16);
+
+   BYTE isWin8 = (pid[15] / 6) & 1;
+   pid[15] = (pid[15] & 0xF7) | ((isWin8 & 2) << 2);
+
+   int digitMapIndex;
+   for(int i = 24; i >= 0; i--)
+   {
+      digitMapIndex = 0;
+      for (int j = 14; j >= 0; j--)
+      {
+         int byteValue = (digitMapIndex << 8) | pid[j];
+         pid[j] = (BYTE)(byteValue / 24);
+         digitMapIndex = byteValue % 24;
+         decodedKey[i] = digits[digitMapIndex];
+      }
+   }
+
+   TCHAR buffer[32];
+   memcpy(buffer, &decodedKey[1], digitMapIndex * sizeof(TCHAR));
+   buffer[digitMapIndex] = 'N';
+   memcpy(&buffer[digitMapIndex + 1], &decodedKey[digitMapIndex + 1], (25 - digitMapIndex) * sizeof(TCHAR));
+
+   for(int i = 0, j = 0; i < 25; i += 5, j += 6)
+   {
+      memcpy(&decodedKey[j], &buffer[i], 5 * sizeof(TCHAR));
+      decodedKey[j + 5] = '-';
+   }
+   decodedKey[29] = 0;
+}
+
+/**
+ * Handler for System.OS.ProductId parameters
+ */
+LONG H_SystemProductInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   HKEY hKey;
+   if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion"), 0, KEY_QUERY_VALUE, &hKey) != ERROR_SUCCESS)
+   {
+      TCHAR buffer[1024];
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("H_SystemProductInfo: Cannot open registry key (%s)"), GetSystemErrorText(GetLastError(), buffer, 1024));
+      return SYSINFO_RC_ERROR;
+   }
+
+   LONG rc;
+   BYTE buffer[1024];
+   DWORD size = sizeof(buffer);
+   if (RegQueryValueEx(hKey, arg, NULL, NULL, buffer, &size) == ERROR_SUCCESS)
+   {
+      if (!_tcscmp(arg, _T("DigitalProductId")))
+      {
+         OSVERSIONINFO v;
+         memset(&v, 0, sizeof(OSVERSIONINFO));
+         v.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+         GetVersionEx(&v);
+         if ((v.dwMajorVersion > 6) || ((v.dwMajorVersion == 6) && (v.dwMinorVersion >= 2)))
+            DecodeProductKeyWin8(buffer, value);
+         else
+            DecodeProductKeyWin7(buffer, value);
+      }
+      else
+      {
+         ret_string(value, reinterpret_cast<TCHAR*>(buffer));
+      }
+      rc = SYSINFO_RC_SUCCESS;
+   }
+   else
+   {
+      TCHAR buffer[1024];
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("H_SystemProductInfo: Cannot read registry key %s (%s)"), arg, GetSystemErrorText(GetLastError(), buffer, 1024));
+      rc = SYSINFO_RC_ERROR;
+   }
+   RegCloseKey(hKey);
+   return rc;
 }
 
 /**
