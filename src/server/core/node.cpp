@@ -2651,6 +2651,7 @@ bool Node::updateHardwareComponents(PollerInfo *poller, UINT32 requestId)
    readCount += ReadHardwareInformation(this, components, HWC_MEMORY, _T("Hardware.MemoryDevices"));
    readCount += ReadHardwareInformation(this, components, HWC_STORAGE, _T("Hardware.StorageDevices"));
    readCount += ReadHardwareInformation(this, components, HWC_BATTERY, _T("Hardware.Batteries"));
+   readCount += ReadHardwareInformation(this, components, HWC_NETWORK_ADAPTER, _T("Hardware.NetworkAdapters"));
 
    if (readCount == 0)
    {
@@ -2664,7 +2665,7 @@ bool Node::updateHardwareComponents(PollerInfo *poller, UINT32 requestId)
             { _T("category"), _T("type"), _T("vendor"), _T("model"),
               _T("location"), _T("partNumber"), _T("serialNumber"),
               _T("capacity"), _T("description") };
-   static const TCHAR *categoryNames[] = { _T("Other"), _T("Baseboard"), _T("Processor"), _T("Memory device"), _T("Storage device"), _T("Battery") };
+   static const TCHAR *categoryNames[] = { _T("Other"), _T("Baseboard"), _T("Processor"), _T("Memory device"), _T("Storage device"), _T("Battery"), _T("Network adapter") };
 
    lockProperties();
    if (m_hardwareComponents != NULL)

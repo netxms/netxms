@@ -63,7 +63,6 @@ import org.netxms.client.objects.MobileDevice;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objects.Rack;
 import org.netxms.client.objects.Sensor;
-import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.objectbrowser.api.ObjectContextMenu;
 import org.netxms.ui.eclipse.objectview.api.ObjectDetailsProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;

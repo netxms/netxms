@@ -18,14 +18,39 @@
  */
 package org.netxms.ui.eclipse.objectview.widgets.helpers;
 
+import java.util.HashMap;
+import java.util.Map;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
 import org.netxms.client.HardwareComponent;
+import org.netxms.client.constants.DataType;
+import org.netxms.client.constants.HardwareComponentCategory;
+import org.netxms.client.datacollection.DataFormatter;
 import org.netxms.ui.eclipse.objectview.widgets.HardwareInventory;
 
+/**
+ * Label provider for hardware inventory view
+ */
 public class HardwareComponentLabelProvider extends LabelProvider implements ITableLabelProvider
 {
+   private Map<HardwareComponentCategory, String> categoryNames;
+   
+   /**
+    * Constructor
+    */
+   public HardwareComponentLabelProvider()
+   {
+      categoryNames = new HashMap<HardwareComponentCategory, String>();
+      categoryNames.put(HardwareComponentCategory.BASEBOARD, "Baseboard");
+      categoryNames.put(HardwareComponentCategory.BATTERY, "Battery");
+      categoryNames.put(HardwareComponentCategory.MEMORY_DEVICE, "Memory device");
+      categoryNames.put(HardwareComponentCategory.NETWORK_ADAPTER, "Network adapter");
+      categoryNames.put(HardwareComponentCategory.OTHER, "Other");
+      categoryNames.put(HardwareComponentCategory.PROCESSOR, "Processor");
+      categoryNames.put(HardwareComponentCategory.STORAGE_DEVICE, "Storage device");
+   }
+   
    /* (non-Javadoc)
     * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
     */
@@ -45,13 +70,35 @@ public class HardwareComponentLabelProvider extends LabelProvider implements ITa
       switch(columnIndex)
       {
          case HardwareInventory.COLUMN_CAPACITY:
-            return Integer.toString(c.getCapacity());
+            switch(c.getCategory())
+            {
+               case BATTERY:
+                  return Long.toString(c.getCapacity()) + " mWh"; 
+               case MEMORY_DEVICE:
+               case STORAGE_DEVICE:
+                  return new DataFormatter("%*sB", DataType.UINT64, true).format(Long.toString(c.getCapacity())); 
+               case NETWORK_ADAPTER:
+                  return new DataFormatter("%*sbps", DataType.UINT64, false).format(Long.toString(c.getCapacity())); 
+               case PROCESSOR:
+                  return new DataFormatter("%*sHz", DataType.UINT64, false).format(Long.toString(c.getCapacity() * 1000000L));
+               default:
+                  break;
+            }
+            return "";
+         case HardwareInventory.COLUMN_CATEGORY:
+            return categoryNames.get(c.getCategory());
+         case HardwareInventory.COLUMN_DESCRIPTION:
+            return c.getDescription();
          case HardwareInventory.COLUMN_INDEX:
             return Integer.toString(c.getIndex());
+         case HardwareInventory.COLUMN_LOCATION:
+            return c.getLocation();
          case HardwareInventory.COLUMN_MODEL:
             return c.getModel();
-         case HardwareInventory.COLUMN_SERIAL:
-            return c.getModel();
+         case HardwareInventory.COLUMN_PART_NUMBER:
+            return c.getPartNumber();
+         case HardwareInventory.COLUMN_SERIAL_NUMBER:
+            return c.getSerialNumber();
          case HardwareInventory.COLUMN_TYPE:
             return c.getType();
          case HardwareInventory.COLUMN_VENDOR:

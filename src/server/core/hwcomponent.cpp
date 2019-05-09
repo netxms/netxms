@@ -138,7 +138,9 @@ HardwareComponent::HardwareComponent(HardwareComponentCategory category, const T
    for(int i = 0; i < table->getNumColumns(); i++)
    {
       const TCHAR *cname = table->getColumnName(i);
-      if (!_tcsicmp(cname, _T("HANDLE")))
+      if (!_tcsicmp(cname, _T("HANDLE")) ||
+          !_tcsicmp(cname, _T("NUMBER")) ||
+          !_tcsicmp(cname, _T("INDEX")))
          m_index = table->getAsUInt(row, i);
       else if (!_tcsicmp(cname, _T("LOCATION")))
          m_location = MemCopyString(table->getAsString(row, i));
@@ -152,10 +154,12 @@ HardwareComponent::HardwareComponent(HardwareComponentCategory category, const T
       else if (!_tcsicmp(table->getColumnName(i), _T("PART_NUMBER")))
          m_partNumber = MemCopyString(table->getAsString(row, i));
       else if (!_tcsicmp(table->getColumnName(i), _T("CAPACITY")) ||
+               !_tcsicmp(table->getColumnName(i), _T("SPEED")) ||
                !_tcsicmp(table->getColumnName(i), _T("CURR_SPEED")) ||
                !_tcsicmp(table->getColumnName(i), _T("SIZE")))
          m_capacity = table->getAsUInt64(row, i);
-      else if (!_tcsicmp(table->getColumnName(i), _T("SERIAL_NUMBER")))
+      else if (!_tcsicmp(table->getColumnName(i), _T("SERIAL_NUMBER")) ||
+               !_tcsicmp(table->getColumnName(i), _T("MAC_ADDRESS")))
          m_serialNumber = MemCopyString(table->getAsString(row, i));
       else if ((!_tcsicmp(table->getColumnName(i), _T("TYPE")) && (category != HWC_STORAGE)) ||
                !_tcsicmp(table->getColumnName(i), _T("TYPE_DESCRIPTION")) ||

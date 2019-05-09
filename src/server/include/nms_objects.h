@@ -411,7 +411,8 @@ enum HardwareComponentCategory
    HWC_PROCESSOR = 2,
    HWC_MEMORY = 3,
    HWC_STORAGE = 4,
-   HWC_BATTERY = 5
+   HWC_BATTERY = 5,
+   HWC_NETWORK_ADAPTER = 6
 };
 
 /**

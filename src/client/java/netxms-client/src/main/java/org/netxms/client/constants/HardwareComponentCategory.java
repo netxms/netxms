@@ -30,9 +30,10 @@ public enum HardwareComponentCategory
    OTHER(0),
    BASEBOARD(1),
    PROCESSOR(2),
-   MEMORY(3),
-   STORAGE(4),
-   BATTERY(5);
+   MEMORY_DEVICE(3),
+   STORAGE_DEVICE(4),
+   BATTERY(5),
+   NETWORK_ADAPTER(6);
    
    private static Map<Integer, HardwareComponentCategory> lookupTable = new HashMap<Integer, HardwareComponentCategory>();
    static
