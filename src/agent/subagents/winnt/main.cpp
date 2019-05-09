@@ -238,7 +238,7 @@ static void SubAgentShutdown()
 /**
  * Supported parameters
  */
-static NETXMS_SUBAGENT_PARAM m_parameters[] =
+static NETXMS_SUBAGENT_PARAM s_parameters[] =
 {
    { _T("Agent.Desktop"), H_AgentDesktop, NULL, DCI_DT_STRING, _T("Desktop associated with agent process") },
 
@@ -439,7 +439,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 /**
  * Supported lists
  */
-static NETXMS_SUBAGENT_LIST m_lists[] =
+static NETXMS_SUBAGENT_LIST s_lists[] =
 {
    { _T("FileSystem.MountPoints"), H_MountPoints, NULL },
    { _T("Hardware.Batteries"), SMBIOS_ListHandler, _T("B") },
@@ -460,7 +460,7 @@ static NETXMS_SUBAGENT_LIST m_lists[] =
 /**
  * Supported tables
  */
-static NETXMS_SUBAGENT_TABLE m_tables[] =
+static NETXMS_SUBAGENT_TABLE s_tables[] =
 {
    { _T("FileSystem.Volumes"), H_FileSystems, NULL, _T("VOLUME"), DCTDESC_FILESYSTEM_VOLUMES },
    { _T("Hardware.Batteries"), SMBIOS_TableHandler, _T("B"), _T("HANDLE"), DCTDESC_HARDWARE_BATTERIES },
@@ -475,7 +475,7 @@ static NETXMS_SUBAGENT_TABLE m_tables[] =
 /**
  * Supported actions
  */
-static NETXMS_SUBAGENT_ACTION m_actions[] =
+static NETXMS_SUBAGENT_ACTION s_actions[] =
 {
 	{ _T("System.Restart"), H_ActionShutdown, _T("R"), _T("Restart system") },
 	{ _T("System.Shutdown"), H_ActionShutdown, _T("S"), _T("Shutdown system") },
@@ -485,20 +485,20 @@ static NETXMS_SUBAGENT_ACTION m_actions[] =
 /**
  * Subagent information
  */
-static NETXMS_SUBAGENT_INFO m_info =
+static NETXMS_SUBAGENT_INFO s_info =
 {
-	NETXMS_SUBAGENT_INFO_MAGIC,
-	_T("WinNT"), NETXMS_VERSION_STRING,
-	SubAgentInit, SubAgentShutdown, NULL, NULL,
-	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
-	m_parameters,
-	sizeof(m_lists) / sizeof(NETXMS_SUBAGENT_LIST),
-	m_lists,
-	sizeof(m_tables) / sizeof(NETXMS_SUBAGENT_TABLE),
-	m_tables,
-	sizeof(m_actions) / sizeof(NETXMS_SUBAGENT_ACTION),
-	m_actions,
-	0, NULL	// push parameters
+   NETXMS_SUBAGENT_INFO_MAGIC,
+   _T("WinNT"), NETXMS_VERSION_STRING,
+   SubAgentInit, SubAgentShutdown, NULL, NULL,
+   sizeof(s_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
+   s_parameters,
+   sizeof(s_lists) / sizeof(NETXMS_SUBAGENT_LIST),
+   s_lists,
+   sizeof(s_tables) / sizeof(NETXMS_SUBAGENT_TABLE),
+   s_tables,
+   sizeof(s_actions) / sizeof(NETXMS_SUBAGENT_ACTION),
+   s_actions,
+   0, NULL	// push parameters
 };
 
 /**
@@ -506,7 +506,7 @@ static NETXMS_SUBAGENT_INFO m_info =
  */
 DECLARE_SUBAGENT_ENTRY_POINT(WINNT)
 {
-	*ppInfo = &m_info;
+	*ppInfo = &s_info;
 	ImportSymbols();
 
    OSVERSIONINFO ver;

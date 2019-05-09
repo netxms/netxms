@@ -1,6 +1,6 @@
 /*
 ** WMI NetXMS subagent
-** Copyright (C) 2008 Victor Kirhenshtein
+** Copyright (C) 2008-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -56,8 +56,8 @@ typedef struct
 
 IEnumWbemClassObject *DoWMIQuery(WCHAR *ns, WCHAR *query, WMI_QUERY_CONTEXT *ctx);
 void CloseWMIQuery(WMI_QUERY_CONTEXT *ctx);
-TCHAR *VariantToString(VARIANT *pValue);
-LONG VariantToInt(VARIANT *pValue);
-
+TCHAR *VariantToString(VARIANT *v, TCHAR *buffer = NULL, size_t size = 0);
+LONG VariantToInt(VARIANT *v);
+void VariantToTableCell(VARIANT *v, Table *t, int column);
 
 #endif
