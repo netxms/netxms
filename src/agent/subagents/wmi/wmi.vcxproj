@@ -176,6 +176,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="acpi.cpp" />
+    <ClCompile Include="net.cpp" />
     <ClCompile Include="sc.cpp" />
     <ClCompile Include="wmi.cpp" />
   </ItemGroup>

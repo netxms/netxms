@@ -1,6 +1,6 @@
 /*
 ** WMI NetXMS subagent
-** Copyright (C) 2008-2018 Victor Kirhenshtein
+** Copyright (C) 2008-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -27,56 +27,134 @@
  */
 LONG H_ACPIThermalZones(const TCHAR *pszParam, const TCHAR *pArg, StringList *value, AbstractCommSession *session);
 LONG H_ACPITZCurrTemp(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_NetworkAdapterProperty(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_NetworkAdaptersList(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
+LONG H_NetworkAdaptersTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *session);
 LONG H_SecurityCenterDisplayName(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_SecurityCenterProductState(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 
 /**
+ * Set table column value from variant
+ */
+void VariantToTableCell(VARIANT *v, Table *t, int column)
+{
+   switch (v->vt)
+   {
+      case VT_BOOL:
+         t->set(column, v->boolVal ? _T("TRUE") : _T("FALSE"));
+         break;
+      case VT_UI1:
+         t->set(column, v->bVal);
+         break;
+      case VT_I2:
+         t->set(column, v->uiVal);
+         break;
+      case VT_I4:
+         t->set(column, v->lVal);
+         break;
+      case VT_R4:
+         t->set(column, v->fltVal);
+         break;
+      case VT_R8:
+         t->set(column, v->dblVal);
+         break;
+      case VT_BSTR:
+#ifdef UNICODE
+         t->set(column, v->bstrVal);
+#else
+         t->setPreallocated(column, MBStringFromWideString(pValue->bstrVal));
+#endif
+         break;
+      default:
+         break;
+   }
+}
+
+/**
  * Convert variant to string value
  */
-TCHAR *VariantToString(VARIANT *pValue)
+TCHAR *VariantToString(VARIANT *v, TCHAR *buffer, size_t size)
 {
-   TCHAR *buf = NULL;
-
-   switch (pValue->vt) 
+   TCHAR *b = buffer;
+   switch(v->vt) 
    {
-		case VT_NULL: 
-         buf = _tcsdup(_T("<null>"));
+		case VT_NULL:
+         if (b == NULL)
+            b = MemCopyString(_T(""));
+         else
+            *b = 0;
          break;
-	   case VT_BOOL: 
-			buf = _tcsdup(pValue->boolVal ? _T("TRUE") : _T("FALSE"));
+	   case VT_BOOL:
+         if (b == NULL)
+            b = MemCopyString(v->boolVal ? _T("TRUE") : _T("FALSE"));
+         else
+            _tcslcpy(b, v->boolVal ? _T("TRUE") : _T("FALSE"), size);
          break;
 	   case VT_UI1:
-			buf = (TCHAR *)malloc(32 * sizeof(TCHAR));
-			_sntprintf(buf, 32, _T("%d"), pValue->bVal);
+         if (b == NULL)
+         {
+            size = 32;
+            b = MemAllocArray<TCHAR>(size);
+         }
+			_sntprintf(b, size, _T("%d"), v->bVal);
 			break;
 		case VT_I2:
-			buf = (TCHAR *)malloc(32 * sizeof(TCHAR));
-			_sntprintf(buf, 32, _T("%d"), pValue->uiVal);
+         if (b == NULL)
+         {
+            size = 32;
+            b = MemAllocArray<TCHAR>(size);
+         }
+			_sntprintf(b, 32, _T("%d"), v->uiVal);
 			break;
 		case VT_I4:
-			buf = (TCHAR *)malloc(32 * sizeof(TCHAR));
-			_sntprintf(buf, 32, _T("%d"), pValue->lVal);
+         if (b == NULL)
+         {
+            size = 32;
+            b = MemAllocArray<TCHAR>(size);
+         }
+         _sntprintf(b, 32, _T("%d"), v->lVal);
 			break;
 		case VT_R4:
-			buf = (TCHAR *)malloc(32 * sizeof(TCHAR));
-			_sntprintf(buf, 32, _T("%f"), pValue->fltVal);
+         if (b == NULL)
+         {
+            size = 32;
+            b = MemAllocArray<TCHAR>(size);
+         }
+         _sntprintf(b, 32, _T("%f"), v->fltVal);
 			break;
 		case VT_R8:
-			buf = (TCHAR *)malloc(32 * sizeof(TCHAR));
-			_sntprintf(buf, 32, _T("%f"), pValue->dblVal);
+         if (b == NULL)
+         {
+            size = 32;
+            b = MemAllocArray<TCHAR>(size);
+         }
+         _sntprintf(b, 32, _T("%f"), v->dblVal);
 			break;
 		case VT_BSTR:
+         if (b == NULL)
+         {
 #ifdef UNICODE
-			buf = wcsdup(pValue->bstrVal);
+            b = MemCopyString(v->bstrVal);
 #else
-			buf = MBStringFromWideString(pValue->bstrVal);
+            b = MBStringFromWideString(v->bstrVal);
 #endif
+         }
+         else
+         {
+#ifdef UNICODE
+            _tcslcpy(b, v->bstrVal, size);
+#else
+            WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, v->bstrVal, -1, b, size, NULL, NULL);
+#endif
+         }
 			break;
 	   default:
+         if (b != NULL)
+            *b = 0;
 			break;
 	}
 
-   return buf;
+   return b;
 }
 
 /**
@@ -232,7 +310,7 @@ static LONG H_WMIQuery(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, Abstrac
 					if (str != NULL)
 					{
 						ret_string(value, str);
-						free(str);
+						MemFree(str);
 					}
 					else
 					{
@@ -301,39 +379,35 @@ static LONG H_WMINameSpaces(const TCHAR *pszParam, const TCHAR *pArg, StringList
 /**
  * Handler for WMI.Classes list
  */
-static LONG H_WMIClasses(const TCHAR *pszParam, const TCHAR *pArg, StringList *value, AbstractCommSession *session)
+static LONG H_WMIClasses(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session)
 {
-	WMI_QUERY_CONTEXT ctx;
-	IEnumWbemClassObject *pEnumObject = NULL;
-	IWbemClassObject *pClassObject = NULL;
-	TCHAR ns[256];
-	ULONG uRet;
-	LONG rc = SYSINFO_RC_ERROR;
+   TCHAR ns[256];
+   if (!AgentGetParameterArg(param, 1, ns, 256))
+      return SYSINFO_RC_UNSUPPORTED;
 
-	if (!AgentGetParameterArg(pszParam, 1, ns, 256))
-		return SYSINFO_RC_UNSUPPORTED;
+   LONG rc = SYSINFO_RC_ERROR;
 
-	pEnumObject = DoWMIQuery(ns, L"SELECT * FROM meta_class", &ctx);
-	if (pEnumObject != NULL)
-	{
-		while(pEnumObject->Next(WBEM_INFINITE, 1, &pClassObject, &uRet) == S_OK)
-		{
-			VARIANT v;
-
-			if (pClassObject->Get(L"__CLASS", 0, &v, 0, 0) == S_OK)
-			{
-				TCHAR *str;
-
-				str = VariantToString(&v);
-				VariantClear(&v);
-				value->addPreallocated(str);
-			}
-			pClassObject->Release();
-		}
-		pEnumObject->Release();
-		CloseWMIQuery(&ctx);
-		rc = SYSINFO_RC_SUCCESS;
-	}
+   WMI_QUERY_CONTEXT ctx;
+   IEnumWbemClassObject *enumObject = DoWMIQuery(ns, L"SELECT * FROM meta_class", &ctx);
+   if (enumObject != NULL)
+   {
+      IWbemClassObject *classObject = NULL;
+      ULONG uRet;
+      while(enumObject->Next(WBEM_INFINITE, 1, &classObject, &uRet) == S_OK)
+      {
+         VARIANT v;
+         if (classObject->Get(L"__CLASS", 0, &v, 0, 0) == S_OK)
+         {
+            TCHAR *str = VariantToString(&v);
+            VariantClear(&v);
+            value->addPreallocated(str);
+         }
+         classObject->Release();
+      }
+      enumObject->Release();
+      CloseWMIQuery(&ctx);
+      rc = SYSINFO_RC_SUCCESS;
+   }
 
    return rc;
 }
@@ -341,10 +415,18 @@ static LONG H_WMIClasses(const TCHAR *pszParam, const TCHAR *pArg, StringList *v
 /**
  * Provided parameters
  */
-static NETXMS_SUBAGENT_PARAM m_parameters[] =
+static NETXMS_SUBAGENT_PARAM s_parameters[] =
 {
    { _T("ACPI.ThermalZone.CurrentTemp"), H_ACPITZCurrTemp, _T("*"), DCI_DT_INT, _T("Current temperature in ACPI thermal zone") },
    { _T("ACPI.ThermalZone.CurrentTemp(*)"), H_ACPITZCurrTemp, _T("%"), DCI_DT_INT, _T("Current temperature in ACPI thermal zone {instance}") },
+   { _T("Hardware.NetworkAdapter.Availability(*)"), H_NetworkAdapterProperty, _T("Availability"), DCI_DT_UINT, DCIDESC_HARDWARE_NETWORKADAPTER_AVAILABILITY },
+   { _T("Hardware.NetworkAdapter.Description(*)"), H_NetworkAdapterProperty, _T("Description"), DCI_DT_STRING, DCIDESC_HARDWARE_NETWORKADAPTER_DESCRIPTION },
+   { _T("Hardware.NetworkAdapter.InterfaceIndex(*)"), H_NetworkAdapterProperty, _T("InterfaceIndex"), DCI_DT_UINT, DCIDESC_HARDWARE_NETWORKADAPTER_IFINDEX },
+   { _T("Hardware.NetworkAdapter.MACAddress(*)"), H_NetworkAdapterProperty, _T("MACAddress"), DCI_DT_STRING, DCIDESC_HARDWARE_NETWORKADAPTER_MACADDR },
+   { _T("Hardware.NetworkAdapter.Manufacturer(*)"), H_NetworkAdapterProperty, _T("Manufacturer"), DCI_DT_STRING, DCIDESC_HARDWARE_NETWORKADAPTER_MANUFACTURER },
+   { _T("Hardware.NetworkAdapter.Product(*)"), H_NetworkAdapterProperty, _T("ProductName"), DCI_DT_STRING, DCIDESC_HARDWARE_NETWORKADAPTER_PRODUCT },
+   { _T("Hardware.NetworkAdapter.Speed(*)"), H_NetworkAdapterProperty, _T("Speed"), DCI_DT_UINT64, DCIDESC_HARDWARE_NETWORKADAPTER_SPEED },
+   { _T("Hardware.NetworkAdapter.Type(*)"), H_NetworkAdapterProperty, _T("AdapterType"), DCI_DT_STRING, DCIDESC_HARDWARE_NETWORKADAPTER_TYPE },
    { _T("System.AntiSpywareProduct.Active"), H_SecurityCenterProductState, _T("RAntiSpywareProduct"), DCI_DT_INT, _T("Anti-spyware product active") },
    { _T("System.AntiSpywareProduct.DisplayName"), H_SecurityCenterDisplayName, _T("AntispywareProduct"), DCI_DT_STRING, _T("Anti-spyware product display name") },
    { _T("System.AntiSpywareProduct.UpToDate"), H_SecurityCenterProductState, _T("UAntiSpywareProduct"), DCI_DT_INT, _T("Anti-spyware product up to date") },
@@ -360,28 +442,38 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 /**
  * Provided lists
  */
-static NETXMS_SUBAGENT_LIST m_lists[] =
+static NETXMS_SUBAGENT_LIST s_lists[] =
 {
    { _T("ACPI.ThermalZones"), H_ACPIThermalZones, NULL },
+   { _T("Hardware.NetworkAdapters"), H_NetworkAdaptersList, NULL },
    { _T("WMI.Classes(*)"), H_WMIClasses, NULL },
    { _T("WMI.NameSpaces"), H_WMINameSpaces, NULL }
 };
 
 /**
+ * Supported tables
+ */
+static NETXMS_SUBAGENT_TABLE s_tables[] =
+{
+   { _T("Hardware.NetworkAdapters"), H_NetworkAdaptersTable, NULL, _T("INDEX"), DCTDESC_HARDWARE_NETWORK_ADAPTERS }
+};
+
+/**
  * Subagent information
  */
-static NETXMS_SUBAGENT_INFO m_info =
+static NETXMS_SUBAGENT_INFO s_info =
 {
    NETXMS_SUBAGENT_INFO_MAGIC,
-	_T("WMI"), NETXMS_VERSION_STRING,
+   _T("WMI"), NETXMS_VERSION_STRING,
    NULL, NULL, NULL, NULL,     // handlers
-   sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
-	m_parameters,
-	sizeof(m_lists) / sizeof(NETXMS_SUBAGENT_LIST),
-	m_lists,
-	0, NULL,	// tables
+   sizeof(s_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
+   s_parameters,
+   sizeof(s_lists) / sizeof(NETXMS_SUBAGENT_LIST),
+   s_lists,
+   sizeof(s_tables) / sizeof(NETXMS_SUBAGENT_TABLE),
+   s_tables,
    0, NULL,	// actions
-	0, NULL	// push parameters
+   0, NULL	// push parameters
 };
 
 /**
@@ -389,7 +481,7 @@ static NETXMS_SUBAGENT_INFO m_info =
  */
 DECLARE_SUBAGENT_ENTRY_POINT(WMI)
 {
-   *ppInfo = &m_info;
+   *ppInfo = &s_info;
    return true;
 }
 
