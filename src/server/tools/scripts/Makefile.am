@@ -9,4 +9,12 @@
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 bin_SCRIPTS = nx-collect-server-diag
-EXTRA_DIST = nx-collect-server-diag.cmd zip.ps1
+EXTRA_DIST = nx-collect-server-diag.in nx-collect-server-diag.cmd zip.ps1
+
+REPLACE_CMD = sed "s,~BINDIR~,@NETXMS_BINDIR@,g" < $@.in > $@
+
+nx-collect-server-diag: nx-collect-server-diag.in
+	$(REPLACE_CMD)
+
+clean-local:
+	rm -f nx-collect-server-diag
