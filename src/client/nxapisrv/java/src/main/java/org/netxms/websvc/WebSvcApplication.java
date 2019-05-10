@@ -32,6 +32,7 @@ import org.netxms.websvc.handlers.ObjectToolOutputHandler;
 import org.netxms.websvc.handlers.ObjectTools;
 import org.netxms.websvc.handlers.Objects;
 import org.netxms.websvc.handlers.PredefinedGraphs;
+import org.netxms.websvc.handlers.RootHandler;
 import org.netxms.websvc.handlers.Sessions;
 import org.netxms.websvc.handlers.SummaryTableAdHoc;
 import org.netxms.websvc.handlers.UserPassword;
@@ -73,6 +74,7 @@ public class WebSvcApplication extends Application
    {
       log.debug("createInboundRoot() called");
       Router router = new Router(getContext());
+      router.attach("/", RootHandler.class);
       router.attach("/alarms", Alarms.class);
       router.attach("/alarms/{id}", Alarms.class);
       router.attach("/authenticate", AccessIntegrationTools.class);

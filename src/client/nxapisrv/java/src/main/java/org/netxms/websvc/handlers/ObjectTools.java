@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2018 Raden Solutions
+ * Copyright (C) 2003-2019 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,6 +19,10 @@
 
 package org.netxms.websvc.handlers;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.netxms.client.NXCException;
@@ -37,15 +41,12 @@ import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.Representation;
 import org.restlet.representation.StringRepresentation;
 import org.restlet.resource.Post;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.util.*;
-
+/**
+ * Handler for object tool management
+ */
 public class ObjectTools extends AbstractObjectHandler
 {
-   private Logger log = LoggerFactory.getLogger(ObjectTools.class);
-
    /* (non-Javadoc)
     * @see org.netxms.websvc.handlers.AbstractHandler#getCollection(java.util.Map)
     */

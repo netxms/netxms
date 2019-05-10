@@ -50,7 +50,7 @@ public class JsonFilterJsonObject extends JsonFilter<JsonObject>
          Entry<String, JsonElement> e = it.next();
          if (fields.contains(e.getKey()))
          {
-            result.add(e.getKey(), e.getValue());
+            result.add(e.getKey(), (JsonElement)JsonFilter.createFilter(e.getValue(), fields).filter());
          }
       }
       return result;

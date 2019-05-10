@@ -21,7 +21,6 @@ package org.netxms.websvc.json;
 import java.util.Set;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 
 /**
  * Filter for JSON arrays
@@ -46,9 +45,9 @@ public class JsonFilterJsonArray extends JsonFilter<JsonArray>
       for(int i = 0; i < object.size(); i++)
       {
          JsonElement e = object.get(i);
-         if (e instanceof JsonObject)
+         if (e instanceof JsonElement)
          {
-            object.set(i, new JsonFilterJsonObject((JsonObject)e, fields).filter());
+            object.set(i, (JsonElement)JsonFilter.createFilter(e, fields).filter());
          }
       }
       return object;

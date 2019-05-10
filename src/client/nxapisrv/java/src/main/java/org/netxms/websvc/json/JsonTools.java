@@ -35,6 +35,7 @@ import org.netxms.websvc.json.adapters.MacAddressAdapter;
 import org.netxms.websvc.json.adapters.NXCSessionAdapter;
 import com.google.gson.ExclusionStrategy;
 import com.google.gson.FieldAttributes;
+import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -46,25 +47,12 @@ import com.google.gson.JsonParser;
 public class JsonTools
 {
    /**
-    * Create JSON representation for given object
+    * Create correctly configured GSON instance.
     * 
-    * @param object object to serialize
-    * @return JSON code
+    * @return GSON instance
     */
-   public static String jsonFromObject(Object object, Set<String> fields)
+   public static Gson createGsonInstance()
    {
-      if (object == null)
-         return "{ }"; 
-               
-      if ((object instanceof JsonObject) || 
-          (object instanceof JsonArray) ||
-          (object instanceof JSONObject) ||
-          (object instanceof JSONArray))
-         return JsonFilter.createFilter(object, fields).filter().toString();
-      
-      if (object instanceof ResponseContainer)
-         return ((ResponseContainer)object).toJson(fields);
-      
       GsonBuilder builder = new GsonBuilder();
       builder.setPrettyPrinting();  // FIXME: remove for production
       builder.registerTypeAdapter(Date.class, new DateAdapter());
@@ -85,13 +73,37 @@ public class JsonTools
             return c.isAnnotationPresent(Internal.class);
          }
       });
-      if ((fields != null) && !fields.isEmpty())
-      {
-         return JsonFilter.createFilter(builder.create().toJsonTree(object), fields).filter().toString();
-      }
-      return builder.create().toJson(object);
+      return builder.create();
    }
    
+   /**
+    * Create JSON representation for given object
+    * 
+    * @param object object to serialize
+    * @return JSON code
+    */
+   public static String jsonFromObject(Object object, Set<String> fields)
+   {
+      if (object == null)
+         return "{ }"; 
+               
+      if ((object instanceof JsonObject) || 
+          (object instanceof JsonArray) ||
+          (object instanceof JSONObject) ||
+          (object instanceof JSONArray))
+         return JsonFilter.createFilter(object, fields).filter().toString();
+      
+      if (object instanceof ResponseContainer)
+         return ((ResponseContainer)object).toJson(fields);
+      
+      Gson gson = createGsonInstance();
+      if ((fields != null) && !fields.isEmpty())
+      {
+         return JsonFilter.createFilter(gson.toJsonTree(object), fields).filter().toString();
+      }
+      return gson.toJson(object);
+   }
+
    /**
     * Create JsonObject from JSON code. Will return empty object if input string cannot be parsed.
     * 

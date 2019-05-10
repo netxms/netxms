@@ -13,6 +13,7 @@
 - Additional system information parameters on Windows
 - Added NXSL hook for subnet creation
 - Interface object properties can be changed inside interface creation hook
+- Improvements in web service API
 - Fixed issues:
 	NX-1537 ("Hidden" flag for DCI)
 	NX-1574 (Add hasActiveThreshold attribute/method to DCI object accessible in NXSL)
