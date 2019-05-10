@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2017 Raden Solutions
+ * Copyright (C) 2003-2019 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,18 +18,26 @@
  */
 package org.netxms.websvc.handlers;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
-import java.util.UUID;
+import java.util.Set;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.RCC;
+import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.events.Alarm;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.Node;
+import org.netxms.websvc.json.JsonTools;
 import org.netxms.websvc.json.ResponseContainer;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 
 /**
  * Handler for alarm management
@@ -50,29 +58,122 @@ public class Alarms extends AbstractHandler
    {
       NXCSession session = getSession();
       Collection<Alarm> alarms = session.getAlarms().values();
-      String queryGuid = query.get("objectGuid");
-      if (queryGuid != null)
-      {         
-         UUID objectGuid = UUID.fromString(queryGuid);
-         if (!session.isObjectsSynchronized())
-            session.syncObjects();
-         
-         AbstractObject object = session.findObjectByGUID(objectGuid);
-         if (object == null)
-            throw new NXCException(RCC.INVALID_OBJECT_ID);
+      
+      AbstractObject rootObject = getObjectFromQuery(query);
+
+      final boolean[] stateMask;
+      String stateFilter = query.get("state");
+      if (stateFilter != null)
+      {
+         stateMask = new boolean[] { false, false, false, false };
+         for(String s : stateFilter.split(","))
+         {
+            try
+            {
+               int n = Integer.parseInt(s);
+               if ((n >= Alarm.STATE_OUTSTANDING) && (n <= Alarm.STATE_TERMINATED))
+                  stateMask[n] = true;
+            }
+            catch(NumberFormatException e)
+            {
+               if (s.equalsIgnoreCase("outstanding"))
+                  stateMask[Alarm.STATE_OUTSTANDING] = true;
+               else if (s.equalsIgnoreCase("acknowledged"))
+                  stateMask[Alarm.STATE_ACKNOWLEDGED] = true;
+               else if (s.equalsIgnoreCase("resolved"))
+                  stateMask[Alarm.STATE_RESOLVED] = true;
+               else if (s.equalsIgnoreCase("terminated"))
+                  stateMask[Alarm.STATE_TERMINATED] = true;
+            }
+         }
+      }
+      else
+      {
+         stateMask = new boolean[] { true, true, true, true };
+      }
+      
+      Date createdBefore = parseTimestamp(query.get("createdBefore"));
+      Date createdAfter = parseTimestamp(query.get("createdAfter"));
+      Date updatedBefore = parseTimestamp(query.get("updatedBefore"));
+      Date updatedAfter = parseTimestamp(query.get("updatedAfter"));
+      
+      if ((rootObject != null) || (stateFilter != null) || (createdBefore != null) ||
+          (createdAfter != null) || (updatedBefore != null) || (updatedAfter != null))
+      {
+         boolean includeChildren = Boolean.parseBoolean(query.getOrDefault("includeChildObjects", "false"));
          
          Iterator<Alarm> iterator =  alarms.iterator();
          while(iterator.hasNext())
          {
             Alarm alarm = iterator.next();
-            if(alarm.getSourceObjectId() != object.getObjectId())
+            
+            if (!stateMask[alarm.getState() & Alarm.STATE_MASK])
+            {
+               iterator.remove();
+               continue;
+            }
+            
+            if (((createdBefore != null) && alarm.getCreationTime().after(createdBefore)) ||
+                ((createdAfter != null) && alarm.getCreationTime().before(createdAfter)) ||
+                ((updatedBefore != null) && alarm.getLastChangeTime().after(updatedBefore)) ||
+                ((updatedAfter != null) && alarm.getLastChangeTime().before(updatedAfter)))
+            {
+               iterator.remove();
+               continue;
+            }
+            
+            if ((rootObject != null) &&
+                (alarm.getSourceObjectId() != rootObject.getObjectId()) &&
+                (!includeChildren || !rootObject.isParentOf(alarm.getSourceObjectId())))
             {
                iterator.remove();
             }
          }
       }
+      
+      if (!Boolean.parseBoolean(query.getOrDefault("resolveReferences", "false")))
+         return new ResponseContainer("alarms", alarms);
 
-      return new ResponseContainer("alarms", alarms);
+      List<JsonObject> serializedAlarms = new ArrayList<JsonObject>();
+      Map<Long, DciValue[]> cachedValues = null;
+      Gson gson = JsonTools.createGsonInstance();
+      for(Alarm a : alarms)
+      {
+         JsonObject json = (JsonObject)gson.toJsonTree(a);
+         AbstractObject object = session.findObjectById(a.getSourceObjectId());
+         if (object != null)
+         {
+            json.add("sourceObject", gson.toJsonTree(object));
+            if (a.getDciId() != 0)
+            {
+               DciValue[] values = null;
+               if (cachedValues != null)
+                  values = cachedValues.get(object.getObjectId());
+               if (values == null)
+                  values = session.getLastValues(object.getObjectId());
+               
+               for(DciValue v : values)
+               {
+                  if (v.getId() == a.getDciId())
+                  {
+                     json.add("dci", gson.toJsonTree(v));
+                     break;
+                  }
+               }
+               
+               if (cachedValues == null)
+                  cachedValues = new HashMap<Long, DciValue[]>();
+               cachedValues.put(object.getObjectId(), values);
+            }
+            if (session.isZoningEnabled() && (object instanceof Node))
+            {
+               json.addProperty("zoneUIN", ((Node)object).getZoneId());
+               json.addProperty("zoneName", ((Node)object).getZoneName());
+            }
+         }
+         serializedAlarms.add(json);
+      }
+      return new ResponseContainer("alarms", serializedAlarms);
    }
    
    /* (non-Javadoc)

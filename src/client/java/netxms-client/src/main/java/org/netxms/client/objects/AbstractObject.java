@@ -375,7 +375,9 @@ public abstract class AbstractObject
 	}
 
 	/**
-	 * @return the comments
+	 * Get object's comments.
+	 * 
+	 * @return object's comments
 	 */
 	public String getComments()
 	{
@@ -383,7 +385,9 @@ public abstract class AbstractObject
 	}
 
 	/**
-	 * @return the objectId
+	 * Get object ID (unique within single NetXMS server).
+	 * 
+	 * @return object ID
 	 */
 	public long getObjectId()
 	{
@@ -391,7 +395,9 @@ public abstract class AbstractObject
 	}
 
 	/**
-	 * @return the objectName
+	 * Get object name.
+	 * 
+	 * @return object name
 	 */
 	public String getObjectName()
 	{
@@ -399,7 +405,9 @@ public abstract class AbstractObject
 	}
 
 	/**
-	 * @return the status
+	 * Get object status.
+	 * 
+	 * @return object status
 	 */
 	public ObjectStatus getStatus()
 	{
@@ -415,7 +423,9 @@ public abstract class AbstractObject
 	}
 
 	/**
-	 * @return the inheritAccessRights
+	 * Check setting of "inherit access rights" flag
+	 * 
+	 * @return true if "inherit access rights" flag is set
 	 */
 	public boolean isInheritAccessRights()
 	{
@@ -426,14 +436,15 @@ public abstract class AbstractObject
 	 * Check if given object is direct or indirect parent
 	 * 
 	 * @param objectId ID of object to check
+	 * @return true if given object is direct or indirect parent of this object
 	 */
 	public boolean isChildOf(final long objectId)
 	{
-		for (Long id : parents)
+	   if (parents.contains(objectId))
+	      return true;
+	   
+		for(Long id : parents)
 		{
-			if (id == objectId)
-			   return true;
-			
 			AbstractObject object = session.findObjectById(id);
 			if (object != null)
 			{
@@ -447,15 +458,14 @@ public abstract class AbstractObject
 	/**
 	 * Check if at least one of given objects is direct or indirect parent
 	 * @param objects List of object ID to check
+	 * @return true if at least one of given objects is direct or indirect parent of this object
 	 */
 	public boolean isChildOf(final long[] objects)
 	{
 		for(long object : objects)
 		{
 			if (isChildOf(object))
-			{
 				return true;
-			}
 		}
 		return false;
 	}
@@ -467,13 +477,57 @@ public abstract class AbstractObject
 	 */
 	public boolean isDirectChildOf(final long objectId)
 	{
-		for(Long id : parents)
-		{
-			if (id == objectId)
-			   return true;
-		}
-		return false;
+	   return parents.contains(objectId);
 	}
+
+   /**
+    * Check if given object is direct or indirect child
+    * 
+    * @param objectId ID of object to check
+    * @return true if given object is direct or indirect child of this object
+    */
+   public boolean isParentOf(final long objectId)
+   {
+      if (children.contains(objectId))
+         return true;
+      
+      for(Long id : children)
+      {
+         AbstractObject object = session.findObjectById(id);
+         if (object != null)
+         {
+            if (object.isParentOf(objectId))
+               return true;
+         }
+      }
+      return false;
+   }
+
+   /**
+    * Check if at least one of given objects is direct or indirect child
+    * @param objects List of object identifiers to check
+    * @return true if at least one of given objects is direct or indirect child of this object
+    */
+   public boolean isParentOf(final long[] objects)
+   {
+      for(long object : objects)
+      {
+         if (isParentOf(object))
+            return true;
+      }
+      return false;
+   }
+
+   /**
+    * Check if given object is direct child
+    * 
+    * @param objectId ID of object to check
+    * @return true if given object is direct child of this object
+    */
+   public boolean isDirectParentOf(final long objectId)
+   {
+      return children.contains(objectId);
+   }
 
 	/**
 	 * @return List of parent objects
@@ -493,7 +547,9 @@ public abstract class AbstractObject
 	}
 
 	/**
-	 * @return List of child objects
+	 * Get all child objects as array.
+	 * 
+	 * @return Array of child objects
 	 */
 	public AbstractObject[] getChildrenAsArray()
 	{

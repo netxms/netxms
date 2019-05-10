@@ -18,15 +18,20 @@
  */
 package org.netxms.websvc.handlers;
 
+import java.io.IOException;
 import java.nio.charset.Charset;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import javax.servlet.ServletContext;
 import org.apache.commons.codec.binary.Base64;
 import org.json.JSONObject;
+import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.RCC;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.websvc.ApiProperties;
 import org.netxms.websvc.SessionStore;
 import org.netxms.websvc.SessionToken;
@@ -47,7 +52,6 @@ import org.restlet.resource.ServerResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.google.gson.JsonObject;
-import javax.servlet.ServletContext;
 
 /**
  * Abstract handler implementation
@@ -433,6 +437,60 @@ public abstract class AbstractHandler extends ServerResource
    }
    
    /**
+    * Get object reference from query parameters. Supported references (in priority order):
+    *    objectGuid=
+    *    objectId=
+    * Will call NXCSession.syncObjects() if necessary.
+    *    
+    * @param query query parameters
+    * @return referenced object or null if object reference was not given
+    * @throws IOException if I/O error occurs during object synchronization
+    * @throws NXCException if error occurs during object synchronization or given object reference is invalid
+    */
+   AbstractObject getObjectFromQuery(Map<String, String> query) throws IOException, NXCException
+   {
+      String objectGuid = query.get("objectGuid");
+      if (objectGuid != null)
+      {         
+         if (!session.isObjectsSynchronized())
+            session.syncObjects();
+
+         try
+         {
+            AbstractObject object = session.findObjectByGUID(UUID.fromString(objectGuid));
+            if (object == null)
+               throw new NXCException(RCC.INVALID_OBJECT_ID);
+            return object;
+         }
+         catch(IllegalArgumentException e)
+         {
+            throw new NXCException(RCC.INVALID_OBJECT_ID, e);
+         }
+      }
+      
+      String objectId = query.get("objectId");
+      if (objectId != null)
+      {
+         if (!session.isObjectsSynchronized())
+            session.syncObjects();
+
+         try
+         {
+            AbstractObject object = session.findObjectById(Long.parseLong(objectId));
+            if (object == null)
+               throw new NXCException(RCC.INVALID_OBJECT_ID);
+            return object;
+         }
+         catch(NumberFormatException e)
+         {
+            throw new NXCException(RCC.INVALID_OBJECT_ID, e);
+         }
+      }
+      
+      return null;
+   }
+   
+   /**
     * Parse string as Integer value
     * 
     * @param value input string
@@ -474,5 +532,26 @@ public abstract class AbstractHandler extends ServerResource
       {
          return defaultValue;
       }      
+   }
+   
+   /**
+    * Parse string as timestamp.
+    * 
+    * @param value timestamp string
+    * @return timestamp value as Date object
+    */
+   static protected Date parseTimestamp(String value)
+   {
+      if (value == null)
+         return null;
+      
+      try
+      {
+         return new Date(Long.parseLong(value) * 1000L);
+      }
+      catch(NumberFormatException e)
+      {
+         return null;
+      }
    }
 }

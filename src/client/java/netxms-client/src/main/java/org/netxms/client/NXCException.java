@@ -39,6 +39,8 @@ public class NXCException extends Exception
    protected String additionalInfo;
 
 	/**
+	 * Create new NXC exception.
+	 * 
 	 * @param errorCode Error code
 	 */
 	public NXCException(int errorCode)
@@ -49,6 +51,8 @@ public class NXCException extends Exception
 	}
 
 	/**
+    * Create new NXC exception with additional information.
+    * 
 	 * @param errorCode Error code
 	 * @param additionalInfo Additional info
 	 */
@@ -58,6 +62,19 @@ public class NXCException extends Exception
       this.errorCode = errorCode;
       this.additionalInfo = additionalInfo;
 	}
+
+   /**
+    * Create new NXC exception with root cause reference.
+    * 
+    * @param errorCode Error code
+    * @param cause root cause exception
+    */
+   public NXCException(int errorCode, Throwable cause)
+   {
+      super(cause);
+      this.errorCode = errorCode;
+      this.additionalInfo = null;
+   }
 
    /**
     * Get error message text for given error code. Must not return null.
