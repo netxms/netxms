@@ -3,7 +3,7 @@
 
 [Setup]
 #include "setup.iss"
-OutputBaseFilename=nxagent-2.2.13
+OutputBaseFilename=nxagent-2.2.14
 
 [Files]
 ; Installer helpers
