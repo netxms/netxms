@@ -323,7 +323,7 @@ stop_search:
                      _T("   export <file>        : Export database to file\n")
                      _T("   get <name>           : Get value of server configuration variable\n")
                      _T("   import <file>        : Import database from file\n")
-                     _T("   init [file]          : Initialize database. If schema file is not specified,\n")
+                     _T("   init [<file>]        : Initialize database. If schema file is not specified,\n")
                      _T("                          it's loaded from $NETXMS_HOME/share/netxms/sql/dbinit_DBTYPE.sql\n")
 				         _T("   migrate <source>     : Migrate database from given source\n")
                      _T("   reset-system-account : Unlock user \"system\" and reset it's password to default\n")
