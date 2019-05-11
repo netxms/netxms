@@ -35,13 +35,19 @@ void LIBNXDBMGR_EXPORTABLE ShowQuery(const TCHAR *query)
  */
 DB_RESULT LIBNXDBMGR_EXPORTABLE SQLSelect(const TCHAR *query)
 {
-   DB_RESULT hResult;
-   TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
+   return SQLSelectEx(g_dbHandle, query);
+}
 
+/**
+ * Execute SQL SELECT query and print error message on screen if query failed
+ */
+DB_RESULT LIBNXDBMGR_EXPORTABLE SQLSelectEx(DB_HANDLE hdb, const TCHAR *query)
+{
    if (g_queryTrace)
       ShowQuery(query);
 
-   hResult = DBSelectEx(g_dbHandle, query, errorText);
+   TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
+   DB_RESULT hResult = DBSelectEx(hdb, query, errorText);
    if (hResult == NULL)
       WriteToTerminalEx(_T("SQL query failed (%s):\n\x1b[33;1m%s\x1b[0m\n"), errorText, query);
    return hResult;

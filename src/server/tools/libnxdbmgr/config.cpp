@@ -1,6 +1,6 @@
 /*
 ** NetXMS database manager library
-** Copyright (C) 2004-2018 Victor Kirhenshtein
+** Copyright (C) 2004-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -27,13 +27,21 @@
  */
 bool LIBNXDBMGR_EXPORTABLE DBMgrMetaDataReadStr(const TCHAR *variable, TCHAR *buffer, size_t bufferSize, const TCHAR *defaultValue)
 {
+   return DBMgrMetaDataReadStrEx(g_dbHandle, variable, buffer, bufferSize, defaultValue);
+}
+
+/**
+ * Read string value from metadata table
+ */
+bool LIBNXDBMGR_EXPORTABLE DBMgrMetaDataReadStrEx(DB_HANDLE hdb, const TCHAR *variable, TCHAR *buffer, size_t bufferSize, const TCHAR *defaultValue)
+{
    _tcslcpy(buffer, defaultValue, bufferSize);
    if (_tcslen(variable) > 127)
       return false;
 
    TCHAR szQuery[256];
    _sntprintf(szQuery, 256, _T("SELECT var_value FROM metadata WHERE var_name='%s'"), variable);
-   DB_RESULT hResult = SQLSelect(szQuery);
+   DB_RESULT hResult = SQLSelectEx(hdb, szQuery);
    if (hResult == NULL)
       return false;
 
@@ -53,8 +61,16 @@ bool LIBNXDBMGR_EXPORTABLE DBMgrMetaDataReadStr(const TCHAR *variable, TCHAR *bu
  */
 INT32 LIBNXDBMGR_EXPORTABLE DBMgrMetaDataReadInt32(const TCHAR *variable, INT32 defaultValue)
 {
+   return DBMgrMetaDataReadInt32Ex(g_dbHandle, variable, defaultValue);
+}
+
+/**
+ * Read integer value from configuration table
+ */
+INT32 LIBNXDBMGR_EXPORTABLE DBMgrMetaDataReadInt32Ex(DB_HANDLE hdb, const TCHAR *variable, INT32 defaultValue)
+{
    TCHAR szBuffer[64];
-   if (DBMgrMetaDataReadStr(variable, szBuffer, 64, _T("")))
+   if (DBMgrMetaDataReadStrEx(hdb, variable, szBuffer, 64, _T("")))
       return _tcstol(szBuffer, NULL, 0);
    else
       return defaultValue;

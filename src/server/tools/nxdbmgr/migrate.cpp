@@ -77,13 +77,13 @@ static bool ConnectToSource()
 		_tprintf(_T("Unable to connect to database %s@%s as %s: %s\n"), s_dbName, s_dbServer, s_dbLogin, errorText);
       return false;
    }
-   WriteToTerminalEx(_T("Connected to source database\n"));
+   WriteToTerminal(_T("Connected to source database\n"));
 
    // Get database syntax
 	s_sourceSyntax = DBGetSyntax(s_hdbSource);
 	if (s_sourceSyntax == DB_SYNTAX_UNKNOWN)
 	{
-      _tprintf(_T("Unable to determine source database syntax\n"));
+	   WriteToTerminal(_T("Unable to determine source database syntax\n"));
       return false;
    }
 
@@ -91,7 +91,7 @@ static bool ConnectToSource()
 	INT32 major, minor;
    if (!DBGetSchemaVersion(s_hdbSource, &major, &minor))
    {
-      _tprintf(_T("Unable to determine source database version.\n"));
+      WriteToTerminal(_T("Unable to determine source database version.\n"));
       return false;
    }
    if ((major > DB_SCHEMA_VERSION_MAJOR) || ((major == DB_SCHEMA_VERSION_MAJOR) && (minor > DB_SCHEMA_VERSION_MINOR)))
@@ -223,21 +223,16 @@ static bool MigrateTable(const TCHAR *table)
  */
 static bool MigrateDataTables()
 {
-   if (DBMgrMetaDataReadInt32(_T("SingeTablePerfData"), 0))
-      return true;  // Single table mode
+   IntegerArray<UINT32> *targets = GetDataCollectionTargets();
+   if (targets == NULL)
+      return false;
 
-	TCHAR buffer[1024];
-
-	DB_RESULT hResult = SQLSelect(_T("SELECT id FROM nodes"));
-	if (hResult == NULL)
-		return FALSE;
-
-	// Create and import idata_xx and tdata_xx tables for each node in "nodes" table
-	int count = DBGetNumRows(hResult);
-	int i;
+	// Create and import idata_xx and tdata_xx tables for each data collection target
+	int count = targets->size();
+   int i;
 	for(i = 0; i < count; i++)
 	{
-		DWORD id = DBGetFieldULong(hResult, i, 0);
+		UINT32 id = targets->get(i);
       if (!g_dataOnlyMigration)
       {
 		   if (!CreateIDataTable(id))
@@ -246,8 +241,9 @@ static bool MigrateDataTables()
 
       if (!g_skipDataMigration)
       {
-		   _sntprintf(buffer, 1024, _T("idata_%d"), id);
-		   if (!MigrateTable(buffer))
+         TCHAR table[32];
+		   _sntprintf(table, 32, _T("idata_%u"), id);
+		   if (!MigrateTable(table))
 			   break;
       }
 
@@ -259,14 +255,269 @@ static bool MigrateDataTables()
 
       if (!g_skipDataMigration)
       {
-		   _sntprintf(buffer, 1024, _T("tdata_%d"), id);
-		   if (!MigrateTable(buffer))
+         TCHAR table[32];
+		   _sntprintf(table, 32, _T("tdata_%u"), id);
+		   if (!MigrateTable(table))
 			   break;
       }
 	}
 
-	DBFreeResult(hResult);
+	delete targets;
 	return i == count;
+}
+
+/**
+ * Migrate collected data from multi-table to single table configuration
+ */
+static bool MigrateDataToSingleTable(UINT32 nodeId, bool tdata)
+{
+   const TCHAR *prefix = tdata ? _T("tdata") : _T("idata");
+   WriteToTerminalEx(_T("Migrating table \x1b[1m%s_%u\x1b[0m to \x1b[1m%s\x1b[0m\n"), prefix, nodeId, prefix);
+
+   if (!DBBegin(g_dbHandle))
+   {
+      _tprintf(_T("ERROR: unable to start transaction in target database\n"));
+      return false;
+   }
+
+   bool success = false;
+   TCHAR buffer[256], errorText[DBDRV_MAX_ERROR_TEXT];
+   _sntprintf(buffer, 256, _T("SELECT item_id,%s_timestamp,%s_value FROM %s_%u"),
+            prefix, prefix, prefix, nodeId);
+   DB_UNBUFFERED_RESULT hResult = DBSelectUnbufferedEx(s_hdbSource, buffer, errorText);
+   if (hResult == NULL)
+   {
+      _tprintf(_T("ERROR: unable to read data from source table (%s)\n"), errorText);
+      DBRollback(g_dbHandle);
+      return false;
+   }
+
+   DB_STATEMENT hStmt = DBPrepareEx(g_dbHandle,
+            tdata ?
+               _T("INSERT INTO tdata (node_id,item_id,tdata_timestamp,tdata_value) VALUES (?,?,?,?)")
+               : _T("INSERT INTO idata (node_id,item_id,idata_timestamp,idata_value) VALUES (?,?,?,?)"),
+            true, errorText);
+   if (hStmt != NULL)
+   {
+      success = true;
+      int rows = 0, totalRows = 0;
+      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, nodeId);
+      while(DBFetch(hResult))
+      {
+         DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, DBGetFieldULong(hResult, 0));
+         DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, DBGetFieldULong(hResult, 1));
+         if (tdata)
+         {
+            DBBind(hStmt, 4, DB_SQLTYPE_TEXT, DBGetField(hResult, 2, NULL, 0), DB_BIND_DYNAMIC);
+         }
+         else
+         {
+            DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, DBGetField(hResult, 2, NULL, 0), DB_BIND_DYNAMIC);
+         }
+         if (!SQLExecute(hStmt))
+         {
+            _tprintf(_T("Failed input record:\n"));
+            int columnCount = DBGetColumnCount(hResult);
+            for(int i = 0; i < columnCount; i++)
+            {
+               DBGetColumnName(hResult, i, buffer, 256);
+               TCHAR *value = DBGetField(hResult, i, NULL, 0);
+               _tprintf(_T("   %s = \"%s\"\n"), buffer, CHECK_NULL(value));
+               MemFree(value);
+            }
+            success = false;
+            break;
+         }
+
+         rows++;
+         if (rows >= g_migrationTxnSize)
+         {
+            rows = 0;
+            DBCommit(g_dbHandle);
+            DBBegin(g_dbHandle);
+         }
+
+         totalRows++;
+         if ((totalRows & 0xFF) == 0)
+         {
+            _tprintf(_T("%8d\r"), totalRows);
+            fflush(stdout);
+         }
+      }
+
+      if (success)
+         DBCommit(g_dbHandle);
+      else
+         DBRollback(g_dbHandle);
+      DBFreeStatement(hStmt);
+   }
+   else
+   {
+      _tprintf(_T("ERROR: cannot prepare INSERT statement (%s)\n"), errorText);
+      DBRollback(g_dbHandle);
+   }
+   DBFreeResult(hResult);
+   return success;
+}
+
+/**
+ * Migrate data tables to single table
+ */
+static bool MigrateDataTablesToSingleTable()
+{
+   IntegerArray<UINT32> *targets = GetDataCollectionTargets();
+   if (targets == NULL)
+      return false;
+
+   // Copy data from idata_xx and tdata_xx tables for each node in "nodes" table
+   int count = targets->size();
+   int i;
+   for(i = 0; i < count; i++)
+   {
+      UINT32 id = targets->get(i);
+      if (!MigrateDataToSingleTable(id, false))
+         break;
+      if (!MigrateDataToSingleTable(id, true))
+         break;
+   }
+
+   delete targets;
+   return i == count;
+}
+
+/**
+ * Migrate collected data from single table to multi-single table configuration
+ */
+static bool MigrateDataFromSingleTable(UINT32 nodeId, bool tdata)
+{
+   const TCHAR *prefix = tdata ? _T("tdata") : _T("idata");
+   WriteToTerminalEx(_T("Migrating table \x1b[1m%s_%u\x1b[0m from \x1b[1m%s\x1b[0m\n"), prefix, nodeId, prefix);
+
+   if (!DBBegin(g_dbHandle))
+   {
+      _tprintf(_T("ERROR: unable to start transaction in target database\n"));
+      return false;
+   }
+
+   bool success = false;
+   TCHAR buffer[256], errorText[DBDRV_MAX_ERROR_TEXT];
+   _sntprintf(buffer, 256, _T("SELECT item_id,%s_timestamp,%s_value FROM %s WHERE node_id=%u"),
+            prefix, prefix, prefix, nodeId);
+   DB_UNBUFFERED_RESULT hResult = DBSelectUnbufferedEx(s_hdbSource, buffer, errorText);
+   if (hResult == NULL)
+   {
+      _tprintf(_T("ERROR: unable to read data from source table (%s)\n"), errorText);
+      DBRollback(g_dbHandle);
+      return false;
+   }
+
+   _sntprintf(buffer, 256, _T("INSERT INTO %s_%u (item_id,%s_timestamp,%s_value) VALUES (?,?,?)"), prefix, nodeId, prefix, prefix);
+   DB_STATEMENT hStmt = DBPrepareEx(g_dbHandle, buffer, true, errorText);
+   if (hStmt != NULL)
+   {
+      success = true;
+      int rows = 0, totalRows = 0;
+      while(DBFetch(hResult))
+      {
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, DBGetFieldULong(hResult, 0));
+         DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, DBGetFieldULong(hResult, 1));
+         if (tdata)
+         {
+            DBBind(hStmt, 3, DB_SQLTYPE_TEXT, DBGetField(hResult, 2, NULL, 0), DB_BIND_DYNAMIC);
+         }
+         else
+         {
+            DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, DBGetField(hResult, 2, NULL, 0), DB_BIND_DYNAMIC);
+         }
+         if (!SQLExecute(hStmt))
+         {
+            _tprintf(_T("Failed input record:\n"));
+            int columnCount = DBGetColumnCount(hResult);
+            for(int i = 0; i < columnCount; i++)
+            {
+               DBGetColumnName(hResult, i, buffer, 256);
+               TCHAR *value = DBGetField(hResult, i, NULL, 0);
+               _tprintf(_T("   %s = \"%s\"\n"), buffer, CHECK_NULL(value));
+               MemFree(value);
+            }
+            success = false;
+            break;
+         }
+
+         rows++;
+         if (rows >= g_migrationTxnSize)
+         {
+            rows = 0;
+            DBCommit(g_dbHandle);
+            DBBegin(g_dbHandle);
+         }
+
+         totalRows++;
+         if ((totalRows & 0xFF) == 0)
+         {
+            _tprintf(_T("%8d\r"), totalRows);
+            fflush(stdout);
+         }
+      }
+
+      if (success)
+         DBCommit(g_dbHandle);
+      else
+         DBRollback(g_dbHandle);
+      DBFreeStatement(hStmt);
+   }
+   else
+   {
+      _tprintf(_T("ERROR: cannot prepare INSERT statement (%s)\n"), errorText);
+      DBRollback(g_dbHandle);
+   }
+   DBFreeResult(hResult);
+   return success;
+}
+
+/**
+ * Migrate data tables from single table
+ */
+static bool MigrateDataTablesFromSingleTable()
+{
+   IntegerArray<UINT32> *targets = GetDataCollectionTargets();
+   if (targets == NULL)
+      return false;
+
+   // Create and import idata_xx and tdata_xx tables for each data collection target
+   int count = targets->size();
+   int i;
+   for(i = 0; i < count; i++)
+   {
+      UINT32 id = targets->get(i);
+
+      if (!g_dataOnlyMigration)
+      {
+         if (!CreateIDataTable(id))
+            break;   // Failed to create idata_xx table
+      }
+
+      if (!g_skipDataMigration)
+      {
+         if (!MigrateDataFromSingleTable(id, false))
+            break;
+      }
+
+      if (!g_dataOnlyMigration)
+      {
+         if (!CreateTDataTable(id))
+            break;   // Failed to create tdata tables
+      }
+
+      if (!g_skipDataMigration)
+      {
+         if (!MigrateDataFromSingleTable(id, true))
+            break;
+      }
+   }
+
+   delete targets;
+   return i == count;
 }
 
 /**
@@ -294,10 +545,34 @@ void MigrateDatabase(const TCHAR *sourceConfig, TCHAR *destConfFields, bool skip
 
 	TCHAR sourceConfFields[2048];
 	_sntprintf(sourceConfFields, 2048, _T("\tDriver: %s\n\tDB Name: %s\n\tDB Server: %s\n\tDB Login: %s"), s_dbDriver, s_dbName, s_dbServer, s_dbLogin);
-	if (!GetYesNo(_T("Source:\n%s\nTarget:\n%s\n\nConfirm database migration?"), sourceConfFields, destConfFields))
+
+	TCHAR options[1024];
+	if (g_dataOnlyMigration)
 	{
-	   goto cleanup;
+	   _tcscpy(options, _T("\tData only migration"));
 	}
+	else
+	{
+      _sntprintf(options, 1024,
+               _T("\tSkip audit log.............: %s\n")
+               _T("\tSkip alarm log.............: %s\n")
+               _T("\tSkip event log.............: %s\n")
+               _T("\tSkip syslog................: %s\n")
+               _T("\tSkip SNMP trap log.........: %s\n")
+               _T("\tSkip collected data........: %s\n")
+               _T("\tSkip data collection schema: %s"),
+               skipAudit ? _T("yes") : _T("no"),
+               skipAlarms ? _T("yes") : _T("no"),
+               skipEvent ? _T("yes") : _T("no"),
+               skipSysLog ? _T("yes") : _T("no"),
+               skipTrapLog ? _T("yes") : _T("no"),
+               g_skipDataMigration ? _T("yes") : _T("no"),
+               g_skipDataSchemaMigration ? _T("yes") : _T("no")
+       );
+	}
+
+	if (!GetYesNo(_T("Source:\n%s\n\nTarget:\n%s\n\nOptions:\n%s\n\nConfirm database migration?"), sourceConfFields, destConfFields, options))
+	   goto cleanup;
 
 	// Decrypt password
    DecryptPassword(s_dbLogin, s_dbPassword, s_dbPassword, MAX_PASSWORD);
@@ -313,6 +588,9 @@ void MigrateDatabase(const TCHAR *sourceConfig, TCHAR *destConfFields, bool skip
 	   // Migrate tables
 	   for(int i = 0; g_tables[i] != NULL; i++)
 	   {
+	      if (!_tcscmp(g_tables[i], _T("idata")) ||
+             !_tcscmp(g_tables[i], _T("tdata")))
+	         continue;  // idata and tdata migrated separately
 	      if (skipAudit && !_tcscmp(g_tables[i], _T("audit_log")))
 	         continue;
 	      if (skipEvent && !_tcscmp(g_tables[i], _T("event_log")))
@@ -326,9 +604,7 @@ void MigrateDatabase(const TCHAR *sourceConfig, TCHAR *destConfFields, bool skip
 	      if (skipSysLog && !_tcscmp(g_tables[i], _T("syslog")))
 	         continue;
 	      if ((g_skipDataMigration || g_skipDataSchemaMigration) &&
-	           (!_tcscmp(g_tables[i], _T("raw_dci_values")) ||
-	            !_tcscmp(g_tables[i], _T("idata")) ||
-	            !_tcscmp(g_tables[i], _T("tdata"))))
+	           !_tcscmp(g_tables[i], _T("raw_dci_values")))
 	         continue;
 		   if (!MigrateTable(g_tables[i]))
 			   goto cleanup;
@@ -340,8 +616,31 @@ void MigrateDatabase(const TCHAR *sourceConfig, TCHAR *destConfFields, bool skip
 
    if (!g_skipDataSchemaMigration)
    {
-      if (!MigrateDataTables())
-         goto cleanup;
+      bool singleTableDestination = (DBMgrMetaDataReadInt32(_T("SingeTablePerfData"), 0) != 0);
+      bool singleTableSource = (DBMgrMetaDataReadInt32Ex(s_hdbSource, _T("SingeTablePerfData"), 0) != 0);
+
+      if (singleTableSource && singleTableDestination && !g_skipDataMigration)
+      {
+         if (!MigrateTable(_T("idata")))
+            goto cleanup;
+         if (!MigrateTable(_T("tdata")))
+            goto cleanup;
+      }
+      else if (singleTableSource && !singleTableDestination)
+      {
+         if (!MigrateDataTablesFromSingleTable())
+            goto cleanup;
+      }
+      else if (!singleTableSource && singleTableDestination && !g_skipDataMigration)
+      {
+         if (!MigrateDataTablesToSingleTable())
+            goto cleanup;
+      }
+      else if (!singleTableSource && !singleTableDestination)
+      {
+         if (!MigrateDataTables())
+            goto cleanup;
+      }
    }
 
 	success = true;

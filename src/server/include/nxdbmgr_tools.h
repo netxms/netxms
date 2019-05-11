@@ -53,6 +53,7 @@ void LIBNXDBMGR_EXPORTABLE SetDBMgrForcedConfirmationMode(bool forced);
 // SQL query tools
 void LIBNXDBMGR_EXPORTABLE ShowQuery(const TCHAR *query);
 DB_RESULT LIBNXDBMGR_EXPORTABLE SQLSelect(const TCHAR *query);
+DB_RESULT LIBNXDBMGR_EXPORTABLE SQLSelectEx(DB_HANDLE hdb, const TCHAR *query);
 DB_UNBUFFERED_RESULT LIBNXDBMGR_EXPORTABLE SQLSelectUnbuffered(const TCHAR *query);
 bool LIBNXDBMGR_EXPORTABLE SQLExecute(DB_STATEMENT hStmt);
 bool LIBNXDBMGR_EXPORTABLE SQLQuery(const TCHAR *query, bool showOutput = false);
@@ -66,7 +67,9 @@ void LIBNXDBMGR_EXPORTABLE SetOperationInProgress(bool inProgress);
 
 // Config and metadata API
 bool LIBNXDBMGR_EXPORTABLE DBMgrMetaDataReadStr(const TCHAR *variable, TCHAR *buffer, size_t bufferSize, const TCHAR *defaultValue);
+bool LIBNXDBMGR_EXPORTABLE DBMgrMetaDataReadStrEx(DB_HANDLE hdb, const TCHAR *variable, TCHAR *buffer, size_t bufferSize, const TCHAR *defaultValue);
 INT32 LIBNXDBMGR_EXPORTABLE DBMgrMetaDataReadInt32(const TCHAR *variable, INT32 defaultValue);
+INT32 LIBNXDBMGR_EXPORTABLE DBMgrMetaDataReadInt32Ex(DB_HANDLE hdb, const TCHAR *variable, INT32 defaultValue);
 bool LIBNXDBMGR_EXPORTABLE DBMgrMetaDataWriteStr(const TCHAR *variable, const TCHAR *value);
 bool LIBNXDBMGR_EXPORTABLE DBMgrMetaDataWriteInt32(const TCHAR *variable, INT32 value);
 bool LIBNXDBMGR_EXPORTABLE DBMgrConfigReadStr(const TCHAR *variable, TCHAR *buffer, size_t bufferSize, const TCHAR *defaultValue);

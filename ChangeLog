@@ -14,6 +14,7 @@
 - Added NXSL hook for subnet creation
 - Interface object properties can be changed inside interface creation hook
 - Improvements in web service API
+- Support for migration to and from TimescaleDB in nxdbmgr
 - Fixed issues:
 	NX-1537 ("Hidden" flag for DCI)
 	NX-1574 (Add hasActiveThreshold attribute/method to DCI object accessible in NXSL)
