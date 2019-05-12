@@ -27,7 +27,7 @@
  * Externals
  */
 BOOL MigrateMaps();
-bool ConvertTDataTables();
+bool ConvertTDataTables(int stage);
 
 /**
  * Re-create TDATA tables
@@ -1956,7 +1956,6 @@ static BOOL H_UpgradeFromV411(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV410(int currVersion, int newVersion)
 {
-   //check if tdata upgrade was already done, then just delete "TdataTableUpdated" metadata parameter
    if (!DBMgrMetaDataReadInt32(_T("TdataTableUpdated"), 0))
    {
       StringMap savedMetadata;
@@ -1986,9 +1985,7 @@ static BOOL H_UpgradeFromV410(int currVersion, int newVersion)
       else
          CHK_EXEC(SQLQuery(_T("INSERT INTO metadata (var_name,var_value) VALUES ('TDataIndexCreationCommand_0','CREATE INDEX idx_tdata_%d ON tdata_%d(item_id,tdata_timestamp)')")));
 
-      // table conversion will require multiple commits
-      DBCommit(g_dbHandle);
-      if (!ConvertTDataTables())
+      if (!ConvertTDataTables(1))
       {
          if (!g_ignoreErrors)
          {
@@ -2007,7 +2004,7 @@ static BOOL H_UpgradeFromV410(int currVersion, int newVersion)
          }
       }
 
-      DBBegin(g_dbHandle);
+      RegisterOnlineUpgrade(0, 411);
    }
    else
    {

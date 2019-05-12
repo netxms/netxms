@@ -22,6 +22,8 @@
 
 #include "nxdbmgr.h"
 
+bool ConvertTDataTables(int stage);
+
 /**
  * Check if there are pending online upgrades
  */
@@ -171,6 +173,15 @@ static bool SetZoneUIN(const TCHAR *table, const TCHAR *idColumn, const TCHAR *o
 }
 
 /**
+ * Online upgrade for version 0.411
+ */
+static bool Upgrade_0_411()
+{
+   CHK_EXEC_NO_SP(ConvertTDataTables(2));
+   return true;
+}
+
+/**
  * Online upgrade for version 22.21
  */
 static bool Upgrade_22_21()
@@ -199,6 +210,7 @@ struct
 } s_handlers[] =
 {
    { 22, 21, Upgrade_22_21 },
+   { 0, 411, Upgrade_0_411 },
    { 0, 0, NULL }
 };
 
@@ -222,10 +234,10 @@ void RunPendingOnlineUpgrades()
       UINT32 id = _tcstol(upgradeList->get(i), NULL, 16);
       int major = id >> 16;
       int minor = id & 0xFFFF;
-      if ((major != 0) && (minor != 0))
+      if ((major != 0) || (minor != 0))
       {
          bool (*handler)() = NULL;
-         for(int j = 0; s_handlers[j].major != 0; j++)
+         for(int j = 0; (s_handlers[j].major != 0) || (s_handlers[j].minor != 0); j++)
          {
             if ((s_handlers[j].major == major) && (s_handlers[j].minor == minor))
             {
