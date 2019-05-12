@@ -77,90 +77,78 @@ static Table *ReadTable(UINT64 recordId, UINT32 tableId, UINT32 objectId)
  */
 static bool ConvertTData(UINT32 id, int *skippedRecords)
 {
-   TCHAR oldName[64], newName[64];
-   _sntprintf(oldName, 64, _T("tdata_%d"), id);
-   _sntprintf(newName, 64, _T("tdata_temp_%d"), id);
-   if (!DBRenameTable(g_dbHandle, oldName, newName))
+   bool success = false;
+   int total = 0x07FFFFFF;
+   TCHAR query[256];
+   _sntprintf(query, 256, _T("SELECT count(*) FROM tdata_temp_%d"), id);
+   DB_RESULT hCountResult = DBSelect(g_dbHandle, query);
+   if (hCountResult != NULL)
    {
-      _tprintf(_T("Table rename failed (%s -> %s)\n"), oldName, newName);
-      return false;
+      total = DBGetFieldLong(hCountResult, 0, 0);
+      if (total <= 0)
+         total = 0x07FFFFFF;
+      DBFreeResult(hCountResult);
    }
 
-   bool success = false;
-   if (CreateTDataTable(id))
+   // Open second connection to database to allow unbuffered query in parallel with inserts
+   DB_HANDLE hdb = ConnectToDatabase();
+   if (hdb != NULL)
    {
-      int total = 0x07FFFFFF;
-      TCHAR query[256];
-      _sntprintf(query, 256, _T("SELECT count(*) FROM tdata_temp_%d"), id);
-      DB_RESULT hCountResult = DBSelect(g_dbHandle, query);
-      if (hCountResult != NULL)
+      _sntprintf(query, 256, _T("SELECT item_id,tdata_timestamp,record_id FROM tdata_temp_%d"), id);
+      DB_UNBUFFERED_RESULT hResult = DBSelectUnbuffered(hdb, query);
+      if (hResult != NULL)
       {
-         total = DBGetFieldLong(hCountResult, 0, 0);
-         if (total <= 0)
-            total = 0x07FFFFFF;
-         DBFreeResult(hCountResult);
-      }
-
-      // Open second connection to database to allow unbuffered query in parallel with inserts
-      DB_HANDLE hdb = ConnectToDatabase();
-      if (hdb != NULL)
-      {
-         _sntprintf(query, 256, _T("SELECT item_id,tdata_timestamp,record_id FROM tdata_temp_%d"), id);
-         DB_UNBUFFERED_RESULT hResult = DBSelectUnbuffered(hdb, query);
-         if (hResult != NULL)
+         _sntprintf(query, 256, _T("INSERT INTO tdata_%d (item_id,tdata_timestamp,tdata_value) VALUES (?,?,?)"), id);
+         DB_STATEMENT hStmt = DBPrepare(g_dbHandle, query);
+         if (hStmt != NULL)
          {
-            _sntprintf(query, 256, _T("INSERT INTO tdata_%d (item_id,tdata_timestamp,tdata_value) VALUES (?,?,?)"), id);
-            DB_STATEMENT hStmt = DBPrepare(g_dbHandle, query);
-            if (hStmt != NULL)
+            success = true;
+            int converted = 0;
+            int skipped = 0;
+            DBBegin(g_dbHandle);
+            while(DBFetch(hResult))
             {
-               success = true;
-               int converted = 0;
-               int skipped = 0;
-               DBBegin(g_dbHandle);
-               while(DBFetch(hResult))
+               UINT32 tableId = DBGetFieldULong(hResult, 0);
+               UINT32 timestamp = DBGetFieldULong(hResult, 1);
+               UINT64 recordId = DBGetFieldUInt64(hResult, 2);
+               Table *value = ReadTable(recordId, tableId, id);
+               if (value != NULL)
                {
-                  UINT32 tableId = DBGetFieldULong(hResult, 0);
-                  UINT32 timestamp = DBGetFieldULong(hResult, 1);
-                  UINT64 recordId = DBGetFieldUInt64(hResult, 2);
-                  Table *value = ReadTable(recordId, tableId, id);
-                  if (value != NULL)
+                  DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, tableId);
+                  DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, timestamp);
+                  DBBind(hStmt, 3, DB_SQLTYPE_TEXT, DB_CTYPE_UTF8_STRING, value->createPackedXML(), DB_BIND_DYNAMIC);
+                  if (!SQLExecute(hStmt))
                   {
-                     DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, tableId);
-                     DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, timestamp);
-                     DBBind(hStmt, 3, DB_SQLTYPE_TEXT, DB_CTYPE_UTF8_STRING, value->createPackedXML(), DB_BIND_DYNAMIC);
-                     if (!SQLExecute(hStmt))
-                     {
-                        delete value;
-                        success = false;
-                        break;
-                     }
                      delete value;
+                     success = false;
+                     break;
                   }
-                  else
-                  {
-                     skipped++;
-                  }
-
-                  converted++;
-                  if (converted % 100 == 0)
-                  {
-                     int pct = (converted * 100) / total;
-                     if (pct > 100)
-                        pct = 100;
-                     WriteToTerminalEx(_T("\b\b\b\b%3d%%"), pct);
-                     fflush(stdout);
-                     DBCommit(g_dbHandle);
-                     DBBegin(g_dbHandle);
-                  }
+                  delete value;
                }
-               DBCommit(g_dbHandle);
-               DBFreeStatement(hStmt);
-               *skippedRecords = skipped;
+               else
+               {
+                  skipped++;
+               }
+
+               converted++;
+               if (converted % 100 == 0)
+               {
+                  int pct = (converted * 100) / total;
+                  if (pct > 100)
+                     pct = 100;
+                  WriteToTerminalEx(_T("\b\b\b\b%3d%%"), pct);
+                  fflush(stdout);
+                  DBCommit(g_dbHandle);
+                  DBBegin(g_dbHandle);
+               }
             }
-            DBFreeResult(hResult);
+            DBCommit(g_dbHandle);
+            DBFreeStatement(hStmt);
+            *skippedRecords = skipped;
          }
-         DBDisconnect(hdb);
+         DBFreeResult(hResult);
       }
+      DBDisconnect(hdb);
    }
 
    if (success)
@@ -173,24 +161,14 @@ static bool ConvertTData(UINT32 id, int *skippedRecords)
       _sntprintf(query, 256, _T("DROP TABLE tdata_temp_%d"), id);
       SQLQuery(query);
    }
-   else
-   {
-      TCHAR query[256];
-      _sntprintf(query, 256, _T("DROP TABLE tdata_%d"), id);
-      SQLQuery(query);
-
-      _sntprintf(oldName, 64, _T("tdata_temp_%d"), id);
-      _sntprintf(newName, 64, _T("tdata_%d"), id);
-      DBRenameTable(g_dbHandle, oldName, newName);
-   }
 
    return success;
 }
 
 /**
- * Check data tables for given o bject class
+ * Check data tables for given object class
  */
-static bool ConvertTDataForClass(const TCHAR *className)
+static bool ConvertTDataForClass(const TCHAR *className, int stage)
 {
    bool success = false;
    TCHAR query[1024];
@@ -203,7 +181,18 @@ static bool ConvertTDataForClass(const TCHAR *className)
       for(int i = 0; i < count; i++)
       {
          UINT32 id = DBGetFieldULong(hResult, i, 0);
-         if (IsDataTableExist(_T("tdata_%d"), id))
+         if (stage == 1)
+         {
+            if (IsDataTableExist(_T("tdata_%d"), id))
+            {
+               TCHAR oldName[32], newName[32];
+               _sntprintf(oldName, 32, _T("tdata_%d"), id);
+               _sntprintf(newName, 32, _T("tdata_temp_%d"), id);
+               CHK_EXEC_NO_SP(DBRenameTable(g_dbHandle, oldName, newName));
+            }
+            CreateTDataTable(id);
+         }
+         else if ((stage == 2) && IsDataTableExist(_T("tdata_temp_%d"), id))
          {
             WriteToTerminalEx(_T("Converting table \x1b[1mtdata_%d\x1b[0m:   0%%"), id);
             fflush(stdout);
@@ -219,16 +208,11 @@ static bool ConvertTDataForClass(const TCHAR *className)
             {
                WriteToTerminalEx(_T("\b\b\b\b\x1b[31;1mfailed\x1b[0m\n"));
                success = false;
-               if(g_ignoreErrors)
+               if (g_ignoreErrors)
                   continue;
                else
                   break;
             }
-         }
-         else
-         {
-            CreateTDataTable(id);
-            WriteToTerminalEx(_T("Created empty table \x1b[1mtdata_%d\x1b[0m\n"), id);
          }
       }
       DBFreeResult(hResult);
@@ -239,12 +223,12 @@ static bool ConvertTDataForClass(const TCHAR *className)
 /**
  * Convert tdata tables into new format
  */
-bool ConvertTDataTables()
+bool ConvertTDataTables(int stage)
 {
-   CHK_EXEC(ConvertTDataForClass(_T("nodes")));
-   CHK_EXEC(ConvertTDataForClass(_T("clusters")));
-   CHK_EXEC(ConvertTDataForClass(_T("mobile_devices")));
-   CHK_EXEC(ConvertTDataForClass(_T("access_points")));
-   CHK_EXEC(ConvertTDataForClass(_T("chassis")));
+   CHK_EXEC_NO_SP(ConvertTDataForClass(_T("nodes"), stage));
+   CHK_EXEC_NO_SP(ConvertTDataForClass(_T("clusters"), stage));
+   CHK_EXEC_NO_SP(ConvertTDataForClass(_T("mobile_devices"), stage));
+   CHK_EXEC_NO_SP(ConvertTDataForClass(_T("access_points"), stage));
+   CHK_EXEC_NO_SP(ConvertTDataForClass(_T("chassis"), stage));
    return true;
 }
