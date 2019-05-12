@@ -38,7 +38,7 @@ struct HandlerData
  */
 PythonPlugin::PythonPlugin(const TCHAR *name, PythonInterpreter *interpreter, PyObject *subagentModule)
 {
-   m_name = _tcsdup(name);
+   m_name = MemCopyString(name);
    m_interpreter = interpreter;
    m_subagentModule = subagentModule;
 }
@@ -50,7 +50,7 @@ PythonPlugin::~PythonPlugin()
 {
    m_interpreter->decref(m_subagentModule);
    delete m_interpreter;
-   free(m_name);
+   MemFree(m_name);
 }
 
 /**

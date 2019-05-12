@@ -79,11 +79,12 @@ PyObject *PyInit_netxms_agent()
    // DCI data types
    PyModule_AddIntConstant(module, "DCI_DT_COUNTER32", DCI_DT_COUNTER32);
    PyModule_AddIntConstant(module, "DCI_DT_COUNTER64", DCI_DT_COUNTER64);
+   PyModule_AddIntConstant(module, "DCI_DT_FLOAT", DCI_DT_FLOAT);
    PyModule_AddIntConstant(module, "DCI_DT_INT", DCI_DT_INT);
    PyModule_AddIntConstant(module, "DCI_DT_INT64", DCI_DT_INT64);
    PyModule_AddIntConstant(module, "DCI_DT_STRING", DCI_DT_STRING);
    PyModule_AddIntConstant(module, "DCI_DT_UINT", DCI_DT_UINT);
-   PyModule_AddIntConstant(module, "DCI_DT_UINT", DCI_DT_UINT64);
+   PyModule_AddIntConstant(module, "DCI_DT_UINT64", DCI_DT_UINT64);
 
    return module;
 }
