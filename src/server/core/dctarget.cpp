@@ -1579,6 +1579,20 @@ StringMap *DataCollectionTarget::getInstanceList(DCObject *dco)
 }
 
 /**
+ * Cancellation checkpoint for instance discovery loop
+ */
+#define INSTANCE_DISCOVERY_CANCELLATION_CHECKPOINT \
+if (g_flags & AF_SHUTDOWN) \
+{ \
+   object->clearBusyFlag(); \
+   for(i++; i < rootObjects.size(); i++) \
+      rootObjects.get(i)->clearBusyFlag(); \
+   delete instances; \
+   changed = false; \
+   break; \
+}
+
+/**
  * Do instance discovery
  */
 void DataCollectionTarget::doInstanceDiscovery(UINT32 requestId)
@@ -1609,10 +1623,12 @@ void DataCollectionTarget::doInstanceDiscovery(UINT32 requestId)
                 m_name, m_id, object->getName(), object->getId());
       sendPollerMsg(requestId, _T("   Updating instances for %s [%d]\r\n"), object->getName(), object->getId());
       StringMap *instances = getInstanceList(object);
+      INSTANCE_DISCOVERY_CANCELLATION_CHECKPOINT;
       if (instances != NULL)
       {
          DbgPrintf(5, _T("DataCollectionTarget::doInstanceDiscovery(%s [%u]): read %d values"), m_name, m_id, instances->size());
          object->filterInstanceList(instances);
+         INSTANCE_DISCOVERY_CANCELLATION_CHECKPOINT;
          if (updateInstances(object, instances, requestId))
             changed = true;
          delete instances;

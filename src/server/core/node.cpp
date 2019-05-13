@@ -6733,7 +6733,7 @@ void Node::routingTablePoll(PollerInfo *poller, ClientSession *session, UINT32 r
  */
 UINT32 Node::callSnmpEnumerate(const TCHAR *pszRootOid,
                               UINT32 (* pHandler)(SNMP_Variable *, SNMP_Transport *, void *),
-                              void *pArg, const TCHAR *context)
+                              void *pArg, const TCHAR *context, bool failOnShutdown)
 {
    if ((m_capabilities & NC_IS_SNMP) &&
        (!(m_state & NSF_SNMP_UNREACHABLE)) &&
@@ -6745,7 +6745,7 @@ UINT32 Node::callSnmpEnumerate(const TCHAR *pszRootOid,
       pTransport = createSnmpTransport(0, context);
       if (pTransport != NULL)
       {
-         dwResult = SnmpWalk(pTransport, pszRootOid, pHandler, pArg);
+         dwResult = SnmpWalk(pTransport, pszRootOid, pHandler, pArg, false, failOnShutdown);
          delete pTransport;
       }
       else
