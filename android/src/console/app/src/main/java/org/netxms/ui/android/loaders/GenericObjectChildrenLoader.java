@@ -67,7 +67,7 @@ public class GenericObjectChildrenLoader extends AsyncTaskLoader<Set<AbstractObj
 				if (go != null)
 				{
 					service.getSession().syncMissingObjects(go.getChildIdList(), false, NXCSession.OBJECT_SYNC_WAIT);
-					children = go.getAllChilds(classFilter);
+					children = go.getAllChildren(classFilter);
 				}
 			}
 			else
