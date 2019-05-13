@@ -2010,7 +2010,8 @@ public:
    void setRoutingLoopEvent(const InetAddress& address, UINT32 nodeId, UINT64 eventId);
 
    UINT32 callSnmpEnumerate(const TCHAR *pszRootOid,
-      UINT32 (* pHandler)(SNMP_Variable *, SNMP_Transport *, void *), void *pArg, const TCHAR *context = NULL);
+      UINT32 (* pHandler)(SNMP_Variable *, SNMP_Transport *, void *), void *pArg,
+      const TCHAR *context = NULL, bool failOnShutdown = false);
 
    NetworkMapObjectList *getL2Topology();
    NetworkMapObjectList *buildL2Topology(UINT32 *pdwStatus, int radius, bool includeEndNodes);

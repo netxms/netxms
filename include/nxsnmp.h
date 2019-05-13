@@ -96,6 +96,7 @@
 #define SNMP_ERR_AUTH_FAILURE       18    /* authentication failure */
 #define SNMP_ERR_DECRYPTION         19    /* decryption error */
 #define SNMP_ERR_BAD_RESPONSE       20    /* malformed or unexpected response from agent */
+#define SNMP_ERR_ABORTED            21    /* operation aborted */
 
 
 //
@@ -774,10 +775,10 @@ UINT32 LIBNXSNMP_EXPORTABLE SnmpGetEx(SNMP_Transport *pTransport,
                                       size_t bufferSize, UINT32 dwFlags, UINT32 *dataLen);
 UINT32 LIBNXSNMP_EXPORTABLE SnmpWalk(SNMP_Transport *transport, const TCHAR *rootOid,
 						                   UINT32 (* handler)(SNMP_Variable *, SNMP_Transport *, void *),
-                                     void *userArg, bool logErrors = false);
+                                     void *userArg, bool logErrors = false, bool failOnShutdown = false);
 UINT32 LIBNXSNMP_EXPORTABLE SnmpWalk(SNMP_Transport *transport, const UINT32 *rootOid, size_t rootOidLen,
                                      UINT32 (* handler)(SNMP_Variable *, SNMP_Transport *, void *),
-                                     void *userArg, bool logErrors = false);
+                                     void *userArg, bool logErrors = false, bool failOnShutdown = false);
 int LIBNXSNMP_EXPORTABLE SnmpWalkCount(SNMP_Transport *transport, const UINT32 *rootOid, size_t rootOidLen);
 int LIBNXSNMP_EXPORTABLE SnmpWalkCount(SNMP_Transport *transport, const TCHAR *rootOid);
 

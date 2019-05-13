@@ -245,7 +245,7 @@ UINT32 LIBNXSNMP_EXPORTABLE SnmpGetEx(SNMP_Transport *pTransport,
  */
 UINT32 LIBNXSNMP_EXPORTABLE SnmpWalk(SNMP_Transport *transport, const TCHAR *rootOid,
                                      UINT32 (* handler)(SNMP_Variable *, SNMP_Transport *, void *),
-                                     void *userArg, bool logErrors)
+                                     void *userArg, bool logErrors, bool failOnShutdown)
 {
    if (transport == NULL)
       return SNMP_ERR_COMM;
@@ -262,7 +262,7 @@ UINT32 LIBNXSNMP_EXPORTABLE SnmpWalk(SNMP_Transport *transport, const TCHAR *roo
       return SNMP_ERR_BAD_OID;
    }
 
-   return SnmpWalk(transport, rootOidBin, rootOidLen, handler, userArg, logErrors);
+   return SnmpWalk(transport, rootOidBin, rootOidLen, handler, userArg, logErrors, failOnShutdown);
 }
 
 /**
@@ -270,7 +270,7 @@ UINT32 LIBNXSNMP_EXPORTABLE SnmpWalk(SNMP_Transport *transport, const TCHAR *roo
  */
 UINT32 LIBNXSNMP_EXPORTABLE SnmpWalk(SNMP_Transport *transport, const UINT32 *rootOid, size_t rootOidLen,
                                      UINT32 (* handler)(SNMP_Variable *, SNMP_Transport *, void *),
-                                     void *userArg, bool logErrors)
+                                     void *userArg, bool logErrors, bool failOnShutdown)
 {
 	if (transport == NULL)
 		return SNMP_ERR_COMM;
@@ -287,6 +287,12 @@ UINT32 LIBNXSNMP_EXPORTABLE SnmpWalk(SNMP_Transport *transport, const UINT32 *ro
    size_t firstObjectNameLen = 0;
    while(bRunning)
    {
+      if (failOnShutdown && IsShutdownInProgress())
+      {
+         dwResult = SNMP_ERR_ABORTED;
+         break;
+      }
+
       SNMP_PDU *pRqPDU = new SNMP_PDU(SNMP_GET_NEXT_REQUEST, (UINT32)InterlockedIncrement(&s_requestId) & 0x7FFFFFFF, transport->getSnmpVersion());
       pRqPDU->bindVariable(new SNMP_Variable(pdwName, nameLength));
 	   SNMP_PDU *pRespPDU;

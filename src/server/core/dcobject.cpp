@@ -1218,8 +1218,11 @@ struct FilterCallbackData
  */
 static EnumerationCallbackResult FilterCallback(const TCHAR *key, const void *value, void *data)
 {
-   NXSL_VM *instanceFilter = ((FilterCallbackData *)data)->instanceFilter;
-   DCObject *dco = ((FilterCallbackData *)data)->dco;
+   if (g_flags & AF_SHUTDOWN)
+      return _STOP;
+
+   NXSL_VM *instanceFilter = static_cast<FilterCallbackData*>(data)->instanceFilter;
+   DCObject *dco = static_cast<FilterCallbackData*>(data)->dco;
 
    instanceFilter->setGlobalVariable(_T("$object"), dco->getOwner()->createNXSLObject());
    instanceFilter->setGlobalVariable(_T("$targetObject"), dco->getOwner()->createNXSLObject());
@@ -1304,7 +1307,7 @@ static EnumerationCallbackResult FilterCallback(const TCHAR *key, const void *va
       TCHAR szBuffer[1024];
       _sntprintf(szBuffer, 1024, _T("DCI::%s::%d::InstanceFilter"), dco->getOwnerName(), dco->getId());
       PostDciEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, dco->getId(), "ssd", szBuffer, instanceFilter->getErrorText(), dco->getId());
-      ((FilterCallbackData *)data)->filteredInstances->set(key, (const TCHAR *)value);
+      static_cast<FilterCallbackData*>(data)->filteredInstances->set(key, (const TCHAR *)value);
    }
    return _CONTINUE;
 }
@@ -1339,7 +1342,6 @@ void DCObject::filterInstanceList(StringMap *instances)
    instances->addAll(&filteredInstances);
    delete data.instanceFilter;
 }
-
 
 /**
  * Set new instance discovery filter script

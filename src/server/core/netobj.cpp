@@ -2492,6 +2492,9 @@ NXSL_Value *NetObj::createNXSLObject()
  */
 void NetObj::executeHookScript(const TCHAR *hookName)
 {
+   if (g_flags & AF_SHUTDOWN)
+      return;
+
    TCHAR scriptName[MAX_PATH] = _T("Hook::");
    _tcslcpy(&scriptName[6], hookName, MAX_PATH - 6);
    NXSL_VM *vm = CreateServerScriptVM(scriptName);

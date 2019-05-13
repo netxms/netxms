@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -345,6 +345,8 @@ static UINT32 Dot1dPortTableHandler(SNMP_Variable *pVar, SNMP_Transport *pTransp
 	return SNMP_ERR_SUCCESS;
 }
 
+#define FDB_CHECK_FAILURE(s) if ((s) != SNMP_ERR_SUCCESS) { delete fdb; return NULL; }
+
 /**
  * Get switch forwarding database from node
  */
@@ -355,7 +357,7 @@ ForwardingDatabase *GetSwitchForwardingDatabase(Node *node)
 
 	ForwardingDatabase *fdb = new ForwardingDatabase(node->getId());
 
-	node->callSnmpEnumerate(_T(".1.3.6.1.2.1.17.1.4.1.2"), Dot1dPortTableHandler, fdb);
+	FDB_CHECK_FAILURE(node->callSnmpEnumerate(_T(".1.3.6.1.2.1.17.1.4.1.2"), Dot1dPortTableHandler, fdb, NULL, true));
    if (node->isPerVlanFdbSupported())
    {
       VlanList *vlans = node->getVlans();
@@ -365,20 +367,25 @@ ForwardingDatabase *GetSwitchForwardingDatabase(Node *node)
          {
             TCHAR context[16];
             _sntprintf(context, 16, _T("%s%d"), (node->getSNMPVersion() < SNMP_VERSION_3) ? _T("") : _T("vlan-"), vlans->get(i)->getVlanId());
-            node->callSnmpEnumerate(_T(".1.3.6.1.2.1.17.1.4.1.2"), Dot1dPortTableHandler, fdb, context);
+            if (node->callSnmpEnumerate(_T(".1.3.6.1.2.1.17.1.4.1.2"), Dot1dPortTableHandler, fdb, context, true))
+            {
+               vlans->decRefCount();
+               delete fdb;
+               return NULL;
+            }
          }
          vlans->decRefCount();
       }
    }
 
-   node->callSnmpEnumerate(_T(".1.3.6.1.2.1.17.7.1.2.2.1.2"), Dot1qTpFdbHandler, fdb);
-	int size = fdb->getSize();
-	DbgPrintf(5, _T("FDB: %d entries read from dot1qTpFdbTable"), size);
+   FDB_CHECK_FAILURE(node->callSnmpEnumerate(_T(".1.3.6.1.2.1.17.7.1.2.2.1.2"), Dot1qTpFdbHandler, fdb, NULL, true));
+   int size = fdb->getSize();
+   DbgPrintf(5, _T("FDB: %d entries read from dot1qTpFdbTable"), size);
 
    fdb->setCurrentVlanId(1);
-	node->callSnmpEnumerate(_T(".1.3.6.1.2.1.17.4.3.1.1"), FDBHandler, fdb);
-	DbgPrintf(5, _T("FDB: %d entries read from dot1dTpFdbTable"), fdb->getSize() - size);
-	size = fdb->getSize();
+   FDB_CHECK_FAILURE(node->callSnmpEnumerate(_T(".1.3.6.1.2.1.17.4.3.1.1"), FDBHandler, fdb, NULL, true));
+   DbgPrintf(5, _T("FDB: %d entries read from dot1dTpFdbTable"), fdb->getSize() - size);
+   size = fdb->getSize();
 
 	if (node->isPerVlanFdbSupported())
 	{
@@ -390,7 +397,12 @@ ForwardingDatabase *GetSwitchForwardingDatabase(Node *node)
 				TCHAR context[16];
 				_sntprintf(context, 16, _T("%s%d"), (node->getSNMPVersion() < SNMP_VERSION_3) ? _T("") : _T("vlan-"), vlans->get(i)->getVlanId());
             fdb->setCurrentVlanId((UINT16)vlans->get(i)->getVlanId());
-				node->callSnmpEnumerate(_T(".1.3.6.1.2.1.17.4.3.1.1"), FDBHandler, fdb, context);
+				if (node->callSnmpEnumerate(_T(".1.3.6.1.2.1.17.4.3.1.1"), FDBHandler, fdb, context) != SNMP_ERR_SUCCESS)
+				{
+		         vlans->decRefCount();
+				   delete fdb;
+				   return NULL;
+				}
 				DbgPrintf(5, _T("FDB: %d entries read from dot1dTpFdbTable in context %s"), fdb->getSize() - size, context);
 				size = fdb->getSize();
 			}

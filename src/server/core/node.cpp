@@ -4306,6 +4306,20 @@ void Node::instanceDiscoveryPoll(ClientSession *session, UINT32 requestId, Polle
 }
 
 /**
+ * Cancellation checkpoint for instance discovery loop
+ */
+#define INSTANCE_DISCOVERY_CANCELLATION_CHECKPOINT \
+if (g_flags & AF_SHUTDOWN) \
+{ \
+   object->clearBusyFlag(); \
+   for(i++; i < rootObjects.size(); i++) \
+      rootObjects.get(i)->clearBusyFlag(); \
+   delete instances; \
+   changed = false; \
+   break; \
+}
+
+/**
  * Do instance discovery
  */
 void Node::doInstanceDiscovery(UINT32 requestId)
@@ -4336,10 +4350,12 @@ void Node::doInstanceDiscovery(UINT32 requestId)
                 m_name, m_id, object->getName(), object->getId());
       sendPollerMsg(requestId, _T("   Updating instances for %s [%d]\r\n"), object->getName(), object->getId());
       StringMap *instances = getInstanceList(object);
+      INSTANCE_DISCOVERY_CANCELLATION_CHECKPOINT;
       if (instances != NULL)
       {
          DbgPrintf(5, _T("Node::doInstanceDiscovery(%s [%u]): read %d values"), m_name, m_id, instances->size());
          object->filterInstanceList(instances);
+         INSTANCE_DISCOVERY_CANCELLATION_CHECKPOINT;
          if (updateInstances(object, instances, requestId))
             changed = true;
          delete instances;
@@ -6840,7 +6856,7 @@ void Node::updateRoutingTable()
  */
 UINT32 Node::callSnmpEnumerate(const TCHAR *pszRootOid,
                               UINT32 (* pHandler)(SNMP_Variable *, SNMP_Transport *, void *),
-                              void *pArg, const TCHAR *context)
+                              void *pArg, const TCHAR *context, bool failOnShutdown)
 {
    if ((m_flags & NF_IS_SNMP) &&
        (!(m_dwDynamicFlags & NDF_SNMP_UNREACHABLE)) &&
@@ -6852,7 +6868,7 @@ UINT32 Node::callSnmpEnumerate(const TCHAR *pszRootOid,
       pTransport = createSnmpTransport(0, context);
       if (pTransport != NULL)
       {
-         dwResult = SnmpWalk(pTransport, pszRootOid, pHandler, pArg);
+         dwResult = SnmpWalk(pTransport, pszRootOid, pHandler, pArg, false, failOnShutdown);
          delete pTransport;
       }
       else
