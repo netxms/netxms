@@ -30,7 +30,6 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
-import org.netxms.client.constants.HistoricalDataType;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.DciDataRow;
 import org.netxms.client.datacollection.DciValue;
@@ -145,7 +144,7 @@ public class GrafanaDataCollection extends AbstractHandler
     */
    private JsonObject fillGraphData(Long objectId, Long dciId, String legend, Date from, Date to) throws IOException, NXCException
    {
-      DciData data = getSession().getCollectedData(objectId, dciId, from, to, 0, HistoricalDataType.PROCESSED);
+      DciData data = getSession().getCollectedData(objectId, dciId, from, to, 0);
 
       JsonObject root = new JsonObject();
       JsonArray datapoints = new JsonArray();
