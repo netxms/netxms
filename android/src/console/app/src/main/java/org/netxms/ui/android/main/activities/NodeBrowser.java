@@ -450,7 +450,7 @@ public class NodeBrowser extends AbstractClientActivity
 		{
 			if (currentParent != null)
 			{
-				AbstractObject[] list = currentParent.getChildsAsArray();
+				AbstractObject[] list = currentParent.getChildrenAsArray();
 				if (list != null)
 				{
 					adapter.setNodes(list);
@@ -502,7 +502,7 @@ public class NodeBrowser extends AbstractClientActivity
 			try
 			{
 				service.getSession().syncMissingObjects((long[])params[0], false, NXCSession.OBJECT_SYNC_WAIT);
-				return currentParent.getChildsAsArray();
+				return currentParent.getChildrenAsArray();
 			}
 			catch (Exception e)
 			{

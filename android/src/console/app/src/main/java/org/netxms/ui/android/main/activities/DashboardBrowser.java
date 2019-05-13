@@ -231,7 +231,7 @@ public class DashboardBrowser extends AbstractClientActivity
 
 		TextView curPath = (TextView)findViewById(R.id.ScreenTitleSecondary);
 		curPath.setText(getFullPath());
-		adapter.setNodes(currentParent.getChildsAsArray());
+		adapter.setNodes(currentParent.getChildrenAsArray());
 		adapter.notifyDataSetChanged();
 		new SyncMissingObjectsTask(currentParent.getObjectId()).execute(new Object[] { currentParent.getChildIdList() });
 	}
@@ -294,7 +294,7 @@ public class DashboardBrowser extends AbstractClientActivity
 		{
 			if (currentParent != null)
 			{
-				AbstractObject[] list = currentParent.getChildsAsArray();
+				AbstractObject[] list = currentParent.getChildrenAsArray();
 				if (list != null)
 				{
 					adapter.setNodes(list);
@@ -352,7 +352,7 @@ public class DashboardBrowser extends AbstractClientActivity
 				dialog.cancel();
 			if ((result == null) && (DashboardBrowser.this.currentParent.getObjectId() == currentRoot))
 			{
-				adapter.setNodes(currentParent.getChildsAsArray());
+				adapter.setNodes(currentParent.getChildrenAsArray());
 				adapter.notifyDataSetChanged();
 			}
 		}
