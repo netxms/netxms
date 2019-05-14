@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -48,7 +48,7 @@ Zone::Zone(UINT32 uin, const TCHAR *name) : NetObj()
 {
    m_id = 0;
    m_uin = uin;
-   nx_strncpy(m_name, name, MAX_OBJECT_NAME);
+   _tcslcpy(m_name, name, MAX_OBJECT_NAME);
    m_proxyNodeId = 0;
 	m_idxNodeByAddr = new InetAddressIndex;
 	m_idxInterfaceByAddr = new InetAddressIndex;
@@ -75,58 +75,60 @@ bool Zone::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    if (!loadCommonProperties(hdb))
       return false;
 
-   TCHAR szQuery[256];
-   _sntprintf(szQuery, 256, _T("SELECT zone_guid FROM zones WHERE id=%d"), dwId);
-   DB_RESULT hResult = DBSelect(hdb, szQuery);
-   if (hResult == NULL)
-      return false;     // Query failed
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT zone_guid FROM zones WHERE id=?"));
+   if (hStmt == NULL)
+      return false;
 
    bool success = false;
 
-   if (DBGetNumRows(hResult) == 0)
+   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, dwId);
+   DB_RESULT hResult = DBSelectPrepared(hStmt);
+   if (hResult != NULL)
    {
-      DBFreeResult(hResult);
-      if (dwId == BUILTIN_OID_ZONE0)
+      if (DBGetNumRows(hResult) == 0)
       {
-         m_uin = 0;
-         return true;
+         if (dwId == BUILTIN_OID_ZONE0)
+         {
+            m_uin = 0;
+            success = true;
+         }
+         else
+         {
+            nxlog_debug(4, _T("Cannot load zone object %ld - missing record in \"zones\" table"), (long)m_id);
+         }
       }
       else
       {
-			DbgPrintf(4, _T("Cannot load zone object %ld - missing record in \"zones\" table"), (long)m_id);
-         return false;
+         m_uin = DBGetFieldULong(hResult, 0, 0);
+         success = true;
       }
+      DBFreeResult(hResult);
    }
-   else
+   DBFreeStatement(hStmt);
+
+   if (success)
    {
-      m_uin = DBGetFieldULong(hResult, 0, 0);
-
-      DB_STATEMENT zoneProxyStmt = DBPrepare(hdb, _T("SELECT proxy_node FROM zone_proxies WHERE object_id=?"));
-      if (zoneProxyStmt != NULL)
+      success = false;
+      hStmt = DBPrepare(hdb, _T("SELECT proxy_node FROM zone_proxies WHERE object_id=?"));
+      if (hStmt != NULL)
       {
-         DBBind(zoneProxyStmt, 1, DB_SQLTYPE_INTEGER, dwId);
-         DB_RESULT zoneProxyResult = DBSelectPrepared(zoneProxyStmt);
-         if (zoneProxyResult != NULL)
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, dwId);
+         hResult = DBSelectPrepared(hStmt);
+         if (hResult != NULL)
          {
-            if (DBGetNumRows(zoneProxyResult) > 0)
-            {
-               m_proxyNodeId = DBGetFieldULong(zoneProxyResult, 0, 0);
-               success = true;
-            }
-            else if (dwId == BUILTIN_OID_ZONE0)
-            {
-               success = true;
-            }
+            m_proxyNodeId = DBGetFieldULong(hResult, 0, 0);
+            DBFreeResult(hResult);
+            success = true;
          }
+         DBFreeStatement(hStmt);
       }
    }
-
-   DBFreeResult(hResult);
 
    // Load access list
-   loadACLFromDB(hdb);
+   if (success)
+      success = loadACLFromDB(hdb);
 
-   return true;
+   return success;
 }
 
 /**
@@ -160,17 +162,24 @@ bool Zone::saveToDatabase(DB_HANDLE hdb)
          success = false;
       }
    }
-   if(success)
-   {
+
+   if (success)
       success = executeQueryOnObject(hdb, _T("DELETE FROM zone_proxies WHERE object_id=?"));
-   }
-   if(success)
+
+   if (success)
    {
       DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO zone_proxies (object_id,proxy_node) VALUES (?,?)"));
-      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
-      DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_proxyNodeId);
-      success = DBExecute(hStmt);
-      DBFreeStatement(hStmt);
+      if (hStmt != NULL)
+      {
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+         DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_proxyNodeId);
+         success = DBExecute(hStmt);
+         DBFreeStatement(hStmt);
+      }
+      else
+      {
+         success = false;
+      }
    }
 
    if (success)
@@ -188,6 +197,8 @@ bool Zone::deleteFromDatabase(DB_HANDLE hdb)
    bool success = NetObj::deleteFromDatabase(hdb);
    if (success)
       success = executeQueryOnObject(hdb, _T("DELETE FROM zones WHERE id=?"));
+   if (success)
+      success = executeQueryOnObject(hdb, _T("DELETE FROM zone_proxies WHERE object_id=?"));
    return success;
 }
 
