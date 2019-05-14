@@ -1914,8 +1914,39 @@ else
 			AC_DEFINE(HAVE_PTHREAD_RWLOCK, 1, Define to 1 if you have working pthread read/write locks)
 		fi
 	fi
-
 fi
+
+AC_LANG_PUSH([C++])
+
+AC_MSG_CHECKING(whether C++ compiler supports __thread)
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+]],[[
+	static __thread int z;
+	return 0;
+]])
+],[
+        AC_MSG_RESULT(yes)
+        AC_DEFINE(HAVE_THREAD_SPECIFIER,1,Define to 1 if __thread storage specifier is available)
+],[
+        AC_MSG_RESULT(no)
+        AC_DEFINE(HAVE_THREAD_SPECIFIER,0,Define to 1 if __thread storage specifier is available)
+])
+
+AC_MSG_CHECKING(whether C++ compiler supports thread_local)
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+]],[[
+	static thread_local int z;
+	return 0;
+]])
+],[
+        AC_MSG_RESULT(yes)
+        AC_DEFINE(HAVE_THREAD_LOCAL_SPECIFIER,1,Define to 1 if thread_local storage specifier is available)
+],[
+        AC_MSG_RESULT(no)
+        AC_DEFINE(HAVE_THREAD_LOCAL_SPECIFIER,0,Define to 1 if thread_local storage specifier is available)
+])
+
+AC_LANG_POP([C++])
 
 
 #--------------------------------------------------------------------

@@ -887,9 +887,18 @@ int LIBNETXMS_EXPORTABLE putws(const WCHAR *s)
 
 WCHAR LIBNETXMS_EXPORTABLE *wcserror(int errnum)
 {
-   static WCHAR value[8192];
-
-   MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, strerror(errnum), -1, value, 8192);
+   static thread_local WCHAR value[256];
+#if HAVE_STRERROR_R
+   char buffer[256];
+#if HAVE_POSIX_STRERROR_R
+   strerror_r(errnum, buffer, 256);
+   MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, buffer, -1, value, 256);
+#else
+   MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, strerror_r(errnum, buffer, 256), -1, value, 256);
+#endif
+#else
+   MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, strerror(errnum), -1, value, 256);
+#endif
    return value;
 }
 
