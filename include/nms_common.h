@@ -61,8 +61,6 @@
 #define _CRT_SECURE_NO_WARNINGS
 #endif
 
-#define HAVE_OVERRIDE_SPECIFIER  1
-
 #endif   /* _WIN32 */
 
 #if HAVE_JEMALLOC_JEMALLOC_H
@@ -198,7 +196,9 @@ typedef int bool;
 
 #define _Noreturn __declspec(noreturn)
 
-#define CAN_DELETE_COPY_CTOR    1
+#define CAN_DELETE_COPY_CTOR      1
+#define HAVE_OVERRIDE_SPECIFIER   1
+#define HAVE_THREAD_LOCAL_STORAGE 1
 
 // Disable some warnings:
 //   4577 -  'noexcept' used with no exception handling mode specified
@@ -442,6 +442,16 @@ typedef unsigned __int64 uint64_t;
 #define PREFIX		"/usr/local"
 #endif
 #warning Installation prefix not defined, defaulting to /usr/local
+#endif
+
+#if HAVE_THREAD_LOCAL_SPECIFIER
+#define HAVE_THREAD_LOCAL_STORAGE 1
+#elif HAVE_THREAD_SPECIFIER
+#define thread_local __thread
+#define HAVE_THREAD_LOCAL_STORAGE 1
+#else
+#define thread_local
+#define HAVE_THREAD_LOCAL_STORAGE 0
 #endif
 
 #if HAVE_STDBOOL_H
