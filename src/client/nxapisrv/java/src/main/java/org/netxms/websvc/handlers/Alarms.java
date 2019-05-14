@@ -25,7 +25,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.netxms.client.NXCSession;
@@ -134,6 +133,9 @@ public class Alarms extends AbstractHandler
       if (!Boolean.parseBoolean(query.getOrDefault("resolveReferences", "false")))
          return new ResponseContainer("alarms", alarms);
 
+      if (!session.isObjectsSynchronized())
+         session.syncObjects();
+      
       List<JsonObject> serializedAlarms = new ArrayList<JsonObject>();
       Map<Long, DciValue[]> cachedValues = null;
       Gson gson = JsonTools.createGsonInstance();
