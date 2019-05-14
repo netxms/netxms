@@ -2595,6 +2595,9 @@ void LIBNETXMS_EXPORTABLE SHA256Init(SHA256_STATE *state);
 void LIBNETXMS_EXPORTABLE SHA256Update(SHA256_STATE *state, const BYTE *data, size_t size);
 void LIBNETXMS_EXPORTABLE SHA256Finish(SHA256_STATE *state, BYTE *hash);
 
+void LIBNETXMS_EXPORTABLE SignMessage(const BYTE *message, size_t mlen, const BYTE *key, size_t klen, BYTE *signature);
+bool LIBNETXMS_EXPORTABLE ValidateMessageSignature(const BYTE *message, size_t mlen, const BYTE *key, size_t klen, const BYTE *signature);
+
 void LIBNETXMS_EXPORTABLE GenerateRandomBytes(BYTE *buffer, size_t size);
 
 void LIBNETXMS_EXPORTABLE LogOpenSSLErrorStack(int level);
