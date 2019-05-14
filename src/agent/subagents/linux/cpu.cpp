@@ -420,7 +420,7 @@ struct CPU_INFO
    int coreId;
    int physicalId;
    char model[64];
-   long frequency;
+   INT64 frequency;
    int cacheSize;
 };
 
@@ -473,11 +473,11 @@ static int ReadCpuInfo(CPU_INFO *info, int size)
       else if (!strcmp(buffer, "cpu MHz"))
       {
          char *eptr;
-         info[count].frequency = strtol(s, &eptr, 10) * 1000;
+         info[count].frequency = strtoll(s, &eptr, 10) * _LL(1000);
          if (*eptr == '.')
          {
             eptr[4] = 0;
-            info[count].frequency += strtol(eptr + 1, NULL, 10);
+            info[count].frequency += strtoll(eptr + 1, NULL, 10);
          }
       }
       else if (!strcmp(buffer, "cache size"))
@@ -530,7 +530,8 @@ LONG H_CpuInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommS
          ret_int(value, cpu->coreId);
          break;
       case 'F':   // Frequency
-         _sntprintf(value, MAX_RESULT_LENGTH, _T("%d.%03d"), cpu->frequency / 1000, cpu->frequency % 1000);
+         _sntprintf(value, MAX_RESULT_LENGTH, _T("%d.%03d"),
+               static_cast<int>(cpu->frequency / 1000), static_cast<int>(cpu->frequency % 1000));
          break;
       case 'M':   // Model
          ret_mbstring(value, cpu->model);

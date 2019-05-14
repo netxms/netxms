@@ -211,7 +211,7 @@ static int ProcRead(ObjectArray<Process> *plist, const char *procNameFilter, con
       bool uidFound = true;
       char *pProcName = NULL;
       char *pProcStat = NULL;
-      unsigned long nPid = 0;
+      unsigned int nPid = 0;
 
       char fileName[MAX_PATH], procNameBuffer[MAX_PROCESS_NAME_LEN + 1];
 
@@ -240,7 +240,7 @@ static int ProcRead(ObjectArray<Process> *plist, const char *procNameFilter, con
          if (bytes > 0)
          {
             szProcStat[bytes] = 0;
-            if (sscanf(szProcStat, "%lu ", &nPid) == 1)
+            if (sscanf(szProcStat, "%u ", &nPid) == 1)
             {
                char *procNamePos = strchr(szProcStat, '(');
                if (procNamePos != NULL)
@@ -356,7 +356,7 @@ static int ProcRead(ObjectArray<Process> *plist, const char *procNameFilter, con
                           &p->state, &p->parent, &p->group, &p->minflt, &p->majflt,
                           &p->utime, &p->ktime, &p->threads, &p->vmsize, &p->rss) != 10)
                {
-                  AgentWriteDebugLog(2, _T("Error parsing /proc/%d/stat"), nPid);
+                  AgentWriteDebugLog(2, _T("Error parsing /proc/%u/stat"), nPid);
                }
             }
             p->fd = readHandles ? ReadProcessHandles(nPid) : NULL;
