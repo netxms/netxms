@@ -345,6 +345,68 @@ bool Template::saveToDatabase(DB_HANDLE hdb)
 }
 
 /**
+ * Process list of deleted items
+ */
+static bool ProcessDeletedItems(DB_HANDLE hdb, const String& list)
+{
+   String query = _T("DELETE FROM thresholds WHERE item_id IN (");
+   query.append(list);
+   query.append(_T(')'));
+   return DBQuery(hdb, query);
+}
+
+/**
+ * Process list of deleted tables
+ */
+static bool ProcessDeletedTables(DB_HANDLE hdb, const String& list)
+{
+   String query = _T("DELETE FROM dc_table_columns WHERE table_id IN (");
+   query.append(list);
+   query.append(_T(')'));
+   if (!DBQuery(hdb, query))
+      return false;
+
+   query = _T("DELETE FROM dct_thresholds WHERE table_id IN (");
+   query.append(list);
+   query.append(_T(')'));
+   return DBQuery(hdb, query);
+}
+
+/**
+ * Process list of deleted table thresholds
+ */
+static bool ProcessDeletedTableThresholds(DB_HANDLE hdb, const String& list)
+{
+   String query = _T("DELETE FROM dct_threshold_conditions WHERE threshold_id IN (");
+   query.append(list);
+   query.append(_T(')'));
+   if (!DBQuery(hdb, query))
+      return false;
+
+   query = _T("DELETE FROM dct_threshold_instances WHERE threshold_id IN (");
+   query.append(list);
+   query.append(_T(')'));
+   return DBQuery(hdb, query);
+}
+
+/**
+ * Process list of deleted data collection objects
+ */
+static bool ProcessDeletedDCObjects(DB_HANDLE hdb, const String& list)
+{
+   String query = _T("DELETE FROM dci_schedules WHERE item_id IN (");
+   query.append(list);
+   query.append(_T(')'));
+   if (!DBQuery(hdb, query))
+      return false;
+
+   query = _T("DELETE FROM dci_access WHERE dci_id IN (");
+   query.append(list);
+   query.append(_T(')'));
+   return DBQuery(hdb, query);
+}
+
+/**
  * Delete object from database
  */
 bool Template::deleteFromDatabase(DB_HANDLE hdb)
@@ -367,25 +429,30 @@ bool Template::deleteFromDatabase(DB_HANDLE hdb)
    // Delete DCI configuration
    if (success)
    {
-      String listItems, listTables, listAll, listTableThresholds;
-      for(int i = 0; i < m_dcObjects->size(); i++)
+      String listItems, listTables, listTableThresholds, listAll;
+      int countItems = 0, countTables = 0, countTableThresholds = 0, countAll = 0;
+      for(int i = 0; (i < m_dcObjects->size()) && success; i++)
       {
          DCObject *o = m_dcObjects->get(i);
          if (!listAll.isEmpty())
             listAll.append(_T(','));
          listAll.append(o->getId());
+         countAll++;
+
          if (o->getType() == DCO_TYPE_ITEM)
          {
             if (!listItems.isEmpty())
                listItems.append(_T(','));
             listItems.append(o->getId());
             QueueRawDciDataDelete(o->getId());
+            countItems++;
          }
          else if (o->getType() == DCO_TYPE_TABLE)
          {
             if (!listTables.isEmpty())
                listTables.append(_T(','));
             listTables.append(o->getId());
+            countTables++;
 
             IntegerArray<UINT32> *idList = static_cast<DCTable*>(o)->getThresholdIdList();
             for(int j = 0; j < idList->size(); j++)
@@ -393,50 +460,51 @@ bool Template::deleteFromDatabase(DB_HANDLE hdb)
                if (!listTableThresholds.isEmpty())
                   listTableThresholds.append(_T(','));
                listTableThresholds.append(idList->get(j));
+               countTableThresholds++;
             }
             delete idList;
          }
-      }
 
-      TCHAR query[8192];
-      if (!listItems.isEmpty())
-      {
-         _sntprintf(query, 8192, _T("DELETE FROM thresholds WHERE item_id IN (%s)"), (const TCHAR *)listItems);
-         success = DBQuery(hdb, query);
-      }
-
-      if (!listTables.isEmpty())
-      {
-         _sntprintf(query, 8192, _T("DELETE FROM dc_table_columns WHERE table_id IN (%s)"), (const TCHAR *)listTables);
-         success = DBQuery(hdb, query);
-         if (success)
+         if (countItems >= 500)
          {
-            _sntprintf(query, 8192, _T("DELETE FROM dct_thresholds WHERE table_id IN (%s)"), (const TCHAR *)listTables);
-            success = DBQuery(hdb, query);
+            success = ProcessDeletedItems(hdb, listItems);
+            listItems.clear();
+            countItems = 0;
+         }
+
+         if ((countTables >= 500) && success)
+         {
+            success = ProcessDeletedTables(hdb, listTables);
+            listTables.clear();
+            countTables = 0;
+         }
+
+         if ((countTableThresholds >= 500) && success)
+         {
+            success = ProcessDeletedTableThresholds(hdb, listTableThresholds);
+            listTableThresholds.clear();
+            countTableThresholds = 0;
+         }
+
+         if ((countAll >= 500) && success)
+         {
+            success = ProcessDeletedDCObjects(hdb, listAll);
+            listAll.clear();
+            countAll = 0;
          }
       }
 
-      if (!listTableThresholds.isEmpty())
-      {
-         _sntprintf(query, 8192, _T("DELETE FROM dct_threshold_conditions WHERE threshold_id IN (%s)"), (const TCHAR *)listTableThresholds);
-         success = DBQuery(hdb, query);
-         if (success)
-         {
-            _sntprintf(query, 8192, _T("DELETE FROM dct_threshold_instances WHERE threshold_id IN (%s)"), (const TCHAR *)listTableThresholds);
-            success = DBQuery(hdb, query);
-         }
-      }
+      if ((countItems > 0) && success)
+         success = ProcessDeletedItems(hdb, listItems);
 
-      if (!listAll.isEmpty())
-      {
-         _sntprintf(query, 8192, _T("DELETE FROM dci_schedules WHERE item_id IN (%s)"), (const TCHAR *)listAll);
-         success = DBQuery(hdb, query);
-         if (success)
-         {
-            _sntprintf(query, 8192, _T("DELETE FROM dci_access WHERE dci_id IN (%s)"), (const TCHAR *)listAll);
-            success = DBQuery(hdb, query);
-         }
-      }
+      if ((countTables > 0) && success)
+         success = ProcessDeletedTables(hdb, listTables);
+
+      if ((countTableThresholds > 0) && success)
+         success = ProcessDeletedTableThresholds(hdb, listTableThresholds);
+
+      if ((countAll > 0) && success)
+         success = ProcessDeletedDCObjects(hdb, listAll);
    }
 
    if (success)
