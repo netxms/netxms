@@ -179,6 +179,7 @@ void DataCollectionItem::updateAndSave(const DataCollectionItem *item)
    {
       m_type = item->m_type;
       m_origin = item->m_origin;
+      MemFree(m_name);
       m_name = _tcsdup(item->m_name);
       m_pollingInterval = item->m_pollingInterval;
       if (m_lastPollTime < item->m_lastPollTime)
