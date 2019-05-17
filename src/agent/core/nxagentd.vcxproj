@@ -197,6 +197,7 @@
     <ClCompile Include="master.cpp" />
     <ClCompile Include="nxagentd.cpp" />
     <ClCompile Include="policy.cpp" />
+    <ClCompile Include="proxy.cpp" />
     <ClCompile Include="push.cpp" />
     <ClCompile Include="register.cpp" />
     <ClCompile Include="sa.cpp" />

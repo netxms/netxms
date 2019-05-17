@@ -881,7 +881,7 @@ void LIBNETXMS_EXPORTABLE GenerateRandomBytes(BYTE *buffer, size_t size)
 void LIBNETXMS_EXPORTABLE SignMessage(const void *message, size_t mlen, const BYTE *key, size_t klen, BYTE *signature)
 {
 #ifdef _WITH_ENCRYPTION
-   HMAC(EVP_sha256(), key, klen, reinterpret_cast<const BYTE*>(message), mlen, signature, NULL);
+   HMAC(EVP_sha256(), key, static_cast<int>(klen), reinterpret_cast<const BYTE*>(message), mlen, signature, NULL);
 #else
    memset(signature, 0, SHA256_DIGEST_SIZE); // FIXME: use embedded HMAC-SHA256 implementation
 #endif

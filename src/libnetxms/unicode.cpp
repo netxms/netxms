@@ -534,9 +534,9 @@ UCS2CHAR LIBNETXMS_EXPORTABLE *UCS2StringFromUCS4String(const UCS4CHAR *src)
  */
 UCS4CHAR LIBNETXMS_EXPORTABLE *UCS4StringFromUCS2String(const UCS2CHAR *src)
 {
-   int len = ucs2_strlen(src) + 1;
+   size_t len = ucs2_strlen(src) + 1;
    UCS4CHAR *out = MemAllocArrayNoInit<UCS4CHAR>(len);
-   ucs2_to_ucs4(src, -1, out, len);
+   ucs2_to_ucs4(src, -1, out, static_cast<int>(len));
    return out;
 }
 

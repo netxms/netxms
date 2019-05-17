@@ -28,13 +28,12 @@
 
 #define CHECK_ALLOCATION do { \
    if (m_allocated == m_count) { \
-      size_t step = std::min(4096, m_allocated); \
+      int step = std::min(4096, m_allocated); \
       m_allocated += step; \
       TCHAR **values = m_pool.allocateArray<TCHAR*>(m_allocated); \
       memcpy(values, m_values, (m_allocated - step) * sizeof(TCHAR*)); \
       m_values = values; \
    } } while(0)
-
 
 /**
  * Constructor: create empty string list

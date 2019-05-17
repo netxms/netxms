@@ -609,7 +609,7 @@ int LIBNETXMS_EXPORTABLE ThreadPoolGetSerializedRequestCount(ThreadPool *p, cons
 {
    MutexLock(p->serializationLock);
    SerializationQueue *q = p->serializationQueues->get(key);
-   int count = (q != NULL) ? q->size() : 0;
+   int count = (q != NULL) ? static_cast<int>(q->size()) : 0;
    MutexUnlock(p->serializationLock);
    return count;
 }

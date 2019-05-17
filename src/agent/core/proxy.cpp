@@ -250,9 +250,9 @@ void DataCollectionProxy::checkConnection()
    for(int retryCount = 5; retryCount > 0; retryCount--)
    {
 #ifdef MSG_NOSIGNAL
-      int bytes = send(sd, &request, sizeof(request), MSG_NOSIGNAL);
+      int bytes = send(sd, reinterpret_cast<char*>(&request), sizeof(request), MSG_NOSIGNAL);
 #else
-      int bytes = send(sd, &request, sizeof(request), 0);
+      int bytes = send(sd, reinterpret_cast<char*>(&request), sizeof(request), 0);
 #endif
       if (bytes <= 0)
          continue;
@@ -403,7 +403,7 @@ ConnectionProcessingResult ProxyConnectionListener::processDatagram(SOCKET s)
    ProxyMsg request;
    SockAddrBuffer addr;
    socklen_t addrLen = sizeof(SockAddrBuffer);
-   int bytes = recvfrom(s, &request, sizeof(request), 0, (struct sockaddr *)&addr, &addrLen);
+   int bytes = recvfrom(s, reinterpret_cast<char*>(&request), sizeof(request), 0, (struct sockaddr *)&addr, &addrLen);
    if (bytes > 0)
    {
       g_proxyListMutex.lock();
@@ -426,7 +426,7 @@ ConnectionProcessingResult ProxyConnectionListener::processDatagram(SOCKET s)
 
       if (isValid)
       {
-         if (sendto(s, &request, sizeof(request), 0, (struct sockaddr *)&addr, addrLen) < 0)
+         if (sendto(s, reinterpret_cast<char*>(&request), sizeof(request), 0, (struct sockaddr *)&addr, addrLen) < 0)
          {
             TCHAR buffer[64];
             nxlog_debug_tag(DEBUG_TAG, 1, _T("ProxyConnectionListener: cannot send response to requester at %s"), SockaddrToStr((struct sockaddr *)&addr, buffer));

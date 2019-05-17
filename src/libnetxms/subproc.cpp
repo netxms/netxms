@@ -317,7 +317,7 @@ bool SubProcessExecutor::sendCommand(UINT16 command, const void *data, size_t da
    msg.flags = htons((data != NULL) ? MF_BINARY : MF_CONTROL);
    msg.numFields = htonl((UINT32)dataSize);
    UINT32 padding = (8 - (dataSize % 8)) & 7;
-   msg.size = htonl(NXCP_HEADER_SIZE + dataSize + padding);
+   msg.size = htonl(NXCP_HEADER_SIZE + static_cast<UINT32>(dataSize) + padding);
    if (!m_pipe->write(&msg, NXCP_HEADER_SIZE))
       return false;
    if (data != NULL)
