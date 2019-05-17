@@ -138,6 +138,17 @@ mibs_DATA = \
 	CISCO-VLAN-IFTABLE-RELATIONSHIP-MIB.txt \
 	CISCO-VLAN-MEMBERSHIP-MIB.txt \
 	CISCO-VTP-MIB.txt \
+	CISCOSB-BRIDGEMIBOBJECTS-MIB.txt \
+	CISCOSB-CPU-COUNTERS-MIB.txt \
+	CISCOSB-DEVICEPARAMS-MIB.txt \
+	CISCOSB-HWENVIROMENT.txt \
+	CISCOSB-LLDP-MIB.txt \
+	CISCOSB-MIB.txt \
+	CISCOSB-Physicaldescription-MIB.txt \
+	CISCOSB-SYSMNG-MIB.txt \
+	CISCOSB-TRAPS-MIB.txt \
+	CISCOSB-rlInterfaces.txt \
+	CISCOSB-vlan-MIB.txt \
 	CONFIG-MIB.txt \
 	Console-Monitoring-MIB.txt \
 	COSINE-GLOBAL-REG.txt \
@@ -535,6 +546,7 @@ mibs_DATA = \
 	OPTIMUX-MIB.txt \
 	OSPF-MIB.txt \
 	OSPF-TRAP-MIB.txt \
+	OSPFV3-MIB.txt \
 	P-BRIDGE-MIB.txt \
 	PerfHist-TC-MIB.txt \
 	PIM-MIB.txt \

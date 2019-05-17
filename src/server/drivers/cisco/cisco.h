@@ -32,9 +32,9 @@
 class CiscoDeviceDriver : public NetworkDeviceDriver
 {
 public:
-   virtual const TCHAR *getVersion();
-	virtual VlanList *getVlans(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData);
-	virtual bool isPerVlanFdbSupported();
+   virtual const TCHAR *getVersion() override;
+	virtual VlanList *getVlans(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData) override;
+	virtual bool isPerVlanFdbSupported() override;
 };
 
 /**
@@ -43,10 +43,10 @@ public:
 class GenericCiscoDriver : public CiscoDeviceDriver
 {
 public:
-   virtual const TCHAR *getName();
+   virtual const TCHAR *getName() override;
 
-   virtual int isPotentialDevice(const TCHAR *oid);
-   virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid);
+   virtual int isPotentialDevice(const TCHAR *oid) override;
+   virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid) override;
 };
 
 /**
@@ -55,11 +55,11 @@ public:
 class CatalystDriver : public CiscoDeviceDriver
 {
 public:
-   virtual const TCHAR *getName();
+   virtual const TCHAR *getName() override;
 
-   virtual int isPotentialDevice(const TCHAR *oid);
-   virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid);
-   virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, int useAliases, bool useIfXTable);
+   virtual int isPotentialDevice(const TCHAR *oid) override;
+   virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid) override;
+   virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, int useAliases, bool useIfXTable) override;
 };
 
 /**
@@ -68,11 +68,11 @@ public:
 class Cat2900Driver : public CiscoDeviceDriver
 {
 public:
-   virtual const TCHAR *getName();
+   virtual const TCHAR *getName() override;
 
-   virtual int isPotentialDevice(const TCHAR *oid);
-   virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid);
-   virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, int useAliases, bool useIfXTable);
+   virtual int isPotentialDevice(const TCHAR *oid) override;
+   virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid) override;
+   virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, int useAliases, bool useIfXTable) override;
 };
 
 /**
@@ -81,11 +81,34 @@ public:
 class CiscoEswDriver : public NetworkDeviceDriver
 {
 public:
-   virtual const TCHAR *getName();
+   virtual const TCHAR *getName() override;
 
-   virtual int isPotentialDevice(const TCHAR *oid);
-   virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid);
-   virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, int useAliases, bool useIfXTable);
+   virtual int isPotentialDevice(const TCHAR *oid) override;
+   virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid) override;
+   virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, int useAliases, bool useIfXTable) override;
+};
+
+/**
+ * Max number of modules (stack units) for SB switch
+ */
+#define SB_MAX_MODULE_NUMBER        64
+
+/**
+ * Max number of interfaces per row for SB switch
+ */
+#define SB_MAX_INTERFACES_PER_ROW   32
+
+/**
+ * Cisco SB module (stack unit) layout information
+ */
+struct SB_MODULE_LAYOUT
+{
+   UINT32 index;
+   UINT32 minIfIndex;
+   UINT32 maxIfIndex;
+   UINT32 rows;
+   UINT32 columns;
+   UINT32 interfaces[SB_MAX_INTERFACES_PER_ROW * 2];
 };
 
 /**
@@ -93,12 +116,16 @@ public:
  */
 class CiscoSbDriver : public NetworkDeviceDriver
 {
-public:
-   virtual const TCHAR *getName();
+private:
+   int getPhysicalPortLayout(SNMP_Transport *snmp, SB_MODULE_LAYOUT *layout);
 
-   virtual int isPotentialDevice(const TCHAR *oid);
-   virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid);
-   virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, int useAliases, bool useIfXTable);
+public:
+   virtual const TCHAR *getName() override;
+
+   virtual int isPotentialDevice(const TCHAR *oid) override;
+   virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid) override;
+   virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, int useAliases, bool useIfXTable) override;
+   virtual void getModuleLayout(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, int module, NDD_MODULE_LAYOUT *layout) override;
 };
 
 #endif
