@@ -31,7 +31,7 @@
  */
 extern ThreadPool *g_dataCollectorPool;
 
-HashMap<ProxyKey, DataCollectionProxy> g_proxyList;
+HashMap<ProxyKey, DataCollectionProxy> g_proxyList(true);
 HashMap<UINT64, ZoneConfiguration> *g_proxyserverConfList = new HashMap<UINT64, ZoneConfiguration>(true);
 Mutex g_proxyListMutex;
 
