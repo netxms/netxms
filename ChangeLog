@@ -4,6 +4,7 @@
 
 - Improved driver for Cisco Small Business switches
 - Fixed issues:
+	MX-1609 (Duplicate server configuration parameters)
 	NX-1637 (Unrecognized Cisco SG Switch)
 
 
