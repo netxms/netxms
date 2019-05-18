@@ -227,7 +227,7 @@ void Zone::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
    m_snmpPorts.fillMessage(msg, VID_ZONE_SNMP_PORT_LIST_BASE, VID_ZONE_SNMP_PORT_COUNT);
 
 #if HAVE_ALLOCA
-   UINT32 *idList = static_cast<UINT32*>(alloca(m_proxyNodes->size() * sizeof(UINT32)));
+   UINT32 *idList = reinterpret_cast<UINT32*>(alloca(m_proxyNodes->size() * sizeof(UINT32)));
 #else
    UINT32 *idList = MemAllocArrayNoInit<UINT32>(m_proxyNodes->size());
 #endif
