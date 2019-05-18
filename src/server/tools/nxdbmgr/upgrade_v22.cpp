@@ -24,6 +24,16 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade 22.56 to 22.57
+ */
+static bool H_UpgradeFromV56()
+{
+   CHK_EXEC(SQLQuery(_T("DELETE FROM config WHERE var_name='AlarmListDisplayLimit'")));
+   CHK_EXEC(SetMinorSchemaVersion(57));
+   return true;
+}
+
+/**
  * Upgrade 22.55 to 22.56
  */
 static bool H_UpgradeFromV55()
@@ -1133,6 +1143,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 56, 22, 57, H_UpgradeFromV56 },
    { 55, 22, 56, H_UpgradeFromV55 },
    { 54, 22, 55, H_UpgradeFromV54 },
    { 53, 22, 54, H_UpgradeFromV53 },
