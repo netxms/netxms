@@ -380,4 +380,10 @@ Language=English
 [PS-%1] %2
 .
 
+MessageId=
+SymbolicName=MSG_CANNOT_FORCE_ENCRYPTION
+Language=English
+Encryption is required but agent was built without encryption support
+.
+
 ;#endif
