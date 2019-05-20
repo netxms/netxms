@@ -181,8 +181,8 @@ static EnumerationCallbackResult SetPSValueCB(const TCHAR *key, const void *valu
 
    DB_STATEMENT hStmt =
       IsDatabaseRecordExist(hdb, _T("persistent_storage"), _T("entry_key"), key) ?
-         DBPrepare(hdb, _T("INSERT INTO persistent_storage (value,entry_key) VALUES (?,?)")) :
-         DBPrepare(hdb, _T("UPDATE persistent_storage SET value=? WHERE entry_key=?"));
+         DBPrepare(hdb, _T("UPDATE persistent_storage SET value=? WHERE entry_key=?")) :
+         DBPrepare(hdb, _T("INSERT INTO persistent_storage (value,entry_key) VALUES (?,?)"));
 
    bool success;
    if (hStmt != NULL)
@@ -207,7 +207,7 @@ static EnumerationCallbackResult MoveToPreviousListCB(const TCHAR *key, const vo
 {
    StringMap *mapToMove = (StringMap*)data;
    if (!s_valueDeleteList->contains(key) && !s_valueSetList->contains(key))
-      mapToMove->set(key, (TCHAR *)value);
+      mapToMove->set(key, static_cast<const TCHAR*>(value));
    return _CONTINUE;
 }
 
