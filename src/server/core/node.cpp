@@ -1865,9 +1865,8 @@ restart_agent_check:
       nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 7, _T("StatusPoll(%s): agent check finished"), m_name);
 
       // If file update connection is active, send NOP command to prevent disconnection by idle timeout
-      AgentConnection *fileUpdateConnection;
       lockProperties();
-      fileUpdateConnection = m_fileUpdateConn;
+      AgentConnection *fileUpdateConnection = m_fileUpdateConn;
       if (fileUpdateConnection != NULL)
          fileUpdateConnection->incRefCount();
       unlockProperties();
@@ -1956,7 +1955,7 @@ restart_agent_check:
    delete snmp;
    if (pollerNode != NULL)
       pollerNode->decRefCount();
-   DbgPrintf(7, _T("StatusPoll(%s): finished child object poll"), m_name);
+   nxlog_debug(7, _T("StatusPoll(%s): finished child object poll"), m_name);
 
    // Check if entire node is down
    // This check is disabled for nodes without IP address
@@ -1978,10 +1977,25 @@ restart_agent_check:
          }
       }
       unlockChildList();
-      if (allDown && (m_capabilities & NC_IS_NATIVE_AGENT) &&
-          !(m_flags & NF_DISABLE_NXCP) && !(m_state & NSF_AGENT_UNREACHABLE))
+      if (allDown && (m_capabilities & NC_IS_NATIVE_AGENT) && !(m_flags & NF_DISABLE_NXCP))
       {
-         allDown = false;
+         if (m_state & NSF_AGENT_UNREACHABLE)
+         {
+            // Use TCP ping to check if node actually unreachable if possible
+            if (m_ipAddress.isValidUnicast())
+            {
+               TcpPingResult r = TcpPing(m_ipAddress, m_agentPort, 1000);
+               if ((r == TCP_PING_SUCCESS) || (r == TCP_PING_REJECT))
+               {
+                  nxlog_debug(6, _T("StatusPoll(%s): agent us unreachable but IP address is likely reachable (TCP ping returns %d)"), m_name, r);
+                  allDown = false;
+               }
+            }
+         }
+         else
+         {
+            allDown = false;
+         }
       }
       if (allDown && (m_capabilities & NC_IS_SNMP) &&
           !(m_flags & NF_DISABLE_SNMP) && !(m_state & NSF_SNMP_UNREACHABLE))
@@ -1989,7 +2003,7 @@ restart_agent_check:
          allDown = false;
       }
 
-      DbgPrintf(6, _T("StatusPoll(%s): allDown=%s, statFlags=0x%08X"), m_name, allDown ? _T("true") : _T("false"), m_state);
+      nxlog_debug(6, _T("StatusPoll(%s): allDown=%s, statFlags=0x%08X"), m_name, allDown ? _T("true") : _T("false"), m_state);
       if (allDown)
       {
          if (!(m_state & DCSF_UNREACHABLE))
