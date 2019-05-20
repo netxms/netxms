@@ -2421,7 +2421,7 @@ typedef struct _dir_struc_w
 
 #ifdef __cplusplus
 
-int LIBNETXMS_EXPORTABLE ConnectEx(SOCKET s, struct sockaddr *addr, int len, UINT32 timeout);
+int LIBNETXMS_EXPORTABLE ConnectEx(SOCKET s, struct sockaddr *addr, int len, UINT32 timeout, bool *isTimeout = NULL);
 int LIBNETXMS_EXPORTABLE SendEx(SOCKET hSocket, const void *data, size_t len, int flags, MUTEX mutex);
 int LIBNETXMS_EXPORTABLE RecvEx(SOCKET hSocket, void *data, size_t len, int flags, UINT32 timeout);
 bool LIBNETXMS_EXPORTABLE RecvAll(SOCKET s, void *buffer, size_t size, UINT32 timeout);
@@ -3011,6 +3011,17 @@ enum nxDirectoryType
    nxDirShare = 4
 };
 
+/**
+ * TCP ping result
+ */
+enum TcpPingResult
+{
+   TCP_PING_SUCCESS = 0,
+   TCP_PING_SOCKET_ERROR = 1,
+   TCP_PING_TIMEOUT = 2,
+   TCP_PING_REJECT = 3
+};
+
 #define EMA_FP_SHIFT  11                  /* nr of bits of precision */
 #define EMA_FP_1      (1 << EMA_FP_SHIFT) /* 1.0 as fixed-point */
 #define EMA_EXP_1     1884                /* 1/exp(5sec/1min) as fixed-point */
@@ -3034,6 +3045,7 @@ INT64 LIBNETXMS_EXPORTABLE GetMappedHeapMemory();
 
 void LIBNETXMS_EXPORTABLE GetNetXMSDirectory(nxDirectoryType type, TCHAR *dir);
 
+TcpPingResult LIBNETXMS_EXPORTABLE TcpPing(const InetAddress& addr, UINT16 port, UINT32 timeout);
 UINT32 LIBNETXMS_EXPORTABLE IcmpPing(const InetAddress& addr, int numRetries, UINT32 timeout, UINT32 *rtt, UINT32 packetSize, bool dontFragment);
 UINT16 LIBNETXMS_EXPORTABLE CalculateIPChecksum(const void *data, size_t len);
 

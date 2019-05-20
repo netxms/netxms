@@ -1305,9 +1305,12 @@ bool RecvAll(SOCKET s, void *buffer, size_t size, UINT32 timeout)
  * Connect with given timeout
  * Sets socket to non-blocking mode
  */
-int LIBNETXMS_EXPORTABLE ConnectEx(SOCKET s, struct sockaddr *addr, int len, UINT32 timeout)
+int LIBNETXMS_EXPORTABLE ConnectEx(SOCKET s, struct sockaddr *addr, int len, UINT32 timeout, bool *isTimeout)
 {
 	SetSocketNonBlocking(s);
+
+	if (isTimeout != NULL)
+	   *isTimeout = false;
 
 	int rc = connect(s, addr, len);
 	if (rc == -1)
@@ -1347,6 +1350,8 @@ int LIBNETXMS_EXPORTABLE ConnectEx(SOCKET s, struct sockaddr *addr, int len, UIN
 			else if (rc == 0)	// timeout, return error
 			{
 				rc = -1;
+			   if (isTimeout != NULL)
+			      *isTimeout = true;
 			}
 #else
 			struct timeval tv;
@@ -1397,6 +1402,8 @@ int LIBNETXMS_EXPORTABLE ConnectEx(SOCKET s, struct sockaddr *addr, int len, UIN
 #ifdef _WIN32
 				WSASetLastError(WSAETIMEDOUT);
 #endif
+            if (isTimeout != NULL)
+               *isTimeout = true;
 			}
 #endif
 		}
@@ -3617,4 +3624,50 @@ bool LIBNETXMS_EXPORTABLE VerifyFileSignature(const TCHAR *file)
 #else
    return false;
 #endif
+}
+
+/**
+ * Do TCP "ping"
+ */
+TcpPingResult LIBNETXMS_EXPORTABLE TcpPing(const InetAddress& addr, UINT16 port, UINT32 timeout)
+{
+   SOCKET s = socket(addr.getFamily(), SOCK_STREAM, 0);
+   if (s == INVALID_SOCKET)
+      return TCP_PING_SOCKET_ERROR;
+
+   TcpPingResult result;
+   bool isTimeout;
+   SockAddrBuffer sb;
+   addr.fillSockAddr(&sb, port);
+   if (ConnectEx(s, reinterpret_cast<struct sockaddr*>(&sb), SA_LEN(reinterpret_cast<struct sockaddr*>(&sb)), timeout, &isTimeout) == 0)
+   {
+      result = TCP_PING_SUCCESS;
+      shutdown(s, SHUT_RDWR);
+   }
+   else
+   {
+      if (isTimeout)
+      {
+         result = TCP_PING_TIMEOUT;
+      }
+      else
+      {
+#ifdef _WIN32
+         result = (WSAGetLastError() == WSAECONNREFUSED) ? TCP_PING_REJECT : TCP_PING_SOCKET_ERROR;
+#else
+         unsigned int err, len = sizeof(int);
+         if (getsockopt(s, SOL_SOCKET, SO_ERROR, &err, &len) == 0)
+         {
+            result = (err == ECONNREFUSED) ? TCP_PING_REJECT : TCP_PING_SOCKET_ERROR;
+         }
+         else
+         {
+            result = TCP_PING_SOCKET_ERROR;
+         }
+#endif
+      }
+   }
+
+   closesocket(s);
+   return result;
 }
