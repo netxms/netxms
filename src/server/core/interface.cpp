@@ -29,8 +29,8 @@
 Interface::Interface() : NetObj()
 {
    m_parentInterfaceId = 0;
-	m_flags = 0;
-	nx_strncpy(m_description, m_name, MAX_DB_STRING);
+   m_flags = 0;
+   _tcslcpy(m_description, m_name, MAX_DB_STRING);
    m_alias[0] = 0;
    m_index = 0;
    m_type = IFTYPE_OTHER;
@@ -114,13 +114,13 @@ Interface::Interface(const TCHAR *name, const TCHAR *descr, UINT32 index, const 
           : NetObj()
 {
    if ((ifType == IFTYPE_SOFTWARE_LOOPBACK) || addrList.isLoopbackOnly())
-		m_flags = IF_LOOPBACK;
-	else
-		m_flags = 0;
+      m_flags = IF_LOOPBACK;
+   else
+      m_flags = 0;
 
    m_parentInterfaceId = 0;
-   nx_strncpy(m_name, name, MAX_OBJECT_NAME);
-   nx_strncpy(m_description, descr, MAX_DB_STRING);
+   _tcslcpy(m_name, name, MAX_OBJECT_NAME);
+   _tcslcpy(m_description, descr, MAX_DB_STRING);
    m_alias[0] = 0;
    m_index = index;
    m_type = ifType;
@@ -159,7 +159,7 @@ Interface::Interface(const TCHAR *name, const TCHAR *descr, UINT32 index, const 
  */
 Interface::~Interface()
 {
-   free(m_ifTableSuffix);
+   MemFree(m_ifTableSuffix);
    delete m_vlans;
 }
 
