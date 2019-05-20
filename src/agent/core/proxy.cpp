@@ -289,6 +289,11 @@ void DataCollectionProxy::checkConnection()
       }
    }
 
+   if(m_connected != result)
+   {
+      nxlog_write_generic(NXLOG_INFO, _T("DataCollectionProxy::checkConnection(): ")UINT64X_FMT(_T("016"))_T(" server %d proxy connection status changed to %s"), m_serverId, m_proxyId, result ? _T("true") : _T("false"));
+   }
+
    m_connected = result;
    closesocket(sd);
 }
@@ -432,11 +437,15 @@ ConnectionProcessingResult ProxyConnectionListener::processDatagram(SOCKET s)
             nxlog_debug_tag(DEBUG_TAG, 1, _T("ProxyConnectionListener: cannot send response to requester at %s"), SockaddrToStr((struct sockaddr *)&addr, buffer));
          }
       }
-      else
+      else if (nxlog_get_debug_level_tag(DEBUG_TAG) >= 7)
       {
          TCHAR buffer[64];
-         nxlog_debug_tag(DEBUG_TAG, 1, _T("ProxyConnectionListener: invalid packet drop: ip=%s, serverid=") UINT64X_FMT(_T("016")) _T(", nodeid=%d"),
-                        SockaddrToStr((struct sockaddr *)&addr, buffer), ntohq(request.serverId), ntohl(request.proxyIdSelf));
+         TCHAR challenge[PROXY_CHALLENGE_SIZE * 2 + 1];
+         TCHAR hmac[SHA256_DIGEST_SIZE * 2 + 1];
+         nxlog_debug_tag(DEBUG_TAG, 7, _T("ProxyConnectionListener: invalid packet drop: ip=%s"), SockaddrToStr((struct sockaddr *)&addr, buffer));
+         nxlog_debug_tag(DEBUG_TAG, 7, _T("   Request:  challenge=%s serverId=") UINT64X_FMT(_T("016")) _T(" zone=%u dest=%u self=%u HMAC=%s"),
+                           BinToStr(request.challenge, PROXY_CHALLENGE_SIZE, challenge), request.serverId, request.zoneUin,
+                           request.proxyIdDest, request.proxyIdSelf, BinToStr(request.hmac, SHA256_DIGEST_SIZE, hmac));
       }
    }
    return CPR_COMPLETED;
