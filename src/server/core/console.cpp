@@ -1293,6 +1293,50 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
       if (libraryLocked)
          scriptLibrary->unlock();
    }
+   else if (IsCommand(_T("TCPPING"), szBuffer, 4))
+   {
+      pArg = ExtractWord(pArg, szBuffer);
+      if (szBuffer[0] != 0)
+      {
+         InetAddress addr = InetAddress::parse(szBuffer);
+         if (addr.isValid())
+         {
+            ExtractWord(pArg, szBuffer);
+            if (szBuffer[0] != 0)
+            {
+               UINT16 port = static_cast<UINT16>(_tcstoul(szBuffer, NULL, 0));
+               UINT32 rc = TcpPing(addr, port, 1000);
+               switch(rc)
+               {
+                  case TCP_PING_SUCCESS:
+                     ConsolePrintf(pCtx, _T("Success\n"));
+                     break;
+                  case TCP_PING_REJECT:
+                     ConsolePrintf(pCtx, _T("Connection rejected\n"));
+                     break;
+                  case TCP_PING_SOCKET_ERROR:
+                     ConsolePrintf(pCtx, _T("Socket error\n"));
+                     break;
+                  case TCP_PING_TIMEOUT:
+                     ConsolePrintf(pCtx, _T("Timeout\n"));
+                     break;
+               }
+            }
+            else
+            {
+               ConsoleWrite(pCtx, _T("Usage: TCPPING <address> <port>\n"));
+            }
+         }
+         else
+         {
+            ConsoleWrite(pCtx, _T("Invalid IP address\n"));
+         }
+      }
+      else
+      {
+         ConsoleWrite(pCtx, _T("Usage: TCPPING <address> <port>\n"));
+      }
+   }
    else if (IsCommand(_T("TRACE"), szBuffer, 1))
    {
       UINT32 dwNode1, dwNode2;
