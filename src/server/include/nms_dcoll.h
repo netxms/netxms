@@ -96,6 +96,7 @@ private:
    UINT32 m_eventCode;      // Event code to be generated
    UINT32 m_rearmEventCode;
    ItemValue m_value;
+   bool m_expandValue;
    ItemValue m_lastCheckValue;
    BYTE m_function;          // Function code
    BYTE m_operation;         // Comparision operation code
@@ -105,8 +106,8 @@ private:
    TCHAR *m_scriptSource;
    NXSL_Program *m_script;
    time_t m_lastScriptErrorReport;
-   BOOL m_isReached;
-   BOOL m_wasReachedBeforeMaint;
+   bool m_isReached;
+   bool m_wasReachedBeforeMaint;
 	int m_numMatches;			// Number of consecutive matches
 	int m_repeatInterval;		// -1 = default, 0 = off, >0 = seconds between repeats
 	time_t m_lastEventTimestamp;
@@ -128,29 +129,29 @@ public:
 
    void bindToItem(UINT32 itemId, UINT32 targetId) { m_itemId = itemId; m_targetId = targetId; }
 
-   UINT32 getId() { return m_id; }
-   UINT32 getEventCode() { return m_eventCode; }
-   UINT32 getRearmEventCode() { return m_rearmEventCode; }
-	int getFunction() { return m_function; }
-	int getOperation() { return m_operation; }
-	int getSampleCount() { return m_sampleCount; }
-   const TCHAR *getStringValue() { return m_value.getString(); }
-   BOOL isReached() { return m_isReached; }
-   BOOL wasReachedBeforeMaintenance() { return m_wasReachedBeforeMaint; }
-   void updateBeforeMaintenanceState() { m_wasReachedBeforeMaint = m_isReached; }
-   const ItemValue& getLastCheckValue() { return m_lastCheckValue; }
-   void setLastCheckedValue(const ItemValue &value) { m_lastCheckValue  = value; }
+   UINT32 getId() const { return m_id; }
+   UINT32 getEventCode() const { return m_eventCode; }
+   UINT32 getRearmEventCode() const { return m_rearmEventCode; }
+	int getFunction() const { return m_function; }
+	int getOperation() const { return m_operation; }
+	int getSampleCount() const { return m_sampleCount; }
+   const TCHAR *getStringValue() const { return m_value.getString(); }
+   bool isReached() const { return m_isReached; }
+   bool wasReachedBeforeMaintenance() const { return m_wasReachedBeforeMaint; }
+   const ItemValue& getLastCheckValue() const { return m_lastCheckValue; }
+	int getRepeatInterval() const { return m_repeatInterval; }
+	time_t getLastEventTimestamp() const { return m_lastEventTimestamp; }
+	int getCurrentSeverity() const { return m_currentSeverity; }
 
-	int getRepeatInterval() { return m_repeatInterval; }
-	time_t getLastEventTimestamp() { return m_lastEventTimestamp; }
-	int getCurrentSeverity() { return m_currentSeverity; }
 	void markLastEvent(int severity);
+   void updateBeforeMaintenanceState() { m_wasReachedBeforeMaint = m_isReached; }
+   void setLastCheckedValue(const ItemValue &value) { m_lastCheckValue = value; }
 
    BOOL saveToDB(DB_HANDLE hdb, UINT32 dwIndex);
    ThresholdCheckResult check(ItemValue &value, ItemValue **ppPrevValues, ItemValue &fvalue, NetObj *target, DCItem *dci);
    ThresholdCheckResult checkError(UINT32 dwErrorCount);
 
-   void createMessage(NXCPMessage *msg, UINT32 baseId);
+   void createMessage(NXCPMessage *msg, UINT32 baseId) const;
    void updateFromMessage(NXCPMessage *msg, UINT32 baseId);
 
    void createId();

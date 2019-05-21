@@ -2890,8 +2890,23 @@ String NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, const E
                   else
                   {
                      buffer[i] = 0;
-                     StrStrip(buffer);
-                     output.appendPreallocated(getCustomAttributeCopy(buffer));
+                     TCHAR *defaultValue = _tcschr(buffer, _T(':'));
+                     if (defaultValue != NULL)
+                     {
+                        *defaultValue = 0;
+                        defaultValue++;
+                        StrStrip(buffer);
+                        TCHAR *v = getCustomAttributeCopy(buffer);
+                        if (v != NULL)
+                           output.appendPreallocated(v);
+                        else
+                           output.append(defaultValue);
+                     }
+                     else
+                     {
+                        StrStrip(buffer);
+                        output.appendPreallocated(getCustomAttributeCopy(buffer));
+                     }
                   }
                   break;
                case '(':   // Input field
@@ -2924,12 +2939,25 @@ String NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, const E
                      else
                      {
                         buffer[i] = 0;
-                        StrStrip(buffer);
                         const StringList *names = event->getParameterNames();
-                        int index = names->indexOfIgnoreCase(buffer);
-                        if (index != -1)
+                        TCHAR *defaultValue = _tcschr(buffer, _T(':'));
+                        if (defaultValue != NULL)
                         {
-                           output.append(event->getParameter(index));
+                           *defaultValue = 0;
+                           defaultValue++;
+                           StrStrip(buffer);
+                           int index = names->indexOfIgnoreCase(buffer);
+                           if (index != -1)
+                              output.append(event->getParameter(index));
+                           else
+                              output.append(defaultValue);
+                        }
+                        else
+                        {
+                           StrStrip(buffer);
+                           int index = names->indexOfIgnoreCase(buffer);
+                           if (index != -1)
+                              output.append(event->getParameter(index));
                         }
                      }
                   }

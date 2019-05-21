@@ -32,6 +32,7 @@ Threshold::Threshold(DCItem *pRelatedItem)
    m_targetId = pRelatedItem->getOwnerId();
    m_eventCode = EVENT_THRESHOLD_REACHED;
    m_rearmEventCode = EVENT_THRESHOLD_REARMED;
+   m_expandValue = false;
    m_function = F_LAST;
    m_operation = OP_EQ;
    m_dataType = pRelatedItem->getDataType();
@@ -57,6 +58,7 @@ Threshold::Threshold()
    m_targetId = 0;
    m_eventCode = EVENT_THRESHOLD_REACHED;
    m_rearmEventCode = EVENT_THRESHOLD_REARMED;
+   m_expandValue = false;
    m_function = F_LAST;
    m_operation = OP_EQ;
    m_dataType = 0;
@@ -83,6 +85,7 @@ Threshold::Threshold(Threshold *src, bool shadowCopy)
    m_eventCode = src->m_eventCode;
    m_rearmEventCode = src->m_rearmEventCode;
    m_value = src->m_value;
+   m_expandValue = src->m_expandValue;
    m_function = src->m_function;
    m_operation = src->m_operation;
    m_dataType = src->m_dataType;
@@ -118,6 +121,7 @@ Threshold::Threshold(DB_RESULT hResult, int iRow, DCItem *pRelatedItem)
    m_rearmEventCode = DBGetFieldULong(hResult, iRow, 9);
    DBGetField(hResult, iRow, 1, szBuffer, MAX_DB_STRING);
    m_value = szBuffer;
+   m_expandValue = (NumChars(m_value, '%') > 0);
    m_function = (BYTE)DBGetFieldLong(hResult, iRow, 3);
    m_operation = (BYTE)DBGetFieldLong(hResult, iRow, 4);
    m_dataType = pRelatedItem->getDataType();
@@ -152,6 +156,7 @@ Threshold::Threshold(ConfigEntry *config, DCItem *parentItem)
    m_operation = (BYTE)config->getSubEntryValueAsInt(_T("condition"), 0, OP_EQ);
    m_dataType = parentItem->getDataType();
 	m_value = config->getSubEntryValue(_T("value"), 0, _T(""));
+   m_expandValue = (NumChars(m_value, '%') > 0);
    m_sampleCount = (config->getSubEntryValue(_T("sampleCount")) != NULL) ? config->getSubEntryValueAsInt(_T("sampleCount"), 0, 1) : config->getSubEntryValueAsInt(_T("param1"), 0, 1);
    m_scriptSource = NULL;
    m_script = NULL;
@@ -262,7 +267,7 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
          break;
    }
 
-   BOOL bMatch = FALSE;
+   bool match = false;
    int dataType = m_dataType;
 
    // Execute function on value
@@ -302,12 +307,12 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
          break;
    }
 
-   // Run comparision operation on function result and threshold value
+   // Run comparison operation on function result and threshold value
    if (m_function == F_ERROR)
    {
       // Threshold::Check() can be called only for valid values, which
       // means that error thresholds cannot be active
-      bMatch = FALSE;
+      match = false;
    }
    else if (m_function == F_SCRIPT)
    {
@@ -324,7 +329,7 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
                NXSL_Value *result = vm->getResult();
                if (result != NULL)
                {
-                  bMatch = (result->getValueAsInt32() != 0);
+                  match = (result->getValueAsInt32() != 0);
                }
             }
             else
@@ -362,27 +367,30 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
    }
    else
    {
+      const ItemValue& tvalue = m_expandValue ?
+               ItemValue(target->expandText(m_value.getString(), NULL, NULL, NULL, NULL), m_value.getTimeStamp()) :
+               m_value;
       switch(m_operation)
       {
          case OP_LE:    // Less
             switch(dataType)
             {
                case DCI_DT_INT:
-                  bMatch = ((INT32)fvalue < (INT32)m_value);
+                  match = ((INT32)fvalue < (INT32)tvalue);
                   break;
                case DCI_DT_UINT:
                case DCI_DT_COUNTER32:
-                  bMatch = ((UINT32)fvalue < (UINT32)m_value);
+                  match = ((UINT32)fvalue < (UINT32)tvalue);
                   break;
                case DCI_DT_INT64:
-                  bMatch = ((INT64)fvalue < (INT64)m_value);
+                  match = ((INT64)fvalue < (INT64)tvalue);
                   break;
                case DCI_DT_UINT64:
                case DCI_DT_COUNTER64:
-                  bMatch = ((UINT64)fvalue < (UINT64)m_value);
+                  match = ((UINT64)fvalue < (UINT64)tvalue);
                   break;
                case DCI_DT_FLOAT:
-                  bMatch = ((double)fvalue < (double)m_value);
+                  match = ((double)fvalue < (double)tvalue);
                   break;
             }
             break;
@@ -390,21 +398,21 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
             switch(dataType)
             {
                case DCI_DT_INT:
-                  bMatch = ((INT32)fvalue <= (INT32)m_value);
+                  match = ((INT32)fvalue <= (INT32)tvalue);
                   break;
                case DCI_DT_UINT:
                case DCI_DT_COUNTER32:
-                  bMatch = ((UINT32)fvalue <= (UINT32)m_value);
+                  match = ((UINT32)fvalue <= (UINT32)tvalue);
                   break;
                case DCI_DT_INT64:
-                  bMatch = ((INT64)fvalue <= (INT64)m_value);
+                  match = ((INT64)fvalue <= (INT64)tvalue);
                   break;
                case DCI_DT_UINT64:
                case DCI_DT_COUNTER64:
-                  bMatch = ((UINT64)fvalue <= (UINT64)m_value);
+                  match = ((UINT64)fvalue <= (UINT64)tvalue);
                   break;
                case DCI_DT_FLOAT:
-                  bMatch = ((double)fvalue <= (double)m_value);
+                  match = ((double)fvalue <= (double)tvalue);
                   break;
             }
             break;
@@ -412,24 +420,24 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
             switch(dataType)
             {
                case DCI_DT_INT:
-                  bMatch = ((INT32)fvalue == (INT32)m_value);
+                  match = ((INT32)fvalue == (INT32)tvalue);
                   break;
                case DCI_DT_UINT:
                case DCI_DT_COUNTER32:
-                  bMatch = ((UINT32)fvalue == (UINT32)m_value);
+                  match = ((UINT32)fvalue == (UINT32)tvalue);
                   break;
                case DCI_DT_INT64:
-                  bMatch = ((INT64)fvalue == (INT64)m_value);
+                  match = ((INT64)fvalue == (INT64)tvalue);
                   break;
                case DCI_DT_UINT64:
                case DCI_DT_COUNTER64:
-                  bMatch = ((UINT64)fvalue == (UINT64)m_value);
+                  match = ((UINT64)fvalue == (UINT64)tvalue);
                   break;
                case DCI_DT_FLOAT:
-                  bMatch = ((double)fvalue == (double)m_value);
+                  match = ((double)fvalue == (double)tvalue);
                   break;
                case DCI_DT_STRING:
-                  bMatch = !_tcscmp(fvalue.getString(), m_value.getString());
+                  match = (_tcscmp(fvalue.getString(), tvalue.getString()) == 0);
                   break;
             }
             break;
@@ -437,21 +445,21 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
             switch(dataType)
             {
                case DCI_DT_INT:
-                  bMatch = ((INT32)fvalue >= (INT32)m_value);
+                  match = ((INT32)fvalue >= (INT32)tvalue);
                   break;
                case DCI_DT_UINT:
                case DCI_DT_COUNTER32:
-                  bMatch = ((UINT32)fvalue >= (UINT32)m_value);
+                  match = ((UINT32)fvalue >= (UINT32)tvalue);
                   break;
                case DCI_DT_INT64:
-                  bMatch = ((INT64)fvalue >= (INT64)m_value);
+                  match = ((INT64)fvalue >= (INT64)tvalue);
                   break;
                case DCI_DT_UINT64:
                case DCI_DT_COUNTER64:
-                  bMatch = ((UINT64)fvalue >= (UINT64)m_value);
+                  match = ((UINT64)fvalue >= (UINT64)tvalue);
                   break;
                case DCI_DT_FLOAT:
-                  bMatch = ((double)fvalue >= (double)m_value);
+                  match = ((double)fvalue >= (double)tvalue);
                   break;
             }
             break;
@@ -459,21 +467,21 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
             switch(dataType)
             {
                case DCI_DT_INT:
-                  bMatch = ((INT32)fvalue > (INT32)m_value);
+                  match = ((INT32)fvalue > (INT32)tvalue);
                   break;
                case DCI_DT_UINT:
                case DCI_DT_COUNTER32:
-                  bMatch = ((UINT32)fvalue > (UINT32)m_value);
+                  match = ((UINT32)fvalue > (UINT32)tvalue);
                   break;
                case DCI_DT_INT64:
-                  bMatch = ((INT64)fvalue > (INT64)m_value);
+                  match = ((INT64)fvalue > (INT64)tvalue);
                   break;
                case DCI_DT_UINT64:
                case DCI_DT_COUNTER64:
-                  bMatch = ((UINT64)fvalue > (UINT64)m_value);
+                  match = ((UINT64)fvalue > (UINT64)tvalue);
                   break;
                case DCI_DT_FLOAT:
-                  bMatch = ((double)fvalue > (double)m_value);
+                  match = ((double)fvalue > (double)tvalue);
                   break;
             }
             break;
@@ -481,36 +489,36 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
             switch(dataType)
             {
                case DCI_DT_INT:
-                  bMatch = ((INT32)fvalue != (INT32)m_value);
+                  match = ((INT32)fvalue != (INT32)tvalue);
                   break;
                case DCI_DT_UINT:
                case DCI_DT_COUNTER32:
-                  bMatch = ((UINT32)fvalue != (UINT32)m_value);
+                  match = ((UINT32)fvalue != (UINT32)tvalue);
                   break;
                case DCI_DT_INT64:
-                  bMatch = ((INT64)fvalue != (INT64)m_value);
+                  match = ((INT64)fvalue != (INT64)tvalue);
                   break;
                case DCI_DT_UINT64:
                case DCI_DT_COUNTER64:
-                  bMatch = ((UINT64)fvalue != (UINT64)m_value);
+                  match = ((UINT64)fvalue != (UINT64)tvalue);
                   break;
                case DCI_DT_FLOAT:
-                  bMatch = ((double)fvalue != (double)m_value);
+                  match = ((double)fvalue != (double)tvalue);
                   break;
                case DCI_DT_STRING:
-                  bMatch = _tcscmp(fvalue.getString(), m_value.getString());
+                  match = (_tcscmp(fvalue.getString(), tvalue.getString()) != 0);
                   break;
             }
             break;
          case OP_LIKE:
             // This operation can be performed only on strings
             if (m_dataType == DCI_DT_STRING)
-               bMatch = MatchString(m_value.getString(), fvalue.getString(), true);
+               match = MatchString(tvalue.getString(), fvalue.getString(), true);
             break;
          case OP_NOTLIKE:
             // This operation can be performed only on strings
             if (m_dataType == DCI_DT_STRING)
-               bMatch = !MatchString(m_value.getString(), fvalue.getString(), true);
+               match = !MatchString(tvalue.getString(), fvalue.getString(), true);
             break;
          default:
             break;
@@ -520,11 +528,11 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
 	// Check for number of consecutive matches
 	if ((m_function == F_LAST) || (m_function == F_DIFF) || (m_function == F_SCRIPT))
 	{
-		if (bMatch)
+		if (match)
 		{
 			m_numMatches++;
 			if (m_numMatches < m_sampleCount)
-				bMatch = FALSE;
+				match = FALSE;
 		}
 		else
 		{
@@ -532,8 +540,8 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
 		}
 	}
 
-   ThresholdCheckResult result = (bMatch && !m_isReached) ? ACTIVATED : ((!bMatch && m_isReached) ? DEACTIVATED : (m_isReached ? ALREADY_ACTIVE : ALREADY_INACTIVE));
-   m_isReached = bMatch;
+   ThresholdCheckResult result = (match && !m_isReached) ? ACTIVATED : ((!match && m_isReached) ? DEACTIVATED : (m_isReached ? ALREADY_ACTIVE : ALREADY_INACTIVE));
+   m_isReached = match;
    if (result == ACTIVATED || result == DEACTIVATED)
    {
       // Update threshold status in database
@@ -569,9 +577,9 @@ ThresholdCheckResult Threshold::checkError(UINT32 dwErrorCount)
    if (m_function != F_ERROR)
       return m_isReached ? ALREADY_ACTIVE : ALREADY_INACTIVE;
 
-   BOOL bMatch = ((UINT32)m_sampleCount <= dwErrorCount);
-   ThresholdCheckResult result = (bMatch && !m_isReached) ? ACTIVATED : ((!bMatch && m_isReached) ? DEACTIVATED : (m_isReached ? ALREADY_ACTIVE : ALREADY_INACTIVE));
-   m_isReached = bMatch;
+   bool match = ((UINT32)m_sampleCount <= dwErrorCount);
+   ThresholdCheckResult result = (match && !m_isReached) ? ACTIVATED : ((!match && m_isReached) ? DEACTIVATED : (m_isReached ? ALREADY_ACTIVE : ALREADY_INACTIVE));
+   m_isReached = match;
    if (result == ACTIVATED || result == DEACTIVATED)
    {
       // Update threshold status in database
@@ -585,10 +593,9 @@ ThresholdCheckResult Threshold::checkError(UINT32 dwErrorCount)
 /**
  * Fill DCI_THRESHOLD with object's data ready to send over the network
  */
-void Threshold::createMessage(NXCPMessage *msg, UINT32 baseId)
+void Threshold::createMessage(NXCPMessage *msg, UINT32 baseId) const
 {
 	UINT32 varId = baseId;
-
 	msg->setField(varId++, m_id);
 	msg->setField(varId++, m_eventCode);
 	msg->setField(varId++, m_rearmEventCode);
@@ -619,6 +626,7 @@ void Threshold::updateFromMessage(NXCPMessage *msg, UINT32 baseId)
    setScript(msg->getFieldAsString(varId++));
 	m_repeatInterval = (int)msg->getFieldAsUInt32(varId++);
 	m_value = msg->getFieldAsString(varId++, buffer, MAX_DCI_STRING_VALUE);
+   m_expandValue = (NumChars(m_value, '%') > 0);
 }
 
 /**
@@ -784,9 +792,8 @@ bool Threshold::equals(const Threshold *t) const
 {
    bool match;
 
-   if (m_function == F_SCRIPT)
+   if ((m_function == F_SCRIPT) || t->m_expandValue || m_expandValue)
    {
-      // Threat value field as string for script thresholds
       match = (_tcscmp(t->m_value.getString(), m_value.getString()) == 0);
    }
    else
@@ -811,7 +818,7 @@ bool Threshold::equals(const Threshold *t) const
             match = ((double)t->m_value == (double)m_value);
             break;
          case DCI_DT_STRING:
-            match = !_tcscmp(t->m_value.getString(), m_value.getString());
+            match = (_tcscmp(t->m_value.getString(), m_value.getString()) == 0);
             break;
          default:
             match = true;
