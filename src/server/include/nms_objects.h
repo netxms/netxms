@@ -27,6 +27,7 @@
 #include <netxms_maps.h>
 #include <geolocation.h>
 #include <jansson.h>
+#include <math.h>
 #include "nxcore_jobs.h"
 #include "nms_topo.h"
 
@@ -2785,14 +2786,27 @@ struct ZoneProxy
    UINT32 nodeId;
    bool isAvailable;     // True if proxy is available
    UINT32 assignments;   // Number of objects where this proxy is assigned
-   double loadAverage;
+   double cpuLoad;
+   double dataCollectorLoad;
 
    ZoneProxy(UINT32 _nodeId)
    {
       nodeId = _nodeId;
       isAvailable = false;
       assignments = 0;
-      loadAverage = 0;
+      cpuLoad = 0;
+      dataCollectorLoad = 0;
+   }
+
+   int compareLoad(const ZoneProxy *p)
+   {
+      double d = dataCollectorLoad - p->dataCollectorLoad;
+      if (fabs(d) > 0.01)
+         return (d < 0) ? -1 : 1;
+      d = cpuLoad - p->cpuLoad;
+      if (fabs(d) > 0.01)
+         return (d < 0) ? -1 : 1;
+      return 0;
    }
 
    json_t *toJson() const

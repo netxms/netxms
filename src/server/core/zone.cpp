@@ -390,7 +390,7 @@ UINT32 Zone::getProxyNodeId(NetObj *object, bool backup)
             if ((object != NULL) && (p->nodeId == object->getAssignedZoneProxyId(!backup)))
                continue;
 
-            if ((proxy == NULL) || (p->loadAverage < proxy->loadAverage) || !proxy->isAvailable)
+            if ((proxy == NULL) || (p->compareLoad(proxy) < 0) || !proxy->isAvailable)
                proxy = p;
          }
       }
@@ -523,7 +523,8 @@ void Zone::updateProxyStatus(Node *node, bool activeMode)
          }
          if (isAvailable && activeMode)
          {
-            p->loadAverage = node->getMetricFromAgentAsDouble(_T("System.CPU.LoadAvg15"), p->loadAverage);
+            p->cpuLoad = node->getMetricFromAgentAsDouble(_T("System.CPU.LoadAvg15"), p->cpuLoad);
+            p->dataCollectorLoad = node->getMetricFromAgentAsDouble(_T("Agent.ThreadPool.LoadAverage15(DATACOLL)"), p->dataCollectorLoad);
          }
          break;
       }
@@ -575,8 +576,8 @@ void Zone::dumpState(ServerConsole *console)
       for(int i = 0; i < m_proxyNodes->size(); i++)
       {
          ZoneProxy *p = m_proxyNodes->get(i);
-         console->printf(_T("      [\x1b[33;1m%7u\x1b[0m] assignments=%u available=\x1b[%s\x1b[0m load=%f\n"), p->nodeId, p->assignments,
-                  p->isAvailable ? _T("32;1myes") : _T("31;1mno"), p->loadAverage);
+         console->printf(_T("      [\x1b[33;1m%7u\x1b[0m] assignments=%u available=\x1b[%s\x1b[0m cpuLoad=%f dcLoad=%f\n"), p->nodeId, p->assignments,
+                  p->isAvailable ? _T("32;1myes") : _T("31;1mno"), p->cpuLoad, p->dataCollectorLoad);
       }
    }
    else
