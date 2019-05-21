@@ -180,13 +180,13 @@ void CleanupActions()
 /**
  * Execute remote action
  */
-static BOOL ExecuteRemoteAction(TCHAR *pszTarget, TCHAR *pszAction)
+static BOOL ExecuteRemoteAction(const TCHAR *pszTarget, const TCHAR *pszAction)
 {
    AgentConnection *pConn;
    if (pszTarget[0] == '@')
    {
       //Resolve name of node to connection to it. Name should be in @name format.
-      Node *node = (Node *)FindObjectByName(pszTarget+1, OBJECT_NODE);
+      Node *node = (Node *)FindObjectByName(&pszTarget[1], OBJECT_NODE);
       if(node == NULL)
          return FALSE;
       pConn = node->createAgentConnection();
@@ -221,7 +221,7 @@ static BOOL ExecuteRemoteAction(TCHAR *pszTarget, TCHAR *pszAction)
    }
 
    StringList list;
-	TCHAR *pTmp = _tcsdup(pszAction);
+	TCHAR *pTmp = MemCopyString(pszAction);
 	int nLen = (int)_tcslen(pTmp);
 	for(int i = 0, nState = 0, nCount = 1; (i < nLen) && (nCount < 127); i++)
 	{
@@ -257,7 +257,7 @@ static BOOL ExecuteRemoteAction(TCHAR *pszTarget, TCHAR *pszAction)
    UINT32 rcc = pConn->execAction(pTmp, list);
    pConn->disconnect();
    pConn->decRefCount();
-   free(pTmp);
+   MemFree(pTmp);
    return rcc == ERR_SUCCESS;
 }
 
@@ -404,20 +404,18 @@ BOOL ExecuteAction(UINT32 actionId, const Event *event, const Alarm *alarm)
          nxlog_debug_tag(DEBUG_TAG, 3, _T("Executing action %d (%s) of type %s"),
             actionId, action->name, actionType[action->type]);
 
-         TCHAR *pszExpandedData, *pszExpandedSubject, *pszExpandedRcpt, *curr, *next;
+         String expandedData = event->expandText(CHECK_NULL_EX(action->data), alarm);
+         expandedData.trim();
 
-         pszExpandedData = event->expandText(CHECK_NULL_EX(action->data), alarm);
-         StrStrip(pszExpandedData);
-
-         pszExpandedRcpt = event->expandText(action->rcptAddr, alarm);
-         StrStrip(pszExpandedRcpt);
+         String expandedRcpt = event->expandText(action->rcptAddr, alarm);
+         expandedRcpt.trim();
 
          switch(action->type)
          {
             case ACTION_EXEC:
-               if (pszExpandedData[0] != 0)
+               if (!expandedData.isEmpty())
                {
-                  ThreadPoolExecute(g_mainThreadPool, RunCommand, _tcsdup(pszExpandedData));
+                  ThreadPoolExecute(g_mainThreadPool, RunCommand, MemCopyString(expandedData));
                }
                else
                {
@@ -426,21 +424,20 @@ BOOL ExecuteAction(UINT32 actionId, const Event *event, const Alarm *alarm)
 					bSuccess = TRUE;
                break;
             case ACTION_SEND_EMAIL:
-               if (pszExpandedRcpt[0] != 0)
+               if (!expandedRcpt.isEmpty())
                {
-                  nxlog_debug_tag(DEBUG_TAG, 3, _T("Sending mail to %s: \"%s\""), pszExpandedRcpt, pszExpandedData);
-                  pszExpandedSubject = event->expandText(action->emailSubject, alarm);
-					   curr = pszExpandedRcpt;
+                  nxlog_debug_tag(DEBUG_TAG, 3, _T("Sending mail to %s: \"%s\""), (const TCHAR *)expandedRcpt, (const TCHAR *)expandedData);
+                  String expandedSubject = event->expandText(action->emailSubject, alarm);
+					   TCHAR *curr = expandedRcpt.getBuffer(), *next;
 					   do
 					   {
 						   next = _tcschr(curr, _T(';'));
 						   if (next != NULL)
 							   *next = 0;
 						   StrStrip(curr);
-						   PostMail(curr, pszExpandedSubject, pszExpandedData);
+						   PostMail(curr, expandedSubject, expandedData);
 						   curr = next + 1;
 					   } while(next != NULL);
-                  free(pszExpandedSubject);
                }
                else
                {
@@ -449,17 +446,17 @@ BOOL ExecuteAction(UINT32 actionId, const Event *event, const Alarm *alarm)
                bSuccess = TRUE;
                break;
             case ACTION_SEND_SMS:
-               if (pszExpandedRcpt[0] != 0)
+               if (!expandedRcpt.isEmpty())
                {
-                  nxlog_debug_tag(DEBUG_TAG, 3, _T("Sending SMS to %s: \"%s\""), pszExpandedRcpt, pszExpandedData);
-					   curr = pszExpandedRcpt;
+                  nxlog_debug_tag(DEBUG_TAG, 3, _T("Sending SMS to %s: \"%s\""), (const TCHAR *)expandedRcpt, (const TCHAR *)expandedData);
+					   TCHAR *curr = expandedRcpt.getBuffer(), *next;
 					   do
 					   {
 						   next = _tcschr(curr, _T(';'));
 						   if (next != NULL)
 							   *next = 0;
 						   StrStrip(curr);
-	                  PostSMS(curr, pszExpandedData);
+	                  PostSMS(curr, expandedData);
 						   curr = next + 1;
 					   } while(next != NULL);
                }
@@ -470,22 +467,22 @@ BOOL ExecuteAction(UINT32 actionId, const Event *event, const Alarm *alarm)
                bSuccess = TRUE;
                break;
             case ACTION_XMPP_MESSAGE:
-               if (pszExpandedRcpt[0] != 0)
+               if (!expandedRcpt.isEmpty())
                {
 #if XMPP_SUPPORTED
-                  nxlog_debug_tag(DEBUG_TAG, 3, _T("Sending XMPP message to %s: \"%s\""), pszExpandedRcpt, pszExpandedData);
-					   curr = pszExpandedRcpt;
+                  nxlog_debug_tag(DEBUG_TAG, 3, _T("Sending XMPP message to %s: \"%s\""), (const TCHAR *)expandedRcpt, (const TCHAR *)expandedData);
+					   TCHAR *curr = expandedRcpt.getBuffer(), *next;
 					   do
 					   {
 						   next = _tcschr(curr, _T(';'));
 						   if (next != NULL)
 							   *next = 0;
 						   StrStrip(curr);
-	                  SendXMPPMessage(curr, pszExpandedData);
+	                  SendXMPPMessage(curr, expandedData);
 						   curr = next + 1;
 					   } while(next != NULL);
 #else
-                  nxlog_debug_tag(DEBUG_TAG, 3, _T("cannot send XMPP message to %s (server compiled without XMPP support)"), pszExpandedRcpt);
+                  nxlog_debug_tag(DEBUG_TAG, 3, _T("cannot send XMPP message to %s (server compiled without XMPP support)"), (const TCHAR *)expandedRcpt);
 #endif
                }
                else
@@ -495,10 +492,10 @@ BOOL ExecuteAction(UINT32 actionId, const Event *event, const Alarm *alarm)
                bSuccess = TRUE;
                break;
             case ACTION_REMOTE:
-               if (pszExpandedRcpt[0] != 0)
+               if (!expandedRcpt.isEmpty())
                {
-                  nxlog_debug_tag(DEBUG_TAG, 3, _T("Executing on \"%s\": \"%s\""), pszExpandedRcpt, pszExpandedData);
-                  bSuccess = ExecuteRemoteAction(pszExpandedRcpt, pszExpandedData);
+                  nxlog_debug_tag(DEBUG_TAG, 3, _T("Executing on \"%s\": \"%s\""), (const TCHAR *)expandedRcpt, (const TCHAR *)expandedData);
+                  bSuccess = ExecuteRemoteAction(expandedRcpt, expandedData);
                }
                else
                {
@@ -507,10 +504,10 @@ BOOL ExecuteAction(UINT32 actionId, const Event *event, const Alarm *alarm)
                }
                break;
 				case ACTION_FORWARD_EVENT:
-               if (pszExpandedRcpt[0] != 0)
+               if (!expandedRcpt.isEmpty())
                {
-                  nxlog_debug_tag(DEBUG_TAG, 3, _T("Forwarding event to \"%s\""), pszExpandedRcpt);
-                  bSuccess = ForwardEvent(pszExpandedRcpt, event);
+                  nxlog_debug_tag(DEBUG_TAG, 3, _T("Forwarding event to \"%s\""), (const TCHAR *)expandedRcpt);
+                  bSuccess = ForwardEvent(expandedRcpt, event);
                }
                else
                {
@@ -519,10 +516,10 @@ BOOL ExecuteAction(UINT32 actionId, const Event *event, const Alarm *alarm)
                }
 					break;
 				case ACTION_NXSL_SCRIPT:
-               if (pszExpandedRcpt[0] != 0)
+               if (!expandedRcpt.isEmpty())
                {
-                  nxlog_debug_tag(DEBUG_TAG, 3, _T("Executing NXSL script \"%s\""), pszExpandedRcpt);
-                  bSuccess = ExecuteActionScript(pszExpandedRcpt, event);
+                  nxlog_debug_tag(DEBUG_TAG, 3, _T("Executing NXSL script \"%s\""), (const TCHAR *)expandedRcpt);
+                  bSuccess = ExecuteActionScript(expandedRcpt, event);
                }
                else
                {
@@ -533,8 +530,6 @@ BOOL ExecuteAction(UINT32 actionId, const Event *event, const Alarm *alarm)
             default:
                break;
          }
-         free(pszExpandedRcpt);
-         free(pszExpandedData);
       }
    }
    RWLockUnlock(s_actionsLock);

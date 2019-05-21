@@ -171,7 +171,7 @@ public:
    void prepareMessage(NXCPMessage *msg) const;
 
    void expandMessageText();
-   TCHAR *expandText(const TCHAR *textTemplate, const Alarm *alarm = NULL) const;
+   String expandText(const TCHAR *textTemplate, const Alarm *alarm = NULL) const;
    void setMessage(const TCHAR *text) { MemFree(m_messageText); m_messageText = MemCopyString(text); }
    void setUserTag(const TCHAR *text) { MemFree(m_userTag); m_userTag = MemCopyString(text); }
 

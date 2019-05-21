@@ -877,7 +877,7 @@ public:
    const TCHAR *dbgGetChildList(TCHAR *szBuffer);
 
    static const TCHAR *getObjectClassName(int objectClass);
-   TCHAR *expandText(const TCHAR *textTemplate, const Alarm *alarm, const Event *event, const TCHAR *userName, const StringMap *inputFields);
+   String expandText(const TCHAR *textTemplate, const Alarm *alarm, const Event *event, const TCHAR *userName, const StringMap *inputFields);
 
    const IntegerArray<UINT32> *getResponsibleUsers() { return m_responsibleUsers; }
    IntegerArray<UINT32> *getAllResponsibleUsers();

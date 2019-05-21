@@ -678,13 +678,13 @@ void Event::expandMessageText()
 
    if (m_messageText != NULL)
       MemFree(m_messageText);
-   m_messageText = expandText(m_messageTemplate);
+   m_messageText = MemCopyString(expandText(m_messageTemplate));
 }
 
 /**
  * Substitute % macros in given text with actual values
  */
-TCHAR *Event::expandText(const TCHAR *textTemplate, const Alarm *alarm) const
+String Event::expandText(const TCHAR *textTemplate, const Alarm *alarm) const
 {
    NetObj *obj = FindObjectById(m_sourceId);
    if (obj == NULL)

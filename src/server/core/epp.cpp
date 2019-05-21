@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -525,11 +525,9 @@ bool EPRule::matchScript(Event *pEvent)
 static EnumerationCallbackResult ExecutePstorageSetAction(const TCHAR *key, const void *value, void *data)
 {
    Event *pEvent = (Event *)data;
-   TCHAR *psValue = pEvent->expandText(key);
-   TCHAR *psKey = pEvent->expandText((TCHAR *)value);
+   String psValue = pEvent->expandText(key);
+   String psKey = pEvent->expandText((TCHAR *)value);
    SetPersistentStorageValue(psValue, psKey);
-   free(psValue);
-   free(psKey);
    return _CONTINUE;
 }
 
@@ -570,11 +568,10 @@ bool EPRule::processEvent(Event *event)
             TCHAR parameters[64], comments[256];
             _sntprintf(parameters, 64, _T("action=%u;event=") UINT64_FMT _T(";alarm=%u"), a->actionId, event->getId(), (alarm != NULL) ? alarm->getAlarmId() : 0);
             _sntprintf(comments, 256, _T("Delayed action execution for event %s"), event->getName());
-            TCHAR *key = ((a->timerKey != NULL) && (*a->timerKey != 0)) ? event->expandText(a->timerKey, alarm) : NULL;
+            String key = ((a->timerKey != NULL) && (*a->timerKey != 0)) ? event->expandText(a->timerKey, alarm) : String();
             AddOneTimeScheduledTask(_T("Execute.Action"), time(NULL) + a->timerDelay, parameters,
                      new ActionExecutionTransientData(event, alarm), 0, event->getSourceId(), SYSTEM_ACCESS_FULL,
-                     comments, SCHEDULED_TASK_SYSTEM, key);
-            MemFree(key);
+                     comments, SCHEDULED_TASK_SYSTEM, key.isEmpty() ? NULL : (const TCHAR *)key);
          }
       }
       delete alarm;
@@ -586,12 +583,14 @@ bool EPRule::processEvent(Event *event)
       Alarm *alarm = FindAlarmById(alarmId);
       for(int i = 0; i < m_timerCancellations.size(); i++)
       {
-         TCHAR *key = event->expandText(m_timerCancellations.get(i), alarm);
-         if (DeleteScheduledTaskByKey(key))
+         String key = event->expandText(m_timerCancellations.get(i), alarm);
+         if (!key.isEmpty())
          {
-            nxlog_debug_tag(DEBUG_TAG, 6, _T("Delayed action execution with key \"%s\" cancelled"), key);
+            if (DeleteScheduledTaskByKey(key))
+            {
+               nxlog_debug_tag(DEBUG_TAG, 6, _T("Delayed action execution with key \"%s\" cancelled"), key);
+            }
          }
-         MemFree(key);
       }
       delete alarm;
    }
@@ -601,9 +600,9 @@ bool EPRule::processEvent(Event *event)
       m_pstorageSetActions.forEach(ExecutePstorageSetAction, event);
    for(int i = 0; i < m_pstorageDeleteActions.size(); i++)
    {
-      TCHAR *psKey = event->expandText(m_pstorageDeleteActions.get(i));
-      DeletePersistentStorageValue(psKey);
-      free(psKey);
+      String key = event->expandText(m_pstorageDeleteActions.get(i));
+      if (!key.isEmpty())
+         DeletePersistentStorageValue(key);
    }
 
    return (m_flags & RF_STOP_PROCESSING) ? true : false;
@@ -618,10 +617,9 @@ UINT32 EPRule::generateAlarm(Event *event)
    // Terminate alarms with key == our ack_key
 	if ((m_alarmSeverity == SEVERITY_RESOLVE) || (m_alarmSeverity == SEVERITY_TERMINATE))
 	{
-		TCHAR *pszAckKey = event->expandText(m_alarmKey);
-		if (pszAckKey[0] != 0)
-		   ResolveAlarmByKey(pszAckKey, (m_flags & RF_TERMINATE_BY_REGEXP) ? true : false, m_alarmSeverity == SEVERITY_TERMINATE, event);
-		free(pszAckKey);
+		String key = event->expandText(m_alarmKey);
+		if (!key.isEmpty())
+		   ResolveAlarmByKey(key, (m_flags & RF_TERMINATE_BY_REGEXP) ? true : false, m_alarmSeverity == SEVERITY_TERMINATE, event);
 	}
 	else	// Generate new alarm
 	{

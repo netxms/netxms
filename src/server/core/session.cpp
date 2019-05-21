@@ -7879,7 +7879,7 @@ static void ActionExecuteCallback(ActionCallbackEvent e, const TCHAR *text, void
 /**
  *  Splits command line
  */
-static StringList *SplitCommandLine(TCHAR *command)
+static StringList *SplitCommandLine(const TCHAR *command)
 {
    StringList *listOfStrings = new StringList();
    String tmp;
@@ -7994,12 +7994,10 @@ void ClientSession::executeAction(NXCPMessage *request)
                      delete alarm;
                      return;
                   }
-                  TCHAR *result = object->expandText(action, alarm, NULL, m_loginName, &inputFields);
-                  list = SplitCommandLine(result);
+                  list = SplitCommandLine(object->expandText(action, alarm, NULL, m_loginName, &inputFields));
                   _tcsncpy(action, list->get(0), MAX_PARAM_NAME);
                   list->remove(0);
                   delete alarm;
-                  free(result);
                }
                else
                {
@@ -10763,11 +10761,11 @@ void ClientSession::getAgentFile(NXCPMessage *request)
                delete alarm;
                return;
             }
-				TCHAR *expandedName = request->getFieldAsBoolean(VID_EXPAND_STRING) ? object->expandText(remoteFile, alarm, NULL, m_loginName, &inputFields) : NULL;
+            bool expand = request->getFieldAsBoolean(VID_EXPAND_STRING);
             bool follow = request->getFieldAsBoolean(VID_FILE_FOLLOW);
-				FileDownloadJob *job = new FileDownloadJob((Node *)object, (expandedName != NULL) ? expandedName : remoteFile,
+				FileDownloadJob *job = new FileDownloadJob((Node *)object,
+				         expand ? object->expandText(remoteFile, alarm, NULL, m_loginName, &inputFields) : remoteFile,
 				         request->getFieldAsUInt32(VID_FILE_SIZE_LIMIT), follow, this, request->getId());
-				MemFree(expandedName);
 				delete alarm;
 				if (AddJob(job))
 				{
@@ -11141,8 +11139,9 @@ void ClientSession::executeLibraryScript(NXCPMessage *request)
                      delete inputFields;
                      return;
                   }
-                  TCHAR *expScript = object->expandText(script, alarm, NULL, m_loginName, inputFields);
-                  script = expScript;
+                  String expScript = object->expandText(script, alarm, NULL, m_loginName, inputFields);
+                  MemFree(script);
+                  script = MemCopyString(expScript);
                   delete alarm;
                   delete inputFields;
                }
@@ -14419,11 +14418,10 @@ void ClientSession::expandMacros(NXCPMessage *request)
          return;
       }
 
-      TCHAR *result = obj->expandText(textToExpand, alarm, NULL, m_loginName, &inputFields);
+      String result = obj->expandText(textToExpand, alarm, NULL, m_loginName, &inputFields);
       msg.setField(outFieldId, result);
       debugPrintf(7, _T("ClientSession::expandMacros(): template=\"%s\", result=\"%s\""), textToExpand, result);
       MemFree(textToExpand);
-      MemFree(result);
       obj->decRefCount();
       delete alarm;
    }

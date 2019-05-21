@@ -601,18 +601,18 @@ UINT32 NXCORE_EXPORTABLE CreateNewAlarm(TCHAR *message, TCHAR *key, int state, i
    bool updateRelatedEvent = false;
 
    // Expand alarm's message and key
-   TCHAR *pszExpMsg = event->expandText(message);
-   TCHAR *pszExpKey = event->expandText(key);
+   String expMsg = event->expandText(message);
+   String expKey = event->expandText(key);
 
    // Check if we have a duplicate alarm
-   if (((state & ALARM_STATE_MASK) != ALARM_STATE_TERMINATED) && (*pszExpKey != 0))
+   if (((state & ALARM_STATE_MASK) != ALARM_STATE_TERMINATED) && !expKey.isEmpty())
    {
       s_alarmList.lock();
 
-      Alarm *alarm = s_alarmList.get(pszExpKey);
+      Alarm *alarm = s_alarmList.get(expKey);
       if (alarm != NULL)
       {
-         alarm->updateFromEvent(event, state, severity, timeout, timeoutEvent, ackTimeout, pszExpMsg, alarmCategoryList);
+         alarm->updateFromEvent(event, state, severity, timeout, timeoutEvent, ackTimeout, expMsg, alarmCategoryList);
          if (!alarm->isEventRelated(event->getId()))
          {
             alarmId = alarm->getAlarmId();      // needed for correct update of related events
@@ -632,7 +632,7 @@ UINT32 NXCORE_EXPORTABLE CreateNewAlarm(TCHAR *message, TCHAR *key, int state, i
    if (newAlarm)
    {
       // Create new alarm structure
-      Alarm *alarm = new Alarm(event, pszExpMsg, pszExpKey, state, severity, timeout, timeoutEvent, ackTimeout, alarmCategoryList);
+      Alarm *alarm = new Alarm(event, expMsg, expKey, state, severity, timeout, timeoutEvent, ackTimeout, alarmCategoryList);
       alarmId = alarm->getAlarmId();
 
       // Open helpdesk issue
@@ -675,8 +675,6 @@ UINT32 NXCORE_EXPORTABLE CreateNewAlarm(TCHAR *message, TCHAR *key, int state, i
                       8, sqlTypes, values);
    }
 
-	MemFree(pszExpMsg);
-   MemFree(pszExpKey);
    return alarmId;
 }
 
