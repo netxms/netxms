@@ -270,6 +270,7 @@ AgentTunnel::AgentTunnel(SSL_CTX *context, SSL *ssl, SOCKET sock, const InetAddr
    m_channelLock = MutexCreate();
    m_hostname[0] = 0;
    m_startTime = time(NULL);
+   m_userAgentInstalled = false;
 }
 
 /**
@@ -491,6 +492,7 @@ void AgentTunnel::setup(const NXCPMessage *request)
       m_platformName = request->getFieldAsString(VID_PLATFORM_NAME);
       m_agentId = request->getFieldAsGUID(VID_AGENT_ID);
       m_agentVersion = request->getFieldAsString(VID_AGENT_VERSION);
+      m_userAgentInstalled = request->getFieldAsBoolean(VID_USERAGENT_INSTALLED);
       request->getFieldAsString(VID_HOSTNAME, m_hostname, MAX_DNS_NAME);
 
       m_state = (m_nodeId != 0) ? AGENT_TUNNEL_BOUND : AGENT_TUNNEL_UNBOUND;
@@ -760,6 +762,7 @@ void AgentTunnel::fillMessage(NXCPMessage *msg, UINT32 baseId) const
    msg->setField(baseId + 9, m_zoneUIN);
    msg->setField(baseId + 10, m_hostname);
    msg->setField(baseId + 11, m_agentId);
+   msg->setField(baseId + 12, m_userAgentInstalled);
 }
 
 /**

@@ -2177,6 +2177,24 @@ restart_agent_check:
       }
    }
 
+   //Get user agent capability
+   if(!(m_state & DCSF_UNREACHABLE) && isNativeAgent())
+   {
+      TCHAR buffer[MAX_RESULT_LENGTH];
+      if(getItemFromAgent(_T("Agent.IsUserAgentInstalled"), MAX_RESULT_LENGTH, buffer) == DCE_SUCCESS)
+      {
+         UINT32 status = _tcstol(buffer, NULL, 0);
+         if (status != 0)
+            m_capabilities |= NC_IS_USER_AGENT_INSTALLED;
+         else
+            m_capabilities &= ~NC_IS_USER_AGENT_INSTALLED;
+      }
+      else
+      {
+         nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("StatusPoll(%s [%d]): unable to get user agent installation capability"), m_name, m_id);
+      }
+   }
+
    // Send delayed events and destroy delayed event queue
    if (pQueue != NULL)
    {

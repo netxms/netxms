@@ -72,6 +72,7 @@ public class Capabilities extends TableElement
 		addFlag(Messages.get().Capabilities_FlagIsVRRP, (node.getCapabilities() & AbstractNode.NC_IS_VRRP) != 0);
 		addFlag(Messages.get().Capabilities_FlagHasEntityMIB, (node.getCapabilities() & AbstractNode.NC_HAS_ENTITY_MIB) != 0);
 		addFlag(Messages.get().Capabilities_FlagHasIfXTable, (node.getCapabilities() & AbstractNode.NC_HAS_IFXTABLE) != 0);
+      addFlag("isUserAgent", (node.getCapabilities() & AbstractNode.NC_IS_USER_AGENT_INSTALLED) != 0);
 		if ((node.getCapabilities() & AbstractNode.NC_IS_SNMP) != 0)
 		{
 			addPair(Messages.get().Capabilities_SNMPPort, Integer.toString(node.getSnmpPort()));

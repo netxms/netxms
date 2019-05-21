@@ -29,6 +29,8 @@
 
 #ifdef _WITH_ENCRYPTION
 
+extern int g_userAgentCount;
+
 /**
  * Check if server address is valid
  */
@@ -629,6 +631,7 @@ bool Tunnel::connectToServer()
    msg.setField(VID_AGENT_ID, g_agentId);
    msg.setField(VID_SYS_NAME, g_systemName);
    msg.setField(VID_ZONE_UIN, g_zoneUIN);
+   msg.setField(VID_USERAGENT_INSTALLED, IsUserAgentInstalled());
 
    TCHAR fqdn[256];
    if (GetLocalHostName(fqdn, 256, true))

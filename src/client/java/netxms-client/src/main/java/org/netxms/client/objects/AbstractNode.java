@@ -69,6 +69,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements RackE
 	public static final int NC_HAS_WINPDH             = 0x00040000;
 	public static final int NC_IS_WIFI_CONTROLLER     = 0x00080000;
 	public static final int NC_IS_SMCLP               = 0x00100000;
+	public static final int NC_IS_USER_AGENT_INSTALLED = 0x00400000;
 
 	// Node flags
    public static final int NF_REMOTE_AGENT           = 0x00010000;

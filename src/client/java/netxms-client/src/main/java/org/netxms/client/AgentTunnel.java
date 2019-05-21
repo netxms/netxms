@@ -40,6 +40,7 @@ public class AgentTunnel
    private long zoneUIN;
    private int activeChannelCount;
    private String hostname;
+   private boolean userAgentInstalled;
    
    /**
     * Create from NXCP message
@@ -61,6 +62,7 @@ public class AgentTunnel
       zoneUIN = msg.getFieldAsInt64(baseId + 9);
       hostname = msg.getFieldAsString(baseId + 10);
       agentId = msg.getFieldAsUUID(baseId + 11);
+      userAgentInstalled = msg.getFieldAsBoolean(baseId + 12);
    }
    
    /**
@@ -168,6 +170,14 @@ public class AgentTunnel
    {
       return hostname;
    }
+   
+   /**
+    * @return the userAgentCount
+    */
+   public boolean isUserAgentInstalled()
+   {
+      return userAgentInstalled;
+   }
 
    /* (non-Javadoc)
     * @see java.lang.Object#toString()
@@ -177,6 +187,7 @@ public class AgentTunnel
    {
       return "AgentTunnel [id=" + id + ", guid=" + guid + ", address=" + address + ", nodeId=" + nodeId + ", systemName="
             + systemName + ", hostname=" + hostname + ", systemInformation=" + systemInformation + ", platformName="
-            + platformName + ", agentVersion=" + agentVersion + ", zoneUIN=" + zoneUIN + ", activeChannelCount=" + activeChannelCount + "]";
+            + platformName + ", agentVersion=" + agentVersion + ", zoneUIN=" + zoneUIN + ", activeChannelCount=" 
+            + activeChannelCount + ", userAgentInstalled=" + userAgentInstalled + "]";
    }
 }

@@ -105,6 +105,7 @@ protected:
    UINT32 m_bindRequestId;
    uuid m_bindGuid;
    UINT32 m_bindUserId;
+   bool m_userAgentInstalled;
    RefCountHashMap<UINT32, AgentTunnelCommChannel> m_channels;
    MUTEX m_channelLock;
    
