@@ -778,7 +778,7 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const char *attr)
    }
    else if (!strcmp(attr, "zone"))
 	{
-      if (g_flags & AF_ENABLE_ZONING)
+      if (IsZoningEnabled())
       {
          Zone *zone = FindZoneByUIN(node->getZoneUIN());
 		   if (zone != NULL)
@@ -795,6 +795,44 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const char *attr)
 		   value = vm->createValue();
 	   }
 	}
+   else if (!strcmp(attr, "zoneProxyAssignments"))
+   {
+      if (IsZoningEnabled())
+      {
+         Zone *zone = FindZoneByProxyId(node->getId());
+         if (zone != NULL)
+         {
+            value = vm->createValue(zone->getProxyNodeAssignments(node->getId()));
+         }
+         else
+         {
+            value = vm->createValue(0);
+         }
+      }
+      else
+      {
+         value = vm->createValue(0);
+      }
+   }
+   else if (!strcmp(attr, "zoneProxyStatus"))
+   {
+      if (IsZoningEnabled())
+      {
+         Zone *zone = FindZoneByProxyId(node->getId());
+         if (zone != NULL)
+         {
+            value = vm->createValue(zone->isProxyNodeAvailable(node->getId()));
+         }
+         else
+         {
+            value = vm->createValue(0);
+         }
+      }
+      else
+      {
+         value = vm->createValue(0);
+      }
+   }
    else if (!strcmp(attr, "zoneUIN"))
 	{
       value = vm->createValue(node->getZoneUIN());
