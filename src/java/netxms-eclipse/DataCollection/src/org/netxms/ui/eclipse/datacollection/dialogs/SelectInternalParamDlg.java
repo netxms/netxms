@@ -58,6 +58,9 @@ public class SelectInternalParamDlg extends AbstractSelectParamDlg
          list.add(new AgentParameter("NetSvc.ResponseTime(*)", "Network service {instance} response time", DataType.UINT32)); //$NON-NLS-1$
          list.add(new AgentParameter("ReceivedSNMPTraps", "Total SNMP traps received", DataType.UINT64)); //$NON-NLS-1$
          list.add(new AgentParameter("ReceivedSyslogMessages", "Total syslog messages received", DataType.UINT64)); //$NON-NLS-1$
+         list.add(new AgentParameter("ZoneProxy.Assignments", "Zone proxy: number of assignments", DataType.UINT32)); //$NON-NLS-1$
+         list.add(new AgentParameter("ZoneProxy.State", "Zone proxy: state", DataType.INT32)); //$NON-NLS-1$
+         list.add(new AgentParameter("ZoneProxy.ZoneUIN", "Zone proxy: UIN of parent zone", DataType.UINT32)); //$NON-NLS-1$
 		}
 		
 		if ((object instanceof Template) || ((object instanceof AbstractNode) && ((AbstractNode)object).hasAgent()))

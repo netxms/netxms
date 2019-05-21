@@ -5363,6 +5363,42 @@ DataCollectionError Node::getInternalItem(const TCHAR *param, size_t bufSize, TC
       _sntprintf(buffer, bufSize, INT64_FMT, m_syslogMessageCount);
       unlockProperties();
    }
+   else if (!_tcsicmp(param, _T("ZoneProxy.Assignments")))
+   {
+      Zone *zone = FindZoneByProxyId(m_id);
+      if (zone != NULL)
+      {
+         _sntprintf(buffer, bufSize, _T("%u"), zone->getProxyNodeAssignments(m_id));
+      }
+      else
+      {
+         rc = DCE_NOT_SUPPORTED;
+      }
+   }
+   else if (!_tcsicmp(param, _T("ZoneProxy.State")))
+   {
+      Zone *zone = FindZoneByProxyId(m_id);
+      if (zone != NULL)
+      {
+         _sntprintf(buffer, bufSize, _T("%d"), zone->isProxyNodeAvailable(m_id) ? 1 : 0);
+      }
+      else
+      {
+         rc = DCE_NOT_SUPPORTED;
+      }
+   }
+   else if (!_tcsicmp(param, _T("ZoneProxy.ZoneUIN")))
+   {
+      Zone *zone = FindZoneByProxyId(m_id);
+      if (zone != NULL)
+      {
+         _sntprintf(buffer, bufSize, _T("%u"), zone->getUIN());
+      }
+      else
+      {
+         rc = DCE_NOT_SUPPORTED;
+      }
+   }
    else if (!_tcsicmp(param, _T("WirelessController.AdoptedAPCount")))
    {
       if (m_capabilities & NC_IS_WIFI_CONTROLLER)

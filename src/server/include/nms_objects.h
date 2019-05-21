@@ -2859,6 +2859,8 @@ public:
 
    UINT32 getProxyNodeId(NetObj *object, bool backup = false);
 	bool isProxyNode(UINT32 nodeId) const;
+	UINT32 getProxyNodeAssignments(UINT32 nodeId) const;
+   bool isProxyNodeAvailable(UINT32 nodeId) const;
 	IntegerArray<UINT32> *getAllProxyNodes() const;
 	void fillAgentConfigurationMessage(NXCPMessage *msg) const;
 

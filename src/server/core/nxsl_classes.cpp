@@ -236,6 +236,23 @@ NXSL_Value *NXSL_NetObjClass::getAttr(NXSL_Object *_object, const char *attr)
       value = vm->createValue(array);
       delete alarms;
    }
+   else if (!strcmp(attr, "backupZoneProxy"))
+   {
+      UINT32 id = object->getAssignedZoneProxyId(true);
+      if (id != 0)
+      {
+         NetObj *proxy = FindObjectById(id, OBJECT_NODE);
+         value = (proxy != NULL) ? proxy->createNXSLObject(vm) : vm->createValue();
+      }
+      else
+      {
+         value = vm->createValue();
+      }
+   }
+   else if (!strcmp(attr, "backupZoneProxyId"))
+   {
+      value = vm->createValue(object->getAssignedZoneProxyId(true));
+   }
    else if (!strcmp(attr, "city"))
    {
       value = vm->createValue(object->getPostalAddress()->getCity());
@@ -283,6 +300,23 @@ NXSL_Value *NXSL_NetObjClass::getAttr(NXSL_Object *_object, const char *attr)
    else if (!strcmp(attr, "postcode"))
    {
       value = vm->createValue(object->getPostalAddress()->getPostCode());
+   }
+   else if (!strcmp(attr, "primaryZoneProxy"))
+   {
+      UINT32 id = object->getAssignedZoneProxyId(false);
+      if (id != 0)
+      {
+         NetObj *proxy = FindObjectById(id, OBJECT_NODE);
+         value = (proxy != NULL) ? proxy->createNXSLObject(vm) : vm->createValue();
+      }
+      else
+      {
+         value = vm->createValue();
+      }
+   }
+   else if (!strcmp(attr, "primaryZoneProxyId"))
+   {
+      value = vm->createValue(object->getAssignedZoneProxyId(false));
    }
    else if (!strcmp(attr, "responsibleUsers"))
    {

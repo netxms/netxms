@@ -443,6 +443,40 @@ bool Zone::isProxyNode(UINT32 nodeId) const
 }
 
 /**
+ * Get number of assignments for given proxy node
+ */
+UINT32 Zone::getProxyNodeAssignments(UINT32 nodeId) const
+{
+   UINT32 result = 0;
+   lockProperties();
+   for(int i = 0; i < m_proxyNodes->size(); i++)
+      if (m_proxyNodes->get(i)->nodeId == nodeId)
+      {
+         result = m_proxyNodes->get(i)->assignments;
+         break;
+      }
+   unlockProperties();
+   return result;
+}
+
+/**
+ * Check if given proxy node is available.
+ */
+bool Zone::isProxyNodeAvailable(UINT32 nodeId) const
+{
+   bool result = false;
+   lockProperties();
+   for(int i = 0; i < m_proxyNodes->size(); i++)
+      if (m_proxyNodes->get(i)->nodeId == nodeId)
+      {
+         result = m_proxyNodes->get(i)->isAvailable;
+         break;
+      }
+   unlockProperties();
+   return result;
+}
+
+/**
  * Get all proxy nodes. Returned array must be destroyed by the caller.
  */
 IntegerArray<UINT32> *Zone::getAllProxyNodes() const
