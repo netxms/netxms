@@ -269,39 +269,57 @@ void String::append(const TCHAR *str, size_t len)
 /**
  * Append integer
  */
-void String::append(INT32 n)
+void String::append(INT32 n, const TCHAR *format)
 {
    TCHAR buffer[64];
-   append(_itot(n, buffer, 10));
+   if (format != NULL)
+   {
+      _sntprintf(buffer, 64, format, n);
+      append(buffer);
+   }
+   else
+   {
+      append(_itot(n, buffer, 10));
+   }
 }
 
 /**
  * Append integer
  */
-void String::append(UINT32 n)
+void String::append(UINT32 n, const TCHAR *format)
 {
    TCHAR buffer[64];
-   _sntprintf(buffer, 64, _T("%u"), n);
+   _sntprintf(buffer, 64, (format != NULL) ? format : _T("%u"), n);
    append(buffer);
 }
 
 /**
  * Append integer
  */
-void String::append(INT64 n)
+void String::append(INT64 n, const TCHAR *format)
 {
    TCHAR buffer[64];
-   _sntprintf(buffer, 64, INT64_FMT, n);
+   _sntprintf(buffer, 64, (format != NULL) ? format : INT64_FMT, n);
    append(buffer);
 }
 
 /**
  * Append integer
  */
-void String::append(UINT64 n)
+void String::append(UINT64 n, const TCHAR *format)
 {
    TCHAR buffer[64];
-   _sntprintf(buffer, 64, UINT64_FMT, n);
+   _sntprintf(buffer, 64, (format != NULL) ? format : UINT64_FMT, n);
+   append(buffer);
+}
+
+/**
+ * Append double
+ */
+void String::append(double d, const TCHAR *format)
+{
+   TCHAR buffer[64];
+   _sntprintf(buffer, 64, (format != NULL) ? format : _T("%f"), d);
    append(buffer);
 }
 

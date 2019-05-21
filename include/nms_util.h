@@ -832,10 +832,11 @@ public:
    void append(const TCHAR *str) { if (str != NULL) append(str, _tcslen(str)); }
 	void append(const TCHAR *str, size_t len);
    void append(const TCHAR c) { append(&c, 1); }
-   void append(INT32 n);
-   void append(UINT32 n);
-   void append(INT64 n);
-   void append(UINT64 n);
+   void append(INT32 n, const TCHAR *format = NULL);
+   void append(UINT32 n, const TCHAR *format = NULL);
+   void append(INT64 n, const TCHAR *format = NULL);
+   void append(UINT64 n, const TCHAR *format = NULL);
+   void append(double d, const TCHAR *format = NULL);
    void append(const uuid& guid);
 
 	void appendPreallocated(TCHAR *str) { if (str != NULL) { append(str); MemFree(str); } }
