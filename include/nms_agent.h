@@ -185,6 +185,7 @@ struct PolicyChangeNotification
 #define DCIDESC_AGENT_ID                             _T("Agent identifier")
 #define DCIDESC_AGENT_IS_EXT_SUBAGENT_CONNECTED      _T("Check if external subagent {instance} is connected")
 #define DCIDESC_AGENT_IS_SUBAGENT_LOADED             _T("Check if subagent {instance} is loaded")
+#define DCIDESC_AGENT_IS_USERAGENT_INSTALLED         _T("Check if user support application is installed")
 #define DCIDESC_AGENT_LAST_TRAP_TIME                 _T("Timestamp of last generated trap")
 #define DCIDESC_AGENT_LOCALDB_FAILED_QUERIES         _T("Agent local database: failed queries")
 #define DCIDESC_AGENT_LOCALDB_SLOW_QUERIES           _T("Agent local database: long running queries")

@@ -115,6 +115,15 @@ static LONG H_AgentID(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, Abstract
 }
 
 /**
+ * Handler for Agent.IsUserAgentInstalled parameter
+ */
+static LONG H_IsUserAgentInstalled(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   ret_int(value, IsUserAgentInstalled());
+   return SYSINFO_RC_SUCCESS;
+}
+
+/**
  * Handler for Agent.SupportedCiphers
  */
 static LONG H_SupportedCiphers(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
@@ -381,8 +390,9 @@ static NETXMS_SUBAGENT_PARAM m_stdParams[] =
    { _T("Agent.Heap.Allocated"), H_AgentHeapAllocated, NULL, DCI_DT_UINT64, DCIDESC_AGENT_HEAP_ALLOCATED },
    { _T("Agent.Heap.Mapped"), H_AgentHeapMapped, NULL, DCI_DT_UINT64, DCIDESC_AGENT_HEAP_MAPPED },
    { _T("Agent.ID"), H_AgentID, NULL, DCI_DT_STRING, DCIDESC_AGENT_ID },
-   { _T("Agent.IsSubagentLoaded(*)"), H_IsSubagentLoaded, NULL, DCI_DT_INT, DCIDESC_AGENT_IS_SUBAGENT_LOADED },
    { _T("Agent.IsExternalSubagentConnected(*)"), H_IsExtSubagentConnected, NULL, DCI_DT_INT, DCIDESC_AGENT_IS_EXT_SUBAGENT_CONNECTED },
+   { _T("Agent.IsSubagentLoaded(*)"), H_IsSubagentLoaded, NULL, DCI_DT_INT, DCIDESC_AGENT_IS_SUBAGENT_LOADED },
+   { _T("Agent.IsUserAgentInstalled"), H_IsUserAgentInstalled, NULL, DCI_DT_INT, DCIDESC_AGENT_IS_USERAGENT_INSTALLED },
    { _T("Agent.LastTrapTime"), H_AgentTraps, _T("T"), DCI_DT_UINT64, DCIDESC_AGENT_LAST_TRAP_TIME },
    { _T("Agent.LocalDatabase.FailedQueries"), H_LocalDatabaseCounters, _T("F"), DCI_DT_COUNTER64, DCIDESC_AGENT_LOCALDB_FAILED_QUERIES },
    { _T("Agent.LocalDatabase.LongRunningQueries"), H_LocalDatabaseCounters, _T("L"), DCI_DT_COUNTER64, DCIDESC_AGENT_LOCALDB_SLOW_QUERIES },

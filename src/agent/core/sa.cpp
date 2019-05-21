@@ -550,3 +550,24 @@ void ShutdownSessionAgents(bool restart)
    }
    RWLockUnlock(s_lock);
 }
+
+/**
+ * Check if user agent component is installed
+ */
+bool IsUserAgentInstalled()
+{
+#ifdef _WIN32
+   HKEY hKey;
+   if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("Software\\NetXMS\\Agent"), 0, KEY_QUERY_VALUE, &hKey) != ERROR_SUCCESS)
+      return false;
+
+   DWORD size = sizeof(DWORD);
+   DWORD value = 0;
+   RegQueryValueEx(hKey, _T("WithUserAgent"), NULL, NULL, (BYTE *)&value, &size);
+   RegCloseKey(hKey);
+
+   return value != 0;
+#else
+   return false;
+#endif
+}

@@ -798,6 +798,7 @@ bool SendControlMessage(NXCPMessage *msg);
 void StartSessionAgentConnector();
 SessionAgentConnector *AcquireSessionAgentConnector(const TCHAR *sessionName);
 void ShutdownSessionAgents(bool restart);
+bool IsUserAgentInstalled();
 
 UINT32 GenerateMessageId();
 
