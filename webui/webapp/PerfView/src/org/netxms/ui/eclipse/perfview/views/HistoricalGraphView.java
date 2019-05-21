@@ -96,7 +96,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
    private ViewRefreshController refreshController;
    private Composite chartParent = null;
    private GraphSettings settings = new GraphSettings();
-   private boolean useMoreThanOneShoucrNode = false;
+   private boolean multipleSourceNodes = false;
 
    private Action actionRefresh;
    private Action actionAutoRefresh;
@@ -265,30 +265,38 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
 
       if (memento != null)
       {
-         long tmpId = 0;
+         final long id;
          try
          {
-            tmpId = Long.parseLong(memento.getTextData()); // to prevent errors on old memento format
+            id = Long.parseLong(memento.getTextData()); // to prevent errors on old memento format
+            if (id == 0)
+               return;
          }
          catch(Exception e)
          {
             e.printStackTrace();
             return;
          }
-         final long id = tmpId;
          
-         ConsoleJob job = new ConsoleJob(Messages.get().HistoricalGraphView_JobName, this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
-
+         ConsoleJob job = new ConsoleJob(Messages.get().HistoricalGraphView_JobName, this, Activator.PLUGIN_ID, null) {
             @Override
             protected void runInternal(IProgressMonitor monitor) throws Exception
             {
-               settings = session.getPredefinedGraph(id);     
+               final GraphSettings s = session.getPredefinedGraph(id);
+               runInUIThread(new Runnable() {
+                  @Override
+                  public void run()
+                  {
+                     settings = s;
+                     configureGraphFromSettings();
+                     settings.addChangeListener(HistoricalGraphView.this);
+                  }
+               });
             }
 
             @Override
             protected String getErrorMessage()
             {
-               //settings = new GraphSettings();
                return null;
             }
          };
@@ -371,9 +379,9 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
          index++;
       }
       
-      //Check that all DCI's are form one node
-      if(index > 0)
-         useMoreThanOneShoucrNode = (nodeId != settings.getDciList()[0].nodeId);
+      // Check that all DCI's are form one node
+      if (index > 0)
+         multipleSourceNodes = (nodeId != settings.getDciList()[0].nodeId);
       
       chart.setItemStyles(styles);
 
@@ -456,7 +464,12 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
    private void getDataFromServer()
    {
       final ChartDciConfig[] dciList = settings.getDciList();
-
+      if (dciList.length == 0)
+      {
+         updateInProgress = false;
+         return;
+      }
+      
       // Request data from server
       ConsoleJob job = new ConsoleJob(Messages.get().HistoricalGraphView_JobName, this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
          private ChartDciConfig currentItem;
@@ -955,7 +968,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
     */
    private void saveGraph(String graphName, String errorMessage, final boolean canBeOverwritten, final boolean asTemplate, final boolean showNameDialog)
    {
-      if(asTemplate && useMoreThanOneShoucrNode)
+      if (asTemplate && multipleSourceNodes)
       {
          String templateError = "More than one node is used for template creation.\nThis may cause undefined behaviour.";
          errorMessage = errorMessage == null ? templateError : errorMessage+"\n\n" +templateError;
