@@ -1,6 +1,6 @@
 /*
 ** NetXMS subagent for GNU/Linux
-** Copyright (C) 2013 Victor Kirhenshtein
+** Copyright (C) 2013-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -28,7 +28,7 @@ LONG H_InstalledProducts(const TCHAR *cmd, const TCHAR *arg, Table *value, Abstr
    const char *command;
    if (access("/bin/rpm", X_OK) == 0)
    {
-		command = "/bin/rpm -qa --queryformat '@@@ #%{NAME}:%{ARCH}|%{VERSION}|%{VENDOR}|%{INSTALLTIME}|%{URL}|%{SUMMARY}\\n'";
+		command = "/bin/rpm -qa --queryformat '@@@ #%{NAME}:%{ARCH}|%{VERSION}%|RELEASE?{-%{RELEASE}}:{}||%{VENDOR}|%{INSTALLTIME}|%{URL}|%{SUMMARY}\\n'";
    }
    else if (access("/usr/bin/dpkg-query", X_OK) == 0)
    {
