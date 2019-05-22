@@ -636,6 +636,10 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const char *attr)
       }
       value = vm->createValue(a);
    }
+   else if (!strcmp(attr, "capabilities"))
+   {
+      value = vm->createValue(node->getCapabilities());
+   }
    else if (!strcmp(attr, "driver"))
    {
       value = vm->createValue(node->getDriverName());
@@ -643,6 +647,26 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const char *attr)
    else if (!strcmp(attr, "flags"))
    {
 		value = vm->createValue(node->getFlags());
+   }
+   else if (!strcmp(attr, "hasAgentIfXCounters"))
+   {
+      value = vm->createValue((node->getCapabilities() & NC_HAS_AGENT_IFXCOUNTERS) ? 1 : 0);
+   }
+   else if (!strcmp(attr, "hasEntityMIB"))
+   {
+      value = vm->createValue((node->getCapabilities() & NC_HAS_ENTITY_MIB) ? 1 : 0);
+   }
+   else if (!strcmp(attr, "hasIfXTable"))
+   {
+      value = vm->createValue((node->getCapabilities() & NC_HAS_IFXTABLE) ? 1 : 0);
+   }
+   else if (!strcmp(attr, "hasVLANs"))
+   {
+      value = vm->createValue((node->getCapabilities() & NC_HAS_VLANS) ? 1 : 0);
+   }
+   else if (!strcmp(attr, "hasWinPDH"))
+   {
+      value = vm->createValue((node->getCapabilities() & NC_HAS_WINPDH) ? 1 : 0);
    }
    else if (!strcmp(attr, "hypervisorInfo"))
    {
@@ -676,6 +700,10 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const char *attr)
 	{
 		value = vm->createValue((LONG)((node->isLocalManagement()) ? 1 : 0));
 	}
+   else if (!strcmp(attr, "isOSPF"))
+   {
+      value = vm->createValue((LONG)((node->getCapabilities() & NC_IS_OSPF) ? 1 : 0));
+   }
    else if (!strcmp(attr, "isPAE") || !strcmp(attr, "is802_1x"))
    {
       value = vm->createValue((LONG)((node->getCapabilities() & NC_IS_8021X) ? 1 : 0));
@@ -696,7 +724,7 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const char *attr)
    {
       value = vm->createValue((LONG)((node->getCapabilities() & NC_IS_SNMP) ? 1 : 0));
    }
-   else if (!strcmp(attr, "isSONMP"))
+   else if (!strcmp(attr, "isSONMP") || !strcmp(attr, "isNDP"))
    {
       value = vm->createValue((LONG)((node->getCapabilities() & NC_IS_NDP) ? 1 : 0));
    }
@@ -704,13 +732,17 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const char *attr)
    {
       value = vm->createValue((LONG)((node->getCapabilities() & NC_IS_STP) ? 1 : 0));
    }
+   else if (!strcmp(attr, "isUserAgentInstalled"))
+   {
+      value = vm->createValue((LONG)((node->getCapabilities() & NC_IS_USER_AGENT_INSTALLED) ? 1 : 0));
+   }
    else if (!strcmp(attr, "isVirtual"))
    {
       value = vm->createValue((LONG)(node->isVirtual() ? 1 : 0));
    }
-   else if (!strcmp(attr, "isUserAgentInstalled"))
+   else if (!strcmp(attr, "isVRRP"))
    {
-      value = vm->createValue((LONG)((node->getCapabilities() & NC_IS_USER_AGENT_INSTALLED) ? 1 : 0));
+      value = vm->createValue((node->getCapabilities() & NC_IS_VRRP) ? 1 : 0);
    }
    else if (!strcmp(attr, "lastAgentCommTime"))
    {
