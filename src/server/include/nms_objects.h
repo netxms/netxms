@@ -56,6 +56,8 @@ extern INT16 g_defaultAgentCacheMode;
  * Utility functions used by inline methods
  */
 bool NXCORE_EXPORTABLE ExecuteQueryOnObject(DB_HANDLE hdb, UINT32 objectId, const TCHAR *query);
+void NXCORE_EXPORTABLE ObjectTransactionStart();
+void NXCORE_EXPORTABLE ObjectTransactionEnd();
 
 /**
  * Constants
@@ -154,15 +156,26 @@ class NXCORE_EXPORTABLE PollerInfo
 private:
    PollerType m_type;
    NetObj *m_object;
+   bool m_objectCreation;
    TCHAR m_status[128];
 
 public:
-   PollerInfo(PollerType type, NetObj *object) { m_type = type; m_object = object; _tcscpy(m_status, _T("awaiting execution")); }
+   PollerInfo(PollerType type, NetObj *object, bool objectCreation)
+   {
+      m_type = type;
+      m_object = object;
+      m_objectCreation = objectCreation;
+      _tcscpy(m_status, _T("awaiting execution"));
+   }
    ~PollerInfo();
 
    PollerType getType() const { return m_type; }
    NetObj *getObject() const { return m_object; }
+   bool isObjectCreation() const { return m_objectCreation; }
    const TCHAR *getStatus() const { return m_status; }
+
+   void startObjectTransaction() { if (!m_objectCreation) ObjectTransactionStart(); }
+   void endObjectTransaction() { if (!m_objectCreation) ObjectTransactionEnd(); }
 
    void startExecution() { _tcscpy(m_status, _T("started")); }
    void setStatus(const TCHAR *status) { _tcslcpy(m_status, status, 128); }
@@ -3479,7 +3492,7 @@ bool IsEventSource(int objectClass);
 int DefaultPropagatedStatus(int iObjectStatus);
 int GetDefaultStatusCalculation(int *pnSingleThreshold, int **ppnThresholds);
 
-PollerInfo *RegisterPoller(PollerType type, NetObj *object);
+PollerInfo *RegisterPoller(PollerType type, NetObj *object, bool objectCreation = false);
 void ShowPollers(CONSOLE_CTX console);
 
 /**

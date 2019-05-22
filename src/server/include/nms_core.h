@@ -1035,8 +1035,6 @@ void InitiateShutdown();
 int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx);
 
 void SaveObjects(DB_HANDLE hdb, UINT32 watchdogId, bool saveRuntimeData);
-void NXCORE_EXPORTABLE ObjectTransactionStart();
-void NXCORE_EXPORTABLE ObjectTransactionEnd();
 
 void NXCORE_EXPORTABLE QueueSQLRequest(const TCHAR *query);
 void NXCORE_EXPORTABLE QueueSQLRequest(const TCHAR *query, int bindCount, int *sqlTypes, const TCHAR **values);

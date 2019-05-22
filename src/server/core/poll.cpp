@@ -60,9 +60,9 @@ PollerInfo::~PollerInfo()
 /**
  * Register active poller
  */
-PollerInfo *RegisterPoller(PollerType type, NetObj *object)
+PollerInfo *RegisterPoller(PollerType type, NetObj *object, bool objectCreation)
 {
-   PollerInfo *p = new PollerInfo(type, object);
+   PollerInfo *p = new PollerInfo(type, object, objectCreation);
    object->incRefCount();
    s_pollerLock.lock();
    s_pollers.set(CAST_FROM_POINTER(p, UINT64), p);

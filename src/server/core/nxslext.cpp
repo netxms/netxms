@@ -618,6 +618,7 @@ static int F_CreateNode(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL
 	newNodeData.zoneUIN = (argc > 3) ? argv[3]->getValueAsUInt32() : 0;
 	newNodeData.doConfPoll = true;
 
+	ObjectTransactionStart();
    Node *node = PollNewNode(&newNodeData);
 	if (node != NULL)
 	{
@@ -631,6 +632,7 @@ static int F_CreateNode(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL
 	{
 		*ppResult = vm->createValue();
 	}
+	ObjectTransactionEnd();
 	return 0;
 }
 

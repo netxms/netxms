@@ -1483,9 +1483,9 @@ void DataCollectionTarget::configurationPollWorkerEntry(PollerInfo *poller)
 void DataCollectionTarget::configurationPollWorkerEntry(PollerInfo *poller, ClientSession *session, UINT32 rqId)
 {
    poller->startExecution();
-   ObjectTransactionStart();
+   poller->startObjectTransaction();
    configurationPoll(poller, session, rqId);
-   ObjectTransactionEnd();
+   poller->endObjectTransaction();
    delete poller;
 }
 
@@ -1510,9 +1510,9 @@ void DataCollectionTarget::instanceDiscoveryPollWorkerEntry(PollerInfo *poller)
 void DataCollectionTarget::instanceDiscoveryPollWorkerEntry(PollerInfo *poller, ClientSession *session, UINT32 requestId)
 {
    poller->startExecution();
-   ObjectTransactionStart();
+   poller->startObjectTransaction();
    instanceDiscoveryPoll(poller, session, requestId);
-   ObjectTransactionEnd();
+   poller->endObjectTransaction();
    delete poller;
 }
 
