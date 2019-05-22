@@ -979,6 +979,7 @@ void DCObject::updateFromTemplate(DCObject *src)
    {
       setStatus(src->m_status, true);
    }
+   m_accessList = new IntegerArray<UINT32>(src->m_accessList);
 
 	unlock();
 }
