@@ -29,8 +29,6 @@
 
 #ifdef _WITH_ENCRYPTION
 
-extern int g_userAgentCount;
-
 /**
  * Check if server address is valid
  */

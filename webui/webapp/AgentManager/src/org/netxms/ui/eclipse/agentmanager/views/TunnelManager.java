@@ -81,7 +81,7 @@ public class TunnelManager extends ViewPart
    public static final int COL_SYSINFO = 8;
    public static final int COL_AGENT_VERSION = 9;
    public static final int COL_AGENT_ID = 10;
-   public static final int COL_USER_AGENT_COUNT = 11;
+   public static final int COL_USER_AGENT_INSTALLED = 11;
    
    private SortableTableViewer viewer;
    private TunnelManagerFilter filter;

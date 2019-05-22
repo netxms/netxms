@@ -77,7 +77,7 @@ public class TunnelListLabelProvider extends LabelProvider implements ITableLabe
             return t.getSystemName();
          case TunnelManager.COL_HOSTNAME:
             return t.getHostname();
-         case TunnelManager.COL_USER_AGENT_COUNT:
+         case TunnelManager.COL_USER_AGENT_INSTALLED:
             return t.isUserAgentInstalled() ? "Yes" : "No";
       }
       return null;

@@ -25,7 +25,6 @@
 /**
  * Session agent list
  */
-int g_userAgentCount;
 static ObjectArray<SessionAgentConnector> s_agents(8, 8, false);
 static RWLOCK s_lock = RWLockCreate();
 
@@ -36,8 +35,6 @@ static void RegisterSessionAgent(SessionAgentConnector *c)
 {
    RWLockWriteLock(s_lock, INFINITE);
    s_agents.add(c);
-   if(c->isUserAgent())
-      g_userAgentCount++;
    RWLockUnlock(s_lock);
 }
 
@@ -52,8 +49,6 @@ static void UnregisterSessionAgent(UINT32 id)
       if (s_agents.get(i)->getId() == id)
       {
          s_agents.remove(i);
-         if(s_agents.get(i)->isUserAgent())
-            g_userAgentCount--;
          break;
       }
    }

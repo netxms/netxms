@@ -75,7 +75,7 @@ public class TunnelListComparator extends ViewerComparator
          case TunnelManager.COL_SYSNAME:
             result = t1.getSystemName().compareToIgnoreCase(t2.getSystemName());
             break;
-         case TunnelManager.COL_USER_AGENT_COUNT:
+         case TunnelManager.COL_USER_AGENT_INSTALLED:
             result = Boolean.compare(t1.isUserAgentInstalled(), t2.isUserAgentInstalled());
             break;
          default:
