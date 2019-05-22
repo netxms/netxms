@@ -708,6 +708,10 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const char *attr)
    {
       value = vm->createValue((LONG)(node->isVirtual() ? 1 : 0));
    }
+   else if (!strcmp(attr, "isUserAgentInstalled"))
+   {
+      value = vm->createValue((LONG)((node->getCapabilities() & NC_IS_USER_AGENT_INSTALLED) ? 1 : 0));
+   }
    else if (!strcmp(attr, "lastAgentCommTime"))
    {
       value = vm->createValue((INT64)node->getLastAgentCommTime());
