@@ -618,6 +618,10 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const char *attr)
       TCHAR buffer[64];
       value = vm->createValue(BinToStr(node->getBridgeId(), MAC_ADDR_LENGTH, buffer));
    }
+   else if (!strcmp(attr, "capabilities"))
+   {
+      value = vm->createValue(node->getCapabilities());
+   }
    else if (!strcmp(attr, "components"))
    {
       ComponentTree *components = node->getComponents();
@@ -635,10 +639,6 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const char *attr)
          a->append(vm->createValue(new NXSL_Object(vm, &g_nxslNodeDependencyClass, new DependentNode(*dependencies->get(i)))));
       }
       value = vm->createValue(a);
-   }
-   else if (!strcmp(attr, "capabilities"))
-   {
-      value = vm->createValue(node->getCapabilities());
    }
    else if (!strcmp(attr, "driver"))
    {
