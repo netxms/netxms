@@ -14420,7 +14420,7 @@ void ClientSession::expandMacros(NXCPMessage *request)
 
       String result = obj->expandText(textToExpand, alarm, NULL, m_loginName, &inputFields);
       msg.setField(outFieldId, result);
-      debugPrintf(7, _T("ClientSession::expandMacros(): template=\"%s\", result=\"%s\""), textToExpand, result);
+      debugPrintf(7, _T("ClientSession::expandMacros(): template=\"%s\", result=\"%s\""), textToExpand, (const TCHAR *)result);
       MemFree(textToExpand);
       obj->decRefCount();
       delete alarm;
