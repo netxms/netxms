@@ -954,6 +954,9 @@ void DCObject::updateFromTemplate(DCObject *src)
 
    setTransformationScript(src->m_transformationScriptSource);
 
+   delete m_accessList;
+   m_accessList = new IntegerArray<UINT32>(src->m_accessList);
+
    // Copy schedules
    delete m_schedules;
    m_schedules = (src->m_schedules != NULL) ? new StringList(src->m_schedules) : NULL;
@@ -979,9 +982,8 @@ void DCObject::updateFromTemplate(DCObject *src)
    {
       setStatus(src->m_status, true);
    }
-   m_accessList = new IntegerArray<UINT32>(src->m_accessList);
 
-	unlock();
+   unlock();
 }
 
 /**
