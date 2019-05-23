@@ -274,7 +274,7 @@ public class GeneralTable extends DCIPropertyPageDialog
       });
       
       fd = new FormData();
-      fd.top = new FormAttachment(origin.getParent(), WidgetHelper.OUTER_SPACING, SWT.BOTTOM);
+      fd.top = new FormAttachment(customSnmpPort, WidgetHelper.OUTER_SPACING, SWT.BOTTOM);
       fd.right = new FormAttachment(100, 0);
       agentCacheMode = WidgetHelper.createLabeledCombo(groupData, SWT.READ_ONLY, Messages.get().GeneralTable_AgentCacheMode, fd);
       agentCacheMode.add(Messages.get().GeneralTable_Default);
@@ -285,7 +285,7 @@ public class GeneralTable extends DCIPropertyPageDialog
 
       fd = new FormData();
       fd.left = new FormAttachment(0, 0);
-      fd.top = new FormAttachment(origin.getParent(), WidgetHelper.OUTER_SPACING, SWT.BOTTOM);
+      fd.top = new FormAttachment(customSnmpPort, WidgetHelper.OUTER_SPACING, SWT.BOTTOM);
       fd.right = new FormAttachment(agentCacheMode.getParent(), -WidgetHelper.OUTER_SPACING, SWT.LEFT);
       sourceNode.setLayoutData(fd);
       
