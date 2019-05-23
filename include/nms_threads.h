@@ -33,6 +33,8 @@
 #include <process.h>
 #endif
 
+#include "winmutex.h"
+
 //
 // Related datatypes and constants
 //
@@ -58,7 +60,7 @@ typedef unsigned int THREAD_ID;
 
 extern "C" typedef THREAD_RESULT (THREAD_CALL *ThreadFunction)(void *);
 
-typedef CRITICAL_SECTION *MUTEX;
+typedef win_mutex_t *MUTEX;
 typedef HANDLE CONDITION;
 struct netxms_thread_t
 {
@@ -215,8 +217,8 @@ inline THREAD_ID ThreadId(THREAD thread)
 
 inline MUTEX MutexCreate()
 {
-	MUTEX mutex = (MUTEX)MemAlloc(sizeof(CRITICAL_SECTION));
-	InitializeCriticalSectionAndSpinCount(mutex, 4000);
+	MUTEX mutex = (MUTEX)MemAlloc(sizeof(win_mutex_t));
+	InitializeMutex(mutex, 4000);
    return mutex;
 }
 
@@ -227,7 +229,7 @@ inline MUTEX MutexCreateRecursive()
 
 inline void MutexDestroy(MUTEX mutex)
 {
-	DeleteCriticalSection(mutex);
+	DestroyMutex(mutex);
    MemFree(mutex);
 }
 
@@ -235,7 +237,7 @@ inline bool MutexLock(MUTEX mutex)
 {
 	if (mutex == INVALID_MUTEX_HANDLE)
 		return false;
-	EnterCriticalSection(mutex);
+	LockMutex(mutex, INFINITE);
    return true;
 }
 
@@ -243,12 +245,19 @@ inline bool MutexTryLock(MUTEX mutex)
 {
 	if (mutex == INVALID_MUTEX_HANDLE)
 		return false;
-	return TryEnterCriticalSection(mutex) ? true : false;
+	return TryLockMutex(mutex);
+}
+
+inline bool MutexTimedLock(MUTEX mutex, UINT32 timeout)
+{
+   if (mutex == INVALID_MUTEX_HANDLE)
+      return false;
+   return LockMutex(mutex, timeout);
 }
 
 inline void MutexUnlock(MUTEX mutex)
 {
-   LeaveCriticalSection(mutex);
+   UnlockMutex(mutex);
 }
 
 inline CONDITION ConditionCreate(bool bBroadcast)
@@ -450,6 +459,23 @@ inline bool MutexTryLock(MUTEX mutex)
    return (mutex != NULL) ? (pth_mutex_acquire(mutex, TRUE, NULL) != 0) : false;
 }
 
+inline bool MutexTimedLock(MUTEX mutex, UINT32 timeout)
+{
+   if (mutex == NULL)
+      return false;
+
+   if (timeout == 0)
+      return pth_mutex_acquire(mutex, TRUE, NULL) != 0;
+
+   if (timeout == INFINITE)
+      return pth_mutex_acquire(mutex, FALSE, NULL) != 0;
+
+   pth_event_t ev = pth_event(PTH_EVENT_TIME, pth_timeout(timeout / 1000, (timeout % 1000) * 1000));
+   int retcode = pth_mutex_acquire(mutex, FALSE, ev);
+   pth_event_free(ev, PTH_FREE_ALL);
+   return retcode != 0;
+}
+
 inline void MutexUnlock(MUTEX mutex)
 {
    if (mutex != NULL) 
@@ -531,9 +557,7 @@ inline bool ConditionWait(CONDITION cond, UINT32 dwTimeOut)
       {
 		   if (dwTimeOut != INFINITE)
 		   {
-            pth_event_t ev;
-
-            ev = pth_event(PTH_EVENT_TIME, pth_timeout(dwTimeOut / 1000, (dwTimeOut % 1000) * 1000));
+            pth_event_t ev = pth_event(PTH_EVENT_TIME, pth_timeout(dwTimeOut / 1000, (dwTimeOut % 1000) * 1000));
 			   retcode = pth_cond_await(&cond->cond, &cond->mutex, ev);
             pth_event_free(ev, PTH_FREE_ALL);
 		   }
@@ -820,6 +844,24 @@ inline bool MutexLock(MUTEX mutex)
 inline bool MutexTryLock(MUTEX mutex)
 {
    return (mutex != NULL) ? (pthread_mutex_trylock(&mutex->mutex) == 0) : false;
+}
+
+inline bool MutexTimedLock(MUTEX mutex, UINT32 timeout)
+{
+   if (mutex == NULL)
+      return false;
+
+   struct timeval now;
+   struct timespec absTimeout;
+
+   gettimeofday(&now, NULL);
+   absTimeout.tv_sec = now.tv_sec + (timeout / 1000);
+
+   now.tv_usec += (timeout % 1000) * 1000;
+   absTimeout.tv_sec += now.tv_usec / 1000000;
+   absTimeout.tv_nsec = (now.tv_usec % 1000000) * 1000;
+
+   return pthread_mutex_timedlock(&mutex->mutex, &absTimeout) == 0;
 }
 
 inline void MutexUnlock(MUTEX mutex)

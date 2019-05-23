@@ -15,6 +15,7 @@ void TestObjectMemoryPool();
 void TestThreadPool();
 void TestMsgWaitQueue();
 void TestMessageClass();
+void TestMutex();
 void TestMutexWrapper();
 void TestRWLockWrapper();
 void TestConditionWrapper();
@@ -1630,6 +1631,7 @@ int main(int argc, char *argv[])
    TestHashSet();
    TestObjectArray();
    TestTable();
+   TestMutex();
    TestMutexWrapper();
    TestRWLockWrapper();
    TestConditionWrapper();

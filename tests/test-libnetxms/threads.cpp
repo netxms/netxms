@@ -6,6 +6,64 @@ static int s_count;
 static int s_increment;
 static int s_val;
 
+static THREAD_RESULT THREAD_CALL MutexWorkerThread(void *arg)
+{
+   MUTEX m = (MUTEX)arg;
+   MutexLock(m);
+   for(int i = 0; i < 100; i++)
+      s_val += s_increment;
+   MutexUnlock(m);
+   return THREAD_OK;
+}
+
+static THREAD_RESULT THREAD_CALL MutexWorkerThread2(void *arg)
+{
+   MUTEX m = (MUTEX)arg;
+   MutexLock(m);
+   s_val = 1;
+   ThreadSleepMs(800);
+   MutexUnlock(m);
+   return THREAD_OK;
+}
+
+void TestMutex()
+{
+   StartTest(_T("Mutex"));
+   for (int n = 0; n < 10; n++)
+   {
+      s_val = 0;
+      srand((unsigned int)time(NULL));
+      s_count = 100 + (rand() % 100);
+      s_increment = (rand() % 5 + 1) * 2;
+
+      MUTEX m = MutexCreate();
+
+      THREAD t[200];
+      for (int i = 0; i < s_count; i++)
+         t[i] = ThreadCreateEx(MutexWorkerThread, 0, m);
+      for (int i = 0; i < s_count; i++)
+         ThreadJoin(t[i]);
+
+      MutexDestroy(m);
+
+      AssertEquals(s_val, s_count * 100 * s_increment);
+   }
+   EndTest();
+
+   StartTest(_T("Mutex timed lock"));
+   MUTEX m = MutexCreate();
+   s_val = 0;
+   THREAD t = ThreadCreateEx(MutexWorkerThread2, 0, m);
+   ThreadSleepMs(100);
+   AssertFalse(MutexTimedLock(m, 200));
+   AssertTrue(MutexTimedLock(m, 1000));
+   MutexUnlock(m);
+   ThreadJoin(t);
+   MutexDestroy(m);
+   AssertEquals(s_val, 1);
+   EndTest();
+}
+
 static THREAD_RESULT THREAD_CALL MutexWrapperWorkerThread(void *arg)
 {
    Mutex m = *((Mutex *)arg);
