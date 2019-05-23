@@ -2264,7 +2264,7 @@ void ClientSession::getObjects(NXCPMessage *request)
       object->fillMessage(&msg, m_dwUserId);
       if (m_dwFlags & CSF_SYNC_OBJECT_COMMENTS)
          object->commentsToMessage(&msg);
-      if (!object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
+      if ((object->getObjectClass() == OBJECT_NODE) && !object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
       {
          // mask passwords
          msg.setField(VID_SHARED_SECRET, _T("********"));
@@ -2325,7 +2325,7 @@ void ClientSession::getSelectedObjects(NXCPMessage *request)
          object->fillMessage(&msg, m_dwUserId);
          if (m_dwFlags & CSF_SYNC_OBJECT_COMMENTS)
             object->commentsToMessage(&msg);
-         if (!object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
+         if ((object->getObjectClass() == OBJECT_NODE) && !object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
          {
             // mask passwords
             msg.setField(VID_SHARED_SECRET, _T("********"));
@@ -2793,6 +2793,13 @@ void ClientSession::sendObjectUpdate(NetObj *object)
       object->fillMessage(&msg, m_dwUserId);
       if (m_dwFlags & CSF_SYNC_OBJECT_COMMENTS)
          object->commentsToMessage(&msg);
+      if ((object->getObjectClass() == OBJECT_NODE) && !object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
+      {
+         // mask passwords
+         msg.setField(VID_SHARED_SECRET, _T("********"));
+         msg.setField(VID_SNMP_AUTH_PASSWORD, _T("********"));
+         msg.setField(VID_SNMP_PRIV_PASSWORD, _T("********"));
+      }
    }
    else
    {
