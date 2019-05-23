@@ -588,7 +588,7 @@ bool EPRule::processEvent(Event *event)
          {
             if (DeleteScheduledTaskByKey(key))
             {
-               nxlog_debug_tag(DEBUG_TAG, 6, _T("Delayed action execution with key \"%s\" cancelled"), key);
+               nxlog_debug_tag(DEBUG_TAG, 6, _T("Delayed action execution with key \"%s\" cancelled"), (const TCHAR *)key);
             }
          }
       }
