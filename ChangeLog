@@ -7,6 +7,8 @@
 	MX-1609 (Duplicate server configuration parameters)
 	NX-1637 (Unrecognized Cisco SG Switch)
 	NX-1639 (NXSL persistent storage entries not saved in database)
+	NX-1644 (DB gets corrupted when adding container/nodes)
+	NX-1645 (Broken UI element layout in table DCI "General" property page)
 
 
 *
