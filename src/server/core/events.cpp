@@ -257,7 +257,7 @@ Event::Event(const EventTemplate *eventTemplate, UINT32 sourceId, UINT32 dciId, 
             case 's':
                {
                   const TCHAR *s = va_arg(args, const TCHAR *);
-					   m_parameters.add(_tcsdup_ex(s));
+					   m_parameters.add(MemCopyString(CHECK_NULL_EX(s)));
                }
                break;
             case 'm':	// multibyte string
@@ -266,7 +266,7 @@ Event::Event(const EventTemplate *eventTemplate, UINT32 sourceId, UINT32 dciId, 
 #ifdef UNICODE
                   m_parameters.add((s != NULL) ? WideStringFromMBString(s) : _tcsdup(_T("")));
 #else
-					   m_parameters.add(strdup(CHECK_NULL_EX(s)));
+					   m_parameters.add(MemCopyStringA(CHECK_NULL_EX_A(s)));
 #endif
                }
                break;
@@ -274,7 +274,7 @@ Event::Event(const EventTemplate *eventTemplate, UINT32 sourceId, UINT32 dciId, 
                {
                   const WCHAR *s = va_arg(args, const WCHAR *);
 #ifdef UNICODE
-		   			m_parameters.add(wcsdup(CHECK_NULL_EX(s)));
+		   			m_parameters.add(MemCopyStringW(CHECK_NULL_EX_W(s)));
 #else
                   m_parameters.add((s != NULL) ? MBStringFromWideString(s) : strdup(""));
 #endif

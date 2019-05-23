@@ -193,7 +193,7 @@ DCTable::DCTable(DB_HANDLE hdb, DB_RESULT hResult, int iRow, Template *pNode) : 
    pszTmp = DBGetField(hResult, iRow, 20, NULL, 0);
    setInstanceFilter(pszTmp);
    MemFree(pszTmp);
-   DBGetField(hResult, iRow, 21, m_instance, MAX_DB_STRING);
+   m_instance = DBGetField(hResult, iRow, 21, NULL, 0);
    m_instanceRetentionTime = DBGetFieldLong(hResult, iRow, 22);
    m_instanceGracePeriodStart = DBGetFieldLong(hResult, iRow, 23);
 

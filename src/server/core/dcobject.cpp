@@ -70,7 +70,7 @@ DCObject::DCObject()
    m_instanceDiscoveryData = NULL;
    m_instanceFilterSource = NULL;
    m_instanceFilter = NULL;
-   m_instance[0] = 0;
+   m_instance = NULL;
    m_accessList = new IntegerArray<UINT32>(0, 16);
    m_instanceRetentionTime = -1;
    m_instanceGracePeriodStart = 0;
@@ -115,11 +115,11 @@ DCObject::DCObject(const DCObject *src, bool shadowCopy)
    m_schedules = (src->m_schedules != NULL) ? new StringList(src->m_schedules) : NULL;
 
    m_instanceDiscoveryMethod = src->m_instanceDiscoveryMethod;
-   m_instanceDiscoveryData = (src->m_instanceDiscoveryData != NULL) ? _tcsdup(src->m_instanceDiscoveryData) : NULL;
+   m_instanceDiscoveryData = MemCopyString(src->m_instanceDiscoveryData);
    m_instanceFilterSource = NULL;
    m_instanceFilter = NULL;
    setInstanceFilter(src->m_instanceFilterSource);
-   _tcscpy(m_instance, src->m_instance);
+   m_instance = MemCopyString(src->m_instance);
    m_accessList = new IntegerArray<UINT32>(src->m_accessList);
    m_instanceRetentionTime = src->m_instanceRetentionTime;
    m_instanceGracePeriodStart = src->m_instanceGracePeriodStart;
@@ -168,7 +168,7 @@ DCObject::DCObject(UINT32 dwId, const TCHAR *szName, int iSource,
    m_instanceDiscoveryData = NULL;
    m_instanceFilterSource = NULL;
    m_instanceFilter = NULL;
-   m_instance[0] = 0;
+   m_instance = NULL;
    m_accessList = new IntegerArray<UINT32>(0, 16);
    m_instanceRetentionTime = -1;
    m_instanceGracePeriodStart = 0;
@@ -232,12 +232,11 @@ DCObject::DCObject(ConfigEntry *config, Template *owner)
 	}
 
    m_instanceDiscoveryMethod = (WORD)config->getSubEntryValueAsInt(_T("instanceDiscoveryMethod"));
-   const TCHAR *value = config->getSubEntryValue(_T("instanceDiscoveryData"));
-   m_instanceDiscoveryData = (value != NULL) ? _tcsdup(value) : NULL;
+   m_instanceDiscoveryData = MemCopyString(config->getSubEntryValue(_T("instanceDiscoveryData")));
    m_instanceFilterSource = NULL;
    m_instanceFilter = NULL;
    setInstanceFilter(config->getSubEntryValue(_T("instanceFilter")));
-   nx_strncpy(m_instance, config->getSubEntryValue(_T("instance"), 0, _T("")), MAX_DB_STRING);
+   m_instance = MemCopyString(config->getSubEntryValue(_T("instance")));
    m_accessList = new IntegerArray<UINT32>(0, 16);
    m_instanceRetentionTime = config->getSubEntryValueAsInt(_T("instanceRetentionTime"), 0, -1);
    m_instanceGracePeriodStart = 0;
@@ -254,8 +253,9 @@ DCObject::~DCObject()
 	free(m_pszPerfTabSettings);
 	free(m_comments);
    MutexDestroy(m_hMutex);
-   free(m_instanceDiscoveryData);
-   free(m_instanceFilterSource);
+   MemFree(m_instance);
+   MemFree(m_instanceDiscoveryData);
+   MemFree(m_instanceFilterSource);
    delete m_instanceFilter;
    delete m_accessList;
 }
@@ -419,7 +419,7 @@ void DCObject::expandMacros(const TCHAR *src, TCHAR *dst, size_t dstLen)
 		}
 		temp.append(rest);
 	}
-	nx_strncpy(dst, temp, dstLen);
+	_tcslcpy(dst, temp, dstLen);
 }
 
 /**
@@ -465,7 +465,11 @@ void DCObject::changeBinding(UINT32 dwNewId, Template *newOwner, BOOL doMacroExp
 	{
 		expandMacros(m_name, m_name, MAX_ITEM_NAME);
 		expandMacros(m_description, m_description, MAX_DB_STRING);
-      expandMacros(m_instance, m_instance, MAX_DB_STRING);
+
+		TCHAR instance[MAX_ITEM_NAME];
+      expandMacros(CHECK_NULL_EX(m_instance), instance, MAX_ITEM_NAME);
+      MemFree(m_instance);
+      m_instance = MemCopyString(instance);
 	}
 
    unlock();
@@ -744,7 +748,7 @@ void DCObject::createMessage(NXCPMessage *pMsg)
       pMsg->setField(VID_INSTD_DATA, m_instanceDiscoveryData);
    if (m_instanceFilterSource != NULL)
       pMsg->setField(VID_INSTD_FILTER, m_instanceFilterSource);
-   pMsg->setField(VID_INSTANCE, m_instance);
+   pMsg->setField(VID_INSTANCE, CHECK_NULL_EX(m_instance));
    pMsg->setFieldFromInt32Array(VID_ACL, m_accessList);
    pMsg->setField(VID_INSTANCE_RETENTION, m_instanceRetentionTime);
    unlock();
@@ -805,13 +809,15 @@ void DCObject::updateFromMessage(NXCPMessage *pMsg)
 
    m_instanceDiscoveryMethod = pMsg->getFieldAsUInt16(VID_INSTD_METHOD);
 
-   free(m_instanceDiscoveryData);
+   MemFree(m_instanceDiscoveryData);
    m_instanceDiscoveryData = pMsg->getFieldAsString(VID_INSTD_DATA);
 
    pszStr = pMsg->getFieldAsString(VID_INSTD_FILTER);
    setInstanceFilter(pszStr);
-   free(pszStr);
-   pMsg->getFieldAsString(VID_INSTANCE, m_instance, MAX_DB_STRING);
+   MemFree(pszStr);
+
+   MemFree(m_instance);
+   m_instance = pMsg->getFieldAsString(VID_INSTANCE);
 
    m_accessList->clear();
    pMsg->getFieldAsInt32Array(VID_ACL, m_accessList);
@@ -964,7 +970,10 @@ void DCObject::updateFromTemplate(DCObject *src)
    }
    else
    {
-      expandMacros(src->m_instance, m_instance, MAX_DB_STRING);
+      TCHAR instance[MAX_ITEM_NAME];
+      expandMacros(CHECK_NULL_EX(src->m_instance), instance, MAX_ITEM_NAME);
+      MemFree(m_instance);
+      m_instance = MemCopyString(instance);
       m_instanceDiscoveryMethod = src->m_instanceDiscoveryMethod;
       MemFree(m_instanceDiscoveryData);
       m_instanceDiscoveryData = _tcsdup_ex(src->m_instanceDiscoveryData);
@@ -1147,11 +1156,11 @@ void DCObject::updateFromImport(ConfigEntry *config)
    }
 
    m_instanceDiscoveryMethod = (WORD)config->getSubEntryValueAsInt(_T("instanceDiscoveryMethod"));
-   const TCHAR *value = config->getSubEntryValue(_T("instanceDiscoveryData"));
    MemFree(m_instanceDiscoveryData);
-   m_instanceDiscoveryData = _tcsdup_ex(value);
+   m_instanceDiscoveryData = MemCopyString(config->getSubEntryValue(_T("instanceDiscoveryData")));
    setInstanceFilter(config->getSubEntryValue(_T("instanceFilter")));
-   nx_strncpy(m_instance, config->getSubEntryValue(_T("instance"), 0, _T("")), MAX_DB_STRING);
+   MemFree(m_instance);
+   m_instance = MemCopyString(config->getSubEntryValue(_T("instance")));
    m_instanceRetentionTime = config->getSubEntryValueAsInt(_T("instanceRetentionTime"), 0, -1);
 
    unlock();
