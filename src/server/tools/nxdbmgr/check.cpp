@@ -937,14 +937,33 @@ static void CheckTemplateNodeMapping()
              !IsDatabaseRecordExist(g_dbHandle, _T("clusters"), _T("id"), dwNodeId) &&
              !IsDatabaseRecordExist(g_dbHandle, _T("mobile_devices"), _T("id"), dwNodeId))
          {
-            g_dbCheckErrors++;
-				DBMgrGetObjectName(dwTemplateId, name);
-            if (GetYesNoEx(_T("Template %d [%s] mapped to non-existent node %d. Delete this mapping?"), dwTemplateId, name, dwNodeId))
+            if(IsDatabaseRecordExist(g_dbHandle, _T("object_containers"), _T("id"), dwTemplateId))
             {
-               _sntprintf(query, 256, _T("DELETE FROM dct_node_map WHERE template_id=%d AND node_id=%d"),
-                          dwTemplateId, dwNodeId);
-               if (SQLQuery(query))
-                  g_dbCheckFixes++;
+               g_dbCheckErrors++;
+               if (GetYesNoEx(_T("Found possibly misplaced object binding %d to %d. Fix it?"), dwTemplateId, dwNodeId))
+               {
+                  _sntprintf(query, 256, _T("DELETE FROM dct_node_map WHERE template_id=%d AND node_id=%d"),
+                                            dwTemplateId, dwNodeId);
+                  if (SQLQuery(query))
+                  {
+                     _sntprintf(query, 256, _T("INSERT INTO container_members (container_id,object_id) VALUES (%d,%d)"),
+                                                              dwTemplateId, dwNodeId);
+                     if(SQLQuery(query))
+                        g_dbCheckFixes++;
+                  }
+               }
+            }
+            else
+            {
+               g_dbCheckErrors++;
+               DBMgrGetObjectName(dwTemplateId, name);
+               if (GetYesNoEx(_T("Template %d [%s] mapped to non-existent node %d. Delete this mapping?"), dwTemplateId, name, dwNodeId))
+               {
+                  _sntprintf(query, 256, _T("DELETE FROM dct_node_map WHERE template_id=%d AND node_id=%d"),
+                             dwTemplateId, dwNodeId);
+                  if (SQLQuery(query))
+                     g_dbCheckFixes++;
+               }
             }
          }
          UpdateStageProgress(1);
