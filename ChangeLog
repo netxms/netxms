@@ -28,6 +28,7 @@
 - Improved driver for Cisco Small Business switches
 - Fixed issues:
 	NX-1609 (Duplicate server configuration parameters)
+	NX-1627 (Proxy node should not ping through itself)
 	NX-1637 (Unrecognized Cisco SG Switch)
 	NX-1639 (NXSL persistent storage entries not saved in database)
 	NX-1644 (DB gets corrupted when adding container/nodes)
