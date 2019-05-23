@@ -159,11 +159,11 @@ bool Container::saveToDatabase(DB_HANDLE hdb)
 	if (success && (m_modified & MODIFY_RELATIONS))
 	{
       // Update members list
-      success = executeQueryOnObject(hdb, _T("DELETE FROM dct_node_map WHERE template_id=?"));
+      success = executeQueryOnObject(hdb, _T("DELETE FROM container_members WHERE container_id=?"));
       lockChildList(false);
       if (success && !m_childList->isEmpty())
       {
-         DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO dct_node_map (template_id,node_id) VALUES (?,?)"), m_childList->size() > 1);
+         DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO container_members (container_id,object_id) VALUES (?,?)"), m_childList->size() > 1);
          if (hStmt != NULL)
          {
             DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
