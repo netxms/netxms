@@ -693,7 +693,7 @@ CREATE TABLE items
   snmp_raw_value_type integer not null,
   delta_calculation integer not null,
   transformation SQL_TEXT,         // Transformation script
-  instance varchar(255) null,   // Free form text which can be used in events
+  instance varchar(1023) null,   // Free form text which can be used in events
   system_tag varchar(255) null,         // System tag
   resource_id integer not null,   // associated cluster resource ID
   proxy_node integer not null,    // ID of proxy node (for SNMP and agent items)
@@ -702,7 +702,7 @@ CREATE TABLE items
   custom_units_name varchar(63) null, // units name of base_units = CUSTOM
   perftab_settings SQL_TEXT null,     // Settings for displaying graph on performance tab
   instd_method integer not null,
-  instd_data varchar(255) null,
+  instd_data varchar(1023) null,
   instd_filter SQL_TEXT null,
   samples integer not null,
   npe_name varchar(15) null,
@@ -767,9 +767,9 @@ CREATE TABLE dc_tables
   perftab_settings SQL_TEXT null,     // Settings for displaying graph on performance tab
   transformation_script SQL_TEXT null,
   comments SQL_TEXT null,
-  instance varchar(255) null,
+  instance varchar(1023) null,
   instd_method integer not null,
-  instd_data varchar(255) null,
+  instd_data varchar(1023) null,
   instd_filter SQL_TEXT null,
   instance_retention_time integer not null,
   grace_period_start integer not null,

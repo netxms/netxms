@@ -128,7 +128,7 @@ DCItem::DCItem(DB_HANDLE hdb, DB_RESULT hResult, int iRow, DataCollectionOwner *
    MemFree(pszTmp);
    m_dwTemplateId = DBGetFieldULong(hResult, iRow, 9);
    DBGetField(hResult, iRow, 10, m_description, MAX_DB_STRING);
-   DBGetField(hResult, iRow, 11, m_instance, MAX_DB_STRING);
+   m_instance = DBGetField(hResult, iRow, 11, NULL, 0);
    m_dwTemplateItemId = DBGetFieldULong(hResult, iRow, 12);
    m_thresholds = NULL;
    m_cacheSize = 0;

@@ -210,7 +210,7 @@ protected:
    TCHAR *m_instanceDiscoveryData;
    TCHAR *m_instanceFilterSource;
    NXSL_Program *m_instanceFilter;
-   TCHAR m_instance[MAX_DB_STRING];
+   TCHAR *m_instance;
    IntegerArray<UINT32> *m_accessList;
    time_t m_instanceGracePeriodStart;  // Start of grace period for missing instance
    INT32 m_instanceRetentionTime;      // Retention time if instance is not found
@@ -333,8 +333,8 @@ public:
    void setInstanceDiscoveryMethod(WORD method) { m_instanceDiscoveryMethod = method; }
    void setInstanceDiscoveryData(const TCHAR *data) { MemFree(m_instanceDiscoveryData); m_instanceDiscoveryData = MemCopyString(data); }
    void setInstanceFilter(const TCHAR *pszScript);
-   void setInstance(const TCHAR *instance) { _tcslcpy(m_instance, instance, MAX_DB_STRING); }
-   const TCHAR *getInstance() const { return m_instance; }
+   void setInstance(const TCHAR *instance) { MemFree(m_instance); m_instance = MemCopyString(instance); }
+   const TCHAR *getInstance() const { return CHECK_NULL_EX(m_instance); }
    void expandInstance();
    time_t getInstanceGracePeriodStart() const { return m_instanceGracePeriodStart; }
    void setInstanceGracePeriodStart(time_t t) { m_instanceGracePeriodStart = t; }

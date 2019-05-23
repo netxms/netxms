@@ -580,7 +580,7 @@ Event::Event(const EventTemplate *eventTemplate, UINT32 sourceId, UINT32 dciId, 
             case 's':
                {
                   const TCHAR *s = va_arg(args, const TCHAR *);
-					   m_parameters.add(MemCopyString(s));
+					   m_parameters.add(MemCopyString(CHECK_NULL_EX(s)));
                }
                break;
             case 'm':	// multibyte string
@@ -589,7 +589,7 @@ Event::Event(const EventTemplate *eventTemplate, UINT32 sourceId, UINT32 dciId, 
 #ifdef UNICODE
                   m_parameters.add((s != NULL) ? WideStringFromMBString(s) : MemCopyStringW(L""));
 #else
-					   m_parameters.add(MemCopyStringA(s));
+					   m_parameters.add(MemCopyStringA(CHECK_NULL_EX_A(s)));
 #endif
                }
                break;
@@ -597,7 +597,7 @@ Event::Event(const EventTemplate *eventTemplate, UINT32 sourceId, UINT32 dciId, 
                {
                   const WCHAR *s = va_arg(args, const WCHAR *);
 #ifdef UNICODE
-		   			m_parameters.add(MemCopyStringW(s));
+		   			m_parameters.add(MemCopyStringW(CHECK_NULL_EX_W(s)));
 #else
                   m_parameters.add((s != NULL) ? MBStringFromWideString(s) : MemCopyStringA(""));
 #endif

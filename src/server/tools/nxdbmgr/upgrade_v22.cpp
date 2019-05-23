@@ -24,11 +24,24 @@
 #include <nxevent.h>
 
 /**
- * Upgrade from 22.57 to 30.0
+ * Upgrade from 22.58 to 30.0
+ */
+static bool H_UpgradeFromV58()
+{
+   CHK_EXEC(SetMajorSchemaVersion(30, 0));
+   return true;
+}
+
+/**
+ * Upgrade 22.57 to 22.58
  */
 static bool H_UpgradeFromV57()
 {
-   CHK_EXEC(SetMajorSchemaVersion(30, 0));
+   CHK_EXEC(DBResizeColumn(g_dbHandle, _T("items"), _T("instance"), 1023, true));
+   CHK_EXEC(DBResizeColumn(g_dbHandle, _T("items"), _T("instd_data"), 1023, true));
+   CHK_EXEC(DBResizeColumn(g_dbHandle, _T("dc_tables"), _T("instance"), 1023, true));
+   CHK_EXEC(DBResizeColumn(g_dbHandle, _T("dc_tables"), _T("instd_data"), 1023, true));
+   CHK_EXEC(SetMinorSchemaVersion(58));
    return true;
 }
 
@@ -1152,7 +1165,8 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
-   { 57, 30, 0,  H_UpgradeFromV57 },
+   { 58, 30, 0,  H_UpgradeFromV58 },
+   { 57, 22, 58, H_UpgradeFromV57 },
    { 56, 22, 57, H_UpgradeFromV56 },
    { 55, 22, 56, H_UpgradeFromV55 },
    { 54, 22, 55, H_UpgradeFromV54 },
