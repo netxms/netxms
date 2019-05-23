@@ -283,6 +283,7 @@
     <ClInclude Include="..\..\include\unicode.h" />
     <ClInclude Include="..\..\include\uthash.h" />
     <ClInclude Include="..\..\include\uuid.h" />
+    <ClInclude Include="..\..\include\winmutex.h" />
     <ClInclude Include="debug_tag_tree.h" />
     <ClInclude Include="diff.h" />
     <ClInclude Include="ice.h" />

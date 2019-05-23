@@ -58,6 +58,7 @@ include_HEADERS = \
 	symbol_visibility.h \
 	unicode.h \
 	uthash.h \
-	uuid.h
+	uuid.h \
+	winmutex.h
 
 SUBDIRS = msvc
