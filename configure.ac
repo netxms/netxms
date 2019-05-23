@@ -809,7 +809,7 @@ AC_ARG_WITH(dist,
 	AGENT_DIRS="libnxtux"
 	SMSDRV_DIRS="anysms kannel mymobile nexmo nxagent slack smseagle text2reach websms"
    HDLINK_DIRS="jira redmine"
-   PDSDRV_DIRS="rrdtool"
+   PDSDRV_DIRS="rrdtool influxdb"
 	NXCONFIG="nxconfig"
 	TOP_LEVEL_MODULES="include sql images tests"
 	SERVER_INCLUDE="include"
@@ -4257,6 +4257,7 @@ AC_CONFIG_FILES([
 	src/server/netxmsd/Makefile
 	src/server/pdsdrv/Makefile
 	src/server/pdsdrv/rrdtool/Makefile
+	src/server/pdsdrv/influxdb/Makefile
 	src/server/spe/Makefile
 	src/server/tools/Makefile
 	src/server/tools/libnxdbmgr/Makefile
