@@ -2850,6 +2850,8 @@ protected:
    virtual void fillMessageInternal(NXCPMessage *msg, UINT32 userId) override;
    virtual UINT32 modifyFromMessageInternal(NXCPMessage *request) override;
 
+   void updateProxyLoad(Node *node);
+
 public:
    Zone();
    Zone(UINT32 uin, const TCHAR *name);

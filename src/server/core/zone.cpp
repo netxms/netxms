@@ -557,13 +557,41 @@ void Zone::updateProxyStatus(Node *node, bool activeMode)
          }
          if (isAvailable && activeMode)
          {
-            p->cpuLoad = node->getMetricFromAgentAsDouble(_T("System.CPU.LoadAvg15"), p->cpuLoad);
-            p->dataCollectorLoad = node->getMetricFromAgentAsDouble(_T("Agent.ThreadPool.LoadAverage15(DATACOLL)"), p->dataCollectorLoad);
+            // Update should be executed on separate thread to avoid server deadlock
+            node->incRefCount();
+            ThreadPoolExecute(g_mainThreadPool, this, &Zone::updateProxyLoad, node);
          }
          break;
       }
    }
    unlockProperties();
+}
+
+/**
+ * Update proxy load information
+ */
+void Zone::updateProxyLoad(Node *node)
+{
+   double cpuLoad = node->getMetricFromAgentAsDouble(_T("System.CPU.LoadAvg15"), -1);
+   double dataCollectorLoad = node->getMetricFromAgentAsDouble(_T("Agent.ThreadPool.LoadAverage15(DATACOLL)"), -1);
+   if ((cpuLoad >= 0) || (dataCollectorLoad >= 0))
+   {
+      lockProperties();
+      for(int i = 0; i < m_proxyNodes->size(); i++)
+      {
+         ZoneProxy *p = m_proxyNodes->get(i);
+         if (p->nodeId == node->getId())
+         {
+            if (cpuLoad >= 0)
+               p->cpuLoad = cpuLoad;
+            if (dataCollectorLoad >= 0)
+               p->dataCollectorLoad = dataCollectorLoad;
+            break;
+         }
+      }
+      unlockProperties();
+   }
+   node->decRefCount();
 }
 
 /**
