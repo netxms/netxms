@@ -538,23 +538,28 @@ void QueueProxiedSyslogMessage(const InetAddress &addr, UINT32 zoneUIN, UINT32 n
 /**
  * Callback for syslog parser
  */
-static void SyslogParserCallback(UINT32 eventCode, const TCHAR *eventName, const TCHAR *line, const TCHAR *source, UINT32 facility, UINT32 severity,
-                                 StringList *captureGroups, StringList *variables, UINT64 recordId, UINT32 objectId, int repeatCount, void *userArg,
-                                 const TCHAR *agentAction, const StringList *agentActionArgs)
+static void SyslogParserCallback(UINT32 eventCode, const TCHAR *eventName, const TCHAR *eventTag,
+         const TCHAR *line, const TCHAR *source, UINT32 facility, UINT32 severity, const StringList *captureGroups,
+         const StringList *variables, UINT64 recordId, UINT32 objectId, int repeatCount, void *userArg,
+         const TCHAR *agentAction, const StringList *agentActionArgs)
 {
-	char format[] = "sssssssssssssssssssssssssssssssss";
-	const TCHAR *plist[33];
+	char format[] = "ssssssssssssssssssssssssssssssssss";
+	const TCHAR *plist[34];
 
 	nxlog_debug_tag(DEBUG_TAG, 7, _T("Syslog message matched, capture group count = %d, repeat count = %d"), captureGroups->size(), repeatCount);
 
 	int count = std::min(captureGroups->size(), 32);
-	format[count + 1] = 0;
-	for(int i = 0; i < count; i++)
+	int i;
+	for(i = 0; i < count; i++)
 		plist[i] = captureGroups->get(i);
+	if (eventTag != NULL)
+	   plist[i++] = eventTag;
 
 	TCHAR repeatCountText[16];
    _sntprintf(repeatCountText, 16, _T("%d"), repeatCount);
-   plist[count] = repeatCountText;
+   plist[i++] = repeatCountText;
+
+   format[i] = 0;
 
    PostEvent(eventCode, objectId, format,
 	          plist[0], plist[1], plist[2], plist[3],
@@ -564,7 +569,8 @@ static void SyslogParserCallback(UINT32 eventCode, const TCHAR *eventName, const
 	          plist[16], plist[17], plist[18], plist[19],
 	          plist[20], plist[21], plist[22], plist[23],
 	          plist[24], plist[25], plist[26], plist[27],
-	          plist[28], plist[29], plist[30], plist[31]);
+	          plist[28], plist[29], plist[30], plist[31],
+	          plist[32], plist[33]);
 }
 
 /**

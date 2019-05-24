@@ -28,9 +28,9 @@
 /**
  * Constructor
  */
-LogParserRule::LogParserRule(LogParser *parser, const TCHAR *name, const TCHAR *regexp, UINT32 eventCode, const TCHAR *eventName,
-									  int repeatInterval, int repeatCount, bool resetRepeat, const TCHAR *source,
-									  UINT32 level, UINT32 idStart, UINT32 idEnd)
+LogParserRule::LogParserRule(LogParser *parser, const TCHAR *name, const TCHAR *regexp, UINT32 eventCode,
+         const TCHAR *eventName, const TCHAR *eventTag, int repeatInterval, int repeatCount,
+         bool resetRepeat, const TCHAR *source, UINT32 level, UINT32 idStart, UINT32 idEnd)
 {
 	String expandedRegexp;
 
@@ -41,6 +41,7 @@ LogParserRule::LogParserRule(LogParser *parser, const TCHAR *name, const TCHAR *
 	m_isValid = (_tregcomp(&m_preg, expandedRegexp, REG_EXTENDED | REG_ICASE) == 0);
 	m_eventCode = eventCode;
 	m_eventName = MemCopyString(eventName);
+   m_eventTag = MemCopyString(eventTag);
 	m_pmatch = MemAllocArray<regmatch_t>(MAX_PARAM_COUNT);
 	m_source = MemCopyString(source);
 	m_level = level;
@@ -74,6 +75,7 @@ LogParserRule::LogParserRule(LogParserRule *src, LogParser *parser)
 	m_isValid = (_tregcomp(&m_preg, m_regexp, REG_EXTENDED | REG_ICASE) == 0);
 	m_eventCode = src->m_eventCode;
 	m_eventName = MemCopyString(src->m_eventName);
+   m_eventTag = MemCopyString(src->m_eventTag);
    m_pmatch = MemAllocArray<regmatch_t>(MAX_PARAM_COUNT);
    m_source = MemCopyString(src->m_source);
 	m_level = src->m_level;
@@ -117,6 +119,7 @@ LogParserRule::~LogParserRule()
 	MemFree(m_source);
 	MemFree(m_regexp);
 	MemFree(m_eventName);
+	MemFree(m_eventTag);
 	MemFree(m_context);
 	MemFree(m_contextToChange);
 	MemFree(m_agentAction);
@@ -170,7 +173,7 @@ bool LogParserRule::matchInternal(bool extMode, const TCHAR *source, UINT32 even
 		{
 			m_parser->trace(6, _T("  matched"));
 			if ((cb != NULL) && ((m_eventCode != 0) || (m_eventName != NULL)))
-				cb(m_eventCode, m_eventName, line, source, eventId, level, NULL, variables, recordId, objectId, 
+				cb(m_eventCode, m_eventName, m_eventTag, line, source, eventId, level, NULL, variables, recordId, objectId,
                ((m_repeatCount > 0) && (m_repeatInterval > 0)) ? m_matchArray->size() : 1, userArg, m_agentAction, m_agentActionArgs);
 			incMatchCount(objectId);
 			return true;
@@ -197,7 +200,7 @@ bool LogParserRule::matchInternal(bool extMode, const TCHAR *source, UINT32 even
                captureGroups.addPreallocated(s);
 				}
 
-				cb(m_eventCode, m_eventName, line, source, eventId, level, &captureGroups, variables, recordId, objectId,
+				cb(m_eventCode, m_eventName, m_eventTag, line, source, eventId, level, &captureGroups, variables, recordId, objectId,
                ((m_repeatCount > 0) && (m_repeatInterval > 0)) ? m_matchArray->size() : 1, userArg, m_agentAction, m_agentActionArgs);
             m_parser->trace(8, _T("  callback completed"));
          }

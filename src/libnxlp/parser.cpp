@@ -64,6 +64,7 @@ struct LogParser_XmlParserState
 	ParserState state;
 	String regexp;
 	String event;
+	TCHAR *eventTag;
 	String file;
 	StringList files;
 	IntegerArray<INT32> encodings;
@@ -103,6 +104,7 @@ struct LogParser_XmlParserState
 	   repeatCount = 0;
 	   repeatInterval = 0;
 	   resetRepeat = true;
+	   eventTag = NULL;
 	}
 };
 
@@ -230,14 +232,6 @@ bool LogParser::addRule(LogParserRule *rule)
 		delete rule;
 	}
 	return valid;
-}
-
-/**
- * Create and add rule
- */
-bool LogParser::addRule(const TCHAR *regexp, UINT32 eventCode, const TCHAR *eventName, int repeatInterval, int repeatCount, bool resetRepeat)
-{
-	return addRule(new LogParserRule(this, NULL, regexp, eventCode, eventName, repeatInterval, repeatCount, resetRepeat));
 }
 
 /**
@@ -565,14 +559,22 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 	else if (!strcmp(name, "event"))
 	{
 		ps->state = XML_STATE_EVENT;
+
+      const char *tag = XMLGetAttr(attrs, "tag");
+      if (tag != NULL)
+      {
+#ifdef UNICODE
+         ps->eventTag = WideStringFromMBString(tag);
+#else
+         ps->eventTag = MemCopyStringA(tag);
+#endif
+      }
 	}
 	else if (!strcmp(name, "context"))
 	{
-		const char *action;
-
 		ps->state = XML_STATE_CONTEXT;
 
-		action = XMLGetAttr(attrs, "action");
+		const char *action = XMLGetAttr(attrs, "action");
 		if (action == NULL)
 			action = "set";
 
@@ -663,13 +665,11 @@ static void EndElement(void *userData, const char *name)
 	}
 	else if (!strcmp(name, "rule"))
 	{
-		UINT32 eventCode;
+      ps->event.trim();
+
 		const TCHAR *eventName = NULL;
 		TCHAR *eptr;
-		LogParserRule *rule;
-
-		ps->event.trim();
-		eventCode = _tcstoul(ps->event, &eptr, 0);
+		UINT32 eventCode = _tcstoul(ps->event, &eptr, 0);
 		if (*eptr != 0)
 		{
 			eventCode = ps->parser->resolveEventName(ps->event, 0);
@@ -681,10 +681,11 @@ static void EndElement(void *userData, const char *name)
 
 		if (ps->regexp.isEmpty())
 			ps->regexp = _T(".*");
-		rule = new LogParserRule(ps->parser, (const TCHAR *)ps->ruleName, (const TCHAR *)ps->regexp, eventCode, eventName, ps->repeatInterval, ps->repeatCount, ps->resetRepeat);
-		if(!ps->agentAction.isEmpty())
+		LogParserRule *rule = new LogParserRule(ps->parser, ps->ruleName, ps->regexp,
+		         eventCode, eventName, ps->eventTag, ps->repeatInterval, ps->repeatCount, ps->resetRepeat);
+		if (!ps->agentAction.isEmpty())
 		   rule->setAgentAction(ps->agentAction);
-		if(!ps->agentActionArgs.isEmpty())
+		if (!ps->agentActionArgs.isEmpty())
 		   rule->setAgentActionArgs(new StringList(ps->agentActionArgs, _T(" ")));
 		if (!ps->ruleContext.isEmpty())
 			rule->setContext(ps->ruleContext);
@@ -724,6 +725,8 @@ static void EndElement(void *userData, const char *name)
 
 		rule->setInverted(ps->invertedRule);
 		rule->setBreakFlag(ps->breakFlag);
+
+		MemFreeAndNull(ps->eventTag);
 
 		ps->parser->addRule(rule);
 		ps->state = XML_STATE_RULES;
@@ -845,7 +848,7 @@ ObjectArray<LogParser> *LogParser::createFromXml(const char *xml, int xmlLen, TC
 	if (success && (state.state == XML_STATE_ERROR))
 	{
 		if (errorText != NULL)
-			nx_strncpy(errorText, state.errorText, errBufSize);
+			_tcslcpy(errorText, state.errorText, errBufSize);
 	}
 	else if (success)
 	{

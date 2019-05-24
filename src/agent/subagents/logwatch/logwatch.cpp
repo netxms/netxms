@@ -1,6 +1,6 @@
 /*
 ** NetXMS LogWatch subagent
-** Copyright (C) 2008-2017 Victor Kirhenshtein
+** Copyright (C) 2008-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -135,11 +135,12 @@ static void SubagentShutdown()
 /**
  * Callback for matched log records
  */
-static void LogParserMatch(UINT32 eventCode, const TCHAR *eventName, const TCHAR *text, const TCHAR *source, UINT32 eventId,
-                           UINT32 severity, StringList *cgs, StringList *variables, UINT64 recordId, UINT32 objectId,
-                           int repeatCount, void *userArg, const TCHAR *agentAction, const StringList *agentActionArgs)
+static void LogParserMatch(UINT32 eventCode, const TCHAR *eventName, const TCHAR *eventTag,
+         const TCHAR *text, const TCHAR *source, UINT32 eventId, UINT32 severity, const StringList *cgs,
+         const StringList *variables, UINT64 recordId, UINT32 objectId, int repeatCount,
+         void *userArg, const TCHAR *agentAction, const StringList *agentActionArgs)
 {
-   int count = cgs->size() + 1 + ((variables != NULL) ? variables->size() : 0);
+   int count = cgs->size() + ((eventTag != NULL) ? 1 : 0) + 1 + ((variables != NULL) ? variables->size() : 0);
    TCHAR eventIdText[16], severityText[16], repeatCountText[16], recordIdText[32];
    _sntprintf(repeatCountText, 16, _T("%d"), repeatCount);
    if (source != NULL)
@@ -150,10 +151,12 @@ static void LogParserMatch(UINT32 eventCode, const TCHAR *eventName, const TCHAR
       count += 4;
    }
 
-   const TCHAR **list = (const TCHAR **)malloc(sizeof(const TCHAR *) * count);
+   const TCHAR **list = MemAllocArray<const TCHAR*>(count);
    int i;
    for(i = 0; i < cgs->size(); i++)
       list[i] = cgs->get(i);
+   if (eventTag != NULL)
+      list[i++] = eventTag;
 
    if (source != NULL)
    {
@@ -174,7 +177,7 @@ static void LogParserMatch(UINT32 eventCode, const TCHAR *eventName, const TCHAR
       AgentExecuteAction(agentAction, agentActionArgs);
 
    AgentSendTrap2(eventCode, eventName, count, list);
-   free(list);
+   MemFree(list);
 }
 
 /**
@@ -408,7 +411,7 @@ static NETXMS_SUBAGENT_LIST s_lists[] =
 /**
  * Subagent information
  */
-static NETXMS_SUBAGENT_INFO m_info =
+static NETXMS_SUBAGENT_INFO s_info =
 {
 	NETXMS_SUBAGENT_INFO_MAGIC,
 	_T("LOGWATCH"), NETXMS_BUILD_TAG,
@@ -427,7 +430,7 @@ static NETXMS_SUBAGENT_INFO m_info =
  */
 DECLARE_SUBAGENT_ENTRY_POINT(LOGWATCH)
 {
-	*ppInfo = &m_info;
+	*ppInfo = &s_info;
 	return true;
 }
 

@@ -79,11 +79,13 @@ enum LogParserFileEncoding
 /**
  * Log parser callback
  * Parameters:
- *    NetXMS event code, NetXMS event name, original text, source,
+ *    NetXMS event code, NetXMS event name, event tag, original text, source,
  *    original event ID (facility), original severity,
  *    capture groups, variables, record id, object id, repeat count, user arg, agent action
  */
-typedef void (* LogParserCallback)(UINT32, const TCHAR *, const TCHAR *, const TCHAR *, UINT32, UINT32, StringList *, StringList *, UINT64, UINT32, int, void *, const TCHAR *, const StringList *);
+typedef void (* LogParserCallback)(UINT32, const TCHAR *, const TCHAR *, const TCHAR *,
+         const TCHAR *, UINT32, UINT32, const StringList *, const StringList *, UINT64, UINT32,
+         int, void *, const TCHAR *, const StringList *);
 
 class LIBNXLP_EXPORTABLE LogParser;
 
@@ -122,6 +124,7 @@ private:
 	regex_t m_preg;
 	UINT32 m_eventCode;
 	TCHAR *m_eventName;
+	TCHAR *m_eventTag;
 	bool m_isValid;
 	regmatch_t *m_pmatch;
 	TCHAR *m_regexp;
@@ -155,7 +158,7 @@ private:
 public:
 	LogParserRule(LogParser *parser, const TCHAR *name,
 	              const TCHAR *regexp, UINT32 eventCode = 0, const TCHAR *eventName = NULL,
-					  int repeatInterval = 0, int repeatCount = 0,
+					  const TCHAR *eventTag = NULL, int repeatInterval = 0, int repeatCount = 0,
 					  bool resetRepeat = true, const TCHAR *source = NULL, UINT32 level = 0xFFFFFFFF,
 					  UINT32 idStart = 0, UINT32 idEnd = 0xFFFFFFFF);
 	LogParserRule(LogParserRule *src, LogParser *parser);
@@ -311,7 +314,6 @@ public:
    bool isSnapshotMode() const { return m_useSnapshot;  }
 #endif
 
-	bool addRule(const TCHAR *regexp, UINT32 eventCode = 0, const TCHAR *eventName = NULL, int repeatInterval = 0, int repeatCount = 0, bool resetRepeat = true);
 	bool addRule(LogParserRule *rule);
 	void setCallback(LogParserCallback cb) { m_cb = cb; }
 	void setUserArg(void *arg) { m_userArg = arg; }
