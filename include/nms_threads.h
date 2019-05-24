@@ -864,13 +864,27 @@ inline bool MutexTimedLock(MUTEX mutex, UINT32 timeout)
 
    return pthread_mutex_timedlock(&mutex->mutex, &absTimeout) == 0;
 #else
-   do
+   if (pthread_mutex_trylock(&mutex->mutex) == 0)
+      return true;
+
+   while(timeout > 0)
    {
+      if (timeout >= 10)
+      {
+         ThreadSleepMs(10);
+         timeout -= 10;
+      }
+      else
+      {
+         ThreadSleepMs(timeout);
+         timeout = 0;
+      }
+
       if (pthread_mutex_trylock(&mutex->mutex) == 0)
          return true;
-      ThreadSleepMs(10);
-      timeout -= min(10, timeout);
    } while(timeout > 0);
+
+   return false;
 #endif
 }
 
