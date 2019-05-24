@@ -1263,6 +1263,12 @@ typedef struct
 #define VID_RECORD_LIMIT            ((UINT32)633)
 #define VID_LOCAL_CACHE             ((UINT32)634)
 #define VID_RESTART                 ((UINT32)635)
+#define VID_THIS_PROXY_ID           ((UINT32)636)
+#define VID_ZONE_PROXY_LIST         ((UINT32)637)
+#define VID_PRIMARY_ZONE_PROXY_ID   ((UINT32)638)
+#define VID_BACKUP_ZONE_PROXY_ID    ((UINT32)639)
+#define VID_USERAGENT_INSTALLED     ((UINT32)640)
+#define VID_CATEGORY_LIST           ((UINT32)641)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

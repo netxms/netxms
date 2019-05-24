@@ -49,9 +49,9 @@ public class Alarm
    private int repeatCount;
    private int state;
    private boolean sticky;
-   private int ackByUser;
+   private int acknowledgedByUser;
    private int resolvedByUser;
-   private int terminateByUser;
+   private int terminatedByUser;
    private long sourceEventId;
    private int sourceEventCode;
    private long sourceObjectId;
@@ -66,6 +66,7 @@ public class Alarm
    private int timeoutEvent;
    private int commentsCount;
    private int ackTime;
+   private long[] categories;
 
    /**
     * @param msg Source NXCP message
@@ -78,9 +79,9 @@ public class Alarm
       repeatCount = msg.getFieldAsInt32(NXCPCodes.VID_REPEAT_COUNT);
       state = msg.getFieldAsInt32(NXCPCodes.VID_STATE);
       sticky = msg.getFieldAsBoolean(NXCPCodes.VID_IS_STICKY);
-      ackByUser = msg.getFieldAsInt32(NXCPCodes.VID_ACK_BY_USER);
+      acknowledgedByUser = msg.getFieldAsInt32(NXCPCodes.VID_ACK_BY_USER);
       resolvedByUser = msg.getFieldAsInt32(NXCPCodes.VID_RESOLVED_BY_USER);
-      terminateByUser = msg.getFieldAsInt32(NXCPCodes.VID_TERMINATED_BY_USER);
+      terminatedByUser = msg.getFieldAsInt32(NXCPCodes.VID_TERMINATED_BY_USER);
       sourceEventId = msg.getFieldAsInt64(NXCPCodes.VID_EVENT_ID);
       sourceEventCode = msg.getFieldAsInt32(NXCPCodes.VID_EVENT_CODE);
       sourceObjectId = msg.getFieldAsInt64(NXCPCodes.VID_OBJECT_ID);
@@ -95,6 +96,7 @@ public class Alarm
       timeoutEvent = msg.getFieldAsInt32(NXCPCodes.VID_ALARM_TIMEOUT_EVENT);
       commentsCount = msg.getFieldAsInt32(NXCPCodes.VID_NUM_COMMENTS);
       ackTime = msg.getFieldAsInt32(NXCPCodes.VID_TIMESTAMP);
+      categories = msg.getFieldAsUInt32Array(NXCPCodes.VID_CATEGORY_LIST);
    }
 
    /**
@@ -153,19 +155,23 @@ public class Alarm
    }
 
    /**
-    * @return the ackByUser
+    * Get id of user that acknowledged this alarm (or 0 if alarm is not acknowledged).
+    *
+    * @return id of user that acknowledged this alarm (or 0 if alarm is not acknowledged)
     */
-   public int getAckByUser()
+   public int getAcknowledgedByUser()
    {
-      return ackByUser;
+      return acknowledgedByUser;
    }
 
    /**
-    * @return the terminateByUser
+    * Get id of user that terminated this alarm (or 0 if alarm is not terminated).
+    *
+    * @return id of user that terminated this alarm (or 0 if alarm is not terminated)
     */
-   public int getTerminateByUser()
+   public int getTerminatedByUser()
    {
-      return terminateByUser;
+      return terminatedByUser;
    }
 
    /**
@@ -273,7 +279,9 @@ public class Alarm
    }
 
    /**
-    * @return the resolvedByUser
+    * Get id of user that resolved this alarm (or 0 if alarm is not resolved).
+    *
+    * @return id of user that resolved this alarm (or 0 if alarm is not resolved)
     */
    public int getResolvedByUser()
    {
@@ -289,10 +297,22 @@ public class Alarm
    }
 
    /**
-    * @return the sticky
+    * Get time when alarm was acknowledged
+    *
+    * @return time when alarm was acknowledged
     */
    public int getAckTime()
    {
       return ackTime;
+   }
+
+   /**
+    * Get list of categories this alarm belongs to.
+    *
+    * @return list of categories this alarm belongs to
+    */
+   public long[] getCategories()
+   {
+      return categories;
    }
 }
