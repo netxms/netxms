@@ -3655,7 +3655,12 @@ TcpPingResult LIBNETXMS_EXPORTABLE TcpPing(const InetAddress& addr, UINT16 port,
 #ifdef _WIN32
          result = (WSAGetLastError() == WSAECONNREFUSED) ? TCP_PING_REJECT : TCP_PING_SOCKET_ERROR;
 #else
-         unsigned int err, len = sizeof(int);
+         unsigned int err;
+#if GETSOCKOPT_USES_SOCKLEN_T
+         socklen_t len = sizeof(int);
+#else
+         unsigned int len = sizeof(int);
+#endif
          if (getsockopt(s, SOL_SOCKET, SO_ERROR, &err, &len) == 0)
          {
             result = (err == ECONNREFUSED) ? TCP_PING_REJECT : TCP_PING_SOCKET_ERROR;

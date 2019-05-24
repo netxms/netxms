@@ -113,7 +113,11 @@ static bool GetPeerUID(SOCKET s, unsigned int *uid)
    }
 #elif defined(SO_PEERID)
    struct peercred_struct peer;
+#if GETSOCKOPT_USES_SOCKLEN_T
+   socklen_t len = sizeof(peer);
+#else
    unsigned int len = sizeof(peer);
+#endif
    if (getsockopt(s, SOL_SOCKET, SO_PEERID, &peer, &len) == 0)
    {
       *uid = (unsigned int)peer.euid;
@@ -121,7 +125,11 @@ static bool GetPeerUID(SOCKET s, unsigned int *uid)
    }
 #elif defined(SO_PEERCRED)
    struct ucred peer;
+#if GETSOCKOPT_USES_SOCKLEN_T
+   socklen_t len = sizeof(peer);
+#else
    unsigned int len = sizeof(peer);
+#endif
    if (getsockopt(s, SOL_SOCKET, SO_PEERCRED, &peer, &len) == 0)
    {
       *uid = (unsigned int)peer.uid;

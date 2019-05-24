@@ -2627,6 +2627,38 @@ fi
 
 
 #--------------------------------------------------------------------
+# getsockopt
+#--------------------------------------------------------------------
+
+AC_MSG_CHECKING([if getsockopt uses socklen_t])
+AC_LANG_PUSH([C++])
+AC_COMPILE_IFELSE([
+	AC_LANG_PROGRAM([
+#ifdef HAVE_SYS_TYPES_H
+#include <sys/types.h>
+#endif
+#ifdef HAVE_SYS_SOCKET_H
+#include <sys/socket.h>
+#endif
+	],
+	[
+		unsigned int err;
+		socklen_t len = sizeof(int);
+		return getsockopt(0, SOL_SOCKET, SO_ERROR, &err, &len);
+	])],
+	[
+		AC_MSG_RESULT(yes)
+		AC_DEFINE(GETSOCKOPT_USES_SOCKLEN_T, 1, Define to 1 if getsockopt uses socklen_t for length argument)
+	],
+	[
+		AC_MSG_RESULT(no)
+		AC_DEFINE(GETSOCKOPT_USES_SOCKLEN_T, 0, Define to 1 if getsockopt uses socklen_t for length argument)
+	]
+)
+AC_LANG_POP([C++])
+
+
+#--------------------------------------------------------------------
 # Linux specific checks
 #--------------------------------------------------------------------
 
