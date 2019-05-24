@@ -851,6 +851,7 @@ inline bool MutexTimedLock(MUTEX mutex, UINT32 timeout)
    if (mutex == NULL)
       return false;
 
+#if HAVE_PTHREAD_MUTEX_TIMEDLOCK
    struct timeval now;
    struct timespec absTimeout;
 
@@ -862,6 +863,15 @@ inline bool MutexTimedLock(MUTEX mutex, UINT32 timeout)
    absTimeout.tv_nsec = (now.tv_usec % 1000000) * 1000;
 
    return pthread_mutex_timedlock(&mutex->mutex, &absTimeout) == 0;
+#else
+   do
+   {
+      if (pthread_mutex_trylock(&mutex->mutex) == 0)
+         return true;
+      ThreadSleepMs(10);
+      timeout -= min(10, timeout);
+   } while(timeout > 0);
+#endif
 }
 
 inline void MutexUnlock(MUTEX mutex)
