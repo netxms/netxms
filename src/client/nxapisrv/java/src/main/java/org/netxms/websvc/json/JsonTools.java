@@ -18,6 +18,7 @@
  */
 package org.netxms.websvc.json;
 
+import java.lang.reflect.Type;
 import java.net.InetAddress;
 import java.util.Date;
 import java.util.Set;
@@ -28,6 +29,8 @@ import org.netxms.base.InetAddressEx;
 import org.netxms.base.MacAddress;
 import org.netxms.base.annotations.Internal;
 import org.netxms.client.NXCSession;
+import org.netxms.client.objects.AbstractObject;
+import org.netxms.websvc.json.adapters.AbstractObjectSerializer;
 import org.netxms.websvc.json.adapters.DateAdapter;
 import org.netxms.websvc.json.adapters.InetAddressAdapter;
 import org.netxms.websvc.json.adapters.InetAddressExAdapter;
@@ -48,18 +51,30 @@ public class JsonTools
 {
    /**
     * Create correctly configured GSON instance.
-    * 
+    *
     * @return GSON instance
     */
    public static Gson createGsonInstance()
    {
+      return createGsonInstance(null);
+   }
+
+   /**
+    * Create correctly configured GSON instance with specific type adapter excluded.
+    *
+    * @param adapterExclusion adapter class to be excluded
+    * @return GSON instance
+    */
+   public static Gson createGsonInstance(Class<?> adapterExclusion)
+   {
       GsonBuilder builder = new GsonBuilder();
       builder.setPrettyPrinting();  // FIXME: remove for production
-      builder.registerTypeAdapter(Date.class, new DateAdapter());
-      builder.registerTypeAdapter(InetAddress.class, new InetAddressAdapter());
-      builder.registerTypeAdapter(InetAddressEx.class, new InetAddressExAdapter());
-      builder.registerTypeAdapter(MacAddress.class, new MacAddressAdapter());
-      builder.registerTypeAdapter(NXCSession.class, new NXCSessionAdapter());
+      registerTypeAdapter(builder, Date.class, new DateAdapter(), adapterExclusion);
+      registerTypeAdapter(builder, InetAddress.class, new InetAddressAdapter(), adapterExclusion);
+      registerTypeAdapter(builder, InetAddressEx.class, new InetAddressExAdapter(), adapterExclusion);
+      registerTypeAdapter(builder, MacAddress.class, new MacAddressAdapter(), adapterExclusion);
+      registerTypeAdapter(builder, NXCSession.class, new NXCSessionAdapter(), adapterExclusion);
+      registerTypeHierarchyAdapter(builder, AbstractObject.class, new AbstractObjectSerializer(), adapterExclusion);
       builder.setExclusionStrategies(new ExclusionStrategy() {
          @Override
          public boolean shouldSkipField(FieldAttributes f)
@@ -75,10 +90,40 @@ public class JsonTools
       });
       return builder.create();
    }
-   
+
+   /**
+    * Register type adapter for given builder.
+    *
+    * @param builder builder object
+    * @param type adaptable type
+    * @param adapter adapter object
+    * @param adapterExclusion adapter class to be excluded
+    * @return builder object for convenience
+    */
+   private static GsonBuilder registerTypeAdapter(GsonBuilder builder, Type type, Object adapter, Class<?> adapterExclusion)
+   {
+      return ((adapterExclusion == null) || !adapterExclusion.isInstance(adapter)) ?
+            builder.registerTypeAdapter(type, adapter) : builder;
+   }
+
+   /**
+    * Register type hierarchy adapter for given builder.
+    *
+    * @param builder builder object
+    * @param type adaptable type
+    * @param adapter adapter object
+    * @param adapterExclusion adapter class to be excluded
+    * @return builder object for convenience
+    */
+   private static GsonBuilder registerTypeHierarchyAdapter(GsonBuilder builder, Class<?> type, Object adapter, Class<?> adapterExclusion)
+   {
+      return ((adapterExclusion == null) || !adapterExclusion.isInstance(adapter)) ?
+            builder.registerTypeHierarchyAdapter(type, adapter) : builder;
+   }
+
    /**
     * Create JSON representation for given object
-    * 
+    *
     * @param object object to serialize
     * @return JSON code
     */
@@ -106,7 +151,7 @@ public class JsonTools
 
    /**
     * Create JsonObject from JSON code. Will return empty object if input string cannot be parsed.
-    * 
+    *
     * @param json JSON code
     * @return Parsed JsonObject
     */
@@ -125,7 +170,7 @@ public class JsonTools
    
    /**
     * Get JSON value as a string by key
-    * 
+    *
     * @param data base JSON object
     * @param key search object key
     * @param defaultValue value in case searched object not found
@@ -147,7 +192,7 @@ public class JsonTools
    
    /**
     * Get JSON value as an int by key
-    * 
+    *
     * @param data base JSON object
     * @param key search object key
     * @param defaultValue value in case searched object not found
@@ -169,7 +214,7 @@ public class JsonTools
    
    /**
     * Get JSON value as a long by key
-    * 
+    *
     * @param data base JSON object
     * @param key search object key
     * @param defaultValue value in case searched object not found
@@ -191,7 +236,7 @@ public class JsonTools
    
    /**
     * Get JSON value as an enum by key
-    * 
+    *
     * @param data base JSON object
     * @param clazz enum class to convert to
     * @param key search object key
@@ -214,7 +259,7 @@ public class JsonTools
    
    /**
     * Get JSON value as a JSONArray by key
-    * 
+    *
     * @param data base JSON object
     * @param key search object key
     * @param defaultValue value in case searched object not found
@@ -236,7 +281,7 @@ public class JsonTools
    
    /**
     * Get JSON value as a boolean by key
-    * 
+    *
     * @param data base JSON object
     * @param key search object key
     * @param defaultValue value in case searched object not found

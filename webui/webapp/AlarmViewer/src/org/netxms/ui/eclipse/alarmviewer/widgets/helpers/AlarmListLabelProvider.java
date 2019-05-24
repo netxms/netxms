@@ -135,9 +135,9 @@ public class AlarmListLabelProvider extends LabelProvider implements ITableLabel
 			case AlarmList.COLUMN_ACK_BY:
 				if (((Alarm)element).getState() == Alarm.STATE_OUTSTANDING)
 					return null;
-				long userId = (((Alarm)element).getState() == Alarm.STATE_ACKNOWLEDGED) ? ((Alarm)element).getAckByUser() : ((Alarm)element).getResolvedByUser();
+				long userId = (((Alarm)element).getState() == Alarm.STATE_ACKNOWLEDGED) ? ((Alarm)element).getAcknowledgedByUser() : ((Alarm)element).getResolvedByUser();
 				AbstractUserObject user = session.findUserDBObjectById(userId);
-				return (user != null) ? user.getName() : ("[" + Long.toString(((Alarm)element).getAckByUser()) + "]"); //$NON-NLS-1$ //$NON-NLS-2$
+				return (user != null) ? user.getName() : ("[" + Long.toString(((Alarm)element).getAcknowledgedByUser()) + "]"); //$NON-NLS-1$ //$NON-NLS-2$
 			case AlarmList.COLUMN_CREATED:
 				return RegionalSettings.getDateTimeFormat().format(((Alarm)element).getCreationTime());
 			case AlarmList.COLUMN_LASTCHANGE:

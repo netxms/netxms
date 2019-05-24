@@ -451,6 +451,7 @@ void Alarm::fillMessage(NXCPMessage *msg) const
    msg->setField(VID_ALARM_TIMEOUT_EVENT, m_timeoutEvent);
    msg->setField(VID_NUM_COMMENTS, m_commentCount);
    msg->setField(VID_TIMESTAMP, (UINT32)((m_ackTimeout != 0) ? (m_ackTimeout - time(NULL)) : 0));
+   msg->setFieldFromInt32Array(VID_CATEGORY_LIST, m_alarmCategoryList);
    if (m_notificationCode != 0)
       msg->setField(VID_NOTIFICATION_CODE, m_notificationCode);
 }

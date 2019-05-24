@@ -347,11 +347,11 @@ public class NXCSession
 
    // Event objects
    private Map<Long, EventObject> eventObjects = new HashMap<Long, EventObject>();
-   private boolean eventObjectsNeedSync = false;
+   private boolean eventObjectsSynchronized = false;
 
    // Alarm categories
    private Map<Long, AlarmCategory> alarmCategories = new HashMap<Long, AlarmCategory>();
-   private boolean alarmCategoriesNeedSync = false;
+   private boolean alarmCategoriesSynchronized = false;
 
    // Message of the day
    private String messageOfTheDay;
@@ -779,7 +779,7 @@ public class NXCSession
                strictAlarmStatusFlow = ((int)data != 0);
                break;
             case SessionNotification.RELOAD_EVENT_DB:
-               if (eventObjectsNeedSync)
+               if (eventObjectsSynchronized)
                {
                   resyncEventObjects();
                }
@@ -943,7 +943,7 @@ public class NXCSession
          EventObject obj = (code != SessionNotification.EVENT_TEMPLATE_DELETED) ?
                EventObject.createFromMessage(msg, NXCPCodes.VID_ELEMENT_LIST_BASE) :
                null;
-         if (eventObjectsNeedSync)
+         if (eventObjectsSynchronized)
          {
             synchronized(eventObjects)
             {
@@ -985,7 +985,7 @@ public class NXCSession
          AlarmCategory ac = (code != SessionNotification.ALARM_CATEGORY_DELETED) ?
                new AlarmCategory(msg, NXCPCodes.VID_ELEMENT_LIST_BASE) :
                null;
-         if (alarmCategoriesNeedSync)
+         if (alarmCategoriesSynchronized)
          {
             synchronized(alarmCategories)
             {
@@ -6824,8 +6824,18 @@ public class NXCSession
          {
             alarmCategories.put(c.getId(), c);
          }
-         alarmCategoriesNeedSync = true;
+         alarmCategoriesSynchronized = true;
       }
+   }
+
+   /**
+    * Check if alarm categories are synchronized.
+    *
+    * @return true if if alarm categories are synchronized
+    */
+   public boolean isAlarmCategoriesSynchronized()
+   {
+      return alarmCategoriesSynchronized;
    }
 
    /**
@@ -6892,6 +6902,16 @@ public class NXCSession
    }
 
    /**
+    * Check if event configuratrion objects are synchronized.
+    *
+    * @return true if event configuratrion objects are synchronized
+    */
+   public boolean isEventObjectsSynchronized()
+   {
+      return eventObjectsSynchronized;
+   }
+
+   /**
     * Synchronize event templates configuration. After call to this method
     * session object will maintain internal list of configured event templates.
     *
@@ -6908,7 +6928,7 @@ public class NXCSession
          {
             eventObjects.put(o.getCode(), o);
          }
-         eventObjectsNeedSync = true;
+         eventObjectsSynchronized = true;
       }
    }
 

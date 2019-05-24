@@ -119,7 +119,7 @@ public class GrafanaAlarms extends AbstractHandler
                r.add(a.getRepeatCount());
                r.add(a.getHelpdeskReference());
                
-               user = getSession().findUserDBObjectById(a.getAckByUser());
+               user = getSession().findUserDBObjectById(a.getAcknowledgedByUser());
                if (user == null)
                   r.add("");
                else

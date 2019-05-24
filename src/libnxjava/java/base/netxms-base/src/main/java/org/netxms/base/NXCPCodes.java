@@ -1046,6 +1046,8 @@ public class NXCPCodes
    public static final long VID_ZONE_PROXY_LIST = 637;
    public static final long VID_PRIMARY_ZONE_PROXY_ID = 638;
    public static final long VID_BACKUP_ZONE_PROXY_ID = 639;
+   public static final long VID_USERAGENT_INSTALLED = 640;
+   public static final long VID_CATEGORY_LIST = 641;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;

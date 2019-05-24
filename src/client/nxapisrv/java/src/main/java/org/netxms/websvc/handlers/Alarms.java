@@ -31,11 +31,15 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.constants.RCC;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.events.Alarm;
+import org.netxms.client.events.AlarmCategory;
+import org.netxms.client.events.EventObject;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
+import org.netxms.client.users.AbstractUserObject;
 import org.netxms.websvc.json.JsonTools;
 import org.netxms.websvc.json.ResponseContainer;
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
 /**
@@ -130,11 +134,17 @@ public class Alarms extends AbstractHandler
          }
       }
       
-      if (!Boolean.parseBoolean(query.getOrDefault("resolveReferences", "false")))
+      if (!Boolean.parseBoolean(query.getOrDefault("resolveReferences", "false")) || alarms.isEmpty())
          return new ResponseContainer("alarms", alarms);
 
       if (!session.isObjectsSynchronized())
          session.syncObjects();
+      if (!session.isUserDatabaseSynchronized())
+         session.syncUserDatabase();
+      if (!session.isAlarmCategoriesSynchronized())
+         session.syncAlarmCategories();
+      if (!session.isEventObjectsSynchronized())
+         session.syncEventObjects();
       
       List<JsonObject> serializedAlarms = new ArrayList<JsonObject>();
       Map<Long, DciValue[]> cachedValues = null;
@@ -173,11 +183,54 @@ public class Alarms extends AbstractHandler
                json.addProperty("zoneName", ((Node)object).getZoneName());
             }
          }
+
+         addUserName(json, session, a.getAcknowledgedByUser(), "acknowledgedByUserName");
+         addUserName(json, session, a.getResolvedByUser(), "resolvedByUserName");
+         addUserName(json, session, a.getTerminatedByUser(), "terminatedByUserName");
+
+         EventObject e = session.findEventObjectByCode(a.getSourceEventCode());
+         if (e != null)
+         {
+            json.addProperty("sourceEventName", e.getName());
+         }
+         
+         json.remove("categories");
+         JsonArray categories = new JsonArray();
+         for(long cid : a.getCategories())
+         {
+            JsonObject c = new JsonObject();
+            c.addProperty("id", cid);
+            AlarmCategory category = session.findAlarmCategoryById(cid);
+            c.addProperty("name", (category != null) ? category.getName() : Long.toString(cid));
+            categories.add(c);
+         }
+         json.add("categories", categories);
+
          serializedAlarms.add(json);
       }
       return new ResponseContainer("alarms", serializedAlarms);
    }
    
+   /**
+    * Add user name for given user to JSON object as property
+    *
+    * @param json JSON object
+    * @param session client session
+    * @param userId user ID
+    * @param property property name
+    */
+   private static void addUserName(JsonObject json, NXCSession session, int userId, String property)
+   {
+      if (userId == 0)
+         return;
+
+      AbstractUserObject user = session.findUserDBObjectById(userId);
+      if (user != null)
+      {
+         json.addProperty(property, user.getName());
+      }
+   }
+
    /* (non-Javadoc)
     * @see org.netxms.websvc.handlers.AbstractHandler#executeCommand(java.lang.String, org.json.JSONObject)
     */
