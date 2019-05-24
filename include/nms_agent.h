@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -722,10 +722,10 @@ typedef struct
    UINT32 magic;    // Magic number to check if subagent uses correct version of this structure
    TCHAR name[MAX_SUBAGENT_NAME];
    TCHAR version[32];
-	bool (* init)(Config *);   // Called to initialize subagent. Can be NULL.
-   void (* shutdown)();       // Called at subagent unload. Can be NULL.
-   bool (* commandHandler)(UINT32 command, NXCPMessage *request, NXCPMessage *response, AbstractCommSession *session);
-   void ( *notify)(UINT32 code, void *data);  // Generic notification interface
+   bool (*init)(Config *);   // Called to initialize subagent. Can be NULL.
+   void (*shutdown)();       // Called at subagent unload. Can be NULL.
+   bool (*commandHandler)(UINT32 command, NXCPMessage *request, NXCPMessage *response, AbstractCommSession *session);
+   void (*notify)(UINT32 code, void *data);  // Generic notification interface
    UINT32 numParameters;
    NETXMS_SUBAGENT_PARAM *parameters;
    UINT32 numLists;
@@ -734,8 +734,8 @@ typedef struct
    NETXMS_SUBAGENT_TABLE *tables;
    UINT32 numActions;
    NETXMS_SUBAGENT_ACTION *actions;
-	UINT32 numPushParameters;
-	NETXMS_SUBAGENT_PUSHPARAM *pushParameters;
+   UINT32 numPushParameters;
+   NETXMS_SUBAGENT_PUSHPARAM *pushParameters;
 } NETXMS_SUBAGENT_INFO;
 
 /**
@@ -743,26 +743,26 @@ typedef struct
  */
 inline void ret_string(TCHAR *rbuf, const TCHAR *value)
 {
-	_tcslcpy(rbuf, value, MAX_RESULT_LENGTH);
+   _tcslcpy(rbuf, value, MAX_RESULT_LENGTH);
 }
 
 inline void ret_wstring(TCHAR *rbuf, const WCHAR *value)
 {
 #ifdef UNICODE
-	wcslcpy(rbuf, value, MAX_RESULT_LENGTH);
+   wcslcpy(rbuf, value, MAX_RESULT_LENGTH);
 #else
-	WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, value, -1, rbuf, MAX_RESULT_LENGTH, NULL, NULL);
-	rbuf[MAX_RESULT_LENGTH - 1] = 0;
+   WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, value, -1, rbuf, MAX_RESULT_LENGTH, NULL, NULL);
+   rbuf[MAX_RESULT_LENGTH - 1] = 0;
 #endif
 }
 
 inline void ret_mbstring(TCHAR *rbuf, const char *value)
 {
 #ifdef UNICODE
-	MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, value, -1, rbuf, MAX_RESULT_LENGTH);
-	rbuf[MAX_RESULT_LENGTH - 1] = 0;
+   MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, value, -1, rbuf, MAX_RESULT_LENGTH);
+   rbuf[MAX_RESULT_LENGTH - 1] = 0;
 #else
-	strlcpy(rbuf, value, MAX_RESULT_LENGTH);
+   strlcpy(rbuf, value, MAX_RESULT_LENGTH);
 #endif
 }
 
