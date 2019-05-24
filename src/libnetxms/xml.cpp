@@ -103,9 +103,7 @@ String LIBNETXMS_EXPORTABLE EscapeStringForXML2(const TCHAR *str, int length)
  */
 const char LIBNETXMS_EXPORTABLE *XMLGetAttr(const char **attrs, const char *name)
 {
-	int i;
-
-	for(i = 0; attrs[i] != NULL; i += 2)
+	for(int i = 0; attrs[i] != NULL; i += 2)
 	{
 		if (!stricmp(attrs[i], name))
 			return attrs[i + 1];
