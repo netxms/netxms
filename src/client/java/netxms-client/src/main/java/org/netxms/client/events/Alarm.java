@@ -313,6 +313,6 @@ public class Alarm
     */
    public long[] getCategories()
    {
-      return categories;
+      return (categories != null) ? categories : new long[0];
    }
 }
