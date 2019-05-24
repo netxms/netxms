@@ -338,7 +338,6 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
                time_t now = time(NULL);
                if (m_lastScriptErrorReport + ConfigReadInt(_T("DataCollection.ScriptErrorReportInterval"), 86400) < now)
                {
-nxlog_debug(1, _T("**** now=%ld last=%ld sum=%ld"), now, m_lastScriptErrorReport, m_lastScriptErrorReport + ConfigReadInt(_T("DataCollection.ScriptErrorReportInterval"), 86400));
                   TCHAR buffer[1024];
                   _sntprintf(buffer, 1024, _T("DCI::%s::%d::%d::ThresholdScript"), target->getName(), dci->getId(), m_id);
                   PostDciEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, dci->getId(), "ssd", buffer, vm->getErrorText(), dci->getId());
