@@ -947,10 +947,22 @@ static void CheckTemplateNodeMapping()
                                             dwTemplateId, dwNodeId);
                   if (SQLQuery(query))
                   {
-                     _sntprintf(query, 256, _T("INSERT INTO container_members (container_id,object_id) VALUES (%d,%d)"),
-                                                              dwTemplateId, dwNodeId);
-                     if(SQLQuery(query))
-                        g_dbCheckFixes++;
+                     _sntprintf(query, 256, _T("SELECT * FROM container_members WHERE container_id=%d AND object_id=%d"),
+                                                                 dwTemplateId, dwNodeId);
+
+                     DB_RESULT containerMemberResult = SQLSelect(query);
+                     if (containerMemberResult != NULL)
+                     {
+                        if (DBGetNumRows(containerMemberResult) == 0)
+                        {
+                           _sntprintf(query, 256, _T("INSERT INTO container_members (container_id,object_id) VALUES (%d,%d)"),
+                                                                    dwTemplateId, dwNodeId);
+                           SQLQuery(query);
+                        }
+
+                        DBFreeResult(containerMemberResult);
+                     }
+                     g_dbCheckFixes++;
                   }
                }
             }
