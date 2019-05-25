@@ -840,6 +840,7 @@ void NetObj::deleteObject(NetObj *initiator)
 
    // Remove references to this object from parent objects
    DbgPrintf(5, _T("NetObj::Delete(): clearing parent list for object %d"), m_id);
+   ObjectArray<NetObj> *recalcList = NULL;
    lockParentList(true);
    for(int i = 0; i < m_parentList->size(); i++)
    {
@@ -856,7 +857,11 @@ void NetObj::deleteObject(NetObj *initiator)
             deleteList->add(obj);
          }
          else
-            obj->calculateCompoundStatus();
+         {
+            if (recalcList == NULL)
+               recalcList = new ObjectArray<NetObj>(16, 16, false);
+            recalcList->add(obj);
+         }
       }
 		decRefCount();
    }
@@ -873,6 +878,17 @@ void NetObj::deleteObject(NetObj *initiator)
          obj->deleteObject(this);
       }
       delete deleteList;
+   }
+
+   // Recalculate statuses of parent objects
+   if (recalcList != NULL)
+   {
+      for(int i = 0; i < recalcList->size(); i++)
+      {
+         NetObj *obj = recalcList->get(i);
+         obj->calculateCompoundStatus();
+      }
+      delete recalcList;
    }
 
    lockProperties();
