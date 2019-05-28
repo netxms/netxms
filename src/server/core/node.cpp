@@ -42,14 +42,14 @@ extern ThreadPool *g_pollerThreadPool;
 /**
  * Poll cancellation checkpoint
  */
-#define POLL_CANCELLATION_CHECKPOINT \
-         do { if (g_flags & AF_SHUTDOWN) { pollerUnlock(); return; } } while(0)
+#define POLL_CANCELLATION_CHECKPOINT(flag) \
+         do { if (g_flags & AF_SHUTDOWN) { m_dwDynamicFlags &= ~(flag); pollerUnlock(); return; } } while(0)
 
 /**
  * Poll cancellation checkpoint with additional hook
  */
-#define POLL_CANCELLATION_CHECKPOINT_EX(hook) \
-         do { if (g_flags & AF_SHUTDOWN) { hook; pollerUnlock(); return; } } while(0)
+#define POLL_CANCELLATION_CHECKPOINT_EX(flag, hook) \
+         do { if (g_flags & AF_SHUTDOWN) { hook; m_dwDynamicFlags &= ~(flag); pollerUnlock(); return; } } while(0)
 
 /**
  * Node class default constructor
@@ -1540,15 +1540,12 @@ void Node::statusPoll(PollerInfo *poller)
  */
 void Node::statusPoll(ClientSession *pSession, UINT32 rqId, PollerInfo *poller)
 {
-   if (m_dwDynamicFlags & NDF_DELETE_IN_PROGRESS)
+   if ((m_dwDynamicFlags & NDF_DELETE_IN_PROGRESS) || IsShutdownInProgress())
    {
       if (rqId == 0)
          m_dwDynamicFlags &= ~NDF_QUEUED_FOR_STATUS_POLL;
       return;
    }
-
-   if (IsShutdownInProgress())
-      return;
 
    UINT32 dwOldFlags = m_flags;
 
@@ -1556,7 +1553,7 @@ void Node::statusPoll(ClientSession *pSession, UINT32 rqId, PollerInfo *poller)
    poller->setStatus(_T("wait for lock"));
    pollerLock();
 
-   POLL_CANCELLATION_CHECKPOINT_EX(delete pQueue);
+   POLL_CANCELLATION_CHECKPOINT_EX(NDF_QUEUED_FOR_STATUS_POLL, delete pQueue);
 
    poller->setStatus(_T("preparing"));
    m_pollRequestor = pSession;
@@ -1685,7 +1682,7 @@ restart_agent_check:
       nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): SNMP check finished"), m_name);
    }
 
-   POLL_CANCELLATION_CHECKPOINT_EX(delete pQueue);
+   POLL_CANCELLATION_CHECKPOINT_EX(NDF_QUEUED_FOR_STATUS_POLL, delete pQueue);
 
    // Check native agent connectivity
    if ((m_flags & NF_IS_NATIVE_AGENT) && (!(m_flags & NF_DISABLE_NXCP)))
@@ -1773,7 +1770,7 @@ restart_agent_check:
 
    poller->setStatus(_T("prepare polling list"));
 
-   POLL_CANCELLATION_CHECKPOINT_EX(delete pQueue);
+   POLL_CANCELLATION_CHECKPOINT_EX(NDF_QUEUED_FOR_STATUS_POLL, delete pQueue);
 
    // Find service poller node object
    Node *pollerNode = NULL;
@@ -1843,7 +1840,7 @@ restart_agent_check:
       }
       curr->decRefCount();
 
-      POLL_CANCELLATION_CHECKPOINT_EX({ for(i++; i < pollList.size(); i++) pollList.get(i)->decRefCount(); delete pQueue; delete snmp; });
+      POLL_CANCELLATION_CHECKPOINT_EX(NDF_QUEUED_FOR_STATUS_POLL, { for(i++; i < pollList.size(); i++) pollList.get(i)->decRefCount(); delete pQueue; delete snmp; });
    }
    delete snmp;
    if (pollerNode != NULL)
@@ -1967,7 +1964,7 @@ restart_agent_check:
       }
    }
 
-   POLL_CANCELLATION_CHECKPOINT_EX(delete pQueue);
+   POLL_CANCELLATION_CHECKPOINT_EX(NDF_QUEUED_FOR_STATUS_POLL, delete pQueue);
 
    // Get uptime and update boot time
    if (!(m_dwDynamicFlags & NDF_UNREACHABLE))
@@ -2077,7 +2074,7 @@ restart_agent_check:
       delete pQueue;
    }
 
-   POLL_CANCELLATION_CHECKPOINT;
+   POLL_CANCELLATION_CHECKPOINT(NDF_QUEUED_FOR_STATUS_POLL);
 
    // Call hooks in loaded modules
    for(UINT32 i = 0; i < g_dwNumModules; i++)
@@ -2659,15 +2656,12 @@ void Node::configurationPoll(PollerInfo *poller)
  */
 void Node::configurationPoll(ClientSession *pSession, UINT32 rqId, PollerInfo *poller, int maskBits)
 {
-   if (m_dwDynamicFlags & NDF_DELETE_IN_PROGRESS)
+   if ((m_dwDynamicFlags & NDF_DELETE_IN_PROGRESS) || IsShutdownInProgress())
    {
       if (rqId == 0)
          m_dwDynamicFlags &= ~NDF_QUEUED_FOR_CONFIG_POLL;
       return;
    }
-
-   if (IsShutdownInProgress())
-      return;
 
    UINT32 dwOldFlags = m_flags;
    TCHAR szBuffer[4096];
@@ -2676,7 +2670,7 @@ void Node::configurationPoll(ClientSession *pSession, UINT32 rqId, PollerInfo *p
    poller->setStatus(_T("wait for lock"));
    pollerLock();
 
-   POLL_CANCELLATION_CHECKPOINT;
+   POLL_CANCELLATION_CHECKPOINT(NDF_QUEUED_FOR_CONFIG_POLL);
 
    m_pollRequestor = pSession;
    sendPollerMsg(rqId, _T("Starting configuration poll for node %s\r\n"), m_name);
@@ -2719,12 +2713,12 @@ void Node::configurationPoll(ClientSession *pSession, UINT32 rqId, PollerInfo *p
       if (confPollAgent(rqId))
          modified |= MODIFY_NODE_PROPERTIES;
 
-      POLL_CANCELLATION_CHECKPOINT;
+      POLL_CANCELLATION_CHECKPOINT(NDF_QUEUED_FOR_CONFIG_POLL);
 
       if (confPollSnmp(rqId))
          modified |= MODIFY_NODE_PROPERTIES;
 
-      POLL_CANCELLATION_CHECKPOINT;
+      POLL_CANCELLATION_CHECKPOINT(NDF_QUEUED_FOR_CONFIG_POLL);
 
       // Check for CheckPoint SNMP agent on port 260
       if (ConfigReadBoolean(_T("EnableCheckPointSNMP"), false))
@@ -2761,7 +2755,7 @@ void Node::configurationPoll(ClientSession *pSession, UINT32 rqId, PollerInfo *p
       if (updateInterfaceConfiguration(rqId, maskBits))
          modified |= MODIFY_NODE_PROPERTIES;
 
-      POLL_CANCELLATION_CHECKPOINT;
+      POLL_CANCELLATION_CHECKPOINT(NDF_QUEUED_FOR_CONFIG_POLL);
 
       if (g_flags & AF_MERGE_DUPLICATE_NODES)
       {
@@ -2831,17 +2825,17 @@ void Node::configurationPoll(ClientSession *pSession, UINT32 rqId, PollerInfo *p
          }
       }
 
-      POLL_CANCELLATION_CHECKPOINT;
+      POLL_CANCELLATION_CHECKPOINT(NDF_QUEUED_FOR_CONFIG_POLL);
 
       updateSoftwarePackages(poller, rqId);
 
-      POLL_CANCELLATION_CHECKPOINT;
+      POLL_CANCELLATION_CHECKPOINT(NDF_QUEUED_FOR_CONFIG_POLL);
 
       applyUserTemplates();
       updateContainerMembership();
       deployAgentPolicies();
 
-      POLL_CANCELLATION_CHECKPOINT;
+      POLL_CANCELLATION_CHECKPOINT(NDF_QUEUED_FOR_CONFIG_POLL);
 
       // Call hooks in loaded modules
       for(UINT32 i = 0; i < g_dwNumModules; i++)
@@ -2854,7 +2848,7 @@ void Node::configurationPoll(ClientSession *pSession, UINT32 rqId, PollerInfo *p
          }
       }
 
-      POLL_CANCELLATION_CHECKPOINT;
+      POLL_CANCELLATION_CHECKPOINT(NDF_QUEUED_FOR_CONFIG_POLL);
 
       // Setup permanent connection to agent if not present (needed for proper configuration re-sync)
       if (m_flags & NF_IS_NATIVE_AGENT)
@@ -2892,7 +2886,7 @@ void Node::configurationPoll(ClientSession *pSession, UINT32 rqId, PollerInfo *p
       }
       unlockProperties();
 
-      POLL_CANCELLATION_CHECKPOINT;
+      POLL_CANCELLATION_CHECKPOINT(NDF_QUEUED_FOR_CONFIG_POLL);
 
       // Execute hook script
       poller->setStatus(_T("hook"));
@@ -6843,14 +6837,11 @@ void Node::routingTablePoll(PollerInfo *poller)
  */
 void Node::updateRoutingTable()
 {
-   if (m_dwDynamicFlags & NDF_DELETE_IN_PROGRESS)
+   if ((m_dwDynamicFlags & NDF_DELETE_IN_PROGRESS) || IsShutdownInProgress())
    {
       m_dwDynamicFlags &= ~NDF_QUEUED_FOR_ROUTE_POLL;
       return;
    }
-
-   if (IsShutdownInProgress())
-      return;
 
    ROUTING_TABLE *pRT = getRoutingTable();
    if (pRT != NULL)
@@ -7449,20 +7440,17 @@ void Node::topologyPoll(PollerInfo *poller)
  */
 void Node::topologyPoll(ClientSession *pSession, UINT32 rqId, PollerInfo *poller)
 {
-   if (m_dwDynamicFlags & NDF_DELETE_IN_PROGRESS)
+   if ((m_dwDynamicFlags & NDF_DELETE_IN_PROGRESS) || IsShutdownInProgress())
    {
       if (rqId == 0)
          m_dwDynamicFlags &= ~NDF_QUEUED_FOR_TOPOLOGY_POLL;
       return;
    }
 
-   if (IsShutdownInProgress())
-      return;
-
    poller->setStatus(_T("wait for lock"));
    pollerLock();
 
-   POLL_CANCELLATION_CHECKPOINT;
+   POLL_CANCELLATION_CHECKPOINT(NDF_QUEUED_FOR_TOPOLOGY_POLL);
 
    m_pollRequestor = pSession;
    sendPollerMsg(rqId, _T("Starting topology poll for node %s\r\n"), m_name);
@@ -7523,7 +7511,7 @@ void Node::topologyPoll(ClientSession *pSession, UINT32 rqId, PollerInfo *poller
       }
    }
 
-   POLL_CANCELLATION_CHECKPOINT;
+   POLL_CANCELLATION_CHECKPOINT(NDF_QUEUED_FOR_TOPOLOGY_POLL);
 
    poller->setStatus(_T("reading FDB"));
    ForwardingDatabase *fdb = GetSwitchForwardingDatabase(this);
@@ -7543,7 +7531,7 @@ void Node::topologyPoll(ClientSession *pSession, UINT32 rqId, PollerInfo *poller
       sendPollerMsg(rqId, POLLER_WARNING _T("Failed to get switch forwarding database\r\n"));
    }
 
-   POLL_CANCELLATION_CHECKPOINT;
+   POLL_CANCELLATION_CHECKPOINT(NDF_QUEUED_FOR_TOPOLOGY_POLL);
 
    poller->setStatus(_T("building neighbor list"));
    LinkLayerNeighbors *nbs = BuildLinkLayerNeighborList(this);
@@ -7668,7 +7656,7 @@ void Node::topologyPoll(ClientSession *pSession, UINT32 rqId, PollerInfo *poller
       sendPollerMsg(rqId, POLLER_ERROR _T("Cannot get link layer topology\r\n"));
    }
 
-   POLL_CANCELLATION_CHECKPOINT;
+   POLL_CANCELLATION_CHECKPOINT(NDF_QUEUED_FOR_TOPOLOGY_POLL);
 
    // Read list of associated wireless stations
    if ((m_driver != NULL) && (m_flags & NF_IS_WIFI_CONTROLLER))
@@ -7720,7 +7708,7 @@ void Node::topologyPoll(ClientSession *pSession, UINT32 rqId, PollerInfo *poller
       }
    }
 
-   POLL_CANCELLATION_CHECKPOINT;
+   POLL_CANCELLATION_CHECKPOINT(NDF_QUEUED_FOR_TOPOLOGY_POLL);
 
    // Call hooks in loaded modules
    poller->setStatus(_T("calling modules"));
@@ -7733,7 +7721,7 @@ void Node::topologyPoll(ClientSession *pSession, UINT32 rqId, PollerInfo *poller
       }
    }
 
-   POLL_CANCELLATION_CHECKPOINT;
+   POLL_CANCELLATION_CHECKPOINT(NDF_QUEUED_FOR_TOPOLOGY_POLL);
 
    // Execute hook script
    poller->setStatus(_T("hook"));
