@@ -260,3 +260,16 @@ void HashMapIterator::remove()
       m_hashMap->destroyObject(m_curr->value);
    MemFree(m_curr);
 }
+
+/**
+ * Remove current element without destroying it
+ */
+void HashMapIterator::unlink()
+{
+   if (m_curr == NULL)
+      return;
+
+   HASH_DEL(m_hashMap->m_data, m_curr);
+   DELETE_KEY(m_hashMap, m_curr);
+   MemFree(m_curr);
+}

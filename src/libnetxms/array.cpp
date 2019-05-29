@@ -347,3 +347,15 @@ void ArrayIterator::remove()
    m_array->remove(m_pos);
    m_pos--;
 }
+
+/**
+ * Remove current element without calling it's destructor
+ */
+void ArrayIterator::unlink()
+{
+   if ((m_pos >= m_array->size()) || (m_pos < 0))
+      return;
+
+   m_array->unlink(m_pos);
+   m_pos--;
+}

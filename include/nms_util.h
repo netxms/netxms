@@ -907,6 +907,7 @@ public:
    virtual bool hasNext() = 0;
    virtual void *next() = 0;
    virtual void remove() = 0;
+   virtual void unlink() = 0;
 };
 
 /**
@@ -926,6 +927,7 @@ public:
    bool hasNext() { return m_worker->hasNext(); }
    T *next() { return (T *)m_worker->next(); }
    void remove() { m_worker->remove(); }
+   void unlink() { m_worker->unlink(); }
 };
 
 /**
@@ -1003,6 +1005,7 @@ public:
    virtual bool hasNext() override;
    virtual void *next() override;
    virtual void remove() override;
+   virtual void unlink() override;
 };
 
 /**
@@ -1345,6 +1348,7 @@ public:
    virtual bool hasNext() override;
    virtual void *next() override;
    virtual void remove() override;
+   virtual void unlink() override;
 };
 
 /**
@@ -1490,6 +1494,7 @@ public:
    virtual bool hasNext() override;
    virtual void *next() override;
    virtual void remove() override;
+   virtual void unlink() override;
 };
 
 /**
