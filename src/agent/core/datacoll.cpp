@@ -36,11 +36,11 @@ void UpdateSnmpTarget(SNMPTarget *target);
 UINT32 GetSnmpValue(const uuid& target, UINT16 port, const TCHAR *oid, TCHAR *value, int interpretRawValue);
 
 void LoadProxyConfiguration();
-void UpdateProxyConfiguration(UINT64 serverId, HashMap<ProxyKey, DataCollectionProxy> *proxyList, const ZoneConfiguration *zone);
+void UpdateProxyConfiguration(UINT64 serverId, HashMap<ServerObjectKey, DataCollectionProxy> *proxyList, const ZoneConfiguration *zone);
 void ProxyConnectionChecker(void *arg);
 THREAD_RESULT THREAD_CALL ProxyListenerThread(void *arg);
 
-extern HashMap<ProxyKey, DataCollectionProxy> g_proxyList;
+extern HashMap<ServerObjectKey, DataCollectionProxy> g_proxyList;
 extern Mutex g_proxyListMutex;
 
 extern UINT32 g_dcReconciliationBlockSize;
@@ -85,6 +85,7 @@ public:
 
    UINT32 getId() const { return m_id; }
    UINT64 getServerId() const { return m_serverId; }
+   ServerObjectKey getKey() const { return ServerObjectKey(m_serverId, m_id); }
    const TCHAR *getName() const { return m_name; }
    int getType() const { return (int)m_type; }
    int getOrigin() const { return (int)m_origin; }
@@ -95,9 +96,9 @@ public:
    time_t getLastPollTime() { return m_lastPollTime; }
    UINT32 getBackupProxyId() const { return m_backupProxyId; }
 
-   bool equals(const DataCollectionItem *item) const { return (m_serverId == item->m_serverId) && (m_id == item->m_id); }
+//   bool equals(const DataCollectionItem *item) const { return (m_serverId == item->m_serverId) && (m_id == item->m_id); }
 
-   void updateAndSave(const DataCollectionItem *item);
+   bool updateAndSave(const DataCollectionItem *item, bool txnOpen);
    void saveToDatabase(bool newObject);
    void deleteFromDatabase();
    void setLastPollTime(time_t time);
@@ -183,7 +184,7 @@ DataCollectionItem::~DataCollectionItem()
  * Will check if object has changed. If at least one field is changed - all data will be updated and
  * saved to database.
  */
-void DataCollectionItem::updateAndSave(const DataCollectionItem *item)
+bool DataCollectionItem::updateAndSave(const DataCollectionItem *item, bool txnOpen)
 {
    // if at least one of fields changed - set all fields and save to DB
    if ((m_type != item->m_type) || (m_origin != item->m_origin) || _tcscmp(m_name, item->m_name) ||
@@ -202,8 +203,15 @@ void DataCollectionItem::updateAndSave(const DataCollectionItem *item)
       m_snmpPort = item->m_snmpPort;
       m_snmpRawValueType = item->m_snmpRawValueType;
       m_backupProxyId = item->m_backupProxyId;
+
+      if (!txnOpen)
+      {
+         DBBegin(GetLocalDatabaseHandle());
+         txnOpen = true;
+      }
       saveToDatabase(false);
    }
+   return txnOpen;
 }
 
 /**
@@ -582,7 +590,7 @@ static THREAD_RESULT THREAD_CALL DatabaseWriter(void *arg)
 /**
  * List of all data collection items
  */
-static ObjectArray<DataCollectionItem> s_items(64, 64, true);
+static HashMap<ServerObjectKey, DataCollectionItem> s_items(true);
 static Mutex s_itemLock;
 
 /**
@@ -624,14 +632,16 @@ static THREAD_RESULT THREAD_CALL ReconciliationThread(void *arg)
          {
             DBBegin(hdb);
             TCHAR query[256];
-            for(int i = 0; i < s_items.size(); i++)
+            Iterator<DataCollectionItem> *it = s_items.iterator();
+            while(it->hasNext())
             {
-               DataCollectionItem *dci = s_items.get(i);
+               DataCollectionItem *dci = it->next();
                _sntprintf(query, 256, _T("UPDATE dc_config SET last_poll=") UINT64_FMT _T(" WHERE server_id=") UINT64_FMT _T(" AND dci_id=%d"),
                           (UINT64)dci->getLastPollTime(), (UINT64)dci->getServerId(), dci->getId());
                DBQuery(hdb, query);
             }
             DBCommit(hdb);
+            delete it;
             s_pollTimeChanged = false;
          }
          s_itemLock.unlock();
@@ -948,9 +958,10 @@ static UINT32 DataCollectionSchedulerRun()
    UINT32 sleepTime = 60;
 
    s_itemLock.lock();
-   for(int i = 0; i < s_items.size(); i++)
+   Iterator<DataCollectionItem> *it = s_items.iterator();
+   while(it->hasNext())
    {
-      DataCollectionItem *dci = s_items.get(i);
+      DataCollectionItem *dci = it->next();
       time_t now = time(NULL);
       UINT32 timeToPoll = dci->getTimeToNextPoll(now);
       if (timeToPoll == 0)
@@ -963,7 +974,7 @@ static UINT32 DataCollectionSchedulerRun()
          else
          {
             g_proxyListMutex.lock();
-            DataCollectionProxy *proxy = g_proxyList.get(ProxyKey(dci->getServerId(), dci->getBackupProxyId()));
+            DataCollectionProxy *proxy = g_proxyList.get(ServerObjectKey(dci->getServerId(), dci->getBackupProxyId()));
             schedule = ((proxy != NULL) && !proxy->isConnected());
             g_proxyListMutex.unlock();
          }
@@ -986,6 +997,7 @@ static UINT32 DataCollectionSchedulerRun()
             else
             {
                DebugPrintf(7, _T("DataCollector: unsupported origin %d"), dci->getOrigin());
+               dci->setLastPollTime(time(NULL));
             }
 
             timeToPoll = dci->getPollingInterval();
@@ -994,6 +1006,7 @@ static UINT32 DataCollectionSchedulerRun()
       if (sleepTime > timeToPoll)
          sleepTime = timeToPoll;
    }
+   delete it;
    s_itemLock.unlock();
    return sleepTime;
 }
@@ -1048,8 +1061,8 @@ void ConfigureDataCollection(UINT64 serverId, NXCPMessage *msg)
    }
    DebugPrintf(4, _T("%d SNMP targets received from server ") UINT64X_FMT(_T("016")), count, serverId);
 
-   //Read proxy list if exists
-   HashMap<ProxyKey, DataCollectionProxy> *proxyList = new HashMap<ProxyKey, DataCollectionProxy>(true);
+   // Read proxy list
+   HashMap<ServerObjectKey, DataCollectionProxy> *proxyList = new HashMap<ServerObjectKey, DataCollectionProxy>(true);
    count = msg->getFieldAsInt32(VID_ZONE_PROXY_COUNT);
    if (count > 0)
    {
@@ -1057,20 +1070,21 @@ void ConfigureDataCollection(UINT64 serverId, NXCPMessage *msg)
       for(int i = 0; i < count; i++)
       {
          UINT32 proxyId = msg->getFieldAsInt32(fieldId);
-         proxyList->set(ProxyKey(serverId, proxyId),
+         proxyList->set(ServerObjectKey(serverId, proxyId),
                new DataCollectionProxy(serverId, proxyId, msg->getFieldAsInetAddress(fieldId + 1)));
          fieldId += 10;
       }
    }
    DebugPrintf(4, _T("%d proxies received from server ") UINT64X_FMT(_T("016")), count, serverId);
 
-   ObjectArray<DataCollectionItem> config(32, 32, true);
-
+   // Read data collection items
+   HashMap<ServerObjectKey, DataCollectionItem> config(true);
    count = msg->getFieldAsInt32(VID_NUM_ELEMENTS);
    UINT32 fieldId = VID_ELEMENT_LIST_BASE;
    for(int i = 0; i < count; i++)
    {
-      config.add(new DataCollectionItem(serverId, msg, fieldId));
+      DataCollectionItem *dci = new DataCollectionItem(serverId, msg, fieldId);
+      config.set(dci->getKey(), dci);
       fieldId += 10;
    }
    DebugPrintf(4, _T("%d data collection elements received from server ") UINT64X_FMT(_T("016")), count, serverId);
@@ -1080,23 +1094,19 @@ void ConfigureDataCollection(UINT64 serverId, NXCPMessage *msg)
    s_itemLock.lock();
 
    // Update and add new
-   for(int j = 0; j < config.size(); j++)
+   Iterator<DataCollectionItem> *it = config.iterator();
+   while(it->hasNext())
    {
-      DataCollectionItem *item = config.get(j);
-      bool exist = false;
-      for(int i = 0; i < s_items.size(); i++)
+      DataCollectionItem *item = it->next();
+      DataCollectionItem *existingItem = s_items.get(item->getKey());
+      if (existingItem != NULL)
       {
-         if (item->equals(s_items.get(i)))
-         {
-            s_items.get(i)->updateAndSave(item);
-            exist = true;
-         }
+         txnOpen = existingItem->updateAndSave(item, txnOpen);
       }
-
-      if (!exist)
+      else
       {
          DataCollectionItem *newItem = new DataCollectionItem(item);
-         s_items.add(newItem);
+         s_items.set(newItem->getKey(), newItem);
          if (!txnOpen)
          {
             DBBegin(hdb);
@@ -1107,7 +1117,7 @@ void ConfigureDataCollection(UINT64 serverId, NXCPMessage *msg)
 
       if (item->getBackupProxyId() != 0)
       {
-         DataCollectionProxy *proxy = proxyList->get(ProxyKey(serverId, item->getBackupProxyId()));
+         DataCollectionProxy *proxy = proxyList->get(ServerObjectKey(serverId, item->getBackupProxyId()));
          if (proxy != NULL)
          {
             proxy->setInUse(true);
@@ -1119,23 +1129,17 @@ void ConfigureDataCollection(UINT64 serverId, NXCPMessage *msg)
          }
       }
    }
+   delete it;
 
    // Remove not existing configuration and data for it
-   for(int i = 0; i < s_items.size(); i++)
+   it = s_items.iterator();
+   while(it->hasNext())
    {
-      DataCollectionItem *item = s_items.get(i);
+      DataCollectionItem *item = it->next();
       if (item->getServerId() != serverId)
          continue;
 
-      bool exist = false;
-      for(int j = 0; j < config.size(); j++)
-      {
-         if (item->equals(config.get(j)))
-         {
-            exist = true;
-         }
-      }
-      if (!exist)
+      if (!config.contains(item->getKey()))
       {
          if (!txnOpen)
          {
@@ -1143,11 +1147,11 @@ void ConfigureDataCollection(UINT64 serverId, NXCPMessage *msg)
             txnOpen = true;
          }
          item->deleteFromDatabase();
-         s_items.unlink(i);
+         it->unlink();
          item->decRefCount();
-         i--;
       }
    }
+   delete it;
 
    if (txnOpen)
       DBCommit(hdb);
@@ -1179,7 +1183,8 @@ static void LoadState()
       int count = DBGetNumRows(hResult);
       for(int i = 0; i < count; i++)
       {
-         s_items.add(new DataCollectionItem(hResult, i));
+         DataCollectionItem *dci = new DataCollectionItem(hResult, i);
+         s_items.set(dci->getKey(), dci);
       }
       DBFreeResult(hResult);
    }
@@ -1274,16 +1279,17 @@ static void ClearStalledOfflineData(void *arg)
          DBCommit(hdb);
 
          s_itemLock.lock();
-         for(int i = 0; i < s_items.size(); i++)
+         Iterator<DataCollectionItem> *it = s_items.iterator();
+         while(it->hasNext())
          {
-            DataCollectionItem *item = s_items.get(i);
+            DataCollectionItem *item = it->next();
             if (item->getServerId() == serverId)
             {
-               s_items.unlink(i);
+               it->unlink();
                item->decRefCount();
-               i--;
             }
          }
+         delete it;
          s_itemLock.unlock();
 
          nxlog_debug_tag(DEBUG_TAG, 2, _T("Offline data collection configuration for server ID ") UINT64X_FMT(_T("016")) _T(" deleted"), serverId);

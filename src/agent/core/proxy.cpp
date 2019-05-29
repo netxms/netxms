@@ -31,7 +31,7 @@
  */
 extern ThreadPool *g_dataCollectorPool;
 
-HashMap<ProxyKey, DataCollectionProxy> g_proxyList(true);
+HashMap<ServerObjectKey, DataCollectionProxy> g_proxyList(true);
 HashMap<UINT64, ZoneConfiguration> *g_proxyserverConfList = new HashMap<UINT64, ZoneConfiguration>(true);
 Mutex g_proxyListMutex;
 
@@ -75,7 +75,7 @@ void ZoneConfiguration::update(const ZoneConfiguration *cfg)
 /**
  * Save proxy configuration to database
  */
-static void SaveProxyConfiguration(UINT64 serverId, HashMap<ProxyKey, DataCollectionProxy> *proxyList, const ZoneConfiguration *zone)
+static void SaveProxyConfiguration(UINT64 serverId, HashMap<ServerObjectKey, DataCollectionProxy> *proxyList, const ZoneConfiguration *zone)
 {
    DB_HANDLE hdb = GetLocalDatabaseHandle();
    DBBegin(hdb);
@@ -328,7 +328,7 @@ void ProxyConnectionChecker(void *arg)
 /**
  * Update proxy list on data collection configuration update
  */
-void UpdateProxyConfiguration(UINT64 serverId, HashMap<ProxyKey, DataCollectionProxy> *proxyList, const ZoneConfiguration *zone)
+void UpdateProxyConfiguration(UINT64 serverId, HashMap<ServerObjectKey, DataCollectionProxy> *proxyList, const ZoneConfiguration *zone)
 {
    g_proxyListMutex.lock();
    Iterator<DataCollectionProxy> *it = proxyList->iterator();
@@ -419,7 +419,7 @@ ConnectionProcessingResult ProxyConnectionListener::processDatagram(SOCKET s)
           ValidateMessageSignature(&request, sizeof(request) - sizeof(request.hmac), cfg->getSharedSecret(), ZONE_PROXY_KEY_LENGTH, request.hmac) &&
           (ntohl(request.proxyIdDest) == cfg->getThisNodeId()) &&
           (ntohl(request.zoneUin) == cfg->getZoneUIN()) &&
-          g_proxyList.contains(ProxyKey(cfg->getServerId(), ntohl(request.proxyIdSelf))))
+          g_proxyList.contains(ServerObjectKey(cfg->getServerId(), ntohl(request.proxyIdSelf))))
       {
          isValid = true;
          UINT32 tmp = request.proxyIdDest;
