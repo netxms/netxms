@@ -61,7 +61,7 @@ void StringSet::add(const TCHAR *str)
    if (entry == NULL)
    {
       entry = (StringSetEntry *)malloc(sizeof(StringSetEntry));
-      entry->str = _tcsdup(str);
+      entry->str = MemCopyString(str);
       HASH_ADD_KEYPTR(hh, m_data, entry->str, keyLen, entry);
    }
 }
@@ -82,7 +82,7 @@ void StringSet::addPreallocated(TCHAR *str)
    }
    else
    {
-      free(str);
+      MemFree(str);
    }
 }
 
@@ -97,8 +97,8 @@ void StringSet::remove(const TCHAR *str)
    if (entry != NULL)
    {
       HASH_DEL(m_data, entry);
-      free(entry->str);
-      free(entry);
+      MemFree(entry->str);
+      MemFree(entry);
    }
 }
 
@@ -111,8 +111,8 @@ void StringSet::clear()
    HASH_ITER(hh, m_data, entry, tmp)
    {
       HASH_DEL(m_data, entry);
-      free(entry->str);
-      free(entry);
+      MemFree(entry->str);
+      MemFree(entry);
    }
 }
 
@@ -347,6 +347,18 @@ void StringSetIterator::remove()
       return;
 
    HASH_DEL(m_stringSet->m_data, m_curr);
-   free(m_curr->str);
-   free(m_curr);
+   MemFree(m_curr->str);
+   MemFree(m_curr);
+}
+
+/**
+ * Remove current element without destroying it
+ */
+void StringSetIterator::unlink()
+{
+   if (m_curr == NULL)
+      return;
+
+   HASH_DEL(m_stringSet->m_data, m_curr);
+   MemFree(m_curr);
 }
