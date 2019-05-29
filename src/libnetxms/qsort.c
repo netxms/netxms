@@ -87,7 +87,7 @@
 
 #undef DEBUG_QSORT
 
-static char _ID[] = "<qsort.c gjm 1.15 2016-03-10>";
+static char _ID[] __UNUSED__ = "<qsort.c gjm 1.15 2016-03-10>";
 
 /* How many bytes are there per word? (Must be a power of 2,
 * and must in fact equal sizeof(int).)
