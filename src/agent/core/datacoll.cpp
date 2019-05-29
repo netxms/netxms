@@ -76,6 +76,7 @@ public:
 
    UINT32 getId() const { return m_id; }
    UINT64 getServerId() const { return m_serverId; }
+   ServerObjectKey getKey() const { return ServerObjectKey(m_serverId, m_id); }
    const TCHAR *getName() const { return m_name; }
    int getType() const { return (int)m_type; }
    int getOrigin() const { return (int)m_origin; }
@@ -85,9 +86,9 @@ public:
    UINT32 getPollingInterval() const { return (UINT32)m_pollingInterval; }
    time_t getLastPollTime() { return m_lastPollTime; }
 
-   bool equals(const DataCollectionItem *item) const { return (m_serverId == item->m_serverId) && (m_id == item->m_id); }
+//   bool equals(const DataCollectionItem *item) const { return (m_serverId == item->m_serverId) && (m_id == item->m_id); }
 
-   void updateAndSave(const DataCollectionItem *item);
+   bool updateAndSave(const DataCollectionItem *item, bool txnOpen);
    void saveToDatabase(bool newObject);
    void deleteFromDatabase();
    void setLastPollTime(time_t time);
@@ -170,7 +171,7 @@ DataCollectionItem::~DataCollectionItem()
  * Will check if object has changed. If at least one field is changed - all data will be updated and
  * saved to database.
  */
-void DataCollectionItem::updateAndSave(const DataCollectionItem *item)
+bool DataCollectionItem::updateAndSave(const DataCollectionItem *item, bool txnOpen)
 {
    // if at least one of fields changed - set all fields and save to DB
    if ((m_type != item->m_type) || (m_origin != item->m_origin) || _tcscmp(m_name, item->m_name) ||
@@ -187,8 +188,15 @@ void DataCollectionItem::updateAndSave(const DataCollectionItem *item)
       m_snmpTargetGuid = item->m_snmpTargetGuid;
       m_snmpPort = item->m_snmpPort;
       m_snmpRawValueType = item->m_snmpRawValueType;
+
+      if (!txnOpen)
+      {
+         DBBegin(GetLocalDatabaseHandle());
+         txnOpen = true;
+      }
       saveToDatabase(false);
    }
+   return txnOpen;
 }
 
 /**
@@ -566,7 +574,7 @@ static THREAD_RESULT THREAD_CALL DatabaseWriter(void *arg)
 /**
  * List of all data collection items
  */
-static ObjectArray<DataCollectionItem> s_items(64, 64, true);
+static HashMap<ServerObjectKey, DataCollectionItem> s_items(true);
 static Mutex s_itemLock;
 
 /**
@@ -608,14 +616,16 @@ static THREAD_RESULT THREAD_CALL ReconciliationThread(void *arg)
          {
             DBBegin(hdb);
             TCHAR query[256];
-            for(int i = 0; i < s_items.size(); i++)
+            Iterator<DataCollectionItem> *it = s_items.iterator();
+            while(it->hasNext())
             {
-               DataCollectionItem *dci = s_items.get(i);
+               DataCollectionItem *dci = it->next();
                _sntprintf(query, 256, _T("UPDATE dc_config SET last_poll=") UINT64_FMT _T(" WHERE server_id=") UINT64_FMT _T(" AND dci_id=%d"),
                           (UINT64)dci->getLastPollTime(), (UINT64)dci->getServerId(), dci->getId());
                DBQuery(hdb, query);
             }
             DBCommit(hdb);
+            delete it;
             s_pollTimeChanged = false;
          }
          s_itemLock.unlock();
@@ -932,9 +942,10 @@ static UINT32 DataCollectionSchedulerRun()
    UINT32 sleepTime = 60;
 
    s_itemLock.lock();
-   for(int i = 0; i < s_items.size(); i++)
+   Iterator<DataCollectionItem> *it = s_items.iterator();
+   while(it->hasNext())
    {
-      DataCollectionItem *dci = s_items.get(i);
+      DataCollectionItem *dci = it->next();
       time_t now = time(NULL);
       UINT32 timeToPoll = dci->getTimeToNextPoll(now);
       if (timeToPoll == 0)
@@ -955,6 +966,7 @@ static UINT32 DataCollectionSchedulerRun()
          else
          {
             DebugPrintf(7, _T("DataCollector: unsupported origin %d"), dci->getOrigin());
+            dci->setLastPollTime(time(NULL));
          }
 
          timeToPoll = dci->getPollingInterval();
@@ -963,6 +975,7 @@ static UINT32 DataCollectionSchedulerRun()
       if (sleepTime > timeToPoll)
          sleepTime = timeToPoll;
    }
+   delete it;
    s_itemLock.unlock();
    return sleepTime;
 }
@@ -1017,13 +1030,14 @@ void ConfigureDataCollection(UINT64 serverId, NXCPMessage *msg)
    }
    DebugPrintf(4, _T("%d SNMP targets received from server ") UINT64X_FMT(_T("016")), count, serverId);
 
-   ObjectArray<DataCollectionItem> config(32, 32, true);
-
+   // Read data collection items
+   HashMap<ServerObjectKey, DataCollectionItem> config(true);
    count = msg->getFieldAsInt32(VID_NUM_ELEMENTS);
    UINT32 fieldId = VID_ELEMENT_LIST_BASE;
    for(int i = 0; i < count; i++)
    {
-      config.add(new DataCollectionItem(serverId, msg, fieldId));
+      DataCollectionItem *dci = new DataCollectionItem(serverId, msg, fieldId);
+      config.set(dci->getKey(), dci);
       fieldId += 10;
    }
    DebugPrintf(4, _T("%d data collection elements received from server ") UINT64X_FMT(_T("016")), count, serverId);
@@ -1033,22 +1047,19 @@ void ConfigureDataCollection(UINT64 serverId, NXCPMessage *msg)
    s_itemLock.lock();
 
    // Update and add new
-   for(int j = 0; j < config.size(); j++)
+   Iterator<DataCollectionItem> *it = config.iterator();
+   while(it->hasNext())
    {
-      DataCollectionItem *item = config.get(j);
-      bool exist = false;
-      for(int i = 0; i < s_items.size(); i++)
+      DataCollectionItem *item = it->next();
+      DataCollectionItem *existingItem = s_items.get(item->getKey());
+      if (existingItem != NULL)
       {
-         if (item->equals(s_items.get(i)))
-         {
-            s_items.get(i)->updateAndSave(item);
-            exist = true;
-         }
+         txnOpen = existingItem->updateAndSave(item, txnOpen);
       }
-      if (!exist)
+      else
       {
          DataCollectionItem *newItem = new DataCollectionItem(item);
-         s_items.add(newItem);
+         s_items.set(newItem->getKey(), newItem);
          if (!txnOpen)
          {
             DBBegin(hdb);
@@ -1057,23 +1068,17 @@ void ConfigureDataCollection(UINT64 serverId, NXCPMessage *msg)
          newItem->saveToDatabase(true);
       }
    }
+   delete it;
 
    // Remove not existing configuration and data for it
-   for(int i = 0; i < s_items.size(); i++)
+   it = s_items.iterator();
+   while(it->hasNext())
    {
-      DataCollectionItem *item = s_items.get(i);
+      DataCollectionItem *item = it->next();
       if (item->getServerId() != serverId)
          continue;
 
-      bool exist = false;
-      for(int j = 0; j < config.size(); j++)
-      {
-         if (item->equals(config.get(j)))
-         {
-            exist = true;
-         }
-      }
-      if (!exist)
+      if (!config.contains(item->getKey()))
       {
          if (!txnOpen)
          {
@@ -1081,11 +1086,11 @@ void ConfigureDataCollection(UINT64 serverId, NXCPMessage *msg)
             txnOpen = true;
          }
          item->deleteFromDatabase();
-         s_items.unlink(i);
+         it->unlink();
          item->decRefCount();
-         i--;
       }
    }
+   delete it;
 
    if (txnOpen)
       DBCommit(hdb);
@@ -1107,7 +1112,8 @@ static void LoadState()
       int count = DBGetNumRows(hResult);
       for(int i = 0; i < count; i++)
       {
-         s_items.add(new DataCollectionItem(hResult, i));
+         DataCollectionItem *dci = new DataCollectionItem(hResult, i);
+         s_items.set(dci->getKey(), dci);
       }
       DBFreeResult(hResult);
    }
@@ -1200,16 +1206,17 @@ static void ClearStalledOfflineData(void *arg)
          DBCommit(hdb);
 
          s_itemLock.lock();
-         for(int i = 0; i < s_items.size(); i++)
+         Iterator<DataCollectionItem> *it = s_items.iterator();
+         while(it->hasNext())
          {
-            DataCollectionItem *item = s_items.get(i);
+            DataCollectionItem *item = it->next();
             if (item->getServerId() == serverId)
             {
-               s_items.unlink(i);
+               it->unlink();
                item->decRefCount();
-               i--;
             }
          }
+         delete it;
          s_itemLock.unlock();
 
          nxlog_debug_tag(DEBUG_TAG, 2, _T("Offline data collection configuration for server ID ") UINT64X_FMT(_T("016")) _T(" deleted"), serverId);

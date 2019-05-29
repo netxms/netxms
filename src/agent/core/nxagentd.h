@@ -162,6 +162,33 @@ enum ThreadPoolStat
 #define AGENT_ACTION_SUBAGENT    2
 #define AGENT_ACTION_SHELLEXEC	3
 
+#ifdef __HP_aCC
+#pragma pack 1
+#else
+#pragma pack(1)
+#endif
+
+/**
+ * Hash map key for server objects (64 bit server ID + 32 bit object ID)
+ */
+struct ServerObjectKey
+{
+   UINT64 serverId;
+   UINT32 proxyId;
+
+   ServerObjectKey(UINT64 _serverId, UINT32 _proxyId)
+   {
+      serverId = _serverId;
+      proxyId = _proxyId;
+   }
+};
+
+#ifdef __HP_aCC
+#pragma pack
+#else
+#pragma pack()
+#endif
+
 /**
  * External table definition
  */
