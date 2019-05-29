@@ -100,6 +100,7 @@ Node::Node() : super()
    m_mutexTopoAccess = MutexCreate();
    m_agentConnection = NULL;
    m_proxyConnections = new ProxyAgentConnection[MAX_PROXY_TYPE];
+   m_pendingDataConfigurationSync = 0;
    m_smclpConnection = NULL;
    m_lastAgentTrapId = 0;
    m_lastSNMPTrapId = 0;
@@ -215,6 +216,7 @@ Node::Node(const NewNodeData *newNodeData, UINT32 flags)  : super()
    m_mutexTopoAccess = MutexCreate();
    m_agentConnection = NULL;
    m_proxyConnections = new ProxyAgentConnection[MAX_PROXY_TYPE];
+   m_pendingDataConfigurationSync = 0;
    m_smclpConnection = NULL;
    m_lastAgentTrapId = 0;
    m_lastSNMPTrapId = 0;
@@ -6029,17 +6031,7 @@ void Node::onSnmpProxyChange(UINT32 oldProxy)
    if (node != NULL)
    {
       DbgPrintf(4, _T("Node::onSnmpProxyChange(%s [%d]): data collection sync needed for %s [%d]"), m_name, m_id, node->m_name, node->m_id);
-      node->agentLock();
-      bool newConnection;
-      if (node->connectToAgent(NULL, NULL, &newConnection))
-      {
-         if (!newConnection)
-         {
-            DbgPrintf(4, _T("Node::onSnmpProxyChange(%s [%d]): initiating data collection sync for %s [%d]"), m_name, m_id, node->m_name, node->m_id);
-            node->syncDataCollectionWithAgent(node->m_agentConnection);
-         }
-      }
-      node->agentUnlock();
+      node->forceSyncDataCollectionConfig();
    }
 
    // resync data collection configuration with old proxy
@@ -6047,17 +6039,7 @@ void Node::onSnmpProxyChange(UINT32 oldProxy)
    if (node != NULL)
    {
       DbgPrintf(4, _T("Node::onSnmpProxyChange(%s [%d]): data collection sync needed for %s [%d]"), m_name, m_id, node->m_name, node->m_id);
-      node->agentLock();
-      bool newConnection;
-      if (node->connectToAgent(NULL, NULL, &newConnection))
-      {
-         if (!newConnection)
-         {
-            DbgPrintf(4, _T("Node::onSnmpProxyChange(%s [%d]): initiating data collection sync for %s [%d]"), m_name, m_id, node->m_name, node->m_id);
-            node->syncDataCollectionWithAgent(node->m_agentConnection);
-         }
-      }
-      node->agentUnlock();
+      node->forceSyncDataCollectionConfig();
    }
 }
 
@@ -8673,14 +8655,26 @@ void Node::clearDataCollectionConfigFromAgent(AgentConnectionEx *conn)
 void Node::onDataCollectionChangeAsyncCallback(void *arg)
 {
    Node *node = static_cast<Node*>(arg);
-   node->agentLock();
-   bool newConnection;
-   if (node->connectToAgent(NULL, NULL, &newConnection))
+   if (InterlockedIncrement(&node->m_pendingDataConfigurationSync) == 1)
    {
-      if (!newConnection)
-         node->syncDataCollectionWithAgent(node->m_agentConnection);
+      ThreadSleep(30);  // wait for possible subsequent update requests within 30 seconds
+      InterlockedDecrement(&node->m_pendingDataConfigurationSync);
+
+      node->agentLock();
+      bool newConnection;
+      if (node->connectToAgent(NULL, NULL, &newConnection))
+      {
+         if (!newConnection)
+            node->syncDataCollectionWithAgent(node->m_agentConnection);
+      }
+      node->agentUnlock();
    }
-   node->agentUnlock();
+   else
+   {
+      // data collection configuration update already scheduled
+      InterlockedDecrement(&node->m_pendingDataConfigurationSync);
+      nxlog_debug(5, _T("Node::onDataCollectionChangeAsyncCallback(%s [%d]): configuration upload already scheduled"), node->m_name, node->m_id);
+   }
 }
 
 /**

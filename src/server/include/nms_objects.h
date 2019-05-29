@@ -2132,6 +2132,7 @@ protected:
 	MUTEX m_mutexTopoAccess;
    AgentConnectionEx *m_agentConnection;
    ProxyAgentConnection *m_proxyConnections;
+   VolatileCounter m_pendingDataConfigurationSync;
    SMCLP_Connection *m_smclpConnection;
 	UINT64 m_lastAgentTrapId;	     // ID of last received agent trap
    UINT64 m_lastAgentPushRequestId; // ID of last received agent push request
