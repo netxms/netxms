@@ -34,6 +34,7 @@ extern const TCHAR *g_tables[];
 static FIX_FIELD s_fixFields[] =
 {
    { _T("dct_threshold_instances"), "tt_row_number" },
+   { _T("graphs"), "flags" },
    { _T("network_maps"), "bg_zoom" },
    { _T("nodes"), "capabilities" },
    { _T("nodes"), "port_rows" },
