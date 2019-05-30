@@ -228,6 +228,7 @@ mibs_DATA = \
 	DHCPv6-Server-MIB.txt \
 	DIFFSERV-DSCP-TC.txt \
 	DIFFSERV-MIB.txt \
+	DigiPower-PDU-MIB.txt \
 	DIGIUM-MIB.txt \
 	DISMAN-PING-MIB.txt \
 	DISMAN-TRACEROUTE-MIB.txt \
