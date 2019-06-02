@@ -586,7 +586,7 @@ void StopDBWriter()
 /**
  * Get size of IData writer queue
  */
-size_t GetIDataWriterQueueSize()
+INT64 GetIDataWriterQueueSize()
 {
    size_t size = 0;
    for(int i = 0; i < s_idataWriterCount; i++)
@@ -597,10 +597,10 @@ size_t GetIDataWriterQueueSize()
 /**
  * Get size of raw data writer queue
  */
-int GetRawDataWriterQueueSize()
+INT64 GetRawDataWriterQueueSize()
 {
    s_rawDataWriterLock.lock();
-   int size = HASH_COUNT(s_rawDataWriterQueue);
+   INT64 size = HASH_COUNT(s_rawDataWriterQueue);
    s_rawDataWriterLock.unlock();
    return size + s_batchSize;
 }

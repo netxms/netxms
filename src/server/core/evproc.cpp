@@ -276,7 +276,7 @@ THREAD_RESULT THREAD_CALL EventProcessor(void *arg)
 /**
  * Get size of event log writer queue
  */
-size_t GetEventLogWriterQueueSize()
+INT64 GetEventLogWriterQueueSize()
 {
    return s_loggerQueue->size();
 }

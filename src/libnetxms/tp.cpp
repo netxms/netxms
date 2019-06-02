@@ -568,9 +568,9 @@ void LIBNETXMS_EXPORTABLE ThreadPoolGetInfo(ThreadPool *p, ThreadPoolInfo *info)
    info->totalRequests = p->taskExecutionCount;
    info->load = (info->curThreads > 0) ? info->activeRequests * 100 / info->curThreads : 0;
    info->usage = info->curThreads * 100 / info->maxThreads;
-   info->loadAvg[0] = static_cast<double>(p->loadAverage[0]) / EMA_FP_1;
-   info->loadAvg[1] = static_cast<double>(p->loadAverage[1]) / EMA_FP_1;
-   info->loadAvg[2] = static_cast<double>(p->loadAverage[2]) / EMA_FP_1;
+   info->loadAvg[0] = GetExpMovingAverageValue(p->loadAverage[0]);
+   info->loadAvg[1] = GetExpMovingAverageValue(p->loadAverage[1]);
+   info->loadAvg[2] = GetExpMovingAverageValue(p->loadAverage[2]);
    info->averageWaitTime = static_cast<UINT32>(p->averageWaitTime / EMA_FP_1);
    MutexUnlock(p->mutex);
    MutexLock(p->schedulerLock);

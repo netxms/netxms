@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,20 +21,17 @@
 **/
 
 #include "nxcore.h"
+#include <gauge_helpers.h>
+
+/**
+ * Server statistics collector
+ */
+THREAD_RESULT THREAD_CALL ServerStatCollector(void *);
 
 /**
  * Interval between DCI polling
  */
-#define ITEM_POLLING_INTERVAL    1
-
-/**
- * Externals
- */
-extern Queue g_syslogProcessingQueue;
-extern Queue g_syslogWriteQueue;
-extern ThreadPool *g_pollerThreadPool;
-
-size_t GetEventLogWriterQueueSize();
+#define ITEM_POLLING_INTERVAL             1
 
 /**
  * Thread pool for data collectors
@@ -42,19 +39,14 @@ size_t GetEventLogWriterQueueSize();
 ThreadPool *g_dataCollectorThreadPool = NULL;
 
 /**
- * Global data
+ * DCI cache loader queue
  */
-double g_dAvgDataCollectorQueueSize = 0;
-double g_dAvgPollerQueueSize = 0;
-double g_dAvgDBWriterQueueSize = 0;
-double g_dAvgIDataWriterQueueSize = 0;
-double g_dAvgRawDataWriterQueueSize = 0;
-double g_dAvgDBAndIDataWriterQueueSize = 0;
-double g_dAvgSyslogProcessingQueueSize = 0;
-double g_dAvgSyslogWriterQueueSize = 0;
-double g_dAvgEventLogWriterQueueSize = 0;
-UINT32 g_dwAvgDCIQueuingTime = 0;
 Queue g_dciCacheLoaderQueue;
+
+/**
+ * Average time to queue DCI
+ */
+UINT32 g_averageDCIQueuingTime = 0;
 
 /**
  * Collect data for DCI
@@ -387,12 +379,8 @@ static THREAD_RESULT THREAD_CALL ItemPoller(void *pArg)
 {
    ThreadSetName("ItemPoller");
 
-   UINT32 dwSum, currPos = 0;
-   UINT32 dwTimingHistory[60 / ITEM_POLLING_INTERVAL];
-   INT64 qwStart;
-
    UINT32 watchdogId = WatchdogAddThread(_T("Item Poller"), 10);
-   memset(dwTimingHistory, 0, sizeof(UINT32) * (60 / ITEM_POLLING_INTERVAL));
+   GaugeData<UINT32> queuingTime(ITEM_POLLING_INTERVAL, 300);
 
    while(!IsShutdownInProgress())
    {
@@ -401,106 +389,17 @@ static THREAD_RESULT THREAD_CALL ItemPoller(void *pArg)
       WatchdogNotify(watchdogId);
 		DbgPrintf(8, _T("ItemPoller: wakeup"));
 
-      qwStart = GetCurrentTimeMs();
+      INT64 startTime = GetCurrentTimeMs();
 		g_idxNodeById.forEach(QueueItems, &watchdogId);
 		g_idxClusterById.forEach(QueueItems, &watchdogId);
 		g_idxMobileDeviceById.forEach(QueueItems, &watchdogId);
       g_idxChassisById.forEach(QueueItems, &watchdogId);
 		g_idxSensorById.forEach(QueueItems, &watchdogId);
 
-      // Save last poll time
-      dwTimingHistory[currPos] = (UINT32)(GetCurrentTimeMs() - qwStart);
-      currPos++;
-      if (currPos == (60 / ITEM_POLLING_INTERVAL))
-         currPos = 0;
-
-      // Calculate new average for last minute
-		dwSum = 0;
-      for(int i = 0; i < (60 / ITEM_POLLING_INTERVAL); i++)
-         dwSum += dwTimingHistory[i];
-      g_dwAvgDCIQueuingTime = dwSum / (60 / ITEM_POLLING_INTERVAL);
+		queuingTime.update(static_cast<UINT32>(GetCurrentTimeMs() - startTime));
+		g_averageDCIQueuingTime = static_cast<UINT32>(queuingTime.getAverage());
    }
    DbgPrintf(1, _T("Item poller thread terminated"));
-   return THREAD_OK;
-}
-
-/**
- * Statistics collection thread
- */
-static THREAD_RESULT THREAD_CALL StatCollector(void *pArg)
-{
-   ThreadSetName("StatCollector");
-
-   UINT32 i, currPos = 0;
-   UINT32 pollerQS[12], dataCollectorQS[12], dbWriterQS[12];
-   UINT32 iDataWriterQS[12], rawDataWriterQS[12], dbAndIDataWriterQS[12];
-   UINT32 syslogProcessingQS[12], syslogWriterQS[12], eventLogWriterQS[12];
-   double sum1, sum2, sum3, sum4, sum5, sum8, sum9, sum10, sum11;
-
-   memset(pollerQS, 0, sizeof(UINT32) * 12);
-   memset(dataCollectorQS, 0, sizeof(UINT32) * 12);
-   memset(dbWriterQS, 0, sizeof(UINT32) * 12);
-   memset(iDataWriterQS, 0, sizeof(UINT32) * 12);
-   memset(rawDataWriterQS, 0, sizeof(UINT32) * 12);
-   memset(dbAndIDataWriterQS, 0, sizeof(UINT32) * 12);
-   memset(syslogProcessingQS, 0, sizeof(UINT32) * 12);
-   memset(syslogWriterQS, 0, sizeof(UINT32) * 12);
-   g_dAvgDataCollectorQueueSize = 0;
-   g_dAvgDBWriterQueueSize = 0;
-   g_dAvgIDataWriterQueueSize = 0;
-   g_dAvgRawDataWriterQueueSize = 0;
-   g_dAvgDBAndIDataWriterQueueSize = 0;
-   g_dAvgSyslogProcessingQueueSize = 0;
-   g_dAvgSyslogWriterQueueSize = 0;
-   g_dAvgEventLogWriterQueueSize = 0;
-   g_dAvgPollerQueueSize = 0;
-   while(!SleepAndCheckForShutdown(5))
-   {
-      if (!(g_flags & AF_SERVER_INITIALIZED))
-         continue;
-
-      // Get current values
-      ThreadPoolInfo poolInfo;
-      ThreadPoolGetInfo(g_dataCollectorThreadPool, &poolInfo);
-      dataCollectorQS[currPos] = (poolInfo.activeRequests > poolInfo.curThreads) ? poolInfo.activeRequests - poolInfo.curThreads : 0;
-
-      ThreadPoolGetInfo(g_pollerThreadPool, &poolInfo);
-      pollerQS[currPos] = (poolInfo.activeRequests > poolInfo.curThreads) ? poolInfo.activeRequests - poolInfo.curThreads : 0;
-
-      dbWriterQS[currPos] = g_dbWriterQueue->size();
-      iDataWriterQS[currPos] = GetIDataWriterQueueSize();
-      rawDataWriterQS[currPos] = GetRawDataWriterQueueSize();
-      dbAndIDataWriterQS[currPos] = dbWriterQS[currPos] + iDataWriterQS[currPos] + rawDataWriterQS[currPos];
-      syslogProcessingQS[currPos] = g_syslogProcessingQueue.size();
-      syslogWriterQS[currPos] = g_syslogWriteQueue.size();
-      eventLogWriterQS[currPos] = GetEventLogWriterQueueSize();
-      currPos++;
-      if (currPos == 12)
-         currPos = 0;
-
-      // Calculate new averages
-      for(i = 0, sum1 = 0, sum2 = 0, sum3 = 0, sum4 = 0, sum5 = 0, sum8 = 0, sum9 = 0, sum10 = 0, sum11 = 0; i < 12; i++)
-      {
-         sum1 += dataCollectorQS[i];
-         sum2 += dbWriterQS[i];
-         sum3 += iDataWriterQS[i];
-         sum4 += rawDataWriterQS[i];
-         sum5 += dbAndIDataWriterQS[i];
-         sum8 += syslogProcessingQS[i];
-         sum9 += syslogWriterQS[i];
-         sum10 += pollerQS[i];
-         sum11 += eventLogWriterQS[i];
-      }
-      g_dAvgDataCollectorQueueSize = sum1 / 12;
-      g_dAvgDBWriterQueueSize = sum2 / 12;
-      g_dAvgIDataWriterQueueSize = sum3 / 12;
-      g_dAvgRawDataWriterQueueSize = sum4 / 12;
-      g_dAvgDBAndIDataWriterQueueSize = sum5 / 12;
-      g_dAvgSyslogProcessingQueueSize = sum8 / 12;
-      g_dAvgSyslogWriterQueueSize = sum9 / 12;
-      g_dAvgPollerQueueSize = sum10 / 12;
-      g_dAvgEventLogWriterQueueSize = sum11 / 12;
-   }
    return THREAD_OK;
 }
 
@@ -554,7 +453,7 @@ void InitDataCollector()
             128 * 1024);
 
    s_itemPollerThread = ThreadCreateEx(ItemPoller, 0, NULL);
-   s_statCollectorThread = ThreadCreateEx(StatCollector, 0, NULL);
+   s_statCollectorThread = ThreadCreateEx(ServerStatCollector, 0, NULL);
    s_cacheLoaderThread = ThreadCreateEx(CacheLoader, 0, NULL);
 }
 

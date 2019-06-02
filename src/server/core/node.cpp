@@ -33,6 +33,7 @@
  */
 extern VolatileCounter64 g_syslogMessagesReceived;
 extern VolatileCounter64 g_snmpTrapsReceived;
+extern UINT32 g_averageDCIQueuingTime;
 
 /**
  * Poller thread pool
@@ -5448,45 +5449,25 @@ DataCollectionError Node::getInternalItem(const TCHAR *param, size_t bufSize, TC
    }
    else if (m_capabilities & NC_IS_LOCAL_MGMT)
    {
-      if (!_tcsicmp(param, _T("Server.AverageDataCollectorQueueSize")))
+      if (!_tcsicmp(param, _T("Server.AverageDCIQueuingTime")))
       {
-         _sntprintf(buffer, bufSize, _T("%f"), g_dAvgDataCollectorQueueSize);
+         _sntprintf(buffer, bufSize, _T("%u"), g_averageDCIQueuingTime);
       }
-      else if (!_tcsicmp(param, _T("Server.AverageDBWriterQueueSize")))
+      else if (!_tcsicmp(param, _T("Server.QueueSize.Average(*)")))
       {
-         _sntprintf(buffer, bufSize, _T("%f"), g_dAvgDBAndIDataWriterQueueSize);
+         rc = GetQueueStatistic(param, StatisticType::AVERAGE, buffer);
       }
-      else if (!_tcsicmp(param, _T("Server.AverageDBWriterQueueSize.Other")))
+      else if (!_tcsicmp(param, _T("Server.QueueSize.Current(*)")))
       {
-         _sntprintf(buffer, bufSize, _T("%f"), g_dAvgDBWriterQueueSize);
+         rc = GetQueueStatistic(param, StatisticType::CURRENT, buffer);
       }
-      else if (!_tcsicmp(param, _T("Server.AverageDBWriterQueueSize.IData")))
+      else if (!_tcsicmp(param, _T("Server.QueueSize.Max(*)")))
       {
-         _sntprintf(buffer, bufSize, _T("%f"), g_dAvgIDataWriterQueueSize);
+         rc = GetQueueStatistic(param, StatisticType::MAX, buffer);
       }
-      else if (!_tcsicmp(param, _T("Server.AverageDBWriterQueueSize.RawData")))
+      else if (!_tcsicmp(param, _T("Server.QueueSize.Min(*)")))
       {
-         _sntprintf(buffer, bufSize, _T("%f"), g_dAvgRawDataWriterQueueSize);
-      }
-      else if (!_tcsicmp(param, _T("Server.AverageDCIQueuingTime")))
-      {
-         _sntprintf(buffer, bufSize, _T("%u"), g_dwAvgDCIQueuingTime);
-      }
-      else if (!_tcsicmp(param, _T("Server.AverageEventLogWriterQueueSize")))
-      {
-         _sntprintf(buffer, bufSize, _T("%f"), g_dAvgEventLogWriterQueueSize);
-      }
-      else if (!_tcsicmp(param, _T("Server.AveragePollerQueueSize")))
-      {
-         _sntprintf(buffer, bufSize, _T("%f"), g_dAvgPollerQueueSize);
-      }
-      else if (!_tcsicmp(param, _T("Server.AverageSyslogProcessingQueueSize")))
-      {
-         _sntprintf(buffer, bufSize, _T("%f"), g_dAvgSyslogProcessingQueueSize);
-      }
-      else if (!_tcsicmp(param, _T("Server.AverageSyslogWriterQueueSize")))
-      {
-         _sntprintf(buffer, bufSize, _T("%f"), g_dAvgSyslogWriterQueueSize);
+         rc = GetQueueStatistic(param, StatisticType::MIN, buffer);
       }
       else if (!_tcsicmp(param, _T("Server.DB.Queries.Failed")))
       {

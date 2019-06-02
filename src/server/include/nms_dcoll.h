@@ -35,6 +35,14 @@ enum ThresholdCheckResult
 };
 
 /**
+ * Statistic type
+ */
+enum class StatisticType
+{
+   CURRENT, MIN, MAX, AVERAGE
+};
+
+/**
  * DCI value
  */
 class NXCORE_EXPORTABLE ItemValue
@@ -761,19 +769,6 @@ void CalculateItemValueTotal(ItemValue &result, int nDataType, const ItemValue *
 void CalculateItemValueMin(ItemValue &result, int nDataType, const ItemValue *const *valueList, size_t numValues);
 void CalculateItemValueMax(ItemValue &result, int nDataType, const ItemValue *const *valueList, size_t numValues);
 
-/**
- * Global variables
- */
-extern double g_dAvgDataCollectorQueueSize;
-extern double g_dAvgPollerQueueSize;
-extern double g_dAvgDBWriterQueueSize;
-extern double g_dAvgIDataWriterQueueSize;
-extern double g_dAvgRawDataWriterQueueSize;
-extern double g_dAvgDBAndIDataWriterQueueSize;
-extern double g_dAvgSyslogProcessingQueueSize;
-extern double g_dAvgSyslogWriterQueueSize;
-extern double g_dAvgEventLogWriterQueueSize;
-extern UINT32 g_dwAvgDCIQueuingTime;
-
+DataCollectionError GetQueueStatistic(const TCHAR *parameter, StatisticType type, TCHAR *value);
 
 #endif   /* _nms_dcoll_h_ */

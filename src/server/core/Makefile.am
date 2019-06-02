@@ -29,7 +29,7 @@ libnxcore_la_SOURCES = abind_target.cpp accesspoint.cpp acl.cpp actions.cpp addr
 			nxslext.cpp objects.cpp objtools.cpp package.cpp \
 			pds.cpp poll.cpp ps.cpp rack.cpp \
 			radius.cpp reporting.cpp rootobj.cpp schedule.cpp script.cpp \
-			sensor.cpp session.cpp slmcheck.cpp smclp.cpp \
+			sensor.cpp server_stats.cpp session.cpp slmcheck.cpp smclp.cpp \
 			sms.cpp snmp.cpp snmptrap.cpp stp.cpp subnet.cpp summary_email.cpp \
 			svccontainer.cpp swpkg.cpp syncer.cpp syslogd.cpp \
 			template.cpp tools.cpp tracert.cpp tunnel.cpp \

@@ -3027,15 +3027,24 @@ enum TcpPingResult
 #define EMA_EXP_1     1884                /* 1/exp(5sec/1min) as fixed-point */
 #define EMA_EXP_5     2014                /* 1/exp(5sec/5min) */
 #define EMA_EXP_15    2037                /* 1/exp(5sec/15min) */
+#define EMA_EXP(interval, period)   static_cast<int>((1.0 / exp(static_cast<double>(interval) / static_cast<double>(period))) * 2048)
 
 /**
- * Update xponential moving average value
+ * Update exponential moving average value
  */
 template<typename T> inline void UpdateExpMovingAverage(T& load, int exp, T n)
 {
    load *= exp;
    load += n * (EMA_FP_1 - exp);
    load >>= EMA_FP_SHIFT;
+}
+
+/**
+ * Get actual exponential load average value from internal representation
+ */
+template<typename T> inline double GetExpMovingAverageValue(const T load)
+{
+   return static_cast<double>(load) / EMA_FP_1;
 }
 
 TCHAR LIBNETXMS_EXPORTABLE *GetHeapInfo();

@@ -40,8 +40,8 @@ typedef struct
  * Static data
  */
 static Queue s_smsQueue;
-static bool (* s_fpDrvSendMsg)(const TCHAR *, const TCHAR *);
-static void (* s_fpDrvUnload)();
+static bool (*s_fpDrvSendMsg)(const TCHAR *, const TCHAR *);
+static void (*s_fpDrvUnload)();
 static THREAD s_senderThread = INVALID_THREAD_HANDLE;
 static bool s_smsDriverLoaded = false;
 
