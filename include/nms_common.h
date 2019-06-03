@@ -681,7 +681,7 @@ FILE *open_memstream(char **, size_t *);
 #ifdef __cplusplus
 
 inline int _access(const char *pathname, int mode) { return ::access(pathname, mode); }
-inline int chdir(const char *path) { return ::chdir(path);  }
+inline int _chdir(const char *path) { return ::chdir(path);  }
 inline int _close(int fd) { return ::close(fd); }
 inline int _fileno(FILE *stream) { return ::fileno(stream); }
 inline int _isatty(int fd) { return ::isatty(fd); }
@@ -689,7 +689,7 @@ inline off_t _lseek(int fd, off_t offset, int whence) { return ::lseek(fd, offse
 inline int _mkdir(const char *pathname, mode_t mode) { return ::mkdir(pathname, mode); }
 inline int _open(const char *pathname, int flags) { return ::open(pathname, flags); }
 inline int _open(const char *pathname, int flags, mode_t mode) { return ::open(pathname, flags, mode); }
-inline int pclose(FILE *stream) { return ::pclose(stream); }
+inline int _pclose(FILE *stream) { return ::pclose(stream); }
 inline FILE *_popen(const char *command, const char *type) { return ::popen(command, type); }
 inline int _putenv(char *string) { return ::putenv(string); }
 inline ssize_t _read(int fd, void *buf, size_t count) { return ::read(fd, buf, count); }
