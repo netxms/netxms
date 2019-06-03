@@ -41,7 +41,7 @@ void ShowPredictionEngines(CONSOLE_CTX console);
 void ShowAgentTunnels(CONSOLE_CTX console);
 UINT32 BindAgentTunnel(UINT32 tunnelId, UINT32 nodeId, UINT32 userId);
 UINT32 UnbindAgentTunnel(UINT32 nodeId, UINT32 userId);
-size_t GetEventLogWriterQueueSize();
+INT64 GetEventLogWriterQueueSize();
 
 /**
  * Format string to show value of global flag

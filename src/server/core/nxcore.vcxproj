@@ -307,6 +307,7 @@
     <ClCompile Include="schedule.cpp" />
     <ClCompile Include="script.cpp" />
     <ClCompile Include="sensor.cpp" />
+    <ClCompile Include="server_stats.cpp" />
     <ClCompile Include="session.cpp" />
     <ClCompile Include="slmcheck.cpp" />
     <ClCompile Include="smclp.cpp" />
