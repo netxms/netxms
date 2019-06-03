@@ -68,6 +68,8 @@ snmp.*		SNMP related messages
 snmp.entity	Entity MIB processing
 snmp.trap	SNMP trap processing
 
+statcoll	Internal server statistic collector
+
 sync		Syncer messages
 
 threads.*	Thread related

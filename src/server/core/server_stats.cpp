@@ -23,6 +23,8 @@
 #include "nxcore.h"
 #include <gauge_helpers.h>
 
+#define DEBUG_TAG _T("statcoll")
+
 /**
  * Collection interval
  */
@@ -56,8 +58,15 @@ static Mutex s_queuesLock;
  */
 inline void AddQueueToCollector(const TCHAR *name, Queue *queue)
 {
-   Gauge64 *gauge = new GaugeQueueLength(name, queue, QUEUE_STATS_COLLECTION_INTERVAL, QUEUE_STATS_AVERAGE_PERIOD);
-   s_queues.set(name, gauge);
+   if (queue != NULL)
+   {
+      Gauge64 *gauge = new GaugeQueueLength(name, queue, QUEUE_STATS_COLLECTION_INTERVAL, QUEUE_STATS_AVERAGE_PERIOD);
+      s_queues.set(name, gauge);
+   }
+   else
+   {
+      nxlog_debug_tag(DEBUG_TAG, 2, _T("Queue %s does not exist"));
+   }
 }
 
 /**
@@ -65,8 +74,15 @@ inline void AddQueueToCollector(const TCHAR *name, Queue *queue)
  */
 inline void AddQueueToCollector(const TCHAR *name, ThreadPool *pool)
 {
-   Gauge64 *gauge = new GaugeThreadPoolRequests(name, pool, QUEUE_STATS_COLLECTION_INTERVAL, QUEUE_STATS_AVERAGE_PERIOD);
-   s_queues.set(name, gauge);
+   if (pool != NULL)
+   {
+      Gauge64 *gauge = new GaugeThreadPoolRequests(name, pool, QUEUE_STATS_COLLECTION_INTERVAL, QUEUE_STATS_AVERAGE_PERIOD);
+      s_queues.set(name, gauge);
+   }
+   else
+   {
+      nxlog_debug_tag(DEBUG_TAG, 2, _T("Thread pool %s does not exist"));
+   }
 }
 
 /**
@@ -118,15 +134,14 @@ THREAD_RESULT THREAD_CALL ServerStatCollector(void *arg)
    AddQueueToCollector(_T("TemplateUpdater"), &g_templateUpdateQueue);
    s_queuesLock.unlock();
 
+   nxlog_debug_tag(DEBUG_TAG, 1, _T("Server statistic collector thread started"));
    while(!SleepAndCheckForShutdown(QUEUE_STATS_COLLECTION_INTERVAL))
    {
-      if (!(g_flags & AF_SERVER_INITIALIZED))
-         continue;
-
       s_queuesLock.lock();
       s_queues.forEach(UpdateGauge, NULL);
       s_queuesLock.unlock();
    }
+   nxlog_debug_tag(DEBUG_TAG, 1, _T("Server statistic collector thread stopped"));
    return THREAD_OK;
 }
 

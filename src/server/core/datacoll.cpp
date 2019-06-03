@@ -24,11 +24,6 @@
 #include <gauge_helpers.h>
 
 /**
- * Server statistics collector
- */
-THREAD_RESULT THREAD_CALL ServerStatCollector(void *);
-
-/**
  * Interval between DCI polling
  */
 #define ITEM_POLLING_INTERVAL             1
@@ -439,7 +434,6 @@ THREAD_RESULT THREAD_CALL CacheLoader(void *arg)
  * Threads
  */
 static THREAD s_itemPollerThread = INVALID_THREAD_HANDLE;
-static THREAD s_statCollectorThread = INVALID_THREAD_HANDLE;
 static THREAD s_cacheLoaderThread = INVALID_THREAD_HANDLE;
 
 /**
@@ -453,7 +447,6 @@ void InitDataCollector()
             128 * 1024);
 
    s_itemPollerThread = ThreadCreateEx(ItemPoller, 0, NULL);
-   s_statCollectorThread = ThreadCreateEx(ServerStatCollector, 0, NULL);
    s_cacheLoaderThread = ThreadCreateEx(CacheLoader, 0, NULL);
 }
 
@@ -463,7 +456,6 @@ void InitDataCollector()
 void StopDataCollection()
 {
    ThreadJoin(s_itemPollerThread);
-   ThreadJoin(s_statCollectorThread);
    ThreadJoin(s_cacheLoaderThread);
    ThreadPoolDestroy(g_dataCollectorThreadPool);
 }

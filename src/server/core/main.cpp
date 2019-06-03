@@ -127,6 +127,7 @@ THREAD_RESULT THREAD_CALL BeaconPoller(void *);
 THREAD_RESULT THREAD_CALL JobManagerThread(void *);
 THREAD_RESULT THREAD_CALL UptimeCalculator(void *);
 THREAD_RESULT THREAD_CALL ReportingServerConnector(void *);
+THREAD_RESULT THREAD_CALL ServerStatCollector(void *);
 THREAD_RESULT THREAD_CALL TunnelListenerThread(void *arg);
 
 /**
@@ -183,6 +184,7 @@ static THREAD s_clientListenerThread = INVALID_THREAD_HANDLE;
 static THREAD s_mobileDeviceListenerThread = INVALID_THREAD_HANDLE;
 static THREAD s_tunnelListenerThread = INVALID_THREAD_HANDLE;
 static THREAD s_eventProcessorThread = INVALID_THREAD_HANDLE;
+static THREAD s_statCollectorThread = INVALID_THREAD_HANDLE;
 static int m_nShutdownReason = SHUTDOWN_DEFAULT;
 static StringSet s_components;
 
@@ -1134,6 +1136,10 @@ retry_db_lock:
 
    ExecuteStartupScripts();
 
+   // Internal stat collector should be started last when all queues
+   // and thread pools already created
+   s_statCollectorThread = ThreadCreateEx(ServerStatCollector, 0, NULL);
+
 	g_flags |= AF_SERVER_INITIALIZED;
 	PostEvent(EVENT_SERVER_STARTED, g_dwMgmtNode, NULL);
 	nxlog_debug(1, _T("Server initialization completed in %d milliseconds"), static_cast<int>(GetCurrentTimeMs() - initStartTime));
@@ -1159,6 +1165,8 @@ void NXCORE_EXPORTABLE Shutdown()
       if (g_pModuleList[i].pfShutdown != NULL)
          g_pModuleList[i].pfShutdown();
    }
+
+   ThreadJoin(s_statCollectorThread);
 
    StopHouseKeeper();
    ShutdownTaskScheduler();
