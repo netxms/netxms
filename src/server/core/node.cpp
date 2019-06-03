@@ -56,13 +56,13 @@ ObjectArray<HardwareComponent> *CalculateHardwareChanges(ObjectArray<HardwareCom
  * Poll cancellation checkpoint
  */
 #define POLL_CANCELLATION_CHECKPOINT(flag) \
-         do { if (g_flags & AF_SHUTDOWN) { m_runtimeFlags &= ~(flag); pollerUnlock(); return; } } while(0)
+         do { if (g_flags & AF_SHUTDOWN) { lockProperties(); m_runtimeFlags &= ~(flag); unlockProperties(); pollerUnlock(); return; } } while(0)
 
 /**
  * Poll cancellation checkpoint with additional hook
  */
 #define POLL_CANCELLATION_CHECKPOINT_EX(flag, hook) \
-         do { if (g_flags & AF_SHUTDOWN) { hook; m_runtimeFlags &= ~(flag); pollerUnlock(); return; } } while(0)
+         do { if (g_flags & AF_SHUTDOWN) { hook; lockProperties(); m_runtimeFlags &= ~(flag); unlockProperties(); pollerUnlock(); return; } } while(0)
 
 /**
  * Node class default constructor
@@ -1649,12 +1649,15 @@ void Node::calculateCompoundStatus(BOOL bForcedRecalc)
  */
 void Node::statusPoll(PollerInfo *poller, ClientSession *pSession, UINT32 rqId)
 {
-   if ((m_runtimeFlags & DCDF_DELETE_IN_PROGRESS) || IsShutdownInProgress())
+   lockProperties();
+   if (m_isDeleteInitiated || IsShutdownInProgress())
    {
       if (rqId == 0)
          m_runtimeFlags &= ~DCDF_QUEUED_FOR_STATUS_POLL;
+      unlockProperties();
       return;
    }
+   unlockProperties();
 
    UINT32 oldCapabilities = m_capabilities;
    UINT32 oldState = m_state;
@@ -2824,12 +2827,15 @@ bool Node::updateSoftwarePackages(PollerInfo *poller, UINT32 requestId)
  */
 void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId)
 {
-   if ((m_runtimeFlags & DCDF_DELETE_IN_PROGRESS) || IsShutdownInProgress())
+   lockProperties();
+   if (m_isDeleteInitiated || IsShutdownInProgress())
    {
       if (rqId == 0)
          m_runtimeFlags &= ~DCDF_QUEUED_FOR_CONFIGURATION_POLL;
+      unlockProperties();
       return;
    }
+   unlockProperties();
 
    UINT32 oldCapabilities = m_capabilities;
    TCHAR szBuffer[4096];
@@ -3067,9 +3073,11 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
 
    // Finish configuration poll
    poller->setStatus(_T("cleanup"));
+   lockProperties();
    if (rqId == 0)
       m_runtimeFlags &= ~DCDF_QUEUED_FOR_CONFIGURATION_POLL;
    m_runtimeFlags &= ~NDF_RECHECK_CAPABILITIES;
+   unlockProperties();
    pollerUnlock();
    DbgPrintf(4, _T("Finished configuration poll for node %s (ID: %d)"), m_name, m_id);
 
@@ -4512,7 +4520,7 @@ bool Node::connectToSMCLP()
  */
 bool Node::connectToAgent(UINT32 *error, UINT32 *socketError, bool *newConnection, bool forceConnect)
 {
-   if (g_flags & AF_SHUTDOWN)
+   if ((g_flags & AF_SHUTDOWN) || m_isDeleteInitiated)
       return false;
 
    if (!forceConnect && (m_agentConnection == NULL) && (time(NULL) - m_lastAgentConnectAttempt < 30))
@@ -6298,7 +6306,8 @@ AgentConnectionEx *Node::createAgentConnection(bool sendServerId)
        (m_flags & NF_DISABLE_NXCP) ||
        (m_state & NSF_AGENT_UNREACHABLE) ||
        (m_state & DCSF_UNREACHABLE) ||
-       (m_status == STATUS_UNMANAGED))
+       (m_status == STATUS_UNMANAGED) ||
+       m_isDeleteInitiated)
       return NULL;
 
    AgentTunnel *tunnel = GetTunnelForNode(m_id);
@@ -6788,11 +6797,15 @@ void Node::routingTablePollWorkerEntry(PollerInfo *poller, ClientSession *sessio
  */
 void Node::routingTablePoll(PollerInfo *poller, ClientSession *session, UINT32 rqId)
 {
-   if ((m_runtimeFlags & DCDF_DELETE_IN_PROGRESS) || IsShutdownInProgress())
+   lockProperties();
+   if (m_isDeleteInitiated || IsShutdownInProgress())
    {
-      m_runtimeFlags &= ~NDF_QUEUED_FOR_ROUTE_POLL;
+      if (rqId == 0)
+         m_runtimeFlags &= ~NDF_QUEUED_FOR_ROUTE_POLL;
+      unlockProperties();
       return;
    }
+   unlockProperties();
 
    ROUTING_TABLE *pRT = getRoutingTable();
    if (pRT != NULL)
@@ -6803,8 +6816,10 @@ void Node::routingTablePoll(PollerInfo *poller, ClientSession *session, UINT32 r
       routingTableUnlock();
       DbgPrintf(5, _T("Routing table updated for node %s [%d]"), m_name, m_id);
    }
+   lockProperties();
    m_lastRTUpdate = time(NULL);
    m_runtimeFlags &= ~NDF_QUEUED_FOR_ROUTE_POLL;
+   unlockProperties();
 }
 
 /**
@@ -6883,14 +6898,9 @@ bool Node::setAgentProxy(AgentConnectionEx *conn)
  */
 void Node::prepareForDeletion()
 {
-   // Prevent node from being queued for polling
-   lockProperties();
-   m_runtimeFlags |= DCDF_DELETE_IN_PROGRESS;
-   unlockProperties();
-
    // Wait for all pending polls
    DbgPrintf(4, _T("Node::PrepareForDeletion(%s [%d]): waiting for outstanding polls to finish"), m_name, (int)m_id);
-   while(1)
+   while (true)
    {
       lockProperties();
       if ((m_runtimeFlags &
@@ -7030,7 +7040,7 @@ UINT32 Node::getEffectiveAgentProxy()
  */
 SNMP_Transport *Node::createSnmpTransport(WORD port, const TCHAR *context)
 {
-   if ((m_flags & NF_DISABLE_SNMP) || (m_status == STATUS_UNMANAGED) || (g_flags & AF_SHUTDOWN))
+   if ((m_flags & NF_DISABLE_SNMP) || (m_status == STATUS_UNMANAGED) || (g_flags & AF_SHUTDOWN) || m_isDeleteInitiated)
       return NULL;
 
    SNMP_Transport *pTransport = NULL;
@@ -7367,12 +7377,15 @@ void Node::topologyPollWorkerEntry(PollerInfo *poller, ClientSession *session, U
  */
 void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, UINT32 rqId)
 {
-   if ((m_runtimeFlags & DCDF_DELETE_IN_PROGRESS) || IsShutdownInProgress())
+   lockProperties();
+   if (m_isDeleteInitiated || IsShutdownInProgress())
    {
       if (rqId == 0)
          m_runtimeFlags &= ~NDF_QUEUED_FOR_TOPOLOGY_POLL;
+      unlockProperties();
       return;
    }
+   unlockProperties();
 
    poller->setStatus(_T("wait for lock"));
    pollerLock();
@@ -7656,8 +7669,12 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, UINT32 rqId
 
    sendPollerMsg(rqId, _T("Finished topology poll for node %s\r\n"), m_name);
 
+   lockProperties();
    m_lastTopologyPoll = time(NULL);
-   m_runtimeFlags &= ~NDF_QUEUED_FOR_TOPOLOGY_POLL;
+   if (rqId == 0)
+      m_runtimeFlags &= ~NDF_QUEUED_FOR_TOPOLOGY_POLL;
+   unlockProperties();
+
    pollerUnlock();
 
    DbgPrintf(4, _T("Finished topology poll for node %s [%d]"), m_name, m_id);

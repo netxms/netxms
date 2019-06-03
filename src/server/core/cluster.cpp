@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -507,12 +507,15 @@ bool Cluster::isVirtualAddr(const InetAddress& addr)
  */
 void Cluster::configurationPoll(PollerInfo *poller, ClientSession *pSession, UINT32 dwRqId)
 {
-   if (m_runtimeFlags & DCDF_DELETE_IN_PROGRESS)
+   lockProperties();
+   if (m_isDeleteInitiated)
    {
       if (dwRqId == 0)
          m_runtimeFlags &= ~DCDF_QUEUED_FOR_STATUS_POLL;
+      unlockProperties();
       return;
    }
+   unlockProperties();
 
    poller->setStatus(_T("wait for lock"));
    pollerLock();
@@ -554,12 +557,15 @@ void Cluster::configurationPoll(PollerInfo *poller, ClientSession *pSession, UIN
  */
 void Cluster::statusPoll(PollerInfo *poller, ClientSession *pSession, UINT32 dwRqId)
 {
-   if (m_runtimeFlags & DCDF_DELETE_IN_PROGRESS)
+   lockProperties();
+   if (m_isDeleteInitiated)
    {
       if (dwRqId == 0)
          m_runtimeFlags &= ~DCDF_QUEUED_FOR_STATUS_POLL;
+      unlockProperties();
       return;
    }
+   unlockProperties();
 
    poller->setStatus(_T("wait for lock"));
    pollerLock();

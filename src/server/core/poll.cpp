@@ -416,10 +416,9 @@ static void DiscoveryPoller(void *arg)
       return;
    }
 
-   Node *node = (Node *)poller->getObject();
-	if (node->getRuntimeFlags() & DCDF_DELETE_IN_PROGRESS)
+   Node *node = static_cast<Node*>(poller->getObject());
+	if (node->isDeleteInitiated())
 	{
-      node->setDiscoveryPollTimeStamp();
       delete poller;
       return;
 	}
@@ -617,21 +616,18 @@ static void QueueForPolling(NetObj *object, void *data)
    if (object->isDataCollectionTarget())
    {
       DataCollectionTarget *target = (DataCollectionTarget *)object;
-      if (target->isReadyForStatusPoll())
+      if (target->lockForStatusPoll())
       {
-         target->lockForStatusPoll();
          nxlog_debug_tag(DEBUG_TAG_POLL_MANAGER, 6, _T("Data Collection Target %d \"%s\" queued for status poll"), (int)target->getId(), target->getName());
          ThreadPoolExecuteSerialized(g_pollerThreadPool, threadKey, target, &DataCollectionTarget::statusPollWorkerEntry, RegisterPoller(POLLER_TYPE_STATUS, target));
       }
-      if (target->isReadyForConfigurationPoll())
+      if (target->lockForConfigurationPoll())
       {
-         target->lockForConfigurationPoll();
          nxlog_debug_tag(DEBUG_TAG_POLL_MANAGER, 6, _T("Data Collection Target %d \"%s\" queued for configuration poll"), (int)target->getId(), target->getName());
          ThreadPoolExecuteSerialized(g_pollerThreadPool, threadKey, target, &DataCollectionTarget::configurationPollWorkerEntry, RegisterPoller(POLLER_TYPE_CONFIGURATION, target));
       }
-      if (target->isReadyForInstancePoll())
+      if (target->lockForInstancePoll())
       {
-         target->lockForInstancePoll();
          nxlog_debug_tag(DEBUG_TAG_POLL_MANAGER, 6, _T("Data Collection Target %d \"%s\" queued for instance discovery poll"), (int)target->getId(), target->getName());
          ThreadPoolExecuteSerialized(g_pollerThreadPool, threadKey, target, &DataCollectionTarget::instanceDiscoveryPollWorkerEntry, RegisterPoller(POLLER_TYPE_INSTANCE_DISCOVERY, target));
       }
@@ -641,22 +637,19 @@ static void QueueForPolling(NetObj *object, void *data)
 	{
 		case OBJECT_NODE:
 			{
-				Node *node = (Node *)object;
-				if (node->isReadyForRoutePoll())
+				Node *node = static_cast<Node*>(object);
+				if (node->lockForRoutePoll())
 				{
-					node->lockForRoutePoll();
 					nxlog_debug_tag(DEBUG_TAG_POLL_MANAGER, 6, _T("Node %d \"%s\" queued for routing table poll"), (int)node->getId(), node->getName());
 					ThreadPoolExecuteSerialized(g_pollerThreadPool, threadKey, node, &Node::routingTablePollWorkerEntry, RegisterPoller(POLLER_TYPE_ROUTING_TABLE, node));
 				}
-				if (node->isReadyForDiscoveryPoll())
+				if (node->lockForDiscoveryPoll())
 				{
-					node->lockForDiscoveryPoll();
 					nxlog_debug_tag(DEBUG_TAG_POLL_MANAGER, 6, _T("Node %d \"%s\" queued for discovery poll"), (int)node->getId(), node->getName());
 					ThreadPoolExecuteSerialized(g_pollerThreadPool, threadKey, DiscoveryPoller, RegisterPoller(POLLER_TYPE_DISCOVERY, node));
 				}
-				if (node->isReadyForTopologyPoll())
+				if (node->lockForTopologyPoll())
 				{
-					node->lockForTopologyPoll();
 					nxlog_debug_tag(DEBUG_TAG_POLL_MANAGER, 6, _T("Node %d \"%s\" queued for topology poll"), (int)node->getId(), node->getName());
 					ThreadPoolExecuteSerialized(g_pollerThreadPool, threadKey, node, &Node::topologyPollWorkerEntry, RegisterPoller(POLLER_TYPE_TOPOLOGY, node));
 				}
@@ -664,7 +657,7 @@ static void QueueForPolling(NetObj *object, void *data)
 			break;
 		case OBJECT_CONDITION:
 			{
-			   ConditionObject *cond = (ConditionObject *)object;
+			   ConditionObject *cond = static_cast<ConditionObject*>(object);
 				if (cond->isReadyForPoll())
 				{
 					cond->lockForPoll();
@@ -675,7 +668,7 @@ static void QueueForPolling(NetObj *object, void *data)
 			break;
 		case OBJECT_BUSINESSSERVICE:
 			{
-				BusinessService *service = (BusinessService *)object;
+				BusinessService *service = static_cast<BusinessService*>(object);
 				if (service->isReadyForPolling())
 				{
 					service->lockForPolling();

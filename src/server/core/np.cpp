@@ -41,6 +41,20 @@ static ObjectArray<DiscoveredAddress> s_processingList(64, 64, false);
 static Mutex s_processingListLock;
 
 /**
+ * Node information for autodiscovery filter
+ */
+struct DISCOVERY_FILTER_DATA
+{
+   InetAddress ipAddr;
+   UINT32 zoneUIN;
+   UINT32 dwFlags;
+   int nSNMPVersion;
+   TCHAR szObjectId[MAX_OID_LEN * 4];    // SNMP OID
+   TCHAR szAgentVersion[MAX_AGENT_VERSION_LEN];
+   TCHAR szPlatform[MAX_PLATFORM_NAME_LEN];
+};
+
+/**
  * Check if given address is in processing by new node poller
  */
 bool IsNodePollerActiveAddress(const InetAddress& addr)
@@ -135,82 +149,82 @@ NXSL_DiscoveryClass::NXSL_DiscoveryClass() : NXSL_Class()
 
 NXSL_Value *NXSL_DiscoveryClass::getAttr(NXSL_Object *object, const char *pszAttr)
 {
-   DISCOVERY_FILTER_DATA *pData;
-   NXSL_Value *pValue = NULL;
-   TCHAR szBuffer[256];
-
    NXSL_VM *vm = object->vm();
-   pData = (DISCOVERY_FILTER_DATA *)object->getData();
-   if (!strcmp(pszAttr, "ipAddr"))
+   DISCOVERY_FILTER_DATA *data = static_cast<DISCOVERY_FILTER_DATA*>(object->getData());
+   NXSL_Value *value = NULL;
+
+   if (!strcmp(pszAttr, "agentVersion"))
    {
-      pValue = vm->createValue(pData->ipAddr.toString(szBuffer));
+      value = vm->createValue(data->szAgentVersion);
    }
-   else if (!strcmp(pszAttr, "netMask"))
+   else if (!strcmp(pszAttr, "ipAddr"))
    {
-      pValue = vm->createValue(pData->ipAddr.getMaskBits());
-   }
-   else if (!strcmp(pszAttr, "subnet"))
-   {
-      pValue = vm->createValue(pData->ipAddr.getSubnetAddress().toString(szBuffer));
+      TCHAR buffer[64];
+      value = vm->createValue(data->ipAddr.toString(buffer));
    }
    else if (!strcmp(pszAttr, "isAgent"))
    {
-      pValue = vm->createValue((LONG)((pData->dwFlags & NNF_IS_AGENT) ? 1 : 0));
-   }
-   else if (!strcmp(pszAttr, "isSNMP"))
-   {
-      pValue = vm->createValue((LONG)((pData->dwFlags & NNF_IS_SNMP) ? 1 : 0));
+      value = vm->createValue((LONG)((data->dwFlags & NNF_IS_AGENT) ? 1 : 0));
    }
    else if (!strcmp(pszAttr, "isBridge"))
    {
-      pValue = vm->createValue((LONG)((pData->dwFlags & NNF_IS_BRIDGE) ? 1 : 0));
-   }
-   else if (!strcmp(pszAttr, "isRouter"))
-   {
-      pValue = vm->createValue((LONG)((pData->dwFlags & NNF_IS_ROUTER) ? 1 : 0));
-   }
-   else if (!strcmp(pszAttr, "isPrinter"))
-   {
-      pValue = vm->createValue((LONG)((pData->dwFlags & NNF_IS_PRINTER) ? 1 : 0));
+      value = vm->createValue((LONG)((data->dwFlags & NNF_IS_BRIDGE) ? 1 : 0));
    }
    else if (!strcmp(pszAttr, "isCDP"))
    {
-      pValue = vm->createValue((LONG)((pData->dwFlags & NNF_IS_CDP) ? 1 : 0));
-   }
-   else if (!strcmp(pszAttr, "isSONMP"))
-   {
-      pValue = vm->createValue((LONG)((pData->dwFlags & NNF_IS_SONMP) ? 1 : 0));
+      value = vm->createValue((LONG)((data->dwFlags & NNF_IS_CDP) ? 1 : 0));
    }
    else if (!strcmp(pszAttr, "isLLDP"))
    {
-      pValue = vm->createValue((LONG)((pData->dwFlags & NNF_IS_LLDP) ? 1 : 0));
+      value = vm->createValue((LONG)((data->dwFlags & NNF_IS_LLDP) ? 1 : 0));
    }
-   else if (!strcmp(pszAttr, "snmpVersion"))
+   else if (!strcmp(pszAttr, "isPrinter"))
    {
-      pValue = vm->createValue((LONG)pData->nSNMPVersion);
+      value = vm->createValue((LONG)((data->dwFlags & NNF_IS_PRINTER) ? 1 : 0));
    }
-   else if (!strcmp(pszAttr, "snmpOID"))
+   else if (!strcmp(pszAttr, "isRouter"))
    {
-      pValue = vm->createValue(pData->szObjectId);
+      value = vm->createValue((LONG)((data->dwFlags & NNF_IS_ROUTER) ? 1 : 0));
    }
-   else if (!strcmp(pszAttr, "agentVersion"))
+   else if (!strcmp(pszAttr, "isSNMP"))
    {
-      pValue = vm->createValue(pData->szAgentVersion);
+      value = vm->createValue((LONG)((data->dwFlags & NNF_IS_SNMP) ? 1 : 0));
+   }
+   else if (!strcmp(pszAttr, "isSONMP"))
+   {
+      value = vm->createValue((LONG)((data->dwFlags & NNF_IS_SONMP) ? 1 : 0));
+   }
+   else if (!strcmp(pszAttr, "netMask"))
+   {
+      value = vm->createValue(data->ipAddr.getMaskBits());
    }
    else if (!strcmp(pszAttr, "platformName"))
    {
-      pValue = vm->createValue(pData->szPlatform);
+      value = vm->createValue(data->szPlatform);
+   }
+   else if (!strcmp(pszAttr, "snmpOID"))
+   {
+      value = vm->createValue(data->szObjectId);
+   }
+   else if (!strcmp(pszAttr, "snmpVersion"))
+   {
+      value = vm->createValue((LONG)data->nSNMPVersion);
+   }
+   else if (!strcmp(pszAttr, "subnet"))
+   {
+      TCHAR buffer[64];
+      value = vm->createValue(data->ipAddr.getSubnetAddress().toString(buffer));
    }
    else if (!strcmp(pszAttr, "zone"))
    {
-      Zone *zone = FindZoneByUIN(pData->zoneUIN);
-      pValue = (zone != NULL) ? zone->createNXSLObject(vm) : vm->createValue();
+      Zone *zone = FindZoneByUIN(data->zoneUIN);
+      value = (zone != NULL) ? zone->createNXSLObject(vm) : vm->createValue();
    }
    else if (!strcmp(pszAttr, "zoneUIN"))
    {
-      pValue = vm->createValue(pData->zoneUIN);
+      value = vm->createValue(data->zoneUIN);
    }
-   return pValue;
+   return value;
 }
 
 /**

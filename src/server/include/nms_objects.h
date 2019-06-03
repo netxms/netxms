@@ -776,6 +776,7 @@ public:
 
    bool isModified() const { return m_modified != 0; }
    bool isDeleted() const { return m_isDeleted; }
+   bool isDeleteInitiated() const { return m_isDeleteInitiated; }
    bool isOrphaned() const { return m_parentList->size() == 0; }
    bool isEmpty() const { return m_childList->size() == 0; }
 
@@ -1505,43 +1506,38 @@ public:
    void statusPollWorkerEntry(PollerInfo *poller);
    void statusPollWorkerEntry(PollerInfo *poller, ClientSession *session, UINT32 rqId);
    void statusPollPollerEntry(PollerInfo *poller, ClientSession *session, UINT32 rqId);
-   virtual bool isReadyForStatusPoll();
-   void lockForStatusPoll();
+   virtual bool lockForStatusPoll();
    void unlockForStatusPoll();
 
    void configurationPollWorkerEntry(PollerInfo *poller);
    void configurationPollWorkerEntry(PollerInfo *poller, ClientSession *session, UINT32 rqId);
-   virtual bool isReadyForConfigurationPoll();
-   void lockForConfigurationPoll();
+   virtual bool lockForConfigurationPoll();
    void unlockForConfigurationPoll();
 
    void instanceDiscoveryPollWorkerEntry(PollerInfo *poller);
    void instanceDiscoveryPollWorkerEntry(PollerInfo *poller, ClientSession *session, UINT32 rqId);
-   virtual bool isReadyForInstancePoll();
-   void lockForInstancePoll();
+   virtual bool lockForInstancePoll();
    void unlockForInstancePoll();
 
    UINT32 getLastValues(NXCPMessage *msg, bool objectTooltipOnly, bool overviewOnly, bool includeNoValueObjects, UINT32 userId);
 };
 
-inline bool DataCollectionTarget::isReadyForInstancePoll()
+inline bool DataCollectionTarget::lockForInstancePoll()
 {
-	if (m_isDeleted)
-		return false;
-   return (m_status != STATUS_UNMANAGED) &&
-	       (!(m_flags & DCF_DISABLE_CONF_POLL)) &&
-          (!(m_runtimeFlags & DCDF_QUEUED_FOR_INSTANCE_POLL)) &&
-          (!(m_runtimeFlags & DCDF_DELETE_IN_PROGRESS)) &&
-          (m_runtimeFlags & DCDF_CONFIGURATION_POLL_PASSED) &&
-          ((UINT32)(time(NULL) - m_lastInstancePoll) > g_instancePollingInterval);
-
-}
-
-inline void DataCollectionTarget::lockForInstancePoll()
-{
+   bool success = false;
    lockProperties();
-   m_runtimeFlags |= DCDF_QUEUED_FOR_INSTANCE_POLL;
+   if (!m_isDeleted && !m_isDeleteInitiated &&
+       (m_status != STATUS_UNMANAGED) &&
+	    (!(m_flags & DCF_DISABLE_CONF_POLL)) &&
+       (!(m_runtimeFlags & DCDF_QUEUED_FOR_INSTANCE_POLL)) &&
+       (m_runtimeFlags & DCDF_CONFIGURATION_POLL_PASSED) &&
+       (static_cast<UINT32>(time(NULL) - m_lastInstancePoll) > g_instancePollingInterval))
+   {
+      m_runtimeFlags |= DCDF_QUEUED_FOR_INSTANCE_POLL;
+      success = true;
+   }
    unlockProperties();
+   return success;
 }
 
 inline void DataCollectionTarget::unlockForInstancePoll()
@@ -1551,28 +1547,29 @@ inline void DataCollectionTarget::unlockForInstancePoll()
    unlockProperties();
 }
 
-inline bool DataCollectionTarget::isReadyForConfigurationPoll()
+inline bool DataCollectionTarget::lockForConfigurationPoll()
 {
-
-	if (m_isDeleted)
-		return false;
-   if (m_runtimeFlags & DCDF_FORCE_CONFIGURATION_POLL)
-   {
-      m_runtimeFlags &= ~DCDF_FORCE_CONFIGURATION_POLL;
-      return true;
-   }
-   return (m_status != STATUS_UNMANAGED) &&
-	       (!(m_flags & DCF_DISABLE_CONF_POLL)) &&
-          (!(m_runtimeFlags & DCDF_QUEUED_FOR_CONFIGURATION_POLL)) &&
-          (!(m_runtimeFlags & DCDF_DELETE_IN_PROGRESS)) &&
-          ((UINT32)(time(NULL) - m_lastConfigurationPoll) > g_dwConfigurationPollingInterval);
-}
-
-inline void DataCollectionTarget::lockForConfigurationPoll()
-{
+   bool success = false;
    lockProperties();
-   m_runtimeFlags |= DCDF_QUEUED_FOR_CONFIGURATION_POLL;
+	if (!m_isDeleted && !m_isDeleteInitiated)
+	{
+      if (m_runtimeFlags & DCDF_FORCE_CONFIGURATION_POLL)
+      {
+         m_runtimeFlags &= ~DCDF_FORCE_CONFIGURATION_POLL;
+         m_runtimeFlags |= DCDF_QUEUED_FOR_CONFIGURATION_POLL;
+         success = true;
+      }
+      else if ((m_status != STATUS_UNMANAGED) &&
+               (!(m_flags & DCF_DISABLE_CONF_POLL)) &&
+               (!(m_runtimeFlags & DCDF_QUEUED_FOR_CONFIGURATION_POLL)) &&
+               (static_cast<UINT32>(time(NULL) - m_lastConfigurationPoll) > g_dwConfigurationPollingInterval))
+      {
+         m_runtimeFlags |= DCDF_QUEUED_FOR_CONFIGURATION_POLL;
+         success = true;
+      }
+	}
    unlockProperties();
+   return success;
 }
 
 inline void DataCollectionTarget::unlockForConfigurationPoll()
@@ -1582,27 +1579,30 @@ inline void DataCollectionTarget::unlockForConfigurationPoll()
    unlockProperties();
 }
 
-inline bool DataCollectionTarget::isReadyForStatusPoll()
+inline bool DataCollectionTarget::lockForStatusPoll()
 {
-	if (m_isDeleted)
-		return false;
-   if (m_runtimeFlags & DCDF_FORCE_STATUS_POLL)
-   {
-      m_runtimeFlags &= ~DCDF_FORCE_STATUS_POLL;
-      return true;
-   }
-   return (m_status != STATUS_UNMANAGED) &&
-	       (!(m_flags & DCF_DISABLE_STATUS_POLL)) &&
-          (!(m_runtimeFlags & DCDF_QUEUED_FOR_STATUS_POLL)) &&
-          (!(m_runtimeFlags & DCDF_DELETE_IN_PROGRESS)) &&
-          (!(m_runtimeFlags & DCDF_CONFIGURATION_POLL_PENDING)) &&
-          ((UINT32)(time(NULL) - m_lastStatusPoll) > g_dwStatusPollingInterval);
-}
-inline void DataCollectionTarget::lockForStatusPoll()
-{
+   bool success = false;
    lockProperties();
-   m_runtimeFlags |= DCDF_QUEUED_FOR_STATUS_POLL;
+   if (!m_isDeleted && !m_isDeleteInitiated)
+   {
+      if (m_runtimeFlags & DCDF_FORCE_STATUS_POLL)
+      {
+         m_runtimeFlags &= ~DCDF_FORCE_STATUS_POLL;
+         m_runtimeFlags |= DCDF_QUEUED_FOR_STATUS_POLL;
+         success = true;
+      }
+      else if ((m_status != STATUS_UNMANAGED) &&
+               (!(m_flags & DCF_DISABLE_STATUS_POLL)) &&
+               (!(m_runtimeFlags & DCDF_QUEUED_FOR_STATUS_POLL)) &&
+               (!(m_runtimeFlags & DCDF_CONFIGURATION_POLL_PENDING)) &&
+               ((UINT32)(time(NULL) - m_lastStatusPoll) > g_dwStatusPollingInterval))
+      {
+         m_runtimeFlags |= DCDF_QUEUED_FOR_STATUS_POLL;
+         success = true;
+      }
+   }
    unlockProperties();
+   return success;
 }
 
 inline void DataCollectionTarget::unlockForStatusPoll()
@@ -1666,9 +1666,9 @@ public:
 
 	virtual DataCollectionError getInternalItem(const TCHAR *param, size_t bufSize, TCHAR *buffer) override;
 
-	virtual bool isReadyForStatusPoll() override { return false; }
-	virtual bool isReadyForConfigurationPoll() override { return false; }
-	virtual bool isReadyForInstancePoll() override { return false; }
+	virtual bool lockForStatusPoll() override { return false; }
+	virtual bool lockForConfigurationPoll() override { return false; }
+	virtual bool lockForInstancePoll() override { return false; }
 };
 
 /**
@@ -1726,9 +1726,9 @@ public:
 	void updateInfo(const TCHAR *vendor, const TCHAR *model, const TCHAR *serialNumber);
    void updateState(AccessPointState state);
 
-   virtual bool isReadyForStatusPoll() override { return false; }
-   virtual bool isReadyForConfigurationPoll() override { return false; }
-   virtual bool isReadyForInstancePoll() override { return false; }
+   virtual bool lockForStatusPoll() override { return false; }
+   virtual bool lockForConfigurationPoll() override { return false; }
+   virtual bool lockForInstancePoll() override { return false; }
 };
 
 /**
@@ -1767,7 +1767,7 @@ public:
    virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
    virtual bool showThresholdSummary() override;
 
-   virtual bool isReadyForInstancePoll() override { return false; }
+   virtual bool lockForInstancePoll() override { return false; }
 
    virtual void unbindFromTemplate(UINT32 dwTemplateId, bool removeDCI) override;
 
@@ -1837,9 +1837,9 @@ public:
    virtual bool showThresholdSummary() override;
    virtual UINT32 getEffectiveSourceNode(DCObject *dco) override;
 
-   virtual bool isReadyForStatusPoll() override { return false; }
-   virtual bool isReadyForConfigurationPoll() override { return false; }
-   virtual bool isReadyForInstancePoll() override { return false; }
+   virtual bool lockForStatusPoll() override { return false; }
+   virtual bool lockForConfigurationPoll() override { return false; }
+   virtual bool lockForInstancePoll() override { return false; }
 
    virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
 
@@ -2264,10 +2264,10 @@ public:
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
    virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
 
-   virtual bool isReadyForStatusPoll() override;
-   virtual bool isReadyForDiscoveryPoll();
-   virtual bool isReadyForRoutePoll();
-   virtual bool isReadyForTopologyPoll();
+   virtual bool lockForStatusPoll() override;
+   virtual bool lockForDiscoveryPoll();
+   virtual bool lockForRoutePoll();
+   virtual bool lockForTopologyPoll();
 
    virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
 
@@ -2394,10 +2394,7 @@ public:
    AccessPointState getAccessPointState(AccessPoint *ap, SNMP_Transport *snmpTransport);
    void setChassis(UINT32 chassisId);
 
-   void lockForDiscoveryPoll();
-   void lockForRoutePoll();
-   void lockForTopologyPoll();
-	void forceConfigurationPoll() { m_runtimeFlags |= DCDF_FORCE_CONFIGURATION_POLL; }
+	void forceConfigurationPoll() { lockProperties(); m_runtimeFlags |= DCDF_FORCE_CONFIGURATION_POLL; unlockProperties(); }
 
    virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE) override;
 
@@ -2504,80 +2501,86 @@ inline void Node::setDiscoveryPollTimeStamp()
    m_runtimeFlags &= ~NDF_QUEUED_FOR_DISCOVERY_POLL;
 }
 
-inline bool Node::isReadyForStatusPoll()
+inline bool Node::lockForStatusPoll()
 {
-	if (m_isDeleted)
-		return false;
-   if (m_runtimeFlags & DCDF_FORCE_STATUS_POLL)
+   bool success = false;
+   lockProperties();
+   if (!m_isDeleted && !m_isDeleteInitiated)
    {
-      m_runtimeFlags &= ~DCDF_FORCE_STATUS_POLL;
-      return true;
+      if (m_runtimeFlags & DCDF_FORCE_STATUS_POLL)
+      {
+         m_runtimeFlags &= ~DCDF_FORCE_STATUS_POLL;
+         m_runtimeFlags |= DCDF_QUEUED_FOR_STATUS_POLL;
+         success = true;
+      }
+      else if ((m_status != STATUS_UNMANAGED) &&
+               (!(m_flags & DCF_DISABLE_STATUS_POLL)) &&
+               (!(m_runtimeFlags & DCDF_QUEUED_FOR_STATUS_POLL)) &&
+               (getMyCluster() == NULL) &&
+               (!(m_runtimeFlags & DCDF_CONFIGURATION_POLL_PENDING)) &&
+               (static_cast<UINT32>(time(NULL) - m_lastStatusPoll) > g_dwStatusPollingInterval))
+      {
+         m_runtimeFlags |= DCDF_QUEUED_FOR_STATUS_POLL;
+         success = true;
+      }
    }
-   return (m_status != STATUS_UNMANAGED) &&
-	       (!(m_flags & DCF_DISABLE_STATUS_POLL)) &&
-          (!(m_runtimeFlags & DCDF_QUEUED_FOR_STATUS_POLL)) &&
-          (!(m_runtimeFlags & DCDF_DELETE_IN_PROGRESS)) &&
-			 (getMyCluster() == NULL) &&
-          (!(m_runtimeFlags & DCDF_CONFIGURATION_POLL_PENDING)) &&
-          ((UINT32)(time(NULL) - m_lastStatusPoll) > g_dwStatusPollingInterval);
-}
-
-inline bool Node::isReadyForDiscoveryPoll()
-{
-	if (m_isDeleted)
-		return false;
-   return (g_flags & AF_ENABLE_NETWORK_DISCOVERY) &&
-          (m_status != STATUS_UNMANAGED) &&
-			 (!(m_flags & NF_DISABLE_DISCOVERY_POLL)) &&
-          (!(m_runtimeFlags & NDF_QUEUED_FOR_DISCOVERY_POLL)) &&
-          (!(m_runtimeFlags & DCDF_DELETE_IN_PROGRESS)) &&
-          (m_runtimeFlags & DCDF_CONFIGURATION_POLL_PASSED) &&
-          ((UINT32)(time(NULL) - m_lastDiscoveryPoll) > g_dwDiscoveryPollingInterval);
-}
-
-inline bool Node::isReadyForRoutePoll()
-{
-	if (m_isDeleted)
-		return false;
-   return (m_status != STATUS_UNMANAGED) &&
-	       (!(m_flags & NF_DISABLE_ROUTE_POLL)) &&
-          (!(m_runtimeFlags & NDF_QUEUED_FOR_ROUTE_POLL)) &&
-          (!(m_runtimeFlags & DCDF_DELETE_IN_PROGRESS)) &&
-          (m_runtimeFlags & DCDF_CONFIGURATION_POLL_PASSED) &&
-          ((UINT32)(time(NULL) - m_lastRTUpdate) > g_dwRoutingTableUpdateInterval);
-}
-
-inline bool Node::isReadyForTopologyPoll()
-{
-	if (m_isDeleted)
-		return false;
-   return (m_status != STATUS_UNMANAGED) &&
-	       (!(m_flags & NF_DISABLE_TOPOLOGY_POLL)) &&
-          (!(m_runtimeFlags & NDF_QUEUED_FOR_TOPOLOGY_POLL)) &&
-          (!(m_runtimeFlags & DCDF_DELETE_IN_PROGRESS)) &&
-          (m_runtimeFlags & DCDF_CONFIGURATION_POLL_PASSED) &&
-          ((UINT32)(time(NULL) - m_lastTopologyPoll) > g_dwTopologyPollingInterval);
-}
-
-inline void Node::lockForDiscoveryPoll()
-{
-   lockProperties();
-   m_runtimeFlags |= NDF_QUEUED_FOR_DISCOVERY_POLL;
    unlockProperties();
+   return success;
 }
 
-inline void Node::lockForTopologyPoll()
+inline bool Node::lockForDiscoveryPoll()
 {
+   bool success = false;
    lockProperties();
-   m_runtimeFlags |= NDF_QUEUED_FOR_TOPOLOGY_POLL;
+   if (!m_isDeleted && !m_isDeleteInitiated &&
+       (g_flags & AF_ENABLE_NETWORK_DISCOVERY) &&
+       (m_status != STATUS_UNMANAGED) &&
+		 (!(m_flags & NF_DISABLE_DISCOVERY_POLL)) &&
+       (!(m_runtimeFlags & NDF_QUEUED_FOR_DISCOVERY_POLL)) &&
+       (m_runtimeFlags & DCDF_CONFIGURATION_POLL_PASSED) &&
+       (static_cast<UINT32>(time(NULL) - m_lastDiscoveryPoll) > g_dwDiscoveryPollingInterval))
+   {
+      m_runtimeFlags |= NDF_QUEUED_FOR_DISCOVERY_POLL;
+      success = true;
+   }
    unlockProperties();
+   return success;
 }
 
-inline void Node::lockForRoutePoll()
+inline bool Node::lockForRoutePoll()
 {
+   bool success = false;
    lockProperties();
-   m_runtimeFlags |= NDF_QUEUED_FOR_ROUTE_POLL;
+   if (!m_isDeleted && !m_isDeleteInitiated &&
+       (m_status != STATUS_UNMANAGED) &&
+	    (!(m_flags & NF_DISABLE_ROUTE_POLL)) &&
+       (!(m_runtimeFlags & NDF_QUEUED_FOR_ROUTE_POLL)) &&
+       (m_runtimeFlags & DCDF_CONFIGURATION_POLL_PASSED) &&
+       (static_cast<UINT32>(time(NULL) - m_lastRTUpdate) > g_dwRoutingTableUpdateInterval))
+   {
+      m_runtimeFlags |= NDF_QUEUED_FOR_ROUTE_POLL;
+      success = true;
+   }
    unlockProperties();
+   return success;
+}
+
+inline bool Node::lockForTopologyPoll()
+{
+   bool success = false;
+   lockProperties();
+   if (!m_isDeleted && !m_isDeleteInitiated &&
+       (m_status != STATUS_UNMANAGED) &&
+	    (!(m_flags & NF_DISABLE_TOPOLOGY_POLL)) &&
+       (!(m_runtimeFlags & NDF_QUEUED_FOR_TOPOLOGY_POLL)) &&
+       (m_runtimeFlags & DCDF_CONFIGURATION_POLL_PASSED) &&
+       (static_cast<UINT32>(time(NULL) - m_lastTopologyPoll) > g_dwTopologyPollingInterval))
+   {
+      m_runtimeFlags |= NDF_QUEUED_FOR_TOPOLOGY_POLL;
+      success = true;
+   }
+   unlockProperties();
+   return success;
 }
 
 /**

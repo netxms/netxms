@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2018 Raden Solutions
+** Copyright (C) 2003-2019 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -528,18 +528,23 @@ StringMap *Sensor::getInstanceList(DCObject *dco)
  */
 void Sensor::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId)
 {
-   if (m_runtimeFlags & DCDF_DELETE_IN_PROGRESS)
+   lockProperties();
+   if (m_isDeleteInitiated || IsShutdownInProgress())
    {
       if (rqId == 0)
          m_runtimeFlags &= ~DCDF_QUEUED_FOR_CONFIGURATION_POLL;
+      unlockProperties();
       return;
    }
+   unlockProperties();
 
    poller->setStatus(_T("wait for lock"));
    pollerLock();
 
    if (IsShutdownInProgress())
    {
+      if (rqId == 0)
+         unlockForConfigurationPoll();
       pollerUnlock();
       return;
    }
@@ -580,14 +585,16 @@ void Sensor::configurationPoll(PollerInfo *poller, ClientSession *session, UINT3
    sendPollerMsg(rqId, _T("Finished configuration poll for sensor %s\r\n"), m_name);
    sendPollerMsg(rqId, _T("Sensor configuration was%schanged after poll\r\n"), hasChanges ? _T(" ") : _T(" not "));
 
+   lockProperties();
+   m_lastConfigurationPoll = time(NULL);
    if (rqId == 0)
       m_runtimeFlags &= ~DCDF_QUEUED_FOR_CONFIGURATION_POLL;
-   m_lastConfigurationPoll = time(NULL);
-
-   nxlog_debug(5, _T("Finished configuration poll for sensor %s (ID: %d)"), m_name, m_id);
    m_runtimeFlags &= ~DCDF_CONFIGURATION_POLL_PENDING;
    m_runtimeFlags |= DCDF_CONFIGURATION_POLL_PASSED;
+   unlockProperties();
+
    pollerUnlock();
+   nxlog_debug(5, _T("Finished configuration poll for sensor %s (ID: %d)"), m_name, m_id);
 
    if (hasChanges)
    {
@@ -595,7 +602,6 @@ void Sensor::configurationPoll(PollerInfo *poller, ClientSession *session, UINT3
       setModified(MODIFY_SENSOR_PROPERTIES);
       unlockProperties();
    }
-
 }
 
 /**
@@ -611,12 +617,15 @@ void Sensor::checkDlmsConverterAccessibility()
  */
 void Sensor::statusPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId)
 {
-   if (m_runtimeFlags & DCDF_DELETE_IN_PROGRESS)
+   lockProperties();
+   if (m_isDeleteInitiated || IsShutdownInProgress())
    {
       if (rqId == 0)
          m_runtimeFlags &= ~DCDF_QUEUED_FOR_STATUS_POLL;
+      unlockProperties();
       return;
    }
+   unlockProperties();
 
    Queue *pQueue = new Queue;     // Delayed event queue
 
@@ -626,6 +635,8 @@ void Sensor::statusPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId)
    if (IsShutdownInProgress())
    {
       delete pQueue;
+      if (rqId == 0)
+         unlockForStatusPoll();
       pollerUnlock();
       return;
    }
@@ -729,7 +740,7 @@ void Sensor::statusPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId)
    executeHookScript(_T("StatusPoll"));
 
    if (rqId == 0)
-      m_runtimeFlags &= ~DCDF_QUEUED_FOR_STATUS_POLL;
+      unlockForStatusPoll();
 
    if (prevState != m_state)
       setModified(MODIFY_SENSOR_PROPERTIES);
@@ -967,11 +978,6 @@ DataCollectionError Sensor::getListFromAgent(const TCHAR *name, StringList **lis
  */
 void Sensor::prepareForDeletion()
 {
-   // Prevent sensor from being queued for polling
-   lockProperties();
-   m_runtimeFlags |= DCDF_DELETE_IN_PROGRESS;
-   unlockProperties();
-
    // Wait for all pending polls
    nxlog_debug(4, _T("Sensor::PrepareForDeletion(%s [%d]): waiting for outstanding polls to finish"), m_name, m_id);
    while(1)

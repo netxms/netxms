@@ -1521,21 +1521,23 @@ void DataCollectionTarget::instanceDiscoveryPollWorkerEntry(PollerInfo *poller, 
  */
 void DataCollectionTarget::instanceDiscoveryPoll(PollerInfo *poller, ClientSession *session, UINT32 requestId)
 {
-   if (m_runtimeFlags & DCDF_DELETE_IN_PROGRESS)
+   lockProperties();
+   if (m_isDeleteInitiated || IsShutdownInProgress())
    {
       if (requestId == 0)
          m_runtimeFlags &= ~DCDF_QUEUED_FOR_INSTANCE_POLL;
+      unlockProperties();
       return;
    }
-
-   if (IsShutdownInProgress())
-      return;
+   unlockProperties();
 
    poller->setStatus(_T("wait for lock"));
    pollerLock();
 
    if (IsShutdownInProgress())
    {
+      if (requestId == 0)
+         unlockForInstancePoll();
       pollerUnlock();
       return;
    }
@@ -1565,7 +1567,7 @@ void DataCollectionTarget::instanceDiscoveryPoll(PollerInfo *poller, ClientSessi
    // Finish instance discovery poll
    poller->setStatus(_T("cleanup"));
    if (requestId == 0)
-      m_runtimeFlags &= ~DCDF_QUEUED_FOR_INSTANCE_POLL;
+      unlockForInstancePoll();
    pollerUnlock();
    DbgPrintf(4, _T("Finished instance discovery poll for %s %s (ID: %d)"), getObjectClassName(), m_name, m_id);
 }

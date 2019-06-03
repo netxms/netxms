@@ -2740,19 +2740,20 @@ void ClientSession::scheduleObjectUpdate(NetObj *object)
  */
 void ClientSession::onObjectChange(NetObj *object)
 {
-   //create object list with mutex to control objects that already scheduled for update
-   MutexLock(m_pendingObjectNotificationsLock);
    if (((m_dwFlags & CSF_OBJECT_SYNC_FINISHED) > 0) && isAuthenticated() &&
          isSubscribedTo(NXC_CHANNEL_OBJECTS) &&
-      (object->isDeleted() || object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ)) &&
-       !m_pendingObjectNotifications->contains(object->getId()))
+      (object->isDeleted() || object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ)))
    {
-      m_pendingObjectNotifications->put(object->getId());
-      object->incRefCount();
-      incRefCount();
-      ThreadPoolScheduleRelative(g_clientThreadPool, m_objectNotificationDelay, this, &ClientSession::scheduleObjectUpdate, object);
+      MutexLock(m_pendingObjectNotificationsLock);
+      if (!m_pendingObjectNotifications->contains(object->getId()))
+      {
+         m_pendingObjectNotifications->put(object->getId());
+         object->incRefCount();
+         incRefCount();
+         ThreadPoolScheduleRelative(g_clientThreadPool, m_objectNotificationDelay, this, &ClientSession::scheduleObjectUpdate, object);
+      }
+      MutexUnlock(m_pendingObjectNotificationsLock);
    }
-   MutexUnlock(m_pendingObjectNotificationsLock);
 }
 
 /**

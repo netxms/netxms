@@ -1349,10 +1349,9 @@ void NetObj::fillMessage(NXCPMessage *msg, UINT32 userId)
 /**
  * Handler for EnumerateSessions()
  */
-static void BroadcastObjectChange(ClientSession *pSession, void *pArg)
+static void BroadcastObjectChange(ClientSession *session, void *context)
 {
-   if (pSession->isAuthenticated())
-      pSession->onObjectChange((NetObj *)pArg);
+   session->onObjectChange(static_cast<NetObj*>(context));
 }
 
 /**
@@ -1790,7 +1789,7 @@ void NetObj::hide()
 }
 
 /**
- * Unhide object and all its childs
+ * Unhide object and all its children
  */
 void NetObj::unhide()
 {

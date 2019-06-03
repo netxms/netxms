@@ -313,20 +313,6 @@ public:
 };
 
 /**
- * Node information for autodiscovery filter
- */
-typedef struct
-{
-   InetAddress ipAddr;
-   UINT32 zoneUIN;
-   UINT32 dwFlags;
-   int nSNMPVersion;
-   TCHAR szObjectId[MAX_OID_LEN * 4];    // SNMP OID
-   TCHAR szAgentVersion[MAX_AGENT_VERSION_LEN];
-   TCHAR szPlatform[MAX_PLATFORM_NAME_LEN];
-} DISCOVERY_FILTER_DATA;
-
-/**
  * Data update structure for client sessions
  */
 typedef struct
