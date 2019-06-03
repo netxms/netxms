@@ -45,7 +45,7 @@ static int GetPolicyInventory(AgentConnection *conn)
 		for(int i = 0; i < ap->size(); i++)
 		{
 		   TCHAR buffer[64];
-			_tprintf(_T("%-16s %-4d %-64s ") UINT64X_FMT(_T("016")) _T(" %-3d\n"), ap->getGuid(i).toString(buffer), ap->getType(i), ap->getServerInfo(i), ap->getServerId(i), ap->getVersion(i));
+			_tprintf(_T("%-16s %-16s %-64s ") UINT64X_FMT(_T("016")) _T(" %-3d\n"), ap->getGuid(i).toString(buffer), ap->getType(i), ap->getServerInfo(i), ap->getServerId(i), ap->getVersion(i));
 		}
 		delete ap;
 	}
