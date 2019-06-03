@@ -239,7 +239,7 @@ void ExportDatabase(char *file, bool skipAudit, bool skipAlarms, bool skipEvent,
 		return;
 
 	// Create new SQLite database
-	unlink(file);
+	_unlink(file);
 	if (sqlite3_open(file, &db) != SQLITE_OK)
 	{
 		_tprintf(_T("ERROR: unable to open output file\n"));

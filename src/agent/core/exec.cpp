@@ -339,7 +339,7 @@ static THREAD_RESULT THREAD_CALL POpenWorker(void *arg)
             data->values.add(value);
          }
       }
-		pclose(hPipe);
+		_pclose(hPipe);
 	}
 	else
 	{

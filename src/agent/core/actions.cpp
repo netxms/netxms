@@ -238,7 +238,7 @@ static THREAD_RESULT THREAD_CALL ActionExecutionThread(void *arg)
          data->m_session->sendMessage(&msg);
          msg.deleteAllFields();
       }
-      pclose(pipe);
+      _pclose(pipe);
       data->m_session->debugPrintf(4, _T("ActionExecutionThread: command completed"));
    }
    else

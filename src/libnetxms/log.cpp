@@ -481,7 +481,7 @@ static THREAD_RESULT THREAD_CALL BackgroundWriterThread(void *arg)
 	      if ((s_logFileHandle != NULL) && (s_rotationMode == NXLOG_ROTATION_BY_SIZE) && (s_maxLogSize != 0))
 	      {
 	         NX_STAT_STRUCT st;
-		      NX_FSTAT(fileno(s_logFileHandle), &st);
+		      NX_FSTAT(_fileno(s_logFileHandle), &st);
 		      if ((UINT64)st.st_size >= s_maxLogSize)
 			      RotateLog(FALSE);
 	      }
@@ -661,7 +661,7 @@ static void WriteLogToFile(TCHAR *message, const WORD type)
 	   if ((s_logFileHandle != NULL) && (s_rotationMode == NXLOG_ROTATION_BY_SIZE) && (s_maxLogSize != 0))
 	   {
 	      NX_STAT_STRUCT st;
-		   NX_FSTAT(fileno(s_logFileHandle), &st);
+		   NX_FSTAT(_fileno(s_logFileHandle), &st);
 		   if ((UINT64)st.st_size >= s_maxLogSize)
 			   RotateLog(FALSE);
 	   }
