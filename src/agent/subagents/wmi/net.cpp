@@ -137,7 +137,7 @@ LONG H_NetworkAdapterProperty(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, 
    UINT32 index = _tcstoul(indexText, NULL, 0);
 
    WCHAR query[4096];
-   _snwprintf(query, 4096, L"SELECT %s FROM Win32_NetworkAdapter " QUERY_CONDITION L" AND Index=%u", arg, index);
+   _snwprintf(query, 4096, L"SELECT %s FROM Win32_NetworkAdapter %s AND Index=%u", arg, QUERY_CONDITION, index);
 
    WMI_QUERY_CONTEXT ctx;
    IEnumWbemClassObject *enumObject = DoWMIQuery(L"root\\cimv2", query, &ctx);
