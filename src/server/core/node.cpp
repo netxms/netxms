@@ -1042,7 +1042,7 @@ InterfaceList *Node::getInterfaceList()
          bool useIfXTable;
          if (m_nUseIfXTable == IFXTABLE_DEFAULT)
          {
-            useIfXTable = (ConfigReadBoolean(_T("UseIfXTable"), true) != 0) ? true : false;
+            useIfXTable = ConfigReadBoolean(_T("UseIfXTable"), true);
          }
          else
          {

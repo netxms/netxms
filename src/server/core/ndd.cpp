@@ -148,14 +148,30 @@ static int CompareDrivers(const void *e1, const void *e2)
  * @param node Node object to test
  * @returns Pointer to device driver object
  */
-NetworkDeviceDriver *FindDriverForNode(Node *node, SNMP_Transport *pTransport)
+NetworkDeviceDriver *FindDriverForNode(Node *node, SNMP_Transport *snmpTransport)
+{
+   TCHAR driverName[64];
+   return FindDriverForNode(node->getName(), node->getSNMPObjectId(),
+            node->getCustomAttribute(_T("snmp.driver"), driverName, 64), snmpTransport);
+}
+
+/**
+ * Find appropriate device driver for given network device
+ *
+ * @param name Node name
+ * @param snmpObjectId SNMP object ID
+ * @param defaultDriver default driver to use
+ * @param snmpTransport transport
+ * @returns Pointer to device driver object
+ */
+NetworkDeviceDriver *FindDriverForNode(const TCHAR *name, const TCHAR *snmpObjectId, const TCHAR *defaultDriver, SNMP_Transport *snmpTransport)
 {
 	struct __selected_driver selection[MAX_DEVICE_DRIVERS];
 	int selected = 0;
 
 	for(int i = 0; i < s_numDrivers; i++)
 	{
-		int pri = s_drivers[i]->isPotentialDevice(node->getSNMPObjectId());
+		int pri = s_drivers[i]->isPotentialDevice(snmpObjectId);
 		if (pri > 0)
 		{
 			if (pri > 255)
@@ -164,7 +180,7 @@ NetworkDeviceDriver *FindDriverForNode(Node *node, SNMP_Transport *pTransport)
 			selection[selected].driver = s_drivers[i];
 			selected++;
 			DbgPrintf(6, _T("FindDriverForNode(%s): found potential device driver %s with priority %d"),
-			          node->getName(), s_drivers[i]->getName(), pri);
+			          name, s_drivers[i]->getName(), pri);
 		}
 	}
 
@@ -173,19 +189,18 @@ NetworkDeviceDriver *FindDriverForNode(Node *node, SNMP_Transport *pTransport)
 		qsort(selection, selected, sizeof(struct __selected_driver), CompareDrivers);
 		for(int i = 0 ; i < selected; i++)
 		{
-			if (selection[i].driver->isDeviceSupported(pTransport, node->getSNMPObjectId()))
+			if (selection[i].driver->isDeviceSupported(snmpTransport, snmpObjectId))
 				return selection[i].driver;
 		}
 	}
 
    // Manual driver selection
-	TCHAR driverName[64];
-   if (node->getCustomAttribute(_T("snmp.driver"), driverName, 64) != NULL)
+   if (defaultDriver != NULL)
    {
-      NetworkDeviceDriver *driver = FindDriverByName(driverName);
+      NetworkDeviceDriver *driver = FindDriverByName(defaultDriver);
       if (driver != NULL)
       {
-         DbgPrintf(6, _T("FindDriverForNode(%s): device driver %s selected manually"), node->getName(), driver->getName());
+         DbgPrintf(6, _T("FindDriverForNode(%s): device driver %s selected manually"), name, driver->getName());
          return driver;
       }
    }

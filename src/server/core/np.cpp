@@ -41,20 +41,6 @@ static ObjectArray<DiscoveredAddress> s_processingList(64, 64, false);
 static Mutex s_processingListLock;
 
 /**
- * Node information for autodiscovery filter
- */
-struct DISCOVERY_FILTER_DATA
-{
-   InetAddress ipAddr;
-   UINT32 zoneUIN;
-   UINT32 dwFlags;
-   int nSNMPVersion;
-   TCHAR szObjectId[MAX_OID_LEN * 4];    // SNMP OID
-   TCHAR szAgentVersion[MAX_AGENT_VERSION_LEN];
-   TCHAR szPlatform[MAX_PLATFORM_NAME_LEN];
-};
-
-/**
  * Check if given address is in processing by new node poller
  */
 bool IsNodePollerActiveAddress(const InetAddress& addr)
@@ -125,112 +111,8 @@ NewNodeData::NewNodeData(const NXCPMessage *msg, const InetAddress& ipAddr)
  */
 NewNodeData::~NewNodeData()
 {
-   delete(snmpSecurity);
+   delete snmpSecurity;
 }
-
-/**
- * Discovery class
- */
-class NXSL_DiscoveryClass : public NXSL_Class
-{
-public:
-   NXSL_DiscoveryClass();
-
-   virtual NXSL_Value *getAttr(NXSL_Object *pObject, const char *pszAttr);
-};
-
-/**
- * Implementation of discovery class
- */
-NXSL_DiscoveryClass::NXSL_DiscoveryClass() : NXSL_Class()
-{
-   setName(_T("NewNode"));
-}
-
-NXSL_Value *NXSL_DiscoveryClass::getAttr(NXSL_Object *object, const char *pszAttr)
-{
-   NXSL_VM *vm = object->vm();
-   DISCOVERY_FILTER_DATA *data = static_cast<DISCOVERY_FILTER_DATA*>(object->getData());
-   NXSL_Value *value = NULL;
-
-   if (!strcmp(pszAttr, "agentVersion"))
-   {
-      value = vm->createValue(data->szAgentVersion);
-   }
-   else if (!strcmp(pszAttr, "ipAddr"))
-   {
-      TCHAR buffer[64];
-      value = vm->createValue(data->ipAddr.toString(buffer));
-   }
-   else if (!strcmp(pszAttr, "isAgent"))
-   {
-      value = vm->createValue((LONG)((data->dwFlags & NNF_IS_AGENT) ? 1 : 0));
-   }
-   else if (!strcmp(pszAttr, "isBridge"))
-   {
-      value = vm->createValue((LONG)((data->dwFlags & NNF_IS_BRIDGE) ? 1 : 0));
-   }
-   else if (!strcmp(pszAttr, "isCDP"))
-   {
-      value = vm->createValue((LONG)((data->dwFlags & NNF_IS_CDP) ? 1 : 0));
-   }
-   else if (!strcmp(pszAttr, "isLLDP"))
-   {
-      value = vm->createValue((LONG)((data->dwFlags & NNF_IS_LLDP) ? 1 : 0));
-   }
-   else if (!strcmp(pszAttr, "isPrinter"))
-   {
-      value = vm->createValue((LONG)((data->dwFlags & NNF_IS_PRINTER) ? 1 : 0));
-   }
-   else if (!strcmp(pszAttr, "isRouter"))
-   {
-      value = vm->createValue((LONG)((data->dwFlags & NNF_IS_ROUTER) ? 1 : 0));
-   }
-   else if (!strcmp(pszAttr, "isSNMP"))
-   {
-      value = vm->createValue((LONG)((data->dwFlags & NNF_IS_SNMP) ? 1 : 0));
-   }
-   else if (!strcmp(pszAttr, "isSONMP"))
-   {
-      value = vm->createValue((LONG)((data->dwFlags & NNF_IS_SONMP) ? 1 : 0));
-   }
-   else if (!strcmp(pszAttr, "netMask"))
-   {
-      value = vm->createValue(data->ipAddr.getMaskBits());
-   }
-   else if (!strcmp(pszAttr, "platformName"))
-   {
-      value = vm->createValue(data->szPlatform);
-   }
-   else if (!strcmp(pszAttr, "snmpOID"))
-   {
-      value = vm->createValue(data->szObjectId);
-   }
-   else if (!strcmp(pszAttr, "snmpVersion"))
-   {
-      value = vm->createValue((LONG)data->nSNMPVersion);
-   }
-   else if (!strcmp(pszAttr, "subnet"))
-   {
-      TCHAR buffer[64];
-      value = vm->createValue(data->ipAddr.getSubnetAddress().toString(buffer));
-   }
-   else if (!strcmp(pszAttr, "zone"))
-   {
-      Zone *zone = FindZoneByUIN(data->zoneUIN);
-      value = (zone != NULL) ? zone->createNXSLObject(vm) : vm->createValue();
-   }
-   else if (!strcmp(pszAttr, "zoneUIN"))
-   {
-      value = vm->createValue(data->zoneUIN);
-   }
-   return value;
-}
-
-/**
- * Discovery class object
- */
-static NXSL_DiscoveryClass m_nxslDiscoveryClass;
 
 /**
  * Poll new node for configuration
@@ -494,11 +376,265 @@ static bool HostIsReachable(const InetAddress& ipAddr, UINT32 zoneUIN, bool full
 }
 
 /**
+ * Node information for autodiscovery filter
+ */
+struct DiscoveryFilterData
+{
+   InetAddress ipAddr;
+   NetworkDeviceDriver *driver;
+   StringMap *driverAttributes;
+   DriverData *driverData;
+   InterfaceList *ifList;
+   UINT32 zoneUIN;
+   UINT32 flags;
+   int snmpVersion;
+   TCHAR dnsName[MAX_DNS_NAME];
+   TCHAR snmpObjectId[MAX_OID_LEN * 4];    // SNMP OID
+   TCHAR agentVersion[MAX_AGENT_VERSION_LEN];
+   TCHAR platform[MAX_PLATFORM_NAME_LEN];
+
+   ~DiscoveryFilterData()
+   {
+      delete ifList;
+      delete driverAttributes;
+      delete driverData;
+   }
+};
+
+/**
+ * "DiscoveredInterface" NXSL class
+ */
+class NXSL_DiscoveredInterfaceClass : public NXSL_Class
+{
+public:
+   NXSL_DiscoveredInterfaceClass();
+
+   virtual NXSL_Value *getAttr(NXSL_Object *pObject, const char *pszAttr);
+};
+
+/**
+ * Implementation of NXSL class "DiscoveredInterface" - constructor
+ */
+NXSL_DiscoveredInterfaceClass::NXSL_DiscoveredInterfaceClass() : NXSL_Class()
+{
+   setName(_T("DiscoveredInterface"));
+}
+
+/**
+ * Implementation of NXSL class "DiscoveredInterface" - get attribute
+ */
+NXSL_Value *NXSL_DiscoveredInterfaceClass::getAttr(NXSL_Object *object, const char *pszAttr)
+{
+   NXSL_VM *vm = object->vm();
+   InterfaceInfo *iface = static_cast<InterfaceInfo*>(object->getData());
+   NXSL_Value *value = NULL;
+
+   if (!strcmp(pszAttr, "alias"))
+   {
+      value = vm->createValue(iface->alias);
+   }
+   else if (!strcmp(pszAttr, "description"))
+   {
+      value = vm->createValue(iface->description);
+   }
+   else if (!strcmp(pszAttr, "index"))
+   {
+      value = vm->createValue(iface->index);
+   }
+   else if (!strcmp(pszAttr, "isPhysicalPort"))
+   {
+      value = vm->createValue(iface->isPhysicalPort);
+   }
+   else if (!strcmp(pszAttr, "macAddr"))
+   {
+      TCHAR buffer[64];
+      value = vm->createValue(MACToStr(iface->macAddr, buffer));
+   }
+   else if (!strcmp(pszAttr, "mtu"))
+   {
+      value = vm->createValue(iface->mtu);
+   }
+   else if (!strcmp(pszAttr, "name"))
+   {
+      value = vm->createValue(iface->name);
+   }
+   else if (!strcmp(pszAttr, "port"))
+   {
+      value = vm->createValue(iface->port);
+   }
+   else if (!strcmp(pszAttr, "slot"))
+   {
+      value = vm->createValue(iface->slot);
+   }
+   else if (!strcmp(pszAttr, "speed"))
+   {
+      value = vm->createValue(iface->speed);
+   }
+   else if (!strcmp(pszAttr, "type"))
+   {
+      value = vm->createValue(iface->type);
+   }
+   return value;
+}
+
+/**
+ * "DiscoveredInterface" class object
+ */
+static NXSL_DiscoveredInterfaceClass s_nxslDiscoveredInterfaceClass;
+
+/**
+ * "DiscoveredNode" NXSL class
+ */
+class NXSL_DiscoveredNodeClass : public NXSL_Class
+{
+public:
+   NXSL_DiscoveredNodeClass();
+
+   virtual NXSL_Value *getAttr(NXSL_Object *pObject, const char *pszAttr);
+};
+
+/**
+ * Implementation of NXSL class "DiscoveredNode" - constructor
+ */
+NXSL_DiscoveredNodeClass::NXSL_DiscoveredNodeClass() : NXSL_Class()
+{
+   setName(_T("DiscoveredNode"));
+}
+
+/**
+ * Implementation of NXSL class "DiscoveredNode" - get attribute
+ */
+NXSL_Value *NXSL_DiscoveredNodeClass::getAttr(NXSL_Object *object, const char *pszAttr)
+{
+   NXSL_VM *vm = object->vm();
+   DiscoveryFilterData *data = static_cast<DiscoveryFilterData*>(object->getData());
+   NXSL_Value *value = NULL;
+
+   if (!strcmp(pszAttr, "agentVersion"))
+   {
+      value = vm->createValue(data->agentVersion);
+   }
+   else if (!strcmp(pszAttr, "dnsName"))
+   {
+      if (data->dnsName[0] == 0)
+      {
+         bool addressResolved = false;
+         if (IsZoningEnabled() && (data->zoneUIN != 0))
+         {
+            Zone *zone = FindZoneByUIN(data->zoneUIN);
+            if (zone != NULL)
+            {
+               AgentConnectionEx *conn = zone->acquireConnectionToProxy();
+               if (conn != NULL)
+               {
+                  addressResolved = (conn->getHostByAddr(data->ipAddr, data->dnsName, MAX_DNS_NAME) != NULL);
+                  conn->decRefCount();
+               }
+            }
+         }
+         else
+         {
+            addressResolved = (data->ipAddr.getHostByAddr(data->dnsName, MAX_DNS_NAME) != NULL);
+         }
+
+         if (!addressResolved)
+         {
+            // Return IP address as DNS name if request fails
+            data->ipAddr.toString(data->dnsName);
+         }
+      }
+      value = vm->createValue(data->dnsName);
+   }
+   else if (!strcmp(pszAttr, "interfaces"))
+   {
+      NXSL_Array *array = new NXSL_Array(vm);
+      if (data->ifList != NULL)
+      {
+         for(int i = 0; i < data->ifList->size(); i++)
+            array->append(vm->createValue(new NXSL_Object(vm, &s_nxslDiscoveredInterfaceClass, data->ifList->get(i))));
+      }
+      value = vm->createValue(array);
+   }
+   else if (!strcmp(pszAttr, "ipAddr"))
+   {
+      TCHAR buffer[64];
+      value = vm->createValue(data->ipAddr.toString(buffer));
+   }
+   else if (!strcmp(pszAttr, "isAgent"))
+   {
+      value = vm->createValue((LONG)((data->flags & NNF_IS_AGENT) ? 1 : 0));
+   }
+   else if (!strcmp(pszAttr, "isBridge"))
+   {
+      value = vm->createValue((LONG)((data->flags & NNF_IS_BRIDGE) ? 1 : 0));
+   }
+   else if (!strcmp(pszAttr, "isCDP"))
+   {
+      value = vm->createValue((LONG)((data->flags & NNF_IS_CDP) ? 1 : 0));
+   }
+   else if (!strcmp(pszAttr, "isLLDP"))
+   {
+      value = vm->createValue((LONG)((data->flags & NNF_IS_LLDP) ? 1 : 0));
+   }
+   else if (!strcmp(pszAttr, "isPrinter"))
+   {
+      value = vm->createValue((LONG)((data->flags & NNF_IS_PRINTER) ? 1 : 0));
+   }
+   else if (!strcmp(pszAttr, "isRouter"))
+   {
+      value = vm->createValue((LONG)((data->flags & NNF_IS_ROUTER) ? 1 : 0));
+   }
+   else if (!strcmp(pszAttr, "isSNMP"))
+   {
+      value = vm->createValue((LONG)((data->flags & NNF_IS_SNMP) ? 1 : 0));
+   }
+   else if (!strcmp(pszAttr, "isSONMP"))
+   {
+      value = vm->createValue((LONG)((data->flags & NNF_IS_SONMP) ? 1 : 0));
+   }
+   else if (!strcmp(pszAttr, "netMask"))
+   {
+      value = vm->createValue(data->ipAddr.getMaskBits());
+   }
+   else if (!strcmp(pszAttr, "platformName"))
+   {
+      value = vm->createValue(data->platform);
+   }
+   else if (!strcmp(pszAttr, "snmpOID"))
+   {
+      value = vm->createValue(data->snmpObjectId);
+   }
+   else if (!strcmp(pszAttr, "snmpVersion"))
+   {
+      value = vm->createValue((LONG)data->snmpVersion);
+   }
+   else if (!strcmp(pszAttr, "subnet"))
+   {
+      TCHAR buffer[64];
+      value = vm->createValue(data->ipAddr.getSubnetAddress().toString(buffer));
+   }
+   else if (!strcmp(pszAttr, "zone"))
+   {
+      Zone *zone = FindZoneByUIN(data->zoneUIN);
+      value = (zone != NULL) ? zone->createNXSLObject(vm) : vm->createValue();
+   }
+   else if (!strcmp(pszAttr, "zoneUIN"))
+   {
+      value = vm->createValue(data->zoneUIN);
+   }
+   return value;
+}
+
+/**
+ * "DiscoveredNode" class object
+ */
+static NXSL_DiscoveredNodeClass s_nxslDiscoveredNodeClass;
+
+/**
  * Check if newly discovered node should be added
  */
 static BOOL AcceptNewNode(NewNodeData *newNodeData, BYTE *macAddr)
 {
-   DISCOVERY_FILTER_DATA data;
    TCHAR szFilter[MAX_CONFIG_VALUE], szBuffer[256], szIpAddr[64];
    UINT32 dwTemp;
    AgentConnection *pAgentConn;
@@ -581,35 +717,24 @@ static BOOL AcceptNewNode(NewNodeData *newNodeData, BYTE *macAddr)
    ConfigReadStr(_T("DiscoveryFilter"), szFilter, MAX_CONFIG_VALUE, _T(""));
    StrStrip(szFilter);
 
-   // Check for filter script
-   if ((szFilter[0] == 0) || (!_tcsicmp(szFilter, _T("none"))))
-	{
-		if (!HostIsReachable(newNodeData->ipAddr, newNodeData->zoneUIN, false, NULL, NULL))
-		{
-		   nxlog_debug_tag(DEBUG_TAG, 4, _T("AcceptNewNode(%s): host is not reachable"), szIpAddr);
-			return FALSE;
-		}
-		nxlog_debug_tag(DEBUG_TAG, 4, _T("AcceptNewNode(%s): no filtering, node accepted"), szIpAddr);
-      return TRUE;   // No filtering
-	}
-
-   // Initialize new node data
-   memset(&data, 0, sizeof(DISCOVERY_FILTER_DATA));
+   // Initialize discovered node data
+   DiscoveryFilterData data;
+   memset(&data, 0, sizeof(DiscoveryFilterData));
    data.ipAddr = newNodeData->ipAddr;
    data.zoneUIN = newNodeData->zoneUIN;
 
    // Check for address range if we use simple filter instead of script
-	UINT32 autoFilterFlags;
+   UINT32 autoFilterFlags;
    if (!_tcsicmp(szFilter, _T("auto")))
    {
       autoFilterFlags = ConfigReadULong(_T("DiscoveryFilterFlags"), DFF_ALLOW_AGENT | DFF_ALLOW_SNMP);
       nxlog_debug_tag(DEBUG_TAG, 4, _T("AcceptNewNode(%s): auto filter, flags=%04X"), szIpAddr, autoFilterFlags);
 
-		if (autoFilterFlags & DFF_ONLY_RANGE)
+      if (autoFilterFlags & DFF_ONLY_RANGE)
       {
-		   nxlog_debug_tag(DEBUG_TAG, 4, _T("AcceptNewNode(%s): auto filter - checking range"), szIpAddr);
-	      ObjectArray<InetAddressListElement> *list = LoadServerAddressList(2);
-	      if (list != NULL)
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("AcceptNewNode(%s): auto filter - checking range"), szIpAddr);
+         ObjectArray<InetAddressListElement> *list = LoadServerAddressList(2);
+         if (list != NULL)
          {
             for(int i = 0; (i < list->size()) && (!bResult); i++)
             {
@@ -618,85 +743,115 @@ static BOOL AcceptNewNode(NewNodeData *newNodeData, BYTE *macAddr)
             delete list;
          }
          nxlog_debug_tag(DEBUG_TAG, 4, _T("AcceptNewNode(%s): auto filter - range check result is %d"), szIpAddr, bResult);
-			if (!bResult)
-				return FALSE;
+         if (!bResult)
+            return FALSE;
       }
    }
 
-	// Check if host is reachable
-	if (!HostIsReachable(newNodeData->ipAddr, newNodeData->zoneUIN, true, &pTransport, &pAgentConn))
-	{
-	   nxlog_debug_tag(DEBUG_TAG, 4, _T("AcceptNewNode(%s): host is not reachable"), szIpAddr);
-      return FALSE;
-	}
-	if (pTransport != NULL)
-	{
-      data.dwFlags |= NNF_IS_SNMP;
-		data.nSNMPVersion = pTransport->getSnmpVersion();
-		newNodeData->snmpSecurity = new SNMP_SecurityContext(pTransport->getSecurityContext());
-	}
-   if (pAgentConn != NULL)
+   // Check if host is reachable
+   if (!HostIsReachable(newNodeData->ipAddr, newNodeData->zoneUIN, true, &pTransport, &pAgentConn))
    {
-      data.dwFlags |= NNF_IS_AGENT;
-      pAgentConn->getParameter(_T("Agent.Version"), MAX_AGENT_VERSION_LEN, data.szAgentVersion);
-      pAgentConn->getParameter(_T("System.PlatformName"), MAX_PLATFORM_NAME_LEN, data.szPlatform);
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("AcceptNewNode(%s): host is not reachable"), szIpAddr);
+      return FALSE;
    }
 
-   // Check if node is a router
-   if (data.dwFlags & NNF_IS_SNMP)
+   // Basic communication settings
+   if (pTransport != NULL)
    {
-      if (SnmpGet(data.nSNMPVersion, pTransport,
+      data.flags |= NNF_IS_SNMP;
+      data.snmpVersion = pTransport->getSnmpVersion();
+      newNodeData->snmpSecurity = new SNMP_SecurityContext(pTransport->getSecurityContext());
+
+      // Get SNMP OID
+      SnmpGet(data.snmpVersion, pTransport,
+              _T(".1.3.6.1.2.1.1.2.0"), NULL, 0, data.snmpObjectId, MAX_OID_LEN * 4, 0);
+
+      data.driver = FindDriverForNode(szIpAddr, data.snmpObjectId, NULL, pTransport);
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("AcceptNewNode(%s): selected device driver %s"), szIpAddr, data.driver->getName());
+   }
+   if (pAgentConn != NULL)
+   {
+      data.flags |= NNF_IS_AGENT;
+      pAgentConn->getParameter(_T("Agent.Version"), MAX_AGENT_VERSION_LEN, data.agentVersion);
+      pAgentConn->getParameter(_T("System.PlatformName"), MAX_PLATFORM_NAME_LEN, data.platform);
+   }
+
+   // Read interface list if possible
+   if (data.flags & NNF_IS_AGENT)
+   {
+      data.ifList = pAgentConn->getInterfaceList();
+   }
+   if ((data.ifList == NULL) && (data.flags & NNF_IS_SNMP))
+   {
+      data.driverAttributes = new StringMap();
+      data.driver->analyzeDevice(pTransport, data.snmpObjectId, data.driverAttributes, &data.driverData);
+      data.ifList = data.driver->getInterfaces(pTransport, data.driverAttributes, data.driverData,
+               ConfigReadInt(_T("UseInterfaceAliases"), 0), ConfigReadBoolean(_T("UseIfXTable"), true));
+   }
+
+   // TODO: check all interfaces for matching existing nodes
+
+   // Check for filter script
+   if ((szFilter[0] == 0) || (!_tcsicmp(szFilter, _T("none"))))
+	{
+		nxlog_debug_tag(DEBUG_TAG, 4, _T("AcceptNewNode(%s): no filtering, node accepted"), szIpAddr);
+	   if (pAgentConn != NULL)
+	      pAgentConn->decRefCount();
+	   delete pTransport;
+      return TRUE;   // No filtering
+	}
+
+   // Check if node is a router
+   if (data.flags & NNF_IS_SNMP)
+   {
+      if (SnmpGet(data.snmpVersion, pTransport,
                   _T(".1.3.6.1.2.1.4.1.0"), NULL, 0, &dwTemp, sizeof(UINT32), 0) == SNMP_ERR_SUCCESS)
       {
          if (dwTemp == 1)
-            data.dwFlags |= NNF_IS_ROUTER;
+            data.flags |= NNF_IS_ROUTER;
       }
    }
-   else if (data.dwFlags & NNF_IS_AGENT)
+   else if (data.flags & NNF_IS_AGENT)
    {
       // Check IP forwarding status
       if (pAgentConn->getParameter(_T("Net.IP.Forwarding"), 16, szBuffer) == ERR_SUCCESS)
       {
          if (_tcstoul(szBuffer, NULL, 10) != 0)
-            data.dwFlags |= NNF_IS_ROUTER;
+            data.flags |= NNF_IS_ROUTER;
       }
    }
 
    // Check various SNMP device capabilities
-   if (data.dwFlags & NNF_IS_SNMP)
+   if (data.flags & NNF_IS_SNMP)
    {
-		// Get SNMP OID
-		SnmpGet(data.nSNMPVersion, pTransport,
-		        _T(".1.3.6.1.2.1.1.2.0"), NULL, 0, data.szObjectId, MAX_OID_LEN * 4, 0);
-
       // Check if node is a bridge
-      if (SnmpGet(data.nSNMPVersion, pTransport,
+      if (SnmpGet(data.snmpVersion, pTransport,
                   _T(".1.3.6.1.2.1.17.1.1.0"), NULL, 0, szBuffer, sizeof(szBuffer), 0) == SNMP_ERR_SUCCESS)
       {
-         data.dwFlags |= NNF_IS_BRIDGE;
+         data.flags |= NNF_IS_BRIDGE;
       }
 
       // Check for CDP (Cisco Discovery Protocol) support
-      if (SnmpGet(data.nSNMPVersion, pTransport,
+      if (SnmpGet(data.snmpVersion, pTransport,
                   _T(".1.3.6.1.4.1.9.9.23.1.3.1.0"), NULL, 0, &dwTemp, sizeof(UINT32), 0) == SNMP_ERR_SUCCESS)
       {
          if (dwTemp == 1)
-            data.dwFlags |= NNF_IS_CDP;
+            data.flags |= NNF_IS_CDP;
       }
 
       // Check for SONMP (Nortel topology discovery protocol) support
-      if (SnmpGet(data.nSNMPVersion, pTransport,
+      if (SnmpGet(data.snmpVersion, pTransport,
                   _T(".1.3.6.1.4.1.45.1.6.13.1.2.0"), NULL, 0, &dwTemp, sizeof(UINT32), 0) == SNMP_ERR_SUCCESS)
       {
          if (dwTemp == 1)
-            data.dwFlags |= NNF_IS_SONMP;
+            data.flags |= NNF_IS_SONMP;
       }
 
       // Check for LLDP (Link Layer Discovery Protocol) support
-      if (SnmpGet(data.nSNMPVersion, pTransport,
+      if (SnmpGet(data.snmpVersion, pTransport,
                   _T(".1.0.8802.1.1.2.1.3.2.0"), NULL, 0, szBuffer, sizeof(szBuffer), 0) == SNMP_ERR_SUCCESS)
       {
-         data.dwFlags |= NNF_IS_LLDP;
+         data.flags |= NNF_IS_LLDP;
       }
    }
 
@@ -717,13 +872,13 @@ static BOOL AcceptNewNode(NewNodeData *newNodeData, BYTE *macAddr)
       {
          if (autoFilterFlags & DFF_ALLOW_AGENT)
          {
-            if (data.dwFlags & NNF_IS_AGENT)
+            if (data.flags & NNF_IS_AGENT)
                bResult = TRUE;
          }
 
          if (autoFilterFlags & DFF_ALLOW_SNMP)
          {
-            if (data.dwFlags & NNF_IS_SNMP)
+            if (data.flags & NNF_IS_SNMP)
                bResult = TRUE;
          }
       }
@@ -735,7 +890,7 @@ static BOOL AcceptNewNode(NewNodeData *newNodeData, BYTE *macAddr)
       if (vm != NULL)
       {
          nxlog_debug_tag(DEBUG_TAG, 4, _T("AcceptNewNode(%s): Running filter script %s"), szIpAddr, szFilter);
-         NXSL_Value *pValue = vm->createValue(new NXSL_Object(vm, &m_nxslDiscoveryClass, &data));
+         NXSL_Value *pValue = vm->createValue(new NXSL_Object(vm, &s_nxslDiscoveredNodeClass, &data));
          if (vm->run(1, &pValue))
          {
             bResult = (vm->getResult()->getValueAsInt32() != 0) ? TRUE : FALSE;
