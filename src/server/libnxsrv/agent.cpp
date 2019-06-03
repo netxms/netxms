@@ -2217,7 +2217,7 @@ UINT32 AgentConnection::prepareFileDownload(const TCHAR *fileName, UINT32 rqId, 
       else
       {
          if (append)
-            lseek(m_hCurrFile, 0, SEEK_END);
+            _lseek(m_hCurrFile, 0, SEEK_END);
       }
 
       m_dwDownloadRequestId = rqId;

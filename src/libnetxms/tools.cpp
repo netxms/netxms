@@ -687,7 +687,7 @@ const TCHAR LIBNETXMS_EXPORTABLE *ExpandFileName(const TCHAR *name, TCHAR *buffe
 				char result[1024];
 
 				int rc = (int)fread(result, 1, 1023, p);
-				pclose(p);
+				_pclose(p);
 
 				if (rc > 0)
 				{

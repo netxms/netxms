@@ -191,7 +191,7 @@ THREAD_RESULT THREAD_CALL SendFileUpdatesOverNXCP(void *args)
             pMsg->setId(0);
             pMsg->setField(VID_FILE_NAME, flData->getFileId(), MAX_PATH);
 
-            lseek(hFile, flData->getOffset(), SEEK_SET);
+            _lseek(hFile, flData->getOffset(), SEEK_SET);
             readBytes = (BYTE*)malloc(readSize);
             readSize = _read(hFile, readBytes, readSize);
             AgentWriteDebugLog(6, _T("SendFileUpdatesOverNXCP: %d bytes will be sent."), readSize);

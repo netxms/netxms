@@ -771,7 +771,7 @@ bool LIBNETXMS_EXPORTABLE SendFileOverNXCP(AbstractCommChannel *channel, UINT32 
       size_t bytesToRead = (offset < 0) ? (0 - offset) : (fileSize - offset);
       INT64 bytesTransferred = 0;
 
-		if (lseek(hFile, offset, (offset < 0) ? SEEK_END : SEEK_SET) != -1)
+		if (_lseek(hFile, offset, (offset < 0) ? SEEK_END : SEEK_SET) != -1)
 		{
          StreamCompressor *compressor = (compressionMethod != NXCP_STREAM_COMPRESSION_NONE) ? StreamCompressor::create(compressionMethod, true, FILE_BUFFER_SIZE) : NULL;
          BYTE *compBuffer = (compressor != NULL) ? (BYTE *)malloc(FILE_BUFFER_SIZE) : NULL;

@@ -1530,12 +1530,12 @@ static void UpdateEnvironment()
          char *mbName = MBStringFromWideString(e->getName());
          char *mbValue = MBStringFromWideString(e->getValue());
          snprintf(env, len, "%s=%s", mbName, mbValue);
-         free(mbName);
-         free(mbValue);
+         MemFree(mbName);
+         MemFree(mbValue);
 #else
          sprintf(env, "%s=%s", e->getName(), e->getValue());
 #endif
-         putenv(env);
+         _putenv(env);
       }
    }
    delete entrySet;

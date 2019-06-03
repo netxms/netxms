@@ -26,10 +26,8 @@
 #include <expat.h>
 #include <nxstat.h>
 
-#if defined(_WIN32)
-#define isatty _isatty
-#elif !HAVE_ISATTY
-#define isatty(x) (true)
+#if !HAVE_ISATTY
+#define _isatty(x) (true)
 #endif
 
 /**
@@ -614,7 +612,7 @@ void ConfigEntry::addSubTree(const ConfigEntry *root, bool merge)
  */
 void ConfigEntry::print(FILE *file, int level, TCHAR *prefix)
 {
-   if (isatty(fileno(file)))
+   if (_isatty(_fileno(file)))
       WriteToTerminalEx(_T("%s\x1b[32;1m%s\x1b[0m\n"), prefix, m_name);
    else
       _tprintf(_T("%s%s\n"), prefix, m_name);
@@ -630,7 +628,7 @@ void ConfigEntry::print(FILE *file, int level, TCHAR *prefix)
    {
       for(int i = 0; i < m_values.size(); i++)
       {
-         if (isatty(fileno(file)))
+         if (_isatty(_fileno(file)))
             WriteToTerminalEx(_T("%s  value: \x1b[1m%s\x1b[0m\n"), prefix, m_values.get(i));
          else
             _tprintf(_T("%s  value: %s\n"), prefix, m_values.get(i));

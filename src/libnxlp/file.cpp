@@ -143,7 +143,7 @@ static off_t ParseNewRecords(LogParser *parser, int fh)
 
    do
    {
-      resetPos = lseek(fh, 0, SEEK_CUR);
+      resetPos = _lseek(fh, 0, SEEK_CUR);
       if ((bytes = _read(fh, &buffer[bufPos], READ_BUFFER_SIZE - bufPos)) > 0)
       {
          bytes += bufPos;
@@ -154,7 +154,7 @@ static off_t ParseNewRecords(LogParser *parser, int fh)
             if (eptr == NULL)
             {
 					int remaining = bytes - bufPos;
-               resetPos = lseek(fh, 0, SEEK_CUR) - remaining;
+               resetPos = _lseek(fh, 0, SEEK_CUR) - remaining;
 					if (remaining > 0)
 					{
 					   if (buffer != ptr)
@@ -376,7 +376,7 @@ static int ScanFileEncoding(int fh)
  */
 template<typename T> bool SkipZeroBlock(int fh)
 {
-   off_t startPos = lseek(fh, 0, SEEK_CUR);
+   off_t startPos = _lseek(fh, 0, SEEK_CUR);
 
    char buffer[4096];
    while(true)
@@ -389,14 +389,14 @@ template<typename T> bool SkipZeroBlock(int fh)
       {
          if (*p != 0)
          {
-            off_t pos = lseek(fh, i - bytes, SEEK_CUR);
+            off_t pos = _lseek(fh, i - bytes, SEEK_CUR);
             nxlog_debug_tag(DEBUG_TAG, 6, _T("LogParser: end of zero block found at %ld"), (long)pos);
             return true;
          }
       }
    }
 
-   lseek(fh, startPos, SEEK_SET);
+   _lseek(fh, startPos, SEEK_SET);
    return false;
 }
 
@@ -434,7 +434,7 @@ template<typename T> bool SeekToZero(int fh)
       {
          if (*p == 0)
          {
-            off_t pos = lseek(fh, i - bytes, SEEK_CUR);
+            off_t pos = _lseek(fh, i - bytes, SEEK_CUR);
             nxlog_debug_tag(DEBUG_TAG, 6, _T("Beginning of zero block found at %ld"), (long)pos);
             return true;
          }
@@ -470,7 +470,7 @@ static void SeekToZero(int fh, int chsize, bool detectBrokenPrealloc)
       if (SkipZeroBlock(fh, chsize))
       {
          nxlog_debug_tag(DEBUG_TAG, 4, _T("LogParser: broken preallocated file detected"));
-         lseek(fh, 0, SEEK_END); // assume that file has broken preallocation, read from end of file
+         _lseek(fh, 0, SEEK_END); // assume that file has broken preallocation, read from end of file
       }
    }
 }
@@ -558,7 +558,7 @@ bool LogParser::monitorFile()
       if (m_fileEncoding == -1)
       {
          m_fileEncoding = ScanFileEncoding(fh);
-         lseek(fh, 0, SEEK_SET);
+         _lseek(fh, 0, SEEK_SET);
       }
 
 		size_t size = (size_t)st.st_size;
@@ -567,7 +567,7 @@ bool LogParser::monitorFile()
 		{
 			nxlog_debug_tag(DEBUG_TAG, 5, _T("Parsing existing records in file \"%s\""), fname);
 			off_t resetPos = ParseNewRecords(this, fh);
-         lseek(fh, resetPos, SEEK_SET);
+         _lseek(fh, resetPos, SEEK_SET);
 		}
 		else if (m_preallocatedFile)
 		{
@@ -575,7 +575,7 @@ bool LogParser::monitorFile()
 		}
 		else
 		{
-			lseek(fh, 0, SEEK_END);
+			_lseek(fh, 0, SEEK_END);
 		}
 
 		while(true)
@@ -628,7 +628,7 @@ bool LogParser::monitorFile()
 				if (((size_t)st.st_size < size) || m_rescan)
 				{
 					// File was cleared, start from the beginning
-					lseek(fh, 0, SEEK_SET);
+					_lseek(fh, 0, SEEK_SET);
 					if (!m_rescan)
 					   nxlog_debug_tag(DEBUG_TAG, 3, _T("File \"%s\" st_size < size, assume file rotation"), fname);
 				}
@@ -636,7 +636,7 @@ bool LogParser::monitorFile()
 				mtime = st.st_mtime;
 				nxlog_debug_tag(DEBUG_TAG, 6, _T("New data available in file \"%s\""), fname);
 				off_t resetPos = ParseNewRecords(this, fh);
-				lseek(fh, resetPos, SEEK_SET);
+				_lseek(fh, resetPos, SEEK_SET);
 			}
 			else if (m_preallocatedFile)
 			{
@@ -644,25 +644,25 @@ bool LogParser::monitorFile()
 				int bytes = _read(fh, buffer, 4);
 				if ((bytes == 4) && memcmp(buffer, "\x00\x00\x00\x00", 4))
 				{
-               lseek(fh, -4, SEEK_CUR);
+               _lseek(fh, -4, SEEK_CUR);
 	            nxlog_debug_tag(DEBUG_TAG, 6, _T("New data available in file \"%s\""), fname);
 	            off_t resetPos = ParseNewRecords(this, fh);
-	            lseek(fh, resetPos, SEEK_SET);
+	            _lseek(fh, resetPos, SEEK_SET);
 				}
 				else
 				{
-               off_t pos = lseek(fh, -bytes, SEEK_CUR);
+               off_t pos = _lseek(fh, -bytes, SEEK_CUR);
                if (pos > 0)
                {
                   int readSize = std::min(pos, (off_t)4);
-                  lseek(fh, -readSize, SEEK_CUR);
+                  _lseek(fh, -readSize, SEEK_CUR);
                   int bytes = _read(fh, buffer, readSize);
                   if ((bytes == readSize) && !memcmp(buffer, "\x00\x00\x00\x00", readSize))
                   {
                      nxlog_debug_tag(DEBUG_TAG, 6, _T("Detected reset of preallocated file \"%s\""), fname);
-                     lseek(fh, 0, SEEK_SET);
+                     _lseek(fh, 0, SEEK_SET);
                      off_t resetPos = ParseNewRecords(this, fh);
-                     lseek(fh, resetPos, SEEK_SET);
+                     _lseek(fh, resetPos, SEEK_SET);
                   }
                }
 				}
@@ -792,7 +792,7 @@ bool LogParser::monitorFile2()
       if (m_fileEncoding == -1)
       {
          m_fileEncoding = ScanFileEncoding(fh);
-         lseek(fh, 0, SEEK_SET);
+         _lseek(fh, 0, SEEK_SET);
       }
 
       if (!readFromStart && !m_rescan)
@@ -802,31 +802,31 @@ bool LogParser::monitorFile2()
             if (m_preallocatedFile)
                SeekToZero(fh, getCharSize(), m_detectBrokenPrealloc);
             else
-               lseek(fh, 0, SEEK_END);
+               _lseek(fh, 0, SEEK_END);
             firstRead = false;
          }
          else
          {
-            lseek(fh, lastPos, SEEK_SET);
+            _lseek(fh, lastPos, SEEK_SET);
             char buffer[4];
             int bytes = _read(fh, buffer, 4);
             if ((bytes == 4) && memcmp(buffer, "\x00\x00\x00\x00", 4))
             {
-               lseek(fh, -4, SEEK_CUR);
+               _lseek(fh, -4, SEEK_CUR);
                nxlog_debug_tag(DEBUG_TAG, 6, _T("New data available in file \"%s\""), fname);
             }
             else
             {
-               off_t pos = lseek(fh, -bytes, SEEK_CUR);
+               off_t pos = _lseek(fh, -bytes, SEEK_CUR);
                if (pos > 0)
                {
                   int readSize = std::min(pos, (off_t)4);
-                  lseek(fh, -readSize, SEEK_CUR);
+                  _lseek(fh, -readSize, SEEK_CUR);
                   int bytes = _read(fh, buffer, readSize);
                   if ((bytes == readSize) && !memcmp(buffer, "\x00\x00\x00\x00", readSize))
                   {
                      nxlog_debug_tag(DEBUG_TAG, 6, _T("Detected reset of preallocated file \"%s\""), fname);
-                     lseek(fh, 0, SEEK_SET);
+                     _lseek(fh, 0, SEEK_SET);
                   }
                }
             }
@@ -947,7 +947,7 @@ bool LogParser::monitorFileWithSnapshot()
       if (m_fileEncoding == -1)
       {
          m_fileEncoding = ScanFileEncoding(fh);
-         lseek(fh, 0, SEEK_SET);
+         _lseek(fh, 0, SEEK_SET);
       }
 
       if (!readFromStart && !m_rescan)
@@ -957,12 +957,12 @@ bool LogParser::monitorFileWithSnapshot()
             if (m_preallocatedFile)
                SeekToZero(fh, getCharSize(), m_detectBrokenPrealloc);
             else
-               lseek(fh, 0, SEEK_END);
+               _lseek(fh, 0, SEEK_END);
             firstRead = false;
          }
          else
          {
-            lseek(fh, lastPos, SEEK_SET);
+            _lseek(fh, lastPos, SEEK_SET);
          }
       }
       readFromStart = false;

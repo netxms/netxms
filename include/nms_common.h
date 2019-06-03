@@ -305,20 +305,12 @@ typedef int bool;
 #define vscprintf    _vscprintf
 #define scwprintf    _scwprintf
 #define vscwprintf   _vscwprintf
-#define popen        _popen
-#define pclose       _pclose
 #define stricmp      _stricmp
 #define strnicmp     _strnicmp
 #define wcsicmp      _wcsicmp
 #define wcsnicmp     _wcsnicmp
 #define strlwr(s)    _strlwr(s)
 #define strupr(s)    _strupr(s)
-#define putenv(s)    _putenv(s)
-#define fileno(f)    _fileno(f)
-#define chdir(p)     _chdir(p)
-#define mkdir(p,m)   _mkdir(p,m)
-#define lseek(f,o,w) _lseek(f,o,w)
-#define unlink(x)    _unlink(x)
 
 typedef UINT64 QWORD;   // for compatibility
 typedef int socklen_t;
@@ -689,20 +681,38 @@ FILE *open_memstream(char **, size_t *);
 #ifdef __cplusplus
 
 inline int _access(const char *pathname, int mode) { return ::access(pathname, mode); }
+inline int chdir(const char *path) { return ::chdir(path);  }
 inline int _close(int fd) { return ::close(fd); }
+inline int _fileno(FILE *stream) { return ::fileno(stream); }
 inline int _isatty(int fd) { return ::isatty(fd); }
+inline off_t _lseek(int fd, off_t offset, int whence) { return ::lseek(fd, offset, whence);  }
+inline int _mkdir(const char *pathname, mode_t mode) { return ::mkdir(pathname, mode); }
 inline int _open(const char *pathname, int flags) { return ::open(pathname, flags); }
 inline int _open(const char *pathname, int flags, mode_t mode) { return ::open(pathname, flags, mode); }
+inline int pclose(FILE *stream) { return ::pclose(stream); }
+inline FILE *_popen(const char *command, const char *type) { return ::popen(command, type); }
+inline int _putenv(char *string) { return ::putenv(string); }
 inline ssize_t _read(int fd, void *buf, size_t count) { return ::read(fd, buf, count); }
+inline int _remove(const char *pathname) { return ::remove(pathname); }
+inline int _unlink(const char *pathname) { return ::unlink(pathname); }
 inline ssize_t _write(int fd, const void *buf, size_t count) { return ::write(fd, buf, count); }
 
 #else
 
 #define _access(p, m)      access((p), (m))
+#define _chdir(p)          chdir(p)
 #define _close(f)          close(f)
+#define _fileno(f)         fileno(f)
 #define _isatty(f)         isatty(f)
+#define _lseek(f, o, w)    lseek((f), (o) ,(w))
+#define _mkdir(p, m)       mkdir((p), (m))
 #define _open              open
+#define _pclose(f)         pclose(f)
+#define _popen(c, m)       popen((c), (m))
+#define _putenv(s)         putenv(s)
 #define _read(f, b, l)     read((f), (b), (l))
+#define _remove(f)         remove(f)
+#define _unlink(f)         unlink(f)
 #define _write(f, b, l)    write((f), (b), (l))
 
 #endif
