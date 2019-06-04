@@ -1648,6 +1648,8 @@ if test "x$CXX" = "xCC" ; then
 		fi
 	fi
 
+	AC_CXX_CHECK_OPTION(-std=c++11)
+
 	AC_MSG_CHECKING(whether C compiler supports symbol visibility control)
 	OLD_CPPFLAGS="$CPPFLAGS"
 	CPPFLAGS="$CPPFLAGS -xldscope=hidden"
