@@ -1275,8 +1275,7 @@ void NetObj::fillMessage(NXCPMessage *msg, UINT32 userId)
  */
 static void BroadcastObjectChange(ClientSession *pSession, void *pArg)
 {
-   if (pSession->isAuthenticated())
-      pSession->onObjectChange((NetObj *)pArg);
+   pSession->onObjectChange((NetObj *)pArg);
 }
 
 /**
