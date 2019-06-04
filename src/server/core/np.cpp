@@ -409,7 +409,7 @@ class NXSL_DiscoveredInterfaceClass : public NXSL_Class
 public:
    NXSL_DiscoveredInterfaceClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *pObject, const char *pszAttr);
+   virtual NXSL_Value *getAttr(NXSL_Object *pObject, const char *attr);
 };
 
 /**
@@ -423,54 +423,63 @@ NXSL_DiscoveredInterfaceClass::NXSL_DiscoveredInterfaceClass() : NXSL_Class()
 /**
  * Implementation of NXSL class "DiscoveredInterface" - get attribute
  */
-NXSL_Value *NXSL_DiscoveredInterfaceClass::getAttr(NXSL_Object *object, const char *pszAttr)
+NXSL_Value *NXSL_DiscoveredInterfaceClass::getAttr(NXSL_Object *object, const char *attr)
 {
    NXSL_VM *vm = object->vm();
    InterfaceInfo *iface = static_cast<InterfaceInfo*>(object->getData());
    NXSL_Value *value = NULL;
 
-   if (!strcmp(pszAttr, "alias"))
+   if (!strcmp(attr, "alias"))
    {
       value = vm->createValue(iface->alias);
    }
-   else if (!strcmp(pszAttr, "description"))
+   else if (!strcmp(attr, "description"))
    {
       value = vm->createValue(iface->description);
    }
-   else if (!strcmp(pszAttr, "index"))
+   else if (!strcmp(attr, "index"))
    {
       value = vm->createValue(iface->index);
    }
-   else if (!strcmp(pszAttr, "isPhysicalPort"))
+   else if (!strcmp(attr, "ipAddressList"))
+   {
+      NXSL_Array *a = new NXSL_Array(vm);
+      for(int i = 0; i < iface->ipAddrList.size(); i++)
+      {
+         a->append(NXSL_InetAddressClass::createObject(vm, iface->ipAddrList.get(i)));
+      }
+      value = vm->createValue(a);
+   }
+   else if (!strcmp(attr, "isPhysicalPort"))
    {
       value = vm->createValue(iface->isPhysicalPort);
    }
-   else if (!strcmp(pszAttr, "macAddr"))
+   else if (!strcmp(attr, "macAddr"))
    {
       TCHAR buffer[64];
       value = vm->createValue(MACToStr(iface->macAddr, buffer));
    }
-   else if (!strcmp(pszAttr, "mtu"))
+   else if (!strcmp(attr, "mtu"))
    {
       value = vm->createValue(iface->mtu);
    }
-   else if (!strcmp(pszAttr, "name"))
+   else if (!strcmp(attr, "name"))
    {
       value = vm->createValue(iface->name);
    }
-   else if (!strcmp(pszAttr, "port"))
+   else if (!strcmp(attr, "port"))
    {
       value = vm->createValue(iface->port);
    }
-   else if (!strcmp(pszAttr, "slot"))
+   else if (!strcmp(attr, "slot"))
    {
       value = vm->createValue(iface->slot);
    }
-   else if (!strcmp(pszAttr, "speed"))
+   else if (!strcmp(attr, "speed"))
    {
       value = vm->createValue(iface->speed);
    }
-   else if (!strcmp(pszAttr, "type"))
+   else if (!strcmp(attr, "type"))
    {
       value = vm->createValue(iface->type);
    }

@@ -992,10 +992,6 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *object, const char *attr)
       }
       value = vm->createValue(a);
    }
-   else if (!strcmp(attr, "ipNetMask"))
-   {
-      value = vm->createValue(iface->getIpAddressList()->getFirstUnicastAddress().getMaskBits());
-   }
    else if (!strcmp(attr, "isExcludedFromTopology"))
    {
       value = vm->createValue((LONG)(iface->isExcludedFromTopology() ? 1 : 0));
