@@ -407,18 +407,15 @@ static void CheckHostRoute(Node *node, ROUTE *route)
  */
 static void DiscoveryPoller(void *arg)
 {
-   PollerInfo *poller = (PollerInfo *)arg;
+   PollerInfo *poller = static_cast<PollerInfo*>(arg);
    poller->startExecution();
 
-   if (IsShutdownInProgress())
-   {
-      delete poller;
-      return;
-   }
-
    Node *node = static_cast<Node*>(poller->getObject());
-	if (node->isDeleteInitiated())
+	if (node->isDeleteInitiated() || IsShutdownInProgress())
 	{
+	   nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Discovery poll for node %s (%s) in zone %d aborted"),
+	             node->getName(), (const TCHAR *)node->getIpAddress().toString(), (int)node->getZoneUIN());
+      node->setDiscoveryPollTimeStamp();
       delete poller;
       return;
 	}
@@ -437,6 +434,15 @@ static void DiscoveryPoller(void *arg)
 				CheckPotentialNode(node, e->ipAddr, e->ifIndex, e->macAddr.value(), DA_SRC_ARP_CACHE, node->getId());
       }
       pArpCache->decRefCount();
+   }
+
+   if (node->isDeleteInitiated() || IsShutdownInProgress())
+   {
+      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Discovery poll for node %s (%s) in zone %d aborted"),
+                node->getName(), (const TCHAR *)node->getIpAddress().toString(), (int)node->getZoneUIN());
+      node->setDiscoveryPollTimeStamp();
+      delete poller;
+      return;
    }
 
 	// Retrieve and analyze node's routing table

@@ -739,20 +739,24 @@ void Sensor::statusPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId)
    poller->setStatus(_T("hook"));
    executeHookScript(_T("StatusPoll"));
 
+   lockProperties();
+   m_lastStatusPoll = time(NULL);
    if (rqId == 0)
-      unlockForStatusPoll();
-
+      m_runtimeFlags &= ~DCDF_QUEUED_FOR_STATUS_POLL;
    if (prevState != m_state)
       setModified(MODIFY_SENSOR_PROPERTIES);
+   unlockProperties();
 
    sendPollerMsg(rqId, _T("Finished status poll for sensor %s\r\n"), m_name);
    sendPollerMsg(rqId, _T("Sensor status after poll is %s\r\n"), GetStatusAsText(m_status, true));
 
    pollerUnlock();
-   m_lastStatusPoll = time(NULL);
    nxlog_debug(5, _T("Finished status poll for sensor %s (ID: %d)"), m_name, m_id);
 }
 
+/**
+ * Set all required parameters for LoRaWAN request
+ */
 void Sensor::prepareLoraDciParameters(String &parameter)
 {
    int place = parameter.find(_T(")"));
@@ -995,7 +999,7 @@ void Sensor::prepareForDeletion()
    nxlog_debug(4, _T("Sensor::PrepareForDeletion(%s [%d]): no outstanding polls left"), m_name, m_id);
 
    AgentConnectionEx *conn = getAgentConnection();
-   if(m_commProtocol == COMM_LORAWAN && conn != NULL)
+   if ((m_commProtocol == COMM_LORAWAN) && (conn != NULL))
    {
       NXCPMessage msg(conn->getProtocolVersion());
       msg.setCode(CMD_UNREGISTER_LORAWAN_SENSOR);

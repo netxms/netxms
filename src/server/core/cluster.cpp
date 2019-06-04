@@ -508,7 +508,7 @@ bool Cluster::isVirtualAddr(const InetAddress& addr)
 void Cluster::configurationPoll(PollerInfo *poller, ClientSession *pSession, UINT32 dwRqId)
 {
    lockProperties();
-   if (m_isDeleteInitiated)
+   if (m_isDeleteInitiated || IsShutdownInProgress())
    {
       if (dwRqId == 0)
          m_runtimeFlags &= ~DCDF_QUEUED_FOR_STATUS_POLL;
@@ -522,6 +522,8 @@ void Cluster::configurationPoll(PollerInfo *poller, ClientSession *pSession, UIN
 
    if (IsShutdownInProgress())
    {
+      if (dwRqId == 0)
+         unlockForConfigurationPoll();
       pollerUnlock();
       return;
    }
@@ -537,19 +539,21 @@ void Cluster::configurationPoll(PollerInfo *poller, ClientSession *pSession, UIN
    if (ConfigReadBoolean(_T("ClusterContainerAutoBind"), false))
       updateContainerMembership();
 
-   lockProperties();
-   m_lastConfigurationPoll = time(NULL);
-   m_runtimeFlags &= ~DCDF_QUEUED_FOR_CONFIGURATION_POLL;
-   unlockProperties();
-
    poller->setStatus(_T("hook"));
    executeHookScript(_T("ConfigurationPoll"));
 
    sendPollerMsg(dwRqId, _T("CLUSTER CONFIGURATION POLL [%s]: Finished\r\n"), m_name);
    DbgPrintf(6, _T("CLUSTER CONFIGURATION POLL [%s]: Finished"), m_name);
 
-   pollerUnlock();
+   lockProperties();
+   m_lastConfigurationPoll = time(NULL);
+   if (dwRqId == 0)
+      m_runtimeFlags &= ~DCDF_QUEUED_FOR_CONFIGURATION_POLL;
+   m_runtimeFlags &= ~DCDF_CONFIGURATION_POLL_PENDING;
    m_runtimeFlags |= DCDF_CONFIGURATION_POLL_PASSED;
+   unlockProperties();
+
+   pollerUnlock();
 }
 
 /**
@@ -558,7 +562,7 @@ void Cluster::configurationPoll(PollerInfo *poller, ClientSession *pSession, UIN
 void Cluster::statusPoll(PollerInfo *poller, ClientSession *pSession, UINT32 dwRqId)
 {
    lockProperties();
-   if (m_isDeleteInitiated)
+   if (m_isDeleteInitiated || IsShutdownInProgress())
    {
       if (dwRqId == 0)
          m_runtimeFlags &= ~DCDF_QUEUED_FOR_STATUS_POLL;
@@ -572,6 +576,8 @@ void Cluster::statusPoll(PollerInfo *poller, ClientSession *pSession, UINT32 dwR
 
    if (IsShutdownInProgress())
    {
+      if (dwRqId == 0)
+         unlockForStatusPoll();
       pollerUnlock();
       return;
    }
@@ -627,7 +633,11 @@ void Cluster::statusPoll(PollerInfo *poller, ClientSession *pSession, UINT32 dwR
 	// Check for cluster resource movement
 	if (!allDown)
 	{
-		BYTE *resourceFound = (BYTE *)calloc(m_dwNumResources, 1);
+#if HAVE_ALLOCA
+      BYTE *resourceFound = static_cast<BYTE*>(alloca(m_dwNumResources));
+#else
+		BYTE *resourceFound = MemAllocArray<BYTE>(m_dwNumResources);
+#endif
 
       poller->setStatus(_T("resource poll"));
 	   sendPollerMsg(dwRqId, _T("CLUSTER STATUS POLL [%s]: Polling resources\r\n"), m_name);
@@ -706,7 +716,9 @@ void Cluster::statusPoll(PollerInfo *poller, ClientSession *pSession, UINT32 dwR
 			}
 		}
 		unlockProperties();
-		free(resourceFound);
+#if !HAVE_ALLOCA
+		MemFree(resourceFound);
+#endif
 	}
 
    // Execute hook script
