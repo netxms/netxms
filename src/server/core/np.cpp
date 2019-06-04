@@ -499,7 +499,7 @@ class NXSL_DiscoveredNodeClass : public NXSL_Class
 public:
    NXSL_DiscoveredNodeClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *pObject, const char *pszAttr);
+   virtual NXSL_Value *getAttr(NXSL_Object *pObject, const char *attr);
 };
 
 /**
@@ -513,17 +513,17 @@ NXSL_DiscoveredNodeClass::NXSL_DiscoveredNodeClass() : NXSL_Class()
 /**
  * Implementation of NXSL class "DiscoveredNode" - get attribute
  */
-NXSL_Value *NXSL_DiscoveredNodeClass::getAttr(NXSL_Object *object, const char *pszAttr)
+NXSL_Value *NXSL_DiscoveredNodeClass::getAttr(NXSL_Object *object, const char *attr)
 {
    NXSL_VM *vm = object->vm();
    DiscoveryFilterData *data = static_cast<DiscoveryFilterData*>(object->getData());
    NXSL_Value *value = NULL;
 
-   if (!strcmp(pszAttr, "agentVersion"))
+   if (!strcmp(attr, "agentVersion"))
    {
       value = vm->createValue(data->agentVersion);
    }
-   else if (!strcmp(pszAttr, "dnsName"))
+   else if (!strcmp(attr, "dnsName"))
    {
       if (data->dnsName[0] == 0)
       {
@@ -554,7 +554,7 @@ NXSL_Value *NXSL_DiscoveredNodeClass::getAttr(NXSL_Object *object, const char *p
       }
       value = vm->createValue(data->dnsName);
    }
-   else if (!strcmp(pszAttr, "interfaces"))
+   else if (!strcmp(attr, "interfaces"))
    {
       NXSL_Array *array = new NXSL_Array(vm);
       if (data->ifList != NULL)
@@ -564,70 +564,70 @@ NXSL_Value *NXSL_DiscoveredNodeClass::getAttr(NXSL_Object *object, const char *p
       }
       value = vm->createValue(array);
    }
-   else if (!strcmp(pszAttr, "ipAddr"))
+   else if (!strcmp(attr, "ipAddr"))
    {
       TCHAR buffer[64];
       value = vm->createValue(data->ipAddr.toString(buffer));
    }
-   else if (!strcmp(pszAttr, "isAgent"))
+   else if (!strcmp(attr, "isAgent"))
    {
       value = vm->createValue((LONG)((data->flags & NNF_IS_AGENT) ? 1 : 0));
    }
-   else if (!strcmp(pszAttr, "isBridge"))
+   else if (!strcmp(attr, "isBridge"))
    {
       value = vm->createValue((LONG)((data->flags & NNF_IS_BRIDGE) ? 1 : 0));
    }
-   else if (!strcmp(pszAttr, "isCDP"))
+   else if (!strcmp(attr, "isCDP"))
    {
       value = vm->createValue((LONG)((data->flags & NNF_IS_CDP) ? 1 : 0));
    }
-   else if (!strcmp(pszAttr, "isLLDP"))
+   else if (!strcmp(attr, "isLLDP"))
    {
       value = vm->createValue((LONG)((data->flags & NNF_IS_LLDP) ? 1 : 0));
    }
-   else if (!strcmp(pszAttr, "isPrinter"))
+   else if (!strcmp(attr, "isPrinter"))
    {
       value = vm->createValue((LONG)((data->flags & NNF_IS_PRINTER) ? 1 : 0));
    }
-   else if (!strcmp(pszAttr, "isRouter"))
+   else if (!strcmp(attr, "isRouter"))
    {
       value = vm->createValue((LONG)((data->flags & NNF_IS_ROUTER) ? 1 : 0));
    }
-   else if (!strcmp(pszAttr, "isSNMP"))
+   else if (!strcmp(attr, "isSNMP"))
    {
       value = vm->createValue((LONG)((data->flags & NNF_IS_SNMP) ? 1 : 0));
    }
-   else if (!strcmp(pszAttr, "isSONMP"))
+   else if (!strcmp(attr, "isSONMP"))
    {
       value = vm->createValue((LONG)((data->flags & NNF_IS_SONMP) ? 1 : 0));
    }
-   else if (!strcmp(pszAttr, "netMask"))
+   else if (!strcmp(attr, "netMask"))
    {
       value = vm->createValue(data->ipAddr.getMaskBits());
    }
-   else if (!strcmp(pszAttr, "platformName"))
+   else if (!strcmp(attr, "platformName"))
    {
       value = vm->createValue(data->platform);
    }
-   else if (!strcmp(pszAttr, "snmpOID"))
+   else if (!strcmp(attr, "snmpOID"))
    {
       value = vm->createValue(data->snmpObjectId);
    }
-   else if (!strcmp(pszAttr, "snmpVersion"))
+   else if (!strcmp(attr, "snmpVersion"))
    {
       value = vm->createValue((LONG)data->snmpVersion);
    }
-   else if (!strcmp(pszAttr, "subnet"))
+   else if (!strcmp(attr, "subnet"))
    {
       TCHAR buffer[64];
       value = vm->createValue(data->ipAddr.getSubnetAddress().toString(buffer));
    }
-   else if (!strcmp(pszAttr, "zone"))
+   else if (!strcmp(attr, "zone"))
    {
       Zone *zone = FindZoneByUIN(data->zoneUIN);
       value = (zone != NULL) ? zone->createNXSLObject(vm) : vm->createValue();
    }
-   else if (!strcmp(pszAttr, "zoneUIN"))
+   else if (!strcmp(attr, "zoneUIN"))
    {
       value = vm->createValue(data->zoneUIN);
    }
@@ -864,11 +864,6 @@ static BOOL AcceptNewNode(NewNodeData *newNodeData, BYTE *macAddr)
       }
    }
 
-   // Cleanup
-   if (pAgentConn != NULL)
-      pAgentConn->decRefCount();
-	delete pTransport;
-
    // Check if we use simple filter instead of script
    if (!_tcsicmp(szFilter, _T("auto")))
    {
@@ -899,8 +894,17 @@ static BOOL AcceptNewNode(NewNodeData *newNodeData, BYTE *macAddr)
       if (vm != NULL)
       {
          nxlog_debug_tag(DEBUG_TAG, 4, _T("AcceptNewNode(%s): Running filter script %s"), szIpAddr, szFilter);
-         NXSL_Value *pValue = vm->createValue(new NXSL_Object(vm, &s_nxslDiscoveredNodeClass, &data));
-         if (vm->run(1, &pValue))
+
+         if (pTransport != NULL)
+         {
+            vm->setGlobalVariable("$snmp", vm->createValue(new NXSL_Object(vm, &g_nxslSnmpTransportClass, pTransport)));
+            pTransport = NULL;   // Transport will be deleted by NXSL object destructor
+         }
+         // TODO: make agent connection available in script
+         vm->setGlobalVariable("$node", vm->createValue(new NXSL_Object(vm, &s_nxslDiscoveredNodeClass, &data)));
+
+         NXSL_Value *param = vm->createValue(new NXSL_Object(vm, &s_nxslDiscoveredNodeClass, &data));
+         if (vm->run(1, &param))
          {
             bResult = (vm->getResult()->getValueAsInt32() != 0) ? TRUE : FALSE;
             nxlog_debug_tag(DEBUG_TAG, 4, _T("AcceptNewNode(%s): Filter script result: %d"), szIpAddr, bResult);
@@ -918,6 +922,11 @@ static BOOL AcceptNewNode(NewNodeData *newNodeData, BYTE *macAddr)
          nxlog_debug_tag(DEBUG_TAG, 4, _T("AcceptNewNode(%s): Cannot find filter script %s"), szIpAddr, szFilter);
       }
    }
+
+   // Cleanup
+   if (pAgentConn != NULL)
+      pAgentConn->decRefCount();
+   delete pTransport;
 
    return bResult;
 }
