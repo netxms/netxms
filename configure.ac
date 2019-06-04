@@ -1296,6 +1296,7 @@ fi
 
 case "$PLATFORM" in
    AIX)
+      CPPFLAGS="$CPPFLAGS -D_THREAD_SAFE=1"
       LDFLAGS_PREFIX="-no-undefined -Wl,-brtl $LDFLAGS"
       AC_CPP_CHECK_OPTION(-qsuppress=1540-1401)
       AC_CPP_CHECK_OPTION(-qsuppress=1506-356)

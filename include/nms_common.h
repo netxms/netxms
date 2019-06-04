@@ -682,7 +682,7 @@ FILE *open_memstream(char **, size_t *);
 inline int _access(const char *pathname, int mode) { return ::access(pathname, mode); }
 inline int _chdir(const char *path) { return ::chdir(path);  }
 inline int _close(int fd) { return ::close(fd); }
-inline int _fileno(FILE *stream) { return ::fileno(stream); }
+inline int _fileno(FILE *stream) { return fileno(stream); }
 inline int _isatty(int fd) { return ::isatty(fd); }
 inline off_t _lseek(int fd, off_t offset, int whence) { return ::lseek(fd, offset, whence);  }
 inline int _mkdir(const char *pathname, mode_t mode) { return ::mkdir(pathname, mode); }
