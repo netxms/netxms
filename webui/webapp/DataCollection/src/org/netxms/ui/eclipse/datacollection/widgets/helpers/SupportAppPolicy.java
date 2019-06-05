@@ -9,7 +9,7 @@ import org.simpleframework.xml.Root;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
 
-@Root(name="SupportAppPolicy")
+@Root(name="SupportAppPolicy", strict=false)
 public class SupportAppPolicy
 {
    @Element(required=false)
@@ -37,7 +37,7 @@ public class SupportAppPolicy
    public Integer menuTextColor;
    
    @Element(required=false)
-   public String logo;
+   public String icon;
    
    @Element(required=false)
    public String welcomeMessage;
@@ -56,7 +56,7 @@ public class SupportAppPolicy
    {
       Serializer serializer = new Persister();
       SupportAppPolicy obj = serializer.read(SupportAppPolicy.class, xml);
-      obj.updateParents();
+      obj.updateMenuParents();
       return obj;
    }
    
@@ -74,30 +74,43 @@ public class SupportAppPolicy
       return writer.toString();
    }
    
-   public void setLogo(byte bs[])
+   /**
+    * Set application icon
+    * 
+    * @param content application icon file content (in ICO format)
+    */
+   public void setIcon(byte[] content)
    {
-      if(bs != null)
+      if (content != null)
       {
          try
          {
-            logo = new String(Base64.encodeBase64(bs, false), "ISO-8859-1");
+            icon = new String(Base64.encodeBase64(content), "ISO-8859-1");
          }
          catch(UnsupportedEncodingException e)
          {
-            logo = null;
+            icon = null;
          }
       }
       else
-         logo = null;
+      {
+         icon = null;
+      }
    }
 	
-   public byte[] getLogo() 
+   /**
+    * Get application icon file content (in ICO format)
+    * 
+    * @return application icon file content (in ICO format)
+    */
+   public byte[] getIcon() 
    {
-      if(logo == null)
+      if (icon == null)
          return null;
+      
       try
       {
-         return Base64.decodeBase64(logo.getBytes("ISO-8859-1"));
+         return Base64.decodeBase64(icon.getBytes("ISO-8859-1"));
       }
       catch(UnsupportedEncodingException e)
       {
@@ -105,7 +118,10 @@ public class SupportAppPolicy
       }
    }
 
-   public void updateParents()
+   /**
+    * Update parent references in menu items
+    */
+   public void updateMenuParents()
    {
       menu.updateParents(null);
    }

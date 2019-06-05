@@ -22,12 +22,13 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.preference.ColorSelector;
-import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
@@ -76,6 +77,8 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
    public static final int COMMAND = 2;
    public static final int ICON = 3;
    
+   private static final int[] IMAGE_SIZE = { 128, 64, 32, 16 };
+   
    private ColorSelector backgroundColor;
    private ColorSelector borderColor;
    private ColorSelector headerColor;
@@ -92,8 +95,9 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
    private Action editAction;
    private SortableTreeViewer viewer;
    private SupportAppPolicy sPolicy;
-   private Label iconLabel;
-   private Image icon;
+   private Label[] iconBox = new Label[4];
+   private Image[] iconPreview = new Image[4];
+   private byte[] iconFile = null;
 
    /**
     * Constructor
@@ -125,7 +129,7 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
       setLayout(layout);
       
       // Image
-      createIconSelector(this);
+      createIconSelector();
       
       Composite colorSelectors = new Composite(this, SWT.NONE);
       layout = new GridLayout();
@@ -144,7 +148,6 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
       setColorSchemaCheckbox.setLayoutData(gd);
       setColorSchemaCheckbox.setSelection(sPolicy.menuBackgroundColor != null);
       
-      
       backgroundColor = WidgetHelper.createLabeledColorSelector(colorSelectors, "Background", WidgetHelper.DEFAULT_LAYOUT_DATA);    
       textColor = WidgetHelper.createLabeledColorSelector(colorSelectors, "Text", WidgetHelper.DEFAULT_LAYOUT_DATA);      
       borderColor = WidgetHelper.createLabeledColorSelector(colorSelectors, "Border", WidgetHelper.DEFAULT_LAYOUT_DATA);     
@@ -153,8 +156,6 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
       menuTextColor = WidgetHelper.createLabeledColorSelector(colorSelectors, "Menu text", WidgetHelper.DEFAULT_LAYOUT_DATA);
       menuHighligtColor = WidgetHelper.createLabeledColorSelector(colorSelectors, "Menu highlight", WidgetHelper.DEFAULT_LAYOUT_DATA);
       menuSelectionColor = WidgetHelper.createLabeledColorSelector(colorSelectors, "Menu selection", WidgetHelper.DEFAULT_LAYOUT_DATA);
-
-      
       
       welcomeMessageText = WidgetHelper.createLabeledText(this, SWT.MULTI | SWT.BORDER, SWT.DEFAULT,
             "Welcome message", "", WidgetHelper.DEFAULT_LAYOUT_DATA);
@@ -162,7 +163,6 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
       data.heightHint = 100;
       welcomeMessageText.setLayoutData(data);
       
-      //ListOfActions
       final String[] columnNames = { "Name", "Display name", "Command", "Icon" };
       final int[] columnWidths = { 300, 300, 300, 300 };         
       viewer = new SortableTreeViewer(this, columnNames, columnWidths, 0, SWT.UP, SortableTableViewer.DEFAULT_STYLE);
@@ -236,56 +236,26 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
    }
    
    /**
-    * Create icon
-    */
-   @SuppressWarnings("deprecation")
-   private void createIcon()
-   {
-      if (icon != null) 
-      {
-         icon.dispose();
-         icon = null;
-      }
-      
-      byte[] imageBytes = sPolicy.getLogo();
-      if ((imageBytes == null) || (imageBytes.length == 0))
-         return;
-      
-      ByteArrayInputStream input = new ByteArrayInputStream(imageBytes);
-      try
-      {
-         ImageDescriptor d = ImageDescriptor.createFromImageData(new ImageData(input));
-         icon = d.createImage();
-      }
-      catch(Exception e)
-      {
-         Activator.logError("Exception in General.createIcon()", e); //$NON-NLS-1$
-      }
-   }
-   
-   /**
     * @param parent
     */
-   private void createIconSelector(Composite parent)
+   private void createIconSelector()
    {
-      Group group = new Group(parent, SWT.NONE);
-      group.setText("Logo");
+      Group group = new Group(this, SWT.NONE);
+      group.setText("Application Icon");
       GridData gd = new GridData(SWT.FILL, SWT.FILL, false, false);
       group.setLayoutData(gd);
       
       GridLayout layout = new GridLayout();
-      layout.numColumns = 3;
+      layout.numColumns = 4;
+      layout.makeColumnsEqualWidth = true;
       group.setLayout(layout);
-      
-      iconLabel = new Label(group, SWT.CENTER);
-      iconLabel.setImage(icon);
-      gd = new GridData(SWT.FILL, SWT.FILL, true, true);
-      gd.widthHint = 256;
-      gd.heightHint = 256;
-      iconLabel.setLayoutData(gd);
-      
+   
+      for(int i = 0; i < IMAGE_SIZE.length; i++)
+         createIconPreviewControl(group, i);
+
       Button link = new Button(group, SWT.PUSH);
       link.setImage(SharedIcons.IMG_FIND);
+      link.setText("Select");
       link.setToolTipText("Select");
       link.addSelectionListener(new SelectionAdapter() {
          @Override
@@ -294,22 +264,59 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
             selectIcon();
          }
       });
+      link.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 
       link = new Button(group, SWT.PUSH);
       link.setImage(SharedIcons.IMG_CLEAR);
+      link.setText("Clear");
       link.setToolTipText("Clear");
       link.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
          {
-            iconLabel.setImage(SharedIcons.IMG_EMPTY);
-            if (icon != null)
+            iconFile = null;
+            for(int i = 0; i < IMAGE_SIZE.length; i++)
             {
-               icon.dispose();
-               icon = null;
+               if (iconPreview[i] != null)
+               {
+                  iconPreview[i].dispose();
+                  iconPreview[i] = null;
+               }
+               iconBox[i].setImage(null);
             }
+            fireModifyListeners();
          }
       });
+      link.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+   }
+   
+   /**
+    * Create icon selector
+    * 
+    * @param parent
+    * @param sizeIndex
+    */
+   private void createIconPreviewControl(Composite parent, final int sizeIndex)
+   {
+      Composite selector = new Composite(parent, SWT.NONE);
+      GridLayout layout = new GridLayout();
+      selector.setLayout(layout);
+      layout.numColumns = 2;
+      layout.makeColumnsEqualWidth = true;
+      selector.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+      
+      Label title = new Label(selector, SWT.CENTER);
+      title.setText(String.format("%dx%d", IMAGE_SIZE[sizeIndex], IMAGE_SIZE[sizeIndex]));
+      GridData gd = new GridData(SWT.CENTER, SWT.FILL, true, false);
+      gd.horizontalSpan = 2;
+      title.setLayoutData(gd);
+      
+      iconBox[sizeIndex] = new Label(selector, SWT.CENTER | SWT.BORDER);
+      gd = new GridData(SWT.FILL, SWT.FILL, true, true);
+      gd.widthHint = 128;
+      gd.heightHint = 128;
+      gd.horizontalSpan = 2;
+      iconBox[sizeIndex].setLayoutData(gd);
    }
    
    /**
@@ -345,7 +352,7 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
          @Override
          public void run()
          {
-            deleteMenuItem();
+            deleteMenuItems();
          }
       };
    }
@@ -373,7 +380,10 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
       viewer.getControl().setMenu(menu);
    }
 
-   private void deleteMenuItem()
+   /**
+    * Delete selected menu items
+    */
+   private void deleteMenuItems()
    {
       IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
       if (selection.isEmpty())
@@ -385,6 +395,9 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
       fireModifyListeners();
    }
 
+   /**
+    * Edit menu item
+    */
    private void editMenuItem()
    { 
       IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
@@ -400,6 +413,11 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
       fireModifyListeners();
    }
    
+   /**
+    * Create new menu item
+    * 
+    * @param isSubMenu true if new item is a sub-menu
+    */
    private void createMenuItem(boolean isSubMenu)
    {
       IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
@@ -423,32 +441,97 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
    private void selectIcon()
    {
       FileDialog dlg = new FileDialog(getShell(), SWT.OPEN);
-      dlg.setFilterExtensions(new String[] { "*.gif;*.jpg;*.png", "*.*" }); //$NON-NLS-1$ //$NON-NLS-2$
-      dlg.setFilterNames(new String[] { "Image files", "All files" });
+      dlg.setFilterExtensions(new String[] { "*.ico", "*.*" }); //$NON-NLS-1$ //$NON-NLS-2$
+      dlg.setFilterNames(new String[] { "Icon files", "All files" });
       String fileName = dlg.open();
       if (fileName == null)
          return;
       
+      InputStream in = null;
       try
       {
-         Image image = new Image(getShell().getDisplay(), new FileInputStream(new File(fileName)));
-         if ((image.getImageData().width <= 256) && (image.getImageData().height <= 256))
-         { 
-            if (icon != null)
-               icon.dispose();
-            icon = image;
-            iconLabel.setImage(icon);
-         }
-         else
-         {
-            image.dispose();
-            MessageDialogHelper.openError(getShell(), "Error", "Image is too large");
-         }
+         in = new FileInputStream(new File(fileName));
+         ByteArrayOutputStream out = new ByteArrayOutputStream();
+         byte[] buffer = new byte[8192];
+         int bytes;
+         while((bytes = in.read(buffer)) > 0)
+            out.write(buffer, 0, bytes);
+         iconFile = out.toByteArray();
+
+         updateIconPreview();
+         fireModifyListeners();
       }
       catch(Exception e)
       {
-         MessageDialogHelper.openError(getShell(),"Error", String.format("Can not load image %s", e.getLocalizedMessage()));
+         MessageDialogHelper.openError(getShell(), "Error", String.format("Cannot load image: %s", e.getLocalizedMessage()));
       }
+      finally
+      {
+         if (in != null)
+         {
+            try
+            {
+               in.close();
+            }
+            catch(IOException e)
+            {
+            }
+         }
+      }
+   }
+   
+   /**
+    * Update icon preview
+    */
+   private void updateIconPreview()
+   {
+      for(int i = 0; i < IMAGE_SIZE.length; i++)
+      {
+         if (iconPreview[i] != null)
+         {
+            iconPreview[i].dispose();
+            iconPreview[i] = null;
+         }
+      }
+      if ((iconFile != null) && (iconFile.length != 0))
+      {
+         ByteArrayInputStream input = new ByteArrayInputStream(iconFile);
+         try
+         {
+            ImageLoader loader = new ImageLoader();
+            ImageData[] data = loader.load(input);
+            for(int i = 0; i < data.length; i++)
+            {
+               for(int j = 0; j < IMAGE_SIZE.length; j++)
+               {
+                  int size = IMAGE_SIZE[j];
+                  if ((data[i].width == size) && (data[i].height == size))
+                  {
+                     if (iconPreview[j] != null)
+                        iconPreview[j].dispose();
+                     iconPreview[j] = new Image(getDisplay(), data[i]);
+                     break;
+                  }
+               }
+            }
+         }
+         catch(Exception e)
+         {
+            Activator.logError("Exception while updating ", e); //$NON-NLS-1$
+         }
+      }
+      
+      for(int i = 0; i < IMAGE_SIZE.length; i++)
+         iconBox[i].setImage(iconPreview[i]);
+   }
+   
+   /**
+    * Create preview images
+    */
+   private void updateIconFromPolicy()
+   {
+      iconFile = sPolicy.getIcon();
+      updateIconPreview();
    }
    
    /* (non-Javadoc)
@@ -457,8 +540,7 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
    @Override
    protected void updateControlsFromPolicy()
    {             
-      createIcon();
-      iconLabel.setImage(icon);
+      updateIconFromPolicy();
 
       if (sPolicy.backgroundColor != null)
          backgroundColor.setColorValue(ColorConverter.rgbFromInt(sPolicy.backgroundColor));
@@ -487,20 +569,8 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
     */
    @Override
    public AgentPolicy getUpdatedPolicy()
-   { 
-      if (icon != null)
-      {
-         ImageLoader loader = new ImageLoader();
-         loader.data = new ImageData[] { icon.getImageData() };
-         ByteArrayOutputStream stream = new ByteArrayOutputStream(1024);
-         loader.save(stream, SWT.IMAGE_PNG);
-         sPolicy.setLogo(stream.toByteArray());
-      }
-      else
-      {
-         sPolicy.setLogo(null);
-      }
-      
+   {
+      sPolicy.setIcon((iconFile != null) && (iconFile.length > 0) ? iconFile : null);
       sPolicy.welcomeMessage = welcomeMessageText.getText();
 
       if (setColorSchemaCheckbox.getSelection())
@@ -532,17 +602,18 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
       }
       catch(Exception e)
       {
-         //TODO: make some notifiaction?
          policy.setContent("");
          e.printStackTrace();
       }
       return policy;
    }
 
+   /* (non-Javadoc)
+    * @see org.netxms.ui.eclipse.datacollection.widgets.AbstractPolicyEditor#isFindReplaceRequired()
+    */
    @Override
    public boolean isFindReplaceRequired()
    {
-      // TODO Auto-generated method stub
       return false;
    }
 }

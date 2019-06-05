@@ -60,6 +60,11 @@ public abstract class AbstractPolicyEditor extends Composite
    {
    }
    
+   /**
+    * Check if Find/Replace action is required for this editor
+    * 
+    * @return true if Find/Replace action is required for this editor
+    */
    public abstract boolean isFindReplaceRequired();
 
    public void setFindAndReplaceAction(FindReplaceAction actionFindReplace)
