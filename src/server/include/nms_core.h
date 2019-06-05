@@ -140,8 +140,8 @@
 #define IDG_OBJECT_TOOL       14
 #define IDG_SCRIPT            15
 #define IDG_AGENT_CONFIG      16
-#define IDG_GRAPH					17
-#define IDG_CERTIFICATE			18
+#define IDG_GRAPH             17
+#define IDG_CERTIFICATE       18
 #define IDG_DCT_COLUMN        19
 #define IDG_MAPPING_TABLE     20
 #define IDG_DCI_SUMMARY_TABLE 21

@@ -25,23 +25,25 @@
 /**
  * Constants
  */
-#define NUMBER_OF_GROUPS   25
+#define NUMBER_OF_GROUPS   24
 
 /**
  * Static data
  */
 static MUTEX s_mutexTableAccess;
 static UINT32 s_freeIdTable[NUMBER_OF_GROUPS] = { 100, FIRST_USER_EVENT_ID, 1, 1,
-                                                   1, 1, 0x80000000,
-                                                   1, 1, 0x80000001, 1, 1, 1, 1,
-                                                   10000, 10000, 1, 1, 1, 1, 1, 1, 1
+                                                  1, 1, 0x80000000, 1,
+						  1, 0x80000001, 1, 1,
+						  1, 1, 10000, 10000,
+						  1, 1, 1, 1,
+						  1, 1, 1, 1
                                                  };
-static UINT32 s_idLimits[NUMBER_OF_GROUPS] = { 0xFFFFFFFE, 0x7FFFFFFF, 0x7FFFFFFF,
-                                                0x7FFFFFFF, 0xFFFFFFFE, 0x7FFFFFFF, 0xFFFFFFFF,
-                                                0x7FFFFFFF, 0x7FFFFFFF, 0xFFFFFFFE, 0xFFFFFFFE,
-                                                0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE,
-                                                0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE,
-                                                0x7FFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE
+static UINT32 s_idLimits[NUMBER_OF_GROUPS] = { 0xFFFFFFFE, 0x7FFFFFFF, 0x7FFFFFFF, 0x7FFFFFFF,
+                                               0xFFFFFFFE, 0x7FFFFFFF, 0xFFFFFFFF, 0x7FFFFFFF,
+					       0x7FFFFFFF, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE,
+					       0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE,
+					       0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE, 0x7FFFFFFE,
+					       0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE
                                               };
 static UINT64 m_freeEventId = 1;
 static const TCHAR *m_pszGroupNames[NUMBER_OF_GROUPS] =
@@ -63,12 +65,12 @@ static const TCHAR *m_pszGroupNames[NUMBER_OF_GROUPS] =
    _T("Object Tools"),
    _T("Scripts"),
    _T("Agent Configs"),
-	_T("Graphs"),
-	_T("Certificates"),
-	_T("Table Columns"),
-	_T("Mapping Tables"),
+   _T("Graphs"),
+   _T("Certificates"),
+   _T("Table Columns"),
+   _T("Mapping Tables"),
    _T("DCI Summary Tables"),
-   _T("Scheduled Tasks")
+   _T("Scheduled Tasks"),
    _T("Alarm categories")
 };
 
