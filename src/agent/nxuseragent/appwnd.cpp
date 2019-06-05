@@ -95,13 +95,13 @@ static void PaintWindow(HWND hWnd, HDC hdc)
    DeleteObject(hPen);
    InflateRect(&clientArea, -(MARGIN_WIDTH + BORDER_WIDTH), -BORDER_WIDTH);
 
-   HICON hIcon = LoadIcon(g_hInstance, MAKEINTRESOURCE(IDI_APP));
-   DrawIconEx(hdc, clientArea.left, clientArea.top + HEADER_HEIGHT, hIcon, 64, 64, 0, NULL, DI_NORMAL | DI_COMPAT | DI_DEFAULTSIZE);
+   DrawIconEx(hdc, clientArea.left, clientArea.top + HEADER_HEIGHT, GetApplicationIcon(),
+      APP_ICON_SIZE, APP_ICON_SIZE, 0, NULL, DI_NORMAL | DI_COMPAT);
 
    // Draw welcome message
    SelectObject(hdc, g_messageFont);
    SetTextColor(hdc, GetApplicationColor(APP_COLOR_FOREGROUND));
-   RECT textRect = { clientArea.left + 64, clientArea.top + HEADER_HEIGHT, clientArea.right, s_sessionInfoPosLeft.y - WINDOW_VERTICAL_SPACING };
+   RECT textRect = { clientArea.left + APP_ICON_SIZE + APP_ICON_SPACING, clientArea.top + HEADER_HEIGHT, clientArea.right, s_sessionInfoPosLeft.y - WINDOW_VERTICAL_SPACING };
    const TCHAR *msg = GetWelcomeMessage();
    DrawText(hdc, msg, (int)_tcslen(msg), &textRect, DT_LEFT | DT_TOP | DT_NOPREFIX);
 
@@ -285,15 +285,15 @@ static POINT CalculateRequiredSize()
       HGDIOBJ oldFont = SelectObject(hdc, g_messageFont);
       POINT pt = GetTextExtent(hdc, GetWelcomeMessage());
 
-      pt.x += 64; // icon size
+      pt.x += APP_ICON_SIZE + APP_ICON_SPACING; // icon size
       nxlog_debug(6, _T("Calculated welcome message box: w=%d, h=%d"), pt.x, pt.y);
       if (pt.x > size.x)
          size.x = pt.x;
-      if (pt.y > 64)
-         size.y += pt.y - 64;
+      if (pt.y > APP_ICON_SIZE + WINDOW_VERTICAL_SPACING)
+         size.y += pt.y - APP_ICON_SIZE - WINDOW_VERTICAL_SPACING;
 
       s_sessionInfoPosLeft.x = MARGIN_WIDTH + BORDER_WIDTH;
-      s_sessionInfoPosLeft.y = BORDER_WIDTH + HEADER_HEIGHT + std::max(pt.y, (LONG)64);
+      s_sessionInfoPosLeft.y = BORDER_WIDTH + HEADER_HEIGHT + std::max(pt.y, (LONG)APP_ICON_SIZE) + WINDOW_VERTICAL_SPACING;
 
       // Information area
       s_infoLineHeight = GetTextExtent(hdc, _T("X")).y;
@@ -329,7 +329,7 @@ static POINT CalculateRequiredSize()
    }
 
    size.x += BORDER_WIDTH * 2 + MARGIN_WIDTH * 2;
-   size.y += BORDER_WIDTH * 2 + 64 + HEADER_HEIGHT + FOOTER_HEIGHT + WINDOW_VERTICAL_SPACING;
+   size.y += BORDER_WIDTH * 2 + APP_ICON_SIZE + HEADER_HEIGHT + FOOTER_HEIGHT + WINDOW_VERTICAL_SPACING * 2;
    nxlog_debug(6, _T("Calculated app window size: w=%d, h=%d"), size.x, size.y);
 
    s_footerStartPos.x = BORDER_WIDTH + MARGIN_WIDTH;

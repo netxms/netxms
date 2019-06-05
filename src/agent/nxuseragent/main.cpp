@@ -38,6 +38,7 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR cmdLine
 
    InitNetXMSProcess(false);
    InitLogging();
+   LoadConfig();
 
    WSADATA wsaData;
    int wrc = WSAStartup(MAKEWORD(2, 2), &wsaData);

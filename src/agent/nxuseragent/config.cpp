@@ -59,6 +59,63 @@ UINT GetHotKey(UINT *modifiers)
 }
 
 /**
+ * Application icon
+ */
+static HICON s_appIcon = NULL;
+
+/**
+ * Acquire application icon
+ */
+HICON GetApplicationIcon()
+{
+   return (s_appIcon != NULL) ? s_appIcon : LoadIcon(g_hInstance, MAKEINTRESOURCE(IDI_APP));
+}
+
+/**
+ * Create custom icon from configuration
+ */
+static void CreateCustomIcon(const TCHAR *data)
+{
+   char *imageData = NULL;
+   size_t imageDataLen = 0;
+
+#ifdef UNICODE
+   char *mbdata = MBStringFromWideString(data);
+   BOOL success = base64_decode_alloc(mbdata, strlen(mbdata), &imageData, &imageDataLen);
+   MemFree(mbdata);
+#else
+   BOOL success = base64_decode_alloc(data, strlen(data), &imageData, &imageDataLen);
+#endif
+   if (!success)
+      return;
+
+   TCHAR path[MAX_PATH];
+   GetTempPath(MAX_PATH, path);
+
+   TCHAR fname[MAX_PATH];
+   GetTempFileName(path, _T("nxua"), 0, fname);
+
+   FILE *f = _tfopen(fname, _T("wb"));
+   if (f != NULL)
+   {
+      fwrite(imageData, 1, imageDataLen, f);
+      fclose(f);
+   }
+
+   MemFree(imageData);
+
+   if (s_appIcon != NULL)
+      DestroyIcon(s_appIcon);
+   s_appIcon = (HICON)LoadImage(NULL, fname, IMAGE_ICON, 64, 64, LR_LOADFROMFILE);
+   if (s_appIcon == NULL)
+      nxlog_debug(2, _T("Cannot load application icon from %s"), fname);
+
+   UpdateTrayIcon(fname);
+
+   DeleteFile(fname);
+}
+
+/**
  * Config merge strategy
  */
 static ConfigEntry *SupportAppMergeStrategy(ConfigEntry *parent, const TCHAR *name)
@@ -69,7 +126,7 @@ static ConfigEntry *SupportAppMergeStrategy(ConfigEntry *parent, const TCHAR *na
 }
 
 /**
- * Load configuration
+ * Load configuration. Should be called on UI thread.
  */
 void LoadConfig()
 {
@@ -102,6 +159,21 @@ void LoadConfig()
          }
          if (!buffer.isEmpty())
             s_welcomeMessage = MemCopyString(buffer);
+      }
+
+      e = config.getEntry(_T("/icon"));
+      if (e != NULL)
+      {
+         CreateCustomIcon(e->getValue());
+      }
+      else
+      {
+         if (s_appIcon != NULL)
+         {
+            DestroyIcon(s_appIcon);
+            s_appIcon = NULL;
+         }
+         ResetTrayIcon();
       }
 
       LoadMenuItems(&config);

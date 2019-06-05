@@ -29,6 +29,8 @@
 #define HEADER_HEIGHT            16
 #define FOOTER_HEIGHT            16
 #define INDICATOR_HEIGHT         8
+#define APP_ICON_SIZE            64
+#define APP_ICON_SPACING         12
 
 #define FONT_SIZE_MESSAGE        12
 #define FONT_SIZE_MENU           13
@@ -118,6 +120,8 @@ public:
 /*** Functions ***/
 bool SetupTrayIcon();
 void RemoveTrayIcon();
+void ResetTrayIcon();
+void UpdateTrayIcon(const TCHAR *file);
 HWND GetTrayWindow();
 bool PrepareApplicationWindow();
 bool SetupSessionEventHandler();
@@ -136,6 +140,7 @@ void OpenApplicationWindow(POINT pt, bool hotkeyOpen);
 void CloseApplicationWindow();
 COLORREF GetApplicationColor(ApplicationColorId colorId);
 const TCHAR *GetWelcomeMessage();
+HICON GetApplicationIcon();
 POINT GetMenuPosition();
 POINT GetTextExtent(HDC hdc, const TCHAR *text, HFONT font = NULL);
 void UpdateAddressList();

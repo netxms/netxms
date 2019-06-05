@@ -13,6 +13,11 @@ static HWND s_hWnd = NULL;
 static NOTIFYICONDATA s_trayIcon;
 
 /**
+ * Tray icon image
+ */
+static HICON s_trayIconImage = NULL;
+
+/**
  * Show tray contet menu
  */
 static void ShowContextMenu(HWND hWnd, POINT pt)
@@ -96,7 +101,7 @@ bool SetupTrayIcon()
    s_trayIcon.hWnd = s_hWnd;
    s_trayIcon.uCallbackMessage = NXUA_MSG_TOOLTIP_NOTIFY;
    _tcscpy(s_trayIcon.szTip, _T("NetXMS User Agent"));
-   s_trayIcon.hIcon = LoadIcon(g_hInstance, MAKEINTRESOURCE(IDI_APP));
+   s_trayIcon.hIcon = (s_trayIconImage != NULL) ? s_trayIconImage : LoadIcon(g_hInstance, MAKEINTRESOURCE(IDI_APP));
       
    Shell_NotifyIcon(NIM_ADD, &s_trayIcon);
    Shell_NotifyIcon(NIM_SETVERSION, &s_trayIcon);
@@ -110,6 +115,33 @@ bool SetupTrayIcon()
 void RemoveTrayIcon()
 {
    Shell_NotifyIcon(NIM_DELETE, &s_trayIcon);
+}
+
+/**
+ * Update tray icon from file
+ */
+void UpdateTrayIcon(const TCHAR *file)
+{
+   if (s_trayIconImage != NULL)
+      DestroyIcon(s_trayIconImage);
+   s_trayIconImage = (HICON)LoadImage(NULL, file, IMAGE_ICON, SM_CXSMICON, SM_CYSMICON, LR_LOADFROMFILE);
+   if (s_trayIconImage == NULL)
+      nxlog_debug(2, _T("Cannot load tray icon from %s"), file);
+
+   s_trayIcon.hIcon = (s_trayIconImage != NULL) ? s_trayIconImage : LoadIcon(g_hInstance, MAKEINTRESOURCE(IDI_APP));
+   Shell_NotifyIcon(NIM_MODIFY, &s_trayIcon);
+}
+
+/**
+ * Reset tray icon
+ */
+void ResetTrayIcon()
+{
+   if (s_trayIconImage != NULL)
+      DestroyIcon(s_trayIconImage);
+   s_trayIconImage = NULL;
+   s_trayIcon.hIcon = LoadIcon(g_hInstance, MAKEINTRESOURCE(IDI_APP));
+   Shell_NotifyIcon(NIM_MODIFY, &s_trayIcon);
 }
 
 /**
