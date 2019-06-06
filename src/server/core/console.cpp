@@ -86,10 +86,11 @@ static void PrintArpCache(CONSOLE_CTX ctx, Node *node, ArpCache *arpCache)
 /**
  * Dump index callback (by IP address)
  */
-static void DumpIndexCallbackByInetAddr(const InetAddress& addr, NetObj *object, void *data)
+static void DumpIndexCallbackByInetAddr(const InetAddress& addr, NetObj *object, void *context)
 {
    TCHAR buffer[64];
-   ConsolePrintf((CONSOLE_CTX)data, _T("%-40s %p %s [%d]\n"), addr.toString(buffer), object, object->getName(), (int)object->getId());
+   static_cast<ServerConsole*>(context)->printf(_T("%-40s [%7u] %s [%d]\n"),
+            addr.toString(buffer), object->getId(), object->getName(), (int)object->getId());
 }
 
 /**
@@ -101,19 +102,36 @@ void DumpIndex(CONSOLE_CTX pCtx, InetAddressIndex *index)
 }
 
 /**
- * Dump index callback (by ID)
+ * Dump index callback (by GUID)
  */
-static void DumpIndexCallbackById(NetObj *object, void *data)
+static void DumpIndexCallbackByGUID(const uuid *guid, NetObj *object, void *context)
 {
-   ConsolePrintf((CONSOLE_CTX)data, _T("%08X %p %s\n"), object->getId(), object, object->getName());
+   TCHAR buffer[64];
+   static_cast<ServerConsole*>(context)->printf(_T("%s [%7u] %s\n"), guid->toString(buffer), object->getId(), object->getName());
 }
 
 /**
  * Dump index (by ID)
  */
-static void DumpIndex(CONSOLE_CTX pCtx, ObjectIndex *index)
+static void DumpIndex(ServerConsole *console, HashIndex<uuid> *index)
 {
-   index->forEach(DumpIndexCallbackById, pCtx);
+   index->forEach(DumpIndexCallbackByGUID, console);
+}
+
+/**
+ * Dump index callback (by ID)
+ */
+static void DumpIndexCallbackById(NetObj *object, void *context)
+{
+   static_cast<ServerConsole*>(context)->printf(_T("%08X %p %s\n"), object->getId(), object, object->getName());
+}
+
+/**
+ * Dump index (by ID)
+ */
+static void DumpIndex(ServerConsole *console, ObjectIndex *index)
+{
+   index->forEach(DumpIndexCallbackById, console);
 }
 
 /**
@@ -821,6 +839,10 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
          if (IsCommand(_T("CONDITION"), szBuffer, 1))
          {
             DumpIndex(pCtx, &g_idxConditionById);
+         }
+         else if (IsCommand(_T("GUID"), szBuffer, 1))
+         {
+            DumpIndex(pCtx, &g_idxObjectByGUID);
          }
          else if (IsCommand(_T("ID"), szBuffer, 2))
          {

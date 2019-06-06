@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2015 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -52,7 +52,7 @@ InetAddressIndex::~InetAddressIndex()
    HASH_ITER(hh, m_root, entry, tmp)
    {
       HASH_DEL(m_root, entry);
-      free(entry);
+      MemFree(entry);
    }
    RWLockDestroy(m_lock);
 }
@@ -80,7 +80,7 @@ bool InetAddressIndex::put(const InetAddress& addr, NetObj *object)
    HASH_FIND(hh, m_root, key, sizeof(key), entry);
    if (entry == NULL)
    {
-      entry = (InetAddressIndexEntry *)malloc(sizeof(InetAddressIndexEntry));
+      entry = MemAllocStruct<InetAddressIndexEntry>();
       memcpy(entry->key, key, sizeof(key));
       entry->addr = addr;
       HASH_ADD_KEYPTR(hh, m_root, entry->key, sizeof(key), entry);
@@ -128,7 +128,7 @@ void InetAddressIndex::remove(const InetAddress& addr)
    if (entry != NULL)
    {
       HASH_DEL(m_root, entry);
-      free(entry);
+      MemFree(entry);
    }
    RWLockUnlock(m_lock);
 }

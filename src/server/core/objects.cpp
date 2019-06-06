@@ -40,6 +40,7 @@ UINT32 NXCORE_EXPORTABLE g_dwMgmtNode = 0;
 Queue g_templateUpdateQueue;
 
 ObjectIndex g_idxObjectById;
+HashIndex<uuid> g_idxObjectByGUID;
 ObjectIndex g_idxSubnetById;
 InetAddressIndex g_idxSubnetByAddr;
 InetAddressIndex g_idxInterfaceByAddr;
@@ -287,7 +288,10 @@ void NetObjInsert(NetObj *pObject, bool newObject, bool importedObject)
          DBConnectionPoolReleaseConnection(hdb);
 		}
    }
+
 	g_idxObjectById.put(pObject->getId(), pObject);
+	g_idxObjectByGUID.put(pObject->getGuid(), pObject);
+
    if (!pObject->isDeleted())
    {
       switch(pObject->getObjectClass())
@@ -1181,33 +1185,12 @@ NetObj NXCORE_EXPORTABLE *FindObjectByName(const TCHAR *name, int objClass)
 }
 
 /**
- * Callback data for FindObjectByGUID
- */
-struct __find_object_by_guid_data
-{
-   int objClass;
-   uuid guid;
-};
-
-/**
- * GUID comparator for FindObjectByGUID
- */
-static bool ObjectGuidComparator(NetObj *object, void *data)
-{
-   struct __find_object_by_guid_data *fd = (struct __find_object_by_guid_data *)data;
-   return ((fd->objClass == -1) || (fd->objClass == object->getObjectClass())) &&
-          !object->isDeleted() && object->getGuid().equals(fd->guid);
-}
-
-/**
  * Find object by GUID
  */
 NetObj NXCORE_EXPORTABLE *FindObjectByGUID(const uuid& guid, int objClass)
 {
-   struct __find_object_by_guid_data data;
-   data.objClass = objClass;
-   data.guid = guid;
-   return FindObject(ObjectGuidComparator, &data, objClass);
+   NetObj *object = g_idxObjectByGUID.get(guid);
+   return ((object == NULL) || (objClass == -1)) ? object : ((object->getObjectClass() == objClass) ? object : NULL);
 }
 
 /**
@@ -2145,41 +2128,33 @@ static void PrintObjectInfo(ServerConsole *console, UINT32 objectId, const TCHAR
 }
 
 /**
- * Enumeration callback for DumpObjects
+ * Dump object information to console
  */
-static void DumpObjectCallback(NetObj *object, void *data)
+static void DumpObject(ServerConsole *console, NetObj *object, TCHAR *buffer)
 {
-	struct __dump_objects_data *dd = (struct __dump_objects_data *)data;
-
-   // Apply name filter
-   if ((dd->filter != NULL) && !MatchString(dd->filter, object->getName(), false))
-      return;
-
-	CONSOLE_CTX console = dd->console;
-
-	ConsolePrintf(console, _T("\x1b[1mObject ID %d \"%s\"\x1b[0m\n")
+   ConsolePrintf(console, _T("\x1b[1mObject ID %d \"%s\"\x1b[0m\n")
                        _T("   Class=%s  Status=%s  IsModified=%d  IsDeleted=%d  RefCount=%d\n"),
-					  object->getId(), object->getName(), object->getObjectClassName(),
+                 object->getId(), object->getName(), object->getObjectClassName(),
                  GetStatusAsText(object->getStatus(), true),
                  object->isModified(), object->isDeleted(), object->getRefCount());
    ConsolePrintf(console, _T("   Parents: <%s>\n   Children: <%s>\n"),
-                 object->dbgGetParentList(dd->buffer), object->dbgGetChildList(&dd->buffer[4096]));
-	time_t t = object->getTimeStamp();
+                 object->dbgGetParentList(buffer), object->dbgGetChildList(&buffer[4096]));
+   time_t t = object->getTimeStamp();
 #if HAVE_LOCALTIME_R
-	struct tm tmbuffer;
+   struct tm tmbuffer;
    struct tm *ltm = localtime_r(&t, &tmbuffer);
 #else
-	struct tm *ltm = localtime(&t);
+   struct tm *ltm = localtime(&t);
 #endif
-	_tcsftime(dd->buffer, 256, _T("%d.%b.%Y %H:%M:%S"), ltm);
-   ConsolePrintf(console, _T("   Last change.........: %s\n"), dd->buffer);
+   _tcsftime(buffer, 256, _T("%d.%b.%Y %H:%M:%S"), ltm);
+   ConsolePrintf(console, _T("   Last change.........: %s\n"), buffer);
    if (object->isDataCollectionTarget())
       ConsolePrintf(console, _T("   State flags.........: 0x%08x\n"), ((DataCollectionTarget *)object)->getState());
    switch(object->getObjectClass())
    {
       case OBJECT_NODE:
          ConsolePrintf(console, _T("   Primary IP..........: %s\n   Primary hostname....: %s\n   Capabilities........: isSNMP=%d isAgent=%d isLocalMgmt=%d\n   SNMP ObjectId.......: %s\n"),
-                       ((Node *)object)->getIpAddress().toString(dd->buffer),
+                       ((Node *)object)->getIpAddress().toString(buffer),
                        ((Node *)object)->getPrimaryName(),
                        ((Node *)object)->isSNMPSupported(),
                        ((Node *)object)->isNativeAgent(),
@@ -2190,18 +2165,18 @@ static void DumpObjectCallback(NetObj *object, void *data)
          break;
       case OBJECT_SUBNET:
          ConsolePrintf(console, _T("   IP address..........: %s/%d\n"),
-                  static_cast<Subnet*>(object)->getIpAddress().toString(dd->buffer),
+                  static_cast<Subnet*>(object)->getIpAddress().toString(buffer),
                   static_cast<Subnet*>(object)->getIpAddress().getMaskBits());
          break;
       case OBJECT_ACCESSPOINT:
-         ConsolePrintf(console, _T("   IP address..........: %s\n"), ((AccessPoint *)object)->getIpAddress().toString(dd->buffer));
+         ConsolePrintf(console, _T("   IP address..........: %s\n"), ((AccessPoint *)object)->getIpAddress().toString(buffer));
          break;
       case OBJECT_INTERFACE:
-         ConsolePrintf(console, _T("   MAC address.........: %s\n"), MACToStr(((Interface *)object)->getMacAddr(), dd->buffer));
+         ConsolePrintf(console, _T("   MAC address.........: %s\n"), MACToStr(((Interface *)object)->getMacAddr(), buffer));
          for(int n = 0; n < ((Interface *)object)->getIpAddressList()->size(); n++)
          {
             const InetAddress& a = ((Interface *)object)->getIpAddressList()->get(n);
-            ConsolePrintf(console, _T("   IP address..........: %s/%d\n"), a.toString(dd->buffer), a.getMaskBits());
+            ConsolePrintf(console, _T("   IP address..........: %s/%d\n"), a.toString(buffer), a.getMaskBits());
          }
          break;
       case OBJECT_TEMPLATE:
@@ -2217,17 +2192,52 @@ static void DumpObjectCallback(NetObj *object, void *data)
 }
 
 /**
+ * Enumeration callback for DumpObjects
+ */
+static void DumpObjectCallback(NetObj *object, void *data)
+{
+	struct __dump_objects_data *dd = static_cast<__dump_objects_data*>(data);
+   if ((dd->filter == NULL) || MatchString(dd->filter, object->getName(), false))
+   {
+      DumpObject(dd->console, object, dd->buffer);
+   }
+}
+
+/**
  * Dump objects to debug console
  */
 void DumpObjects(CONSOLE_CTX pCtx, const TCHAR *filter)
 {
-	struct __dump_objects_data data;
+	__dump_objects_data data;
+   data.buffer = MemAllocArrayNoInit<TCHAR>(128000);
 
-   data.buffer = (TCHAR *)malloc(128000 * sizeof(TCHAR));
-	data.console = pCtx;
-   data.filter = filter;
-	g_idxObjectById.forEach(DumpObjectCallback, &data);
-	free(data.buffer);
+   bool findById = false;
+   if (filter != NULL)
+   {
+      uuid guid = uuid::parse(filter);
+      if (!guid.isNull())
+      {
+         findById = true;
+         NetObj *object = FindObjectByGUID(guid);
+         if (object != NULL)
+         {
+            DumpObject(pCtx, object, data.buffer);
+         }
+         else
+         {
+            pCtx->printf(_T("Object with GUID %s not found\n"), filter);
+         }
+      }
+   }
+
+   if (!findById)
+   {
+      data.console = pCtx;
+      data.filter = filter;
+      g_idxObjectById.forEach(DumpObjectCallback, &data);
+   }
+
+	MemFree(data.buffer);
 }
 
 /**
@@ -2354,6 +2364,7 @@ void NetObjDelete(NetObj *object)
 
    // Delete object from index by ID and object itself
 	g_idxObjectById.remove(object->getId());
+	g_idxObjectByGUID.remove(object->getGuid());
 	if (object->getRefCount() == 0)
 	{
 	   delete object;

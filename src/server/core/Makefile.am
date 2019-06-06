@@ -16,8 +16,8 @@ libnxcore_la_SOURCES = abind_target.cpp accesspoint.cpp acl.cpp actions.cpp addr
 			dctcolumn.cpp dctthreshold.cpp debug.cpp devdb.cpp dfile_info.cpp \
 			download_job.cpp ef.cpp email.cpp entirenet.cpp \
 			epp.cpp events.cpp evproc.cpp fdb.cpp filemonitoring.cpp \
-			graph.cpp hdlink.cpp hk.cpp hwcomponent.cpp icmpscan.cpp id.cpp \
-			import.cpp inaddr_index.cpp index.cpp interface.cpp \
+			graph.cpp hash_index.cpp hdlink.cpp hk.cpp hwcomponent.cpp \
+			icmpscan.cpp id.cpp import.cpp inaddr_index.cpp index.cpp interface.cpp \
 			isc.cpp job.cpp jobmgr.cpp jobqueue.cpp layer2.cpp \
 			ldap.cpp lln.cpp lldp.cpp locks.cpp logfilter.cpp \
 			loghandle.cpp logs.cpp macdb.cpp main.cpp maint.cpp \

@@ -146,7 +146,7 @@ INDEX_HEAD *AbstractIndexBase::acquireIndex()
 /**
  * Release index
  */
-inline void ReleaseIndex(INDEX_HEAD *h)
+static inline void ReleaseIndex(INDEX_HEAD *h)
 {
    InterlockedDecrement(&h->readers);
 }

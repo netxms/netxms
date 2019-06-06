@@ -372,6 +372,53 @@ public:
 	void forEach(void (*callback)(const InetAddress&, NetObj *, void *), void *data);
 };
 
+struct HashIndexHead;
+
+/**
+ * Generic hash-based index
+ */
+class NXCORE_EXPORTABLE HashIndexBase
+{
+private:
+   HashIndexHead* volatile m_primary;
+   HashIndexHead* volatile m_secondary;
+   MUTEX m_writerLock;
+   size_t m_keyLength;
+
+   HashIndexHead *acquireIndex();
+   void swapAndWait();
+
+public:
+   HashIndexBase(size_t keyLength);
+   ~HashIndexBase();
+
+   bool put(const void *key, NetObj *object);
+   void remove(const void *key);
+
+   int size();
+   NetObj *get(const void *key);
+   NetObj *find(bool (*comparator)(NetObj *, void *), void *context);
+   void forEach(void (*callback)(const void *, NetObj *, void *), void *context);
+};
+
+/**
+ * Hash index template
+ */
+template<typename K> class HashIndex : public HashIndexBase
+{
+public:
+   HashIndex() : HashIndexBase(sizeof(K)) { }
+
+   bool put(const K *key, NetObj *object) { return HashIndexBase::put(key, object); }
+   bool put(const K& key, NetObj *object) { return HashIndexBase::put(&key, object); }
+   void remove(const K *key) { HashIndexBase::remove(key); }
+   void remove(const K& key) { HashIndexBase::remove(&key); }
+
+   NetObj *get(const K *key) { return HashIndexBase::get(key); }
+   NetObj *get(const K& key) { return HashIndexBase::get(&key); }
+   void forEach(void (*callback)(const K *, NetObj *, void *), void *context) { HashIndexBase::forEach(reinterpret_cast<void (*)(const void *, NetObj *, void *)>(callback), context); }
+};
+
 /**
  * Change code
  */
@@ -3516,6 +3563,7 @@ extern BOOL g_bModificationsLocked;
 extern Queue g_templateUpdateQueue;
 
 extern ObjectIndex NXCORE_EXPORTABLE g_idxObjectById;
+extern HashIndex<uuid> g_idxObjectByGUID;
 extern InetAddressIndex NXCORE_EXPORTABLE g_idxSubnetByAddr;
 extern InetAddressIndex NXCORE_EXPORTABLE g_idxInterfaceByAddr;
 extern InetAddressIndex NXCORE_EXPORTABLE g_idxNodeByAddr;
