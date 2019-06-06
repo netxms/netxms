@@ -1,6 +1,6 @@
 /*
  ** NetXMS - Network Management System
- ** Copyright (C) 2003-2018 Raden Solutions
+ ** Copyright (C) 2003-2019 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU Lesser General Public License as published
@@ -157,50 +157,26 @@ int LIBNETXMS_EXPORTABLE utf8_ucs2len(const char *src, int srcLen)
 int LIBNETXMS_EXPORTABLE utf8_to_mb(const char *src, int srcLen, char *dst, int dstLen)
 {
    int len = (int)strlen(src) + 1;
-   WCHAR *buffer = (len <= 32768) ? (WCHAR *)alloca(len * sizeof(WCHAR)) : (WCHAR *)malloc(len * sizeof(WCHAR));
+   WCHAR *buffer = (len <= 32768) ? (WCHAR *)alloca(len * sizeof(WCHAR)) : (WCHAR *)MemAlloc(len * sizeof(WCHAR));
    MultiByteToWideChar(CP_UTF8, 0, src, -1, buffer, len);
    int ret = WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, buffer, -1, dst, dstLen, NULL, NULL);
    if (len > 32768)
-      free(buffer);
+      MemFree(buffer);
    return ret;
 }
 
 #else /* _WIN32 */
 
 /**
- * Convert UTF-8 to multibyte using stub (no actual conversion for character codes above 0x7F)
- */
-static int __internal_utf8_to_mb(const char *src, int srcLen, char *dst, int dstLen)
-{
-   const char *psrc = src;
-   char *pdst = dst;
-   int dsize = 0;
-   int ssize = (srcLen == -1) ? strlen(src) : srcLen;
-   for(int pos = 0; (pos < ssize) && (dsize < dstLen - 1); pos++, psrc++)
-   {
-      BYTE b = (BYTE)*psrc;
-      if ((b & 0x80) == 0)  // ASCII-7 character
-      {
-         *pdst = (char)b;
-         pdst++;
-         dsize++;
-      }
-      else if ((b & 0xC0) == 0xC0)  // UTF-8 start byte
-      {
-         *pdst = '?';
-         pdst++;
-         dsize++;
-      }
-   }
-   *pdst = 0;
-   return dsize;
-}
-
-/**
  * Convert UTF-8 to multibyte
  */
 int LIBNETXMS_EXPORTABLE utf8_to_mb(const char *src, int srcLen, char *dst, int dstLen)
 {
+   if (g_defaultCodePageType == CodePageType::ASCII)
+      return utf8_to_ASCII(src, srcLen, dst, dstLen);
+   if (g_defaultCodePageType == CodePageType::ISO8859_1)
+      return utf8_to_ISO8859_1(src, srcLen, dst, dstLen);
+
 #if HAVE_ICONV && !defined(__DISABLE_ICONV)
    iconv_t cd;
    const char *inbuf;
@@ -210,7 +186,7 @@ int LIBNETXMS_EXPORTABLE utf8_to_mb(const char *src, int srcLen, char *dst, int 
    cd = IconvOpen(g_cpDefault, "UTF-8");
    if (cd == (iconv_t)(-1))
    {
-      return __internal_utf8_to_mb(src, srcLen, dst, dstLen);
+      return utf8_to_ASCII(src, srcLen, dst, dstLen);
    }
 
    inbuf = (const char *)src;
@@ -242,8 +218,56 @@ int LIBNETXMS_EXPORTABLE utf8_to_mb(const char *src, int srcLen, char *dst, int 
 
    return (int)count;
 #else
-   return __internal_utf8_to_mb(src, srcLen, dst, dstLen);
+   return utf8_to_ASCII(src, srcLen, dst, dstLen);
 #endif
 }
 
 #endif /* _WIN32 */
+
+/**
+ * Convert UTF-8 to ASCII (also used as fallback if iconv_open fails)
+ */
+int LIBNETXMS_EXPORTABLE utf8_to_ASCII(const char *src, int srcLen, char *dst, int dstLen)
+{
+   size_t len = (srcLen == -1) ? strlen(src) : srcLen;
+   const BYTE *s = reinterpret_cast<const BYTE*>(src);
+   char *d = dst;
+   int dcount = 0;
+   while((len > 0) && (dcount < dstLen))
+   {
+      UCS4CHAR ch = CodePointFromUTF8(s, len);
+      *d++ = (ch < 128) ? static_cast<char>(ch) : '?';
+      dcount++;
+   }
+
+   if (srcLen != -1)
+      return dcount;
+   if (dcount == dstLen)
+      dcount--;
+   dst[dcount] = 0;
+   return dcount;
+}
+
+/**
+ * Convert UTF-8 to ISO8859-1
+ */
+int LIBNETXMS_EXPORTABLE utf8_to_ISO8859_1(const char *src, int srcLen, char *dst, int dstLen)
+{
+   size_t len = (srcLen == -1) ? strlen(src) : srcLen;
+   const BYTE *s = reinterpret_cast<const BYTE*>(src);
+   BYTE *d = reinterpret_cast<BYTE*>(dst);
+   int dcount = 0;
+   while((len > 0) && (dcount < dstLen))
+   {
+      UCS4CHAR ch = CodePointFromUTF8(s, len);
+      *d++ = ((ch < 128) || ((ch >= 160) && (ch <= 255))) ? static_cast<BYTE>(ch) : '?';
+      dcount++;
+   }
+
+   if (srcLen != -1)
+      return dcount;
+   if (dcount == dstLen)
+      dcount--;
+   dst[dcount] = 0;
+   return dcount;
+}

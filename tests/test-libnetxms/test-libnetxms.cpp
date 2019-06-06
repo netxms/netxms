@@ -33,6 +33,9 @@ static UCS2CHAR ucs2TextShort[] = { 'L', 'o', 'r', 'e', 'm', ' ', 'i', 'p', 's',
 static UCS2CHAR ucs2TextSurrogates[] = { 'L', 'o', 'r', 'e', 'm', 0xD801, 0xDFFF, 'i', 'p', 's', 'u', 'm', 0x1CD, '.', 0 };
 static UCS4CHAR ucs4TextSurrogatesTest[] = { 'L', 'o', 'r', 'e', 'm', 0x0107FF, 'i', 'p', 's', 'u', 'm', 0x1CD, '.', 0 };
 static char utf8TextSurrogatesTest[] = { 'L', 'o', 'r', 'e', 'm', (char)0xF0, (char)0x90, (char)0x9F, (char)0xBF, 'i', 'p', 's', 'u', 'm', (char)0xC7, (char)0x8D, '.', 0 };
+static WCHAR wcTextISO8859_1[] = L"Lorem ipsum dolor sit amet, £ 10, ¢ 20, ¥ 50, bønne";
+static char mbTextISO8859_1[] = "Lorem ipsum dolor sit amet, \xA3 10, \xA2 20, \xA5 50, b\xF8nne";
+static char mbTextASCII[] = "Lorem ipsum dolor sit amet, ? 10, ? 20, ? 50, b?nne";
 
 /**
  * Test string conversion
@@ -213,6 +216,52 @@ static void TestStringConversion()
       utf8_to_ucs4(mbText, -1, buffer, 1024);
    }
    EndTest(GetCurrentTimeMs() - start);
+
+#if UNICODE_UCS4
+#define ucs4TextISO8859_1 wcTextISO8859_1
+   UCS2CHAR ucs2TextISO8859_1[256];
+   ucs4_to_ucs2(wcTextISO8859_1, -1, ucs2TextISO8859_1, 256);
+#else
+#define ucs2TextISO8859_1 wcTextISO8859_1
+   UCS4CHAR ucs4TextISO8859_1[256];
+   ucs2_to_ucs4(wcTextISO8859_1, -1, ucs4TextISO8859_1, 256);
+#endif
+
+   StartTest(_T("ISO8859-1 to UCS-4 conversion"));
+   len = ISO8859_1_to_ucs4(mbTextISO8859_1, -1, ucs4buffer, 1024);
+   AssertEquals(len, 51);
+   AssertTrue(!memcmp(ucs4buffer, ucs4TextISO8859_1, 51 * sizeof(UCS4CHAR)));
+   EndTest();
+
+   StartTest(_T("UCS-4 to ISO8859-1 conversion"));
+   len = ucs4_to_ISO8859_1(ucs4TextISO8859_1, -1, utf8buffer, 1024);
+   AssertEquals(len, 51);
+   AssertTrue(!memcmp(utf8buffer, mbTextISO8859_1, 51));
+   EndTest();
+
+   StartTest(_T("ISO8859-1 to UCS-2 conversion"));
+   len = ISO8859_1_to_ucs2(mbTextISO8859_1, -1, ucs2buffer, 1024);
+   AssertEquals(len, 51);
+   AssertTrue(!memcmp(ucs2buffer, ucs2TextISO8859_1, 51 * sizeof(UCS2CHAR)));
+   EndTest();
+
+   StartTest(_T("UCS-2 to ISO8859-1 conversion"));
+   len = ucs2_to_ISO8859_1(ucs2TextISO8859_1, -1, utf8buffer, 1024);
+   AssertEquals(len, 51);
+   AssertTrue(!memcmp(utf8buffer, mbTextISO8859_1, 51));
+   EndTest();
+
+   StartTest(_T("UCS-4 to ASCII conversion"));
+   len = ucs4_to_ASCII(ucs4TextISO8859_1, -1, utf8buffer, 1024);
+   AssertEquals(len, 51);
+   AssertTrue(!memcmp(utf8buffer, mbTextASCII, 51));
+   EndTest();
+
+   StartTest(_T("UCS-2 to ASCII conversion"));
+   len = ucs2_to_ASCII(ucs2TextISO8859_1, -1, utf8buffer, 1024);
+   AssertEquals(len, 51);
+   AssertTrue(!memcmp(utf8buffer, mbTextASCII, 51));
+   EndTest();
 }
 
 /**

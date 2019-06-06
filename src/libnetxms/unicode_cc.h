@@ -75,6 +75,17 @@ void IconvClose(iconv_t cd);
 
 #endif   /* _WIN32 */
 
+/**
+ * Application codepage type
+ */
+enum class CodePageType
+{
+   OTHER,
+   ASCII,
+   ISO8859_1
+};
+
 extern char g_cpDefault[];
+extern CodePageType g_defaultCodePageType;
 
 #endif

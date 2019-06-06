@@ -39,30 +39,15 @@ int LIBNETXMS_EXPORTABLE mb_to_ucs4(const char *src, int srcLen, UCS4CHAR *dst, 
 #elif !defined UNICODE_UCS4
 
 /**
- * Convert multibyte to UCS-4 using stub
- */
-static int __internal_mb_to_ucs4(const char *src, int srcLen, UCS4CHAR *dst, int dstLen)
-{
-   const char *psrc;
-   UCS2CHAR *pdst;
-   int pos, size;
-
-   size = (srcLen == -1) ? (int) strlen(src) : srcLen;
-   if (size >= dstLen)
-      size = dstLen - 1;
-
-   for(psrc = src, pos = 0, pdst = dst; pos < size; pos++, psrc++, pdst++)
-      *pdst = (UCS4CHAR)(*psrc);
-   *pdst = 0;
-
-   return size;
-}
-
-/**
  * Convert multibyte to UCS-4
  */
 int LIBNETXMS_EXPORTABLE mb_to_ucs4(const char *src, int srcLen, UCS4CHAR *dst, int dstLen)
 {
+   if (g_defaultCodePageType == CodePageType::ASCII)
+      return ASCII_to_ucs4(src, srcLen, dst, dstLen);
+   if (g_defaultCodePageType == CodePageType::ISO8859_1)
+      return ISO8859_1_to_ucs4(src, srcLen, dst, dstLen);
+
 #if HAVE_ICONV && !defined(__DISABLE_ICONV)
    iconv_t cd;
    const char *inbuf;
@@ -72,7 +57,7 @@ int LIBNETXMS_EXPORTABLE mb_to_ucs4(const char *src, int srcLen, UCS4CHAR *dst, 
    cd = IconvOpen(UCS4_CODEPAGE_NAME, g_cpDefault);
    if (cd == (iconv_t)(-1))
    {
-      return __internal_mb_to_ucs4(src, srcLen, dst, dstLen);
+      return ASCII_to_ucs4(src, srcLen, dst, dstLen);
    }
 
    inbuf = (const char *) src;
@@ -106,7 +91,7 @@ int LIBNETXMS_EXPORTABLE mb_to_ucs4(const char *src, int srcLen, UCS4CHAR *dst, 
 
    return (int)count;
 #else
-   return __internal_mb_to_ucs4(src, srcLen, dst, dstLen);
+   return ASCII_to_ucs4(src, srcLen, dst, dstLen);
 #endif
 }
 
@@ -115,30 +100,15 @@ int LIBNETXMS_EXPORTABLE mb_to_ucs4(const char *src, int srcLen, UCS4CHAR *dst, 
 #if !defined(_WIN32) && !defined(UNICODE_UCS2)
 
 /**
- * Convert multibyte to UCS-2 using stub
- */
-static int __internal_mb_to_ucs2(const char *src, int srcLen, UCS2CHAR *dst, int dstLen)
-{
-   const char *psrc;
-   UCS2CHAR *pdst;
-   int pos, size;
-
-   size = (srcLen == -1) ? (int) strlen(src) : srcLen;
-   if (size >= dstLen)
-      size = dstLen - 1;
-
-   for(psrc = src, pos = 0, pdst = dst; pos < size; pos++, psrc++, pdst++)
-      *pdst = (UCS2CHAR)(*psrc);
-   *pdst = 0;
-
-   return size;
-}
-
-/**
  * Convert multibyte to UCS-2
  */
 int LIBNETXMS_EXPORTABLE mb_to_ucs2(const char *src, int srcLen, UCS2CHAR *dst, int dstLen)
 {
+   if (g_defaultCodePageType == CodePageType::ASCII)
+      return ASCII_to_ucs2(src, srcLen, dst, dstLen);
+   if (g_defaultCodePageType == CodePageType::ISO8859_1)
+      return ISO8859_1_to_ucs2(src, srcLen, dst, dstLen);
+
 #if HAVE_ICONV && !defined(__DISABLE_ICONV)
    iconv_t cd;
    const char *inbuf;
@@ -148,7 +118,7 @@ int LIBNETXMS_EXPORTABLE mb_to_ucs2(const char *src, int srcLen, UCS2CHAR *dst, 
    cd = IconvOpen(UCS2_CODEPAGE_NAME, g_cpDefault);
    if (cd == (iconv_t)(-1))
    {
-      return __internal_mb_to_ucs2(src, srcLen, dst, dstLen);
+      return ASCII_to_ucs2(src, srcLen, dst, dstLen);
    }
 
    inbuf = (const char *) src;
@@ -182,7 +152,7 @@ int LIBNETXMS_EXPORTABLE mb_to_ucs2(const char *src, int srcLen, UCS2CHAR *dst, 
 
    return (int)count;
 #else
-   return __internal_mb_to_ucs2(src, srcLen, dst, dstLen);
+   return ASCII_to_ucs2(src, srcLen, dst, dstLen);
 #endif
 }
 
@@ -207,28 +177,15 @@ int LIBNETXMS_EXPORTABLE mb_to_utf8(const char *src, int srcLen, char *dst, int 
 #else /* not _WIN32 */
 
 /**
- * Convert multibyte to UTF-8 using stub (no actual conversion for character codes above 0x7F)
- */
-static int __internal_mb_to_utf8(const char *src, int srcLen, char *dst, int dstLen)
-{
-   const char *psrc;
-   char *pdst;
-   int pos, size;
-
-   size = (srcLen == -1) ? strlen(src) : srcLen;
-   if (size >= dstLen)
-      size = dstLen - 1;
-   for(psrc = src, pos = 0, pdst = dst; pos < size; pos++, psrc++, pdst++)
-      *pdst = ((unsigned char)(*psrc) < 128) ? *psrc : '?';
-   *pdst = 0;
-   return size;
-}
-
-/**
  * Convert multibyte to UTF-8
  */
 int LIBNETXMS_EXPORTABLE mb_to_utf8(const char *src, int srcLen, char *dst, int dstLen)
 {
+   if (g_defaultCodePageType == CodePageType::ASCII)
+      return ASCII_to_utf8(src, srcLen, dst, dstLen);
+   if (g_defaultCodePageType == CodePageType::ISO8859_1)
+      return ISO8859_1_to_utf8(src, srcLen, dst, dstLen);
+
 #if HAVE_ICONV && !defined(__DISABLE_ICONV)
    iconv_t cd;
    const char *inbuf;
@@ -238,7 +195,7 @@ int LIBNETXMS_EXPORTABLE mb_to_utf8(const char *src, int srcLen, char *dst, int 
    cd = IconvOpen("UTF-8", g_cpDefault);
    if (cd == (iconv_t)(-1))
    {
-      return __internal_mb_to_utf8(src, srcLen, dst, dstLen);
+      return ASCII_to_utf8(src, srcLen, dst, dstLen);
    }
 
    inbuf = (const char *)src;
@@ -270,8 +227,132 @@ int LIBNETXMS_EXPORTABLE mb_to_utf8(const char *src, int srcLen, char *dst, int 
 
    return (int)count;
 #else
-   return __internal_mb_to_utf8(src, srcLen, dst, dstLen);
+   return ASCII_to_utf8(src, srcLen, dst, dstLen);
 #endif
 }
 
 #endif /* _WIN32 */
+
+/**
+ * Convert ASCII to UTF-8
+ */
+int LIBNETXMS_EXPORTABLE ASCII_to_utf8(const char *src, int srcLen, char *dst, int dstLen)
+{
+   int size = (srcLen == -1) ? static_cast<int>(strlen(src)) : srcLen;
+   if (size >= dstLen)
+      size = dstLen - 1;
+
+   const BYTE *psrc = reinterpret_cast<const BYTE*>(src);
+   char *pdst = dst;
+   for(int pos = 0; pos < size; pos++, psrc++, pdst++)
+      *pdst = (*psrc < 128) ? static_cast<char>(*psrc) : '?';
+   *pdst = 0;
+
+   return size;
+}
+
+/**
+ * Convert ASCII to UCS-2
+ */
+int LIBNETXMS_EXPORTABLE ASCII_to_ucs2(const char *src, int srcLen, UCS2CHAR *dst, int dstLen)
+{
+   int size = (srcLen == -1) ? static_cast<int>(strlen(src)) : srcLen;
+   if (size >= dstLen)
+      size = dstLen - 1;
+
+   const BYTE *psrc = reinterpret_cast<const BYTE*>(src);
+   UCS2CHAR *pdst = dst;
+   for(int pos = 0; pos < size; pos++, psrc++, pdst++)
+      *pdst = (*psrc < 128) ? *psrc : '?';
+   *pdst = 0;
+
+   return size;
+}
+
+/**
+ * Convert ASCII to UCS-4
+ */
+int LIBNETXMS_EXPORTABLE ASCII_to_ucs4(const char *src, int srcLen, UCS4CHAR *dst, int dstLen)
+{
+   int size = (srcLen == -1) ? static_cast<int>(strlen(src)) : srcLen;
+   if (size >= dstLen)
+      size = dstLen - 1;
+
+   const BYTE *psrc = reinterpret_cast<const BYTE*>(src);
+   UCS4CHAR *pdst = dst;
+   for(int pos = 0; pos < size; pos++, psrc++, pdst++)
+      *pdst = (*psrc < 128) ? *psrc : '?';
+   *pdst = 0;
+
+   return size;
+}
+
+/**
+ * Convert ISO8859-1 to UTF-8
+ */
+int LIBNETXMS_EXPORTABLE ISO8859_1_to_utf8(const char *src, int srcLen, char *dst, int dstLen)
+{
+   int size = (srcLen == -1) ? static_cast<int>(strlen(src)) : srcLen;
+   if (size >= dstLen)
+      size = dstLen - 1;
+
+   const BYTE *psrc = reinterpret_cast<const BYTE*>(src);
+   BYTE *pdst = reinterpret_cast<BYTE*>(dst);
+   for(int pos = 0; pos < size; pos++, psrc++, pdst++)
+   {
+      if (*psrc < 128)
+      {
+         *pdst = *psrc;
+      }
+      else if (*psrc >= 160)
+      {
+         if (size - pos < 2)
+            break;   // no enough space in destination buffer
+         *pdst++ = static_cast<BYTE>((static_cast<unsigned int>(*psrc) >> 6) | 0xC0);
+         *pdst = static_cast<BYTE>((static_cast<unsigned int>(*psrc) & 0x3F) | 0x80);
+      }
+      else
+      {
+         *pdst = '?';
+      }
+   }
+   *pdst = 0;
+
+   return size;
+}
+
+/**
+ * Convert ISO8859-1 to UCS-2
+ */
+int LIBNETXMS_EXPORTABLE ISO8859_1_to_ucs2(const char *src, int srcLen, UCS2CHAR *dst, int dstLen)
+{
+   int size = (srcLen == -1) ? static_cast<int>(strlen(src)) : srcLen;
+   if (size >= dstLen)
+      size = dstLen - 1;
+
+   const BYTE *psrc = reinterpret_cast<const BYTE*>(src);
+   UCS2CHAR *pdst = dst;
+   for(int pos = 0; pos < size; pos++, psrc++, pdst++)
+      *pdst = ((*psrc < 128) || (*psrc >= 160)) ? *psrc : '?';
+   *pdst = 0;
+
+   return size;
+}
+
+/**
+ * Convert ISO8859-1 to UCS-4
+ */
+int LIBNETXMS_EXPORTABLE ISO8859_1_to_ucs4(const char *src, int srcLen, UCS4CHAR *dst, int dstLen)
+{
+   int size = (srcLen == -1) ? static_cast<int>(strlen(src)) : srcLen;
+   if (size >= dstLen)
+      size = dstLen - 1;
+
+   const BYTE *psrc = reinterpret_cast<const BYTE*>(src);
+   UCS4CHAR *pdst = dst;
+   for(int pos = 0; pos < size; pos++, psrc++, pdst++)
+      *pdst = ((*psrc < 128) || (*psrc >= 160)) ? *psrc : '?';
+   *pdst = 0;
+
+   return size;
+}

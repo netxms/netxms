@@ -313,7 +313,7 @@
 #define WC_DEFAULTCHAR     0x00000004
 
 // Default codepage for iconv()
-#define ICONV_DEFAULT_CODEPAGE "ASCII"
+#define ICONV_DEFAULT_CODEPAGE "ISO8859-1"
 
 #endif	/* _WIN32 */
 
