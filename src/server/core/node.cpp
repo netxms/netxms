@@ -3703,7 +3703,7 @@ bool Node::confPollSnmp(UINT32 rqId)
       unlockProperties();
 
       TCHAR debugInfo[256];
-      _sntprintf(debugInfo, 256, _T("%s [%u"), m_name, m_id);
+      _sntprintf(debugInfo, 256, _T("%s [%u]"), m_name, m_id);
       ComponentTree *components = BuildComponentTree(pTransport, debugInfo);
       lockProperties();
       if (m_components != NULL)

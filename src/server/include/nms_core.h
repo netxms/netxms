@@ -1059,6 +1059,7 @@ bool LookupDevicePortLayout(const SNMP_ObjectId& objectId, NDD_MODULE_LAYOUT *la
 void CheckForMgmtNode();
 void CheckPotentialNode(const InetAddress& ipAddr, UINT32 zoneUIN, DiscoveredAddressSourceType sourceType, UINT32 sourceNodeId);
 Node NXCORE_EXPORTABLE *PollNewNode(NewNodeData *newNodeData);
+INT64 GetDiscoveryPollerQueueSize();
 
 void NXCORE_EXPORTABLE EnumerateClientSessions(void (*pHandler)(ClientSession *, void *), void *pArg);
 void NXCORE_EXPORTABLE NotifyClientSessions(UINT32 dwCode, UINT32 dwData);
@@ -1183,7 +1184,7 @@ void DumpClientSessions(CONSOLE_CTX console);
 void DumpMobileDeviceSessions(CONSOLE_CTX console);
 void ShowServerStats(CONSOLE_CTX console);
 void ShowQueueStats(CONSOLE_CTX console, Queue *pQueue, const TCHAR *pszName);
-void ShowQueueStats(CONSOLE_CTX console, size_t size, const TCHAR *pszName);
+void ShowQueueStats(CONSOLE_CTX console, INT64 size, const TCHAR *pszName);
 void ShowThreadPoolPendingQueue(CONSOLE_CTX console, ThreadPool *p, const TCHAR *pszName);
 void ShowThreadPool(CONSOLE_CTX console, ThreadPool *p);
 DataCollectionError GetThreadPoolStat(ThreadPoolStat stat, const TCHAR *param, TCHAR *value);

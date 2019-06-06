@@ -78,7 +78,7 @@ void ShowServerStats(CONSOLE_CTX console)
 /**
  * Show queue stats from function
  */
-void ShowQueueStats(CONSOLE_CTX console, size_t size, const TCHAR *pszName)
+void ShowQueueStats(CONSOLE_CTX console, INT64 size, const TCHAR *pszName)
 {
    ConsolePrintf(console, _T("%-32s : %u\n"), pszName, static_cast<unsigned int>(size));
 }

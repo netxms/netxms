@@ -38,7 +38,6 @@
 /**
  * Externals
  */
-extern ObjectQueue<DiscoveredAddress> g_nodePollerQueue;
 extern Queue g_syslogProcessingQueue;
 extern Queue g_syslogWriteQueue;
 extern ThreadPool *g_dataCollectorThreadPool;
@@ -126,7 +125,7 @@ THREAD_RESULT THREAD_CALL ServerStatCollector(void *arg)
    AddQueueToCollector(_T("DBWriter.Total"), GetTotalDBWriterQueueSize);
    AddQueueToCollector(_T("EventLogWriter"), GetEventLogWriterQueueSize);
    AddQueueToCollector(_T("EventProcessor"), g_pEventQueue);
-   AddQueueToCollector(_T("NodeDiscoveryPoller"), &g_nodePollerQueue);
+   AddQueueToCollector(_T("NodeDiscoveryPoller"), GetDiscoveryPollerQueueSize);
    AddQueueToCollector(_T("Poller"), g_pollerThreadPool);
    AddQueueToCollector(_T("Scheduler"), g_schedulerThreadPool);
    AddQueueToCollector(_T("SyslogProcessor"), &g_syslogProcessingQueue);

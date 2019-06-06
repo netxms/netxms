@@ -637,12 +637,11 @@ static NXSL_DiscoveredNodeClass s_nxslDiscoveredNodeClass;
 /**
  * Check if newly discovered node should be added
  */
-static BOOL AcceptNewNode(NewNodeData *newNodeData, BYTE *macAddr)
+static bool AcceptNewNode(NewNodeData *newNodeData, BYTE *macAddr)
 {
    TCHAR szFilter[MAX_CONFIG_VALUE], szBuffer[256], szIpAddr[64];
    UINT32 dwTemp;
    AgentConnection *pAgentConn;
-   BOOL bResult = FALSE;
 	SNMP_Transport *pTransport;
 
 	newNodeData->ipAddr.toString(szIpAddr);
@@ -650,13 +649,13 @@ static BOOL AcceptNewNode(NewNodeData *newNodeData, BYTE *macAddr)
        (FindSubnetByIP(newNodeData->zoneUIN, newNodeData->ipAddr) != NULL))
 	{
       nxlog_debug_tag(DEBUG_TAG, 4, _T("AcceptNewNode(%s): node already exist in database"), szIpAddr);
-      return FALSE;  // Node already exist in database
+      return false;  // Node already exist in database
 	}
 
    if (!memcmp(macAddr, "\xFF\xFF\xFF\xFF\xFF\xFF", 6))
    {
 		DbgPrintf(4, _T("AcceptNewNode(%s): broadcast MAC address"), szIpAddr);
-      return FALSE;  // Broadcast MAC
+      return false;  // Broadcast MAC
    }
 
    NXSL_VM *hook = FindHookScript(_T("AcceptNewNode"), NULL);
@@ -683,7 +682,7 @@ static BOOL AcceptNewNode(NewNodeData *newNodeData, BYTE *macAddr)
       }
       delete hook;
       if (stop)
-         return FALSE;  // blocked by hook
+         return false;  // blocked by hook
    }
 
 	Interface *iface = GetOldNodeWithNewIP(newNodeData->ipAddr, newNodeData->zoneUIN, macAddr);
@@ -692,7 +691,7 @@ static BOOL AcceptNewNode(NewNodeData *newNodeData, BYTE *macAddr)
 		if (!HostIsReachable(newNodeData->ipAddr, newNodeData->zoneUIN, false, NULL, NULL))
 		{
 		   nxlog_debug_tag(DEBUG_TAG, 4, _T("AcceptNewNode(%s): found existing interface with same MAC address, but new IP is not reachable"), szIpAddr);
-			return FALSE;
+			return false;
 		}
 
 		Node *oldNode = iface->getParentNode();
@@ -704,7 +703,7 @@ static BOOL AcceptNewNode(NewNodeData *newNodeData, BYTE *macAddr)
 			nxlog_debug_tag(DEBUG_TAG, 4, _T("AcceptNewNode(%s): node already exist in database with ip %s, will change to new"), szIpAddr, szOldIpAddr);
 			oldNode->changeIPAddress(newNodeData->ipAddr);
 		}
-		return FALSE;
+		return false;
 	}
 
    // Allow filtering by loaded modules
@@ -713,7 +712,7 @@ static BOOL AcceptNewNode(NewNodeData *newNodeData, BYTE *macAddr)
 		if (g_pModuleList[i].pfAcceptNewNode != NULL)
 		{
 			if (!g_pModuleList[i].pfAcceptNewNode(newNodeData->ipAddr, newNodeData->zoneUIN, macAddr))
-				return FALSE;	// filtered out by module
+				return false;	// filtered out by module
 		}
 	}
 
@@ -738,17 +737,18 @@ static BOOL AcceptNewNode(NewNodeData *newNodeData, BYTE *macAddr)
       {
          nxlog_debug_tag(DEBUG_TAG, 4, _T("AcceptNewNode(%s): auto filter - checking range"), szIpAddr);
          ObjectArray<InetAddressListElement> *list = LoadServerAddressList(2);
+         bool result = false;
          if (list != NULL)
          {
-            for(int i = 0; (i < list->size()) && (!bResult); i++)
+            for(int i = 0; (i < list->size()) && !result; i++)
             {
-               bResult = list->get(i)->contains(data.ipAddr);
+               result = list->get(i)->contains(data.ipAddr);
             }
             delete list;
          }
-         nxlog_debug_tag(DEBUG_TAG, 4, _T("AcceptNewNode(%s): auto filter - range check result is %d"), szIpAddr, bResult);
-         if (!bResult)
-            return FALSE;
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("AcceptNewNode(%s): auto filter - range check result is %d"), szIpAddr, result);
+         if (!result)
+            return false;
       }
    }
 
@@ -859,29 +859,30 @@ static BOOL AcceptNewNode(NewNodeData *newNodeData, BYTE *macAddr)
       }
    }
 
+   bool result = false;
+
    // Check if we use simple filter instead of script
    if (!_tcsicmp(szFilter, _T("auto")))
    {
-		bResult = FALSE;
       if ((autoFilterFlags & (DFF_ALLOW_AGENT | DFF_ALLOW_SNMP)) == 0)
       {
-         bResult = TRUE;
+         result = true;
       }
       else
       {
          if (autoFilterFlags & DFF_ALLOW_AGENT)
          {
             if (data.flags & NNF_IS_AGENT)
-               bResult = TRUE;
+               result = true;
          }
 
          if (autoFilterFlags & DFF_ALLOW_SNMP)
          {
             if (data.flags & NNF_IS_SNMP)
-               bResult = TRUE;
+               result = true;
          }
       }
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("AcceptNewNode(%s): auto filter - bResult=%d"), szIpAddr, bResult);
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("AcceptNewNode(%s): auto filter - bResult=%d"), szIpAddr, result);
    }
    else
    {
@@ -901,8 +902,8 @@ static BOOL AcceptNewNode(NewNodeData *newNodeData, BYTE *macAddr)
          NXSL_Value *param = vm->createValue(new NXSL_Object(vm, &s_nxslDiscoveredNodeClass, &data));
          if (vm->run(1, &param))
          {
-            bResult = (vm->getResult()->getValueAsInt32() != 0) ? TRUE : FALSE;
-            nxlog_debug_tag(DEBUG_TAG, 4, _T("AcceptNewNode(%s): Filter script result: %d"), szIpAddr, bResult);
+            result = (vm->getResult()->getValueAsInt32() != 0);
+            nxlog_debug_tag(DEBUG_TAG, 4, _T("AcceptNewNode(%s): Filter script result: %d"), szIpAddr, result);
          }
          else
          {
@@ -923,7 +924,29 @@ static BOOL AcceptNewNode(NewNodeData *newNodeData, BYTE *macAddr)
       pAgentConn->decRefCount();
    delete pTransport;
 
-   return bResult;
+   return result;
+}
+
+/**
+ * Create discovered node object
+ */
+static void CreateDiscoveredNode(NewNodeData *newNodeData)
+{
+   // Double check IP address because parallel discovery may already create that node
+   if ((FindNodeByIP(newNodeData->zoneUIN, newNodeData->ipAddr) == NULL) &&
+       (FindSubnetByIP(newNodeData->zoneUIN, newNodeData->ipAddr) == NULL))
+   {
+      ObjectTransactionStart();
+      PollNewNode(newNodeData);
+      ObjectTransactionEnd();
+   }
+   else
+   {
+      TCHAR ipAddr[64];
+      newNodeData->ipAddr.toString(ipAddr);
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("CreateDiscoveredNode(%s): node already exist in database"), ipAddr);
+   }
+   delete newNodeData;
 }
 
 /**
@@ -933,16 +956,27 @@ static void ProcessDiscoveredAddress(DiscoveredAddress *address)
 {
    if (!IsShutdownInProgress())
    {
-      NewNodeData newNodeData(address->ipAddr);
-      newNodeData.zoneUIN = address->zoneUIN;
-      newNodeData.origin = NODE_ORIGIN_NETWORK_DISCOVERY;
-      newNodeData.doConfPoll = true;
+      NewNodeData *newNodeData = new NewNodeData(address->ipAddr);
+      newNodeData->zoneUIN = address->zoneUIN;
+      newNodeData->origin = NODE_ORIGIN_NETWORK_DISCOVERY;
+      newNodeData->doConfPoll = true;
 
-      if (address->ignoreFilter || AcceptNewNode(&newNodeData, address->bMacAddr))
+      if (address->ignoreFilter || AcceptNewNode(newNodeData, address->bMacAddr))
       {
-         ObjectTransactionStart();
-         PollNewNode(&newNodeData);
-         ObjectTransactionEnd();
+         if (g_discoveryThreadPool != NULL)
+         {
+            TCHAR key[32];
+            _sntprintf(key, 32, _T("Zone%u"), address->zoneUIN);
+            ThreadPoolExecuteSerialized(g_discoveryThreadPool, key, CreateDiscoveredNode, newNodeData);
+         }
+         else
+         {
+            CreateDiscoveredNode(newNodeData);
+         }
+      }
+      else
+      {
+         delete newNodeData;
       }
    }
    s_processingListLock.lock();
@@ -995,4 +1029,23 @@ THREAD_RESULT THREAD_CALL NodePoller(void *arg)
    }
    nxlog_debug(1, _T("Node poller thread terminated"));
    return THREAD_OK;
+}
+
+/**
+ * Get total size of discovery poller queue (all stages)
+ */
+INT64 GetDiscoveryPollerQueueSize()
+{
+   int poolQueueSize;
+   if (g_discoveryThreadPool != NULL)
+   {
+      ThreadPoolInfo info;
+      ThreadPoolGetInfo(g_discoveryThreadPool, &info);
+      poolQueueSize = (info.activeRequests > info.curThreads) ? info.activeRequests - info.curThreads : 0;
+   }
+   else
+   {
+      poolQueueSize = 0;
+   }
+   return g_nodePollerQueue.size() + poolQueueSize;
 }

@@ -1019,7 +1019,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
          ShowQueueStats(pCtx, g_pEventQueue, _T("Event processor"));
          ShowQueueStats(pCtx, GetEventLogWriterQueueSize(), _T("Event log writer"));
          ShowThreadPoolPendingQueue(pCtx, g_pollerThreadPool, _T("Poller"));
-         ShowQueueStats(pCtx, &g_nodePollerQueue, _T("Node discovery poller"));
+         ShowQueueStats(pCtx, GetDiscoveryPollerQueueSize(), _T("Node discovery poller"));
          ShowQueueStats(pCtx, &g_syslogProcessingQueue, _T("Syslog processing"));
          ShowQueueStats(pCtx, &g_syslogWriteQueue, _T("Syslog writer"));
          ShowThreadPoolPendingQueue(pCtx, g_schedulerThreadPool, _T("Scheduler"));
