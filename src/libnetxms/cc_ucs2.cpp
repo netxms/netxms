@@ -1,6 +1,6 @@
 /*
  ** NetXMS - Network Management System
- ** Copyright (C) 2003-2018 Raden Solutions
+ ** Copyright (C) 2003-2019 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU Lesser General Public License as published
@@ -206,30 +206,15 @@ int LIBNETXMS_EXPORTABLE ucs2_utf8len(const UCS2CHAR *src, int srcLen)
 #if !defined(_WIN32) && !defined(UNICODE_UCS2)
 
 /**
- * Convert UCS-2 to multibyte using stub (no actual conversion for character codes above 0x007F)
- */
-static int __internal_ucs2_to_mb(const UCS2CHAR *src, int srcLen, char *dst, int dstLen)
-{
-   const UCS2CHAR *psrc;
-   char *pdst;
-   int pos, size;
-
-   size = (srcLen == -1) ? (int) ucs2_strlen(src) : srcLen;
-   if (size >= dstLen)
-      size = dstLen - 1;
-
-   for(psrc = src, pos = 0, pdst = dst; pos < size; pos++, psrc++, pdst++)
-      *pdst = (*psrc < 256) ? (char) (*psrc) : '?';
-   *pdst = 0;
-
-   return size;
-}
-
-/**
  * Convert UCS-2 to multibyte
  */
 int LIBNETXMS_EXPORTABLE ucs2_to_mb(const UCS2CHAR *src, int srcLen, char *dst, int dstLen)
 {
+   if (g_defaultCodePageType == CodePageType::ASCII)
+      return ucs2_to_ASCII(src, srcLen, dst, dstLen);
+   if (g_defaultCodePageType == CodePageType::ISO8859_1)
+      return ucs2_to_ISO8859_1(src, srcLen, dst, dstLen);
+
 #if HAVE_ICONV && !defined(__DISABLE_ICONV)
    iconv_t cd;
    const char *inbuf;
@@ -239,7 +224,7 @@ int LIBNETXMS_EXPORTABLE ucs2_to_mb(const UCS2CHAR *src, int srcLen, char *dst, 
    cd = IconvOpen(g_cpDefault, UCS2_CODEPAGE_NAME);
    if (cd == (iconv_t) (-1))
    {
-      return __internal_ucs2_to_mb(src, srcLen, dst, dstLen);
+      return ucs2_to_ASCII(src, srcLen, dst, dstLen);
    }
 
    inbuf = (const char *) src;
@@ -267,8 +252,52 @@ int LIBNETXMS_EXPORTABLE ucs2_to_mb(const UCS2CHAR *src, int srcLen, char *dst, 
 
    return (int)count;
 #else
-   return __internal_ucs2_to_mb(src, srcLen, dst, dstLen);
+   return ucs2_to_ASCII(src, srcLen, dst, dstLen);
 #endif
 }
 
 #endif
+
+/**
+ * Convert UCS-2 to ASCII (also used as fallback if iconv_open fails)
+ */
+int LIBNETXMS_EXPORTABLE ucs2_to_ASCII(const UCS2CHAR *src, int srcLen, char *dst, int dstLen)
+{
+   int size = (srcLen == -1) ? static_cast<int>(ucs2_strlen(src)) : srcLen;
+   if (size >= dstLen)
+      size = dstLen - 1;
+
+   const UCS2CHAR *psrc = src;
+   char *pdst = dst;
+   for(int pos = 0; pos < size; pos++, psrc++, pdst++)
+   {
+      if ((*psrc & 0xFC00) == 0xD800)  // high surrogate
+         continue;
+      *pdst = (*psrc < 128) ? static_cast<char>(*psrc) : '?';
+   }
+   *pdst = 0;
+
+   return size;
+}
+
+/**
+ * Convert UCS-2 to ISO8859-1
+ */
+int LIBNETXMS_EXPORTABLE ucs2_to_ISO8859_1(const UCS2CHAR *src, int srcLen, char *dst, int dstLen)
+{
+   int size = (srcLen == -1) ? static_cast<int>(ucs2_strlen(src)) : srcLen;
+   if (size >= dstLen)
+      size = dstLen - 1;
+
+   const UCS2CHAR *psrc = src;
+   BYTE *pdst = reinterpret_cast<BYTE*>(dst);
+   for(int pos = 0; pos < size; pos++, psrc++, pdst++)
+   {
+      if ((*psrc & 0xFC00) == 0xD800)  // high surrogate
+         continue;
+      *pdst = ((*psrc < 128) || ((*psrc >= 160) && (*psrc <= 255))) ? static_cast<BYTE>(*psrc) : '?';
+   }
+   *pdst = 0;
+
+   return size;
+}
