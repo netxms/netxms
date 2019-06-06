@@ -388,6 +388,7 @@ struct DiscoveryFilterData
    UINT32 zoneUIN;
    UINT32 flags;
    int snmpVersion;
+   bool dnsNameResolved;
    TCHAR dnsName[MAX_DNS_NAME];
    TCHAR snmpObjectId[MAX_OID_LEN * 4];    // SNMP OID
    TCHAR agentVersion[MAX_AGENT_VERSION_LEN];
@@ -525,9 +526,8 @@ NXSL_Value *NXSL_DiscoveredNodeClass::getAttr(NXSL_Object *object, const char *a
    }
    else if (!strcmp(attr, "dnsName"))
    {
-      if (data->dnsName[0] == 0)
+      if (!data->dnsNameResolved)
       {
-         bool addressResolved = false;
          if (IsZoningEnabled() && (data->zoneUIN != 0))
          {
             Zone *zone = FindZoneByUIN(data->zoneUIN);
@@ -536,23 +536,18 @@ NXSL_Value *NXSL_DiscoveredNodeClass::getAttr(NXSL_Object *object, const char *a
                AgentConnectionEx *conn = zone->acquireConnectionToProxy();
                if (conn != NULL)
                {
-                  addressResolved = (conn->getHostByAddr(data->ipAddr, data->dnsName, MAX_DNS_NAME) != NULL);
+                  conn->getHostByAddr(data->ipAddr, data->dnsName, MAX_DNS_NAME);
                   conn->decRefCount();
                }
             }
          }
          else
          {
-            addressResolved = (data->ipAddr.getHostByAddr(data->dnsName, MAX_DNS_NAME) != NULL);
+            data->ipAddr.getHostByAddr(data->dnsName, MAX_DNS_NAME);
          }
-
-         if (!addressResolved)
-         {
-            // Return IP address as DNS name if request fails
-            data->ipAddr.toString(data->dnsName);
-         }
+         data->dnsNameResolved = true;
       }
-      value = vm->createValue(data->dnsName);
+      value = (data->dnsName[0] != 0) ? vm->createValue(data->dnsName) : vm->createValue();
    }
    else if (!strcmp(attr, "interfaces"))
    {
