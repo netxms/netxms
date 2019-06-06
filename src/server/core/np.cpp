@@ -936,18 +936,20 @@ static BOOL AcceptNewNode(NewNodeData *newNodeData, BYTE *macAddr)
  */
 static void ProcessDiscoveredAddress(DiscoveredAddress *address)
 {
-   NewNodeData newNodeData(address->ipAddr);
-   newNodeData.zoneUIN = address->zoneUIN;
-   newNodeData.origin = NODE_ORIGIN_NETWORK_DISCOVERY;
-   newNodeData.doConfPoll = true;
-
-   if (address->ignoreFilter || AcceptNewNode(&newNodeData, address->bMacAddr))
+   if (!IsShutdownInProgress())
    {
-      ObjectTransactionStart();
-      PollNewNode(&newNodeData);
-      ObjectTransactionEnd();
-   }
+      NewNodeData newNodeData(address->ipAddr);
+      newNodeData.zoneUIN = address->zoneUIN;
+      newNodeData.origin = NODE_ORIGIN_NETWORK_DISCOVERY;
+      newNodeData.doConfPoll = true;
 
+      if (address->ignoreFilter || AcceptNewNode(&newNodeData, address->bMacAddr))
+      {
+         ObjectTransactionStart();
+         PollNewNode(&newNodeData);
+         ObjectTransactionEnd();
+      }
+   }
    s_processingListLock.lock();
    s_processingList.remove(address);
    s_processingListLock.unlock();
