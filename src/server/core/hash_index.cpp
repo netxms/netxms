@@ -62,12 +62,14 @@ HashIndexBase::~HashIndexBase()
    HashIndexElement *entry, *tmp;
    HASH_ITER(hh, m_primary->elements, entry, tmp)
    {
+      HASH_DEL(m_primary->elements, entry);
       MemFree(entry);
    }
    MemFree(m_primary);
 
    HASH_ITER(hh, m_secondary->elements, entry, tmp)
    {
+      HASH_DEL(m_secondary->elements, entry);
       MemFree(entry);
    }
    MemFree(m_secondary);
