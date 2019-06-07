@@ -1008,6 +1008,9 @@ retry_db_lock:
 	FileUploadJob::init();
 	InitMappingTables();
 
+	//Initialize user agent messages
+	InitUserAgentMessages();
+
    InitClientListeners();
    int importMode = ConfigReadInt(_T("ImportConfigurationOnStartup"), 1);
 	if (importMode > 0)

@@ -147,6 +147,7 @@
 #define IDG_DCI_SUMMARY_TABLE 21
 #define IDG_SCHEDULED_TASK    22
 #define IDG_ALARM_CATEGORY    23
+#define IDG_UA_MESSAGE        24
 
 /**
  * Exit codes for console commands
@@ -769,6 +770,9 @@ private:
    void onPolicyEditorClose(NXCPMessage *request);
    void forcApplyPolicy(NXCPMessage *pRequest);
    void getMatchingDCI(NXCPMessage *request);
+   void getUserAgentMessages(NXCPMessage *request);
+   void addUserAgentMessages(NXCPMessage *request);
+   void recallUserAgentMessages(NXCPMessage *request);
    ObjectArray<DCObject> *resolveDCOsByRegex(UINT32 objectId, const TCHAR *objectNameRegex, const TCHAR *dciRegex, bool searchByName);
 #ifdef WITH_ZMQ
    void zmqManageSubscription(NXCPMessage *request, zmq::SubscriptionType type, bool subscribe);

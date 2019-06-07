@@ -613,6 +613,11 @@ typedef struct
 #define CMD_POLICY_FORCE_APPLY            0x017A
 #define CMD_GET_NODE_HARDWARE             0x017B
 #define CMD_GET_MATCHING_DCI              0x017C
+#define CMD_GET_USER_AGENT_MESSAGES       0x017D
+#define CMD_ADD_USER_AGENT_MESSAGE        0x017E
+#define CMD_RECALL_USER_AGENT_MESSAGE     0x017F
+#define CMD_UPDATE_USER_AGENT_MESSAGES    0x0180
+
 
 #define CMD_RS_LIST_REPORTS            0x1100
 #define CMD_RS_GET_REPORT              0x1101
@@ -1269,6 +1274,7 @@ typedef struct
 #define VID_BACKUP_ZONE_PROXY_ID    ((UINT32)639)
 #define VID_USERAGENT_INSTALLED     ((UINT32)640)
 #define VID_CATEGORY_LIST           ((UINT32)641)
+#define VID_USER_AGENT_MESSAGE_COUNT ((UINT32)642)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)
@@ -1482,6 +1488,8 @@ typedef struct
 #define VID_CONFIG_HINT_LIST_BASE   ((UINT32)0x10000000)
 
 #define VID_ZONE_PROXY_BASE         ((UINT32)0x70000000)
+
+#define VID_USER_AGENT_MESSAGE_BASE ((UINT32)0x10000000)
 
 // base value for SNMP community strings
 #define VID_COMMUNITY_STRING_LIST_BASE       ((UINT32)0x10000000)

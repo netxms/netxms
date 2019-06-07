@@ -442,7 +442,7 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
    {
       FileDialog dlg = new FileDialog(getShell(), SWT.OPEN);
       dlg.setFilterExtensions(new String[] { "*.ico", "*.*" }); //$NON-NLS-1$ //$NON-NLS-2$
-      dlg.setFilterNames(new String[] { "Icon files", "All files" });
+      //dlg.setFilterNames(new String[] { "Icon files", "All files" });
       String fileName = dlg.open();
       if (fileName == null)
          return;

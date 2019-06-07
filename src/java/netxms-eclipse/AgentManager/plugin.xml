@@ -53,6 +53,14 @@
             name="Agent Tunnel Manager"
             restorable="true">
       </view>
+      <view
+            allowMultiple="false"
+            class="org.netxms.ui.eclipse.agentmanager.views.UserAgentMessagesView"
+            icon="icons/user_agent_messages.png"
+            id="org.netxms.ui.eclipse.agentmanager.views.UserAgentMessagesView"
+            name="User Agent Messages"
+            restorable="true">
+      </view>
    </extension>
    <extension
          point="org.eclipse.ui.popupMenus">
@@ -75,6 +83,15 @@
                icon="icons/image_obj.gif"
                id="org.netxms.ui.eclipse.agentmanager.popupActions.TakeScreenshot_Node"
                label="%menu.TakeScreenshot"
+               menubarPath="objectmgmt"
+               style="push">
+         </action>
+         <action
+               class="org.netxms.ui.eclipse.agentmanager.actions.SendUserAgentMessage"
+               enablesFor="+"
+               icon="icons/user_agent_messages.png"
+               id="horg.netxms.ui.eclipse.agentmanager.popupActions.SendUserAgentMessage"
+               label="Send user agent message"
                menubarPath="objectmgmt"
                style="push">
          </action>
@@ -117,6 +134,16 @@
                toolbarPath="config/additions"
                tooltip="%actionDescription.openTunnelManager">
          </action>
+         <action
+               class="org.netxms.ui.eclipse.agentmanager.actions.OpenUserAgentMessagesView"
+               definitionId="org.netxms.ui.eclipse.agentmanager.commands.open_user_agent_messages"
+               icon="icons/user_agent_messages.png"
+               id="org.netxms.ui.eclipse.agentmanager.actions.open_user_agent_messages"
+               label="User Agent Messages"
+               menubarPath="config/additions"
+               style="push"
+               tooltip="Open User Agent Messages">
+         </action>
       </actionSet>
    </extension>
    <extension
@@ -152,6 +179,12 @@
             id="org.netxms.ui.eclipse.agentmanager.commands.show_filter"
             name="Toggle Filter">
       </command>
+      <command
+            categoryId="org.netxms.ui.eclipse.console.category.views"
+            description="Open User Agent Messages"
+            id="org.netxms.ui.eclipse.agentmanager.commands.open_user_agent_messages"
+            name="User Agent Messages">
+      </command>
    </extension>
    <extension
          point="org.eclipse.ui.contexts">
@@ -168,6 +201,11 @@
       <context
             id="org.netxms.ui.eclipse.agentmanager.context.ConfigEditor"
             name="Agent Config Editor"
+            parentId="org.eclipse.ui.contexts.window">
+      </context>
+      <context
+            id="org.netxms.ui.eclipse.agentmanager.context.UserAgentMessagesView"
+            name="User Agent Messages"
             parentId="org.eclipse.ui.contexts.window">
       </context>
    </extension>
@@ -197,6 +235,31 @@
             schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
             sequence="M1+F">
       </key>
+   </extension>
+   <extension
+         point="org.eclipse.ui.activities">
+      <activity
+            id="org.netxms.ui.eclipse.agentmanager.activities.SendUserAgentMessage"
+            name="User Agent Message">
+         <enabledWhen>
+            <with
+                  variable="org.netxms.access.UserAgentMessages">
+               <equals
+                     value="true">
+               </equals>
+            </with>
+         </enabledWhen>
+      </activity>
+      <activityPatternBinding
+            activityId="org.netxms.ui.eclipse.agentmanager.activities.SendUserAgentMessage"
+            isEqualityPattern="true"
+            pattern="org.netxms.ui.eclipse.agentmanager/org.netxms.ui.eclipse.agentmanager.actions.open_user_agent_messages">
+      </activityPatternBinding>
+      <activityPatternBinding
+            activityId="org.netxms.ui.eclipse.agentmanager.activities.SendUserAgentMessage"
+            isEqualityPattern="true"
+            pattern="org.netxms.ui.eclipse.agentmanager/horg.netxms.ui.eclipse.agentmanager.popupActions.SendUserAgentMessage">
+      </activityPatternBinding>
    </extension>
 
 </plugin>

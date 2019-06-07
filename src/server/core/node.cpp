@@ -3521,6 +3521,13 @@ bool Node::confPollAgent(UINT32 rqId)
 
       checkAgentPolicyBinding(pAgentConn);
 
+      //Send active user agent messages to agent
+      NXCPMessage msg;
+      msg.setCode(CMD_UPDATE_USER_AGENT_MESSAGES);
+      msg.setId(pAgentConn->generateRequestId());
+      FillUserAgentMessagesAll(&msg, this);
+      pAgentConn->sendMessage(&msg);
+
       pAgentConn->disconnect();
    }
    else

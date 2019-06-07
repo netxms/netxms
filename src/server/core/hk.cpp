@@ -332,6 +332,17 @@ static THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
 		g_idxMobileDeviceById.forEach(CleanDciData, hdb);
 		g_idxSensorById.forEach(CleanDciData, hdb);
 
+		//Delete old user agent messages
+	   dwRetentionTime = ConfigReadULong(_T("UserAgent.RetentionTime"), 30);
+	   if (dwRetentionTime > 0)
+	   {
+	      nxlog_debug_tag(DEBUG_TAG, 2, _T("Clearing user agent messages log (retention time %d days)"), dwRetentionTime);
+	      dwRetentionTime *= 86400;  // Convert days to seconds
+	      DeleteOldUserAgentMessages(hdb, dwRetentionTime);
+         if (!ThrottleHousekeeper())
+            break;
+	   }
+
 		DBConnectionPoolReleaseConnection(hdb);
 
 		// Validate template DCIs

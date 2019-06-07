@@ -24,6 +24,28 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 30.74 to 30.75
+ */
+static bool H_UpgradeFromV74()
+{
+   CHK_EXEC(CreateTable(
+      _T("CREATE TABLE user_agent_messages (")
+      _T("   id integer not null,")
+      _T("   message varchar(1023) null,")
+      _T("   objects varchar(1023) not null,")
+      _T("   start_time integer not null,")
+      _T("   end_time integer not null,")
+      _T("   recall char(1) not null,")
+      _T("PRIMARY KEY(id))")));
+
+   CHK_EXEC(CreateConfigParam(_T("UserAgent.DefaultMessageRetentionTime"), _T("10080"), _T("Default user agent message retention time (in minutes)."), _T("minutes"), 'I', true, false, true, false));
+   CHK_EXEC(CreateConfigParam(_T("UserAgent.RetentionTime"), _T("30"), _T("User agent message historical data retention time (in days)."), _T("days"), 'I', true, false, false, false));
+
+   CHK_EXEC(SetMinorSchemaVersion(75));
+   return true;
+}
+
+/**
  * Upgrade from 30.73 to 30.74 (changes also included into 22.58)
  */
 static bool H_UpgradeFromV73()
@@ -2496,6 +2518,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 74, 30, 75, H_UpgradeFromV74 },
    { 73, 30, 74, H_UpgradeFromV73 },
    { 72, 30, 73, H_UpgradeFromV72 },
    { 71, 30, 72, H_UpgradeFromV71 },

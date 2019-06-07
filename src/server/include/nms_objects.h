@@ -3480,6 +3480,42 @@ struct ObjectQueryResult
    }
 };
 
+#define MAX_USER_AGENT_MESSAGE_SIZE 1024
+
+/**
+ * User agent message list
+ */
+class UserAgentMessage
+{
+private:
+   UINT32 m_id;
+   TCHAR m_message[MAX_USER_AGENT_MESSAGE_SIZE];
+   IntegerArray<UINT32> *m_objectList; //like alarm category list
+   time_t m_startTime;
+   time_t m_endTime;
+   bool m_recall;
+   VolatileCounter m_refCount;
+
+public:
+   UserAgentMessage(DB_RESULT result, int row);
+   UserAgentMessage(const TCHAR *message, IntegerArray<UINT32> *m_objectId, time_t startTime, time_t endTime);
+   ~UserAgentMessage() { MemFree(m_message); }
+
+   UINT32 getId() { return m_id; }
+   time_t getEndTime() { return m_endTime; }
+   time_t getStartTime() { return m_startTime; }
+   bool isRecalled() { return m_recall; }
+
+   void recall() { m_recall = true; processUpdate(); };
+   void processUpdate();
+   bool isApplicable(UINT32 nodeId);
+   void fillMessage(UINT32 base, NXCPMessage *msg, bool fullInfo = true);
+   void saveToDatabase();
+   void incRefCount() { InterlockedIncrement(&m_refCount); }
+   void decRefCountInc() { InterlockedIncrement(&m_refCount); }
+   bool hasNoRef() { return m_refCount == 0; }
+};
+
 /**
  * Functions
  */
@@ -3548,6 +3584,10 @@ int GetDefaultStatusCalculation(int *pnSingleThreshold, int **ppnThresholds);
 PollerInfo *RegisterPoller(PollerType type, NetObj *object, bool objectCreation = false);
 void ShowPollers(CONSOLE_CTX console);
 
+void InitUserAgentMessages();
+void DeleteOldUserAgentMessages(DB_HANDLE hdb,UINT32 retentionTime);
+void FillUserAgentMessagesAll(NXCPMessage *msg, Node *node);
+
 /**
  * Global variables
  */
@@ -3577,5 +3617,9 @@ extern ObjectIndex NXCORE_EXPORTABLE g_idxAccessPointById;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxConditionById;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxServiceCheckById;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxSensorById;
+
+//User agent messages
+extern Mutex g_userAgentMessageListMutex;
+extern ObjectArray<UserAgentMessage> g_userAgentMessageList;
 
 #endif   /* _nms_objects_h_ */

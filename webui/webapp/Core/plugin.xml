@@ -233,15 +233,19 @@
                priorityLevel="workbench">
          </variable>
          <variable
+               name="org.netxms.access.ExternalIntegration"
+               priorityLevel="workbench">
+         </variable>
+         <variable
+               name="org.netxms.access.ImportConfiguration"
+               priorityLevel="workbench">
+         </variable>
+         <variable
                name="org.netxms.access.ManageActions"
                priorityLevel="workbench">
          </variable>
          <variable
                name="org.netxms.access.ManageAgentConfig"
-               priorityLevel="workbench">
-         </variable>
-         <variable
-               name="org.netxms.access.ManageServerFiles"
                priorityLevel="workbench">
          </variable>
          <variable
@@ -257,15 +261,23 @@
                priorityLevel="workbench">
          </variable>
          <variable
+               name="org.netxms.access.ManagePStorage"
+               priorityLevel="workbench">
+         </variable>
+         <variable
+               name="org.netxms.access.ManageRepositories"
+               priorityLevel="workbench">
+         </variable>
+         <variable
                name="org.netxms.access.ManageScripts"
                priorityLevel="workbench">
          </variable>
          <variable
-               name="org.netxms.access.ManageSessions"
+               name="org.netxms.access.ManageServerFiles"
                priorityLevel="workbench">
          </variable>
          <variable
-               name="org.netxms.access.ManagePStorage"
+               name="org.netxms.access.ManageSessions"
                priorityLevel="workbench">
          </variable>
          <variable
@@ -325,11 +337,23 @@
                priorityLevel="workbench">
          </variable>
          <variable
+               name="org.netxms.access.SetupTcpProxy"
+               priorityLevel="workbench">
+         </variable>
+         <variable
                name="org.netxms.access.UnlinkIssues"
                priorityLevel="workbench">
          </variable>
          <variable
+               name="org.netxms.access.UserAgentMessages"
+               priorityLevel="workbench">
+         </variable>
+         <variable
                name="org.netxms.access.UserScheduledTasks"
+               priorityLevel="workbench">
+         </variable>
+         <variable
+               name="org.netxms.access.ViewAllAlarms"
                priorityLevel="workbench">
          </variable>
          <variable
@@ -342,6 +366,10 @@
          </variable>
          <variable
                name="org.netxms.access.ViewEventLog"
+               priorityLevel="workbench">
+         </variable>
+         <variable
+               name="org.netxms.access.ViewRepositories"
                priorityLevel="workbench">
          </variable>
          <variable

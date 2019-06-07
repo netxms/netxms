@@ -30,6 +30,9 @@ UINT32 DeployPolicy(CommSession *session, NXCPMessage *request);
 UINT32 UninstallPolicy(CommSession *session, NXCPMessage *request);
 UINT32 GetPolicyInventory(CommSession *session, NXCPMessage *msg);
 void ClearDataCollectionConfiguration();
+UINT32 AddUserAgentMessageChange(NXCPMessage *request);
+UINT32 RemoveUserAgentMessageChange(NXCPMessage *request);
+UINT32 UpdateUserAgentMessageList(NXCPMessage *request);
 
 /**
  * SNMP proxy thread pool
@@ -745,6 +748,36 @@ void CommSession::processingThread()
                if (m_masterServer && (g_dwFlags & AF_ENABLE_TCP_PROXY))
                {
                   response.setField(VID_RCC, closeTcpProxy(request));
+               }
+               else
+               {
+                  response.setField(VID_RCC, ERR_ACCESS_DENIED);
+               }
+               break;
+            case CMD_ADD_USER_AGENT_MESSAGE:
+               if (m_masterServer)
+               {
+                  response.setField(VID_RCC, AddUserAgentMessageChange(request));
+               }
+               else
+               {
+                  response.setField(VID_RCC, ERR_ACCESS_DENIED);
+               }
+               break;
+            case CMD_RECALL_USER_AGENT_MESSAGE:
+               if (m_masterServer)
+               {
+                  response.setField(VID_RCC, RemoveUserAgentMessageChange(request));
+               }
+               else
+               {
+                  response.setField(VID_RCC, ERR_ACCESS_DENIED);
+               }
+               break;
+            case CMD_UPDATE_USER_AGENT_MESSAGES:
+               if (m_masterServer)
+               {
+                  response.setField(VID_RCC, UpdateUserAgentMessageList(request));
                }
                else
                {

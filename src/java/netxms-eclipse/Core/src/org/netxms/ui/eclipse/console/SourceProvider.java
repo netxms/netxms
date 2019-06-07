@@ -35,15 +35,18 @@ public class SourceProvider extends AbstractSourceProvider
    public static final String UA_DELETE_ALARMS         = "org.netxms.access.DeleteAlarms"; //$NON-NLS-1$
    public static final String UA_EDIT_EVENT_DB         = "org.netxms.access.EditEventConfiguration"; //$NON-NLS-1$
    public static final String UA_EPP                   = "org.netxms.access.EventProcessingPolicy"; //$NON-NLS-1$
+   public static final String UA_EXTERNAL_INTEGRATION  = "org.netxms.access.ExternalIntegration"; //$NON-NLS-1$
+   public static final String UA_IMPORT_CONFIGURATION  = "org.netxms.access.ImportConfiguration"; //$NON-NLS-1$
    public static final String UA_MANAGE_ACTIONS        = "org.netxms.access.ManageActions"; //$NON-NLS-1$
    public static final String UA_MANAGE_AGENT_CFG      = "org.netxms.access.ManageAgentConfig"; //$NON-NLS-1$
-   public static final String UA_MANAGE_SERVER_FILES   = "org.netxms.access.ManageServerFiles"; //$NON-NLS-1$
    public static final String UA_MANAGE_IMAGE_LIB      = "org.netxms.access.ManageImageLibray"; //$NON-NLS-1$
    public static final String UA_MANAGE_MAPPING_TBLS   = "org.netxms.access.ManageMappingTables"; //$NON-NLS-1$
    public static final String UA_MANAGE_PACKAGES       = "org.netxms.access.ManagePackages"; //$NON-NLS-1$
-   public static final String UA_MANAGE_SCRIPTS        = "org.netxms.access.ManageScripts"; //$NON-NLS-1$
-   public static final String UA_MANAGE_SESSIONS       = "org.netxms.access.ManageSessions"; //$NON-NLS-1$
    public static final String UA_MANAGE_PSTORAGE       = "org.netxms.access.ManagePStorage"; //$NON-NLS-1$
+   public static final String UA_MANAGE_REPOSITORIES   = "org.netxms.access.ManageRepositories"; //$NON-NLS-1$
+   public static final String UA_MANAGE_SCRIPTS        = "org.netxms.access.ManageScripts"; //$NON-NLS-1$
+   public static final String UA_MANAGE_SERVER_FILES   = "org.netxms.access.ManageServerFiles"; //$NON-NLS-1$
+   public static final String UA_MANAGE_SESSIONS       = "org.netxms.access.ManageSessions"; //$NON-NLS-1$
    public static final String UA_MANAGE_SUMMARY_TBLS   = "org.netxms.access.ManageSummaryTables"; //$NON-NLS-1$
    public static final String UA_MANAGE_TOOLS          = "org.netxms.access.ManageTools"; //$NON-NLS-1$
 	public static final String UA_MANAGE_USERS          = "org.netxms.access.ManageUsers"; //$NON-NLS-1$
@@ -58,11 +61,15 @@ public class SourceProvider extends AbstractSourceProvider
    public static final String UA_SEND_SMS              = "org.netxms.access.SendSMS"; //$NON-NLS-1$
    public static final String UA_SERVER_CONFIG         = "org.netxms.access.ServerConfig"; //$NON-NLS-1$
    public static final String UA_SERVER_CONSOLE        = "org.netxms.access.ServerConsole"; //$NON-NLS-1$
+   public static final String UA_SETUP_TCP_PROXY       = "org.netxms.access.SetupTcpProxy"; //$NON-NLS-1$
    public static final String UA_UNLINK_ISSUES         = "org.netxms.access.UnlinkIssues"; //$NON-NLS-1$
+   public static final String UA_USER_AGENT_MESSAGES   = "org.netxms.access.UserAgentMessages"; //$NON-NLS-1$
    public static final String UA_USER_SCHEDULED_TASKS  = "org.netxms.access.UserScheduledTasks"; //$NON-NLS-1$
+   public static final String UA_VIEW_ALL_ALARMS       = "org.netxms.access.ViewAllAlarms"; //$NON-NLS-1$
    public static final String UA_VIEW_AUDIT_LOG        = "org.netxms.access.ViewAuditLog"; //$NON-NLS-1$
    public static final String UA_VIEW_EVENT_DB         = "org.netxms.access.ViewEventConfiguration"; //$NON-NLS-1$
    public static final String UA_VIEW_EVENT_LOG        = "org.netxms.access.ViewEventLog"; //$NON-NLS-1$
+   public static final String UA_VIEW_REPOSITORIES     = "org.netxms.access.ViewRepositories"; //$NON-NLS-1$
    public static final String UA_VIEW_SYSLOG           = "org.netxms.access.ViewSyslog"; //$NON-NLS-1$
    public static final String UA_VIEW_TRAP_LOG         = "org.netxms.access.ViewTrapLog"; //$NON-NLS-1$
    public static final String UA_XMPP_COMMANDS         = "org.netxms.access.XMPPCommands"; //$NON-NLS-1$
@@ -74,15 +81,18 @@ public class SourceProvider extends AbstractSourceProvider
    	   UA_DELETE_ALARMS,
    	   UA_EDIT_EVENT_DB,
    	   UA_EPP,
+   	   UA_EXTERNAL_INTEGRATION,
+   	   UA_IMPORT_CONFIGURATION,
    	   UA_MANAGE_ACTIONS,
    	   UA_MANAGE_AGENT_CFG,
-   	   UA_MANAGE_SERVER_FILES,
    	   UA_MANAGE_IMAGE_LIB,
    	   UA_MANAGE_MAPPING_TBLS,
    	   UA_MANAGE_PACKAGES,
-   	   UA_MANAGE_SCRIPTS,
+         UA_MANAGE_PSTORAGE,
+   	   UA_MANAGE_REPOSITORIES,
+         UA_MANAGE_SCRIPTS,
+         UA_MANAGE_SERVER_FILES,
    	   UA_MANAGE_SESSIONS,
-   	   UA_MANAGE_PSTORAGE,
    	   UA_MANAGE_SUMMARY_TBLS,
    	   UA_MANAGE_TOOLS,
    	   UA_MANAGE_USERS,
@@ -97,11 +107,15 @@ public class SourceProvider extends AbstractSourceProvider
    	   UA_SEND_SMS,
    	   UA_SERVER_CONFIG,
    	   UA_SERVER_CONSOLE,
+   	   UA_SETUP_TCP_PROXY,
    	   UA_UNLINK_ISSUES,
+   	   UA_USER_AGENT_MESSAGES,
    	   UA_USER_SCHEDULED_TASKS,
+   	   UA_VIEW_ALL_ALARMS,
    	   UA_VIEW_AUDIT_LOG,
    	   UA_VIEW_EVENT_DB,
    	   UA_VIEW_EVENT_LOG,
+   	   UA_VIEW_REPOSITORIES,
    	   UA_VIEW_SYSLOG,
    	   UA_VIEW_TRAP_LOG,
    	   UA_XMPP_COMMANDS
@@ -169,15 +183,18 @@ public class SourceProvider extends AbstractSourceProvider
       setAccessRight(rights, UserAccessRights.SYSTEM_ACCESS_DELETE_ALARMS, UA_DELETE_ALARMS);
       setAccessRight(rights, UserAccessRights.SYSTEM_ACCESS_EDIT_EVENT_DB, UA_EDIT_EVENT_DB);
       setAccessRight(rights, UserAccessRights.SYSTEM_ACCESS_EPP, UA_EPP);
+      setAccessRight(rights, UserAccessRights.SYSTEM_ACCESS_EXTERNAL_INTEGRATION, UA_EXTERNAL_INTEGRATION);
+      setAccessRight(rights, UserAccessRights.SYSTEM_ACCESS_IMPORT_CONFIGURATION, UA_IMPORT_CONFIGURATION);
       setAccessRight(rights, UserAccessRights.SYSTEM_ACCESS_MANAGE_ACTIONS, UA_MANAGE_ACTIONS);
       setAccessRight(rights, UserAccessRights.SYSTEM_ACCESS_MANAGE_AGENT_CFG, UA_MANAGE_AGENT_CFG);
       setAccessRight(rights, UserAccessRights.SYSTEM_ACCESS_MANAGE_IMAGE_LIB, UA_MANAGE_IMAGE_LIB);
       setAccessRight(rights, UserAccessRights.SYSTEM_ACCESS_MANAGE_MAPPING_TBLS, UA_MANAGE_MAPPING_TBLS);
       setAccessRight(rights, UserAccessRights.SYSTEM_ACCESS_MANAGE_PACKAGES, UA_MANAGE_PACKAGES);
+      setAccessRight(rights, UserAccessRights.SYSTEM_ACCESS_PERSISTENT_STORAGE, UA_MANAGE_PSTORAGE);
+      setAccessRight(rights, UserAccessRights.SYSTEM_ACCESS_MANAGE_REPOSITORIES, UA_MANAGE_REPOSITORIES);
       setAccessRight(rights, UserAccessRights.SYSTEM_ACCESS_MANAGE_SCRIPTS, UA_MANAGE_SCRIPTS);
       setAccessRight(rights, UserAccessRights.SYSTEM_ACCESS_MANAGE_SERVER_FILES, UA_MANAGE_SERVER_FILES);
       setAccessRight(rights, UserAccessRights.SYSTEM_ACCESS_MANAGE_SESSIONS, UA_MANAGE_SESSIONS);
-      setAccessRight(rights, UserAccessRights.SYSTEM_ACCESS_PERSISTENT_STORAGE, UA_MANAGE_PSTORAGE);
       setAccessRight(rights, UserAccessRights.SYSTEM_ACCESS_MANAGE_SUMMARY_TBLS, UA_MANAGE_SUMMARY_TBLS);
       setAccessRight(rights, UserAccessRights.SYSTEM_ACCESS_MANAGE_TOOLS, UA_MANAGE_TOOLS);
 	   setAccessRight(rights, UserAccessRights.SYSTEM_ACCESS_MANAGE_USERS, UA_MANAGE_USERS);
@@ -192,11 +209,15 @@ public class SourceProvider extends AbstractSourceProvider
       setAccessRight(rights, UserAccessRights.SYSTEM_ACCESS_SEND_SMS, UA_SEND_SMS);
 	   setAccessRight(rights, UserAccessRights.SYSTEM_ACCESS_SERVER_CONFIG, UA_SERVER_CONFIG);
       setAccessRight(rights, UserAccessRights.SYSTEM_ACCESS_SERVER_CONSOLE, UA_SERVER_CONSOLE);
+      setAccessRight(rights, UserAccessRights.SYSTEM_ACCESS_SETUP_TCP_PROXY, UA_SETUP_TCP_PROXY);
       setAccessRight(rights, UserAccessRights.SYSTEM_ACCESS_UNLINK_ISSUES, UA_UNLINK_ISSUES);
+      setAccessRight(rights, UserAccessRights.SYSTEM_ACCESS_USAER_AGENT_MESSAGES, UA_USER_AGENT_MESSAGES);
       setAccessRight(rights, UserAccessRights.SYSTEM_ACCESS_USER_SCHEDULED_TASKS, UA_USER_SCHEDULED_TASKS);
+      setAccessRight(rights, UserAccessRights.SYSTEM_ACCESS_VIEW_ALL_ALARMS, UA_VIEW_ALL_ALARMS);
       setAccessRight(rights, UserAccessRights.SYSTEM_ACCESS_VIEW_AUDIT_LOG, UA_VIEW_AUDIT_LOG);
 	   setAccessRight(rights, UserAccessRights.SYSTEM_ACCESS_VIEW_EVENT_DB, UA_VIEW_EVENT_DB);
 	   setAccessRight(rights, UserAccessRights.SYSTEM_ACCESS_VIEW_EVENT_LOG, UA_VIEW_EVENT_LOG);
+      setAccessRight(rights, UserAccessRights.SYSTEM_ACCESS_VIEW_REPOSITORIES, UA_VIEW_REPOSITORIES);
       setAccessRight(rights, UserAccessRights.SYSTEM_ACCESS_VIEW_SYSLOG, UA_VIEW_SYSLOG);
 	   setAccessRight(rights, UserAccessRights.SYSTEM_ACCESS_VIEW_TRAP_LOG, UA_VIEW_TRAP_LOG);
 	   setAccessRight(rights, UserAccessRights.SYSTEM_ACCESS_XMPP_COMMANDS, UA_XMPP_COMMANDS);

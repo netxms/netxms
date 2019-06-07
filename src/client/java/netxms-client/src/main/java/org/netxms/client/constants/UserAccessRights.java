@@ -52,6 +52,7 @@ public class UserAccessRights
    public static final long SYSTEM_ACCESS_EXTERNAL_INTEGRATION    = 0x008000000000L;
    public static final long SYSTEM_ACCESS_SETUP_TCP_PROXY         = 0x010000000000L;
    public static final long SYSTEM_ACCESS_IMPORT_CONFIGURATION    = 0x020000000000L;
+   public static final long SYSTEM_ACCESS_USAER_AGENT_MESSAGES    = 0x040000000000L;
 
 	// Object access rights
 	public static final int OBJECT_ACCESS_READ          = 0x00000001;

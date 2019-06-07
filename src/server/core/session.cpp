@@ -1341,6 +1341,15 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_GET_MATCHING_DCI:
          getMatchingDCI(request);
          break;
+      case CMD_GET_USER_AGENT_MESSAGES:
+         getUserAgentMessages(request);
+         break;
+      case CMD_ADD_USER_AGENT_MESSAGE:
+         addUserAgentMessages(request);
+         break;
+      case CMD_RECALL_USER_AGENT_MESSAGE:
+         recallUserAgentMessages(request);
+         break;
 #ifdef WITH_ZMQ
       case CMD_ZMQ_SUBSCRIBE_EVENT:
          zmqManageSubscription(request, zmq::EVENT, true);
@@ -14700,6 +14709,115 @@ void ClientSession::getMatchingDCI(NXCPMessage *request)
    }
    else
       msg.setField(VID_RCC, RCC_INVALID_ARGUMENT);
+
+   sendMessage(&msg);
+}
+
+/**
+ * Get list of user agent messages
+ */
+void ClientSession::getUserAgentMessages(NXCPMessage *request)
+{
+   NXCPMessage msg;
+   msg.setCode(CMD_REQUEST_COMPLETED);
+   msg.setId(request->getId());
+
+   if (m_dwSystemAccess & SYSTEM_ACCESS_USAER_AGENT_MESSAGES)
+   {
+      g_userAgentMessageListMutex.lock();
+      msg.setField(VID_USER_AGENT_MESSAGE_COUNT, g_userAgentMessageList.size());
+      int base = VID_USER_AGENT_MESSAGE_BASE;
+      for(int i = 0; i < g_userAgentMessageList.size(); i++, base+=10)
+      {
+         g_userAgentMessageList.get(i)->fillMessage(base, &msg);
+      }
+      g_userAgentMessageListMutex.unlock();
+      msg.setField(VID_RCC, RCC_SUCCESS);
+   }
+   else
+      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+
+   sendMessage(&msg);
+}
+
+/**
+ * Create new user agent message and send to the nodes
+ */
+void ClientSession::addUserAgentMessages(NXCPMessage *request)
+{
+   NXCPMessage msg;
+   msg.setCode(CMD_REQUEST_COMPLETED);
+   msg.setId(request->getId());
+
+   if (m_dwSystemAccess & SYSTEM_ACCESS_USAER_AGENT_MESSAGES)
+   {
+      IntegerArray<UINT32> *arr = new IntegerArray<UINT32>(16,16);
+      request->getFieldAsInt32Array(VID_USER_AGENT_MESSAGE_BASE + 1, arr);
+      bool hasAccess = true;
+      for (int i = 0; i < arr->size(); i++)
+      {
+         if(!FindObjectById(arr->get(i))->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+         {
+            hasAccess = false;
+            break;
+         }
+      }
+      if (hasAccess)
+      {
+         g_userAgentMessageListMutex.lock();
+         TCHAR tmp[MAX_USER_AGENT_MESSAGE_SIZE];
+         UserAgentMessage *uam = new UserAgentMessage(request->getFieldAsString(VID_USER_AGENT_MESSAGE_BASE, tmp, MAX_USER_AGENT_MESSAGE_SIZE),
+               arr, request->getFieldAsTime(VID_USER_AGENT_MESSAGE_BASE + 2), request->getFieldAsTime(VID_USER_AGENT_MESSAGE_BASE + 3));
+         g_userAgentMessageList.add(uam);
+         uam->incRefCount();
+         g_userAgentMessageListMutex.unlock();
+
+         ThreadPoolExecute(g_clientThreadPool, uam, &UserAgentMessage::processUpdate);
+      }
+      else
+      {
+         delete arr;
+         msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      }
+   }
+   else
+      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+
+   sendMessage(&msg);
+}
+
+/**
+ * Recall user user message
+ */
+void ClientSession::recallUserAgentMessages(NXCPMessage *request)
+{
+   NXCPMessage msg;
+   msg.setCode(CMD_REQUEST_COMPLETED);
+   msg.setId(request->getId());
+
+   if (m_dwSystemAccess & SYSTEM_ACCESS_USAER_AGENT_MESSAGES)
+   {
+      g_userAgentMessageListMutex.lock();
+      int base = VID_USER_AGENT_MESSAGE_BASE;
+      UserAgentMessage *uam;
+      for(int i = 0; i < g_userAgentMessageList.size(); i++, base+=10)
+      {
+         if(g_userAgentMessageList.get(i)->getId() == request->getFieldAsUInt32(VID_OBJECT_ID))
+         {
+            g_userAgentMessageList.get(i)->recall();
+            uam = g_userAgentMessageList.get(i);
+            uam->incRefCount();
+         }
+      }
+      g_userAgentMessageListMutex.unlock();
+
+      if(uam != NULL)
+         ThreadPoolExecute(g_clientThreadPool, uam, &UserAgentMessage::processUpdate);
+
+      msg.setField(VID_RCC, RCC_SUCCESS);
+   }
+   else
+      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
 
    sendMessage(&msg);
 }

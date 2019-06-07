@@ -1956,3 +1956,17 @@ CREATE TABLE versionable_object
    PRIMARY KEY(object_id)
 ) TABLE_TYPE;
 
+/**
+ * User agent messages
+ */
+CREATE TABLE user_agent_messages 
+( 
+   id integer not null,
+   message varchar(1023) null,
+   objects varchar(1023) not null,
+   start_time integer not null,
+   end_time integer not null,
+   recall char(1) not null,
+   PRIMARY KEY(id)
+) TABLE_TYPE;
+
