@@ -8688,6 +8688,7 @@ void Node::onDataCollectionChangeAsyncCallback(void *arg)
 void Node::onDataCollectionChange()
 {
    super::onDataCollectionChange();
+
    if (m_capabilities & NC_IS_NATIVE_AGENT)
    {
       DbgPrintf(5, _T("Node::onDataCollectionChange(%s [%d]): executing data collection sync"), m_name, m_id);

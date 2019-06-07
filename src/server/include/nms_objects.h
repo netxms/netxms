@@ -1065,7 +1065,8 @@ protected:
    virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId) override;
    virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest) override;
 
-   virtual void onDataCollectionChange() {}
+   virtual void onDataCollectionLoad() { }
+   virtual void onDataCollectionChange() { }
 
    void loadItemsFromDB(DB_HANDLE hdb);
    void destroyItems();
@@ -1467,11 +1468,14 @@ protected:
    time_t m_lastStatusPoll;
    time_t m_lastInstancePoll;
    MUTEX m_hPollerMutex;
+   double m_proxyLoadFactor;
 
 	virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId) override;
 	virtual void fillMessageInternalStage2(NXCPMessage *pMsg, UINT32 userId) override;
    virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest) override;
 
+   virtual void onDataCollectionLoad() override;
+   virtual void onDataCollectionChange() override;
 	virtual bool isDataCollectionDisabled();
    virtual void updatePingData();
 
@@ -1498,6 +1502,8 @@ protected:
 
    void addProxyDataCollectionElement(ProxyInfo *info, const DCObject *dco, UINT32 primaryProxyId);
    void addProxySnmpTarget(ProxyInfo *info, const Node *node);
+   void calculateProxyLoad();
+
    virtual void collectProxyInfo(ProxyInfo *info);
    static void collectProxyInfoCallback(NetObj *object, void *data);
 
@@ -1529,6 +1535,8 @@ public:
 	UINT32 getThresholdSummary(NXCPMessage *msg, UINT32 baseId, UINT32 userId);
 	UINT32 getPerfTabDCIList(NXCPMessage *pMsg, UINT32 userId);
    void getDciValuesSummary(SummaryTable *tableDefinition, Table *tableData, UINT32 userId);
+   UINT32 getLastValues(NXCPMessage *msg, bool objectTooltipOnly, bool overviewOnly, bool includeNoValueObjects, UINT32 userId);
+   double getProxyLoadFactor() { return GetAttributeWithLock(&m_proxyLoadFactor, m_mutexProperties); }
 
    void updateDciCache();
    void updateDCItemCacheSize(UINT32 dciId, UINT32 conditionId = 0);
@@ -1565,8 +1573,6 @@ public:
    void instanceDiscoveryPollWorkerEntry(PollerInfo *poller, ClientSession *session, UINT32 rqId);
    virtual bool lockForInstancePoll();
    void unlockForInstancePoll();
-
-   UINT32 getLastValues(NXCPMessage *msg, bool objectTooltipOnly, bool overviewOnly, bool includeNoValueObjects, UINT32 userId);
 };
 
 inline bool DataCollectionTarget::lockForInstancePoll()
@@ -2120,7 +2126,6 @@ private:
 	void onSnmpProxyChange(UINT32 oldProxy);
 
    static void onDataCollectionChangeAsyncCallback(void *arg);
-
 
 protected:
    InetAddress m_ipAddress;
@@ -2848,28 +2853,58 @@ public:
 struct ZoneProxy
 {
    UINT32 nodeId;
-   bool isAvailable;     // True if proxy is available
-   UINT32 assignments;   // Number of objects where this proxy is assigned
+   bool isAvailable;    // True if proxy is available
+   UINT32 assignments;  // Number of objects where this proxy is assigned
+   INT32 rawDataSenderLoad;
+   double loadFactor;   // Load factor calculated from assigned nodes' DCIs
    double cpuLoad;
    double dataCollectorLoad;
+   double dataSenderLoad;
+   double dataSenderLoadTrend;
 
    ZoneProxy(UINT32 _nodeId)
    {
       nodeId = _nodeId;
       isAvailable = false;
       assignments = 0;
+      rawDataSenderLoad = 0;
+      loadFactor = 0;
       cpuLoad = 0;
       dataCollectorLoad = 0;
+      dataSenderLoad = 0;
+      dataSenderLoadTrend = 0;
    }
 
    int compareLoad(const ZoneProxy *p)
    {
-      double d = dataCollectorLoad - p->dataCollectorLoad;
+      if (dataSenderLoadTrend == 0)
+         return (p->dataSenderLoadTrend != 0) ? -1 : 0;
+
+      if (p->dataSenderLoadTrend == 0)
+         return (dataSenderLoadTrend != 0) ? 1 : 0;
+
+      if ((dataSenderLoadTrend < 0) && (p->dataSenderLoadTrend > 0))
+         return -1;
+
+      if ((dataSenderLoadTrend > 0) && (p->dataSenderLoadTrend < 0))
+         return 1;
+
+      double d = fabs(dataSenderLoadTrend) - fabs(p->dataSenderLoadTrend);
       if (fabs(d) > 0.01)
          return (d < 0) ? -1 : 1;
+
+      d = dataSenderLoad - p->dataSenderLoad;
+      if (fabs(d) > 0.01)
+         return (d < 0) ? -1 : 1;
+
+      d = dataCollectorLoad - p->dataCollectorLoad;
+      if (fabs(d) > 0.01)
+         return (d < 0) ? -1 : 1;
+
       d = cpuLoad - p->cpuLoad;
       if (fabs(d) > 0.01)
          return (d < 0) ? -1 : 1;
+
       return 0;
    }
 

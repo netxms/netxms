@@ -574,7 +574,8 @@ void Zone::updateProxyLoad(Node *node)
 {
    double cpuLoad = node->getMetricFromAgentAsDouble(_T("System.CPU.LoadAvg15"), -1);
    double dataCollectorLoad = node->getMetricFromAgentAsDouble(_T("Agent.ThreadPool.LoadAverage15(DATACOLL)"), -1);
-   if ((cpuLoad >= 0) || (dataCollectorLoad >= 0))
+   INT32 dataSenderQueueSize = node->getMetricFromAgentAsInt32(_T("Agent.DataCollectorQueueSize"), -1);  // FIXME: rename to Agent.DataSenderQueueSize
+   if ((cpuLoad >= 0) || (dataCollectorLoad >= 0) || (dataSenderQueueSize >= 0))
    {
       lockProperties();
       for(int i = 0; i < m_proxyNodes->size(); i++)
@@ -586,6 +587,14 @@ void Zone::updateProxyLoad(Node *node)
                p->cpuLoad = cpuLoad;
             if (dataCollectorLoad >= 0)
                p->dataCollectorLoad = dataCollectorLoad;
+            if (dataSenderQueueSize >= 0)
+            {
+               // EMA_EXP_5 = 60 measurements
+               UpdateExpMovingAverage(p->rawDataSenderLoad, EMA_EXP_5, dataSenderQueueSize);
+               double load = GetExpMovingAverageValue(p->rawDataSenderLoad);
+               p->dataSenderLoadTrend = load - p->dataSenderLoad;
+               p->dataSenderLoad = load;
+            }
             break;
          }
       }
@@ -638,8 +647,9 @@ void Zone::dumpState(ServerConsole *console)
       for(int i = 0; i < m_proxyNodes->size(); i++)
       {
          ZoneProxy *p = m_proxyNodes->get(i);
-         console->printf(_T("      [\x1b[33;1m%7u\x1b[0m] assignments=%u available=\x1b[%s\x1b[0m cpuLoad=%f dcLoad=%f\n"), p->nodeId, p->assignments,
-                  p->isAvailable ? _T("32;1myes") : _T("31;1mno"), p->cpuLoad, p->dataCollectorLoad);
+         console->printf(_T("      [\x1b[33;1m%7u\x1b[0m] assignments=%u available=\x1b[%s\x1b[0m senderLoad=%f(%f) dcLoad=%f cpuLoad=%f\n"),
+                  p->nodeId, p->assignments, p->isAvailable ? _T("32;1myes") : _T("31;1mno"),
+                  p->dataSenderLoad, p->dataSenderLoadTrend, p->dataCollectorLoad, p->cpuLoad);
       }
    }
    else

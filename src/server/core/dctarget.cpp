@@ -51,6 +51,7 @@ DataCollectionTarget::DataCollectionTarget() : super()
    m_lastStatusPoll = 0;
    m_lastInstancePoll = 0;
    m_hPollerMutex = MutexCreate();
+   m_proxyLoadFactor = 0;
 }
 
 /**
@@ -67,6 +68,7 @@ DataCollectionTarget::DataCollectionTarget(const TCHAR *name) : super(name)
    m_lastStatusPoll = 0;
    m_lastInstancePoll = 0;
    m_hPollerMutex = MutexCreate();
+   m_proxyLoadFactor = 0;
 }
 
 /**
@@ -1812,4 +1814,47 @@ UINT32 DataCollectionTarget::getLastValues(NXCPMessage *msg, bool objectTooltipO
 
    unlockDciAccess();
    return RCC_SUCCESS;
+}
+
+/**
+ * Hook for data collection load
+ */
+void DataCollectionTarget::onDataCollectionLoad()
+{
+   super::onDataCollectionLoad();
+   calculateProxyLoad();
+}
+
+/**
+ * Hook for data collection change
+ */
+void DataCollectionTarget::onDataCollectionChange()
+{
+   super::onDataCollectionChange();
+   calculateProxyLoad();
+}
+
+/**
+ * Calculate proxy load factor
+ */
+void DataCollectionTarget::calculateProxyLoad()
+{
+   double loadFactor = 0;
+   lockDciAccess(false);
+   for(int i = 0; i < m_dcObjects->size(); i++)
+   {
+      DCObject *object = m_dcObjects->get(i);
+      if ((object->getDataSource() == DS_SNMP_AGENT) && (object->getStatus() == ITEM_STATUS_ACTIVE))
+      {
+         if (object->isAdvancedSchedule())
+            loadFactor += 12;  // assume 5 minutes interval for custom schedule
+         else
+            loadFactor += 3600.0 / static_cast<double>(object->getEffectivePollingInterval());
+      }
+   }
+   unlockDciAccess();
+
+   lockProperties();
+   m_proxyLoadFactor = loadFactor;
+   unlockProperties();
 }

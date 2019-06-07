@@ -3036,9 +3036,9 @@ enum TcpPingResult
 
 #define EMA_FP_SHIFT  11                  /* nr of bits of precision */
 #define EMA_FP_1      (1 << EMA_FP_SHIFT) /* 1.0 as fixed-point */
-#define EMA_EXP_1     1884                /* 1/exp(5sec/1min) as fixed-point */
-#define EMA_EXP_5     2014                /* 1/exp(5sec/5min) */
-#define EMA_EXP_15    2037                /* 1/exp(5sec/15min) */
+#define EMA_EXP_1     1884                /* 1/exp(5sec/1min = 12 points) as fixed-point */
+#define EMA_EXP_5     2014                /* 1/exp(5sec/5min = 60 points) */
+#define EMA_EXP_15    2037                /* 1/exp(5sec/15min = 180 points) */
 #define EMA_EXP(interval, period)   static_cast<int>((1.0 / exp(static_cast<double>(interval) / static_cast<double>(period))) * 2048)
 
 /**
