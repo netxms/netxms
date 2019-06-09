@@ -26,6 +26,9 @@ import org.eclipse.ui.contexts.IContextService;
 import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
+import org.netxms.client.ServerAction;
+import org.netxms.client.SessionListener;
+import org.netxms.client.SessionNotification;
 import org.netxms.client.UserAgentMessage;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.agentmanager.Activator;
@@ -39,7 +42,7 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.FilterText;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
-public class UserAgentMessagesView extends ViewPart
+public class UserAgentMessagesView extends ViewPart implements SessionListener
 {
    public static final String ID = "org.netxms.ui.eclipse.agentmanager.views.UserAgentMessagesView";
    
@@ -57,6 +60,7 @@ public class UserAgentMessagesView extends ViewPart
    private Action actionShowFilter;
    private Action actionRefresh;
    private Action actionRecall;
+   private NXCSession session;
    
    /* (non-Javadoc)
     * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
@@ -65,6 +69,7 @@ public class UserAgentMessagesView extends ViewPart
    public void createPartControl(Composite parent)
    {
       parent.setLayout(new FormLayout());
+      session = ConsoleSharedData.getSession();
       
       // Create filter area
       filterText = new FilterText(parent, SWT.NONE, null, true);
@@ -130,8 +135,20 @@ public class UserAgentMessagesView extends ViewPart
          filterText.setFocus();
       else
          enableFilter(false); // Will hide filter area correctly
+
+      session.addListener(this);
       
       refresh();
+   }
+
+   /* (non-Javadoc)
+    * @see org.eclipse.ui.part.WorkbenchPart#dispose()
+    */
+   @Override
+   public void dispose()
+   {
+      session.removeListener(this);
+      super.dispose();
    }
    
    /**
@@ -192,7 +209,6 @@ public class UserAgentMessagesView extends ViewPart
     */
    private void recallMessage()
    {
-      final NXCSession session = ConsoleSharedData.getSession();
       IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
       if ((selection.size() >= 1))
       {
@@ -368,4 +384,13 @@ public class UserAgentMessagesView extends ViewPart
       viewer.refresh(false);
    }
 
+	@Override
+	public void notificationHandler(SessionNotification n) {
+		switch(n.getCode())
+		{
+			case SessionNotification.USER_AGENT_MESSAGE_CHANGED:
+				refresh();
+				break;
+		}		
+	}
 }

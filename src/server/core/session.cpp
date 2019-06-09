@@ -14773,6 +14773,7 @@ void ClientSession::addUserAgentMessages(NXCPMessage *request)
          g_userAgentMessageListMutex.unlock();
 
          ThreadPoolExecute(g_clientThreadPool, uam, &UserAgentMessage::processUpdate);
+         NotifyClientSessions(NX_NOTIFY_USER_AGENT_MESSAGE_CHANGED, (UINT32)uam->getId());
       }
       else
       {
@@ -14812,7 +14813,10 @@ void ClientSession::recallUserAgentMessages(NXCPMessage *request)
       g_userAgentMessageListMutex.unlock();
 
       if(uam != NULL)
+      {
          ThreadPoolExecute(g_clientThreadPool, uam, &UserAgentMessage::processUpdate);
+         NotifyClientSessions(NX_NOTIFY_USER_AGENT_MESSAGE_CHANGED, (UINT32)uam->getId());
+      }
 
       msg.setField(VID_RCC, RCC_SUCCESS);
    }
