@@ -2776,7 +2776,7 @@ void Node::configurationPoll(ClientSession *pSession, UINT32 rqId, PollerInfo *p
 
             duplicateNode->reconcileWithDuplicateNode(this);
             duplicateNode->decRefCount();
-            DbgPrintf(4, _T("Aborted configuration poll for node %s (ID: %d)"), m_name, m_id);
+            nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("Aborted configuration poll for node %s (ID: %d)"), m_name, m_id);
             ThreadPoolExecute(g_pollerThreadPool, this, &NetObj::deleteObject, static_cast<NetObj*>(NULL));
             return;
          }
@@ -2797,27 +2797,32 @@ void Node::configurationPoll(ClientSession *pSession, UINT32 rqId, PollerInfo *p
           (dwAddr != INADDR_ANY) &&
           isMyIP(dwAddr))
       {
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("ConfPoll(%s [%u]): node name is an IP address and need to be resolved"), m_name, m_id);
          sendPollerMsg(rqId, _T("Node name is an IP address and need to be resolved\r\n"));
          poller->setStatus(_T("resolving name"));
          if (resolveName(FALSE))
          {
             sendPollerMsg(rqId, POLLER_INFO _T("Node name resolved to %s\r\n"), m_name);
+            nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("ConfPoll(%s [%u]): node name resolved"), m_name, m_id);
             modified |= MODIFY_COMMON_PROPERTIES;
          }
          else
          {
             sendPollerMsg(rqId, POLLER_WARNING _T("Node name cannot be resolved\r\n"));
+            nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("ConfPoll(%s [%u]): node name cannot be resolved"), m_name, m_id);
          }
       }
       else
       {
          if (g_flags & AF_SYNC_NODE_NAMES_WITH_DNS)
          {
-            sendPollerMsg(rqId, _T("Syncing node name with DNS\r\n"));
+            sendPollerMsg(rqId, _T("Synchronizing node name with DNS\r\n"));
+            nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("ConfPoll(%s [%u]): synchronizing node name with DNS"), m_name, m_id);
             poller->setStatus(_T("resolving name"));
             if (resolveName(TRUE))
             {
                sendPollerMsg(rqId, POLLER_INFO _T("Node name resolved to %s\r\n"), m_name);
+               nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("ConfPoll(%s [%u]): node name resolved"), m_name, m_id);
                modified |= MODIFY_COMMON_PROPERTIES;
             }
          }

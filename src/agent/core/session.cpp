@@ -677,14 +677,9 @@ void CommSession::processingThread()
 					   response.setField(VID_RCC, ERR_ACCESS_DENIED);
 					}
 					break;
-            case CMD_HOST_BY_IP:
-            {
-               InetAddress addr = request->getFieldAsInetAddress(VID_IP_ADDRESS);
-               TCHAR dnsName[MAX_DNS_NAME];
-               response.setField(VID_NAME, addr.getHostByAddr(dnsName, MAX_DNS_NAME));
-               response.setField(VID_RCC, ERR_SUCCESS);
+            case CMD_GET_HOSTNAME_BY_IPADDR:
+               getHostNameByAddr(request, &response);
                break;
-            }
             case CMD_SET_SERVER_CAPABILITIES:
                // Servers before 2.0 use VID_ENABLED
                m_ipv6Aware = request->isFieldExist(VID_IPV6_SUPPORT) ? request->getFieldAsBoolean(VID_IPV6_SUPPORT) : request->getFieldAsBoolean(VID_ENABLED);
@@ -1080,6 +1075,31 @@ void CommSession::updateConfig(NXCPMessage *pRequest, NXCPMessage *pMsg)
    else
    {
       pMsg->setField(VID_RCC, ERR_ACCESS_DENIED);
+   }
+}
+
+/**
+ * Get hostname by IP address
+ */
+void CommSession::getHostNameByAddr(NXCPMessage *request, NXCPMessage *response)
+{
+   InetAddress addr = request->getFieldAsInetAddress(VID_IP_ADDRESS);
+   if (addr.isValid())
+   {
+      TCHAR dnsName[MAX_DNS_NAME];
+      if (addr.getHostByAddr(dnsName, MAX_DNS_NAME) != NULL)
+      {
+         response->setField(VID_NAME, dnsName);
+         response->setField(VID_RCC, ERR_SUCCESS);
+      }
+      else
+      {
+         response->setField(VID_RCC, ERR_NO_SUCH_INSTANCE);
+      }
+   }
+   else
+   {
+      response->setField(VID_RCC, ERR_BAD_ARGUMENTS);
    }
 }
 
