@@ -382,6 +382,7 @@ private:
    UINT32 closeTcpProxy(NXCPMessage *request);
    void proxySnmpRequest(NXCPMessage *request);
    void sendMessageInBackground(NXCP_MESSAGE *msg);
+   void getHostNameByAddr(NXCPMessage *request, NXCPMessage *response);
 
    void readThread();
    void processingThread();

@@ -640,7 +640,7 @@ public:
 	UINT32 getPolicyInventory(AgentPolicyInfo **info);
 	UINT32 uninstallPolicy(const uuid& guid);
    UINT32 takeScreenshot(const TCHAR *sessionName, BYTE **data, size_t *size);
-   TCHAR *getHostByAddr(const InetAddress& ipAddr, TCHAR *buf, size_t bufLen);
+   TCHAR *getHostByAddr(const InetAddress& ipAddr, TCHAR *buffer, size_t bufLen);
    UINT32 setupTcpProxy(const InetAddress& ipAddr, UINT16 port, UINT32 *channelId);
    UINT32 closeTcpProxy(UINT32 channelId);
 
