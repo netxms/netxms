@@ -6474,22 +6474,22 @@ void ClientSession::pollerThread(DataCollectionTarget *pTarget, int iPollType, U
    switch(iPollType)
    {
       case POLL_STATUS:
-         pTarget->statusPollWorkerEntry(RegisterPoller(POLLER_TYPE_STATUS, pTarget), this, dwRqId);
+         pTarget->statusPollWorkerEntry(RegisterPoller(PollerType::STATUS, pTarget), this, dwRqId);
          break;
       case POLL_CONFIGURATION_FULL:
          if(pTarget->getObjectClass() == OBJECT_NODE)
             ((Node *)pTarget)->setRecheckCapsFlag();
          // intentionally no break here
       case POLL_CONFIGURATION_NORMAL:
-         pTarget->configurationPollWorkerEntry(RegisterPoller(POLLER_TYPE_CONFIGURATION, pTarget), this, dwRqId);
+         pTarget->configurationPollWorkerEntry(RegisterPoller(PollerType::CONFIGURATION, pTarget), this, dwRqId);
          break;
       case POLL_INSTANCE_DISCOVERY:
-         pTarget->instanceDiscoveryPollWorkerEntry(RegisterPoller(POLLER_TYPE_INSTANCE_DISCOVERY, pTarget), this, dwRqId);
+         pTarget->instanceDiscoveryPollWorkerEntry(RegisterPoller(PollerType::INSTANCE_DISCOVERY, pTarget), this, dwRqId);
          break;
       case POLL_TOPOLOGY:
          if(pTarget->getObjectClass() == OBJECT_NODE)
          {
-            static_cast<Node*>(pTarget)->topologyPollWorkerEntry(RegisterPoller(POLLER_TYPE_TOPOLOGY, pTarget), this, dwRqId);
+            static_cast<Node*>(pTarget)->topologyPollWorkerEntry(RegisterPoller(PollerType::TOPOLOGY, pTarget), this, dwRqId);
          }
          break;
       case POLL_INTERFACE_NAMES:

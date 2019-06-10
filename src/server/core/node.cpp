@@ -2280,7 +2280,7 @@ bool Node::checkNetworkPathElement(UINT32 nodeId, const TCHAR *nodeType, bool is
    {
       DbgPrintf(6, _T("Node::checkNetworkPathElement(%s [%d]): forced status poll on node %s [%d]"),
                 m_name, m_id, node->getName(), node->getId());
-      PollerInfo *poller = RegisterPoller(POLLER_TYPE_STATUS, node);
+      PollerInfo *poller = RegisterPoller(PollerType::STATUS, node);
       poller->startExecution();
       node->statusPoll(poller, NULL, 0);
       delete poller;
@@ -2365,7 +2365,7 @@ bool Node::checkNetworkPathLayer2(UINT32 requestId, bool secondPass)
                {
                   nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("Node::checkNetworkPath(%s [%d]): forced status poll on node %s [%d]"),
                               m_name, m_id, node->getName(), node->getId());
-                  node->statusPollWorkerEntry(RegisterPoller(POLLER_TYPE_STATUS, node), NULL, 0);
+                  node->statusPollWorkerEntry(RegisterPoller(PollerType::STATUS, node), NULL, 0);
                }
             }
 

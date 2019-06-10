@@ -1208,7 +1208,7 @@ void DataCollectionTarget::leaveMaintenanceMode()
    unlockProperties();
 
    if(forcePoll)
-      statusPollWorkerEntry(RegisterPoller(POLLER_TYPE_STATUS, this), NULL, 0);
+      statusPollWorkerEntry(RegisterPoller(PollerType::STATUS, this), NULL, 0);
 }
 
 /**

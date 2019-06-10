@@ -467,13 +467,13 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
                         static_cast<DataCollectionTarget*>(object)->lockForConfigurationPoll();
                         ThreadPoolExecute(g_pollerThreadPool, static_cast<DataCollectionTarget*>(object),
                                  &DataCollectionTarget::configurationPollWorkerEntry,
-                                 RegisterPoller(POLLER_TYPE_CONFIGURATION, static_cast<DataCollectionTarget*>(object)));
+                                 RegisterPoller(PollerType::CONFIGURATION, static_cast<DataCollectionTarget*>(object)));
                         break;
                      case 2:
                         static_cast<DataCollectionTarget*>(object)->lockForStatusPoll();
                         ThreadPoolExecute(g_pollerThreadPool, static_cast<DataCollectionTarget*>(object),
                                  &DataCollectionTarget::statusPollWorkerEntry,
-                                 RegisterPoller(POLLER_TYPE_STATUS, static_cast<DataCollectionTarget*>(object)));
+                                 RegisterPoller(PollerType::STATUS, static_cast<DataCollectionTarget*>(object)));
                         break;
                      case 3:
                         if (object->getObjectClass() == OBJECT_NODE)
@@ -481,7 +481,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
                            static_cast<Node*>(object)->lockForTopologyPoll();
                            ThreadPoolExecute(g_pollerThreadPool, static_cast<Node*>(object),
                                     &Node::topologyPollWorkerEntry,
-                                    RegisterPoller(POLLER_TYPE_TOPOLOGY, static_cast<Node*>(object)));
+                                    RegisterPoller(PollerType::TOPOLOGY, static_cast<Node*>(object)));
                         }
                         else
                         {
@@ -494,7 +494,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
                            static_cast<Node*>(object)->lockForRoutePoll();
                            ThreadPoolExecute(g_pollerThreadPool, static_cast<Node*>(object),
                                     &Node::routingTablePollWorkerEntry,
-                                    RegisterPoller(POLLER_TYPE_ROUTING_TABLE, static_cast<Node*>(object)));
+                                    RegisterPoller(PollerType::ROUTING_TABLE, static_cast<Node*>(object)));
                         }
                         else
                         {
@@ -505,7 +505,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
                         static_cast<DataCollectionTarget*>(object)->lockForInstancePoll();
                         ThreadPoolExecute(g_pollerThreadPool, static_cast<DataCollectionTarget*>(object),
                                  &DataCollectionTarget::instanceDiscoveryPollWorkerEntry,
-                                 RegisterPoller(POLLER_TYPE_INSTANCE_DISCOVERY, static_cast<DataCollectionTarget*>(object)));
+                                 RegisterPoller(PollerType::INSTANCE_DISCOVERY, static_cast<DataCollectionTarget*>(object)));
                         break;
                   }
                }

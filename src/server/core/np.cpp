@@ -193,7 +193,7 @@ Node NXCORE_EXPORTABLE *PollNewNode(NewNodeData *newNodeData)
 
 	if (newNodeData->doConfPoll)
    {
-	   node->configurationPollWorkerEntry(RegisterPoller(POLLER_TYPE_CONFIGURATION, node, true));
+	   node->configurationPollWorkerEntry(RegisterPoller(PollerType::CONFIGURATION, node, true));
    }
 
    node->unhide();

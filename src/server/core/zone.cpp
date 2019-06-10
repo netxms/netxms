@@ -42,6 +42,8 @@ Zone::Zone() : super()
 	m_idxNodeByAddr = new InetAddressIndex;
 	m_idxInterfaceByAddr = new InetAddressIndex;
 	m_idxSubnetByAddr = new InetAddressIndex;
+   m_lastHealthCheck = NEVER;
+   m_lockedForHealthCheck = false;
 }
 
 /**
@@ -57,6 +59,8 @@ Zone::Zone(UINT32 uin, const TCHAR *name) : super()
 	m_idxNodeByAddr = new InetAddressIndex;
 	m_idxInterfaceByAddr = new InetAddressIndex;
 	m_idxSubnetByAddr = new InetAddressIndex;
+   m_lastHealthCheck = NEVER;
+   m_lockedForHealthCheck = false;
 }
 
 /**
@@ -559,7 +563,7 @@ void Zone::updateProxyStatus(Node *node, bool activeMode)
          {
             // Update should be executed on separate thread to avoid server deadlock
             node->incRefCount();
-            ThreadPoolExecute(g_mainThreadPool, this, &Zone::updateProxyLoad, node);
+            ThreadPoolExecute(g_mainThreadPool, this, &Zone::updateProxyLoadData, node);
          }
          break;
       }
@@ -570,7 +574,7 @@ void Zone::updateProxyStatus(Node *node, bool activeMode)
 /**
  * Update proxy load information
  */
-void Zone::updateProxyLoad(Node *node)
+void Zone::updateProxyLoadData(Node *node)
 {
    double cpuLoad = node->getMetricFromAgentAsDouble(_T("System.CPU.LoadAvg15"), -1);
    double dataCollectorLoad = node->getMetricFromAgentAsDouble(_T("Agent.ThreadPool.LoadAverage15(DATACOLL)"), -1);
@@ -589,8 +593,7 @@ void Zone::updateProxyLoad(Node *node)
                p->dataCollectorLoad = dataCollectorLoad;
             if (dataSenderQueueSize >= 0)
             {
-               // EMA_EXP_5 = 60 measurements
-               UpdateExpMovingAverage(p->rawDataSenderLoad, EMA_EXP_5, dataSenderQueueSize);
+               UpdateExpMovingAverage(p->rawDataSenderLoad, EMA_EXP_15, dataSenderQueueSize);
                double load = GetExpMovingAverageValue(p->rawDataSenderLoad);
                p->dataSenderLoadTrend = load - p->dataSenderLoad;
                p->dataSenderLoad = load;
@@ -601,6 +604,176 @@ void Zone::updateProxyLoad(Node *node)
       unlockProperties();
    }
    node->decRefCount();
+}
+
+/**
+ * Filter nodes by assigned proxy ID
+ */
+static bool ProxyFilter(NetObj *object, void *context)
+{
+   return object->getAssignedZoneProxyId(false) == CAST_FROM_POINTER(context, UINT32);
+}
+
+/**
+ * Compare nodes by estimated proxy load
+ */
+static int CompareNodesByProxyLoad(const NetObj **n1, const NetObj **n2)
+{
+   double d = ((Node*)(*n1))->getProxyLoadFactor() - ((Node*)(*n2))->getProxyLoadFactor();
+   return (d < 0) ? -1 : (d > 0) ? 1 : 0;
+}
+
+/**
+ * Callback for updating node backup proxy
+ */
+static void UpdateNodeBackupProxy(void *node)
+{
+   static_cast<Node*>(node)->getEffectiveSnmpProxy(true);
+}
+
+/**
+ * Migrate proxy load
+ */
+void Zone::migrateProxyLoad(ZoneProxy *source, ZoneProxy *target)
+{
+   ObjectArray<NetObj> *nodes = g_idxNodeById.getObjects(true, ProxyFilter, CAST_TO_POINTER(source->nodeId, void*));
+   nodes->sort(CompareNodesByProxyLoad);
+
+   double loadFactor = 0;
+   for(int i = 0; i < nodes->size(); i++)
+      loadFactor += static_cast<Node*>(nodes->get(i))->getProxyLoadFactor();
+   double targetLoadFactor = loadFactor * 0.75;
+
+   nxlog_debug_tag(DEBUG_TAG_ZONE_PROXY, 6, _T("ZoneHealthCheck(%s [%u]): %d nodes on proxy [%u], load factor %f, target %f"),
+            m_name, m_uin, nodes->size(), source->nodeId, loadFactor, targetLoadFactor);
+
+   for(int i = 0; (i < nodes->size()) && (loadFactor > targetLoadFactor); i++)
+   {
+      Node *n = static_cast<Node*>(nodes->get(i));
+      nxlog_debug_tag(DEBUG_TAG_ZONE_PROXY, 6, _T("ZoneHealthCheck(%s [%u]): moving node %s [%u] from [%u] to [%u]"),
+               m_name, m_uin, n->getName(), n->getId(), source->nodeId, target->nodeId);
+      source->assignments--;
+      target->assignments++;
+      n->setAssignedZoneProxyId(target->nodeId, false);
+      if (n->getAssignedZoneProxyId(true) == target->nodeId)
+      {
+         nxlog_debug_tag(DEBUG_TAG_ZONE_PROXY, 6, _T("ZoneHealthCheck(%s [%u]): backup proxy for node node %s [%u] should be changed"),
+                  m_name, m_uin, n->getName(), n->getId());
+         n->setAssignedZoneProxyId(0, true);
+         target->assignments--;
+         ThreadPoolExecute(g_mainThreadPool, UpdateNodeBackupProxy, n);
+      }
+      loadFactor -= n->getProxyLoadFactor();
+   }
+
+   for(int i = 0; i < nodes->size(); i++)
+      nodes->get(i)->decRefCount();
+   delete nodes;
+
+   Node *node = static_cast<Node*>(FindObjectById(target->nodeId, OBJECT_NODE));
+   if (node != NULL)
+      node->forceSyncDataCollectionConfig();
+
+   node = static_cast<Node*>(FindObjectById(source->nodeId, OBJECT_NODE));
+   if (node != NULL)
+      node->forceSyncDataCollectionConfig();
+}
+
+/**
+ * Do zone health check
+ */
+void Zone::healthCheck(PollerInfo *poller)
+{
+   poller->startExecution();
+   nxlog_debug_tag(DEBUG_TAG_ZONE_PROXY, 6, _T("ZoneHealthCheck(%s [%u]): started"), m_name, m_uin);
+
+   lockProperties();
+
+   // Calculate average load
+   int count = 0;
+   double dataSenderLoad = 0, dataCollectorLoad = 0, cpuLoad = 0;
+   for(int i = 0; i < m_proxyNodes->size(); i++)
+   {
+      ZoneProxy *p = m_proxyNodes->get(i);
+      if (!p->isAvailable)
+         continue;
+
+      dataSenderLoad += p->dataSenderLoad;
+      dataCollectorLoad += p->dataCollectorLoad;
+      cpuLoad += p->cpuLoad;
+      count++;
+   }
+
+   // Check if load balancing is needed
+   if (count > 1)
+   {
+      dataSenderLoad /= count;
+      dataCollectorLoad /= count;
+      cpuLoad /= count;
+      nxlog_debug_tag(DEBUG_TAG_ZONE_PROXY, 6, _T("ZoneHealthCheck(%s [%u]): %d active proxies, average values: %f/%f/%f"),
+               m_name, m_uin, count, dataSenderLoad, dataCollectorLoad, cpuLoad);
+
+      time_t now = time(NULL);
+      ObjectArray<ZoneProxy> sources(16, 16, false);  // potential sources for removing load
+      ObjectArray<ZoneProxy> targets(16, 16, false);  // potential sources for adding load
+      for(int i = 0; i < m_proxyNodes->size(); i++)
+      {
+         ZoneProxy *p = m_proxyNodes->get(i);
+         if (!p->isAvailable)
+            continue;
+
+         if ((p->dataSenderLoad <= dataSenderLoad) &&
+             (p->dataCollectorLoad <= dataCollectorLoad) &&
+             (p->cpuLoad <= cpuLoad) &&
+             (now - p->loadBalanceTimestamp >= 420))  // was not re-balanced within last 7 minutes
+         {
+            targets.add(p);
+         }
+         else if (((p->dataSenderLoad > dataSenderLoad) ||
+                   (p->dataSenderLoadTrend > 0) ||
+                   (p->dataCollectorLoad > dataCollectorLoad) ||
+                   ((p->cpuLoad > cpuLoad) && (p->cpuLoad > 1))) &&
+                  (now - p->loadBalanceTimestamp >= 420))  // was not re-balanced within last 7 minutes
+         {
+            sources.add(p);
+         }
+      }
+
+      if (!sources.isEmpty() && !targets.isEmpty())
+      {
+         int j = 0;
+         for(int i = 0; i < sources.size(); i++)
+         {
+            ZoneProxy *s = sources.get(i);
+            ZoneProxy *t = targets.get(j);
+            j++;
+            if (j == targets.size())
+               j = 0;
+
+            nxlog_debug_tag(DEBUG_TAG_ZONE_PROXY, 6, _T("ZoneHealthCheck(%s [%u]): moving load: [%u] -> [%u]"), m_name, m_uin, s->nodeId, t->nodeId);
+            migrateProxyLoad(s, t);
+            s->loadBalanceTimestamp = now;
+            t->loadBalanceTimestamp = now;
+         }
+      }
+      else
+      {
+         nxlog_debug_tag(DEBUG_TAG_ZONE_PROXY, 6, _T("ZoneHealthCheck(%s [%u]): proxy load balancing is not %s"),
+                  m_name, m_uin, sources.isEmpty() ? _T("needed") : _T("possible"));
+      }
+   }
+   else
+   {
+      nxlog_debug_tag(DEBUG_TAG_ZONE_PROXY, 6, _T("ZoneHealthCheck(%s [%u]): proxy load balancing is not needed"), m_name, m_uin);
+   }
+
+   m_lastHealthCheck = time(NULL);
+   m_lockedForHealthCheck = false;
+
+   unlockProperties();
+
+   delete poller;
+   nxlog_debug_tag(DEBUG_TAG_ZONE_PROXY, 6, _T("ZoneHealthCheck(%s [%u]): completed"), m_name, m_uin);
 }
 
 /**

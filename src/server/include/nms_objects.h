@@ -136,16 +136,17 @@ public:
 /**
  * Poller types
  */
-enum PollerType
+enum class PollerType
 {
-   POLLER_TYPE_STATUS = 0,
-   POLLER_TYPE_CONFIGURATION = 1,
-   POLLER_TYPE_INSTANCE_DISCOVERY = 2,
-   POLLER_TYPE_ROUTING_TABLE = 3,
-   POLLER_TYPE_DISCOVERY = 4,
-   POLLER_TYPE_BUSINESS_SERVICE = 5,
-   POLLER_TYPE_CONDITION = 6,
-   POLLER_TYPE_TOPOLOGY = 7
+   STATUS = 0,
+   CONFIGURATION = 1,
+   INSTANCE_DISCOVERY = 2,
+   ROUTING_TABLE = 3,
+   DISCOVERY = 4,
+   BUSINESS_SERVICE = 5,
+   CONDITION = 6,
+   TOPOLOGY = 7,
+   ZONE_HEALTH = 8
 };
 
 /**
@@ -2861,6 +2862,7 @@ struct ZoneProxy
    double dataCollectorLoad;
    double dataSenderLoad;
    double dataSenderLoadTrend;
+   time_t loadBalanceTimestamp;
 
    ZoneProxy(UINT32 _nodeId)
    {
@@ -2873,6 +2875,7 @@ struct ZoneProxy
       dataCollectorLoad = 0;
       dataSenderLoad = 0;
       dataSenderLoadTrend = 0;
+      loadBalanceTimestamp = NEVER;
    }
 
    int compareLoad(const ZoneProxy *p)
@@ -2932,11 +2935,14 @@ protected:
 	InetAddressIndex *m_idxInterfaceByAddr;
 	InetAddressIndex *m_idxSubnetByAddr;
 	StringList m_snmpPorts;
+	time_t m_lastHealthCheck;
+	bool m_lockedForHealthCheck;
 
    virtual void fillMessageInternal(NXCPMessage *msg, UINT32 userId) override;
    virtual UINT32 modifyFromMessageInternal(NXCPMessage *request) override;
 
-   void updateProxyLoad(Node *node);
+   void updateProxyLoadData(Node *node);
+   void migrateProxyLoad(ZoneProxy *source, ZoneProxy *target);
 
 public:
    Zone();
@@ -2969,8 +2975,10 @@ public:
 
    void updateProxyStatus(Node *node, bool activeMode);
 
-   void addSubnet(Subnet *pSubnet) { addChild(pSubnet); pSubnet->addParent(this); }
+   bool lockForHealthCheck();
+   void healthCheck(PollerInfo *poller);
 
+   void addSubnet(Subnet *pSubnet) { addChild(pSubnet); pSubnet->addParent(this); }
 	void addToIndex(Subnet *subnet) { m_idxSubnetByAddr->put(subnet->getIpAddress(), subnet); }
    void addToIndex(Interface *iface) { m_idxInterfaceByAddr->put(iface->getIpAddressList(), iface); }
    void addToIndex(const InetAddress& addr, Interface *iface) { m_idxInterfaceByAddr->put(addr, iface); }
@@ -2994,6 +3002,24 @@ public:
    void dumpNodeIndex(ServerConsole *console);
    void dumpSubnetIndex(ServerConsole *console);
 };
+
+inline bool Zone::lockForHealthCheck()
+{
+   bool success = false;
+   lockProperties();
+   if (!m_isDeleted && !m_isDeleteInitiated)
+   {
+      if ((m_status != STATUS_UNMANAGED) &&
+          !m_lockedForHealthCheck &&
+          ((UINT32)(time(NULL) - m_lastHealthCheck) >= g_dwStatusPollingInterval))
+      {
+         m_lockedForHealthCheck = true;
+         success = true;
+      }
+   }
+   unlockProperties();
+   return success;
+}
 
 /**
  * Entire network
