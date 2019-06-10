@@ -180,7 +180,7 @@ static THREAD_RESULT THREAD_CALL WorkerThread(void *arg)
       
       INT64 waitTime = (GetCurrentTimeMs() - rq->queueTime) << EMA_FP_SHIFT;
       MutexLock(p->mutex);
-      UpdateExpMovingAverage(p->averageWaitTime, EMA_EXP_15, waitTime);
+      UpdateExpMovingAverage(p->averageWaitTime, EMA_EXP_180, waitTime);
       MutexUnlock(p->mutex);
 
       rq->func(rq->arg);
@@ -224,9 +224,9 @@ static THREAD_RESULT THREAD_CALL MaintenanceThread(void *arg)
          cycleTime = 0;
 
          INT64 requestCount = static_cast<INT64>(p->activeRequests) << EMA_FP_SHIFT;
-         UpdateExpMovingAverage(p->loadAverage[0], EMA_EXP_1, requestCount);
-         UpdateExpMovingAverage(p->loadAverage[1], EMA_EXP_5, requestCount);
-         UpdateExpMovingAverage(p->loadAverage[2], EMA_EXP_15, requestCount);
+         UpdateExpMovingAverage(p->loadAverage[0], EMA_EXP_12, requestCount);
+         UpdateExpMovingAverage(p->loadAverage[1], EMA_EXP_60, requestCount);
+         UpdateExpMovingAverage(p->loadAverage[2], EMA_EXP_180, requestCount);
 
          count++;
          if (count == s_maintThreadResponsiveness)
