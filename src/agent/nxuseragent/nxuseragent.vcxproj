@@ -141,7 +141,7 @@
     <ClCompile Include="config.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="menu.cpp" />
-    <ClCompile Include="messages.cpp" />
+    <ClCompile Include="notifications.cpp" />
     <ClCompile Include="net.cpp" />
     <ClCompile Include="screenshot.cpp" />
     <ClCompile Include="session.cpp" />

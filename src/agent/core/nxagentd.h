@@ -541,7 +541,7 @@ public:
    void takeScreenshot(NXCPMessage *msg);
    void sendUserAgentConfig();
    void sendUserAgentMessages();
-   void sendUserAgentMessageUpdate(UserAgentMessage *uam);
+   void sendUserAgentMessageUpdate(UserNotification *n);
    void notifyOnUserAgentMessageRemoval(const ServerObjectKey& id);
    void shutdown(bool restart);
 };

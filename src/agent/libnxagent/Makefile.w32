@@ -1,7 +1,8 @@
 TARGET = libnxagent.dll
 TYPE = dll
 SOURCES = bridge.cpp dfile_info.cpp lora_device_data.cpp main.cpp \
-          procexec.cpp registry.cpp smbios.cpp tools.cpp uam.cpp
+          procexec.cpp registry.cpp smbios.cpp tools.cpp \
+          user_notification.cpp
 
 CPPFLAGS = /DLIBNXAGENT_EXPORTS
 LIBS = libnxdb.lib libnetxms.lib ws2_32.lib

@@ -45,7 +45,7 @@
     <ClCompile Include="comm.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="messages.cpp">
+    <ClCompile Include="notifications.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

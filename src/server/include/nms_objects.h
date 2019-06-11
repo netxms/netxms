@@ -3573,7 +3573,7 @@ public:
    void fillMessage(UINT32 base, NXCPMessage *msg, bool fullInfo = true);
    void saveToDatabase();
    void incRefCount() { InterlockedIncrement(&m_refCount); }
-   void decRefCount() { InterlockedIncrement(&m_refCount); }
+   void decRefCount() { InterlockedDecrement(&m_refCount); }
    bool hasNoRef() { return m_refCount == 0; }
 };
 

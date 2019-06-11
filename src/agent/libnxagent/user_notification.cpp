@@ -16,7 +16,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** File: uam.cpp
+** File: user_notification.cpp
 **
 **/
 
@@ -25,7 +25,7 @@
 /**
  * User agent message constructor
  */
-UserAgentMessage::UserAgentMessage(UINT64 serverId, const NXCPMessage *msg, UINT32 baseId) : m_id(serverId, msg->getFieldAsUInt32(baseId))
+UserNotification::UserNotification(UINT64 serverId, const NXCPMessage *msg, UINT32 baseId) : m_id(serverId, msg->getFieldAsUInt32(baseId))
 {
    m_message = msg->getFieldAsString(baseId + 1);
    m_startTime = msg->getFieldAsTime(baseId + 2);
@@ -35,7 +35,7 @@ UserAgentMessage::UserAgentMessage(UINT64 serverId, const NXCPMessage *msg, UINT
 /**
  * User agent message constructor
  */
-UserAgentMessage::UserAgentMessage(const NXCPMessage *msg, UINT32 baseId) : m_id(msg->getFieldAsUInt64(baseId + 9), msg->getFieldAsUInt32(baseId))
+UserNotification::UserNotification(const NXCPMessage *msg, UINT32 baseId) : m_id(msg->getFieldAsUInt64(baseId + 9), msg->getFieldAsUInt32(baseId))
 {
    m_message = msg->getFieldAsString(baseId + 1);
    m_startTime = msg->getFieldAsTime(baseId + 2);
@@ -45,7 +45,7 @@ UserAgentMessage::UserAgentMessage(const NXCPMessage *msg, UINT32 baseId) : m_id
 /**
  * User agent message destructor
  */
-UserAgentMessage::~UserAgentMessage()
+UserNotification::~UserNotification()
 {
    MemFree(m_message);
 }
@@ -53,7 +53,7 @@ UserAgentMessage::~UserAgentMessage()
 /**
  * Prepare NXCP message with user agent message info
  */
-void UserAgentMessage::fillMessage(NXCPMessage *msg, UINT32 baseId)
+void UserNotification::fillMessage(NXCPMessage *msg, UINT32 baseId)
 {
    msg->setField(baseId, m_id.objectId);
    msg->setField(baseId + 2, m_message);

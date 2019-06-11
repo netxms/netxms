@@ -1003,9 +1003,9 @@ public:
 };
 
 /**
- * User agent message
+ * Notification for the user
  */
-class LIBNXAGENT_EXPORTABLE UserAgentMessage
+class LIBNXAGENT_EXPORTABLE UserNotification
 {
 private:
    ServerObjectKey m_id;
@@ -1014,9 +1014,9 @@ private:
    time_t m_endTime;
 
 public:
-   UserAgentMessage(UINT64 serverId, const NXCPMessage *msg, UINT32 baseId);
-   UserAgentMessage(const NXCPMessage *msg, UINT32 baseId);
-   ~UserAgentMessage();
+   UserNotification(UINT64 serverId, const NXCPMessage *msg, UINT32 baseId);
+   UserNotification(const NXCPMessage *msg, UINT32 baseId);
+   ~UserNotification();
 
    const ServerObjectKey& getId() const { return m_id; }
    const TCHAR *getMessage() const { return m_message;  }

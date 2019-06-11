@@ -31,7 +31,7 @@ static RWLOCK s_lock = RWLockCreate();
 /**
  * List of active user agent messages
  */
-static HashMap<ServerObjectKey, UserAgentMessage> s_userAgentMessages(true);
+static HashMap<ServerObjectKey, UserNotification> s_userAgentMessages(true);
 static Mutex s_userAgentMessageLock;
 
 /**
@@ -344,11 +344,11 @@ void SessionAgentConnector::sendUserAgentMessages()
    msg.setId(nextRequestId());
 
    UINT32 count = 0, baseId = VID_USER_AGENT_MESSAGE_BASE;
-   Iterator<UserAgentMessage> *it = s_userAgentMessages.iterator();
+   Iterator<UserNotification> *it = s_userAgentMessages.iterator();
    while (it->hasNext())
    {
-      UserAgentMessage *uam = it->next();
-      uam->fillMessage(&msg, baseId);
+      UserNotification *n = it->next();
+      n->fillMessage(&msg, baseId);
       baseId += 10;
       count++;
    }
@@ -359,12 +359,12 @@ void SessionAgentConnector::sendUserAgentMessages()
 /**
  * Notify user agents on message update
  */
-void SessionAgentConnector::sendUserAgentMessageUpdate(UserAgentMessage *uam)
+void SessionAgentConnector::sendUserAgentMessageUpdate(UserNotification *n)
 {
    NXCPMessage msg;
    msg.setCode(CMD_ADD_USER_AGENT_MESSAGE);
    msg.setId(nextRequestId());
-   uam->fillMessage(&msg, VID_USER_AGENT_MESSAGE_BASE);
+   n->fillMessage(&msg, VID_USER_AGENT_MESSAGE_BASE);
    sendMessage(&msg);
 }
 
@@ -613,14 +613,14 @@ void UpdateUserAgentsMessageList()
 /**
  * Add or update specific user message
  */
-void UpdateUserAgentMessage(UserAgentMessage *uam)
+void UpdateUserAgentMessage(UserNotification *n)
 {
    RWLockReadLock(s_lock, INFINITE);
    for (int i = 0; i < s_agents.size(); i++)
    {
       SessionAgentConnector *c = s_agents.get(i);
       if (c->isUserAgent())
-         c->sendUserAgentMessageUpdate(uam);
+         c->sendUserAgentMessageUpdate(n);
    }
    RWLockUnlock(s_lock);
 }
@@ -664,17 +664,17 @@ bool IsUserAgentInstalled()
  */
 UINT32 AddUserAgentMessage(UINT64 serverId, NXCPMessage *request)
 {
-   UserAgentMessage *uam = new UserAgentMessage(serverId, request, VID_USER_AGENT_MESSAGE_BASE);
+   UserNotification *n = new UserNotification(serverId, request, VID_USER_AGENT_MESSAGE_BASE);
 
    s_userAgentMessageLock.lock();
-   s_userAgentMessages.set(uam->getId(), uam);
+   s_userAgentMessages.set(n->getId(), n);
 
    RWLockReadLock(s_lock, INFINITE);
    for (int i = 0; i < s_agents.size(); i++)
    {
       SessionAgentConnector *c = s_agents.get(i);
       if (c->isUserAgent())
-         c->sendUserAgentMessageUpdate(uam);
+         c->sendUserAgentMessageUpdate(n);
    }
    RWLockUnlock(s_lock);
 
@@ -716,8 +716,8 @@ UINT32 UpdateUserAgentMessageList(UINT64 serverId, NXCPMessage *request)
    int base = VID_USER_AGENT_MESSAGE_BASE;
    for (int i = 0; i < count; i++, base += 10)
    {
-      UserAgentMessage *uam = new UserAgentMessage(serverId, request, base);
-      s_userAgentMessages.set(uam->getId(), uam);
+      UserNotification *n = new UserNotification(serverId, request, base);
+      s_userAgentMessages.set(n->getId(), n);
    }
 
    RWLockReadLock(s_lock, INFINITE);
