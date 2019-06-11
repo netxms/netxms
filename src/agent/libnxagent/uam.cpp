@@ -57,7 +57,7 @@ void UserAgentMessage::fillMessage(NXCPMessage *msg, UINT32 baseId)
 {
    msg->setField(baseId, m_id.objectId);
    msg->setField(baseId + 2, m_message);
-   msg->setField(baseId + 3, m_startTime);
-   msg->setField(baseId + 4, m_endTime);
+   msg->setFieldFromTime(baseId + 3, m_startTime);
+   msg->setFieldFromTime(baseId + 4, m_endTime);
    msg->setField(baseId + 9, m_id.serverId);
 }
