@@ -175,6 +175,7 @@
     <ClCompile Include="registry.cpp" />
     <ClCompile Include="smbios.cpp" />
     <ClCompile Include="tools.cpp" />
+    <ClCompile Include="uam.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\include\nms_agent.h" />

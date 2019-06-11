@@ -29,6 +29,12 @@ static ObjectArray<SessionAgentConnector> s_agents(8, 8, false);
 static RWLOCK s_lock = RWLockCreate();
 
 /**
+ * List of active user agent messages
+ */
+static HashMap<ServerObjectKey, UserAgentMessage> s_userAgentMessages(true);
+static Mutex s_userAgentMessageLock;
+
+/**
  * Register session agent
  */
 static void RegisterSessionAgent(SessionAgentConnector *c)
@@ -198,6 +204,10 @@ void SessionAgentConnector::readThread()
                if (m_userAgent)
                {
                   sendUserAgentConfig();
+
+                  s_userAgentMessageLock.lock();
+                  sendUserAgentMessages();
+                  s_userAgentMessageLock.unlock();
                }
             }
             else
@@ -322,6 +332,53 @@ void SessionAgentConnector::sendUserAgentConfig()
    {
       nxlog_debug(4, _T("SA-%d: cannot load user agent configuration from %s"), m_id, g_userAgentPolicyDirectory);
    }
+}
+
+/**
+ * Send all user agent messages (assumes that lock on message list already acquired)
+ */
+void SessionAgentConnector::sendUserAgentMessages()
+{
+   NXCPMessage msg;
+   msg.setCode(CMD_UPDATE_USER_AGENT_MESSAGES);
+   msg.setId(nextRequestId());
+
+   UINT32 count = 0, baseId = VID_USER_AGENT_MESSAGE_BASE;
+   Iterator<UserAgentMessage> *it = s_userAgentMessages.iterator();
+   while (it->hasNext())
+   {
+      UserAgentMessage *uam = it->next();
+      uam->fillMessage(&msg, baseId);
+      baseId += 10;
+      count++;
+   }
+   msg.setField(VID_USER_AGENT_MESSAGE_COUNT, count);
+   sendMessage(&msg);
+}
+
+/**
+ * Notify user agents on message update
+ */
+void SessionAgentConnector::sendUserAgentMessageUpdate(UserAgentMessage *uam)
+{
+   NXCPMessage msg;
+   msg.setCode(CMD_ADD_USER_AGENT_MESSAGE);
+   msg.setId(nextRequestId());
+   uam->fillMessage(&msg, VID_USER_AGENT_MESSAGE_BASE);
+   sendMessage(&msg);
+}
+
+/**
+ * Notify user agents on message removal
+ */
+void SessionAgentConnector::notifyOnUserAgentMessageRemoval(const ServerObjectKey& id)
+{
+   NXCPMessage msg;
+   msg.setCode(CMD_RECALL_USER_AGENT_MESSAGE);
+   msg.setId(nextRequestId());
+   msg.setField(VID_USER_AGENT_MESSAGE_BASE, id.objectId);
+   msg.setField(VID_USER_AGENT_MESSAGE_BASE + 1, id.serverId);
+   sendMessage(&msg);
 }
 
 /**
@@ -539,6 +596,36 @@ void UpdateUserAgentsConfiguration()
 }
 
 /**
+ * Update user message list
+ */
+void UpdateUserAgentsMessageList()
+{
+   RWLockReadLock(s_lock, INFINITE);
+   for (int i = 0; i < s_agents.size(); i++)
+   {
+      SessionAgentConnector *c = s_agents.get(i);
+      if (c->isUserAgent())
+         c->sendUserAgentConfig();
+   }
+   RWLockUnlock(s_lock);
+}
+
+/**
+ * Add or update specific user message
+ */
+void UpdateUserAgentMessage(UserAgentMessage *uam)
+{
+   RWLockReadLock(s_lock, INFINITE);
+   for (int i = 0; i < s_agents.size(); i++)
+   {
+      SessionAgentConnector *c = s_agents.get(i);
+      if (c->isUserAgent())
+         c->sendUserAgentMessageUpdate(uam);
+   }
+   RWLockUnlock(s_lock);
+}
+
+/**
  * Shutdown session agent with optional delayed restart
  */
 void ShutdownSessionAgents(bool restart)
@@ -570,4 +657,79 @@ bool IsUserAgentInstalled()
 #else
    return false;
 #endif
+}
+
+/**
+ * Notify on new user agent message
+ */
+UINT32 AddUserAgentMessage(UINT64 serverId, NXCPMessage *request)
+{
+   UserAgentMessage *uam = new UserAgentMessage(serverId, request, VID_USER_AGENT_MESSAGE_BASE);
+
+   s_userAgentMessageLock.lock();
+   s_userAgentMessages.set(uam->getId(), uam);
+
+   RWLockReadLock(s_lock, INFINITE);
+   for (int i = 0; i < s_agents.size(); i++)
+   {
+      SessionAgentConnector *c = s_agents.get(i);
+      if (c->isUserAgent())
+         c->sendUserAgentMessageUpdate(uam);
+   }
+   RWLockUnlock(s_lock);
+
+   s_userAgentMessageLock.unlock();
+
+   return RCC_SUCCESS;
+}
+
+/**
+ * Notify on user agent message recall
+ */
+UINT32 RemoveUserAgentMessage(UINT64 serverId, NXCPMessage *request)
+{
+   ServerObjectKey id = ServerObjectKey(serverId, request->getFieldAsUInt32(VID_USER_AGENT_MESSAGE_BASE));
+   s_userAgentMessageLock.lock();
+   s_userAgentMessages.remove(id);
+   s_userAgentMessageLock.unlock();
+
+   RWLockReadLock(s_lock, INFINITE);
+   for (int i = 0; i < s_agents.size(); i++)
+   {
+      SessionAgentConnector *c = s_agents.get(i);
+      if (c->isUserAgent())
+         c->notifyOnUserAgentMessageRemoval(id);
+   }
+   RWLockUnlock(s_lock);
+
+   return RCC_SUCCESS;
+}
+
+/**
+ * Update complete list of user agent messages
+ */
+UINT32 UpdateUserAgentMessageList(UINT64 serverId, NXCPMessage *request)
+{
+   s_userAgentMessageLock.lock();
+   s_userAgentMessages.clear();
+   int count = request->getFieldAsInt32(VID_USER_AGENT_MESSAGE_COUNT);
+   int base = VID_USER_AGENT_MESSAGE_BASE;
+   for (int i = 0; i < count; i++, base += 10)
+   {
+      UserAgentMessage *uam = new UserAgentMessage(serverId, request, base);
+      s_userAgentMessages.set(uam->getId(), uam);
+   }
+
+   RWLockReadLock(s_lock, INFINITE);
+   for (int i = 0; i < s_agents.size(); i++)
+   {
+      SessionAgentConnector *c = s_agents.get(i);
+      if (c->isUserAgent())
+         c->sendUserAgentMessages();
+   }
+   RWLockUnlock(s_lock);
+
+   s_userAgentMessageLock.unlock();
+
+   return RCC_SUCCESS;
 }

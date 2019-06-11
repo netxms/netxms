@@ -78,11 +78,10 @@ void FillUserAgentMessagesAll(NXCPMessage *msg, Node *node)
    for (int i = 0; i < g_userAgentMessageList.size(); i++)
    {
       UserAgentMessage *uam = g_userAgentMessageList.get(i);
-      if ((uam->getEndTime() >= now) && (uam->getStartTime() <= now) &&
-            !uam->isRecalled() && uam->isApplicable(node->getId()))
+      if ((uam->getEndTime() >= now) && !uam->isRecalled() && uam->isApplicable(node->getId()))
       {
          uam->fillMessage(base, msg, false);
-         base+=10;
+         base += 10;
          count++;
       }
    }
@@ -210,11 +209,11 @@ void UserAgentMessage::fillMessage(UINT32 base, NXCPMessage *msg, bool fullInfo)
 {
    msg->setField(base, m_id);
    msg->setField(base + 1, m_message, MAX_USER_AGENT_MESSAGE_SIZE);
-   if(fullInfo) // do not send info to agent
+   msg->setFieldFromTime(base + 2, m_startTime);
+   msg->setFieldFromTime(base + 3, m_endTime);
+   if (fullInfo) // do not send info to agent
    {
-      msg->setFieldFromInt32Array(base + 2, m_objectList);
-      msg->setFieldFromTime(base + 3, m_startTime);
-      msg->setFieldFromTime(base + 4, m_endTime);
+      msg->setFieldFromInt32Array(base + 4, m_objectList);
       msg->setField(base + 5, m_recall);
    }
 }

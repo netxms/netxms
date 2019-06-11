@@ -141,6 +141,7 @@
     <ClCompile Include="config.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="menu.cpp" />
+    <ClCompile Include="messages.cpp" />
     <ClCompile Include="net.cpp" />
     <ClCompile Include="screenshot.cpp" />
     <ClCompile Include="session.cpp" />
@@ -176,6 +177,9 @@
     </ProjectReference>
     <ProjectReference Include="..\..\libpng\libpng.vcxproj">
       <Project>{c1a5e28a-cf47-4d96-9656-3312f16e3724}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\libnxagent\libnxagent.vcxproj">
+      <Project>{811f41fe-131d-491a-9184-fbe687068d34}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -588,6 +588,33 @@ struct PolicyChangeNotification
 #define DCTDESC_SYSTEM_OPEN_FILES                    _T("Open files")
 #define DCTDESC_SYSTEM_PROCESSES                     _T("Processes")
 
+#ifdef __HP_aCC
+#pragma pack 1
+#else
+#pragma pack(1)
+#endif
+
+/**
+ * Hash map key for server objects (64 bit server ID + 32 bit object ID)
+ */
+struct LIBNXAGENT_EXPORTABLE ServerObjectKey
+{
+   UINT64 serverId;
+   UINT32 objectId;
+
+   ServerObjectKey(UINT64 _serverId, UINT32 _objectId)
+   {
+      serverId = _serverId;
+      objectId = _objectId;
+   }
+};
+
+#ifdef __HP_aCC
+#pragma pack
+#else
+#pragma pack()
+#endif
+
 /**
  * Class that stores information about file that will be received
  */
@@ -973,6 +1000,30 @@ public:
 
    INT32 getLastContact() const { return (INT32)m_lastContact; }
    void updateLastContact() { m_lastContact = time(NULL); }
+};
+
+/**
+ * User agent message
+ */
+class LIBNXAGENT_EXPORTABLE UserAgentMessage
+{
+private:
+   ServerObjectKey m_id;
+   TCHAR *m_message;
+   time_t m_startTime;
+   time_t m_endTime;
+
+public:
+   UserAgentMessage(UINT64 serverId, const NXCPMessage *msg, UINT32 baseId);
+   UserAgentMessage(const NXCPMessage *msg, UINT32 baseId);
+   ~UserAgentMessage();
+
+   const ServerObjectKey& getId() const { return m_id; }
+   const TCHAR *getMessage() const { return m_message;  }
+   time_t getStartTime() const { return m_startTime; }
+   time_t getEndTime() const { return m_endTime; }
+
+   void fillMessage(NXCPMessage *msg, UINT32 baseId);
 };
 
 #endif   /* _nms_agent_h_ */

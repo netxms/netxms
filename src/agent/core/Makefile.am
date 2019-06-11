@@ -6,7 +6,7 @@ nxagentd_SOURCES = messages.c actions.cpp appagent.cpp comm.cpp config.cpp \
                    session.cpp snmpproxy.cpp snmptrapproxy.cpp \
                    static_subagents.cpp subagent.cpp sysinfo.cpp syslog.cpp \
                    systemd.cpp tcpproxy.cpp tools.cpp trap.cpp tunnel.cpp \
-                   uamessages.cpp upgrade.cpp watchdog.cpp
+                   upgrade.cpp watchdog.cpp
 
 nxagentd_CPPFLAGS = -I@top_srcdir@/include
 

@@ -30,9 +30,9 @@ UINT32 DeployPolicy(CommSession *session, NXCPMessage *request);
 UINT32 UninstallPolicy(CommSession *session, NXCPMessage *request);
 UINT32 GetPolicyInventory(CommSession *session, NXCPMessage *msg);
 void ClearDataCollectionConfiguration();
-UINT32 AddUserAgentMessageChange(NXCPMessage *request);
-UINT32 RemoveUserAgentMessageChange(NXCPMessage *request);
-UINT32 UpdateUserAgentMessageList(NXCPMessage *request);
+UINT32 AddUserAgentMessage(UINT64 serverId, NXCPMessage *request);
+UINT32 RemoveUserAgentMessage(UINT64 serverId, NXCPMessage *request);
+UINT32 UpdateUserAgentMessageList(UINT64 serverId, NXCPMessage *request);
 
 /**
  * SNMP proxy thread pool
@@ -752,7 +752,7 @@ void CommSession::processingThread()
             case CMD_ADD_USER_AGENT_MESSAGE:
                if (m_masterServer)
                {
-                  response.setField(VID_RCC, AddUserAgentMessageChange(request));
+                  response.setField(VID_RCC, AddUserAgentMessage(m_serverId, request));
                }
                else
                {
@@ -762,7 +762,7 @@ void CommSession::processingThread()
             case CMD_RECALL_USER_AGENT_MESSAGE:
                if (m_masterServer)
                {
-                  response.setField(VID_RCC, RemoveUserAgentMessageChange(request));
+                  response.setField(VID_RCC, RemoveUserAgentMessage(m_serverId, request));
                }
                else
                {
@@ -772,7 +772,7 @@ void CommSession::processingThread()
             case CMD_UPDATE_USER_AGENT_MESSAGES:
                if (m_masterServer)
                {
-                  response.setField(VID_RCC, UpdateUserAgentMessageList(request));
+                  response.setField(VID_RCC, UpdateUserAgentMessageList(m_serverId, request));
                }
                else
                {
