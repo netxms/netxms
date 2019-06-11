@@ -1592,7 +1592,7 @@ static int F_CountScheduledTasksByKey(int argc, NXSL_Value **argv, NXSL_Value **
  *    CreateUserAgentMessage(object, message, startTime, endTime)
  * where:
  *     object    - NetXMS object
- *     name      - message to be sent
+ *     message   - message to be sent
  *     startTime - start time of message delivery
  *     endTime   - end time of message delivery
  * Return value:
