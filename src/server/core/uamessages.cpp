@@ -64,7 +64,8 @@ void DeleteOldUserAgentMessages(DB_HANDLE hdb, UINT32 retentionTime)
    g_userAgentMessageListMutex.unlock();
 
    TCHAR query[256];
-   _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("DELETE FROM user_agent_messages WHERE end_time>="), (long)(now - retentionTime));
+   _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("DELETE FROM user_agent_messages WHERE end_time>=") INT64_FMT,
+         static_cast<INT64>(now - retentionTime));
    DBQuery(hdb, query);
 }
 

@@ -212,6 +212,7 @@
     <ClCompile Include="tools.cpp" />
     <ClCompile Include="trap.cpp" />
     <ClCompile Include="tunnel.cpp" />
+    <ClCompile Include="uamessages.cpp" />
     <ClCompile Include="upgrade.cpp" />
     <ClCompile Include="watchdog.cpp" />
   </ItemGroup>

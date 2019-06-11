@@ -249,6 +249,7 @@
     <ClCompile Include="fdb.cpp" />
     <ClCompile Include="filemonitoring.cpp" />
     <ClCompile Include="graph.cpp" />
+    <ClCompile Include="hash_index.cpp" />
     <ClCompile Include="hdlink.cpp" />
     <ClCompile Include="hk.cpp" />
     <ClCompile Include="hwcomponent.cpp" />
@@ -325,6 +326,7 @@
     <ClCompile Include="tools.cpp" />
     <ClCompile Include="tracert.cpp" />
     <ClCompile Include="tunnel.cpp" />
+    <ClCompile Include="uamessages.cpp" />
     <ClCompile Include="uniroot.cpp" />
     <ClCompile Include="upload_job.cpp" />
     <ClCompile Include="uptimecalc.cpp" />
