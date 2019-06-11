@@ -416,6 +416,8 @@ public:
 
    const SNMP_ObjectId& getName() const { return m_name; }
    UINT32 getType() const { return m_type; }
+   bool isInteger() const;
+   bool isString() const;
    size_t getValueLength() const { return m_valueLength; }
    const BYTE *getValue() const { return m_value; }
 

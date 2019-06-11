@@ -22,6 +22,8 @@
 
 #include "cisco.h"
 
+#define DEBUG_TAG_CISCO_SB DEBUG_TAG_CISCO _T(".sb")
+
 /**
  * Get driver name
  */
@@ -97,19 +99,33 @@ static UINT32 HandlerPhysicalPorts(SNMP_Variable *var, SNMP_Transport *snmp, voi
    SNMP_PDU *response;
    if (snmp->doRequest(&request, &response, SnmpGetDefaultTimeout(), 3) == SNMP_ERR_SUCCESS)
    {
-      if (response->getNumVariables() == 2)
+      if ((response->getNumVariables() == 2) &&
+          response->getVariable(0)->isInteger() &&
+          response->getVariable(1)->isInteger())
       {
          UINT32 row = response->getVariable(0)->getValueAsUInt();
          UINT32 column = response->getVariable(1)->getValueAsUInt();
-         if (module->rows < row)
-            module->rows = row;
-         if (module->columns < column)
-            module->columns = column;
-         if ((module->minIfIndex > oid[14]) || (module->minIfIndex == 0))
-            module->minIfIndex = oid[14];
-         if (module->maxIfIndex < oid[14])
-            module->maxIfIndex = oid[14];
-         module->interfaces[(row - 1) * SB_MAX_INTERFACES_PER_ROW + column - 1] = oid[14];
+         if ((row >= 1) && (row <= 2) && (column >= 1) && (column <= SB_MAX_INTERFACES_PER_ROW))
+         {
+            if (module->rows < row)
+               module->rows = row;
+            if (module->columns < column)
+               module->columns = column;
+            if ((module->minIfIndex > oid[14]) || (module->minIfIndex == 0))
+               module->minIfIndex = oid[14];
+            if (module->maxIfIndex < oid[14])
+               module->maxIfIndex = oid[14];
+            module->interfaces[(row - 1) * SB_MAX_INTERFACES_PER_ROW + column - 1] = oid[14];
+         }
+         else
+         {
+            nxlog_debug_tag(DEBUG_TAG_CISCO_SB, 7,
+                  _T("HandlerPhysicalPorts: invalid response for interface %u (row=%u column=%u)"), oid[14], row, column);
+         }
+      }
+      else
+      {
+         nxlog_debug_tag(DEBUG_TAG_CISCO_SB, 7, _T("HandlerPhysicalPorts: invalid response for interface %u"), oid[14]);
       }
       delete response;
    }
@@ -155,7 +171,7 @@ InterfaceList *CiscoSbDriver::getInterfaces(SNMP_Transport *snmp, StringMap *att
             SB_MODULE_LAYOUT *module = &layout[j];
             if ((iface->index >= module->minIfIndex) && (iface->index <= module->maxIfIndex))
             {
-               for(int n = 0; n < SB_MAX_INTERFACES_PER_ROW * module->rows; n++)
+               for(UINT32 n = 0; n < SB_MAX_INTERFACES_PER_ROW * module->rows; n++)
                {
                   if (module->interfaces[n] == iface->index)
                   {
