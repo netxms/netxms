@@ -97,7 +97,6 @@ static UINT32 HandlerPhysicalPorts(SNMP_Variable *var, SNMP_Transport *snmp, voi
    SNMP_PDU *response;
    if (snmp->doRequest(&request, &response, SnmpGetDefaultTimeout(), 3) == SNMP_ERR_SUCCESS)
    {
-      // check number of varbinds and address type (1 = unicast)
       if (response->getNumVariables() == 2)
       {
          UINT32 row = response->getVariable(0)->getValueAsUInt();
