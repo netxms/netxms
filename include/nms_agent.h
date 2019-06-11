@@ -1016,6 +1016,7 @@ private:
 public:
    UserNotification(UINT64 serverId, const NXCPMessage *msg, UINT32 baseId);
    UserNotification(const NXCPMessage *msg, UINT32 baseId);
+   UserNotification(UINT64 serverId, UINT32 messageId, TCHAR *message, time_t start, time_t end);
    ~UserNotification();
 
    const ServerObjectKey& getId() const { return m_id; }
@@ -1024,6 +1025,7 @@ public:
    time_t getEndTime() const { return m_endTime; }
 
    void fillMessage(NXCPMessage *msg, UINT32 baseId);
+   void saveToDatabase(DB_HANDLE hdb);
 };
 
 #endif   /* _nms_agent_h_ */

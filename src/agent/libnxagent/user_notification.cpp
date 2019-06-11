@@ -43,6 +43,16 @@ UserNotification::UserNotification(const NXCPMessage *msg, UINT32 baseId) : m_id
 }
 
 /**
+ * User agent message constructor
+ */
+UserNotification::UserNotification(UINT64 serverId, UINT32 messageId, TCHAR *message, time_t start, time_t end) : m_id(serverId, messageId)
+{
+   m_message = message;
+   m_startTime = start;
+   m_endTime = end;
+}
+
+/**
  * User agent message destructor
  */
 UserNotification::~UserNotification()
@@ -60,4 +70,13 @@ void UserNotification::fillMessage(NXCPMessage *msg, UINT32 baseId)
    msg->setFieldFromTime(baseId + 3, m_startTime);
    msg->setFieldFromTime(baseId + 4, m_endTime);
    msg->setField(baseId + 9, m_id.serverId);
+}
+
+void UserNotification::saveToDatabase(DB_HANDLE db)
+{
+   TCHAR query[2048];
+   _sntprintf(query, 2048, _T("INSERT INTO user_agent_messages (server_id,message_id,message,start_time,end_time)")
+         _T("VALUES (") INT64_FMT _T(",%d,%s,%d,%d)"), m_id.serverId, m_id.objectId, (const TCHAR *)DBPrepareString(db, m_message,1023),
+         m_startTime, m_endTime);
+   DBQuery(db, query);
 }

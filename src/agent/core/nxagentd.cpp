@@ -77,6 +77,8 @@ void ShutdownSyslogSender();
 void StartLocalDataCollector();
 void ShutdownLocalDataCollector();
 
+void LoadUserAgentMessagesFromDatabase();
+
 void StartWatchdog();
 void StopWatchdog();
 int WatchdogMain(DWORD pid, const TCHAR *configSection);
@@ -1228,6 +1230,7 @@ BOOL Initialize()
 	else
 	{
 		// Start network listener and session watchdog
+      LoadUserAgentMessagesFromDatabase();
       StartLocalDataCollector();
       if (g_wListenPort != 0)
       {

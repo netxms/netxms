@@ -93,6 +93,14 @@ bool WriteMetadata(const TCHAR *name, INT32 value)
  */
 static const TCHAR *s_dbInitQueries[] =
 {
+   _T("CREATE TABLE user_agent_messages (")
+   _T("  server_id number(20) not null,")
+   _T("  message_id integer not null,")
+   _T("  message varchar(1023) not null,")
+   _T("  start_time integer not null,")
+   _T("  end_time integer not null,")
+   _T("  PRIMARY KEY(server_id,message_id))"),
+
    _T("CREATE TABLE zone_config (")
    _T("  server_id number(20) not null,")
    _T("  this_node_id integer not null,")

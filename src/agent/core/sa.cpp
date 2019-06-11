@@ -665,9 +665,14 @@ bool IsUserAgentInstalled()
 UINT32 AddUserAgentMessage(UINT64 serverId, NXCPMessage *request)
 {
    UserNotification *n = new UserNotification(serverId, request, VID_USER_AGENT_MESSAGE_BASE);
+   DB_HANDLE db = GetLocalDatabaseHandle();
 
    s_userAgentMessageLock.lock();
-   s_userAgentMessages.set(n->getId(), n);
+   if(n->getStartTime() != 0)
+   {
+      s_userAgentMessages.set(n->getId(), n);
+      n->saveToDatabase(db);
+   }
 
    RWLockReadLock(s_lock, INFINITE);
    for (int i = 0; i < s_agents.size(); i++)
@@ -677,6 +682,10 @@ UINT32 AddUserAgentMessage(UINT64 serverId, NXCPMessage *request)
          c->sendUserAgentMessageUpdate(n);
    }
    RWLockUnlock(s_lock);
+
+
+   if(n->getStartTime() == 0)
+      delete n;
 
    s_userAgentMessageLock.unlock();
 
@@ -691,6 +700,13 @@ UINT32 RemoveUserAgentMessage(UINT64 serverId, NXCPMessage *request)
    ServerObjectKey id = ServerObjectKey(serverId, request->getFieldAsUInt32(VID_USER_AGENT_MESSAGE_BASE));
    s_userAgentMessageLock.lock();
    s_userAgentMessages.remove(id);
+
+   DB_HANDLE db = GetLocalDatabaseHandle();
+   TCHAR query[256];
+   _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("DELETE FROM user_agent_messages WHERE server_id=") INT64_FMT
+         _T(" AND message_id=%d"),  serverId, id);
+   DBQuery(db, query);
+
    s_userAgentMessageLock.unlock();
 
    RWLockReadLock(s_lock, INFINITE);
@@ -711,13 +727,20 @@ UINT32 RemoveUserAgentMessage(UINT64 serverId, NXCPMessage *request)
 UINT32 UpdateUserAgentMessageList(UINT64 serverId, NXCPMessage *request)
 {
    s_userAgentMessageLock.lock();
+   DB_HANDLE db = GetLocalDatabaseHandle();
+   TCHAR query[256];
+
    s_userAgentMessages.clear();
+   _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("DELETE FROM user_agent_messages WHERE server_id=") INT64_FMT, serverId);
+   DBQuery(db, query);
+
    int count = request->getFieldAsInt32(VID_USER_AGENT_MESSAGE_COUNT);
    int base = VID_USER_AGENT_MESSAGE_BASE;
    for (int i = 0; i < count; i++, base += 10)
    {
       UserNotification *n = new UserNotification(serverId, request, base);
       s_userAgentMessages.set(n->getId(), n);
+      n->saveToDatabase(db);
    }
 
    RWLockReadLock(s_lock, INFINITE);
@@ -732,4 +755,28 @@ UINT32 UpdateUserAgentMessageList(UINT64 serverId, NXCPMessage *request)
    s_userAgentMessageLock.unlock();
 
    return RCC_SUCCESS;
+}
+
+void LoadUserAgentMessagesFromDatabase()
+{
+   DB_HANDLE db = GetLocalDatabaseHandle();
+
+   TCHAR query[1024];
+   _sntprintf(query, 1024, _T("SELECT server_id,message_id,message,start_time,end_time FROM user_agent_messages"));
+
+   DB_RESULT hResult = DBSelect(db, query);
+   if (hResult != NULL)
+   {
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
+      {
+         UserNotification *n = new UserNotification(DBGetFieldUInt64(hResult, i, 0),
+                                                      DBGetFieldULong(hResult, i, 1),
+                                                      DBGetField(hResult, i, 2, NULL, 0),
+                                                      (time_t)DBGetFieldInt64(hResult, i, 3),
+                                                      (time_t)DBGetFieldInt64(hResult, i, 4));
+
+         s_userAgentMessages.set(n->getId(), n);
+      }
+   }
 }

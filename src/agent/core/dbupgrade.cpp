@@ -37,6 +37,26 @@ bool g_ignoreAgentDbErrors = FALSE;
  */
 static DB_HANDLE s_db = NULL;
 
+
+/**
+ * Upgrade from V8 to V9
+ */
+static BOOL H_UpgradeFromV8(int currVersion, int newVersion)
+{
+   TCHAR createUserAgentMessages[] =
+         _T("CREATE TABLE user_agent_messages (")
+         _T("  server_id number(20) not null,")
+         _T("  message_id integer not null,")
+         _T("  message varchar(1023) not null,")
+         _T("  start_time integer not null,")
+         _T("  end_time integer not null,")
+         _T("  PRIMARY KEY(server_id,message_id))");
+   CHK_EXEC(Query(createUserAgentMessages));
+
+   CHK_EXEC(WriteMetadata(_T("SchemaVersion"), 9));
+   return TRUE;
+}
+
 /**
  * Upgrade from V7 to V8
  */
@@ -369,6 +389,7 @@ static struct
    { 5, 6, H_UpgradeFromV5 },
    { 6, 7, H_UpgradeFromV6 },
    { 7, 8, H_UpgradeFromV7 },
+   { 8, 9, H_UpgradeFromV8 },
    { 0, 0, NULL }
 };
 
