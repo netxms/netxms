@@ -26,6 +26,8 @@
 
 #include <nddrv.h>
 
+#define DEBUG_TAG_CISCO _T("ndd.cisco")
+
 /**
  * Generic Cisco driver
  */

@@ -161,6 +161,25 @@ bool SNMP_Variable::parse(const BYTE *data, size_t varLength)
 }
 
 /**
+ * Check if value can be represented as integer
+ */
+bool SNMP_Variable::isInteger() const
+{
+   return (m_type == ASN_INTEGER) || (m_type == ASN_COUNTER32) ||
+      (m_type == ASN_GAUGE32) || (m_type == ASN_TIMETICKS) ||
+      (m_type == ASN_UINTEGER32) || (m_type == ASN_IP_ADDR) ||
+      (m_type == ASN_COUNTER64);
+}
+
+/**
+* Check if value can be represented as string
+*/
+bool SNMP_Variable::isString() const
+{
+   return isInteger() || (m_type == ASN_OCTET_STRING) || (m_type == ASN_OBJECT_ID);
+}
+
+/**
  * Get raw value
  * Returns actual data length
  */
