@@ -186,7 +186,7 @@ void UserAgentMessage::processUpdate()
    }
 
    saveToDatabase();
-   decRefCountInc();
+   decRefCount();
 }
 
 /**

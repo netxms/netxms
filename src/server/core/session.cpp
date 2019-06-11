@@ -14800,10 +14800,11 @@ void ClientSession::recallUserAgentMessages(NXCPMessage *request)
    {
       g_userAgentMessageListMutex.lock();
       int base = VID_USER_AGENT_MESSAGE_BASE;
-      UserAgentMessage *uam;
+      UserAgentMessage *uam = NULL;
       for(int i = 0; i < g_userAgentMessageList.size(); i++, base+=10)
       {
-         if(g_userAgentMessageList.get(i)->getId() == request->getFieldAsUInt32(VID_OBJECT_ID))
+         if(g_userAgentMessageList.get(i)->getId() == request->getFieldAsUInt32(VID_OBJECT_ID) &&
+               !g_userAgentMessageList.get(i)->isRecalled() && (g_userAgentMessageList.get(i)->getStartTime() != 0))
          {
             g_userAgentMessageList.get(i)->recall();
             uam = g_userAgentMessageList.get(i);
@@ -14816,9 +14817,11 @@ void ClientSession::recallUserAgentMessages(NXCPMessage *request)
       {
          ThreadPoolExecute(g_clientThreadPool, uam, &UserAgentMessage::processUpdate);
          NotifyClientSessions(NX_NOTIFY_USER_AGENT_MESSAGE_CHANGED, (UINT32)uam->getId());
+         msg.setField(VID_RCC, RCC_SUCCESS);
       }
+      else
+         msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
 
-      msg.setField(VID_RCC, RCC_SUCCESS);
    }
    else
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);

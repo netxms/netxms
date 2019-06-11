@@ -26,7 +26,6 @@ import org.eclipse.ui.contexts.IContextService;
 import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
-import org.netxms.client.ServerAction;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
 import org.netxms.client.UserAgentMessage;
@@ -213,24 +212,21 @@ public class UserAgentMessagesView extends ViewPart implements SessionListener
       if ((selection.size() >= 1))
       {
          for(Object o : selection.toList())
-         {
+         {            
             final UserAgentMessage msg = (UserAgentMessage)o;
-            if(!msg.isRecalled())
-            {
-               new ConsoleJob("Recall user agent message", this, Activator.PLUGIN_ID, null) {
-                  @Override
-                  protected void runInternal(IProgressMonitor monitor) throws Exception
-                  {
-                     session.userAgentMessagesRecall(msg.getId());
-                  }
-                  
-                  @Override
-                  protected String getErrorMessage()
-                  {
-                     return "Cannot recall user agent message";
-                  }
-               }.start();
-            }
+            new ConsoleJob("Recall user agent message", this, Activator.PLUGIN_ID, null) {
+               @Override
+               protected void runInternal(IProgressMonitor monitor) throws Exception
+               {
+                  session.userAgentMessagesRecall(msg.getId());
+               }
+               
+               @Override
+               protected String getErrorMessage()
+               {
+                  return "Cannot recall user agent message";
+               }
+            }.start();
          }
       }
    }
@@ -297,14 +293,17 @@ public class UserAgentMessagesView extends ViewPart implements SessionListener
       IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
       if ((selection.size() >= 1))
       {
+         boolean recallIsActive = true;
          for(Object o : selection.toList())
          {
-            if (!((UserAgentMessage)o).isRecalled())
+            if (((UserAgentMessage)o).isRecalled() || (((UserAgentMessage)o).getStartTime().getTime() == 0))
             {
-               manager.add(actionRecall);
+               recallIsActive = false;
                break;
             }
          }
+         if(recallIsActive)
+            manager.add(actionRecall);
       }
    }
    
