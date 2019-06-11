@@ -1002,6 +1002,7 @@ enum AggregationFunction
 #define ACTION_FORWARD_EVENT  4
 #define ACTION_NXSL_SCRIPT    5
 #define ACTION_XMPP_MESSAGE   6
+#define USER_AGENT_MESSAGE    7
 
 /**
  * Network map types

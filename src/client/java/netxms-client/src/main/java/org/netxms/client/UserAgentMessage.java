@@ -28,7 +28,9 @@ public class UserAgentMessage
    {
       id = response.getFieldAsInt32(base);
       message = response.getFieldAsString(base + 1);
-      objectList = response.getFieldAsUInt32Array(base + 2);
+      startTime = response.getFieldAsDate(base + 2);
+      endTime = response.getFieldAsDate(base + 3);
+      objectList = response.getFieldAsUInt32Array(base + 4);
       
       Arrays.sort(objectList); //Sort objects for comparator in table view
       StringBuilder sb = new StringBuilder();
@@ -41,8 +43,6 @@ public class UserAgentMessage
          }
       }
       objNames = sb.toString();
-      startTime = response.getFieldAsDate(base + 3);
-      endTime = response.getFieldAsDate(base + 4);
       recalled = response.getFieldAsBoolean(base + 5);
    }
 

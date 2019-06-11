@@ -280,7 +280,8 @@ public class UserAgentMessagesView extends ViewPart implements SessionListener
       Menu menu = menuMgr.createContextMenu(viewer.getControl());
       viewer.getControl().setMenu(menu);
 
-      // Register menu for extension.
+      // Register menu for extension
+      getSite().setSelectionProvider(viewer);
       getSite().registerContextMenu(menuMgr, viewer);
    }
    
