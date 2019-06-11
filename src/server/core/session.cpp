@@ -14764,16 +14764,9 @@ void ClientSession::addUserAgentMessages(NXCPMessage *request)
       }
       if (hasAccess)
       {
-         g_userAgentMessageListMutex.lock();
          TCHAR tmp[MAX_USER_AGENT_MESSAGE_SIZE];
-         UserAgentMessage *uam = new UserAgentMessage(request->getFieldAsString(VID_USER_AGENT_MESSAGE_BASE, tmp, MAX_USER_AGENT_MESSAGE_SIZE),
+         CreateNewUserAgentMessage(request->getFieldAsString(VID_USER_AGENT_MESSAGE_BASE, tmp, MAX_USER_AGENT_MESSAGE_SIZE),
                arr, request->getFieldAsTime(VID_USER_AGENT_MESSAGE_BASE + 2), request->getFieldAsTime(VID_USER_AGENT_MESSAGE_BASE + 3));
-         g_userAgentMessageList.add(uam);
-         uam->incRefCount();
-         g_userAgentMessageListMutex.unlock();
-
-         ThreadPoolExecute(g_clientThreadPool, uam, &UserAgentMessage::processUpdate);
-         NotifyClientSessions(NX_NOTIFY_USER_AGENT_MESSAGE_CHANGED, (UINT32)uam->getId());
       }
       else
       {

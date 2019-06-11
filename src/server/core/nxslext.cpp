@@ -1587,6 +1587,46 @@ static int F_CountScheduledTasksByKey(int argc, NXSL_Value **argv, NXSL_Value **
 }
 
 /**
+ * Create user agent message
+ * Syntax:
+ *    CreateUserAgentMessage(object, message, startTime, endTime)
+ * where:
+ *     object    - NetXMS object
+ *     name      - message to be sent
+ *     startTime - start time of message delivery
+ *     endTime   - end time of message delivery
+ * Return value:
+ *     message id
+ */
+static int F_CreateUserAgentMessage(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+{
+   if (!argv[0]->isObject())
+      return NXSL_ERR_NOT_OBJECT;
+
+   if (!argv[1]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   if (!argv[2]->isNumeric() || !argv[3]->isNumeric())
+      return NXSL_ERR_NOT_INTEGER;
+
+   NXSL_Object *object = argv[0]->getValueAsObject();
+   if (!object->getClass()->instanceOf(g_nxslNetObjClass.getName()))
+      return NXSL_ERR_BAD_CLASS;
+
+   UINT32 len = MAX_USER_AGENT_MESSAGE_SIZE;
+   const TCHAR *message = argv[1]->getValueAsString(&len);
+   IntegerArray<UINT32> *arr = new IntegerArray<UINT32>(16,16);
+   arr->add(static_cast<NetObj*>(object->getData())->getId());
+   time_t startTime = (time_t)argv[2]->getValueAsUInt64();
+   time_t endTime = (time_t)argv[3]->getValueAsUInt64();
+
+   UINT32 id = CreateNewUserAgentMessage(message, arr, startTime, endTime);
+
+   *ppResult = vm->createValue(id);
+   return 0;
+}
+
+/**
  * Additional server functions to use within all scripts
  */
 static NXSL_ExtFunction m_nxslServerFunctions[] =
@@ -1602,6 +1642,7 @@ static NXSL_ExtFunction m_nxslServerFunctions[] =
    { "CountryAlphaCode", F_CountryAlphaCode, 1 },
    { "CountryName", F_CountryName, 1 },
    { "CountScheduledTasksByKey", F_CountScheduledTasksByKey, 1 },
+   { "CreateUserAgentMessage", F_CreateUserAgentMessage, 4},
    { "CurrencyAlphaCode", F_CurrencyAlphaCode, 1 },
    { "CurrencyExponent", F_CurrencyExponent, 1 },
    { "CurrencyName", F_CurrencyName, 1 },

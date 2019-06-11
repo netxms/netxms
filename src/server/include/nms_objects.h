@@ -3648,6 +3648,7 @@ void ShowPollers(CONSOLE_CTX console);
 void InitUserAgentMessages();
 void DeleteOldUserAgentMessages(DB_HANDLE hdb,UINT32 retentionTime);
 void FillUserAgentMessagesAll(NXCPMessage *msg, Node *node);
+UINT32 CreateNewUserAgentMessage(const TCHAR *message, IntegerArray<UINT32> *arr, time_t startTime, time_t endTime);
 
 /**
  * Global variables

@@ -90,6 +90,19 @@ void FillUserAgentMessagesAll(NXCPMessage *msg, Node *node)
    g_userAgentMessageListMutex.unlock();
 }
 
+UINT32 CreateNewUserAgentMessage(const TCHAR *message, IntegerArray<UINT32> *arr, time_t startTime, time_t endTime)
+{
+   g_userAgentMessageListMutex.lock();
+   UserAgentMessage *uam = new UserAgentMessage(message, arr, startTime, endTime);
+   g_userAgentMessageList.add(uam);
+   uam->incRefCount();
+   g_userAgentMessageListMutex.unlock();
+
+   ThreadPoolExecute(g_clientThreadPool, uam, &UserAgentMessage::processUpdate);
+   NotifyClientSessions(NX_NOTIFY_USER_AGENT_MESSAGE_CHANGED, uam->getId());
+   return uam->getId();
+}
+
 /**
  * Create user agent message form database
  */
