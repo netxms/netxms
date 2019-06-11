@@ -15,6 +15,7 @@ include_HEADERS = \
 	build.h \
 	config-netware.h \
 	dbdrv.h \
+	gauge_helpers.h \
 	geolocation.h \
 	ieee8021x.h \
 	jansson.h \
