@@ -206,34 +206,48 @@ bool Subnet::findMacAddress(const InetAddress& ipAddr, BYTE *macAddr)
    TCHAR buffer[64];
    nxlog_debug_tag(DEBUG_TAG_TOPO_ARP, 6, _T("Subnet[%s]::findMacAddress: searching for IP address %s"), m_name, ipAddr.toString(buffer));
 
-   bool success = false;
-
-	lockChildList(false);
-   for(int i = 0; (i < m_childList->size()) && !success; i++)
+   ObjectArray<Node> nodes(256, 256, false);
+   lockChildList(false);
+   for(int i = 0; i < m_childList->size(); i++)
    {
-      if (m_childList->get(i)->getObjectClass() != OBJECT_NODE)
-			continue;
+      NetObj *o = m_childList->get(i);
+      if ((o->getObjectClass() == OBJECT_NODE) &&
+          (o->getStatus() != STATUS_UNMANAGED) &&
+          (static_cast<Node*>(o)->isNativeAgent() || static_cast<Node*>(o)->isSNMPSupported()))
+      {
+         o->incRefCount();
+         nodes.add(static_cast<Node*>(o));
+      }
+   }
+   unlockChildList();
 
-		Node *node = (Node *)m_childList->get(i);
+   bool success = false;
+   int i;
+   for(i = 0; (i < nodes.size()) && !success; i++)
+   {
+		Node *node = nodes.get(i);
 		nxlog_debug_tag(DEBUG_TAG_TOPO_ARP, 6, _T("Subnet[%s]::findMacAddress: reading ARP cache for node %s [%u]"), m_name, node->getName(), node->getId());
 		ArpCache *arpCache = node->getArpCache();
-		if (arpCache == NULL)
+		if (arpCache != NULL)
 		{
-	      nxlog_debug_tag(DEBUG_TAG_TOPO_ARP, 7, _T("Subnet[%s]::findMacAddress: cannot read ARP cache for node %s [%u]"), m_name, node->getName(), node->getId());
-			continue;
+         const ArpEntry *e = arpCache->findByIP(ipAddr);
+         if (e != NULL)
+         {
+            nxlog_debug_tag(DEBUG_TAG_TOPO_ARP, 6, _T("Subnet[%s]::findMacAddress: found MAC address for IP address %s"), m_name, ipAddr.toString(buffer));
+            memcpy(macAddr, e->macAddr.value(), MAC_ADDR_LENGTH);
+            success = true;
+         }
+         arpCache->decRefCount();
 		}
-
-		const ArpEntry *e = arpCache->findByIP(ipAddr);
-		if (e != NULL)
+		else
       {
-         nxlog_debug_tag(DEBUG_TAG_TOPO_ARP, 6, _T("Subnet[%s]::findMacAddress: found MAC address for IP address %s"), m_name, ipAddr.toString(buffer));
-         memcpy(macAddr, e->macAddr.value(), MAC_ADDR_LENGTH);
-         success = true;
+         nxlog_debug_tag(DEBUG_TAG_TOPO_ARP, 7, _T("Subnet[%s]::findMacAddress: cannot read ARP cache for node %s [%u]"), m_name, node->getName(), node->getId());
       }
-
-		arpCache->decRefCount();
+      node->decRefCount();
    }
-	unlockChildList();
+
+   for(; i < nodes.size(); i++)
+      nodes.get(i)->decRefCount();
 
 	return success;
 }
