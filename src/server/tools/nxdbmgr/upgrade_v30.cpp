@@ -24,6 +24,30 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 30.75 to 30.76
+ */
+static bool H_UpgradeFromV75()
+{
+   DB_RESULT hResult = SQLSelect(_T("SELECT system_access FROM user_groups WHERE id=-2147483647"));
+   if (hResult != NULL)
+   {
+      if (DBGetNumRows(hResult) != 0)
+      {
+         UINT64 accessRights = DBGetFieldUInt64(hResult, 0, 0);
+         accessRights |= SYSTEM_ACCESS_USAER_AGENT_MESSAGES;
+
+         TCHAR query[256];
+         _sntprintf(query, 256, _T("UPDATE user_groups SET system_access=") UINT64_FMT _T(" WHERE id=-2147483647"), accessRights);
+         CHK_EXEC(SQLQuery(query));
+      }
+      DBFreeResult(hResult);
+   }
+
+   CHK_EXEC(SetMinorSchemaVersion(76));
+   return true;
+}
+
+/**
  * Upgrade from 30.74 to 30.75
  */
 static bool H_UpgradeFromV74()
@@ -2518,6 +2542,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 75, 30, 76, H_UpgradeFromV75 },
    { 74, 30, 75, H_UpgradeFromV74 },
    { 73, 30, 74, H_UpgradeFromV73 },
    { 72, 30, 73, H_UpgradeFromV72 },

@@ -287,7 +287,7 @@ INSERT INTO users (id,name,password,system_access,flags,full_name,
                    disabled_until,last_login,created)
    VALUES (0,'system',
            '3A445C0072CD69D9030CC6644020E5C4576051B1', /* Default password: netxms */
-           274877906943,12,'','Built-in system account',5,0,  /* Flags: change password + disabled */
+           8796093022207,12,'','Built-in system account',5,0,  /* Flags: change password + disabled */
            '00000000-0000-0000-0000-000000000000',0,'',0,0,0,0,0,0
           );
 
@@ -317,7 +317,7 @@ INSERT INTO user_groups (id,name,system_access,flags,description,guid,created)
 ** Default "Admins" group
 */
 INSERT INTO user_groups (id,name,system_access,flags,description,guid,created)
-   VALUES (-2147483647, 'Admins', 4398046511103, 0, 'Default administrative group',
+   VALUES (-2147483647, 'Admins', 8796093022207, 0, 'Default administrative group',
            '00000000-0000-0000-0000-000000000000',0
           );
 
