@@ -423,13 +423,13 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD code, TCHAR *pszBuffer)
       _T("CMD_POLICY_FORCE_APPLY"),
       _T("CMD_GET_NODE_HARDWARE"),
       _T("CMD_GET_MATCHING_DCI"),
-      _T("CMD_GET_USER_AGENT_MESSAGES"),
-      _T("CMD_ADD_USER_AGENT_MESSAGE"),
-      _T("CMD_RECALL_USER_AGENT_MESSAGE"),
-      _T("CMD_UPDATE_USER_AGENT_MESSAGES")
+      _T("CMD_GET_UA_NOTIFICATIONS"),
+      _T("CMD_ADD_UA_NOTIFICATION"),
+      _T("CMD_RECALL_UA_NOTIFICATION"),
+      _T("CMD_UPDATE_UA_NOTIFICATIONS")
    };
 
-   if ((code >= CMD_LOGIN) && (code <= CMD_UPDATE_USER_AGENT_MESSAGES))
+   if ((code >= CMD_LOGIN) && (code <= CMD_UPDATE_UA_NOTIFICATIONS))
    {
       _tcscpy(pszBuffer, pszMsgNames[code - CMD_LOGIN]);
    }

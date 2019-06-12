@@ -154,8 +154,14 @@ static void ProcessRequest(NXCPMessage *request)
       case CMD_UPDATE_AGENT_CONFIG:
          UpdateConfig(request);
          break;
-      case CMD_UPDATE_USER_AGENT_MESSAGES:
+      case CMD_UPDATE_UA_NOTIFICATIONS:
          UpdateNotifications(request);
+         break;
+      case CMD_ADD_UA_NOTIFICATION:
+         AddNotification(request);
+         break;
+      case CMD_RECALL_UA_NOTIFICATION:
+         RemoveNotification(request);
          break;
       case CMD_SHUTDOWN:
          ShutdownAgent(request->getFieldAsBoolean(VID_RESTART));

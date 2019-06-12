@@ -539,10 +539,10 @@ public:
 
    bool testConnection();
    void takeScreenshot(NXCPMessage *msg);
-   void sendUserAgentConfig();
-   void sendUserAgentMessages();
-   void sendUserAgentMessageUpdate(UserNotification *n);
-   void notifyOnUserAgentMessageRemoval(const ServerObjectKey& id);
+   void updateUserAgentConfig();
+   void updateUserAgentNotifications();
+   void addUserAgentNotification(UserAgentNotification *n);
+   void removeUserAgentNotification(const ServerObjectKey& id);
    void shutdown(bool restart);
 };
 

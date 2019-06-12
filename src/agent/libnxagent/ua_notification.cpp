@@ -23,9 +23,10 @@
 #include "libnxagent.h"
 
 /**
- * User agent message constructor
+ * User agent notification constructor
  */
-UserNotification::UserNotification(UINT64 serverId, const NXCPMessage *msg, UINT32 baseId) : m_id(serverId, msg->getFieldAsUInt32(baseId))
+UserAgentNotification::UserAgentNotification(UINT64 serverId, const NXCPMessage *msg, UINT32 baseId)
+      : m_id(serverId, msg->getFieldAsUInt32(baseId))
 {
    m_message = msg->getFieldAsString(baseId + 1);
    m_startTime = msg->getFieldAsTime(baseId + 2);
@@ -33,9 +34,10 @@ UserNotification::UserNotification(UINT64 serverId, const NXCPMessage *msg, UINT
 }
 
 /**
- * User agent message constructor
+ * User agent notification constructor
  */
-UserNotification::UserNotification(const NXCPMessage *msg, UINT32 baseId) : m_id(msg->getFieldAsUInt64(baseId + 9), msg->getFieldAsUInt32(baseId))
+UserAgentNotification::UserAgentNotification(const NXCPMessage *msg, UINT32 baseId)
+      : m_id(msg->getFieldAsUInt64(baseId + 9), msg->getFieldAsUInt32(baseId))
 {
    m_message = msg->getFieldAsString(baseId + 1);
    m_startTime = msg->getFieldAsTime(baseId + 2);
@@ -43,9 +45,10 @@ UserNotification::UserNotification(const NXCPMessage *msg, UINT32 baseId) : m_id
 }
 
 /**
- * User agent message constructor
+ * User agent notification constructor
  */
-UserNotification::UserNotification(UINT64 serverId, UINT32 messageId, TCHAR *message, time_t start, time_t end) : m_id(serverId, messageId)
+UserAgentNotification::UserAgentNotification(UINT64 serverId, UINT32 notificationId, TCHAR *message, time_t start, time_t end)
+      : m_id(serverId, notificationId)
 {
    m_message = message;
    m_startTime = start;
@@ -53,30 +56,35 @@ UserNotification::UserNotification(UINT64 serverId, UINT32 messageId, TCHAR *mes
 }
 
 /**
- * User agent message destructor
+ * User agent notification destructor
  */
-UserNotification::~UserNotification()
+UserAgentNotification::~UserAgentNotification()
 {
    MemFree(m_message);
 }
 
 /**
- * Prepare NXCP message with user agent message info
+ * Prepare NXCP message with user agent notification info
  */
-void UserNotification::fillMessage(NXCPMessage *msg, UINT32 baseId)
+void UserAgentNotification::fillMessage(NXCPMessage *msg, UINT32 baseId)
 {
    msg->setField(baseId, m_id.objectId);
-   msg->setField(baseId + 2, m_message);
-   msg->setFieldFromTime(baseId + 3, m_startTime);
-   msg->setFieldFromTime(baseId + 4, m_endTime);
+   msg->setField(baseId + 1, m_message);
+   msg->setFieldFromTime(baseId + 2, m_startTime);
+   msg->setFieldFromTime(baseId + 3, m_endTime);
    msg->setField(baseId + 9, m_id.serverId);
 }
 
-void UserNotification::saveToDatabase(DB_HANDLE db)
+/**
+ * Save notification object to agent database
+ */
+void UserAgentNotification::saveToDatabase(DB_HANDLE db)
 {
    TCHAR query[2048];
-   _sntprintf(query, 2048, _T("INSERT INTO user_agent_messages (server_id,message_id,message,start_time,end_time)")
-         _T("VALUES (") INT64_FMT _T(",%d,%s,%d,%d)"), m_id.serverId, m_id.objectId, (const TCHAR *)DBPrepareString(db, m_message,1023),
-         m_startTime, m_endTime);
+   _sntprintf(query, 2048,
+         _T("INSERT INTO user_agent_notifications (server_id,notification_id,message,start_time,end_time)")
+         _T(" VALUES (") INT64_FMT _T(",%u,%s,%d,%d)"), m_id.serverId, m_id.objectId,
+         (const TCHAR *)DBPrepareString(db, m_message, 1023), static_cast<unsigned int>(m_startTime),
+         static_cast<unsigned int>(m_endTime));
    DBQuery(db, query);
 }

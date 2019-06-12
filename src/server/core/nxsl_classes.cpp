@@ -660,6 +660,10 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const char *attr)
    {
       value = vm->createValue((node->getCapabilities() & NC_HAS_IFXTABLE) ? 1 : 0);
    }
+   else if (!strcmp(attr, "hasUserAgent"))
+   {
+      value = vm->createValue((LONG)((node->getCapabilities() & NC_HAS_USER_AGENT) ? 1 : 0));
+   }
    else if (!strcmp(attr, "hasVLANs"))
    {
       value = vm->createValue((node->getCapabilities() & NC_HAS_VLANS) ? 1 : 0);
@@ -731,10 +735,6 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const char *attr)
    else if (!strcmp(attr, "isSTP"))
    {
       value = vm->createValue((LONG)((node->getCapabilities() & NC_IS_STP) ? 1 : 0));
-   }
-   else if (!strcmp(attr, "isUserAgentInstalled"))
-   {
-      value = vm->createValue((LONG)((node->getCapabilities() & NC_IS_USER_AGENT_INSTALLED) ? 1 : 0));
    }
    else if (!strcmp(attr, "isVirtual"))
    {

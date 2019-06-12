@@ -1,6 +1,6 @@
 SOURCES = bridge.cpp dfile_info.cpp lora_device_data.cpp main.cpp \
           procexec.cpp registry.cpp smbios.cpp tools.cpp \
-          user_notification.cpp
+          ua_notification.cpp
 
 lib_LTLIBRARIES = libnxagent.la
 

@@ -72,7 +72,7 @@ void DeleteOldUserAgentMessages(DB_HANDLE hdb, UINT32 retentionTime)
 void FillUserAgentMessagesAll(NXCPMessage *msg, Node *node)
 {
    g_userAgentMessageListMutex.lock();
-   int base = VID_USER_AGENT_MESSAGE_BASE;
+   int base = VID_UA_NOTIFICATION_BASE;
    time_t now = time(NULL);
    int count = 0;
    for (int i = 0; i < g_userAgentMessageList.size(); i++)
@@ -85,7 +85,7 @@ void FillUserAgentMessagesAll(NXCPMessage *msg, Node *node)
          count++;
       }
    }
-   msg->setField(VID_USER_AGENT_MESSAGE_COUNT, count);
+   msg->setField(VID_UA_NOTIFICATION_COUNT, count);
    g_userAgentMessageListMutex.unlock();
 }
 
@@ -188,8 +188,8 @@ static void SendUpdate(NXCPMessage *msg, NetObj *obj)
 void UserAgentMessage::processUpdate()
 {
    NXCPMessage msg;
-   msg.setCode(m_recall ? CMD_RECALL_USER_AGENT_MESSAGE : CMD_ADD_USER_AGENT_MESSAGE);
-   fillMessage(VID_USER_AGENT_MESSAGE_BASE, &msg, false);
+   msg.setCode(m_recall ? CMD_RECALL_UA_NOTIFICATION : CMD_ADD_UA_NOTIFICATION);
+   fillMessage(VID_UA_NOTIFICATION_BASE, &msg, false);
 
    //create and fill message
    for (int i = 0; i < m_objectList->size(); i++)

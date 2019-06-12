@@ -39,7 +39,7 @@
     <ClCompile Include="smbios.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="user_notification.cpp">
+    <ClCompile Include="ua_notification.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

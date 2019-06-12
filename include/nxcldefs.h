@@ -190,7 +190,7 @@
 #define NC_IS_CPSNMP              0x00000080  /* CheckPoint SNMP agent on port 260 */
 #define NC_IS_CDP                 0x00000100
 #define NC_IS_NDP                 0x00000200  /* Supports Nortel (Synoptics/Bay Networks) topology discovery */ /* SONMP is an old name for NDP */
-#define NC_IS_LLDP                0x00000400 /* Supports Link Layer Discovery Protocol */
+#define NC_IS_LLDP                0x00000400  /* Supports Link Layer Discovery Protocol */
 #define NC_IS_VRRP                0x00000800  /* VRRP support */
 #define NC_HAS_VLANS              0x00001000  /* VLAN information available */
 #define NC_IS_8021X               0x00002000  /* 802.1x support enabled on node */
@@ -202,7 +202,7 @@
 #define NC_IS_WIFI_CONTROLLER     0x00080000  /* Node is wireless network controller */
 #define NC_IS_SMCLP               0x00100000  /* Node supports SMCLP protocol */
 #define NC_IS_NEW_POLICY_TYPES    0x00200000  /* Defines if agent is already upgraded to new policy type */
-#define NC_IS_USER_AGENT_INSTALLED 0x00400000
+#define NC_HAS_USER_AGENT         0x00400000  /* User agent (desktop support app) is installed */  
 
 /**
  * Flag separator

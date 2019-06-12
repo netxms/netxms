@@ -2181,17 +2181,17 @@ restart_agent_check:
    if (!(m_state & DCSF_UNREACHABLE) && isNativeAgent())
    {
       TCHAR buffer[MAX_RESULT_LENGTH];
-      if(getItemFromAgent(_T("Agent.IsUserAgentInstalled"), MAX_RESULT_LENGTH, buffer) == DCE_SUCCESS)
+      if (getItemFromAgent(_T("Agent.IsUserAgentInstalled"), MAX_RESULT_LENGTH, buffer) == DCE_SUCCESS)
       {
          UINT32 status = _tcstol(buffer, NULL, 0);
          if (status != 0)
-            m_capabilities |= NC_IS_USER_AGENT_INSTALLED;
+            m_capabilities |= NC_HAS_USER_AGENT;
          else
-            m_capabilities &= ~NC_IS_USER_AGENT_INSTALLED;
+            m_capabilities &= ~NC_HAS_USER_AGENT;
       }
       else
       {
-         nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("StatusPoll(%s [%d]): unable to get user agent installation capability"), m_name, m_id);
+         nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("StatusPoll(%s [%d]): cannot get user agent information"), m_name, m_id);
       }
    }
 
@@ -3523,12 +3523,15 @@ bool Node::confPollAgent(UINT32 rqId)
 
       checkAgentPolicyBinding(pAgentConn);
 
-      //Send active user agent messages to agent
-      NXCPMessage msg;
-      msg.setCode(CMD_UPDATE_USER_AGENT_MESSAGES);
-      msg.setId(pAgentConn->generateRequestId());
-      FillUserAgentMessagesAll(&msg, this);
-      pAgentConn->sendMessage(&msg);
+      // Update user agent notification list
+      if (m_capabilities & NC_HAS_USER_AGENT)
+      {
+         NXCPMessage msg;
+         msg.setCode(CMD_UPDATE_UA_NOTIFICATIONS);
+         msg.setId(pAgentConn->generateRequestId());
+         FillUserAgentMessagesAll(&msg, this);
+         pAgentConn->sendMessage(&msg);
+      }
 
       pAgentConn->disconnect();
    }

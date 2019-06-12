@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -30,9 +30,9 @@ UINT32 DeployPolicy(CommSession *session, NXCPMessage *request);
 UINT32 UninstallPolicy(CommSession *session, NXCPMessage *request);
 UINT32 GetPolicyInventory(CommSession *session, NXCPMessage *msg);
 void ClearDataCollectionConfiguration();
-UINT32 AddUserAgentMessage(UINT64 serverId, NXCPMessage *request);
-UINT32 RemoveUserAgentMessage(UINT64 serverId, NXCPMessage *request);
-UINT32 UpdateUserAgentMessageList(UINT64 serverId, NXCPMessage *request);
+UINT32 AddUserAgentNotification(UINT64 serverId, NXCPMessage *request);
+UINT32 RemoveUserAgentNotification(UINT64 serverId, NXCPMessage *request);
+UINT32 UpdateUserAgentNotifications(UINT64 serverId, NXCPMessage *request);
 
 /**
  * SNMP proxy thread pool
@@ -749,30 +749,30 @@ void CommSession::processingThread()
                   response.setField(VID_RCC, ERR_ACCESS_DENIED);
                }
                break;
-            case CMD_ADD_USER_AGENT_MESSAGE:
+            case CMD_ADD_UA_NOTIFICATION:
                if (m_masterServer)
                {
-                  response.setField(VID_RCC, AddUserAgentMessage(m_serverId, request));
+                  response.setField(VID_RCC, AddUserAgentNotification(m_serverId, request));
                }
                else
                {
                   response.setField(VID_RCC, ERR_ACCESS_DENIED);
                }
                break;
-            case CMD_RECALL_USER_AGENT_MESSAGE:
+            case CMD_RECALL_UA_NOTIFICATION:
                if (m_masterServer)
                {
-                  response.setField(VID_RCC, RemoveUserAgentMessage(m_serverId, request));
+                  response.setField(VID_RCC, RemoveUserAgentNotification(m_serverId, request));
                }
                else
                {
                   response.setField(VID_RCC, ERR_ACCESS_DENIED);
                }
                break;
-            case CMD_UPDATE_USER_AGENT_MESSAGES:
+            case CMD_UPDATE_UA_NOTIFICATIONS:
                if (m_masterServer)
                {
-                  response.setField(VID_RCC, UpdateUserAgentMessageList(m_serverId, request));
+                  response.setField(VID_RCC, UpdateUserAgentNotifications(m_serverId, request));
                }
                else
                {

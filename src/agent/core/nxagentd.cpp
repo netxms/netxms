@@ -77,7 +77,7 @@ void ShutdownSyslogSender();
 void StartLocalDataCollector();
 void ShutdownLocalDataCollector();
 
-void LoadUserAgentMessagesFromDatabase();
+void LoadUserAgentNotifications();
 
 void StartWatchdog();
 void StopWatchdog();
@@ -1229,8 +1229,7 @@ BOOL Initialize()
 	}
 	else
 	{
-		// Start network listener and session watchdog
-      LoadUserAgentMessagesFromDatabase();
+      LoadUserAgentNotifications();
       StartLocalDataCollector();
       if (g_wListenPort != 0)
       {

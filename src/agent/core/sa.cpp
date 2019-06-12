@@ -29,10 +29,10 @@ static ObjectArray<SessionAgentConnector> s_agents(8, 8, false);
 static RWLOCK s_lock = RWLockCreate();
 
 /**
- * List of active user agent messages
+ * List of active user agent notifications
  */
-static HashMap<ServerObjectKey, UserNotification> s_userAgentMessages(true);
-static Mutex s_userAgentMessageLock;
+static HashMap<ServerObjectKey, UserAgentNotification> s_userAgentNotifications(true);
+static Mutex s_userAgentNotificationsLock;
 
 /**
  * Register session agent
@@ -203,11 +203,11 @@ void SessionAgentConnector::readThread()
 
                if (m_userAgent)
                {
-                  sendUserAgentConfig();
+                  updateUserAgentConfig();
 
-                  s_userAgentMessageLock.lock();
-                  sendUserAgentMessages();
-                  s_userAgentMessageLock.unlock();
+                  s_userAgentNotificationsLock.lock();
+                  updateUserAgentNotifications();
+                  s_userAgentNotificationsLock.unlock();
                }
             }
             else
@@ -310,7 +310,7 @@ static ConfigEntry *SupportAppMergeStrategy(ConfigEntry *parent, const TCHAR *na
 /**
  * Send configuration for user agent
  */
-void SessionAgentConnector::sendUserAgentConfig()
+void SessionAgentConnector::updateUserAgentConfig()
 {
    Config config;
    config.setTopLevelTag(_T("SupportAppPolicy"));
@@ -335,49 +335,49 @@ void SessionAgentConnector::sendUserAgentConfig()
 }
 
 /**
- * Send all user agent messages (assumes that lock on message list already acquired)
+ * Send all user agent notifications (assumes that lock on notification list already acquired)
  */
-void SessionAgentConnector::sendUserAgentMessages()
+void SessionAgentConnector::updateUserAgentNotifications()
 {
    NXCPMessage msg;
-   msg.setCode(CMD_UPDATE_USER_AGENT_MESSAGES);
+   msg.setCode(CMD_UPDATE_UA_NOTIFICATIONS);
    msg.setId(nextRequestId());
 
-   UINT32 count = 0, baseId = VID_USER_AGENT_MESSAGE_BASE;
-   Iterator<UserNotification> *it = s_userAgentMessages.iterator();
+   UINT32 count = 0, baseId = VID_UA_NOTIFICATION_BASE;
+   Iterator<UserAgentNotification> *it = s_userAgentNotifications.iterator();
    while (it->hasNext())
    {
-      UserNotification *n = it->next();
+      UserAgentNotification *n = it->next();
       n->fillMessage(&msg, baseId);
       baseId += 10;
       count++;
    }
-   msg.setField(VID_USER_AGENT_MESSAGE_COUNT, count);
+   msg.setField(VID_UA_NOTIFICATION_COUNT, count);
    sendMessage(&msg);
 }
 
 /**
- * Notify user agents on message update
+ * Add new notification
  */
-void SessionAgentConnector::sendUserAgentMessageUpdate(UserNotification *n)
+void SessionAgentConnector::addUserAgentNotification(UserAgentNotification *n)
 {
    NXCPMessage msg;
-   msg.setCode(CMD_ADD_USER_AGENT_MESSAGE);
+   msg.setCode(CMD_ADD_UA_NOTIFICATION);
    msg.setId(nextRequestId());
-   n->fillMessage(&msg, VID_USER_AGENT_MESSAGE_BASE);
+   n->fillMessage(&msg, VID_UA_NOTIFICATION_BASE);
    sendMessage(&msg);
 }
 
 /**
- * Notify user agents on message removal
+ * Remove specific notification
  */
-void SessionAgentConnector::notifyOnUserAgentMessageRemoval(const ServerObjectKey& id)
+void SessionAgentConnector::removeUserAgentNotification(const ServerObjectKey& id)
 {
    NXCPMessage msg;
-   msg.setCode(CMD_RECALL_USER_AGENT_MESSAGE);
+   msg.setCode(CMD_RECALL_UA_NOTIFICATION);
    msg.setId(nextRequestId());
-   msg.setField(VID_USER_AGENT_MESSAGE_BASE, id.objectId);
-   msg.setField(VID_USER_AGENT_MESSAGE_BASE + 1, id.serverId);
+   msg.setField(VID_UA_NOTIFICATION_BASE, id.objectId);
+   msg.setField(VID_UA_NOTIFICATION_BASE + 1, id.serverId);
    sendMessage(&msg);
 }
 
@@ -590,37 +590,7 @@ void UpdateUserAgentsConfiguration()
    {
       SessionAgentConnector *c = s_agents.get(i);
       if (c->isUserAgent())
-         c->sendUserAgentConfig();
-   }
-   RWLockUnlock(s_lock);
-}
-
-/**
- * Update user message list
- */
-void UpdateUserAgentsMessageList()
-{
-   RWLockReadLock(s_lock, INFINITE);
-   for (int i = 0; i < s_agents.size(); i++)
-   {
-      SessionAgentConnector *c = s_agents.get(i);
-      if (c->isUserAgent())
-         c->sendUserAgentConfig();
-   }
-   RWLockUnlock(s_lock);
-}
-
-/**
- * Add or update specific user message
- */
-void UpdateUserAgentMessage(UserNotification *n)
-{
-   RWLockReadLock(s_lock, INFINITE);
-   for (int i = 0; i < s_agents.size(); i++)
-   {
-      SessionAgentConnector *c = s_agents.get(i);
-      if (c->isUserAgent())
-         c->sendUserAgentMessageUpdate(n);
+         c->updateUserAgentConfig();
    }
    RWLockUnlock(s_lock);
 }
@@ -662,15 +632,15 @@ bool IsUserAgentInstalled()
 /**
  * Notify on new user agent message
  */
-UINT32 AddUserAgentMessage(UINT64 serverId, NXCPMessage *request)
+UINT32 AddUserAgentNotification(UINT64 serverId, NXCPMessage *request)
 {
-   UserNotification *n = new UserNotification(serverId, request, VID_USER_AGENT_MESSAGE_BASE);
+   UserAgentNotification *n = new UserAgentNotification(serverId, request, VID_UA_NOTIFICATION_BASE);
    DB_HANDLE db = GetLocalDatabaseHandle();
 
-   s_userAgentMessageLock.lock();
-   if(n->getStartTime() != 0)
+   s_userAgentNotificationsLock.lock();
+   if (n->getStartTime() != 0)
    {
-      s_userAgentMessages.set(n->getId(), n);
+      s_userAgentNotifications.set(n->getId(), n);
       n->saveToDatabase(db);
    }
 
@@ -679,42 +649,40 @@ UINT32 AddUserAgentMessage(UINT64 serverId, NXCPMessage *request)
    {
       SessionAgentConnector *c = s_agents.get(i);
       if (c->isUserAgent())
-         c->sendUserAgentMessageUpdate(n);
+         c->addUserAgentNotification(n);
    }
    RWLockUnlock(s_lock);
 
-
-   if(n->getStartTime() == 0)
+   if (n->getStartTime() == 0)
       delete n;
 
-   s_userAgentMessageLock.unlock();
+   s_userAgentNotificationsLock.unlock();
 
    return RCC_SUCCESS;
 }
 
 /**
- * Notify on user agent message recall
+ * Remove user agent notification
  */
-UINT32 RemoveUserAgentMessage(UINT64 serverId, NXCPMessage *request)
+UINT32 RemoveUserAgentNotification(UINT64 serverId, NXCPMessage *request)
 {
-   ServerObjectKey id = ServerObjectKey(serverId, request->getFieldAsUInt32(VID_USER_AGENT_MESSAGE_BASE));
-   s_userAgentMessageLock.lock();
-   s_userAgentMessages.remove(id);
+   ServerObjectKey id = ServerObjectKey(serverId, request->getFieldAsUInt32(VID_UA_NOTIFICATION_BASE));
+   
+   s_userAgentNotificationsLock.lock();
+   s_userAgentNotifications.remove(id);
+   s_userAgentNotificationsLock.unlock();
 
-   DB_HANDLE db = GetLocalDatabaseHandle();
    TCHAR query[256];
-   _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("DELETE FROM user_agent_messages WHERE server_id=") INT64_FMT
-         _T(" AND message_id=%d"),  serverId, id);
+   _sntprintf(query, 256, _T("DELETE FROM user_agent_notifications WHERE server_id=") INT64_FMT _T(" AND notification_id=%u"), serverId, id.objectId);
+   DB_HANDLE db = GetLocalDatabaseHandle();
    DBQuery(db, query);
-
-   s_userAgentMessageLock.unlock();
 
    RWLockReadLock(s_lock, INFINITE);
    for (int i = 0; i < s_agents.size(); i++)
    {
       SessionAgentConnector *c = s_agents.get(i);
       if (c->isUserAgent())
-         c->notifyOnUserAgentMessageRemoval(id);
+         c->removeUserAgentNotification(id);
    }
    RWLockUnlock(s_lock);
 
@@ -722,24 +690,27 @@ UINT32 RemoveUserAgentMessage(UINT64 serverId, NXCPMessage *request)
 }
 
 /**
- * Update complete list of user agent messages
+ * Update complete list of user agent notifications
  */
-UINT32 UpdateUserAgentMessageList(UINT64 serverId, NXCPMessage *request)
+UINT32 UpdateUserAgentNotifications(UINT64 serverId, NXCPMessage *request)
 {
-   s_userAgentMessageLock.lock();
    DB_HANDLE db = GetLocalDatabaseHandle();
-   TCHAR query[256];
 
-   s_userAgentMessages.clear();
-   _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("DELETE FROM user_agent_messages WHERE server_id=") INT64_FMT, serverId);
+   s_userAgentNotificationsLock.lock();
+
+   // FIXME: only delete notifications from current server
+   s_userAgentNotifications.clear();
+
+   TCHAR query[256];
+   _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("DELETE FROM user_agent_notifications WHERE server_id=") INT64_FMT, serverId);
    DBQuery(db, query);
 
-   int count = request->getFieldAsInt32(VID_USER_AGENT_MESSAGE_COUNT);
-   int base = VID_USER_AGENT_MESSAGE_BASE;
-   for (int i = 0; i < count; i++, base += 10)
+   int count = request->getFieldAsInt32(VID_UA_NOTIFICATION_COUNT);
+   int baseId = VID_UA_NOTIFICATION_BASE;
+   for (int i = 0; i < count; i++, baseId += 10)
    {
-      UserNotification *n = new UserNotification(serverId, request, base);
-      s_userAgentMessages.set(n->getId(), n);
+      UserAgentNotification *n = new UserAgentNotification(serverId, request, baseId);
+      s_userAgentNotifications.set(n->getId(), n);
       n->saveToDatabase(db);
    }
 
@@ -748,21 +719,24 @@ UINT32 UpdateUserAgentMessageList(UINT64 serverId, NXCPMessage *request)
    {
       SessionAgentConnector *c = s_agents.get(i);
       if (c->isUserAgent())
-         c->sendUserAgentMessages();
+         c->updateUserAgentNotifications();
    }
    RWLockUnlock(s_lock);
 
-   s_userAgentMessageLock.unlock();
+   s_userAgentNotificationsLock.unlock();
 
    return RCC_SUCCESS;
 }
 
-void LoadUserAgentMessagesFromDatabase()
+/**
+ * LOad user agent notifications from local database
+ */
+void LoadUserAgentNotifications()
 {
    DB_HANDLE db = GetLocalDatabaseHandle();
 
    TCHAR query[1024];
-   _sntprintf(query, 1024, _T("SELECT server_id,message_id,message,start_time,end_time FROM user_agent_messages"));
+   _sntprintf(query, 1024, _T("SELECT server_id,notification_id,message,start_time,end_time FROM user_agent_notifications"));
 
    DB_RESULT hResult = DBSelect(db, query);
    if (hResult != NULL)
@@ -770,13 +744,14 @@ void LoadUserAgentMessagesFromDatabase()
       int count = DBGetNumRows(hResult);
       for(int i = 0; i < count; i++)
       {
-         UserNotification *n = new UserNotification(DBGetFieldUInt64(hResult, i, 0),
-                                                      DBGetFieldULong(hResult, i, 1),
-                                                      DBGetField(hResult, i, 2, NULL, 0),
-                                                      (time_t)DBGetFieldInt64(hResult, i, 3),
-                                                      (time_t)DBGetFieldInt64(hResult, i, 4));
+         UserAgentNotification *n = 
+            new UserAgentNotification(DBGetFieldUInt64(hResult, i, 0),
+                  DBGetFieldULong(hResult, i, 1),
+                  DBGetField(hResult, i, 2, NULL, 0),
+                  (time_t)DBGetFieldInt64(hResult, i, 3),
+                  (time_t)DBGetFieldInt64(hResult, i, 4));
 
-         s_userAgentMessages.set(n->getId(), n);
+         s_userAgentNotifications.set(n->getId(), n);
       }
    }
 }

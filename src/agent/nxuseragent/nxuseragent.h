@@ -152,6 +152,8 @@ void StartAgentConnector();
 void StopAgentConnector();
 void SendLoginMessage();
 void UpdateNotifications(NXCPMessage *request);
+void AddNotification(NXCPMessage *request);
+void RemoveNotification(NXCPMessage *request);
 
 /*** Global variables ***/
 extern HINSTANCE g_hInstance;
