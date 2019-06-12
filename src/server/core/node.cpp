@@ -856,15 +856,12 @@ ArpCache *Node::getArpCache(bool forceRead)
          conn->decRefCount();
       }
    }
-   else if (m_flags & NF_IS_SNMP)
+   else if ((m_flags & NF_IS_SNMP) && (m_driver != NULL))
    {
       SNMP_Transport *transport = createSnmpTransport();
       if (transport != NULL)
       {
-         if (m_driver != NULL)
-         {
-            arpCache = m_driver->getArpCache(transport, m_driverData);
-         }
+         arpCache = m_driver->getArpCache(transport, m_driverData);
          delete transport;
       }
    }
