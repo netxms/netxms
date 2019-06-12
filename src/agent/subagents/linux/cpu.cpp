@@ -197,6 +197,36 @@ static THREAD_RESULT THREAD_CALL CpuUsageCollectorThread(void *pArg)
 	return THREAD_OK;
 }
 
+static UINT32 GetCpuCountFromStat()
+{
+   UINT32 count = 0;
+
+   FILE *hStat = fopen("/proc/stat", "r");
+   char buffer[1024];
+
+   if (hStat == NULL)
+   {
+      AgentWriteDebugLog(2, _T("Cannot open /proc/stat"));
+      return count;
+   }
+
+   while(true)
+   {
+      if (fgets(buffer, sizeof(buffer), hStat) == NULL)
+         break;
+
+      int ret;
+      if (buffer[0] == 'c' && buffer[1] == 'p' && buffer[2] == 'u' && buffer[3] != ' ')
+      {
+         count++;
+      }
+   }
+
+
+   fclose(hStat);
+   return count;
+}
+
 /**
  * Start CPU usage collector
  */
@@ -207,6 +237,9 @@ void StartCpuUsageCollector()
 	m_cpuUsageMutex = MutexCreate();
 
    UINT32 cpuCount = sysconf(_SC_NPROCESSORS_ONLN);
+   UINT32 cpuCount2 = GetCpuCountFromStat();
+   cpuCount = std::max(cpuCount, cpuCount2);
+
    m_cpuUsage = (float *)calloc(CPU_USAGE_SLOTS, sizeof(float) * (cpuCount + 1));
    m_cpuUsageUser = (float *)calloc(CPU_USAGE_SLOTS, sizeof(float) * (cpuCount + 1));
    m_cpuUsageNice = (float *)calloc(CPU_USAGE_SLOTS, sizeof(float) * (cpuCount + 1));
