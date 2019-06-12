@@ -7,9 +7,9 @@ static HashMap<ServerObjectKey, UserNotification> s_notifications(true);
 static Mutex s_notificationLock;
 
 /**
- * Update messages
+ * Update notifications for user
  */
-void UpdateUserMessages(NXCPMessage *request)
+void UpdateNotifications(NXCPMessage *request)
 {
    s_notificationLock.lock();
 

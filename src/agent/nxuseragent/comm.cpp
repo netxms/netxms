@@ -155,7 +155,7 @@ static void ProcessRequest(NXCPMessage *request)
          UpdateConfig(request);
          break;
       case CMD_UPDATE_USER_AGENT_MESSAGES:
-         UpdateUserMessages(request);
+         UpdateNotifications(request);
          break;
       case CMD_SHUTDOWN:
          ShutdownAgent(request->getFieldAsBoolean(VID_RESTART));

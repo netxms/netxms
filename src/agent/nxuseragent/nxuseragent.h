@@ -151,7 +151,7 @@ void TakeScreenshot(NXCPMessage *response);
 void StartAgentConnector();
 void StopAgentConnector();
 void SendLoginMessage();
-void UpdateUserMessages(NXCPMessage *request);
+void UpdateNotifications(NXCPMessage *request);
 
 /*** Global variables ***/
 extern HINSTANCE g_hInstance;
