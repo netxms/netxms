@@ -139,8 +139,8 @@ Alarm::Alarm(Event *event, const TCHAR *message, const TCHAR *key, int state, in
    m_termByUser = 0;
    m_relatedEvents = new IntegerArray<UINT64>(16, 16);
    m_relatedEvents->add(event->getId());
-   nx_strncpy(m_message, message, MAX_EVENT_MSG_LENGTH);
-   nx_strncpy(m_key, key, MAX_DB_STRING);
+   _tcslcpy(m_message, message, MAX_EVENT_MSG_LENGTH);
+   _tcslcpy(m_key, key, MAX_DB_STRING);
    m_alarmCategoryList = new IntegerArray<UINT32>(alarmCategoryList);
    m_notificationCode = 0;
 }
@@ -200,9 +200,9 @@ Alarm::Alarm(DB_HANDLE hdb, DB_RESULT hResult, int row)
    for(int i = 0; i < count; i++)
    {
       m_alarmCategoryList->add(_tcstoul(ids[i], NULL, 10));
-      free(ids[i]);
+      MemFree(ids[i]);
    }
-   free(ids);
+   MemFree(ids);
 }
 
 /**
@@ -1320,10 +1320,10 @@ void SendAlarmsToClient(UINT32 dwRqId, ClientSession *pSession)
    msg.setCode(CMD_ALARM_DATA);
    msg.setId(dwRqId);
 
-   s_alarmList.lock();
-   for(int i = 0; i < s_alarmList.size(); i++)
+   ObjectArray<Alarm> *alarms = GetAlarms();
+   for(int i = 0; i < alarms->size(); i++)
    {
-      Alarm *alarm = s_alarmList.get(i);
+      Alarm *alarm = alarms->get(i);
       NetObj *object = FindObjectById(alarm->getSourceObject());
       if ((object != NULL) &&
           object->checkAccessRights(dwUserId, OBJECT_ACCESS_READ_ALARMS) &&
@@ -1334,7 +1334,7 @@ void SendAlarmsToClient(UINT32 dwRqId, ClientSession *pSession)
          msg.deleteAllFields();
       }
    }
-   s_alarmList.unlock();
+   delete alarms;
 
    // Send end-of-list indicator
    msg.setField(VID_ALARM_ID, (UINT32)0);
@@ -1830,9 +1830,8 @@ UINT32 GetAlarmComments(UINT32 alarmId, NXCPMessage *msg)
  */
 ObjectArray<Alarm> NXCORE_EXPORTABLE *GetAlarms(UINT32 objectId, bool recursive)
 {
-   ObjectArray<Alarm> *result = new ObjectArray<Alarm>(16, 16, true);
-
    s_alarmList.lock();
+   ObjectArray<Alarm> *result = new ObjectArray<Alarm>(s_alarmList.size(), 16, true);
    for(int i = 0; i < s_alarmList.size(); i++)
    {
       Alarm *alarm = s_alarmList.get(i);
