@@ -53,7 +53,7 @@ public:
    virtual const TCHAR *getName();
    virtual const TCHAR *getVersion();
 
-   virtual bool init();
+   virtual bool init(Config *config);
    virtual void shutdown();
 
    virtual bool saveDCItemValue(DCItem *dcObject, time_t timestamp, const TCHAR *value);

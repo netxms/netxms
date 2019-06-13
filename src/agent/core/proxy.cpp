@@ -173,28 +173,6 @@ void LoadProxyConfiguration()
 }
 
 /**
- * Connect to given host/port
- *
- * @return connected socket on success or INVALID_SOCKET on error
- */
-SOCKET ConnectToHostUDP(const InetAddress& addr, UINT16 port)
-{
-   SOCKET s = socket(addr.getFamily(), SOCK_DGRAM, 0);
-   if (s == INVALID_SOCKET)
-      return INVALID_SOCKET;
-
-   SockAddrBuffer saBuffer;
-   struct sockaddr *sa = addr.fillSockAddr(&saBuffer, port);
-   int rc = connect(s, sa, SA_LEN(sa));
-   if (rc == -1)
-   {
-      closesocket(s);
-      s = INVALID_SOCKET;
-   }
-   return s;
-}
-
-/**
  * Create new data collection proxy object
  */
 DataCollectionProxy::DataCollectionProxy(UINT64 serverId, UINT32 proxyId, const InetAddress& address)

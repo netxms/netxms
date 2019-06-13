@@ -2438,6 +2438,7 @@ int LIBNETXMS_EXPORTABLE RecvEx(SOCKET hSocket, void *data, size_t len, int flag
 bool LIBNETXMS_EXPORTABLE RecvAll(SOCKET s, void *buffer, size_t size, UINT32 timeout);
 
 SOCKET LIBNETXMS_EXPORTABLE ConnectToHost(const InetAddress& addr, UINT16 port, UINT32 timeout);
+SOCKET LIBNETXMS_EXPORTABLE ConnectToHostUDP(const InetAddress& addr, UINT16 port);
 
 int LIBNETXMS_EXPORTABLE BitsInMask(UINT32 mask);
 int LIBNETXMS_EXPORTABLE BitsInMask(const BYTE *mask, size_t size);

@@ -29,6 +29,11 @@
 #define DEBUG_TAG _T("pdsdrv")
 
 /**
+ * Server configuration
+ */
+extern Config g_serverConfig;
+
+/**
  * Drivers to load
  */
 TCHAR *g_pdsLoadList = NULL;
@@ -72,7 +77,7 @@ const TCHAR *PerfDataStorageDriver::getVersion()
 /**
  * Initialize driver. Default implementation always returns true.
  */
-bool PerfDataStorageDriver::init()
+bool PerfDataStorageDriver::init(Config *config)
 {
    return true;
 }
@@ -157,7 +162,7 @@ static void LoadDriver(const TCHAR *file)
 	}
 	else
 	{
-		nx_strncpy(fullName, file, MAX_PATH);
+		_tcslcpy(fullName, file, MAX_PATH);
 	}
    HMODULE hModule = DLOpen(fullName, errorText);
 #endif
@@ -171,18 +176,18 @@ static void LoadDriver(const TCHAR *file)
       {
          if (*apiVersion == PDSDRV_API_VERSION)
          {
-				PerfDataStorageDriver *driver = CreateInstance();
-				if ((driver != NULL) && driver->init())
-				{
-					s_drivers[s_numDrivers++] = driver;
-					nxlog_write(MSG_PDSDRV_LOADED, EVENTLOG_INFORMATION_TYPE, "s", driver->getName());
-				}
-				else
-				{
+            PerfDataStorageDriver *driver = CreateInstance();
+            if ((driver != NULL) && driver->init(&g_serverConfig))
+            {
+               s_drivers[s_numDrivers++] = driver;
+               nxlog_write(MSG_PDSDRV_LOADED, EVENTLOG_INFORMATION_TYPE, "s", driver->getName());
+            }
+            else
+            {
                delete driver;
-					nxlog_write(MSG_PDSDRV_INIT_FAILED, EVENTLOG_ERROR_TYPE, "s", file);
-					DLClose(hModule);
-				}
+               nxlog_write(MSG_PDSDRV_INIT_FAILED, EVENTLOG_ERROR_TYPE, "s", file);
+               DLClose(hModule);
+            }
          }
          else
          {
@@ -207,24 +212,24 @@ static void LoadDriver(const TCHAR *file)
  */
 void LoadPerfDataStorageDrivers()
 {
-	memset(s_drivers, 0, sizeof(PerfDataStorageDriver *) * MAX_PDS_DRIVERS);
+   memset(s_drivers, 0, sizeof(PerfDataStorageDriver *) * MAX_PDS_DRIVERS);
 
-	nxlog_debug_tag(DEBUG_TAG, 1, _T("Loading performance data storage drivers"));
-	for(TCHAR *curr = g_pdsLoadList, *next = NULL; curr != NULL; curr = next)
+   nxlog_debug_tag(DEBUG_TAG, 1, _T("Loading performance data storage drivers"));
+   for(TCHAR *curr = g_pdsLoadList, *next = NULL; curr != NULL; curr = next)
    {
-		next = _tcschr(curr, _T('\n'));
-		if (next != NULL)
-		{
-			*next = 0;
-			next++;
-		}
-		StrStrip(curr);
-		if (*curr == 0)
-			continue;
+      next = _tcschr(curr, _T('\n'));
+      if (next != NULL)
+      {
+         *next = 0;
+         next++;
+      }
+      StrStrip(curr);
+      if (*curr == 0)
+         continue;
 
-		LoadDriver(curr);
-		if (s_numDrivers == MAX_PDS_DRIVERS)
-			break;	// Too many drivers already loaded
+      LoadDriver(curr);
+      if (s_numDrivers == MAX_PDS_DRIVERS)
+         break;	// Too many drivers already loaded
    }
    if (s_numDrivers > 0)
       g_flags |= AF_PERFDATA_STORAGE_DRIVER_LOADED;

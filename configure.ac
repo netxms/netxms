@@ -809,7 +809,7 @@ AC_ARG_WITH(dist,
 	AGENT_DIRS="libnxtux"
 	SMSDRV_DIRS="anysms kannel mymobile nexmo nxagent slack smseagle text2reach websms"
    HDLINK_DIRS="jira redmine"
-   PDSDRV_DIRS="rrdtool"
+   PDSDRV_DIRS="influxdb rrdtool"
 	NXCONFIG="nxconfig"
 	TOP_LEVEL_MODULES="include sql images tests"
 	SERVER_INCLUDE="include"
@@ -1054,6 +1054,7 @@ if test $? = 0; then
 	TOP_LEVEL_MODULES="$TOP_LEVEL_MODULES sql images"
 	CONTRIB_MODULES="$CONTRIB_MODULES mibs backgrounds music templates"
 	SMSDRV_DIRS="$SMSDRV_DIRS nxagent"
+	PDSDRV_DIRS="influxdb"
 	if test "x$XMPP_SUPPORT" = "xyes"; then
 		MODULES="libstrophe $MODULES"
 		AC_DEFINE(XMPP_SUPPORTED, 1, Define to 1 if XMPP is supported)
@@ -4292,6 +4293,7 @@ AC_CONFIG_FILES([
 	src/server/libnxsrv/Makefile
 	src/server/netxmsd/Makefile
 	src/server/pdsdrv/Makefile
+	src/server/pdsdrv/influxdb/Makefile
 	src/server/pdsdrv/rrdtool/Makefile
 	src/server/spe/Makefile
 	src/server/tools/Makefile

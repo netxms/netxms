@@ -1433,6 +1433,28 @@ SOCKET LIBNETXMS_EXPORTABLE ConnectToHost(const InetAddress& addr, UINT16 port, 
    return s;
 }
 
+/**
+ * Prepare UDP socket for sending data to given host/port
+ *
+ * @return configured socket on success or INVALID_SOCKET on error
+ */
+SOCKET LIBNETXMS_EXPORTABLE ConnectToHostUDP(const InetAddress& addr, UINT16 port)
+{
+   SOCKET s = socket(addr.getFamily(), SOCK_DGRAM, 0);
+   if (s == INVALID_SOCKET)
+      return INVALID_SOCKET;
+
+   SockAddrBuffer saBuffer;
+   struct sockaddr *sa = addr.fillSockAddr(&saBuffer, port);
+   int rc = connect(s, sa, SA_LEN(sa));
+   if (rc == -1)
+   {
+      closesocket(s);
+      s = INVALID_SOCKET;
+   }
+   return s;
+}
+
 #ifndef VER_PLATFORM_WIN32_WINDOWS
 #define VER_PLATFORM_WIN32_WINDOWS 1
 #endif
