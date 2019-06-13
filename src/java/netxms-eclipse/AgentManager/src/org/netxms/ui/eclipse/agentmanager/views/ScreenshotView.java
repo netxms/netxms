@@ -96,7 +96,16 @@ public class ScreenshotView extends ViewPart
       super.init(site);
 
       session = (NXCSession)ConsoleSharedData.getSession();
-      nodeId = Long.parseLong(site.getSecondaryId());
+      String[] params = site.getSecondaryId().split("&");
+      nodeId = Long.parseLong(params[0]);
+      if(params.length > 1)
+      {
+         userSession = params[1];
+         if(params.length > 2)
+            userName = params[2];
+         else
+            userName = params[1];     
+      }
 
       setPartName(String.format(Messages.get().ScreenshotView_PartTitle, session.getObjectName(nodeId)));
    }

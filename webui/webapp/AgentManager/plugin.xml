@@ -185,6 +185,22 @@
             id="org.netxms.ui.eclipse.agentmanager.commands.open_user_agent_messages"
             name="User Agent Messages">
       </command>
+      <command
+            description="Toggle user session filter"
+            id="org.netxms.ui.eclipse.datacollection.commands.show_user_session_filter"
+            name="Toggle user session filter">
+         <defaultHandler
+               class="org.netxms.ui.eclipse.agentmanager.actions.ToggleUserSessionFilterHandler">
+            <parameter
+                  name="default"
+                  value="default">
+            </parameter>
+         </defaultHandler>
+         <state
+               class="org.eclipse.jface.commands.ToggleState"
+               id="org.netxms.ui.eclipse.datacollection.commands.show_user_session_filter.state">
+         </state>
+      </command>
    </extension>
    <extension
          point="org.eclipse.ui.contexts">
@@ -249,6 +265,38 @@
             isEqualityPattern="true"
             pattern="org.netxms.ui.eclipse.agentmanager/horg.netxms.ui.eclipse.agentmanager.popupActions.SendUserAgentMessage">
       </activityPatternBinding>
+   </extension>
+   <extension
+         point="org.netxms.ui.eclipse.objectview.tabs">
+      <tab
+            class="org.netxms.ui.eclipse.agentmanager.objecttabs.UserSessionsTab"
+            icon="icons/user.png"
+            id="org.netxms.ui.eclipse.agentmanager.objecttabs.UserSessionsTab"
+            name="User Sessions"
+            order="70">
+      </tab>
+   </extension>
+   <extension
+         point="org.eclipse.ui.menus">
+      <menuContribution
+            allPopups="false"
+            locationURI="menu:org.netxms.ui.eclipse.objectview.view.tabbed_object_view?after=additions">
+         <command
+               commandId="org.netxms.ui.eclipse.datacollection.commands.show_user_session_filter"
+               label="Show user session filter"
+               style="toggle"
+               tooltip="Show user session filter">
+            <visibleWhen
+                  checkEnabled="false">
+               <with
+                     variable="org.netxms.ui.eclipse.objectview.ActiveTab">
+                  <instanceof
+                        value="org.netxms.ui.eclipse.agentmanager.objecttabs.UserSessionsTab">
+                  </instanceof>
+               </with>
+            </visibleWhen>
+         </command>
+      </menuContribution>
    </extension>
 
 </plugin>
