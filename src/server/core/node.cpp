@@ -5473,19 +5473,19 @@ DataCollectionError Node::getInternalItem(const TCHAR *param, size_t bufSize, TC
       {
          _sntprintf(buffer, bufSize, _T("%u"), g_averageDCIQueuingTime);
       }
-      else if (!_tcsicmp(param, _T("Server.QueueSize.Average(*)")))
+      else if (MatchString(_T("Server.QueueSize.Average(*)"), param, false))
       {
          rc = GetQueueStatistic(param, StatisticType::AVERAGE, buffer);
       }
-      else if (!_tcsicmp(param, _T("Server.QueueSize.Current(*)")))
+      else if (MatchString(_T("Server.QueueSize.Current(*)"), param, false))
       {
          rc = GetQueueStatistic(param, StatisticType::CURRENT, buffer);
       }
-      else if (!_tcsicmp(param, _T("Server.QueueSize.Max(*)")))
+      else if (MatchString(_T("Server.QueueSize.Max(*)"), param, false))
       {
          rc = GetQueueStatistic(param, StatisticType::MAX, buffer);
       }
-      else if (!_tcsicmp(param, _T("Server.QueueSize.Min(*)")))
+      else if (MatchString(_T("Server.QueueSize.Min(*)"), param, false))
       {
          rc = GetQueueStatistic(param, StatisticType::MIN, buffer);
       }
@@ -5563,43 +5563,43 @@ DataCollectionError Node::getInternalItem(const TCHAR *param, size_t bufSize, TC
       {
          _sntprintf(buffer, bufSize, UINT64_FMT, g_syslogMessagesReceived);
       }
-      else if (MatchString(_T("Server.ThreadPool.ActiveRequests(*)"), param, FALSE))
+      else if (MatchString(_T("Server.ThreadPool.ActiveRequests(*)"), param, false))
       {
          rc = GetThreadPoolStat(THREAD_POOL_ACTIVE_REQUESTS, param, buffer);
       }
-      else if (MatchString(_T("Server.ThreadPool.CurrSize(*)"), param, FALSE))
+      else if (MatchString(_T("Server.ThreadPool.CurrSize(*)"), param, false))
       {
          rc = GetThreadPoolStat(THREAD_POOL_CURR_SIZE, param, buffer);
       }
-      else if (MatchString(_T("Server.ThreadPool.Load(*)"), param, FALSE))
+      else if (MatchString(_T("Server.ThreadPool.Load(*)"), param, false))
       {
          rc = GetThreadPoolStat(THREAD_POOL_LOAD, param, buffer);
       }
-      else if (MatchString(_T("Server.ThreadPool.LoadAverage(*)"), param, FALSE))
+      else if (MatchString(_T("Server.ThreadPool.LoadAverage(*)"), param, false))
       {
          rc = GetThreadPoolStat(THREAD_POOL_LOADAVG_1, param, buffer);
       }
-      else if (MatchString(_T("Server.ThreadPool.LoadAverage5(*)"), param, FALSE))
+      else if (MatchString(_T("Server.ThreadPool.LoadAverage5(*)"), param, false))
       {
          rc = GetThreadPoolStat(THREAD_POOL_LOADAVG_5, param, buffer);
       }
-      else if (MatchString(_T("Server.ThreadPool.LoadAverage15(*)"), param, FALSE))
+      else if (MatchString(_T("Server.ThreadPool.LoadAverage15(*)"), param, false))
       {
          rc = GetThreadPoolStat(THREAD_POOL_LOADAVG_15, param, buffer);
       }
-      else if (MatchString(_T("Server.ThreadPool.MaxSize(*)"), param, FALSE))
+      else if (MatchString(_T("Server.ThreadPool.MaxSize(*)"), param, false))
       {
          rc = GetThreadPoolStat(THREAD_POOL_MAX_SIZE, param, buffer);
       }
-      else if (MatchString(_T("Server.ThreadPool.MinSize(*)"), param, FALSE))
+      else if (MatchString(_T("Server.ThreadPool.MinSize(*)"), param, false))
       {
          rc = GetThreadPoolStat(THREAD_POOL_MIN_SIZE, param, buffer);
       }
-      else if (MatchString(_T("Server.ThreadPool.ScheduledRequests(*)"), param, FALSE))
+      else if (MatchString(_T("Server.ThreadPool.ScheduledRequests(*)"), param, false))
       {
          rc = GetThreadPoolStat(THREAD_POOL_SCHEDULED_REQUESTS, param, buffer);
       }
-      else if (MatchString(_T("Server.ThreadPool.Usage(*)"), param, FALSE))
+      else if (MatchString(_T("Server.ThreadPool.Usage(*)"), param, false))
       {
          rc = GetThreadPoolStat(THREAD_POOL_USAGE, param, buffer);
       }
