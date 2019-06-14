@@ -33,7 +33,6 @@
 #include <pdsdrv.h>
 
 #include <iostream>
-#include <mutex>
 #include <regex>
 #include <string>
 
@@ -49,15 +48,18 @@ private:
    const TCHAR *m_hostname;
    UINT16 m_port;
    SOCKET m_socket;
-   std::string queuedMessages;
-   unsigned int nbQueuedMessages;
-   std::mutex mtx;
-   void queuePush(std::string data, unsigned int maxSize);
-   void logMessage(std::string message, int level);
-   std::string normalizeString(std::string str);
-   std::string getString(const wchar_t *data);
-   void findAndReplaceAll(std::string &data, std::string toSearch, std::string replaceStr);
-   void toLowerCase(std::string &data);
+   std::string m_queuedMessages;
+   UINT32 m_queuedMessageCount;
+   UINT32 m_maxQueueSize;
+   Mutex m_mutex;
+
+   void queuePush(const std::string& data);
+   void logMessage(const std::string& message, int level);
+
+   static std::string normalizeString(std::string str);
+   static std::string getString(const TCHAR *tstr);
+   static void findAndReplaceAll(std::string& data, const std::string& toSearch, const std::string& replaceStr);
+   static void toLowerCase(std::string& data);
 
 public:
    InfluxDBStorageDriver();
@@ -83,8 +85,9 @@ InfluxDBStorageDriver::InfluxDBStorageDriver()
    m_hostname = _T("localhost");
    m_port = 8189;
    m_socket = INVALID_SOCKET;
-   nbQueuedMessages = 0;
-   queuedMessages = "";
+   m_queuedMessageCount = 0;
+   m_queuedMessages = "";
+   m_maxQueueSize = 100;
 }
 
 /**
@@ -94,77 +97,126 @@ InfluxDBStorageDriver::~InfluxDBStorageDriver()
 {
 }
 
-inline void InfluxDBStorageDriver::logMessage(std::string message, int level = 1) {
-  std::wstring msg(message.begin(), message.end());
-  nxlog_debug_tag(DEBUG_TAG, level, msg.c_str());
+/**
+ * Log message
+ */
+inline void InfluxDBStorageDriver::logMessage(const std::string& message, int level)
+{
+#ifdef UNICODE
+   nxlog_debug_tag(DEBUG_TAG, level, _T("%hs"), message.c_str());
+#else
+   nxlog_debug_tag(DEBUG_TAG, level, "%s", message.c_str());
+#endif
 }
 
 /**
  * Normalize all the metric and tag names
  */
-std::string InfluxDBStorageDriver::normalizeString(std::string str) {
-  toLowerCase(str);
-  str.erase(std::remove_if(str.begin(), str.end(), ::isspace), str.end());
-  std::replace(str.begin(), str.end(), ':', '_');
-  std::replace(str.begin(), str.end(), '.', '_');
-  std::replace(str.begin(), str.end(), '-', '_');
-  std::replace(str.begin(), str.end(), ',', '_');
-  std::replace(str.begin(), str.end(), '#', '_');
-  std::regex remove{"\\(.*"};
-  str = std::regex_replace(str, remove, "");
-
-  return str;
+std::string InfluxDBStorageDriver::normalizeString(std::string str)
+{
+   toLowerCase(str);
+   str.erase(std::remove_if(str.begin(), str.end(), ::isspace), str.end());
+   std::replace(str.begin(), str.end(), ':', '_');
+   std::replace(str.begin(), str.end(), '.', '_');
+   std::replace(str.begin(), str.end(), '-', '_');
+   std::replace(str.begin(), str.end(), ',', '_');
+   std::replace(str.begin(), str.end(), '#', '_');
+   std::regex remove { "\\(.*" };
+   str = std::regex_replace(str, remove, "");
+   return str;
 }
 
-inline void InfluxDBStorageDriver::toLowerCase(std::string &data) {
-  std::transform(data.begin(), data.end(), data.begin(), ::tolower);
+/**
+ * Convert string to lower case
+ */
+inline void InfluxDBStorageDriver::toLowerCase(std::string& data)
+{
+   std::transform(data.begin(), data.end(), data.begin(), ::tolower);
 }
 
-std::string InfluxDBStorageDriver::getString(const wchar_t *data) {
-  std::wstring tempWStr(data);
-  std::string tmpStr(tempWStr.begin(), tempWStr.end());
-  return tmpStr;
+/**
+ * Get std::string from TCHAR (will return UTF-8 string in Unicode builds)
+ */
+std::string InfluxDBStorageDriver::getString(const TCHAR *tstr)
+{
+#ifdef UNICODE
+#ifdef UNICODE_UCS4
+   int len = ucs4_utf8len(tstr, -1);
+#else
+   int len = ucs2_utf8len(tstr, -1);
+#endif
+#if HAVE_ALLOCA
+   char *buffer = static_cast<char*>(alloca(len + 1));
+#else
+   char *buffer = static_cast<char*>(MemAlloc(len + 1));
+#endif
+   WideCharToMultiByte(CP_UTF8, 0, tstr, -1, buffer, len + 1, NULL, NULL);
+#if HAVE_ALLOCA
+   return std::string(buffer);
+#else
+   std::string result(buffer);
+   MemFree(buffer);
+   return result;
+#endif
+#else
+   return std::string(tstr);
+#endif
 }
 
-void InfluxDBStorageDriver::findAndReplaceAll(std::string &data, std::string toSearch, std::string replaceStr) {
-  // Get the first occurrence
-  size_t pos = data.find(toSearch);
+/**
+ * Find and replace all occurrences of given sub-string
+ */
+void InfluxDBStorageDriver::findAndReplaceAll(std::string& data, const std::string& toSearch, const std::string& replaceStr)
+{
+   // Get the first occurrence
+   size_t pos = data.find(toSearch);
 
-  // Repeat till end is reached
-  while (pos != std::string::npos) {
-    // Replace this occurrence of Sub String
-    data.replace(pos, toSearch.size(), replaceStr);
-    // Get the next occurrence from the current position
-    pos = data.find(toSearch, pos + replaceStr.size());
-  }
+   // Repeat till end is reached
+   while (pos != std::string::npos)
+   {
+      // Replace this occurrence of Sub String
+      data.replace(pos, toSearch.size(), replaceStr);
+      // Get the next occurrence from the current position
+      pos = data.find(toSearch, pos + replaceStr.size());
+   }
 }
 
 /**
  * Metric Queuing and Packet sending
  */
-void InfluxDBStorageDriver::queuePush(std::string data, unsigned int maxSize = 100) {
+void InfluxDBStorageDriver::queuePush(const std::string& data)
+{
+   m_mutex.lock();
 
-  bool flushNow = data.empty();
-  if (!flushNow) {
-    queuedMessages += data + "\n";
-    nbQueuedMessages++;
-    logMessage("Queue size: " + std::to_string(nbQueuedMessages) + " / " + std::to_string(maxSize), 3);
-  }
+   bool flushNow = data.empty();
+   if (!flushNow)
+   {
+      m_queuedMessages += data + "\n";
+      m_queuedMessageCount++;
+      logMessage("Queue size: " + std::to_string(m_queuedMessageCount) + " / " + std::to_string(m_maxQueueSize), 3);
+   }
 
-  if ((nbQueuedMessages >= maxSize) || flushNow) {
-    logMessage("Queue size: " + std::to_string(nbQueuedMessages) + " / " + std::to_string(maxSize) + " (Sending)", 2);
+   if ((m_queuedMessageCount >= m_maxQueueSize) || flushNow)
+   {
+      logMessage("Queue size: " + std::to_string(m_queuedMessageCount) + " / " + std::to_string(m_maxQueueSize) + " (Sending)", 2);
 
-    if (queuedMessages.size() > 0) {
-      if (send(m_socket, (char *)queuedMessages.c_str(), queuedMessages.size(), 0) <= 0) {
-         nxlog_debug_tag(DEBUG_TAG, 8, _T("socket error: %s"), _tcserror(errno));
-        // Ignore; will be re-sent with the next message
-      } else {
-        // Data sent - empty queue
-        queuedMessages = "";
-        nbQueuedMessages = 0;
+      if (m_queuedMessages.size() > 0)
+      {
+         if (send(m_socket, (char *)m_queuedMessages.c_str(), m_queuedMessages.size(), 0) <= 0)
+         {
+            nxlog_debug_tag(DEBUG_TAG, 8, _T("socket error: %s"), _tcserror(errno));
+            // Ignore; will be re-sent with the next message
+         }
+         else
+         {
+            // Data sent - empty queue
+            m_queuedMessages = "";
+            m_queuedMessageCount = 0;
+         }
       }
-    }
-  }
+   }
+
+   m_mutex.unlock();
 }
 
 /**
@@ -182,8 +234,9 @@ bool InfluxDBStorageDriver::init(Config *config)
 {
    logMessage("Initializing", 1);
 
-   m_hostname = config->getValue(_T("/InfluxDB/Hostname"), _T("localhost"));
-   m_port = static_cast<UINT16>(config->getValueAsUInt(_T("/InfluxDB/Port"), 8189));
+   m_hostname = config->getValue(_T("/InfluxDB/Hostname"), m_hostname);
+   m_port = static_cast<UINT16>(config->getValueAsUInt(_T("/InfluxDB/Port"), m_port));
+   m_maxQueueSize = config->getValueAsUInt(_T("/InfluxDB/MaxQueueSize"), m_maxQueueSize);
 
    InetAddress addr = InetAddress::resolveHostName(m_hostname);
    if (!addr.isValidUnicast())
@@ -203,231 +256,268 @@ bool InfluxDBStorageDriver::init(Config *config)
    return true;
 }
 
+/**
+ * Shutdown driver
+ */
 void InfluxDBStorageDriver::shutdown()
 {
    logMessage("Shutdown", 1);
-   this->queuePush("");
+   queuePush("");
    closesocket(m_socket);
 }
 
 /**
  * Build and queue metric from item DCI's
  */
-bool InfluxDBStorageDriver::saveDCItemValue(DCItem *dci, time_t timestamp, const TCHAR *value) {
-  if (dci == NULL) {
-    logMessage("Metric Not Sent: Empty DCI", 1);
-    return true;
-  }
+bool InfluxDBStorageDriver::saveDCItemValue(DCItem *dci, time_t timestamp, const TCHAR *value)
+{
+   nxlog_debug_tag(DEBUG_TAG, 8,
+            _T("Raw metric: OwnerName:%s SystemTag:%s DataSource:%i Type:%i Name:%s Description: %s Instance:%s DataType:%i Value:%s timestamp:") INT64_FMT,
+            dci->getOwner()->getName(), dci->getSystemTag(), dci->getDataSource(), dci->getType(), dci->getName(),
+            dci->getDescription(), dci->getInstance(), dci->getDataType(), value, static_cast<INT64>(timestamp));
 
-  nxlog_debug_tag(DEBUG_TAG, 5, _T("Raw metric: OwnerName:%s SystemTag:%s DataSource:%i Type:%i Name:%s Description: %s Instance:%s DataType:%i Value:%s timestamp:%zu"), dci->getOwner()->getName(), dci->getSystemTag(), dci->getDataSource(), dci->getType(), dci->getName(), dci->getDescription(), dci->getInstance(), dci->getDataType(), value, timestamp);
+   // Dont't try to send empty values
+   if (*value == 0)
+   {
+      logMessage("Metric Not Sent: Empty value", 7);
+      return true;
+   }
 
-  std::string m_ds = ""; // Data sources
-  switch (dci->getDataSource()) {
-  case DS_INTERNAL:
-    m_ds = "internal";
-    break;
-  case DS_NATIVE_AGENT:
-    m_ds = "agent";
-    break;
-  case DS_SNMP_AGENT:
-    m_ds = "snmp";
-    break;
-  case DS_CHECKPOINT_AGENT:
-    m_ds = "check_point_snmp";
-    break;
-  case DS_PUSH_AGENT:
-    m_ds = "push";
-    break;
-  case DS_WINPERF:
-    m_ds = "wmi";
-    break;
-  case DS_SMCLP:
-    m_ds = "smclp";
-    break;
-  case DS_SCRIPT:
-    m_ds = "script";
-    break;
-  case DS_SSH:
-    m_ds = "ssh";
-    break;
-  case DS_MQTT:
-    m_ds = "mqtt";
-    break;
-  case DS_DEVICE_DRIVER:
-    m_ds = "device";
-    break;
-  default:
-    m_ds = "unknown";
-    break;
-  }
+   const char *ds = ""; // Data sources
+   switch (dci->getDataSource())
+   {
+      case DS_INTERNAL:
+         ds = "internal";
+         break;
+      case DS_NATIVE_AGENT:
+         ds = "agent";
+         break;
+      case DS_SNMP_AGENT:
+         ds = "snmp";
+         break;
+      case DS_CHECKPOINT_AGENT:
+         ds = "check_point_snmp";
+         break;
+      case DS_PUSH_AGENT:
+         ds = "push";
+         break;
+      case DS_WINPERF:
+         ds = "wmi";
+         break;
+      case DS_SMCLP:
+         ds = "smclp";
+         break;
+      case DS_SCRIPT:
+         ds = "script";
+         break;
+      case DS_SSH:
+         ds = "ssh";
+         break;
+      case DS_MQTT:
+         ds = "mqtt";
+         break;
+      case DS_DEVICE_DRIVER:
+         ds = "device";
+         break;
+      default:
+         ds = "unknown";
+         break;
+   }
 
-  std::string m_dc = ""; // Data collection object types
-  switch (dci->getType()) {
-  case DCO_TYPE_GENERIC:
-    m_dc = "generic";
-    break;
-  case DCO_TYPE_ITEM:
-    m_dc = "item";
-    break;
-  case DCO_TYPE_TABLE:
-    m_dc = "table";
-    break;
-  case DCO_TYPE_LIST:
-    m_dc = "list";
-    break;
-  default:
-    m_dc = "unknown";
-    break;
-  }
+   const char *dc = ""; // Data collection object types
+   switch (dci->getType())
+   {
+      case DCO_TYPE_GENERIC:
+         dc = "generic";
+         break;
+      case DCO_TYPE_ITEM:
+         dc = "item";
+         break;
+      case DCO_TYPE_TABLE:
+         dc = "table";
+         break;
+      case DCO_TYPE_LIST:
+         dc = "list";
+         break;
+      default:
+         dc = "unknown";
+         break;
+   }
 
-  std::string m_dt = ""; // DCI (data collection item) data types
-  switch (dci->getDataType()) {
-  case DCI_DT_INT:
-    m_dt = "signed-integer32";
-    break;
-  case DCI_DT_UINT:
-    m_dt = "unsigned-integer32";
-    break;
-  case DCI_DT_INT64:
-    m_dt = "signed-integer64";
-    break;
-  case DCI_DT_UINT64:
-    m_dt = "unsigned-integer64";
-    break;
-  case DCI_DT_FLOAT:
-    m_dt = "float";
-    break;
-  case DCI_DT_STRING:
-    m_dt = "string";
-    break;
-  case DCI_DT_NULL:
-    m_dt = "null";
-    break;
-  case DCI_DT_COUNTER32:
-    m_dt = "counter32";
-    break;
-  case DCI_DT_COUNTER64:
-    m_dt = "counter64";
-    break;
-  default:
-    m_dt = "unknown";
-    break;
-  }
+   const char *dt = ""; // DCI (data collection item) data types
+   bool isInteger;
+   switch (dci->getDataType())
+   {
+      case DCI_DT_INT:
+         dt = "signed-integer32";
+         isInteger = true;
+         break;
+      case DCI_DT_UINT:
+         dt = "unsigned-integer32";
+         isInteger = true;
+         break;
+      case DCI_DT_INT64:
+         dt = "signed-integer64";
+         isInteger = true;
+         break;
+      case DCI_DT_UINT64:
+         dt = "unsigned-integer64";
+         isInteger = true;
+         break;
+      case DCI_DT_FLOAT:
+         dt = "float";
+         isInteger = false;
+         break;
+      case DCI_DT_STRING:
+         dt = "string";
+         isInteger = false;
+         break;
+      case DCI_DT_NULL:
+         dt = "null";
+         isInteger = false;
+         break;
+      case DCI_DT_COUNTER32:
+         dt = "counter32";
+         isInteger = true;
+         break;
+      case DCI_DT_COUNTER64:
+         dt = "counter64";
+         isInteger = true;
+         break;
+      default:
+         dt = "unknown";
+         isInteger = false;
+         break;
+   }
 
-  // Metric name
-  std::string m_name = "";
+   // Metric name
+   std::string name = "";
 
-  // If it's a MIB or Dummy metric use the Description if not use the Name
-  if (std::regex_match(getString(dci->getName()), std::regex{"^\\.1.*"}) || std::regex_match(getString(dci->getName()), std::regex{"^Dummy.*"})) {
-    m_name = normalizeString(getString(dci->getDescription()));
-  } else {
-    m_name = normalizeString(getString(dci->getName()));
-  }
+   // If it's a MIB or Dummy metric use the Description if not use the Name
+   if (std::regex_match(getString(dci->getName()), std::regex
+      { "^\\.1.*" }) || std::regex_match(getString(dci->getName()), std::regex
+      { "^Dummy.*" }))
+   {
+      name = normalizeString(getString(dci->getDescription()));
+   }
+   else
+   {
+      name = normalizeString(getString(dci->getName()));
+   }
 
-  // Instance
-  std::string m_inst = normalizeString(getString(dci->getInstance()));
-  if (m_inst.empty()) {
-    m_inst = "none";
-  } else {
-    // Remove instance from the metric name
-    std::string::size_type i = m_name.find(m_inst);
-    if (i != std::string::npos) {
-      m_name.erase(i, m_inst.length());
-      findAndReplaceAll(m_name, "__", "_");
-    }
-  }
-
-  // Host
-  std::string m_host = getString(dci->getOwner()->getName());
-  std::replace(m_host.begin(), m_host.end(), ' ', '_');
-  std::replace(m_host.begin(), m_host.end(), ':', '_');
-  findAndReplaceAll(m_host, "__", "_");
-  toLowerCase(m_host);
-
-  if (m_host.empty()) {
-    logMessage("Metric Not Sent: Empty host", 1);
-    return true;
-  }
-
-  // Get Host CA's
-  std::string m_tags = "";
-  StringMap *ca = dci->getOwner()->getCustomAttributes();
-  if (ca != NULL) {
-    StringList *ca_key = ca->keys();
-    logMessage("Host: " + m_host + " - CMA: #" + std::to_string(ca->size()), 5);
-
-    for (int i = 0; i < ca_key->size(); i++) {
-      std::string ca_key_name = getString(ca_key->get(i));
-      std::string ca_value = getString(ca->get(ca_key->get(i)));
-      ca_value = normalizeString(ca_value);
-
-      // Only include CA's with the prefix tag_
-      if (std::regex_match(ca_key_name, std::regex{"^tag_.*", std::regex_constants::icase}) && !ca_value.empty()) {
-        std::regex remove{"^tag_", std::regex_constants::icase};
-        ca_key_name = std::regex_replace(ca_key_name, remove, "");
-        ca_key_name = normalizeString(ca_key_name);
-        logMessage("Host: " + m_host + " - CA: K:" + ca_key_name + " = V:" + ca_value, 5);
-
-        if (m_tags.empty()) {
-          m_tags = ca_key_name + '=' + '"' + ca_value + '"';
-        } else {
-          m_tags = m_tags + ',' + ca_key_name + '=' + '"' + ca_value + '"';
-        }
-
-      } else {
-        logMessage("Host: " + m_host + " - CA: K:" + ca_key_name + " (Ignored)", 5);
+   // Instance
+   std::string instance = normalizeString(getString(dci->getInstance()));
+   if (instance.empty())
+   {
+      instance = "none";
+   }
+   else
+   {
+      // Remove instance from the metric name
+      std::string::size_type i = name.find(instance);
+      if (i != std::string::npos)
+      {
+         name.erase(i, instance.length());
+         findAndReplaceAll(name, "__", "_");
       }
-    }
-    delete ca_key;
-  }
-  delete ca;
+   }
 
+   // Host
+   std::string host = getString(dci->getOwner()->getName());
+   std::replace(host.begin(), host.end(), ' ', '_');
+   std::replace(host.begin(), host.end(), ':', '_');
+   findAndReplaceAll(host, "__", "_");
+   toLowerCase(host);
 
-  // TS
-  std::stringstream cls;
-  cls << (long)timestamp;
-  std::string m_ts = cls.str();
+   if (host.empty())
+   {
+      logMessage("Metric Not Sent: Empty host", 1);
+      return true;
+   }
 
-  // Value
-  std::string m_val = getString(value);
+   // Get Host CA's
+   std::string m_tags = "";
+   StringMap *ca = dci->getOwner()->getCustomAttributes();
+   if (ca != NULL)
+   {
+      StringList *ca_key = ca->keys();
+      logMessage("Host: " + host + " - CMA: #" + std::to_string(ca->size()), 7);
 
-  // Dont't try to send empty values
-  if (m_val.empty()) {
-    logMessage("Metric Not Sent: Empty value", 1);
-    return true;
-  }
+      for (int i = 0; i < ca_key->size(); i++)
+      {
+         std::string ca_key_name = getString(ca_key->get(i));
+         std::string ca_value = getString(ca->get(ca_key->get(i)));
+         ca_value = normalizeString(ca_value);
 
-  // String formating
-  if (m_dt == "string") {
-    m_val = '"' + m_val + '"';
-  }
+         // Only include CA's with the prefix tag_
+         if (std::regex_match(ca_key_name, std::regex
+            { "^tag_.*", std::regex_constants::icase }) && !ca_value.empty())
+         {
+            std::regex remove
+               { "^tag_", std::regex_constants::icase };
+            ca_key_name = std::regex_replace(ca_key_name, remove, "");
+            ca_key_name = normalizeString(ca_key_name);
+            logMessage("Host: " + host + " - CA: K:" + ca_key_name + " = V:" + ca_value, 7);
 
-  // Integer formating
-  if (m_dt.find("integer") != std::string::npos || m_dt.find("counter") != std::string::npos) {
-    m_val = m_val + "i";
-  }
+            if (m_tags.empty())
+            {
+               m_tags = ca_key_name + '=' + '"' + ca_value + '"';
+            }
+            else
+            {
+               m_tags = m_tags + ',' + ca_key_name + '=' + '"' + ca_value + '"';
+            }
 
-  // Build final metric structure
-  std::string m_data = "";
-  if (m_tags.empty()) {
-    m_data = m_name + ",host=" + m_host + ",instance=" + m_inst + ",datasource=" + m_ds + ",dataclass=" + m_dc + ",datatype=" + m_dt + " value=" + m_val + " " + m_ts + "000000000";
-  } else {
-    m_data = m_name + ",host=" + m_host + ",instance=" + m_inst + ",datasource=" + m_ds + ",dataclass=" + m_dc + ",datatype=" + m_dt + "," + m_tags + " value=" + m_val + " " + m_ts + "000000000";
-  }
+         }
+         else
+         {
+            logMessage("Host: " + host + " - CA: K:" + ca_key_name + " (Ignored)", 7);
+         }
+      }
+      delete ca_key;
+   }
+   delete ca;
 
-  logMessage("Processing metric: " + m_data, 3);
-  this->mtx.lock();
-  this->queuePush(m_data);
-  this->mtx.unlock();
+   // Formatted timestamp
+   char ts[32];
+   snprintf(ts, 32, INT64_FMTA "000000000", static_cast<INT64>(timestamp));
 
-  return true;
+   // Value
+   std::string fvalue = getString(value);
+
+   // String formating
+   if (dci->getDataType() == DCI_DT_STRING)
+      fvalue = '"' + fvalue + '"';
+
+   // Integer formating
+   if (isInteger)
+      fvalue = fvalue + "i";
+
+   // Build final metric structure
+   std::string data = "";
+   if (m_tags.empty())
+   {
+      data = name + ",host=" + host + ",instance=" + instance + ",datasource=" + ds + ",dataclass=" + dc + ",datatype="
+               + dt + " value=" + fvalue + " " + ts;
+   }
+   else
+   {
+      data = name + ",host=" + host + ",instance=" + instance + ",datasource=" + ds + ",dataclass=" + dc + ",datatype="
+               + dt + "," + m_tags + " value=" + fvalue + " " + ts;
+   }
+
+   logMessage("Processing metric: " + data, 7);
+   queuePush(data);
+
+   return true;
 }
 
 /**
  * Save table DCI's
  */
-bool InfluxDBStorageDriver::saveDCTableValue(DCTable *dcObject, time_t timestamp, Table *value) {
-  return true;
+bool InfluxDBStorageDriver::saveDCTableValue(DCTable *dcObject, time_t timestamp, Table *value)
+{
+   return true;
 }
 
 /**
@@ -442,9 +532,9 @@ DECLARE_PDSDRV_ENTRY_POINT(s_driverName, InfluxDBStorageDriver);
  */
 BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
-        if (dwReason == DLL_PROCESS_ATTACH)
-                DisableThreadLibraryCalls(hInstance);
-        return TRUE;
+   if (dwReason == DLL_PROCESS_ATTACH)
+      DisableThreadLibraryCalls(hInstance);
+   return TRUE;
 }
 
 #endif
