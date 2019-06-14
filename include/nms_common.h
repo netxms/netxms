@@ -38,14 +38,16 @@
 
 #else    /* _WIN32 */
 
-#ifndef UNDER_CE
 #define _WITH_ENCRYPTION   1
 #define WITH_OPENSSL       1
 #define WITH_LDAP          1
+
 #if !defined(WINDOWS_ONLY) && !defined(_CRT_SECURE_NO_DEPRECATE)
 #define _CRT_SECURE_NO_DEPRECATE
 #endif
-#endif
+
+// Turn off C++ exceptions use in standard header files
+#define _HAS_EXCEPTIONS    0
 
 // prevent defining min and max macros in Windows headers
 #ifndef NOMINMAX

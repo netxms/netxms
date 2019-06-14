@@ -638,7 +638,7 @@ UINT32 AgentConnectionEx::processCollectedData(NXCPMessage *msg)
    }
 
    // Check that server is not overloaded with DCI data
-   int queueSize = GetIDataWriterQueueSize();
+   INT64 queueSize = GetIDataWriterQueueSize();
    if (queueSize > 250000)
    {
       debugPrintf(5, _T("AgentConnectionEx::processCollectedData: database writer queue is too large (%d) - cannot accept new data"), queueSize);
@@ -775,7 +775,7 @@ UINT32 AgentConnectionEx::processBulkCollectedData(NXCPMessage *request, NXCPMes
    }
 
    // Check that server is not overloaded with DCI data
-   int queueSize = GetIDataWriterQueueSize();
+   INT64 queueSize = GetIDataWriterQueueSize();
    if (queueSize > 250000)
    {
       debugPrintf(5, _T("AgentConnectionEx::processBulkCollectedData: database writer queue is too large (%d) - cannot accept new data"), queueSize);

@@ -68,7 +68,11 @@ static LRESULT CALLBACK TrayEventHandlerWndProc(HWND hWnd, UINT uMsg, WPARAM wPa
          SetForegroundWindow(hWnd);
          OpenApplicationWindow(pt, false);
          break;
+      case NIN_BALLOONUSERCLICK:
+         nxlog_debug(1, _T("NIN_BALLOONUSERCLICK"));
+         break;
       default:
+         nxlog_debug(1, _T("notification message %u"), LOWORD(lParam));
          break;
    }
 
@@ -150,4 +154,21 @@ void ResetTrayIcon()
 HWND GetTrayWindow()
 {
    return s_hWnd;
+}
+
+/**
+ * Show balloon notification
+ */
+void ShowTrayNotification(const TCHAR *text)
+{
+   NOTIFYICONDATA nid;
+   nid.cbSize = sizeof(nid);
+   nid.uVersion = NOTIFYICON_VERSION_4;
+   nid.hWnd = s_trayIcon.hWnd;
+   nid.uID = s_trayIcon.uID;
+   nid.uFlags = NIF_INFO;
+   nid.dwInfoFlags = NIIF_INFO;
+   _tcscpy_s(nid.szInfoTitle, _T("NetXMS User Agent"));
+   _tcslcpy(nid.szInfo, text, 256);
+   Shell_NotifyIcon(NIM_MODIFY, &nid);
 }

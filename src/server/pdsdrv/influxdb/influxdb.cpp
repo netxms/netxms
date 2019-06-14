@@ -32,7 +32,6 @@
 #include <nms_core.h>
 #include <pdsdrv.h>
 
-#include <iostream>
 #include <regex>
 #include <string>
 
@@ -54,7 +53,6 @@ private:
    Mutex m_mutex;
 
    void queuePush(const std::string& data);
-   void logMessage(const std::string& message, int level);
 
    static std::string normalizeString(std::string str);
    static std::string getString(const TCHAR *tstr);
@@ -95,18 +93,6 @@ InfluxDBStorageDriver::InfluxDBStorageDriver()
  */
 InfluxDBStorageDriver::~InfluxDBStorageDriver()
 {
-}
-
-/**
- * Log message
- */
-inline void InfluxDBStorageDriver::logMessage(const std::string& message, int level)
-{
-#ifdef UNICODE
-   nxlog_debug_tag(DEBUG_TAG, level, _T("%hs"), message.c_str());
-#else
-   nxlog_debug_tag(DEBUG_TAG, level, "%s", message.c_str());
-#endif
 }
 
 /**
@@ -193,16 +179,15 @@ void InfluxDBStorageDriver::queuePush(const std::string& data)
    {
       m_queuedMessages += data + "\n";
       m_queuedMessageCount++;
-      logMessage("Queue size: " + std::to_string(m_queuedMessageCount) + " / " + std::to_string(m_maxQueueSize), 3);
    }
 
    if ((m_queuedMessageCount >= m_maxQueueSize) || flushNow)
    {
-      logMessage("Queue size: " + std::to_string(m_queuedMessageCount) + " / " + std::to_string(m_maxQueueSize) + " (Sending)", 2);
+      nxlog_debug_tag(DEBUG_TAG, 7, _T("Queue size: %u / %u (sending)"), m_queuedMessageCount, m_maxQueueSize);
 
       if (m_queuedMessages.size() > 0)
       {
-         if (send(m_socket, (char *)m_queuedMessages.c_str(), m_queuedMessages.size(), 0) <= 0)
+         if (SendEx(m_socket, m_queuedMessages.c_str(), m_queuedMessages.size(), 0, INVALID_MUTEX_HANDLE) <= 0)
          {
             nxlog_debug_tag(DEBUG_TAG, 8, _T("socket error: %s"), _tcserror(errno));
             // Ignore; will be re-sent with the next message
@@ -210,10 +195,14 @@ void InfluxDBStorageDriver::queuePush(const std::string& data)
          else
          {
             // Data sent - empty queue
-            m_queuedMessages = "";
+            m_queuedMessages.clear();
             m_queuedMessageCount = 0;
          }
       }
+   }
+   else
+   {
+      nxlog_debug_tag(DEBUG_TAG, 7, _T("Queue size: %u / %u"), m_queuedMessageCount, m_maxQueueSize);
    }
 
    m_mutex.unlock();
@@ -232,8 +221,6 @@ const TCHAR *InfluxDBStorageDriver::getName()
  */
 bool InfluxDBStorageDriver::init(Config *config)
 {
-   logMessage("Initializing", 1);
-
    m_hostname = config->getValue(_T("/InfluxDB/Hostname"), m_hostname);
    m_port = static_cast<UINT16>(config->getValueAsUInt(_T("/InfluxDB/Port"), m_port));
    m_maxQueueSize = config->getValueAsUInt(_T("/InfluxDB/MaxQueueSize"), m_maxQueueSize);
@@ -253,6 +240,7 @@ bool InfluxDBStorageDriver::init(Config *config)
    }
 
    nxlog_debug_tag(DEBUG_TAG, 2, _T("Using destination address %s:%u"), (const TCHAR *)addr.toString(), m_port);
+   nxlog_debug_tag(DEBUG_TAG, 2, _T("Max queue size set to %u"), m_maxQueueSize);
    return true;
 }
 
@@ -261,9 +249,9 @@ bool InfluxDBStorageDriver::init(Config *config)
  */
 void InfluxDBStorageDriver::shutdown()
 {
-   logMessage("Shutdown", 1);
    queuePush("");
    closesocket(m_socket);
+   nxlog_debug_tag(DEBUG_TAG, 1, _T("Shutdown completed"));
 }
 
 /**
@@ -279,7 +267,7 @@ bool InfluxDBStorageDriver::saveDCItemValue(DCItem *dci, time_t timestamp, const
    // Dont't try to send empty values
    if (*value == 0)
    {
-      logMessage("Metric Not Sent: Empty value", 7);
+      nxlog_debug_tag(DEBUG_TAG, 7, _T("Metric %s [%u] not sent: empty value"), dci->getName(), dci->getId());
       return true;
    }
 
@@ -431,7 +419,7 @@ bool InfluxDBStorageDriver::saveDCItemValue(DCItem *dci, time_t timestamp, const
 
    if (host.empty())
    {
-      logMessage("Metric Not Sent: Empty host", 1);
+      nxlog_debug_tag(DEBUG_TAG, 7, _T("Metric not sent: empty host"));
       return true;
    }
 
@@ -441,7 +429,7 @@ bool InfluxDBStorageDriver::saveDCItemValue(DCItem *dci, time_t timestamp, const
    if (ca != NULL)
    {
       StringList *ca_key = ca->keys();
-      logMessage("Host: " + host + " - CMA: #" + std::to_string(ca->size()), 7);
+      nxlog_debug_tag(DEBUG_TAG, 7, _T("Host: %hs - CMA: #%d"), host.c_str(), ca->size());
 
       for (int i = 0; i < ca_key->size(); i++)
       {
@@ -457,7 +445,8 @@ bool InfluxDBStorageDriver::saveDCItemValue(DCItem *dci, time_t timestamp, const
                { "^tag_", std::regex_constants::icase };
             ca_key_name = std::regex_replace(ca_key_name, remove, "");
             ca_key_name = normalizeString(ca_key_name);
-            logMessage("Host: " + host + " - CA: K:" + ca_key_name + " = V:" + ca_value, 7);
+            nxlog_debug_tag(DEBUG_TAG, 7, _T("Host: %hs - CA: K:%hs = V:%hs"),
+                  host.c_str(), ca_key_name.c_str(), ca_value.c_str());
 
             if (m_tags.empty())
             {
@@ -471,7 +460,7 @@ bool InfluxDBStorageDriver::saveDCItemValue(DCItem *dci, time_t timestamp, const
          }
          else
          {
-            logMessage("Host: " + host + " - CA: K:" + ca_key_name + " (Ignored)", 7);
+            nxlog_debug_tag(DEBUG_TAG, 7, _T("Host: %hs - CA: K:%hs (Ignored)"), host.c_str(), ca_key_name.c_str());
          }
       }
       delete ca_key;
@@ -506,7 +495,7 @@ bool InfluxDBStorageDriver::saveDCItemValue(DCItem *dci, time_t timestamp, const
                + dt + "," + m_tags + " value=" + fvalue + " " + ts;
    }
 
-   logMessage("Processing metric: " + data, 7);
+   nxlog_debug_tag(DEBUG_TAG, 7, _T("Processing metric: %hs"), data.c_str());
    queuePush(data);
 
    return true;

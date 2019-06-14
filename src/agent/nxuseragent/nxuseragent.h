@@ -154,6 +154,7 @@ void SendLoginMessage();
 void UpdateNotifications(NXCPMessage *request);
 void AddNotification(NXCPMessage *request);
 void RemoveNotification(NXCPMessage *request);
+void ShowTrayNotification(const TCHAR *text);
 
 /*** Global variables ***/
 extern HINSTANCE g_hInstance;

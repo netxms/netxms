@@ -34,9 +34,16 @@ void AddNotification(NXCPMessage *request)
    UserAgentNotification *n = new UserAgentNotification(request, VID_UA_NOTIFICATION_BASE);
    nxlog_debug(7, _T("Add notification [%u]: %s"), n->getId().objectId, n->getMessage());
 
-   s_notificationLock.lock();
-   s_notifications.set(n->getId(), n);
-   s_notificationLock.unlock();
+   if (n->getStartTime() == 0)
+   {
+      ShowTrayNotification(n->getMessage());
+   }
+   else
+   {
+      s_notificationLock.lock();
+      s_notifications.set(n->getId(), n);
+      s_notificationLock.unlock();
+   }
 }
 
 /**
