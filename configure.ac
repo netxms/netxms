@@ -812,7 +812,7 @@ AC_ARG_WITH(tests,
 AC_ARG_ENABLE(systemd,
 [AS_HELP_STRING(--disable-systemd,disable Systemd support)],
 [
-	if test "x$$enableval" = "xno"; then
+	if test "x$enableval" = "xno"; then
 		SYSTEMD_SUPPORT="no"
 	fi
 ])
@@ -2323,6 +2323,11 @@ else
 	HAVE_LIBSSH=no
 fi
 
+
+#--------------------------------------------------------------------
+# Checks for LDAP libraries
+#--------------------------------------------------------------------
+
 if test "x$LDAP_SUPPORT" = "xyes" -a "x$DIST_BUILD" != "xyes"; then
 	AC_CHECK_HEADER(ldap.h,HAVE_LDAP=yes,HAVE_LDAP=no)
 	if test "x$HAVE_LDAP" = "xyes"; then
@@ -2363,6 +2368,11 @@ if test "x$LDAP_SUPPORT" = "xyes" -a "x$DIST_BUILD" != "xyes"; then
 	fi
 	LDAP_SUPPORT="$HAVE_LDAP"
 fi
+
+
+#--------------------------------------------------------------------
+# Checks for systemd libraries
+#--------------------------------------------------------------------
 
 if test "x$SYSTEMD_SUPPORT" = "xyes"; then
 	AC_CHECK_HEADER(systemd/sd-bus.h, [ HAVE_SDBUS=yes ], [ HAVE_SDBUS=no ])
