@@ -1,0 +1,8 @@
+TARGET = influxdb.pdsd
+TYPE = pdsd
+COMPONENT = server
+SOURCES = influxdb.cpp
+
+LIBS = nxcore.lib libnxsrv.lib libnetxms.lib ws2_32.lib
+	  
+include ..\..\..\..\Makefile.inc.w32
