@@ -276,7 +276,7 @@
 					<guid>824e9fa1-a0ac-410b-af7c-bc2cc5336116</guid>
 					<name>System.Memory.Virtual.FreePerc</name>
 					<description>System: free virtual memory (%)</description>
-					<dataType>1</dataType>
+					<dataType>5</dataType>
 					<samples>0</samples>
 					<origin>1</origin>
 					<interval>0</interval>

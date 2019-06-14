@@ -128,7 +128,7 @@
 					<guid>4f48be5e-a13d-4102-9d3c-3152fec54e2b</guid>
 					<name>System.Memory.Physical.CachedPerc</name>
 					<description>System: cache memory (%)</description>
-					<dataType>1</dataType>
+					<dataType>5</dataType>
 					<samples>0</samples>
 					<origin>1</origin>
 					<interval>0</interval>
@@ -257,7 +257,7 @@
 					<guid>eec23c2a-5a75-4233-985f-2a0fbe5633fc</guid>
 					<name>System.Memory.Physical.AvailablePerc</name>
 					<description>System: available physical memory (%)</description>
-					<dataType>1</dataType>
+					<dataType>5</dataType>
 					<samples>0</samples>
 					<origin>1</origin>
 					<interval>0</interval>
