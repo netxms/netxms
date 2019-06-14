@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -23,10 +23,13 @@
 #include <nms_util.h>
 
 #if WITH_SYSTEMD
+
+#if HAVE_SDBUS
 extern "C"
 {
 #include <systemd/sd-bus.h>
 }
+#endif
 
 /**
  * Find the name of the systemd service given pid (if run as service)
@@ -64,12 +67,17 @@ static char *FindServiceName(UINT32 pid)
  */
 bool RestartService(UINT32 pid)
 {
+   char *serviceName = FindServiceName(pid);
+   if (serviceName == NULL)
+      return false;  // Not a systemd service
+
+#if HAVE_SDBUS
+
    sd_bus_error error = SD_BUS_ERROR_NULL;
    sd_bus_message *m = NULL;
    sd_bus *bus = NULL;
    const char *path;
    int r;
-   char *serviceName = FindServiceName(pid);
    bool result = false;
 
    /* Connect to the system bus */
@@ -117,6 +125,14 @@ finish:
    free(serviceName);
 
    return result;
-}
+
+#else /* HAVE_SDBUS */
+
+   char command[1024];
+   snprintf(command, 1024, "systemctl restart %s", serviceName);
+   return system(command) == 0;
 
 #endif
+}
+
+#endif   /* WITH_SYSTEMD */
