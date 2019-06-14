@@ -47,7 +47,9 @@
 #endif
 
 // Turn off C++ exceptions use in standard header files
+#ifndef _HAS_EXCEPTIONS
 #define _HAS_EXCEPTIONS    0
+#endif
 
 // prevent defining min and max macros in Windows headers
 #ifndef NOMINMAX

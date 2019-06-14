@@ -334,6 +334,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "nxuseragent", "src\agent\nx
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "influxdb", "src\server\pdsdrv\influxdb\influxdb.vcxproj", "{85AE6F60-1A9A-FD4F-9D4E-1E9E688740EF}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "python", "src\agent\subagents\python\python.vcxproj", "{238B7E80-FFC5-E54C-964A-B1C11C879F1C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -1390,6 +1392,14 @@ Global
 		{85AE6F60-1A9A-FD4F-9D4E-1E9E688740EF}.Release|Win32.Build.0 = Release|Win32
 		{85AE6F60-1A9A-FD4F-9D4E-1E9E688740EF}.Release|x64.ActiveCfg = Release|x64
 		{85AE6F60-1A9A-FD4F-9D4E-1E9E688740EF}.Release|x64.Build.0 = Release|x64
+		{238B7E80-FFC5-E54C-964A-B1C11C879F1C}.Debug|Win32.ActiveCfg = Debug|Win32
+		{238B7E80-FFC5-E54C-964A-B1C11C879F1C}.Debug|Win32.Build.0 = Debug|Win32
+		{238B7E80-FFC5-E54C-964A-B1C11C879F1C}.Debug|x64.ActiveCfg = Debug|x64
+		{238B7E80-FFC5-E54C-964A-B1C11C879F1C}.Debug|x64.Build.0 = Debug|x64
+		{238B7E80-FFC5-E54C-964A-B1C11C879F1C}.Release|Win32.ActiveCfg = Release|Win32
+		{238B7E80-FFC5-E54C-964A-B1C11C879F1C}.Release|Win32.Build.0 = Release|Win32
+		{238B7E80-FFC5-E54C-964A-B1C11C879F1C}.Release|x64.ActiveCfg = Release|x64
+		{238B7E80-FFC5-E54C-964A-B1C11C879F1C}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -1534,6 +1544,7 @@ Global
 		{3865A294-3553-AD46-A447-34FB482B12E6} = {896A7CDA-423A-460A-83E2-6ED37DAE187C}
 		{E917440E-3636-4CB8-B42B-6BED812A9A97} = {8BC9D64D-347C-41BE-A506-D21C8FB72D56}
 		{85AE6F60-1A9A-FD4F-9D4E-1E9E688740EF} = {7C6DD495-5A44-4D50-B065-A8CA120272F7}
+		{238B7E80-FFC5-E54C-964A-B1C11C879F1C} = {451F583D-C2DB-4414-870C-7FA0189BE7DD}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E4F6B1F2-1076-4A45-8750-AF6CA13917B3}

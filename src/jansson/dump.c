@@ -349,7 +349,7 @@ static int do_dump(const json_t *json, size_t flags, int depth,
                 }
                 assert(i == size);
 
-                qsort(keys, size, sizeof(const char *), compare_keys);
+                qsort((void *)keys, size, sizeof(const char *), compare_keys);
 
                 for(i = 0; i < size; i++)
                 {
@@ -364,7 +364,7 @@ static int do_dump(const json_t *json, size_t flags, int depth,
                     if(dump(separator, separator_length, data) ||
                        do_dump(value, flags, depth + 1, dump, data))
                     {
-                        jsonp_free(keys);
+                        jsonp_free((void *)keys);
                         goto object_error;
                     }
 
@@ -373,7 +373,7 @@ static int do_dump(const json_t *json, size_t flags, int depth,
                         if(dump(",", 1, data) ||
                            dump_indent(flags, depth + 1, 1, dump, data))
                         {
-                            jsonp_free(keys);
+                            jsonp_free((void *)keys);
                             goto object_error;
                         }
                     }
@@ -381,13 +381,13 @@ static int do_dump(const json_t *json, size_t flags, int depth,
                     {
                         if(dump_indent(flags, depth, 0, dump, data))
                         {
-                            jsonp_free(keys);
+                            jsonp_free((void *)keys);
                             goto object_error;
                         }
                     }
                 }
 
-                jsonp_free(keys);
+                jsonp_free((void *)keys);
             }
             else
             {

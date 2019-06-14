@@ -31,8 +31,8 @@ public:
 
    static PythonPlugin *load(const TCHAR *file, StructArray<NETXMS_SUBAGENT_PARAM> *parameters, StructArray<NETXMS_SUBAGENT_LIST> *lists);
 
-   static INT32 parameterHandler(const TCHAR *parameter, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
-   static INT32 listHandler(const TCHAR *parameter, const TCHAR *arg, StringList *value, AbstractCommSession *session);
+   static LONG parameterHandlerEntryPoint(const TCHAR *parameter, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+   static LONG listHandlerEntryPoint(const TCHAR *parameter, const TCHAR *arg, StringList *value, AbstractCommSession *session);
 };
 
 #endif

@@ -80,7 +80,7 @@ bool PythonPlugin::getParameters(StructArray<NETXMS_SUBAGENT_PARAM> *parameters)
                _tcslcpy(p.name, name, MAX_PARAM_NAME);
                p.dataType = type;
                _tcslcpy(p.description, description, MAX_DB_STRING);
-               p.handler = PythonPlugin::parameterHandler;
+               p.handler = &PythonPlugin::parameterHandlerEntryPoint;
                p.arg = reinterpret_cast<TCHAR*>(new HandlerData(this, id));
                parameters->add(&p);
                nxlog_debug_tag(PY_SUBAGENT_DEBUG_TAG, 6, _T("Parameter added (id=%s name=\"%s\" type=%d)"), id, name, type);
@@ -129,7 +129,7 @@ bool PythonPlugin::getLists(StructArray<NETXMS_SUBAGENT_LIST> *lists)
                NETXMS_SUBAGENT_LIST l;
                _tcslcpy(l.name, name, MAX_PARAM_NAME);
                _tcslcpy(l.description, description, MAX_DB_STRING);
-               l.handler = PythonPlugin::listHandler;
+               l.handler = &PythonPlugin::listHandlerEntryPoint;
                l.arg = reinterpret_cast<TCHAR*>(new HandlerData(this, id));
                lists->add(&l);
                nxlog_debug_tag(PY_SUBAGENT_DEBUG_TAG, 6, _T("List added (id=%s name=\"%s\")"), id, name);
@@ -196,7 +196,7 @@ PythonPlugin *PythonPlugin::load(const TCHAR *file, StructArray<NETXMS_SUBAGENT_
 /**
  * Parameter handler entry point
  */
-INT32 PythonPlugin::parameterHandler(const TCHAR *parameter, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+LONG PythonPlugin::parameterHandlerEntryPoint(const TCHAR *parameter, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    const HandlerData *hd = reinterpret_cast<const HandlerData*>(arg);
    return hd->plugin->parameterHandler(hd->id, parameter, value);
@@ -241,7 +241,7 @@ INT32 PythonPlugin::parameterHandler(const TCHAR *id, const TCHAR *name, TCHAR *
 /**
  * List handler entry point
  */
-INT32 PythonPlugin::listHandler(const TCHAR *parameter, const TCHAR *arg, StringList *value, AbstractCommSession *session)
+LONG PythonPlugin::listHandlerEntryPoint(const TCHAR *parameter, const TCHAR *arg, StringList *value, AbstractCommSession *session)
 {
    const HandlerData *hd = reinterpret_cast<const HandlerData*>(arg);
    return hd->plugin->listHandler(hd->id, parameter, value);

@@ -10,13 +10,10 @@
  *    use it, the author would love to hear about it.
  */
 
-#include "ice.h"
-#include <stdio.h>
-#include <stdlib.h>
 #include <nms_common.h>
+#include "ice.h"
 
-
-	/* Structure of a single round subkey */
+/* Structure of a single round subkey */
 typedef DWORD	ICE_SUBKEY[3];
 
 
