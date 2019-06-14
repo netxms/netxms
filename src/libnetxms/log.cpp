@@ -305,7 +305,7 @@ bool LIBNETXMS_EXPORTABLE nxlog_set_rotation_policy(int rotationMode, UINT64 max
 		else if (rotationMode == NXLOG_ROTATION_DAILY)
 		{
 			if ((dailySuffix != NULL) && (dailySuffix[0] != 0))
-				nx_strncpy(s_dailyLogSuffixTemplate, dailySuffix, sizeof(s_dailyLogSuffixTemplate) / sizeof(TCHAR));
+				_tcslcpy(s_dailyLogSuffixTemplate, dailySuffix, sizeof(s_dailyLogSuffixTemplate) / sizeof(TCHAR));
 			SetDayStart();
 		}
 	}
@@ -523,17 +523,21 @@ bool LIBNETXMS_EXPORTABLE nxlog_open(const TCHAR *logName, UINT32 flags,
 		WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, logName, -1, s_syslogName, 64, NULL, NULL);
 		s_syslogName[63] = 0;
 #else
-		nx_strncpy(s_syslogName, logName, 64);
+		strlcpy(s_syslogName, logName, 64);
 #endif
       openlog(s_syslogName, LOG_PID, LOG_DAEMON);
 		s_flags |= NXLOG_IS_OPEN;
 #endif
    }
+   else if (s_flags & NXLOG_USE_SYSTEMD)
+   {
+      s_flags |= NXLOG_IS_OPEN;
+   }
    else
    {
       TCHAR buffer[32];
 
-		nx_strncpy(s_logFileName, logName, MAX_PATH);
+      _tcslcpy(s_logFileName, logName, MAX_PATH);
 #if HAVE_FOPEN64
       s_logFileHandle = _tfopen64(logName, _T("a"));
 #else
@@ -579,6 +583,10 @@ void LIBNETXMS_EXPORTABLE nxlog_close()
 #else
          closelog();
 #endif
+      }
+      else if (s_flags & NXLOG_USE_SYSTEMD)
+      {
+         // Do nothing
       }
       else
       {
@@ -904,19 +912,18 @@ void LIBNETXMS_EXPORTABLE nxlog_write(DWORD msg, WORD wType, const char *format,
    if (s_flags & NXLOG_USE_SYSLOG)
    {
       int level;
-
       switch(wType)
       {
-         case EVENTLOG_ERROR_TYPE:
+         case NXLOG_ERROR:
             level = LOG_ERR;
             break;
-         case EVENTLOG_WARNING_TYPE:
+         case NXLOG_WARNING:
             level = LOG_WARNING;
             break;
-         case EVENTLOG_INFORMATION_TYPE:
+         case NXLOG_INFO:
             level = LOG_NOTICE;
             break;
-         case EVENTLOG_DEBUG_TYPE:
+         case NXLOG_DEBUG:
             level = LOG_DEBUG;
             break;
          default:
@@ -935,6 +942,29 @@ void LIBNETXMS_EXPORTABLE nxlog_write(DWORD msg, WORD wType, const char *format,
 		{
 			m_consoleWriter(_T("%s %s"), FormatLogTimestamp(szBuffer), pMsg);
 		}
+   }
+   else if (s_flags & NXLOG_USE_SYSTEMD)
+   {
+      int level;
+      switch(wType)
+      {
+         case NXLOG_ERROR:
+            level = 3;
+            break;
+         case NXLOG_WARNING:
+            level = 4;
+            break;
+         case NXLOG_INFO:
+            level = 5;
+            break;
+         case NXLOG_DEBUG:
+            level = 7;
+            break;
+         default:
+            level = 6;
+            break;
+      }
+      _ftprintf(stderr, _T("<%d>%s"), level, pMsg);
    }
    else
    {
