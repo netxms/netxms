@@ -4466,7 +4466,7 @@ if test "x${BUILD_AGENT}" = "xyes"; then
 		if test "x${HAVE_SDBUS}" = "xyes"; then
 			echo "SD-Bus support          : YES"
 		else
-			echo "SD-Bus support   	      : NO"
+			echo "SD-Bus support          : NO"
 		fi
 	else
 		echo "Systemd support         : NO"
