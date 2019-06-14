@@ -137,7 +137,7 @@ extern const TCHAR *g_szMessages[];
 #if defined(_WIN32)
 #define VALID_OPTIONS   "c:CdD:e:EfFG:hHiIkKlM:n:N:P:r:RsSUvW:X:Z:z:"
 #else
-#define VALID_OPTIONS   "c:CdD:fFg:G:hkKlM:p:P:r:u:vW:X:Z:z:"
+#define VALID_OPTIONS   "c:CdD:fFg:G:hkKlM:p:P:r:Su:vW:X:Z:z:"
 #endif
 
 /**
@@ -377,8 +377,8 @@ static TCHAR m_szHelpText[] =
    _T("   -R         : Remove Windows service\n")
    _T("   -s         : Start Windows servive\n")
    _T("   -S         : Stop Windows service\n")
-#endif
-#if !defined(_WIN32)
+#else
+   _T("   -S         : Run as systemd daemon\n")
    _T("   -u <uid>   : Change user ID to <uid> after start\n")
 #endif
    _T("   -v         : Display version and exit\n")
@@ -1563,6 +1563,7 @@ int main(int argc, char *argv[])
 #else
    TCHAR *pszEnv;
 	int uid = 0, gid = 0;
+	bool systemdMode = false;
 #endif
 
    InitNetXMSProcess(false);
@@ -1765,6 +1766,11 @@ int main(int argc, char *argv[])
 #else
             strlcpy(g_windowsServiceDisplayName, optarg, MAX_PATH);
 #endif
+            break;
+#else /* not _WIN32 */
+         case 'S':   // Run as systemd daemon with type "simple"
+            g_dwFlags |= AF_DAEMON;
+            systemdMode = true;
             break;
 #endif
          case '?':
@@ -1986,7 +1992,7 @@ int main(int argc, char *argv[])
 						}
 					}
 #else    /* _WIN32 */
-					if (g_dwFlags & AF_DAEMON)
+					if ((g_dwFlags & AF_DAEMON) && !systemdMode)
                {
 						if (daemon(0, 0) == -1)
 						{
