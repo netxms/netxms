@@ -193,6 +193,7 @@ DISABLE_COMMONCRYPTO="no"
 OPENSSL_LIBSSL="ssl"
 OPENSSL_LIBCRYPTO="crypto"
 SYSTEMD_SUPPORT="yes"
+HAVE_SDBUS="no"
 EXEC_LDFLAGS=""
 EXEC_LIBS=""
 DIST_BUILD="no"
@@ -2364,12 +2365,15 @@ if test "x$LDAP_SUPPORT" = "xyes" -a "x$DIST_BUILD" != "xyes"; then
 fi
 
 if test "x$SYSTEMD_SUPPORT" = "xyes"; then
-	AC_CHECK_HEADER(systemd/sd-bus.h,HAVE_SYSTEMD=yes,HAVE_SYSTEMD=no)
-	if test "x$HAVE_SYSTEMD" = "xyes"; then
-		AC_DEFINE(WITH_SYSTEMD, 1, Define to 1 if you have Systemd libraries and headers)
-		AGENT_LIBS="-lsystemd $AGENT_LIBS"
+	AC_CHECK_HEADER(systemd/sd-bus.h, [ HAVE_SDBUS=yes ], [ HAVE_SDBUS=no ])
+	if test "x$HAVE_SDBUS" = "xyes"; then
+		AC_CHECK_LIB(systemd, sd_bus_open_system, [ HAVE_SDBUS=yes ], [ HAVE_SDBUS=no ])
 	fi
-	SYSTEMD_SUPPORT="$HAVE_SYSTEMD"
+	if test "x$HAVE_SDBUS" = "xyes"; then
+		AC_DEFINE(HAVE_SDBUS, 1, Define to 1 if you have Systemd SD-Bus libraries and headers)
+		AGENT_LIBS="$AGENT_LIBS -lsystemd"
+	fi
+	AC_DEFINE(WITH_SYSTEMD, 1, Define to 1 to enable systemd support)
 fi
 
 #--------------------------------------------------------------------
@@ -4359,9 +4363,14 @@ if test "x${BUILD_AGENT}" = "xyes"; then
 	echo "Agent extra components  :${AGENT_DIRS}"
 	echo "Subagents list          :${SUBAGENT_DIRS}"
 	if test "x${SYSTEMD_SUPPORT}" = "xyes"; then
-		echo "Systemd support   	: YES"
+		echo "Systemd support         : YES"
+		if test "x${HAVE_SDBUS}" = "xyes"; then
+			echo "SD-Bus support          : YES"
+		else
+			echo "SD-Bus support   	      : NO"
+		fi
 	else
-		echo "Systemd support   	: NO"
+		echo "Systemd support         : NO"
 	fi
 else
 	echo "Build Agent             : NO"
