@@ -1598,7 +1598,7 @@ static int F_CountScheduledTasksByKey(int argc, NXSL_Value **argv, NXSL_Value **
  * Return value:
  *     message id
  */
-static int F_CreateUserAgentMessage(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+static int F_CreateUserAgentNotification(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
    if (!argv[0]->isObject())
       return NXSL_ERR_NOT_OBJECT;
@@ -1620,9 +1620,10 @@ static int F_CreateUserAgentMessage(int argc, NXSL_Value **argv, NXSL_Value **pp
    time_t startTime = (time_t)argv[2]->getValueAsUInt64();
    time_t endTime = (time_t)argv[3]->getValueAsUInt64();
 
-   UINT32 id = CreateNewUserAgentMessage(message, arr, startTime, endTime);
+   UserAgentMessage *uam = CreateNewUserAgentNotification(message, arr, startTime, endTime);
 
-   *ppResult = vm->createValue(id);
+   *ppResult = vm->createValue(uam->getId());
+   uam->decRefCount();
    return 0;
 }
 
@@ -1642,7 +1643,7 @@ static NXSL_ExtFunction m_nxslServerFunctions[] =
    { "CountryAlphaCode", F_CountryAlphaCode, 1 },
    { "CountryName", F_CountryName, 1 },
    { "CountScheduledTasksByKey", F_CountScheduledTasksByKey, 1 },
-   { "CreateUserAgentMessage", F_CreateUserAgentMessage, 4},
+   { "CreateUserAgentNotification", F_CreateUserAgentNotification, 4},
    { "CurrencyAlphaCode", F_CurrencyAlphaCode, 1 },
    { "CurrencyExponent", F_CurrencyExponent, 1 },
    { "CurrencyName", F_CurrencyName, 1 },

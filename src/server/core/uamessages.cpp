@@ -23,13 +23,13 @@
 #include "nxcore.h"
 
 
-Mutex g_userAgentMessageListMutex;
-ObjectArray<UserAgentMessage> g_userAgentMessageList(true);
+Mutex g_userAgentNotificationListMutex;
+ObjectArray<UserAgentMessage> g_userAgentNotificationList(true);
 
 /**
  * Init user agent messages
  */
-void InitUserAgentMessages()
+void InitUserAgentNotifications()
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
@@ -39,29 +39,30 @@ void InitUserAgentMessages()
       int count = DBGetNumRows(hResult);
       for(int i = 0; i < count; i++)
       {
-         g_userAgentMessageList.add(new UserAgentMessage(hResult, i));
+         g_userAgentNotificationList.add(new UserAgentMessage(hResult, i));
       }
       DBFreeResult(hResult);
    }
    DBConnectionPoolReleaseConnection(hdb);
-   DbgPrintf(2, _T("%d user agent messages loaded"), g_userAgentMessageList.size());
+   DbgPrintf(2, _T("%d user agent messages loaded"), g_userAgentNotificationList.size());
 }
 
-void DeleteOldUserAgentMessages(DB_HANDLE hdb, UINT32 retentionTime)
+void DeleteOldUserAgentNotifications(DB_HANDLE hdb, UINT32 retentionTime)
 {
-   g_userAgentMessageListMutex.lock();
+   g_userAgentNotificationListMutex.lock();
    time_t now = time(NULL);
-   Iterator<UserAgentMessage> *it = g_userAgentMessageList.iterator();
+   Iterator<UserAgentMessage> *it = g_userAgentNotificationList.iterator();
    while (it->hasNext())
    {
       UserAgentMessage *uam = it->next();
       if((now - uam->getEndTime()) >= retentionTime && uam->hasNoRef())
       {
          it->remove();
+         break;
       }
    }
    delete it;
-   g_userAgentMessageListMutex.unlock();
+   g_userAgentNotificationListMutex.unlock();
 
    TCHAR query[256];
    _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("DELETE FROM user_agent_messages WHERE end_time>=") INT64_FMT,
@@ -69,15 +70,15 @@ void DeleteOldUserAgentMessages(DB_HANDLE hdb, UINT32 retentionTime)
    DBQuery(hdb, query);
 }
 
-void FillUserAgentMessagesAll(NXCPMessage *msg, Node *node)
+void FillUserAgentNotificationsAll(NXCPMessage *msg, Node *node)
 {
-   g_userAgentMessageListMutex.lock();
+   g_userAgentNotificationListMutex.lock();
    int base = VID_UA_NOTIFICATION_BASE;
    time_t now = time(NULL);
    int count = 0;
-   for (int i = 0; i < g_userAgentMessageList.size(); i++)
+   for (int i = 0; i < g_userAgentNotificationList.size(); i++)
    {
-      UserAgentMessage *uam = g_userAgentMessageList.get(i);
+      UserAgentMessage *uam = g_userAgentNotificationList.get(i);
       if ((uam->getEndTime() >= now) && !uam->isRecalled() && uam->isApplicable(node->getId()))
       {
          uam->fillMessage(base, msg, false);
@@ -86,20 +87,22 @@ void FillUserAgentMessagesAll(NXCPMessage *msg, Node *node)
       }
    }
    msg->setField(VID_UA_NOTIFICATION_COUNT, count);
-   g_userAgentMessageListMutex.unlock();
+   g_userAgentNotificationListMutex.unlock();
 }
 
-UINT32 CreateNewUserAgentMessage(const TCHAR *message, IntegerArray<UINT32> *arr, time_t startTime, time_t endTime)
+UserAgentMessage *CreateNewUserAgentNotification(const TCHAR *message, IntegerArray<UINT32> *arr, time_t startTime, time_t endTime)
 {
-   g_userAgentMessageListMutex.lock();
+   g_userAgentNotificationListMutex.lock();
    UserAgentMessage *uam = new UserAgentMessage(message, arr, startTime, endTime);
-   g_userAgentMessageList.add(uam);
+   g_userAgentNotificationList.add(uam);
    uam->incRefCount();
-   g_userAgentMessageListMutex.unlock();
+   uam->incRefCount();
+   g_userAgentNotificationListMutex.unlock();
 
+   json_t *objData = uam->toJson();
    ThreadPoolExecute(g_clientThreadPool, uam, &UserAgentMessage::processUpdate);
    NotifyClientSessions(NX_NOTIFY_USER_AGENT_MESSAGE_CHANGED, uam->getId());
-   return uam->getId();
+   return uam;
 }
 
 /**
@@ -252,4 +255,20 @@ void UserAgentMessage::saveToDatabase()
    }
 
    DBConnectionPoolReleaseConnection(hdb);
+}
+
+/**
+ * Serealize object to json
+ */
+json_t *UserAgentMessage::toJson() const
+{
+   json_t *root = json_object();
+   json_object_set_new(root, "id", json_integer(m_id));
+   json_object_set_new(root, "message", json_string_t(m_message));
+   json_object_set_new(root, "objectList", m_objectList->toJson());
+   json_object_set_new(root, "startTime", json_integer(m_startTime));
+   json_object_set_new(root, "endTime", json_integer(m_endTime));
+   json_object_set_new(root, "recalled", json_boolean(m_recall));
+   return root;
+
 }

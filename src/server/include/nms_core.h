@@ -770,9 +770,9 @@ private:
    void onPolicyEditorClose(NXCPMessage *request);
    void forcApplyPolicy(NXCPMessage *pRequest);
    void getMatchingDCI(NXCPMessage *request);
-   void getUserAgentMessages(NXCPMessage *request);
-   void addUserAgentMessages(NXCPMessage *request);
-   void recallUserAgentMessages(NXCPMessage *request);
+   void getUserAgentNotification(NXCPMessage *request);
+   void addUserAgentNotification(NXCPMessage *request);
+   void recallUserAgentNotification(NXCPMessage *request);
    ObjectArray<DCObject> *resolveDCOsByRegex(UINT32 objectId, const TCHAR *objectNameRegex, const TCHAR *dciRegex, bool searchByName);
 #ifdef WITH_ZMQ
    void zmqManageSubscription(NXCPMessage *request, zmq::SubscriptionType type, bool subscribe);

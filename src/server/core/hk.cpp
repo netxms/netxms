@@ -338,7 +338,7 @@ static THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
 	   {
 	      nxlog_debug_tag(DEBUG_TAG, 2, _T("Clearing user agent messages log (retention time %d days)"), dwRetentionTime);
 	      dwRetentionTime *= 86400;  // Convert days to seconds
-	      DeleteOldUserAgentMessages(hdb, dwRetentionTime);
+	      DeleteOldUserAgentNotifications(hdb, dwRetentionTime);
          if (!ThrottleHousekeeper())
             break;
 	   }

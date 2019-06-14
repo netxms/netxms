@@ -1342,13 +1342,13 @@ void ClientSession::processRequest(NXCPMessage *request)
          getMatchingDCI(request);
          break;
       case CMD_GET_UA_NOTIFICATIONS:
-         getUserAgentMessages(request);
+         getUserAgentNotification(request);
          break;
       case CMD_ADD_UA_NOTIFICATION:
-         addUserAgentMessages(request);
+         addUserAgentNotification(request);
          break;
       case CMD_RECALL_UA_NOTIFICATION:
-         recallUserAgentMessages(request);
+         recallUserAgentNotification(request);
          break;
 #ifdef WITH_ZMQ
       case CMD_ZMQ_SUBSCRIBE_EVENT:
@@ -14716,7 +14716,7 @@ void ClientSession::getMatchingDCI(NXCPMessage *request)
 /**
  * Get list of user agent messages
  */
-void ClientSession::getUserAgentMessages(NXCPMessage *request)
+void ClientSession::getUserAgentNotification(NXCPMessage *request)
 {
    NXCPMessage msg;
    msg.setCode(CMD_REQUEST_COMPLETED);
@@ -14724,18 +14724,21 @@ void ClientSession::getUserAgentMessages(NXCPMessage *request)
 
    if (m_dwSystemAccess & SYSTEM_ACCESS_USAER_AGENT_MESSAGES)
    {
-      g_userAgentMessageListMutex.lock();
-      msg.setField(VID_UA_NOTIFICATION_COUNT, g_userAgentMessageList.size());
+      g_userAgentNotificationListMutex.lock();
+      msg.setField(VID_UA_NOTIFICATION_COUNT, g_userAgentNotificationList.size());
       int base = VID_UA_NOTIFICATION_BASE;
-      for(int i = 0; i < g_userAgentMessageList.size(); i++, base+=10)
+      for(int i = 0; i < g_userAgentNotificationList.size(); i++, base+=10)
       {
-         g_userAgentMessageList.get(i)->fillMessage(base, &msg);
+         g_userAgentNotificationList.get(i)->fillMessage(base, &msg);
       }
-      g_userAgentMessageListMutex.unlock();
+      g_userAgentNotificationListMutex.unlock();
       msg.setField(VID_RCC, RCC_SUCCESS);
    }
    else
+   {
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied getting user agent notifications"));
+   }
 
    sendMessage(&msg);
 }
@@ -14743,7 +14746,7 @@ void ClientSession::getUserAgentMessages(NXCPMessage *request)
 /**
  * Create new user agent message and send to the nodes
  */
-void ClientSession::addUserAgentMessages(NXCPMessage *request)
+void ClientSession::addUserAgentNotification(NXCPMessage *request)
 {
    NXCPMessage msg;
    msg.setCode(CMD_REQUEST_COMPLETED);
@@ -14751,12 +14754,12 @@ void ClientSession::addUserAgentMessages(NXCPMessage *request)
 
    if (m_dwSystemAccess & SYSTEM_ACCESS_USAER_AGENT_MESSAGES)
    {
-      IntegerArray<UINT32> *arr = new IntegerArray<UINT32>(16, 16);
-      request->getFieldAsInt32Array(VID_UA_NOTIFICATION_BASE + 1, arr);
+      IntegerArray<UINT32> *objectList = new IntegerArray<UINT32>(16, 16);
+      request->getFieldAsInt32Array(VID_UA_NOTIFICATION_BASE + 1, objectList);
       bool hasAccess = true;
-      for (int i = 0; i < arr->size(); i++)
+      for (int i = 0; i < objectList->size(); i++)
       {
-         if(!FindObjectById(arr->get(i))->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+         if(!FindObjectById(objectList->get(i))->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
          {
             hasAccess = false;
             break;
@@ -14765,17 +14768,24 @@ void ClientSession::addUserAgentMessages(NXCPMessage *request)
       if (hasAccess)
       {
          TCHAR tmp[MAX_USER_AGENT_MESSAGE_SIZE];
-         CreateNewUserAgentMessage(request->getFieldAsString(VID_UA_NOTIFICATION_BASE, tmp, MAX_USER_AGENT_MESSAGE_SIZE),
-               arr, request->getFieldAsTime(VID_UA_NOTIFICATION_BASE + 2), request->getFieldAsTime(VID_UA_NOTIFICATION_BASE + 3));
+        UserAgentMessage *uam = CreateNewUserAgentNotification(request->getFieldAsString(VID_UA_NOTIFICATION_BASE, tmp, MAX_USER_AGENT_MESSAGE_SIZE),
+               objectList, request->getFieldAsTime(VID_UA_NOTIFICATION_BASE + 2), request->getFieldAsTime(VID_UA_NOTIFICATION_BASE + 3));
+         json_t *objData = uam->toJson();
+         WriteAuditLogWithJsonValues(AUDIT_OBJECTS, true, m_dwUserId, m_workstation, m_id, uam->getId(), NULL, objData,
+            _T("User agent notification %d created"), uam->getId());
+         uam->decRefCount();
       }
       else
       {
-         delete arr;
+         delete objectList;
          msg.setField(VID_RCC, RCC_ACCESS_DENIED);
       }
    }
    else
+   {
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on user agent notification creation"));
+   }
 
    sendMessage(&msg);
 }
@@ -14783,7 +14793,7 @@ void ClientSession::addUserAgentMessages(NXCPMessage *request)
 /**
  * Recall user user message
  */
-void ClientSession::recallUserAgentMessages(NXCPMessage *request)
+void ClientSession::recallUserAgentNotification(NXCPMessage *request)
 {
    NXCPMessage msg;
    msg.setCode(CMD_REQUEST_COMPLETED);
@@ -14791,23 +14801,27 @@ void ClientSession::recallUserAgentMessages(NXCPMessage *request)
 
    if (m_dwSystemAccess & SYSTEM_ACCESS_USAER_AGENT_MESSAGES)
    {
-      g_userAgentMessageListMutex.lock();
+      g_userAgentNotificationListMutex.lock();
       int base = VID_UA_NOTIFICATION_BASE;
       UserAgentMessage *uam = NULL;
-      for(int i = 0; i < g_userAgentMessageList.size(); i++, base+=10)
+      UINT32 objectId = request->getFieldAsUInt32(VID_OBJECT_ID);
+      for(int i = 0; i < g_userAgentNotificationList.size(); i++, base+=10)
       {
-         if(g_userAgentMessageList.get(i)->getId() == request->getFieldAsUInt32(VID_OBJECT_ID) &&
-               !g_userAgentMessageList.get(i)->isRecalled() && (g_userAgentMessageList.get(i)->getStartTime() != 0))
+         UserAgentMessage *tmp = g_userAgentNotificationList.get(i);
+         if(tmp->getId() == objectId && !tmp->isRecalled() && (tmp->getStartTime() != 0))
          {
-            g_userAgentMessageList.get(i)->recall();
-            uam = g_userAgentMessageList.get(i);
+            tmp->recall();
+            uam = tmp;
             uam->incRefCount();
          }
       }
-      g_userAgentMessageListMutex.unlock();
+      g_userAgentNotificationListMutex.unlock();
 
       if(uam != NULL)
       {
+         json_t *objData = uam->toJson();
+         WriteAuditLogWithJsonValues(AUDIT_OBJECTS, true, m_dwUserId, m_workstation, m_id, uam->getId(), NULL, objData,
+            _T("User agent notification %d recalled"), uam->getId());
          ThreadPoolExecute(g_clientThreadPool, uam, &UserAgentMessage::processUpdate);
          NotifyClientSessions(NX_NOTIFY_USER_AGENT_MESSAGE_CHANGED, (UINT32)uam->getId());
          msg.setField(VID_RCC, RCC_SUCCESS);
@@ -14817,7 +14831,10 @@ void ClientSession::recallUserAgentMessages(NXCPMessage *request)
 
    }
    else
+   {
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on user agent notification recall"));
+   }
 
    sendMessage(&msg);
 }

@@ -1009,7 +1009,7 @@ retry_db_lock:
 	InitMappingTables();
 
 	//Initialize user agent messages
-	InitUserAgentMessages();
+	InitUserAgentNotifications();
 
    InitClientListeners();
    int importMode = ConfigReadInt(_T("ImportConfigurationOnStartup"), 1);

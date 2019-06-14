@@ -3529,7 +3529,7 @@ bool Node::confPollAgent(UINT32 rqId)
          NXCPMessage msg;
          msg.setCode(CMD_UPDATE_UA_NOTIFICATIONS);
          msg.setId(pAgentConn->generateRequestId());
-         FillUserAgentMessagesAll(&msg, this);
+         FillUserAgentNotificationsAll(&msg, this);
          pAgentConn->sendMessage(&msg);
       }
 

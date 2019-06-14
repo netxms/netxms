@@ -43,7 +43,7 @@ static DB_HANDLE s_db = NULL;
  */
 static BOOL H_UpgradeFromV8(int currVersion, int newVersion)
 {
-   TCHAR createUserAgentMessages[] =
+   TCHAR createUserAgentNotifications[] =
          _T("CREATE TABLE user_agent_notifications (")
          _T("  server_id number(20) not null,")
          _T("  notification_id integer not null,")
@@ -51,7 +51,7 @@ static BOOL H_UpgradeFromV8(int currVersion, int newVersion)
          _T("  start_time integer not null,")
          _T("  end_time integer not null,")
          _T("  PRIMARY KEY(server_id,notification_id))");
-   CHK_EXEC(Query(createUserAgentMessages));
+   CHK_EXEC(Query(createUserAgentNotifications));
 
    CHK_EXEC(WriteMetadata(_T("SchemaVersion"), 9));
    return TRUE;

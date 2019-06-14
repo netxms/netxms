@@ -3575,6 +3575,8 @@ public:
    void incRefCount() { InterlockedIncrement(&m_refCount); }
    void decRefCount() { InterlockedDecrement(&m_refCount); }
    bool hasNoRef() { return m_refCount == 0; }
+
+   json_t *toJson() const;
 };
 
 /**
@@ -3645,10 +3647,10 @@ int GetDefaultStatusCalculation(int *pnSingleThreshold, int **ppnThresholds);
 PollerInfo *RegisterPoller(PollerType type, NetObj *object, bool objectCreation = false);
 void ShowPollers(CONSOLE_CTX console);
 
-void InitUserAgentMessages();
-void DeleteOldUserAgentMessages(DB_HANDLE hdb,UINT32 retentionTime);
-void FillUserAgentMessagesAll(NXCPMessage *msg, Node *node);
-UINT32 CreateNewUserAgentMessage(const TCHAR *message, IntegerArray<UINT32> *arr, time_t startTime, time_t endTime);
+void InitUserAgentNotifications();
+void DeleteOldUserAgentNotifications(DB_HANDLE hdb,UINT32 retentionTime);
+void FillUserAgentNotificationsAll(NXCPMessage *msg, Node *node);
+UserAgentMessage *CreateNewUserAgentNotification(const TCHAR *message, IntegerArray<UINT32> *arr, time_t startTime, time_t endTime);
 
 /**
  * Global variables
@@ -3681,7 +3683,7 @@ extern ObjectIndex NXCORE_EXPORTABLE g_idxServiceCheckById;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxSensorById;
 
 //User agent messages
-extern Mutex g_userAgentMessageListMutex;
-extern ObjectArray<UserAgentMessage> g_userAgentMessageList;
+extern Mutex g_userAgentNotificationListMutex;
+extern ObjectArray<UserAgentMessage> g_userAgentNotificationList;
 
 #endif   /* _nms_objects_h_ */
