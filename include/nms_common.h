@@ -319,7 +319,12 @@ typedef int bool;
 typedef UINT64 QWORD;   // for compatibility
 typedef int socklen_t;
 typedef long pid_t;
-typedef LONG ssize_t;
+
+#ifdef _WIN64
+typedef __int64 ssize_t;
+#else
+typedef int ssize_t;
+#endif
 
 typedef signed __int8 int8_t;
 typedef signed __int16 int16_t;
