@@ -14722,7 +14722,7 @@ void ClientSession::getUserAgentNotification(NXCPMessage *request)
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(request->getId());
 
-   if (m_dwSystemAccess & SYSTEM_ACCESS_USAER_AGENT_MESSAGES)
+   if (m_dwSystemAccess & SYSTEM_ACCESS_UA_NOTIFICATIONS)
    {
       g_userAgentNotificationListMutex.lock();
       msg.setField(VID_UA_NOTIFICATION_COUNT, g_userAgentNotificationList.size());
@@ -14768,12 +14768,12 @@ void ClientSession::addUserAgentNotification(NXCPMessage *request)
       if (hasAccess)
       {
          TCHAR tmp[MAX_USER_AGENT_MESSAGE_SIZE];
-        UserAgentMessage *uam = CreateNewUserAgentNotification(request->getFieldAsString(VID_UA_NOTIFICATION_BASE, tmp, MAX_USER_AGENT_MESSAGE_SIZE),
+        UserAgentNotificationItem *uan = CreateNewUserAgentNotification(request->getFieldAsString(VID_UA_NOTIFICATION_BASE, tmp, MAX_USER_AGENT_MESSAGE_SIZE),
                objectList, request->getFieldAsTime(VID_UA_NOTIFICATION_BASE + 2), request->getFieldAsTime(VID_UA_NOTIFICATION_BASE + 3));
-         json_t *objData = uam->toJson();
-         WriteAuditLogWithJsonValues(AUDIT_OBJECTS, true, m_dwUserId, m_workstation, m_id, uam->getId(), NULL, objData,
-            _T("User agent notification %d created"), uam->getId());
-         uam->decRefCount();
+         json_t *objData = uan->toJson();
+         WriteAuditLogWithJsonValues(AUDIT_OBJECTS, true, m_dwUserId, m_workstation, m_id, uan->getId(), NULL, objData,
+            _T("User agent notification %d created"), uan->getId());
+         uan->decRefCount();
       }
       else
       {
@@ -14803,27 +14803,27 @@ void ClientSession::recallUserAgentNotification(NXCPMessage *request)
    {
       g_userAgentNotificationListMutex.lock();
       int base = VID_UA_NOTIFICATION_BASE;
-      UserAgentMessage *uam = NULL;
+      UserAgentNotificationItem *uan = NULL;
       UINT32 objectId = request->getFieldAsUInt32(VID_OBJECT_ID);
       for(int i = 0; i < g_userAgentNotificationList.size(); i++, base+=10)
       {
-         UserAgentMessage *tmp = g_userAgentNotificationList.get(i);
+         UserAgentNotificationItem *tmp = g_userAgentNotificationList.get(i);
          if(tmp->getId() == objectId && !tmp->isRecalled() && (tmp->getStartTime() != 0))
          {
             tmp->recall();
-            uam = tmp;
-            uam->incRefCount();
+            uan = tmp;
+            uan->incRefCount();
          }
       }
       g_userAgentNotificationListMutex.unlock();
 
-      if(uam != NULL)
+      if(uan != NULL)
       {
-         json_t *objData = uam->toJson();
-         WriteAuditLogWithJsonValues(AUDIT_OBJECTS, true, m_dwUserId, m_workstation, m_id, uam->getId(), NULL, objData,
-            _T("User agent notification %d recalled"), uam->getId());
-         ThreadPoolExecute(g_clientThreadPool, uam, &UserAgentMessage::processUpdate);
-         NotifyClientSessions(NX_NOTIFY_USER_AGENT_MESSAGE_CHANGED, (UINT32)uam->getId());
+         json_t *objData = uan->toJson();
+         WriteAuditLogWithJsonValues(AUDIT_OBJECTS, true, m_dwUserId, m_workstation, m_id, uan->getId(), NULL, objData,
+            _T("User agent notification %d recalled"), uan->getId());
+         ThreadPoolExecute(g_clientThreadPool, uan, &UserAgentNotificationItem::processUpdate);
+         NotifyClientSessions(NX_NOTIFY_USER_AGENT_MESSAGE_CHANGED, (UINT32)uan->getId());
          msg.setField(VID_RCC, RCC_SUCCESS);
       }
       else

@@ -32,8 +32,8 @@ libnxcore_la_SOURCES = abind_target.cpp accesspoint.cpp acl.cpp actions.cpp addr
 			sensor.cpp server_stats.cpp session.cpp slmcheck.cpp smclp.cpp \
 			sms.cpp snmp.cpp snmptrap.cpp stp.cpp subnet.cpp summary_email.cpp \
 			svccontainer.cpp swpkg.cpp syncer.cpp syslogd.cpp \
-			template.cpp tools.cpp tracert.cpp tunnel.cpp \
-			uniroot.cpp upload_job.cpp uptimecalc.cpp uamessages.cpp userdb.cpp \
+			template.cpp tools.cpp tracert.cpp tunnel.cpp ua_notification_item.cpp \
+			uniroot.cpp upload_job.cpp uptimecalc.cpp userdb.cpp \
 			userdb_objects.cpp vobject.cpp vpnconn.cpp vrrp.cpp watchdog.cpp \
 			winperf.cpp xmpp.cpp zeromq.cpp zone.cpp
 libnxcore_la_CPPFLAGS = -I@top_srcdir@/include -I@top_srcdir@/src/server/include -DNXCORE_EXPORTS \

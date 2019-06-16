@@ -462,7 +462,7 @@ BOOL InitIdTable()
    }
 
    // Get first available user agent message id
-   hResult = DBSelect(hdb, _T("SELECT max(id) FROM user_agent_messages"));
+   hResult = DBSelect(hdb, _T("SELECT max(id) FROM user_agent_notification"));
    if (hResult != NULL)
    {
       if (DBGetNumRows(hResult) > 0)

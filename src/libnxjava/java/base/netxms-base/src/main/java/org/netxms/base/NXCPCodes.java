@@ -398,7 +398,6 @@ public class NXCPCodes
    public static final int CMD_GET_UA_NOTIFICATIONS = 0x017D;
    public static final int CMD_ADD_UA_NOTIFICATION = 0x017E;
    public static final int CMD_RECALL_UA_NOTIFICATION = 0x017F;
-   public static final int CMD_UPDATE_USER_AGENT_MESSAGES = 0x0180;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;

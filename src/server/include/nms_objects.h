@@ -3546,7 +3546,7 @@ struct ObjectQueryResult
 /**
  * User agent message list
  */
-class UserAgentMessage
+class UserAgentNotificationItem
 {
 private:
    UINT32 m_id;
@@ -3558,9 +3558,9 @@ private:
    VolatileCounter m_refCount;
 
 public:
-   UserAgentMessage(DB_RESULT result, int row);
-   UserAgentMessage(const TCHAR *message, IntegerArray<UINT32> *m_objectId, time_t startTime, time_t endTime);
-   ~UserAgentMessage() { MemFree(m_message); }
+   UserAgentNotificationItem(DB_RESULT result, int row);
+   UserAgentNotificationItem(const TCHAR *message, IntegerArray<UINT32> *m_objectId, time_t startTime, time_t endTime);
+   ~UserAgentNotificationItem() { MemFree(m_message); }
 
    UINT32 getId() { return m_id; }
    time_t getEndTime() { return m_endTime; }
@@ -3650,7 +3650,7 @@ void ShowPollers(CONSOLE_CTX console);
 void InitUserAgentNotifications();
 void DeleteOldUserAgentNotifications(DB_HANDLE hdb,UINT32 retentionTime);
 void FillUserAgentNotificationsAll(NXCPMessage *msg, Node *node);
-UserAgentMessage *CreateNewUserAgentNotification(const TCHAR *message, IntegerArray<UINT32> *arr, time_t startTime, time_t endTime);
+UserAgentNotificationItem *CreateNewUserAgentNotification(const TCHAR *message, IntegerArray<UINT32> *arr, time_t startTime, time_t endTime);
 
 /**
  * Global variables
@@ -3684,6 +3684,6 @@ extern ObjectIndex NXCORE_EXPORTABLE g_idxSensorById;
 
 //User agent messages
 extern Mutex g_userAgentNotificationListMutex;
-extern ObjectArray<UserAgentMessage> g_userAgentNotificationList;
+extern ObjectArray<UserAgentNotificationItem> g_userAgentNotificationList;
 
 #endif   /* _nms_objects_h_ */
