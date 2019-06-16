@@ -21,14 +21,14 @@ package org.netxms.ui.eclipse.agentmanager.views.helpers;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
-import org.netxms.client.UserAgentMessage;
-import org.netxms.ui.eclipse.agentmanager.views.UserAgentMessagesView;
+import org.netxms.client.UserAgentNotification;
+import org.netxms.ui.eclipse.agentmanager.views.UserAgentNotificationView;
 import org.netxms.ui.eclipse.console.resources.RegionalSettings;
 
 /**
- * Label provider for user agent message
+ * Label provider for user agent notification
  */
-public class UserAgentMessageLabelProvider extends LabelProvider implements ITableLabelProvider
+public class UserAgentNotificationLabelProvider extends LabelProvider implements ITableLabelProvider
 {   
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
@@ -45,20 +45,20 @@ public class UserAgentMessageLabelProvider extends LabelProvider implements ITab
 	@Override
 	public String getColumnText(Object element, int columnIndex)
 	{
-	   UserAgentMessage uaMessage = (UserAgentMessage)element;
+	   UserAgentNotification uaMessage = (UserAgentNotification)element;
 		switch(columnIndex)
 		{
-			case UserAgentMessagesView.COL_ID:
+			case UserAgentNotificationView.COL_ID:
 				return Long.toString(uaMessage.getId());
-			case UserAgentMessagesView.COL_OBJECTS:
+			case UserAgentNotificationView.COL_OBJECTS:
 				return uaMessage.getObjectNamesAsString();
-			case UserAgentMessagesView.COL_MESSAGE:
+			case UserAgentNotificationView.COL_MESSAGE:
 				return uaMessage.getMessage();
-			case UserAgentMessagesView.COL_IS_RECALLED:
+			case UserAgentNotificationView.COL_IS_RECALLED:
 				return uaMessage.isRecalled() ? "Yes" : "No";
-			case UserAgentMessagesView.COL_START_TIME:
+			case UserAgentNotificationView.COL_START_TIME:
 				return uaMessage.getStartTime().getTime() == 0 ? "" : RegionalSettings.getDateTimeFormat().format(uaMessage.getStartTime());
-			case UserAgentMessagesView.COL_END_TIME:
+			case UserAgentNotificationView.COL_END_TIME:
 				return uaMessage.getEndTime().getTime() == 0 ? "" : RegionalSettings.getDateTimeFormat().format(uaMessage.getEndTime());
 		}
 		return null;

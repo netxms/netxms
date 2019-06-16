@@ -63,7 +63,7 @@ public class SourceProvider extends AbstractSourceProvider
    public static final String UA_SERVER_CONSOLE        = "org.netxms.access.ServerConsole"; //$NON-NLS-1$
    public static final String UA_SETUP_TCP_PROXY       = "org.netxms.access.SetupTcpProxy"; //$NON-NLS-1$
    public static final String UA_UNLINK_ISSUES         = "org.netxms.access.UnlinkIssues"; //$NON-NLS-1$
-   public static final String UA_USER_AGENT_MESSAGES   = "org.netxms.access.UserAgentMessages"; //$NON-NLS-1$
+   public static final String UA_UA_NOTIFICATIONS      = "org.netxms.access.UserAgentNotifications"; //$NON-NLS-1$
    public static final String UA_USER_SCHEDULED_TASKS  = "org.netxms.access.UserScheduledTasks"; //$NON-NLS-1$
    public static final String UA_VIEW_ALL_ALARMS       = "org.netxms.access.ViewAllAlarms"; //$NON-NLS-1$
    public static final String UA_VIEW_AUDIT_LOG        = "org.netxms.access.ViewAuditLog"; //$NON-NLS-1$
@@ -109,7 +109,7 @@ public class SourceProvider extends AbstractSourceProvider
    	   UA_SERVER_CONSOLE,
    	   UA_SETUP_TCP_PROXY,
    	   UA_UNLINK_ISSUES,
-   	   UA_USER_AGENT_MESSAGES,
+   	   UA_UA_NOTIFICATIONS,
    	   UA_USER_SCHEDULED_TASKS,
    	   UA_VIEW_ALL_ALARMS,
    	   UA_VIEW_AUDIT_LOG,
@@ -211,7 +211,7 @@ public class SourceProvider extends AbstractSourceProvider
       setAccessRight(rights, UserAccessRights.SYSTEM_ACCESS_SERVER_CONSOLE, UA_SERVER_CONSOLE);
       setAccessRight(rights, UserAccessRights.SYSTEM_ACCESS_SETUP_TCP_PROXY, UA_SETUP_TCP_PROXY);
       setAccessRight(rights, UserAccessRights.SYSTEM_ACCESS_UNLINK_ISSUES, UA_UNLINK_ISSUES);
-      setAccessRight(rights, UserAccessRights.SYSTEM_ACCESS_USAER_AGENT_MESSAGES, UA_USER_AGENT_MESSAGES);
+      setAccessRight(rights, UserAccessRights.SYSTEM_ACCESS_UA_NOTIFICATIONS, UA_UA_NOTIFICATIONS);
       setAccessRight(rights, UserAccessRights.SYSTEM_ACCESS_USER_SCHEDULED_TASKS, UA_USER_SCHEDULED_TASKS);
       setAccessRight(rights, UserAccessRights.SYSTEM_ACCESS_VIEW_ALL_ALARMS, UA_VIEW_ALL_ALARMS);
       setAccessRight(rights, UserAccessRights.SYSTEM_ACCESS_VIEW_AUDIT_LOG, UA_VIEW_AUDIT_LOG);

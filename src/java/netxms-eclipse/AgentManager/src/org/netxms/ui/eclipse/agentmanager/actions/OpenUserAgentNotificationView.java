@@ -19,12 +19,12 @@
 package org.netxms.ui.eclipse.agentmanager.actions;
 
 import org.netxms.ui.eclipse.actions.OpenView;
-import org.netxms.ui.eclipse.agentmanager.views.UserAgentMessagesView;
+import org.netxms.ui.eclipse.agentmanager.views.UserAgentNotificationView;
 
 /**
- * Open user agent messages view
+ * Open user agent notification view
  */
-public class OpenUserAgentMessagesView extends OpenView
+public class OpenUserAgentNotificationView extends OpenView
 {
    /* (non-Javadoc)
     * @see org.netxms.ui.eclipse.actions.OpenView#getViewId()
@@ -32,6 +32,6 @@ public class OpenUserAgentMessagesView extends OpenView
    @Override
    protected String getViewId()
    {
-      return UserAgentMessagesView.ID;
+      return UserAgentNotificationView.ID;
    }
 }

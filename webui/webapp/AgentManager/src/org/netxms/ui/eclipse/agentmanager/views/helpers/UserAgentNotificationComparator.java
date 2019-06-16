@@ -21,14 +21,14 @@ package org.netxms.ui.eclipse.agentmanager.views.helpers;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
-import org.netxms.client.UserAgentMessage;
-import org.netxms.ui.eclipse.agentmanager.views.UserAgentMessagesView;
+import org.netxms.client.UserAgentNotification;
+import org.netxms.ui.eclipse.agentmanager.views.UserAgentNotificationView;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
- * User agent message comparator
+ * User agent notification comparator
  */
-public class UserAgentMessageComparator extends ViewerComparator
+public class UserAgentNotificationComparator extends ViewerComparator
 {
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ViewerComparator#compare(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
@@ -36,27 +36,27 @@ public class UserAgentMessageComparator extends ViewerComparator
 	@Override
 	public int compare(Viewer viewer, Object e1, Object e2)
 	{
-	   UserAgentMessage uam1 = (UserAgentMessage)e1;
-	   UserAgentMessage uam2 = (UserAgentMessage)e2;
+	   UserAgentNotification uam1 = (UserAgentNotification)e1;
+	   UserAgentNotification uam2 = (UserAgentNotification)e2;
 		int result;
 		switch((Integer)((SortableTableViewer)viewer).getTable().getSortColumn().getData("ID")) //$NON-NLS-1$
 		{
-			case UserAgentMessagesView.COL_ID:
+			case UserAgentNotificationView.COL_ID:
 				result = Long.signum(uam1.getId() - uam2.getId());
 				break;
-			case UserAgentMessagesView.COL_OBJECTS:
+			case UserAgentNotificationView.COL_OBJECTS:
 				result = uam1.getObjectNamesAsString().compareToIgnoreCase(uam2.getObjectNamesAsString());
 				break;
-			case UserAgentMessagesView.COL_MESSAGE:
+			case UserAgentNotificationView.COL_MESSAGE:
 				result = uam1.getMessage().compareTo(uam2.getMessage());
 				break;
-			case UserAgentMessagesView.COL_IS_RECALLED:
+			case UserAgentNotificationView.COL_IS_RECALLED:
 				result = Boolean.compare(uam1.isRecalled(), uam2.isRecalled());
 				break;
-			case UserAgentMessagesView.COL_START_TIME:
+			case UserAgentNotificationView.COL_START_TIME:
 				result = uam1.getStartTime().compareTo(uam2.getStartTime());
 				break;
-			case UserAgentMessagesView.COL_END_TIME:
+			case UserAgentNotificationView.COL_END_TIME:
             result = uam1.getEndTime().compareTo(uam2.getEndTime());
 				break;
 			default:

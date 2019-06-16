@@ -14752,7 +14752,7 @@ void ClientSession::addUserAgentNotification(NXCPMessage *request)
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(request->getId());
 
-   if (m_dwSystemAccess & SYSTEM_ACCESS_USAER_AGENT_MESSAGES)
+   if (m_dwSystemAccess & SYSTEM_ACCESS_UA_NOTIFICATIONS)
    {
       IntegerArray<UINT32> *objectList = new IntegerArray<UINT32>(16, 16);
       request->getFieldAsInt32Array(VID_UA_NOTIFICATION_BASE + 1, objectList);
@@ -14799,7 +14799,7 @@ void ClientSession::recallUserAgentNotification(NXCPMessage *request)
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(request->getId());
 
-   if (m_dwSystemAccess & SYSTEM_ACCESS_USAER_AGENT_MESSAGES)
+   if (m_dwSystemAccess & SYSTEM_ACCESS_UA_NOTIFICATIONS)
    {
       g_userAgentNotificationListMutex.lock();
       int base = VID_UA_NOTIFICATION_BASE;

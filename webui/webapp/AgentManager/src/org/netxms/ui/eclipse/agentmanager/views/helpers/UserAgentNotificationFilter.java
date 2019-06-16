@@ -20,20 +20,20 @@ package org.netxms.ui.eclipse.agentmanager.views.helpers;
 
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
-import org.netxms.client.UserAgentMessage;
+import org.netxms.client.UserAgentNotification;
 import org.netxms.ui.eclipse.console.resources.RegionalSettings;
 
 /**
- * User agent message filter
+ * User agent notification filter
  */
-public class UserAgentMessageFilter extends ViewerFilter
+public class UserAgentNotificationFilter extends ViewerFilter
 {
    private String filterString = null;
 
    @Override
    public boolean select(Viewer viewer, Object parentElement, Object element)
    {
-      UserAgentMessage uam = (UserAgentMessage)element;
+      UserAgentNotification uam = (UserAgentNotification)element;
       if ((filterString == null) || (filterString.isEmpty()))
          return true;
       else if (Long.toString(uam.getId()).toLowerCase().contains(filterString))

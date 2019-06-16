@@ -11077,36 +11077,36 @@ public class NXCSession
       waitForRCC(msg.getMessageId());
    }
 
-   public List<UserAgentMessage> getUserAgentMessages() throws NXCException, IOException
+   public List<UserAgentNotification> getUserAgentNotifications() throws NXCException, IOException
    {
-      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_USER_AGENT_MESSAGES);
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_UA_NOTIFICATIONS);
       sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());
-      List<UserAgentMessage> list = new ArrayList<UserAgentMessage>();
+      List<UserAgentNotification> list = new ArrayList<UserAgentNotification>();
       int count = response.getFieldAsInt32(NXCPCodes.VID_USER_AGENT_MESSAGE_COUNT);
-      long base = NXCPCodes.VID_USER_AGENT_MESSAGE_BASE;
+      long base = NXCPCodes.VID_UA_NOTIFICATION_BASE;
       System.out.println(count);
       for (int i = 0 ; i < count; i++, base+=10)
-         list.add(new UserAgentMessage(response, base, this));
+         list.add(new UserAgentNotification(response, base, this));
       
       return list;
    }
 
-   public void userAgentMessagesRecall(long id) throws NXCException, IOException
+   public void userAgentNotificationRecall(long id) throws NXCException, IOException
    {
-      final NXCPMessage msg = newMessage(NXCPCodes.CMD_RECALL_USER_AGENT_MESSAGE);
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_RECALL_UA_NOTIFICATION);
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)id);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
    
-   public void createUserAgentMessage(String message, Long[] objects, Date startTime, Date endTime) throws NXCException, IOException
+   public void createUserAgentNotification(String message, Long[] objects, Date startTime, Date endTime) throws NXCException, IOException
    {
-      final NXCPMessage msg = newMessage(NXCPCodes.CMD_ADD_USER_AGENT_MESSAGE);
-      msg.setField(NXCPCodes.VID_USER_AGENT_MESSAGE_BASE, message);
-      msg.setField(NXCPCodes.VID_USER_AGENT_MESSAGE_BASE + 1, objects);
-      msg.setField(NXCPCodes.VID_USER_AGENT_MESSAGE_BASE + 2, startTime);
-      msg.setField(NXCPCodes.VID_USER_AGENT_MESSAGE_BASE + 3, endTime);
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_ADD_UA_NOTIFICATION);
+      msg.setField(NXCPCodes.VID_UA_NOTIFICATION_BASE, message);
+      msg.setField(NXCPCodes.VID_UA_NOTIFICATION_BASE + 1, objects);
+      msg.setField(NXCPCodes.VID_UA_NOTIFICATION_BASE + 2, startTime);
+      msg.setField(NXCPCodes.VID_UA_NOTIFICATION_BASE + 3, endTime);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }

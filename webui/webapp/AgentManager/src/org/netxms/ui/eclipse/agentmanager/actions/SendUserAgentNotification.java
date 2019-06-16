@@ -34,14 +34,14 @@ import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Container;
 import org.netxms.ui.eclipse.agentmanager.Activator;
-import org.netxms.ui.eclipse.agentmanager.dialogs.SendUserAgentMessageDialog;
+import org.netxms.ui.eclipse.agentmanager.dialogs.SendUserAgentNotificationDialog;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
- * Send action for user agent message
+ * Send action for user agent notification
  */
-public class SendUserAgentMessage implements IObjectActionDelegate
+public class SendUserAgentNotification implements IObjectActionDelegate
 {
    private Shell shell;
    private ViewPart viewPart;
@@ -54,20 +54,20 @@ public class SendUserAgentMessage implements IObjectActionDelegate
 	public void run(IAction action)
 	{	
 	   final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-      final SendUserAgentMessageDialog dlg = new SendUserAgentMessageDialog(shell);
+      final SendUserAgentNotificationDialog dlg = new SendUserAgentNotificationDialog(shell);
       if (dlg.open() == Window.OK)
       {
-         new ConsoleJob("Create user agent message job", viewPart, Activator.PLUGIN_ID, null) {
+         new ConsoleJob("Create user agent notification job", viewPart, Activator.PLUGIN_ID, null) {
             @Override
             protected String getErrorMessage()
             {
-               return "Failed to create user agent message";
+               return "Failed to create user agent notification";
             }
 
             @Override
             protected void runInternal(IProgressMonitor monitor) throws Exception
             {
-               session.createUserAgentMessage(dlg.getMessage(), objects.toArray(new Long[objects.size()]), dlg.getStartTime(), dlg.getEndTime());
+               session.createUserAgentNotification(dlg.getMessage(), objects.toArray(new Long[objects.size()]), dlg.getStartTime(), dlg.getEndTime());
             }
          }.start();
       }

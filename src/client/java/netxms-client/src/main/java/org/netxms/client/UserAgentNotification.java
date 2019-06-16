@@ -5,9 +5,9 @@ import java.util.Date;
 import org.netxms.base.NXCPMessage;
 
 /**
- * User agent message class
+ * User agent notification class
  */
-public class UserAgentMessage
+public class UserAgentNotification
 {
    private long id;
    private String message;
@@ -18,13 +18,13 @@ public class UserAgentMessage
    private boolean recalled;
    
    /**
-    * Constructor for UsearAgentMessage class
+    * Constructor for UsearAgentNotification class
     * 
     * @param response response message form server
     * @param base base id of object
     * @param session session
     */
-   public UserAgentMessage(NXCPMessage response, long base, NXCSession session)
+   public UserAgentNotification(NXCPMessage response, long base, NXCSession session)
    {
       id = response.getFieldAsInt32(base);
       message = response.getFieldAsString(base + 1);

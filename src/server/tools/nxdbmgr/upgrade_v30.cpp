@@ -34,7 +34,7 @@ static bool H_UpgradeFromV75()
       if (DBGetNumRows(hResult) != 0)
       {
          UINT64 accessRights = DBGetFieldUInt64(hResult, 0, 0);
-         accessRights |= SYSTEM_ACCESS_USAER_AGENT_MESSAGES;
+         accessRights |= SYSTEM_ACCESS_UA_NOTIFICATIONS;
 
          TCHAR query[256];
          _sntprintf(query, 256, _T("UPDATE user_groups SET system_access=") UINT64_FMT _T(" WHERE id=-2147483647"), accessRights);

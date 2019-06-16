@@ -395,9 +395,9 @@ public class NXCPCodes
    public static final int CMD_POLICY_FORCE_APPLY = 0x017A;
    public static final int CMD_GET_NODE_HARDWARE = 0x017B;
    public static final int CMD_GET_MATCHING_DCI = 0x017C;
-   public static final int CMD_GET_USER_AGENT_MESSAGES = 0x017D;
-   public static final int CMD_ADD_USER_AGENT_MESSAGE = 0x017E;
-   public static final int CMD_RECALL_USER_AGENT_MESSAGE = 0x017F;
+   public static final int CMD_GET_UA_NOTIFICATIONS = 0x017D;
+   public static final int CMD_ADD_UA_NOTIFICATION = 0x017E;
+   public static final int CMD_RECALL_UA_NOTIFICATION = 0x017F;
    public static final int CMD_UPDATE_USER_AGENT_MESSAGES = 0x0180;
 
 	// CMD_RS_ - Reporting Server related codes
@@ -1155,5 +1155,5 @@ public class NXCPCodes
    public static final long VID_TIMER_LIST_BASE= 0x60000000L;
    public static final long VID_AGENT_POLICY_BASE = 0x10000000L;
    public static final long VID_ZONE_PROXY_BASE = 0x70000000L;
-   public static final long VID_USER_AGENT_MESSAGE_BASE = 0x10000000L;
+   public static final long VID_UA_NOTIFICATION_BASE = 0x10000000L;
 }

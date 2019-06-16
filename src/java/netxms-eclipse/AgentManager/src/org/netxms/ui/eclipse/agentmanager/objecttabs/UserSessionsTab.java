@@ -371,7 +371,7 @@ public class UserSessionsTab extends ObjectTab
          @Override
          protected String getErrorMessage()
          {
-            return "Cannot get list of user agent messages";
+            return "Cannot get list of user agent sessions";
          }
       }.start();
    }

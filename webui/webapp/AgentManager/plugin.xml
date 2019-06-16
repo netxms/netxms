@@ -55,10 +55,10 @@
       </view>
       <view
             allowMultiple="false"
-            class="org.netxms.ui.eclipse.agentmanager.views.UserAgentMessagesView"
+            class="org.netxms.ui.eclipse.agentmanager.views.UserAgentNotificationView"
             icon="icons/user_agent_messages.png"
-            id="org.netxms.ui.eclipse.agentmanager.views.UserAgentMessagesView"
-            name="User Agent Messages"
+            id="org.netxms.ui.eclipse.agentmanager.views.UserAgentNotificationView"
+            name="User Agent Notifications"
             restorable="true">
       </view>
    </extension>
@@ -87,11 +87,11 @@
                style="push">
          </action>
          <action
-               class="org.netxms.ui.eclipse.agentmanager.actions.SendUserAgentMessage"
+               class="org.netxms.ui.eclipse.agentmanager.actions.SendUserAgentNotification"
                enablesFor="+"
                icon="icons/user_agent_messages.png"
-               id="horg.netxms.ui.eclipse.agentmanager.popupActions.SendUserAgentMessage"
-               label="Send user agent message"
+               id="horg.netxms.ui.eclipse.agentmanager.popupActions.SendUserAgentNotification"
+               label="Send user agent notification"
                menubarPath="objectmgmt"
                style="push">
          </action>
@@ -135,14 +135,14 @@
                tooltip="%actionDescription.openTunnelManager">
          </action>
          <action
-               class="org.netxms.ui.eclipse.agentmanager.actions.OpenUserAgentMessagesView"
+               class="org.netxms.ui.eclipse.agentmanager.actions.OpenUserAgentNotificationView"
                definitionId="org.netxms.ui.eclipse.agentmanager.commands.open_user_agent_messages"
                icon="icons/user_agent_messages.png"
                id="org.netxms.ui.eclipse.agentmanager.actions.open_user_agent_messages"
-               label="User Agent Messages"
+               label="User Agent Notifications"
                menubarPath="config/additions"
                style="push"
-               tooltip="Open User Agent Messages">
+               tooltip="Open User Agent Notifications">
          </action>
       </actionSet>
    </extension>
@@ -181,9 +181,9 @@
       </command>
       <command
             categoryId="org.netxms.ui.eclipse.console.category.views"
-            description="Open User Agent Messages"
+            description="Open User Agent Notifications"
             id="org.netxms.ui.eclipse.agentmanager.commands.open_user_agent_messages"
-            name="User Agent Messages">
+            name="User Agent Notifications">
       </command>
       <command
             description="Toggle user session filter"
@@ -215,8 +215,8 @@
             parentId="org.eclipse.ui.contexts.window">
       </context>
       <context
-            id="org.netxms.ui.eclipse.agentmanager.context.UserAgentMessagesView"
-            name="User Agent Messages"
+            id="org.netxms.ui.eclipse.agentmanager.context.UserAgentNotificationView"
+            name="User Agent Notifications"
             parentId="org.eclipse.ui.contexts.window">
       </context>
    </extension>
@@ -244,11 +244,11 @@
    <extension
          point="org.eclipse.ui.activities">
       <activity
-            id="org.netxms.ui.eclipse.agentmanager.activities.SendUserAgentMessage"
-            name="User Agent Message">
+            id="org.netxms.ui.eclipse.agentmanager.activities.SendUserAgentNotification"
+            name="User Agent Notification">
          <enabledWhen>
             <with
-                  variable="org.netxms.access.UserAgentMessages">
+                  variable="org.netxms.access.UserAgentNotifications">
                <equals
                      value="true">
                </equals>
@@ -256,14 +256,14 @@
          </enabledWhen>
       </activity>
       <activityPatternBinding
-            activityId="org.netxms.ui.eclipse.agentmanager.activities.SendUserAgentMessage"
+            activityId="org.netxms.ui.eclipse.agentmanager.activities.SendUserAgentNotification"
             isEqualityPattern="true"
             pattern="org.netxms.ui.eclipse.agentmanager/org.netxms.ui.eclipse.agentmanager.actions.open_user_agent_messages">
       </activityPatternBinding>
       <activityPatternBinding
-            activityId="org.netxms.ui.eclipse.agentmanager.activities.SendUserAgentMessage"
+            activityId="org.netxms.ui.eclipse.agentmanager.activities.SendUserAgentNotification"
             isEqualityPattern="true"
-            pattern="org.netxms.ui.eclipse.agentmanager/horg.netxms.ui.eclipse.agentmanager.popupActions.SendUserAgentMessage">
+            pattern="org.netxms.ui.eclipse.agentmanager/horg.netxms.ui.eclipse.agentmanager.popupActions.SendUserAgentNotification">
       </activityPatternBinding>
    </extension>
    <extension

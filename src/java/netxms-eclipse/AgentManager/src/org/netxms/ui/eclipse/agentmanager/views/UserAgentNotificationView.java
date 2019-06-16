@@ -28,12 +28,12 @@ import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
-import org.netxms.client.UserAgentMessage;
+import org.netxms.client.UserAgentNotification;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.agentmanager.Activator;
-import org.netxms.ui.eclipse.agentmanager.views.helpers.UserAgentMessageComparator;
-import org.netxms.ui.eclipse.agentmanager.views.helpers.UserAgentMessageFilter;
-import org.netxms.ui.eclipse.agentmanager.views.helpers.UserAgentMessageLabelProvider;
+import org.netxms.ui.eclipse.agentmanager.views.helpers.UserAgentNotificationComparator;
+import org.netxms.ui.eclipse.agentmanager.views.helpers.UserAgentNotificationFilter;
+import org.netxms.ui.eclipse.agentmanager.views.helpers.UserAgentNotificationLabelProvider;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -41,9 +41,9 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.FilterText;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
-public class UserAgentMessagesView extends ViewPart implements SessionListener
+public class UserAgentNotificationView extends ViewPart implements SessionListener
 {
-   public static final String ID = "org.netxms.ui.eclipse.agentmanager.views.UserAgentMessagesView";
+   public static final String ID = "org.netxms.ui.eclipse.agentmanager.views.UserAgentNotificationView";
    
    public static final int COL_ID = 0;
    public static final int COL_OBJECTS = 1;
@@ -53,7 +53,7 @@ public class UserAgentMessagesView extends ViewPart implements SessionListener
    public static final int COL_END_TIME = 5;
    
    private SortableTableViewer viewer; 
-   private UserAgentMessageFilter filter;
+   private UserAgentNotificationFilter filter;
    private boolean initShowfilter = true;
    private FilterText filterText;
    private Action actionShowFilter;
@@ -92,20 +92,20 @@ public class UserAgentMessagesView extends ViewPart implements SessionListener
       final int[] widths = { 80, 300, 300, 80, 100, 100 };
       viewer = new SortableTableViewer(parent, names, widths, 0, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
       viewer.setContentProvider(new ArrayContentProvider());
-      viewer.setLabelProvider(new UserAgentMessageLabelProvider());
-      viewer.setComparator(new UserAgentMessageComparator());
-      filter = new UserAgentMessageFilter();
+      viewer.setLabelProvider(new UserAgentNotificationLabelProvider());
+      viewer.setComparator(new UserAgentNotificationComparator());
+      filter = new UserAgentNotificationFilter();
       viewer.addFilter(filter);
       
       final IDialogSettings settings = Activator.getDefault().getDialogSettings();
       initShowfilter = settings.getBoolean(ID + "initShowFilter");
       
-      WidgetHelper.restoreTableViewerSettings(viewer, settings, "UserAgentMessages");
+      WidgetHelper.restoreTableViewerSettings(viewer, settings, "UserAgentNotification");
       viewer.getTable().addDisposeListener(new DisposeListener() {
          @Override
          public void widgetDisposed(DisposeEvent e)
          {
-            WidgetHelper.saveTableViewerSettings(viewer, settings, "UserAgentMessages");
+            WidgetHelper.saveTableViewerSettings(viewer, settings, "UserAgentNotification");
             settings.put(ID + "initShowFilter", initShowfilter);
          }
       });
@@ -158,7 +158,7 @@ public class UserAgentMessagesView extends ViewPart implements SessionListener
       IContextService contextService = (IContextService)getSite().getService(IContextService.class);
       if (contextService != null)
       {
-         contextService.activateContext("org.netxms.ui.eclipse.agentmanager.context.UserAgentMessagesView"); 
+         contextService.activateContext("org.netxms.ui.eclipse.agentmanager.context.UserAgentNotificationView"); 
       }
    }
 
@@ -175,7 +175,7 @@ public class UserAgentMessagesView extends ViewPart implements SessionListener
          }
       };
       
-      actionRecall = new Action("Recall message") {
+      actionRecall = new Action("Recall notification") {
          @Override
          public void run()
          {
@@ -213,18 +213,18 @@ public class UserAgentMessagesView extends ViewPart implements SessionListener
       {
          for(Object o : selection.toList())
          {            
-            final UserAgentMessage msg = (UserAgentMessage)o;
-            new ConsoleJob("Recall user agent message", this, Activator.PLUGIN_ID, null) {
+            final UserAgentNotification msg = (UserAgentNotification)o;
+            new ConsoleJob("Recall user agent notification", this, Activator.PLUGIN_ID, null) {
                @Override
                protected void runInternal(IProgressMonitor monitor) throws Exception
                {
-                  session.userAgentMessagesRecall(msg.getId());
+                  session.userAgentNotificationRecall(msg.getId());
                }
                
                @Override
                protected String getErrorMessage()
                {
-                  return "Cannot recall user agent message";
+                  return "Cannot recall user agent notification";
                }
             }.start();
          }
@@ -297,7 +297,7 @@ public class UserAgentMessagesView extends ViewPart implements SessionListener
          boolean recallIsActive = true;
          for(Object o : selection.toList())
          {
-            if (((UserAgentMessage)o).isRecalled() || (((UserAgentMessage)o).getStartTime().getTime() == 0))
+            if (((UserAgentNotification)o).isRecalled() || (((UserAgentNotification)o).getStartTime().getTime() == 0))
             {
                recallIsActive = false;
                break;
@@ -314,11 +314,11 @@ public class UserAgentMessagesView extends ViewPart implements SessionListener
    private void refresh()
    {
       final NXCSession session = ConsoleSharedData.getSession();
-      new ConsoleJob("Get list of user agent messages", this, Activator.PLUGIN_ID, null) {
+      new ConsoleJob("Get list of user agent notifications", this, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            final List<UserAgentMessage> messages = session.getUserAgentMessages();
+            final List<UserAgentNotification> messages = session.getUserAgentNotifications();
             runInUIThread(new Runnable() {
                @Override
                public void run()
@@ -331,7 +331,7 @@ public class UserAgentMessagesView extends ViewPart implements SessionListener
          @Override
          protected String getErrorMessage()
          {
-            return "Cannot get list of user agent messages";
+            return "Cannot get list of user agent notifications";
          }
       }.start();
    }

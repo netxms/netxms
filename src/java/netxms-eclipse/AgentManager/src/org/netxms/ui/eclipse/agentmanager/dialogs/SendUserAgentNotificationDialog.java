@@ -43,9 +43,9 @@ import org.netxms.ui.eclipse.widgets.LabeledSpinner;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
- * Dialog for user agent message sending
+ * Dialog for user agent notification sending
  */
-public class SendUserAgentMessageDialog extends Dialog
+public class SendUserAgentNotificationDialog extends Dialog
 {
    private LabeledText textMessage;
    private Button radioOneTime;
@@ -65,7 +65,7 @@ public class SendUserAgentMessageDialog extends Dialog
 	 * @param parentShell
 	 * @param canSendUserMessage 
 	 */
-	public SendUserAgentMessageDialog(Shell parentShell)
+	public SendUserAgentNotificationDialog(Shell parentShell)
 	{
 		super(parentShell);
 	}
@@ -77,7 +77,7 @@ public class SendUserAgentMessageDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText("Send user agent message");
+		newShell.setText("Send user agent notification");
 	}
 
 	/* (non-Javadoc)
@@ -190,7 +190,7 @@ public class SendUserAgentMessageDialog extends Dialog
       
       final NXCSession session = ConsoleSharedData.getSession();
       
-      new ConsoleJob("Get default user agent message retention time", null, Activator.PLUGIN_ID, null) {
+      new ConsoleJob("Get default user agent notification retention time", null, Activator.PLUGIN_ID, null) {
          
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
@@ -250,7 +250,7 @@ public class SendUserAgentMessageDialog extends Dialog
 	/**
 	 * Get message 
 	 * 
-	 * @return user agent message
+	 * @return user agent notification
 	 */
    public String getMessage()
    {
@@ -260,7 +260,7 @@ public class SendUserAgentMessageDialog extends Dialog
    /**
     * Start time
     * 
-    * @return user agent message start time
+    * @return user agent notification start time
     */
    public Date getStartTime()
    {
@@ -270,7 +270,7 @@ public class SendUserAgentMessageDialog extends Dialog
    /**
     * End time
     * 
-    * @return user agent message end time
+    * @return user agent notification end time
     */
    public Date getEndTime()
    {

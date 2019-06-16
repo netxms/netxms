@@ -433,7 +433,7 @@
                priorityLevel="workbench">
          </variable>
          <variable
-               name="org.netxms.access.UserAgentMessages"
+               name="org.netxms.access.UserAgentNotifications"
                priorityLevel="workbench">
          </variable>
          <variable
