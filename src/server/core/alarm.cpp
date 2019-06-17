@@ -329,9 +329,6 @@ static void NotifyClients(UINT32 code, const Alarm *alarm)
  */
 void Alarm::createInDatabase()
 {
-   TCHAR categoryList[MAX_DB_STRING];
-   categoryList[0] = 0;
-
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
    DB_STATEMENT hStmt = DBPrepare(hdb,
@@ -378,9 +375,6 @@ void Alarm::createInDatabase()
  */
 void Alarm::updateInDatabase()
 {
-   TCHAR categoryList[MAX_DB_STRING];
-   categoryList[0] = 0;
-
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
    DB_STATEMENT hStmt = DBPrepare(hdb,
@@ -1217,6 +1211,7 @@ UINT32 UnlinkHelpdeskIssueByHDRef(const TCHAR *hdref, ClientSession *session)
 void NXCORE_EXPORTABLE DeleteAlarm(UINT32 alarmId, bool objectCleanup)
 {
    DWORD dwObject;
+   bool found = false;
 
    // Delete alarm from in-memory list
    if (!objectCleanup)  // otherwise already locked
@@ -1229,6 +1224,7 @@ void NXCORE_EXPORTABLE DeleteAlarm(UINT32 alarmId, bool objectCleanup)
          dwObject = alarm->getSourceObject();
          NotifyClients(NX_NOTIFY_ALARM_DELETED, alarm);
          s_alarmList.remove(i);
+         found = true;
          break;
       }
    }
@@ -1236,7 +1232,7 @@ void NXCORE_EXPORTABLE DeleteAlarm(UINT32 alarmId, bool objectCleanup)
       s_alarmList.unlock();
 
    // Delete from database
-   if (!objectCleanup)
+   if (found && !objectCleanup)
    {
       TCHAR szQuery[256];
 
@@ -1245,9 +1241,9 @@ void NXCORE_EXPORTABLE DeleteAlarm(UINT32 alarmId, bool objectCleanup)
       _sntprintf(szQuery, 256, _T("DELETE FROM alarm_events WHERE alarm_id=%d"), (int)alarmId);
       QueueSQLRequest(szQuery);
 
-	   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-	   DeleteAlarmNotes(hdb, alarmId);
-	   DBConnectionPoolReleaseConnection(hdb);
+      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+      DeleteAlarmNotes(hdb, alarmId);
+      DBConnectionPoolReleaseConnection(hdb);
 
       UpdateObjectStatus(dwObject);
    }

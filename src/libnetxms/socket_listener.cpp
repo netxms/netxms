@@ -354,7 +354,6 @@ void StreamSocketListener::mainLoop()
 void DatagramSocketListener::mainLoop()
 {
    SocketPoller sp;
-   int errorCount = 0;
    while(!m_stop && !isStopConditionReached())
    {
       sp.reset();

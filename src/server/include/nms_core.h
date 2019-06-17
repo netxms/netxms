@@ -460,13 +460,18 @@ public:
 };
 
 /**
+ * Session ID
+ */
+typedef int session_id_t;
+
+/**
  * Client (user) session
  */
 class NXCORE_EXPORTABLE ClientSession
 {
 private:
    SOCKET m_hSocket;
-   int m_id;
+   session_id_t m_id;
    UINT32 m_dwUserId;
    UINT64 m_dwSystemAccess;    // User's system access rights
    UINT32 m_dwFlags;           // Session flags
@@ -804,8 +809,8 @@ public:
    void writeAuditLogWithValues(const TCHAR *subsys, bool success, UINT32 objectId, const TCHAR *oldValue, const TCHAR *newValue, const TCHAR *format, ...);
    void writeAuditLogWithValues(const TCHAR *subsys, bool success, UINT32 objectId, json_t *oldValue, json_t *newValue, const TCHAR *format, ...);
 
-   int getId() const { return m_id; }
-   void setId(int id) { if (m_id == -1) m_id = id; }
+   session_id_t getId() const { return m_id; }
+   void setId(session_id_t id) { if (m_id == -1) m_id = id; }
 
    const TCHAR *getLoginName() const { return m_loginName; }
    const TCHAR *getSessionName() const { return m_sessionName; }
@@ -1067,7 +1072,7 @@ INT64 GetDiscoveryPollerQueueSize();
 
 void NXCORE_EXPORTABLE EnumerateClientSessions(void (*pHandler)(ClientSession *, void *), void *pArg);
 void NXCORE_EXPORTABLE NotifyClientSessions(UINT32 dwCode, UINT32 dwData);
-void NXCORE_EXPORTABLE NotifyClientSession(UINT32 sessionId, UINT32 dwCode, UINT32 dwData);
+void NXCORE_EXPORTABLE NotifyClientSession(session_id_t sessionId, UINT32 dwCode, UINT32 dwData);
 void NXCORE_EXPORTABLE NotifyClientGraphUpdate(NXCPMessage *update, UINT32 graphId);
 void NotifyClientPolicyUpdate(NXCPMessage *msg, Template *object);
 void NotifyClientPolicyDelete(uuid guid, Template *object);
@@ -1077,8 +1082,8 @@ void NotifyClientDCIStatusChange(DataCollectionOwner *object, UINT32 dcoId, int 
 void NotifyClientDCIUpdate(NXCPMessage *update, NetObj *object);
 int GetSessionCount(bool includeSystemAccount);
 bool IsLoggedIn(UINT32 dwUserId);
-bool NXCORE_EXPORTABLE KillClientSession(int id);
-void CloseOtherSessions(UINT32 userId, UINT32 thisSession);
+bool NXCORE_EXPORTABLE KillClientSession(session_id_t id);
+void CloseOtherSessions(UINT32 userId, session_id_t thisSession);
 
 void GetSysInfoStr(TCHAR *buffer, int nMaxSize);
 InetAddress GetLocalIpAddr();

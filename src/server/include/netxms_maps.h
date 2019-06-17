@@ -63,7 +63,7 @@ class ObjLink
 public:
    UINT32 id1;
    UINT32 id2;
-   LONG type;
+   int type;
 	TCHAR port1[MAX_CONNECTOR_NAME];
 	TCHAR port2[MAX_CONNECTOR_NAME];
 	int portIdCount;
@@ -107,7 +107,7 @@ public:
 	void createMessage(NXCPMessage *pMsg);
 
 	bool isLinkExist(UINT32 objectId1, UINT32 objectId2) const;
-	ObjLink *getLink(UINT32 objectId1, UINT32 objectId2, UINT32 linkType);
+	ObjLink *getLink(UINT32 objectId1, UINT32 objectId2, int linkType);
 	bool isObjectExist(UINT32 objectId) const;
 
 	void setAllowDuplicateLinks(bool allowDuplicateLinks) { m_allowDuplicateLinks = allowDuplicateLinks; }

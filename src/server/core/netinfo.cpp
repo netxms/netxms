@@ -149,7 +149,6 @@ static ArpCache *SysGetLocalArpCache()
    free(sysArpCache);
 #else
 	TCHAR szByte[4], *pChar;
-	UINT32 i, j;
 
 	if (imp_NxSubAgentGetArpCache != NULL)
 	{
@@ -166,19 +165,17 @@ static ArpCache *SysGetLocalArpCache()
          // where XXXXXXXXXXXX is a MAC address (12 hexadecimal digits)
          // a.b.c.d is an IP address in decimal dotted notation
          // n is an interface index
-         for(i = 0; i < list.size(); i++)
+         TCHAR temp[128];
+         for (int i = 0; i < list.size(); i++)
          {
-            TCHAR *pTemp = _tcsdup(list.get(i));
-            TCHAR *pBuf = pTemp;
+            _tcslcpy(temp, list.get(i), 128);
+            TCHAR *pBuf = temp;
             if (_tcslen(pBuf) < 20)     // Invalid line
-            {
-               free(pTemp);
                continue;
-            }
 
             // MAC address
             BYTE macAddr[6];
-            for(j = 0; j < 6; j++)
+            for (int j = 0; j < 6; j++)
             {
                memcpy(szByte, pBuf, sizeof(TCHAR) * 2);
                macAddr[j] = (BYTE)_tcstol(szByte, NULL, 16);
@@ -186,7 +183,7 @@ static ArpCache *SysGetLocalArpCache()
             }
 
             // IP address
-            while(*pBuf == ' ')
+            while (*pBuf == ' ')
                pBuf++;
             pChar = _tcschr(pBuf, _T(' '));
             if (pChar != NULL)
@@ -197,8 +194,6 @@ static ArpCache *SysGetLocalArpCache()
             UINT32 ifIndex = (pChar != NULL) ? _tcstoul(pChar + 1, NULL, 10) : 0;
 
             arpCache->addEntry(ipAddr, MacAddress(macAddr, 6), ifIndex);
-
-            free(pTemp);
          }
       }
    }
@@ -269,7 +264,7 @@ static InterfaceList *SysGetLocalIfList()
 				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, pInfo->AdapterName, -1, szAdapterName, MAX_OBJECT_NAME);
             szAdapterName[MAX_OBJECT_NAME - 1] = 0;
 #else
-            nx_strncpy(szAdapterName, pInfo->AdapterName, MAX_OBJECT_NAME);
+            strlcpy(szAdapterName, pInfo->AdapterName, MAX_OBJECT_NAME);
 #endif
          }
 
@@ -307,10 +302,11 @@ static InterfaceList *SysGetLocalIfList()
       if (imp_NxSubAgentGetIfList(&list))
       {
          pIfList = new InterfaceList(list.size());
-         for(UINT32 i = 0; i < list.size(); i++)
+         TCHAR temp[1024];
+         for(int i = 0; i < list.size(); i++)
          {
-            TCHAR *pTemp = _tcsdup(list.get(i));
-            TCHAR *pBuf = pTemp;
+            _tcslcpy(temp, list.get(i), 1024);
+            TCHAR *pBuf = temp;
 
             // Index
             UINT32 ifIndex = 0;
@@ -380,7 +376,6 @@ static InterfaceList *SysGetLocalIfList()
 
                pIfList->add(iface);
             }
-            free(pTemp);
          }
       }
    }

@@ -217,8 +217,6 @@ static void DebugWriter(const TCHAR *tag, const TCHAR *msg)
  */
 int main(int argc, char *argv[])
 {
-	int ret = 0;
-
 	InitNetXMSProcess(true);
 
 	opterr = 0;

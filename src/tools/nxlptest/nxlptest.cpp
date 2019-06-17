@@ -146,14 +146,13 @@ int main(int argc, char *argv[])
 #ifdef UNICODE
 	WCHAR *wname = WideStringFromMBString(argv[optind]);
 	xml = LoadFile(wname, &size);
-	free(wname);
+	MemFree(wname);
 #else
 	xml = LoadFile(argv[optind], &size);
 #endif
 	if (xml != NULL)
 	{
 		TCHAR errorText[1024];
-		THREAD thread;
 
       ObjectArray<LogParser> *parsers = LogParser::createFromXml((const char *)xml, size, errorText, 1024); 
 		if ((parsers != NULL) && (parsers->size() > 0))
@@ -170,7 +169,7 @@ int main(int argc, char *argv[])
             parser->setSnapshotMode(true);
 #endif
 
-			thread = ThreadCreateEx(ParserThread, 0, parser);
+			THREAD thread = ThreadCreateEx(ParserThread, 0, parser);
 #ifdef _WIN32
 			_tprintf(_T("Parser started. Press ESC to stop.\nFile: %s\nTrace level: %d\n\n"),
 				      parser->getFileName(), parser->getTraceLevel());
@@ -194,7 +193,8 @@ int main(int argc, char *argv[])
 			while(!s_stop)
             ThreadSleepMs(500);
 #endif
-			parser->stop();
+         parser->stop();
+         ThreadJoin(thread);
          delete parser;
 		}
 		else
@@ -202,7 +202,7 @@ int main(int argc, char *argv[])
 			_tprintf(_T("ERROR: invalid parser definition file (%s)\n"), errorText);
 			rc = 1;
 		}
-		free(xml);
+		MemFree(xml);
       delete parsers;
 	}
 	else

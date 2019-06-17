@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2018 Raden Solutions
+** Copyright (C) 2003-2019 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -94,12 +94,12 @@ PolicyInstallJob::PolicyInstallJob(const TCHAR *params, UINT32 nodeId, UINT32 us
 	   return;
 	}
 
-	GenericAgentPolicy *policy = ((Template *)obj)->getAgentPolicyCopy(m_policyGuid);
-	if(policy != NULL)
-	{
-	   _tcscpy(name,policy->getName());
-	   delete policy;
-	}
+   GenericAgentPolicy *policy = static_cast<Template*>(obj)->getAgentPolicyCopy(m_policyGuid);
+   if (policy != NULL)
+   {
+      _tcscpy(name, policy->getName());
+      delete policy;
+   }
 
    m_retryCount = (paramList.size() >= 2) ? _tcstol(paramList.get(2), NULL, 0) : 0;
 

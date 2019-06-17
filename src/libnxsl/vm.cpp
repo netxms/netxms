@@ -2496,7 +2496,9 @@ void NXSL_VM::trace(int level, const TCHAR *text)
 void NXSL_VM::error(int errorCode, int sourceLine)
 {
    m_errorCode = errorCode;
-   m_errorLine = (sourceLine == -1) ? (((m_cp == INVALID_ADDRESS) || (m_cp >= m_instructionSet->size())) ? 0 : m_instructionSet->get(m_cp)->m_sourceLine) : sourceLine;
+   m_errorLine = (sourceLine == -1) ?
+            (((m_cp == INVALID_ADDRESS) || (m_cp >= static_cast<UINT32>(m_instructionSet->size()))) ?
+                     0 : m_instructionSet->get(m_cp)->m_sourceLine) : sourceLine;
 
    TCHAR szBuffer[1024];
    _sntprintf(szBuffer, 1024, _T("Error %d in line %d: %s"), errorCode, m_errorLine, GetErrorMessage(errorCode));

@@ -861,8 +861,6 @@ NXCP_MESSAGE *NXCPMessage::serialize(bool allowCompression) const
    // Calculate message size
    size_t size = NXCP_HEADER_SIZE;
    UINT32 fieldCount = 0;
-   BYTE *compressedData = NULL;
-   size_t compressedDataSize = 0;
    if (m_flags & MF_BINARY)
    {
       size += m_dataSize;

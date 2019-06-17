@@ -118,6 +118,7 @@
 #define AF_ENABLE_TCP_PROXY         0x01000000
 #define AF_ENABLE_PUSH_CONNECTOR    0x02000000
 #define AF_USE_SYSTEMD_JOURNAL      0x04000000
+#define AF_SYSTEMD_DAEMON           0x08000000
 
 // Flags for component failures
 #define FAIL_OPEN_LOG               0x00000001

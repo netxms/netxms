@@ -65,7 +65,7 @@ AbstractIndexBase::~AbstractIndexBase()
 {
    if (m_owner)
    {
-      for(int i = 0; i < m_primary->size; i++)
+      for(size_t i = 0; i < m_primary->size; i++)
          destroyObject(m_primary->elements[i].object);
    }
 	MemFree(m_primary->elements);
@@ -310,7 +310,7 @@ void AbstractIndexBase::clear()
 
    if (m_owner)
    {
-      for(int i = 0; i < m_secondary->size; i++)
+      for(size_t i = 0; i < m_secondary->size; i++)
          destroyObject(m_secondary->elements[i].object);
    }
 
@@ -403,7 +403,7 @@ void *AbstractIndexBase::find(bool (*comparator)(void *, void *), void *data)
 	void *result = NULL;
 
    INDEX_HEAD *index = acquireIndex();
-	for(int i = 0; i < index->size; i++)
+	for(size_t i = 0; i < index->size; i++)
 		if (comparator(index->elements[i].object, data))
 		{
 			result = index->elements[i].object;
@@ -423,7 +423,7 @@ void *AbstractIndexBase::find(bool (*comparator)(void *, void *), void *data)
 void AbstractIndexBase::findObjects(Array *resultSet, bool (*comparator)(void *, void *), void *data)
 {
    INDEX_HEAD *index = acquireIndex();
-   for(int i = 0; i < index->size; i++)
+   for(size_t i = 0; i < index->size; i++)
    {
       if (comparator(index->elements[i].object, data))
          resultSet->add(index->elements[i].object);
@@ -440,7 +440,7 @@ void AbstractIndexBase::findObjects(Array *resultSet, bool (*comparator)(void *,
 void AbstractIndexBase::forEach(void (*callback)(void *, void *), void *data)
 {
    INDEX_HEAD *index = acquireIndex();
-	for(int i = 0; i < index->size; i++)
+	for(size_t i = 0; i < index->size; i++)
 		callback(index->elements[i].object, data);
    ReleaseIndex(index);
 }
@@ -456,7 +456,7 @@ ObjectArray<NetObj> *ObjectIndex::getObjects(bool updateRefCount, bool (*filter)
 {
    INDEX_HEAD *index = acquireIndex();
    ObjectArray<NetObj> *result = new ObjectArray<NetObj>(index->size);
-   for(int i = 0; i < index->size; i++)
+   for(size_t i = 0; i < index->size; i++)
    {
       if ((filter == NULL) || filter(static_cast<NetObj*>(index->elements[i].object), userData))
       {

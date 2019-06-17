@@ -121,14 +121,14 @@ int LIBNETXMS_EXPORTABLE mb_to_ucs2(const char *src, int srcLen, UCS2CHAR *dst, 
       return ASCII_to_ucs2(src, srcLen, dst, dstLen);
    }
 
-   inbuf = (const char *) src;
-   inbytes = (srcLen == -1) ? strlen(src) + 1 : (size_t) srcLen;
-   outbuf = (char *) dst;
-   outbytes = (size_t) dstLen * sizeof(UCS2CHAR);
-   count = iconv(cd, (ICONV_CONST char **) &inbuf, &inbytes, &outbuf, &outbytes);
+   inbuf = src;
+   inbytes = (srcLen == -1) ? strlen(src) + 1 : static_cast<size_t>(srcLen);
+   outbuf = reinterpret_cast<char*>(dst);
+   outbytes = static_cast<size_t>(dstLen) * sizeof(UCS2CHAR);
+   count = iconv(cd, (ICONV_CONST char **)&inbuf, &inbytes, &outbuf, &outbytes);
    IconvClose(cd);
 
-   if (count == (size_t) - 1)
+   if (count == (size_t)-1)
    {
       if (errno == EILSEQ)
       {
@@ -139,7 +139,7 @@ int LIBNETXMS_EXPORTABLE mb_to_ucs2(const char *src, int srcLen, UCS2CHAR *dst, 
          count = 0;
       }
    }
-   if (((char *) outbuf - (char *) dst > sizeof(UCS2CHAR)) && (*dst == 0xFEFF))
+   if ((outbuf - reinterpret_cast<char*>(dst) > static_cast<ptrdiff_t>(sizeof(UCS2CHAR))) && (*dst == 0xFEFF))
    {
       // Remove UNICODE byte order indicator if presented
       memmove(dst, &dst[1], (char *) outbuf - (char *) dst - sizeof(UCS2CHAR));

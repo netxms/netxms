@@ -1140,7 +1140,7 @@ public:
    GenericAgentPolicy(uuid guid, UINT32 ownerId);
    GenericAgentPolicy(const TCHAR *name, const TCHAR *type, UINT32 ownerId);
    GenericAgentPolicy(GenericAgentPolicy *policy);
-   ~GenericAgentPolicy();
+   virtual ~GenericAgentPolicy();
 
    const TCHAR *getName() const { return m_name; }
    const uuid getGuid() const { return m_guid; }

@@ -56,7 +56,7 @@ StringSet::~StringSet()
 void StringSet::add(const TCHAR *str)
 {
    StringSetEntry *entry;
-   int keyLen = (int)(_tcslen(str) * sizeof(TCHAR));
+   int keyLen = static_cast<int>(_tcslen(str) * sizeof(TCHAR));
    HASH_FIND(hh, m_data, str, keyLen, entry);
    if (entry == NULL)
    {
@@ -72,7 +72,7 @@ void StringSet::add(const TCHAR *str)
 void StringSet::addPreallocated(TCHAR *str)
 {
    StringSetEntry *entry;
-   int keyLen = (int)(_tcslen(str) * sizeof(TCHAR));
+   int keyLen = static_cast<int>(_tcslen(str) * sizeof(TCHAR));
    HASH_FIND(hh, m_data, str, keyLen, entry);
    if (entry == NULL)
    {
@@ -92,7 +92,7 @@ void StringSet::addPreallocated(TCHAR *str)
 void StringSet::remove(const TCHAR *str)
 {
    StringSetEntry *entry;
-   int keyLen = (int)(_tcslen(str) * sizeof(TCHAR));
+   int keyLen = static_cast<int>(_tcslen(str) * sizeof(TCHAR));
    HASH_FIND(hh, m_data, str, keyLen, entry);
    if (entry != NULL)
    {

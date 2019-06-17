@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -331,7 +331,7 @@ bool NetworkMapObjectList::isLinkExist(UINT32 objectId1, UINT32 objectId2) const
 /**
  * Get link between two given objects if it exists
  */
-ObjLink *NetworkMapObjectList::getLink(UINT32 objectId1, UINT32 objectId2, UINT32 linkType)
+ObjLink *NetworkMapObjectList::getLink(UINT32 objectId1, UINT32 objectId2, int linkType)
 {
    for(int i = 0; i < m_linkList->size(); i++)
    {

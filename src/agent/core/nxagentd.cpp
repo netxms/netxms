@@ -1563,7 +1563,6 @@ int main(int argc, char *argv[])
 #else
    TCHAR *pszEnv;
 	int uid = 0, gid = 0;
-	bool systemdMode = false;
 #endif
 
    InitNetXMSProcess(false);
@@ -1769,8 +1768,7 @@ int main(int argc, char *argv[])
             break;
 #else /* not _WIN32 */
          case 'S':   // Run as systemd daemon with type "simple"
-            g_dwFlags |= AF_DAEMON;
-            systemdMode = true;
+            g_dwFlags |= AF_DAEMON | AF_SYSTEMD_DAEMON;
             break;
 #endif
          case '?':
@@ -1992,7 +1990,7 @@ int main(int argc, char *argv[])
 						}
 					}
 #else    /* _WIN32 */
-					if ((g_dwFlags & AF_DAEMON) && !systemdMode)
+					if ((g_dwFlags & AF_DAEMON) && !(g_dwFlags & AF_SYSTEMD_DAEMON))
                {
 						if (daemon(0, 0) == -1)
 						{

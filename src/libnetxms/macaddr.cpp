@@ -30,7 +30,7 @@
  */
 bool MacAddress::isValid() const
 {
-   for(int i = 0; i < m_length; i++)
+   for(size_t i = 0; i < m_length; i++)
       if (m_value[i] != 0)
          return true;
    return false;
@@ -100,7 +100,7 @@ TCHAR *MacAddress::toStringInternal3(TCHAR *buffer, const TCHAR separator) const
 {
    TCHAR *curr = buffer;
 
-   for(int i = 0; i < m_length; i++)
+   for(size_t i = 0; i < m_length; i++)
    {
       *curr++ = bin2hex(m_value[i] >> 4);
       if (((curr+1) - buffer) % 4 == 0)
@@ -120,7 +120,7 @@ TCHAR *MacAddress::toStringInternal(TCHAR *buffer, const TCHAR separator, bool b
 {
    TCHAR *curr = buffer;
 
-   for(int i = 0; i < m_length; i++)
+   for(size_t i = 0; i < m_length; i++)
    {
       *curr++ = bin2hex(m_value[i] >> 4);
       *curr++ = bin2hex(m_value[i] & 15);
@@ -155,9 +155,15 @@ String MacAddress::toString(MacAddressNotation notation) const
          stringSize = m_length * 2 + m_length / 2; //-1 separator +1 for 0 termination
          break;
    }
-   TCHAR *buf = (TCHAR *)malloc(stringSize * sizeof(TCHAR));
+#if HAVE_ALLOCA
+   TCHAR *buf = (TCHAR *)alloca(stringSize * sizeof(TCHAR));
+#else
+   TCHAR *buf = MemAllocArray<TCHAR>(stringSize);
+#endif
    String str(toString(buf, notation));
-   free(buf);
+#if !HAVE_ALLOCA
+   MemFree(buf);
+#endif
    return str;
 }
 
