@@ -789,6 +789,9 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DB_SUPPORTS_MERGE));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_PARALLEL_NETWORK_DISCOVERY));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_SINGLE_TABLE_PERF_DATA));
+         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_MERGE_DUPLICATE_NODES));
+         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_SYSTEMD_DAEMON));
+         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_USE_SYSTEMD_JOURNAL));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_SERVER_INITIALIZED));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_SHUTDOWN));
          ConsolePrintf(pCtx, _T("\n"));

@@ -20,9 +20,11 @@
 **
 **/
 
-#include <nms_util.h>
+#include <nxagentd.h>
 
 #if WITH_SYSTEMD
+
+#include <signal.h>
 
 #if HAVE_SDBUS
 extern "C"
@@ -70,6 +72,25 @@ bool RestartService(UINT32 pid)
    char *serviceName = FindServiceName(pid);
    if (serviceName == NULL)
       return false;  // Not a systemd service
+
+   // If -S option was given just terminate old process - systemd will restart it
+   if (g_dwFlags & AF_SYSTEMD_DAEMON)
+   {
+      kill(pid, SIGTERM);
+      int i;
+      for(i = 0; i < 30; i++)
+      {
+         sleep(2);
+         if (kill(pid, SIGCONT) == -1)
+            break;
+      }
+
+      // Kill previous instance of agent if it's still running
+      if (i == 30)
+         kill(pid, SIGKILL);
+
+      return true;
+   }
 
 #if HAVE_SDBUS
 

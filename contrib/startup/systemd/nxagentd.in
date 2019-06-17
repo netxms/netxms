@@ -3,11 +3,12 @@ Description=NetXMS Agent
 After=network.target network-online.target
 
 [Service]
-Type=forking
+Type=simple
 Environment="NXAGENTD_CONFIG=/etc/nxagentd.conf"
 EnvironmentFile=-/etc/default/nxagentd
-ExecStart=~BINDIR~/nxagentd -d $NXAGENTD_OPTIONS -c $NXAGENTD_CONFIG 
+ExecStart=~BINDIR~/nxagentd -S $NXAGENTD_OPTIONS -c $NXAGENTD_CONFIG
 PIDFile=/var/run/nxagentd.pid
+Restart=always
 
 [Install]
 WantedBy=multi-user.target

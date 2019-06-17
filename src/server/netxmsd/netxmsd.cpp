@@ -74,13 +74,17 @@ static TCHAR help_text[] = _T("NetXMS Server Version ") NETXMS_VERSION_STRING _T
                            _T("   -M          : Create service with manual start\n")
                            _T("   -P <passwd> : Password for service account.\n")
 #else
-                           _T("   -p <file>   : Specify pid file.\n")
+                           _T("   -p <file>   : Path to pid file (default: /var/run/netxmsd.pid).\n")
 #endif
                            _T("   -q          : Disable interactive console\n")
 #ifdef _WIN32
                            _T("   -R          : Remove Windows service\n")
                            _T("   -s          : Start Windows service\n")
                            _T("   -S          : Stop Windows service\n")
+#else
+#if WITH_SYSTEMD
+                           _T("   -S          : Run as systemd daemon\n")
+#endif
 #endif
                            _T("   -v          : Display version and exit\n")
                            _T("\n");
@@ -185,7 +189,7 @@ static void CreateMiniDump(DWORD pid)
 #ifdef _WIN32
 #define VALID_OPTIONS   "c:CdD:ehIlL:mMP:qRsSv"
 #else
-#define VALID_OPTIONS   "c:CdD:ehlp:qv"
+#define VALID_OPTIONS   "c:CdD:ehlp:qSv"
 #endif
 
 /**
@@ -228,6 +232,7 @@ static BOOL ParseCommandLine(int argc, char *argv[])
 		{ (char *)"stop", 0, NULL, 'S' },
 #else
 		{ (char *)"pid-file", 1, NULL, 'p' },
+		{ (char *)"systemd-daemon", 0, NULL, 'S' },
 #endif
 		{ NULL, 0, 0, 0 }
 	};
@@ -352,6 +357,9 @@ static BOOL ParseCommandLine(int argc, char *argv[])
             strlcpy(g_szPIDFile, optarg, MAX_PATH);
 #endif
             break;
+			case 'S':
+				g_flags |= AF_DAEMON | AF_SYSTEMD_DAEMON;
+				break;
 #endif   /* _WIN32 */
          default:
    			break;
@@ -497,7 +505,7 @@ int main(int argc, char* argv[])
       Main(NULL);
    }
 #else    /* not _WIN32 */
-   if (!IsStandalone())
+   if (!IsStandalone() && !(g_flags & AF_SYSTEMD_DAEMON))
    {
       if (daemon(0, 0) == -1)
       {
