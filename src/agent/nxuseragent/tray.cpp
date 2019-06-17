@@ -68,11 +68,7 @@ static LRESULT CALLBACK TrayEventHandlerWndProc(HWND hWnd, UINT uMsg, WPARAM wPa
          SetForegroundWindow(hWnd);
          OpenApplicationWindow(pt, false);
          break;
-      case NIN_BALLOONUSERCLICK:
-         nxlog_debug(1, _T("NIN_BALLOONUSERCLICK"));
-         break;
       default:
-         nxlog_debug(1, _T("notification message %u"), LOWORD(lParam));
          break;
    }
 

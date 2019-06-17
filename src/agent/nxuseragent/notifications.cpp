@@ -7,6 +7,39 @@ static HashMap<ServerObjectKey, UserAgentNotification> s_notifications(true);
 static Mutex s_notificationLock;
 
 /**
+ * Update read flag
+ */
+static void MarkAsRead(UserAgentNotification *n)
+{
+   n->setRead();
+
+   HKEY hKey;
+   if (RegCreateKeyEx(HKEY_CURRENT_USER, _T("Software\\NetXMS\\UserAgent\\Notifications"), 0, NULL, 0, KEY_ALL_ACCESS, NULL, &hKey, NULL) == ERROR_SUCCESS)
+   {
+      TCHAR name[64];
+      _sntprintf(name, 64, _T("%u:%I64u"), n->getId().objectId, n->getId().serverId);
+      DWORD t = (DWORD)time(NULL);
+      RegSetValueEx(hKey, name, 0, REG_DWORD, (BYTE *)&t, sizeof(DWORD));
+      RegCloseKey(hKey);
+   }
+}
+
+/**
+ * Delete read mark in registry
+ */
+static void DeleteReadMark(const ServerObjectKey& id)
+{
+   HKEY hKey;
+   if (RegOpenKeyEx(HKEY_CURRENT_USER, _T("Software\\NetXMS\\UserAgent\\Notifications"), 0, KEY_ALL_ACCESS, &hKey) == ERROR_SUCCESS)
+   {
+      TCHAR name[64];
+      _sntprintf(name, 64, _T("%u:%I64u"), id.objectId, id.serverId);
+      RegDeleteValue(hKey, name);
+      RegCloseKey(hKey);
+   }
+}
+
+/**
  * Update notifications for user
  */
 void UpdateNotifications(NXCPMessage *request)
@@ -58,4 +91,6 @@ void RemoveNotification(NXCPMessage *request)
    s_notificationLock.lock();
    s_notifications.remove(id);
    s_notificationLock.unlock();
+
+   DeleteReadMark(id);
 }

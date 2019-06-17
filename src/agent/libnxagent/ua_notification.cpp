@@ -31,6 +31,7 @@ UserAgentNotification::UserAgentNotification(UINT64 serverId, const NXCPMessage 
    m_message = msg->getFieldAsString(baseId + 1);
    m_startTime = msg->getFieldAsTime(baseId + 2);
    m_endTime = msg->getFieldAsTime(baseId + 3);
+   m_read = false;
 }
 
 /**
@@ -42,6 +43,7 @@ UserAgentNotification::UserAgentNotification(const NXCPMessage *msg, UINT32 base
    m_message = msg->getFieldAsString(baseId + 1);
    m_startTime = msg->getFieldAsTime(baseId + 2);
    m_endTime = msg->getFieldAsTime(baseId + 3);
+   m_read = false;
 }
 
 /**
@@ -53,6 +55,7 @@ UserAgentNotification::UserAgentNotification(UINT64 serverId, UINT32 notificatio
    m_message = message;
    m_startTime = start;
    m_endTime = end;
+   m_read = false;
 }
 
 /**

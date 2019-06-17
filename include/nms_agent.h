@@ -1013,6 +1013,7 @@ private:
    TCHAR *m_message;
    time_t m_startTime;
    time_t m_endTime;
+   bool m_read;
 
 public:
    UserAgentNotification(UINT64 serverId, const NXCPMessage *msg, UINT32 baseId);
@@ -1024,6 +1025,9 @@ public:
    const TCHAR *getMessage() const { return m_message;  }
    time_t getStartTime() const { return m_startTime; }
    time_t getEndTime() const { return m_endTime; }
+   bool isRead() const { return m_read; }
+
+   void setRead() { m_read = true; }
 
    void fillMessage(NXCPMessage *msg, UINT32 baseId);
    void saveToDatabase(DB_HANDLE hdb);
