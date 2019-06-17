@@ -259,7 +259,7 @@ void DataCollectionItem::saveToDatabase(bool newObject)
 }
 
 /**
- * Remove item form database and delete not synced data if exist
+ * Remove item form database
  */
 void DataCollectionItem::deleteFromDatabase()
 {
@@ -268,11 +268,7 @@ void DataCollectionItem::deleteFromDatabase()
    _sntprintf(query, 256, _T("DELETE FROM dc_config WHERE server_id=") UINT64_FMT _T(" AND dci_id=%d"), m_serverId, m_id);
    if (DBQuery(db, query))
    {
-      _sntprintf(query, 256, _T("DELETE FROM dc_queue WHERE server_id=") UINT64_FMT _T(" AND dci_id=%d"), m_serverId, m_id);
-      if (DBQuery(db, query))
-      {
-         DebugPrintf(6, _T("DataCollectionItem::deleteFromDatabase: object(serverId=") UINT64X_FMT(_T("016")) _T(",dciId=%d) removed from database"), m_serverId, m_id);
-      }
+      DebugPrintf(6, _T("DataCollectionItem::deleteFromDatabase: object(serverId=") UINT64X_FMT(_T("016")) _T(",dciId=%d) removed from database"), m_serverId, m_id);
    }
 }
 
@@ -1131,7 +1127,7 @@ void ConfigureDataCollection(UINT64 serverId, NXCPMessage *msg)
    }
    delete it;
 
-   // Remove not existing configuration and data for it
+   // Remove not existing configuration
    it = s_items.iterator();
    while(it->hasNext())
    {
