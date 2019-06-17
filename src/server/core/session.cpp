@@ -14762,6 +14762,7 @@ void ClientSession::addUserAgentNotification(NXCPMessage *request)
          if(!FindObjectById(objectList->get(i))->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
          {
             hasAccess = false;
+            writeAuditLog(AUDIT_SYSCFG, false, objectList->get(i), _T("Access denied on user agent notification creation"));
             break;
          }
       }
@@ -14808,11 +14809,15 @@ void ClientSession::recallUserAgentNotification(NXCPMessage *request)
       for(int i = 0; i < g_userAgentNotificationList.size(); i++, base+=10)
       {
          UserAgentNotificationItem *tmp = g_userAgentNotificationList.get(i);
-         if(tmp->getId() == objectId && !tmp->isRecalled() && (tmp->getStartTime() != 0))
+         if(tmp->getId() == objectId)
          {
-            tmp->recall();
-            uan = tmp;
-            uan->incRefCount();
+            if(!tmp->isRecalled() && (tmp->getStartTime() != 0))
+            {
+               tmp->recall();
+               uan = tmp;
+               uan->incRefCount();
+            }
+            break;
          }
       }
       g_userAgentNotificationListMutex.unlock();
