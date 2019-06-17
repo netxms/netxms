@@ -318,11 +318,24 @@ void RecoverConfigPolicyDirectory()
 }
 
 /**
+ * Debug writer
+ */
+static void DebugWriter(const TCHAR *tag, const TCHAR *text)
+{
+   if (tag == NULL)
+      ConsolePrintf(_T("%s\n"), text);
+   else
+      ConsolePrintf(_T("<%s> %s\n"), tag, text);
+}
+
+/**
  * Load config
  */
 bool LoadConfig()
 {
-   bool validConfig = g_config->loadConfig(g_szConfigFile, DEFAULT_CONFIG_SECTION, NULL, false);
+   nxlog_set_debug_writer(DebugWriter);
+   nxlog_set_debug_level(1);
+   bool validConfig = g_config->loadConfig(g_szConfigFile, DEFAULT_CONFIG_SECTION, NULL, true);
    if (validConfig)
    {
       const TCHAR *dir = g_config->getValue(_T("/%agent/DataDirectory"));
@@ -365,5 +378,7 @@ bool LoadConfig()
    {
       ConsolePrintf(_T("Error loading configuration from \"%s\" section ") DEFAULT_CONFIG_SECTION _T("\n"), g_szConfigFile);
    }
+   nxlog_set_debug_writer(NULL);
+   nxlog_set_debug_level(0);
    return validConfig;
 }
