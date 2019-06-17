@@ -27,6 +27,7 @@
  */
 static ObjectArray<SessionAgentConnector> s_agents(8, 8, false);
 static RWLOCK s_lock = RWLockCreate();
+static int s_userAgentCount;
 
 /**
  * List of active user agent notifications
@@ -41,6 +42,8 @@ static void RegisterSessionAgent(SessionAgentConnector *c)
 {
    RWLockWriteLock(s_lock, INFINITE);
    s_agents.add(c);
+   if(c->isUserAgent())
+      s_userAgentCount++;
    RWLockUnlock(s_lock);
 }
 
@@ -55,6 +58,8 @@ static void UnregisterSessionAgent(UINT32 id)
       if (s_agents.get(i)->getId() == id)
       {
          s_agents.remove(i);
+         if(s_agents.get(i)->isUserAgent())
+            s_userAgentCount--;
          break;
       }
    }
@@ -577,6 +582,15 @@ LONG H_SessionAgents(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractC
    }
    RWLockUnlock(s_lock);
 
+   return SYSINFO_RC_SUCCESS;
+}
+
+/**
+ * Handler for number of connected session agents
+ */
+LONG H_SessionAgentCount(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   ret_int(value, s_userAgentCount);
    return SYSINFO_RC_SUCCESS;
 }
 

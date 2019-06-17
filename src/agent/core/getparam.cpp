@@ -53,6 +53,7 @@ LONG H_PushValues(const TCHAR *cmd, const TCHAR *arg, StringList *value, Abstrac
 LONG H_ResolverAddrByName(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_ResolverAddrByNameList(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
 LONG H_ResolverNameByAddr(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_SessionAgentCount(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_SessionAgents(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *session);
 LONG H_SHA1Hash(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_SNMPProxyStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
@@ -407,6 +408,7 @@ static NETXMS_SUBAGENT_PARAM m_stdParams[] =
    { _T("Agent.Registrar"), H_StringConstant, g_szRegistrar, DCI_DT_STRING, DCIDESC_AGENT_REGISTRAR },
    { _T("Agent.RejectedConnections"), H_UIntPtr, (TCHAR *)&g_rejectedConnections, DCI_DT_COUNTER32, DCIDESC_AGENT_REJECTEDCONNECTIONS },
    { _T("Agent.SentTraps"), H_AgentTraps, _T("S"), DCI_DT_COUNTER64, DCIDESC_AGENT_SENT_TRAPS },
+   { _T("Agent.SessionAgentCount"), H_SessionAgentCount, NULL, DCI_DT_UINT, DCIDESC_AGENT_SESSION_AGENTS_COUNT },
    { _T("Agent.SNMP.IsProxyEnabled"), H_FlagValue, CAST_TO_POINTER(AF_ENABLE_SNMP_PROXY, TCHAR *), DCI_DT_UINT, DCIDESC_AGENT_SNMP_ISPROXYENABLED },
    { _T("Agent.SNMP.IsTrapProxyEnabled"), H_FlagValue, CAST_TO_POINTER(AF_ENABLE_SNMP_TRAP_PROXY, TCHAR *), DCI_DT_UINT, DCIDESC_AGENT_SNMP_ISPROXYENABLED },
    { _T("Agent.SNMP.Requests"), H_SNMPProxyStats, _T("R"), DCI_DT_COUNTER64, DCIDESC_AGENT_SNMP_REQUESTS },

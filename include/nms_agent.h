@@ -199,6 +199,7 @@ struct PolicyChangeNotification
 #define DCIDESC_AGENT_PUSH_VALUE                     _T("Cached value of push parameter {instance}")
 #define DCIDESC_AGENT_REGISTRAR                      _T("Registrar server address set on agent startup")
 #define DCIDESC_AGENT_REJECTEDCONNECTIONS            _T("Number of connections rejected by agent")
+#define DCIDESC_AGENT_SESSION_AGENTS_COUNT           _T("Number of connected session agents")
 #define DCIDESC_AGENT_SENT_TRAPS                     _T("Number of traps successfully sent to server")
 #define DCIDESC_AGENT_SNMP_ISPROXYENABLED            _T("Check if SNMP proxy is enabled")
 #define DCIDESC_AGENT_SNMP_REQUESTS                  _T("Number of SNMP requests sent")
