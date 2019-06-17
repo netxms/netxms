@@ -65,7 +65,7 @@ extern Queue g_dciCacheLoaderQueue;
 extern ThreadPool *g_clientThreadPool;
 extern ThreadPool *g_dataCollectorThreadPool;
 
-void UnregisterClientSession(int id);
+void UnregisterClientSession(session_id_t id);
 void ResetDiscoveryPoller();
 NXCPMessage *ForwardMessageToReportingServer(NXCPMessage *request, ClientSession *session);
 void RemovePendingFileTransferRequests(ClientSession *session);

@@ -152,7 +152,8 @@ static int cas_validate(const char *ticket, const char *service, char *outbuf, i
    InetAddress a;
    SockAddrBuffer sa;
    SOCKET s = INVALID_SOCKET;
-   int err, b, ret, total;
+   int err, b, ret;
+   size_t total;
    SSL *ssl = NULL;
    X509 *s_cert = NULL;
    char buf[4096];

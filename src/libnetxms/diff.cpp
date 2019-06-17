@@ -524,21 +524,21 @@ Array *DiffEngine::diff_linesToChars(const String &text1, const String &text2)
 
 String DiffEngine::diff_linesToCharsMunge(const String &text, StringList &lineArray, StringIntMap<int>& lineHash)
 {
-   size_t lineStart = 0;
-   size_t lineEnd = 0;
+   ssize_t lineStart = 0;
+   ssize_t lineEnd = 0;
    String line;
    String chars;
    // Walk the text, pulling out a substring for each line.
    // text.split('\n') would would temporarily double our memory footprint.
    // Modifying text would create many large strings to garbage collect.
-   while(lineEnd < text.length())
+   while(lineEnd < static_cast<ssize_t>(text.length()))
    {
       lineEnd = text.find(_T("\n"), lineStart);
       if (lineEnd == String::npos)
       {
          lineEnd = text.length();
       }
-      line = safeMid(text, lineStart, (int)(lineEnd - lineStart + 1));
+      line = safeMid(text, lineStart, lineEnd - lineStart + 1);
       lineStart = lineEnd + 1;
 
       /* FIXME: non-UNICODE version will fail on texts with > 255 unique lines */
@@ -1366,7 +1366,7 @@ int DiffEngine::diff_xIndex(const ObjectArray<Diff> &diffs, int loc)
    int chars2 = 0;
    int last_chars1 = 0;
    int last_chars2 = 0;
-   Diff *lastDiff;
+   Diff *lastDiff = NULL;
    for(int i = 0; i < diffs.size(); i++)
    {
       Diff *aDiff = diffs.get(i);
@@ -1389,7 +1389,7 @@ int DiffEngine::diff_xIndex(const ObjectArray<Diff> &diffs, int loc)
       last_chars1 = chars1;
       last_chars2 = chars2;
    }
-   if (lastDiff->operation == DIFF_DELETE)
+   if ((lastDiff != NULL) && (lastDiff->operation == DIFF_DELETE))
    {
       // The location was deleted.
       return last_chars2;

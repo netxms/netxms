@@ -282,7 +282,7 @@ BOOL LIBNETXMS_EXPORTABLE RWLockWriteLock(RWLOCK hLock, UINT32 dwTimeOut)
    }
 
    if (bResult)
-      hLock->m_writerThreadId = GetCurentTharedId();
+      hLock->m_writerThreadId = GetCurrentThreadId();
 
    pthread_mutex_unlock(&hLock->m_mutex);
 #endif

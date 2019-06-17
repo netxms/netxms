@@ -148,7 +148,7 @@ static void C_SysNodeDown(Node *pNode, Event *pEvent)
 
    // Trace route from management station or proxy to failed node and
    // check for failed intermediate nodes or interfaces
-	UINT32 sourceNodeId;
+	UINT32 sourceNodeId = 0;
 	if (!(pNode->getFlags() & NF_DISABLE_ICMP))
 	   sourceNodeId = pNode->getIcmpProxy();
    if ((sourceNodeId == 0) && !(pNode->getFlags() & NF_DISABLE_NXCP))

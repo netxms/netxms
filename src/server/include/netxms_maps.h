@@ -55,7 +55,7 @@ class ObjLink
 public:
    UINT32 id1;
    UINT32 id2;
-   LONG type;
+   int type;
 	TCHAR port1[MAX_CONNECTOR_NAME];
 	TCHAR port2[MAX_CONNECTOR_NAME];
 	int portIdCount;

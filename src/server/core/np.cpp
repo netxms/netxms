@@ -588,7 +588,7 @@ static BOOL AcceptNewNode(NewNodeData *newNodeData, BYTE *macAddr)
    data.zoneUIN = newNodeData->zoneUIN;
 
    // Check for address range if we use simple filter instead of script
-	UINT32 autoFilterFlags;
+   UINT32 autoFilterFlags = 0;
    if (!_tcsicmp(szFilter, _T("auto")))
    {
       autoFilterFlags = ConfigReadULong(_T("DiscoveryFilterFlags"), DFF_ALLOW_AGENT | DFF_ALLOW_SNMP);

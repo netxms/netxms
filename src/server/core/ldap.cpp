@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2016 Raden Solutions
+** Copyright (C) 2003-2019 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -639,16 +639,16 @@ void LDAPConnection::fillLists(LDAPMessage *searchResult)
 /**
  * Get attribute's value
  */
-TCHAR *LDAPConnection::getAttrValue(LDAPMessage *entry, const char *attr, UINT32 i)
+TCHAR *LDAPConnection::getAttrValue(LDAPMessage *entry, const char *attr, int index)
 {
    TCHAR *result = NULL;
    berval **values = ldap_get_values_lenA(m_ldapConn, entry, (char *)attr);   // cast needed for Windows LDAP library
-   if (ldap_count_values_len(values) > i)
+   if (ldap_count_values_len(values) > index)
    {
 #ifdef UNICODE
-      result = WideStringFromUTF8String(values[i]->bv_val);
+      result = WideStringFromUTF8String(values[index]->bv_val);
 #else
-      result = MBStringFromUTF8String(values[i]->bv_val);
+      result = MBStringFromUTF8String(values[index]->bv_val);
 #endif /* UNICODE */
    }
    ldap_value_free_len(values);

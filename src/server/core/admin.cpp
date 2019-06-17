@@ -38,8 +38,6 @@ extern Condition g_dbPasswordReady;
  */
 static THREAD_RESULT THREAD_CALL ProcessingThread(void *pArg)
 {
-   static NXCPEncryptionContext *dummyCtx = NULL;
-
    SOCKET sock = CAST_FROM_POINTER(pArg, SOCKET);
 
    SocketConsole console(sock);

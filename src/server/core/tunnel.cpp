@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -449,7 +449,7 @@ bool AgentTunnel::sendMessage(NXCPMessage *msg)
       debugPrintf(6, _T("Sending message %s"), NXCPMessageCodeName(msg->getCode(), buffer));
    }
    NXCP_MESSAGE *data = msg->serialize(true);
-   bool success = (sslWrite(data, ntohl(data->size)) == ntohl(data->size));
+   bool success = (sslWrite(data, ntohl(data->size)) == static_cast<int>(ntohl(data->size)));
    free(data);
    return success;
 }
@@ -735,7 +735,7 @@ int AgentTunnel::sendChannelData(UINT32 id, const void *data, size_t len)
 {
    NXCP_MESSAGE *msg = CreateRawNXCPMessage(CMD_CHANNEL_DATA, id, 0, data, len, NULL, false);
    int rc = sslWrite(msg, ntohl(msg->size));
-   if (rc == ntohl(msg->size))
+   if (rc == static_cast<int>(ntohl(msg->size)))
       rc = (int)len;  // adjust number of bytes to exclude tunnel overhead
    free(msg);
    return rc;

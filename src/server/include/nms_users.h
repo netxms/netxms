@@ -133,7 +133,7 @@ private:
    void getAllSyncParameters();
    void compareGroupList();
    void compareUserLists();
-   TCHAR *getAttrValue(LDAPMessage *entry, const char *attr, UINT32 i = 0);
+   TCHAR *getAttrValue(LDAPMessage *entry, const char *attr, int index = 0);
    TCHAR *getIdAttrValue(LDAPMessage *entry, const char *attr);
    void prepareStringForInit(LDAP_CHAR *connectionLine);
    int readInPages(LDAP_CHAR *base);

@@ -71,7 +71,7 @@ DCItem::DCItem(const DCItem *src, bool shadowCopy) : DCObject(src, shadowCopy)
    if (m_cacheSize > 0)
    {
       m_ppValueCache = (ItemValue **)calloc(m_cacheSize, sizeof(ItemValue*));
-      for(int i = 0; i < m_cacheSize; i++)
+      for(UINT32 i = 0; i < m_cacheSize; i++)
          m_ppValueCache[i] = new ItemValue(src->m_ppValueCache[i]);
    }
    else
@@ -1584,7 +1584,7 @@ bool DCItem::deleteEntry(time_t timestamp)
       return false;
 
    lock();
-   for(int i = 0; i < m_cacheSize; i++)
+   for(UINT32 i = 0; i < m_cacheSize; i++)
    {
       if (m_ppValueCache[i]->getTimeStamp() == timestamp)
       {

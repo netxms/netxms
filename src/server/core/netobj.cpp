@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -125,7 +125,7 @@ const TCHAR *NetObj::getObjectClassName() const
  */
 const TCHAR *NetObj::getObjectClassName(int objectClass)
 {
-   return ((objectClass >= 0) && (objectClass < sizeof(s_className) / sizeof(const TCHAR *))) ? s_className[objectClass] : _T("Custom");
+   return ((objectClass >= 0) && (objectClass < static_cast<int>(sizeof(s_className) / sizeof(const TCHAR *)))) ? s_className[objectClass] : _T("Custom");
 }
 
 /**

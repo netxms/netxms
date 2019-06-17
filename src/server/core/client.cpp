@@ -59,7 +59,7 @@ static BOOL RegisterClientSession(ClientSession *pSession)
 /**
  * Unregister session
  */
-void UnregisterClientSession(int id)
+void UnregisterClientSession(session_id_t id)
 {
    RWLockWriteLock(s_sessionListLock, INFINITE);
    s_sessionList[id] = NULL;
@@ -185,7 +185,6 @@ THREAD_RESULT THREAD_CALL ClientListenerThread(void *arg)
 void DumpClientSessions(CONSOLE_CTX pCtx)
 {
    int i, iCount;
-   static const TCHAR *pszStateName[] = { _T("init"), _T("idle"), _T("processing") };
    static const TCHAR *pszCipherName[] = { _T("NONE"), _T("AES-256"), _T("BF-256"), _T("IDEA"), _T("3DES"), _T("AES-128"), _T("BF-128") };
 	static const TCHAR *pszClientType[] = { _T("DESKTOP"), _T("WEB"), _T("MOBILE"), _T("TABLET"), _T("APP") };
 
@@ -213,7 +212,7 @@ void DumpClientSessions(CONSOLE_CTX pCtx)
 /**
  * Kill client session
  */
-bool NXCORE_EXPORTABLE KillClientSession(int id)
+bool NXCORE_EXPORTABLE KillClientSession(session_id_t id)
 {
    bool success = false;
    RWLockReadLock(s_sessionListLock, INFINITE);
@@ -312,7 +311,7 @@ void NXCORE_EXPORTABLE NotifyClientSessions(UINT32 dwCode, UINT32 dwData)
 /**
  * Send notification to specified user session
  */
-void NXCORE_EXPORTABLE NotifyClientSession(UINT32 sessionId, UINT32 dwCode, UINT32 dwData)
+void NXCORE_EXPORTABLE NotifyClientSession(session_id_t sessionId, UINT32 dwCode, UINT32 dwData)
 {
    RWLockReadLock(s_sessionListLock, INFINITE);
    for(int i = 0; i < MAX_CLIENT_SESSIONS; i++)
@@ -361,7 +360,7 @@ bool IsLoggedIn(UINT32 dwUserId)
 /**
  * Close all user's sessions except given one
  */
-void CloseOtherSessions(UINT32 userId, UINT32 thisSession)
+void CloseOtherSessions(UINT32 userId, session_id_t thisSession)
 {
    RWLockReadLock(s_sessionListLock, INFINITE);
    for(int i = 0; i < MAX_CLIENT_SESSIONS; i++)
@@ -370,7 +369,7 @@ void CloseOtherSessions(UINT32 userId, UINT32 thisSession)
           (s_sessionList[i]->getUserId() == userId) &&
           (s_sessionList[i]->getId() != thisSession))
       {
-         nxlog_debug(4, _T("CloseOtherSessions(%d,%d): disconnecting session %d"), userId, thisSession, s_sessionList[i]->getId());
+         nxlog_debug(4, _T("CloseOtherSessions(%u,%u): disconnecting session %u"), userId, thisSession, s_sessionList[i]->getId());
          s_sessionList[i]->kill();
       }
    }

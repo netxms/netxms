@@ -242,11 +242,11 @@ void MobileDevice::updateStatus(NXCPMessage *msg)
 
    int type = msg->getFieldType(VID_BATTERY_LEVEL);
    if (type == NXCP_DT_INT32)
-		m_batteryLevel = msg->getFieldAsInt32(VID_BATTERY_LEVEL);
+      m_batteryLevel = msg->getFieldAsInt32(VID_BATTERY_LEVEL);
    else if (type == NXCP_DT_INT16)
-		m_batteryLevel = (int)msg->getFieldAsInt16(VID_BATTERY_LEVEL);
+      m_batteryLevel = (int)msg->getFieldAsInt16(VID_BATTERY_LEVEL);
 	else
-		m_batteryLevel = -1;
+      m_batteryLevel = -1;
 
 	if (msg->isFieldExist(VID_GEOLOCATION_TYPE))
 	{

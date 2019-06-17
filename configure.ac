@@ -1981,7 +1981,7 @@ AC_CHECK_HEADERS([sys/types.h sys/stat.h unistd.h stdarg.h fcntl.h sched.h])
 AC_CHECK_HEADERS([sys/int_types.h time.h sys/time.h sys/utsname.h sys/wait.h])
 AC_CHECK_HEADERS([arpa/inet.h netdb.h netinet/in.h netinet/tcp.h net/nh.h sys/socket.h])
 AC_CHECK_HEADERS([fcntl.h dirent.h sys/ioctl.h sys/sockio.h poll.h termios.h])
-AC_CHECK_HEADERS([inttypes.h memory.h stdint.h stdlib.h strings.h string.h])
+AC_CHECK_HEADERS([inttypes.h memory.h stdint.h stdlib.h strings.h string.h ctype.h])
 AC_CHECK_HEADERS([readline/readline.h byteswap.h sys/select.h dlfcn.h locale.h])
 AC_CHECK_HEADERS([sys/sysctl.h sys/param.h sys/user.h vm/vm_param.h syslog.h])
 AC_CHECK_HEADERS([grp.h pwd.h malloc.h stdbool.h utime.h endian.h sys/syscall.h])
@@ -2448,7 +2448,24 @@ AC_CHECK_FUNCS([itoa _itoa isatty malloc_info malloc_trim utime])
 AC_CHECK_FUNCS([getpwnam getpwuid getpwuid_r getgrnam getgrgid getgrgid_r])
 AC_CHECK_FUNCS([getpeereid sched_yield getpid localeconv])
 
-AC_CHECK_DECLS([nanosleep, daemon, strerror])
+AC_CHECK_DECLS([nanosleep, daemon, strerror, toupper, tolower],,,[
+#if HAVE_CTYPE_H
+#include <ctype.h>
+#endif
+#if HAVE_TIME_H
+#include <time.h>
+#endif
+#if HAVE_UNISTD_H
+#include <unistd.h>
+#endif
+#if HAVE_STRING_H
+#include <string.h>
+#endif
+#if HAVE_ERRNO_H
+#include <errno.h>
+#endif
+])
+
 
 # Do not use inet_pton on Solaris as it has binary compatibility problems
 if test "$PLATFORM" != "SunOS"; then
@@ -2903,9 +2920,12 @@ AC_CHECK_FUNCS([mbstowcs mbsrtowcs itow _itow wcsftime wcstok wutime])
 AC_CHECK_FUNCS([wprintf vwprintf swprintf vswprintf fwprintf vfwprintf])
 AC_CHECK_FUNCS([wcslcpy wcslcat])
 
-AC_CHECK_DECLS([putws],,,[
+AC_CHECK_DECLS([putws, towupper, towlower],,,[
 #if HAVE_WCHAR_H
 #include <wchar.h>
+#endif
+#if HAVE_WCTYPE_H
+#include <wctype.h>
 #endif
 ])
 

@@ -97,19 +97,19 @@ GeoLocation::GeoLocation(const GeoLocation &src)
  */
 GeoLocation::GeoLocation(NXCPMessage &msg)
 {
-	m_type = (int)msg.getFieldAsUInt16(VID_GEOLOCATION_TYPE);
+   m_type = (int)msg.getFieldAsUInt16(VID_GEOLOCATION_TYPE);
 
    if (msg.getFieldType(VID_LATITUDE) == NXCP_DT_INT32)
-	   m_lat = (double)msg.getFieldAsInt32(VID_LATITUDE) / 1000000;
+      m_lat = (double)msg.getFieldAsInt32(VID_LATITUDE) / 1000000;
    else
-	   m_lat = msg.getFieldAsDouble(VID_LATITUDE);
+      m_lat = msg.getFieldAsDouble(VID_LATITUDE);
 
    if (msg.getFieldType(VID_LONGITUDE) == NXCP_DT_INT32)
-	   m_lon = (double)msg.getFieldAsInt32(VID_LONGITUDE) / 1000000;
+      m_lon = (double)msg.getFieldAsInt32(VID_LONGITUDE) / 1000000;
    else
-   	m_lon = msg.getFieldAsDouble(VID_LONGITUDE);
+      m_lon = msg.getFieldAsDouble(VID_LONGITUDE);
 
-	m_accuracy = (int)msg.getFieldAsUInt16(VID_ACCURACY);
+   m_accuracy = (int)msg.getFieldAsUInt16(VID_ACCURACY);
 
    m_timestamp = 0;
    int ft = msg.getFieldType(VID_GEOLOCATION_TIMESTAMP);
@@ -406,9 +406,9 @@ bool GeoLocation::sameLocation(double lat, double lon, int oldAccuracy) const
  */
 GeoLocation GeoLocation::parseAgentData(const TCHAR *data)
 {
-   double lat, lon;
-   int acc, signal, fix;
-   time_t timestamp;
+   double lat = 0, lon = 0;
+   int acc = 0, signal = 0, fix = 0;
+   time_t timestamp = 0;
 
    TCHAR buffer[256];
    _tcslcpy(buffer, data, 256);

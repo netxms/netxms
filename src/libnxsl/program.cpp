@@ -443,7 +443,7 @@ void NXSL_Program::optimize()
 		if (((instr->m_opCode == OPCODE_JMP) ||
 			  (instr->m_opCode == OPCODE_JZ_PEEK) ||
 			  (instr->m_opCode == OPCODE_JNZ_PEEK)) &&
-			 (instr->m_operand.m_addr == i + 1))
+			 (instr->m_operand.m_addr == static_cast<UINT32>(i + 1)))
 		{
 			removeInstructions(i, 1);
 			i--;
