@@ -3,11 +3,12 @@ Description=NetXMS Server
 After=network.target network-online.target
 
 [Service]
-Type=forking
+Type=simple
 Environment="NETXMSD_CONFIG=/etc/netxmsd.conf"
 EnvironmentFile=-/etc/default/netxmsd
-ExecStart=~BINDIR~/netxmsd -d $NETXMSD_OPTIONS --config $NETXMSD_CONFIG 
+ExecStart=~BINDIR~/netxmsd -S $NETXMSD_OPTIONS --config $NETXMSD_CONFIG
 PIDFile=/var/run/netxmsd.pid
+Restart=always
 
 [Install]
 WantedBy=multi-user.target

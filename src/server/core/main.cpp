@@ -662,6 +662,7 @@ BOOL NXCORE_EXPORTABLE Initialize()
 	}
    if (!nxlog_open((g_flags & AF_USE_SYSLOG) ? NETXMSD_SYSLOG_NAME : g_szLogFile,
 	                ((g_flags & AF_USE_SYSLOG) ? NXLOG_USE_SYSLOG : 0) |
+	                ((g_flags & AF_USE_SYSTEMD_JOURNAL) ? NXLOG_USE_SYSTEMD : 0) |
 	                ((g_flags & AF_BACKGROUND_LOG_WRITER) ? NXLOG_BACKGROUND_WRITER : 0) |
                    ((g_flags & AF_DAEMON) ? 0 : NXLOG_PRINT_TO_STDOUT),
                    _T("LIBNXSRV.DLL"),

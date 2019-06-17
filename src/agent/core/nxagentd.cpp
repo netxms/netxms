@@ -373,7 +373,9 @@ static TCHAR m_szHelpText[] =
    _T("   -s         : Start Windows servive\n")
    _T("   -S         : Stop Windows service\n")
 #else
+#if WITH_SYSTEMD
    _T("   -S         : Run as systemd daemon\n")
+#endif
    _T("   -u <uid>   : Change user ID to <uid> after start\n")
 #endif
    _T("   -v         : Display version and exit\n")
@@ -529,6 +531,10 @@ static String BuildRestartCommandLine(bool withWaitPid)
       command.append(configSection);
    }
 
+#if WITH_SYSTEMD
+   if (g_dwFlags & AF_SYSTEMD_DAEMON)
+      command.append(_T(" -S"));
+#endif
    if (g_dwFlags & AF_DAEMON)
       command.append(_T(" -d"));
    if (g_dwFlags & AF_CENTRAL_CONFIG)
