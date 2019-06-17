@@ -1959,7 +1959,7 @@ CREATE TABLE versionable_object
 /**
  * User agent messages
  */
-CREATE TABLE user_agent_messages 
+CREATE TABLE user_agent_notification 
 ( 
    id integer not null,
    message varchar(1023) null,
