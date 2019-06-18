@@ -107,8 +107,9 @@ std::string InfluxDBStorageDriver::normalizeString(std::string str)
    std::replace(str.begin(), str.end(), '-', '_');
    std::replace(str.begin(), str.end(), ',', '_');
    std::replace(str.begin(), str.end(), '#', '_');
-   std::regex remove { "\\(.*" };
-   str = std::regex_replace(str, remove, "");
+   size_t index = str.find('(');
+   if (index != std::string::npos)
+      str.resize(index);
    return str;
 }
 
@@ -438,13 +439,9 @@ bool InfluxDBStorageDriver::saveDCItemValue(DCItem *dci, time_t timestamp, const
          ca_value = normalizeString(ca_value);
 
          // Only include CA's with the prefix tag_
-         if (std::regex_match(ca_key_name, std::regex
-            { "^tag_.*", std::regex_constants::icase }) && !ca_value.empty())
+         if (!ca_value.empty() && !strnicmp("tag_", ca_key_name.c_str(), 4))
          {
-            std::regex remove
-               { "^tag_", std::regex_constants::icase };
-            ca_key_name = std::regex_replace(ca_key_name, remove, "");
-            ca_key_name = normalizeString(ca_key_name);
+            ca_key_name = normalizeString(ca_key_name.substr(4));
             nxlog_debug_tag(DEBUG_TAG, 7, _T("Host: %hs - CA: K:%hs = V:%hs"),
                   host.c_str(), ca_key_name.c_str(), ca_value.c_str());
 
