@@ -28,11 +28,15 @@
 #include <server_console.h>
 #include <nxsl.h>
 
+class NXSL_ComponentHandle;
+
 /**
  * Node component
  */
 class LIBNXSRV_EXPORTABLE Component
 {
+   friend class NXSL_ComponentHandle;
+
 protected:
    UINT32 m_index;         // Unique index of this component
    UINT32 m_class;         // Component class
@@ -46,6 +50,8 @@ protected:
    UINT32 m_parentIndex;   // Index of parent component or 0 for root
    INT32 m_position;       // Component relative position within parent
    ObjectArray<Component> *m_children;
+
+   NXSL_Array *getChildrenForNXSL(NXSL_VM *vm, NXSL_ComponentHandle *handle) const;
 
 public:
    Component(UINT32 index, const TCHAR *name);
@@ -61,7 +67,6 @@ public:
    UINT32 getParentIndex() const { return m_parentIndex; }
    INT32 getPosition() const { return m_position; }
    const ObjectArray<Component> *getChildren() const { return m_children; }
-   NXSL_Array *getChildrenForNXSL(NXSL_VM *vm) const;
 
    UINT32 getClass() const { return m_class; }
    const TCHAR *getDescription() const { return m_description; }
@@ -97,6 +102,8 @@ public:
    bool isEmpty() const { return m_root == NULL; }
    const Component *getRoot() const { return m_root; }
    bool equals(const ComponentTree *t) const;
+
+   NXSL_Value *getRootForNXSL(NXSL_VM *vm);
 };
 
 /**
@@ -113,6 +120,7 @@ public:
    NXSL_ComponentClass();
 
    virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr) override;
+   virtual void onObjectDelete(NXSL_Object *object) override;
 };
 
 /**

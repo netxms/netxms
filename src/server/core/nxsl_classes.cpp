@@ -626,9 +626,14 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const char *attr)
    {
       ComponentTree *components = node->getComponents();
       if (components != NULL)
-         value = vm->createValue(new NXSL_Object(vm, &g_nxslComponentClass, components->getRoot()));
+      {
+         value = components->getRootForNXSL(vm);
+         components->decRefCount();
+      }
       else
+      {
          value = vm->createValue();
+      }
    }
    else if (!strcmp(attr, "dependentNodes"))
    {

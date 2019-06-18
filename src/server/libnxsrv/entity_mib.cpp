@@ -26,6 +26,32 @@
 #define DEBUG_TAG _T("snmp.entity")
 
 /**
+ * Component handle for NXSL
+ */
+struct NXSL_ComponentHandle
+{
+   ComponentTree *tree;
+   Component *component;
+
+   NXSL_ComponentHandle(ComponentTree *t, Component *c)
+   {
+      tree = t;
+      component = c;
+      t->incRefCount();
+   }
+
+   ~NXSL_ComponentHandle()
+   {
+      tree->decRefCount();
+   }
+
+   NXSL_Array *getChildrenForNXSL(NXSL_VM *vm)
+   {
+      return component->getChildrenForNXSL(vm, this);
+   }
+};
+
+/**
  * Component tree constructor
  */
 ComponentTree::ComponentTree(Component *root)
@@ -60,6 +86,14 @@ bool ComponentTree::equals(const ComponentTree *t) const
    if (t->m_root == NULL)
       return false;
    return m_root->equals(t->m_root);
+}
+
+/**
+ * Get root component as NXSL object
+ */
+NXSL_Value *ComponentTree::getRootForNXSL(NXSL_VM *vm)
+{
+   return vm->createValue(new NXSL_Object(vm, &g_nxslComponentClass, new NXSL_ComponentHandle(this, m_root)));
 }
 
 /**
@@ -282,12 +316,12 @@ bool Component::equals(const Component *c) const
 /*
  * Get child components as NXSL Array
  */
-NXSL_Array *Component::getChildrenForNXSL(NXSL_VM *vm) const
+NXSL_Array *Component::getChildrenForNXSL(NXSL_VM *vm, NXSL_ComponentHandle *handle) const
 {
    NXSL_Array *components = new NXSL_Array(vm);
    for(int i = 0; i < m_children->size(); i++)
    {
-      components->set(i, vm->createValue(new NXSL_Object(vm, &g_nxslComponentClass, m_children->get(i))));
+      components->set(i, vm->createValue(new NXSL_Object(vm, &g_nxslComponentClass, new NXSL_ComponentHandle(handle->tree, m_children->get(i)))));
    }
    return components;
 }
@@ -358,6 +392,14 @@ NXSL_ComponentClass::NXSL_ComponentClass() : NXSL_Class()
 }
 
 /**
+ * NXSL object destructor
+ */
+void NXSL_ComponentClass::onObjectDelete(NXSL_Object *object)
+{
+   delete static_cast<NXSL_ComponentHandle*>(object->getData());
+}
+
+/**
  * NXSL class ComponentClass: get attribute
  */
 NXSL_Value *NXSL_ComponentClass::getAttr(NXSL_Object *object, const char *attr)
@@ -369,7 +411,8 @@ NXSL_Value *NXSL_ComponentClass::getAttr(NXSL_Object *object, const char *attr)
 
    NXSL_VM *vm = object->vm();
    NXSL_Value *value = NULL;
-   Component *component = (Component *)object->getData();
+   NXSL_ComponentHandle *handle = static_cast<NXSL_ComponentHandle*>(object->getData());
+   Component *component = handle->component;
    if (!strcmp(attr, "class"))
    {
       if (component->getClass() >= classCount)
@@ -379,7 +422,7 @@ NXSL_Value *NXSL_ComponentClass::getAttr(NXSL_Object *object, const char *attr)
    }
    else if (!strcmp(attr, "children"))
    {
-      value = vm->createValue(component->getChildrenForNXSL(vm));
+      value = vm->createValue(handle->getChildrenForNXSL(vm));
    }
    else if (!strcmp(attr, "description"))
    {
