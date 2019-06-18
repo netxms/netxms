@@ -578,7 +578,7 @@ void Zone::updateProxyLoadData(Node *node)
 {
    double cpuLoad = node->getMetricFromAgentAsDouble(_T("System.CPU.LoadAvg15"), -1);
    double dataCollectorLoad = node->getMetricFromAgentAsDouble(_T("Agent.ThreadPool.LoadAverage15(DATACOLL)"), -1);
-   INT32 dataSenderQueueSize = node->getMetricFromAgentAsInt32(_T("Agent.DataCollectorQueueSize"), -1);  // FIXME: rename to Agent.DataSenderQueueSize
+   INT64 dataSenderQueueSize = node->getMetricFromAgentAsInt32(_T("Agent.DataCollectorQueueSize"), -1);  // FIXME: rename to Agent.DataSenderQueueSize
    if ((cpuLoad >= 0) || (dataCollectorLoad >= 0) || (dataSenderQueueSize >= 0))
    {
       lockProperties();

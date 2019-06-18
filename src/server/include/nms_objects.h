@@ -2856,7 +2856,7 @@ struct ZoneProxy
    UINT32 nodeId;
    bool isAvailable;    // True if proxy is available
    UINT32 assignments;  // Number of objects where this proxy is assigned
-   INT32 rawDataSenderLoad;
+   INT64 rawDataSenderLoad;
    double loadFactor;   // Load factor calculated from assigned nodes' DCIs
    double cpuLoad;
    double dataCollectorLoad;
