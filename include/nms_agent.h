@@ -1019,6 +1019,7 @@ public:
    UserAgentNotification(UINT64 serverId, const NXCPMessage *msg, UINT32 baseId);
    UserAgentNotification(const NXCPMessage *msg, UINT32 baseId);
    UserAgentNotification(UINT64 serverId, UINT32 notificationId, TCHAR *message, time_t start, time_t end);
+   UserAgentNotification(const UserAgentNotification *src);
    ~UserAgentNotification();
 
    const ServerObjectKey& getId() const { return m_id; }

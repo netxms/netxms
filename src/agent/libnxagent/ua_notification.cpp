@@ -59,6 +59,17 @@ UserAgentNotification::UserAgentNotification(UINT64 serverId, UINT32 notificatio
 }
 
 /**
+ * Copy constructor
+ */
+UserAgentNotification::UserAgentNotification(const UserAgentNotification *src) : m_id(src->m_id)
+{
+   m_message = MemCopyString(src->m_message);
+   m_startTime = src->m_startTime;
+   m_endTime = src->m_endTime;
+   m_read = src->m_read;
+}
+
+/**
  * User agent notification destructor
  */
 UserAgentNotification::~UserAgentNotification()
