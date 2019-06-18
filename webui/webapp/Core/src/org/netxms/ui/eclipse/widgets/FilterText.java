@@ -100,7 +100,7 @@ public class FilterText extends Composite
       gd.verticalAlignment = SWT.CENTER;
       textArea.setLayoutData(gd);
 		
-		text = new Text(textArea, SWT.NONE);
+		text = new Text(textArea, SWT.SINGLE);
 		text.setTextLimit(64);
 		text.setMessage(Messages.get().FilterText_FilterIsEmpty);
 		gd = new GridData();
