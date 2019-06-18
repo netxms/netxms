@@ -630,6 +630,9 @@ bool Tunnel::connectToServer()
    msg.setField(VID_SYS_NAME, g_systemName);
    msg.setField(VID_ZONE_UIN, g_zoneUIN);
    msg.setField(VID_USERAGENT_INSTALLED, IsUserAgentInstalled());
+   msg.setField(VID_AGENT_PROXY, (g_dwFlags & AF_ENABLE_PROXY) ? true : false);
+   msg.setField(VID_SNMP_PROXY, (g_dwFlags & AF_ENABLE_SNMP_PROXY) ? true : false);
+   msg.setField(VID_SNMP_TRAP_PROXY, (g_dwFlags & AF_ENABLE_SNMP_TRAP_PROXY) ? true : false);
 
    TCHAR fqdn[256];
    if (GetLocalHostName(fqdn, 256, true))

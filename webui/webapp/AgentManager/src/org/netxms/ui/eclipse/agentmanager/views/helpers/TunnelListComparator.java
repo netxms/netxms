@@ -47,6 +47,9 @@ public class TunnelListComparator extends ViewerComparator
          case TunnelManager.COL_AGENT_ID:
             result = t1.getAgentId().compareTo(t2.getAgentId());
             break;
+         case TunnelManager.COL_AGENT_PROXY:
+            result = Boolean.compare(t1.isAgentProxy(), t2.isAgentProxy());
+            break;
          case TunnelManager.COL_AGENT_VERSION:
             result = t1.getAgentVersion().compareToIgnoreCase(t2.getAgentVersion());
             break;
@@ -66,6 +69,12 @@ public class TunnelListComparator extends ViewerComparator
          case TunnelManager.COL_PLATFORM:
             result = t1.getPlatformName().compareToIgnoreCase(t2.getPlatformName());
             break;
+         case TunnelManager.COL_SNMP_PROXY:
+            result = Boolean.compare(t1.isSnmpProxy(), t2.isSnmpProxy());
+            break;
+         case TunnelManager.COL_SNMP_TRAP_PROXY:
+            result = Boolean.compare(t1.isSnmpTrapProxy(), t2.isSnmpTrapProxy());
+            break;
          case TunnelManager.COL_STATE:
             result = (t1.isBound() ? 1 : 0) - (t2.isBound() ? 1 : 0);
             break;
@@ -75,7 +84,7 @@ public class TunnelListComparator extends ViewerComparator
          case TunnelManager.COL_SYSNAME:
             result = t1.getSystemName().compareToIgnoreCase(t2.getSystemName());
             break;
-         case TunnelManager.COL_USER_AGENT_INSTALLED:
+         case TunnelManager.COL_USER_AGENT:
             result = Boolean.compare(t1.isUserAgentInstalled(), t2.isUserAgentInstalled());
             break;
          default:

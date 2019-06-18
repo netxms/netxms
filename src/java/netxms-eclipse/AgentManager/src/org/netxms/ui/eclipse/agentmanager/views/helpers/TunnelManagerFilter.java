@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2017 Raden Solutions
+ * Copyright (C) 2003-2019 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,10 +23,16 @@ import org.eclipse.jface.viewers.ViewerFilter;
 import org.netxms.client.AgentTunnel;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
+/**
+ * Filter for tunnel manager view
+ */
 public class TunnelManagerFilter extends ViewerFilter
 {
    private String filterString = null;
 
+   /**
+    * @see org.eclipse.jface.viewers.ViewerFilter#select(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
+    */
    @Override
    public boolean select(Viewer viewer, Object parentElement, Object element)
    {
@@ -55,7 +61,9 @@ public class TunnelManagerFilter extends ViewerFilter
    }
    
    /**
-    * @param filterString the filterString to set
+    * Set filter string.
+    * 
+    * @param filterString new filter string
     */
    public void setFilterString(String filterString)
    {

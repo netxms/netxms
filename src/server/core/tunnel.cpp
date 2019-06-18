@@ -493,6 +493,9 @@ void AgentTunnel::setup(const NXCPMessage *request)
       m_agentId = request->getFieldAsGUID(VID_AGENT_ID);
       m_agentVersion = request->getFieldAsString(VID_AGENT_VERSION);
       m_userAgentInstalled = request->getFieldAsBoolean(VID_USERAGENT_INSTALLED);
+      m_agentProxy = request->getFieldAsBoolean(VID_AGENT_PROXY);
+      m_snmpProxy = request->getFieldAsBoolean(VID_SNMP_PROXY);
+      m_snmpTrapProxy = request->getFieldAsBoolean(VID_SNMP_TRAP_PROXY);
       request->getFieldAsString(VID_HOSTNAME, m_hostname, MAX_DNS_NAME);
 
       m_state = (m_nodeId != 0) ? AGENT_TUNNEL_BOUND : AGENT_TUNNEL_UNBOUND;
@@ -511,6 +514,10 @@ void AgentTunnel::setup(const NXCPMessage *request)
       debugPrintf(4, _T("   Agent ID:           %s"), (const TCHAR *)m_agentId.toString());
       debugPrintf(4, _T("   Agent version:      %s"), m_agentVersion);
       debugPrintf(4, _T("   Zone UIN:           %u"), m_zoneUIN);
+      debugPrintf(4, _T("   Agent proxy:        %s"), m_agentProxy ? _T("YES") : _T("NO"));
+      debugPrintf(4, _T("   SNMP proxy:         %s"), m_snmpProxy ? _T("YES") : _T("NO"));
+      debugPrintf(4, _T("   SNMP trap proxy:    %s"), m_snmpTrapProxy ? _T("YES") : _T("NO"));
+      debugPrintf(4, _T("   User agent:         %s"), m_userAgentInstalled ? _T("YES") : _T("NO"));
 
       if (m_state == AGENT_TUNNEL_BOUND)
       {
@@ -763,6 +770,9 @@ void AgentTunnel::fillMessage(NXCPMessage *msg, UINT32 baseId) const
    msg->setField(baseId + 10, m_hostname);
    msg->setField(baseId + 11, m_agentId);
    msg->setField(baseId + 12, m_userAgentInstalled);
+   msg->setField(baseId + 13, m_agentProxy);
+   msg->setField(baseId + 14, m_snmpProxy);
+   msg->setField(baseId + 15, m_snmpTrapProxy);
 }
 
 /**

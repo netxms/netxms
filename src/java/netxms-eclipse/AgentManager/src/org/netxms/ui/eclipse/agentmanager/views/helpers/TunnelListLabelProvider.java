@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2017 Victor Kirhenshtein
+ * Copyright (C) 2003-2019 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -57,6 +57,8 @@ public class TunnelListLabelProvider extends LabelProvider implements ITableLabe
       {
          case TunnelManager.COL_AGENT_ID:
             return t.getAgentId().toString();
+         case TunnelManager.COL_AGENT_PROXY:
+            return t.isAgentProxy() ? "Yes" : "No";
          case TunnelManager.COL_AGENT_VERSION:
             return t.getAgentVersion();
          case TunnelManager.COL_CHANNELS:
@@ -69,6 +71,10 @@ public class TunnelListLabelProvider extends LabelProvider implements ITableLabe
             return t.isBound() ? ConsoleSharedData.getSession().getObjectName(t.getNodeId()) : "";
          case TunnelManager.COL_PLATFORM:
             return t.getPlatformName();
+         case TunnelManager.COL_SNMP_PROXY:
+            return t.isSnmpProxy() ? "Yes" : "No";
+         case TunnelManager.COL_SNMP_TRAP_PROXY:
+            return t.isSnmpTrapProxy() ? "Yes" : "No";
          case TunnelManager.COL_STATE:
             return t.isBound() ? "Bound" : "Unbound";
          case TunnelManager.COL_SYSINFO:
@@ -77,7 +83,7 @@ public class TunnelListLabelProvider extends LabelProvider implements ITableLabe
             return t.getSystemName();
          case TunnelManager.COL_HOSTNAME:
             return t.getHostname();
-         case TunnelManager.COL_USER_AGENT_INSTALLED:
+         case TunnelManager.COL_USER_AGENT:
             return t.isUserAgentInstalled() ? "Yes" : "No";
       }
       return null;

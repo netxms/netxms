@@ -1274,6 +1274,7 @@ typedef struct
 #define VID_USERAGENT_INSTALLED     ((UINT32)640)
 #define VID_CATEGORY_LIST           ((UINT32)641)
 #define VID_UA_NOTIFICATION_COUNT   ((UINT32)642)
+#define VID_SNMP_TRAP_PROXY         ((UINT32)643)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

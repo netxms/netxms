@@ -106,6 +106,9 @@ protected:
    uuid m_bindGuid;
    UINT32 m_bindUserId;
    bool m_userAgentInstalled;
+   bool m_agentProxy;
+   bool m_snmpProxy;
+   bool m_snmpTrapProxy;
    RefCountHashMap<UINT32, AgentTunnelCommChannel> m_channels;
    MUTEX m_channelLock;
    

@@ -40,6 +40,9 @@ public class AgentTunnel
    private long zoneUIN;
    private int activeChannelCount;
    private String hostname;
+   private boolean agentProxy;
+   private boolean snmpProxy;
+   private boolean snmpTrapProxy;
    private boolean userAgentInstalled;
    
    /**
@@ -63,6 +66,9 @@ public class AgentTunnel
       hostname = msg.getFieldAsString(baseId + 10);
       agentId = msg.getFieldAsUUID(baseId + 11);
       userAgentInstalled = msg.getFieldAsBoolean(baseId + 12);
+      agentProxy = msg.getFieldAsBoolean(baseId + 13);
+      snmpProxy = msg.getFieldAsBoolean(baseId + 14);
+      snmpTrapProxy = msg.getFieldAsBoolean(baseId + 15);
    }
    
    /**
@@ -76,7 +82,9 @@ public class AgentTunnel
    }
 
    /**
-    * @return the id
+    * Get tunnel internal ID.
+    * 
+    * @return tunnel internal ID
     */
    public int getId()
    {
@@ -84,7 +92,9 @@ public class AgentTunnel
    }
 
    /**
-    * @return the guid
+    * Get tunnel globally unique identifier.
+    * 
+    * @return tunnel globally unique identifier
     */
    public UUID getGuid()
    {
@@ -132,7 +142,9 @@ public class AgentTunnel
    }
 
    /**
-    * @return the platformName
+    * Get platform name for this agent's host.
+    * 
+    * @return platform name for this agent's host
     */
    public String getPlatformName()
    {
@@ -140,7 +152,9 @@ public class AgentTunnel
    }
 
    /**
-    * @return the agentVersion
+    * Get agent version.
+    * 
+    * @return agent version
     */
    public String getAgentVersion()
    {
@@ -148,7 +162,10 @@ public class AgentTunnel
    }
 
    /**
-    * @return the zoneId
+    * Get zone UIN for this agent. For unbound tunnels it is zone UIN
+    * set in agent's configuration file.
+    * 
+    * @return zone UIN for this agent
     */
    public long getZoneUIN()
    {
@@ -156,7 +173,9 @@ public class AgentTunnel
    }
 
    /**
-    * @return the activeChannelCount
+    * Get active channel count for this tunnel.
+    * 
+    * @return active channel count for this tunnel
     */
    public int getActiveChannelCount()
    {
@@ -164,7 +183,9 @@ public class AgentTunnel
    }
    
    /**
-    * @return the hostname
+    * Get remote host name.
+    * 
+    * @return remote host name
     */
    public String getHostname()
    {
@@ -172,7 +193,39 @@ public class AgentTunnel
    }
    
    /**
-    * @return the userAgentCount
+    * Check if agent proxy is enabled on this agent.
+    * 
+    * @return true if agent proxy is enabled on this agent
+    */
+   public boolean isAgentProxy()
+   {
+      return agentProxy;
+   }
+
+   /**
+    * Check if SNMP proxy is enabled on this agent.
+    * 
+    * @return true if SNMP proxy is enabled on this agent
+    */
+   public boolean isSnmpProxy()
+   {
+      return snmpProxy;
+   }
+
+   /**
+    * Check if SNMP trap proxy is enabled on this agent.
+    * 
+    * @return true if SNMP trap proxy is enabled on this agent
+    */
+   public boolean isSnmpTrapProxy()
+   {
+      return snmpTrapProxy;
+   }
+
+   /**
+    * Check if user agent is installed on remote system.
+    * 
+    * @return true if user agent is installed on remote system
     */
    public boolean isUserAgentInstalled()
    {

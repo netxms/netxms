@@ -81,7 +81,10 @@ public class TunnelManager extends ViewPart
    public static final int COL_SYSINFO = 8;
    public static final int COL_AGENT_VERSION = 9;
    public static final int COL_AGENT_ID = 10;
-   public static final int COL_USER_AGENT_INSTALLED = 11;
+   public static final int COL_AGENT_PROXY = 11;
+   public static final int COL_SNMP_PROXY = 12;
+   public static final int COL_SNMP_TRAP_PROXY = 13;
+   public static final int COL_USER_AGENT = 14;
    
    private SortableTableViewer viewer;
    private TunnelManagerFilter filter;
@@ -119,8 +122,11 @@ public class TunnelManager extends ViewPart
          }
       });
       
-      final String[] names = { "ID", "State", "Node", "IP address", "Channels", "System name", "Hostname", "Platform", "System information", "Agent version", "Agent ID", "User agent installed" };
-      final int[] widths = { 80, 80, 140, 150, 80, 150, 150, 250, 300, 150, 150, 150 };
+      final String[] names = 
+         { "ID", "State", "Node", "IP address", "Channels", "System name", "Hostname",
+           "Platform", "System information", "Agent version", "Agent ID", "Agent proxy", 
+           "SNMP proxy", "SNMP trap proxy", "User agent" };
+      final int[] widths = { 80, 80, 140, 150, 80, 150, 150, 250, 300, 150, 150, 80, 80, 80, 80 };
       viewer = new SortableTableViewer(parent, names, widths, 0, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setLabelProvider(new TunnelListLabelProvider());
@@ -228,11 +234,6 @@ public class TunnelManager extends ViewPart
       };
       
       actionShowFilter = new Action("&Show filter") {
-         /*
-          * (non-Javadoc)
-          * 
-          * @see org.eclipse.jface.action.Action#run()
-          */
          @Override
          public void run()
          {
