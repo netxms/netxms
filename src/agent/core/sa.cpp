@@ -27,7 +27,7 @@
  */
 static ObjectArray<SessionAgentConnector> s_agents(8, 8, false);
 static RWLOCK s_lock = RWLockCreate();
-static int s_userAgentCount;
+static int s_userAgentCount = 0;
 
 /**
  * List of active user agent notifications
@@ -42,7 +42,7 @@ static void RegisterSessionAgent(SessionAgentConnector *c)
 {
    RWLockWriteLock(s_lock, INFINITE);
    s_agents.add(c);
-   if(c->isUserAgent())
+   if (c->isUserAgent())
       s_userAgentCount++;
    RWLockUnlock(s_lock);
 }
@@ -57,9 +57,9 @@ static void UnregisterSessionAgent(UINT32 id)
    {
       if (s_agents.get(i)->getId() == id)
       {
-         s_agents.remove(i);
-         if(s_agents.get(i)->isUserAgent())
+         if (s_agents.get(i)->isUserAgent())
             s_userAgentCount--;
+         s_agents.remove(i);
          break;
       }
    }
