@@ -3560,7 +3560,7 @@ private:
 public:
    UserAgentNotificationItem(DB_RESULT result, int row);
    UserAgentNotificationItem(const TCHAR *message, IntegerArray<UINT32> *m_objectId, time_t startTime, time_t endTime);
-   ~UserAgentNotificationItem() { MemFree(m_message); }
+   ~UserAgentNotificationItem() { delete m_objectList; }
 
    UINT32 getId() { return m_id; }
    time_t getEndTime() { return m_endTime; }

@@ -14774,6 +14774,7 @@ void ClientSession::addUserAgentNotification(NXCPMessage *request)
          json_t *objData = uan->toJson();
          WriteAuditLogWithJsonValues(AUDIT_OBJECTS, true, m_dwUserId, m_workstation, m_id, uan->getId(), NULL, objData,
             _T("User agent notification %d created"), uan->getId());
+         delete objData;
          uan->decRefCount();
       }
       else
@@ -14827,6 +14828,7 @@ void ClientSession::recallUserAgentNotification(NXCPMessage *request)
          json_t *objData = uan->toJson();
          WriteAuditLogWithJsonValues(AUDIT_OBJECTS, true, m_dwUserId, m_workstation, m_id, uan->getId(), NULL, objData,
             _T("User agent notification %d recalled"), uan->getId());
+         delete objData;
          ThreadPoolExecute(g_clientThreadPool, uan, &UserAgentNotificationItem::processUpdate);
          NotifyClientSessions(NX_NOTIFY_USER_AGENT_MESSAGE_CHANGED, (UINT32)uan->getId());
          msg.setField(VID_RCC, RCC_SUCCESS);

@@ -24,7 +24,7 @@
 
 
 Mutex g_userAgentNotificationListMutex;
-ObjectArray<UserAgentNotificationItem> g_userAgentNotificationList(true);
+ObjectArray<UserAgentNotificationItem> g_userAgentNotificationList(0, 16, true);
 
 /**
  * Init user agent messages
@@ -99,7 +99,6 @@ UserAgentNotificationItem *CreateNewUserAgentNotification(const TCHAR *message, 
    uan->incRefCount();
    g_userAgentNotificationListMutex.unlock();
 
-   json_t *objData = uan->toJson();
    ThreadPoolExecute(g_clientThreadPool, uan, &UserAgentNotificationItem::processUpdate);
    NotifyClientSessions(NX_NOTIFY_USER_AGENT_MESSAGE_CHANGED, uan->getId());
    return uan;
