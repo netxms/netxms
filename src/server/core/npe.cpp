@@ -375,10 +375,10 @@ bool GetPredictedData(ClientSession *session, const NXCPMessage *request, NXCPMe
 
    // Send CMD_REQUEST_COMPLETED message
    response->setField(VID_RCC, RCC_SUCCESS);
-   ((DCItem *)dci)->fillMessageWithThresholds(response, false);
+   static_cast<DCItem*>(dci)->fillMessageWithThresholds(response, false);
    session->sendMessage(response);
 
-   int dataType = ((DCItem *)dci)->getDataType();
+   int dataType = static_cast<DCItem*>(dci)->getDataType();
    time_t timeFrom = request->getFieldAsTime(VID_TIME_FROM);
    time_t timestamp = request->getFieldAsTime(VID_TIME_TO);
    time_t interval = dci->getEffectivePollingInterval();
@@ -391,7 +391,7 @@ bool GetPredictedData(ClientSession *session, const NXCPMessage *request, NXCPMe
    pData->dciId = htonl(dci->getId());
 
    // Fill memory block with records
-   double *series = new double[count];
+   double *series = MemAllocArray<double>(count);
    if (timestamp >= timeFrom)
    {
       engine->getPredictedSeries(dci->getOwner()->getId(), dci->getId(), count, series);
@@ -427,20 +427,19 @@ bool GetPredictedData(ClientSession *session, const NXCPMessage *request, NXCPMe
          }
          pCurr = (DCI_DATA_ROW *)(((char *)pCurr) + s_rowSize[dataType]);
          timestamp -= interval;
-
       }
-
       pData->numRows = htonl(count);
    }
+   MemFree(series);
 
    // Prepare and send raw message with fetched data
    NXCP_MESSAGE *msg =
       CreateRawNXCPMessage(CMD_DCI_DATA, request->getId(), 0,
                            pData, count * s_rowSize[dataType] + sizeof(DCI_DATA_HEADER),
                            NULL, session->isCompressionEnabled());
-   free(pData);
+   MemFree(pData);
    session->sendRawMessage(msg);
-   free(msg);
+   MemFree(msg);
    return true;
 }
 

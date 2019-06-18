@@ -69,7 +69,7 @@ bool BusinessServiceRoot::saveToDatabase(DB_HANDLE hdb)
       success = saveACLToDB(hdb);
 
    unlockProperties();
-   return true;
+   return success;
 }
 
 /**

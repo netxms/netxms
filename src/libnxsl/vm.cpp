@@ -746,8 +746,8 @@ void NXSL_VM::execute()
             }
             else
             {
-               pVar = m_expressionVariables->create(*cp->m_operand.m_identifier,
-                        (cp->m_stackItems == 0) ? createValue(pValue) : pValue);
+               m_expressionVariables->create(*cp->m_operand.m_identifier,
+                     (cp->m_stackItems == 0) ? createValue(pValue) : pValue);
             }
          }
          else
