@@ -25,6 +25,7 @@ import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.commands.ActionHandler;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.viewers.ArrayContentProvider;
@@ -95,6 +96,8 @@ public class TunnelManager extends ViewPart
    private Action actionBind;
    private Action actionUnbind;
    private Action actionShowFilter;
+   private Action actionHideNonProxy;
+   private Action actionHideNonUA;
    
    /* (non-Javadoc)
     * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
@@ -233,7 +236,7 @@ public class TunnelManager extends ViewPart
          }
       };
       
-      actionShowFilter = new Action("&Show filter") {
+      actionShowFilter = new Action("&Show filter", Action.AS_CHECK_BOX) {
          @Override
          public void run()
          {
@@ -245,6 +248,22 @@ public class TunnelManager extends ViewPart
       actionShowFilter.setActionDefinitionId("org.netxms.ui.eclipse.agentmanager.commands.show_filter"); //$NON-NLS-1$
       final IHandlerService handlerService = (IHandlerService)getSite().getService(IHandlerService.class);
       handlerService.activateHandler(actionShowFilter.getActionDefinitionId(), new ActionHandler(actionShowFilter));
+
+      actionHideNonProxy = new Action("Hide tunnels without proxy function", Action.AS_CHECK_BOX) {
+         @Override
+         public void run()
+         {
+            filter.setHideNonProxy(actionHideNonProxy.isChecked());
+         }
+      };
+
+      actionHideNonUA = new Action("Hide tunnels without user agent", Action.AS_CHECK_BOX) {
+         @Override
+         public void run()
+         {
+            filter.setHideNonUA(actionHideNonUA.isChecked());
+         }
+      };
    }
 
    /**
@@ -263,8 +282,11 @@ public class TunnelManager extends ViewPart
     */
    private void fillLocalPullDown(IMenuManager manager)
    {
-      manager.add(actionRefresh);
       manager.add(actionShowFilter);
+      manager.add(actionHideNonProxy);
+      manager.add(actionHideNonUA);
+      manager.add(new Separator());
+      manager.add(actionRefresh);
    }
 
    /**
@@ -273,8 +295,9 @@ public class TunnelManager extends ViewPart
     */
    private void fillLocalToolBar(IToolBarManager manager)
    {
-      manager.add(actionRefresh);
       manager.add(actionShowFilter);
+      manager.add(new Separator());
+      manager.add(actionRefresh);
    }
 
    /**

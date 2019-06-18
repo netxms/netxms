@@ -50,7 +50,7 @@
             class="org.netxms.ui.eclipse.agentmanager.views.TunnelManager"
             icon="icons/tunnel_manager.png"
             id="org.netxms.ui.eclipse.agentmanager.views.TunnelManager"
-            name="Agent Tunnel Manager"
+            name="Agent Tunnels"
             restorable="true">
       </view>
       <view
@@ -212,6 +212,11 @@
       <context
             id="org.netxms.ui.eclipse.agentmanager.context.TunnelManager"
             name="Tunnel Manager"
+            parentId="org.eclipse.ui.contexts.window">
+      </context>
+      <context
+            id="org.netxms.ui.eclipse.agentmanager.context.ConfigEditor"
+            name="Agent Config Editor"
             parentId="org.eclipse.ui.contexts.window">
       </context>
       <context

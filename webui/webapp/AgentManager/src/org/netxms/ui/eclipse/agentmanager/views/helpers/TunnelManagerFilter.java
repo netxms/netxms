@@ -29,6 +29,8 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 public class TunnelManagerFilter extends ViewerFilter
 {
    private String filterString = null;
+   private boolean hideNonProxy = false;
+   private boolean hideNonUA = false;
 
    /**
     * @see org.eclipse.jface.viewers.ViewerFilter#select(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
@@ -37,26 +39,43 @@ public class TunnelManagerFilter extends ViewerFilter
    public boolean select(Viewer viewer, Object parentElement, Object element)
    {
       AgentTunnel t = (AgentTunnel)element;
+      
+      if (hideNonUA && !t.isUserAgentInstalled())
+         return false;
+
+      if (hideNonProxy && !t.isAgentProxy() && !t.isSnmpProxy() && !t.isSnmpTrapProxy())
+         return false;
+      
       if ((filterString == null) || (filterString.isEmpty()))
          return true;
-      else if (t.getAgentVersion().toLowerCase().contains(filterString))
+      
+      if (t.getAgentVersion().toLowerCase().contains(filterString))
          return true;
-      else if (t.isBound() ? Integer.toString(t.getActiveChannelCount()).toLowerCase().contains(filterString) : false)
+
+      if (t.isBound() ? Integer.toString(t.getActiveChannelCount()).toLowerCase().contains(filterString) : false)
          return true;
-      else if (Integer.toString(t.getId()).toLowerCase().contains(filterString))
+      
+      if (Integer.toString(t.getId()).toLowerCase().contains(filterString))
          return true;
-      else if (t.getAddress().getHostAddress().toLowerCase().contains(filterString))
+      
+      if (t.getAddress().getHostAddress().toLowerCase().contains(filterString))
          return true;
-      else if (t.isBound() ? ConsoleSharedData.getSession().getObjectName(t.getNodeId()).toLowerCase().contains(filterString) : false)
+      
+      if (t.isBound() ? ConsoleSharedData.getSession().getObjectName(t.getNodeId()).toLowerCase().contains(filterString) : false)
          return true;
-      else if (t.getPlatformName().toLowerCase().contains(filterString))
+      
+      if (t.getPlatformName().toLowerCase().contains(filterString))
          return true;
-      else if (t.isBound() ? "bound".contains(filterString) : "unbound".contains(filterString))
+      
+      if (t.isBound() ? "bound".contains(filterString) : "unbound".contains(filterString))
          return true;
-      else if (t.getSystemInformation().toLowerCase().contains(filterString))
+      
+      if (t.getSystemInformation().toLowerCase().contains(filterString))
          return true;
-      else if (t.getSystemName().toLowerCase().contains(filterString))
+      
+      if (t.getSystemName().toLowerCase().contains(filterString))
          return true;
+      
       return false;
    }
    
@@ -68,5 +87,25 @@ public class TunnelManagerFilter extends ViewerFilter
    public void setFilterString(String filterString)
    {
       this.filterString = filterString.toLowerCase();
+   }
+
+   /**
+    * Show/hide tunnels without proxy function
+    * 
+    * @param hide true to hide tunnels without proxy function
+    */
+   public void setHideNonProxy(boolean hide)
+   {
+      this.hideNonProxy = hide;
+   }
+
+   /**
+    * Show/hide tunnels without user agent
+    * 
+    * @param hide true to hide tunnels without user agent
+    */
+   public void setHideNonUA(boolean hide)
+   {
+      this.hideNonUA = hide;
    }
 }
