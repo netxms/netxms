@@ -342,3 +342,76 @@ void StringMapBase::setIgnoreCase(bool ignore)
    }
    m_data = data;
 }
+
+/**
+ * String map iterator
+ */
+StringMapIterator::StringMapIterator(StringMapBase *map)
+{
+   m_map = map;
+   m_curr = NULL;
+   m_next = NULL;
+}
+
+/**
+ * Next element availability indicator
+ */
+bool StringMapIterator::hasNext()
+{
+   if (m_map->m_data == NULL)
+      return false;
+
+   return (m_curr != NULL) ? (m_next != NULL) : true;
+}
+
+/**
+ * Get next element
+ */
+void *StringMapIterator::next()
+{
+   if (m_map->m_data == NULL)
+      return NULL;
+
+   if (m_curr == NULL)  // iteration not started
+   {
+      m_curr = m_map->m_data;
+   }
+   else
+   {
+      if (m_next == NULL)
+         return NULL;
+      m_curr = m_next;
+   }
+   m_next = static_cast<StringMapEntry*>(m_curr->hh.next);
+   return m_curr->value;
+}
+
+/**
+ * Remove current element
+ */
+void StringMapIterator::remove()
+{
+   if (m_curr == NULL)
+      return;
+
+   HASH_DEL(m_map->m_data, m_curr);
+   MemFree(m_curr->key);
+   MemFree(m_curr->originalKey);
+   if (m_map->m_objectOwner)
+      m_map->destroyObject(m_curr->value);
+   MemFree(m_curr);
+}
+
+/**
+ * Remove current element without destroying it
+ */
+void StringMapIterator::unlink()
+{
+   if (m_curr == NULL)
+      return;
+
+   HASH_DEL(m_map->m_data, m_curr);
+   MemFree(m_curr->key);
+   MemFree(m_curr->originalKey);
+   MemFree(m_curr);
+}
