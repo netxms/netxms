@@ -798,6 +798,7 @@ bool ImportAction(ConfigEntry *config, bool overwrite)
       {
          nxlog_debug_tag(_T("import"), 4, _T("ImportAction: found existing action \"%s\" with GUID %s (skipping)"),
                   action->name, action->guid.toString(guidText));
+         RWLockUnlock(s_actionsLock);
          return true;
       }
       nxlog_debug_tag(_T("import"), 4, _T("ImportAction: found existing action \"%s\" with GUID %s"), action->name, action->guid.toString(guidText));
