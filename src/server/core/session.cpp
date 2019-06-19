@@ -8402,7 +8402,7 @@ void ClientSession::sendServerStats(UINT32 dwRqId)
 	msg.setField(VID_QSIZE_DCI_CACHE_LOADER, static_cast<UINT32>(g_dciCacheLoaderQueue.size()));
 	msg.setField(VID_QSIZE_DBWRITER, static_cast<UINT32>(g_dbWriterQueue->size()));
 	msg.setField(VID_QSIZE_EVENT, static_cast<UINT32>(g_pEventQueue->size()));
-	msg.setField(VID_QSIZE_NODE_POLLER, static_cast<UINT32>(g_nodePollerQueue.size()));
+	msg.setField(VID_QSIZE_NODE_POLLER, static_cast<UINT32>(GetDiscoveryPollerQueueSize()));
 
    // Send response
    sendMessage(&msg);

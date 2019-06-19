@@ -1041,7 +1041,7 @@ INT64 GetDiscoveryPollerQueueSize()
    {
       ThreadPoolInfo info;
       ThreadPoolGetInfo(g_discoveryThreadPool, &info);
-      poolQueueSize = (info.activeRequests > info.curThreads) ? info.activeRequests - info.curThreads : 0;
+      poolQueueSize = ((info.activeRequests > info.curThreads) ? info.activeRequests - info.curThreads : 0) + info.serializedRequests;
    }
    else
    {
