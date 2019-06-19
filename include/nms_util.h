@@ -1161,11 +1161,36 @@ struct KeyValuePair
    const void *value;
 };
 
+class StringMapBase;
+
+/**
+ * String map iterator
+ */
+class LIBNETXMS_EXPORTABLE StringMapIterator : public AbstractIterator
+{
+   DISABLE_COPY_CTOR(StringMapIterator)
+
+private:
+   StringMapBase *m_map;
+   StringMapEntry *m_curr;
+   StringMapEntry *m_next;
+
+public:
+   StringMapIterator(StringMapBase *map);
+
+   virtual bool hasNext() override;
+   virtual void *next() override;
+   virtual void remove() override;
+   virtual void unlink() override;
+};
+
 /**
  * String maps base class
  */
 class LIBNETXMS_EXPORTABLE StringMapBase
 {
+   friend class StringMapIterator;
+
 protected:
    StringMapEntry *m_data;
 	bool m_objectOwner;
@@ -1237,6 +1262,8 @@ public:
    double getDouble(const TCHAR *key, double defaultValue) const;
 	bool getBoolean(const TCHAR *key, bool defaultValue) const;
 
+   Iterator<const TCHAR> *iterator() { return new Iterator<const TCHAR>(new StringMapIterator(this)); }
+
    void fillMessage(NXCPMessage *msg, UINT32 sizeFieldId, UINT32 baseFieldId) const;
    void loadMessage(const NXCPMessage *msg, UINT32 sizeFieldId, UINT32 baseFieldId);
 
@@ -1261,6 +1288,8 @@ public:
 	T *get(const TCHAR *key) const { return (T*)getObject(key); }
    T *get(const TCHAR *key, size_t len) const { return (T*)getObject(key, len); }
    ObjectArray<T> *values() const { ObjectArray<T> *v = new ObjectArray<T>(size()); fillValues(v); return v; }
+
+   Iterator<T> *iterator() { return new Iterator<T>(new StringMapIterator(this)); }
 };
 
 /**
