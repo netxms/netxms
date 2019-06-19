@@ -1086,6 +1086,7 @@ struct ThreadPoolInfo
    int curThreads;         // current threads
    int activeRequests;     // number of active requests
    int scheduledRequests;  // number of requests scheduled for execution
+   int serializedRequests; // number of requests waiting in serialized execution queues
    UINT64 totalRequests;   // Total requests executed (cumulative count)
    UINT64 threadStarts;    // Number of thread starts
    UINT64 threadStops;     // Number of thread stops

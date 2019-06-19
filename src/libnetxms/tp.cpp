@@ -573,9 +573,18 @@ void LIBNETXMS_EXPORTABLE ThreadPoolGetInfo(ThreadPool *p, ThreadPoolInfo *info)
    info->loadAvg[2] = static_cast<double>(p->loadAverage[2]) / EMA_FP_1;
    info->averageWaitTime = static_cast<UINT32>(p->averageWaitTime / EMA_FP_1);
    MutexUnlock(p->mutex);
+
    MutexLock(p->schedulerLock);
    info->scheduledRequests = p->schedulerQueue->size();
    MutexUnlock(p->schedulerLock);
+
+   info->serializedRequests = 0;
+   MutexLock(p->serializationLock);
+   Iterator<SerializationQueue> *it = p->serializationQueues->iterator();
+   while(it->hasNext())
+      info->serializedRequests += static_cast<int>(it->next()->size());
+   delete it;
+   MutexUnlock(p->serializationLock);
 }
 
 /**
