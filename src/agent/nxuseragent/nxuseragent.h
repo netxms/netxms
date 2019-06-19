@@ -17,7 +17,8 @@
 #include "messages.h"
 
 /*** Messages ***/
-#define NXUA_MSG_TOOLTIP_NOTIFY     (WM_USER + 1)
+#define NXUA_MSG_TOOLTIP_NOTIFY        (WM_USER + 1)
+#define NXUA_MSG_OPEN_MESSAGE_WINDOW   (WM_USER + 2)
 
 /*** Main window parameters ***/
 #define MARGIN_WIDTH             15
@@ -154,7 +155,10 @@ void SendLoginMessage();
 void UpdateNotifications(NXCPMessage *request);
 void AddNotification(NXCPMessage *request);
 void RemoveNotification(NXCPMessage *request);
+ObjectArray<UserAgentNotification> *GetNotificationsForDisplay();
 void ShowTrayNotification(const TCHAR *text);
+bool PrepareMessageWindow();
+void OpenMessageWindow();
 
 /*** Global variables ***/
 extern HINSTANCE g_hInstance;

@@ -40,6 +40,27 @@ static void DeleteReadMark(const ServerObjectKey& id)
 }
 
 /**
+ * Check if marked as read in registry
+ */
+static bool IsMarkedAsRead(const ServerObjectKey& id)
+{
+   HKEY hKey;
+   if (RegOpenKeyEx(HKEY_CURRENT_USER, _T("Software\\NetXMS\\UserAgent\\Notifications"), 0, KEY_ALL_ACCESS, &hKey) != ERROR_SUCCESS)
+      return false;
+
+   TCHAR name[64];
+   _sntprintf(name, 64, _T("%u:%I64u"), id.objectId, id.serverId);
+   DWORD data, size = sizeof(DWORD);
+   bool result = false;
+   if (RegQueryValueEx(hKey, name, NULL, NULL, reinterpret_cast<BYTE*>(&data), &size) == ERROR_SUCCESS)
+   {
+      result = (data != 0);
+   }
+   RegCloseKey(hKey);
+   return result;
+}
+
+/**
  * Update notifications for user
  */
 void UpdateNotifications(NXCPMessage *request)
@@ -52,11 +73,15 @@ void UpdateNotifications(NXCPMessage *request)
    for (int i = 0; i < count; i++, base += 10)
    {
       UserAgentNotification *n = new UserAgentNotification(request, base);
+      if (IsMarkedAsRead(n->getId()))
+         n->setRead();
       s_notifications.set(n->getId(), n);
       nxlog_debug(7, _T("Notification [%u]: %s"), n->getId().objectId, n->getMessage());
    }
 
    s_notificationLock.unlock();
+
+   //PostThreadMessage(g_mainThreadId, NXUA_MSG_OPEN_MESSAGE_WINDOW, 0, 0);
 }
 
 /**
@@ -73,6 +98,9 @@ void AddNotification(NXCPMessage *request)
    }
    else
    {
+      if (IsMarkedAsRead(n->getId()))
+         n->setRead();
+
       s_notificationLock.lock();
       s_notifications.set(n->getId(), n);
       s_notificationLock.unlock();
@@ -93,4 +121,30 @@ void RemoveNotification(NXCPMessage *request)
    s_notificationLock.unlock();
 
    DeleteReadMark(id);
+}
+
+/**
+ * Selector for notifications
+ */
+static EnumerationCallbackResult NotificationSelector(const void *key, const void *value, void *context)
+{
+   const UserAgentNotification *n = static_cast<const UserAgentNotification*>(value);
+   if (!n->isRead() && (n->getStartTime() <= time(NULL)))
+   {
+      static_cast<ObjectArray<UserAgentNotification>*>(context)->add(new UserAgentNotification(n));
+   }
+   return _CONTINUE;
+}
+
+/**
+ * Get list of notifications to be displayed (should be destroyed by caller).
+ */
+ObjectArray<UserAgentNotification> *GetNotificationsForDisplay()
+{
+   ObjectArray<UserAgentNotification> *list = new ObjectArray<UserAgentNotification>(64, 64, true);
+   time_t now = time(NULL);
+   s_notificationLock.lock();
+   s_notifications.forEach(NotificationSelector, list);
+   s_notificationLock.unlock();
+   return list;
 }

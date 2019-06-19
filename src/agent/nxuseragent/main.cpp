@@ -3,6 +3,13 @@
 NETXMS_EXECUTABLE_HEADER(nxuseragent)
 
 /**
+ * Enable Common Controls version 6
+ */
+#pragma comment(linker, "\"/manifestdependency:type='win32' \
+name='Microsoft.Windows.Common-Controls' version='6.0.0.0' \
+processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
+
+/**
  * Application instance handle
  */
 HINSTANCE g_hInstance;
@@ -48,7 +55,12 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR cmdLine
       nxlog_debug(2, _T("WSAStartup() failed (%s)"), GetSystemErrorText(WSAGetLastError(), buffer, 1024));
    }
 
-   if ((wrc != 0) || !InitMenu() || !SetupTrayIcon() || !PrepareApplicationWindow() || !SetupSessionEventHandler())
+   INITCOMMONCONTROLSEX icc;
+   icc.dwSize = sizeof(INITCOMMONCONTROLSEX);
+   icc.dwICC = ICC_LINK_CLASS;
+
+   if ((wrc != 0) || !InitCommonControlsEx(&icc) || !InitMenu() || !SetupTrayIcon() ||
+       !PrepareApplicationWindow() || !PrepareMessageWindow() || !SetupSessionEventHandler())
    {
       nxlog_write(MSG_INIT_FAILED, NXLOG_ERROR, NULL);
       MessageBox(NULL, _T("NetXMS User Agent initialization failed"), _T("NetXMS User Agent"), MB_OK | MB_ICONSTOP);
@@ -74,6 +86,10 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR cmdLine
          GetCursorPos(&pt);
          SetForegroundWindow(GetTrayWindow());
          OpenApplicationWindow(pt, true);
+      }
+      else if (msg.message == NXUA_MSG_OPEN_MESSAGE_WINDOW)
+      {
+         OpenMessageWindow();
       }
       else
       {
