@@ -376,12 +376,13 @@ void Template::forceInstallPolicy(DataCollectionTarget *target)
  */
 void Template::applyDCIChanges()
 {
+   lockProperties();
    if (m_dciListModified)
    {
-      if (getObjectClass() == OBJECT_TEMPLATE)
-         updateVersion();
+      updateVersion();
       setModified(MODIFY_OTHER);
    }
+   unlockProperties();
    super::applyDCIChanges();
 }
 

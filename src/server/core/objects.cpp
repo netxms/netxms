@@ -94,12 +94,12 @@ static THREAD_RESULT THREAD_CALL ApplyTemplateThread(void *pArg)
             {
                case APPLY_TEMPLATE:
                   pInfo->pTemplate->applyToTarget((DataCollectionTarget *)dcTarget);
-                  ((DataCollectionTarget *)dcTarget)->applyDCIChanges();
+                  static_cast<DataCollectionTarget*>(dcTarget)->applyDCIChanges();
                   bSuccess = TRUE;
                   break;
                case REMOVE_TEMPLATE:
-                  ((DataCollectionTarget *)dcTarget)->unbindFromTemplate(pInfo->pTemplate->getId(), pInfo->removeDCI);
-                  ((DataCollectionTarget *)dcTarget)->applyDCIChanges();
+                  static_cast<DataCollectionTarget*>(dcTarget)->unbindFromTemplate(pInfo->pTemplate->getId(), pInfo->removeDCI);
+                  static_cast<DataCollectionTarget*>(dcTarget)->applyDCIChanges();
                   bSuccess = TRUE;
                   break;
                default:

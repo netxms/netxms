@@ -865,7 +865,7 @@ public:
    void setId(UINT32 dwId) { m_id = dwId; setModified(MODIFY_ALL); }
    void generateGuid() { m_guid = uuid::generate(); }
    void setName(const TCHAR *pszName) { lockProperties(); _tcslcpy(m_name, pszName, MAX_OBJECT_NAME); setModified(MODIFY_COMMON_PROPERTIES); unlockProperties(); }
-   void resetStatus() { m_status = STATUS_UNKNOWN; setModified(MODIFY_RUNTIME); }
+   void resetStatus() { lockProperties(); m_status = STATUS_UNKNOWN; setModified(MODIFY_RUNTIME); unlockProperties(); }
    void setComments(TCHAR *text);	/* text must be dynamically allocated */
 
    bool isInMaintenanceMode() const { return m_maintenanceEventId != 0; }
@@ -1324,11 +1324,11 @@ public:
 
    void setMacAddr(const BYTE *macAddr, bool updateMacDB);
    void setIpAddress(const InetAddress& addr);
-   void setBridgePortNumber(UINT32 bpn) { m_bridgePortNumber = bpn; setModified(MODIFY_INTERFACE_PROPERTIES); }
-   void setSlotNumber(UINT32 slot) { m_slotNumber = slot; setModified(MODIFY_INTERFACE_PROPERTIES); }
-   void setPortNumber(UINT32 port) { m_portNumber = port; setModified(MODIFY_INTERFACE_PROPERTIES); }
-	void setPhysicalPortFlag(bool isPhysical) { if (isPhysical) m_flags |= IF_PHYSICAL_PORT; else m_flags &= ~IF_PHYSICAL_PORT; setModified(MODIFY_INTERFACE_PROPERTIES); }
-	void setManualCreationFlag(bool isManual) { if (isManual) m_flags |= IF_CREATED_MANUALLY; else m_flags &= ~IF_CREATED_MANUALLY; setModified(MODIFY_INTERFACE_PROPERTIES); }
+   void setBridgePortNumber(UINT32 bpn) { lockProperties(); m_bridgePortNumber = bpn; setModified(MODIFY_INTERFACE_PROPERTIES); unlockProperties(); }
+   void setSlotNumber(UINT32 slot) { lockProperties(); m_slotNumber = slot; setModified(MODIFY_INTERFACE_PROPERTIES); unlockProperties(); }
+   void setPortNumber(UINT32 port) { lockProperties(); m_portNumber = port; setModified(MODIFY_INTERFACE_PROPERTIES); unlockProperties(); }
+	void setPhysicalPortFlag(bool isPhysical) { lockProperties(); if (isPhysical) m_flags |= IF_PHYSICAL_PORT; else m_flags &= ~IF_PHYSICAL_PORT; setModified(MODIFY_INTERFACE_PROPERTIES); unlockProperties(); }
+	void setManualCreationFlag(bool isManual) { lockProperties(); if (isManual) m_flags |= IF_CREATED_MANUALLY; else m_flags &= ~IF_CREATED_MANUALLY; setModified(MODIFY_INTERFACE_PROPERTIES); unlockProperties(); }
 	void setPeer(Node *node, Interface *iface, LinkLayerProtocol protocol, bool reflection);
    void clearPeer() { lockProperties(); m_peerNodeId = 0; m_peerInterfaceId = 0; m_peerDiscoveryProtocol = LL_PROTO_UNKNOWN; setModified(MODIFY_INTERFACE_PROPERTIES); unlockProperties(); }
    void setDescription(const TCHAR *descr) { lockProperties(); _tcslcpy(m_description, descr, MAX_DB_STRING); setModified(MODIFY_INTERFACE_PROPERTIES); unlockProperties(); }
@@ -1336,10 +1336,10 @@ public:
    void addIpAddress(const InetAddress& addr);
    void deleteIpAddress(InetAddress addr);
    void setNetMask(const InetAddress& addr);
-	void setMTU(int mtu) { m_mtu = mtu; setModified(MODIFY_INTERFACE_PROPERTIES); }
-	void setSpeed(UINT64 speed) { m_speed = speed; setModified(MODIFY_INTERFACE_PROPERTIES); }
+	void setMTU(int mtu) { lockProperties(); m_mtu = mtu; setModified(MODIFY_INTERFACE_PROPERTIES); unlockProperties(); }
+	void setSpeed(UINT64 speed) { lockProperties(); m_speed = speed; setModified(MODIFY_INTERFACE_PROPERTIES); unlockProperties(); }
    void setIfTableSuffix(int len, const UINT32 *suffix) { lockProperties(); MemFree(m_ifTableSuffix); m_ifTableSuffixLen = len; m_ifTableSuffix = (len > 0) ? (UINT32 *)nx_memdup(suffix, len * sizeof(UINT32)) : NULL; setModified(MODIFY_INTERFACE_PROPERTIES); unlockProperties(); }
-   void setParentInterface(UINT32 parentInterfaceId) { m_parentInterfaceId = parentInterfaceId; setModified(MODIFY_INTERFACE_PROPERTIES); }
+   void setParentInterface(UINT32 parentInterfaceId) { lockProperties(); m_parentInterfaceId = parentInterfaceId; setModified(MODIFY_INTERFACE_PROPERTIES); unlockProperties(); }
    void addVlan(UINT32 id);
    void clearVlanList() { lockProperties(); if (m_vlans != NULL) m_vlans->clear(); unlockProperties(); }
 

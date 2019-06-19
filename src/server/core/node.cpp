@@ -2225,9 +2225,7 @@ restart_agent_check:
 
    if (oldState != m_state || oldCapabilities != m_capabilities)
    {
-      lockProperties();
-      setModified(MODIFY_NODE_PROPERTIES);
-      unlockProperties();
+      markAsModified(MODIFY_NODE_PROPERTIES);
    }
 
    calculateCompoundStatus();
@@ -3085,9 +3083,7 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
 
    if (modified != 0)
    {
-      lockProperties();
-      setModified(modified);
-      unlockProperties();
+      markAsModified(modified);
    }
 }
 
@@ -7536,7 +7532,7 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, UINT32 rqId
                   }
                }
 
-               ifLocal->setPeer((Node *)object, ifRemote, ni->protocol, false);
+               ifLocal->setPeer(static_cast<Node*>(object), ifRemote, ni->protocol, false);
                ifRemote->setPeer(this, ifLocal, ni->protocol, true);
                sendPollerMsg(rqId, _T("   Local interface %s linked to remote interface %s:%s\r\n"),
                              ifLocal->getName(), object->getName(), ifRemote->getName());

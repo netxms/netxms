@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2018 Raden Solutions
+** Copyright (C) 2003-2019 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -44,7 +44,7 @@ SlmCheck::SlmCheck() : super()
 SlmCheck::SlmCheck(const TCHAR *name, bool isTemplate) : super()
 {
    m_isHidden = true;
-	nx_strncpy(m_name, name, MAX_OBJECT_NAME);
+	_tcslcpy(m_name, name, MAX_OBJECT_NAME);
 	m_type = SlmCheck::check_script;
 	m_script = NULL;
 	m_pCompiledScript = NULL;
@@ -81,7 +81,7 @@ SlmCheck::SlmCheck(SlmCheck *tmpl) : super()
 SlmCheck::~SlmCheck()
 {
 	delete m_threshold;
-	free(m_script);
+	MemFree(m_script);
 	delete m_pCompiledScript;
 }
 
@@ -280,7 +280,7 @@ UINT32 SlmCheck::modifyFromMessageInternal(NXCPMessage *pRequest)
 	{
 		TCHAR *script = pRequest->getFieldAsString(VID_SCRIPT);
 		setScript(script);
-		free(script);
+		MemFree(script);
 	}
 
 	if (pRequest->isFieldExist(VID_THRESHOLD_BASE))
@@ -315,7 +315,7 @@ void SlmCheck::postModify()
 }
 
 /**
- * Set check script
+ * Set check script. Should be called with object properties locked.
  */
 void SlmCheck::setScript(const TCHAR *script)
 {

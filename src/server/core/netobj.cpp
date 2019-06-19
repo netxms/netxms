@@ -703,7 +703,7 @@ void NetObj::addChild(NetObj *object)
    m_childList->add(object);
    unlockChildList();
 	incRefCount();
-   setModified(MODIFY_RELATIONS);
+	markAsModified(MODIFY_RELATIONS);
    DbgPrintf(7, _T("NetObj::addChild: this=%s [%d]; object=%s [%d]"), m_name, m_id, object->m_name, object->m_id);
 }
 
@@ -721,7 +721,7 @@ void NetObj::addParent(NetObj *object)
    m_parentList->add(object);
    unlockParentList();
 	incRefCount();
-   setModified(MODIFY_RELATIONS);
+	markAsModified(MODIFY_RELATIONS);
    DbgPrintf(7, _T("NetObj::addParent: this=%s [%d]; object=%s [%d]"), m_name, m_id, object->m_name, object->m_id);
 }
 
@@ -747,7 +747,7 @@ void NetObj::deleteChild(NetObj *object)
    m_childList->remove(i);
    unlockChildList();
 	decRefCount();
-   setModified(MODIFY_RELATIONS);
+	markAsModified(MODIFY_RELATIONS);
 }
 
 /**
@@ -772,7 +772,7 @@ void NetObj::deleteParent(NetObj *object)
    m_parentList->remove(i);
    unlockParentList();
 	decRefCount();
-   setModified(MODIFY_RELATIONS);
+	markAsModified(MODIFY_RELATIONS);
 }
 
 /**
@@ -2426,12 +2426,12 @@ void NetObj::setCustomAttributePV(const TCHAR *name, TCHAR *value)
    const TCHAR *curr = m_customAttributes.get(name);
    if ((curr == NULL) || _tcscmp(curr, value))
    {
-      m_customAttributes.setPreallocated(_tcsdup(name), value);
+      m_customAttributes.setPreallocated(MemCopyString(name), value);
       setModified(MODIFY_CUSTOM_ATTRIBUTES);
    }
    else
    {
-      free(value);
+      MemFree(value);
    }
    unlockProperties();
 }
