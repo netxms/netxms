@@ -1228,6 +1228,8 @@ void Interface::onObjectDelete(UINT32 dwObjectId)
  */
 void Interface::setPeer(Node *node, Interface *iface, LinkLayerProtocol protocol, bool reflection)
 {
+   lockProperties();
+
    if ((m_peerNodeId == node->getId()) && (m_peerInterfaceId == iface->getId()) && (m_peerDiscoveryProtocol == protocol))
    {
       if ((m_flags & IF_PEER_REFLECTION) && !reflection)
@@ -1236,28 +1238,31 @@ void Interface::setPeer(Node *node, Interface *iface, LinkLayerProtocol protocol
          m_flags &= ~IF_PEER_REFLECTION;
          setModified(MODIFY_COMMON_PROPERTIES);
       }
-      return;
+   }
+   else
+   {
+      m_peerNodeId = node->getId();
+      m_peerInterfaceId = iface->getId();
+      m_peerDiscoveryProtocol = protocol;
+      if (reflection)
+         m_flags |= IF_PEER_REFLECTION;
+      else
+         m_flags &= ~IF_PEER_REFLECTION;
+      setModified(MODIFY_INTERFACE_PROPERTIES | MODIFY_COMMON_PROPERTIES);
+      if (!m_isSystem)
+      {
+         static const TCHAR *names[] = { _T("localIfId"), _T("localIfIndex"), _T("localIfName"),
+            _T("localIfIP"), _T("localIfMAC"), _T("remoteNodeId"), _T("remoteNodeName"),
+            _T("remoteIfId"), _T("remoteIfIndex"), _T("remoteIfName"), _T("remoteIfIP"),
+            _T("remoteIfMAC"), _T("protocol") };
+         PostEventWithNames(EVENT_IF_PEER_CHANGED, getParentNodeId(), "ddsAhdsddsAhd", names,
+            m_id, m_index, m_name, &m_ipAddressList.getFirstUnicastAddress(), m_macAddr,
+            node->getId(), node->getName(), iface->getId(), iface->getIfIndex(), iface->getName(),
+            &iface->getIpAddressList()->getFirstUnicastAddress(), iface->getMacAddr(), protocol);
+      }
    }
 
-   m_peerNodeId = node->getId();
-   m_peerInterfaceId = iface->getId();
-   m_peerDiscoveryProtocol = protocol;
-   if (reflection)
-      m_flags |= IF_PEER_REFLECTION;
-   else
-      m_flags &= ~IF_PEER_REFLECTION;
-   setModified(MODIFY_INTERFACE_PROPERTIES | MODIFY_COMMON_PROPERTIES);
-   if (!m_isSystem)
-   {
-      static const TCHAR *names[] = { _T("localIfId"), _T("localIfIndex"), _T("localIfName"),
-         _T("localIfIP"), _T("localIfMAC"), _T("remoteNodeId"), _T("remoteNodeName"),
-         _T("remoteIfId"), _T("remoteIfIndex"), _T("remoteIfName"), _T("remoteIfIP"),
-         _T("remoteIfMAC"), _T("protocol") };
-      PostEventWithNames(EVENT_IF_PEER_CHANGED, getParentNodeId(), "ddsAhdsddsAhd", names,
-         m_id, m_index, m_name, &m_ipAddressList.getFirstUnicastAddress(), m_macAddr,
-         node->getId(), node->getName(), iface->getId(), iface->getIfIndex(), iface->getName(),
-         &iface->getIpAddressList()->getFirstUnicastAddress(), iface->getMacAddr(), protocol);
-   }
+   unlockProperties();
 }
 
 /**
