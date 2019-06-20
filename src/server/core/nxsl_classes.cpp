@@ -1782,6 +1782,10 @@ NXSL_Value *NXSL_DciClass::getAttr(NXSL_Object *object, const char *attr)
    {
 		value = vm->createValue((LONG)dci->getOrigin());
    }
+   else if (!strcmp(attr, "pollingInterval"))
+   {
+      value = vm->createValue(dci->getPollingInterval());
+   }
    else if (!strcmp(attr, "status"))
    {
 		value = vm->createValue((LONG)dci->getStatus());

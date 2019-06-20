@@ -1476,6 +1476,7 @@ DCObjectInfo::DCObjectInfo(DCObject *object)
    m_origin = object->getDataSource();
    m_status = object->getStatus();
    m_errorCount = object->getErrorCount();
+   m_pollingInterval = object->getEffectivePollingInterval();
    m_lastPollTime = object->getLastPollTime();
    if (m_type == DCO_TYPE_ITEM)
    {

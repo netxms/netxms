@@ -726,6 +726,7 @@ private:
    int m_origin;
    int m_status;
    UINT32 m_errorCount;
+   INT32 m_pollingInterval;
    time_t m_lastPollTime;
    bool m_hasActiveThreshold;
    int m_thresholdSeverity;
@@ -749,6 +750,7 @@ public:
    int getOrigin() const { return m_origin; }
    int getStatus() const { return m_status; }
    UINT32 getErrorCount() const { return m_errorCount; }
+   INT32 getPollingInterval() const { return m_pollingInterval; }
    time_t getLastPollTime() const { return m_lastPollTime; }
    UINT32 getOwnerId() const { return m_ownerId; }
    bool hasActiveThreshold() const { return m_hasActiveThreshold; }
