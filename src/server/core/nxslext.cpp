@@ -159,7 +159,7 @@ static int F_GetInterfaceObject(int argc, NXSL_Value **argv, NXSL_Value **ppResu
 	Interface *ifc = node->findInterfaceByIndex(argv[1]->getValueAsUInt32());
 	if (ifc != NULL)
 	{
-		*ppResult = vm->createValue(new NXSL_Object(vm, &g_nxslInterfaceClass, ifc));
+		*ppResult = ifc->createNXSLObject(vm);
 	}
 	else
 	{

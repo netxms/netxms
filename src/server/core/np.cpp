@@ -204,6 +204,7 @@ Node NXCORE_EXPORTABLE *PollNewNode(NewNodeData *newNodeData)
 
 /**
  * Find existing node by MAC address to detect IP address change for already known node.
+ * This function increments reference count for interface object.
  *
  * @param ipAddr new (discovered) IP address
  * @param zoneUIN zone ID
@@ -244,7 +245,7 @@ static Interface *GetOldNodeWithNewIP(const InetAddress& ipAddr, UINT32 zoneUIN,
 		memcpy(nodeMacAddr, bMacAddr, MAC_ADDR_LENGTH);
 	}
 
-	Interface *iface = FindInterfaceByMAC(nodeMacAddr);
+	Interface *iface = FindInterfaceByMAC(nodeMacAddr, true);
 
 	if (iface == NULL)
 		DbgPrintf(6, _T("GetOldNodeWithNewIP: returning null (FindInterfaceByMAC!)"));
@@ -685,26 +686,45 @@ static bool AcceptNewNode(NewNodeData *newNodeData, BYTE *macAddr)
          return false;  // blocked by hook
    }
 
-	Interface *iface = GetOldNodeWithNewIP(newNodeData->ipAddr, newNodeData->zoneUIN, macAddr);
-	if (iface != NULL)
-	{
-		if (!HostIsReachable(newNodeData->ipAddr, newNodeData->zoneUIN, false, NULL, NULL))
-		{
-		   nxlog_debug_tag(DEBUG_TAG, 4, _T("AcceptNewNode(%s): found existing interface with same MAC address, but new IP is not reachable"), szIpAddr);
-			return false;
-		}
+   int retryCount = 5;
+   while (retryCount-- > 0)
+   {
+      Interface *iface = GetOldNodeWithNewIP(newNodeData->ipAddr, newNodeData->zoneUIN, macAddr);
+      if (iface == NULL)
+         break;
 
-		Node *oldNode = iface->getParentNode();
-      if (iface->getIpAddressList()->hasAddress(oldNode->getIpAddress()))
-		{
-			// we should change node's primary IP only if old IP for this MAC was also node's primary IP
-			TCHAR szOldIpAddr[16];
-			oldNode->getIpAddress().toString(szOldIpAddr);
-			nxlog_debug_tag(DEBUG_TAG, 4, _T("AcceptNewNode(%s): node already exist in database with ip %s, will change to new"), szIpAddr, szOldIpAddr);
-			oldNode->changeIPAddress(newNodeData->ipAddr);
-		}
-		return false;
-	}
+      if (!HostIsReachable(newNodeData->ipAddr, newNodeData->zoneUIN, false, NULL, NULL))
+      {
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("AcceptNewNode(%s): found existing interface with same MAC address, but new IP is not reachable"), szIpAddr);
+         iface->decRefCount();
+         return false;
+      }
+
+      // Interface could be deleted by configuration poller while HostIsReachable was running
+      Node *oldNode = iface->getParentNode();
+      if (!iface->isDeleted() && (oldNode != NULL))
+      {
+         if (iface->getIpAddressList()->hasAddress(oldNode->getIpAddress()))
+         {
+            // we should change node's primary IP only if old IP for this MAC was also node's primary IP
+            TCHAR szOldIpAddr[16];
+            oldNode->getIpAddress().toString(szOldIpAddr);
+            nxlog_debug_tag(DEBUG_TAG, 4, _T("AcceptNewNode(%s): node already exist in database with IP %s, will change to new"), szIpAddr, szOldIpAddr);
+            oldNode->changeIPAddress(newNodeData->ipAddr);
+         }
+         iface->decRefCount();
+         return false;
+      }
+
+      iface->decRefCount();
+      ThreadSleepMs(100);
+   }
+   if (retryCount == 0)
+   {
+      // Still getting deleted interface
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("AcceptNewNode(%s): found existing but marked for deletion interface with same MAC address"), szIpAddr);
+      return false;
+   }
 
    // Allow filtering by loaded modules
    for(UINT32 i = 0; i < g_dwNumModules; i++)

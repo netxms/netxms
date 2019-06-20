@@ -510,7 +510,7 @@ void NetObjDeleteFromIndexes(NetObj *pObject)
          break;
 		case OBJECT_ACCESSPOINT:
 			g_idxAccessPointById.remove(pObject->getId());
-         MacDbRemove(((AccessPoint *)pObject)->getMacAddr());
+         MacDbRemove(static_cast<AccessPoint*>(pObject)->getMacAddr());
          break;
 		case OBJECT_CHASSIS:
          g_idxChassisById.remove(pObject->getId());
@@ -541,10 +541,10 @@ void NetObjDeleteFromIndexes(NetObj *pObject)
       case OBJECT_INTERFACE:
 			if (IsZoningEnabled())
 			{
-				Zone *zone = (Zone *)g_idxZoneByUIN.get(((Interface *)pObject)->getZoneUIN());
+				Zone *zone = (Zone *)g_idxZoneByUIN.get(static_cast<Interface*>(pObject)->getZoneUIN());
 				if (zone != NULL)
 				{
-					zone->removeFromIndex((Interface *)pObject);
+					zone->removeFromIndex(static_cast<Interface*>(pObject));
 				}
 				else
 				{
@@ -554,7 +554,7 @@ void NetObjDeleteFromIndexes(NetObj *pObject)
 			}
 			else
 			{
-            const ObjectArray<InetAddress> *list = ((Interface *)pObject)->getIpAddressList()->getList();
+            const ObjectArray<InetAddress> *list = static_cast<Interface*>(pObject)->getIpAddressList()->getList();
             for(int i = 0; i < list->size(); i++)
             {
                InetAddress *addr = list->get(i);
@@ -568,7 +568,7 @@ void NetObjDeleteFromIndexes(NetObj *pObject)
                }
             }
 			}
-         MacDbRemove(((Interface *)pObject)->getMacAddr());
+         MacDbRemove(static_cast<Interface*>(pObject)->getMacAddr());
          break;
       case OBJECT_ZONE:
 			g_idxZoneByUIN.remove(((Zone *)pObject)->getUIN());
@@ -606,13 +606,21 @@ void NetObjDeleteFromIndexes(NetObj *pObject)
 /**
  * Find access point by MAC address
  */
-AccessPoint NXCORE_EXPORTABLE *FindAccessPointByMAC(const BYTE *macAddr)
+AccessPoint NXCORE_EXPORTABLE *FindAccessPointByMAC(const BYTE *macAddr, bool updateRefCount)
 {
 	if (!memcmp(macAddr, "\x00\x00\x00\x00\x00\x00", 6))
 		return NULL;
 
-	NetObj *object = MacDbFind(macAddr);
-   return ((object != NULL) && (object->getObjectClass() == OBJECT_ACCESSPOINT)) ? (AccessPoint *)object : NULL;
+	NetObj *object = MacDbFind(macAddr, updateRefCount);
+	if (object == NULL)
+	   return NULL;
+	if (object->getObjectClass() != OBJECT_ACCESSPOINT)
+	{
+	   if (updateRefCount)
+	      object->decRefCount();
+	   return NULL;
+	}
+   return static_cast<AccessPoint*>(object);
 }
 
 /**
@@ -751,7 +759,7 @@ Node NXCORE_EXPORTABLE *FindNodeByIP(UINT32 zoneUIN, const InetAddressList *ipAd
 /**
  * Find interface by IP address
  */
-Interface NXCORE_EXPORTABLE *FindInterfaceByIP(UINT32 zoneUIN, const InetAddress& ipAddr)
+Interface NXCORE_EXPORTABLE *FindInterfaceByIP(UINT32 zoneUIN, const InetAddress& ipAddr, bool updateRefCount)
 {
    if (!ipAddr.isValidUnicast())
       return NULL;
@@ -759,7 +767,7 @@ Interface NXCORE_EXPORTABLE *FindInterfaceByIP(UINT32 zoneUIN, const InetAddress
 	Interface *iface = NULL;
 	if (IsZoningEnabled())
 	{
-	   Zone *zone = (Zone *)g_idxZoneByUIN.get(zoneUIN);
+	   Zone *zone = static_cast<Zone*>(g_idxZoneByUIN.get(zoneUIN));
 		if (zone != NULL)
 		{
 			iface = zone->getInterfaceByAddr(ipAddr);
@@ -767,8 +775,10 @@ Interface NXCORE_EXPORTABLE *FindInterfaceByIP(UINT32 zoneUIN, const InetAddress
 	}
 	else
 	{
-		iface = (Interface *)g_idxInterfaceByAddr.get(ipAddr);
+		iface = static_cast<Interface*>(g_idxInterfaceByAddr.get(ipAddr));
 	}
+	if (updateRefCount && (iface != NULL))
+	   iface->incRefCount();
 	return iface;
 }
 
@@ -784,13 +794,21 @@ Node NXCORE_EXPORTABLE *FindNodeByMAC(const BYTE *macAddr)
 /**
  * Find interface by MAC address
  */
-Interface NXCORE_EXPORTABLE *FindInterfaceByMAC(const BYTE *macAddr)
+Interface NXCORE_EXPORTABLE *FindInterfaceByMAC(const BYTE *macAddr, bool updateRefCount)
 {
 	if (!memcmp(macAddr, "\x00\x00\x00\x00\x00\x00", 6))
 		return NULL;
 
-	NetObj *object = MacDbFind(macAddr);
-   return ((object != NULL) && (object->getObjectClass() == OBJECT_INTERFACE)) ? (Interface *)object : NULL;
+	NetObj *object = MacDbFind(macAddr, updateRefCount);
+	if (object == NULL)
+	   return NULL;
+	if (object->getObjectClass() != OBJECT_INTERFACE)
+	{
+	   if (updateRefCount)
+	      object->decRefCount();
+	   return NULL;
+	}
+   return static_cast<Interface*>(object);
 }
 
 struct NodeFindHostnameData
@@ -843,9 +861,12 @@ static bool DescriptionComparator(NetObj *object, void *description)
 /**
  * Find interface by description
  */
-Interface NXCORE_EXPORTABLE *FindInterfaceByDescription(const TCHAR *description)
+Interface NXCORE_EXPORTABLE *FindInterfaceByDescription(const TCHAR *description, bool updateRefCount)
 {
-	return (Interface *)g_idxObjectById.find(DescriptionComparator, (void *)description);
+	Interface *iface = static_cast<Interface*>(g_idxObjectById.find(DescriptionComparator, (void *)description));
+	if (updateRefCount && (iface != NULL))
+	   iface->incRefCount();
+	return iface;
 }
 
 /**
