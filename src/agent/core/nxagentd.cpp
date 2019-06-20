@@ -1601,7 +1601,7 @@ int main(int argc, char *argv[])
 #if defined(_WIN32) || HAVE_DECL_GETOPT_LONG
    static struct option longOptions[] =
    {
-      { (char *)"zone-uin", 0, NULL, 'B' },
+      { (char *)"zone-uin", 1, NULL, 'B' },
       { NULL, 0, 0, 0 }
    };
 #endif
