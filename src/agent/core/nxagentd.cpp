@@ -23,6 +23,10 @@
 #include "nxagentd.h"
 #include <nxstat.h>
 
+#if HAVE_GETOPT_H
+#include <getopt.h>
+#endif
+
 #ifdef _WIN32
 #include <conio.h>
 #else
@@ -86,7 +90,7 @@ int WatchdogMain(DWORD pid, const TCHAR *configSection);
 void InitSessionList();
 void DestroySessionList();
 
-BOOL RegisterOnServer(const TCHAR *pszServer);
+BOOL RegisterOnServer(const TCHAR *pszServer, UINT32 zoneUIN);
 
 void UpdatePolicyInventory();
 
@@ -135,9 +139,9 @@ extern const TCHAR *g_szMessages[];
  * Valid options for getopt()
  */
 #if defined(_WIN32)
-#define VALID_OPTIONS   "c:CdD:e:EfFG:hHiIkKlM:n:N:P:r:RsSUvW:X:Z:z:"
+#define VALID_OPTIONS   "B:c:CdD:e:EfFG:hHiIkKlM:n:N:P:r:RsSUvW:X:Z:z:"
 #else
-#define VALID_OPTIONS   "c:CdD:fFg:G:hkKlM:p:P:r:Su:vW:X:Z:z:"
+#define VALID_OPTIONS   "B:c:CdD:fFg:G:hkKlM:p:P:r:Su:vW:X:Z:z:"
 #endif
 
 /**
@@ -343,6 +347,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
 static TCHAR m_szHelpText[] =
    _T("Usage: nxagentd [options]\n")
    _T("Where valid options are:\n")
+   _T("   -B <uin>   : Set zone UIN\n")
    _T("   -c <file>  : Use configuration file <file> (default ") AGENT_DEFAULT_CONFIG _T(")\n")
    _T("   -C         : Load configuration file, dump resulting configuration, and exit\n")
    _T("   -d         : Run as daemon/service\n")
@@ -1255,7 +1260,7 @@ BOOL Initialize()
 
    	if (g_dwFlags & AF_REGISTER)
       {
-         RegisterOnServer(g_szRegistrar);
+         RegisterOnServer(g_szRegistrar, g_zoneUIN);
       }
 
       s_tunnelManagerThread = ThreadCreateEx(TunnelManager, 0, NULL);
@@ -1593,14 +1598,40 @@ int main(int argc, char *argv[])
       _tcslcpy(g_szConfigIncludeDir, pszEnv, MAX_PATH);
 #endif
 
+#if defined(_WIN32) || HAVE_DECL_GETOPT_LONG
+   static struct option longOptions[] =
+   {
+      { (char *)"zone-uin", 0, NULL, 'B' },
+      { NULL, 0, 0, 0 }
+   };
+#endif
+
    // Parse command line
 	if (argc == 1)
 		iAction = ACTION_HELP;
    opterr = 1;
+
+#if defined(_WIN32) || HAVE_DECL_GETOPT_LONG
+   while((ch = getopt_long(argc, argv, VALID_OPTIONS, longOptions, NULL)) != -1)
+#else
    while((ch = getopt(argc, argv, VALID_OPTIONS)) != -1)
+#endif
    {
       switch(ch)
       {
+         case 'B':  //zone UIN
+         {
+            UINT32 zoneUIN = strtoul(optarg, &eptr, 0);
+            if ((*eptr != 0))
+            {
+               fprintf(stderr, "Invalid zone UIN: %s\n", optarg);
+               iAction = -1;
+               iExitCode = 1;
+            }
+            else
+               g_zoneUIN = zoneUIN;
+            break;
+         }
          case 'c':   // Configuration file
 #ifdef UNICODE
 				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, g_szConfigFile, MAX_PATH);

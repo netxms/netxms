@@ -10660,7 +10660,8 @@ void ClientSession::registerAgent(NXCPMessage *pRequest)
 
 	if (ConfigReadBoolean(_T("EnableAgentRegistration"), false))
 	{
-      node = FindNodeByIP(0, m_clientAddr);
+	   UINT32 zoneUIN = pRequest->getFieldAsUInt32(VID_ZONE_UIN);
+      node = FindNodeByIP(zoneUIN, m_clientAddr);
       if (node != NULL)
       {
          // Node already exist, force configuration poll
@@ -10671,7 +10672,7 @@ void ClientSession::registerAgent(NXCPMessage *pRequest)
       {
          DiscoveredAddress *info = MemAllocStruct<DiscoveredAddress>();
          info->ipAddr = m_clientAddr;
-         info->zoneUIN = 0;	// Add to default zone
+         info->zoneUIN = zoneUIN;
          info->ignoreFilter = TRUE;		// Ignore discovery filters and add node anyway
          info->sourceType = DA_SRC_AGENT_REGISTRATION;
          info->sourceNodeId = 0;

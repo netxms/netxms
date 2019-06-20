@@ -35,7 +35,7 @@ LONG H_PlatformName(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCo
 /**
  * Register agent on management server
  */
-BOOL RegisterOnServer(const TCHAR *pszServer)
+BOOL RegisterOnServer(const TCHAR *pszServer, UINT32 zoneUIN)
 {
    SOCKET hSocket;
    BOOL bRet = FALSE;
@@ -69,6 +69,7 @@ BOOL RegisterOnServer(const TCHAR *pszServer)
          msg.setField(VID_VERSION_MAJOR, (WORD)NETXMS_VERSION_MAJOR);
          msg.setField(VID_VERSION_MINOR, (WORD)NETXMS_VERSION_MINOR);
          msg.setField(VID_VERSION_RELEASE, (WORD)NETXMS_VERSION_BUILD);
+         msg.setField(VID_ZONE_UIN, zoneUIN);
 
          // Send request
          pRawMsg = msg.serialize();
