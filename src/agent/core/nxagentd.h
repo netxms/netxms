@@ -89,7 +89,7 @@
 #define MAX_PSUFFIX_LENGTH 32
 #define MAX_SERVERS        32
 #define MAX_ESA_USER_NAME  64
-#define MAX_AGENT_MSG_SIZE 4194304
+#define MAX_AGENT_MSG_SIZE (16 * 1024 * 1024)   // 16MB
 
 #define AF_DAEMON                   0x00000001
 #define AF_USE_SYSLOG               0x00000002
@@ -376,34 +376,34 @@ public:
    void run();
    void disconnect();
 
-   virtual bool sendMessage(const NXCPMessage *msg);
-   virtual void postMessage(const NXCPMessage *msg);
-   virtual bool sendRawMessage(const NXCP_MESSAGE *msg);
-   virtual void postRawMessage(const NXCP_MESSAGE *msg);
-	virtual bool sendFile(UINT32 requestId, const TCHAR *file, long offset, bool allowCompression, VolatileCounter *cancellationFlag);
-   virtual UINT32 doRequest(NXCPMessage *msg, UINT32 timeout);
-   virtual NXCPMessage *doRequestEx(NXCPMessage *msg, UINT32 timeout);
-   virtual NXCPMessage *waitForMessage(UINT16 code, UINT32 id, UINT32 timeout);
-   virtual UINT32 generateRequestId();
+   virtual bool sendMessage(const NXCPMessage *msg) override;
+   virtual void postMessage(const NXCPMessage *msg) override;
+   virtual bool sendRawMessage(const NXCP_MESSAGE *msg) override;
+   virtual void postRawMessage(const NXCP_MESSAGE *msg) override;
+	virtual bool sendFile(UINT32 requestId, const TCHAR *file, long offset, bool allowCompression, VolatileCounter *cancellationFlag) override;
+   virtual UINT32 doRequest(NXCPMessage *msg, UINT32 timeout) override;
+   virtual NXCPMessage *doRequestEx(NXCPMessage *msg, UINT32 timeout) override;
+   virtual NXCPMessage *waitForMessage(UINT16 code, UINT32 id, UINT32 timeout) override;
+   virtual UINT32 generateRequestId() override;
 
-   virtual UINT32 getId() { return m_id; };
+   virtual UINT32 getId() override { return m_id; };
 
-   virtual UINT64 getServerId() { return m_serverId; }
-	virtual const InetAddress& getServerAddress() { return m_serverAddr; }
+   virtual UINT64 getServerId() override { return m_serverId; }
+	virtual const InetAddress& getServerAddress() override { return m_serverAddr; }
 
-   virtual bool isMasterServer() { return m_masterServer; }
-   virtual bool isControlServer() { return m_controlServer; }
-   virtual bool canAcceptData() { return m_acceptData; }
-   virtual bool canAcceptTraps() { return m_acceptTraps; }
-   virtual bool canAcceptFileUpdates() { return m_acceptFileUpdates; }
-   virtual bool isBulkReconciliationSupported() { return m_bulkReconciliationSupported; }
-   virtual bool isIPv6Aware() { return m_ipv6Aware; }
+   virtual bool isMasterServer() override { return m_masterServer; }
+   virtual bool isControlServer() override { return m_controlServer; }
+   virtual bool canAcceptData() override { return m_acceptData; }
+   virtual bool canAcceptTraps() override { return m_acceptTraps; }
+   virtual bool canAcceptFileUpdates() override { return m_acceptFileUpdates; }
+   virtual bool isBulkReconciliationSupported() override { return m_bulkReconciliationSupported; }
+   virtual bool isIPv6Aware() override { return m_ipv6Aware; }
 
-   virtual UINT32 openFile(TCHAR *nameOfFile, UINT32 requestId, time_t fileModTime = 0);
+   virtual UINT32 openFile(TCHAR *nameOfFile, UINT32 requestId, time_t fileModTime = 0) override;
 
-   virtual void debugPrintf(int level, const TCHAR *format, ...);
+   virtual void debugPrintf(int level, const TCHAR *format, ...) override;
 
-   virtual void prepareProxySessionSetupMsg(NXCPMessage *msg);
+   virtual void prepareProxySessionSetupMsg(NXCPMessage *msg) override;
 
    UINT32 getIndex() { return m_index; }
    void setIndex(UINT32 index) { if (m_index == INVALID_INDEX) m_index = index; }
@@ -425,31 +425,31 @@ public:
    VirtualSession(UINT64 serverId);
    virtual ~VirtualSession();
 
-   virtual UINT32 getId() { return m_id; }
+   virtual UINT32 getId() override { return m_id; }
 
-   virtual UINT64 getServerId() { return m_serverId; };
-   virtual const InetAddress& getServerAddress() { return InetAddress::LOOPBACK; }
+   virtual UINT64 getServerId() override { return m_serverId; };
+   virtual const InetAddress& getServerAddress() override { return InetAddress::LOOPBACK; }
 
-   virtual bool isMasterServer() { return false; }
-   virtual bool isControlServer() { return false; }
-   virtual bool canAcceptData() { return true; }
-   virtual bool canAcceptTraps() { return true; }
-   virtual bool canAcceptFileUpdates() { return false; }
-   virtual bool isBulkReconciliationSupported() { return false; }
-   virtual bool isIPv6Aware() { return true; }
+   virtual bool isMasterServer() override { return false; }
+   virtual bool isControlServer() override { return false; }
+   virtual bool canAcceptData() override { return false; }
+   virtual bool canAcceptTraps() override { return false; }
+   virtual bool canAcceptFileUpdates() override { return false; }
+   virtual bool isBulkReconciliationSupported() override { return false; }
+   virtual bool isIPv6Aware() override { return true; }
 
-   virtual bool sendMessage(const NXCPMessage *pMsg) { return false; }
-   virtual void postMessage(const NXCPMessage *pMsg) { }
-   virtual bool sendRawMessage(const NXCP_MESSAGE *pMsg) { return false; }
-   virtual void postRawMessage(const NXCP_MESSAGE *pMsg) { }
-   virtual bool sendFile(UINT32 requestId, const TCHAR *file, long offset, bool allowCompression, VolatileCounter *cancelationFlag) { return false; }
-   virtual UINT32 doRequest(NXCPMessage *msg, UINT32 timeout) { return RCC_NOT_IMPLEMENTED; }
-   virtual NXCPMessage *doRequestEx(NXCPMessage *msg, UINT32 timeout) { return NULL; }
-   virtual NXCPMessage *waitForMessage(UINT16 code, UINT32 id, UINT32 timeout) { return NULL; }
-   virtual UINT32 generateRequestId() { return 0; }
-   virtual UINT32 openFile(TCHAR *fileName, UINT32 requestId, time_t fileModTime = 0) { return ERR_INTERNAL_ERROR; }
-   virtual void debugPrintf(int level, const TCHAR *format, ...);
-   virtual void prepareProxySessionSetupMsg(NXCPMessage *msg) { }
+   virtual bool sendMessage(const NXCPMessage *pMsg) override { return false; }
+   virtual void postMessage(const NXCPMessage *pMsg) override { }
+   virtual bool sendRawMessage(const NXCP_MESSAGE *pMsg) override { return false; }
+   virtual void postRawMessage(const NXCP_MESSAGE *pMsg) override { }
+   virtual bool sendFile(UINT32 requestId, const TCHAR *file, long offset, bool allowCompression, VolatileCounter *cancelationFlag) override { return false; }
+   virtual UINT32 doRequest(NXCPMessage *msg, UINT32 timeout) override { return RCC_NOT_IMPLEMENTED; }
+   virtual NXCPMessage *doRequestEx(NXCPMessage *msg, UINT32 timeout) override { return NULL; }
+   virtual NXCPMessage *waitForMessage(UINT16 code, UINT32 id, UINT32 timeout) override { return NULL; }
+   virtual UINT32 generateRequestId() override { return 0; }
+   virtual UINT32 openFile(TCHAR *fileName, UINT32 requestId, time_t fileModTime = 0) override { return ERR_INTERNAL_ERROR; }
+   virtual void debugPrintf(int level, const TCHAR *format, ...) override;
+   virtual void prepareProxySessionSetupMsg(NXCPMessage *msg) override { }
 };
 
 /**
@@ -472,31 +472,31 @@ public:
    ProxySession(NXCPMessage *msg);
    virtual ~ProxySession();
 
-   virtual UINT32 getId() { return m_id; }
+   virtual UINT32 getId() override { return m_id; }
 
-   virtual UINT64 getServerId() { return m_serverId; };
-   virtual const InetAddress& getServerAddress() { return m_serverAddress; }
+   virtual UINT64 getServerId() override { return m_serverId; };
+   virtual const InetAddress& getServerAddress() override { return m_serverAddress; }
 
-   virtual bool isMasterServer() { return m_masterServer; }
-   virtual bool isControlServer() { return m_controlServer; }
-   virtual bool canAcceptData() { return m_canAcceptData; }
-   virtual bool canAcceptTraps() { return m_canAcceptTraps; }
-   virtual bool canAcceptFileUpdates() { return m_canAcceptFileUpdates; }
-   virtual bool isBulkReconciliationSupported() { return false; }
-   virtual bool isIPv6Aware() { return m_ipv6Aware; }
+   virtual bool isMasterServer() override { return m_masterServer; }
+   virtual bool isControlServer() override { return m_controlServer; }
+   virtual bool canAcceptData() override { return m_canAcceptData; }
+   virtual bool canAcceptTraps() override { return m_canAcceptTraps; }
+   virtual bool canAcceptFileUpdates() override { return m_canAcceptFileUpdates; }
+   virtual bool isBulkReconciliationSupported() override { return false; }
+   virtual bool isIPv6Aware() override { return m_ipv6Aware; }
 
-   virtual bool sendMessage(const NXCPMessage *pMsg);
-   virtual void postMessage(const NXCPMessage *pMsg);
-   virtual bool sendRawMessage(const NXCP_MESSAGE *pMsg);
-   virtual void postRawMessage(const NXCP_MESSAGE *pMsg);
-   virtual bool sendFile(UINT32 requestId, const TCHAR *file, long offset, bool allowCompression, VolatileCounter *cancelationFlag) { return false; }
-   virtual UINT32 doRequest(NXCPMessage *msg, UINT32 timeout) { return RCC_NOT_IMPLEMENTED; }
-   virtual NXCPMessage *doRequestEx(NXCPMessage *msg, UINT32 timeout) { return NULL; }
-   virtual NXCPMessage *waitForMessage(UINT16 code, UINT32 id, UINT32 timeout) { return NULL; }
-   virtual UINT32 generateRequestId() { return 0; }
-   virtual UINT32 openFile(TCHAR *fileName, UINT32 requestId, time_t fileModTime = 0) { return ERR_INTERNAL_ERROR; }
-   virtual void debugPrintf(int level, const TCHAR *format, ...);
-   virtual void prepareProxySessionSetupMsg(NXCPMessage *msg) { }
+   virtual bool sendMessage(const NXCPMessage *pMsg) override;
+   virtual void postMessage(const NXCPMessage *pMsg) override;
+   virtual bool sendRawMessage(const NXCP_MESSAGE *pMsg) override;
+   virtual void postRawMessage(const NXCP_MESSAGE *pMsg) override;
+   virtual bool sendFile(UINT32 requestId, const TCHAR *file, long offset, bool allowCompression, VolatileCounter *cancelationFlag) override { return false; }
+   virtual UINT32 doRequest(NXCPMessage *msg, UINT32 timeout) override { return RCC_NOT_IMPLEMENTED; }
+   virtual NXCPMessage *doRequestEx(NXCPMessage *msg, UINT32 timeout) override { return NULL; }
+   virtual NXCPMessage *waitForMessage(UINT16 code, UINT32 id, UINT32 timeout) override { return NULL; }
+   virtual UINT32 generateRequestId() override { return 0; }
+   virtual UINT32 openFile(TCHAR *fileName, UINT32 requestId, time_t fileModTime = 0) override { return ERR_INTERNAL_ERROR; }
+   virtual void debugPrintf(int level, const TCHAR *format, ...) override;
+   virtual void prepareProxySessionSetupMsg(NXCPMessage *msg) override { }
 };
 
 /**
