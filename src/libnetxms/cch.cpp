@@ -97,6 +97,9 @@ int SocketCommChannel::shutdown()
  */
 void SocketCommChannel::close()
 {
-   closesocket(m_socket);
-   m_socket = INVALID_SOCKET;
+   if (m_socket != INVALID_SOCKET)
+   {
+      closesocket(m_socket);
+      m_socket = INVALID_SOCKET;
+   }
 }
