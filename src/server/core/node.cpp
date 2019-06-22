@@ -2818,6 +2818,15 @@ bool Node::updateSoftwarePackages(PollerInfo *poller, UINT32 requestId)
 }
 
 /**
+ * Background worker for duplicate node delete
+ */
+static void DeleteDuplicateNode(Node *node)
+{
+   node->deleteObject(NULL);
+   node->decRefCount();
+}
+
+/**
  * Perform configuration poll on node
  */
 void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId)
@@ -2940,15 +2949,16 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
             duplicateNode->reconcileWithDuplicateNode(this);
             duplicateNode->decRefCount();
             nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("Aborted configuration poll for node %s (ID: %d)"), m_name, m_id);
-            ThreadPoolExecute(g_pollerThreadPool, this, &NetObj::deleteObject, static_cast<NetObj*>(NULL));
+            incRefCount();  // for delete callback
+            ThreadPoolExecute(g_pollerThreadPool, DeleteDuplicateNode, this);
             return;
          }
          else if (dcr == REMOVE_OTHER)
          {
             nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 3, _T("Removing node %s [%u] as duplicate"), duplicateNode->getName(), duplicateNode->getId());
             reconcileWithDuplicateNode(duplicateNode);
-            ThreadPoolExecute(g_pollerThreadPool, duplicateNode, &NetObj::deleteObject, static_cast<NetObj*>(NULL));
-            duplicateNode->decRefCount();
+            // Delete callback will call decRefCount
+            ThreadPoolExecute(g_pollerThreadPool, DeleteDuplicateNode, duplicateNode);
          }
       }
 
