@@ -447,11 +447,11 @@ bool InfluxDBStorageDriver::saveDCItemValue(DCItem *dci, time_t timestamp, const
 
             if (m_tags.empty())
             {
-               m_tags = ca_key_name + '=' + '"' + ca_value + '"';
+               m_tags = ca_key_name + '=' + ca_value;
             }
             else
             {
-               m_tags = m_tags + ',' + ca_key_name + '=' + '"' + ca_value + '"';
+               m_tags = m_tags + ',' + ca_key_name + '=' + ca_value;
             }
 
          }
