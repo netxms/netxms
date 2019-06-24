@@ -19,7 +19,8 @@ import org.netxms.client.objects.Node;
  */
 public class TcpProxyApp
 {
-   private String server; 
+   private String server;
+   private int serverPort; 
    private String login;
    private String password;
    private String node;
@@ -30,7 +31,17 @@ public class TcpProxyApp
    
    public TcpProxyApp(String server, String login, String password, String node, InetAddress remoteAddress, int remotePort, int localPort)
    {
-      this.server = server;
+      String[] parts = server.split(":");
+      if (parts.length == 2)
+      {
+	 this.server = parts[0];
+	 this.serverPort = Integer.parseInt(parts[1]);
+      }
+      else
+      {
+         this.server = server;
+	 this.serverPort = 4701;
+      }
       this.login = login;
       this.password = password;
       this.node = node;
@@ -45,7 +56,7 @@ public class TcpProxyApp
    private void run() throws Exception
    {
       print("Connecting to NetXMS server " + server + " as user " + login);
-      NXCSession session = new NXCSession(server);
+      NXCSession session = new NXCSession(server, serverPort);
       session.connect(new int[] { ProtocolVersion.INDEX_TCPPROXY });
       session.login(login, password);
 

@@ -56,6 +56,7 @@ def main():
    updatePomVersion('src/client/java/netxms-client/pom.xml', sys.argv[1])
    updatePomVersion('src/client/nxshell/java/pom.xml', sys.argv[1])
    updatePomVersion('src/client/nxapisrv/java/pom.xml', sys.argv[1])
+   updatePomVersion('src/client/nxtcpproxy/pom.xml', sys.argv[1])
    replaceInFile('src/java/build/pack.sh', r'version=.*', r'version=%s'  % sys.argv[1]) 
    updatePomVersion('src/java/client/mobile-agent/pom.xml', sys.argv[1])
    replaceVersionInJuraXML(sys.argv[1])
