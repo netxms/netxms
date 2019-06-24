@@ -25,42 +25,35 @@
  */
 LONG H_InstalledProducts(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *session)
 {
-   const char *command;
-   if (access("/usr/sbin/pkg", X_OK) == 0)
+   if (access("/usr/sbin/pkg", X_OK) != 0)
+      return SYSINFO_RC_UNSUPPORTED;
+
+   FILE *pipe = popen("/usr/sbin/pkg query '@@@ #%n:%q|%v||%t|%w|%c'", "r");
+   if (pipe == NULL)
+      return SYSINFO_RC_ERROR;
+
+   value->addColumn(_T("NAME"));
+   value->addColumn(_T("VERSION"));
+   value->addColumn(_T("VENDOR"));
+   value->addColumn(_T("DATE"));
+   value->addColumn(_T("URL"));
+   value->addColumn(_T("DESCRIPTION"));
+
+   while(1)
    {
-		command = "/usr/sbin/pkg query '@@@ #%n|%v||%t|%w|%e\\n'";
-   }
-   else
-   {
-  		return SYSINFO_RC_UNSUPPORTED;
-   }
+      char line[1024];
+      if (fgets(line, 1024, pipe) == NULL)
+         break;
 
-	FILE *pipe = popen(command, "r");
-	if (pipe == NULL)
-		return SYSINFO_RC_ERROR;
+      if (memcmp(line, "@@@", 3))
+         continue;
 
-	value->addColumn(_T("NAME"));
-	value->addColumn(_T("VERSION"));
-	value->addColumn(_T("VENDOR"));
-	value->addColumn(_T("DATE"));
-	value->addColumn(_T("URL"));
-	value->addColumn(_T("DESCRIPTION"));
-
-	while(1)
-	{
-		char line[1024];
-		if (fgets(line, 1024, pipe) == NULL)
-			break;
-
-		if (memcmp(line, "@@@", 3))
-			continue;
-
-		value->addRow();
-		char *curr = strchr(&line[3], '#');
-		if (curr != NULL)
-			curr++;
-		else
-			curr = &line[3];
+      value->addRow();
+      char *curr = strchr(&line[3], '#');
+      if (curr != NULL)
+         curr++;
+      else
+         curr = &line[3];
 		for(int i = 0; i < 6; i++)
 		{
 			char *ptr = strchr(curr, '|');
@@ -82,11 +75,14 @@ LONG H_InstalledProducts(const TCHAR *cmd, const TCHAR *arg, Table *value, Abstr
 			// OS architecture or package is architecture-independent
 			if (i == 0)
 			{
-			   char *pa = strrchr(curr, ':');
-			   if (pa != NULL)
+			   char *s = strchr(curr, ':');
+			   if (s != NULL)
 			   {
-			      if (!strcmp(pa, ":all") || !strcmp(pa, ":noarch") || !strcmp(pa, ":(none)") || (strstr(arch, pa) != NULL))
-			         *pa = 0;
+               char *pa = strrchr(curr, ':');
+			      if (!strcmp(pa, ":*") || (strstr(arch, pa) != NULL))
+			         *s = 0;
+					else
+                  memmove(s, pa, strlen(pa) + 1);
 			   }
 			}
 
