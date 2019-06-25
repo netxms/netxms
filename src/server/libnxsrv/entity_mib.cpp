@@ -28,8 +28,9 @@
 /**
  * Component handle for NXSL
  */
-struct NXSL_ComponentHandle
+class NXSL_ComponentHandle
 {
+public:
    ComponentTree *tree;
    Component *component;
 

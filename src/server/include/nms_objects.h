@@ -255,14 +255,14 @@ protected:
    INDEX_HEAD *acquireIndex();
    void swapAndWait();
 
-	static int findElement(INDEX_HEAD *index, UINT64 key);
+	static ssize_t findElement(INDEX_HEAD *index, UINT64 key);
    void findObjects(Array *resultSet, bool (*comparator)(void *, void *), void *data);
 
 public:
 	AbstractIndexBase(bool owner);
 	~AbstractIndexBase();
 
-   int size();
+   size_t size();
 	bool put(UINT64 key, void *object);
 	void remove(UINT64 key);
 	void clear();

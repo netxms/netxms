@@ -643,7 +643,7 @@ TCHAR *LDAPConnection::getAttrValue(LDAPMessage *entry, const char *attr, int in
 {
    TCHAR *result = NULL;
    berval **values = ldap_get_values_lenA(m_ldapConn, entry, (char *)attr);   // cast needed for Windows LDAP library
-   if (ldap_count_values_len(values) > index)
+   if (static_cast<int>(ldap_count_values_len(values)) > index)
    {
 #ifdef UNICODE
       result = WideStringFromUTF8String(values[index]->bv_val);

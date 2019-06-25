@@ -180,7 +180,7 @@ bool AbstractIndexBase::put(UINT64 key, void *object)
 
 	MutexLock(m_writerLock);
 
-	int pos = findElement(m_secondary, key);
+	ssize_t pos = findElement(m_secondary, key);
 	if (pos != -1)
 	{
 		// Element already exist
@@ -258,7 +258,7 @@ void AbstractIndexBase::remove(UINT64 key)
          m_primary->maxKey = (m_primary->size > 0) ? m_primary->elements[m_primary->size - 1].key : 0;
          m_dirty = false;
       }
-      int pos = findElement(m_primary, key);
+      ssize_t pos = findElement(m_primary, key);
       if (pos != -1)
       {
          if (m_owner)
@@ -271,7 +271,7 @@ void AbstractIndexBase::remove(UINT64 key)
 
    MutexLock(m_writerLock);
 
-	int pos = findElement(m_secondary, key);
+	ssize_t pos = findElement(m_secondary, key);
 	if (pos != -1)
 	{
       m_secondary->size--;
@@ -330,7 +330,7 @@ void AbstractIndexBase::clear()
  * @param key object's key
  * @return element index or -1 if not found
  */
-int AbstractIndexBase::findElement(INDEX_HEAD *index, UINT64 key)
+ssize_t AbstractIndexBase::findElement(INDEX_HEAD *index, UINT64 key)
 {
    size_t first, last, mid;
 
@@ -375,7 +375,7 @@ void *AbstractIndexBase::get(UINT64 key)
       m_dirty = false;
    }
    INDEX_HEAD *index = acquireIndex();
-	int pos = findElement(index, key);
+	ssize_t pos = findElement(index, key);
 	void *object = (pos == -1) ? NULL : index->elements[pos].object;
    ReleaseIndex(index);
 	return object;
@@ -384,10 +384,10 @@ void *AbstractIndexBase::get(UINT64 key)
 /**
  * Get index size
  */
-int AbstractIndexBase::size()
+size_t AbstractIndexBase::size()
 {
    INDEX_HEAD *index = acquireIndex();
-	int s = index->size;
+	size_t s = index->size;
    ReleaseIndex(index);
 	return s;
 }

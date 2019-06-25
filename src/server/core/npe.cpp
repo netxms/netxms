@@ -385,7 +385,7 @@ bool GetPredictedData(ClientSession *session, const NXCPMessage *request, NXCPMe
 
    // Allocate memory for data and prepare data header
    char buffer[64];
-   int count = MIN((timestamp - timeFrom)/interval, MAX_DCI_DATA_RECORDS);
+   int count = std::min(static_cast<int>((timestamp - timeFrom) / interval), MAX_DCI_DATA_RECORDS);
    DCI_DATA_HEADER *pData = (DCI_DATA_HEADER *)malloc(count * s_rowSize[dataType] + sizeof(DCI_DATA_HEADER));
    pData->dataType = htonl((UINT32)dataType);
    pData->dciId = htonl(dci->getId());

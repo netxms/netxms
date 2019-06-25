@@ -212,8 +212,9 @@ static int cas_validate(const char *ticket, const char *service, char *outbuf, i
    }
 
    total = 0;
-   do {
-      b = SSL_read(ssl, buf + total, (sizeof(buf) - 1) - total);
+   do 
+   {
+      b = SSL_read(ssl, buf + total, static_cast<int>(sizeof(buf) - 1 - total));
       total += b;
    } while (b > 0);
    buf[total] = '\0';
