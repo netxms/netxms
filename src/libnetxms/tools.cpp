@@ -20,6 +20,10 @@
 **
 **/
 
+#ifdef _WIN32
+#define _CRT_NONSTDC_NO_WARNINGS
+#endif
+
 #include "libnetxms.h"
 #include <stdarg.h>
 #include <nms_agent.h>
@@ -3044,10 +3048,40 @@ static time_t FileTimeToUnixTime(FILETIME *ft)
 /**
  * stat() implementaion for Windows
  */
-int LIBNETXMS_EXPORTABLE _statw32(const TCHAR *file, struct _stati64 *st)
+int LIBNETXMS_EXPORTABLE _statw32(const WCHAR *file, struct _stati64 *st)
 {
+   size_t l = _tcslen(file);
+
+   // Special handling for root directory
+   if (((l == 2) && (file[1] == L':')) ||
+       ((l == 3) && (file[1] == L':') && (file[2] == L'\\')))
+   {
+      if (l == 2)
+      {
+         WCHAR temp[4];
+         temp[0] = file[0];
+         temp[1] = L':';
+         temp[2] = L'\\';
+         temp[3] = 0;
+         return _wstati64(temp, st);
+      }
+      return _wstati64(file, st);
+   }
+
+   WCHAR *fn;
+   if ((l > 1) && (file[l - 1] == L'\\'))
+   {
+      fn = (WCHAR *)alloca(l * sizeof(TCHAR));
+      memcpy(fn, file, (l - 1) * sizeof(TCHAR));
+      fn[l - 1] = 0;
+   }
+   else
+   {
+      fn = const_cast<WCHAR*>(file);
+   }
+
    WIN32_FIND_DATA fd;
-   HANDLE h = FindFirstFile(file, &fd);
+   HANDLE h = FindFirstFile(fn, &fd);
    if (h == INVALID_HANDLE_VALUE)
    {
       _set_errno((GetLastError() == ERROR_FILE_NOT_FOUND) ? ENOENT : EIO);
@@ -3059,8 +3093,6 @@ int LIBNETXMS_EXPORTABLE _statw32(const TCHAR *file, struct _stati64 *st)
    if (!(fd.dwFileAttributes & FILE_ATTRIBUTE_READONLY))
       st->st_mode |= _S_IWRITE;
    if (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-      st->st_mode |= _S_IFDIR;
-   else if (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
       st->st_mode |= _S_IFDIR;
    else if (fd.dwFileAttributes & FILE_ATTRIBUTE_DEVICE)
       st->st_mode |= _S_IFCHR;
