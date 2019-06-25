@@ -959,6 +959,23 @@ static void TestQueue()
    AssertEquals(q->allocated(), 16);
    EndTest();
 
+   StartTest(_T("Queue: performance"));
+   delete q;
+   q = new Queue();
+   INT64 startTime = GetCurrentTimeMs();
+   for(int i = 0; i < 100; i++)
+   {
+      for(int j = 0; j < 10000; j++)
+         q->put(CAST_TO_POINTER(j + 1, void *));
+      AssertEquals(q->size(), 10000);
+
+      void *p;
+      while((p = q->get()) != NULL)
+         ;
+      AssertEquals(q->size(), 0);
+   }
+   EndTest(GetCurrentTimeMs() - startTime);
+
    delete q;
 }
 

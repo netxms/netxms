@@ -92,7 +92,7 @@ NetObj::NetObj()
    m_stateBeforeMaintenance = 0;
    m_runtimeFlags = 0;
    m_flags = 0;
-   m_responsibleUsers = new IntegerArray<UINT32>(0, 16);
+   m_responsibleUsers = NULL;
    m_rwlockResponsibleUsers = RWLockCreate();
 }
 
@@ -459,6 +459,7 @@ bool NetObj::loadCommonProperties(DB_HANDLE hdb)
 
 	if (success)
 	{
+      success = false;
 	   hStmt = DBPrepare(hdb, _T("SELECT user_id FROM responsible_users WHERE object_id=?"));
 	   if (hStmt != NULL)
 	   {
@@ -466,20 +467,18 @@ bool NetObj::loadCommonProperties(DB_HANDLE hdb)
 	      DB_RESULT hResult = DBSelectPrepared(hStmt);
 	      if (hResult != NULL)
 	      {
+	         success = true;
 	         int numRows = DBGetNumRows(hResult);
-	         for(int i = 0; i < numRows; i++)
+	         if (numRows > 0)
 	         {
-	            m_responsibleUsers->add(DBGetFieldULong(hResult, i, 0));
+	            m_responsibleUsers = new IntegerArray<UINT32>(numRows, 16);
+               for(int i = 0; i < numRows; i++)
+                  m_responsibleUsers->add(DBGetFieldULong(hResult, i, 0));
 	         }
 	         DBFreeResult(hResult);
 	      }
-	      else
-	         success = false;
-
 	      DBFreeStatement(hStmt);
 	   }
-	   else
-	      success = false;
 	}
 
 	if (!success)
@@ -663,27 +662,29 @@ bool NetObj::saveCommonProperties(DB_HANDLE hdb)
 		success = saveTrustedNodes(hdb);
 
 	// Save responsible users
-	if (success && !m_responsibleUsers->isEmpty())
+	if (success)
 	{
 	   success = executeQueryOnObject(hdb, _T("DELETE FROM responsible_users WHERE object_id=?"));
-	   if (success)
+      lockResponsibleUsersList(false);
+	   if (success && (m_responsibleUsers != NULL) && !m_responsibleUsers->isEmpty())
 	   {
-	      hStmt = DBPrepare(hdb, _T("INSERT INTO responsible_users (object_id,user_id) VALUES (?,?)"));
+	      hStmt = DBPrepare(hdb, _T("INSERT INTO responsible_users (object_id,user_id) VALUES (?,?)"), m_responsibleUsers->size() > 1);
 	      if (hStmt != NULL)
 	      {
 	         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
-	         lockResponsibleUsersList(false);
-	         for(int i = 0; i < m_responsibleUsers->size(); i++)
+	         for(int i = 0; (i < m_responsibleUsers->size()) && success; i++)
 	         {
 	            DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_responsibleUsers->get(i));
 	            success = DBExecute(hStmt);
 	         }
-	         unlockResponsibleUsersList();
 	         DBFreeStatement(hStmt);
 	      }
 	      else
+	      {
 	         success = false;
+	      }
 	   }
+      unlockResponsibleUsersList();
 	}
 
    return success ? saveModuleData(hdb) : false;
@@ -1516,7 +1517,11 @@ UINT32 NetObj::modifyFromMessageInternal(NXCPMessage *pRequest)
    if (pRequest->isFieldExist(VID_RESPONSIBLE_USERS))
    {
       lockResponsibleUsersList(true);
+      if (m_responsibleUsers == NULL)
+         m_responsibleUsers = new IntegerArray<UINT32>(0, 16);
       pRequest->getFieldAsInt32Array(VID_RESPONSIBLE_USERS, m_responsibleUsers);
+      if (m_responsibleUsers->isEmpty())
+         delete_and_null(m_responsibleUsers);
       unlockResponsibleUsersList();
    }
 
@@ -2649,8 +2654,11 @@ json_t *NetObj::toJson()
 
    json_t *responsibleUsers = json_array();
    lockResponsibleUsersList(false);
-   for(int i = 0; i < m_responsibleUsers->size(); i++)
-      json_array_append_new(responsibleUsers, json_integer(m_responsibleUsers->get(i)));
+   if (m_responsibleUsers != NULL)
+   {
+      for(int i = 0; i < m_responsibleUsers->size(); i++)
+         json_array_append_new(responsibleUsers, json_integer(m_responsibleUsers->get(i)));
+   }
    unlockResponsibleUsersList();
    json_object_set_new(root, "responsibleUsers", responsibleUsers);
 
@@ -3019,11 +3027,14 @@ void NetObj::getAllResponsibleUsersInternal(IntegerArray<UINT32> *list)
    {
       NetObj *obj = m_parentList->get(i);
       obj->lockResponsibleUsersList(false);
-      for(int n = 0; n < obj->m_responsibleUsers->size(); n++)
+      if (obj->m_responsibleUsers != NULL)
       {
-         UINT32 userId = obj->m_responsibleUsers->get(n);
-         if (!list->contains(userId))
-            list->add(userId);
+         for(int n = 0; n < obj->m_responsibleUsers->size(); n++)
+         {
+            UINT32 userId = obj->m_responsibleUsers->get(n);
+            if (!list->contains(userId))
+               list->add(userId);
+         }
       }
       obj->unlockResponsibleUsersList();
       m_parentList->get(i)->getAllResponsibleUsersInternal(list);
@@ -3037,7 +3048,7 @@ void NetObj::getAllResponsibleUsersInternal(IntegerArray<UINT32> *list)
 IntegerArray<UINT32> *NetObj::getAllResponsibleUsers()
 {
    lockResponsibleUsersList(false);
-   IntegerArray<UINT32> *responsibleUsers = new IntegerArray<UINT32>(m_responsibleUsers);
+   IntegerArray<UINT32> *responsibleUsers = (m_responsibleUsers != NULL) ? new IntegerArray<UINT32>(m_responsibleUsers) : new IntegerArray<UINT32>(0, 16);
    unlockResponsibleUsersList();
 
    getAllResponsibleUsersInternal(responsibleUsers);
