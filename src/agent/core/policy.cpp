@@ -178,7 +178,15 @@ UINT32 DeployPolicy(CommSession *session, NXCPMessage *request)
 	UINT32 rcc;
 
    TCHAR type[32];
-   request->getFieldAsString(VID_POLICY_TYPE, type, 32);
+   if (!_tcscmp(request->getFieldAsString(VID_POLICY_TYPE, type, 32), _T("")))
+   {
+      UINT32 tmp = request->getFieldAsUInt16(VID_POLICY_TYPE);
+      if (tmp == AGENT_POLICY_LOG_PARSER)
+         _tcscpy(type, _T("AgentConfig"));
+      else if (tmp == AGENT_POLICY_CONFIG)
+         _tcscpy(type, _T("LogParserConfig"));
+   }
+
 	uuid guid = request->getFieldAsGUID(VID_GUID);
 
    if (!_tcscmp(type, _T("AgentConfig")))
@@ -213,7 +221,7 @@ UINT32 DeployPolicy(CommSession *session, NXCPMessage *request)
 		NotifySubAgents(AGENT_NOTIFY_POLICY_INSTALLED, &n);
 	}
 	session->debugPrintf(3, _T("Policy deployment: TYPE=%s RCC=%d"), type, rcc);
-	return rcc;
+   return rcc;
 }
 
 /**
