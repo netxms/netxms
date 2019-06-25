@@ -13,10 +13,6 @@ netxmsd_LDADD = \
 	../../libnetxms/libnetxms.la \
    @SERVER_LIBS@ @EXEC_LIBS@
 
-if PYTHON_SUPPORT
-netxmsd_LDADD += ../../libnxpython/libnxpython.la @PYTHON_LIBS@
-endif
-
 EXTRA_DIST = \
 	netxmsd.vcxproj netxmsd.vcxproj.filters \
 	netxmsd.h \

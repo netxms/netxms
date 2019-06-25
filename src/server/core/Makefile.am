@@ -49,9 +49,6 @@ libnxcore_la_LIBADD = \
 	../../agent/libnxagent/libnxagent.la \
 	../../libnetxms/libnetxms.la \
 	@SERVER_LIBS@
-if PYTHON_SUPPORT
-libnxcore_la_LIBADD += @top_srcdir@/src/libnxpython/libnxpython.la @PYTHON_LIBS@
-endif
 if XMPP_SUPPORT
 libnxcore_la_LIBADD += @top_srcdir@/src/libstrophe/libstrophe.la
 endif
