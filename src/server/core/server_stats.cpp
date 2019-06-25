@@ -124,7 +124,7 @@ THREAD_RESULT THREAD_CALL ServerStatCollector(void *arg)
    AddQueueToCollector(_T("DBWriter.RawData"), GetRawDataWriterQueueSize);
    AddQueueToCollector(_T("DBWriter.Total"), GetTotalDBWriterQueueSize);
    AddQueueToCollector(_T("EventLogWriter"), GetEventLogWriterQueueSize);
-   AddQueueToCollector(_T("EventProcessor"), g_pEventQueue);
+   AddQueueToCollector(_T("EventProcessor"), &g_eventQueue);
    AddQueueToCollector(_T("NodeDiscoveryPoller"), GetDiscoveryPollerQueueSize);
    AddQueueToCollector(_T("Poller"), g_pollerThreadPool);
    AddQueueToCollector(_T("Scheduler"), g_schedulerThreadPool);

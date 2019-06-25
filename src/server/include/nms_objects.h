@@ -1344,7 +1344,7 @@ public:
 
 	void updateZoneUIN();
 
-   void statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQueue, Cluster *cluster, SNMP_Transport *snmpTransport, UINT32 nodeIcmpProxy);
+   void statusPoll(ClientSession *session, UINT32 rqId, ObjectQueue<Event> *eventQueue, Cluster *cluster, SNMP_Transport *snmpTransport, UINT32 nodeIcmpProxy);
 
    UINT32 wakeUp();
 	void setExpectedState(int state) { lockProperties(); setExpectedStateInternal(state); unlockProperties(); }
@@ -1395,7 +1395,7 @@ public:
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
    virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
 
-   void statusPoll(ClientSession *session, UINT32 rqId, Node *pollerNode, Queue *eventQueue);
+   void statusPoll(ClientSession *session, UINT32 rqId, Node *pollerNode, ObjectQueue<Event> *eventQueue);
 
    UINT32 getResponseTime() { return m_responseTime; }
 };
@@ -1762,7 +1762,7 @@ public:
 
    virtual json_t *toJson() override;
 
-   void statusPollFromController(ClientSession *session, UINT32 rqId, Queue *eventQueue, Node *controller, SNMP_Transport *snmpTransport);
+   void statusPollFromController(ClientSession *session, UINT32 rqId, ObjectQueue<Event> *eventQueue, Node *controller, SNMP_Transport *snmpTransport);
 
    UINT32 getIndex() const { return m_index; }
 	const BYTE *getMacAddr() const { return m_macAddr; }

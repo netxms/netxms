@@ -23,9 +23,13 @@
 #include "nxcore.h"
 
 /**
- * Global variables
+ * Event processing queue
  */
-Queue *g_pEventQueue = NULL;
+ObjectQueue<Event> g_eventQueue;
+
+/**
+ * Event processing policy
+ */
 EventPolicy *g_pEventPolicy = NULL;
 
 /**
@@ -61,7 +65,7 @@ EventObject::EventObject(NXCPMessage *msg)
  */
 EventObject::~EventObject()
 {
-   free(m_description);
+   MemFree(m_description);
 }
 
 /**
@@ -70,7 +74,7 @@ EventObject::~EventObject()
 void EventObject::modifyFromMessage(NXCPMessage *msg)
 {
    m_code = msg->getFieldAsUInt32(VID_EVENT_CODE);
-   free(m_description);
+   MemFree(m_description);
    m_description = msg->getFieldAsString(VID_DESCRIPTION);
    msg->getFieldAsString(VID_NAME, m_name, MAX_EVENT_NAME);
 }
@@ -125,7 +129,7 @@ EventTemplate::EventTemplate(NXCPMessage *msg) : EventObject(msg)
  */
 EventTemplate::~EventTemplate()
 {
-   free(m_messageTemplate);
+   MemFree(m_messageTemplate);
 }
 
 /**
@@ -150,7 +154,7 @@ void EventTemplate::modifyFromMessage(NXCPMessage *msg)
    EventObject::modifyFromMessage(msg);
    m_severity = msg->getFieldAsInt32(VID_SEVERITY);
    m_flags = msg->getFieldAsInt32(VID_FLAGS);
-   free(m_messageTemplate);
+   MemFree(m_messageTemplate);
    m_messageTemplate = msg->getFieldAsString(VID_MESSAGE);
 }
 
@@ -258,6 +262,7 @@ static bool CheckGroupMembership(UINT32 eventCode, UINT32 groupId)
 
    return false;
 }
+
 /**
  * Modify event template from message
  */
@@ -917,9 +922,6 @@ BOOL InitEventSubsystem()
    // Create object access mutex
    m_rwlockTemplateAccess = RWLockCreate();
 
-   // Create event queue
-   g_pEventQueue = new Queue;
-
    // Load events from database
    bSuccess = LoadEventConfiguration();
 
@@ -943,7 +945,6 @@ BOOL InitEventSubsystem()
  */
 void ShutdownEventSubsystem()
 {
-   delete g_pEventQueue;
    delete g_pEventPolicy;
    RWLockDestroy(m_rwlockTemplateAccess);
 }
@@ -992,34 +993,31 @@ void DeleteEventObjectFromList(UINT32 eventCode)
  * @param names names for parameters (NULL if parameters are unnamed)
  * @param args event parameters
  */
-static bool RealPostEvent(Queue *queue, UINT64 *eventId, UINT32 eventCode, UINT32 sourceId, UINT32 dciId,
+static bool RealPostEvent(ObjectQueue<Event> *queue, UINT64 *eventId, UINT32 eventCode, UINT32 sourceId, UINT32 dciId,
                           const TCHAR *userTag, const char *format, const TCHAR **names, va_list args)
 {
-   EventTemplate *eventTemplate = NULL;
-   bool success = false;
-
    RWLockReadLock(m_rwlockTemplateAccess, INFINITE);
+   EventObject *eventObject = m_eventObjects.get(eventCode);
+   RWLockUnlock(m_rwlockTemplateAccess);
 
-   eventTemplate = (EventTemplate *)m_eventObjects.get(eventCode);
-   if (eventTemplate != NULL)
+   bool success;
+   if ((eventObject != NULL) && !eventObject->isGroup())
    {
       // Template found, create new event
-      Event *evt = new Event(eventTemplate, sourceId, dciId, userTag, format, names, args);
+      Event *evt = new Event(static_cast<EventTemplate*>(eventObject), sourceId, dciId, userTag, format, names, args);
       if (eventId != NULL)
          *eventId = evt->getId();
 
       // Add new event to queue
       queue->put(evt);
 
-      eventTemplate->decRefCount();
+      eventObject->decRefCount();
       success = true;
    }
-
-   RWLockUnlock(m_rwlockTemplateAccess);
-
-   if (eventTemplate == NULL)
+   else
    {
-      DbgPrintf(3, _T("RealPostEvent: event with code %d not defined"), eventCode);
+      nxlog_debug_tag(_T("event.proc"), 3, _T("RealPostEvent: event with code %u not defined"), eventCode);
+      success = false;
    }
    return success;
 }
@@ -1048,7 +1046,7 @@ bool NXCORE_EXPORTABLE PostEvent(UINT32 eventCode, UINT32 sourceId, const char *
 {
    va_list args;
    va_start(args, format);
-   bool success = RealPostEvent(g_pEventQueue, NULL, eventCode, sourceId, 0, NULL, format, NULL, args);
+   bool success = RealPostEvent(&g_eventQueue, NULL, eventCode, sourceId, 0, NULL, format, NULL, args);
    va_end(args);
    return success;
 }
@@ -1078,7 +1076,7 @@ bool NXCORE_EXPORTABLE PostDciEvent(UINT32 eventCode, UINT32 sourceId, UINT32 dc
 {
    va_list args;
    va_start(args, format);
-   bool success = RealPostEvent(g_pEventQueue, NULL, eventCode, sourceId, dciId, NULL, format, NULL, args);
+   bool success = RealPostEvent(&g_eventQueue, NULL, eventCode, sourceId, dciId, NULL, format, NULL, args);
    va_end(args);
    return success;
 }
@@ -1108,7 +1106,7 @@ UINT64 NXCORE_EXPORTABLE PostEvent2(UINT32 eventCode, UINT32 sourceId, const cha
    va_list args;
    UINT64 eventId;
    va_start(args, format);
-   bool success = RealPostEvent(g_pEventQueue, &eventId, eventCode, sourceId, 0, NULL, format, NULL, args);
+   bool success = RealPostEvent(&g_eventQueue, &eventId, eventCode, sourceId, 0, NULL, format, NULL, args);
    va_end(args);
    return success ? eventId : 0;
 }
@@ -1137,7 +1135,7 @@ bool NXCORE_EXPORTABLE PostEventWithNames(UINT32 eventCode, UINT32 sourceId, con
 {
    va_list args;
    va_start(args, names);
-   bool success = RealPostEvent(g_pEventQueue, NULL, eventCode, sourceId, 0, NULL, format, names, args);
+   bool success = RealPostEvent(&g_eventQueue, NULL, eventCode, sourceId, 0, NULL, format, names, args);
    va_end(args);
    return success;
 }
@@ -1167,7 +1165,7 @@ bool NXCORE_EXPORTABLE PostDciEventWithNames(UINT32 eventCode, UINT32 sourceId, 
 {
    va_list args;
    va_start(args, names);
-   bool success = RealPostEvent(g_pEventQueue, NULL, eventCode, sourceId, dciId, NULL, format, names, args);
+   bool success = RealPostEvent(&g_eventQueue, NULL, eventCode, sourceId, dciId, NULL, format, names, args);
    va_end(args);
    return success;
 }
@@ -1196,7 +1194,7 @@ bool NXCORE_EXPORTABLE PostEventWithTagAndNames(UINT32 eventCode, UINT32 sourceI
 {
    va_list args;
    va_start(args, names);
-   bool success = RealPostEvent(g_pEventQueue, NULL, eventCode, sourceId, 0, userTag, format, names, args);
+   bool success = RealPostEvent(&g_eventQueue, NULL, eventCode, sourceId, 0, userTag, format, names, args);
    va_end(args);
    return success;
 }
@@ -1290,7 +1288,7 @@ bool NXCORE_EXPORTABLE PostEventWithTag(UINT32 eventCode, UINT32 sourceId, const
 {
    va_list args;
    va_start(args, format);
-   bool success = RealPostEvent(g_pEventQueue, NULL, eventCode, sourceId, 0, userTag, format, NULL, args);
+   bool success = RealPostEvent(&g_eventQueue, NULL, eventCode, sourceId, 0, userTag, format, NULL, args);
    va_end(args);
    return success;
 }
@@ -1315,7 +1313,7 @@ bool NXCORE_EXPORTABLE PostEventWithTag(UINT32 eventCode, UINT32 sourceId, const
  *        G - uuid object (GUID)
  *        i - Object ID
  */
-bool NXCORE_EXPORTABLE PostEventEx(Queue *queue, UINT32 eventCode, UINT32 sourceId, const char *format, ...)
+bool NXCORE_EXPORTABLE PostEventEx(ObjectQueue<Event> *queue, UINT32 eventCode, UINT32 sourceId, const char *format, ...)
 {
    va_list args;
    va_start(args, format);
@@ -1327,15 +1325,11 @@ bool NXCORE_EXPORTABLE PostEventEx(Queue *queue, UINT32 eventCode, UINT32 source
 /**
  * Resend events from specific queue to system event queue
  */
-void NXCORE_EXPORTABLE ResendEvents(Queue *queue)
+void NXCORE_EXPORTABLE ResendEvents(ObjectQueue<Event> *queue)
 {
-   while(1)
-   {
-      void *pEvent = queue->get();
-      if (pEvent == NULL)
-         break;
-      g_pEventQueue->put(pEvent);
-   }
+   Event *e;
+   while ((e = queue->get()) != NULL)
+      g_eventQueue.put(e);
 }
 
 /**

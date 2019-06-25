@@ -72,8 +72,8 @@ private:
    UINT32 m_maxWaitTime;
 
 public:
-   SerializationQueue() : Queue() { m_maxWaitTime = 0; }
-   SerializationQueue(UINT32 initialSize, UINT32 bufferIncrement) : Queue(initialSize, bufferIncrement) { m_maxWaitTime = 0; }
+   SerializationQueue() : Queue(false) { m_maxWaitTime = 0; }
+   SerializationQueue(size_t initialSize, size_t bufferIncrement) : Queue(initialSize, bufferIncrement, false) { m_maxWaitTime = 0; }
 
    UINT32 getMaxWaitTime() { return m_maxWaitTime; }
    void updateMaxWaitTime(UINT32 waitTime) { m_maxWaitTime = std::max(waitTime, m_maxWaitTime); }

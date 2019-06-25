@@ -358,15 +358,15 @@ bool NXCORE_EXPORTABLE PostDciEventWithNames(UINT32 eventCode, UINT32 sourceId, 
 bool NXCORE_EXPORTABLE PostDciEventWithNames(UINT32 eventCode, UINT32 sourceId, UINT32 dciId, StringMap *parameters);
 bool NXCORE_EXPORTABLE PostEventWithTagAndNames(UINT32 eventCode, UINT32 sourceId, const TCHAR *userTag, const char *format, const TCHAR **names, ...);
 bool NXCORE_EXPORTABLE PostEventWithTag(UINT32 eventCode, UINT32 sourceId, const TCHAR *userTag, const char *format, ...);
-bool NXCORE_EXPORTABLE PostEventEx(Queue *queue, UINT32 eventCode, UINT32 sourceId, const char *format, ...);
-void NXCORE_EXPORTABLE ResendEvents(Queue *queue);
+bool NXCORE_EXPORTABLE PostEventEx(ObjectQueue<Event> *queue, UINT32 eventCode, UINT32 sourceId, const char *format, ...);
+void NXCORE_EXPORTABLE ResendEvents(ObjectQueue<Event> *queue);
 
 const TCHAR NXCORE_EXPORTABLE *GetStatusAsText(int status, bool allCaps);
 
 /**
  * Global variables
  */
-extern Queue *g_pEventQueue;
+extern ObjectQueue<Event> g_eventQueue;
 extern EventPolicy *g_pEventPolicy;
 extern INT64 g_totalEventsProcessed;
 

@@ -40,6 +40,8 @@ typedef EnumerationCallbackResult (*QueueEnumerationCallback)(const void *object
  */
 class LIBNETXMS_EXPORTABLE Queue
 {
+   DISABLE_COPY_CTOR(Queue)
+
 private:
    MUTEX m_mutexQueueAccess;
    CONDITION m_condWakeup;
@@ -51,20 +53,25 @@ private:
    size_t m_last;
    size_t m_bufferIncrement;
 	bool m_shutdownFlag;
+	bool m_owner;
 
 	void commonInit();
    void lock() { MutexLock(m_mutexQueueAccess); }
    void unlock() { MutexUnlock(m_mutexQueueAccess); }
    void shrink();
 
+protected:
+   void (*m_destructor)(void*);
+
 public:
-   Queue();
-   Queue(size_t initialSize, size_t bufferIncrement = 32);
+   Queue(bool owner = false);
+   Queue(size_t initialSize, size_t bufferIncrement, bool owner = false);
    virtual ~Queue();
 
    void put(void *object);
 	void insert(void *object);
 	void setShutdownMode();
+	void setOwner(bool owner) { m_owner = owner; }
    void *get();
    void *getOrBlock(UINT32 timeout = INFINITE);
    size_t size() const { return m_numElements; }
@@ -80,9 +87,14 @@ public:
  */
 template<typename T> class ObjectQueue : public Queue
 {
+   DISABLE_COPY_CTOR(ObjectQueue)
+
+private:
+   static void destructor(void *object) { delete static_cast<T*>(object); }
+
 public:
-   ObjectQueue() : Queue() { }
-   ObjectQueue(size_t initialSize, size_t bufferIncrement = 32) : Queue(initialSize, bufferIncrement) { }
+   ObjectQueue(bool owner = false) : Queue(owner) { m_destructor = destructor; }
+   ObjectQueue(size_t initialSize, size_t bufferIncrement, bool owner = false) : Queue(initialSize, bufferIncrement, owner) { }
    virtual ~ObjectQueue() { }
 
    T *get() { return (T*)Queue::get(); }

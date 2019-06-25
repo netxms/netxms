@@ -501,7 +501,7 @@ bool Interface::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Perform status poll on interface
  */
-void Interface::statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQueue, Cluster *cluster, SNMP_Transport *snmpTransport, UINT32 nodeIcmpProxy)
+void Interface::statusPoll(ClientSession *session, UINT32 rqId, ObjectQueue<Event> *eventQueue, Cluster *cluster, SNMP_Transport *snmpTransport, UINT32 nodeIcmpProxy)
 {
    if (IsShutdownInProgress())
       return;

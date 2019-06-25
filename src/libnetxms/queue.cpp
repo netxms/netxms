@@ -26,22 +26,24 @@
 /**
  * Queue constructor
  */
-Queue::Queue(size_t initialSize, size_t bufferIncrement)
+Queue::Queue(size_t initialSize, size_t bufferIncrement, bool owner)
 {
    m_initialSize = initialSize;
    m_bufferSize = initialSize;
    m_bufferIncrement = bufferIncrement;
+   m_owner = owner;
 	commonInit();
 }
 
 /**
  * Default queue constructor
  */
-Queue::Queue()
+Queue::Queue(bool owner)
 {
    m_initialSize = 256;
    m_bufferSize = 256;
    m_bufferIncrement = 32;
+   m_owner = owner;
 	commonInit();
 }
 
@@ -57,6 +59,7 @@ void Queue::commonInit()
    m_last = 0;
    m_elements = MemAllocArray<void*>(m_bufferSize);
 	m_shutdownFlag = false;
+	m_destructor = MemFree;
 }
 
 /**
@@ -64,6 +67,17 @@ void Queue::commonInit()
  */
 Queue::~Queue()
 {
+   if (m_owner)
+   {
+      for(size_t i = 0, pos = m_first; i < m_numElements; i++)
+      {
+         if (m_elements[pos] != INVALID_POINTER_VALUE)
+            m_destructor(m_elements[pos]);
+         pos++;
+         if (pos == m_bufferSize)
+            pos = 0;
+      }
+   }
    MutexDestroy(m_mutexQueueAccess);
    ConditionDestroy(m_condWakeup);
    MemFree(m_elements);
@@ -172,6 +186,17 @@ void *Queue::getOrBlock(UINT32 timeout)
 void Queue::clear()
 {
    lock();
+   if (m_owner)
+   {
+      for(size_t i = 0, pos = m_first; i < m_numElements; i++)
+      {
+         if (m_elements[pos] != INVALID_POINTER_VALUE)
+            m_destructor(m_elements[pos]);
+         pos++;
+         if (pos == m_bufferSize)
+            pos = 0;
+      }
+   }
    m_numElements = 0;
    m_first = 0;
    m_last = 0;
@@ -229,6 +254,8 @@ bool Queue::remove(const void *key, QueueComparator comparator)
 	{
 		if ((m_elements[pos] != NULL) && comparator(key, m_elements[pos]))
 		{
+		   if (m_owner && (m_elements[pos] != INVALID_POINTER_VALUE))
+		      m_destructor(m_elements[pos]);
 			m_elements[pos] = NULL;
 			success = true;
 			break;
@@ -249,7 +276,7 @@ void Queue::forEach(QueueEnumerationCallback callback, void *context)
    lock();
    for(size_t i = 0, pos = m_first; i < m_numElements; i++)
    {
-      if (m_elements[pos] != NULL)
+      if ((m_elements[pos] != NULL) && (m_elements[pos] != INVALID_POINTER_VALUE))
       {
          if (callback(m_elements[pos], context) == _STOP)
             break;

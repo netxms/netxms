@@ -1659,11 +1659,11 @@ void Node::statusPoll(PollerInfo *poller, ClientSession *pSession, UINT32 rqId)
    UINT32 oldCapabilities = m_capabilities;
    UINT32 oldState = m_state;
 
-   Queue *pQueue = new Queue;     // Delayed event queue
+   ObjectQueue<Event> *eventQueue = new ObjectQueue<Event>(true);     // Delayed event queue
    poller->setStatus(_T("wait for lock"));
    pollerLock();
 
-   POLL_CANCELLATION_CHECKPOINT_EX(DCDF_QUEUED_FOR_STATUS_POLL, delete pQueue);
+   POLL_CANCELLATION_CHECKPOINT_EX(DCDF_QUEUED_FOR_STATUS_POLL, delete eventQueue);
 
    poller->setStatus(_T("preparing"));
    m_pollRequestor = pSession;
@@ -1713,7 +1713,7 @@ restart_agent_check:
                if (m_pollCountSNMP >= requiredPolls)
                {
                   m_state &= ~NSF_SNMP_UNREACHABLE;
-                  PostEventEx(pQueue, EVENT_SNMP_OK, m_id, NULL);
+                  PostEventEx(eventQueue, EVENT_SNMP_OK, m_id, NULL);
                   sendPollerMsg(rqId, POLLER_INFO _T("Connectivity with SNMP agent restored\r\n"));
                   m_pollCountSNMP = 0;
                }
@@ -1777,7 +1777,7 @@ restart_agent_check:
                if (m_pollCountSNMP >= requiredPolls)
                {
                   m_state |= NSF_SNMP_UNREACHABLE;
-                  PostEventEx(pQueue, EVENT_SNMP_FAIL, m_id, NULL);
+                  PostEventEx(eventQueue, EVENT_SNMP_FAIL, m_id, NULL);
                   m_failTimeSNMP = tNow;
                   m_pollCountSNMP = 0;
                }
@@ -1792,7 +1792,7 @@ restart_agent_check:
       nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): SNMP check finished"), m_name);
    }
 
-   POLL_CANCELLATION_CHECKPOINT_EX(DCDF_QUEUED_FOR_STATUS_POLL, delete pQueue);
+   POLL_CANCELLATION_CHECKPOINT_EX(DCDF_QUEUED_FOR_STATUS_POLL, delete eventQueue);
 
    // Check native agent connectivity
    if ((m_capabilities & NC_IS_NATIVE_AGENT) && (!(m_flags & NF_DISABLE_NXCP)))
@@ -1813,7 +1813,7 @@ restart_agent_check:
             if (m_pollCountAgent >= requiredPolls)
             {
                m_state &= ~NSF_AGENT_UNREACHABLE;
-               PostEventEx(pQueue, EVENT_AGENT_OK, m_id, NULL);
+               PostEventEx(eventQueue, EVENT_AGENT_OK, m_id, NULL);
                sendPollerMsg(rqId, POLLER_INFO _T("Connectivity with NetXMS agent restored\r\n"));
                m_pollCountAgent = 0;
 
@@ -1853,7 +1853,7 @@ restart_agent_check:
             if (m_pollCountAgent >= requiredPolls)
             {
                m_state |= NSF_AGENT_UNREACHABLE;
-               PostEventEx(pQueue, EVENT_AGENT_FAIL, m_id, NULL);
+               PostEventEx(eventQueue, EVENT_AGENT_FAIL, m_id, NULL);
                m_failTimeAgent = tNow;
                //cancel file monitoring locally(on agent it is canceled if agent have fallen)
                g_monitoringList.removeDisconnectedNode(m_id);
@@ -1880,7 +1880,7 @@ restart_agent_check:
 
    poller->setStatus(_T("prepare polling list"));
 
-   POLL_CANCELLATION_CHECKPOINT_EX(DCDF_QUEUED_FOR_STATUS_POLL, delete pQueue);
+   POLL_CANCELLATION_CHECKPOINT_EX(DCDF_QUEUED_FOR_STATUS_POLL, delete eventQueue);
 
    // Find service poller node object
    Node *pollerNode = NULL;
@@ -1934,15 +1934,15 @@ restart_agent_check:
       {
          case OBJECT_INTERFACE:
             DbgPrintf(7, _T("StatusPoll(%s): polling interface %d [%s]"), m_name, curr->getId(), curr->getName());
-            static_cast<Interface*>(curr)->statusPoll(pSession, rqId, pQueue, cluster, snmp, m_icmpProxy);
+            static_cast<Interface*>(curr)->statusPoll(pSession, rqId, eventQueue, cluster, snmp, m_icmpProxy);
             break;
          case OBJECT_NETWORKSERVICE:
             DbgPrintf(7, _T("StatusPoll(%s): polling network service %d [%s]"), m_name, curr->getId(), curr->getName());
-            static_cast<NetworkService*>(curr)->statusPoll(pSession, rqId, pollerNode, pQueue);
+            static_cast<NetworkService*>(curr)->statusPoll(pSession, rqId, pollerNode, eventQueue);
             break;
          case OBJECT_ACCESSPOINT:
             DbgPrintf(7, _T("StatusPoll(%s): polling access point %d [%s]"), m_name, curr->getId(), curr->getName());
-            static_cast<AccessPoint*>(curr)->statusPollFromController(pSession, rqId, pQueue, this, snmp);
+            static_cast<AccessPoint*>(curr)->statusPollFromController(pSession, rqId, eventQueue, this, snmp);
             break;
          default:
             DbgPrintf(7, _T("StatusPoll(%s): skipping object %d [%s] class %d"), m_name, curr->getId(), curr->getName(), curr->getObjectClass());
@@ -1950,7 +1950,7 @@ restart_agent_check:
       }
       curr->decRefCount();
 
-      POLL_CANCELLATION_CHECKPOINT_EX(DCDF_QUEUED_FOR_STATUS_POLL, { for(i++; i < pollList.size(); i++) pollList.get(i)->decRefCount(); delete pQueue; delete snmp; });
+      POLL_CANCELLATION_CHECKPOINT_EX(DCDF_QUEUED_FOR_STATUS_POLL, { for(i++; i < pollList.size(); i++) pollList.get(i)->decRefCount(); delete eventQueue; delete snmp; });
    }
    delete snmp;
    if (pollerNode != NULL)
@@ -2028,14 +2028,7 @@ restart_agent_check:
                unlockChildList();
 
                // Clear delayed event queue
-               while(true)
-               {
-                  Event *e = (Event *)pQueue->get();
-                  if (e == NULL)
-                     break;
-                  delete e;
-               }
-               delete_and_null(pQueue);
+               delete_and_null(eventQueue);
 
                PostEvent(EVENT_NODE_UNREACHABLE, m_id, NULL);
             }
@@ -2074,7 +2067,7 @@ restart_agent_check:
       }
    }
 
-   POLL_CANCELLATION_CHECKPOINT_EX(DCDF_QUEUED_FOR_STATUS_POLL, delete pQueue);
+   POLL_CANCELLATION_CHECKPOINT_EX(DCDF_QUEUED_FOR_STATUS_POLL, delete eventQueue);
 
    // Get uptime and update boot time
    if (!(m_state & DCSF_UNREACHABLE))
@@ -2196,10 +2189,10 @@ restart_agent_check:
    }
 
    // Send delayed events and destroy delayed event queue
-   if (pQueue != NULL)
+   if (eventQueue != NULL)
    {
-      ResendEvents(pQueue);
-      delete pQueue;
+      ResendEvents(eventQueue);
+      delete eventQueue;
    }
 
    POLL_CANCELLATION_CHECKPOINT(DCDF_QUEUED_FOR_STATUS_POLL);

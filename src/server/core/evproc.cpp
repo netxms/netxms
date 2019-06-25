@@ -38,7 +38,7 @@ INT64 g_totalEventsProcessed = 0;
  */
 static THREAD s_threadStormDetector = INVALID_THREAD_HANDLE;
 static THREAD s_threadLogger = INVALID_THREAD_HANDLE;
-static Queue *s_loggerQueue = NULL;
+static ObjectQueue<Event> s_loggerQueue;
 
 /**
  * Handler for EnumerateSessions()
@@ -106,7 +106,7 @@ static THREAD_RESULT THREAD_CALL EventLogger(void *arg)
 
    while(true)
    {
-      Event *pEvent = (Event *)s_loggerQueue->getOrBlock();
+      Event *pEvent = s_loggerQueue.getOrBlock();
       if (pEvent == INVALID_POINTER_VALUE)
          break;   // Shutdown indicator
 
@@ -170,7 +170,7 @@ static THREAD_RESULT THREAD_CALL EventLogger(void *arg)
 					DBExecute(hStmt);
 					nxlog_debug_tag(DEBUG_TAG, 8, _T("EventLogger: DBExecute: id=%d,code=%d"), (int)pEvent->getId(), (int)pEvent->getCode());
 					delete pEvent;
-					pEvent = (Event *)s_loggerQueue->getOrBlock(500);
+					pEvent = s_loggerQueue.getOrBlock(500);
 				} while((pEvent != NULL) && (pEvent != INVALID_POINTER_VALUE));
 				DBFreeStatement(hStmt);
 			}
@@ -194,12 +194,11 @@ THREAD_RESULT THREAD_CALL EventProcessor(void *arg)
 {
    ThreadSetName("EventProcessor");
 
-   s_loggerQueue = new Queue;
 	s_threadLogger = ThreadCreateEx(EventLogger, 0, NULL);
 	s_threadStormDetector = ThreadCreateEx(EventStormDetector, 0, NULL);
    while(true)
    {
-      Event *pEvent = (Event *)g_pEventQueue->getOrBlock();
+      Event *pEvent = g_eventQueue.getOrBlock();
       if (pEvent == INVALID_POINTER_VALUE)
          break;   // Shutdown indicator
 
@@ -254,7 +253,7 @@ THREAD_RESULT THREAD_CALL EventProcessor(void *arg)
 		// Logger will destroy event object after logging
 		if ((pEvent->getFlags() & EF_LOG) && (pEvent->getCode() != EVENT_DB_QUERY_FAILED))
 		{
-			s_loggerQueue->put(pEvent);
+			s_loggerQueue.put(pEvent);
 		}
 		else
       {
@@ -265,10 +264,9 @@ THREAD_RESULT THREAD_CALL EventProcessor(void *arg)
       g_totalEventsProcessed++;
    }
 
-	s_loggerQueue->put(INVALID_POINTER_VALUE);
+	s_loggerQueue.put(INVALID_POINTER_VALUE);
 	ThreadJoin(s_threadStormDetector);
 	ThreadJoin(s_threadLogger);
-	delete s_loggerQueue;
    nxlog_debug_tag(DEBUG_TAG, 1, _T("Event processing thread stopped"));
    return THREAD_OK;
 }
@@ -278,5 +276,5 @@ THREAD_RESULT THREAD_CALL EventProcessor(void *arg)
  */
 INT64 GetEventLogWriterQueueSize()
 {
-   return s_loggerQueue->size();
+   return s_loggerQueue.size();
 }

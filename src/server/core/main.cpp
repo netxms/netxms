@@ -1195,7 +1195,7 @@ void NXCORE_EXPORTABLE Shutdown()
    StopSyslogServer();
 
    nxlog_debug(2, _T("Waiting for event processor to stop"));
-	g_pEventQueue->put(INVALID_POINTER_VALUE);
+	g_eventQueue.put(INVALID_POINTER_VALUE);
 	ThreadJoin(s_eventProcessorThread);
 
 	ShutdownMailer();

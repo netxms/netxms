@@ -317,7 +317,7 @@ UINT32 NetworkService::modifyFromMessageInternal(NXCPMessage *pRequest)
 /**
  * Perform status poll on network service
  */
-void NetworkService::statusPoll(ClientSession *session, UINT32 rqId, Node *pollerNode, Queue *eventQueue)
+void NetworkService::statusPoll(ClientSession *session, UINT32 rqId, Node *pollerNode, ObjectQueue<Event> *eventQueue)
 {
    int oldStatus = m_status, newStatus;
    Node *pNode;

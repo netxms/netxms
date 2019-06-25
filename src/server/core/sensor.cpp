@@ -629,14 +629,11 @@ void Sensor::statusPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId)
    }
    unlockProperties();
 
-   Queue *pQueue = new Queue;     // Delayed event queue
-
    poller->setStatus(_T("wait for lock"));
    pollerLock();
 
    if (IsShutdownInProgress())
    {
-      delete pQueue;
       if (rqId == 0)
          unlockForStatusPoll();
       pollerUnlock();
@@ -732,12 +729,6 @@ void Sensor::statusPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId)
    }
    calculateStatus(TRUE);
 
-   // Send delayed events and destroy delayed event queue
-   if (pQueue != NULL)
-   {
-      ResendEvents(pQueue);
-      delete pQueue;
-   }
    poller->setStatus(_T("hook"));
    executeHookScript(_T("StatusPoll"));
 
