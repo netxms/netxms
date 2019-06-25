@@ -942,7 +942,6 @@ public:
    static const TCHAR *getObjectClassName(int objectClass);
    String expandText(const TCHAR *textTemplate, const Alarm *alarm, const Event *event, const TCHAR *userName, const StringMap *inputFields);
 
-   const IntegerArray<UINT32> *getResponsibleUsers() { return m_responsibleUsers; }
    IntegerArray<UINT32> *getAllResponsibleUsers();
 };
 

@@ -394,9 +394,11 @@ void Template::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
    super::fillMessageInternal(pMsg, userId);
    AutoBindTarget::fillMessageInternal(pMsg, userId);
    VersionableObject::fillMessageInternal(pMsg, userId);
-   UINT32 baseId = VID_AGENT_POLICY_BASE;
 }
 
+/**
+ * Modify template object from NXCP message
+ */
 UINT32 Template::modifyFromMessageInternal(NXCPMessage *pRequest)
 {
    // Change flags
@@ -532,8 +534,6 @@ uuid Template::updatePolicyFromMessage(NXCPMessage *request)
    msg.setCode(CMD_UPDATE_AGENT_POLICY);
    msg.setField(VID_TEMPLATE_ID, m_id);
    uuid guid = request->getFieldAsGUID(VID_GUID);
-   uuid nullguid = uuid::NULL_UUID;
-   uuid notnullguid = uuid::generate();
    TCHAR name[MAX_DB_STRING];
    TCHAR policyType[32];
 

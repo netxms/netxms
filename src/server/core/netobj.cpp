@@ -3019,9 +3019,9 @@ void NetObj::getAllResponsibleUsersInternal(IntegerArray<UINT32> *list)
    {
       NetObj *obj = m_parentList->get(i);
       obj->lockResponsibleUsersList(false);
-      for(int n = 0; n < obj->getResponsibleUsers()->size(); n++)
+      for(int n = 0; n < obj->m_responsibleUsers->size(); n++)
       {
-         UINT32 userId = obj->getResponsibleUsers()->get(n);
+         UINT32 userId = obj->m_responsibleUsers->get(n);
          if (!list->contains(userId))
             list->add(userId);
       }

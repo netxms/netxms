@@ -115,15 +115,14 @@ Sensor *Sensor::createSensor(TCHAR *name, NXCPMessage *request)
  */
 AgentConnectionEx *Sensor::getAgentConnection()
 {
-   UINT32 rcc = ERR_CONNECT_FAILED;
    if (IsShutdownInProgress())
       return NULL;
 
-   NetObj *proxy = FindObjectById(m_proxyNodeId, OBJECT_NODE);
-   if(proxy == NULL)
+   Node *proxy = static_cast<Node*>(FindObjectById(m_proxyNodeId, OBJECT_NODE));
+   if (proxy == NULL)
       return NULL;
 
-   return ((Node *)proxy)->acquireProxyConnection(SENSOR_PROXY);
+   return proxy->acquireProxyConnection(SENSOR_PROXY);
 }
 
 /**
@@ -434,7 +433,7 @@ UINT32 Sensor::modifyFromMessageInternal(NXCPMessage *request)
  */
 void Sensor::calculateCompoundStatus(BOOL bForcedRecalc)
 {
-   UINT32 oldStatus = m_status;
+   int oldStatus = m_status;
    calculateStatus(bForcedRecalc);
    lockProperties();
    if (oldStatus != m_status)
@@ -442,6 +441,9 @@ void Sensor::calculateCompoundStatus(BOOL bForcedRecalc)
    unlockProperties();
 }
 
+/**
+ * Calculate sensor status
+ */
 void Sensor::calculateStatus(BOOL bForcedRecalc)
 {
    AgentConnectionEx *conn = getAgentConnection();
