@@ -3408,36 +3408,36 @@ static time_t FileTimeToUnixTime(FILETIME *ft)
 /**
  * stat() implementaion for Windows
  */
-int LIBNETXMS_EXPORTABLE _statw32(const TCHAR *file, struct _stati64 *st)
+int LIBNETXMS_EXPORTABLE _statw32(const WCHAR *file, struct _stati64 *st)
 {
    size_t l = _tcslen(file);
 
    // Special handling for root directory
-   if (((l == 2) && (file[1] == _T(':'))) ||
-       ((l == 3) && (file[1] == _T(':')) && (file[2] == _T('\\'))))
+   if (((l == 2) && (file[1] == L':')) ||
+       ((l == 3) && (file[1] == L':') && (file[2] == L'\\')))
    {
       if (l == 2)
       {
-         TCHAR temp[4];
+         WCHAR temp[4];
          temp[0] = file[0];
-         temp[1] = _T(':');
-         temp[2] = _T('\\');
+         temp[1] = L':';
+         temp[2] = L'\\';
          temp[3] = 0;
-         return _tstati64(temp, st);
+         return _wstati64(temp, st);
       }
-      return _tstati64(file, st);
+      return _wstati64(file, st);
    }
 
-   TCHAR *fn;
-   if ((l > 1) && (file[l - 1] == _T('\\')))
+   WCHAR *fn;
+   if ((l > 1) && (file[l - 1] == L'\\'))
    {
-      fn = (TCHAR *)alloca(l * sizeof(TCHAR));
+      fn = (WCHAR *)alloca(l * sizeof(TCHAR));
       memcpy(fn, file, (l - 1) * sizeof(TCHAR));
       fn[l - 1] = 0;
    }
    else
    {
-      fn = const_cast<TCHAR*>(file);
+      fn = const_cast<WCHAR*>(file);
    }
 
    WIN32_FIND_DATA fd;
@@ -3453,8 +3453,6 @@ int LIBNETXMS_EXPORTABLE _statw32(const TCHAR *file, struct _stati64 *st)
    if (!(fd.dwFileAttributes & FILE_ATTRIBUTE_READONLY))
       st->st_mode |= _S_IWRITE;
    if (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-      st->st_mode |= _S_IFDIR;
-   else if (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
       st->st_mode |= _S_IFDIR;
    else if (fd.dwFileAttributes & FILE_ATTRIBUTE_DEVICE)
       st->st_mode |= _S_IFCHR;
