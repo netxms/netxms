@@ -35,10 +35,6 @@
 #include <openssl/applink.c>
 #endif
 
-#if WITH_PYTHON
-#include <Python.h>
-#endif
-
 NETXMS_EXECUTABLE_HEADER(netxmsd)
 
 /**
@@ -476,11 +472,6 @@ int main(int argc, char* argv[])
          if (IsStandalone())
             _tprintf(_T("ERROR: Failed to execute command \"%hs\"\n"), szCmd);
    }
-
-#if WITH_PYTHON
-   // Python interpreter will keep pointer for lifetime of the application so it's not a memory leak
-   Py_SetProgramName(WideStringFromMBStringSysLocale(argv[0]));
-#endif
 
 #ifdef _WIN32
    if (!IsStandalone())
