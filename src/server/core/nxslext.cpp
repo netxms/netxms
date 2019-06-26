@@ -1760,6 +1760,23 @@ void NXSL_ServerEnv::configureVM(NXSL_VM *vm)
    vm->addConstant("DCI::STRING", vm->createValue(DCI_DT_STRING));
    vm->addConstant("DCI::NULL", vm->createValue(DCI_DT_NULL));
 
+   vm->addConstant("NodeState::Unreachable", vm->createValue(DCSF_UNREACHABLE));
+   vm->addConstant("NodeState::NetworkPathProblem", vm->createValue(DCSF_NETWORK_PATH_PROBLEM));
+   vm->addConstant("NodeState::AgentUnreachable", vm->createValue(NSF_AGENT_UNREACHABLE));
+   vm->addConstant("NodeState::SNMPUnreachable", vm->createValue(NSF_SNMP_UNREACHABLE));
+   vm->addConstant("NodeState::CacheModeNotSupported", vm->createValue(NSF_CACHE_MODE_NOT_SUPPORTED));
+
+   vm->addConstant("ClusterState::Unreachable", vm->createValue(DCSF_UNREACHABLE));
+   vm->addConstant("ClusterState::NetworkPathProblem", vm->createValue(DCSF_NETWORK_PATH_PROBLEM));
+   vm->addConstant("ClusterState::Down", vm->createValue(CLSF_DOWN));
+
+   vm->addConstant("SensorState::Unreachable", vm->createValue(DCSF_UNREACHABLE));
+   vm->addConstant("SensorState::NetworkPathProblem", vm->createValue(DCSF_NETWORK_PATH_PROBLEM));
+   vm->addConstant("SensorState::Provisioned", vm->createValue(SSF_PROVISIONED));
+   vm->addConstant("SensorState::Registered", vm->createValue(SSF_REGISTERED));
+   vm->addConstant("SensorState::Active", vm->createValue(SSF_ACTIVE));
+   vm->addConstant("SensorState::PendingConfigUpdate", vm->createValue(SSF_CONF_UPDATE_PENDING));
+
    CALL_ALL_MODULES(pfNXSLServerVMConfig, (vm));
 }
 

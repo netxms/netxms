@@ -332,6 +332,10 @@ NXSL_Value *NXSL_NetObjClass::getAttr(NXSL_Object *_object, const char *attr)
       delete userDB;
       delete responsibleUsers;
    }
+   else if (!strcmp(attr, "state"))
+   {
+      value = vm->createValue(object->getState());
+   }
    else if (!strcmp(attr, "status"))
    {
       value = vm->createValue((LONG)object->getStatus());
