@@ -1531,6 +1531,8 @@ void DataCollectionTarget::instanceDiscoveryPoll(PollerInfo *poller, ClientSessi
       unlockProperties();
       return;
    }
+   // Poller can be called directly - in that case poll flag will not be set
+   m_runtimeFlags |= DCDF_QUEUED_FOR_INSTANCE_POLL;
    unlockProperties();
 
    poller->setStatus(_T("wait for lock"));

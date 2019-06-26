@@ -538,6 +538,8 @@ void Sensor::configurationPoll(PollerInfo *poller, ClientSession *session, UINT3
       unlockProperties();
       return;
    }
+   // Poller can be called directly - in that case poll flag will not be set
+   m_runtimeFlags |= DCDF_QUEUED_FOR_CONFIGURATION_POLL;
    unlockProperties();
 
    poller->setStatus(_T("wait for lock"));
@@ -627,6 +629,8 @@ void Sensor::statusPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId)
       unlockProperties();
       return;
    }
+   // Poller can be called directly - in that case poll flag will not be set
+   m_runtimeFlags |= DCDF_QUEUED_FOR_STATUS_POLL;
    unlockProperties();
 
    poller->setStatus(_T("wait for lock"));

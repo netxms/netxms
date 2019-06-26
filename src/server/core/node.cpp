@@ -1654,6 +1654,8 @@ void Node::statusPoll(PollerInfo *poller, ClientSession *pSession, UINT32 rqId)
       unlockProperties();
       return;
    }
+   // Poller can be called directly - in that case poll flag will not be set
+   m_runtimeFlags |= DCDF_QUEUED_FOR_STATUS_POLL;
    unlockProperties();
 
    UINT32 oldCapabilities = m_capabilities;
@@ -2832,6 +2834,8 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
       unlockProperties();
       return;
    }
+   // Poller can be called directly - in that case poll flag will not be set
+   m_runtimeFlags |= DCDF_QUEUED_FOR_CONFIGURATION_POLL;
    unlockProperties();
 
    UINT32 oldCapabilities = m_capabilities;
@@ -6816,6 +6820,8 @@ void Node::routingTablePoll(PollerInfo *poller, ClientSession *session, UINT32 r
       unlockProperties();
       return;
    }
+   // Poller can be called directly - in that case poll flag will not be set
+   m_runtimeFlags |= NDF_QUEUED_FOR_ROUTE_POLL;
    unlockProperties();
 
    ROUTING_TABLE *pRT = getRoutingTable();
@@ -7396,6 +7402,8 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, UINT32 rqId
       unlockProperties();
       return;
    }
+   // Poller can be called directly - in that case poll flag will not be set
+   m_runtimeFlags |= NDF_QUEUED_FOR_TOPOLOGY_POLL;
    unlockProperties();
 
    poller->setStatus(_T("wait for lock"));
