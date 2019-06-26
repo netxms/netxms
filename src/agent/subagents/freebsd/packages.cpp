@@ -39,6 +39,30 @@ LONG H_InstalledProducts(const TCHAR *cmd, const TCHAR *arg, Table *value, Abstr
    value->addColumn(_T("URL"));
    value->addColumn(_T("DESCRIPTION"));
 
+   struct utsname un;
+   const char *arch;
+   if (uname(&un) != -1)
+   {
+      if (!strcmp(un.machine, "i686") || !strcmp(un.machine, "i586") || !strcmp(un.machine, "i486") || !strcmp(un.machine, "i386"))
+      {
+         arch = ":i686:i586:i486:i386";
+      }
+      else if (!strcmp(un.machine, "amd64") || !strcmp(un.machine, "x86_64"))
+      {
+         arch = ":amd64:x86_64";
+      }
+      else
+      {
+         memmove(&un.machine[1], un.machine, strlen(un.machine) + 1);
+         un.machine[0] = ':';
+         arch = un.machine;
+      }
+   }
+   else
+   {
+      arch = ":i686:i586:i486:i386";
+   }
+
    while(1)
    {
       char line[1024];

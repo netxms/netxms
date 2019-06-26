@@ -68,8 +68,6 @@ static void SubAgentShutdown()
 	ShutdownCpuUsageCollector();
 }
 
-LONG H_InstalledProducts(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *session)
-
 /**
  * Supported parameters
  */

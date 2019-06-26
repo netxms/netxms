@@ -3,6 +3,7 @@
 *
 
 - Improved systemd integration
+- Agent table System.InstalledProducts supported on FreeBSD
 
 
 *
