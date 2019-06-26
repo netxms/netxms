@@ -1168,10 +1168,12 @@ typedef struct tagICMPHDR
  */
 #ifdef __cplusplus
 
-inline void * MemAlloc(size_t size) { return malloc(size); }
+inline void *MemAlloc(size_t size) { return malloc(size); }
+inline char *MemAllocStringA(size_t size) { return static_cast<char*>(MemAlloc(size)); }
+inline WCHAR *MemAllocStringW(size_t size) { return static_cast<WCHAR*>(MemAlloc(size * sizeof(WCHAR))); }
 template <typename T> T *MemAllocStruct() { return (T*)calloc(1, sizeof(T)); }
 template <typename T> T *MemAllocArray(size_t count) { return (T*)calloc(count, sizeof(T)); }
-template <typename T> T *MemAllocArrayNoInit(size_t count) { return (T*)malloc(count * sizeof(T)); }
+template <typename T> T *MemAllocArrayNoInit(size_t count) { return (T*)MemAlloc(count * sizeof(T)); }
 template <typename T> T *MemRealloc(T *p, size_t size) { return (T*)realloc(p, size); }
 template <typename T> T *MemReallocArray(T *p, size_t count) { return (T*)realloc(p, count * sizeof(T)); }
 #if FREE_IS_NULL_SAFE
@@ -1185,8 +1187,10 @@ template <typename T> void MemFreeAndNull(T* &p) { if (p != NULL) { free(p); p =
 #else /* __cplusplus */
 
 #define MemAlloc(size) malloc(size)
+#define MemAllocStringA(size) MemAlloc(size)
+#define MemAllocStringW(size) MemAlloc(size * sizeof(WCHAR))
 #define MemAllocArray(count, size) calloc(count, size)
-#define MemAllocArrayNoInit(count, size) malloc((count) * (size))
+#define MemAllocArrayNoInit(count, size) MemAlloc((count) * (size))
 #define MemRealloc(p, size) realloc(p, size)
 #if FREE_IS_NULL_SAFE
 #define MemFree(p) free(p);
@@ -1197,6 +1201,12 @@ template <typename T> void MemFreeAndNull(T* &p) { if (p != NULL) { free(p); p =
 #endif
 
 #endif /* __cplusplus */
+
+#ifdef UNICODE
+#define MemAllocString MemAllocStringW
+#else
+#define MemAllocString MemAllocStringA
+#endif
 
 #ifdef __cplusplus
 extern "C" {
