@@ -1,6 +1,6 @@
 /*
 ** NetXMS subagent for SunOS/Solaris
-** Copyright (C) 2004-2014 Victor Kirhenshtein
+** Copyright (C) 2004-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -67,7 +67,7 @@ static int ProcFilter(const struct dirent *pEnt)
 // Parameters:
 //    pEnt - If not NULL, ProcRead() will return pointer to dynamically
 //           allocated array of process information structures for
-//           matched processes. Caller should free it with free().
+//           matched processes. Caller should free it with MemFree().
 //    pszProcName - If not NULL, only processes with matched name will
 //                  be counted and read. If szCmdLine is NULL, then exact
 //                  match required to pass filter; otherwise szProcName can
@@ -96,8 +96,7 @@ static int ProcRead(PROC_ENT **pEnt, char *pszProcName, char *pszCmdLine, int lw
 
       if (nCount > 0 && pEnt != NULL)
       {
-         *pEnt = (PROC_ENT *)malloc(sizeof(PROC_ENT) * (nCount + 1));
-
+         *pEnt = MemAllocArray<PROC_ENT>(nCount + 1);
          if (*pEnt == NULL)
          {
             nFound = -1;
@@ -106,10 +105,6 @@ static int ProcRead(PROC_ENT **pEnt, char *pszProcName, char *pszCmdLine, int lw
             {
                free(pNameList[nCount]);
             }
-         }
-         else
-         {
-            memset(*pEnt, 0, sizeof(PROC_ENT) * (nCount + 1));
          }
       }
 
