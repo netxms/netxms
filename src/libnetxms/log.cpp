@@ -1040,6 +1040,7 @@ static void nxlog_debug_tag_internal(const TCHAR *tag, int level, const TCHAR *f
 
    TCHAR buffer[8192];
    _vsntprintf(buffer, 8192, format, args);
+   buffer[8191] = 0;
    nxlog_write(s_debugMsgTag, NXLOG_DEBUG, "ss", tagf, buffer);
 
    if (s_debugWriter != NULL)
