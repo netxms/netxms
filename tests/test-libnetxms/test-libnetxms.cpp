@@ -775,6 +775,26 @@ static void TestInetAddress()
    static BYTE keyIPv6[] = { 0x12, AF_INET6, 0xFE, 0x80, 0x12, 0x34, 0x00, 0x00, 0x00, 0x00, 0x6E, 0x88, 0x14, 0xFF, 0xFE, 0xC4, 0xB8, 0xF8 };
    AssertTrue(memcmp(key, keyIPv6, 18) == 0);
    EndTest();
+
+   TCHAR text[64];
+
+   StartTest(_T("InetAddress - toString() - IPv4"));
+   a = InetAddress::parse("10.217.11.43");
+   a.toString(text);
+   AssertTrue(!_tcscmp(text, _T("10.217.11.43")));
+   EndTest();
+
+   StartTest(_T("InetAddress - toString() - IPv6"));
+   a = InetAddress::parse("2000:1234::1");
+   a.toString(text);
+   AssertTrue(!_tcscmp(text, _T("2000:1234::1")));
+   a = InetAddress::parse("2001:47c::");
+   a.toString(text);
+   AssertTrue(!_tcscmp(text, _T("2001:47c::")));
+   a = InetAddress::parse("2001:47c::df33:16a");
+   a.toString(text);
+   AssertTrue(!_tcscmp(text, _T("2001:47c::df33:16a")));
+   EndTest();
 }
 
 /**
