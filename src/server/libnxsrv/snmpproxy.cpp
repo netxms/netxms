@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Server Library
-** Copyright (C) 2003-2015 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -48,7 +48,7 @@ SNMP_ProxyTransport::~SNMP_ProxyTransport()
 /**
  * Send PDU
  */
-int SNMP_ProxyTransport::sendMessage(SNMP_PDU *pdu)
+int SNMP_ProxyTransport::sendMessage(SNMP_PDU *pdu, UINT32 timeout)
 {
    int nRet = -1;
 	NXCPMessage msg(m_agentConnection->getProtocolVersion());
@@ -62,7 +62,8 @@ int SNMP_ProxyTransport::sendMessage(SNMP_PDU *pdu)
 		msg.setField(VID_PORT, m_port);
 		msg.setField(VID_PDU_SIZE, (UINT32)size);
 		msg.setField(VID_PDU, pBuffer, size);
-      free(pBuffer);
+		msg.setField(VID_TIMEOUT, timeout);
+      MemFree(pBuffer);
 
       if (m_waitForResponse)
       {
@@ -84,7 +85,7 @@ int SNMP_ProxyTransport::sendMessage(SNMP_PDU *pdu)
 /**
  * Receive PDU
  */
-int SNMP_ProxyTransport::readMessage(SNMP_PDU **ppData, UINT32 dwTimeout,
+int SNMP_ProxyTransport::readMessage(SNMP_PDU **ppData, UINT32 timeout,
                                      struct sockaddr *pSender, socklen_t *piAddrSize,
                                      SNMP_SecurityContext* (*contextFinder)(struct sockaddr *, socklen_t))
 {
@@ -99,7 +100,7 @@ int SNMP_ProxyTransport::readMessage(SNMP_PDU **ppData, UINT32 dwTimeout,
 	if (rcc == ERR_SUCCESS)
 	{
 		dwSize = m_response->getFieldAsUInt32(VID_PDU_SIZE);
-		pBuffer = (BYTE *)malloc(dwSize);
+		pBuffer = MemAllocArrayNoInit<BYTE>(dwSize);
 		m_response->getFieldAsBinary(VID_PDU, pBuffer, dwSize);
 
 		if (contextFinder != NULL)
@@ -111,7 +112,7 @@ int SNMP_ProxyTransport::readMessage(SNMP_PDU **ppData, UINT32 dwTimeout,
 			delete *ppData;
 			*ppData = NULL;
 		}
-		free(pBuffer);
+		MemFree(pBuffer);
 		nRet = (int)dwSize;
 	}
 	else if (rcc == ERR_REQUEST_TIMEOUT)

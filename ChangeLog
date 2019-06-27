@@ -31,6 +31,7 @@
 - Improved systemd integration
 - Agent table System.InstalledProducts supported on FreeBSD
 - Fixed issues:
+	NX-857 (Server should send SNMP timeout to proxy agent)
 	NX-1651 ("Thresholds" not updating live)
 
 

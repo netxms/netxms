@@ -514,7 +514,7 @@ void AgentConnectionEx::onSnmpTrap(NXCPMessage *msg)
                   snmpTransport->setSecurityContext(context);
 
                   snmpTransport->setWaitForResponse(false);
-                  snmpTransport->sendMessage(response);
+                  snmpTransport->sendMessage(response, 0);
                   delete response;
                   delete snmpTransport;
                }

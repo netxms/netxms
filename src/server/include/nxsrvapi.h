@@ -681,10 +681,10 @@ public:
 	SNMP_ProxyTransport(AgentConnection *conn, const InetAddress& ipAddr, UINT16 port);
 	virtual ~SNMP_ProxyTransport();
 
-   virtual int readMessage(SNMP_PDU **ppData, UINT32 dwTimeout = INFINITE,
+   virtual int readMessage(SNMP_PDU **ppData, UINT32 timeout = INFINITE,
                            struct sockaddr *pSender = NULL, socklen_t *piAddrSize = NULL,
 	                        SNMP_SecurityContext* (*contextFinder)(struct sockaddr *, socklen_t) = NULL) override;
-   virtual int sendMessage(SNMP_PDU *pdu) override;
+   virtual int sendMessage(SNMP_PDU *pdu, UINT32 timeout) override;
    virtual InetAddress getPeerIpAddress() override;
    virtual UINT16 getPort() override;
    virtual bool isProxyTransport() override;
