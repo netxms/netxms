@@ -1,1 +1,1 @@
-set build_number=9523
+set build_number=9524
