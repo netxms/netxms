@@ -30,6 +30,8 @@
 
 - Improved systemd integration
 - Agent table System.InstalledProducts supported on FreeBSD
+- Fixed issues:
+	NX-1651 ("Thresholds" not updating live)
 
 
 *

@@ -348,7 +348,7 @@ typedef struct
 #define CMD_PACKAGE_INFO                  0x006D
 #define CMD_REMOVE_PACKAGE                0x006E
 #define CMD_INSTALL_PACKAGE               0x006F
-/*UNUSED:#define CMD_LOCK_PACKAGE_DB               0x0070*/
+#define CMD_THRESHOLD_UPDATE              0x0070
 /*UNUSED:#define CMD_UNLOCK_PACKAGE_DB             0x0071*/
 #define CMD_ABORT_FILE_TRANSFER           0x0072
 #define CMD_CHECK_NETWORK_SERVICE         0x0073
@@ -1275,6 +1275,7 @@ typedef struct
 #define VID_CATEGORY_LIST           ((UINT32)641)
 #define VID_UA_NOTIFICATION_COUNT   ((UINT32)642)
 #define VID_SNMP_TRAP_PROXY         ((UINT32)643)
+#define VID_THRESHOLD_ID            ((UINT32)644)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

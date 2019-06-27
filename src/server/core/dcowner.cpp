@@ -406,7 +406,7 @@ bool DataCollectionOwner::addDCObject(DCObject *object, bool alreadyLocked, bool
       setModified(MODIFY_DATA_COLLECTION);
 		unlockProperties();
 		if(notify)
-		   NotifyClientDCIUpdate(this, object);
+		   NotifyClientsOnDCIUpdate(this, object);
 	}
    return success;
 }
@@ -442,7 +442,7 @@ bool DataCollectionOwner::deleteDCObject(UINT32 dcObjectId, bool needLock, UINT3
             nxlog_debug_tag(_T("obj.dc"), 7, _T("DataCollectionOwner::DeleteDCObject: deleting DCObject [%u] from object %s [%u]"), dcObjectId, m_name, m_id);
             destroyItem(object, i);
             success = true;
-            NotifyClientDCIDelete(this, dcObjectId);
+            NotifyClientsOnDCIDelete(this, dcObjectId);
             nxlog_debug_tag(_T("obj.dc"), 7, _T("DataCollectionOwner::DeleteDCObject: DCObject deleted from object %s [%u]"), m_name, m_id);
          }
          else

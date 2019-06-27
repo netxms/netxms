@@ -560,7 +560,7 @@ uuid Template::updatePolicyFromMessage(NXCPMessage *request)
    updateVersion();
 
    setModified(MODIFY_POLICY, false);
-   NotifyClientPolicyUpdate(&msg, this);
+   NotifyClientsOnPolicyUpdate(&msg, this);
    unlockProperties();
    return guid;
 }
@@ -592,7 +592,7 @@ bool Template::removePolicy(const uuid& guid)
       m_deletedPolicyList->add(policy);
       updateVersion();
 
-      NotifyClientPolicyDelete(guid, this);
+      NotifyClientsOnPolicyDelete(guid, this);
       setModified(MODIFY_POLICY, false);
       success = true;
    }

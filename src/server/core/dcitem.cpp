@@ -445,7 +445,7 @@ void DCItem::checkThresholds(ItemValue &value)
       t->setLastCheckedValue(checkValue);
       switch(result)
       {
-         case ACTIVATED:
+         case ThresholdCheckResult::ACTIVATED:
             {
                PostDciEventWithNames(t->getEventCode(), m_owner->getId(), m_id, "ssssisds",
 					   s_paramNamesReach, m_name, m_description, t->getStringValue(),
@@ -459,8 +459,9 @@ void DCItem::checkThresholds(ItemValue &value)
                if (!(m_flags & DCF_ALL_THRESHOLDS))
                   i = m_thresholds->size();  // Stop processing
             }
+            NotifyClientsOnThresholdChange(m_owner->getId(), m_id, t->getId(), NULL, result);
             break;
-         case DEACTIVATED:
+         case ThresholdCheckResult::DEACTIVATED:
             PostDciEventWithNames(t->getRearmEventCode(), m_owner->getId(), m_id, "ssissss",
 					s_paramNamesRearm, m_name, m_description, m_id, m_instance,
 					t->getStringValue(), (const TCHAR *)checkValue, (const TCHAR *)value);
@@ -469,8 +470,9 @@ void DCItem::checkThresholds(ItemValue &value)
                // this flag used to re-send activation event for next active threshold
                thresholdDeactivated = true;
             }
+            NotifyClientsOnThresholdChange(m_owner->getId(), m_id, t->getId(), NULL, result);
             break;
-         case ALREADY_ACTIVE:
+         case ThresholdCheckResult::ALREADY_ACTIVE:
             {
    				// Check if we need to re-sent threshold violation event
 	            time_t now = time(NULL);
@@ -799,7 +801,7 @@ void DCItem::processNewError(bool noInstance, time_t now)
       ThresholdCheckResult result = t->checkError(m_dwErrorCount);
       switch(result)
       {
-         case ACTIVATED:
+         case ThresholdCheckResult::ACTIVATED:
             {
                PostDciEventWithNames(t->getEventCode(), m_owner->getId(), m_id, "ssssisds",
 					   s_paramNamesReach, m_name, m_description, _T(""), _T(""),
@@ -815,12 +817,14 @@ void DCItem::processNewError(bool noInstance, time_t now)
                   i = m_thresholds->size();  // Stop processing
                }
             }
+            NotifyClientsOnThresholdChange(m_owner->getId(), m_id, t->getId(), NULL, result);
             break;
-         case DEACTIVATED:
+         case ThresholdCheckResult::DEACTIVATED:
             PostDciEventWithNames(t->getRearmEventCode(), m_owner->getId(), m_id, "ssissss",
 					s_paramNamesRearm, m_name, m_description, m_id, m_instance, _T(""), _T(""), _T(""));
+            NotifyClientsOnThresholdChange(m_owner->getId(), m_id, t->getId(), NULL, result);
             break;
-         case ALREADY_ACTIVE:
+         case ThresholdCheckResult::ALREADY_ACTIVE:
             {
    				// Check if we need to re-sent threshold violation event
                UINT32 repeatInterval = (t->getRepeatInterval() == -1) ? g_thresholdRepeatInterval : (UINT32)t->getRepeatInterval();

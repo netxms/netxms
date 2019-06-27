@@ -26,7 +26,7 @@
 /**
  * Threshold check results
  */
-enum ThresholdCheckResult
+enum class ThresholdCheckResult
 {
    ACTIVATED = 0,
    DEACTIVATED = 1,

@@ -271,6 +271,9 @@ AgentTunnel::AgentTunnel(SSL_CTX *context, SSL *ssl, SOCKET sock, const InetAddr
    m_hostname[0] = 0;
    m_startTime = time(NULL);
    m_userAgentInstalled = false;
+   m_agentProxy = false;
+   m_snmpProxy = false;
+   m_snmpTrapProxy = false;
 }
 
 /**

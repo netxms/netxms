@@ -494,15 +494,17 @@ void DCTable::checkThresholds(Table *value)
          ThresholdCheckResult result = t->check(value, row, instance);
          switch(result)
          {
-            case ACTIVATED:
+            case ThresholdCheckResult::ACTIVATED:
                PostDciEventWithNames(t->getActivationEvent(), m_owner->getId(), m_id, "ssids", paramNames, m_name, m_description, m_id, row, instance);
                if (!(m_flags & DCF_ALL_THRESHOLDS))
                   i = m_thresholds->size();  // Stop processing (for current row)
+               NotifyClientsOnThresholdChange(m_owner->getId(), m_id, t->getId(), instance, result);
                break;
-            case DEACTIVATED:
+            case ThresholdCheckResult::DEACTIVATED:
                PostDciEventWithNames(t->getDeactivationEvent(), m_owner->getId(), m_id, "ssids", paramNames, m_name, m_description, m_id, row, instance);
+               NotifyClientsOnThresholdChange(m_owner->getId(), m_id, t->getId(), instance, result);
                break;
-            case ALREADY_ACTIVE:
+            case ThresholdCheckResult::ALREADY_ACTIVE:
 				   i = m_thresholds->size();  // Threshold condition still true, stop processing
                break;
             default:

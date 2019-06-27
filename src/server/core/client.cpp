@@ -278,7 +278,7 @@ void SendUserDBUpdate(int code, UINT32 id, UserDatabaseObject *object)
 /**
  * Send graph update to all active sessions
  */
-void NXCORE_EXPORTABLE NotifyClientGraphUpdate(NXCPMessage *update, UINT32 graphId)
+void NXCORE_EXPORTABLE NotifyClientsOnGraphUpdate(NXCPMessage *update, UINT32 graphId)
 {
    RWLockReadLock(s_sessionListLock, INFINITE);
    for(int i = 0; i < MAX_CLIENT_SESSIONS; i++)
@@ -293,7 +293,7 @@ void NXCORE_EXPORTABLE NotifyClientGraphUpdate(NXCPMessage *update, UINT32 graph
 /**
  * Send policy update/create to all sessions
  */
-void NotifyClientPolicyUpdate(NXCPMessage *msg, Template *object)
+void NotifyClientsOnPolicyUpdate(NXCPMessage *msg, Template *object)
 {
    RWLockReadLock(s_sessionListLock, INFINITE);
    for(int i = 0; i < MAX_CLIENT_SESSIONS; i++)
@@ -308,43 +308,43 @@ void NotifyClientPolicyUpdate(NXCPMessage *msg, Template *object)
 /**
  * Send policy update/create to all sessions
  */
-void NotifyClientPolicyDelete(uuid guid, Template *object)
+void NotifyClientsOnPolicyDelete(uuid guid, Template *object)
 {
    NXCPMessage msg;
    msg.setCode(CMD_DELETE_AGENT_POLICY);
    msg.setField(VID_GUID, guid);
    msg.setField(VID_TEMPLATE_ID, object->getId());
-   NotifyClientPolicyUpdate(&msg, object);
+   NotifyClientsOnPolicyUpdate(&msg, object);
 }
 
 /**
  * Send DCI update to all active sessions
  */
-void NotifyClientDCIUpdate(DataCollectionOwner *object, DCObject *dco)
+void NotifyClientsOnDCIUpdate(DataCollectionOwner *object, DCObject *dco)
 {
    NXCPMessage msg;
    msg.setCode(CMD_MODIFY_NODE_DCI);
    msg.setField(VID_OBJECT_ID, object->getId());
    dco->createMessage(&msg);
-   NotifyClientDCIUpdate(&msg, object);
+   NotifyClientsOnDCIUpdate(&msg, object);
 }
 
 /**
  * Send graph update to all active sessions
  */
-void NotifyClientDCIDelete(DataCollectionOwner *object, UINT32 dcoId)
+void NotifyClientsOnDCIDelete(DataCollectionOwner *object, UINT32 dcoId)
 {
    NXCPMessage msg;
    msg.setCode(CMD_DELETE_NODE_DCI);
    msg.setField(VID_OBJECT_ID, object->getId());
    msg.setField(VID_DCI_ID, dcoId);
-   NotifyClientDCIUpdate(&msg, object);
+   NotifyClientsOnDCIUpdate(&msg, object);
 }
 
 /**
  * Send DCI delete to all active sessions
  */
-void NotifyClientDCIStatusChange(DataCollectionOwner *object, UINT32 dcoId, int status)
+void NotifyClientsOnDCIStatusChange(DataCollectionOwner *object, UINT32 dcoId, int status)
 {
    NXCPMessage msg;
    msg.setCode(CMD_SET_DCI_STATUS);
@@ -352,22 +352,60 @@ void NotifyClientDCIStatusChange(DataCollectionOwner *object, UINT32 dcoId, int 
    msg.setField(VID_DCI_STATUS, status);
    msg.setField(VID_NUM_ITEMS, 1);
    msg.setField(VID_ITEM_LIST, dcoId);
-   NotifyClientDCIUpdate(&msg, object);
+   NotifyClientsOnDCIUpdate(&msg, object);
 }
 
 /**
  * Send DCI update/delete to all active sessions
  */
-void NotifyClientDCIUpdate(NXCPMessage *update, NetObj *object)
+void NotifyClientsOnDCIUpdate(NXCPMessage *update, NetObj *object)
 {
    RWLockReadLock(s_sessionListLock, INFINITE);
    for(int i = 0; i < MAX_CLIENT_SESSIONS; i++)
-      if ((s_sessionList[i] != NULL) &&
-          s_sessionList[i]->isAuthenticated() &&
-          !s_sessionList[i]->isTerminated() &&
-          object->checkAccessRights(s_sessionList[i]->getUserId(), OBJECT_ACCESS_MODIFY) &&
-          s_sessionList[i]->isDCOpened(object->getId()))
-         s_sessionList[i]->postMessage(update);
+   {
+      ClientSession *session = s_sessionList[i];
+      if ((session != NULL) &&
+          session->isAuthenticated() &&
+          !session->isTerminated() &&
+          object->checkAccessRights(session->getUserId(), OBJECT_ACCESS_MODIFY) &&
+          session->isDCOpened(object->getId()))
+      {
+         session->postMessage(update);
+      }
+   }
+   RWLockUnlock(s_sessionListLock);
+}
+
+/**
+ * Notify clients on threshold change
+ */
+void NotifyClientsOnThresholdChange(UINT32 objectId, UINT32 dciId, UINT32 thresholdId, const TCHAR *instance, ThresholdCheckResult change)
+{
+   NetObj *object = FindObjectById(objectId);
+   if (object == NULL)
+      return;
+
+   NXCPMessage msg(CMD_THRESHOLD_UPDATE, 0);
+   msg.setField(VID_OBJECT_ID, objectId);
+   msg.setField(VID_DCI_ID, dciId);
+   msg.setField(VID_THRESHOLD_ID, thresholdId);
+   if (instance != NULL)
+      msg.setField(VID_INSTANCE, instance);
+   msg.setField(VID_STATE, change == ThresholdCheckResult::ACTIVATED);
+
+   RWLockReadLock(s_sessionListLock, INFINITE);
+   for(int i = 0; i < MAX_CLIENT_SESSIONS; i++)
+   {
+      ClientSession *session = s_sessionList[i];
+      if ((session != NULL) &&
+          session->isAuthenticated() &&
+          !session->isTerminated() &&
+          session->isSubscribedTo(NXC_CHANNEL_DC_THRESHOLDS) &&
+          object->checkAccessRights(session->getUserId(), OBJECT_ACCESS_READ))
+      {
+         session->postMessage(&msg);
+      }
+   }
    RWLockUnlock(s_sessionListLock);
 }
 

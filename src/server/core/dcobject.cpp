@@ -483,7 +483,7 @@ void DCObject::setStatus(int status, bool generateEvent)
 {
 	if ((m_owner != NULL) && (m_status != (BYTE)status))
 	{
-      NotifyClientDCIStatusChange(getOwner(), getId(), status);
+      NotifyClientsOnDCIStatusChange(getOwner(), getId(), status);
       if(generateEvent && IsEventSource(m_owner->getObjectClass()))
       {
          static UINT32 eventCode[3] = { EVENT_DCI_ACTIVE, EVENT_DCI_DISABLED, EVENT_DCI_UNSUPPORTED };
@@ -1509,6 +1509,7 @@ DCObjectInfo::DCObjectInfo(const NXCPMessage *msg, DCObject *object)
    m_dataType = (m_type == DCO_TYPE_ITEM) ? msg->getFieldAsInt16(VID_DCI_DATA_TYPE) : -1;
    m_origin = msg->getFieldAsInt16(VID_DCI_SOURCE_TYPE);
    m_status = msg->getFieldAsInt16(VID_DCI_STATUS);
+   m_pollingInterval = (object != NULL) ? object->getEffectivePollingInterval() : 0;
    m_errorCount = (object != NULL) ? object->getErrorCount() : 0;
    m_lastPollTime = (object != NULL) ? object->getLastPollTime() : 0;
    m_hasActiveThreshold = false;

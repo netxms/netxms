@@ -135,7 +135,7 @@ public class NXCPCodes
 	public static final int CMD_PACKAGE_INFO = 0x006D;
 	public static final int CMD_REMOVE_PACKAGE = 0x006E;
 	public static final int CMD_INSTALL_PACKAGE = 0x006F;
-//	public static final int CMD_LOCK_PACKAGE_DB = 0x0070;
+	public static final int CMD_THRESHOLD_UPDATE = 0x0070;
 //	public static final int CMD_UNLOCK_PACKAGE_DB = 0x0071;
 	public static final int CMD_ABORT_FILE_TRANSFER = 0x0072;
 	public static final int CMD_CHECK_NETWORK_SERVICE = 0x0073;
@@ -1052,6 +1052,8 @@ public class NXCPCodes
    public static final long VID_USERAGENT_INSTALLED = 640;
    public static final long VID_CATEGORY_LIST = 641;
    public static final long VID_USER_AGENT_MESSAGE_COUNT = 642;
+   public static final long VID_SNMP_TRAP_PROXY = 643;
+   public static final long VID_THRESHOLD_ID = 644;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;

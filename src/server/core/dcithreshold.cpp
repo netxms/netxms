@@ -254,14 +254,14 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
    {
       case F_DIFF:
          if (ppPrevValues[0]->getTimeStamp() == 1) // Timestamp 1 means placeholder value inserted by cache loader
-            return m_isReached ? ALREADY_ACTIVE : ALREADY_INACTIVE;
+            return m_isReached ? ThresholdCheckResult::ALREADY_ACTIVE : ThresholdCheckResult::ALREADY_INACTIVE;
          break;
       case F_AVERAGE:
       case F_SUM:
       case F_DEVIATION:
          for(int i = 0; i < m_sampleCount - 1; i++)
             if (ppPrevValues[i]->getTimeStamp() == 1) // Timestamp 1 means placeholder value inserted by cache loader
-               return m_isReached ? ALREADY_ACTIVE : ALREADY_INACTIVE;
+               return m_isReached ? ThresholdCheckResult::ALREADY_ACTIVE : ThresholdCheckResult::ALREADY_INACTIVE;
          break;
       default:
          break;
@@ -540,9 +540,12 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
 		}
 	}
 
-   ThresholdCheckResult result = (match && !m_isReached) ? ACTIVATED : ((!match && m_isReached) ? DEACTIVATED : (m_isReached ? ALREADY_ACTIVE : ALREADY_INACTIVE));
+   ThresholdCheckResult result = (match && !m_isReached) ?
+            ThresholdCheckResult::ACTIVATED :
+                  ((!match && m_isReached) ? ThresholdCheckResult::DEACTIVATED :
+                        (m_isReached ? ThresholdCheckResult::ALREADY_ACTIVE : ThresholdCheckResult::ALREADY_INACTIVE));
    m_isReached = match;
-   if (result == ACTIVATED || result == DEACTIVATED)
+   if (result == ThresholdCheckResult::ACTIVATED || result == ThresholdCheckResult::DEACTIVATED)
    {
       // Update threshold status in database
       TCHAR szQuery[256];
@@ -575,12 +578,15 @@ void Threshold::markLastEvent(int severity)
 ThresholdCheckResult Threshold::checkError(UINT32 dwErrorCount)
 {
    if (m_function != F_ERROR)
-      return m_isReached ? ALREADY_ACTIVE : ALREADY_INACTIVE;
+      return m_isReached ? ThresholdCheckResult::ALREADY_ACTIVE : ThresholdCheckResult::ALREADY_INACTIVE;
 
    bool match = ((UINT32)m_sampleCount <= dwErrorCount);
-   ThresholdCheckResult result = (match && !m_isReached) ? ACTIVATED : ((!match && m_isReached) ? DEACTIVATED : (m_isReached ? ALREADY_ACTIVE : ALREADY_INACTIVE));
+   ThresholdCheckResult result = (match && !m_isReached) ?
+            ThresholdCheckResult::ACTIVATED :
+                  ((!match && m_isReached) ? ThresholdCheckResult::DEACTIVATED :
+                           (m_isReached ? ThresholdCheckResult::ALREADY_ACTIVE : ThresholdCheckResult::ALREADY_INACTIVE));
    m_isReached = match;
-   if (result == ACTIVATED || result == DEACTIVATED)
+   if (result == ThresholdCheckResult::ACTIVATED || result == ThresholdCheckResult::DEACTIVATED)
    {
       // Update threshold status in database
       TCHAR szQuery[256];

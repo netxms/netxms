@@ -316,6 +316,9 @@ bool ClientSession::isSubscribedTo(const TCHAR *channel) const
    return subscribed;
 }
 
+/**
+ * Check if data collection configuration is open
+ */
 bool ClientSession::isDCOpened(UINT32 dcId) const
 {
    bool found = false;
@@ -3574,7 +3577,7 @@ void ClientSession::modifyNodeDCI(NXCPMessage *request)
                         msg.setField(VID_RCC, RCC_SUCCESS);
                         DCObject* dco = ((DataCollectionOwner *)object)->getDCObjectById(itemId, 0, true);
                         if(dco != NULL)
-                           NotifyClientDCIUpdate((DataCollectionOwner *)object, dco);
+                           NotifyClientsOnDCIUpdate((DataCollectionOwner *)object, dco);
 
                         // Send index to id mapping for newly created thresholds to client
                         if (dcObjectType == DCO_TYPE_ITEM)

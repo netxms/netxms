@@ -99,6 +99,7 @@ import org.netxms.client.datacollection.PerfTabDci;
 import org.netxms.client.datacollection.PredictionEngine;
 import org.netxms.client.datacollection.SimpleDciValue;
 import org.netxms.client.datacollection.Threshold;
+import org.netxms.client.datacollection.ThresholdStateChange;
 import org.netxms.client.datacollection.ThresholdViolationSummary;
 import org.netxms.client.datacollection.TransformationTestResult;
 import org.netxms.client.datacollection.WinPerfObject;
@@ -208,12 +209,13 @@ public class NXCSession
    public static final int DEFAULT_CONN_PORT = 4701;
 
    // Core notification channels
-   public static final String CHANNEL_EVENTS = "Core.Events";
-   public static final String CHANNEL_SYSLOG = "Core.Syslog";
    public static final String CHANNEL_ALARMS = "Core.Alarms";
+   public static final String CHANNEL_AUDIT_LOG = "Core.Audit";
+   public static final String CHANNEL_DC_THRESHOLDS = "Core.DC.Thresholds";
+   public static final String CHANNEL_EVENTS = "Core.Events";
    public static final String CHANNEL_OBJECTS = "Core.Objects";
    public static final String CHANNEL_SNMP_TRAPS = "Core.SNMP.Traps";
-   public static final String CHANNEL_AUDIT_LOG = "Core.Audit";
+   public static final String CHANNEL_SYSLOG = "Core.Syslog";
    public static final String CHANNEL_USERDB = "Core.UserDB";
 
    // Object sync options
@@ -586,6 +588,9 @@ public class NXCSession
                      break;
                   case NXCPCodes.CMD_ALARM_CATEGORY_UPDATE:
                      processAlarmCategoryConfigChange(msg);
+                     break;
+                  case NXCPCodes.CMD_THRESHOLD_UPDATE:
+                     processThresholdChange(msg);
                      break;
                   case NXCPCodes.CMD_TCP_PROXY_DATA:
                      processTcpProxyData((int)msg.getMessageId(), msg.getBinaryData());
@@ -971,6 +976,17 @@ public class NXCSession
          final int flags = msg.getFieldAsInt32(NXCPCodes.VID_FLAGS);
          sendNotification(new SessionNotification(SessionNotification.IMAGE_LIBRARY_CHANGED,
                flags == 0 ? SessionNotification.IMAGE_UPDATED : SessionNotification.IMAGE_DELETED, imageGuid));
+      }
+
+      /**
+       * Process server notification on threshold change
+       *
+       * @param msg notification message
+       */
+      public void processThresholdChange(NXCPMessage msg)
+      {
+         sendNotification(new SessionNotification(SessionNotification.THRESHOLD_STATE_CHANGED,
+               msg.getFieldAsInt64(NXCPCodes.VID_OBJECT_ID), new ThresholdStateChange(msg)));
       }
 
       /**
