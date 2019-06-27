@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -640,7 +640,7 @@ public:
    virtual int readMessage(SNMP_PDU **data, UINT32 timeout = INFINITE,
                            struct sockaddr *sender = NULL, socklen_t *addrSize = NULL,
 	                        SNMP_SecurityContext* (*contextFinder)(struct sockaddr *, socklen_t) = NULL) = 0;
-   virtual int sendMessage(SNMP_PDU *pdu) = 0;
+   virtual int sendMessage(SNMP_PDU *pdu, UINT32 timeout) = 0;
    virtual InetAddress getPeerIpAddress() = 0;
    virtual UINT16 getPort() = 0;
    virtual bool isProxyTransport() = 0;
@@ -688,11 +688,11 @@ public:
 
    virtual int readMessage(SNMP_PDU **data, UINT32 timeout = INFINITE,
                            struct sockaddr *sender = NULL, socklen_t *addrSize = NULL,
-	                        SNMP_SecurityContext* (*contextFinder)(struct sockaddr *, socklen_t) = NULL);
-   virtual int sendMessage(SNMP_PDU *pPDU);
-   virtual InetAddress getPeerIpAddress();
-   virtual UINT16 getPort();
-   virtual bool isProxyTransport();
+	                        SNMP_SecurityContext* (*contextFinder)(struct sockaddr *, socklen_t) = NULL) override;
+   virtual int sendMessage(SNMP_PDU *pdu, UINT32 timeout) override;
+   virtual InetAddress getPeerIpAddress() override;
+   virtual UINT16 getPort() override;
+   virtual bool isProxyTransport() override;
 
    UINT32 createUDPTransport(const TCHAR *hostName, UINT16 port = SNMP_DEFAULT_PORT);
    UINT32 createUDPTransport(const InetAddress& hostAddr, UINT16 port = SNMP_DEFAULT_PORT);

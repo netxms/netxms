@@ -59,11 +59,11 @@ LONG H_SNMPProxyStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, Abstract
 /**
  * Read PDU from network
  */
-static bool ReadPDU(SOCKET hSocket, BYTE *pdu, UINT32 *pdwSize)
+static bool ReadPDU(SOCKET hSocket, BYTE *pdu, UINT32 *pdwSize, UINT32 timeout)
 {
 	SocketPoller sp;
 	sp.add(hSocket);
-	if (sp.poll(g_snmpTimeout) <= 0)
+	if (sp.poll(timeout) <= 0)
 	   return false;
 
 	int bytes = recv(hSocket, (char *)pdu, SNMP_BUFFER_SIZE, 0);
@@ -99,6 +99,9 @@ void CommSession::proxySnmpRequest(NXCPMessage *request)
             BYTE *pduOut = (BYTE *)malloc(SNMP_BUFFER_SIZE);
             if (pduOut != NULL)
             {
+               UINT32 serverTimeout = request->getFieldAsUInt32(VID_TIMEOUT);
+               UINT32 timeout = (g_snmpTimeout != 0) ? g_snmpTimeout : ((serverTimeout != 0) ? serverTimeout : 1000);   // 1 second if not set
+
                int nRetries;
                for(nRetries = 0; nRetries < 3; nRetries++)
                {
@@ -106,7 +109,7 @@ void CommSession::proxySnmpRequest(NXCPMessage *request)
                   {
                      s_snmpRequests++;
                      UINT32 dwSizeOut;
-                     if (ReadPDU(hSocket, pduOut, &dwSizeOut))
+                     if (ReadPDU(hSocket, pduOut, &dwSizeOut, timeout))
                      {
                         s_snmpResponses++;
                         response.setField(VID_PDU_SIZE, dwSizeOut);

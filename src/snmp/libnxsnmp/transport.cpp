@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** SNMP support library
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -83,7 +83,7 @@ void SNMP_Transport::setSecurityContext(SNMP_SecurityContext *ctx)
 }
 
 /**
- * Send a request and wait for respone with respect for timeouts and retransmissions
+ * Send a request and wait for response with respect for timeouts and retransmissions
  */
 UINT32 SNMP_Transport::doRequest(SNMP_PDU *request, SNMP_PDU **response, UINT32 timeout, int numRetries)
 {
@@ -116,7 +116,7 @@ UINT32 SNMP_Transport::doRequest(SNMP_PDU *request, SNMP_PDU **response, UINT32 
 
 retry:
 		rc = SNMP_ERR_SUCCESS;
-      if (sendMessage(request) <= 0)
+      if (sendMessage(request, timeout) <= 0)
       {
          rc = SNMP_ERR_COMM;
          break;
@@ -504,19 +504,17 @@ int SNMP_UDPTransport::readMessage(SNMP_PDU **ppData, UINT32 dwTimeout,
 /**
  * Send PDU to socket
  */
-int SNMP_UDPTransport::sendMessage(SNMP_PDU *pPDU)
+int SNMP_UDPTransport::sendMessage(SNMP_PDU *pdu, UINT32 timeout)
 {
-   BYTE *pBuffer;
-   int nBytes = 0;
-
-   size_t size = pPDU->encode(&pBuffer, m_securityContext);
+   int bytes = 0;
+   BYTE *buffer;
+   size_t size = pdu->encode(&buffer, m_securityContext);
    if (size != 0)
    {
-      nBytes = sendto(m_hSocket, (char *)pBuffer, (int)size, 0, (struct sockaddr *)&m_peerAddr, SA_LEN((struct sockaddr *)&m_peerAddr));
-      free(pBuffer);
+      bytes = sendto(m_hSocket, (char *)buffer, (int)size, 0, (struct sockaddr *)&m_peerAddr, SA_LEN((struct sockaddr *)&m_peerAddr));
+      MemFree(buffer);
    }
-
-   return nBytes;
+   return bytes;
 }
 
 /**
