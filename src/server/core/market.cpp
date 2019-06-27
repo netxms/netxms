@@ -94,6 +94,7 @@ void ClientSession::getRepositories(NXCPMessage *request)
          }
          msg.setField(VID_RCC, RCC_SUCCESS);
          writeAuditLog(AUDIT_SYSCFG, true, 0, _T("Read list of configured repositories"));
+         DBFreeResult(hResult);
       }
       else
       {
