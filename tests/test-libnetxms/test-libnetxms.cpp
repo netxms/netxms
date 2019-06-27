@@ -1285,6 +1285,7 @@ static void TestTable()
    delete table;
    delete table2;
    delete table3;
+   delete table4;
 }
 
 /**
