@@ -72,8 +72,6 @@ Begin
   If FileExists(strExecName) Then
   Begin
     Log('Stopping agent service');
-    RegDeleteValue(HKEY_LOCAL_MACHINE, 'Software\NetXMS\Agent', 'ReloadFlag');
-    ExtractTemporaryFile('nxreload.exe');
     FileCopy(ExpandConstant('{tmp}\nxreload.exe'), ExpandConstant('{app}\bin\nxreload.exe'), False);
     ExecAndLog(strExecName, '-k', ExpandConstant('{app}\bin'));
     ExecAndLog(strExecName, '-S', ExpandConstant('{app}\bin'));
@@ -85,6 +83,9 @@ End;
 
 Function PrepareToInstall(var NeedsRestart: Boolean): String;
 Begin
+  RegDeleteValue(HKEY_LOCAL_MACHINE, 'Software\NetXMS\Agent', 'ReloadFlag');
+  ExecAndLog('taskkill.exe', '/IM nxreload.exe /F', ExpandConstant('{tmp}'));
+  ExtractTemporaryFile('nxreload.exe');
   StopService;
   Result := '';
 End;
