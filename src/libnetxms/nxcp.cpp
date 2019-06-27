@@ -154,7 +154,7 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD code, TCHAR *pszBuffer)
       _T("CMD_PACKAGE_INFO"),
       _T("CMD_REMOVE_PACKAGE"),
       _T("CMD_INSTALL_PACKAGE"),
-      _T("0x0070"),
+      _T("CMD_THRESHOLD_UPDATE"),
       _T("0x0071"),
       _T("CMD_ABORT_FILE_TRANSFER"),
       _T("CMD_CHECK_NETWORK_SERVICE"),

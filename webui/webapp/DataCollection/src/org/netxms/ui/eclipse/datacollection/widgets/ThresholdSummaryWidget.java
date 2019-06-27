@@ -26,12 +26,17 @@ import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IViewPart;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.netxms.client.NXCSession;
+import org.netxms.client.SessionListener;
+import org.netxms.client.SessionNotification;
+import org.netxms.client.datacollection.ThresholdStateChange;
 import org.netxms.client.datacollection.ThresholdViolationSummary;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.datacollection.Activator;
@@ -60,6 +65,8 @@ public class ThresholdSummaryWidget extends Composite
 	private IViewPart viewPart;
 	private SortableTreeViewer viewer;
 	private VisibilityValidator visibilityValidator;
+	private boolean subscribed = false;
+	private boolean refreshScheduled = false;
 	
 	/**
 	 * @param parent
@@ -80,6 +87,51 @@ public class ThresholdSummaryWidget extends Composite
 		viewer.setComparator(new ThresholdTreeComparator());
 
 		createPopupMenu();
+		
+		addDisposeListener(new DisposeListener() {
+         @Override
+         public void widgetDisposed(DisposeEvent e)
+         {
+            if (!subscribed)
+               return;
+            
+            final NXCSession session = ConsoleSharedData.getSession();
+            ConsoleJob job = new ConsoleJob("Unsubscribe from threshold notifications", null, Activator.PLUGIN_ID, null) {
+               @Override
+               protected void runInternal(IProgressMonitor monitor) throws Exception
+               {
+                  session.unsubscribe(NXCSession.CHANNEL_DC_THRESHOLDS);
+               }
+               
+               @Override
+               protected String getErrorMessage()
+               {
+                  return "Cannot change event subscription";
+               }
+            };
+            job.setUser(false);
+            job.setSystem(true);
+            job.start();
+         }
+      });
+		
+		ConsoleSharedData.getSession().addListener(new SessionListener() {
+         @Override
+         public void notificationHandler(SessionNotification n)
+         {
+            if (n.getCode() == SessionNotification.THRESHOLD_STATE_CHANGED)
+            {
+               final ThresholdStateChange stateChange = (ThresholdStateChange)n.getObject();
+               getDisplay().asyncExec(new Runnable() {
+                  @Override
+                  public void run()
+                  {
+                     processNotification(stateChange);
+                  }
+               });
+            }
+         }
+      });
 	}
 
 	/**
@@ -114,6 +166,28 @@ public class ThresholdSummaryWidget extends Composite
 	{
 		mgr.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 	}
+	
+	/**
+	 * Process threshold state change
+	 * 
+	 * @param stateChange state change information
+	 */
+	private void processNotification(ThresholdStateChange stateChange)
+	{
+	   if (refreshScheduled || (object == null) ||
+	       ((object.getObjectId() != stateChange.getObjectId()) && !object.isParentOf(stateChange.getObjectId())))
+	      return;
+
+	   refreshScheduled = true;
+	   getDisplay().timerExec(500, new Runnable() {
+         @Override
+         public void run()
+         {
+            refreshScheduled = false;
+            refresh();
+         }
+      });
+	}
 
 	/**
 	 * Refresh widget
@@ -129,7 +203,7 @@ public class ThresholdSummaryWidget extends Composite
 			return;
 		}
 		
-		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+		final NXCSession session = ConsoleSharedData.getSession();
 		final long rootId = object.getObjectId();
 		ConsoleJob job = new ConsoleJob(Messages.get().ThresholdSummaryWidget_JobTitle, viewPart, Activator.PLUGIN_ID, null) {
 			@Override
@@ -146,6 +220,11 @@ public class ThresholdSummaryWidget extends Composite
 						viewer.expandAll();
 					}
 				});
+				if (!subscribed)
+				{
+				   session.subscribe(NXCSession.CHANNEL_DC_THRESHOLDS);
+				   subscribed = true;
+				}
 			}
 			
 			@Override

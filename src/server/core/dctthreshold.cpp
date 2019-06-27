@@ -713,7 +713,7 @@ ThresholdCheckResult DCTableThreshold::check(Table *value, int row, const TCHAR 
             i->updateRow(row);
             i->incMatchCount();
             if (i->isActive())
-               return ALREADY_ACTIVE;
+               return ThresholdCheckResult::ALREADY_ACTIVE;
          }
          else
          {
@@ -723,9 +723,9 @@ ThresholdCheckResult DCTableThreshold::check(Table *value, int row, const TCHAR 
          if (i->getMatchCount() >= m_sampleCount)
          {
             i->setActive();
-            return ACTIVATED;
+            return ThresholdCheckResult::ACTIVATED;
          }
-         return ALREADY_INACTIVE;
+         return ThresholdCheckResult::ALREADY_INACTIVE;
       }
    }
 
@@ -735,13 +735,13 @@ ThresholdCheckResult DCTableThreshold::check(Table *value, int row, const TCHAR 
    {
       bool deactivated = i->isActive();
       m_instances->remove(instance);
-      return deactivated ? DEACTIVATED : ALREADY_INACTIVE;
+      return deactivated ? ThresholdCheckResult::DEACTIVATED : ThresholdCheckResult::ALREADY_INACTIVE;
    }
-   return ALREADY_INACTIVE;
+   return ThresholdCheckResult::ALREADY_INACTIVE;
 }
 
 /**
- * Callback for cloning threshld instances
+ * Callback for cloning threshold instances
  */
 static EnumerationCallbackResult CloneThresholdInstances(const TCHAR *key, const void *value, void *data)
 {

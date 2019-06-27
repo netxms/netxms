@@ -986,13 +986,14 @@ enum AggregationFunction
 /**
  * Core subscription channels
  */
-#define NXC_CHANNEL_EVENTS       _T("Core.Events")
-#define NXC_CHANNEL_SYSLOG       _T("Core.Syslog")
-#define NXC_CHANNEL_ALARMS       _T("Core.Alarms")
-#define NXC_CHANNEL_OBJECTS      _T("Core.Objects")
-#define NXC_CHANNEL_SNMP_TRAPS   _T("Core.SNMP.Traps")
-#define NXC_CHANNEL_AUDIT_LOG    _T("Core.Audit")
-#define NXC_CHANNEL_USERDB       _T("Core.UserDB")
+#define NXC_CHANNEL_ALARMS          _T("Core.Alarms")
+#define NXC_CHANNEL_AUDIT_LOG       _T("Core.Audit")
+#define NXC_CHANNEL_DC_THRESHOLDS   _T("Core.DC.Thresholds")
+#define NXC_CHANNEL_EVENTS          _T("Core.Events")
+#define NXC_CHANNEL_OBJECTS         _T("Core.Objects")
+#define NXC_CHANNEL_SNMP_TRAPS      _T("Core.SNMP.Traps")
+#define NXC_CHANNEL_SYSLOG          _T("Core.Syslog")
+#define NXC_CHANNEL_USERDB          _T("Core.UserDB")
 
 /**
  * Node creation flags

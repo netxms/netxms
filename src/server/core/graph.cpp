@@ -464,7 +464,7 @@ void SaveGraph(NXCPMessage *pRequest, UINT32 userId, NXCPMessage *msg)
             }
             update.setField(VID_NUM_GRAPHS, 1);
 
-            NotifyClientGraphUpdate(&update, graphId);
+            NotifyClientsOnGraphUpdate(&update, graphId);
 			}
 			else
 			{

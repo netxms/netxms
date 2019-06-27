@@ -278,7 +278,7 @@ void SendUserDBUpdate(int code, UINT32 id, UserDatabaseObject *object)
 /**
  * Send graph update to all active sessions
  */
-void NXCORE_EXPORTABLE NotifyClientGraphUpdate(NXCPMessage *update, UINT32 graphId)
+void NXCORE_EXPORTABLE NotifyClientsOnGraphUpdate(NXCPMessage *update, UINT32 graphId)
 {
    RWLockReadLock(s_sessionListLock, INFINITE);
    for(int i = 0; i < MAX_CLIENT_SESSIONS; i++)
@@ -287,6 +287,39 @@ void NXCORE_EXPORTABLE NotifyClientGraphUpdate(NXCPMessage *update, UINT32 graph
           !s_sessionList[i]->isTerminated() &&
           (GetGraphAccessCheckResult(graphId, s_sessionList[i]->getUserId()) == RCC_SUCCESS))
          s_sessionList[i]->postMessage(update);
+   RWLockUnlock(s_sessionListLock);
+}
+
+/**
+ * Notify clients on threshold change
+ */
+void NotifyClientsOnThresholdChange(UINT32 objectId, UINT32 dciId, UINT32 thresholdId, const TCHAR *instance, ThresholdCheckResult change)
+{
+   NetObj *object = FindObjectById(objectId);
+   if (object == NULL)
+      return;
+
+   NXCPMessage msg(CMD_THRESHOLD_UPDATE, 0);
+   msg.setField(VID_OBJECT_ID, objectId);
+   msg.setField(VID_DCI_ID, dciId);
+   msg.setField(VID_THRESHOLD_ID, thresholdId);
+   if (instance != NULL)
+      msg.setField(VID_INSTANCE, instance);
+   msg.setField(VID_STATE, change == ThresholdCheckResult::ACTIVATED);
+
+   RWLockReadLock(s_sessionListLock, INFINITE);
+   for(int i = 0; i < MAX_CLIENT_SESSIONS; i++)
+   {
+      ClientSession *session = s_sessionList[i];
+      if ((session != NULL) &&
+          session->isAuthenticated() &&
+          !session->isTerminated() &&
+          session->isSubscribedTo(NXC_CHANNEL_DC_THRESHOLDS) &&
+          object->checkAccessRights(session->getUserId(), OBJECT_ACCESS_READ))
+      {
+         session->postMessage(&msg);
+      }
+   }
    RWLockUnlock(s_sessionListLock);
 }
 
