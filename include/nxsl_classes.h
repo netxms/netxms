@@ -93,6 +93,7 @@ struct LIBNXSL_EXPORTABLE NXSL_Identifier
 
    NXSL_Identifier(const identifier_t& s)
    {
+      memset(value, 0, sizeof(value));
       strcpy(value, s.v);
       length = (BYTE)strlen(value);
    }
