@@ -767,5 +767,6 @@ void LoadUserAgentNotifications()
 
          s_userAgentNotifications.set(n->getId(), n);
       }
+      DBFreeResult(hResult);
    }
 }
