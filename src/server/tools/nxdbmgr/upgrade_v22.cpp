@@ -24,11 +24,21 @@
 #include <nxevent.h>
 
 /**
- * Upgrade from 22.58 to 30.0
+ * Upgrade from 22.59 to 30.0
+ */
+static bool H_UpgradeFromV59()
+{
+   CHK_EXEC(SetMajorSchemaVersion(30, 0));
+   return true;
+}
+
+/**
+ * Upgrade 22.58 to 22.59
  */
 static bool H_UpgradeFromV58()
 {
-   CHK_EXEC(SetMajorSchemaVersion(30, 0));
+   CHK_EXEC(SQLQuery(_T("UPDATE config_values SET var_description='AUTO' WHERE var_name='DefaultInterfaceExpectedState' AND var_value='1'")));
+   CHK_EXEC(SetMinorSchemaVersion(59));
    return true;
 }
 
@@ -1165,7 +1175,8 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
-   { 58, 30, 0,  H_UpgradeFromV58 },
+   { 59, 30, 0,  H_UpgradeFromV59 },
+   { 58, 22, 59, H_UpgradeFromV58 },
    { 57, 22, 58, H_UpgradeFromV57 },
    { 56, 22, 57, H_UpgradeFromV56 },
    { 55, 22, 56, H_UpgradeFromV55 },

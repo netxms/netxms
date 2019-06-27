@@ -254,7 +254,7 @@ INSERT INTO config_values (var_name,var_value,var_description) VALUES ('DefaultA
 INSERT INTO config_values (var_name,var_value,var_description) VALUES ('DefaultAgentProtocolCompressionMode','1','Enabled');
 INSERT INTO config_values (var_name,var_value,var_description) VALUES ('DefaultAgentProtocolCompressionMode','2','Disabled');
 INSERT INTO config_values (var_name,var_value,var_description) VALUES ('DefaultInterfaceExpectedState','0','UP');
-INSERT INTO config_values (var_name,var_value,var_description) VALUES ('DefaultInterfaceExpectedState','1','DOWN');
+INSERT INTO config_values (var_name,var_value,var_description) VALUES ('DefaultInterfaceExpectedState','1','AUTO');
 INSERT INTO config_values (var_name,var_value,var_description) VALUES ('DefaultInterfaceExpectedState','2','IGNORE');
 INSERT INTO config_values (var_name,var_value,var_description) VALUES ('DefaultEncryptionPolicy','0','Disabled');
 INSERT INTO config_values (var_name,var_value,var_description) VALUES ('DefaultEncryptionPolicy','1','Allowed');
