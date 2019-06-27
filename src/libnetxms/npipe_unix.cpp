@@ -46,9 +46,9 @@ NamedPipeListener *NamedPipeListener::create(const TCHAR *name, NamedPipeRequest
    struct sockaddr_un addrLocal;
    addrLocal.sun_family = AF_UNIX;
 #ifdef UNICODE
-   sprintf(addrLocal.sun_path, "/tmp/.%S", name);
+   snprintf(addrLocal.sun_path, sizeof(addrLocal.sun_path), "/tmp/.%S", name);
 #else
-   sprintf(addrLocal.sun_path, "/tmp/.%s", name);
+   snprintf(addrLocal.sun_path, sizeof(addrLocal.sun_path), "/tmp/.%s", name);
 #endif
    unlink(addrLocal.sun_path);
    prevMask = umask(0);
