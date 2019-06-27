@@ -94,6 +94,31 @@ EPRule::EPRule(ConfigEntry *config) : m_actions(0, 16, true)
       delete tmp;
    }
 
+   ConfigEntry *alarmCategoriesEntry = config->findEntry(_T("alarmCategories"));
+   if(alarmCategoriesEntry != NULL)
+   {
+      ConfigEntry *categories = alarmCategoriesEntry->findEntry(_T("category"));
+      if (categories != NULL)
+      {
+         for(int i = 0; i < categories->getValueCount(); i++)
+         {
+            const TCHAR *v = categories->getValue(i);
+            if ((v != NULL) && (*v != 0))
+            {
+               UINT32 id = GetAlarmCategoryIdByName(v);
+               if(id > 0)
+               {
+                  m_alarmCategoryList.add(id);
+               }
+               else
+               {
+                  m_alarmCategoryList.add(CreateNewAlarmCategoryFromImport(v));
+               }
+            }
+         }
+      }
+   }
+
    m_scriptSource = _tcsdup(config->getSubEntryValue(_T("script"), 0, _T("")));
    if ((m_scriptSource != NULL) && (*m_scriptSource != 0))
    {
@@ -373,11 +398,19 @@ void EPRule::createNXMPRecord(String &str)
    {
       str.appendFormattedString(_T("\t\t\t\t<set id=\"%d\" key=\"%s\">%s</set>\n"), i+1, arr->get(i)->key, arr->get(i)->value);
    }
+   delete arr;
    for(int i = 0; i < m_pstorageDeleteActions.size(); i++)
    {
       str.appendFormattedString(_T("\t\t\t\t<delete id=\"%d\" key=\"%s\"/>\n"), i+1, m_pstorageDeleteActions.get(i));
    }
-   str += _T("\t\t\t</pStorageActions>\n\t\t</rule>\n");
+   str += _T("\t\t\t</pStorageActions>\n\t\t\t<alarmCategories>\n");
+   for(int i = 0; i < m_alarmCategoryList.size(); i++)
+   {
+      str.append(_T("\t\t\t\t<category>"));
+      str.append(GetAlarmCategoryName(m_alarmCategoryList.get(i)));
+      str.append(_T("</category>\n"));
+   }
+   str += _T("\t\t\t</alarmCategories>\n\t\t</rule>\n");
 }
 
 /**

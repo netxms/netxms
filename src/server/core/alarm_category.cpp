@@ -36,6 +36,7 @@ private:
 public:
    AlarmCategory(UINT32 id);
    AlarmCategory(DB_RESULT hResult, int row, IntegerArray<UINT32> *aclCache);
+   AlarmCategory(UINT32 id, const TCHAR *name, const TCHAR *description);
    ~AlarmCategory();
 
    UINT32 getId() const { return m_id; }
@@ -79,12 +80,22 @@ AlarmCategory::AlarmCategory(DB_RESULT hResult, int row, IntegerArray<UINT32> *a
 }
 
 /**
+ * Create new category
+ */
+AlarmCategory::AlarmCategory(UINT32 id, const TCHAR *name, const TCHAR *description)
+{
+   m_id = id;
+   m_name = MemCopyString(name);
+   m_description = MemCopyString(description);
+}
+
+/**
  * Destructor
  */
 AlarmCategory::~AlarmCategory()
 {
-   free(m_name);
-   free(m_description);
+   MemFree(m_name);
+   MemFree(m_description);
 }
 
 /**
@@ -390,4 +401,52 @@ void LoadAlarmCategories()
       DBFreeResult(hResult);
    }
    DBConnectionPoolReleaseConnection(hdb);
+}
+
+const String GetAlarmCategoryName(UINT32 id)
+{
+   String name;
+   s_lock.readLock();
+   name = s_categories.get(id)->getName();
+   s_lock.unlock();
+   return name;
+}
+
+UINT32 GetAlarmCategoryIdByName(const TCHAR *name)
+{
+   UINT32 id = 0;
+   s_lock.readLock();
+   Iterator<AlarmCategory> *it = s_categories.iterator();
+   while(it->hasNext())
+   {
+     AlarmCategory *c = it->next();
+     if(!_tcscmp(c->getName(), name))
+     {
+        id = c->getId();
+        break;
+     }
+   }
+   delete it;
+   s_lock.unlock();
+   return id;
+}
+
+UINT32 CreateNewAlarmCategoryFromImport(const TCHAR *name)
+{
+   UINT32 id = CreateUniqueId(IDG_ALARM_CATEGORY);
+   AlarmCategory *category = new AlarmCategory(id, name, _T("Alarm category created by import"));
+
+   s_lock.writeLock();
+   s_categories.set(id, category);
+   category->saveToDatabase();
+
+   //Notify clients
+   NXCPMessage msg;
+   msg.setCode(CMD_ALARM_CATEGORY_UPDATE);
+   msg.setField(VID_NOTIFICATION_CODE, (UINT16)NX_NOTIFY_ALARM_CATEGORY_UPDATE);
+   category->fillMessage(&msg, VID_ELEMENT_LIST_BASE);
+   EnumerateClientSessions(SendAlarmCategoryDBChangeNotification, &msg);
+
+   s_lock.unlock();
+   return id;
 }
