@@ -2545,7 +2545,7 @@ void Node::checkAgentPolicyBinding(AgentConnection *conn)
             {
                 if(((Template*)m_parentList->get(i))->hasPolicy(guid))
                 {
-                   found = false;
+                   found = true;
                    break;
                 }
             }
