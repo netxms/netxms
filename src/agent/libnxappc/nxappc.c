@@ -131,7 +131,7 @@ int LIBNXAPPC_EXPORTABLE nxappc_open_channel(void)
 		return NXAPPC_FAIL;
 	
 	addrLocal.sun_family = AF_UNIX;
-   sprintf(addrLocal.sun_path, "/tmp/.nxappc.%s", s_channel);
+   snprintf(addrLocal.sun_path, sizeof(addrLocal.sun_path), "/tmp/.nxappc.%s", s_channel);
 	if (connect(s_socket, (struct sockaddr *)&addrLocal, SUN_LEN(&addrLocal)) == -1)
    {
       closesocket(s_socket);
