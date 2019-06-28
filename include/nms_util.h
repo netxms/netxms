@@ -2330,6 +2330,9 @@ class LIBNETXMS_EXPORTABLE SocketCommChannel : public AbstractCommChannel
 private:
    SOCKET m_socket;
    bool m_owner;
+#ifndef _WIN32
+   int m_controlPipe[2];
+#endif
 
 protected:
    virtual ~SocketCommChannel();
@@ -2464,7 +2467,7 @@ typedef struct _dir_struc_w
 
 int LIBNETXMS_EXPORTABLE ConnectEx(SOCKET s, struct sockaddr *addr, int len, UINT32 timeout, bool *isTimeout = NULL);
 int LIBNETXMS_EXPORTABLE SendEx(SOCKET hSocket, const void *data, size_t len, int flags, MUTEX mutex);
-int LIBNETXMS_EXPORTABLE RecvEx(SOCKET hSocket, void *data, size_t len, int flags, UINT32 timeout);
+int LIBNETXMS_EXPORTABLE RecvEx(SOCKET hSocket, void *data, size_t len, int flags, UINT32 timeout, SOCKET controlSocket = INVALID_SOCKET);
 bool LIBNETXMS_EXPORTABLE RecvAll(SOCKET s, void *buffer, size_t size, UINT32 timeout);
 
 SOCKET LIBNETXMS_EXPORTABLE ConnectToHost(const InetAddress& addr, UINT16 port, UINT32 timeout);

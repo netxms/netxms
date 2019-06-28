@@ -1243,7 +1243,7 @@ retry:
  * @param timeout waiting timeout in milliseconds
  * @return number of bytes read on success, 0 if socket was closed, -1 on error, -2 on timeout
  */
-int LIBNETXMS_EXPORTABLE RecvEx(SOCKET hSocket, void *data, size_t len, int flags, UINT32 timeout)
+int LIBNETXMS_EXPORTABLE RecvEx(SOCKET hSocket, void *data, size_t len, int flags, UINT32 timeout, SOCKET controlSocket)
 {
 	if (hSocket == INVALID_SOCKET)
 		return -1;
@@ -1253,17 +1253,32 @@ int LIBNETXMS_EXPORTABLE RecvEx(SOCKET hSocket, void *data, size_t len, int flag
    {
       SocketPoller sp;
       sp.add(hSocket);
+      if (controlSocket != INVALID_SOCKET)
+         sp.add(controlSocket);
       rc = sp.poll(timeout);
       if (rc > 0)
       {
-#ifdef _WIN32
-         rc = recv(hSocket, (char *)data, (int)len, flags);
-#else
-         do
+         if ((controlSocket != INVALID_SOCKET) && sp.isSet(controlSocket))
          {
-            rc = recv(hSocket, (char *)data, len, flags);
-         } while((rc == -1) && (errno == EINTR));
+            char data;
+#ifdef _WIN32
+            recv(controlSocket, &data, 1);
+#else
+            _read(controlSocket, &data, 1);
 #endif
+            rc = 0;  // Cancel signal
+         }
+         else
+         {
+#ifdef _WIN32
+            rc = recv(hSocket, (char *)data, (int)len, flags);
+#else
+            do
+            {
+               rc = recv(hSocket, (char *)data, len, flags);
+            } while((rc == -1) && (errno == EINTR));
+#endif
+         }
       }
       else
       {

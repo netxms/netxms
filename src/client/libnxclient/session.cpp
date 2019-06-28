@@ -66,6 +66,7 @@ NXCSession::NXCSession()
    m_protocolVersions = new IntegerArray<UINT32>(8, 8);
    m_passwordChangeNeeded = false;
 	m_compressionEnabled = false;
+	m_receiver = NULL;
 }
 
 /**
@@ -115,15 +116,18 @@ void NXCSession::disconnect()
    if (!m_connected || m_disconnected)
       return;
 
-   // Close socket
+   // Cancel receiver
+   if (m_receiver != NULL)
+      m_receiver->cancel();
+
+   if (m_receiverThread != INVALID_THREAD_HANDLE)
+      ThreadJoin(m_receiverThread);
+
    if (m_hSocket != INVALID_SOCKET)
    {
       shutdown(m_hSocket, SHUT_RDWR);
       closesocket(m_hSocket);
    }
-
-   if (m_receiverThread != INVALID_THREAD_HANDLE)
-      ThreadJoin(m_receiverThread);
 
    // Clear message wait queue
    delete m_msgWaitQueue;
@@ -421,11 +425,11 @@ THREAD_RESULT THREAD_CALL NXCSession::receiverThreadStarter(void *arg)
  */
 void NXCSession::receiverThread()
 {
-   SocketMessageReceiver receiver(m_hSocket, 4096, MAX_MSG_SIZE);
+   m_receiver = new SocketMessageReceiver(m_hSocket, 4096, MAX_MSG_SIZE);
    while(true)
    {
       MessageReceiverResult result;
-      NXCPMessage *msg = receiver.readMessage(900000, &result);
+      NXCPMessage *msg = m_receiver->readMessage(900000, &result);
 
       // Check for decryption error
       if (result == MSGRECV_DECRYPTION_FAILURE)
@@ -437,7 +441,8 @@ void NXCSession::receiverThread()
       // Receive error
       if (msg == NULL)
       {
-         DebugPrintf(_T("NXCSession::receiverThread: message receiving error (%s)"), AbstractMessageReceiver::resultToText(result));
+         if (result != MSGRECV_CLOSED)
+            DebugPrintf(_T("NXCSession::receiverThread: message receiving error (%s)"), AbstractMessageReceiver::resultToText(result));
          break;
       }
 
@@ -452,7 +457,7 @@ void NXCSession::receiverThread()
                NXCPMessage *response;
                MutexLock(m_dataLock);
                SetupEncryptionContext(msg, &m_encryptionContext, &response, NULL, NXCP_VERSION);
-               receiver.setEncryptionContext(m_encryptionContext);
+               m_receiver->setEncryptionContext(m_encryptionContext);
                MutexUnlock(m_dataLock);
                sendMessage(response);
                delete response;
@@ -471,6 +476,7 @@ void NXCSession::receiverThread()
       }
       delete msg;
    }
+   delete_and_null(m_receiver);
 }
 
 /**

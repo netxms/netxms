@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -184,6 +184,13 @@ const TCHAR *AbstractMessageReceiver::resultToText(MessageReceiverResult result)
 SocketMessageReceiver::SocketMessageReceiver(SOCKET socket, size_t initialSize, size_t maxSize) : AbstractMessageReceiver(initialSize, maxSize)
 {
    m_socket = socket;
+#ifndef _WIN32
+   if (pipe(m_controlPipe) != 0)
+   {
+      m_controlPipe[0] = -1;
+      m_controlPipe[1] = -1;
+   }
+#endif
 }
 
 /**
@@ -191,6 +198,12 @@ SocketMessageReceiver::SocketMessageReceiver(SOCKET socket, size_t initialSize, 
  */
 SocketMessageReceiver::~SocketMessageReceiver()
 {
+#ifndef _WIN32
+   if (m_controlPipe[0] != -1)
+      _close(m_controlPipe[0]);
+   if (m_controlPipe[0] != -1)
+      _close(m_controlPipe[1]);
+#endif
 }
 
 /**
@@ -198,7 +211,26 @@ SocketMessageReceiver::~SocketMessageReceiver()
  */
 int SocketMessageReceiver::readBytes(BYTE *buffer, size_t size, UINT32 timeout)
 {
+#ifdef _WIN32
    return RecvEx(m_socket, buffer, size, 0, timeout);
+#else
+   return RecvEx(m_socket, buffer, size, 0, timeout, m_controlPipe[0]);
+#endif
+}
+
+/**
+ * Stop receiver
+ */
+void SocketMessageReceiver::cancel()
+{
+#ifdef _WIN32
+   shutdown(m_socket, SHUT_RDWR);
+#else
+   if (m_controlPipe[1] != -1)
+      _write(m_controlPipe[1], "X", 1);
+   else
+      shutdown(m_socket, SHUT_RDWR);
+#endif
 }
 
 /**
@@ -226,6 +258,14 @@ int CommChannelMessageReceiver::readBytes(BYTE *buffer, size_t size, UINT32 time
    return m_channel->recv(buffer, size, timeout);
 }
 
+/**
+ * Stop receiver
+ */
+void CommChannelMessageReceiver::cancel()
+{
+   m_channel->shutdown();
+}
+
 #ifdef _WITH_ENCRYPTION
 
 /**
@@ -236,6 +276,13 @@ TlsMessageReceiver::TlsMessageReceiver(SOCKET socket, SSL *ssl, MUTEX mutex, siz
    m_socket = socket;
    m_ssl = ssl;
    m_mutex = mutex;
+#ifndef _WIN32
+   if (pipe(m_controlPipe) != 0)
+   {
+      m_controlPipe[0] = -1;
+      m_controlPipe[1] = -1;
+   }
+#endif
 }
 
 /**
@@ -243,6 +290,12 @@ TlsMessageReceiver::TlsMessageReceiver(SOCKET socket, SSL *ssl, MUTEX mutex, siz
  */
 TlsMessageReceiver::~TlsMessageReceiver()
 {
+#ifndef _WIN32
+   if (m_controlPipe[0] != -1)
+      _close(m_controlPipe[0]);
+   if (m_controlPipe[0] != -1)
+      _close(m_controlPipe[1]);
+#endif
 }
 
 /**
@@ -261,9 +314,21 @@ int TlsMessageReceiver::readBytes(BYTE *buffer, size_t size, UINT32 timeout)
          MutexUnlock(m_mutex);
          SocketPoller sp(needWrite);
          sp.add(m_socket);
+#ifndef _WIN32
+         if (!needWrite && (m_controlPipe[0] != -1))
+            sp.add(m_controlPipe[0]);
+#endif
          int rc = sp.poll(timeout);
          if (rc <= 0)
             return (rc == 0) ? -2 : -1;   // -2 for timeout
+#ifndef _WIN32
+         if (!needWrite && (m_controlPipe[0] != -1) && sp.isSet(m_controlPipe[0]))
+         {
+            char data;
+            _read(m_controlPipe[0], &data, 1);
+            return 0;
+         }
+#endif
          needWrite = false;
          MutexLock(m_mutex);
       }
@@ -289,16 +354,38 @@ int TlsMessageReceiver::readBytes(BYTE *buffer, size_t size, UINT32 timeout)
    return bytes;
 }
 
+/**
+ * Stop receiver
+ */
+void TlsMessageReceiver::cancel()
+{
+#ifdef _WIN32
+   shutdown(m_socket, SHUT_RDWR);
+#else
+   if (m_controlPipe[1] != -1)
+      _write(m_controlPipe[1], "X", 1);
+   else
+      shutdown(m_socket, SHUT_RDWR);
+#endif
+}
+
 #endif /* _WITH_ENCRYPTION */
 
 /**
  * Pipe message receiver constructor
  */
-PipeMessageReceiver::PipeMessageReceiver(HPIPE pipe, size_t initialSize, size_t maxSize) : AbstractMessageReceiver(initialSize, maxSize)
+PipeMessageReceiver::PipeMessageReceiver(HPIPE hpipe, size_t initialSize, size_t maxSize) : AbstractMessageReceiver(initialSize, maxSize)
 {
-   m_pipe = pipe;
+   m_pipe = hpipe;
 #ifdef _WIN32
    m_readEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
+   m_cancelEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
+#else
+   if (pipe(m_controlPipe) != 0)
+   {
+      m_controlPipe[0] = -1;
+      m_controlPipe[1] = -1;
+   }
 #endif
 }
 
@@ -309,6 +396,12 @@ PipeMessageReceiver::~PipeMessageReceiver()
 {
 #ifdef _WIN32
 	CloseHandle(m_readEvent);
+	CloseHandle(m_cancelEvent);
+#else
+   if (m_controlPipe[0] != -1)
+      _close(m_controlPipe[0]);
+   if (m_controlPipe[0] != -1)
+      _close(m_controlPipe[1]);
 #endif
 }
 
@@ -330,10 +423,12 @@ int PipeMessageReceiver::readBytes(BYTE *buffer, size_t size, UINT32 timeout)
 	if (GetLastError() != ERROR_IO_PENDING)
 		return -1;
 
-   if (WaitForSingleObject(m_readEvent, timeout) != WAIT_OBJECT_0)
+	HANDLE handes[2] = { m_readEvent, m_cancelEvent };
+	DWORD rc = WaitForMultipleObjects(2, handles, FALSE, timeout);
+   if (rc != WAIT_OBJECT_0)
    {
       CancelIo(m_pipe);
-      return -2;
+      return (rc == WAIT_OBJECT_0 + 1) ? 0 : -2;
    }
 
 	if (!GetOverlappedResult(m_pipe, &ov, &bytes, TRUE))
@@ -343,6 +438,19 @@ int PipeMessageReceiver::readBytes(BYTE *buffer, size_t size, UINT32 timeout)
 	}
    return (int)bytes;
 #else
-   return RecvEx(m_pipe, buffer, size, 0, timeout);
+   return RecvEx(m_pipe, buffer, size, 0, timeout, m_controlPipe[0]);
+#endif
+}
+
+/**
+ * Stop receiver
+ */
+void PipeMessageReceiver::cancel()
+{
+#ifdef _WIN32
+   SetEvent(m_cancelEvent);
+#else
+   if (m_controlPipe[1] != -1)
+      _write(m_controlPipe[1], "X", 1);
 #endif
 }
