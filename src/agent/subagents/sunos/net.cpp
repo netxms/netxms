@@ -396,7 +396,7 @@ LONG H_NetInterfaceStats(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue
       kc = kstat_open();
       if (kc != NULL)
       {
-         kp = kstat_lookup(kc, szDevice, nInstance, szIfName);
+         kp = kstat_lookup(kc, (g_flags & SF_SOLARIS_11) > 0 ? "link" : szDevice, nInstance, szIfName);
          if (kp != NULL)
          {
             if(kstat_read(kc, kp, 0) != -1)
@@ -445,7 +445,7 @@ LONG H_NetInterfaceStats(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue
          }
          else
          {
-            AgentWriteDebugLog(7, _T("SunOS: H_NetInterfaceStats: call to kstat_lookup() failed (%s)"), _tcserror(errno));
+            AgentWriteDebugLog(7, _T("SunOS: H_NetInterfaceStats: call to kstat_lookup(%hs, %d, %hs) failed (%s)"), (g_flags & SF_SOLARIS_11) > 0 ? "link" : szDevice, nInstance, szIfName, _tcserror(errno));
          }
          kstat_close(kc);
       }
