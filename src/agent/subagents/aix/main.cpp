@@ -1,6 +1,6 @@
 /*
 ** NetXMS subagent for AIX
-** Copyright (C) 2005-2014 Victor Kirhenshtein
+** Copyright (C) 2005-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,17 +22,16 @@
 
 #include "aix_subagent.h"
 
-
-//
-// Hanlder functions
-//
-
+/**
+ * Hanlder functions
+ */
 LONG H_CpuCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
 LONG H_CpuUsage(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
 LONG H_CpuUsageEx(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
 LONG H_DiskInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
 LONG H_FileSystems(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *);
 LONG H_Hostname(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
+LONG H_InstalledProducts(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *session);
 LONG H_IOStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_IOStatsTotal(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_LoadAvg(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
@@ -313,7 +312,8 @@ static NETXMS_SUBAGENT_TABLE m_tables[] =
    { _T("FileSystem.Volumes"), H_FileSystems, NULL, _T("MOUNTPOINT"), DCTDESC_FILESYSTEM_VOLUMES },
    { _T("LVM.LogicalVolumes(*)"), H_LvmLogicalVolumesTable, NULL, _T("NAME"), DCTDESC_LVM_LOGICAL_VOLUMES },
    { _T("LVM.PhysicalVolumes(*)"), H_LvmPhysicalVolumesTable, NULL, _T("NAME"), DCTDESC_LVM_PHYSICAL_VOLUMES },
-   { _T("LVM.VolumeGroups"), H_LvmVolumeGroupsTable, NULL, _T("NAME"), DCTDESC_LVM_VOLUME_GROUPS }
+   { _T("LVM.VolumeGroups"), H_LvmVolumeGroupsTable, NULL, _T("NAME"), DCTDESC_LVM_VOLUME_GROUPS },
+   { _T("System.InstalledProducts"), H_InstalledProducts, NULL, _T("NAME"), DCTDESC_SYSTEM_INSTALLED_PRODUCTS }
 };
 
 /**
