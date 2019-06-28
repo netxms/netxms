@@ -457,7 +457,7 @@ LONG H_NetInterfaceStats(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue
    }
    else
    {
-      AgentWriteDebugLog(7, _T("SunOS: H_NetInterfaceStats: failed to find interface name"),);
+      AgentWriteDebugLog(7, _T("SunOS: H_NetInterfaceStats: failed to find interface name"));
    }
 
    return nRet;
