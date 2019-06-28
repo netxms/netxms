@@ -638,9 +638,9 @@ void Cluster::statusPoll(PollerInfo *poller, ClientSession *pSession, UINT32 dwR
 	if (!allDown)
 	{
 #if HAVE_ALLOCA
-      BYTE *resourceFound = static_cast<BYTE*>(alloca(m_dwNumResources));
+      BYTE *resourceFound = reinterpret_cast<BYTE*>(alloca(m_dwNumResources));
 #else
-		BYTE *resourceFound = MemAllocArray<BYTE>(m_dwNumResources);
+      BYTE *resourceFound = MemAllocArray<BYTE>(m_dwNumResources);
 #endif
 
       poller->setStatus(_T("resource poll"));

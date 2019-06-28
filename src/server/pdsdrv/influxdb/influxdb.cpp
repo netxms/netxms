@@ -32,7 +32,6 @@
 #include <nms_core.h>
 #include <pdsdrv.h>
 
-#include <regex>
 #include <string>
 
 // debug pdsdrv.influxdb 1-5
@@ -383,9 +382,8 @@ bool InfluxDBStorageDriver::saveDCItemValue(DCItem *dci, time_t timestamp, const
    std::string name = "";
 
    // If it's a MIB or Dummy metric use the Description if not use the Name
-   if (std::regex_match(getString(dci->getName()), std::regex
-      { "^\\.1.*" }) || std::regex_match(getString(dci->getName()), std::regex
-      { "^Dummy.*" }))
+   if ((dci->getDataSource() == DS_SNMP_AGENT) ||
+       ((dci->getDataSource() == DS_INTERNAL) && !_tcsnicmp(dci->getName(), _T("Dummy"), 5)))
    {
       name = normalizeString(getString(dci->getDescription()));
    }
