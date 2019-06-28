@@ -423,7 +423,7 @@ int PipeMessageReceiver::readBytes(BYTE *buffer, size_t size, UINT32 timeout)
 	if (GetLastError() != ERROR_IO_PENDING)
 		return -1;
 
-	HANDLE handes[2] = { m_readEvent, m_cancelEvent };
+	HANDLE handles[2] = { m_readEvent, m_cancelEvent };
 	DWORD rc = WaitForMultipleObjects(2, handles, FALSE, timeout);
    if (rc != WAIT_OBJECT_0)
    {

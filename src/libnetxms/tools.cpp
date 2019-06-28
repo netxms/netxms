@@ -1262,7 +1262,7 @@ int LIBNETXMS_EXPORTABLE RecvEx(SOCKET hSocket, void *data, size_t len, int flag
          {
             char data;
 #ifdef _WIN32
-            recv(controlSocket, &data, 1);
+            recv(controlSocket, &data, 1, 0);
 #else
             _read(controlSocket, &data, 1);
 #endif
