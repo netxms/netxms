@@ -433,11 +433,31 @@ LONG H_NetInterfaceStats(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue
                   }
                   nRet = SYSINFO_RC_SUCCESS;
                }
+               else
+               {
+                  AgentWriteDebugLog(5, _T("SunOS: H_NetInterfaceStats: call to kstat_data_lookup() failed (%s)"), _tcserror(errno));
+               }
             }
+            else
+            {
+               AgentWriteDebugLog(5, _T("SunOS: H_NetInterfaceStats: call to kstat_read() failed (%s)"), _tcserror(errno));
+            }
+         }
+         else
+         {
+            AgentWriteDebugLog(7, _T("SunOS: H_NetInterfaceStats: call to kstat_lookup() failed (%s)"), _tcserror(errno));
          }
          kstat_close(kc);
       }
+      else
+      {
+         AgentWriteDebugLog(7, _T("SunOS: H_NetInterfaceStats: call to kstat_open() failed (%s)"), _tcserror(errno));
+      }
       kstat_unlock();
+   }
+   else
+   {
+      AgentWriteDebugLog(7, _T("SunOS: H_NetInterfaceStats: failed to find interface name"),);
    }
 
    return nRet;
