@@ -426,7 +426,7 @@ private:
 #endif
 
 protected:
-   virtual int readBytes(BYTE *buffer, size_t size, UINT32 timeout);
+   virtual int readBytes(BYTE *buffer, size_t size, UINT32 timeout) override;
 
 public:
    PipeMessageReceiver(HPIPE hpipe, size_t initialSize, size_t maxSize);
