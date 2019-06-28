@@ -248,6 +248,7 @@ class LIBNXCLIENT_EXPORTABLE NXCSession
 {
 private:
    THREAD m_receiverThread;
+   SocketMessageReceiver *m_receiver;
 
    static THREAD_RESULT THREAD_CALL receiverThreadStarter(void *arg);
    void receiverThread();

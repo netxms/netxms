@@ -333,6 +333,8 @@ public:
    AbstractMessageReceiver(size_t initialSize, size_t maxSize);
    virtual ~AbstractMessageReceiver();
 
+   virtual void cancel() = 0;
+
    void setEncryptionContext(NXCPEncryptionContext *ctx) { m_encryptionContext = ctx; }
 
    NXCPMessage *readMessage(UINT32 timeout, MessageReceiverResult *result);
@@ -348,13 +350,18 @@ class LIBNETXMS_EXPORTABLE SocketMessageReceiver : public AbstractMessageReceive
 {
 private:
    SOCKET m_socket;
+#ifndef _WIN32
+   int m_controlPipe[2];
+#endif
 
 protected:
-   virtual int readBytes(BYTE *buffer, size_t size, UINT32 timeout);
+   virtual int readBytes(BYTE *buffer, size_t size, UINT32 timeout) override;
 
 public:
    SocketMessageReceiver(SOCKET socket, size_t initialSize, size_t maxSize);
    virtual ~SocketMessageReceiver();
+
+   virtual void cancel() override;
 };
 
 /**
@@ -366,11 +373,13 @@ private:
    AbstractCommChannel *m_channel;
 
 protected:
-   virtual int readBytes(BYTE *buffer, size_t size, UINT32 timeout);
+   virtual int readBytes(BYTE *buffer, size_t size, UINT32 timeout) override;
 
 public:
    CommChannelMessageReceiver(AbstractCommChannel *channel, size_t initialSize, size_t maxSize);
    virtual ~CommChannelMessageReceiver();
+
+   virtual void cancel() override;
 };
 
 #ifdef _WITH_ENCRYPTION
@@ -384,13 +393,18 @@ private:
    SOCKET m_socket;
    SSL *m_ssl;
    MUTEX m_mutex;
+#ifndef _WIN32
+   int m_controlPipe[2];
+#endif
 
 protected:
-   virtual int readBytes(BYTE *buffer, size_t size, UINT32 timeout);
+   virtual int readBytes(BYTE *buffer, size_t size, UINT32 timeout) override;
 
 public:
    TlsMessageReceiver(SOCKET socket, SSL *ssl, MUTEX mutex, size_t initialSize, size_t maxSize);
    virtual ~TlsMessageReceiver();
+
+   virtual void cancel() override;
 };
 
 #endif /* _WITH_ENCRYPTION */
@@ -404,14 +418,19 @@ private:
    HPIPE m_pipe;
 #ifdef _WIN32
 	HANDLE m_readEvent;
+   HANDLE m_cancelEvent;
+#else
+   int m_controlPipe[2];
 #endif
 
 protected:
-   virtual int readBytes(BYTE *buffer, size_t size, UINT32 timeout);
+   virtual int readBytes(BYTE *buffer, size_t size, UINT32 timeout) override;
 
 public:
-   PipeMessageReceiver(HPIPE pipe, size_t initialSize, size_t maxSize);
+   PipeMessageReceiver(HPIPE hpipe, size_t initialSize, size_t maxSize);
    virtual ~PipeMessageReceiver();
+
+   virtual void cancel() override;
 };
 
 /**
