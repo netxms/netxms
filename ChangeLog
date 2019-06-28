@@ -29,7 +29,7 @@
 *
 
 - Improved systemd integration
-- Agent table System.InstalledProducts supported on FreeBSD
+- Agent table System.InstalledProducts supported on AIX and FreeBSD
 - Fixed issues:
 	NX-857 (Server should send SNMP timeout to proxy agent)
 	NX-869 (nxevent sometimes hanges after sending event)
