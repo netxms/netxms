@@ -1055,7 +1055,7 @@ void InitLocalNetInfo();
 ArpCache *GetLocalArpCache();
 InterfaceList *GetLocalInterfaceList();
 
-ROUTING_TABLE *SnmpGetRoutingTable(UINT32 dwVersion, SNMP_Transport *pTransport);
+ROUTING_TABLE *SnmpGetRoutingTable(SNMP_Transport *pTransport);
 
 void LoadNetworkDeviceDrivers();
 NetworkDeviceDriver *FindDriverForNode(Node *node, SNMP_Transport *snmpTransport);

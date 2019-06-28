@@ -6642,7 +6642,7 @@ ROUTING_TABLE *Node::getRoutingTable()
       SNMP_Transport *pTransport = createSnmpTransport();
       if (pTransport != NULL)
       {
-         pRT = SnmpGetRoutingTable(m_capabilities, pTransport);
+         pRT = SnmpGetRoutingTable(pTransport);
          delete pTransport;
       }
    }

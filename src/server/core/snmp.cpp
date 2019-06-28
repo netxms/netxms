@@ -71,11 +71,11 @@ static UINT32 HandlerRoute(SNMP_Variable *pVar, SNMP_Transport *pTransport, void
 /**
  * Get routing table via SNMP
  */
-ROUTING_TABLE *SnmpGetRoutingTable(UINT32 dwVersion, SNMP_Transport *pTransport)
+ROUTING_TABLE *SnmpGetRoutingTable(SNMP_Transport *pTransport)
 {
    ROUTING_TABLE *pRT;
 
-   pRT = (ROUTING_TABLE *)malloc(sizeof(ROUTING_TABLE));
+   pRT = MemAllocStruct<ROUTING_TABLE>();
    if (pRT == NULL)
       return NULL;
 
