@@ -39,40 +39,48 @@ LONG H_InstalledProducts(const TCHAR *cmd, const TCHAR *arg, Table *value, Abstr
    value->addColumn(_T("URL"));
    value->addColumn(_T("DESCRIPTION"));
 
-   static int columnMapping[8] = { 0, -1, 1, -1, -1, -1, -1, 5 };
+   const char *data[8];
    while(1)
    {
       char line[1024];
       if (fgets(line, 1024, pipe) == NULL)
          break;
 
+      memset(data, 0, sizeof(data));
       char *curr = line;
-		for(int i = 0; i < 8; i++)
-		{
-			char *ptr = strchr(curr, ':');
-			if (ptr != NULL)
-			{
-				*ptr = 0;
-			}
-			else
-			{
-				ptr = strchr(curr, '\n');
-				if (ptr != NULL)
-				{
-					*ptr = 0;
-					ptr = NULL;
-				}
-			}
-
-         if (columnMapping[i] != -1)
-            value->set(columnMapping[i], curr);
-
+      for(int i = 0; i < 8; i++)
+      {
+         char *ptr = strchr(curr, ':');
+         if (ptr != NULL)
+         {
+            *ptr = 0;
+         }
+         else
+         {
+            ptr = strchr(curr, '\n');
+            if (ptr != NULL)
+            {
+               *ptr = 0;
+               ptr = NULL;
+            }
+         }
+         data[i] = curr;
          if (ptr == NULL)
             break;
          curr = ptr + 1;
-		}
-	}
-	pclose(pipe);
+      }
 
-	return SYSINFO_RC_SUCCESS;
+      if ((data[7] != NULL) && (*(data[0]) != 0))
+      {
+         value->addRow();
+
+         // use fileset name if product type is "fileset" and name otherwise
+         value->set(0, *(data[6]) == 'F' ? data[1] : data[0]);
+         value->set(1, data[2]);
+         value->set(5, data[7]);
+      }
+   }
+   pclose(pipe);
+
+   return SYSINFO_RC_SUCCESS;
 }
