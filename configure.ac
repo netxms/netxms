@@ -1299,8 +1299,6 @@ case "$PLATFORM" in
    AIX)
       CPPFLAGS="$CPPFLAGS -D_THREAD_SAFE=1"
       LDFLAGS_PREFIX="-no-undefined -Wl,-brtl $LDFLAGS"
-      AC_CPP_CHECK_OPTION(-qsuppress=1540-1401)
-      AC_CPP_CHECK_OPTION(-qsuppress=1506-356)
       ;;
    HP-UX)
       CPPFLAGS="$CPPFLAGS -D_HPUX -D_HPUX_SOURCE -D_POSIX_PTHREAD_SEMANTICS -D_XOPEN_SOURCE=500 -D_XOPEN_SOURCE_EXTENDED=1 -D_REENTRANT -D_INCLUDE_LONGLONG -D_LARGEFILE64_SOURCE"
@@ -1599,6 +1597,15 @@ if test "x$CXX" = "xxlC_r" ; then
 			CPPFLAGS="$OLD_CPPFLAGS"
 			AC_MSG_RESULT(no)
 		])
+
+	AC_CXX_CHECK_OPTION(-qlanglvl=extended0x)
+	AC_CXX_CHECK_OPTION(-qnoeh)
+	AC_CXX_CHECK_OPTION(-qsuppress=1540-1090)
+
+	AC_C_CHECK_OPTION(-qlanglvl=extc1x)
+
+	AC_CPP_CHECK_OPTION(-qsuppress=1506-356)
+	AC_CPP_CHECK_OPTION(-qsuppress=1540-1401)
 fi
 
 if test "x$CXX" = "xCC" ; then
