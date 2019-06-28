@@ -181,7 +181,7 @@ static BOOL ImportTable(sqlite3 *db, const TCHAR *table)
 /**
  * Import data tables
  */
-static bool ImportDataTables(sqlite3 *db)
+static bool ImportDataTables(sqlite3 *db, const StringList& excludedTables)
 {
    IntegerArray<UINT32> *targets = GetDataCollectionTargets();
    if (targets == NULL)
@@ -200,10 +200,17 @@ static bool ImportDataTables(sqlite3 *db)
 
 		TCHAR table[64];
 		_sntprintf(table, 64, _T("idata_%d"), id);
-		if (!ImportTable(db, table))
+		if (!excludedTables.contains(table))
 		{
-         success = false;
-			break;
+         if (!ImportTable(db, table))
+         {
+            success = false;
+            break;
+         }
+		}
+		else
+		{
+         _tprintf(_T("Skipping table %s\n"), table);
 		}
 
       if (!CreateTDataTable(id))
@@ -213,11 +220,18 @@ static bool ImportDataTables(sqlite3 *db)
       }
 
 		_sntprintf(table, 64, _T("tdata_%d"), id);
-		if (!ImportTable(db, table))
-		{
-         success = false;
-			break;
-		}
+      if (!excludedTables.contains(table))
+      {
+         if (!ImportTable(db, table))
+         {
+            success = false;
+            break;
+         }
+      }
+      else
+      {
+         _tprintf(_T("Skipping table %s\n"), table);
+      }
 	}
 
 	delete targets;
@@ -234,17 +248,31 @@ static int GetSchemaVersionCB(void *arg, int cols, char **data, char **names)
 }
 
 /**
+ * Data for module table import
+ */
+struct ModuleTableImportData
+{
+  const StringList *excludedTables;
+  sqlite3 *db;
+};
+
+/**
  * Callback for importing module table
  */
-static bool ImportModuleTable(const TCHAR *table, void *userData)
+static bool ImportModuleTable(const TCHAR *table, void *context)
 {
-   return ImportTable(static_cast<sqlite3*>(userData), table);
+   if (static_cast<ModuleTableImportData*>(context)->excludedTables->contains(table))
+   {
+      _tprintf(_T("Skipping table %s\n"), table);
+      return true;
+   }
+   return ImportTable(static_cast<ModuleTableImportData*>(context)->db, table);
 }
 
 /**
  * Import database
  */
-void ImportDatabase(const char *file)
+void ImportDatabase(const char *file, const StringList& excludedTables)
 {
 	sqlite3 *db;
 	char *errmsg;
@@ -283,16 +311,26 @@ void ImportDatabase(const char *file)
 	// Import tables
 	for(i = 0; g_tables[i] != NULL; i++)
 	{
-		if (!ImportTable(db, g_tables[i]))
+	   const TCHAR *table = g_tables[i];
+	   if (excludedTables.contains(table))
+	   {
+	      _tprintf(_T("Skipping table %s\n"), table);
+	      continue;
+	   }
+		if (!ImportTable(db, table))
 			goto cleanup;
 	}
 
 	if (!singleTablePerfData)
 	{
-      if (!ImportDataTables(db))
+      if (!ImportDataTables(db, excludedTables))
          goto cleanup;
 	}
-	if (!EnumerateModuleTables(ImportModuleTable, db))
+
+	ModuleTableImportData data;
+	data.db = db;
+	data.excludedTables = &excludedTables;
+	if (!EnumerateModuleTables(ImportModuleTable, &data))
       goto cleanup;
 
 	success = TRUE;

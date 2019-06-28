@@ -84,7 +84,6 @@ static void QueryTracerCallback(const TCHAR *query, bool failure, const TCHAR *e
 bool ValidateDatabase()
 {
 	DB_RESULT hResult;
-	LONG nVersion = 0;
 	BOOL bLocked = FALSE;
    TCHAR szLockStatus[MAX_DB_STRING], szLockInfo[MAX_DB_STRING];
 
@@ -241,6 +240,7 @@ int main(int argc, char *argv[])
    bool skipTrapLog = false;
    bool showOutput = false;
 	TCHAR fallbackSyntax[32] = _T("");
+	StringList excludedTables;
    int ch;
 
    InitNetXMSProcess(true);
@@ -308,7 +308,7 @@ stop_search:
 
    // Parse command line
    opterr = 1;
-   while((ch = getopt(argc, argv, "Ac:dDEfF:GhILMNoqRsStT:vXY")) != -1)
+   while((ch = getopt(argc, argv, "Ac:dDe:EfF:GhILMNoqRsStT:vXY")) != -1)
    {
       switch(ch)
       {
@@ -335,6 +335,7 @@ stop_search:
                      _T("   -c <config> : Use alternate configuration file. Default is %s\n")
                      _T("   -d          : Check collected data (may take very long time).\n")
                      _T("   -D          : Migrate only collected data.\n")
+                     _T("   -e <table>  : Exclude specific table from export, import, or migration.\n")
                      _T("   -E          : Skip export or migration of event log\n")
                      _T("   -f          : Force repair - do not ask for confirmation.\n")
                      _T("   -F <syntax> : Fallback database syntax to use if not set in metadata.\n")
@@ -379,6 +380,9 @@ stop_search:
 				break;
          case 'D':
             g_dataOnlyMigration = true;
+            break;
+         case 'e':
+            excludedTables.addMBString(optarg);
             break;
          case 'E':
             skipEvent = true;
@@ -640,11 +644,11 @@ stop_search:
       }
       else if (!strcmp(argv[optind], "export"))
       {
-         ExportDatabase(argv[optind + 1], skipAudit, skipAlarms, skipEvent, skipSysLog, skipTrapLog);
+         ExportDatabase(argv[optind + 1], skipAudit, skipAlarms, skipEvent, skipSysLog, skipTrapLog, excludedTables);
       }
       else if (!strcmp(argv[optind], "import"))
       {
-         ImportDatabase(argv[optind + 1]);
+         ImportDatabase(argv[optind + 1], excludedTables);
       }
       else if (!strcmp(argv[optind], "migrate"))
 		{
@@ -655,7 +659,7 @@ stop_search:
 #endif
 			TCHAR destConfFields[2048];
 			_sntprintf(destConfFields, 2048, _T("\tDriver: %s\n\tDB Name: %s\n\tDB Server: %s\n\tDB Login: %s"), s_dbDriver, s_dbName, s_dbServer, s_dbLogin);
-         MigrateDatabase(sourceConfig, destConfFields, skipAudit, skipAlarms, skipEvent, skipSysLog, skipTrapLog);
+         MigrateDatabase(sourceConfig, destConfFields, skipAudit, skipAlarms, skipEvent, skipSysLog, skipTrapLog, excludedTables);
 #ifdef UNICODE
 			free(sourceConfig);
 #endif

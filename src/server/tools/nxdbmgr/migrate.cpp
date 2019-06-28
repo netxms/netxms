@@ -523,15 +523,21 @@ static bool MigrateDataTablesFromSingleTable()
 /**
  * Callback for migrating module table
  */
-static bool MigrateTableCallback(const TCHAR *table, void *userData)
+static bool MigrateTableCallback(const TCHAR *table, void *context)
 {
+   if (((const StringList *)context)->contains(table))
+   {
+      WriteToTerminalEx(_T("Skipping table \x1b[1m%s\x1b[0m\n"), table);
+      return true;
+   }
    return MigrateTable(table);
 }
 
 /**
  * Migrate database
  */
-void MigrateDatabase(const TCHAR *sourceConfig, TCHAR *destConfFields, bool skipAudit, bool skipAlarms, bool skipEvent, bool skipSysLog, bool skipTrapLog)
+void MigrateDatabase(const TCHAR *sourceConfig, TCHAR *destConfFields, bool skipAudit, bool skipAlarms,
+         bool skipEvent, bool skipSysLog, bool skipTrapLog, const StringList& excludedTables)
 {
    bool success = false;
 
@@ -591,26 +597,27 @@ void MigrateDatabase(const TCHAR *sourceConfig, TCHAR *destConfFields, bool skip
 	      if (!_tcscmp(g_tables[i], _T("idata")) ||
              !_tcscmp(g_tables[i], _T("tdata")))
 	         continue;  // idata and tdata migrated separately
-	      if (skipAudit && !_tcscmp(g_tables[i], _T("audit_log")))
+
+	      if ((skipAudit && !_tcscmp(g_tables[i], _T("audit_log"))) ||
+	          (skipEvent && !_tcscmp(g_tables[i], _T("event_log"))) ||
+	          (skipAlarms && (!_tcscmp(g_tables[i], _T("alarms")) ||
+	                          !_tcscmp(g_tables[i], _T("alarm_notes")) ||
+	                          !_tcscmp(g_tables[i], _T("alarm_events")))) ||
+	          (skipTrapLog && !_tcscmp(g_tables[i], _T("snmp_trap_log"))) ||
+	          (skipSysLog && !_tcscmp(g_tables[i], _T("syslog"))) ||
+	          ((g_skipDataMigration || g_skipDataSchemaMigration) &&
+	                   !_tcscmp(g_tables[i], _T("raw_dci_values"))) ||
+	          excludedTables.contains(g_tables[i]))
+	      {
+	         WriteToTerminalEx(_T("Skipping table \x1b[1m%s\x1b[0m\n"), g_tables[i]);
 	         continue;
-	      if (skipEvent && !_tcscmp(g_tables[i], _T("event_log")))
-	         continue;
-	      if (skipAlarms && (!_tcscmp(g_tables[i], _T("alarms")) ||
-	                         !_tcscmp(g_tables[i], _T("alarm_notes")) ||
-	                         !_tcscmp(g_tables[i], _T("alarm_events"))))
-	         continue;
-	      if (skipTrapLog && !_tcscmp(g_tables[i], _T("snmp_trap_log")))
-	         continue;
-	      if (skipSysLog && !_tcscmp(g_tables[i], _T("syslog")))
-	         continue;
-	      if ((g_skipDataMigration || g_skipDataSchemaMigration) &&
-	           !_tcscmp(g_tables[i], _T("raw_dci_values")))
-	         continue;
-		   if (!MigrateTable(g_tables[i]))
+	      }
+
+	      if (!MigrateTable(g_tables[i]))
 			   goto cleanup;
 	   }
 
-	   if (!EnumerateModuleTables(MigrateTableCallback, NULL))
+	   if (!EnumerateModuleTables(MigrateTableCallback, (void *)&excludedTables))
          goto cleanup;
    }
 
