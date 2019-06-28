@@ -37,6 +37,7 @@
 	NX-1633 (Add option to "nxdbmgr export" which will skip selected tables)
 	NX-1646 (Agent can't start with invalid entry in the configuration file)
 	NX-1651 ("Thresholds" not updating live)
+	NX-1655 (Agent's parameters for network interfaces always return error on Solaris 11)
 
 
 *
