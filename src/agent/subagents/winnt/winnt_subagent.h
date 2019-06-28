@@ -96,6 +96,11 @@ struct WINDOW_LIST
 };
 
 /**
+ * Read CPU vendor ID
+ */
+void ReadCPUVendorId();
+
+/**
  * Optional imports
  */
 extern DWORD (__stdcall *imp_GetIfEntry2)(PMIB_IF_ROW2);

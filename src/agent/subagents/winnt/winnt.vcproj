@@ -346,6 +346,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\disk.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\hypervisor.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\main.cpp"
 				>
 			</File>

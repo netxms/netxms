@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -170,6 +170,64 @@
 #define DCIDESC_FS_TYPE                           _T("Type of file system {instance}")
 #define DCIDESC_FS_USED                           _T("Used space on file system {instance}")
 #define DCIDESC_FS_USEDPERC                       _T("Percentage of used space on file system {instance}")
+#define DCIDESC_HARDWARE_BASEBOARD_MANUFACTURER      _T("Hardware: baseboard manufacturer")
+#define DCIDESC_HARDWARE_BASEBOARD_PRODUCT           _T("Hardware: baseboard product name")
+#define DCIDESC_HARDWARE_BASEBOARD_SERIALNUMBER      _T("Hardware: baseboard serial number")
+#define DCIDESC_HARDWARE_BASEBOARD_TYPE              _T("Hardware: baseboard type")
+#define DCIDESC_HARDWARE_BASEBOARD_VERSION           _T("Hardware: baseboard version")
+#define DCIDESC_HARDWARE_BATTERY_CAPACITY            _T("Hardware: battery {instance} capacity")
+#define DCIDESC_HARDWARE_BATTERY_CHEMISTRY           _T("Hardware: battery {instance} chemistry")
+#define DCIDESC_HARDWARE_BATTERY_LOCATION            _T("Hardware: battery {instance} location")
+#define DCIDESC_HARDWARE_BATTERY_MANUFACTURE_DATE    _T("Hardware: battery {instance} manufacture date")
+#define DCIDESC_HARDWARE_BATTERY_MANUFACTURER        _T("Hardware: battery {instance} manufacturer")
+#define DCIDESC_HARDWARE_BATTERY_NAME                _T("Hardware: battery {instance} name")
+#define DCIDESC_HARDWARE_BATTERY_SERIALNUMBER        _T("Hardware: battery {instance} serial number")
+#define DCIDESC_HARDWARE_BATTERY_VOLTAGE             _T("Hardware: battery {instance} voltage")
+#define DCIDESC_HARDWARE_MEMORYDEVICE_BANK           _T("Hardware: memory device {instance} bank")
+#define DCIDESC_HARDWARE_MEMORYDEVICE_CONFSPEED      _T("Hardware: memory device {instance} configured speed")
+#define DCIDESC_HARDWARE_MEMORYDEVICE_FORMFACTOR     _T("Hardware: memory device {instance} form factor")
+#define DCIDESC_HARDWARE_MEMORYDEVICE_LOCATION       _T("Hardware: memory device {instance} location")
+#define DCIDESC_HARDWARE_MEMORYDEVICE_MANUFACTURER   _T("Hardware: memory device {instance} manufacturer")
+#define DCIDESC_HARDWARE_MEMORYDEVICE_MAXSPEED       _T("Hardware: memory device {instance} max speed")
+#define DCIDESC_HARDWARE_MEMORYDEVICE_PARTNUMBER     _T("Hardware: memory device {instance} part number")
+#define DCIDESC_HARDWARE_MEMORYDEVICE_SERIALNUMBER   _T("Hardware: memory device {instance} serial number")
+#define DCIDESC_HARDWARE_MEMORYDEVICE_SIZE           _T("Hardware: memory device {instance} size")
+#define DCIDESC_HARDWARE_MEMORYDEVICE_TYPE           _T("Hardware: memory device {instance} type")
+#define DCIDESC_HARDWARE_NETWORKADAPTER_AVAILABILITY _T("Hardware: network adapter {instance} availability")
+#define DCIDESC_HARDWARE_NETWORKADAPTER_DESCRIPTION  _T("Hardware: network adapter {instance} description")
+#define DCIDESC_HARDWARE_NETWORKADAPTER_IFINDEX      _T("Hardware: network adapter {instance} interface index")
+#define DCIDESC_HARDWARE_NETWORKADAPTER_MACADDR      _T("Hardware: network adapter {instance} MAC address")
+#define DCIDESC_HARDWARE_NETWORKADAPTER_MANUFACTURER _T("Hardware: network adapter {instance} manufacturer")
+#define DCIDESC_HARDWARE_NETWORKADAPTER_PRODUCT      _T("Hardware: network adapter {instance} product name")
+#define DCIDESC_HARDWARE_NETWORKADAPTER_SPEED        _T("Hardware: network adapter {instance} speed")
+#define DCIDESC_HARDWARE_NETWORKADAPTER_TYPE         _T("Hardware: network adapter {instance} type")
+#define DCIDESC_HARDWARE_PROCESSOR_CORES             _T("Hardware: processor {instance} number of cores")
+#define DCIDESC_HARDWARE_PROCESSOR_CURRSPEED         _T("Hardware: processor {instance} current speed")
+#define DCIDESC_HARDWARE_PROCESSOR_FAMILY            _T("Hardware: processor {instance} family")
+#define DCIDESC_HARDWARE_PROCESSOR_MANUFACTURER      _T("Hardware: processor {instance} manufacturer")
+#define DCIDESC_HARDWARE_PROCESSOR_MAXSPEED          _T("Hardware: processor {instance} max speed")
+#define DCIDESC_HARDWARE_PROCESSOR_PARTNUMBER        _T("Hardware: processor {instance} part number")
+#define DCIDESC_HARDWARE_PROCESSOR_SERIALNUMBER      _T("Hardware: processor {instance} serial number")
+#define DCIDESC_HARDWARE_PROCESSOR_SOCKET            _T("Hardware: processor {instance} socket")
+#define DCIDESC_HARDWARE_PROCESSOR_THREADS           _T("Hardware: processor {instance} number of threads")
+#define DCIDESC_HARDWARE_PROCESSOR_TYPE              _T("Hardware: processor {instance} type")
+#define DCIDESC_HARDWARE_PROCESSOR_VERSION           _T("Hardware: processor {instance} version")
+#define DCIDESC_HARDWARE_STORAGEDEVICE_BUSTYPE       _T("Hardware: storage device {instance} bus type")
+#define DCIDESC_HARDWARE_STORAGEDEVICE_ISREMOVABLE   _T("Hardware: storage device {instance} removable flag")
+#define DCIDESC_HARDWARE_STORAGEDEVICE_MANUFACTURER  _T("Hardware: storage device {instance} manufacturer")
+#define DCIDESC_HARDWARE_STORAGEDEVICE_PRODUCT       _T("Hardware: storage device {instance} product name")
+#define DCIDESC_HARDWARE_STORAGEDEVICE_REVISION      _T("Hardware: storage device {instance} revision")
+#define DCIDESC_HARDWARE_STORAGEDEVICE_SERIALNUMBER  _T("Hardware: storage device {instance} serial number")
+#define DCIDESC_HARDWARE_STORAGEDEVICE_SIZE          _T("Hardware: storage device {instance} size")
+#define DCIDESC_HARDWARE_STORAGEDEVICE_TYPE          _T("Hardware: storage device {instance} type")
+#define DCIDESC_HARDWARE_STORAGEDEVICE_TYPEDESCR     _T("Hardware: storage device {instance} type description")
+#define DCIDESC_HARDWARE_SYSTEM_MANUFACTURER         _T("Hardware: system manufacturer")
+#define DCIDESC_HARDWARE_SYSTEM_PRODUCT              _T("Hardware: product name")
+#define DCIDESC_HARDWARE_SYSTEM_SERIALNUMBER         _T("Hardware: system serial number")
+#define DCIDESC_HARDWARE_SYSTEM_VERSION              _T("Hardware: version")
+#define DCIDESC_HARDWARE_WAKEUPEVENT                 _T("Hardware: wakeup event")
+#define DCIDESC_HYPERVISOR_TYPE                      _T("Hypervisor type")
+#define DCIDESC_HYPERVISOR_VERSION                   _T("Hypervisor version")
 #define DCIDESC_LVM_LV_SIZE                       _T("Size of logical volume {instance}")
 #define DCIDESC_LVM_LV_STATUS                     _T("Status of logical volume {instance}")
 #define DCIDESC_LVM_PV_FREE                       _T("Free space on physical volume {instance}")
@@ -333,6 +391,9 @@
 #define DCIDESC_PROCESS_WKSET                     _T("Physical memory used by process {instance}")
 #define DCIDESC_PROCESS_ZOMBIE_COUNT              _T("Number of {instance} zombie processes")
 #define DCIDESC_SYSTEM_APPADDRESSSPACE            _T("Address space available to applications (MB)")
+#define DCIDESC_SYSTEM_BIOS_DATE                     _T("BIOS date")
+#define DCIDESC_SYSTEM_BIOS_VENDOR                   _T("BIOS vendor")
+#define DCIDESC_SYSTEM_BIOS_VERSION                  _T("BIOS version")
 #define DCIDESC_SYSTEM_CONNECTEDUSERS             _T("Number of logged in users")
 #define DCIDESC_SYSTEM_HANDLECOUNT                _T("Total number of handles")
 #define DCIDESC_SYSTEM_PROCESSCOUNT               _T("Total number of processes")
@@ -489,6 +550,11 @@
 #define DCTDESC_AGENT_SESSION_AGENTS              _T("Registered session agents")
 #define DCTDESC_AGENT_SUBAGENTS                   _T("Loaded subagents")
 #define DCTDESC_FILESYSTEM_VOLUMES                _T("File system volumes")
+#define DCTDESC_HARDWARE_BATTERIES                   _T("Hardware: batteries")
+#define DCTDESC_HARDWARE_MEMORY_DEVICES              _T("Hardware: memory devices")
+#define DCTDESC_HARDWARE_NETWORK_ADAPTERS            _T("Hardware: network adapters")
+#define DCTDESC_HARDWARE_PROCESSORS                  _T("Hardware: processors")
+#define DCTDESC_HARDWARE_STORAGE_DEVICES             _T("Hardware: storage devices")
 #define DCTDESC_LVM_VOLUME_GROUPS                 _T("LVM volume groups")
 #define DCTDESC_LVM_LOGICAL_VOLUMES               _T("Logical volumes in volume group {instance}")
 #define DCTDESC_LVM_PHYSICAL_VOLUMES              _T("Physical volumes in volume group {instance}")
@@ -813,5 +879,16 @@ bool LIBNXAGENT_EXPORTABLE WriteRegistry(const TCHAR *attr, const TCHAR *value);
 bool LIBNXAGENT_EXPORTABLE WriteRegistry(const TCHAR *attr, INT32 value);
 bool LIBNXAGENT_EXPORTABLE WriteRegistry(const TCHAR *attr, INT64 value);
 bool LIBNXAGENT_EXPORTABLE DeleteRegistryEntry(const TCHAR *attr);
+
+const char LIBNXAGENT_EXPORTABLE *SMBIOS_GetHardwareManufacturer();
+const char LIBNXAGENT_EXPORTABLE *SMBIOS_GetHardwareProduct();
+LIBNXAGENT_EXPORTABLE const char * const *SMBIOS_GetOEMStrings();
+bool LIBNXAGENT_EXPORTABLE SMBIOS_Parse(BYTE *(*reader)(size_t*));
+LONG LIBNXAGENT_EXPORTABLE SMBIOS_ParameterHandler(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG LIBNXAGENT_EXPORTABLE SMBIOS_BatteryParameterHandler(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG LIBNXAGENT_EXPORTABLE SMBIOS_MemDevParameterHandler(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG LIBNXAGENT_EXPORTABLE SMBIOS_ProcessorParameterHandler(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG LIBNXAGENT_EXPORTABLE SMBIOS_ListHandler(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
+LONG LIBNXAGENT_EXPORTABLE SMBIOS_TableHandler(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *session);
 
 #endif   /* _nms_agent_h_ */

@@ -10,6 +10,8 @@
 
 EXTRA_DIST = \
 	cpu.cpp \
+	disk.cpp \
+	hypervisor.cpp \
 	main.cpp \
 	net.cpp \
 	procinfo.cpp \

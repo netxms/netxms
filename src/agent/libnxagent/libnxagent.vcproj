@@ -358,6 +358,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\smbios.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\tools.cpp"
 				>
 			</File>
