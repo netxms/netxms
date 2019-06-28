@@ -21,6 +21,7 @@
 **/
 
 #include "sunos_subagent.h"
+#include <sys/systeminfo.h>
 
 #if HAVE_ZONE_H
 #include <zone.h>
@@ -152,6 +153,13 @@ static bool SubAgentInit(Config *config)
 {
    if (!config->parseTemplate(_T("SunOS"), s_cfgTemplate))
       return false;
+  
+   char tmp[64]; 
+   if(sysinfo(SI_VERSION, tmp, 64) != -1)
+   {
+      if(!memcmp(tmp, "11", 2))
+         g_flags |= SF_SOLARIS_11;
+   }
 
    // try to determine if we are running in global zone
    if ((access("/dev/dump", F_OK) == 0)
