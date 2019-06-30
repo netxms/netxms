@@ -18,6 +18,7 @@
  */
 package org.netxms.ui.eclipse.osm;
 
+import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
@@ -88,4 +89,25 @@ public class Activator extends AbstractUIPlugin
 	{
 		return imageDescriptorFromPlugin(PLUGIN_ID, path);
 	}
+
+   /**
+    * Log via platform logging facilities
+    *
+    * @param msg
+    */
+   public static void log(String msg)
+   {
+      log(msg, null);
+   }
+
+   /**
+    * Log via platform logging facilities
+    *
+    * @param msg
+    * @param e
+    */
+   public static void log(String msg, Exception e)
+   {
+      getDefault().getLog().log(new Status(Status.INFO, PLUGIN_ID, Status.OK, msg, e));
+   }
 }

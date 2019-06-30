@@ -18,12 +18,15 @@
  */
 package org.netxms.ui.eclipse.osm.tools;
 
+import java.io.BufferedInputStream;
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import org.eclipse.core.runtime.Platform;
-import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.osgi.service.datalocation.Location;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
@@ -33,6 +36,7 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.base.GeoLocation;
+import org.netxms.base.NXCommon;
 import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.osm.Activator;
 import org.netxms.ui.eclipse.osm.GeoLocationCache;
@@ -157,13 +161,38 @@ public class MapLoader
 		}
 		catch(MalformedURLException e)
 		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+         Activator.log("Invalid tile server URL", e);
 			return null;
 		}
+
+		HttpURLConnection conn = null;
+		InputStream in = null;
+		Image image = null;
+		try
+      {
+		   conn = (HttpURLConnection)url.openConnection();
+		   conn.setRequestProperty("User-Agent", "nxmc/" + NXCommon.VERSION);
+         in = new BufferedInputStream(conn.getInputStream());
+         image = new Image(display, in);
+      }
+      catch(IOException e)
+      {
+         Activator.log(url.toString() + ": " + e.getMessage());
+      }
+      finally
+      {
+         try
+         {
+            if (in != null)
+               in.close();
+            if (conn != null)
+               conn.disconnect();
+         }
+         catch(IOException e)
+         {
+         }
+      }
 		
-		final ImageDescriptor id = ImageDescriptor.createFromURL(url);
-		final Image image = id.createImage(false, display);
 		if (image != null)
 		{
 			// save to cache
