@@ -34,6 +34,7 @@
 	NX-857 (Server should send SNMP timeout to proxy agent)
 	NX-869 (nxevent sometimes hanges after sending event)
 	NX-1606 (DefaultInterfaceExpectedState - wrong values)
+	NX-1624 (Add "for the last minute" to description of Icmp.* per-minute agent parameters)
 	NX-1633 (Add option to "nxdbmgr export" which will skip selected tables)
 	NX-1646 (Agent can't start with invalid entry in the configuration file)
 	NX-1651 ("Thresholds" not updating live)
