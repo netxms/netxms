@@ -18,12 +18,15 @@
  */
 package org.netxms.ui.eclipse.osm.tools;
 
+import java.io.BufferedInputStream;
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import org.eclipse.core.runtime.Platform;
-import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.osgi.service.datalocation.Location;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
@@ -33,6 +36,7 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.base.GeoLocation;
+import org.netxms.base.NXCommon;
 import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.osm.Activator;
 import org.netxms.ui.eclipse.osm.GeoLocationCache;
@@ -161,6 +165,8 @@ public class MapLoader
 	}
 	
 	/**
+	 * Load tile from tile server. Expected to be executed on background thread.
+	 * 
 	 * @param zoom
 	 * @param x
 	 * @param y
@@ -181,14 +187,56 @@ public class MapLoader
 		}
 		catch(MalformedURLException e)
 		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		   Activator.log("Invalid tile server URL", e);
 			return null;
 		}
+
+		Image image = null;
+      HttpURLConnection conn = null;
+      InputStream in = null;
+      try
+      {
+         conn = (HttpURLConnection)url.openConnection();
+         conn.setRequestProperty("User-Agent", "nxmc-webui/" + NXCommon.VERSION);
+         in = new BufferedInputStream(conn.getInputStream());
+         final ImageData imageData = new ImageData(in);
+
+         final Image[] imageContainer = new Image[1];
+         display.syncExec(new Runnable() {
+            @Override
+            public void run()
+            {
+               try
+               {
+                  imageContainer[0] = new Image(display, imageData);
+               }
+               catch(Exception e)
+               {
+                  Activator.log("Image creation failed", e);
+                  imageContainer[0] = null;
+               }
+            }
+         });
+         image = imageContainer[0];
+      }
+      catch(IOException e)
+      {
+         Activator.log(url.toString() + ": " + e.getMessage());
+      }
+      finally
+      {
+         try
+         {
+            if (in != null)
+               in.close();
+            if (conn != null)
+               conn.disconnect();
+         }
+         catch(IOException e)
+         {
+         }
+      }
 		
-		ImageCreator ic = new ImageCreator(ImageDescriptor.createFromURL(url));
-		display.syncExec(ic);
-		final Image image = ic.getImage();
 		if (image != null)
 		{
 			// save to cache
@@ -247,25 +295,31 @@ public class MapLoader
 	 */
 	private Image loadTileFromCache(int zoom, int x, int y)
 	{
-		try
+		final File imageFile = buildCacheFileName(zoom, x, y);
+		synchronized(CACHE_MUTEX)
 		{
-			File imageFile = buildCacheFileName(zoom, x, y);
-			synchronized(CACHE_MUTEX)
+			if (imageFile.canRead())
 			{
-				if (imageFile.canRead())
-				{
-					ImageCreator ic = new ImageCreator(imageFile.getAbsolutePath());
-					display.syncExec(ic);
-					return ic.getImage();
-				}
+			   final Image[] image = new Image[1];
+			   display.syncExec(new Runnable() {
+               @Override
+               public void run()
+               {
+                  try
+                  {
+                     image[0] = new Image(display, imageFile.getAbsolutePath());
+                  }
+                  catch(Exception e)
+                  {
+                     Activator.log("Image creation failed", e);
+                     image[0] = null;
+                  }
+               }
+            });
+				return image[0];
 			}
-			return null;
 		}
-		catch(Exception e)
-		{
-			e.printStackTrace(); /* FIXME: for debug purposes only */
-			return null;
-		}
+		return null;
 	}
 	
 	/**
@@ -391,43 +445,5 @@ public class MapLoader
 			missingTile.dispose();
 		if (borderTile != null)
 			borderTile.dispose();
-	}
-	
-	private class ImageCreator implements Runnable
-	{
-		private Image image;
-		private ImageDescriptor descriptor;
-		private String file;
-		
-		public ImageCreator(ImageDescriptor descriptor)
-		{
-			this.descriptor = descriptor;
-			this.file = null;
-		}
-		
-		public ImageCreator(String file)
-		{
-			this.descriptor = null;
-			this.file = file;
-		}
-		
-		@Override
-		public void run()
-		{
-			try
-			{
-				image = (file != null) ? new Image(display, file) : descriptor.createImage(false, display);
-			}
-			catch(Exception e)
-			{
-				e.printStackTrace();		// for debug
-				image = null;
-			}
-		}
-
-		public Image getImage()
-		{
-			return image;
-		}	
 	}
 }
