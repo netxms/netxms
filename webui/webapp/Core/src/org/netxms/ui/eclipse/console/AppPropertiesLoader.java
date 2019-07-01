@@ -6,6 +6,7 @@ package org.netxms.ui.eclipse.console;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
+import javax.servlet.ServletContext;
 
 import org.eclipse.rap.rwt.RWT;
 
