@@ -7,6 +7,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
+import org.eclipse.rap.rwt.RWT;
+
 /**
  * Loader class for application properties
  */
@@ -22,8 +24,15 @@ public class AppPropertiesLoader
 		try
 		{
 			in = getClass().getResourceAsStream("/nxmc.properties"); //$NON-NLS-1$
-			if (in != null)
+			if (in == null) {
+				ServletContext context = RWT.getRequest().getSession().getServletContext();
+				if (context != null) {
+					in = context.getResourceAsStream("/nxmc.properties"); //$NON-NLS-1$
+				}
+			}
+			if (in != null) {
 				properties.load(in);
+			}
 		}
 		catch(Exception e)
 		{
