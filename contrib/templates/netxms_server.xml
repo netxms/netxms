@@ -1974,7 +1974,7 @@
 					<retention>0</retention>
 					<instance></instance>
 					<systemTag></systemTag>
-					<delta>0</delta>
+					<delta>3</delta>
 					<flags>0</flags>
 					<snmpRawValueType>0</snmpRawValueType>
 					<snmpPort>0</snmpPort>
@@ -1996,7 +1996,7 @@
 					<retention>0</retention>
 					<instance></instance>
 					<systemTag></systemTag>
-					<delta>0</delta>
+					<delta>3</delta>
 					<flags>0</flags>
 					<snmpRawValueType>0</snmpRawValueType>
 					<snmpPort>0</snmpPort>
