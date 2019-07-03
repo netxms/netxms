@@ -14,6 +14,7 @@
 - Internal server parameters for counting client sessions
 - Fixed issues:
 	NX-183 (Implemented responsible users for objects)
+	NX-725 (Add alarm comments from NXSL)
 	NX-900 (Server started during nxdbmgr check forced repair)
 	NX-1102 (Implement event groups)
 	NX-1199 (SNMP credentials per-zone)
