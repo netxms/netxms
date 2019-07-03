@@ -116,6 +116,36 @@ public:
 };
 
 /**
+ * Alarm category
+ */
+class AlarmCategory
+{
+private:
+   UINT32 m_id;
+   TCHAR *m_name;
+   TCHAR *m_description;
+   IntegerArray<UINT32> m_acl;
+
+public:
+   AlarmCategory(UINT32 id);
+   AlarmCategory(DB_RESULT hResult, int row, IntegerArray<UINT32> *aclCache);
+   AlarmCategory(UINT32 id, const TCHAR *name, const TCHAR *description);
+   AlarmCategory(AlarmCategory* obj);
+   ~AlarmCategory();
+
+   UINT32 getId() const { return m_id; }
+   const TCHAR *getName() const { return m_name; }
+   const TCHAR *getDescription() const { return m_description; }
+
+   bool checkAccess(UINT32 userId);
+
+   void fillMessage(NXCPMessage *msg, UINT32 baseId) const;
+   void modifyFromMessage(const NXCPMessage *msg);
+   void updateDescription(const TCHAR *description) { MemFree(m_description); m_description = MemCopyString(description); }
+   bool saveToDatabase() const;
+};
+
+/**
  * Functions
  */
 bool InitAlarmManager();
@@ -165,5 +195,22 @@ UINT32 GetHelpdeskIssueUrl(const TCHAR *hdref, TCHAR *url, size_t size);
 UINT32 UnlinkHelpdeskIssueById(UINT32 dwAlarmId, ClientSession *session);
 UINT32 UnlinkHelpdeskIssueByHDRef(const TCHAR *hdref, ClientSession *session);
 
+/**
+ * Alarm category functions
+ */
+void GetAlarmCategories(NXCPMessage *msg);
+UINT32 UpdateAlarmCategory(const NXCPMessage *request, UINT32 *returnId);
+UINT32 DeleteAlarmCategory(UINT32 id);
+bool CheckAlarmCategoryAccess(UINT32 userId, UINT32 categoryId);
+void LoadAlarmCategories();
+AlarmCategory *GetAlarmCategory(UINT32 id);
+UINT32 GetAndUpdateAlarmCategoryByName(const TCHAR *name, const TCHAR *description);
+UINT32 CreateNewAlarmCategoryFromImport(const TCHAR *name, const TCHAR *description);
+
+/**
+ * Alarm summary emails
+ */
+void SendAlarmSummaryEmail(const ScheduledTaskParameters *params);
+void EnableAlarmSummaryEmails();
 
 #endif

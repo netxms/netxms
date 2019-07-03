@@ -97,25 +97,28 @@ EPRule::EPRule(ConfigEntry *config) : m_actions(0, 16, true)
    ConfigEntry *alarmCategoriesEntry = config->findEntry(_T("alarmCategories"));
    if(alarmCategoriesEntry != NULL)
    {
-      ConfigEntry *categories = alarmCategoriesEntry->findEntry(_T("category"));
+      ObjectArray<ConfigEntry> *categories = alarmCategoriesEntry->getSubEntries(_T("category#*"));
       if (categories != NULL)
       {
-         for(int i = 0; i < categories->getValueCount(); i++)
+         for (int i = 0; i < categories->size(); i++)
          {
-            const TCHAR *v = categories->getValue(i);
-            if ((v != NULL) && (*v != 0))
+            const TCHAR *name = categories->get(i)->getAttribute(_T("name"));
+            const TCHAR *description = categories->get(i)->getValue();
+
+            if ((name != NULL) && (*name != 0))
             {
-               UINT32 id = GetAlarmCategoryIdByName(v);
+               UINT32 id = GetAndUpdateAlarmCategoryByName(name, description);
                if(id > 0)
                {
                   m_alarmCategoryList.add(id);
                }
                else
                {
-                  m_alarmCategoryList.add(CreateNewAlarmCategoryFromImport(v));
+                  m_alarmCategoryList.add(CreateNewAlarmCategoryFromImport(name, CHECK_NULL_EX(description)));
                }
             }
          }
+         delete categories;
       }
    }
 
@@ -406,9 +409,11 @@ void EPRule::createNXMPRecord(String &str)
    str += _T("\t\t\t</pStorageActions>\n\t\t\t<alarmCategories>\n");
    for(int i = 0; i < m_alarmCategoryList.size(); i++)
    {
-      str.append(_T("\t\t\t\t<category>"));
-      str.append(GetAlarmCategoryName(m_alarmCategoryList.get(i)));
+      AlarmCategory *category = GetAlarmCategory(m_alarmCategoryList.get(i));
+      str.appendFormattedString(_T("\t\t\t\t<category id=\"%d\" name=\"%s\">"), category->getId(), category->getName());
+      str.append(category->getDescription());
       str.append(_T("</category>\n"));
+      delete category;
    }
    str += _T("\t\t\t</alarmCategories>\n\t\t</rule>\n");
 }

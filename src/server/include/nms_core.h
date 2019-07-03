@@ -1248,24 +1248,6 @@ void StopHouseKeeper();
 void RunHouseKeeper();
 
 /**
- * Alarm category functions
- */
-void GetAlarmCategories(NXCPMessage *msg);
-UINT32 UpdateAlarmCategory(const NXCPMessage *request, UINT32 *returnId);
-UINT32 DeleteAlarmCategory(UINT32 id);
-bool CheckAlarmCategoryAccess(UINT32 userId, UINT32 categoryId);
-void LoadAlarmCategories();
-const String GetAlarmCategoryName(UINT32 id);
-UINT32 GetAlarmCategoryIdByName(const TCHAR *name);
-UINT32 CreateNewAlarmCategoryFromImport(const TCHAR *name);
-
-/**
- * Alarm summary emails
- */
-void SendAlarmSummaryEmail(const ScheduledTaskParameters *params);
-void EnableAlarmSummaryEmails();
-
-/**
  * NXSL script functions
  */
 UINT32 UpdateScript(const NXCPMessage *request, UINT32 *scriptId);

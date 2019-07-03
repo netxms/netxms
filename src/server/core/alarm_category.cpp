@@ -23,34 +23,6 @@
 #include "nxcore.h"
 
 /**
- * Alarm category
- */
-class AlarmCategory
-{
-private:
-   UINT32 m_id;
-   TCHAR *m_name;
-   TCHAR *m_description;
-   IntegerArray<UINT32> m_acl;
-
-public:
-   AlarmCategory(UINT32 id);
-   AlarmCategory(DB_RESULT hResult, int row, IntegerArray<UINT32> *aclCache);
-   AlarmCategory(UINT32 id, const TCHAR *name, const TCHAR *description);
-   ~AlarmCategory();
-
-   UINT32 getId() const { return m_id; }
-   const TCHAR *getName() const { return m_name; }
-   const TCHAR *getDescription() const { return m_description; }
-
-   bool checkAccess(UINT32 userId);
-
-   void fillMessage(NXCPMessage *msg, UINT32 baseId) const;
-   void modifyFromMessage(const NXCPMessage *msg);
-   bool saveToDatabase() const;
-};
-
-/**
  * Create new category
  */
 AlarmCategory::AlarmCategory(UINT32 id)
@@ -90,6 +62,16 @@ AlarmCategory::AlarmCategory(UINT32 id, const TCHAR *name, const TCHAR *descript
 }
 
 /**
+ * Copy constructor
+ */
+AlarmCategory::AlarmCategory(AlarmCategory* obj)
+{
+   m_id = obj->m_id;
+   m_name = MemCopyString(obj->m_name);
+   m_description = MemCopyString(obj->m_description);
+}
+
+/**
  * Destructor
  */
 AlarmCategory::~AlarmCategory()
@@ -114,10 +96,10 @@ void AlarmCategory::fillMessage(NXCPMessage *msg, UINT32 baseId) const
  */
 void AlarmCategory::modifyFromMessage(const NXCPMessage *msg)
 {
-   free(m_name);
+   MemFree(m_name);
    m_name = msg->getFieldAsString(VID_NAME);
 
-   free(m_description);
+   MemFree(m_description);
    m_description = msg->getFieldAsString(VID_DESCRIPTION);
 
    msg->getFieldAsInt32Array(VID_ALARM_CATEGORY_ACL, &m_acl);
@@ -236,8 +218,9 @@ void GetAlarmCategories(NXCPMessage *msg)
 */
 UINT32 UpdateAlarmCategory(const NXCPMessage *request, UINT32 *returnId)
 {
-   TCHAR *name = request->getFieldAsString(VID_NAME);
-   if (name == NULL || name[0] == 0)
+   TCHAR name[64];
+   request->getFieldAsString(VID_NAME, name, 64);
+   if (name[0] == 0)
       return RCC_CATEGORY_NAME_EMPTY;
 
    UINT32 id = request->getFieldAsUInt32(VID_CATEGORY_ID);
@@ -403,16 +386,15 @@ void LoadAlarmCategories()
    DBConnectionPoolReleaseConnection(hdb);
 }
 
-const String GetAlarmCategoryName(UINT32 id)
+AlarmCategory *GetAlarmCategory(UINT32 id)
 {
-   String name;
    s_lock.readLock();
-   name = s_categories.get(id)->getName();
+   AlarmCategory *alarmCategory = new AlarmCategory(s_categories.get(id));
    s_lock.unlock();
-   return name;
+   return alarmCategory;
 }
 
-UINT32 GetAlarmCategoryIdByName(const TCHAR *name)
+UINT32 GetAndUpdateAlarmCategoryByName(const TCHAR *name, const TCHAR *description)
 {
    UINT32 id = 0;
    s_lock.readLock();
@@ -422,6 +404,7 @@ UINT32 GetAlarmCategoryIdByName(const TCHAR *name)
      AlarmCategory *c = it->next();
      if(!_tcscmp(c->getName(), name))
      {
+        c->updateDescription(description);
         id = c->getId();
         break;
      }
@@ -431,10 +414,10 @@ UINT32 GetAlarmCategoryIdByName(const TCHAR *name)
    return id;
 }
 
-UINT32 CreateNewAlarmCategoryFromImport(const TCHAR *name)
+UINT32 CreateNewAlarmCategoryFromImport(const TCHAR *name, const TCHAR *description)
 {
    UINT32 id = CreateUniqueId(IDG_ALARM_CATEGORY);
-   AlarmCategory *category = new AlarmCategory(id, name, _T("Alarm category created by import"));
+   AlarmCategory *category = new AlarmCategory(id, name, description);
 
    s_lock.writeLock();
    s_categories.set(id, category);
