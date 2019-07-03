@@ -6139,7 +6139,7 @@ void ClientSession::updateAlarmComment(NXCPMessage *request)
 			msg.setField(VID_RCC,
             byHelpdeskRef ?
             AddAlarmComment(hdref, CHECK_NULL(text), m_dwUserId) :
-            UpdateAlarmComment(alarmId, commentId, CHECK_NULL(text), m_dwUserId));
+            UpdateAlarmComment(alarmId, &commentId, CHECK_NULL(text), m_dwUserId));
 			MemFree(text);
       }
       else

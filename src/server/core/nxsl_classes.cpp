@@ -1615,6 +1615,49 @@ NXSL_METHOD_DEFINITION(Alarm, terminate)
 }
 
 /**
+ * Alarm::addComment() method
+ */
+NXSL_METHOD_DEFINITION(Alarm, addComment)
+{
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   bool syncWithHelpdesk = true;
+   if (argc > 1)
+   {
+      if(!argv[1]->isInteger())
+         return NXSL_ERR_NOT_INTEGER;
+      else
+         syncWithHelpdesk = argv[1]->getValueAsBoolean();
+   }
+
+   Alarm *alarm = (Alarm *)object->getData();
+   UINT32 id = 0;
+   UINT32 rcc = UpdateAlarmComment(alarm->getAlarmId(), &id, argv[0]->getValueAsCString(), 0, syncWithHelpdesk);
+   if(rcc != RCC_SUCCESS)
+      return NXSL_ERR_INTERNAL;
+
+   *result = vm->createValue(id);
+   return 0;
+}
+
+/**
+ * Alarm::getComments() method
+ */
+NXSL_METHOD_DEFINITION(Alarm, getComments)
+{
+   NXSL_Array *array = new NXSL_Array(vm);
+   ObjectArray<AlarmComment> *alarmComments = GetAlarmComments(((Alarm *)object->getData())->getAlarmId());
+   for(int i = 0; i < alarmComments->size(); i++)
+   {
+      array->append(vm->createValue(new NXSL_Object(vm, &g_nxslAlarmComments, alarmComments->get(i))));
+   }
+   delete alarmComments;
+   *result = vm->createValue(array);
+   return 0;
+}
+
+/**
  * NXSL class Alarm: constructor
  */
 NXSL_AlarmClass::NXSL_AlarmClass() : NXSL_Class()
@@ -1624,6 +1667,8 @@ NXSL_AlarmClass::NXSL_AlarmClass() : NXSL_Class()
    NXSL_REGISTER_METHOD(Alarm, acknowledge, 0);
    NXSL_REGISTER_METHOD(Alarm, resolve, 0);
    NXSL_REGISTER_METHOD(Alarm, terminate, 0);
+   NXSL_REGISTER_METHOD(Alarm, addComment, -1);
+   NXSL_REGISTER_METHOD(Alarm, getComments, 0);
 }
 
 /**
@@ -1710,6 +1755,52 @@ NXSL_Value *NXSL_AlarmClass::getAttr(NXSL_Object *pObject, const char *attr)
    else if (!strcmp(attr, "state"))
    {
       value = vm->createValue(alarm->getState());
+   }
+   return value;
+}
+
+
+
+/**
+ * NXSL class Alarm: constructor
+ */
+NXSL_AlarmCommentsClass::NXSL_AlarmCommentsClass() : NXSL_Class()
+{
+   setName(_T("AlarmComments"));
+}
+
+/**
+ * NXSL object destructor
+ */
+void NXSL_AlarmCommentsClass::onObjectDelete(NXSL_Object *object)
+{
+   delete (AlarmComment *)object->getData();
+}
+
+/**
+ * NXSL class Alarm: get attribute
+ */
+NXSL_Value *NXSL_AlarmCommentsClass::getAttr(NXSL_Object *pObject, const char *attr)
+{
+   NXSL_VM *vm = pObject->vm();
+   NXSL_Value *value = NULL;
+   AlarmComment *alarmComment = (AlarmComment *)pObject->getData();
+
+   if (!strcmp(attr, "id"))
+   {
+      value = vm->createValue(alarmComment->getId());
+   }
+   else if (!strcmp(attr, "changeTime"))
+   {
+      value = vm->createValue((INT64)alarmComment->getChangeTime());
+   }
+   else if (!strcmp(attr, "userId"))
+   {
+      value = vm->createValue(alarmComment->getUserId());
+   }
+   else if (!strcmp(attr, "text"))
+   {
+      value = vm->createValue(alarmComment->getText());
    }
    return value;
 }
@@ -2218,6 +2309,7 @@ void NXSL_NodeDependencyClass::onObjectDelete(NXSL_Object *object)
  * Class objects
  */
 NXSL_AlarmClass g_nxslAlarmClass;
+NXSL_AlarmCommentsClass g_nxslAlarmComments;
 NXSL_ChassisClass g_nxslChassisClass;
 NXSL_ClusterClass g_nxslClusterClass;
 NXSL_ContainerClass g_nxslContainerClass;

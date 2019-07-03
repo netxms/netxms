@@ -1593,15 +1593,16 @@ static bool IsValidNoteId(UINT32 alarmId, UINT32 noteId)
 
 /**
  * Update alarm's comment
+ * Will update commentId to correct id if new comment is created
  */
-UINT32 Alarm::updateAlarmComment(UINT32 commentId, const TCHAR *text, UINT32 userId, bool syncWithHelpdesk)
+UINT32 Alarm::updateAlarmComment(UINT32 *commentId, const TCHAR *text, UINT32 userId, bool syncWithHelpdesk)
 {
    bool newNote = false;
    UINT32 rcc;
 
-	if (commentId != 0)
+	if (*commentId != 0)
 	{
-      if (IsValidNoteId(m_alarmId, commentId))
+      if (IsValidNoteId(m_alarmId, *commentId))
 		{
 			DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 			DB_STATEMENT hStmt = DBPrepare(hdb, _T("UPDATE alarm_notes SET change_time=?,user_id=?,note_text=? WHERE note_id=?"));
@@ -1610,7 +1611,7 @@ UINT32 Alarm::updateAlarmComment(UINT32 commentId, const TCHAR *text, UINT32 use
 				DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (UINT32)time(NULL));
 				DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, userId);
 				DBBind(hStmt, 3, DB_SQLTYPE_TEXT, text, DB_BIND_STATIC);
-				DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, commentId);
+				DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, *commentId);
 				rcc = DBExecute(hStmt) ? RCC_SUCCESS : RCC_DB_FAILURE;
 				DBFreeStatement(hStmt);
 			}
@@ -1629,12 +1630,12 @@ UINT32 Alarm::updateAlarmComment(UINT32 commentId, const TCHAR *text, UINT32 use
 	{
 		// new note
 		newNote = true;
-		commentId = CreateUniqueId(IDG_ALARM_NOTE);
+		*commentId = CreateUniqueId(IDG_ALARM_NOTE);
 		DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 		DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO alarm_notes (note_id,alarm_id,change_time,user_id,note_text) VALUES (?,?,?,?,?)"));
 		if (hStmt != NULL)
 		{
-			DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, commentId);
+			DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, *commentId);
          DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_alarmId);
 			DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (UINT32)time(NULL));
 			DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, userId);
@@ -1675,7 +1676,8 @@ UINT32 AddAlarmComment(const TCHAR *hdref, const TCHAR *text, UINT32 userId)
       Alarm *alarm = s_alarmList.get(i);
       if (!_tcscmp(alarm->getHelpDeskRef(), hdref))
       {
-         rcc = alarm->updateAlarmComment(0, text, userId, false);
+         UINT32 id = 0;
+         rcc = alarm->updateAlarmComment(&id, text, userId, false);
          break;
       }
    }
@@ -1687,7 +1689,7 @@ UINT32 AddAlarmComment(const TCHAR *hdref, const TCHAR *text, UINT32 userId)
 /**
  * Update alarm's comment
  */
-UINT32 UpdateAlarmComment(UINT32 alarmId, UINT32 noteId, const TCHAR *text, UINT32 userId)
+UINT32 UpdateAlarmComment(UINT32 alarmId, UINT32 *noteId, const TCHAR *text, UINT32 userId, bool syncWithHelpdesk)
 {
    UINT32 rcc = RCC_INVALID_ALARM_ID;
 
@@ -1697,7 +1699,7 @@ UINT32 UpdateAlarmComment(UINT32 alarmId, UINT32 noteId, const TCHAR *text, UINT
       Alarm *alarm = s_alarmList.get(i);
       if (alarm->getAlarmId() == alarmId)
       {
-         rcc = alarm->updateAlarmComment(noteId, text, userId, true);
+         rcc = alarm->updateAlarmComment(noteId, text, userId, syncWithHelpdesk);
          break;
       }
    }
@@ -1760,6 +1762,38 @@ UINT32 DeleteAlarmCommentByID(UINT32 alarmId, UINT32 noteId)
    s_alarmList.unlock();
 
    return rcc;
+}
+
+/**
+ * Get alarm's comments
+ * Will return object array that is not the owner of objects
+ */
+ObjectArray<AlarmComment> *GetAlarmComments(UINT32 alarmId)
+{
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   ObjectArray<AlarmComment> *comments = new ObjectArray<AlarmComment>(7, 7, false);
+
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT note_id,change_time,user_id,note_text FROM alarm_notes WHERE alarm_id=?"));
+   if (hStmt != NULL)
+   {
+      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, alarmId);
+      DB_RESULT hResult = DBSelectPrepared(hStmt);
+      if (hResult != NULL)
+      {
+         int count = DBGetNumRows(hResult);
+
+         for(int i = 0; i < count; i++)
+         {
+            comments->add(new AlarmComment(DBGetFieldULong(hResult, i, 0), DBGetFieldULong(hResult, i, 1),
+                  DBGetFieldULong(hResult, i, 2), DBGetField(hResult, i, 3, NULL, 0)));
+         }
+         DBFreeResult(hResult);
+      }
+      DBFreeStatement(hStmt);
+   }
+
+   DBConnectionPoolReleaseConnection(hdb);
+   return comments;
 }
 
 /**
@@ -2017,4 +2051,15 @@ void ShutdownAlarmManager()
 {
    s_shutdown.set();
    ThreadJoin(s_watchdogThread);
+}
+
+/**
+ * Alarm comments constructor
+ */
+AlarmComment::AlarmComment(UINT32 id, time_t changeTime, UINT32 userId, TCHAR *text)
+{
+   m_id = id;
+   m_changeTime = changeTime;
+   m_userId = userId;
+   m_text = text;
 }

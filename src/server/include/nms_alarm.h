@@ -109,7 +109,7 @@ public:
    void resolve(UINT32 userId, Event *event, bool terminate, bool notify);
    UINT32 openHelpdeskIssue(TCHAR *hdref);
    void unlinkFromHelpdesk() { m_helpDeskState = ALARM_HELPDESK_IGNORED; m_helpDeskRef[0] = 0; }
-   UINT32 updateAlarmComment(UINT32 commentId, const TCHAR *text, UINT32 userId, bool syncWithHelpdesk);
+   UINT32 updateAlarmComment(UINT32 *commentId, const TCHAR *text, UINT32 userId, bool syncWithHelpdesk);
    UINT32 deleteComment(UINT32 commentId);
 
    bool checkCategoryAccess(ClientSession *session) const;
@@ -146,6 +146,27 @@ public:
 };
 
 /**
+ * Alarm comments
+ */
+class AlarmComment
+{
+private:
+   UINT32 m_id;
+   time_t m_changeTime;
+   UINT32 m_userId;
+   TCHAR *m_text;
+
+public:
+   AlarmComment(UINT32 id, time_t changeTime, UINT32 userId, TCHAR *text);
+   ~AlarmComment() { MemFree(m_text); }
+
+   UINT32 getId() const { return m_id; }
+   time_t getChangeTime() const { return m_changeTime; }
+   UINT32 getUserId() const { return m_userId; }
+   const TCHAR *getText() const { return m_text; }
+};
+
+/**
  * Functions
  */
 bool InitAlarmManager();
@@ -178,9 +199,10 @@ UINT32 NXCORE_EXPORTABLE ResolveAlarmByHDRef(const TCHAR *hdref, ClientSession *
 void NXCORE_EXPORTABLE DeleteAlarm(UINT32 dwAlarmId, bool objectCleanup);
 
 UINT32 AddAlarmComment(const TCHAR *hdref, const TCHAR *text, UINT32 userId);
-UINT32 UpdateAlarmComment(UINT32 alarmId, UINT32 noteId, const TCHAR *text, UINT32 userId);
+UINT32 UpdateAlarmComment(UINT32 alarmId, UINT32 *noteId, const TCHAR *text, UINT32 userId, bool syncWithHelpdesk = true);
 UINT32 DeleteAlarmCommentByID(UINT32 alarmId, UINT32 noteId);
 UINT32 GetAlarmComments(UINT32 alarmId, NXCPMessage *msg);
+ObjectArray<AlarmComment> *GetAlarmComments(UINT32 alarmId);
 
 bool DeleteObjectAlarms(UINT32 objectId, DB_HANDLE hdb);
 

@@ -169,6 +169,18 @@ public:
 };
 
 /**
+ * NXSL "AlarmComments" class
+ */
+class NXSL_AlarmCommentsClass : public NXSL_Class
+{
+public:
+   NXSL_AlarmCommentsClass();
+
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr) override;
+   virtual void onObjectDelete(NXSL_Object *object) override;
+};
+
+/**
  * NXSL "DCI" class
  */
 class NXSL_DciClass : public NXSL_Class
@@ -324,6 +336,7 @@ bool ParseValueList(NXSL_VM *vm, TCHAR **start, ObjectRefArray<NXSL_Value> &args
  * Global variables
  */
 extern NXSL_AlarmClass g_nxslAlarmClass;
+extern NXSL_AlarmCommentsClass g_nxslAlarmComments;
 extern NXSL_ChassisClass g_nxslChassisClass;
 extern NXSL_ClusterClass g_nxslClusterClass;
 extern NXSL_ContainerClass g_nxslContainerClass;
