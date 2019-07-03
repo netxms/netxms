@@ -1650,7 +1650,7 @@ NXSL_METHOD_DEFINITION(Alarm, getComments)
    ObjectArray<AlarmComment> *alarmComments = GetAlarmComments(((Alarm *)object->getData())->getAlarmId());
    for(int i = 0; i < alarmComments->size(); i++)
    {
-      array->append(vm->createValue(new NXSL_Object(vm, &g_nxslAlarmComments, alarmComments->get(i))));
+      array->append(vm->createValue(new NXSL_Object(vm, &g_nxslAlarmCommentClass, alarmComments->get(i))));
    }
    delete alarmComments;
    *result = vm->createValue(array);
@@ -1764,15 +1764,15 @@ NXSL_Value *NXSL_AlarmClass::getAttr(NXSL_Object *pObject, const char *attr)
 /**
  * NXSL class Alarm: constructor
  */
-NXSL_AlarmCommentsClass::NXSL_AlarmCommentsClass() : NXSL_Class()
+NXSL_AlarmCommentClass::NXSL_AlarmCommentClass() : NXSL_Class()
 {
-   setName(_T("AlarmComments"));
+   setName(_T("AlarmComment"));
 }
 
 /**
  * NXSL object destructor
  */
-void NXSL_AlarmCommentsClass::onObjectDelete(NXSL_Object *object)
+void NXSL_AlarmCommentClass::onObjectDelete(NXSL_Object *object)
 {
    delete (AlarmComment *)object->getData();
 }
@@ -1780,7 +1780,7 @@ void NXSL_AlarmCommentsClass::onObjectDelete(NXSL_Object *object)
 /**
  * NXSL class Alarm: get attribute
  */
-NXSL_Value *NXSL_AlarmCommentsClass::getAttr(NXSL_Object *pObject, const char *attr)
+NXSL_Value *NXSL_AlarmCommentClass::getAttr(NXSL_Object *pObject, const char *attr)
 {
    NXSL_VM *vm = pObject->vm();
    NXSL_Value *value = NULL;
@@ -2309,7 +2309,7 @@ void NXSL_NodeDependencyClass::onObjectDelete(NXSL_Object *object)
  * Class objects
  */
 NXSL_AlarmClass g_nxslAlarmClass;
-NXSL_AlarmCommentsClass g_nxslAlarmComments;
+NXSL_AlarmCommentClass g_nxslAlarmCommentClass;
 NXSL_ChassisClass g_nxslChassisClass;
 NXSL_ClusterClass g_nxslClusterClass;
 NXSL_ContainerClass g_nxslContainerClass;
