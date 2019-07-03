@@ -5476,6 +5476,50 @@ DataCollectionError Node::getInternalItem(const TCHAR *param, size_t bufSize, TC
       {
          _sntprintf(buffer, bufSize, _T("%u"), g_averageDCIQueuingTime);
       }
+      else if (!_tcsicmp(param, _T("Server.ClientSessions.Authenticated")))
+      {
+         _sntprintf(buffer, bufSize, _T("%d"), GetSessionCount(true, false, -1, NULL));
+      }
+      else if (MatchString(_T("Server.ClientSessions.Authenticated(*)"), param, false))
+      {
+         TCHAR loginName[256];
+         AgentGetParameterArg(param, 1, loginName, 256);
+         _sntprintf(buffer, bufSize, _T("%d"), GetSessionCount(true, false, -1, loginName));
+      }
+      else if (!_tcsicmp(param, _T("Server.ClientSessions.Desktop")))
+      {
+         _sntprintf(buffer, bufSize, _T("%d"), GetSessionCount(true, true, CLIENT_TYPE_DESKTOP, NULL));
+      }
+      else if (MatchString(_T("Server.ClientSessions.Desktop(*)"), param, false))
+      {
+         TCHAR loginName[256];
+         AgentGetParameterArg(param, 1, loginName, 256);
+         _sntprintf(buffer, bufSize, _T("%d"), GetSessionCount(true, false, CLIENT_TYPE_DESKTOP, loginName));
+      }
+      else if (!_tcsicmp(param, _T("Server.ClientSessions.Mobile")))
+      {
+         _sntprintf(buffer, bufSize, _T("%d"), GetSessionCount(true, true, CLIENT_TYPE_MOBILE, NULL));
+      }
+      else if (MatchString(_T("Server.ClientSessions.Mobile(*)"), param, false))
+      {
+         TCHAR loginName[256];
+         AgentGetParameterArg(param, 1, loginName, 256);
+         _sntprintf(buffer, bufSize, _T("%d"), GetSessionCount(true, false, CLIENT_TYPE_MOBILE, loginName));
+      }
+      else if (!_tcsicmp(param, _T("Server.ClientSessions.Total")))
+      {
+         _sntprintf(buffer, bufSize, _T("%d"), GetSessionCount(true, true, -1, NULL));
+      }
+      else if (!_tcsicmp(param, _T("Server.ClientSessions.Web")))
+      {
+         _sntprintf(buffer, bufSize, _T("%d"), GetSessionCount(true, true, CLIENT_TYPE_WEB, NULL));
+      }
+      else if (MatchString(_T("Server.ClientSessions.Web(*)"), param, false))
+      {
+         TCHAR loginName[256];
+         AgentGetParameterArg(param, 1, loginName, 256);
+         _sntprintf(buffer, bufSize, _T("%d"), GetSessionCount(true, false, CLIENT_TYPE_WEB, loginName));
+      }
       else if (MatchString(_T("Server.QueueSize.Average(*)"), param, false))
       {
          rc = GetQueueStatistic(param, StatisticType::AVERAGE, buffer);

@@ -442,15 +442,19 @@ void NXCORE_EXPORTABLE NotifyClientSession(session_id_t sessionId, UINT32 dwCode
 /**
  * Get number of active user sessions
  */
-int GetSessionCount(bool includeSystemAccount)
+int GetSessionCount(bool includeSystemAccount, bool includeNonAuthenticated, int typeFilter, const TCHAR *loginFilter)
 {
    int i, nCount;
 
    RWLockReadLock(s_sessionListLock, INFINITE);
    for(i = 0, nCount = 0; i < MAX_CLIENT_SESSIONS; i++)
    {
-      if ((s_sessionList[i] != NULL) &&
-          (includeSystemAccount || (s_sessionList[i]->getUserId() != 0)))
+      ClientSession *s = s_sessionList[i];
+      if ((s != NULL) &&
+          (includeSystemAccount || (s->getUserId() != 0)) &&
+          (includeNonAuthenticated || s->isAuthenticated()) &&
+          ((typeFilter == -1) || (s->getClientType() == typeFilter)) &&
+          ((loginFilter == NULL) || !_tcscmp(loginFilter, s->getLoginName())))
       {
          nCount++;
       }

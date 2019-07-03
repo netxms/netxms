@@ -8382,7 +8382,7 @@ void ClientSession::sendServerStats(UINT32 dwRqId)
 	msg.setField(VID_NUM_NODES, (UINT32)g_idxNodeById.size());
 
    // Client sessions
-   msg.setField(VID_NUM_SESSIONS, (UINT32)GetSessionCount(true));
+   msg.setField(VID_NUM_SESSIONS, (UINT32)GetSessionCount(true, true, -1, NULL));
 
    // Alarms
    GetAlarmStats(&msg);
