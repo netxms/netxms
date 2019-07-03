@@ -567,7 +567,7 @@ public class LogParserRuleEditor extends DashboardComposite
 		rule.setDescription(description.getText());
 		if (event.getEventCode() != 0)
 		{
-			rule.setEvent(new LogParserEvent(event.getEventName(), null));
+			rule.setEvent(new LogParserEvent(event.getEventName() != null ? event.getEventName() : Long.toString(event.getEventCode()), null));
 		}
 		else
 		{
