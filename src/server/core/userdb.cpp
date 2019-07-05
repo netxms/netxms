@@ -816,6 +816,7 @@ void RemoveDeletedLDAPEntries(StringObjectMap<Entry> *entryListDn, StringObjectM
          }
 		}
    }
+   delete it;
    RWLockUnlock(s_userDatabaseLock);
 }
 
