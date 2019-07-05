@@ -170,7 +170,7 @@ void AgentActionExecutor::substituteArgs()
  */
 void AgentActionExecutor::onOutput(const char *text)
 {
-   NXCPMessage msg;
+   NXCPMessage msg(m_session->getProtocolVersion());
    msg.setId(m_requestId);
    msg.setCode(CMD_COMMAND_OUTPUT);
 #ifdef UNICODE
@@ -189,7 +189,7 @@ void AgentActionExecutor::onOutput(const char *text)
  */
 void AgentActionExecutor::endOfOutput()
 {
-   NXCPMessage msg;
+   NXCPMessage msg(m_session->getProtocolVersion());
    msg.setId(m_requestId);
    msg.setCode(CMD_COMMAND_OUTPUT);
    msg.setEndOfSequence();
@@ -227,7 +227,7 @@ BOOL AddAction(const TCHAR *pszName, int iType, const TCHAR *pArg,
          case AGENT_ACTION_SUBAGENT:
             m_pActionList[i].handler.sa.fpHandler = fpHandler;
             m_pActionList[i].handler.sa.pArg = pArg;
-            nx_strncpy(m_pActionList[i].handler.sa.szSubagentName, pszSubAgent,MAX_PATH);
+            _tcslcpy(m_pActionList[i].handler.sa.szSubagentName, pszSubAgent,MAX_PATH);
             break;
          default:
             break;
@@ -236,7 +236,7 @@ BOOL AddAction(const TCHAR *pszName, int iType, const TCHAR *pArg,
    else
    {
       // Update existing entry in action list
-      nx_strncpy(m_pActionList[i].szDescription, pszDescription, MAX_DB_STRING);
+      _tcslcpy(m_pActionList[i].szDescription, pszDescription, MAX_DB_STRING);
       if ((m_pActionList[i].iType == AGENT_ACTION_EXEC) || (m_pActionList[i].iType == AGENT_ACTION_SHELLEXEC))
          MemFree(m_pActionList[i].handler.pszCmdLine);
       m_pActionList[i].iType = iType;
@@ -249,7 +249,7 @@ BOOL AddAction(const TCHAR *pszName, int iType, const TCHAR *pArg,
          case AGENT_ACTION_SUBAGENT:
             m_pActionList[i].handler.sa.fpHandler = fpHandler;
             m_pActionList[i].handler.sa.pArg = pArg;
-            nx_strncpy(m_pActionList[i].handler.sa.szSubagentName, pszSubAgent,MAX_PATH);
+            _tcslcpy(m_pActionList[i].handler.sa.szSubagentName, pszSubAgent,MAX_PATH);
             break;
          default:
             break;
@@ -346,7 +346,7 @@ static THREAD_RESULT THREAD_CALL ActionExecutionThread(void *arg)
 {
    ActionExecutorData *data = (ActionExecutorData *)arg;
 
-   NXCPMessage msg;
+   NXCPMessage msg(data->m_session->getProtocolVersion());
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(data->m_requestId);
    msg.setField(VID_RCC, ERR_SUCCESS);

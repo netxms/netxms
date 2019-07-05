@@ -106,7 +106,7 @@ void SendTrap(UINT32 dwEventCode, const TCHAR *eventName, int iNumArgs, const TC
                   dwEventCode, CHECK_NULL(eventName), iNumArgs, (const TCHAR *)argsText);
    }
 
-   NXCPMessage msg(CMD_TRAP, 0);
+   NXCPMessage msg(CMD_TRAP, 0, 4); // Use version 4
 	msg.setField(VID_TRAP_ID, s_trapIdBase | (UINT64)InterlockedIncrement(&s_trapIdCounter));
    msg.setField(VID_EVENT_CODE, dwEventCode);
 	if (eventName != NULL)

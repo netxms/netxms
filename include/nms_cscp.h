@@ -26,7 +26,7 @@
 /**
  * Constants
  */
-#define NXCP_VERSION                   4
+#define NXCP_VERSION                   5
 
 #define SERVER_LISTEN_PORT_FOR_CLIENTS 4701
 #define SERVER_LISTEN_PORT_FOR_MOBILES 4747
@@ -110,6 +110,11 @@ typedef struct
       struct
       {
          UINT32 length;
+         char value[1]; // actual size depends on length value
+      } utf8string;
+      struct
+      {
+         UINT32 length;
          BYTE value[1]; // actual size depends on length value
       } binary;
       struct
@@ -126,15 +131,16 @@ typedef struct
    } data;
 } NXCP_MESSAGE_FIELD;
 
-#define df_int16    int16
-#define df_int32    data.int32
-#define df_uint32   data.uint32
-#define df_int64    data.int64
-#define df_uint64   data.uint64
-#define df_real     data.real
-#define df_string   data.string
-#define df_binary   data.binary
-#define df_inetaddr data.inetaddr
+#define df_int16        int16
+#define df_int32        data.int32
+#define df_uint32       data.uint32
+#define df_int64        data.int64
+#define df_uint64       data.uint64
+#define df_real         data.real
+#define df_string       data.string
+#define df_utf8string   data.utf8string
+#define df_binary       data.binary
+#define df_inetaddr     data.inetaddr
 
 /**
  * Message structure
@@ -214,25 +220,27 @@ typedef struct
 /**
  * Data types
  */
-#define NXCP_DT_INT32      0
-#define NXCP_DT_STRING     1
-#define NXCP_DT_INT64      2
-#define NXCP_DT_INT16      3
-#define NXCP_DT_BINARY     4
-#define NXCP_DT_FLOAT      5
-#define NXCP_DT_INETADDR   6
+#define NXCP_DT_INT32         0
+#define NXCP_DT_STRING        1
+#define NXCP_DT_INT64         2
+#define NXCP_DT_INT16         3
+#define NXCP_DT_BINARY        4
+#define NXCP_DT_FLOAT         5
+#define NXCP_DT_INETADDR      6
+#define NXCP_DT_UTF8_STRING   7
 
 /**
  * Message flags
  */
-#define MF_BINARY             0x0001
-#define MF_END_OF_FILE        0x0002
-#define MF_DONT_ENCRYPT       0x0004
-#define MF_END_OF_SEQUENCE    0x0008
-#define MF_REVERSE_ORDER      0x0010
-#define MF_CONTROL            0x0020
-#define MF_COMPRESSED         0x0040
-#define MF_STREAM             0x0080
+#define MF_BINARY             0x0001   /* binary message indicator */
+#define MF_END_OF_FILE        0x0002   /* end of file indicator */
+#define MF_DONT_ENCRYPT       0x0004   /* prevent message encryption */
+#define MF_END_OF_SEQUENCE    0x0008   /* end of message sequence indicator */
+#define MF_REVERSE_ORDER      0x0010   /* indicator of reversed order of messages in a sequence */
+#define MF_CONTROL            0x0020   /* control message indicator */
+#define MF_COMPRESSED         0x0040   /* compressed message indicator */
+#define MF_STREAM             0x0080   /* indicates that this message is part of data stream */
+#define MF_NXCP_VERSION(v)    (((v) & 0x0F) << 12) /* protocol version encoded in highest 4 bits */
 
 /**
  * Message (command) codes

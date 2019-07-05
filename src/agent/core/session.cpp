@@ -129,6 +129,7 @@ CommSession::CommSession(AbstractCommChannel *channel, const InetAddress &server
    m_processingQueue = new Queue;
    m_channel = channel;
    m_channel->incRefCount();
+   m_protocolVersion = NXCP_VERSION;
    m_hProxySocket = INVALID_SOCKET;
    m_processingThread = INVALID_THREAD_HANDLE;
    m_proxyReadThread = INVALID_THREAD_HANDLE;
@@ -260,7 +261,7 @@ void CommSession::readThread()
 
          if (nxlog_get_debug_level() >= 8)
          {
-            String msgDump = NXCPMessage::dump(receiver.getRawMessageBuffer(), NXCP_VERSION);
+            String msgDump = NXCPMessage::dump(receiver.getRawMessageBuffer(), m_protocolVersion);
             debugPrintf(8, _T("Message dump:\n%s"), (const TCHAR *)msgDump);
          }
 
@@ -278,13 +279,10 @@ void CommSession::readThread()
                   {
                      if (msg->isEndOfFile())
                      {
-                        NXCPMessage response;
-
                         dInfo->close(true);
                         m_downloadFileMap.remove(msg->getId());
 
-                        response.setCode(CMD_REQUEST_COMPLETED);
-                        response.setId(msg->getId());
+                        NXCPMessage response(CMD_REQUEST_COMPLETED, msg->getId(), m_protocolVersion);
                         response.setField(VID_RCC, ERR_SUCCESS);
                         sendMessage(&response);
                      }
@@ -292,13 +290,10 @@ void CommSession::readThread()
                   else
                   {
                      // I/O error
-                     NXCPMessage response;
-
                      dInfo->close(false);
                      m_downloadFileMap.remove(msg->getId());
 
-                     response.setCode(CMD_REQUEST_COMPLETED);
-                     response.setId(msg->getId());
+                     NXCPMessage response(CMD_REQUEST_COMPLETED, msg->getId(), m_protocolVersion);
                      response.setField(VID_RCC, ERR_IO_FAILURE);
                      sendMessage(&response);
                   }
@@ -327,11 +322,15 @@ void CommSession::readThread()
 
             if (msg->getCode() == CMD_GET_NXCP_CAPS)
             {
+               UINT32 peerNXCPVersion = msg->getEncodedProtocolVersion(); // Before NXCP version 5 encoded version will be 0, assume version 4
+               m_protocolVersion = (peerNXCPVersion == 0) ? 4 : MIN(peerNXCPVersion, NXCP_VERSION);
+               debugPrintf(4, _T("Using protocol version %d"), m_protocolVersion);
+
                NXCP_MESSAGE *response = (NXCP_MESSAGE *)malloc(NXCP_HEADER_SIZE);
                response->id = htonl(msg->getId());
                response->code = htons((WORD)CMD_NXCP_CAPS);
-               response->flags = htons(MF_CONTROL);
-               response->numFields = htonl(NXCP_VERSION << 24);
+               response->flags = htons(MF_CONTROL | MF_NXCP_VERSION(m_protocolVersion));
+               response->numFields = htonl(m_protocolVersion << 24);
                response->size = htonl(NXCP_HEADER_SIZE);
                sendRawMessage(response, m_pCtx);
             }
@@ -352,7 +351,7 @@ void CommSession::readThread()
                   if (m_pCtx == NULL)
                   {
                      NXCPMessage *pResponse;
-                     SetupEncryptionContext(msg, &m_pCtx, &pResponse, NULL, NXCP_VERSION);
+                     SetupEncryptionContext(msg, &m_pCtx, &pResponse, NULL, m_protocolVersion);
                      sendMessage(pResponse);
                      delete pResponse;
                      receiver.setEncryptionContext(m_pCtx);
@@ -372,9 +371,7 @@ void CommSession::readThread()
                   }
                   else
                   {
-                     NXCPMessage response;
-                     response.setCode(CMD_REQUEST_COMPLETED);
-                     response.setId(msg->getId());
+                     NXCPMessage response(CMD_REQUEST_COMPLETED, msg->getId(), m_protocolVersion);
                      response.setField(VID_RCC, rcc);
                      sendMessage(&response);
                   }
@@ -388,9 +385,7 @@ void CommSession::readThread()
                   }
                   else
                   {
-                     NXCPMessage response;
-                     response.setCode(CMD_REQUEST_COMPLETED);
-                     response.setId(msg->getId());
+                     NXCPMessage response(CMD_REQUEST_COMPLETED, msg->getId(), m_protocolVersion);
                      response.setField(VID_RCC, ERR_ACCESS_DENIED);
                      sendMessage(&response);
                      delete msg;
@@ -458,7 +453,7 @@ bool CommSession::sendRawMessage(NXCP_MESSAGE *msg, NXCPEncryptionContext *ctx)
                ntohs(msg->flags) & MF_COMPRESSED ? _T("compressed") : _T("uncompressed"));
       if (nxlog_get_debug_level() >= 8)
       {
-         String msgDump = NXCPMessage::dump(msg, NXCP_VERSION);
+         String msgDump = NXCPMessage::dump(msg, m_protocolVersion);
          debugPrintf(8, _T("Outgoing message dump:\n%s"), (const TCHAR *)msgDump);
       }
    }
@@ -548,7 +543,6 @@ void CommSession::sendMessageInBackground(NXCP_MESSAGE *msg)
  */
 void CommSession::processingThread()
 {
-   NXCPMessage response;
    while(true)
    {
       NXCPMessage *request = (NXCPMessage *)m_processingQueue->getOrBlock();
@@ -557,8 +551,7 @@ void CommSession::processingThread()
       UINT32 command = request->getCode();
 
       // Prepare response message
-      response.setCode(CMD_REQUEST_COMPLETED);
-      response.setId(request->getId());
+      NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId(), m_protocolVersion);
 
       // Check if authentication required
       if ((!m_authenticated) && (command != CMD_AUTHENTICATE))
@@ -790,7 +783,6 @@ void CommSession::processingThread()
 
       // Send response
       sendMessage(&response);
-      response.deleteAllFields();
    }
 }
 

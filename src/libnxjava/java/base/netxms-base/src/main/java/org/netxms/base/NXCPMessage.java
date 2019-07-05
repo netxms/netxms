@@ -195,6 +195,7 @@ public class NXCPMessage
 						inputStream.readFully(df, 8, 8);
 						break;
 					case NXCPMessageField.TYPE_STRING:		// all these types has 4-byte length field followed by actual content
+               case NXCPMessageField.TYPE_UTF8_STRING:
 					case NXCPMessageField.TYPE_BINARY:
 						int size = inputStream.readInt();
 						df = Arrays.copyOf(df, size + 12);
@@ -214,7 +215,7 @@ public class NXCPMessage
 				}
 	
 				final NXCPMessageField variable = new NXCPMessageField(df);
-				fields.put(variable.getVariableId(), variable);
+				fields.put(variable.getId(), variable);
 			}
 		}
 	}
@@ -311,7 +312,7 @@ public class NXCPMessage
 	 */
 	public void setField(final NXCPMessageField src)
 	{
-		fields.put(src.getVariableId(), src);
+		fields.put(src.getId(), src);
 	}
 
 	/**
@@ -348,15 +349,27 @@ public class NXCPMessage
 	}
 
 	/**
-	 * Set field of STRING type
+	 * Set field of UTF8-STRING type
 	 * 
-	 * @param fieldId
-	 * @param value
+	 * @param fieldId field ID
+	 * @param value string value
 	 */
 	public void setField(final long fieldId, final String value)
 	{
 		setField(new NXCPMessageField(fieldId, value));
 	}
+
+   /**
+    * Set field of STRING or UTF8-STRING type
+    * 
+    * @param fieldId field ID
+    * @param value string value
+    * @param forceUcsEncoding if true, UCS2 encoding will be used (STRING type)
+    */
+   public void setField(final long fieldId, final String value, boolean forceUcsEncoding)
+   {
+      setField(new NXCPMessageField(fieldId, value, forceUcsEncoding));
+   }
 
 	/**
 	 * Set field of DOUBLE type

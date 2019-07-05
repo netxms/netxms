@@ -102,9 +102,7 @@ THREAD_RESULT THREAD_CALL SyslogSender(void *)
       nxlog_debug(6, _T("SyslogSender: got message from queue"));
       bool sent = false;
 
-      NXCPMessage msg;
-      msg.setCode(CMD_SYSLOG_RECORDS);
-      msg.setId(GenerateMessageId());
+      NXCPMessage msg(CMD_SYSLOG_RECORDS, GenerateMessageId(), 4);   // Use version 4
       msg.setField(VID_REQUEST_ID, id++);
       msg.setField(VID_IP_ADDRESS, rec->addr);
       msg.setFieldFromTime(VID_TIMESTAMP, rec->timestamp);

@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -780,10 +780,10 @@ bool LIBNETXMS_EXPORTABLE SendFileOverNXCP(AbstractCommChannel *channel, UINT32 
 		if (_lseek(hFile, offset, (offset < 0) ? SEEK_END : SEEK_SET) != -1)
 		{
          StreamCompressor *compressor = (compressionMethod != NXCP_STREAM_COMPRESSION_NONE) ? StreamCompressor::create(compressionMethod, true, FILE_BUFFER_SIZE) : NULL;
-         BYTE *compBuffer = (compressor != NULL) ? (BYTE *)malloc(FILE_BUFFER_SIZE) : NULL;
+         BYTE *compBuffer = (compressor != NULL) ? (BYTE *)MemAlloc(FILE_BUFFER_SIZE) : NULL;
 
 			// Allocate message and prepare it's header
-         NXCP_MESSAGE *msg = (NXCP_MESSAGE *)malloc(NXCP_HEADER_SIZE + 8 + ((compressor != NULL) ? compressor->compressBufferSize(FILE_BUFFER_SIZE) + 4 : FILE_BUFFER_SIZE));
+         NXCP_MESSAGE *msg = (NXCP_MESSAGE *)MemAlloc(NXCP_HEADER_SIZE + 8 + ((compressor != NULL) ? compressor->compressBufferSize(FILE_BUFFER_SIZE) + 4 : FILE_BUFFER_SIZE));
 			msg->id = htonl(id);
 			msg->code = htons(CMD_FILE_DATA);
          msg->flags = htons(MF_BINARY | MF_STREAM | ((compressionMethod != NXCP_STREAM_COMPRESSION_NONE) ? MF_COMPRESSED : 0));
@@ -834,7 +834,7 @@ bool LIBNETXMS_EXPORTABLE SendFileOverNXCP(AbstractCommChannel *channel, UINT32 
 					if (emsg != NULL)
 					{
 					   channel->send(emsg, ntohl(emsg->size), mutex);
-						free(emsg);
+						MemFree(emsg);
 					}
 				}
 				else
@@ -881,10 +881,10 @@ bool LIBNETXMS_EXPORTABLE SendFileOverNXCP(AbstractCommChannel *channel, UINT32 
                ThreadSleepMs(delay);
 			}
 
-		   free(compBuffer);
+		   MemFree(compBuffer);
 		   delete compressor;
 
-			free(msg);
+			MemFree(msg);
 		}
 		_close(hFile);
 	}
@@ -921,22 +921,21 @@ bool LIBNETXMS_EXPORTABLE SendFileOverNXCP(AbstractCommChannel *channel, UINT32 
  */
 bool LIBNETXMS_EXPORTABLE NXCPGetPeerProtocolVersion(AbstractCommChannel *channel, int *pnVersion, MUTEX mutex)
 {
-   NXCP_MESSAGE msg;
-   NXCPEncryptionContext *pDummyCtx = NULL;
-   NXCP_BUFFER *pBuffer;
    bool success = false;
-   int nSize;
 
+   NXCP_MESSAGE msg;
    msg.id = 0;
    msg.numFields = 0;
    msg.size = htonl(NXCP_HEADER_SIZE);
    msg.code = htons(CMD_GET_NXCP_CAPS);
-   msg.flags = htons(MF_CONTROL);
+   msg.flags = htons(MF_CONTROL | MF_NXCP_VERSION(NXCP_VERSION));
    if (channel->send(&msg, NXCP_HEADER_SIZE, mutex) == NXCP_HEADER_SIZE)
    {
-      pBuffer = (NXCP_BUFFER *)malloc(sizeof(NXCP_BUFFER));
+      NXCP_BUFFER *pBuffer = MemAllocStruct<NXCP_BUFFER>();
       NXCPInitBuffer(pBuffer);
-      nSize = RecvNXCPMessage(channel, &msg, pBuffer, NXCP_HEADER_SIZE, &pDummyCtx, NULL, 30000);
+
+      NXCPEncryptionContext *pDummyCtx = NULL;
+      int nSize = RecvNXCPMessage(channel, &msg, pBuffer, NXCP_HEADER_SIZE, &pDummyCtx, NULL, 30000);
       if ((nSize == NXCP_HEADER_SIZE) &&
           (ntohs(msg.code) == CMD_NXCP_CAPS) &&
           (ntohs(msg.flags) & MF_CONTROL))
@@ -952,7 +951,7 @@ bool LIBNETXMS_EXPORTABLE NXCPGetPeerProtocolVersion(AbstractCommChannel *channe
          success = true;
          *pnVersion = 1;
       }
-      free(pBuffer);
+      MemFree(pBuffer);
    }
    return success;
 }

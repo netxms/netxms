@@ -151,9 +151,7 @@ THREAD_RESULT THREAD_CALL SNMPTrapSender(void *pArg)
       DebugPrintf(6, _T("SNMPTrapSender: got trap from queue"));
       bool sent = false;
 
-      NXCPMessage *msg = new NXCPMessage();
-      msg->setCode(CMD_SNMP_TRAP);
-      msg->setId(GenerateMessageId());
+      NXCPMessage *msg = new NXCPMessage(CMD_SNMP_TRAP, GenerateMessageId(), 4); // Use version 4
       msg->setField(VID_IP_ADDRESS, pdu->ipAddr);
       msg->setField(VID_PORT, pdu->port);
       msg->setField(VID_PDU_SIZE, pdu->lenght);

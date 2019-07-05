@@ -21,6 +21,7 @@ package org.netxms.base;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -39,6 +40,7 @@ public class NXCPMessageField
 	public static final int TYPE_BINARY = 4;
 	public static final int TYPE_FLOAT = 5;
 	public static final int TYPE_INETADDR = 6;
+   public static final int TYPE_UTF8_STRING = 7;
    
 	private static final int SIGNED = 0x01;
    
@@ -50,6 +52,7 @@ public class NXCPMessageField
 	private Long integerValue;
 	private Double realValue;
 	private String stringValue;
+	private byte[] utf8StringValue;
 	private byte[] binaryValue;
 	private InetAddressEx inetAddressValue;
 
@@ -107,15 +110,27 @@ public class NXCPMessageField
 	}
 
 	/**
-	 * @param varId
-	 * @param value
+	 * Create string field
+	 * 
+	 * @param fieldId field ID
+	 * @param value string value
+	 * @param forceUcsEncoding if true, encode field as UCS-2 instead of UTF-8
 	 */
-	public NXCPMessageField(final long varId, final String value)
+	public NXCPMessageField(final long fieldId, final String value, boolean forceUcsEncoding)
 	{
-		id = varId;
-		type = TYPE_STRING;
+		id = fieldId;
+		type = forceUcsEncoding ? TYPE_STRING : TYPE_UTF8_STRING;
 		setStringValue(value);
 	}
+
+   /**
+    * @param fieldId
+    * @param value
+    */
+   public NXCPMessageField(final long fieldId, final String value)
+   {
+      this(fieldId, value, false);
+   }
 
 	/**
 	 * @param varId
@@ -300,6 +315,11 @@ public class NXCPMessageField
 					}
 					setStringValue(sb.toString());
 					break;
+            case TYPE_UTF8_STRING:
+               utf8StringValue = new byte[in.readInt()];
+               in.readFully(utf8StringValue);
+               setStringValue(new String(utf8StringValue, "UTF-8"));
+               break;
 				case TYPE_BINARY:
 					binaryValue = new byte[in.readInt()];
 					in.readFully(binaryValue);
@@ -525,37 +545,41 @@ public class NXCPMessageField
 	}
 
 	/**
-	 * @return the variableId
+	 * Get this field ID
+	 * 
+	 * @return this field ID
 	 */
-	public long getVariableId()
+	public long getId()
 	{
 		return id;
 	}
 
 	/**
-	 * @param variableId the variableId to set
+	 * @param id new ID for this field
 	 */
-	public void setVariableId(final long variableId)
+	public void setId(final long id)
 	{
-		this.id = variableId;
+		this.id = id;
 	}
 
 	/**
-	 * @return the variableType
+	 * Get type of this field
+	 * 
+	 * @return this field type
 	 */
-	public int getVariableType()
+	public int getType()
 	{
 		return type;
 	}
 
 	/**
-	 *
-	 * @return
+	 * Calculate binary (encoded) size for this field
+	 * 
+	 * @return calculated binary (encoded) size for this field
 	 */
 	private int calculateBinarySize()
 	{
 		final int size;
-
 		switch(type)
 		{
 			case TYPE_INTEGER:
@@ -571,6 +595,18 @@ public class NXCPMessageField
 			case TYPE_STRING:
 				size = stringValue.length() * 2 + 12;
 				break;
+         case TYPE_UTF8_STRING:
+            try
+            {
+               if (utf8StringValue == null)
+                  utf8StringValue = stringValue.getBytes("UTF-8"); 
+            }
+            catch(UnsupportedEncodingException e)
+            {
+               utf8StringValue = new byte[0];
+            }
+            size = utf8StringValue.length + 12;
+            break;
 			case TYPE_BINARY:
 				size = binaryValue.length + 12;
 				break;
@@ -620,6 +656,19 @@ public class NXCPMessageField
 					out.writeInt(stringValue.length() * 2);
 					out.writeChars(stringValue);
 					break;
+            case TYPE_UTF8_STRING:
+               try
+               {
+                  if (utf8StringValue == null)
+                     utf8StringValue = stringValue.getBytes("UTF-8"); 
+               }
+               catch(UnsupportedEncodingException e)
+               {
+                  utf8StringValue = new byte[0];
+               }
+               out.writeInt(utf8StringValue.length);
+               out.write(utf8StringValue);
+               break;
 				case TYPE_BINARY:
 					out.writeInt(binaryValue.length);
 					out.write(binaryValue);

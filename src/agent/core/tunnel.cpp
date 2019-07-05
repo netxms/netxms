@@ -622,9 +622,7 @@ bool Tunnel::connectToServer()
    m_requestId = 0;
 
    // Do handshake
-   NXCPMessage msg;
-   msg.setCode(CMD_SETUP_AGENT_TUNNEL);
-   msg.setId(InterlockedIncrement(&m_requestId));
+   NXCPMessage msg(CMD_SETUP_AGENT_TUNNEL, InterlockedIncrement(&m_requestId), 4);  // Use version 4 during setup
    msg.setField(VID_AGENT_VERSION, NETXMS_BUILD_TAG);
    msg.setField(VID_AGENT_ID, g_agentId);
    msg.setField(VID_SYS_NAME, g_systemName);
@@ -695,9 +693,7 @@ void Tunnel::checkConnection()
    }
    else
    {
-      NXCPMessage msg;
-      msg.setCode(CMD_KEEPALIVE);
-      msg.setId(InterlockedIncrement(&m_requestId));
+      NXCPMessage msg(CMD_KEEPALIVE, InterlockedIncrement(&m_requestId), 4);
       if (sendMessage(&msg))
       {
          NXCPMessage *response = waitForMessage(CMD_KEEPALIVE, msg.getId());
@@ -888,7 +884,7 @@ bool Tunnel::saveCertificate(X509 *cert, EVP_PKEY *key)
  */
 void Tunnel::processBindRequest(NXCPMessage *request)
 {
-   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId(), 4);
 
    uuid guid = request->getFieldAsGUID(VID_GUID);
    char *cn = guid.toString().getUTF8String();
@@ -906,7 +902,7 @@ void Tunnel::processBindRequest(NXCPMessage *request)
       int len = i2d_X509_REQ(req, &buffer);
       if (len > 0)
       {
-         NXCPMessage certRequest(CMD_REQUEST_CERTIFICATE, request->getId());
+         NXCPMessage certRequest(CMD_REQUEST_CERTIFICATE, request->getId(), 4);
          certRequest.setField(VID_CERTIFICATE, buffer, len);
          sendMessage(&certRequest);
          OPENSSL_free(buffer);
@@ -981,7 +977,7 @@ void Tunnel::processBindRequest(NXCPMessage *request)
  */
 void Tunnel::createSession(NXCPMessage *request)
 {
-   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId(), 4);
 
    // Assume that peer always have minimal access, so don't check return value
    bool masterServer, controlServer;
@@ -1065,7 +1061,7 @@ void Tunnel::closeChannel(TunnelCommChannel *channel)
 
    if (id != 0)
    {
-      NXCPMessage msg(CMD_CLOSE_CHANNEL, 0);
+      NXCPMessage msg(CMD_CLOSE_CHANNEL, 0, 4);
       msg.setField(VID_CHANNEL_ID, id);
       sendMessage(&msg);
    }

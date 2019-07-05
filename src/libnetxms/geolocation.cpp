@@ -121,7 +121,7 @@ GeoLocation::GeoLocation(NXCPMessage &msg)
    {
       m_timestamp = (time_t)msg.getFieldAsUInt32(VID_GEOLOCATION_TIMESTAMP);
    }
-   else if (ft == NXCP_DT_STRING)
+   else if ((ft == NXCP_DT_STRING) || (ft == NXCP_DT_UTF8_STRING))
    {
       char ts[256];
       msg.getFieldAsMBString(VID_GEOLOCATION_TIMESTAMP, ts, 256);

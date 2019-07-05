@@ -34,7 +34,7 @@
 /**
  * Calculate field size
  */
-static size_t CalculateFieldSize(NXCP_MESSAGE_FIELD *field, bool networkByteOrder)
+static size_t CalculateFieldSize(const NXCP_MESSAGE_FIELD *field, bool networkByteOrder)
 {
    size_t nSize;
 
@@ -54,6 +54,7 @@ static size_t CalculateFieldSize(NXCP_MESSAGE_FIELD *field, bool networkByteOrde
          nSize = 32;
          break;
       case NXCP_DT_STRING:
+      case NXCP_DT_UTF8_STRING:
       case NXCP_DT_BINARY:
          if (networkByteOrder)
             nSize = ntohl(field->df_string.length) + 12;
@@ -179,8 +180,10 @@ NXCPMessage::NXCPMessage(const NXCP_MESSAGE *msg, int version) : m_pool(SizeHint
    m_flags = ntohs(msg->flags);
    m_code = ntohs(msg->code);
    m_id = ntohl(msg->id);
-   m_version = version;
    m_fields = NULL;
+
+   int v = getEncodedProtocolVersion();
+   m_version = (v != 0) ? v : version; // Use encoded version if present
 
    // Parse data fields
    if (m_flags & MF_BINARY)
@@ -280,7 +283,7 @@ NXCPMessage::NXCPMessage(const NXCP_MESSAGE *msg, int version) : m_pool(SizeHint
             break;
          }
          if ((pos > msgDataSize - 12) &&
-             ((field->type == NXCP_DT_STRING) || (field->type == NXCP_DT_BINARY)))
+             ((field->type == NXCP_DT_STRING) || (field->type == NXCP_DT_UTF8_STRING) || (field->type == NXCP_DT_BINARY)))
          {
             m_version = -1;   // error indicator
             break;
@@ -322,7 +325,10 @@ NXCPMessage::NXCPMessage(const NXCP_MESSAGE *msg, int version) : m_pool(SizeHint
 #endif
                break;
             case NXCP_DT_BINARY:
-               entry->data.df_string.length = ntohl(entry->data.df_string.length);
+               entry->data.df_binary.length = ntohl(entry->data.df_binary.length);
+               break;
+            case NXCP_DT_UTF8_STRING:
+               entry->data.df_utf8string.length = ntohl(entry->data.df_utf8string.length);
                break;
             case NXCP_DT_INETADDR:
                if (entry->data.df_inetaddr.family == NXCP_AF_INET)
@@ -363,14 +369,14 @@ NXCP_MESSAGE_FIELD *NXCPMessage::find(UINT32 fieldId) const
 /**
  * Set field
  * Argument size (data size) contains data length in bytes for DT_BINARY type
- * and maximum number of characters for DT_STRING type (0 means no limit)
+ * and maximum number of characters for DT_STRING and DT_UTF8_STRING types (0 means no limit)
  */
 void *NXCPMessage::set(UINT32 fieldId, BYTE type, const void *value, bool isSigned, size_t size)
 {
    if (m_flags & MF_BINARY)
       return NULL;
 
-   size_t length;
+   size_t length, bufferLength;
 #if defined(UNICODE_UCS2) && defined(UNICODE)
 #define __buffer value
 #else
@@ -413,6 +419,31 @@ void *NXCPMessage::set(UINT32 fieldId, BYTE type, const void *value, bool isSign
          entry = CreateMessageField(m_pool, 12 + length * 2);
          entry->data.df_string.length = (UINT32)(length * 2);
          memcpy(entry->data.df_string.value, __buffer, entry->data.df_string.length);
+         break;
+      case NXCP_DT_UTF8_STRING:
+         length = _tcslen(static_cast<const TCHAR*>(value));
+         if ((size > 0) && (length > size))
+            length = size;
+#ifdef UNICODE
+#ifdef UNICODE_UCS4
+         bufferLength = ucs4_utf8len(static_cast<const TCHAR*>(value), (int)length);
+#else
+         bufferLength = ucs2_utf8len(static_cast<const TCHAR*>(value), (int)length);
+#endif
+#else    /* not UNICODE */
+         bufferLength = length * 3;
+#endif
+         entry = CreateMessageField(m_pool, 12 + bufferLength);
+         entry->data.df_utf8string.length = (UINT32)length;
+#ifdef UNICODE
+#ifdef UNICODE_UCS4
+         entry->data.df_utf8string.length = (UINT32)ucs4_to_utf8(static_cast<const TCHAR*>(value), length, entry->data.df_utf8string.value, (int)bufferLength);
+#else
+         entry->data.df_utf8string.length = (UINT32)ucs2_to_utf8(static_cast<const TCHAR*>(value), length, entry->data.df_utf8string.value, (int)bufferLength);
+#endif
+#else    /* not UNICODE */
+         entry->data.df_utf8string.length = (UINT32)mb_to_utf8(static_cast<const TCHAR*>(value), length, entry->data.df_utf8string.value, (int)bufferLength);
+#endif
          break;
       case NXCP_DT_BINARY:
          entry = CreateMessageField(m_pool, 12 + size);
@@ -649,9 +680,16 @@ TCHAR *NXCPMessage::getFieldAsString(UINT32 fieldId, MemoryPool *pool, TCHAR *bu
    if ((buffer != NULL) && (bufferSize == 0))
       return NULL;   // non-sense combination
 
+   if (buffer != NULL)
+      *buffer = 0;
+
+   BYTE type;
+   void *value = get(fieldId, 0xFF, &type);
+   if (value == NULL)
+      return NULL;
+
    TCHAR *str = NULL;
-   void *value = get(fieldId, NXCP_DT_STRING);
-   if (value != NULL)
+   if (type == NXCP_DT_STRING)
    {
       if (buffer == NULL)
       {
@@ -670,8 +708,8 @@ TCHAR *NXCPMessage::getFieldAsString(UINT32 fieldId, MemoryPool *pool, TCHAR *bu
       }
 
       size_t length = (buffer == NULL) ? 
-            static_cast<size_t>(*((UINT32 *)value) / 2) : 
-            std::min(static_cast<size_t>(*((UINT32 *)value) / 2), bufferSize - 1);
+            static_cast<size_t>(*static_cast<UINT32*>(value) / 2) :
+            std::min(static_cast<size_t>(*static_cast<UINT32*>(value) / 2), bufferSize - 1);
 #if defined(UNICODE) && defined(UNICODE_UCS4)
 		ucs2_to_ucs4((UCS2CHAR *)((BYTE *)value + 4), length, str, length + 1);
 #elif defined(UNICODE) && defined(UNICODE_UCS2)
@@ -681,15 +719,37 @@ TCHAR *NXCPMessage::getFieldAsString(UINT32 fieldId, MemoryPool *pool, TCHAR *bu
 #endif
       str[length] = 0;
    }
-   else
+   else if (type == NXCP_DT_UTF8_STRING)
    {
+      size_t length = static_cast<size_t>(*static_cast<UINT32*>(value));
+#ifdef UNICODE
       if (buffer != NULL)
       {
-         str = buffer;
-         str[0] = 0;
+         int outlen = MultiByteToWideChar(CP_UTF8, 0, static_cast<char*>(value) + 4, length, buffer, bufferSize - 1);
+         buffer[outlen] = 0;
       }
+      else
+      {
+         int outlen = MultiByteToWideChar(CP_UTF8, 0, static_cast<char*>(value) + 4, length, NULL, 0);
+         str = MemAllocStringW(outlen + 1);
+         outlen = MultiByteToWideChar(CP_UTF8, 0, static_cast<char*>(value) + 4, length, str, outlen);
+         str[outlen] = 0;
+      }
+#else
+      if (buffer != NULL)
+      {
+         int outlen = utf8_to_mb(static_cast<char*>(value) + 4, length, buffer, bufferSize - 1);
+         buffer[outlen] = 0;
+      }
+      else
+      {
+         str = MemAllocStringA(length + 1);
+         int outlen = utf8_to_mb(static_cast<char*>(value) + 4, length, str, length);
+         str[outlen] = 0;
+      }
+#endif
    }
-   return str;
+   return (str != NULL) ? str : buffer;
 }
 
 #ifdef UNICODE
@@ -891,8 +951,8 @@ NXCP_MESSAGE *NXCPMessage::serialize(bool allowCompression) const
    NXCP_MESSAGE *msg = static_cast<NXCP_MESSAGE*>(MemAlloc(size));
    memset(msg, 0, size);
    msg->code = htons(m_code);
-   msg->flags = htons(m_flags);
-   msg->size = htonl((UINT32)size);
+   msg->flags = htons(m_flags | MF_NXCP_VERSION(m_version));
+   msg->size = htonl(static_cast<UINT32>(size));
    msg->id = htonl(m_id);
    msg->numFields = htonl(fieldCount);
 
@@ -935,6 +995,7 @@ NXCP_MESSAGE *NXCPMessage::serialize(bool allowCompression) const
 #endif
                break;
             case NXCP_DT_BINARY:
+            case NXCP_DT_UTF8_STRING:
                field->df_string.length = htonl(field->df_string.length);
                break;
             case NXCP_DT_INETADDR:
@@ -964,7 +1025,7 @@ NXCP_MESSAGE *NXCPMessage::serialize(bool allowCompression) const
       if (deflateInit(&stream, 9) == Z_OK)
       {
          size_t compBufferSize = deflateBound(&stream, (unsigned long)(size - NXCP_HEADER_SIZE));
-         BYTE *compressedMsg = (BYTE *)malloc(compBufferSize + NXCP_HEADER_SIZE + 4);
+         BYTE *compressedMsg = (BYTE *)MemAlloc(compBufferSize + NXCP_HEADER_SIZE + 4);
          stream.next_in = (BYTE *)msg->fields;
          stream.avail_in = (UINT32)(size - NXCP_HEADER_SIZE);
          stream.next_out = compressedMsg + NXCP_HEADER_SIZE + 4;
@@ -977,7 +1038,7 @@ NXCP_MESSAGE *NXCPMessage::serialize(bool allowCompression) const
             if (compMsgSize < size - 4)
             {
                memcpy(compressedMsg, msg, NXCP_HEADER_SIZE);
-               free(msg);
+               MemFree(msg);
                msg = (NXCP_MESSAGE *)compressedMsg;
                msg->flags |= htons(MF_COMPRESSED);
                memcpy((BYTE *)msg + NXCP_HEADER_SIZE, &msg->size, 4); // Save size of uncompressed message
@@ -985,12 +1046,12 @@ NXCP_MESSAGE *NXCPMessage::serialize(bool allowCompression) const
             }
             else
             {
-               free(compressedMsg);
+               MemFree(compressedMsg);
             }
          }
          else
          {
-            free(compressedMsg);
+            MemFree(compressedMsg);
          }
          deflateEnd(&stream);
       }
@@ -1133,11 +1194,11 @@ bool NXCPMessage::setFieldFromFile(UINT32 fieldId, const TCHAR *pszFileName)
 static TCHAR *GetStringFromField(void *df)
 {
 #if defined(UNICODE) && defined(UNICODE_UCS4)
-   TCHAR *str = (TCHAR *)malloc(*((UINT32 *)df) * 2 + 4);
+   TCHAR *str = (TCHAR *)MemAlloc(*((UINT32 *)df) * 2 + 4);
 #elif defined(UNICODE) && defined(UNICODE_UCS2)
-   TCHAR *str = (TCHAR *)malloc(*((UINT32 *)df) + 2);
+   TCHAR *str = (TCHAR *)MemAlloc(*((UINT32 *)df) + 2);
 #else
-   TCHAR *str = (TCHAR *)malloc(*((UINT32 *)df) / 2 + 1);
+   TCHAR *str = (TCHAR *)MemAlloc(*((UINT32 *)df) / 2 + 1);
 #endif
    int len = (int)(*((UINT32 *)df) / 2);
 #if defined(UNICODE) && defined(UNICODE_UCS4)
@@ -1148,6 +1209,30 @@ static TCHAR *GetStringFromField(void *df)
 	ucs2_to_mb((UCS2CHAR *)((BYTE *)df + 4), len, str, len + 1);
 #endif
    str[len] = 0;
+   return str;
+}
+
+/**
+ * Get string from UTF8 encoded field
+ */
+static TCHAR *GetStringFromFieldUTF8(void *df)
+{
+   size_t utf8len = *static_cast<UINT32*>(df);
+   const char *utf8str = static_cast<char*>(df) + 4;
+#if defined(UNICODE) && defined(UNICODE_UCS4)
+   int dlen = utf8_ucs4len(utf8str, utf8len) + 1;
+#elif defined(UNICODE) && defined(UNICODE_UCS2)
+   int dlen = utf8_ucs2len(utf8str, utf8len) + 1;
+#else
+   int dlen = utf8len + 1;
+#endif
+   TCHAR *str = MemAllocString(dlen);
+#ifdef UNICODE
+   dlen = MultiByteToWideChar(CP_UTF8, 0, utf8str, utf8len, str, dlen);
+#else
+   dlen = utf8_to_mb(utf8str, utf8len, str, dlen);
+#endif
+   str[dlen] = 0;
    return str;
 }
 
@@ -1184,8 +1269,8 @@ String NXCPMessage::dump(const NXCP_MESSAGE *msg, int version)
    }
 
    // header
-   out.appendFormattedString(_T("  ** code=0x%04X (%s) flags=0x%04X id=%d size=%d numFields=%d\n"), 
-      code, NXCPMessageCodeName(code, buffer), flags, id, size, numFields);
+   out.appendFormattedString(_T("  ** code=0x%04X (%s) version=%d flags=0x%04X id=%d size=%d numFields=%d\n"),
+      code, NXCPMessageCodeName(code, buffer), flags >> 12, flags & 0x0FFF, id, size, numFields);
    if (flags & MF_BINARY)
    {
       out += _T("  ** binary message\n");
@@ -1196,7 +1281,7 @@ String NXCPMessage::dump(const NXCP_MESSAGE *msg, int version)
    size_t pos = NXCP_HEADER_SIZE;
    for(int f = 0; f < numFields; f++)
    {
-      NXCP_MESSAGE_FIELD *field = (NXCP_MESSAGE_FIELD *)(((BYTE *)msg) + pos);
+      const NXCP_MESSAGE_FIELD *field = reinterpret_cast<const NXCP_MESSAGE_FIELD*>(reinterpret_cast<const BYTE*>(msg) + pos);
 
       // Validate position inside message
       if (pos > size - 8)
@@ -1205,7 +1290,7 @@ String NXCPMessage::dump(const NXCP_MESSAGE *msg, int version)
          break;
       }
       if ((pos > size - 12) && 
-          ((field->type == NXCP_DT_STRING) || (field->type == NXCP_DT_BINARY)))
+          ((field->type == NXCP_DT_STRING) || (field->type == NXCP_DT_UTF8_STRING) || (field->type == NXCP_DT_BINARY)))
       {
          out.appendFormattedString(_T("  ** message format error (pos > size - 8 and field type %d)\n"), (int)field->type);
          break;
@@ -1220,8 +1305,7 @@ String NXCPMessage::dump(const NXCP_MESSAGE *msg, int version)
       }
 
       // Create new entry
-      NXCP_MESSAGE_FIELD *convertedField = (NXCP_MESSAGE_FIELD *)malloc(fieldSize);
-      memcpy(convertedField, field, fieldSize);
+      NXCP_MESSAGE_FIELD *convertedField = static_cast<NXCP_MESSAGE_FIELD*>(MemCopyBlock(field, fieldSize));
 
       // Convert numeric values to host format
       convertedField->fieldId = ntohl(convertedField->fieldId);
@@ -1229,19 +1313,19 @@ String NXCPMessage::dump(const NXCP_MESSAGE *msg, int version)
       {
          case NXCP_DT_INT32:
             convertedField->df_int32 = ntohl(convertedField->df_int32);
-            out.appendFormattedString(_T("  ** %06X: [%6d] INT32    %d\n"), (int)pos, (int)convertedField->fieldId, convertedField->df_int32);
+            out.appendFormattedString(_T("  ** %06X: [%6d] INT32       %d\n"), (int)pos, (int)convertedField->fieldId, convertedField->df_int32);
             break;
          case NXCP_DT_INT64:
             convertedField->df_int64 = ntohq(convertedField->df_int64);
-            out.appendFormattedString(_T("  ** %06X: [%6d] INT64    ") INT64_FMT _T("\n"), (int)pos, (int)convertedField->fieldId, convertedField->df_int64);
+            out.appendFormattedString(_T("  ** %06X: [%6d] INT64       ") INT64_FMT _T("\n"), (int)pos, (int)convertedField->fieldId, convertedField->df_int64);
             break;
          case NXCP_DT_INT16:
             convertedField->df_int16 = ntohs(convertedField->df_int16);
-            out.appendFormattedString(_T("  ** %06X: [%6d] INT16    %d\n"), (int)pos, (int)convertedField->fieldId, (int)convertedField->df_int16);
+            out.appendFormattedString(_T("  ** %06X: [%6d] INT16       %d\n"), (int)pos, (int)convertedField->fieldId, (int)convertedField->df_int16);
             break;
          case NXCP_DT_FLOAT:
             convertedField->df_real = ntohd(convertedField->df_real);
-            out.appendFormattedString(_T("  ** %06X: [%6d] FLOAT    %f\n"), (int)pos, (int)convertedField->fieldId, convertedField->df_real);
+            out.appendFormattedString(_T("  ** %06X: [%6d] FLOAT       %f\n"), (int)pos, (int)convertedField->fieldId, convertedField->df_real);
             break;
          case NXCP_DT_STRING:
 #if !(WORDS_BIGENDIAN)
@@ -1249,12 +1333,23 @@ String NXCPMessage::dump(const NXCP_MESSAGE *msg, int version)
             bswap_array_16(convertedField->df_string.value, (int)convertedField->df_string.length / 2);
 #endif
             str = GetStringFromField((BYTE *)convertedField + 8);
-            out.appendFormattedString(_T("  ** %06X: [%6d] STRING   \"%s\"\n"), (int)pos, (int)convertedField->fieldId, str);
-            free(str);
+            out.appendFormattedString(_T("  ** %06X: [%6d] STRING      \"%s\"\n"), (int)pos, (int)convertedField->fieldId, str);
+            MemFree(str);
+            break;
+         case NXCP_DT_UTF8_STRING:
+#if !(WORDS_BIGENDIAN)
+            convertedField->df_utf8string.length = ntohl(convertedField->df_utf8string.length);
+#endif
+            str = GetStringFromFieldUTF8((BYTE *)convertedField + 8);
+            out.appendFormattedString(_T("  ** %06X: [%6d] UTF8-STRING \"%s\"\n"), (int)pos, (int)convertedField->fieldId, str);
+            MemFree(str);
             break;
          case NXCP_DT_BINARY:
-            convertedField->df_string.length = ntohl(convertedField->df_string.length);
-            out.appendFormattedString(_T("  ** %06X: [%6d] BINARY   len=%d\n"), (int)pos, (int)convertedField->fieldId, (int)convertedField->df_string.length);
+#if !(WORDS_BIGENDIAN)
+            convertedField->df_binary.length = ntohl(convertedField->df_binary.length);
+#endif
+            out.appendFormattedString(_T("  ** %06X: [%6d] BINARY      len=%d\n"), (int)pos,
+                     (int)convertedField->fieldId, (int)convertedField->df_binary.length);
             break;
          case NXCP_DT_INETADDR:
             {
@@ -1263,7 +1358,7 @@ String NXCPMessage::dump(const NXCP_MESSAGE *msg, int version)
                      InetAddress(ntohl(convertedField->df_inetaddr.addr.v4)) :
                      InetAddress(convertedField->df_inetaddr.addr.v6);
                a.setMaskBits(convertedField->df_inetaddr.maskBits);
-               out.appendFormattedString(_T("  ** %06X: [%6d] INETADDR %s\n"), (int)pos, (int)convertedField->fieldId, (const TCHAR *)a.toString());
+               out.appendFormattedString(_T("  ** %06X: [%6d] INETADDR    %s\n"), (int)pos, (int)convertedField->fieldId, (const TCHAR *)a.toString());
             }
             break;
          default:

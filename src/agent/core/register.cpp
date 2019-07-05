@@ -40,7 +40,6 @@ BOOL RegisterOnServer(const TCHAR *pszServer, UINT32 zoneUIN)
    SOCKET hSocket;
    BOOL bRet = FALSE;
    TCHAR szBuffer[MAX_RESULT_LENGTH];
-   NXCPMessage msg, *pResponse;
    NXCP_MESSAGE *pRawMsg;
    NXCP_BUFFER *pBuffer;
    NXCPEncryptionContext *pDummyCtx = NULL;
@@ -61,8 +60,7 @@ BOOL RegisterOnServer(const TCHAR *pszServer, UINT32 zoneUIN)
       if (connect(hSocket, (struct sockaddr *)&sa, SA_LEN((struct sockaddr *)&sa)) != -1)
       {
          // Prepare request
-         msg.setCode(CMD_REGISTER_AGENT);
-         msg.setId(2);
+         NXCPMessage msg(CMD_REGISTER_AGENT, 2, 2); // User version 2
          if (H_PlatformName(NULL, NULL, szBuffer, NULL) != SYSINFO_RC_SUCCESS)
             _tcscpy(szBuffer, _T("error"));
          msg.setField(VID_PLATFORM_NAME, szBuffer);
@@ -84,7 +82,7 @@ BOOL RegisterOnServer(const TCHAR *pszServer, UINT32 zoneUIN)
                                    &pDummyCtx, NULL, 30000);
             if (nLen >= 16)
             {
-               pResponse = NXCPMessage::deserialize(pRawMsg);
+               NXCPMessage *pResponse = NXCPMessage::deserialize(pRawMsg);
                if (pResponse != NULL)
                {
                   if ((pResponse->getCode() == CMD_REQUEST_COMPLETED) &&

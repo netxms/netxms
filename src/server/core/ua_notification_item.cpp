@@ -210,7 +210,7 @@ void UserAgentNotificationItem::processUpdate()
 void UserAgentNotificationItem::fillMessage(UINT32 base, NXCPMessage *msg, bool fullInfo)
 {
    msg->setField(base, m_id);
-   msg->setField(base + 1, m_message, MAX_USER_AGENT_MESSAGE_SIZE);
+   msg->setField(base + 1, m_message);
    msg->setFieldFromTime(base + 2, m_startTime);
    msg->setFieldFromTime(base + 3, m_endTime);
    if (fullInfo) // do not send info to agent

@@ -478,9 +478,7 @@ bool DataElement::sendToServer(bool reconciliation)
    if (session == NULL)
       return false;
 
-   NXCPMessage msg;
-   msg.setCode(CMD_DCI_DATA);
-   msg.setId(session->generateRequestId());
+   NXCPMessage msg(CMD_DCI_DATA, session->generateRequestId(), session->getProtocolVersion());
    msg.setField(VID_DCI_ID, m_dciId);
    msg.setField(VID_DCI_SOURCE_TYPE, (INT16)m_origin);
    msg.setField(VID_DCOBJECT_TYPE, (INT16)m_type);
@@ -724,9 +722,7 @@ static THREAD_RESULT THREAD_CALL ReconciliationThread(void *arg)
          {
             DebugPrintf(6, _T("ReconciliationThread: %d records to be sent in bulk mode"), bulkSendList.size());
 
-            NXCPMessage msg;
-            msg.setCode(CMD_DCI_DATA);
-            msg.setId(session->generateRequestId());
+            NXCPMessage msg(CMD_DCI_DATA, session->generateRequestId(), session->getProtocolVersion());
             msg.setField(VID_BULK_RECONCILIATION, (INT16)1);
             msg.setField(VID_NUM_ELEMENTS, (INT16)bulkSendList.size());
             msg.setField(VID_TIMEOUT, g_dcReconciliationTimeout);

@@ -61,7 +61,6 @@ BOOL DownloadConfig(TCHAR *pszServer)
 {
    BOOL bRet = FALSE;
    TCHAR szBuffer[MAX_RESULT_LENGTH], *pszConfig;
-   NXCPMessage msg, *pResponse;
    NXCP_MESSAGE *pRawMsg;
    NXCP_BUFFER *pBuffer;
    NXCPEncryptionContext *pDummyCtx = NULL;
@@ -92,6 +91,7 @@ BOOL DownloadConfig(TCHAR *pszServer)
       if (connect(hSocket, (struct sockaddr *)&sa, SA_LEN((struct sockaddr *)&sa)) != -1)
       {
          // Prepare request
+         NXCPMessage msg(2);  // Server version is not known, use protocol version 2
          msg.setCode(CMD_GET_MY_CONFIG);
          msg.setId(1);
          if (H_PlatformName(NULL, NULL, szBuffer, NULL) != SYSINFO_RC_SUCCESS)
@@ -115,7 +115,7 @@ BOOL DownloadConfig(TCHAR *pszServer)
                                    &pDummyCtx, NULL, 30000);
             if (nLen >= 16)
             {
-               pResponse = NXCPMessage::deserialize(pRawMsg);
+               NXCPMessage *pResponse = NXCPMessage::deserialize(pRawMsg);
                if (pResponse != NULL)
                {
                   if ((pResponse->getCode() == CMD_REQUEST_COMPLETED) &&

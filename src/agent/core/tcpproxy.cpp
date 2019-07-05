@@ -45,8 +45,7 @@ TcpProxy::~TcpProxy()
    shutdown(m_socket, SHUT_RDWR);
    closesocket(m_socket);
 
-   NXCPMessage msg;
-   msg.setCode(CMD_CLOSE_TCP_PROXY);
+   NXCPMessage msg(CMD_CLOSE_TCP_PROXY, 0, m_session->getProtocolVersion());
    msg.setField(VID_CHANNEL_ID, m_id);
    m_session->postMessage(&msg);
 }

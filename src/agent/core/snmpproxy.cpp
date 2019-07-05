@@ -81,7 +81,7 @@ static bool ReadPDU(SOCKET hSocket, BYTE *pdu, UINT32 *pdwSize, UINT32 timeout)
 void CommSession::proxySnmpRequest(NXCPMessage *request)
 {
    UINT32 requestId = request->getId();
-   NXCPMessage response(CMD_REQUEST_COMPLETED, requestId);
+   NXCPMessage response(CMD_REQUEST_COMPLETED, requestId, m_protocolVersion);
 
    s_serverRequests++;
    size_t sizeIn;

@@ -664,6 +664,7 @@ public:
    virtual NXCPMessage *doRequestEx(NXCPMessage *msg, UINT32 timeout) = 0;
    virtual NXCPMessage *waitForMessage(UINT16 code, UINT32 id, UINT32 timeout) = 0;
    virtual UINT32 generateRequestId() = 0;
+   virtual int getProtocolVersion() = 0;
    virtual UINT32 openFile(TCHAR* nameOfFile, UINT32 requestId, time_t fileModTime = 0) = 0;
    virtual void debugPrintf(int level, const TCHAR *format, ...) = 0;
    virtual void prepareProxySessionSetupMsg(NXCPMessage *msg) = 0;
@@ -672,51 +673,51 @@ public:
 /**
  * Subagent's parameter information
  */
-typedef struct
+struct NETXMS_SUBAGENT_PARAM
 {
    TCHAR name[MAX_PARAM_NAME];
    LONG (* handler)(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
    const TCHAR *arg;
    int dataType;		// Use DT_DEPRECATED to indicate deprecated parameter
    TCHAR description[MAX_DB_STRING];
-} NETXMS_SUBAGENT_PARAM;
+};
 
 /**
  * Subagent's push parameter information
  */
-typedef struct
+struct NETXMS_SUBAGENT_PUSHPARAM
 {
    TCHAR name[MAX_PARAM_NAME];
    int dataType;
    TCHAR description[MAX_DB_STRING];
-} NETXMS_SUBAGENT_PUSHPARAM;
+};
 
 /**
  * Subagent's list information
  */
-typedef struct
+struct NETXMS_SUBAGENT_LIST
 {
    TCHAR name[MAX_PARAM_NAME];
    LONG (* handler)(const TCHAR *, const TCHAR *, StringList *, AbstractCommSession *);
    const TCHAR *arg;
    TCHAR description[MAX_DB_STRING];
-} NETXMS_SUBAGENT_LIST;
+};
 
 /**
  * Subagent's table column information
  */
-typedef struct
+struct NETXMS_SUBAGENT_TABLE_COLUMN
 {
    TCHAR name[MAX_COLUMN_NAME];
    TCHAR displayName[MAX_COLUMN_NAME];
    int dataType;
    bool isInstance;
-} NETXMS_SUBAGENT_TABLE_COLUMN;
+};
 
 /**
  * Subagent's table information
  */
-typedef struct
+struct NETXMS_SUBAGENT_TABLE
 {
    TCHAR name[MAX_PARAM_NAME];
    LONG (* handler)(const TCHAR *, const TCHAR *, Table *, AbstractCommSession *);
@@ -725,18 +726,18 @@ typedef struct
    TCHAR description[MAX_DB_STRING];
    int numColumns;
    NETXMS_SUBAGENT_TABLE_COLUMN *columns;
-} NETXMS_SUBAGENT_TABLE;
+};
 
 /**
  * Subagent's action information
  */
-typedef struct
+struct NETXMS_SUBAGENT_ACTION
 {
    TCHAR name[MAX_PARAM_NAME];
    LONG (* handler)(const TCHAR *, const StringList *, const TCHAR *, AbstractCommSession *);
    const TCHAR *arg;
    TCHAR description[MAX_DB_STRING];
-} NETXMS_SUBAGENT_ACTION;
+};
 
 #define NETXMS_SUBAGENT_INFO_MAGIC     ((UINT32)0x20180707)
 
@@ -745,7 +746,7 @@ class NXCPMessage;
 /**
  * Subagent initialization structure
  */
-typedef struct
+struct NETXMS_SUBAGENT_INFO
 {
    UINT32 magic;    // Magic number to check if subagent uses correct version of this structure
    TCHAR name[MAX_SUBAGENT_NAME];
@@ -764,7 +765,7 @@ typedef struct
    NETXMS_SUBAGENT_ACTION *actions;
    UINT32 numPushParameters;
    NETXMS_SUBAGENT_PUSHPARAM *pushParameters;
-} NETXMS_SUBAGENT_INFO;
+};
 
 /**
  * Inline functions for returning parameters

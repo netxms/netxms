@@ -313,6 +313,7 @@ private:
    UINT32 m_index;
    TCHAR m_key[32];  // key for serialized background tasks
    AbstractCommChannel *m_channel;
+   int m_protocolVersion;
    Queue *m_processingQueue;
    THREAD m_processingThread;
    THREAD m_proxyReadThread;
@@ -385,6 +386,7 @@ public:
    virtual NXCPMessage *doRequestEx(NXCPMessage *msg, UINT32 timeout) override;
    virtual NXCPMessage *waitForMessage(UINT16 code, UINT32 id, UINT32 timeout) override;
    virtual UINT32 generateRequestId() override;
+   virtual int getProtocolVersion() override { return m_protocolVersion; }
 
    virtual UINT32 getId() override { return m_id; };
 
@@ -447,6 +449,7 @@ public:
    virtual NXCPMessage *doRequestEx(NXCPMessage *msg, UINT32 timeout) override { return NULL; }
    virtual NXCPMessage *waitForMessage(UINT16 code, UINT32 id, UINT32 timeout) override { return NULL; }
    virtual UINT32 generateRequestId() override { return 0; }
+   virtual int getProtocolVersion() override { return NXCP_VERSION; }
    virtual UINT32 openFile(TCHAR *fileName, UINT32 requestId, time_t fileModTime = 0) override { return ERR_INTERNAL_ERROR; }
    virtual void debugPrintf(int level, const TCHAR *format, ...) override;
    virtual void prepareProxySessionSetupMsg(NXCPMessage *msg) override { }
@@ -494,6 +497,7 @@ public:
    virtual NXCPMessage *doRequestEx(NXCPMessage *msg, UINT32 timeout) override { return NULL; }
    virtual NXCPMessage *waitForMessage(UINT16 code, UINT32 id, UINT32 timeout) override { return NULL; }
    virtual UINT32 generateRequestId() override { return 0; }
+   virtual int getProtocolVersion() override { return NXCP_VERSION; }
    virtual UINT32 openFile(TCHAR *fileName, UINT32 requestId, time_t fileModTime = 0) override { return ERR_INTERNAL_ERROR; }
    virtual void debugPrintf(int level, const TCHAR *format, ...) override;
    virtual void prepareProxySessionSetupMsg(NXCPMessage *msg) override { }

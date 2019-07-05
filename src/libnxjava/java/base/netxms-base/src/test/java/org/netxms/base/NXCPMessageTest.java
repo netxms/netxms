@@ -56,9 +56,10 @@ public class NXCPMessageTest extends TestCase
 		msg1.setFieldInt32(3, 20);
 		msg1.setFieldInt64(4, 123456789L);
 		msg1.setField(5, byteTest);
+      msg1.setField(6, "string value - UCS2", true);
 	
 		final byte[] bytes = msg1.createNXCPMessage(false);
-		assertEquals(120, bytes.length);
+		assertEquals(160, bytes.length);
 		
 		final NXCPMessage msg2 = new NXCPMessage(bytes, null);
 		
@@ -69,6 +70,7 @@ public class NXCPMessageTest extends TestCase
 		assertEquals(20, msg2.findField(3).getAsInteger().intValue());
 		assertEquals(123456789L, msg2.findField(4).getAsInteger().longValue());
 		assertEquals(true, Arrays.equals(byteTest, msg2.findField(5).getAsBinary()));
+      assertEquals("string value - UCS2", msg2.findField(6).getAsString());
 	}
 	
    public void testCompressedMessageEncodingAndDecoding() throws Exception
@@ -83,7 +85,7 @@ public class NXCPMessageTest extends TestCase
       msg1.setField(5, byteTest);
    
       final byte[] bytes = msg1.createNXCPMessage(true);
-      assertEquals(120, bytes.length);
+      assertEquals(104, bytes.length);
       
       final NXCPMessage msg2 = new NXCPMessage(bytes, null);
       

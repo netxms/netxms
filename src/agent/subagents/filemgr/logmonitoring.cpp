@@ -1,6 +1,6 @@
 /*
  ** File management subagent
- ** Copyright (C) 2014 Raden Solutions
+ ** Copyright (C) 2014-2019 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -161,16 +161,12 @@ THREAD_RESULT THREAD_CALL SendFileUpdatesOverNXCP(void *args)
    }
 
    int threadSleepTime = 1;
-   BYTE *readBytes = NULL;
-   NXCPMessage *pMsg;
-   UINT32 readSize;
 
    bool follow = true;
    NX_STAT_STRUCT st;
    NX_FSTAT(hFile, &st);
    flData->setOffset((long)st.st_size);
    ThreadSleep(threadSleepTime);
-   int headerSize = NXCP_HEADER_SIZE + MAX_PATH*2;
 
    while (follow)
    {
@@ -178,35 +174,33 @@ THREAD_RESULT THREAD_CALL SendFileUpdatesOverNXCP(void *args)
       long newOffset = (long)st.st_size;
       if (flData->getOffset() < newOffset)
       {
-         readSize = newOffset - flData->getOffset();
-         for(int i = readSize; i > 0; i = i - readSize)
+         size_t readSize = newOffset - flData->getOffset();
+         for(size_t i = readSize; i > 0; i = i - readSize)
          {
-            if (readSize+1+headerSize > MAX_MSG_SIZE)
+            if (readSize > 65536)
             {
-               readSize = MAX_MSG_SIZE - headerSize;
+               readSize = 65536;
                newOffset = flData->getOffset() + readSize;
             }
-            pMsg = new NXCPMessage();
-            pMsg->setCode(CMD_FILE_MONITORING);
-            pMsg->setId(0);
-            pMsg->setField(VID_FILE_NAME, flData->getFileId(), MAX_PATH);
+            NXCPMessage msg;
+            msg.setCode(CMD_FILE_MONITORING);
+            msg.setId(0);
+            msg.setField(VID_FILE_NAME, flData->getFileId());
 
             _lseek(hFile, flData->getOffset(), SEEK_SET);
-            readBytes = (BYTE*)malloc(readSize);
-            readSize = _read(hFile, readBytes, readSize);
-            AgentWriteDebugLog(6, _T("SendFileUpdatesOverNXCP: %d bytes will be sent."), readSize);
-#ifdef UNICODE
-            TCHAR *text = WideStringFromMBString((char *)readBytes);
-            pMsg->setField(VID_FILE_DATA, text, readSize);
-            free(text);
-#else
-            pMsg->setField(VID_FILE_DATA, (char *)readBytes, readSize);
-#endif
+            char *content = static_cast<char*>(MemAlloc(readSize + 1));
+            readSize = _read(hFile, content, readSize);
+            for(size_t j = 0; j < readSize; j++)
+               if (content[j] == 0)
+                  content[j] = ' ';
+            content[readSize] = 0;
+            AgentWriteDebugLog(6, _T("SendFileUpdatesOverNXCP: %u bytes will be sent."), static_cast<unsigned int>(readSize));
+            msg.setFieldFromMBString(VID_FILE_DATA, content);
             flData->setOffset(newOffset);
 
             SendFileUpdateCallbackData data;
             data.ip = flData->getServerAddress();
-            data.pMsg = pMsg;
+            data.pMsg = &msg;
 
             bool sent = AgentEnumerateSessions(SendFileUpdateCallback, &data);
             if (!sent)
@@ -214,8 +208,7 @@ THREAD_RESULT THREAD_CALL SendFileUpdatesOverNXCP(void *args)
                g_monitorFileList.remove(flData->getFileId());
             }
 
-            free(readBytes);
-            delete pMsg;
+            MemFree(content);
          }
       }
 

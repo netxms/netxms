@@ -98,6 +98,7 @@ public:
 
    int getProtocolVersion() const { return m_version; }
    void setProtocolVersion(int version) { m_version = version; }
+   int getEncodedProtocolVersion() const { return (m_flags & 0xF000) >> 12; }
 
    bool isEndOfFile() const { return (m_flags & MF_END_OF_FILE) ? true : false; }
    bool isEndOfSequence() const { return (m_flags & MF_END_OF_SEQUENCE) ? true : false; }
@@ -120,9 +121,8 @@ public:
    void setField(UINT32 fieldId, UINT64 value) { set(fieldId, NXCP_DT_INT64, &value, false); }
    void setField(UINT32 fieldId, double value) { set(fieldId, NXCP_DT_FLOAT, &value); }
    void setField(UINT32 fieldId, bool value) { INT16 v = value ? 1 : 0; set(fieldId, NXCP_DT_INT16, &v, true); }
-   void setField(UINT32 fieldId, const String& value) { set(fieldId, NXCP_DT_STRING, (const TCHAR *)value); }
-   void setField(UINT32 fieldId, const TCHAR *value) { if (value != NULL) set(fieldId, NXCP_DT_STRING, value); }
-   void setField(UINT32 fieldId, const TCHAR *value, size_t maxLen) { if (value != NULL) set(fieldId, NXCP_DT_STRING, value, false, maxLen); }
+   void setField(UINT32 fieldId, const String& value) { set(fieldId, (m_version >= 5) ? NXCP_DT_UTF8_STRING : NXCP_DT_STRING, (const TCHAR *)value); }
+   void setField(UINT32 fieldId, const TCHAR *value) { if (value != NULL) set(fieldId, (m_version >= 5) ? NXCP_DT_UTF8_STRING : NXCP_DT_STRING, value); }
    void setField(UINT32 fieldId, const BYTE *value, size_t size) { set(fieldId, NXCP_DT_BINARY, value, false, size); }
    void setField(UINT32 fieldId, const InetAddress& value) { set(fieldId, NXCP_DT_INETADDR, &value); }
    void setField(UINT32 fieldId, const uuid& value) { set(fieldId, NXCP_DT_BINARY, value.getValue(), false, UUID_LENGTH); }
@@ -130,7 +130,7 @@ public:
 #ifdef UNICODE
    void setFieldFromMBString(UINT32 fieldId, const char *value);
 #else
-   void setFieldFromMBString(UINT32 fieldId, const char *value) { set(fieldId, NXCP_DT_STRING, value); }
+   void setFieldFromMBString(UINT32 fieldId, const char *value) { set(fieldId, (m_version >= 5) ? NXCP_DT_UTF8_STRING : NXCP_DT_STRING, value); }
 #endif
    void setFieldFromTime(UINT32 fieldId, time_t value) { UINT64 t = (UINT64)value; set(fieldId, NXCP_DT_INT64, &t); }
    void setFieldFromInt32Array(UINT32 fieldId, size_t numElements, const UINT32 *elements);

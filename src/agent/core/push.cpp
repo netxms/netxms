@@ -33,12 +33,11 @@ static VolatileCounter s_requestIdLow = 0;
  */
 bool PushData(const TCHAR *parameter, const TCHAR *value, UINT32 objectId, time_t timestamp)
 {
-	NXCPMessage msg;
 	bool success = false;
 
 	nxlog_debug(6, _T("PushData: \"%s\" = \"%s\""), parameter, value);
 
-	msg.setCode(CMD_PUSH_DCI_DATA);
+	NXCPMessage msg(CMD_PUSH_DCI_DATA, 0, 4); // Use version 4 to avoid compatibility issues
 	msg.setField(VID_NAME, parameter);
 	msg.setField(VID_VALUE, value);
    msg.setField(VID_OBJECT_ID, objectId);
