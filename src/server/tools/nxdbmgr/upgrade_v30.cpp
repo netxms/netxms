@@ -24,6 +24,16 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 30.78 to 30.79
+ */
+static bool H_UpgradeFromV78()
+{
+   CHK_EXEC(CreateConfigParam(_T("DBWriter.MaxRecordsPerStatement"), _T("100"), _T("Maximum number of records per one SQL statement for delayed database writes."), _T("records/statement"), 'I', true, true, false, false));
+   CHK_EXEC(SetMinorSchemaVersion(79));
+   return true;
+}
+
+/**
  * Upgrade from 30.77 to 30.78 (changes also included into 22.59)
  */
 static bool H_UpgradeFromV77()
@@ -2568,6 +2578,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 78, 30, 79, H_UpgradeFromV78 },
    { 77, 30, 78, H_UpgradeFromV77 },
    { 76, 30, 77, H_UpgradeFromV76 },
    { 75, 30, 76, H_UpgradeFromV75 },
