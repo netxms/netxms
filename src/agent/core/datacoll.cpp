@@ -447,7 +447,7 @@ void DataElement::saveToDatabase(DB_STATEMENT hStmt)
  */
 static bool SessionComparator_Sender(AbstractCommSession *session, void *data)
 {
-   return (session->getServerId() == *((INT64 *)data)) && session->canAcceptData();
+   return (session->getServerId() == *static_cast<UINT64*>(data)) && session->canAcceptData();
 }
 
 /**

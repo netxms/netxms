@@ -401,7 +401,6 @@ bool UpgradeDatabase()
 {
    int i;
    UINT32 version = 0;
-   BOOL bLocked = FALSE;
    s_db = GetLocalDatabaseHandle();
 
    // Get database format version

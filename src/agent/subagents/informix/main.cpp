@@ -113,7 +113,6 @@ static bool SubAgentInit(Config *config)
 	bool result = true;
 	static DatabaseInfo info;
 	int i;
-	TCHAR dbPassEncrypted[MAX_DB_STRING] = _T("");
    static NX_CFG_TEMPLATE configTemplate[] =
    {
       { _T("Id"),                CT_STRING, 0, 0, MAX_STR,       0, info.id },
@@ -160,7 +159,6 @@ static bool SubAgentInit(Config *config)
 	{
 		TCHAR section[MAX_STR];
 		memset(&info, 0, sizeof(info));
-		dbPassEncrypted[0] = _T('\0');
 		_sntprintf(section, MAX_STR, _T("informix/databases/database#%d"), i);
 		if ((result = config->parseTemplate(section, configTemplate)) != TRUE)
 		{

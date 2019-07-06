@@ -52,8 +52,8 @@ typedef struct {
 
 typedef struct {
 	int version;						// minimum database version in xxx format for this query
-	TCHAR* prefix;						// parameter prefix, e.g. "Informix.Dbspaces."
-	TCHAR* query;						// the query
+	const TCHAR* prefix;						// parameter prefix, e.g. "Informix.Dbspaces."
+	const TCHAR* query;						// the query
 	int	  queryColumns;						// number of columns returned by query
 	DBParameter* values[MAX_DATABASES];		// list of values
 	int valueCount[MAX_DATABASES];
