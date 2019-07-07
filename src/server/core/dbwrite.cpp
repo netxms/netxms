@@ -448,6 +448,7 @@ static THREAD_RESULT THREAD_CALL IDataWriteThreadSingleTable_PostgreSQL(void *ar
             if (countStmt >= maxRecordsPerStmt)
             {
                countStmt = 0;
+               query.append(_T(" ON CONFLICT DO NOTHING"));
                if (!DBQuery(hdb, query))
                   break;
                query = _T("INSERT INTO idata (node_id,item_id,idata_timestamp,idata_value,raw_value) VALUES");
@@ -461,7 +462,10 @@ static THREAD_RESULT THREAD_CALL IDataWriteThreadSingleTable_PostgreSQL(void *ar
                break;
          }
          if (countStmt > 0)
+         {
+            query.append(_T(" ON CONFLICT DO NOTHING"));
             DBQuery(hdb, query);
+         }
          DBCommit(hdb);
       }
       else
