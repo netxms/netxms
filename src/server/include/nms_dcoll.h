@@ -411,6 +411,7 @@ public:
 
    int getDataType() const { return m_dataType; }
    int getNXSLDataType() const;
+   int getDeltaCalculationMethod() const { return m_deltaCalculation; }
 	bool isInterpretSnmpRawValue() const { return (m_flags & DCF_RAW_VALUE_OCTET_STRING) ? true : false; }
 	WORD getSnmpRawValueType() const { return m_snmpRawValueType; }
 	bool hasActiveThreshold();
@@ -447,7 +448,7 @@ public:
 	BOOL enumThresholds(BOOL (* pfCallback)(Threshold *, UINT32, void *), void *pArg);
 
 	void setDataType(int dataType) { m_dataType = dataType; }
-	void setDeltaCalcMethod(int method) { m_deltaCalculation = method; }
+	void setDeltaCalculationMethod(int method) { m_deltaCalculation = method; }
 	void setAllThresholdsFlag(BOOL bFlag) { if (bFlag) m_flags |= DCF_ALL_THRESHOLDS; else m_flags &= ~DCF_ALL_THRESHOLDS; }
 	void addThreshold(Threshold *pThreshold);
 	void deleteAllThresholds();
