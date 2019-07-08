@@ -262,17 +262,8 @@ LONG LIBNXAGENT_EXPORTABLE SMBIOS_BatteryParameterHandler(const TCHAR *cmd, cons
    if (!AgentGetParameterArg(cmd, 1, instanceText, 64))
       return SYSINFO_RC_UNSUPPORTED;
 
-   Battery *b = NULL;
-   UINT16 instance = static_cast<UINT16>(_tcstol(instanceText, NULL, 0));
-   for (int i = 0; i < s_batteries.size(); i++)
-   {
-      if (s_batteries.get(i)->handle == instance)
-      {
-         b = s_batteries.get(i);
-         break;
-      }
-   }
-
+   int instance = _tcstol(instanceText, NULL, 0);
+   Battery *b = s_batteries.get(instance);
    if (b == NULL)
       return SYSINFO_RC_NO_SUCH_INSTANCE;
 
@@ -318,17 +309,8 @@ LONG LIBNXAGENT_EXPORTABLE SMBIOS_MemDevParameterHandler(const TCHAR *cmd, const
    if (!AgentGetParameterArg(cmd, 1, instanceText, 64))
       return SYSINFO_RC_UNSUPPORTED;
 
-   MemoryDevice *md = NULL;
-   UINT16 instance = static_cast<UINT16>(_tcstol(instanceText, NULL, 0));
-   for(int i = 0; i < s_memoryDevices.size(); i++)
-   {
-      if (s_memoryDevices.get(i)->handle == instance)
-      {
-         md = s_memoryDevices.get(i);
-         break;
-      }
-   }
-
+   int instance = _tcstol(instanceText, NULL, 0);
+   MemoryDevice *md = s_memoryDevices.get(instance);
    if (md == NULL)
       return SYSINFO_RC_NO_SUCH_INSTANCE;
 
@@ -380,17 +362,8 @@ LONG LIBNXAGENT_EXPORTABLE SMBIOS_ProcessorParameterHandler(const TCHAR *cmd, co
    if (!AgentGetParameterArg(cmd, 1, instanceText, 64))
       return SYSINFO_RC_UNSUPPORTED;
 
-   Processor *proc = NULL;
-   UINT16 instance = static_cast<UINT16>(_tcstol(instanceText, NULL, 0));
-   for(int i = 0; i < s_processors.size(); i++)
-   {
-      if (s_processors.get(i)->handle == instance)
-      {
-         proc = s_processors.get(i);
-         break;
-      }
-   }
-
+   int instance = _tcstol(instanceText, NULL, 0);
+   Processor *proc = s_processors.get(instance);
    if (proc == NULL)
       return SYSINFO_RC_NO_SUCH_INSTANCE;
 
@@ -519,19 +492,19 @@ LONG LIBNXAGENT_EXPORTABLE SMBIOS_ListHandler(const TCHAR *cmd, const TCHAR *arg
       case 'B':   // batteries
          for (int i = 0; i < s_batteries.size(); i++)
          {
-            value->add(s_batteries.get(i)->handle);
+            value->add(i);
          }
          break;
       case 'M':   // memory devices
          for(int i = 0; i < s_memoryDevices.size(); i++)
          {
-            value->add(s_memoryDevices.get(i)->handle);
+            value->add(i);
          }
          break;
       case 'P':   // processors
          for(int i = 0; i < s_processors.size(); i++)
          {
-            value->add(s_processors.get(i)->handle);
+            value->add(i);
          }
          break;
       default:
@@ -560,7 +533,7 @@ LONG LIBNXAGENT_EXPORTABLE SMBIOS_TableHandler(const TCHAR *cmd, const TCHAR *ar
          for(int i = 0; i < s_batteries.size(); i++)
          {
             value->addRow();
-            value->set(0, s_batteries.get(i)->handle);
+            value->set(0, i);
             value->set(1, s_batteries.get(i)->name);
             value->set(2, s_batteries.get(i)->location);
             value->set(3, s_batteries.get(i)->capacity);
@@ -586,7 +559,7 @@ LONG LIBNXAGENT_EXPORTABLE SMBIOS_TableHandler(const TCHAR *cmd, const TCHAR *ar
          for (int i = 0; i < s_memoryDevices.size(); i++)
          {
             value->addRow();
-            value->set(0, s_memoryDevices.get(i)->handle);
+            value->set(0, i);
             value->set(1, s_memoryDevices.get(i)->location);
             value->set(2, s_memoryDevices.get(i)->bank);
             value->set(3, s_memoryDevices.get(i)->formFactor);
@@ -615,7 +588,7 @@ LONG LIBNXAGENT_EXPORTABLE SMBIOS_TableHandler(const TCHAR *cmd, const TCHAR *ar
          for(int i = 0; i < s_processors.size(); i++)
          {
             value->addRow();
-            value->set(0, s_processors.get(i)->handle);
+            value->set(0, i);
             value->set(1, s_processors.get(i)->type);
             value->set(2, s_processors.get(i)->family);
             value->set(3, s_processors.get(i)->version);
