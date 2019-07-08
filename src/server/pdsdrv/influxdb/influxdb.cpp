@@ -213,7 +213,7 @@ void InfluxDBStorageDriver::queuePush(const std::string& data)
  */
 const TCHAR *InfluxDBStorageDriver::getName()
 {
-  return s_driverName;
+   return s_driverName;
 }
 
 /**
@@ -260,9 +260,9 @@ void InfluxDBStorageDriver::shutdown()
 bool InfluxDBStorageDriver::saveDCItemValue(DCItem *dci, time_t timestamp, const TCHAR *value)
 {
    nxlog_debug_tag(DEBUG_TAG, 8,
-            _T("Raw metric: OwnerName:%s SystemTag:%s DataSource:%i Type:%i Name:%s Description: %s Instance:%s DataType:%i Value:%s timestamp:") INT64_FMT,
+            _T("Raw metric: OwnerName:%s SystemTag:%s DataSource:%i Type:%i Name:%s Description: %s Instance:%s DataType:%i DeltaType:%i Value:%s timestamp:") INT64_FMT,
             dci->getOwner()->getName(), dci->getSystemTag(), dci->getDataSource(), dci->getType(), dci->getName(),
-            dci->getDescription(), dci->getInstance(), dci->getDataType(), value, static_cast<INT64>(timestamp));
+            dci->getDescription(), dci->getInstance(), dci->getDataType(), dci->getDeltaCalculationMethod(), value, static_cast<INT64>(timestamp));
 
    // Dont't try to send empty values
    if (*value == 0)
@@ -329,6 +329,26 @@ bool InfluxDBStorageDriver::saveDCItemValue(DCItem *dci, time_t timestamp, const
          break;
       default:
          dc = "unknown";
+         break;
+   }
+
+   const char *dct = ""; // Data Calculation types
+   switch (dci->getDeltaCalculationMethod())
+   {
+      case DCM_ORIGINAL_VALUE:
+         dct = "original";
+         break;
+      case DCM_SIMPLE:
+         dct = "simple";
+         break;
+      case DCM_AVERAGE_PER_SECOND:
+         dct = "avg_sec";
+         break;
+      case DCM_AVERAGE_PER_MINUTE:
+         dct = "avg_min";
+         break;
+      default:
+         dct = "unknown";
          break;
    }
 
@@ -423,6 +443,7 @@ bool InfluxDBStorageDriver::saveDCItemValue(DCItem *dci, time_t timestamp, const
    }
 
    // Get Host CA's
+   bool ignoreMetric = false;
    std::string m_tags = "";
    StringMap *ca = dci->getOwner()->getCustomAttributes();
    if (ca != NULL)
@@ -435,6 +456,11 @@ bool InfluxDBStorageDriver::saveDCItemValue(DCItem *dci, time_t timestamp, const
          std::string ca_key_name = getString(ca_key->get(i));
          std::string ca_value = getString(ca->get(ca_key->get(i)));
          ca_value = normalizeString(ca_value);
+
+         if (!ca_value.empty() && !strnicmp("ignore_influxdb", ca_key_name.c_str(), 15))
+         {
+            ignoreMetric = true;
+         }
 
          // Only include CA's with the prefix tag_
          if (!ca_value.empty() && !strnicmp("tag_", ca_key_name.c_str(), 4))
@@ -462,6 +488,12 @@ bool InfluxDBStorageDriver::saveDCItemValue(DCItem *dci, time_t timestamp, const
    }
    delete ca;
 
+   if (ignoreMetric)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 7, _T("Metric not sent: has ignore flag"));
+      return true;
+   }
+
    // Formatted timestamp
    char ts[32];
    snprintf(ts, 32, INT64_FMTA "000000000", static_cast<INT64>(timestamp));
@@ -482,12 +514,12 @@ bool InfluxDBStorageDriver::saveDCItemValue(DCItem *dci, time_t timestamp, const
    if (m_tags.empty())
    {
       data = name + ",host=" + host + ",instance=" + instance + ",datasource=" + ds + ",dataclass=" + dc + ",datatype="
-               + dt + " value=" + fvalue + " " + ts;
+               + dt + ",deltatype=" + dct + " value=" + fvalue + " " + ts;
    }
    else
    {
       data = name + ",host=" + host + ",instance=" + instance + ",datasource=" + ds + ",dataclass=" + dc + ",datatype="
-               + dt + "," + m_tags + " value=" + fvalue + " " + ts;
+               + dt + ",deltatype=" + dct + "," + m_tags + " value=" + fvalue + " " + ts;
    }
 
    nxlog_debug_tag(DEBUG_TAG, 7, _T("Processing metric: %hs"), data.c_str());
