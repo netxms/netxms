@@ -517,6 +517,7 @@ public:
    const TCHAR *getSerialNumber() const { return CHECK_NULL_EX(m_serialNumber); };
    const TCHAR *getDescription() const { return CHECK_NULL_EX(m_description); };
 
+   void setIndex(int index) { m_index = index; }
    void setChangeCode(ChangeCode code) { m_changeCode = code; }
 };
 

@@ -2666,9 +2666,33 @@ static int ReadHardwareInformation(Node *node, ObjectArray<HardwareComponent> *c
    if (node->getTableFromAgent(tableName, &table) != DCE_SUCCESS)
       return 0;
 
+   bool resequence = false;
+   int base = components->size();
    for(int i = 0; i < table->getNumRows(); i++)
-      components->add(new HardwareComponent(category, table, i));
+   {
+      HardwareComponent *c = new HardwareComponent(category, table, i);
+      if (!resequence)
+      {
+         // Check for duplicate indexes - older agent versions that use BIOS handles may return duplicate handles
+         for(int j = base; j < components->size(); j++)
+         {
+            if (components->get(j)->getIndex() == c->getIndex())
+            {
+               resequence = true;
+               break;
+            }
+         }
+      }
+      components->add(c);
+   }
    delete table;
+
+   if (resequence)
+   {
+      for(int i = base, index = 0; i < components->size(); i++, index++)
+         components->get(i)->setIndex(index);
+   }
+
    return 1;
 }
 
