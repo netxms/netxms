@@ -23,6 +23,43 @@
 #include "nxdbmgr.h"
 #include <nxevent.h>
 
+/**
+ * Upgrade from 30.80 to 30.81
+ */
+static bool H_UpgradeFromV80()
+{
+   UINT32 discoveryEnabled;
+   UINT32 activeDiscoveryEnabled;
+   DB_RESULT hResult = DBSelect(g_dbHandle, _T("SELECT var_value from config WHERE var_name='RunNetworkDiscovery'"));
+   if (hResult != NULL)
+   {
+      if(DBGetNumRows(hResult) > 0)
+         discoveryEnabled = DBGetFieldLong(hResult, 0, 0);
+   }
+   hResult = DBSelect(g_dbHandle, _T("SELECT var_value from config WHERE var_name='ActiveNetworkDiscovery'"));
+   if (hResult != NULL)
+   {
+      if(DBGetNumRows(hResult) > 0)
+         activeDiscoveryEnabled = DBGetFieldLong(hResult, 0, 0);
+   }
+
+   static TCHAR batch[] =
+      _T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('NetworkDiscovery.Type','0','Disabled')\n")
+      _T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('NetworkDiscovery.Type','1','Passive only')\n")
+      _T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('NetworkDiscovery.Type','2','Active only')\n")
+      _T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('NetworkDiscovery.Type','3','Passive and active')\n")
+      _T("DELETE FROM config WHERE var_name='RunNetworkDiscovery'\n")
+      _T("DELETE FROM config WHERE var_name='ActiveNetworkDiscovery'\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+
+   String discoveryType;
+   discoveryType.append((discoveryEnabled > 0) ? ((activeDiscoveryEnabled > 0) ? 3 : 1) : 0);
+
+   CHK_EXEC(CreateConfigParam(_T("NetworkDiscovery.Type"), discoveryType, _T("Type of the network discovery."), NULL, 'C', true, true, false, true));
+   CHK_EXEC(SetMinorSchemaVersion(81));
+   return true;
+}
 
 /**
  * Upgrade from 30.79 to 30.80
@@ -2596,6 +2633,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 80, 30, 81, H_UpgradeFromV80 },
    { 79, 30, 80, H_UpgradeFromV79 },
    { 78, 30, 79, H_UpgradeFromV78 },
    { 77, 30, 78, H_UpgradeFromV77 },

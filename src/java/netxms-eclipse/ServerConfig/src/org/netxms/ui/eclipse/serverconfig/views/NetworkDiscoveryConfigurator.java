@@ -85,6 +85,7 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
    private Button radioDiscoveryOff;
    private Button radioDiscoveryPassive;
    private Button radioDiscoveryActive;
+   private Button radioDiscoveryActiveAndPasive;
    private Button checkUseSnmpTraps;
    private Button checkUseSyslog;
    private Button radioFilterOff;
@@ -225,12 +226,19 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
             setModified();
             if (radioDiscoveryOff.getSelection())
             {
-               config.setEnabled(false);
+               config.setDiscoveryType(DiscoveryConfig.DISCOVERY_TYPE_NONE);
             }
-            else
+            else if (radioDiscoveryPassive.getSelection())
             {
-               config.setEnabled(true);
-               config.setActive(radioDiscoveryActive.getSelection());
+               config.setDiscoveryType(DiscoveryConfig.DISCOVERY_TYPE_PASIVE);
+            }
+            else if (radioDiscoveryActive.getSelection())
+            {
+               config.setDiscoveryType(DiscoveryConfig.DISCOVERY_TYPE_ACTIVE);
+            }
+            else if (radioDiscoveryActiveAndPasive.getSelection())
+            {
+               config.setDiscoveryType(DiscoveryConfig.DISCOVERY_TYPE_ACTIVE_PASIVE);
             }
          }
 
@@ -246,9 +254,11 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
       radioDiscoveryPassive = toolkit.createButton(clientArea, Messages.get().NetworkDiscoveryConfigurator_PassiveDiscovery,
             SWT.RADIO);
       radioDiscoveryPassive.addSelectionListener(listener);
-      radioDiscoveryActive = toolkit.createButton(clientArea, Messages.get().NetworkDiscoveryConfigurator_ActiveDiscovery,
-            SWT.RADIO);
+      radioDiscoveryActive = toolkit.createButton(clientArea, "Active only", SWT.RADIO);
       radioDiscoveryActive.addSelectionListener(listener);
+      radioDiscoveryActiveAndPasive = toolkit.createButton(clientArea, Messages.get().NetworkDiscoveryConfigurator_ActiveDiscovery,
+            SWT.RADIO);
+      radioDiscoveryActiveAndPasive.addSelectionListener(listener);
 
       checkUseSnmpTraps = toolkit.createButton(clientArea, Messages.get().NetworkDiscoveryConfigurator_UseSNMPTrapsForDiscovery, SWT.CHECK);
       checkUseSnmpTraps.addSelectionListener(new SelectionAdapter() {
@@ -580,9 +590,10 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
    {
       this.config = config;
 
-      radioDiscoveryOff.setSelection(!config.isEnabled());
-      radioDiscoveryPassive.setSelection(config.isEnabled() && !config.isActive());
-      radioDiscoveryActive.setSelection(config.isEnabled() && config.isActive());
+      radioDiscoveryOff.setSelection(config.getDiscoveryType() == DiscoveryConfig.DISCOVERY_TYPE_NONE);
+      radioDiscoveryPassive.setSelection(config.getDiscoveryType() == DiscoveryConfig.DISCOVERY_TYPE_PASIVE);
+      radioDiscoveryActive.setSelection(config.getDiscoveryType() == DiscoveryConfig.DISCOVERY_TYPE_ACTIVE);
+      radioDiscoveryActiveAndPasive.setSelection(config.getDiscoveryType() == DiscoveryConfig.DISCOVERY_TYPE_ACTIVE_PASIVE);
       checkUseSnmpTraps.setSelection(config.isUseSnmpTraps());
       checkUseSyslog.setSelection(config.isUseSyslog());
 

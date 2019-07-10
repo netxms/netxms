@@ -5,7 +5,6 @@
 */
 
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('ActiveDiscoveryInterval','7200','7200',1,1,'I','Interval in seconds between active network discovery polls.','seconds');
-INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('ActiveNetworkDiscovery','0','0',1,1,'B','Enable/disable active network discovery. This setting is change by Network Discovery GUI','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('AgentCommandTimeout','4000','4000',1,1,'I','Timeout in milliseconds for commands sent to agent. If agent did not respond to command within given number of seconds, command considered as failed.','milliseconds');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('AgentDefaultSharedSecret','netxms','netxms',1,0,'S','String that will be used as a shared secret in case if agent will required authentication.','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('AgentTunnels.ListenPort','4703','4703',1,1,'I','TCP port number to listen on for incoming agent tunnel connections.','');
@@ -146,6 +145,7 @@ INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_rest
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('MinViewRefreshInterval','1000','1000',1,0,'I','','seconds');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('NetworkDiscovery.EnableParallelProcessing','0','0',1,0,'B','Enable/disable parallel processing of discovered addresses.','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('NetworkDiscovery.MergeDuplicateNodes','0','0',1,0,'B','Enable/disable merge of duplicate nodes. When enabled, configuration of duplicate node(s) will be merged into original node and duplicate(s) will be deleted.','');
+INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('NetworkDiscovery.Type','0','0',1,1,'C','Type of the network discovery.','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('MobileDeviceListenerPort','4747','4747',1,1,'I','','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('NumberOfUpgradeThreads','10','10',1,0,'I','The number of threads used to perform agent upgrades (i.e. maximum number of parallel upgrades).','threads');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('NXSL.EnableContainerFunctions','1','1',1,1,'B','Enable/disable server-side NXSL functions for container management (such as CreateContainer, RemoveContainer, BindObject, UnbindObject).','');
@@ -170,7 +170,6 @@ INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_rest
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('ResolveDNSToIPOnStatusPoll','0','0',1,1,'B','Resolve DNS to IP on status poll.','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('ResolveNodeNames','1','1',1,0,'B','Resolve node name using DNS, SNMP system name, or host name if current node name is it''s IP address.','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('RoutingTableUpdateInterval','300','300',1,1,'I','Interval in seconds between reading routing table from node.','seconds');
-INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('RunNetworkDiscovery','0','0',1,1,'B','Enable/disable automatic network discovery process. *This setting is change by Network Discovery GUI*.','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('ServerColor','','',1,0,'H','Identification color for this server','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('ServerCommandOutputTimeout','60','60',1,0,'I','','seconds');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('ServerName','','',1,0,'S','Name of this server','');
@@ -277,6 +276,10 @@ INSERT INTO config_values (var_name,var_value,var_description) VALUES ('SyslogNo
 INSERT INTO config_values (var_name,var_value,var_description) VALUES ('SyslogNodeMatchingPolicy','1','Hostname, then IP');
 INSERT INTO config_values (var_name,var_value,var_description) VALUES ('LdapUserDeleteAction','0','Delete user');
 INSERT INTO config_values (var_name,var_value,var_description) VALUES ('LdapUserDeleteAction','1','Disable user');
+INSERT INTO config_values (var_name,var_value,var_description) VALUES ('NetworkDiscovery.Type','0','Disabled');
+INSERT INTO config_values (var_name,var_value,var_description) VALUES ('NetworkDiscovery.Type','1','Passive only');
+INSERT INTO config_values (var_name,var_value,var_description) VALUES ('NetworkDiscovery.Type','2','Active only');
+INSERT INTO config_values (var_name,var_value,var_description) VALUES ('NetworkDiscovery.Type','3','Passive and active');
 
 /*
 ** System user
