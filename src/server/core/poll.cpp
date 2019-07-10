@@ -764,15 +764,26 @@ void ResetDiscoveryPoller()
 
    // Reload discovery parameters
    g_dwDiscoveryPollingInterval = ConfigReadInt(_T("DiscoveryPollingInterval"), 900);
-   if (ConfigReadBoolean(_T("RunNetworkDiscovery"), false))
-      g_flags |= AF_ENABLE_NETWORK_DISCOVERY;
-   else
-      g_flags &= ~AF_ENABLE_NETWORK_DISCOVERY;
 
-   if (ConfigReadBoolean(_T("ActiveNetworkDiscovery"), false))
-      g_flags |= AF_ACTIVE_NETWORK_DISCOVERY;
-   else
-      g_flags &= ~AF_ACTIVE_NETWORK_DISCOVERY;
+   switch(ConfigReadInt(_T("NetworkDiscovery.Type"), 0))
+   {
+      case 0:  // Disabled
+         g_flags &= ~(AF_PASSIVE_NETWORK_DISCOVERY | AF_ACTIVE_NETWORK_DISCOVERY);
+         break;
+      case 1:  // Passive only
+         g_flags |= AF_PASSIVE_NETWORK_DISCOVERY;
+         g_flags &= ~AF_ACTIVE_NETWORK_DISCOVERY;
+         break;
+      case 2:  // Active only
+         g_flags &= ~AF_PASSIVE_NETWORK_DISCOVERY;
+         g_flags |= AF_ACTIVE_NETWORK_DISCOVERY;
+         break;
+      case 3:  // Active and passive
+         g_flags |= AF_PASSIVE_NETWORK_DISCOVERY | AF_ACTIVE_NETWORK_DISCOVERY;
+         break;
+      default:
+         break;
+   }
 
    if (ConfigReadBoolean(_T("UseSNMPTrapsForDiscovery"), false))
       g_flags |= AF_SNMP_TRAP_DISCOVERY;

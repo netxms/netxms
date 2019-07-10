@@ -2586,7 +2586,7 @@ inline bool Node::lockForDiscoveryPoll()
    bool success = false;
    lockProperties();
    if (!m_isDeleted && !m_isDeleteInitiated &&
-       (g_flags & AF_ENABLE_NETWORK_DISCOVERY) &&
+       (g_flags & AF_PASSIVE_NETWORK_DISCOVERY) &&
        (m_status != STATUS_UNMANAGED) &&
 		 (!(m_flags & NF_DISABLE_DISCOVERY_POLL)) &&
        (!(m_runtimeFlags & NDF_QUEUED_FOR_DISCOVERY_POLL)) &&

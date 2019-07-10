@@ -753,7 +753,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
          ConsolePrintf(pCtx, _T("Flags: 0x") UINT64X_FMT(_T("016")) _T("\n"), g_flags);
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DAEMON));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_USE_SYSLOG));
-         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_ENABLE_NETWORK_DISCOVERY));
+         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_PASSIVE_NETWORK_DISCOVERY));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_ACTIVE_NETWORK_DISCOVERY));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_LOG_SQL_ERRORS));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DELETE_EMPTY_SUBNETS));

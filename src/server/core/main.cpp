@@ -338,11 +338,7 @@ static void LoadGlobalConfig()
 		g_flags |= AF_ENABLE_ZONING;
 	if (ConfigReadBoolean(_T("EnableObjectTransactions"), false))
 		g_flags |= AF_ENABLE_OBJECT_TRANSACTIONS;
-	if (ConfigReadBoolean(_T("RunNetworkDiscovery"), false))
-		g_flags |= AF_ENABLE_NETWORK_DISCOVERY;
-	if (ConfigReadBoolean(_T("ActiveNetworkDiscovery"), false))
-		g_flags |= AF_ACTIVE_NETWORK_DISCOVERY;
-   if (ConfigReadBoolean(_T("UseSNMPTrapsForDiscovery"), false))
+	if (ConfigReadBoolean(_T("UseSNMPTrapsForDiscovery"), false))
       g_flags |= AF_SNMP_TRAP_DISCOVERY;
    if (ConfigReadBoolean(_T("UseSyslogForDiscovery"), false))
       g_flags |= AF_SYSLOG_DISCOVERY;
@@ -376,6 +372,21 @@ static void LoadGlobalConfig()
       g_flags |= AF_CASE_INSENSITIVE_LOGINS;
    if (ConfigReadBoolean(_T("TrapSourcesInAllZones"), false))
       g_flags |= AF_TRAP_SOURCES_IN_ALL_ZONES;
+
+   switch(ConfigReadInt(_T("NetworkDiscovery.Type"), 0))
+   {
+      case 1:  // Passive only
+         g_flags |= AF_PASSIVE_NETWORK_DISCOVERY;
+         break;
+      case 2:  // Active only
+         g_flags |= AF_ACTIVE_NETWORK_DISCOVERY;
+         break;
+      case 3:  // Active and passive
+         g_flags |= AF_PASSIVE_NETWORK_DISCOVERY | AF_ACTIVE_NETWORK_DISCOVERY;
+         break;
+      default:
+         break;
+   }
 
    if (g_netxmsdDataDir[0] == 0)
    {

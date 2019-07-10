@@ -28,19 +28,21 @@
  */
 static bool H_UpgradeFromV80()
 {
-   UINT32 discoveryEnabled;
-   UINT32 activeDiscoveryEnabled;
+   UINT32 discoveryEnabled = 0;
+   UINT32 activeDiscoveryEnabled = 0;
    DB_RESULT hResult = DBSelect(g_dbHandle, _T("SELECT var_value from config WHERE var_name='RunNetworkDiscovery'"));
    if (hResult != NULL)
    {
-      if(DBGetNumRows(hResult) > 0)
+      if (DBGetNumRows(hResult) > 0)
          discoveryEnabled = DBGetFieldLong(hResult, 0, 0);
+      DBFreeResult(hResult);
    }
    hResult = DBSelect(g_dbHandle, _T("SELECT var_value from config WHERE var_name='ActiveNetworkDiscovery'"));
    if (hResult != NULL)
    {
-      if(DBGetNumRows(hResult) > 0)
+      if (DBGetNumRows(hResult) > 0)
          activeDiscoveryEnabled = DBGetFieldLong(hResult, 0, 0);
+      DBFreeResult(hResult);
    }
 
    static TCHAR batch[] =
@@ -53,10 +55,12 @@ static bool H_UpgradeFromV80()
       _T("<END>");
    CHK_EXEC(SQLBatch(batch));
 
-   String discoveryType;
-   discoveryType.append((discoveryEnabled > 0) ? ((activeDiscoveryEnabled > 0) ? 3 : 1) : 0);
+   const TCHAR *discoveryType =
+            (discoveryEnabled ? (activeDiscoveryEnabled ? _T("3") : _T("1")) : _T("0"));
 
    CHK_EXEC(CreateConfigParam(_T("NetworkDiscovery.Type"), discoveryType, _T("Type of the network discovery."), NULL, 'C', true, true, false, true));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET default_value='0' WHERE var_name='NetworkDiscovery.Type'")));
+
    CHK_EXEC(SetMinorSchemaVersion(81));
    return true;
 }
