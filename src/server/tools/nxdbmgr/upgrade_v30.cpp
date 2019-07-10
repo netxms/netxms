@@ -23,6 +23,24 @@
 #include "nxdbmgr.h"
 #include <nxevent.h>
 
+
+/**
+ * Upgrade from 30.79 to 30.80
+ */
+static bool H_UpgradeFromV79()
+{
+   static const TCHAR *batch =
+            _T("ALTER TABLE usm_credentials ADD comment varchar(255) null\n")
+            _T("ALTER TABLE address_lists ADD comment varchar(255) null\n")
+            _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+
+   CHK_EXEC(DBRenameTable(g_dbHandle, _T("user_agent_notification"), _T("user_agent_notifications")));
+
+   CHK_EXEC(SetMinorSchemaVersion(80));
+   return true;
+}
+
 /**
  * Upgrade from 30.78 to 30.79
  */
@@ -2578,6 +2596,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 79, 30, 80, H_UpgradeFromV79 },
    { 78, 30, 79, H_UpgradeFromV78 },
    { 77, 30, 78, H_UpgradeFromV77 },
    { 76, 30, 77, H_UpgradeFromV76 },

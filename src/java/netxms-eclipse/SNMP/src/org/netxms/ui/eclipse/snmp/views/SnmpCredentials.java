@@ -25,6 +25,8 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.dialogs.InputDialog;
 import org.eclipse.jface.viewers.ArrayContentProvider;
+import org.eclipse.jface.viewers.DoubleClickEvent;
+import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.window.Window;
@@ -61,6 +63,7 @@ import org.netxms.ui.eclipse.snmp.views.helpers.SnmpUsmComparator;
 import org.netxms.ui.eclipse.snmp.views.helpers.SnmpUsmLabelProvider;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.StringComparator;
+import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
  * Configurator for network discovery
@@ -69,12 +72,19 @@ public class SnmpCredentials extends ViewPart implements ISaveablePart
 {
 	public static final String ID = "org.netxms.ui.eclipse.snmp.views.SnmpCredentials"; //$NON-NLS-1$
 
+	public static final int USM_CRED_USER_NAME = 0;
+   public static final int USM_CRED_AUTHENTICATION = 1;
+   public static final int USM_CRED_ENCRYPTION = 2;
+   public static final int USM_CRED_AUTH_PASSWORD = 3;
+   public static final int USM_CRED_ENC_PASSWORD = 4;
+   public static final int USM_CRED_COMMENT = 5;
+	
 	private NXCSession session;
 	private boolean modified = false;
 	private FormToolkit toolkit;
 	private ScrolledForm form;
 	private TableViewer snmpCommunityList;
-	private TableViewer snmpUsmCredList;
+	private SortableTableViewer snmpUsmCredList;
 	private TableViewer snmpPortList;
 	private Action actionSave;
 	private SnmpConfig config;
@@ -130,8 +140,8 @@ public class SnmpCredentials extends ViewPart implements ISaveablePart
 		}
       
 		createSnmpCommunitySection();
-		createSnmpUsmCredSection();
 		createSnmpPortList();
+      createSnmpUsmCredSection();
 		
 		createActions();
 		contributeToActionBars();
@@ -287,6 +297,7 @@ public class SnmpCredentials extends ViewPart implements ISaveablePart
 		TableWrapData td = new TableWrapData();
 		td.align = TableWrapData.FILL;
 		td.grabHorizontal = true;
+		td.colspan = 2;
 		section.setLayoutData(td);
 		
 		Composite clientArea = toolkit.createComposite(section);
@@ -295,19 +306,29 @@ public class SnmpCredentials extends ViewPart implements ISaveablePart
 		clientArea.setLayout(layout);
 		section.setClient(clientArea);
 		
-		snmpUsmCredList = new TableViewer(clientArea, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
+		final String[] names = { "User name", "Auth type", "Priv type", "Auth secret", "Priv secret", "Comment" };
+		final int[] widths = { 100, 100, 100, 100, 100, 100 };
+		snmpUsmCredList = new SortableTableViewer(clientArea, names, widths, 0, SWT.DOWN, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
 		toolkit.adapt(snmpUsmCredList.getTable());
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		gd.verticalAlignment = SWT.FILL;
 		gd.grabExcessVerticalSpace = true;
-		gd.verticalSpan = 2;
+		gd.verticalSpan = 3;
 		gd.heightHint = 150;
 		snmpUsmCredList.getTable().setLayoutData(gd);
 		snmpUsmCredList.setContentProvider(new ArrayContentProvider());
 		snmpUsmCredList.setLabelProvider(new SnmpUsmLabelProvider());
 		snmpUsmCredList.setComparator(new SnmpUsmComparator());
+		snmpUsmCredList.addDoubleClickListener(new IDoubleClickListener() {
+         
+         @Override
+         public void doubleClick(DoubleClickEvent event)
+         {
+            editUsmCredzantial();
+         }
+      });
 
 		final ImageHyperlink linkAdd = toolkit.createImageHyperlink(clientArea, SWT.NONE);
 		linkAdd.setText(Messages.get().SnmpConfigurator_Add);
@@ -322,6 +343,20 @@ public class SnmpCredentials extends ViewPart implements ISaveablePart
 				addUsmCredentials();
 			}
 		});
+
+      final ImageHyperlink linkEdit = toolkit.createImageHyperlink(clientArea, SWT.NONE);
+      linkEdit.setText("Edit...");
+      linkEdit.setImage(SharedIcons.IMG_EDIT);
+      gd = new GridData();
+      gd.verticalAlignment = SWT.TOP;
+      linkEdit.setLayoutData(gd);
+      linkEdit.addHyperlinkListener(new HyperlinkAdapter() {
+         @Override
+         public void linkActivated(HyperlinkEvent e)
+         {
+            editUsmCredzantial();
+         }
+      });
 		
 		final ImageHyperlink linkRemove = toolkit.createImageHyperlink(clientArea, SWT.NONE);
 		linkRemove.setText(Messages.get().SnmpConfigurator_Remove);
@@ -553,7 +588,7 @@ public class SnmpCredentials extends ViewPart implements ISaveablePart
 	 */
 	private void addUsmCredentials()
 	{
-		AddUsmCredDialog dlg = new AddUsmCredDialog(getSite().getShell());
+		AddUsmCredDialog dlg = new AddUsmCredDialog(getSite().getShell(), null);
 		if (dlg.open() == Window.OK)
 		{
 			SnmpUsmCredential cred = dlg.getValue();
@@ -563,6 +598,24 @@ public class SnmpCredentials extends ViewPart implements ISaveablePart
          setModified();
 		}
 	}
+   
+   /**
+    * Edit SNMP USM credential
+    */
+   private void editUsmCredzantial()
+   {
+      IStructuredSelection selection = (IStructuredSelection)snmpUsmCredList.getSelection();
+      if (selection.size() != 1)
+         return;
+      SnmpUsmCredential cred = (SnmpUsmCredential)selection.getFirstElement();
+      AddUsmCredDialog dlg = new AddUsmCredDialog(getSite().getShell(), cred);
+      if (dlg.open() == Window.OK)
+      {
+         final List<SnmpUsmCredential> list = config.getUsmCredentials(zoneUIN);
+         snmpUsmCredList.setInput(list.toArray());
+         setModified();
+      }
+   }
 	
 	/**
 	 * Remove selected SNMP USM credentials

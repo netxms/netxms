@@ -18,30 +18,49 @@
  */
 package org.netxms.ui.eclipse.serverconfig.views.helpers;
 
+import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
+import org.eclipse.swt.graphics.Image;
 import org.netxms.client.InetAddressListElement;
 import org.netxms.client.NXCSession;
+import org.netxms.ui.eclipse.serverconfig.views.NetworkDiscoveryConfigurator;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
  * Label provider for address lists
  */
-public class AddressListLabelProvider extends LabelProvider
+public class AddressListLabelProvider extends LabelProvider  implements ITableLabelProvider
 {
    private NXCSession session = ConsoleSharedData.getSession();
+   private boolean isDiscoveryTarget;
    
-   /* (non-Javadoc)
-    * @see org.eclipse.jface.viewers.LabelProvider#getText(java.lang.Object)
-    */
-   @Override
-   public String getText(Object element)
+   public AddressListLabelProvider(boolean isDiscoveryTarget)
    {
-      InetAddressListElement e = (InetAddressListElement)element;
-      String base = (e.getType() == InetAddressListElement.SUBNET) ? e.getBaseAddress().getHostAddress() + "/" + e.getMaskBits() : e.getBaseAddress().getHostAddress() + " - " + e.getEndAddress().getHostAddress();
-      if (e.getProxyId() != 0)
-         return base + " via " + session.getObjectName(e.getProxyId());
-      if (e.getZoneUIN() != 0)
-         return base + " in zone " + session.getZoneName(e.getZoneUIN());
-      return base;
+      this.isDiscoveryTarget = isDiscoveryTarget; 
+   }
+
+   @Override
+   public Image getColumnImage(Object element, int columnIndex)
+   {
+      return null;
+   }
+
+   @Override
+   public String getColumnText(Object element, int columnIndex)
+   {      
+      InetAddressListElement e = (InetAddressListElement)element;    
+      switch(columnIndex)
+      {
+         case NetworkDiscoveryConfigurator.RANGE:
+            return (e.getType() == InetAddressListElement.SUBNET) ? e.getBaseAddress().getHostAddress() + "/" + e.getMaskBits() : e.getBaseAddress().getHostAddress() + " - " + e.getEndAddress().getHostAddress();
+         case NetworkDiscoveryConfigurator.PROXY:
+            if(isDiscoveryTarget)
+               return (e.getProxyId() != 0) ? session.getObjectName(e.getProxyId()) : session.getZoneName(e.getZoneUIN());
+            else
+               return e.getComment();
+         case NetworkDiscoveryConfigurator.COMMENT:
+            return e.getComment();
+      }
+      return null;
    }
 }

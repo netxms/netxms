@@ -32,6 +32,7 @@ public class SnmpUsmCredential
 	private String authPassword;
 	private String privPassword;
 	private int zoneId;
+	private String comment;
 	
 	/**
 	 * Create credentials object from data in NXCP message
@@ -47,6 +48,7 @@ public class SnmpUsmCredential
 		authPassword = msg.getFieldAsString(baseId + 3);
 		privPassword = msg.getFieldAsString(baseId + 4);
 		zoneId = msg.getFieldAsInt32(baseId + 5);
+      comment = msg.getFieldAsString(baseId + 6);
 	}
 	
 	/**
@@ -60,6 +62,7 @@ public class SnmpUsmCredential
 		authPassword = "";
 		privPassword = "";
 		zoneId = 0;
+		comment = "";
 	}
 	
 	/**
@@ -76,6 +79,7 @@ public class SnmpUsmCredential
 		msg.setField(baseId + 3, authPassword);
 		msg.setField(baseId + 4, privPassword);
       msg.setFieldInt32(baseId + 5, zoneId);
+      msg.setField(baseId + 6, comment);
 	}
 
 	/**
@@ -232,4 +236,20 @@ public class SnmpUsmCredential
 	{
 	   this.zoneId = zoneId;
 	}
+
+   /**
+    * @return the comment
+    */
+   public String getComment()
+   {
+      return comment;
+   }
+
+   /**
+    * @param comment the comment to set
+    */
+   public void setComment(String comment)
+   {
+      this.comment = comment;
+   }
 }

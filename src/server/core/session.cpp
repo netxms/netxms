@@ -11502,12 +11502,12 @@ void ClientSession::sendUsmCredentials(UINT32 dwRqId)
 	if (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG)
 	{
 	   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-		hResult = DBSelect(hdb, _T("SELECT user_name,auth_method,priv_method,auth_password,priv_password,zone FROM usm_credentials ORDER BY zone"));
+		hResult = DBSelect(hdb, _T("SELECT user_name,auth_method,priv_method,auth_password,priv_password,zone,comment FROM usm_credentials ORDER BY zone"));
 		if (hResult != NULL)
 		{
 			count = DBGetNumRows(hResult);
 			msg.setField(VID_NUM_RECORDS, (UINT32)count);
-			for(i = 0, id = VID_USM_CRED_LIST_BASE; i < count; i++, id += 4)
+			for(i = 0, id = VID_USM_CRED_LIST_BASE; i < count; i++, id += 3)
 			{
 				DBGetField(hResult, i, 0, buffer, MAX_DB_STRING);	// security name
 				msg.setField(id++, buffer);
@@ -11522,6 +11522,9 @@ void ClientSession::sendUsmCredentials(UINT32 dwRqId)
 				msg.setField(id++, buffer);
 
 				msg.setField(id++, DBGetFieldULong(hResult, i, 5)); // zone ID
+
+				TCHAR comment[256];
+				msg.setField(id++, DBGetField(hResult, i, 6, comment, 256)); //comment
 			}
 			DBFreeResult(hResult);
 			msg.setField(VID_RCC, RCC_SUCCESS);
@@ -11559,12 +11562,12 @@ void ClientSession::updateUsmCredentials(NXCPMessage *request)
 
 			if (DBQuery(hdb, _T("DELETE FROM usm_credentials")))
 			{
-			   DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO usm_credentials (id,user_name,auth_method,priv_method,auth_password,priv_password,zone) VALUES(?,?,?,?,?,?,?)"));
+			   DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO usm_credentials (id,user_name,auth_method,priv_method,auth_password,priv_password,zone,comment) VALUES(?,?,?,?,?,?,?,?)"));
 			   if (hStmt != NULL)
 			   {
 		         UINT32 id = VID_USM_CRED_LIST_BASE;
 		         int count = (int)request->getFieldAsUInt32(VID_NUM_RECORDS);
-               for(int i = 0; i < count; i++, id += 4)
+               for(int i = 0; i < count; i++, id += 3)
                {
                   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, i+1);
                   DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, request->getFieldAsString(id++), DB_BIND_DYNAMIC);
@@ -11573,6 +11576,7 @@ void ClientSession::updateUsmCredentials(NXCPMessage *request)
                   DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, request->getFieldAsString(id++), DB_BIND_DYNAMIC);
                   DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, request->getFieldAsString(id++), DB_BIND_DYNAMIC);
                   DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, (int)request->getFieldAsUInt32(id++));
+                  DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, request->getFieldAsString(id++), DB_BIND_DYNAMIC);
                   if (!DBExecute(hStmt))
                   {
                      rcc = RCC_DB_FAILURE;

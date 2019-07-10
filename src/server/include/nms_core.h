@@ -293,6 +293,7 @@ private:
    UINT32 m_proxyId;
    InetAddress m_baseAddress;
    InetAddress m_endAddress;
+   TCHAR m_comment[256];
 
 public:
    InetAddressListElement(NXCPMessage *msg, UINT32 baseId);
@@ -309,6 +310,7 @@ public:
    const InetAddress& getEndAddress() const { return m_endAddress; }
    UINT32 getZoneUIN() const { return m_zoneUIN; }
    UINT32 getProxyId() const { return m_proxyId; }
+   const TCHAR *getComment() const { return m_comment; }
 
    String toString() const;
 };

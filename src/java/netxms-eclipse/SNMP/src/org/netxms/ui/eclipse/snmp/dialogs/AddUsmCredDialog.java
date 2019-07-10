@@ -39,16 +39,19 @@ public class AddUsmCredDialog extends Dialog
 	private LabeledText name;
 	private LabeledText authPasswd;
 	private LabeledText privPasswd;
+   private LabeledText comment;
 	private Combo authMethod;
 	private Combo privMethod;
-	private SnmpUsmCredential value;
+	private SnmpUsmCredential cred;
 			
 	/**
 	 * @param parentShell
+	 * @param cred 
 	 */
-	public AddUsmCredDialog(Shell parentShell)
+	public AddUsmCredDialog(Shell parentShell, SnmpUsmCredential cred)
 	{
 		super(parentShell);
+		this.cred = cred;
 	}
 
 	/* (non-Javadoc)
@@ -111,6 +114,25 @@ public class AddUsmCredDialog extends Dialog
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		privPasswd.setLayoutData(gd);
+      
+      comment = new LabeledText(dialogArea, SWT.NONE);
+      comment.setLabel("Comment");
+      comment.getTextControl().setTextLimit(255);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalSpan = 2;
+      comment.setLayoutData(gd);
+		
+		if(cred != null)
+		{
+		   name.setText(cred.getName());
+		   authMethod.select(cred.getAuthMethod());
+		   privMethod.select(cred.getPrivMethod());
+		   authPasswd.setText(cred.getAuthPassword());
+		   privPasswd.setText(cred.getPrivPassword());
+		   comment.setText(cred.getComment());
+		}
 		
 		return dialogArea;
 	}
@@ -121,12 +143,14 @@ public class AddUsmCredDialog extends Dialog
 	@Override
 	protected void okPressed()
 	{
-		value = new SnmpUsmCredential();
-		value.setName(name.getText().trim());
-		value.setAuthMethod(authMethod.getSelectionIndex());
-		value.setPrivMethod(privMethod.getSelectionIndex());
-		value.setAuthPassword(authPasswd.getText());
-		value.setPrivPassword(privPasswd.getText());
+	   if(cred == null)
+	      cred = new SnmpUsmCredential();
+	   cred.setName(name.getText().trim());
+	   cred.setAuthMethod(authMethod.getSelectionIndex());
+	   cred.setPrivMethod(privMethod.getSelectionIndex());
+	   cred.setAuthPassword(authPasswd.getText());
+		cred.setPrivPassword(privPasswd.getText());
+		cred.setComment(comment.getText());
 		super.okPressed();
 	}
 
@@ -135,6 +159,6 @@ public class AddUsmCredDialog extends Dialog
 	 */
 	public SnmpUsmCredential getValue()
 	{
-		return value;
+		return cred;
 	}
 }

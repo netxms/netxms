@@ -35,6 +35,7 @@ public class InetAddressListElement
 	private int maskBits;
 	private long zoneUIN;
 	private long proxyId;
+	private String comment;
 	
 	/**
 	 * Create new "range" element
@@ -43,8 +44,9 @@ public class InetAddressListElement
 	 * @param endAddress end address
 	 * @param zoneUIN zone UIN
 	 * @param proxyId proxy node ID
+	 * @param comment element comment
 	 */
-	public InetAddressListElement(InetAddress baseAddress, InetAddress endAddress, long zoneUIN, long proxyId)
+	public InetAddressListElement(InetAddress baseAddress, InetAddress endAddress, long zoneUIN, long proxyId, String comment)
 	{
 		this.type = RANGE;
 		this.baseAddress = baseAddress;
@@ -52,6 +54,7 @@ public class InetAddressListElement
 		this.maskBits = 0;
 		this.zoneUIN = zoneUIN;
 		this.proxyId = proxyId;
+		this.comment = comment;
 	}
 
    /**
@@ -61,8 +64,9 @@ public class InetAddressListElement
     * @param maskBits mask bits
     * @param zoneUIN zone UIN
     * @param proxyId proxy node ID
+    * @param comment element comment
     */
-   public InetAddressListElement(InetAddress baseAddress, int maskBits, long zoneUIN, long proxyId)
+   public InetAddressListElement(InetAddress baseAddress, int maskBits, long zoneUIN, long proxyId, String comment)
    {
       this.type = SUBNET;
       this.baseAddress = baseAddress;
@@ -70,6 +74,47 @@ public class InetAddressListElement
       this.maskBits = maskBits;
       this.zoneUIN = zoneUIN;
       this.proxyId = proxyId;
+      this.comment = comment;
+   }
+
+   /**
+    * Update object method
+    * 
+    * @param baseAddress base address
+    * @param endAddress end address
+    * @param zoneUIN zone UIN
+    * @param proxyId proxy node ID
+    * @param comment element comment
+    */
+   public void update(InetAddress baseAddress, InetAddress endAddress, long zoneUIN, long proxyId, String comment)
+   {
+      this.type = RANGE;
+      this.baseAddress = baseAddress;
+      this.endAddress = endAddress;
+      this.maskBits = 0;
+      this.zoneUIN = zoneUIN;
+      this.proxyId = proxyId;
+      this.comment = comment;
+   }
+   
+   /**
+    * Update object method
+    * 
+    * @param baseAddress base address
+    * @param maskBits mask bits
+    * @param zoneUIN zone UIN
+    * @param proxyId proxy node ID
+    * @param comment element comment
+    */
+   public void update(InetAddress baseAddress, int maskBits, long zoneUIN, long proxyId, String comment)
+   {
+      this.type = SUBNET;
+      this.baseAddress = baseAddress;
+      this.endAddress = null;
+      this.maskBits = maskBits;
+      this.zoneUIN = zoneUIN;
+      this.proxyId = proxyId;
+      this.comment = comment;      
    }
 
 	/**
@@ -94,6 +139,7 @@ public class InetAddressListElement
 		}
       zoneUIN = msg.getFieldAsInt64(baseId + 3);
       proxyId = msg.getFieldAsInt64(baseId + 4);
+      comment = msg.getFieldAsString(baseId + 5);
 	}
 
 	/**
@@ -112,6 +158,7 @@ public class InetAddressListElement
 	      msg.setField(baseId + 2, endAddress);
       msg.setFieldInt32(baseId + 3, (int)zoneUIN);
       msg.setFieldInt32(baseId + 4, (int)proxyId);
+      msg.setField(baseId + 5, comment);
    }
 
 	/**
@@ -160,6 +207,14 @@ public class InetAddressListElement
    public long getProxyId()
    {
       return proxyId;
+   }
+
+   /**
+    * @return the comment
+    */
+   public String getComment()
+   {
+      return comment;
    }
 
    /* (non-Javadoc)
@@ -225,5 +280,10 @@ public class InetAddressListElement
       if (zoneUIN != other.zoneUIN)
          return false;
       return true;
+   }
+   
+   public boolean isSubnet()
+   {
+      return type == SUBNET;
    }
 }

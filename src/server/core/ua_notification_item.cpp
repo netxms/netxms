@@ -33,7 +33,7 @@ void InitUserAgentNotifications()
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
-   DB_RESULT hResult = DBSelect(hdb, _T("SELECT id,message,objects,start_time,end_time,recall FROM user_agent_notification"));
+   DB_RESULT hResult = DBSelect(hdb, _T("SELECT id,message,objects,start_time,end_time,recall FROM user_agent_notifications"));
    if (hResult != NULL)
    {
       int count = DBGetNumRows(hResult);
@@ -65,7 +65,7 @@ void DeleteOldUserAgentNotifications(DB_HANDLE hdb, UINT32 retentionTime)
    g_userAgentNotificationListMutex.unlock();
 
    TCHAR query[256];
-   _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("DELETE FROM user_agent_notification WHERE end_time>=") INT64_FMT,
+   _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("DELETE FROM user_agent_notifications WHERE end_time>=") INT64_FMT,
          static_cast<INT64>(now - retentionTime));
    DBQuery(hdb, query);
 }
@@ -231,7 +231,7 @@ void UserAgentNotificationItem::saveToDatabase()
             _T("message"), _T("objects"), _T("start_time"), _T("end_time"), _T("recall"), NULL
          };
 
-   DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("user_agent_notification"), _T("id"), m_id, columns);
+   DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("user_agent_notifications"), _T("id"), m_id, columns);
    if (hStmt != NULL)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_message, MAX_USER_AGENT_MESSAGE_SIZE);
