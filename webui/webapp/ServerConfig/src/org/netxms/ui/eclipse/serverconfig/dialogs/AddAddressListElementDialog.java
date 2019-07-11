@@ -51,6 +51,7 @@ public class AddAddressListElementDialog extends Dialog
 	private Button radioRange;
 	private LabeledText textAddr1;
 	private LabeledText textAddr2;
+   private LabeledText comment;
 	private ZoneSelector zoneSelector;
 	private ObjectSelector proxySelector;
 	private InetAddressListElement element;
@@ -58,11 +59,13 @@ public class AddAddressListElementDialog extends Dialog
 	
 	/**
 	 * @param parentShell
+	 * @param inetAddressListElement 
 	 */
-	public AddAddressListElementDialog(Shell parentShell, boolean enableProxySelection)
+	public AddAddressListElementDialog(Shell parentShell, boolean enableProxySelection, InetAddressListElement inetAddressListElement)
 	{
 		super(parentShell);
 		this.enableProxySelection = enableProxySelection;
+		element = inetAddressListElement;
 	}
 
 	/* (non-Javadoc)
@@ -162,6 +165,31 @@ public class AddAddressListElementDialog extends Dialog
          proxySelector.setLayoutData(gd);
 		}
 		
+      comment = new LabeledText(dialogArea, SWT.NONE);
+      comment.setLabel("Comment");
+      comment.getTextControl().setTextLimit(255);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      comment.setLayoutData(gd);
+      
+      if (element != null)
+      {
+         radioSubnet.setSelection(element.isSubnet());
+         radioRange.setSelection(!element.isSubnet());
+         textAddr1.setText(element.getBaseAddress().getHostAddress());
+         textAddr2.setText(element.isSubnet() ? Integer.toString(element.getMaskBits()) : element.getEndAddress().getHostAddress());
+         if (enableProxySelection)
+         {
+            if (ConsoleSharedData.getSession().isZoningEnabled())
+            {
+               zoneSelector.setZoneUIN(element.getZoneUIN());
+            }
+            proxySelector.setObjectId(element.getProxyId());
+         }
+         comment.setText(element.getComment());
+      }
+		
 		return dialogArea;
 	}
 
@@ -185,11 +213,18 @@ public class AddAddressListElementDialog extends Dialog
 	             ((baseAddress instanceof Inet4Address) && (maskBits > 32)) ||
                 ((baseAddress instanceof Inet6Address) && (maskBits > 128)))
 	            throw new NumberFormatException("Invalid network mask");
-	         element = new InetAddressListElement(baseAddress, maskBits, zoneUIN, proxyId);
+	         if(element == null)
+	            element = new InetAddressListElement(baseAddress, maskBits, zoneUIN, proxyId, comment.getText());
+	         else
+	            element.update(baseAddress, maskBits, zoneUIN, proxyId, comment.getText());
 	      }
 	      else
 	      {
-            element = new InetAddressListElement(InetAddress.getByName(textAddr1.getText().trim()), InetAddress.getByName(textAddr2.getText().trim()), zoneUIN, proxyId);
+	         if(element == null)
+	            element = new InetAddressListElement(InetAddress.getByName(textAddr1.getText().trim()), InetAddress.getByName(textAddr2.getText().trim()), zoneUIN, proxyId, comment.getText());
+	         else
+               element.update(InetAddress.getByName(textAddr1.getText().trim()), InetAddress.getByName(textAddr2.getText().trim()), zoneUIN, proxyId, comment.getText());
+	            
 	      }
 		}
 		catch(UnknownHostException e)

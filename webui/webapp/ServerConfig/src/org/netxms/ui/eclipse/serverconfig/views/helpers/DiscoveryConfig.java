@@ -25,14 +25,20 @@ import org.netxms.client.InetAddressListElement;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.server.ServerVariable;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
  * Class which holds all elements of network discovery configuration
  */
 public class DiscoveryConfig
 {
-	private boolean enabled;
-	private boolean active;
+   public final static int DISCOVERY_TYPE_NONE = 0;
+   public final static int DISCOVERY_TYPE_PASIVE = 1;
+   public final static int DISCOVERY_TYPE_ACTIVE = 2;
+   public final static int DISCOVERY_TYPE_ACTIVE_PASIVE = 3;
+   
+   
+	private int discoveryType;
 	private boolean useSnmpTraps;
 	private boolean useSyslog;
 	private int filterFlags;
@@ -50,6 +56,7 @@ public class DiscoveryConfig
 	/**
 	 * Load discovery configuration from server. This method directly calls
 	 * communication API, so it should not be called from UI thread.
+	 * @param session 
 	 * 
 	 * @return network discovery configuration
 	 * @throws IOException if socket I/O error occurs
@@ -61,8 +68,7 @@ public class DiscoveryConfig
 		
 		Map<String, ServerVariable> variables = session.getServerVariables();
 		
-		config.enabled = getBoolean(variables, "RunNetworkDiscovery", false); //$NON-NLS-1$
-		config.active = getBoolean(variables, "ActiveNetworkDiscovery", false); //$NON-NLS-1$
+		config.discoveryType = getInteger(variables, "NetworkDiscovery.Type", 0);
 		config.useSnmpTraps = getBoolean(variables, "UseSNMPTrapsForDiscovery", false); //$NON-NLS-1$
       config.useSyslog = getBoolean(variables, "UseSyslogForDiscovery", false); //$NON-NLS-1$
 		config.filterFlags = getInteger(variables, "DiscoveryFilterFlags", 0); //$NON-NLS-1$
@@ -145,8 +151,7 @@ public class DiscoveryConfig
 	 */
 	public void save(NXCSession session) throws NXCException, IOException
 	{
-		session.setServerVariable("RunNetworkDiscovery", enabled ? "1" : "0"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-		session.setServerVariable("ActiveNetworkDiscovery", active ? "1" : "0"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		session.setServerVariable("NetworkDiscovery.Type", Integer.toString(discoveryType)); //$NON-NLS-1$ 	
       session.setServerVariable("UseSNMPTrapsForDiscovery", useSnmpTraps ? "1" : "0"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
       session.setServerVariable("UseSyslogForDiscovery", useSyslog ? "1" : "0"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		session.setServerVariable("DiscoveryFilterFlags", Integer.toString(filterFlags)); //$NON-NLS-1$
@@ -156,38 +161,6 @@ public class DiscoveryConfig
 		session.setAddressList(NXCSession.ADDRESS_LIST_DISCOVERY_TARGETS, targets);
 		
 		session.resetServerComponent(NXCSession.SERVER_COMPONENT_DISCOVERY_MANAGER);
-	}
-
-	/**
-	 * @return the enabled
-	 */
-	public boolean isEnabled()
-	{
-		return enabled;
-	}
-
-	/**
-	 * @param enabled the enabled to set
-	 */
-	public void setEnabled(boolean enabled)
-	{
-		this.enabled = enabled;
-	}
-
-	/**
-	 * @return the active
-	 */
-	public boolean isActive()
-	{
-		return active;
-	}
-
-	/**
-	 * @param active the active to set
-	 */
-	public void setActive(boolean active)
-	{
-		this.active = active;
 	}
 
 	/**
@@ -284,5 +257,21 @@ public class DiscoveryConfig
    public void setUseSyslog(boolean useSyslog)
    {
       this.useSyslog = useSyslog;
+   }
+
+   /**
+    * @return the discoveryType
+    */
+   public int getDiscoveryType()
+   {
+      return discoveryType;
+   }
+
+   /**
+    * @param discoveryType the discoveryType to set
+    */
+   public void setDiscoveryType(int discoveryType)
+   {
+      this.discoveryType = discoveryType;
    }
 }

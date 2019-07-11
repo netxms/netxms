@@ -24,8 +24,9 @@ import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.viewers.ArrayContentProvider;
+import org.eclipse.jface.viewers.DoubleClickEvent;
+import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
-import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
@@ -65,6 +66,7 @@ import org.netxms.ui.eclipse.serverconfig.views.helpers.AddressListLabelProvider
 import org.netxms.ui.eclipse.serverconfig.views.helpers.DiscoveryConfig;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
+import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
  * Configurator for network discovery
@@ -72,6 +74,11 @@ import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveablePart
 {
    public static final String ID = "org.netxms.ui.eclipse.serverconfig.views.NetworkDiscoveryConfigurator"; //$NON-NLS-1$
+   
+   public static final int RANGE = 0;
+   public static final int PROXY = 1;
+   public static final int COMMENT = 2;
+   
 
    NXCSession session = (NXCSession)ConsoleSharedData.getSession();
    private DiscoveryConfig config;
@@ -81,6 +88,7 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
    private Button radioDiscoveryOff;
    private Button radioDiscoveryPassive;
    private Button radioDiscoveryActive;
+   private Button radioDiscoveryActiveAndPasive;
    private Button checkUseSnmpTraps;
    private Button checkUseSyslog;
    private Button radioFilterOff;
@@ -90,8 +98,8 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
    private Button checkAgentOnly;
    private Button checkSnmpOnly;
    private Button checkRangeOnly;
-   private TableViewer filterAddressList;
-   private TableViewer activeDiscoveryAddressList;
+   private SortableTableViewer filterAddressList;
+   private SortableTableViewer activeDiscoveryAddressList;
    private Action actionSave;
 
    /*
@@ -221,12 +229,19 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
             setModified();
             if (radioDiscoveryOff.getSelection())
             {
-               config.setEnabled(false);
+               config.setDiscoveryType(DiscoveryConfig.DISCOVERY_TYPE_NONE);
             }
-            else
+            else if (radioDiscoveryPassive.getSelection())
             {
-               config.setEnabled(true);
-               config.setActive(radioDiscoveryActive.getSelection());
+               config.setDiscoveryType(DiscoveryConfig.DISCOVERY_TYPE_PASIVE);
+            }
+            else if (radioDiscoveryActive.getSelection())
+            {
+               config.setDiscoveryType(DiscoveryConfig.DISCOVERY_TYPE_ACTIVE);
+            }
+            else if (radioDiscoveryActiveAndPasive.getSelection())
+            {
+               config.setDiscoveryType(DiscoveryConfig.DISCOVERY_TYPE_ACTIVE_PASIVE);
             }
          }
 
@@ -242,9 +257,11 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
       radioDiscoveryPassive = toolkit.createButton(clientArea, Messages.get().NetworkDiscoveryConfigurator_PassiveDiscovery,
             SWT.RADIO);
       radioDiscoveryPassive.addSelectionListener(listener);
-      radioDiscoveryActive = toolkit.createButton(clientArea, Messages.get().NetworkDiscoveryConfigurator_ActiveDiscovery,
-            SWT.RADIO);
+      radioDiscoveryActive = toolkit.createButton(clientArea, "Active only", SWT.RADIO);
       radioDiscoveryActive.addSelectionListener(listener);
+      radioDiscoveryActiveAndPasive = toolkit.createButton(clientArea, Messages.get().NetworkDiscoveryConfigurator_ActiveDiscovery,
+            SWT.RADIO);
+      radioDiscoveryActiveAndPasive.addSelectionListener(listener);
 
       checkUseSnmpTraps = toolkit.createButton(clientArea, Messages.get().NetworkDiscoveryConfigurator_UseSNMPTrapsForDiscovery, SWT.CHECK);
       checkUseSnmpTraps.addSelectionListener(new SelectionAdapter() {
@@ -402,20 +419,30 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
       clientArea.setLayout(layout);
       section.setClient(clientArea);
 
-      activeDiscoveryAddressList = new TableViewer(clientArea, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
+      final String[] names = { "Range", "Proxy", "Comment" };
+      final int[] widths = { 150, 150, 150 };
+      activeDiscoveryAddressList = new SortableTableViewer(clientArea, names, widths, 0, SWT.DOWN, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
       toolkit.adapt(activeDiscoveryAddressList.getTable());
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       gd.verticalAlignment = SWT.FILL;
       gd.grabExcessVerticalSpace = true;
-      gd.verticalSpan = 2;
+      gd.verticalSpan = 3;
       gd.heightHint = 100;
       activeDiscoveryAddressList.getTable().setLayoutData(gd);
       activeDiscoveryAddressList.getTable().setSortDirection(SWT.UP);
       activeDiscoveryAddressList.setContentProvider(new ArrayContentProvider());
-      activeDiscoveryAddressList.setLabelProvider(new AddressListLabelProvider());
-      activeDiscoveryAddressList.setComparator(new AddressListElementComparator());
+      activeDiscoveryAddressList.setLabelProvider(new AddressListLabelProvider(true));
+      activeDiscoveryAddressList.setComparator(new AddressListElementComparator(true));
+      activeDiscoveryAddressList.addDoubleClickListener(new IDoubleClickListener() {
+         
+         @Override
+         public void doubleClick(DoubleClickEvent event)
+         {
+            editTargetAddressListElement();
+         }
+      });
 
       final ImageHyperlink linkAdd = toolkit.createImageHyperlink(clientArea, SWT.NONE);
       linkAdd.setText(Messages.get().NetworkDiscoveryConfigurator_Add);
@@ -428,6 +455,20 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
          public void linkActivated(HyperlinkEvent e)
          {
             addTargetAddressListElement();
+         }
+      });      
+
+      final ImageHyperlink linkEdit = toolkit.createImageHyperlink(clientArea, SWT.NONE);
+      linkEdit.setText("Edit...");
+      linkEdit.setImage(SharedIcons.IMG_EDIT);
+      gd = new GridData();
+      gd.verticalAlignment = SWT.TOP;
+      linkEdit.setLayoutData(gd);
+      linkEdit.addHyperlinkListener(new HyperlinkAdapter() {
+         @Override
+         public void linkActivated(HyperlinkEvent e)
+         {
+            editTargetAddressListElement();
          }
       });
 
@@ -465,20 +506,30 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
       clientArea.setLayout(layout);
       section.setClient(clientArea);
 
-      filterAddressList = new TableViewer(clientArea, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
+      final String[] names = { "Range", "Comment" };
+      final int[] widths = { 150, 150 };      
+      filterAddressList = new SortableTableViewer(clientArea, names, widths, 0, SWT.DOWN, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
       toolkit.adapt(filterAddressList.getTable());
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       gd.verticalAlignment = SWT.FILL;
       gd.grabExcessVerticalSpace = true;
-      gd.verticalSpan = 2;
+      gd.verticalSpan = 3;
       gd.heightHint = 100;
       filterAddressList.getTable().setLayoutData(gd);
       filterAddressList.getTable().setSortDirection(SWT.UP);
       filterAddressList.setContentProvider(new ArrayContentProvider());
-      filterAddressList.setLabelProvider(new AddressListLabelProvider());
-      filterAddressList.setComparator(new AddressListElementComparator());
+      filterAddressList.setLabelProvider(new AddressListLabelProvider(false));
+      filterAddressList.setComparator(new AddressListElementComparator(false));
+      filterAddressList.addDoubleClickListener(new IDoubleClickListener() {
+         
+         @Override
+         public void doubleClick(DoubleClickEvent event)
+         {
+            editAddressFilterElement();
+         }
+      });
 
       final ImageHyperlink linkAdd = toolkit.createImageHyperlink(clientArea, SWT.NONE);
       linkAdd.setText(Messages.get().NetworkDiscoveryConfigurator_Add);
@@ -491,6 +542,20 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
          public void linkActivated(HyperlinkEvent e)
          {
             addAddressFilterElement();
+         }
+      });
+
+      final ImageHyperlink linkEdit = toolkit.createImageHyperlink(clientArea, SWT.NONE);
+      linkEdit.setText("Edit...");
+      linkEdit.setImage(SharedIcons.IMG_EDIT);
+      gd = new GridData();
+      gd.verticalAlignment = SWT.TOP;
+      linkEdit.setLayoutData(gd);
+      linkEdit.addHyperlinkListener(new HyperlinkAdapter() {
+         @Override
+         public void linkActivated(HyperlinkEvent e)
+         {
+            editAddressFilterElement();
          }
       });
 
@@ -528,9 +593,10 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
    {
       this.config = config;
 
-      radioDiscoveryOff.setSelection(!config.isEnabled());
-      radioDiscoveryPassive.setSelection(config.isEnabled() && !config.isActive());
-      radioDiscoveryActive.setSelection(config.isEnabled() && config.isActive());
+      radioDiscoveryOff.setSelection(config.getDiscoveryType() == DiscoveryConfig.DISCOVERY_TYPE_NONE);
+      radioDiscoveryPassive.setSelection(config.getDiscoveryType() == DiscoveryConfig.DISCOVERY_TYPE_PASIVE);
+      radioDiscoveryActive.setSelection(config.getDiscoveryType() == DiscoveryConfig.DISCOVERY_TYPE_ACTIVE);
+      radioDiscoveryActiveAndPasive.setSelection(config.getDiscoveryType() == DiscoveryConfig.DISCOVERY_TYPE_ACTIVE_PASIVE);
       checkUseSnmpTraps.setSelection(config.isUseSnmpTraps());
       checkUseSyslog.setSelection(config.isUseSyslog());
 
@@ -696,7 +762,7 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
     */
    private void addTargetAddressListElement()
    {
-      AddAddressListElementDialog dlg = new AddAddressListElementDialog(getSite().getShell(), true);
+      AddAddressListElementDialog dlg = new AddAddressListElementDialog(getSite().getShell(), true, null);
       if (dlg.open() == Window.OK)
       {
          final List<InetAddressListElement> list = config.getTargets();
@@ -707,6 +773,24 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
             activeDiscoveryAddressList.setInput(list.toArray());
             setModified();
          }
+      }
+   }
+   
+   /**
+    * Edit active discovery range element
+    */
+   private void editTargetAddressListElement()
+   {
+      IStructuredSelection selection = (IStructuredSelection)activeDiscoveryAddressList.getSelection();
+      if (selection.size() != 1)
+         return;
+      
+      AddAddressListElementDialog dlg = new AddAddressListElementDialog(getSite().getShell(), true, (InetAddressListElement)selection.getFirstElement());
+      if (dlg.open() == Window.OK)
+      {
+         final List<InetAddressListElement> list = config.getTargets();
+         activeDiscoveryAddressList.setInput(list.toArray());
+         setModified();
       }
    }
 
@@ -733,7 +817,7 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
     */
    private void addAddressFilterElement()
    {
-      AddAddressListElementDialog dlg = new AddAddressListElementDialog(getSite().getShell(), false);
+      AddAddressListElementDialog dlg = new AddAddressListElementDialog(getSite().getShell(), false, null);
       if (dlg.open() == Window.OK)
       {
          final List<InetAddressListElement> list = config.getAddressFilter();
@@ -744,6 +828,24 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
             filterAddressList.setInput(list.toArray());
             setModified();
          }
+      }
+   }
+   
+   /**
+    * Edit address filter element
+    */
+   private void editAddressFilterElement()
+   {
+      IStructuredSelection selection = (IStructuredSelection)filterAddressList.getSelection();
+      if (selection.size() != 1)
+         return;
+      
+      AddAddressListElementDialog dlg = new AddAddressListElementDialog(getSite().getShell(), false, (InetAddressListElement)selection.getFirstElement());
+      if (dlg.open() == Window.OK)
+      {
+         final List<InetAddressListElement> list = config.getAddressFilter();
+         filterAddressList.setInput(list.toArray());
+         setModified();
       }
    }
 
