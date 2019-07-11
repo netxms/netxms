@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -640,6 +640,173 @@ TCHAR NXCORE_EXPORTABLE *ResolveUserId(UINT32 id, TCHAR *buffer, bool noFail)
 }
 
 /**
+ * Thread pool wrapper for DeleteUserFromAllObjects
+ */
+static void DeleteUserFromAllObjectsWrapper(void *uid)
+{
+   DeleteUserFromAllObjects(CAST_FROM_POINTER(uid, UINT32));
+}
+
+/**
+ * Delete user or group
+ *
+ * @param id user database object ID
+ * @param alreadyLocked true if user database lock already acquired
+ * @return RCC ready to be sent to client
+ */
+static UINT32 DeleteUserDatabaseObjectInternal(UINT32 id, bool alreadyLocked)
+{
+   if (alreadyLocked)
+   {
+      // Running DeleteUserFromAllObjects with write lock set on user database
+      // can cause deadlock if access right check is running in parallel
+      ThreadPoolExecute(g_mainThreadPool, DeleteUserFromAllObjectsWrapper, CAST_TO_POINTER(id, void*));
+   }
+   else
+   {
+      DeleteUserFromAllObjects(id);
+   }
+
+   if (!alreadyLocked)
+      RWLockWriteLock(s_userDatabaseLock, INFINITE);
+
+   UserDatabaseObject *object = s_userDatabase.get(id);
+   if (object != NULL)
+   {
+      object->setDeleted();
+      if (!(id & GROUP_FLAG))
+      {
+         Iterator<UserDatabaseObject> *it = s_userDatabase.iterator();
+         while(it->hasNext())
+         {
+            UserDatabaseObject *group = it->next();
+            if (group->getId() & GROUP_FLAG)
+            {
+               ((Group *)group)->deleteUser(id);
+            }
+         }
+         delete it;
+      }
+   }
+
+   if (!alreadyLocked)
+      RWLockUnlock(s_userDatabaseLock);
+
+   SendUserDBUpdate(USER_DB_DELETE, id, NULL);
+   return RCC_SUCCESS;
+}
+
+/**
+ * Delete user or group
+ *
+ * @param id user database object ID
+ * @return RCC ready to be sent to client
+ */
+UINT32 NXCORE_EXPORTABLE DeleteUserDatabaseObject(UINT32 id)
+{
+   return DeleteUserDatabaseObjectInternal(id, false);
+}
+
+/**
+ * Create new user or group
+ */
+UINT32 NXCORE_EXPORTABLE CreateNewUser(const TCHAR *name, bool isGroup, UINT32 *id)
+{
+   UINT32 dwResult = RCC_SUCCESS;
+
+   RWLockWriteLock(s_userDatabaseLock, INFINITE);
+
+   // Check for duplicate name
+   UserDatabaseObject *object = isGroup ? (UserDatabaseObject *)s_groups.get(name) : (UserDatabaseObject *)s_users.get(name);
+   if (object != NULL)
+   {
+      dwResult = RCC_OBJECT_ALREADY_EXISTS;
+   }
+
+   if (dwResult == RCC_SUCCESS)
+   {
+      if (isGroup)
+      {
+         object = new Group(CreateUniqueId(IDG_USER_GROUP), name);
+      }
+      else
+      {
+         object = new User(CreateUniqueId(IDG_USER), name);
+      }
+      AddDatabaseObject(object);
+      SendUserDBUpdate(USER_DB_CREATE, object->getId(), object);
+      *id = object->getId();
+   }
+
+   RWLockUnlock(s_userDatabaseLock);
+   return dwResult;
+}
+
+/**
+ * Modify user database object
+ */
+UINT32 NXCORE_EXPORTABLE ModifyUserDatabaseObject(NXCPMessage *msg, json_t **oldData, json_t **newData)
+{
+   UINT32 dwResult = RCC_INVALID_USER_ID;
+
+   UINT32 id = msg->getFieldAsUInt32(VID_USER_ID);
+
+   RWLockWriteLock(s_userDatabaseLock, INFINITE);
+
+   UserDatabaseObject *object = s_userDatabase.get(id);
+   if (object != NULL)
+   {
+      TCHAR name[MAX_USER_NAME], prevName[MAX_USER_NAME];
+
+      UINT32 fields = msg->getFieldAsUInt32(VID_FIELDS);
+      if (fields & USER_MODIFY_LOGIN_NAME)
+      {
+         msg->getFieldAsString(VID_USER_NAME, name, MAX_USER_NAME);
+         if (IsValidObjectName(name))
+         {
+            _tcslcpy(prevName, object->getName(), MAX_USER_NAME);
+         }
+         else
+         {
+            dwResult = RCC_INVALID_OBJECT_NAME;
+         }
+      }
+
+      if (dwResult != RCC_INVALID_OBJECT_NAME)
+      {
+         *oldData = object->toJson();
+         object->modifyFromMessage(msg);
+         *newData = object->toJson();
+         SendUserDBUpdate(USER_DB_MODIFY, id, object);
+         dwResult = RCC_SUCCESS;
+      }
+
+      if ((dwResult == RCC_SUCCESS) && (fields & USER_MODIFY_LOGIN_NAME))
+      {
+         // update login names hash map if login name was modified
+         if (_tcscmp(prevName, object->getName()))
+         {
+            if (object->isGroup())
+            {
+               nxlog_debug(4, _T("Group rename: %s -> %s"), prevName, object->getName());
+               s_groups.remove(prevName);
+               s_groups.set(object->getName(), (Group *)object);
+            }
+            else
+            {
+               nxlog_debug(4, _T("User rename: %s -> %s"), prevName, object->getName());
+               s_users.remove(prevName);
+               s_users.set(object->getName(), (User *)object);
+            }
+         }
+      }
+   }
+
+   RWLockUnlock(s_userDatabaseLock);
+   return dwResult;
+}
+
+/**
  * Check if provided user name is not used or belongs to given user.
  * Access to user DB must be locked when this function is called
  */
@@ -664,7 +831,7 @@ inline bool GroupNameIsUnique(const TCHAR *name, Group *group)
  */
 static TCHAR *GenerateUniqueName(const TCHAR *oldName, UINT32 id)
 {
-   TCHAR *name = (TCHAR *)malloc(sizeof(TCHAR) * 256);
+   TCHAR *name = MemAllocString(256);
    _sntprintf(name, 256, _T("%s_LDAP%d"), oldName, id);
    return name;
 }
@@ -722,7 +889,7 @@ void UpdateLDAPUser(const TCHAR *dn, Entry *obj)
                user->setDn(dn);
                s_ldapNames.set(dn, user);
             }
-            free(userName);
+            MemFree(userName);
          }
          else
          {
@@ -778,7 +945,7 @@ void UpdateLDAPUser(const TCHAR *dn, Entry *obj)
          user->getGuidAsText(guid);
          PostEvent(EVENT_LDAP_SYNC_ERROR ,g_dwMgmtNode, "issss", user->getId(), guid, user->getDn(), user->getName(), description);
          DbgPrintf(4, _T("UpdateLDAPUser(): User added: ID: %s DN: %s, login name: %s, full name: %s, description: %s"), CHECK_NULL(obj->m_id), dn, userName, CHECK_NULL(obj->m_fullName), CHECK_NULL(obj->m_description));
-         free(userName);
+         MemFree(userName);
       }
    }
    RWLockUnlock(s_userDatabaseLock);
@@ -805,7 +972,7 @@ void RemoveDeletedLDAPEntries(StringObjectMap<Entry> *entryListDn, StringObjectM
             if (m_action == USER_DELETE)
             {
                DbgPrintf(4, _T("RemoveDeletedLDAPEntry(): LDAP %s object %s was removed from user database"), isUser ? _T("user") : _T("group"), object->getDn());
-               DeleteUserDatabaseObject(object->getId(), true);
+               DeleteUserDatabaseObjectInternal(object->getId(), true);
             }
             else if (m_action == USER_DISABLE)
             {
@@ -950,7 +1117,7 @@ void UpdateLDAPGroup(const TCHAR *dn, Entry *obj) //no full name, add users insi
                group->setDn(dn);
                s_ldapNames.set(dn, group);
             }
-            free(groupName);
+            MemFree(groupName);
          }
          else
          {
@@ -1003,7 +1170,7 @@ void UpdateLDAPGroup(const TCHAR *dn, Entry *obj) //no full name, add users insi
          group->getGuidAsText(guid);
          PostEvent(EVENT_LDAP_SYNC_ERROR ,g_dwMgmtNode, "issss", group->getId(), guid, group->getDn(), group->getName(), description);
          DbgPrintf(4, _T("UpdateLDAPGroup(): Group added: ID: %s DN: %s, login name: %s, description: %s"), CHECK_NULL(obj->m_id), dn, obj->m_loginName, CHECK_NULL(obj->m_description));
-         free(groupName);
+         MemFree(groupName);
       }
    }
    RWLockUnlock(s_userDatabaseLock);
@@ -1034,144 +1201,6 @@ void DumpUsers(CONSOLE_CTX pCtx)
    delete it;
    RWLockUnlock(s_userDatabaseLock);
    ConsolePrintf(pCtx, _T("\n"));
-}
-
-/**
- * Delete user or group
- *
- * @param id user database object ID
- * @return RCC ready to be sent to client
- */
-UINT32 NXCORE_EXPORTABLE DeleteUserDatabaseObject(UINT32 id, bool alreadyLocked)
-{
-   DeleteUserFromAllObjects(id);
-
-   if (!alreadyLocked)
-      RWLockWriteLock(s_userDatabaseLock, INFINITE);
-
-   UserDatabaseObject *object = s_userDatabase.get(id);
-   if (object != NULL)
-   {
-      object->setDeleted();
-      if (!(id & GROUP_FLAG))
-      {
-         Iterator<UserDatabaseObject> *it = s_userDatabase.iterator();
-         while(it->hasNext())
-         {
-            UserDatabaseObject *group = it->next();
-            if (group->getId() & GROUP_FLAG)
-            {
-               ((Group *)group)->deleteUser(id);
-            }
-         }
-         delete it;
-      }
-	}
-
-   if (!alreadyLocked)
-      RWLockUnlock(s_userDatabaseLock);
-
-   SendUserDBUpdate(USER_DB_DELETE, id, NULL);
-   return RCC_SUCCESS;
-}
-
-/**
- * Create new user or group
- */
-UINT32 NXCORE_EXPORTABLE CreateNewUser(const TCHAR *name, bool isGroup, UINT32 *id)
-{
-   UINT32 dwResult = RCC_SUCCESS;
-
-   RWLockWriteLock(s_userDatabaseLock, INFINITE);
-
-   // Check for duplicate name
-   UserDatabaseObject *object = isGroup ? (UserDatabaseObject *)s_groups.get(name) : (UserDatabaseObject *)s_users.get(name);
-   if (object != NULL)
-   {
-      dwResult = RCC_OBJECT_ALREADY_EXISTS;
-	}
-
-	if (dwResult == RCC_SUCCESS)
-	{
-		if (isGroup)
-		{
-			object = new Group(CreateUniqueId(IDG_USER_GROUP), name);
-		}
-		else
-		{
-			object = new User(CreateUniqueId(IDG_USER), name);
-		}
-		AddDatabaseObject(object);
-		SendUserDBUpdate(USER_DB_CREATE, object->getId(), object);
-		*id = object->getId();
-	}
-
-   RWLockUnlock(s_userDatabaseLock);
-	return dwResult;
-}
-
-/**
- * Modify user database object
- */
-UINT32 NXCORE_EXPORTABLE ModifyUserDatabaseObject(NXCPMessage *msg, json_t **oldData, json_t **newData)
-{
-   UINT32 dwResult = RCC_INVALID_USER_ID;
-
-	UINT32 id = msg->getFieldAsUInt32(VID_USER_ID);
-
-   RWLockWriteLock(s_userDatabaseLock, INFINITE);
-
-   UserDatabaseObject *object = s_userDatabase.get(id);
-   if (object != NULL)
-   {
-      TCHAR name[MAX_USER_NAME], prevName[MAX_USER_NAME];
-
-      UINT32 fields = msg->getFieldAsUInt32(VID_FIELDS);
-      if (fields & USER_MODIFY_LOGIN_NAME)
-      {
-         msg->getFieldAsString(VID_USER_NAME, name, MAX_USER_NAME);
-         if (IsValidObjectName(name))
-         {
-            nx_strncpy(prevName, object->getName(), MAX_USER_NAME);
-         }
-         else
-         {
-            dwResult = RCC_INVALID_OBJECT_NAME;
-         }
-      }
-
-      if (dwResult != RCC_INVALID_OBJECT_NAME)
-      {
-         *oldData = object->toJson();
-         object->modifyFromMessage(msg);
-         *newData = object->toJson();
-         SendUserDBUpdate(USER_DB_MODIFY, id, object);
-         dwResult = RCC_SUCCESS;
-      }
-
-      if ((dwResult == RCC_SUCCESS) && (fields & USER_MODIFY_LOGIN_NAME))
-      {
-         // update login names hash map if login name was modified
-         if (_tcscmp(prevName, object->getName()))
-         {
-            if (object->isGroup())
-            {
-               nxlog_debug(4, _T("Group rename: %s -> %s"), prevName, object->getName());
-               s_groups.remove(prevName);
-               s_groups.set(object->getName(), (Group *)object);
-            }
-            else
-            {
-               nxlog_debug(4, _T("User rename: %s -> %s"), prevName, object->getName());
-               s_users.remove(prevName);
-               s_users.set(object->getName(), (User *)object);
-            }
-         }
-      }
-   }
-
-   RWLockUnlock(s_userDatabaseLock);
-   return dwResult;
 }
 
 /**
@@ -1221,7 +1250,7 @@ static bool IsStringContainsSubsequence(const TCHAR *str, const TCHAR *sequence,
 	TCHAR subseq[256];
 	for(int i = 0; i < sequenceLen - len; i++)
 	{
-		nx_strncpy(subseq, &sequence[i], len + 1);
+		_tcslcpy(subseq, &sequence[i], len + 1);
 		if (_tcsstr(str, subseq) != NULL)
 			return true;
 	}
@@ -1347,7 +1376,7 @@ UINT32 NXCORE_EXPORTABLE SetUserPassword(UINT32 id, const TCHAR *newPassword, co
 #ifdef UNICODE
             char *mb = UTF8StringFromWideString(newPassword);
             CalculateSHA1Hash((BYTE *)mb, strlen(mb), newPasswdHash);
-            free(mb);
+            MemFree(mb);
 #else
             CalculateSHA1Hash((BYTE *)newPassword, strlen(newPassword), newPasswdHash);
 #endif
@@ -1384,7 +1413,7 @@ UINT32 NXCORE_EXPORTABLE SetUserPassword(UINT32 id, const TCHAR *newPassword, co
                DBQuery(hdb, query);
             }
 
-            free(ph);
+            MemFree(ph);
             if (dwResult == RCC_REUSED_PASSWORD)
                goto finish;
          }
@@ -1582,7 +1611,7 @@ bool AuthenticateUserForXMPPSubscription(const char *xmppId)
 
          TCHAR workstation[256];
          _tcscpy(workstation, _T("XMPP:"));
-         nx_strncpy(&workstation[5], _xmppId, 251);
+         _tcslcpy(&workstation[5], _xmppId, 251);
          WriteAuditLog(AUDIT_SECURITY, TRUE, object->getId(), workstation, AUDIT_SYSTEM_SID, 0, _T("User authenticated for XMPP subscription"));
 
          success = true;
@@ -1592,7 +1621,7 @@ bool AuthenticateUserForXMPPSubscription(const char *xmppId)
    delete it;
    RWLockUnlock(s_userDatabaseLock);
 
-   free(_xmppId);
+   MemFree(_xmppId);
    return success;
 }
 
@@ -1630,7 +1659,7 @@ bool AuthenticateUserForXMPPCommands(const char *xmppId)
 
          TCHAR workstation[256];
          _tcscpy(workstation, _T("XMPP:"));
-         nx_strncpy(&workstation[5], _xmppId, 251);
+         _tcslcpy(&workstation[5], _xmppId, 251);
 
          if (systemRights & SYSTEM_ACCESS_XMPP_COMMANDS)
          {
@@ -1649,6 +1678,6 @@ bool AuthenticateUserForXMPPCommands(const char *xmppId)
    delete it;
    RWLockUnlock(s_userDatabaseLock);
 
-   free(_xmppId);
+   MemFree(_xmppId);
    return success;
 }

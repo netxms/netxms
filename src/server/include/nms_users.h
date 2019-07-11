@@ -423,7 +423,7 @@ UINT32 NXCORE_EXPORTABLE ValidateUserPassword(UINT32 userId, const TCHAR *login,
 UINT32 NXCORE_EXPORTABLE SetUserPassword(UINT32 id, const TCHAR *newPassword, const TCHAR *oldPassword, bool changeOwnPassword);
 bool CheckUserMembershipInternal(UINT32 userId, UINT32 groupId, IntegerArray<UINT32> *searchPath);
 bool NXCORE_EXPORTABLE CheckUserMembership(UINT32 userId, UINT32 groupId);
-UINT32 NXCORE_EXPORTABLE DeleteUserDatabaseObject(UINT32 id, bool alreadyLocked = false);
+UINT32 NXCORE_EXPORTABLE DeleteUserDatabaseObject(UINT32 id);
 UINT32 NXCORE_EXPORTABLE CreateNewUser(const TCHAR *name, bool isGroup, UINT32 *id);
 UINT32 NXCORE_EXPORTABLE ModifyUserDatabaseObject(NXCPMessage *msg, json_t **oldData, json_t **newData);
 UINT32 NXCORE_EXPORTABLE DetachLdapUser(UINT32 id);
