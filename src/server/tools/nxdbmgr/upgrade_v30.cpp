@@ -24,6 +24,22 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 30.81 to 30.82
+ */
+static bool H_UpgradeFromV81()
+{
+   CHK_EXEC(SQLQuery(
+         _T("INSERT INTO script_library (guid,script_id,script_name,script_code) ")
+         _T("VALUES ('0517b64c-b1c3-43a1-8081-4b9dcc9433bb',20,'Hook::UpdateInterface','")
+         _T("/* Available global variables:\r\n *  $node - current node, object of ''Node'' class\r\n")
+         _T(" *  $interface - current interface, object of ''Interface'' class\n\n *\r\n * Expected return value:\r\n")
+         _T(" *  none - returned value is ignored\r\n */\r\n')")));
+
+   CHK_EXEC(SetMinorSchemaVersion(82));
+   return true;
+}
+
+/**
  * Upgrade from 30.80 to 30.81
  */
 static bool H_UpgradeFromV80()
@@ -2637,6 +2653,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 81, 30, 82, H_UpgradeFromV81 },
    { 80, 30, 81, H_UpgradeFromV80 },
    { 79, 30, 80, H_UpgradeFromV79 },
    { 78, 30, 79, H_UpgradeFromV78 },

@@ -2292,6 +2292,7 @@ protected:
 
 	bool updateInterfaceConfiguration(UINT32 rqid, int maskBits);
    bool deleteDuplicateInterfaces(UINT32 rqid);
+   void executeInterfaceUpdateHook(Interface *iface);
    void updatePhysicalContainerBinding(int containerClass, UINT32 containerId);
    DuplicateCheckResult checkForDuplicates(Node **duplicate);
    bool isDuplicateOf(Node *node);

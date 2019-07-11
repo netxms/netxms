@@ -12,6 +12,7 @@
 - Support for macros in threshold values
 - Improved network discovery filter script capabilities
 - Internal server parameters for counting client sessions
+- New hook script UpdateInterface
 - Fixed issues:
 	NX-183 (Implemented responsible users for objects)
 	NX-725 (Add alarm comments from NXSL)

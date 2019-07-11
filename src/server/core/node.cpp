@@ -4069,6 +4069,28 @@ void Node::checkIfXTable(SNMP_Transport *pTransport)
 }
 
 /**
+ * Execute interface update hook
+ */
+void Node::executeInterfaceUpdateHook(Interface *iface)
+{
+   NXSL_VM *vm = CreateServerScriptVM(_T("Hook::UpdateInterface"), this);
+   if (vm == NULL)
+   {
+      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 7, _T("Node::executeInterfaceUpdateHook(%s [%u]): hook script \"Hook::UpdateInterface\" not found"), m_name, m_id);
+      return;
+   }
+
+   vm->setGlobalVariable("$interface", iface->createNXSLObject(vm));
+
+   NXSL_Value *argv = iface->createNXSLObject(vm);
+   if (!vm->run(1, &argv))
+   {
+      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("Node::executeInterfaceUpdateHook(%s [%u]): hook script execution error: %s"), m_name, m_id, vm->getErrorText());
+   }
+   delete vm;
+}
+
+/**
  * Delete duplicate interfaces
  * (find and delete multiple interfaces with same ifIndex value created by version prior to 2.0-M3)
  */
@@ -4186,64 +4208,75 @@ bool Node::updateInterfaceConfiguration(UINT32 rqid, int maskBits)
          {
             if (m_childList->get(i)->getObjectClass() == OBJECT_INTERFACE)
             {
-               Interface *pInterface = (Interface *)m_childList->get(i);
-
+               Interface *pInterface = static_cast<Interface*>(m_childList->get(i));
                if (ifInfo->index == pInterface->getIfIndex())
                {
+                  bool interfaceUpdated = false;
+
                   // Existing interface, check configuration
                   if (memcmp(ifInfo->macAddr, "\x00\x00\x00\x00\x00\x00", MAC_ADDR_LENGTH) &&
                       memcmp(ifInfo->macAddr, pInterface->getMacAddr(), MAC_ADDR_LENGTH))
                   {
                      TCHAR szOldMac[16], szNewMac[16];
-
-                     BinToStr((BYTE *)pInterface->getMacAddr(), MAC_ADDR_LENGTH, szOldMac);
+                     BinToStr(pInterface->getMacAddr(), MAC_ADDR_LENGTH, szOldMac);
                      BinToStr(ifInfo->macAddr, MAC_ADDR_LENGTH, szNewMac);
                      PostEvent(EVENT_MAC_ADDR_CHANGED, m_id, "idsss",
                                pInterface->getId(), pInterface->getIfIndex(),
                                pInterface->getName(), szOldMac, szNewMac);
                      pInterface->setMacAddr(ifInfo->macAddr, true);
+                     interfaceUpdated = true;
                   }
                   if (_tcscmp(ifInfo->name, pInterface->getName()))
                   {
                      pInterface->setName(ifInfo->name);
+                     interfaceUpdated = true;
                   }
                   if (_tcscmp(ifInfo->description, pInterface->getDescription()))
                   {
                      pInterface->setDescription(ifInfo->description);
+                     interfaceUpdated = true;
                   }
                   if (_tcscmp(ifInfo->alias, pInterface->getAlias()))
                   {
                      pInterface->setAlias(ifInfo->alias);
+                     interfaceUpdated = true;
                   }
                   if (ifInfo->bridgePort != pInterface->getBridgePortNumber())
                   {
                      pInterface->setBridgePortNumber(ifInfo->bridgePort);
+                     interfaceUpdated = true;
                   }
                   if (ifInfo->slot != pInterface->getSlotNumber())
                   {
                      pInterface->setSlotNumber(ifInfo->slot);
+                     interfaceUpdated = true;
                   }
                   if (ifInfo->port != pInterface->getPortNumber())
                   {
                      pInterface->setPortNumber(ifInfo->port);
+                     interfaceUpdated = true;
                   }
                   if (ifInfo->isPhysicalPort != pInterface->isPhysicalPort())
                   {
                      pInterface->setPhysicalPortFlag(ifInfo->isPhysicalPort);
+                     interfaceUpdated = true;
                   }
                   if (ifInfo->mtu != pInterface->getMTU())
                   {
                      pInterface->setMTU(ifInfo->mtu);
+                     interfaceUpdated = true;
                   }
                   if (ifInfo->speed != pInterface->getSpeed())
                   {
                      pInterface->setSpeed(ifInfo->speed);
+                     interfaceUpdated = true;
                   }
                   if ((ifInfo->ifTableSuffixLength != pInterface->getIfTableSuffixLen()) ||
                       memcmp(ifInfo->ifTableSuffix, pInterface->getIfTableSuffix(),
                          std::min(ifInfo->ifTableSuffixLength, pInterface->getIfTableSuffixLen())))
                   {
                      pInterface->setIfTableSuffix(ifInfo->ifTableSuffixLength, ifInfo->ifTableSuffix);
+                     interfaceUpdated = true;
                   }
 
                   // Check for deleted IPs and changed masks
@@ -4261,6 +4294,7 @@ bool Node::updateInterfaceConfiguration(UINT32 rqid, int maskBits)
                            pInterface->setNetMask(addr);
                            sendPollerMsg(rqid, POLLER_INFO _T("   IP network mask changed to /%d on interface \"%s\" address %s\r\n"),
                               addr.getMaskBits(), pInterface->getName(), (const TCHAR *)ifAddr.toString());
+                           interfaceUpdated = true;
                         }
                      }
                      else
@@ -4270,6 +4304,7 @@ bool Node::updateInterfaceConfiguration(UINT32 rqid, int maskBits)
                         PostEvent(EVENT_IF_IPADDR_DELETED, m_id, "dsAdd", pInterface->getId(), pInterface->getName(),
                                   &ifAddr, ifAddr.getMaskBits(), pInterface->getIfIndex());
                         pInterface->deleteIpAddress(ifAddr);
+                        interfaceUpdated = true;
                      }
                   }
 
@@ -4284,8 +4319,12 @@ bool Node::updateInterfaceConfiguration(UINT32 rqid, int maskBits)
                                   &addr, addr.getMaskBits(), pInterface->getIfIndex());
                         sendPollerMsg(rqid, POLLER_INFO _T("   IP address %s added to interface \"%s\"\r\n"),
                            (const TCHAR *)addr.toString(), pInterface->getName());
+                        interfaceUpdated = true;
                      }
                   }
+
+                  if (interfaceUpdated)
+                     executeInterfaceUpdateHook(pInterface);
 
                   isNewInterface = false;
                   break;
