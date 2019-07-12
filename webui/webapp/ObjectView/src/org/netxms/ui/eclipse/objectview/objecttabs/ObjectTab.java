@@ -143,6 +143,7 @@ public abstract class ObjectTab implements IPluginContribution
     */
    public void unselected()
    {
+	  System.out.println("Unselect called");
       if (context == null)
          return;
       

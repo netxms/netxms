@@ -29,7 +29,7 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.commands.ICommandService;
 import org.eclipse.ui.commands.IElementUpdater;
 import org.eclipse.ui.menus.UIElement;
-import org.netxms.ui.eclipse.objectview.objecttabs.InterfacesTab;
+import org.netxms.ui.eclipse.objectview.objecttabs.helpers.NodeComponentTab;
 
 /**
  * Command handler for toggling interface tab filter state
@@ -44,14 +44,14 @@ public class ToggleFilterHandler extends AbstractHandler implements IElementUpda
       if (object instanceof IEvaluationContext)
       {
          Object tab = ((IEvaluationContext)object).getVariable("org.netxms.ui.eclipse.objectview.ActiveTab"); //$NON-NLS-1$
-         if ((tab != null) && (tab instanceof InterfacesTab))
+         if ((tab != null) && (tab instanceof NodeComponentTab))
          {
             ICommandService service = (ICommandService)PlatformUI.getWorkbench().getService(ICommandService.class);
             Command command = service.getCommand("org.netxms.ui.eclipse.objectview.commands.show_filter"); //$NON-NLS-1$
             State state = command.getState("org.netxms.ui.eclipse.objectview.commands.show_filter.state"); //$NON-NLS-1$
             boolean isChecked = !(Boolean)state.getValue();
             state.setValue(isChecked);
-            ((InterfacesTab)tab).enableFilter(isChecked);
+            ((NodeComponentTab)tab).enableFilter(isChecked);
             service.refreshElements(event.getCommand().getId(), null);
          }
       }

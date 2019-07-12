@@ -72,7 +72,6 @@ import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.client.objects.AgentPolicy;
 import org.netxms.client.objects.BusinessService;
 import org.netxms.client.objects.BusinessServiceRoot;
 import org.netxms.client.objects.Cluster;
@@ -86,8 +85,6 @@ import org.netxms.client.objects.NetworkMap;
 import org.netxms.client.objects.NetworkMapGroup;
 import org.netxms.client.objects.NetworkMapRoot;
 import org.netxms.client.objects.Node;
-import org.netxms.client.objects.PolicyGroup;
-import org.netxms.client.objects.PolicyRoot;
 import org.netxms.client.objects.Rack;
 import org.netxms.client.objects.Sensor;
 import org.netxms.client.objects.ServiceRoot;
@@ -132,11 +129,13 @@ public class ObjectBrowser extends ViewPart
 	private Action actionMovePolicy;
 	private Action actionRefresh;
 	private Action actionRenameObject;
+   private Action actionHideNodeComponents;
 	private boolean initHideUnmanaged = false;
 	private boolean initHideTemplateChecks = false;
    private boolean initHideSubInterfaces = false;
 	private boolean initShowFilter = true;
 	private boolean initShowStatus = false;
+	private boolean initHideNodeComponents = false;
 	private String initialObjectSelection = null;
 	private ObjectOpenHandlerRegistry openHandlers;
 	private ObjectActionValidator[] actionValidators;
@@ -153,6 +152,7 @@ public class ObjectBrowser extends ViewPart
 			initHideUnmanaged = safeCast(memento.getBoolean("ObjectBrowser.hideUnmanaged"), false); //$NON-NLS-1$
 			initHideTemplateChecks = safeCast(memento.getBoolean("ObjectBrowser.hideTemplateChecks"), false); //$NON-NLS-1$
 			initHideSubInterfaces = safeCast(memento.getBoolean("ObjectBrowser.hideSubInterfaces"), false); //$NON-NLS-1$
+			initHideNodeComponents =  safeCast(memento.getBoolean("ObjectBrowser.hideNodeComponents"), true); //$NON-NLS-1$
 			initShowStatus = safeCast(memento.getBoolean("ObjectBrowser.showStatusIndicator"), false); //$NON-NLS-1$
 			initialObjectSelection = memento.getString("ObjectBrowser.selectedObject"); //$NON-NLS-1$
 		}
@@ -189,6 +189,7 @@ public class ObjectBrowser extends ViewPart
 		memento.putBoolean("ObjectBrowser.hideTemplateChecks", objectTree.isHideTemplateChecks()); //$NON-NLS-1$
       memento.putBoolean("ObjectBrowser.hideSubInterfaces", objectTree.isHideSubInterfaces()); //$NON-NLS-1$
 		memento.putBoolean("ObjectBrowser.showStatusIndicator", objectTree.isStatusIndicatorEnabled()); //$NON-NLS-1$
+      memento.putBoolean("ObjectBrowser.hideNodeComponents", objectTree.isHideNodeComponents()); //$NON-NLS-1$
 		saveSelection(memento);
 	}
 
@@ -209,7 +210,7 @@ public class ObjectBrowser extends ViewPart
 			rootObjects = (long[])value;
 		}
 		
-		objectTree = new ObjectTree(parent, SWT.NONE, ObjectTree.MULTI, rootObjects, null, true, true);
+		objectTree = new ObjectTree(parent, SWT.NONE, ObjectTree.MULTI, rootObjects, null, true, true, initHideNodeComponents);
 		FormData fd = new FormData();
 		fd.left = new FormAttachment(0, 0);
 		fd.top = new FormAttachment(0, 0);
@@ -586,6 +587,16 @@ public class ObjectBrowser extends ViewPart
 		actionRenameObject.setActionDefinitionId("org.netxms.ui.eclipse.objectbrowser.commands.rename_object"); //$NON-NLS-1$
       final ActionHandler renameObjectHandler = new ActionHandler(actionRenameObject);
       handlerService.activateHandler(actionRenameObject.getActionDefinitionId(), renameObjectHandler);
+      
+      actionHideNodeComponents = new Action("Hide node components", Action.AS_CHECK_BOX) {
+         @Override
+         public void run()
+         {
+            objectTree.setHideNodeComponent(actionHideNodeComponents.isChecked());
+         }
+      };
+      actionHideNodeComponents.setId("org.netxms.ui.eclipse.objectbrowser.actions.showHideNodeComponents"); //$NON-NLS-1$
+      actionHideNodeComponents.setChecked(objectTree.isHideNodeComponents());
 	}
 
 	/**
@@ -599,6 +610,7 @@ public class ObjectBrowser extends ViewPart
       FilteringMenuManager.add(manager, actionHideSubInterfaces, Activator.PLUGIN_ID);
       FilteringMenuManager.add(manager, actionHideUnmanaged, Activator.PLUGIN_ID);
       FilteringMenuManager.add(manager, actionHideTemplateChecks, Activator.PLUGIN_ID);
+      FilteringMenuManager.add(manager, actionHideNodeComponents, Activator.PLUGIN_ID);
 		manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
       manager.add(new Separator());
       FilteringMenuManager.add(manager, actionRefresh, Activator.PLUGIN_ID);

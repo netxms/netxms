@@ -140,6 +140,22 @@
             name="%tab.name.Rack"
             order="15">
       </tab>
+      <tab
+            class="org.netxms.ui.eclipse.objectview.objecttabs.VPNTab"
+            contextId="org.netxms.ui.eclipse.objectview.context.VPNTab"
+            icon="icons/vpn.png"
+            id="org.netxms.ui.eclipse.objectview.objecttabs.VPNTab"
+            name="VPN Connectors"
+            order="60">
+      </tab>
+      <tab
+            class="org.netxms.ui.eclipse.objectview.objecttabs.NetworkServiceTab"
+            contextId="org.netxms.ui.eclipse.objectview.context.NetworkServiceTab"
+            icon="icons/network_service.png"
+            id="org.netxms.ui.eclipse.objectview.objecttabs.NetworkServiceTab"
+            name="Network Services"
+            order="60">
+      </tab>
    </extension>
    <extension
          point="org.eclipse.ui.popupMenus">
@@ -217,12 +233,34 @@
             schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
             sequence="M1+F2">
       </key>
+      <key
+            commandId="org.netxms.ui.eclipse.objectview.commands.show_filter"
+            contextId="org.netxms.ui.eclipse.objectview.context.VPNTab"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="M1+F2">
+      </key>
+      <key
+            commandId="org.netxms.ui.eclipse.objectview.commands.show_filter"
+            contextId="org.netxms.ui.eclipse.objectview.context.NetworkServiceTab"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="M1+F2">
+      </key>
    </extension>
    <extension
          point="org.eclipse.ui.contexts">
       <context
             id="org.netxms.ui.eclipse.objectview.context.InterfacesTab"
             name="Interfaces Tab"
+            parentId="org.eclipse.ui.contexts.window">
+      </context>
+      <context
+            id="org.netxms.ui.eclipse.objectview.context.NetworkServiceTab"
+            name="Network Service Tab"
+            parentId="org.eclipse.ui.contexts.window">
+      </context>
+      <context
+            id="org.netxms.ui.eclipse.objectview.context.VPNTab"
+            name="VPN Connectors Tab"
             parentId="org.eclipse.ui.contexts.window">
       </context>
    </extension>
@@ -240,9 +278,17 @@
                   checkEnabled="false">
                <with
                      variable="org.netxms.ui.eclipse.objectview.ActiveTab">
-                  <instanceof
-                        value="org.netxms.ui.eclipse.objectview.objecttabs.InterfacesTab">
-                  </instanceof>
+                  <or>
+                     <instanceof
+                           value="org.netxms.ui.eclipse.objectview.objecttabs.InterfacesTab">
+                     </instanceof>
+                     <instanceof
+                           value="org.netxms.ui.eclipse.objectview.objecttabs.VPNTab">
+                     </instanceof>
+                     <instanceof
+                           value="org.netxms.ui.eclipse.objectview.objecttabs.NetworkServiceTab">
+                     </instanceof>
+                  </or>
                </with>
             </visibleWhen>
          </command>

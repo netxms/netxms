@@ -19,7 +19,6 @@
 package org.netxms.ui.eclipse.objectview.objecttabs.helpers;
 
 import org.eclipse.jface.viewers.Viewer;
-import org.eclipse.jface.viewers.ViewerFilter;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.Interface;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -27,7 +26,7 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 /**
  * Filter for Interfaces tab
  */
-public class InterfacesTabFilter extends ViewerFilter
+public class InterfacesTabFilter extends NodeComponentTabFilter
 {
    private NXCSession session = ConsoleSharedData.getSession();
    private String filterString = null;
@@ -328,24 +327,6 @@ public class InterfacesTabFilter extends ViewerFilter
       if (interf.getDot1xBackendStateAsText().toLowerCase().contains(filterString))
          return true;
       return false;
-   }
-
-   /**
-    * Get filter string
-    * 
-    * @return
-    */
-   public String getFilterString()
-   {
-      return filterString;
-   }
-
-   /**
-    * @param filterString the filterString to set
-    */
-   public void setFilterString(String filterString)
-   {
-      this.filterString = filterString.toLowerCase();
    }
 
    /**

@@ -37,7 +37,7 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public class InterfaceListLabelProvider extends LabelProvider implements ITableLabelProvider, ITableColorProvider
 {
-	private final String[] ifaceExpectedState = { Messages.get().InterfaceListLabelProvider_StateUp, Messages.get().InterfaceListLabelProvider_StateDown, Messages.get().InterfaceListLabelProvider_StateIgnore, Messages.get().InterfaceListLabelProvider_Auto };
+	private static final String[] ifaceExpectedState = { Messages.get().InterfaceListLabelProvider_StateUp, Messages.get().InterfaceListLabelProvider_StateDown, Messages.get().InterfaceListLabelProvider_StateIgnore, Messages.get().InterfaceListLabelProvider_Auto };
 	
 	private AbstractNode node = null;
 	private NXCSession session = ConsoleSharedData.getSession();

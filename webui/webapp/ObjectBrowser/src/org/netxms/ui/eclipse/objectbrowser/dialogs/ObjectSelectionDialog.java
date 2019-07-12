@@ -25,10 +25,15 @@ import java.util.Set;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
@@ -40,6 +45,7 @@ import org.netxms.ui.eclipse.objectbrowser.api.ObjectSelectionFilterFactory;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectTree;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
+import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
  * Object selection dialog
@@ -48,6 +54,7 @@ public class ObjectSelectionDialog extends Dialog
 {
 	private NXCSession session;
 	private ObjectTree objectTree;
+	private Button checkHideNodeComponents;
 	private long[] rootObjects;
 	private long[] selectedObjects;
 	private Set<Integer> classFilter;
@@ -282,20 +289,47 @@ public class ObjectSelectionDialog extends Dialog
 		IDialogSettings settings = Activator.getDefault().getDialogSettings();
 		Composite dialogArea = (Composite)super.createDialogArea(parent);
 
-		dialogArea.setLayout(new FormLayout());
+		GridLayout layout = new GridLayout();
+		layout.verticalSpacing = WidgetHelper.DIALOG_SPACING;
+		dialogArea.setLayout(layout);
 
-		objectTree = new ObjectTree(dialogArea, SWT.NONE, multiSelection ? ObjectTree.MULTI : 0, rootObjects, classFilter, showFilterToolTip, showFilterCloseButton);
+		boolean checked = (settings.get("SelectObject.hideNodeComponents") != null) ? settings.getBoolean("SelectObject.hideNodeComponents") : true; //$NON-NLS-1$  
+		objectTree = new ObjectTree(dialogArea, SWT.NONE, multiSelection ? ObjectTree.MULTI : 0, rootObjects, classFilter, showFilterToolTip, showFilterCloseButton, false);
+		objectTree.setHideNodeComponent(checked);
 		
 		String text = settings.get("SelectObject.Filter"); //$NON-NLS-1$
 		if (text != null)
 			objectTree.setFilter(text);
 
-		FormData fd = new FormData();
-		fd.left = new FormAttachment(0, 0);
-		fd.top = new FormAttachment(0, 0);
-		fd.right = new FormAttachment(100, 0);
-		fd.bottom = new FormAttachment(100, 0);
-		objectTree.setLayoutData(fd);
+		GridData gd = new GridData();
+		gd.horizontalAlignment = SWT.FILL;
+		gd.verticalAlignment = SWT.FILL;
+		gd.grabExcessHorizontalSpace = true;
+		gd.grabExcessVerticalSpace = true;
+		objectTree.setLayoutData(gd); 
+		    
+		checkHideNodeComponents = new Button(dialogArea, SWT.CHECK);
+		checkHideNodeComponents.setText("Hide node components");
+		checkHideNodeComponents.setSelection(checked);
+		checkHideNodeComponents.addSelectionListener(new SelectionListener() {
+         
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            objectTree.setHideNodeComponent(checkHideNodeComponents.getSelection());           
+         }
+         
+         @Override
+         public void widgetDefaultSelected(SelectionEvent e)
+         {
+            widgetSelected(e);            
+         }
+      });		
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.verticalAlignment = SWT.CENTER;
+      gd.grabExcessHorizontalSpace = true;
+		checkHideNodeComponents.setLayoutData(gd);
 
 		return dialogArea;
 	}
@@ -361,6 +395,7 @@ public class ObjectSelectionDialog extends Dialog
 		settings.put("SelectObject.cx", size.x); //$NON-NLS-1$
 		settings.put("SelectObject.cy", size.y); //$NON-NLS-1$
 		settings.put("SelectObject.Filter", objectTree.getFilter()); //$NON-NLS-1$
+      settings.put("SelectObject.hideNodeComponents", checkHideNodeComponents.getSelection()); //$NON-NLS-1$
 	}
 
 	/**
