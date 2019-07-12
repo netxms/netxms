@@ -1390,7 +1390,7 @@ CREATE TABLE address_lists
   addr_type integer not null, // 0 - addr/mask, 1 - address range
   addr1 varchar(48) not null,
   addr2 varchar(48) not null,
-  comment varchar(255) null,
+  comments varchar(255) null,
   PRIMARY KEY(list_type,community_id,zone_uin,addr_type,addr1,addr2)
 ) TABLE_TYPE;
 
@@ -1520,7 +1520,7 @@ CREATE TABLE usm_credentials
   auth_password varchar(255) null,
   priv_password varchar(255) null,
   zone integer null,
-  comment varchar(255) null,
+  comments varchar(255) null,
   PRIMARY KEY(id)
 ) TABLE_TYPE;
 

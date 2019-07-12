@@ -75,9 +75,8 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
    
    public static final int RANGE = 0;
    public static final int PROXY = 1;
-   public static final int COMMENT = 2;
+   public static final int COMMENTS = 2;
    
-
    private DiscoveryConfig config;
    private boolean modified = false;
    private FormToolkit toolkit;
@@ -416,7 +415,7 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
       clientArea.setLayout(layout);
       section.setClient(clientArea);
 
-      final String[] names = { "Range", "Proxy", "Comment" };
+      final String[] names = { "Range", "Proxy", "Comments" };
       final int[] widths = { 150, 150, 150 };
       activeDiscoveryAddressList = new SortableTableViewer(clientArea, names, widths, 0, SWT.DOWN, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
       toolkit.adapt(activeDiscoveryAddressList.getTable());

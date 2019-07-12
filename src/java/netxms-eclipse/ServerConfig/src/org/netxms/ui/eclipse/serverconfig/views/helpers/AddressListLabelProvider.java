@@ -58,7 +58,7 @@ public class AddressListLabelProvider extends LabelProvider  implements ITableLa
                return (e.getProxyId() != 0) ? session.getObjectName(e.getProxyId()) : session.getZoneName(e.getZoneUIN());
             else
                return e.getComment();
-         case NetworkDiscoveryConfigurator.COMMENT:
+         case NetworkDiscoveryConfigurator.COMMENTS:
             return e.getComment();
       }
       return null;

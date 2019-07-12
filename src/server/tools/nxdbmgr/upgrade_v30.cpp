@@ -24,6 +24,21 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 30.82 to 30.83
+ */
+static bool H_UpgradeFromV82()
+{
+   if (!DBMgrMetaDataReadInt32(_T("CorrectFieldNamesV80"), 0))
+   {
+      CHK_EXEC(DBRenameColumn(g_dbHandle, _T("address_lists"), _T("comment"), _T("comments")));
+      CHK_EXEC(DBRenameColumn(g_dbHandle, _T("usm_credentials"), _T("comment"), _T("comments")));
+   }
+   CHK_EXEC(SQLQuery(_T("DELETE FROM metadata WHERE var_name='CorrectFieldNamesV80'")));
+   CHK_EXEC(SetMinorSchemaVersion(83));
+   return true;
+}
+
+/**
  * Upgrade from 30.81 to 30.82
  */
 static bool H_UpgradeFromV81()
@@ -87,10 +102,13 @@ static bool H_UpgradeFromV80()
 static bool H_UpgradeFromV79()
 {
    static const TCHAR *batch =
-            _T("ALTER TABLE usm_credentials ADD comment varchar(255) null\n")
-            _T("ALTER TABLE address_lists ADD comment varchar(255) null\n")
+            _T("ALTER TABLE address_lists ADD comments varchar(255)\n")
+            _T("ALTER TABLE usm_credentials ADD comments varchar(255)\n")
             _T("<END>");
    CHK_EXEC(SQLBatch(batch));
+
+   // Indicator that field names are correct ("comments" instead of "comment")
+   CHK_EXEC(DBMgrMetaDataWriteInt32(_T("CorrectFieldNamesV80"), 1));
 
    CHK_EXEC(DBRenameTable(g_dbHandle, _T("user_agent_notification"), _T("user_agent_notifications")));
 
@@ -2653,6 +2671,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 82, 30, 83, H_UpgradeFromV82 },
    { 81, 30, 82, H_UpgradeFromV81 },
    { 80, 30, 81, H_UpgradeFromV80 },
    { 79, 30, 80, H_UpgradeFromV79 },

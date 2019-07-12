@@ -42,7 +42,7 @@ public class SnmpUsmComparator extends ViewerComparator
          case SnmpCredentials.USM_CRED_ENC_PASSWORD:
             result = c1.getPrivPassword().compareTo(c2.getPrivPassword());
             break;
-         case SnmpCredentials.USM_CRED_COMMENT:
+         case SnmpCredentials.USM_CRED_COMMENTS:
             result = c1.getComment().compareToIgnoreCase(c2.getComment());
             break;
          default:

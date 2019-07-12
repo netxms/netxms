@@ -11502,7 +11502,7 @@ void ClientSession::sendUsmCredentials(UINT32 dwRqId)
 	if (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG)
 	{
 	   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-		hResult = DBSelect(hdb, _T("SELECT user_name,auth_method,priv_method,auth_password,priv_password,zone,comment FROM usm_credentials ORDER BY zone"));
+		hResult = DBSelect(hdb, _T("SELECT user_name,auth_method,priv_method,auth_password,priv_password,zone,comments FROM usm_credentials ORDER BY zone"));
 		if (hResult != NULL)
 		{
 			count = DBGetNumRows(hResult);
@@ -11523,8 +11523,8 @@ void ClientSession::sendUsmCredentials(UINT32 dwRqId)
 
 				msg.setField(id++, DBGetFieldULong(hResult, i, 5)); // zone ID
 
-				TCHAR comment[256];
-				msg.setField(id++, DBGetField(hResult, i, 6, comment, 256)); //comment
+				TCHAR comments[256];
+				msg.setField(id++, DBGetField(hResult, i, 6, comments, 256)); //comment
 			}
 			DBFreeResult(hResult);
 			msg.setField(VID_RCC, RCC_SUCCESS);
@@ -11562,14 +11562,14 @@ void ClientSession::updateUsmCredentials(NXCPMessage *request)
 
 			if (DBQuery(hdb, _T("DELETE FROM usm_credentials")))
 			{
-			   DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO usm_credentials (id,user_name,auth_method,priv_method,auth_password,priv_password,zone,comment) VALUES(?,?,?,?,?,?,?,?)"));
+			   DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO usm_credentials (id,user_name,auth_method,priv_method,auth_password,priv_password,zone,comments) VALUES(?,?,?,?,?,?,?,?)"));
 			   if (hStmt != NULL)
 			   {
 		         UINT32 id = VID_USM_CRED_LIST_BASE;
 		         int count = (int)request->getFieldAsUInt32(VID_NUM_RECORDS);
                for(int i = 0; i < count; i++, id += 3)
                {
-                  DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, i+1);
+                  DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, i + 1);
                   DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, request->getFieldAsString(id++), DB_BIND_DYNAMIC);
                   DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (int)request->getFieldAsUInt16(id++)); // Auth method
                   DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (int)request->getFieldAsUInt16(id++)); // Priv method
@@ -11586,10 +11586,14 @@ void ClientSession::updateUsmCredentials(NXCPMessage *request)
                DBFreeStatement(hStmt);
 			   }
 	         else
+	         {
 	            rcc = RCC_DB_FAILURE;
+	         }
 			}
          else
+         {
             rcc = RCC_DB_FAILURE;
+         }
 
 			if (rcc == RCC_SUCCESS)
             DBCommit(hdb);
@@ -11597,7 +11601,9 @@ void ClientSession::updateUsmCredentials(NXCPMessage *request)
             DBRollback(hdb);
 		}
       else
+      {
          rcc = RCC_DB_FAILURE;
+      }
 		DBConnectionPoolReleaseConnection(hdb);
 	}
 	else

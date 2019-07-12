@@ -39,7 +39,7 @@ InetAddressListElement::InetAddressListElement(NXCPMessage *msg, UINT32 baseId)
    }
    m_zoneUIN = msg->getFieldAsInt32(baseId + 3);
    m_proxyId = msg->getFieldAsInt32(baseId + 4);
-   msg->getFieldAsString(baseId + 5, m_comment, 256);
+   msg->getFieldAsString(baseId + 5, m_comments, MAX_ADDRESS_LIST_COMMENTS_LEN);
 }
 
 /**
@@ -52,7 +52,7 @@ InetAddressListElement::InetAddressListElement(const InetAddress& baseAddr, cons
    m_endAddress = endAddr;
    m_zoneUIN = 0;
    m_proxyId = 0;
-   m_comment[0] = 0;
+   m_comments[0] = 0;
 }
 
 /**
@@ -65,7 +65,7 @@ InetAddressListElement::InetAddressListElement(const InetAddress& baseAddr, int 
    m_baseAddress.setMaskBits(maskBits);
    m_zoneUIN = 0;
    m_proxyId = 0;
-   m_comment[0] = 0;
+   m_comments[0] = 0;
 }
 
 /**
@@ -103,7 +103,7 @@ InetAddressListElement::InetAddressListElement(DB_RESULT hResult, int row)
    }
    m_zoneUIN = DBGetFieldLong(hResult, row, 3);
    m_proxyId = DBGetFieldLong(hResult, row, 4);
-   DBGetField(hResult, row, 5, m_comment, 256);
+   DBGetField(hResult, row, 5, m_comments, MAX_ADDRESS_LIST_COMMENTS_LEN);
 }
 
 /**
@@ -119,7 +119,7 @@ void InetAddressListElement::fillMessage(NXCPMessage *msg, UINT32 baseId) const
       msg->setField(baseId + 2, m_endAddress);
    msg->setField(baseId + 3, m_zoneUIN);
    msg->setField(baseId + 4, m_proxyId);
-   msg->setField(baseId + 5, m_comment);
+   msg->setField(baseId + 5, m_comments);
 }
 
 /**
@@ -171,7 +171,7 @@ bool UpdateAddressListFromMessage(NXCPMessage *msg)
       int count = msg->getFieldAsInt32(VID_NUM_RECORDS);
       if (count > 0)
       {
-         DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO address_lists (list_type,addr_type,addr1,addr2,community_id,zone_uin,proxy_id,comment) VALUES (?,?,?,?,?,?,?,?)"), count > 1);
+         DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO address_lists (list_type,addr_type,addr1,addr2,community_id,zone_uin,proxy_id,comments) VALUES (?,?,?,?,?,?,?,?)"), count > 1);
          if (hStmt != NULL)
          {
             DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, listType);
@@ -189,7 +189,7 @@ bool UpdateAddressListFromMessage(NXCPMessage *msg)
                DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, (INT32)0);
                DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, e.getZoneUIN());
                DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, e.getProxyId());
-               DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, e.getComment(), DB_BIND_STATIC);
+               DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, e.getComments(), DB_BIND_STATIC);
                success = DBExecute(hStmt);
             }
 
@@ -226,7 +226,7 @@ ObjectArray<InetAddressListElement> *LoadServerAddressList(int listType)
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
    TCHAR query[256];
-   _sntprintf(query, 256, _T("SELECT addr_type,addr1,addr2,zone_uin,proxy_id,comment FROM address_lists WHERE list_type=%d"), listType);
+   _sntprintf(query, 256, _T("SELECT addr_type,addr1,addr2,zone_uin,proxy_id,comments FROM address_lists WHERE list_type=%d"), listType);
    DB_RESULT hResult = DBSelect(hdb, query);
    if (hResult == NULL)
    {

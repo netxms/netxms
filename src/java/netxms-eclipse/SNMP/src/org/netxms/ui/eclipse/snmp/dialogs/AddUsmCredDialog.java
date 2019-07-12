@@ -116,7 +116,7 @@ public class AddUsmCredDialog extends Dialog
 		privPasswd.setLayoutData(gd);
       
       comment = new LabeledText(dialogArea, SWT.NONE);
-      comment.setLabel("Comment");
+      comment.setLabel("Comments");
       comment.getTextControl().setTextLimit(255);
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;

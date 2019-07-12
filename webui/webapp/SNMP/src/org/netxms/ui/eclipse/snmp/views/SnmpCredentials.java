@@ -77,7 +77,7 @@ public class SnmpCredentials extends ViewPart implements ISaveablePart
    public static final int USM_CRED_ENCRYPTION = 2;
    public static final int USM_CRED_AUTH_PASSWORD = 3;
    public static final int USM_CRED_ENC_PASSWORD = 4;
-   public static final int USM_CRED_COMMENT = 5;
+   public static final int USM_CRED_COMMENTS = 5;
 	
 	private NXCSession session;
 	private boolean modified = false;
@@ -306,7 +306,7 @@ public class SnmpCredentials extends ViewPart implements ISaveablePart
 		clientArea.setLayout(layout);
 		section.setClient(clientArea);
 		
-		final String[] names = { "User name", "Auth type", "Priv type", "Auth secret", "Priv secret", "Comment" };
+		final String[] names = { "User name", "Auth type", "Priv type", "Auth secret", "Priv secret", "Comments" };
 		final int[] widths = { 100, 100, 100, 100, 100, 100 };
 		snmpUsmCredList = new SortableTableViewer(clientArea, names, widths, 0, SWT.DOWN, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
 		toolkit.adapt(snmpUsmCredList.getTable());

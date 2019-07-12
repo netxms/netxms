@@ -46,7 +46,7 @@ public class SnmpUsmLabelProvider extends LabelProvider implements ITableLabelPr
 		      return c.getAuthPassword();
 		   case SnmpCredentials.USM_CRED_ENC_PASSWORD:
 		      return c.getPrivPassword();
-		   case SnmpCredentials.USM_CRED_COMMENT:
+		   case SnmpCredentials.USM_CRED_COMMENTS:
 		      return c.getComment();
       }
 		return null;

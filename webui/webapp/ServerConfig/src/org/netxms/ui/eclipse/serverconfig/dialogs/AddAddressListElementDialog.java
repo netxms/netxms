@@ -51,7 +51,7 @@ public class AddAddressListElementDialog extends Dialog
 	private Button radioRange;
 	private LabeledText textAddr1;
 	private LabeledText textAddr2;
-   private LabeledText comment;
+   private LabeledText comments;
 	private ZoneSelector zoneSelector;
 	private ObjectSelector proxySelector;
 	private InetAddressListElement element;
@@ -165,13 +165,13 @@ public class AddAddressListElementDialog extends Dialog
          proxySelector.setLayoutData(gd);
 		}
 		
-      comment = new LabeledText(dialogArea, SWT.NONE);
-      comment.setLabel("Comment");
-      comment.getTextControl().setTextLimit(255);
+      comments = new LabeledText(dialogArea, SWT.NONE);
+      comments.setLabel("Comments");
+      comments.getTextControl().setTextLimit(255);
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
-      comment.setLayoutData(gd);
+      comments.setLayoutData(gd);
       
       if (element != null)
       {
@@ -187,7 +187,7 @@ public class AddAddressListElementDialog extends Dialog
             }
             proxySelector.setObjectId(element.getProxyId());
          }
-         comment.setText(element.getComment());
+         comments.setText(element.getComment());
       }
 		
 		return dialogArea;
@@ -214,16 +214,16 @@ public class AddAddressListElementDialog extends Dialog
                 ((baseAddress instanceof Inet6Address) && (maskBits > 128)))
 	            throw new NumberFormatException("Invalid network mask");
 	         if(element == null)
-	            element = new InetAddressListElement(baseAddress, maskBits, zoneUIN, proxyId, comment.getText());
+	            element = new InetAddressListElement(baseAddress, maskBits, zoneUIN, proxyId, comments.getText());
 	         else
-	            element.update(baseAddress, maskBits, zoneUIN, proxyId, comment.getText());
+	            element.update(baseAddress, maskBits, zoneUIN, proxyId, comments.getText());
 	      }
 	      else
 	      {
 	         if(element == null)
-	            element = new InetAddressListElement(InetAddress.getByName(textAddr1.getText().trim()), InetAddress.getByName(textAddr2.getText().trim()), zoneUIN, proxyId, comment.getText());
+	            element = new InetAddressListElement(InetAddress.getByName(textAddr1.getText().trim()), InetAddress.getByName(textAddr2.getText().trim()), zoneUIN, proxyId, comments.getText());
 	         else
-               element.update(InetAddress.getByName(textAddr1.getText().trim()), InetAddress.getByName(textAddr2.getText().trim()), zoneUIN, proxyId, comment.getText());
+               element.update(InetAddress.getByName(textAddr1.getText().trim()), InetAddress.getByName(textAddr2.getText().trim()), zoneUIN, proxyId, comments.getText());
 	            
 	      }
 		}

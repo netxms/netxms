@@ -283,6 +283,11 @@ enum AddressListElementType
 #define SNMP_CONFIG_GLOBAL -1
 
 /**
+ * Max address list comments length
+ */
+#define MAX_ADDRESS_LIST_COMMENTS_LEN  256
+
+/**
  * IP address list element
  */
 class NXCORE_EXPORTABLE InetAddressListElement
@@ -293,7 +298,7 @@ private:
    UINT32 m_proxyId;
    InetAddress m_baseAddress;
    InetAddress m_endAddress;
-   TCHAR m_comment[256];
+   TCHAR m_comments[MAX_ADDRESS_LIST_COMMENTS_LEN];
 
 public:
    InetAddressListElement(NXCPMessage *msg, UINT32 baseId);
@@ -310,7 +315,7 @@ public:
    const InetAddress& getEndAddress() const { return m_endAddress; }
    UINT32 getZoneUIN() const { return m_zoneUIN; }
    UINT32 getProxyId() const { return m_proxyId; }
-   const TCHAR *getComment() const { return m_comment; }
+   const TCHAR *getComments() const { return m_comments; }
 
    String toString() const;
 };

@@ -61,7 +61,7 @@ public class AddressListElementComparator extends ViewerComparator
             else
                result = a1.getComment().compareTo(a2.getComment());
             break;
-         case NetworkDiscoveryConfigurator.COMMENT:
+         case NetworkDiscoveryConfigurator.COMMENTS:
             result = a1.getComment().compareTo(a2.getComment());
             break;
          default:
