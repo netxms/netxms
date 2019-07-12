@@ -8,7 +8,6 @@ import org.netxms.base.NXCPMessage;
 public class EventObject
 {
    public static final int FLAG_WRITE_TO_LOG = 0x0001;
-   public static final int FLAG_EVENT_GROUP = 0x0002;
    
    private static final long GROUP_ID_FLAG = 0x80000000L;
    
@@ -39,7 +38,9 @@ public class EventObject
     */
    protected EventObject(final EventObject src)
    {
-      setAll(src);
+      code = src.code;
+      name = src.name;
+      description = src.description;
    }
    
    /**

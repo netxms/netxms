@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2019 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,12 +22,12 @@ import org.eclipse.jface.viewers.ITableColorProvider;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.client.events.EventGroup;
 import org.netxms.client.events.EventObject;
 import org.netxms.client.events.EventTemplate;
+import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.eventmanager.widgets.EventObjectList;
@@ -37,10 +37,7 @@ import org.netxms.ui.eclipse.eventmanager.widgets.EventObjectList;
  */
 public class EventObjectLabelProvider extends WorkbenchLabelProvider implements ITableLabelProvider, ITableColorProvider
 {
-   private static final Color COLOR_GROUP = new Color(Display.getDefault(), new RGB(255, 221, 173));
-   private static final Color COLOR_GROUP_CHILDREN = new Color(Display.getDefault(), new RGB(255, 255, 173));
-   
-	/* (non-Javadoc)
+	/**
 	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
 	 */
 	@Override
@@ -53,7 +50,7 @@ public class EventObjectLabelProvider extends WorkbenchLabelProvider implements 
 		return getImage(element);
 	}
 
-	/* (non-Javadoc)
+	/**
 	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
 	 */
 	@Override
@@ -88,19 +85,23 @@ public class EventObjectLabelProvider extends WorkbenchLabelProvider implements 
 		return null;
 	}
 
+   /**
+    * @see org.eclipse.jface.viewers.ITableColorProvider#getForeground(java.lang.Object, int)
+    */
    @Override
    public Color getForeground(Object element, int columnIndex)
    {
       return null;
    }
 
+   /**
+    * @see org.eclipse.jface.viewers.ITableColorProvider#getBackground(java.lang.Object, int)
+    */
    @Override
    public Color getBackground(Object element, int columnIndex)
    {
       if (element instanceof EventGroup)
-         return COLOR_GROUP;
-      if ((element instanceof EventObject) && ((EventObject)element).hasParents())
-         return COLOR_GROUP_CHILDREN;
+         return SharedColors.getColor(SharedColors.CGROUP_BORDER, Display.getCurrent());
       return null;
    }
 }

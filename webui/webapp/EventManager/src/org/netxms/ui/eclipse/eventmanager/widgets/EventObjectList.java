@@ -18,6 +18,7 @@
  */
 package org.netxms.ui.eclipse.eventmanager.widgets;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -71,8 +72,8 @@ import org.netxms.ui.eclipse.eventmanager.Activator;
 import org.netxms.ui.eclipse.eventmanager.Messages;
 import org.netxms.ui.eclipse.eventmanager.dialogs.EditEventGroupDialog;
 import org.netxms.ui.eclipse.eventmanager.dialogs.EditEventTemplateDialog;
-import org.netxms.ui.eclipse.eventmanager.views.helpers.EventObjectContentProvider;
 import org.netxms.ui.eclipse.eventmanager.views.helpers.EventObjectComparator;
+import org.netxms.ui.eclipse.eventmanager.views.helpers.EventObjectContentProvider;
 import org.netxms.ui.eclipse.eventmanager.views.helpers.EventObjectFilter;
 import org.netxms.ui.eclipse.eventmanager.views.helpers.EventObjectLabelProvider;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -184,8 +185,7 @@ public class EventObjectList extends Composite implements SessionListener
       viewer.setComparator(new EventObjectComparator());
       filter = new EventObjectFilter();
       viewer.addFilter(filter);
-      viewer.addSelectionChangedListener(new ISelectionChangedListener()
-      {
+      viewer.addSelectionChangedListener(new ISelectionChangedListener() {
          @Override
          public void selectionChanged(SelectionChangedEvent event)
          {
@@ -261,46 +261,57 @@ public class EventObjectList extends Composite implements SessionListener
    private void refreshView()
    {
       new ConsoleJob(Messages.get().EventConfigurator_OpenJob_Title, null, Activator.PLUGIN_ID, JOB_FAMILY) {
-         
-         /* (non-Javadoc)
-          * @see org.netxms.ui.eclipse.jobs.ConsoleJob#getErrorMessage()
-          */
          @Override
          protected String getErrorMessage()
          {
             return Messages.get().EventConfigurator_OpenJob_Error;
          }
 
-         /* (non-Javadoc)
-          * @see org.netxms.ui.eclipse.jobs.ConsoleJob#runInternal(org.eclipse.core.runtime.IProgressMonitor)
-          */
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
             final List<EventObject> list = session.getEventObjects();
             runInUIThread(new Runnable() {
-               
-               /* (non-Javadoc)
-                * @see java.lang.Runnable#run()
-                */
                @Override
                public void run()
                {
                   eventObjects = new HashMap<Long, EventObject>(list.size());
                   for(final EventObject o: list)
-                  {
-                     if ((o instanceof EventGroup) && !showGroups)
-                        continue;
-                     
                      eventObjects.put(o.getCode(), o);
-                  }
-                  viewer.setInput(eventObjects.values().toArray());
+                  viewer.setInput(getTopLevelElements());
                }
             });
          }
       }.start();
    }
    
+   /**
+    * Get top level elements for tree viewer
+    * 
+    * @return top level elements for tree viewer
+    */
+   private Object[] getTopLevelElements()
+   {
+      List<EventObject> result = new ArrayList<EventObject>(eventObjects.size());
+      if (showGroups)
+      {
+         for(EventObject o : eventObjects.values())
+         {
+            if (!o.hasParents())
+               result.add(o);
+         }
+      }
+      else
+      {
+         for(EventObject o : eventObjects.values())
+         {
+            if (!(o instanceof EventGroup))
+               result.add(o);
+         }
+      }
+      return result.toArray();
+   }
+
    /**
     * Enable drag support in object tree
     */
@@ -387,7 +398,7 @@ public class EventObjectList extends Composite implements SessionListener
                   else
                   {
                      eventObjects.put(n.getSubCode(), (EventObject)n.getObject());
-                     viewer.setInput(eventObjects.values().toArray());
+                     viewer.setInput(getTopLevelElements());
                   }
                }
             });
@@ -398,7 +409,7 @@ public class EventObjectList extends Composite implements SessionListener
                public void run()
                {
                   eventObjects.remove(n.getSubCode());
-                  viewer.setInput(eventObjects.values().toArray());
+                  viewer.setInput(getTopLevelElements());
                }
             });
             break;
@@ -578,10 +589,6 @@ public class EventObjectList extends Composite implements SessionListener
             if (updateParent)
             {
                runInUIThread(new Runnable() {
-                  
-                  /* (non-Javadoc)
-                   * @see java.lang.Runnable#run()
-                   */
                   @Override
                   public void run()
                   {

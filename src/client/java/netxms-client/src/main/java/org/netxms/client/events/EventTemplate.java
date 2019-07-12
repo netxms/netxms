@@ -66,7 +66,9 @@ public class EventTemplate extends EventObject
 	public EventTemplate(final EventTemplate src)
 	{
 	   super(src);
-		setAll(src);
+      severity = ((EventTemplate)src).severity;
+      flags = ((EventTemplate)src).flags;
+      message = ((EventTemplate)src).message;
 	}
 	
 	/* (non-Javadoc)

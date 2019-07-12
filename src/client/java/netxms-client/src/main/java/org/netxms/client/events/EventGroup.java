@@ -28,7 +28,7 @@ public class EventGroup extends EventObject
    public EventGroup(EventGroup src)
    {
       super(src);
-      setAll(src);
+      eventCodeList = new ArrayList<Long>(((EventGroup)src).eventCodeList);
    }
 
    /**
@@ -115,6 +115,6 @@ public class EventGroup extends EventObject
          return;
 
       super.setAll(src);
-      eventCodeList = ((EventGroup)src).eventCodeList;
+      eventCodeList = new ArrayList<Long>(((EventGroup)src).eventCodeList);
    }
 }
