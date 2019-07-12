@@ -140,7 +140,7 @@ static void CheckMgmtFlagCallback(NetObj *object, void *data)
 {
 	if ((g_dwMgmtNode != object->getId()) && ((Node *)object)->isLocalManagement())
 	{
-		((Node *)object)->clearLocalMgmtFlag();
+	   static_cast<Node*>(object)->clearLocalMgmtFlag();
 		nxlog_debug_tag(DEBUG_TAG_POLL_MANAGER, 2, _T("Incorrectly set flag NC_IS_LOCAL_MGMT cleared from node %s [%d]"),
 					 object->getName(), object->getId());
 	}
@@ -151,7 +151,7 @@ static void CheckMgmtFlagCallback(NetObj *object, void *data)
  */
 static bool LocalMgmtNodeComparator(NetObj *object, void *data)
 {
-	return ((Node *)object)->isLocalManagement();
+	return static_cast<Node*>(object)->isLocalManagement();
 }
 
 /**
@@ -159,11 +159,10 @@ static bool LocalMgmtNodeComparator(NetObj *object, void *data)
  */
 void CheckForMgmtNode()
 {
-   InterfaceList *pIfList;
    Node *node;
    int i;
 
-   pIfList = GetLocalInterfaceList();
+   InterfaceList *pIfList = GetLocalInterfaceList();
    if (pIfList != NULL)
    {
       for(i = 0; i < pIfList->size(); i++)

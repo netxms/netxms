@@ -20,6 +20,8 @@ package org.netxms.ui.eclipse.objectmanager.dialogs;
 
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.layout.RowLayout;
@@ -56,6 +58,7 @@ public class CreateNodeDialog extends Dialog
    private LabeledText sshPasswordField;
 	private Button checkUnmanaged;
    private Button checkMaintenanceMode;
+   private Button checkAsZoneProxy;
 	private Button checkDisableAgent;
 	private Button checkDisableSNMP;
 	private Button checkDisablePing;
@@ -87,7 +90,7 @@ public class CreateNodeDialog extends Dialog
 	public CreateNodeDialog(Shell parentShell, CreateNodeDialog prev)
 	{
 		super(parentShell);
-		session = (NXCSession)ConsoleSharedData.getSession();
+		session = ConsoleSharedData.getSession();
 		if (prev != null)
 		{
          creationFlags = prev.creationFlags;
@@ -196,6 +199,34 @@ public class CreateNodeDialog extends Dialog
       checkMaintenanceMode.setText("Enter &maintenance mode immediately");
       checkMaintenanceMode.setSelection((creationFlags & NXCObjectCreationData.CF_ENTER_MAINTENANCE) != 0);
 
+      if (session.isZoningEnabled())
+      {
+         checkAsZoneProxy = new Button(optionsGroup, SWT.CHECK);
+         checkAsZoneProxy.setText("Create as zone proxy for selected zone");
+         checkAsZoneProxy.setSelection((creationFlags & NXCObjectCreationData.CF_AS_ZONE_PROXY) != 0);
+         checkAsZoneProxy.addSelectionListener(new SelectionListener() {
+            @Override
+            public void widgetSelected(SelectionEvent e)
+            {
+               if (checkAsZoneProxy.getSelection())
+               {
+                  checkDisableAgent.setSelection(false);
+                  checkDisableAgent.setEnabled(false);
+               }
+               else
+               {
+                  checkDisableAgent.setEnabled(true);
+               }
+            }
+            
+            @Override
+            public void widgetDefaultSelected(SelectionEvent e)
+            {
+               widgetSelected(e);
+            }
+         });
+      }
+      
 		checkDisableAgent = new Button(optionsGroup, SWT.CHECK);
 		checkDisableAgent.setText(Messages.get().CreateNodeDialog_DisableAgent);
 		checkDisableAgent.setSelection((creationFlags & NXCObjectCreationData.CF_DISABLE_NXCP) != 0);
@@ -277,7 +308,7 @@ public class CreateNodeDialog extends Dialog
 		hostName = hostNameField.getText().trim();
 		if (hostName.isEmpty())
 			hostName = objectNameField.getText().trim();
-		if (!hostName.matches("^(([A-Za-z0-9\\-]+\\.)*[A-Za-z0-9\\-]+|[A-Fa-f0-9:]+)$")) //$NON-NLS-1$
+		if (!hostName.matches("^(([A-Za-z0-9_-]+\\.)*[A-Za-z0-9_-]+|[A-Fa-f0-9:]+)$")) //$NON-NLS-1$
 		{
 			MessageDialogHelper.openWarning(getShell(), Messages.get().CreateNodeDialog_Warning, 
 			      String.format(Messages.get().CreateNodeDialog_WarningInvalidHostname, hostName));
@@ -293,6 +324,8 @@ public class CreateNodeDialog extends Dialog
 			creationFlags |= NXCObjectCreationData.CF_CREATE_UNMANAGED;
       if (checkMaintenanceMode.getSelection())
          creationFlags |= NXCObjectCreationData.CF_ENTER_MAINTENANCE;
+      if (checkAsZoneProxy.getSelection())
+         creationFlags |= NXCObjectCreationData.CF_AS_ZONE_PROXY;
 		if (checkDisableAgent.getSelection())
 			creationFlags |= NXCObjectCreationData.CF_DISABLE_NXCP;
 		if (checkDisablePing.getSelection())

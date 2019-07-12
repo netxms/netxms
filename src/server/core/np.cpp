@@ -191,6 +191,15 @@ Node NXCORE_EXPORTABLE *PollNewNode(NewNodeData *newNodeData)
       node->checkSubnetBinding();
    }
 
+   if (IsZoningEnabled() && (newNodeData->creationFlags & NXC_NCF_AS_ZONE_PROXY) && (newNodeData->zoneUIN != 0))
+   {
+      Zone *zone = FindZoneByUIN(newNodeData->zoneUIN);
+      if (zone != NULL)
+      {
+         zone->addProxy(node);
+      }
+   }
+
 	if (newNodeData->doConfPoll)
    {
 	   node->configurationPollWorkerEntry(RegisterPoller(PollerType::CONFIGURATION, node, true));

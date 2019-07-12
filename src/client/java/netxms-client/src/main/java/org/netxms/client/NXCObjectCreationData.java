@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2019 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,11 +34,12 @@ import org.netxms.client.objects.NetworkService;
 public class NXCObjectCreationData
 {
 	// Creation flags
-	public static int CF_DISABLE_ICMP = 0x0001;
-	public static int CF_DISABLE_NXCP = 0x0002;
-	public static int CF_DISABLE_SNMP = 0x0004;
-	public static int CF_CREATE_UNMANAGED = 0x0008;
-   public static int CF_ENTER_MAINTENANCE = 0x0010;
+	public static int CF_DISABLE_ICMP        = 0x0001;
+	public static int CF_DISABLE_NXCP        = 0x0002;
+	public static int CF_DISABLE_SNMP        = 0x0004;
+	public static int CF_CREATE_UNMANAGED    = 0x0008;
+   public static int CF_ENTER_MAINTENANCE   = 0x0010;
+   public static int CF_AS_ZONE_PROXY       = 0x0020;
 	
 	private int objectClass;
 	private String name;

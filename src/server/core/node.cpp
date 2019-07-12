@@ -2879,7 +2879,7 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
    if (m_runtimeFlags & NDF_RECHECK_CAPABILITIES)
    {
       sendPollerMsg(rqId, POLLER_WARNING _T("Capability reset\r\n"));
-      m_capabilities = 0;
+      m_capabilities &= NC_IS_LOCAL_MGMT; // reset all except "local management" flag
       m_runtimeFlags &= ~DCDF_CONFIGURATION_POLL_PASSED;
       m_snmpObjectId[0] = 0;
       m_platformName[0] = 0;

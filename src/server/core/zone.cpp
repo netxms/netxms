@@ -248,7 +248,7 @@ void Zone::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
  */
 UINT32 Zone::modifyFromMessageInternal(NXCPMessage *request)
 {
-   if(request->isFieldExist(VID_ZONE_PROXY_LIST))
+   if (request->isFieldExist(VID_ZONE_PROXY_LIST))
    {
       IntegerArray<UINT32> newProxyList;
       request->getFieldAsInt32Array(VID_ZONE_PROXY_LIST, &newProxyList);
@@ -293,6 +293,29 @@ UINT32 Zone::modifyFromMessageInternal(NXCPMessage *request)
 	}
 
    return super::modifyFromMessageInternal(request);
+}
+
+/**
+ * Add node as zone proxy
+ */
+void Zone::addProxy(Node *node)
+{
+   UINT32 nodeId = node->getId();
+
+   lockProperties();
+   bool found = false;
+   for(int i = 0; i < m_proxyNodes->size(); i++)
+      if (m_proxyNodes->get(i)->nodeId == nodeId)
+      {
+         found = true;
+         break;
+      }
+   if (!found)
+   {
+      m_proxyNodes->add(new ZoneProxy(nodeId));
+      setModified(MODIFY_OTHER);
+   }
+   unlockProperties();
 }
 
 /**

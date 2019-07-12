@@ -2974,6 +2974,7 @@ public:
 
    AgentConnectionEx *acquireConnectionToProxy(bool validate = false);
 
+   void addProxy(Node *node);
    void updateProxyStatus(Node *node, bool activeMode);
 
    bool lockForHealthCheck();
