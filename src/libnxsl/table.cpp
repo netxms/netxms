@@ -226,7 +226,7 @@ NXSL_TableClass::~NXSL_TableClass()
  */
 void NXSL_TableClass::onObjectDelete(NXSL_Object *object)
 {
-   ((Table *)object->getData())->decRefCount();
+   static_cast<Table*>(object->getData())->decRefCount();
 }
 
 /**
@@ -236,7 +236,7 @@ NXSL_Value *NXSL_TableClass::getAttr(NXSL_Object *object, const char *attr)
 {
    NXSL_VM *vm = object->vm();
    NXSL_Value *value = NULL;
-   Table *table = (Table *)object->getData();
+   Table *table = static_cast<Table*>(object->getData());
    if (!strcmp(attr, "columnCount"))
    {
       value = vm->createValue((LONG)table->getNumColumns());

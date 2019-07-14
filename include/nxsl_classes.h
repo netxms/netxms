@@ -1013,8 +1013,8 @@ public:
    NXSL_LocalStorage(NXSL_VM *vm);
    virtual ~NXSL_LocalStorage();
 
-   virtual void write(const TCHAR *name, NXSL_Value *value);
-   virtual NXSL_Value *read(const TCHAR *name, NXSL_ValueManager *vm);
+   virtual void write(const TCHAR *name, NXSL_Value *value) override;
+   virtual NXSL_Value *read(const TCHAR *name, NXSL_ValueManager *vm) override;
 };
 
 /**
@@ -1133,8 +1133,8 @@ public:
    NXSL_TableRowClass();
    virtual ~NXSL_TableRowClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr);
-   virtual void onObjectDelete(NXSL_Object *object);
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr) override;
+   virtual void onObjectDelete(NXSL_Object *object) override;
 };
 
 /**
@@ -1146,8 +1146,8 @@ public:
    NXSL_TableColumnClass();
    virtual ~NXSL_TableColumnClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr);
-	virtual void onObjectDelete(NXSL_Object *object);
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr) override;
+	virtual void onObjectDelete(NXSL_Object *object) override;
 };
 
 /**
@@ -1159,8 +1159,8 @@ public:
    NXSL_TableClass();
    virtual ~NXSL_TableClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr);
-	virtual void onObjectDelete(NXSL_Object *object);
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr) override;
+	virtual void onObjectDelete(NXSL_Object *object) override;
 };
 
 /**
@@ -1172,7 +1172,7 @@ public:
    NXSL_StaticTableClass();
    virtual ~NXSL_StaticTableClass();
 
-	virtual void onObjectDelete(NXSL_Object *object);
+	virtual void onObjectDelete(NXSL_Object *object) override;
 };
 
 /**
@@ -1184,8 +1184,8 @@ public:
    NXSL_ConnectorClass();
    virtual ~NXSL_ConnectorClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr);
-	virtual void onObjectDelete(NXSL_Object *object);
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr) override;
+	virtual void onObjectDelete(NXSL_Object *object) override;
 };
 
 /**
@@ -1197,8 +1197,8 @@ public:
    NXSL_GeoLocationClass();
    virtual ~NXSL_GeoLocationClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr);
-   virtual void onObjectDelete(NXSL_Object *object);
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr) override;
+   virtual void onObjectDelete(NXSL_Object *object) override;
 
    static NXSL_Value *createObject(NXSL_VM *vm, const GeoLocation& gl);
 };
@@ -1212,10 +1212,37 @@ public:
    NXSL_InetAddressClass();
    virtual ~NXSL_InetAddressClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr);
-   virtual void onObjectDelete(NXSL_Object *object);
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr) override;
+   virtual void onObjectDelete(NXSL_Object *object) override;
 
    static NXSL_Value *createObject(NXSL_VM *vm, const InetAddress& addr);
+};
+
+/**
+ * NXSL "JsonObject" class
+ */
+class LIBNXSL_EXPORTABLE NXSL_JsonObjectClass : public NXSL_Class
+{
+public:
+   NXSL_JsonObjectClass();
+   virtual ~NXSL_JsonObjectClass();
+
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr) override;
+   virtual bool setAttr(NXSL_Object *object, const char *attr, NXSL_Value *value) override;
+   virtual void onObjectDelete(NXSL_Object *object) override;
+};
+
+/**
+ * NXSL "JsonArray" class
+ */
+class LIBNXSL_EXPORTABLE NXSL_JsonArrayClass : public NXSL_Class
+{
+public:
+   NXSL_JsonArrayClass();
+   virtual ~NXSL_JsonArrayClass();
+
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr) override;
+   virtual void onObjectDelete(NXSL_Object *object) override;
 };
 
 /**
@@ -1228,5 +1255,7 @@ extern NXSL_TableColumnClass LIBNXSL_EXPORTABLE g_nxslTableColumnClass;
 extern NXSL_ConnectorClass LIBNXSL_EXPORTABLE g_nxslConnectorClass;
 extern NXSL_GeoLocationClass LIBNXSL_EXPORTABLE g_nxslGeoLocationClass;
 extern NXSL_InetAddressClass LIBNXSL_EXPORTABLE g_nxslInetAddressClass;
+extern NXSL_JsonObjectClass LIBNXSL_EXPORTABLE g_nxslJsonObjectClass;
+extern NXSL_JsonArrayClass LIBNXSL_EXPORTABLE g_nxslJsonArrayClass;
 
 #endif

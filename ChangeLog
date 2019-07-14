@@ -14,6 +14,7 @@
 - Internal server parameters for counting client sessions
 - New hook script UpdateInterface
 - Node creation option "create as zone proxy"
+- JSON support in NXSL
 - Fixed issues:
 	NX-183 (Implemented responsible users for objects)
 	NX-725 (Add alarm comments from NXSL)

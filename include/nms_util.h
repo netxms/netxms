@@ -2162,6 +2162,7 @@ public:
    const InetAddress& get(int index) const { const InetAddress *a = m_list->get(index); return (a != NULL) ? *a : InetAddress::INVALID; }
 
    int size() const { return m_list->size(); }
+   bool isEmpty() const { return m_list->isEmpty(); }
    bool hasAddress(const InetAddress& addr) const { return indexOf(addr) != -1; }
    const InetAddress& findAddress(const InetAddress& addr) const { int idx = indexOf(addr); return (idx != -1) ? *m_list->get(idx) : InetAddress::INVALID; }
    const InetAddress& findSameSubnetAddress(const InetAddress& addr) const;

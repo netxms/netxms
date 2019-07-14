@@ -91,6 +91,9 @@ int F_Base64Decode(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm
 int F_Base64Encode(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_GeoLocation(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_InetAddress(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_JsonArray(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_JsonObject(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_JsonParse(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_ReadPersistentStorage(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_SecondsToUptime(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_SplitString(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
@@ -115,6 +118,8 @@ static NXSL_ExtFunction s_builtinFunctions[] =
 {
    { "__new@GeoLocation", F_GeoLocation, -1 },
    { "__new@InetAddress", F_InetAddress, -1 },
+   { "__new@JsonArray", F_JsonArray, 0 },
+   { "__new@JsonObject", F_JsonObject, 0 },
    { "__new@Table", F_Table, 0 },
    { "__new@TIME", F_TIME, 0 },
 	{ "_exit", F_exit, -1 },
@@ -177,6 +182,7 @@ static NXSL_ExtFunction s_builtinFunctions[] =
    { "ArrayToString", F_ArrayToString, 2 },
    { "Base64Decode", F_Base64Decode, -1 },
    { "Base64Encode", F_Base64Encode, -1 },
+   { "JsonParse", F_JsonParse, 1 },
    { "ReadPersistentStorage", F_ReadPersistentStorage, 1 },
 	{ "SecondsToUptime", F_SecondsToUptime, 1 },
    { "SplitString", F_SplitString, 2 },

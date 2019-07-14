@@ -138,7 +138,7 @@ static void CreateManagementNode(const InetAddress& addr)
  */
 static void CheckMgmtFlagCallback(NetObj *object, void *data)
 {
-	if ((g_dwMgmtNode != object->getId()) && ((Node *)object)->isLocalManagement())
+	if ((g_dwMgmtNode != object->getId()) && static_cast<Node*>(object)->isLocalManagement())
 	{
 	   static_cast<Node*>(object)->clearLocalMgmtFlag();
 		nxlog_debug_tag(DEBUG_TAG_POLL_MANAGER, 2, _T("Incorrectly set flag NC_IS_LOCAL_MGMT cleared from node %s [%d]"),
@@ -188,7 +188,7 @@ void CheckForMgmtNode()
          for(i = 0; i < pIfList->size(); i++)
          {
             InterfaceInfo *iface = pIfList->get(i);
-            if ((iface->type == IFTYPE_SOFTWARE_LOOPBACK) || (iface->ipAddrList.size() == 0))
+            if ((iface->type == IFTYPE_SOFTWARE_LOOPBACK) || iface->ipAddrList.isEmpty())
                continue;
 
             for(int j = 0; j < iface->ipAddrList.size(); j++)
