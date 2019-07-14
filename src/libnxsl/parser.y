@@ -2,6 +2,7 @@
 
 #ifdef _WIN32
 #pragma warning(disable : 4065 4102)
+#define _CRT_SECURE_NO_WARNINGS
 #endif
 
 #define YYERROR_VERBOSE

@@ -208,6 +208,7 @@
     <ClCompile Include="instruction.cpp" />
     <ClCompile Include="io.cpp" />
     <ClCompile Include="iterator.cpp" />
+    <ClCompile Include="json.cpp" />
     <ClCompile Include="lex.parser.cpp" />
     <ClCompile Include="lexer.cpp" />
     <ClCompile Include="library.cpp" />
@@ -241,6 +242,9 @@
     <BISON Include="parser.y" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\jansson\jansson.vcxproj">
+      <Project>{12d6e037-84d8-406a-8a9b-3e00d3e0d426}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\libnetxms\libnetxms.vcxproj">
       <Project>{b1745870-f3ed-4acb-b813-0c4f47ef0793}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>

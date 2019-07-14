@@ -96,6 +96,9 @@
     <ClCompile Include="io.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="json.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="libnxsl.h">

@@ -21,6 +21,7 @@ escape		\\[bnrt0\"\\]
 #ifdef _WIN32
 #define YY_NO_UNISTD_H
 #pragma warning(disable : 4244 4267)
+#define _CRT_SECURE_NO_WARNINGS
 #endif
 
 #ifdef __HP_aCC

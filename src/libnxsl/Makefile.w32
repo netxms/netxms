@@ -8,7 +8,7 @@ SOURCES = lex.parser.cpp parser.tab.cpp \
           value.cpp variable.cpp vm.cpp
 GENERATED = lex.parser.cpp parser.tab.hpp parser.tab.cpp
 CPPFLAGS = /DLIBNXSL_EXPORTS /D__STDC_VERSION__=199901L
-LIBS = libnetxms.lib libtre.lib ws2_32.lib
+LIBS = libnetxms.lib libtre.lib jansson.lib ws2_32.lib
   
 include ..\..\Makefile.inc.w32
 
