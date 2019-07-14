@@ -165,7 +165,7 @@ NXSL_METHOD_DEFINITION(JsonObject, get)
 #ifdef UNICODE
    WideCharToMultiByte(CP_UTF8, 0, argv[0]->getValueAsCString(), -1, attr, 256, NULL, NULL);
 #else
-   mb_to_utf8(rgv[0]->getValueAsCString(), -1, attr, 256);
+   mb_to_utf8(argv[0]->getValueAsCString(), -1, attr, 256);
 #endif
    attr[255] = 0;
 
@@ -185,7 +185,7 @@ NXSL_METHOD_DEFINITION(JsonObject, set)
 #ifdef UNICODE
    WideCharToMultiByte(CP_UTF8, 0, argv[0]->getValueAsCString(), -1, attr, 256, NULL, NULL);
 #else
-   mb_to_utf8(rgv[0]->getValueAsCString(), -1, attr, 256);
+   mb_to_utf8(argv[0]->getValueAsCString(), -1, attr, 256);
 #endif
    attr[255] = 0;
 
