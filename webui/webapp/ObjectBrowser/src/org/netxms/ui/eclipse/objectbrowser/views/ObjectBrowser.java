@@ -135,7 +135,7 @@ public class ObjectBrowser extends ViewPart
    private boolean initHideSubInterfaces = false;
 	private boolean initShowFilter = true;
 	private boolean initShowStatus = false;
-	private boolean initHideNodeComponents = false;
+	private boolean initHideNodeComponents = true;
 	private String initialObjectSelection = null;
 	private ObjectOpenHandlerRegistry openHandlers;
 	private ObjectActionValidator[] actionValidators;

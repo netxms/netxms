@@ -682,7 +682,7 @@ public class ObjectTree extends Composite
     * 
     * @param enabled new flag value
     */
-   public void setShowNodeComponent(boolean enabled)
+   public void setHideNodeComponent(boolean enabled)
    {
       hideNodeComponents = enabled;
       contentProvider.setHideNodeComponents(enabled);

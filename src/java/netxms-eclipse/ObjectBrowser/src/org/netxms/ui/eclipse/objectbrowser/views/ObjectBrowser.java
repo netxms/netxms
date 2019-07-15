@@ -135,7 +135,7 @@ public class ObjectBrowser extends ViewPart
    private boolean initHideSubInterfaces = false;
 	private boolean initShowFilter = true;
 	private boolean initShowStatus = false;
-	private boolean initHideNodeComponents = false;
+	private boolean initHideNodeComponents = true;
 	private String initialObjectSelection = null;
 	private ObjectOpenHandlerRegistry openHandlers;
 	private ObjectActionValidator[] actionValidators;
@@ -152,9 +152,9 @@ public class ObjectBrowser extends ViewPart
 			initHideUnmanaged = safeCast(memento.getBoolean("ObjectBrowser.hideUnmanaged"), false); //$NON-NLS-1$
 			initHideTemplateChecks = safeCast(memento.getBoolean("ObjectBrowser.hideTemplateChecks"), false); //$NON-NLS-1$
 			initHideSubInterfaces = safeCast(memento.getBoolean("ObjectBrowser.hideSubInterfaces"), false); //$NON-NLS-1$
+			initHideNodeComponents =  safeCast(memento.getBoolean("ObjectBrowser.hideNodeComponents"), true); //$NON-NLS-1$
 			initShowStatus = safeCast(memento.getBoolean("ObjectBrowser.showStatusIndicator"), false); //$NON-NLS-1$
 			initialObjectSelection = memento.getString("ObjectBrowser.selectedObject"); //$NON-NLS-1$
-			initHideNodeComponents =  safeCast(memento.getBoolean("ObjectBrowser.hideNodeComponents"), true); //$NON-NLS-1$
 		}
 		openHandlers = new ObjectOpenHandlerRegistry();
 		registerActionValidators();
@@ -592,7 +592,7 @@ public class ObjectBrowser extends ViewPart
          @Override
          public void run()
          {
-            objectTree.setShowNodeComponent(actionHideNodeComponents.isChecked());
+            objectTree.setHideNodeComponent(actionHideNodeComponents.isChecked());
          }
       };
       actionHideNodeComponents.setId("org.netxms.ui.eclipse.objectbrowser.actions.showHideNodeComponents"); //$NON-NLS-1$

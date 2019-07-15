@@ -295,7 +295,7 @@ public class ObjectSelectionDialog extends Dialog
 
 		boolean checked = (settings.get("SelectObject.hideNodeComponents") != null) ? settings.getBoolean("SelectObject.hideNodeComponents") : true; //$NON-NLS-1$  
 		objectTree = new ObjectTree(dialogArea, SWT.NONE, multiSelection ? ObjectTree.MULTI : 0, rootObjects, classFilter, showFilterToolTip, showFilterCloseButton, false);
-		objectTree.setShowNodeComponent(checked);
+		objectTree.setHideNodeComponent(checked);
 		
 		String text = settings.get("SelectObject.Filter"); //$NON-NLS-1$
 		if (text != null)
@@ -316,7 +316,7 @@ public class ObjectSelectionDialog extends Dialog
          @Override
          public void widgetSelected(SelectionEvent e)
          {
-            objectTree.setShowNodeComponent(checkHideNodeComponents.getSelection());           
+            objectTree.setHideNodeComponent(checkHideNodeComponents.getSelection());           
          }
          
          @Override
