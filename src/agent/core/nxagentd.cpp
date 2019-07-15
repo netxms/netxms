@@ -202,6 +202,8 @@ UINT32 g_dwMaxSessions = 0;
 UINT32 g_longRunningQueryThreshold = 250;
 UINT32 g_dcReconciliationBlockSize = 1024;
 UINT32 g_dcReconciliationTimeout = 60000;
+UINT32 g_dcWriterFlushInterval = 5000;
+UINT32 g_dcWriterMaxTransactionSize = 10000;
 UINT32 g_dcMaxCollectorPoolSize = 64;
 UINT32 g_dcOfflineExpirationTime = 10; // 10 days
 UINT32 g_zoneUIN = 0;
@@ -278,6 +280,8 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("DataCollectionThreadPoolSize"), CT_LONG, 0, 0, 0, 0, &g_dcMaxCollectorPoolSize, NULL },
    { _T("DataReconciliationBlockSize"), CT_LONG, 0, 0, 0, 0, &g_dcReconciliationBlockSize, NULL },
    { _T("DataReconciliationTimeout"), CT_LONG, 0, 0, 0, 0, &g_dcReconciliationTimeout, NULL },
+   { _T("DataWriterFlushInterval"), CT_LONG, 0, 0, 0, 0, &g_dcWriterFlushInterval, NULL },
+   { _T("DataWriterMaxTransactionSize"), CT_LONG, 0, 0, 0, 0, &g_dcWriterMaxTransactionSize, NULL },
    { _T("DailyLogFileSuffix"), CT_STRING, 0, 0, 64, 0, s_dailyLogFileSuffix, NULL },
    { _T("DebugLevel"), CT_LONG, 0, 0, 0, 0, &s_debugLevel, &s_debugLevel },
    { _T("DebugTags"), CT_STRING_LIST, ',', 0, 0, 0, &s_debugTags, NULL },

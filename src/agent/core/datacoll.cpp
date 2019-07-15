@@ -45,6 +45,8 @@ extern Mutex g_proxyListMutex;
 
 extern UINT32 g_dcReconciliationBlockSize;
 extern UINT32 g_dcReconciliationTimeout;
+extern UINT32 g_dcWriterFlushInterval;
+extern UINT32 g_dcWriterMaxTransactionSize;
 extern UINT32 g_dcMaxCollectorPoolSize;
 extern UINT32 g_dcOfflineExpirationTime;
 
@@ -98,9 +100,9 @@ public:
 
 //   bool equals(const DataCollectionItem *item) const { return (m_serverId == item->m_serverId) && (m_id == item->m_id); }
 
-   bool updateAndSave(const DataCollectionItem *item, bool txnOpen);
-   void saveToDatabase(bool newObject);
-   void deleteFromDatabase();
+   bool updateAndSave(const DataCollectionItem *item, bool txnOpen, DB_HANDLE hdb, DB_STATEMENT &stmtInsert, DB_STATEMENT &stmtUpdate);
+   void saveToDatabase(bool newObject, DB_HANDLE hdb, DB_STATEMENT &stmtInsert, DB_STATEMENT &stmtUpdate);
+   void deleteFromDatabase(DB_HANDLE hdb, DB_STATEMENT &stmtDelete);
    void setLastPollTime(time_t time);
 
    void startDataCollection() { m_busy = 1; incRefCount(); }
@@ -184,7 +186,7 @@ DataCollectionItem::~DataCollectionItem()
  * Will check if object has changed. If at least one field is changed - all data will be updated and
  * saved to database.
  */
-bool DataCollectionItem::updateAndSave(const DataCollectionItem *item, bool txnOpen)
+bool DataCollectionItem::updateAndSave(const DataCollectionItem *item, bool txnOpen, DB_HANDLE hdb, DB_STATEMENT &stmtInsert, DB_STATEMENT &stmtUpdate)
 {
    // if at least one of fields changed - set all fields and save to DB
    if ((m_type != item->m_type) || (m_origin != item->m_origin) || _tcscmp(m_name, item->m_name) ||
@@ -206,10 +208,10 @@ bool DataCollectionItem::updateAndSave(const DataCollectionItem *item, bool txnO
 
       if (!txnOpen)
       {
-         DBBegin(GetLocalDatabaseHandle());
+         DBBegin(hdb);
          txnOpen = true;
       }
-      saveToDatabase(false);
+      saveToDatabase(false, hdb, stmtInsert, stmtUpdate);
    }
    return txnOpen;
 }
@@ -217,26 +219,33 @@ bool DataCollectionItem::updateAndSave(const DataCollectionItem *item, bool txnO
 /**
  * Save configuration object to database
  */
-void DataCollectionItem::saveToDatabase(bool newObject)
+void DataCollectionItem::saveToDatabase(bool newObject, DB_HANDLE hdb, DB_STATEMENT &stmtInsert, DB_STATEMENT &stmtUpdate)
 {
    DebugPrintf(6, _T("DataCollectionItem::saveToDatabase: %s object(serverId=") UINT64X_FMT(_T("016")) _T(",dciId=%d) saved to database"),
                newObject ? _T("new") : _T("existing"), m_serverId, m_id);
-   DB_HANDLE db = GetLocalDatabaseHandle();
-   DB_STATEMENT hStmt;
 
+   DB_STATEMENT hStmt;
    if (newObject)
    {
-		hStmt = DBPrepare(db,
-                    _T("INSERT INTO dc_config (type,origin,name,polling_interval,")
-                    _T("last_poll,snmp_port,snmp_target_guid,snmp_raw_type,backup_proxy_id,server_id,dci_id)")
-                    _T("VALUES (?,?,?,?,?,?,?,?,?,?,?)"));
+      if (stmtInsert == NULL)
+      {
+         stmtInsert = DBPrepare(hdb,
+                  _T("INSERT INTO dc_config (type,origin,name,polling_interval,")
+                  _T("last_poll,snmp_port,snmp_target_guid,snmp_raw_type,backup_proxy_id,server_id,dci_id)")
+                  _T("VALUES (?,?,?,?,?,?,?,?,?,?,?)"));
+      }
+      hStmt = stmtInsert;
    }
    else
    {
-      hStmt = DBPrepare(db,
+      if (stmtUpdate == NULL)
+      {
+         stmtUpdate = DBPrepare(hdb,
                     _T("UPDATE dc_config SET type=?,origin=?,name=?,")
                     _T("polling_interval=?,last_poll=?,snmp_port=?,")
                     _T("snmp_target_guid=?,snmp_raw_type=?,backup_proxy_id=? WHERE server_id=? AND dci_id=?"));
+      }
+      hStmt = stmtUpdate;
    }
 
 	if (hStmt == NULL)
@@ -255,18 +264,23 @@ void DataCollectionItem::saveToDatabase(bool newObject)
 	DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, (LONG)m_id);
 
    DBExecute(hStmt);
-   DBFreeStatement(hStmt);
 }
 
 /**
  * Remove item form database
  */
-void DataCollectionItem::deleteFromDatabase()
+void DataCollectionItem::deleteFromDatabase(DB_HANDLE hdb, DB_STATEMENT &stmtDelete)
 {
-   DB_HANDLE db = GetLocalDatabaseHandle();
-   TCHAR query[256];
-   _sntprintf(query, 256, _T("DELETE FROM dc_config WHERE server_id=") UINT64_FMT _T(" AND dci_id=%d"), m_serverId, m_id);
-   if (DBQuery(db, query))
+   if (stmtDelete == NULL)
+   {
+      stmtDelete = DBPrepare(hdb, _T("DELETE FROM dc_config WHERE server_id=? AND dci_id=?"), true);
+      if (stmtDelete == NULL)
+         return;
+   }
+
+   DBBind(stmtDelete, 1, DB_SQLTYPE_BIGINT, m_serverId);
+   DBBind(stmtDelete, 2, DB_SQLTYPE_INTEGER, m_id);
+   if (DBExecute(stmtDelete))
    {
       DebugPrintf(6, _T("DataCollectionItem::deleteFromDatabase: object(serverId=") UINT64X_FMT(_T("016")) _T(",dciId=%d) removed from database"), m_serverId, m_id);
    }
@@ -535,7 +549,7 @@ static Mutex s_serverSyncStatusLock;
 /**
  * Database writer queue
  */
-static Queue s_databaseWriterQueue;
+static ObjectQueue<DataElement> s_databaseWriterQueue;
 
 /**
  * Database writer
@@ -547,19 +561,18 @@ static THREAD_RESULT THREAD_CALL DatabaseWriter(void *arg)
 
    while(true)
    {
-      DataElement *e = (DataElement *)s_databaseWriterQueue.getOrBlock();
+      DataElement *e = s_databaseWriterQueue.getOrBlock();
       if (e == INVALID_POINTER_VALUE)
          break;
 
-      DB_STATEMENT hStmt= DBPrepare(hdb, _T("INSERT INTO dc_queue (server_id,dci_id,dci_type,dci_origin,status_code,snmp_target_guid,timestamp,value) VALUES (?,?,?,?,?,?,?,?)"));
+      DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO dc_queue (server_id,dci_id,dci_type,dci_origin,status_code,snmp_target_guid,timestamp,value) VALUES (?,?,?,?,?,?,?,?)"));
       if (hStmt == NULL)
       {
          delete e;
          continue;
       }
 
-      int count = 0;
-
+      UINT32 count = 0;
       DBBegin(hdb);
       while((e != NULL) && (e != INVALID_POINTER_VALUE))
       {
@@ -567,16 +580,20 @@ static THREAD_RESULT THREAD_CALL DatabaseWriter(void *arg)
          delete e;
 
          count++;
-         if (count > 200)
+         if (count == g_dcWriterMaxTransactionSize)
             break;
 
-         e = (DataElement *)s_databaseWriterQueue.getOrBlock(500);  // Wait up to 500 ms for next data block
+         e = s_databaseWriterQueue.get();
       }
       DBCommit(hdb);
       DBFreeStatement(hStmt);
-      DebugPrintf(7, _T("Database writer: %d records inserted"), count);
+      DebugPrintf(7, _T("Database writer: %u records inserted"), count);
       if (e == INVALID_POINTER_VALUE)
          break;
+
+      // Sleep only if queue was emptied
+      if (count < g_dcWriterMaxTransactionSize)
+         ThreadSleepMs(g_dcWriterFlushInterval);
    }
 
    DebugPrintf(1, _T("Database writer thread stopped"));
@@ -782,17 +799,23 @@ static THREAD_RESULT THREAD_CALL ReconciliationThread(void *arg)
 
          if (deleteList.size() > 0)
          {
-            DBBegin(hdb);
-            for(int i = 0; i < deleteList.size(); i++)
+            DB_STATEMENT hStmt = DBPrepare(hdb, _T("DELETE FROM dc_queue WHERE server_id=? AND dci_id=? AND timestamp=?"), true);
+            if (hStmt != NULL)
             {
-               DataElement *e = deleteList.get(i);
-               _sntprintf(query, 256, _T("DELETE FROM dc_queue WHERE server_id=") UINT64_FMT _T(" AND dci_id=%d AND timestamp=") INT64_FMT,
-                  e->getServerId(), e->getDciId(), (INT64)e->getTimestamp());
-               DBQuery(hdb, query);
+               DBBegin(hdb);
+               for(int i = 0; i < deleteList.size(); i++)
+               {
+                  DataElement *e = deleteList.get(i);
+                  DBBind(hStmt, 1, DB_SQLTYPE_BIGINT, e->getServerId());
+                  DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, e->getDciId());
+                  DBBind(hStmt, 3, DB_SQLTYPE_BIGINT, static_cast<INT64>(e->getTimestamp()));
+                  DBExecute(hStmt);
+               }
+               DBCommit(hdb);
+               DBFreeStatement(hStmt);
+               vacuumNeeded = true;
             }
-            DBCommit(hdb);
             nxlog_debug(4, _T("ReconciliationThread: %d records sent"), deleteList.size());
-            vacuumNeeded = true;
          }
       }
       DBFreeResult(hResult);
@@ -1086,6 +1109,7 @@ void ConfigureDataCollection(UINT64 serverId, NXCPMessage *msg)
    DebugPrintf(4, _T("%d data collection elements received from server ") UINT64X_FMT(_T("016")), count, serverId);
 
    bool txnOpen = false;
+   DB_STATEMENT stmtInsert = NULL, stmtUpdate = NULL, stmtDelete = NULL;
 
    s_itemLock.lock();
 
@@ -1097,7 +1121,7 @@ void ConfigureDataCollection(UINT64 serverId, NXCPMessage *msg)
       DataCollectionItem *existingItem = s_items.get(item->getKey());
       if (existingItem != NULL)
       {
-         txnOpen = existingItem->updateAndSave(item, txnOpen);
+         txnOpen = existingItem->updateAndSave(item, txnOpen, hdb, stmtInsert, stmtUpdate);
       }
       else
       {
@@ -1108,7 +1132,7 @@ void ConfigureDataCollection(UINT64 serverId, NXCPMessage *msg)
             DBBegin(hdb);
             txnOpen = true;
          }
-         newItem->saveToDatabase(true);
+         newItem->saveToDatabase(true, hdb, stmtInsert, stmtUpdate);
       }
 
       if (item->getBackupProxyId() != 0)
@@ -1127,7 +1151,7 @@ void ConfigureDataCollection(UINT64 serverId, NXCPMessage *msg)
    }
    delete it;
 
-   // Remove not existing configuration
+   // Remove non-existing configuration
    it = s_items.iterator();
    while(it->hasNext())
    {
@@ -1142,7 +1166,7 @@ void ConfigureDataCollection(UINT64 serverId, NXCPMessage *msg)
             DBBegin(hdb);
             txnOpen = true;
          }
-         item->deleteFromDatabase();
+         item->deleteFromDatabase(hdb, stmtDelete);
          it->unlink();
          item->decRefCount();
       }
@@ -1151,6 +1175,13 @@ void ConfigureDataCollection(UINT64 serverId, NXCPMessage *msg)
 
    if (txnOpen)
       DBCommit(hdb);
+
+   if (stmtInsert != NULL)
+      DBFreeStatement(stmtInsert);
+   if (stmtUpdate != NULL)
+      DBFreeStatement(stmtUpdate);
+   if (stmtDelete != NULL)
+      DBFreeStatement(stmtDelete);
 
    s_itemLock.unlock();
 
