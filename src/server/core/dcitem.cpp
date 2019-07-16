@@ -1723,7 +1723,8 @@ void DCItem::createExportRecord(String &str)
                           _T("\t\t\t\t\t<snmpRawValueType>%d</snmpRawValueType>\n")
                           _T("\t\t\t\t\t<snmpPort>%d</snmpPort>\n")
                           _T("\t\t\t\t\t<instanceDiscoveryMethod>%d</instanceDiscoveryMethod>\n")
-                          _T("\t\t\t\t\t<instanceRetentionTime>%d</instanceRetentionTime>\n"),
+                          _T("\t\t\t\t\t<instanceRetentionTime>%d</instanceRetentionTime>\n")
+                          _T("\t\t\t\t\t<comments>%s</comments>\n"),
 								  (int)m_id, (const TCHAR *)m_guid.toString(),
 								  (const TCHAR *)EscapeStringForXML2(m_name),
                           (const TCHAR *)EscapeStringForXML2(m_description),
@@ -1731,7 +1732,9 @@ void DCItem::createExportRecord(String &str)
                           (const TCHAR *)EscapeStringForXML2(m_instance),
                           (const TCHAR *)EscapeStringForXML2(m_systemTag),
 								  (int)m_deltaCalculation, (int)m_flags,
-								  (int)m_snmpRawValueType, (int)m_snmpPort, (int)m_instanceDiscoveryMethod, m_instanceRetentionTime);
+								  (int)m_snmpRawValueType, (int)m_snmpPort,
+								  (int)m_instanceDiscoveryMethod, m_instanceRetentionTime,
+								  (const TCHAR *)EscapeStringForXML2(m_comments));
 
 	if (m_transformationScriptSource != NULL)
 	{

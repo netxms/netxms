@@ -291,8 +291,14 @@ bool Template::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
 void Template::createExportRecord(String &str)
 {
    TCHAR guid[48];
-   str.appendFormattedString(_T("\t\t<template id=\"%d\">\n\t\t\t<guid>%s</guid>\n\t\t\t<name>%s</name>\n\t\t\t<flags>%d</flags>\n"),
-                             m_id, m_guid.toString(guid), (const TCHAR *)EscapeStringForXML2(m_name), m_flags);
+   str.appendFormattedString(_T("\t\t<template id=\"%d\">\n")
+                             _T("\t\t\t<guid>%s</guid>\n")
+                             _T("\t\t\t<name>%s</name>\n")
+                             _T("\t\t\t<flags>%d</flags>\n")
+                             _T("\t\t\t<comments>%s</comments>\n"),
+                             m_id, m_guid.toString(guid),
+                             (const TCHAR *)EscapeStringForXML2(m_name), m_flags,
+                             (const TCHAR *)EscapeStringForXML2(m_comments));
 
    // Path in groups
    StringList path;

@@ -66,6 +66,9 @@ DataCollectionOwner::DataCollectionOwner(ConfigEntry *config)
    nx_strncpy(m_name, config->getSubEntryValue(_T("name"), 0, _T("Unnamed Object")), MAX_OBJECT_NAME);
    m_flags = config->getSubEntryValueAsUInt(_T("flags"), 0, 0);
 
+   //Comment
+   m_comments = MemCopyString(config->getSubEntryValue(_T("comments")));
+
    // Data collection
    m_dcObjects = new ObjectArray<DCObject>(8, 16, true);
    ConfigEntry *dcRoot = config->findEntry(_T("dataCollection"));

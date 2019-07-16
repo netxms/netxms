@@ -213,7 +213,7 @@ DCObject::DCObject(ConfigEntry *config, DataCollectionOwner *owner)
 	m_transformationScriptSource = NULL;
 	m_transformationScript = NULL;
    m_lastScriptErrorReport = 0;
-	m_comments = NULL;
+   m_comments = MemCopyString(config->getSubEntryValue(_T("comments")));
    m_pollingSession = NULL;
 	setTransformationScript(config->getSubEntryValue(_T("transformation")));
 

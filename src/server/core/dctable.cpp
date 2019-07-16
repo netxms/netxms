@@ -1070,14 +1070,16 @@ void DCTable::createExportRecord(String &str)
                           _T("\t\t\t\t\t<snmpPort>%d</snmpPort>\n")
                           _T("\t\t\t\t\t<instanceDiscoveryMethod>%d</instanceDiscoveryMethod>\n")
                           _T("\t\t\t\t\t<instance>%s</instance>\n")
-                          _T("\t\t\t\t\t<instanceRetentionTime>%d</instanceRetentionTime>\n"),
+                          _T("\t\t\t\t\t<instanceRetentionTime>%d</instanceRetentionTime>\n")
+                          _T("\t\t\t\t\t<comments>%s</comments>\n"),
 								  (int)m_id, (const TCHAR *)m_guid.toString(),
 								  (const TCHAR *)EscapeStringForXML2(m_name),
                           (const TCHAR *)EscapeStringForXML2(m_description),
                           (int)m_source, m_iPollingInterval, m_iRetentionTime,
                           (const TCHAR *)EscapeStringForXML2(m_systemTag),
 								  (int)m_flags, (int)m_snmpPort, (int)m_instanceDiscoveryMethod,
-								  (const TCHAR *)EscapeStringForXML2(m_instance), m_instanceRetentionTime);
+								  (const TCHAR *)EscapeStringForXML2(m_instance), m_instanceRetentionTime,
+								  (const TCHAR *)EscapeStringForXML2(m_comments));
 
 	if (m_transformationScriptSource != NULL)
 	{
