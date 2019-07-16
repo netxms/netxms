@@ -133,7 +133,7 @@ public class LoginJob implements IRunnableWithProgress
          monitor.setTaskName(Messages.get(display).LoginJob_sync_event_db);
          try
          {
-            session.syncEventObjects();
+            session.syncEventTemplates();
          }
          catch(NXCException e)
          {

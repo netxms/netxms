@@ -24,6 +24,74 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 30.83 to 30.84
+ */
+static bool H_UpgradeFromV83()
+{
+   static const TCHAR *batch =
+            _T("ALTER TABLE event_cfg ADD tags varchar(2000)\n")
+            _T("ALTER TABLE event_log ADD event_tags varchar(2000)\n")
+            _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+
+   DB_RESULT hResult = SQLSelect(_T("SELECT event_code,name FROM event_group_members INNER JOIN event_groups ON event_groups.id=event_group_members.group_id ORDER BY event_code"));
+   if (hResult != NULL)
+   {
+      UINT32 currEventCode = 0;
+      String tags;
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
+      {
+         UINT32 eventCode = DBGetFieldULong(hResult, i, 0);
+         if (eventCode != currEventCode)
+         {
+            if (!tags.isEmpty())
+            {
+               String query = _T("UPDATE event_cfg SET tags=");
+               query.append(DBPrepareString(g_dbHandle, tags));
+               query.append(_T(" WHERE event_code="));
+               query.append(currEventCode);
+               CHK_EXEC(SQLQuery(query));
+               tags.clear();
+            }
+            currEventCode = eventCode;
+         }
+
+         TCHAR tag[64];
+         DBGetField(hResult, i, 1, tag, 64);
+         Trim(tag);
+         if (tag[0] != 0)
+         {
+            if (!tags.isEmpty())
+               tags.append(_T(','));
+            tags.append(tag);
+         }
+      }
+      DBFreeResult(hResult);
+
+      if (!tags.isEmpty())
+      {
+         String query = _T("UPDATE event_cfg SET tags=");
+         query.append(DBPrepareString(g_dbHandle, tags));
+         query.append(_T(" WHERE event_code="));
+         query.append(currEventCode);
+         CHK_EXEC(SQLQuery(query));
+      }
+   }
+   else
+   {
+      if (!g_ignoreErrors)
+         return false;
+   }
+
+   CHK_EXEC(SQLQuery(_T("DROP TABLE event_group_members")));
+   CHK_EXEC(SQLQuery(_T("DROP TABLE event_groups")));
+
+   CHK_EXEC(SetMinorSchemaVersion(84));
+   return true;
+}
+
+/**
  * Upgrade from 30.82 to 30.83
  */
 static bool H_UpgradeFromV82()
@@ -2671,6 +2739,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 83, 30, 84, H_UpgradeFromV83 },
    { 82, 30, 83, H_UpgradeFromV82 },
    { 81, 30, 82, H_UpgradeFromV81 },
    { 80, 30, 81, H_UpgradeFromV80 },

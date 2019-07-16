@@ -43,8 +43,8 @@ ForwardingDatabase::ForwardingDatabase(UINT32 nodeId)
  */
 ForwardingDatabase::~ForwardingDatabase()
 {
-	free(m_fdb);
-	free(m_portMap);
+	MemFree(m_fdb);
+	MemFree(m_portMap);
 }
 
 /**
@@ -98,7 +98,7 @@ void ForwardingDatabase::addEntry(FDB_ENTRY *entry)
 	if (m_fdbSize == m_fdbAllocated)
 	{
 		m_fdbAllocated += 32;
-		m_fdb = (FDB_ENTRY *)realloc(m_fdb, sizeof(FDB_ENTRY) * m_fdbAllocated);
+		m_fdb = MemReallocArray(m_fdb, m_fdbAllocated);
 	}
 	memcpy(&m_fdb[m_fdbSize], entry, sizeof(FDB_ENTRY));
 	m_fdb[m_fdbSize].ifIndex = ifIndexFromPort(entry->port);
@@ -295,7 +295,6 @@ static UINT32 Dot1qTpFdbHandler(SNMP_Variable *pVar, SNMP_Transport *pTransport,
 	int port = pVar->getValueAsInt();
 	if (port == 0)
 		return SNMP_ERR_SUCCESS;
-
 
 	// Get port number and status
    SNMP_PDU *pRqPDU = new SNMP_PDU(SNMP_GET_REQUEST, SnmpNewRequestId(), pTransport->getSnmpVersion());

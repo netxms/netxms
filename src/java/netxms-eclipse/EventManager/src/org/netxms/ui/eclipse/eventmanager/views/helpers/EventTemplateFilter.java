@@ -25,7 +25,7 @@ import org.netxms.client.events.EventTemplate;
 /**
  * Event template filter
  */
-public class EventObjectFilter extends ViewerFilter
+public class EventTemplateFilter extends ViewerFilter
 {
    private String filterText = null;
    
@@ -40,6 +40,8 @@ public class EventObjectFilter extends ViewerFilter
       else if (((EventTemplate)element).getName().toLowerCase().contains(filterText.toLowerCase()))
          return true;
       else if (((EventTemplate)element).getMessage().toLowerCase().contains(filterText.toLowerCase()))
+         return true;
+      else if (((EventTemplate)element).getTagList().toLowerCase().contains(filterText.toLowerCase()))
          return true;
       return false;
    }

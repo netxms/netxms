@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2019 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,6 +18,8 @@
  */
 package org.netxms.client.events;
 
+import java.util.HashSet;
+import java.util.Set;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.constants.Severity;
@@ -25,11 +27,18 @@ import org.netxms.client.constants.Severity;
 /**
  * Event template
  */
-public class EventTemplate extends EventObject
+public class EventTemplate
 {
+   public static final int FLAG_WRITE_TO_LOG = 0x0001;
+   
+   private long code;
+   private String name;
+   private String message;
+   private String description;
 	private Severity severity;
 	private int flags;
-	private String message;
+	private String tagList; 
+   private Set<String> tags;
 	
 	/**
 	 * Create new empty event template.
@@ -38,24 +47,38 @@ public class EventTemplate extends EventObject
 	 */
 	public EventTemplate(long code)
 	{
-	   super(code);
+      this.code = code;
+      name = "";
+      message = "";
+      description = "";
 		severity = Severity.NORMAL;
 		flags = FLAG_WRITE_TO_LOG;
-		message = "";
+		tagList= "";
+		tags = new HashSet<String>();
 	}
 	
 	/**
 	 * Create event template object from NXCP message.
 	 * 
 	 * @param msg NXCP message
-    * @param base base field id
+    * @param baseId base field id
 	 */
-	public EventTemplate(final NXCPMessage msg, long base)
+	public EventTemplate(final NXCPMessage msg, long baseId)
 	{
-	   super(msg, base);
-		severity = Severity.getByValue(msg.getFieldAsInt32(base + 4));
-		flags = msg.getFieldAsInt32(base + 5);
-		message = msg.getFieldAsString(base + 6);
+      code = msg.getFieldAsInt64(baseId + 1);
+      description = msg.getFieldAsString(baseId + 2);
+      name = msg.getFieldAsString(baseId + 3);
+		severity = Severity.getByValue(msg.getFieldAsInt32(baseId + 4));
+		flags = msg.getFieldAsInt32(baseId + 5);
+		message = msg.getFieldAsString(baseId + 6);
+
+      tags = new HashSet<String>();
+		tagList = msg.getFieldAsString(baseId + 7);
+		if ((tagList != null) && !tagList.isEmpty())
+		{
+		   for(String s : tagList.split(","))
+		      tags.add(s);
+		}
 	}
 	
 	/**
@@ -65,10 +88,14 @@ public class EventTemplate extends EventObject
 	 */
 	public EventTemplate(final EventTemplate src)
 	{
-	   super(src);
+      code = src.code;
+      name = src.name;
+      description = src.description;
       severity = ((EventTemplate)src).severity;
       flags = ((EventTemplate)src).flags;
       message = ((EventTemplate)src).message;
+      tagList = src.tagList;
+      tags = new HashSet<String>(src.tags);
 	}
 	
 	/* (non-Javadoc)
@@ -76,10 +103,23 @@ public class EventTemplate extends EventObject
 	 */
 	public void fillMessage(NXCPMessage msg)
 	{
-	   super.fillMessage(msg);
+      msg.setFieldInt32(NXCPCodes.VID_EVENT_CODE, (int) code);
+      msg.setField(NXCPCodes.VID_NAME, name);
+      msg.setField(NXCPCodes.VID_MESSAGE, message);
+      msg.setField(NXCPCodes.VID_DESCRIPTION, description);
       msg.setFieldInt32(NXCPCodes.VID_SEVERITY, severity.getValue());
       msg.setFieldInt32(NXCPCodes.VID_FLAGS, flags);
-      msg.setField(NXCPCodes.VID_MESSAGE, message);
+      if (!tags.isEmpty())
+      {
+         StringBuilder sb = new StringBuilder();
+         for(String s : tags)
+         {
+            if (sb.length() > 0)
+               sb.append(',');
+            sb.append(s);
+         }
+         msg.setField(NXCPCodes.VID_TAGS, sb.toString());
+      }
 	}
 	
 	/**
@@ -87,15 +127,16 @@ public class EventTemplate extends EventObject
 	 * 
 	 * @param src Original event template object
 	 */
-	public void setAll(final EventObject src)
+	public void setAll(final EventTemplate src)
 	{
-	   if (!(src instanceof EventTemplate))
-	      return;
-	   
-	   super.setAll(src);
-		severity = ((EventTemplate)src).severity;
-		flags = ((EventTemplate)src).flags;
-		message = ((EventTemplate)src).message;
+      code = src.code;
+      name = src.name;
+      message = src.message;
+      description = src.description;
+		severity = src.severity;
+		flags = src.flags;
+		tagList = src.tagList;
+		tags = new HashSet<String>(src.tags);
 	}
 
 	/**
@@ -145,4 +186,103 @@ public class EventTemplate extends EventObject
 	{
 		this.message = message;
 	}
+
+   /**
+    * @return the name
+    */
+   public String getName()
+   {
+      return name;
+   }
+
+   /**
+    * @param name the name to set
+    */
+   public void setName(String name)
+   {
+      this.name = name;
+   }   
+
+   /**
+    * @return the description
+    */
+   public String getDescription()
+   {
+      return description;
+   }
+
+   /**
+    * @param description the description to set
+    */
+   public void setDescription(String description)
+   {
+      this.description = description;
+   }   
+
+   /**
+    * @return the code
+    */
+   public long getCode()
+   {
+      return code;
+   }
+
+   /**
+    * @param code the code to set
+    */
+   public void setCode(long code)
+   {
+      this.code = code;
+   }
+
+   /**
+    * @return the tags
+    */
+   public Set<String> getTags()
+   {
+      return tags;
+   }
+
+   /**
+    * @param tags the tags to set
+    */
+   public void setTags(Set<String> tags)
+   {
+      this.tags = tags;
+      if (!tags.isEmpty())
+      {
+         StringBuilder sb = new StringBuilder();
+         for(String s : tags)
+         {
+            if (sb.length() > 0)
+               sb.append(',');
+            sb.append(s);
+         }
+         tagList = sb.toString();
+      }
+      else
+      {
+         tagList = "";
+      }
+   }
+   
+   /**
+    * Get tags as list
+    * 
+    * @return tags as comma separated list
+    */
+   public String getTagList()
+   {
+      return (tagList != null) ? tagList : "";
+   }
+
+   /**
+    * @see java.lang.Object#toString()
+    */
+   @Override
+   public String toString()
+   {
+      return "EventTemplate [code=" + code + ", name=" + name + ", message=" + message + ", description=" + description
+            + ", severity=" + severity + ", flags=" + flags + ", tagList=" + tagList + ", tags=" + tags + "]";
+   }
 }

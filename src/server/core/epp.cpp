@@ -59,11 +59,11 @@ EPRule::EPRule(ConfigEntry *config) : m_actions(0, 16, true)
 		ObjectArray<ConfigEntry> *events = eventsRoot->getSubEntries(_T("event#*"));
       for(int i = 0; i < events->size(); i++)
       {
-         EventObject *o = FindEventObjectByName(events->get(i)->getSubEntryValue(_T("name"), 0, _T("<unknown>")));
-         if (o != NULL)
+         EventTemplate *e = FindEventTemplateByName(events->get(i)->getSubEntryValue(_T("name"), 0, _T("<unknown>")));
+         if (e != NULL)
          {
-            m_events.add(o->getCode());
-            o->decRefCount();
+            m_events.add(e->getCode());
+            e->decRefCount();
          }
       }
       delete events;
@@ -463,25 +463,10 @@ bool EPRule::matchEvent(UINT32 eventCode)
    bool match = false;
    for(int i = 0; i < m_events.size(); i++)
    {
-      UINT32 e = m_events.get(i);
-      if (e & GROUP_FLAG_BIT)
+      if (m_events.get(i) == eventCode)
       {
-         EventGroup *g = (EventGroup *)FindEventObjectByCode(e);
-         if (g != NULL)
-         {
-            if (g->isMember(eventCode))
-               match = true;
-            g->decRefCount();
-            break;
-         }
-      }
-      else
-      {
-         if (e == eventCode)
-         {
-            match = true;
-            break;
-         }
+         match = true;
+         break;
       }
    }
    return (m_flags & RF_NEGATED_EVENTS) ? !match : match;

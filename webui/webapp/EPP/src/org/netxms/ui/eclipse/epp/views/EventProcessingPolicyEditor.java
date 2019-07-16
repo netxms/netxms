@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2019 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -62,7 +62,6 @@ import org.netxms.client.ServerAction;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
 import org.netxms.client.events.AlarmCategory;
-import org.netxms.client.events.EventObject;
 import org.netxms.client.events.EventProcessingPolicy;
 import org.netxms.client.events.EventProcessingPolicyRule;
 import org.netxms.client.events.EventTemplate;
@@ -886,43 +885,49 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
    {
    }
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.ISaveablePart#isDirty()
-	 */
-	@Override
-	public boolean isDirty()
-	{
-		return modified;
-	}
+   /*
+    * (non-Javadoc)
+    * 
+    * @see org.eclipse.ui.ISaveablePart#isDirty()
+    */
+   @Override
+   public boolean isDirty()
+   {
+      return modified;
+   }
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.ISaveablePart#isSaveAsAllowed()
-	 */
-	@Override
-	public boolean isSaveAsAllowed()
-	{
-		return false;
-	}
+   /*
+    * (non-Javadoc)
+    * 
+    * @see org.eclipse.ui.ISaveablePart#isSaveAsAllowed()
+    */
+   @Override
+   public boolean isSaveAsAllowed()
+   {
+      return false;
+   }
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.ISaveablePart#isSaveOnCloseNeeded()
-	 */
-	@Override
-	public boolean isSaveOnCloseNeeded()
-	{
-		return modified;
-	}
+   /*
+    * (non-Javadoc)
+    * 
+    * @see org.eclipse.ui.ISaveablePart#isSaveOnCloseNeeded()
+    */
+   @Override
+   public boolean isSaveOnCloseNeeded()
+   {
+      return modified;
+   }
 
-	/**
-	 * Clear selection
-	 */
-	private void clearSelection()
-	{
-		for(RuleEditor e : selection)
-			e.setSelected(false);
-		selection.clear();
-		lastSelectedRule = -1;
-	}
+   /**
+    * Clear selection
+    */
+   private void clearSelection()
+   {
+      for(RuleEditor e : selection)
+         e.setSelected(false);
+      selection.clear();
+      lastSelectedRule = -1;
+   }
 
    /**
     * Set selection to given rule
@@ -979,42 +984,42 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
       onSelectionChange();
    }
 
-	/**
-	 * Internal handler for selection change
-	 */
-	private void onSelectionChange()
-	{
-		actionDelete.setEnabled(selection.size() > 0);
-		actionInsertBefore.setEnabled(selection.size() == 1);
-		actionInsertAfter.setEnabled(selection.size() == 1);
-		actionCut.setEnabled(selection.size() > 0);
-		actionCopy.setEnabled(selection.size() > 0);
-		actionPaste.setEnabled((selection.size() == 1) && !clipboard.isEmpty());
-	}
+   /**
+    * Internal handler for selection change
+    */
+   private void onSelectionChange()
+   {
+      actionDelete.setEnabled(selection.size() > 0);
+      actionInsertBefore.setEnabled(selection.size() == 1);
+      actionInsertAfter.setEnabled(selection.size() == 1);
+      actionCut.setEnabled(selection.size() > 0);
+      actionCopy.setEnabled(selection.size() > 0);
+      actionPaste.setEnabled((selection.size() == 1) && !clipboard.isEmpty());
+   }
 
-	/**
-	 * Delete selected rules
-	 */
-	private void deleteSelectedRules()
-	{
-		for(RuleEditor e : selection)
-		{
-			policy.deleteRule(e.getRule());
-			ruleEditors.remove(e);
-			e.dispose();
-		}
+   /**
+    * Delete selected rules
+    */
+   private void deleteSelectedRules()
+   {
+      for(RuleEditor e : selection)
+      {
+         policy.deleteRule(e.getRule());
+         ruleEditors.remove(e);
+         e.dispose();
+      }
 
-		// Renumber rules
-		for(int i = 0; i < ruleEditors.size(); i++)
-			ruleEditors.get(i).setRuleNumber(i + 1);
+      // Renumber rules
+      for(int i = 0; i < ruleEditors.size(); i++)
+         ruleEditors.get(i).setRuleNumber(i + 1);
 
-		selection.clear();
-		lastSelectedRule = -1;
-		onSelectionChange();
+      selection.clear();
+      lastSelectedRule = -1;
+      onSelectionChange();
 
-		updateEditorAreaLayout();
-		setModified(true);
-	}
+      updateEditorAreaLayout();
+      setModified(true);
+   }
 
    /**
     * Insert new rule at given position
@@ -1054,45 +1059,45 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
       setModified(true);
    }
 
-	/**
-	 * Cut selected rules to internal clipboard
-	 */
-	private void cutRules()
-	{
-		clipboard.clear();
-		actionPaste.setEnabled(true);
+   /**
+    * Cut selected rules to internal clipboard
+    */
+   private void cutRules()
+   {
+      clipboard.clear();
+      actionPaste.setEnabled(true);
 
-		for(RuleEditor e : selection)
-		{
-			clipboard.add(e.getRule());
-			policy.deleteRule(e.getRule());
-			ruleEditors.remove(e);
-			e.dispose();
-		}
+      for(RuleEditor e : selection)
+      {
+         clipboard.add(e.getRule());
+         policy.deleteRule(e.getRule());
+         ruleEditors.remove(e);
+         e.dispose();
+      }
 
-		// Renumber rules
-		for(int i = 0; i < ruleEditors.size(); i++)
-			ruleEditors.get(i).setRuleNumber(i + 1);
+      // Renumber rules
+      for(int i = 0; i < ruleEditors.size(); i++)
+         ruleEditors.get(i).setRuleNumber(i + 1);
 
-		selection.clear();
-		lastSelectedRule = -1;
-		onSelectionChange();
+      selection.clear();
+      lastSelectedRule = -1;
+      onSelectionChange();
 
-		updateEditorAreaLayout();
-		setModified(true);
-	}
+      updateEditorAreaLayout();
+      setModified(true);
+   }
 
-	/**
-	 * Copy selected rules to internal clipboard
-	 */
-	private void copyRules()
-	{
-		clipboard.clear();
-		actionPaste.setEnabled(true);
+   /**
+    * Copy selected rules to internal clipboard
+    */
+   private void copyRules()
+   {
+      clipboard.clear();
+      actionPaste.setEnabled(true);
 
-		for(RuleEditor e : selection)
-			clipboard.add(new EventProcessingPolicyRule(e.getRule()));
-	}
+      for(RuleEditor e : selection)
+         clipboard.add(new EventProcessingPolicyRule(e.getRule()));
+   }
 
    /**
     * Paste rules from internal clipboard
@@ -1302,8 +1307,8 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
       // check event names
       for(Long code : rule.getEvents())
       {
-         EventObject evo = session.findEventObjectByCode(code);
-         if ((evo != null) && evo.getName().toLowerCase().contains(filterText))
+         EventTemplate evt = session.findEventTemplateByCode(code);
+         if ((evt != null) && evt.getName().toLowerCase().contains(filterText))
             return true;
       }
 

@@ -19,16 +19,17 @@
 ** System events
 */
 
-INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description,tags) VALUES
 	(
 		EVENT_NODE_ADDED, 'SYS_NODE_ADDED', '8d34acfd-dad6-4f6e-b6a8-1189683591ef',
 		EVENT_SEVERITY_NORMAL, 1,
 		'Node added',
 		'Generated when new node object added to the database.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Node origin (0 = created manually, 1 = created by network discovery, 2 = created by tunnel auto bind)'
+		'   1) Node origin (0 = created manually, 1 = created by network discovery, 2 = created by tunnel auto bind)',
+      'NewObject'
 	);
-INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description,tags) VALUES
 	(
 		EVENT_SUBNET_ADDED, 'SYS_SUBNET_ADDED', '75fc3f8b-768f-46b4-bf44-72949436a679',
 		EVENT_SEVERITY_NORMAL, 0,
@@ -38,9 +39,10 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'   1) Subnet object ID' CONCAT CRLF CONCAT
 		'   2) Subnet name' CONCAT CRLF CONCAT
 		'   3) IP address' CONCAT CRLF CONCAT
-		'   4) Network mask'
+		'   4) Network mask',
+      'NewObject'
 	);
-INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description,tags) VALUES
 	(
 		EVENT_INTERFACE_ADDED, 'SYS_IF_ADDED', '33cb8f9c-9427-459c-8a71-45c73f5cc183',
 		EVENT_SEVERITY_NORMAL, 1,
@@ -52,7 +54,8 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'   2) Interface name' CONCAT CRLF CONCAT
 		'   3) Interface IP address' CONCAT CRLF CONCAT
 		'   4) Interface netmask' CONCAT CRLF CONCAT
-		'   5) Interface index'
+		'   5) Interface index',
+      'NewObject'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
@@ -152,68 +155,75 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'   4) Interface netmask' CONCAT CRLF CONCAT
 		'   5) Interface index'
 	);
-INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description,tags) VALUES
 	(
 		EVENT_NODE_NORMAL, 'SYS_NODE_NORMAL', '03bc11c0-ec20-43be-be45-e60846f744dc',
 		EVENT_SEVERITY_NORMAL, 1,
 		'Node status changed to NORMAL',
 		'Generated when node status changed to normal.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Previous node status'
+		'   1) Previous node status',
+      'NodeStatus'
 	);
-INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description,tags) VALUES
 	(
 		EVENT_NODE_WARNING, 'SYS_NODE_WARNING', '1c80deab-aafb-43a7-93a7-1330dd563b47',
 		EVENT_SEVERITY_WARNING, 1,
 		'Node status changed to WARNING',
 		'Generated when node status changed to "Warning".' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Previous node status'
+		'   1) Previous node status',
+      'NodeStatus'
 	);
-INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description,tags) VALUES
 	(
 		EVENT_NODE_MINOR, 'SYS_NODE_MINOR', '84eaea00-4ed7-41eb-9079-b783e5c60651',
 		EVENT_SEVERITY_MINOR, 1,
 		'Node status changed to MINOR',
 		'Generated when node status changed to "Minor Problem" (informational).' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Previous node status'
+		'   1) Previous node status',
+      'NodeStatus'
 	);
-INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description,tags) VALUES
 	(
 		EVENT_NODE_MAJOR, 'SYS_NODE_MAJOR', '27035c88-c27a-4c16-97b3-4658d34a5f63',
 		EVENT_SEVERITY_MAJOR, 1,
 		'Node status changed to MAJOR',
 		'Generated when node status changed to "Major Problem".' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Previous node status'
+		'   1) Previous node status',
+      'NodeStatus'
 	);
-INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description,tags) VALUES
 	(
 		EVENT_NODE_CRITICAL, 'SYS_NODE_CRITICAL', '8f2e98f8-1cd4-4e12-b41f-48b5c60ebe8e',
 		EVENT_SEVERITY_CRITICAL, 1,
 		'Node status changed to CRITICAL',
 		'Generated when node status changed to critical.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Previous node status'
+		'   1) Previous node status',
+      'NodeStatus'
 	);
-INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description,tags) VALUES
 	(
 		EVENT_NODE_UNKNOWN, 'SYS_NODE_UNKNOWN', '6933cce0-fe1f-4123-817f-af1fb9f0eab4',
 		EVENT_SEVERITY_NORMAL, 1,
 		'Node status changed to UNKNOWN',
 		'Generated when node status changed to unknown.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Previous node status'
+		'   1) Previous node status',
+      'NodeStatus'
 	);
-INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description,tags) VALUES
 	(
 		EVENT_NODE_UNMANAGED, 'SYS_NODE_UNMANAGED', 'a8356ba7-51b7-4487-b74e-d12132db233c',
 		EVENT_SEVERITY_NORMAL, 1,
 		'Node status changed to UNMANAGED',
 		'Generated when node status changed to unmanaged.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Previous node status'
+		'   1) Previous node status',
+      'NodeStatus'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(

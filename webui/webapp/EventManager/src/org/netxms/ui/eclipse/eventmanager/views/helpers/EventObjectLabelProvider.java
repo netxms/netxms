@@ -18,24 +18,17 @@
  */
 package org.netxms.ui.eclipse.eventmanager.views.helpers;
 
-import org.eclipse.jface.viewers.ITableColorProvider;
 import org.eclipse.jface.viewers.ITableLabelProvider;
-import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
-import org.netxms.client.events.EventGroup;
-import org.netxms.client.events.EventObject;
 import org.netxms.client.events.EventTemplate;
-import org.netxms.ui.eclipse.console.resources.SharedColors;
-import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
-import org.netxms.ui.eclipse.eventmanager.widgets.EventObjectList;
+import org.netxms.ui.eclipse.eventmanager.widgets.EventTemplateList;
 
 /**
  * Label provider for event template objects
  */
-public class EventObjectLabelProvider extends WorkbenchLabelProvider implements ITableLabelProvider, ITableColorProvider
+public class EventObjectLabelProvider extends WorkbenchLabelProvider implements ITableLabelProvider
 {
 	/**
 	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
@@ -45,8 +38,6 @@ public class EventObjectLabelProvider extends WorkbenchLabelProvider implements 
 	{
 	   if ((columnIndex != 0))
 	      return null;
-	   if (element instanceof EventGroup)
-	      return SharedIcons.IMG_CONTAINER;
 		return getImage(element);
 	}
 
@@ -58,50 +49,17 @@ public class EventObjectLabelProvider extends WorkbenchLabelProvider implements 
 	{
 		switch(columnIndex)
 		{
-			case EventObjectList.COLUMN_CODE:
-			   if (element instanceof EventGroup)
-			      return null;
-				return Long.toString(((EventObject)element).getCode());
-			case EventObjectList.COLUMN_NAME:
-				   return ((EventObject)element).getName();
-			case EventObjectList.COLUMN_SEVERITY:
-            if (element instanceof EventTemplate)
-               return StatusDisplayInfo.getStatusText(((EventTemplate)element).getSeverity());
-            else
-               return "";
-			case EventObjectList.COLUMN_FLAGS:
-            if (element instanceof EventTemplate)
-               return ((((EventTemplate)element).getFlags() & EventTemplate.FLAG_WRITE_TO_LOG) != 0) ? "L" : "-"; //$NON-NLS-1$ //$NON-NLS-2$
-            else
-               return "";
-			case EventObjectList.COLUMN_MESSAGE:
-            if (element instanceof EventTemplate)
-               return ((EventTemplate)element).getMessage();
-            else
-               return "";
-			case EventObjectList.COLUMN_DESCRIPTION:
-				return ((EventObject)element).getDescription();
+			case EventTemplateList.COLUMN_CODE:
+				return Long.toString(((EventTemplate)element).getCode());
+			case EventTemplateList.COLUMN_NAME:
+				return ((EventTemplate)element).getName();
+			case EventTemplateList.COLUMN_SEVERITY:
+            return StatusDisplayInfo.getStatusText(((EventTemplate)element).getSeverity());
+			case EventTemplateList.COLUMN_FLAGS:
+            return ((((EventTemplate)element).getFlags() & EventTemplate.FLAG_WRITE_TO_LOG) != 0) ? "L" : "-"; //$NON-NLS-1$ //$NON-NLS-2$
+			case EventTemplateList.COLUMN_MESSAGE:
+            return ((EventTemplate)element).getMessage();
 		}
 		return null;
 	}
-
-   /**
-    * @see org.eclipse.jface.viewers.ITableColorProvider#getForeground(java.lang.Object, int)
-    */
-   @Override
-   public Color getForeground(Object element, int columnIndex)
-   {
-      return null;
-   }
-
-   /**
-    * @see org.eclipse.jface.viewers.ITableColorProvider#getBackground(java.lang.Object, int)
-    */
-   @Override
-   public Color getBackground(Object element, int columnIndex)
-   {
-      if (element instanceof EventGroup)
-         return SharedColors.getColor(SharedColors.CGROUP_BORDER, Display.getCurrent());
-      return null;
-   }
 }

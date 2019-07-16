@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,37 +16,35 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.eventmanager.dialogs.helpers;
+package org.netxms.ui.eclipse.epp.propertypages.helpers;
 
-import org.eclipse.jface.viewers.Viewer;
-import org.eclipse.jface.viewers.ViewerFilter;
+import org.eclipse.jface.viewers.ITableLabelProvider;
+import org.eclipse.swt.graphics.Image;
+import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.client.events.EventTemplate;
 
 /**
- * Filter for event list
- *
+ * Label provider for event template objects
  */
-public class EventListFilter extends ViewerFilter
+public class EventTemplateLabelProvider extends WorkbenchLabelProvider implements ITableLabelProvider
 {
-	private String filterString = null;
-	
 	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ViewerFilter#select(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
+	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
 	 */
 	@Override
-	public boolean select(Viewer viewer, Object parentElement, Object element)
+	public Image getColumnImage(Object element, int columnIndex)
 	{
-		if (filterString == null)
-			return true;
-		
-		return ((EventTemplate)element).getName().toLowerCase().contains(filterString);
+	   if ((columnIndex != 0))
+	      return null;
+		return getImage(element);
 	}
 
-	/**
-	 * Set filter string
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
 	 */
-	public void setFilterString(final String filterString)
+	@Override
+	public String getColumnText(Object element, int columnIndex)
 	{
-		this.filterString = filterString.isEmpty() ? null : filterString.toLowerCase();
+	   return ((EventTemplate)element).getName();	
 	}
 }

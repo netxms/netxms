@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2017 Raden Solutions
+ * Copyright (C) 2003-2019 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,10 +18,8 @@
  */
 package org.netxms.ui.eclipse.eventmanager.widgets;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
@@ -32,20 +30,12 @@ import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.commands.ActionHandler;
 import org.eclipse.jface.dialogs.IDialogSettings;
-import org.eclipse.jface.util.LocalSelectionTransfer;
+import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
-import org.eclipse.jface.viewers.ITreeSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
-import org.eclipse.jface.viewers.TreeSelection;
-import org.eclipse.jface.viewers.ViewerDropAdapter;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.dnd.DND;
-import org.eclipse.swt.dnd.DragSourceAdapter;
-import org.eclipse.swt.dnd.DragSourceEvent;
-import org.eclipse.swt.dnd.Transfer;
-import org.eclipse.swt.dnd.TransferData;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.ModifyEvent;
@@ -63,80 +53,70 @@ import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
-import org.netxms.client.events.EventGroup;
-import org.netxms.client.events.EventObject;
 import org.netxms.client.events.EventTemplate;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.eventmanager.Activator;
 import org.netxms.ui.eclipse.eventmanager.Messages;
-import org.netxms.ui.eclipse.eventmanager.dialogs.EditEventGroupDialog;
 import org.netxms.ui.eclipse.eventmanager.dialogs.EditEventTemplateDialog;
-import org.netxms.ui.eclipse.eventmanager.views.helpers.EventObjectComparator;
-import org.netxms.ui.eclipse.eventmanager.views.helpers.EventObjectContentProvider;
-import org.netxms.ui.eclipse.eventmanager.views.helpers.EventObjectFilter;
-import org.netxms.ui.eclipse.eventmanager.views.helpers.EventObjectLabelProvider;
+import org.netxms.ui.eclipse.eventmanager.views.helpers.EventTemplateComparator;
+import org.netxms.ui.eclipse.eventmanager.views.helpers.EventTemplateFilter;
+import org.netxms.ui.eclipse.eventmanager.views.helpers.EventTemplateLabelProvider;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.FilterText;
-import org.netxms.ui.eclipse.widgets.SortableTreeViewer;
+import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
- * Event object list widget
+ * Event template list widget
  */
-public class EventObjectList extends Composite implements SessionListener
+public class EventTemplateList extends Composite implements SessionListener
 {
-   public static final String JOB_FAMILY = "EventObjectListJob"; //$NON-NLS-1$
-   
    // Columns
    public static final int COLUMN_CODE = 0;
    public static final int COLUMN_NAME = 1;
    public static final int COLUMN_SEVERITY = 2;
    public static final int COLUMN_FLAGS = 3;
    public static final int COLUMN_MESSAGE = 4;
-   public static final int COLUMN_DESCRIPTION = 5;
+   public static final int COLUMN_TAGS = 5;
    
-   private HashMap<Long, EventObject> eventObjects;
-   private SortableTreeViewer viewer;
+   private HashMap<Long, EventTemplate> eventTemplates;
+   private SortableTableViewer viewer;
    private FilterText filterControl;
    private Action actionNew;
    private Action actionEdit;
    private Action actionDelete;
-   private Action actionRemove;
    private Action actionShowFilter;
    private Action actionRefresh;
-   private Action actionShowGroups;
-   private Action actionNewGroup;
    private NXCSession session;
-   private EventObjectFilter filter;
+   private EventTemplateFilter filter;
    private boolean filterEnabled;
-   private boolean showGroups;
-   private ViewPart viewPart ;
+   private ViewPart viewPart;
    
    /**
-    * Constructor for event object list with specific columns to show
+    * Constructor for event template list with specific columns to show
     * 
     * @param viewPart the viewPart
     * @param parent parent composite
     * @param style style
     * @param columnsToShow which columns to show
     */
-   public EventObjectList(ViewPart viewPart, Composite parent, int style, final String configPrefix)
+   public EventTemplateList(ViewPart viewPart, Composite parent, int style, final String configPrefix)
    {
-      this(parent, style, configPrefix, false, true);
+      this(parent, style, configPrefix, false);
       this.viewPart = viewPart;
    }
    
    /**
-    * Constructor for event object list
+    * Constructor for event template list
     * 
     * @param viewPart the viewPart
     * @param parent parent composite
     * @param style style
     */
-   public EventObjectList(Composite parent, int style, final String configPrefix, boolean isDialog, boolean groupsVisible)
+   public EventTemplateList(Composite parent, int style, final String configPrefix, boolean isDialog)
    {
       super(parent, style);
       
@@ -146,12 +126,7 @@ public class EventObjectList extends Composite implements SessionListener
       else
          filterEnabled = settings.getBoolean(configPrefix + ".filterEnabled"); //$NON-NLS-1$
       
-      if (groupsVisible)
-         showGroups = true;
-      else
-         showGroups = settings.getBoolean(configPrefix + ".showGroups");
-      
-      session = (NXCSession)ConsoleSharedData.getSession();
+      session = ConsoleSharedData.getSession();
       
       parent.setLayout(new FormLayout());
       
@@ -172,47 +147,41 @@ public class EventObjectList extends Composite implements SessionListener
          }
       });
       
-      final String[] names = { Messages.get().EventConfigurator_ColCode, Messages.get().EventConfigurator_ColName, Messages.get().EventConfigurator_ColSeverity, Messages.get().EventConfigurator_ColFlags, Messages.get().EventConfigurator_ColMessage, Messages.get().EventConfigurator_ColDescription };
-      final int[] widths = { 70, 200, 90, 50, 400, 400 };
+      final String[] names = { Messages.get().EventConfigurator_ColCode, Messages.get().EventConfigurator_ColName, Messages.get().EventConfigurator_ColSeverity, Messages.get().EventConfigurator_ColFlags, Messages.get().EventConfigurator_ColMessage, Messages.get().EventConfigurator_ColTags };
+      final int[] widths = { 70, 200, 90, 50, 400, 300 };
       
-      viewer = new SortableTreeViewer(parent, isDialog ? Arrays.copyOfRange(names, 0, 2) : names,
-                                              isDialog ? Arrays.copyOfRange(widths, 0, 2) : widths,
-                                              0, SWT.UP, SWT.BORDER | SWT.FULL_SELECTION | SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
+      viewer = new SortableTableViewer(parent, isDialog ? Arrays.copyOfRange(names, 0, 2) : names,
+            isDialog ? Arrays.copyOfRange(widths, 0, 2) : widths,
+            0, SWT.UP, SWT.BORDER | SWT.FULL_SELECTION | SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
       
-      WidgetHelper.restoreTreeViewerSettings(viewer, Activator.getDefault().getDialogSettings(), configPrefix);
-      viewer.setContentProvider(new EventObjectContentProvider());
-      viewer.setLabelProvider(new EventObjectLabelProvider());
-      viewer.setComparator(new EventObjectComparator());
-      filter = new EventObjectFilter();
+      WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), configPrefix);
+      viewer.setContentProvider(new ArrayContentProvider());
+      viewer.setLabelProvider(new EventTemplateLabelProvider());
+      viewer.setComparator(new EventTemplateComparator());
+      filter = new EventTemplateFilter();
       viewer.addFilter(filter);
       viewer.addSelectionChangedListener(new ISelectionChangedListener() {
          @Override
          public void selectionChanged(SelectionChangedEvent event)
          {
-            ITreeSelection selection = (ITreeSelection)event.getSelection();
+            IStructuredSelection selection = (IStructuredSelection)event.getSelection();
             if (selection != null)
             {
-               if (selection.getPaths().length > 0)
-                  actionRemove.setEnabled(selection.getPaths()[0].getParentPath().getLastSegment() != null);
                actionEdit.setEnabled(selection.size() == 1);
                actionDelete.setEnabled(selection.size() > 0);
             }
          }
       });
-      viewer.getTree().addDisposeListener(new DisposeListener() {
+      viewer.getControl().addDisposeListener(new DisposeListener() {
          @Override
          public void widgetDisposed(DisposeEvent e)
          {
-            WidgetHelper.saveTreeViewerSettings(viewer, Activator.getDefault().getDialogSettings(), configPrefix);
+            WidgetHelper.saveTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), configPrefix);
 
             IDialogSettings settings = Activator.getDefault().getDialogSettings();
             settings.put(configPrefix + ".filterEnabled", filterEnabled);
-            settings.put(configPrefix + ".showGroups", showGroups);
          }
       });
-      
-      enableDragSupport();
-      enableDropSupport();
       
       // Setup layout
       FormData fd = new FormData();
@@ -260,7 +229,7 @@ public class EventObjectList extends Composite implements SessionListener
     */
    private void refreshView()
    {
-      new ConsoleJob(Messages.get().EventConfigurator_OpenJob_Title, null, Activator.PLUGIN_ID, JOB_FAMILY) {
+      new ConsoleJob(Messages.get().EventConfigurator_OpenJob_Title, null, Activator.PLUGIN_ID, null) {
          @Override
          protected String getErrorMessage()
          {
@@ -270,110 +239,19 @@ public class EventObjectList extends Composite implements SessionListener
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            final List<EventObject> list = session.getEventObjects();
+            final List<EventTemplate> list = session.getEventTemplates();
             runInUIThread(new Runnable() {
                @Override
                public void run()
                {
-                  eventObjects = new HashMap<Long, EventObject>(list.size());
-                  for(final EventObject o: list)
-                     eventObjects.put(o.getCode(), o);
-                  viewer.setInput(getTopLevelElements());
+                  eventTemplates = new HashMap<Long, EventTemplate>(list.size());
+                  for(final EventTemplate t: list)
+                     eventTemplates.put(t.getCode(), t);
+                  viewer.setInput(eventTemplates.values().toArray());
                }
             });
          }
       }.start();
-   }
-   
-   /**
-    * Get top level elements for tree viewer
-    * 
-    * @return top level elements for tree viewer
-    */
-   private Object[] getTopLevelElements()
-   {
-      List<EventObject> result = new ArrayList<EventObject>(eventObjects.size());
-      if (showGroups)
-      {
-         for(EventObject o : eventObjects.values())
-         {
-            if (!o.hasParents())
-               result.add(o);
-         }
-      }
-      else
-      {
-         for(EventObject o : eventObjects.values())
-         {
-            if (!(o instanceof EventGroup))
-               result.add(o);
-         }
-      }
-      return result.toArray();
-   }
-
-   /**
-    * Enable drag support in object tree
-    */
-   public void enableDragSupport()
-   {
-      Transfer[] transfers = new Transfer[] { LocalSelectionTransfer.getTransfer() };
-      viewer.addDragSupport(DND.DROP_COPY | DND.DROP_MOVE, transfers, new DragSourceAdapter() {
-         @Override
-         public void dragStart(DragSourceEvent event)
-         {
-            LocalSelectionTransfer.getTransfer().setSelection(viewer.getSelection());
-            event.doit = true;
-         }
-         
-         @Override
-         public void dragSetData(DragSourceEvent event)
-         {
-            event.data = LocalSelectionTransfer.getTransfer().getSelection();
-         }
-      });
-   }
-   
-   /**
-    * Enable drop support
-    */
-   public void enableDropSupport()
-   {
-      final Transfer[] transfers = new Transfer[] { LocalSelectionTransfer.getTransfer() };
-      viewer.addDropSupport(DND.DROP_COPY | DND.DROP_MOVE, transfers, new ViewerDropAdapter(viewer) {
-
-         @Override
-         public boolean performDrop(Object data)
-         {
-            TreeSelection selection = (TreeSelection)data;
-            List<?> movableSelection = selection.toList();
-            for(int i = 0; i < movableSelection.size(); i++)
-            {
-               if (((EventObject)movableSelection.get(i)).getCode() != ((EventGroup)getCurrentTarget()).getCode())
-                  ((EventGroup)getCurrentTarget()).addChild(((EventObject)movableSelection.get(i)).getCode());               
-            }            
-            modifyEventObject((EventGroup)getCurrentTarget(), false);
-            
-            return true;
-         }
-
-         @Override
-         public boolean validateDrop(Object target, int operation, TransferData transferType)
-         {
-            if ((target == null) || !LocalSelectionTransfer.getTransfer().isSupportedType(transferType))
-               return false;
-
-            IStructuredSelection selection = (IStructuredSelection)LocalSelectionTransfer.getTransfer().getSelection();
-            if (selection.isEmpty())
-               return false;
-
-            if (!(target instanceof EventGroup))
-               return false;
-
-            return true;
-         }
-         
-      });
    }
    
    /* (non-Javadoc)
@@ -389,16 +267,16 @@ public class EventObjectList extends Composite implements SessionListener
                @Override
                public void run()
                {
-                  EventObject oldObj = eventObjects.get(n.getSubCode());
-                  if (oldObj != null)
+                  EventTemplate old = eventTemplates.get(n.getSubCode());
+                  if (old != null)
                   {
-                     oldObj.setAll((EventObject)n.getObject());
+                     old.setAll((EventTemplate)n.getObject());
                      viewer.refresh();
                   }
                   else
                   {
-                     eventObjects.put(n.getSubCode(), (EventObject)n.getObject());
-                     viewer.setInput(getTopLevelElements());
+                     eventTemplates.put(n.getSubCode(), new EventTemplate((EventTemplate)n.getObject()));
+                     viewer.setInput(eventTemplates.values().toArray());
                   }
                }
             });
@@ -408,8 +286,8 @@ public class EventObjectList extends Composite implements SessionListener
                @Override
                public void run()
                {
-                  eventObjects.remove(n.getSubCode());
-                  viewer.setInput(getTopLevelElements());
+                  eventTemplates.remove(n.getSubCode());
+                  viewer.setInput(eventTemplates.values().toArray());
                }
             });
             break;
@@ -453,31 +331,6 @@ public class EventObjectList extends Composite implements SessionListener
          public void run()
          {
             enableFilter(actionShowFilter.isChecked());
-         }
-      };
-      
-      actionRemove = new Action("&Remove from group") {
-         @Override
-         public void run()
-         {
-            removeFromGroup();
-         }
-      };
-      
-      actionShowGroups = new Action("&Show event groups", Action.AS_CHECK_BOX) {
-         @Override
-         public void run()
-         {
-            showEventGroups();
-         }
-      };
-      actionShowGroups.setChecked(showGroups);
-      
-      actionNewGroup = new Action("&Add new event group") {
-         @Override
-         public void run()
-         {
-            createNewEventGroup();
          }
       };
       
@@ -549,10 +402,7 @@ public class EventObjectList extends Composite implements SessionListener
       mgr.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
       mgr.add(actionNew);
       mgr.add(actionDelete);
-      mgr.add(actionNewGroup);
-      mgr.add(actionRemove);
       mgr.add(new Separator());
-      mgr.add(actionShowGroups);
       mgr.add(actionEdit);
    }
 
@@ -561,20 +411,22 @@ public class EventObjectList extends Composite implements SessionListener
     */
    protected void createNewEventTemplate()
    {
-      final EventTemplate etmpl = new EventTemplate(0);
-      EditEventTemplateDialog dlg = new EditEventTemplateDialog(getShell().getShell(), etmpl, false);
+      final EventTemplate tmpl = new EventTemplate(0);
+      EditEventTemplateDialog dlg = new EditEventTemplateDialog(getShell().getShell(), tmpl, false);
       if (dlg.open() == Window.OK)
-         modifyEventObject(etmpl, true);
+      {
+         modifyEventTemplate(tmpl);
+      }
    }
    
    /**
     * Modify event object in server
     * 
-    * @param obj to modify
+    * @param tmpl to modify
     */
-   protected void modifyEventObject(final EventObject obj, final boolean updateParent)
+   protected void modifyEventTemplate(final EventTemplate tmpl)
    {      
-      new ConsoleJob(Messages.get().EventConfigurator_UpdateJob_Title, null, Activator.PLUGIN_ID, JOB_FAMILY) {
+      new ConsoleJob(Messages.get().EventConfigurator_UpdateJob_Title, null, Activator.PLUGIN_ID, null) {
          @Override
          protected String getErrorMessage()
          {
@@ -584,23 +436,7 @@ public class EventObjectList extends Composite implements SessionListener
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            session.modifyEventObject(obj);
-            
-            if (updateParent)
-            {
-               runInUIThread(new Runnable() {
-                  @Override
-                  public void run()
-                  {
-                     ITreeSelection selection = (ITreeSelection)viewer.getSelection();
-                     if (selection.size() == 1 && selection.getFirstElement() instanceof EventGroup)
-                     {
-                        ((EventGroup)selection.getFirstElement()).addChild(obj.getCode());
-                        modifyEventObject((EventGroup)selection.getFirstElement(), false);
-                     }
-                  }
-               });
-            }
+            session.modifyEventObject(tmpl);
          }
       }.start();
    }
@@ -614,20 +450,12 @@ public class EventObjectList extends Composite implements SessionListener
       if (selection.size() != 1)
          return;
       
-      if (selection.getFirstElement() instanceof EventGroup)
-      {
-         final EventGroup group = new EventGroup((EventGroup)selection.getFirstElement());
-         EditEventGroupDialog dlg = new EditEventGroupDialog(getShell().getShell(), group);
-         if (dlg.open() == Window.OK)
-            modifyEventObject(group, false);
-         else
-            return;
-      }
-      
-      final EventTemplate etmpl = new EventTemplate((EventTemplate)selection.getFirstElement());
-      EditEventTemplateDialog dlg = new EditEventTemplateDialog(getShell().getShell(), etmpl, false);
+      final EventTemplate tmpl = new EventTemplate((EventTemplate)selection.getFirstElement());
+      EditEventTemplateDialog dlg = new EditEventTemplateDialog(getShell().getShell(), tmpl, false);
       if (dlg.open() == Window.OK)
-         modifyEventObject(etmpl, false);
+      {
+         modifyEventTemplate(tmpl);
+      }
    }
 
    /**
@@ -635,75 +463,32 @@ public class EventObjectList extends Composite implements SessionListener
     */
    protected void deleteEventTemplate()
    {
-      final IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
 
       final String message = ((selection.size() > 1) ? Messages.get().EventConfigurator_DeleteConfirmation_Plural : Messages.get().EventConfigurator_DeleteConfirmation_Singular);
       final Shell shell = viewPart.getSite().getShell();
       if (!MessageDialogHelper.openQuestion(shell, Messages.get().EventConfigurator_DeleteConfirmationTitle, message))
          return;
+
+      final long[] deleteList = new long[selection.size()];
+      int i = 0;
+      for(Object o : selection.toList())
+         deleteList[i++] = ((EventTemplate)o).getCode();
       
-      new ConsoleJob(Messages.get().EventConfigurator_DeleteJob_Title, null, Activator.PLUGIN_ID, JOB_FAMILY) {
+      new ConsoleJob(Messages.get().EventConfigurator_DeleteJob_Title, null, Activator.PLUGIN_ID, null) {
          @Override
          protected String getErrorMessage()
          {
             return Messages.get().EventConfigurator_DeleteJob_Error;
          }
 
-         @SuppressWarnings("unchecked")
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            Iterator<EventObject> it = selection.iterator();
-            while(it.hasNext())
-            {
-               session.deleteEventObject(it.next().getCode());
-            }
+            for(long code : deleteList)
+               session.deleteEventTemplate(code);
          }
       }.start();
-   }
-   
-   /**
-    * Remove event object from group
-    */
-   @SuppressWarnings("unchecked")
-   protected void removeFromGroup()
-   {
-      ITreeSelection selection = (ITreeSelection)viewer.getSelection();
-      List<EventObject> list = selection.toList();
-      for(int i = 0; i < selection.size(); i++)
-      {
-         EventGroup parent = (EventGroup)selection.getPathsFor(list.get(i))[0].getParentPath().getLastSegment();
-         EventObject child = list.get(i);
-         parent.removeChild(child.getCode());
-         modifyEventObject(parent, false);
-      }
-   }
-   
-   /**
-    * Create new Event group 
-    */
-   protected void createNewEventGroup()
-   {
-      EventGroup group = new EventGroup();
-         
-      EditEventGroupDialog dlg = new EditEventGroupDialog(getShell().getShell(), group);
-      if (dlg.open() == Window.OK)
-         modifyEventObject(group, true);
-   } 
-   
-   /**
-    * Enable/Disable event group viewing
-    */
-   protected void showEventGroups()
-   {
-      if (showGroups)
-         showGroups = false;
-      else
-         showGroups = true;
-      
-      actionShowGroups.setChecked(showGroups);
-      actionNewGroup.setEnabled(showGroups);
-      actionRefresh.run();
    }
    
    /**
@@ -756,7 +541,7 @@ public class EventObjectList extends Composite implements SessionListener
     * Get underlying tree viewer
     * @return viewer
     */
-   public SortableTreeViewer getViewer()
+   public SortableTableViewer getViewer()
    {
       return viewer;
    }
@@ -792,16 +577,6 @@ public class EventObjectList extends Composite implements SessionListener
    }
    
    /**
-    * Get remove from group action
-    * 
-    * @return remove from group action
-    */
-   public Action getActionRemoveFromGroup()
-   {
-      return actionRemove;
-   }
-   
-   /**
     * Get show filter action
     *  
     * @return show filter action
@@ -819,25 +594,5 @@ public class EventObjectList extends Composite implements SessionListener
    public Action getActionRefresh()
    {
       return actionRefresh;
-   }
-   
-   /**
-    * Get show groups action
-    * 
-    * @return show groups action
-    */
-   public Action getActionShowGroups()
-   {
-      return actionShowGroups;
-   }
-   
-   /**
-    * Get create new group action
-    * 
-    * @return create new group action
-    */
-   public Action getActionNewGroup()
-   {
-      return actionNewGroup;
    }
 }

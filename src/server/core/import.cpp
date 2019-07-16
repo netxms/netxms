@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -29,10 +29,10 @@
  */
 static bool IsEventExist(const TCHAR *name, Config *config)
 {
-   EventObject *eo = FindEventObjectByName(name);
-	if (eo != NULL)
+   EventTemplate *e = FindEventTemplateByName(name);
+	if (e != NULL)
 	{
-	   eo->decRefCount();
+	   e->decRefCount();
 		return true;
 	}
 

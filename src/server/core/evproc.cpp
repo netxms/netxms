@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -115,7 +115,7 @@ static THREAD_RESULT THREAD_CALL EventLogger(void *arg)
 		if (syntaxId == DB_SYNTAX_SQLITE)
 		{ 
 			String query = _T("INSERT INTO event_log (event_id,event_code,event_timestamp,event_source,zone_uin,")
-			               _T("dci_id,event_severity,event_message,root_event_id,user_tag,raw_data) VALUES (");
+			               _T("dci_id,event_severity,event_message,root_event_id,user_tag,event_tags,raw_data) VALUES (");
 			query.append(pEvent->getId());
          query.append(_T(','));
 			query.append(pEvent->getCode());
@@ -136,6 +136,8 @@ static THREAD_RESULT THREAD_CALL EventLogger(void *arg)
          query.append(_T(','));
          query.append(DBPrepareString(hdb, pEvent->getUserTag(), 63));
          query.append(_T(','));
+         query.append(DBPrepareString(hdb, pEvent->getTags(), 2000));
+         query.append(_T(','));
          json_t *json = pEvent->toJson();
          char *jsonText = json_dumps(json, JSON_INDENT(3) | JSON_EMBED);
          query.append(DBPrepareStringUTF8(hdb, jsonText));
@@ -150,8 +152,8 @@ static THREAD_RESULT THREAD_CALL EventLogger(void *arg)
 		else
 		{
 			DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO event_log (event_id,event_code,event_timestamp,")
-				_T("event_source,zone_uin,dci_id,event_severity,event_message,root_event_id,user_tag,raw_data) ")
-				_T("VALUES (?,?,?,?,?,?,?,?,?,?,?)"), true);
+				_T("event_source,zone_uin,dci_id,event_severity,event_message,root_event_id,user_tag,event_tags,raw_data) ")
+				_T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?)"), true);
 			if (hStmt != NULL)
 			{
 				do
@@ -166,7 +168,8 @@ static THREAD_RESULT THREAD_CALL EventLogger(void *arg)
                DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, pEvent->getMessage(), DB_BIND_STATIC, MAX_EVENT_MSG_LENGTH);
 					DBBind(hStmt, 9, DB_SQLTYPE_BIGINT, pEvent->getRootId());
                DBBind(hStmt, 10, DB_SQLTYPE_VARCHAR, pEvent->getUserTag(), DB_BIND_STATIC, 63);
-               DBBind(hStmt, 11, DB_SQLTYPE_TEXT, pEvent->toJson(), DB_BIND_DYNAMIC);
+               DBBind(hStmt, 11, DB_SQLTYPE_VARCHAR, pEvent->getTags(), DB_BIND_STATIC, 2000);
+               DBBind(hStmt, 12, DB_SQLTYPE_TEXT, pEvent->toJson(), DB_BIND_DYNAMIC);
 					DBExecute(hStmt);
 					nxlog_debug_tag(DEBUG_TAG, 8, _T("EventLogger: DBExecute: id=%d,code=%d"), (int)pEvent->getId(), (int)pEvent->getCode());
 					delete pEvent;

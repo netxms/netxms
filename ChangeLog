@@ -2,7 +2,7 @@
 * 3.0
 *
 
-- Event groups
+- Event tags
 - User agents (desktop support application)
 - Raw DCI values saved in history along with corresponding transformed values
 - New DCI data types - "32 bit counter" and "64 bit counter"

@@ -21,8 +21,8 @@ package org.netxms.ui.eclipse.eventmanager.dialogs.helpers;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
-import org.netxms.client.events.EventObject;
-import org.netxms.ui.eclipse.eventmanager.widgets.EventObjectList;
+import org.netxms.client.events.EventTemplate;
+import org.netxms.ui.eclipse.eventmanager.widgets.EventTemplateList;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
@@ -40,11 +40,11 @@ public class EventObjectComparator extends ViewerComparator
 
 		switch((Integer)((SortableTableViewer)viewer).getTable().getSortColumn().getData("ID")) //$NON-NLS-1$
 		{
-			case EventObjectList.COLUMN_CODE:
-				result = (int)(((EventObject)e1).getCode() - ((EventObject)e2).getCode());
+			case EventTemplateList.COLUMN_CODE:
+				result = (int)(((EventTemplate)e1).getCode() - ((EventTemplate)e2).getCode());
 				break;
-			case EventObjectList.COLUMN_NAME:
-				result = ((EventObject)e1).getName().compareToIgnoreCase(((EventObject)e2).getName());
+			case EventTemplateList.COLUMN_NAME:
+				result = ((EventTemplate)e1).getName().compareToIgnoreCase(((EventTemplate)e2).getName());
 				break;
 			default:
 				result = 0;

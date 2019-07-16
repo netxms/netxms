@@ -484,6 +484,8 @@ int main(int argc, char* argv[])
       {
          _tprintf(_T("NetXMS Core initialization failed\n"));
 
+         InitiateProcessShutdown();
+
          // Remove database lock
          if (g_flags & AF_DB_LOCKED)
          {
@@ -516,6 +518,8 @@ int main(int argc, char* argv[])
    // Initialize server
    if (!Initialize())
    {
+      InitiateProcessShutdown();
+
       // Remove database lock
       if (g_flags & AF_DB_LOCKED)
       {

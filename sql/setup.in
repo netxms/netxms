@@ -281,6 +281,7 @@ INSERT INTO config_values (var_name,var_value,var_description) VALUES ('NetworkD
 INSERT INTO config_values (var_name,var_value,var_description) VALUES ('NetworkDiscovery.Type','2','Active only');
 INSERT INTO config_values (var_name,var_value,var_description) VALUES ('NetworkDiscovery.Type','3','Passive and active');
 
+
 /*
 ** System user
 */
@@ -336,29 +337,6 @@ INSERT INTO acl (object_id,user_id,access_rights) VALUES (7,-2147483647,524287);
 INSERT INTO acl (object_id,user_id,access_rights) VALUES (8,-2147483647,524287);
 INSERT INTO acl (object_id,user_id,access_rights) VALUES (9,-2147483647,524287);
 
-/*
-** Default event groups
-*/
-
-#define ID_GROUP_1 -2147483647
-#define ID_GROUP_2 -2147483646
-
-INSERT INTO event_groups (guid,id,name,description)
-   VALUES ('04b326c0-5cc0-411f-8587-2836cb87c920',ID_GROUP_1,'NodeStatus','All events reporting about node status change');
-INSERT INTO event_groups (guid,id,name,description)
-   VALUES ('b61859c6-1768-4a61-a0cf-eed07d688f66',ID_GROUP_2,'NewObjects','All events reporting about new objects creation');
-
-INSERT INTO event_group_members (group_id,event_code) VALUES (ID_GROUP_1,EVENT_NODE_NORMAL);
-INSERT INTO event_group_members (group_id,event_code) VALUES (ID_GROUP_1,EVENT_NODE_MINOR);
-INSERT INTO event_group_members (group_id,event_code) VALUES (ID_GROUP_1,EVENT_NODE_WARNING);
-INSERT INTO event_group_members (group_id,event_code) VALUES (ID_GROUP_1,EVENT_NODE_MAJOR);
-INSERT INTO event_group_members (group_id,event_code) VALUES (ID_GROUP_1,EVENT_NODE_CRITICAL);
-INSERT INTO event_group_members (group_id,event_code) VALUES (ID_GROUP_1,EVENT_NODE_UNKNOWN);
-INSERT INTO event_group_members (group_id,event_code) VALUES (ID_GROUP_1,EVENT_NODE_UNMANAGED);
-
-INSERT INTO event_group_members (group_id,event_code) VALUES (ID_GROUP_2,EVENT_NODE_ADDED);
-INSERT INTO event_group_members (group_id,event_code) VALUES (ID_GROUP_2,EVENT_SUBNET_ADDED);
-INSERT INTO event_group_members (group_id,event_code) VALUES (ID_GROUP_2,EVENT_INTERFACE_ADDED);
 
 /*
 ** Default community string

@@ -1054,6 +1054,7 @@ public class NXCPCodes
    public static final long VID_USER_AGENT_MESSAGE_COUNT = 642;
    public static final long VID_SNMP_TRAP_PROXY = 643;
    public static final long VID_THRESHOLD_ID = 644;
+   public static final long VID_TAGS = 645;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;

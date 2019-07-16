@@ -21,10 +21,8 @@ package org.netxms.ui.eclipse.eventmanager.views.helpers;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
-import org.netxms.client.events.EventGroup;
-import org.netxms.client.events.EventObject;
 import org.netxms.client.events.EventTemplate;
-import org.netxms.ui.eclipse.eventmanager.widgets.EventObjectList;
+import org.netxms.ui.eclipse.eventmanager.widgets.EventTemplateList;
 import org.netxms.ui.eclipse.widgets.SortableTreeViewer;
 
 /**
@@ -42,41 +40,20 @@ public class EventObjectComparator extends ViewerComparator
 
 		switch((Integer)((SortableTreeViewer)viewer).getTree().getSortColumn().getData("ID")) //$NON-NLS-1$
 		{
-			case EventObjectList.COLUMN_CODE:
-			   if ((e1 instanceof EventGroup) == (e2 instanceof EventGroup))
-	            result = (int)(((EventObject)e1).getCode() - ((EventObject)e2).getCode());
-			   else
-			      result = (e1 instanceof EventGroup) ? -1 : 1;
+			case EventTemplateList.COLUMN_CODE:
+            result = (int)(((EventTemplate)e1).getCode() - ((EventTemplate)e2).getCode());
 				break;
-			case EventObjectList.COLUMN_NAME:
-            if ((e1 instanceof EventGroup) == (e2 instanceof EventGroup))
-               result = ((EventObject)e1).getName().compareToIgnoreCase(((EventObject)e2).getName());
-            else
-               result = (e1 instanceof EventGroup) ? -1 : 1;
+			case EventTemplateList.COLUMN_NAME:
+            result = ((EventTemplate)e1).getName().compareToIgnoreCase(((EventTemplate)e2).getName());
 				break;
-			case EventObjectList.COLUMN_SEVERITY:
-			   if (e1 instanceof EventTemplate && e2 instanceof EventTemplate)
-			      result = ((EventTemplate)e1).getSeverity().compareTo(((EventTemplate)e2).getSeverity());
-			   else
-			      result = 0;
+			case EventTemplateList.COLUMN_SEVERITY:
+		      result = ((EventTemplate)e1).getSeverity().compareTo(((EventTemplate)e2).getSeverity());
 				break;
-			case EventObjectList.COLUMN_FLAGS:
-            if (e1 instanceof EventTemplate && e2 instanceof EventTemplate)
-               result = ((EventTemplate)e1).getFlags() - ((EventTemplate)e2).getFlags();
-            else
-               result = 0;
+			case EventTemplateList.COLUMN_FLAGS:
+            result = ((EventTemplate)e1).getFlags() - ((EventTemplate)e2).getFlags();
 				break;
-			case EventObjectList.COLUMN_MESSAGE:
-            if (e1 instanceof EventTemplate && e2 instanceof EventTemplate)
-               result = ((EventTemplate)e1).getMessage().compareToIgnoreCase(((EventTemplate)e2).getMessage());
-            else
-               result = 0;
-				break;
-			case EventObjectList.COLUMN_DESCRIPTION:
-            if ((e1 instanceof EventGroup) == (e2 instanceof EventGroup))
-               result = ((EventObject)e1).getDescription().compareToIgnoreCase(((EventObject)e2).getDescription());
-            else
-               result = (e1 instanceof EventGroup) ? -1 : 1;
+			case EventTemplateList.COLUMN_MESSAGE:
+            result = ((EventTemplate)e1).getMessage().compareToIgnoreCase(((EventTemplate)e2).getMessage());
 				break;
 			default:
 				result = 0;

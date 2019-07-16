@@ -129,25 +129,24 @@
 #define IDG_SNMP_TRAP         3
 #define IDG_JOB               4
 #define IDG_ACTION            5
-#define IDG_EVENT_GROUP       6
-#define IDG_THRESHOLD         7
-#define IDG_USER              8
-#define IDG_USER_GROUP        9
-#define IDG_ALARM             10
-#define IDG_ALARM_NOTE        11
-#define IDG_PACKAGE           12
-#define IDG_SLM_TICKET        13
-#define IDG_OBJECT_TOOL       14
-#define IDG_SCRIPT            15
-#define IDG_AGENT_CONFIG      16
-#define IDG_GRAPH             17
-#define IDG_CERTIFICATE       18
-#define IDG_DCT_COLUMN        19
-#define IDG_MAPPING_TABLE     20
-#define IDG_DCI_SUMMARY_TABLE 21
-#define IDG_SCHEDULED_TASK    22
-#define IDG_ALARM_CATEGORY    23
-#define IDG_UA_MESSAGE        24
+#define IDG_THRESHOLD         6
+#define IDG_USER              7
+#define IDG_USER_GROUP        8
+#define IDG_ALARM             9
+#define IDG_ALARM_NOTE        10
+#define IDG_PACKAGE           11
+#define IDG_SLM_TICKET        12
+#define IDG_OBJECT_TOOL       13
+#define IDG_SCRIPT            14
+#define IDG_AGENT_CONFIG      15
+#define IDG_GRAPH             16
+#define IDG_CERTIFICATE       17
+#define IDG_DCT_COLUMN        18
+#define IDG_MAPPING_TABLE     19
+#define IDG_DCI_SUMMARY_TABLE 20
+#define IDG_SCHEDULED_TASK    21
+#define IDG_ALARM_CATEGORY    22
+#define IDG_UA_MESSAGE        23
 
 /**
  * Exit codes for console commands

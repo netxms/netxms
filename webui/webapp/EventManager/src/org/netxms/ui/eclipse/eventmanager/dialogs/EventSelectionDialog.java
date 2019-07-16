@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2019 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,10 +31,10 @@ import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
-import org.netxms.client.events.EventObject;
+import org.netxms.client.events.EventTemplate;
 import org.netxms.ui.eclipse.eventmanager.Activator;
 import org.netxms.ui.eclipse.eventmanager.Messages;
-import org.netxms.ui.eclipse.eventmanager.widgets.EventObjectList;
+import org.netxms.ui.eclipse.eventmanager.widgets.EventTemplateList;
 
 /**
  * Event selection dialog
@@ -44,19 +44,17 @@ public class EventSelectionDialog extends Dialog
    private static final String CONFIG_PREFIX = "SelectEvent"; //$NON-NLS-1$
    
 	private boolean multiSelection;
-   private boolean showGroups;
-	private EventObject selectedEvents[];
-	private EventObjectList eventObjectList;
+	private EventTemplate selectedEvents[];
+	private EventTemplateList eventTemplateList;
 
 	/**
 	 * @param parentShell
 	 */
-	public EventSelectionDialog(Shell parentShell, boolean showGroups)
+	public EventSelectionDialog(Shell parentShell)
 	{
 		super(parentShell);
 		setShellStyle(getShellStyle() | SWT.RESIZE);
 		multiSelection = false;
-		this.showGroups = showGroups;
 	}
 
 	/* (non-Javadoc)
@@ -87,15 +85,15 @@ public class EventSelectionDialog extends Dialog
 		
 		dialogArea.setLayout(new FormLayout());
 		
-		eventObjectList = new EventObjectList(dialogArea, SWT.NONE, CONFIG_PREFIX, true, showGroups);
+		eventTemplateList = new EventTemplateList(dialogArea, SWT.NONE, CONFIG_PREFIX, true);
 		FormData fd = new FormData();
       fd.left = new FormAttachment(0, 0);
       fd.top = new FormAttachment(100, 0);
       fd.right = new FormAttachment(100, 0);
       fd.bottom = new FormAttachment(100, 0);
-      eventObjectList.setLayoutData(fd);
+      eventTemplateList.setLayoutData(fd);
 		
-      eventObjectList.getViewer().addDoubleClickListener(new IDoubleClickListener() {
+      eventTemplateList.getViewer().addDoubleClickListener(new IDoubleClickListener() {
 			@Override
 			public void doubleClick(DoubleClickEvent event)
 			{
@@ -113,9 +111,9 @@ public class EventSelectionDialog extends Dialog
 	@Override
 	protected void okPressed()
 	{
-		final IStructuredSelection selection = (IStructuredSelection)eventObjectList.getViewer().getSelection();
-		final List<EventObject> list = selection.toList();
-		selectedEvents = list.toArray(new EventObject[list.size()]);
+		final IStructuredSelection selection = (IStructuredSelection)eventTemplateList.getViewer().getSelection();
+		final List<EventTemplate> list = selection.toList();
+		selectedEvents = list.toArray(new EventTemplate[list.size()]);
 		super.okPressed();
 	}
 
@@ -142,7 +140,7 @@ public class EventSelectionDialog extends Dialog
 	 * 
 	 * @return Selected event templates
 	 */
-	public EventObject[] getSelectedEvents()
+	public EventTemplate[] getSelectedEvents()
 	{
 		return selectedEvents;
 	}

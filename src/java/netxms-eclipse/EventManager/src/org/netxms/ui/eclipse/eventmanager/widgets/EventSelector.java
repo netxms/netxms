@@ -21,7 +21,6 @@ package org.netxms.ui.eclipse.eventmanager.widgets;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.NXCSession;
-import org.netxms.client.events.EventObject;
 import org.netxms.client.events.EventTemplate;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
@@ -65,12 +64,12 @@ public class EventSelector extends AbstractSelector
 	@Override
 	protected void selectionButtonHandler()
 	{
-		EventSelectionDialog dlg = new EventSelectionDialog(getShell(), false);
+		EventSelectionDialog dlg = new EventSelectionDialog(getShell());
 		dlg.enableMultiSelection(false);
 		if (dlg.open() == Window.OK)
 		{
 			long prevEventCode = eventCode;
-			EventObject[] events = dlg.getSelectedEvents();
+			EventTemplate[] events = dlg.getSelectedEvents();
 			if (events.length > 0)
 			{
 				eventCode = events[0].getCode();
@@ -145,16 +144,13 @@ public class EventSelector extends AbstractSelector
 		this.eventCode = eventCode;
 		if (eventCode != 0)
 		{
-			EventObject object = ((NXCSession)ConsoleSharedData.getSession()).findEventObjectByCode(eventCode);
-			if (object != null)
+			EventTemplate evt = ((NXCSession)ConsoleSharedData.getSession()).findEventTemplateByCode(eventCode);
+			if (evt != null)
 			{
-			   eventName = object.getName();
+			   eventName = evt.getName();
 				setText(eventName);
-				if (object instanceof EventTemplate)
-				   setImage(StatusDisplayInfo.getStatusImage(((EventTemplate)object).getSeverity()));
-				else
-				   setImage(SharedIcons.IMG_CONTAINER);
-				getTextControl().setToolTipText(generateToolTipText(object));
+			   setImage(StatusDisplayInfo.getStatusImage(((EventTemplate)evt).getSeverity()));
+				getTextControl().setToolTipText(generateToolTipText(evt));
 			}
 			else
 			{
@@ -177,20 +173,17 @@ public class EventSelector extends AbstractSelector
 	 * @param event event template
 	 * @return tooltip text
 	 */
-	private String generateToolTipText(EventObject object)
+	private String generateToolTipText(EventTemplate evt)
 	{
-		StringBuilder sb = new StringBuilder(object.getName());
+		StringBuilder sb = new StringBuilder(evt.getName());
 		sb.append(" ["); //$NON-NLS-1$
-		sb.append(object.getCode());
-		if (object instanceof EventTemplate)
-		{
-   		sb.append(Messages.get().EventSelector_Severity);
-   		sb.append(StatusDisplayInfo.getStatusText(((EventTemplate)object).getSeverity()));
-         sb.append("\n\n"); //$NON-NLS-1$
-         sb.append(((EventTemplate)object).getMessage());
-		}
+		sb.append(evt.getCode());
+		sb.append(Messages.get().EventSelector_Severity);
+		sb.append(StatusDisplayInfo.getStatusText(((EventTemplate)evt).getSeverity()));
+      sb.append("\n\n"); //$NON-NLS-1$
+      sb.append(((EventTemplate)evt).getMessage());
 		sb.append("\n\n"); //$NON-NLS-1$
-		sb.append(object.getDescription().replace("\r", "")); //$NON-NLS-1$ //$NON-NLS-2$
+		sb.append(evt.getDescription().replace("\r", "")); //$NON-NLS-1$ //$NON-NLS-2$
 		return sb.toString();
 	}
 

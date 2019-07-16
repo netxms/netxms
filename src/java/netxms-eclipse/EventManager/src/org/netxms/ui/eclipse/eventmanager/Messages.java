@@ -14,11 +14,11 @@ public class Messages extends NLS
 	public static String EditEventTemplateDialog_TitleEdit;
 	public static String EditEventTemplateDialog_WriteToLog;
 	public static String EventConfigurator_ColCode;
-	public static String EventConfigurator_ColDescription;
 	public static String EventConfigurator_ColFlags;
 	public static String EventConfigurator_ColMessage;
 	public static String EventConfigurator_ColName;
 	public static String EventConfigurator_ColSeverity;
+   public static String EventConfigurator_ColTags;
 	public static String EventConfigurator_CreateJob_Error;
 	public static String EventConfigurator_CreateJob_Title;
 	public static String EventConfigurator_Delete;

@@ -18,6 +18,7 @@
  */
 package org.netxms.ui.eclipse.eventmanager.dialogs;
 
+import java.util.HashSet;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
@@ -40,11 +41,12 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
  */
 public class EditEventTemplateDialog extends Dialog
 {
-	private EventTemplate object;
+	private EventTemplate eventTemplate;
 	private boolean isNew;
 	private LabeledText id;
 	private LabeledText name;
 	private LabeledText message;
+   private LabeledText tags;
 	private LabeledText description;
 	private Combo severity;
 	private Button optionLog;
@@ -53,11 +55,13 @@ public class EditEventTemplateDialog extends Dialog
 	 * Default constructor.
 	 * 
 	 * @param parentShell
+	 * @param eventTemplate
+	 * @param isNew
 	 */
-	public EditEventTemplateDialog(Shell parentShell, EventTemplate object, boolean isNew)
+	public EditEventTemplateDialog(Shell parentShell, EventTemplate eventTemplate, boolean isNew)
 	{
 		super(parentShell);
-		this.object = object;
+		this.eventTemplate = eventTemplate;
 		this.isNew = isNew;
 	}
 
@@ -78,7 +82,7 @@ public class EditEventTemplateDialog extends Dialog
       
       id = new LabeledText(dialogArea, SWT.NONE);
       id.setLabel(Messages.get().EditEventTemplateDialog_EventCode);
-      id.setText(Long.toString(object.getCode()));
+      id.setText(Long.toString(eventTemplate.getCode()));
       id.getTextControl().setEditable(false);
       
       GridData gd = new GridData();
@@ -90,11 +94,11 @@ public class EditEventTemplateDialog extends Dialog
       severity.add(StatusDisplayInfo.getStatusText(Severity.MINOR));
       severity.add(StatusDisplayInfo.getStatusText(Severity.MAJOR));
       severity.add(StatusDisplayInfo.getStatusText(Severity.CRITICAL));
-      severity.select(object.getSeverity().getValue());
+      severity.select(eventTemplate.getSeverity().getValue());
       
       name = new LabeledText(dialogArea, SWT.NONE);
       name.setLabel(Messages.get().EditEventTemplateDialog_EventName);
-      name.setText(object.getName());
+      name.setText(eventTemplate.getName());
       gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
@@ -102,7 +106,7 @@ public class EditEventTemplateDialog extends Dialog
       
       optionLog = new Button(dialogArea, SWT.CHECK);
       optionLog.setText(Messages.get().EditEventTemplateDialog_WriteToLog);
-      optionLog.setSelection((object.getFlags() & EventTemplate.FLAG_WRITE_TO_LOG) != 0);
+      optionLog.setSelection((eventTemplate.getFlags() & EventTemplate.FLAG_WRITE_TO_LOG) != 0);
       gd = new GridData();
       gd.grabExcessHorizontalSpace = false;
       gd.horizontalAlignment = SWT.RIGHT;
@@ -111,7 +115,7 @@ public class EditEventTemplateDialog extends Dialog
       
       message = new LabeledText(dialogArea, SWT.NONE);
       message.setLabel(Messages.get().EditEventTemplateDialog_Message);
-      message.setText(object.getMessage());
+      message.setText(eventTemplate.getMessage());
       gd = new GridData();
       gd.horizontalSpan = 2;
       gd.grabExcessHorizontalSpace = true;
@@ -119,9 +123,19 @@ public class EditEventTemplateDialog extends Dialog
       gd.widthHint = 450;
       message.setLayoutData(gd);
 		
+      tags = new LabeledText(dialogArea, SWT.NONE);
+      tags.setLabel("Tags");
+      tags.setText(eventTemplate.getTagList());
+      gd = new GridData();
+      gd.horizontalSpan = 2;
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalAlignment = SWT.FILL;
+      gd.widthHint = 450;
+      tags.setLayoutData(gd);
+      
       description = new LabeledText(dialogArea, SWT.NONE, SWT.MULTI | SWT.BORDER | SWT.H_SCROLL | SWT.V_SCROLL | SWT.WRAP);
       description.setLabel(Messages.get().EditEventTemplateDialog_Description);
-      description.setText(object.getDescription());
+      description.setText(eventTemplate.getDescription());
       gd = new GridData();
       gd.horizontalSpan = 2;
       gd.grabExcessHorizontalSpace = true;
@@ -140,11 +154,19 @@ public class EditEventTemplateDialog extends Dialog
 	@Override
 	protected void okPressed()
 	{
-		object.setName(name.getText());
-		object.setSeverity(Severity.getByValue(severity.getSelectionIndex()));
-		object.setMessage(message.getText());
-		object.setDescription(description.getText());
-		object.setFlags(optionLog.getSelection() ? EventTemplate.FLAG_WRITE_TO_LOG : 0);
+		eventTemplate.setName(name.getText());
+		eventTemplate.setSeverity(Severity.getByValue(severity.getSelectionIndex()));
+		eventTemplate.setMessage(message.getText());
+		eventTemplate.setDescription(description.getText());
+		eventTemplate.setFlags(optionLog.getSelection() ? EventTemplate.FLAG_WRITE_TO_LOG : 0);
+		
+		HashSet<String> tagSet = new HashSet<String>();
+		for(String s : tags.getText().split(","))
+		{
+		   tagSet.add(s.trim());
+		}
+		eventTemplate.setTags(tagSet);
+		
 		super.okPressed();
 	}
 

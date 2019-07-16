@@ -40,10 +40,10 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.NXCSession;
-import org.netxms.client.events.EventObject;
 import org.netxms.client.events.EventProcessingPolicyRule;
+import org.netxms.client.events.EventTemplate;
 import org.netxms.ui.eclipse.epp.Messages;
-import org.netxms.ui.eclipse.epp.propertypages.helpers.EventObjectLabelProvider;
+import org.netxms.ui.eclipse.epp.propertypages.helpers.EventTemplateLabelProvider;
 import org.netxms.ui.eclipse.epp.widgets.RuleEditor;
 import org.netxms.ui.eclipse.eventmanager.dialogs.EventSelectionDialog;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -60,7 +60,7 @@ public class RuleEvents extends PropertyPage
 	private RuleEditor editor;
 	private EventProcessingPolicyRule rule;
 	private SortableTableViewer viewer;
-	private Map<Long, EventObject> events = new HashMap<Long, EventObject>();
+	private Map<Long, EventTemplate> events = new HashMap<Long, EventTemplate>();
 	private Button addButton;
 	private Button deleteButton;
 	private Button checkInverted;
@@ -90,7 +90,7 @@ public class RuleEvents extends PropertyPage
       final int[] columnWidths = { 300 };
       viewer = new SortableTableViewer(dialogArea, columnNames, columnWidths, 0, SWT.UP, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
       viewer.setContentProvider(new ArrayContentProvider());
-      viewer.setLabelProvider(new EventObjectLabelProvider());
+      viewer.setLabelProvider(new EventTemplateLabelProvider());
       viewer.setComparator(new ObjectLabelComparator((ILabelProvider)viewer.getLabelProvider()));
       viewer.addSelectionChangedListener(new ISelectionChangedListener() {
 			@Override
@@ -101,7 +101,7 @@ public class RuleEvents extends PropertyPage
 			}
       });
 
-      for(EventObject o : session.findMultipleEventObjects(rule.getEvents().toArray(new Long[0])))
+      for(EventTemplate o : session.findMultipleEventTemplates(rule.getEvents().toArray(new Long[0])))
       	events.put(o.getCode(), o);
       viewer.setInput(events.values().toArray());
       
@@ -171,11 +171,11 @@ public class RuleEvents extends PropertyPage
 	 */
 	private void addEvent()
 	{
-		EventSelectionDialog dlg = new EventSelectionDialog(getShell(), true);
+		EventSelectionDialog dlg = new EventSelectionDialog(getShell());
 		dlg.enableMultiSelection(true);
 		if (dlg.open() == Window.OK)
 		{
-			for(EventObject e : dlg.getSelectedEvents())
+			for(EventTemplate e : dlg.getSelectedEvents())
 				events.put(e.getCode(), e);
 		}
       viewer.setInput(events.values().toArray());
@@ -192,7 +192,7 @@ public class RuleEvents extends PropertyPage
 		{
 			while(it.hasNext())
 			{
-			   EventObject e = (EventObject)it.next();
+			   EventTemplate e = (EventTemplate)it.next();
 				events.remove(e.getCode());
 			}
 	      viewer.setInput(events.values().toArray());

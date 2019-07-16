@@ -25,28 +25,30 @@
 /**
  * Constants
  */
-#define NUMBER_OF_GROUPS   25
+#define NUMBER_OF_GROUPS   24
 
 /**
  * Static data
  */
 static MUTEX s_mutexTableAccess;
-static UINT32 s_freeIdTable[NUMBER_OF_GROUPS] = { 100, FIRST_USER_EVENT_ID, 1, 1,
-                                                  1, 1, 0x80000000, 1,
-						  1, 0x80000001, 1, 1,
-						  1, 1, 10000, 10000,
-						  1, 1, 1, 1,
-						  1, 1, 1, 1,
-						  1
-                                                 };
-static UINT32 s_idLimits[NUMBER_OF_GROUPS] = { 0xFFFFFFFE, 0x7FFFFFFF, 0x7FFFFFFF, 0x7FFFFFFF,
-                                               0xFFFFFFFE, 0x7FFFFFFF, 0xFFFFFFFF, 0x7FFFFFFF,
-					       0x7FFFFFFF, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE,
-					       0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE,
-					       0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE, 0x7FFFFFFE,
-					       0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE,
-					       0xFFFFFFFE
-                                              };
+static UINT32 s_freeIdTable[NUMBER_OF_GROUPS] =
+         {
+            100, FIRST_USER_EVENT_ID, 1, 1,
+            1, 1, 1, 1,
+            0x80000001, 1, 1, 1,
+            1, 10000, 10000, 1,
+            1, 1, 1, 1,
+            1, 1, 1, 1
+         };
+static UINT32 s_idLimits[NUMBER_OF_GROUPS] =
+         {
+            0xFFFFFFFE, 0x7FFFFFFF, 0x7FFFFFFF, 0x7FFFFFFF,
+            0xFFFFFFFE, 0x7FFFFFFF, 0x7FFFFFFF, 0x7FFFFFFF,
+            0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE,
+            0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE,
+            0xFFFFFFFE, 0xFFFFFFFE, 0x7FFFFFFE, 0xFFFFFFFE,
+            0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE
+         };
 static UINT64 m_freeEventId = 1;
 static const TCHAR *m_pszGroupNames[NUMBER_OF_GROUPS] =
 {
@@ -56,7 +58,6 @@ static const TCHAR *m_pszGroupNames[NUMBER_OF_GROUPS] =
    _T("SNMP Trap"),
    _T("Jobs"),
    _T("Actions"),
-   _T("Event Groups"),
    _T("Data Collection Thresholds"),
    _T("Users"),
    _T("User Groups"),
@@ -262,15 +263,6 @@ BOOL InitIdTable()
    {
       if (DBGetNumRows(hResult) > 0)
          s_freeIdTable[IDG_ACTION] = std::max(s_freeIdTable[IDG_ACTION], DBGetFieldULong(hResult, 0, 0) + 1);
-      DBFreeResult(hResult);
-   }
-
-   // Get first available event group id
-   hResult = DBSelect(hdb, _T("SELECT max(id) FROM event_groups"));
-   if (hResult != NULL)
-   {
-      if (DBGetNumRows(hResult) > 0)
-         s_freeIdTable[IDG_EVENT_GROUP] = std::max(s_freeIdTable[IDG_EVENT_GROUP], DBGetFieldULong(hResult, 0, 0) + 1);
       DBFreeResult(hResult);
    }
 

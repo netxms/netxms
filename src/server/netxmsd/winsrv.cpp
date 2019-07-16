@@ -87,6 +87,8 @@ static VOID WINAPI CoreServiceMain(DWORD argc, LPTSTR *argv)
    // Actual initialization
    if (!Initialize())
    {
+      InitiateProcessShutdown();
+
       // Remove database lock
       if (g_flags & AF_DB_LOCKED)
       {

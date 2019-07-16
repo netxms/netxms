@@ -2039,7 +2039,7 @@ void ClientSession::modifyEventTemplate(NXCPMessage *pRequest)
    if (checkSysAccessRights(SYSTEM_ACCESS_EDIT_EVENT_DB))
    {
       json_t *oldValue, *newValue;
-      UINT32 rcc = UpdateEventObject(pRequest, &msg, &oldValue, &newValue);
+      UINT32 rcc = UpdateEventTemplate(pRequest, &msg, &oldValue, &newValue);
       if (rcc == RCC_SUCCESS)
       {
          TCHAR name[MAX_EVENT_NAME];
@@ -2077,7 +2077,7 @@ void ClientSession::deleteEventTemplate(NXCPMessage *pRequest)
    // Check access rights
    if (checkSysAccessRights(SYSTEM_ACCESS_EDIT_EVENT_DB) && (dwEventCode >= FIRST_USER_EVENT_ID))
    {
-      UINT32 rcc = DeleteEventObject(dwEventCode);
+      UINT32 rcc = DeleteEventTemplate(dwEventCode);
       if (rcc == RCC_SUCCESS)
 			writeAuditLog(AUDIT_SYSCFG, true, 0, _T("Event template [%d] deleted"), dwEventCode);
 
@@ -9720,7 +9720,7 @@ void ClientSession::exportConfiguration(NXCPMessage *pRequest)
          pdwList = MemAllocArray<UINT32>(count);
          pRequest->getFieldAsInt32Array(VID_EVENT_LIST, count, pdwList);
          for(i = 0; i < count; i++)
-            CreateNXMPEventRecord(str, pdwList[i]);
+            CreateEventTemplateExportRecord(str, pdwList[i]);
          free(pdwList);
          str += _T("\t</events>\n");
 

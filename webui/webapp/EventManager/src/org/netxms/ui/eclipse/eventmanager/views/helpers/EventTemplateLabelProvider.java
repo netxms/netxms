@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2019 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,26 +16,21 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.epp.propertypages.helpers;
+package org.netxms.ui.eclipse.eventmanager.views.helpers;
 
-import org.eclipse.jface.viewers.ITableColorProvider;
 import org.eclipse.jface.viewers.ITableLabelProvider;
-import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.graphics.RGB;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
-import org.netxms.client.events.EventGroup;
-import org.netxms.client.events.EventObject;
-import org.netxms.ui.eclipse.console.resources.SharedIcons;
+import org.netxms.client.events.EventTemplate;
+import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
+import org.netxms.ui.eclipse.eventmanager.widgets.EventTemplateList;
 
 /**
  * Label provider for event template objects
  */
-public class EventObjectLabelProvider extends WorkbenchLabelProvider implements ITableLabelProvider, ITableColorProvider
+public class EventTemplateLabelProvider extends WorkbenchLabelProvider implements ITableLabelProvider
 {
-   private static final Color COLOR_GROUP = new Color(Display.getDefault(), new RGB(255, 221, 173));
-	/* (non-Javadoc)
+	/**
 	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
 	 */
 	@Override
@@ -43,31 +38,30 @@ public class EventObjectLabelProvider extends WorkbenchLabelProvider implements 
 	{
 	   if ((columnIndex != 0))
 	      return null;
-	   if (element instanceof EventGroup)
-	      return SharedIcons.IMG_CONTAINER;
 		return getImage(element);
 	}
 
-	/* (non-Javadoc)
+	/**
 	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
 	 */
 	@Override
 	public String getColumnText(Object element, int columnIndex)
 	{
-	   return ((EventObject)element).getName();	
+		switch(columnIndex)
+		{
+			case EventTemplateList.COLUMN_CODE:
+				return Long.toString(((EventTemplate)element).getCode());
+			case EventTemplateList.COLUMN_NAME:
+				return ((EventTemplate)element).getName();
+			case EventTemplateList.COLUMN_SEVERITY:
+            return StatusDisplayInfo.getStatusText(((EventTemplate)element).getSeverity());
+			case EventTemplateList.COLUMN_FLAGS:
+            return ((((EventTemplate)element).getFlags() & EventTemplate.FLAG_WRITE_TO_LOG) != 0) ? "L" : "-"; //$NON-NLS-1$ //$NON-NLS-2$
+			case EventTemplateList.COLUMN_MESSAGE:
+            return ((EventTemplate)element).getMessage();
+         case EventTemplateList.COLUMN_TAGS:
+            return ((EventTemplate)element).getTagList();
+		}
+		return null;
 	}
-
-   @Override
-   public Color getForeground(Object element, int columnIndex)
-   {
-      return null;
-   }
-
-   @Override
-   public Color getBackground(Object element, int columnIndex)
-   {
-      if (element instanceof EventGroup)
-         return COLOR_GROUP;
-      return null;
-   }
 }

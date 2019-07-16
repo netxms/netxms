@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2019 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,7 +33,7 @@ import org.eclipse.ui.forms.widgets.ImageHyperlink;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.client.constants.ColumnFilterType;
 import org.netxms.client.constants.Severity;
-import org.netxms.client.events.EventObject;
+import org.netxms.client.events.EventTemplate;
 import org.netxms.client.log.ColumnFilter;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
@@ -123,8 +123,8 @@ public class EventConditionEditor extends ConditionEditor
       {
          setSelectedOperation(initialFilter.isNegated() ? 1 : 0);
          eventCode = initialFilter.getNumericValue();
-         EventObject o = ConsoleSharedData.getSession().findEventObjectByCode(eventCode);
-         if (o != null && o instanceof EventObject)
+         EventTemplate o = ConsoleSharedData.getSession().findEventTemplateByCode(eventCode);
+         if (o != null)
          {
             objectName.setText(o.getName());
             objectName.setImage(labelProvider.getImage(o));
@@ -142,11 +142,11 @@ public class EventConditionEditor extends ConditionEditor
 	 */
 	private void selectEvent()
 	{
-		EventSelectionDialog dlg = new EventSelectionDialog(getShell(), false);
+		EventSelectionDialog dlg = new EventSelectionDialog(getShell());
 		dlg.enableMultiSelection(false);
 		if (dlg.open() == Window.OK)
 		{
-		   EventObject[] events = dlg.getSelectedEvents();
+		   EventTemplate[] events = dlg.getSelectedEvents();
 			if (events.length > 0)
 			{
 				eventCode = events[0].getCode();

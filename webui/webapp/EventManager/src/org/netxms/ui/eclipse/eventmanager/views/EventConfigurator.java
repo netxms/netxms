@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2019 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,11 +32,10 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.part.ViewPart;
-import org.netxms.ui.eclipse.eventmanager.widgets.EventObjectList;
+import org.netxms.ui.eclipse.eventmanager.widgets.EventTemplateList;
 
 /**
  * Event configuration view
- * 
  */
 public class EventConfigurator extends ViewPart
 {
@@ -45,7 +44,7 @@ public class EventConfigurator extends ViewPart
 	
    private static final String TABLE_CONFIG_PREFIX = "EventTemplateList"; //$NON-NLS-1$
 
-	private EventObjectList dataView;
+	private EventTemplateList dataView;
 
    /* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
@@ -55,7 +54,7 @@ public class EventConfigurator extends ViewPart
 	{		
       parent.setLayout(new FormLayout());
       
-      dataView = new EventObjectList(this, parent, SWT.NONE, TABLE_CONFIG_PREFIX);
+      dataView = new EventTemplateList(this, parent, SWT.NONE, TABLE_CONFIG_PREFIX);
       FormData fd = new FormData();
       fd.left = new FormAttachment(0, 0);
       fd.top = new FormAttachment(100, 0);
@@ -96,7 +95,6 @@ public class EventConfigurator extends ViewPart
 		manager.add(new Separator());
       manager.add(dataView.getActionShowFilter());
       manager.add(new Separator());
-      manager.add(dataView.getActionShowGroups());
 		manager.add(dataView.getActionRefresh());
 	}
 
@@ -124,10 +122,7 @@ public class EventConfigurator extends ViewPart
 		mgr.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 		mgr.add(dataView.getActionRefresh());
 		mgr.add(dataView.getActionDelete());
-      mgr.add(dataView.getActionNewGroup());
-		mgr.add(dataView.getActionRemoveFromGroup());
 		mgr.add(new Separator());
-		mgr.add(dataView.getActionShowGroups());
 		mgr.add(dataView.getActionEdit());
 	}
 

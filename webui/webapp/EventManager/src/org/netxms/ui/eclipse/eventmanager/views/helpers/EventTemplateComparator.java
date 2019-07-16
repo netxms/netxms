@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.eventmanager.dialogs.helpers;
+package org.netxms.ui.eclipse.eventmanager.views.helpers;
 
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
@@ -28,7 +28,7 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 /**
  * Event template comparator
  */
-public class EventObjectComparator extends ViewerComparator
+public class EventTemplateComparator extends ViewerComparator
 {
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ViewerComparator#compare(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
@@ -41,11 +41,23 @@ public class EventObjectComparator extends ViewerComparator
 		switch((Integer)((SortableTableViewer)viewer).getTable().getSortColumn().getData("ID")) //$NON-NLS-1$
 		{
 			case EventTemplateList.COLUMN_CODE:
-				result = (int)(((EventTemplate)e1).getCode() - ((EventTemplate)e2).getCode());
+            result = (int)(((EventTemplate)e1).getCode() - ((EventTemplate)e2).getCode());
 				break;
 			case EventTemplateList.COLUMN_NAME:
-				result = ((EventTemplate)e1).getName().compareToIgnoreCase(((EventTemplate)e2).getName());
+            result = ((EventTemplate)e1).getName().compareToIgnoreCase(((EventTemplate)e2).getName());
 				break;
+			case EventTemplateList.COLUMN_SEVERITY:
+		      result = ((EventTemplate)e1).getSeverity().compareTo(((EventTemplate)e2).getSeverity());
+				break;
+			case EventTemplateList.COLUMN_FLAGS:
+            result = ((EventTemplate)e1).getFlags() - ((EventTemplate)e2).getFlags();
+				break;
+			case EventTemplateList.COLUMN_MESSAGE:
+            result = ((EventTemplate)e1).getMessage().compareToIgnoreCase(((EventTemplate)e2).getMessage());
+				break;
+         case EventTemplateList.COLUMN_TAGS:
+            result = ((EventTemplate)e1).getTagList().compareToIgnoreCase(((EventTemplate)e2).getTagList());
+            break;
 			default:
 				result = 0;
 				break;
