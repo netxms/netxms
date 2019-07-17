@@ -58,7 +58,7 @@ public class SourceProvider extends AbstractSourceProvider
    public static final String UA_SCHEDULE_FILE_UPLOAD  = "org.netxms.access.ScheduleFileUpload"; //$NON-NLS-1$
    public static final String UA_SCHEDULE_MAINTENANCE  = "org.netxms.access.ScheduleMaintenance"; //$NON-NLS-1$
    public static final String UA_SCHEDULE_SCRIPT       = "org.netxms.access.ScheduleScript"; //$NON-NLS-1$
-   public static final String UA_SEND_SMS              = "org.netxms.access.SendSMS"; //$NON-NLS-1$
+   public static final String UA_SEND_NOTIFICATION     = "org.netxms.access.SendNotification"; //$NON-NLS-1$
    public static final String UA_SERVER_CONFIG         = "org.netxms.access.ServerConfig"; //$NON-NLS-1$
    public static final String UA_SERVER_CONSOLE        = "org.netxms.access.ServerConsole"; //$NON-NLS-1$
    public static final String UA_SETUP_TCP_PROXY       = "org.netxms.access.SetupTcpProxy"; //$NON-NLS-1$
@@ -104,7 +104,7 @@ public class SourceProvider extends AbstractSourceProvider
    	   UA_SCHEDULE_FILE_UPLOAD,
    	   UA_SCHEDULE_MAINTENANCE,
    	   UA_SCHEDULE_SCRIPT,
-   	   UA_SEND_SMS,
+   	   UA_SEND_NOTIFICATION,
    	   UA_SERVER_CONFIG,
    	   UA_SERVER_CONSOLE,
    	   UA_SETUP_TCP_PROXY,
@@ -206,7 +206,7 @@ public class SourceProvider extends AbstractSourceProvider
       setAccessRight(rights, UserAccessRights.SYSTEM_ACCESS_SCHEDULE_FILE_UPLOAD, UA_SCHEDULE_FILE_UPLOAD);
       setAccessRight(rights, UserAccessRights.SYSTEM_ACCESS_SCHEDULE_MAINTENANCE, UA_SCHEDULE_MAINTENANCE);
       setAccessRight(rights, UserAccessRights.SYSTEM_ACCESS_SCHEDULE_SCRIPT, UA_SCHEDULE_SCRIPT);
-      setAccessRight(rights, UserAccessRights.SYSTEM_ACCESS_SEND_SMS, UA_SEND_SMS);
+      setAccessRight(rights, UserAccessRights.SYSTEM_ACCESS_SEND_NOTIFICATION, UA_SEND_NOTIFICATION);
 	   setAccessRight(rights, UserAccessRights.SYSTEM_ACCESS_SERVER_CONFIG, UA_SERVER_CONFIG);
       setAccessRight(rights, UserAccessRights.SYSTEM_ACCESS_SERVER_CONSOLE, UA_SERVER_CONSOLE);
       setAccessRight(rights, UserAccessRights.SYSTEM_ACCESS_SETUP_TCP_PROXY, UA_SETUP_TCP_PROXY);

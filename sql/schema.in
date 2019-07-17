@@ -1171,6 +1171,7 @@ CREATE TABLE actions
   // command line for external command execution actions, or
   // action name with optional arguments for remote execution actions
   action_data SQL_TEXT null,
+  channel_name varchar(63) null,
   PRIMARY KEY(action_id)
 ) TABLE_TYPE;
 
@@ -2123,3 +2124,16 @@ CREATE TABLE user_agent_notifications
    recall char(1) not null,
    PRIMARY KEY(id)
 ) TABLE_TYPE;
+
+/**
+ * Notification channel configurations
+ */
+CREATE TABLE notification_channels
+(
+   name varchar(63) not null,
+   driver_name varchar(63) not null,
+   description  varchar(255) null,
+   configuration $SQL:TEXT null,
+   PRIMARY KEY(name)
+) TABLE_TYPE;
+

@@ -459,18 +459,6 @@ Failed to load network service object with id %1 from database
 .
 
 MessageId=
-SymbolicName=MSG_SMSDRV_NO_ENTRY_POINTS
-Language=English
-Unable to find all required exportable functions in SMS driver "%1"
-.
-
-MessageId=
-SymbolicName=MSG_SMSDRV_INIT_FAILED
-Language=English
-SMS driver "%1" initialization failed
-.
-
-MessageId=
 SymbolicName=MSG_ZONE_LOAD_FAILED
 Language=English
 Failed to load zone object with id %1 from database
@@ -813,12 +801,6 @@ Failed to load dashboard object with id %1 from database
 .
 
 MessageId=
-SymbolicName=MSG_SMSDRV_INVALID_OPTION
-Language=English
-Invalid option %1 passed to SMS driver
-.
-
-MessageId=
 SymbolicName=MSG_RG_LOAD_FAILED
 Language=English
 Failed to load report group object with id %1 from database
@@ -1128,6 +1110,18 @@ MessageId=
 SymbolicName=MSG_MODULE_REGISTRATION_FAILED
 Language=English
 Registartion of server module "%1" failed
+.
+
+MessageId=
+SymbolicName=MSG_NO_NCD_ENTRY_POINT
+Language=English
+Unable to find entry point in notification channel driver "%1"
+.
+
+MessageId=
+SymbolicName=MSG_NCD_API_VERSION_MISMATCH
+Language=English
+Notification channel driver "%1" cannot be loaded because of API version mismatch (driver: %3; server: %2)
 .
 
 ;#endif

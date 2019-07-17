@@ -972,9 +972,8 @@ retry_db_lock:
 		return FALSE;	// Mandatory module not loaded
 	RegisterPredictionEngines();
 
-	// Initialize mailer and SMS sender
+	// Initialize mailer
 	InitMailer();
-	InitSMSSender();
 
 	// Load users from database
 	InitUsers();
@@ -997,6 +996,10 @@ retry_db_lock:
 	if (!InitAlarmManager())
 		return FALSE;
 
+	//Initialize notification channels
+	LoadNotificationChannelDrivers();
+	LoadNCConfiguration();
+
 	// Initialize objects infrastructure and load objects from database
 	LoadNetworkDeviceDrivers();
 	ObjectsInit();
@@ -1005,7 +1008,7 @@ retry_db_lock:
 	nxlog_debug(1, _T("Objects loaded and initialized"));
 
 	// Initialize and load event actions
-	if (!InitActions())
+	if (!LoadActions())
 	{
 		nxlog_write(MSG_ACTION_INIT_ERROR, EVENTLOG_ERROR_TYPE, NULL);
 		return FALSE;
@@ -1217,7 +1220,6 @@ void NXCORE_EXPORTABLE Shutdown()
 	ThreadJoin(s_eventProcessorThread);
 
 	ShutdownMailer();
-	ShutdownSMSSender();
 
 #if XMPP_SUPPORTED
    StopXMPPConnector();

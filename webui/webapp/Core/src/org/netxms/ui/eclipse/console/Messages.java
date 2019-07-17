@@ -156,14 +156,6 @@ public class Messages extends NLS
    public String ScheduleSelector_Schedule;
    public String SecurityWarningDialog_DontAskAgain;
    public String SecurityWarningDialog_Title;
-   public String SendSMS_DialogTextPrefix;
-	public String SendSMS_DialogTextSuffix;
-	public String SendSMS_DialogTitle;
-	public String SendSMS_JobTitle;
-	public String SendSMS_SendError;
-	public String SendSMSDialog_Message;
-	public String SendSMSDialog_PhoneNumber;
-	public String SendSMSDialog_Title;
 	public String ServerClock_OptionShowText;
    public String ServerClock_OptionShowTimeZone;
    public String ServerClock_ServerTime;

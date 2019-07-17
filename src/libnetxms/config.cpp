@@ -1194,47 +1194,66 @@ static TCHAR *FindComment(TCHAR *str)
    return NULL;
 }
 
+
+
 /**
  * Load INI-style config
  */
 bool Config::loadIniConfig(const TCHAR *file, const TCHAR *defaultIniSection, bool ignoreErrors)
 {
-   FILE *cfg;
+   BYTE *xml;
+   UINT32 size;
+   bool success;
+
+   xml = LoadFile(file, &size);
+   if (xml != NULL)
+   {
+      success = loadIniConfigFromMemory((char *)xml, (int)size, file, defaultIniSection, ignoreErrors);
+      free(xml);
+   }
+   else
+   {
+      success = false;
+   }
+   return success;
+}
+
+/**
+ * Load INI-style config
+ */
+bool Config::loadIniConfigFromMemory(const char *content, size_t length, const TCHAR *fileName, const TCHAR *defaultIniSection, bool ignoreErrors)
+{
    TCHAR buffer[4096], *ptr;
    ConfigEntry *currentSection;
    int sourceLine = 0;
    bool validConfig = true;
 
-   cfg = _tfopen(file, _T("r"));
-   if (cfg == NULL)
-   {
-      error(_T("Cannot open file %s"), file);
-      return false;
-   }
-
    currentSection = m_root->findEntry(defaultIniSection);
    if (currentSection == NULL)
    {
-      currentSection = new ConfigEntry(defaultIniSection, m_root, this, file, 0, 0);
+      currentSection = new ConfigEntry(defaultIniSection, m_root, this, fileName, 0, 0);
    }
 
-   while(!feof(cfg))
+   const char *curr = content;
+   const char *next = curr;
+   while(next != NULL)
    {
       // Read line from file
-      buffer[0] = 0;
-      if (_fgetts(buffer, 4095, cfg) == NULL)
-         break;	// EOF or error
+      next = strchr(curr, '\n');
+      size_t llen = (next != NULL) ? next - curr : length - (curr - content);
+#ifdef UNICODE
+      llen = MultiByteToWideChar(CP_UTF8, 0, curr, llen, buffer, 4095);
+#else
+      llen = MIN(llen, 4095);
+      memcpy(buffer, curr, llen);
+#endif
+      buffer[llen] = 0;
+      curr = (next != NULL) ? next+1 : NULL;
+
       sourceLine++;
-      ptr = _tcschr(buffer, _T('\n'));
+      ptr = _tcschr(buffer, _T('\r'));
       if (ptr != NULL)
-      {
-         if (ptr != buffer)
-         {
-            if (*(ptr - 1) == '\r')
-               ptr--;
-         }
          *ptr = 0;
-      }
       ptr = FindComment(buffer);
       if (ptr != NULL)
          *ptr = 0;
@@ -1264,14 +1283,14 @@ bool Config::loadIniConfig(const TCHAR *file, const TCHAR *defaultIniSection, bo
             if (*curr == _T('@'))
             {
                // @name indicates no merge entry
-               currentSection = new ConfigEntry(curr + 1, parent, this, file, sourceLine, 0);
+               currentSection = new ConfigEntry(curr + 1, parent, this, fileName, sourceLine, 0);
             }
             else
             {
                currentSection = parent->findEntry(curr);
                if (currentSection == NULL)
                {
-                  currentSection = new ConfigEntry(curr, parent, this, file, sourceLine, 0);
+                  currentSection = new ConfigEntry(curr, parent, this, fileName, sourceLine, 0);
                }
             }
             curr = s + 1;
@@ -1284,7 +1303,7 @@ bool Config::loadIniConfig(const TCHAR *file, const TCHAR *defaultIniSection, bo
          ptr = _tcschr(buffer, _T('='));
          if (ptr == NULL)
          {
-            error(_T("Syntax error in configuration file %s at line %d"), file, sourceLine);
+            error(_T("Syntax error in configuration file %s at line %d"), fileName, sourceLine);
             validConfig = false;
             continue;
          }
@@ -1296,12 +1315,11 @@ bool Config::loadIniConfig(const TCHAR *file, const TCHAR *defaultIniSection, bo
          ConfigEntry *entry = currentSection->findEntry(buffer);
          if (entry == NULL)
          {
-            entry = new ConfigEntry(buffer, currentSection, this, file, sourceLine, 0);
+            entry = new ConfigEntry(buffer, currentSection, this, fileName, sourceLine, 0);
          }
          entry->addValuePreallocated(ExpandValue(ptr, false, m_allowMacroExpansion));
       }
    }
-   fclose(cfg);
    return ignoreErrors || validConfig;
 }
 
@@ -1448,6 +1466,34 @@ static void CharData(void *userData, const XML_Char *s, int len)
 
    if ((ps->level > 0) && (ps->level <= MAX_STACK_DEPTH))
       ps->charData[ps->level - 1].appendMBString(s, len, CP_UTF8);
+}
+
+/**
+ * Load config from XML in memory
+ */
+bool Config::loadConfigFromMemory(const char *xml, int xmlSize, const TCHAR *defaultIniSection, const char *topLevelTag, bool ignoreErrors, bool merge)
+{
+   bool success;
+   int ch;
+   int i = 0;
+   do
+   {
+      ch = xml[i];
+      i++;
+   }
+   while(isspace(ch));
+
+
+   if (ch == '<')
+   {
+      success = loadXmlConfigFromMemory(xml, xmlSize, NULL, topLevelTag, merge);
+   }
+   else
+   {
+      success = loadIniConfigFromMemory(const_cast<char *>(xml), xmlSize, _T(":memory:"), defaultIniSection, ignoreErrors);
+   }
+
+   return success;
 }
 
 /**

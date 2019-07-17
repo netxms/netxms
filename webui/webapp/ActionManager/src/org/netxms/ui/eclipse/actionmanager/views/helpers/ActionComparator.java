@@ -60,6 +60,9 @@ public class ActionComparator extends ViewerComparator
 			case ActionManager.COLUMN_DATA:
 				rc = ((ServerAction)e1).getData().compareToIgnoreCase(((ServerAction)e2).getData());
 				break;
+         case ActionManager.COLUMN_CHANNEL:
+            rc = ((ServerAction)e1).getChannelName().compareToIgnoreCase(((ServerAction)e2).getChannelName());
+            break;
 			default:
 				rc = 0;
 				break;

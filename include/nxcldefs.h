@@ -58,6 +58,7 @@
 #define MAX_DCI_DATA_RECORDS        200000
 #define MAX_POLICY_CONFIG_NAME      64
 #define MAX_INT32                   0x7FFFFFFF
+#define MAX_NC_DESCRIPTION 256
 
 /**
  * NetXMS agent authentication methods
@@ -489,6 +490,7 @@ enum SessionState
 #define NX_NOTIFY_POLICY_MODIFIED            39
 #define NX_NOTIFY_POLICY_DELETED             40
 #define NX_NOTIFY_USER_AGENT_MESSAGE_CHANGED 41
+#define NX_NOTIFICATION_CHANNEL_CHANGED      42
 
 /**
  * Request completion codes
@@ -623,6 +625,9 @@ enum SessionState
 #define RCC_FOLDER_ALREADY_EXISTS     ((UINT32)127)
 #define RCC_NO_SUCH_POLICY            ((UINT32)128)
 #define RCC_NO_HARDWARE_DATA          ((UINT32)129)
+#define RCC_CHANNEL_ALREADY_EXIST     ((UINT32)130)
+#define RCC_NO_CHANNEL_NAME           ((UINT32)131)
+#define RCC_CHANNEL_IN_USE            ((UINT32)132)
 
 /**
  * Mask bits for NXCModifyEventTemplate()
@@ -698,7 +703,7 @@ enum SessionState
 #define SYSTEM_ACCESS_VIEW_AUDIT_LOG          _ULL(0x000000004000)
 #define SYSTEM_ACCESS_MANAGE_AGENT_CFG        _ULL(0x000000008000)
 #define SYSTEM_ACCESS_PERSISTENT_STORAGE      _ULL(0x000000010000)
-#define SYSTEM_ACCESS_SEND_SMS                _ULL(0x000000020000)
+#define SYSTEM_ACCESS_SEND_NOTIFICATION       _ULL(0x000000020000)
 #define SYSTEM_ACCESS_MOBILE_DEVICE_LOGIN     _ULL(0x000000040000)
 #define SYSTEM_ACCESS_REGISTER_AGENTS         _ULL(0x000000080000)
 #define SYSTEM_ACCESS_READ_SERVER_FILES       _ULL(0x000000100000)
@@ -1004,7 +1009,7 @@ enum AggregationFunction
 #define ACTION_EXEC           0
 #define ACTION_REMOTE         1
 #define ACTION_SEND_EMAIL     2
-#define ACTION_SEND_SMS       3
+#define ACTION_NOTIFICATION   3
 #define ACTION_FORWARD_EVENT  4
 #define ACTION_NXSL_SCRIPT    5
 #define ACTION_XMPP_MESSAGE   6

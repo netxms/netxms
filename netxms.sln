@@ -75,7 +75,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "nxevent", "src\client\nxeve
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "nxpush", "src\client\nxpush\nxpush.vcxproj", "{B8671BF7-94E1-4615-A8C2-F5C78DB8C515}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "nxsms", "src\client\nxsms\nxsms.vcxproj", "{B0A70A32-A8F0-4071-8044-FDA3C834A5C5}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "nxnotify", "src\client\nxnotify\nxnotify.vcxproj", "{B0A70A32-A8F0-4071-8044-FDA3C834A5C5}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libnxsnmp", "src\snmp\libnxsnmp\libnxsnmp.vcxproj", "{7DC90EE4-E31C-4F12-8F1E-81F10E9099FB}"
 EndProject

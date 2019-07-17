@@ -1194,6 +1194,116 @@ static void TestHashMap()
 }
 
 /**
+ * Test shared hash map
+ */
+static void TestSharedHashMap()
+{
+   StartTest(_T("SharedHashMap: create"));
+   SharedHashMap<HASH_KEY, String> *sharedHashMap = new SharedHashMap<HASH_KEY, String>(true);
+   AssertEquals(sharedHashMap->size(), 0);
+   EndTest();
+
+   HASH_KEY k1 = { '1', '2', '3', '4', '5', '6' };
+   HASH_KEY k2 = { '0', '0', 'a', 'b', 'c', 'd' };
+   HASH_KEY k3 = { '0', '0', '3', 'X', '1', '1' };
+   HASH_KEY k4 = { '1', '0', '3', 'X', '1', '1' };
+
+   StartTest(_T("SharedHashMap: set/get"));
+
+   sharedHashMap->set(k1, new String(_T("String 1")));
+   sharedHashMap->set(k2, new String(_T("String 2")));
+   sharedHashMap->set(k3, new String(_T("String 3")));
+   AssertEquals(sharedHashMap->size(), 3);
+
+   String *s = sharedHashMap->get(k1);
+   AssertNotNull(s);
+   AssertTrue(!_tcscmp(s->getBuffer(), _T("String 1")));
+
+   s = sharedHashMap->get(k2);
+   AssertNotNull(s);
+   AssertTrue(!_tcscmp(s->getBuffer(), _T("String 2")));
+
+   s = sharedHashMap->get(k3);
+   AssertNotNull(s);
+   AssertTrue(!_tcscmp(s->getBuffer(), _T("String 3")));
+
+   s = sharedHashMap->get(k4);
+   AssertNull(s);
+
+   EndTest();
+
+   StartTest(_T("SharedHashMap: remove"));
+   sharedHashMap->remove(k1);
+   AssertEquals(sharedHashMap->size(), 2);
+   s = sharedHashMap->get(k1);
+   AssertNull(s);
+   EndTest();
+
+   StartTest(_T("SharedHashMap: get shared"));
+   shared_ptr<String> shared = sharedHashMap->getShared(k2);
+   AssertEquals(shared.use_count(), 2);
+   delete sharedHashMap;
+   AssertEquals(shared.use_count(), 1);
+   AssertTrue(!_tcscmp(shared->getBuffer(), _T("String 2")));
+   EndTest();
+}
+
+/**
+ * Test shared hash map
+ */
+static void TestSynchronizedSharedHashMap()
+{
+   StartTest(_T("SynchronizedSharedHashMap: create"));
+   SynchronizedSharedHashMap<HASH_KEY, String> *hashMap = new SynchronizedSharedHashMap<HASH_KEY, String>(true);
+   AssertEquals(hashMap->size(), 0);
+   EndTest();
+
+   HASH_KEY k1 = { '1', '2', '3', '4', '5', '6' };
+   HASH_KEY k2 = { '0', '0', 'a', 'b', 'c', 'd' };
+   HASH_KEY k3 = { '0', '0', '3', 'X', '1', '1' };
+   HASH_KEY k4 = { '1', '0', '3', 'X', '1', '1' };
+
+   StartTest(_T("SynchronizedSharedHashMap: set/get"));
+
+   hashMap->set(k1, new String(_T("String 1")));
+   hashMap->set(k2, new String(_T("String 2")));
+   hashMap->set(k3, new String(_T("String 3")));
+   AssertEquals(hashMap->size(), 3);
+
+   shared_ptr<String> s = hashMap->getShared(k1);
+   AssertNotNull(s);
+   AssertTrue(!_tcscmp(s->getBuffer(), _T("String 1")));
+
+   s = hashMap->getShared(k2);
+   AssertNotNull(s);
+   AssertTrue(!_tcscmp(s->getBuffer(), _T("String 2")));
+
+   s = hashMap->getShared(k3);
+   AssertNotNull(s);
+   AssertTrue(!_tcscmp(s->getBuffer(), _T("String 3")));
+
+   s = hashMap->getShared(k4);
+   AssertNull(s);
+
+   EndTest();
+
+   StartTest(_T("SynchronizedSharedHashMap: remove"));
+   hashMap->remove(k1);
+   AssertEquals(hashMap->size(), 2);
+   s = hashMap->getShared(k1);
+   AssertNull(s);
+   EndTest();
+
+   StartTest(_T("SynchronizedSharedHashMap: get shared"));
+   shared_ptr<String> shared = hashMap->getShared(k2);
+   AssertEquals(shared.use_count(), 2);
+   delete hashMap;
+   AssertEquals(shared.use_count(), 1);
+   AssertTrue(!_tcscmp(shared->getBuffer(), _T("String 2")));
+   EndTest();
+}
+
+/**
  * Test hash set
  */
 static void TestHashSet()
@@ -1948,6 +2058,8 @@ int main(int argc, char *argv[])
    TestItoa();
    TestQueue();
    TestHashMap();
+   TestSharedHashMap();
+   TestSynchronizedSharedHashMap();
    TestHashSet();
    TestObjectArray();
    TestSharedObjectArray();

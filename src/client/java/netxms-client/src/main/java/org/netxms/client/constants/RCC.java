@@ -121,6 +121,11 @@ public final class RCC extends CommonRCC
    public static final int INVALID_TUNNEL_ID = 125;
    public static final int FILE_ALREADY_EXISTS = 126;
    public static final int FOLDER_ALREADY_EXIST = 127;
+   public static final int NO_SUCH_POLICY = 128;
+   public static final int NO_HARDWARE_DATA = 129;
+   public static final int CHANNEL_ALREADY_EXIST = 130;
+   public static final int NO_CHANNEL_NAME = 131;
+   public static final int CHANNEL_IN_USE = 132;
 	
 	// SNMP-specific, has no corresponding RCC_xxx constants in C library
 	public static final int BAD_MIB_FILE_HEADER = 1001;

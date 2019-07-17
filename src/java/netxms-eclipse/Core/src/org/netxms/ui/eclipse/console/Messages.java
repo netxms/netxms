@@ -153,14 +153,6 @@ public class Messages extends NLS
    public static String ScheduleSelector_Schedule;
    public static String SecurityWarningDialog_DontAskAgain;
    public static String SecurityWarningDialog_Title;
-   public static String SendSMS_DialogTextPrefix;
-	public static String SendSMS_DialogTextSuffix;
-	public static String SendSMS_DialogTitle;
-	public static String SendSMS_JobTitle;
-	public static String SendSMS_SendError;
-	public static String SendSMSDialog_Message;
-	public static String SendSMSDialog_PhoneNumber;
-	public static String SendSMSDialog_Title;
 	public static String ServerClock_OptionShowText;
    public static String ServerClock_OptionShowTimeZone;
    public static String ServerClock_ServerTime;

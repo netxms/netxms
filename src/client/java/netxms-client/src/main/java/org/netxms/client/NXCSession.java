@@ -9646,17 +9646,20 @@ public class NXCSession
    }
 
    /**
-    * Send SMS via server. User should have appropriate rights to execute this command.
+    * Send Notification via server. User should have appropriate rights to execute this command.
     *
     * @param phoneNumber target phone number
     * @param message     message text
+    * @param string 
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void sendSMS(String phoneNumber, String message) throws IOException, NXCException
+   public void sendNotification(String channelName, String phoneNumber, String subject, String message) throws IOException, NXCException
    {
-      final NXCPMessage msg = newMessage(NXCPCodes.CMD_SEND_SMS);
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_SEND_NOTIFICATION);
+      msg.setField(NXCPCodes.VID_CHANNEL_NAME, channelName);
       msg.setField(NXCPCodes.VID_RCPT_ADDR, phoneNumber);
+      msg.setField(NXCPCodes.VID_EMAIL_SUBJECT, subject);
       msg.setField(NXCPCodes.VID_MESSAGE, message);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
@@ -11053,6 +11056,12 @@ public class NXCSession
       }
    }
 
+   /**
+    * Returns agent policy list
+    * 
+    * @param templateId id of the template where policy are defined
+    * @return hash map of policy UUID to policy
+    */
    public HashMap<UUID, AgentPolicy> getAgentPolicyList(long templateId) throws IOException, NXCException
    {
 
@@ -11071,6 +11080,13 @@ public class NXCSession
       return map;
    }
 
+   /**
+    * Saves new or updated policy
+    * 
+    * @param templateId id of template where policy is defined
+    * @param currentlySelectedElement policy data to be updated or created. For new policy GUID should be null
+    * @return UUID of saved policy
+    */
    public UUID savePolicy(long templateId, AgentPolicy currentlySelectedElement) throws NXCException, IOException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_UPDATE_AGENT_POLICY);
@@ -11080,6 +11096,12 @@ public class NXCSession
       return waitForRCC(msg.getMessageId()).getFieldAsUUID(NXCPCodes.VID_GUID);
    }
 
+   /**
+    * Delete policy 
+    * 
+    * @param templateId id of template where policy is defined
+    * @param guid guid of the policy that should be deleted
+    */
    public void deletePolicy(long templateId, UUID guid) throws NXCException, IOException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_AGENT_POLICY);
@@ -11089,6 +11111,13 @@ public class NXCSession
       waitForRCC(msg.getMessageId());
    }
 
+   /**
+    * Command sent on policyEditor close to send updates to all applied nodes
+    * 
+    * @param templateId id of the closed template
+    * @throws NXCException
+    * @throws IOException
+    */
    public void onPolicyEditorClose(long templateId) throws NXCException, IOException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_POLICY_EDITOR_CLOSED);
@@ -11097,6 +11126,11 @@ public class NXCSession
       waitForRCC(msg.getMessageId());
    }
 
+   /**
+    * Force policy installation on all nodes where template is applied 
+    * 
+    * @param templateId template id
+    */
    public void forcePolicyInstallation(long templateId) throws NXCException, IOException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_POLICY_FORCE_APPLY);
@@ -11105,6 +11139,11 @@ public class NXCSession
       waitForRCC(msg.getMessageId());
    }
 
+   /**
+    * Get user agent notifications list
+    * 
+    * @return list of user agent notifications
+    */
    public List<UserAgentNotification> getUserAgentNotifications() throws NXCException, IOException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_UA_NOTIFICATIONS);
@@ -11113,13 +11152,17 @@ public class NXCSession
       List<UserAgentNotification> list = new ArrayList<UserAgentNotification>();
       int count = response.getFieldAsInt32(NXCPCodes.VID_USER_AGENT_MESSAGE_COUNT);
       long base = NXCPCodes.VID_UA_NOTIFICATION_BASE;
-      System.out.println(count);
       for (int i = 0 ; i < count; i++, base+=10)
          list.add(new UserAgentNotification(response, base, this));
       
       return list;
    }
 
+   /**
+    * Recall user agent notification
+    * 
+    * @param id recall id
+    */
    public void userAgentNotificationRecall(long id) throws NXCException, IOException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_RECALL_UA_NOTIFICATION);
@@ -11128,6 +11171,14 @@ public class NXCSession
       waitForRCC(msg.getMessageId());
    }
    
+   /**
+    * Create new user agent notifications
+    * 
+    * @param message notification message
+    * @param objects objects to show notifications
+    * @param startTime notification's activation time
+    * @param endTime notificaiton's display end time
+    */
    public void createUserAgentNotification(String message, Long[] objects, Date startTime, Date endTime) throws NXCException, IOException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_ADD_UA_NOTIFICATION);
@@ -11137,5 +11188,82 @@ public class NXCSession
       msg.setField(NXCPCodes.VID_UA_NOTIFICATION_BASE + 3, endTime);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
+   }
+
+   /**
+    * Get server notification channels
+    * 
+    * @return list of server notifications channels
+    */
+   public List<NotificationChannel> getNotificationChannels() throws NXCException, IOException
+   {
+      List<NotificationChannel> ncList = new ArrayList<NotificationChannel>();
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_NOTIFICATION_CHANNELS);
+      sendMessage(msg);
+      final NXCPMessage response = waitForRCC(msg.getMessageId());
+      int count = response.getFieldAsInt32(NXCPCodes.VID_CHANNEL_COUNT);
+      long base = NXCPCodes.VID_NOTIFICATION_CHANNEL_BASE;
+      for (int i = 0 ; i < count; i++, base+=20)
+         ncList.add(new NotificationChannel(response, base));            
+      return ncList;
+   }
+   
+   public void createNotificationChannel(NotificationChannel nc) throws NXCException, IOException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_ADD_NOTIFICATION_CHANNEL);
+      nc.fillMessage(msg);
+      sendMessage(msg);  
+      waitForRCC(msg.getMessageId());    
+   }
+   
+   
+   public void updateNotificationChannel(NotificationChannel nc) throws NXCException, IOException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_UPDATE_NOTIFICATION_CHANNEL);
+      nc.fillMessage(msg);
+      sendMessage(msg);  
+      waitForRCC(msg.getMessageId());          
+   }
+   
+   /**
+    * Delete notification channel
+    * 
+    * @param name name of notification channel to be deleted
+    */
+   public void deleteNotificationChannel(String name) throws NXCException, IOException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_NOTIFICATION_CHANNEL);
+      msg.setField(NXCPCodes.VID_NAME, name);
+      sendMessage(msg);  
+      waitForRCC(msg.getMessageId());    
+   }
+
+   /**
+    * Rename notification channel
+    * 
+    * @param name old notification channel name
+    * @param newName new notification channel name
+    */
+   public void renameNotificaiotnChannel(String name, String newName) throws NXCException, IOException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_RENAME_NOTIFICATION_CHANNEL);
+      msg.setField(NXCPCodes.VID_NAME, name);
+      msg.setField(NXCPCodes.VID_NEW_NAME, newName);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
+
+   /**
+    * Get driver name list
+    * 
+    * @return driver name list
+    */
+   public List<String> getDriverNames() throws NXCException, IOException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_NOTIFICATION_DRIVERS);
+      sendMessage(msg);
+      final NXCPMessage response = waitForRCC(msg.getMessageId());
+      List<String> list = response.getStringListFromFields(NXCPCodes.VID_NOTIFICATION_DRIVER_BASE, NXCPCodes.VID_DRIVER_COUNT);
+      return list;
    }
 }

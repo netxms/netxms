@@ -231,7 +231,7 @@ public class NXCPCodes
 	public static final int CMD_QUERY_L2_TOPOLOGY = 0x00CD;
 	public static final int CMD_AUDIT_RECORD = 0x00CE;
 	public static final int CMD_GET_AUDIT_LOG = 0x00CF;
-	public static final int CMD_SEND_SMS = 0x00D0;
+	public static final int CMD_SEND_NOTIFICATION = 0x00D0;
 	public static final int CMD_GET_COMMUNITY_LIST = 0x00D1;
 	public static final int CMD_UPDATE_COMMUNITY_LIST = 0x00D2;
 	public static final int CMD_GET_PERSISTENT_STORAGE = 0x00D3;
@@ -398,6 +398,13 @@ public class NXCPCodes
    public static final int CMD_GET_UA_NOTIFICATIONS = 0x017D;
    public static final int CMD_ADD_UA_NOTIFICATION = 0x017E;
    public static final int CMD_RECALL_UA_NOTIFICATION = 0x017F;
+   public static final int CMD_UPDATE_UA_NOTIFICATIONS = 0x0180;
+   public static final int CMD_GET_NOTIFICATION_CHANNELS = 0x0181;   
+   public static final int CMD_ADD_NOTIFICATION_CHANNEL = 0x0182;   
+   public static final int CMD_UPDATE_NOTIFICATION_CHANNEL = 0x0183;   
+   public static final int CMD_DELETE_NOTIFICATION_CHANNEL = 0x0184; 
+   public static final int CMD_GET_NOTIFICATION_DRIVERS = 0x0185;
+   public static final int CMD_RENAME_NOTIFICATION_CHANNEL = 0x0186;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;
@@ -1063,6 +1070,10 @@ public class NXCPCodes
    public static final long VID_ICMP_COLLECTION_MODE = 651;
    public static final long VID_ICMP_TARGET_COUNT = 652;
    public static final long VID_HAS_ICMP_DATA = 653;
+   public static final long VID_CHANNEL_NAME = 654;
+   public static final long VID_CHANNEL_COUNT = 655;
+   public static final long VID_DRIVER_COUNT = 656;
+   public static final long VID_NEW_NAME = 657;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;
@@ -1167,4 +1178,6 @@ public class NXCPCodes
    public static final long VID_AGENT_POLICY_BASE = 0x10000000L;
    public static final long VID_ZONE_PROXY_BASE = 0x70000000L;
    public static final long VID_UA_NOTIFICATION_BASE = 0x10000000L;
+   public static final long VID_NOTIFICATION_CHANNEL_BASE = 0x10000000L;
+   public static final long VID_NOTIFICATION_DRIVER_BASE = 0x10000000L;
 }

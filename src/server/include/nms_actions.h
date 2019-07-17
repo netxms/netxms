@@ -36,9 +36,11 @@ struct Action
    TCHAR rcptAddr[MAX_RCPT_ADDR_LEN];
    TCHAR emailSubject[MAX_EMAIL_SUBJECT_LEN];
    TCHAR *data;
+   TCHAR channelName[MAX_OBJECT_NAME];
 
    Action(const TCHAR *name);
    Action(DB_RESULT hResult, int row);
+   Action(const Action *act);
    ~Action();
 
    void fillMessage(NXCPMessage *msg) const;
@@ -48,12 +50,14 @@ struct Action
 //
 // Functions
 //
-BOOL InitActions();
+bool LoadActions();
 void CleanupActions();
 BOOL ExecuteAction(UINT32 actionId, const Event *event, const Alarm *alarm);
 UINT32 CreateAction(const TCHAR *pszName, UINT32 *pdwId);
 UINT32 DeleteAction(UINT32 dwActionId);
 UINT32 ModifyActionFromMessage(NXCPMessage *pMsg);
+void UpdateChannelNameInActions(std::pair<TCHAR *, TCHAR *> *names);
+bool CheckChannelIsUsedInAction(TCHAR *name);
 void SendActionsToClient(ClientSession *pSession, UINT32 dwRqId);
 void CreateActionExportRecord(String &xml, UINT32 id);
 bool ImportAction(ConfigEntry *config, bool overwrite);

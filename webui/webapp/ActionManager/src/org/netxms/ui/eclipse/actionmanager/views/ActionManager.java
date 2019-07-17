@@ -77,6 +77,7 @@ public class ActionManager extends ViewPart implements SessionListener
 	public static final int COLUMN_RCPT = 2;
 	public static final int COLUMN_SUBJ = 3;
 	public static final int COLUMN_DATA = 4;
+	public static final int COLUMN_CHANNEL = 5;
 	
 	private SortableTableViewer viewer;
 	private NXCSession session;
@@ -96,8 +97,8 @@ public class ActionManager extends ViewPart implements SessionListener
 		
 		parent.setLayout(new FillLayout());
 		
-		final String[] columnNames = { Messages.get().ActionManager_ColumnName, Messages.get().ActionManager_ColumnType, Messages.get().ActionManager_ColumnRcpt, Messages.get().ActionManager_ColumnSubj, Messages.get().ActionManager_ColumnData };
-		final int[] columnWidths = { 150, 90, 100, 120, 200 };
+		final String[] columnNames = { Messages.get().ActionManager_ColumnName, Messages.get().ActionManager_ColumnType, Messages.get().ActionManager_ColumnRcpt, Messages.get().ActionManager_ColumnSubj, Messages.get().ActionManager_ColumnData, "Channel name" };
+		final int[] columnWidths = { 150, 90, 100, 120, 200, 100 };
 		viewer = new SortableTableViewer(parent, columnNames, columnWidths, COLUMN_NAME, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
 		WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), TABLE_CONFIG_PREFIX);
 		viewer.setContentProvider(new ArrayContentProvider());

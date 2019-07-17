@@ -75,9 +75,6 @@ lib/libnetxms.so.0
 %%SERVER%%lib/libnxsl.la
 %%SERVER%%lib/libnxsl.so
 %%SERVER%%lib/libnxsl.so.0
-%%SERVER%%lib/libnxsms_generic.la
-%%SERVER%%lib/libnxsms_generic.so
-%%SERVER%%lib/libnxsms_generic.so.0
 %%SERVER%%lib/libnxsnmp.la
 %%SERVER%%lib/libnxsnmp.so
 %%SERVER%%lib/libnxsnmp.so.0

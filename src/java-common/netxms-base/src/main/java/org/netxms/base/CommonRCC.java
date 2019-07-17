@@ -62,5 +62,5 @@ public class CommonRCC
 	public static final int LICENSE_VIOLATION = 105;
 	public static final int CLIENT_LICENSE_EXCEEDED = 106;
 	public static final int OBJECT_ALREADY_EXISTS = 107;
-   public static final int OBJECT_IN_USE = 116;
+	public static final int OBJECT_IN_USE = 116;
 }

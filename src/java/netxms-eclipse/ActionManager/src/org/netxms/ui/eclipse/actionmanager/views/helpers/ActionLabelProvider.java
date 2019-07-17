@@ -37,7 +37,7 @@ public class ActionLabelProvider extends DecoratingLabelProvider implements ITab
    	   Messages.get().ActionLabelProvider_ActionTypeExecute, 
    	   Messages.get().ActionLabelProvider_ActionTypeRemoteExec, 
    	   Messages.get().ActionLabelProvider_ActionTypeMail, 
-   	   Messages.get().ActionLabelProvider_ActionTypeSMS, 
+   	   Messages.get().ActionLabelProvider_ActionTypeNotification, 
    	   Messages.get().ActionLabelProvider_ActionTypeForward, 
          Messages.get().ActionLabelProvider_ActionTypeNXSL, 
    	   Messages.get().ActionLabelProvider_ActionTypeXMPP 
@@ -88,6 +88,8 @@ public class ActionLabelProvider extends DecoratingLabelProvider implements ITab
 				return action.getEmailSubject();
 			case ActionManager.COLUMN_DATA:
 				return action.getData();
+         case ActionManager.COLUMN_CHANNEL:
+            return action.getChannelName();
 		}
 		return null;
 	}

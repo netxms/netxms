@@ -64,14 +64,9 @@
    <extension
          point="org.eclipse.ui.commands">
       <command
-            description="%actionDescription.SendSMS"
-            id="org.netxms.ui.eclipse.console.commands.send_sms"
-            name="%action.SendSMS">
-      </command>
-      <command
-            description="Toggle Filter"
-            id="org.netxms.ui.eclipse.library.commands.show_filter"
-            name="Toggle Filter">
+            description="Send notification"
+            id="org.netxms.ui.eclipse.console.commands.send_notification"
+            name="Send notification">
       </command>
       <command
             description="%command.PauseTrace"
@@ -106,6 +101,11 @@
             id="org.netxms.ui.eclipse.console.category.tools"
             name="%category.name.Tools">
       </category>
+      <command
+            description="Toggle Filter"
+            id="org.netxms.ui.eclipse.library.commands.show_filter"
+            name="Toggle Filter">
+      </command>
    </extension>
    <extension
          point="org.eclipse.ui.actionSets">
@@ -114,10 +114,10 @@
             label="%actionSet.core"
             visible="true">
          <action
-               class="org.netxms.ui.eclipse.console.actions.SendSMS"
-               definitionId="org.netxms.ui.eclipse.console.commands.send_sms"
-               id="org.netxms.ui.eclipse.console.actions.send_sms"
-               label="%action.SendSMS"
+               class="org.netxms.ui.eclipse.console.actions.SendNotification"
+               definitionId="org.netxms.ui.eclipse.console.commands.send_notification"
+               id="org.netxms.ui.eclipse.console.actions.send_notification"
+               label="Send notification"
                menubarPath="tools/additions">
          </action>
       </actionSet>
@@ -125,7 +125,7 @@
    <extension
          point="org.eclipse.ui.bindings">
       <key
-            commandId="org.netxms.ui.eclipse.console.commands.send_sms"
+            commandId="org.netxms.ui.eclipse.console.commands.send_notification"
             schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
             sequence="M1+M3+S">
       </key>
@@ -325,7 +325,7 @@
                priorityLevel="workbench">
          </variable>
          <variable
-               name="org.netxms.access.SendSMS"
+               name="org.netxms.access.SendNotification"
                priorityLevel="workbench">
          </variable>
          <variable
@@ -389,20 +389,20 @@
    <extension
          point="org.eclipse.ui.activities">
       <activity
-            id="org.netxms.ui.eclipse.console.activity.SendSMS"
-            name="Send SMS">
+            id="org.netxms.ui.eclipse.console.activity.SendNotification"
+            name="Send notification">
          <enabledWhen>
             <with
-                  variable="org.netxms.access.SendSMS">
+                  variable="org.netxms.access.SendNotification">
                <equals
                      value="true">
                </equals>
             </with></enabledWhen>
       </activity>
       <activityPatternBinding
-            activityId="org.netxms.ui.eclipse.console.activity.SendSMS"
+            activityId="org.netxms.ui.eclipse.console.activity.SendNotification"
             isEqualityPattern="true"
-            pattern="org.netxms.webui.core/org.netxms.ui.eclipse.console.actions.send_sms">
+            pattern="org.netxms.webui.core/org.netxms.ui.eclipse.console.actions.send_notification">
       </activityPatternBinding>
    </extension>
    <extension

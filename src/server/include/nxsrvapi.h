@@ -88,6 +88,7 @@
 
 #define LDIR_NDD              _T("/ndd")
 #define LDIR_PDSDRV           _T("/pdsdrv")
+#define LDIR_NCD              _T("/ncd")
 
 #define DDIR_PACKAGES         _T("/packages")
 #define DDIR_BACKGROUNDS      _T("/backgrounds")

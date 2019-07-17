@@ -1233,6 +1233,14 @@ template <typename T, typename B> inline void ThreadPoolExecute(ThreadPool *p, T
 }
 
 /**
+ * Execute serialized task as soon as possible (use class member without arguments)
+ */
+template <typename T, typename B> inline void ThreadPoolExecuteSerialized(ThreadPool *p, const TCHAR *key, T *object, void (B::*f)())
+{
+   ThreadPoolExecuteSerialized(p, key, __ThreadPoolExecute_Wrapper_0<B>, new __ThreadPoolExecute_WrapperData_0<B>(object, f));
+}
+
+/**
  * Execute task with delay (use class member without arguments)
  */
 template <typename T, typename B> inline void ThreadPoolScheduleRelative(ThreadPool *p, UINT32 delay, T *object, void (B::*f)())
