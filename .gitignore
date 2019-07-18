@@ -164,6 +164,9 @@ target
 /src/client/nxapisrv/java/local
 /src/client/nxevent/nxevent
 /src/client/nxnotify/nxnotify
+/src/client/nxmc/java/.classpath
+/src/client/nxmc/java/.project
+/src/client/nxmc/java/.settings
 /src/client/nxpush/nxpush
 /src/client/nxshell/nxshell
 /src/client/nxshell/java/.classpath
