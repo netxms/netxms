@@ -25,7 +25,6 @@ import org.netxms.client.InetAddressListElement;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.server.ServerVariable;
-import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
  * Class which holds all elements of network discovery configuration

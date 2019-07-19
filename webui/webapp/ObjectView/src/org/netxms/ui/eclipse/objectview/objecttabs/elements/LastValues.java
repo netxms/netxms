@@ -39,7 +39,6 @@ import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.DataCollectionTarget;
 import org.netxms.ui.eclipse.console.resources.GroupMarkers;
-import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectview.Activator;
 import org.netxms.ui.eclipse.objectview.Messages;

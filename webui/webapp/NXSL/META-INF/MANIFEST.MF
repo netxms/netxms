@@ -13,3 +13,4 @@ Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy
 Export-Package: org.netxms.ui.eclipse.nxsl.dialogs,
  org.netxms.ui.eclipse.nxsl.widgets
+Automatic-Module-Name: org.netxms.ui.eclipse.nxsl

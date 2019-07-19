@@ -18,3 +18,4 @@ Export-Package: org.netxms.ui.eclipse.snmp.actions,
  org.netxms.ui.eclipse.snmp.shared,
  org.netxms.ui.eclipse.snmp.views,
  org.netxms.ui.eclipse.snmp.widgets
+Automatic-Module-Name: org.netxms.ui.eclipse.snmp

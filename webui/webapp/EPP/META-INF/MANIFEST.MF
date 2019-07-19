@@ -19,3 +19,4 @@ Bundle-ActivationPolicy: lazy
 Export-Package: org.netxms.ui.eclipse.epp.dialogs,
  org.netxms.ui.eclipse.epp.dialogs.helpers
 Import-Package: org.netxms.ui.eclipse.alarmviewer.widgets
+Automatic-Module-Name: org.netxms.ui.eclipse.epp

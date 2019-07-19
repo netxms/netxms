@@ -30,3 +30,4 @@ Export-Package: org.netxms.ui.eclipse.networkmaps.algorithms,
  org.netxms.ui.eclipse.networkmaps.views,
  org.netxms.ui.eclipse.networkmaps.views.helpers,
  org.netxms.ui.eclipse.networkmaps.widgets
+Automatic-Module-Name: org.netxms.ui.eclipse.networkmaps

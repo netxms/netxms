@@ -14,3 +14,4 @@ Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ActivationPolicy: lazy
 Export-Package: org.netxms.ui.eclipse.actionmanager.dialogs,
  org.netxms.ui.eclipse.actionmanager.views.helpers
+Automatic-Module-Name: org.netxms.ui.eclipse.actionmanager

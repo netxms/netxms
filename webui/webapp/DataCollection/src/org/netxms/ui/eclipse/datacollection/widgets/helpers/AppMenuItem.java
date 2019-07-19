@@ -203,7 +203,6 @@ public class AppMenuItem
          items.add(item);
    }
    
-   @SuppressWarnings("deprecation")
    public Image getIcon()
    {
       if (icon == null)

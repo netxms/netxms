@@ -16,3 +16,4 @@ Require-Bundle: org.eclipse.rap.ui;bundle-version="2.3.1",
  org.netxms.rap.draw2d;bundle-version="1.5.1"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy
+Automatic-Module-Name: org.netxms.ui.eclipse.serviceview

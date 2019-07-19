@@ -22,3 +22,4 @@ Export-Package: org.netxms.ui.eclipse.objectview.api,
  org.netxms.ui.eclipse.objectview.views,
  org.netxms.ui.eclipse.objectview.widgets,
  org.netxms.ui.eclipse.objectview.widgets.helpers
+Automatic-Module-Name: org.netxms.ui.eclipse.objectview

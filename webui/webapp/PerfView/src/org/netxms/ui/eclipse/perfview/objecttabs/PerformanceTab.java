@@ -47,7 +47,6 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.MobileDevice;
 import org.netxms.client.objects.Sensor;
-import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab;
 import org.netxms.ui.eclipse.perfview.Activator;
 import org.netxms.ui.eclipse.perfview.Messages;

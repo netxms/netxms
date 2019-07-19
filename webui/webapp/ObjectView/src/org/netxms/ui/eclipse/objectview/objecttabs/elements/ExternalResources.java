@@ -33,7 +33,6 @@ import org.eclipse.ui.forms.events.HyperlinkEvent;
 import org.eclipse.ui.forms.widgets.Hyperlink;
 import org.netxms.client.ObjectUrl;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab;
 
 /**

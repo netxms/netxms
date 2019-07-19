@@ -20,7 +20,6 @@ package org.netxms.ui.eclipse.objectview.objecttabs;
 
 import org.eclipse.core.commands.Command;
 import org.eclipse.core.commands.State;
-import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.dialogs.IDialogSettings;

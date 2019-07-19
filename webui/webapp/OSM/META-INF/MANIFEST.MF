@@ -16,3 +16,4 @@ Bundle-ActivationPolicy: lazy
 Export-Package: org.netxms.ui.eclipse.osm.actions,
  org.netxms.ui.eclipse.osm.tools,
  org.netxms.ui.eclipse.osm.widgets
+Automatic-Module-Name: org.netxms.ui.eclipse.osm
