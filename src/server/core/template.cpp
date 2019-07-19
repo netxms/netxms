@@ -439,6 +439,10 @@ void Template::updateFromImport(ConfigEntry *config)
       m_policyList->set(guid, curr);
    }
    delete dcis;
+
+   lockProperties();
+   setModified(MODIFY_ALL);
+   unlockProperties();
 }
 
 /**
