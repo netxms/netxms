@@ -176,6 +176,9 @@ void RegisterSchedulerTaskHandler(const TCHAR *id, scheduled_action_executor exe
 UINT32 NXCORE_EXPORTABLE AddRecurrentScheduledTask(const TCHAR *task, const TCHAR *schedule, const TCHAR *persistentData,
          ScheduledTaskTransientData *transientData, UINT32 owner, UINT32 objectId, UINT64 systemRights,
          const TCHAR *comments = NULL, UINT32 flags = 0, const TCHAR *key = NULL);
+UINT32 NXCORE_EXPORTABLE AddUniqueRecurrentScheduledTask(const TCHAR *task, const TCHAR *schedule, const TCHAR *persistentData,
+         ScheduledTaskTransientData *transientData, UINT32 owner, UINT32 objectId, UINT64 systemRights,
+         const TCHAR *comments = NULL, UINT32 flags = 0, const TCHAR *key = NULL);
 UINT32 NXCORE_EXPORTABLE AddOneTimeScheduledTask(const TCHAR *task, time_t nextExecutionTime, const TCHAR *persistentData,
          ScheduledTaskTransientData *transientData, UINT32 owner, UINT32 objectId, UINT64 systemRights,
          const TCHAR *comments = NULL, UINT32 flags = 0, const TCHAR *key = NULL);

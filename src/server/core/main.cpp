@@ -1100,7 +1100,7 @@ retry_db_lock:
 	RegisterSchedulerTaskHandler(_T("Policy.Uninstall"), ScheduleUninstallPolicy, 0); //No access right because it will be used only by server
    RegisterSchedulerTaskHandler(ALARM_SUMMARY_EMAIL_TASK_ID, SendAlarmSummaryEmail, 0); //No access right because it will be used only by server
    RegisterSchedulerTaskHandler(UNBOUND_TUNNEL_PROCESSOR_TASK_ID, ProcessUnboundTunnels, 0); //No access right because it will be used only by server
-   RegisterSchedulerTaskHandler(DCT_RESET_POLLER_TIMER_TASK_ID, ResetObjectPollerTimers, 0); //No access right because it will be used only by server
+   RegisterSchedulerTaskHandler(DCT_RESET_POLL_TIMERS_TASK_ID, ResetObjectPollTimers, 0); //No access right because it will be used only by server
    InitializeTaskScheduler();
 
    // Schedule unbound agent tunnel processing
@@ -1125,8 +1125,8 @@ retry_db_lock:
    else
       DeleteScheduledTaskByHandlerId(ALARM_SUMMARY_EMAIL_TASK_ID);
 
-   //Schedule poller timers reset
-   EnablePollerTimersReset();
+   // Schedule poll timers reset
+   AddUniqueRecurrentScheduledTask(DCT_RESET_POLL_TIMERS_TASK_ID, _T("0 0 1 * *"), _T(""), NULL, 0, 0, SYSTEM_ACCESS_FULL, _T(""), SCHEDULED_TASK_SYSTEM);
 
 	// Start listeners
    s_tunnelListenerThread = ThreadCreateEx(TunnelListenerThread, 0, NULL);

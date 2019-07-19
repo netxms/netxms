@@ -2867,3 +2867,26 @@ StructArray<DependentNode> *GetNodeDependencies(UINT32 nodeId)
    g_idxNodeById.forEach(NodeDependencyCheckCallback, &data);
    return data.dependencies;
 }
+
+
+/**
+ * Callback for cleaning expired DCI data on node
+ */
+static void ResetPollTimers(NetObj *object, void *data)
+{
+   static_cast<DataCollectionTarget*>(object)->resetPollTimers();
+}
+
+/**
+ * Reset poll timers for all nodes
+ */
+void ResetObjectPollTimers(const ScheduledTaskParameters *params)
+{
+   nxlog_debug_tag(_T("poll.system"), 2, _T("Resetting object poll timers"));
+   g_idxNodeById.forEach(ResetPollTimers, NULL);
+   g_idxClusterById.forEach(ResetPollTimers, NULL);
+   g_idxMobileDeviceById.forEach(ResetPollTimers, NULL);
+   g_idxSensorById.forEach(ResetPollTimers, NULL);
+   g_idxAccessPointById.forEach(ResetPollTimers, NULL);
+   g_idxChassisById.forEach(ResetPollTimers, NULL);
+}

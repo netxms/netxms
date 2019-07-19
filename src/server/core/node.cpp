@@ -9299,9 +9299,15 @@ json_t *Node::toJson()
    return root;
 }
 
-void Node::resetPollerTimers()
+/**
+ * Reset poll timers
+ */
+void Node::resetPollTimers()
 {
-   super::resetPollerTimers();
+   super::resetPollTimers();
+
+   lockProperties();
    m_topologyPollTimer->reset();
    m_routingTablePollTimer->reset();
+   unlockProperties();
 }

@@ -1440,36 +1440,25 @@ public:
 };
 
 /**
- * Manually updated 64 bit integer gauge
+ * Reset poll timers for all objects
  */
-class ManualGauge64 : public Gauge64
-{
-protected:
-   virtual INT64 readCurrentValue() override { return 0; }
-
-public:
-   ManualGauge64(const TCHAR *name, int interval, int period) : Gauge64(name, interval, period) { }
-};
+void ResetObjectPollTimers(const ScheduledTaskParameters *params);
 
 /**
- * Reference on currently executed poller timer
+ * Poll timers reset task
  */
-extern ManualGauge64 *g_currentPollerTimer;
+#define DCT_RESET_POLL_TIMERS_TASK_ID _T("System.ResetPollTimers")
 
-/**
- * Poller timer reset task
- */
-#define DCT_RESET_POLLER_TIMER_TASK_ID _T("DataCollectionTarget.ResetPollTimers")
-void ResetObjectPollerTimers(const ScheduledTaskParameters *params);
-void EnablePollerTimersReset();
+#define pollerLock(name) \
+   _pollerLock(); \
+   UINT64 __pollStartTime = GetCurrentTimeMs(); \
+   ManualGauge64 *__pollTimer = m_ ##name##PollTimer; \
 
-#define pollerLock(name) _pollerLock();\
-      UINT64 startTime = GetCurrentTimeMs(); \
-      g_currentPollerTimer = m_ ##name## PollTimer;
-
-#define pollerUnlock() if(g_currentPollerTimer != NULL) { lockProperties(); g_currentPollerTimer->update(GetCurrentTimeMs() - startTime); unlockProperties();  } \
-      g_currentPollerTimer = NULL; \
-      _pollerUnlock();
+#define pollerUnlock() \
+   lockProperties(); \
+   __pollTimer->update(GetCurrentTimeMs() - __pollStartTime); \
+   unlockProperties(); \
+   _pollerUnlock();
 
 /**
  * Data collection proxy information structure
@@ -1611,9 +1600,12 @@ public:
    virtual bool lockForInstancePoll();
    void unlockForInstancePoll();
 
-   virtual void resetPollerTimers();
+   virtual void resetPollTimers();
 };
 
+/**
+ * Lock object for instance discovery poll
+ */
 inline bool DataCollectionTarget::lockForInstancePoll()
 {
    bool success = false;
@@ -1632,6 +1624,9 @@ inline bool DataCollectionTarget::lockForInstancePoll()
    return success;
 }
 
+/**
+ * Unlock from instance discovery poll
+ */
 inline void DataCollectionTarget::unlockForInstancePoll()
 {
    lockProperties();
@@ -1639,6 +1634,9 @@ inline void DataCollectionTarget::unlockForInstancePoll()
    unlockProperties();
 }
 
+/**
+ * Lock object for configuration poll
+ */
 inline bool DataCollectionTarget::lockForConfigurationPoll()
 {
    bool success = false;
@@ -2487,7 +2485,7 @@ public:
 	void checkSubnetBinding();
    AccessPointState getAccessPointState(AccessPoint *ap, SNMP_Transport *snmpTransport);
    void setChassis(UINT32 chassisId);
-   virtual void resetPollerTimers();
+   virtual void resetPollTimers() override;
 
 	void forceConfigurationPoll() { lockProperties(); m_runtimeFlags |= DCDF_FORCE_CONFIGURATION_POLL; unlockProperties(); }
 

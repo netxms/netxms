@@ -22,8 +22,6 @@
 
 #include "nxcore.h"
 
-#define DCT_RESET_POLLER_TIMER_TASK_ID _T("DataCollectionTarget.ResetPollTimers")
-
 /**
  * Data collector thread pool
  */
@@ -662,7 +660,6 @@ NetObj *DataCollectionTarget::objectFromParameter(const TCHAR *param)
 DataCollectionError DataCollectionTarget::getInternalItem(const TCHAR *param, size_t bufSize, TCHAR *buffer)
 {
    DataCollectionError error = DCE_SUCCESS;
-
 
    if (!_tcsicmp(param, _T("PollTime.Configuration.Average")))
    {
@@ -1946,44 +1943,14 @@ void DataCollectionTarget::calculateProxyLoad()
    unlockProperties();
 }
 
-void DataCollectionTarget::resetPollerTimers()
+/**
+ * Reset poll timers
+ */
+void DataCollectionTarget::resetPollTimers()
 {
+   lockProperties();
    m_statusPollTimer->reset();
    m_configurationPollTimer->reset();
    m_instancePollTimer->reset();
-}
-
-/**
- * Callback for cleaning expired DCI data on node
- */
-static void ResetPollerTimer(NetObj *object, void *data)
-{
-   static_cast<DataCollectionTarget*>(object)->resetPollerTimers();
-}
-
-/**
- * Reset poll timers for all nodes
- */
-void ResetObjectPollerTimers(const ScheduledTaskParameters *params)
-{
-   nxlog_debug_tag(DCT_RESET_POLLER_TIMER_TASK_ID, 2, _T("Reset poller timers"));
-   g_idxNodeById.forEach(ResetPollerTimer, NULL);
-   g_idxClusterById.forEach(ResetPollerTimer, NULL);
-   g_idxMobileDeviceById.forEach(ResetPollerTimer, NULL);
-   g_idxSensorById.forEach(ResetPollerTimer, NULL);
-   g_idxAccessPointById.forEach(ResetPollerTimer, NULL);
-   g_idxChassisById.forEach(ResetPollerTimer, NULL);
-}
-
-/**
- * Enable poll timer reset by creating a scheduled task.
- * If task has already been set, do nothing
- */
-void EnablePollerTimersReset()
-{
-   ScheduledTask *task = FindScheduledTaskByHandlerId(DCT_RESET_POLLER_TIMER_TASK_ID);
-   if (task == NULL)
-   {
-      AddRecurrentScheduledTask(DCT_RESET_POLLER_TIMER_TASK_ID, _T("0 0 1 * *"), _T(""), NULL, 0, 0, SYSTEM_ACCESS_FULL, _T(""), SCHEDULED_TASK_SYSTEM);
-   }
+   unlockProperties();
 }

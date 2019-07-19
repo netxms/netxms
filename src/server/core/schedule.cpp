@@ -335,6 +335,18 @@ UINT32 NXCORE_EXPORTABLE AddRecurrentScheduledTask(const TCHAR *task, const TCHA
 }
 
 /**
+ * Create scheduled task only if task with same task ID does not exist
+ */
+UINT32 NXCORE_EXPORTABLE AddUniqueRecurrentScheduledTask(const TCHAR *task, const TCHAR *schedule, const TCHAR *persistentData,
+         ScheduledTaskTransientData *transientData, UINT32 owner, UINT32 objectId, UINT64 systemRights,
+         const TCHAR *comments, UINT32 flags, const TCHAR *key)
+{
+   if (FindScheduledTaskByHandlerId(task) != NULL)
+      return RCC_SUCCESS;
+   return AddRecurrentScheduledTask(task, schedule, persistentData, transientData, owner, objectId, systemRights, comments, flags, key);
+}
+
+/**
  * One time schedule creation function
  */
 UINT32 NXCORE_EXPORTABLE AddOneTimeScheduledTask(const TCHAR *task, time_t nextExecutionTime, const TCHAR *persistentData,

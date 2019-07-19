@@ -218,4 +218,16 @@ public:
    }
 };
 
+/**
+ * Manually updated 64 bit integer gauge
+ */
+class ManualGauge64 : public Gauge64
+{
+protected:
+   virtual INT64 readCurrentValue() override { return 0; }
+
+public:
+   ManualGauge64(const TCHAR *name, int interval, int period) : Gauge64(name, interval, period) { }
+};
+
 #endif
