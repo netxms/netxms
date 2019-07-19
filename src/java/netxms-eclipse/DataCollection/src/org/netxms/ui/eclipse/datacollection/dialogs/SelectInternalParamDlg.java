@@ -51,9 +51,29 @@ public class SelectInternalParamDlg extends AbstractSelectParamDlg
 		list.add(new AgentParameter("Status", Messages.get().SelectInternalParamDlg_DCI_Status, DataType.INT32)); //$NON-NLS-1$
 		list.add(new AgentParameter("PingTime", Messages.get().SelectInternalParamDlg_PingTime_PrimaryIP, DataType.UINT32)); //$NON-NLS-1$
 		list.add(new AgentParameter("PingTime(*)", Messages.get().SelectInternalParamDlg_PingTime_Instance, DataType.UINT32)); //$NON-NLS-1$
+		list.add(new AgentParameter("PollTime.Configuration.Average", "Poll time (configuration): average", DataType.UINT64)); //$NON-NLS-1$
+		list.add(new AgentParameter("PollTime.Configuration.Last", "Poll time (configuration): last", DataType.UINT64)); //$NON-NLS-1$
+		list.add(new AgentParameter("PollTime.Configuration.Max", "Poll time (configuration): max", DataType.UINT64)); //$NON-NLS-1$
+		list.add(new AgentParameter("PollTime.Configuration.Min", "Poll time (configuration): min", DataType.UINT64)); //$NON-NLS-1$
+		list.add(new AgentParameter("PollTime.Instance.Average", "Poll time (instance): average", DataType.UINT64)); //$NON-NLS-1$
+		list.add(new AgentParameter("PollTime.Instance.Last", "Poll time (instance): last", DataType.UINT64)); //$NON-NLS-1$
+		list.add(new AgentParameter("PollTime.Instance.Max", "Poll time (instance): max", DataType.UINT64)); //$NON-NLS-1$
+		list.add(new AgentParameter("PollTime.Instance.Min", "Poll time (instance): min", DataType.UINT64)); //$NON-NLS-1$
+		list.add(new AgentParameter("PollTime.Status.Average", "Poll time (status): average", DataType.UINT64)); //$NON-NLS-1$
+		list.add(new AgentParameter("PollTime.Status.Last", "Poll time (status): last", DataType.UINT64)); //$NON-NLS-1$
+		list.add(new AgentParameter("PollTime.Status.Max", "Poll time (status): max", DataType.UINT64)); //$NON-NLS-1$
+		list.add(new AgentParameter("PollTime.Status.Min", "Poll time (status): min", DataType.UINT64)); //$NON-NLS-1$
 		
 		if ((object instanceof Template) || (object instanceof AbstractNode))
 		{
+		   list.add(new AgentParameter("PollTime.RoutingTable.Average", "Poll time (routing table): average", DataType.UINT64)); //$NON-NLS-1$
+		   list.add(new AgentParameter("PollTime.RoutingTable.Last", "Poll time (routing table): last", DataType.UINT64)); //$NON-NLS-1$
+		   list.add(new AgentParameter("PollTime.RoutingTable.Max", "Poll time (routing table): max", DataType.UINT64)); //$NON-NLS-1$
+		   list.add(new AgentParameter("PollTime.RoutingTable.Min", "Poll time (routing table): min", DataType.UINT64)); //$NON-NLS-1$
+		   list.add(new AgentParameter("PollTime.Topology.Average", "Poll time (topology): average", DataType.UINT64)); //$NON-NLS-1$
+		   list.add(new AgentParameter("PollTime.Topology.Last", "Poll time (topology): last", DataType.UINT64)); //$NON-NLS-1$
+		   list.add(new AgentParameter("PollTime.Topology.Max", "Poll time (topology): max", DataType.UINT64)); //$NON-NLS-1$
+		   list.add(new AgentParameter("PollTime.Topology.Min", "Poll time (topology): min", DataType.UINT64)); //$NON-NLS-1$
 			list.add(new AgentParameter("Net.IP.NextHop(*)", Messages.get().SelectInternalParamDlg_DCI_NextHop, DataType.STRING)); //$NON-NLS-1$
          list.add(new AgentParameter("NetSvc.ResponseTime(*)", "Network service {instance} response time", DataType.UINT32)); //$NON-NLS-1$
          list.add(new AgentParameter("ReceivedSNMPTraps", "Total SNMP traps received", DataType.UINT64)); //$NON-NLS-1$

@@ -22,10 +22,13 @@
 
 #include "nxcore.h"
 
+#define DCT_RESET_POLLER_TIMER_TASK_ID _T("DataCollectionTarget.ResetPollTimers")
+
 /**
  * Data collector thread pool
  */
 extern ThreadPool *g_dataCollectorThreadPool;
+ManualGauge64 *g_currentPollerTimer = NULL;
 
 /**
  * Data collector worker
@@ -52,6 +55,9 @@ DataCollectionTarget::DataCollectionTarget() : super()
    m_lastInstancePoll = 0;
    m_hPollerMutex = MutexCreate();
    m_proxyLoadFactor = 0;
+   m_statusPollTimer = new ManualGauge64(_T("status"), 1, 1000);
+   m_configurationPollTimer = new ManualGauge64(_T("configuration"), 1, 1000);
+   m_instancePollTimer = new ManualGauge64(_T("instance"), 1, 1000);
 }
 
 /**
@@ -69,6 +75,9 @@ DataCollectionTarget::DataCollectionTarget(const TCHAR *name) : super(name)
    m_lastInstancePoll = 0;
    m_hPollerMutex = MutexCreate();
    m_proxyLoadFactor = 0;
+   m_statusPollTimer = new ManualGauge64(_T("status"), 1, 1000);
+   m_configurationPollTimer = new ManualGauge64(_T("configuration"), 1, 1000);
+   m_instancePollTimer = new ManualGauge64(_T("instance"), 1, 1000);
 }
 
 /**
@@ -79,6 +88,9 @@ DataCollectionTarget::~DataCollectionTarget()
    delete m_deletedItems;
    delete m_deletedTables;
    delete m_scriptErrorReports;
+   delete m_statusPollTimer;
+   delete m_configurationPollTimer;
+   delete m_instancePollTimer;
    MutexDestroy(m_hPollerMutex);
 }
 
@@ -651,7 +663,80 @@ DataCollectionError DataCollectionTarget::getInternalItem(const TCHAR *param, si
 {
    DataCollectionError error = DCE_SUCCESS;
 
-   if (!_tcsicmp(param, _T("Status")))
+
+   if (!_tcsicmp(param, _T("PollTime.Configuration.Average")))
+   {
+      lockProperties();
+      _sntprintf(buffer, bufSize, INT64_FMT, static_cast<INT64>(m_configurationPollTimer->getAverage()));
+      unlockProperties();
+   }
+   else if (!_tcsicmp(param, _T("PollTime.Configuration.Last")))
+   {
+      lockProperties();
+      _sntprintf(buffer, bufSize, INT64_FMT, m_configurationPollTimer->getCurrent());
+      unlockProperties();
+   }
+   else if (!_tcsicmp(param, _T("PollTime.Configuration.Max")))
+   {
+      lockProperties();
+      _sntprintf(buffer, bufSize, INT64_FMT, m_configurationPollTimer->getMax());
+      unlockProperties();
+   }
+   else if (!_tcsicmp(param, _T("PollTime.Configuration.Min")))
+   {
+      lockProperties();
+      _sntprintf(buffer, bufSize, INT64_FMT, m_configurationPollTimer->getMin());
+      unlockProperties();
+   }
+   else if (!_tcsicmp(param, _T("PollTime.Instance.Average")))
+   {
+      lockProperties();
+      _sntprintf(buffer, bufSize, INT64_FMT, static_cast<INT64>(m_instancePollTimer->getAverage()));
+      unlockProperties();
+   }
+   else if (!_tcsicmp(param, _T("PollTime.Instance.Last")))
+   {
+      lockProperties();
+      _sntprintf(buffer, bufSize, INT64_FMT, m_instancePollTimer->getCurrent());
+      unlockProperties();
+   }
+   else if (!_tcsicmp(param, _T("PollTime.Instance.Max")))
+   {
+      lockProperties();
+      _sntprintf(buffer, bufSize, INT64_FMT, m_instancePollTimer->getMax());
+      unlockProperties();
+   }
+   else if (!_tcsicmp(param, _T("PollTime.Instance.Min")))
+   {
+      lockProperties();
+      _sntprintf(buffer, bufSize, INT64_FMT, m_instancePollTimer->getMin());
+      unlockProperties();
+   }
+   else if (!_tcsicmp(param, _T("PollTime.Status.Average")))
+   {
+      lockProperties();
+      _sntprintf(buffer, bufSize, INT64_FMT, static_cast<INT64>(m_statusPollTimer->getAverage()));
+      unlockProperties();
+   }
+   else if (!_tcsicmp(param, _T("PollTime.Status.Last")))
+   {
+      lockProperties();
+      _sntprintf(buffer, bufSize, INT64_FMT, m_statusPollTimer->getCurrent());
+      unlockProperties();
+   }
+   else if (!_tcsicmp(param, _T("PollTime.Status.Max")))
+   {
+      lockProperties();
+      _sntprintf(buffer, bufSize, INT64_FMT, m_statusPollTimer->getMax());
+      unlockProperties();
+   }
+   else if (!_tcsicmp(param, _T("PollTime.Status.Min")))
+   {
+      lockProperties();
+      _sntprintf(buffer, bufSize, INT64_FMT, m_statusPollTimer->getMin());
+      unlockProperties();
+   }
+   else if (!_tcsicmp(param, _T("Status")))
    {
       _sntprintf(buffer, bufSize, _T("%d"), m_status);
    }
@@ -1536,7 +1621,7 @@ void DataCollectionTarget::instanceDiscoveryPoll(PollerInfo *poller, ClientSessi
    unlockProperties();
 
    poller->setStatus(_T("wait for lock"));
-   pollerLock();
+   pollerLock(instance);
 
    if (IsShutdownInProgress())
    {
@@ -1859,4 +1944,46 @@ void DataCollectionTarget::calculateProxyLoad()
    lockProperties();
    m_proxyLoadFactor = loadFactor;
    unlockProperties();
+}
+
+void DataCollectionTarget::resetPollerTimers()
+{
+   m_statusPollTimer->reset();
+   m_configurationPollTimer->reset();
+   m_instancePollTimer->reset();
+}
+
+/**
+ * Callback for cleaning expired DCI data on node
+ */
+static void ResetPollerTimer(NetObj *object, void *data)
+{
+   static_cast<DataCollectionTarget*>(object)->resetPollerTimers();
+}
+
+/**
+ * Reset poll timers for all nodes
+ */
+void ResetObjectPollerTimers(const ScheduledTaskParameters *params)
+{
+   nxlog_debug_tag(DCT_RESET_POLLER_TIMER_TASK_ID, 2, _T("Reset poller timers"));
+   g_idxNodeById.forEach(ResetPollerTimer, NULL);
+   g_idxClusterById.forEach(ResetPollerTimer, NULL);
+   g_idxMobileDeviceById.forEach(ResetPollerTimer, NULL);
+   g_idxSensorById.forEach(ResetPollerTimer, NULL);
+   g_idxAccessPointById.forEach(ResetPollerTimer, NULL);
+   g_idxChassisById.forEach(ResetPollerTimer, NULL);
+}
+
+/**
+ * Enable poll timer reset by creating a scheduled task.
+ * If task has already been set, do nothing
+ */
+void EnablePollerTimersReset()
+{
+   ScheduledTask *task = FindScheduledTaskByHandlerId(DCT_RESET_POLLER_TIMER_TASK_ID);
+   if (task == NULL)
+   {
+      AddRecurrentScheduledTask(DCT_RESET_POLLER_TIMER_TASK_ID, _T("0 0 1 * *"), _T(""), NULL, 0, 0, SYSTEM_ACCESS_FULL, _T(""), SCHEDULED_TASK_SYSTEM);
+   }
 }

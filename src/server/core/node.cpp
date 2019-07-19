@@ -168,6 +168,8 @@ Node::Node() : super()
    m_portRowCount = 0;
    m_agentCompressionMode = NODE_AGENT_COMPRESSION_DEFAULT;
    m_rackOrientation = FILL;
+   m_topologyPollTimer = new ManualGauge64(_T("topology"), 1, 1000);
+   m_routingTablePollTimer = new ManualGauge64(_T("routingTable"), 1, 1000);
 }
 
 /**
@@ -286,6 +288,8 @@ Node::Node(const NewNodeData *newNodeData, UINT32 flags)  : super()
    m_agentCompressionMode = NODE_AGENT_COMPRESSION_DEFAULT;
    m_rackOrientation = FILL;
    m_agentId = newNodeData->agentId;
+   m_topologyPollTimer = new ManualGauge64(_T("topology"), 1, 1000);
+   m_routingTablePollTimer = new ManualGauge64(_T("routingTable"), 1, 1000);
 }
 
 /**
@@ -336,6 +340,8 @@ Node::~Node()
    delete m_routingLoopEvents;
    MemFree(m_agentCertSubject);
    MemFree(m_hypervisorInfo);
+   delete m_topologyPollTimer;
+   delete m_routingTablePollTimer;
 }
 
 /**
@@ -1663,7 +1669,7 @@ void Node::statusPoll(PollerInfo *poller, ClientSession *pSession, UINT32 rqId)
 
    ObjectQueue<Event> *eventQueue = new ObjectQueue<Event>(true);     // Delayed event queue
    poller->setStatus(_T("wait for lock"));
-   pollerLock();
+   pollerLock(status);
 
    POLL_CANCELLATION_CHECKPOINT_EX(DCDF_QUEUED_FOR_STATUS_POLL, delete eventQueue);
 
@@ -2867,7 +2873,7 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
    UINT32 modified = 0;
 
    poller->setStatus(_T("wait for lock"));
-   pollerLock();
+   pollerLock(configuration);
 
    POLL_CANCELLATION_CHECKPOINT(DCDF_QUEUED_FOR_CONFIGURATION_POLL);
 
@@ -5452,6 +5458,54 @@ DataCollectionError Node::getInternalItem(const TCHAR *param, size_t bufSize, TC
          rc = DCE_NOT_SUPPORTED;
       }
    }
+   else if (!_tcsicmp(param, _T("PollTime.RoutingTable.Average")))
+   {
+      lockProperties();
+      _sntprintf(buffer, bufSize, INT64_FMT, static_cast<INT64>(m_routingTablePollTimer->getAverage()));
+      unlockProperties();
+   }
+   else if (!_tcsicmp(param, _T("PollTime.RoutingTable.Last")))
+   {
+      lockProperties();
+      _sntprintf(buffer, bufSize, INT64_FMT, m_routingTablePollTimer->getCurrent());
+      unlockProperties();
+   }
+   else if (!_tcsicmp(param, _T("PollTime.RoutingTable.Max")))
+   {
+      lockProperties();
+      _sntprintf(buffer, bufSize, INT64_FMT, m_routingTablePollTimer->getMax());
+      unlockProperties();
+   }
+   else if (!_tcsicmp(param, _T("PollTime.RoutingTable.Min")))
+   {
+      lockProperties();
+      _sntprintf(buffer, bufSize, INT64_FMT, m_routingTablePollTimer->getMin());
+      unlockProperties();
+   }
+   else if (!_tcsicmp(param, _T("PollTime.Topology.Average")))
+   {
+      lockProperties();
+      _sntprintf(buffer, bufSize, INT64_FMT, static_cast<INT64>(m_topologyPollTimer->getAverage()));
+      unlockProperties();
+   }
+   else if (!_tcsicmp(param, _T("PollTime.Topology.Last")))
+   {
+      lockProperties();
+      _sntprintf(buffer, bufSize, INT64_FMT, m_topologyPollTimer->getCurrent());
+      unlockProperties();
+   }
+   else if (!_tcsicmp(param, _T("PollTime.Topology.Max")))
+   {
+      lockProperties();
+      _sntprintf(buffer, bufSize, INT64_FMT, m_topologyPollTimer->getMax());
+      unlockProperties();
+   }
+   else if (!_tcsicmp(param, _T("PollTime.Topology.Min")))
+   {
+      lockProperties();
+      _sntprintf(buffer, bufSize, INT64_FMT, m_topologyPollTimer->getMin());
+      unlockProperties();
+   }
    else if (!_tcsicmp(param, _T("ReceivedSNMPTraps")))
    {
       lockProperties();
@@ -5583,22 +5637,6 @@ DataCollectionError Node::getInternalItem(const TCHAR *param, size_t bufSize, TC
          AgentGetParameterArg(param, 1, loginName, 256);
          _sntprintf(buffer, bufSize, _T("%d"), GetSessionCount(true, false, CLIENT_TYPE_WEB, loginName));
       }
-      else if (MatchString(_T("Server.QueueSize.Average(*)"), param, false))
-      {
-         rc = GetQueueStatistic(param, StatisticType::AVERAGE, buffer);
-      }
-      else if (MatchString(_T("Server.QueueSize.Current(*)"), param, false))
-      {
-         rc = GetQueueStatistic(param, StatisticType::CURRENT, buffer);
-      }
-      else if (MatchString(_T("Server.QueueSize.Max(*)"), param, false))
-      {
-         rc = GetQueueStatistic(param, StatisticType::MAX, buffer);
-      }
-      else if (MatchString(_T("Server.QueueSize.Min(*)"), param, false))
-      {
-         rc = GetQueueStatistic(param, StatisticType::MIN, buffer);
-      }
       else if (!_tcsicmp(param, _T("Server.DB.Queries.Failed")))
       {
          LIBNXDB_PERF_COUNTERS counters;
@@ -5664,6 +5702,22 @@ DataCollectionError Node::getInternalItem(const TCHAR *param, size_t bufSize, TC
             _sntprintf(buffer, bufSize, UINT64_FMT, bytes);
          else
             rc = DCE_NOT_SUPPORTED;
+      }
+      else if (MatchString(_T("Server.QueueSize.Average(*)"), param, false))
+      {
+         rc = GetQueueStatistic(param, StatisticType::AVERAGE, buffer);
+      }
+      else if (MatchString(_T("Server.QueueSize.Current(*)"), param, false))
+      {
+         rc = GetQueueStatistic(param, StatisticType::CURRENT, buffer);
+      }
+      else if (MatchString(_T("Server.QueueSize.Max(*)"), param, false))
+      {
+         rc = GetQueueStatistic(param, StatisticType::MAX, buffer);
+      }
+      else if (MatchString(_T("Server.QueueSize.Min(*)"), param, false))
+      {
+         rc = GetQueueStatistic(param, StatisticType::MIN, buffer);
       }
       else if (!_tcsicmp(param, _T("Server.ReceivedSNMPTraps")))
       {
@@ -6604,7 +6658,7 @@ void Node::setPrimaryIPAddress(const InetAddress& addr)
  */
 void Node::changeIPAddress(const InetAddress& ipAddr)
 {
-   pollerLock();
+   _pollerLock();
 
    lockProperties();
 
@@ -6644,7 +6698,7 @@ void Node::changeIPAddress(const InetAddress& ipAddr)
    deleteAgentConnection();
    agentUnlock();
 
-   pollerUnlock();
+   _pollerUnlock();
 }
 
 /**
@@ -6654,7 +6708,7 @@ void Node::changeZone(UINT32 newZone)
 {
    int i;
 
-   pollerLock();
+   _pollerLock();
 
    lockProperties();
    m_zoneUIN = newZone;
@@ -6693,7 +6747,7 @@ void Node::changeZone(UINT32 newZone)
    deleteAgentConnection();
    agentUnlock();
 
-   pollerUnlock();
+   _pollerUnlock();
 }
 
 /**
@@ -6931,6 +6985,7 @@ void Node::routingTablePoll(PollerInfo *poller, ClientSession *session, UINT32 r
    m_runtimeFlags |= NDF_QUEUED_FOR_ROUTE_POLL;
    unlockProperties();
 
+   pollerLock(routingTable);
    ROUTING_TABLE *pRT = getRoutingTable();
    if (pRT != NULL)
    {
@@ -6940,6 +6995,8 @@ void Node::routingTablePoll(PollerInfo *poller, ClientSession *session, UINT32 r
       routingTableUnlock();
       DbgPrintf(5, _T("Routing table updated for node %s [%d]"), m_name, m_id);
    }
+   pollerUnlock();
+
    lockProperties();
    m_lastRTUpdate = time(NULL);
    m_runtimeFlags &= ~NDF_QUEUED_FOR_ROUTE_POLL;
@@ -7514,7 +7571,7 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, UINT32 rqId
    unlockProperties();
 
    poller->setStatus(_T("wait for lock"));
-   pollerLock();
+   pollerLock(topology);
 
    POLL_CANCELLATION_CHECKPOINT(NDF_QUEUED_FOR_TOPOLOGY_POLL);
 
@@ -8185,10 +8242,10 @@ void Node::checkSubnetBinding()
  */
 void Node::updateInterfaceNames(ClientSession *pSession, UINT32 rqId)
 {
-   pollerLock();
-   if (IsShutdownInProgress())
+   _pollerLock();
+   if (m_isDeleteInitiated || IsShutdownInProgress())
    {
-      pollerUnlock();
+      _pollerUnlock();
       return;
    }
 
@@ -8246,7 +8303,7 @@ void Node::updateInterfaceNames(ClientSession *pSession, UINT32 rqId)
 
    // Finish poll
    sendPollerMsg(rqId, _T("Finished interface names poll for node %s\r\n"), m_name);
-   pollerUnlock();
+   _pollerUnlock();
    DbgPrintf(4, _T("Finished interface names poll for node %s (ID: %d)"), m_name, m_id);
 }
 
@@ -9240,4 +9297,11 @@ json_t *Node::toJson()
    json_object_set_new(root, "portNumberingScheme", json_integer(m_portNumberingScheme));
    json_object_set_new(root, "portRowCount", json_integer(m_portRowCount));
    return root;
+}
+
+void Node::resetPollerTimers()
+{
+   super::resetPollerTimers();
+   m_topologyPollTimer->reset();
+   m_routingTablePollTimer->reset();
 }

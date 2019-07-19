@@ -543,7 +543,7 @@ void Sensor::configurationPoll(PollerInfo *poller, ClientSession *session, UINT3
    unlockProperties();
 
    poller->setStatus(_T("wait for lock"));
-   pollerLock();
+   pollerLock(configuration);
 
    if (IsShutdownInProgress())
    {
@@ -634,7 +634,7 @@ void Sensor::statusPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId)
    unlockProperties();
 
    poller->setStatus(_T("wait for lock"));
-   pollerLock();
+   pollerLock(status);
 
    if (IsShutdownInProgress())
    {

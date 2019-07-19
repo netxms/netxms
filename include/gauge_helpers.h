@@ -43,6 +43,7 @@ protected:
    T m_max;
    T m_average; // exponential moving average
    bool m_null;
+   bool m_reset;
    int m_exp;        // Pre-calculated exponent value for moving average calculation
    
 public:
@@ -73,7 +74,7 @@ public:
          m_null = false;
          m_min = curr;
          m_max = curr;
-         m_average = curr;
+         m_average = curr * EMA_FP_1;
       }
       else
       {
@@ -83,6 +84,12 @@ public:
             m_max = curr;
          UpdateExpMovingAverage(m_average, m_exp, curr);
       }
+   }
+
+   void reset()
+   {
+      m_min = m_current;
+      m_max = m_current;
    }
 };
 
@@ -115,10 +122,16 @@ public:
    bool isNull() const { return m_data.isNull(); }
    int getInterval() const { return m_interval; }
    int getPeriod() const { return m_period; }
+   void reset() {m_data.reset(); }
    
    void update() 
    {
       m_data.update(readCurrentValue());
+   }
+
+   void update(T value)
+   {
+      m_data.update(value);
    }
 };
 

@@ -30,6 +30,7 @@
 #include <math.h>
 #include "nxcore_jobs.h"
 #include "nms_topo.h"
+#include <gauge_helpers.h>
 
 /**
  * Forward declarations of classes
@@ -1439,6 +1440,38 @@ public:
 };
 
 /**
+ * Manually updated 64 bit integer gauge
+ */
+class ManualGauge64 : public Gauge64
+{
+protected:
+   virtual INT64 readCurrentValue() override { return 0; }
+
+public:
+   ManualGauge64(const TCHAR *name, int interval, int period) : Gauge64(name, interval, period) { }
+};
+
+/**
+ * Reference on currently executed poller timer
+ */
+extern ManualGauge64 *g_currentPollerTimer;
+
+/**
+ * Poller timer reset task
+ */
+#define DCT_RESET_POLLER_TIMER_TASK_ID _T("DataCollectionTarget.ResetPollTimers")
+void ResetObjectPollerTimers(const ScheduledTaskParameters *params);
+void EnablePollerTimersReset();
+
+#define pollerLock(name) _pollerLock();\
+      UINT64 startTime = GetCurrentTimeMs(); \
+      g_currentPollerTimer = m_ ##name## PollTimer;
+
+#define pollerUnlock() if(g_currentPollerTimer != NULL) { lockProperties(); g_currentPollerTimer->update(GetCurrentTimeMs() - startTime); unlockProperties();  } \
+      g_currentPollerTimer = NULL; \
+      _pollerUnlock();
+
+/**
  * Data collection proxy information structure
  */
 struct ProxyInfo
@@ -1470,6 +1503,9 @@ protected:
    time_t m_lastInstancePoll;
    MUTEX m_hPollerMutex;
    double m_proxyLoadFactor;
+   ManualGauge64 *m_statusPollTimer;
+   ManualGauge64 *m_configurationPollTimer;
+   ManualGauge64 *m_instancePollTimer;
 
 	virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId) override;
 	virtual void fillMessageInternalStage2(NXCPMessage *pMsg, UINT32 userId) override;
@@ -1488,8 +1524,8 @@ protected:
    void doInstanceDiscovery(UINT32 requestId);
    bool updateInstances(DCObject *root, StringMap *instances, UINT32 requestId);
 
-   void pollerLock() { MutexLock(m_hPollerMutex); }
-   void pollerUnlock() { MutexUnlock(m_hPollerMutex); }
+   void _pollerLock() { MutexLock(m_hPollerMutex); }
+   void _pollerUnlock() { MutexUnlock(m_hPollerMutex); }
 
    NetObj *objectFromParameter(const TCHAR *param);
 
@@ -1574,6 +1610,8 @@ public:
    void instanceDiscoveryPollWorkerEntry(PollerInfo *poller, ClientSession *session, UINT32 rqId);
    virtual bool lockForInstancePoll();
    void unlockForInstancePoll();
+
+   virtual void resetPollerTimers();
 };
 
 inline bool DataCollectionTarget::lockForInstancePoll()
@@ -2229,6 +2267,8 @@ protected:
 	UINT32 m_portNumberingScheme;
 	UINT32 m_portRowCount;
 	RackOrientation m_rackOrientation;
+	ManualGauge64 *m_topologyPollTimer;
+	ManualGauge64 *m_routingTablePollTimer;
 
    virtual void statusPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) override;
    virtual void configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) override;
@@ -2447,6 +2487,7 @@ public:
 	void checkSubnetBinding();
    AccessPointState getAccessPointState(AccessPoint *ap, SNMP_Transport *snmpTransport);
    void setChassis(UINT32 chassisId);
+   virtual void resetPollerTimers();
 
 	void forceConfigurationPoll() { lockProperties(); m_runtimeFlags |= DCDF_FORCE_CONFIGURATION_POLL; unlockProperties(); }
 

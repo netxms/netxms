@@ -520,7 +520,7 @@ void Cluster::configurationPoll(PollerInfo *poller, ClientSession *pSession, UIN
    unlockProperties();
 
    poller->setStatus(_T("wait for lock"));
-   pollerLock();
+   pollerLock(configuration);
 
    if (IsShutdownInProgress())
    {
@@ -576,7 +576,7 @@ void Cluster::statusPoll(PollerInfo *poller, ClientSession *pSession, UINT32 dwR
    unlockProperties();
 
    poller->setStatus(_T("wait for lock"));
-   pollerLock();
+   pollerLock(status);
 
    if (IsShutdownInProgress())
    {
