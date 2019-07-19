@@ -822,6 +822,7 @@ UINT32 UpdateScheduledTaskFromMsg(NXCPMessage *request,  UINT32 owner, UINT64 sy
    MemFree(taskId);
    MemFree(schedule);
    MemFree(persistentData);
+   MemFree(comments);
    return rcc;
 }
 
