@@ -32,7 +32,7 @@ import org.netxms.client.constants.RCC;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.events.Alarm;
 import org.netxms.client.events.AlarmCategory;
-import org.netxms.client.events.EventObject;
+import org.netxms.client.events.EventTemplate;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
 import org.netxms.client.users.AbstractUserObject;
@@ -144,7 +144,7 @@ public class Alarms extends AbstractHandler
       if (!session.isAlarmCategoriesSynchronized())
          session.syncAlarmCategories();
       if (!session.isEventObjectsSynchronized())
-         session.syncEventObjects();
+         session.syncEventTemplates();
       
       List<JsonObject> serializedAlarms = new ArrayList<JsonObject>();
       Map<Long, DciValue[]> cachedValues = null;
@@ -188,7 +188,7 @@ public class Alarms extends AbstractHandler
          addUserName(json, session, a.getResolvedByUser(), "resolvedByUserName");
          addUserName(json, session, a.getTerminatedByUser(), "terminatedByUserName");
 
-         EventObject e = session.findEventObjectByCode(a.getSourceEventCode());
+         EventTemplate e = session.findEventTemplateByCode(a.getSourceEventCode());
          if (e != null)
          {
             json.addProperty("sourceEventName", e.getName());
