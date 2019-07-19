@@ -327,10 +327,18 @@ static THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
 
 		// Remove expired DCI data
       nxlog_debug_tag(DEBUG_TAG, 2, _T("Clearing collected DCI data"));
-		g_idxNodeById.forEach(CleanDciData, hdb);
-		g_idxClusterById.forEach(CleanDciData, hdb);
-		g_idxMobileDeviceById.forEach(CleanDciData, hdb);
-		g_idxSensorById.forEach(CleanDciData, hdb);
+      if (!ConfigReadBoolean(_T("Housekeeper.DisableCollectedDataCleanup"), false))
+      {
+         nxlog_debug_tag(DEBUG_TAG, 2, _T("Clearing collected DCI data"));
+         g_idxNodeById.forEach(CleanDciData, hdb);
+         g_idxClusterById.forEach(CleanDciData, hdb);
+         g_idxMobileDeviceById.forEach(CleanDciData, hdb);
+         g_idxSensorById.forEach(CleanDciData, hdb);
+      }
+      else
+      {
+         nxlog_debug_tag(DEBUG_TAG, 2, _T("Collected DCI data cleanup disabled"));
+      }
 
 		//Delete old user agent messages
 	   dwRetentionTime = ConfigReadULong(_T("UserAgent.RetentionTime"), 30);

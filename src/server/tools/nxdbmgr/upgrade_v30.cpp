@@ -24,6 +24,16 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 30.85 to 30.86
+ */
+static bool H_UpgradeFromV85()
+{
+   CHK_EXEC(CreateConfigParam(_T("Housekeeper.DisableCollectedDataCleanup"), _T("0"), _T("Disable automatic cleanup of collected DCI data during housekeeper run."), NULL, 'B', true, false, false, false));
+   CHK_EXEC(SetMinorSchemaVersion(86));
+   return true;
+}
+
+/**
  * Upgrade from 30.84 to 30.85
  */
 static bool H_UpgradeFromV84()
@@ -2755,6 +2765,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 85, 30, 86, H_UpgradeFromV85 },
    { 84, 30, 85, H_UpgradeFromV84 },
    { 83, 30, 84, H_UpgradeFromV83 },
    { 82, 30, 83, H_UpgradeFromV82 },
