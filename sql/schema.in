@@ -946,7 +946,6 @@ CREATE TABLE event_log
   event_message varchar(2000) null,
   event_tags varchar(2000) null,
   root_event_id SQL_INT64 not null, /* Non-zero if current event correlates to some other event */
-  user_tag varchar(63) null,
   raw_data SQL_TEXT null, /* Raw event data in JSON format */
 #ifdef DB_TSDB
   PRIMARY KEY(event_id,event_source,event_timestamp)
@@ -1087,6 +1086,7 @@ CREATE TABLE alarms
   hd_ref varchar(63) null,  // Help desk reference
   creation_time integer not null,
   last_change_time integer not null,
+  rule_guid varchar(36) null,
   source_object_id integer not null,
   zone_uin integer not null,
   source_event_code integer not null,
@@ -1104,6 +1104,7 @@ CREATE TABLE alarms
   timeout_event integer not null,
   ack_timeout integer not null,
   alarm_category_ids varchar(255) null,
+  event_tags varchar(2000) null,
 #ifdef DB_TSDB
   PRIMARY KEY(alarm_id,source_object_id,creation_time)
 #else

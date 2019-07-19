@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -45,7 +45,9 @@ static NXCORE_LOG s_logs[] =
 			{ _T("ack_by"), _T("Ack by"), LC_USER_ID },
 			{ _T("resolved_by"), _T("Resolved by"), LC_USER_ID },
 			{ _T("term_by"), _T("Terminated by"), LC_USER_ID },
+         { _T("rule_guid"), _T("Rule"), LC_TEXT },
 			{ _T("alarm_key"), _T("Key"), LC_TEXT },
+         { _T("event_tags"), _T("Event Tags"), LC_TEXT },
 			{ NULL, NULL, 0 }
 		}
 	},
@@ -75,7 +77,7 @@ static NXCORE_LOG s_logs[] =
 			{ _T("event_code"), _T("Event"), LC_EVENT_CODE },
 			{ _T("event_severity"), _T("Severity"), LC_SEVERITY },
 			{ _T("event_message"), _T("Message"), LC_TEXT },
-			{ _T("user_tag"), _T("User tag"), LC_TEXT },
+			{ _T("event_tags"), _T("Event tags"), LC_TEXT },
          { _T("root_event_id"), _T("Root ID"), LC_INTEGER },
 			{ NULL, NULL, 0 }
 		}

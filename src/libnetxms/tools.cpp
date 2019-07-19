@@ -3153,20 +3153,6 @@ INT64 LIBNETXMS_EXPORTABLE GetMappedHeapMemory()
 }
 
 /**
- * Constructor for abstract iterator
- */
-AbstractIterator::AbstractIterator()
-{
-}
-
-/**
- * Destructor for abstract iterator
- */
-AbstractIterator::~AbstractIterator()
-{
-}
-
-/**
  * Escape string for JSON
  */
 String LIBNETXMS_EXPORTABLE EscapeStringForJSON(const TCHAR *s)

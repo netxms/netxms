@@ -44,14 +44,15 @@ BOOL EF_ProcessMessage(ISCSession *session, NXCPMessage *request, NXCPMessage *r
 {
 	int i, numArgs;
 	UINT32 code, id;
-	TCHAR userTag[MAX_USERTAG_LENGTH], *argList[32], *name;
+	TCHAR *argList[32], *name;
    char format[] = "ssssssssssssssssssssssssssssssss";
 	NetObj *object;
 	BOOL tagExist;
 
 	if (request->getCode() == CMD_FORWARD_EVENT)
 	{
-		DbgPrintf(4, _T("Event forwarding request from %s"), IpToStr(session->GetPeerAddress(), userTag));
+	   TCHAR buffer[64];
+		DbgPrintf(4, _T("Event forwarding request from %s"), IpToStr(session->GetPeerAddress(), buffer));
 		
 		id = request->getFieldAsUInt32(VID_OBJECT_ID);
 		if (id != 0)
@@ -77,7 +78,7 @@ BOOL EF_ProcessMessage(ISCSession *session, NXCPMessage *request, NXCPMessage *r
 					code = 0;
 					DbgPrintf(5, _T("Event name %s cannot be resolved"), name);
 				}
-				free(name);
+				MemFree(name);
 			}
 			else
 			{
@@ -89,12 +90,9 @@ BOOL EF_ProcessMessage(ISCSession *session, NXCPMessage *request, NXCPMessage *r
 				numArgs = 32;
 			for(i = 0; i < numArgs; i++)
 				argList[i] = request->getFieldAsString(VID_EVENT_ARG_BASE + i);
-			tagExist = request->isFieldExist(VID_USER_TAG);
-			if (tagExist)
-				request->getFieldAsString(VID_USER_TAG, userTag, MAX_USERTAG_LENGTH);
 
 			format[numArgs] = 0;
-			if (PostEventWithTag(code, object->getId(), tagExist ? userTag : NULL,
+			if (PostEventWithTag(code, object->getId(), request->getFieldAsString(VID_TAGS),
 			                     (numArgs > 0) ? format : NULL,
 			                     argList[0], argList[1], argList[2], argList[3],
 										argList[4], argList[5], argList[6], argList[7],

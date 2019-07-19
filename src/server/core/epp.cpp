@@ -501,7 +501,6 @@ bool EPRule::matchScript(Event *pEvent)
    m_script->setGlobalVariable("SEVERITY_TEXT", m_script->createValue(GetStatusAsText(pEvent->getSeverity(), true)));
    m_script->setGlobalVariable("OBJECT_ID", m_script->createValue(pEvent->getSourceId()));
    m_script->setGlobalVariable("EVENT_TEXT", m_script->createValue((TCHAR *)pEvent->getMessage()));
-   m_script->setGlobalVariable("USER_TAG", m_script->createValue((TCHAR *)pEvent->getUserTag()));
 
    // Pass event's parameters as arguments and
    // other information as variables
@@ -646,7 +645,7 @@ UINT32 EPRule::generateAlarm(Event *event)
 	}
 	else	// Generate new alarm
 	{
-	   alarmId = CreateNewAlarm(m_alarmMessage, m_alarmKey, ALARM_STATE_OUTSTANDING,
+	   alarmId = CreateNewAlarm(m_guid, m_alarmMessage, m_alarmKey, ALARM_STATE_OUTSTANDING,
                      (m_alarmSeverity == SEVERITY_FROM_EVENT) ? event->getSeverity() : m_alarmSeverity,
                      m_alarmTimeout, m_alarmTimeoutEvent, event, 0, &m_alarmCategoryList,
                      ((m_flags & RF_CREATE_TICKET) != 0) ? true : false);

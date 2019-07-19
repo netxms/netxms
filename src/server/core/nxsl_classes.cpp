@@ -1443,15 +1443,42 @@ NXSL_METHOD_DEFINITION(Event, setSeverity)
 }
 
 /**
- * Event::setUserTag() method
+ * Event::addTag() method
  */
-NXSL_METHOD_DEFINITION(Event, setUserTag)
+NXSL_METHOD_DEFINITION(Event, addTag)
 {
    if (!argv[0]->isString())
       return NXSL_ERR_NOT_STRING;
 
-   Event *event = (Event *)object->getData();
-   event->setUserTag(argv[0]->getValueAsCString());
+   Event *event = static_cast<Event*>(object->getData());
+   event->addTag(argv[0]->getValueAsCString());
+   *result = vm->createValue();
+   return 0;
+}
+
+/**
+ * Event::hasTag() method
+ */
+NXSL_METHOD_DEFINITION(Event, hasTag)
+{
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   Event *event = static_cast<Event*>(object->getData());
+   *result = vm->createValue(event->hasTag(argv[0]->getValueAsCString()));
+   return 0;
+}
+
+/**
+ * Event::removeTag() method
+ */
+NXSL_METHOD_DEFINITION(Event, removeTag)
+{
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   Event *event = static_cast<Event*>(object->getData());
+   event->removeTag(argv[0]->getValueAsCString());
    *result = vm->createValue();
    return 0;
 }
@@ -1477,9 +1504,11 @@ NXSL_EventClass::NXSL_EventClass() : NXSL_Class()
 {
    setName(_T("Event"));
 
+   NXSL_REGISTER_METHOD(Event, addTag, 1);
+   NXSL_REGISTER_METHOD(Event, hasTag, 1);
+   NXSL_REGISTER_METHOD(Event, removeTag, 1);
    NXSL_REGISTER_METHOD(Event, setMessage, 1);
    NXSL_REGISTER_METHOD(Event, setSeverity, 1);
-   NXSL_REGISTER_METHOD(Event, setUserTag, 1);
    NXSL_REGISTER_METHOD(Event, toJson, 0);
 }
 
@@ -1539,13 +1568,19 @@ NXSL_Value *NXSL_EventClass::getAttr(NXSL_Object *pObject, const char *attr)
    {
       value = vm->createValue(event->getSourceId());
    }
+   else if (!strcmp(attr, "tagList"))
+   {
+      value = vm->createValue(event->getTagsAsList());
+   }
+   else if (!strcmp(attr, "tags"))
+   {
+      StringList *tags = String(event->getTagsAsList()).split(_T(","));
+      value = vm->createValue(new NXSL_Array(vm, tags));
+      delete tags;
+   }
    else if (!strcmp(attr, "timestamp"))
    {
       value = vm->createValue((INT64)event->getTimeStamp());
-   }
-   else if (!strcmp(attr, "userTag"))
-   {
-      value = vm->createValue(event->getUserTag());
    }
    else
    {
@@ -1708,6 +1743,10 @@ NXSL_Value *NXSL_AlarmClass::getAttr(NXSL_Object *pObject, const char *attr)
    {
       value = vm->createValue(alarm->getSourceEventId());
    }
+   else if (!strcmp(attr, "eventTagList"))
+   {
+      value = vm->createValue(alarm->getEventTags());
+   }
    else if (!strcmp(attr, "helpdeskReference"))
    {
       value = vm->createValue(alarm->getHelpDeskRef());
@@ -1743,6 +1782,11 @@ NXSL_Value *NXSL_AlarmClass::getAttr(NXSL_Object *pObject, const char *attr)
    else if (!strcmp(attr, "resolvedBy"))
    {
       value = vm->createValue(alarm->getResolvedByUser());
+   }
+   else if (!strcmp(attr, "ruleGuid"))
+   {
+      TCHAR buffer[64];
+      value = vm->createValue(alarm->getRule().toString(buffer));
    }
    else if (!strcmp(attr, "severity"))
    {

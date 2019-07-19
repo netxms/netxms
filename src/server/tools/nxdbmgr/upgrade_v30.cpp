@@ -24,6 +24,22 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 30.84 to 30.85
+ */
+static bool H_UpgradeFromV84()
+{
+   static const TCHAR *batch =
+            _T("ALTER TABLE alarms ADD rule_guid varchar(36)\n")
+            _T("ALTER TABLE alarms ADD event_tags varchar(2000)\n")
+            _T("UPDATE event_log SET event_tags=user_tag\n")
+            _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(DBDropColumn(g_dbHandle, _T("event_log"), _T("user_tag")));
+   CHK_EXEC(SetMinorSchemaVersion(85));
+   return true;
+}
+
+/**
  * Upgrade from 30.83 to 30.84
  */
 static bool H_UpgradeFromV83()
@@ -2739,6 +2755,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 84, 30, 85, H_UpgradeFromV84 },
    { 83, 30, 84, H_UpgradeFromV83 },
    { 82, 30, 83, H_UpgradeFromV82 },
    { 81, 30, 82, H_UpgradeFromV81 },

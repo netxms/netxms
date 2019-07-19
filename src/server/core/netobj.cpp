@@ -2772,12 +2772,6 @@ String NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, const E
                case 'T':   // Event's timestamp as number of seconds since epoch
                   output.append(static_cast<INT64>((event != NULL) ? event->getTimeStamp() : time(NULL)));
                   break;
-               case 'u':   // User tag
-                  if (event != NULL)
-                  {
-                     output.append(event->getUserTag());
-                  }
-                  break;
                case 'U':   // User name
                   output.append(userName);
                   break;

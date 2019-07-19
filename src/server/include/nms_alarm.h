@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -38,9 +38,11 @@ private:
    UINT32 m_alarmId;         // Unique alarm ID
    time_t m_creationTime;    // Alarm creation time in UNIX time format
    time_t m_lastChangeTime;  // Alarm's last change time in UNIX time format
+   uuid m_rule;              // GUID of EPP rule that generates this alarm
    UINT32 m_sourceObject;    // Source object ID
    UINT32 m_zoneUIN;         // Zone UIN for source object
    UINT32 m_sourceEventCode; // Originating event code
+   TCHAR *m_eventTags;       // Tags of originating event
    UINT32 m_dciId;           // related DCI ID
    BYTE m_currentSeverity;   // Alarm's current severity
    BYTE m_originalSeverity;  // Alarm's original severity
@@ -64,7 +66,7 @@ private:
    String categoryListToString();
 
 public:
-   Alarm(Event *event, const TCHAR *message, const TCHAR *key, int state, int severity, UINT32 timeout, UINT32 timeoutEvent, UINT32 ackTimeout, IntegerArray<UINT32> *alarmCategoryList);
+   Alarm(Event *event, const uuid& rule, const TCHAR *message, const TCHAR *key, int state, int severity, UINT32 timeout, UINT32 timeoutEvent, UINT32 ackTimeout, IntegerArray<UINT32> *alarmCategoryList);
    Alarm(DB_HANDLE hdb, DB_RESULT hResult, int row);
    Alarm(const Alarm *src, bool copyEvents, UINT32 notificationCode = 0);
    ~Alarm();
@@ -73,8 +75,10 @@ public:
    UINT32 getAlarmId() const { return m_alarmId; }
    time_t getCreationTime() const { return m_creationTime; }
    time_t getLastChangeTime() const { return m_lastChangeTime; }
+   const uuid& getRule() const { return m_rule; }
    UINT32 getSourceObject() const { return m_sourceObject; }
    UINT32 getSourceEventCode() const { return m_sourceEventCode; }
+   const TCHAR *getEventTags() const { return m_eventTags; }
    UINT32 getDciId() const { return m_dciId; }
    BYTE getCurrentSeverity() const { return m_currentSeverity; }
    BYTE getOriginalSeverity() const { return m_originalSeverity; }
@@ -187,8 +191,8 @@ void GetAlarmStats(NXCPMessage *pMsg);
 int GetAlarmCount();
 Alarm NXCORE_EXPORTABLE *LoadAlarmFromDatabase(UINT32 alarmId);
 
-UINT32 NXCORE_EXPORTABLE CreateNewAlarm(TCHAR *message, TCHAR *key, int state, int severity, UINT32 timeout,
-									           UINT32 timeoutEvent, Event *event, UINT32 ackTimeout, IntegerArray<UINT32> *alarmCategoryList, bool openHelpdeskIssue);
+UINT32 NXCORE_EXPORTABLE CreateNewAlarm(const uuid& rule, TCHAR *message, TCHAR *key, int state, int severity, UINT32 timeout,
+         UINT32 timeoutEvent, Event *event, UINT32 ackTimeout, IntegerArray<UINT32> *alarmCategoryList, bool openHelpdeskIssue);
 UINT32 NXCORE_EXPORTABLE AckAlarmById(UINT32 dwAlarmId, ClientSession *session, bool sticky, UINT32 acknowledgmentActionTime);
 UINT32 NXCORE_EXPORTABLE AckAlarmByHDRef(const TCHAR *hdref, ClientSession *session, bool sticky, UINT32 acknowledgmentActionTime);
 UINT32 NXCORE_EXPORTABLE ResolveAlarmById(UINT32 alarmId, ClientSession *session, bool terminate);

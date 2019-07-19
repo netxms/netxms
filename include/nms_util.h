@@ -893,42 +893,70 @@ public:
 };
 
 /**
+ * Abstract const iterator class (to be implemented by actual iterable class)
+ */
+class LIBNETXMS_EXPORTABLE AbstractConstIterator
+{
+   DISABLE_COPY_CTOR(AbstractConstIterator)
+
+protected:
+   AbstractConstIterator() { }
+
+public:
+   virtual ~AbstractConstIterator() { }
+
+   virtual bool hasNext() = 0;
+   virtual void *next() = 0;
+};
+
+/**
  * Abstract iterator class (to be implemented by actual iterable class)
  */
-class LIBNETXMS_EXPORTABLE AbstractIterator
+class LIBNETXMS_EXPORTABLE AbstractIterator : public AbstractConstIterator
 {
    DISABLE_COPY_CTOR(AbstractIterator)
 
 protected:
-   AbstractIterator();
+   AbstractIterator() : AbstractConstIterator() { }
 
 public:
-   virtual ~AbstractIterator();
+   virtual ~AbstractIterator() { }
 
-   virtual bool hasNext() = 0;
-   virtual void *next() = 0;
    virtual void remove() = 0;
    virtual void unlink() = 0;
 };
 
 /**
- * Iterator class (public interface for iteration)
+ * Const iterator class (public interface for iteration over const object)
  */
-template <class T> class Iterator
+template <class T> class ConstIterator
 {
-   DISABLE_COPY_CTOR(Iterator)
+   DISABLE_COPY_CTOR(ConstIterator)
 
-private:
-   AbstractIterator *m_worker;
+protected:
+   AbstractConstIterator *m_worker;
 
 public:
-   Iterator(AbstractIterator *worker) { m_worker = worker; }
-   ~Iterator() { delete m_worker; }
+   ConstIterator(AbstractConstIterator *worker) { m_worker = worker; }
+   virtual ~ConstIterator() { delete m_worker; }
 
    bool hasNext() { return m_worker->hasNext(); }
    T *next() { return (T *)m_worker->next(); }
-   void remove() { m_worker->remove(); }
-   void unlink() { m_worker->unlink(); }
+};
+
+/**
+ * Iterator class (public interface for iteration)
+ */
+template <class T> class Iterator : public ConstIterator<T>
+{
+   DISABLE_COPY_CTOR(Iterator)
+
+public:
+   Iterator(AbstractIterator *worker) : ConstIterator<T>(worker) { }
+   virtual ~Iterator() { }
+
+   void remove() { static_cast<AbstractIterator*>(this->m_worker)->remove(); }
+   void unlink() { static_cast<AbstractIterator*>(this->m_worker)->unlink(); }
 };
 
 /**
@@ -1361,6 +1389,25 @@ class NXCPMessage;
 class StringSet;
 
 /**
+ * String set const iterator
+ */
+class LIBNETXMS_EXPORTABLE StringSetConstIterator : public AbstractConstIterator
+{
+   DISABLE_COPY_CTOR(StringSetConstIterator)
+
+private:
+   const StringSet *m_stringSet;
+   StringSetEntry *m_curr;
+   StringSetEntry *m_next;
+
+public:
+   StringSetConstIterator(const StringSet *stringSet);
+
+   virtual bool hasNext() override;
+   virtual void *next() override;
+};
+
+/**
  * String set iterator
  */
 class LIBNETXMS_EXPORTABLE StringSetIterator : public AbstractIterator
@@ -1387,6 +1434,7 @@ public:
 class LIBNETXMS_EXPORTABLE StringSet
 {
    friend class StringSetIterator;
+   friend class StringSetConstIterator;
 
 private:
    StringSetEntry *m_data;
@@ -1400,11 +1448,13 @@ public:
    void remove(const TCHAR *str);
    void clear();
 
+   bool isEmpty() const { return m_data == NULL; }
    int size() const;
    bool contains(const TCHAR *str) const;
    bool equals(const StringSet *s) const;
 
-   void addAll(StringSet *src);
+   void addAll(const StringSet *src);
+   void addAll(const StringSet &src) { addAll(&src); }
    void addAll(TCHAR **strings, int count);
    void splitAndAdd(const TCHAR *src, const TCHAR *separator);
    void addAllPreallocated(TCHAR **strings, int count);
@@ -1417,6 +1467,7 @@ public:
    String join(const TCHAR *separator);
 
    Iterator<const TCHAR> *iterator() { return new Iterator<const TCHAR>(new StringSetIterator(this)); }
+   ConstIterator<const TCHAR> *constIterator() const { return new ConstIterator<const TCHAR>(new StringSetConstIterator(this)); }
 };
 
 /**

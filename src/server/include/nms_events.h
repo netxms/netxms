@@ -92,8 +92,7 @@ private:
    TCHAR *m_messageText;
    TCHAR *m_messageTemplate;
    time_t m_timeStamp;
-	TCHAR *m_userTag;
-	TCHAR *m_tags;
+   StringSet m_tags;
 	TCHAR *m_customMessage;
 	Array m_parameters;
 	StringList m_parameterNames;
@@ -113,8 +112,7 @@ public:
    UINT32 getDciId() const { return m_dciId; }
 	const TCHAR *getName() const { return m_name; }
    const TCHAR *getMessage() const { return m_messageText; }
-   const TCHAR *getUserTag() const { return m_userTag; }
-   const TCHAR *getTags() const { return m_tags; }
+   String getTagsAsList() const;
    time_t getTimeStamp() const { return m_timeStamp; }
    const Array *getParameterList() const { return &m_parameters; }
    const StringList *getParameterNames() const { return &m_parameterNames; }
@@ -129,7 +127,10 @@ public:
    void expandMessageText();
    String expandText(const TCHAR *textTemplate, const Alarm *alarm = NULL) const;
    void setMessage(const TCHAR *text) { MemFree(m_messageText); m_messageText = MemCopyString(text); }
-   void setUserTag(const TCHAR *text) { MemFree(m_userTag); m_userTag = MemCopyString(text); }
+
+   bool hasTag(const TCHAR *tag) const { return m_tags.contains(tag); }
+   void addTag(const TCHAR *tag) { m_tags.add(tag); }
+   void removeTag(const TCHAR *tag) { m_tags.remove(tag); }
 
    int getParametersCount() const { return m_parameters.size(); }
    const TCHAR *getParameter(int index) const { return static_cast<TCHAR*>(m_parameters.get(index)); }

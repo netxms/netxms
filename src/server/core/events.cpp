@@ -193,8 +193,6 @@ Event::Event()
    m_messageText = NULL;
    m_messageTemplate = NULL;
    m_timeStamp = 0;
-	m_userTag = NULL;
-	m_tags = NULL;
 	m_customMessage = NULL;
 	m_parameters.setOwner(true);
 }
@@ -216,8 +214,7 @@ Event::Event(const Event *src)
    m_messageText = MemCopyString(src->m_messageText);
    m_messageTemplate = MemCopyString(src->m_messageTemplate);
    m_timeStamp = src->m_timeStamp;
-	m_userTag = MemCopyString(src->m_userTag);
-   m_tags = MemCopyString(src->m_tags);
+   m_tags.addAll(src->m_tags);
 	m_customMessage = MemCopyString(src->m_customMessage);
 	m_parameters.setOwner(true);
    for(int i = 0; i < src->m_parameters.size(); i++)
@@ -236,11 +233,12 @@ Event *Event::createFromJson(json_t *json)
 
    json_int_t id, rootId, timestamp;
    const char *name = NULL, *message = NULL;
-   json_t *tag = NULL;
-   if (json_unpack(json, "{s:I, s:I, s:i, s:s, s:I, s:i, s:i, s:i, s:i, s:o, s:s}",
+   json_t *tags = NULL;
+   if (json_unpack(json, "{s:I, s:I, s:i, s:s, s:I, s:i, s:i, s:i, s:i, s:s, s:o}",
             "id", &id, "rootId", &rootId, "code", &event->m_code, "name", &name, "timestamp", &timestamp,
             "source", &event->m_sourceId, "zone", &event->m_zoneUIN, "dci", &event->m_dciId,
-            "severity", &event->m_severity, "tag", &tag, "message", &message) == -1)
+            "severity", &event->m_severity, "message", &message,
+            (json_object_get(json, "tags") != NULL) ? "tags" : "tag", &tags) == -1)
    {
       delete event;
       return NULL;   // Unpack failure
@@ -262,13 +260,32 @@ Event *Event::createFromJson(json_t *json)
 #else
    event->m_messageText = MBStringFromUTF8String(message);
 #endif
-   if ((tag != NULL) && json_is_string(tag))
+   if (tags != NULL)
    {
+      if (json_is_array(tags))
+      {
+         size_t count = json_array_size(tags);
+         for(size_t i = 0; i < count; i++)
+         {
+            json_t *e = json_array_get(tags, i);
+            if (json_is_string(e))
+            {
 #ifdef UNICODE
-      event->m_userTag = WideStringFromUTF8String(json_string_value(tag));
+               event->m_tags.addPreallocated(WideStringFromUTF8String(json_string_value(e)));
 #else
-      event->m_userTag = MBStringFromUTF8String(json_string_value(tag));
+               event->m_tags.addPreallocated(MBStringFromUTF8String(json_string_value(e)));
 #endif
+            }
+         }
+      }
+      else if (json_is_string(tags))
+      {
+#ifdef UNICODE
+         event->m_tags.addPreallocated(WideStringFromUTF8String(json_string_value(tags)));
+#else
+         event->m_tags.addPreallocated(MBStringFromUTF8String(json_string_value(tags)));
+#endif
+      }
    }
 
    json_t *parameters = json_object_get(json, "parameters");
@@ -316,11 +333,13 @@ Event::Event(const EventTemplate *eventTemplate, UINT32 sourceId, UINT32 dciId, 
    m_sourceId = sourceId;
    m_dciId = dciId;
    m_messageText = NULL;
-	m_userTag = MemCopyString(userTag);
-   if ((m_userTag != NULL) && (_tcslen(m_userTag) >= MAX_USERTAG_LENGTH))
-      m_userTag[MAX_USERTAG_LENGTH - 1] = 0;
-   m_tags = MemCopyString(eventTemplate->getTags());
-	m_customMessage = NULL;
+
+   if ((eventTemplate->getTags() != NULL) && (eventTemplate->getTags()[0] != 0))
+      m_tags.splitAndAdd(eventTemplate->getTags(), _T(","));
+   if (userTag != NULL)
+      m_tags.add(userTag);
+
+   m_customMessage = NULL;
 	m_parameters.setOwner(true);
 
 	// Zone UIN
@@ -448,8 +467,6 @@ Event::~Event()
 {
    MemFree(m_messageText);
    MemFree(m_messageTemplate);
-	MemFree(m_userTag);
-	MemFree(m_tags);
 	MemFree(m_customMessage);
 }
 
@@ -554,11 +571,31 @@ void Event::prepareMessage(NXCPMessage *msg) const
 	msg->setField(id++, m_sourceId);
 	msg->setField(id++, (WORD)m_severity);
 	msg->setField(id++, CHECK_NULL_EX(m_messageText));
-	msg->setField(id++, CHECK_NULL_EX(m_userTag));
+	msg->setField(id++, getTagsAsList());
 	msg->setField(id++, (UINT32)m_parameters.size());
 	for(int i = 0; i < m_parameters.size(); i++)
 	   msg->setField(id++, (TCHAR *)m_parameters.get(i));
 	msg->setField(id++, m_dciId);
+}
+
+/**
+ * Get all tags as list
+ */
+String Event::getTagsAsList() const
+{
+   String list;
+   if (!m_tags.isEmpty())
+   {
+      ConstIterator<const TCHAR> *it = m_tags.constIterator();
+      while(it->hasNext())
+      {
+         if (!list.isEmpty())
+            list.append(_T(','));
+         list.append(it->next());
+      }
+      delete it;
+   }
+   return list;
 }
 
 /**
@@ -576,8 +613,23 @@ json_t *Event::toJson()
    json_object_set_new(root, "zone", json_integer(m_zoneUIN));
    json_object_set_new(root, "dci", json_integer(m_dciId));
    json_object_set_new(root, "severity", json_integer(m_severity));
-   json_object_set_new(root, "tag", json_string_t(m_userTag));
    json_object_set_new(root, "message", json_string_t(m_messageText));
+
+   if (!m_tags.isEmpty())
+   {
+      json_t *tags = json_array();
+      ConstIterator<const TCHAR> *it = m_tags.constIterator();
+      while(it->hasNext())
+      {
+         json_array_append_new(tags, json_string_t(it->next()));
+      }
+      delete it;
+      json_object_set_new(root, "tags", tags);
+   }
+   else
+   {
+      json_object_set_new(root, "tags", json_null());
+   }
 
    json_t *parameters = json_array();
    for(int i = 0; i < m_parameters.size(); i++)

@@ -201,7 +201,7 @@ void StringSet::splitAndAdd(const TCHAR *src, const TCHAR *separator)
 /**
  * Add all entries from source set
  */
-void StringSet::addAll(StringSet *src)
+void StringSet::addAll(const StringSet *src)
 {
    StringSetEntry *entry, *tmp;
    HASH_ITER(hh, src->m_data, entry, tmp)
@@ -296,7 +296,50 @@ String StringSet::join(const TCHAR *separator)
 }
 
 /**
- * Hash map iterator
+ * String set iterator
+ */
+StringSetConstIterator::StringSetConstIterator(const StringSet *stringSet)
+{
+   m_stringSet = stringSet;
+   m_curr = NULL;
+   m_next = NULL;
+}
+
+/**
+ * Next element availability indicator
+ */
+bool StringSetConstIterator::hasNext()
+{
+   if (m_stringSet->m_data == NULL)
+      return false;
+
+   return (m_curr != NULL) ? (m_next != NULL) : true;
+}
+
+/**
+ * Get next element
+ */
+void *StringSetConstIterator::next()
+{
+   if (m_stringSet->m_data == NULL)
+      return NULL;
+
+   if (m_curr == NULL)  // iteration not started
+   {
+      m_curr = m_stringSet->m_data;
+   }
+   else
+   {
+      if (m_next == NULL)
+         return NULL;
+      m_curr = m_next;
+   }
+   m_next = static_cast<StringSetEntry*>(m_curr->hh.next);
+   return m_curr->str;
+}
+
+/**
+ * String set iterator
  */
 StringSetIterator::StringSetIterator(StringSet *stringSet)
 {

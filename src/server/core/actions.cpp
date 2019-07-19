@@ -317,8 +317,7 @@ static bool ForwardEvent(const TCHAR *server, const Event *event)
          }
 			msg.setField(VID_EVENT_CODE, event->getCode());
 			msg.setField(VID_EVENT_NAME, event->getName());
-			if (event->getUserTag() != NULL)
-				msg.setField(VID_USER_TAG, event->getUserTag());
+         msg.setField(VID_TAGS, event->getTagsAsList());
 			msg.setField(VID_NUM_ARGS, (WORD)event->getParametersCount());
 			for(int i = 0; i < event->getParametersCount(); i++)
 				msg.setField(VID_EVENT_ARG_BASE + i, event->getParameter(i));
