@@ -28,7 +28,7 @@
 /**
  * Default element destructor
  */
-static void ObjectDestructor(void *element)
+static void DefaultObjectDestructor(void *element, Array *array)
 {
 	MemFree(element);
 }
@@ -39,8 +39,9 @@ static void ObjectDestructor(void *element)
  * @param initial initial array size
  * @param grow number of elements to add when array has to grow
  * @param owner if set to true, array is an owner of added objects and will destroy them on removed from array
+ * @param objectDestructor custom object destructor or NULL
  */
-Array::Array(int initial, int grow, bool owner)
+Array::Array(int initial, int grow, bool owner, void (*objectDestructor)(void *, Array *))
 {
 	m_size = 0;
 	m_grow = (grow > 0) ? grow : 16;
@@ -48,7 +49,7 @@ Array::Array(int initial, int grow, bool owner)
    m_elementSize = sizeof(void *);
 	m_data = (m_allocated > 0) ? (void **)MemAlloc(m_elementSize * m_allocated) : NULL;
 	m_objectOwner = owner;
-	m_objectDestructor = ObjectDestructor;
+	m_objectDestructor = (objectDestructor != NULL) ? objectDestructor : DefaultObjectDestructor;
    m_storePointers = true;
 }
 
@@ -67,7 +68,7 @@ Array::Array(void *data, int initial, int grow, size_t elementSize)
       memcpy(m_data, data, initial * m_elementSize);
    }
 	m_objectOwner = false;
-	m_objectDestructor = ObjectDestructor;
+	m_objectDestructor = DefaultObjectDestructor;
    m_storePointers = false;
 }
 
@@ -130,6 +131,30 @@ int Array::add(void *element)
 }
 
 /**
+ * Add placeholder for element. Returns pointer to element.
+ */
+void *Array::addPlaceholder()
+{
+   if (m_size == m_allocated)
+   {
+      m_allocated += m_grow;
+      m_data = MemRealloc(m_data, m_elementSize * m_allocated);
+   }
+
+   void *element;
+   if (m_storePointers)
+   {
+      element = &m_data[m_size++];
+   }
+   else
+   {
+      element = ADDR(m_size);
+      m_size++;
+   }
+   return element;
+}
+
+/**
  * Set element at given index. If index is within array bounds, element at this position will be replaced,
  * otherwise array will be expanded as required. Other new positions created during expansion will
  * be filled with NULL values.
@@ -178,6 +203,21 @@ void Array::replace(int index, void *element)
    	m_data[index] = element;
    else
    	memcpy(ADDR(index), element, m_elementSize);
+}
+
+/**
+ * Replace element at given index with placeholder. If index is beyond array bounds,
+ * this method will do nothing. Returns element address or NULL.
+ */
+void *Array::replaceWithPlaceholder(int index)
+{
+   if ((index < 0) || (index >= m_size))
+      return NULL;
+
+   if (m_objectOwner)
+      destroyObject(m_data[index]);
+
+   return m_storePointers ? &m_data[index] : ADDR(index);
 }
 
 /**

@@ -973,13 +973,14 @@ private:
    size_t m_elementSize;
 	void **m_data;
 	bool m_objectOwner;
+	void *m_context;
 
 	void internalRemove(int index, bool allowDestruction);
-	void destroyObject(void *object) { if (object != NULL) m_objectDestructor(object); }
+	void destroyObject(void *object) { if (object != NULL) m_objectDestructor(object, this); }
 
 protected:
    bool m_storePointers;
-	void (*m_objectDestructor)(void *);
+	void (*m_objectDestructor)(void *, Array *);
 
    Array(void *data, int initial, int grow, size_t elementSize);
    Array(const Array *src);
@@ -987,7 +988,7 @@ protected:
    void *__getBuffer() const { return m_data; }
 
 public:
-	Array(int initial = 0, int grow = 16, bool owner = false);
+	Array(int initial = 0, int grow = 16, bool owner = false, void (*objectDestructor)(void *, Array *) = NULL);
 	virtual ~Array();
 
    void *get(int index) const { return ((index >= 0) && (index < m_size)) ? (m_storePointers ? m_data[index] : (void *)((char *)m_data + index * m_elementSize)): NULL; }
@@ -1010,11 +1011,17 @@ public:
    void sort(int (*cb)(const void *, const void *));
    void sort(int (*cb)(void *, const void *, const void *), void *context);
 
+   void *addPlaceholder();
+   void *replaceWithPlaceholder(int index);
+
 	int size() const { return m_size; }
 	bool isEmpty() const { return m_size == 0; }
 
 	void setOwner(bool owner) { m_objectOwner = owner; }
 	bool isOwner() const { return m_objectOwner; }
+
+	void setContext(void *context) { m_context = context; }
+	void *getContext() const { return m_context; }
 };
 
 /**
@@ -1045,7 +1052,7 @@ template <class T> class ObjectArray : public Array
    DISABLE_COPY_CTOR(ObjectArray)
 
 private:
-	static void destructor(void *object) { delete static_cast<T*>(object); }
+	static void destructor(void *object, Array *array) { delete static_cast<T*>(object); }
 
 public:
 	ObjectArray(int initial = 0, int grow = 16, bool owner = false) : Array(initial, grow, owner) { m_objectDestructor = destructor; }
@@ -1086,7 +1093,7 @@ template <class T> class ObjectRefArray : public Array
    DISABLE_COPY_CTOR(ObjectRefArray)
 
 private:
-	static void destructor(void *object) { }
+	static void destructor(void *object, Array *array) { }
 
 public:
 	ObjectRefArray(int initial = 0, int grow = 16) : Array(initial, grow, false) { m_objectDestructor = destructor; }
@@ -1114,7 +1121,7 @@ template <class T> class IntegerArray : public Array
    DISABLE_COPY_CTOR(IntegerArray)
 
 private:
-	static void destructor(void *element) { }
+	static void destructor(void *element, Array *array) { }
 
 public:
 	IntegerArray(int initial = 0, int grow = 16) : Array(NULL, initial, grow, sizeof(T)) { m_objectDestructor = destructor; m_storePointers = (sizeof(T) == sizeof(void *)); }
@@ -1141,7 +1148,7 @@ template <class T> class StructArray : public Array
    DISABLE_COPY_CTOR(StructArray)
 
 private:
-	static void destructor(void *element) { }
+	static void destructor(void *element, Array *array) { }
 
 public:
 	StructArray(int initial = 0, int grow = 16) : Array(NULL, initial, grow, sizeof(T)) { m_objectDestructor = destructor; }
@@ -1161,6 +1168,58 @@ public:
    void unlink(const T *element) { Array::unlink((void *)element); }
 
    T *getBuffer() const { return (T*)__getBuffer(); }
+};
+
+/**
+ * Shared object array
+ */
+template <class T> class SharedObjectArray
+{
+   DISABLE_COPY_CTOR(SharedObjectArray)
+
+private:
+   Array m_data;
+   ObjectMemoryPool<std::shared_ptr<T>> m_pool;
+
+   static void destructor(void *element, Array *array)
+   {
+      static_cast<SharedObjectArray<T>*>(array->getContext())->m_pool.destroy(static_cast<std::shared_ptr<T>*>(element));
+   }
+
+public:
+   SharedObjectArray(int initial = 0, int grow = 16) :
+      m_data(initial, grow, true, SharedObjectArray<T>::destructor), m_pool(std::max(grow, 256)) { m_data.setContext(this); }
+   virtual ~SharedObjectArray() { }
+
+   int add(std::shared_ptr<T> element) { return m_data.add(new(m_pool.allocate()) std::shared_ptr<T>(element)); }
+   int add(T *element) { return m_data.add(new(m_pool.allocate()) std::shared_ptr<T>(element)); }
+   T *get(int index) const
+   {
+      auto p = static_cast<std::shared_ptr<T>*>(m_data.get(index));
+      return (p != NULL) ? p->get() : NULL;
+   }
+   std::shared_ptr<T> getShared(int index) const
+   {
+      auto p = static_cast<std::shared_ptr<T>*>(m_data.get(index));
+      return (p != NULL) ? *p : std::shared_ptr<T>();
+   }
+   void replace(int index, std::shared_ptr<T> element)
+   {
+      auto p = static_cast<std::shared_ptr<T>**>(m_data.replaceWithPlaceholder(index));
+      if (p != NULL)
+         *p = new(m_pool.allocate()) std::shared_ptr<T>(element);
+   }
+   void replace(int index, T *element)
+   {
+      auto p = static_cast<std::shared_ptr<T>**>(m_data.replaceWithPlaceholder(index));
+      if (p != NULL)
+         *p = new(m_pool.allocate()) std::shared_ptr<T>(element);
+   }
+   void remove(int index) { m_data.remove(index); }
+   void clear() { m_data.clear(); }
+
+   int size() const { return m_data.size(); }
+   bool isEmpty() const { return m_data.isEmpty(); }
 };
 
 /**

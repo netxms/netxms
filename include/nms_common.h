@@ -185,6 +185,15 @@ typedef int bool;
 #endif
 
 
+/***** Common C++ includes *****/
+
+#ifdef __cplusplus
+
+#include <memory>
+
+#endif	/* __cplusplus */
+
+
 /***** Platform dependent includes and defines *****/
 
 #if defined(_WIN32) || defined(UNDER_CE)
