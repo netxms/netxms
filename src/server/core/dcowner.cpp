@@ -28,7 +28,7 @@
  */
 DataCollectionOwner::DataCollectionOwner() : super()
 {
-	m_dcObjects = new ObjectArray<DCObject>(8, 16, true);
+	m_dcObjects = new SharedObjectArray<DCObject>(0, 128);
    m_status = STATUS_NORMAL;
    m_dciAccessLock = RWLockCreate();
    m_dciListModified = false;
@@ -40,7 +40,7 @@ DataCollectionOwner::DataCollectionOwner() : super()
 DataCollectionOwner::DataCollectionOwner(const TCHAR *pszName) : super()
 {
    nx_strncpy(m_name, pszName, MAX_OBJECT_NAME);
-	m_dcObjects = new ObjectArray<DCObject>(8, 16, true);
+	m_dcObjects = new SharedObjectArray<DCObject>(0, 128);
    m_status = STATUS_NORMAL;
    m_isHidden = true;
    m_dciAccessLock = RWLockCreate();
@@ -63,14 +63,14 @@ DataCollectionOwner::DataCollectionOwner(ConfigEntry *config)
       m_guid = guid;
 
    // Name
-   nx_strncpy(m_name, config->getSubEntryValue(_T("name"), 0, _T("Unnamed Object")), MAX_OBJECT_NAME);
+   _tcslcpy(m_name, config->getSubEntryValue(_T("name"), 0, _T("Unnamed Object")), MAX_OBJECT_NAME);
    m_flags = config->getSubEntryValueAsUInt(_T("flags"), 0, 0);
 
    //Comment
    m_comments = MemCopyString(config->getSubEntryValue(_T("comments")));
 
    // Data collection
-   m_dcObjects = new ObjectArray<DCObject>(8, 16, true);
+   m_dcObjects = new SharedObjectArray<DCObject>(0, 128);
    ConfigEntry *dcRoot = config->findEntry(_T("dataCollection"));
    if (dcRoot != NULL)
    {
@@ -430,20 +430,19 @@ bool DataCollectionOwner::deleteDCObject(UINT32 dcObjectId, bool needLock, UINT3
 		DCObject *object = m_dcObjects->get(i);
       if (object->getId() == dcObjectId)
       {
-         if(object->hasAccess(userId))
+         if (object->hasAccess(userId))
          {
+            shared_ptr<DCObject> ref = m_dcObjects->getShared(i);  // Prevent destruction by call to remove
+            m_dcObjects->remove(i);
+
             // Check if it is instance DCI
             if ((object->getType() == DCO_TYPE_ITEM) && (((DCItem *)object)->getInstanceDiscoveryMethod() != IDM_NONE))
             {
                deleteChildDCIs(dcObjectId);
-
-               // Index may be incorrect at this point
-               if (m_dcObjects->get(i) != object)
-                  i = m_dcObjects->indexOf(object);
             }
             // Destroy item
             nxlog_debug_tag(_T("obj.dc"), 7, _T("DataCollectionOwner::DeleteDCObject: deleting DCObject [%u] from object %s [%u]"), dcObjectId, m_name, m_id);
-            destroyItem(object, i);
+            deleteDCObject(object);
             success = true;
             NotifyClientsOnDCIDelete(this, dcObjectId);
             nxlog_debug_tag(_T("obj.dc"), 7, _T("DataCollectionOwner::DeleteDCObject: DCObject deleted from object %s [%u]"), m_name, m_id);
@@ -480,7 +479,8 @@ void DataCollectionOwner::deleteChildDCIs(UINT32 dcObjectId)
       if (subObject->getTemplateItemId() == dcObjectId)
       {
          nxlog_debug_tag(_T("obj.dc"), 7, _T("DataCollectionOwner::DeleteDCObject: deleting DCObject %d created by DCObject %d instance discovery from object %d"), (int)subObject->getId(), (int)dcObjectId, (int)m_id);
-         destroyItem(subObject, i);
+         deleteDCObject(subObject);
+         m_dcObjects->remove(i);
          i--;
       }
    }
@@ -488,21 +488,19 @@ void DataCollectionOwner::deleteChildDCIs(UINT32 dcObjectId)
 
 /**
  * Delete DCI object.
- * Deletes or schedules deletion from DB and removes it from index
- * It is assumed that list is already locked
+ * Deletes or schedules deletion from DB.
+ * It is assumed that list is already locked.
  */
-void DataCollectionOwner::destroyItem(DCObject *object, int index)
+void DataCollectionOwner::deleteDCObject(DCObject *object)
 {
    if (object->prepareForDeletion())
    {
-      // Physically delete DCI only if it is not busy
+      // Delete DCI from database only if it is not busy
       // Busy DCIs will be deleted by data collector
       object->deleteFromDatabase();
-      m_dcObjects->remove(index);
    }
    else
    {
-      m_dcObjects->unlink(index);
       nxlog_debug_tag(_T("obj.dc"), 7, _T("DataCollectionOwner::DeleteItem: destruction of DCO %u delayed"), object->getId());
    }
 }
@@ -657,20 +655,20 @@ void DataCollectionOwner::sendItemsToClient(ClientSession *pSession, UINT32 dwRq
 /**
  * Get item by it's id
  */
-DCObject *DataCollectionOwner::getDCObjectById(UINT32 itemId, UINT32 userId, bool lock)
+shared_ptr<DCObject> DataCollectionOwner::getDCObjectById(UINT32 itemId, UINT32 userId, bool lock)
 {
-   DCObject *object = NULL;
+   shared_ptr<DCObject> object;
 
    if (lock)
       lockDciAccess(false);
 
    for(int i = 0; i < m_dcObjects->size(); i++)
 	{
-		DCObject *curr = m_dcObjects->get(i);
+      DCObject *curr = m_dcObjects->get(i);
       if (curr->getId() == itemId)
 		{
          if (curr->hasAccess(userId))
-            object = curr;
+            object = m_dcObjects->getShared(i);
          else
             nxlog_debug_tag(_T("obj.dc"), 6, _T("DataCollectionOwner::getDCObjectById: denied access to DCObject %u for user %u"), itemId, userId);
          break;
@@ -685,19 +683,19 @@ DCObject *DataCollectionOwner::getDCObjectById(UINT32 itemId, UINT32 userId, boo
 /**
  * Get item by template item id
  */
-DCObject *DataCollectionOwner::getDCObjectByTemplateId(UINT32 tmplItemId, UINT32 userId)
+shared_ptr<DCObject> DataCollectionOwner::getDCObjectByTemplateId(UINT32 tmplItemId, UINT32 userId)
 {
-   DCObject *object = NULL;
+   shared_ptr<DCObject> object;
 
    lockDciAccess(false);
    // Check if that item exists
    for(int i = 0; i < m_dcObjects->size(); i++)
 	{
-		DCObject *curr = m_dcObjects->get(i);
+      DCObject *curr = m_dcObjects->get(i);
       if (curr->getTemplateItemId() == tmplItemId)
 		{
          if (curr->hasAccess(userId))
-            object = curr;
+            object = m_dcObjects->getShared(i);
          else
             nxlog_debug_tag(_T("obj.dc"), 6, _T("DataCollectionOwner::getDCObjectByTemplateId: denied access to DCObject %u for user %u"), curr->getId(), userId);
          break;
@@ -709,21 +707,21 @@ DCObject *DataCollectionOwner::getDCObjectByTemplateId(UINT32 tmplItemId, UINT32
 }
 
 /**
- * Get item by it's name (case-insensetive)
+ * Get item by it's name (case-insensitive)
  */
-DCObject *DataCollectionOwner::getDCObjectByName(const TCHAR *name, UINT32 userId)
+shared_ptr<DCObject> DataCollectionOwner::getDCObjectByName(const TCHAR *name, UINT32 userId)
 {
-   DCObject *object = NULL;
+   shared_ptr<DCObject> object;
 
    lockDciAccess(false);
    // Check if that item exists
    for(int i = 0; i < m_dcObjects->size(); i++)
 	{
-		DCObject *curr = m_dcObjects->get(i);
+      DCObject *curr = m_dcObjects->get(i);
       if (!_tcsicmp(curr->getName(), name))
 		{
          if (curr->hasAccess(userId))
-            object = curr;
+            object = m_dcObjects->getShared(i);
          else
             nxlog_debug_tag(_T("obj.dc"), 6, _T("DataCollectionOwner::getDCObjectByName: denied access to DCObject %u for user %u"), curr->getId(), userId);
          break;
@@ -734,21 +732,21 @@ DCObject *DataCollectionOwner::getDCObjectByName(const TCHAR *name, UINT32 userI
 }
 
 /**
- * Get item by it's description (case-insensetive)
+ * Get item by it's description (case-insensitive)
  */
-DCObject *DataCollectionOwner::getDCObjectByDescription(const TCHAR *description, UINT32 userId)
+shared_ptr<DCObject> DataCollectionOwner::getDCObjectByDescription(const TCHAR *description, UINT32 userId)
 {
-   DCObject *object = NULL;
+   shared_ptr<DCObject> object;
 
    lockDciAccess(false);
    // Check if that item exists
    for(int i = 0; i < m_dcObjects->size(); i++)
 	{
-		DCObject *curr = m_dcObjects->get(i);
+      DCObject *curr = m_dcObjects->get(i);
       if (!_tcsicmp(curr->getDescription(), description))
 		{
          if (curr->hasAccess(userId))
-            object = curr;
+            object = m_dcObjects->getShared(i);
          else
             nxlog_debug_tag(_T("obj.dc"), 6, _T("DataCollectionOwner::getDCObjectByDescription: denied access to DCObject %u for user %u"), curr->getId(), userId);
          break;
@@ -761,9 +759,9 @@ DCObject *DataCollectionOwner::getDCObjectByDescription(const TCHAR *description
 /**
  * Get item by GUID
  */
-DCObject *DataCollectionOwner::getDCObjectByGUID(const uuid& guid, UINT32 userId, bool lock)
+shared_ptr<DCObject> DataCollectionOwner::getDCObjectByGUID(const uuid& guid, UINT32 userId, bool lock)
 {
-   DCObject *object = NULL;
+   shared_ptr<DCObject> object;
 
    if (lock)
       lockDciAccess(false);
@@ -775,7 +773,7 @@ DCObject *DataCollectionOwner::getDCObjectByGUID(const uuid& guid, UINT32 userId
       if (guid.equals(curr->getGuid()))
       {
          if (curr->hasAccess(userId))
-            object = curr;
+            object = m_dcObjects->getShared(i);
          else
             nxlog_debug_tag(_T("obj.dc"), 6, _T("DataCollectionOwner::getDCObjectByGUID: denied access to DCObject %u for user %u"), curr->getId(), userId);
          break;
@@ -1038,14 +1036,14 @@ void DataCollectionOwner::updateFromImport(ConfigEntry *config)
       {
          ConfigEntry *e = dcis->get(i);
          uuid guid = e->getSubEntryValueAsUUID(_T("guid"));
-         DCObject *curr = !guid.isNull() ? getDCObjectByGUID(guid, 0, false) : NULL;
+         shared_ptr<DCObject> curr = !guid.isNull() ? getDCObjectByGUID(guid, 0, false) : shared_ptr<DCObject>();
          if ((curr != NULL) && (curr->getType() == DCO_TYPE_ITEM))
          {
             curr->updateFromImport(e);
          }
          else
          {
-            m_dcObjects->add(new DCItem(e, this));
+            m_dcObjects->add(make_shared<DCItem>(e, this));
          }
          guidList.add(new uuid(guid));
       }
@@ -1056,14 +1054,14 @@ void DataCollectionOwner::updateFromImport(ConfigEntry *config)
       {
          ConfigEntry *e = dctables->get(i);
          uuid guid = e->getSubEntryValueAsUUID(_T("guid"));
-         DCObject *curr = !guid.isNull() ? getDCObjectByGUID(guid, 0, false) : NULL;
+         shared_ptr<DCObject> curr = !guid.isNull() ? getDCObjectByGUID(guid, 0, false) : shared_ptr<DCObject>();
          if ((curr != NULL) && (curr->getType() == DCO_TYPE_TABLE))
          {
             curr->updateFromImport(e);
          }
          else
          {
-            m_dcObjects->add(new DCTable(e, this));
+            m_dcObjects->add(make_shared<DCTable>(e, this));
          }
          guidList.add(new uuid(guid));
       }
@@ -1104,10 +1102,15 @@ void DataCollectionOwner::updateFromImport(ConfigEntry *config)
 json_t *DataCollectionOwner::toJson()
 {
    json_t *root = super::toJson();
-   lockProperties();
+
+   lockDciAccess(false);
    json_object_set_new(root, "dcObjects", json_object_array(m_dcObjects));
+   unlockDciAccess();
+
+   lockProperties();
    json_object_set_new(root, "flags", json_integer(m_flags));
    unlockProperties();
+
    return root;
 }
 
@@ -1138,24 +1141,28 @@ bool DataCollectionOwner::isDataCollectionSource(UINT32 nodeId)
  * @param userId to check user access
  * @return list of matching DCOs
  */
-ObjectArray<DCObject> *DataCollectionOwner::getDCObjectsByRegex(const TCHAR *regex, bool searchName, UINT32 userId) const
+SharedObjectArray<DCObject> *DataCollectionOwner::getDCObjectsByRegex(const TCHAR *regex, bool searchName, UINT32 userId)
 {
    regex_t preg;
    if (_tregcomp(&preg, regex, REG_EXTENDED | REG_NOSUB) != 0)
       return NULL;
 
-   ObjectArray<DCObject> *result = new ObjectArray<DCObject>();
+   lockDciAccess(false);
+
+   SharedObjectArray<DCObject> *result = new SharedObjectArray<DCObject>(m_dcObjects->size());
 
    for(int i = 0; i < m_dcObjects->size(); i++)
    {
       DCObject *o = m_dcObjects->get(i);
-      if (!o->hasAccess(userId))
-         continue;
-      if (!searchName && _tregexec(&preg, o->getDescription(), 0, NULL, 0) == 0)
-         result->add(o);
-      else if (_tregexec(&preg, o->getName(), 0, NULL, 0) == 0)
-         result->add(o);
+      if (o->hasAccess(userId) &&
+         ((!searchName && (_tregexec(&preg, o->getDescription(), 0, NULL, 0) == 0)) ||
+          (searchName && (_tregexec(&preg, o->getName(), 0, NULL, 0) == 0))))
+      {
+         result->add(m_dcObjects->getShared(i));
+      }
    }
+
+   unlockDciAccess();
 
    regfree(&preg);
    return result;

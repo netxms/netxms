@@ -1179,13 +1179,13 @@ template <class T> class SharedObjectArray
 
 private:
    Array m_data;
-   ObjectMemoryPool<std::shared_ptr<T>> m_pool;
+   ObjectMemoryPool<shared_ptr<T>> m_pool;
 
-   static std::shared_ptr<T> m_null;
+   static shared_ptr<T> m_null;
 
    static void destructor(void *element, Array *array)
    {
-      static_cast<SharedObjectArray<T>*>(array->getContext())->m_pool.destroy(static_cast<std::shared_ptr<T>*>(element));
+      static_cast<SharedObjectArray<T>*>(array->getContext())->m_pool.destroy(static_cast<shared_ptr<T>*>(element));
    }
 
 public:
@@ -1193,29 +1193,29 @@ public:
       m_data(initial, grow, true, SharedObjectArray<T>::destructor), m_pool(std::max(grow, 64)) { m_data.setContext(this); }
    virtual ~SharedObjectArray() { }
 
-   int add(std::shared_ptr<T> element) { return m_data.add(new(m_pool.allocate()) std::shared_ptr<T>(element)); }
-   int add(T *element) { return m_data.add(new(m_pool.allocate()) std::shared_ptr<T>(element)); }
+   int add(shared_ptr<T> element) { return m_data.add(new(m_pool.allocate()) shared_ptr<T>(element)); }
+   int add(T *element) { return m_data.add(new(m_pool.allocate()) shared_ptr<T>(element)); }
    T *get(int index) const
    {
-      auto p = static_cast<std::shared_ptr<T>*>(m_data.get(index));
+      auto p = static_cast<shared_ptr<T>*>(m_data.get(index));
       return (p != NULL) ? p->get() : NULL;
    }
-   const std::shared_ptr<T>& getShared(int index) const
+   const shared_ptr<T>& getShared(int index) const
    {
-      auto p = static_cast<std::shared_ptr<T>*>(m_data.get(index));
+      auto p = static_cast<shared_ptr<T>*>(m_data.get(index));
       return (p != NULL) ? *p : m_null;
    }
-   void replace(int index, std::shared_ptr<T> element)
+   void replace(int index, shared_ptr<T> element)
    {
-      auto p = static_cast<std::shared_ptr<T>**>(m_data.replaceWithPlaceholder(index));
+      auto p = static_cast<shared_ptr<T>**>(m_data.replaceWithPlaceholder(index));
       if (p != NULL)
-         *p = new(m_pool.allocate()) std::shared_ptr<T>(element);
+         *p = new(m_pool.allocate()) shared_ptr<T>(element);
    }
    void replace(int index, T *element)
    {
-      auto p = static_cast<std::shared_ptr<T>**>(m_data.replaceWithPlaceholder(index));
+      auto p = static_cast<shared_ptr<T>**>(m_data.replaceWithPlaceholder(index));
       if (p != NULL)
-         *p = new(m_pool.allocate()) std::shared_ptr<T>(element);
+         *p = new(m_pool.allocate()) shared_ptr<T>(element);
    }
    void remove(int index) { m_data.remove(index); }
    void clear() { m_data.clear(); }
@@ -1224,7 +1224,7 @@ public:
    bool isEmpty() const { return m_data.isEmpty(); }
 };
 
-template <class T> std::shared_ptr<T> SharedObjectArray<T>::m_null = std::shared_ptr<T>();
+template <class T> shared_ptr<T> SharedObjectArray<T>::m_null = shared_ptr<T>();
 
 /**
  * Entry of string map (internal)

@@ -31,7 +31,7 @@ ManualGauge64 *g_currentPollerTimer = NULL;
 /**
  * Data collector worker
  */
-void DataCollector(void *arg);
+void DataCollector(shared_ptr<DCObject> dcObject);
 
 /**
  * Throttle housekeeper if needed. Returns false if shutdown time has arrived and housekeeper process should be aborted.
@@ -509,7 +509,7 @@ UINT32 DataCollectionTarget::getPerfTabDCIList(NXCPMessage *pMsg, UINT32 userId)
                // DCI created via instance discovery - send ID of root template item
                // to allow UI to resolve double template case
                // (template -> instance discovery item on node -> actual item on node)
-               DCObject *src = getDCObjectById(object->getTemplateItemId(), userId, false);
+               shared_ptr<DCObject> src = getDCObjectById(object->getTemplateItemId(), userId, false);
                pMsg->setField(dwId++, (src != NULL) ? src->getTemplateItemId() : 0);
                dwId += 2;
             }
@@ -564,7 +564,7 @@ UINT32 DataCollectionTarget::getThresholdSummary(NXCPMessage *msg, UINT32 baseId
 /**
  * Process new DCI value
  */
-bool DataCollectionTarget::processNewDCValue(DCObject *dco, time_t currTime, const void *value)
+bool DataCollectionTarget::processNewDCValue(shared_ptr<DCObject> dco, time_t currTime, const void *value)
 {
    bool updateStatus;
 	bool result = dco->processNewValue(currTime, value, &updateStatus);
@@ -597,7 +597,7 @@ void DataCollectionTarget::queueItemsForPolling()
    for(int i = 0; i < m_dcObjects->size(); i++)
    {
 		DCObject *object = m_dcObjects->get(i);
-      if (object->isReadyForPolling(currTime))
+      if (m_dcObjects->get(i)->isReadyForPolling(currTime))
       {
          object->setBusyFlag();
          incRefCount();   // Increment reference count for each queued DCI
@@ -611,11 +611,11 @@ void DataCollectionTarget::queueItemsForPolling()
             _sntprintf(key, 32, _T("%08X/%s"),
                      m_id, (object->getDataSource() == DS_SSH) ? _T("ssh") :
                               (object->getDataSource() == DS_SMCLP) ? _T("smclp") : _T("agent"));
-            ThreadPoolExecuteSerialized(g_dataCollectorThreadPool, key, DataCollector, object);
+            ThreadPoolExecuteSerialized(g_dataCollectorThreadPool, key, DataCollector, m_dcObjects->getShared(i));
          }
          else
          {
-            ThreadPoolExecute(g_dataCollectorThreadPool, DataCollector, object);
+            ThreadPoolExecute(g_dataCollectorThreadPool, DataCollector, m_dcObjects->getShared(i));
          }
 			nxlog_debug_tag(_T("obj.dc.queue"), 8, _T("DataCollectionTarget(%s)->QueueItemsForPolling(): item %d \"%s\" added to queue"), m_name, object->getId(), object->getName());
       }
@@ -1299,10 +1299,10 @@ void DataCollectionTarget::leaveMaintenanceMode()
 void DataCollectionTarget::updateDCItemCacheSize(UINT32 dciId, UINT32 conditionId)
 {
    lockDciAccess(false);
-   DCObject *dci = getDCObjectById(dciId, 0, false);
+   shared_ptr<DCObject> dci = getDCObjectById(dciId, 0, false);
    if ((dci != NULL) && (dci->getType() == DCO_TYPE_ITEM))
    {
-      static_cast<DCItem*>(dci)->updateCacheSize(conditionId);
+      static_cast<DCItem*>(dci.get())->updateCacheSize(conditionId);
    }
    unlockDciAccess();
 }
@@ -1313,12 +1313,12 @@ void DataCollectionTarget::updateDCItemCacheSize(UINT32 dciId, UINT32 conditionI
 void DataCollectionTarget::reloadDCItemCache(UINT32 dciId)
 {
    lockDciAccess(false);
-   DCObject *dci = getDCObjectById(dciId, 0, false);
+   shared_ptr<DCObject> dci = getDCObjectById(dciId, 0, false);
    if ((dci != NULL) && (dci->getType() == DCO_TYPE_ITEM))
    {
       nxlog_debug_tag(_T("obj.dc.cache"), 6, _T("Reload DCI cache for \"%s\" [%d] on %s [%d]"),
                dci->getName(), dci->getId(), m_name, m_id);
-      static_cast<DCItem*>(dci)->reloadCache();
+      static_cast<DCItem*>(dci.get())->reloadCache();
    }
    unlockDciAccess();
 }

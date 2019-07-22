@@ -1632,6 +1632,38 @@ if test "x$CXX" = "xxlC_r" ; then
 
 	AC_CPP_CHECK_OPTION(-qsuppress=1506-356)
 	AC_CPP_CHECK_OPTION(-qsuppress=1540-1401)
+
+	# Check for std::shared_ptr
+	AC_LANG_PUSH([C++])
+	AC_MSG_CHECKING(if std::shared_ptr is supported)
+	AC_COMPILE_IFELSE([
+		AC_LANG_PROGRAM([
+#include <memory>
+			],
+			[ std::shared_ptr<int> p; ])],
+		[
+			AC_MSG_RESULT(yes)
+		],
+		[
+			AC_MSG_RESULT(no)
+			AC_MSG_CHECKING(if std::tr1::shared_ptr is supported)
+			OLD_CXXFLAGS="$CXXFLAGS"
+			CXXFLAGS="$CXXFLAGS -D__IBMCPP_TR1__"
+			AC_COMPILE_IFELSE([
+				AC_LANG_PROGRAM([
+#include <memory>
+					],
+					[ std::tr1::shared_ptr<int> p; ])],
+				[
+					AC_MSG_RESULT(yes)
+				],
+				[
+					AC_MSG_RESULT(no)
+					CXXFLAGS="$OLD_CXXFLAGS"
+				]
+			)
+		]
+	)
 fi
 
 if test "x$CXX" = "xCC" ; then

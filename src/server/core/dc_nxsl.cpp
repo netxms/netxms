@@ -41,7 +41,7 @@ static int F_GetDCIObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
 		return NXSL_ERR_BAD_CLASS;
 
 	DataCollectionTarget *node = (DataCollectionTarget *)object->getData();
-	DCObject *dci = node->getDCObjectById(argv[1]->getValueAsUInt32(), 0);
+	shared_ptr<DCObject> dci = node->getDCObjectById(argv[1]->getValueAsUInt32(), 0);
 	if (dci != NULL)
 	{
 		*ppResult = dci->createNXSLObject(vm);
@@ -71,16 +71,16 @@ static int GetDCIValueImpl(bool rawValue, int argc, NXSL_Value **argv, NXSL_Valu
 		return NXSL_ERR_BAD_CLASS;
 
 	DataCollectionTarget *node = (DataCollectionTarget *)object->getData();
-	DCObject *dci = node->getDCObjectById(argv[1]->getValueAsUInt32(), 0);
+	shared_ptr<DCObject> dci = node->getDCObjectById(argv[1]->getValueAsUInt32(), 0);
 	if (dci != NULL)
    {
       if (dci->getType() == DCO_TYPE_ITEM)
 	   {
-         *ppResult = rawValue ? ((DCItem *)dci)->getRawValueForNXSL(vm) : ((DCItem *)dci)->getValueForNXSL(vm, F_LAST, 1);
+         *ppResult = rawValue ? static_cast<DCItem*>(dci.get())->getRawValueForNXSL(vm) : static_cast<DCItem*>(dci.get())->getValueForNXSL(vm, F_LAST, 1);
 	   }
       else if (dci->getType() == DCO_TYPE_TABLE)
       {
-         Table *t = ((DCTable *)dci)->getLastValue();
+         Table *t = static_cast<DCTable*>(dci.get())->getLastValue();
          *ppResult = (t != NULL) ? vm->createValue(new NXSL_Object(vm, &g_nxslTableClass, t)) : vm->createValue();
       }
       else
@@ -133,16 +133,16 @@ static int GetDciValueExImpl(bool byName, int argc, NXSL_Value **argv, NXSL_Valu
 		return NXSL_ERR_BAD_CLASS;
 
 	DataCollectionTarget *node = (DataCollectionTarget *)object->getData();
-	DCObject *dci = byName ? node->getDCObjectByName(argv[1]->getValueAsCString(), 0) : node->getDCObjectByDescription(argv[1]->getValueAsCString(), 0);
+	shared_ptr<DCObject> dci = byName ? node->getDCObjectByName(argv[1]->getValueAsCString(), 0) : node->getDCObjectByDescription(argv[1]->getValueAsCString(), 0);
 	if (dci != NULL)
    {
       if (dci->getType() == DCO_TYPE_ITEM)
 	   {
-         *ppResult = ((DCItem *)dci)->getValueForNXSL(vm, F_LAST, 1);
+         *ppResult = static_cast<DCItem*>(dci.get())->getValueForNXSL(vm, F_LAST, 1);
 	   }
       else if (dci->getType() == DCO_TYPE_TABLE)
       {
-         Table *t = ((DCTable *)dci)->getLastValue();
+         Table *t = static_cast<DCTable*>(dci.get())->getLastValue();
          *ppResult = (t != NULL) ? vm->createValue(new NXSL_Object(vm, &g_nxslTableClass, t)) : vm->createValue();
       }
       else
@@ -195,7 +195,7 @@ static int F_FindDCIByName(int argc, NXSL_Value **argv, NXSL_Value **ppResult, N
 		return NXSL_ERR_BAD_CLASS;
 
 	DataCollectionTarget *node = (DataCollectionTarget *)object->getData();
-	DCObject *dci = node->getDCObjectByName(argv[1]->getValueAsCString(), 0);
+	shared_ptr<DCObject> dci = node->getDCObjectByName(argv[1]->getValueAsCString(), 0);
 	*ppResult = (dci != NULL) ? vm->createValue(dci->getId()) : vm->createValue((UINT32)0);
 	return 0;
 }
@@ -217,7 +217,7 @@ static int F_FindDCIByDescription(int argc, NXSL_Value **argv, NXSL_Value **ppRe
 		return NXSL_ERR_BAD_CLASS;
 
 	DataCollectionTarget *node = (DataCollectionTarget *)object->getData();
-	DCObject *dci = node->getDCObjectByDescription(argv[1]->getValueAsCString(), 0);
+	shared_ptr<DCObject> dci = node->getDCObjectByDescription(argv[1]->getValueAsCString(), 0);
 	*ppResult = (dci != NULL) ? vm->createValue(dci->getId()) : vm->createValue((UINT32)0);
 	return 0;
 }
@@ -281,14 +281,14 @@ static int F_GetDCIValueStat(int argc, NXSL_Value **argv, NXSL_Value **ppResult,
 		return NXSL_ERR_BAD_CLASS;
 
 	DataCollectionTarget *node = (DataCollectionTarget *)object->getData();
-	DCObject *dci = node->getDCObjectById(argv[1]->getValueAsUInt32(), 0);
+	shared_ptr<DCObject> dci = node->getDCObjectById(argv[1]->getValueAsUInt32(), 0);
 	if ((dci != NULL) && (dci->getType() == DCO_TYPE_ITEM))
 	{
-      TCHAR *result = ((DCItem *)dci)->getAggregateValue(func, argv[2]->getValueAsInt32(), argv[3]->getValueAsInt32());
+      TCHAR *result = static_cast<DCItem*>(dci.get())->getAggregateValue(func, argv[2]->getValueAsInt32(), argv[3]->getValueAsInt32());
       if (result != NULL)
       {
          *ppResult = vm->createValue(result);
-         free(result);
+         MemFree(result);
       }
       else
       {
@@ -354,7 +354,7 @@ static int F_GetDCIValues(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
 		return NXSL_ERR_BAD_CLASS;
 
 	DataCollectionTarget *node = (DataCollectionTarget *)object->getData();
-	DCObject *dci = node->getDCObjectById(argv[1]->getValueAsUInt32(), 0);
+	shared_ptr<DCObject> dci = node->getDCObjectById(argv[1]->getValueAsUInt32(), 0);
 	if ((dci != NULL) && (dci->getType() == DCO_TYPE_ITEM))
 	{
 		DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
@@ -496,7 +496,7 @@ static int F_PushDCIData(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXS
 	DataCollectionTarget *node = (DataCollectionTarget *)object->getData();
 
    bool success = false;
-	DCObject *dci = node->getDCObjectById(argv[1]->getValueAsUInt32(), 0);
+	shared_ptr<DCObject> dci = node->getDCObjectById(argv[1]->getValueAsUInt32(), 0);
    if ((dci != NULL) && (dci->getDataSource() == DS_PUSH_AGENT))
    {
       time_t t = time(NULL);

@@ -76,7 +76,7 @@ bool PredictionEngine::getPredictedSeries(UINT32 nodeId, UINT32 dciId, int count
    if ((object == NULL) || !object->isDataCollectionTarget())
       return false;
 
-   DCObject *dci = static_cast<DataCollectionTarget*>(object)->getDCObjectById(dciId, 0);
+   shared_ptr<DCObject> dci = static_cast<DataCollectionTarget*>(object)->getDCObjectById(dciId, 0);
    if (dci->getType() != DCO_TYPE_ITEM)
       return false;
 
@@ -358,7 +358,7 @@ bool GetPredictedData(ClientSession *session, const NXCPMessage *request, NXCPMe
    static UINT32 s_rowSize[] = { 8, 8, 16, 16, 516, 16, 8, 8, 16 };
 
    // Find DCI object
-   DCObject *dci = dcTarget->getDCObjectById(request->getFieldAsUInt32(VID_DCI_ID), session->getUserId());
+   shared_ptr<DCObject> dci = dcTarget->getDCObjectById(request->getFieldAsUInt32(VID_DCI_ID), session->getUserId());
    if (dci == NULL)
    {
       response->setField(VID_RCC, RCC_INVALID_DCI_ID);
@@ -371,14 +371,14 @@ bool GetPredictedData(ClientSession *session, const NXCPMessage *request, NXCPMe
       return false;
    }
 
-   PredictionEngine *engine = FindPredictionEngine(((DCItem *)dci)->getPredictionEngine());
+   PredictionEngine *engine = FindPredictionEngine(static_cast<DCItem*>(dci.get())->getPredictionEngine());
 
    // Send CMD_REQUEST_COMPLETED message
    response->setField(VID_RCC, RCC_SUCCESS);
-   static_cast<DCItem*>(dci)->fillMessageWithThresholds(response, false);
+   static_cast<DCItem*>(dci.get())->fillMessageWithThresholds(response, false);
    session->sendMessage(response);
 
-   int dataType = static_cast<DCItem*>(dci)->getDataType();
+   int dataType = static_cast<DCItem*>(dci.get())->getDataType();
    time_t timeFrom = request->getFieldAsTime(VID_TIME_FROM);
    time_t timestamp = request->getFieldAsTime(VID_TIME_TO);
    time_t interval = dci->getEffectivePollingInterval();

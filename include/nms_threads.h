@@ -1125,15 +1125,15 @@ template <typename T> inline void ThreadPoolExecute(ThreadPool *p, void (*f)(T *
 }
 
 /**
- * Wrapper data for ThreadPoolExecute with std::shared_ptr argument
+ * Wrapper data for ThreadPoolExecute with shared_ptr argument
  */
 template <typename T> class __ThreadPoolExecute_SharedPtr_WrapperData
 {
 public:
-   std::shared_ptr<T> m_object;
-   void (*m_func)(std::shared_ptr<T>);
+   shared_ptr<T> m_object;
+   void (*m_func)(shared_ptr<T>);
 
-   __ThreadPoolExecute_SharedPtr_WrapperData(std::shared_ptr<T> object, void (*func)(std::shared_ptr<T>))
+   __ThreadPoolExecute_SharedPtr_WrapperData(shared_ptr<T> object, void (*func)(shared_ptr<T>))
    {
       m_object = object;
       m_func = func;
@@ -1141,7 +1141,7 @@ public:
 };
 
 /**
- * Wrapper for ThreadPoolExecute with std::shared_ptr argument
+ * Wrapper for ThreadPoolExecute with shared_ptr argument
  */
 template <typename T> void __ThreadPoolExecute_SharedPtr_Wrapper(void *arg)
 {
@@ -1153,7 +1153,7 @@ template <typename T> void __ThreadPoolExecute_SharedPtr_Wrapper(void *arg)
 /**
  * Wrapper for ThreadPoolExecute to use smart pointer to given type as argument
  */
-template <typename T> inline void ThreadPoolExecute(ThreadPool *p, void (*f)(std::shared_ptr<T>), std::shared_ptr<T> arg)
+template <typename T> inline void ThreadPoolExecute(ThreadPool *p, void (*f)(shared_ptr<T>), shared_ptr<T> arg)
 {
    ThreadPoolExecute(p, __ThreadPoolExecute_SharedPtr_Wrapper<T>, new __ThreadPoolExecute_SharedPtr_WrapperData<T>(arg, f));
 }
@@ -1169,7 +1169,7 @@ template <typename T> inline void ThreadPoolExecuteSerialized(ThreadPool *p, con
 /**
  * Wrapper for ThreadPoolExecuteSerialized to use smart pointer to given type as argument
  */
-template <typename T> inline void ThreadPoolExecuteSerialized(ThreadPool *p, const TCHAR *key, void (*f)(std::shared_ptr<T>), std::shared_ptr<T> arg)
+template <typename T> inline void ThreadPoolExecuteSerialized(ThreadPool *p, const TCHAR *key, void (*f)(shared_ptr<T>), shared_ptr<T> arg)
 {
    ThreadPoolExecuteSerialized(p, key, __ThreadPoolExecute_SharedPtr_Wrapper<T>, new __ThreadPoolExecute_SharedPtr_WrapperData<T>(arg, f));
 }

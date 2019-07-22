@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -673,6 +673,26 @@ void MobileDeviceSession::updateDeviceStatus(NXCPMessage *request)
 }
 
 /**
+ * Data push element
+ */
+struct MobileDataPushElement
+{
+   shared_ptr<DCObject> dci;
+   TCHAR *value;
+
+   MobileDataPushElement(const shared_ptr<DCObject> &_dci, TCHAR *_value)
+   {
+      dci = _dci;
+      value = _value;
+   }
+
+   ~MobileDataPushElement()
+   {
+      MemFree(value);
+   }
+};
+
+/**
  * Push DCI data
  */
 void MobileDeviceSession::pushData(NXCPMessage *request)
@@ -688,9 +708,7 @@ void MobileDeviceSession::pushData(NXCPMessage *request)
       int count = (int)request->getFieldAsUInt32(VID_NUM_ITEMS);
       if (count > 0)
       {
-         DCItem **dciList = (DCItem **)malloc(sizeof(DCItem *) * count);
-         TCHAR **valueList = (TCHAR **)malloc(sizeof(TCHAR *) * count);
-         memset(valueList, 0, sizeof(TCHAR *) * count);
+         ObjectArray<MobileDataPushElement> values(count, 16, true);
 
          int i;
          UINT32 varId = VID_PUSH_DCI_DATA_BASE;
@@ -701,7 +719,7 @@ void MobileDeviceSession::pushData(NXCPMessage *request)
 
             // find DCI by ID or name (if ID==0)
             UINT32 dciId = request->getFieldAsUInt32(varId++);
-		      DCObject *pItem;
+            shared_ptr<DCObject> pItem;
             if (dciId != 0)
             {
                pItem = device->getDCObjectById(dciId, 0);
@@ -717,8 +735,7 @@ void MobileDeviceSession::pushData(NXCPMessage *request)
             {
                if (pItem->getDataSource() == DS_PUSH_AGENT)
                {
-                  dciList[i] = (DCItem *)pItem;
-                  valueList[i] = request->getFieldAsString(varId++);
+                  values.add(new MobileDataPushElement(pItem, request->getFieldAsString(varId++)));
                   ok = true;
                }
                else
@@ -758,12 +775,13 @@ void MobileDeviceSession::pushData(NXCPMessage *request)
                time(&t);
             }
 
-            for(i = 0; i < count; i++)
+            for(i = 0; i < values.size(); i++)
             {
-			      if (_tcslen(valueList[i]) >= MAX_DCI_STRING_VALUE)
-				      valueList[i][MAX_DCI_STRING_VALUE - 1] = 0;
-			      device->processNewDCValue(dciList[i], t, valueList[i]);
-			      dciList[i]->setLastPollTime(t);
+               MobileDataPushElement *v = values.get(i);
+			      if (_tcslen(v->value) >= MAX_DCI_STRING_VALUE)
+				      v->value[MAX_DCI_STRING_VALUE - 1] = 0;
+			      device->processNewDCValue(v->dci, t, v->value);
+			      v->dci->setLastPollTime(t);
             }
             msg.setField(VID_RCC, RCC_SUCCESS);
          }
@@ -771,12 +789,6 @@ void MobileDeviceSession::pushData(NXCPMessage *request)
          {
             msg.setField(VID_FAILED_DCI_INDEX, i - 1);
          }
-
-         // Cleanup
-         for(i = 0; i < count; i++)
-            MemFree(valueList[i]);
-         MemFree(valueList);
-         free(dciList);
       }
       else
       {

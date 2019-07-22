@@ -805,14 +805,14 @@ UINT32 Cluster::collectAggregatedData(DCItem *item, TCHAR *buffer)
          continue;
 
       Node *node = static_cast<Node*>(m_childList->get(i));
-      DCObject *dco = node->getDCObjectByTemplateId(item->getId(), 0);
+      shared_ptr<DCObject> dco = node->getDCObjectByTemplateId(item->getId(), 0);
       if ((dco != NULL) &&
           (dco->getType() == DCO_TYPE_ITEM) &&
           (dco->getStatus() == ITEM_STATUS_ACTIVE) &&
           ((dco->getErrorCount() == 0) || dco->isAggregateWithErrors()) &&
           dco->matchClusterResource())
       {
-         ItemValue *v = static_cast<DCItem*>(dco)->getInternalLastValue();
+         ItemValue *v = static_cast<DCItem*>(dco.get())->getInternalLastValue();
          if (v != NULL)
          {
             // Immediately after server startup cache may be filled with placeholder values
@@ -872,14 +872,14 @@ UINT32 Cluster::collectAggregatedData(DCTable *table, Table **result)
          continue;
 
       Node *node = static_cast<Node*>(m_childList->get(i));
-      DCObject *dco = node->getDCObjectByTemplateId(table->getId(), 0);
+      shared_ptr<DCObject> dco = node->getDCObjectByTemplateId(table->getId(), 0);
       if ((dco != NULL) &&
           (dco->getType() == DCO_TYPE_TABLE) &&
           (dco->getStatus() == ITEM_STATUS_ACTIVE) &&
           ((dco->getErrorCount() == 0) || dco->isAggregateWithErrors()) &&
           dco->matchClusterResource())
       {
-         Table *v = ((DCTable *)dco)->getLastValue();
+         Table *v = static_cast<DCTable*>(dco.get())->getLastValue();
          if (v != NULL)
             values[valueCount++] = v;
       }

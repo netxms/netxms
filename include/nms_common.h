@@ -191,6 +191,20 @@ typedef int bool;
 
 #include <memory>
 
+#ifdef __IBMCPP_TR1__
+using std::tr1::shared_ptr;
+
+// xlC++ implementation C++11 TR1 does not have make_shared
+template<typename T, typename... Args>
+inline shared_ptr<T> make_shared(Args&&... args)
+{
+   return shared_ptr<T>(new T(args...));
+}
+#else
+using std::shared_ptr;
+using std::make_shared;
+#endif
+
 #endif	/* __cplusplus */
 
 

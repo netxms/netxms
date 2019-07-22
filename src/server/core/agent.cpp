@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -301,7 +301,7 @@ void AgentConnectionEx::onDataPush(NXCPMessage *msg)
          if (target != NULL)
          {
 		      DbgPrintf(5, _T("%s: agent data push: %s=%s"), target->getName(), name, value);
-		      DCObject *dci = target->getDCObjectByName(name, 0);
+		      shared_ptr<DCObject> dci = target->getDCObjectByName(name, 0);
 		      if ((dci != NULL) && (dci->getType() == DCO_TYPE_ITEM) && (dci->getDataSource() == DS_PUSH_AGENT) && (dci->getStatus() == ITEM_STATUS_ACTIVE))
 		      {
 			      DbgPrintf(5, _T("%s: agent data push: found DCI %d"), target->getName(), dci->getId());
@@ -670,7 +670,7 @@ UINT32 AgentConnectionEx::processCollectedData(NXCPMessage *msg)
    }
 
    UINT32 dciId = msg->getFieldAsUInt32(VID_DCI_ID);
-   DCObject *dcObject = target->getDCObjectById(dciId, 0);
+   shared_ptr<DCObject> dcObject = target->getDCObjectById(dciId, 0);
    if (dcObject == NULL)
    {
       debugPrintf(5, _T("AgentConnectionEx::processCollectedData: cannot find DCI with ID %d on object %s [%d]"),
@@ -849,7 +849,7 @@ UINT32 AgentConnectionEx::processBulkCollectedData(NXCPMessage *request, NXCPMes
       }
 
       UINT32 dciId = request->getFieldAsUInt32(fieldId);
-      DCObject *dcObject = target->getDCObjectById(dciId, 0);
+      shared_ptr<DCObject> dcObject = target->getDCObjectById(dciId, 0);
       if (dcObject == NULL)
       {
          debugPrintf(5, _T("AgentConnectionEx::processBulkCollectedData: cannot find DCI with ID %d on object %s [%d] (element %d)"),

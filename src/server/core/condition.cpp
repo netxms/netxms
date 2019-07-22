@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -403,16 +403,16 @@ void ConditionObject::check()
       {
          if (pObject->getObjectClass() == OBJECT_NODE)
          {
-            DCObject *pItem = ((Node *)pObject)->getDCObjectById(m_dciList[i].id, 0);
+            shared_ptr<DCObject> pItem = static_cast<Node*>(pObject)->getDCObjectById(m_dciList[i].id, 0);
             if (pItem != NULL)
             {
                if (pItem->getType() == DCO_TYPE_ITEM)
                {
-                  ppValueList[i] = ((DCItem *)pItem)->getValueForNXSL(m_script, m_dciList[i].function, m_dciList[i].polls);
+                  ppValueList[i] = static_cast<DCItem*>(pItem.get())->getValueForNXSL(m_script, m_dciList[i].function, m_dciList[i].polls);
                }
                else if (pItem->getType() == DCO_TYPE_TABLE)
                {
-                  Table *t = ((DCTable *)pItem)->getLastValue();
+                  Table *t = static_cast<DCTable*>(pItem.get())->getLastValue();
                   if (t != NULL)
                   {
                      ppValueList[i] = m_script->createValue(new NXSL_Object(m_script, &g_nxslTableClass, t));

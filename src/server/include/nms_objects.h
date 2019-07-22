@@ -1057,7 +1057,7 @@ private:
    typedef NetObj super;
 
 protected:
-	ObjectArray<DCObject> *m_dcObjects;
+	SharedObjectArray<DCObject> *m_dcObjects;
    bool m_dciListModified;
    TCHAR m_szCurrDCIOwner[MAX_SESSION_NAME];
 	RWLOCK m_dciAccessLock;
@@ -1078,7 +1078,7 @@ protected:
 	void unlockDciAccess() { RWLockUnlock(m_dciAccessLock); }
 
    void deleteChildDCIs(UINT32 dcObjectId);
-   void destroyItem(DCObject *object, int index);
+   void deleteDCObject(DCObject *object);
 
 public:
    DataCollectionOwner();
@@ -1101,12 +1101,12 @@ public:
    bool updateDCObject(UINT32 dwItemId, NXCPMessage *pMsg, UINT32 *pdwNumMaps, UINT32 **ppdwMapIndex, UINT32 **ppdwMapId, UINT32 userId);
    bool deleteDCObject(UINT32 dcObjectId, bool needLock, UINT32 userId);
    bool setItemStatus(UINT32 dwNumItems, UINT32 *pdwItemList, int iStatus);
-   DCObject *getDCObjectById(UINT32 itemId, UINT32 userId, bool lock = true);
-   DCObject *getDCObjectByGUID(const uuid& guid, UINT32 userId, bool lock = true);
-   DCObject *getDCObjectByTemplateId(UINT32 tmplItemId, UINT32 userId);
-   DCObject *getDCObjectByName(const TCHAR *name, UINT32 userId);
-   DCObject *getDCObjectByDescription(const TCHAR *description, UINT32 userId);
-   ObjectArray<DCObject> *getDCObjectsByRegex(const TCHAR *regex, bool searchName, UINT32 userId) const;
+   shared_ptr<DCObject> getDCObjectById(UINT32 itemId, UINT32 userId, bool lock = true);
+   shared_ptr<DCObject> getDCObjectByGUID(const uuid& guid, UINT32 userId, bool lock = true);
+   shared_ptr<DCObject> getDCObjectByTemplateId(UINT32 tmplItemId, UINT32 userId);
+   shared_ptr<DCObject> getDCObjectByName(const TCHAR *name, UINT32 userId);
+   shared_ptr<DCObject> getDCObjectByDescription(const TCHAR *description, UINT32 userId);
+   SharedObjectArray<DCObject> *getDCObjectsByRegex(const TCHAR *regex, bool searchName, UINT32 userId);
    NXSL_Value *getAllDCObjectsForNXSL(NXSL_VM *vm, const TCHAR *name, const TCHAR *description, UINT32 userId);
    virtual void applyDCIChanges();
    void setDCIModificationFlag() { m_dciListModified = true; }
@@ -1558,8 +1558,8 @@ public:
    UINT32 getStringMapFromScript(const TCHAR *param, StringMap **map, DataCollectionTarget *targetObject);
 
    UINT32 getTableLastValues(UINT32 dciId, NXCPMessage *msg);
-	UINT32 getThresholdSummary(NXCPMessage *msg, UINT32 baseId, UINT32 userId);
-	UINT32 getPerfTabDCIList(NXCPMessage *pMsg, UINT32 userId);
+   UINT32 getThresholdSummary(NXCPMessage *msg, UINT32 baseId, UINT32 userId);
+   UINT32 getPerfTabDCIList(NXCPMessage *pMsg, UINT32 userId);
    void getDciValuesSummary(SummaryTable *tableDefinition, Table *tableData, UINT32 userId);
    UINT32 getLastValues(NXCPMessage *msg, bool objectTooltipOnly, bool overviewOnly, bool includeNoValueObjects, UINT32 userId);
    double getProxyLoadFactor() { return GetAttributeWithLock(&m_proxyLoadFactor, m_mutexProperties); }
@@ -1569,12 +1569,12 @@ public:
    void reloadDCItemCache(UINT32 dciId);
    void cleanDCIData(DB_HANDLE hdb);
    void queueItemsForPolling();
-	bool processNewDCValue(DCObject *dco, time_t currTime, const void *value);
-	void scheduleItemDataCleanup(UINT32 dciId);
+   bool processNewDCValue(shared_ptr<DCObject> dco, time_t currTime, const void *value);
+   void scheduleItemDataCleanup(UINT32 dciId);
    void scheduleTableDataCleanup(UINT32 dciId);
    void queuePredictionEngineTraining();
 
-	bool applyTemplateItem(UINT32 dwTemplateId, DCObject *dcObject);
+   bool applyTemplateItem(UINT32 dwTemplateId, DCObject *dcObject);
    void cleanDeletedTemplateItems(UINT32 dwTemplateId, UINT32 dwNumItems, UINT32 *pdwItemList);
    virtual void unbindFromTemplate(UINT32 dwTemplateId, bool removeDCI);
 

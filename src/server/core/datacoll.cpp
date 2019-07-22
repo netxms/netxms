@@ -209,17 +209,15 @@ static void *GetTableData(DataCollectionTarget *dcTarget, DCTable *table, UINT32
 /**
  * Data collector
  */
-void DataCollector(void *arg)
+void DataCollector(shared_ptr<DCObject> dcObject)
 {
-   DCObject *pItem = static_cast<DCObject*>(arg);
-   DataCollectionTarget *target = static_cast<DataCollectionTarget*>(pItem->getOwner());
+   DataCollectionTarget *target = static_cast<DataCollectionTarget*>(dcObject->getOwner());
 
-   if (pItem->isScheduledForDeletion())
+   if (dcObject->isScheduledForDeletion())
    {
       nxlog_debug(7, _T("DataCollector(): about to destroy DC object %d \"%s\" owner=%d"),
-                  pItem->getId(), pItem->getName(), (target != NULL) ? (int)target->getId() : -1);
-      pItem->deleteFromDatabase();
-      delete pItem;
+                  dcObject->getId(), dcObject->getName(), (target != NULL) ? (int)target->getId() : -1);
+      dcObject->deleteFromDatabase();
       if (target != NULL)
          target->decRefCount();
       return;
@@ -228,23 +226,23 @@ void DataCollector(void *arg)
    if (target == NULL)
    {
       nxlog_debug(3, _T("DataCollector: attempt to collect information for non-existing node (DCI=%d \"%s\")"),
-                  pItem->getId(), pItem->getName());
+                  dcObject->getId(), dcObject->getName());
 
       // Update item's last poll time and clear busy flag so item can be polled again
-      pItem->setLastPollTime(time(NULL));
-      pItem->clearBusyFlag();
+      dcObject->setLastPollTime(time(NULL));
+      dcObject->clearBusyFlag();
       return;
    }
 
    if (IsShutdownInProgress())
    {
-      pItem->clearBusyFlag();
+      dcObject->clearBusyFlag();
       return;
    }
 
    DbgPrintf(8, _T("DataCollector(): processing DC object %d \"%s\" owner=%d sourceNode=%d"),
-             pItem->getId(), pItem->getName(), (target != NULL) ? (int)target->getId() : -1, pItem->getSourceNode());
-   UINT32 sourceNodeId = target->getEffectiveSourceNode(pItem);
+             dcObject->getId(), dcObject->getName(), (target != NULL) ? (int)target->getId() : -1, dcObject->getSourceNode());
+   UINT32 sourceNodeId = target->getEffectiveSourceNode(dcObject.get());
    if (sourceNodeId != 0)
    {
       Node *sourceNode = (Node *)FindObjectById(sourceNodeId, OBJECT_NODE);
@@ -259,7 +257,7 @@ void DataCollector(void *arg)
          else
          {
             // Change item's status to "not supported"
-            pItem->setStatus(ITEM_STATUS_NOT_SUPPORTED, true);
+            dcObject->setStatus(ITEM_STATUS_NOT_SUPPORTED, true);
             target->decRefCount();
             target = NULL;
          }
@@ -279,13 +277,13 @@ void DataCollector(void *arg)
          void *data;
          TCHAR buffer[MAX_LINE_SIZE];
          UINT32 error;
-         switch(pItem->getType())
+         switch(dcObject->getType())
          {
             case DCO_TYPE_ITEM:
-               data = GetItemData(target, (DCItem *)pItem, buffer, &error);
+               data = GetItemData(target, static_cast<DCItem*>(dcObject.get()), buffer, &error);
                break;
             case DCO_TYPE_TABLE:
-               data = GetTableData(target, (DCTable *)pItem, &error);
+               data = GetTableData(target, static_cast<DCTable*>(dcObject.get()), &error);
                break;
             default:
                data = NULL;
@@ -297,59 +295,59 @@ void DataCollector(void *arg)
          switch(error)
          {
             case DCE_SUCCESS:
-               if (pItem->getStatus() == ITEM_STATUS_NOT_SUPPORTED)
-                  pItem->setStatus(ITEM_STATUS_ACTIVE, true);
-               if (!((DataCollectionTarget *)pItem->getOwner())->processNewDCValue(pItem, currTime, data))
+               if (dcObject->getStatus() == ITEM_STATUS_NOT_SUPPORTED)
+                  dcObject->setStatus(ITEM_STATUS_ACTIVE, true);
+               if (!static_cast<DataCollectionTarget*>(dcObject->getOwner())->processNewDCValue(dcObject, currTime, data))
                {
                   // value processing failed, convert to data collection error
-                  pItem->processNewError(false);
+                  dcObject->processNewError(false);
                }
                break;
             case DCE_COLLECTION_ERROR:
-               if (pItem->getStatus() == ITEM_STATUS_NOT_SUPPORTED)
-                  pItem->setStatus(ITEM_STATUS_ACTIVE, true);
-               pItem->processNewError(false);
+               if (dcObject->getStatus() == ITEM_STATUS_NOT_SUPPORTED)
+                  dcObject->setStatus(ITEM_STATUS_ACTIVE, true);
+               dcObject->processNewError(false);
                break;
             case DCE_NO_SUCH_INSTANCE:
-               if (pItem->getStatus() == ITEM_STATUS_NOT_SUPPORTED)
-                  pItem->setStatus(ITEM_STATUS_ACTIVE, true);
-               pItem->processNewError(true);
+               if (dcObject->getStatus() == ITEM_STATUS_NOT_SUPPORTED)
+                  dcObject->setStatus(ITEM_STATUS_ACTIVE, true);
+               dcObject->processNewError(true);
                break;
             case DCE_COMM_ERROR:
-               pItem->processNewError(false);
+               dcObject->processNewError(false);
                break;
             case DCE_NOT_SUPPORTED:
                // Change item's status
-               pItem->setStatus(ITEM_STATUS_NOT_SUPPORTED, true);
+               dcObject->setStatus(ITEM_STATUS_NOT_SUPPORTED, true);
                break;
          }
 
          // Send session notification when force poll is performed
-         if (pItem->getPollingSession() != NULL)
+         if (dcObject->getPollingSession() != NULL)
          {
-            ClientSession *session = pItem->processForcePoll();
-            session->notify(NX_NOTIFY_FORCE_DCI_POLL, pItem->getOwnerId());
+            ClientSession *session = dcObject->processForcePoll();
+            session->notify(NX_NOTIFY_FORCE_DCI_POLL, dcObject->getOwnerId());
             session->decRefCount();
          }
       }
 
       // Decrement node's usage counter
       target->decRefCount();
-      if ((pItem->getSourceNode() != 0) && (pItem->getOwner() != NULL))
+      if ((dcObject->getSourceNode() != 0) && (dcObject->getOwner() != NULL))
       {
-         pItem->getOwner()->decRefCount();
+         dcObject->getOwner()->decRefCount();
       }
    }
    else     /* target == NULL */
    {
-      DataCollectionOwner *n = pItem->getOwner();
+      DataCollectionOwner *n = dcObject->getOwner();
       nxlog_debug(5, _T("DataCollector: attempt to collect information for non-existing or inaccessible node (DCI=%d \"%s\" target=%d sourceNode=%d)"),
-                  pItem->getId(), pItem->getName(), (n != NULL) ? (int)n->getId() : -1, sourceNodeId);
+                  dcObject->getId(), dcObject->getName(), (n != NULL) ? (int)n->getId() : -1, sourceNodeId);
    }
 
    // Update item's last poll time and clear busy flag so item can be polled again
-   pItem->setLastPollTime(currTime);
-   pItem->clearBusyFlag();
+   dcObject->setLastPollTime(currTime);
+   dcObject->clearBusyFlag();
 }
 
 /**
@@ -415,12 +413,12 @@ THREAD_RESULT THREAD_CALL CacheLoader(void *arg)
       if ((object != NULL) && object->isDataCollectionTarget())
       {
          object->incRefCount();
-         DCObject *dci = static_cast<DataCollectionTarget*>(object)->getDCObjectById(ref->getId(), 0, true);
+         shared_ptr<DCObject> dci = static_cast<DataCollectionTarget*>(object)->getDCObjectById(ref->getId(), 0, true);
          if ((dci != NULL) && (dci->getType() == DCO_TYPE_ITEM))
          {
             nxlog_debug_tag(_T("obj.dc.cache"), 6, _T("Loading cache for DCI %s [%d] on %s [%d]"),
                      ref->getName(), ref->getId(), object->getName(), object->getId());
-            static_cast<DCItem*>(dci)->reloadCache();
+            static_cast<DCItem*>(dci.get())->reloadCache();
          }
          object->decRefCount();
       }
@@ -569,13 +567,13 @@ void WriteFullParamListToMessage(NXCPMessage *pMsg, int origin, WORD flags)
  */
 int GetDCObjectType(UINT32 nodeId, UINT32 dciId)
 {
-   Node *node = (Node *)FindObjectById(nodeId, OBJECT_NODE);
+   Node *node = static_cast<Node*>(FindObjectById(nodeId, OBJECT_NODE));
    if (node != NULL)
    {
-      DCObject *dco = node->getDCObjectById(dciId, 0);
-      if (dco != NULL)
+      shared_ptr<DCObject> dcObject = node->getDCObjectById(dciId, 0);
+      if (dcObject != NULL)
       {
-         return dco->getType();
+         return dcObject->getType();
       }
    }
    return DCO_TYPE_ITEM;   // default
