@@ -61,7 +61,7 @@ Array::Array(void *data, int initial, int grow, size_t elementSize)
 	m_grow = (grow > 0) ? grow : 16;
 	m_allocated = (initial >= 0) ? initial : 16;
    m_elementSize = elementSize;
-	m_data = (void **)MemAlloc(m_elementSize * m_allocated);
+	m_data = (m_allocated > 0) ? (void **)MemAlloc(m_elementSize * m_allocated) : NULL;
    if (data != NULL)
    {
       memcpy(m_data, data, initial * m_elementSize);
@@ -80,7 +80,7 @@ Array::Array(const Array *src)
 	m_grow = src->m_grow;
 	m_allocated = src->m_allocated;
    m_elementSize = src->m_elementSize;
-	m_data = (src->m_data != NULL) ? (void **)nx_memdup(src->m_data, m_elementSize * m_allocated) : NULL;
+	m_data = (src->m_data != NULL) ? (void **)MemCopyBlock(src->m_data, m_elementSize * m_allocated) : NULL;
 	m_objectOwner = src->m_objectOwner;
 	m_objectDestructor = src->m_objectDestructor;
    m_storePointers = src->m_storePointers;
@@ -93,8 +93,16 @@ Array::~Array()
 {
 	if (m_objectOwner)
 	{
-		for(int i = 0; i < m_size; i++)
-			destroyObject(m_data[i]);
+	   if (m_storePointers)
+	   {
+         for(int i = 0; i < m_size; i++)
+            destroyObject(m_data[i]);
+	   }
+	   else
+	   {
+         for(int i = 0; i < m_size; i++)
+            destroyObject(ADDR(i));
+	   }
 	}
 	MemFree(m_data);
 }
