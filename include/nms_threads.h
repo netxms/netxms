@@ -1125,11 +1125,53 @@ template <typename T> inline void ThreadPoolExecute(ThreadPool *p, void (*f)(T *
 }
 
 /**
+ * Wrapper data for ThreadPoolExecute with std::shared_ptr argument
+ */
+template <typename T> class __ThreadPoolExecute_SharedPtr_WrapperData
+{
+public:
+   std::shared_ptr<T> m_object;
+   void (*m_func)(std::shared_ptr<T>);
+
+   __ThreadPoolExecute_SharedPtr_WrapperData(std::shared_ptr<T> object, void (*func)(std::shared_ptr<T>))
+   {
+      m_object = object;
+      m_func = func;
+   }
+};
+
+/**
+ * Wrapper for ThreadPoolExecute with std::shared_ptr argument
+ */
+template <typename T> void __ThreadPoolExecute_SharedPtr_Wrapper(void *arg)
+{
+   __ThreadPoolExecute_SharedPtr_WrapperData<T> *wd = static_cast<__ThreadPoolExecute_SharedPtr_WrapperData<T> *>(arg);
+   wd->m_func(wd->m_object);
+   delete wd;
+}
+
+/**
+ * Wrapper for ThreadPoolExecute to use smart pointer to given type as argument
+ */
+template <typename T> inline void ThreadPoolExecute(ThreadPool *p, void (*f)(std::shared_ptr<T>), std::shared_ptr<T> arg)
+{
+   ThreadPoolExecute(p, __ThreadPoolExecute_SharedPtr_Wrapper<T>, new __ThreadPoolExecute_SharedPtr_WrapperData<T>(arg, f));
+}
+
+/**
  * Wrapper for ThreadPoolExecuteSerialized to use pointer to given type as argument
  */
 template <typename T> inline void ThreadPoolExecuteSerialized(ThreadPool *p, const TCHAR *key, void (*f)(T *), T *arg)
 {
    ThreadPoolExecuteSerialized(p, key, (ThreadPoolWorkerFunction)f, (void *)arg);
+}
+
+/**
+ * Wrapper for ThreadPoolExecuteSerialized to use smart pointer to given type as argument
+ */
+template <typename T> inline void ThreadPoolExecuteSerialized(ThreadPool *p, const TCHAR *key, void (*f)(std::shared_ptr<T>), std::shared_ptr<T> arg)
+{
+   ThreadPoolExecuteSerialized(p, key, __ThreadPoolExecute_SharedPtr_Wrapper<T>, new __ThreadPoolExecute_SharedPtr_WrapperData<T>(arg, f));
 }
 
 /**
@@ -1165,7 +1207,11 @@ public:
    T *m_object;
    void (T::*m_func)();
 
-   __ThreadPoolExecute_WrapperData_0(T *object, void (T::*func)()) { m_object = object; m_func = func; }
+   __ThreadPoolExecute_WrapperData_0(T *object, void (T::*func)())
+   {
+      m_object = object;
+      m_func = func;
+   }
 };
 
 /**
@@ -1204,7 +1250,12 @@ public:
    void (T::*m_func)(R);
    R m_arg;
 
-   __ThreadPoolExecute_WrapperData_1(T *object, void (T::*func)(R), R arg) { m_object = object; m_func = func; m_arg = arg; }
+   __ThreadPoolExecute_WrapperData_1(T *object, void (T::*func)(R), R arg)
+   {
+      m_object = object;
+      m_func = func;
+      m_arg = arg;
+   }
 };
 
 /**
@@ -1252,7 +1303,13 @@ public:
    R1 m_arg1;
    R2 m_arg2;
 
-   __ThreadPoolExecute_WrapperData_2(T *object, void (T::*func)(R1, R2), R1 arg1, R2 arg2) { m_object = object; m_func = func; m_arg1 = arg1; m_arg2 = arg2; }
+   __ThreadPoolExecute_WrapperData_2(T *object, void (T::*func)(R1, R2), R1 arg1, R2 arg2)
+   {
+      m_object = object;
+      m_func = func;
+      m_arg1 = arg1;
+      m_arg2 = arg2;
+   }
 };
 
 /**

@@ -1181,6 +1181,8 @@ private:
    Array m_data;
    ObjectMemoryPool<std::shared_ptr<T>> m_pool;
 
+   static std::shared_ptr<T> m_null;
+
    static void destructor(void *element, Array *array)
    {
       static_cast<SharedObjectArray<T>*>(array->getContext())->m_pool.destroy(static_cast<std::shared_ptr<T>*>(element));
@@ -1188,7 +1190,7 @@ private:
 
 public:
    SharedObjectArray(int initial = 0, int grow = 16) :
-      m_data(initial, grow, true, SharedObjectArray<T>::destructor), m_pool(std::max(grow, 256)) { m_data.setContext(this); }
+      m_data(initial, grow, true, SharedObjectArray<T>::destructor), m_pool(std::max(grow, 64)) { m_data.setContext(this); }
    virtual ~SharedObjectArray() { }
 
    int add(std::shared_ptr<T> element) { return m_data.add(new(m_pool.allocate()) std::shared_ptr<T>(element)); }
@@ -1198,10 +1200,10 @@ public:
       auto p = static_cast<std::shared_ptr<T>*>(m_data.get(index));
       return (p != NULL) ? p->get() : NULL;
    }
-   std::shared_ptr<T> getShared(int index) const
+   const std::shared_ptr<T>& getShared(int index) const
    {
       auto p = static_cast<std::shared_ptr<T>*>(m_data.get(index));
-      return (p != NULL) ? *p : std::shared_ptr<T>();
+      return (p != NULL) ? *p : m_null;
    }
    void replace(int index, std::shared_ptr<T> element)
    {
@@ -1221,6 +1223,8 @@ public:
    int size() const { return m_data.size(); }
    bool isEmpty() const { return m_data.isEmpty(); }
 };
+
+template <class T> std::shared_ptr<T> SharedObjectArray<T>::m_null = std::shared_ptr<T>();
 
 /**
  * Entry of string map (internal)
@@ -2070,6 +2074,24 @@ template<typename T> json_t *json_integer_array(const T *values, size_t size)
  * Serialize ObjectArray as JSON
  */
 template<typename T> json_t *json_object_array(const ObjectArray<T> *a)
+{
+   json_t *root = json_array();
+   if (a != NULL)
+   {
+      for(int i = 0; i < a->size(); i++)
+      {
+         T *e = a->get(i);
+         if (e != NULL)
+            json_array_append_new(root, e->toJson());
+      }
+   }
+   return root;
+}
+
+/**
+ * Serialize SharedObjectArray as JSON
+ */
+template<typename T> json_t *json_object_array(const SharedObjectArray<T> *a)
 {
    json_t *root = json_array();
    if (a != NULL)

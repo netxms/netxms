@@ -51,6 +51,7 @@ Array::Array(int initial, int grow, bool owner, void (*objectDestructor)(void *,
 	m_objectOwner = owner;
 	m_objectDestructor = (objectDestructor != NULL) ? objectDestructor : DefaultObjectDestructor;
    m_storePointers = true;
+   m_context = NULL;
 }
 
 /**
@@ -70,6 +71,7 @@ Array::Array(void *data, int initial, int grow, size_t elementSize)
 	m_objectOwner = false;
 	m_objectDestructor = DefaultObjectDestructor;
    m_storePointers = false;
+   m_context = NULL;
 }
 
 /**
@@ -85,6 +87,7 @@ Array::Array(const Array *src)
 	m_objectOwner = src->m_objectOwner;
 	m_objectDestructor = src->m_objectDestructor;
    m_storePointers = src->m_storePointers;
+   m_context = src->m_context;
 }
 
 /**
