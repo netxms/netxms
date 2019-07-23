@@ -25,6 +25,9 @@ import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
@@ -100,6 +103,20 @@ public class EventSelectionDialog extends Dialog
 				EventSelectionDialog.this.okPressed();
 			}
 		});
+      
+      eventTemplateList.addDisposeListener(new DisposeListener() {
+         
+         @Override
+         public void widgetDisposed(DisposeEvent e)
+         {
+            Point size = getShell().getSize();
+            IDialogSettings settings = Activator.getDefault().getDialogSettings();
+
+            settings.put(CONFIG_PREFIX + ".cx", size.x); //$NON-NLS-1$
+            settings.put(CONFIG_PREFIX + ".cy", size.y); //$NON-NLS-1$
+         }
+      });
+      
 		
 		return dialogArea;
 	}

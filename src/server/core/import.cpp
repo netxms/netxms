@@ -264,16 +264,17 @@ static UINT32 ImportEvent(ConfigEntry *event, bool overwrite)
 	// Create or update event template in database
    const TCHAR *msg = event->getSubEntryValue(_T("message"), 0, name);
    const TCHAR *descr = event->getSubEntryValue(_T("description"));
+   const TCHAR *tags = event->getSubEntryValue(_T("tags"));
 	TCHAR query[8192];
    if ((code != 0) && IsDatabaseRecordExist(hdb, _T("event_cfg"), _T("event_code"), code))
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("ImportEvent: found existing event with code %d (%s)"), code, overwrite ? _T("updating") : _T("skipping"));
       if (overwrite)
       {
-         _sntprintf(query, 8192, _T("UPDATE event_cfg SET event_name=%s,severity=%d,flags=%d,message=%s,description=%s WHERE event_code=%d"),
+         _sntprintf(query, 8192, _T("UPDATE event_cfg SET event_name=%s,severity=%d,flags=%d,message=%s,description=%s,tags=%s WHERE event_code=%d"),
                     (const TCHAR *)DBPrepareString(hdb, name), event->getSubEntryValueAsInt(_T("severity")),
                     event->getSubEntryValueAsInt(_T("flags")), (const TCHAR *)DBPrepareString(hdb, msg),
-                    (const TCHAR *)DBPrepareString(hdb, descr), code);
+                    (const TCHAR *)DBPrepareString(hdb, descr), (const TCHAR *)DBPrepareString(hdb, tags), code);
       }
       else
       {
@@ -285,10 +286,10 @@ static UINT32 ImportEvent(ConfigEntry *event, bool overwrite)
       nxlog_debug_tag(DEBUG_TAG, 4, _T("ImportEvent: found existing event with name %s (%s)"), name, overwrite ? _T("updating") : _T("skipping"));
       if (overwrite)
       {
-         _sntprintf(query, 8192, _T("UPDATE event_cfg SET severity=%d,flags=%d,message=%s,description=%s WHERE event_name=%s"),
+         _sntprintf(query, 8192, _T("UPDATE event_cfg SET severity=%d,flags=%d,message=%s,description=%s,tags=%s WHERE event_name=%s"),
                     event->getSubEntryValueAsInt(_T("severity")),
                     event->getSubEntryValueAsInt(_T("flags")), (const TCHAR *)DBPrepareString(hdb, msg),
-                    (const TCHAR *)DBPrepareString(hdb, descr), (const TCHAR *)DBPrepareString(hdb, name));
+                    (const TCHAR *)DBPrepareString(hdb, descr), (const TCHAR *)DBPrepareString(hdb, tags), (const TCHAR *)DBPrepareString(hdb, name));
       }
       else
       {
@@ -302,10 +303,10 @@ static UINT32 ImportEvent(ConfigEntry *event, bool overwrite)
       if (code == 0)
          code = CreateUniqueId(IDG_EVENT);
       _sntprintf(query, 8192, _T("INSERT INTO event_cfg (event_code,event_name,severity,flags,")
-                              _T("message,description,guid) VALUES (%d,%s,%d,%d,%s,%s,'%s')"),
+                              _T("message,description,guid,tags) VALUES (%d,%s,%d,%d,%s,%s,'%s',%s)"),
                  code, (const TCHAR *)DBPrepareString(hdb, name), event->getSubEntryValueAsInt(_T("severity")),
 					  event->getSubEntryValueAsInt(_T("flags")), (const TCHAR *)DBPrepareString(hdb, msg),
-					  (const TCHAR *)DBPrepareString(hdb, descr), (const TCHAR *)guid.toString());
+					  (const TCHAR *)DBPrepareString(hdb, descr), (const TCHAR *)guid.toString(), (const TCHAR *)DBPrepareString(hdb, tags));
       nxlog_debug_tag(DEBUG_TAG, 4, _T("ImportEvent: added new event: code=%d, name=%s, guid=%s"), code, name, (const TCHAR *)guid.toString());
    }
 	UINT32 rcc = (query[0] != 0) ? (DBQuery(hdb, query) ? RCC_SUCCESS : RCC_DB_FAILURE) : RCC_SUCCESS;

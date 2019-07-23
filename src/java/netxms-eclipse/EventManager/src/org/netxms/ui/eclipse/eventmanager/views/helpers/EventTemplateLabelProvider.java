@@ -30,7 +30,14 @@ import org.netxms.ui.eclipse.eventmanager.widgets.EventTemplateList;
  */
 public class EventTemplateLabelProvider extends WorkbenchLabelProvider implements ITableLabelProvider
 {
-	/**
+   boolean isDialog;
+   
+	public EventTemplateLabelProvider(boolean isDialog)
+   {
+	   this.isDialog = isDialog;
+   }
+
+   /**
 	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
 	 */
 	@Override
@@ -54,7 +61,10 @@ public class EventTemplateLabelProvider extends WorkbenchLabelProvider implement
 			case EventTemplateList.COLUMN_NAME:
 				return ((EventTemplate)element).getName();
 			case EventTemplateList.COLUMN_SEVERITY:
-            return StatusDisplayInfo.getStatusText(((EventTemplate)element).getSeverity());
+			   if(isDialog)
+	            return ((EventTemplate)element).getTagList();			      
+			   else
+			      return StatusDisplayInfo.getStatusText(((EventTemplate)element).getSeverity());
 			case EventTemplateList.COLUMN_FLAGS:
             return ((((EventTemplate)element).getFlags() & EventTemplate.FLAG_WRITE_TO_LOG) != 0) ? "L" : "-"; //$NON-NLS-1$ //$NON-NLS-2$
 			case EventTemplateList.COLUMN_MESSAGE:

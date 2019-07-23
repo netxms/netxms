@@ -18,7 +18,6 @@
  */
 package org.netxms.ui.eclipse.eventmanager.widgets;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -149,15 +148,17 @@ public class EventTemplateList extends Composite implements SessionListener
       
       final String[] names = { Messages.get().EventConfigurator_ColCode, Messages.get().EventConfigurator_ColName, Messages.get().EventConfigurator_ColSeverity, Messages.get().EventConfigurator_ColFlags, Messages.get().EventConfigurator_ColMessage, Messages.get().EventConfigurator_ColTags };
       final int[] widths = { 70, 200, 90, 50, 400, 300 };
+      final String[] dialogNames = { Messages.get().EventConfigurator_ColCode, Messages.get().EventConfigurator_ColName, Messages.get().EventConfigurator_ColTags };
+      final int[] dialogWidths = { 70, 200, 300 };
       
-      viewer = new SortableTableViewer(parent, isDialog ? Arrays.copyOfRange(names, 0, 2) : names,
-            isDialog ? Arrays.copyOfRange(widths, 0, 2) : widths,
+      viewer = new SortableTableViewer(parent, isDialog ? dialogNames : names,
+            isDialog ? dialogWidths : widths,
             0, SWT.UP, SWT.BORDER | SWT.FULL_SELECTION | SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
       
       WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), configPrefix);
       viewer.setContentProvider(new ArrayContentProvider());
-      viewer.setLabelProvider(new EventTemplateLabelProvider());
-      viewer.setComparator(new EventTemplateComparator());
+      viewer.setLabelProvider(new EventTemplateLabelProvider(isDialog));
+      viewer.setComparator(new EventTemplateComparator(isDialog));
       filter = new EventTemplateFilter();
       viewer.addFilter(filter);
       viewer.addSelectionChangedListener(new ISelectionChangedListener() {

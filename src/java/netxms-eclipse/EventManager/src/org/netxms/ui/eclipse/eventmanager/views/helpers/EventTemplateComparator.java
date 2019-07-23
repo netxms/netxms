@@ -30,7 +30,14 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
  */
 public class EventTemplateComparator extends ViewerComparator
 {
-	/* (non-Javadoc)
+   boolean isDialog;
+   
+	public EventTemplateComparator(boolean isDialog)
+   {
+      this.isDialog = isDialog;
+   }
+
+   /* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ViewerComparator#compare(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
 	 */
 	@Override
@@ -47,7 +54,10 @@ public class EventTemplateComparator extends ViewerComparator
             result = ((EventTemplate)e1).getName().compareToIgnoreCase(((EventTemplate)e2).getName());
 				break;
 			case EventTemplateList.COLUMN_SEVERITY:
-		      result = ((EventTemplate)e1).getSeverity().compareTo(((EventTemplate)e2).getSeverity());
+			   if(isDialog)
+			      result = ((EventTemplate)e1).getTagList().compareToIgnoreCase(((EventTemplate)e2).getTagList());
+			   else
+			      result = ((EventTemplate)e1).getSeverity().compareTo(((EventTemplate)e2).getSeverity());
 				break;
 			case EventTemplateList.COLUMN_FLAGS:
             result = ((EventTemplate)e1).getFlags() - ((EventTemplate)e2).getFlags();

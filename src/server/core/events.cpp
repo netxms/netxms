@@ -100,6 +100,7 @@ json_t *EventTemplate::toJson() const
       for(int i = 0; i < tags->size(); i++)
          json_array_append_new(array, json_string_t(tags->get(i)));
       json_object_set_new(root, "tags", array);
+      delete tags;
    }
    else
    {
@@ -1158,7 +1159,7 @@ void CreateEventTemplateExportRecord(String &str, UINT32 eventCode)
       str.append(EscapeStringForXML2(e->getMessageTemplate()));
       str.append(_T("</message>\n\t\t\t<tags>"));
       str.append(EscapeStringForXML2(e->getTags()));
-      str.append(_T("</tags>\n\t\t</event>"));
+      str.append(_T("</tags>\n\t\t</event>\n"));
       e->decRefCount();
    }
 
