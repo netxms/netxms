@@ -324,7 +324,7 @@ public class CreateNodeDialog extends Dialog
 			creationFlags |= NXCObjectCreationData.CF_CREATE_UNMANAGED;
       if (checkMaintenanceMode.getSelection())
          creationFlags |= NXCObjectCreationData.CF_ENTER_MAINTENANCE;
-      if (checkAsZoneProxy.getSelection())
+      if (session.isZoningEnabled() && checkAsZoneProxy.getSelection())
          creationFlags |= NXCObjectCreationData.CF_AS_ZONE_PROXY;
 		if (checkDisableAgent.getSelection())
 			creationFlags |= NXCObjectCreationData.CF_DISABLE_NXCP;
