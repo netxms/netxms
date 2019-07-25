@@ -180,6 +180,19 @@ class DataCollectionOwner;
 class DCObjectInfo;
 
 /**
+ * DCObject storage class
+ */
+enum class DCObjectStorageClass
+{
+   DEFAULT = 0,
+   BELOW_7 = 1,
+   BELOW_30 = 2,
+   BELOW_90 = 3,
+   BELOW_180 = 4,
+   OTHER = 5
+};
+
+/**
  * Generic data collection object
  */
 class NXCORE_EXPORTABLE DCObject
@@ -292,9 +305,12 @@ public:
    bool isAdvancedSchedule() const { return (m_flags & DCF_ADVANCED_SCHEDULE) ? true : false; }
    int getAggregationFunction() const { return DCF_GET_AGGREGATION_FUNCTION(m_flags); }
    int getRetentionTime() const { return m_iRetentionTime; }
+   DCObjectStorageClass getStorageClass() const { return storageClassFromRetentionTime(m_iRetentionTime); }
    int getEffectiveRetentionTime() const { return (m_iRetentionTime > 0) ? m_iRetentionTime : m_defaultRetentionTime; }
    const TCHAR *getComments() const { return m_comments; }
    INT16 getAgentCacheMode();
+   bool hasValue();
+   bool hasAccess(UINT32 userId);
 
 	bool matchClusterResource();
    bool isReadyForPolling(time_t currTime);
@@ -332,10 +348,7 @@ public:
    ClientSession *getPollingSession() { return m_pollingSession; }
 	bool prepareForDeletion();
 
-	static int m_defaultRetentionTime;
-	static int m_defaultPollingInterval;
-
-   WORD getInstanceDiscoveryMethod() const { return m_instanceDiscoveryMethod; }
+	WORD getInstanceDiscoveryMethod() const { return m_instanceDiscoveryMethod; }
    const TCHAR *getInstanceDiscoveryData() const { return m_instanceDiscoveryData; }
    INT32 getInstanceRetentionTime() const { return m_instanceRetentionTime; }
    void filterInstanceList(StringMap *instances);
@@ -347,8 +360,12 @@ public:
    void expandInstance();
    time_t getInstanceGracePeriodStart() const { return m_instanceGracePeriodStart; }
    void setInstanceGracePeriodStart(time_t t) { m_instanceGracePeriodStart = t; }
-   bool hasValue();
-   bool hasAccess(UINT32 userId);
+
+	static int m_defaultRetentionTime;
+	static int m_defaultPollingInterval;
+
+   static DCObjectStorageClass storageClassFromRetentionTime(int retentionTime);
+   static const TCHAR *getStorageClassName(DCObjectStorageClass storageClass);
 };
 
 /**

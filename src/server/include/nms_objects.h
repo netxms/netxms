@@ -331,6 +331,11 @@ public:
    {
       AbstractIndexBase::forEach(reinterpret_cast<void (*)(void*, void*)>(callback), data);
    }
+
+   template<typename P> void forEach(void (*callback)(T *, P *), P *data)
+   {
+      AbstractIndexBase::forEach(reinterpret_cast<void (*)(void*, void*)>(callback), data);
+   }
 };
 
 /**
@@ -1568,6 +1573,7 @@ public:
    void updateDCItemCacheSize(UINT32 dciId, UINT32 conditionId = 0);
    void reloadDCItemCache(UINT32 dciId);
    void cleanDCIData(DB_HANDLE hdb);
+   void calculateDciCutoffTimes(time_t *cutoffTimeIData, time_t *cutoffTimeTData);
    void queueItemsForPolling();
    bool processNewDCValue(shared_ptr<DCObject> dco, time_t currTime, const void *value);
    void scheduleItemDataCleanup(UINT32 dciId);

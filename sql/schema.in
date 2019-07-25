@@ -885,34 +885,178 @@ CREATE TABLE dci_access
 /**
  * Collected DCI data
  */
-CREATE TABLE idata
+#ifdef DB_TSDB
+
+CREATE TABLE idata_sc_default
 (
-   node_id integer not null,
    item_id integer not null,
    idata_timestamp integer not null,
    idata_value varchar(255) null,
    raw_value varchar(255) null,
-   PRIMARY KEY(node_id,item_id,idata_timestamp)
+   PRIMARY KEY(item_id,idata_timestamp)
 ) TABLE_TYPE;
 
-#ifdef DB_TSDB
-SELECT create_hypertable('idata', 'idata_timestamp', 'node_id', chunk_time_interval => 604800, number_partitions => 100, migrate_data => true);
+CREATE TABLE idata_sc_7
+(
+   item_id integer not null,
+   idata_timestamp integer not null,
+   idata_value varchar(255) null,
+   raw_value varchar(255) null,
+   PRIMARY KEY(item_id,idata_timestamp)
+) TABLE_TYPE;
+
+CREATE TABLE idata_sc_30
+(
+   item_id integer not null,
+   idata_timestamp integer not null,
+   idata_value varchar(255) null,
+   raw_value varchar(255) null,
+   PRIMARY KEY(item_id,idata_timestamp)
+) TABLE_TYPE;
+
+CREATE TABLE idata_sc_90
+(
+   item_id integer not null,
+   idata_timestamp integer not null,
+   idata_value varchar(255) null,
+   raw_value varchar(255) null,
+   PRIMARY KEY(item_id,idata_timestamp)
+) TABLE_TYPE;
+
+CREATE TABLE idata_sc_180
+(
+   item_id integer not null,
+   idata_timestamp integer not null,
+   idata_value varchar(255) null,
+   raw_value varchar(255) null,
+   PRIMARY KEY(item_id,idata_timestamp)
+) TABLE_TYPE;
+
+CREATE TABLE idata_sc_other
+(
+   item_id integer not null,
+   idata_timestamp integer not null,
+   idata_value varchar(255) null,
+   raw_value varchar(255) null,
+   PRIMARY KEY(item_id,idata_timestamp)
+) TABLE_TYPE;
+
+SELECT create_hypertable('idata_sc_default', 'idata_timestamp', 'item_id', chunk_time_interval => 86400, number_partitions => 100);
+SELECT create_hypertable('idata_sc_7', 'idata_timestamp', 'item_id', chunk_time_interval => 86400, number_partitions => 100);
+SELECT create_hypertable('idata_sc_30', 'idata_timestamp', 'item_id', chunk_time_interval => 86400, number_partitions => 100);
+SELECT create_hypertable('idata_sc_90', 'idata_timestamp', 'item_id', chunk_time_interval => 86400, number_partitions => 100);
+SELECT create_hypertable('idata_sc_180', 'idata_timestamp', 'item_id', chunk_time_interval => 86400, number_partitions => 100);
+SELECT create_hypertable('idata_sc_other', 'idata_timestamp', 'item_id', chunk_time_interval => 86400, number_partitions => 100);
+
+CREATE VIEW idata AS
+   SELECT * FROM idata_sc_default
+   UNION ALL
+   SELECT * FROM idata_sc_7
+   UNION ALL
+   SELECT * FROM idata_sc_30
+   UNION ALL
+   SELECT * FROM idata_sc_90
+   UNION ALL
+   SELECT * FROM idata_sc_180
+   UNION ALL
+   SELECT * FROM idata_sc_other;
+
+#else
+
+CREATE TABLE idata
+(
+   item_id integer not null,
+   idata_timestamp integer not null,
+   idata_value varchar(255) null,
+   raw_value varchar(255) null,
+   PRIMARY KEY(item_id,idata_timestamp)
+) TABLE_TYPE;
+
 #endif
 
 /**
  * Collected table DCI data
  */
-CREATE TABLE tdata
+#ifdef DB_TSDB
+
+CREATE TABLE tdata_sc_default
 (
-   node_id integer not null,
    item_id integer not null,
    tdata_timestamp integer not null,
    tdata_value SQL_TEXT null,
-   PRIMARY KEY(node_id,item_id,tdata_timestamp)
+   PRIMARY KEY(item_id,tdata_timestamp)
 ) TABLE_TYPE;
 
-#ifdef DB_TSDB
-SELECT create_hypertable('tdata', 'tdata_timestamp', 'node_id', chunk_time_interval => 604800, number_partitions => 100, migrate_data => true);
+CREATE TABLE tdata_sc_7
+(
+   item_id integer not null,
+   tdata_timestamp integer not null,
+   tdata_value SQL_TEXT null,
+   PRIMARY KEY(item_id,tdata_timestamp)
+) TABLE_TYPE;
+
+CREATE TABLE tdata_sc_30
+(
+   item_id integer not null,
+   tdata_timestamp integer not null,
+   tdata_value SQL_TEXT null,
+   PRIMARY KEY(item_id,tdata_timestamp)
+) TABLE_TYPE;
+
+CREATE TABLE tdata_sc_90
+(
+   item_id integer not null,
+   tdata_timestamp integer not null,
+   tdata_value SQL_TEXT null,
+   PRIMARY KEY(item_id,tdata_timestamp)
+) TABLE_TYPE;
+
+CREATE TABLE tdata_sc_180
+(
+   item_id integer not null,
+   tdata_timestamp integer not null,
+   tdata_value SQL_TEXT null,
+   PRIMARY KEY(item_id,tdata_timestamp)
+) TABLE_TYPE;
+
+CREATE TABLE tdata_sc_other
+(
+   item_id integer not null,
+   tdata_timestamp integer not null,
+   tdata_value SQL_TEXT null,
+   PRIMARY KEY(item_id,tdata_timestamp)
+) TABLE_TYPE;
+
+SELECT create_hypertable('tdata_sc_default', 'tdata_timestamp', 'item_id', chunk_time_interval => 86400, number_partitions => 100);
+SELECT create_hypertable('tdata_sc_7', 'tdata_timestamp', 'item_id', chunk_time_interval => 86400, number_partitions => 100);
+SELECT create_hypertable('tdata_sc_30', 'tdata_timestamp', 'item_id', chunk_time_interval => 86400, number_partitions => 100);
+SELECT create_hypertable('tdata_sc_90', 'tdata_timestamp', 'item_id', chunk_time_interval => 86400, number_partitions => 100);
+SELECT create_hypertable('tdata_sc_180', 'tdata_timestamp', 'item_id', chunk_time_interval => 86400, number_partitions => 100);
+SELECT create_hypertable('tdata_sc_other', 'tdata_timestamp', 'item_id', chunk_time_interval => 86400, number_partitions => 100);
+
+CREATE VIEW tdata AS
+   SELECT * FROM tdata_sc_default
+   UNION ALL
+   SELECT * FROM tdata_sc_7
+   UNION ALL
+   SELECT * FROM tdata_sc_30
+   UNION ALL
+   SELECT * FROM tdata_sc_90
+   UNION ALL
+   SELECT * FROM tdata_sc_180
+   UNION ALL
+   SELECT * FROM tdata_sc_other;
+
+#else
+
+CREATE TABLE tdata
+(
+   item_id integer not null,
+   tdata_timestamp integer not null,
+   tdata_value SQL_TEXT null,
+   PRIMARY KEY(item_id,tdata_timestamp)
+) TABLE_TYPE;
+
 #endif
 
 /**
@@ -978,7 +1122,7 @@ CREATE INDEX idx_event_log_root_id ON event_log(root_event_id);
 #endif
 
 #ifdef DB_TSDB
-SELECT create_hypertable('event_log', 'event_timestamp', 'event_source', chunk_time_interval => 604800, number_partitions => 50, migrate_data => true);
+SELECT create_hypertable('event_log', 'event_timestamp', 'event_source', chunk_time_interval => 86400, number_partitions => 100);
 #endif
 
 /**
@@ -1113,7 +1257,7 @@ CREATE TABLE alarms
 ) TABLE_TYPE;
 
 #ifdef DB_TSDB
-SELECT create_hypertable('alarms', 'creation_time', 'source_object_id', chunk_time_interval => 604800, number_partitions => 50, migrate_data => true);
+SELECT create_hypertable('alarms', 'creation_time', 'source_object_id', chunk_time_interval => 86400, number_partitions => 10, migrate_data => true);
 #endif
 
 /*
@@ -1305,7 +1449,7 @@ CREATE INDEX idx_syslog_msg_timestamp ON syslog(msg_timestamp);
 CREATE INDEX idx_syslog_source ON syslog(source_object_id);
 
 #ifdef DB_TSDB
-SELECT create_hypertable('syslog', 'msg_timestamp', 'source_object_id', chunk_time_interval => 604800, number_partitions => 50, migrate_data => true);
+SELECT create_hypertable('syslog', 'msg_timestamp', 'source_object_id', chunk_time_interval => 86400, number_partitions => 100);
 #endif
 
 /*
@@ -1343,7 +1487,7 @@ CREATE INDEX idx_snmp_trap_log_tt ON snmp_trap_log(trap_timestamp);
 CREATE INDEX idx_snmp_trap_log_oid ON snmp_trap_log(object_id);
 
 #ifdef DB_TSDB
-SELECT create_hypertable('snmp_trap_log', 'trap_timestamp', 'object_id', chunk_time_interval => 604800, number_partitions => 50, migrate_data => true);
+SELECT create_hypertable('snmp_trap_log', 'trap_timestamp', 'object_id', chunk_time_interval => 86400, number_partitions => 100);
 #endif
 
 /*
@@ -1952,4 +2096,3 @@ CREATE TABLE user_agent_notifications
    recall char(1) not null,
    PRIMARY KEY(id)
 ) TABLE_TYPE;
-

@@ -715,7 +715,7 @@ bool DCItem::processNewValue(time_t tmTimeStamp, const void *originalValue, bool
 
 	// Save transformed value to database
    if ((m_flags & DCF_NO_STORAGE) == 0)
-	   QueueIDataInsert(tmTimeStamp, m_owner->getId(), m_id, (const TCHAR *)originalValue, pValue->getString());
+	   QueueIDataInsert(tmTimeStamp, m_owner->getId(), m_id, (const TCHAR *)originalValue, pValue->getString(), getStorageClass());
    if (g_flags & AF_PERFDATA_STORAGE_DRIVER_LOADED)
       PerfDataStorageRequest(this, tmTimeStamp, pValue->getString());
 
@@ -1203,8 +1203,8 @@ void DCItem::reloadCache()
          if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
          {
             _sntprintf(szBuffer, MAX_DB_STRING, _T("SELECT TOP %d idata_value,idata_timestamp FROM idata ")
-                              _T("WHERE node_id=%d AND item_id=%d ORDER BY idata_timestamp DESC"),
-                    m_requiredCacheSize, m_owner->getId(), m_id);
+                              _T("WHERE item_id=%d ORDER BY idata_timestamp DESC"),
+                    m_requiredCacheSize, m_id);
          }
          else
          {
@@ -1217,8 +1217,8 @@ void DCItem::reloadCache()
          if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
          {
             _sntprintf(szBuffer, MAX_DB_STRING, _T("SELECT * FROM (SELECT idata_value,idata_timestamp FROM idata ")
-                              _T("WHERE node_id=%d AND item_id=%d ORDER BY idata_timestamp DESC) WHERE ROWNUM <= %d"),
-                    m_owner->getId(), m_id, m_requiredCacheSize);
+                              _T("WHERE item_id=%d ORDER BY idata_timestamp DESC) WHERE ROWNUM <= %d"),
+                    m_id, m_requiredCacheSize);
          }
          else
          {
@@ -1234,8 +1234,8 @@ void DCItem::reloadCache()
          if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
          {
             _sntprintf(szBuffer, MAX_DB_STRING, _T("SELECT idata_value,idata_timestamp FROM idata ")
-                              _T("WHERE node_id=%d AND item_id=%d ORDER BY idata_timestamp DESC LIMIT %d"),
-                    m_owner->getId(), m_id, m_requiredCacheSize);
+                              _T("WHERE item_id=%d ORDER BY idata_timestamp DESC LIMIT %d"),
+                    m_id, m_requiredCacheSize);
          }
          else
          {
@@ -1248,8 +1248,8 @@ void DCItem::reloadCache()
          if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
          {
             _sntprintf(szBuffer, MAX_DB_STRING, _T("SELECT idata_value,idata_timestamp FROM idata ")
-               _T("WHERE node_id=%d AND item_id=%d ORDER BY idata_timestamp DESC FETCH FIRST %d ROWS ONLY"),
-               m_owner->getId(), m_id, m_requiredCacheSize);
+               _T("WHERE item_id=%d ORDER BY idata_timestamp DESC FETCH FIRST %d ROWS ONLY"),
+               m_id, m_requiredCacheSize);
          }
          else
          {
@@ -1262,8 +1262,7 @@ void DCItem::reloadCache()
          if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
          {
             _sntprintf(szBuffer, MAX_DB_STRING, _T("SELECT idata_value,idata_timestamp FROM idata ")
-                              _T("WHERE node_id=%d AND item_id=%d ORDER BY idata_timestamp DESC"),
-                    m_owner->getId(), m_id);
+                              _T("WHERE item_id=%d ORDER BY idata_timestamp DESC"), m_id);
          }
          else
          {
@@ -1491,25 +1490,25 @@ TCHAR *DCItem::getAggregateValue(AggregationFunction func, time_t periodStart, t
       if (g_dbSyntax == DB_SYNTAX_ORACLE)
       {
          _sntprintf(query, 1024, _T("SELECT %s(coalesce(to_number(idata_value),0)) FROM idata ")
-            _T("WHERE node_id=? AND item_id=? AND idata_timestamp BETWEEN ? AND ?"),
+            _T("WHERE item_id=? AND idata_timestamp BETWEEN ? AND ?"),
             functions[func]);
       }
       else if (g_dbSyntax == DB_SYNTAX_MSSQL)
       {
          _sntprintf(query, 1024, _T("SELECT %s(coalesce(cast(idata_value as float),0)) FROM idata ")
-            _T("WHERE node_id=? AND item_id=? AND (idata_timestamp BETWEEN ? AND ?) AND isnumeric(idata_value)=1"),
+            _T("WHERE item_id=? AND (idata_timestamp BETWEEN ? AND ?) AND isnumeric(idata_value)=1"),
             functions[func]);
       }
       else if ((g_dbSyntax == DB_SYNTAX_PGSQL) || (g_dbSyntax == DB_SYNTAX_TSDB))
       {
          _sntprintf(query, 1024, _T("SELECT %s(idata_value::double precision) FROM idata ")
-            _T("WHERE node_id=? AND item_id=? AND idata_timestamp BETWEEN ? AND ? AND idata_value~E'^\\\\d+(\\\\.\\\\d+)*$'"),
+            _T("WHERE item_id=? AND idata_timestamp BETWEEN ? AND ? AND idata_value~E'^\\\\d+(\\\\.\\\\d+)*$'"),
             functions[func]);
       }
       else
       {
          _sntprintf(query, 1024, _T("SELECT %s(coalesce(idata_value,0)) FROM idata ")
-            _T("WHERE node_id=? AND item_id=? and idata_timestamp between ? and ?"),
+            _T("WHERE item_id=? and idata_timestamp between ? and ?"),
             functions[func]);
       }
    }
@@ -1544,12 +1543,9 @@ TCHAR *DCItem::getAggregateValue(AggregationFunction func, time_t periodStart, t
 	DB_STATEMENT hStmt = DBPrepare(hdb, query);
 	if (hStmt != NULL)
 	{
-	   int index = 1;
-	   if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
-	      DBBind(hStmt, index++, DB_SQLTYPE_INTEGER, m_owner->getId());
-		DBBind(hStmt, index++, DB_SQLTYPE_INTEGER, m_id);
-		DBBind(hStmt, index++, DB_SQLTYPE_INTEGER, (INT32)periodStart);
-		DBBind(hStmt, index++, DB_SQLTYPE_INTEGER, (INT32)periodEnd);
+		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+		DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (INT32)periodStart);
+		DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (INT32)periodEnd);
 		DB_RESULT hResult = DBSelectPrepared(hStmt);
 		if (hResult != NULL)
 		{
@@ -1576,9 +1572,16 @@ bool DCItem::deleteAllData()
    lock();
    TCHAR query[256];
    if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
-      _sntprintf(query, 256, _T("DELETE FROM idata WHERE node_id=%d AND item_id=%d"), m_owner->getId(), m_id);
+   {
+      if (g_dbSyntax == DB_SYNTAX_TSDB)
+         _sntprintf(query, 256, _T("DELETE FROM idata_sc_%s WHERE item_id=%d"), getStorageClassName(getStorageClass()), m_id);
+      else
+         _sntprintf(query, 256, _T("DELETE FROM idata WHERE item_id=%d"), m_id);
+   }
    else
+   {
       _sntprintf(query, 256, _T("DELETE FROM idata_%d WHERE item_id=%d"), m_owner->getId(), m_id);
+   }
 	bool success = DBQuery(hdb, query);
 	clearCache();
 	updateCacheSizeInternal(true);
@@ -1593,15 +1596,28 @@ bool DCItem::deleteAllData()
  */
 bool DCItem::deleteEntry(time_t timestamp)
 {
-   TCHAR query[256];
-
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    lock();
+
+   TCHAR query[256];
    if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
-      _sntprintf(query, 256, _T("DELETE FROM idata WHERE node_id=%d AND item_id=%d AND idata_timestamp=%d"), m_owner->getId(), m_id, (int)timestamp);
+   {
+      if (g_dbSyntax == DB_SYNTAX_TSDB)
+      {
+         _sntprintf(query, 256, _T("DELETE FROM idata_sc_%s WHERE item_id=%d AND idata_timestamp=%d"),
+                  getStorageClassName(getStorageClass()), m_id, (int)timestamp);
+      }
+      else
+      {
+         _sntprintf(query, 256, _T("DELETE FROM idata WHERE item_id=%d AND idata_timestamp=%d"), m_id, (int)timestamp);
+      }
+   }
    else
+   {
       _sntprintf(query, 256, _T("DELETE FROM idata_%d WHERE item_id=%d AND idata_timestamp=%d"), m_owner->getId(), m_id, (int)timestamp);
+   }
    unlock();
+
    bool success = DBQuery(hdb, query);
    DBConnectionPoolReleaseConnection(hdb);
 

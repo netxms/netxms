@@ -67,7 +67,8 @@ struct DELAYED_RAW_DATA_UPDATE
 struct IDataWriter
 {
    THREAD thread;
-   Queue *queue;
+   ObjectQueue<DELAYED_IDATA_INSERT> *queue;
+   const TCHAR *storageClass;
 };
 
 /**
@@ -176,15 +177,19 @@ void NXCORE_EXPORTABLE QueueSQLRequest(const TCHAR *query, int bindCount, int *s
 /**
  * Queue INSERT request for idata_xxx table
  */
-void QueueIDataInsert(time_t timestamp, UINT32 nodeId, UINT32 dciId, const TCHAR *rawValue, const TCHAR *transformedValue)
+void QueueIDataInsert(time_t timestamp, UINT32 nodeId, UINT32 dciId, const TCHAR *rawValue, const TCHAR *transformedValue, DCObjectStorageClass storageClass)
 {
-	DELAYED_IDATA_INSERT *rq = (DELAYED_IDATA_INSERT *)malloc(sizeof(DELAYED_IDATA_INSERT));
+	DELAYED_IDATA_INSERT *rq = MemAllocStruct<DELAYED_IDATA_INSERT>();
 	rq->timestamp = timestamp;
 	rq->nodeId = nodeId;
 	rq->dciId = dciId;
    _tcslcpy(rq->rawValue, rawValue, MAX_RESULT_LENGTH);
    _tcslcpy(rq->transformedValue, transformedValue, MAX_RESULT_LENGTH);
-   if (s_idataWriterCount > 1)
+   if ((g_flags & AF_SINGLE_TABLE_PERF_DATA) && (g_dbSyntax == DB_SYNTAX_TSDB))
+   {
+      s_idataWriters[static_cast<int>(storageClass)].queue->put(rq);
+   }
+   else if (s_idataWriterCount > 1)
    {
       int hash = nodeId % s_idataWriterCount;
       s_idataWriters[hash].queue->put(rq);
@@ -286,7 +291,7 @@ static THREAD_RESULT THREAD_CALL IDataWriteThread(void *arg)
    int maxRecords = ConfigReadInt(_T("DBWriter.MaxRecordsPerTransaction"), 1000);
    while(true)
    {
-		DELAYED_IDATA_INSERT *rq = static_cast<DELAYED_IDATA_INSERT*>(writer->queue->getOrBlock());
+		DELAYED_IDATA_INSERT *rq = writer->queue->getOrBlock();
       if (rq == INVALID_POINTER_VALUE)   // End-of-job indicator
          break;
 
@@ -335,7 +340,7 @@ static THREAD_RESULT THREAD_CALL IDataWriteThread(void *arg)
 				if (!success || (count > maxRecords))
 					break;
 
-				rq = static_cast<DELAYED_IDATA_INSERT*>(writer->queue->getOrBlock(500));
+				rq = writer->queue->getOrBlock(500);
 				if ((rq == NULL) || (rq == INVALID_POINTER_VALUE))
 					break;
 			}
@@ -365,7 +370,7 @@ static THREAD_RESULT THREAD_CALL IDataWriteThreadSingleTable_Generic(void *arg)
    TCHAR query[1024];
    while(true)
    {
-      DELAYED_IDATA_INSERT *rq = static_cast<DELAYED_IDATA_INSERT*>(writer->queue->getOrBlock());
+      DELAYED_IDATA_INSERT *rq = writer->queue->getOrBlock();
       if (rq == INVALID_POINTER_VALUE)   // End-of-job indicator
          break;
 
@@ -375,8 +380,8 @@ static THREAD_RESULT THREAD_CALL IDataWriteThreadSingleTable_Generic(void *arg)
          int count = 0;
          while(true)
          {
-            _sntprintf(query, 1024, _T("INSERT INTO idata (node_id,item_id,idata_timestamp,idata_value,raw_value) VALUES (%d,%d,%d,%s,%s)"),
-                       (int)rq->nodeId, (int)rq->dciId, (int)rq->timestamp,
+            _sntprintf(query, 1024, _T("INSERT INTO idata (item_id,idata_timestamp,idata_value,raw_value) VALUES (%d,%d,%s,%s)"),
+                       (int)rq->dciId, (int)rq->timestamp,
                        (const TCHAR *)DBPrepareString(hdb, rq->transformedValue),
                        (const TCHAR *)DBPrepareString(hdb, rq->rawValue));
             bool success = DBQuery(hdb, query);
@@ -387,7 +392,7 @@ static THREAD_RESULT THREAD_CALL IDataWriteThreadSingleTable_Generic(void *arg)
             if (!success || (count > maxRecords))
                break;
 
-            rq = static_cast<DELAYED_IDATA_INSERT*>(writer->queue->getOrBlock(500));
+            rq = writer->queue->getOrBlock(500);
             if ((rq == NULL) || (rq == INVALID_POINTER_VALUE))
                break;
          }
@@ -413,6 +418,12 @@ static THREAD_RESULT THREAD_CALL IDataWriteThreadSingleTable_PostgreSQL(void *ar
    ThreadSetName("DBWriter/IData");
    IDataWriter *writer = static_cast<IDataWriter*>(arg);
 
+   TCHAR queryBase[256];
+   if (writer->storageClass != NULL)
+      _sntprintf(queryBase, 256, _T("INSERT INTO idata_sc_%s (item_id,idata_timestamp,idata_value,raw_value) VALUES"), writer->storageClass);
+   else
+      _tcscpy(queryBase, _T("INSERT INTO idata (item_id,idata_timestamp,idata_value,raw_value) VALUES"));
+
    int maxRecordsPerTxn = ConfigReadInt(_T("DBWriter.MaxRecordsPerTransaction"), 1000);
    int maxRecordsPerStmt = ConfigReadInt(_T("DBWriter.MaxRecordsPerStatement"), 100);
 
@@ -423,20 +434,20 @@ static THREAD_RESULT THREAD_CALL IDataWriteThreadSingleTable_PostgreSQL(void *ar
 
    while(true)
    {
-      DELAYED_IDATA_INSERT *rq = static_cast<DELAYED_IDATA_INSERT*>(writer->queue->getOrBlock());
+      DELAYED_IDATA_INSERT *rq = writer->queue->getOrBlock();
       if (rq == INVALID_POINTER_VALUE)   // End-of-job indicator
          break;
 
       DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
       if (DBBegin(hdb))
       {
-         query = _T("INSERT INTO idata (node_id,item_id,idata_timestamp,idata_value,raw_value) VALUES");
+         query = queryBase;
          int countTxn = 0, countStmt = 0;
          while(true)
          {
-            _sntprintf(data, 1024, _T("%c(%u,%u,%u,%s,%s)"),
+            _sntprintf(data, 1024, _T("%c(%u,%u,%s,%s)"),
                        (countStmt > 0) ? _T(',') : _T(' '),
-                       rq->nodeId, rq->dciId, (unsigned int)rq->timestamp,
+                       rq->dciId, (unsigned int)rq->timestamp,
                        (const TCHAR *)DBPrepareString(hdb, rq->transformedValue),
                        (const TCHAR *)DBPrepareString(hdb, rq->rawValue));
             query.append(data);
@@ -451,13 +462,13 @@ static THREAD_RESULT THREAD_CALL IDataWriteThreadSingleTable_PostgreSQL(void *ar
                query.append(_T(" ON CONFLICT DO NOTHING"));
                if (!DBQuery(hdb, query))
                   break;
-               query = _T("INSERT INTO idata (node_id,item_id,idata_timestamp,idata_value,raw_value) VALUES");
+               query = queryBase;
             }
 
             if (countTxn >= maxRecordsPerTxn)
                break;
 
-            rq = static_cast<DELAYED_IDATA_INSERT*>(writer->queue->getOrBlock(500));
+            rq = writer->queue->getOrBlock(500);
             if ((rq == NULL) || (rq == INVALID_POINTER_VALUE))
                break;
          }
@@ -490,7 +501,7 @@ static THREAD_RESULT THREAD_CALL IDataWriteThreadSingleTable_Oracle(void *arg)
    int maxRecords = ConfigReadInt(_T("DBWriter.MaxRecordsPerTransaction"), 1000);
    while(true)
    {
-      DELAYED_IDATA_INSERT *rq = static_cast<DELAYED_IDATA_INSERT*>(writer->queue->getOrBlock());
+      DELAYED_IDATA_INSERT *rq = writer->queue->getOrBlock();
       if (rq == INVALID_POINTER_VALUE)   // End-of-job indicator
          break;
 
@@ -498,16 +509,15 @@ static THREAD_RESULT THREAD_CALL IDataWriteThreadSingleTable_Oracle(void *arg)
       if (DBBegin(hdb))
       {
          int count = 0;
-         DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO idata (node_id,item_id,idata_timestamp,idata_value,raw_value) VALUES (?,?,?,?,?)"));
+         DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO idata (item_id,idata_timestamp,idata_value,raw_value) VALUES (?,?,?,?)"));
          if (hStmt != NULL)
          {
             while(true)
             {
-               DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, rq->nodeId);
-               DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, rq->dciId);
-               DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (INT64)rq->timestamp);
-               DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, rq->transformedValue, DB_BIND_STATIC);
-               DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, rq->rawValue, DB_BIND_STATIC);
+               DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, rq->dciId);
+               DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (INT64)rq->timestamp);
+               DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, rq->transformedValue, DB_BIND_STATIC);
+               DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, rq->rawValue, DB_BIND_STATIC);
                bool success = DBExecute(hStmt);
 
                MemFree(rq);
@@ -516,7 +526,7 @@ static THREAD_RESULT THREAD_CALL IDataWriteThreadSingleTable_Oracle(void *arg)
                if (!success || (count > maxRecords))
                   break;
 
-               rq = static_cast<DELAYED_IDATA_INSERT*>(writer->queue->getOrBlock(500));
+               rq = writer->queue->getOrBlock(500);
                if ((rq == NULL) || (rq == INVALID_POINTER_VALUE))
                   break;
             }
@@ -653,17 +663,30 @@ void StartDBWriter()
 	if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
 	{
 	   // Always use single writer if performance data stored in single table
-      s_idataWriters[0].queue = new Queue();
       switch(g_dbSyntax)
       {
          case DB_SYNTAX_ORACLE:
+            s_idataWriters[0].storageClass = NULL;
+            s_idataWriters[0].queue = new ObjectQueue<DELAYED_IDATA_INSERT>();
             s_idataWriters[0].thread = ThreadCreateEx(IDataWriteThreadSingleTable_Oracle, 0, &s_idataWriters[0]);
             break;
          case DB_SYNTAX_PGSQL:
-         case DB_SYNTAX_TSDB:
+            s_idataWriters[0].storageClass = NULL;
+            s_idataWriters[0].queue = new ObjectQueue<DELAYED_IDATA_INSERT>();
             s_idataWriters[0].thread = ThreadCreateEx(IDataWriteThreadSingleTable_PostgreSQL, 0, &s_idataWriters[0]);
             break;
+         case DB_SYNTAX_TSDB:
+            s_idataWriterCount = static_cast<int>(DCObjectStorageClass::OTHER) + 1;
+            for(int i = 0; i < s_idataWriterCount; i++)
+            {
+               s_idataWriters[i].storageClass = DCObject::getStorageClassName(static_cast<DCObjectStorageClass>(i));
+               s_idataWriters[i].queue = new ObjectQueue<DELAYED_IDATA_INSERT>();
+               s_idataWriters[i].thread = ThreadCreateEx(IDataWriteThreadSingleTable_PostgreSQL, 0, &s_idataWriters[i]);
+            }
+            break;
          default:
+            s_idataWriters[0].storageClass = NULL;
+            s_idataWriters[0].queue = new ObjectQueue<DELAYED_IDATA_INSERT>();
             s_idataWriters[0].thread = ThreadCreateEx(IDataWriteThreadSingleTable_Generic, 0, &s_idataWriters[0]);
             break;
       }
@@ -678,7 +701,8 @@ void StartDBWriter()
       nxlog_debug(1, _T("Using %d DCI data write queues"), s_idataWriterCount);
       for(int i = 0; i < s_idataWriterCount; i++)
       {
-         s_idataWriters[i].queue = new Queue();
+         s_idataWriters[i].storageClass = NULL;
+         s_idataWriters[i].queue = new ObjectQueue<DELAYED_IDATA_INSERT>();
          s_idataWriters[i].thread = ThreadCreateEx(IDataWriteThread, 0, &s_idataWriters[i]);
       }
 	}

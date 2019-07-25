@@ -281,20 +281,26 @@ DCTable::~DCTable()
  */
 bool DCTable::deleteAllData()
 {
-   TCHAR szQuery[256];
-	bool success;
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
    lock();
-   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   _sntprintf(szQuery, 256,
-            (g_flags & AF_SINGLE_TABLE_PERF_DATA) ?
-                     _T("DELETE FROM tdata WHERE node_id=%u AND item_id=%u") :
-                     _T("DELETE FROM tdata_%u WHERE item_id=%u"),
-            m_owner->getId(), m_id);
-	success = DBQuery(hdb, szQuery) ? true : false;
-   DBConnectionPoolReleaseConnection(hdb);
+   TCHAR query[256];
+   if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
+   {
+      if (g_dbSyntax == DB_SYNTAX_TSDB)
+         _sntprintf(query, 256, _T("DELETE FROM tdata_sc_%s WHERE item_id=%u"), getStorageClassName(getStorageClass()), m_id);
+      else
+         _sntprintf(query, 256, _T("DELETE FROM tdata WHERE item_id=%u"), m_id);
+   }
+   else
+   {
+      _sntprintf(query, 256, _T("DELETE FROM tdata_%u WHERE item_id=%u"), m_owner->getId(), m_id);
+   }
+	bool success = DBQuery(hdb, query);
    unlock();
-	return success;
+
+   DBConnectionPoolReleaseConnection(hdb);
+   return success;
 }
 
 /**
@@ -302,18 +308,30 @@ bool DCTable::deleteAllData()
  */
 bool DCTable::deleteEntry(time_t timestamp)
 {
-   TCHAR szQuery[256];
-   lock();
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   _sntprintf(szQuery, 256,
-            (g_flags & AF_SINGLE_TABLE_PERF_DATA) ?
-                     _T("DELETE FROM tdata WHERE node_id=%u AND item_id=%u AND tdata_timestamp=%u") :
-                     _T("DELETE FROM tdata_%u WHERE item_id=%u AND tdata_timestamp=%u"),
-            m_owner->getId(), m_id, (UINT32)timestamp);
-   bool success = DBQuery(hdb, szQuery);
-   DBConnectionPoolReleaseConnection(hdb);
+
+   lock();
+   TCHAR query[256];
+   if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
+   {
+      if (g_dbSyntax == DB_SYNTAX_TSDB)
+      {
+         _sntprintf(query, 256, _T("DELETE FROM tdata_sc_%s WHERE item_id=%u AND tdata_timestamp=%u"),
+                  getStorageClassName(getStorageClass()), m_id, (UINT32)timestamp);
+      }
+      else
+      {
+         _sntprintf(query, 256, _T("DELETE FROM tdata WHERE item_id=%u AND tdata_timestamp=%u"), m_id, (UINT32)timestamp);
+      }
+   }
+   else
+   {
+      _sntprintf(query, 256, _T("DELETE FROM tdata_%u WHERE item_id=%u AND tdata_timestamp=%u"), m_owner->getId(), m_id, (UINT32)timestamp);
+   }
+   bool success = DBQuery(hdb, query);
    unlock();
 
+   DBConnectionPoolReleaseConnection(hdb);
    return success;
 }
 
@@ -382,7 +400,7 @@ bool DCTable::processNewValue(time_t timestamp, const void *value, bool *updateS
 	   DB_STATEMENT hStmt;
 	   if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
 	   {
-	      hStmt = DBPrepare(hdb, _T("INSERT INTO tdata (node_id,item_id,tdata_timestamp,tdata_value) VALUES (?,?,?,?)"));
+	      hStmt = DBPrepare(hdb, _T("INSERT INTO tdata (item_id,tdata_timestamp,tdata_value) VALUES (?,?,?)"));
 	   }
 	   else
 	   {
@@ -392,12 +410,9 @@ bool DCTable::processNewValue(time_t timestamp, const void *value, bool *updateS
 	   }
 	   if (hStmt != NULL)
 	   {
-	      int index = 1;
-	      if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
-	         DBBind(hStmt, index++, DB_SQLTYPE_INTEGER, nodeId);
-		   DBBind(hStmt, index++, DB_SQLTYPE_INTEGER, tableId);
-		   DBBind(hStmt, index++, DB_SQLTYPE_INTEGER, (INT32)timestamp);
-		   DBBind(hStmt, index++, DB_SQLTYPE_TEXT, DB_CTYPE_UTF8_STRING, data->createPackedXML(), DB_BIND_DYNAMIC);
+		   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, tableId);
+		   DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (INT32)timestamp);
+		   DBBind(hStmt, 3, DB_SQLTYPE_TEXT, DB_CTYPE_UTF8_STRING, data->createPackedXML(), DB_BIND_DYNAMIC);
 	      success = DBExecute(hStmt);
 		   DBFreeStatement(hStmt);
 	   }

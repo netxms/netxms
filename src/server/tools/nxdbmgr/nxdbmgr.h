@@ -87,6 +87,9 @@ bool CheckModuleSchemas();
 
 bool IsColumnFixNeeded(const TCHAR *table, const char *name);
 
+bool LoadDataCollectionObjects();
+const TCHAR *GetDCObjectStorageClass(UINT32 id);
+
 /**
  * Global variables
  */

@@ -33,6 +33,33 @@ int __EXPORT DCObject::m_defaultRetentionTime = 30;
 int __EXPORT DCObject::m_defaultPollingInterval = 60;
 
 /**
+ * Get storage class from retention time
+ */
+DCObjectStorageClass DCObject::storageClassFromRetentionTime(int retentionTime)
+{
+   if (retentionTime == 0)
+      return DCObjectStorageClass::DEFAULT;
+   if (retentionTime <= 7)
+      return DCObjectStorageClass::BELOW_7;
+   if (retentionTime <= 30)
+      return DCObjectStorageClass::BELOW_30;
+   if (retentionTime <= 90)
+      return DCObjectStorageClass::BELOW_90;
+   if (retentionTime <= 180)
+      return DCObjectStorageClass::BELOW_180;
+   return DCObjectStorageClass::OTHER;
+}
+
+/**
+ * Get name of storage class
+ */
+const TCHAR *DCObject::getStorageClassName(DCObjectStorageClass storageClass)
+{
+   static const TCHAR *names[] = { _T("default"), _T("7"), _T("30"), _T("90"), _T("180"), _T("other") };
+   return names[static_cast<int>(storageClass)];
+}
+
+/**
  * Default constructor for DCObject
  */
 DCObject::DCObject()

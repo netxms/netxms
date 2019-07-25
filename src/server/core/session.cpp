@@ -4067,12 +4067,12 @@ static DB_STATEMENT PrepareDataSelect(DB_HANDLE hdb, UINT32 nodeId, int dciType,
       switch(g_dbSyntax)
       {
          case DB_SYNTAX_MSSQL:
-            _sntprintf(query, 512, _T("SELECT TOP %d %s_timestamp,%s%s FROM %s WHERE node_id=? AND item_id=?%s ORDER BY %s_timestamp DESC"),
+            _sntprintf(query, 512, _T("SELECT TOP %d %s_timestamp,%s%s FROM %s WHERE item_id=?%s ORDER BY %s_timestamp DESC"),
                      (int)maxRows, tablePrefix, SELECTION_COLUMNS,
                      tablePrefix, condition, tablePrefix);
             break;
          case DB_SYNTAX_ORACLE:
-            _sntprintf(query, 512, _T("SELECT * FROM (SELECT %s_timestamp,%s%s FROM %s WHERE node_id=? AND item_id=?%s ORDER BY %s_timestamp DESC) WHERE ROWNUM<=%d"),
+            _sntprintf(query, 512, _T("SELECT * FROM (SELECT %s_timestamp,%s%s FROM %s WHERE item_id=?%s ORDER BY %s_timestamp DESC) WHERE ROWNUM<=%d"),
                      tablePrefix, SELECTION_COLUMNS,
                      tablePrefix, condition, tablePrefix, (int)maxRows);
             break;
@@ -4080,12 +4080,12 @@ static DB_STATEMENT PrepareDataSelect(DB_HANDLE hdb, UINT32 nodeId, int dciType,
          case DB_SYNTAX_PGSQL:
          case DB_SYNTAX_SQLITE:
          case DB_SYNTAX_TSDB:
-            _sntprintf(query, 512, _T("SELECT %s_timestamp,%s%s FROM %s WHERE node_id=? AND item_id=?%s ORDER BY %s_timestamp DESC LIMIT %d"),
+            _sntprintf(query, 512, _T("SELECT %s_timestamp,%s%s FROM %s WHERE item_id=?%s ORDER BY %s_timestamp DESC LIMIT %d"),
                      tablePrefix, SELECTION_COLUMNS,
                      tablePrefix, condition, tablePrefix, (int)maxRows);
             break;
          case DB_SYNTAX_DB2:
-            _sntprintf(query, 512, _T("SELECT %s_timestamp,%s%s FROM %s WHERE node_id=? AND item_id=?%s ORDER BY %s_timestamp DESC FETCH FIRST %d ROWS ONLY"),
+            _sntprintf(query, 512, _T("SELECT %s_timestamp,%s%s FROM %s WHERE item_id=?%s ORDER BY %s_timestamp DESC FETCH FIRST %d ROWS ONLY"),
                      tablePrefix, SELECTION_COLUMNS,
                      tablePrefix, condition, tablePrefix, (int)maxRows);
             break;
@@ -4323,8 +4323,6 @@ read_from_db:
       TCHAR instance[256];
 
 		int pos = 1;
-		if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
-	      DBBind(hStmt, pos++, DB_SQLTYPE_INTEGER, dcTarget->getId());
 		DBBind(hStmt, pos++, DB_SQLTYPE_INTEGER, dci->getId());
 		if (dciType == DCO_TYPE_TABLE)
 		{
@@ -4504,7 +4502,7 @@ read_from_db:
 		               }
 				         delete table;
 				      }
-				      free(encodedTable);
+				      MemFree(encodedTable);
 				   }
 				}
 				pCurr = (DCI_DATA_ROW *)(((char *)pCurr) + s_rowSize[dataType]);

@@ -155,5 +155,6 @@ inline void RollbackToSavePoint(INT64 id)
  */
 #define CHK_EXEC(x) do { INT64 s = CreateSavePoint(); if (!(x)) { RollbackToSavePoint(s); if (!g_ignoreErrors) return false; } ReleaseSavePoint(s); } while (0)
 #define CHK_EXEC_NO_SP(x) do { if (!(x)) { if (!g_ignoreErrors) return false; } } while (0)
+#define CHK_EXEC_NO_SP_WITH_HOOK(x, hook) do { if (!(x)) { if (!g_ignoreErrors) { hook; return false; } } } while (0)
 
 #endif   /* _nxdbmgr_tools_h_ */

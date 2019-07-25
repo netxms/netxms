@@ -97,18 +97,22 @@ DataCollectionTarget::~DataCollectionTarget()
  */
 bool DataCollectionTarget::deleteFromDatabase(DB_HANDLE hdb)
 {
-   bool success = super::deleteFromDatabase(hdb);
-   if(success)
-      success = executeQueryOnObject(hdb, _T("DELETE FROM dct_node_map WHERE node_id=?"));
-   if (success)
+   bool success = executeQueryOnObject(hdb, _T("DELETE FROM dct_node_map WHERE node_id=?"));
+
+   // TSDB: to avoid heavy query on idata tables let collected data expire instead of deleting it immediately
+   if (success && ((g_dbSyntax != DB_SYNTAX_TSDB) || !(g_flags & AF_SINGLE_TABLE_PERF_DATA)))
    {
       TCHAR query[256];
-      _sntprintf(query, 256, (g_flags & AF_SINGLE_TABLE_PERF_DATA) ? _T("DELETE FROM idata WHERE node_id=%u") : _T("DROP TABLE idata_%u"), m_id);
+      _sntprintf(query, 256, (g_flags & AF_SINGLE_TABLE_PERF_DATA) ? _T("DELETE FROM idata WHERE item_id IN (SELECT item_id FROM items WHERE node_id=%u)") : _T("DROP TABLE idata_%u"), m_id);
       QueueSQLRequest(query);
 
-      _sntprintf(query, 256, (g_flags & AF_SINGLE_TABLE_PERF_DATA) ? _T("DELETE FROM tdata WHERE node_id=%u") : _T("DROP TABLE tdata_%u"), m_id);
+      _sntprintf(query, 256, (g_flags & AF_SINGLE_TABLE_PERF_DATA) ? _T("DELETE FROM tdata WHERE item_id IN (SELECT item_id FROM dc_tables WHERE node_id=%u)") : _T("DROP TABLE tdata_%u"), m_id);
       QueueSQLRequest(query);
    }
+
+   if (success)
+      success = super::deleteFromDatabase(hdb);
+
    return success;
 }
 
@@ -182,6 +186,28 @@ void DataCollectionTarget::updateDciCache()
 		}
 	}
 	unlockDciAccess();
+}
+
+/**
+ * Clean expired DCI data using TSDB drop_chunks() function
+ */
+void DataCollectionTarget::calculateDciCutoffTimes(time_t *cutoffTimeIData, time_t *cutoffTimeTData)
+{
+   time_t now = time(NULL);
+
+   lockDciAccess(false);
+   for(int i = 0; i < m_dcObjects->size(); i++)
+   {
+      DCObject *o = m_dcObjects->get(i);
+      DCObjectStorageClass sclass = o->getStorageClass();
+      if (sclass == DCObjectStorageClass::DEFAULT)
+         continue;
+
+      time_t *cutoffTime = (o->getType() == DCO_TYPE_ITEM) ? &cutoffTimeIData[static_cast<int>(sclass) - 1] : &cutoffTimeTData[static_cast<int>(sclass) - 1];
+      if ((*cutoffTime == 0) || (*cutoffTime > now - o->getEffectiveRetentionTime() * 86400))
+         *cutoffTime = now - o->getEffectiveRetentionTime() * 86400;
+   }
+   unlockDciAccess();
 }
 
 /**

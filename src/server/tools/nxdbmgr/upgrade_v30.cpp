@@ -24,6 +24,166 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 30.86 to 30.87
+ */
+static bool H_UpgradeFromV86()
+{
+   if (g_dbSyntax == DB_SYNTAX_TSDB)
+   {
+      CHK_EXEC(DBRenameTable(g_dbHandle, _T("idata"), _T("idata_old")));
+      CHK_EXEC(DBRenameTable(g_dbHandle, _T("tdata"), _T("tdata_old")));
+
+      CHK_EXEC(CreateTable(
+               _T("CREATE TABLE idata_sc_default (")
+               _T("  item_id integer not null,")
+               _T("  idata_timestamp integer not null,")
+               _T("  idata_value varchar(255) null,")
+               _T("  raw_value varchar(255) null,")
+               _T("PRIMARY KEY(item_id,idata_timestamp))")
+               ));
+      CHK_EXEC(CreateTable(
+               _T("CREATE TABLE idata_sc_7 (")
+               _T("  item_id integer not null,")
+               _T("  idata_timestamp integer not null,")
+               _T("  idata_value varchar(255) null,")
+               _T("  raw_value varchar(255) null,")
+               _T("PRIMARY KEY(item_id,idata_timestamp))")
+               ));
+      CHK_EXEC(CreateTable(
+               _T("CREATE TABLE idata_sc_30 (")
+               _T("  item_id integer not null,")
+               _T("  idata_timestamp integer not null,")
+               _T("  idata_value varchar(255) null,")
+               _T("  raw_value varchar(255) null,")
+               _T("PRIMARY KEY(item_id,idata_timestamp))")
+               ));
+      CHK_EXEC(CreateTable(
+               _T("CREATE TABLE idata_sc_90 (")
+               _T("  item_id integer not null,")
+               _T("  idata_timestamp integer not null,")
+               _T("  idata_value varchar(255) null,")
+               _T("  raw_value varchar(255) null,")
+               _T("PRIMARY KEY(item_id,idata_timestamp))")
+               ));
+      CHK_EXEC(CreateTable(
+               _T("CREATE TABLE idata_sc_180 (")
+               _T("  item_id integer not null,")
+               _T("  idata_timestamp integer not null,")
+               _T("  idata_value varchar(255) null,")
+               _T("  raw_value varchar(255) null,")
+               _T("PRIMARY KEY(item_id,idata_timestamp))")
+               ));
+      CHK_EXEC(CreateTable(
+               _T("CREATE TABLE idata_sc_other (")
+               _T("  item_id integer not null,")
+               _T("  idata_timestamp integer not null,")
+               _T("  idata_value varchar(255) null,")
+               _T("  raw_value varchar(255) null,")
+               _T("PRIMARY KEY(item_id,idata_timestamp))")
+               ));
+
+      CHK_EXEC(CreateTable(
+               _T("CREATE TABLE tdata_sc_default (")
+               _T("  item_id integer not null,")
+               _T("  tdata_timestamp integer not null,")
+               _T("  tdata_value $SQL:TEXT null,")
+               _T("PRIMARY KEY(item_id,tdata_timestamp))")
+               ));
+      CHK_EXEC(CreateTable(
+               _T("CREATE TABLE tdata_sc_7 (")
+               _T("  item_id integer not null,")
+               _T("  tdata_timestamp integer not null,")
+               _T("  tdata_value $SQL:TEXT null,")
+               _T("PRIMARY KEY(item_id,tdata_timestamp))")
+               ));
+      CHK_EXEC(CreateTable(
+               _T("CREATE TABLE tdata_sc_30 (")
+               _T("  item_id integer not null,")
+               _T("  tdata_timestamp integer not null,")
+               _T("  tdata_value $SQL:TEXT null,")
+               _T("PRIMARY KEY(item_id,tdata_timestamp))")
+               ));
+      CHK_EXEC(CreateTable(
+               _T("CREATE TABLE tdata_sc_90 (")
+               _T("  item_id integer not null,")
+               _T("  tdata_timestamp integer not null,")
+               _T("  tdata_value $SQL:TEXT null,")
+               _T("PRIMARY KEY(item_id,tdata_timestamp))")
+               ));
+      CHK_EXEC(CreateTable(
+               _T("CREATE TABLE tdata_sc_180 (")
+               _T("  item_id integer not null,")
+               _T("  tdata_timestamp integer not null,")
+               _T("  tdata_value $SQL:TEXT null,")
+               _T("PRIMARY KEY(item_id,tdata_timestamp))")
+               ));
+      CHK_EXEC(CreateTable(
+               _T("CREATE TABLE tdata_sc_other (")
+               _T("  item_id integer not null,")
+               _T("  tdata_timestamp integer not null,")
+               _T("  tdata_value $SQL:TEXT null,")
+               _T("PRIMARY KEY(item_id,tdata_timestamp))")
+               ));
+
+      CHK_EXEC(SQLQuery(_T("SELECT create_hypertable('idata_sc_default', 'idata_timestamp', 'item_id', chunk_time_interval => 86400, number_partitions => 100)")));
+      CHK_EXEC(SQLQuery(_T("SELECT create_hypertable('idata_sc_7', 'idata_timestamp', 'item_id', chunk_time_interval => 86400, number_partitions => 100)")));
+      CHK_EXEC(SQLQuery(_T("SELECT create_hypertable('idata_sc_30', 'idata_timestamp', 'item_id', chunk_time_interval => 86400, number_partitions => 100)")));
+      CHK_EXEC(SQLQuery(_T("SELECT create_hypertable('idata_sc_90', 'idata_timestamp', 'item_id', chunk_time_interval => 86400, number_partitions => 100)")));
+      CHK_EXEC(SQLQuery(_T("SELECT create_hypertable('idata_sc_180', 'idata_timestamp', 'item_id', chunk_time_interval => 86400, number_partitions => 100)")));
+      CHK_EXEC(SQLQuery(_T("SELECT create_hypertable('idata_sc_other', 'idata_timestamp', 'item_id', chunk_time_interval => 86400, number_partitions => 100)")));
+
+      CHK_EXEC(SQLQuery(_T("SELECT create_hypertable('tdata_sc_default', 'tdata_timestamp', 'item_id', chunk_time_interval => 86400, number_partitions => 100)")));
+      CHK_EXEC(SQLQuery(_T("SELECT create_hypertable('tdata_sc_7', 'tdata_timestamp', 'item_id', chunk_time_interval => 86400, number_partitions => 100)")));
+      CHK_EXEC(SQLQuery(_T("SELECT create_hypertable('tdata_sc_30', 'tdata_timestamp', 'item_id', chunk_time_interval => 86400, number_partitions => 100)")));
+      CHK_EXEC(SQLQuery(_T("SELECT create_hypertable('tdata_sc_90', 'tdata_timestamp', 'item_id', chunk_time_interval => 86400, number_partitions => 100)")));
+      CHK_EXEC(SQLQuery(_T("SELECT create_hypertable('tdata_sc_180', 'tdata_timestamp', 'item_id', chunk_time_interval => 86400, number_partitions => 100)")));
+      CHK_EXEC(SQLQuery(_T("SELECT create_hypertable('tdata_sc_other', 'tdata_timestamp', 'item_id', chunk_time_interval => 86400, number_partitions => 100)")));
+
+      CHK_EXEC(SQLQuery(
+            _T("CREATE VIEW idata AS")
+            _T("   SELECT * FROM idata_sc_default")
+            _T("   UNION ALL")
+            _T("   SELECT * FROM idata_sc_7")
+            _T("   UNION ALL")
+            _T("   SELECT * FROM idata_sc_30")
+            _T("   UNION ALL")
+            _T("   SELECT * FROM idata_sc_90")
+            _T("   UNION ALL")
+            _T("   SELECT * FROM idata_sc_180")
+            _T("   UNION ALL")
+            _T("   SELECT * FROM idata_sc_other")));
+
+      CHK_EXEC(SQLQuery(
+            _T("CREATE VIEW tdata AS")
+            _T("   SELECT * FROM tdata_sc_default")
+            _T("   UNION ALL")
+            _T("   SELECT * FROM tdata_sc_7")
+            _T("   UNION ALL")
+            _T("   SELECT * FROM tdata_sc_30")
+            _T("   UNION ALL")
+            _T("   SELECT * FROM tdata_sc_90")
+            _T("   UNION ALL")
+            _T("   SELECT * FROM tdata_sc_180")
+            _T("   UNION ALL")
+            _T("   SELECT * FROM tdata_sc_other")));
+
+      RegisterOnlineUpgrade(30, 87);
+   }
+   else
+   {
+      CHK_EXEC(DBDropPrimaryKey(g_dbHandle, _T("idata")));
+      CHK_EXEC(DBDropColumn(g_dbHandle, _T("idata"), _T("node_id")));
+      CHK_EXEC(DBAddPrimaryKey(g_dbHandle, _T("idata"), _T("item_id,idata_timestamp")));
+
+      CHK_EXEC(DBDropPrimaryKey(g_dbHandle, _T("tdata")));
+      CHK_EXEC(DBDropColumn(g_dbHandle, _T("tdata"), _T("node_id")));
+      CHK_EXEC(DBAddPrimaryKey(g_dbHandle, _T("tdata"), _T("item_id,tdata_timestamp")));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(87));
+   return true;
+}
+
+/**
  * Upgrade from 30.85 to 30.86
  */
 static bool H_UpgradeFromV85()
@@ -2765,6 +2925,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 86, 30, 87, H_UpgradeFromV86 },
    { 85, 30, 86, H_UpgradeFromV85 },
    { 84, 30, 85, H_UpgradeFromV84 },
    { 83, 30, 84, H_UpgradeFromV83 },

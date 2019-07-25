@@ -183,13 +183,73 @@ static void CleanAlarmHistory(DB_HANDLE hdb)
 }
 
 /**
+ * DCI cutoff times
+ */
+struct CutoffTimes
+{
+   time_t cutoffTimeIData[static_cast<size_t>(DCObjectStorageClass::OTHER)];
+   time_t cutoffTimeTData[static_cast<size_t>(DCObjectStorageClass::OTHER)];
+};
+
+/**
+ * Drop timescale DB chunks for given object type and storage class
+ */
+static void DropChunksForStorageClass(DB_HANDLE hdb, time_t cutoffTime, TCHAR objectType, DCObjectStorageClass storageClass)
+{
+   TCHAR query[256];
+   _sntprintf(query, 256, _T("SELECT drop_chunks(") INT64_FMT _T(", '%cdata_sc_%s')"),
+            static_cast<INT64>(cutoffTime), objectType, DCObject::getStorageClassName(storageClass));
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("Executing query \"%s\""), query);
+   DB_RESULT hResult = DBSelect(hdb, query);
+   if (hResult != NULL)
+      DBFreeResult(hResult);
+}
+
+/**
+ * Callback for calculating cutoff time for TimescaleDB drop_chunks()
+ */
+static void CalculateDciCutoffTimes(NetObj *object, CutoffTimes *data)
+{
+   static_cast<DataCollectionTarget*>(object)->calculateDciCutoffTimes(data->cutoffTimeIData, data->cutoffTimeTData);
+}
+
+/**
+ * Clean collected data in Timescale database
+ */
+static void CleanTimescaleData(DB_HANDLE hdb)
+{
+   CutoffTimes cutoffTimes;
+   memset(&cutoffTimes, 0, sizeof(cutoffTimes));
+
+   g_idxAccessPointById.forEach(CalculateDciCutoffTimes, &cutoffTimes);
+   g_idxChassisById.forEach(CalculateDciCutoffTimes, &cutoffTimes);
+   g_idxClusterById.forEach(CalculateDciCutoffTimes, &cutoffTimes);
+   g_idxMobileDeviceById.forEach(CalculateDciCutoffTimes, &cutoffTimes);
+   g_idxNodeById.forEach(CalculateDciCutoffTimes, &cutoffTimes);
+   g_idxSensorById.forEach(CalculateDciCutoffTimes, &cutoffTimes);
+
+   // Always run on default storage class
+   time_t defaultCutoffTime = time(NULL) - DCObject::m_defaultRetentionTime * 86400;
+   DropChunksForStorageClass(hdb, defaultCutoffTime, 'i', DCObjectStorageClass::DEFAULT);
+   DropChunksForStorageClass(hdb, defaultCutoffTime, 't', DCObjectStorageClass::DEFAULT);
+
+   for(int c = static_cast<int>(DCObjectStorageClass::BELOW_7); c <= static_cast<int>(DCObjectStorageClass::OTHER); c++)
+   {
+      if (cutoffTimes.cutoffTimeIData[c - 1] != 0)
+         DropChunksForStorageClass(hdb, cutoffTimes.cutoffTimeIData[c - 1], 'i', static_cast<DCObjectStorageClass>(c));
+      if (cutoffTimes.cutoffTimeTData[c - 1] != 0)
+         DropChunksForStorageClass(hdb, cutoffTimes.cutoffTimeTData[c - 1], 't', static_cast<DCObjectStorageClass>(c));
+   }
+}
+
+/**
  * Callback for cleaning expired DCI data on node
  */
 static void CleanDciData(NetObj *object, void *data)
 {
    if (s_shutdown)
       return;
-	static_cast<DataCollectionTarget*>(object)->cleanDCIData((DB_HANDLE)data);
+	static_cast<DataCollectionTarget*>(object)->cleanDCIData(static_cast<DB_HANDLE>(data));
 	ThrottleHousekeeper();
 }
 
@@ -330,10 +390,21 @@ static THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
       if (!ConfigReadBoolean(_T("Housekeeper.DisableCollectedDataCleanup"), false))
       {
          nxlog_debug_tag(DEBUG_TAG, 2, _T("Clearing collected DCI data"));
-         g_idxNodeById.forEach(CleanDciData, hdb);
-         g_idxClusterById.forEach(CleanDciData, hdb);
-         g_idxMobileDeviceById.forEach(CleanDciData, hdb);
-         g_idxSensorById.forEach(CleanDciData, hdb);
+         if ((g_dbSyntax == DB_SYNTAX_TSDB) && (g_flags & AF_SINGLE_TABLE_PERF_DATA))
+         {
+            nxlog_debug_tag(DEBUG_TAG, 4, _T("Using drop_chunks()"));
+            CleanTimescaleData(hdb);
+         }
+         else
+         {
+            nxlog_debug_tag(DEBUG_TAG, 4, _T("Using DELETE statements"));
+            g_idxAccessPointById.forEach(CleanDciData, hdb);
+            g_idxChassisById.forEach(CleanDciData, hdb);
+            g_idxClusterById.forEach(CleanDciData, hdb);
+            g_idxMobileDeviceById.forEach(CleanDciData, hdb);
+            g_idxNodeById.forEach(CleanDciData, hdb);
+            g_idxSensorById.forEach(CleanDciData, hdb);
+         }
       }
       else
       {

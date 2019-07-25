@@ -200,6 +200,221 @@ static bool Upgrade_22_21()
 }
 
 /**
+ * Insert into idata table using storage class
+ */
+static bool InsertUsingStorageClass_IData(const TCHAR *sclass, const StringObjectMap<StringList>& data)
+{
+   StringList *elements = data.get(sclass);
+   if (elements->isEmpty())
+      return true;
+
+   String query = _T("INSERT INTO idata_sc_");
+   query.append(sclass);
+   query.append(_T(" (item_id,idata_timestamp,idata_value,raw_value) VALUES"));
+   for(int i = 0; i < elements->size(); i++)
+   {
+      query.append((i == 0) ? _T(" ") : _T(","));
+      query.append(elements->get(i));
+   }
+   query.append(_T(" ON CONFLICT DO NOTHING"));
+   return SQLQuery(query);
+}
+
+/**
+ * Insert into tdata table using storage class
+ */
+static bool InsertUsingStorageClass_TData(const TCHAR *sclass, const StringObjectMap<StringList>& data)
+{
+   StringList *elements = data.get(sclass);
+   if (elements->isEmpty())
+      return true;
+
+   String query = _T("INSERT INTO tdata_sc_");
+   query.append(sclass);
+   query.append(_T(" (item_id,tdata_timestamp,tdata_value) VALUES"));
+   for(int i = 0; i < elements->size(); i++)
+   {
+      query.append((i == 0) ? _T(" ") : _T(","));
+      query.append(elements->get(i));
+   }
+   query.append(_T(" ON CONFLICT DO NOTHING"));
+   return SQLQuery(query);
+}
+
+/**
+ * Online upgrade for version 30.87
+ */
+static bool Upgrade_30_87()
+{
+   if (g_dbSyntax != DB_SYNTAX_TSDB)
+      return true;   // not needed
+
+   CHK_EXEC_NO_SP(LoadDataCollectionObjects());
+
+   WriteToTerminal(_T("Converting table \x1b[1midata\x1b[0m\n"));
+
+   int totalCount = 0;
+   time_t cutoffTime = 0, nextCutoffTime = 0, currTime = 0;
+   UINT32 currId = 0;
+   while(true)
+   {
+      TCHAR query[1024];
+      _sntprintf(query, 1024,
+               _T("SELECT item_id,idata_timestamp,idata_value,raw_value FROM idata_old WHERE (idata_timestamp=%u AND item_id>%u) OR idata_timestamp>%u ORDER BY idata_timestamp,item_id LIMIT 10000"),
+               static_cast<UINT32>(currTime), currId, static_cast<UINT32>(currTime));
+      DB_UNBUFFERED_RESULT hResult = SQLSelectUnbuffered(query);
+      if (hResult == NULL)
+      {
+         if (g_ignoreErrors)
+            continue;
+         return false;
+      }
+
+      int count = 0;
+
+      StringObjectMap<StringList> data(true);
+      data.set(_T("default"), new StringList());
+      data.set(_T("7"), new StringList());
+      data.set(_T("30"), new StringList());
+      data.set(_T("90"), new StringList());
+      data.set(_T("180"), new StringList());
+      data.set(_T("other"), new StringList());
+
+      while(DBFetch(hResult))
+      {
+         currId = DBGetFieldULong(hResult, 0);
+         currTime = DBGetFieldULong(hResult, 1);
+
+         TCHAR query[1024], buffer1[256], buffer2[256];
+         _sntprintf(query, 1024, _T("(%u,%u,%s,%s)"),
+                  currId, static_cast<UINT32>(currTime),
+                  (const TCHAR *)DBPrepareString(g_dbHandle, DBGetField(hResult, 2, buffer1, 256)),
+                  (const TCHAR *)DBPrepareString(g_dbHandle, DBGetField(hResult, 3, buffer2, 256)));
+         data.get(GetDCObjectStorageClass(currId))->add(query);
+
+         if (currTime != nextCutoffTime)
+         {
+            cutoffTime = nextCutoffTime;
+            nextCutoffTime = currTime;
+         }
+         count++;
+      }
+      DBFreeResult(hResult);
+
+      if (count == 0)
+         break;   // End of data
+
+      CHK_EXEC_NO_SP(DBBegin(g_dbHandle));
+
+      CHK_EXEC(InsertUsingStorageClass_IData(_T("default"), data));
+      CHK_EXEC(InsertUsingStorageClass_IData(_T("7"), data));
+      CHK_EXEC(InsertUsingStorageClass_IData(_T("30"), data));
+      CHK_EXEC(InsertUsingStorageClass_IData(_T("90"), data));
+      CHK_EXEC(InsertUsingStorageClass_IData(_T("180"), data));
+      CHK_EXEC(InsertUsingStorageClass_IData(_T("other"), data));
+
+      if (cutoffTime != 0)
+      {
+         _sntprintf(query, 256, _T("SELECT drop_chunks(%u, 'idata_old')"), (UINT32)cutoffTime);
+         CHK_EXEC(SQLQuery(query));
+         cutoffTime = 0;
+      }
+
+      CHK_EXEC_NO_SP(DBCommit(g_dbHandle));
+
+      totalCount += count;
+      WriteToTerminalEx(_T("   %d records processed\n"), totalCount);
+      if (count < 10000)
+         break;
+   }
+
+   CHK_EXEC_NO_SP(SQLQuery(_T("DROP TABLE idata_old")));
+
+   WriteToTerminal(_T("Converting table \x1b[1mtdata\x1b[0m\n"));
+
+   totalCount = 0;
+   cutoffTime = 0;
+   nextCutoffTime = 0;
+   currTime = 0;
+   currId = 0;
+   while(true)
+   {
+      TCHAR query[1024];
+      _sntprintf(query, 1024,
+               _T("SELECT item_id,tdata_timestamp,tdata_value FROM tdata_old WHERE (tdata_timestamp=%u AND item_id>%u) OR tdata_timestamp>%u ORDER BY tdata_timestamp,item_id LIMIT 10000"),
+               static_cast<UINT32>(currTime), currId, static_cast<UINT32>(currTime));
+      DB_UNBUFFERED_RESULT hResult = SQLSelectUnbuffered(query);
+      if (hResult == NULL)
+      {
+         if (g_ignoreErrors)
+            continue;
+         return false;
+      }
+
+      int count = 0;
+
+      StringObjectMap<StringList> data(true);
+      data.set(_T("default"), new StringList());
+      data.set(_T("7"), new StringList());
+      data.set(_T("30"), new StringList());
+      data.set(_T("90"), new StringList());
+      data.set(_T("180"), new StringList());
+      data.set(_T("other"), new StringList());
+
+      while(DBFetch(hResult))
+      {
+         currId = DBGetFieldULong(hResult, 0);
+         currTime = DBGetFieldULong(hResult, 1);
+
+         TCHAR query[1024], buffer[256];
+         _sntprintf(query, 1024, _T("(%u,%u,%s)"),
+                  currId, static_cast<UINT32>(currTime),
+                  (const TCHAR *)DBPrepareString(g_dbHandle, DBGetField(hResult, 2, buffer, 256)));
+         data.get(GetDCObjectStorageClass(currId))->add(query);
+
+         if (currTime != nextCutoffTime)
+         {
+            cutoffTime = nextCutoffTime;
+            nextCutoffTime = currTime;
+         }
+         count++;
+      }
+      DBFreeResult(hResult);
+
+      if (count == 0)
+         break;   // End of data
+
+      CHK_EXEC_NO_SP(DBBegin(g_dbHandle));
+
+      CHK_EXEC(InsertUsingStorageClass_TData(_T("default"), data));
+      CHK_EXEC(InsertUsingStorageClass_TData(_T("7"), data));
+      CHK_EXEC(InsertUsingStorageClass_TData(_T("30"), data));
+      CHK_EXEC(InsertUsingStorageClass_TData(_T("90"), data));
+      CHK_EXEC(InsertUsingStorageClass_TData(_T("180"), data));
+      CHK_EXEC(InsertUsingStorageClass_TData(_T("other"), data));
+
+      if (cutoffTime != 0)
+      {
+         TCHAR query[256];
+         _sntprintf(query, 256, _T("SELECT drop_chunks(%u, 'tdata_old')"), (UINT32)cutoffTime);
+         CHK_EXEC(SQLQuery(query));
+         cutoffTime = 0;
+      }
+
+      CHK_EXEC_NO_SP(DBCommit(g_dbHandle));
+
+      totalCount += count;
+      WriteToTerminalEx(_T("   %d records processed\n"), totalCount);
+      if (count < 10000)
+         break;
+   }
+
+   CHK_EXEC_NO_SP(SQLQuery(_T("DROP TABLE tdata_old")));
+
+   return true;
+}
+
+/**
  * Online upgrade registry
  */
 struct
@@ -209,6 +424,7 @@ struct
    bool (*handler)();
 } s_handlers[] =
 {
+   { 30, 87, Upgrade_30_87 },
    { 22, 21, Upgrade_22_21 },
    { 0, 411, Upgrade_0_411 },
    { 0, 0, NULL }
