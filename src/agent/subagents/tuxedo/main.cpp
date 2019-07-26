@@ -181,13 +181,29 @@ inline int GetTuxedoClientThreadStackSize()
 static bool SubAgentInit(Config *config)
 {
 #ifdef NDRX_VERSION
-   const char *nc = getenv("NDRX_CCONFIG");
+   static const char *envNames[] = {
+      "NDRX_CONFIG",
+      "NDRX_CCONFIG",
+      "NDRX_CCONFIG1",
+      "NDRX_CCONFIG2",
+      "NDRX_CCONFIG3",
+      "NDRX_CCONFIG4",
+      "NDRX_CCONFIG5",
+      NULL
+   };
+   const char *nc = NULL;
+   for(int i = 0; envNames[i] != NULL; i++)
+   {
+      nc = getenv(envNames[i]);
+      if (nc != NULL)
+         break;
+   }
    if (nc == NULL)
    {
       AgentWriteLog(NXLOG_ERROR, _T("Tuxedo: Enduro/X environment is not configured"));
       return false;
    }
-   nxlog_debug_tag(TUXEDO_DEBUG_TAG, 2, _T("Using Enduro/X configuration directory %hs"), nc);
+   nxlog_debug_tag(TUXEDO_DEBUG_TAG, 2, _T("Using Enduro/X configuration %hs"), nc);
 #else
    const char *tc = getenv("TUXCONFIG");
    if (tc == NULL)
@@ -235,7 +251,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("Tuxedo.Client.Name(*)"), H_ClientInfo, _T("N"), DCI_DT_STRING, _T("Tuxedo client {instance} name") },
    { _T("Tuxedo.Client.State(*)"), H_ClientInfo, _T("S"), DCI_DT_STRING, _T("Tuxedo client {instance} state") },
    { _T("Tuxedo.IsMasterMachine"), H_IsMasterMachine, NULL, DCI_DT_INT, _T("Tuxedo master machine flag") },
-	{ _T("Tuxedo.Domain.ID"), H_DomainInfo, _T("I"), DCI_DT_STRING, _T("Tuxedo domain ID") },
+   { _T("Tuxedo.Domain.ID"), H_DomainInfo, _T("I"), DCI_DT_STRING, _T("Tuxedo domain ID") },
    { _T("Tuxedo.Domain.Master"), H_DomainInfo, _T("M"), DCI_DT_STRING, _T("Tuxedo domain master/backup machines") },
    { _T("Tuxedo.Domain.Model"), H_DomainInfo, _T("m"), DCI_DT_STRING, _T("Tuxedo domain model") },
    { _T("Tuxedo.Domain.Queues"), H_DomainInfo, _T("Q"), DCI_DT_INT,  _T("Tuxedo: number of queues") },
