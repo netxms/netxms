@@ -2768,6 +2768,9 @@ bool Node::updateHardwareComponents(PollerInfo *poller, UINT32 requestId)
       delete m_hardwareComponents;
       setModified(MODIFY_HARDWARE_INVENTORY);
    }
+   else if (components != NULL)
+      setModified(MODIFY_HARDWARE_INVENTORY);
+
    m_hardwareComponents = components;
    unlockProperties();
    return true;
@@ -2837,6 +2840,9 @@ bool Node::updateSoftwarePackages(PollerInfo *poller, UINT32 requestId)
       delete m_softwarePackages;
       setModified(MODIFY_SOFTWARE_INVENTORY);
    }
+   else if (packages != NULL)
+      setModified(MODIFY_SOFTWARE_INVENTORY);
+
    m_softwarePackages = packages;
    unlockProperties();
    return true;
@@ -3770,11 +3776,6 @@ bool Node::confPollSnmp(UINT32 rqId)
    {
       lockProperties();
       m_capabilities &= ~NC_HAS_ENTITY_MIB;
-      if (m_components != NULL)
-      {
-         m_components->decRefCount();
-         m_components = NULL;
-      }
       unlockProperties();
    }
 
