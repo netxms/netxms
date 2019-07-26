@@ -1,7 +1,7 @@
 SUBAGENT = tuxedo
 
 pkglib_LTLIBRARIES = tuxedo.la
-tuxedo_la_SOURCES = clients.cpp domain.cpp machines.cpp main.cpp queues.cpp servers.cpp services.cpp
+tuxedo_la_SOURCES = clients.cpp domain.cpp machines.cpp main.cpp queues.cpp servers.cpp services.cpp svcgroups.cpp
 tuxedo_la_CPPFLAGS=-I@top_srcdir@/include @TUXEDO_CPPFLAGS@
 tuxedo_la_LDFLAGS = -module -avoid-version -export-symbols ../subagent.sym @TUXEDO_LDFLAGS@
 tuxedo_la_LIBADD = ../../libnxagent/libnxagent.la ../../libnxtux/libnxtux.la ../../../libnetxms/libnetxms.la -ltux -lfml32 @TUXEDO_LIBS@

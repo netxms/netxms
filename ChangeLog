@@ -16,6 +16,7 @@
 - Node creation option "create as zone proxy"
 - JSON support in NXSL
 - Cleanup of collected DCI data by housekeeper can be disabled
+- Service group support in Tuxedo subagent
 - Fixed issues:
 	NX-183 (Implemented responsible users for objects)
 	NX-725 (Add alarm comments from NXSL)

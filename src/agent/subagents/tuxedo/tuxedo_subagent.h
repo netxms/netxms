@@ -34,9 +34,10 @@
 bool TuxedoGetMachinePhysicalID(const TCHAR *lmid, char *pmid);
 bool TuxedoGetLocalMachineID(char *lmid);
 
-#define LOCAL_DATA_MACHINES   0x01
-#define LOCAL_DATA_QUEUES     0x02
-#define LOCAL_DATA_SERVERS    0x04
+#define LOCAL_DATA_MACHINES         0x01
+#define LOCAL_DATA_QUEUES           0x02
+#define LOCAL_DATA_SERVERS          0x04
+#define LOCAL_DATA_SERVICE_GROUPS   0x08
 
 extern UINT32 g_tuxedoQueryLocalData;
 extern bool g_tuxedoLocalMachineFilter;

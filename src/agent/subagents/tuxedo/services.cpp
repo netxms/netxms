@@ -28,7 +28,7 @@
 class TuxedoService
 {
 public:
-   TCHAR m_name[128];
+   TCHAR m_name[32];
    char m_state[16];
    char m_routingName[16];
    long m_load;

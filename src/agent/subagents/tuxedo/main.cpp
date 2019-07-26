@@ -46,6 +46,9 @@ LONG H_ServerInstancesList(const TCHAR *param, const TCHAR *arg, StringList *val
 LONG H_ServerInstancesTable(const TCHAR *param, const TCHAR *arg, Table *value, AbstractCommSession *session);
 LONG H_ServersList(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session);
 LONG H_ServersTable(const TCHAR *param, const TCHAR *arg, Table *value, AbstractCommSession *session);
+LONG H_ServiceGroupInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_ServiceGroupsList(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session);
+LONG H_ServiceGroupsTable(const TCHAR *param, const TCHAR *arg, Table *value, AbstractCommSession *session);
 LONG H_ServiceInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_ServicesList(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session);
 LONG H_ServicesTable(const TCHAR *param, const TCHAR *arg, Table *value, AbstractCommSession *session);
@@ -58,6 +61,7 @@ void TuxedoQueryDomain();
 void TuxedoQueryMachines();
 void TuxedoQueryQueues();
 void TuxedoQueryServers();
+void TuxedoQueryServiceGroups();
 void TuxedoQueryServices();
 
 /**
@@ -68,12 +72,13 @@ void TuxedoResetDomain();
 void TuxedoResetMachines();
 void TuxedoResetQueues();
 void TuxedoResetServers();
+void TuxedoResetServiceGroups();
 void TuxedoResetServices();
 
 /**
  * Local data query flags
  */
-UINT32 g_tuxedoQueryLocalData = LOCAL_DATA_MACHINES | LOCAL_DATA_QUEUES | LOCAL_DATA_SERVERS;
+UINT32 g_tuxedoQueryLocalData = LOCAL_DATA_MACHINES | LOCAL_DATA_QUEUES | LOCAL_DATA_SERVERS | LOCAL_DATA_SERVICE_GROUPS;
 
 /**
  * Local host LMID filter settings
@@ -135,6 +140,7 @@ static THREAD_RESULT THREAD_CALL TuxedoPollerThread(void *arg)
          TuxedoResetMachines();
          TuxedoResetQueues();
          TuxedoResetServers();
+         TuxedoResetServiceGroups();
          TuxedoResetServices();
          continue;
       }
@@ -144,6 +150,7 @@ static THREAD_RESULT THREAD_CALL TuxedoPollerThread(void *arg)
       TuxedoQueryMachines();
       TuxedoQueryQueues();
       TuxedoQueryServers();
+      TuxedoQueryServiceGroups();
       TuxedoQueryServices();
 
       TuxedoDisconnect();
@@ -176,6 +183,8 @@ static bool SubAgentInit(Config *config)
             (g_tuxedoQueryLocalData & LOCAL_DATA_QUEUES) ? _T("ON") : _T("OFF"));
    nxlog_debug_tag(TUXEDO_DEBUG_TAG, 3, _T("Query local data for servers is %s"),
             (g_tuxedoQueryLocalData & LOCAL_DATA_SERVERS) ? _T("ON") : _T("OFF"));
+   nxlog_debug_tag(TUXEDO_DEBUG_TAG, 3, _T("Query local data for service groups is %s"),
+            (g_tuxedoQueryLocalData & LOCAL_DATA_SERVICE_GROUPS) ? _T("ON") : _T("OFF"));
 
    g_tuxedoLocalMachineFilter = config->getValueAsBoolean(_T("/Tuxedo/FilterByLocalMachineId"), true);
    nxlog_debug_tag(TUXEDO_DEBUG_TAG, 3, _T("Filter by local machine ID is %s"), g_tuxedoLocalMachineFilter ? _T("ON") : _T("OFF"));
@@ -239,26 +248,38 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("Tuxedo.Server.Machine(*)"), H_ServerInfo, _T("M"), DCI_DT_STRING, _T("Tuxedo server {instance}: machine ID") },
    { _T("Tuxedo.Server.MaxInstances(*)"), H_ServerInfo, _T("x"), DCI_DT_INT, _T("Tuxedo server {instance}: maximum instances") },
    { _T("Tuxedo.Server.MinInstances(*)"), H_ServerInfo, _T("i"), DCI_DT_INT, _T("Tuxedo server {instance}: minimum instances") },
-   { _T("Tuxedo.Server.Name(*)"), H_ServerInfo, _T("N"), DCI_DT_STRING, _T("Tuxedo server {instance} name") },
+   { _T("Tuxedo.Server.Name(*)"), H_ServerInfo, _T("N"), DCI_DT_STRING, _T("Tuxedo server {instance}: name") },
    { _T("Tuxedo.Server.ProcessedRequests(*)"), H_ServerInstanceInfo, _T("R"), DCI_DT_INT, _T("Tuxedo server instance {instance}: processed requests") },
    { _T("Tuxedo.Server.ProcessedWorkloads(*)"), H_ServerInstanceInfo, _T("W"), DCI_DT_INT, _T("Tuxedo server instance {instance}: processed workloads") },
    { _T("Tuxedo.Server.RunningInstances(*)"), H_ServerInfo, _T("r"), DCI_DT_INT, _T("Tuxedo server {instance}: running instances") },
    { _T("Tuxedo.ServerInstance.ActiveRequests(*)"), H_ServerInstanceInfo, _T("A"), DCI_DT_INT, _T("Tuxedo server instance {instance}: active requests") },
-   { _T("Tuxedo.ServerInstance.BaseID(*)"), H_ServerInstanceInfo, _T("B"), DCI_DT_INT, _T("Tuxedo server instance {instance} base ID") },
+   { _T("Tuxedo.ServerInstance.BaseID(*)"), H_ServerInstanceInfo, _T("B"), DCI_DT_INT, _T("Tuxedo server instance {instance}: base ID") },
    { _T("Tuxedo.ServerInstance.CommandLine(*)"), H_ServerInstanceInfo, _T("C"), DCI_DT_STRING, _T("Tuxedo server instance {instance}: command line") },
    { _T("Tuxedo.ServerInstance.CurrentService(*)"), H_ServerInstanceInfo, _T("c"), DCI_DT_STRING, _T("Tuxedo server instance {instance}: current service") },
    { _T("Tuxedo.ServerInstance.Generation(*)"), H_ServerInstanceInfo, _T("G"), DCI_DT_INT, _T("Tuxedo server instance {instance}: generation") },
    { _T("Tuxedo.ServerInstance.Group(*)"), H_ServerInstanceInfo, _T("g"), DCI_DT_STRING, _T("Tuxedo server instance {instance}: server group") },
    { _T("Tuxedo.ServerInstance.Machine(*)"), H_ServerInstanceInfo, _T("M"), DCI_DT_STRING, _T("Tuxedo server instance {instance}: machine ID") },
-   { _T("Tuxedo.ServerInstance.Name(*)"), H_ServerInstanceInfo, _T("N"), DCI_DT_STRING, _T("Tuxedo server instance {instance} name") },
-   { _T("Tuxedo.ServerInstance.PID(*)"), H_ServerInstanceInfo, _T("P"), DCI_DT_INT, _T("Tuxedo server instance {instance} process ID") },
+   { _T("Tuxedo.ServerInstance.Name(*)"), H_ServerInstanceInfo, _T("N"), DCI_DT_STRING, _T("Tuxedo server instance {instance}: name") },
+   { _T("Tuxedo.ServerInstance.PID(*)"), H_ServerInstanceInfo, _T("P"), DCI_DT_INT, _T("Tuxedo server instance {instance}: process ID") },
    { _T("Tuxedo.ServerInstance.ProcessedRequests(*)"), H_ServerInstanceInfo, _T("R"), DCI_DT_INT, _T("Tuxedo server instance {instance}: processed requests") },
    { _T("Tuxedo.ServerInstance.ProcessedWorkloads(*)"), H_ServerInstanceInfo, _T("W"), DCI_DT_INT, _T("Tuxedo server instance {instance}: processed workloads") },
-   { _T("Tuxedo.ServerInstance.State(*)"), H_ServerInstanceInfo, _T("S"), DCI_DT_STRING, _T("Tuxedo server instance {instance} state") },
-   { _T("Tuxedo.Service.Load(*)"), H_ServiceInfo, _T("L"), DCI_DT_INT, _T("Tuxedo service {instance} load") },
-   { _T("Tuxedo.Service.Priority(*)"), H_ServiceInfo, _T("P"), DCI_DT_INT, _T("Tuxedo service {instance} priority") },
-   { _T("Tuxedo.Service.RoutingName(*)"), H_ServiceInfo, _T("R"), DCI_DT_STRING, _T("Tuxedo service {instance} routing name") },
-   { _T("Tuxedo.Service.State(*)"), H_ServiceInfo, _T("S"), DCI_DT_STRING, _T("Tuxedo service {instance} state") }
+   { _T("Tuxedo.ServerInstance.State(*)"), H_ServerInstanceInfo, _T("S"), DCI_DT_STRING, _T("Tuxedo server instance {instance}: state") },
+   { _T("Tuxedo.Service.Load(*)"), H_ServiceInfo, _T("L"), DCI_DT_INT, _T("Tuxedo service {instance}: load") },
+   { _T("Tuxedo.Service.Priority(*)"), H_ServiceInfo, _T("P"), DCI_DT_INT, _T("Tuxedo service {instance}: priority") },
+   { _T("Tuxedo.Service.RoutingName(*)"), H_ServiceInfo, _T("R"), DCI_DT_STRING, _T("Tuxedo service {instance}: routing name") },
+   { _T("Tuxedo.Service.State(*)"), H_ServiceInfo, _T("S"), DCI_DT_STRING, _T("Tuxedo service {instance}: state") },
+   { _T("Tuxedo.ServiceGroup.CompletedRequests(*)"), H_ServiceGroupInfo, _T("C"), DCI_DT_INT, _T("Tuxedo service group {instance}: completed requests") },
+   { _T("Tuxedo.ServiceGroup.FailedRequests(*)"), H_ServiceGroupInfo, _T("f"), DCI_DT_INT, _T("Tuxedo service group {instance}: failed requests") },
+   { _T("Tuxedo.ServiceGroup.LastExecutionTime(*)"), H_ServiceGroupInfo, _T("e"), DCI_DT_INT, _T("Tuxedo service group {instance}: last execution time") },
+   { _T("Tuxedo.ServiceGroup.Load(*)"), H_ServiceGroupInfo, _T("L"), DCI_DT_INT, _T("Tuxedo service group {instance}: load") },
+   { _T("Tuxedo.ServiceGroup.MaxExecutionTime(*)"), H_ServiceGroupInfo, _T("x"), DCI_DT_INT, _T("Tuxedo service group {instance}: max execution time") },
+   { _T("Tuxedo.ServiceGroup.MinExecutionTime(*)"), H_ServiceGroupInfo, _T("m"), DCI_DT_INT, _T("Tuxedo service group {instance}: min execution time") },
+   { _T("Tuxedo.ServiceGroup.Priority(*)"), H_ServiceGroupInfo, _T("P"), DCI_DT_INT, _T("Tuxedo service group {instance}: priority") },
+   { _T("Tuxedo.ServiceGroup.QueuedRequests(*)"), H_ServiceGroupInfo, _T("Q"), DCI_DT_INT, _T("Tuxedo service group {instance}: queued requests") },
+   { _T("Tuxedo.ServiceGroup.RequestAddress(*)"), H_ServiceGroupInfo, _T("A"), DCI_DT_STRING, _T("Tuxedo service group {instance}: request address") },
+   { _T("Tuxedo.ServiceGroup.RoutingName(*)"), H_ServiceGroupInfo, _T("R"), DCI_DT_STRING, _T("Tuxedo service group {instance}: routing name") },
+   { _T("Tuxedo.ServiceGroup.State(*)"), H_ServiceGroupInfo, _T("S"), DCI_DT_STRING, _T("Tuxedo service group {instance}: state") },
+   { _T("Tuxedo.ServiceGroup.SuccessfulRequests(*)"), H_ServiceGroupInfo, _T("s"), DCI_DT_INT, _T("Tuxedo service group {instance}: successful requests") }
 };
 
 /**
@@ -271,6 +292,7 @@ static NETXMS_SUBAGENT_LIST s_lists[] =
    { _T("Tuxedo.Queues"), H_QueuesList, NULL },
    { _T("Tuxedo.ServerInstances"), H_ServerInstancesList, NULL },
    { _T("Tuxedo.Servers"), H_ServersList, NULL },
+   { _T("Tuxedo.ServiceGroups"), H_ServiceGroupsList, NULL },
    { _T("Tuxedo.Services"), H_ServicesList, NULL }
 };
 
@@ -284,13 +306,14 @@ static NETXMS_SUBAGENT_TABLE s_tables[] =
    { _T("Tuxedo.Queues"), H_QueuesTable, NULL, _T("NAME"), _T("Tuxedo queues") },
    { _T("Tuxedo.ServerInstances"), H_ServerInstancesTable, NULL, _T("ID"), _T("Tuxedo server instances") },
    { _T("Tuxedo.Servers"), H_ServersTable, NULL, _T("BASE_ID"), _T("Tuxedo servers") },
+   { _T("Tuxedo.ServiceGroups"), H_ServiceGroupsTable, NULL, _T("SVCNAME,SRVGROUP"), _T("Tuxedo service groups") },
    { _T("Tuxedo.Services"), H_ServicesTable, NULL, _T("NAME"), _T("Tuxedo services") }
 };
 
 /**
  * Subagent information
  */
-static NETXMS_SUBAGENT_INFO m_info =
+static NETXMS_SUBAGENT_INFO s_info =
 {
 	NETXMS_SUBAGENT_INFO_MAGIC,
 	_T("TUXEDO"), NETXMS_BUILD_TAG,
@@ -310,7 +333,7 @@ static NETXMS_SUBAGENT_INFO m_info =
  */
 DECLARE_SUBAGENT_ENTRY_POINT(TUXEDO)
 {
-	*ppInfo = &m_info;
+	*ppInfo = &s_info;
 	return true;
 }
 
