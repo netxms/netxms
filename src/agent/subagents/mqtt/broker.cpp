@@ -82,6 +82,8 @@ MqttBroker *MqttBroker::createFromConfig(const ConfigEntry *config, StructArray<
       return NULL;
    }
 
+   mosquitto_threaded_set(broker->m_handle, true);
+
    mosquitto_log_callback_set(broker->m_handle, LogCallback);
    mosquitto_message_callback_set(broker->m_handle, MqttBroker::messageCallback);
 
