@@ -164,10 +164,31 @@ static THREAD_RESULT THREAD_CALL TuxedoPollerThread(void *arg)
 static THREAD s_pollerThread = INVALID_THREAD_HANDLE;
 
 /**
+ * Calculate stack size for Tuxedo client thread
+ */
+inline int GetTuxedoClientThreadStackSize()
+{
+#ifdef NDRX_VERSION
+   return ndrx_platf_stack_get_size();
+#else
+   return 0;
+#endif
+}
+
+/**
  * Subagent initialization
  */
 static bool SubAgentInit(Config *config)
 {
+#ifdef NDRX_VERSION
+   const char *nc = getenv("NDRX_CONFIG");
+   if (nc == NULL)
+   {
+      AgentWriteLog(NXLOG_ERROR, _T("Tuxedo: Enduro/X environment is not configured"));
+      return false;
+   }
+   nxlog_debug_tag(TUXEDO_DEBUG_TAG, 2, _T("Using Enduro/X configuration file %hs"), nc);
+#else
    const char *tc = getenv("TUXCONFIG");
    if (tc == NULL)
    {
@@ -175,6 +196,7 @@ static bool SubAgentInit(Config *config)
       return false;
    }
    nxlog_debug_tag(TUXEDO_DEBUG_TAG, 2, _T("Using Tuxedo configuration file %hs"), tc);
+#endif
 
    g_tuxedoQueryLocalData = config->getValueAsUInt(_T("/Tuxedo/QueryLocalData"), g_tuxedoQueryLocalData);
    nxlog_debug_tag(TUXEDO_DEBUG_TAG, 3, _T("Query local data for machines is %s"),
@@ -188,7 +210,8 @@ static bool SubAgentInit(Config *config)
 
    g_tuxedoLocalMachineFilter = config->getValueAsBoolean(_T("/Tuxedo/FilterByLocalMachineId"), true);
    nxlog_debug_tag(TUXEDO_DEBUG_TAG, 3, _T("Filter by local machine ID is %s"), g_tuxedoLocalMachineFilter ? _T("ON") : _T("OFF"));
-   s_pollerThread = ThreadCreateEx(TuxedoPollerThread, 0, CAST_TO_POINTER(config->getValueAsUInt(_T("/Tuxedo/PollingInterval"), 10), void*));
+   s_pollerThread = ThreadCreateEx(TuxedoPollerThread, GetTuxedoClientThreadStackSize(),
+         CAST_TO_POINTER(config->getValueAsUInt(_T("/Tuxedo/PollingInterval"), 10), void*));
    return true;
 }
 

@@ -29,6 +29,13 @@
 #include <nxtux.h>
 #include <tpadm.h>
 
+#ifdef NDRX_VERSION
+#include <nstdutil.h>
+#ifndef MIB_LOCAL
+#define MIB_LOCAL 0x00010000
+#endif
+#endif
+
 #define TUXEDO_DEBUG_TAG   _T("sa.tuxedo")
 
 bool TuxedoGetMachinePhysicalID(const TCHAR *lmid, char *pmid);

@@ -3692,7 +3692,15 @@ if test $? = 0; then
 	fi
 
 	LIBS="$LIBS $TUXEDO_LIBS"
-	AC_CHECK_LIB(tux, tpcall, [], [AC_MSG_ERROR(libtux is required for Tuxedo support)])
+	AC_CHECK_LIB(tux, tpcall, [ TUXEDO_LIBS="-ltux -lfml32 $TUXEDO_LIBS" ],
+		[
+		 	# Assume we are building for Enduro/X
+			AC_CHECK_LIB(rt, mq_open, [ TUXEDO_LIBS="$TUXEDO_LIBS -lrt" ])
+			AC_CHECK_LIB(atmi, tpcall,
+				[ TUXEDO_LIBS="-latmi -lubf -lnstd $TUXEDO_LIBS" ],
+				[ AC_MSG_ERROR(libtux or libatmi is required for Tuxedo support)],
+				[ -lubf -lnstd $TUXEDO_LIBS ])
+		])
 
 	CPPFLAGS="$OLD_CPPFLAGS"
 	LDFLAGS="$OLD_LDFLAGS"
