@@ -165,6 +165,7 @@
   <ItemGroup>
     <ClCompile Include="check.cpp" />
     <ClCompile Include="clear.cpp" />
+    <ClCompile Include="datacoll.cpp" />
     <ClCompile Include="export.cpp" />
     <ClCompile Include="import.cpp" />
     <ClCompile Include="init.cpp" />

@@ -182,6 +182,7 @@
     <ClCompile Include="queues.cpp" />
     <ClCompile Include="servers.cpp" />
     <ClCompile Include="services.cpp" />
+    <ClCompile Include="svcgroups.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="tuxedo_subagent.h" />

@@ -36,6 +36,9 @@
     <ClCompile Include="services.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="svcgroups.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="tuxedo_subagent.h">
