@@ -181,13 +181,13 @@ inline int GetTuxedoClientThreadStackSize()
 static bool SubAgentInit(Config *config)
 {
 #ifdef NDRX_VERSION
-   const char *nc = getenv("NDRX_CONFIG");
+   const char *nc = getenv("NDRX_CCONFIG");
    if (nc == NULL)
    {
       AgentWriteLog(NXLOG_ERROR, _T("Tuxedo: Enduro/X environment is not configured"));
       return false;
    }
-   nxlog_debug_tag(TUXEDO_DEBUG_TAG, 2, _T("Using Enduro/X configuration file %hs"), nc);
+   nxlog_debug_tag(TUXEDO_DEBUG_TAG, 2, _T("Using Enduro/X configuration directory %hs"), nc);
 #else
    const char *tc = getenv("TUXCONFIG");
    if (tc == NULL)
