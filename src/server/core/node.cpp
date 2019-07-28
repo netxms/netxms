@@ -8724,11 +8724,11 @@ void Node::updatePingData()
 /**
  * Get access point state via driver
  */
-AccessPointState Node::getAccessPointState(AccessPoint *ap, SNMP_Transport *snmpTransport)
+AccessPointState Node::getAccessPointState(AccessPoint *ap, SNMP_Transport *snmpTransport, const ObjectArray<RadioInterfaceInfo> *radioInterfaces)
 {
    if (m_driver == NULL)
       return AP_UNKNOWN;
-   return m_driver->getAccessPointState(snmpTransport, &m_customAttributes, m_driverData, ap->getIndex(), ap->getMacAddr(), ap->getIpAddress());
+   return m_driver->getAccessPointState(snmpTransport, &m_customAttributes, m_driverData, ap->getIndex(), ap->getMacAddr(), ap->getIpAddress(), radioInterfaces);
 }
 
 /**

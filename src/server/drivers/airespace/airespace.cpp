@@ -22,6 +22,8 @@
 
 #include "airespace.h"
 
+#define DEBUG_TAG _T("ndd.airespace")
+
 /**
  * Get driver name
  */
@@ -45,7 +47,8 @@ const TCHAR *AirespaceDriver::getVersion()
  */
 int AirespaceDriver::isPotentialDevice(const TCHAR *oid)
 {
-   return (_tcsncmp(oid, _T(".1.3.6.1.4.1.14179."), 19) == 0) ? 127 : 0;
+   return ((_tcsncmp(oid, _T(".1.3.6.1.4.1.14179."), 19) == 0) ||
+           (_tcsncmp(oid, _T(".1.3.6.1.4.1.9.1."), 17) == 0)) ? 127 : 0;
 }
 
 /**
@@ -58,11 +61,13 @@ bool AirespaceDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
 {
    // read agentInventoryMachineModel
    TCHAR buffer[1024];
-   if (SnmpGetEx(snmp, _T(".1.3.6.1.4.1.14179.1.1.1.3.0"), NULL, 0, buffer, sizeof(buffer), 0, NULL) != SNMP_ERR_SUCCESS)
+   if (SnmpGetEx(snmp, _T(".1.3.6.1.4.1.14179.1.1.1.3.0"), NULL, 0, buffer, sizeof(buffer), SG_STRING_RESULT, NULL) != SNMP_ERR_SUCCESS)
       return false;
 
-   // model must start with AIR-WLC44, like AIR-WLC4402-50-K9
-   return _tcsncmp(buffer, _T("AIR-WLC44"), 9) == 0;
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("agentInventoryMachineModel=\"%s\""), buffer);
+
+   // model must start with AIR-WLC44 (like AIR-WLC4402-50-K9) or AIR-CT55 (like AIR-CT5508-K90)
+   return (_tcsncmp(buffer, _T("AIR-WLC44"), 9) == 0) || (_tcsncmp(buffer, _T("AIR-CT55"), 8) == 0);
 }
 
 /**
@@ -149,7 +154,7 @@ static UINT32 HandlerAccessPointList(SNMP_Variable *var, SNMP_Transport *snmp, v
             new AccessPointInfo(
                0,
                macAddr,
-               ntohl(_t_inet_addr(response->getVariable(1)->getValueAsString(ipAddr, 32))),
+               InetAddress::parse(response->getVariable(1)->getValueAsString(ipAddr, 32)),
                (response->getVariable(2)->getValueAsInt() == 1) ? AP_ADOPTED : AP_UNADOPTED,
                response->getVariable(3)->getValueAsString(name, MAX_OBJECT_NAME),
                _T("Cisco"),   // vendor
@@ -275,6 +280,44 @@ ObjectArray<WirelessStationInfo> *AirespaceDriver::getWirelessStations(SNMP_Tran
    }
 
    return wsList;
+}
+
+/**
+ * Get access point state
+ *
+ * @param snmp SNMP transport
+ * @param attributes Node's custom attributes
+ * @param driverData driver-specific data previously created in analyzeDevice
+ * @param apIndex access point index
+ * @param macAdddr access point MAC address
+ * @param ipAddr access point IP address
+ * @param radioInterfaces list of radio interfaces for this AP
+ * @return state of access point or AP_UNKNOWN if it cannot be determined
+ */
+AccessPointState AirespaceDriver::getAccessPointState(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData,
+                                                      UINT32 apIndex, const BYTE *macAddr, const InetAddress& ipAddr,
+                                                      const ObjectArray<RadioInterfaceInfo> *radioInterfaces)
+{
+   if ((radioInterfaces == NULL) || radioInterfaces->isEmpty())
+      return AP_UNKNOWN;
+
+   TCHAR oid[256], macAddrText[64];
+   _sntprintf(oid, 256, _T(".1.3.6.1.4.1.14179.2.2.1.1.6.%s"),
+            MacAddress(radioInterfaces->get(0)->macAddr, MAC_ADDR_LENGTH).toString(macAddrText, MacAddressNotation::DECIMAL_DOT_SEPARATED));
+
+   UINT32 value;
+   if (SnmpGet(snmp->getSnmpVersion(), snmp, oid, NULL, 0, &value, sizeof(UINT32), 0) != SNMP_ERR_SUCCESS)
+      return AP_UNKNOWN;
+
+   switch(value)
+   {
+      case 1:
+         return AP_ADOPTED;
+      case 2:
+         return AP_UNADOPTED;
+      default:
+         return AP_UNKNOWN;
+   }
 }
 
 /**

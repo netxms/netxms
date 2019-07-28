@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Driver for Symbol WS series wireless switches
-** Copyright (C) 2013-2016 Raden Solutions
+** Copyright (C) 2013-2019 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -385,7 +385,8 @@ static UINT32 HandlerAccessPointFindUnadopted(SNMP_Variable *var, SNMP_Transport
  * @return state of access point or AP_UNKNOWN if it cannot be determined
  */
 AccessPointState SymbolDriver::getAccessPointState(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData,
-                                                   UINT32 apIndex, const BYTE *macAddr, const InetAddress& ipAddr)
+                                                   UINT32 apIndex, const BYTE *macAddr, const InetAddress& ipAddr,
+						   const ObjectArray<RadioInterfaceInfo> *radioInterfaces)
 {
    TCHAR oid[256];
 

@@ -147,9 +147,9 @@ bool AccessPoint::saveToDatabase(DB_HANDLE hdb)
       {
          TCHAR macStr[16];
          DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, BinToStr(m_macAddr, MAC_ADDR_LENGTH, macStr), DB_BIND_STATIC);
-         DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, CHECK_NULL_EX(m_vendor), DB_BIND_STATIC);
-         DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, CHECK_NULL_EX(m_model), DB_BIND_STATIC);
-         DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, CHECK_NULL_EX(m_serialNumber), DB_BIND_STATIC);
+         DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_vendor, DB_BIND_STATIC);
+         DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_model, DB_BIND_STATIC);
+         DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, m_serialNumber, DB_BIND_STATIC);
          DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, m_nodeId);
          DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, (INT32)m_apState);
          DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, m_index);
@@ -347,7 +347,7 @@ void AccessPoint::getRadioName(int rfIndex, TCHAR *buffer, size_t bufSize)
 		{
 			if (m_radioInterfaces->get(i)->index == rfIndex)
 			{
-				nx_strncpy(buffer, m_radioInterfaces->get(i)->name, bufSize);
+				_tcslcpy(buffer, m_radioInterfaces->get(i)->name, bufSize);
 				break;
 			}
 		}
@@ -360,7 +360,7 @@ void AccessPoint::getRadioName(int rfIndex, TCHAR *buffer, size_t bufSize)
  */
 Node *AccessPoint::getParentNode()
 {
-   return (Node *)FindObjectById(m_nodeId, OBJECT_NODE);
+   return static_cast<Node*>(FindObjectById(m_nodeId, OBJECT_NODE));
 }
 
 /**
@@ -370,14 +370,14 @@ void AccessPoint::updateInfo(const TCHAR *vendor, const TCHAR *model, const TCHA
 {
 	lockProperties();
 
-	free(m_vendor);
-	m_vendor = (vendor != NULL) ? _tcsdup(vendor) : NULL;
+	MemFree(m_vendor);
+	m_vendor = MemCopyString(vendor);
 
-	free(m_model);
-	m_model = (model != NULL) ? _tcsdup(model) : NULL;
+	MemFree(m_model);
+	m_model = MemCopyString(model);
 
-	free(m_serialNumber);
-	m_serialNumber = (serialNumber != NULL) ? _tcsdup(serialNumber) : NULL;
+	MemFree(m_serialNumber);
+	m_serialNumber = MemCopyString(serialNumber);
 
 	setModified(MODIFY_OTHER);
 	unlockProperties();
@@ -429,14 +429,15 @@ void AccessPoint::updateState(AccessPointState state)
 /**
  * Do status poll
  */
-void AccessPoint::statusPollFromController(ClientSession *session, UINT32 rqId, ObjectQueue<Event> *eventQueue, Node *controller, SNMP_Transport *snmpTransport)
+void AccessPoint::statusPollFromController(ClientSession *session, UINT32 rqId, ObjectQueue<Event> *eventQueue,
+         Node *controller, SNMP_Transport *snmpTransport)
 {
    m_pollRequestor = session;
 
    sendPollerMsg(rqId, _T("   Starting status poll on access point %s\r\n"), m_name);
    sendPollerMsg(rqId, _T("      Current access point status is %s\r\n"), GetStatusAsText(m_status, true));
 
-   AccessPointState state = controller->getAccessPointState(this, snmpTransport);
+   AccessPointState state = controller->getAccessPointState(this, snmpTransport, m_radioInterfaces);
    if ((state == AP_UNKNOWN) && m_ipAddress.isValid())
    {
       DbgPrintf(6, _T("AccessPoint::statusPoll(%s [%d]): unable to get AP state from driver"), m_name, m_id);

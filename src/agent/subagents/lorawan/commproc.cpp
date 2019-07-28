@@ -126,7 +126,7 @@ LONG H_Communication(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abstrac
    switch(*arg)
    {
       case 'A':
-         ret_string(value, data->getDevAddr().toString(MAC_ADDR_FLAT_STRING));
+         ret_string(value, data->getDevAddr().toString(MacAddressNotation::FLAT_STRING));
          break;
       case 'C':
          ret_int(value, data->getLastContact());

@@ -174,7 +174,7 @@ UINT32 LoraWanServerLink::registerDevice(NXCPMessage *request)
       TCHAR appKey[33];
       request->getFieldAsString(VID_LORA_APP_EUI, appEui, 17);
       request->getFieldAsString(VID_LORA_APP_KEY, appKey, 33);
-      json_object_set_new(root, "deveui", json_string_t((const TCHAR*)data->getDevEui().toString(MAC_ADDR_FLAT_STRING)));
+      json_object_set_new(root, "deveui", json_string_t((const TCHAR*)data->getDevEui().toString(MacAddressNotation::FLAT_STRING)));
       json_object_set_new(root, "appeui", json_string_t(appEui));
       json_object_set_new(root, "appkey", json_string_t(appKey));
       strcat(url, "/devices");
@@ -185,7 +185,7 @@ UINT32 LoraWanServerLink::registerDevice(NXCPMessage *request)
       TCHAR nwkSKey[33];
       request->getFieldAsString(VID_LORA_APP_S_KEY, appSKey, 33);
       request->getFieldAsString(VID_LORA_NWK_S_KWY, nwkSKey, 33);
-      json_object_set_new(root, "devaddr", json_string_t((const TCHAR*)data->getDevAddr().toString(MAC_ADDR_FLAT_STRING)));
+      json_object_set_new(root, "devaddr", json_string_t((const TCHAR*)data->getDevAddr().toString(MacAddressNotation::FLAT_STRING)));
       json_object_set_new(root, "appskey", json_string_t(appSKey));
       json_object_set_new(root, "nwkskey", json_string_t(nwkSKey));
       strcat(url, "/nodes");
@@ -233,11 +233,11 @@ UINT32 LoraWanServerLink::deleteDevice(uuid guid)
    if (data->isOtaa())  // if OTAA
    {
 #ifdef UNICODE
-      addr = UTF8StringFromWideString((const TCHAR*)data->getDevEui().toString(MAC_ADDR_FLAT_STRING));
+      addr = UTF8StringFromWideString((const TCHAR*)data->getDevEui().toString(MacAddressNotation::FLAT_STRING));
       snprintf(url, MAX_PATH, "%s/devices/%s", m_url, addr);
       free(addr);
 #else
-      snprintf(url, MAX_PATH, "%s/devices/%s", m_url, (const TCHAR*)data->getDevEui().toString(MAC_ADDR_FLAT_STRING));
+      snprintf(url, MAX_PATH, "%s/devices/%s", m_url, (const TCHAR*)data->getDevEui().toString(MacAddressNotation::FLAT_STRING));
 #endif
       if (sendRequest("DELETE", url) == CURLE_OK)
       {
@@ -256,11 +256,11 @@ UINT32 LoraWanServerLink::deleteDevice(uuid guid)
    if (data->getDevAddr().length() != 0)
    {
 #ifdef UNICODE
-      addr = UTF8StringFromWideString((const TCHAR *)data->getDevAddr().toString(MAC_ADDR_FLAT_STRING));
+      addr = UTF8StringFromWideString((const TCHAR *)data->getDevAddr().toString(MacAddressNotation::FLAT_STRING));
       snprintf(url, MAX_PATH, "%s/nodes/%s", m_url, addr);
       free(addr);
 #else
-      snprintf(url, MAX_PATH, "%s/nodes/%s", m_url, (const TCHAR *)data->getDevAddr().toString(MAC_ADDR_FLAT_STRING));
+      snprintf(url, MAX_PATH, "%s/nodes/%s", m_url, (const TCHAR *)data->getDevAddr().toString(MacAddressNotation::FLAT_STRING));
 #endif
       struct curl_slist *headers = NULL;
       headers = curl_slist_append(headers, "Accept: application/json");

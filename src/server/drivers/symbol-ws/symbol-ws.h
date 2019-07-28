@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Driver for Symbol WS series wireless switches
-** Copyright (C) 2013 Raden Solutions
+** Copyright (C) 2013-2019 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -33,17 +33,18 @@
 class SymbolDriver : public NetworkDeviceDriver
 {
 public:
-   virtual const TCHAR *getName();
-   virtual const TCHAR *getVersion();
+   virtual const TCHAR *getName() override;
+   virtual const TCHAR *getVersion() override;
 
-   virtual int isPotentialDevice(const TCHAR *oid);
-   virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid);
-   virtual int getClusterMode(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData);
-   virtual bool isWirelessController(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData);
-   virtual ObjectArray<AccessPointInfo> *getAccessPoints(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData);
-   virtual ObjectArray<WirelessStationInfo> *getWirelessStations(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData);
+   virtual int isPotentialDevice(const TCHAR *oid) override;
+   virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid) override;
+   virtual int getClusterMode(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData) override;
+   virtual bool isWirelessController(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData) override;
+   virtual ObjectArray<AccessPointInfo> *getAccessPoints(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData) override;
+   virtual ObjectArray<WirelessStationInfo> *getWirelessStations(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData) override;
    virtual AccessPointState getAccessPointState(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData,
-                                                UINT32 apIndex, const BYTE *macAddr, const InetAddress& ipAddr);
+                                                UINT32 apIndex, const BYTE *macAddr, const InetAddress& ipAddr,
+						const ObjectArray<RadioInterfaceInfo> *radioInterfaces) override;
 };
 
 #endif

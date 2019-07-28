@@ -84,8 +84,8 @@ UINT32 LoraDeviceData::saveToDB(bool isNew) const
 
       if (hStmt != NULL)
       {
-         DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_devAddr.length() > 0 ? (const TCHAR*)m_devAddr.toString(MAC_ADDR_FLAT_STRING) : _T(""), DB_BIND_STATIC);
-         DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_devEui.length() > 0 ? (const TCHAR*)m_devEui.toString(MAC_ADDR_FLAT_STRING) : _T(""), DB_BIND_STATIC);
+         DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_devAddr.length() > 0 ? (const TCHAR*)m_devAddr.toString(MacAddressNotation::FLAT_STRING) : _T(""), DB_BIND_STATIC);
+         DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_devEui.length() > 0 ? (const TCHAR*)m_devEui.toString(MacAddressNotation::FLAT_STRING) : _T(""), DB_BIND_STATIC);
          DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_decoder);
          DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (UINT32)m_lastContact);
          DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, m_guid);

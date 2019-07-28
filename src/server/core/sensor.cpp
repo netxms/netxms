@@ -348,7 +348,7 @@ json_t *Sensor::toJson()
 {
    json_t *root = super::toJson();
    json_object_set_new(root, "flags", json_integer(m_flags));
-   json_object_set_new(root, "macAddr", json_string_t(m_macAddress.toString(MAC_ADDR_FLAT_STRING)));
+   json_object_set_new(root, "macAddr", json_string_t(m_macAddress.toString(MacAddressNotation::FLAT_STRING)));
    json_object_set_new(root, "deviceClass", json_integer(m_deviceClass));
    json_object_set_new(root, "vendor", json_string_t(m_vendor));
    json_object_set_new(root, "commProtocol", json_integer(m_commProtocol));

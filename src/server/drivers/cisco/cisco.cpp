@@ -137,7 +137,6 @@ static UINT32 HandlerTrunkPorts(SNMP_Variable *var, SNMP_Transport *transport, v
    return SNMP_ERR_SUCCESS;
 }
 
-
 /**
  * Handler for access port enumeration on Cisco device
  */

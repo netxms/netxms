@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Database Abstraction Library
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -1433,7 +1433,7 @@ void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, const u
 void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, const MacAddress& value)
 {
    TCHAR buffer[36];
-   DBBind(hStmt, pos, sqlType, DB_CTYPE_STRING, value.toString(buffer, MAC_ADDR_FLAT_STRING), DB_BIND_TRANSIENT);
+   DBBind(hStmt, pos, sqlType, DB_CTYPE_STRING, value.toString(buffer, MacAddressNotation::FLAT_STRING), DB_BIND_TRANSIENT);
 }
 
 /**

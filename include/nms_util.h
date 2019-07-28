@@ -2156,14 +2156,15 @@ inline bool SocketAddressEquals(struct sockaddr *a1, struct sockaddr *a2)
 /**
  * MAC address notations
  */
-enum MacAddressNotation
+enum class MacAddressNotation
 {
-   MAC_ADDR_FLAT_STRING = 0,
-   MAC_ADDR_COLON_SEPARATED = 1,
-   MAC_ADDR_BYTEPAIR_COLON_SEPARATED = 2,
-   MAC_ADDR_HYPHEN_SEPARATED = 3,
-   MAC_ADDR_DOT_SEPARATED = 4,
-   MAC_ADDR_BYTEPAIR_DOT_SEPARATED = 5
+   FLAT_STRING = 0,
+   COLON_SEPARATED = 1,
+   BYTEPAIR_COLON_SEPARATED = 2,
+   HYPHEN_SEPARATED = 3,
+   DOT_SEPARATED = 4,
+   BYTEPAIR_DOT_SEPARATED = 5,
+   DECIMAL_DOT_SEPARATED = 6
 };
 
 /**
@@ -2177,6 +2178,7 @@ private:
 
    TCHAR *toStringInternal(TCHAR *buffer, const TCHAR separator, bool bytePair = false) const;
    TCHAR *toStringInternal3(TCHAR *buffer, const TCHAR separator) const;
+   TCHAR *toStringInternalDecimal(TCHAR *buffer, const TCHAR separator) const;
 
 public:
    MacAddress(size_t length = 0) { m_length = MIN(length, 16); memset(m_value, 0, 16); }
@@ -2194,8 +2196,8 @@ public:
    bool isBroadcast() const;
    bool equals(const MacAddress &a) const;
 
-   TCHAR *toString(TCHAR *buffer, MacAddressNotation notation = MAC_ADDR_COLON_SEPARATED) const;
-   String toString(MacAddressNotation notation = MAC_ADDR_COLON_SEPARATED) const;
+   TCHAR *toString(TCHAR *buffer, MacAddressNotation notation = MacAddressNotation::COLON_SEPARATED) const;
+   String toString(MacAddressNotation notation = MacAddressNotation::COLON_SEPARATED) const;
 };
 
 /**

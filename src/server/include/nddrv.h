@@ -324,7 +324,8 @@ public:
    virtual ObjectArray<AccessPointInfo> *getAccessPoints(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData);
    virtual ObjectArray<WirelessStationInfo> *getWirelessStations(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData);
    virtual AccessPointState getAccessPointState(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData,
-                                                UINT32 apIndex, const BYTE *macAddr, const InetAddress& ipAddr);
+                                                UINT32 apIndex, const BYTE *macAddr, const InetAddress& ipAddr,
+                                                const ObjectArray<RadioInterfaceInfo> *radioInterfaces);
    virtual bool hasMetrics();
    virtual DataCollectionError getMetric(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, const TCHAR *name, TCHAR *value, size_t size);
    virtual ObjectArray<AgentParameterDefinition> *getAvailableMetrics(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData);

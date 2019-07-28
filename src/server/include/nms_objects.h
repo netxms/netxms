@@ -2489,7 +2489,7 @@ public:
 	void routingTablePollWorkerEntry(PollerInfo *poller);
    void routingTablePollWorkerEntry(PollerInfo *poller, ClientSession *session, UINT32 rqId);
 	void checkSubnetBinding();
-   AccessPointState getAccessPointState(AccessPoint *ap, SNMP_Transport *snmpTransport);
+   AccessPointState getAccessPointState(AccessPoint *ap, SNMP_Transport *snmpTransport, const ObjectArray<RadioInterfaceInfo> *radioInterfaces);
    void setChassis(UINT32 chassisId);
    virtual void resetPollTimers() override;
 

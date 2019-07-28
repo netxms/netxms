@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Utility Library
-** Copyright (C) 2003-2018 Raden Solutions
+** Copyright (C) 2003-2019 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -71,26 +71,41 @@ TCHAR *MacAddress::toString(TCHAR *buffer, MacAddressNotation notation) const
 {
    switch(notation)
    {
-      case MAC_ADDR_FLAT_STRING:
+      case MacAddressNotation::FLAT_STRING:
          BinToStr(m_value, m_length, buffer);
          break;
-      case MAC_ADDR_COLON_SEPARATED:
+      case MacAddressNotation::COLON_SEPARATED:
          toStringInternal(buffer, _T(':'));
          break;
-      case MAC_ADDR_BYTEPAIR_COLON_SEPARATED:
+      case MacAddressNotation::BYTEPAIR_COLON_SEPARATED:
          toStringInternal(buffer, _T(':'), true);
          break;
-      case MAC_ADDR_HYPHEN_SEPARATED:
+      case MacAddressNotation::HYPHEN_SEPARATED:
          toStringInternal(buffer, _T('-'));
          break;
-      case MAC_ADDR_DOT_SEPARATED:
+      case MacAddressNotation::DOT_SEPARATED:
          toStringInternal3(buffer, _T('.'));
          break;
-      case MAC_ADDR_BYTEPAIR_DOT_SEPARATED:
+      case MacAddressNotation::BYTEPAIR_DOT_SEPARATED:
          toStringInternal(buffer, _T('.'), true);
+         break;
+      case MacAddressNotation::DECIMAL_DOT_SEPARATED:
+         toStringInternalDecimal(buffer, _T('.'));
          break;
    }
    return buffer;
+}
+
+/**
+ * Returns string representaiton of mac address
+ */
+String MacAddress::toString(MacAddressNotation notation) const
+{
+   if (m_length == 0)
+      return String();
+
+   TCHAR buffer[64]; // max_length(16) * 4
+   return String(toString(buffer, notation));
 }
 
 /**
@@ -132,39 +147,20 @@ TCHAR *MacAddress::toStringInternal(TCHAR *buffer, const TCHAR separator, bool b
 }
 
 /**
- * Returns string representaiton of mac address
+ * Internal method to string
  */
-String MacAddress::toString(MacAddressNotation notation) const
+TCHAR *MacAddress::toStringInternalDecimal(TCHAR *buffer, const TCHAR separator) const
 {
-   if (m_length == 0)
-      return String();
+   TCHAR *curr = buffer;
 
-   size_t stringSize;
-   switch(notation)
+   for(size_t i = 0; i < m_length; i++)
    {
-      case MAC_ADDR_FLAT_STRING:
-         stringSize = m_length * 2 + 1;
-         break;
-      case MAC_ADDR_COLON_SEPARATED:
-      case MAC_ADDR_HYPHEN_SEPARATED:
-      case MAC_ADDR_DOT_SEPARATED:
-         stringSize = m_length * 2 + m_length; //-1 separator +1 for 0 termination
-         break;
-      case MAC_ADDR_BYTEPAIR_DOT_SEPARATED:
-      case MAC_ADDR_BYTEPAIR_COLON_SEPARATED:
-         stringSize = m_length * 2 + m_length / 2; //-1 separator +1 for 0 termination
-         break;
+      if (i > 0)
+         *curr++ = separator;
+      _sntprintf(curr, 4, _T("%u"), static_cast<unsigned int>(m_value[i]));
+      curr += _tcslen(curr);
    }
-#if HAVE_ALLOCA
-   TCHAR *buf = (TCHAR *)alloca(stringSize * sizeof(TCHAR));
-#else
-   TCHAR *buf = MemAllocArray<TCHAR>(stringSize);
-#endif
-   String str(toString(buf, notation));
-#if !HAVE_ALLOCA
-   MemFree(buf);
-#endif
-   return str;
+   return buffer;
 }
 
 /**

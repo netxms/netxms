@@ -846,10 +846,12 @@ ObjectArray<WirelessStationInfo> *NetworkDeviceDriver::getWirelessStations(SNMP_
  * @param apIndex access point index
  * @param macAdddr access point MAC address
  * @param ipAddr access point IP address
+ * @param radioInterfaces list of radio interfaces for this AP
  * @return state of access point or AP_UNKNOWN if it cannot be determined
  */
 AccessPointState NetworkDeviceDriver::getAccessPointState(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, 
-                                                          UINT32 apIndex, const BYTE *macAddr, const InetAddress& ipAddr)
+                                                          UINT32 apIndex, const BYTE *macAddr, const InetAddress& ipAddr,
+                                                          const ObjectArray<RadioInterfaceInfo> *radioInterfaces)
 {
    return AP_UNKNOWN;
 }
