@@ -1177,9 +1177,10 @@ template <class T> class SharedObjectArray
 {
    DISABLE_COPY_CTOR(SharedObjectArray)
 
+   // Note: member order is important because m_data allocates memory from m_pool
 private:
-   Array m_data;
    ObjectMemoryPool<shared_ptr<T>> m_pool;
+   Array m_data;
 
    static shared_ptr<T> m_null;
 
@@ -1190,7 +1191,7 @@ private:
 
 public:
    SharedObjectArray(int initial = 0, int grow = 16) :
-      m_data(initial, grow, true, SharedObjectArray<T>::destructor), m_pool(std::max(grow, 64)) { m_data.setContext(this); }
+      m_pool(std::max(grow, 64)), m_data(initial, grow, true, SharedObjectArray<T>::destructor) { m_data.setContext(this); }
    virtual ~SharedObjectArray() { }
 
    int add(shared_ptr<T> element) { return m_data.add(new(m_pool.allocate()) shared_ptr<T>(element)); }

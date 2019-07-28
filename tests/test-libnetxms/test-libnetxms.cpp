@@ -1245,7 +1245,7 @@ static void TestHashSet()
 }
 
 /**
- * Test array
+ * Test object array
  */
 static void TestObjectArray()
 {
@@ -1313,6 +1313,85 @@ static void TestObjectArray()
    EndTest();
 
    delete array;
+}
+
+/**
+ * Test shared object array
+ */
+static void TestSharedObjectArray()
+{
+   StartTest(_T("SharedObjectArray: create"));
+   SharedObjectArray<String> *array = new SharedObjectArray<String>(16, 16);
+   AssertEquals(array->size(), 0);
+   EndTest();
+
+   StartTest(_T("SharedObjectArray: add/get"));
+   array->add(new String(_T("value 1")));
+   array->add(new String(_T("value 2")));
+   array->add(new String(_T("value 3")));
+   array->add(new String(_T("value 4")));
+   array->add(new String(_T("value 5")));
+   AssertEquals(array->size(), 5);
+   AssertNull(array->get(5));
+   AssertNotNull(array->get(1));
+   AssertTrue(!_tcscmp(array->get(1)->getBuffer(), _T("value 2")));
+   EndTest();
+
+   StartTest(_T("SharedObjectArray: replace"));
+   array->replace(0, new String(_T("replace")));
+   AssertEquals(array->size(), 5);
+   AssertTrue(!_tcscmp(array->get(0)->getBuffer(), _T("replace")));
+   EndTest();
+
+   StartTest(_T("SharedObjectArray: remove"));
+   array->remove(0);
+   AssertEquals(array->size(), 4);
+   AssertTrue(!_tcscmp(array->get(0)->getBuffer(), _T("value 2")));
+   array->remove(3);
+   AssertEquals(array->size(), 3);
+   AssertTrue(!_tcscmp(array->get(2)->getBuffer(), _T("value 4")));
+   EndTest();
+
+   /*
+   StartTest(_T("SharedObjectArray: iterator"));
+   Iterator<String> *it = array->iterator();
+   AssertTrue(it->hasNext());
+   String *s = it->next();
+   AssertTrue(!_tcscmp(s->getBuffer(), _T("value 2")));
+   s = it->next();
+   AssertTrue(!_tcscmp(s->getBuffer(), _T("value 3")));
+   s = it->next();
+   AssertTrue(!_tcscmp(s->getBuffer(), _T("value 4")));
+   s = it->next();
+   AssertNull(s);
+   delete it;
+   EndTest();
+
+   StartTest(_T("SharedObjectArray: remove with iterator"));
+   it = array->iterator();
+   AssertTrue(it->hasNext());
+   while(it->hasNext())
+   {
+      String *s = it->next();
+      if (!_tcscmp(s->getBuffer(), _T("value 4")))
+      {
+         it->remove();
+      }
+   }
+   delete it;
+   AssertEquals(array->size(), 2);
+   AssertTrue(!_tcscmp(array->get(0)->getBuffer(), _T("value 2")));
+   AssertTrue(!_tcscmp(array->get(1)->getBuffer(), _T("value 3")));
+   EndTest();
+   */
+
+   StartTest(_T("SharedObjectArray: get shared"));
+   shared_ptr<String> s = array->getShared(0);
+   AssertEquals(s.use_count(), 2);
+   delete array;
+   AssertEquals(s.use_count(), 1);
+   AssertTrue(!_tcscmp(s->getBuffer(), _T("value 2")));
+   EndTest();
 }
 
 /**
@@ -1845,6 +1924,7 @@ int main(int argc, char *argv[])
    TestHashMap();
    TestHashSet();
    TestObjectArray();
+   TestSharedObjectArray();
    TestTable();
    TestMutex();
    TestMutexWrapper();
