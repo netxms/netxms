@@ -196,7 +196,7 @@ public:
 TuxedoServer::TuxedoServer(TuxedoServerInstance *base) : m_summary(base), m_instances(64, 64, true)
 {
    m_uniqueId = (base->m_groupId << 16) | base->m_baseId;
-   m_running = !strcmp(base->m_state, "ACTIVE") ? 1 : 0;
+   m_running = !strncmp(base->m_state, "ACT", 3) ? 1 : 0;
    m_instances.add(base);
 }
 
