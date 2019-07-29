@@ -18,6 +18,7 @@
 - Cleanup of collected DCI data by housekeeper can be disabled
 - Service group support in Tuxedo subagent
 - Improved Enduro/X compatibility
+- Improved Cisco Aironet (former Airespace) driver
 - Fixed issues:
 	NX-183 (Implemented responsible users for objects)
 	NX-725 (Add alarm comments from NXSL)
