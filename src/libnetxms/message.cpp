@@ -1276,6 +1276,11 @@ String NXCPMessage::dump(const NXCP_MESSAGE *msg, int version)
       out += _T("  ** binary message\n");
       return out;
    }
+   if (flags & MF_CONTROL)
+   {
+      out += _T("  ** control message\n");
+      return out;
+   }
 
    size_t msgDataSize;
    const BYTE *msgData;
@@ -1331,7 +1336,7 @@ String NXCPMessage::dump(const NXCP_MESSAGE *msg, int version)
       if ((pos > msgDataSize - 12) &&
           ((field->type == NXCP_DT_STRING) || (field->type == NXCP_DT_UTF8_STRING) || (field->type == NXCP_DT_BINARY)))
       {
-         out.appendFormattedString(_T("  ** message format error (pos > size - 8 and field type %d)\n"), (int)field->type);
+         out.appendFormattedString(_T("  ** message format error (pos > msgDataSize - 12 and field type %d)\n"), (int)field->type);
          break;
       }
 
