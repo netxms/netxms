@@ -1276,20 +1276,59 @@ String NXCPMessage::dump(const NXCP_MESSAGE *msg, int version)
       out += _T("  ** binary message\n");
       return out;
    }
+
+   size_t msgDataSize;
+   const BYTE *msgData;
+   BYTE *allocatedMsgData;
+   if ((flags & MF_COMPRESSED) && (version >= 4))
+   {
+      msgDataSize = (size_t)ntohl(*((UINT32 *)((BYTE *)msg + NXCP_HEADER_SIZE))) - NXCP_HEADER_SIZE;
+
+      z_stream stream;
+      stream.zalloc = Z_NULL;
+      stream.zfree = Z_NULL;
+      stream.opaque = Z_NULL;
+      stream.avail_in = size - NXCP_HEADER_SIZE - 4;
+      stream.next_in = (BYTE *)msg + NXCP_HEADER_SIZE + 4;
+      if (inflateInit(&stream) != Z_OK)
+      {
+         out.append(_T("Cannot decompress message"));
+         return out;
+      }
+
+      msgData = allocatedMsgData = static_cast<BYTE*>(MemAlloc(msgDataSize));
+      stream.next_out = allocatedMsgData;
+      stream.avail_out = (UINT32)msgDataSize;
+
+      if (inflate(&stream, Z_FINISH) != Z_STREAM_END)
+      {
+         inflateEnd(&stream);
+         MemFree(allocatedMsgData);
+         out.append(_T("Cannot decompress message"));
+         return out;
+      }
+      inflateEnd(&stream);
+   }
+   else
+   {
+      msgDataSize = size - NXCP_HEADER_SIZE;
+      msgData = reinterpret_cast<const BYTE*>(msg) + NXCP_HEADER_SIZE;
+      allocatedMsgData = NULL;
+   }
    
    // Parse data fields
-   size_t pos = NXCP_HEADER_SIZE;
+   size_t pos = 0;
    for(int f = 0; f < numFields; f++)
    {
-      const NXCP_MESSAGE_FIELD *field = reinterpret_cast<const NXCP_MESSAGE_FIELD*>(reinterpret_cast<const BYTE*>(msg) + pos);
+      const NXCP_MESSAGE_FIELD *field = reinterpret_cast<const NXCP_MESSAGE_FIELD*>(msgData + pos);
 
       // Validate position inside message
-      if (pos > size - 8)
+      if (pos > msgDataSize - 8)
       {
-         out += _T("  ** message format error (pos > size - 8)\n");
+         out += _T("  ** message format error (pos > msgDataSize - 8)\n");
          break;
       }
-      if ((pos > size - 12) && 
+      if ((pos > msgDataSize - 12) &&
           ((field->type == NXCP_DT_STRING) || (field->type == NXCP_DT_UTF8_STRING) || (field->type == NXCP_DT_BINARY)))
       {
          out.appendFormattedString(_T("  ** message format error (pos > size - 8 and field type %d)\n"), (int)field->type);
@@ -1298,7 +1337,7 @@ String NXCPMessage::dump(const NXCP_MESSAGE *msg, int version)
 
       // Calculate and validate field size
       size_t fieldSize = CalculateFieldSize(field, true);
-      if (pos + fieldSize > size)
+      if (pos + fieldSize > msgDataSize)
       {
          out.appendFormattedString(_T("  ** message format error (invalid field size %d at offset 0x%06X)\n"), (int)fieldSize, (int)pos);
          break;
@@ -1365,7 +1404,7 @@ String NXCPMessage::dump(const NXCP_MESSAGE *msg, int version)
             out.appendFormattedString(_T("  ** %06X: [%6d] unknown type %d\n"), (int)pos, (int)convertedField->fieldId, (int)field->type);
             break;
       }
-      free(convertedField);
+      MemFree(convertedField);
 
       // Starting from version 2, all fields should be 8-byte aligned
       if (version >= 2)
@@ -1374,5 +1413,6 @@ String NXCPMessage::dump(const NXCP_MESSAGE *msg, int version)
          pos += fieldSize;
    }
 
+   MemFree(allocatedMsgData);
    return out;
 }
