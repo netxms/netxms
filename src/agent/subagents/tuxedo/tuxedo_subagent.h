@@ -38,6 +38,8 @@
 
 #define TUXEDO_DEBUG_TAG   _T("sa.tuxedo")
 
+#define MAX_LMID_LEN    64
+
 bool TuxedoGetMachinePhysicalID(const TCHAR *lmid, char *pmid);
 bool TuxedoGetLocalMachineID(char *lmid);
 

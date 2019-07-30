@@ -32,7 +32,7 @@ public:
    TCHAR m_srvGroup[32];
    long m_groupNumber;
    char m_rqAddr[32];
-   char m_lmid[64];
+   char m_lmid[MAX_LMID_LEN];
    char m_state[16];
    char m_routingName[16];
    long m_load;
@@ -129,7 +129,7 @@ void TuxedoQueryServiceGroups()
    CFchg32(fb, TA_OPERATION, 0, (char *)"GET", 0, FLD_STRING);
    CFchg32(fb, TA_CLASS, 0, (char *)"T_SVCGRP", 0, FLD_STRING);
 
-   char lmid[64];
+   char lmid[MAX_LMID_LEN];
    if (g_tuxedoLocalMachineFilter && TuxedoGetLocalMachineID(lmid))
    {
       CFchg32(fb, TA_LMID, 0, lmid, 0, FLD_STRING);
@@ -152,7 +152,7 @@ void TuxedoQueryServiceGroups()
          {
             TuxedoServiceGropup *s = new TuxedoServiceGropup(rsp, (FLDOCC32)i);
             TCHAR key[128];
-            _sntprintf(key, 128, _T("%s/%s"), s->m_svcName, s->m_srvGroup);
+            _sntprintf(key, 128, _T("%s/%s/%hs"), s->m_svcName, s->m_srvGroup, s->m_lmid);
             serviceGroups->set(key, s);
          }
 
@@ -200,7 +200,7 @@ LONG H_ServiceGroupsList(const TCHAR *param, const TCHAR *arg, StringList *value
       {
          auto group = static_cast<const TuxedoServiceGropup*>(serviceGroups->get(i)->value);
          TCHAR buffer[128];
-         _sntprintf(buffer, 128, _T("%s,%s"), group->m_svcName, group->m_srvGroup);
+         _sntprintf(buffer, 128, _T("%s,%s,%s"), group->m_svcName, group->m_srvGroup, group->m_lmid);
          value->add(buffer);
       }
       delete serviceGroups;
@@ -225,9 +225,9 @@ LONG H_ServiceGroupsTable(const TCHAR *param, const TCHAR *arg, Table *value, Ab
    {
       value->addColumn(_T("SVCNAME"), DCI_DT_STRING, _T("Service name"), true);
       value->addColumn(_T("SRVGROUP"), DCI_DT_STRING, _T("Server group"), true);
+      value->addColumn(_T("LMID"), DCI_DT_STRING, _T("LMID"), true);
       value->addColumn(_T("GROUPNO"), DCI_DT_INT, _T("Group number"));
       value->addColumn(_T("RQADDR"), DCI_DT_STRING, _T("Request address"));
-      value->addColumn(_T("LMID"), DCI_DT_STRING, _T("LMID"));
       value->addColumn(_T("STATE"), DCI_DT_STRING, _T("State"));
       value->addColumn(_T("RT_NAME"), DCI_DT_STRING, _T("Routing name"));
       value->addColumn(_T("LOAD"), DCI_DT_INT, _T("Load"));
@@ -249,9 +249,9 @@ LONG H_ServiceGroupsTable(const TCHAR *param, const TCHAR *arg, Table *value, Ab
          auto group = static_cast<const TuxedoServiceGropup*>(serviceGroups->get(i)->value);
          value->set(0, group->m_svcName);
          value->set(1, group->m_srvGroup);
-         value->set(2, (INT32)group->m_groupNumber);
-         value->set(3, group->m_rqAddr);
-         value->set(4, group->m_lmid);
+         value->set(2, group->m_lmid);
+         value->set(3, (INT32)group->m_groupNumber);
+         value->set(4, group->m_rqAddr);
          value->set(5, group->m_state);
          value->set(6, group->m_routingName);
          value->set(7, (INT32)group->m_load);
@@ -282,11 +282,17 @@ LONG H_ServiceGroupsTable(const TCHAR *param, const TCHAR *arg, Table *value, Ab
 LONG H_ServiceGroupInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    TCHAR serviceName[32], serverGroup[32];
-   if (!AgentGetParameterArg(param, 1, serviceName, 32) || !AgentGetParameterArg(param, 2, serverGroup, 32))
+   char lmid[MAX_LMID_LEN];
+   if (!AgentGetParameterArg(param, 1, serviceName, 32) ||
+       !AgentGetParameterArg(param, 2, serverGroup, 32) ||
+       !AgentGetParameterArgA(param, 3, lmid, MAX_LMID_LEN))
       return SYSINFO_RC_UNSUPPORTED;
 
+   if (lmid[0] == 0)
+      TuxedoGetLocalMachineID(lmid);
+
    TCHAR key[128];
-   _sntprintf(key, 128, _T("%s/%s"), serviceName, serverGroup);
+   _sntprintf(key, 128, _T("%s/%s/%hs"), serviceName, serverGroup, lmid);
 
    LONG rc = SYSINFO_RC_SUCCESS;
 

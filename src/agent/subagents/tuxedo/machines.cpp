@@ -113,7 +113,7 @@ TuxedoMachine::TuxedoMachine(FBFR32 *fb, FLDOCC32 index)
 /**
  * Local machine ID
  */
-static char s_localMachineId[64];
+static char s_localMachineId[MAX_LMID_LEN];
 static bool s_validLocalMachineId = false;
 
 /**
