@@ -2338,8 +2338,8 @@ protected:
    bool deleteDuplicateInterfaces(UINT32 rqid);
    void executeInterfaceUpdateHook(Interface *iface);
    void updatePhysicalContainerBinding(int containerClass, UINT32 containerId);
-   DuplicateCheckResult checkForDuplicates(Node **duplicate);
-   bool isDuplicateOf(Node *node);
+   DuplicateCheckResult checkForDuplicates(Node **duplicate, TCHAR *reason, size_t size);
+   bool isDuplicateOf(Node *node, TCHAR *reason, size_t size);
    void reconcileWithDuplicateNode(Node *node);
 
    bool connectToAgent(UINT32 *error = NULL, UINT32 *socketError = NULL, bool *newConnection = NULL, bool forceConnect = false);

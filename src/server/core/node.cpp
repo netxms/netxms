@@ -2849,12 +2849,36 @@ bool Node::updateSoftwarePackages(PollerInfo *poller, UINT32 requestId)
 }
 
 /**
+ * Data for DeleteDuplicateNode
+ */
+struct DeleteDuplicateNodeData
+{
+   Node *originalNode;
+   Node *duplicateNode;
+   TCHAR *reason;
+
+   DeleteDuplicateNodeData(Node *original, Node *duplicate, const TCHAR *_reason)
+   {
+      originalNode = original;
+      duplicateNode = duplicate;
+      reason = MemCopyString(_reason);
+   }
+};
+
+/**
  * Background worker for duplicate node delete
  */
-static void DeleteDuplicateNode(Node *node)
+static void DeleteDuplicateNode(DeleteDuplicateNodeData *data)
 {
-   node->deleteObject(NULL);
-   node->decRefCount();
+   PostEvent(EVENT_DUPLICATE_NODE_DELETED, g_dwMgmtNode, "dssdsss",
+            data->originalNode->getId(), data->originalNode->getName(), data->originalNode->getPrimaryName(),
+            data->duplicateNode->getId(), data->duplicateNode->getName(), data->duplicateNode->getPrimaryName(),
+            data->reason);
+   data->duplicateNode->deleteObject(NULL);
+   data->duplicateNode->decRefCount();
+   data->originalNode->decRefCount();
+   MemFree(data->reason);
+   delete data;
 }
 
 /**
@@ -2967,7 +2991,8 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
       if (g_flags & AF_MERGE_DUPLICATE_NODES)
       {
          Node *duplicateNode;
-         DuplicateCheckResult dcr = checkForDuplicates(&duplicateNode);
+         TCHAR reason[1024];
+         DuplicateCheckResult dcr = checkForDuplicates(&duplicateNode, reason, 1024);
          if (dcr == REMOVE_THIS)
          {
             nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 3, _T("Removing node %s [%u] as duplicate"), m_name, m_id);
@@ -2980,18 +3005,19 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
             pollerUnlock();
 
             duplicateNode->reconcileWithDuplicateNode(this);
-            duplicateNode->decRefCount();
             nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("Aborted configuration poll for node %s (ID: %d)"), m_name, m_id);
             incRefCount();  // for delete callback
-            ThreadPoolExecute(g_pollerThreadPool, DeleteDuplicateNode, this);
+            // Delete callback will call decRefCount on duplicateNode
+            ThreadPoolExecute(g_pollerThreadPool, DeleteDuplicateNode, new DeleteDuplicateNodeData(duplicateNode, this, reason));
             return;
          }
          else if (dcr == REMOVE_OTHER)
          {
             nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 3, _T("Removing node %s [%u] as duplicate"), duplicateNode->getName(), duplicateNode->getId());
             reconcileWithDuplicateNode(duplicateNode);
-            // Delete callback will call decRefCount
-            ThreadPoolExecute(g_pollerThreadPool, DeleteDuplicateNode, duplicateNode);
+            incRefCount();  // for delete callback
+            // Delete callback will call decRefCount on duplicateNode
+            ThreadPoolExecute(g_pollerThreadPool, DeleteDuplicateNode, new DeleteDuplicateNodeData(this, duplicateNode, reason));
          }
       }
 
@@ -3141,7 +3167,7 @@ static bool FilterByZone(NetObj *object, void *zoneUIN)
 /**
  * Check for duplicate nodes
  */
-DuplicateCheckResult Node::checkForDuplicates(Node **duplicate)
+DuplicateCheckResult Node::checkForDuplicates(Node **duplicate, TCHAR *reason, size_t size)
 {
    DuplicateCheckResult result = NO_DUPLICATES;
    ObjectArray<NetObj> *nodes = g_idxNodeById.getObjects(true, FilterByZone, CAST_TO_POINTER(m_zoneUIN, void*));
@@ -3155,7 +3181,7 @@ DuplicateCheckResult Node::checkForDuplicates(Node **duplicate)
          continue;
       }
 
-      if (isDuplicateOf(node))
+      if (isDuplicateOf(node, reason, 1024))
       {
          nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 3, _T("Node %s [%u] is a duplicate of node %s [%u]"),
                   m_name, m_id, node->getName(), node->getId());
@@ -3202,7 +3228,7 @@ DuplicateCheckResult Node::checkForDuplicates(Node **duplicate)
 /**
  * Check if this node is a duplicate of given node
  */
-bool Node::isDuplicateOf(Node *node)
+bool Node::isDuplicateOf(Node *node, TCHAR *reason, size_t size)
 {
    // Check if primary IP is on one of other node's interfaces
    if (!(m_flags & NF_REMOTE_AGENT) && m_ipAddress.isValidUnicast() &&
@@ -3211,8 +3237,9 @@ bool Node::isDuplicateOf(Node *node)
       Interface *iface = node->findInterfaceByIP(m_ipAddress);
       if (iface != NULL)
       {
-         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 3, _T("Primary IP address %s of node %s [%u] found on interface %s of node %s [%u]"),
+         _sntprintf(reason, size, _T("Primary IP address %s of node %s [%u] found on interface %s of node %s [%u]"),
                   (const TCHAR *)m_ipAddress.toString(), m_name, m_id, iface->getName(), node->getName(), node->getId());
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 3, _T("%s"), reason);
          return true;
       }
    }
