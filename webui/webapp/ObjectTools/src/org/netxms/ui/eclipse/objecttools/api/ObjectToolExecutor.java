@@ -567,6 +567,7 @@ public final class ObjectToolExecutor
                   {
                      final IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
                      MessageDialogHelper.openError(window.getShell(), Messages.get().ObjectToolsDynamicMenu_Error, String.format(Messages.get().ObjectToolsDynamicMenu_ErrorOpeningView, e.getLocalizedMessage()));
+                     Activator.logError("Cannot open agent file viewer", e);
                   }
                }
             });
