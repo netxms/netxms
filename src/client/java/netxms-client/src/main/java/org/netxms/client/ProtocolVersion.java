@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2019 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,23 +28,23 @@ import org.netxms.base.NXCPMessage;
 public final class ProtocolVersion
 {
    // Versions
-   public static final int ALARMS = 3;
-   public static final int BASE = 51;
-   public static final int FULL = 25;
-   public static final int MOBILE = 1;
-   public static final int PUSH = 1;
+   public static final int ALARMS    = 3;
+   public static final int BASE      = 52;
+   public static final int FULL      = 25;
+   public static final int MOBILE    = 1;
+   public static final int PUSH      = 1;
    public static final int SCHEDULER = 2;
-   public static final int TCPPROXY = 1;
-   public static final int TRAP = 1;
+   public static final int TCPPROXY  = 1;
+   public static final int TRAP      = 1;
    
    // Indexes
-   public static final int INDEX_BASE = 0;
-   public static final int INDEX_ALARMS = 1;
-   public static final int INDEX_PUSH = 2;
-   public static final int INDEX_TRAP = 3;
-   public static final int INDEX_MOBILE = 4;
-   public static final int INDEX_FULL = 5;
-   public static final int INDEX_TCPPROXY = 6;
+   public static final int INDEX_BASE      = 0;
+   public static final int INDEX_ALARMS    = 1;
+   public static final int INDEX_PUSH      = 2;
+   public static final int INDEX_TRAP      = 3;
+   public static final int INDEX_MOBILE    = 4;
+   public static final int INDEX_FULL      = 5;
+   public static final int INDEX_TCPPROXY  = 6;
    public static final int INDEX_SCHEDULER = 7;
    
    private static final int[] CURRENT_VERSION = { BASE, ALARMS, PUSH, TRAP, MOBILE, FULL, TCPPROXY, SCHEDULER };

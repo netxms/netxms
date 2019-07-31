@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -41,7 +41,7 @@
 /**
  * Current client-server protocol versions
  */
-#define CLIENT_PROTOCOL_VERSION_BASE      51    /* Base protocol version - must match for all clients */
+#define CLIENT_PROTOCOL_VERSION_BASE      52    /* Base protocol version - must match for all clients */
 #define CLIENT_PROTOCOL_VERSION_ALARMS    3     /* Alarm management API */
 #define CLIENT_PROTOCOL_VERSION_PUSH      1     /* Data push API */
 #define CLIENT_PROTOCOL_VERSION_TRAP      1     /* Event (trap) sending API */
