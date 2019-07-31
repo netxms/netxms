@@ -201,7 +201,7 @@ void Subnet::setCorrectMask(const InetAddress& addr)
  * @param macAddr buffer for found MAC address
  * @return true if MAC address found
  */
-bool Subnet::findMacAddress(const InetAddress& ipAddr, BYTE *macAddr)
+MacAddress Subnet::findMacAddress(const InetAddress& ipAddr)
 {
    TCHAR buffer[64];
    nxlog_debug_tag(DEBUG_TAG_TOPO_ARP, 6, _T("Subnet[%s]::findMacAddress: searching for IP address %s"), m_name, ipAddr.toString(buffer));
@@ -222,6 +222,7 @@ bool Subnet::findMacAddress(const InetAddress& ipAddr, BYTE *macAddr)
    unlockChildList();
 
    bool success = false;
+   MacAddress macAddr(MacAddress::ZERO);
    int i;
    for(i = 0; (i < nodes.size()) && !success; i++)
    {
@@ -234,7 +235,7 @@ bool Subnet::findMacAddress(const InetAddress& ipAddr, BYTE *macAddr)
          if (e != NULL)
          {
             nxlog_debug_tag(DEBUG_TAG_TOPO_ARP, 6, _T("Subnet[%s]::findMacAddress: found MAC address for IP address %s"), m_name, ipAddr.toString(buffer));
-            memcpy(macAddr, e->macAddr.value(), MAC_ADDR_LENGTH);
+            macAddr = e->macAddr;
             success = true;
          }
          arpCache->decRefCount();
@@ -249,7 +250,7 @@ bool Subnet::findMacAddress(const InetAddress& ipAddr, BYTE *macAddr)
    for(; i < nodes.size(); i++)
       nodes.get(i)->decRefCount();
 
-	return success;
+	return macAddr;
 }
 
 /**

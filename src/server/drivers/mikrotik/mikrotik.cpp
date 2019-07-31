@@ -227,7 +227,7 @@ ObjectArray<AccessPointInfo> *MikrotikDriver::getAccessPoints(SNMP_Transport *sn
  * @return state of access point or AP_UNKNOWN if it cannot be determined
  */
 AccessPointState MikrotikDriver::getAccessPointState(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData,
-                                                     UINT32 apIndex, const BYTE *macAddr, const InetAddress& ipAddr,
+                                                     UINT32 apIndex, const MacAddress& macAddr, const InetAddress& ipAddr,
 						     const ObjectArray<RadioInterfaceInfo> *radioInterfaces)
 {
    return AP_ADOPTED;

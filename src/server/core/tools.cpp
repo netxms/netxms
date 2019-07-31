@@ -222,21 +222,20 @@ BOOL ExecCommand(TCHAR *pszCommand)
  * Send Wake-on-LAN packet (magic packet) to given IP address
  * with given MAC address inside
  */
-BOOL SendMagicPacket(UINT32 dwIpAddr, BYTE *pbMacAddr, int iNumPackets)
+bool SendMagicPacket(const InetAddress& ipAddr, const MacAddress& macAddr, int count)
 {
-   BYTE *pCurr, bPacketData[102];
-   SOCKET hSocket;
-   struct sockaddr_in addr;
-   BOOL bResult = TRUE;
-   int i;
+   if (!macAddr.isValid() || (macAddr.length() != 6) || (ipAddr.getFamily() != AF_INET))
+      return false;
 
    // Create data area
-   memset(bPacketData, 0xFF, 6);
-   for(i = 0, pCurr = bPacketData + 6; i < 16; i++, pCurr += 6)
-      memcpy(pCurr, pbMacAddr, 6);
+   BYTE packetData[102];
+   memset(packetData, 0xFF, 6);
+   BYTE *curr = packetData + 6;
+   for(int i = 0; i < 16; i++, curr += 6)
+      memcpy(curr, macAddr.value(), 6);
 
    // Create socket
-   hSocket = socket(AF_INET, SOCK_DGRAM, 0);
+   SOCKET hSocket = socket(AF_INET, SOCK_DGRAM, 0);
    if (hSocket == INVALID_SOCKET)
    {
       DbgPrintf(5, _T("SendMagicPacket: ERROR creating socket: %s."), _tcserror(errno));
@@ -244,22 +243,24 @@ BOOL SendMagicPacket(UINT32 dwIpAddr, BYTE *pbMacAddr, int iNumPackets)
    }
 	SetSocketBroadcast(hSocket);
 
+   struct sockaddr_in addr;
    memset(&addr, 0, sizeof(struct sockaddr_in));
    addr.sin_family = AF_INET;
-   addr.sin_addr.s_addr = dwIpAddr;
+   addr.sin_addr.s_addr = htonl(ipAddr.getAddressV4());
    addr.sin_port = htons(53);
 
    // Send requested number of packets
-   for(i = 0; i < iNumPackets; i++)
-      if (sendto(hSocket, (char *)bPacketData, 102, 0, (struct sockaddr *)&addr, sizeof(struct sockaddr_in)) < 0)
+   bool success = true;
+   for(int i = 0; i < count; i++)
+      if (sendto(hSocket, (char *)packetData, 102, 0, (struct sockaddr *)&addr, sizeof(struct sockaddr_in)) < 0)
       {
-         DbgPrintf(5, _T("SendMagicPacket: ERROR sending message: %s."), _tcserror(errno));
-         bResult = FALSE;
+         nxlog_debug(5, _T("SendMagicPacket: ERROR sending message: %s."), _tcserror(errno));
+         success = false;
       }
 
    // Cleanup
    closesocket(hSocket);
-   return bResult;
+   return success;
 }
 
 /**

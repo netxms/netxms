@@ -26,6 +26,16 @@
 #include <netxms-regex.h>
 
 /**
+ * Predefined invalid MAC address object
+ */
+const MacAddress MacAddress::NONE;
+
+/**
+ * Predefined MAC address object 00:00:00:00:00:00
+ */
+const MacAddress MacAddress::ZERO(MAC_ADDR_LENGTH);
+
+/**
  * Returns true if MAC address is valid (has non-zero length and do not consists of all zeroes
  */
 bool MacAddress::isValid() const
@@ -37,31 +47,16 @@ bool MacAddress::isValid() const
 }
 
 /**
- * Returns true if it is the multicast address
- */
-bool MacAddress::isMulticast() const
-{
-   return (m_length == 6) ? (m_value[0] & 0x01) != 0 : false;
-}
-
-/**
  * Returns true if it is the broadcast address
  */
 bool MacAddress::isBroadcast() const
 {
-   return (m_length == 6) ? !memcmp(m_value, "\xFF\xFF\xFF\xFF\xFF\xFF", 6) : false;
-}
-
-/**
- * Returns true if addrese are equals
- */
-bool MacAddress::equals(const MacAddress &a) const
-{
-   if(a.length() == m_length)
-   {
-      return !memcmp(m_value, a.value(), m_length);
-   }
-   return false;
+   if (m_length == 0)
+      return false;
+   for(size_t i = 0; i < m_length; i++)
+      if (m_value[i] != 0xFF)
+         return false;
+   return true;
 }
 
 /**
@@ -169,7 +164,7 @@ TCHAR *MacAddress::toStringInternalDecimal(TCHAR *buffer, const TCHAR separator)
 MacAddress MacAddress::parse(const char *str)
 {
    if (str == NULL || strlen(str) > 23)
-      return MacAddress();
+      return MacAddress(MacAddress::ZERO);
 
    regex_t compRegex;
    char exp1[254] = { "^([0-9a-fA-F]{2})[ :-]?"
@@ -218,7 +213,7 @@ MacAddress MacAddress::parse(const char *str)
       return MacAddress(buffer, size);
    }
 
-   return MacAddress();
+   return MacAddress(MacAddress::ZERO);
 }
 
 /**

@@ -1020,7 +1020,7 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *object, const char *attr)
    else if (!strcmp(attr, "macAddr"))
    {
 		TCHAR buffer[256];
-		value = vm->createValue(BinToStr(iface->getMacAddr(), MAC_ADDR_LENGTH, buffer));
+		value = vm->createValue(iface->getMacAddr().toString(buffer));
    }
    else if (!strcmp(attr, "mtu"))
    {

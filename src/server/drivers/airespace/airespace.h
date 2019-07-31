@@ -43,7 +43,7 @@ public:
    virtual ObjectArray<AccessPointInfo> *getAccessPoints(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData) override;
    virtual ObjectArray<WirelessStationInfo> *getWirelessStations(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData) override;
    virtual AccessPointState getAccessPointState(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData,
-                                                UINT32 apIndex, const BYTE *macAddr, const InetAddress& ipAddr,
+                                                UINT32 apIndex, const MacAddress& macAddr, const InetAddress& ipAddr,
                                                 const ObjectArray<RadioInterfaceInfo> *radioInterfaces) override;
 };
 

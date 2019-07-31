@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -111,7 +111,7 @@ static Interface *FindRemoteInterface(Node *node, UINT32 idType, BYTE *id, size_
 	switch(idType)
 	{
 		case 3:	// MAC address
-			return node->findInterfaceByMAC(id);
+			return node->findInterfaceByMAC(MacAddress(id, idLen));
 		case 4:	// Network address
 			if (id[0] == 1)	// IPv4
 			{

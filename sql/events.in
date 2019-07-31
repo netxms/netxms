@@ -1242,8 +1242,8 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'   5) Known MAC address' CONCAT CRLF CONCAT
 		'   6) Discovered MAC address' CONCAT CRLF CONCAT
 		'   7) Discovery source node object ID' CONCAT CRLF CONCAT
-      '   8) Discovery source node name' CONCAT CRLF CONCAT
-      '   9) Discovery data source'
+		'   8) Discovery source node name' CONCAT CRLF CONCAT
+		'   9) Discovery data source'
 	);
 
 /*

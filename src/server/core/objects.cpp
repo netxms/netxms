@@ -2190,13 +2190,14 @@ static void DumpObject(ServerConsole *console, NetObj *object, TCHAR *buffer)
                   static_cast<Subnet*>(object)->getIpAddress().getMaskBits());
          break;
       case OBJECT_ACCESSPOINT:
-         ConsolePrintf(console, _T("   IP address..........: %s\n"), ((AccessPoint *)object)->getIpAddress().toString(buffer));
+         ConsolePrintf(console, _T("   MAC address.........: %s\n"), static_cast<AccessPoint*>(object)->getMacAddr().toString(buffer));
+         ConsolePrintf(console, _T("   IP address..........: %s\n"), static_cast<AccessPoint*>(object)->getIpAddress().toString(buffer));
          break;
       case OBJECT_INTERFACE:
-         ConsolePrintf(console, _T("   MAC address.........: %s\n"), MACToStr(((Interface *)object)->getMacAddr(), buffer));
+         ConsolePrintf(console, _T("   MAC address.........: %s\n"), static_cast<Interface*>(object)->getMacAddr().toString(buffer));
          for(int n = 0; n < ((Interface *)object)->getIpAddressList()->size(); n++)
          {
-            const InetAddress& a = ((Interface *)object)->getIpAddressList()->get(n);
+            const InetAddress& a = static_cast<Interface*>(object)->getIpAddressList()->get(n);
             ConsolePrintf(console, _T("   IP address..........: %s/%d\n"), a.toString(buffer), a.getMaskBits());
          }
          break;

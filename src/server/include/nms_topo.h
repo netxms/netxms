@@ -269,7 +269,7 @@ public:
 NetworkPath *TraceRoute(Node *pSrc, Node *pDest);
 void BuildL2Topology(NetworkMapObjectList &topology, Node *root, int nDepth, bool includeEndNodes);
 ForwardingDatabase *GetSwitchForwardingDatabase(Node *node);
-NetObj *FindInterfaceConnectionPoint(const BYTE *macAddr, int *type);
+NetObj *FindInterfaceConnectionPoint(const MacAddress& macAddr, int *type);
 
 ObjectArray<LLDP_LOCAL_PORT_INFO> *GetLLDPLocalPortInfo(SNMP_Transport *snmp);
 

@@ -37,8 +37,8 @@ protected:
 	void getVlanInterfaces(SNMP_Transport *pTransport, InterfaceList *pIfList);
 
 public:
-   virtual const TCHAR *getVersion();
-	virtual VlanList *getVlans(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData);
+   virtual const TCHAR *getVersion() override;
+	virtual VlanList *getVlans(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData) override;
 };
 
 /**
@@ -47,15 +47,15 @@ public:
 class BayStackDriver : public AvayaERSDriver
 {
 protected:
-   virtual UINT32 getSlotSize(StringMap *attributes);
+   virtual UINT32 getSlotSize(StringMap *attributes) override;
 
 public:
-   virtual const TCHAR *getName();
+   virtual const TCHAR *getName() override;
 
-   virtual int isPotentialDevice(const TCHAR *oid);
-   virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid);
-   virtual void analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, StringMap *attributes, DriverData **driverData);
-   virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, int useAliases, bool useIfXTable);
+   virtual int isPotentialDevice(const TCHAR *oid) override;
+   virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid) override;
+   virtual void analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, StringMap *attributes, DriverData **driverData) override;
+   virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, int useAliases, bool useIfXTable) override;
 };
 
 /**
@@ -64,12 +64,12 @@ public:
 class PassportDriver : public AvayaERSDriver
 {
 public:
-   virtual const TCHAR *getName();
+   virtual const TCHAR *getName() override;
 
-   virtual int isPotentialDevice(const TCHAR *oid);
-   virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid);
-   virtual void analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, StringMap *attributes, DriverData **driverData);
-   virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, int useAliases, bool useIfXTable);
+   virtual int isPotentialDevice(const TCHAR *oid) override;
+   virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid) override;
+   virtual void analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, StringMap *attributes, DriverData **driverData) override;
+   virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, int useAliases, bool useIfXTable) override;
 };
 
 /**
@@ -78,16 +78,16 @@ public:
 class NtwsDriver : public NetworkDeviceDriver
 {
 public:
-   virtual const TCHAR *getName();
-   virtual const TCHAR *getVersion();
+   virtual const TCHAR *getName() override;
+   virtual const TCHAR *getVersion() override;
 
-   virtual int isPotentialDevice(const TCHAR *oid);
-   virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid);
-   virtual void analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, StringMap *attributes, DriverData **driverData);
-   virtual int getClusterMode(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData);
-   virtual bool isWirelessController(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData);
-   virtual ObjectArray<AccessPointInfo> *getAccessPoints(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData);
-   virtual ObjectArray<WirelessStationInfo> *getWirelessStations(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData);
+   virtual int isPotentialDevice(const TCHAR *oid) override;
+   virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid) override;
+   virtual void analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, StringMap *attributes, DriverData **driverData) override;
+   virtual int getClusterMode(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData) override;
+   virtual bool isWirelessController(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData) override;
+   virtual ObjectArray<AccessPointInfo> *getAccessPoints(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData) override;
+   virtual ObjectArray<WirelessStationInfo> *getWirelessStations(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData) override;
 };
 
 #endif

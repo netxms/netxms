@@ -309,11 +309,21 @@ void CheckPotentialNode(const InetAddress& ipAddr, UINT32 zoneUIN, DiscoveredAdd
 /**
  * Check potential new node from ARP cache or routing table
  */
-static void CheckPotentialNode(Node *node, const InetAddress& ipAddr, UINT32 ifIndex, const BYTE *macAddr,
+static void CheckPotentialNode(Node *node, const InetAddress& ipAddr, UINT32 ifIndex, const MacAddress& macAddr,
          DiscoveredAddressSourceType sourceType, UINT32 sourceNodeId)
 {
+   static const TCHAR *sourceNames[] = {
+            _T("ARP Cache"),
+            _T("Routing Table"),
+            _T("Agent Registration"),
+            _T("SNMP Trap"),
+            _T("Syslog"),
+            _T("Active Discovery"),
+   };
+
    TCHAR buffer[64];
-   nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Checking potential node %s at %s:%d"), ipAddr.toString(buffer), node->getName(), ifIndex);
+   nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Checking potential node %s at %s:%d (source: %s)"),
+            ipAddr.toString(buffer), node->getName(), ifIndex, sourceNames[sourceType]);
    if (!ipAddr.isValidUnicast())
    {
       nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Potential node %s rejected (IP address is not a valid unicast address)"), ipAddr.toString(buffer));
@@ -325,6 +335,16 @@ static void CheckPotentialNode(Node *node, const InetAddress& ipAddr, UINT32 ifI
    {
       nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Potential node %s rejected (IP address already known at node %s [%d])"),
                ipAddr.toString(buffer), curr->getName(), curr->getId());
+
+      // Check for duplicate IP address
+      Interface *iface = curr->findInterfaceByIP(ipAddr);
+      if ((iface != NULL) && macAddr.isValid() && !iface->getMacAddr().equals(macAddr))
+      {
+         MacAddress knownMAC = iface->getMacAddr();
+         PostEvent(EVENT_DUPLICATE_IP_ADDRESS, g_dwMgmtNode, "AdssHHdss",
+                  &ipAddr, curr->getId(), curr->getName(), iface->getName(),
+                  &knownMAC, &macAddr, node->getId(), node->getName(), sourceNames[sourceType]);
+      }
       return;
    }
 
@@ -355,10 +375,10 @@ static void CheckPotentialNode(Node *node, const InetAddress& ipAddr, UINT32 ifI
             pInfo->ipAddr.setMaskBits(interfaceAddress.getMaskBits());
             pInfo->zoneUIN = node->getZoneUIN();
             pInfo->ignoreFilter = FALSE;
-            if (macAddr == NULL)
-               memset(pInfo->bMacAddr, 0, MAC_ADDR_LENGTH);
+            if (macAddr.isValid() && (macAddr.length() == MAC_ADDR_LENGTH))
+               memcpy(pInfo->bMacAddr, macAddr.value(), MAC_ADDR_LENGTH);
             else
-               memcpy(pInfo->bMacAddr, macAddr, MAC_ADDR_LENGTH);
+               memset(pInfo->bMacAddr, 0, MAC_ADDR_LENGTH);
             pInfo->sourceType = sourceType;
             pInfo->sourceNodeId = sourceNodeId;
             nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 5, _T("New node queued: %s/%d"),
@@ -394,7 +414,7 @@ static void CheckHostRoute(Node *node, ROUTE *route)
 	iface = node->findInterfaceByIndex(route->dwIfIndex);
 	if ((iface != NULL) && iface->getIpAddressList()->findSameSubnetAddress(route->dwDestAddr).isValidUnicast())
 	{
-		CheckPotentialNode(node, route->dwDestAddr, route->dwIfIndex, NULL, DA_SRC_ROUTING_TABLE, node->getId());
+		CheckPotentialNode(node, route->dwDestAddr, route->dwIfIndex, MacAddress::NONE, DA_SRC_ROUTING_TABLE, node->getId());
 	}
 	else
 	{
@@ -405,9 +425,8 @@ static void CheckHostRoute(Node *node, ROUTE *route)
 /**
  * Discovery poller
  */
-static void DiscoveryPoller(void *arg)
+void DiscoveryPoller(PollerInfo *poller)
 {
-   PollerInfo *poller = static_cast<PollerInfo*>(arg);
    poller->startExecution();
 
    Node *node = static_cast<Node*>(poller->getObject());
@@ -431,7 +450,7 @@ static void DiscoveryPoller(void *arg)
       {
          const ArpEntry *e = pArpCache->get(i);
 			if (!e->macAddr.isBroadcast())	// Ignore broadcast addresses
-				CheckPotentialNode(node, e->ipAddr, e->ifIndex, e->macAddr.value(), DA_SRC_ARP_CACHE, node->getId());
+				CheckPotentialNode(node, e->ipAddr, e->ifIndex, e->macAddr, DA_SRC_ARP_CACHE, node->getId());
       }
       pArpCache->decRefCount();
    }
@@ -453,7 +472,7 @@ static void DiscoveryPoller(void *arg)
 	{
 		for(int i = 0; i < rt->iNumEntries; i++)
 		{
-			CheckPotentialNode(node, rt->pRoutes[i].dwNextHop, rt->pRoutes[i].dwIfIndex, NULL, DA_SRC_ROUTING_TABLE, node->getId());
+			CheckPotentialNode(node, rt->pRoutes[i].dwNextHop, rt->pRoutes[i].dwIfIndex, MacAddress::NONE, DA_SRC_ROUTING_TABLE, node->getId());
 			if ((rt->pRoutes[i].dwDestMask == 0xFFFFFFFF) && (rt->pRoutes[i].dwDestAddr != 0))
 				CheckHostRoute(node, &rt->pRoutes[i]);
 		}

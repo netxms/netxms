@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -844,13 +844,13 @@ ObjectArray<WirelessStationInfo> *NetworkDeviceDriver::getWirelessStations(SNMP_
  * @param attributes Node's custom attributes
  * @param driverData driver-specific data previously created in analyzeDevice
  * @param apIndex access point index
- * @param macAdddr access point MAC address
+ * @param macAddr access point MAC address
  * @param ipAddr access point IP address
  * @param radioInterfaces list of radio interfaces for this AP
  * @return state of access point or AP_UNKNOWN if it cannot be determined
  */
 AccessPointState NetworkDeviceDriver::getAccessPointState(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, 
-                                                          UINT32 apIndex, const BYTE *macAddr, const InetAddress& ipAddr,
+                                                          UINT32 apIndex, const MacAddress& macAddr, const InetAddress& ipAddr,
                                                           const ObjectArray<RadioInterfaceInfo> *radioInterfaces)
 {
    return AP_UNKNOWN;

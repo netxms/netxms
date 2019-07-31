@@ -1098,7 +1098,7 @@ InetAddress GetLocalIpAddr();
 InetAddress NXCORE_EXPORTABLE ResolveHostName(UINT32 zoneUIN, const TCHAR *hostname);
 
 BOOL ExecCommand(TCHAR *pszCommand);
-BOOL SendMagicPacket(UINT32 dwIpAddr, BYTE *pbMacAddr, int iNumPackets);
+bool SendMagicPacket(const InetAddress& ipAddr, const MacAddress& macAddr, int count);
 
 BOOL InitIdTable();
 UINT32 CreateUniqueId(int iGroup);

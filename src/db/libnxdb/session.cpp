@@ -729,7 +729,7 @@ MacAddress LIBNXDB_EXPORTABLE DBGetFieldMacAddr(DB_RESULT hResult, int iRow, int
    TCHAR *pszVal, buffer[36];
    pszVal = DBGetField(hResult, iRow, iColumn, buffer, 36);
 
-   return pszVal == NULL ? MacAddress() : MacAddress::parse(pszVal);
+   return pszVal == NULL ? MacAddress(MacAddress::ZERO) : MacAddress::parse(pszVal);
 }
 
 /**
@@ -763,6 +763,9 @@ bool LIBNXDB_EXPORTABLE DBGetFieldByteArray(DB_RESULT hResult, int iRow, int iCo
    return bResult;
 }
 
+/**
+ * Get field's value as integer array from byte array encoded in hex
+ */
 bool LIBNXDB_EXPORTABLE DBGetFieldByteArray2(DB_RESULT hResult, int iRow, int iColumn,
                                              BYTE *data, int nSize, int nDefault)
 {

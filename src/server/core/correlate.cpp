@@ -114,15 +114,13 @@ static void C_SysNodeDown(Node *pNode, Event *pEvent)
 	   }
 	   else
 	   {
-         BYTE localMacAddr[MAC_ADDR_LENGTH];
-         memcpy(localMacAddr, iface->getMacAddr(), MAC_ADDR_LENGTH);
          int type = 0;
-         NetObj *cp = FindInterfaceConnectionPoint(localMacAddr, &type);
+         NetObj *cp = FindInterfaceConnectionPoint(iface->getMacAddr(), &type);
          if (cp != NULL)
          {
             if (cp->getObjectClass() == OBJECT_INTERFACE)
             {
-               Interface *iface = (Interface *)cp;
+               Interface *iface = static_cast<Interface*>(cp);
                if ((iface->getAdminState() == IF_ADMIN_STATE_DOWN) || (iface->getAdminState() == IF_ADMIN_STATE_TESTING) ||
                     (iface->getOperState() == IF_OPER_STATE_DOWN) || (iface->getOperState() == IF_OPER_STATE_TESTING))
                {
@@ -134,7 +132,7 @@ static void C_SysNodeDown(Node *pNode, Event *pEvent)
             }
             else if (cp->getObjectClass() == OBJECT_ACCESSPOINT)
             {
-               AccessPoint *ap = (AccessPoint *)cp;
+               AccessPoint *ap = static_cast<AccessPoint*>(cp);
                if (ap->getStatus() == STATUS_CRITICAL)   // FIXME: how to correctly determine if AP is down?
                {
                   nxlog_debug(5, _T("Node::checkNetworkPath(%s [%d]): wireless access point %s [%d] for current node %s [%d] is down"),

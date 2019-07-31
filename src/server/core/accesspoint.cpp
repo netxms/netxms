@@ -24,11 +24,10 @@
 /**
  * Default constructor
  */
-AccessPoint::AccessPoint() : super()
+AccessPoint::AccessPoint() : super(), m_macAddr(MacAddress::ZERO)
 {
 	m_nodeId = 0;
    m_index = 0;
-	memset(m_macAddr, 0, MAC_ADDR_LENGTH);
 	m_vendor = NULL;
 	m_model = NULL;
 	m_serialNumber = NULL;
@@ -40,11 +39,10 @@ AccessPoint::AccessPoint() : super()
 /**
  * Constructor for creating new access point object
  */
-AccessPoint::AccessPoint(const TCHAR *name, UINT32 index, const BYTE *macAddr) : super(name)
+AccessPoint::AccessPoint(const TCHAR *name, UINT32 index, const BYTE *macAddr) : super(name), m_macAddr(MacAddress::ZERO)
 {
 	m_nodeId = 0;
    m_index = index;
-	memcpy(m_macAddr, macAddr, MAC_ADDR_LENGTH);
 	m_vendor = NULL;
 	m_model = NULL;
 	m_serialNumber = NULL;
@@ -59,9 +57,9 @@ AccessPoint::AccessPoint(const TCHAR *name, UINT32 index, const BYTE *macAddr) :
  */
 AccessPoint::~AccessPoint()
 {
-	free(m_vendor);
-	free(m_model);
-	free(m_serialNumber);
+	MemFree(m_vendor);
+	MemFree(m_model);
+	MemFree(m_serialNumber);
 	delete m_radioInterfaces;
 }
 
@@ -84,7 +82,7 @@ bool AccessPoint::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 	if (hResult == NULL)
 		return false;
 
-	DBGetFieldByteArray2(hResult, 0, 0, m_macAddr, MAC_ADDR_LENGTH, 0);
+	m_macAddr = DBGetFieldMacAddr(hResult, 0, 0);
 	m_vendor = DBGetField(hResult, 0, 1, NULL, 0);
 	m_model = DBGetField(hResult, 0, 2, NULL, 0);
 	m_serialNumber = DBGetField(hResult, 0, 3, NULL, 0);
@@ -146,7 +144,7 @@ bool AccessPoint::saveToDatabase(DB_HANDLE hdb)
       if (hStmt != NULL)
       {
          TCHAR macStr[16];
-         DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, BinToStr(m_macAddr, MAC_ADDR_LENGTH, macStr), DB_BIND_STATIC);
+         DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_macAddr);
          DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_vendor, DB_BIND_STATIC);
          DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_model, DB_BIND_STATIC);
          DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, m_serialNumber, DB_BIND_STATIC);
@@ -204,7 +202,7 @@ void AccessPoint::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
    super::fillMessageInternal(msg, userId);
    msg->setField(VID_IP_ADDRESS, m_ipAddress);
 	msg->setField(VID_NODE_ID, m_nodeId);
-	msg->setField(VID_MAC_ADDR, m_macAddr, MAC_ADDR_LENGTH);
+	msg->setField(VID_MAC_ADDR, m_macAddr);
 	msg->setField(VID_VENDOR, CHECK_NULL_EX(m_vendor));
 	msg->setField(VID_MODEL, CHECK_NULL_EX(m_model));
 	msg->setField(VID_SERIAL_NUMBER, CHECK_NULL_EX(m_serialNumber));
@@ -619,8 +617,8 @@ json_t *AccessPoint::toJson()
    json_object_set_new(root, "index", json_integer(m_index));
    json_object_set_new(root, "ipAddress", m_ipAddress.toJson());
    json_object_set_new(root, "nodeId", json_integer(m_nodeId));
-   char macAddrText[64];
-   json_object_set_new(root, "macAddr", json_string_a(BinToStrA(m_macAddr, sizeof(m_macAddr), macAddrText)));
+   TCHAR macAddrText[64];
+   json_object_set_new(root, "macAddr", json_string_t(m_macAddr.toString(macAddrText)));
    json_object_set_new(root, "vendor", json_string_t(m_vendor));
    json_object_set_new(root, "model", json_string_t(m_model));
    json_object_set_new(root, "serialNumber", json_string_t(m_serialNumber));

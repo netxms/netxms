@@ -2182,8 +2182,8 @@ private:
 
 public:
    MacAddress(size_t length = 0) { m_length = MIN(length, 16); memset(m_value, 0, 16); }
-   MacAddress(const BYTE *value, size_t length) { m_length = MIN(length, 16); memcpy(m_value, value, m_length); }
-   MacAddress(const MacAddress& src) { memcpy(m_value, src.m_value, src.m_length); m_length = src.m_length; }
+   MacAddress(const BYTE *value, size_t length) { memset(m_value, 0, 16); m_length = MIN(length, 16); memcpy(m_value, value, m_length); }
+   MacAddress(const MacAddress& src) { memcpy(m_value, src.m_value, 16); m_length = src.m_length; }
 
    static MacAddress parse(const char *str);
    static MacAddress parse(const WCHAR *str);
@@ -2192,12 +2192,16 @@ public:
    size_t length() const { return m_length; }
 
    bool isValid() const;
-   bool isMulticast() const;
    bool isBroadcast() const;
-   bool equals(const MacAddress &a) const;
+   bool isMulticast() const { return (m_length == 6) ? (m_value[0] & 0x01) != 0 : false; }
+   bool equals(const MacAddress &a) const { return (a.length() == m_length) ? memcmp(m_value, a.value(), m_length) == 0 : false; }
+   bool equals(const BYTE *value, size_t length = 6) const { return (length == m_length) ? memcmp(m_value, value, m_length) == 0 : false; }
 
    TCHAR *toString(TCHAR *buffer, MacAddressNotation notation = MacAddressNotation::COLON_SEPARATED) const;
    String toString(MacAddressNotation notation = MacAddressNotation::COLON_SEPARATED) const;
+
+   static const MacAddress NONE;
+   static const MacAddress ZERO;
 };
 
 /**

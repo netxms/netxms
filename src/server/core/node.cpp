@@ -1219,7 +1219,7 @@ Interface *Node::findInterfaceBySlotAndPort(UINT32 slot, UINT32 port)
  * Find interface by MAC address
  * Returns pointer to interface object or NULL if appropriate interface couldn't be found
  */
-Interface *Node::findInterfaceByMAC(const BYTE *macAddr)
+Interface *Node::findInterfaceByMAC(const MacAddress& macAddr)
 {
    Interface *iface = NULL;
    lockChildList(false);
@@ -1228,9 +1228,9 @@ Interface *Node::findInterfaceByMAC(const BYTE *macAddr)
       NetObj *curr = m_childList->get(i);
       if (curr->getObjectClass() == OBJECT_INTERFACE)
       {
-         if (!memcmp(((Interface *)curr)->getMacAddr(), macAddr, MAC_ADDR_LENGTH))
+         if (static_cast<Interface*>(curr)->getMacAddr().equals(macAddr))
          {
-            iface = (Interface *)curr;
+            iface = static_cast<Interface*>(curr);
             break;
          }
       }
@@ -1299,7 +1299,7 @@ NetObj *Node::findConnectionPoint(UINT32 *localIfId, BYTE *localMacAddr, int *ty
          if (cp != NULL)
          {
             *localIfId = iface->getId();
-            memcpy(localMacAddr, iface->getMacAddr(), MAC_ADDR_LENGTH);
+            memcpy(localMacAddr, iface->getMacAddr().value(), MAC_ADDR_LENGTH);
             break;
          }
       }
@@ -1311,7 +1311,7 @@ NetObj *Node::findConnectionPoint(UINT32 *localIfId, BYTE *localMacAddr, int *ty
 /**
  * Find attached access point by MAC address
  */
-AccessPoint *Node::findAccessPointByMAC(const BYTE *macAddr)
+AccessPoint *Node::findAccessPointByMAC(const MacAddress& macAddr)
 {
    AccessPoint *ap = NULL;
    lockChildList(false);
@@ -1320,9 +1320,9 @@ AccessPoint *Node::findAccessPointByMAC(const BYTE *macAddr)
       NetObj *curr = m_childList->get(i);
       if (curr->getObjectClass() == OBJECT_ACCESSPOINT)
       {
-         if (!memcmp(((AccessPoint *)curr)->getMacAddr(), macAddr, MAC_ADDR_LENGTH))
+         if (static_cast<AccessPoint*>(curr)->getMacAddr().equals(macAddr))
          {
-            ap = (AccessPoint *)curr;
+            ap = static_cast<AccessPoint*>(curr);
             break;
          }
       }
@@ -1366,10 +1366,10 @@ AccessPoint *Node::findAccessPointByBSSID(const BYTE *bssid)
       NetObj *curr = m_childList->get(i);
       if (curr->getObjectClass() == OBJECT_ACCESSPOINT)
       {
-         if (!memcmp(((AccessPoint *)curr)->getMacAddr(), bssid, MAC_ADDR_LENGTH) ||
-             ((AccessPoint *)curr)->isMyRadio(bssid))
+         if (static_cast<AccessPoint*>(curr)->getMacAddr().equals(bssid) ||
+             static_cast<AccessPoint*>(curr)->isMyRadio(bssid))
          {
-            ap = (AccessPoint *)curr;
+            ap = static_cast<AccessPoint*>(curr);
             break;
          }
       }
@@ -1413,7 +1413,7 @@ Interface *Node::createInterfaceObject(InterfaceInfo *info, bool manuallyCreated
    {
       iface = new Interface(info->ipAddrList, m_zoneUIN, syntheticMask);
    }
-   iface->setMacAddr(info->macAddr, false);
+   iface->setMacAddr(MacAddress(info->macAddr, MAC_ADDR_LENGTH), false);
    iface->setBridgePortNumber(info->bridgePort);
    iface->setSlotNumber(info->slot);
    iface->setPortNumber(info->port);
@@ -1474,12 +1474,12 @@ Interface *Node::createInterfaceObject(InterfaceInfo *info, bool manuallyCreated
 /**
  * Create new interface - convenience wrapper
  */
-Interface *Node::createNewInterface(const InetAddress& ipAddr, BYTE *macAddr, bool fakeInterface)
+Interface *Node::createNewInterface(const InetAddress& ipAddr, const MacAddress& macAddr, bool fakeInterface)
 {
    InterfaceInfo info(1);
    info.ipAddrList.add(ipAddr);
-   if (macAddr != NULL)
-      memcpy(info.macAddr, macAddr, MAC_ADDR_LENGTH);
+   if (macAddr.isValid() && (macAddr.length() == MAC_ADDR_LENGTH))
+      memcpy(info.macAddr, macAddr.value(), MAC_ADDR_LENGTH);
    return createNewInterface(&info, false, fakeInterface);
 }
 
@@ -2347,13 +2347,12 @@ bool Node::checkNetworkPathLayer2(UINT32 requestId, bool secondPass)
       }
       else
       {
-         BYTE localMacAddr[MAC_ADDR_LENGTH];
-         memcpy(localMacAddr, iface->getMacAddr(), MAC_ADDR_LENGTH);
          int type = 0;
-         NetObj *cp = FindInterfaceConnectionPoint(localMacAddr, &type);
+         NetObj *cp = FindInterfaceConnectionPoint(iface->getMacAddr(), &type);
          if (cp != NULL)
          {
-            nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("Node::checkNetworkPath(%s [%d]): found connection point: %s [%d]"), m_name, m_id, cp->getName(), cp->getId());
+            nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6,
+                     _T("Node::checkNetworkPath(%s [%d]): found connection point: %s [%d]"), m_name, m_id, cp->getName(), cp->getId());
             if (secondPass)
             {
                Node *node = (cp->getObjectClass() == OBJECT_INTERFACE) ? ((Interface *)cp)->getParentNode() : ((AccessPoint *)cp)->getParentNode();
@@ -3945,7 +3944,9 @@ bool Node::confPollSnmp(UINT32 rqId)
                adopted++;
 
             bool newAp = false;
-            AccessPoint *ap = (clusterMode == CLUSTER_MODE_STANDALONE) ? findAccessPointByMAC(info->getMacAddr()) : FindAccessPointByMAC(info->getMacAddr());
+            AccessPoint *ap = (clusterMode == CLUSTER_MODE_STANDALONE) ?
+                     findAccessPointByMAC(MacAddress(info->getMacAddr(), MAC_ADDR_LENGTH)) :
+                     FindAccessPointByMAC(info->getMacAddr());
             if (ap == NULL)
             {
                String name;
@@ -4249,15 +4250,15 @@ bool Node::updateInterfaceConfiguration(UINT32 rqid, int maskBits)
 
                   // Existing interface, check configuration
                   if (memcmp(ifInfo->macAddr, "\x00\x00\x00\x00\x00\x00", MAC_ADDR_LENGTH) &&
-                      memcmp(ifInfo->macAddr, pInterface->getMacAddr(), MAC_ADDR_LENGTH))
+                      !pInterface->getMacAddr().equals(ifInfo->macAddr, MAC_ADDR_LENGTH))
                   {
                      TCHAR szOldMac[16], szNewMac[16];
-                     BinToStr(pInterface->getMacAddr(), MAC_ADDR_LENGTH, szOldMac);
-                     BinToStr(ifInfo->macAddr, MAC_ADDR_LENGTH, szNewMac);
+                     pInterface->getMacAddr().toString(szOldMac);
+                     MACToStr(ifInfo->macAddr, szNewMac);
                      PostEvent(EVENT_MAC_ADDR_CHANGED, m_id, "idsss",
                                pInterface->getId(), pInterface->getIfIndex(),
                                pInterface->getName(), szOldMac, szNewMac);
-                     pInterface->setMacAddr(ifInfo->macAddr, true);
+                     pInterface->setMacAddr(MacAddress(ifInfo->macAddr, MAC_ADDR_LENGTH), true);
                      interfaceUpdated = true;
                   }
                   if (_tcscmp(ifInfo->name, pInterface->getName()))
@@ -4446,8 +4447,7 @@ bool Node::updateInterfaceConfiguration(UINT32 rqid, int maskBits)
       }
 
       // Check if we have pseudo-interface object
-      BYTE macAddr[MAC_ADDR_LENGTH];
-      BYTE *pMacAddr;
+      MacAddress macAddr(MacAddress::ZERO);
       dwCount = getInterfaceCount(&pInterface);
       if (dwCount == 1)
       {
@@ -4459,36 +4459,32 @@ bool Node::updateInterfaceConfiguration(UINT32 rqid, int maskBits)
                deleteInterface(pInterface);
                if (m_ipAddress.isValidUnicast())
                {
-                  memset(macAddr, 0, MAC_ADDR_LENGTH);
                   Subnet *pSubnet = FindSubnetForNode(m_zoneUIN, m_ipAddress);
                   if (pSubnet != NULL)
-                     pSubnet->findMacAddress(m_ipAddress, macAddr);
-                  pMacAddr = !memcmp(macAddr, "\x00\x00\x00\x00\x00\x00", MAC_ADDR_LENGTH) ? NULL : macAddr;
-                  TCHAR szMac[20];
-                  MACToStr(macAddr, szMac);
+                     macAddr = pSubnet->findMacAddress(m_ipAddress);
+                  TCHAR szMac[32];
+                  macAddr.toString(szMac);
                   nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("Node::updateInterfaceConfiguration(%s [%u]): got MAC for unknown interface: %s"), m_name, m_id, szMac);
                   InetAddress ifaceAddr = m_ipAddress;
                   ifaceAddr.setMaskBits(maskBits);
-                  createNewInterface(ifaceAddr, pMacAddr, true);
+                  createNewInterface(ifaceAddr, macAddr, true);
                }
             }
             else
             {
                // check MAC address
-               memset(macAddr, 0, MAC_ADDR_LENGTH);
                Subnet *pSubnet = FindSubnetForNode(m_zoneUIN, m_ipAddress);
                if (pSubnet != NULL)
                {
                   nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("Node::updateInterfaceConfiguration(%s [%u]): found subnet %s [%u]"),
                             m_name, m_id, pSubnet->getName(), pSubnet->getId());
-                  pSubnet->findMacAddress(m_ipAddress, macAddr);
+                  macAddr = pSubnet->findMacAddress(m_ipAddress);
                }
-               if (memcmp(macAddr, "\x00\x00\x00\x00\x00\x00", MAC_ADDR_LENGTH) && memcmp(macAddr, pInterface->getMacAddr(), MAC_ADDR_LENGTH))
+               if (macAddr.isValid() && !macAddr.equals(pInterface->getMacAddr()))
                {
-                  TCHAR szOldMac[16], szNewMac[16];
-
-                  BinToStr((BYTE *)pInterface->getMacAddr(), MAC_ADDR_LENGTH, szOldMac);
-                  BinToStr(macAddr, MAC_ADDR_LENGTH, szNewMac);
+                  TCHAR szOldMac[32], szNewMac[32];
+                  pInterface->getMacAddr().toString(szOldMac);
+                  macAddr.toString(szNewMac);
                   nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("Node::updateInterfaceConfiguration(%s [%u]): MAC change for unknown interface: %s to %s"),
                             m_name, m_id, szOldMac, szNewMac);
                   PostEvent(EVENT_MAC_ADDR_CHANGED, m_id, "idsss",
@@ -4504,21 +4500,20 @@ bool Node::updateInterfaceConfiguration(UINT32 rqid, int maskBits)
          // No interfaces at all, create pseudo-interface
          if (m_ipAddress.isValidUnicast())
          {
-            memset(macAddr, 0, MAC_ADDR_LENGTH);
             Subnet *pSubnet = FindSubnetForNode(m_zoneUIN, m_ipAddress);
             if (pSubnet != NULL)
             {
                nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("Node::updateInterfaceConfiguration(%s [%u]): found subnet %s [%u]"),
                          m_name, m_id, pSubnet->getName(), pSubnet->getId());
-               pSubnet->findMacAddress(m_ipAddress, macAddr);
+               macAddr = pSubnet->findMacAddress(m_ipAddress);
             }
-            pMacAddr = !memcmp(macAddr, "\x00\x00\x00\x00\x00\x00", MAC_ADDR_LENGTH) ? NULL : macAddr;
-            TCHAR szMac[20];
-            MACToStr(macAddr, szMac);
-            nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("Node::updateInterfaceConfiguration(%s [%u]): got MAC for unknown interface: %s"), m_name, m_id, szMac);
+            TCHAR szMac[32];
+            macAddr.toString(szMac);
+            nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5,
+                     _T("Node::updateInterfaceConfiguration(%s [%u]): got MAC for unknown interface: %s"), m_name, m_id, szMac);
             InetAddress ifaceAddr = m_ipAddress;
             ifaceAddr.setMaskBits(maskBits);
-            createNewInterface(ifaceAddr, pMacAddr, true);
+            createNewInterface(ifaceAddr, macAddr, true);
          }
       }
       nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("Node::updateInterfaceConfiguration(%s [%u]): pIfList == NULL, dwCount = %u"), m_name, m_id, dwCount);
@@ -7843,7 +7838,7 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, UINT32 rqId
                ws->nodeId = (node != NULL) ? node->getId() : 0;
                if ((node != NULL) && (ws->ipAddr == 0))
                {
-                  Interface *iface = node->findInterfaceByMAC(ws->macAddr);
+                  Interface *iface = node->findInterfaceByMAC(MacAddress(ws->macAddr, MAC_ADDR_LENGTH));
                   if ((iface != NULL) && iface->getIpAddressList()->getFirstUnicastAddressV4().isValid())
                      ws->ipAddr = iface->getIpAddressList()->getFirstUnicastAddressV4().getAddressV4();
                   else

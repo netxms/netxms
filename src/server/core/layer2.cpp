@@ -62,14 +62,14 @@ void BuildL2Topology(NetworkMapObjectList &topology, Node *root, int nDepth, boo
 /**
  * Find connection point for interface
  */
-NetObj *FindInterfaceConnectionPoint(const BYTE *macAddr, int *type)
+NetObj *FindInterfaceConnectionPoint(const MacAddress& macAddr, int *type)
 {
 	TCHAR macAddrText[32];
-	DbgPrintf(6, _T("Called FindInterfaceConnectionPoint(%s)"), MACToStr(macAddr, macAddrText));
+	nxlog_debug(6, _T("Called FindInterfaceConnectionPoint(%s)"), macAddr.toString(macAddrText));
 
    *type = CP_TYPE_INDIRECT;
 
-   if (!memcmp(macAddr, "\x00\x00\x00\x00\x00\x00", MAC_ADDR_LENGTH))
+   if (!macAddr.isValid() || (macAddr.length() != MAC_ADDR_LENGTH))
       return NULL;
 
 	NetObj *cp = NULL;
@@ -89,7 +89,7 @@ NetObj *FindInterfaceConnectionPoint(const BYTE *macAddr, int *type)
 			DbgPrintf(6, _T("FindInterfaceConnectionPoint(%s): FDB obtained for node %s [%d]"),
 			          macAddrText, node->getName(), (int)node->getId());
          bool isStatic;
-			UINT32 ifIndex = fdb->findMacAddress(macAddr, &isStatic);
+			UINT32 ifIndex = fdb->findMacAddress(macAddr.value(), &isStatic);
 			if (ifIndex != 0)
 			{
 			   DbgPrintf(6, _T("FindInterfaceConnectionPoint(%s): MAC address found on interface %d (%s)"),
@@ -146,7 +146,7 @@ NetObj *FindInterfaceConnectionPoint(const BYTE *macAddr, int *type)
             for(int i = 0; i < wsList->size(); i++)
             {
                WirelessStationInfo *ws = wsList->get(i);
-               if (!memcmp(ws->macAddr, macAddr, MAC_ADDR_LENGTH))
+               if (!memcmp(ws->macAddr, macAddr.value(), MAC_ADDR_LENGTH))
                {
                   AccessPoint *ap = (AccessPoint *)FindObjectById(ws->apObjectId, OBJECT_ACCESSPOINT);
                   if (ap != NULL)

@@ -26,7 +26,7 @@
 /**
  * Default constructor for Interface object
  */
-Interface::Interface() : super()
+Interface::Interface() : super(), m_macAddr(MacAddress::ZERO)
 {
    m_parentInterfaceId = 0;
    _tcslcpy(m_description, m_name, MAX_DB_STRING);
@@ -47,7 +47,6 @@ Interface::Interface() : super()
    m_confirmedOperState = IF_OPER_STATE_UNKNOWN;
 	m_dot1xPaeAuthState = PAE_STATE_UNKNOWN;
 	m_dot1xBackendAuthState = BACKEND_STATE_UNKNOWN;
-   memset(m_macAddr, 0, MAC_ADDR_LENGTH);
    m_lastDownEventId = 0;
 	m_pendingStatus = -1;
 	m_statusPollCount = 0;
@@ -64,7 +63,7 @@ Interface::Interface() : super()
 /**
  * Constructor for "fake" interface object
  */
-Interface::Interface(const InetAddressList& addrList, UINT32 zoneUIN, bool bSyntheticMask) : super()
+Interface::Interface(const InetAddressList& addrList, UINT32 zoneUIN, bool bSyntheticMask) : super(), m_macAddr(MacAddress::ZERO)
 {
    m_parentInterfaceId = 0;
 	m_flags = bSyntheticMask ? IF_SYNTHETIC_MASK : 0;
@@ -91,7 +90,6 @@ Interface::Interface(const InetAddressList& addrList, UINT32 zoneUIN, bool bSynt
    m_confirmedOperState = IF_OPER_STATE_UNKNOWN;
 	m_dot1xPaeAuthState = PAE_STATE_UNKNOWN;
 	m_dot1xBackendAuthState = BACKEND_STATE_UNKNOWN;
-   memset(m_macAddr, 0, MAC_ADDR_LENGTH);
    m_lastDownEventId = 0;
 	m_pendingStatus = -1;
    m_statusPollCount = 0;
@@ -110,7 +108,7 @@ Interface::Interface(const InetAddressList& addrList, UINT32 zoneUIN, bool bSynt
  * Constructor for normal interface object
  */
 Interface::Interface(const TCHAR *name, const TCHAR *descr, UINT32 index, const InetAddressList& addrList, UINT32 ifType, UINT32 zoneUIN)
-          : super()
+          : super(), m_macAddr(MacAddress::ZERO)
 {
    if ((ifType == IFTYPE_SOFTWARE_LOOPBACK) || addrList.isLoopbackOnly())
       m_flags = IF_LOOPBACK;
@@ -138,7 +136,6 @@ Interface::Interface(const TCHAR *name, const TCHAR *descr, UINT32 index, const 
    m_peerDiscoveryProtocol = LL_PROTO_UNKNOWN;
 	m_dot1xPaeAuthState = PAE_STATE_UNKNOWN;
 	m_dot1xBackendAuthState = BACKEND_STATE_UNKNOWN;
-   memset(m_macAddr, 0, MAC_ADDR_LENGTH);
    m_lastDownEventId = 0;
 	m_pendingStatus = -1;
    m_statusPollCount = 0;
@@ -210,7 +207,7 @@ bool Interface::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
       m_type = DBGetFieldULong(hResult, 0, 0);
       m_index = DBGetFieldULong(hResult, 0, 1);
       UINT32 nodeId = DBGetFieldULong(hResult, 0, 2);
-		DBGetFieldByteArray2(hResult, 0, 3, m_macAddr, MAC_ADDR_LENGTH, 0);
+      m_macAddr = DBGetFieldMacAddr(hResult, 0, 3);
       m_requiredPollCount = DBGetFieldLong(hResult, 0, 4);
 		m_bridgePortNumber = DBGetFieldULong(hResult, 0, 5);
 		m_slotNumber = DBGetFieldULong(hResult, 0, 6);
@@ -384,7 +381,7 @@ bool Interface::saveToDatabase(DB_HANDLE hdb)
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, dwNodeId);
       DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_type);
       DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_index);
-      DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, BinToStr(m_macAddr, MAC_ADDR_LENGTH, szMacStr), DB_BIND_STATIC);
+      DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, m_macAddr);
       DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, (LONG)m_requiredPollCount);
       DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, m_bridgePortNumber);
       DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, m_slotNumber);
@@ -1053,7 +1050,7 @@ void Interface::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
    msg->setField(VID_SPEED, m_speed);
    msg->setField(VID_IF_SLOT, m_slotNumber);
    msg->setField(VID_IF_PORT, m_portNumber);
-   msg->setField(VID_MAC_ADDR, m_macAddr, MAC_ADDR_LENGTH);
+   msg->setField(VID_MAC_ADDR, m_macAddr);
 	msg->setField(VID_REQUIRED_POLLS, (WORD)m_requiredPollCount);
 	msg->setField(VID_PEER_NODE_ID, m_peerNodeId);
 	msg->setField(VID_PEER_INTERFACE_ID, m_peerInterfaceId);
@@ -1135,12 +1132,12 @@ UINT32 Interface::wakeUp()
 {
    UINT32 rcc = RCC_NO_MAC_ADDRESS;
 
-   if (memcmp(m_macAddr, "\x00\x00\x00\x00\x00\x00", 6))
+   if (m_macAddr.isValid())
    {
       const InetAddress addr = m_ipAddressList.getFirstUnicastAddressV4();
       if (addr.isValid())
       {
-         UINT32 destAddr = htonl(addr.getAddressV4() | ~(0xFFFFFFFF << (32 - addr.getMaskBits())));
+         InetAddress destAddr(addr.getAddressV4() | ~(0xFFFFFFFF << (32 - addr.getMaskBits())));
          if (SendMagicPacket(destAddr, m_macAddr, 5))
             rcc = RCC_SUCCESS;
          else
@@ -1264,12 +1261,12 @@ void Interface::setPeer(Node *node, Interface *iface, LinkLayerProtocol protocol
 /**
  * Set MAC address for interface
  */
-void Interface::setMacAddr(const BYTE *macAddr, bool updateMacDB)
+void Interface::setMacAddr(const MacAddress& macAddr, bool updateMacDB)
 {
    lockProperties();
    if (updateMacDB)
       MacDbRemove(m_macAddr);
-   memcpy(m_macAddr, macAddr, MAC_ADDR_LENGTH);
+   m_macAddr = macAddr;
    if (updateMacDB)
       MacDbAddInterface(this);
    setModified(MODIFY_INTERFACE_PROPERTIES);
@@ -1423,8 +1420,8 @@ json_t *Interface::toJson()
 {
    json_t *root = super::toJson();
    json_object_set_new(root, "index", json_integer(m_index));
-   char macAddrText[64];
-   json_object_set_new(root, "macAddr", json_string(BinToStrA(m_macAddr, MAC_ADDR_LENGTH, macAddrText)));
+   TCHAR macAddrText[64];
+   json_object_set_new(root, "macAddr", json_string_t(m_macAddr.toString(macAddrText)));
    json_object_set_new(root, "ipAddressList", m_ipAddressList.toJson());
    json_object_set_new(root, "flags", json_integer(m_flags));
    json_object_set_new(root, "description", json_string_t(m_description));

@@ -385,7 +385,7 @@ static UINT32 HandlerAccessPointFindUnadopted(SNMP_Variable *var, SNMP_Transport
  * @return state of access point or AP_UNKNOWN if it cannot be determined
  */
 AccessPointState SymbolDriver::getAccessPointState(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData,
-                                                   UINT32 apIndex, const BYTE *macAddr, const InetAddress& ipAddr,
+                                                   UINT32 apIndex, const MacAddress& macAddr, const InetAddress& ipAddr,
 						   const ObjectArray<RadioInterfaceInfo> *radioInterfaces)
 {
    TCHAR oid[256];
@@ -401,7 +401,7 @@ AccessPointState SymbolDriver::getAccessPointState(SNMP_Transport *snmp, StringM
 
    // Check if AP became unadopted
    AP_SEARCH_DATA data;
-   memcpy(data.macAddr, macAddr, MAC_ADDR_LENGTH);
+   memcpy(data.macAddr, macAddr.value(), MAC_ADDR_LENGTH);
    data.found = false;
    if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.388.14.3.2.1.9.4.1.2"),
                 HandlerAccessPointFindUnadopted, &data) != SNMP_ERR_SUCCESS)

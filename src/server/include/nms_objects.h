@@ -1228,7 +1228,7 @@ private:
 protected:
    UINT32 m_parentInterfaceId;
    UINT32 m_index;
-   BYTE m_macAddr[MAC_ADDR_LENGTH];
+   MacAddress m_macAddr;
    InetAddressList m_ipAddressList;
 	TCHAR m_description[MAX_DB_STRING];	// Interface description - value of ifDescr for SNMP, equals to name for NetXMS agent
 	TCHAR m_alias[MAX_DB_STRING];	// Interface alias - value of ifAlias for SNMP, empty for NetXMS agent
@@ -1310,7 +1310,7 @@ public:
 	int getDot1xBackendAuthState() const { return (int)m_dot1xBackendAuthState; }
 	const TCHAR *getDescription() const { return m_description; }
 	const TCHAR *getAlias() const { return m_alias; }
-   const BYTE *getMacAddr() const { return m_macAddr; }
+   const MacAddress& getMacAddr() const { return m_macAddr; }
    int getIfTableSuffixLen() const { return m_ifTableSuffixLen; }
    const UINT32 *getIfTableSuffix() const { return m_ifTableSuffix; }
    UINT32 getPingTime();
@@ -1328,7 +1328,7 @@ public:
    UINT64 getLastDownEventId() const { return m_lastDownEventId; }
    void setLastDownEventId(UINT64 id) { m_lastDownEventId = id; }
 
-   void setMacAddr(const BYTE *macAddr, bool updateMacDB);
+   void setMacAddr(const MacAddress& macAddr, bool updateMacDB);
    void setIpAddress(const InetAddress& addr);
    void setBridgePortNumber(UINT32 bpn) { lockProperties(); m_bridgePortNumber = bpn; setModified(MODIFY_INTERFACE_PROPERTIES); unlockProperties(); }
    void setSlotNumber(UINT32 slot) { lockProperties(); m_slotNumber = slot; setModified(MODIFY_INTERFACE_PROPERTIES); unlockProperties(); }
@@ -1779,7 +1779,7 @@ protected:
    UINT32 m_index;
    InetAddress m_ipAddress;
 	UINT32 m_nodeId;
-	BYTE m_macAddr[MAC_ADDR_LENGTH];
+	MacAddress m_macAddr;
 	TCHAR *m_vendor;
 	TCHAR *m_model;
 	TCHAR *m_serialNumber;
@@ -1808,7 +1808,7 @@ public:
    void statusPollFromController(ClientSession *session, UINT32 rqId, ObjectQueue<Event> *eventQueue, Node *controller, SNMP_Transport *snmpTransport);
 
    UINT32 getIndex() const { return m_index; }
-	const BYTE *getMacAddr() const { return m_macAddr; }
+	const MacAddress& getMacAddr() const { return m_macAddr; }
    const InetAddress& getIpAddress() const { return m_ipAddress; }
 	bool isMyRadio(int rfIndex);
 	bool isMyRadio(const BYTE *macAddr);
@@ -2440,7 +2440,7 @@ public:
 
    void addInterface(Interface *pInterface) { addChild(pInterface); pInterface->addParent(this); }
    Interface *createNewInterface(InterfaceInfo *ifInfo, bool manuallyCreated, bool fakeInterface);
-   Interface *createNewInterface(const InetAddress& ipAddr, BYTE *macAddr, bool fakeInterface);
+   Interface *createNewInterface(const InetAddress& ipAddr, const MacAddress& macAddr, bool fakeInterface);
    void deleteInterface(Interface *iface);
 
 	void setPrimaryName(const TCHAR *name) { lockProperties(); _tcslcpy(m_primaryName, name, MAX_DNS_NAME); unlockProperties(); }
@@ -2459,11 +2459,11 @@ public:
    InterfaceList *getInterfaceList();
    Interface *findInterfaceByIndex(UINT32 ifIndex);
    Interface *findInterfaceByName(const TCHAR *name);
-	Interface *findInterfaceByMAC(const BYTE *macAddr);
+	Interface *findInterfaceByMAC(const MacAddress& macAddr);
 	Interface *findInterfaceByIP(const InetAddress& addr);
 	Interface *findInterfaceBySlotAndPort(UINT32 slot, UINT32 port);
 	Interface *findBridgePort(UINT32 bridgePortNumber);
-   AccessPoint *findAccessPointByMAC(const BYTE *macAddr);
+   AccessPoint *findAccessPointByMAC(const MacAddress& macAddr);
    AccessPoint *findAccessPointByBSSID(const BYTE *bssid);
    AccessPoint *findAccessPointByRadioId(int rfIndex);
    ObjectArray<WirelessStationInfo> *getWirelessStations();
@@ -2728,7 +2728,7 @@ public:
 
 	void setCorrectMask(const InetAddress& addr);
 
-	bool findMacAddress(const InetAddress& ipAddr, BYTE *macAddr);
+	MacAddress findMacAddress(const InetAddress& ipAddr);
 
    UINT32 *buildAddressMap(int *length);
 };
@@ -3639,9 +3639,11 @@ void UpdateInterfaceIndex(const InetAddress& oldIpAddr, const InetAddress& newIp
 
 void NXCORE_EXPORTABLE MacDbAddAccessPoint(AccessPoint *ap);
 void NXCORE_EXPORTABLE MacDbAddInterface(Interface *iface);
-void NXCORE_EXPORTABLE MacDbAddObject(const BYTE *macAddr, NetObj *object);
+void NXCORE_EXPORTABLE MacDbAddObject(const MacAddress& macAddr, NetObj *object);
 void NXCORE_EXPORTABLE MacDbRemove(const BYTE *macAddr);
+void NXCORE_EXPORTABLE MacDbRemove(const MacAddress& macAddr);
 NetObj NXCORE_EXPORTABLE *MacDbFind(const BYTE *macAddr, bool updateRefCount = false);
+NetObj NXCORE_EXPORTABLE *MacDbFind(const MacAddress& macAddr, bool updateRefCount = false);
 
 NetObj NXCORE_EXPORTABLE *FindObjectById(UINT32 dwId, int objClass = -1);
 NetObj NXCORE_EXPORTABLE *FindObjectByName(const TCHAR *name, int objClass = -1);

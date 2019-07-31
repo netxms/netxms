@@ -236,12 +236,13 @@ static Interface *GetOldNodeWithNewIP(const InetAddress& ipAddr, UINT32 zoneUIN,
 		subnet = FindSubnetForNode(zoneUIN, ipAddr);
 		if (subnet != NULL)
 		{
-			BOOL found = subnet->findMacAddress(ipAddr, nodeMacAddr);
-			if (!found)
+			MacAddress macAddr = subnet->findMacAddress(ipAddr);
+			if (!macAddr.isValid())
 			{
 				DbgPrintf(6, _T("GetOldNodeWithNewIP: MAC address not found"));
 				return NULL;
 			}
+	      memcpy(nodeMacAddr, macAddr.value(), MAC_ADDR_LENGTH);
 		}
 		else
 		{

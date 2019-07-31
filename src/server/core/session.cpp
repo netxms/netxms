@@ -11650,16 +11650,16 @@ void ClientSession::findNodeConnection(NXCPMessage *request)
 			{
 				localNodeId = ((Interface *)object)->getParentNode()->getId();
 				localIfId = objectId;
-				memcpy(localMacAddr, ((Interface *)object)->getMacAddr(), MAC_ADDR_LENGTH);
-				cp = FindInterfaceConnectionPoint(localMacAddr, &type);
+				memcpy(localMacAddr, ((Interface *)object)->getMacAddr().value(), MAC_ADDR_LENGTH);
+				cp = FindInterfaceConnectionPoint(MacAddress(localMacAddr, MAC_ADDR_LENGTH), &type);
 				msg.setField(VID_RCC, RCC_SUCCESS);
 			}
          else if (object->getObjectClass() == OBJECT_ACCESSPOINT)
 			{
 				localNodeId = 0;
 				localIfId = 0;
-				memcpy(localMacAddr, ((AccessPoint *)object)->getMacAddr(), MAC_ADDR_LENGTH);
-				cp = FindInterfaceConnectionPoint(localMacAddr, &type);
+				memcpy(localMacAddr, ((AccessPoint *)object)->getMacAddr().value(), MAC_ADDR_LENGTH);
+				cp = FindInterfaceConnectionPoint(MacAddress(localMacAddr, MAC_ADDR_LENGTH), &type);
 				msg.setField(VID_RCC, RCC_SUCCESS);
 			}
 			else
@@ -11710,12 +11710,11 @@ void ClientSession::findNodeConnection(NXCPMessage *request)
 void ClientSession::findMacAddress(NXCPMessage *request)
 {
    NXCPMessage msg;
-	BYTE macAddr[6];
 
 	msg.setId(request->getId());
 	msg.setCode(CMD_REQUEST_COMPLETED);
 
-	request->getFieldAsBinary(VID_MAC_ADDR, macAddr, 6);
+	MacAddress macAddr = request->getFieldAsMacAddress(VID_MAC_ADDR);
 	int type;
 	NetObj *cp = FindInterfaceConnectionPoint(macAddr, &type);
 	msg.setField(VID_RCC, RCC_SUCCESS);
@@ -11725,7 +11724,7 @@ void ClientSession::findMacAddress(NXCPMessage *request)
 	{
 		UINT32 localNodeId, localIfId;
 
-		Interface *localIf = FindInterfaceByMAC(macAddr);
+		Interface *localIf = FindInterfaceByMAC(macAddr.value());
 		if (localIf != NULL)
 		{
 			localIfId = localIf->getId();
@@ -11745,7 +11744,7 @@ void ClientSession::findMacAddress(NXCPMessage *request)
          msg.setField(VID_IF_INDEX, (cp->getObjectClass() == OBJECT_INTERFACE) ? ((Interface *)cp)->getIfIndex() : (UINT32)0);
 	      msg.setField(VID_LOCAL_NODE_ID, localNodeId);
 		   msg.setField(VID_LOCAL_INTERFACE_ID, localIfId);
-		   msg.setField(VID_MAC_ADDR, macAddr, MAC_ADDR_LENGTH);
+		   msg.setField(VID_MAC_ADDR, macAddr);
          msg.setField(VID_IP_ADDRESS, (localIf != NULL) ? localIf->getIpAddressList()->getFirstUnicastAddress() : InetAddress::INVALID);
 		   msg.setField(VID_CONNECTION_TYPE, (UINT16)type);
          if (cp->getObjectClass() == OBJECT_INTERFACE)
@@ -11760,12 +11759,12 @@ void ClientSession::findMacAddress(NXCPMessage *request)
 	}
 	else
 	{
-      Interface *localIf = FindInterfaceByMAC(macAddr);
+      Interface *localIf = FindInterfaceByMAC(macAddr.value());
       if (localIf != NULL)
       {
          msg.setField(VID_LOCAL_NODE_ID, localIf->getParentNodeId());
          msg.setField(VID_LOCAL_INTERFACE_ID, localIf->getId());
-         msg.setField(VID_MAC_ADDR, macAddr, MAC_ADDR_LENGTH);
+         msg.setField(VID_MAC_ADDR, macAddr);
          msg.setField(VID_IP_ADDRESS, localIf->getIpAddressList()->getFirstUnicastAddress());
 
          if (localIf->getPeerInterfaceId() != 0)
@@ -11783,7 +11782,7 @@ void ClientSession::findMacAddress(NXCPMessage *request)
 
          TCHAR buffer[64];
          debugPrintf(5, _T("findMacAddress: MAC address %s not found in FDB but interface found (%s on %s [%d])"),
-                     MACToStr(macAddr, buffer), localIf->getName(), localIf->getParentNode()->getName(), localIf->getParentNodeId());
+                     macAddr.toString(buffer), localIf->getName(), localIf->getParentNode()->getName(), localIf->getParentNodeId());
       }
 	}
 
@@ -11802,15 +11801,15 @@ void ClientSession::findIpAddress(NXCPMessage *request)
 	msg.setCode(CMD_REQUEST_COMPLETED);
 	msg.setField(VID_RCC, RCC_SUCCESS);
 
-	BYTE macAddr[6];
+	MacAddress macAddr;
 	bool found = false;
 
 	UINT32 zoneUIN = request->getFieldAsUInt32(VID_ZONE_UIN);
 	UINT32 ipAddr = request->getFieldAsUInt32(VID_IP_ADDRESS);
 	Interface *iface = FindInterfaceByIP(zoneUIN, ipAddr);
-	if ((iface != NULL) && memcmp(iface->getMacAddr(), "\x00\x00\x00\x00\x00\x00", MAC_ADDR_LENGTH))
+	if ((iface != NULL) && iface->getMacAddr().isValid())
 	{
-		memcpy(macAddr, iface->getMacAddr(), MAC_ADDR_LENGTH);
+		macAddr = iface->getMacAddr();
 		found = true;
 		debugPrintf(5, _T("findIpAddress(%s): endpoint iface=%s"), IpToStr(ipAddr, ipAddrText), iface->getName());
 	}
@@ -11822,7 +11821,8 @@ void ClientSession::findIpAddress(NXCPMessage *request)
 		if (subnet != NULL)
 		{
 			debugPrintf(5, _T("findIpAddress(%s): found subnet %s"), ipAddrText, subnet->getName());
-			found = subnet->findMacAddress(ipAddr, macAddr);
+			macAddr = subnet->findMacAddress(ipAddr);
+			found = macAddr.isValid();
 		}
 		else
 		{
@@ -11841,7 +11841,7 @@ void ClientSession::findIpAddress(NXCPMessage *request)
 		{
 			UINT32 localNodeId, localIfId;
 
-			Interface *localIf = (iface != NULL) ? iface : FindInterfaceByMAC(macAddr);
+			Interface *localIf = (iface != NULL) ? iface : FindInterfaceByMAC(macAddr.value());
 			if (localIf != NULL)
 			{
 				localIfId = localIf->getId();
@@ -11861,7 +11861,7 @@ void ClientSession::findIpAddress(NXCPMessage *request)
             msg.setField(VID_IF_INDEX, (cp->getObjectClass() == OBJECT_INTERFACE) ? ((Interface *)cp)->getIfIndex() : (UINT32)0);
 			   msg.setField(VID_LOCAL_NODE_ID, localNodeId);
 			   msg.setField(VID_LOCAL_INTERFACE_ID, localIfId);
-			   msg.setField(VID_MAC_ADDR, macAddr, MAC_ADDR_LENGTH);
+			   msg.setField(VID_MAC_ADDR, macAddr);
 			   msg.setField(VID_IP_ADDRESS, ipAddr);
 			   msg.setField(VID_CONNECTION_TYPE, (UINT16)type);
             if (cp->getObjectClass() == OBJECT_INTERFACE)
@@ -11874,7 +11874,7 @@ void ClientSession::findIpAddress(NXCPMessage *request)
 		{
 		   // Connection not found but node with given IP address registered in the system
          msg.setField(VID_CONNECTION_TYPE, (UINT16)CP_TYPE_UNKNOWN);
-         msg.setField(VID_MAC_ADDR, macAddr, MAC_ADDR_LENGTH);
+         msg.setField(VID_MAC_ADDR, macAddr);
          msg.setField(VID_IP_ADDRESS, ipAddr);
          msg.setField(VID_LOCAL_NODE_ID, iface->getParentNodeId());
          msg.setField(VID_LOCAL_INTERFACE_ID, iface->getId());

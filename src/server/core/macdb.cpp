@@ -46,25 +46,25 @@ static RWLOCK s_lock = RWLockCreate();
 /**
  * Add interface
  */
-void NXCORE_EXPORTABLE MacDbAddObject(const BYTE *macAddr, NetObj *object)
+void NXCORE_EXPORTABLE MacDbAddObject(const MacAddress& macAddr, NetObj *object)
 {
-   // Ignore non-unique addresses
-   if (!memcmp(macAddr, "\x00\x00\x00\x00\x00\x00", 6) ||
-       !memcmp(macAddr, "\x00\x00\x5E\x00\x01", 5) || // VRRP
-       !memcmp(macAddr, "\x00\x00\x0C\x07\xAC", 5) || // HSRP
-       (!memcmp(macAddr, "\x00\x00\x0C\x9F", 4) && ((macAddr[4] & 0xF0) == 0xF0)) || // HSRP
-       (!memcmp(macAddr, "\x00\x05\x73\xA0", 4) && ((macAddr[4] & 0xF0) == 0x00)) || // HSRP IPv6
-       ((macAddr[0] & 0x01) != 0))  // multicast
+   // Ignore non-unique or non-Ethernet addresses
+   if (!macAddr.isValid() || macAddr.isBroadcast() || macAddr.isMulticast() ||
+       (macAddr.length() != MAC_ADDR_LENGTH) ||
+       !memcmp(macAddr.value(), "\x00\x00\x5E\x00\x01", 5) || // VRRP
+       !memcmp(macAddr.value(), "\x00\x00\x0C\x07\xAC", 5) || // HSRP
+       (!memcmp(macAddr.value(), "\x00\x00\x0C\x9F", 4) && ((macAddr.value()[4] & 0xF0) == 0xF0)) || // HSRP
+       (!memcmp(macAddr.value(), "\x00\x05\x73\xA0", 4) && ((macAddr.value()[4] & 0xF0) == 0x00))) // HSRP IPv6
       return;
 
    object->incRefCount();
    RWLockWriteLock(s_lock, INFINITE);
    MacDbEntry *entry;
-   HASH_FIND(hh, s_data, macAddr, MAC_ADDR_LENGTH, entry);
+   HASH_FIND(hh, s_data, macAddr.value(), MAC_ADDR_LENGTH, entry);
    if (entry == NULL)
    {
       entry = (MacDbEntry *)malloc(sizeof(MacDbEntry));
-      memcpy(entry->macAddr, macAddr, MAC_ADDR_LENGTH);
+      memcpy(entry->macAddr, macAddr.value(), MAC_ADDR_LENGTH);
       HASH_ADD_KEYPTR(hh, s_data, entry->macAddr, MAC_ADDR_LENGTH, entry);
    }
    else
@@ -73,7 +73,7 @@ void NXCORE_EXPORTABLE MacDbAddObject(const BYTE *macAddr, NetObj *object)
       {
          TCHAR macAddrStr[32];
          nxlog_debug(5, _T("MacDbAddObject: MAC address %s already known (%s [%d] -> %s [%d])"),
-                     MACToStr(macAddr, macAddrStr), entry->object->getName(), entry->object->getId(),
+                     macAddr.toString(macAddrStr), entry->object->getName(), entry->object->getId(),
                      object->getName(), object->getId());
       }
       entry->object->decRefCount();
@@ -119,7 +119,17 @@ void NXCORE_EXPORTABLE MacDbRemove(const BYTE *macAddr)
 }
 
 /**
- * Find interface by MAC address
+ * Delete entry
+ */
+void NXCORE_EXPORTABLE MacDbRemove(const MacAddress& macAddr)
+{
+   if (!macAddr.isValid() || macAddr.isBroadcast() || macAddr.isMulticast() || (macAddr.length() != MAC_ADDR_LENGTH))
+      return;
+   MacDbRemove(macAddr.value());
+}
+
+/**
+ * Find object by MAC address
  */
 NetObj NXCORE_EXPORTABLE *MacDbFind(const BYTE *macAddr, bool updateRefCount)
 {
@@ -131,4 +141,14 @@ NetObj NXCORE_EXPORTABLE *MacDbFind(const BYTE *macAddr, bool updateRefCount)
       object->incRefCount();
    RWLockUnlock(s_lock);
    return object;
+}
+
+/**
+ * Find object by MAC address
+ */
+NetObj NXCORE_EXPORTABLE *MacDbFind(const MacAddress& macAddr, bool updateRefCount)
+{
+   if (!macAddr.isValid() || macAddr.isBroadcast() || macAddr.isMulticast() || (macAddr.length() != MAC_ADDR_LENGTH))
+      return NULL;
+   return MacDbFind(macAddr.value(), updateRefCount);
 }

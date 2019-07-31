@@ -408,48 +408,53 @@ Event::Event(const EventTemplate *eventTemplate, UINT32 sourceId, UINT32 dciId, 
                }
                break;
             case 'd':
-               buffer = (TCHAR *)malloc(16 * sizeof(TCHAR));
+               buffer = MemAllocString(16);
                _sntprintf(buffer, 16, _T("%d"), va_arg(args, LONG));
 					m_parameters.add(buffer);
                break;
             case 'D':
-               buffer = (TCHAR *)malloc(32 * sizeof(TCHAR));
+               buffer = MemAllocString(32);
                _sntprintf(buffer, 32, INT64_FMT, va_arg(args, INT64));
 					m_parameters.add(buffer);
                break;
             case 't':
-               buffer = (TCHAR *)malloc(32 * sizeof(TCHAR));
+               buffer = MemAllocString(32);
                _sntprintf(buffer, 32, INT64_FMT, (INT64)va_arg(args, time_t));
 					m_parameters.add(buffer);
                break;
             case 'x':
             case 'i':
-               buffer = (TCHAR *)malloc(16 * sizeof(TCHAR));
+               buffer = MemAllocString(16);
                _sntprintf(buffer, 16, _T("0x%08X"), va_arg(args, UINT32));
 					m_parameters.add(buffer);
                break;
             case 'a':   // IPv4 address
-               buffer = (TCHAR *)malloc(16 * sizeof(TCHAR));
+               buffer = MemAllocString(16);
                IpToStr(va_arg(args, UINT32), buffer);
 					m_parameters.add(buffer);
                break;
             case 'A':   // InetAddress object
-               buffer = (TCHAR *)malloc(64 * sizeof(TCHAR));
+               buffer = MemAllocString(64);
                (va_arg(args, InetAddress *))->toString(buffer);
 					m_parameters.add(buffer);
                break;
             case 'h':
-               buffer = (TCHAR *)malloc(32 * sizeof(TCHAR));
+               buffer = MemAllocString(32);
                MACToStr(va_arg(args, BYTE *), buffer);
 					m_parameters.add(buffer);
                break;
+            case 'H':
+               buffer = MemAllocString(32);
+               (va_arg(args, MacAddress *))->toString(buffer);
+               m_parameters.add(buffer);
+               break;
             case 'G':   // uuid object (GUID)
-               buffer = (TCHAR *)malloc(48 * sizeof(TCHAR));
+               buffer = MemAllocString(48);
                (va_arg(args, uuid *))->toString(buffer);
                m_parameters.add(buffer);
                break;
             default:
-               buffer = (TCHAR *)malloc(64 * sizeof(TCHAR));
+               buffer = MemAllocString(64);
                _sntprintf(buffer, 64, _T("BAD FORMAT \"%c\" [value = 0x%08X]"), szFormat[i], va_arg(args, UINT32));
 					m_parameters.add(buffer);
                break;
@@ -783,7 +788,8 @@ void ReloadEvents()
  *        x - Hex integer
  *        a - IPv4 address
  *        A - InetAddress object
- *        h - MAC (hardware) address
+ *        h - MAC (hardware) address as byte array
+ *        H - MAC (hardware) address as MacAddress object
  *        G - uuid object (GUID)
  *        i - Object ID
  * @param names names for parameters (NULL if parameters are unnamed)
@@ -833,7 +839,8 @@ static bool RealPostEvent(ObjectQueue<Event> *queue, UINT64 *eventId, UINT32 eve
  *        x - Hex integer
  *        a - IPv4 address
  *        A - InetAddress object
- *        h - MAC (hardware) address
+ *        h - MAC (hardware) address as byte array
+ *        H - MAC (hardware) address as MacAddress object
  *        G - uuid object (GUID)
  *        i - Object ID
  *        t - timestamp (time_t) as raw value (seconds since epoch)
@@ -863,7 +870,8 @@ bool NXCORE_EXPORTABLE PostEvent(UINT32 eventCode, UINT32 sourceId, const char *
  *        x - Hex integer
  *        a - IPv4 address
  *        A - InetAddress object
- *        h - MAC (hardware) address
+ *        h - MAC (hardware) address as byte array
+ *        H - MAC (hardware) address as MacAddress object
  *        G - uuid object (GUID)
  *        i - Object ID
  *        t - timestamp (time_t) as raw value (seconds since epoch)
@@ -892,7 +900,8 @@ bool NXCORE_EXPORTABLE PostDciEvent(UINT32 eventCode, UINT32 sourceId, UINT32 dc
  *        x - Hex integer
  *        a - IPv4 address
  *        A - InetAddress object
- *        h - MAC (hardware) address
+ *        h - MAC (hardware) address as byte array
+ *        H - MAC (hardware) address as MacAddress object
  *        G - uuid object (GUID)
  *        i - Object ID
  *        t - timestamp (time_t) as raw value (seconds since epoch)
@@ -922,7 +931,8 @@ UINT64 NXCORE_EXPORTABLE PostEvent2(UINT32 eventCode, UINT32 sourceId, const cha
  *        x - Hex integer
  *        a - IPv4 address
  *        A - InetAddress object
- *        h - MAC (hardware) address
+ *        h - MAC (hardware) address as byte array
+ *        H - MAC (hardware) address as MacAddress object
  *        G - uuid object (GUID)
  *        i - Object ID
  * @param names names for parameters (NULL if parameters are unnamed)
@@ -952,7 +962,8 @@ bool NXCORE_EXPORTABLE PostEventWithNames(UINT32 eventCode, UINT32 sourceId, con
  *        x - Hex integer
  *        a - IPv4 address
  *        A - InetAddress object
- *        h - MAC (hardware) address
+ *        h - MAC (hardware) address as byte array
+ *        H - MAC (hardware) address as MacAddress object
  *        G - uuid object (GUID)
  *        i - Object ID
  * @param names names for parameters (NULL if parameters are unnamed)
@@ -981,7 +992,8 @@ bool NXCORE_EXPORTABLE PostDciEventWithNames(UINT32 eventCode, UINT32 sourceId, 
  *        x - Hex integer
  *        a - IPv4 address
  *        A - InetAddress object
- *        h - MAC (hardware) address
+ *        h - MAC (hardware) address as byte array
+ *        H - MAC (hardware) address as MacAddress object
  *        G - uuid object (GUID)
  *        i - Object ID
  * @param names names for parameters (NULL if parameters are unnamed)
@@ -1074,7 +1086,8 @@ bool NXCORE_EXPORTABLE PostDciEventWithNames(UINT32 eventCode, UINT32 sourceId, 
  *        x - Hex integer
  *        a - IPv4 address
  *        A - InetAddress object
- *        h - MAC (hardware) address
+ *        h - MAC (hardware) address as byte array
+ *        H - MAC (hardware) address as MacAddress object
  *        G - uuid object (GUID)
  *        i - Object ID
  * @param names names for parameters (NULL if parameters are unnamed)
@@ -1105,7 +1118,8 @@ bool NXCORE_EXPORTABLE PostEventWithTag(UINT32 eventCode, UINT32 sourceId, const
  *        x - Hex integer
  *        a - IPv4 address
  *        A - InetAddress object
- *        h - MAC (hardware) address
+ *        h - MAC (hardware) address as byte array
+ *        H - MAC (hardware) address as MacAddress object
  *        G - uuid object (GUID)
  *        i - Object ID
  */

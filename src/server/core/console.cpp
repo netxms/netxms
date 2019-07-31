@@ -42,6 +42,7 @@ void ShowAgentTunnels(CONSOLE_CTX console);
 UINT32 BindAgentTunnel(UINT32 tunnelId, UINT32 nodeId, UINT32 userId);
 UINT32 UnbindAgentTunnel(UINT32 nodeId, UINT32 userId);
 INT64 GetEventLogWriterQueueSize();
+void DiscoveryPoller(PollerInfo *poller);
 
 /**
  * Format string to show value of global flag
@@ -431,6 +432,10 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
          {
             pollType = 1;
          }
+         else if (IsCommand(_T("DISCOVERY"), szBuffer, 1))
+         {
+            pollType = 6;
+         }
          else if (IsCommand(_T("INSTANCE"), szBuffer, 1))
          {
             pollType = 5;
@@ -464,13 +469,11 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
                   switch(pollType)
                   {
                      case 1:
-                        static_cast<DataCollectionTarget*>(object)->lockForConfigurationPoll();
                         ThreadPoolExecute(g_pollerThreadPool, static_cast<DataCollectionTarget*>(object),
                                  &DataCollectionTarget::configurationPollWorkerEntry,
                                  RegisterPoller(PollerType::CONFIGURATION, static_cast<DataCollectionTarget*>(object)));
                         break;
                      case 2:
-                        static_cast<DataCollectionTarget*>(object)->lockForStatusPoll();
                         ThreadPoolExecute(g_pollerThreadPool, static_cast<DataCollectionTarget*>(object),
                                  &DataCollectionTarget::statusPollWorkerEntry,
                                  RegisterPoller(PollerType::STATUS, static_cast<DataCollectionTarget*>(object)));
@@ -478,7 +481,6 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
                      case 3:
                         if (object->getObjectClass() == OBJECT_NODE)
                         {
-                           static_cast<Node*>(object)->lockForTopologyPoll();
                            ThreadPoolExecute(g_pollerThreadPool, static_cast<Node*>(object),
                                     &Node::topologyPollWorkerEntry,
                                     RegisterPoller(PollerType::TOPOLOGY, static_cast<Node*>(object)));
@@ -491,7 +493,6 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
                      case 4:
                         if (object->getObjectClass() == OBJECT_NODE)
                         {
-                           static_cast<Node*>(object)->lockForRoutePoll();
                            ThreadPoolExecute(g_pollerThreadPool, static_cast<Node*>(object),
                                     &Node::routingTablePollWorkerEntry,
                                     RegisterPoller(PollerType::ROUTING_TABLE, static_cast<Node*>(object)));
@@ -502,10 +503,19 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
                         }
                         break;
                      case 5:
-                        static_cast<DataCollectionTarget*>(object)->lockForInstancePoll();
                         ThreadPoolExecute(g_pollerThreadPool, static_cast<DataCollectionTarget*>(object),
                                  &DataCollectionTarget::instanceDiscoveryPollWorkerEntry,
                                  RegisterPoller(PollerType::INSTANCE_DISCOVERY, static_cast<DataCollectionTarget*>(object)));
+                        break;
+                     case 6:
+                        if (object->getObjectClass() == OBJECT_NODE)
+                        {
+                           ThreadPoolExecute(g_pollerThreadPool, DiscoveryPoller, RegisterPoller(PollerType::DISCOVERY, object));
+                        }
+                        else
+                        {
+                           ConsolePrintf(pCtx, _T("ERROR: this poll type can only be initiated for node objects\n\n"));
+                        }
                         break;
                   }
                }
@@ -521,12 +531,12 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
          }
          else
          {
-            ConsoleWrite(pCtx, _T("Usage POLL [CONFIGURATION|STATUS|TOPOLOGY|INSTANCE|ROUTING-TABLE] <object>\n"));
+            ConsoleWrite(pCtx, _T("Usage POLL [CONFIGURATION|DISCOVERY|STATUS|TOPOLOGY|INSTANCE|ROUTING-TABLE] <object>\n"));
          }
       }
       else
       {
-         ConsoleWrite(pCtx, _T("Usage POLL [CONFIGURATION|STATUS|TOPOLOGY|INSTANCE|ROUTING-TABLE] <node>\n"));
+         ConsoleWrite(pCtx, _T("Usage POLL [CONFIGURATION|DISCOVERY|STATUS|TOPOLOGY|INSTANCE|ROUTING-TABLE] <node>\n"));
       }
    }
    else if (IsCommand(_T("SCAN"), szBuffer, 4))
