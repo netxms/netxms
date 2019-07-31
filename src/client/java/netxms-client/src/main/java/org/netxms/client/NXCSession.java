@@ -8676,7 +8676,7 @@ public class NXCSession
       }
 
       ReceivedFile remoteFile = waitForFile(msg.getMessageId(), 36000000);
-      if (remoteFile == null)
+      if (remoteFile.isFailed())
          throw new NXCException(RCC.AGENT_FILE_DOWNLOAD_ERROR);
       AgentFileData file = new AgentFileData(id, remoteFileName, remoteFile.getFile());
 
