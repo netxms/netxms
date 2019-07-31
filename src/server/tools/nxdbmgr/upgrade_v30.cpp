@@ -24,6 +24,45 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 30.87 to 30.88
+ */
+static bool H_UpgradeFromV87()
+{
+   CHK_EXEC(CreateEventTemplate(EVENT_DUPLICATE_NODE_DELETED, _T("SYS_DUPLICATE_NODE_DELETED"),
+            SEVERITY_WARNING, EF_LOG, _T("b587cd90-d98b-432f-acfd-ff51f25c27d1"),
+            _T("Duplicate node %5 is deleted (%7)"),
+            _T("Generated when node is deleted by network discovery de-duplication process.\r\n")
+            _T("Parameters:\r\n")
+            _T("   1) Original node object ID\r\n")
+            _T("   2) Original node name\r\n")
+            _T("   3) Original node primary host name\r\n")
+            _T("   4) Duplicate node object ID\r\n")
+            _T("   5) Duplicate node name\r\n")
+            _T("   6) Duplicate node primary host name\r\n")
+            _T("   7) Reason")
+            ));
+
+   CHK_EXEC(CreateEventTemplate(EVENT_DUPLICATE_IP_ADDRESS, _T("SYS_DUPLICATE_IP_ADDRESS"),
+            SEVERITY_WARNING, EF_LOG, _T("f134169c-9f88-4390-9e0e-248b7f8a0013"),
+            _T("IP address %1 already known on node %3 interface %4 with MAC %5 but found via %8 with MAC %6"),
+            _T("Generated when possibly duplicate IP address is detected by network discovery process.\r\n")
+            _T("Parameters:\r\n")
+            _T("   1) IP address\r\n")
+            _T("   2) Known node object ID\r\n")
+            _T("   3) Known node name\r\n")
+            _T("   4) Known interface name\r\n")
+            _T("   5) Known MAC address\r\n")
+            _T("   6) Discovered MAC address\r\n")
+            _T("   7) Discovery source node object ID\r\n")
+            _T("   8) Discovery source node name\r\n")
+            _T("   9) Discovery data source")
+            ));
+
+   CHK_EXEC(SetMinorSchemaVersion(88));
+   return true;
+}
+
+/**
  * Upgrade from 30.86 to 30.87
  */
 static bool H_UpgradeFromV86()
@@ -2925,6 +2964,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 87, 30, 88, H_UpgradeFromV87 },
    { 86, 30, 87, H_UpgradeFromV86 },
    { 85, 30, 86, H_UpgradeFromV85 },
    { 84, 30, 85, H_UpgradeFromV84 },

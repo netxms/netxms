@@ -1179,7 +1179,6 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Server started',
 		'Generated when server initialization is completed.'
 	);
-
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
 		EVENT_HARDWARE_COMPONENT_ADDED, 'SYS_HARDWARE_COMPONENT_ADDED', '3677d317-d5fc-4ba7-83a9-890db4aa7112',
@@ -1197,7 +1196,6 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'   8) Capacity' CONCAT CRLF CONCAT
 		'   9) Description'
 	);
-
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
 		EVENT_HARDWARE_COMPONENT_REMOVED, 'SYS_HARDWARE_COMPONENT_REMOVED', '72904936-1d42-40c4-810c-e226ae44d7f1',
@@ -1214,6 +1212,38 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'   7) Serial number' CONCAT CRLF CONCAT
 		'   8) Capacity' CONCAT CRLF CONCAT
 		'   9) Description'
+	);
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
+		EVENT_DUPLICATE_NODE_DELETED, 'SYS_DUPLICATE_NODE_DELETED', 'b587cd90-d98b-432f-acfd-ff51f25c27d1',
+		EVENT_SEVERITY_WARNING, 1,
+		'Duplicate node %5 is deleted (%7)',
+		'Generated when node is deleted by network discovery de-duplication process.' CONCAT CRLF CONCAT
+		'Parameters:' CONCAT CRLF CONCAT
+		'   1) Original node object ID' CONCAT CRLF CONCAT
+		'   2) Original node name' CONCAT CRLF CONCAT
+		'   3) Original node primary host name' CONCAT CRLF CONCAT
+		'   4) Duplicate node object ID' CONCAT CRLF CONCAT
+		'   5) Duplicate node name' CONCAT CRLF CONCAT
+		'   6) Duplicate node primary host name' CONCAT CRLF CONCAT
+		'   7) Reason'
+	);
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
+		EVENT_DUPLICATE_IP_ADDRESS, 'SYS_DUPLICATE_IP_ADDRESS', 'f134169c-9f88-4390-9e0e-248b7f8a0013',
+		EVENT_SEVERITY_WARNING, 1,
+		'IP address %1 already known on node %3 interface %4 with MAC %5 but found via %8 with MAC %6',
+		'Generated when possibly duplicate IP address is detected by network discovery process.' CONCAT CRLF CONCAT
+		'Parameters:' CONCAT CRLF CONCAT
+		'   1) IP address' CONCAT CRLF CONCAT
+		'   2) Known node object ID' CONCAT CRLF CONCAT
+		'   3) Known node name' CONCAT CRLF CONCAT
+		'   4) Known interface name' CONCAT CRLF CONCAT
+		'   5) Known MAC address' CONCAT CRLF CONCAT
+		'   6) Discovered MAC address' CONCAT CRLF CONCAT
+		'   7) Discovery source node object ID' CONCAT CRLF CONCAT
+      '   8) Discovery source node name' CONCAT CRLF CONCAT
+      '   9) Discovery data source'
 	);
 
 /*
