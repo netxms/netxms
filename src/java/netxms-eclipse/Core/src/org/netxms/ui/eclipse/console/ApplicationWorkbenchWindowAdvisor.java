@@ -108,8 +108,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor im
 
       final IPreferenceStore ps = Activator.getDefault().getPreferenceStore();
       IWorkbenchWindowConfigurer configurer = getWindowConfigurer();
-      //configurer.setShowCoolBar(ps.getBoolean("SHOW_COOLBAR")); //$NON-NLS-1$
-      configurer.setShowCoolBar(true); //$NON-NLS-1$
+      configurer.setShowCoolBar(ps.getBoolean("SHOW_COOLBAR")); //$NON-NLS-1$
       configurer.setShowStatusLine(true);
       configurer.setShowProgressIndicator(true);
       configurer.setShowPerspectiveBar(true);
