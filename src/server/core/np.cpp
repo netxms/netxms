@@ -30,6 +30,11 @@
 extern ObjectQueue<DiscoveredAddress> g_nodePollerQueue;
 
 /**
+ * Discovery source type names
+ */
+extern const TCHAR *g_discoveredAddrSourceTypeAsText[];
+
+/**
  * Thread pool
  */
 ThreadPool *g_discoveryThreadPool = NULL;
@@ -1031,9 +1036,9 @@ THREAD_RESULT THREAD_CALL NodePoller(void *arg)
       if (address == INVALID_POINTER_VALUE)
          break;   // Shutdown indicator received
 
-		nxlog_debug_tag(DEBUG_TAG, 4, _T("NodePoller: processing address %s/%d in zone %d (source type %d, source node [%u])"),
+		nxlog_debug_tag(DEBUG_TAG, 4, _T("NodePoller: processing address %s/%d in zone %d (source type %s, source node [%u])"),
 		         address->ipAddr.toString(szIpAddr), address->ipAddr.getMaskBits(), (int)address->zoneUIN,
-		         address->sourceType, address->sourceNodeId);
+		         g_discoveredAddrSourceTypeAsText[address->sourceType], address->sourceNodeId);
 
 		s_processingListLock.lock();
 		s_processingList.add(address);

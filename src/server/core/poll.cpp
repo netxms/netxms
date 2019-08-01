@@ -41,6 +41,18 @@ ObjectQueue<DiscoveredAddress> g_nodePollerQueue;
 ThreadPool *g_pollerThreadPool = NULL;
 
 /**
+ * Discovery source type names
+ */
+const TCHAR *g_discoveredAddrSourceTypeAsText[] = {
+         _T("ARP Cache"),
+         _T("Routing Table"),
+         _T("Agent Registration"),
+         _T("SNMP Trap"),
+         _T("Syslog"),
+         _T("Active Discovery"),
+};
+
+/**
  * Active pollers
  */
 static HashMap<UINT64, PollerInfo> s_pollers(false);
@@ -244,7 +256,8 @@ static bool PollerQueueElementComparator(const void *key, const DiscoveredAddres
 void CheckPotentialNode(const InetAddress& ipAddr, UINT32 zoneUIN, DiscoveredAddressSourceType sourceType, UINT32 sourceNodeId)
 {
 	TCHAR buffer[64];
-	nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Checking address %s in zone %d"), ipAddr.toString(buffer), zoneUIN);
+	nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Checking address %s in zone %d (source: %s)"),
+	         ipAddr.toString(buffer), zoneUIN, g_discoveredAddrSourceTypeAsText[sourceType]);
    if (!ipAddr.isValid() || ipAddr.isBroadcast() || ipAddr.isLoopback() || ipAddr.isMulticast())
    {
       nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Potential node %s rejected (IP address is not a valid unicast address)"), ipAddr.toString(buffer));
@@ -312,18 +325,9 @@ void CheckPotentialNode(const InetAddress& ipAddr, UINT32 zoneUIN, DiscoveredAdd
 static void CheckPotentialNode(Node *node, const InetAddress& ipAddr, UINT32 ifIndex, const MacAddress& macAddr,
          DiscoveredAddressSourceType sourceType, UINT32 sourceNodeId)
 {
-   static const TCHAR *sourceNames[] = {
-            _T("ARP Cache"),
-            _T("Routing Table"),
-            _T("Agent Registration"),
-            _T("SNMP Trap"),
-            _T("Syslog"),
-            _T("Active Discovery"),
-   };
-
    TCHAR buffer[64];
    nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Checking potential node %s at %s:%d (source: %s)"),
-            ipAddr.toString(buffer), node->getName(), ifIndex, sourceNames[sourceType]);
+            ipAddr.toString(buffer), node->getName(), ifIndex, g_discoveredAddrSourceTypeAsText[sourceType]);
    if (!ipAddr.isValidUnicast())
    {
       nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Potential node %s rejected (IP address is not a valid unicast address)"), ipAddr.toString(buffer));
@@ -343,7 +347,8 @@ static void CheckPotentialNode(Node *node, const InetAddress& ipAddr, UINT32 ifI
          MacAddress knownMAC = iface->getMacAddr();
          PostEvent(EVENT_DUPLICATE_IP_ADDRESS, g_dwMgmtNode, "AdssHHdss",
                   &ipAddr, curr->getId(), curr->getName(), iface->getName(),
-                  &knownMAC, &macAddr, node->getId(), node->getName(), sourceNames[sourceType]);
+                  &knownMAC, &macAddr, node->getId(), node->getName(),
+                  g_discoveredAddrSourceTypeAsText[sourceType]);
       }
       return;
    }
