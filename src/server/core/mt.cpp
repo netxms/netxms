@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -132,24 +132,15 @@ MappingTable::~MappingTable()
 }
 
 /**
- * Data for FillMessageCallback
- */
-struct FillMessageCallbackData
-{
-   NXCPMessage *msg;
-   UINT32 id;
-};
-
-/**
  * Callback for setting mapping table elements in NXCP message
  */
-static EnumerationCallbackResult FillMessageCallback(const TCHAR *key, const void *value, void *data)
+static EnumerationCallbackResult FillMessageCallback(const TCHAR *key,
+         const MappingTableElement *value, std::pair<NXCPMessage*, UINT32> *context)
 {
-   UINT32 id = ((FillMessageCallbackData *)data)->id;
-	((FillMessageCallbackData *)data)->msg->setField(id, key);
-	((FillMessageCallbackData *)data)->msg->setField(id + 1, ((MappingTableElement *)value)->getValue());
-	((FillMessageCallbackData *)data)->msg->setField(id + 2, ((MappingTableElement *)value)->getDescription());
-	((FillMessageCallbackData *)data)->id += 10;
+	context->first->setField(context->second, key);
+	context->first->setField(context->second + 1, value->getValue());
+	context->first->setField(context->second + 2, value->getDescription());
+	context->second += 10;
    return _CONTINUE;
 }
 
@@ -164,21 +155,18 @@ void MappingTable::fillMessage(NXCPMessage *msg)
 	msg->setField(VID_DESCRIPTION, CHECK_NULL_EX(m_description));
 	
 	msg->setField(VID_NUM_ELEMENTS, (UINT32)m_data->size());
-   FillMessageCallbackData data;
-   data.msg = msg;
-	data.id = VID_ELEMENT_LIST_BASE;
+   std::pair<NXCPMessage*, UINT32> data(msg, VID_ELEMENT_LIST_BASE);
    m_data->forEach(FillMessageCallback, &data);
 }
 
 /**
  * Callback for saving elements into database
  */
-static EnumerationCallbackResult SaveElementCallback(const TCHAR *key, const void *value, void *data)
+static EnumerationCallbackResult SaveElementCallback(const TCHAR *key, const MappingTableElement *value, db_statement_t *hStmt)
 {
-   DB_STATEMENT hStmt = (DB_STATEMENT)data;
 	DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, key, DB_BIND_STATIC);
-	DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, ((MappingTableElement *)value)->getValue(), DB_BIND_STATIC);
-	DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, ((MappingTableElement *)value)->getDescription(), DB_BIND_STATIC);
+	DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, value->getValue(), DB_BIND_STATIC);
+	DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, value->getDescription(), DB_BIND_STATIC);
    return DBExecute(hStmt) ? _CONTINUE : _STOP;
 }
 
@@ -334,20 +322,11 @@ void InitMappingTables()
 }
 
 /**
- * Notification data structure
- */
-struct NOTIFICATION_DATA
-{
-	UINT32 code;
-	LONG id;
-};
-
-/**
  * Callback for client notification
  */
-static void NotifyClients(ClientSession *session, void *arg)
+static void NotifyClients(ClientSession *session, std::pair<UINT32, UINT32> *context)
 {
-	session->notify(((NOTIFICATION_DATA *)arg)->code, ((NOTIFICATION_DATA *)arg)->id);
+	session->notify(context->first, context->second);
 }
 
 /**
@@ -400,15 +379,13 @@ UINT32 UpdateMappingTable(NXCPMessage *msg, LONG *newId)
 		}
 	}
 
-	NOTIFICATION_DATA data;
-	data.code = NX_NOTIFY_MAPTBL_CHANGED;
-	data.id = mt->getId();
+	std::pair<UINT32, UINT32> context(NX_NOTIFY_MAPTBL_CHANGED, mt->getId());
 
 	RWLockUnlock(s_mappingTablesLock);
 
 	if (rcc == RCC_SUCCESS)
 	{
-		EnumerateClientSessions(NotifyClients, &data);
+		EnumerateClientSessions(NotifyClients, &context);
 	}
 	else
 	{
@@ -449,10 +426,8 @@ UINT32 DeleteMappingTable(LONG id)
 	RWLockUnlock(s_mappingTablesLock);
 	if (rcc == RCC_SUCCESS)
 	{
-		NOTIFICATION_DATA data;
-		data.code = NX_NOTIFY_MAPTBL_DELETED;
-		data.id = id;
-		EnumerateClientSessions(NotifyClients, &data);
+	   std::pair<UINT32, UINT32> context(NX_NOTIFY_MAPTBL_DELETED, id);
+		EnumerateClientSessions(NotifyClients, &context);
 	}
 	return rcc;
 }

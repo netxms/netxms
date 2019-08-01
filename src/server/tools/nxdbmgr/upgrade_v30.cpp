@@ -24,6 +24,17 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 30.88 to 30.89
+ */
+static bool H_UpgradeFromV88()
+{
+   CHK_EXEC(DBResizeColumn(g_dbHandle, _T("software_inventory"), _T("version"), 63, false));
+   CHK_EXEC(DBResizeColumn(g_dbHandle, _T("mapping_data"), _T("md_value"), 4000, true));
+   CHK_EXEC(SetMinorSchemaVersion(89));
+   return true;
+}
+
+/**
  * Upgrade from 30.87 to 30.88
  */
 static bool H_UpgradeFromV87()
@@ -2964,6 +2975,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 88, 30, 89, H_UpgradeFromV88 },
    { 87, 30, 88, H_UpgradeFromV87 },
    { 86, 30, 87, H_UpgradeFromV86 },
    { 85, 30, 86, H_UpgradeFromV85 },

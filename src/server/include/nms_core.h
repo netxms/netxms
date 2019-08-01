@@ -1076,7 +1076,12 @@ void CheckPotentialNode(const InetAddress& ipAddr, UINT32 zoneUIN, DiscoveredAdd
 Node NXCORE_EXPORTABLE *PollNewNode(NewNodeData *newNodeData);
 INT64 GetDiscoveryPollerQueueSize();
 
-void NXCORE_EXPORTABLE EnumerateClientSessions(void (*pHandler)(ClientSession *, void *), void *pArg);
+void NXCORE_EXPORTABLE EnumerateClientSessions(void (*handler)(ClientSession *, void *), void *context);
+template <typename C> void EnumerateClientSessions(void (*handler)(ClientSession *, C *), C *context)
+{
+   EnumerateClientSessions(reinterpret_cast<void (*)(ClientSession *, void *)>(handler), context);
+}
+
 void NXCORE_EXPORTABLE NotifyClientSessions(UINT32 dwCode, UINT32 dwData);
 void NXCORE_EXPORTABLE NotifyClientSession(session_id_t sessionId, UINT32 dwCode, UINT32 dwData);
 void NXCORE_EXPORTABLE NotifyClientsOnGraphUpdate(NXCPMessage *update, UINT32 graphId);

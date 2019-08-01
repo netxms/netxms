@@ -1370,6 +1370,13 @@ public:
    ObjectArray<T> *values() const { ObjectArray<T> *v = new ObjectArray<T>(size()); fillValues(v); return v; }
 
    Iterator<T> *iterator() { return new Iterator<T>(new StringMapIterator(this)); }
+
+   using StringMapBase::forEach;
+   template <typename C>
+   EnumerationCallbackResult forEach(EnumerationCallbackResult (*cb)(const TCHAR *, const T *, C *), C *context) const
+   {
+      return StringMapBase::forEach(reinterpret_cast<EnumerationCallbackResult (*)(const TCHAR*, const void*, void*)>(cb), context);
+   }
 };
 
 /**

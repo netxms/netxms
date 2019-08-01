@@ -362,7 +362,7 @@ CREATE TABLE software_inventory
 (
   node_id integer not null,
   name varchar(127) not null,
-  version varchar(47) not null,
+  version varchar(63) not null,
   vendor varchar(63) null,
   install_date integer not null,
   url varchar(255) null,
@@ -1904,7 +1904,7 @@ CREATE TABLE mapping_tables
   id integer not null,
   name varchar(63) not null,
   flags integer not null,
-  description SQL_TEXT4K null,
+  description varchar(4000) null,
   PRIMARY KEY(id)
 ) TABLE_TYPE;
 
@@ -1915,8 +1915,8 @@ CREATE TABLE mapping_data
 (
   table_id integer not null,
   md_key varchar(63) not null,
-  md_value varchar(255) null,
-  description SQL_TEXT4K null,
+  md_value varchar(4000) null,
+  description varchar(4000) null,
   PRIMARY KEY(table_id,md_key)
 ) TABLE_TYPE;
 
