@@ -418,8 +418,8 @@ void AccessPoint::updateState(AccessPointState state)
    {
       static const TCHAR *names[] = { _T("id"), _T("name"), _T("macAddr"), _T("ipAddr"), _T("vendor"), _T("model"), _T("serialNumber") };
       PostEventWithNames((state == AP_ADOPTED) ? EVENT_AP_ADOPTED : ((state == AP_UNADOPTED) ? EVENT_AP_UNADOPTED : EVENT_AP_DOWN),
-         m_nodeId, "ishAsss", names,
-         m_id, m_name, m_macAddr, &m_ipAddress,
+         m_nodeId, "isHAsss", names,
+         m_id, m_name, &m_macAddr, &m_ipAddress,
          CHECK_NULL_EX(m_vendor), CHECK_NULL_EX(m_model), CHECK_NULL_EX(m_serialNumber));
    }
 }

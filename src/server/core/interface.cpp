@@ -1248,10 +1248,10 @@ void Interface::setPeer(Node *node, Interface *iface, LinkLayerProtocol protocol
             _T("localIfIP"), _T("localIfMAC"), _T("remoteNodeId"), _T("remoteNodeName"),
             _T("remoteIfId"), _T("remoteIfIndex"), _T("remoteIfName"), _T("remoteIfIP"),
             _T("remoteIfMAC"), _T("protocol") };
-         PostEventWithNames(EVENT_IF_PEER_CHANGED, getParentNodeId(), "ddsAhdsddsAhd", names,
-            m_id, m_index, m_name, &m_ipAddressList.getFirstUnicastAddress(), m_macAddr,
+         PostEventWithNames(EVENT_IF_PEER_CHANGED, getParentNodeId(), "ddsAHdsddsAHd", names,
+            m_id, m_index, m_name, &m_ipAddressList.getFirstUnicastAddress(), &m_macAddr,
             node->getId(), node->getName(), iface->getId(), iface->getIfIndex(), iface->getName(),
-            &iface->getIpAddressList()->getFirstUnicastAddress(), iface->getMacAddr(), protocol);
+            &iface->getIpAddressList()->getFirstUnicastAddress(), &iface->getMacAddr(), protocol);
       }
    }
 
