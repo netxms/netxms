@@ -51,8 +51,8 @@ static TCHAR *s_debugTags = NULL;
 /**
  * Help text
  */
-static TCHAR help_text[] = _T("NetXMS Server Version ") NETXMS_VERSION_STRING _T(" Build ") NETXMS_VERSION_BUILD_STRING _T(" (") NETXMS_BUILD_TAG _T(")") IS_UNICODE_BUILD_STRING _T("\n")
-                           _T("Copyright (c) 2003-2015 Raden Solutions\n\n")
+static TCHAR help_text[] = _T("NetXMS Server Version ") NETXMS_VERSION_STRING _T(" Build ") NETXMS_BUILD_TAG IS_UNICODE_BUILD_STRING _T("\n")
+                           _T("Copyright (c) 2003-2019 Raden Solutions\n\n")
                            _T("Usage: netxmsd [<options>]\n\n")
                            _T("Valid options are:\n")
                            _T("   -e          : Run database check on startup\n")
@@ -247,7 +247,7 @@ static BOOL ParseCommandLine(int argc, char *argv[])
 	         return FALSE;
 			case 'v':
             {
-				   _tprintf(_T("NetXMS Server Version ") NETXMS_VERSION_STRING _T(" Build ") NETXMS_VERSION_BUILD_STRING _T(" (") NETXMS_BUILD_TAG _T(")") IS_UNICODE_BUILD_STRING _T("\n"));
+				   _tprintf(_T("NetXMS Server Version ") NETXMS_VERSION_STRING _T(" Build ") NETXMS_BUILD_TAG IS_UNICODE_BUILD_STRING _T("\n"));
                String ciphers = NXCPGetSupportedCiphersAsText();
                _tprintf(_T("NXCP: %d.%d.%d.%d (%s)\n"), 
                   NXCP_VERSION, CLIENT_PROTOCOL_VERSION_BASE, CLIENT_PROTOCOL_VERSION_MOBILE, CLIENT_PROTOCOL_VERSION_FULL,

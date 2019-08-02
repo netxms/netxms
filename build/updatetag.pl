@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 
 my $file_prefix = shift || "netxms";
 my $define_prefix = shift || "NETXMS";
@@ -30,6 +30,7 @@ if (IsUpdateNeeded($h_file, $tag) == 1)
 	print OUT "#define " . $define_prefix . "_BUILD_TAG _T(\"$tag\")\n";
 	print OUT "#define " . $define_prefix . "_BUILD_TAG_A \"$tag\"\n";
 	print OUT "#define " . $define_prefix . "_BUILD_NUMBER $build_number\n";
+	print OUT "#define " . $define_prefix . "_VERSION_BUILD $build_number\n";
 	print OUT "#define " . $define_prefix . "_VERSION_STRING _T(\"$version_string\")\n";
 	print OUT "#define " . $define_prefix . "_VERSION_STRING_A \"$version_string\"\n";
 	print OUT "#endif\n";
