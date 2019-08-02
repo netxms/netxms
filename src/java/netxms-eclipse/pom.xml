@@ -8,7 +8,7 @@
     <packaging>pom</packaging>
     <modules>
         <module>Product</module> 
-        <module>../../libnxjava/java/base/</module>
+        <module>../../java-common</module>
         <module>../../client/java</module>
         <module>../nebula/org.netxms.nebula.widgets.gallery</module>
         <module>ActionManager</module>

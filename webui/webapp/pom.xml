@@ -9,7 +9,7 @@
   <modules>
     <module>Branding</module>
     <module>Product</module>
-    <module>../../src/libnxjava/java/base/</module>
+    <module>../../src/java-common</module>
     <module>../../src/client/java</module>
     <module>ActionManager</module>
     <module>AgentManager</module>
