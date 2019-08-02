@@ -155,9 +155,6 @@ target
 /src/agent/tools/nxappget/nxappget
 /src/agent/tools/nxapush/nxapush
 /src/client/install/Output
-/src/client/java/netxms-base/.classpath
-/src/client/java/netxms-base/.project
-/src/client/java/netxms-base/.settings
 /src/client/java/netxms-client/.classpath
 /src/client/java/netxms-client/.project
 /src/client/java/netxms-client/.settings
@@ -198,11 +195,11 @@ target
 /src/java/nxreporting/.settings
 /src/java/nxreporting/netxms-reporting-server-*
 /src/java/nxreporting/src/main/resources/nxreporting.xml
+/src/java-common/netxms-base/.classpath
+/src/java-common/netxms-base/.project
+/src/java-common/netxms-base/.settings
 /src/libexpat/libexpat/x64
 /src/libnetxms/x64
-/src/libnxjava/java/base/netxms-base/.classpath
-/src/libnxjava/java/base/netxms-base/.project
-/src/libnxjava/java/base/netxms-base/.settings
 /src/libnxjava/java/bridge/.classpath
 /src/libnxjava/java/bridge/.project
 /src/libnxjava/java/bridge/.settings

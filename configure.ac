@@ -804,7 +804,7 @@ AC_ARG_ENABLE(64bit,
 AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
 	DB_DRIVERS="mysql mariadb pgsql odbc mssql sqlite oracle db2 informix"
-	MODULES="appagent jansson libexpat libstrophe libtre zlib libnetxms libnxjava install sqlite snmp libnxsl libnxmb libnxlp libnxpython libnxcc db server smsdrv agent client nxscript nxcproxy"
+	MODULES="appagent jansson java-common libexpat libstrophe libtre zlib libnetxms libnxjava install sqlite snmp libnxsl libnxmb libnxlp libnxpython libnxcc db server smsdrv agent client nxscript nxcproxy"
 	TOOLS="nxlptest"
 	SUBAGENT_DIRS="linux ds18x20 freebsd openbsd minix mqtt mysql netbsd sunos aix ipso hpux odbcquery informix oracle lmsensors darwin rpi java jmx bind9 ubntlw netsvc db2 tuxedo mongodb ssh vmgr xen lorawan asterisk python"
 	AGENT_DIRS="libnxtux"
@@ -866,7 +866,7 @@ fi
 
 check_substr "$COMPONENTS" "java"
 if test $? = 0; then
-	MODULES="$MODULES libnxjava"
+	MODULES="$MODULES java-common libnxjava"
 	SUBAGENT_DIRS="$SUBAGENT_DIRS java bind9 jmx ubntlw"
 fi
 
@@ -4313,16 +4313,15 @@ AC_CONFIG_FILES([
 	src/install/Makefile
 	src/install/windows/Makefile
 	src/jansson/Makefile
+	src/java-common/Makefile
+	src/java-common/lib/Makefile
+	src/java-common/netxms-base/Makefile
 	src/libexpat/Makefile
 	src/libexpat/libexpat/Makefile
 	src/libnetxms/Makefile
 	src/libnxcc/Makefile
 	src/libnxjava/Makefile
 	src/libnxjava/java/Makefile
-	src/libnxjava/java/base/Makefile
-	src/libnxjava/java/base/lib/Makefile
-	src/libnxjava/java/base/netxms-base/Makefile
-	src/libnxjava/java/bridge/Makefile
 	src/libnxlp/Makefile
 	src/libnxmb/Makefile
 	src/libnxpython/Makefile
