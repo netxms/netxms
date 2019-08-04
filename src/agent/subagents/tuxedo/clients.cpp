@@ -22,13 +22,15 @@
 
 #include "tuxedo_subagent.h"
 
+#define MAX_CLIENT_ID_LEN	132
+
 /**
  * Tuxedo client information
  */
 class TuxedoClient
 {
 public:
-   TCHAR m_id[80];
+   TCHAR m_id[MAX_CLIENT_ID_LEN];
    char m_name[32];
    char m_lmid[64];
    char m_state[16];
@@ -81,9 +83,9 @@ TuxedoClient::TuxedoClient(FBFR32 *fb, FLDOCC32 index)
    m_encBits[0] = 0;
 
 #ifdef UNICODE
-   char id[80] = "";
+   char id[MAX_CLIENT_ID_LEN] = "";
    CFgetString(fb, TA_CLIENTID, index, id, sizeof(id));
-   MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, id, -1, m_id, 80);
+   MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, id, -1, m_id, sizeof(m_id) / sizeof(WCHAR));
 #else
    CFgetString(fb, TA_CLIENTID, index, m_id, sizeof(m_id));
 #endif
@@ -286,8 +288,8 @@ LONG H_ClientsTable(const TCHAR *param, const TCHAR *arg, Table *value, Abstract
  */
 LONG H_ClientInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
-   TCHAR id[80];
-   if (!AgentGetParameterArg(param, 1, id, 80))
+   TCHAR id[MAX_CLIENT_ID_LEN];
+   if (!AgentGetParameterArg(param, 1, id, MAX_CLIENT_ID_LEN))
       return SYSINFO_RC_UNSUPPORTED;
 
    LONG rc = SYSINFO_RC_SUCCESS;

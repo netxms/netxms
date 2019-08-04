@@ -1,6 +1,6 @@
 /*
 ** NetXMS Tuxedo subagent
-** Copyright (C) 2014-2018 Raden Solutions
+** Copyright (C) 2014-2019 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -245,6 +245,39 @@ static void SubAgentShutdown()
  */
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
+#ifdef NDRX_VERSION
+   { _T("EnduroX.Client.ActiveConversations(*)"), H_ClientInfo, _T("a"), DCI_DT_INT, _T("Enduro/X client {instance}: active conversations") },
+   { _T("EnduroX.Client.ActiveRequests(*)"), H_ClientInfo, _T("A"), DCI_DT_INT, _T("Enduro/X client {instance} machine") },
+   { _T("EnduroX.Client.Machine(*)"), H_ClientInfo, _T("N"), DCI_DT_STRING, _T("Enduro/X client {instance} name") },
+   { _T("EnduroX.Client.Name(*)"), H_ClientInfo, _T("N"), DCI_DT_STRING, _T("Enduro/X client {instance} name") },
+   { _T("EnduroX.Client.State(*)"), H_ClientInfo, _T("S"), DCI_DT_STRING, _T("Enduro/X client {instance} state") },	
+   { _T("EnduroX.Domain.ID"), H_DomainInfo, _T("I"), DCI_DT_STRING, _T("Enduro/X domain ID") },
+   { _T("EnduroX.Domain.Queues"), H_DomainInfo, _T("Q"), DCI_DT_INT,  _T("Enduro/X: number of queues") },
+   { _T("EnduroX.Domain.Servers"), H_DomainInfo, _T("S"), DCI_DT_INT, _T("Enduro/X: number of servers") },
+   { _T("EnduroX.Domain.Services"), H_DomainInfo, _T("s"), DCI_DT_INT, _T("Enduro/X: number of services") },
+   { _T("EnduroX.Domain.State"), H_DomainInfo, _T("T"), DCI_DT_STRING, _T("Enduro/X domain state") },
+   { _T("EnduroX.Machine.Accessers(*)"), H_MachineInfo, _T("A"), DCI_DT_INT, _T("Enduro/X machine {instance}: accessers") },
+   { _T("EnduroX.Machine.Clients(*)"), H_MachineInfo, _T("C"), DCI_DT_INT, _T("Enduro/X machine {instance}: clients") },
+   { _T("EnduroX.Machine.Conversations(*)"), H_MachineInfo, _T("o"), DCI_DT_INT, _T("Enduro/X machine {instance}: conversations") },
+   { _T("EnduroX.Machine.State(*)"), H_MachineInfo, _T("S"), DCI_DT_STRING, _T("Enduro/X machine {instance} state") },
+   { _T("EnduroX.Queue.Machine(*)"), H_QueueInfo, _T("M"), DCI_DT_STRING, _T("Enduro/X queue {instance}: hosting machine") },
+   { _T("EnduroX.Queue.RequestsCurrent(*)"), H_QueueInfo, _T("r"), DCI_DT_STRING, _T("Enduro/X queue {instance}: current requests queued") },
+   { _T("EnduroX.Queue.State(*)"), H_QueueInfo, _T("s"), DCI_DT_STRING, _T("Enduro/X queue {instance} state") },
+   { _T("EnduroX.ServerInstance.CommandLine(*)"), H_ServerInstanceInfo, _T("C"), DCI_DT_STRING, _T("Enduro/X server instance {instance}: command line") },
+   { _T("EnduroX.ServerInstance.Generation(*)"), H_ServerInstanceInfo, _T("G"), DCI_DT_INT, _T("Enduro/X server instance {instance}: generation") },
+   { _T("EnduroX.ServerInstance.Machine(*)"), H_ServerInstanceInfo, _T("M"), DCI_DT_STRING, _T("Enduro/X server instance {instance}: machine ID") },
+   { _T("EnduroX.ServerInstance.Name(*)"), H_ServerInstanceInfo, _T("N"), DCI_DT_STRING, _T("Enduro/X server instance {instance}: name") },
+   { _T("EnduroX.ServerInstance.PID(*)"), H_ServerInstanceInfo, _T("P"), DCI_DT_INT, _T("Enduro/X server instance {instance}: process ID") },
+   { _T("EnduroX.ServerInstance.State(*)"), H_ServerInstanceInfo, _T("S"), DCI_DT_STRING, _T("Enduro/X server instance {instance}: state") },
+   { _T("EnduroX.Service.State(*)"), H_ServiceInfo, _T("S"), DCI_DT_STRING, _T("Enduro/X service {instance}: state") },
+   { _T("EnduroX.ServiceGroup.CompletedRequests(*)"), H_ServiceGroupInfo, _T("C"), DCI_DT_INT, _T("Enduro/X service group {instance}: completed requests") },
+   { _T("EnduroX.ServiceGroup.FailedRequests(*)"), H_ServiceGroupInfo, _T("f"), DCI_DT_INT, _T("Enduro/X service group {instance}: failed requests") },
+   { _T("EnduroX.ServiceGroup.LastExecutionTime(*)"), H_ServiceGroupInfo, _T("e"), DCI_DT_INT, _T("Enduro/X service group {instance}: last execution time") },
+   { _T("EnduroX.ServiceGroup.MaxExecutionTime(*)"), H_ServiceGroupInfo, _T("x"), DCI_DT_INT, _T("Enduro/X service group {instance}: max execution time") },
+   { _T("EnduroX.ServiceGroup.MinExecutionTime(*)"), H_ServiceGroupInfo, _T("m"), DCI_DT_INT, _T("Enduro/X service group {instance}: min execution time") },
+   { _T("EnduroX.ServiceGroup.State(*)"), H_ServiceGroupInfo, _T("S"), DCI_DT_STRING, _T("Enduro/X service group {instance}: state") },
+   { _T("EnduroX.ServiceGroup.SuccessfulRequests(*)"), H_ServiceGroupInfo, _T("s"), DCI_DT_INT, _T("Enduro/X service group {instance}: successful requests") }
+#else
    { _T("Tuxedo.Client.ActiveConversations(*)"), H_ClientInfo, _T("a"), DCI_DT_INT, _T("Tuxedo client {instance}: active conversations") },
    { _T("Tuxedo.Client.ActiveRequests(*)"), H_ClientInfo, _T("A"), DCI_DT_INT, _T("Tuxedo client {instance} machine") },
    { _T("Tuxedo.Client.Machine(*)"), H_ClientInfo, _T("N"), DCI_DT_STRING, _T("Tuxedo client {instance} name") },
@@ -319,6 +352,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("Tuxedo.ServiceGroup.RoutingName(*)"), H_ServiceGroupInfo, _T("R"), DCI_DT_STRING, _T("Tuxedo service group {instance}: routing name") },
    { _T("Tuxedo.ServiceGroup.State(*)"), H_ServiceGroupInfo, _T("S"), DCI_DT_STRING, _T("Tuxedo service group {instance}: state") },
    { _T("Tuxedo.ServiceGroup.SuccessfulRequests(*)"), H_ServiceGroupInfo, _T("s"), DCI_DT_INT, _T("Tuxedo service group {instance}: successful requests") }
+#endif
 };
 
 /**
@@ -326,6 +360,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
  */
 static NETXMS_SUBAGENT_LIST s_lists[] =
 {
+#ifdef NDRX_VERSION
    { _T("Tuxedo.Clients"), H_ClientsList, NULL },
    { _T("Tuxedo.Machines"), H_MachinesList, NULL },
    { _T("Tuxedo.Queues"), H_QueuesList, NULL },
@@ -333,6 +368,15 @@ static NETXMS_SUBAGENT_LIST s_lists[] =
    { _T("Tuxedo.Servers"), H_ServersList, NULL },
    { _T("Tuxedo.ServiceGroups"), H_ServiceGroupsList, NULL },
    { _T("Tuxedo.Services"), H_ServicesList, NULL }
+#else
+   { _T("EnduroX.Clients"), H_ClientsList, NULL },
+   { _T("EnduroX.Machines"), H_MachinesList, NULL },
+   { _T("EnduroX.Queues"), H_QueuesList, NULL },
+   { _T("EnduroX.ServerInstances"), H_ServerInstancesList, NULL },
+   { _T("EnduroX.Servers"), H_ServersList, NULL },
+   { _T("EnduroX.ServiceGroups"), H_ServiceGroupsList, NULL },
+   { _T("EnduroX.Services"), H_ServicesList, NULL }
+#endif
 };
 
 /**
@@ -340,6 +384,7 @@ static NETXMS_SUBAGENT_LIST s_lists[] =
  */
 static NETXMS_SUBAGENT_TABLE s_tables[] =
 {
+#ifdef NDRX_VERSION
    { _T("Tuxedo.Clients"), H_ClientsTable, NULL, _T("ID"), _T("Tuxedo clients") },
    { _T("Tuxedo.Machines"), H_MachinesTable, NULL, _T("ID"), _T("Tuxedo machines") },
    { _T("Tuxedo.Queues"), H_QueuesTable, NULL, _T("NAME"), _T("Tuxedo queues") },
@@ -347,6 +392,15 @@ static NETXMS_SUBAGENT_TABLE s_tables[] =
    { _T("Tuxedo.Servers"), H_ServersTable, NULL, _T("BASE_ID"), _T("Tuxedo servers") },
    { _T("Tuxedo.ServiceGroups"), H_ServiceGroupsTable, NULL, _T("SVCNAME,SRVGROUP"), _T("Tuxedo service groups") },
    { _T("Tuxedo.Services"), H_ServicesTable, NULL, _T("NAME"), _T("Tuxedo services") }
+#else
+   { _T("EnduroX.Clients"), H_ClientsTable, NULL, _T("ID"), _T("Enduro/X clients") },
+   { _T("EnduroX.Machines"), H_MachinesTable, NULL, _T("ID"), _T("Enduro/X machines") },
+   { _T("EnduroX.Queues"), H_QueuesTable, NULL, _T("NAME"), _T("Enduro/X queues") },
+   { _T("EnduroX.ServerInstances"), H_ServerInstancesTable, NULL, _T("ID"), _T("Enduro/X server instances") },
+   { _T("EnduroX.Servers"), H_ServersTable, NULL, _T("BASE_ID"), _T("Enduro/X servers") },
+   { _T("EnduroX.ServiceGroups"), H_ServiceGroupsTable, NULL, _T("SVCNAME,SRVGROUP"), _T("Enduro/X service groups") },
+   { _T("EnduroX.Services"), H_ServicesTable, NULL, _T("NAME"), _T("Enduro/X services") }
+#endif
 };
 
 /**
@@ -354,17 +408,17 @@ static NETXMS_SUBAGENT_TABLE s_tables[] =
  */
 static NETXMS_SUBAGENT_INFO s_info =
 {
-	NETXMS_SUBAGENT_INFO_MAGIC,
-	_T("TUXEDO"), NETXMS_BUILD_TAG,
-	SubAgentInit, SubAgentShutdown, NULL, NULL,
-	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
-	m_parameters,
-	sizeof(s_lists) / sizeof(NETXMS_SUBAGENT_LIST),
+   NETXMS_SUBAGENT_INFO_MAGIC,
+   _T("TUXEDO"), NETXMS_BUILD_TAG,
+   SubAgentInit, SubAgentShutdown, NULL, NULL,
+   sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
+   m_parameters,
+   sizeof(s_lists) / sizeof(NETXMS_SUBAGENT_LIST),
    s_lists,
-	sizeof(s_tables) / sizeof(NETXMS_SUBAGENT_TABLE),
+   sizeof(s_tables) / sizeof(NETXMS_SUBAGENT_TABLE),
    s_tables,
-	0, NULL, // actions
-	0, NULL	// push parameters
+   0, NULL, // actions
+   0, NULL  // push parameters
 };
 
 /**
@@ -372,8 +426,8 @@ static NETXMS_SUBAGENT_INFO s_info =
  */
 DECLARE_SUBAGENT_ENTRY_POINT(TUXEDO)
 {
-	*ppInfo = &s_info;
-	return true;
+   *ppInfo = &s_info;
+   return true;
 }
 
 #ifdef _WIN32
@@ -383,9 +437,9 @@ DECLARE_SUBAGENT_ENTRY_POINT(TUXEDO)
  */
 BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
-	if (dwReason == DLL_PROCESS_ATTACH)
-		DisableThreadLibraryCalls(hInstance);
-	return TRUE;
+   if (dwReason == DLL_PROCESS_ATTACH)
+      DisableThreadLibraryCalls(hInstance);
+   return TRUE;
 }
 
 #endif

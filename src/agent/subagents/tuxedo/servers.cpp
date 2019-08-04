@@ -36,7 +36,7 @@ public:
    char m_state[16];
    char m_cmdLine[1024];
    char m_envFile[256];
-   char m_rqAddr[32];
+   char m_rqAddr[132];
    char m_lmid[64];
    long m_min;
    long m_max;
