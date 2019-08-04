@@ -179,6 +179,7 @@
     <ClCompile Include="disk.cpp" />
     <ClCompile Include="fs.cpp" />
     <ClCompile Include="hypervisor.cpp" />
+    <ClCompile Include="iostat.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="net.cpp" />
     <ClCompile Include="procinfo.cpp" />

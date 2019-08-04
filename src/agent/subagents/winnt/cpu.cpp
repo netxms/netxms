@@ -158,13 +158,13 @@ void StartCPUStatCollector()
    SYSTEM_INFO si;
    GetSystemInfo(&si);
    s_cpuCount = (int)si.dwNumberOfProcessors;
-   s_cpuTimes = (SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION *)malloc(sizeof(SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION) * s_cpuCount * 2);
-   s_usage = (UINT32 *)calloc(900, sizeof(UINT32) * (s_cpuCount + 1));
-   s_idle = (UINT32 *)calloc(900, sizeof(UINT32) * (s_cpuCount + 1));
-   s_kernel = (UINT32 *)calloc(900, sizeof(UINT32) * (s_cpuCount + 1));
-   s_user = (UINT32 *)calloc(900, sizeof(UINT32) * (s_cpuCount + 1));
-   s_interrupt = (UINT32 *)calloc(900, sizeof(UINT32) * (s_cpuCount + 1));
-   s_interruptCount = (UINT32 *)calloc(sizeof(UINT32), s_cpuCount + 1);
+   s_cpuTimes = MemAllocArray<SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION>(s_cpuCount * 2);
+   s_usage = MemAllocArray<UINT32>(900 * (s_cpuCount + 1));
+   s_idle = MemAllocArray<UINT32>(900 * (s_cpuCount + 1));
+   s_kernel = MemAllocArray<UINT32>(900 * (s_cpuCount + 1));
+   s_user = MemAllocArray<UINT32>(900 * (s_cpuCount + 1));
+   s_interrupt = MemAllocArray<UINT32>(900 * (s_cpuCount + 1));
+   s_interruptCount = MemAllocArray<UINT32>(s_cpuCount + 1);
    InitializeCriticalSectionAndSpinCount(&s_lock, 1000);
    s_collectorThread = ThreadCreateEx(CPUStatCollector, 0, NULL);
 }
@@ -175,11 +175,11 @@ void StartCPUStatCollector()
 void StopCPUStatCollector()
 {
    ThreadJoin(s_collectorThread);
-   free(s_cpuTimes);
-   free(s_usage);
-   free(s_idle);
-   free(s_kernel);
-   free(s_user);
+   MemFree(s_cpuTimes);
+   MemFree(s_usage);
+   MemFree(s_idle);
+   MemFree(s_kernel);
+   MemFree(s_user);
    DeleteCriticalSection(&s_lock);
 }
 

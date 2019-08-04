@@ -51,8 +51,6 @@ static struct
    { _T("System.CPU.LoadAvg"), _T("\\System\\Processor Queue Length"), 0, 60, COUNTER_TYPE_FLOAT, _T("Average CPU load for last minute"), DCI_DT_FLOAT },
    { _T("System.CPU.LoadAvg5"), _T("\\System\\Processor Queue Length"), 0, 300, COUNTER_TYPE_FLOAT, _T("Average CPU load for last 5 minutes"), DCI_DT_FLOAT },
    { _T("System.CPU.LoadAvg15"), _T("\\System\\Processor Queue Length"), 0, 900, COUNTER_TYPE_FLOAT, _T("Average CPU load for last 15 minutes"), DCI_DT_FLOAT },
-   { _T("System.IO.DiskQueue"), _T("\\PhysicalDisk(_Total)\\Avg. Disk Queue Length"), 0, 60, COUNTER_TYPE_FLOAT, DCIDESC_SYSTEM_IO_DISKQUEUE, DCI_DT_FLOAT },
-   { _T("System.IO.DiskTime"), _T("\\PhysicalDisk(_Total)\\% Disk Time"), 0, 60, COUNTER_TYPE_FLOAT, _T("Average disk busy time for last minute"), DCI_DT_FLOAT },
    { NULL, NULL, 0, 0, 0, NULL, 0 }
 };
 
@@ -145,7 +143,7 @@ static LONG H_PdhCounterValue(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *p
 	}
 	else	// Call from H_CounterAlias
 	{
-		nx_strncpy(szCounter, pArg, MAX_PATH);
+		_tcslcpy(szCounter, pArg, MAX_PATH);
 	}
 
    if ((rc = PdhOpenQuery(NULL, 0, &hQuery)) != ERROR_SUCCESS)
