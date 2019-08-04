@@ -1,6 +1,6 @@
 /*
 ** Windows XP/2003/Vista/2008/7/8 NetXMS subagent
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -43,23 +43,41 @@
 #define MAX_MODULES        512
 
 /**
+ * Attributes for I/O stats
+ */
+enum IOInfoType
+{
+   IOSTAT_DISK_QUEUE,
+   IOSTAT_IO_READ_TIME,
+   IOSTAT_IO_TIME,
+   IOSTAT_IO_WRITE_TIME,
+   IOSTAT_NUM_READS,
+   IOSTAT_NUM_SREADS,
+   IOSTAT_NUM_SWRITES,
+   IOSTAT_NUM_WRITES
+};
+
+/**
  * Attributes for H_ProcInfo
  */
-#define PROCINFO_GDI_OBJ         1
-#define PROCINFO_IO_OTHER_B      2
-#define PROCINFO_IO_OTHER_OP     3
-#define PROCINFO_IO_READ_B       4
-#define PROCINFO_IO_READ_OP      5
-#define PROCINFO_IO_WRITE_B      6
-#define PROCINFO_IO_WRITE_OP     7
-#define PROCINFO_KTIME           8
-#define PROCINFO_PF              9
-#define PROCINFO_USER_OBJ        10
-#define PROCINFO_UTIME           11
-#define PROCINFO_VMSIZE          12
-#define PROCINFO_WKSET           13
-#define PROCINFO_CPUTIME         14
-#define PROCINFO_HANDLES         15
+enum ProcessInfoType
+{
+   PROCINFO_GDI_OBJ,
+   PROCINFO_IO_OTHER_B,
+   PROCINFO_IO_OTHER_OP,
+   PROCINFO_IO_READ_B,
+   PROCINFO_IO_READ_OP,
+   PROCINFO_IO_WRITE_B,
+   PROCINFO_IO_WRITE_OP,
+   PROCINFO_KTIME,
+   PROCINFO_PF,
+   PROCINFO_USER_OBJ,
+   PROCINFO_UTIME,
+   PROCINFO_VMSIZE,
+   PROCINFO_WKSET,
+   PROCINFO_CPUTIME,
+   PROCINFO_HANDLES
+};
 
 #define INFOTYPE_MIN             0
 #define INFOTYPE_MAX             1

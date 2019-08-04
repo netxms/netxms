@@ -46,6 +46,9 @@ LONG H_HypervisorVersion(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abs
 LONG H_InstalledProducts(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *);
 LONG H_InterfaceList(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
 LONG H_InterfaceNames(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
+LONG H_IoDeviceList(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
+LONG H_IoStats(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_IoStatsTotal(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_IPRoutingTable(const TCHAR *cmd, const TCHAR *arg, StringList *pValue, AbstractCommSession *session);
 LONG H_MemoryInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_MemoryInfo2(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
@@ -76,6 +79,8 @@ LONG H_WindowStations(const TCHAR *cmd, const TCHAR *arg, StringList *value, Abs
 
 void StartCPUStatCollector();
 void StopCPUStatCollector();
+void StartIOStatCollector();
+void StopIOStatCollector();
 
 /**
  * Optional imports
@@ -227,6 +232,7 @@ static bool SubAgentInit(Config *config)
    ReadCPUVendorId();
    SMBIOS_Parse(BIOSReader);
    StartCPUStatCollector();
+   StartIOStatCollector();
    return true;
 }
 
@@ -236,6 +242,7 @@ static bool SubAgentInit(Config *config)
 static void SubAgentShutdown()
 {
    StopCPUStatCollector();
+   StopIOStatCollector();
 }
 
 /**
@@ -416,6 +423,23 @@ static NETXMS_SUBAGENT_PARAM s_parameters[] =
 
    { _T("System.HandleCount"), H_HandleCount, NULL, DCI_DT_UINT, DCIDESC_SYSTEM_HANDLECOUNT },
 
+   { _T("System.IO.ReadRate"), H_IoStatsTotal, (const TCHAR *)IOSTAT_NUM_READS, DCI_DT_FLOAT, DCIDESC_SYSTEM_IO_READS },
+   { _T("System.IO.ReadRate(*)"), H_IoStats, (const TCHAR *)IOSTAT_NUM_READS, DCI_DT_FLOAT, DCIDESC_SYSTEM_IO_READS_EX },
+   { _T("System.IO.WriteRate"), H_IoStatsTotal, (const TCHAR *)IOSTAT_NUM_WRITES, DCI_DT_FLOAT, DCIDESC_SYSTEM_IO_WRITES },
+   { _T("System.IO.WriteRate(*)"), H_IoStats, (const TCHAR *)IOSTAT_NUM_WRITES, DCI_DT_FLOAT, DCIDESC_SYSTEM_IO_WRITES_EX },
+   { _T("System.IO.BytesReadRate"), H_IoStatsTotal, (const TCHAR *)IOSTAT_NUM_SREADS, DCI_DT_UINT64, DCIDESC_SYSTEM_IO_BYTEREADS },
+   { _T("System.IO.BytesReadRate(*)"), H_IoStats, (const TCHAR *)IOSTAT_NUM_SREADS, DCI_DT_UINT64, DCIDESC_SYSTEM_IO_BYTEREADS_EX },
+   { _T("System.IO.BytesWriteRate"), H_IoStatsTotal, (const TCHAR *)IOSTAT_NUM_SWRITES, DCI_DT_UINT64, DCIDESC_SYSTEM_IO_BYTEWRITES },
+   { _T("System.IO.BytesWriteRate(*)"), H_IoStats, (const TCHAR *)IOSTAT_NUM_SWRITES, DCI_DT_UINT64, DCIDESC_SYSTEM_IO_BYTEWRITES_EX },
+   { _T("System.IO.DiskQueue"), H_IoStatsTotal, (const TCHAR *)IOSTAT_DISK_QUEUE, DCI_DT_FLOAT, DCIDESC_SYSTEM_IO_DISKQUEUE },
+   { _T("System.IO.DiskQueue(*)"), H_IoStats, (const TCHAR *)IOSTAT_DISK_QUEUE, DCI_DT_FLOAT, DCIDESC_SYSTEM_IO_DISKQUEUE_EX },
+   { _T("System.IO.DiskReadTime"), H_IoStatsTotal, (const TCHAR *)IOSTAT_IO_READ_TIME, DCI_DT_FLOAT, DCIDESC_SYSTEM_IO_DISKREADTIME },
+   { _T("System.IO.DiskReadTime(*)"), H_IoStats, (const TCHAR *)IOSTAT_IO_READ_TIME, DCI_DT_FLOAT, DCIDESC_SYSTEM_IO_DISKREADTIME_EX },
+   { _T("System.IO.DiskTime"), H_IoStatsTotal, (const TCHAR *)IOSTAT_IO_TIME, DCI_DT_FLOAT, DCIDESC_SYSTEM_IO_DISKTIME },
+   { _T("System.IO.DiskTime(*)"), H_IoStats, (const TCHAR *)IOSTAT_IO_TIME, DCI_DT_FLOAT, DCIDESC_SYSTEM_IO_DISKTIME_EX },
+   { _T("System.IO.DiskWriteTime"), H_IoStatsTotal, (const TCHAR *)IOSTAT_IO_WRITE_TIME, DCI_DT_FLOAT, DCIDESC_SYSTEM_IO_DISKWRITETIME },
+   { _T("System.IO.DiskWriteTime(*)"), H_IoStats, (const TCHAR *)IOSTAT_IO_WRITE_TIME, DCI_DT_FLOAT, DCIDESC_SYSTEM_IO_DISKWRITETIME_EX },
+
    { _T("System.Memory.Physical.Available"), H_MemoryInfo, (TCHAR *)MEMINFO_PHYSICAL_AVAIL, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_PHYSICAL_AVAILABLE },
    { _T("System.Memory.Physical.AvailablePerc"), H_MemoryInfo, (TCHAR *)MEMINFO_PHYSICAL_AVAIL_PCT, DCI_DT_FLOAT, DCIDESC_SYSTEM_MEMORY_PHYSICAL_AVAILABLE_PCT },
    { _T("System.Memory.Physical.Cached"), H_MemoryInfo2, (TCHAR *)MEMINFO_PHYSICAL_CACHE, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_PHYSICAL_CACHED },
@@ -464,7 +488,8 @@ static NETXMS_SUBAGENT_LIST s_lists[] =
    { _T("Net.IP.RoutingTable"), H_IPRoutingTable, NULL },
 	{ _T("System.ActiveUserSessions"), H_ActiveUserSessions, NULL },
 	{ _T("System.Desktops(*)"), H_Desktops, NULL },
-	{ _T("System.ProcessList"), H_ProcessList, NULL },
+   { _T("System.IO.Devices"), H_IoDeviceList, NULL },
+   { _T("System.ProcessList"), H_ProcessList, NULL },
 	{ _T("System.Services"), H_ServiceList, NULL },
 	{ _T("System.WindowStations"), H_WindowStations, NULL }
 };
