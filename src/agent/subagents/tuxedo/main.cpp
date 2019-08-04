@@ -245,6 +245,39 @@ static void SubAgentShutdown()
  */
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
+#ifdef NDRX_VERSION
+   { _T("Endurox.Client.ActiveConversations(*)"), H_ClientInfo, _T("a"), DCI_DT_INT, _T("Enduro/X client {instance}: active conversations") },
+   { _T("Endurox.Client.ActiveRequests(*)"), H_ClientInfo, _T("A"), DCI_DT_INT, _T("Enduro/X client {instance} machine") },
+   { _T("Endurox.Client.Machine(*)"), H_ClientInfo, _T("N"), DCI_DT_STRING, _T("Enduro/X client {instance} name") },
+   { _T("Endurox.Client.Name(*)"), H_ClientInfo, _T("N"), DCI_DT_STRING, _T("Enduro/X client {instance} name") },
+   { _T("Endurox.Client.State(*)"), H_ClientInfo, _T("S"), DCI_DT_STRING, _T("Enduro/X client {instance} state") },	
+   { _T("Endurox.Domain.ID"), H_DomainInfo, _T("I"), DCI_DT_STRING, _T("Enduro/X domain ID") },
+   { _T("Endurox.Domain.Queues"), H_DomainInfo, _T("Q"), DCI_DT_INT,  _T("Enduro/X: number of queues") },
+   { _T("Endurox.Domain.Servers"), H_DomainInfo, _T("S"), DCI_DT_INT, _T("Enduro/X: number of servers") },
+   { _T("Endurox.Domain.Services"), H_DomainInfo, _T("s"), DCI_DT_INT, _T("Enduro/X: number of services") },
+   { _T("Endurox.Domain.State"), H_DomainInfo, _T("T"), DCI_DT_STRING, _T("Enduro/X domain state") },
+   { _T("Endurox.Machine.Accessers(*)"), H_MachineInfo, _T("A"), DCI_DT_INT, _T("Enduro/X machine {instance}: accessers") },
+   { _T("Endurox.Machine.Clients(*)"), H_MachineInfo, _T("C"), DCI_DT_INT, _T("Enduro/X machine {instance}: clients") },
+   { _T("Endurox.Machine.Conversations(*)"), H_MachineInfo, _T("o"), DCI_DT_INT, _T("Enduro/X machine {instance}: conversations") },
+   { _T("Endurox.Machine.State(*)"), H_MachineInfo, _T("S"), DCI_DT_STRING, _T("Enduro/X machine {instance} state") },
+   { _T("Endurox.Queue.Machine(*)"), H_QueueInfo, _T("M"), DCI_DT_STRING, _T("Enduro/X queue {instance}: hosting machine") },
+   { _T("Endurox.Queue.RequestsCurrent(*)"), H_QueueInfo, _T("r"), DCI_DT_STRING, _T("Enduro/X queue {instance}: current requests queued") },
+   { _T("Endurox.Queue.State(*)"), H_QueueInfo, _T("s"), DCI_DT_STRING, _T("Enduro/X queue {instance} state") },
+   { _T("Endurox.ServerInstance.CommandLine(*)"), H_ServerInstanceInfo, _T("C"), DCI_DT_STRING, _T("Enduro/X server instance {instance}: command line") },
+   { _T("Endurox.ServerInstance.Generation(*)"), H_ServerInstanceInfo, _T("G"), DCI_DT_INT, _T("Enduro/X server instance {instance}: generation") },
+   { _T("Endurox.ServerInstance.Machine(*)"), H_ServerInstanceInfo, _T("M"), DCI_DT_STRING, _T("Enduro/X server instance {instance}: machine ID") },
+   { _T("Endurox.ServerInstance.Name(*)"), H_ServerInstanceInfo, _T("N"), DCI_DT_STRING, _T("Enduro/X server instance {instance}: name") },
+   { _T("Endurox.ServerInstance.PID(*)"), H_ServerInstanceInfo, _T("P"), DCI_DT_INT, _T("Enduro/X server instance {instance}: process ID") },
+   { _T("Endurox.ServerInstance.State(*)"), H_ServerInstanceInfo, _T("S"), DCI_DT_STRING, _T("Enduro/X server instance {instance}: state") },
+   { _T("Endurox.Service.State(*)"), H_ServiceInfo, _T("S"), DCI_DT_STRING, _T("Enduro/X service {instance}: state") },
+   { _T("Endurox.ServiceGroup.CompletedRequests(*)"), H_ServiceGroupInfo, _T("C"), DCI_DT_INT, _T("Enduro/X service group {instance}: completed requests") },
+   { _T("Endurox.ServiceGroup.FailedRequests(*)"), H_ServiceGroupInfo, _T("f"), DCI_DT_INT, _T("Enduro/X service group {instance}: failed requests") },
+   { _T("Endurox.ServiceGroup.LastExecutionTime(*)"), H_ServiceGroupInfo, _T("e"), DCI_DT_INT, _T("Enduro/X service group {instance}: last execution time") },
+   { _T("Endurox.ServiceGroup.MaxExecutionTime(*)"), H_ServiceGroupInfo, _T("x"), DCI_DT_INT, _T("Enduro/X service group {instance}: max execution time") },
+   { _T("Endurox.ServiceGroup.MinExecutionTime(*)"), H_ServiceGroupInfo, _T("m"), DCI_DT_INT, _T("Enduro/X service group {instance}: min execution time") },
+   { _T("Endurox.ServiceGroup.State(*)"), H_ServiceGroupInfo, _T("S"), DCI_DT_STRING, _T("Enduro/X service group {instance}: state") },
+   { _T("Endurox.ServiceGroup.SuccessfulRequests(*)"), H_ServiceGroupInfo, _T("s"), DCI_DT_INT, _T("Enduro/X service group {instance}: successful requests") }
+#else
    { _T("Tuxedo.Client.ActiveConversations(*)"), H_ClientInfo, _T("a"), DCI_DT_INT, _T("Tuxedo client {instance}: active conversations") },
    { _T("Tuxedo.Client.ActiveRequests(*)"), H_ClientInfo, _T("A"), DCI_DT_INT, _T("Tuxedo client {instance} machine") },
    { _T("Tuxedo.Client.Machine(*)"), H_ClientInfo, _T("N"), DCI_DT_STRING, _T("Tuxedo client {instance} name") },
@@ -319,6 +352,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("Tuxedo.ServiceGroup.RoutingName(*)"), H_ServiceGroupInfo, _T("R"), DCI_DT_STRING, _T("Tuxedo service group {instance}: routing name") },
    { _T("Tuxedo.ServiceGroup.State(*)"), H_ServiceGroupInfo, _T("S"), DCI_DT_STRING, _T("Tuxedo service group {instance}: state") },
    { _T("Tuxedo.ServiceGroup.SuccessfulRequests(*)"), H_ServiceGroupInfo, _T("s"), DCI_DT_INT, _T("Tuxedo service group {instance}: successful requests") }
+#endif
 };
 
 /**

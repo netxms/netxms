@@ -28,7 +28,7 @@
 class TuxedoClient
 {
 public:
-   TCHAR m_id[80];
+   TCHAR m_id[129];
    char m_name[32];
    char m_lmid[64];
    char m_state[16];
@@ -81,9 +81,9 @@ TuxedoClient::TuxedoClient(FBFR32 *fb, FLDOCC32 index)
    m_encBits[0] = 0;
 
 #ifdef UNICODE
-   char id[80] = "";
+   char id[129] = "";
    CFgetString(fb, TA_CLIENTID, index, id, sizeof(id));
-   MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, id, -1, m_id, 80);
+   MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, id, -1, m_id, 129);
 #else
    CFgetString(fb, TA_CLIENTID, index, m_id, sizeof(m_id));
 #endif
@@ -286,8 +286,8 @@ LONG H_ClientsTable(const TCHAR *param, const TCHAR *arg, Table *value, Abstract
  */
 LONG H_ClientInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
-   TCHAR id[80];
-   if (!AgentGetParameterArg(param, 1, id, 80))
+   TCHAR id[129];
+   if (!AgentGetParameterArg(param, 1, id, 129))
       return SYSINFO_RC_UNSUPPORTED;
 
    LONG rc = SYSINFO_RC_SUCCESS;

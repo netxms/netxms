@@ -28,7 +28,7 @@
 class TuxedoQueue
 {
 public:
-   TCHAR m_name[32];
+   TCHAR m_name[129];
    char m_lmid[64];
    char m_serverName[128];
    char m_state[16];
@@ -60,9 +60,9 @@ TuxedoQueue::TuxedoQueue(FBFR32 *fb, FLDOCC32 index)
    m_workloadsCurrent = 0;
 
 #ifdef UNICODE
-   char name[32] = "";
+   char name[129] = "";
    CFgetString(fb, TA_RQADDR, index, name, sizeof(name));
-   MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, name, -1, m_name, 32);
+   MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, name, -1, m_name, 129);
 #else
    CFgetString(fb, TA_RQADDR, index, m_name, sizeof(m_name));
 #endif
@@ -295,8 +295,8 @@ LONG H_QueuesTable(const TCHAR *param, const TCHAR *arg, Table *value, AbstractC
  */
 LONG H_QueueInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
-   TCHAR queueName[128];
-   if (!AgentGetParameterArg(param, 1, queueName, 128))
+   TCHAR queueName[129];
+   if (!AgentGetParameterArg(param, 1, queueName, 129))
       return SYSINFO_RC_UNSUPPORTED;
 
    LONG rc = SYSINFO_RC_SUCCESS;
