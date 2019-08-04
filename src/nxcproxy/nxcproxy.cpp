@@ -385,7 +385,7 @@ int main(int argc, char *argv[])
             break;
 #endif
          case 'v':   // Print version and exit
-            _tprintf(_T("NetXMS Client Proxy Version ") NETXMS_VERSION_STRING _T(" Build ") NETXMS_VERSION_BUILD_STRING _T("\n"));
+            _tprintf(_T("NetXMS Client Proxy Version ") NETXMS_VERSION_STRING _T(" Build ") NETXMS_BUILD_TAG _T("\n"));
             iAction = ACTION_NONE;
             break;
 #ifdef _WIN32
