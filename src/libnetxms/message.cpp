@@ -763,23 +763,52 @@ char *NXCPMessage::getFieldAsMBString(UINT32 fieldId, char *buffer, size_t buffe
       return NULL;   // non-sense combination
 
    char *str = NULL;
-   void *value = get(fieldId, NXCP_DT_STRING);
+   BYTE ftype;
+   void *value = get(fieldId, 0xFF, &ftype);
    if (value != NULL)
    {
-      if (buffer == NULL)
+      if (ftype == NXCP_DT_STRING)
       {
-         str = (char *)malloc(*((UINT32 *)value) / 2 + 1);
+         if (buffer == NULL)
+         {
+            str = static_cast<char*>(MemAlloc(*static_cast<UINT32*>(value) / 2 + 1));
+         }
+         else
+         {
+            str = buffer;
+         }
+
+         size_t length = (buffer == NULL) ?
+               static_cast<size_t>(*static_cast<UINT32*>(value) / 2) :
+               std::min(static_cast<size_t>(*static_cast<UINT32*>(value) / 2), bufferSize - 1);
+         ucs2_to_mb((UCS2CHAR *)((BYTE *)value + 4), (int)length, str, (int)length + 1);
+         str[length] = 0;
+      }
+      else if (ftype == NXCP_DT_UTF8_STRING)
+      {
+         if (buffer == NULL)
+         {
+            str = static_cast<char*>(MemAlloc(*static_cast<UINT32*>(value) + 1));
+         }
+         else
+         {
+            str = buffer;
+         }
+
+         size_t length = (buffer == NULL) ?
+               static_cast<size_t>(*static_cast<UINT32*>(value)) :
+               std::min(static_cast<size_t>(*static_cast<UINT32*>(value)), bufferSize - 1);
+         length = utf8_to_mb(static_cast<char*>(value) + 4, (int)length, str, (int)length + 1);
+         str[length] = 0;
       }
       else
       {
-         str = buffer;
+         if (buffer != NULL)
+         {
+            str = buffer;
+            str[0] = 0;
+         }
       }
-
-      size_t length = (buffer == NULL) ? 
-            static_cast<size_t>(*((UINT32 *)value) / 2) : 
-            std::min(static_cast<size_t>(*((UINT32 *)value) / 2), bufferSize - 1);
-      ucs2_to_mb((UCS2CHAR *)((BYTE *)value + 4), (int)length, str, (int)length + 1);
-      str[length] = 0;
    }
    else
    {
