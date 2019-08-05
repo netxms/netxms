@@ -74,7 +74,7 @@ private:
 
    NXCPMessage(const NXCP_MESSAGE *msg, int version);
 
-   void *set(UINT32 fieldId, BYTE type, const void *value, bool isSigned = false, size_t size = 0);
+   void *set(UINT32 fieldId, BYTE type, const void *value, bool isSigned = false, size_t size = 0, bool isUtf8 = false);
    void *get(UINT32 fieldId, BYTE requiredType, BYTE *fieldType = NULL) const;
    NXCP_MESSAGE_FIELD *find(UINT32 fieldId) const;
    bool isValid() { return m_version != -1; }
@@ -97,7 +97,7 @@ public:
    void setId(UINT32 id) { m_id = id; }
 
    int getProtocolVersion() const { return m_version; }
-   void setProtocolVersion(int version) { m_version = version; }
+   void setProtocolVersion(int version);
    int getEncodedProtocolVersion() const { return (m_flags & 0xF000) >> 12; }
 
    bool isEndOfFile() const { return (m_flags & MF_END_OF_FILE) ? true : false; }
@@ -132,6 +132,7 @@ public:
 #else
    void setFieldFromMBString(UINT32 fieldId, const char *value) { set(fieldId, (m_version >= 5) ? NXCP_DT_UTF8_STRING : NXCP_DT_STRING, value); }
 #endif
+   void setFieldFromUtf8String(UINT32 fieldId, const char *value) { set(fieldId, (m_version >= 5) ? NXCP_DT_UTF8_STRING : NXCP_DT_STRING, value, false, 0, true); }
    void setFieldFromTime(UINT32 fieldId, time_t value) { UINT64 t = (UINT64)value; set(fieldId, NXCP_DT_INT64, &t); }
    void setFieldFromInt32Array(UINT32 fieldId, size_t numElements, const UINT32 *elements);
    void setFieldFromInt32Array(UINT32 fieldId, const IntegerArray<UINT32> *data);

@@ -758,7 +758,7 @@ void MobileDeviceSession::pushData(NXCPMessage *request)
             {
                t = (time_t)request->getFieldAsUInt32(VID_TIMESTAMP);
             }
-            else if (ft == NXCP_DT_STRING)
+            else if ((ft == NXCP_DT_STRING) || (ft == NXCP_DT_UTF8_STRING))
             {
                char ts[256];
                request->getFieldAsMBString(VID_TIMESTAMP, ts, 256);
