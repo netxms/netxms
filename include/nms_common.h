@@ -296,6 +296,8 @@ using std::make_shared;
 
 #define HAVE_DIRENT_D_TYPE      1
 
+#define HAVE_MOSQUITTO_THREADED_SET	1
+
 #include <winsock2.h>
 #include <windows.h>
 #include <ws2tcpip.h>

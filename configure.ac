@@ -3784,6 +3784,9 @@ if test "x$DISABLE_MQTT" != "xyes" -a "x$DIST_BUILD" != "xyes"; then
 	AC_DEFINE(WITH_MQTT, 1, Define to 1 if MQTT is supported)
 	SUBAGENT_DIRS="$SUBAGENT_DIRS mqtt"
 
+	LIBS="$LIBS $MQTT_LIBS"
+	AC_CHECK_FUNCS([mosquitto_threaded_set])
+
 	CPPFLAGS="$OLD_CPPFLAGS"
 	LDFLAGS="$OLD_LDFLAGS"
 	LIBS="$OLD_LIBS"
