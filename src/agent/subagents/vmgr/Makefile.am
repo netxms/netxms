@@ -2,7 +2,7 @@ SUBAGENT = vmgr
 
 pkglib_LTLIBRARIES = vmgr.la
 vmgr_la_SOURCES = vmgr.cpp hostconnections.cpp dataproviders.cpp
-vmgr_la_CPPFLAGS=-I@top_srcdir@/include @VMGR_CPPFLAGS@
+vmgr_la_CPPFLAGS=-I@top_srcdir@/include @VMGR_CPPFLAGS@ -I@top_srcdir@/build
 vmgr_la_LDFLAGS = -module -avoid-version -export-symbols ../subagent.sym @VMGR_LDFLAGS@
 vmgr_la_LIBADD = ../../libnxagent/libnxagent.la ../../../libnetxms/libnetxms.la @VMGR_LIBS@
 

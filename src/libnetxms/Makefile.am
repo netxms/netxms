@@ -21,7 +21,7 @@ else
 libnetxms_la_SOURCES = $(SOURCES)
 endif
 
-libnetxms_la_CPPFLAGS=-I@top_srcdir@/include -DLIBNETXMS_EXPORTS
+libnetxms_la_CPPFLAGS=-I@top_srcdir@/include -DLIBNETXMS_EXPORTS -I@top_srcdir@/build
 if USE_INTERNAL_EXPAT
 libnetxms_la_CPPFLAGS+=-I@top_srcdir@/src/libexpat/libexpat
 endif

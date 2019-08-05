@@ -2,7 +2,7 @@ DRIVER = ignitenet
 
 pkglib_LTLIBRARIES = ignitenet.la
 ignitenet_la_SOURCES = ignitenet.cpp
-ignitenet_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include
+ignitenet_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build
 ignitenet_la_LDFLAGS = -module -avoid-version
 ignitenet_la_LIBADD = ../../../libnetxms/libnetxms.la \
 		      ../../../snmp/libnxsnmp/libnxsnmp.la \

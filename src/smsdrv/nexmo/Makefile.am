@@ -2,7 +2,7 @@ DRIVER = nexmo
 
 pkglib_LTLIBRARIES = nexmo.la
 nexmo_la_SOURCES = main.cpp
-nexmo_la_CPPFLAGS=-I@top_srcdir@/include
+nexmo_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/build
 nexmo_la_LDFLAGS = -module -avoid-version
 nexmo_la_LIBADD = ../../libnetxms/libnetxms.la -lcurl
 if USE_INTERNAL_JANSSON

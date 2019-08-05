@@ -2,7 +2,7 @@ DRIVER = mymobile
 
 pkglib_LTLIBRARIES = mymobile.la
 mymobile_la_SOURCES = main.cpp
-mymobile_la_CPPFLAGS=-I@top_srcdir@/include
+mymobile_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/build
 mymobile_la_LDFLAGS = -module -avoid-version
 mymobile_la_LIBADD = ../../libnetxms/libnetxms.la -lcurl
 if USE_INTERNAL_JANSSON

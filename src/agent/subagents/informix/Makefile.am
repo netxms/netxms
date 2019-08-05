@@ -2,7 +2,7 @@ SUBAGENT = informix
 
 pkglib_LTLIBRARIES = informix.la
 informix_la_SOURCES = main.cpp
-informix_la_CPPFLAGS=-I@top_srcdir@/include
+informix_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/build
 informix_la_LDFLAGS = -module -avoid-version -export-symbols ../subagent.sym
 informix_la_LIBADD = ../../libnxagent/libnxagent.la ../../../libnetxms/libnetxms.la ../../../db/libnxdb/libnxdb.la
 

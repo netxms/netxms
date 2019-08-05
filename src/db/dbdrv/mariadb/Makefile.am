@@ -2,7 +2,7 @@ DRIVER = mariadb
 
 pkglib_LTLIBRARIES = mariadb.la
 mariadb_la_SOURCES = mariadb.cpp
-mariadb_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include @MARIADB_CPPFLAGS@
+mariadb_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include @MARIADB_CPPFLAGS@ -I@top_srcdir@/build
 mariadb_la_LDFLAGS = -module -avoid-version @MARIADB_LDFLAGS@
 mariadb_la_LIBADD = ../../../libnetxms/libnetxms.la @MARIADB_LIBS@
 

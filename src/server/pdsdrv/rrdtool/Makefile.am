@@ -2,7 +2,7 @@ DRIVER = rrdtool
 
 pkglib_LTLIBRARIES = rrdtool.la
 rrdtool_la_SOURCES = rrdtool.cpp
-rrdtool_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include
+rrdtool_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build
 rrdtool_la_LDFLAGS = -module -avoid-version
 rrdtool_la_LIBADD = ../../../libnetxms/libnetxms.la ../../libnxsrv/libnxsrv.la ../../core/libnxcore.la -lrrd
 

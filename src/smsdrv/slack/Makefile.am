@@ -2,7 +2,7 @@ DRIVER = slack
 
 pkglib_LTLIBRARIES = slack.la
 slack_la_SOURCES = main.cpp
-slack_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include
+slack_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build
 slack_la_LDFLAGS = -module -avoid-version
 slack_la_LIBADD = ../../libnetxms/libnetxms.la -lcurl
 if USE_INTERNAL_JANSSON

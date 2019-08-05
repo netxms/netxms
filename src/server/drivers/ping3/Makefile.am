@@ -2,7 +2,7 @@ DRIVER = ping3
 
 pkglib_LTLIBRARIES = ping3.la
 ping3_la_SOURCES = ping3.cpp
-ping3_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include
+ping3_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build
 ping3_la_LDFLAGS = -module -avoid-version
 ping3_la_LIBADD = ../../../libnetxms/libnetxms.la \
 		      ../../../snmp/libnxsnmp/libnxsnmp.la \

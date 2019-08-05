@@ -2,7 +2,7 @@ HDLINK = redmine
 
 pkglib_LTLIBRARIES = redmine.la
 redmine_la_SOURCES = redmine.cpp
-redmine_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include
+redmine_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build
 redmine_la_LDFLAGS = -module -avoid-version
 redmine_la_LIBADD = ../../../libnetxms/libnetxms.la ../../libnxsrv/libnxsrv.la ../../core/libnxcore.la -lcurl
 if USE_INTERNAL_JANSSON

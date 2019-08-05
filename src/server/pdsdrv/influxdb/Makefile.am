@@ -2,7 +2,7 @@ DRIVER = influxdb
 
 pkglib_LTLIBRARIES = influxdb.la
 influxdb_la_SOURCES = influxdb.cpp
-influxdb_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include
+influxdb_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build
 influxdb_la_LDFLAGS = -module -avoid-version
 influxdb_la_LIBADD = ../../../libnetxms/libnetxms.la ../../libnxsrv/libnxsrv.la ../../core/libnxcore.la
 

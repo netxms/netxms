@@ -2,7 +2,7 @@ DRIVER = avaya
 
 pkglib_LTLIBRARIES = avaya.la
 avaya_la_SOURCES = avaya.cpp baystack.cpp ers8000.cpp ntws.cpp vlan-if.cpp
-avaya_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include
+avaya_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build
 avaya_la_LDFLAGS = -module -avoid-version
 avaya_la_LIBADD = ../../../libnetxms/libnetxms.la \
 	../../../snmp/libnxsnmp/libnxsnmp.la \

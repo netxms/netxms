@@ -2,7 +2,7 @@ DRIVER = tb
 
 pkglib_LTLIBRARIES = tb.la
 tb_la_SOURCES = tb.cpp
-tb_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include
+tb_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build
 tb_la_LDFLAGS = -module -avoid-version
 tb_la_LIBADD = ../../../libnetxms/libnetxms.la \
 		      ../../../snmp/libnxsnmp/libnxsnmp.la \

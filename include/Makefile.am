@@ -22,7 +22,6 @@ include_HEADERS = \
 	netxmsdb.h \
 	netxms_getopt.h \
 	netxms_isc.h \
-	netxms-build-tag.h \
 	netxms-regex.h \
 	netxms-version.h \
 	nms_agent.h \

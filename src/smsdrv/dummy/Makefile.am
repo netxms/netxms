@@ -2,7 +2,7 @@ DRIVER = dummy
 
 pkglib_LTLIBRARIES = dummy.la
 dummy_la_SOURCES = main.cpp
-dummy_la_CPPFLAGS=-I@top_srcdir@/include
+dummy_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/build
 dummy_la_LDFLAGS = -module -avoid-version
 dummy_la_LIBADD = ../../libnetxms/libnetxms.la
 

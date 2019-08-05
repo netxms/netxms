@@ -2,7 +2,7 @@ DRIVER = generic
 
 pkglib_LTLIBRARIES = generic.la
 generic_la_SOURCES = main.cpp pdumode.cpp
-generic_la_CPPFLAGS=-I@top_srcdir@/include
+generic_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/build
 generic_la_LDFLAGS = -module -avoid-version
 generic_la_LIBADD = ../../libnetxms/libnetxms.la
 

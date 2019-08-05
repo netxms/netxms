@@ -10,7 +10,7 @@
 
 bin_PROGRAMS = nxcproxy
 nxcproxy_SOURCES = messages.c listener.cpp nxcproxy.cpp session.cpp tools.cpp
-nxcproxy_CPPFLAGS=-I@top_srcdir@/include
+nxcproxy_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/build
 nxcproxy_LDADD = ../libnetxms/libnetxms.la
 
 if USE_INTERNAL_EXPAT

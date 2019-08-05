@@ -2,7 +2,7 @@ SUBAGENT = sms
 
 pkglib_LTLIBRARIES = sms.la
 sms_la_SOURCES = main.cpp pdumode.cpp sender.cpp
-sms_la_CPPFLAGS=-I@top_srcdir@/include
+sms_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/build
 sms_la_LDFLAGS = -module -avoid-version -export-symbols ../subagent.sym
 sms_la_LIBADD = ../../libnxagent/libnxagent.la ../../../libnetxms/libnetxms.la
 

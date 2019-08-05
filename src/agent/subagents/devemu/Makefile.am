@@ -2,7 +2,7 @@ SUBAGENT = devemu
 
 pkglib_LTLIBRARIES = devemu.la
 devemu_la_SOURCES = devemu.cpp
-devemu_la_CPPFLAGS=-I@top_srcdir@/include
+devemu_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/build
 devemu_la_LDFLAGS = -module -avoid-version -export-symbols ../subagent.sym
 devemu_la_LIBADD = ../../libnxagent/libnxagent.la ../../../libnetxms/libnetxms.la
 

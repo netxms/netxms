@@ -2,7 +2,7 @@ DRIVER = at
 
 pkglib_LTLIBRARIES = at.la
 at_la_SOURCES = at.cpp
-at_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include
+at_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build
 at_la_LDFLAGS = -module -avoid-version
 at_la_LIBADD = ../../../libnetxms/libnetxms.la \
 		      ../../../snmp/libnxsnmp/libnxsnmp.la \

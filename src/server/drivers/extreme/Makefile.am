@@ -2,7 +2,7 @@ DRIVER = extreme
 
 pkglib_LTLIBRARIES = extreme.la
 extreme_la_SOURCES = extreme.cpp
-extreme_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include
+extreme_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build
 extreme_la_LDFLAGS = -module -avoid-version
 extreme_la_LIBADD = ../../../libnetxms/libnetxms.la \
 		      ../../../snmp/libnxsnmp/libnxsnmp.la \

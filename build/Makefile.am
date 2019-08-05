@@ -8,6 +8,7 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
+BUILT_SOURCES = netxms-build-tag.h netxms-build-tag.iss
 
 EXTRA_DIST = \
 	build.vcxproj \
@@ -16,3 +17,12 @@ EXTRA_DIST = \
 	msvc_setenv_x64.cmd \
 	msvc_setenv_x86.cmd \
 	updatetag.pl
+
+netxms-build-tag.iss: netxms-build-tag.h
+
+netxms-build-tag.h: update-tag
+
+.PHONY: update-tag
+
+update-tag:
+	./updatetag.pl

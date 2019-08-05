@@ -2,7 +2,7 @@ DRIVER = smseagle
 
 pkglib_LTLIBRARIES = smseagle.la
 smseagle_la_SOURCES = main.cpp
-smseagle_la_CPPFLAGS=-I@top_srcdir@/include
+smseagle_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/build
 smseagle_la_LDFLAGS = -module -avoid-version
 smseagle_la_LIBADD = ../../libnetxms/libnetxms.la -lcurl
 

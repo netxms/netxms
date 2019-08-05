@@ -2,7 +2,7 @@ DRIVER = pgsql
 
 pkglib_LTLIBRARIES = pgsql.la
 pgsql_la_SOURCES = pgsql.cpp
-pgsql_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include @PGSQL_CPPFLAGS@
+pgsql_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include @PGSQL_CPPFLAGS@ -I@top_srcdir@/build
 pgsql_la_LDFLAGS = -module -avoid-version @PGSQL_LDFLAGS@
 pgsql_la_LIBADD = ../../../libnetxms/libnetxms.la @PGSQL_LIBS@
 

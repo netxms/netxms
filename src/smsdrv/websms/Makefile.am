@@ -2,7 +2,7 @@ DRIVER = websms
 
 pkglib_LTLIBRARIES = websms.la
 websms_la_SOURCES = main.cpp
-websms_la_CPPFLAGS=-I@top_srcdir@/include
+websms_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/build
 websms_la_LDFLAGS = -module -avoid-version
 websms_la_LIBADD = ../../libnetxms/libnetxms.la -lcurl
 

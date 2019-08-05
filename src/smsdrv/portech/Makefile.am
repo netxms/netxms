@@ -2,7 +2,7 @@ DRIVER = portech
 
 pkglib_LTLIBRARIES = portech.la
 portech_la_SOURCES = main.cpp pdumode.cpp
-portech_la_CPPFLAGS=-I@top_srcdir@/include
+portech_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/build
 portech_la_LDFLAGS = -module -avoid-version
 portech_la_LIBADD = ../../libnetxms/libnetxms.la
 

@@ -2,7 +2,7 @@ DRIVER = dbemu
 
 pkglib_LTLIBRARIES = dbemu.la
 dbemu_la_SOURCES = main.cpp
-dbemu_la_CPPFLAGS=-I@top_srcdir@/include
+dbemu_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/build
 dbemu_la_LDFLAGS = -module -avoid-version
 dbemu_la_LIBADD = ../../db/libnxdb/libnxdb.la ../../libnetxms/libnetxms.la
 

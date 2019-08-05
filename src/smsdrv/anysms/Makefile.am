@@ -2,7 +2,7 @@ DRIVER = anysms
 
 pkglib_LTLIBRARIES = anysms.la
 anysms_la_SOURCES = main.cpp
-anysms_la_CPPFLAGS=-I@top_srcdir@/include
+anysms_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/build
 anysms_la_LDFLAGS = -module -avoid-version
 anysms_la_LIBADD = ../../libnetxms/libnetxms.la -lcurl
 

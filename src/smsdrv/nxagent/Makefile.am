@@ -2,7 +2,7 @@ DRIVER = nxagent
 
 pkglib_LTLIBRARIES = nxagent.la
 nxagent_la_SOURCES = main.cpp
-nxagent_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include
+nxagent_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build
 nxagent_la_LDFLAGS = -module -avoid-version
 nxagent_la_LIBADD = ../../libnetxms/libnetxms.la ../../server/libnxsrv/libnxsrv.la
 

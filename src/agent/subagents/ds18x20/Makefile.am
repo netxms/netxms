@@ -2,7 +2,7 @@ SUBAGENT = ds18x20
 
 pkglib_LTLIBRARIES = ds18x20.la
 ds18x20_la_SOURCES = ds18x20.cpp
-ds18x20_la_CPPFLAGS=-I@top_srcdir@/include
+ds18x20_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/build
 ds18x20_la_LDFLAGS = -module -avoid-version -export-symbols ../subagent.sym
 ds18x20_la_LIBADD = ../../libnxagent/libnxagent.la ../../../libnetxms/libnetxms.la
 

@@ -2,7 +2,7 @@ DRIVER = text2reach
 
 pkglib_LTLIBRARIES = text2reach.la
 text2reach_la_SOURCES = main.cpp
-text2reach_la_CPPFLAGS=-I@top_srcdir@/include
+text2reach_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/build
 text2reach_la_LDFLAGS = -module -avoid-version
 text2reach_la_LIBADD = ../../libnetxms/libnetxms.la -lcurl
 

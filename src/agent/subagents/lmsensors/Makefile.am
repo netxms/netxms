@@ -2,7 +2,7 @@ SUBAGENT = lmsensors
 
 pkglib_LTLIBRARIES = lmsensors.la
 lmsensors_la_SOURCES = main.cpp
-lmsensors_la_CPPFLAGS=-I@top_srcdir@/include
+lmsensors_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/build
 lmsensors_la_LDFLAGS = -module -avoid-version -export-symbols ../subagent.sym
 lmsensors_la_LIBADD = ../../libnxagent/libnxagent.la ../../../libnetxms/libnetxms.la -lsensors
 

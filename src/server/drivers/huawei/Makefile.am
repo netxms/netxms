@@ -2,7 +2,7 @@ DRIVER = huawei
 
 pkglib_LTLIBRARIES = huawei.la
 huawei_la_SOURCES = huawei.cpp optix.cpp
-huawei_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include
+huawei_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build
 huawei_la_LDFLAGS = -module -avoid-version
 huawei_la_LIBADD = ../../../libnetxms/libnetxms.la \
 	../../../snmp/libnxsnmp/libnxsnmp.la \

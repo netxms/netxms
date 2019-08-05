@@ -2,7 +2,7 @@ DRIVER = hpe
 
 pkglib_LTLIBRARIES = hpe.la
 hpe_la_SOURCES = h3c.cpp hpe.cpp hpsw.cpp procurve.cpp
-hpe_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include
+hpe_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build
 hpe_la_LDFLAGS = -module -avoid-version
 hpe_la_LIBADD = ../../../libnetxms/libnetxms.la \
 		      ../../../snmp/libnxsnmp/libnxsnmp.la \

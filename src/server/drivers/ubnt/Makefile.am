@@ -2,7 +2,7 @@ DRIVER = ubnt
 
 pkglib_LTLIBRARIES = ubnt.la
 ubnt_la_SOURCES = ubnt.cpp
-ubnt_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include
+ubnt_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build
 ubnt_la_LDFLAGS = -module -avoid-version
 ubnt_la_LIBADD = ../../../libnetxms/libnetxms.la \
 		      ../../../snmp/libnxsnmp/libnxsnmp.la \
