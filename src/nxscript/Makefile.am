@@ -10,7 +10,7 @@
 
 bin_PROGRAMS = nxscript
 nxscript_SOURCES = class.cpp nxscript.cpp
-nxscript_CPPFLAGS = -I@top_srcdir@/include
+nxscript_CPPFLAGS = -I@top_srcdir@/include -I@top_srcdir@/build
 nxscript_LDFLAGS = -I@top_srcdir@/include @EXEC_LDFLAGS@
 nxscript_LDADD = ../libnetxms/libnetxms.la ../libnxsl/libnxsl.la @EXEC_LIBS@
 

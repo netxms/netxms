@@ -1,6 +1,6 @@
 bin_PROGRAMS = nxminfo
 nxminfo_SOURCES = nxminfo.cpp
-nxminfo_CPPFLAGS = -I@top_srcdir@/include -I@top_srcdir@/src/server/include
+nxminfo_CPPFLAGS = -I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build
 nxminfo_LDFLAGS = @EXEC_LDFLAGS@
 nxminfo_LDADD = \
 	../../libnxsrv/libnxsrv.la \

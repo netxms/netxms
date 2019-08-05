@@ -8,7 +8,7 @@ nxagentd_SOURCES = messages.c actions.cpp appagent.cpp comm.cpp config.cpp \
                    systemd.cpp tcpproxy.cpp tools.cpp trap.cpp tunnel.cpp \
                    upgrade.cpp watchdog.cpp
 
-nxagentd_CPPFLAGS = -I@top_srcdir@/include
+nxagentd_CPPFLAGS = -I@top_srcdir@/include -I@top_srcdir@/build
 
 nxagentd_LDFLAGS = @EXEC_LDFLAGS@
 if STATIC_BUILD

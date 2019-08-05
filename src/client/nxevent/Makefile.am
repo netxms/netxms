@@ -10,7 +10,7 @@
 
 bin_PROGRAMS = nxevent
 nxevent_SOURCES = nxevent.cpp
-nxevent_CPPFLAGS = -I@top_srcdir@/include
+nxevent_CPPFLAGS = -I@top_srcdir@/include -I@top_srcdir@/build
 nxevent_LDFLAGS = @EXEC_LDFLAGS@
 nxevent_LDADD = ../../libnetxms/libnetxms.la ../libnxclient/libnxclient.la @EXEC_LIBS@
 

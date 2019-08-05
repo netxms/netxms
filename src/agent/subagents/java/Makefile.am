@@ -2,7 +2,7 @@ SUBAGENT = java
 
 pkglib_LTLIBRARIES = java.la
 java_la_SOURCES = main.cpp SubAgent.cpp
-java_la_CPPFLAGS = -I@top_srcdir@/include
+java_la_CPPFLAGS = -I@top_srcdir@/include -I@top_srcdir@/build
 java_la_LDFLAGS = -module -avoid-version -export-symbols ../subagent.sym
 java_la_LIBADD = @top_srcdir@/src/agent/libnxagent/libnxagent.la \
 	@top_srcdir@/src/libnxjava/libnxjava.la \
