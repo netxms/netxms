@@ -271,7 +271,7 @@
 #define NSF_CACHE_MODE_NOT_SUPPORTED   0x00080000
 
 /**
- * Sensor status flags
+ * Sensor state flags
  */
 #define SSF_PROVISIONED                0x00010000
 #define SSF_REGISTERED                 0x00020000

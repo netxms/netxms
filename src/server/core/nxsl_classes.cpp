@@ -1803,8 +1803,6 @@ NXSL_Value *NXSL_AlarmClass::getAttr(NXSL_Object *pObject, const char *attr)
    return value;
 }
 
-
-
 /**
  * NXSL class Alarm: constructor
  */

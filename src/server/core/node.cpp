@@ -791,7 +791,7 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
          DBBind(hStmt, 23, DB_SQLTYPE_VARCHAR, m_snmpSecurity->getPrivPassword(), DB_BIND_STATIC);
 #endif
          DBBind(hStmt, 24, DB_SQLTYPE_INTEGER, (LONG)snmpMethods);
-         DBBind(hStmt, 25, DB_SQLTYPE_VARCHAR, m_sysName, DB_BIND_STATIC);
+         DBBind(hStmt, 25, DB_SQLTYPE_VARCHAR, m_sysName, DB_BIND_STATIC, 127);
          DBBind(hStmt, 26, DB_SQLTYPE_VARCHAR, BinToStr(m_baseBridgeAddress, MAC_ADDR_LENGTH, baseAddress), DB_BIND_STATIC);
          DBBind(hStmt, 27, DB_SQLTYPE_INTEGER, (LONG)m_downSince);
          DBBind(hStmt, 28, DB_SQLTYPE_VARCHAR, (m_driver != NULL) ? m_driver->getName() : _T(""), DB_BIND_STATIC);
@@ -801,8 +801,8 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
          DBBind(hStmt, 32, DB_SQLTYPE_INTEGER, m_rackId);   // rack ID
          DBBind(hStmt, 33, DB_SQLTYPE_INTEGER, (LONG)m_bootTime);
          DBBind(hStmt, 34, DB_SQLTYPE_VARCHAR, _itot(m_agentCacheMode, cacheMode, 10), DB_BIND_STATIC, 1);
-         DBBind(hStmt, 35, DB_SQLTYPE_VARCHAR, m_sysContact, DB_BIND_STATIC);
-         DBBind(hStmt, 36, DB_SQLTYPE_VARCHAR, m_sysLocation, DB_BIND_STATIC);
+         DBBind(hStmt, 35, DB_SQLTYPE_VARCHAR, m_sysContact, DB_BIND_STATIC, 127);
+         DBBind(hStmt, 36, DB_SQLTYPE_VARCHAR, m_sysLocation, DB_BIND_STATIC, 255);
          DBBind(hStmt, 37, DB_SQLTYPE_INTEGER, (LONG)m_lastAgentCommTime);
          DBBind(hStmt, 38, DB_SQLTYPE_BIGINT, m_syslogMessageCount);
          DBBind(hStmt, 39, DB_SQLTYPE_BIGINT, m_snmpTrapCount);
