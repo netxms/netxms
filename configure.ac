@@ -4202,6 +4202,7 @@ AC_SUBST(NETXMS_LIBRARY_VERSION)
 
 AC_CONFIG_FILES([
 	Makefile
+	build/Makefile
 	contrib/Makefile
 	contrib/backgrounds/Makefile
 	contrib/integration/Makefile
