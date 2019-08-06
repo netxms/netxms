@@ -1344,7 +1344,7 @@ void DataCollectionTarget::reloadDCItemCache(UINT32 dciId)
    {
       nxlog_debug_tag(_T("obj.dc.cache"), 6, _T("Reload DCI cache for \"%s\" [%d] on %s [%d]"),
                dci->getName(), dci->getId(), m_name, m_id);
-      static_cast<DCItem*>(dci.get())->reloadCache();
+      static_cast<DCItem*>(dci.get())->reloadCache(true);
    }
    unlockDciAccess();
 }

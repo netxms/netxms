@@ -67,7 +67,6 @@ extern const TCHAR *g_szMessages[];
 /**
  * Externals
  */
-extern Queue g_dciCacheLoaderQueue;
 extern ThreadPool *g_clientThreadPool;
 extern ThreadPool *g_syncerThreadPool;
 extern ThreadPool *g_discoveryThreadPool;

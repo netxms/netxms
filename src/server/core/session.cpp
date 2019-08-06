@@ -61,7 +61,6 @@
  * Externals
  */
 extern ObjectQueue<DiscoveredAddress> g_nodePollerQueue;
-extern Queue g_dciCacheLoaderQueue;
 extern ThreadPool *g_clientThreadPool;
 extern ThreadPool *g_dataCollectorThreadPool;
 
