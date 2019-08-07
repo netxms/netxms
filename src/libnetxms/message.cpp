@@ -896,16 +896,16 @@ char *NXCPMessage::getFieldAsUtf8String(UINT32 fieldId, char *buffer, size_t buf
       }
       else if (type == NXCP_DT_UTF8_STRING)
       {
+         size_t srcLen = *static_cast<UINT32*>(value);
          if (buffer == NULL)
          {
-            size_t srcLen = *static_cast<UINT32*>(value);
             str = MemAllocArrayNoInit<char>(srcLen + 1);
             memcpy(str, static_cast<BYTE*>(value) + 4, srcLen);
             str[srcLen] = 0;
          }
          else
          {
-            strlcpy(buffer, static_cast<char*>(value) + 4, bufferSize);
+            strlcpy(buffer, static_cast<char*>(value) + 4, std::min(srcLen + 1, bufferSize));
             str = buffer;
          }
       }
