@@ -33,7 +33,11 @@ static UCS2CHAR ucs2TextShort[] = { 'L', 'o', 'r', 'e', 'm', ' ', 'i', 'p', 's',
 static UCS2CHAR ucs2TextSurrogates[] = { 'L', 'o', 'r', 'e', 'm', 0xD801, 0xDFFF, 'i', 'p', 's', 'u', 'm', 0x1CD, '.', 0 };
 static UCS4CHAR ucs4TextSurrogatesTest[] = { 'L', 'o', 'r', 'e', 'm', 0x0107FF, 'i', 'p', 's', 'u', 'm', 0x1CD, '.', 0 };
 static char utf8TextSurrogatesTest[] = { 'L', 'o', 'r', 'e', 'm', (char)0xF0, (char)0x90, (char)0x9F, (char)0xBF, 'i', 'p', 's', 'u', 'm', (char)0xC7, (char)0x8D, '.', 0 };
+#ifdef __HP_aCC
+static WCHAR wcTextISO8859_1[] = L"Lorem ipsum dolor sit amet, \xA3 10, \xA2 20, \xA5 50, b\xF8nne";
+#else
 static WCHAR wcTextISO8859_1[] = L"Lorem ipsum dolor sit amet, £ 10, ¢ 20, ¥ 50, bønne";
+#endif
 static char mbTextISO8859_1[] = "Lorem ipsum dolor sit amet, \xA3 10, \xA2 20, \xA5 50, b\xF8nne";
 static char mbTextASCII[] = "Lorem ipsum dolor sit amet, ? 10, ? 20, ? 50, b?nne";
 
@@ -272,7 +276,11 @@ static void TestStringList()
    StartTest(_T("String list - add"));
    StringList *s1 = new StringList();
    s1->add(1);
+#ifdef __HP_aCC
+   s1->add(static_cast<INT64>(_LL(12345000000001)));
+#else
    s1->add(_LL(12345000000001));
+#endif
    s1->add(_T("text1"));
    s1->addPreallocated(_tcsdup(_T("text2")));
    s1->add(3.1415);

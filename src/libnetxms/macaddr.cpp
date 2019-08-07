@@ -28,12 +28,12 @@
 /**
  * Predefined invalid MAC address object
  */
-const MacAddress MacAddress::NONE;
+const MacAddress LIBNETXMS_EXPORTABLE MacAddress::NONE;
 
 /**
  * Predefined MAC address object 00:00:00:00:00:00
  */
-const MacAddress MacAddress::ZERO(MAC_ADDR_LENGTH);
+const MacAddress LIBNETXMS_EXPORTABLE MacAddress::ZERO(MAC_ADDR_LENGTH);
 
 /**
  * Returns true if MAC address is valid (has non-zero length and do not consists of all zeroes

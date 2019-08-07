@@ -18,7 +18,7 @@ SUBAGENT = hpux
 
 pkglib_LTLIBRARIES = hpux.la
 hpux_la_SOURCES = disk.cpp iostat.cpp main.cpp net.cpp proc.cpp system.cpp
-hpux_la_CPPFLAGS = -I@top_srcdir@/include -D_PSTAT64
+hpux_la_CPPFLAGS = -I@top_srcdir@/include -I@top_srcdir@/build -D_PSTAT64
 hpux_la_LIBADD = ../../libnxagent/libnxagent.la ../../../libnetxms/libnetxms.la -lnm
 hpux_la_LDFLAGS = -module -avoid-version -export-symbols ../platform-subagent.sym
 

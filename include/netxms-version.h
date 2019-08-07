@@ -23,7 +23,7 @@
 #ifndef _netxms_version_h_
 #define _netxms_version_h_
 
-#include "netxms-build-tag.h"
+#include <netxms-build-tag.h>
 
 /**
  * Version constants 
