@@ -459,7 +459,7 @@ NXSL_Value *NXSL_ZoneClass::getAttr(NXSL_Object *object, const char *attr)
       return value;
 
    NXSL_VM *vm = object->vm();
-   Zone *zone = (Zone *)object->getData();
+   Zone *zone = static_cast<Zone*>(object->getData());
    if (!strcmp(attr, "proxyNodes"))
    {
       NXSL_Array *array = new NXSL_Array(vm);
@@ -467,7 +467,8 @@ NXSL_Value *NXSL_ZoneClass::getAttr(NXSL_Object *object, const char *attr)
       for(int i = 0; i < proxies->size(); i++)
       {
          Node *node = static_cast<Node*>(FindObjectById(proxies->get(i), OBJECT_NODE));
-         array->append(node->createNXSLObject(vm));
+         if (node != NULL)
+            array->append(node->createNXSLObject(vm));
       }
       value = vm->createValue(array);
    }
