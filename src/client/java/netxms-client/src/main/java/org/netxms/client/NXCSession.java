@@ -1373,14 +1373,15 @@ public class NXCSession
       try
       {
          encryptionContext = EncryptionContext.createInstance(msg);
-         response.setField(NXCPCodes.VID_SESSION_KEY, encryptionContext.getEncryptedSessionKey(msg));
-         response.setField(NXCPCodes.VID_SESSION_IV, encryptionContext.getEncryptedIv(msg));
+         response.setField(NXCPCodes.VID_SESSION_KEY, encryptionContext.getEncryptedSessionKey());
+         response.setField(NXCPCodes.VID_SESSION_IV, encryptionContext.getEncryptedIv());
          response.setFieldInt16(NXCPCodes.VID_CIPHER, encryptionContext.getCipher());
          response.setFieldInt16(NXCPCodes.VID_KEY_LENGTH, encryptionContext.getKeyLength());
          response.setFieldInt16(NXCPCodes.VID_IV_LENGTH, encryptionContext.getIvLength());
          response.setFieldInt32(NXCPCodes.VID_RCC, RCC.SUCCESS);
          Logger.debug("NXCSession.setupEncryption",
                "Cipher selected: " + EncryptionContext.getCipherName(encryptionContext.getCipher()));
+         Logger.debug("NXCSession.setupEncryption", "Server key fingerprint: " + encryptionContext.getServerKeyFingerprint());
       }
       catch(Exception e)
       {

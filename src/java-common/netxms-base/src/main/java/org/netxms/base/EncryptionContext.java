@@ -24,6 +24,8 @@ import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.security.InvalidKeyException;
 import java.security.KeyFactory;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.security.spec.X509EncodedKeySpec;
@@ -52,6 +54,7 @@ public final class EncryptionContext
 	private Cipher decryptor;
 	private SecretKey key;
 	private IvParameterSpec iv;
+	private PublicKey serverPublicKey;
 
    /* (non-Javadoc)
     * @see java.lang.Object#toString()
@@ -180,7 +183,7 @@ public final class EncryptionContext
 		{
 			try
 			{
-				return new EncryptionContext(selectedCipher);
+				return new EncryptionContext(selectedCipher, request);
 			}
 			catch(Exception e)
 			{
@@ -198,7 +201,7 @@ public final class EncryptionContext
 	 * 
 	 * @param cipher cipher to use
 	 */
-	protected EncryptionContext(int cipher) throws GeneralSecurityException
+	protected EncryptionContext(int cipher, NXCPMessage request) throws GeneralSecurityException
 	{
 		this.cipher = cipher;
 		keyLength = KEY_LENGTHS[cipher];
@@ -215,37 +218,34 @@ public final class EncryptionContext
       SecureRandom random = SecureRandom.getInstance("SHA1PRNG");
       random.nextBytes(ivBytes);
       iv = new IvParameterSpec(ivBytes);
-	}
+	
+      byte[] pkeyBytes = request.getFieldAsBinary(NXCPCodes.VID_PUBLIC_KEY);
+      serverPublicKey = KeyFactory.getInstance("RSA").generatePublic(new X509EncodedKeySpec(pkeyBytes));
+	}	
 
 	/**
 	 * Encrypt session key with public key from encryption setup message.
 	 * 
-	 * @param msg encryption setup message
 	 * @return encrypted session key
 	 * @throws GeneralSecurityException 
 	 */
-	public byte[] getEncryptedSessionKey(NXCPMessage msg) throws GeneralSecurityException
+	public byte[] getEncryptedSessionKey() throws GeneralSecurityException
 	{
-		byte[] pkeyBytes = msg.getFieldAsBinary(NXCPCodes.VID_PUBLIC_KEY);
-		PublicKey publicKey = KeyFactory.getInstance("RSA").generatePublic(new X509EncodedKeySpec(pkeyBytes));
 		Cipher cipher = Cipher.getInstance("RSA/ECB/OAEPWithSHA1AndMGF1Padding");
-		cipher.init(Cipher.ENCRYPT_MODE, publicKey);
+		cipher.init(Cipher.ENCRYPT_MODE, serverPublicKey);
 		return cipher.doFinal(key.getEncoded());
 	}
 
 	/**
 	 * Encrypt initialization vector with public key from encryption setup message.
 	 * 
-	 * @param msg encryption setup message
 	 * @return encrypted initialization vector
 	 * @throws GeneralSecurityException 
 	 */
-	public byte[] getEncryptedIv(NXCPMessage msg) throws GeneralSecurityException
+	public byte[] getEncryptedIv() throws GeneralSecurityException
 	{
-		byte[] pkeyBytes = msg.getFieldAsBinary(NXCPCodes.VID_PUBLIC_KEY);
-		PublicKey publicKey = KeyFactory.getInstance("RSA").generatePublic(new X509EncodedKeySpec(pkeyBytes));
 		Cipher cipher = Cipher.getInstance("RSA/ECB/OAEPWithSHA1AndMGF1Padding");
-		cipher.init(Cipher.ENCRYPT_MODE, publicKey);
+		cipher.init(Cipher.ENCRYPT_MODE, serverPublicKey);
 		return cipher.doFinal(iv.getIV());
 	}
 	
@@ -376,4 +376,34 @@ public final class EncryptionContext
 		return iv.getIV().length;
 	}
 
+	/**
+	 * Get fingerprint of server public key
+	 * 
+	 * @return fingerprint of server public key
+	 */
+	public String getServerKeyFingerprint()
+	{
+	   if (serverPublicKey == null)
+	      return "none";
+	   
+      try
+      {
+         MessageDigest m = MessageDigest.getInstance("MD5");
+         byte[] key = serverPublicKey.getEncoded();
+         m.update(key, 0, key.length);
+         
+         StringBuilder sb = new StringBuilder();
+         for(int b : m.digest())
+         {
+            if (sb.length() > 0)
+               sb.append(':');
+            sb.append(String.format("%02x", b < 0 ? 129 + b : b));
+         }
+         return sb.toString();
+      }
+      catch(NoSuchAlgorithmException e)
+      {
+         return "error";
+      }
+	}
 }
