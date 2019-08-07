@@ -96,6 +96,11 @@ const TCHAR *RedmineLink::getName()
  */
 bool RedmineLink::init()
 {
+   if (!InitializeLibCURL())
+   {
+      DbgPrintf(1, _T("Redmine: cURL initialization failed"));
+      return false;
+   }
    ConfigReadStrUTF8(_T("RedmineServerURL"), m_serverUrl, MAX_OBJECT_NAME, "http://localhost");
    ConfigReadStrUTF8(_T("RedmineApiKey"), m_apiKey, JIRA_MAX_LOGIN_LEN, "n/a");
    DbgPrintf(5, _T("Redmine: server URL set to %hs"), m_serverUrl);

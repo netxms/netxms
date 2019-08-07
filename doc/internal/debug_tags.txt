@@ -28,6 +28,8 @@ event.corr      Event correlation
 event.policy	Event processing policy
 event.proc	Event processor
 
+init.*		Generic process or library initialization
+
 job.*		Server jobs related
 job.manager	Job manager
 

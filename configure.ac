@@ -2355,11 +2355,12 @@ fi
 if test "x$DISABLE_CURL" = "xno" -a "x$DIST_BUILD" != "xyes"; then
 	AC_CHECK_HEADER(curl/curl.h,HAVE_LIBCURL=yes,HAVE_LIBCURL=no)
 	if test "x$HAVE_LIBCURL" = "xyes"; then
-		AC_CHECK_LIB(curl, curl_global_init, [ HAVE_LIBCURL=yes ], [ HAVE_LIBCURL=no ])
+		AC_CHECK_LIB(curl, curl_global_init, [
+			HAVE_LIBCURL=yes
+			LIBS="$LIBS -lcurl"
+		], [ HAVE_LIBCURL=no ])
 		AC_CHECK_DECLS([CURLOPT_NOSIGNAL, curl_version_info],,,[
-#ifdef HAVE_CURL_CURL_H
 #include <curl/curl.h>
-#endif
 		])
 	fi
 

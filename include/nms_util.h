@@ -3184,6 +3184,9 @@ time_t LIBNETXMS_EXPORTABLE ParseDateTimeW(const WCHAR *text, time_t defaultValu
 #define ParseDateTime ParseDateTimeA
 #endif
 
+bool LIBNETXMS_EXPORTABLE InitializeLibCURL();
+const char LIBNETXMS_EXPORTABLE *GetLibCURLVersion();
+
 #ifdef __cplusplus
 }
 #endif

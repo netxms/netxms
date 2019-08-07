@@ -23,6 +23,75 @@
 
 #include "libnetxms.h"
 
+#if HAVE_LIBCURL
+#include <curl/curl.h>
+#endif
+
+/**
+ * libcurl initialization flag
+ */
+static int s_curlInitialized = 0;
+
+/**
+ * Saved cURL version
+ */
+static const char *s_curlVersion = "uninitialized";
+
+/**
+ * Initialize libcurl
+ */
+bool LIBNETXMS_EXPORTABLE InitializeLibCURL()
+{
+#if HAVE_LIBCURL
+   static VolatileCounter reentryGuarg = 0;
+
+retry:
+   if (s_curlInitialized > 0)
+      return true;
+   if (s_curlInitialized < 0)
+      return false;
+
+   if (InterlockedIncrement(&reentryGuarg) > 1)
+   {
+      InterlockedDecrement(&reentryGuarg);
+      goto retry;
+   }
+
+   if (curl_global_init(CURL_GLOBAL_ALL) != CURLE_OK)
+   {
+      nxlog_debug_tag(_T("init.curl"), 1, _T("cURL initialization failed"));
+      s_curlInitialized = -1;
+      return false;
+   }
+
+   s_curlVersion = curl_version();
+   nxlog_debug_tag(_T("init.curl"), 3, _T("cURL initialized (version: %hs)"), s_curlVersion);
+   s_curlInitialized = 1;
+   return true;
+#else
+   return false;
+#endif
+}
+
+/**
+ * Global cleanup for libcurl
+ */
+void LibCURLCleanup()
+{
+#if HAVE_LIBCURL
+   if (s_curlInitialized > 0)
+      curl_global_cleanup();
+#endif
+}
+
+/**
+ * Get libcurl version
+ */
+const char LIBNETXMS_EXPORTABLE *GetLibCURLVersion()
+{
+   return s_curlVersion;
+}
+
 /**
  * Wrappers for byte swap functions for C code linking
  */

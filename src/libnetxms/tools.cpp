@@ -62,6 +62,8 @@
 HRESULT (WINAPI *imp_SetThreadDescription)(HANDLE, PCWSTR) = NULL;
 #endif
 
+void LibCURLCleanup();
+
 /**
  * Process shutdown condition
  */
@@ -80,6 +82,7 @@ static void OnProcessExit()
    SubProcessExecutor::shutdown();
    MsgWaitQueue::shutdown();
    ConditionDestroy(s_shutdownCondition);
+   LibCURLCleanup();
 }
 
 /**

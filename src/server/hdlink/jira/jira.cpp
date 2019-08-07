@@ -106,10 +106,15 @@ const TCHAR *JiraLink::getVersion()
  */
 bool JiraLink::init()
 {
+   if (!InitializeLibCURL())
+   {
+      nxlog_debug(1, _T("Jira: cURL initialization failed"));
+      return false;
+   }
    ConfigReadStrUTF8(_T("JiraServerURL"), m_serverUrl, MAX_OBJECT_NAME, "http://localhost");
    ConfigReadStrUTF8(_T("JiraLogin"), m_login, JIRA_MAX_LOGIN_LEN, "netxms");
    ConfigReadStrUTF8(_T("JiraPassword"), m_password, JIRA_MAX_PASSWORD_LEN, "");
-   DbgPrintf(5, _T("Jira: server URL set to %hs"), m_serverUrl);
+   nxlog_debug(5, _T("Jira: server URL set to %hs"), m_serverUrl);
    return true;
 }
 
