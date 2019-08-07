@@ -79,7 +79,7 @@ import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.constants.RCC;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.ConditionDciInfo;
-import org.netxms.client.datacollection.DCONotificationCallback;
+import org.netxms.client.datacollection.DataCollectionConfigurationChangeListener;
 import org.netxms.client.datacollection.DCOStatusHolder;
 import org.netxms.client.datacollection.DataCollectionConfiguration;
 import org.netxms.client.datacollection.DataCollectionItem;
@@ -6530,7 +6530,7 @@ public class NXCSession
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public DataCollectionConfiguration openDataCollectionConfiguration(long nodeId, DCONotificationCallback notifyDCOChangeCB)
+   public DataCollectionConfiguration openDataCollectionConfiguration(long nodeId, DataCollectionConfigurationChangeListener notifyDCOChangeCB)
          throws IOException, NXCException
    {
       final DataCollectionConfiguration cfg = new DataCollectionConfiguration(this, nodeId);

@@ -57,8 +57,8 @@ import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.RCC;
-import org.netxms.client.datacollection.DCONotificationCallback;
 import org.netxms.client.datacollection.DataCollectionConfiguration;
+import org.netxms.client.datacollection.DataCollectionConfigurationChangeListener;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DataCollectionTable;
@@ -133,7 +133,7 @@ public class DataCollectionEditor extends ViewPart
 	private Action actionExportToCsv;
 	private Action actionExportAllToCsv;
 	private boolean hideModificationWarnings;
-	private DCONotificationCallback notificationCallback;
+	private DataCollectionConfigurationChangeListener changeListener;
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
@@ -149,16 +149,39 @@ public class DataCollectionEditor extends ViewPart
 		object = ((obj != null) && ((obj instanceof DataCollectionTarget) || (obj instanceof Template))) ? obj : null;
 		setPartName(Messages.get().DataCollectionEditor_PartNamePrefix + ((object != null) ? object.getObjectName() : Messages.get().DataCollectionEditor_Error));
 	
-		notificationCallback = new DCONotificationCallback() {
-         
+		changeListener = new DataCollectionConfigurationChangeListener() {
          @Override
-         public void notifyDCOChange()
+         public void onUpdate(DataCollectionObject object)
          {
             getSite().getShell().getDisplay().asyncExec(new Runnable() {
                @Override
                public void run()
                {
                   viewer.setInput(dciConfig.getItems());
+               }
+            }); 
+         }
+
+         @Override
+         public void onDelete(long id)
+         {
+            getSite().getShell().getDisplay().asyncExec(new Runnable() {
+               @Override
+               public void run()
+               {
+                  viewer.setInput(dciConfig.getItems());
+               }
+            }); 
+         }
+
+         @Override
+         public void onStatusChange(long id, int status)
+         {
+            getSite().getShell().getDisplay().asyncExec(new Runnable() {
+               @Override
+               public void run()
+               {
+                  viewer.refresh();
                }
             }); 
          }
@@ -283,7 +306,7 @@ public class DataCollectionEditor extends ViewPart
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				dciConfig = session.openDataCollectionConfiguration(object.getObjectId(), notificationCallback);
+				dciConfig = session.openDataCollectionConfiguration(object.getObjectId(), changeListener);
 				dciConfig.setUserData(viewer);
 				runInUIThread(new Runnable() {
 					@Override
@@ -776,7 +799,7 @@ public class DataCollectionEditor extends ViewPart
 			{
 				dciConfig.copyObjects(dciConfig.getNodeId(), dciList);
 				dciConfig.close();
-				dciConfig.open(notificationCallback);
+				dciConfig.open(changeListener);
 				runInUIThread(new Runnable() {
 					@Override
 					public void run()
@@ -918,7 +941,7 @@ public class DataCollectionEditor extends ViewPart
 					try
 					{
 						Thread.sleep(500);
-						dciConfig.open(notificationCallback);
+						dciConfig.open(changeListener);
 						success = true;
 					}
 					catch(NXCException e)

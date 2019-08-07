@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2018 RadenSolutions
+ * Copyright (C) 2018-2019 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,7 +21,27 @@ package org.netxms.client.datacollection;
 /**
  * Callback to notify View about object change
  */
-public interface DCONotificationCallback
+public interface DataCollectionConfigurationChangeListener
 {
-   void notifyDCOChange();
+   /**
+    * Called when data collection object updated.
+    * 
+    * @param object data collection object
+    */
+   void onUpdate(DataCollectionObject object);
+   
+   /**
+    * Called when data collection object is deleted
+    * 
+    * @param id data collection object ID
+    */
+   void onDelete(long id);
+   
+   /**
+    * Called when state of data collection object was changed
+    * 
+    * @param id data collection object ID
+    * @param status new status of data collection object
+    */
+   void onStatusChange(long id, int status);
 }
