@@ -67,7 +67,7 @@ import org.netxms.base.NXCPException;
 import org.netxms.base.NXCPMessage;
 import org.netxms.base.NXCPMessageReceiver;
 import org.netxms.base.NXCPMsgWaitQueue;
-import org.netxms.base.NXCommon;
+import org.netxms.base.VersionInfo;
 import org.netxms.client.agent.config.ConfigContent;
 import org.netxms.client.agent.config.ConfigListElement;
 import org.netxms.client.constants.AggregationFunction;
@@ -79,9 +79,9 @@ import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.constants.RCC;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.ConditionDciInfo;
-import org.netxms.client.datacollection.DataCollectionConfigurationChangeListener;
 import org.netxms.client.datacollection.DCOStatusHolder;
 import org.netxms.client.datacollection.DataCollectionConfiguration;
+import org.netxms.client.datacollection.DataCollectionConfigurationChangeListener;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DataCollectionTable;
@@ -260,7 +260,7 @@ public class NXCSession
    private String connAddress;
    private int connPort;
    private boolean connUseEncryption;
-   private String connClientInfo = "nxjclient/" + NXCommon.VERSION;
+   private String connClientInfo = "nxjclient/" + VersionInfo.version();
    private int clientType = DESKTOP_CLIENT;
    private String clientAddress = null;
    private boolean ignoreProtocolVersion = false;
@@ -2090,7 +2090,7 @@ public class NXCSession
          }
       }
 
-      request.setField(NXCPCodes.VID_LIBNXCL_VERSION, NXCommon.VERSION);
+      request.setField(NXCPCodes.VID_LIBNXCL_VERSION, VersionInfo.version());
       request.setField(NXCPCodes.VID_CLIENT_INFO, connClientInfo);
       request.setField(NXCPCodes.VID_OS_INFO, System.getProperty("os.name") + " " + System.getProperty("os.version"));
       request.setFieldInt16(NXCPCodes.VID_CLIENT_TYPE, clientType);

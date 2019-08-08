@@ -43,8 +43,7 @@ import org.eclipse.ui.actions.ContributionItemFactory;
 import org.eclipse.ui.application.ActionBarAdvisor;
 import org.eclipse.ui.application.IActionBarConfigurer;
 import org.eclipse.ui.internal.actions.CommandAction;
-import org.netxms.base.BuildNumber;
-import org.netxms.base.NXCommon;
+import org.netxms.base.VersionInfo;
 import org.netxms.ui.eclipse.console.resources.GroupMarkers;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
@@ -106,7 +105,7 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor
 				{
 					MessageDialogHelper.openInformation(window.getShell(), 
 							Messages.get().ApplicationActionBarAdvisor_AboutTitle, 
-							String.format(Messages.get().ApplicationActionBarAdvisor_AboutText, NXCommon.VERSION + " (" + BuildNumber.TEXT +")"));
+							String.format(Messages.get().ApplicationActionBarAdvisor_AboutText, VersionInfo.version()));
 				}
 			}
 		};

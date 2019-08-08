@@ -75,7 +75,7 @@ import org.swtchart.Range;
  */
 public class LineChart extends Chart implements HistoricalDataChart
 {
-	private static final int MAX_ZOOM_LEVEL = 16;
+	//private static final int MAX_ZOOM_LEVEL = 16;
 	
 	private List<GraphItem> items = new ArrayList<GraphItem>();
 	private List<GraphItemStyle> itemStyles = new ArrayList<GraphItemStyle>(GraphSettings.MAX_GRAPH_ITEM_COUNT);
@@ -89,7 +89,7 @@ public class LineChart extends Chart implements HistoricalDataChart
 	private boolean adjustYAxis = true;
 	private boolean modifyYBase = false;
 	private int lineWidth = 2;
-	private int zoomLevel = 0;
+	//private int zoomLevel = 0;
 	private int legendPosition = GraphSettings.POSITION_BOTTOM;
 	//private MouseMoveListener moveListener;
 	private IPreferenceStore preferenceStore;
@@ -331,6 +331,7 @@ public class LineChart extends Chart implements HistoricalDataChart
     * @param axis
     *            the axis to set range
     */
+	/*
 	private void setRange(Point range, IAxis axis)
 	{
 		double min = axis.getDataCoordinate(range.x);
@@ -338,6 +339,7 @@ public class LineChart extends Chart implements HistoricalDataChart
 
 		axis.setRange(new Range(min, max));
 	}
+	*/
 
    /**
 	 * Create color object from preference string

@@ -4,6 +4,7 @@ my $file_prefix = shift || "netxms";
 my $define_prefix = shift || "NETXMS";
 my $h_file = shift || $file_prefix . "-build-tag.h";
 my $iss_file = shift || $file_prefix . "-build-tag.iss";
+my $property_file = shift || $file_prefix . "-build-tag.properties";
 
 my $tag = `git describe --always`;
 chomp $tag;
@@ -48,6 +49,17 @@ if (IsUpdateNeeded($iss_file, $tag) == 1)
 	close OUT;
 
 	print "Build tag updated in $iss_file\n";
+}
+
+if (IsUpdateNeeded($property_file, $tag) == 1)
+{
+	open(OUT, ">$property_file") or die "Cannot open output file: $!";
+	print OUT "#* BUILDTAG:$tag *\n";
+	print OUT $define_prefix . "_VERSION=$version_string\n";
+	print OUT $define_prefix . "_BUILD_TAG=$tag\n";
+	close OUT;
+
+	print "Build tag updated in $property_file\n";
 }
 
 sub IsUpdateNeeded

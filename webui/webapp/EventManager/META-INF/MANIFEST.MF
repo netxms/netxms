@@ -9,7 +9,7 @@ Require-Bundle: org.eclipse.rap.ui;bundle-version="2.3.0",
  org.netxms.ui.base;bundle-version="3.0.0",
  org.netxms.ui.eclipse.clientlibrary;bundle-version="3.0.0",
  org.netxms.webui.core;bundle-version="3.0.0"
-Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ActivationPolicy: lazy
 Export-Package: org.netxms.ui.eclipse.eventmanager.dialogs,
  org.netxms.ui.eclipse.eventmanager.widgets

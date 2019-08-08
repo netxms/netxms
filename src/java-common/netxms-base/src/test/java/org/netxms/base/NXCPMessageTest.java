@@ -133,7 +133,7 @@ public class NXCPMessageTest extends TestCase
       final byte[] bytes = msg1.createNXCPMessage(true);
       System.out.println("   Message encoded into " + bytes.length + " bytes");
       
-	   EncryptionContext ctx = new EncryptionContext(cipher);
+	   EncryptionContext ctx = new EncryptionContext(cipher, null);
 	   byte[] encryptedBytes = ctx.encryptMessage(msg1, true);
       System.out.println("   Message encrypted into " + encryptedBytes.length + " bytes");
       

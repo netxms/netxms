@@ -42,11 +42,9 @@ target
 .idea
 .vs
 
-/build/netxms-build-tag.iss
 /build/netxms-build-tag.h
-/netxms-build-tag.h
-/include/netxms-build-tag.h
-/include/netxms-build-tag.iss
+/build/netxms-build-tag.iss
+/build/netxms-build-tag.properties
 
 /netxms-*.tar.gz
 /*.apkg
@@ -198,6 +196,7 @@ target
 /src/java-common/netxms-base/.classpath
 /src/java-common/netxms-base/.project
 /src/java-common/netxms-base/.settings
+/src/java-common/netxms-base/src/main/resources/netxms-build-tag.properties
 /src/libexpat/libexpat/x64
 /src/libnetxms/x64
 /src/libnxjava/java/bridge/.classpath

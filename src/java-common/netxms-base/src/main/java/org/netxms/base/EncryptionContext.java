@@ -219,8 +219,11 @@ public final class EncryptionContext
       random.nextBytes(ivBytes);
       iv = new IvParameterSpec(ivBytes);
 	
-      byte[] pkeyBytes = request.getFieldAsBinary(NXCPCodes.VID_PUBLIC_KEY);
-      serverPublicKey = KeyFactory.getInstance("RSA").generatePublic(new X509EncodedKeySpec(pkeyBytes));
+      if (request != null)
+      {
+         byte[] pkeyBytes = request.getFieldAsBinary(NXCPCodes.VID_PUBLIC_KEY);
+         serverPublicKey = KeyFactory.getInstance("RSA").generatePublic(new X509EncodedKeySpec(pkeyBytes));
+      }
 	}	
 
 	/**
