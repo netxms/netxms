@@ -10,8 +10,20 @@ Require-Bundle: org.eclipse.core.runtime;bundle-version="3.8.0",
 Bundle-ActivationPolicy: lazy
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ClassPath: .,
- lib/simple-xml-2.6.4.jar
+ lib/simple-xml-2.6.4.jar,
+ lib/netty-buffer-4.1.38.Final.jar,
+ lib/netty-common-4.1.38.Final.jar
 Export-Package: com.jcraft.jzlib,
+ io.netty.buffer,
+ io.netty.util,
+ io.netty.util.collection,
+ io.netty.util.concurrent,
+ io.netty.util.internal,
+ io.netty.util.internal.logging,
+ io.netty.util.internal.shaded.org.jctools.queues,
+ io.netty.util.internal.shaded.org.jctools.queues.atomic,
+ io.netty.util.internal.shaded.org.jctools.util,
+ io.netty.util.internal.svm,
  org.netxms.base,
  org.netxms.base.annotations,
  org.netxms.certificate.loader,
