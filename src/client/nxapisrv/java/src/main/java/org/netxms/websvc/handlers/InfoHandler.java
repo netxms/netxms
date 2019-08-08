@@ -18,8 +18,7 @@
  */
 package org.netxms.websvc.handlers;
 
-import org.netxms.base.BuildNumber;
-import org.netxms.base.NXCommon;
+import org.netxms.base.VersionInfo;
 import org.netxms.websvc.json.JsonTools;
 import org.restlet.data.MediaType;
 import org.restlet.representation.Representation;
@@ -45,8 +44,8 @@ public class InfoHandler extends ServerResource
    {
       JsonObject response = new JsonObject();
       response.addProperty("apiVersion", API_VERSION);
-      response.addProperty("build", BuildNumber.TEXT);
-      response.addProperty("clientVersion", NXCommon.VERSION);
+      response.addProperty("build", VersionInfo.buildTag());
+      response.addProperty("clientVersion", VersionInfo.version());
       return new StringRepresentation(JsonTools.jsonFromObject(response, null), MediaType.APPLICATION_JSON);
    }
 }

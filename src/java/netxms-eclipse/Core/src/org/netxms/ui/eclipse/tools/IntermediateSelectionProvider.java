@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2018 Victor Kirhenshtein
+ * Copyright (C) 2003-2019 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,8 +34,8 @@ import org.eclipse.jface.viewers.SelectionChangedEvent;
  */
 public class IntermediateSelectionProvider implements IPostSelectionProvider
 {
-	private final ListenerList selectionListeners = new ListenerList();
-	private final ListenerList postSelectionListeners = new ListenerList();
+	private final ListenerList<ISelectionChangedListener> selectionListeners = new ListenerList<ISelectionChangedListener>();
+	private final ListenerList<ISelectionChangedListener> postSelectionListeners = new ListenerList<ISelectionChangedListener>();
 	private ISelectionProvider delegate;
 
 	private ISelectionChangedListener selectionListener = new ISelectionChangedListener() {
@@ -100,7 +100,7 @@ public class IntermediateSelectionProvider implements IPostSelectionProvider
 		fireSelectionChanged(postSelectionListeners, selection);
 	}
 
-	private void fireSelectionChanged(ListenerList list, ISelection selection)
+	private void fireSelectionChanged(ListenerList<ISelectionChangedListener> list, ISelection selection)
 	{
 		SelectionChangedEvent event = new SelectionChangedEvent(delegate, selection);
 		Object[] listeners = list.getListeners();

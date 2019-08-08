@@ -5,7 +5,7 @@ pylib_DATA = subagent.py
 
 pkglib_LTLIBRARIES = python.la
 python_la_SOURCES = bridge.cpp main.cpp plugin.cpp
-python_la_CPPFLAGS = -I@top_srcdir@/include @PYTHON_CPPFLAGS@
+python_la_CPPFLAGS = -I@top_srcdir@/include -I@top_srcdir@/build @PYTHON_CPPFLAGS@
 python_la_LDFLAGS = -module -avoid-version -export-symbols ../subagent.sym @PYTHON_LDFLAGS@
 python_la_LIBADD = @top_srcdir@/src/agent/libnxagent/libnxagent.la \
 	@top_srcdir@/src/libnxpython/libnxpython.la \
