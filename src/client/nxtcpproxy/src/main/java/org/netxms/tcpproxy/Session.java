@@ -53,7 +53,7 @@ public class Session
       {
          InputStream in = socket.getInputStream();
          byte[] buffer = new byte[32768];
-         while(socket.isConnected())
+         while(true)
          {
             int bytes = in.read(buffer);
             if (bytes <= 0)
@@ -98,7 +98,7 @@ public class Session
          InputStream in = proxy.getInputStream();
          OutputStream out = socket.getOutputStream();
          byte[] buffer = new byte[32768];
-         while(!proxy.isClosed())
+         while(true)
          {
             int bytes = in.read(buffer);
             if (bytes <= 0)
