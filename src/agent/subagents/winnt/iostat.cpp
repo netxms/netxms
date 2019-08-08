@@ -156,7 +156,7 @@ struct DiskPerfStats
  */
 static HashMap<UINT32, DiskPerfStats> s_diskPerfStats(true);
 static DiskPerfStats s_globalDiskPerfStats(0xFFFFFFFF);
-static CRITICAL_SECTION s_diskPerfStatsLock;
+static win_mutex_t s_diskPerfStatsLock;
 
 /**
  * Add devices for I/O stats collection
@@ -168,7 +168,7 @@ static void AddDevicesForIOStatCollection()
    if (count == 0)
       return;
 
-   EnterCriticalSection(&s_diskPerfStatsLock);
+   LockMutex(&s_diskPerfStatsLock, INFINITE);
    for (int i = 0; i < count; i++)
    {
       if (!s_diskPerfStats.contains(devices[i]))
@@ -178,7 +178,7 @@ static void AddDevicesForIOStatCollection()
          nxlog_debug_tag(DEBUG_TAG, 4, _T("Physical disk %u added to I/O stat collector"), ps->device);
       }
    }
-   LeaveCriticalSection(&s_diskPerfStatsLock);
+   UnlockMutex(&s_diskPerfStatsLock);
 }
 
 /**
@@ -202,7 +202,7 @@ static THREAD_RESULT THREAD_CALL IOStatColector(void *arg)
       DISK_PERFORMANCE rawDataTotal;
       memset(&rawDataTotal, 0, sizeof(rawDataTotal));
 
-      EnterCriticalSection(&s_diskPerfStatsLock);
+      LockMutex(&s_diskPerfStatsLock, INFINITE);
       Iterator<DiskPerfStats> *it = s_diskPerfStats.iterator();
       while (it->hasNext())
       {
@@ -235,7 +235,7 @@ static THREAD_RESULT THREAD_CALL IOStatColector(void *arg)
 
       s_globalDiskPerfStats.update(rawDataTotal);
 
-      LeaveCriticalSection(&s_diskPerfStatsLock);
+      UnlockMutex(&s_diskPerfStatsLock);
    }
 
    nxlog_debug_tag(DEBUG_TAG, 1, _T("I/O stat collector thread stopped"));
@@ -257,7 +257,7 @@ void StartIOStatCollector()
    s_perfCounterFrequency = frequency.QuadPart / 1000;   // Convert to ticks per millisecond
    nxlog_debug_tag(DEBUG_TAG, 4, _T("Performance counter frequency %llu Hz"), frequency.QuadPart);
 
-   InitializeCriticalSectionAndSpinCount(&s_diskPerfStatsLock, 1000);
+   InitializeMutex(&s_diskPerfStatsLock, 1000);
    s_ioStatCollectorThread = ThreadCreateEx(IOStatColector, 0, NULL);
 }
 
@@ -267,7 +267,7 @@ void StartIOStatCollector()
 void StopIOStatCollector()
 {
    ThreadJoin(s_ioStatCollectorThread);
-   DeleteCriticalSection(&s_diskPerfStatsLock);
+   DestroyMutex(&s_diskPerfStatsLock);
 }
 
 /**
@@ -334,7 +334,7 @@ LONG H_IoStats(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommS
    if (*eptr != 0)
       return SYSINFO_RC_UNSUPPORTED;
 
-   EnterCriticalSection(&s_diskPerfStatsLock);
+   LockMutex(&s_diskPerfStatsLock, INFINITE);
    DiskPerfStats *ps = s_diskPerfStats.get(device);
    LONG rc;
    if (ps != NULL)
@@ -345,7 +345,7 @@ LONG H_IoStats(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommS
    {
       rc = SYSINFO_RC_NO_SUCH_INSTANCE;
    }
-   LeaveCriticalSection(&s_diskPerfStatsLock);
+   UnlockMutex(&s_diskPerfStatsLock);
 
    return rc;
 }
@@ -363,7 +363,7 @@ LONG H_IoStatsTotal(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abstract
  */
 LONG H_IoDeviceList(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session)
 {
-   EnterCriticalSection(&s_diskPerfStatsLock);
+   LockMutex(&s_diskPerfStatsLock, INFINITE);
    Iterator<DiskPerfStats> *it = s_diskPerfStats.iterator();
    while (it->hasNext())
    {
@@ -371,6 +371,6 @@ LONG H_IoDeviceList(const TCHAR *cmd, const TCHAR *arg, StringList *value, Abstr
       value->add(ps->device);
    }
    delete it;
-   LeaveCriticalSection(&s_diskPerfStatsLock);
+   UnlockMutex(&s_diskPerfStatsLock);
    return SYSINFO_RC_SUCCESS;
 }

@@ -32,7 +32,7 @@ static UINT32 *s_user = NULL;
 static UINT32 *s_interrupt = NULL;
 static UINT32 *s_interruptCount = NULL;
 static int s_bpos = 0;
-static CRITICAL_SECTION s_lock;
+static win_mutex_t s_lock;
 
 /**
  * CPU collector thread
@@ -61,7 +61,7 @@ static THREAD_RESULT THREAD_CALL CPUStatCollector(void *arg)
       UINT64 sysUser = 0;
       UINT64 sysInterrupt = 0;
 
-      EnterCriticalSection(&s_lock);
+      LockMutex(&s_lock, INFINITE);
 
       s_interruptCount[s_cpuCount] = 0;
 
@@ -127,7 +127,7 @@ static THREAD_RESULT THREAD_CALL CPUStatCollector(void *arg)
       if (s_bpos >= (s_cpuCount + 1) * 900)
          s_bpos = 0;
 
-      LeaveCriticalSection(&s_lock);
+      UnlockMutex(&s_lock);
       
       // swap buffers
       if (curr == s_cpuTimes)
@@ -165,7 +165,7 @@ void StartCPUStatCollector()
    s_user = MemAllocArray<UINT32>(900 * (s_cpuCount + 1));
    s_interrupt = MemAllocArray<UINT32>(900 * (s_cpuCount + 1));
    s_interruptCount = MemAllocArray<UINT32>(s_cpuCount + 1);
-   InitializeCriticalSectionAndSpinCount(&s_lock, 1000);
+   InitializeMutex(&s_lock, 1000);
    s_collectorThread = ThreadCreateEx(CPUStatCollector, 0, NULL);
 }
 
@@ -180,7 +180,7 @@ void StopCPUStatCollector()
    MemFree(s_idle);
    MemFree(s_kernel);
    MemFree(s_user);
-   DeleteCriticalSection(&s_lock);
+   DestroyMutex(&s_lock);
 }
 
 /**
@@ -248,14 +248,14 @@ LONG H_CpuUsage(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractComm
          break;
    }
 
-   EnterCriticalSection(&s_lock);
+   LockMutex(&s_lock, INFINITE);
    for(int p = s_bpos - step, i = 0; i < count; i++, p -= step)
    {
       if (p < 0)
          p = s_cpuCount * 900 - step;
       usage += data[p + cpuIndex];
    }
-   LeaveCriticalSection(&s_lock);
+   UnlockMutex(&s_lock);
 
    usage /= count;
    _sntprintf(value, MAX_RESULT_LENGTH, _T("%d.%02d"), usage / 100, usage % 100);
@@ -298,9 +298,9 @@ LONG H_CpuInterrupts(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abstrac
          return SYSINFO_RC_UNSUPPORTED;
    }
 
-   EnterCriticalSection(&s_lock);
+   LockMutex(&s_lock, INFINITE);
    ret_uint(value, s_interruptCount[cpuIndex]);
-   LeaveCriticalSection(&s_lock);
+   UnlockMutex(&s_lock);
 
    return SYSINFO_RC_SUCCESS;
 }
