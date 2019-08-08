@@ -21,14 +21,13 @@ package org.netxms.client;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
 import java.util.Arrays;
 import java.util.Timer;
 import java.util.TimerTask;
-
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 
 /**
  * TCP proxy object
@@ -37,13 +36,14 @@ public class TcpProxy
 {
    private NXCSession session;
    private int channelId;
-   private PipedInputStream localInputStream;
-   private PipedOutputStream remoteOutputStream;
+   private ProxyInputStream localInputStream;
    private ProxyOutputStream localOutputStream;
    private int timeThreshold = 100;
    private byte[] sendBuffer = new byte[256];
    private int pendingBytes = 0;
    private Timer sendTimer = new Timer(true);
+   private ByteBuf recvBuffer = Unpooled.buffer(8192);
+   private Object recvMonitor = new Object();
 
    /**
     * TODO
@@ -57,9 +57,7 @@ public class TcpProxy
       this.session = session;
       this.channelId = channelId;
 
-      localInputStream = new PipedInputStream();
-      remoteOutputStream = new PipedOutputStream(localInputStream);
-
+      localInputStream = new ProxyInputStream();
       localOutputStream = new ProxyOutputStream();
    }
 
@@ -87,14 +85,12 @@ public class TcpProxy
       {
          localOutputStream.close();
          localInputStream.close();
-         remoteOutputStream.close();
       }
       catch(Exception e)
       {
       }
       localInputStream = null;
       localOutputStream = null;
-      remoteOutputStream = null;
    }
 
    /**
@@ -252,12 +248,10 @@ public class TcpProxy
     */
    protected void processRemoteData(byte data[])
    {
-      try
+      synchronized(recvMonitor)
       {
-         remoteOutputStream.write(data);
-      }
-      catch(IOException e)
-      {
+         recvBuffer.writeBytes(data);
+         recvMonitor.notify();
       }
    }
 
@@ -280,7 +274,7 @@ public class TcpProxy
     */
    private class ProxyOutputStream extends OutputStream
    {
-      /* (non-Javadoc)
+      /**
        * @see java.io.OutputStream#write(int)
        */
       @Override
@@ -291,7 +285,7 @@ public class TcpProxy
          write(data, 0, 1);
       }
 
-      /* (non-Javadoc)
+      /**
        * @see java.io.OutputStream#write(byte[], int, int)
        */
       @Override
@@ -312,6 +306,102 @@ public class TcpProxy
          {
             throw new IOException(e);
          }
+      }
+   }
+   
+   /**
+    * Proxy input stream
+    */
+   private class ProxyInputStream extends InputStream
+   {
+      private boolean closed = false;
+      
+      /**
+       * @see java.io.InputStream#close()
+       */
+      @Override
+      public void close() throws IOException
+      {
+         synchronized(recvMonitor)
+         {
+            closed = true;
+            recvMonitor.notify();
+         }
+      }
+
+      /**
+       * @see java.io.InputStream#available()
+       */
+      @Override
+      public int available() throws IOException
+      {
+         synchronized(recvMonitor)
+         {
+            return recvBuffer.readableBytes();
+         }
+      }
+
+      /**
+       * @see java.io.InputStream#read()
+       */
+      @Override
+      public int read() throws IOException
+      {
+         synchronized(recvMonitor)
+         {
+            while(recvBuffer.readableBytes() == 0)
+            {
+               if (closed)
+                  return -1;
+               try
+               {
+                  recvMonitor.wait();
+               }
+               catch(InterruptedException e)
+               {
+               }
+            }
+            return recvBuffer.readUnsignedByte();
+         }
+      }
+
+      /**
+       * @see java.io.InputStream#read(byte[], int, int)
+       */
+      @Override
+      public int read(byte[] b, int off, int len) throws IOException
+      {
+         if (len == 0)
+            return 0;
+
+         synchronized(recvMonitor)
+         {
+            while(recvBuffer.readableBytes() == 0)
+            {
+               if (closed)
+                  return -1;
+               try
+               {
+                  recvMonitor.wait();
+               }
+               catch(InterruptedException e)
+               {
+               }
+            }
+            
+            int bytes = Math.min(len, recvBuffer.readableBytes());
+            recvBuffer.readBytes(b, off, bytes);
+            return bytes;
+         }
+      }
+
+      /**
+       * @see java.io.InputStream#read(byte[])
+       */
+      @Override
+      public int read(byte[] b) throws IOException
+      {
+         return read(b, 0, b.length);
       }
    }
 }

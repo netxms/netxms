@@ -10499,12 +10499,12 @@ public class NXCSession
       msg.setFieldInt16(NXCPCodes.VID_PORT, port);
       sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());
-      TcpProxy proxy = new TcpProxy(this, response.getFieldAsInt32(NXCPCodes.VID_CHANNEL_ID));
       synchronized(tcpProxies)
       {
+         TcpProxy proxy = new TcpProxy(this, response.getFieldAsInt32(NXCPCodes.VID_CHANNEL_ID));
          tcpProxies.put(proxy.getChannelId(), proxy);
+         return proxy;
       }
-      return proxy;
    }
 
    /**
