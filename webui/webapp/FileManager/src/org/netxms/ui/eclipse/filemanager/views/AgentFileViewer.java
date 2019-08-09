@@ -34,6 +34,7 @@ import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IActionBars;
+import org.eclipse.ui.IViewReference;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
@@ -342,13 +343,26 @@ public class AgentFileViewer extends ViewPart
          }
          return false;
       }
-	   AgentFileViewer view = (AgentFileViewer)window.getActivePage().showView(AgentFileViewer.ID, secondaryId, IWorkbenchPage.VIEW_ACTIVATE);
-	   view.viewer.setLineStyler(lineStyler);
-	   view.followChanges = followChanges;
-	   view.viewer.showFile(file.getFile());
-	   if (followChanges)
+	   IViewReference vi = window.getActivePage().findViewReference(AgentFileViewer.ID, secondaryId);
+	   if(vi != null)
 	   {
-	      view.viewer.startTracking(nodeId, file.getId(), file.getRemoteName());
+	      AgentFileViewer view = (AgentFileViewer)vi.getView(true);
+         if (view != null)
+         {
+            window.getActivePage().activate(view);
+         }
+	   }
+	   else
+	   {
+	      AgentFileViewer view = (AgentFileViewer)window.getActivePage().showView(AgentFileViewer.ID, secondaryId, IWorkbenchPage.VIEW_ACTIVATE);
+   	   view.viewer.setLineStyler(lineStyler);
+   	   view.followChanges = followChanges;
+   	   view.viewer.showFile(file.getFile());
+   	   if (followChanges)
+   	   {
+   	      view.viewer.startTracking(nodeId, file.getId(), file.getRemoteName());
+   	   }
+   	   view.updatePartName(file.getRemoteName()); //$NON-NLS-1$
 	   }
 	   return true;
 	}

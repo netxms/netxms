@@ -92,6 +92,8 @@ bool FileMonitoringList::removeMonitoringFile(MONITORED_FILE *fileForRemove)
    for(int i = 0; i < m_monitoredFiles.size(); i++)
    {
       MONITORED_FILE* m_monitoredFile = m_monitoredFiles.get(i);
+      if (m_monitoredFile->nodeID == fileForRemove->nodeID)
+         nodeConnectionCount++;
       if(_tcscmp(m_monitoredFile->fileName, fileForRemove->fileName) == 0 &&
          m_monitoredFile->nodeID == fileForRemove->nodeID &&
          m_monitoredFile->session == fileForRemove->session)
@@ -101,8 +103,6 @@ bool FileMonitoringList::removeMonitoringFile(MONITORED_FILE *fileForRemove)
          deleted = true;
          i--;
       }
-      if (m_monitoredFile->nodeID == fileForRemove->nodeID)
-         nodeConnectionCount++;
    }
 
    if (deleted && nodeConnectionCount == 1)
