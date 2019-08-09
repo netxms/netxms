@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2018 Victor Kirhenshtein
+ * Copyright (C) 2003-2019 Victor Kirhenshtein
  * <p>
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,8 +26,6 @@ import java.util.Timer;
 import java.util.TimerTask;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 
 /**
  * TCP proxy object
@@ -42,8 +40,6 @@ public class TcpProxy
    private byte[] sendBuffer = new byte[256];
    private int pendingBytes = 0;
    private Timer sendTimer = new Timer(true);
-   private ByteBuf recvBuffer = Unpooled.buffer(8192);
-   private Object recvMonitor = new Object();
 
    /**
     * TODO
@@ -248,11 +244,7 @@ public class TcpProxy
     */
    protected void processRemoteData(byte data[])
    {
-      synchronized(recvMonitor)
-      {
-         recvBuffer.writeBytes(data);
-         recvMonitor.notify();
-      }
+      localInputStream.write(data);
    }
 
    /**
@@ -315,6 +307,40 @@ public class TcpProxy
    private class ProxyInputStream extends InputStream
    {
       private boolean closed = false;
+      private byte[] buffer = new byte[65536];
+      private int readPos = 0;
+      private int writePos = 0;
+      private Object monitor = new Object();
+      
+      /**
+       * Write bytes to stream internal buffer
+       * 
+       * @param data data to write
+       */
+      public void write(byte[] data)
+      {
+         synchronized(monitor)
+         {
+            if (buffer.length - writePos < data.length)
+            {
+               if (buffer.length - writePos + readPos >= data.length)
+               {
+                  // Buffer can be shifted to make place for new data
+                  System.arraycopy(buffer, readPos, buffer, 0, writePos - readPos);
+               }
+               else
+               {
+                  byte[] newBuffer = new byte[Math.max(buffer.length * 2, data.length + buffer.length)];
+                  System.arraycopy(buffer, readPos, newBuffer, 0, writePos - readPos);
+                  buffer = newBuffer;
+               }
+               writePos -= readPos; 
+               readPos = 0;
+            }
+            System.arraycopy(data, 0, buffer, writePos, data.length);
+            writePos += data.length;
+         }
+      }
       
       /**
        * @see java.io.InputStream#close()
@@ -322,10 +348,10 @@ public class TcpProxy
       @Override
       public void close() throws IOException
       {
-         synchronized(recvMonitor)
+         synchronized(monitor)
          {
             closed = true;
-            recvMonitor.notify();
+            monitor.notify();
          }
       }
 
@@ -335,9 +361,9 @@ public class TcpProxy
       @Override
       public int available() throws IOException
       {
-         synchronized(recvMonitor)
+         synchronized(monitor)
          {
-            return recvBuffer.readableBytes();
+            return writePos - readPos;
          }
       }
 
@@ -347,21 +373,27 @@ public class TcpProxy
       @Override
       public int read() throws IOException
       {
-         synchronized(recvMonitor)
+         synchronized(monitor)
          {
-            while(recvBuffer.readableBytes() == 0)
+            while(readPos == writePos)
             {
                if (closed)
                   return -1;
                try
                {
-                  recvMonitor.wait();
+                  monitor.wait();
                }
                catch(InterruptedException e)
                {
                }
             }
-            return recvBuffer.readUnsignedByte();
+            int b = buffer[readPos++];
+            if (readPos == writePos)
+            {
+               readPos = 0;
+               writePos = 0;
+            }
+            return b < 0 ? 129 + b : b;
          }
       }
 
@@ -374,23 +406,29 @@ public class TcpProxy
          if (len == 0)
             return 0;
 
-         synchronized(recvMonitor)
+         synchronized(monitor)
          {
-            while(recvBuffer.readableBytes() == 0)
+            while(readPos == writePos)
             {
                if (closed)
                   return -1;
                try
                {
-                  recvMonitor.wait();
+                  monitor.wait();
                }
                catch(InterruptedException e)
                {
                }
             }
             
-            int bytes = Math.min(len, recvBuffer.readableBytes());
-            recvBuffer.readBytes(b, off, bytes);
+            int bytes = Math.min(len, writePos - readPos);
+            System.arraycopy(buffer, readPos, b, off, bytes);
+            readPos += bytes;
+            if (readPos == writePos)
+            {
+               readPos = 0;
+               writePos = 0;
+            }
             return bytes;
          }
       }
