@@ -194,11 +194,11 @@ bool GenericAgentPolicy::createDeploymentMessage(NXCPMessage *msg, bool supportN
    {
       if(!_tcscmp(m_policyType, _T("AgentConfig")))
       {
-         msg->setField(VID_POLICY_TYPE, AGENT_POLICY_CONFIG);
+         msg->setField(VID_POLICY_TYPE, static_cast<UINT16>(AGENT_POLICY_CONFIG));
       }
       else if(!_tcscmp(m_policyType, _T("LogParserConfig")))
       {
-         msg->setField(VID_POLICY_TYPE, AGENT_POLICY_LOG_PARSER);
+         msg->setField(VID_POLICY_TYPE, static_cast<UINT16>(AGENT_POLICY_LOG_PARSER));
       }
    }
    msg->setField(VID_GUID, m_guid);

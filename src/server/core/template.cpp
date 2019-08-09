@@ -627,7 +627,10 @@ void Template::applyPolicyChanges()
          {
             UINT32 rcc = conn->getPolicyInventory(&ap);
             if(rcc == RCC_SUCCESS)
+            {
                checkPolicyBind((Node *)object, ap, NULL, NULL);
+               delete ap;
+            }
          }
       }
    }
@@ -646,16 +649,22 @@ void Template::forceApplyPolicyChanges()
       if(object->getObjectClass() == OBJECT_NODE)
       {
          Node * node = (Node *)object;
-         ServerJob *job = new PolicyInstallJob(node, m_id, object->getGuid(), object->getName(), 0);
-         if (AddJob(job))
+         Iterator<GenericAgentPolicy> *it = m_policyList->iterator();
+         while(it->hasNext())
          {
-            DbgPrintf(5, _T("Template::forceApplyPolicyChanges(%s): \"%s\" policy deploy scheduled for \"%s\" node"), node->getName(), m_name, node->getName());
+            GenericAgentPolicy *policy = it->next();
+            ServerJob *job = new PolicyInstallJob(node, m_id, policy->getGuid(), policy->getName(), 0);
+            if (AddJob(job))
+            {
+               DbgPrintf(5, _T("Template::forceApplyPolicyChanges(%s): \"%s\" policy deploy scheduled for \"%s\" node"), node->getName(), m_name, node->getName());
+            }
+            else
+            {
+               delete job;
+               DbgPrintf(5, _T("Template::forceApplyPolicyChanges(%s): \"%s\" policy deploy is not possible to scheduled for \"%s\" node"), node->getName(), m_name, node->getName());
+            }
          }
-         else
-         {
-            delete job;
-            DbgPrintf(5, _T("Template::forceApplyPolicyChanges(%s): \"%s\" policy deploy is not possible to scheduled for \"%s\" node"), node->getName(), m_name, node->getName());
-         }
+         delete it;
       }
    }
    unlockChildList();
@@ -675,8 +684,12 @@ void Template::applyPolicyChanges(DataCollectionTarget *object)
       {
          UINT32 rcc = conn->getPolicyInventory(&ap);
          if(rcc == RCC_SUCCESS)
+         {
             checkPolicyBind((Node *)object, ap, NULL, NULL);
+            delete ap;
+         }
       }
+      conn->decRefCount();
    }
    unlockChildList();
 }

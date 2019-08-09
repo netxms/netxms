@@ -1338,7 +1338,7 @@ void ClientSession::processRequest(NXCPMessage *request)
          onPolicyEditorClose(request);
          break;
       case CMD_POLICY_FORCE_APPLY:
-         forcApplyPolicy(request);
+         forceApplyPolicy(request);
          break;
       case CMD_GET_MATCHING_DCI:
          getMatchingDCI(request);
@@ -14584,38 +14584,28 @@ static void ForceApplyPolicyChanges(void *arg)
 /**
  * Force apply
  */
-void ClientSession::forcApplyPolicy(NXCPMessage *pRequest)
+void ClientSession::forceApplyPolicy(NXCPMessage *pRequest)
 {
    NXCPMessage msg;
-   NetObj *pSource, *pDestination;
+   NetObj *templateObject;
 
    // Prepare response message
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(pRequest->getId());
 
    // Get source and destination
-   pSource = FindObjectById(pRequest->getFieldAsUInt32(VID_SOURCE_OBJECT_ID));
-   pDestination = FindObjectById(pRequest->getFieldAsUInt32(VID_DESTINATION_OBJECT_ID));
-   if ((pSource != NULL) && (pDestination != NULL))
+   templateObject = FindObjectById(pRequest->getFieldAsUInt32(VID_TEMPLATE_ID), OBJECT_TEMPLATE);
+   if ((templateObject != NULL))
    {
-      // Check object types
-      if ((pSource->getObjectClass() == OBJECT_TEMPLATE) && pDestination->getObjectClass() == OBJECT_NODE)
+      // Check access rights
+      if (templateObject->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
       {
-         // Check access rights
-         if ((pSource->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ)) &&
-             (pDestination->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY)))
-         {
-            ThreadPoolExecute(g_clientThreadPool, ForceApplyPolicyChanges, ((Template *)pSource));
-            msg.setField(VID_RCC, RCC_SUCCESS);
-         }
-         else  // User doesn't have enough rights on object(s)
-         {
-            msg.setField(VID_RCC, RCC_ACCESS_DENIED);
-         }
+         ThreadPoolExecute(g_clientThreadPool, ForceApplyPolicyChanges, ((Template *)templateObject));
+         msg.setField(VID_RCC, RCC_SUCCESS);
       }
-      else     // Object(s) is not a node
+      else  // User doesn't have enough rights on object(s)
       {
-         msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+         msg.setField(VID_RCC, RCC_ACCESS_DENIED);
       }
    }
    else  // No object(s) with given ID

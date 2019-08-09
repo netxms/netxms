@@ -779,7 +779,7 @@ private:
    void deletePolicy(NXCPMessage *request);
    void getPolicyList(NXCPMessage *request);
    void onPolicyEditorClose(NXCPMessage *request);
-   void forcApplyPolicy(NXCPMessage *pRequest);
+   void forceApplyPolicy(NXCPMessage *pRequest);
    void getMatchingDCI(NXCPMessage *request);
    void getUserAgentNotification(NXCPMessage *request);
    void addUserAgentNotification(NXCPMessage *request);
