@@ -48,14 +48,16 @@ public class NXCLQueryExecutor implements JRQueryExecuter {
 //        return "test value";
 //    }
 
-    @Override
+    @SuppressWarnings("unchecked")
+   @Override
     public JRDataSource createDatasource() throws JRException {
         String reportLocation = ThreadLocalReportInfo.getReportLocation();
 
         try {
             URL[] urls = {new URL("file:" + reportLocation)};
+            @SuppressWarnings("resource")
             ReportClassLoader classLoader = new ReportClassLoader(urls, getClass().getClassLoader());
-            Class<NXCLDataSource> aClass = (Class<NXCLDataSource>) classLoader.loadClass("report.DataSource");
+            Class<NXCLDataSource> aClass = (Class<NXCLDataSource>)classLoader.loadClass("report.DataSource");
             Constructor<NXCLDataSource> constructor = aClass.getConstructor(JRDataset.class, Map.class);
             NXCLDataSource dataSource = constructor.newInstance(dataset, parametersMap);
             JRQueryChunk chunk = dataset.getQuery().getChunks()[0];
