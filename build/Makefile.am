@@ -8,6 +8,8 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
+include_HEADERS = netxms-build-tag.h
+
 BUILT_SOURCES = netxms-build-tag.iss netxms-build-tag.h netxms-build-tag.properties
 
 EXTRA_DIST = \
