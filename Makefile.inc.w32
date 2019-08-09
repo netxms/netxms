@@ -195,8 +195,15 @@ MVNCMD=install
 MVNCMD=package
 !endif
 
+!ifdef EXTERNAL_RESOURCES
+RESCMD=@copy $(EXTERNAL_RESOURCES) .\src\main\resources\
+!else
+RESCMD=@echo skip resource copy
+!endif
+
 $(BINFILE): pom.xml
 	mvn clean
+	$(RESCMD)
 	mvn $(MVNCMD) $(MVNFLAGS)
 	mv target/$(TARGET) $(BINFILE)
 
