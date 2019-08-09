@@ -411,7 +411,7 @@ static THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
          nxlog_debug_tag(DEBUG_TAG, 2, _T("Collected DCI data cleanup disabled"));
       }
 
-		//Delete old user agent messages
+		// Delete old user agent messages
 	   dwRetentionTime = ConfigReadULong(_T("UserAgent.RetentionTime"), 30);
 	   if (dwRetentionTime > 0)
 	   {
@@ -421,6 +421,16 @@ static THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
          if (!ThrottleHousekeeper())
             break;
 	   }
+
+	   // Save object runtime data
+	   ObjectArray<NetObj> *objects = g_idxObjectById.getObjects(true);
+	   for(int i = 0; i < objects->size(); i++)
+	   {
+	      NetObj *o = objects->get(i);
+	      o->saveRuntimeData(hdb);
+	      o->decRefCount();
+	   }
+	   delete objects;
 
 		DBConnectionPoolReleaseConnection(hdb);
 

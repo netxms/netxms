@@ -121,7 +121,7 @@ UINT32 LIBNETXMS_EXPORTABLE IcmpPing(const InetAddress &addr, int numRetries, UI
 					rc = ICMP_API_ERROR;
 					break;
 				default:
-					rc = ICMP_UNREACHEABLE;
+					rc = ICMP_UNREACHABLE;
 					break;
 			}
 		}
@@ -244,7 +244,7 @@ static UINT32 WaitForReply(int sock, UINT32 addr, UINT16 id, UINT16 sequence, UI
 				{
 					if (((IPHDR *)reply.m_data)->m_iaDst.s_addr == addr)
 					{
-						result = ICMP_UNREACHEABLE;
+						result = ICMP_UNREACHABLE;
 						break;
 					}
 				}

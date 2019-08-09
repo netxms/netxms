@@ -27,6 +27,7 @@
 #define DEBUG_TAG_CONF_POLL   _T("poll.conf")
 #define DEBUG_TAG_AGENT       _T("node.agent")
 #define DEBUG_TAG_STATUS_POLL _T("poll.status")
+#define DEBUG_TAG_ICMP_POLL   _T("poll.icmp")
 
 /**
  * Performance counters
@@ -92,6 +93,7 @@ Node::Node() : super()
    m_lastInstancePoll = 0;
    m_lastTopologyPoll = 0;
    m_lastRTUpdate = 0;
+   m_lastIcmpPoll = 0;
    m_downSince = 0;
    m_bootTime = 0;
    m_agentUpTime = 0;
@@ -170,6 +172,8 @@ Node::Node() : super()
    m_rackOrientation = FILL;
    m_topologyPollTimer = new ManualGauge64(_T("topology"), 1, 1000);
    m_routingTablePollTimer = new ManualGauge64(_T("routingTable"), 1, 1000);
+   m_icmpStatCollectionMode = IcmpStatCollectionMode::DEFAULT;
+   m_icmpStatCollectors = NULL;
 }
 
 /**
@@ -177,7 +181,7 @@ Node::Node() : super()
  */
 Node::Node(const NewNodeData *newNodeData, UINT32 flags)  : super()
 {
-   m_runtimeFlags |= DCDF_CONFIGURATION_POLL_PENDING;
+   m_runtimeFlags |= ODF_CONFIGURATION_POLL_PENDING;
    newNodeData->ipAddr.toString(m_primaryName);
    m_status = STATUS_UNKNOWN;
    m_type = NODE_TYPE_UNKNOWN;
@@ -210,6 +214,7 @@ Node::Node(const NewNodeData *newNodeData, UINT32 flags)  : super()
    m_lastInstancePoll = 0;
    m_lastTopologyPoll = 0;
    m_lastRTUpdate = 0;
+   m_lastIcmpPoll = 0;
    m_downSince = 0;
    m_bootTime = 0;
    m_agentUpTime = 0;
@@ -290,6 +295,8 @@ Node::Node(const NewNodeData *newNodeData, UINT32 flags)  : super()
    m_agentId = newNodeData->agentId;
    m_topologyPollTimer = new ManualGauge64(_T("topology"), 1, 1000);
    m_routingTablePollTimer = new ManualGauge64(_T("routingTable"), 1, 1000);
+   m_icmpStatCollectionMode = IcmpStatCollectionMode::DEFAULT;
+   m_icmpStatCollectors = NULL;
 }
 
 /**
@@ -342,6 +349,7 @@ Node::~Node()
    MemFree(m_hypervisorInfo);
    delete m_topologyPollTimer;
    delete m_routingTablePollTimer;
+   delete m_icmpStatCollectors;
 }
 
 /**
@@ -378,7 +386,7 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
       _T("port_rows,port_numbering_scheme,agent_comp_mode,")
       _T("tunnel_id,lldp_id,capabilities,fail_time_snmp,fail_time_agent,")
       _T("rack_orientation,rack_image_rear,agent_id,agent_cert_subject,")
-      _T("hypervisor_type,hypervisor_info")
+      _T("hypervisor_type,hypervisor_info,icmp_poll_mode")
       _T(" FROM nodes WHERE id=?"));
    if (hStmt == NULL)
       return false;
@@ -495,6 +503,19 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
       MemFreeAndNull(m_agentCertSubject);
    DBGetField(hResult, 0, 55, m_hypervisorType, MAX_HYPERVISOR_TYPE_LENGTH);
    m_hypervisorInfo = DBGetField(hResult, 0, 56, NULL, 0);
+
+   switch(DBGetFieldLong(hResult, 0, 57))
+   {
+      case 1:
+         m_icmpStatCollectionMode = IcmpStatCollectionMode::ON;
+         break;
+      case 2:
+         m_icmpStatCollectionMode = IcmpStatCollectionMode::OFF;
+         break;
+      default:
+         m_icmpStatCollectionMode = IcmpStatCollectionMode::DEFAULT;
+         break;
+   }
 
    DBFreeResult(hResult);
    DBFreeStatement(hStmt);
@@ -693,7 +714,76 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
       }
 
       if (!bResult)
-         DbgPrintf(3, _T("Cannot load hardware information of node %d (%s)"), m_id, m_name);
+         nxlog_debug(3, _T("Cannot load hardware information of node %d (%s)"), m_id, m_name);
+   }
+
+   if (bResult && isIcmpStatCollectionEnabled())
+   {
+      m_icmpStatCollectors = new StringObjectMap<IcmpStatCollector>(true);
+      hStmt = DBPrepare(hdb, _T("SELECT poll_target FROM icmp_statistics WHERE object_id=?"));
+      if (hStmt != NULL)
+      {
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+         hResult = DBSelectPrepared(hStmt);
+         if (hResult != NULL)
+         {
+            int period = ConfigReadInt(_T("ICMP.StatisticPeriod"), 60);
+            int count = DBGetNumRows(hResult);
+            for(int i = 0; i < count; i++)
+            {
+               TCHAR target[128];
+               DBGetField(hResult, i, 0, target, 128);
+               IcmpStatCollector *c = IcmpStatCollector::loadFromDatabase(hdb, m_id, target, period);
+               if (c != NULL)
+                  m_icmpStatCollectors->set(target, c);
+               else
+                  nxlog_debug(3, _T("Cannot load ICMP statistic collector %s for node %s [%u]"), target, m_name, m_id);
+            }
+            DBFreeResult(hResult);
+
+            // Check that primary target exist
+            if (!m_icmpStatCollectors->contains(_T("PRI")))
+               m_icmpStatCollectors->set(_T("PRI"), new IcmpStatCollector(period));
+         }
+         else
+         {
+            bResult = false;
+         }
+         DBFreeStatement(hStmt);
+      }
+      else
+      {
+         bResult = false;
+      }
+   }
+
+   if (bResult)
+   {
+      hStmt = DBPrepare(hdb, _T("SELECT ip_addr FROM icmp_target_address_list WHERE node_id=?"));
+      if (hStmt != NULL)
+      {
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+         hResult = DBSelectPrepared(hStmt);
+         if (hResult != NULL)
+         {
+            int count = DBGetNumRows(hResult);
+            for(int i = 0; i < count; i++)
+            {
+               InetAddress addr = DBGetFieldInetAddr(hResult, i, 0);
+               if (addr.isValidUnicast() && !m_icmpTargets.hasAddress(addr))
+                  m_icmpTargets.add(addr);
+            }
+            DBFreeResult(hResult);
+         }
+         else
+         {
+            bResult = false;
+         }
+      }
+      else
+      {
+         bResult = false;
+      }
    }
 
    return bResult;
@@ -726,6 +816,14 @@ static bool SaveComponent(DB_STATEMENT hStmt, const Component *component)
 }
 
 /**
+ * Save ICMP statistics collector
+ */
+static EnumerationCallbackResult SaveIcmpStatCollector(const TCHAR *target, const IcmpStatCollector *collector, std::pair<UINT32, DB_HANDLE> *context)
+{
+   return collector->saveToDatabase(context->second, context->first, target) ? _CONTINUE : _STOP;
+}
+
+/**
  * Save object to database
  */
 bool Node::saveToDatabase(DB_HANDLE hdb)
@@ -748,7 +846,7 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
          _T("snmp_trap_count"), _T("node_type"), _T("node_subtype"), _T("ssh_login"), _T("ssh_password"), _T("ssh_proxy"),
          _T("chassis_id"), _T("port_rows"), _T("port_numbering_scheme"), _T("agent_comp_mode"), _T("tunnel_id"), _T("lldp_id"),
          _T("fail_time_snmp"), _T("fail_time_agent"), _T("rack_orientation"), _T("rack_image_rear"), _T("agent_id"),
-         _T("agent_cert_subject"), _T("hypervisor_type"), _T("hypervisor_info"),
+         _T("agent_cert_subject"), _T("hypervisor_type"), _T("hypervisor_info"), _T("icmp_poll_mode"),
          NULL
       };
 
@@ -757,6 +855,20 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
       {
          int snmpMethods = m_snmpSecurity->getAuthMethod() | (m_snmpSecurity->getPrivMethod() << 8);
          TCHAR ipAddr[64], baseAddress[16], cacheMode[16], compressionMode[16];
+
+         const TCHAR *icmpPollMode;
+         switch(m_icmpStatCollectionMode)
+         {
+            case IcmpStatCollectionMode::ON:
+               icmpPollMode = _T("1");
+               break;
+            case IcmpStatCollectionMode::OFF:
+               icmpPollMode = _T("2");
+               break;
+            default:
+               icmpPollMode = _T("0");
+               break;
+         }
 
          DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_ipAddress.toString(ipAddr), DB_BIND_STATIC);
          DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_primaryName, DB_BIND_STATIC);
@@ -825,7 +937,8 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
          DBBind(hStmt, 56, DB_SQLTYPE_VARCHAR, m_agentCertSubject, DB_BIND_STATIC);
          DBBind(hStmt, 57, DB_SQLTYPE_VARCHAR, m_hypervisorType, DB_BIND_STATIC);
          DBBind(hStmt, 58, DB_SQLTYPE_VARCHAR, m_hypervisorInfo, DB_BIND_STATIC);
-         DBBind(hStmt, 59, DB_SQLTYPE_INTEGER, m_id);
+         DBBind(hStmt, 59, DB_SQLTYPE_VARCHAR, icmpPollMode, DB_BIND_STATIC);
+         DBBind(hStmt, 60, DB_SQLTYPE_INTEGER, m_id);
 
          success = DBExecute(hStmt);
          DBFreeStatement(hStmt);
@@ -888,7 +1001,7 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
    if (success && (m_modified & MODIFY_HARDWARE_INVENTORY))
    {
       success = executeQueryOnObject(hdb, _T("DELETE FROM hardware_inventory WHERE node_id=?"));
-      if ((m_hardwareComponents != NULL) && !m_hardwareComponents->isEmpty())
+      if (success && (m_hardwareComponents != NULL) && !m_hardwareComponents->isEmpty())
       {
          DB_STATEMENT hStmt = DBPrepare(hdb,
                   _T("INSERT INTO hardware_inventory (node_id,category,component_index,hw_type,vendor,model,location,capacity,part_number,serial_number,description) VALUES (?,?,?,?,?,?,?,?,?,?,?)"),
@@ -914,6 +1027,43 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
       unlockDciAccess();
    }
 
+   // Save ICMP pollers
+   if (success && (m_modified & MODIFY_ICMP_POLL_SETTINGS))
+   {
+      lockProperties();
+
+      success = executeQueryOnObject(hdb, _T("DELETE FROM icmp_statistics WHERE object_id=?"));
+      if (success && isIcmpStatCollectionEnabled() && (m_icmpStatCollectors != NULL) && !m_icmpStatCollectors->isEmpty())
+      {
+         std::pair<UINT32, DB_HANDLE> context(m_id, hdb);
+         success = (m_icmpStatCollectors->forEach(SaveIcmpStatCollector, &context) == _CONTINUE);
+      }
+
+      if (success)
+         success = executeQueryOnObject(hdb, _T("DELETE FROM icmp_target_address_list WHERE node_id=?"));
+
+      if (success && !m_icmpTargets.isEmpty())
+      {
+         DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO icmp_target_address_list (node_id,ip_addr) VALUES (?,?)"), m_icmpTargets.size() > 1);
+         if (hStmt != NULL)
+         {
+            DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+            for(int i = 0; success && i < m_icmpTargets.size(); i++)
+            {
+               DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_icmpTargets.get(i));
+               success = DBExecute(hStmt);
+            }
+            DBFreeStatement(hStmt);
+         }
+         else
+         {
+            success = false;
+         }
+      }
+
+      unlockProperties();
+   }
+
    return success;
 }
 
@@ -926,6 +1076,18 @@ bool Node::saveRuntimeData(DB_HANDLE hdb)
 {
    if (!super::saveRuntimeData(hdb))
       return false;
+
+   lockProperties();
+   if (isIcmpStatCollectionEnabled() && (m_icmpStatCollectors != NULL) && !m_icmpStatCollectors->isEmpty())
+   {
+      std::pair<UINT32, DB_HANDLE> context(m_id, hdb);
+      if (m_icmpStatCollectors->forEach(SaveIcmpStatCollector, &context) == _STOP)
+      {
+         unlockProperties();
+         return false;
+      }
+   }
+   unlockProperties();
 
    if ((m_lastAgentCommTime == NEVER) && (m_syslogMessageCount == 0) && (m_snmpTrapCount == 0))
       return true;
@@ -956,6 +1118,10 @@ bool Node::deleteFromDatabase(DB_HANDLE hdb)
       success = executeQueryOnObject(hdb, _T("DELETE FROM nodes WHERE id=?"));
    if (success)
       success = executeQueryOnObject(hdb, _T("DELETE FROM nsmap WHERE node_id=?"));
+   if (success)
+      success = executeQueryOnObject(hdb, _T("DELETE FROM icmp_statistics WHERE object_id=?"));
+   if (success)
+      success = executeQueryOnObject(hdb, _T("DELETE FROM icmp_target_address_list WHERE node_id=?"));
    return success;
 }
 
@@ -1656,12 +1822,12 @@ void Node::statusPoll(PollerInfo *poller, ClientSession *pSession, UINT32 rqId)
    if (m_isDeleteInitiated || IsShutdownInProgress())
    {
       if (rqId == 0)
-         m_runtimeFlags &= ~DCDF_QUEUED_FOR_STATUS_POLL;
+         m_runtimeFlags &= ~ODF_QUEUED_FOR_STATUS_POLL;
       unlockProperties();
       return;
    }
    // Poller can be called directly - in that case poll flag will not be set
-   m_runtimeFlags |= DCDF_QUEUED_FOR_STATUS_POLL;
+   m_runtimeFlags |= ODF_QUEUED_FOR_STATUS_POLL;
    unlockProperties();
 
    UINT32 oldCapabilities = m_capabilities;
@@ -1671,7 +1837,7 @@ void Node::statusPoll(PollerInfo *poller, ClientSession *pSession, UINT32 rqId)
    poller->setStatus(_T("wait for lock"));
    pollerLock(status);
 
-   POLL_CANCELLATION_CHECKPOINT_EX(DCDF_QUEUED_FOR_STATUS_POLL, delete eventQueue);
+   POLL_CANCELLATION_CHECKPOINT_EX(ODF_QUEUED_FOR_STATUS_POLL, delete eventQueue);
 
    poller->setStatus(_T("preparing"));
    m_pollRequestor = pSession;
@@ -1800,7 +1966,7 @@ restart_agent_check:
       nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): SNMP check finished"), m_name);
    }
 
-   POLL_CANCELLATION_CHECKPOINT_EX(DCDF_QUEUED_FOR_STATUS_POLL, delete eventQueue);
+   POLL_CANCELLATION_CHECKPOINT_EX(ODF_QUEUED_FOR_STATUS_POLL, delete eventQueue);
 
    // Check native agent connectivity
    if ((m_capabilities & NC_IS_NATIVE_AGENT) && (!(m_flags & NF_DISABLE_NXCP)))
@@ -1888,7 +2054,7 @@ restart_agent_check:
 
    poller->setStatus(_T("prepare polling list"));
 
-   POLL_CANCELLATION_CHECKPOINT_EX(DCDF_QUEUED_FOR_STATUS_POLL, delete eventQueue);
+   POLL_CANCELLATION_CHECKPOINT_EX(ODF_QUEUED_FOR_STATUS_POLL, delete eventQueue);
 
    // Find service poller node object
    Node *pollerNode = NULL;
@@ -1958,7 +2124,7 @@ restart_agent_check:
       }
       curr->decRefCount();
 
-      POLL_CANCELLATION_CHECKPOINT_EX(DCDF_QUEUED_FOR_STATUS_POLL, { for(i++; i < pollList.size(); i++) pollList.get(i)->decRefCount(); delete eventQueue; delete snmp; });
+      POLL_CANCELLATION_CHECKPOINT_EX(ODF_QUEUED_FOR_STATUS_POLL, { for(i++; i < pollList.size(); i++) pollList.get(i)->decRefCount(); delete eventQueue; delete snmp; });
    }
    delete snmp;
    if (pollerNode != NULL)
@@ -2075,7 +2241,7 @@ restart_agent_check:
       }
    }
 
-   POLL_CANCELLATION_CHECKPOINT_EX(DCDF_QUEUED_FOR_STATUS_POLL, delete eventQueue);
+   POLL_CANCELLATION_CHECKPOINT_EX(ODF_QUEUED_FOR_STATUS_POLL, delete eventQueue);
 
    // Get uptime and update boot time
    if (!(m_state & DCSF_UNREACHABLE))
@@ -2203,7 +2369,7 @@ restart_agent_check:
       delete eventQueue;
    }
 
-   POLL_CANCELLATION_CHECKPOINT(DCDF_QUEUED_FOR_STATUS_POLL);
+   POLL_CANCELLATION_CHECKPOINT(ODF_QUEUED_FOR_STATUS_POLL);
 
    // Call hooks in loaded modules
    for(UINT32 i = 0; i < g_dwNumModules; i++)
@@ -2245,7 +2411,7 @@ restart_agent_check:
    sendPollerMsg(rqId, _T("Node status after poll is %s\r\n"), GetStatusAsText(m_status, true));
    m_pollRequestor = NULL;
    if (rqId == 0)
-      m_runtimeFlags &= ~DCDF_QUEUED_FOR_STATUS_POLL;
+      m_runtimeFlags &= ~ODF_QUEUED_FOR_STATUS_POLL;
    pollerUnlock();
    DbgPrintf(5, _T("Finished status poll for node %s (ID: %d)"), m_name, m_id);
 
@@ -2889,12 +3055,12 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
    if (m_isDeleteInitiated || IsShutdownInProgress())
    {
       if (rqId == 0)
-         m_runtimeFlags &= ~DCDF_QUEUED_FOR_CONFIGURATION_POLL;
+         m_runtimeFlags &= ~ODF_QUEUED_FOR_CONFIGURATION_POLL;
       unlockProperties();
       return;
    }
    // Poller can be called directly - in that case poll flag will not be set
-   m_runtimeFlags |= DCDF_QUEUED_FOR_CONFIGURATION_POLL;
+   m_runtimeFlags |= ODF_QUEUED_FOR_CONFIGURATION_POLL;
    unlockProperties();
 
    UINT32 oldCapabilities = m_capabilities;
@@ -2904,7 +3070,7 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
    poller->setStatus(_T("wait for lock"));
    pollerLock(configuration);
 
-   POLL_CANCELLATION_CHECKPOINT(DCDF_QUEUED_FOR_CONFIGURATION_POLL);
+   POLL_CANCELLATION_CHECKPOINT(ODF_QUEUED_FOR_CONFIGURATION_POLL);
 
    m_pollRequestor = session;
    sendPollerMsg(rqId, _T("Starting configuration poll for node %s\r\n"), m_name);
@@ -2915,7 +3081,7 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
    {
       sendPollerMsg(rqId, POLLER_WARNING _T("Capability reset\r\n"));
       m_capabilities &= NC_IS_LOCAL_MGMT; // reset all except "local management" flag
-      m_runtimeFlags &= ~DCDF_CONFIGURATION_POLL_PASSED;
+      m_runtimeFlags &= ~ODF_CONFIGURATION_POLL_PASSED;
       m_snmpObjectId[0] = 0;
       m_platformName[0] = 0;
       m_agentVersion[0] = 0;
@@ -2943,12 +3109,12 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
       if (confPollAgent(rqId))
          modified |= MODIFY_NODE_PROPERTIES;
 
-      POLL_CANCELLATION_CHECKPOINT(DCDF_QUEUED_FOR_CONFIGURATION_POLL);
+      POLL_CANCELLATION_CHECKPOINT(ODF_QUEUED_FOR_CONFIGURATION_POLL);
 
       if (confPollSnmp(rqId))
          modified |= MODIFY_NODE_PROPERTIES;
 
-      POLL_CANCELLATION_CHECKPOINT(DCDF_QUEUED_FOR_CONFIGURATION_POLL);
+      POLL_CANCELLATION_CHECKPOINT(ODF_QUEUED_FOR_CONFIGURATION_POLL);
 
       // Check for CheckPoint SNMP agent on port 260
       if (ConfigReadBoolean(_T("EnableCheckPointSNMP"), false))
@@ -2985,7 +3151,7 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
       if (updateInterfaceConfiguration(rqId, 0)) // maskBits
          modified |= MODIFY_NODE_PROPERTIES;
 
-      POLL_CANCELLATION_CHECKPOINT(DCDF_QUEUED_FOR_CONFIGURATION_POLL);
+      POLL_CANCELLATION_CHECKPOINT(ODF_QUEUED_FOR_CONFIGURATION_POLL);
 
       if (g_flags & AF_MERGE_DUPLICATE_NODES)
       {
@@ -2997,9 +3163,9 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
             nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 3, _T("Removing node %s [%u] as duplicate"), m_name, m_id);
 
             poller->setStatus(_T("cleanup"));
-            m_runtimeFlags &= ~DCDF_CONFIGURATION_POLL_PENDING;
+            m_runtimeFlags &= ~ODF_CONFIGURATION_POLL_PENDING;
             if (rqId == 0)
-               m_runtimeFlags &= ~DCDF_QUEUED_FOR_CONFIGURATION_POLL;
+               m_runtimeFlags &= ~ODF_QUEUED_FOR_CONFIGURATION_POLL;
             m_runtimeFlags &= ~NDF_RECHECK_CAPABILITIES;
             pollerUnlock();
 
@@ -3063,17 +3229,17 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
          }
       }
 
-      POLL_CANCELLATION_CHECKPOINT(DCDF_QUEUED_FOR_CONFIGURATION_POLL);
+      POLL_CANCELLATION_CHECKPOINT(ODF_QUEUED_FOR_CONFIGURATION_POLL);
 
       updateSoftwarePackages(poller, rqId);
       updateHardwareComponents(poller, rqId);
 
-      POLL_CANCELLATION_CHECKPOINT(DCDF_QUEUED_FOR_CONFIGURATION_POLL);
+      POLL_CANCELLATION_CHECKPOINT(ODF_QUEUED_FOR_CONFIGURATION_POLL);
 
       applyUserTemplates();
       updateContainerMembership();
 
-      POLL_CANCELLATION_CHECKPOINT(DCDF_QUEUED_FOR_CONFIGURATION_POLL);
+      POLL_CANCELLATION_CHECKPOINT(ODF_QUEUED_FOR_CONFIGURATION_POLL);
 
       // Call hooks in loaded modules
       for(UINT32 i = 0; i < g_dwNumModules; i++)
@@ -3086,7 +3252,7 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
          }
       }
 
-      POLL_CANCELLATION_CHECKPOINT(DCDF_QUEUED_FOR_CONFIGURATION_POLL);
+      POLL_CANCELLATION_CHECKPOINT(ODF_QUEUED_FOR_CONFIGURATION_POLL);
 
       // Setup permanent connection to agent if not present (needed for proper configuration re-sync)
       if (m_capabilities & NC_IS_NATIVE_AGENT)
@@ -3124,7 +3290,7 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
       }
       unlockProperties();
 
-      POLL_CANCELLATION_CHECKPOINT(DCDF_QUEUED_FOR_CONFIGURATION_POLL);
+      POLL_CANCELLATION_CHECKPOINT(ODF_QUEUED_FOR_CONFIGURATION_POLL);
 
       // Execute hook script
       poller->setStatus(_T("hook"));
@@ -3135,15 +3301,15 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
       sendPollerMsg(rqId, _T("Finished configuration poll for node %s\r\n"), m_name);
       sendPollerMsg(rqId, _T("Node configuration was%schanged after poll\r\n"), (modified != 0) ? _T(" ") : _T(" not "));
 
-      m_runtimeFlags &= ~DCDF_CONFIGURATION_POLL_PENDING;
-      m_runtimeFlags |= DCDF_CONFIGURATION_POLL_PASSED;
+      m_runtimeFlags &= ~ODF_CONFIGURATION_POLL_PENDING;
+      m_runtimeFlags |= ODF_CONFIGURATION_POLL_PASSED;
    }
 
    // Finish configuration poll
    poller->setStatus(_T("cleanup"));
    lockProperties();
    if (rqId == 0)
-      m_runtimeFlags &= ~DCDF_QUEUED_FOR_CONFIGURATION_POLL;
+      m_runtimeFlags &= ~ODF_QUEUED_FOR_CONFIGURATION_POLL;
    m_runtimeFlags &= ~NDF_RECHECK_CAPABILITIES;
    unlockProperties();
    pollerUnlock();
@@ -5382,6 +5548,46 @@ DataCollectionError Node::getInternalItem(const TCHAR *param, size_t bufSize, TC
          _tcscpy(buffer, _T("-1"));
       }
    }
+   else if (!_tcsicmp(_T("ICMP.PacketLoss"), param))
+   {
+      rc = getIcmpStatistic(NULL, IcmpStatFunction::LOSS, buffer);
+   }
+   else if (MatchString(_T("ICMP.PacketLoss(*)"), param, FALSE))
+   {
+      rc = getIcmpStatistic(param, IcmpStatFunction::LOSS, buffer);
+   }
+   else if (!_tcsicmp(_T("ICMP.ResponseTime.Average"), param))
+   {
+      rc = getIcmpStatistic(NULL, IcmpStatFunction::AVERAGE, buffer);
+   }
+   else if (MatchString(_T("ICMP.ResponseTime.Average(*)"), param, FALSE))
+   {
+      rc = getIcmpStatistic(param, IcmpStatFunction::AVERAGE, buffer);
+   }
+   else if (!_tcsicmp(_T("ICMP.ResponseTime.Last"), param))
+   {
+      rc = getIcmpStatistic(NULL, IcmpStatFunction::LAST, buffer);
+   }
+   else if (MatchString(_T("ICMP.ResponseTime.Last(*)"), param, FALSE))
+   {
+      rc = getIcmpStatistic(param, IcmpStatFunction::LAST, buffer);
+   }
+   else if (!_tcsicmp(_T("ICMP.ResponseTime.Max"), param))
+   {
+      rc = getIcmpStatistic(NULL, IcmpStatFunction::MAX, buffer);
+   }
+   else if (MatchString(_T("ICMP.ResponseTime.Max(*)"), param, FALSE))
+   {
+      rc = getIcmpStatistic(param, IcmpStatFunction::MAX, buffer);
+   }
+   else if (!_tcsicmp(_T("ICMP.ResponseTime.Min"), param))
+   {
+      rc = getIcmpStatistic(NULL, IcmpStatFunction::MIN, buffer);
+   }
+   else if (MatchString(_T("ICMP.ResponseTime.Min(*)"), param, FALSE))
+   {
+      rc = getIcmpStatistic(param, IcmpStatFunction::MIN, buffer);
+   }
    else if (MatchString(_T("Net.IP.NextHop(*)"), param, FALSE))
    {
       if ((m_capabilities & NC_IS_NATIVE_AGENT) || (m_capabilities & NC_IS_SNMP))
@@ -5421,60 +5627,6 @@ DataCollectionError Node::getInternalItem(const TCHAR *param, size_t bufSize, TC
       if ((object != NULL) && (object->getObjectClass() == OBJECT_NETWORKSERVICE))
       {
          _sntprintf(buffer, bufSize, _T("%u"), ((NetworkService *)object)->getResponseTime());
-      }
-      else
-      {
-         rc = DCE_NOT_SUPPORTED;
-      }
-   }
-   else if (MatchString(_T("PingTime(*)"), param, FALSE))
-   {
-      NetObj *object = objectFromParameter(param);
-      if ((object != NULL) && (object->getObjectClass() == OBJECT_INTERFACE))
-      {
-         UINT32 value = ((Interface *)object)->getPingTime();
-         if (value == 10000)
-            rc = DCE_COLLECTION_ERROR;
-         else
-            _sntprintf(buffer, bufSize, _T("%d"), value);
-      }
-      else
-      {
-         rc = DCE_NOT_SUPPORTED;
-      }
-   }
-   else if (!_tcsicmp(_T("PingTime"), param))
-   {
-      if (m_ipAddress.isValid())
-      {
-         Interface *iface = NULL;
-
-         // Find interface for primary IP
-         lockChildList(false);
-         for(int i = 0; i < m_childList->size(); i++)
-         {
-            NetObj *curr = m_childList->get(i);
-            if ((curr->getObjectClass() == OBJECT_INTERFACE) && ((Interface *)curr)->getIpAddressList()->hasAddress(m_ipAddress))
-            {
-               iface = (Interface *)curr;
-               break;
-            }
-         }
-         unlockChildList();
-
-         UINT32 value = PING_TIME_TIMEOUT;
-         if (iface != NULL)
-         {
-            value = iface->getPingTime();
-         }
-         else
-         {
-            value = getPingTime();
-         }
-         if (value == PING_TIME_TIMEOUT)
-            rc = DCE_COLLECTION_ERROR;
-         else
-            _sntprintf(buffer, bufSize, _T("%d"), value);
       }
       else
       {
@@ -5942,6 +6094,29 @@ void Node::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
    pMsg->setField(VID_PORT_NUMBERING_SCHEME, m_portNumberingScheme);
    pMsg->setField(VID_AGENT_COMPRESSION_MODE, m_agentCompressionMode);
    pMsg->setField(VID_RACK_ORIENTATION, static_cast<INT16>(m_rackOrientation));
+   pMsg->setField(VID_ICMP_COLLECTION_MODE, (INT16)m_icmpStatCollectionMode);
+   if (isIcmpStatCollectionEnabled() && (m_icmpStatCollectors != NULL))
+   {
+      IcmpStatCollector *collector = m_icmpStatCollectors->get(_T("PRI"));
+      if (collector != NULL)
+      {
+         pMsg->setField(VID_ICMP_LAST_RESPONSE_TIME, collector->last());
+         pMsg->setField(VID_ICMP_MIN_RESPONSE_TIME, collector->min());
+         pMsg->setField(VID_ICMP_MAX_RESPONSE_TIME, collector->max());
+         pMsg->setField(VID_ICMP_AVG_RESPONSE_TIME, collector->average());
+         pMsg->setField(VID_ICMP_PACKET_LOSS, collector->packetLoss());
+      }
+      pMsg->setField(VID_HAS_ICMP_DATA, true);
+   }
+   else
+   {
+      pMsg->setField(VID_HAS_ICMP_DATA, false);
+   }
+
+   pMsg->setField(VID_ICMP_TARGET_COUNT, m_icmpTargets.size());
+   UINT32 fieldId = VID_ICMP_TARGET_LIST_BASE;
+   for(int i = 0; i < m_icmpTargets.size(); i++)
+      pMsg->setField(fieldId++, m_icmpTargets.get(i));
 }
 
 /**
@@ -6069,7 +6244,7 @@ UINT32 Node::modifyFromMessageInternal(NXCPMessage *pRequest)
       }
 
       _tcscpy(m_primaryName, primaryName);
-      m_runtimeFlags |= DCDF_FORCE_CONFIGURATION_POLL | NDF_RECHECK_CAPABILITIES;
+      m_runtimeFlags |= ODF_FORCE_CONFIGURATION_POLL | NDF_RECHECK_CAPABILITIES;
    }
 
    // Poller node ID
@@ -6205,6 +6380,46 @@ UINT32 Node::modifyFromMessageInternal(NXCPMessage *pRequest)
 
    if (pRequest->isFieldExist(VID_RACK_ORIENTATION))
       m_rackOrientation = static_cast<RackOrientation>(pRequest->getFieldAsUInt16(VID_RACK_ORIENTATION));
+
+   if (pRequest->isFieldExist(VID_ICMP_COLLECTION_MODE))
+   {
+      switch(pRequest->getFieldAsInt16(VID_ICMP_COLLECTION_MODE))
+      {
+         case 1:
+            m_icmpStatCollectionMode = IcmpStatCollectionMode::ON;
+            break;
+         case 2:
+            m_icmpStatCollectionMode = IcmpStatCollectionMode::OFF;
+            break;
+         default:
+            m_icmpStatCollectionMode = IcmpStatCollectionMode::DEFAULT;
+            break;
+      }
+      if (isIcmpStatCollectionEnabled())
+      {
+         if (m_icmpStatCollectors == NULL)
+            m_icmpStatCollectors = new StringObjectMap<IcmpStatCollector>(true);
+         if (!m_icmpStatCollectors->contains(_T("PRI")))
+            m_icmpStatCollectors->set(_T("PRI"), new IcmpStatCollector(ConfigReadInt(_T("ICMP.StatisticPeriod"), 60)));
+      }
+      else
+      {
+         delete_and_null(m_icmpStatCollectors);
+      }
+   }
+
+   if (pRequest->isFieldExist(VID_ICMP_TARGET_COUNT))
+   {
+      m_icmpTargets.clear();
+      int count = pRequest->getFieldAsInt32(VID_ICMP_TARGET_COUNT);
+      UINT32 fieldId = VID_ICMP_TARGET_LIST_BASE;
+      for(int i = 0; i < count; i++)
+      {
+         InetAddress addr = pRequest->getFieldAsInetAddress(fieldId++);
+         if (addr.isValidUnicast() && !m_icmpTargets.hasAddress(addr))
+            m_icmpTargets.add(addr);
+      }
+   }
 
    return super::modifyFromMessageInternal(pRequest);
 }
@@ -6694,7 +6909,7 @@ void Node::changeIPAddress(const InetAddress& ipAddr)
          ipAddr.toString(m_primaryName);
 
       setPrimaryIPAddress(ipAddr);
-      m_runtimeFlags |= DCDF_FORCE_CONFIGURATION_POLL | NDF_RECHECK_CAPABILITIES;
+      m_runtimeFlags |= ODF_FORCE_CONFIGURATION_POLL | NDF_RECHECK_CAPABILITIES;
 
       // Change status of node and all it's children to UNKNOWN
       m_status = STATUS_UNKNOWN;
@@ -6735,7 +6950,7 @@ void Node::changeZone(UINT32 newZone)
 
    lockProperties();
    m_zoneUIN = newZone;
-   m_runtimeFlags |= DCDF_FORCE_CONFIGURATION_POLL | NDF_RECHECK_CAPABILITIES;
+   m_runtimeFlags |= ODF_FORCE_CONFIGURATION_POLL | NDF_RECHECK_CAPABILITIES;
    m_lastConfigurationPoll = 0;
    unlockProperties();
 
@@ -7108,9 +7323,10 @@ void Node::prepareForDeletion()
    {
       lockProperties();
       if ((m_runtimeFlags &
-            (DCDF_QUEUED_FOR_STATUS_POLL | DCDF_QUEUED_FOR_CONFIGURATION_POLL |
+            (ODF_QUEUED_FOR_STATUS_POLL | ODF_QUEUED_FOR_CONFIGURATION_POLL |
              NDF_QUEUED_FOR_DISCOVERY_POLL | NDF_QUEUED_FOR_ROUTE_POLL |
-             NDF_QUEUED_FOR_TOPOLOGY_POLL | DCDF_QUEUED_FOR_INSTANCE_POLL)) == 0)
+             NDF_QUEUED_FOR_TOPOLOGY_POLL | ODF_QUEUED_FOR_INSTANCE_POLL |
+             NDF_QUEUED_FOR_ICMP_POLL)) == 0)
       {
          unlockProperties();
          break;
@@ -8674,76 +8890,6 @@ ObjectArray<WirelessStationInfo> *Node::getWirelessStations()
 }
 
 /**
- * Update ping data
- */
-void Node::updatePingData()
-{
-   UINT32 icmpProxy = m_icmpProxy;
-   if (IsZoningEnabled() && (m_zoneUIN != 0) && (icmpProxy == 0))
-   {
-      Zone *zone = FindZoneByUIN(m_zoneUIN);
-      if (zone != NULL)
-      {
-         icmpProxy = zone->isProxyNode(m_id) ? m_id : zone->getProxyNodeId(this);
-      }
-   }
-
-   if (icmpProxy != 0)
-   {
-      nxlog_debug(7, _T("Node::updatePingData: ping via proxy [%u]"), icmpProxy);
-      Node *proxyNode = (Node *)g_idxNodeById.get(icmpProxy);
-      if ((proxyNode != NULL) && proxyNode->isNativeAgent() && !proxyNode->isDown())
-      {
-         nxlog_debug(7, _T("Node::updatePingData: proxy node found: %s"), proxyNode->getName());
-         AgentConnection *conn = proxyNode->createAgentConnection();
-         if (conn != NULL)
-         {
-            TCHAR parameter[128], buffer[64];
-
-            _sntprintf(parameter, 128, _T("Icmp.Ping(%s)"), m_ipAddress.toString(buffer));
-            if (conn->getParameter(parameter, 64, buffer) == ERR_SUCCESS)
-            {
-               nxlog_debug(7, _T("Node::updatePingData:  proxy response: \"%s\""), buffer);
-               TCHAR *eptr;
-               long value = _tcstol(buffer, &eptr, 10);
-               m_pingLastTimeStamp = time(NULL);
-               if ((*eptr == 0) && (value >= 0) && (value < 10000))
-               {
-                  m_pingTime = value;
-               }
-               else
-               {
-                  m_pingTime = PING_TIME_TIMEOUT;
-                  nxlog_debug(7, _T("Node::updatePingData: incorrect value: %d or error while parsing: %s"), value, eptr);
-               }
-            }
-            conn->decRefCount();
-         }
-         else
-         {
-            nxlog_debug(7, _T("Node::updatePingData: cannot connect to agent on proxy node [%u]"), icmpProxy);
-            m_pingTime = PING_TIME_TIMEOUT;
-         }
-      }
-      else
-      {
-         nxlog_debug(7, _T("Node::updatePingData: proxy node not available [%u]"), icmpProxy);
-         m_pingTime = PING_TIME_TIMEOUT;
-      }
-   }
-   else  // not using ICMP proxy
-   {
-      UINT32 dwPingStatus = IcmpPing(m_ipAddress, 3, g_icmpPingTimeout, &m_pingTime, g_icmpPingSize, false);
-      if (dwPingStatus != ICMP_SUCCESS)
-      {
-         nxlog_debug(7, _T("Node::updatePingData: error getting ping %d"), dwPingStatus);
-         m_pingTime = PING_TIME_TIMEOUT;
-      }
-      m_pingLastTimeStamp = time(NULL);
-   }
-}
-
-/**
  * Get access point state via driver
  */
 AccessPointState Node::getAccessPointState(AccessPoint *ap, SNMP_Transport *snmpTransport, const ObjectArray<RadioInterfaceInfo> *radioInterfaces)
@@ -9263,6 +9409,7 @@ void Node::buildInternalCommunicationTopologyInternal(NetworkMapObjectList *topo
 json_t *Node::toJson()
 {
    json_t *root = super::toJson();
+   lockProperties();
    json_object_set_new(root, "ipAddress", m_ipAddress.toJson());
    json_object_set_new(root, "primaryName", json_string_t(m_primaryName));
    json_object_set_new(root, "tunnelId", m_tunnelId.toJson());
@@ -9319,6 +9466,9 @@ json_t *Node::toJson()
    json_object_set_new(root, "sshProxy", json_integer(m_sshProxy));
    json_object_set_new(root, "portNumberingScheme", json_integer(m_portNumberingScheme));
    json_object_set_new(root, "portRowCount", json_integer(m_portRowCount));
+   json_object_set_new(root, "icmpStatCollectionMode", json_integer((int)m_icmpStatCollectionMode));
+   json_object_set_new(root, "icmpTargets", m_icmpTargets.toJson());
+   unlockProperties();
    return root;
 }
 
@@ -9333,4 +9483,284 @@ void Node::resetPollTimers()
    m_topologyPollTimer->reset();
    m_routingTablePollTimer->reset();
    unlockProperties();
+}
+
+/**
+ * Entry point for ICMP poll worker thread
+ */
+void Node::icmpPollWorkerEntry(PollerInfo *poller)
+{
+   poller->startExecution();
+   icmpPoll(poller);
+   delete poller;
+}
+
+/**
+ * ICMP poll target
+ */
+struct IcmpPollTarget
+{
+   TCHAR name[MAX_OBJECT_NAME];
+   InetAddress address;
+
+   IcmpPollTarget(const TCHAR *category, const TCHAR *_name, const InetAddress& _address)
+   {
+      if (category != NULL)
+      {
+         _tcslcpy(name, category, MAX_OBJECT_NAME);
+         _tcslcat(name, _T(":"), MAX_OBJECT_NAME);
+         if (_name != NULL)
+            _tcslcat(name, _name, MAX_OBJECT_NAME);
+         else
+            _address.toString(&name[_tcslen(name)]);
+      }
+      else
+      {
+         if (_name != NULL)
+            _tcslcpy(name, _name, MAX_OBJECT_NAME);
+         else
+            _address.toString(name);
+      }
+      address = _address;
+   }
+};
+
+/**
+ * ICMP poll
+ */
+void Node::icmpPoll(PollerInfo *poller)
+{
+   // Prepare poll list
+   StructArray<IcmpPollTarget> targets;
+
+   lockProperties();
+   if (m_ipAddress.isValidUnicast())
+      targets.add(IcmpPollTarget(NULL, _T("PRI"), m_ipAddress));
+   for(int i = 0; i < m_icmpTargets.size(); i++)
+      targets.add(IcmpPollTarget(_T("A"), NULL, m_icmpTargets.get(i)));
+   unlockProperties();
+
+   lockChildList(false);
+   for(int i = 0; i < m_childList->size(); i++)
+   {
+      NetObj *curr = m_childList->get(i);
+      if (curr->getStatus() == STATUS_UNMANAGED)
+         continue;
+
+      if (((curr->getObjectClass() == OBJECT_INTERFACE) && static_cast<Interface*>(curr)->isIncludedInIcmpPoll()) ||
+          ((curr->getObjectClass() == OBJECT_ACCESSPOINT) && static_cast<AccessPoint*>(curr)->isIncludedInIcmpPoll()))
+      {
+         InetAddress addr = curr->getPrimaryIpAddress();
+         if (addr.isValidUnicast())
+            targets.add(IcmpPollTarget(_T("N"), curr->getName(), addr));
+      }
+   }
+   unlockChildList();
+
+   Node *proxyNode = NULL;
+   AgentConnection *conn = NULL;
+   UINT32 icmpProxy = getEffectiveIcmpProxy();
+   if (icmpProxy != 0)
+   {
+      nxlog_debug_tag(DEBUG_TAG_ICMP_POLL, 7, _T("Node::icmpPoll(%s [%u]): ping via proxy [%u]"), m_name, m_id, icmpProxy);
+      Node *proxyNode = static_cast<Node*>(g_idxNodeById.get(icmpProxy));
+      if ((proxyNode == NULL) || !proxyNode->isNativeAgent() || proxyNode->isDown())
+      {
+         nxlog_debug_tag(DEBUG_TAG_ICMP_POLL, 7, _T("Node::icmpPoll(%s [%u]): proxy node not available"), m_name, m_id);
+         proxyNode = NULL;
+         goto end_poll;
+      }
+      proxyNode->incRefCount();
+      nxlog_debug_tag(DEBUG_TAG_ICMP_POLL, 7, _T("Node::icmpPoll(%s [%u]): proxy node found: %s"), m_name, m_id, proxyNode->getName());
+      conn = proxyNode->createAgentConnection();
+      if (conn == NULL)
+      {
+         nxlog_debug_tag(DEBUG_TAG_ICMP_POLL, 7, _T("Node::icmpPoll(%s [%u]): cannot connect to agent on proxy node"), m_name, m_id);
+         goto end_poll;
+      }
+   }
+
+   for(int i = 0; i < targets.size(); i++)
+   {
+      const IcmpPollTarget *t = targets.get(i);
+      icmpPollAddress(conn, t->name, t->address);
+   }
+
+end_poll:
+   if (conn != NULL)
+      conn->decRefCount();
+   if (proxyNode != NULL)
+      proxyNode->decRefCount();
+
+   lockProperties();
+   m_lastIcmpPoll = time(NULL);
+   m_runtimeFlags &= ~NDF_QUEUED_FOR_ICMP_POLL;
+   unlockProperties();
+}
+
+/**
+ * Poll specific address with ICMP
+ */
+void Node::icmpPollAddress(AgentConnection *conn, const TCHAR *target, const InetAddress& addr)
+{
+   TCHAR debugPrefix[256], buffer[64];
+   _sntprintf(debugPrefix, 256, _T("Node::icmpPollAddress(%s [%u], %s, %s):"), m_name, m_id, target, addr.toString(buffer));
+
+   UINT32 status = ICMP_SEND_FAILED, rtt = 0;
+   if (conn != NULL)
+   {
+      TCHAR parameter[128];
+      _sntprintf(parameter, 128, _T("Icmp.Ping(%s)"), addr.toString(buffer));
+      UINT32 rcc = conn->getParameter(parameter, 64, buffer);
+      if (rcc == ERR_SUCCESS)
+      {
+         nxlog_debug_tag(DEBUG_TAG_ICMP_POLL, 7, _T("%s: proxy response: \"%s\""), debugPrefix, buffer);
+         TCHAR *eptr;
+         rtt = _tcstol(buffer, &eptr, 10);
+         if (*eptr == 0)
+         {
+            status = ICMP_SUCCESS;
+         }
+      }
+      else if (rcc == ERR_REQUEST_TIMEOUT)
+      {
+         status = ICMP_TIMEOUT;
+         rtt = 10000;
+      }
+      nxlog_debug_tag(DEBUG_TAG_ICMP_POLL, 7, _T("%s: response time %u"), debugPrefix, rtt);
+   }
+   else  // not using ICMP proxy
+   {
+      nxlog_debug_tag(DEBUG_TAG_ICMP_POLL, 7, _T("%s: calling IcmpPing(%s,3,%d,%d)"),
+               debugPrefix, addr.toString(buffer), g_icmpPingTimeout, g_icmpPingSize);
+      status = IcmpPing(addr, 1, g_icmpPingTimeout, &rtt, g_icmpPingSize, false);
+      nxlog_debug_tag(DEBUG_TAG_ICMP_POLL, 7, _T("%s: ping status=%u RTT=%u"), debugPrefix, status, rtt);
+   }
+
+   if ((status == ICMP_SUCCESS) || (status == ICMP_TIMEOUT) || (status == ICMP_UNREACHABLE))
+   {
+      lockProperties();
+
+      if (m_icmpStatCollectors == NULL)
+         m_icmpStatCollectors = new StringObjectMap<IcmpStatCollector>(true);
+
+      IcmpStatCollector *collector = m_icmpStatCollectors->get(target);
+      if (collector == NULL)
+      {
+         collector = new IcmpStatCollector(ConfigReadInt(_T("ICMP.StatisticPeriod"), 60));
+         m_icmpStatCollectors->set(target, collector);
+         nxlog_debug_tag(DEBUG_TAG_ICMP_POLL, 7, _T("%s: new collector object created"), debugPrefix);
+      }
+
+      collector->update((status == ICMP_SUCCESS) ? rtt : 10000);
+
+      unlockProperties();
+   }
+}
+
+/**
+ * Get all ICMP statistics for given target
+ */
+bool Node::getIcmpStatistics(const TCHAR *target, UINT32 *last, UINT32 *min, UINT32 *max, UINT32 *avg, UINT32 *loss)
+{
+   lockProperties();
+   IcmpStatCollector *collector = (m_icmpStatCollectors != NULL) ? m_icmpStatCollectors->get(target) : NULL;
+   if (last != NULL)
+      *last = (collector != NULL) ? collector->last() : 0;
+   if (min != NULL)
+      *min = (collector != NULL) ? collector->min() : 0;
+   if (max != NULL)
+      *max = (collector != NULL) ? collector->max() : 0;
+   if (avg != NULL)
+      *avg = (collector != NULL) ? collector->average() : 0;
+   if (loss != NULL)
+      *loss = (collector != NULL) ? collector->packetLoss() : 0;
+   unlockProperties();
+   return collector != NULL;
+}
+
+/**
+ * Get all ICMP statistic collectors
+ */
+StringList *Node::getIcmpStatCollectors()
+{
+   lockProperties();
+   StringList *collectors = m_icmpStatCollectors->keys();
+   unlockProperties();
+   return collectors;
+}
+
+/**
+ * Get ICMP poll statistic for given target and function
+ */
+DataCollectionError Node::getIcmpStatistic(const TCHAR *param, IcmpStatFunction function, TCHAR *value)
+{
+   TCHAR key[MAX_OBJECT_NAME + 2];
+   if (param != NULL)
+   {
+      TCHAR target[MAX_OBJECT_NAME];
+      if (!AgentGetParameterArg(param, 1, target, MAX_OBJECT_NAME))
+         return DataCollectionError::DCE_NOT_SUPPORTED;
+
+      if ((_tcslen(target) >= 2) && (target[1] == ':'))
+      {
+         _tcslcpy(key, target, MAX_OBJECT_NAME + 2);
+      }
+      else
+      {
+         InetAddress a = InetAddress::parse(target);
+         if (a.isValid())
+         {
+            key[0] = 'A';
+            key[1] = ':';
+            a.toString(&key[2]);
+         }
+         else
+         {
+            NetObj *object = objectFromParameter(param);
+            if ((object == NULL) || ((object->getObjectClass() != OBJECT_INTERFACE) && (object->getObjectClass() != OBJECT_ACCESSPOINT)))
+               return DataCollectionError::DCE_NO_SUCH_INSTANCE;
+
+            key[0] = 'N';
+            key[1] = ':';
+            _tcslcpy(&key[2], object->getName(), MAX_OBJECT_NAME);
+         }
+      }
+   }
+   else
+   {
+      _tcscpy(key, _T("PRI"));
+   }
+
+   lockProperties();
+   DataCollectionError rc;
+   IcmpStatCollector *collector = (m_icmpStatCollectors != NULL) ? m_icmpStatCollectors->get(key) : NULL;
+   if (collector != NULL)
+   {
+      switch(function)
+      {
+         case IcmpStatFunction::AVERAGE:
+            ret_uint(value, collector->average());
+            break;
+         case IcmpStatFunction::LAST:
+            ret_uint(value, collector->last());
+            break;
+         case IcmpStatFunction::LOSS:
+            ret_uint(value, collector->packetLoss());
+            break;
+         case IcmpStatFunction::MAX:
+            ret_uint(value, collector->max());
+            break;
+         case IcmpStatFunction::MIN:
+            ret_uint(value, collector->min());
+            break;
+      }
+      rc = DataCollectionError::DCE_SUCCESS;
+   }
+   else
+   {
+      rc = DataCollectionError::DCE_NO_SUCH_INSTANCE;
+   }
+   unlockProperties();
+   return rc;
 }

@@ -244,8 +244,7 @@ bool AbstractContainer::deleteFromDatabase(DB_HANDLE hdb)
 bool Container::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 {
    bool success = super::loadFromDatabase(hdb, dwId);
-
-   if(success)
+   if (success)
       success = AutoBindTarget::loadFromDatabase(hdb, m_id);
    return success;
 }
@@ -288,7 +287,7 @@ bool Container::deleteFromDatabase(DB_HANDLE hdb)
       success = executeQueryOnObject(hdb, _T("DELETE FROM object_containers WHERE id=?"));
    if (success)
       success = executeQueryOnObject(hdb, _T("DELETE FROM container_members WHERE container_id=?"));
-   if(success)
+   if (success)
       success = AutoBindTarget::deleteFromDatabase(hdb);
    return success;
 }
@@ -306,7 +305,7 @@ bool Container::showThresholdSummary()
  */
 UINT32 Container::modifyFromMessageInternal(NXCPMessage *request)
 {
-   AutoBindTarget::modifyFromMessageInternal(request);
+   AutoBindTarget::modifyFromMessage(request);
    return super::modifyFromMessageInternal(request);
 }
 
@@ -316,7 +315,7 @@ UINT32 Container::modifyFromMessageInternal(NXCPMessage *request)
 void Container::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
 {
    super::fillMessageInternal(msg, userId);
-   AutoBindTarget::fillMessageInternal(msg, userId);
+   AutoBindTarget::fillMessage(msg);
 }
 
 /**

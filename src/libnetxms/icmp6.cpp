@@ -1,6 +1,6 @@
 /* 
 ** libnetxms - Common NetXMS utility library
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -207,11 +207,11 @@ static UINT32 WaitForReply(int sock, struct sockaddr_in6 *addr, UINT32 id, UINT3
                break;
             }
 
-            // Check for "destination unreacheable" error
+            // Check for "destination unreachable" error
             if (((reply->type == 1) || (reply->type == 3)) &&  // 1 = Destination Unreachable, 3 = Time Exceeded
                 !memcmp(((ICMP6_ERROR_REPORT *)reply)->destAddr, addr->sin6_addr.s6_addr, 16))
             {
-               result = ICMP_UNREACHEABLE;
+               result = ICMP_UNREACHABLE;
                break;
             }
          }
@@ -235,7 +235,7 @@ UINT32 IcmpPing6(const InetAddress &addr, int retries, UINT32 timeout, UINT32 *r
    struct sockaddr_in6 src, dest;
    addr.fillSockAddr((SockAddrBuffer *)&dest);
    if (!FindSourceAddress(&dest, &src))
-      return ICMP_UNREACHEABLE;  // no route to host
+      return ICMP_UNREACHABLE;  // no route to host
 
    int sd = socket(AF_INET6, SOCK_RAW, IPPROTO_ICMPV6);
    if (sd < 0)

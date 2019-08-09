@@ -193,7 +193,7 @@ inline WCHAR towupper(WCHAR c)
  * Return codes for IcmpPing()
  */
 #define ICMP_SUCCESS          0
-#define ICMP_UNREACHEABLE     1
+#define ICMP_UNREACHABLE      1
 #define ICMP_TIMEOUT          2
 #define ICMP_RAW_SOCK_FAILED  3
 #define ICMP_API_ERROR        4
@@ -1157,15 +1157,22 @@ public:
 	virtual ~StructArray() { }
 
 	int add(const T *element) { return Array::add((void *)element); }
+   int add(const T &element) { return Array::add((void *)&element); }
 	T *get(int index) const { return (T*)Array::get(index); }
    int indexOf(const T *element) const { return Array::indexOf((void *)element); }
+   int indexOf(const T &element) const { return Array::indexOf((void *)&element); }
    bool contains(const T *element) const { return indexOf(element) >= 0; }
+   bool contains(const T &element) const { return indexOf(element) >= 0; }
 	void set(int index, const T *element) { Array::set(index, (void *)element); }
+   void set(int index, const T &element) { Array::set(index, (void *)&element); }
 	void replace(int index, const T *element) { Array::replace(index, (void *)element); }
+   void replace(int index, const T &element) { Array::replace(index, (void *)&element); }
 	void remove(int index) { Array::remove(index); }
    void remove(const T *element) { Array::remove((void *)element); }
+   void remove(const T &element) { Array::remove((void *)&element); }
 	void unlink(int index) { Array::unlink(index); }
    void unlink(const T *element) { Array::unlink((void *)element); }
+   void unlink(const T &element) { Array::unlink((void *)&element); }
 
    T *getBuffer() const { return (T*)__getBuffer(); }
 };

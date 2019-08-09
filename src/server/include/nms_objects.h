@@ -44,13 +44,14 @@ class ComponentTree;
 /**
  * Global variables used by inline methods
  */
-extern UINT32 g_dwDiscoveryPollingInterval;
-extern UINT32 g_dwStatusPollingInterval;
-extern UINT32 g_dwConfigurationPollingInterval;
-extern UINT32 g_dwRoutingTableUpdateInterval;
-extern UINT32 g_dwTopologyPollingInterval;
-extern UINT32 g_dwConditionPollingInterval;
+extern UINT32 g_discoveryPollingInterval;
+extern UINT32 g_statusPollingInterval;
+extern UINT32 g_configurationPollingInterval;
+extern UINT32 g_routingTableUpdateInterval;
+extern UINT32 g_topologyPollingInterval;
+extern UINT32 g_conditionPollingInterval;
 extern UINT32 g_instancePollingInterval;
+extern UINT32 g_icmpPollingInterval;
 extern INT16 g_defaultAgentCacheMode;
 
 /**
@@ -147,7 +148,8 @@ enum class PollerType
    BUSINESS_SERVICE = 5,
    CONDITION = 6,
    TOPOLOGY = 7,
-   ZONE_HEALTH = 8
+   ZONE_HEALTH = 8,
+   ICMP = 9
 };
 
 /**
@@ -201,6 +203,16 @@ enum AutoBindDecision
    AutoBindDecision_Ignore = -1,
    AutoBindDecision_Unbind = 0,
    AutoBindDecision_Bind = 1
+};
+
+/**
+ * ICMP statistic collection mode
+ */
+enum class IcmpStatCollectionMode
+{
+   DEFAULT = 0,
+   ON = 1,
+   OFF = 2
 };
 
 /**
@@ -580,24 +592,25 @@ struct NXCORE_EXPORTABLE NewNodeData
 /**
  * Object modification flags
  */
-#define MODIFY_RUNTIME              0x0000
-#define MODIFY_OTHER                0x0001
-#define MODIFY_CUSTOM_ATTRIBUTES    0x0002
-#define MODIFY_DATA_COLLECTION      0x0004
-#define MODIFY_RELATIONS            0x0008
-#define MODIFY_COMMON_PROPERTIES    0x0010
-#define MODIFY_ACCESS_LIST          0x0020
-#define MODIFY_NODE_PROPERTIES      0x0040
-#define MODIFY_INTERFACE_PROPERTIES 0x0080
-#define MODIFY_CLUSTER_RESOURCES    0x0100
-#define MODIFY_MAP_CONTENT          0x0200
-#define MODIFY_SENSOR_PROPERTIES    0x0400
-#define MODIFY_MODULE_DATA          0x0800
-#define MODIFY_POLICY               0x1000
-#define MODIFY_SOFTWARE_INVENTORY   0x2000
-#define MODIFY_HARDWARE_INVENTORY   0x4000
-#define MODIFY_COMPONENTS           0x8000
-#define MODIFY_ALL                  0xFFFF
+#define MODIFY_RUNTIME              0x000000
+#define MODIFY_OTHER                0x000001
+#define MODIFY_CUSTOM_ATTRIBUTES    0x000002
+#define MODIFY_DATA_COLLECTION      0x000004
+#define MODIFY_RELATIONS            0x000008
+#define MODIFY_COMMON_PROPERTIES    0x000010
+#define MODIFY_ACCESS_LIST          0x000020
+#define MODIFY_NODE_PROPERTIES      0x000040
+#define MODIFY_INTERFACE_PROPERTIES 0x000080
+#define MODIFY_CLUSTER_RESOURCES    0x000100
+#define MODIFY_MAP_CONTENT          0x000200
+#define MODIFY_SENSOR_PROPERTIES    0x000400
+#define MODIFY_MODULE_DATA          0x000800
+#define MODIFY_POLICY               0x001000
+#define MODIFY_SOFTWARE_INVENTORY   0x002000
+#define MODIFY_HARDWARE_INVENTORY   0x004000
+#define MODIFY_COMPONENTS           0x008000
+#define MODIFY_ICMP_POLL_SETTINGS   0x010000
+#define MODIFY_ALL                  0xFFFFFF
 
 /**
  * Column definition for DCI summary table
@@ -687,6 +700,9 @@ public:
  */
 class NXCORE_EXPORTABLE NetObj
 {
+   friend class AutoBindTarget;
+   friend class VersionableObject;
+
    DISABLE_COPY_CTOR(NetObj)
 
 private:
@@ -808,6 +824,7 @@ public:
 
    virtual int getObjectClass() const { return OBJECT_GENERIC; }
    virtual const TCHAR *getObjectClassName() const;
+   virtual InetAddress getPrimaryIpAddress() const { return InetAddress::INVALID; }
 
    UINT32 getId() const { return m_id; }
    const TCHAR *getName() const { return m_name; }
@@ -830,6 +847,7 @@ public:
    void setMapImage(const uuid& image) { lockProperties(); m_image = image; setModified(MODIFY_COMMON_PROPERTIES); unlockProperties(); }
 
    bool isModified() const { return m_modified != 0; }
+   bool isModified(UINT32 bit) const { return (m_modified & bit) != 0; }
    bool isDeleted() const { return m_isDeleted; }
    bool isDeleteInitiated() const { return m_isDeleteInitiated; }
    bool isOrphaned() const { return m_parentList->size() == 0; }
@@ -991,11 +1009,13 @@ inline void NetObj::decRefCount()
  */
 class NXCORE_EXPORTABLE VersionableObject
 {
-protected:
+private:
    NetObj *m_this;
+
+protected:
    VolatileCounter m_version;
 
-   void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId);
+   void fillMessage(NXCPMessage *msg);
 
    bool saveToDatabase(DB_HANDLE hdb);
    bool deleteFromDatabase(DB_HANDLE hdb);
@@ -1017,23 +1037,25 @@ public:
  */
 class NXCORE_EXPORTABLE AutoBindTarget
 {
-protected:
+private:
    NetObj *m_this;
-   TCHAR *m_bindFilterSource;
-   NXSL_Program *m_bindFilter;
-   bool m_autoBindFlag;
-   bool m_autoUnbindFlag;
    MUTEX m_mutexProperties;
 
    void internalLock() const { MutexLock(m_mutexProperties); }
    void internalUnlock() const { MutexUnlock(m_mutexProperties); }
 
-   UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
-   void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId);
+protected:
+   TCHAR *m_bindFilterSource;
+   NXSL_Program *m_bindFilter;
+   bool m_autoBindFlag;
+   bool m_autoUnbindFlag;
 
+   void modifyFromMessage(NXCPMessage *request);
+   void fillMessage(NXCPMessage *msg);
+
+   bool loadFromDatabase(DB_HANDLE hdb, UINT32 objectId);
    bool saveToDatabase(DB_HANDLE hdb);
    bool deleteFromDatabase(DB_HANDLE hdb);
-   bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
    void updateFromImport(ConfigEntry *config);
 
    void toJson(json_t *root);
@@ -1041,7 +1063,7 @@ protected:
 
 public:
    AutoBindTarget(NetObj *_this);
-   AutoBindTarget(NetObj *_thist, ConfigEntry *config);
+   AutoBindTarget(NetObj *_this, ConfigEntry *config);
    virtual ~AutoBindTarget();
 
    AutoBindDecision isApplicable(DataCollectionTarget *object);
@@ -1051,6 +1073,41 @@ public:
    void setAutoBindMode(bool doBind, bool doUnbind);
 
    const TCHAR *getAutoBindScriptSource() const { return m_bindFilterSource; }
+};
+
+/**
+ * ICMP statistics collector
+ */
+class NXCORE_EXPORTABLE IcmpStatCollector
+{
+private:
+   UINT32 m_lastResponseTime;
+   UINT32 m_minResponseTime;
+   UINT32 m_maxResponseTime;
+   UINT32 m_avgResponseTime;
+   UINT32 m_packetLoss;
+   UINT16 *m_rawResponseTimes;
+   int m_writePos;
+   int m_bufferSize;
+
+   void recalculate();
+
+public:
+   IcmpStatCollector(int period);
+   ~IcmpStatCollector();
+
+   UINT32 last() const { return m_lastResponseTime; }
+   UINT32 average() const { return m_avgResponseTime; }
+   UINT32 min() const { return m_minResponseTime; }
+   UINT32 max() const { return m_maxResponseTime; }
+   UINT32 packetLoss() const { return m_packetLoss; }
+
+   void update(UINT32 responseTime);
+   void resize(int period);
+
+   bool saveToDatabase(DB_HANDLE hdb, UINT32 objectId, const TCHAR *target) const;
+
+   static IcmpStatCollector *loadFromDatabase(DB_HANDLE hdb, UINT32 objectId, const TCHAR *target, int period);
 };
 
 /**
@@ -1253,8 +1310,6 @@ protected:
 	int m_operStatePollCount;
 	int m_requiredPollCount;
    UINT32 m_zoneUIN;
-   UINT32 m_pingTime;
-   time_t m_pingLastTimeStamp;
    int m_ifTableSuffixLen;
    UINT32 *m_ifTableSuffix;
    IntegerArray<UINT32> *m_vlans;
@@ -1277,6 +1332,8 @@ public:
    virtual ~Interface();
 
    virtual int getObjectClass() const override { return OBJECT_INTERFACE; }
+   virtual InetAddress getPrimaryIpAddress() const override { lockProperties(); auto a = m_ipAddressList.getFirstUnicastAddress(); unlockProperties(); return a; }
+
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
    virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
@@ -1290,7 +1347,7 @@ public:
    UINT32 getParentInterfaceId() const { return m_parentInterfaceId; }
 
    const InetAddressList *getIpAddressList() const { return &m_ipAddressList; }
-   const InetAddress& getFirstIpAddress() const;
+   InetAddress getFirstIpAddress() const;
    UINT32 getZoneUIN() const { return m_zoneUIN; }
    UINT32 getIfIndex() const { return m_index; }
    UINT32 getIfType() const { return m_type; }
@@ -1313,7 +1370,6 @@ public:
    const MacAddress& getMacAddr() const { return m_macAddr; }
    int getIfTableSuffixLen() const { return m_ifTableSuffixLen; }
    const UINT32 *getIfTableSuffix() const { return m_ifTableSuffix; }
-   UINT32 getPingTime();
 	bool isSyntheticMask() const { return (m_flags & IF_SYNTHETIC_MASK) ? true : false; }
 	bool isPhysicalPort() const { return (m_flags & IF_PHYSICAL_PORT) ? true : false; }
 	bool isLoopback() const { return (m_flags & IF_LOOPBACK) ? true : false; }
@@ -1323,6 +1379,7 @@ public:
                                 (m_type == IFTYPE_OTHER) &&
                                 !_tcscmp(m_name, _T("unknown")); }
    bool isSubInterface() const { return m_parentInterfaceId != 0; }
+   bool isIncludedInIcmpPoll() const { return (m_flags & IF_INCLUDE_IN_ICMP_POLL) ? true : false; }
    NXSL_Value *getVlanListForNXSL(NXSL_VM *vm);
 
    UINT64 getLastDownEventId() const { return m_lastDownEventId; }
@@ -1356,7 +1413,6 @@ public:
    UINT32 wakeUp();
 	void setExpectedState(int state) { lockProperties(); setExpectedStateInternal(state); unlockProperties(); }
    void setExcludeFromTopology(bool excluded);
-	void updatePingData();
 };
 
 /**
@@ -1490,8 +1546,6 @@ protected:
    IntegerArray<UINT32> *m_deletedItems;
    IntegerArray<UINT32> *m_deletedTables;
    StringMap *m_scriptErrorReports;
-   UINT32 m_pingTime;
-   time_t m_pingLastTimeStamp;
    time_t m_lastConfigurationPoll;
    time_t m_lastStatusPoll;
    time_t m_lastInstancePoll;
@@ -1508,7 +1562,6 @@ protected:
    virtual void onDataCollectionLoad() override;
    virtual void onDataCollectionChange() override;
 	virtual bool isDataCollectionDisabled();
-   virtual void updatePingData();
 
    virtual void statusPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId);
    virtual void configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId);
@@ -1588,8 +1641,6 @@ public:
 
    int getMostCriticalDCIStatus();
 
-   UINT32 getPingTime();
-
    void statusPollWorkerEntry(PollerInfo *poller);
    void statusPollWorkerEntry(PollerInfo *poller, ClientSession *session, UINT32 rqId);
    void statusPollPollerEntry(PollerInfo *poller, ClientSession *session, UINT32 rqId);
@@ -1619,11 +1670,11 @@ inline bool DataCollectionTarget::lockForInstancePoll()
    if (!m_isDeleted && !m_isDeleteInitiated &&
        (m_status != STATUS_UNMANAGED) &&
 	    (!(m_flags & DCF_DISABLE_CONF_POLL)) &&
-       (!(m_runtimeFlags & DCDF_QUEUED_FOR_INSTANCE_POLL)) &&
-       (m_runtimeFlags & DCDF_CONFIGURATION_POLL_PASSED) &&
+       (!(m_runtimeFlags & ODF_QUEUED_FOR_INSTANCE_POLL)) &&
+       (m_runtimeFlags & ODF_CONFIGURATION_POLL_PASSED) &&
        (static_cast<UINT32>(time(NULL) - m_lastInstancePoll) > g_instancePollingInterval))
    {
-      m_runtimeFlags |= DCDF_QUEUED_FOR_INSTANCE_POLL;
+      m_runtimeFlags |= ODF_QUEUED_FOR_INSTANCE_POLL;
       success = true;
    }
    unlockProperties();
@@ -1636,7 +1687,7 @@ inline bool DataCollectionTarget::lockForInstancePoll()
 inline void DataCollectionTarget::unlockForInstancePoll()
 {
    lockProperties();
-   m_runtimeFlags &= ~DCDF_QUEUED_FOR_INSTANCE_POLL;
+   m_runtimeFlags &= ~ODF_QUEUED_FOR_INSTANCE_POLL;
    unlockProperties();
 }
 
@@ -1649,18 +1700,18 @@ inline bool DataCollectionTarget::lockForConfigurationPoll()
    lockProperties();
 	if (!m_isDeleted && !m_isDeleteInitiated)
 	{
-      if (m_runtimeFlags & DCDF_FORCE_CONFIGURATION_POLL)
+      if (m_runtimeFlags & ODF_FORCE_CONFIGURATION_POLL)
       {
-         m_runtimeFlags &= ~DCDF_FORCE_CONFIGURATION_POLL;
-         m_runtimeFlags |= DCDF_QUEUED_FOR_CONFIGURATION_POLL;
+         m_runtimeFlags &= ~ODF_FORCE_CONFIGURATION_POLL;
+         m_runtimeFlags |= ODF_QUEUED_FOR_CONFIGURATION_POLL;
          success = true;
       }
       else if ((m_status != STATUS_UNMANAGED) &&
                (!(m_flags & DCF_DISABLE_CONF_POLL)) &&
-               (!(m_runtimeFlags & DCDF_QUEUED_FOR_CONFIGURATION_POLL)) &&
-               (static_cast<UINT32>(time(NULL) - m_lastConfigurationPoll) > g_dwConfigurationPollingInterval))
+               (!(m_runtimeFlags & ODF_QUEUED_FOR_CONFIGURATION_POLL)) &&
+               (static_cast<UINT32>(time(NULL) - m_lastConfigurationPoll) > g_configurationPollingInterval))
       {
-         m_runtimeFlags |= DCDF_QUEUED_FOR_CONFIGURATION_POLL;
+         m_runtimeFlags |= ODF_QUEUED_FOR_CONFIGURATION_POLL;
          success = true;
       }
 	}
@@ -1671,7 +1722,7 @@ inline bool DataCollectionTarget::lockForConfigurationPoll()
 inline void DataCollectionTarget::unlockForConfigurationPoll()
 {
    lockProperties();
-   m_runtimeFlags &= ~DCDF_QUEUED_FOR_CONFIGURATION_POLL;
+   m_runtimeFlags &= ~ODF_QUEUED_FOR_CONFIGURATION_POLL;
    unlockProperties();
 }
 
@@ -1681,19 +1732,19 @@ inline bool DataCollectionTarget::lockForStatusPoll()
    lockProperties();
    if (!m_isDeleted && !m_isDeleteInitiated)
    {
-      if (m_runtimeFlags & DCDF_FORCE_STATUS_POLL)
+      if (m_runtimeFlags & ODF_FORCE_STATUS_POLL)
       {
-         m_runtimeFlags &= ~DCDF_FORCE_STATUS_POLL;
-         m_runtimeFlags |= DCDF_QUEUED_FOR_STATUS_POLL;
+         m_runtimeFlags &= ~ODF_FORCE_STATUS_POLL;
+         m_runtimeFlags |= ODF_QUEUED_FOR_STATUS_POLL;
          success = true;
       }
       else if ((m_status != STATUS_UNMANAGED) &&
                (!(m_flags & DCF_DISABLE_STATUS_POLL)) &&
-               (!(m_runtimeFlags & DCDF_QUEUED_FOR_STATUS_POLL)) &&
-               (!(m_runtimeFlags & DCDF_CONFIGURATION_POLL_PENDING)) &&
-               ((UINT32)(time(NULL) - m_lastStatusPoll) > g_dwStatusPollingInterval))
+               (!(m_runtimeFlags & ODF_QUEUED_FOR_STATUS_POLL)) &&
+               (!(m_runtimeFlags & ODF_CONFIGURATION_POLL_PENDING)) &&
+               ((UINT32)(time(NULL) - m_lastStatusPoll) > g_statusPollingInterval))
       {
-         m_runtimeFlags |= DCDF_QUEUED_FOR_STATUS_POLL;
+         m_runtimeFlags |= ODF_QUEUED_FOR_STATUS_POLL;
          success = true;
       }
    }
@@ -1704,7 +1755,7 @@ inline bool DataCollectionTarget::lockForStatusPoll()
 inline void DataCollectionTarget::unlockForStatusPoll()
 {
    lockProperties();
-   m_runtimeFlags &= ~DCDF_QUEUED_FOR_STATUS_POLL;
+   m_runtimeFlags &= ~ODF_QUEUED_FOR_STATUS_POLL;
    unlockProperties();
 }
 
@@ -1790,18 +1841,19 @@ protected:
 	virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId) override;
    virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest) override;
 
-   virtual void updatePingData() override;
-
 public:
    AccessPoint();
    AccessPoint(const TCHAR *name, UINT32 index, const BYTE *macAddr);
    virtual ~AccessPoint();
 
    virtual int getObjectClass() const override { return OBJECT_ACCESSPOINT; }
+   virtual InetAddress getPrimaryIpAddress() const override { return getIpAddress(); }
 
    virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
+
+   virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
 
    virtual json_t *toJson() override;
 
@@ -1809,12 +1861,16 @@ public:
 
    UINT32 getIndex() const { return m_index; }
 	const MacAddress& getMacAddr() const { return m_macAddr; }
-   const InetAddress& getIpAddress() const { return m_ipAddress; }
+   InetAddress getIpAddress() const { lockProperties(); auto a = m_ipAddress; unlockProperties(); return a; }
 	bool isMyRadio(int rfIndex);
 	bool isMyRadio(const BYTE *macAddr);
 	void getRadioName(int rfIndex, TCHAR *buffer, size_t bufSize);
    AccessPointState getApState() const { return m_apState; }
    Node *getParentNode();
+   bool isIncludedInIcmpPoll() const { return (m_flags & APF_INCLUDE_IN_ICMP_POLL) ? true : false; }
+   const TCHAR *getVendor() const { return CHECK_NULL_EX(m_vendor); }
+   const TCHAR *getModel() const { return CHECK_NULL_EX(m_model); }
+   const TCHAR *getSerialNumber() const { return CHECK_NULL_EX(m_serialNumber); }
 
 	void attachToNode(UINT32 nodeId);
    void setIpAddress(const InetAddress& addr) { lockProperties(); m_ipAddress = addr; setModified(MODIFY_OTHER); unlockProperties(); }
@@ -2127,6 +2183,18 @@ enum DuplicateCheckResult
 };
 
 /**
+ * ICMP statistic function
+ */
+enum class IcmpStatFunction
+{
+   LAST,
+   MIN,
+   MAX,
+   AVERAGE,
+   LOSS
+};
+
+/**
  * Container for proxy agent connections
  */
 class ProxyAgentConnection : public ObjectLock<AgentConnectionEx>
@@ -2214,6 +2282,7 @@ protected:
 	time_t m_lastDiscoveryPoll;
 	time_t m_lastTopologyPoll;
    time_t m_lastRTUpdate;
+   time_t m_lastIcmpPoll;
    time_t m_failTimeSNMP;
    time_t m_failTimeAgent;
 	time_t m_downSince;
@@ -2273,11 +2342,16 @@ protected:
 	RackOrientation m_rackOrientation;
 	ManualGauge64 *m_topologyPollTimer;
 	ManualGauge64 *m_routingTablePollTimer;
+   IcmpStatCollectionMode m_icmpStatCollectionMode;
+   StringObjectMap<IcmpStatCollector> *m_icmpStatCollectors;
+   InetAddressList m_icmpTargets;
 
    virtual void statusPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) override;
    virtual void configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId) override;
-   virtual void topologyPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId);
-   virtual void routingTablePoll(PollerInfo *poller, ClientSession *session, UINT32 rqId);
+
+   void topologyPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId);
+   void routingTablePoll(PollerInfo *poller, ClientSession *session, UINT32 rqId);
+   void icmpPoll(PollerInfo *poller);
 
    virtual bool isDataCollectionDisabled() override;
    virtual void collectProxyInfo(ProxyInfo *info) override;
@@ -2287,8 +2361,6 @@ protected:
 
    virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId) override;
    virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest) override;
-
-   virtual void updatePingData() override;
 
    virtual void onDataCollectionChange() override;
 
@@ -2331,6 +2403,7 @@ protected:
    bool checkNetworkPathLayer2(UINT32 requestId, bool secondPass);
    bool checkNetworkPathLayer3(UINT32 requestId, bool secondPass);
 	bool checkNetworkPathElement(UINT32 nodeId, const TCHAR *nodeType, bool isProxy, UINT32 requestId, bool secondPass);
+	void icmpPollAddress(AgentConnection *conn, const TCHAR *target, const InetAddress& addr);
 
    void syncDataCollectionWithAgent(AgentConnectionEx *conn);
 
@@ -2356,6 +2429,7 @@ public:
    virtual ~Node();
 
    virtual int getObjectClass() const override { return OBJECT_NODE; }
+   virtual InetAddress getPrimaryIpAddress() const override { return getIpAddress(); }
 
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
    virtual bool saveRuntimeData(DB_HANDLE hdb) override;
@@ -2363,9 +2437,10 @@ public:
    virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
 
    virtual bool lockForStatusPoll() override;
-   virtual bool lockForDiscoveryPoll();
-   virtual bool lockForRoutePoll();
-   virtual bool lockForTopologyPoll();
+   bool lockForDiscoveryPoll();
+   bool lockForRoutePoll();
+   bool lockForTopologyPoll();
+   bool lockForIcmpPoll();
 
    virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
 
@@ -2373,7 +2448,7 @@ public:
 
 	Cluster *getMyCluster();
 
-   const InetAddress& getIpAddress() const { return m_ipAddress; }
+   InetAddress getIpAddress() const { lockProperties(); auto a = m_ipAddress; unlockProperties(); return a; }
    UINT32 getZoneUIN() const { return m_zoneUIN; }
    NodeType getType() const { return m_type; }
    bool isVirtual() const { return (m_type == NODE_TYPE_VIRTUAL) || (m_type == NODE_TYPE_CONTAINER); }
@@ -2397,6 +2472,12 @@ public:
 	bool isPerVlanFdbSupported() const { return (m_driver != NULL) ? m_driver->isPerVlanFdbSupported() : false; }
 	bool isWirelessController() const { return m_capabilities & NC_IS_WIFI_CONTROLLER ? true : false; }
 	bool supportNewTypeFormat() const { return m_capabilities & NC_IS_NEW_POLICY_TYPES ? true : false; }
+
+   bool isIcmpStatCollectionEnabled() const
+   {
+      return (m_icmpStatCollectionMode == IcmpStatCollectionMode::DEFAULT) ?
+               ((g_flags & AF_COLLECT_ICMP_STATISTICS) != 0) : (m_icmpStatCollectionMode == IcmpStatCollectionMode::ON);
+   }
 
    const uuid& getAgentId() const { return m_agentId; }
 	const TCHAR *getAgentVersion() const { return m_agentVersion; }
@@ -2488,12 +2569,13 @@ public:
 	void updateInterfaceNames(ClientSession *pSession, UINT32 dwRqId);
 	void routingTablePollWorkerEntry(PollerInfo *poller);
    void routingTablePollWorkerEntry(PollerInfo *poller, ClientSession *session, UINT32 rqId);
+   void icmpPollWorkerEntry(PollerInfo *poller);
 	void checkSubnetBinding();
    AccessPointState getAccessPointState(AccessPoint *ap, SNMP_Transport *snmpTransport, const ObjectArray<RadioInterfaceInfo> *radioInterfaces);
    void setChassis(UINT32 chassisId);
    virtual void resetPollTimers() override;
 
-	void forceConfigurationPoll() { lockProperties(); m_runtimeFlags |= DCDF_FORCE_CONFIGURATION_POLL; unlockProperties(); }
+	void forceConfigurationPoll() { lockProperties(); m_runtimeFlags |= ODF_FORCE_CONFIGURATION_POLL; unlockProperties(); }
 
    virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE) override;
 
@@ -2573,8 +2655,11 @@ public:
 	NetObj *findConnectionPoint(UINT32 *localIfId, BYTE *localMacAddr, int *type);
 	void addHostConnections(LinkLayerNeighbors *nbs);
 	void addExistingConnections(LinkLayerNeighbors *nbs);
-
 	NetworkMapObjectList *buildIPTopology(UINT32 *pdwStatus, int radius, bool includeEndNodes);
+
+   bool getIcmpStatistics(const TCHAR *target, UINT32 *last, UINT32 *min, UINT32 *max, UINT32 *avg, UINT32 *loss);
+   DataCollectionError getIcmpStatistic(const TCHAR *param, IcmpStatFunction function, TCHAR *value);
+   StringList *getIcmpStatCollectors();
 
 	ServerJobQueue *getJobQueue() { return m_jobQueue; }
 	int getJobCount(const TCHAR *type = NULL) { return m_jobQueue->getJobCount(type); }
@@ -2606,20 +2691,20 @@ inline bool Node::lockForStatusPoll()
    lockProperties();
    if (!m_isDeleted && !m_isDeleteInitiated)
    {
-      if (m_runtimeFlags & DCDF_FORCE_STATUS_POLL)
+      if (m_runtimeFlags & ODF_FORCE_STATUS_POLL)
       {
-         m_runtimeFlags &= ~DCDF_FORCE_STATUS_POLL;
-         m_runtimeFlags |= DCDF_QUEUED_FOR_STATUS_POLL;
+         m_runtimeFlags &= ~ODF_FORCE_STATUS_POLL;
+         m_runtimeFlags |= ODF_QUEUED_FOR_STATUS_POLL;
          success = true;
       }
       else if ((m_status != STATUS_UNMANAGED) &&
                (!(m_flags & DCF_DISABLE_STATUS_POLL)) &&
-               (!(m_runtimeFlags & DCDF_QUEUED_FOR_STATUS_POLL)) &&
+               (!(m_runtimeFlags & ODF_QUEUED_FOR_STATUS_POLL)) &&
                (getMyCluster() == NULL) &&
-               (!(m_runtimeFlags & DCDF_CONFIGURATION_POLL_PENDING)) &&
-               (static_cast<UINT32>(time(NULL) - m_lastStatusPoll) > g_dwStatusPollingInterval))
+               (!(m_runtimeFlags & ODF_CONFIGURATION_POLL_PENDING)) &&
+               (static_cast<UINT32>(time(NULL) - m_lastStatusPoll) > g_statusPollingInterval))
       {
-         m_runtimeFlags |= DCDF_QUEUED_FOR_STATUS_POLL;
+         m_runtimeFlags |= ODF_QUEUED_FOR_STATUS_POLL;
          success = true;
       }
    }
@@ -2636,8 +2721,8 @@ inline bool Node::lockForDiscoveryPoll()
        (m_status != STATUS_UNMANAGED) &&
 		 (!(m_flags & NF_DISABLE_DISCOVERY_POLL)) &&
        (!(m_runtimeFlags & NDF_QUEUED_FOR_DISCOVERY_POLL)) &&
-       (m_runtimeFlags & DCDF_CONFIGURATION_POLL_PASSED) &&
-       (static_cast<UINT32>(time(NULL) - m_lastDiscoveryPoll) > g_dwDiscoveryPollingInterval))
+       (m_runtimeFlags & ODF_CONFIGURATION_POLL_PASSED) &&
+       (static_cast<UINT32>(time(NULL) - m_lastDiscoveryPoll) > g_discoveryPollingInterval))
    {
       m_runtimeFlags |= NDF_QUEUED_FOR_DISCOVERY_POLL;
       success = true;
@@ -2654,8 +2739,8 @@ inline bool Node::lockForRoutePoll()
        (m_status != STATUS_UNMANAGED) &&
 	    (!(m_flags & NF_DISABLE_ROUTE_POLL)) &&
        (!(m_runtimeFlags & NDF_QUEUED_FOR_ROUTE_POLL)) &&
-       (m_runtimeFlags & DCDF_CONFIGURATION_POLL_PASSED) &&
-       (static_cast<UINT32>(time(NULL) - m_lastRTUpdate) > g_dwRoutingTableUpdateInterval))
+       (m_runtimeFlags & ODF_CONFIGURATION_POLL_PASSED) &&
+       (static_cast<UINT32>(time(NULL) - m_lastRTUpdate) > g_routingTableUpdateInterval))
    {
       m_runtimeFlags |= NDF_QUEUED_FOR_ROUTE_POLL;
       success = true;
@@ -2672,10 +2757,28 @@ inline bool Node::lockForTopologyPoll()
        (m_status != STATUS_UNMANAGED) &&
 	    (!(m_flags & NF_DISABLE_TOPOLOGY_POLL)) &&
        (!(m_runtimeFlags & NDF_QUEUED_FOR_TOPOLOGY_POLL)) &&
-       (m_runtimeFlags & DCDF_CONFIGURATION_POLL_PASSED) &&
-       (static_cast<UINT32>(time(NULL) - m_lastTopologyPoll) > g_dwTopologyPollingInterval))
+       (m_runtimeFlags & ODF_CONFIGURATION_POLL_PASSED) &&
+       (static_cast<UINT32>(time(NULL) - m_lastTopologyPoll) > g_topologyPollingInterval))
    {
       m_runtimeFlags |= NDF_QUEUED_FOR_TOPOLOGY_POLL;
+      success = true;
+   }
+   unlockProperties();
+   return success;
+}
+
+inline bool Node::lockForIcmpPoll()
+{
+   bool success = false;
+   lockProperties();
+   if (!m_isDeleted && !m_isDeleteInitiated &&
+       (m_status != STATUS_UNMANAGED) &&
+       isIcmpStatCollectionEnabled() &&
+       (!(m_runtimeFlags & NDF_QUEUED_FOR_ICMP_POLL)) &&
+       (!(m_runtimeFlags & ODF_CONFIGURATION_POLL_PENDING)) &&
+       ((UINT32)(time(NULL) - m_lastIcmpPoll) > g_icmpPollingInterval))
+   {
+      m_runtimeFlags |= NDF_QUEUED_FOR_ICMP_POLL;
       success = true;
    }
    unlockProperties();
@@ -2709,6 +2812,7 @@ public:
    virtual ~Subnet();
 
    virtual int getObjectClass() const override { return OBJECT_SUBNET; }
+   virtual InetAddress getPrimaryIpAddress() const override { return getIpAddress(); }
 
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
@@ -2722,7 +2826,7 @@ public:
 
    virtual bool showThresholdSummary() override;
 
-   const InetAddress& getIpAddress() const { return m_ipAddress; }
+   InetAddress getIpAddress() const { lockProperties(); auto a = m_ipAddress; unlockProperties(); return a; }
    UINT32 getZoneUIN() const { return m_zoneUIN; }
 	bool isSyntheticMask() const { return m_bSyntheticMask; }
 
@@ -3058,7 +3162,7 @@ inline bool Zone::lockForHealthCheck()
    {
       if ((m_status != STATUS_UNMANAGED) &&
           !m_lockedForHealthCheck &&
-          ((UINT32)(time(NULL) - m_lastHealthCheck) >= g_dwStatusPollingInterval))
+          ((UINT32)(time(NULL) - m_lastHealthCheck) >= g_statusPollingInterval))
       {
          m_lockedForHealthCheck = true;
          success = true;
@@ -3138,7 +3242,7 @@ public:
    {
       return ((m_status != STATUS_UNMANAGED) &&
               (!m_queuedForPolling) && (!m_isDeleted) &&
-              ((UINT32)time(NULL) - (UINT32)m_lastPoll > g_dwConditionPollingInterval));
+              ((UINT32)time(NULL) - (UINT32)m_lastPoll > g_conditionPollingInterval));
    }
 
    int getCacheSizeForDCI(UINT32 itemId, bool noLock);
@@ -3532,22 +3636,6 @@ public:
 
 	UINT32 getNodeId() { return m_nodeId; }
 };
-
-/**
- * Get IP address for object
- */
-inline const InetAddress& GetObjectIpAddress(const NetObj *object)
-{
-   if (object->getObjectClass() == OBJECT_NODE)
-      return static_cast<const Node*>(object)->getIpAddress();
-   if (object->getObjectClass() == OBJECT_SUBNET)
-      return static_cast<const Subnet*>(object)->getIpAddress();
-   if (object->getObjectClass() == OBJECT_ACCESSPOINT)
-      return static_cast<const AccessPoint*>(object)->getIpAddress();
-   if (object->getObjectClass() == OBJECT_INTERFACE)
-      return static_cast<const Interface*>(object)->getIpAddressList()->getFirstUnicastAddress();
-   return InetAddress::INVALID;
-}
 
 /**
  * Node dependency types

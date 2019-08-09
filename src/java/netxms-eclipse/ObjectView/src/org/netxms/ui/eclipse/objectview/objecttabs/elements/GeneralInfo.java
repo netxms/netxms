@@ -177,6 +177,11 @@ public class GeneralInfo extends TableElement
                           rack.isTopBottomNumbering() ? node.getRackPosition() + node.getRackHeight() - 1 : node.getRackPosition()));
                }
             }
+            if (node.isIcmpStatisticsCollected())
+            {
+               addPair("ICMP average response time", node.getIcmpAverageResponseTime() + " ms");
+               addPair("ICMP packet loss", node.getIcmpPacketLoss() + "%");
+            }
 				break;
 			case AbstractObject.OBJECT_MOBILEDEVICE:
 				MobileDevice md = (MobileDevice)object;

@@ -5154,7 +5154,7 @@ public class NXCSession
          msg.setField(NXCPCodes.VID_AUTOBIND_FILTER, data.getAutoBindFilter());
       }
 
-      if (data.isFieldSet(NXCObjectModificationData.AUTOBIND_REMOVE_FLAGS))
+      if (data.isFieldSet(NXCObjectModificationData.AUTOBIND_FLAGS))
       {
          msg.setField(NXCPCodes.VID_AUTOBIND_FLAG, data.isAutoBindEnabled());
          msg.setField(NXCPCodes.VID_AUTOUNBIND_FLAG, data.isAutoUnbindEnabled());
@@ -5641,6 +5641,19 @@ public class NXCSession
          msg.setField(NXCPCodes.VID_RESPONSIBLE_USERS, users);
       }
 
+      if (data.isFieldSet(NXCObjectModificationData.ICMP_POLL_MODE))
+      {
+         msg.setFieldInt16(NXCPCodes.VID_ICMP_COLLECTION_MODE, data.getIcmpStatCollectionMode().getValue());
+      }
+      
+      if (data.isFieldSet(NXCObjectModificationData.ICMP_POLL_TARGETS))
+      {
+         msg.setFieldInt32(NXCPCodes.VID_ICMP_TARGET_COUNT, data.getIcmpTargets().size());
+         long fieldId = NXCPCodes.VID_ICMP_TARGET_LIST_BASE;
+         for(InetAddress a : data.getIcmpTargets())
+            msg.setField(fieldId++, a);
+      }
+      
       modifyCustomObject(data, userData, msg);
 
       sendMessage(msg);

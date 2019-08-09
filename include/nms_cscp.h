@@ -1285,6 +1285,14 @@ typedef struct
 #define VID_SNMP_TRAP_PROXY         ((UINT32)643)
 #define VID_THRESHOLD_ID            ((UINT32)644)
 #define VID_TAGS                    ((UINT32)645)
+#define VID_ICMP_AVG_RESPONSE_TIME  ((UINT32)646)
+#define VID_ICMP_MIN_RESPONSE_TIME  ((UINT32)647)
+#define VID_ICMP_MAX_RESPONSE_TIME  ((UINT32)648)
+#define VID_ICMP_LAST_RESPONSE_TIME ((UINT32)649)
+#define VID_ICMP_PACKET_LOSS        ((UINT32)650)
+#define VID_ICMP_COLLECTION_MODE    ((UINT32)651)
+#define VID_ICMP_TARGET_COUNT       ((UINT32)652)
+#define VID_HAS_ICMP_DATA           ((UINT32)653)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)
@@ -1340,6 +1348,9 @@ typedef struct
 
 // Base value for URL list
 #define VID_URL_LIST_BASE           ((UINT32)0x74000000)
+
+// Base value for ICMP target list
+#define VID_ICMP_TARGET_LIST_BASE   ((UINT32)0x75000000)
 
 // IP address list base
 #define VID_IP_ADDRESS_LIST_BASE    ((UINT32)0x7F000000)

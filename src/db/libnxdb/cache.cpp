@@ -59,7 +59,8 @@ void LIBNXDB_EXPORTABLE DBCloseInMemoryDatabase(DB_HANDLE hdb)
 /**
  * Cache table
  */
-bool LIBNXDB_EXPORTABLE DBCacheTable(DB_HANDLE cacheDB, DB_HANDLE sourceDB, const TCHAR *table, const TCHAR *indexColumn, const TCHAR *columns, const TCHAR * const *intColumns)
+bool LIBNXDB_EXPORTABLE DBCacheTable(DB_HANDLE cacheDB, DB_HANDLE sourceDB, const TCHAR *table, const TCHAR *indexColumn,
+         const TCHAR *columns, const TCHAR * const *intColumns)
 {
    TCHAR query[1024];
    _sntprintf(query, 1024, _T("SELECT %s FROM %s"), columns, table);

@@ -398,8 +398,8 @@ void Template::applyDCIChanges()
 void Template::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
 {
    super::fillMessageInternal(pMsg, userId);
-   AutoBindTarget::fillMessageInternal(pMsg, userId);
-   VersionableObject::fillMessageInternal(pMsg, userId);
+   AutoBindTarget::fillMessage(pMsg);
+   VersionableObject::fillMessage(pMsg);
 }
 
 /**
@@ -414,7 +414,7 @@ UINT32 Template::modifyFromMessageInternal(NXCPMessage *pRequest)
       m_flags &= ~mask;
       m_flags |= pRequest->getFieldAsUInt32(VID_FLAGS) & mask;
    }
-   AutoBindTarget::modifyFromMessageInternal(pRequest);
+   AutoBindTarget::modifyFromMessage(pRequest);
 
    return super::modifyFromMessageInternal(pRequest);
 }

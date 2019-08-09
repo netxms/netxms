@@ -230,17 +230,16 @@
 #define DCF_DISABLE_CONF_POLL      0x00000002
 #define DCF_DISABLE_DATA_COLLECT   0x00000004
 
-
 /**
- * Data Collection Object runtime (dynamic) flags first half of int
+ * Common object runtime flags (can be used by all NetObj derived classes)
  */
-#define DCDF_QUEUED_FOR_STATUS_POLL        0x0001
-#define DCDF_QUEUED_FOR_CONFIGURATION_POLL 0x0002
-#define DCDF_QUEUED_FOR_INSTANCE_POLL      0x0004
-#define DCDF_FORCE_STATUS_POLL             0x0008
-#define DCDF_FORCE_CONFIGURATION_POLL      0x0010
-#define DCDF_CONFIGURATION_POLL_PASSED     0x0020
-#define DCDF_CONFIGURATION_POLL_PENDING    0x0040
+#define ODF_QUEUED_FOR_STATUS_POLL         0x0001
+#define ODF_QUEUED_FOR_CONFIGURATION_POLL  0x0002
+#define ODF_QUEUED_FOR_INSTANCE_POLL       0x0004
+#define ODF_FORCE_STATUS_POLL              0x0008
+#define ODF_FORCE_CONFIGURATION_POLL       0x0010
+#define ODF_CONFIGURATION_POLL_PASSED      0x0020
+#define ODF_CONFIGURATION_POLL_PENDING     0x0040
 
 /**
  * Node runtime (dynamic) flags
@@ -250,15 +249,16 @@
 #define NDF_QUEUED_FOR_ROUTE_POLL      0x00040000
 #define NDF_RECHECK_CAPABILITIES       0x00080000
 #define NDF_NEW_TUNNEL_BIND            0x00100000
+#define NDF_QUEUED_FOR_ICMP_POLL       0x00200000
 
 /**
- * Data Collection Object status flags
+ * Data collection object state flags
  */
 #define DCSF_UNREACHABLE               0x00000001
 #define DCSF_NETWORK_PATH_PROBLEM      0x00000002
 
 /**
- * Cluster status flags
+ * Cluster state flags
  */
 #define CLSF_DOWN                      0x00010000
 
@@ -291,6 +291,11 @@
 #define CHF_BIND_UNDER_CONTROLLER   0x00000001
 
 /**
+ * Access point flags
+ */
+#define APF_INCLUDE_IN_ICMP_POLL 0x00000001
+
+/**
  * Interface flags
  */
 #define IF_SYNTHETIC_MASK        0x00000001
@@ -299,8 +304,9 @@
 #define IF_LOOPBACK              0x00000008
 #define IF_CREATED_MANUALLY      0x00000010
 #define IF_PEER_REFLECTION       0x00000020  /* topology information obtained by reflection */
+#define IF_INCLUDE_IN_ICMP_POLL  0x00000040  /* interface should be included into node ICMP poll */
 #define IF_EXPECTED_STATE_MASK   0x30000000	/* 2-bit field holding expected interface state */
-#define IF_USER_FLAGS_MASK       (IF_EXCLUDE_FROM_TOPOLOGY)    /* flags that can be changed by user */
+#define IF_USER_FLAGS_MASK       (IF_EXCLUDE_FROM_TOPOLOGY | IF_INCLUDE_IN_ICMP_POLL)    /* flags that can be changed by user */
 
 /**
  * Expected interface states

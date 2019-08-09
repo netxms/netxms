@@ -464,6 +464,19 @@ static void OnConfigVariableChange(bool isCLOB, const TCHAR *name, const TCHAR *
       else
          DeleteScheduledTaskByHandlerId(ALARM_SUMMARY_EMAIL_TASK_ID);
    }
+   else if (!_tcscmp(name, _T("ICMP.CollectPollStatistics")))
+   {
+      if (_tcstol(value, NULL, 0))
+         g_flags |= AF_COLLECT_ICMP_STATISTICS;
+      else
+         g_flags &= ~AF_COLLECT_ICMP_STATISTICS;
+   }
+   else if (!_tcscmp(name, _T("ICMP.PollingInterval")))
+   {
+      TCHAR *eptr;
+      UINT32 i = _tcstoul(value, &eptr, 0);
+      g_icmpPollingInterval = (i > 0) && (*eptr == 0) ? i : 60;
+   }
    else if (!_tcscmp(name, _T("NetworkDiscovery.EnableParallelProcessing")))
    {
       if (_tcstol(value, NULL, 0))

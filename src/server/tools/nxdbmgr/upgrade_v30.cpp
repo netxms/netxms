@@ -24,6 +24,52 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 30.90 to 30.91
+ */
+static bool H_UpgradeFromV90()
+{
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET var_name='ICMP.PingSize' WHERE var_name='IcmpPingSize'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET var_name='ICMP.PingTmeout' WHERE var_name='IcmpPingTimeout'")));
+
+   CHK_EXEC(CreateConfigParam(_T("ICMP.CollectPollStatistics"), _T("1"),
+            _T("Collect ICMP poll statistics for all nodes by default. When enabled ICMP ping is used on each status poll and response time and packet loss are collected."),
+            NULL, 'B', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(_T("ICMP.StatisticPeriod"), _T("60"),
+            _T("Time period for collecting ICMP statistics (in number of polls)."),
+            _T("polls"), 'I', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(_T("ICMP.PollingInterval"), _T("60"),
+            _T("Interval between ICMP polls (in seconds)."),
+            _T("seconds"), 'I', true, false, false, false));
+
+   CHK_EXEC(CreateTable(
+            _T("CREATE TABLE icmp_statistics (")
+            _T("  object_id integer not null,")
+            _T("  poll_target varchar(63) not null,")
+            _T("  min_response_time integer not null,")
+            _T("  max_response_time integer not null,")
+            _T("  avg_response_time integer not null,")
+            _T("  last_response_time integer not null,")
+            _T("  sample_count integer not null,")
+            _T("  raw_response_times $SQL:TEXT null,")
+            _T("PRIMARY KEY(object_id,poll_target))")
+            ));
+
+   CHK_EXEC(CreateTable(
+            _T("CREATE TABLE icmp_target_address_list (")
+            _T("  node_id integer not null,")
+            _T("  ip_addr varchar(48) not null,")
+            _T("PRIMARY KEY(node_id,ip_addr))")
+            ));
+
+   CHK_EXEC(SQLQuery(_T("ALTER TABLE nodes ADD icmp_poll_mode char(1)")));
+   CHK_EXEC(SQLQuery(_T("UPDATE nodes SET icmp_poll_mode='0'")));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("nodes"), _T("icmp_poll_mode")));
+
+   CHK_EXEC(SetMinorSchemaVersion(91));
+   return true;
+}
+
+/**
  * Upgrade from 30.89 to 30.90
  */
 static bool H_UpgradeFromV89()
@@ -2990,6 +3036,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 90, 30, 91, H_UpgradeFromV90 },
    { 89, 30, 90, H_UpgradeFromV89 },
    { 88, 30, 89, H_UpgradeFromV88 },
    { 87, 30, 88, H_UpgradeFromV87 },

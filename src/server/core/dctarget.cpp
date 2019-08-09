@@ -46,8 +46,6 @@ DataCollectionTarget::DataCollectionTarget() : super()
    m_deletedItems = new IntegerArray<UINT32>(32, 32);
    m_deletedTables = new IntegerArray<UINT32>(32, 32);
    m_scriptErrorReports = new StringMap();
-   m_pingLastTimeStamp = 0;
-   m_pingTime = PING_TIME_TIMEOUT;
    m_lastConfigurationPoll = 0;
    m_lastStatusPoll = 0;
    m_lastInstancePoll = 0;
@@ -66,8 +64,6 @@ DataCollectionTarget::DataCollectionTarget(const TCHAR *name) : super(name)
    m_deletedItems = new IntegerArray<UINT32>(32, 32);
    m_deletedTables = new IntegerArray<UINT32>(32, 32);
    m_scriptErrorReports = new StringMap();
-   m_pingLastTimeStamp = 0;
-   m_pingTime = PING_TIME_TIMEOUT;
    m_lastConfigurationPoll = 0;
    m_lastStatusPoll = 0;
    m_lastInstancePoll = 0;
@@ -167,9 +163,9 @@ void DataCollectionTarget::fillMessageInternalStage2(NXCPMessage *msg, UINT32 us
 /**
  * Modify object from message
  */
-UINT32 DataCollectionTarget::modifyFromMessageInternal(NXCPMessage *pRequest)
+UINT32 DataCollectionTarget::modifyFromMessageInternal(NXCPMessage *request)
 {
-   return super::modifyFromMessageInternal(pRequest);
+   return super::modifyFromMessageInternal(request);
 }
 
 /**
@@ -1240,28 +1236,6 @@ void DataCollectionTarget::calculateCompoundStatus(BOOL bForcedRecalc)
 }
 
 /**
- * Returns last ping time
- */
-UINT32 DataCollectionTarget::getPingTime()
-{
-   if ((time(NULL) - m_pingLastTimeStamp) > g_dwStatusPollingInterval)
-   {
-      updatePingData();
-      DbgPrintf(7, _T("DataCollectionTarget::getPingTime: update ping time is required! Last ping time %d."), m_pingLastTimeStamp);
-   }
-   return m_pingTime;
-}
-
-/**
- * Update ping data
- */
-void DataCollectionTarget::updatePingData()
-{
-   m_pingLastTimeStamp = 0;
-   m_pingTime = PING_TIME_TIMEOUT;
-}
-
-/**
  * Enter maintenance mode
  */
 void DataCollectionTarget::enterMaintenanceMode(const TCHAR *comments)
@@ -1539,10 +1513,7 @@ void DataCollectionTarget::updateContainerMembership()
  */
 json_t *DataCollectionTarget::toJson()
 {
-   json_t *root = super::toJson();
-   json_object_set_new(root, "pingTime", json_integer(m_pingTime));
-   json_object_set_new(root, "pingLastTimeStamp", json_integer(m_pingLastTimeStamp));
-   return root;
+   return super::toJson();
 }
 
 /**
@@ -1635,12 +1606,12 @@ void DataCollectionTarget::instanceDiscoveryPoll(PollerInfo *poller, ClientSessi
    if (m_isDeleteInitiated || IsShutdownInProgress())
    {
       if (requestId == 0)
-         m_runtimeFlags &= ~DCDF_QUEUED_FOR_INSTANCE_POLL;
+         m_runtimeFlags &= ~ODF_QUEUED_FOR_INSTANCE_POLL;
       unlockProperties();
       return;
    }
    // Poller can be called directly - in that case poll flag will not be set
-   m_runtimeFlags |= DCDF_QUEUED_FOR_INSTANCE_POLL;
+   m_runtimeFlags |= ODF_QUEUED_FOR_INSTANCE_POLL;
    unlockProperties();
 
    poller->setStatus(_T("wait for lock"));

@@ -43,9 +43,9 @@ VersionableObject::VersionableObject(NetObj *_this, ConfigEntry *config)
 /**
  * Create NXCP message with object's data
  */
-void VersionableObject::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
+void VersionableObject::fillMessage(NXCPMessage *msg)
 {
-   pMsg->setField(VID_VERSION, m_version);
+   msg->setField(VID_VERSION, m_version);
 }
 
 /**
@@ -80,7 +80,7 @@ bool VersionableObject::saveToDatabase(DB_HANDLE hdb)
  */
 bool VersionableObject::deleteFromDatabase(DB_HANDLE hdb)
 {
-   return ExecuteQueryOnObject(hdb, m_this->getId(), _T("DELETE FROM versionable_object WHERE object_id=?"));
+   return m_this->executeQueryOnObject(hdb, _T("DELETE FROM versionable_object WHERE object_id=?"));
 }
 
 /**

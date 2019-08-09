@@ -352,7 +352,18 @@ CREATE TABLE nodes
   capabilities integer null,
   fail_time_snmp integer not null,
   fail_time_agent integer not null,
+  icmp_poll_mode char(1) not null,
   PRIMARY KEY(id)
+) TABLE_TYPE;
+
+/**
+ * IP addresses for ICMP poll
+ */
+CREATE TABLE icmp_target_address_list
+(
+  node_id integer not null,
+  ip_addr varchar(48) not null,
+  PRIMARY KEY(iface_id,ip_addr)
 ) TABLE_TYPE;
 
 /*
@@ -639,6 +650,22 @@ CREATE TABLE container_members
   container_id integer not null,
   object_id integer not null,
   PRIMARY KEY(container_id,object_id)
+) TABLE_TYPE;
+
+/**
+ * ICMP statistics
+ */
+CREATE TABLE icmp_statistics
+(
+   object_id integer not null,
+   poll_target varchar(63) not null,
+   min_response_time integer not null,
+   max_response_time integer not null,
+   avg_response_time integer not null,
+   last_response_time integer not null,
+   sample_count integer not null,
+   raw_response_times TEXT null,
+   PRIMARY KEY(object_id,poll_target)
 ) TABLE_TYPE;
 
 /**

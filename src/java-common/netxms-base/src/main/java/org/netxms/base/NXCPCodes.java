@@ -1055,6 +1055,14 @@ public class NXCPCodes
    public static final long VID_SNMP_TRAP_PROXY = 643;
    public static final long VID_THRESHOLD_ID = 644;
    public static final long VID_TAGS = 645;
+   public static final long VID_ICMP_AVG_RESPONSE_TIME = 646;
+   public static final long VID_ICMP_MIN_RESPONSE_TIME = 647;
+   public static final long VID_ICMP_MAX_RESPONSE_TIME = 648;
+   public static final long VID_ICMP_LAST_RESPONSE_TIME = 649;
+   public static final long VID_ICMP_PACKET_LOSS = 650;
+   public static final long VID_ICMP_COLLECTION_MODE = 651;
+   public static final long VID_ICMP_TARGET_COUNT = 652;
+   public static final long VID_HAS_ICMP_DATA = 653;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;
@@ -1079,6 +1087,7 @@ public class NXCPCodes
    public static final long VID_OVERVIEW_DCI_LIST_BASE = 0x72000000L;
    public static final long VID_TOOLTIP_DCI_LIST_BASE = 0x73000000L;
    public static final long VID_URL_LIST_BASE = 0x74000000L;
+   public static final long VID_ICMP_TARGET_LIST_BASE = 0x75000000L;
 	public static final long VID_RESOURCE_LIST_BASE = 0x20000000L;
 	public static final long VID_IP_ADDRESS_LIST_BASE = 0x7F000000L;
    public static final long VID_SYNC_SUBNETS_BASE = 0x28000000L;

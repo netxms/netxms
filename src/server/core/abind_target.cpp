@@ -61,7 +61,7 @@ AutoBindTarget::AutoBindTarget(NetObj *_this, ConfigEntry *config)
 AutoBindTarget::~AutoBindTarget()
 {
    delete m_bindFilter;
-   free(m_bindFilterSource);
+   MemFree(m_bindFilterSource);
    MutexDestroy(m_mutexProperties);
 }
 
@@ -71,12 +71,10 @@ AutoBindTarget::~AutoBindTarget()
 void AutoBindTarget::setAutoBindMode(bool doBind, bool doUnbind)
 {
    internalLock();
-
    m_autoBindFlag = doBind;
    m_autoUnbindFlag = doUnbind;
-
-   m_this->markAsModified(MODIFY_OTHER);
    internalUnlock();
+   m_this->markAsModified(MODIFY_OTHER);
 }
 
 /**
@@ -114,56 +112,55 @@ void AutoBindTarget::setAutoBindFilter(const TCHAR *filter)
 /**
  * Modify object from NXCP message
  */
-UINT32 AutoBindTarget::modifyFromMessageInternal(NXCPMessage *pRequest)
+void AutoBindTarget::modifyFromMessage(NXCPMessage *request)
 {
    internalLock();
-   if (pRequest->isFieldExist(VID_AUTOBIND_FLAG))
+   if (request->isFieldExist(VID_AUTOBIND_FLAG))
    {
-      m_autoBindFlag = pRequest->getFieldAsBoolean(VID_AUTOBIND_FLAG);
+      m_autoBindFlag = request->getFieldAsBoolean(VID_AUTOBIND_FLAG);
    }
-   if (pRequest->isFieldExist(VID_AUTOUNBIND_FLAG))
+   if (request->isFieldExist(VID_AUTOUNBIND_FLAG))
    {
-      m_autoUnbindFlag = pRequest->getFieldAsBoolean(VID_AUTOUNBIND_FLAG);
+      m_autoUnbindFlag = request->getFieldAsBoolean(VID_AUTOUNBIND_FLAG);
    }
    internalUnlock();
 
    // Change apply filter
-   if (pRequest->isFieldExist(VID_AUTOBIND_FILTER))
+   if (request->isFieldExist(VID_AUTOBIND_FILTER))
    {
-      TCHAR *filter = pRequest->getFieldAsString(VID_AUTOBIND_FILTER);
+      TCHAR *filter = request->getFieldAsString(VID_AUTOBIND_FILTER);
       setAutoBindFilter(filter);
-      free(filter);
+      MemFree(filter);
    }
-   return RCC_SUCCESS;
 }
 
 /**
  * Create NXCP message with object's data
  */
-void AutoBindTarget::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
+void AutoBindTarget::fillMessage(NXCPMessage *msg)
 {
    internalLock();
-   pMsg->setField(VID_AUTOBIND_FLAG, m_autoBindFlag);
-   pMsg->setField(VID_AUTOUNBIND_FLAG, m_autoUnbindFlag);
-   pMsg->setField(VID_AUTOBIND_FILTER, CHECK_NULL_EX(m_bindFilterSource));
+   msg->setField(VID_AUTOBIND_FLAG, m_autoBindFlag);
+   msg->setField(VID_AUTOUNBIND_FLAG, m_autoUnbindFlag);
+   msg->setField(VID_AUTOBIND_FILTER, CHECK_NULL_EX(m_bindFilterSource));
    internalUnlock();
 }
 
 /**
  * Load object from database
  */
-bool AutoBindTarget::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
+bool AutoBindTarget::loadFromDatabase(DB_HANDLE hdb, UINT32 objectId)
 {
    TCHAR szQuery[256];
 
-   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT bind_filter,bind_flag,unbind_flag FROM auto_bind_target WHERE object_id=%d"), dwId);
+   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT bind_filter,bind_flag,unbind_flag FROM auto_bind_target WHERE object_id=%d"), objectId);
    DB_RESULT hResult = DBSelect(hdb, szQuery);
    if (hResult == NULL)
       return false;
 
    TCHAR *filter = DBGetField(hResult, 0, 0, NULL, 0);
    setAutoBindFilter(filter);
-   free(filter);
+   MemFree(filter);
 
    m_autoBindFlag = DBGetFieldLong(hResult, 0, 1) ? true : false;
    m_autoUnbindFlag = DBGetFieldLong(hResult, 0, 2) ? true : false;

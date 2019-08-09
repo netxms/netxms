@@ -380,6 +380,14 @@ static void TestStringMap()
    AssertTrue(!_tcscmp(v, _T("consectetur adipiscing elit")));
    EndTest(GetCurrentTimeMs() - start);
 
+   StartTest(_T("String map - keys"));
+   StringList *keys = m->keys();
+   AssertNotNull(keys);
+   AssertEquals(keys->size(), 10000);
+   AssertTrue(!_tcsncmp(keys->get(500), _T("key-"), 4));
+   delete keys;
+   EndTest();
+
    StartTest(_T("String map - clear"));
    start = GetCurrentTimeMs();
    m->clear();

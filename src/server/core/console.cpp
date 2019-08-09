@@ -394,7 +394,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
                case ICMP_SUCCESS:
                   ConsolePrintf(pCtx, _T("Success, RTT = %d ms\n"), (int)rtt);
                   break;
-               case ICMP_UNREACHEABLE:
+               case ICMP_UNREACHABLE:
                   ConsolePrintf(pCtx, _T("Destination unreachable\n"));
                   break;
                case ICMP_TIMEOUT:
@@ -801,6 +801,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_MERGE_DUPLICATE_NODES));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_SYSTEMD_DAEMON));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_USE_SYSTEMD_JOURNAL));
+         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_COLLECT_ICMP_STATISTICS));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_SERVER_INITIALIZED));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_SHUTDOWN));
          ConsolePrintf(pCtx, _T("\n"));

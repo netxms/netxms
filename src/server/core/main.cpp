@@ -144,13 +144,14 @@ NXCORE_EXPORTABLE_VAR(TCHAR g_szListenAddress[MAX_PATH]) = _T("*");
 #ifndef _WIN32
 NXCORE_EXPORTABLE_VAR(TCHAR g_szPIDFile[MAX_PATH]) = _T("/var/run/netxmsd.pid");
 #endif
-UINT32 g_dwDiscoveryPollingInterval;
-UINT32 g_dwStatusPollingInterval;
-UINT32 g_dwConfigurationPollingInterval;
-UINT32 g_dwRoutingTableUpdateInterval;
-UINT32 g_dwTopologyPollingInterval;
-UINT32 g_dwConditionPollingInterval;
+UINT32 g_discoveryPollingInterval;
+UINT32 g_statusPollingInterval;
+UINT32 g_configurationPollingInterval;
+UINT32 g_routingTableUpdateInterval;
+UINT32 g_topologyPollingInterval;
+UINT32 g_conditionPollingInterval;
 UINT32 g_instancePollingInterval;
+UINT32 g_icmpPollingInterval;
 UINT32 g_icmpPingSize;
 UINT32 g_icmpPingTimeout = 1500;    // ICMP ping timeout (milliseconds)
 UINT32 g_auditFlags;
@@ -310,14 +311,15 @@ static void LoadGlobalConfig()
       g_flags |= AF_SINGLE_TABLE_PERF_DATA;
    }
 
-	g_dwDiscoveryPollingInterval = ConfigReadInt(_T("DiscoveryPollingInterval"), 900);
-	g_dwStatusPollingInterval = ConfigReadInt(_T("StatusPollingInterval"), 60);
-	g_dwConfigurationPollingInterval = ConfigReadInt(_T("ConfigurationPollingInterval"), 3600);
+   g_conditionPollingInterval = ConfigReadInt(_T("ConditionPollingInterval"), 60);
+   g_configurationPollingInterval = ConfigReadInt(_T("ConfigurationPollingInterval"), 3600);
+	g_discoveryPollingInterval = ConfigReadInt(_T("DiscoveryPollingInterval"), 900);
+   g_icmpPollingInterval = ConfigReadInt(_T("ICMP.PollingInterval"), 60);
 	g_instancePollingInterval = ConfigReadInt(_T("InstancePollingInterval"), 600);
-	g_dwRoutingTableUpdateInterval = ConfigReadInt(_T("RoutingTableUpdateInterval"), 300);
-	g_dwTopologyPollingInterval = ConfigReadInt(_T("Topology.PollingInterval"), 1800);
-	g_dwConditionPollingInterval = ConfigReadInt(_T("ConditionPollingInterval"), 60);
-	g_slmPollingInterval = ConfigReadInt(_T("SlmPollingInterval"), 60);
+	g_routingTableUpdateInterval = ConfigReadInt(_T("RoutingTableUpdateInterval"), 300);
+   g_slmPollingInterval = ConfigReadInt(_T("SlmPollingInterval"), 60);
+   g_statusPollingInterval = ConfigReadInt(_T("StatusPollingInterval"), 60);
+	g_topologyPollingInterval = ConfigReadInt(_T("Topology.PollingInterval"), 1800);
 	DCObject::m_defaultPollingInterval = ConfigReadInt(_T("DefaultDCIPollingInterval"), 60);
    DCObject::m_defaultRetentionTime = ConfigReadInt(_T("DefaultDCIRetentionTime"), 30);
    g_defaultAgentCacheMode = (INT16)ConfigReadInt(_T("DefaultAgentCacheMode"), AGENT_CACHE_OFF);
@@ -371,6 +373,8 @@ static void LoadGlobalConfig()
       g_flags |= AF_CASE_INSENSITIVE_LOGINS;
    if (ConfigReadBoolean(_T("TrapSourcesInAllZones"), false))
       g_flags |= AF_TRAP_SOURCES_IN_ALL_ZONES;
+   if (ConfigReadBoolean(_T("ICMP.CollectPollStatistics"), true))
+      g_flags |= AF_COLLECT_ICMP_STATISTICS;
 
    switch(ConfigReadInt(_T("NetworkDiscovery.Type"), 0))
    {

@@ -44,6 +44,8 @@ public class Interface extends GenericObject implements ZoneMember
 	public static final int IF_EXCLUDE_FROM_TOPOLOGY  = 0x00000004;
 	public static final int IF_LOOPBACK               = 0x00000008;
 	public static final int IF_CREATED_MANUALLY       = 0x00000010;
+   public static final int IF_PEER_REFLECTION        = 0x00000020;
+   public static final int IF_INCLUDE_IN_ICMP_POLL   = 0x00000040;
 	public static final int IF_EXPECTED_STATE_MASK    = 0x30000000;
 	
 	public static final int ADMIN_STATE_UNKNOWN      = 0;
@@ -763,6 +765,16 @@ public class Interface extends GenericObject implements ZoneMember
 	{
 		return (flags & IF_EXCLUDE_FROM_TOPOLOGY) != 0;
 	}
+
+   /**
+    * Check if this interface is included in ICMP poll for owning node
+    * 
+    * @return true if this interface is included in ICMP poll for owning node
+    */
+   public boolean isIncludedInIcmpPoll()
+   {
+      return (flags & IF_INCLUDE_IN_ICMP_POLL) != 0;
+   }
 
    /**
     * Get peer discovery protocol

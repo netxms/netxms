@@ -220,7 +220,7 @@ static LONG H_IcmpPing(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, 
       ret_uint(pValue, dwRTT);
       return SYSINFO_RC_SUCCESS;
    }
-   else if ((result == ICMP_TIMEOUT) || (result == ICMP_UNREACHEABLE))
+   else if ((result == ICMP_TIMEOUT) || (result == ICMP_UNREACHABLE))
 	{
       ret_uint(pValue, 10000);
       return SYSINFO_RC_SUCCESS;

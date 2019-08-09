@@ -23,19 +23,20 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.InetAddress;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-
 import org.netxms.base.GeoLocation;
 import org.netxms.base.InetAddressEx;
 import org.netxms.base.MacAddress;
 import org.netxms.base.PostalAddress;
 import org.netxms.client.constants.AgentCacheMode;
 import org.netxms.client.constants.AgentCompressionMode;
+import org.netxms.client.constants.IcmpStatCollectionMode;
 import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.constants.RackOrientation;
 import org.netxms.client.dashboards.DashboardElement;
@@ -57,7 +58,7 @@ public class NXCObjectModificationData
    public static final int CUSTOM_ATTRIBUTES      = 3;
    public static final int AUTOBIND_FILTER        = 4;
    public static final int LINK_COLOR             = 5;
-   //public static final int POLICY_CONFIG          = 6;
+   public static final int AUTOBIND_FLAGS         = 6;
    public static final int VERSION                = 7;
    public static final int DESCRIPTION            = 8;
    public static final int AGENT_PORT             = 9;
@@ -133,7 +134,8 @@ public class NXCObjectModificationData
    public static final int SNMP_PORT_LIST         = 79;
    public static final int PASSIVE_ELEMENTS       = 80;
    public static final int RESPONSIBLE_USERS      = 81;
-   public static final int AUTOBIND_REMOVE_FLAGS  = 82;
+   public static final int ICMP_POLL_MODE         = 82;
+   public static final int ICMP_POLL_TARGETS      = 83;
 
    private Set<Integer> fieldSet;
    private long objectId;
@@ -242,6 +244,8 @@ public class NXCObjectModificationData
    private List<Long> responsibleUsers;
    private boolean isAutoBindEnabled;
    private boolean isAutoUnbindEnabled;
+   private IcmpStatCollectionMode icmpStatCollectionMode;
+   private List<InetAddress> icmpTargets;
 
    /**
     * Constructor for creating modification data for given object
@@ -2021,7 +2025,7 @@ public class NXCObjectModificationData
    {
       isAutoBindEnabled = autoApply;
       isAutoUnbindEnabled = autoUnbind;
-      fieldSet.add(AUTOBIND_REMOVE_FLAGS);
+      fieldSet.add(AUTOBIND_FLAGS);
    }
 
    /**
@@ -2038,5 +2042,47 @@ public class NXCObjectModificationData
    public boolean isAutoUnbindEnabled()
    {
       return isAutoUnbindEnabled;
+   }
+
+   /**
+    * Get ICMP statistic collection mode
+    * 
+    * @return ICMP statistic collection mode
+    */
+   public IcmpStatCollectionMode getIcmpStatCollectionMode()
+   {
+      return icmpStatCollectionMode;
+   }
+
+   /**
+    * Set ICMP statistic collection mode
+    * 
+    * @param mode new ICMP statistic collection mode
+    */
+   public void setIcmpStatCollectionMode(IcmpStatCollectionMode mode)
+   {
+      this.icmpStatCollectionMode = mode;
+      fieldSet.add(ICMP_POLL_MODE);
+   }
+
+   /**
+    * Get additional ICMP poll targets
+    * 
+    * @return additional ICMP poll targets
+    */
+   public List<InetAddress> getIcmpTargets()
+   {
+      return icmpTargets;
+   }
+
+   /**
+    * Set additional ICMP poll targets
+    * 
+    * @param icmpTargets new list of additional ICMP poll targets
+    */
+   public void setIcmpTargets(Collection<InetAddress> icmpTargets)
+   {
+      this.icmpTargets = new ArrayList<InetAddress>(icmpTargets);
+      fieldSet.add(ICMP_POLL_TARGETS);
    }
 }
