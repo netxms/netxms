@@ -362,7 +362,6 @@ public class AgentFileViewer extends ViewPart
    	   {
    	      view.viewer.startTracking(nodeId, file.getId(), file.getRemoteName());
    	   }
-   	   view.updatePartName(file.getRemoteName()); //$NON-NLS-1$
 	   }
 	   return true;
 	}
