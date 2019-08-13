@@ -62,6 +62,7 @@ import org.netxms.client.objects.Template;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.datacollection.Activator;
+import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.dialogs.CreatePolicyDialog;
 import org.netxms.ui.eclipse.datacollection.dialogs.SavePolicyDialog;
 import org.netxms.ui.eclipse.datacollection.widgets.AbstractPolicyEditor;
@@ -381,7 +382,11 @@ public class PolicyEditorView extends ViewPart implements ISaveablePart2, Sessio
    }
    
    protected void deletePolicy()
-   {
+   {      
+      if (!MessageDialogHelper.openConfirm(getSite().getShell(), "Delete policy",
+                                     "Do you really want to delete selected policy?"))
+         return;
+      
       new ConsoleJob("DeletePolicy", this, Activator.PLUGIN_ID, null) {
          
          @Override
@@ -463,6 +468,7 @@ public class PolicyEditorView extends ViewPart implements ISaveablePart2, Sessio
       menuMgr.addMenuListener(new IMenuListener() {
          public void menuAboutToShow(IMenuManager mgr)
          {
+            mgr.add(actionCreate);
             mgr.add(actionDelete);
          }
       });

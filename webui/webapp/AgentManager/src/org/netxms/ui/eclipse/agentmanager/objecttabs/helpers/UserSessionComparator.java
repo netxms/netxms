@@ -30,6 +30,18 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
  */
 public class UserSessionComparator extends ViewerComparator
 {
+   UserSessionsTab tab;
+   
+   /**
+    * Constructor 
+    * 
+    * @param tab
+    */
+   public UserSessionComparator(UserSessionsTab tab)
+   {
+      this.tab = tab;
+   }
+   
    /*
     * (non-Javadoc)
     * 
@@ -42,8 +54,11 @@ public class UserSessionComparator extends ViewerComparator
 
       TableRow row1 = (TableRow)e1;
       TableRow row2 = (TableRow)e2;
+      
+      Integer id = (Integer)((SortableTableViewer)viewer).getTable().getSortColumn().getData("ID");
+      int index1 = tab.getTable().getColumnIndex(UserSessionsTab.COLUMNS[id]);
 
-      switch((Integer)((SortableTableViewer)viewer).getTable().getSortColumn().getData("ID"))
+      switch(index1)
       {
          case UserSessionsTab.COLUMN_ID:
             result = row1.get(UserSessionsTab.COLUMN_ID).getValue().compareTo(row2.get(UserSessionsTab.COLUMN_ID).getValue());
