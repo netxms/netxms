@@ -12,5 +12,5 @@ Require-Bundle: org.eclipse.ui;bundle-version="3.8.2",
  org.netxms.ui.eclipse.objectbrowser;bundle-version="2.2.16",
  org.netxms.ui.eclipse.nxsl;bundle-version="2.2.16",
  org.netxms.ui.eclipse.charts;bundle-version="2.2.16"
-Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Bundle-ActivationPolicy: lazy

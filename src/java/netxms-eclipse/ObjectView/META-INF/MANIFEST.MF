@@ -16,7 +16,7 @@ Require-Bundle: org.eclipse.ui;bundle-version="3.8.2",
  org.netxms.ui.base;bundle-version="2.2.16",
  org.netxms.ui.eclipse.clientlibrary;bundle-version="2.2.16",
  org.eclipse.core.expressions;bundle-version="3.4.400"
-Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Bundle-ActivationPolicy: lazy
 Export-Package: org.netxms.ui.eclipse.objectview.api,
  org.netxms.ui.eclipse.objectview.objecttabs,
