@@ -6539,16 +6539,16 @@ public class NXCSession
     * when it is no longer needed.
     *
     * @param nodeId            Node object identifier
-    * @param notifyDCOChangeCB callback that will be called when DCO object is changed by server notification
+    * @param changeListener callback that will be called when DCO object is changed by server notification
     * @return Data collection configuration object
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public DataCollectionConfiguration openDataCollectionConfiguration(long nodeId, DataCollectionConfigurationChangeListener notifyDCOChangeCB)
+   public DataCollectionConfiguration openDataCollectionConfiguration(long nodeId, DataCollectionConfigurationChangeListener changeListener)
          throws IOException, NXCException
    {
       final DataCollectionConfiguration cfg = new DataCollectionConfiguration(this, nodeId);
-      cfg.open(notifyDCOChangeCB);
+      cfg.open(changeListener);
       return cfg;
    }
 
