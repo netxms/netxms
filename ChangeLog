@@ -3,6 +3,7 @@
 *
 
 - Event tags
+- ICMP polls for collecting ICMP response time statistic on server side
 - User agents (desktop support application)
 - Raw DCI values saved in history along with corresponding transformed values
 - New DCI data types - "32 bit counter" and "64 bit counter"
