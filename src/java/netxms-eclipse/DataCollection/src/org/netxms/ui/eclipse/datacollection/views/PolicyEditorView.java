@@ -62,7 +62,6 @@ import org.netxms.client.objects.Template;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.datacollection.Activator;
-import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.dialogs.CreatePolicyDialog;
 import org.netxms.ui.eclipse.datacollection.dialogs.SavePolicyDialog;
 import org.netxms.ui.eclipse.datacollection.widgets.AbstractPolicyEditor;
@@ -279,7 +278,7 @@ public class PolicyEditorView extends ViewPart implements ISaveablePart2, Sessio
          }
          else
          {
-            editor = new GenericPolicyEditor(editorSection, SWT.NONE, currentlySelectedElement);
+            editor = new GenericPolicyEditor(editorArea, SWT.NONE, currentlySelectedElement);
          }
          toolkit.adapt(editor);
          editor.addModifyListener(new PolicyModifyListener() {
@@ -303,18 +302,16 @@ public class PolicyEditorView extends ViewPart implements ISaveablePart2, Sessio
     */
    private void refresh()
    {      
-      ConsoleJob job = new ConsoleJob("Save agent policy", this, Activator.PLUGIN_ID, null) 
-      {
-
+      ConsoleJob job = new ConsoleJob("Save agent policy", this, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            policies = session.getAgentPolicyList(templateId);
+            final HashMap<UUID, AgentPolicy> serverPolicies = session.getAgentPolicyList(templateId);
             runInUIThread(new Runnable() {
-               
                @Override
                public void run()
                {
+                  policies = serverPolicies;
                   policyList.setInput(policies.values().toArray());
                }
             });
@@ -352,6 +349,7 @@ public class PolicyEditorView extends ViewPart implements ISaveablePart2, Sessio
             save();
          }
       };
+      actionSave.setEnabled(false);
       
       actionShowTechnicalInformation = new Action("Show technical details", Action.AS_CHECK_BOX) {
          @Override
@@ -385,6 +383,9 @@ public class PolicyEditorView extends ViewPart implements ISaveablePart2, Sessio
    {      
       if (!MessageDialogHelper.openConfirm(getSite().getShell(), "Delete policy",
                                      "Do you really want to delete selected policy?"))
+         return;
+      
+      if(currentlySelectedElement == null)
          return;
       
       new ConsoleJob("DeletePolicy", this, Activator.PLUGIN_ID, null) {
@@ -424,12 +425,11 @@ public class PolicyEditorView extends ViewPart implements ISaveablePart2, Sessio
             newPolicy.setGuid(newObjectGuid);
             
             runInUIThread(new Runnable() {
-               
                @Override
                public void run()
                {
                   AgentPolicy policy = policies.get(newObjectGuid);
-                  if(policy != null)
+                  if (policy != null)
                   {
                      currentlySelectedElement = policy; 
                      StructuredSelection selection = new StructuredSelection(policy);
@@ -450,12 +450,10 @@ public class PolicyEditorView extends ViewPart implements ISaveablePart2, Sessio
          @Override
          protected String getErrorMessage()
          {
-            return "Can not update policy";
+            return "Cannot update policy";
          }
       }.start();
-      
    }
-
 
    /**
     * Create pop-up menu for user list
@@ -568,7 +566,7 @@ public class PolicyEditorView extends ViewPart implements ISaveablePart2, Sessio
     */
    protected void setModified()
    {
-      if (modified)
+      if (modified || currentlySelectedElement == null)
          return;
       
       modified = true;
@@ -734,7 +732,7 @@ public class PolicyEditorView extends ViewPart implements ISaveablePart2, Sessio
                   else
                   {
                      policies.put(((AgentPolicy)n.getObject()).getGuid(), (AgentPolicy)n.getObject());
-                     policyList.setInput(policies);
+                     policyList.setInput(policies.values().toArray());
                   }
                }
             });
