@@ -363,7 +363,7 @@ CREATE TABLE icmp_target_address_list
 (
   node_id integer not null,
   ip_addr varchar(48) not null,
-  PRIMARY KEY(iface_id,ip_addr)
+  PRIMARY KEY(node_id,ip_addr)
 ) TABLE_TYPE;
 
 /*
