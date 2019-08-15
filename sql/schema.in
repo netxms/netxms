@@ -2133,7 +2133,7 @@ CREATE TABLE notification_channels
    name varchar(63) not null,
    driver_name varchar(63) not null,
    description  varchar(255) null,
-   configuration $SQL:TEXT null,
+   configuration SQL_TEXT null,
    PRIMARY KEY(name)
 ) TABLE_TYPE;
 
