@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2014-2017 Raden Solutions
+** Copyright (C) 2014-2019 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -238,7 +238,8 @@ THREAD_RESULT THREAD_CALL SyslogReceiver(void *)
    nxlog_debug(5, _T("SyslogReceiver: trying to bind on UDP %s:%d"), SockaddrToStr((struct sockaddr *)&servAddr, buffer), ntohs(servAddr.sin_port));
    if (bind(hSocket, (struct sockaddr *)&servAddr, sizeof(struct sockaddr_in)) != 0)
    {
-      nxlog_write(MSG_BIND_ERROR, EVENTLOG_ERROR_TYPE, "dse", g_syslogListenPort, _T("SyslogReceiver"), WSAGetLastError());
+      TCHAR buffer[1024];
+      nxlog_write(NXLOG_ERROR, _T("Unable to bind IPv4 socket for syslog receiver (%s)"), GetLastSocketErrorText(buffer, 1024));
       bindFailures++;
       closesocket(hSocket);
       hSocket = INVALID_SOCKET;
@@ -248,7 +249,7 @@ THREAD_RESULT THREAD_CALL SyslogReceiver(void *)
    nxlog_debug(5, _T("SyslogReceiver: trying to bind on UDP [%s]:%d"), SockaddrToStr((struct sockaddr *)&servAddr6, buffer), ntohs(servAddr6.sin6_port));
    if (bind(hSocket6, (struct sockaddr *)&servAddr6, sizeof(struct sockaddr_in6)) != 0)
    {
-      nxlog_write(MSG_BIND_ERROR, EVENTLOG_ERROR_TYPE, "dse", g_syslogListenPort, _T("SyslogReceiver"), WSAGetLastError());
+      nxlog_write(NXLOG_ERROR, _T("Unable to bind IPv6 socket for syslog receiver (%s)"), GetLastSocketErrorText(buffer, 1024));
       bindFailures++;
       closesocket(hSocket6);
       hSocket6 = INVALID_SOCKET;

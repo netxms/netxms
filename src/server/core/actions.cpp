@@ -169,7 +169,7 @@ bool LoadActions()
    }
    else
    {
-      nxlog_write(MSG_ACTIONS_LOAD_FAILED, EVENTLOG_ERROR_TYPE, NULL);
+      nxlog_write(NXLOG_ERROR, _T("Error loading server action configuration from database"));
    }
    DBConnectionPoolReleaseConnection(hdb);
    return success;
@@ -345,7 +345,7 @@ static bool ForwardEvent(const TCHAR *server, const Event *event)
 	}
 	delete isc;
 	if (rcc != ISC_ERR_SUCCESS)
-		nxlog_write(MSG_EVENT_FORWARD_FAILED, EVENTLOG_WARNING_TYPE, "ss", server, ISCErrorCodeToText(rcc));
+		nxlog_write(NXLOG_WARNING, _T("Failed to forward event to server %s (%s)"), server, ISCErrorCodeToText(rcc));
 	return rcc == ISC_ERR_SUCCESS;
 }
 

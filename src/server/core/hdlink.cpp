@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -82,37 +82,38 @@ void LoadHelpDeskLink()
 				{
                if (s_link->init())
                {
-					   nxlog_write(MSG_HDLINK_LOADED, EVENTLOG_INFORMATION_TYPE, "ss", s_link->getName(), s_link->getVersion());
+					   nxlog_write(NXLOG_INFO, _T("Helpdesk link module %s (version %s) loaded successfully"), s_link->getName(), s_link->getVersion());
                   g_flags |= AF_HELPDESK_LINK_ACTIVE;
                }
 				   else
 				   {
-					   nxlog_write(MSG_HDLINK_INIT_FAILED, EVENTLOG_ERROR_TYPE, "s", s_link->getName());
+					   nxlog_write(NXLOG_ERROR, _T("Initialization of helpdesk link module %s failed"), s_link->getName());
                   delete_and_null(s_link);
 					   DLClose(hModule);
 				   }
 				}
 				else
 				{
-					nxlog_write(MSG_HDLINK_INIT_FAILED, EVENTLOG_ERROR_TYPE, "s", name);
+               nxlog_write(NXLOG_ERROR, _T("Initialization of helpdesk link module \"%s\" failed"), name);
 					DLClose(hModule);
 				}
          }
          else
          {
-            nxlog_write(MSG_HDLINK_API_VERSION_MISMATCH, EVENTLOG_ERROR_TYPE, "sdd", name, NDDRV_API_VERSION, *apiVersion);
+            nxlog_write(NXLOG_ERROR, _T("Helpdesk link module \"%s\" cannot be loaded because of API version mismatch (module: %d; server: %d)"),
+                     name, *apiVersion, NDDRV_API_VERSION);
             DLClose(hModule);
          }
       }
       else
       {
-         nxlog_write(MSG_NO_HDLINK_ENTRY_POINT, EVENTLOG_ERROR_TYPE, "s", name);
+         nxlog_write(NXLOG_ERROR, _T("Unable to find entry point in helpdesk link module \"%s\""), name);
          DLClose(hModule);
       }
    }
    else
    {
-      nxlog_write(MSG_DLOPEN_FAILED, EVENTLOG_ERROR_TYPE, "ss", name, errorText);
+      nxlog_write(NXLOG_ERROR, _T("Unable to load module \"%s\" (%s)"), name, errorText);
    }
 }
 

@@ -157,7 +157,7 @@ int main(int argc, char *argv[])
          skipSQLite = true;
    }
 
-   DBInit(0, 0);
+   DBInit();
 
    if (!skipMySQL)
    {

@@ -179,11 +179,11 @@ void RegisterPredictionEngines()
          if (e->initialize(errorMessage))
          {
             s_engines.set(e->getName(), e);
-            nxlog_write(MSG_NPE_REGISTERED, NXLOG_INFO, "ss", e->getName(), e->getVersion());
+            nxlog_write(NXLOG_INFO, _T("Prediction engine %s version %s registered"), e->getName(), e->getVersion());
          }
          else
          {
-            nxlog_write(MSG_NPE_INIT_FAILED, NXLOG_ERROR, "ss", e->getName(), e->getVersion());
+            nxlog_write(NXLOG_ERROR, _T("Initialization of prediction engine %s version %s failed"), e->getName(), e->getVersion());
             delete e;
          }
       }

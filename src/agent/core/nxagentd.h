@@ -32,8 +32,7 @@
 #include <nxlog.h>
 #include <nxcldefs.h>
 #include <nxdbapi.h>
-#include "messages.h"
-#include "nxsnmp.h"
+#include <nxsnmp.h>
 #include "localdb.h"
 
 #ifdef _NETWARE
@@ -119,6 +118,7 @@
 #define AF_ENABLE_PUSH_CONNECTOR    0x02000000
 #define AF_USE_SYSTEMD_JOURNAL      0x04000000
 #define AF_SYSTEMD_DAEMON           0x08000000
+#define AF_JSON_LOG                 0x10000000
 
 // Flags for component failures
 #define FAIL_OPEN_LOG               0x00000001
@@ -698,17 +698,9 @@ BOOL Initialize();
 void Shutdown();
 void Main();
 
-void ConsolePrintf(const TCHAR *format, ...)
-#if !defined(UNICODE) && (defined(__GNUC__) || defined(__clang__))
-   __attribute__ ((format(printf, 1, 2)))
-#endif
-;
-
-void DebugPrintf(int level, const TCHAR *format, ...)
-#if !defined(UNICODE) && (defined(__GNUC__) || defined(__clang__))
-   __attribute__ ((format(printf, 2, 3)))
-#endif
-;
+void ConsolePrintf(const TCHAR *format, ...);
+void ConsolePrintf2(const TCHAR *format, va_list args);
+void DebugPrintf(int level, const TCHAR *format, ...);
 
 void BuildFullPath(TCHAR *pszFileName, TCHAR *pszFullPath);
 

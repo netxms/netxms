@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -626,7 +626,7 @@ static void CreateParserFromConfig()
 		}
 		else
 		{
-			nxlog_write(MSG_SYSLOG_PARSER_INIT_FAILED, EVENTLOG_ERROR_TYPE, "s", parseError);
+			nxlog_write(NXLOG_ERROR, _T("Cannot initialize syslog parser (%s)"), parseError);
 		}
 		free(xml);
 		delete parsers;
@@ -653,7 +653,8 @@ static THREAD_RESULT THREAD_CALL SyslogReceiver(void *pArg)
    if (hSocket == INVALID_SOCKET)
 #endif
    {
-      nxlog_write(MSG_SOCKET_FAILED, EVENTLOG_ERROR_TYPE, "s", _T("SyslogReceiver"));
+      TCHAR buffer[1024];
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Unable to create socket for syslog receiver (%s)"), GetLastSocketErrorText(buffer, 1024));
       return THREAD_OK;
    }
 
@@ -736,7 +737,8 @@ static THREAD_RESULT THREAD_CALL SyslogReceiver(void *pArg)
    nxlog_debug_tag(DEBUG_TAG, 5, _T("Trying to bind on UDP %s:%d"), SockaddrToStr((struct sockaddr *)&servAddr, buffer), ntohs(servAddr.sin_port));
    if (bind(hSocket, (struct sockaddr *)&servAddr, sizeof(struct sockaddr_in)) != 0)
    {
-      nxlog_write(MSG_BIND_ERROR, EVENTLOG_ERROR_TYPE, "dse", port, _T("SyslogReceiver"), WSAGetLastError());
+      TCHAR buffer[1024];
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Unable to bind IPv4 socket for syslog receiver (%s)"), GetLastSocketErrorText(buffer, 1024));
       bindFailures++;
       closesocket(hSocket);
       hSocket = INVALID_SOCKET;
@@ -746,7 +748,7 @@ static THREAD_RESULT THREAD_CALL SyslogReceiver(void *pArg)
    nxlog_debug_tag(DEBUG_TAG, 5, _T("Trying to bind on UDP [%s]:%d"), SockaddrToStr((struct sockaddr *)&servAddr6, buffer), ntohs(servAddr6.sin6_port));
    if (bind(hSocket6, (struct sockaddr *)&servAddr6, sizeof(struct sockaddr_in6)) != 0)
    {
-      nxlog_write(MSG_BIND_ERROR, EVENTLOG_ERROR_TYPE, "dse", port, _T("SyslogReceiver"), WSAGetLastError());
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Unable to bind IPv6 socket for syslog receiver (%s)"), GetLastSocketErrorText(buffer, 1024));
       bindFailures++;
       closesocket(hSocket6);
       hSocket6 = INVALID_SOCKET;
@@ -763,10 +765,16 @@ static THREAD_RESULT THREAD_CALL SyslogReceiver(void *pArg)
    }
 
    if (hSocket != INVALID_SOCKET)
-      nxlog_write(MSG_LISTENING_FOR_SYSLOG, EVENTLOG_INFORMATION_TYPE, "ad", ntohl(servAddr.sin_addr.s_addr), port);
+   {
+      TCHAR ipAddrText[64];
+      nxlog_write(NXLOG_INFO, _T("Listening for syslog messages on UDP socket %s:%u"), InetAddress(ntohl(servAddr.sin_addr.s_addr)).toString(ipAddrText), port);
+   }
 #ifdef WITH_IPV6
    if (hSocket6 != INVALID_SOCKET)
-      nxlog_write(MSG_LISTENING_FOR_SYSLOG, EVENTLOG_INFORMATION_TYPE, "Hd", servAddr6.sin6_addr.s6_addr, port);
+   {
+      TCHAR ipAddrText[64];
+      nxlog_write(NXLOG_INFO, _T("Listening for syslog messages on UDP socket %s:%u"), InetAddress(servAddr6.sin6_addr.s6_addr).toString(ipAddrText), port);
+   }
 #endif
 
    SocketPoller sp;

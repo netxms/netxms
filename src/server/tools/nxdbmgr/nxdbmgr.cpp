@@ -151,7 +151,7 @@ DB_HANDLE ConnectToDatabase()
    DB_HANDLE hdb = DBConnect(s_driver, s_dbServer, s_dbName, s_dbLogin, s_dbPassword, s_dbSchema, errorText);
    if (hdb == NULL)
    {
-      _tprintf(_T("Unable to connect to database %s@%s as %s: %s\n"), s_dbName, s_dbServer, s_dbLogin, errorText);
+      _tprintf(_T("Unable to connect to database %s@%s as %s (%s)\n"), s_dbName, s_dbServer, s_dbLogin, errorText);
    }
    return hdb;
 }
@@ -516,7 +516,7 @@ stop_search:
 #endif
 
    // Connect to database
-   if (!DBInit(0, 0))
+   if (!DBInit())
    {
       _tprintf(_T("Unable to initialize database library\n"));
       return 3;

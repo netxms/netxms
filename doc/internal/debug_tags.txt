@@ -30,6 +30,9 @@ event.proc	Event processor
 
 init.*		Generic process or library initialization
 
+java.*		Java components
+java.bridge	Java bridge library
+
 job.*		Server jobs related
 job.manager	Job manager
 
@@ -68,6 +71,7 @@ sa.ping		Ping subagent
 
 snmp.*		SNMP related messages
 snmp.entity	Entity MIB processing
+snmp.lib	SNMP library low-level diagnostic
 snmp.trap	SNMP trap processing
 
 statcoll	Internal server statistic collector

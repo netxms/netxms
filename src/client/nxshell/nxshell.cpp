@@ -204,12 +204,14 @@ static void ShowUsage(bool showVersion)
 /**
  * Debug writer
  */
-static void DebugWriter(const TCHAR *tag, const TCHAR *msg)
+static void DebugWriter(const TCHAR *tag, const TCHAR *format, va_list args)
 {
    if (tag == NULL)      
-      _tprintf(_T("DBG: %s\n"), msg);
+      _tprintf(_T("DBG: "));
    else
-      _tprintf(_T("DBG: <%s> %s\n"), tag, msg);
+      _tprintf(_T("DBG: <%s> "), tag);
+   _vtprintf(format, args);
+   _fputtc(_T('\n'), stdout);
 }
 
 /**

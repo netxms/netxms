@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -31,7 +31,6 @@ void ConsolePrintf(const TCHAR *format, ...)
    if (!(g_dwFlags & AF_DAEMON))
    {
       va_list args;
-
       va_start(args, format);
       _vtprintf(format, args);
       va_end(args);
@@ -39,21 +38,23 @@ void ConsolePrintf(const TCHAR *format, ...)
 }
 
 /**
+ * Print message to the console if allowed to do so
+ */
+void ConsolePrintf2(const TCHAR *format, va_list args)
+{
+   if (!(g_dwFlags & AF_DAEMON))
+      _vtprintf(format, args);
+}
+
+/**
  * Print debug messages
  */
 void DebugPrintf(int level, const TCHAR *format, ...)
 {
-   if (level > nxlog_get_debug_level())
-      return;
-
    va_list args;
-   TCHAR buffer[4096];
-
    va_start(args, format);
-   _vsntprintf(buffer, 4096, format, args);
+   nxlog_debug2(level, format, args);
    va_end(args);
-
-   nxlog_write(MSG_DEBUG, EVENTLOG_DEBUG_TYPE, "s", buffer);
 }
 
 /**

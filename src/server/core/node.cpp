@@ -545,11 +545,12 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
       pObject = FindObjectById(dwSubnetId, OBJECT_SUBNET);
       if (pObject == NULL)
       {
-         nxlog_write(MSG_INVALID_SUBNET_ID, EVENTLOG_ERROR_TYPE, "dd", dwId, dwSubnetId);
+         nxlog_write(NXLOG_ERROR, _T("Inconsistent database: node %s [%u] linked to non-existing subnet [%u]"), m_name, m_id, dwSubnetId);
       }
       else if (pObject->getObjectClass() != OBJECT_SUBNET)
       {
-         nxlog_write(MSG_SUBNET_NOT_SUBNET, EVENTLOG_ERROR_TYPE, "dd", dwId, dwSubnetId);
+         nxlog_write(NXLOG_ERROR, _T("Inconsistent database: node %s [%u] linked to object %s [%u] which is not a subnet"),
+                  m_name, m_id, pObject->getName(), pObject->getId());
       }
       else
       {
@@ -8317,16 +8318,16 @@ void Node::checkSubnetBinding()
    unlockChildList();
 
    // Check if we have subnet bindings for all interfaces
-   DbgPrintf(5, _T("Checking subnet bindings for node %s [%d]"), m_name, m_id);
+   nxlog_debug(5, _T("Checking subnet bindings for node %s [%d]"), m_name, m_id);
    for(int i = 0; i < addrList.size(); i++)
    {
       InetAddress addr = addrList.get(i);
-      DbgPrintf(5, _T("Node::checkSubnetBinding(%s [%d]): checking address %s/%d"), m_name, m_id, addr.toString(buffer), addr.getMaskBits());
+      nxlog_debug(5, _T("Node::checkSubnetBinding(%s [%d]): checking address %s/%d"), m_name, m_id, addr.toString(buffer), addr.getMaskBits());
 
       Interface *iface = findInterfaceByIP(addr);
       if (iface == NULL)
       {
-         nxlog_write(MSG_INTERNAL_ERROR, EVENTLOG_WARNING_TYPE, "s", _T("Cannot find interface object in Node::checkSubnetBinding()"));
+         nxlog_write(NXLOG_WARNING, _T("Internal error: cannot find interface object in Node::checkSubnetBinding()"));
          continue;   // Something goes really wrong
       }
 
@@ -8336,7 +8337,7 @@ void Node::checkSubnetBinding()
       Subnet *pSubnet = FindSubnetForNode(m_zoneUIN, addr);
       if (pSubnet != NULL)
       {
-         DbgPrintf(5, _T("Node::checkSubnetBinding(%s [%d]): found subnet %s [%d]"), m_name, m_id, pSubnet->getName(), pSubnet->getId());
+         nxlog_debug(5, _T("Node::checkSubnetBinding(%s [%d]): found subnet %s [%d]"), m_name, m_id, pSubnet->getName(), pSubnet->getId());
          if (isSync)
          {
             pSubnet = NULL;   // No further checks on this subnet
@@ -8345,8 +8346,8 @@ void Node::checkSubnetBinding()
          {
             if (pSubnet->isSyntheticMask() && !iface->isSyntheticMask() && (addr.getMaskBits() > 0))
             {
-               DbgPrintf(4, _T("Setting correct netmask for subnet %s [%d] from node %s [%d]"),
-                         pSubnet->getName(), pSubnet->getId(), m_name, m_id);
+               nxlog_debug(4, _T("Setting correct netmask for subnet %s [%d] from node %s [%d]"),
+                        pSubnet->getName(), pSubnet->getId(), m_name, m_id);
                if ((addr.getHostBits() < 2) && (getParentCount() > 1))
                {
                   /* Delete subnet object if we try to change it's netmask to 255.255.255.255 or 255.255.255.254 and
@@ -8364,8 +8365,8 @@ void Node::checkSubnetBinding()
             // Check if node is linked to this subnet
             if ((pSubnet != NULL) && !pSubnet->isDirectChild(m_id))
             {
-               DbgPrintf(4, _T("Restored link between subnet %s [%d] and node %s [%d]"),
-                         pSubnet->getName(), pSubnet->getId(), m_name, m_id);
+               nxlog_debug(4, _T("Restored link between subnet %s [%d] and node %s [%d]"),
+                        pSubnet->getName(), pSubnet->getId(), m_name, m_id);
                pSubnet->addNode(this);
             }
          }

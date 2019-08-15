@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -96,18 +96,16 @@ void InitLocalNetInfo()
          {
             DLClose(m_hSubAgent);
             m_hSubAgent = NULL;
-            nxlog_write(MSG_PLATFORM_SUBAGENT_NOT_LOADED, NXLOG_ERROR,
-                     "ss", szName, _T("Subagent doesn't provide any usable parameters"));
+            nxlog_write(NXLOG_ERROR, _T("Cannot load platform subagent \"%s\" (Subagent doesn't provide any usable parameters)"), szName);
          }
          else
          {
-            nxlog_write(MSG_PLATFORM_SUBAGENT_LOADED, NXLOG_INFO, "s", szName);
+            nxlog_write(NXLOG_INFO, _T("Platform subagent \"%1\" successfully loaded"), szName);
          }
       }
       else
       {
-         nxlog_write(MSG_PLATFORM_SUBAGENT_NOT_LOADED, EVENTLOG_ERROR_TYPE,
-                  "ss", szName, szErrorText);
+         nxlog_write(NXLOG_ERROR, _T("Cannot load platform subagent \"%s\" (%s)"), szName, szErrorText);
       }
    }
 #endif

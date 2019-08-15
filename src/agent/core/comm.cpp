@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -115,7 +115,7 @@ bool RegisterSession(CommSession *session)
       }
 
    MutexUnlock(g_hSessionListAccess);
-   nxlog_write(MSG_TOO_MANY_SESSIONS, EVENTLOG_WARNING_TYPE, NULL);
+   nxlog_write(NXLOG_WARNING, _T("Too many communication sessions open - unable to accept new connection"));
    return false;
 }
 
@@ -234,7 +234,8 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
 #endif
       )
    {
-      nxlog_write(MSG_SOCKET_ERROR, EVENTLOG_ERROR_TYPE, "e", WSAGetLastError());
+      TCHAR buffer[1024];
+      nxlog_write(NXLOG_ERROR, _T("Unable to create socket (%s)"), GetLastSocketErrorText(buffer, 1024));
       exit(1);
    }
 
@@ -317,7 +318,8 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
 	   DebugPrintf(1, _T("Trying to bind on %s:%d"), SockaddrToStr((struct sockaddr *)&servAddr, buffer), ntohs(servAddr.sin_port));
       if (bind(hSocket, (struct sockaddr *)&servAddr, sizeof(struct sockaddr_in)) != 0)
       {
-         nxlog_write(MSG_BIND_ERROR, EVENTLOG_ERROR_TYPE, "e", WSAGetLastError());
+         TCHAR buffer[1024];
+         nxlog_write(NXLOG_ERROR, _T("Unable to bind IPv4 socket (%s)"), GetLastSocketErrorText(buffer, 1024));
          bindFailures++;
       }
    }
@@ -332,7 +334,8 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
       DebugPrintf(1, _T("Trying to bind on [%s]:%d"), SockaddrToStr((struct sockaddr *)&servAddr6, buffer), ntohs(servAddr6.sin6_port));
       if (bind(hSocket6, (struct sockaddr *)&servAddr6, sizeof(struct sockaddr_in6)) != 0)
       {
-         nxlog_write(MSG_BIND_ERROR, EVENTLOG_ERROR_TYPE, "e", WSAGetLastError());
+         TCHAR buffer[1024];
+         nxlog_write(NXLOG_ERROR, _T("Unable to bind IPv6 socket (%s)"), GetLastSocketErrorText(buffer, 1024));
          bindFailures++;
       }
    }
@@ -355,7 +358,8 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
    {
       if (listen(hSocket, SOMAXCONN) == 0)
 		{
-	   	nxlog_write(MSG_LISTENING, EVENTLOG_INFORMATION_TYPE, "ad", ntohl(servAddr.sin_addr.s_addr), g_wListenPort);
+         TCHAR ipAddrText[64];
+         nxlog_write(NXLOG_INFO, _T("Listening on socket %s:%u"), InetAddress(ntohl(servAddr.sin_addr.s_addr)).toString(ipAddrText), g_wListenPort);
 		}
 		else
 		{
@@ -368,7 +372,8 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
    {
       if (listen(hSocket6, SOMAXCONN) == 0)
 		{
-	   	nxlog_write(MSG_LISTENING, EVENTLOG_INFORMATION_TYPE, "Hd", servAddr6.sin6_addr.s6_addr, g_wListenPort);
+         TCHAR ipAddrText[64];
+         nxlog_write(NXLOG_INFO, _T("Listening on socket %s:%u"), InetAddress(servAddr6.sin6_addr.s6_addr).toString(ipAddrText), g_wListenPort);
 		}
 		else
 		{
@@ -406,12 +411,15 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
             int error = WSAGetLastError();
 
             if (error != WSAEINTR)
-               nxlog_write(MSG_ACCEPT_ERROR, EVENTLOG_ERROR_TYPE, "e", error);
+            {
+               TCHAR buffer[1024];
+               nxlog_write(NXLOG_ERROR, _T("Unable to accept incoming connection (%s)"), GetLastSocketErrorText(buffer, 1024));
+            }
             errorCount++;
             g_acceptErrors++;
             if (errorCount > 1000)
             {
-               nxlog_write(MSG_TOO_MANY_ERRORS, EVENTLOG_WARNING_TYPE, NULL);
+               nxlog_write(NXLOG_WARNING, _T("Too many consecutive errors on accept() call"));
                errorCount = 0;
             }
             ThreadSleepMs(500);
@@ -467,7 +475,8 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
          if ((error != EINTR) && (error != ENOENT))
 #endif
          {
-            nxlog_write(MSG_SELECT_ERROR, EVENTLOG_ERROR_TYPE, "e", error);
+            TCHAR buffer[1024];
+            nxlog_write(NXLOG_ERROR, _T("Call to select() failed (%s)"), GetLastSocketErrorText(buffer, 1024));
             ThreadSleepMs(100);
          }
       }
@@ -482,7 +491,7 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
 #ifdef WITH_IPV6
    closesocket(hSocket6);
 #endif
-   DebugPrintf(1, _T("Listener thread terminated"));
+   nxlog_debug(1, _T("Listener thread terminated"));
    return THREAD_OK;
 }
 

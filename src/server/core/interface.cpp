@@ -227,7 +227,7 @@ bool Interface::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
          NetObj *object = FindObjectById(nodeId, OBJECT_NODE);
          if (object == NULL)
          {
-            nxlog_write(MSG_INVALID_NODE_ID, EVENTLOG_ERROR_TYPE, "dd", dwId, nodeId);
+            nxlog_write(NXLOG_ERROR, _T("Inconsistent database: interface %s [%u] linked to non-existent node [%u]"), m_name, m_id, nodeId);
          }
          else
          {

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,6 +22,8 @@
 
 #include "nxcore.h"
 
+#define DEBUG_TAG _T("xmpp")
+
 #if XMPP_SUPPORTED
 
 #include <strophe.h>
@@ -34,16 +36,16 @@ static void Logger(void * const userdata, const xmpp_log_level_t level, const ch
    switch(level)
    {
       case XMPP_LEVEL_ERROR:
-         nxlog_write(MSG_XMPP_ERROR, NXLOG_ERROR, "mm", area, msg);
+         nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("%hs %hs"), area, msg);
          break;
       case XMPP_LEVEL_WARN:
-         nxlog_write(MSG_XMPP_WARNING, NXLOG_WARNING, "mm", area, msg);
+         nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("%hs %hs"), area, msg);
          break;
       case XMPP_LEVEL_INFO:
-         nxlog_write(MSG_XMPP_INFO, NXLOG_INFO, "mm", area, msg);
+         nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("%hs %hs"), area, msg);
          break;
       default:
-         DbgPrintf(6, _T("XMPP: %hs"), msg);
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("%hs"), msg);
          break;
    }
 }
@@ -59,7 +61,7 @@ static const xmpp_log_t s_logger = { Logger, NULL };
 static int VersionHandler(xmpp_conn_t * const conn, xmpp_stanza_t * const stanza, void * const userdata)
 {
    xmpp_ctx_t *ctx = (xmpp_ctx_t *)userdata;
-   DbgPrintf(5, _T("XMPP: Received version request from %hs"), xmpp_stanza_get_attribute(stanza, "from"));
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("Received version request from %hs"), xmpp_stanza_get_attribute(stanza, "from"));
 
    xmpp_stanza_t *reply = xmpp_stanza_new(ctx);
    xmpp_stanza_set_name(reply, "iq");
@@ -110,7 +112,7 @@ static int PresenceHandler(xmpp_conn_t * const conn, xmpp_stanza_t * const stanz
       return 1;
 
    const char *requestor = xmpp_stanza_get_attribute(stanza, "from");
-   DbgPrintf(4, _T("XMPP: presence subscribe request from %hs"), requestor);
+   nxlog_debug_tag(DEBUG_TAG, 4, _T("Presence subscribe request from %hs"), requestor);
 
    xmpp_stanza_t *reply = xmpp_stanza_new(ctx);
    xmpp_stanza_set_name(reply, "presence");
@@ -144,7 +146,7 @@ static int MessageHandler(xmpp_conn_t * const conn, xmpp_stanza_t * const stanza
 
    const char *requestor = xmpp_stanza_get_attribute(stanza, "from");
 	char *intext = xmpp_stanza_get_text(xmpp_stanza_get_child_by_name(stanza, "body"));
-   DbgPrintf(6, _T("XMPP: Incoming message from %hs: %hs"), requestor, intext);
+   nxlog_debug_tag(DEBUG_TAG, 6, _T("Incoming message from %hs: %hs"), requestor, intext);
 
    if (AuthenticateUserForXMPPCommands(requestor))
    {
@@ -184,7 +186,7 @@ static int MessageHandler(xmpp_conn_t * const conn, xmpp_stanza_t * const stanza
    }
    else
    {
-      DbgPrintf(6, _T("XMPP: %hs is not authorized for XMPP commands"), requestor);
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("%hs is not authorized for XMPP commands"), requestor);
    }
    xmpp_free(ctx, intext);
 	return 1;
@@ -206,7 +208,7 @@ static void ConnectionHandler(xmpp_conn_t * const conn, const xmpp_conn_event_t 
 
    if (status == XMPP_CONN_CONNECT)
    {
-      DbgPrintf(3, _T("XMPP: connected"));
+      nxlog_debug_tag(DEBUG_TAG, 3, _T("Connected to XMPP server"));
 
       xmpp_handler_add(conn, VersionHandler, "jabber:iq:version", "iq", NULL, ctx);
       xmpp_handler_add(conn, MessageHandler, NULL, "message", NULL, ctx);
@@ -223,7 +225,7 @@ static void ConnectionHandler(xmpp_conn_t * const conn, const xmpp_conn_event_t 
    else
    {
       s_xmppConnected = false;
-      DbgPrintf(3, _T("XMPP: disconnected"));
+      nxlog_debug_tag(DEBUG_TAG, 3, _T("Disconnected from XMPP server"));
       xmpp_stop(ctx);
    }
 }
@@ -261,7 +263,7 @@ static THREAD_RESULT THREAD_CALL XMPPConnectionManager(void *arg)
    strlcpy(password, tmpPassword, MAX_PASSWORD);
    strlcpy(login, tmpPassword, 64);
 #endif // UNICODE
-   DbgPrintf(1, _T("XMPP connection manager started"));
+   nxlog_debug_tag(DEBUG_TAG, 1, _T("XMPP connection manager started"));
 
    char server[256];
    ConfigReadStrA(_T("XMPPServer"), server, 256, "");
@@ -294,7 +296,7 @@ static THREAD_RESULT THREAD_CALL XMPPConnectionManager(void *arg)
    s_xmppContext = NULL;
 
    xmpp_shutdown();
-   DbgPrintf(1, _T("XMPP connection manager stopped"));
+   nxlog_debug_tag(DEBUG_TAG, 1, _T("XMPP connection manager stopped"));
    return THREAD_OK;
 }
 
@@ -343,7 +345,7 @@ public:
  */
 static THREAD_RESULT THREAD_CALL XMPPMessageSender(void *arg)
 {
-   DbgPrintf(1, _T("XMPP message sender started"));
+   nxlog_debug_tag(DEBUG_TAG, 1, _T("XMPP message sender started"));
 
    while(true)
    {
@@ -358,13 +360,13 @@ static THREAD_RESULT THREAD_CALL XMPPMessageSender(void *arg)
          if (m->getAge() < 3600)
          {
             s_xmppMessageQueue.insert(m);
-            DbgPrintf(6, _T("XMPPMessageSender: XMPP connection unavailable, will retry in 30 seconds"));
+            nxlog_debug_tag(DEBUG_TAG, 6, _T("XMPPMessageSender: XMPP connection unavailable, will retry in 30 seconds"));
             if (SleepAndCheckForShutdown(30))   // retry message sending in 30 seconds
                break;
          }
          else
          {
-            DbgPrintf(6, _T("XMPPMessageSender: XMPP connection unavailable, dropping undelivered message to %hs"), m->getRecipient());
+            nxlog_debug_tag(DEBUG_TAG, 6, _T("XMPPMessageSender: XMPP connection unavailable, dropping undelivered message to %hs"), m->getRecipient());
             delete m;
          }
          continue;
@@ -390,7 +392,7 @@ static THREAD_RESULT THREAD_CALL XMPPMessageSender(void *arg)
       delete m;
    }
 
-   DbgPrintf(1, _T("XMPP message sender stopped"));
+   nxlog_debug_tag(DEBUG_TAG, 1, _T("XMPP message sender stopped"));
    return THREAD_OK;
 }
 

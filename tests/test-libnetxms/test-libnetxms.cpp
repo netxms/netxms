@@ -2004,12 +2004,14 @@ static void TestDebugTags()
 /**
  * Debug writer for logger
  */
-static void DebugWriter(const TCHAR *tag, const TCHAR *message)
+static void DebugWriter(const TCHAR *tag, const TCHAR *format, va_list args)
 {
    if (tag != NULL)
-      _tprintf(_T("[DEBUG/%-20s] %s\n"), tag, message);
+      _tprintf(_T("[DEBUG/%-20s] "), tag);
    else
-      _tprintf(_T("[DEBUG%-21s] %s\n"), _T(""), message);
+      _tprintf(_T("[DEBUG%-21s] "), _T(""));
+   _vtprintf(format, args);
+   _fputtc(_T('\n'), stdout);
 }
 
 /**

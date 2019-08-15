@@ -1722,11 +1722,11 @@ void NXSL_ServerEnv::trace(int level, const TCHAR *text)
 {
 	if (level == 0)
 	{
-		nxlog_write(MSG_OTHER, EVENTLOG_INFORMATION_TYPE, "s", text);
+		nxlog_write(NXLOG_INFO, _T("%s"), text);
 	}
 	else
 	{
-		DbgPrintf(level, _T("%s"), text);
+		nxlog_debug(level, _T("%s"), text);
 	}
 }
 

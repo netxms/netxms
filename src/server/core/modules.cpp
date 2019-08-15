@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -86,38 +86,38 @@ static bool LoadNetXMSModule(const TCHAR *name)
                   memcpy(&g_pModuleList[g_dwNumModules], &module, sizeof(NXMODULE));
                   g_pModuleList[g_dwNumModules].hModule = hModule;
 
-                  nxlog_write(MSG_MODULE_LOADED, EVENTLOG_INFORMATION_TYPE, "s", g_pModuleList[g_dwNumModules].szName);
+                  nxlog_write(NXLOG_INFO, _T("Server module %s loaded successfully"), g_pModuleList[g_dwNumModules].szName);
                   g_dwNumModules++;
 
                   success = true;
                }
                else
                {
-                  nxlog_write(MSG_MODULE_INITIALIZATION_FAILED, EVENTLOG_ERROR_TYPE, "s", name);
+                  nxlog_write(NXLOG_ERROR, _T("Initialization of server module \"%s\" failed"), name);
                   DLClose(hModule);
                }
             }
             else
             {
-               nxlog_write(MSG_MODULE_BAD_MAGIC, EVENTLOG_ERROR_TYPE, "s", name);
+               nxlog_write(NXLOG_ERROR, _T("Module \"%s\" has invalid magic number - probably it was compiled for different NetXMS server version"), name);
                DLClose(hModule);
             }
          }
          else
          {
-            nxlog_write(MSG_MODULE_REGISTRATION_FAILED, EVENTLOG_ERROR_TYPE, "s", name);
+            nxlog_write(NXLOG_ERROR, _T("Registartion of server module \"%s\" failed"), name);
             DLClose(hModule);
          }
       }
       else
       {
-         nxlog_write(MSG_NO_MODULE_ENTRY_POINT, EVENTLOG_ERROR_TYPE, "s", name);
+         nxlog_write(NXLOG_ERROR, _T("Unable to find entry point in server module \"%s\""), name);
          DLClose(hModule);
       }
    }
    else
    {
-      nxlog_write(MSG_DLOPEN_FAILED, EVENTLOG_ERROR_TYPE, "ss", name, szErrorText);
+      nxlog_write(NXLOG_ERROR, _T("Unable to load module \"%s\" (%s)"), name, szErrorText);
    }
    return success;
 }

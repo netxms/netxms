@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -343,7 +343,7 @@ static THREAD_RESULT THREAD_CALL POpenWorker(void *arg)
 	}
 	else
 	{
-		nxlog_write(MSG_CREATE_PROCESS_FAILED, EVENTLOG_ERROR_TYPE, "se", data->cmdLine, errno);
+		nxlog_write(NXLOG_ERROR, _T("Unable to create process \"%s\" (%s)"), data->cmdLine, _tcserror(errno));
 		data->status = SYSINFO_RC_ERROR;
 	}
 

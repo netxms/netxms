@@ -109,7 +109,7 @@ bool Cluster::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 				}
 				else
 				{
-               nxlog_write(MSG_INVALID_CLUSTER_MEMBER, EVENTLOG_ERROR_TYPE, "dd", m_id, dwNodeId);
+               nxlog_write(NXLOG_ERROR, _T("Inconsistent database: cluster object %s [%u] has reference to non-existent node object [%u]"), m_name, m_id, dwNodeId);
 					break;
 				}
 			}

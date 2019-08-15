@@ -134,7 +134,7 @@ EPRule::EPRule(ConfigEntry *config) : m_actions(0, 16, true)
       }
       else
       {
-         nxlog_write(MSG_EPRULE_SCRIPT_COMPILATION_ERROR, EVENTLOG_ERROR_TYPE, "ds", m_id, szError);
+         nxlog_write(NXLOG_ERROR, _T("Failed to compile evaluation script for event processing policy rule #%u (%s)"), m_id + 1, szError);
       }
    }
    else
@@ -210,8 +210,7 @@ EPRule::EPRule(DB_RESULT hResult, int row) : m_actions(0, 16, true)
       }
       else
       {
-         nxlog_write(MSG_EPRULE_SCRIPT_COMPILATION_ERROR, EVENTLOG_ERROR_TYPE,
-                  "ds", m_id, szError);
+         nxlog_write(NXLOG_ERROR, _T("Failed to compile evaluation script for event processing policy rule #%u (%s)"), m_id + 1, szError);
       }
    }
    else
@@ -297,7 +296,7 @@ EPRule::EPRule(NXCPMessage *msg) : m_actions(0, 16, true)
       }
       else
       {
-         nxlog_write(MSG_EPRULE_SCRIPT_COMPILATION_ERROR, EVENTLOG_ERROR_TYPE, "ds", m_id, szError);
+         nxlog_write(NXLOG_ERROR, _T("Failed to compile evaluation script for event processing policy rule #%u (%s)"), m_id + 1, szError);
       }
    }
    else
@@ -446,7 +445,7 @@ bool EPRule::matchSource(UINT32 objectId)
       }
       else
       {
-         nxlog_write(MSG_INVALID_EPP_OBJECT, EVENTLOG_ERROR_TYPE, "d", m_sources.get(i));
+         nxlog_write(NXLOG_WARNING, _T("Invalid object identifier %u in event processing policy rule #%u"), m_sources.get(i), m_id + 1);
       }
    }
    return (m_flags & RF_NEGATED_SOURCE) ? !match : match;
@@ -533,7 +532,7 @@ bool EPRule::matchScript(Event *pEvent)
       TCHAR buffer[1024];
       _sntprintf(buffer, 1024, _T("EPP::%d"), m_id + 1);
       PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, m_script->getErrorText(), 0);
-      nxlog_write(MSG_EPRULE_SCRIPT_EXECUTION_ERROR, EVENTLOG_ERROR_TYPE, "ds", m_id + 1, m_script->getErrorText());
+      nxlog_write(NXLOG_ERROR, _T("Failed to execute evaluation script for event processing policy rule #%u (%s)"), m_id + 1, m_script->getErrorText());
    }
    free(ppValueList);
    delete globals;

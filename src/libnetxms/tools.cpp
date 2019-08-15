@@ -919,7 +919,11 @@ TCHAR LIBNETXMS_EXPORTABLE *GetLastSocketErrorText(TCHAR *buffer, size_t size)
 #else
    _sntprintf(buffer, size, _T("%u "), errno);
    size_t len = _tcslen(buffer);
+#if HAVE_STRERROR_R
+   _tcserror_r(errno, &buffer[len], size - len);
+#else
    _tcslcpy(&buffer[len], _tcserror(errno), size - len);
+#endif
 #endif
    return buffer;
 }

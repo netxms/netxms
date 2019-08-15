@@ -91,7 +91,7 @@ SNMPTrapConfiguration::SNMPTrapConfiguration(DB_RESULT trapResult, DB_HANDLE hdb
       {
          SNMPTrapParameterMapping *param = new SNMPTrapParameterMapping(mapResult, i);
          if (!param->isPositional() && !param->getOid()->isValid())
-            nxlog_write(MSG_INVALID_TRAP_ARG_OID, EVENTLOG_ERROR_TYPE, "sd", (const TCHAR *)param->getOid()->toString(), m_id);
+            nxlog_write(NXLOG_WARNING, _T("Invalid trap parameter OID %s for trap %u in trap configuration table"), (const TCHAR *)param->getOid()->toString(), m_id);
          m_mappings.add(param);
       }
       DBFreeResult(mapResult);
@@ -124,7 +124,7 @@ SNMPTrapConfiguration::SNMPTrapConfiguration(ConfigEntry *entry, const uuid& gui
          {
             SNMPTrapParameterMapping *param = new SNMPTrapParameterMapping(parameters->get(i));
             if (!param->isPositional() && !param->getOid()->isValid())
-               nxlog_write(MSG_INVALID_TRAP_ARG_OID, EVENTLOG_ERROR_TYPE, "sd", (const TCHAR *)param->getOid()->toString(), m_id);
+               nxlog_write(NXLOG_WARNING, _T("Invalid trap parameter OID %s for trap %u in trap configuration table"), (const TCHAR *)param->getOid()->toString(), m_id);
             m_mappings.add(param);
          }
       }
@@ -336,8 +336,8 @@ void LoadTrapCfg()
             if (!trapCfg->getOid().isValid())
             {
                TCHAR buffer[MAX_DB_STRING];
-               nxlog_write(MSG_INVALID_TRAP_OID, NXLOG_ERROR, "s",
-                           DBGetField(hResult, i, 1, buffer, MAX_DB_STRING));
+               nxlog_write(NXLOG_ERROR, _T("Invalid trap enterprise ID %s in trap configuration table"),
+                        DBGetField(hResult, i, 1, buffer, MAX_DB_STRING));
             }
             m_trapCfgList.add(trapCfg);
          }
@@ -702,7 +702,8 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
    if (hSocket == INVALID_SOCKET)
 #endif
    {
-      nxlog_write(MSG_SOCKET_FAILED, EVENTLOG_ERROR_TYPE, "s", _T("SNMPTrapReceiver"));
+      TCHAR buffer[1024];
+      nxlog_write(NXLOG_ERROR, _T("Unable to create socket for SNMP trap receiver (%s)"), GetLastSocketErrorText(buffer, 1024));
       return THREAD_OK;
    }
 
@@ -776,7 +777,8 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
    nxlog_debug_tag(DEBUG_TAG, 5, _T("Trying to bind on UDP %s:%d"), SockaddrToStr((struct sockaddr *)&servAddr, buffer), ntohs(servAddr.sin_port));
    if (bind(hSocket, (struct sockaddr *)&servAddr, sizeof(struct sockaddr_in)) != 0)
    {
-      nxlog_write(MSG_BIND_ERROR, EVENTLOG_ERROR_TYPE, "dse", m_wTrapPort, _T("SNMPTrapReceiver"), WSAGetLastError());
+      TCHAR buffer[1024];
+      nxlog_write(NXLOG_ERROR, _T("Unable to bind IPv4 socket for SNMP trap receiver (%s)"), GetLastSocketErrorText(buffer, 1024));
       bindFailures++;
       closesocket(hSocket);
       hSocket = INVALID_SOCKET;
@@ -786,7 +788,8 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
    nxlog_debug_tag(DEBUG_TAG, 5, _T("Trying to bind on UDP [%s]:%d"), SockaddrToStr((struct sockaddr *)&servAddr6, buffer), ntohs(servAddr6.sin6_port));
    if (bind(hSocket6, (struct sockaddr *)&servAddr6, sizeof(struct sockaddr_in6)) != 0)
    {
-      nxlog_write(MSG_BIND_ERROR, EVENTLOG_ERROR_TYPE, "dse", m_wTrapPort, _T("SNMPTrapReceiver"), WSAGetLastError());
+      TCHAR buffer[1024];
+      nxlog_write(NXLOG_ERROR, _T("Unable to bind IPv6 socket for SNMP trap receiver (%s)"), GetLastSocketErrorText(buffer, 1024));
       bindFailures++;
       closesocket(hSocket6);
       hSocket6 = INVALID_SOCKET;
@@ -803,10 +806,16 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
    }
 
    if (hSocket != INVALID_SOCKET)
-	   nxlog_write(MSG_LISTENING_FOR_SNMP, EVENTLOG_INFORMATION_TYPE, "ad", ntohl(servAddr.sin_addr.s_addr), m_wTrapPort);
+   {
+      TCHAR ipAddrText[64];
+	   nxlog_write(NXLOG_INFO, _T("Listening for SNMP traps on UDP socket %s:%u"), InetAddress(ntohl(servAddr.sin_addr.s_addr)).toString(ipAddrText), m_wTrapPort);
+   }
 #ifdef WITH_IPV6
    if (hSocket6 != INVALID_SOCKET)
-	   nxlog_write(MSG_LISTENING_FOR_SNMP, EVENTLOG_INFORMATION_TYPE, "Hd", servAddr6.sin6_addr.s6_addr, m_wTrapPort);
+   {
+      TCHAR ipAddrText[64];
+      nxlog_write(NXLOG_INFO, _T("Listening for SNMP traps on UDP socket %s:%u"), InetAddress(servAddr6.sin6_addr.s6_addr).toString(ipAddrText), m_wTrapPort);
+   }
 #endif
 
    SNMP_Transport *snmp = CreateTransport(hSocket);

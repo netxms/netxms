@@ -44,8 +44,8 @@ static void JNICALL J_writeLog(JNIEnv *jenv, jclass jcls, jint level, jstring jm
       return;
 
    TCHAR *message = CStringFromJavaString(jenv, jmessage);
-   nxlog_write_generic(static_cast<int>(level), _T("%s"), message);
-   free(message);
+   nxlog_write_tag(static_cast<int>(level), _T("java"), _T("%s"), message);
+   MemFree(message);
 }
 
 /**
@@ -93,7 +93,7 @@ bool RegisterPlatformNatives(JNIEnv *env)
 
    if (env->RegisterNatives(platformClass, s_jniNativeMethods, (jint)(sizeof(s_jniNativeMethods) / sizeof (s_jniNativeMethods[0]))) != 0)
    {
-      nxlog_write_generic(NXLOG_ERROR, _T("JavaBridge: Failed to register native methods for platform class"));
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_JAVA_BRIDGE, _T("Failed to register native methods for platform class"));
       return false;
    }
 

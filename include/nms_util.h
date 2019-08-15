@@ -234,6 +234,7 @@ inline WCHAR towupper(WCHAR c)
 #define NXLOG_BACKGROUND_WRITER ((UINT32)0x00000004)
 #define NXLOG_DEBUG_MODE        ((UINT32)0x00000008)
 #define NXLOG_USE_SYSTEMD       ((UINT32)0x00000010)
+#define NXLOG_JSON_FORMAT       ((UINT32)0x00000020)
 #define NXLOG_IS_OPEN           ((UINT32)0x80000000)
 
 /**
@@ -3284,12 +3285,12 @@ int LIBNETXMS_EXPORTABLE alphasort(const struct dirent **a, const struct dirent 
 
 TCHAR LIBNETXMS_EXPORTABLE *safe_fgetts(TCHAR *buffer, int len, FILE *f);
 
-bool LIBNETXMS_EXPORTABLE nxlog_open(const TCHAR *logName, UINT32 flags, const TCHAR *msgModule,
-                                     unsigned int msgCount, const TCHAR **messages,
-                                     DWORD debugMsg, DWORD debugMsgTag, DWORD genericMsg);
+bool LIBNETXMS_EXPORTABLE nxlog_open(const TCHAR *logName, UINT32 flags);
 void LIBNETXMS_EXPORTABLE nxlog_close();
-void LIBNETXMS_EXPORTABLE nxlog_write(DWORD msg, WORD wType, const char *format, ...);
-void LIBNETXMS_EXPORTABLE nxlog_write_generic(WORD type, const TCHAR *format, ...);
+void LIBNETXMS_EXPORTABLE nxlog_write(INT16 severity, const TCHAR *format, ...);
+void LIBNETXMS_EXPORTABLE nxlog_write2(INT16 severity, const TCHAR *format, va_list args);
+void LIBNETXMS_EXPORTABLE nxlog_write_tag(INT16 severity, const TCHAR *tag, const TCHAR *format, ...);
+void LIBNETXMS_EXPORTABLE nxlog_write_tag2(INT16 severity, const TCHAR *tag, const TCHAR *format, va_list args);
 void LIBNETXMS_EXPORTABLE nxlog_debug(int level, const TCHAR *format, ...);
 void LIBNETXMS_EXPORTABLE nxlog_debug2(int level, const TCHAR *format, va_list args);
 void LIBNETXMS_EXPORTABLE nxlog_debug_tag(const TCHAR *tag, int level, const TCHAR *format, ...);
@@ -3326,7 +3327,7 @@ ObjectArray<DebugTagInfo> LIBNETXMS_EXPORTABLE *nxlog_get_all_debug_tags();
 
 #endif   /* __cplusplus */
 
-typedef void (*NxLogDebugWriter)(const TCHAR *, const TCHAR *);
+typedef void (*NxLogDebugWriter)(const TCHAR *, const TCHAR *, va_list);
 void LIBNETXMS_EXPORTABLE nxlog_set_debug_writer(NxLogDebugWriter writer);
 
 typedef void (*NxLogConsoleWriter)(const TCHAR *, ...);

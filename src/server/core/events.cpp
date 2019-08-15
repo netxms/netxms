@@ -717,7 +717,7 @@ static bool LoadEventConfiguration()
    }
    else
    {
-      nxlog_write(MSG_EVENT_LOAD_ERROR, EVENTLOG_ERROR_TYPE, NULL);
+      nxlog_write(NXLOG_ERROR, _T("Unable to load event templates from database"));
       success = false;
    }
 
@@ -743,7 +743,7 @@ bool InitEventSubsystem()
       if (!g_pEventPolicy->loadFromDB())
       {
          success = FALSE;
-         nxlog_write(MSG_EPP_LOAD_FAILED, EVENTLOG_ERROR_TYPE, NULL);
+         nxlog_write(NXLOG_ERROR, _T("Error loading event processing policy from database"));
          delete g_pEventPolicy;
       }
    }

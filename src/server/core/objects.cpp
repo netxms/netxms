@@ -431,7 +431,7 @@ void NetObjInsert(NetObj *pObject, bool newObject, bool importedObject)
 						}
 					}
 					if (!processed)
-						nxlog_write(MSG_BAD_NETOBJ_TYPE, EVENTLOG_ERROR_TYPE, "d", pObject->getObjectClass());
+						nxlog_write(NXLOG_ERROR, _T("Internal error: invalid object class %d"), pObject->getObjectClass());
 				}
             break;
       }
@@ -597,7 +597,7 @@ void NetObjDeleteFromIndexes(NetObj *pObject)
 					}
 				}
 				if (!processed)
-					nxlog_write(MSG_BAD_NETOBJ_TYPE, EVENTLOG_ERROR_TYPE, "d", pObject->getObjectClass());
+               nxlog_write(NXLOG_ERROR, _T("Internal error: invalid object class %d"), pObject->getObjectClass());
 			}
          break;
    }
@@ -1497,7 +1497,7 @@ BOOL LoadObjects()
             else     // Object load failed
             {
                pZone->destroy();
-               nxlog_write(MSG_ZONE_LOAD_FAILED, NXLOG_ERROR, "d", id);
+               nxlog_write(NXLOG_ERROR, _T("Failed to load zone object with ID %u from database"), id);
             }
          }
          DBFreeResult(hResult);
@@ -1524,7 +1524,7 @@ BOOL LoadObjects()
          else     // Object load failed
          {
             condition->destroy();
-            nxlog_write(MSG_CONDITION_LOAD_FAILED, NXLOG_ERROR, "d", id);
+            nxlog_write(NXLOG_ERROR, _T("Failed to load condition object with ID %u from database"), id);
          }
       }
       DBFreeResult(hResult);
@@ -1561,7 +1561,7 @@ BOOL LoadObjects()
          else     // Object load failed
          {
             subnet->destroy();
-            nxlog_write(MSG_SUBNET_LOAD_FAILED, NXLOG_ERROR, "d", id);
+            nxlog_write(NXLOG_ERROR, _T("Failed to load subnet object with ID %u from database"), id);
          }
       }
       DBFreeResult(hResult);
@@ -1584,7 +1584,7 @@ BOOL LoadObjects()
          }
          else     // Object load failed
          {
-            nxlog_write(MSG_RACK_LOAD_FAILED, NXLOG_ERROR, "d", id);
+            nxlog_write(NXLOG_ERROR, _T("Failed to load rack object with ID %u from database"), id);
             rack->destroy();
          }
       }
@@ -1607,7 +1607,7 @@ BOOL LoadObjects()
          }
          else     // Object load failed
          {
-            nxlog_write(MSG_CHASSIS_LOAD_FAILED, NXLOG_ERROR, "d", id);
+            nxlog_write(NXLOG_ERROR, _T("Failed to load chassis object with ID %u from database"), id);
             chassis->destroy();
          }
       }
@@ -1632,7 +1632,7 @@ BOOL LoadObjects()
          else     // Object load failed
          {
             md->destroy();
-            nxlog_write(MSG_MOBILEDEVICE_LOAD_FAILED, NXLOG_ERROR, "d", id);
+            nxlog_write(NXLOG_ERROR, _T("Failed to load mobile device object with ID %u from database"), id);
          }
       }
       DBFreeResult(hResult);
@@ -1656,7 +1656,7 @@ BOOL LoadObjects()
          else     // Object load failed
          {
             sensor->destroy();
-            nxlog_write(MSG_SENSOR_LOAD_FAILED, NXLOG_ERROR, "d", id);
+            nxlog_write(NXLOG_ERROR, _T("Failed to load sensor object with ID %u from database"), id);
          }
       }
       DBFreeResult(hResult);
@@ -1688,7 +1688,7 @@ BOOL LoadObjects()
          else     // Object load failed
          {
             node->destroy();
-            nxlog_write(MSG_NODE_LOAD_FAILED, NXLOG_ERROR, "d", id);
+            nxlog_write(NXLOG_ERROR, _T("Failed to load node object with ID %u from database"), id);
          }
       }
       DBFreeResult(hResult);
@@ -1711,7 +1711,7 @@ BOOL LoadObjects()
          }
          else     // Object load failed
          {
-            nxlog_write(MSG_AP_LOAD_FAILED, NXLOG_ERROR, "d", id);
+            nxlog_write(NXLOG_ERROR, _T("Failed to load access point object with ID %u from database"), id);
             ap->destroy();
          }
       }
@@ -1735,7 +1735,7 @@ BOOL LoadObjects()
          }
          else     // Object load failed
          {
-            nxlog_write(MSG_INTERFACE_LOAD_FAILED, NXLOG_ERROR, "d", id);
+            nxlog_write(NXLOG_ERROR, _T("Failed to load interface object with ID %u from database"), id);
             iface->destroy();
          }
       }
@@ -1759,7 +1759,7 @@ BOOL LoadObjects()
          else     // Object load failed
          {
             service->destroy();
-            nxlog_write(MSG_NETSRV_LOAD_FAILED, NXLOG_ERROR, "d", id);
+            nxlog_write(NXLOG_ERROR, _T("Failed to load network service object with ID %u from database"), id);
          }
       }
       DBFreeResult(hResult);
@@ -1782,7 +1782,7 @@ BOOL LoadObjects()
          else     // Object load failed
          {
             connector->destroy();
-            nxlog_write(MSG_VPNC_LOAD_FAILED, NXLOG_ERROR, "d", id);
+            nxlog_write(NXLOG_ERROR, _T("Failed to load VPN connector object with ID %u from database"), id);
          }
       }
       DBFreeResult(hResult);
@@ -1805,7 +1805,7 @@ BOOL LoadObjects()
          else     // Object load failed
          {
             cluster->destroy();
-            nxlog_write(MSG_CLUSTER_LOAD_FAILED, NXLOG_ERROR, "d", id);
+            nxlog_write(NXLOG_ERROR, _T("Failed to load cluster object with ID %u from database"), id);
          }
       }
       DBFreeResult(hResult);
@@ -1834,7 +1834,7 @@ BOOL LoadObjects()
          else     // Object load failed
          {
             tmpl->destroy();
-            nxlog_write(MSG_TEMPLATE_LOAD_FAILED, NXLOG_ERROR, "d", id);
+            nxlog_write(NXLOG_ERROR, _T("Failed to load template object with ID %u from database"), id);
          }
       }
       DBFreeResult(hResult);
@@ -1857,7 +1857,7 @@ BOOL LoadObjects()
          else     // Object load failed
          {
             map->destroy();
-            nxlog_write(MSG_NETMAP_LOAD_FAILED, NXLOG_ERROR, "d", id);
+            nxlog_write(NXLOG_ERROR, _T("Failed to load network map object with ID %u from database"), id);
          }
       }
       DBFreeResult(hResult);
@@ -1885,7 +1885,7 @@ BOOL LoadObjects()
          else     // Object load failed
          {
             pContainer->destroy();
-            nxlog_write(MSG_CONTAINER_LOAD_FAILED, NXLOG_ERROR, "d", id);
+            nxlog_write(NXLOG_ERROR, _T("Failed to load container object with ID %u from database"), id);
          }
       }
       DBFreeResult(hResult);
@@ -1911,7 +1911,7 @@ BOOL LoadObjects()
          else     // Object load failed
          {
             pGroup->destroy();
-            nxlog_write(MSG_TG_LOAD_FAILED, NXLOG_ERROR, "d", id);
+            nxlog_write(NXLOG_ERROR, _T("Failed to load template group object with ID %u from database"), id);
          }
       }
       DBFreeResult(hResult);
@@ -1935,7 +1935,7 @@ BOOL LoadObjects()
          else     // Object load failed
          {
             group->destroy();
-            nxlog_write(MSG_MG_LOAD_FAILED, NXLOG_ERROR, "d", id);
+            nxlog_write(NXLOG_ERROR, _T("Failed to load network map group object with ID %u from database"), id);
          }
       }
       DBFreeResult(hResult);
@@ -1958,7 +1958,7 @@ BOOL LoadObjects()
          else     // Object load failed
          {
             dashboard->destroy();
-            nxlog_write(MSG_DASHBOARD_LOAD_FAILED, NXLOG_ERROR, "d", id);
+            nxlog_write(NXLOG_ERROR, _T("Failed to load dashboard object with ID %u from database"), id);
          }
       }
       DBFreeResult(hResult);
@@ -1982,7 +1982,7 @@ BOOL LoadObjects()
          else     // Object load failed
          {
             group->destroy();
-            nxlog_write(MSG_MG_LOAD_FAILED, NXLOG_ERROR, "d", id);
+            nxlog_write(NXLOG_ERROR, _T("Failed to load dashboard group object with ID %u from database"), id);
          }
       }
       DBFreeResult(hResult);
@@ -2006,7 +2006,7 @@ BOOL LoadObjects()
 		   else     // Object load failed
 		   {
 			   service->destroy();
-			   nxlog_write(MSG_BUSINESS_SERVICE_LOAD_FAILED, NXLOG_ERROR, "d", id);
+			   nxlog_write(NXLOG_ERROR, _T("Failed to load business service object with ID %u from database"), id);
 		   }
 	   }
 	   DBFreeResult(hResult);
@@ -2030,7 +2030,7 @@ BOOL LoadObjects()
 		   else     // Object load failed
 		   {
 			   nl->destroy();
-			   nxlog_write(MSG_NODE_LINK_LOAD_FAILED, NXLOG_ERROR, "d", id);
+			   nxlog_write(NXLOG_ERROR, _T("Failed to load node link object with ID %u from database"), id);
 		   }
 	   }
 	   DBFreeResult(hResult);
@@ -2053,7 +2053,7 @@ BOOL LoadObjects()
          else     // Object load failed
          {
             check->destroy();
-            nxlog_write(MSG_SERVICE_CHECK_LOAD_FAILED, NXLOG_ERROR, "d", id);
+            nxlog_write(NXLOG_ERROR, _T("Failed to load service check object with ID %u from database"), id);
          }
       }
       DBFreeResult(hResult);

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -58,7 +58,7 @@ THREAD_RESULT THREAD_CALL BeaconPoller(void *arg)
       }
       else
 		{
-			nxlog_write(MSG_INVALID_BEACON, EVENTLOG_WARNING_TYPE, "s", curr);
+			nxlog_write(NXLOG_WARNING, _T("Invalid beacon host name or address %s - host will be excluded from beacon list"), curr);
 		}
 	}
 

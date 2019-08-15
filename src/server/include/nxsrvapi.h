@@ -39,10 +39,6 @@
 #include <netxms_isc.h>
 #include <nxcldefs.h>
 
-#ifdef INCLUDE_LIBNXSRV_MESSAGES
-#include "../libnxsrv/messages.h"
-#endif
-
 /**
  * Default files
  */
@@ -51,6 +47,7 @@
 #define DEFAULT_LOG_FILE      _T("C:\\netxmsd.log")
 #define DEFAULT_DUMP_DIR      _T("C:\\")
 
+#define LDIR_NCD              _T("\\ncd")
 #define LDIR_NDD              _T("\\ndd")
 #define LDIR_PDSDRV           _T("\\pdsdrv")
 
@@ -86,9 +83,9 @@
 #define DEFAULT_LOG_FILE      _T("/var/log/netxmsd.log")
 #define DEFAULT_DUMP_DIR      _T("/var/tmp")
 
+#define LDIR_NCD              _T("/ncd")
 #define LDIR_NDD              _T("/ndd")
 #define LDIR_PDSDRV           _T("/pdsdrv")
-#define LDIR_NCD              _T("/ncd")
 
 #define DDIR_PACKAGES         _T("/packages")
 #define DDIR_BACKGROUNDS      _T("/backgrounds")
@@ -153,6 +150,7 @@
 #define AF_SYSTEMD_DAEMON                      _ULL(0x0000200000000000)
 #define AF_USE_SYSTEMD_JOURNAL                 _ULL(0x0000400000000000)
 #define AF_COLLECT_ICMP_STATISTICS             _ULL(0x0000800000000000)
+#define AF_LOG_IN_JSON_FORMAT                  _ULL(0x0001000000000000)
 #define AF_SERVER_INITIALIZED                  _ULL(0x4000000000000000)
 #define AF_SHUTDOWN                            _ULL(0x8000000000000000)
 
@@ -760,12 +758,6 @@ void LIBNXSRV_EXPORTABLE DestroyRoutingTable(ROUTING_TABLE *pRT);
 void LIBNXSRV_EXPORTABLE SortRoutingTable(ROUTING_TABLE *pRT);
 const TCHAR LIBNXSRV_EXPORTABLE *AgentErrorCodeToText(UINT32 err);
 UINT32 LIBNXSRV_EXPORTABLE AgentErrorToRCC(UINT32 err);
-
-void LIBNXSRV_EXPORTABLE WriteLogOther(WORD wType, const TCHAR *format, ...)
-#if !defined(UNICODE) && (defined(__GNUC__) || defined(__clang__))
-   __attribute__ ((format(printf, 2, 3)))
-#endif
-;
 
 // for compatibility - new code should use nxlog_debug
 #define DbgPrintf nxlog_debug

@@ -131,7 +131,7 @@ void SlmCheck::compileScript()
    }
    else
    {
-      nxlog_write(MSG_SLMCHECK_SCRIPT_COMPILATION_ERROR, NXLOG_WARNING, "dss", m_id, m_name, errorMsg);
+      nxlog_write(NXLOG_WARNING, _T("Failed to compile script for service check object %s [%u] (%s)"), m_name, m_id, errorMsg);
    }
 }
 
@@ -369,7 +369,7 @@ void SlmCheck::execute()
 
 					_sntprintf(buffer, 1024, _T("ServiceCheck::%s::%d"), m_name, m_id);
 					PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, m_pCompiledScript->getErrorText(), m_id);
-					nxlog_write(MSG_SLMCHECK_SCRIPT_EXECUTION_ERROR, NXLOG_WARNING, "dss", m_id, m_name, m_pCompiledScript->getErrorText());
+			      nxlog_write(NXLOG_WARNING, _T("Failed to execute script for service check object %s [%u] (%s)"), m_name, m_id, m_pCompiledScript->getErrorText());
 					m_status = STATUS_UNKNOWN;
 				}
 				delete pGlobals;

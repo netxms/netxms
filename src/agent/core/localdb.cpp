@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -208,7 +208,7 @@ static bool CheckDatabaseStructure()
       // assume empty database, create tables
       if (!InitDatabase())
       {
-         nxlog_write(MSG_LOCAL_DB_CORRUPTED, NXLOG_ERROR, NULL);
+         nxlog_write(NXLOG_ERROR, _T("Local database is corrupted and cannot be used"));
          return false;
       }
 
@@ -225,7 +225,7 @@ static bool CheckDatabaseStructure()
 
    if ((version <= 0) || (version > DB_SCHEMA_VERSION))
    {
-      nxlog_write(MSG_LOCAL_DB_CORRUPTED, NXLOG_ERROR, NULL);
+      nxlog_write(NXLOG_ERROR, _T("Local database is corrupted and cannot be used"));
       return false;
    }
 
@@ -235,7 +235,7 @@ static bool CheckDatabaseStructure()
       {
          version = ReadMetadataAsInt(_T("SchemaVersion"));
          nxlog_debug(1, _T("Local database schema version is %d and cannot be upgraded to %d"), version, DB_SCHEMA_VERSION);
-         nxlog_write(MSG_LOCAL_DB_CORRUPTED, NXLOG_ERROR, NULL);
+         nxlog_write(NXLOG_ERROR, _T("Local database is corrupted and cannot be used"));
          return false;
       }
    }
@@ -251,7 +251,7 @@ static bool CheckDatabaseStructure()
    }
    if (!success)
    {
-      nxlog_write(MSG_LOCAL_DB_CORRUPTED, NXLOG_ERROR, NULL);
+      nxlog_write(NXLOG_ERROR, _T("Local database is corrupted and cannot be used"));
       return false;
    }
 

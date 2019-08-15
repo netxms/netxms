@@ -180,30 +180,31 @@ static void LoadDriver(const TCHAR *file)
             if ((driver != NULL) && driver->init(&g_serverConfig))
             {
                s_drivers[s_numDrivers++] = driver;
-               nxlog_write(MSG_PDSDRV_LOADED, EVENTLOG_INFORMATION_TYPE, "s", driver->getName());
+               nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Performance data storage driver %s loaded successfully"), driver->getName());
             }
             else
             {
                delete driver;
-               nxlog_write(MSG_PDSDRV_INIT_FAILED, EVENTLOG_ERROR_TYPE, "s", file);
+               nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Initialization of performance data storage driver \"%s\" failed"), file);
                DLClose(hModule);
             }
          }
          else
          {
-            nxlog_write(MSG_PDSDRV_API_VERSION_MISMATCH, EVENTLOG_ERROR_TYPE, "sdd", file, PDSDRV_API_VERSION, *apiVersion);
+            nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Performance data storage driver \"%s\" cannot be loaded because of API version mismatch (driver: %d; server: %d)"),
+                     file, *apiVersion, PDSDRV_API_VERSION);
             DLClose(hModule);
          }
       }
       else
       {
-         nxlog_write(MSG_NO_PDSDRV_ENTRY_POINT, EVENTLOG_ERROR_TYPE, "s", file);
+         nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Unable to find entry point in performance data storage driver \"%s\""), file);
          DLClose(hModule);
       }
    }
    else
    {
-      nxlog_write(MSG_DLOPEN_FAILED, EVENTLOG_ERROR_TYPE, "ss", file, errorText);
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Unable to load module \"%s\" (%s)"), file, errorText);
    }
 }
 

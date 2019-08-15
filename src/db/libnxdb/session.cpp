@@ -23,9 +23,6 @@
 
 #include "libnxdb.h"
 
-#define DEBUG_TAG_CONNECTION  _T("db.conn")
-#define DEBUG_TAG_QUERY       _T("db.query")
-
 /**
  * Check if statement handle is valid
  */
@@ -293,8 +290,7 @@ bool LIBNXDB_EXPORTABLE DBQueryEx(DB_HANDLE hConn, const TCHAR *szQuery, TCHAR *
    if (dwResult != DBERR_SUCCESS)
 	{	
       s_perfFailedQueries++;
-		if (hConn->m_driver->m_logSqlErrors)
-			nxlog_write(g_sqlErrorMsgCode, EVENTLOG_ERROR_TYPE, "ss", szQuery, errorText);
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_DRIVER, _T("SQL query failed (Query = \"%s\"): %s"), szQuery, errorText);
 		if (hConn->m_driver->m_fpEventHandler != NULL)
 			hConn->m_driver->m_fpEventHandler(DBEVENT_QUERY_FAILED, pwszQuery, wcErrorText, dwResult == DBERR_CONNECTION_LOST, hConn->m_driver->m_userArg);
 	}
@@ -363,8 +359,7 @@ DB_RESULT LIBNXDB_EXPORTABLE DBSelectEx(DB_HANDLE hConn, const TCHAR *szQuery, T
 	if (hResult == NULL)
 	{
 	   s_perfFailedQueries++;
-		if (hConn->m_driver->m_logSqlErrors)
-			nxlog_write(g_sqlErrorMsgCode, EVENTLOG_ERROR_TYPE, "ss", szQuery, errorText);
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_DRIVER, _T("SQL query failed (Query = \"%s\"): %s"), szQuery, errorText);
 		if (hConn->m_driver->m_fpEventHandler != NULL)
 			hConn->m_driver->m_fpEventHandler(DBEVENT_QUERY_FAILED, pwszQuery, wcErrorText, dwError == DBERR_CONNECTION_LOST, hConn->m_driver->m_userArg);
 	}
@@ -869,8 +864,7 @@ DB_UNBUFFERED_RESULT LIBNXDB_EXPORTABLE DBSelectUnbufferedEx(DB_HANDLE hConn, co
 		errorText[DBDRV_MAX_ERROR_TEXT - 1] = 0;
 #endif
 
-		if (hConn->m_driver->m_logSqlErrors)
-        nxlog_write(g_sqlErrorMsgCode, EVENTLOG_ERROR_TYPE, "ss", szQuery, errorText);
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_DRIVER, _T("SQL query failed (Query = \"%s\"): %s"), szQuery, errorText);
 		if (hConn->m_driver->m_fpEventHandler != NULL)
 			hConn->m_driver->m_fpEventHandler(DBEVENT_QUERY_FAILED, pwszQuery, wcErrorText, dwError == DBERR_CONNECTION_LOST, hConn->m_driver->m_userArg);
    }
@@ -1187,8 +1181,7 @@ DB_STATEMENT LIBNXDB_EXPORTABLE DBPrepareEx(DB_HANDLE hConn, const TCHAR *query,
 		errorText[DBDRV_MAX_ERROR_TEXT - 1] = 0;
 #endif
 
-		if (hConn->m_driver->m_logSqlErrors)
-        nxlog_write(g_sqlErrorMsgCode, EVENTLOG_ERROR_TYPE, "ss", query, errorText);
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_DRIVER, _T("SQL query failed (Query = \"%s\"): %s"), query, errorText);
 		if (hConn->m_driver->m_fpEventHandler != NULL)
 			hConn->m_driver->m_fpEventHandler(DBEVENT_QUERY_FAILED, pwszQuery, wcErrorText, errorCode == DBERR_CONNECTION_LOST, hConn->m_driver->m_userArg);
 
@@ -1517,8 +1510,7 @@ bool LIBNXDB_EXPORTABLE DBExecuteEx(DB_STATEMENT hStmt, TCHAR *errorText)
 
    if (dwResult != DBERR_SUCCESS)
 	{	
-		if (hConn->m_driver->m_logSqlErrors)
-			nxlog_write(g_sqlErrorMsgCode, EVENTLOG_ERROR_TYPE, "ss", hStmt->m_query, errorText);
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_DRIVER, _T("SQL query failed (Query = \"%s\"): %s"), hStmt->m_query, errorText);
 		if (hConn->m_driver->m_fpEventHandler != NULL)
 		{
 #ifdef UNICODE
@@ -1601,8 +1593,7 @@ DB_RESULT LIBNXDB_EXPORTABLE DBSelectPreparedEx(DB_STATEMENT hStmt, TCHAR *error
 
 	if (hResult == NULL)
 	{
-		if (hConn->m_driver->m_logSqlErrors)
-			nxlog_write(g_sqlErrorMsgCode, EVENTLOG_ERROR_TYPE, "ss", hStmt->m_query, errorText);
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_DRIVER, _T("SQL query failed (Query = \"%s\"): %s"), hStmt->m_query, errorText);
 		if (hConn->m_driver->m_fpEventHandler != NULL)
 		{
 #ifdef UNICODE
@@ -1693,8 +1684,7 @@ DB_UNBUFFERED_RESULT LIBNXDB_EXPORTABLE DBSelectPreparedUnbufferedEx(DB_STATEMEN
    {
       MutexUnlock(hConn->m_mutexTransLock);
 
-      if (hConn->m_driver->m_logSqlErrors)
-         nxlog_write(g_sqlErrorMsgCode, EVENTLOG_ERROR_TYPE, "ss", hStmt->m_query, errorText);
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_DRIVER, _T("SQL query failed (Query = \"%s\"): %s"), hStmt->m_query, errorText);
       if (hConn->m_driver->m_fpEventHandler != NULL)
       {
 #ifdef UNICODE

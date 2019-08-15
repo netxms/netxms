@@ -802,6 +802,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_SYSTEMD_DAEMON));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_USE_SYSTEMD_JOURNAL));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_COLLECT_ICMP_STATISTICS));
+         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_LOG_IN_JSON_FORMAT));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_SERVER_INITIALIZED));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_SHUTDOWN));
          ConsolePrintf(pCtx, _T("\n"));

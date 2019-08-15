@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Server Library
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -148,20 +148,6 @@ static int CompareRoutes(const void *p1, const void *p2)
 void LIBNXSRV_EXPORTABLE SortRoutingTable(ROUTING_TABLE *pRT)
 {
    qsort(pRT->pRoutes, pRT->iNumEntries, sizeof(ROUTE), CompareRoutes);
-}
-
-/**
- * Log custom message (mostly used by modules)
- */
-void LIBNXSRV_EXPORTABLE WriteLogOther(WORD wType, const TCHAR *format, ...)
-{
-   va_list args;
-   TCHAR buffer[4096];
-
-   va_start(args, format);
-   _vsntprintf(buffer, 4096, format, args);
-   va_end(args);
-   nxlog_write(MSG_OTHER, wType, "s", buffer);
 }
 
 #ifdef _WIN32

@@ -111,7 +111,7 @@ struct LIBNXDB_PERF_COUNTERS
 /**
  * Functions
  */
-bool LIBNXDB_EXPORTABLE DBInit(DWORD logMsgCode, DWORD sqlErrorMsgCode);
+bool LIBNXDB_EXPORTABLE DBInit();
 DB_DRIVER LIBNXDB_EXPORTABLE DBLoadDriver(const TCHAR *module, const TCHAR *initParameters,
 														bool dumpSQL, void (* fpEventHandler)(DWORD, const WCHAR *, const WCHAR *, bool, void *),
 														void *userArg);

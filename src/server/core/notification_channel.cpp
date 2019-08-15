@@ -535,19 +535,20 @@ static void LoadDriver(const TCHAR *file)
          }
          else
          {
-            nxlog_write(MSG_NCD_API_VERSION_MISMATCH, EVENTLOG_ERROR_TYPE, "sdd", file, NDDRV_API_VERSION, *apiVersion);
+            nxlog_write(NXLOG_ERROR, _T("Notification channel driver \"%s\" cannot be loaded because of API version mismatch (driver: %d; server: %d)"),
+                     file, *apiVersion, NCDRV_API_VERSION);
             DLClose(hModule);
          }
       }
       else
       {
-         nxlog_write(MSG_NO_NCD_ENTRY_POINT, EVENTLOG_ERROR_TYPE, "s", file);
+         nxlog_write(NXLOG_ERROR, _T("Unable to find entry point in notification channel driver \"%s\""), file);
          DLClose(hModule);
       }
    }
    else
    {
-      nxlog_write(MSG_DLOPEN_FAILED, EVENTLOG_ERROR_TYPE, "ss", file, errorText);
+      nxlog_write(NXLOG_ERROR, _T("Unable to load module \"%s\" (%s)"), file, errorText);
    }
 }
 

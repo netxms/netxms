@@ -315,12 +315,14 @@ void RecoverConfigPolicyDirectory()
 /**
  * Debug writer
  */
-static void DebugWriter(const TCHAR *tag, const TCHAR *text)
+static void DebugWriter(const TCHAR *tag, const TCHAR *format, va_list args)
 {
-   if (tag == NULL)
-      ConsolePrintf(_T("%s\n"), text);
-   else
-      ConsolePrintf(_T("<%s> %s\n"), tag, text);
+   if (tag != NULL)
+   {
+      ConsolePrintf(_T("<%s> "), tag);
+   }
+   ConsolePrintf2(format, args);
+   ConsolePrintf(_T("\n"));
 }
 
 /**

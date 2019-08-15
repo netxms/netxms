@@ -27,6 +27,9 @@
 #include <nms_util.h>
 #include <nxjava.h>
 
+#define DEBUG_TAG_JAVA_BRIDGE    _T("java.bridge")
+#define DEBUG_TAG_JAVA_RUNTIME   _T("java.runtime")
+
 bool RegisterConfigHelperNatives(JNIEnv *env);
 bool RegisterPlatformNatives(JNIEnv *env);
 

@@ -401,8 +401,9 @@ static THREAD_RESULT THREAD_CALL SessionAgentListener(void *arg)
    // Create socket
    if ((hSocket = socket(AF_INET, SOCK_STREAM, 0)) == INVALID_SOCKET)
    {
-      nxlog_write(MSG_SOCKET_ERROR, EVENTLOG_ERROR_TYPE, "e", WSAGetLastError());
-      DebugPrintf(1, _T("Session agent connector terminated (socket error)"));
+      TCHAR buffer[1024];
+      nxlog_write(NXLOG_ERROR, _T("Unable to open socket (%s)"), GetLastSocketErrorText(buffer, 1024));
+      nxlog_debug(1, _T("Session agent connector terminated (socket error)"));
       return THREAD_OK;
    }
 
@@ -422,14 +423,15 @@ static THREAD_RESULT THREAD_CALL SessionAgentListener(void *arg)
 	DebugPrintf(1, _T("Trying to bind on %s:%d"), IpToStr(ntohl(servAddr.sin_addr.s_addr), szBuffer), ntohs(servAddr.sin_port));
    if (bind(hSocket, (struct sockaddr *)&servAddr, sizeof(struct sockaddr_in)) != 0)
    {
-      nxlog_write(MSG_BIND_ERROR, EVENTLOG_ERROR_TYPE, "e", WSAGetLastError());
-      DebugPrintf(1, _T("Session agent connector terminated (socket error)"));
+      TCHAR buffer[1024];
+      nxlog_write(NXLOG_ERROR, _T("Unable to bind socket (%s)"), GetLastSocketErrorText(buffer, 1024));
+      nxlog_debug(1, _T("Session agent connector terminated (socket error)"));
       return THREAD_OK;
    }
 
    // Set up queue
    listen(hSocket, SOMAXCONN);
-   DebugPrintf(1, _T("Session agent connector listening on port %d"), (int)g_sessionAgentPort);
+   nxlog_debug(1, _T("Session agent connector listening on port %d"), (int)g_sessionAgentPort);
 
    // Wait for connection requests
    SocketPoller sp;
@@ -446,11 +448,14 @@ static THREAD_RESULT THREAD_CALL SessionAgentListener(void *arg)
             int error = WSAGetLastError();
 
             if (error != WSAEINTR)
-               nxlog_write(MSG_ACCEPT_ERROR, EVENTLOG_ERROR_TYPE, "e", error);
+            {
+               TCHAR buffer[1024];
+               nxlog_write(NXLOG_ERROR, _T("Unable to accept incoming connection (%s)"), GetLastSocketErrorText(buffer, 1024));
+            }
             iNumErrors++;
             if (iNumErrors > 1000)
             {
-               nxlog_write(MSG_TOO_MANY_ERRORS, EVENTLOG_WARNING_TYPE, NULL);
+               nxlog_write(NXLOG_WARNING, _T("Too many consecutive errors on accept() call"));
                iNumErrors = 0;
             }
             ThreadSleepMs(500);
@@ -463,7 +468,7 @@ static THREAD_RESULT THREAD_CALL SessionAgentListener(void *arg)
 #endif
 
          iNumErrors = 0;     // Reset consecutive errors counter
-         DebugPrintf(5, _T("Incoming session agent connection"));
+         nxlog_debug(5, _T("Incoming session agent connection"));
 
          // Create new session structure and threads
 		   SessionAgentConnector *c = new SessionAgentConnector(id++, hClientSocket);
@@ -481,7 +486,8 @@ static THREAD_RESULT THREAD_CALL SessionAgentListener(void *arg)
          if ((error != EINTR) && (error != ENOENT))
 #endif
          {
-            nxlog_write(MSG_SELECT_ERROR, EVENTLOG_ERROR_TYPE, "e", error);
+            TCHAR buffer[1024];
+            nxlog_write(NXLOG_ERROR, _T("Call to select() failed (%s)"), GetLastSocketErrorText(buffer, 1024));
             ThreadSleepMs(100);
          }
       }

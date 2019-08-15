@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -48,7 +48,7 @@ BOOL RegisterOnServer(const TCHAR *pszServer, UINT32 zoneUIN)
    InetAddress addr = InetAddress::resolveHostName(pszServer);
    if (!addr.isValidUnicast())
    {
-		nxlog_write(MSG_REGISTRATION_FAILED, EVENTLOG_WARNING_TYPE, "s", _T("Unable to resolve name of management server"));
+		nxlog_write(NXLOG_WARNING, _T("Registration on management server failed (unable to resolve name of management server)"));
       return FALSE;
    }
 
@@ -100,16 +100,16 @@ BOOL RegisterOnServer(const TCHAR *pszServer, UINT32 zoneUIN)
 
 			if (bRet)
 			{
-				nxlog_write(MSG_REGISTRATION_SUCCESSFULL, EVENTLOG_INFORMATION_TYPE, "s", pszServer);
+				nxlog_write(NXLOG_INFO, _T("Successfully registered on management server %s"), pszServer);
 			}
 			else
 			{
-				nxlog_write(MSG_REGISTRATION_FAILED, EVENTLOG_WARNING_TYPE, "s", _T("Communication failure"));
+		      nxlog_write(NXLOG_WARNING, _T("Registration on management server failed (communication failure)"));
 			}
       }
       else
       {
-			nxlog_write(MSG_REGISTRATION_FAILED, EVENTLOG_WARNING_TYPE, "s", _T("Unable to connect to management server"));
+         nxlog_write(NXLOG_WARNING, _T("Registration on management server failed (unable to connect to management server)"));
       }
       closesocket(hSocket);
    }

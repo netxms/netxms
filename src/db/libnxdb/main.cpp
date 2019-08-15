@@ -24,20 +24,6 @@
 #include "libnxdb.h"
 
 /**
- * Write log
- */
-void __DBWriteLog(WORD level, const TCHAR *format, ...)
-{
-	TCHAR buffer[4096];
-	va_list args;
-	
-	va_start(args, format);
-	_vsntprintf(buffer, 4096, format, args);
-	va_end(args);
-	nxlog_write(g_logMsgCode, level, "s", buffer);
-}
-
-/**
  * Set long running query threshold (milliseconds)
  */
 void LIBNXDB_EXPORTABLE DBSetLongRunningThreshold(UINT32 threshold)

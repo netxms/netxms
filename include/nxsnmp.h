@@ -766,7 +766,6 @@ UINT32 LIBNXSNMP_EXPORTABLE SNMPResolveDataType(const TCHAR *pszType);
 TCHAR LIBNXSNMP_EXPORTABLE *SNMPDataTypeName(UINT32 type, TCHAR *buffer, size_t bufferSize);
 
 UINT32 LIBNXSNMP_EXPORTABLE SnmpNewRequestId();
-void LIBNXSNMP_EXPORTABLE SnmpSetMessageIds(DWORD msgParseError, DWORD msgTypeError, DWORD msgGetError);
 void LIBNXSNMP_EXPORTABLE SnmpSetDefaultTimeout(UINT32 timeout);
 UINT32 LIBNXSNMP_EXPORTABLE SnmpGetDefaultTimeout();
 UINT32 LIBNXSNMP_EXPORTABLE SnmpGet(int version, SNMP_Transport *transport,

@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2007-2017 Victor Kirhenshtein
+** Copyright (C) 2007-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -578,8 +578,8 @@ void ReloadCertificates()
 						else
 						{
 						   TCHAR subject[256];
-							nxlog_write(MSG_CANNOT_ADD_CERT, EVENTLOG_ERROR_TYPE,
-										"ss", DBGetField(hResult, i, 1, subject, 256),
+							nxlog_write(NXLOG_ERROR, _T("Cannot add certificate %s to store (%s)"),
+										DBGetField(hResult, i, 1, subject, 256),
 										_ERR_error_tstring(ERR_get_error(), szBuffer));
 						}
 						X509_free(cert); // X509_STORE_add_cert increments reference count
@@ -587,8 +587,8 @@ void ReloadCertificates()
 					else
 					{
                   TCHAR subject[256];
-						nxlog_write(MSG_CANNOT_LOAD_CERT, EVENTLOG_ERROR_TYPE,
-									"ss", DBGetField(hResult, i, 1, subject, 256),
+						nxlog_write(NXLOG_ERROR, _T("Cannot load certificate %s from database (%s)"),
+									DBGetField(hResult, i, 1, subject, 256),
 									_ERR_error_tstring(ERR_get_error(), szBuffer));
 					}
 				}
@@ -596,14 +596,14 @@ void ReloadCertificates()
 			DBFreeResult(hResult);
 
 			if (loaded > 0)
-				nxlog_write(MSG_CA_CERTIFICATES_LOADED, EVENTLOG_INFORMATION_TYPE, "d", loaded);
+				nxlog_write(NXLOG_INFO, _T("Successfully loaded %d trusted CA certificates"), loaded);
 		}
 		DBConnectionPoolReleaseConnection(hdb);
 	}
 	else
 	{
 	   TCHAR buffer[256];
-		nxlog_write(MSG_CANNOT_INIT_CERT_STORE, EVENTLOG_ERROR_TYPE, "s", _ERR_error_tstring(ERR_get_error(), buffer));
+		nxlog_write(NXLOG_ERROR, _T("Cannot initialize certificate store (%s)"), _ERR_error_tstring(ERR_get_error(), buffer));
 	}
 
 	s_certificateStoreLock.unlock();
@@ -634,7 +634,7 @@ bool LoadServerCertificate(RSA **serverKey)
 {
    if (g_serverCertificatePath[0] == 0)
    {
-      nxlog_write(MSG_SERVER_CERT_NOT_SET, NXLOG_INFO, NULL);
+      nxlog_write(NXLOG_INFO, _T("Server certificate not set"));
       return false;
    }
 
@@ -649,7 +649,7 @@ bool LoadServerCertificate(RSA **serverKey)
       FILE *f = _tfopen(curr, _T("r"));
       if (f == NULL)
       {
-         nxlog_write(MSG_CANNOT_LOAD_SERVER_CERT, NXLOG_ERROR, "ss", curr, _tcserror(errno));
+         nxlog_write(NXLOG_ERROR, _T("Cannot load CA certificate from %s (%s)"), curr, _tcserror(errno));
          return false;
       }
       X509 *cert = PEM_read_X509(f, NULL, NULL, NULL);
@@ -657,7 +657,7 @@ bool LoadServerCertificate(RSA **serverKey)
       if (cert == NULL)
       {
          TCHAR buffer[1024];
-         nxlog_write(MSG_CANNOT_LOAD_SERVER_CERT, NXLOG_ERROR, "ss", curr, _ERR_error_tstring(ERR_get_error(), buffer));
+         nxlog_write(NXLOG_ERROR, _T("Cannot load CA certificate from %s (%s)"), curr, _ERR_error_tstring(ERR_get_error(), buffer));
          return false;
       }
 
@@ -672,7 +672,7 @@ bool LoadServerCertificate(RSA **serverKey)
    FILE *f = _tfopen(g_serverCertificatePath, _T("r"));
    if (f == NULL)
    {
-      nxlog_write(MSG_CANNOT_LOAD_SERVER_CERT, NXLOG_ERROR, "ss", g_serverCertificatePath, _tcserror(errno));
+      nxlog_write(NXLOG_ERROR, _T("Cannot load server certificate from %s (%s)"), g_serverCertificatePath, _tcserror(errno));
       return false;
    }
 
@@ -685,7 +685,7 @@ bool LoadServerCertificate(RSA **serverKey)
       f = _tfopen(g_serverCertificateKeyPath, _T("r"));
       if (f == NULL)
       {
-         nxlog_write(MSG_CANNOT_LOAD_SERVER_CERT, NXLOG_ERROR, "ss", g_serverCertificateKeyPath, _tcserror(errno));
+         nxlog_write(NXLOG_ERROR, _T("Cannot load server certificate key from %s (%s)"), g_serverCertificateKeyPath, _tcserror(errno));
          return false;
       }
    }
@@ -695,7 +695,7 @@ bool LoadServerCertificate(RSA **serverKey)
    if ((s_serverCertificate == NULL) || (s_serverCertificateKey == NULL))
    {
       TCHAR buffer[1024];
-      nxlog_write(MSG_CANNOT_LOAD_SERVER_CERT, NXLOG_ERROR, "ss", g_serverCertificatePath, _ERR_error_tstring(ERR_get_error(), buffer));
+      nxlog_write(NXLOG_ERROR, _T("Cannot load server certificate from %s (%s)"), g_serverCertificatePath, _ERR_error_tstring(ERR_get_error(), buffer));
       return false;
    }
    nxlog_debug_tag(DEBUG_TAG, 3, _T("Server certificate: %s"), static_cast<const TCHAR*>(GetCertificateSubjectString(s_serverCertificate)));

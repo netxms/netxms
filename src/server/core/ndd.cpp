@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -57,31 +57,32 @@ static void LoadDriver(const TCHAR *file)
 				   for(int i = 0; i < drivers->size(); i++)
 				   {
                   s_drivers[s_numDrivers++] = drivers->get(i);
-                  nxlog_write(MSG_NDD_LOADED, EVENTLOG_INFORMATION_TYPE, "s", drivers->get(i)->getName());
+                  nxlog_write(NXLOG_INFO, _T("Network device driver %s loaded successfully"), drivers->get(i)->getName());
 				   }
 				   delete drivers;
 				}
 				else
 				{
-					nxlog_write(MSG_NDD_INIT_FAILED, EVENTLOG_ERROR_TYPE, "s", file);
+					nxlog_write(NXLOG_ERROR, _T("Initialization of network device driver \"%s\" failed"), file);
 					DLClose(hModule);
 				}
          }
          else
          {
-            nxlog_write(MSG_NDD_API_VERSION_MISMATCH, EVENTLOG_ERROR_TYPE, "sdd", file, NDDRV_API_VERSION, *apiVersion);
+            nxlog_write(NXLOG_ERROR, _T("Network device driver \"%s\" cannot be loaded because of API version mismatch (driver: %d; server: %d)"),
+                     file, *apiVersion, NDDRV_API_VERSION);
             DLClose(hModule);
          }
       }
       else
       {
-         nxlog_write(MSG_NO_NDD_ENTRY_POINT, EVENTLOG_ERROR_TYPE, "s", file);
+         nxlog_write(NXLOG_ERROR, _T("Unable to find entry point in network device driver \"%s\""), file);
          DLClose(hModule);
       }
    }
    else
    {
-      nxlog_write(MSG_DLOPEN_FAILED, EVENTLOG_ERROR_TYPE, "ss", file, errorText);
+      nxlog_write(NXLOG_ERROR, _T("Unable to load module \"%s\" (%s)"), file, errorText);
    }
 }
 

@@ -340,7 +340,8 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
                   TCHAR buffer[1024];
                   _sntprintf(buffer, 1024, _T("DCI::%s::%d::%d::ThresholdScript"), target->getName(), dci->getId(), m_id);
                   PostDciEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, dci->getId(), "ssd", buffer, vm->getErrorText(), dci->getId());
-                  nxlog_write(MSG_THRESHOLD_SCRIPT_EXECUTION_ERROR, NXLOG_WARNING, "sdds", target->getName(), dci->getId(), m_id, vm->getErrorText());
+                  nxlog_write(NXLOG_WARNING, _T("Failed to execute threshold script for node %s [%u] DCI %s [%u] threshold %u (%s)"),
+                           target->getName(), target->getId(), dci->getName(), dci->getId(), m_id, vm->getErrorText());
                   m_lastScriptErrorReport = now;
                }
             }
@@ -354,14 +355,15 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
                TCHAR buffer[1024];
                _sntprintf(buffer, 1024, _T("DCI::%s::%d::%d::ThresholdScript"), target->getName(), dci->getId(), m_id);
                PostDciEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, dci->getId(), "ssd", buffer, _T("Script load failed"), dci->getId());
-               nxlog_write(MSG_THRESHOLD_SCRIPT_EXECUTION_ERROR, NXLOG_WARNING, "sdds", target->getName(), dci->getId(), m_id, _T("Script load failed"));
+               nxlog_write(NXLOG_WARNING, _T("Failed to load threshold script for node %s [%u] DCI %s [%u] threshold %u"),
+                        target->getName(), target->getId(), dci->getName(), dci->getId(), m_id);
                m_lastScriptErrorReport = now;
             }
          }
       }
       else
       {
-         DbgPrintf(7, _T("Script not compiled for threshold %d of DCI %d of data collection target %s [%d]"),
+         DbgPrintf(7, _T("Script not compiled for threshold %d of DCI %d of data collection target %s [%u]"),
                    m_id, dci->getId(), target->getName(), target->getId());
       }
    }
@@ -913,7 +915,7 @@ void Threshold::associate(DCItem *pItem)
  */
 void Threshold::setScript(TCHAR *script)
 {
-   free(m_scriptSource);
+   MemFree(m_scriptSource);
    delete m_script;
    if (script != NULL)
    {
@@ -929,7 +931,8 @@ void Threshold::setScript(TCHAR *script)
             _sntprintf(defaultName, 32, _T("[%d]"), m_targetId);
             _sntprintf(buffer, 1024, _T("DCI::%s::%d::%d::ThresholdScript"), GetObjectName(m_targetId, defaultName), m_itemId, m_id);
             PostDciEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, m_itemId, "ssd", buffer, errorText, m_itemId);
-            nxlog_write(MSG_THRESHOLD_SCRIPT_COMPILATION_ERROR, NXLOG_WARNING, "sdds", GetObjectName(m_targetId, defaultName), m_itemId, m_id, errorText);
+            nxlog_write(NXLOG_WARNING, _T("Failed to compile threshold script for node %s [%u] DCI %u threshold %u (%s)"),
+                     GetObjectName(m_targetId, defaultName), m_targetId, m_itemId, m_id, errorText);
          }
       }
       else

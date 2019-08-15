@@ -1,7 +1,7 @@
 /* 
  ** NetXMS Java Bridge
  ** Copyright (c) 2013 TEMPEST a.s.
- ** Copyright (c) 2015-2017 Raden Solutions SIA
+ ** Copyright (c) 2015-2019 Raden Solutions SIA
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -45,13 +45,13 @@ static Config *RetrieveConfigNativePointer(JNIEnv *env, jobject obj)
    jclass objClass = env->GetObjectClass(obj);
    if (objClass == NULL)
    {
-      nxlog_write_generic(NXLOG_ERROR, _T("JavaBridge: Could not access to the class Config"));
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_JAVA_BRIDGE, _T("Could not get access to the class Config"));
       return NULL;
    }
    jfieldID nativePointerFieldId = env->GetFieldID(objClass, "configHandle", "J");
    if (nativePointerFieldId == NULL)
    {
-      nxlog_write_generic(NXLOG_ERROR, _T("JavaBridge: Could not access to the field Config.configHandle"));
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_JAVA_BRIDGE, _T("Could not get access to the field Config.configHandle"));
       return NULL;
    }
    jlong result = env->GetLongField(obj, nativePointerFieldId);
@@ -66,13 +66,13 @@ static ConfigEntry *RetrieveConfigEntryNativePointer(JNIEnv *env, jobject obj)
    jclass objClass = env->GetObjectClass(obj);
    if (objClass == NULL)
    {
-      nxlog_write_generic(NXLOG_ERROR, _T("JavaBridge: Could not access to the class ConfigEntry"));
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_JAVA_BRIDGE, _T("Could not get access to the class ConfigEntry"));
       return NULL;
    }
    jfieldID nativePointerFieldId = env->GetFieldID(objClass, "configEntryHandle", "J");
    if (nativePointerFieldId == NULL)
    {
-      nxlog_write_generic(NXLOG_ERROR, _T("JavaBridge: Could not access to the field ConfigEntry.configHandle"));
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_JAVA_BRIDGE, _T("Could not get access to the field ConfigEntry.configHandle"));
       return NULL;
    }
    jlong result = env->GetLongField(obj, nativePointerFieldId);
@@ -90,14 +90,14 @@ static jobject CreateConfigEntryInstance(JNIEnv *curEnv, ConfigEntry *configEntr
    jobject localInstance = curEnv->NewObject(s_configEntryClass, s_configEntryConstructor, CAST_FROM_POINTER(configEntry, jlong));
    if (localInstance == NULL)
    {
-      nxlog_write_generic(NXLOG_ERROR, _T("JavaBridge: Could not instantiate object of class %hs"), s_configEntryClassName);
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_JAVA_BRIDGE, _T("Could not instantiate object of class %hs"), s_configEntryClassName);
       return NULL;
    }
 
    jobject instance = curEnv->NewGlobalRef(localInstance);
    if (instance == NULL)
    {
-      nxlog_write_generic(NXLOG_ERROR, _T("JavaBridge: Could not create a new global reference of %hs"), s_configEntryClassName);
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_JAVA_BRIDGE, _T("Could not create a new global reference of %hs"), s_configEntryClassName);
    }
 
    curEnv->DeleteLocalRef(localInstance);
@@ -933,28 +933,28 @@ bool RegisterConfigHelperNatives(JNIEnv *env)
    s_configConstructor = env->GetMethodID(s_configClass, "<init>", "(J)V");
    if (s_configConstructor == NULL)
    {
-      nxlog_write_generic(NXLOG_ERROR, _T("JavaBridge: Could not retrieve constructor for class %hs"), s_configClassName);
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_JAVA_BRIDGE, _T("Could not retrieve constructor for class %hs"), s_configClassName);
       return false;
    }
 
    s_configEntryConstructor = env->GetMethodID(s_configEntryClass, "<init>", "(J)V");
    if (s_configEntryConstructor == NULL)
    {
-      nxlog_write_generic(NXLOG_ERROR, _T("JavaBridge: Could not retrieve constructor for class %hs"), s_configEntryClass);
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_JAVA_BRIDGE, _T("Could not retrieve constructor for class %hs"), s_configEntryClass);
       return false;
    }
 
    // register native methods exposed by Config
    if (env->RegisterNatives(s_configClass, s_jniMethodsConfig, (jint)(sizeof(s_jniMethodsConfig) / sizeof (s_jniMethodsConfig[0]))) != 0)
    {
-      nxlog_write_generic(NXLOG_ERROR, _T("JavaBridge: Failed to register native methods for %hs"), s_configClassName);
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_JAVA_BRIDGE, _T("Failed to register native methods for %hs"), s_configClassName);
       return false;
    }
 
    // register native methods exposed by ConfigEntry
    if (env->RegisterNatives(s_configEntryClass, s_jniMethodsConfigEntry, (jint)(sizeof(s_jniMethodsConfigEntry) / sizeof(s_jniMethodsConfigEntry[0]))) != 0)
    {
-      nxlog_write_generic(NXLOG_ERROR, _T("JavaBridge: Failed to register native methods for %hs"), s_configEntryClassName);
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_JAVA_BRIDGE, _T("Failed to register native methods for %hs"), s_configEntryClassName);
       return false;
    }
 
@@ -976,14 +976,14 @@ jobject LIBNXJAVA_EXPORTABLE CreateConfigJavaInstance(JNIEnv *env, Config *confi
    jobject localInstance = env->NewObject(s_configClass, s_configConstructor, CAST_FROM_POINTER(config, jlong));
    if (localInstance == NULL)
    {
-      nxlog_write_generic(NXLOG_ERROR, _T("JavaBridge: Could not instantiate object of class %s"), s_configClassName);
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_JAVA_BRIDGE, _T("Could not instantiate object of class %s"), s_configClassName);
       return NULL;
    }
 
    jobject instance = env->NewGlobalRef(localInstance);
    if (instance == NULL)
    {
-      nxlog_write_generic(NXLOG_ERROR, _T("JavaBridge: Could not create a new global reference of %s"), s_configClassName);
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_JAVA_BRIDGE, _T("Could not create a new global reference of %s"), s_configClassName);
    }
    env->DeleteLocalRef(localInstance);
    return instance;

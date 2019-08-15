@@ -182,7 +182,7 @@ BOOL ExecCommand(TCHAR *pszCommand)
 				switch ((nPid = fork()))
 				{
 					case -1:
-                  nxlog_write(MSG_CREATE_PROCESS_FAILED, EVENTLOG_ERROR_TYPE, "se", pszCommand, errno);
+                  nxlog_write(NXLOG_ERROR, _T("Unable to create process \"%s\" (%s)"), pszCommand, _tcserror(errno));
 						break;
 					case 0: // child
 						{

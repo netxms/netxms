@@ -1091,8 +1091,8 @@ void DCObject::setTransformationScript(const TCHAR *source)
          m_transformationScript = NXSLCompile(m_transformationScriptSource, errorText, 1024, NULL);
          if (m_transformationScript == NULL)
          {
-            nxlog_write(MSG_TRANSFORMATION_SCRIPT_COMPILATION_ERROR, NXLOG_WARNING, "dsdss",
-                        getOwnerId(), getOwnerName(), m_id, m_name, errorText);
+            nxlog_write(NXLOG_WARNING, _T("Failed to compile transformation script for object %s [%u] DCI %s [%u] (%s)"),
+                     getOwnerName(), getOwnerId(), m_name, m_id, errorText);
          }
       }
       else
@@ -1402,7 +1402,10 @@ void DCObject::setInstanceFilter(const TCHAR *pszScript)
             // node can be NULL if this DCO was just created from template
             // in this case compilation error will be reported on template level anyway
             if (m_owner != NULL)
-               nxlog_write(MSG_INSTANCE_FILTER_SCRIPT_COMPILATION_ERROR, NXLOG_WARNING, "dsdss", m_owner->getId(), m_owner->getName(), m_id, m_name, errorText);
+            {
+               nxlog_write(NXLOG_WARNING, _T("Failed to compile instance filter script for object %s [%u] DCI %s [%u] (%s)"),
+                        getOwnerName(), getOwnerId(), m_name, m_id, errorText);
+            }
          }
       }
       else

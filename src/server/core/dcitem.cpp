@@ -1055,8 +1055,8 @@ bool DCItem::transform(ItemValue &value, time_t nElapsedTime)
                TCHAR buffer[1024];
                _sntprintf(buffer, 1024, _T("DCI::%s::%d::TransformationScript"), getOwnerName(), m_id);
                PostDciEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, m_id, "ssd", buffer, vm->getErrorText(), m_id);
-               nxlog_write(MSG_TRANSFORMATION_SCRIPT_EXECUTION_ERROR, NXLOG_WARNING, "dsdss",
-                           getOwnerId(), getOwnerName(), m_id, m_name, vm->getErrorText());
+               nxlog_write(NXLOG_WARNING, _T("Failed to execute transformation script for object %s [%u] DCI %s [%u] (%s)"),
+                        getOwnerName(), getOwnerId(), m_name, m_id, vm->getErrorText());
                m_lastScriptErrorReport = now;
             }
          }
@@ -1070,8 +1070,8 @@ bool DCItem::transform(ItemValue &value, time_t nElapsedTime)
             TCHAR buffer[1024];
             _sntprintf(buffer, 1024, _T("DCI::%s::%d::TransformationScript"), getOwnerName(), m_id);
             PostDciEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, m_id, "ssd", buffer, _T("Script load failed"), m_id);
-            nxlog_write(MSG_TRANSFORMATION_SCRIPT_EXECUTION_ERROR, NXLOG_WARNING, "dsdss",
-                        getOwnerId(), getOwnerName(), m_id, m_name, _T("Script load failed"));
+            nxlog_write(NXLOG_WARNING, _T("Failed to load transformation script for object %s [%u] DCI %s [%u]"),
+                     getOwnerName(), getOwnerId(), m_name, m_id);
             m_lastScriptErrorReport = now;
          }
          success = false;

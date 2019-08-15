@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -478,7 +478,7 @@ UINT32 CreateUniqueId(int iGroup)
    if (s_freeIdTable[iGroup] == s_idLimits[iGroup])
    {
       dwId = 0;   // ID zero means _T("no unique ID available")
-      nxlog_write(MSG_NO_UNIQUE_ID, EVENTLOG_ERROR_TYPE, "s", m_pszGroupNames[iGroup]);
+      nxlog_write(NXLOG_ERROR, _T("Unable to assign unique ID to object in group \"%s\". You should perform database optimization to fix that."), m_pszGroupNames[iGroup]);
    }
    else
    {

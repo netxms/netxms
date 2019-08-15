@@ -263,19 +263,22 @@ bool Template::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
             NetObj *pObject = FindObjectById(dwNodeId);
             if (pObject != NULL)
             {
-               if ((pObject->getObjectClass() == OBJECT_NODE) || (pObject->getObjectClass() == OBJECT_CLUSTER) || (pObject->getObjectClass() == OBJECT_MOBILEDEVICE) || (pObject->getObjectClass() == OBJECT_SENSOR))
+               if (pObject-isDataCollectionTarget())
                {
                   addChild(pObject);
                   pObject->addParent(this);
                }
                else
                {
-                  nxlog_write(MSG_DCT_MAP_NOT_NODE, EVENTLOG_ERROR_TYPE, "dd", m_id, dwNodeId);
+                  nxlog_write(NXLOG_ERROR,
+                           _T("Inconsistent database: template object %s [%u] has reference to object %s [%u] which is not data collection target"),
+                           m_name, m_id, pObject->getName(), pObject->getId());
                }
             }
             else
             {
-               nxlog_write(MSG_INVALID_DCT_MAP, EVENTLOG_ERROR_TYPE, "dd", m_id, dwNodeId);
+               nxlog_write(NXLOG_ERROR, _T("Inconsistent database: template object %s [%u] has reference to non-existent object [%u]"),
+                        m_name, m_id, dwNodeId);
             }
          }
          DBFreeResult(hResult);

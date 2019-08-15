@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -66,7 +66,8 @@ void AbstractContainer::linkObjects()
          if (pObject != NULL)
             linkObject(pObject);
          else
-            nxlog_write(MSG_INVALID_CONTAINER_MEMBER, EVENTLOG_ERROR_TYPE, "dd", m_id, m_pdwChildIdList[i]);
+            nxlog_write(NXLOG_ERROR, _T("Inconsistent database: container object %s [%u] has reference to non-existing child object [%u]"),
+                     m_name, m_id, m_pdwChildIdList[i]);
       }
 
       // Cleanup

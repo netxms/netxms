@@ -258,7 +258,7 @@ BOOL LoadUsers()
    {
 		User *user = new User();
 		AddDatabaseObject(user);
-      nxlog_write(MSG_SUPERUSER_CREATED, EVENTLOG_WARNING_TYPE, NULL);
+      nxlog_write(NXLOG_INFO, _T("System account was created because it was not presented in database"));
    }
 
    // Load groups
@@ -286,7 +286,7 @@ BOOL LoadUsers()
 		Group *group = new Group();
 		group->saveToDatabase(hdb);
 		AddDatabaseObject(group);
-      nxlog_write(MSG_EVERYONE_GROUP_CREATED, EVENTLOG_WARNING_TYPE, NULL);
+      nxlog_write(NXLOG_INFO, _T("User group \"Everyone\" was created because it was not presented in database"));
    }
 
    DBConnectionPoolReleaseConnection(hdb);
@@ -427,7 +427,7 @@ UINT32 AuthenticateUser(const TCHAR *login, const TCHAR *password, size_t sigLen
             }
             break;
          default:
-            nxlog_write(MSG_UNKNOWN_AUTH_METHOD, NXLOG_WARNING, "ds", user->getAuthMethod(), login);
+            nxlog_write(NXLOG_WARNING, _T("Unsupported authentication method %d requested for user %s"), user->getAuthMethod(), login);
             bPasswordValid = FALSE;
             break;
       }

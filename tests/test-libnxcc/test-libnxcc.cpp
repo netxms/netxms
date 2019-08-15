@@ -8,10 +8,15 @@ NETXMS_EXECUTABLE_HEADER(test-libnxcc)
 static MUTEX cbLock = MutexCreate();
 static UINT32 s_nodeId;
 
-static void DebugCallback(const TCHAR *tag, const TCHAR *message)
+static void DebugWriter(const TCHAR *tag, const TCHAR *format, va_list args)
 {
    MutexLock(cbLock);
-   _tprintf(_T("[%s] %s\n"), (tag != NULL) ? tag : _T(""), message);
+   if (tag != NULL)
+      _tprintf(_T("[DEBUG/%-20s] "), tag);
+   else
+      _tprintf(_T("[DEBUG%-21s] "), _T(""));
+   _vtprintf(format, args);
+   _fputtc(_T('\n'), stdout);
    MutexUnlock(cbLock);
 }
 
@@ -87,7 +92,7 @@ int main(int argc, char *argv[])
    config->setValue(_T("/CLUSTER/NodeId"), s_nodeId);
    config->setValue(_T("/CLUSTER/PeerNode"), (s_nodeId == 1) ? _T("2:127.0.0.1") : _T("1:127.0.0.1"));
 
-   nxlog_set_debug_writer(DebugCallback);
+   nxlog_set_debug_writer(DebugWriter);
    AssertTrue(ClusterInit(config, _T("CLUSTER"), new EventHandler()));
 
    AssertTrue(ClusterJoin());

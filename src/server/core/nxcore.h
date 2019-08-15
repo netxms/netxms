@@ -24,8 +24,6 @@
 #ifndef _nxcore_h_
 #define _nxcore_h_
 
-#define INCLUDE_LIBNXSRV_MESSAGES
-
 #include <nms_core.h>
 
 #endif   /* _nxcore_h_ */
