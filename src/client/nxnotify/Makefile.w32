@@ -1,6 +1,6 @@
-TARGET = nxsms.exe
+TARGET = nxnotify.exe
 TYPE = exe
-SOURCES = nxsms.cpp
+SOURCES = nxnotify.cpp
 
 LIBS = libnxclient.lib libnetxms.lib ws2_32.lib
 	  
