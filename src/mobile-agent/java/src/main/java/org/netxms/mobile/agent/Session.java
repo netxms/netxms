@@ -34,7 +34,7 @@ import org.netxms.base.NXCPException;
 import org.netxms.base.NXCPMessage;
 import org.netxms.base.NXCPMessageReceiver;
 import org.netxms.base.NXCPMsgWaitQueue;
-import org.netxms.base.NXCommon;
+import org.netxms.base.VersionInfo;
 import org.netxms.mobile.agent.constants.RCC;
 
 /**
@@ -83,8 +83,8 @@ public class Session
 		try
 		{
 			encryptionContext = EncryptionContext.createInstance(msg);
-			response.setField(NXCPCodes.VID_SESSION_KEY, encryptionContext.getEncryptedSessionKey(msg));
-			response.setField(NXCPCodes.VID_SESSION_IV, encryptionContext.getEncryptedIv(msg));
+			response.setField(NXCPCodes.VID_SESSION_KEY, encryptionContext.getEncryptedSessionKey());
+			response.setField(NXCPCodes.VID_SESSION_IV, encryptionContext.getEncryptedIv());
 			response.setFieldInt16(NXCPCodes.VID_CIPHER, encryptionContext.getCipher());
 			response.setFieldInt16(NXCPCodes.VID_KEY_LENGTH, encryptionContext.getKeyLength());
 			response.setFieldInt16(NXCPCodes.VID_IV_LENGTH, encryptionContext.getIvLength());
@@ -387,7 +387,7 @@ public class Session
 			request.setField(NXCPCodes.VID_DEVICE_ID, connDeviceId);
 			request.setField(NXCPCodes.VID_LOGIN_NAME, connLoginName);
 			request.setField(NXCPCodes.VID_PASSWORD, connPassword);
-			request.setField(NXCPCodes.VID_LIBNXCL_VERSION, NXCommon.VERSION);
+			request.setField(NXCPCodes.VID_LIBNXCL_VERSION, VersionInfo.version());
 			request.setField(NXCPCodes.VID_OS_INFO, System.getProperty("os.name") + " " + System.getProperty("os.version"));
 			sendMessage(request);
 			response = waitForMessage(NXCPCodes.CMD_LOGIN_RESP, request.getMessageId());

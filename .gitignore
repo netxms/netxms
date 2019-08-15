@@ -181,9 +181,6 @@ target
 /src/java/build/macosx.*
 /src/java/build/solaris.*
 /src/java/build/win32.*
-/src/java/client/mobile-agent/.classpath
-/src/java/client/mobile-agent/.project
-/src/java/client/mobile-agent/.settings
 /src/java/nebula/org.netxms.nebula.widgets.gallery.tests/.settings
 /src/java/nebula/org.netxms.nebula.widgets.gallery.tests/bin
 /src/java/nebula/org.netxms.nebula.widgets.gallery/.settings
@@ -208,6 +205,9 @@ target
 /src/libnxsl/parser.tab.cpp
 /src/libnxsl/parser.tab.hpp
 /src/libtre/x64
+/src/mobile-agent/java/.classpath
+/src/mobile-agent/java/.project
+/src/mobile-agent/java/.settings
 /src/nxcproxy/messages.c
 /src/nxcproxy/messages.h
 /src/nxcproxy/MSG00001.bin
