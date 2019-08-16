@@ -24,11 +24,11 @@
 #include <nxevent.h>
 
 /**
- * Generate generic SMS driver configuration from configuration line
+ * Generate GSM modem notification channel configuration from SMSDrvConfig
  *
  * pszInitArgs format: portname,speed,databits,parity,stopbits,mode,blocksize,writedelay
  */
-static String createGenericConfig(TCHAR *portName)
+static String CreateNCDrvConfig_GSM(TCHAR *portName)
 {
    String config;
    TCHAR *p;
@@ -130,7 +130,10 @@ static String createGenericConfig(TCHAR *portName)
    return config;
 }
 
-static String createNxagentDriverConfiguration(TCHAR *temp)
+/**
+ * Generate remote GSM modem notification channel configuration from SMSDrvConfig
+ */
+static String CreateNCDrvConfig_NXAgent(TCHAR *temp)
 {
    String config;
    TCHAR *ptr, *eptr;
@@ -146,7 +149,10 @@ static String createNxagentDriverConfiguration(TCHAR *temp)
    return config;
 }
 
-static TCHAR *createDefaultConfig(TCHAR *oldConfiguration)
+/**
+ * Generate default notification channel configuration from SMSDrvConfig
+ */
+static TCHAR *CreateNCDrvConfig_Default(TCHAR *oldConfiguration)
 {
    TCHAR *tmp = _tcschr(oldConfiguration, _T(';'));
    while(tmp != NULL)
@@ -186,7 +192,7 @@ static bool H_UpgradeFromV91()
       DBFreeResult(hResult);
    }
 
-   if(driver != NULL && driver[0] != 0 && _tcscmp(driver, _T("<none>")))
+   if ((driver != NULL) && (driver[0] != 0) && _tcscmp(driver, _T("<none>")))
    {
       hResult = DBSelect(g_dbHandle, _T("SELECT var_value from config WHERE var_name='SMSDrvConfig'"));
       if (hResult != NULL)
@@ -196,26 +202,25 @@ static bool H_UpgradeFromV91()
          DBFreeResult(hResult);
       }
 
-      if(oldConfiguration == NULL)
+      if (oldConfiguration == NULL)
          oldConfiguration = _tcsdup(_T(""));
 
       //prepare driver name
       TCHAR *driverName = NULL;
       _tcslwr(driver);
       TCHAR *tmp = _tcsrchr(driver, FS_PATH_SEPARATOR_CHAR);
-      if(tmp != NULL)
-         driverName = tmp+1;
+      if (tmp != NULL)
+         driverName = tmp + 1;
       else
          driverName = driver;
-      size_t len = _tcslen(driverName);
       tmp = _tcsrchr(driver, _T('.'));
-      if(tmp != NULL)
+      if (tmp != NULL)
       {
          tmp[0] = 0;
-         if(_tcscmp(tmp+1, _T("so")))
+         if (_tcscmp(tmp + 1, _T("so")))
          {
             tmp = _tcsrchr(driver, _T('_'));
-            if(tmp != NULL)
+            if (tmp != NULL)
             {
                driverName = tmp + 1;
             }
@@ -224,7 +229,7 @@ static bool H_UpgradeFromV91()
 
       if (!_tcscmp(driverName, _T("anysms")))
       {
-         newConfiguration = createDefaultConfig(oldConfiguration);
+         newConfiguration = CreateNCDrvConfig_Default(oldConfiguration);
          newDriverName = _T("AnySMS");
       }
       else if (!_tcscmp(driverName, _T("dbemu")))// renamed to dbtable
@@ -237,42 +242,42 @@ static bool H_UpgradeFromV91()
       }
       else if (!_tcscmp(driverName, _T("generic")))
       {
-         newConfiguration = createGenericConfig(oldConfiguration);
+         newConfiguration = CreateNCDrvConfig_GSM(oldConfiguration);
          newDriverName = _T("Generic");
       }
       else if(!_tcscmp(driverName, _T("kannel")))
       {
-         newConfiguration = createDefaultConfig(oldConfiguration);
+         newConfiguration = CreateNCDrvConfig_Default(oldConfiguration);
          newDriverName = _T("Kannel");
       }
       else if(!_tcscmp(driverName, _T("nexmo")))
       {
-         newConfiguration = createDefaultConfig(oldConfiguration);
+         newConfiguration = CreateNCDrvConfig_Default(oldConfiguration);
          newDriverName = _T("Nexmo");
       }
       else if(!_tcscmp(driverName, _T("nxagent")))
       {
-         newConfiguration = createNxagentDriverConfiguration(oldConfiguration);
+         newConfiguration = CreateNCDrvConfig_NXAgent(oldConfiguration);
          newDriverName = _T("NXAgent");
       }
       else if(!_tcscmp(driverName, _T("portech")))
       {
-         newConfiguration = createDefaultConfig(oldConfiguration);
+         newConfiguration = CreateNCDrvConfig_Default(oldConfiguration);
          newDriverName = _T("Portech");
       }
       else if(!_tcscmp(driverName, _T("smseagle")))
       {
-         newConfiguration = createDefaultConfig(oldConfiguration);
+         newConfiguration = CreateNCDrvConfig_Default(oldConfiguration);
          newDriverName = _T("SMSEagle");
       }
       else if(!_tcscmp(driverName, _T("text2reach")))
       {
-         newConfiguration = createDefaultConfig(oldConfiguration);
+         newConfiguration = CreateNCDrvConfig_Default(oldConfiguration);
          newDriverName = _T("Text2Reach");
       }
       else if(!_tcscmp(driverName, _T("websms")))
       {
-         newConfiguration = createDefaultConfig(oldConfiguration);
+         newConfiguration = CreateNCDrvConfig_Default(oldConfiguration);
          newDriverName = _T("WebSMS");
       }
       else

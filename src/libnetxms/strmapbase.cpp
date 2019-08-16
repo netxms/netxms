@@ -208,6 +208,10 @@ void *StringMapBase::unlink(const TCHAR *key)
       value = entry->value;
       MemFree(entry);
    }
+   else
+   {
+      value = NULL;
+   }
    return value;
 }
 

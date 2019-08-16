@@ -29,7 +29,11 @@
 #include <syslog.h>
 #endif
 
-#define MAX_LOG_HISTORY_SIZE	128
+#define MAX_LOG_HISTORY_SIZE	   128
+
+#define LOCAL_MSG_BUFFER_SIZE    1024
+
+typedef TCHAR msg_buffer_t[LOCAL_MSG_BUFFER_SIZE];
 
 /**
  * Debug tags
@@ -824,6 +828,29 @@ static inline void WriteLogToFile(INT16 severity, const TCHAR *tag, const TCHAR 
 }
 
 /**
+ * Format message into local or dynamic buffer
+ */
+static inline TCHAR *FormatString(msg_buffer_t localBuffer, const TCHAR *format, va_list args)
+{
+   int ch = _vsntprintf(localBuffer, LOCAL_MSG_BUFFER_SIZE, format, args);
+   if ((ch != -1) && (ch < LOCAL_MSG_BUFFER_SIZE))
+      return localBuffer;
+   size_t bufferSize = (ch != -1) ? (ch + 1) : 65536;
+   TCHAR *buffer = MemAllocString(bufferSize);
+   _vsntprintf(buffer, bufferSize, format, args);
+   return buffer;
+}
+
+/**
+ * Free formatted string if needed
+ */
+static inline void FreeFormattedString(TCHAR *message, msg_buffer_t localBuffer)
+{
+   if (message != localBuffer)
+      MemFree(message);
+}
+
+/**
  * Write log record - internal implementation
  */
 static void WriteLog(INT16 severity, const TCHAR *tag, const TCHAR *format, va_list args)
@@ -840,8 +867,8 @@ static void WriteLog(INT16 severity, const TCHAR *tag, const TCHAR *format, va_l
 
    if (s_flags & NXLOG_USE_SYSLOG)
    {
-      TCHAR message[16384];
-      _vsntprintf(message, 16384, format, args);
+      msg_buffer_t localBuffer;
+      TCHAR *message = FormatString(localBuffer, format, args);
 
 #ifdef _WIN32
       const TCHAR *strings = message;
@@ -897,6 +924,7 @@ static void WriteLog(INT16 severity, const TCHAR *tag, const TCHAR *format, va_l
          WriteLogToConsole(severity, FormatLogTimestamp(timestamp), tag, message);
          MutexUnlock(s_mutexLogAccess);
       }
+      FreeFormattedString(message, localBuffer);
    }
    else if (s_flags & NXLOG_USE_SYSTEMD)
    {
@@ -933,9 +961,10 @@ static void WriteLog(INT16 severity, const TCHAR *tag, const TCHAR *format, va_l
    }
    else
    {
-      TCHAR message[16384];
-      _vsntprintf(message, 16384, format, args);
+      msg_buffer_t buffer;
+      TCHAR *message = FormatString(buffer, format, args);
       WriteLogToFile(severity, tag, message);
+      FreeFormattedString(message, buffer);
    }
 }
 
@@ -1073,13 +1102,14 @@ void LIBNETXMS_EXPORTABLE nxlog_report_event(DWORD msg, int level, int stringCou
 
       if (s_flags & NXLOG_PRINT_TO_STDOUT)
       {
-         TCHAR message[16384];
-         _vstprintf(message, 16384, altMessage, args);
+         msg_buffer_t localBuffer;
+         TCHAR *message = FormatString(localBuffer, altMessage, args);
 
          MutexLock(s_mutexLogAccess);
          TCHAR timestamp[64];
          WriteLogToConsole(level, FormatLogTimestamp(timestamp), NULL, message);
          MutexUnlock(s_mutexLogAccess);
+         FreeFormattedString(message, localBuffer);
       }
    }
    else

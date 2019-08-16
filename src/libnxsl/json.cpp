@@ -227,7 +227,6 @@ void NXSL_JsonObjectClass::onObjectDelete(NXSL_Object *object)
  */
 NXSL_Value *NXSL_JsonObjectClass::getAttr(NXSL_Object *object, const char *attr)
 {
-   NXSL_VM *vm = object->vm();
    return ValueFromJson(object->vm(), json_object_get(static_cast<json_t*>(object->getData()), attr));
 }
 

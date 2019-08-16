@@ -100,7 +100,7 @@ void InitLocalNetInfo()
          }
          else
          {
-            nxlog_write(NXLOG_INFO, _T("Platform subagent \"%1\" successfully loaded"), szName);
+            nxlog_write(NXLOG_INFO, _T("Platform subagent \"%s\" successfully loaded"), szName);
          }
       }
       else

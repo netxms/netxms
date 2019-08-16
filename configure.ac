@@ -4339,7 +4339,7 @@ AC_CONFIG_FILES([
 	src/ncdrivers/anysms/Makefile
 	src/ncdrivers/dbtable/Makefile
 	src/ncdrivers/dummy/Makefile
-	src/ncdrivers/generic/Makefile
+	src/ncdrivers/gsm/Makefile
 	src/ncdrivers/kannel/Makefile
 	src/ncdrivers/mymobile/Makefile
 	src/ncdrivers/nexmo/Makefile

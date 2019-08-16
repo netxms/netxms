@@ -713,6 +713,10 @@ bool DCItem::processNewValue(time_t tmTimeStamp, const void *originalValue, bool
    if (g_flags & AF_PERFDATA_STORAGE_DRIVER_LOADED)
       PerfDataStorageRequest(this, tmTimeStamp, pValue->getString());
 
+#ifdef WITH_ZMQ
+   ZmqPublishData(m_owner->getId(), m_id, m_name, pValue->getString());
+#endif
+
    // Update prediction engine
    if (m_predictionEngine[0] != 0)
    {
@@ -781,10 +785,6 @@ bool DCItem::processNewValue(time_t tmTimeStamp, const void *originalValue, bool
    }
 
    unlock();
-
-#ifdef WITH_ZMQ
-   ZmqPublishData(m_owner->getId(), m_id, m_name, pValue->getString());
-#endif
 
    return true;
 }
