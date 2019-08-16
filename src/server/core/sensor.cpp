@@ -54,7 +54,7 @@ Sensor::Sensor(TCHAR *name, UINT32 flags, MacAddress macAddress, UINT32 deviceCl
                UINT32 commProtocol, TCHAR *xmlRegConfig, TCHAR *xmlConfig, TCHAR *serialNumber, TCHAR *deviceAddress,
                TCHAR *metaType, TCHAR *description, UINT32 proxyNode) : super(name)
 {
-   m_runtimeFlags |= DCDF_CONFIGURATION_POLL_PENDING;
+   m_runtimeFlags |= ODF_CONFIGURATION_POLL_PENDING;
    m_flags = flags;
    m_macAddress = macAddress;
 	m_deviceClass = deviceClass;
@@ -534,12 +534,12 @@ void Sensor::configurationPoll(PollerInfo *poller, ClientSession *session, UINT3
    if (m_isDeleteInitiated || IsShutdownInProgress())
    {
       if (rqId == 0)
-         m_runtimeFlags &= ~DCDF_QUEUED_FOR_CONFIGURATION_POLL;
+         m_runtimeFlags &= ~ODF_QUEUED_FOR_CONFIGURATION_POLL;
       unlockProperties();
       return;
    }
    // Poller can be called directly - in that case poll flag will not be set
-   m_runtimeFlags |= DCDF_QUEUED_FOR_CONFIGURATION_POLL;
+   m_runtimeFlags |= ODF_QUEUED_FOR_CONFIGURATION_POLL;
    unlockProperties();
 
    poller->setStatus(_T("wait for lock"));
@@ -592,9 +592,9 @@ void Sensor::configurationPoll(PollerInfo *poller, ClientSession *session, UINT3
    lockProperties();
    m_lastConfigurationPoll = time(NULL);
    if (rqId == 0)
-      m_runtimeFlags &= ~DCDF_QUEUED_FOR_CONFIGURATION_POLL;
-   m_runtimeFlags &= ~DCDF_CONFIGURATION_POLL_PENDING;
-   m_runtimeFlags |= DCDF_CONFIGURATION_POLL_PASSED;
+      m_runtimeFlags &= ~ODF_QUEUED_FOR_CONFIGURATION_POLL;
+   m_runtimeFlags &= ~ODF_CONFIGURATION_POLL_PENDING;
+   m_runtimeFlags |= ODF_CONFIGURATION_POLL_PASSED;
    unlockProperties();
 
    pollerUnlock();
@@ -625,12 +625,12 @@ void Sensor::statusPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId)
    if (m_isDeleteInitiated || IsShutdownInProgress())
    {
       if (rqId == 0)
-         m_runtimeFlags &= ~DCDF_QUEUED_FOR_STATUS_POLL;
+         m_runtimeFlags &= ~ODF_QUEUED_FOR_STATUS_POLL;
       unlockProperties();
       return;
    }
    // Poller can be called directly - in that case poll flag will not be set
-   m_runtimeFlags |= DCDF_QUEUED_FOR_STATUS_POLL;
+   m_runtimeFlags |= ODF_QUEUED_FOR_STATUS_POLL;
    unlockProperties();
 
    poller->setStatus(_T("wait for lock"));
@@ -739,7 +739,7 @@ void Sensor::statusPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId)
    lockProperties();
    m_lastStatusPoll = time(NULL);
    if (rqId == 0)
-      m_runtimeFlags &= ~DCDF_QUEUED_FOR_STATUS_POLL;
+      m_runtimeFlags &= ~ODF_QUEUED_FOR_STATUS_POLL;
    if (prevState != m_state)
       setModified(MODIFY_SENSOR_PROPERTIES);
    unlockProperties();
@@ -985,7 +985,7 @@ void Sensor::prepareForDeletion()
    {
       lockProperties();
       if ((m_runtimeFlags &
-            (DCDF_QUEUED_FOR_STATUS_POLL | DCDF_QUEUED_FOR_CONFIGURATION_POLL)) == 0)
+            (ODF_QUEUED_FOR_STATUS_POLL | ODF_QUEUED_FOR_CONFIGURATION_POLL)) == 0)
       {
          unlockProperties();
          break;

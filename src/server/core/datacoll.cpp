@@ -36,7 +36,7 @@ ThreadPool *g_dataCollectorThreadPool = NULL;
 /**
  * DCI cache loader queue
  */
-Queue g_dciCacheLoaderQueue;
+ObjectQueue<DCObjectInfo> g_dciCacheLoaderQueue(true);
 
 /**
  * Average time to queue DCI
@@ -403,9 +403,9 @@ THREAD_RESULT THREAD_CALL CacheLoader(void *arg)
 {
    ThreadSetName("CacheLoader");
    nxlog_debug_tag(_T("obj.dc.cache"), 2, _T("DCI cache loader thread started"));
-   while(true)
+   while(!IsShutdownInProgress())
    {
-      DCObjectInfo *ref = (DCObjectInfo *)g_dciCacheLoaderQueue.getOrBlock();
+      DCObjectInfo *ref = g_dciCacheLoaderQueue.getOrBlock();
       if (ref == INVALID_POINTER_VALUE)
          break;
 
@@ -418,7 +418,7 @@ THREAD_RESULT THREAD_CALL CacheLoader(void *arg)
          {
             nxlog_debug_tag(_T("obj.dc.cache"), 6, _T("Loading cache for DCI %s [%d] on %s [%d]"),
                      ref->getName(), ref->getId(), object->getName(), object->getId());
-            static_cast<DCItem*>(dci.get())->reloadCache();
+            static_cast<DCItem*>(dci.get())->reloadCache(false);
          }
          object->decRefCount();
       }

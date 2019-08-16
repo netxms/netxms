@@ -80,6 +80,17 @@ public:
 };
 
 /**
+ * NXSL "AccessPoint" class
+ */
+class NXSL_AccessPointClass : public NXSL_DCTargetClass
+{
+public:
+   NXSL_AccessPointClass();
+
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr) override;
+};
+
+/**
  * NXSL "MobileDevice" class
  */
 class NXSL_MobileDeviceClass : public NXSL_DCTargetClass
@@ -335,6 +346,7 @@ bool ParseValueList(NXSL_VM *vm, TCHAR **start, ObjectRefArray<NXSL_Value> &args
 /**
  * Global variables
  */
+extern NXSL_AccessPointClass g_nxslAccessPointClass;
 extern NXSL_AlarmClass g_nxslAlarmClass;
 extern NXSL_AlarmCommentClass g_nxslAlarmCommentClass;
 extern NXSL_ChassisClass g_nxslChassisClass;

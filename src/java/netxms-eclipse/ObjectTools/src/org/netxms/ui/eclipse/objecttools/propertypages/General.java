@@ -364,7 +364,8 @@ public class General extends PropertyPage
 	/**
 	 * Create icon
 	 */
-	private void createIcon()
+	@SuppressWarnings("deprecation")
+   private void createIcon()
 	{
 	   if (icon != null)
 	   {

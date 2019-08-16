@@ -269,7 +269,7 @@ void DataCollectionProxy::checkConnection()
 
    if(m_connected != result)
    {
-      nxlog_write_generic(NXLOG_INFO, _T("DataCollectionProxy::checkConnection(): ")UINT64X_FMT(_T("016"))_T(" server %d proxy connection status changed to %s"), m_serverId, m_proxyId, result ? _T("true") : _T("false"));
+      nxlog_write(NXLOG_INFO, _T("DataCollectionProxy::checkConnection(): ")UINT64X_FMT(_T("016"))_T(" server %d proxy connection status changed to %s"), m_serverId, m_proxyId, result ? _T("true") : _T("false"));
    }
 
    m_connected = result;

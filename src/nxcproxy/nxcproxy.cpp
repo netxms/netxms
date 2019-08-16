@@ -208,18 +208,12 @@ bool Initialize()
 	}
    if (!nxlog_open((g_flags & AF_USE_SYSLOG) ? NXCPROXY_SYSLOG_NAME : g_logFile,
 	                ((g_flags & AF_USE_SYSLOG) ? NXLOG_USE_SYSLOG : 0) |
-	                   ((g_flags & AF_DAEMON) ? 0 : NXLOG_PRINT_TO_STDOUT),
-	                _T("NXCPROXY.EXE"),
-#ifdef _WIN32
-                   0, NULL, MSG_DEBUG, MSG_DEBUG_TAG, MSG_GENERIC))
-#else
-	                g_dwNumMessages, g_szMessages, MSG_DEBUG, MSG_DEBUG_TAG, MSG_GENERIC))
-#endif
+                   ((g_flags & AF_DAEMON) ? 0 : NXLOG_PRINT_TO_STDOUT)))
 	{
 		_ftprintf(stderr, _T("FATAL ERROR: Cannot open log file\n"));
 		return false;
 	}
-	nxlog_write(MSG_DEBUG_LEVEL, NXLOG_INFO, "d", g_debugLevel);
+	nxlog_write(NXLOG_INFO, _T("Debug level set to %d"), g_debugLevel);
 
 #ifdef _WIN32
    WSADATA wsaData;
@@ -385,7 +379,7 @@ int main(int argc, char *argv[])
             break;
 #endif
          case 'v':   // Print version and exit
-            _tprintf(_T("NetXMS Client Proxy Version ") NETXMS_VERSION_STRING _T(" Build ") NETXMS_VERSION_BUILD_STRING _T("\n"));
+            _tprintf(_T("NetXMS Client Proxy Version ") NETXMS_VERSION_STRING _T(" Build ") NETXMS_BUILD_TAG _T("\n"));
             iAction = ACTION_NONE;
             break;
 #ifdef _WIN32

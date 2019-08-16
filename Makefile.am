@@ -9,17 +9,9 @@
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 ACLOCAL_AMFLAGS = -I m4
-BUILT_SOURCES = netxms-build-tag.h
-EXTRA_DIST = reconf configure netxms.sln README.HPUX netxms-build-tag.h jemalloc.sym
-SUBDIRS = . m4 src doc tools contrib manpages
+EXTRA_DIST = reconf configure netxms.sln README.HPUX jemalloc.sym
+SUBDIRS = . m4 build src doc tools contrib manpages
 SUBDIRS += @TOP_LEVEL_MODULES@
 
-netxms-build-tag.h: update-tag
-
-.PHONY: update-tag
-
-update-tag:
-	./tools/updatetag.sh
-
 install-exec-hook:
-	if test "x@BUILD_SDK@" = "xyes"; then mkdir -p $(DESTDIR)$(includedir); cp config.h $(DESTDIR)$(includedir); cp netxms-build-tag.h $(DESTDIR)$(includedir); mkdir -p $(DESTDIR)$(pkgdatadir)/sdk; cp libtool $(DESTDIR)$(pkgdatadir)/sdk; cp config/install-sh $(DESTDIR)$(pkgdatadir)/sdk; fi
+	if test "x@BUILD_SDK@" = "xyes"; then mkdir -p $(DESTDIR)$(includedir); cp config.h $(DESTDIR)$(includedir); mkdir -p $(DESTDIR)$(pkgdatadir)/sdk; cp libtool $(DESTDIR)$(pkgdatadir)/sdk; cp config/install-sh $(DESTDIR)$(pkgdatadir)/sdk; fi

@@ -61,7 +61,6 @@
  * Externals
  */
 extern ObjectQueue<DiscoveredAddress> g_nodePollerQueue;
-extern Queue g_dciCacheLoaderQueue;
 extern ThreadPool *g_clientThreadPool;
 extern ThreadPool *g_dataCollectorThreadPool;
 
@@ -1056,8 +1055,8 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_QUERY_INTERNAL_TOPOLOGY:
          queryInternalCommunicationTopology(request);
          break;
-      case CMD_SEND_SMS:
-         sendSMS(request);
+      case CMD_SEND_NOTIFICATION:
+         sendNotification(request);
          break;
       case CMD_GET_COMMUNITY_LIST:
          SendCommunityList(request->getId());
@@ -1339,7 +1338,7 @@ void ClientSession::processRequest(NXCPMessage *request)
          onPolicyEditorClose(request);
          break;
       case CMD_POLICY_FORCE_APPLY:
-         forcApplyPolicy(request);
+         forceApplyPolicy(request);
          break;
       case CMD_GET_MATCHING_DCI:
          getMatchingDCI(request);
@@ -1352,6 +1351,24 @@ void ClientSession::processRequest(NXCPMessage *request)
          break;
       case CMD_RECALL_UA_NOTIFICATION:
          recallUserAgentNotification(request);
+         break;
+      case CMD_GET_NOTIFICATION_CHANNELS:
+         getNotificationChannels(request->getId());
+         break;
+      case CMD_ADD_NOTIFICATION_CHANNEL:
+         addNotificationChannel(request);
+         break;
+      case CMD_UPDATE_NOTIFICATION_CHANNEL:
+         updateNotificationChannel(request);
+         break;
+      case CMD_DELETE_NOTIFICATION_CHANNEL:
+         removeNotificationChannel(request);
+         break;
+      case CMD_RENAME_NOTIFICATION_CHANNEL:
+         renameNotificationChannel(request);
+         break;
+      case CMD_GET_NOTIFICATION_DRIVERS:
+         getNotificationDriverNames(request->getId());
          break;
 #ifdef WITH_ZMQ
       case CMD_ZMQ_SUBSCRIBE_EVENT:
@@ -10459,22 +10476,34 @@ void ClientSession::getDependentNodes(NXCPMessage *request)
 }
 
 /**
- * Send SMS
+ * Send notification
  */
-void ClientSession::sendSMS(NXCPMessage *pRequest)
+void ClientSession::sendNotification(NXCPMessage *pRequest)
 {
    NXCPMessage msg;
-	TCHAR phone[256], message[256];
+	TCHAR channelName[MAX_OBJECT_NAME], *phone, *message, *subject;
 
 	msg.setId(pRequest->getId());
 	msg.setCode(CMD_REQUEST_COMPLETED);
 
-	if ((m_dwSystemAccess & SYSTEM_ACCESS_SEND_SMS) && ConfigReadBoolean(_T("AllowDirectSMS"), false))
+	if ((m_dwSystemAccess & SYSTEM_ACCESS_SEND_NOTIFICATION) && ConfigReadBoolean(_T("AllowDirectNotifications"), false))
 	{
-		pRequest->getFieldAsString(VID_RCPT_ADDR, phone, 256);
-		pRequest->getFieldAsString(VID_MESSAGE, message, 256);
-		PostSMS(phone, message);
-		msg.setField(VID_RCC, RCC_SUCCESS);
+	   pRequest->getFieldAsString(VID_CHANNEL_NAME, channelName);
+	   if(CheckNotificationChannelExist(channelName))
+	   {
+	      phone = pRequest->getFieldAsString(VID_RCPT_ADDR);
+	      subject = pRequest->getFieldAsString(VID_EMAIL_SUBJECT);
+	      message = pRequest->getFieldAsString(VID_MESSAGE);
+	      SendNotification(channelName, phone, subject, message);
+	      msg.setField(VID_RCC, RCC_SUCCESS);
+	      MemFree(phone);
+	      MemFree(subject);
+	      MemFree(message);
+	   }
+	   else
+	   {
+         msg.setField(VID_RCC, RCC_NO_CHANNEL_NAME);
+	   }
 	}
 	else
 	{
@@ -14585,38 +14614,28 @@ static void ForceApplyPolicyChanges(void *arg)
 /**
  * Force apply
  */
-void ClientSession::forcApplyPolicy(NXCPMessage *pRequest)
+void ClientSession::forceApplyPolicy(NXCPMessage *pRequest)
 {
    NXCPMessage msg;
-   NetObj *pSource, *pDestination;
+   NetObj *templateObject;
 
    // Prepare response message
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(pRequest->getId());
 
    // Get source and destination
-   pSource = FindObjectById(pRequest->getFieldAsUInt32(VID_SOURCE_OBJECT_ID));
-   pDestination = FindObjectById(pRequest->getFieldAsUInt32(VID_DESTINATION_OBJECT_ID));
-   if ((pSource != NULL) && (pDestination != NULL))
+   templateObject = FindObjectById(pRequest->getFieldAsUInt32(VID_TEMPLATE_ID), OBJECT_TEMPLATE);
+   if ((templateObject != NULL))
    {
-      // Check object types
-      if ((pSource->getObjectClass() == OBJECT_TEMPLATE) && pDestination->getObjectClass() == OBJECT_NODE)
+      // Check access rights
+      if (templateObject->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
       {
-         // Check access rights
-         if ((pSource->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ)) &&
-             (pDestination->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY)))
-         {
-            ThreadPoolExecute(g_clientThreadPool, ForceApplyPolicyChanges, ((Template *)pSource));
-            msg.setField(VID_RCC, RCC_SUCCESS);
-         }
-         else  // User doesn't have enough rights on object(s)
-         {
-            msg.setField(VID_RCC, RCC_ACCESS_DENIED);
-         }
+         ThreadPoolExecute(g_clientThreadPool, ForceApplyPolicyChanges, ((Template *)templateObject));
+         msg.setField(VID_RCC, RCC_SUCCESS);
       }
-      else     // Object(s) is not a node
+      else  // User doesn't have enough rights on object(s)
       {
-         msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+         msg.setField(VID_RCC, RCC_ACCESS_DENIED);
       }
    }
    else  // No object(s) with given ID
@@ -14863,6 +14882,182 @@ void ClientSession::recallUserAgentNotification(NXCPMessage *request)
       writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on user agent notification recall"));
    }
 
+   sendMessage(&msg);
+}
+
+/**
+ * Get notification channel
+ */
+void ClientSession::getNotificationChannels(UINT32 requestId)
+{
+   NXCPMessage msg;
+   msg.setCode(CMD_REQUEST_COMPLETED);
+   msg.setId(requestId);
+   if(m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG)
+   {
+      GetNotificationChannels(&msg);
+      msg.setField(VID_RCC, RCC_SUCCESS);
+   }
+   else
+   {
+      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on notification channel list"));
+      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+   }
+   sendMessage(&msg);
+}
+
+/**
+ * Add notification channel
+ */
+void ClientSession::addNotificationChannel(NXCPMessage *request)
+{
+   NXCPMessage msg;
+   msg.setCode(CMD_REQUEST_COMPLETED);
+   msg.setId(request->getId());
+   if(m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG)
+   {
+      TCHAR name[MAX_OBJECT_NAME];
+      request->getFieldAsString(VID_NAME, name, MAX_OBJECT_NAME);
+      if(!CheckNotificationChannelExist(name))
+      {
+         TCHAR driverName[MAX_OBJECT_NAME];
+         TCHAR description[MAX_NC_DESCRIPTION];
+         request->getFieldAsString(VID_DRIVER_NAME, driverName, MAX_OBJECT_NAME);
+         request->getFieldAsString(VID_DESCRIPTION, description, MAX_NC_DESCRIPTION);
+         char *configuration = request->getFieldAsMBString(VID_XML_CONFIG, NULL, 0);
+         CreateNotificationChannelAndSave(name, description, driverName, configuration);
+         msg.setField(VID_RCC, RCC_SUCCESS);
+         NotifyClientSessions(NX_NOTIFICATION_CHANNEL_CHANGED, 0);
+      }
+      else
+         msg.setField(VID_RCC, RCC_CHANNEL_ALREADY_EXIST);
+   }
+   else
+   {
+      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on new notification channel add"));
+      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+   }
+   sendMessage(&msg);
+}
+
+/**
+ * Update notificaiton channel
+ */
+void ClientSession::updateNotificationChannel(NXCPMessage *request)
+{
+   NXCPMessage msg;
+   msg.setCode(CMD_REQUEST_COMPLETED);
+   msg.setId(request->getId());
+   if(m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG)
+   {
+      TCHAR name[MAX_OBJECT_NAME];
+      request->getFieldAsString(VID_NAME, name, MAX_OBJECT_NAME);
+      if(CheckNotificationChannelExist(name))
+      {
+         TCHAR driverName[MAX_OBJECT_NAME];
+         TCHAR description[MAX_NC_DESCRIPTION];
+         request->getFieldAsString(VID_DRIVER_NAME, driverName, MAX_OBJECT_NAME);
+         request->getFieldAsString(VID_DESCRIPTION, description, MAX_NC_DESCRIPTION);
+         char *configuration = request->getFieldAsMBString(VID_XML_CONFIG, NULL, 0);
+         UpdateNotificationChannel(name, description, driverName, configuration);
+         msg.setField(VID_RCC, RCC_SUCCESS);
+         NotifyClientSessions(NX_NOTIFICATION_CHANNEL_CHANGED, 0);
+         MemFree(configuration);
+      }
+      else
+         msg.setField(VID_RCC, RCC_NO_CHANNEL_NAME);
+   }
+   else
+   {
+      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on new notification channel add"));
+      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+   }
+   sendMessage(&msg);
+
+}
+
+/**
+ * Remove notification channel
+ */
+void ClientSession::removeNotificationChannel(NXCPMessage *request)
+{
+   NXCPMessage msg;
+   msg.setCode(CMD_REQUEST_COMPLETED);
+   msg.setId(request->getId());
+   if(m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG)
+   {
+      TCHAR name[MAX_OBJECT_NAME];
+      request->getFieldAsString(VID_NAME, name, MAX_OBJECT_NAME);
+      if(!CheckChannelIsUsedInAction(name))
+      {
+         if(DeleteNotificationChannel(name))
+         {
+            NotifyClientSessions(NX_NOTIFICATION_CHANNEL_CHANGED, 0);
+            msg.setField(VID_RCC, RCC_SUCCESS);
+         }
+         else
+            msg.setField(VID_RCC, RCC_NO_CHANNEL_NAME);
+      }
+      else
+         msg.setField(VID_RCC, RCC_CHANNEL_IN_USE);
+   }
+   else
+   {
+      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on new notification channel add"));
+      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+   }
+   sendMessage(&msg);
+}
+
+/**
+ * Rename notification channel
+ */
+void ClientSession::renameNotificationChannel(NXCPMessage *request)
+{
+   NXCPMessage msg;
+   msg.setCode(CMD_REQUEST_COMPLETED);
+   msg.setId(request->getId());
+   if(m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG)
+   {
+      TCHAR *name = request->getFieldAsString(VID_NAME);
+      if(CheckNotificationChannelExist(name))
+      {
+         TCHAR *newName = request->getFieldAsString(VID_NEW_NAME);
+         RenameNotificationChannel(name, newName); //will release names
+         msg.setField(VID_RCC, RCC_SUCCESS);
+      }
+      else
+      {
+         msg.setField(VID_RCC, RCC_NO_CHANNEL_NAME);
+         MemFree(name);
+      }
+   }
+   else
+   {
+      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on new notification channel add"));
+      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+   }
+   sendMessage(&msg);
+}
+
+/**
+ * Get notification driver names
+ */
+void ClientSession::getNotificationDriverNames(UINT32 requestId)
+{
+   NXCPMessage msg;
+   msg.setCode(CMD_REQUEST_COMPLETED);
+   msg.setId(requestId);
+   if(m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG)
+   {
+      GetNotificationDrivers(&msg);
+      msg.setField(VID_RCC, RCC_SUCCESS);
+   }
+   else
+   {
+      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on notification driver list"));
+      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+   }
    sendMessage(&msg);
 }
 

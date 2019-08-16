@@ -117,37 +117,32 @@ bool Initialize()
 {
    // Open log file
    nxlog_open((g_flags & AF_USE_SYSLOG) ? NXFLOWD_SYSLOG_NAME : g_logFile,
-	           ((g_flags & AF_USE_SYSLOG) ? NXLOG_USE_SYSLOG : 0) |
-				  ((g_flags & AF_DAEMON) ? 0 : NXLOG_PRINT_TO_STDOUT),
-              _T("NXFLOWD.EXE"),
-#ifdef _WIN32
-              0, NULL, MSG_DEBUG, MSG_DEBUG_TAG, MSG_OTHER);
-#else
-				  g_dwNumMessages, g_szMessages, MSG_DEBUG, MSG_DEBUG_TAG, MSG_OTHER);
-#endif
+      ((g_flags & AF_USE_SYSLOG) ? NXLOG_USE_SYSLOG : 0) |
+      ((g_flags & AF_DAEMON) ? 0 : NXLOG_PRINT_TO_STDOUT));
 
 #ifdef _WIN32
 	WSADATA wsaData;
 
    if (WSAStartup(2, &wsaData) != 0)
    {
-      nxlog_write(MSG_WSASTARTUP_FAILED, EVENTLOG_ERROR_TYPE, "e", WSAGetLastError());
+      TCHAR buffer[1024];
+      nxlog_write(NXLOG_ERROR, _T("Call to WSAStartup() failed (%s)"), GetSystemErrorText(WSAGetLastError(), buffer, 1024));
       return false;
    }
 #endif
 
 	if (ipfix_init() < 0)
 	{
-      nxlog_write(MSG_IPFIX_INIT_FAILED, EVENTLOG_ERROR_TYPE, NULL);
+      nxlog_write(NXLOG_ERROR, _T("IPFIX library initialization failed"));
 		return false;
 	}
 
 	// Initialize database driver and connect to database
-	if (!DBInit(MSG_OTHER, (g_flags & AF_LOG_SQL_ERRORS) ? MSG_SQL_ERROR : 0))
-		return FALSE;
+	if (!DBInit())
+		return false;
 	g_dbDriverHandle = DBLoadDriver(s_dbDriver, s_dbDrvParams, (g_debugLevel >= 9), NULL, NULL);
 	if (g_dbDriverHandle == NULL)
-		return FALSE;
+		return false;
 
 	// Connect to database
 	TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
@@ -171,11 +166,9 @@ bool Initialize()
 	return true;
 }
 
-
-//
-// Initiate shutdown from service control handler
-//
-
+/**
+ * Initiate shutdown from service control handler
+ */
 void Shutdown()
 {
    // Set shutdowm flag

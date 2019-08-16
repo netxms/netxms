@@ -19,5 +19,4 @@ EXTRA_DIST = \
 	patch_config.status.pl \
 	sharIt \
 	stub.sh \
-	updatetag.sh \
 	update_xrc.pl

@@ -69,6 +69,14 @@
             id="org.netxms.ui.eclipse.serverconfig.views.PersistentStorageView"
             name="Persistent Storage">
       </view>
+      <view
+            allowMultiple="false"
+            category="org.netxms.ui.eclipse.viewcategory.config"
+            class="org.netxms.ui.eclipse.serverconfig.views.NotificationChannelView"
+            id="org.netxms.ui.eclipse.serverconfig.views.NotificationChannelView"
+            name="Notification Channel"
+            restorable="true">
+      </view>
    </extension>
    <extension
          point="org.eclipse.ui.commands">
@@ -162,6 +170,10 @@
             id="org.netxms.ui.eclipse.serverconfig.commands.open_persistent_storage"
             name="Persistent storage">
       </command>
+      <command
+            id="org.netxms.ui.eclipse.serverconfig.commands.open_notification_channels"
+            name="Notification channels">
+      </command>
    </extension>
 
    <extension point = "org.eclipse.ui.actionSets">
@@ -225,6 +237,15 @@
            icon="icons/pstorage.png"
            id="org.netxms.ui.eclipse.serverconfig.actions.open_persistent_storage"
            label="Persistent storage"
+           menubarPath="config/additions"
+           style="push"
+           tooltip="Persistent storage">
+     </action>
+     <action
+           class="org.netxms.ui.eclipse.serverconfig.actions.OpenNotificationChannelList"
+           definitionId="org.netxms.ui.eclipse.serverconfig.commands.open_notification_channels"
+           id="org.netxms.ui.eclipse.serverconfig.actions.open_notification_channels"
+           label="Notification channles"
            menubarPath="config/additions"
            style="push"
            tooltip="Persistent storage">

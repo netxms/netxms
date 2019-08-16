@@ -30,7 +30,6 @@ import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Interface;
-import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.objectview.Messages;
 import org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;

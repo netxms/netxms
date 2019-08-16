@@ -200,7 +200,7 @@ LONG H_ServiceGroupsList(const TCHAR *param, const TCHAR *arg, StringList *value
       {
          auto group = static_cast<const TuxedoServiceGropup*>(serviceGroups->get(i)->value);
          TCHAR buffer[128];
-         _sntprintf(buffer, 128, _T("%s,%s,%s"), group->m_svcName, group->m_srvGroup, group->m_lmid);
+         _sntprintf(buffer, 128, _T("%s,%s,%hs"), group->m_svcName, group->m_srvGroup, group->m_lmid);
          value->add(buffer);
       }
       delete serviceGroups;

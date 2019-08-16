@@ -110,22 +110,9 @@ bool ConditionObject::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    DBFreeResult(hResult);
 
    // Compile script
-   NXSL_Program *p = (NXSL_Program *)NXSLCompile(m_scriptSource, szQuery, 512, NULL);
-   if (p != NULL)
-   {
-      m_script = new NXSL_VM(new NXSL_ServerEnv);
-      if (!m_script->load(p))
-      {
-         nxlog_write(MSG_COND_SCRIPT_COMPILATION_ERROR, EVENTLOG_ERROR_TYPE, "dss", m_id, m_name, m_script->getErrorText());
-         delete_and_null(m_script);
-      }
-      delete p;
-   }
-   else
-   {
-      m_script = NULL;
-      nxlog_write(MSG_COND_SCRIPT_COMPILATION_ERROR, EVENTLOG_ERROR_TYPE, "dss", m_id, m_name, szQuery);
-   }
+   m_script = NXSLCompileAndCreateVM(m_scriptSource, szQuery, 512, new NXSL_ServerEnv());
+   if (m_script == NULL)
+      nxlog_write(NXLOG_ERROR, _T("Failed to compile evaluation script for condition object %s [%u] (%s)"), m_name, m_id, szQuery);
 
    // Load DCI map
    _sntprintf(szQuery, 512, _T("SELECT dci_id,node_id,dci_func,num_polls ")
@@ -275,25 +262,12 @@ UINT32 ConditionObject::modifyFromMessageInternal(NXCPMessage *pRequest)
    {
       TCHAR szError[1024];
 
-      free(m_scriptSource);
+      MemFree(m_scriptSource);
       delete m_script;
       m_scriptSource = pRequest->getFieldAsString(VID_SCRIPT);
-      NXSL_Program *p = (NXSL_Program *)NXSLCompile(m_scriptSource, szError, 1024, NULL);
-      if (p != NULL)
-      {
-         m_script = new NXSL_VM(new NXSL_ServerEnv);
-         if (!m_script->load(p))
-         {
-            nxlog_write(MSG_COND_SCRIPT_COMPILATION_ERROR, EVENTLOG_ERROR_TYPE, "dss", m_id, m_name, m_script->getErrorText());
-            delete_and_null(m_script);
-         }
-         delete p;
-      }
-      else
-      {
-         m_script = NULL;
-         nxlog_write(MSG_COND_SCRIPT_COMPILATION_ERROR, EVENTLOG_ERROR_TYPE, "dss", m_id, m_name, szError);
-      }
+      m_script = NXSLCompileAndCreateVM(m_scriptSource, szError, 1024, new NXSL_ServerEnv());
+      if (m_script == NULL)
+         nxlog_write(NXLOG_ERROR, _T("Failed to compile evaluation script for condition object %s [%u] (%s)"), m_name, m_id, szError);
    }
 
    // Change activation event
@@ -504,8 +478,7 @@ void ConditionObject::check()
    }
    else
    {
-      nxlog_write(MSG_COND_SCRIPT_EXECUTION_ERROR, EVENTLOG_ERROR_TYPE,
-               "dss", m_id, m_name, m_script->getErrorText());
+      nxlog_write(NXLOG_ERROR, _T("Failed to execute evaluation script for condition object %s [%u] (%s)"), m_name, m_id, m_script->getErrorText());
 
       lockProperties();
       if (m_status != STATUS_UNKNOWN)
@@ -515,7 +488,7 @@ void ConditionObject::check()
       }
       unlockProperties();
    }
-   free(ppValueList);
+   MemFree(ppValueList);
 
    // Cause parent object(s) to recalculate it's status
    if (iOldStatus != m_status)

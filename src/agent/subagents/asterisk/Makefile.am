@@ -2,7 +2,7 @@ SUBAGENT = asterisk
 
 pkglib_LTLIBRARIES = asterisk.la
 asterisk_la_SOURCES = ami.cpp channels.cpp events.cpp main.cpp rtcp.cpp sip.cpp system.cpp taskproc.cpp ua.cpp
-asterisk_la_CPPFLAGS=-I@top_srcdir@/include
+asterisk_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/build
 asterisk_la_LDFLAGS = -module -avoid-version -export-symbols ../subagent.sym
 asterisk_la_LIBADD = ../../libnxagent/libnxagent.la ../../../libnetxms/libnetxms.la @ASTERISK_LIBS@
 

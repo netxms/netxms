@@ -122,7 +122,6 @@ public class Messages extends NLS
 	public String SystemRights_ScheduleFileUploadTask;
    public String SystemRights_ScheduleObjectMaint;
    public String SystemRights_ScheduleScriptTask;
-   public String SystemRights_SendSMS;
    public String SystemRights_UnlinkTicket;
 	public String SystemRights_ViewAuditLog;
 	public String SystemRights_ViewEventConfig;

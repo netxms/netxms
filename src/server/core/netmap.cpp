@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2018 Raden Solutions
+** Copyright (C) 2003-2019 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -985,7 +985,7 @@ void NetworkMap::setFilter(const TCHAR *filter)
 		m_filterSource = _tcsdup(filter);
 		m_filter = NXSLCompileAndCreateVM(m_filterSource, error, 256, new NXSL_ServerEnv);
 		if (m_filter == NULL)
-			nxlog_write(MSG_NETMAP_SCRIPT_COMPILATION_ERROR, EVENTLOG_WARNING_TYPE, "dss", m_id, m_name, error);
+			nxlog_write(NXLOG_WARNING, _T("Failed to compile filter script for network map object %s [%u] (%s)"), m_name, m_id, error);
 	}
 	else
 	{
@@ -1016,7 +1016,7 @@ bool NetworkMap::isAllowedOnMap(NetObj *object)
 
 			_sntprintf(buffer, 1024, _T("NetworkMap::%s::%d"), m_name, m_id);
 			PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, m_filter->getErrorText(), m_id);
-			nxlog_write(MSG_NETMAP_SCRIPT_EXECUTION_ERROR, EVENTLOG_WARNING_TYPE, "dss", m_id, m_name, m_filter->getErrorText());
+         nxlog_write(NXLOG_WARNING, _T("Failed to execute filter script for network map object %s [%u] (%s)"), m_name, m_id, m_filter->getErrorText());
 		}
 	}
 	unlockProperties();

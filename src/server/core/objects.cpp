@@ -376,8 +376,8 @@ void NetObjInsert(NetObj *pObject, bool newObject, bool importedObject)
 					}
                if (newObject)
                {
-                  PostEvent(EVENT_SUBNET_ADDED, g_dwMgmtNode, "isAd", pObject->getId(), pObject->getName(),
-                     &((Subnet *)pObject)->getIpAddress(), ((Subnet *)pObject)->getIpAddress().getMaskBits());
+                  InetAddress addr = static_cast<Subnet*>(pObject)->getIpAddress();
+                  PostEvent(EVENT_SUBNET_ADDED, g_dwMgmtNode, "isAd", pObject->getId(), pObject->getName(), &addr, addr.getMaskBits());
                }
             }
             break;
@@ -431,7 +431,7 @@ void NetObjInsert(NetObj *pObject, bool newObject, bool importedObject)
 						}
 					}
 					if (!processed)
-						nxlog_write(MSG_BAD_NETOBJ_TYPE, EVENTLOG_ERROR_TYPE, "d", pObject->getObjectClass());
+						nxlog_write(NXLOG_ERROR, _T("Internal error: invalid object class %d"), pObject->getObjectClass());
 				}
             break;
       }
@@ -597,7 +597,7 @@ void NetObjDeleteFromIndexes(NetObj *pObject)
 					}
 				}
 				if (!processed)
-					nxlog_write(MSG_BAD_NETOBJ_TYPE, EVENTLOG_ERROR_TYPE, "d", pObject->getObjectClass());
+               nxlog_write(NXLOG_ERROR, _T("Internal error: invalid object class %d"), pObject->getObjectClass());
 			}
          break;
    }
@@ -1365,7 +1365,7 @@ BOOL LoadObjects()
                                            _T("check_function"), _T("check_operation"), _T("sample_count"), _T("event_code"), _T("rearm_event_code"),
                                            _T("repeat_interval"), _T("current_state"), _T("current_severity"), _T("match_count"),
                                            _T("last_event_timestamp"), _T("table_id"), _T("flags"), _T("id"), _T("activation_event"),
-                                           _T("deactivation_event"), _T("group_id"), _T("iface_id"), _T("vlan_id"), NULL };
+                                           _T("deactivation_event"), _T("group_id"), _T("iface_id"), _T("vlan_id"), _T("object_id"), NULL };
 
       nxlog_debug(1, _T("Caching object configuration tables"));
       bool success =
@@ -1425,6 +1425,8 @@ BOOL LoadObjects()
                DBCacheTable(cachedb, mainDB, _T("acl"), _T("object_id,user_id"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("trusted_nodes"), _T("source_object_id,target_node_id"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("auto_bind_target"), _T("object_id"), _T("*")) &&
+               DBCacheTable(cachedb, mainDB, _T("icmp_statistics"), _T("object_id,poll_target"), _T("*"), intColumns) &&
+               DBCacheTable(cachedb, mainDB, _T("icmp_target_address_list"), _T("node_id,ip_addr"), _T("*"), intColumns) &&
                DBCacheTable(cachedb, mainDB, _T("software_inventory"), _T("node_id,name,version"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("hardware_inventory"), _T("node_id,category,component_index"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("versionable_object"), _T("object_id"), _T("*"));
@@ -1495,7 +1497,7 @@ BOOL LoadObjects()
             else     // Object load failed
             {
                pZone->destroy();
-               nxlog_write(MSG_ZONE_LOAD_FAILED, NXLOG_ERROR, "d", id);
+               nxlog_write(NXLOG_ERROR, _T("Failed to load zone object with ID %u from database"), id);
             }
          }
          DBFreeResult(hResult);
@@ -1522,7 +1524,7 @@ BOOL LoadObjects()
          else     // Object load failed
          {
             condition->destroy();
-            nxlog_write(MSG_CONDITION_LOAD_FAILED, NXLOG_ERROR, "d", id);
+            nxlog_write(NXLOG_ERROR, _T("Failed to load condition object with ID %u from database"), id);
          }
       }
       DBFreeResult(hResult);
@@ -1559,7 +1561,7 @@ BOOL LoadObjects()
          else     // Object load failed
          {
             subnet->destroy();
-            nxlog_write(MSG_SUBNET_LOAD_FAILED, NXLOG_ERROR, "d", id);
+            nxlog_write(NXLOG_ERROR, _T("Failed to load subnet object with ID %u from database"), id);
          }
       }
       DBFreeResult(hResult);
@@ -1582,7 +1584,7 @@ BOOL LoadObjects()
          }
          else     // Object load failed
          {
-            nxlog_write(MSG_RACK_LOAD_FAILED, NXLOG_ERROR, "d", id);
+            nxlog_write(NXLOG_ERROR, _T("Failed to load rack object with ID %u from database"), id);
             rack->destroy();
          }
       }
@@ -1605,7 +1607,7 @@ BOOL LoadObjects()
          }
          else     // Object load failed
          {
-            nxlog_write(MSG_CHASSIS_LOAD_FAILED, NXLOG_ERROR, "d", id);
+            nxlog_write(NXLOG_ERROR, _T("Failed to load chassis object with ID %u from database"), id);
             chassis->destroy();
          }
       }
@@ -1630,7 +1632,7 @@ BOOL LoadObjects()
          else     // Object load failed
          {
             md->destroy();
-            nxlog_write(MSG_MOBILEDEVICE_LOAD_FAILED, NXLOG_ERROR, "d", id);
+            nxlog_write(NXLOG_ERROR, _T("Failed to load mobile device object with ID %u from database"), id);
          }
       }
       DBFreeResult(hResult);
@@ -1654,7 +1656,7 @@ BOOL LoadObjects()
          else     // Object load failed
          {
             sensor->destroy();
-            nxlog_write(MSG_SENSOR_LOAD_FAILED, NXLOG_ERROR, "d", id);
+            nxlog_write(NXLOG_ERROR, _T("Failed to load sensor object with ID %u from database"), id);
          }
       }
       DBFreeResult(hResult);
@@ -1686,7 +1688,7 @@ BOOL LoadObjects()
          else     // Object load failed
          {
             node->destroy();
-            nxlog_write(MSG_NODE_LOAD_FAILED, NXLOG_ERROR, "d", id);
+            nxlog_write(NXLOG_ERROR, _T("Failed to load node object with ID %u from database"), id);
          }
       }
       DBFreeResult(hResult);
@@ -1709,7 +1711,7 @@ BOOL LoadObjects()
          }
          else     // Object load failed
          {
-            nxlog_write(MSG_AP_LOAD_FAILED, NXLOG_ERROR, "d", id);
+            nxlog_write(NXLOG_ERROR, _T("Failed to load access point object with ID %u from database"), id);
             ap->destroy();
          }
       }
@@ -1733,7 +1735,7 @@ BOOL LoadObjects()
          }
          else     // Object load failed
          {
-            nxlog_write(MSG_INTERFACE_LOAD_FAILED, NXLOG_ERROR, "d", id);
+            nxlog_write(NXLOG_ERROR, _T("Failed to load interface object with ID %u from database"), id);
             iface->destroy();
          }
       }
@@ -1757,7 +1759,7 @@ BOOL LoadObjects()
          else     // Object load failed
          {
             service->destroy();
-            nxlog_write(MSG_NETSRV_LOAD_FAILED, NXLOG_ERROR, "d", id);
+            nxlog_write(NXLOG_ERROR, _T("Failed to load network service object with ID %u from database"), id);
          }
       }
       DBFreeResult(hResult);
@@ -1780,7 +1782,7 @@ BOOL LoadObjects()
          else     // Object load failed
          {
             connector->destroy();
-            nxlog_write(MSG_VPNC_LOAD_FAILED, NXLOG_ERROR, "d", id);
+            nxlog_write(NXLOG_ERROR, _T("Failed to load VPN connector object with ID %u from database"), id);
          }
       }
       DBFreeResult(hResult);
@@ -1803,7 +1805,7 @@ BOOL LoadObjects()
          else     // Object load failed
          {
             cluster->destroy();
-            nxlog_write(MSG_CLUSTER_LOAD_FAILED, NXLOG_ERROR, "d", id);
+            nxlog_write(NXLOG_ERROR, _T("Failed to load cluster object with ID %u from database"), id);
          }
       }
       DBFreeResult(hResult);
@@ -1832,7 +1834,7 @@ BOOL LoadObjects()
          else     // Object load failed
          {
             tmpl->destroy();
-            nxlog_write(MSG_TEMPLATE_LOAD_FAILED, NXLOG_ERROR, "d", id);
+            nxlog_write(NXLOG_ERROR, _T("Failed to load template object with ID %u from database"), id);
          }
       }
       DBFreeResult(hResult);
@@ -1855,7 +1857,7 @@ BOOL LoadObjects()
          else     // Object load failed
          {
             map->destroy();
-            nxlog_write(MSG_NETMAP_LOAD_FAILED, NXLOG_ERROR, "d", id);
+            nxlog_write(NXLOG_ERROR, _T("Failed to load network map object with ID %u from database"), id);
          }
       }
       DBFreeResult(hResult);
@@ -1883,7 +1885,7 @@ BOOL LoadObjects()
          else     // Object load failed
          {
             pContainer->destroy();
-            nxlog_write(MSG_CONTAINER_LOAD_FAILED, NXLOG_ERROR, "d", id);
+            nxlog_write(NXLOG_ERROR, _T("Failed to load container object with ID %u from database"), id);
          }
       }
       DBFreeResult(hResult);
@@ -1909,7 +1911,7 @@ BOOL LoadObjects()
          else     // Object load failed
          {
             pGroup->destroy();
-            nxlog_write(MSG_TG_LOAD_FAILED, NXLOG_ERROR, "d", id);
+            nxlog_write(NXLOG_ERROR, _T("Failed to load template group object with ID %u from database"), id);
          }
       }
       DBFreeResult(hResult);
@@ -1933,7 +1935,7 @@ BOOL LoadObjects()
          else     // Object load failed
          {
             group->destroy();
-            nxlog_write(MSG_MG_LOAD_FAILED, NXLOG_ERROR, "d", id);
+            nxlog_write(NXLOG_ERROR, _T("Failed to load network map group object with ID %u from database"), id);
          }
       }
       DBFreeResult(hResult);
@@ -1956,7 +1958,7 @@ BOOL LoadObjects()
          else     // Object load failed
          {
             dashboard->destroy();
-            nxlog_write(MSG_DASHBOARD_LOAD_FAILED, NXLOG_ERROR, "d", id);
+            nxlog_write(NXLOG_ERROR, _T("Failed to load dashboard object with ID %u from database"), id);
          }
       }
       DBFreeResult(hResult);
@@ -1980,7 +1982,7 @@ BOOL LoadObjects()
          else     // Object load failed
          {
             group->destroy();
-            nxlog_write(MSG_MG_LOAD_FAILED, NXLOG_ERROR, "d", id);
+            nxlog_write(NXLOG_ERROR, _T("Failed to load dashboard group object with ID %u from database"), id);
          }
       }
       DBFreeResult(hResult);
@@ -2004,7 +2006,7 @@ BOOL LoadObjects()
 		   else     // Object load failed
 		   {
 			   service->destroy();
-			   nxlog_write(MSG_BUSINESS_SERVICE_LOAD_FAILED, NXLOG_ERROR, "d", id);
+			   nxlog_write(NXLOG_ERROR, _T("Failed to load business service object with ID %u from database"), id);
 		   }
 	   }
 	   DBFreeResult(hResult);
@@ -2028,7 +2030,7 @@ BOOL LoadObjects()
 		   else     // Object load failed
 		   {
 			   nl->destroy();
-			   nxlog_write(MSG_NODE_LINK_LOAD_FAILED, NXLOG_ERROR, "d", id);
+			   nxlog_write(NXLOG_ERROR, _T("Failed to load node link object with ID %u from database"), id);
 		   }
 	   }
 	   DBFreeResult(hResult);
@@ -2051,7 +2053,7 @@ BOOL LoadObjects()
          else     // Object load failed
          {
             check->destroy();
-            nxlog_write(MSG_SERVICE_CHECK_LOAD_FAILED, NXLOG_ERROR, "d", id);
+            nxlog_write(NXLOG_ERROR, _T("Failed to load service check object with ID %u from database"), id);
          }
       }
       DBFreeResult(hResult);
@@ -2149,6 +2151,29 @@ static void PrintObjectInfo(ServerConsole *console, UINT32 objectId, const TCHAR
 }
 
 /**
+ * Print ICMP statistic for node's child object
+ */
+template <class O> static void PrintObjectIcmpStatistic(ServerConsole *console, O *object)
+{
+   Node *parentNode = object->getParentNode();
+   if (parentNode == NULL)
+      return;
+
+   TCHAR target[MAX_OBJECT_NAME + 2];
+   _sntprintf(target, MAX_OBJECT_NAME + 2, _T("N:%s"), object->getName());
+   UINT32 last, min, max, avg, loss;
+   if (parentNode->getIcmpStatistics(target, &last, &min, &max, &avg, &loss))
+   {
+      ConsolePrintf(console, _T("   ICMP statistics:\n"));
+      ConsolePrintf(console, _T("      RTT last.........: %u ms\n"), last);
+      ConsolePrintf(console, _T("      RTT min..........: %u ms\n"), min);
+      ConsolePrintf(console, _T("      RTT max..........: %u ms\n"), max);
+      ConsolePrintf(console, _T("      RTT average......: %u ms\n"), avg);
+      ConsolePrintf(console, _T("      Packet loss......: %u\n"), loss);
+   }
+}
+
+/**
  * Dump object information to console
  */
 static void DumpObject(ServerConsole *console, NetObj *object, TCHAR *buffer)
@@ -2170,19 +2195,41 @@ static void DumpObject(ServerConsole *console, NetObj *object, TCHAR *buffer)
    _tcsftime(buffer, 256, _T("%d.%b.%Y %H:%M:%S"), ltm);
    ConsolePrintf(console, _T("   Last change.........: %s\n"), buffer);
    if (object->isDataCollectionTarget())
-      ConsolePrintf(console, _T("   State flags.........: 0x%08x\n"), ((DataCollectionTarget *)object)->getState());
+   {
+      ConsolePrintf(console, _T("   State flags.........: 0x%08x\n"), static_cast<DataCollectionTarget*>(object)->getState());
+   }
    switch(object->getObjectClass())
    {
       case OBJECT_NODE:
          ConsolePrintf(console, _T("   Primary IP..........: %s\n   Primary hostname....: %s\n   Capabilities........: isSNMP=%d isAgent=%d isLocalMgmt=%d\n   SNMP ObjectId.......: %s\n"),
-                       ((Node *)object)->getIpAddress().toString(buffer),
-                       ((Node *)object)->getPrimaryName(),
-                       ((Node *)object)->isSNMPSupported(),
-                       ((Node *)object)->isNativeAgent(),
-                       ((Node *)object)->isLocalManagement(),
-                       ((Node *)object)->getSNMPObjectId());
+                       static_cast<Node*>(object)->getIpAddress().toString(buffer),
+                       static_cast<Node*>(object)->getPrimaryName(),
+                       static_cast<Node*>(object)->isSNMPSupported(),
+                       static_cast<Node*>(object)->isNativeAgent(),
+                       static_cast<Node*>(object)->isLocalManagement(),
+                       static_cast<Node*>(object)->getSNMPObjectId());
          PrintObjectInfo(console, object->getAssignedZoneProxyId(false), _T("   Primary zone proxy..:"));
          PrintObjectInfo(console, object->getAssignedZoneProxyId(true), _T("   Backup zone proxy...:"));
+         ConsolePrintf(console, _T("   ICMP polling........: %s\n"),
+                  static_cast<Node*>(object)->isIcmpStatCollectionEnabled() ? _T("ON") : _T("OFF"));
+         if (static_cast<Node*>(object)->isIcmpStatCollectionEnabled())
+         {
+            StringList *collectors = static_cast<Node*>(object)->getIcmpStatCollectors();
+            for(int i = 0; i < collectors->size(); i++)
+            {
+               UINT32 last, min, max, avg, loss;
+               if (static_cast<Node*>(object)->getIcmpStatistics(collectors->get(i), &last, &min, &max, &avg, &loss))
+               {
+                  ConsolePrintf(console, _T("   ICMP statistics (%s):\n"), collectors->get(i));
+                  ConsolePrintf(console, _T("      RTT last.........: %u ms\n"), last);
+                  ConsolePrintf(console, _T("      RTT min..........: %u ms\n"), min);
+                  ConsolePrintf(console, _T("      RTT max..........: %u ms\n"), max);
+                  ConsolePrintf(console, _T("      RTT average......: %u ms\n"), avg);
+                  ConsolePrintf(console, _T("      Packet loss......: %u\n"), loss);
+               }
+            }
+            delete collectors;
+         }
          break;
       case OBJECT_SUBNET:
          ConsolePrintf(console, _T("   IP address..........: %s/%d\n"),
@@ -2192,14 +2239,16 @@ static void DumpObject(ServerConsole *console, NetObj *object, TCHAR *buffer)
       case OBJECT_ACCESSPOINT:
          ConsolePrintf(console, _T("   MAC address.........: %s\n"), static_cast<AccessPoint*>(object)->getMacAddr().toString(buffer));
          ConsolePrintf(console, _T("   IP address..........: %s\n"), static_cast<AccessPoint*>(object)->getIpAddress().toString(buffer));
+         PrintObjectIcmpStatistic(console, static_cast<AccessPoint*>(object));
          break;
       case OBJECT_INTERFACE:
          ConsolePrintf(console, _T("   MAC address.........: %s\n"), static_cast<Interface*>(object)->getMacAddr().toString(buffer));
-         for(int n = 0; n < ((Interface *)object)->getIpAddressList()->size(); n++)
+         for(int n = 0; n < static_cast<Interface*>(object)->getIpAddressList()->size(); n++)
          {
             const InetAddress& a = static_cast<Interface*>(object)->getIpAddressList()->get(n);
             ConsolePrintf(console, _T("   IP address..........: %s/%d\n"), a.toString(buffer), a.getMaskBits());
          }
+         PrintObjectIcmpStatistic(console, static_cast<Interface*>(object));
          break;
       case OBJECT_TEMPLATE:
          ConsolePrintf(console, _T("   Version.............: %d\n"),

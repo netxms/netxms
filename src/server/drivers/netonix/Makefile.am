@@ -2,7 +2,7 @@ DRIVER = netonix
 
 pkglib_LTLIBRARIES = netonix.la
 netonix_la_SOURCES = netonix.cpp
-netonix_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include
+netonix_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build
 netonix_la_LDFLAGS = -module -avoid-version
 netonix_la_LIBADD = ../../../libnetxms/libnetxms.la \
 		  ../../../snmp/libnxsnmp/libnxsnmp.la \

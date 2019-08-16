@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -97,31 +97,30 @@ bool InitSubAgent(HMODULE hModule, const TCHAR *moduleName, bool (* SubAgentRegi
 									 pInfo->name,
 									 pInfo->actions[i].description);
 
-					nxlog_write(MSG_SUBAGENT_LOADED, NXLOG_INFO, "sss", pInfo->name, moduleName, pInfo->version);
+					nxlog_write(NXLOG_INFO, _T("Subagent \"%s\" (%s) loaded successfully (version %s)"), pInfo->name, moduleName, pInfo->version);
 					success = true;
 				}
 				else
 				{
-					nxlog_write(MSG_SUBAGENT_INIT_FAILED, NXLOG_ERROR, "ss", pInfo->name, moduleName);
+					nxlog_write(NXLOG_ERROR, _T("Initialization of subagent \"%s\" (%s) failed"), pInfo->name, moduleName);
 					DLClose(hModule);
 				}
          }
          else
          {
-            nxlog_write(MSG_SUBAGENT_ALREADY_LOADED, EVENTLOG_WARNING_TYPE,
-                        "ss", pInfo->name, s_subAgents.get(i)->szName);
+            nxlog_write(NXLOG_WARNING, _T("Subagent \"%s\" already loaded from module \"%s\""), pInfo->name, s_subAgents.get(i)->szName);
             DLClose(hModule);
          }
       }
       else
       {
-         nxlog_write(MSG_SUBAGENT_BAD_MAGIC, NXLOG_ERROR, "s", moduleName);
+         nxlog_write(NXLOG_ERROR, _T("Subagent \"%s\" has invalid magic number - probably it was compiled for different agent version"), moduleName);
          DLClose(hModule);
       }
    }
    else
    {
-      nxlog_write(MSG_SUBAGENT_REGISTRATION_FAILED, NXLOG_ERROR, "s", moduleName);
+      nxlog_write(NXLOG_ERROR, _T("Registration of subagent \"%s\" failed"), moduleName);
       DLClose(hModule);
    }
 
@@ -167,13 +166,13 @@ bool LoadSubAgent(const TCHAR *moduleName)
       }
       else
       {
-         nxlog_write(MSG_NO_SUBAGENT_ENTRY_POINT, EVENTLOG_ERROR_TYPE, "s", moduleName);
+         nxlog_write(NXLOG_ERROR, _T("Unable to find entry point in subagent module \"%s\""), moduleName);
          DLClose(hModule);
       }
    }
    else
    {
-      nxlog_write(MSG_SUBAGENT_LOAD_FAILED, EVENTLOG_ERROR_TYPE, "ss", moduleName, errorText);
+      nxlog_write(NXLOG_ERROR, _T("Error loading subagent module \"%s\" (%s)"), moduleName, errorText);
    }
 
    return success;

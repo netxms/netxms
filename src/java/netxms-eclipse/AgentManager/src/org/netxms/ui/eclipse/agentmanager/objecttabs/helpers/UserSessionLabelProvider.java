@@ -22,12 +22,25 @@ import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
 import org.netxms.client.TableRow;
+import org.netxms.ui.eclipse.agentmanager.objecttabs.UserSessionsTab;
 
 /**
  * User session label provider
  */
 public class UserSessionLabelProvider extends LabelProvider implements ITableLabelProvider
 {
+   UserSessionsTab tab;
+   
+   /**
+    * Constructor 
+    * 
+    * @param tab
+    */
+   public UserSessionLabelProvider(UserSessionsTab tab)
+   {
+      this.tab = tab;
+   }
+   
    @Override
    public Image getColumnImage(Object element, int columnIndex)
    {
@@ -37,7 +50,10 @@ public class UserSessionLabelProvider extends LabelProvider implements ITableLab
    @Override
    public String getColumnText(Object element, int columnIndex)
    {
-      return ((TableRow)element).get(columnIndex).getValue();
+      int index = tab.getTable().getColumnIndex(UserSessionsTab.COLUMNS[columnIndex]);
+      if(index == -1)
+         return "";
+      return ((TableRow)element).get(index).getValue();
    }
 
 }

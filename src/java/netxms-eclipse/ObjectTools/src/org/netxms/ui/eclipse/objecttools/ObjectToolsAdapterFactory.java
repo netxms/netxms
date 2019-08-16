@@ -105,7 +105,7 @@ public class ObjectToolsAdapterFactory implements IAdapterFactory
 	/* (non-Javadoc)
 	 * @see org.eclipse.core.runtime.IAdapterFactory#getAdapter(java.lang.Object, java.lang.Class)
 	 */
-	@SuppressWarnings("rawtypes")
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
 	public Object getAdapter(Object adaptableObject, Class adapterType)
 	{
@@ -171,9 +171,8 @@ public class ObjectToolsAdapterFactory implements IAdapterFactory
 	/* (non-Javadoc)
 	 * @see org.eclipse.core.runtime.IAdapterFactory#getAdapterList()
 	 */
-	@SuppressWarnings("rawtypes")
 	@Override
-	public Class[] getAdapterList()
+	public Class<?>[] getAdapterList()
 	{
 		return supportedClasses;
 	}

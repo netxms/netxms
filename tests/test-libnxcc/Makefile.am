@@ -10,8 +10,12 @@
 
 bin_PROGRAMS = test-libnxcc
 test_libnxcc_SOURCES = test-libnxcc.cpp
-test_libnxcc_CPPFLAGS = -I@top_srcdir@/include -I../include
+test_libnxcc_CPPFLAGS = -I@top_srcdir@/include -I../include -I@top_srcdir@/build
 test_libnxcc_LDFLAGS = @EXEC_LDFLAGS@
 test_libnxcc_LDADD = @top_srcdir@/src/libnxcc/libnxcc.la @top_srcdir@/src/libnetxms/libnetxms.la @EXEC_LIBS@
+
+if USE_INTERNAL_LIBTRE
+test_libnxcc_LDADD += @top_srcdir@/src/libtre/libnxtre.la
+endif
 
 EXTRA_DIST = test-libnxcc.vcxproj test-libnxcc.vcxproj.filters

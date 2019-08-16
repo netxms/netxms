@@ -44,13 +44,10 @@ public class SelectInternalParamDlg extends AbstractSelectParamDlg
 	{
 		ArrayList<AgentParameter> list = new ArrayList<AgentParameter>(10);
 
-		// Internal parameters common for all nodes
+		// Internal parameters common for all objects
 		list.add(new AgentParameter("ChildStatus(*)", Messages.get().SelectInternalParamDlg_DCI_ChildObjectStatus, DataType.INT32)); //$NON-NLS-1$
 		list.add(new AgentParameter("ConditionStatus(*)", Messages.get().SelectInternalParamDlg_DCI_ConditionStatus, DataType.INT32)); //$NON-NLS-1$
 		list.add(new AgentParameter("Dummy", Messages.get().SelectInternalParamDlg_DCI_Dummy, DataType.INT32)); //$NON-NLS-1$
-		list.add(new AgentParameter("Status", Messages.get().SelectInternalParamDlg_DCI_Status, DataType.INT32)); //$NON-NLS-1$
-		list.add(new AgentParameter("PingTime", Messages.get().SelectInternalParamDlg_PingTime_PrimaryIP, DataType.UINT32)); //$NON-NLS-1$
-		list.add(new AgentParameter("PingTime(*)", Messages.get().SelectInternalParamDlg_PingTime_Instance, DataType.UINT32)); //$NON-NLS-1$
 		list.add(new AgentParameter("PollTime.Configuration.Average", "Poll time (configuration): average", DataType.UINT64)); //$NON-NLS-1$
 		list.add(new AgentParameter("PollTime.Configuration.Last", "Poll time (configuration): last", DataType.UINT64)); //$NON-NLS-1$
 		list.add(new AgentParameter("PollTime.Configuration.Max", "Poll time (configuration): max", DataType.UINT64)); //$NON-NLS-1$
@@ -63,9 +60,22 @@ public class SelectInternalParamDlg extends AbstractSelectParamDlg
 		list.add(new AgentParameter("PollTime.Status.Last", "Poll time (status): last", DataType.UINT64)); //$NON-NLS-1$
 		list.add(new AgentParameter("PollTime.Status.Max", "Poll time (status): max", DataType.UINT64)); //$NON-NLS-1$
 		list.add(new AgentParameter("PollTime.Status.Min", "Poll time (status): min", DataType.UINT64)); //$NON-NLS-1$
+      list.add(new AgentParameter("Status", Messages.get().SelectInternalParamDlg_DCI_Status, DataType.INT32)); //$NON-NLS-1$
 		
 		if ((object instanceof Template) || (object instanceof AbstractNode))
 		{
+         list.add(new AgentParameter("ICMP.PacketLoss", "ICMP ping: packet loss", DataType.UINT32)); //$NON-NLS-1$
+         list.add(new AgentParameter("ICMP.PacketLoss(*)", "ICMP ping to {instance}: packet loss", DataType.UINT32)); //$NON-NLS-1$
+         list.add(new AgentParameter("ICMP.ResponseTime.Average", "ICMP ping: average response time", DataType.UINT32)); //$NON-NLS-1$
+         list.add(new AgentParameter("ICMP.ResponseTime.Average(*)", "ICMP ping to {instance}: average response time", DataType.UINT32)); //$NON-NLS-1$
+         list.add(new AgentParameter("ICMP.ResponseTime.Last", "ICMP ping: last response time", DataType.UINT32)); //$NON-NLS-1$
+         list.add(new AgentParameter("ICMP.ResponseTime.Last(*)", "ICMP ping to {instance}: last response time", DataType.UINT32)); //$NON-NLS-1$
+         list.add(new AgentParameter("ICMP.ResponseTime.Max", "ICMP ping: maximum response time", DataType.UINT32)); //$NON-NLS-1$
+         list.add(new AgentParameter("ICMP.ResponseTime.Max(*)", "ICMP ping to {instance}: maximum response time", DataType.UINT32)); //$NON-NLS-1$
+         list.add(new AgentParameter("ICMP.ResponseTime.Min", "ICMP ping: minimum response time", DataType.UINT32)); //$NON-NLS-1$
+         list.add(new AgentParameter("ICMP.ResponseTime.Min(*)", "ICMP ping to {instance}: minimum response time", DataType.UINT32)); //$NON-NLS-1$
+         list.add(new AgentParameter("Net.IP.NextHop(*)", Messages.get().SelectInternalParamDlg_DCI_NextHop, DataType.STRING)); //$NON-NLS-1$
+         list.add(new AgentParameter("NetSvc.ResponseTime(*)", "Network service {instance} response time", DataType.UINT32)); //$NON-NLS-1$
 		   list.add(new AgentParameter("PollTime.RoutingTable.Average", "Poll time (routing table): average", DataType.UINT64)); //$NON-NLS-1$
 		   list.add(new AgentParameter("PollTime.RoutingTable.Last", "Poll time (routing table): last", DataType.UINT64)); //$NON-NLS-1$
 		   list.add(new AgentParameter("PollTime.RoutingTable.Max", "Poll time (routing table): max", DataType.UINT64)); //$NON-NLS-1$
@@ -74,8 +84,6 @@ public class SelectInternalParamDlg extends AbstractSelectParamDlg
 		   list.add(new AgentParameter("PollTime.Topology.Last", "Poll time (topology): last", DataType.UINT64)); //$NON-NLS-1$
 		   list.add(new AgentParameter("PollTime.Topology.Max", "Poll time (topology): max", DataType.UINT64)); //$NON-NLS-1$
 		   list.add(new AgentParameter("PollTime.Topology.Min", "Poll time (topology): min", DataType.UINT64)); //$NON-NLS-1$
-			list.add(new AgentParameter("Net.IP.NextHop(*)", Messages.get().SelectInternalParamDlg_DCI_NextHop, DataType.STRING)); //$NON-NLS-1$
-         list.add(new AgentParameter("NetSvc.ResponseTime(*)", "Network service {instance} response time", DataType.UINT32)); //$NON-NLS-1$
          list.add(new AgentParameter("ReceivedSNMPTraps", "Total SNMP traps received", DataType.UINT64)); //$NON-NLS-1$
          list.add(new AgentParameter("ReceivedSyslogMessages", "Total syslog messages received", DataType.UINT64)); //$NON-NLS-1$
          list.add(new AgentParameter("ZoneProxy.Assignments", "Zone proxy: number of assignments", DataType.UINT32)); //$NON-NLS-1$

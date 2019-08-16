@@ -58,7 +58,7 @@ Source: "..\..\..\Release\libnxcl.pdb"; DestDir: "{app}\bin"; Flags: ignoreversi
 Source: "..\..\..\Release\libnxmap.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: tools
 Source: "..\..\..\Release\libnxmap.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: tools and pdb
 Source: "..\..\..\Release\nxalarm.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: tools
-Source: "..\..\..\Release\nxsms.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: tools
+Source: "..\..\..\Release\nxnotify.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: tools
 Source: "..\..\..\Release\nxevent.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: tools
 Source: "..\..\..\Release\nxpush.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: tools
 ; Third party files

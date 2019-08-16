@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -116,7 +116,8 @@ THREAD_RESULT THREAD_CALL LocalAdminListener(void *pArg)
    // Create socket
    if ((sock = socket(AF_INET, SOCK_STREAM, 0)) == INVALID_SOCKET)
    {
-      nxlog_write(MSG_SOCKET_FAILED, EVENTLOG_ERROR_TYPE, "s", _T("LocalAdminListener"));
+      TCHAR buffer[1024];
+      nxlog_write(NXLOG_ERROR, _T("Unable to create socket for local admin interface (%s)"), GetLastSocketErrorText(buffer, 1024));
       return THREAD_OK;
    }
 
@@ -135,9 +136,9 @@ THREAD_RESULT THREAD_CALL LocalAdminListener(void *pArg)
    // Bind socket
    if (bind(sock, (struct sockaddr *)&servAddr, sizeof(struct sockaddr_in)) != 0)
    {
-      nxlog_write(MSG_BIND_ERROR, EVENTLOG_ERROR_TYPE, "dse", LOCAL_ADMIN_PORT, _T("LocalAdminListener"), WSAGetLastError());
+      TCHAR buffer[1024];
+      nxlog_write(NXLOG_ERROR, _T("Unable to bind socket for local admin interface (%s)"), GetLastSocketErrorText(buffer, 1024));
       closesocket(sock);
-      /* TODO: we should initiate shutdown from here */
       return THREAD_OK;
    }
 
@@ -177,11 +178,14 @@ THREAD_RESULT THREAD_CALL LocalAdminListener(void *pArg)
          int error = errno;
          if (error != EINTR)
 #endif
-            nxlog_write(MSG_ACCEPT_ERROR, EVENTLOG_ERROR_TYPE, "e", error);
+         {
+            TCHAR buffer[1024];
+            nxlog_write(NXLOG_ERROR, _T("Unable to accept incoming connection (%s)"), GetLastSocketErrorText(buffer, 1024));
+         }
          errorCount++;
          if (errorCount > 1000)
          {
-            nxlog_write(MSG_TOO_MANY_ACCEPT_ERRORS, EVENTLOG_WARNING_TYPE, NULL);
+            nxlog_write(NXLOG_WARNING, _T("Too many consecutive errors on accept() call"));
             errorCount = 0;
          }
          ThreadSleepMs(500);

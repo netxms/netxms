@@ -24,6 +24,33 @@
 #include <entity_mib.h>
 
 /**
+ * Get ICMP statistic for node sub-object
+ */
+template <class O> static NXSL_Value *GetObjectIcmpStatistic(O *object, IcmpStatFunction function, NXSL_VM *vm)
+{
+   NXSL_Value *value;
+   Node *parentNode = object->getParentNode();
+   if (parentNode != NULL)
+   {
+      TCHAR target[MAX_OBJECT_NAME + 5], buffer[MAX_RESULT_LENGTH];
+      _sntprintf(target, MAX_OBJECT_NAME + 4, _T("X(N:%s)"), object->getName());
+      if (parentNode->getIcmpStatistic(target, function, buffer) == DCE_SUCCESS)
+      {
+         value = vm->createValue(buffer);
+      }
+      else
+      {
+         value = vm->createValue();
+      }
+   }
+   else
+   {
+      value = vm->createValue();
+   }
+   return value;
+}
+
+/**
  * clearGeoLocation()
  */
 NXSL_METHOD_DEFINITION(NetObj, clearGeoLocation)
@@ -285,7 +312,7 @@ NXSL_Value *NXSL_NetObjClass::getAttr(NXSL_Object *_object, const char *attr)
    else if (!strcmp(attr, "ipAddr"))
    {
       TCHAR buffer[64];
-      GetObjectIpAddress(object).toString(buffer);
+      object->getPrimaryIpAddress().toString(buffer);
       value = vm->createValue(buffer);
    }
    else if (!strcmp(attr, "mapImage"))
@@ -459,7 +486,7 @@ NXSL_Value *NXSL_ZoneClass::getAttr(NXSL_Object *object, const char *attr)
       return value;
 
    NXSL_VM *vm = object->vm();
-   Zone *zone = (Zone *)object->getData();
+   Zone *zone = static_cast<Zone*>(object->getData());
    if (!strcmp(attr, "proxyNodes"))
    {
       NXSL_Array *array = new NXSL_Array(vm);
@@ -467,7 +494,8 @@ NXSL_Value *NXSL_ZoneClass::getAttr(NXSL_Object *object, const char *attr)
       for(int i = 0; i < proxies->size(); i++)
       {
          Node *node = static_cast<Node*>(FindObjectById(proxies->get(i), OBJECT_NODE));
-         array->append(node->createNXSLObject(vm));
+         if (node != NULL)
+            array->append(node->createNXSLObject(vm));
       }
       value = vm->createValue(array);
    }
@@ -590,6 +618,24 @@ NXSL_NodeClass::NXSL_NodeClass() : NXSL_DCTargetClass()
 }
 
 /**
+ * Get ICMP statistic for object
+ */
+static NXSL_Value *GetNodeIcmpStatistic(Node *node, IcmpStatFunction function, NXSL_VM *vm)
+{
+   NXSL_Value *value;
+   TCHAR buffer[MAX_RESULT_LENGTH];
+   if (node->getIcmpStatistic(NULL, function, buffer) == DCE_SUCCESS)
+   {
+      value = vm->createValue(buffer);
+   }
+   else
+   {
+      value = vm->createValue();
+   }
+   return value;
+}
+
+/**
  * NXSL class Node: get attribute
  */
 NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const char *attr)
@@ -688,6 +734,26 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const char *attr)
    else if (!strcmp(attr, "hypervisorType"))
    {
       value = vm->createValue(node->getHypervisorType());
+   }
+   else if (!strcmp(attr, "icmpAverageRTT"))
+   {
+      value = GetNodeIcmpStatistic(node, IcmpStatFunction::AVERAGE, vm);
+   }
+   else if (!strcmp(attr, "icmpLastRTT"))
+   {
+      value = GetNodeIcmpStatistic(node, IcmpStatFunction::LAST, vm);
+   }
+   else if (!strcmp(attr, "icmpMaxRTT"))
+   {
+      value = GetNodeIcmpStatistic(node, IcmpStatFunction::MAX, vm);
+   }
+   else if (!strcmp(attr, "icmpMinRTT"))
+   {
+      value = GetNodeIcmpStatistic(node, IcmpStatFunction::MIN, vm);
+   }
+   else if (!strcmp(attr, "icmpPacketLoss"))
+   {
+      value = GetNodeIcmpStatistic(node, IcmpStatFunction::LOSS, vm);
    }
    else if (!strcmp(attr, "isAgent"))
    {
@@ -950,7 +1016,7 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *object, const char *attr)
       return value;
 
    NXSL_VM *vm = object->vm();
-   Interface *iface = (Interface *)object->getData();
+   Interface *iface = static_cast<Interface*>(object->getData());
    if (!strcmp(attr, "adminState"))
    {
 		value = vm->createValue((LONG)iface->getAdminState());
@@ -983,6 +1049,26 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *object, const char *attr)
    {
 		value = vm->createValue(iface->getFlags());
    }
+   else if (!strcmp(attr, "icmpAverageRTT"))
+   {
+      value = GetObjectIcmpStatistic(iface, IcmpStatFunction::AVERAGE, vm);
+   }
+   else if (!strcmp(attr, "icmpLastRTT"))
+   {
+      value = GetObjectIcmpStatistic(iface, IcmpStatFunction::LAST, vm);
+   }
+   else if (!strcmp(attr, "icmpMaxRTT"))
+   {
+      value = GetObjectIcmpStatistic(iface, IcmpStatFunction::MAX, vm);
+   }
+   else if (!strcmp(attr, "icmpMinRTT"))
+   {
+      value = GetObjectIcmpStatistic(iface, IcmpStatFunction::MIN, vm);
+   }
+   else if (!strcmp(attr, "icmpPacketLoss"))
+   {
+      value = GetObjectIcmpStatistic(iface, IcmpStatFunction::LOSS, vm);
+   }
    else if (!strcmp(attr, "ifIndex"))
    {
 		value = vm->createValue(iface->getIfIndex());
@@ -1004,6 +1090,10 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *object, const char *attr)
    else if (!strcmp(attr, "isExcludedFromTopology"))
    {
       value = vm->createValue((LONG)(iface->isExcludedFromTopology() ? 1 : 0));
+   }
+   else if (!strcmp(attr, "isIncludedInIcmpPoll"))
+   {
+      value = vm->createValue((LONG)(iface->isIncludedInIcmpPoll() ? 1 : 0));
    }
    else if (!strcmp(attr, "isLoopback"))
    {
@@ -1031,7 +1121,7 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *object, const char *attr)
 		Node *parentNode = iface->getParentNode();
 		if (parentNode != NULL)
 		{
-			value = vm->createValue(new NXSL_Object(vm, &g_nxslNodeClass, parentNode));
+         value = parentNode->createNXSLObject(vm);
 		}
 		else
 		{
@@ -1149,6 +1239,80 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *object, const char *attr)
    else if (!strcmp(attr, "zoneUIN"))
 	{
       value = vm->createValue(iface->getZoneUIN());
+   }
+   return value;
+}
+
+/**
+ * NXSL class AccessPoint: constructor
+ */
+NXSL_AccessPointClass::NXSL_AccessPointClass() : NXSL_DCTargetClass()
+{
+   setName(_T("AccessPoint"));
+}
+
+/**
+ * NXSL class AccessPoint: get attribute
+ */
+NXSL_Value *NXSL_AccessPointClass::getAttr(NXSL_Object *object, const char *attr)
+{
+   NXSL_Value *value = NXSL_DCTargetClass::getAttr(object, attr);
+   if (value != NULL)
+      return value;
+
+   NXSL_VM *vm = object->vm();
+   AccessPoint *ap = static_cast<AccessPoint*>(object->getData());
+   if (!strcmp(attr, "icmpAverageRTT"))
+   {
+      value = GetObjectIcmpStatistic(ap, IcmpStatFunction::AVERAGE, vm);
+   }
+   else if (!strcmp(attr, "icmpLastRTT"))
+   {
+      value = GetObjectIcmpStatistic(ap, IcmpStatFunction::LAST, vm);
+   }
+   else if (!strcmp(attr, "icmpMaxRTT"))
+   {
+      value = GetObjectIcmpStatistic(ap, IcmpStatFunction::MAX, vm);
+   }
+   else if (!strcmp(attr, "icmpMinRTT"))
+   {
+      value = GetObjectIcmpStatistic(ap, IcmpStatFunction::MIN, vm);
+   }
+   else if (!strcmp(attr, "icmpPacketLoss"))
+   {
+      value = GetObjectIcmpStatistic(ap, IcmpStatFunction::LOSS, vm);
+   }
+   else if (!strcmp(attr, "index"))
+   {
+      value = vm->createValue(ap->getIndex());
+   }
+   else if (!strcmp(attr, "model"))
+   {
+      value = vm->createValue(ap->getModel());
+   }
+   else if (!strcmp(attr, "node"))
+   {
+      Node *parentNode = ap->getParentNode();
+      if (parentNode != NULL)
+      {
+         value = parentNode->createNXSLObject(vm);
+      }
+      else
+      {
+         value = vm->createValue();
+      }
+   }
+   else if (!strcmp(attr, "serialNumber"))
+   {
+      value = vm->createValue(ap->getSerialNumber());
+   }
+   else if (!strcmp(attr, "state"))
+   {
+      value = vm->createValue(ap->getApState());
+   }
+   else if (!strcmp(attr, "vendor"))
+   {
+      value = vm->createValue(ap->getVendor());
    }
    return value;
 }
@@ -1803,8 +1967,6 @@ NXSL_Value *NXSL_AlarmClass::getAttr(NXSL_Object *pObject, const char *attr)
    return value;
 }
 
-
-
 /**
  * NXSL class Alarm: constructor
  */
@@ -2352,6 +2514,7 @@ void NXSL_NodeDependencyClass::onObjectDelete(NXSL_Object *object)
 /**
  * Class objects
  */
+NXSL_AccessPointClass g_nxslAccessPointClass;
 NXSL_AlarmClass g_nxslAlarmClass;
 NXSL_AlarmCommentClass g_nxslAlarmCommentClass;
 NXSL_ChassisClass g_nxslChassisClass;

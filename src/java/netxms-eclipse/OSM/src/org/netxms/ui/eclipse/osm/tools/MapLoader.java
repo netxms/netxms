@@ -36,7 +36,7 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.base.GeoLocation;
-import org.netxms.base.NXCommon;
+import org.netxms.base.VersionInfo;
 import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.osm.Activator;
 import org.netxms.ui.eclipse.osm.GeoLocationCache;
@@ -171,7 +171,7 @@ public class MapLoader
 		try
       {
 		   conn = (HttpURLConnection)url.openConnection();
-		   conn.setRequestProperty("User-Agent", "nxmc/" + NXCommon.VERSION);
+		   conn.setRequestProperty("User-Agent", "nxmc/" + VersionInfo.version());
          in = new BufferedInputStream(conn.getInputStream());
          image = new Image(display, in);
       }

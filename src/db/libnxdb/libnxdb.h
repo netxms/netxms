@@ -28,6 +28,10 @@
 #include <nms_threads.h>
 #include <nxdbapi.h>
 
+#define DEBUG_TAG_CONNECTION  _T("db.conn")
+#define DEBUG_TAG_DRIVER      _T("db.driver")
+#define DEBUG_TAG_QUERY       _T("db.query")
+
 /**
  * Max number of loaded database drivers
  */
@@ -40,7 +44,6 @@ struct db_driver_t
 {
 	const char *m_name;
 	int m_refCount;
-	bool m_logSqlErrors;
 	bool m_dumpSql;
 	int m_reconnect;
    int m_defaultPrefetchLimit;
@@ -136,15 +139,8 @@ struct db_unbuffered_result_t
 };
 
 /**
- * Internal functions
- */
-void __DBWriteLog(WORD level, const TCHAR *format, ...);
-
-/**
  * Global variables
  */
-extern UINT32 g_logMsgCode;
-extern UINT32 g_sqlErrorMsgCode;
 extern UINT32 g_sqlQueryExecTimeThreshold;
 
 #endif   /* _libnxsrv_h_ */

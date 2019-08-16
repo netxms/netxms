@@ -191,7 +191,7 @@ typedef int bool;
 
 #include <memory>
 
-#ifdef __IBMCPP_TR1__
+#if defined(__IBMCPP_TR1__)
 using std::tr1::shared_ptr;
 
 // xlC++ implementation C++11 TR1 does not have make_shared
@@ -200,6 +200,9 @@ inline shared_ptr<T> make_shared(Args&&... args)
 {
    return shared_ptr<T>(new T(args...));
 }
+#elif defined(__HP_aCC)
+// HP aC++ does not have shared_ptr implementation, use bundled one
+#include "nx_shared_ptr.h"
 #else
 using std::shared_ptr;
 using std::make_shared;
@@ -295,6 +298,8 @@ using std::make_shared;
 #define HAVE_LIBCURL            1
 
 #define HAVE_DIRENT_D_TYPE      1
+
+#define HAVE_MOSQUITTO_THREADED_SET	1
 
 #include <winsock2.h>
 #include <windows.h>

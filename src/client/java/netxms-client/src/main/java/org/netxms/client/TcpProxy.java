@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2018 Victor Kirhenshtein
+ * Copyright (C) 2003-2019 Victor Kirhenshtein
  * <p>
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,12 +21,9 @@ package org.netxms.client;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
 import java.util.Arrays;
 import java.util.Timer;
 import java.util.TimerTask;
-
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 
@@ -37,8 +34,7 @@ public class TcpProxy
 {
    private NXCSession session;
    private int channelId;
-   private PipedInputStream localInputStream;
-   private PipedOutputStream remoteOutputStream;
+   private ProxyInputStream localInputStream;
    private ProxyOutputStream localOutputStream;
    private int timeThreshold = 100;
    private byte[] sendBuffer = new byte[256];
@@ -57,9 +53,7 @@ public class TcpProxy
       this.session = session;
       this.channelId = channelId;
 
-      localInputStream = new PipedInputStream();
-      remoteOutputStream = new PipedOutputStream(localInputStream);
-
+      localInputStream = new ProxyInputStream();
       localOutputStream = new ProxyOutputStream();
    }
 
@@ -87,14 +81,12 @@ public class TcpProxy
       {
          localOutputStream.close();
          localInputStream.close();
-         remoteOutputStream.close();
       }
       catch(Exception e)
       {
       }
       localInputStream = null;
       localOutputStream = null;
-      remoteOutputStream = null;
    }
 
    /**
@@ -252,13 +244,7 @@ public class TcpProxy
     */
    protected void processRemoteData(byte data[])
    {
-      try
-      {
-         remoteOutputStream.write(data);
-      }
-      catch(IOException e)
-      {
-      }
+      localInputStream.write(data);
    }
 
    /**
@@ -280,7 +266,7 @@ public class TcpProxy
     */
    private class ProxyOutputStream extends OutputStream
    {
-      /* (non-Javadoc)
+      /**
        * @see java.io.OutputStream#write(int)
        */
       @Override
@@ -291,7 +277,7 @@ public class TcpProxy
          write(data, 0, 1);
       }
 
-      /* (non-Javadoc)
+      /**
        * @see java.io.OutputStream#write(byte[], int, int)
        */
       @Override
@@ -312,6 +298,148 @@ public class TcpProxy
          {
             throw new IOException(e);
          }
+      }
+   }
+   
+   /**
+    * Proxy input stream
+    */
+   private class ProxyInputStream extends InputStream
+   {
+      private boolean closed = false;
+      private byte[] buffer = new byte[65536];
+      private int readPos = 0;
+      private int writePos = 0;
+      private Object monitor = new Object();
+      
+      /**
+       * Write bytes to stream internal buffer
+       * 
+       * @param data data to write
+       */
+      public void write(byte[] data)
+      {
+         synchronized(monitor)
+         {
+            if (buffer.length - writePos < data.length)
+            {
+               if (buffer.length - writePos + readPos >= data.length)
+               {
+                  // Buffer can be shifted to make place for new data
+                  System.arraycopy(buffer, readPos, buffer, 0, writePos - readPos);
+               }
+               else
+               {
+                  byte[] newBuffer = new byte[Math.max(buffer.length * 2, data.length + buffer.length)];
+                  System.arraycopy(buffer, readPos, newBuffer, 0, writePos - readPos);
+                  buffer = newBuffer;
+               }
+               writePos -= readPos; 
+               readPos = 0;
+            }
+            System.arraycopy(data, 0, buffer, writePos, data.length);
+            writePos += data.length;
+         }
+      }
+      
+      /**
+       * @see java.io.InputStream#close()
+       */
+      @Override
+      public void close() throws IOException
+      {
+         synchronized(monitor)
+         {
+            closed = true;
+            monitor.notify();
+         }
+      }
+
+      /**
+       * @see java.io.InputStream#available()
+       */
+      @Override
+      public int available() throws IOException
+      {
+         synchronized(monitor)
+         {
+            return writePos - readPos;
+         }
+      }
+
+      /**
+       * @see java.io.InputStream#read()
+       */
+      @Override
+      public int read() throws IOException
+      {
+         synchronized(monitor)
+         {
+            while(readPos == writePos)
+            {
+               if (closed)
+                  return -1;
+               try
+               {
+                  monitor.wait();
+               }
+               catch(InterruptedException e)
+               {
+               }
+            }
+            int b = buffer[readPos++];
+            if (readPos == writePos)
+            {
+               readPos = 0;
+               writePos = 0;
+            }
+            return b < 0 ? 129 + b : b;
+         }
+      }
+
+      /**
+       * @see java.io.InputStream#read(byte[], int, int)
+       */
+      @Override
+      public int read(byte[] b, int off, int len) throws IOException
+      {
+         if (len == 0)
+            return 0;
+
+         synchronized(monitor)
+         {
+            while(readPos == writePos)
+            {
+               if (closed)
+                  return -1;
+               try
+               {
+                  monitor.wait();
+               }
+               catch(InterruptedException e)
+               {
+               }
+            }
+            
+            int bytes = Math.min(len, writePos - readPos);
+            System.arraycopy(buffer, readPos, b, off, bytes);
+            readPos += bytes;
+            if (readPos == writePos)
+            {
+               readPos = 0;
+               writePos = 0;
+            }
+            return bytes;
+         }
+      }
+
+      /**
+       * @see java.io.InputStream#read(byte[])
+       */
+      @Override
+      public int read(byte[] b) throws IOException
+      {
+         return read(b, 0, b.length);
       }
    }
 }

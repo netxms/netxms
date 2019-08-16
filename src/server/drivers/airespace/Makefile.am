@@ -2,7 +2,7 @@ DRIVER = airespace
 
 pkglib_LTLIBRARIES = airespace.la
 airespace_la_SOURCES = airespace.cpp
-airespace_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include
+airespace_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build
 airespace_la_LDFLAGS = -module -avoid-version
 airespace_la_LIBADD = ../../../libnetxms/libnetxms.la \
 	../../../snmp/libnxsnmp/libnxsnmp.la \

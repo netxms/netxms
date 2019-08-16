@@ -39,8 +39,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Layout;
 import org.eclipse.swt.widgets.Shell;
-import org.netxms.base.BuildNumber;
-import org.netxms.base.NXCommon;
+import org.netxms.base.VersionInfo;
 import org.netxms.ui.eclipse.console.Activator;
 import org.netxms.ui.eclipse.console.BrandingManager;
 import org.netxms.ui.eclipse.console.Messages;
@@ -197,7 +196,7 @@ public class DefaultMobileLoginForm extends Window implements LoginForm
 		});
 		
 		Label version = new Label(parent, SWT.NONE);
-		version.setText(String.format(Messages.get().LoginForm_Version, NXCommon.VERSION + " (" + BuildNumber.TEXT + ")"));
+		version.setText(String.format(Messages.get().LoginForm_Version, VersionInfo.version()));
 		version.setBackground(parent.getBackground());
 		version.setForeground(colors.create(32, 32, 32));
 		gd = new GridData();

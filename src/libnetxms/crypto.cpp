@@ -416,19 +416,19 @@ void LIBNETXMS_EXPORTABLE PrepareKeyRequestMsg(NXCPMessage *msg, RSA *pServerKey
 	if (useX509Format)
 	{
 		iLen = i2d_RSA_PUBKEY(pServerKey, NULL);
-		pKeyBuffer = (BYTE *)malloc(iLen);
+		pKeyBuffer = (BYTE *)MemAlloc(iLen);
 		pBufPos = pKeyBuffer;
 		i2d_RSA_PUBKEY(pServerKey, &pBufPos);
 	}
 	else
 	{
 		iLen = i2d_RSAPublicKey(pServerKey, NULL);
-		pKeyBuffer = (BYTE *)malloc(iLen);
+		pKeyBuffer = (BYTE *)MemAlloc(iLen);
 		pBufPos = pKeyBuffer;
 		i2d_RSAPublicKey(pServerKey, &pBufPos);
 	}
 	msg->setField(VID_PUBLIC_KEY, pKeyBuffer, iLen);
-   free(pKeyBuffer);
+   MemFree(pKeyBuffer);
 #endif
 }
 

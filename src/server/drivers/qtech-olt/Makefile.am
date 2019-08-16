@@ -2,7 +2,7 @@ DRIVER = qtech-olt
 
 pkglib_LTLIBRARIES = qtech-olt.la
 qtech_olt_la_SOURCES = qtech-olt.cpp
-qtech_olt_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include
+qtech_olt_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build
 qtech_olt_la_LDFLAGS = -module -avoid-version
 qtech_olt_la_LIBADD = ../../../libnetxms/libnetxms.la \
 		      ../../../snmp/libnxsnmp/libnxsnmp.la \

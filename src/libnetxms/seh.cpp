@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -51,7 +51,6 @@ static void (*m_pfWriter)(const TCHAR *pszText) = NULL;
 static HANDLE m_hExceptionLock = INVALID_HANDLE_VALUE;
 static TCHAR m_szBaseProcessName[64] = _T("netxms");
 static TCHAR m_szDumpDir[MAX_PATH] = _T("C:\\");
-static DWORD m_dwLogMessageCode = 0;
 static BOOL m_printToScreen = FALSE;
 static BOOL m_writeFullDump = FALSE;
 
@@ -91,7 +90,7 @@ void SEHInit()
  */
 void LIBNETXMS_EXPORTABLE SetExceptionHandler(BOOL (*pfHandler)(EXCEPTION_POINTERS *),
 															 void (*pfWriter)(const TCHAR *), const TCHAR *pszDumpDir,
-															 const TCHAR *pszBaseProcessName, DWORD dwLogMsgCode,
+															 const TCHAR *pszBaseProcessName,
 															 BOOL writeFullDump, BOOL printToScreen)
 {
 	m_pfExceptionHandler = pfHandler;
@@ -100,7 +99,6 @@ void LIBNETXMS_EXPORTABLE SetExceptionHandler(BOOL (*pfHandler)(EXCEPTION_POINTE
 		_tcslcpy(m_szBaseProcessName, pszBaseProcessName, 64);
 	if (pszDumpDir != NULL)
 		_tcslcpy(m_szDumpDir, pszDumpDir, MAX_PATH);
-	m_dwLogMessageCode = dwLogMsgCode;
 	m_writeFullDump = writeFullDump;
 	m_printToScreen = printToScreen;
 }
@@ -370,11 +368,12 @@ BOOL LIBNETXMS_EXPORTABLE SEHServiceExceptionHandler(EXCEPTION_POINTERS *pInfo)
    }
 
 	// Write event log
-	nxlog_write(m_dwLogMessageCode, EVENTLOG_ERROR_TYPE, "xsxss",
-               pInfo->ExceptionRecord->ExceptionCode,
-               SEHExceptionName(pInfo->ExceptionRecord->ExceptionCode),
-	            pInfo->ExceptionRecord->ExceptionAddress,
-	            szInfoFile, szDumpFile);
+	nxlog_write(NXLOG_ERROR,
+         _T("EXCEPTION %08X (%s) at %p (crash dump was generated); please send files %s and %s to dump@netxms.org"),
+         pInfo->ExceptionRecord->ExceptionCode,
+         SEHExceptionName(pInfo->ExceptionRecord->ExceptionCode),
+	      pInfo->ExceptionRecord->ExceptionAddress,
+	      szInfoFile, szDumpFile);
 
 	if (m_printToScreen)
 	{

@@ -2,7 +2,7 @@ SUBAGENT = aix
 
 pkglib_LTLIBRARIES = aix.la
 aix_la_SOURCES = cpu.cpp disk.cpp iostat.cpp lvm.cpp main.cpp net.cpp packages.cpp proc.cpp system.cpp
-aix_la_CPPFLAGS=-I@top_srcdir@/include
+aix_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/build
 aix_la_LDFLAGS = -module -avoid-version -export-symbols ../platform-subagent.sym
 aix_la_LIBADD = ../../libnxagent/libnxagent.la ../../../libnetxms/libnetxms.la -lperfstat -llvm -lodm -lcfg
 

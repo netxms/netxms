@@ -1,9 +1,10 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 
 my $file_prefix = shift || "netxms";
 my $define_prefix = shift || "NETXMS";
 my $h_file = shift || $file_prefix . "-build-tag.h";
 my $iss_file = shift || $file_prefix . "-build-tag.iss";
+my $property_file = shift || $file_prefix . "-build-tag.properties";
 
 my $tag = `git describe --always`;
 chomp $tag;
@@ -30,6 +31,7 @@ if (IsUpdateNeeded($h_file, $tag) == 1)
 	print OUT "#define " . $define_prefix . "_BUILD_TAG _T(\"$tag\")\n";
 	print OUT "#define " . $define_prefix . "_BUILD_TAG_A \"$tag\"\n";
 	print OUT "#define " . $define_prefix . "_BUILD_NUMBER $build_number\n";
+	print OUT "#define " . $define_prefix . "_VERSION_BUILD $build_number\n";
 	print OUT "#define " . $define_prefix . "_VERSION_STRING _T(\"$version_string\")\n";
 	print OUT "#define " . $define_prefix . "_VERSION_STRING_A \"$version_string\"\n";
 	print OUT "#endif\n";
@@ -47,6 +49,17 @@ if (IsUpdateNeeded($iss_file, $tag) == 1)
 	close OUT;
 
 	print "Build tag updated in $iss_file\n";
+}
+
+if (IsUpdateNeeded($property_file, $tag) == 1)
+{
+	open(OUT, ">$property_file") or die "Cannot open output file: $!";
+	print OUT "#* BUILDTAG:$tag *\n";
+	print OUT $define_prefix . "_VERSION=$version_string\n";
+	print OUT $define_prefix . "_BUILD_TAG=$tag\n";
+	close OUT;
+
+	print "Build tag updated in $property_file\n";
 }
 
 sub IsUpdateNeeded

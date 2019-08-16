@@ -780,7 +780,7 @@ UINT32 GetParameterValue(const TCHAR *param, TCHAR *value, AbstractCommSession *
                m_dwUnsupportedRequests++;
                break;
             default:
-               nxlog_write(MSG_UNEXPECTED_IRC, EVENTLOG_ERROR_TYPE, "ds", rc, param);
+               nxlog_write(NXLOG_ERROR, _T("Internal error: unexpected return code %d in GetParameterValue(\"%s\")"), rc, param);
                dwErrorCode = ERR_INTERNAL_ERROR;
                m_dwFailedRequests++;
                break;
@@ -871,7 +871,7 @@ UINT32 GetListValue(const TCHAR *param, StringList *value, AbstractCommSession *
                m_dwUnsupportedRequests++;
                break;
             default:
-               nxlog_write(MSG_UNEXPECTED_IRC, EVENTLOG_ERROR_TYPE, "ds", rc, param);
+               nxlog_write(NXLOG_ERROR, _T("Internal error: unexpected return code %d in GetListValue(\"%s\")"), rc, param);
                dwErrorCode = ERR_INTERNAL_ERROR;
                m_dwFailedRequests++;
                break;
@@ -945,7 +945,7 @@ UINT32 GetTableValue(const TCHAR *param, Table *value, AbstractCommSession *sess
                m_dwUnsupportedRequests++;
                break;
             default:
-               nxlog_write(MSG_UNEXPECTED_IRC, EVENTLOG_ERROR_TYPE, "ds", rc, param);
+               nxlog_write(NXLOG_ERROR, _T("Internal error: unexpected return code %d in GetTableValue(\"%s\")"), rc, param);
                dwErrorCode = ERR_INTERNAL_ERROR;
                m_dwFailedRequests++;
                break;

@@ -238,7 +238,7 @@ class LIBNXCLIENT_EXPORTABLE ServerController : public Controller
 public:
    ServerController(NXCSession *session) : Controller(session) { }
 
-   UINT32 sendSMS(const TCHAR *recipient, const TCHAR *text);
+   UINT32 sendNotification(const TCHAR *channelName, const TCHAR *recipient, const TCHAR *subject, const TCHAR *text);
 };
 
 /**

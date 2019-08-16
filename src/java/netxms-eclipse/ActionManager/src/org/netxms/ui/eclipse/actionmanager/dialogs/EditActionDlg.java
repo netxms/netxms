@@ -18,6 +18,9 @@
  */
 package org.netxms.ui.eclipse.actionmanager.dialogs;
 
+import java.util.Comparator;
+import java.util.List;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
@@ -26,13 +29,19 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
+import org.netxms.client.NXCSession;
+import org.netxms.client.NotificationChannel;
 import org.netxms.client.ServerAction;
+import org.netxms.ui.eclipse.actionmanager.Activator;
 import org.netxms.ui.eclipse.actionmanager.Messages;
+import org.netxms.ui.eclipse.jobs.ConsoleJob;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
@@ -47,14 +56,16 @@ public class EditActionDlg extends Dialog
 	private LabeledText recipient;
 	private LabeledText subject;
 	private LabeledText data;
+   private Combo channelName;
 	private Button typeLocalExec;
 	private Button typeRemoteExec;
 	private Button typeExecScript;
 	private Button typeEMail;
-	private Button typeSMS;
+	private Button typeNotification;
 	private Button typeXMPP;
 	private Button typeForward;
 	private Button markDisabled;
+	private List<NotificationChannel> ncList = null;
 
 	/**
 	 * Selection listener for action type radio buttons
@@ -139,10 +150,10 @@ public class EditActionDlg extends Dialog
 		typeEMail.setSelection(action.getType() == ServerAction.SEND_EMAIL);
 		typeEMail.addSelectionListener(new TypeButtonSelectionListener());
 		
-		typeSMS = new Button(typeGroup, SWT.RADIO);
-		typeSMS.setText(Messages.get().EditActionDlg_SendSMS);
-		typeSMS.setSelection(action.getType() == ServerAction.SEND_SMS);
-		typeSMS.addSelectionListener(new TypeButtonSelectionListener());
+		typeNotification = new Button(typeGroup, SWT.RADIO);
+		typeNotification.setText("Send notification");
+		typeNotification.setSelection(action.getType() == ServerAction.SEND_NOTIFICATION);
+		typeNotification.addSelectionListener(new TypeButtonSelectionListener());
 		
       typeXMPP = new Button(typeGroup, SWT.RADIO);
       typeXMPP.setText(Messages.get().EditActionDlg_SendXMPPMessage);
@@ -166,6 +177,26 @@ public class EditActionDlg extends Dialog
 		markDisabled = new Button(optionsGroup, SWT.CHECK);
 		markDisabled.setText(Messages.get().EditActionDlg_ActionDisabled);
 		markDisabled.setSelection(action.isDisabled());
+
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+		channelName = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, "Channel name", gd);
+		channelName.addSelectionListener(new SelectionListener() {
+         
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            recipient.setEnabled(ncList.get(channelName.getSelectionIndex()).getConfigurationTemplate().needRecipient);
+            subject.setEnabled(ncList.get(channelName.getSelectionIndex()).getConfigurationTemplate().needSubject);
+         }
+         
+         @Override
+         public void widgetDefaultSelected(SelectionEvent e)
+         {
+            widgetSelected(e);            
+         }
+      });
 		
 		recipient = new LabeledText(dialogArea, SWT.NONE);
 		recipient.setLabel(getRcptLabel(action.getType()));
@@ -190,8 +221,37 @@ public class EditActionDlg extends Dialog
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		data.setLayoutData(gd);
-		
-		onTypeChange();
+
+      final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+      new ConsoleJob("Get server actions", null, Activator.PLUGIN_ID, null) {
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            ncList = session.getNotificationChannels();
+            ncList.sort(new Comparator<NotificationChannel>() {
+
+               @Override
+               public int compare(NotificationChannel o1, NotificationChannel o2)
+               {
+                  return o1.getName().compareTo(o2.getName());
+               }
+               
+            });
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  onTypeChange();
+               }
+            });
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return "Cannot get notificationchannels";
+         }
+      }.start();
 		
 		return dialogArea;
 	}
@@ -208,8 +268,6 @@ public class EditActionDlg extends Dialog
 		{
 			case ServerAction.EXEC_REMOTE:
 				return Messages.get().EditActionDlg_RemoteHost;
-			case ServerAction.SEND_SMS:
-				return Messages.get().EditActionDlg_PhoneNumber;
          case ServerAction.XMPP_MESSAGE:
             return Messages.get().EditActionDlg_XMPPID;
 			case ServerAction.FORWARD_EVENT:
@@ -252,8 +310,8 @@ public class EditActionDlg extends Dialog
 			action.setType(ServerAction.EXEC_NXSL_SCRIPT);
 		else if (typeEMail.getSelection())
 			action.setType(ServerAction.SEND_EMAIL);
-		else if (typeSMS.getSelection())
-			action.setType(ServerAction.SEND_SMS);
+		else if (typeNotification.getSelection())
+			action.setType(ServerAction.SEND_NOTIFICATION);
       else if (typeXMPP.getSelection())
          action.setType(ServerAction.XMPP_MESSAGE);
 		else if (typeForward.getSelection())
@@ -264,8 +322,25 @@ public class EditActionDlg extends Dialog
 		action.setEmailSubject(subject.getText());
 		action.setData(data.getText());
 		action.setDisabled(markDisabled.getSelection());
+		action.setChannelName(ncList.get(channelName.getSelectionIndex()).getName());
 		
 		super.okPressed();
+	}
+	
+	private void updateChannelList()
+	{
+	   channelName.removeAll();
+	   for(int i = 0; i < ncList.size(); i++)
+	   {
+	      NotificationChannel nc = ncList.get(i);
+	      channelName.add(nc.getName());
+	      if(nc.getName().equals(action.getChannelName()))
+	      {
+	         channelName.select(i);
+            recipient.setEnabled(nc.getConfigurationTemplate().needRecipient);
+            subject.setEnabled(nc.getConfigurationTemplate().needSubject);
+	      }
+	   }
 	}
 	
 	/**
@@ -283,8 +358,8 @@ public class EditActionDlg extends Dialog
 			type = ServerAction.EXEC_NXSL_SCRIPT;
 		else if (typeEMail.getSelection())
 			type = ServerAction.SEND_EMAIL;
-		else if (typeSMS.getSelection())
-			type = ServerAction.SEND_SMS;
+		else if (typeNotification.getSelection())
+			type = ServerAction.SEND_NOTIFICATION;
       else if (typeXMPP.getSelection())
          type = ServerAction.XMPP_MESSAGE;
 		else if (typeForward.getSelection())
@@ -293,28 +368,36 @@ public class EditActionDlg extends Dialog
 		switch(type)
 		{
 			case ServerAction.EXEC_LOCAL:
+			   channelName.setEnabled(false);
 				recipient.setEnabled(false);
 				subject.setEnabled(false);
 				data.setEnabled(true);
 				break;
 			case ServerAction.EXEC_REMOTE:
-         case ServerAction.SEND_SMS:
          case ServerAction.XMPP_MESSAGE:
+            channelName.setEnabled(false);
 				recipient.setEnabled(true);
 				subject.setEnabled(false);
 				data.setEnabled(true);
 				break;
 			case ServerAction.SEND_EMAIL:
+            channelName.setEnabled(false);
 				recipient.setEnabled(true);
 				subject.setEnabled(true);
 				data.setEnabled(true);
 				break;
 			case ServerAction.FORWARD_EVENT:
 			case ServerAction.EXEC_NXSL_SCRIPT:
+            channelName.setEnabled(false);
 				recipient.setEnabled(true);
 				subject.setEnabled(false);
 				data.setEnabled(false);
 				break;
+         case ServerAction.SEND_NOTIFICATION:
+            channelName.setEnabled(true);
+            updateChannelList();            
+            data.setEnabled(true);
+            break;
 		}
 		
 		recipient.setLabel(getRcptLabel(type));

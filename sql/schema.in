@@ -322,7 +322,7 @@ CREATE TABLE nodes
   use_ifxtable integer not null,
   snmp_sys_name varchar(127) null,
   snmp_sys_contact varchar(127) null,
-  snmp_sys_location varchar(127) null,
+  snmp_sys_location varchar(255) null,
   bridge_base_addr varchar(15) null,
   lldp_id varchar(255) null,
   down_since integer not null,
@@ -352,7 +352,18 @@ CREATE TABLE nodes
   capabilities integer null,
   fail_time_snmp integer not null,
   fail_time_agent integer not null,
+  icmp_poll_mode char(1) not null,
   PRIMARY KEY(id)
+) TABLE_TYPE;
+
+/**
+ * IP addresses for ICMP poll
+ */
+CREATE TABLE icmp_target_address_list
+(
+  node_id integer not null,
+  ip_addr varchar(48) not null,
+  PRIMARY KEY(node_id,ip_addr)
 ) TABLE_TYPE;
 
 /*
@@ -362,7 +373,7 @@ CREATE TABLE software_inventory
 (
   node_id integer not null,
   name varchar(127) not null,
-  version varchar(47) not null,
+  version varchar(63) not null,
   vendor varchar(63) null,
   install_date integer not null,
   url varchar(255) null,
@@ -379,12 +390,12 @@ CREATE TABLE hardware_inventory
   category integer not null,
   component_index integer not null,
   hw_type varchar(47) null,
-  vendor varchar(63) null,
-  model varchar(63) null,
+  vendor varchar(127) null,
+  model varchar(127) null,
   location varchar(63) null,
   capacity SQL_INT64 null,
-  part_number varchar(31) null,
-  serial_number varchar(31) null,
+  part_number varchar(63) null,
+  serial_number varchar(63) null,
   description varchar(255) null,
   PRIMARY KEY(node_id,category,component_index)
 ) TABLE_TYPE;
@@ -639,6 +650,22 @@ CREATE TABLE container_members
   container_id integer not null,
   object_id integer not null,
   PRIMARY KEY(container_id,object_id)
+) TABLE_TYPE;
+
+/**
+ * ICMP statistics
+ */
+CREATE TABLE icmp_statistics
+(
+   object_id integer not null,
+   poll_target varchar(63) not null,
+   min_response_time integer not null,
+   max_response_time integer not null,
+   avg_response_time integer not null,
+   last_response_time integer not null,
+   sample_count integer not null,
+   raw_response_times SQL_TEXT null,
+   PRIMARY KEY(object_id,poll_target)
 ) TABLE_TYPE;
 
 /**
@@ -1144,6 +1171,7 @@ CREATE TABLE actions
   // command line for external command execution actions, or
   // action name with optional arguments for remote execution actions
   action_data SQL_TEXT null,
+  channel_name varchar(63) null,
   PRIMARY KEY(action_id)
 ) TABLE_TYPE;
 
@@ -1904,7 +1932,7 @@ CREATE TABLE mapping_tables
   id integer not null,
   name varchar(63) not null,
   flags integer not null,
-  description SQL_TEXT4K null,
+  description varchar(4000) null,
   PRIMARY KEY(id)
 ) TABLE_TYPE;
 
@@ -1915,8 +1943,8 @@ CREATE TABLE mapping_data
 (
   table_id integer not null,
   md_key varchar(63) not null,
-  md_value varchar(255) null,
-  description SQL_TEXT4K null,
+  md_value varchar(4000) null,
+  description varchar(4000) null,
   PRIMARY KEY(table_id,md_key)
 ) TABLE_TYPE;
 
@@ -2096,3 +2124,16 @@ CREATE TABLE user_agent_notifications
    recall char(1) not null,
    PRIMARY KEY(id)
 ) TABLE_TYPE;
+
+/**
+ * Notification channel configurations
+ */
+CREATE TABLE notification_channels
+(
+   name varchar(63) not null,
+   driver_name varchar(63) not null,
+   description  varchar(255) null,
+   configuration SQL_TEXT null,
+   PRIMARY KEY(name)
+) TABLE_TYPE;
+

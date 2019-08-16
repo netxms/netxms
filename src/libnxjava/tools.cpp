@@ -36,7 +36,7 @@ jclass LIBNXJAVA_EXPORTABLE CreateJavaClassGlobalRef(JNIEnv *env, const char *cl
    jclass c = env->FindClass(className);
    if (c == NULL)
    {
-      nxlog_write_generic(NXLOG_ERROR, _T("JavaBridge: Could not find class %hs"), className);
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_JAVA_BRIDGE, _T("Could not find class %hs"), className);
       return NULL;
    }
 
@@ -45,7 +45,7 @@ jclass LIBNXJAVA_EXPORTABLE CreateJavaClassGlobalRef(JNIEnv *env, const char *cl
 
    if (gc == NULL)
    {
-      nxlog_write_generic(NXLOG_ERROR, _T("JavaBridge: Could not create global reference of class %s"), className);
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_JAVA_BRIDGE, _T("Could not create global reference of class %s"), className);
       return NULL;
    }
 

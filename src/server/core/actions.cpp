@@ -31,12 +31,13 @@ Action::Action(const TCHAR *name)
 {
    id = CreateUniqueId(IDG_ACTION);
    guid = uuid::generate();
-   _tcslcpy(this->name, name, MAX_OBJECT_NAME);
+   _tcsncpy(this->name, name, MAX_OBJECT_NAME);
    isDisabled = true;
    type = ACTION_EXEC;
    emailSubject[0] = 0;
    rcptAddr[0] = 0;
    data = NULL;
+   channelName[0] = 0;
 }
 
 /**
@@ -52,6 +53,24 @@ Action::Action(DB_RESULT hResult, int row)
    DBGetField(hResult, row, 5, rcptAddr, MAX_RCPT_ADDR_LEN);
    DBGetField(hResult, row, 6, emailSubject, MAX_EMAIL_SUBJECT_LEN);
    data = DBGetField(hResult, row, 7, NULL, 0);
+   DBGetField(hResult, row, 8, channelName, MAX_OBJECT_NAME);
+}
+
+/**
+ * Action copy constructor
+ */
+Action::Action(const Action *act)
+{
+   id = act->id;
+   guid = act->guid;
+   _tcsncpy(name, act->name, MAX_OBJECT_NAME);
+   type = act->type;
+   isDisabled = act->isDisabled;
+   _tcsncpy(rcptAddr, act->rcptAddr, MAX_RCPT_ADDR_LEN);
+   _tcsncpy(emailSubject, act->emailSubject, MAX_EMAIL_SUBJECT_LEN);
+   data = MemCopyString(act->data);
+   _tcsncpy(channelName, act->channelName, MAX_OBJECT_NAME);
+
 }
 
 /**
@@ -75,6 +94,7 @@ void Action::fillMessage(NXCPMessage *msg) const
    msg->setField(VID_EMAIL_SUBJECT, emailSubject);
    msg->setField(VID_ACTION_NAME, name);
    msg->setField(VID_RCPT_ADDR, rcptAddr);
+   msg->setField(VID_CHANNEL_NAME, channelName);
 }
 
 /**
@@ -85,7 +105,8 @@ void Action::saveToDatabase() const
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
    static const TCHAR *columns[] = { _T("guid"), _T("action_name"), _T("action_type"),
-            _T("is_disabled"), _T("rcpt_addr"), _T("email_subject"), _T("action_data"), NULL };
+            _T("is_disabled"), _T("rcpt_addr"), _T("email_subject"), _T("action_data"),
+            _T("channel_name"), NULL };
    DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("actions"), _T("action_id"), id, columns);
    if (hStmt != NULL)
    {
@@ -96,7 +117,8 @@ void Action::saveToDatabase() const
       DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, rcptAddr, DB_BIND_STATIC);
       DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, emailSubject, DB_BIND_STATIC);
       DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, data, DB_BIND_STATIC);
-      DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, id);
+      DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, channelName, DB_BIND_STATIC);
+      DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, id);
       DBExecute(hStmt);
       DBFreeStatement(hStmt);
    }
@@ -107,8 +129,7 @@ void Action::saveToDatabase() const
 /**
  * Static data
  */
-static AbstractIndex<Action> s_actions(true);
-static RWLOCK s_actionsLock;
+static SynchronizedSharedHashMap<UINT32, Action> s_actions(true);
 static UINT32 m_dwUpdateCode;
 
 /**
@@ -122,50 +143,36 @@ static void SendActionDBUpdate(ClientSession *pSession, void *pArg)
 /**
  * Load actions list from database
  */
-static bool LoadActions()
+bool LoadActions()
 {
    bool success = false;
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    DB_RESULT hResult = DBSelect(hdb, _T("SELECT action_id,guid,action_name,action_type,")
-                                     _T("is_disabled,rcpt_addr,email_subject,action_data ")
-                                     _T("FROM actions ORDER BY action_id"));
+                                     _T("is_disabled,rcpt_addr,email_subject,action_data,")
+                                     _T("channel_name FROM actions ORDER BY action_id"));
    if (hResult != NULL)
    {
-      RWLockWriteLock(s_actionsLock, INFINITE);
       s_actions.clear();
 
       int count = DBGetNumRows(hResult);
       for(int i = 0; i < count; i++)
       {
          Action *action = new Action(hResult, i);
-         s_actions.put(action->id, action);
+         s_actions.set(action->id, action);
       }
 
       nxlog_debug_tag(DEBUG_TAG, 2, _T("%d actions loaded"), s_actions.size());
-      RWLockUnlock(s_actionsLock);
 
       DBFreeResult(hResult);
       success = true;
    }
    else
    {
-      nxlog_write(MSG_ACTIONS_LOAD_FAILED, EVENTLOG_ERROR_TYPE, NULL);
+      nxlog_write(NXLOG_ERROR, _T("Error loading server action configuration from database"));
    }
    DBConnectionPoolReleaseConnection(hdb);
    return success;
-}
-
-/**
- * Initialize action-related stuff
- */
-BOOL InitActions()
-{
-   BOOL bSuccess = FALSE;
-   s_actionsLock = RWLockCreate();
-   if (s_actionsLock != NULL)
-      bSuccess = LoadActions();
-   return bSuccess;
 }
 
 /**
@@ -174,7 +181,6 @@ BOOL InitActions()
 void CleanupActions()
 {
    s_actions.clear();
-   RWLockDestroy(s_actionsLock);
 }
 
 /**
@@ -339,7 +345,7 @@ static bool ForwardEvent(const TCHAR *server, const Event *event)
 	}
 	delete isc;
 	if (rcc != ISC_ERR_SUCCESS)
-		nxlog_write(MSG_EVENT_FORWARD_FAILED, EVENTLOG_WARNING_TYPE, "ss", server, ISCErrorCodeToText(rcc));
+		nxlog_write(NXLOG_WARNING, _T("Failed to forward event to server %s (%s)"), server, ISCErrorCodeToText(rcc));
 	return rcc == ISC_ERR_SUCCESS;
 }
 
@@ -385,12 +391,11 @@ static bool ExecuteActionScript(const TCHAR *scriptName, const Event *event)
  */
 BOOL ExecuteAction(UINT32 actionId, const Event *event, const Alarm *alarm)
 {
-   static const TCHAR *actionType[] = { _T("EXEC"), _T("REMOTE"), _T("SEND EMAIL"), _T("SEND SMS"), _T("FORWARD EVENT"), _T("NXSL SCRIPT"), _T("XMPP MESSAGE") };
+   static const TCHAR *actionType[] = { _T("EXEC"), _T("REMOTE"), _T("SEND EMAIL"), _T("SEND NOTIFICATION"), _T("FORWARD EVENT"), _T("NXSL SCRIPT"), _T("XMPP MESSAGE") };
 
    BOOL bSuccess = FALSE;
 
-   RWLockReadLock(s_actionsLock, INFINITE);
-   Action *action = s_actions.get(actionId);
+   shared_ptr<Action> action = s_actions.getShared(actionId);
    if (action != NULL)
    {
       if (action->isDisabled)
@@ -444,24 +449,20 @@ BOOL ExecuteAction(UINT32 actionId, const Event *event, const Alarm *alarm)
                }
                bSuccess = TRUE;
                break;
-            case ACTION_SEND_SMS:
-               if (!expandedRcpt.isEmpty())
+            case ACTION_NOTIFICATION:
+               if (action->channelName[0] != 0)
                {
-                  nxlog_debug_tag(DEBUG_TAG, 3, _T("Sending SMS to %s: \"%s\""), (const TCHAR *)expandedRcpt, (const TCHAR *)expandedData);
-					   TCHAR *curr = expandedRcpt.getBuffer(), *next;
-					   do
-					   {
-						   next = _tcschr(curr, _T(';'));
-						   if (next != NULL)
-							   *next = 0;
-						   StrStrip(curr);
-	                  PostSMS(curr, expandedData);
-						   curr = next + 1;
-					   } while(next != NULL);
+                  if(expandedRcpt.isEmpty())
+                     nxlog_debug_tag(DEBUG_TAG, 3, _T("Sending notification using channel %s: \"%s\""), action->channelName, (const TCHAR *)expandedData);
+
+                  else
+                     nxlog_debug_tag(DEBUG_TAG, 3, _T("Sending notification using channel %s to %s: \"%s\""), action->channelName, (const TCHAR *)expandedRcpt, (const TCHAR *)expandedData);
+                  String expandedSubject = event->expandText(action->emailSubject, alarm);
+                  SendNotification(action->channelName, expandedRcpt.getBuffer(), expandedSubject, expandedData);
                }
                else
                {
-                  nxlog_debug_tag(DEBUG_TAG, 3, _T("Empty recipients list - SMS will not be sent"));
+                  nxlog_debug_tag(DEBUG_TAG, 3, _T("Empty channel name - notification will not be sent"));
                }
                bSuccess = TRUE;
                break;
@@ -531,16 +532,15 @@ BOOL ExecuteAction(UINT32 actionId, const Event *event, const Alarm *alarm)
          }
       }
    }
-   RWLockUnlock(s_actionsLock);
    return bSuccess;
 }
 
 /**
  * Action name comparator
  */
-static bool ActionNameComparator(Action *action, void *data)
+static bool ActionNameComparator(const UINT32 *id, const Action *action, const TCHAR *name)
 {
-   return _tcsicmp(action->name, static_cast<const TCHAR*>(data)) == 0;
+   return _tcsicmp(action->name, name) == 0;
 }
 
 /**
@@ -549,18 +549,16 @@ static bool ActionNameComparator(Action *action, void *data)
 UINT32 CreateAction(const TCHAR *name, UINT32 *id)
 {
    // Check for duplicate name
-   if (s_actions.find(ActionNameComparator, (void *)name) != NULL)
+   if (s_actions.findElement(ActionNameComparator, name) != NULL)
       return RCC_OBJECT_ALREADY_EXISTS;
 
    Action *action = new Action(name);
    *id = action->id;
    action->saveToDatabase();
 
-   RWLockWriteLock(s_actionsLock, INFINITE);
-   s_actions.put(action->id, action);
+   s_actions.set(action->id, action);
    m_dwUpdateCode = NX_NOTIFY_ACTION_CREATED;
    EnumerateClientSessions(SendActionDBUpdate, action);
-   RWLockUnlock(s_actionsLock);
 
    return RCC_SUCCESS;
 }
@@ -572,19 +570,17 @@ UINT32 DeleteAction(UINT32 actionId)
 {
    UINT32 dwResult = RCC_SUCCESS;
 
-   RWLockWriteLock(s_actionsLock, INFINITE);
-   Action *action = s_actions.get(actionId);
+   shared_ptr<Action> action = s_actions.getShared(actionId);
    if (action != NULL)
    {
       m_dwUpdateCode = NX_NOTIFY_ACTION_DELETED;
-      EnumerateClientSessions(SendActionDBUpdate, action);
+      EnumerateClientSessions(SendActionDBUpdate, action.get());
       s_actions.remove(actionId);
    }
    else
    {
       dwResult = RCC_INVALID_ACTION_ID;
    }
-   RWLockUnlock(s_actionsLock);
 
    if (dwResult == RCC_SUCCESS)
    {
@@ -608,29 +604,77 @@ UINT32 ModifyActionFromMessage(NXCPMessage *pMsg)
 		return RCC_INVALID_OBJECT_NAME;
 
    UINT32 actionId = pMsg->getFieldAsUInt32(VID_ACTION_ID);
-   RWLockWriteLock(s_actionsLock, INFINITE);
 
-   Action *action = s_actions.get(actionId);
-   if (action != NULL)
+   shared_ptr<Action> tmp = s_actions.getShared(actionId);
+   if (tmp != NULL)
    {
+      Action *action = new Action(tmp.get());
       action->isDisabled = pMsg->getFieldAsBoolean(VID_IS_DISABLED);
       action->type = pMsg->getFieldAsUInt16(VID_ACTION_TYPE);
       free(action->data);
       action->data = pMsg->getFieldAsString(VID_ACTION_DATA);
       pMsg->getFieldAsString(VID_EMAIL_SUBJECT, action->emailSubject, MAX_EMAIL_SUBJECT_LEN);
       pMsg->getFieldAsString(VID_RCPT_ADDR, action->rcptAddr, MAX_RCPT_ADDR_LEN);
+      pMsg->getFieldAsString(VID_CHANNEL_NAME, action->channelName, MAX_OBJECT_NAME);
       _tcscpy(action->name, name);
 
       action->saveToDatabase();
 
       m_dwUpdateCode = NX_NOTIFY_ACTION_MODIFIED;
       EnumerateClientSessions(SendActionDBUpdate, action);
+      s_actions.set(actionId, action);
 
       dwResult = RCC_SUCCESS;
    }
 
-   RWLockUnlock(s_actionsLock);
    return dwResult;
+}
+
+/**
+ * Send action to client
+ * first - old name
+ * second - new name
+ */
+static EnumerationCallbackResult RenameChannel(const UINT32 *id, const Action *action, std::pair<TCHAR *, TCHAR *> *names)
+{
+   if(!_tcsncmp(action->channelName, names->first, MAX_OBJECT_NAME))
+   {
+      _tcsncpy(const_cast<TCHAR *>(action->channelName), names->second, MAX_OBJECT_NAME);
+      m_dwUpdateCode = NX_NOTIFY_ACTION_MODIFIED;
+      EnumerateClientSessions(SendActionDBUpdate, const_cast<Action *>(action));
+   }
+
+   return _CONTINUE;
+}
+
+/**
+ * Update notification channel name in all actions
+ * first - old name
+ * second - new name
+ */
+void UpdateChannelNameInActions(std::pair<TCHAR *, TCHAR *> *names)
+{
+   s_actions.forEach(RenameChannel, names);
+}
+
+/**
+ * Check if notification channel with given name is used in actions
+ */
+static EnumerationCallbackResult CheckChannelUsage(const UINT32 *id, const Action *action, TCHAR *name)
+{
+   if(!_tcsncmp(action->channelName, name, MAX_OBJECT_NAME))
+   {
+      return _STOP;
+   }
+   return _CONTINUE;
+}
+
+/**
+ * Check if notification channel with given name is used in actions
+ */
+bool CheckChannelIsUsedInAction(TCHAR *name)
+{
+   return s_actions.forEach(CheckChannelUsage, name) == _STOP;
 }
 
 /**
@@ -645,11 +689,13 @@ struct SendActionData
 /**
  * Send action to client
  */
-static void SendAction(Action *action, void *data)
+static EnumerationCallbackResult SendAction(const UINT32 *id, const Action *action, SendActionData *data)
 {
-   action->fillMessage(static_cast<SendActionData*>(data)->message);
-   static_cast<SendActionData*>(data)->session->sendMessage(static_cast<SendActionData*>(data)->message);
-   static_cast<SendActionData*>(data)->message->deleteAllFields();
+   action->fillMessage(data->message);
+   data->session->sendMessage(static_cast<SendActionData*>(data)->message);
+   data->message->deleteAllFields();
+
+   return _CONTINUE;
 }
 
 /**
@@ -659,14 +705,10 @@ void SendActionsToClient(ClientSession *session, UINT32 requestId)
 {
    NXCPMessage msg(CMD_ACTION_DATA, requestId);
 
-   RWLockReadLock(s_actionsLock, INFINITE);
-
    SendActionData data;
    data.session = session;
    data.message = &msg;
    s_actions.forEach(SendAction, &data);
-
-   RWLockUnlock(s_actionsLock);
 
    // Send end-of-list flag
    msg.setField(VID_ACTION_ID, (UINT32)0);
@@ -680,8 +722,8 @@ void CreateActionExportRecord(String &xml, UINT32 id)
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT guid,action_name,action_type,")
-                                       _T("rcpt_addr,email_subject,action_data ")
-                                       _T("FROM actions WHERE action_id=?"));
+                                       _T("rcpt_addr,email_subject,action_data,")
+                                       _T("channel_name FROM actions WHERE action_id=?"));
    if (hStmt == NULL)
    {
       DBConnectionPoolReleaseConnection(hdb);
@@ -708,7 +750,9 @@ void CreateActionExportRecord(String &xml, UINT32 id)
          xml.appendPreallocated(DBGetFieldForXML(hResult, 0, 4));
          xml.append(_T("</emailSubject>\n\t\t\t<data>"));
          xml.appendPreallocated(DBGetFieldForXML(hResult, 0, 5));
-         xml.append(_T("</data>\n"));
+         xml.append(_T("</data>\n\t\t\t<channelName>"));
+         xml.appendPreallocated(DBGetFieldForXML(hResult, 0, 6));
+         xml.append(_T("</channelName>\n"));
          xml.append(_T("\t\t</action>\n"));
       }
       DBFreeResult(hResult);
@@ -722,7 +766,7 @@ void CreateActionExportRecord(String &xml, UINT32 id)
  */
 bool IsValidActionId(UINT32 id)
 {
-   return s_actions.get(id) != NULL;
+   return s_actions.getShared(id) != NULL;
 }
 
 /**
@@ -730,19 +774,17 @@ bool IsValidActionId(UINT32 id)
  */
 uuid GetActionGUID(UINT32 id)
 {
-   RWLockReadLock(s_actionsLock, INFINITE);
-   Action *action = s_actions.get(id);
+   shared_ptr<Action> action = s_actions.getShared(id);
    uuid guid = (action != NULL) ? action->guid : uuid::NULL_UUID;
-   RWLockUnlock(s_actionsLock);
    return guid;
 }
 
 /**
  * Action GUID comparator
  */
-static bool ActionGUIDComparator(Action *action, void *data)
+static bool ActionGUIDComparator(const UINT32 *id, const Action *action, const uuid *data)
 {
-   return action->guid.equals(*static_cast<uuid*>(data));
+   return action->guid.equals(*data);
 }
 
 /**
@@ -750,10 +792,8 @@ static bool ActionGUIDComparator(Action *action, void *data)
  */
 UINT32 FindActionByGUID(const uuid& guid)
 {
-   RWLockReadLock(s_actionsLock, INFINITE);
-   Action *action = s_actions.find(ActionGUIDComparator, (void *)&guid);
+   shared_ptr<Action> action = s_actions.findElement(ActionGUIDComparator, &guid);
    UINT32 id = (action != NULL) ? action->id : 0;
-   RWLockUnlock(s_actionsLock);
    return id;
 }
 
@@ -768,26 +808,22 @@ bool ImportAction(ConfigEntry *config, bool overwrite)
       return false;
    }
 
-   RWLockWriteLock(s_actionsLock, INFINITE);
-
-   uuid guid = config->getSubEntryValueAsUUID(_T("guid"));
-   Action *action = !guid.isNull() ? s_actions.find(ActionGUIDComparator, &guid) : NULL;
+   const uuid guid = config->getSubEntryValueAsUUID(_T("guid"));
+   shared_ptr<Action> action = !guid.isNull() ? s_actions.findElement(ActionGUIDComparator, &guid) : shared_ptr<Action>();
    if (action == NULL)
    {
       // Check for duplicate name
       const TCHAR *name = config->getSubEntryValue(_T("name"));
-      if (s_actions.find(ActionNameComparator, (void *)name) != NULL)
+      if (s_actions.findElement(ActionNameComparator, name) != NULL)
       {
          nxlog_debug_tag(_T("import"), 4, _T("ImportAction: name \"%s\" already exists"), name);
-         RWLockUnlock(s_actionsLock);
          return false;
       }
 
-      action = new Action(name);
+      action = make_shared<Action>(name);
       action->isDisabled = false;
       if (!guid.isNull())
          action->guid = guid;
-      s_actions.put(action->id, action);
       m_dwUpdateCode = NX_NOTIFY_ACTION_CREATED;
    }
    else
@@ -797,12 +833,12 @@ bool ImportAction(ConfigEntry *config, bool overwrite)
       {
          nxlog_debug_tag(_T("import"), 4, _T("ImportAction: found existing action \"%s\" with GUID %s (skipping)"),
                   action->name, action->guid.toString(guidText));
-         RWLockUnlock(s_actionsLock);
          return true;
       }
       nxlog_debug_tag(_T("import"), 4, _T("ImportAction: found existing action \"%s\" with GUID %s"), action->name, action->guid.toString(guidText));
       _tcslcpy(action->name, config->getSubEntryValue(_T("name")), MAX_OBJECT_NAME);
       m_dwUpdateCode = NX_NOTIFY_ACTION_MODIFIED;
+      action = make_shared<Action>(action.get());
    }
 
    // If not exist, create it
@@ -815,11 +851,15 @@ bool ImportAction(ConfigEntry *config, bool overwrite)
       action->rcptAddr[0] = 0;
    else
       _tcslcpy(action->rcptAddr, config->getSubEntryValue(_T("recipientAddress")), MAX_RCPT_ADDR_LEN);
+   if (config->getSubEntryValue(_T("channelName")) == NULL)
+      action->channelName[0] = 0;
+   else
+      _tcslcpy(action->channelName, config->getSubEntryValue(_T("channelName")), MAX_OBJECT_NAME);
    action->data = MemCopyString(config->getSubEntryValue(_T("data")));
    action->saveToDatabase();
-   EnumerateClientSessions(SendActionDBUpdate, action);
+   EnumerateClientSessions(SendActionDBUpdate, action.get());
+   s_actions.set(action->id, action);
 
-   RWLockUnlock(s_actionsLock);
    return true;
 }
 

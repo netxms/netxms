@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -479,7 +479,7 @@ User::User(DB_HANDLE hdb, DB_RESULT hResult, int row) : UserDatabaseObject(hdb, 
    }
    if (!validHash)
    {
-	   nxlog_write(MSG_INVALID_PASSWORD_HASH, NXLOG_WARNING, "s", m_name);
+	   nxlog_write(NXLOG_WARNING, _T("Invalid password hash for user %s; password reset to default"), m_name);
 	   CalculatePasswordHash(_T("netxms"), PWD_HASH_SHA256, &m_password);
       m_flags |= UF_MODIFIED | UF_CHANGE_PASSWORD;
    }

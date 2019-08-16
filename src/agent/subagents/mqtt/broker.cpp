@@ -1,6 +1,6 @@
 /*
  ** MQTT subagent
- ** Copyright (C) 2017 Raden Solutions
+ ** Copyright (C) 2017-2019 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -82,7 +82,9 @@ MqttBroker *MqttBroker::createFromConfig(const ConfigEntry *config, StructArray<
       return NULL;
    }
 
+#if HAVE_MOSQUITTO_THREADED_SET
    mosquitto_threaded_set(broker->m_handle, true);
+#endif
 
    mosquitto_log_callback_set(broker->m_handle, LogCallback);
    mosquitto_message_callback_set(broker->m_handle, MqttBroker::messageCallback);

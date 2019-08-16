@@ -24,15 +24,17 @@
 #include "libnxclient.h"
 
 /**
- * Send SMS from server
+ * Send notification from server
  */
-UINT32 ServerController::sendSMS(const TCHAR *recipient, const TCHAR *text)
+UINT32 ServerController::sendNotification(const TCHAR *channelName, const TCHAR *recipient, const TCHAR *subject, const TCHAR *text)
 {
    NXCPMessage msg;
 
-   msg.setCode(CMD_SEND_SMS);
+   msg.setCode(CMD_SEND_NOTIFICATION);
    msg.setId(m_session->createMessageId());
+   msg.setField(VID_CHANNEL_NAME, channelName);
    msg.setField(VID_RCPT_ADDR, recipient);
+   msg.setField(VID_EMAIL_SUBJECT, subject);
    msg.setField(VID_MESSAGE, text);
 
    if (!m_session->sendMessage(&msg))

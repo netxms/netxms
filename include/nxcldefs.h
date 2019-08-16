@@ -58,6 +58,7 @@
 #define MAX_DCI_DATA_RECORDS        200000
 #define MAX_POLICY_CONFIG_NAME      64
 #define MAX_INT32                   0x7FFFFFFF
+#define MAX_NC_DESCRIPTION 256
 
 /**
  * NetXMS agent authentication methods
@@ -230,17 +231,16 @@
 #define DCF_DISABLE_CONF_POLL      0x00000002
 #define DCF_DISABLE_DATA_COLLECT   0x00000004
 
-
 /**
- * Data Collection Object runtime (dynamic) flags first half of int
+ * Common object runtime flags (can be used by all NetObj derived classes)
  */
-#define DCDF_QUEUED_FOR_STATUS_POLL        0x0001
-#define DCDF_QUEUED_FOR_CONFIGURATION_POLL 0x0002
-#define DCDF_QUEUED_FOR_INSTANCE_POLL      0x0004
-#define DCDF_FORCE_STATUS_POLL             0x0008
-#define DCDF_FORCE_CONFIGURATION_POLL      0x0010
-#define DCDF_CONFIGURATION_POLL_PASSED     0x0020
-#define DCDF_CONFIGURATION_POLL_PENDING    0x0040
+#define ODF_QUEUED_FOR_STATUS_POLL         0x0001
+#define ODF_QUEUED_FOR_CONFIGURATION_POLL  0x0002
+#define ODF_QUEUED_FOR_INSTANCE_POLL       0x0004
+#define ODF_FORCE_STATUS_POLL              0x0008
+#define ODF_FORCE_CONFIGURATION_POLL       0x0010
+#define ODF_CONFIGURATION_POLL_PASSED      0x0020
+#define ODF_CONFIGURATION_POLL_PENDING     0x0040
 
 /**
  * Node runtime (dynamic) flags
@@ -250,15 +250,16 @@
 #define NDF_QUEUED_FOR_ROUTE_POLL      0x00040000
 #define NDF_RECHECK_CAPABILITIES       0x00080000
 #define NDF_NEW_TUNNEL_BIND            0x00100000
+#define NDF_QUEUED_FOR_ICMP_POLL       0x00200000
 
 /**
- * Data Collection Object status flags
+ * Data collection object state flags
  */
 #define DCSF_UNREACHABLE               0x00000001
 #define DCSF_NETWORK_PATH_PROBLEM      0x00000002
 
 /**
- * Cluster status flags
+ * Cluster state flags
  */
 #define CLSF_DOWN                      0x00010000
 
@@ -271,7 +272,7 @@
 #define NSF_CACHE_MODE_NOT_SUPPORTED   0x00080000
 
 /**
- * Sensor status flags
+ * Sensor state flags
  */
 #define SSF_PROVISIONED                0x00010000
 #define SSF_REGISTERED                 0x00020000
@@ -291,6 +292,11 @@
 #define CHF_BIND_UNDER_CONTROLLER   0x00000001
 
 /**
+ * Access point flags
+ */
+#define APF_INCLUDE_IN_ICMP_POLL 0x00000001
+
+/**
  * Interface flags
  */
 #define IF_SYNTHETIC_MASK        0x00000001
@@ -299,8 +305,9 @@
 #define IF_LOOPBACK              0x00000008
 #define IF_CREATED_MANUALLY      0x00000010
 #define IF_PEER_REFLECTION       0x00000020  /* topology information obtained by reflection */
+#define IF_INCLUDE_IN_ICMP_POLL  0x00000040  /* interface should be included into node ICMP poll */
 #define IF_EXPECTED_STATE_MASK   0x30000000	/* 2-bit field holding expected interface state */
-#define IF_USER_FLAGS_MASK       (IF_EXCLUDE_FROM_TOPOLOGY)    /* flags that can be changed by user */
+#define IF_USER_FLAGS_MASK       (IF_EXCLUDE_FROM_TOPOLOGY | IF_INCLUDE_IN_ICMP_POLL)    /* flags that can be changed by user */
 
 /**
  * Expected interface states
@@ -483,6 +490,7 @@ enum SessionState
 #define NX_NOTIFY_POLICY_MODIFIED            39
 #define NX_NOTIFY_POLICY_DELETED             40
 #define NX_NOTIFY_USER_AGENT_MESSAGE_CHANGED 41
+#define NX_NOTIFICATION_CHANNEL_CHANGED      42
 
 /**
  * Request completion codes
@@ -617,6 +625,9 @@ enum SessionState
 #define RCC_FOLDER_ALREADY_EXISTS     ((UINT32)127)
 #define RCC_NO_SUCH_POLICY            ((UINT32)128)
 #define RCC_NO_HARDWARE_DATA          ((UINT32)129)
+#define RCC_CHANNEL_ALREADY_EXIST     ((UINT32)130)
+#define RCC_NO_CHANNEL_NAME           ((UINT32)131)
+#define RCC_CHANNEL_IN_USE            ((UINT32)132)
 
 /**
  * Mask bits for NXCModifyEventTemplate()
@@ -692,7 +703,7 @@ enum SessionState
 #define SYSTEM_ACCESS_VIEW_AUDIT_LOG          _ULL(0x000000004000)
 #define SYSTEM_ACCESS_MANAGE_AGENT_CFG        _ULL(0x000000008000)
 #define SYSTEM_ACCESS_PERSISTENT_STORAGE      _ULL(0x000000010000)
-#define SYSTEM_ACCESS_SEND_SMS                _ULL(0x000000020000)
+#define SYSTEM_ACCESS_SEND_NOTIFICATION       _ULL(0x000000020000)
 #define SYSTEM_ACCESS_MOBILE_DEVICE_LOGIN     _ULL(0x000000040000)
 #define SYSTEM_ACCESS_REGISTER_AGENTS         _ULL(0x000000080000)
 #define SYSTEM_ACCESS_READ_SERVER_FILES       _ULL(0x000000100000)
@@ -998,7 +1009,7 @@ enum AggregationFunction
 #define ACTION_EXEC           0
 #define ACTION_REMOTE         1
 #define ACTION_SEND_EMAIL     2
-#define ACTION_SEND_SMS       3
+#define ACTION_NOTIFICATION   3
 #define ACTION_FORWARD_EVENT  4
 #define ACTION_NXSL_SCRIPT    5
 #define ACTION_XMPP_MESSAGE   6

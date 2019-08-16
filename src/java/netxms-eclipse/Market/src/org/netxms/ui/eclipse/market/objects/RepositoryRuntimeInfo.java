@@ -34,7 +34,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.ui.IViewPart;
 import org.json.JSONObject;
 import org.json.JSONTokener;
-import org.netxms.base.NXCommon;
+import org.netxms.base.VersionInfo;
 import org.netxms.client.market.Repository;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.market.Activator;
@@ -310,7 +310,7 @@ public class RepositoryRuntimeInfo implements MarketObject
          throw new Exception("Unsupported URL type");
       }
       ((HttpURLConnection)conn).setRequestMethod("POST");
-      ((HttpURLConnection)conn).setRequestProperty("User-Agent", "NetXMS Console/" + NXCommon.VERSION);
+      ((HttpURLConnection)conn).setRequestProperty("User-Agent", "nxmc/" + VersionInfo.version());
       ((HttpURLConnection)conn).setRequestProperty("Content-Type", "application/json; charset=utf-8");
       ((HttpURLConnection)conn).setDoOutput(true);
       ((HttpURLConnection)conn).setAllowUserInteraction(false);

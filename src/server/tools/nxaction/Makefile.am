@@ -1,6 +1,6 @@
 bin_PROGRAMS = nxaction
 nxaction_SOURCES = nxaction.cpp
-nxaction_CPPFLAGS = -I@top_srcdir@/include -I@top_srcdir@/src/server/include
+nxaction_CPPFLAGS = -I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build
 nxaction_LDFLAGS = @EXEC_LDFLAGS@
 nxaction_LDADD = \
 		 ../../libnxsrv/libnxsrv.la \

@@ -194,6 +194,24 @@ void StringMapBase::remove(const TCHAR *key)
 }
 
 /**
+ * Delete value
+ */
+void *StringMapBase::unlink(const TCHAR *key)
+{
+   StringMapEntry *entry = find(key, _tcslen(key) * sizeof(TCHAR));
+   void *value;
+   if (entry != NULL)
+   {
+      HASH_DEL(m_data, entry);
+      MemFree(entry->key);
+      MemFree(entry->originalKey);
+      value = entry->value;
+      MemFree(entry);
+   }
+   return value;
+}
+
+/**
  * Enumerate entries
  * Returns _CONTINUE if whole map was enumerated and _STOP if enumeration was aborted by callback.
  */

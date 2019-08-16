@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -45,7 +45,7 @@ static BOOL RegisterMobileDeviceSession(MobileDeviceSession *pSession)
       }
 
    RWLockUnlock(s_sessionListLock);
-   nxlog_write(MSG_TOO_MANY_MD_SESSIONS, EVENTLOG_WARNING_TYPE, NULL);
+   nxlog_write(NXLOG_WARNING, _T("Too many mobile device sessions open - unable to accept new client connection"));
    return FALSE;
 }
 

@@ -25,7 +25,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import org.netxms.client.constants.AggregationFunction;
 import org.netxms.client.constants.RCC;
-import org.netxms.client.datacollection.DCONotificationCallback;
+import org.netxms.client.datacollection.DataCollectionConfigurationChangeListener;
 import org.netxms.client.datacollection.DataCollectionConfiguration;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.DataCollectionObject;
@@ -84,19 +84,44 @@ public class DataCollectionTest extends AbstractSessionTest
 	public void testGetThresholds() throws Exception
 	{
 		final NXCSession session = connect();
-		
-		final Lock mutex = new ReentrantLock(true);
-      mutex.lock();
-		DataCollectionConfiguration dc = session.openDataCollectionConfiguration(TestConstants.NODE_ID, new DCONotificationCallback() {
-         @Override
-         public void notifyDCOChange()
-         {
-            mutex.unlock();
-         }
+
+		final Object condition = new Object();
+		DataCollectionConfiguration dc = session.openDataCollectionConfiguration(TestConstants.NODE_ID, 
+		      new DataCollectionConfigurationChangeListener() {
+               @Override
+               public void onUpdate(DataCollectionObject object)
+               {
+                  if (object.getName().equals("ThresholdTest-NewDCI"))
+                  {
+                     synchronized(condition)
+                     {
+                        condition.notifyAll();
+                     }
+                  }
+               }
+
+               @Override
+               public void onDelete(long id)
+               {
+               }
+
+               @Override
+               public void onStatusChange(long id, int status)
+               {
+               }
       });
-      final long dciId = dc.modifyObject(new DataCollectionItem(dc, 0));
-      mutex.lock();
-		DataCollectionItem dci = (DataCollectionItem)dc.findItem(dciId, DataCollectionItem.class);
+		DataCollectionItem newDci = new DataCollectionItem(dc, 0);
+		newDci.setName("ThresholdTest-NewDCI");
+
+		long dciId;
+		synchronized(condition)
+		{
+		   dciId = dc.modifyObject(newDci);
+		   condition.wait();
+		}
+
+      DataCollectionItem dci = (DataCollectionItem)dc.findItem(dciId, DataCollectionItem.class);
+		assertNotNull(dci);
       
 		dci.setName("TEST");
 		dci.getThresholds().add(new Threshold());
@@ -109,7 +134,6 @@ public class DataCollectionTest extends AbstractSessionTest
 		dc.deleteObject(dciId);
 		dc.close();
 		session.disconnect();
-		mutex.unlock();
 	}
 	
 	public void testGetThresholdSummary() throws Exception

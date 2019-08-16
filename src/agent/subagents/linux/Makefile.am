@@ -3,7 +3,7 @@ SUBAGENT = linux
 pkglib_LTLIBRARIES = linux.la
 linux_la_SOURCES = cpu.cpp disk.cpp drbd.cpp hddinfo.cpp hypervisor.cpp \
                    iostat.cpp linux.cpp net.cpp packages.cpp proc.cpp system.cpp
-linux_la_CPPFLAGS=-I@top_srcdir@/include
+linux_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/build
 linux_la_LDFLAGS = -module -avoid-version -export-symbols ../platform-subagent.sym
 linux_la_LIBADD = ../../libnxagent/libnxagent.la ../../../libnetxms/libnetxms.la
 

@@ -61,7 +61,7 @@ import org.eclipse.ui.forms.widgets.TableWrapLayout;
 import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.eclipse.ui.part.ViewPart;
-import org.netxms.base.NXCommon;
+import org.netxms.base.VersionInfo;
 import org.netxms.client.NXCSession;
 import org.netxms.client.Script;
 import org.netxms.client.ServerAction;
@@ -916,7 +916,7 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
                      throw new Exception("Unsupported URL type");
                   }
                   ((HttpURLConnection)conn).setRequestMethod("POST");
-                  ((HttpURLConnection)conn).setRequestProperty("User-Agent", "NetXMS Console/" + NXCommon.VERSION);
+                  ((HttpURLConnection)conn).setRequestProperty("User-Agent", "nxmc/" + VersionInfo.version());
                   ((HttpURLConnection)conn).setRequestProperty("Content-Type", "application/xml; charset=utf-8");
                   ((HttpURLConnection)conn).setDoOutput(true);
                   ((HttpURLConnection)conn).setAllowUserInteraction(false);

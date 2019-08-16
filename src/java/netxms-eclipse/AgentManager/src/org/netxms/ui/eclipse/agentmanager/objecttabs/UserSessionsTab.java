@@ -68,7 +68,8 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 public class UserSessionsTab extends ObjectTab
 {
    public static final String JOB_FAMILY = "SesionsObjectTabJob"; //$NON-NLS-1$
-
+   
+   public static final String[] COLUMNS = { "SESSION_ID", "SESSION_NAME", "USER_NAME", "CLIENT_NAME", "STATE", "AGENT_TYPE" };
    public static final int COLUMN_ID = 0;
    public static final int COLUMN_SESSION = 1;
    public static final int COLUMN_USER = 2;
@@ -120,9 +121,9 @@ public class UserSessionsTab extends ObjectTab
       final String[] names = { "Session id", "Session", "User", "Client", "State", "Agent type" };
       final int[] widths = { 150, 150, 100, 150, 150, 100 };
       viewer = new SortableTableViewer(parent, names, widths, COLUMN_ID, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
-      viewer.setLabelProvider(new UserSessionLabelProvider());
+      viewer.setLabelProvider(new UserSessionLabelProvider(this));
       viewer.setContentProvider(new ArrayContentProvider());
-      viewer.setComparator(new UserSessionComparator());
+      viewer.setComparator(new UserSessionComparator(this));
       viewer.getTable().setHeaderVisible(true);
       viewer.getTable().setLinesVisible(true);
       filter = new AgentSessionFilter();
@@ -386,5 +387,13 @@ public class UserSessionsTab extends ObjectTab
    {
       super.selected();
       refresh();
+   }
+   
+   /**
+    * @return displayed table
+    */
+   public Table getTable()
+   {
+      return sessionsTable;
    }
 }

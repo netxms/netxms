@@ -147,7 +147,7 @@ void StartPushConnector()
 {
    if (!(g_dwFlags & AF_ENABLE_PUSH_CONNECTOR))
    {
-      nxlog_write_generic(NXLOG_INFO, _T("Push connector is disabled"));
+      nxlog_write(NXLOG_INFO, _T("Push connector is disabled"));
       return;
    }
 

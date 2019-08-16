@@ -27,7 +27,7 @@ public class UserAccessRights
 	public static final long SYSTEM_ACCESS_VIEW_AUDIT_LOG          = 0x000000004000L;
 	public static final long SYSTEM_ACCESS_MANAGE_AGENT_CFG        = 0x000000008000L;
 	public static final long SYSTEM_ACCESS_PERSISTENT_STORAGE      = 0x000000010000L;
-	public static final long SYSTEM_ACCESS_SEND_SMS                = 0x000000020000L;
+	public static final long SYSTEM_ACCESS_SEND_NOTIFICATION       = 0x000000020000L;
 	public static final long SYSTEM_ACCESS_MOBILE_DEVICE_LOGIN     = 0x000000040000L;
 	public static final long SYSTEM_ACCESS_REGISTER_AGENTS         = 0x000000080000L;
 	public static final long SYSTEM_ACCESS_READ_SERVER_FILES       = 0x000000100000L;

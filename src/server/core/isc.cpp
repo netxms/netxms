@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -215,7 +215,8 @@ THREAD_RESULT THREAD_CALL ISCListener(void *pArg)
    // Create socket
    if ((sock = socket(AF_INET, SOCK_STREAM, 0)) == INVALID_SOCKET)
    {
-      nxlog_write(MSG_SOCKET_FAILED, EVENTLOG_ERROR_TYPE, "s", _T("ISCListener"));
+      TCHAR buffer[1024];
+      nxlog_write(NXLOG_ERROR, _T("Unable to create socket for ISC listener (%s)"), GetLastSocketErrorText(buffer, 1024));
       return THREAD_OK;
    }
 
@@ -234,7 +235,8 @@ THREAD_RESULT THREAD_CALL ISCListener(void *pArg)
    // Bind socket
    if (bind(sock, (struct sockaddr *)&servAddr, sizeof(struct sockaddr_in)) != 0)
    {
-      nxlog_write(MSG_BIND_ERROR, EVENTLOG_ERROR_TYPE, "dse", NETXMS_ISC_PORT, _T("ISCListener"), WSAGetLastError());
+      TCHAR buffer[1024];
+      nxlog_write(NXLOG_ERROR, _T("Unable to bind socket for ISC listener (%s)"), GetLastSocketErrorText(buffer, 1024));
       closesocket(sock);
       /* TODO: we should initiate shutdown from here */
       return THREAD_OK;
@@ -259,11 +261,14 @@ THREAD_RESULT THREAD_CALL ISCListener(void *pArg)
          error = errno;
          if (error != EINTR)
 #endif
-				nxlog_write(MSG_ACCEPT_ERROR, EVENTLOG_ERROR_TYPE, "e", error);
+         {
+            TCHAR buffer[1024];
+            nxlog_write(NXLOG_ERROR, _T("Unable to accept incoming ISC connection (%s)"), GetLastSocketErrorText(buffer, 1024));
+         }
          errorCount++;
          if (errorCount > 1000)
          {
-            nxlog_write(MSG_TOO_MANY_ACCEPT_ERRORS, EVENTLOG_WARNING_TYPE, NULL);
+            nxlog_write(NXLOG_WARNING, _T("Too many consecutive errors on accept() call in ISC listener"));
             errorCount = 0;
          }
          ThreadSleepMs(500);

@@ -16,8 +16,8 @@ libnxcore_la_SOURCES = abind_target.cpp accesspoint.cpp acl.cpp actions.cpp addr
 			dctcolumn.cpp dctthreshold.cpp debug.cpp devdb.cpp dfile_info.cpp \
 			download_job.cpp ef.cpp email.cpp entirenet.cpp \
 			epp.cpp events.cpp evproc.cpp fdb.cpp filemonitoring.cpp \
-			graph.cpp hash_index.cpp hdlink.cpp hk.cpp hwcomponent.cpp \
-			icmpscan.cpp id.cpp import.cpp inaddr_index.cpp index.cpp interface.cpp \
+			graph.cpp hash_index.cpp hdlink.cpp hk.cpp hwcomponent.cpp icmpscan.cpp \
+			icmpstat.cpp id.cpp import.cpp inaddr_index.cpp index.cpp interface.cpp \
 			isc.cpp job.cpp jobmgr.cpp jobqueue.cpp layer2.cpp \
 			ldap.cpp lln.cpp lldp.cpp locks.cpp logfilter.cpp \
 			loghandle.cpp logs.cpp macdb.cpp main.cpp maint.cpp \
@@ -25,18 +25,18 @@ libnxcore_la_SOURCES = abind_target.cpp accesspoint.cpp acl.cpp actions.cpp addr
 			modules.cpp mt.cpp ndd.cpp ndp.cpp \
 			netinfo.cpp netmap.cpp netmap_element.cpp netmap_link.cpp \
 			netmap_objlist.cpp netobj.cpp netsrv.cpp \
-			node.cpp nodelink.cpp np.cpp npe.cpp nxsl_classes.cpp \
+			node.cpp nodelink.cpp notification_channel.cpp np.cpp npe.cpp nxsl_classes.cpp \
 			nxslext.cpp objects.cpp objtools.cpp package.cpp \
 			pds.cpp poll.cpp ps.cpp rack.cpp \
 			radius.cpp reporting.cpp rootobj.cpp schedule.cpp script.cpp \
 			sensor.cpp server_stats.cpp session.cpp slmcheck.cpp smclp.cpp \
-			sms.cpp snmp.cpp snmptrap.cpp stp.cpp subnet.cpp summary_email.cpp \
+			snmp.cpp snmptrap.cpp stp.cpp subnet.cpp summary_email.cpp \
 			svccontainer.cpp swpkg.cpp syncer.cpp syslogd.cpp \
 			template.cpp tools.cpp tracert.cpp tunnel.cpp ua_notification_item.cpp \
 			uniroot.cpp upload_job.cpp uptimecalc.cpp userdb.cpp \
 			userdb_objects.cpp vobject.cpp vpnconn.cpp vrrp.cpp watchdog.cpp \
 			winperf.cpp xmpp.cpp zeromq.cpp zone.cpp
-libnxcore_la_CPPFLAGS = -I@top_srcdir@/include -I@top_srcdir@/src/server/include -DNXCORE_EXPORTS \
+libnxcore_la_CPPFLAGS = -I@top_srcdir@/include -I@top_srcdir@/build -I@top_srcdir@/src/server/include -DNXCORE_EXPORTS \
 	@MQTT_CPPFLAGS@ @ZEROMQ_CPPFLAGS@ @PYTHON_CPPFLAGS@
 libnxcore_la_CXXFLAGS = -I@top_srcdir@/@CUSTOM_INCLUDE@
 libnxcore_la_LDFLAGS = -release $(NETXMS_LIBRARY_VERSION) @MQTT_LDFLAGS@ @ZEROMQ_LDFLAGS@ @PYTHON_LDFLAGS@

@@ -424,7 +424,7 @@ public:
    virtual bool loadThresholdsFromDB(DB_HANDLE hdb);
 
    void updateCacheSize(UINT32 conditionId = 0) { lock(); updateCacheSizeInternal(true, conditionId); unlock(); }
-   void reloadCache();
+   void reloadCache(bool forceReload);
 
    int getDataType() const { return m_dataType; }
    int getNXSLDataType() const;
@@ -791,5 +791,10 @@ void CalculateItemValueMin(ItemValue &result, int nDataType, const ItemValue *co
 void CalculateItemValueMax(ItemValue &result, int nDataType, const ItemValue *const *valueList, size_t numValues);
 
 DataCollectionError GetQueueStatistic(const TCHAR *parameter, StatisticType type, TCHAR *value);
+
+/**
+ * DCI cache loader queue
+ */
+extern ObjectQueue<DCObjectInfo> g_dciCacheLoaderQueue;
 
 #endif   /* _nms_dcoll_h_ */

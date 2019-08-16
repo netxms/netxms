@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -98,11 +98,12 @@ bool VPNConnector::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
          NetObj *pObject = FindObjectById(dwNodeId, OBJECT_NODE);
          if (pObject == NULL)
          {
-            nxlog_write(MSG_INVALID_NODE_ID_EX, NXLOG_ERROR, "dds", dwId, dwNodeId, _T("VPN connector"));
+            nxlog_write(NXLOG_ERROR, _T("Inconsistent database: VPN connector %s [%u] linked to non-existent node [%u]"), m_name, m_id, dwNodeId);
          }
          else if (pObject->getObjectClass() != OBJECT_NODE)
          {
-            nxlog_write(MSG_NODE_NOT_NODE, EVENTLOG_ERROR_TYPE, "dd", dwId, dwNodeId);
+            nxlog_write(NXLOG_ERROR, _T("Inconsistent database: VPN connector %s [%u] linked to object %s [%u] which is not a node"),
+                     m_name, m_id, pObject->getName(), pObject->getId());
          }
          else
          {

@@ -2,7 +2,7 @@ SUBAGENT = gps
 
 pkglib_LTLIBRARIES = gps.la
 gps_la_SOURCES = main.cpp nmea.c
-gps_la_CPPFLAGS=-I@top_srcdir@/include
+gps_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/build
 gps_la_LDFLAGS = -module -avoid-version -export-symbols ../subagent.sym
 gps_la_LIBADD = ../../libnxagent/libnxagent.la ../../../libnetxms/libnetxms.la
 

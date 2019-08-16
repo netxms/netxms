@@ -14,7 +14,6 @@
 #include <nms_agent.h>
 #include <windowsx.h>
 #include "resource.h"
-#include "messages.h"
 
 /*** Messages ***/
 #define NXUA_MSG_TOOLTIP_NOTIFY        (WM_USER + 1)

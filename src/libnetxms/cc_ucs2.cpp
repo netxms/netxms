@@ -26,10 +26,10 @@
 /**
  * Convert UCS-2 to UCS-4
  */
-int LIBNETXMS_EXPORTABLE ucs2_to_ucs4(const UCS2CHAR *src, int srcLen, UCS4CHAR *dst, int dstLen)
+size_t LIBNETXMS_EXPORTABLE ucs2_to_ucs4(const UCS2CHAR *src, ssize_t srcLen, UCS4CHAR *dst, size_t dstLen)
 {
-   int len = static_cast<int>((srcLen == -1) ? ucs2_strlen(src) : srcLen);
-   int scount = 0, dcount = 0;
+   size_t len = (srcLen == -1) ? ucs2_strlen(src) : srcLen;
+   size_t scount = 0, dcount = 0;
    const UCS2CHAR *s = src;
    UCS4CHAR *d = dst;
    while((scount < len) && (dcount < dstLen))
@@ -69,10 +69,10 @@ int LIBNETXMS_EXPORTABLE ucs2_to_ucs4(const UCS2CHAR *src, int srcLen, UCS4CHAR 
 /**
  * Convert UCS-2 to UTF-8
  */
-int LIBNETXMS_EXPORTABLE ucs2_to_utf8(const UCS2CHAR *src, int srcLen, char *dst, int dstLen)
+size_t LIBNETXMS_EXPORTABLE ucs2_to_utf8(const UCS2CHAR *src, ssize_t srcLen, char *dst, size_t dstLen)
 {
-   int len = static_cast<int>((srcLen == -1) ? ucs2_strlen(src) : srcLen);
-   int scount = 0, dcount = 0;
+   size_t len = (srcLen == -1) ? ucs2_strlen(src) : srcLen;
+   size_t scount = 0, dcount = 0;
    const UCS2CHAR *s = src;
    char *d = dst;
    while((scount < len) && (dcount < dstLen))
@@ -149,10 +149,10 @@ int LIBNETXMS_EXPORTABLE ucs2_to_utf8(const UCS2CHAR *src, int srcLen, char *dst
 /**
  * Calculate length in bytes of given UCS-2 string in UTF-8 encoding (including terminating 0 byte)
  */
-int LIBNETXMS_EXPORTABLE ucs2_utf8len(const UCS2CHAR *src, int srcLen)
+size_t LIBNETXMS_EXPORTABLE ucs2_utf8len(const UCS2CHAR *src, ssize_t srcLen)
 {
-   int len = static_cast<int>((srcLen == -1) ? ucs2_strlen(src) : srcLen);
-   int scount = 0, dcount = 1;
+   size_t len = (srcLen == -1) ? ucs2_strlen(src) : srcLen;
+   size_t scount = 0, dcount = 1;
    const UCS2CHAR *s = src;
    while(scount < len)
    {
@@ -208,7 +208,7 @@ int LIBNETXMS_EXPORTABLE ucs2_utf8len(const UCS2CHAR *src, int srcLen)
 /**
  * Convert UCS-2 to multibyte
  */
-int LIBNETXMS_EXPORTABLE ucs2_to_mb(const UCS2CHAR *src, int srcLen, char *dst, int dstLen)
+size_t LIBNETXMS_EXPORTABLE ucs2_to_mb(const UCS2CHAR *src, ssize_t srcLen, char *dst, size_t dstLen)
 {
    if (g_defaultCodePageType == CodePageType::ASCII)
       return ucs2_to_ASCII(src, srcLen, dst, dstLen);
@@ -250,7 +250,7 @@ int LIBNETXMS_EXPORTABLE ucs2_to_mb(const UCS2CHAR *src, int srcLen, char *dst, 
       *((char *) outbuf) = 0;
    }
 
-   return (int)count;
+   return count;
 #else
    return ucs2_to_ASCII(src, srcLen, dst, dstLen);
 #endif
@@ -261,15 +261,15 @@ int LIBNETXMS_EXPORTABLE ucs2_to_mb(const UCS2CHAR *src, int srcLen, char *dst, 
 /**
  * Convert UCS-2 to ASCII (also used as fallback if iconv_open fails)
  */
-int LIBNETXMS_EXPORTABLE ucs2_to_ASCII(const UCS2CHAR *src, int srcLen, char *dst, int dstLen)
+size_t LIBNETXMS_EXPORTABLE ucs2_to_ASCII(const UCS2CHAR *src, ssize_t srcLen, char *dst, size_t dstLen)
 {
-   int size = (srcLen == -1) ? static_cast<int>(ucs2_strlen(src)) : srcLen;
+   size_t size = (srcLen == -1) ? static_cast<int>(ucs2_strlen(src)) : srcLen;
    if (size >= dstLen)
       size = dstLen - 1;
 
    const UCS2CHAR *psrc = src;
    char *pdst = dst;
-   for(int pos = 0; pos < size; pos++, psrc++, pdst++)
+   for(size_t pos = 0; pos < size; pos++, psrc++, pdst++)
    {
       if ((*psrc & 0xFC00) == 0xD800)  // high surrogate
          continue;
@@ -283,15 +283,15 @@ int LIBNETXMS_EXPORTABLE ucs2_to_ASCII(const UCS2CHAR *src, int srcLen, char *ds
 /**
  * Convert UCS-2 to ISO8859-1
  */
-int LIBNETXMS_EXPORTABLE ucs2_to_ISO8859_1(const UCS2CHAR *src, int srcLen, char *dst, int dstLen)
+size_t LIBNETXMS_EXPORTABLE ucs2_to_ISO8859_1(const UCS2CHAR *src, ssize_t srcLen, char *dst, size_t dstLen)
 {
-   int size = (srcLen == -1) ? static_cast<int>(ucs2_strlen(src)) : srcLen;
+   size_t size = (srcLen == -1) ? static_cast<int>(ucs2_strlen(src)) : srcLen;
    if (size >= dstLen)
       size = dstLen - 1;
 
    const UCS2CHAR *psrc = src;
    BYTE *pdst = reinterpret_cast<BYTE*>(dst);
-   for(int pos = 0; pos < size; pos++, psrc++, pdst++)
+   for(size_t pos = 0; pos < size; pos++, psrc++, pdst++)
    {
       if ((*psrc & 0xFC00) == 0xD800)  // high surrogate
          continue;

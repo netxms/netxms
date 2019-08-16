@@ -39,7 +39,7 @@ public class DataCollectionConfiguration
    private boolean isOpen = false;
    private Object userData = null;
    private SessionListener listener;
-   private DCONotificationCallback cb;
+   private DataCollectionConfigurationChangeListener changeListener;
 
    /**
     * Create empty data collection configuration.
@@ -57,17 +57,17 @@ public class DataCollectionConfiguration
    /**
     * Open data collection configuration.
     *
-    * @param notifyDCOChangeCB change callback
+    * @param changeListener change listener
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void open(DCONotificationCallback notifyDCOChangeCB) throws IOException, NXCException
+   public void open(DataCollectionConfigurationChangeListener changeListener) throws IOException, NXCException
    {
       NXCPMessage msg = session.newMessage(NXCPCodes.CMD_GET_NODE_DCI_LIST);
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
       session.sendMessage(msg);
       session.waitForRCC(msg.getMessageId());
-      cb = notifyDCOChangeCB;
+      this.changeListener = changeListener;
 
       while(true)
       {
@@ -93,8 +93,7 @@ public class DataCollectionConfiguration
             items.put(dco.getId(), dco);
       }
 
-      listener = new SessionListener()
-      {
+      listener = new SessionListener() {
          @Override
          public void notificationHandler(SessionNotification n)
          {
@@ -105,22 +104,26 @@ public class DataCollectionConfiguration
             {
                final DataCollectionObject dco = (DataCollectionObject)n.getObject();
                updateItemFromNotification(dco);
+               if (DataCollectionConfiguration.this.changeListener != null)
+                  DataCollectionConfiguration.this.changeListener.onUpdate(dco);
             }
             else if (n.getCode() == SessionNotification.DCI_DELETE)
             {
                final long id = (Long)n.getObject();
                removeItemFromNotification(id);
+               if (DataCollectionConfiguration.this.changeListener != null)
+                  DataCollectionConfiguration.this.changeListener.onDelete(id);
             }
             else if (n.getCode() == SessionNotification.DCI_STATE_CHANGE)
             {
                DCOStatusHolder stHolder = (DCOStatusHolder)n.getObject();
                updateItemStatusFromNotification(stHolder.getDciIdArray(), stHolder.getStatus());
+               if (DataCollectionConfiguration.this.changeListener != null)
+               {
+                  for(long id : stHolder.getDciIdArray())
+                     DataCollectionConfiguration.this.changeListener.onStatusChange(id, stHolder.getStatus());
+               }
             }
-            if (n.getCode() == SessionNotification.DCI_UPDATE || n.getCode() == SessionNotification.DCI_DELETE
-                  || n.getCode() == SessionNotification.DCI_STATE_CHANGE)
-               if (cb != null)
-                  cb.notifyDCOChange();
-
          }
       };
       session.addListener(listener);
@@ -142,7 +145,7 @@ public class DataCollectionConfiguration
       items.clear();
       session.removeListener(listener);
       isOpen = false;
-      cb = null;
+      changeListener = null;
    }
 
    /**
@@ -171,7 +174,7 @@ public class DataCollectionConfiguration
     *
     * @param id DCI ID
     */
-   public void removeItemFromNotification(long id)
+   private void removeItemFromNotification(long id)
    {
       items.remove(id);
    }
@@ -181,7 +184,7 @@ public class DataCollectionConfiguration
     *
     * @param dco
     */
-   public void updateItemFromNotification(DataCollectionObject dco)
+   private void updateItemFromNotification(DataCollectionObject dco)
    {
       DataCollectionObject newDco = null;
       if (dco instanceof DataCollectionItem)
@@ -193,16 +196,16 @@ public class DataCollectionConfiguration
    }
 
    /**
-    * TODO
+    * Update DCI status from session notification
     *
-    * @param idArr  TODO
-    * @param status TODO
+    * @param idList list of DCI identifiers
+    * @param status new status
     */
-   public void updateItemStatusFromNotification(long[] idArr, int status)
+   private void updateItemStatusFromNotification(long[] idList, int status)
    {
-      for(int i = 0; i < idArr.length; i++)
+      for(int i = 0; i < idList.length; i++)
       {
-         DataCollectionObject o = items.get(idArr[i]);
+         DataCollectionObject o = items.get(idList[i]);
          if (o != null)
             o.setStatus(status);
       }

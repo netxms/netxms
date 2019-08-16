@@ -683,7 +683,7 @@ private:
 	void queryL2Topology(NXCPMessage *pRequest);
    void queryInternalCommunicationTopology(NXCPMessage *pRequest);
    void getDependentNodes(NXCPMessage *request);
-	void sendSMS(NXCPMessage *pRequest);
+	void sendNotification(NXCPMessage *pRequest);
 	void SendCommunityList(UINT32 dwRqId);
 	void UpdateCommunityList(NXCPMessage *pRequest);
 	void getPersistantStorage(UINT32 dwRqId);
@@ -779,12 +779,18 @@ private:
    void deletePolicy(NXCPMessage *request);
    void getPolicyList(NXCPMessage *request);
    void onPolicyEditorClose(NXCPMessage *request);
-   void forcApplyPolicy(NXCPMessage *pRequest);
+   void forceApplyPolicy(NXCPMessage *pRequest);
    void getMatchingDCI(NXCPMessage *request);
    void getUserAgentNotification(NXCPMessage *request);
    void addUserAgentNotification(NXCPMessage *request);
    void recallUserAgentNotification(NXCPMessage *request);
    SharedObjectArray<DCObject> *resolveDCOsByRegex(UINT32 objectId, const TCHAR *objectNameRegex, const TCHAR *dciRegex, bool searchByName);
+   void getNotificationChannels(UINT32 requestId);
+   void addNotificationChannel(NXCPMessage *request);
+   void updateNotificationChannel(NXCPMessage *request);
+   void removeNotificationChannel(NXCPMessage *request);
+   void renameNotificationChannel(NXCPMessage *request);
+   void getNotificationDriverNames(UINT32 requestId);
 #ifdef WITH_ZMQ
    void zmqManageSubscription(NXCPMessage *request, zmq::SubscriptionType type, bool subscribe);
    void zmqListSubscriptions(NXCPMessage *request, zmq::SubscriptionType type);
@@ -1069,6 +1075,17 @@ NetworkDeviceDriver *FindDriverForNode(const TCHAR *name, const TCHAR *snmpObjec
 NetworkDeviceDriver *FindDriverByName(const TCHAR *name);
 void AddDriverSpecificOids(StringList *list);
 
+void LoadNotificationChannelDrivers();
+void LoadNCConfiguration();
+void SendNotification(const TCHAR *name, TCHAR *expandedRcpt, const TCHAR *expandedSubject, const TCHAR *expandedData);
+void GetNotificationChannels(NXCPMessage *msg);
+void GetNotificationDrivers(NXCPMessage *msg);
+bool CheckNotificationChannelExist(const TCHAR *name);
+void CreateNotificationChannelAndSave(const TCHAR *name, const TCHAR *description, const TCHAR *driverName, char *configuration);
+void UpdateNotificationChannel(const TCHAR *name, const TCHAR *description, const TCHAR *driverName, char *configuration);
+void RenameNotificationChannel(TCHAR *name, TCHAR *newName);
+bool DeleteNotificationChannel(TCHAR *name);
+
 bool LookupDevicePortLayout(const SNMP_ObjectId& objectId, NDD_MODULE_LAYOUT *layout);
 
 void CheckForMgmtNode();
@@ -1076,7 +1093,12 @@ void CheckPotentialNode(const InetAddress& ipAddr, UINT32 zoneUIN, DiscoveredAdd
 Node NXCORE_EXPORTABLE *PollNewNode(NewNodeData *newNodeData);
 INT64 GetDiscoveryPollerQueueSize();
 
-void NXCORE_EXPORTABLE EnumerateClientSessions(void (*pHandler)(ClientSession *, void *), void *pArg);
+void NXCORE_EXPORTABLE EnumerateClientSessions(void (*handler)(ClientSession *, void *), void *context);
+template <typename C> void EnumerateClientSessions(void (*handler)(ClientSession *, C *), C *context)
+{
+   EnumerateClientSessions(reinterpret_cast<void (*)(ClientSession *, void *)>(handler), context);
+}
+
 void NXCORE_EXPORTABLE NotifyClientSessions(UINT32 dwCode, UINT32 dwData);
 void NXCORE_EXPORTABLE NotifyClientSession(session_id_t sessionId, UINT32 dwCode, UINT32 dwData);
 void NXCORE_EXPORTABLE NotifyClientsOnGraphUpdate(NXCPMessage *update, UINT32 graphId);
@@ -1108,10 +1130,6 @@ void SaveCurrentFreeId();
 void InitMailer();
 void ShutdownMailer();
 void NXCORE_EXPORTABLE PostMail(const TCHAR *pszRcpt, const TCHAR *pszSubject, const TCHAR *pszText, bool isHtml = false);
-
-void InitSMSSender();
-void ShutdownSMSSender();
-void NXCORE_EXPORTABLE PostSMS(const TCHAR *pszRcpt, const TCHAR *pszText);
 
 void InitTraps();
 void SendTrapsToClient(ClientSession *pSession, UINT32 dwRqId);

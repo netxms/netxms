@@ -3,6 +3,7 @@
 *
 
 - Event tags
+- ICMP polls for collecting ICMP response time statistic on server side
 - User agents (desktop support application)
 - Raw DCI values saved in history along with corresponding transformed values
 - New DCI data types - "32 bit counter" and "64 bit counter"
@@ -19,6 +20,9 @@
 - Service group support in Tuxedo subagent
 - Improved Enduro/X compatibility
 - Improved Cisco Aironet (former Airespace) driver
+- Duplicate IP address detection during network discovery
+- Improved I/O performance parameters in Windows agent
+- Optional JSON format for log files
 - Fixed issues:
 	NX-183 (Implemented responsible users for objects)
 	NX-725 (Add alarm comments from NXSL)

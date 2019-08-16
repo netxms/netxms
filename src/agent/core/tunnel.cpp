@@ -312,7 +312,7 @@ void Tunnel::recvThread()
          break;
       }
    }
-   nxlog_write(MSG_TUNNEL_CLOSED, NXLOG_WARNING, "s", m_hostname);
+   nxlog_report_event(61, NXLOG_WARNING, 1, _T("Tunnel with %s closed"), m_hostname);
 }
 
 /**
@@ -669,7 +669,7 @@ bool Tunnel::connectToServer()
    //    - first session from server got wrong access because DNS name in server info structure still unresolved
    m_forceResolve = true;
 
-   nxlog_write(MSG_TUNNEL_ESTABLISHED, NXLOG_INFO, "s", m_hostname);
+   nxlog_report_event(60, NXLOG_INFO, 1, _T("Tunnel with %s established"), m_hostname);
    return true;
 }
 
@@ -1346,7 +1346,7 @@ void ParseTunnelList(TCHAR *list)
       }
       else
       {
-         nxlog_write(MSG_INVALID_TUNNEL_CONFIG, NXLOG_ERROR, "s", curr);
+         nxlog_write(NXLOG_ERROR, _T("Invalid server connection configuration record \"%s\""), curr);
       }
    }
 #endif

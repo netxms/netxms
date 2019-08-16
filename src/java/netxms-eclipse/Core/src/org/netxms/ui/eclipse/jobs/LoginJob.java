@@ -29,7 +29,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.swt.widgets.Display;
-import org.netxms.base.NXCommon;
+import org.netxms.base.VersionInfo;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.ProtocolVersion;
@@ -109,7 +109,7 @@ public class LoginJob implements IRunnableWithProgress
          final NXCSession session = createSession(hostName, port);
          session.setClientLanguage(Locale.getDefault().getLanguage());
          
-         session.setClientInfo("nxmc/" + NXCommon.VERSION); //$NON-NLS-1$
+         session.setClientInfo("nxmc/" + VersionInfo.version()); //$NON-NLS-1$
          session.setIgnoreProtocolVersion(ignoreProtocolVersion);
          monitor.worked(1);
 

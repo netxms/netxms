@@ -409,7 +409,7 @@ int main(int argc, char *argv[])
             s_hideConsole = true;
             break;
 		   case 'v':   // version
-            _tprintf(_T("NetXMS Session Agent Version ") NETXMS_VERSION_STRING _T(" Build ") NETXMS_VERSION_BUILD_STRING _T("\n"));
+            _tprintf(_T("NetXMS Session Agent Version ") NETXMS_VERSION_STRING _T(" Build ") NETXMS_BUILD_TAG _T("\n"));
 			   exit(0);
 			   break;
 		   case '?':

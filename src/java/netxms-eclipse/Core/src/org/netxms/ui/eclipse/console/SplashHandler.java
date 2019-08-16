@@ -21,8 +21,7 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.branding.IProductConstants;
 import org.eclipse.ui.splash.BasicSplashHandler;
-import org.netxms.base.BuildNumber;
-import org.netxms.base.NXCommon;
+import org.netxms.base.VersionInfo;
 
 /**
  * Custom splash handler
@@ -83,8 +82,8 @@ public class SplashHandler extends BasicSplashHandler
 		
       final Color versionColor = new Color(Display.getCurrent(), textColor);
 		final Font versionFont = new Font(Display.getCurrent(), "Verdana", 9, SWT.NONE); //$NON-NLS-1$
-		final String versionText = Messages.get().SplashHandler_Version + NXCommon.VERSION + " (" + BuildNumber.TEXT + ")"; //$NON-NLS-1$ //$NON-NLS-2$
-		final String copyrightText = "\u00A9 2003-2018 Raden Solutions"; //$NON-NLS-1$
+		final String versionText = Messages.get().SplashHandler_Version + VersionInfo.version();
+		final String copyrightText = "\u00A9 2003-2019 Raden Solutions"; //$NON-NLS-1$
       final Composite content = getContent();
 		content.addPaintListener(new PaintListener() {
 			@Override

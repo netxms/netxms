@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -37,12 +37,12 @@ static bool CheckJvmPath(const char *base, const char *libdir, const char *arch,
    for(int i = 0; jreType[i] != NULL; i++)
    {
       snprintf(jvm, MAX_PATH, "%s%s/lib/%s/%s/libjvm" SYSTEM_SHLIB_SUFFIX_A, base, libdir, arch, jreType[i]);
-      nxlog_debug(7, _T("FindJavaRuntime: checking %hs (%s)"), jvm, description);
+      nxlog_debug_tag(DEBUG_TAG_JAVA_RUNTIME, 7, _T("FindJavaRuntime: checking %hs (%s)"), jvm, description);
       if (_access(jvm, 0) == 0)
          return true;
 
       snprintf(jvm, MAX_PATH, "%s%s/jre/lib/%s/%s/libjvm" SYSTEM_SHLIB_SUFFIX_A, base, libdir, arch, jreType[i]);
-      nxlog_debug(7, _T("FindJavaRuntime: checking %hs (%s)"), jvm, description);
+      nxlog_debug_tag(DEBUG_TAG_JAVA_RUNTIME, 7, _T("FindJavaRuntime: checking %hs (%s)"), jvm, description);
       if (_access(jvm, 0) == 0)
          return true;
    }
@@ -84,7 +84,7 @@ TCHAR LIBNXJAVA_EXPORTABLE *FindJavaRuntime(TCHAR *buffer, size_t size)
    {
       s++;
       _tcscpy(s, _T("jre\\bin\\server\\jvm.dll"));
-      nxlog_debug(7, _T("FindJavaRuntime: checking %s (executable path)"), path);
+      nxlog_debug_tag(DEBUG_TAG_JAVA_RUNTIME, 7, _T("FindJavaRuntime: checking %s (executable path)"), path);
       if (_taccess(path, 0) == 0)
       {
          nx_strncpy(buffer, path, size);
@@ -106,7 +106,7 @@ TCHAR LIBNXJAVA_EXPORTABLE *FindJavaRuntime(TCHAR *buffer, size_t size)
    {
 #ifdef _WIN32
       snprintf(jvm, MAX_PATH, "%s\\bin\\jre\\bin\\server\\jvm.dll", netxmsHome);
-      nxlog_debug(7, _T("FindJavaRuntime: checking %hs (NetXMS home)"), jvm);
+      nxlog_debug_tag(DEBUG_TAG_JAVA_RUNTIME, 7, _T("FindJavaRuntime: checking %hs (NetXMS home)"), jvm);
 #else
       CheckJvmPath(netxmsHome, "/lib", un.machine, jvm, _T("NetXMS home"));
 #endif
@@ -129,7 +129,7 @@ TCHAR LIBNXJAVA_EXPORTABLE *FindJavaRuntime(TCHAR *buffer, size_t size)
                if (RegQueryValueExA(hSubKey, "JavaHome", NULL, NULL, (BYTE *)jvm, &size) == ERROR_SUCCESS)
                {
                   strcat(jvm, "\\bin\\server\\jvm.dll");
-                  nxlog_debug(7, _T("FindJavaRuntime: checking %hs (registry)"), jvm);
+                  nxlog_debug_tag(DEBUG_TAG_JAVA_RUNTIME, 7, _T("FindJavaRuntime: checking %hs (registry)"), jvm);
                }
                RegCloseKey(hSubKey);
             }
@@ -147,11 +147,11 @@ TCHAR LIBNXJAVA_EXPORTABLE *FindJavaRuntime(TCHAR *buffer, size_t size)
       {
 #ifdef _WIN32
          snprintf(jvm, MAX_PATH, "%s\\bin\\server\\jvm.dll", javaHome);
-         nxlog_debug(7, _T("FindJavaRuntime: checking %hs (Java home)"), jvm);
+         nxlog_debug_tag(DEBUG_TAG_JAVA_RUNTIME, 7, _T("FindJavaRuntime: checking %hs (Java home)"), jvm);
          if (_access(jvm, 0) != 0)
          {
             snprintf(jvm, MAX_PATH, "%s\\jre\\bin\\server\\jvm.dll", javaHome);
-            nxlog_debug(7, _T("FindJavaRuntime: checking %hs (Java home)"), jvm);
+            nxlog_debug_tag(DEBUG_TAG_JAVA_RUNTIME, 7, _T("FindJavaRuntime: checking %hs (Java home)"), jvm);
          }
 #else
          CheckJvmPath(javaHome, "", un.machine, jvm, _T("Java home"));
@@ -164,7 +164,7 @@ TCHAR LIBNXJAVA_EXPORTABLE *FindJavaRuntime(TCHAR *buffer, size_t size)
    {
 #ifdef _WIN32
       snprintf(jvm, MAX_PATH, JDK_LOCATION "\\jre\\bin\\server\\jvm.dll");
-      nxlog_debug(7, _T("FindJavaRuntime: checking %hs (JDK defined at compile time)"), jvm);
+      nxlog_debug_tag(DEBUG_TAG_JAVA_RUNTIME, 7, _T("FindJavaRuntime: checking %hs (JDK defined at compile time)"), jvm);
 #else
       CheckJvmPath(JDK_LOCATION, "", un.machine, jvm, _T("JDK defined at compile time"));
 #endif
@@ -178,7 +178,7 @@ TCHAR LIBNXJAVA_EXPORTABLE *FindJavaRuntime(TCHAR *buffer, size_t size)
    MultiByteToWideChar(CP_UTF8, 0, jvm, -1, buffer, (int)size);
    buffer[size - 1] = 0;
 #else
-   nx_strncpy(buffer, jvm, size);
+   strlcpy(buffer, jvm, size);
 #endif
    return buffer;
 }

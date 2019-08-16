@@ -1,6 +1,6 @@
 /* 
  ** NetXMS - Network Management System
- ** Copyright (C) 2003-2016 Victor Kirhenshtein
+ ** Copyright (C) 2003-2019 Victor Kirhenshtein
  **
  ** RADIUS client
  ** This code is based on uRadiusLib (C) Gary Wallis, 2006.
@@ -394,7 +394,6 @@ static void encrypt_attr_style_1(char *secret, char *vector, VALUE_PAIR *vp)
 	}
 }
 
-
 /**
  * void encrypt_attr(char *secret, char *vector, VALUE_PAIR *vp);
  *
@@ -420,8 +419,8 @@ static void encrypt_attr(char *secret, char *vector, VALUE_PAIR *vp)
 			/* Unknown style - don't send the cleartext! */
 			vp->length = 19;
 			memcpy(vp->strvalue, "UNKNOWN_ENCR_METHOD", vp->length);
-			nxlog_write(MSG_RADIUS_UNKNOWN_ENCR_METHOD, EVENTLOG_ERROR_TYPE,
-					"dd", vp->flags.encrypt, vp->attribute);
+			nxlog_write(NXLOG_ERROR, _T("RADIUS client error: encryption style %d is not implemented (attribute %d)"),
+					vp->flags.encrypt, vp->attribute);
 	}
 }
 
@@ -1076,6 +1075,10 @@ bool RadiusAuth(const TCHAR *login, const TCHAR *passwd)
 		result = DoRadiusAuth(rlogin, rpasswd, useSecondary, server);
 	   nxlog_debug(4, _T("RADIUS: DoRadiusAuth returned %d for user %s"), result, login);
 	}
-	nxlog_write((result == 0) ? MSG_RADIUS_AUTH_SUCCESS : MSG_RADIUS_AUTH_FAILED, NXLOG_INFO, "sm", login, server);
+	nxlog_write(NXLOG_INFO,
+	         (result == 0) ?
+	                  _T("User %s was successfully authenticated by RADIUS server %hs") :
+	                  _T("Authentication request for user %s was rejected by RADIUS server %hs"),
+	                  login, server);
 	return result == 0;
 }

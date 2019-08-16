@@ -57,14 +57,15 @@ static void ObjectDestructor(void *object, HashMapBase *map)
 }
 
 /**
- * Constructors
+ * Constructor
  */
-HashMapBase::HashMapBase(bool objectOwner, unsigned int keylen)
+HashMapBase::HashMapBase(bool objectOwner, unsigned int keylen, void (*destructor)(void *, HashMapBase *))
 {
-	m_data = NULL;
-	m_objectOwner = objectOwner;
+   m_data = NULL;
+   m_objectOwner = objectOwner;
    m_keylen = keylen;
-	m_objectDestructor = ObjectDestructor;
+   m_objectDestructor = (destructor != NULL) ? destructor : ObjectDestructor;
+   m_context = NULL;
 }
 
 /**

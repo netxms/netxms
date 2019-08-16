@@ -140,8 +140,10 @@ LDFLAGS = $(LDFLAGS) /SUBSYSTEM:$(SUBSYSTEM),5.01
 	
 # Common headers
 HEADERS = $(HEADERS) \
-	$(NETXMS_BASE)\include\build.h \
+	$(NETXMS_BASE)\build\netxms-build-tag.h \
+	$(NETXMS_BASE)\include\gauge_helpers.h \
 	$(NETXMS_BASE)\include\geolocation.h \
+	$(NETXMS_BASE)\include\ieee8021x.h \
 	$(NETXMS_BASE)\include\jansson.h \
 	$(NETXMS_BASE)\include\netxms-regex.h \
 	$(NETXMS_BASE)\include\netxms-version.h \
@@ -153,12 +155,14 @@ HEADERS = $(HEADERS) \
 	$(NETXMS_BASE)\include\nxconfig.h \
 	$(NETXMS_BASE)\include\nxcpapi.h \
 	$(NETXMS_BASE)\include\nxcrypto.h \
+	$(NETXMS_BASE)\include\nxproc.h \
 	$(NETXMS_BASE)\include\nxqueue.h \
 	$(NETXMS_BASE)\include\nxstat.h \
 	$(NETXMS_BASE)\include\rwlock.h \
 	$(NETXMS_BASE)\include\unicode.h \
 	$(NETXMS_BASE)\include\uthash.h \
-	$(NETXMS_BASE)\include\uuid.h
+	$(NETXMS_BASE)\include\uuid.h \
+	$(NETXMS_BASE)\include\winmutex.h
 
 # Common libraries
 LIBS = $(LIBS) libssl.lib libcrypto.lib uuid.lib kernel32.lib user32.lib advapi32.lib shell32.lib
@@ -191,8 +195,15 @@ MVNCMD=install
 MVNCMD=package
 !endif
 
+!ifdef EXTERNAL_RESOURCES
+RESCMD=@copy $(EXTERNAL_RESOURCES) .\src\main\resources\
+!else
+RESCMD=@echo skip resource copy
+!endif
+
 $(BINFILE): pom.xml
 	mvn clean
+	$(RESCMD)
 	mvn $(MVNCMD) $(MVNFLAGS)
 	mv target/$(TARGET) $(BINFILE)
 

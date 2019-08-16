@@ -23,9 +23,6 @@
 
 #include "libnxdb.h"
 
-#define DEBUG_TAG_CONNECTION  _T("db.conn")
-#define DEBUG_TAG_QUERY       _T("db.query")
-
 /**
  * Check if statement handle is valid
  */
@@ -293,8 +290,7 @@ bool LIBNXDB_EXPORTABLE DBQueryEx(DB_HANDLE hConn, const TCHAR *szQuery, TCHAR *
    if (dwResult != DBERR_SUCCESS)
 	{	
       s_perfFailedQueries++;
-		if (hConn->m_driver->m_logSqlErrors)
-			nxlog_write(g_sqlErrorMsgCode, EVENTLOG_ERROR_TYPE, "ss", szQuery, errorText);
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_DRIVER, _T("SQL query failed (Query = \"%s\"): %s"), szQuery, errorText);
 		if (hConn->m_driver->m_fpEventHandler != NULL)
 			hConn->m_driver->m_fpEventHandler(DBEVENT_QUERY_FAILED, pwszQuery, wcErrorText, dwResult == DBERR_CONNECTION_LOST, hConn->m_driver->m_userArg);
 	}
@@ -363,8 +359,7 @@ DB_RESULT LIBNXDB_EXPORTABLE DBSelectEx(DB_HANDLE hConn, const TCHAR *szQuery, T
 	if (hResult == NULL)
 	{
 	   s_perfFailedQueries++;
-		if (hConn->m_driver->m_logSqlErrors)
-			nxlog_write(g_sqlErrorMsgCode, EVENTLOG_ERROR_TYPE, "ss", szQuery, errorText);
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_DRIVER, _T("SQL query failed (Query = \"%s\"): %s"), szQuery, errorText);
 		if (hConn->m_driver->m_fpEventHandler != NULL)
 			hConn->m_driver->m_fpEventHandler(DBEVENT_QUERY_FAILED, pwszQuery, wcErrorText, dwError == DBERR_CONNECTION_LOST, hConn->m_driver->m_userArg);
 	}
@@ -475,13 +470,13 @@ bool LIBNXDB_EXPORTABLE DBGetColumnNameA(DB_UNBUFFERED_RESULT hResult, int colum
  * Get field's value. If buffer is NULL, dynamically allocated string will be returned.
  * Caller is responsible for destroying it by calling free().
  */
-TCHAR LIBNXDB_EXPORTABLE *DBGetField(DB_RESULT hResult, int iRow, int iColumn, TCHAR *pszBuffer, int nBufLen)
+TCHAR LIBNXDB_EXPORTABLE *DBGetField(DB_RESULT hResult, int iRow, int iColumn, TCHAR *pszBuffer, size_t nBufLen)
 {
 #ifdef UNICODE
    if (pszBuffer != NULL)
    {
       *pszBuffer = 0;
-      return hResult->m_driver->m_fpDrvGetField(hResult->m_data, iRow, iColumn, pszBuffer, nBufLen);
+      return hResult->m_driver->m_fpDrvGetField(hResult->m_data, iRow, iColumn, pszBuffer, (int)nBufLen);
    }
    else
    {
@@ -494,7 +489,7 @@ TCHAR LIBNXDB_EXPORTABLE *DBGetField(DB_RESULT hResult, int iRow, int iColumn, T
       else
       {
          nLen++;
-         pszTemp = (WCHAR *)malloc(nLen * sizeof(WCHAR));
+         pszTemp = MemAllocStringW(nLen);
          hResult->m_driver->m_fpDrvGetField(hResult->m_data, iRow, iColumn, pszTemp, nLen);
       }
       return pszTemp;
@@ -508,14 +503,14 @@ TCHAR LIBNXDB_EXPORTABLE *DBGetField(DB_RESULT hResult, int iRow, int iColumn, T
  * Get field's value as UTF8 string. If buffer is NULL, dynamically allocated string will be returned.
  * Caller is responsible for destroying it by calling free().
  */
-char LIBNXDB_EXPORTABLE *DBGetFieldUTF8(DB_RESULT hResult, int iRow, int iColumn, char *pszBuffer, int nBufLen)
+char LIBNXDB_EXPORTABLE *DBGetFieldUTF8(DB_RESULT hResult, int iRow, int iColumn, char *pszBuffer, size_t nBufLen)
 {
    if (hResult->m_driver->m_fpDrvGetFieldUTF8 != NULL)
    {
       if (pszBuffer != NULL)
       {
          *pszBuffer = 0;
-         return hResult->m_driver->m_fpDrvGetFieldUTF8(hResult->m_data, iRow, iColumn, pszBuffer, nBufLen);
+         return hResult->m_driver->m_fpDrvGetFieldUTF8(hResult->m_data, iRow, iColumn, pszBuffer, (int)nBufLen);
       }
       else
       {
@@ -541,10 +536,10 @@ char LIBNXDB_EXPORTABLE *DBGetFieldUTF8(DB_RESULT hResult, int iRow, int iColumn
          return NULL;
       nLen = nLen * 2 + 1;  // increase buffer size because driver may return field length in characters
 
-      WCHAR *wtemp = (WCHAR *)malloc(nLen * sizeof(WCHAR));
+      WCHAR *wtemp = MemAllocStringW(nLen);
       hResult->m_driver->m_fpDrvGetField(hResult->m_data, iRow, iColumn, wtemp, nLen);
       char *value = (pszBuffer != NULL) ? pszBuffer : (char *)malloc(nLen);
-      WideCharToMultiByte(CP_UTF8, 0, wtemp, -1, value, (pszBuffer != NULL) ? nBufLen : nLen, NULL, NULL);
+      WideCharToMultiByte(CP_UTF8, 0, wtemp, -1, value, (pszBuffer != NULL) ? (int)nBufLen : nLen, NULL, NULL);
       MemFree(wtemp);
       return value;
    }
@@ -554,7 +549,7 @@ char LIBNXDB_EXPORTABLE *DBGetFieldUTF8(DB_RESULT hResult, int iRow, int iColumn
  * Get field's value as multibyte string. If buffer is NULL, dynamically allocated string will be returned.
  * Caller is responsible for destroying it by calling free().
  */
-char LIBNXDB_EXPORTABLE *DBGetFieldA(DB_RESULT hResult, int iRow, int iColumn, char *pszBuffer, int nBufLen)
+char LIBNXDB_EXPORTABLE *DBGetFieldA(DB_RESULT hResult, int iRow, int iColumn, char *pszBuffer, size_t nBufLen)
 {
    WCHAR *pwszData, *pwszBuffer;
    char *pszRet;
@@ -563,11 +558,11 @@ char LIBNXDB_EXPORTABLE *DBGetFieldA(DB_RESULT hResult, int iRow, int iColumn, c
    if (pszBuffer != NULL)
    {
       *pszBuffer = 0;
-      pwszBuffer = (WCHAR *)malloc(nBufLen * sizeof(WCHAR));
-      pwszData = hResult->m_driver->m_fpDrvGetField(hResult->m_data, iRow, iColumn, pwszBuffer, nBufLen);
+      pwszBuffer = MemAllocStringW(nBufLen);
+      pwszData = hResult->m_driver->m_fpDrvGetField(hResult->m_data, iRow, iColumn, pwszBuffer, (int)nBufLen);
       if (pwszData != NULL)
       {
-         WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, pwszData, -1, pszBuffer, nBufLen, NULL, NULL);
+         WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, pwszData, -1, pszBuffer, (int)nBufLen, NULL, NULL);
          pszRet = pszBuffer;
       }
       else
@@ -586,7 +581,7 @@ char LIBNXDB_EXPORTABLE *DBGetFieldA(DB_RESULT hResult, int iRow, int iColumn, c
       else
       {
          nLen++;
-         pwszBuffer = (WCHAR *)malloc(nLen * sizeof(WCHAR));
+         pwszBuffer = MemAllocStringW(nLen);
          pwszData = hResult->m_driver->m_fpDrvGetField(hResult->m_data, iRow, iColumn, pwszBuffer, nLen);
          if (pwszData != NULL)
          {
@@ -869,8 +864,7 @@ DB_UNBUFFERED_RESULT LIBNXDB_EXPORTABLE DBSelectUnbufferedEx(DB_HANDLE hConn, co
 		errorText[DBDRV_MAX_ERROR_TEXT - 1] = 0;
 #endif
 
-		if (hConn->m_driver->m_logSqlErrors)
-        nxlog_write(g_sqlErrorMsgCode, EVENTLOG_ERROR_TYPE, "ss", szQuery, errorText);
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_DRIVER, _T("SQL query failed (Query = \"%s\"): %s"), szQuery, errorText);
 		if (hConn->m_driver->m_fpEventHandler != NULL)
 			hConn->m_driver->m_fpEventHandler(DBEVENT_QUERY_FAILED, pwszQuery, wcErrorText, dwError == DBERR_CONNECTION_LOST, hConn->m_driver->m_userArg);
    }
@@ -910,12 +904,12 @@ bool LIBNXDB_EXPORTABLE DBFetch(DB_UNBUFFERED_RESULT hResult)
 /**
  * Get field's value from unbuffered SELECT result
  */
-TCHAR LIBNXDB_EXPORTABLE *DBGetField(DB_UNBUFFERED_RESULT hResult, int iColumn, TCHAR *pBuffer, int iBufSize)
+TCHAR LIBNXDB_EXPORTABLE *DBGetField(DB_UNBUFFERED_RESULT hResult, int iColumn, TCHAR *pBuffer, size_t iBufSize)
 {
 #ifdef UNICODE
    if (pBuffer != NULL)
    {
-	   return hResult->m_driver->m_fpDrvGetFieldUnbuffered(hResult->m_data, iColumn, pBuffer, iBufSize);
+	   return hResult->m_driver->m_fpDrvGetFieldUnbuffered(hResult->m_data, iColumn, pBuffer, (int)iBufSize);
    }
    else
    {
@@ -930,7 +924,7 @@ TCHAR LIBNXDB_EXPORTABLE *DBGetField(DB_UNBUFFERED_RESULT hResult, int iColumn, 
       else
       {
          nLen++;
-         pszTemp = (WCHAR *)malloc(nLen * sizeof(WCHAR));
+         pszTemp = MemAllocStringW(nLen);
          hResult->m_driver->m_fpDrvGetFieldUnbuffered(hResult->m_data, iColumn, pszTemp, nLen);
       }
       return pszTemp;
@@ -942,8 +936,8 @@ TCHAR LIBNXDB_EXPORTABLE *DBGetField(DB_UNBUFFERED_RESULT hResult, int iColumn, 
 
    if (pBuffer != NULL)
    {
-		pwszBuffer = (WCHAR *)malloc(iBufSize * sizeof(WCHAR));
-		if (hResult->m_driver->m_fpDrvGetFieldUnbuffered(hResult->m_data, iColumn, pwszBuffer, iBufSize) != NULL)
+		pwszBuffer = MemAllocStringW(iBufSize);
+		if (hResult->m_driver->m_fpDrvGetFieldUnbuffered(hResult->m_data, iColumn, pwszBuffer, (int)iBufSize) != NULL)
 		{
 			WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR,
 									  pwszBuffer, -1, pBuffer, iBufSize, NULL, NULL);
@@ -953,7 +947,7 @@ TCHAR LIBNXDB_EXPORTABLE *DBGetField(DB_UNBUFFERED_RESULT hResult, int iColumn, 
 		{
 			pszRet = NULL;
 		}
-		free(pwszBuffer);
+		MemFree(pwszBuffer);
    }
    else
    {
@@ -965,7 +959,7 @@ TCHAR LIBNXDB_EXPORTABLE *DBGetField(DB_UNBUFFERED_RESULT hResult, int iColumn, 
       else
       {
          nLen++;
-         pwszBuffer = (WCHAR *)malloc(nLen * sizeof(WCHAR));
+         pwszBuffer = MemAllocStringW(nLen);
 			pwszData = hResult->m_driver->m_fpDrvGetFieldUnbuffered(hResult->m_data, iColumn, pwszBuffer, nLen);
          if (pwszData != NULL)
          {
@@ -988,14 +982,14 @@ TCHAR LIBNXDB_EXPORTABLE *DBGetField(DB_UNBUFFERED_RESULT hResult, int iColumn, 
 /**
  * Get field's value from unbuffered SELECT result as UTF-8 string
  */
-char LIBNXDB_EXPORTABLE *DBGetFieldUTF8(DB_UNBUFFERED_RESULT hResult, int iColumn, char *buffer, int iBufSize)
+char LIBNXDB_EXPORTABLE *DBGetFieldUTF8(DB_UNBUFFERED_RESULT hResult, int iColumn, char *buffer, size_t iBufSize)
 {
    if (hResult->m_driver->m_fpDrvGetFieldUTF8 != NULL)
    {
       if (buffer != NULL)
       {
          *buffer = 0;
-         return hResult->m_driver->m_fpDrvGetFieldUnbufferedUTF8(hResult->m_data, iColumn, buffer, iBufSize);
+         return hResult->m_driver->m_fpDrvGetFieldUnbufferedUTF8(hResult->m_data, iColumn, buffer, (int)iBufSize);
       }
       else
       {
@@ -1008,7 +1002,7 @@ char LIBNXDB_EXPORTABLE *DBGetFieldUTF8(DB_UNBUFFERED_RESULT hResult, int iColum
          else
          {
             nLen = nLen * 2 + 1;  // increase buffer size because driver may return field length in characters
-            pszTemp = (char *)malloc(nLen);
+            pszTemp = MemAllocStringA(nLen);
             hResult->m_driver->m_fpDrvGetFieldUnbufferedUTF8(hResult->m_data, iColumn, pszTemp, nLen);
          }
          return pszTemp;
@@ -1021,10 +1015,10 @@ char LIBNXDB_EXPORTABLE *DBGetFieldUTF8(DB_UNBUFFERED_RESULT hResult, int iColum
          return NULL;
       nLen = nLen * 2 + 1;  // increase buffer size because driver may return field length in characters
 
-      WCHAR *wtemp = (WCHAR *)malloc(nLen * sizeof(WCHAR));
+      WCHAR *wtemp = MemAllocStringW(nLen);
       hResult->m_driver->m_fpDrvGetFieldUnbuffered(hResult->m_data, iColumn, wtemp, nLen);
       char *value = (buffer != NULL) ? buffer : (char *)malloc(nLen);
-      WideCharToMultiByte(CP_UTF8, 0, wtemp, -1, value, (buffer != NULL) ? iBufSize : nLen, NULL, NULL);
+      WideCharToMultiByte(CP_UTF8, 0, wtemp, -1, value, (buffer != NULL) ? (int)iBufSize : nLen, NULL, NULL);
       MemFree(wtemp);
       return value;
    }
@@ -1187,8 +1181,7 @@ DB_STATEMENT LIBNXDB_EXPORTABLE DBPrepareEx(DB_HANDLE hConn, const TCHAR *query,
 		errorText[DBDRV_MAX_ERROR_TEXT - 1] = 0;
 #endif
 
-		if (hConn->m_driver->m_logSqlErrors)
-        nxlog_write(g_sqlErrorMsgCode, EVENTLOG_ERROR_TYPE, "ss", query, errorText);
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_DRIVER, _T("SQL query failed (Query = \"%s\"): %s"), query, errorText);
 		if (hConn->m_driver->m_fpEventHandler != NULL)
 			hConn->m_driver->m_fpEventHandler(DBEVENT_QUERY_FAILED, pwszQuery, wcErrorText, errorCode == DBERR_CONNECTION_LOST, hConn->m_driver->m_userArg);
 
@@ -1517,8 +1510,7 @@ bool LIBNXDB_EXPORTABLE DBExecuteEx(DB_STATEMENT hStmt, TCHAR *errorText)
 
    if (dwResult != DBERR_SUCCESS)
 	{	
-		if (hConn->m_driver->m_logSqlErrors)
-			nxlog_write(g_sqlErrorMsgCode, EVENTLOG_ERROR_TYPE, "ss", hStmt->m_query, errorText);
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_DRIVER, _T("SQL query failed (Query = \"%s\"): %s"), hStmt->m_query, errorText);
 		if (hConn->m_driver->m_fpEventHandler != NULL)
 		{
 #ifdef UNICODE
@@ -1601,8 +1593,7 @@ DB_RESULT LIBNXDB_EXPORTABLE DBSelectPreparedEx(DB_STATEMENT hStmt, TCHAR *error
 
 	if (hResult == NULL)
 	{
-		if (hConn->m_driver->m_logSqlErrors)
-			nxlog_write(g_sqlErrorMsgCode, EVENTLOG_ERROR_TYPE, "ss", hStmt->m_query, errorText);
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_DRIVER, _T("SQL query failed (Query = \"%s\"): %s"), hStmt->m_query, errorText);
 		if (hConn->m_driver->m_fpEventHandler != NULL)
 		{
 #ifdef UNICODE
@@ -1693,8 +1684,7 @@ DB_UNBUFFERED_RESULT LIBNXDB_EXPORTABLE DBSelectPreparedUnbufferedEx(DB_STATEMEN
    {
       MutexUnlock(hConn->m_mutexTransLock);
 
-      if (hConn->m_driver->m_logSqlErrors)
-         nxlog_write(g_sqlErrorMsgCode, EVENTLOG_ERROR_TYPE, "ss", hStmt->m_query, errorText);
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_DRIVER, _T("SQL query failed (Query = \"%s\"): %s"), hStmt->m_query, errorText);
       if (hConn->m_driver->m_fpEventHandler != NULL)
       {
 #ifdef UNICODE

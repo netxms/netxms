@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Utility Library
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -77,7 +77,7 @@ bool GenericSocketListener::initialize()
       )
    {
       TCHAR buffer[256];
-      nxlog_write_generic(NXLOG_ERROR, _T("SocketListener/%s: socket() call failed (%s)"), m_name, GetLastSocketErrorText(buffer, 256));
+      nxlog_write(NXLOG_ERROR, _T("SocketListener/%s: socket() call failed (%s)"), m_name, GetLastSocketErrorText(buffer, 256));
       exit(1);
    }
 
@@ -162,7 +162,7 @@ bool GenericSocketListener::initialize()
                (m_type == SOCK_STREAM) ? _T("tcp") : _T("udp"));
       if (bind(m_socketV4, (struct sockaddr *)&servAddr, sizeof(struct sockaddr_in)) != 0)
       {
-         nxlog_write_generic(NXLOG_ERROR, _T("SocketListener/%s: cannot bind IPv4 socket (%s)"), m_name, GetLastSocketErrorText(buffer, 256));
+         nxlog_write(NXLOG_ERROR, _T("SocketListener/%s: cannot bind IPv4 socket (%s)"), m_name, GetLastSocketErrorText(buffer, 256));
          bindFailures++;
       }
    }
@@ -179,7 +179,7 @@ bool GenericSocketListener::initialize()
                (m_type == SOCK_STREAM) ? _T("tcp") : _T("udp"));
       if (bind(m_socketV6, (struct sockaddr *)&servAddr6, sizeof(struct sockaddr_in6)) != 0)
       {
-         nxlog_write_generic(NXLOG_ERROR, _T("SocketListener/%s: cannot bind IPv6 socket (%s)"), m_name, GetLastSocketErrorText(buffer, 256));
+         nxlog_write(NXLOG_ERROR, _T("SocketListener/%s: cannot bind IPv6 socket (%s)"), m_name, GetLastSocketErrorText(buffer, 256));
          bindFailures++;
       }
    }
@@ -201,7 +201,7 @@ bool GenericSocketListener::initialize()
       {
          if (listen(m_socketV4, SOMAXCONN) == 0)
          {
-            nxlog_write_generic(NXLOG_INFO, _T("SocketListener/%s: listening on %s:%d"), m_name, SockaddrToStr((struct sockaddr *)&servAddr, buffer), (int)m_port);
+            nxlog_write(NXLOG_INFO, _T("SocketListener/%s: listening on %s:%d"), m_name, SockaddrToStr((struct sockaddr *)&servAddr, buffer), (int)m_port);
          }
          else
          {
@@ -214,7 +214,7 @@ bool GenericSocketListener::initialize()
       {
          if (listen(m_socketV6, SOMAXCONN) == 0)
          {
-            nxlog_write_generic(NXLOG_INFO, _T("SocketListener/%s: listening on [%s]:%d"), m_name, SockaddrToStr((struct sockaddr *)&servAddr, buffer), (int)m_port);
+            nxlog_write(NXLOG_INFO, _T("SocketListener/%s: listening on [%s]:%d"), m_name, SockaddrToStr((struct sockaddr *)&servAddr, buffer), (int)m_port);
          }
          else
          {
@@ -287,14 +287,14 @@ void StreamSocketListener::mainLoop()
                if (errorCount == 0)
                {
                   TCHAR buffer[256];
-                  nxlog_write_generic(NXLOG_WARNING, _T("SocketListener/%s: accept() call failed (%s)"), m_name, GetLastSocketErrorText(buffer, 256));
+                  nxlog_write(NXLOG_WARNING, _T("SocketListener/%s: accept() call failed (%s)"), m_name, GetLastSocketErrorText(buffer, 256));
                }
                errorCount++;
             }
             m_acceptErrors++;
             if (errorCount > 1000)
             {
-               nxlog_write_generic(NXLOG_WARNING, _T("SocketListener/%s: multiple consecutive accept() errors"), m_name);
+               nxlog_write(NXLOG_WARNING, _T("SocketListener/%s: multiple consecutive accept() errors"), m_name);
                errorCount = 0;
             }
             ThreadSleepMs(500);
@@ -341,7 +341,7 @@ void StreamSocketListener::mainLoop()
 #endif
          {
             TCHAR buffer[256];
-            nxlog_write_generic(NXLOG_ERROR, _T("SocketListener/%s: select() call failed (%s)"), m_name, GetLastSocketErrorText(buffer, 256));
+            nxlog_write(NXLOG_ERROR, _T("SocketListener/%s: select() call failed (%s)"), m_name, GetLastSocketErrorText(buffer, 256));
             ThreadSleepMs(100);
          }
       }
@@ -381,7 +381,7 @@ void DatagramSocketListener::mainLoop()
 #endif
          {
             TCHAR buffer[256];
-            nxlog_write_generic(NXLOG_ERROR, _T("SocketListener/%s: select() call failed (%s)"), m_name, GetLastSocketErrorText(buffer, 256));
+            nxlog_write(NXLOG_ERROR, _T("SocketListener/%s: select() call failed (%s)"), m_name, GetLastSocketErrorText(buffer, 256));
             ThreadSleepMs(100);
          }
       }

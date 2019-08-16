@@ -787,6 +787,15 @@ void CommSession::processingThread()
 }
 
 /**
+ * Log authentication failure
+ */
+static inline void LogAuthFailure(const InetAddress& serverAddr, const TCHAR *method)
+{
+   TCHAR buffer[64];
+   nxlog_write(NXLOG_WARNING, _T("Authentication failed for peer %s (method = %s)"), serverAddr.toString(buffer), method);
+}
+
+/**
  * Authenticate peer
  */
 void CommSession::authenticate(NXCPMessage *pRequest, NXCPMessage *pMsg)
@@ -814,7 +823,7 @@ void CommSession::authenticate(NXCPMessage *pRequest, NXCPMessage *pMsg)
             }
             else
             {
-               nxlog_write(MSG_AUTH_FAILED, EVENTLOG_WARNING_TYPE, "Is", &m_serverAddr, _T("PLAIN"));
+               LogAuthFailure(m_serverAddr, _T("PLAIN"));
                pMsg->setField(VID_RCC, ERR_AUTH_FAILED);
             }
             break;
@@ -837,7 +846,7 @@ void CommSession::authenticate(NXCPMessage *pRequest, NXCPMessage *pMsg)
             }
             else
             {
-               nxlog_write(MSG_AUTH_FAILED, EVENTLOG_WARNING_TYPE, "Is", &m_serverAddr, _T("MD5"));
+               LogAuthFailure(m_serverAddr, _T("MD5"));
                pMsg->setField(VID_RCC, ERR_AUTH_FAILED);
             }
             break;
@@ -860,7 +869,7 @@ void CommSession::authenticate(NXCPMessage *pRequest, NXCPMessage *pMsg)
             }
             else
             {
-               nxlog_write(MSG_AUTH_FAILED, EVENTLOG_WARNING_TYPE, "Is", &m_serverAddr, _T("SHA1"));
+               LogAuthFailure(m_serverAddr, _T("SHA1"));
                pMsg->setField(VID_RCC, ERR_AUTH_FAILED);
             }
             break;
@@ -1401,17 +1410,10 @@ ProxySession::~ProxySession()
  */
 void ProxySession::debugPrintf(int level, const TCHAR *format, ...)
 {
-   if (level > nxlog_get_debug_level())
-      return;
-
    va_list args;
-   TCHAR buffer[8192];
-
    va_start(args, format);
-   _vsntprintf(buffer, 8192, format, args);
+   nxlog_debug_tag_object2(_T("comm.ps"), m_id, level, format, args);
    va_end(args);
-
-   nxlog_write(MSG_DEBUG_PSESSION, EVENTLOG_DEBUG_TYPE, "ds", m_id, buffer);
 }
 
 /**

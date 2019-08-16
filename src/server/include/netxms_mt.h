@@ -41,8 +41,8 @@ public:
 	MappingTableElement(TCHAR *value, TCHAR *description) { m_value = value; m_description = description; }
 	~MappingTableElement() { MemFree(m_value); MemFree(m_description); }
 
-	const TCHAR *getValue() { return CHECK_NULL_EX(m_value); }
-	const TCHAR *getDescription() { return CHECK_NULL_EX(m_description); }
+	const TCHAR *getValue() const { return CHECK_NULL_EX(m_value); }
+	const TCHAR *getDescription() const { return CHECK_NULL_EX(m_description); }
 };
 
 /**

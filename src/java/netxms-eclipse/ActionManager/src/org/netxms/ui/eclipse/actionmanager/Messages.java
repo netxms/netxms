@@ -10,7 +10,7 @@ public class Messages extends NLS
 	public static String ActionLabelProvider_ActionTypeMail;
    public static String ActionLabelProvider_ActionTypeNXSL;
 	public static String ActionLabelProvider_ActionTypeRemoteExec;
-	public static String ActionLabelProvider_ActionTypeSMS;
+	public static String ActionLabelProvider_ActionTypeNotification;
    public static String ActionLabelProvider_ActionTypeXMPP;
 	public static String ActionLabelProvider_Unknown;
 	public static String ActionManager_ActionDelete;
@@ -49,7 +49,6 @@ public class Messages extends NLS
 	public static String EditActionDlg_RemoteHost;
 	public static String EditActionDlg_RemoteServer;
 	public static String EditActionDlg_ScriptName;
-	public static String EditActionDlg_SendSMS;
 	public static String EditActionDlg_SenMail;
    public static String EditActionDlg_SendXMPPMessage;
 	public static String EditActionDlg_Type;

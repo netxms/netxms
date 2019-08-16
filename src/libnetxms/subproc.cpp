@@ -114,18 +114,18 @@ int LIBNETXMS_EXPORTABLE SubProcessMain(int argc, char *argv[], SubProcessReques
 /**
  * Sub-process registry
  */
-ObjectArray<SubProcessExecutor> *SubProcessExecutor::m_registry = NULL;
-Mutex SubProcessExecutor::m_registryLock;
+ObjectArray<SubProcessExecutor> LIBNETXMS_EXPORTABLE *SubProcessExecutor::m_registry = NULL;
+Mutex LIBNETXMS_EXPORTABLE SubProcessExecutor::m_registryLock;
 
 /**
  * Sub-process manager thread handle
  */
-THREAD SubProcessExecutor::m_monitorThread = INVALID_THREAD_HANDLE;
+THREAD LIBNETXMS_EXPORTABLE SubProcessExecutor::m_monitorThread = INVALID_THREAD_HANDLE;
 
 /**
  * Sub-process manager thread stop condition
  */
-CONDITION SubProcessExecutor::m_stopCondition = INVALID_CONDITION_HANDLE;
+CONDITION LIBNETXMS_EXPORTABLE SubProcessExecutor::m_stopCondition = INVALID_CONDITION_HANDLE;
 
 /**
  * Sub-process monitor thread
@@ -355,7 +355,7 @@ bool SubProcessExecutor::sendRequest(UINT16 command, const void *data, size_t da
    {
       if (rmsg->isBinary())
       {
-         *response = nx_memdup(rmsg->getBinaryData(), rmsg->getBinaryDataSize());
+         *response = MemCopyBlock(rmsg->getBinaryData(), rmsg->getBinaryDataSize());
          *rspSize = rmsg->getBinaryDataSize();
       }
       else

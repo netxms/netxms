@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -93,8 +93,8 @@ void LoadScripts()
                   DBGetField(hResult, i, 2, buffer, MAX_DB_STRING), DBGetField(hResult, i, 3, NULL, 0));
          if (!pScript->isValid())
          {
-            nxlog_write(MSG_SCRIPT_COMPILATION_ERROR, NXLOG_WARNING, "dss",
-                        pScript->getId(), pScript->getName(), pScript->getError());
+            nxlog_write(NXLOG_WARNING, _T("Error compiling library script %s [%u] (%s)"),
+                     pScript->getName(), pScript->getId(), pScript->getError());
          }
          s_scriptLibrary.addScript(pScript);
          DbgPrintf(2, _T("Script %s added to library"), pScript->getName());
@@ -149,7 +149,7 @@ void ReloadScript(UINT32 id)
 
    if (!script->isValid())
    {
-      nxlog_write(MSG_SCRIPT_COMPILATION_ERROR, NXLOG_WARNING, "dss", id, script->getName(), script->getError());
+      nxlog_write(NXLOG_WARNING, _T("Error compiling library script %s [%u] (%s)"), script->getName(), id, script->getError());
    }
 
    s_scriptLibrary.lock();

@@ -31,7 +31,7 @@ static void InitLogging()
    CreateFolder(path);
    
    _tcscat(path, _T("\\nxuseragent.log"));
-   nxlog_open(path, 0, _T("NXUSERAGENT"), 0, NULL, MSG_DEBUG, MSG_DEBUG_TAG, MSG_GENERIC);
+   nxlog_open(path, 0);
    nxlog_set_debug_level(9);
 }
 
@@ -52,7 +52,7 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR cmdLine
    if (wrc != 0)
    {
       TCHAR buffer[1024];
-      nxlog_debug(2, _T("WSAStartup() failed (%s)"), GetSystemErrorText(WSAGetLastError(), buffer, 1024));
+      nxlog_write(NXLOG_ERROR, _T("WSAStartup() failed (%s)"), GetSystemErrorText(WSAGetLastError(), buffer, 1024));
    }
 
    INITCOMMONCONTROLSEX icc;
@@ -62,13 +62,13 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR cmdLine
    if ((wrc != 0) || !InitCommonControlsEx(&icc) || !InitMenu() || !SetupTrayIcon() ||
        !PrepareApplicationWindow() || !PrepareMessageWindow() || !SetupSessionEventHandler())
    {
-      nxlog_write(MSG_INIT_FAILED, NXLOG_ERROR, NULL);
+      nxlog_write(NXLOG_ERROR, _T("NetXMS User Agent initialization failed"));
       MessageBox(NULL, _T("NetXMS User Agent initialization failed"), _T("NetXMS User Agent"), MB_OK | MB_ICONSTOP);
       return 1;
    }
    UpdateAddressList();
    StartAgentConnector();
-   nxlog_write(MSG_USERAGENT_STARTED, NXLOG_INFO, NULL);
+   nxlog_write(NXLOG_INFO, _T("NetXMS user agent started"));
 
    UINT modifiers;
    UINT keycode = GetHotKey(&modifiers);
@@ -104,6 +104,7 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR cmdLine
       UnregisterHotKey(NULL, 1);
    }
    RemoveTrayIcon();
-   nxlog_write(MSG_USERAGENT_STOPPED, NXLOG_INFO, NULL);
+   nxlog_write(NXLOG_INFO, _T("NetXMS user agent stopped"));
+   nxlog_close();
    return 0;
 }

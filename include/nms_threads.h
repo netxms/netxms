@@ -80,7 +80,7 @@ int LIBNETXMS_EXPORTABLE ___ExceptionHandler(EXCEPTION_POINTERS *pInfo);
 
 void LIBNETXMS_EXPORTABLE SetExceptionHandler(BOOL (*pfHandler)(EXCEPTION_POINTERS *),
 															 void (*pfWriter)(const TCHAR *), const TCHAR *pszDumpDir,
-															 const TCHAR *pszBaseProcessName, DWORD dwLogMsgCode,
+															 const TCHAR *pszBaseProcessName,
 															 BOOL writeFullDump, BOOL printToScreen);
 BOOL LIBNETXMS_EXPORTABLE SEHDefaultConsoleHandler(EXCEPTION_POINTERS *pInfo);
 TCHAR LIBNETXMS_EXPORTABLE *SEHExceptionName(DWORD code);
@@ -1230,6 +1230,14 @@ template <typename T> void __ThreadPoolExecute_Wrapper_0(void *arg)
 template <typename T, typename B> inline void ThreadPoolExecute(ThreadPool *p, T *object, void (B::*f)())
 {
    ThreadPoolExecute(p, __ThreadPoolExecute_Wrapper_0<B>, new __ThreadPoolExecute_WrapperData_0<B>(object, f));
+}
+
+/**
+ * Execute serialized task as soon as possible (use class member without arguments)
+ */
+template <typename T, typename B> inline void ThreadPoolExecuteSerialized(ThreadPool *p, const TCHAR *key, T *object, void (B::*f)())
+{
+   ThreadPoolExecuteSerialized(p, key, __ThreadPoolExecute_Wrapper_0<B>, new __ThreadPoolExecute_WrapperData_0<B>(object, f));
 }
 
 /**

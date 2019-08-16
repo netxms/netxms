@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -106,7 +106,7 @@ bool AccessPoint::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
       NetObj *object = FindObjectById(m_nodeId, OBJECT_NODE);
       if (object == NULL)
       {
-         nxlog_write(MSG_INVALID_NODE_ID, EVENTLOG_ERROR_TYPE, "dd", dwId, m_nodeId);
+         nxlog_write(NXLOG_ERROR, _T("Inconsistent database: access point %s [%u] linked to non-existent node [%u]"), m_name, m_id, m_nodeId);
       }
       else
       {
@@ -131,10 +131,9 @@ bool AccessPoint::saveToDatabase(DB_HANDLE hdb)
    // Lock object's access
    lockProperties();
 
-   saveCommonProperties(hdb);
+   bool success = saveCommonProperties(hdb);
 
-   bool bResult;
-   if (m_modified & MODIFY_OTHER)
+   if (success && (m_modified & MODIFY_OTHER))
    {
       DB_STATEMENT hStmt;
       if (IsDatabaseRecordExist(hdb, _T("access_points"), _T("id"), m_id))
@@ -143,7 +142,6 @@ bool AccessPoint::saveToDatabase(DB_HANDLE hdb)
          hStmt = DBPrepare(hdb, _T("INSERT INTO access_points (mac_address,vendor,model,serial_number,node_id,ap_state,ap_index,id) VALUES (?,?,?,?,?,?,?,?)"));
       if (hStmt != NULL)
       {
-         TCHAR macStr[16];
          DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_macAddr);
          DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_vendor, DB_BIND_STATIC);
          DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_model, DB_BIND_STATIC);
@@ -153,22 +151,18 @@ bool AccessPoint::saveToDatabase(DB_HANDLE hdb)
          DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, m_index);
          DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, m_id);
 
-         bResult = DBExecute(hStmt);
+         success = DBExecute(hStmt);
 
          DBFreeStatement(hStmt);
       }
       else
       {
-         bResult = false;
+         success = false;
       }
-   }
-   else
-   {
-      bResult = true;
    }
 
    // Save data collection items
-   if (bResult && (m_modified & MODIFY_DATA_COLLECTION))
+   if (success && (m_modified & MODIFY_DATA_COLLECTION))
    {
 		lockDciAccess(false);
       for(int i = 0; i < m_dcObjects->size(); i++)
@@ -177,10 +171,11 @@ bool AccessPoint::saveToDatabase(DB_HANDLE hdb)
    }
 
    // Save access list
-   saveACLToDB(hdb);
+   if (success)
+      success = saveACLToDB(hdb);
    unlockProperties();
 
-   return bResult;
+   return success;
 }
 
 /**
@@ -234,9 +229,15 @@ void AccessPoint::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
 /**
  * Modify object from message
  */
-UINT32 AccessPoint::modifyFromMessageInternal(NXCPMessage *msg)
+UINT32 AccessPoint::modifyFromMessageInternal(NXCPMessage *request)
 {
-   return super::modifyFromMessageInternal(msg);
+   if (request->isFieldExist(VID_FLAGS))
+   {
+      UINT32 mask = request->isFieldExist(VID_FLAGS_MASK) ? request->getFieldAsUInt32(VID_FLAGS_MASK) : 0xFFFFFFFF;
+      m_flags &= ~mask;
+      m_flags |= request->getFieldAsUInt32(VID_FLAGS) & mask;
+   }
+   return super::modifyFromMessageInternal(request);
 }
 
 /**
@@ -418,8 +419,8 @@ void AccessPoint::updateState(AccessPointState state)
    {
       static const TCHAR *names[] = { _T("id"), _T("name"), _T("macAddr"), _T("ipAddr"), _T("vendor"), _T("model"), _T("serialNumber") };
       PostEventWithNames((state == AP_ADOPTED) ? EVENT_AP_ADOPTED : ((state == AP_UNADOPTED) ? EVENT_AP_UNADOPTED : EVENT_AP_DOWN),
-         m_nodeId, "ishAsss", names,
-         m_id, m_name, m_macAddr, &m_ipAddress,
+         m_nodeId, "isHAsss", names,
+         m_id, m_name, &m_macAddr, &m_ipAddress,
          CHECK_NULL_EX(m_vendor), CHECK_NULL_EX(m_model), CHECK_NULL_EX(m_serialNumber));
    }
 }
@@ -473,19 +474,17 @@ void AccessPoint::statusPollFromController(ClientSession *session, UINT32 rqId, 
 						long value = _tcstol(buffer, &eptr, 10);
 						if ((*eptr == 0) && (value >= 0))
 						{
-                     m_pingLastTimeStamp = time(NULL);
-                     m_pingTime = value;
-							if (value < 10000)
+                     if (value < 10000)
                      {
-            				sendPollerMsg(rqId, POLLER_ERROR _T("      responded to ICMP ping\r\n"));
-                        if (state == AP_DOWN)
+                        sendPollerMsg(rqId, POLLER_ERROR _T("      responded to ICMP ping\r\n"));
+                        if (m_apState == AP_DOWN)
                            state = m_prevState;  /* FIXME: get actual AP state here */
                      }
                      else
-							{
-            				sendPollerMsg(rqId, POLLER_ERROR _T("      no response to ICMP ping\r\n"));
+                     {
+                        sendPollerMsg(rqId, POLLER_ERROR _T("      no response to ICMP ping\r\n"));
                         state = AP_DOWN;
-							}
+                     }
 						}
 					}
 					conn->disconnect();
@@ -508,19 +507,18 @@ void AccessPoint::statusPollFromController(ClientSession *session, UINT32 rqId, 
          TCHAR buffer[64];
 			sendPollerMsg(rqId, _T("      Starting ICMP ping\r\n"));
 			DbgPrintf(7, _T("AccessPoint::StatusPoll(%d,%s): calling IcmpPing(%s,3,%d,NULL,%d)"), m_id, m_name, m_ipAddress.toString(buffer), g_icmpPingTimeout, g_icmpPingSize);
-			UINT32 dwPingStatus = IcmpPing(m_ipAddress, 3, g_icmpPingTimeout, &m_pingTime, g_icmpPingSize, false);
-         m_pingLastTimeStamp = time(NULL);
+			UINT32 responseTime;
+			UINT32 dwPingStatus = IcmpPing(m_ipAddress, 3, g_icmpPingTimeout, &responseTime, g_icmpPingSize, false);
 			if (dwPingStatus == ICMP_SUCCESS)
          {
 				sendPollerMsg(rqId, POLLER_ERROR _T("      responded to ICMP ping\r\n"));
-            if (state == AP_DOWN)
+            if (m_apState == AP_DOWN)
                state = m_prevState;  /* FIXME: get actual AP state here */
          }
          else
 			{
 				sendPollerMsg(rqId, POLLER_ERROR _T("      no response to ICMP ping\r\n"));
             state = AP_DOWN;
-            m_pingTime = PING_TIME_TIMEOUT;
 			}
 			DbgPrintf(7, _T("AccessPoint::StatusPoll(%d,%s): ping result %d, state=%d"), m_id, m_name, dwPingStatus, state);
 		}
@@ -533,79 +531,11 @@ void AccessPoint::statusPollFromController(ClientSession *session, UINT32 rqId, 
 }
 
 /**
- * Updates last ping time and ping time
+ * Create NXSL object for this object
  */
-void AccessPoint::updatePingData()
+NXSL_Value *AccessPoint::createNXSLObject(NXSL_VM *vm)
 {
-   Node *pNode = getParentNode();
-   if (pNode == NULL)
-   {
-      DbgPrintf(7, _T("AccessPoint::updatePingData: Can't find parent node"));
-      return;
-   }
-   UINT32 icmpProxy = pNode->getIcmpProxy();
-
-   if (IsZoningEnabled() && (pNode->getZoneUIN() != 0) && (icmpProxy == 0))
-   {
-      Zone *zone = FindZoneByUIN(pNode->getZoneUIN());
-      if (zone != NULL)
-      {
-         icmpProxy = zone->getProxyNodeId(this);
-      }
-   }
-
-   if (icmpProxy != 0)
-   {
-      DbgPrintf(7, _T("AccessPoint::updatePingData: ping via proxy [%u]"), icmpProxy);
-      Node *proxyNode = (Node *)g_idxNodeById.get(icmpProxy);
-      if ((proxyNode != NULL) && proxyNode->isNativeAgent() && !proxyNode->isDown())
-      {
-         DbgPrintf(7, _T("AccessPoint::updatePingData: proxy node found: %s"), proxyNode->getName());
-         AgentConnection *conn = proxyNode->createAgentConnection();
-         if (conn != NULL)
-         {
-            TCHAR parameter[64], buffer[64];
-
-            _sntprintf(parameter, 64, _T("Icmp.Ping(%s)"), m_ipAddress.toString(buffer));
-            if (conn->getParameter(parameter, 64, buffer) == ERR_SUCCESS)
-            {
-               DbgPrintf(7, _T("AccessPoint::updatePingData:  proxy response: \"%s\""), buffer);
-               TCHAR *eptr;
-               long value = _tcstol(buffer, &eptr, 10);
-               m_pingLastTimeStamp = time(NULL);
-               if ((*eptr == 0) && (value >= 0) && (value < 10000))
-               {
-                  m_pingTime = value;
-               }
-               else
-               {
-                  m_pingTime = PING_TIME_TIMEOUT;
-                  DbgPrintf(7, _T("AccessPoint::updatePingData: incorrect value: %d or error while parsing: %s"), value, eptr);
-               }
-            }
-            conn->disconnect();
-            conn->decRefCount();
-         }
-         else
-         {
-            DbgPrintf(7, _T("AccessPoint::updatePingData: cannot connect to agent on proxy node [%u]"), icmpProxy);
-         }
-      }
-      else
-      {
-         DbgPrintf(7, _T("AccessPoint::updatePingData: proxy node not available [%u]"), icmpProxy);
-      }
-   }
-   else	// not using ICMP proxy
-   {
-      UINT32 dwPingStatus = IcmpPing(m_ipAddress, 3, g_icmpPingTimeout, &m_pingTime, g_icmpPingSize, false);
-      if (dwPingStatus != ICMP_SUCCESS)
-      {
-         DbgPrintf(7, _T("AccessPoint::updatePingData: error getting ping %d"), dwPingStatus);
-         m_pingTime = PING_TIME_TIMEOUT;
-      }
-      m_pingLastTimeStamp = time(NULL);
-   }
+   return vm->createValue(new NXSL_Object(vm, &g_nxslAccessPointClass, this));
 }
 
 /**

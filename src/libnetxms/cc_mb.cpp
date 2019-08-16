@@ -25,12 +25,12 @@
 
 #if defined(_WIN32)
 
-int LIBNETXMS_EXPORTABLE mb_to_ucs4(const char *src, int srcLen, UCS4CHAR *dst, int dstLen)
+size_t LIBNETXMS_EXPORTABLE mb_to_ucs4(const char *src, ssize_t srcLen, UCS4CHAR *dst, size_t dstLen)
 {
-   int len = (srcLen < 0) ? (int)strlen(src) + 1 : srcLen;
+   size_t len = (srcLen < 0) ? strlen(src) + 1 : srcLen;
    WCHAR *buffer = (len <= 32768) ? (WCHAR *)alloca(len * sizeof(WCHAR)) : (WCHAR *)MemAlloc(len * sizeof(WCHAR));
-   MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, src, srcLen, buffer, len);
-   int ret = ucs2_to_ucs4(buffer, srcLen, dst, dstLen);
+   MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, src, (int)srcLen, buffer, (int)len);
+   size_t ret = ucs2_to_ucs4(buffer, srcLen, dst, dstLen);
    if (len > 32768)
       MemFree(buffer);
    return ret;
@@ -41,7 +41,7 @@ int LIBNETXMS_EXPORTABLE mb_to_ucs4(const char *src, int srcLen, UCS4CHAR *dst, 
 /**
  * Convert multibyte to UCS-4
  */
-int LIBNETXMS_EXPORTABLE mb_to_ucs4(const char *src, int srcLen, UCS4CHAR *dst, int dstLen)
+size_t LIBNETXMS_EXPORTABLE mb_to_ucs4(const char *src, ssize_t srcLen, UCS4CHAR *dst, size_t dstLen)
 {
    if (g_defaultCodePageType == CodePageType::ASCII)
       return ASCII_to_ucs4(src, srcLen, dst, dstLen);
@@ -89,7 +89,7 @@ int LIBNETXMS_EXPORTABLE mb_to_ucs4(const char *src, int srcLen, UCS4CHAR *dst, 
       *((UCS4CHAR *)outbuf) = 0;
    }
 
-   return (int)count;
+   return count;
 #else
    return ASCII_to_ucs4(src, srcLen, dst, dstLen);
 #endif
@@ -102,7 +102,7 @@ int LIBNETXMS_EXPORTABLE mb_to_ucs4(const char *src, int srcLen, UCS4CHAR *dst, 
 /**
  * Convert multibyte to UCS-2
  */
-int LIBNETXMS_EXPORTABLE mb_to_ucs2(const char *src, int srcLen, UCS2CHAR *dst, int dstLen)
+size_t LIBNETXMS_EXPORTABLE mb_to_ucs2(const char *src, ssize_t srcLen, UCS2CHAR *dst, size_t dstLen)
 {
    if (g_defaultCodePageType == CodePageType::ASCII)
       return ASCII_to_ucs2(src, srcLen, dst, dstLen);
@@ -150,7 +150,7 @@ int LIBNETXMS_EXPORTABLE mb_to_ucs2(const char *src, int srcLen, UCS2CHAR *dst, 
       *reinterpret_cast<UCS2CHAR*>(outbuf) = 0;
    }
 
-   return (int)count;
+   return count;
 #else
    return ASCII_to_ucs2(src, srcLen, dst, dstLen);
 #endif
@@ -163,14 +163,14 @@ int LIBNETXMS_EXPORTABLE mb_to_ucs2(const char *src, int srcLen, UCS2CHAR *dst, 
 /**
  * Convert multibyte to UTF-8
  */
-int LIBNETXMS_EXPORTABLE mb_to_utf8(const char *src, int srcLen, char *dst, int dstLen)
+size_t LIBNETXMS_EXPORTABLE mb_to_utf8(const char *src, ssize_t srcLen, char *dst, size_t dstLen)
 {
-   int len = (srcLen < 0) ? (int)strlen(src) + 1 : srcLen;
-   WCHAR *buffer = (len <= 32768) ? (WCHAR *)alloca(len * sizeof(WCHAR)) : (WCHAR *)malloc(len * sizeof(WCHAR));
-   MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, src, srcLen, buffer, len);
-   int ret = WideCharToMultiByte(CP_UTF8, 0, buffer, srcLen, dst, dstLen, NULL, NULL);
+   size_t len = (srcLen < 0) ? strlen(src) + 1 : srcLen;
+   WCHAR *buffer = (len <= 32768) ? (WCHAR *)alloca(len * sizeof(WCHAR)) : (WCHAR *)MemAlloc(len * sizeof(WCHAR));
+   MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, src, (int)srcLen, buffer, (int)len);
+   size_t ret = WideCharToMultiByte(CP_UTF8, 0, buffer, (int)srcLen, dst, (int)dstLen, NULL, NULL);
    if (len > 32768)
-      free(buffer);
+      MemFree(buffer);
    return ret;
 }
 
@@ -179,7 +179,7 @@ int LIBNETXMS_EXPORTABLE mb_to_utf8(const char *src, int srcLen, char *dst, int 
 /**
  * Convert multibyte to UTF-8
  */
-int LIBNETXMS_EXPORTABLE mb_to_utf8(const char *src, int srcLen, char *dst, int dstLen)
+size_t LIBNETXMS_EXPORTABLE mb_to_utf8(const char *src, ssize_t srcLen, char *dst, size_t dstLen)
 {
    if (g_defaultCodePageType == CodePageType::ASCII)
       return ASCII_to_utf8(src, srcLen, dst, dstLen);
@@ -225,7 +225,7 @@ int LIBNETXMS_EXPORTABLE mb_to_utf8(const char *src, int srcLen, char *dst, int 
       *((char *)outbuf) = 0;
    }
 
-   return (int)count;
+   return count;
 #else
    return ASCII_to_utf8(src, srcLen, dst, dstLen);
 #endif
@@ -236,15 +236,15 @@ int LIBNETXMS_EXPORTABLE mb_to_utf8(const char *src, int srcLen, char *dst, int 
 /**
  * Convert ASCII to UTF-8
  */
-int LIBNETXMS_EXPORTABLE ASCII_to_utf8(const char *src, int srcLen, char *dst, int dstLen)
+size_t LIBNETXMS_EXPORTABLE ASCII_to_utf8(const char *src, ssize_t srcLen, char *dst, size_t dstLen)
 {
-   int size = (srcLen == -1) ? static_cast<int>(strlen(src)) : srcLen;
+   size_t size = (srcLen == -1) ? strlen(src) : srcLen;
    if (size >= dstLen)
       size = dstLen - 1;
 
    const BYTE *psrc = reinterpret_cast<const BYTE*>(src);
    char *pdst = dst;
-   for(int pos = 0; pos < size; pos++, psrc++, pdst++)
+   for(size_t pos = 0; pos < size; pos++, psrc++, pdst++)
       *pdst = (*psrc < 128) ? static_cast<char>(*psrc) : '?';
    *pdst = 0;
 
@@ -254,15 +254,15 @@ int LIBNETXMS_EXPORTABLE ASCII_to_utf8(const char *src, int srcLen, char *dst, i
 /**
  * Convert ASCII to UCS-2
  */
-int LIBNETXMS_EXPORTABLE ASCII_to_ucs2(const char *src, int srcLen, UCS2CHAR *dst, int dstLen)
+size_t LIBNETXMS_EXPORTABLE ASCII_to_ucs2(const char *src, ssize_t srcLen, UCS2CHAR *dst, size_t dstLen)
 {
-   int size = (srcLen == -1) ? static_cast<int>(strlen(src)) : srcLen;
+   size_t size = (srcLen == -1) ? strlen(src) : srcLen;
    if (size >= dstLen)
       size = dstLen - 1;
 
    const BYTE *psrc = reinterpret_cast<const BYTE*>(src);
    UCS2CHAR *pdst = dst;
-   for(int pos = 0; pos < size; pos++, psrc++, pdst++)
+   for(size_t pos = 0; pos < size; pos++, psrc++, pdst++)
       *pdst = (*psrc < 128) ? *psrc : '?';
    *pdst = 0;
 
@@ -272,15 +272,15 @@ int LIBNETXMS_EXPORTABLE ASCII_to_ucs2(const char *src, int srcLen, UCS2CHAR *ds
 /**
  * Convert ASCII to UCS-4
  */
-int LIBNETXMS_EXPORTABLE ASCII_to_ucs4(const char *src, int srcLen, UCS4CHAR *dst, int dstLen)
+size_t LIBNETXMS_EXPORTABLE ASCII_to_ucs4(const char *src, ssize_t srcLen, UCS4CHAR *dst, size_t dstLen)
 {
-   int size = (srcLen == -1) ? static_cast<int>(strlen(src)) : srcLen;
+   size_t size = (srcLen == -1) ? strlen(src) : srcLen;
    if (size >= dstLen)
       size = dstLen - 1;
 
    const BYTE *psrc = reinterpret_cast<const BYTE*>(src);
    UCS4CHAR *pdst = dst;
-   for(int pos = 0; pos < size; pos++, psrc++, pdst++)
+   for(size_t pos = 0; pos < size; pos++, psrc++, pdst++)
       *pdst = (*psrc < 128) ? *psrc : '?';
    *pdst = 0;
 
@@ -290,15 +290,15 @@ int LIBNETXMS_EXPORTABLE ASCII_to_ucs4(const char *src, int srcLen, UCS4CHAR *ds
 /**
  * Convert ISO8859-1 to UTF-8
  */
-int LIBNETXMS_EXPORTABLE ISO8859_1_to_utf8(const char *src, int srcLen, char *dst, int dstLen)
+size_t LIBNETXMS_EXPORTABLE ISO8859_1_to_utf8(const char *src, ssize_t srcLen, char *dst, size_t dstLen)
 {
-   int size = (srcLen == -1) ? static_cast<int>(strlen(src)) : srcLen;
+   size_t size = (srcLen == -1) ? strlen(src) : srcLen;
    if (size >= dstLen)
       size = dstLen - 1;
 
    const BYTE *psrc = reinterpret_cast<const BYTE*>(src);
    BYTE *pdst = reinterpret_cast<BYTE*>(dst);
-   for(int pos = 0; pos < size; pos++, psrc++, pdst++)
+   for(size_t pos = 0; pos < size; pos++, psrc++, pdst++)
    {
       if (*psrc < 128)
       {
@@ -324,15 +324,15 @@ int LIBNETXMS_EXPORTABLE ISO8859_1_to_utf8(const char *src, int srcLen, char *ds
 /**
  * Convert ISO8859-1 to UCS-2
  */
-int LIBNETXMS_EXPORTABLE ISO8859_1_to_ucs2(const char *src, int srcLen, UCS2CHAR *dst, int dstLen)
+size_t LIBNETXMS_EXPORTABLE ISO8859_1_to_ucs2(const char *src, ssize_t srcLen, UCS2CHAR *dst, size_t dstLen)
 {
-   int size = (srcLen == -1) ? static_cast<int>(strlen(src)) : srcLen;
+   size_t size = (srcLen == -1) ? strlen(src) : srcLen;
    if (size >= dstLen)
       size = dstLen - 1;
 
    const BYTE *psrc = reinterpret_cast<const BYTE*>(src);
    UCS2CHAR *pdst = dst;
-   for(int pos = 0; pos < size; pos++, psrc++, pdst++)
+   for(size_t pos = 0; pos < size; pos++, psrc++, pdst++)
       *pdst = ((*psrc < 128) || (*psrc >= 160)) ? *psrc : '?';
    *pdst = 0;
 
@@ -342,15 +342,15 @@ int LIBNETXMS_EXPORTABLE ISO8859_1_to_ucs2(const char *src, int srcLen, UCS2CHAR
 /**
  * Convert ISO8859-1 to UCS-4
  */
-int LIBNETXMS_EXPORTABLE ISO8859_1_to_ucs4(const char *src, int srcLen, UCS4CHAR *dst, int dstLen)
+size_t LIBNETXMS_EXPORTABLE ISO8859_1_to_ucs4(const char *src, ssize_t srcLen, UCS4CHAR *dst, size_t dstLen)
 {
-   int size = (srcLen == -1) ? static_cast<int>(strlen(src)) : srcLen;
+   size_t size = (srcLen == -1) ? strlen(src) : srcLen;
    if (size >= dstLen)
       size = dstLen - 1;
 
    const BYTE *psrc = reinterpret_cast<const BYTE*>(src);
    UCS4CHAR *pdst = dst;
-   for(int pos = 0; pos < size; pos++, psrc++, pdst++)
+   for(size_t pos = 0; pos < size; pos++, psrc++, pdst++)
       *pdst = ((*psrc < 128) || (*psrc >= 160)) ? *psrc : '?';
    *pdst = 0;
 

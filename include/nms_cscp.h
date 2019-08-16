@@ -452,7 +452,7 @@ typedef struct
 #define CMD_QUERY_L2_TOPOLOGY			      0x00CD
 #define CMD_AUDIT_RECORD                  0x00CE
 #define CMD_GET_AUDIT_LOG                 0x00CF
-#define CMD_SEND_SMS                      0x00D0
+#define CMD_SEND_NOTIFICATION             0x00D0
 #define CMD_GET_COMMUNITY_LIST            0x00D1
 #define CMD_UPDATE_COMMUNITY_LIST         0x00D2
 #define CMD_GET_PERSISTENT_STORAGE        0x00D3
@@ -625,6 +625,12 @@ typedef struct
 #define CMD_ADD_UA_NOTIFICATION           0x017E
 #define CMD_RECALL_UA_NOTIFICATION        0x017F
 #define CMD_UPDATE_UA_NOTIFICATIONS       0x0180
+#define CMD_GET_NOTIFICATION_CHANNELS     0x0181
+#define CMD_ADD_NOTIFICATION_CHANNEL      0x0182
+#define CMD_UPDATE_NOTIFICATION_CHANNEL   0x0183
+#define CMD_DELETE_NOTIFICATION_CHANNEL   0x0184
+#define CMD_GET_NOTIFICATION_DRIVERS      0x0185
+#define CMD_RENAME_NOTIFICATION_CHANNEL   0x0186
 
 #define CMD_RS_LIST_REPORTS            0x1100
 #define CMD_RS_GET_REPORT              0x1101
@@ -1285,6 +1291,18 @@ typedef struct
 #define VID_SNMP_TRAP_PROXY         ((UINT32)643)
 #define VID_THRESHOLD_ID            ((UINT32)644)
 #define VID_TAGS                    ((UINT32)645)
+#define VID_ICMP_AVG_RESPONSE_TIME  ((UINT32)646)
+#define VID_ICMP_MIN_RESPONSE_TIME  ((UINT32)647)
+#define VID_ICMP_MAX_RESPONSE_TIME  ((UINT32)648)
+#define VID_ICMP_LAST_RESPONSE_TIME ((UINT32)649)
+#define VID_ICMP_PACKET_LOSS        ((UINT32)650)
+#define VID_ICMP_COLLECTION_MODE    ((UINT32)651)
+#define VID_ICMP_TARGET_COUNT       ((UINT32)652)
+#define VID_HAS_ICMP_DATA           ((UINT32)653)
+#define VID_CHANNEL_NAME            ((UINT32)654)
+#define VID_CHANNEL_COUNT           ((UINT32)655)
+#define VID_DRIVER_COUNT            ((UINT32)656)
+#define VID_NEW_NAME                ((UINT32)657)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)
@@ -1340,6 +1358,9 @@ typedef struct
 
 // Base value for URL list
 #define VID_URL_LIST_BASE           ((UINT32)0x74000000)
+
+// Base value for ICMP target list
+#define VID_ICMP_TARGET_LIST_BASE   ((UINT32)0x75000000)
 
 // IP address list base
 #define VID_IP_ADDRESS_LIST_BASE    ((UINT32)0x7F000000)
@@ -1500,6 +1521,10 @@ typedef struct
 #define VID_ZONE_PROXY_BASE         ((UINT32)0x70000000)
 
 #define VID_UA_NOTIFICATION_BASE    ((UINT32)0x10000000)
+
+#define VID_NOTIFICATION_CHANNEL_BASE ((UINT32)0x10000000)
+
+#define VID_NOTIFICATION_DRIVER_BASE ((UINT32)0x10000000)
 
 // base value for SNMP community strings
 #define VID_COMMUNITY_STRING_LIST_BASE       ((UINT32)0x10000000)

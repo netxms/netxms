@@ -102,6 +102,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("ServerCertificate"), CT_STRING, 0, 0, MAX_PATH, 0, g_serverCertificatePath, NULL },
    { _T("ServerCertificateKey"), CT_STRING, 0, 0, MAX_PATH, 0, g_serverCertificateKeyPath, NULL },
    { _T("ServerCertificatePassword"), CT_MB_STRING, 0, 0, MAX_PASSWORD, 0, g_serverCertificatePassword, NULL },
+   { _T("WriteLogAsJson"), CT_BOOLEAN64, 0, 0, AF_LOG_IN_JSON_FORMAT, 0, &g_flags, NULL },
    { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL, NULL }
 };
 
@@ -463,6 +464,19 @@ static void OnConfigVariableChange(bool isCLOB, const TCHAR *name, const TCHAR *
          EnableAlarmSummaryEmails();
       else
          DeleteScheduledTaskByHandlerId(ALARM_SUMMARY_EMAIL_TASK_ID);
+   }
+   else if (!_tcscmp(name, _T("ICMP.CollectPollStatistics")))
+   {
+      if (_tcstol(value, NULL, 0))
+         g_flags |= AF_COLLECT_ICMP_STATISTICS;
+      else
+         g_flags &= ~AF_COLLECT_ICMP_STATISTICS;
+   }
+   else if (!_tcscmp(name, _T("ICMP.PollingInterval")))
+   {
+      TCHAR *eptr;
+      UINT32 i = _tcstoul(value, &eptr, 0);
+      g_icmpPollingInterval = (i > 0) && (*eptr == 0) ? i : 60;
    }
    else if (!_tcscmp(name, _T("NetworkDiscovery.EnableParallelProcessing")))
    {

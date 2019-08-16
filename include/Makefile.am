@@ -12,7 +12,6 @@ include_HEADERS = \
 	appagent.h \
 	ata.h \
 	base64.h \
-	build.h \
 	config-netware.h \
 	dbdrv.h \
 	gauge_helpers.h \
@@ -25,11 +24,13 @@ include_HEADERS = \
 	netxms_isc.h \
 	netxms-regex.h \
 	netxms-version.h \
+	ncdrv.h \
 	nms_agent.h \
 	nms_common.h \
 	nms_cscp.h \
 	nms_threads.h \
 	nms_util.h \
+	nx_shared_ptr.h \
 	nxatomic.h \
 	nxcc.h \
 	nxcldefs.h \

@@ -2,7 +2,7 @@ SUBAGENT = mysql
 
 pkglib_LTLIBRARIES = mysql.la
 mysql_la_SOURCES = db.cpp main.cpp
-mysql_la_CPPFLAGS=-I@top_srcdir@/include
+mysql_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/build
 mysql_la_LDFLAGS = -module -avoid-version -export-symbols ../subagent.sym
 mysql_la_LIBADD = ../../libnxagent/libnxagent.la ../../../libnetxms/libnetxms.la ../../../db/libnxdb/libnxdb.la
 if USE_INTERNAL_LIBTRE

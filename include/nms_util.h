@@ -193,7 +193,7 @@ inline WCHAR towupper(WCHAR c)
  * Return codes for IcmpPing()
  */
 #define ICMP_SUCCESS          0
-#define ICMP_UNREACHEABLE     1
+#define ICMP_UNREACHABLE      1
 #define ICMP_TIMEOUT          2
 #define ICMP_RAW_SOCK_FAILED  3
 #define ICMP_API_ERROR        4
@@ -234,6 +234,7 @@ inline WCHAR towupper(WCHAR c)
 #define NXLOG_BACKGROUND_WRITER ((UINT32)0x00000004)
 #define NXLOG_DEBUG_MODE        ((UINT32)0x00000008)
 #define NXLOG_USE_SYSTEMD       ((UINT32)0x00000010)
+#define NXLOG_JSON_FORMAT       ((UINT32)0x00000020)
 #define NXLOG_IS_OPEN           ((UINT32)0x80000000)
 
 /**
@@ -308,16 +309,16 @@ UCS2CHAR LIBNETXMS_EXPORTABLE *ucs2_strdup(const UCS2CHAR *src);
 #endif
 
 // Character conversion functions
-int LIBNETXMS_EXPORTABLE ucs2_to_ucs4(const UCS2CHAR *src, int srcLen, UCS4CHAR *dst, int dstLen);
-int LIBNETXMS_EXPORTABLE ucs2_to_utf8(const UCS2CHAR *src, int srcLen, char *dst, int dstLen);
-int LIBNETXMS_EXPORTABLE ucs2_utf8len(const UCS2CHAR *src, int srcLen);
+size_t LIBNETXMS_EXPORTABLE ucs2_to_ucs4(const UCS2CHAR *src, ssize_t srcLen, UCS4CHAR *dst, size_t dstLen);
+size_t LIBNETXMS_EXPORTABLE ucs2_to_utf8(const UCS2CHAR *src, ssize_t srcLen, char *dst, size_t dstLen);
+size_t LIBNETXMS_EXPORTABLE ucs2_utf8len(const UCS2CHAR *src, ssize_t srcLen);
 #if defined(_WIN32) || defined(UNICODE_UCS2)
-#define ucs2_to_mb(wstr, wlen, mstr, mlen)   WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, wstr, wlen, mstr, mlen, NULL, NULL)
+#define ucs2_to_mb(wstr, wlen, mstr, mlen)   (size_t)WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, wstr, (int)(wlen), mstr, (int)(mlen), NULL, NULL)
 #else
-int LIBNETXMS_EXPORTABLE ucs2_to_mb(const UCS2CHAR *src, int srcLen, char *dst, int dstLen);
+size_t LIBNETXMS_EXPORTABLE ucs2_to_mb(const UCS2CHAR *src, ssize_t srcLen, char *dst, size_t dstLen);
 #endif
-int LIBNETXMS_EXPORTABLE ucs2_to_ASCII(const UCS2CHAR *src, int srcLen, char *dst, int dstLen);
-int LIBNETXMS_EXPORTABLE ucs2_to_ISO8859_1(const UCS2CHAR *src, int srcLen, char *dst, int dstLen);
+size_t LIBNETXMS_EXPORTABLE ucs2_to_ASCII(const UCS2CHAR *src, ssize_t srcLen, char *dst, size_t dstLen);
+size_t LIBNETXMS_EXPORTABLE ucs2_to_ISO8859_1(const UCS2CHAR *src, ssize_t srcLen, char *dst, size_t dstLen);
 
 int LIBNETXMS_EXPORTABLE ucs4_to_ucs2(const UCS4CHAR *src, int srcLen, UCS2CHAR *dst, int dstLen);
 int LIBNETXMS_EXPORTABLE ucs4_ucs2len(const UCS4CHAR *src, int srcLen);
@@ -331,31 +332,38 @@ int LIBNETXMS_EXPORTABLE ucs4_to_mb(const UCS4CHAR *src, int srcLen, char *dst, 
 int LIBNETXMS_EXPORTABLE ucs4_to_ASCII(const UCS4CHAR *src, int srcLen, char *dst, int dstLen);
 int LIBNETXMS_EXPORTABLE ucs4_to_ISO8859_1(const UCS4CHAR *src, int srcLen, char *dst, int dstLen);
 
-int LIBNETXMS_EXPORTABLE utf8_to_ucs4(const char *src, int srcLen, UCS4CHAR *dst, int dstLen);
-int LIBNETXMS_EXPORTABLE utf8_ucs4len(const char *src, int srcLen);
-int LIBNETXMS_EXPORTABLE utf8_to_ucs2(const char *src, int srcLen, UCS2CHAR *dst, int dstLen);
-int LIBNETXMS_EXPORTABLE utf8_ucs2len(const char *src, int srcLen);
-int LIBNETXMS_EXPORTABLE utf8_to_mb(const char *src, int srcLen, char *dst, int dstLen);
-int LIBNETXMS_EXPORTABLE utf8_to_ASCII(const char *src, int srcLen, char *dst, int dstLen);
-int LIBNETXMS_EXPORTABLE utf8_to_ISO8859_1(const char *src, int srcLen, char *dst, int dstLen);
+size_t LIBNETXMS_EXPORTABLE utf8_to_ucs4(const char *src, ssize_t srcLen, UCS4CHAR *dst, size_t dstLen);
+size_t LIBNETXMS_EXPORTABLE utf8_ucs4len(const char *src, ssize_t srcLen);
+size_t LIBNETXMS_EXPORTABLE utf8_to_ucs2(const char *src, ssize_t srcLen, UCS2CHAR *dst, size_t dstLen);
+size_t LIBNETXMS_EXPORTABLE utf8_ucs2len(const char *src, ssize_t srcLen);
+size_t LIBNETXMS_EXPORTABLE utf8_to_mb(const char *src, ssize_t srcLen, char *dst, size_t dstLen);
+size_t LIBNETXMS_EXPORTABLE utf8_to_ASCII(const char *src, ssize_t srcLen, char *dst, size_t dstLen);
+size_t LIBNETXMS_EXPORTABLE utf8_to_ISO8859_1(const char *src, ssize_t srcLen, char *dst, size_t dstLen);
+#ifdef UNICODE_UCS4
+#define utf8_to_wchar   utf8_to_ucs4
+#define utf8_wcharlen   utf8_ucs4len
+#else
+#define utf8_to_wchar   utf8_to_ucs2
+#define utf8_wcharlen   utf8_ucs2len
+#endif
 
 #ifdef UNICODE_UCS4
-#define mb_to_ucs4(mstr, mlen, wstr, wlen)   MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, mstr, mlen, wstr, wlen)
+#define mb_to_ucs4(mstr, mlen, wstr, wlen)   (size_t)MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, mstr, (int)(mlen), wstr, (int)(wlen))
 #else
-int LIBNETXMS_EXPORTABLE mb_to_ucs4(const char *src, int srcLen, UCS4CHAR *dst, int dstLen);
+size_t LIBNETXMS_EXPORTABLE mb_to_ucs4(const char *src, ssize_t srcLen, UCS4CHAR *dst, size_t dstLen);
 #endif
 #if defined(_WIN32) || defined(UNICODE_UCS2)
-#define mb_to_ucs2(mstr, mlen, wstr, wlen)   MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, mstr, mlen, wstr, wlen)
+#define mb_to_ucs2(mstr, mlen, wstr, wlen)   (size_t)MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, mstr, (int)(mlen), wstr, (int)(wlen))
 #else
-int LIBNETXMS_EXPORTABLE mb_to_ucs2(const char *src, int srcLen, UCS2CHAR *dst, int dstLen);
+size_t LIBNETXMS_EXPORTABLE mb_to_ucs2(const char *src, ssize_t srcLen, UCS2CHAR *dst, size_t dstLen);
 #endif
-int LIBNETXMS_EXPORTABLE mb_to_utf8(const char *src, int srcLen, char *dst, int dstLen);
-int LIBNETXMS_EXPORTABLE ASCII_to_utf8(const char *src, int srcLen, char *dst, int dstLen);
-int LIBNETXMS_EXPORTABLE ASCII_to_ucs2(const char *src, int srcLen, UCS2CHAR *dst, int dstLen);
-int LIBNETXMS_EXPORTABLE ASCII_to_ucs4(const char *src, int srcLen, UCS4CHAR *dst, int dstLen);
-int LIBNETXMS_EXPORTABLE ISO8859_1_to_utf8(const char *src, int srcLen, char *dst, int dstLen);
-int LIBNETXMS_EXPORTABLE ISO8859_1_to_ucs2(const char *src, int srcLen, UCS2CHAR *dst, int dstLen);
-int LIBNETXMS_EXPORTABLE ISO8859_1_to_ucs4(const char *src, int srcLen, UCS4CHAR *dst, int dstLen);
+size_t LIBNETXMS_EXPORTABLE mb_to_utf8(const char *src, ssize_t srcLen, char *dst, size_t dstLen);
+size_t LIBNETXMS_EXPORTABLE ASCII_to_utf8(const char *src, ssize_t srcLen, char *dst, size_t dstLen);
+size_t LIBNETXMS_EXPORTABLE ASCII_to_ucs2(const char *src, ssize_t srcLen, UCS2CHAR *dst, size_t dstLen);
+size_t LIBNETXMS_EXPORTABLE ASCII_to_ucs4(const char *src, ssize_t srcLen, UCS4CHAR *dst, size_t dstLen);
+size_t LIBNETXMS_EXPORTABLE ISO8859_1_to_utf8(const char *src, ssize_t srcLen, char *dst, size_t dstLen);
+size_t LIBNETXMS_EXPORTABLE ISO8859_1_to_ucs2(const char *src, ssize_t srcLen, UCS2CHAR *dst, size_t dstLen);
+size_t LIBNETXMS_EXPORTABLE ISO8859_1_to_ucs4(const char *src, ssize_t srcLen, UCS4CHAR *dst, size_t dstLen);
 
 // Conversion helpers
 WCHAR LIBNETXMS_EXPORTABLE *WideStringFromMBString(const char *src);
@@ -1157,15 +1165,22 @@ public:
 	virtual ~StructArray() { }
 
 	int add(const T *element) { return Array::add((void *)element); }
+   int add(const T &element) { return Array::add((void *)&element); }
 	T *get(int index) const { return (T*)Array::get(index); }
    int indexOf(const T *element) const { return Array::indexOf((void *)element); }
+   int indexOf(const T &element) const { return Array::indexOf((void *)&element); }
    bool contains(const T *element) const { return indexOf(element) >= 0; }
+   bool contains(const T &element) const { return indexOf(element) >= 0; }
 	void set(int index, const T *element) { Array::set(index, (void *)element); }
+   void set(int index, const T &element) { Array::set(index, (void *)&element); }
 	void replace(int index, const T *element) { Array::replace(index, (void *)element); }
+   void replace(int index, const T &element) { Array::replace(index, (void *)&element); }
 	void remove(int index) { Array::remove(index); }
    void remove(const T *element) { Array::remove((void *)element); }
+   void remove(const T &element) { Array::remove((void *)&element); }
 	void unlink(int index) { Array::unlink(index); }
    void unlink(const T *element) { Array::unlink((void *)element); }
+   void unlink(const T &element) { Array::unlink((void *)&element); }
 
    T *getBuffer() const { return (T*)__getBuffer(); }
 };
@@ -1283,6 +1298,7 @@ protected:
    void *getObject(const TCHAR *key, size_t len) const;
 	void destroyObject(void *object) { if (object != NULL) m_objectDestructor(object, this); }
 	void fillValues(Array *a) const;
+   void *unlink(const TCHAR *key);
 
 public:
 	StringMapBase(bool objectOwner);
@@ -1330,6 +1346,7 @@ public:
 	void set(const TCHAR *key, UINT32 value);
    void set(const TCHAR *key, INT64 value);
    void set(const TCHAR *key, UINT64 value);
+   TCHAR *unlink(const TCHAR *key) { return (TCHAR *)StringMapBase::unlink(key); }
 
    void addAll(const StringMap *src, bool (*filter)(const TCHAR *, const TCHAR *, void *) = NULL, void *context = NULL);
 
@@ -1368,8 +1385,16 @@ public:
 	T *get(const TCHAR *key) const { return (T*)getObject(key); }
    T *get(const TCHAR *key, size_t len) const { return (T*)getObject(key, len); }
    ObjectArray<T> *values() const { ObjectArray<T> *v = new ObjectArray<T>(size()); fillValues(v); return v; }
+   T *unlink(const TCHAR *key) { return (T*)StringMapBase::unlink(key); }
 
    Iterator<T> *iterator() { return new Iterator<T>(new StringMapIterator(this)); }
+
+   using StringMapBase::forEach;
+   template <typename C>
+   EnumerationCallbackResult forEach(EnumerationCallbackResult (*cb)(const TCHAR *, const T *, C *), C *context) const
+   {
+      return StringMapBase::forEach(reinterpret_cast<EnumerationCallbackResult (*)(const TCHAR*, const void*, void*)>(cb), context);
+   }
 };
 
 /**
@@ -1599,6 +1624,7 @@ private:
    HashMapEntry *m_data;
 	bool m_objectOwner;
    unsigned int m_keylen;
+   void *m_context;
 
 	HashMapEntry *find(const void *key) const;
 	void destroyObject(void *object) { if (object != NULL) m_objectDestructor(object, this); }
@@ -1606,7 +1632,7 @@ private:
 protected:
 	void (*m_objectDestructor)(void *, HashMapBase *);
 
-	HashMapBase(bool objectOwner, unsigned int keylen);
+   HashMapBase(bool objectOwner, unsigned int keylen, void (*destructor)(void *, HashMapBase *) = NULL);
 
 	void *_get(const void *key) const;
 	void _set(const void *key, void *value);
@@ -1624,6 +1650,9 @@ public:
 
    EnumerationCallbackResult forEach(EnumerationCallbackResult (*cb)(const void *, const void *, void *), void *userData) const;
    const void *findElement(bool (*comparator)(const void *, const void *, void *), void *userData) const;
+
+   void setContext(void *context) { m_context = context; }
+   void *getContext() const { return m_context; }
 };
 
 /**
@@ -1656,9 +1685,9 @@ private:
 	static void destructor(void *object, HashMapBase *map) { delete (V*)object; }
 
 public:
-	HashMap(bool objectOwner = false) : HashMapBase(objectOwner, sizeof(K)) { m_objectDestructor = destructor; }
+	HashMap(bool objectOwner = false, void (*_destructor)(void *, HashMapBase *) = destructor) : HashMapBase(objectOwner, sizeof(K), _destructor) { }
 
-	V *get(const K& key) { return (V*)_get(&key); }
+	V *get(const K& key) const { return (V*)_get(&key); }
 	void set(const K& key, V *value) { _set(&key, (void *)value); }
    void remove(const K& key) { _remove(&key, true); }
    void unlink(const K& key) { _remove(&key, false); }
@@ -1687,6 +1716,182 @@ public:
 
    Iterator<V> *iterator() { return new Iterator<V>(new HashMapIterator(this)); }
 };
+
+/**
+ * Shared hash map
+ */
+template <class K, class V> class SharedHashMap
+{
+   DISABLE_COPY_CTOR(SharedHashMap)
+
+   // Note: member order is important because m_data allocates memory from m_pool
+private:
+   ObjectMemoryPool<shared_ptr<V>> m_pool;
+   HashMap<K, shared_ptr<V>> m_data;
+
+   static shared_ptr<V> m_null;
+
+   static void destructor(void *element, HashMapBase *hashMapBase)
+   {
+      static_cast<SharedHashMap<K, V>*>(hashMapBase->getContext())->m_pool.destroy(static_cast<shared_ptr<V>*>(element));
+   }
+
+public:
+   SharedHashMap(bool objectOwner = false, int grow = 16) :
+      m_pool(std::max(grow, 64)), m_data(true, SharedHashMap<K, V>::destructor) { m_data.setContext(this); }
+   virtual ~SharedHashMap() { }
+
+   void set(const K& key, shared_ptr<V> element) { m_data.set(key, new(m_pool.allocate()) shared_ptr<V>(element)); }
+   void set(const K& key, V *element) { m_data.set(key, new(m_pool.allocate()) shared_ptr<V>(element)); }
+   V *get(const K& key) const
+   {
+      auto p = m_data.get(key);
+      return (p != NULL) ? p->get() : NULL;
+   }
+   const shared_ptr<V>& getShared(const K& key) const
+   {
+      auto p = m_data.get(key);
+      return (p != NULL) ? *p : m_null;
+   }
+   void remove(const K& key) { m_data.remove(key); }
+   void unlink(const K& key) { m_data.unlink(key); }
+   void clear() { m_data.clear(); }
+   bool contains(const K& key) { return m_data.contains(key); }
+
+   int size() const { return m_data.size(); }
+
+   template <typename C>
+   EnumerationCallbackResult forEach(EnumerationCallbackResult (*cb)(const K *, const shared_ptr<V> *, C *), C *context) const
+   {
+      return m_data.forEach(reinterpret_cast<EnumerationCallbackResult (*)(const void*, const void*, void*)>(cb), context);
+   }
+};
+
+template <class K, class V> shared_ptr<V> SharedHashMap<K, V>::m_null = shared_ptr<V>();
+
+
+/**
+ * Synchronized shared hash map
+ */
+template <class K, class V> class SynchronizedSharedHashMap
+{
+   DISABLE_COPY_CTOR(SynchronizedSharedHashMap)
+
+   // Note: member order is important because m_data allocates memory from m_pool
+private:
+   ObjectMemoryPool<shared_ptr<V>> m_pool;
+   HashMap<K, shared_ptr<V>> m_data;
+   MUTEX m_mutex;
+
+   static shared_ptr<V> m_null;
+
+   static void destructor(void *element, HashMapBase *hashMapBase)
+   {
+      static_cast<SynchronizedSharedHashMap<K, V>*>(hashMapBase->getContext())->m_pool.destroy(static_cast<shared_ptr<V>*>(element));
+   }
+
+   template <typename C>
+   static EnumerationCallbackResult forEachCallbackWrapper(const K *key, const shared_ptr<V> *value,
+         std::pair<EnumerationCallbackResult (*)(const K*, const V*, C*), C*> *context)
+   {
+      return context->first(key, value->get(), context->second);
+   }
+
+   template <typename C>
+   static bool findCallbackWrapper(const K *key, const shared_ptr<V> *value,
+         std::pair<bool (*)(const K*, const V*, C*), C*> *context)
+   {
+      return context->first(key, value->get(), context->second);
+   }
+
+public:
+   SynchronizedSharedHashMap(bool objectOwner = false, int grow = 16) :
+      m_pool(std::max(grow, 64)), m_data(true, SynchronizedSharedHashMap<K, V>::destructor)
+   {
+      m_data.setContext(this);
+      m_mutex = MutexCreate();
+   }
+   virtual ~SynchronizedSharedHashMap() { MutexDestroy(m_mutex); }
+
+   void set(const K& key, shared_ptr<V> element)
+   {
+      MutexLock(m_mutex);
+      m_data.set(key, new(m_pool.allocate()) shared_ptr<V>(element));
+      MutexUnlock(m_mutex);
+   }
+
+   void set(const K& key, V *element)
+   {
+      MutexLock(m_mutex);
+      m_data.set(key, new(m_pool.allocate()) shared_ptr<V>(element));
+      MutexUnlock(m_mutex);
+   }
+
+   const shared_ptr<V>& getShared(const K& key) const
+   {
+      MutexLock(m_mutex);
+      auto p = m_data.get(key);
+      MutexUnlock(m_mutex);
+      return (p != NULL) ? *p : m_null;
+   }
+
+   void remove(const K& key)
+   {
+      MutexLock(m_mutex);
+      m_data.remove(key);
+      MutexUnlock(m_mutex);
+   }
+
+   void clear()
+   {
+      MutexLock(m_mutex);
+      m_data.clear();
+      MutexUnlock(m_mutex);
+   }
+
+   bool contains(const K& key)
+   {
+      MutexLock(m_mutex);
+      bool contains = m_data.contains(key);
+      MutexUnlock(m_mutex);
+      return contains;
+   }
+
+   int size() const
+   {
+      MutexLock(m_mutex);
+      int size = m_data.size();
+      MutexUnlock(m_mutex);
+      return size;
+   }
+
+   template <typename C>
+   EnumerationCallbackResult forEach(EnumerationCallbackResult (*cb)(const K*, const V*, C*), C *context) const
+   {
+      std::pair<EnumerationCallbackResult (*)(const K*, const V*, C*), C*> internalContext(cb, context);
+      MutexLock(m_mutex);
+      EnumerationCallbackResult result = m_data.forEach(
+            reinterpret_cast<EnumerationCallbackResult (*)(const void*, const void*, void*)>(SynchronizedSharedHashMap<K, V>::forEachCallbackWrapper<C>),
+            &internalContext);
+      MutexUnlock(m_mutex);
+      return result;
+   }
+
+   template <typename C>
+   const shared_ptr<V>& findElement(bool (*cb)(const K *, const V* , C *), C *context) const
+   {
+      std::pair<bool (*)(const K*, const V*, C*), C*> internalContext(cb, context);
+      MutexLock(m_mutex);
+      auto result = reinterpret_cast<const shared_ptr<V>*>(m_data.findElement(
+            reinterpret_cast<bool (*)(const void*, const void*, void*)>(SynchronizedSharedHashMap<K, V>::findCallbackWrapper<C>),
+            &internalContext));
+      MutexUnlock(m_mutex);
+      return (result != NULL) ? *result : m_null;
+   }
+};
+
+template <class K, class V> shared_ptr<V> SynchronizedSharedHashMap<K, V>::m_null = shared_ptr<V>();
+
 
 /**
  * Ring buffer
@@ -3087,12 +3292,13 @@ int LIBNETXMS_EXPORTABLE alphasort(const struct dirent **a, const struct dirent 
 
 TCHAR LIBNETXMS_EXPORTABLE *safe_fgetts(TCHAR *buffer, int len, FILE *f);
 
-bool LIBNETXMS_EXPORTABLE nxlog_open(const TCHAR *logName, UINT32 flags, const TCHAR *msgModule,
-                                     unsigned int msgCount, const TCHAR **messages,
-                                     DWORD debugMsg, DWORD debugMsgTag, DWORD genericMsg);
+bool LIBNETXMS_EXPORTABLE nxlog_open(const TCHAR *logName, UINT32 flags);
 void LIBNETXMS_EXPORTABLE nxlog_close();
-void LIBNETXMS_EXPORTABLE nxlog_write(DWORD msg, WORD wType, const char *format, ...);
-void LIBNETXMS_EXPORTABLE nxlog_write_generic(WORD type, const TCHAR *format, ...);
+void LIBNETXMS_EXPORTABLE nxlog_write(INT16 severity, const TCHAR *format, ...);
+void LIBNETXMS_EXPORTABLE nxlog_write2(INT16 severity, const TCHAR *format, va_list args);
+void LIBNETXMS_EXPORTABLE nxlog_write_tag(INT16 severity, const TCHAR *tag, const TCHAR *format, ...);
+void LIBNETXMS_EXPORTABLE nxlog_write_tag2(INT16 severity, const TCHAR *tag, const TCHAR *format, va_list args);
+void LIBNETXMS_EXPORTABLE nxlog_report_event(DWORD msg, int level, int stringCount, const TCHAR *altMessage, ...);
 void LIBNETXMS_EXPORTABLE nxlog_debug(int level, const TCHAR *format, ...);
 void LIBNETXMS_EXPORTABLE nxlog_debug2(int level, const TCHAR *format, va_list args);
 void LIBNETXMS_EXPORTABLE nxlog_debug_tag(const TCHAR *tag, int level, const TCHAR *format, ...);
@@ -3129,7 +3335,7 @@ ObjectArray<DebugTagInfo> LIBNETXMS_EXPORTABLE *nxlog_get_all_debug_tags();
 
 #endif   /* __cplusplus */
 
-typedef void (*NxLogDebugWriter)(const TCHAR *, const TCHAR *);
+typedef void (*NxLogDebugWriter)(const TCHAR *, const TCHAR *, va_list);
 void LIBNETXMS_EXPORTABLE nxlog_set_debug_writer(NxLogDebugWriter writer);
 
 typedef void (*NxLogConsoleWriter)(const TCHAR *, ...);
@@ -3176,6 +3382,9 @@ time_t LIBNETXMS_EXPORTABLE ParseDateTimeW(const WCHAR *text, time_t defaultValu
 #else
 #define ParseDateTime ParseDateTimeA
 #endif
+
+bool LIBNETXMS_EXPORTABLE InitializeLibCURL();
+const char LIBNETXMS_EXPORTABLE *GetLibCURLVersion();
 
 #ifdef __cplusplus
 }

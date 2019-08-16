@@ -56,12 +56,12 @@ enum Operation
 /**
  * Debug writer
  */
-static void DebugWriter(const TCHAR *tag, const TCHAR *text)
+static void DebugWriter(const TCHAR *tag, const TCHAR *format, va_list args)
 {
-   if (tag == NULL)      
-      _tprintf(_T("%s\n"), text);
-   else
-      _tprintf(_T("<%s> %s\n"), tag, text);
+   if (tag != NULL)
+      _tprintf(_T("<%s> "), tag);
+   _vtprintf(format, args);
+   _fputtc(_T('\n'), stdout);
 }
 
 /**
@@ -272,7 +272,7 @@ int main(int argc, char *argv[])
 
    InitNetXMSProcess(true);
 #ifdef _WIN32
-	SetExceptionHandler(SEHDefaultConsoleHandler, NULL, NULL, _T("nxget"), 0, FALSE, FALSE);
+	SetExceptionHandler(SEHDefaultConsoleHandler, NULL, NULL, _T("nxget"), FALSE, FALSE);
 #endif
 	nxlog_set_debug_writer(DebugWriter);
 

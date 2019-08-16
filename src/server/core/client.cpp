@@ -52,7 +52,7 @@ static BOOL RegisterClientSession(ClientSession *pSession)
          return TRUE;
       }
    RWLockUnlock(s_sessionListLock);
-   nxlog_write(MSG_TOO_MANY_SESSIONS, EVENTLOG_WARNING_TYPE, NULL);
+   nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Too many client sessions open - unable to accept new client connection"));
    return FALSE;
 }
 
@@ -150,7 +150,7 @@ ConnectionProcessingResult ClientListener::processConnection(SOCKET s, const Ine
    {
       if (!session->start())
       {
-         nxlog_write(MSG_CANNOT_CREATE_SESSION_THREAD, NXLOG_ERROR, NULL);
+         nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Cannot create client session service thread"));
          UnregisterClientSession(session->getId());
          delete session;
       }

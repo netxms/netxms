@@ -54,5 +54,4 @@ public class DCOStatusHolder
    {
       this.status = status;
    }
-
 }

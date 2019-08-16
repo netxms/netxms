@@ -18,7 +18,7 @@
  */
 package org.netxms.websvc.handlers;
 
-import org.netxms.base.NXCommon;
+import org.netxms.base.VersionInfo;
 import org.netxms.websvc.json.JsonTools;
 import org.restlet.data.MediaType;
 import org.restlet.representation.Representation;
@@ -41,8 +41,9 @@ public class RootHandler extends ServerResource
    public Representation onGet() throws Exception
    {
       JsonObject response = new JsonObject();
-      response.addProperty("description", "NetXMS web service API version " + NXCommon.VERSION);
-      response.addProperty("version", NXCommon.VERSION);
+      response.addProperty("description", "NetXMS web service API version " + VersionInfo.version());
+      response.addProperty("version", VersionInfo.version());
+      response.addProperty("build", VersionInfo.buildTag());
       return new StringRepresentation(JsonTools.jsonFromObject(response, null), MediaType.APPLICATION_JSON);
    }
 }

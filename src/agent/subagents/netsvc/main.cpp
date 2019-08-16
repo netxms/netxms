@@ -181,15 +181,14 @@ static LONG H_CheckService(const TCHAR *parameters, const TCHAR *arg, TCHAR *val
  */
 static bool SubagentInit(Config *config)
 {
-   bool ret = false;
-
-	config->parseTemplate(_T("netsvc"), m_cfgTemplate);
-
-   ret = curl_global_init(CURL_GLOBAL_ALL) == 0;
-
-   if (ret)
+   bool success = config->parseTemplate(_T("netsvc"), m_cfgTemplate);
+   if (success)
    {
-      AgentWriteDebugLog(3, _T("cURL version: %hs"), curl_version());
+      success = InitializeLibCURL();
+   }
+   if (success)
+   {
+      AgentWriteDebugLog(3, _T("Using cURL version: %hs"), GetLibCURLVersion());
 #if defined(_WIN32) || HAVE_DECL_CURL_VERSION_INFO
       curl_version_info_data *version = curl_version_info(CURLVERSION_NOW);
       char protocols[1024] = {0};
@@ -203,7 +202,7 @@ static bool SubagentInit(Config *config)
       AgentWriteDebugLog(3, _T("Supported protocols: %hs"), protocols);
 #endif
    }
-   return ret;
+   return success;
 }
 
 /**
@@ -211,7 +210,6 @@ static bool SubagentInit(Config *config)
  */
 static void SubagentShutdown()
 {
-   curl_global_cleanup();
 }
 
 /**
@@ -225,7 +223,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 /**
  * Subagent information
  */
-static NETXMS_SUBAGENT_INFO m_info = 
+static NETXMS_SUBAGENT_INFO s_info =
 {
    NETXMS_SUBAGENT_INFO_MAGIC,
    _T("NETSVC"), NETXMS_BUILD_TAG,
@@ -243,7 +241,7 @@ static NETXMS_SUBAGENT_INFO m_info =
  */
 DECLARE_SUBAGENT_ENTRY_POINT(NETSVC)
 {
-   *ppInfo = &m_info;
+   *ppInfo = &s_info;
    return true;
 }
 

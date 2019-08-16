@@ -79,26 +79,26 @@ Source: "..\..\..\x64\Release\pgsql.ddr"; DestDir: "{app}\bin"; Flags: ignorever
 Source: "..\..\..\x64\Release\pgsql.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
 Source: "..\..\..\x64\Release\sqlite.ddr"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\x64\Release\sqlite.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
-; SMS drivers
-Source: "..\..\..\x64\Release\dbemu.sms"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+; NC drivers
+Source: "..\..\..\x64\Release\dbemu.ncd"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\x64\Release\dbemu.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\generic.sms"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\x64\Release\generic.ncd"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\x64\Release\generic.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\kannel.sms"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\x64\Release\kannel.ncd"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\x64\Release\kannel.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\nexmo.sms"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\x64\Release\nexmo.ncd"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\x64\Release\nexmo.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\nxagent.sms"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\x64\Release\nxagent.ncd"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\x64\Release\nxagent.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\portech.sms"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\x64\Release\portech.ncd"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\x64\Release\portech.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\slack.sms"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\x64\Release\slack.ncd"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\x64\Release\slack.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\smseagle.sms"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\x64\Release\smseagle.ncd"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\x64\Release\smseagle.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\text2reach.sms"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\x64\Release\text2reach.ncd"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\x64\Release\text2reach.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\websms.sms"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\x64\Release\websms.ncd"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\x64\Release\websms.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
 ; Tools
 Source: "..\..\..\x64\Release\libnxdbmgr.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
@@ -247,9 +247,9 @@ Source: "..\..\..\x64\Release\nxapush.exe"; DestDir: "{app}\bin"; Flags: ignorev
 Source: "..\..\..\x64\Release\nxcsum.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: tools
 Source: "..\..\..\x64\Release\nxevent.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: tools
 Source: "..\..\..\x64\Release\nxgenguid.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: tools
+Source: "..\..\..\x64\Release\nxnotify.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: tools
 Source: "..\..\..\x64\Release\nxpush.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: tools
 Source: "..\..\..\x64\Release\nxshell.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: tools
-Source: "..\..\..\x64\Release\nxsms.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: tools
 Source: "..\..\client\java\netxms-client\target\netxms-client.jar"; DestDir: "{app}\lib"; Flags: ignoreversion; Components: tools
 Source: "..\..\client\nxshell\java\target\nxshell.jar"; DestDir: "{app}\lib"; Flags: ignoreversion; Components: tools
 ; Diagnostic tools

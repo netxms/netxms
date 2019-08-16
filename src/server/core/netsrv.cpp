@@ -174,7 +174,7 @@ bool NetworkService::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
          pObject = FindObjectById(dwHostNodeId, OBJECT_NODE);
          if (pObject == NULL)
          {
-            nxlog_write(MSG_INVALID_NODE_ID_EX, EVENTLOG_ERROR_TYPE, "dds", dwId, dwHostNodeId, _T("network service"));
+            nxlog_write(NXLOG_ERROR, _T("Inconsistent database: network service %s [%u] linked to non-existent node [%u]"), m_name, m_id, dwHostNodeId);
          }
          else
          {
@@ -190,7 +190,7 @@ bool NetworkService::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
             pObject = FindObjectById(m_pollerNode, OBJECT_NODE);
             if (pObject == NULL)
             {
-               nxlog_write(MSG_INVALID_NODE_ID_EX, EVENTLOG_ERROR_TYPE, "dds", dwId, m_pollerNode, _T("network service"));
+               nxlog_write(NXLOG_ERROR, _T("Inconsistent database: network service %s [%u] use non-existent poller node [%u]"), m_name, m_id, m_pollerNode);
                bResult = false;
             }
          }

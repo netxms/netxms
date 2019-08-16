@@ -263,19 +263,22 @@ bool Template::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
             NetObj *pObject = FindObjectById(dwNodeId);
             if (pObject != NULL)
             {
-               if ((pObject->getObjectClass() == OBJECT_NODE) || (pObject->getObjectClass() == OBJECT_CLUSTER) || (pObject->getObjectClass() == OBJECT_MOBILEDEVICE) || (pObject->getObjectClass() == OBJECT_SENSOR))
+               if (pObject-isDataCollectionTarget())
                {
                   addChild(pObject);
                   pObject->addParent(this);
                }
                else
                {
-                  nxlog_write(MSG_DCT_MAP_NOT_NODE, EVENTLOG_ERROR_TYPE, "dd", m_id, dwNodeId);
+                  nxlog_write(NXLOG_ERROR,
+                           _T("Inconsistent database: template object %s [%u] has reference to object %s [%u] which is not data collection target"),
+                           m_name, m_id, pObject->getName(), pObject->getId());
                }
             }
             else
             {
-               nxlog_write(MSG_INVALID_DCT_MAP, EVENTLOG_ERROR_TYPE, "dd", m_id, dwNodeId);
+               nxlog_write(NXLOG_ERROR, _T("Inconsistent database: template object %s [%u] has reference to non-existent object [%u]"),
+                        m_name, m_id, dwNodeId);
             }
          }
          DBFreeResult(hResult);
@@ -398,8 +401,8 @@ void Template::applyDCIChanges()
 void Template::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
 {
    super::fillMessageInternal(pMsg, userId);
-   AutoBindTarget::fillMessageInternal(pMsg, userId);
-   VersionableObject::fillMessageInternal(pMsg, userId);
+   AutoBindTarget::fillMessage(pMsg);
+   VersionableObject::fillMessage(pMsg);
 }
 
 /**
@@ -414,7 +417,7 @@ UINT32 Template::modifyFromMessageInternal(NXCPMessage *pRequest)
       m_flags &= ~mask;
       m_flags |= pRequest->getFieldAsUInt32(VID_FLAGS) & mask;
    }
-   AutoBindTarget::modifyFromMessageInternal(pRequest);
+   AutoBindTarget::modifyFromMessage(pRequest);
 
    return super::modifyFromMessageInternal(pRequest);
 }
@@ -627,7 +630,10 @@ void Template::applyPolicyChanges()
          {
             UINT32 rcc = conn->getPolicyInventory(&ap);
             if(rcc == RCC_SUCCESS)
+            {
                checkPolicyBind((Node *)object, ap, NULL, NULL);
+               delete ap;
+            }
          }
       }
    }
@@ -646,16 +652,22 @@ void Template::forceApplyPolicyChanges()
       if(object->getObjectClass() == OBJECT_NODE)
       {
          Node * node = (Node *)object;
-         ServerJob *job = new PolicyInstallJob(node, m_id, object->getGuid(), object->getName(), 0);
-         if (AddJob(job))
+         Iterator<GenericAgentPolicy> *it = m_policyList->iterator();
+         while(it->hasNext())
          {
-            DbgPrintf(5, _T("Template::forceApplyPolicyChanges(%s): \"%s\" policy deploy scheduled for \"%s\" node"), node->getName(), m_name, node->getName());
+            GenericAgentPolicy *policy = it->next();
+            ServerJob *job = new PolicyInstallJob(node, m_id, policy->getGuid(), policy->getName(), 0);
+            if (AddJob(job))
+            {
+               DbgPrintf(5, _T("Template::forceApplyPolicyChanges(%s): \"%s\" policy deploy scheduled for \"%s\" node"), node->getName(), m_name, node->getName());
+            }
+            else
+            {
+               delete job;
+               DbgPrintf(5, _T("Template::forceApplyPolicyChanges(%s): \"%s\" policy deploy is not possible to scheduled for \"%s\" node"), node->getName(), m_name, node->getName());
+            }
          }
-         else
-         {
-            delete job;
-            DbgPrintf(5, _T("Template::forceApplyPolicyChanges(%s): \"%s\" policy deploy is not possible to scheduled for \"%s\" node"), node->getName(), m_name, node->getName());
-         }
+         delete it;
       }
    }
    unlockChildList();
@@ -675,8 +687,12 @@ void Template::applyPolicyChanges(DataCollectionTarget *object)
       {
          UINT32 rcc = conn->getPolicyInventory(&ap);
          if(rcc == RCC_SUCCESS)
+         {
             checkPolicyBind((Node *)object, ap, NULL, NULL);
+            delete ap;
+         }
       }
+      conn->decRefCount();
    }
    unlockChildList();
 }

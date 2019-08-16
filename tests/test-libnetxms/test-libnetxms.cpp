@@ -33,7 +33,11 @@ static UCS2CHAR ucs2TextShort[] = { 'L', 'o', 'r', 'e', 'm', ' ', 'i', 'p', 's',
 static UCS2CHAR ucs2TextSurrogates[] = { 'L', 'o', 'r', 'e', 'm', 0xD801, 0xDFFF, 'i', 'p', 's', 'u', 'm', 0x1CD, '.', 0 };
 static UCS4CHAR ucs4TextSurrogatesTest[] = { 'L', 'o', 'r', 'e', 'm', 0x0107FF, 'i', 'p', 's', 'u', 'm', 0x1CD, '.', 0 };
 static char utf8TextSurrogatesTest[] = { 'L', 'o', 'r', 'e', 'm', (char)0xF0, (char)0x90, (char)0x9F, (char)0xBF, 'i', 'p', 's', 'u', 'm', (char)0xC7, (char)0x8D, '.', 0 };
+#if defined(_WIN32) || defined(__HP_aCC)
+static WCHAR wcTextISO8859_1[] = L"Lorem ipsum dolor sit amet, \xA3 10, \xA2 20, \xA5 50, b\xF8nne";
+#else
 static WCHAR wcTextISO8859_1[] = L"Lorem ipsum dolor sit amet, £ 10, ¢ 20, ¥ 50, bønne";
+#endif
 static char mbTextISO8859_1[] = "Lorem ipsum dolor sit amet, \xA3 10, \xA2 20, \xA5 50, b\xF8nne";
 static char mbTextASCII[] = "Lorem ipsum dolor sit amet, ? 10, ? 20, ? 50, b?nne";
 
@@ -95,7 +99,7 @@ static void TestStringConversion()
 
    StartTest(_T("UCS-2 to UCS-4 conversion"));
    UCS4CHAR ucs4buffer[1024];
-   int len = ucs2_to_ucs4(ucs2TextSurrogates, -1, ucs4buffer, 128);
+   size_t len = ucs2_to_ucs4(ucs2TextSurrogates, -1, ucs4buffer, 128);
    AssertEquals(len, 13);
    AssertTrue(!memcmp(ucs4buffer, ucs4TextSurrogatesTest, 13 * sizeof(UCS4CHAR)));
    EndTest();
@@ -272,7 +276,11 @@ static void TestStringList()
    StartTest(_T("String list - add"));
    StringList *s1 = new StringList();
    s1->add(1);
+#ifdef __HP_aCC
+   s1->add(static_cast<INT64>(_LL(12345000000001)));
+#else
    s1->add(_LL(12345000000001));
+#endif
    s1->add(_T("text1"));
    s1->addPreallocated(_tcsdup(_T("text2")));
    s1->add(3.1415);
@@ -371,6 +379,14 @@ static void TestStringMap()
    AssertNotNull(v);
    AssertTrue(!_tcscmp(v, _T("consectetur adipiscing elit")));
    EndTest(GetCurrentTimeMs() - start);
+
+   StartTest(_T("String map - keys"));
+   StringList *keys = m->keys();
+   AssertNotNull(keys);
+   AssertEquals(keys->size(), 10000);
+   AssertTrue(!_tcsncmp(keys->get(500), _T("key-"), 4));
+   delete keys;
+   EndTest();
 
    StartTest(_T("String map - clear"));
    start = GetCurrentTimeMs();
@@ -1178,6 +1194,116 @@ static void TestHashMap()
 }
 
 /**
+ * Test shared hash map
+ */
+static void TestSharedHashMap()
+{
+   StartTest(_T("SharedHashMap: create"));
+   SharedHashMap<HASH_KEY, String> *sharedHashMap = new SharedHashMap<HASH_KEY, String>(true);
+   AssertEquals(sharedHashMap->size(), 0);
+   EndTest();
+
+   HASH_KEY k1 = { '1', '2', '3', '4', '5', '6' };
+   HASH_KEY k2 = { '0', '0', 'a', 'b', 'c', 'd' };
+   HASH_KEY k3 = { '0', '0', '3', 'X', '1', '1' };
+   HASH_KEY k4 = { '1', '0', '3', 'X', '1', '1' };
+
+   StartTest(_T("SharedHashMap: set/get"));
+
+   sharedHashMap->set(k1, new String(_T("String 1")));
+   sharedHashMap->set(k2, new String(_T("String 2")));
+   sharedHashMap->set(k3, new String(_T("String 3")));
+   AssertEquals(sharedHashMap->size(), 3);
+
+   String *s = sharedHashMap->get(k1);
+   AssertNotNull(s);
+   AssertTrue(!_tcscmp(s->getBuffer(), _T("String 1")));
+
+   s = sharedHashMap->get(k2);
+   AssertNotNull(s);
+   AssertTrue(!_tcscmp(s->getBuffer(), _T("String 2")));
+
+   s = sharedHashMap->get(k3);
+   AssertNotNull(s);
+   AssertTrue(!_tcscmp(s->getBuffer(), _T("String 3")));
+
+   s = sharedHashMap->get(k4);
+   AssertNull(s);
+
+   EndTest();
+
+   StartTest(_T("SharedHashMap: remove"));
+   sharedHashMap->remove(k1);
+   AssertEquals(sharedHashMap->size(), 2);
+   s = sharedHashMap->get(k1);
+   AssertNull(s);
+   EndTest();
+
+   StartTest(_T("SharedHashMap: get shared"));
+   shared_ptr<String> shared = sharedHashMap->getShared(k2);
+   AssertEquals(shared.use_count(), 2);
+   delete sharedHashMap;
+   AssertEquals(shared.use_count(), 1);
+   AssertTrue(!_tcscmp(shared->getBuffer(), _T("String 2")));
+   EndTest();
+}
+
+/**
+ * Test shared hash map
+ */
+static void TestSynchronizedSharedHashMap()
+{
+   StartTest(_T("SynchronizedSharedHashMap: create"));
+   SynchronizedSharedHashMap<HASH_KEY, String> *hashMap = new SynchronizedSharedHashMap<HASH_KEY, String>(true);
+   AssertEquals(hashMap->size(), 0);
+   EndTest();
+
+   HASH_KEY k1 = { '1', '2', '3', '4', '5', '6' };
+   HASH_KEY k2 = { '0', '0', 'a', 'b', 'c', 'd' };
+   HASH_KEY k3 = { '0', '0', '3', 'X', '1', '1' };
+   HASH_KEY k4 = { '1', '0', '3', 'X', '1', '1' };
+
+   StartTest(_T("SynchronizedSharedHashMap: set/get"));
+
+   hashMap->set(k1, new String(_T("String 1")));
+   hashMap->set(k2, new String(_T("String 2")));
+   hashMap->set(k3, new String(_T("String 3")));
+   AssertEquals(hashMap->size(), 3);
+
+   shared_ptr<String> s = hashMap->getShared(k1);
+   AssertNotNull(s);
+   AssertTrue(!_tcscmp(s->getBuffer(), _T("String 1")));
+
+   s = hashMap->getShared(k2);
+   AssertNotNull(s);
+   AssertTrue(!_tcscmp(s->getBuffer(), _T("String 2")));
+
+   s = hashMap->getShared(k3);
+   AssertNotNull(s);
+   AssertTrue(!_tcscmp(s->getBuffer(), _T("String 3")));
+
+   s = hashMap->getShared(k4);
+   AssertNull(s);
+
+   EndTest();
+
+   StartTest(_T("SynchronizedSharedHashMap: remove"));
+   hashMap->remove(k1);
+   AssertEquals(hashMap->size(), 2);
+   s = hashMap->getShared(k1);
+   AssertNull(s);
+   EndTest();
+
+   StartTest(_T("SynchronizedSharedHashMap: get shared"));
+   shared_ptr<String> shared = hashMap->getShared(k2);
+   AssertEquals(shared.use_count(), 2);
+   delete hashMap;
+   AssertEquals(shared.use_count(), 1);
+   AssertTrue(!_tcscmp(shared->getBuffer(), _T("String 2")));
+   EndTest();
+}
+
+/**
  * Test hash set
  */
 static void TestHashSet()
@@ -1878,12 +2004,14 @@ static void TestDebugTags()
 /**
  * Debug writer for logger
  */
-static void DebugWriter(const TCHAR *tag, const TCHAR *message)
+static void DebugWriter(const TCHAR *tag, const TCHAR *format, va_list args)
 {
    if (tag != NULL)
-      _tprintf(_T("[DEBUG/%-20s] %s\n"), tag, message);
+      _tprintf(_T("[DEBUG/%-20s] "), tag);
    else
-      _tprintf(_T("[DEBUG%-21s] %s\n"), _T(""), message);
+      _tprintf(_T("[DEBUG%-21s] "), _T(""));
+   _vtprintf(format, args);
+   _fputtc(_T('\n'), stdout);
 }
 
 /**
@@ -1932,6 +2060,8 @@ int main(int argc, char *argv[])
    TestItoa();
    TestQueue();
    TestHashMap();
+   TestSharedHashMap();
+   TestSynchronizedSharedHashMap();
    TestHashSet();
    TestObjectArray();
    TestSharedObjectArray();

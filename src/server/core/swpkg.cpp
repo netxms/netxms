@@ -211,11 +211,11 @@ void SoftwarePackage::fillMessage(NXCPMessage *msg, UINT32 baseId) const
  */
 bool SoftwarePackage::saveToDatabase(DB_STATEMENT hStmt) const
 {
-   DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_name, DB_BIND_STATIC);
-   DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_version, DB_BIND_STATIC);
-   DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, m_vendor, DB_BIND_STATIC);
+   DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_name, DB_BIND_STATIC, 127);
+   DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_version, DB_BIND_STATIC, 63);
+   DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, m_vendor, DB_BIND_STATIC, 63);
    DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, static_cast<UINT32>(m_date));
-   DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, m_url, DB_BIND_STATIC);
-   DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, m_description, DB_BIND_STATIC);
+   DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, m_url, DB_BIND_STATIC, 255);
+   DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, m_description, DB_BIND_STATIC, 255);
    return DBExecute(hStmt);
 }

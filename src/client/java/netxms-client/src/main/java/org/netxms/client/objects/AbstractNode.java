@@ -18,7 +18,10 @@
  */
 package org.netxms.client.objects;
 
+import java.net.InetAddress;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import org.netxms.base.InetAddressEx;
@@ -28,6 +31,7 @@ import org.netxms.base.NXCPMessage;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.AgentCacheMode;
 import org.netxms.client.constants.AgentCompressionMode;
+import org.netxms.client.constants.IcmpStatCollectionMode;
 import org.netxms.client.constants.NodeType;
 import org.netxms.client.constants.RackOrientation;
 
@@ -147,6 +151,14 @@ public abstract class AbstractNode extends DataCollectionTarget implements RackE
    protected long sshProxyId;
    protected int portRowCount;
    protected int portNumberingScheme;
+   protected IcmpStatCollectionMode icmpStatCollectionMode;
+   protected List<InetAddress> icmpTargets;
+   protected boolean icmpStatisticsCollected;
+   protected int icmpLastResponseTime;
+   protected int icmpMinResponseTime;
+   protected int icmpMaxResponseTime;
+   protected int icmpAverageResponseTime;
+   protected int icmpPacketLoss;
 	
 	/**
 	 * Create new node object.
@@ -223,10 +235,25 @@ public abstract class AbstractNode extends DataCollectionTarget implements RackE
       portRowCount = msg.getFieldAsInt16(NXCPCodes.VID_PORT_ROW_COUNT);
       portNumberingScheme = msg.getFieldAsInt16(NXCPCodes.VID_PORT_NUMBERING_SCHEME);
       rackOrientation = RackOrientation.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_RACK_ORIENTATION));
-		
+      icmpStatCollectionMode = IcmpStatCollectionMode.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_ICMP_COLLECTION_MODE));
+      icmpStatisticsCollected = msg.getFieldAsBoolean(NXCPCodes.VID_HAS_ICMP_DATA);
+      icmpAverageResponseTime = msg.getFieldAsInt32(NXCPCodes.VID_ICMP_AVG_RESPONSE_TIME);
+      icmpLastResponseTime = msg.getFieldAsInt32(NXCPCodes.VID_ICMP_LAST_RESPONSE_TIME);
+      icmpMaxResponseTime = msg.getFieldAsInt32(NXCPCodes.VID_ICMP_MAX_RESPONSE_TIME);
+      icmpMinResponseTime = msg.getFieldAsInt32(NXCPCodes.VID_ICMP_MIN_RESPONSE_TIME);
+      icmpPacketLoss = msg.getFieldAsInt32(NXCPCodes.VID_ICMP_PACKET_LOSS);
+      
+      int count = msg.getFieldAsInt32(NXCPCodes.VID_ICMP_TARGET_COUNT);
+      if (count > 0)
+      {
+         icmpTargets = new ArrayList<InetAddress>(count);
+         long fieldId = NXCPCodes.VID_ICMP_TARGET_LIST_BASE;
+         for(int i = 0; i < count; i++)
+            icmpTargets.add(msg.getFieldAsInetAddress(fieldId++));
+      }
+      
 		long bootTimeSeconds = msg.getFieldAsInt64(NXCPCodes.VID_BOOT_TIME);
 		bootTime = (bootTimeSeconds > 0) ? new Date(bootTimeSeconds * 1000) : null;
-		
 
       long commTimeSeconds = msg.getFieldAsInt64(NXCPCodes.VID_AGENT_COMM_TIME);
       lastAgentCommTime = (commTimeSeconds > 0) ? new Date(commTimeSeconds * 1000) : null;
@@ -839,6 +866,72 @@ public abstract class AbstractNode extends DataCollectionTarget implements RackE
       return portNumberingScheme;
    }
    
+   /**
+    * @return the icmpStatCollectionMode
+    */
+   public IcmpStatCollectionMode getIcmpStatCollectionMode()
+   {
+      return icmpStatCollectionMode;
+   }
+
+   /**
+    * @return the icmpTargets
+    */
+   public InetAddress[] getIcmpTargets()
+   {
+      return (icmpTargets != null) ? icmpTargets.toArray(new InetAddress[icmpTargets.size()]) : new InetAddress[0];
+   }
+
+   /**
+    * Check if ICMP statistics is collected for this node.
+    * 
+    * @return true if ICMP statistics is collected for this node
+    */
+   public boolean isIcmpStatisticsCollected()
+   {
+      return icmpStatisticsCollected;
+   }
+
+   /**
+    * @return the icmpLastResponseTime
+    */
+   public int getIcmpLastResponseTime()
+   {
+      return icmpLastResponseTime;
+   }
+
+   /**
+    * @return the icmpMinResponseTime
+    */
+   public int getIcmpMinResponseTime()
+   {
+      return icmpMinResponseTime;
+   }
+
+   /**
+    * @return the icmpMaxResponseTime
+    */
+   public int getIcmpMaxResponseTime()
+   {
+      return icmpMaxResponseTime;
+   }
+
+   /**
+    * @return the icmpAverageResponseTime
+    */
+   public int getIcmpAverageResponseTime()
+   {
+      return icmpAverageResponseTime;
+   }
+
+   /**
+    * @return the icmpPacketLoss
+    */
+   public int getIcmpPacketLoss()
+   {
+      return icmpPacketLoss;
+   }
+
    /**
     * Get node's interface by interface index
     * 

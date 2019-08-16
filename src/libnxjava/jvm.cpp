@@ -52,7 +52,7 @@ JavaBridgeError LIBNXJAVA_EXPORTABLE CreateJavaVM(const TCHAR *jvmPath, const TC
    s_jvmModule = DLOpen(jvmPath, errorText);
    if (s_jvmModule == NULL)
    {
-      nxlog_write_generic(NXLOG_ERROR, _T("JavaBridge: Unable to load JVM: %s"), errorText);
+      nxlog_write(NXLOG_ERROR, _T("JavaBridge: Unable to load JVM: %s"), errorText);
       return NXJAVA_JVM_LOAD_FAILED;
    }
 
@@ -131,13 +131,13 @@ JavaBridgeError LIBNXJAVA_EXPORTABLE CreateJavaVM(const TCHAR *jvmPath, const TC
       }
       else
       {
-         nxlog_write_generic(NXLOG_ERROR, _T("JavaBridge: cannot create Java VM"));
+         nxlog_write(NXLOG_ERROR, _T("JavaBridge: cannot create Java VM"));
          result = NXJAVA_CANNOT_CREATE_JVM;
       }
    }
    else
    {
-      nxlog_write_generic(NXLOG_ERROR, _T("JavaBridge: cannot find JVM entry point (%s)"));
+      nxlog_write(NXLOG_ERROR, _T("JavaBridge: cannot find JVM entry point (%s)"));
       result = NXJAVA_NO_ENTRY_POINT;
    }
 

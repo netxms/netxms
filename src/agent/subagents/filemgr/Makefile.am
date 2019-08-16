@@ -2,7 +2,7 @@ SUBAGENT = filemgr
 
 pkglib_LTLIBRARIES = filemgr.la
 filemgr_la_SOURCES = filemgr.cpp logmonitoring.cpp
-filemgr_la_CPPFLAGS=-I@top_srcdir@/include
+filemgr_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/build
 filemgr_la_LDFLAGS = -module -avoid-version -export-symbols ../subagent.sym
 filemgr_la_LIBADD = ../../libnxagent/libnxagent.la ../../../libnetxms/libnetxms.la
 

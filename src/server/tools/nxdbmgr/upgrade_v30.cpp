@@ -24,6 +24,365 @@
 #include <nxevent.h>
 
 /**
+ * Generate generic SMS driver configuration from configuration line
+ *
+ * pszInitArgs format: portname,speed,databits,parity,stopbits,mode,blocksize,writedelay
+ */
+static String createGenericConfig(TCHAR *portName)
+{
+   String config;
+   TCHAR *p;
+   int parity = NOPARITY;
+   int stopBits = ONESTOPBIT;
+   int blockSize = 8;
+   int writeDelay = 100;
+
+   if ((p = _tcschr(portName, _T(','))) != NULL)
+   {
+      *p = 0; p++;
+      config.appendFormattedString(_T("portname=%s\n"),portName);
+      int tmp = _tcstol(p, NULL, 10);
+      if (tmp != 0)
+      {
+         config.appendFormattedString(_T("speed=%d\n"),tmp);
+
+         if ((p = _tcschr(p, _T(','))) != NULL)
+         {
+            *p = 0; p++;
+            tmp = _tcstol(p, NULL, 10);
+            if (tmp >= 5 && tmp <= 8)
+            {
+               config.appendFormattedString(_T("databits=%d\n"),tmp);
+
+               // parity
+               if ((p = _tcschr(p, _T(','))) != NULL)
+               {
+                  *p = 0; p++;
+                  config.append(_T("parity="));
+                  config.append(p, 1);
+
+                  // stop bits
+                  if ((p = _tcschr(p, _T(','))) != NULL)
+                  {
+                     *p = 0; p++;
+                     config.append(_T("\nstopbits="));
+                     config.append(p, 1);
+
+                     // Text or PDU mode
+                     if ((p = _tcschr(p, _T(','))) != NULL)
+                     {
+                        *p = 0; p++;
+                        config.append(_T("\ntextMode="));
+                        if (*p == _T('T'))
+                        {
+                           config.append(_T("yes"));
+                        }
+                        else if (*p == _T('P'))
+                        {
+                           config.append(_T("no"));
+                        }
+
+                        // Use quotes
+                        if ((p = _tcschr(p, _T(','))) != NULL)
+                        {
+                           *p = 0; p++;
+                           config.append(_T("\nuseQuotes="));
+                           if (*p == _T('N'))
+                           {
+                              config.append(_T("no"));
+                           }
+                           else
+                           {
+                              config.append(_T("yes"));
+                           }
+
+                           // block size
+                           if ((p = _tcschr(p, _T(','))) != NULL)
+                           {
+                              *p = 0; p++;
+                              blockSize = _tcstol(p, NULL, 10);
+                              if ((blockSize < 1) || (blockSize > 256))
+                                 blockSize = 8;
+                              config.appendFormattedString(_T("\nblocksize=%d\n"),blockSize);
+
+                              // write delay
+                              if ((p = _tcschr(p, _T(','))) != NULL)
+                              {
+                                 *p = 0; p++;
+                                 writeDelay = _tcstol(p, NULL, 10);
+                                 if ((writeDelay < 1) || (writeDelay > 10000))
+                                    writeDelay = 100;
+                                 config.appendFormattedString(_T("\nwritedelay=%d"),writeDelay);
+                              }
+                           }
+                        }
+                     }
+                  }
+               }
+            }
+         }
+      }
+   }
+   else
+   {
+      config.appendFormattedString(_T("portname=%s\n"),portName);
+   }
+   return config;
+}
+
+static String createNxagentDriverConfiguration(TCHAR *temp)
+{
+   String config;
+   TCHAR *ptr, *eptr;
+   int field;
+   const TCHAR *array[] = { _T("hostname"), _T("port"), _T("timeout"), _T("secret")};
+   for(ptr = eptr = temp, field = 0; eptr != NULL; field++, ptr = eptr + 1)
+   {
+      eptr = _tcschr(ptr, ',');
+      if (eptr != NULL)
+         *eptr = 0;
+      config.appendFormattedString(_T("%s=%s\n"), array[field], ptr);
+   }
+   return config;
+}
+
+static TCHAR *createDefaultConfig(TCHAR *oldConfiguration)
+{
+   TCHAR *tmp = _tcschr(oldConfiguration, _T(';'));
+   while(tmp != NULL)
+   {
+      tmp[0] = _T('\n');
+      tmp = _tcschr(tmp+1, _T(';'));
+   }
+   return oldConfiguration;
+
+}
+
+/**
+ * Upgrade from 30.91 to 30.92
+ */
+static bool H_UpgradeFromV91()
+{
+   CHK_EXEC(CreateTable(
+      _T("CREATE TABLE notification_channels (")
+      _T("   name varchar(63) not null,")
+      _T("   driver_name varchar(63) not null,")
+      _T("   description  varchar(255) null,")
+      _T("   configuration $SQL:TEXT null,")
+      _T("PRIMARY KEY(name))")));
+
+   CHK_EXEC(SQLQuery(_T("ALTER TABLE actions ADD channel_name varchar(63)")));
+
+   TCHAR *driver = NULL;
+   TCHAR *oldConfiguration = NULL;
+   String newConfiguration;
+   String newDriverName;
+
+   DB_RESULT hResult = DBSelect(g_dbHandle, _T("SELECT var_value from config WHERE var_name='SMSDriver'"));
+   if (hResult != NULL)
+   {
+      if (DBGetNumRows(hResult) > 0)
+         driver = DBGetField(hResult, 0, 0, NULL, 0);
+      DBFreeResult(hResult);
+   }
+
+   if(driver != NULL && driver[0] != 0 && _tcscmp(driver, _T("<none>")))
+   {
+      hResult = DBSelect(g_dbHandle, _T("SELECT var_value from config WHERE var_name='SMSDrvConfig'"));
+      if (hResult != NULL)
+      {
+         if (DBGetNumRows(hResult) > 0)
+            oldConfiguration = DBGetField(hResult, 0, 0, NULL, 0);
+         DBFreeResult(hResult);
+      }
+
+      if(oldConfiguration == NULL)
+         oldConfiguration = _tcsdup(_T(""));
+
+      //prepare driver name
+      TCHAR *driverName = NULL;
+      _tcslwr(driver);
+      TCHAR *tmp = _tcsrchr(driver, FS_PATH_SEPARATOR_CHAR);
+      if(tmp != NULL)
+         driverName = tmp+1;
+      else
+         driverName = driver;
+      int len = _tcslen(driverName);
+      tmp = _tcsrchr(driver, _T('.'));
+      if(tmp != NULL)
+      {
+         tmp[0] = 0;
+         if(_tcscmp(tmp+1, _T("so")))
+         {
+            tmp = _tcsrchr(driver, _T('_'));
+            if(tmp != NULL)
+            {
+               driverName = tmp + 1;
+            }
+         }
+      }
+
+      if(!_tcscmp(driverName, _T("anysms")))
+      {
+         newConfiguration = createDefaultConfig(oldConfiguration);
+         newDriverName = _T("AnySMS");
+      }
+      else if (!_tcscmp(driverName, _T("dbemu")))// renamed to dbtable
+      {
+         newDriverName = _T("DBTable");
+      }
+      else if (!_tcscmp(driverName, _T("dummy")))// renamed to dbtable
+      {
+         newDriverName = _T("Dummy");
+      }
+      else if (!_tcscmp(driverName, _T("generic")))
+      {
+         newConfiguration = createGenericConfig(oldConfiguration);
+         newDriverName = _T("Generic");
+      }
+      else if(!_tcscmp(driverName, _T("kannel")))
+      {
+         newConfiguration = createDefaultConfig(oldConfiguration);
+         newDriverName = _T("Kannel");
+      }
+      else if(!_tcscmp(driverName, _T("nexmo")))
+      {
+         newConfiguration = createDefaultConfig(oldConfiguration);
+         newDriverName = _T("Nexmo");
+      }
+      else if(!_tcscmp(driverName, _T("nxagent")))
+      {
+         newConfiguration = createNxagentDriverConfiguration(oldConfiguration);
+         newDriverName = _T("NXAgent");
+      }
+      else if(!_tcscmp(driverName, _T("portech")))
+      {
+         newConfiguration = createDefaultConfig(oldConfiguration);
+         newDriverName = _T("Portech");
+      }
+      else if(!_tcscmp(driverName, _T("smseagle")))
+      {
+         newConfiguration = createDefaultConfig(oldConfiguration);
+         newDriverName = _T("SMSEagle");
+      }
+      else if(!_tcscmp(driverName, _T("text2reach")))
+      {
+         newConfiguration = createDefaultConfig(oldConfiguration);
+         newDriverName = _T("Text2Reach");
+      }
+      else if(!_tcscmp(driverName, _T("websms")))
+      {
+         newConfiguration = createDefaultConfig(oldConfiguration);
+         newDriverName = _T("WebSMS");
+      }
+      else
+      {
+         newDriverName = driverName;
+         newConfiguration = oldConfiguration;
+      }
+
+      DB_STATEMENT hStmt = DBPrepare(g_dbHandle, _T("INSERT INTO notification_channels (name,driver_name,description,configuration) VALUES ('SMS',?,'Automatically migrated SMS driver configuration',?)"));
+      if (hStmt != NULL)
+      {
+        DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, static_cast<const TCHAR *>(newDriverName), DB_BIND_STATIC);
+        DBBind(hStmt, 2, DB_SQLTYPE_TEXT, static_cast<const TCHAR *>(newConfiguration), DB_BIND_STATIC);
+        if (!SQLExecute(hStmt) && !g_ignoreErrors)
+        {
+           DBFreeStatement(hStmt);
+           return false;
+        }
+        DBFreeStatement(hStmt);
+      }
+      else if (!g_ignoreErrors)
+        return false;
+   }
+
+   static const TCHAR *batch =
+            _T("DELETE FROM config WHERE var_name='SMSDriver'\n")
+            _T("DELETE FROM config WHERE var_name='SMSDrvConfig'\n")
+            _T("UPDATE config SET var_name='AllowDirectNotifications',description='Allow/disallow sending of notification via NetXMS server using nxnotify utility.' WHERE var_name='AllowDirectSMS'\n")
+            _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+
+   MemFree(driver);
+   MemFree(oldConfiguration);
+
+   CHK_EXEC(SetMinorSchemaVersion(92));
+   return true;
+}
+
+/**
+ * Upgrade from 30.90 to 30.91
+ */
+static bool H_UpgradeFromV90()
+{
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET var_name='ICMP.PingSize' WHERE var_name='IcmpPingSize'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET var_name='ICMP.PingTmeout' WHERE var_name='IcmpPingTimeout'")));
+
+   CHK_EXEC(CreateConfigParam(_T("ICMP.CollectPollStatistics"), _T("1"),
+            _T("Collect ICMP poll statistics for all nodes by default. When enabled ICMP ping is used on each status poll and response time and packet loss are collected."),
+            NULL, 'B', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(_T("ICMP.StatisticPeriod"), _T("60"),
+            _T("Time period for collecting ICMP statistics (in number of polls)."),
+            _T("polls"), 'I', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(_T("ICMP.PollingInterval"), _T("60"),
+            _T("Interval between ICMP polls (in seconds)."),
+            _T("seconds"), 'I', true, false, false, false));
+
+   CHK_EXEC(CreateTable(
+            _T("CREATE TABLE icmp_statistics (")
+            _T("  object_id integer not null,")
+            _T("  poll_target varchar(63) not null,")
+            _T("  min_response_time integer not null,")
+            _T("  max_response_time integer not null,")
+            _T("  avg_response_time integer not null,")
+            _T("  last_response_time integer not null,")
+            _T("  sample_count integer not null,")
+            _T("  raw_response_times $SQL:TEXT null,")
+            _T("PRIMARY KEY(object_id,poll_target))")
+            ));
+
+   CHK_EXEC(CreateTable(
+            _T("CREATE TABLE icmp_target_address_list (")
+            _T("  node_id integer not null,")
+            _T("  ip_addr varchar(48) not null,")
+            _T("PRIMARY KEY(node_id,ip_addr))")
+            ));
+
+   CHK_EXEC(SQLQuery(_T("ALTER TABLE nodes ADD icmp_poll_mode char(1)")));
+   CHK_EXEC(SQLQuery(_T("UPDATE nodes SET icmp_poll_mode='0'")));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("nodes"), _T("icmp_poll_mode")));
+
+   CHK_EXEC(SetMinorSchemaVersion(91));
+   return true;
+}
+
+/**
+ * Upgrade from 30.89 to 30.90
+ */
+static bool H_UpgradeFromV89()
+{
+   CHK_EXEC(DBResizeColumn(g_dbHandle, _T("hardware_inventory"), _T("vendor"), 127, true));
+   CHK_EXEC(DBResizeColumn(g_dbHandle, _T("hardware_inventory"), _T("model"), 127, true));
+   CHK_EXEC(DBResizeColumn(g_dbHandle, _T("hardware_inventory"), _T("part_number"), 63, true));
+   CHK_EXEC(DBResizeColumn(g_dbHandle, _T("hardware_inventory"), _T("serial_number"), 63, true));
+   CHK_EXEC(DBResizeColumn(g_dbHandle, _T("nodes"), _T("snmp_sys_location"), 255, true));
+   CHK_EXEC(SetMinorSchemaVersion(90));
+   return true;
+}
+
+/**
+ * Upgrade from 30.88 to 30.89
+ */
+static bool H_UpgradeFromV88()
+{
+   CHK_EXEC(DBResizeColumn(g_dbHandle, _T("software_inventory"), _T("version"), 63, false));
+   CHK_EXEC(DBResizeColumn(g_dbHandle, _T("mapping_data"), _T("md_value"), 4000, true));
+   CHK_EXEC(SetMinorSchemaVersion(89));
+   return true;
+}
+
+/**
  * Upgrade from 30.87 to 30.88
  */
 static bool H_UpgradeFromV87()
@@ -2438,16 +2797,17 @@ static bool H_UpgradeFromV11()
 static bool H_UpgradeFromV10()
 {
    CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='CREATE TABLE idata_%d (item_id integer not null,idata_timestamp integer not null,idata_value varchar(255) null,raw_value varchar(255) null)' WHERE var_name='IDataTableCreationCommand'")));
-
-   IntegerArray<UINT32> *targets = GetDataCollectionTargets();
-   for(int i = 0; i < targets->size(); i++)
+   if (DBMgrMetaDataReadInt32(_T("SingeTablePerfData"), 0) == 0)
    {
-      TCHAR query[256];
-      _sntprintf(query, 256, _T("ALTER TABLE idata_%d ADD raw_value varchar(255)"), targets->get(i));
-      CHK_EXEC(SQLQuery(query));
+      IntegerArray<UINT32> *targets = GetDataCollectionTargets();
+      for(int i = 0; i < targets->size(); i++)
+      {
+         TCHAR query[256];
+         _sntprintf(query, 256, _T("ALTER TABLE idata_%d ADD raw_value varchar(255)"), targets->get(i));
+         CHK_EXEC(SQLQuery(query));
+      }
+      delete targets;
    }
-   delete targets;
-
    CHK_EXEC(SetMinorSchemaVersion(11));
    return true;
 }
@@ -2964,6 +3324,10 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 91, 30, 92, H_UpgradeFromV91 },
+   { 90, 30, 91, H_UpgradeFromV90 },
+   { 89, 30, 90, H_UpgradeFromV89 },
+   { 88, 30, 89, H_UpgradeFromV88 },
    { 87, 30, 88, H_UpgradeFromV87 },
    { 86, 30, 87, H_UpgradeFromV86 },
    { 85, 30, 86, H_UpgradeFromV85 },

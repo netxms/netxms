@@ -67,7 +67,7 @@ import org.netxms.base.NXCPException;
 import org.netxms.base.NXCPMessage;
 import org.netxms.base.NXCPMessageReceiver;
 import org.netxms.base.NXCPMsgWaitQueue;
-import org.netxms.base.NXCommon;
+import org.netxms.base.VersionInfo;
 import org.netxms.client.agent.config.ConfigContent;
 import org.netxms.client.agent.config.ConfigListElement;
 import org.netxms.client.constants.AggregationFunction;
@@ -79,9 +79,9 @@ import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.constants.RCC;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.ConditionDciInfo;
-import org.netxms.client.datacollection.DCONotificationCallback;
 import org.netxms.client.datacollection.DCOStatusHolder;
 import org.netxms.client.datacollection.DataCollectionConfiguration;
+import org.netxms.client.datacollection.DataCollectionConfigurationChangeListener;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DataCollectionTable;
@@ -260,7 +260,7 @@ public class NXCSession
    private String connAddress;
    private int connPort;
    private boolean connUseEncryption;
-   private String connClientInfo = "nxjclient/" + NXCommon.VERSION;
+   private String connClientInfo = "nxjclient/" + VersionInfo.version();
    private int clientType = DESKTOP_CLIENT;
    private String clientAddress = null;
    private boolean ignoreProtocolVersion = false;
@@ -1373,14 +1373,15 @@ public class NXCSession
       try
       {
          encryptionContext = EncryptionContext.createInstance(msg);
-         response.setField(NXCPCodes.VID_SESSION_KEY, encryptionContext.getEncryptedSessionKey(msg));
-         response.setField(NXCPCodes.VID_SESSION_IV, encryptionContext.getEncryptedIv(msg));
+         response.setField(NXCPCodes.VID_SESSION_KEY, encryptionContext.getEncryptedSessionKey());
+         response.setField(NXCPCodes.VID_SESSION_IV, encryptionContext.getEncryptedIv());
          response.setFieldInt16(NXCPCodes.VID_CIPHER, encryptionContext.getCipher());
          response.setFieldInt16(NXCPCodes.VID_KEY_LENGTH, encryptionContext.getKeyLength());
          response.setFieldInt16(NXCPCodes.VID_IV_LENGTH, encryptionContext.getIvLength());
          response.setFieldInt32(NXCPCodes.VID_RCC, RCC.SUCCESS);
          Logger.debug("NXCSession.setupEncryption",
                "Cipher selected: " + EncryptionContext.getCipherName(encryptionContext.getCipher()));
+         Logger.debug("NXCSession.setupEncryption", "Server key fingerprint: " + encryptionContext.getServerKeyFingerprint());
       }
       catch(Exception e)
       {
@@ -2089,7 +2090,7 @@ public class NXCSession
          }
       }
 
-      request.setField(NXCPCodes.VID_LIBNXCL_VERSION, NXCommon.VERSION);
+      request.setField(NXCPCodes.VID_LIBNXCL_VERSION, VersionInfo.version());
       request.setField(NXCPCodes.VID_CLIENT_INFO, connClientInfo);
       request.setField(NXCPCodes.VID_OS_INFO, System.getProperty("os.name") + " " + System.getProperty("os.version"));
       request.setFieldInt16(NXCPCodes.VID_CLIENT_TYPE, clientType);
@@ -5153,7 +5154,7 @@ public class NXCSession
          msg.setField(NXCPCodes.VID_AUTOBIND_FILTER, data.getAutoBindFilter());
       }
 
-      if (data.isFieldSet(NXCObjectModificationData.AUTOBIND_REMOVE_FLAGS))
+      if (data.isFieldSet(NXCObjectModificationData.AUTOBIND_FLAGS))
       {
          msg.setField(NXCPCodes.VID_AUTOBIND_FLAG, data.isAutoBindEnabled());
          msg.setField(NXCPCodes.VID_AUTOUNBIND_FLAG, data.isAutoUnbindEnabled());
@@ -5640,6 +5641,19 @@ public class NXCSession
          msg.setField(NXCPCodes.VID_RESPONSIBLE_USERS, users);
       }
 
+      if (data.isFieldSet(NXCObjectModificationData.ICMP_POLL_MODE))
+      {
+         msg.setFieldInt16(NXCPCodes.VID_ICMP_COLLECTION_MODE, data.getIcmpStatCollectionMode().getValue());
+      }
+      
+      if (data.isFieldSet(NXCObjectModificationData.ICMP_POLL_TARGETS))
+      {
+         msg.setFieldInt32(NXCPCodes.VID_ICMP_TARGET_COUNT, data.getIcmpTargets().size());
+         long fieldId = NXCPCodes.VID_ICMP_TARGET_LIST_BASE;
+         for(InetAddress a : data.getIcmpTargets())
+            msg.setField(fieldId++, a);
+      }
+      
       modifyCustomObject(data, userData, msg);
 
       sendMessage(msg);
@@ -6525,16 +6539,16 @@ public class NXCSession
     * when it is no longer needed.
     *
     * @param nodeId            Node object identifier
-    * @param notifyDCOChangeCB callback that will be called when DCO object is changed by server notification
+    * @param changeListener callback that will be called when DCO object is changed by server notification
     * @return Data collection configuration object
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public DataCollectionConfiguration openDataCollectionConfiguration(long nodeId, DCONotificationCallback notifyDCOChangeCB)
+   public DataCollectionConfiguration openDataCollectionConfiguration(long nodeId, DataCollectionConfigurationChangeListener changeListener)
          throws IOException, NXCException
    {
       final DataCollectionConfiguration cfg = new DataCollectionConfiguration(this, nodeId);
-      cfg.open(notifyDCOChangeCB);
+      cfg.open(changeListener);
       return cfg;
    }
 
@@ -9632,17 +9646,20 @@ public class NXCSession
    }
 
    /**
-    * Send SMS via server. User should have appropriate rights to execute this command.
+    * Send Notification via server. User should have appropriate rights to execute this command.
     *
     * @param phoneNumber target phone number
     * @param message     message text
+    * @param string 
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void sendSMS(String phoneNumber, String message) throws IOException, NXCException
+   public void sendNotification(String channelName, String phoneNumber, String subject, String message) throws IOException, NXCException
    {
-      final NXCPMessage msg = newMessage(NXCPCodes.CMD_SEND_SMS);
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_SEND_NOTIFICATION);
+      msg.setField(NXCPCodes.VID_CHANNEL_NAME, channelName);
       msg.setField(NXCPCodes.VID_RCPT_ADDR, phoneNumber);
+      msg.setField(NXCPCodes.VID_EMAIL_SUBJECT, subject);
       msg.setField(NXCPCodes.VID_MESSAGE, message);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
@@ -11008,12 +11025,12 @@ public class NXCSession
       msg.setFieldInt16(NXCPCodes.VID_PORT, port);
       sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());
-      TcpProxy proxy = new TcpProxy(this, response.getFieldAsInt32(NXCPCodes.VID_CHANNEL_ID));
       synchronized(tcpProxies)
       {
+         TcpProxy proxy = new TcpProxy(this, response.getFieldAsInt32(NXCPCodes.VID_CHANNEL_ID));
          tcpProxies.put(proxy.getChannelId(), proxy);
+         return proxy;
       }
-      return proxy;
    }
 
    /**
@@ -11039,6 +11056,12 @@ public class NXCSession
       }
    }
 
+   /**
+    * Returns agent policy list
+    * 
+    * @param templateId id of the template where policy are defined
+    * @return hash map of policy UUID to policy
+    */
    public HashMap<UUID, AgentPolicy> getAgentPolicyList(long templateId) throws IOException, NXCException
    {
 
@@ -11057,6 +11080,13 @@ public class NXCSession
       return map;
    }
 
+   /**
+    * Saves new or updated policy
+    * 
+    * @param templateId id of template where policy is defined
+    * @param currentlySelectedElement policy data to be updated or created. For new policy GUID should be null
+    * @return UUID of saved policy
+    */
    public UUID savePolicy(long templateId, AgentPolicy currentlySelectedElement) throws NXCException, IOException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_UPDATE_AGENT_POLICY);
@@ -11066,6 +11096,12 @@ public class NXCSession
       return waitForRCC(msg.getMessageId()).getFieldAsUUID(NXCPCodes.VID_GUID);
    }
 
+   /**
+    * Delete policy 
+    * 
+    * @param templateId id of template where policy is defined
+    * @param guid guid of the policy that should be deleted
+    */
    public void deletePolicy(long templateId, UUID guid) throws NXCException, IOException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_AGENT_POLICY);
@@ -11075,6 +11111,13 @@ public class NXCSession
       waitForRCC(msg.getMessageId());
    }
 
+   /**
+    * Command sent on policyEditor close to send updates to all applied nodes
+    * 
+    * @param templateId id of the closed template
+    * @throws NXCException
+    * @throws IOException
+    */
    public void onPolicyEditorClose(long templateId) throws NXCException, IOException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_POLICY_EDITOR_CLOSED);
@@ -11083,6 +11126,11 @@ public class NXCSession
       waitForRCC(msg.getMessageId());
    }
 
+   /**
+    * Force policy installation on all nodes where template is applied 
+    * 
+    * @param templateId template id
+    */
    public void forcePolicyInstallation(long templateId) throws NXCException, IOException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_POLICY_FORCE_APPLY);
@@ -11091,6 +11139,11 @@ public class NXCSession
       waitForRCC(msg.getMessageId());
    }
 
+   /**
+    * Get user agent notifications list
+    * 
+    * @return list of user agent notifications
+    */
    public List<UserAgentNotification> getUserAgentNotifications() throws NXCException, IOException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_UA_NOTIFICATIONS);
@@ -11099,13 +11152,17 @@ public class NXCSession
       List<UserAgentNotification> list = new ArrayList<UserAgentNotification>();
       int count = response.getFieldAsInt32(NXCPCodes.VID_USER_AGENT_MESSAGE_COUNT);
       long base = NXCPCodes.VID_UA_NOTIFICATION_BASE;
-      System.out.println(count);
       for (int i = 0 ; i < count; i++, base+=10)
          list.add(new UserAgentNotification(response, base, this));
       
       return list;
    }
 
+   /**
+    * Recall user agent notification
+    * 
+    * @param id recall id
+    */
    public void userAgentNotificationRecall(long id) throws NXCException, IOException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_RECALL_UA_NOTIFICATION);
@@ -11114,6 +11171,14 @@ public class NXCSession
       waitForRCC(msg.getMessageId());
    }
    
+   /**
+    * Create new user agent notifications
+    * 
+    * @param message notification message
+    * @param objects objects to show notifications
+    * @param startTime notification's activation time
+    * @param endTime notificaiton's display end time
+    */
    public void createUserAgentNotification(String message, Long[] objects, Date startTime, Date endTime) throws NXCException, IOException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_ADD_UA_NOTIFICATION);
@@ -11123,5 +11188,82 @@ public class NXCSession
       msg.setField(NXCPCodes.VID_UA_NOTIFICATION_BASE + 3, endTime);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
+   }
+
+   /**
+    * Get server notification channels
+    * 
+    * @return list of server notifications channels
+    */
+   public List<NotificationChannel> getNotificationChannels() throws NXCException, IOException
+   {
+      List<NotificationChannel> ncList = new ArrayList<NotificationChannel>();
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_NOTIFICATION_CHANNELS);
+      sendMessage(msg);
+      final NXCPMessage response = waitForRCC(msg.getMessageId());
+      int count = response.getFieldAsInt32(NXCPCodes.VID_CHANNEL_COUNT);
+      long base = NXCPCodes.VID_NOTIFICATION_CHANNEL_BASE;
+      for (int i = 0 ; i < count; i++, base+=20)
+         ncList.add(new NotificationChannel(response, base));            
+      return ncList;
+   }
+   
+   public void createNotificationChannel(NotificationChannel nc) throws NXCException, IOException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_ADD_NOTIFICATION_CHANNEL);
+      nc.fillMessage(msg);
+      sendMessage(msg);  
+      waitForRCC(msg.getMessageId());    
+   }
+   
+   
+   public void updateNotificationChannel(NotificationChannel nc) throws NXCException, IOException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_UPDATE_NOTIFICATION_CHANNEL);
+      nc.fillMessage(msg);
+      sendMessage(msg);  
+      waitForRCC(msg.getMessageId());          
+   }
+   
+   /**
+    * Delete notification channel
+    * 
+    * @param name name of notification channel to be deleted
+    */
+   public void deleteNotificationChannel(String name) throws NXCException, IOException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_NOTIFICATION_CHANNEL);
+      msg.setField(NXCPCodes.VID_NAME, name);
+      sendMessage(msg);  
+      waitForRCC(msg.getMessageId());    
+   }
+
+   /**
+    * Rename notification channel
+    * 
+    * @param name old notification channel name
+    * @param newName new notification channel name
+    */
+   public void renameNotificaiotnChannel(String name, String newName) throws NXCException, IOException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_RENAME_NOTIFICATION_CHANNEL);
+      msg.setField(NXCPCodes.VID_NAME, name);
+      msg.setField(NXCPCodes.VID_NEW_NAME, newName);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
+
+   /**
+    * Get driver name list
+    * 
+    * @return driver name list
+    */
+   public List<String> getDriverNames() throws NXCException, IOException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_NOTIFICATION_DRIVERS);
+      sendMessage(msg);
+      final NXCPMessage response = waitForRCC(msg.getMessageId());
+      List<String> list = response.getStringListFromFields(NXCPCodes.VID_NOTIFICATION_DRIVER_BASE, NXCPCodes.VID_DRIVER_COUNT);
+      return list;
    }
 }

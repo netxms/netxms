@@ -1,3 +1,5 @@
-SUBDIRS = base bridge
-	  
+TARGET = netxms-java-bridge.jar
+TYPE = jar
+JAR_BUILD_MODE = install
+
 include ..\..\..\Makefile.inc.w32

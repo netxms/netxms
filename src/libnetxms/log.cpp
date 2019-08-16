@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Utility Library
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -57,19 +57,13 @@ struct DebugTagManager
  */
 #ifdef _WIN32
 static HANDLE s_eventLogHandle = NULL;
-static HMODULE s_msgModuleHandle = NULL;
 #else
-static unsigned int s_numMessages;
-static const TCHAR **s_messages;
 static char s_syslogName[64];
 #endif
 static TCHAR s_logFileName[MAX_PATH] = _T("");
 static FILE *s_logFileHandle = NULL;
 static MUTEX s_mutexLogAccess = INVALID_MUTEX_HANDLE;
 static UINT32 s_flags = 0;
-static DWORD s_debugMsg = 0;
-static DWORD s_debugMsgTag = 0;
-static DWORD s_genericMsg = 0;
 static int s_rotationMode = NXLOG_ROTATION_BY_SIZE;
 static UINT64 s_maxLogSize = 4096 * 1024;	// 4 MB
 static int s_logHistorySize = 4;		// Keep up 4 previous log files
@@ -439,9 +433,6 @@ static THREAD_RESULT THREAD_CALL BackgroundWriterThread(void *arg)
       MutexLock(s_mutexLogAccess);
       if (!s_logBuffer.isEmpty())
       {
-         if (s_flags & NXLOG_PRINT_TO_STDOUT)
-            m_consoleWriter(_T("%s"), s_logBuffer.getBuffer());
-
          size_t buflen = s_logBuffer.length();
          char *data = s_logBuffer.getUTF8String();
          s_logBuffer.clear();
@@ -497,21 +488,12 @@ static THREAD_RESULT THREAD_CALL BackgroundWriterThread(void *arg)
 /**
  * Initialize log
  */
-bool LIBNETXMS_EXPORTABLE nxlog_open(const TCHAR *logName, UINT32 flags,
-                                     const TCHAR *msgModule, unsigned int msgCount, const TCHAR **messages,
-                                     DWORD debugMsg, DWORD debugMsgTag, DWORD genericMsg)
+bool LIBNETXMS_EXPORTABLE nxlog_open(const TCHAR *logName, UINT32 flags)
 {
-	s_flags = flags & 0x7FFFFFFF;
-#ifdef _WIN32
-	s_msgModuleHandle = GetModuleHandle(msgModule);
-#else
-	s_numMessages = msgCount;
-	s_messages = messages;
-#endif
-	s_debugMsg = debugMsg;
-   s_debugMsgTag = debugMsgTag;
-	s_genericMsg = genericMsg;
+   if (s_mutexLogAccess == INVALID_MUTEX_HANDLE)
+      s_mutexLogAccess = MutexCreate();
 
+	s_flags = flags & 0x7FFFFFFF;
    if (s_flags & NXLOG_USE_SYSLOG)
    {
 #ifdef _WIN32
@@ -546,8 +528,16 @@ bool LIBNETXMS_EXPORTABLE nxlog_open(const TCHAR *logName, UINT32 flags,
       if (s_logFileHandle != NULL)
       {
 			s_flags |= NXLOG_IS_OPEN;
-         _ftprintf(s_logFileHandle, _T("\n%s Log file opened (rotation policy %d, max size ") UINT64_FMT _T(")\n"),
-                   FormatLogTimestamp(buffer), s_rotationMode, s_maxLogSize);
+			if (s_flags & NXLOG_JSON_FORMAT)
+			{
+			   _ftprintf(s_logFileHandle, _T("\n{\"timestamp\":\"%s\",\"severity\":\"info\",\"tag\":\"\",\"message\":\"Log file opened (rotation policy %d, max size ") UINT64_FMT _T(")\"}\n"),
+                      FormatLogTimestamp(buffer), s_rotationMode, s_maxLogSize);
+			}
+			else
+			{
+            _ftprintf(s_logFileHandle, _T("\n%s Log file opened (rotation policy %d, max size ") UINT64_FMT _T(")\n"),
+                      FormatLogTimestamp(buffer), s_rotationMode, s_maxLogSize);
+			}
          fflush(s_logFileHandle);
 
 #ifndef _WIN32
@@ -563,10 +553,9 @@ bool LIBNETXMS_EXPORTABLE nxlog_open(const TCHAR *logName, UINT32 flags,
          }
       }
 
-      s_mutexLogAccess = MutexCreate();
 		SetDayStart();
    }
-	return (s_flags & NXLOG_IS_OPEN) ? true : false;
+   return (s_flags & NXLOG_IS_OPEN) ? true : false;
 }
 
 /**
@@ -599,56 +588,111 @@ void LIBNETXMS_EXPORTABLE nxlog_close()
 
          if (s_logFileHandle != NULL)
             fclose(s_logFileHandle);
-         if (s_mutexLogAccess != INVALID_MUTEX_HANDLE)
-            MutexDestroy(s_mutexLogAccess);
       }
 	   s_flags &= ~NXLOG_IS_OPEN;
+   }
+
+   if (s_mutexLogAccess != INVALID_MUTEX_HANDLE)
+   {
+      MutexDestroy(s_mutexLogAccess);
+      s_mutexLogAccess = INVALID_MUTEX_HANDLE;
    }
 }
 
 /**
- * Write record to log file
+ * Format tag for printing
  */
-static void WriteLogToFile(TCHAR *message, const WORD type)
+static inline TCHAR *FormatTag(const TCHAR *tag, TCHAR *tagf)
 {
-   const TCHAR *loglevel;
-   switch(type)
+   int i;
+   if (tag != NULL)
    {
-      case NXLOG_ERROR:
-         loglevel = _T("*E* ");
-	      break;
-      case NXLOG_WARNING:
-         loglevel = _T("*W* ");
-	      break;
-      case NXLOG_INFO:
-         loglevel = _T("*I* ");
-	      break;
-      case NXLOG_DEBUG:
-         loglevel = _T("*D* ");
-	      break;
-      default:
-         loglevel = _T("*?* ");
-	      break;
-   }
-
-   TCHAR buffer[64];
-   if (s_flags & NXLOG_BACKGROUND_WRITER)
-   {
-      MutexLock(s_mutexLogAccess);
-
-	   FormatLogTimestamp(buffer);
-      s_logBuffer.append(buffer);
-      s_logBuffer.append(_T(" "));
-      s_logBuffer.append(loglevel);
-      s_logBuffer.append(message);
-
-      MutexUnlock(s_mutexLogAccess);
+      for(i = 0; (i < 19) && tag[i] != 0; i++)
+         tagf[i] = tag[i];
    }
    else
    {
-      // Prevent simultaneous write to log file
-      MutexLock(s_mutexLogAccess);
+      i = 0;
+   }
+   for(; i < 19; i++)
+      tagf[i] = ' ';
+   tagf[i] = 0;
+   return tagf;
+}
 
+/**
+ * Write log to console (assume that lock already set)
+ */
+static void WriteLogToConsole(INT16 severity, const TCHAR *timestamp, const TCHAR *tag, const TCHAR *message)
+{
+   const TCHAR *loglevel;
+   switch(severity)
+   {
+      case NXLOG_ERROR:
+         loglevel = _T("*E* [");
+         break;
+      case NXLOG_WARNING:
+         loglevel = _T("*W* [");
+         break;
+      case NXLOG_INFO:
+         loglevel = _T("*I* [");
+         break;
+      case NXLOG_DEBUG:
+         loglevel = _T("*D* [");
+         break;
+      default:
+         loglevel = _T("*?* [");
+         break;
+   }
+
+   TCHAR tagf[20];
+   m_consoleWriter(_T("%s %s%s] %s\n"), timestamp, loglevel, FormatTag(tag, tagf), message);
+}
+
+/**
+ * Write record to log file (text format)
+ */
+static void WriteLogToFileAsText(INT16 severity, const TCHAR *tag, const TCHAR *message)
+{
+   const TCHAR *loglevel;
+   switch(severity)
+   {
+      case NXLOG_ERROR:
+         loglevel = _T("*E* [");
+	      break;
+      case NXLOG_WARNING:
+         loglevel = _T("*W* [");
+	      break;
+      case NXLOG_INFO:
+         loglevel = _T("*I* [");
+	      break;
+      case NXLOG_DEBUG:
+         loglevel = _T("*D* [");
+	      break;
+      default:
+         loglevel = _T("*?* [");
+	      break;
+   }
+
+   TCHAR tagf[20];
+   FormatTag(tag, tagf);
+
+   MutexLock(s_mutexLogAccess);
+
+   TCHAR timestamp[64];
+   FormatLogTimestamp(timestamp);
+   if (s_flags & NXLOG_BACKGROUND_WRITER)
+   {
+      s_logBuffer.append(timestamp);
+      s_logBuffer.append(_T(" "));
+      s_logBuffer.append(loglevel);
+      s_logBuffer.append(tagf);
+      s_logBuffer.append(_T("] "));
+      s_logBuffer.append(message);
+      s_logBuffer.append(_T("\n"));
+   }
+   else
+   {
 	   // Check for new day start
       time_t t = time(NULL);
 	   if ((s_rotationMode == NXLOG_ROTATION_DAILY) && (t >= s_currentDayStart + 86400))
@@ -656,16 +700,13 @@ static void WriteLogToFile(TCHAR *message, const WORD type)
 		   RotateLog(FALSE);
 	   }
 
-	   FormatLogTimestamp(buffer);
       if (s_logFileHandle != NULL)
 	   {
-         _ftprintf(s_logFileHandle, _T("%s %s%s"), buffer, loglevel, message);
+         _ftprintf(s_logFileHandle, _T("%s %s%s] %s\n"), timestamp, loglevel, tagf, message);
 		   fflush(s_logFileHandle);
 	   }
-      if (s_flags & NXLOG_PRINT_TO_STDOUT)
-         m_consoleWriter(_T("%s %s%s"), buffer, loglevel, message);
 
-	   // Check log size
+      // Check log size
 	   if ((s_logFileHandle != NULL) && (s_rotationMode == NXLOG_ROTATION_BY_SIZE) && (s_maxLogSize != 0))
 	   {
 	      NX_STAT_STRUCT st;
@@ -673,246 +714,143 @@ static void WriteLogToFile(TCHAR *message, const WORD type)
 		   if ((UINT64)st.st_size >= s_maxLogSize)
 			   RotateLog(FALSE);
 	   }
-
-      MutexUnlock(s_mutexLogAccess);
    }
+
+   if (s_flags & NXLOG_PRINT_TO_STDOUT)
+      WriteLogToConsole(severity, timestamp, tag, message);
+
+   MutexUnlock(s_mutexLogAccess);
 }
 
 /**
- * Format message (UNIX version)
+ * Write record to log file (JSON format)
  */
-#ifndef _WIN32
-
-static TCHAR *FormatMessageUX(UINT32 dwMsgId, TCHAR **ppStrings)
+static void WriteLogToFileAsJSON(INT16 severity, const TCHAR *tag, const TCHAR *message)
 {
-   const TCHAR *p;
-   TCHAR *pMsg;
-   int i, iSize, iLen;
-
-   if (dwMsgId >= s_numMessages)
+   const char *loglevel;
+   switch(severity)
    {
-      // No message with this ID
-      pMsg = (TCHAR *)malloc(64 * sizeof(TCHAR));
-      _sntprintf(pMsg, 64, _T("MSG 0x%08X - Unable to find message text\n"), (unsigned int)dwMsgId);
+      case NXLOG_ERROR:
+         loglevel = "error";
+         break;
+      case NXLOG_WARNING:
+         loglevel = "warning";
+         break;
+      case NXLOG_INFO:
+         loglevel = "info";
+         break;
+      case NXLOG_DEBUG:
+         loglevel = "debug";
+         break;
+      default:
+         loglevel = "info";
+         break;
+   }
+
+   json_t *json = json_object();
+   TCHAR timestamp[64];
+   json_object_set_new(json, "timestamp", json_string_t(FormatLogTimestamp(timestamp)));
+   json_object_set_new(json, "severity", json_string(loglevel));
+   json_object_set_new(json, "tag", json_string_t(CHECK_NULL_EX(tag)));
+   json_object_set_new(json, "message", json_string_t(message));
+   char *text = json_dumps(json, JSON_PRESERVE_ORDER | JSON_COMPACT);
+   json_decref(json);
+
+   MutexLock(s_mutexLogAccess);
+
+   if (s_flags & NXLOG_BACKGROUND_WRITER)
+   {
+      s_logBuffer.appendMBString(text, strlen(text), CP_UTF8);
+      s_logBuffer.append(_T("\n"));
    }
    else
    {
-      iSize = (_tcslen(s_messages[dwMsgId]) + 2) * sizeof(TCHAR);
-      pMsg = (TCHAR *)malloc(iSize);
+      // Check for new day start
+      time_t t = time(NULL);
+      if ((s_rotationMode == NXLOG_ROTATION_DAILY) && (t >= s_currentDayStart + 86400))
+      {
+         RotateLog(FALSE);
+      }
 
-      for(i = 0, p = s_messages[dwMsgId]; *p != 0; p++)
-         if (*p == _T('%'))
+      if (s_logFileHandle != NULL)
+      {
+#ifdef _WIN32
+         fwrite(text, 1, strlen(text), s_logFileHandle);
+         _fputtc(_T('\n'), s_logFileHandle);
+#else
+         // write is used here because on linux fwrite is not working
+         // after calling fwprintf on a stream
+         size_t size = strlen(text);
+         size_t offset = 0;
+         do
          {
-            p++;
-            if ((*p >= _T('1')) && (*p <= _T('9')))
-            {
-               iLen = _tcslen(ppStrings[*p - _T('1')]);
-               iSize += iLen * sizeof(TCHAR);
-               pMsg = (TCHAR *)realloc(pMsg, iSize);
-               _tcscpy(&pMsg[i], ppStrings[*p - _T('1')]);
-               i += iLen;
-            }
-            else
-            {
-               if (*p == 0)   // Handle single % character at the string end
-                  break;
-               pMsg[i++] = *p;
-            }
-         }
-         else
-         {
-            pMsg[i++] = *p;
-         }
-      pMsg[i++] = _T('\n');
-      pMsg[i] = 0;
+            int bw = write(fileno(s_logFileHandle), &text[offset], size);
+            if (bw < 0)
+               break;
+            size -= bw;
+            offset += bw;
+         } while(size > 0);
+         write(fileno(s_logFileHandle), "\n", 1);
+#endif
+         fflush(s_logFileHandle);
+      }
+
+      // Check log size
+      if ((s_logFileHandle != NULL) && (s_rotationMode == NXLOG_ROTATION_BY_SIZE) && (s_maxLogSize != 0))
+      {
+         NX_STAT_STRUCT st;
+         NX_FSTAT(_fileno(s_logFileHandle), &st);
+         if ((UINT64)st.st_size >= s_maxLogSize)
+            RotateLog(FALSE);
+      }
    }
 
-   return pMsg;
+   if (s_flags & NXLOG_PRINT_TO_STDOUT)
+      WriteLogToConsole(severity, timestamp, tag, message);
+
+   MutexUnlock(s_mutexLogAccess);
+   free(text);
 }
 
-#endif   /* ! _WIN32 */
+/**
+ * Write record to log file (JSON format)
+ */
+static inline void WriteLogToFile(INT16 severity, const TCHAR *tag, const TCHAR *message)
+{
+   if (s_flags & NXLOG_JSON_FORMAT)
+      WriteLogToFileAsJSON(severity, tag, message);
+   else
+      WriteLogToFileAsText(severity, tag, message);
+}
 
 /**
- * Write log record
- * Parameters:
- * msg    - Message ID
- * wType  - Message type (see ReportEvent() for details)
- * format - Parameter format string, each parameter represented by one character.
- *          The following format characters can be used:
- *             s - String (multibyte or UNICODE, depending on build)
- *             m - multibyte string
- *             u - UNICODE string
- *             d - Decimal integer
- *             x - Hex integer
- *             e - System error code (will appear in log as textual description)
- *             a - IP address in network byte order
- *             A - IPv6 address in network byte order
- *             H - IPv6 address in network byte order (will appear in [])
- *             I - pointer to InetAddress object
+ * Write log record - internal implementation
  */
-void LIBNETXMS_EXPORTABLE nxlog_write(DWORD msg, WORD wType, const char *format, ...)
+static void WriteLog(INT16 severity, const TCHAR *tag, const TCHAR *format, va_list args)
 {
-   va_list args;
-   TCHAR *strings[16], *pMsg, szBuffer[256];
-   int numStrings = 0;
-   UINT32 error;
-#if defined(UNICODE) && !defined(_WIN32)
-	char *mbMsg;
-#endif
-
-	if (!(s_flags & NXLOG_IS_OPEN) || (msg == 0))
-		return;
-
-   memset(strings, 0, sizeof(TCHAR *) * 16);
-
-   if (format != NULL)
+   if ((severity == NXLOG_DEBUG) && (s_debugWriter != NULL))
    {
-      va_start(args, format);
-
-      for(; (format[numStrings] != 0) && (numStrings < 16); numStrings++)
-      {
-         switch(format[numStrings])
-         {
-            case 's':
-               strings[numStrings] = MemCopyString(va_arg(args, TCHAR *));
-               break;
-            case 'm':
-#ifdef UNICODE
-					strings[numStrings] = WideStringFromMBString(va_arg(args, char *));
-#else
-               strings[numStrings] = MemCopyStringA(va_arg(args, char *));
-#endif
-               break;
-            case 'u':
-#ifdef UNICODE
-               strings[numStrings] = MemCopyStringW(va_arg(args, WCHAR *));
-#else
-					strings[numStrings] = MBStringFromWideString(va_arg(args, WCHAR *));
-#endif
-               break;
-            case 'd':
-               strings[numStrings] = (TCHAR *)malloc(16 * sizeof(TCHAR));
-               _sntprintf(strings[numStrings], 16, _T("%d"), (int)(va_arg(args, LONG)));
-               break;
-            case 'x':
-               strings[numStrings] = (TCHAR *)malloc(16 * sizeof(TCHAR));
-               _sntprintf(strings[numStrings], 16, _T("0x%08X"), (unsigned int)(va_arg(args, UINT32)));
-               break;
-            case 'a':
-               strings[numStrings] = (TCHAR *)malloc(20 * sizeof(TCHAR));
-               IpToStr(va_arg(args, UINT32), strings[numStrings]);
-               break;
-            case 'A':
-               strings[numStrings] = (TCHAR *)malloc(48 * sizeof(TCHAR));
-               Ip6ToStr(va_arg(args, BYTE *), strings[numStrings]);
-               break;
-            case 'H':
-               strings[numStrings] = (TCHAR *)malloc(48 * sizeof(TCHAR));
-               strings[numStrings][0] = _T('[');
-               Ip6ToStr(va_arg(args, BYTE *), strings[numStrings] + 1);
-               _tcscat(strings[numStrings], _T("]"));
-               break;
-            case 'I':
-               strings[numStrings] = (TCHAR *)malloc(48 * sizeof(TCHAR));
-               va_arg(args, InetAddress *)->toString(strings[numStrings]);
-               break;
-            case 'e':
-               error = va_arg(args, UINT32);
-#ifdef _WIN32
-               if (FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | 
-                                 FORMAT_MESSAGE_FROM_SYSTEM | 
-                                 FORMAT_MESSAGE_IGNORE_INSERTS,
-                                 NULL, error,
-                                 MAKELANGID(LANG_NEUTRAL,SUBLANG_DEFAULT), // Default language
-                                 (LPTSTR)&pMsg, 0, NULL) > 0)
-               {
-                  pMsg[_tcscspn(pMsg, _T("\r\n"))] = 0;
-                  strings[numStrings] = (TCHAR *)malloc((_tcslen(pMsg) + 1) * sizeof(TCHAR));
-                  _tcscpy(strings[numStrings], pMsg);
-                  LocalFree(pMsg);
-               }
-               else
-               {
-                  strings[numStrings] = (TCHAR *)malloc(64 * sizeof(TCHAR));
-                  _sntprintf(strings[numStrings], 64, _T("MSG 0x%08X - Unable to find message text"), error);
-               }
-#else   /* _WIN32 */
-#if HAVE_STRERROR_R
-#if HAVE_POSIX_STRERROR_R
-					strings[numStrings] = (TCHAR *)malloc(256 * sizeof(TCHAR));
-					_tcserror_r((int)error, strings[numStrings], 256);
-#else
-					strings[numStrings] = _tcsdup(_tcserror_r((int)error, szBuffer, 256));
-#endif
-#else
-					strings[numStrings] = _tcsdup(_tcserror((int)error));
-#endif
-#endif
-               break;
-            default:
-               strings[numStrings] = (TCHAR *)malloc(32 * sizeof(TCHAR));
-               _sntprintf(strings[numStrings], 32, _T("BAD FORMAT (0x%08X)"), (unsigned int)(va_arg(args, UINT32)));
-               break;
-         }
-      }
-      va_end(args);
+      MutexLock(s_mutexLogAccess);
+      s_debugWriter(tag, format, args);
+      MutexUnlock(s_mutexLogAccess);
    }
 
+   if (!(s_flags & NXLOG_IS_OPEN))
+      return;
+
+   if (s_flags & NXLOG_USE_SYSLOG)
+   {
+      TCHAR message[16384];
+      _vsntprintf(message, 16384, format, args);
+
 #ifdef _WIN32
-   if (!(s_flags & NXLOG_USE_SYSLOG) || (s_flags & NXLOG_PRINT_TO_STDOUT))
-   {
-      LPVOID lpMsgBuf;
-
-      if (FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | 
-                        FORMAT_MESSAGE_FROM_HMODULE | FORMAT_MESSAGE_ARGUMENT_ARRAY,
-                        s_msgModuleHandle, msg, 0, (LPTSTR)&lpMsgBuf, 0, (va_list *)strings) > 0)
-      {
-         TCHAR *pCR;
-
-         // Replace trailing CR/LF pair with LF
-         pCR = _tcschr((TCHAR *)lpMsgBuf, _T('\r'));
-         if (pCR != NULL)
-         {
-            *pCR = _T('\n');
-            pCR++;
-            *pCR = 0;
-         }
-			if (s_flags & NXLOG_USE_SYSLOG)
-			{
-				m_consoleWriter(_T("%s %s"), FormatLogTimestamp(szBuffer), (TCHAR *)lpMsgBuf);
-			}
-			else
-			{
-				WriteLogToFile((TCHAR *)lpMsgBuf, wType);
-			}
-         LocalFree(lpMsgBuf);
-      }
-      else
-      {
-         TCHAR message[64];
-
-         _sntprintf(message, 64, _T("MSG 0x%08X - cannot format message"), msg);
-			if (s_flags & NXLOG_USE_SYSLOG)
-			{
-				m_consoleWriter(_T("%s %s"), FormatLogTimestamp(szBuffer), message);
-			}
-			else
-			{
-	         WriteLogToFile(message, wType);
-			}
-      }
-   }
-
-   if (s_flags & NXLOG_USE_SYSLOG)
-	{
-      ReportEvent(s_eventLogHandle, (wType == EVENTLOG_DEBUG_TYPE) ? EVENTLOG_INFORMATION_TYPE : wType, 0, msg, NULL, numStrings, 0, (const TCHAR **)strings, NULL);
-	}
-#else  /* _WIN32 */
-   pMsg = FormatMessageUX(msg, strings);
-   if (s_flags & NXLOG_USE_SYSLOG)
-   {
+      const TCHAR *strings = message;
+      ReportEvent(s_eventLogHandle,
+         (severity == NXLOG_DEBUG) ? EVENTLOG_INFORMATION_TYPE : severity,
+         0, 1000, NULL, 1, 0, &strings, NULL);
+#else /* _WIN32 */
       int level;
-      switch(wType)
+      switch(severity)
       {
          case NXLOG_ERROR:
             level = LOG_ERR;
@@ -930,23 +868,40 @@ void LIBNETXMS_EXPORTABLE nxlog_write(DWORD msg, WORD wType, const char *format,
             level = LOG_INFO;
             break;
       }
-#ifdef UNICODE
-		mbMsg = MBStringFromWideString(pMsg);
-      syslog(level, "%s", mbMsg);
-		MemFree(mbMsg);
-#else
-      syslog(level, "%s", pMsg);
-#endif
 
-		if (s_flags & NXLOG_PRINT_TO_STDOUT)
-		{
-			m_consoleWriter(_T("%s %s"), FormatLogTimestamp(szBuffer), pMsg);
-		}
+#ifdef UNICODE
+      char *mbmsg = MBStringFromWideString(message);
+      if (tag != NULL)
+      {
+         char mbtag[64];
+         WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, tag, -1, mbtag, 64, NULL, NULL);
+         mbtag[63] = 0;
+         syslog(level, "[%s] %s", mbtag, mbmsg);
+      }
+      else
+      {
+         syslog(level, "%s", mbmsg);
+      }
+      MemFree(mbmsg);
+#else
+      if (tag != NULL)
+         syslog(level, "[%s] %s", tag, message);
+      else
+         syslog(level, "%s", message);
+#endif
+#endif   /* _WIN32 */
+      if (s_flags & NXLOG_PRINT_TO_STDOUT)
+      {
+         MutexLock(s_mutexLogAccess);
+         TCHAR timestamp[64];
+         WriteLogToConsole(severity, FormatLogTimestamp(timestamp), tag, message);
+         MutexUnlock(s_mutexLogAccess);
+      }
    }
    else if (s_flags & NXLOG_USE_SYSTEMD)
    {
       int level;
-      switch(wType)
+      switch(severity)
       {
          case NXLOG_ERROR:
             level = 3;
@@ -964,30 +919,62 @@ void LIBNETXMS_EXPORTABLE nxlog_write(DWORD msg, WORD wType, const char *format,
             level = 6;
             break;
       }
-      _ftprintf(stderr, _T("<%d>%s"), level, pMsg);
+
+      TCHAR tagf[20];
+      MutexLock(s_mutexLogAccess);
+      if (tag != NULL)
+         _ftprintf(stderr, _T("<%d>[%s] "), level, FormatTag(tag, tagf));
+      else
+         _ftprintf(stderr, _T("<%d> "), level);
+      _vftprintf(stderr, format, args);
+      _fputtc(_T('\n'), stderr);
+      fflush(stderr);
+      MutexUnlock(s_mutexLogAccess);
    }
    else
    {
-      WriteLogToFile(pMsg, wType);
+      TCHAR message[16384];
+      _vsntprintf(message, 16384, format, args);
+      WriteLogToFile(severity, tag, message);
    }
-   MemFree(pMsg);
-#endif /* _WIN32 */
-
-   while(--numStrings >= 0)
-      MemFree(strings[numStrings]);
 }
 
 /**
- * Write generic message to log (useful for warning and error messages generated within libraries)
+ * Write message to log with tag
  */
-void LIBNETXMS_EXPORTABLE nxlog_write_generic(WORD type, const TCHAR *format, ...)
+void LIBNETXMS_EXPORTABLE nxlog_write(INT16 severity, const TCHAR *format, ...)
 {
    va_list args;
    va_start(args, format);
-   TCHAR msg[8192];
-   _vsntprintf(msg, 8192, format, args);
+   WriteLog(severity, NULL, format, args);
    va_end(args);
-   nxlog_write(s_genericMsg, type, "s", msg);
+}
+
+/**
+ * Write message to log with tag
+ */
+void LIBNETXMS_EXPORTABLE nxlog_write2(INT16 severity, const TCHAR *format, va_list args)
+{
+   WriteLog(severity, NULL, format, args);
+}
+
+/**
+ * Write message to log with tag
+ */
+void LIBNETXMS_EXPORTABLE nxlog_write_tag(INT16 severity, const TCHAR *tag, const TCHAR *format, ...)
+{
+   va_list args;
+   va_start(args, format);
+   WriteLog(severity, tag, format, args);
+   va_end(args);
+}
+
+/**
+ * Write message to log with tag
+ */
+void LIBNETXMS_EXPORTABLE nxlog_write_tag2(INT16 severity, const TCHAR *tag, const TCHAR *format, va_list args)
+{
+   WriteLog(severity, tag, format, args);
 }
 
 /**
@@ -1000,13 +987,8 @@ void LIBNETXMS_EXPORTABLE nxlog_debug(int level, const TCHAR *format, ...)
 
    va_list args;
    va_start(args, format);
-   TCHAR buffer[8192];
-   _vsntprintf(buffer, 8192, format, args);
+   WriteLog(NXLOG_DEBUG, NULL, format, args);
    va_end(args);
-   nxlog_write(s_debugMsg, NXLOG_DEBUG, "s", buffer);
-
-   if (s_debugWriter != NULL)
-      s_debugWriter(NULL, buffer);
 }
 
 /**
@@ -1017,34 +999,7 @@ void LIBNETXMS_EXPORTABLE nxlog_debug2(int level, const TCHAR *format, va_list a
    if (level > nxlog_get_debug_level_tag(_T("*")))
       return;
 
-   TCHAR buffer[8192];
-   _vsntprintf(buffer, 8192, format, args);
-   nxlog_write(s_debugMsg, NXLOG_DEBUG, "s", buffer);
-
-   if (s_debugWriter != NULL)
-      s_debugWriter(NULL, buffer);
-}
-
-/**
- * Write debug message with tag
- */
-static void nxlog_debug_tag_internal(const TCHAR *tag, int level, const TCHAR *format, va_list args)
-{
-   TCHAR tagf[20];
-   int i;
-   for(i = 0; (i < 19) && tag[i] != 0; i++)
-      tagf[i] = tag[i];
-   for(; i < 19; i++)
-      tagf[i] = ' ';
-   tagf[i] = 0;
-
-   TCHAR buffer[8192];
-   _vsntprintf(buffer, 8192, format, args);
-   buffer[8191] = 0;
-   nxlog_write(s_debugMsgTag, NXLOG_DEBUG, "ss", tagf, buffer);
-
-   if (s_debugWriter != NULL)
-      s_debugWriter(tag, buffer);
+   WriteLog(NXLOG_DEBUG, NULL, format, args);
 }
 
 /**
@@ -1057,7 +1012,7 @@ void LIBNETXMS_EXPORTABLE nxlog_debug_tag(const TCHAR *tag, int level, const TCH
 
    va_list args;
    va_start(args, format);
-   nxlog_debug_tag_internal(tag, level, format, args);
+   WriteLog(NXLOG_DEBUG, tag, format, args);
    va_end(args);
 }
 
@@ -1069,7 +1024,7 @@ void LIBNETXMS_EXPORTABLE nxlog_debug_tag2(const TCHAR *tag, int level, const TC
    if (level > nxlog_get_debug_level_tag(tag))
       return;
 
-   nxlog_debug_tag_internal(tag, level, format, args);
+   WriteLog(NXLOG_DEBUG, tag, format, args);
 }
 
 /**
@@ -1084,7 +1039,7 @@ void LIBNETXMS_EXPORTABLE nxlog_debug_tag_object(const TCHAR *tag, UINT32 object
 
    va_list args;
    va_start(args, format);
-   nxlog_debug_tag_internal(fullTag, level, format, args);
+   WriteLog(NXLOG_DEBUG, fullTag, format, args);
    va_end(args);
 }
 
@@ -1098,5 +1053,41 @@ void LIBNETXMS_EXPORTABLE nxlog_debug_tag_object2(const TCHAR *tag, UINT32 objec
    if (level > nxlog_get_debug_level_tag(fullTag))
       return;
 
-   nxlog_debug_tag_internal(fullTag, level, format, args);
+   WriteLog(NXLOG_DEBUG, fullTag, format, args);
+}
+
+/**
+ * Call ReportEvent if writing to Windows Event Log, otherwise write normal message using provided alternative text
+ */
+void LIBNETXMS_EXPORTABLE nxlog_report_event(DWORD msg, int level, int stringCount, const TCHAR *altMessage, ...)
+{
+   va_list args;
+   va_start(args, altMessage);
+#ifdef _WIN32
+   if (s_flags & NXLOG_USE_SYSLOG)
+   {
+      const TCHAR **strings = (stringCount > 0) ? (const TCHAR **)alloca(sizeof(TCHAR*) * stringCount) : NULL;
+      for (int i = 0; i < stringCount; i++)
+         strings[i] = va_arg(args, TCHAR*);
+      ReportEvent(s_eventLogHandle, level, 0, msg, NULL, stringCount, 0, strings, NULL);
+
+      if (s_flags & NXLOG_PRINT_TO_STDOUT)
+      {
+         TCHAR message[16384];
+         _vstprintf(message, 16384, altMessage, args);
+
+         MutexLock(s_mutexLogAccess);
+         TCHAR timestamp[64];
+         WriteLogToConsole(level, FormatLogTimestamp(timestamp), NULL, message);
+         MutexUnlock(s_mutexLogAccess);
+      }
+   }
+   else
+   {
+      WriteLog(level, NULL, altMessage, args);
+   }
+#else
+   WriteLog(level, NULL, altMessage, args);
+#endif
+   va_end(args);
 }

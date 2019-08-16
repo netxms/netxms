@@ -41,6 +41,18 @@ ObjectQueue<DiscoveredAddress> g_nodePollerQueue;
 ThreadPool *g_pollerThreadPool = NULL;
 
 /**
+ * Discovery source type names
+ */
+const TCHAR *g_discoveredAddrSourceTypeAsText[] = {
+         _T("ARP Cache"),
+         _T("Routing Table"),
+         _T("Agent Registration"),
+         _T("SNMP Trap"),
+         _T("Syslog"),
+         _T("Active Discovery"),
+};
+
+/**
  * Active pollers
  */
 static HashMap<UINT64, PollerInfo> s_pollers(false);
@@ -75,13 +87,13 @@ PollerInfo *RegisterPoller(PollerType type, NetObj *object, bool objectCreation)
  */
 static EnumerationCallbackResult ShowPollerInfo(const void *key, const void *object, void *arg)
 {
-   static const TCHAR *pollerType[] = { _T("STAT"), _T("CONF"), _T("INST"), _T("ROUT"), _T("DISC"), _T("BSVC"), _T("COND"), _T("TOPO"), _T("ZONE") };
+   static const TCHAR *pollerType[] = { _T("STAT"), _T("CONF"), _T("INST"), _T("ROUT"), _T("DISC"), _T("BSVC"), _T("COND"), _T("TOPO"), _T("ZONE"), _T("ICMP") };
 
    PollerInfo *p = (PollerInfo *)object;
    NetObj *o = p->getObject();
 
    TCHAR name[32];
-   nx_strncpy(name, o->getName(), 31);
+   _tcslcpy(name, o->getName(), 31);
    ConsolePrintf(static_cast<CONSOLE_CTX>(arg), _T("%s | %9d | %-30s | %s\n"),
             pollerType[static_cast<int>(p->getType())], o->getId(), name, p->getStatus());
 
@@ -244,7 +256,8 @@ static bool PollerQueueElementComparator(const void *key, const DiscoveredAddres
 void CheckPotentialNode(const InetAddress& ipAddr, UINT32 zoneUIN, DiscoveredAddressSourceType sourceType, UINT32 sourceNodeId)
 {
 	TCHAR buffer[64];
-	nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Checking address %s in zone %d"), ipAddr.toString(buffer), zoneUIN);
+	nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Checking address %s in zone %d (source: %s)"),
+	         ipAddr.toString(buffer), zoneUIN, g_discoveredAddrSourceTypeAsText[sourceType]);
    if (!ipAddr.isValid() || ipAddr.isBroadcast() || ipAddr.isLoopback() || ipAddr.isMulticast())
    {
       nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Potential node %s rejected (IP address is not a valid unicast address)"), ipAddr.toString(buffer));
@@ -312,18 +325,9 @@ void CheckPotentialNode(const InetAddress& ipAddr, UINT32 zoneUIN, DiscoveredAdd
 static void CheckPotentialNode(Node *node, const InetAddress& ipAddr, UINT32 ifIndex, const MacAddress& macAddr,
          DiscoveredAddressSourceType sourceType, UINT32 sourceNodeId)
 {
-   static const TCHAR *sourceNames[] = {
-            _T("ARP Cache"),
-            _T("Routing Table"),
-            _T("Agent Registration"),
-            _T("SNMP Trap"),
-            _T("Syslog"),
-            _T("Active Discovery"),
-   };
-
    TCHAR buffer[64];
    nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Checking potential node %s at %s:%d (source: %s)"),
-            ipAddr.toString(buffer), node->getName(), ifIndex, sourceNames[sourceType]);
+            ipAddr.toString(buffer), node->getName(), ifIndex, g_discoveredAddrSourceTypeAsText[sourceType]);
    if (!ipAddr.isValidUnicast())
    {
       nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Potential node %s rejected (IP address is not a valid unicast address)"), ipAddr.toString(buffer));
@@ -343,7 +347,8 @@ static void CheckPotentialNode(Node *node, const InetAddress& ipAddr, UINT32 ifI
          MacAddress knownMAC = iface->getMacAddr();
          PostEvent(EVENT_DUPLICATE_IP_ADDRESS, g_dwMgmtNode, "AdssHHdss",
                   &ipAddr, curr->getId(), curr->getName(), iface->getName(),
-                  &knownMAC, &macAddr, node->getId(), node->getName(), sourceNames[sourceType]);
+                  &knownMAC, &macAddr, node->getId(), node->getName(),
+                  g_discoveredAddrSourceTypeAsText[sourceType]);
       }
       return;
    }
@@ -640,20 +645,20 @@ static void QueueForPolling(NetObj *object, void *data)
 
    if (object->isDataCollectionTarget())
    {
-      DataCollectionTarget *target = (DataCollectionTarget *)object;
+      auto target = static_cast<DataCollectionTarget*>(object);
       if (target->lockForStatusPoll())
       {
-         nxlog_debug_tag(DEBUG_TAG_POLL_MANAGER, 6, _T("Data Collection Target %d \"%s\" queued for status poll"), (int)target->getId(), target->getName());
+         nxlog_debug_tag(DEBUG_TAG_POLL_MANAGER, 6, _T("Data collection target %s [%u] queued for status poll"), target->getName(), target->getId());
          ThreadPoolExecuteSerialized(g_pollerThreadPool, threadKey, target, &DataCollectionTarget::statusPollWorkerEntry, RegisterPoller(PollerType::STATUS, target));
       }
       if (target->lockForConfigurationPoll())
       {
-         nxlog_debug_tag(DEBUG_TAG_POLL_MANAGER, 6, _T("Data Collection Target %d \"%s\" queued for configuration poll"), (int)target->getId(), target->getName());
+         nxlog_debug_tag(DEBUG_TAG_POLL_MANAGER, 6, _T("Data collection target %s [%u] queued for configuration poll"), target->getName(), target->getId());
          ThreadPoolExecuteSerialized(g_pollerThreadPool, threadKey, target, &DataCollectionTarget::configurationPollWorkerEntry, RegisterPoller(PollerType::CONFIGURATION, target));
       }
       if (target->lockForInstancePoll())
       {
-         nxlog_debug_tag(DEBUG_TAG_POLL_MANAGER, 6, _T("Data Collection Target %d \"%s\" queued for instance discovery poll"), (int)target->getId(), target->getName());
+         nxlog_debug_tag(DEBUG_TAG_POLL_MANAGER, 6, _T("Data collection target %s [%u] queued for instance discovery poll"), target->getName(), target->getId());
          ThreadPoolExecuteSerialized(g_pollerThreadPool, threadKey, target, &DataCollectionTarget::instanceDiscoveryPollWorkerEntry, RegisterPoller(PollerType::INSTANCE_DISCOVERY, target));
       }
    }
@@ -665,19 +670,24 @@ static void QueueForPolling(NetObj *object, void *data)
 				Node *node = static_cast<Node*>(object);
 				if (node->lockForRoutePoll())
 				{
-					nxlog_debug_tag(DEBUG_TAG_POLL_MANAGER, 6, _T("Node %d \"%s\" queued for routing table poll"), (int)node->getId(), node->getName());
+					nxlog_debug_tag(DEBUG_TAG_POLL_MANAGER, 6, _T("Node %s [%u] queued for routing table poll"), node->getName(), node->getId());
 					ThreadPoolExecuteSerialized(g_pollerThreadPool, threadKey, node, &Node::routingTablePollWorkerEntry, RegisterPoller(PollerType::ROUTING_TABLE, node));
 				}
 				if (node->lockForDiscoveryPoll())
 				{
-					nxlog_debug_tag(DEBUG_TAG_POLL_MANAGER, 6, _T("Node %d \"%s\" queued for discovery poll"), (int)node->getId(), node->getName());
+					nxlog_debug_tag(DEBUG_TAG_POLL_MANAGER, 6, _T("Node %s [%u] queued for discovery poll"), node->getName(), node->getId());
 					ThreadPoolExecuteSerialized(g_pollerThreadPool, threadKey, DiscoveryPoller, RegisterPoller(PollerType::DISCOVERY, node));
 				}
 				if (node->lockForTopologyPoll())
 				{
-					nxlog_debug_tag(DEBUG_TAG_POLL_MANAGER, 6, _T("Node %d \"%s\" queued for topology poll"), (int)node->getId(), node->getName());
+					nxlog_debug_tag(DEBUG_TAG_POLL_MANAGER, 6, _T("Node %s [%u] queued for topology poll"), node->getName(), node->getId());
 					ThreadPoolExecuteSerialized(g_pollerThreadPool, threadKey, node, &Node::topologyPollWorkerEntry, RegisterPoller(PollerType::TOPOLOGY, node));
 				}
+		      if (node->lockForIcmpPoll())
+		      {
+		         nxlog_debug_tag(DEBUG_TAG_POLL_MANAGER, 6, _T("Node %s [%u] queued for ICMP poll"), node->getName(), node->getId());
+		         ThreadPoolExecuteSerialized(g_pollerThreadPool, threadKey, node, &Node::icmpPollWorkerEntry, RegisterPoller(PollerType::ICMP, node));
+		      }
 			}
 			break;
 		case OBJECT_CONDITION:
@@ -781,7 +791,7 @@ void ResetDiscoveryPoller()
    }
 
    // Reload discovery parameters
-   g_dwDiscoveryPollingInterval = ConfigReadInt(_T("DiscoveryPollingInterval"), 900);
+   g_discoveryPollingInterval = ConfigReadInt(_T("DiscoveryPollingInterval"), 900);
 
    switch(ConfigReadInt(_T("NetworkDiscovery.Type"), 0))
    {

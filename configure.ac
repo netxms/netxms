@@ -137,7 +137,7 @@ AGENT_DIRS=""
 SERVER_LIBS=""
 SERVER_TOOLS=""
 SERVER_INCLUDE=""
-SMSDRV_DIRS=""
+NCDRV_DIRS=""
 HDLINK_DIRS=""
 PDSDRV_DIRS=""
 TOP_LEVEL_MODULES=""
@@ -804,18 +804,18 @@ AC_ARG_ENABLE(64bit,
 AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
 	DB_DRIVERS="mysql mariadb pgsql odbc mssql sqlite oracle db2 informix"
-	MODULES="appagent jansson libexpat libstrophe libtre zlib libnetxms libnxjava install sqlite snmp libnxsl libnxmb libnxlp libnxpython libnxcc db server smsdrv agent client nxscript nxcproxy"
+	MODULES="appagent jansson java-common libexpat libstrophe libtre zlib libnetxms libnxjava install sqlite snmp libnxsl libnxmb libnxlp libnxpython libnxcc db server ncdrivers agent client nxscript nxcproxy"
 	TOOLS="nxlptest"
 	SUBAGENT_DIRS="linux ds18x20 freebsd openbsd minix mqtt mysql netbsd sunos aix ipso hpux odbcquery informix oracle lmsensors darwin rpi java jmx bind9 ubntlw netsvc db2 tuxedo mongodb ssh vmgr xen lorawan asterisk python"
 	AGENT_DIRS="libnxtux"
-	SMSDRV_DIRS="anysms kannel mymobile nexmo nxagent slack smseagle text2reach websms"
+	NCDRV_DIRS="anysms kannel mymobile nexmo nxagent slack smseagle text2reach websms"
    HDLINK_DIRS="jira redmine"
    PDSDRV_DIRS="influxdb rrdtool"
 	NXCONFIG="nxconfig"
 	TOP_LEVEL_MODULES="include sql images tests"
 	SERVER_INCLUDE="include"
 	CONTRIB_MODULES="mibs backgrounds music templates"
-	CLIENT_COMPONENTS="java nxalarm nxevent nxpush nxshell nxsms"
+	CLIENT_COMPONENTS="java nxalarm nxevent nxpush nxshell nxnotify"
 	SERVER_TOOLS="nxconfig"
 	DIST_BUILD="yes"
 )
@@ -866,7 +866,7 @@ fi
 
 check_substr "$COMPONENTS" "java"
 if test $? = 0; then
-	MODULES="$MODULES libnxjava"
+	MODULES="$MODULES java-common libnxjava"
 	SUBAGENT_DIRS="$SUBAGENT_DIRS java bind9 jmx ubntlw"
 fi
 
@@ -1051,10 +1051,10 @@ if test $? = 0; then
 		AC_MSG_ERROR(Encryption support is required for server build.)
 	fi
 	BUILD_SERVER="yes"
-	MODULES="$MODULES libnxsl libnxcc server smsdrv nxscript"
+	MODULES="$MODULES libnxsl libnxcc server ncdrivers nxscript"
 	TOP_LEVEL_MODULES="$TOP_LEVEL_MODULES sql images"
 	CONTRIB_MODULES="$CONTRIB_MODULES mibs backgrounds music templates"
-	SMSDRV_DIRS="$SMSDRV_DIRS nxagent"
+	NCDRV_DIRS="$NCDRV_DIRS nxagent"
 	PDSDRV_DIRS="influxdb"
 	if test "x$XMPP_SUPPORT" = "xyes"; then
 		MODULES="libstrophe $MODULES"
@@ -1066,7 +1066,7 @@ check_substr "$COMPONENTS" "client"
 if test $? = 0; then
 	BUILD_CLIENT="yes"
 	MODULES="$MODULES client"
-	CLIENT_COMPONENTS="$CLIENT_COMPONENTS nxalarm nxevent nxpush nxsms"
+	CLIENT_COMPONENTS="$CLIENT_COMPONENTS nxalarm nxevent nxpush nxnotify"
 	check_substr "$COMPONENTS" "java"
 	if test $? = 0; then
 		CLIENT_COMPONENTS="$CLIENT_COMPONENTS java nxshell"
@@ -1158,7 +1158,7 @@ if test $? = 0; then
 	if test "x$STATIC_BUILD" = "xyes"; then
 		MODULES="$MODULES appagent client"
 	else
-		MODULES="$MODULES appagent client libnxsl libnxlp libnxcc db nxscript smsdrv snmp"
+		MODULES="$MODULES appagent client libnxsl libnxlp libnxcc db nxscript ncdrivers snmp"
 		TOOLS="$TOOLS nxlptest"
 	fi
 fi
@@ -2355,11 +2355,12 @@ fi
 if test "x$DISABLE_CURL" = "xno" -a "x$DIST_BUILD" != "xyes"; then
 	AC_CHECK_HEADER(curl/curl.h,HAVE_LIBCURL=yes,HAVE_LIBCURL=no)
 	if test "x$HAVE_LIBCURL" = "xyes"; then
-		AC_CHECK_LIB(curl, curl_global_init, [ HAVE_LIBCURL=yes ], [ HAVE_LIBCURL=no ])
+		AC_CHECK_LIB(curl, curl_global_init, [
+			HAVE_LIBCURL=yes
+			LIBS="$LIBS -lcurl"
+		], [ HAVE_LIBCURL=no ])
 		AC_CHECK_DECLS([CURLOPT_NOSIGNAL, curl_version_info],,,[
-#ifdef HAVE_CURL_CURL_H
 #include <curl/curl.h>
-#endif
 		])
 	fi
 
@@ -2368,7 +2369,7 @@ if test "x$DISABLE_CURL" = "xno" -a "x$DIST_BUILD" != "xyes"; then
 	fi
 
 	SUBAGENT_DIRS="$SUBAGENT_DIRS netsvc"
-	SMSDRV_DIRS="$SMSDRV_DIRS anysms kannel mymobile nexmo slack smseagle text2reach websms"
+	NCDRV_DIRS="$NCDRV_DIRS anysms kannel mymobile nexmo slack smseagle text2reach websms"
 	HDLINK_DIRS="$HDLINK_DIRS jira redmine"
 	AC_DEFINE(HAVE_LIBCURL, 1, Define to 1 if libcurl is available)
 fi
@@ -3784,6 +3785,9 @@ if test "x$DISABLE_MQTT" != "xyes" -a "x$DIST_BUILD" != "xyes"; then
 	AC_DEFINE(WITH_MQTT, 1, Define to 1 if MQTT is supported)
 	SUBAGENT_DIRS="$SUBAGENT_DIRS mqtt"
 
+	LIBS="$LIBS $MQTT_LIBS"
+	AC_CHECK_FUNCS([mosquitto_threaded_set])
+
 	CPPFLAGS="$OLD_CPPFLAGS"
 	LDFLAGS="$OLD_LDFLAGS"
 	LIBS="$OLD_LIBS"
@@ -4107,7 +4111,7 @@ AS_IF([test "x$with_dist" = "xyes"],
   AGENT_DIRS=`echo $AGENT_DIRS|perl -nae 'my %seen; my @out; for (@F) {push(@out, $_) unless $seen{$_}++; }; print join(" ", @out)'`
   SUBAGENT_DIRS=`echo $SUBAGENT_DIRS|perl -nae 'my %seen; my @out; for (@F) {push(@out, $_) unless $seen{$_}++; }; print join(" ", @out)'`
   MODULES=`echo $MODULES|perl -nae 'my %seen; my @out; for (@F) {push(@out, $_) unless $seen{$_}++; }; print join(" ", @out)'`
-  SMSDRV_DIRS=`echo $SMSDRV_DIRS|perl -nae 'my %seen; my @out; for (@F) {push(@out, $_) unless $seen{$_}++; }; print join(" ", @out)'`
+  NCDRV_DIRS=`echo $NCDRV_DIRS|perl -nae 'my %seen; my @out; for (@F) {push(@out, $_) unless $seen{$_}++; }; print join(" ", @out)'`
   HDLINK_DIRS=`echo $HDLINK_DIRS|perl -nae 'my %seen; my @out; for (@F) {push(@out, $_) unless $seen{$_}++; }; print join(" ", @out)'`
 ])
 
@@ -4172,7 +4176,7 @@ AC_SUBST(SERVER_INCLUDE)
 AC_SUBST(SERVER_LIBS)
 AC_SUBST(SERVER_TOOLS)
 AC_SUBST(SHLIB_SUFFIX)
-AC_SUBST(SMSDRV_DIRS)
+AC_SUBST(NCDRV_DIRS)
 AC_SUBST(SQLFLAGS)
 AC_SUBST(STATIC_SUBAGENT_LIST)
 AC_SUBST(SUBAGENT_DIRS)
@@ -4202,6 +4206,7 @@ AC_SUBST(NETXMS_LIBRARY_VERSION)
 
 AC_CONFIG_FILES([
 	Makefile
+	build/Makefile
 	contrib/Makefile
 	contrib/backgrounds/Makefile
 	contrib/integration/Makefile
@@ -4294,10 +4299,10 @@ AC_CONFIG_FILES([
 	src/client/libnxclient/Makefile
 	src/client/nxalarm/Makefile
 	src/client/nxevent/Makefile
+	src/client/nxnotify/Makefile
 	src/client/nxpush/Makefile
 	src/client/nxshell/Makefile
 	src/client/nxshell/java/Makefile
-	src/client/nxsms/Makefile
 	src/db/Makefile
 	src/db/dbdrv/Makefile
 	src/db/dbdrv/db2/Makefile
@@ -4313,16 +4318,15 @@ AC_CONFIG_FILES([
 	src/install/Makefile
 	src/install/windows/Makefile
 	src/jansson/Makefile
+	src/java-common/Makefile
+	src/java-common/lib/Makefile
+	src/java-common/netxms-base/Makefile
 	src/libexpat/Makefile
 	src/libexpat/libexpat/Makefile
 	src/libnetxms/Makefile
 	src/libnxcc/Makefile
 	src/libnxjava/Makefile
 	src/libnxjava/java/Makefile
-	src/libnxjava/java/base/Makefile
-	src/libnxjava/java/base/lib/Makefile
-	src/libnxjava/java/base/netxms-base/Makefile
-	src/libnxjava/java/bridge/Makefile
 	src/libnxlp/Makefile
 	src/libnxmb/Makefile
 	src/libnxpython/Makefile
@@ -4330,6 +4334,21 @@ AC_CONFIG_FILES([
 	src/libstrophe/Makefile
 	src/libtre/Makefile
 	src/libtre/win32/Makefile
+	src/ncdrivers/Makefile
+	src/ncdrivers/textfile/Makefile
+	src/ncdrivers/anysms/Makefile
+	src/ncdrivers/dbtable/Makefile
+	src/ncdrivers/dummy/Makefile
+	src/ncdrivers/generic/Makefile
+	src/ncdrivers/kannel/Makefile
+	src/ncdrivers/mymobile/Makefile
+	src/ncdrivers/nexmo/Makefile
+	src/ncdrivers/nxagent/Makefile
+	src/ncdrivers/portech/Makefile
+	src/ncdrivers/slack/Makefile
+	src/ncdrivers/smseagle/Makefile
+	src/ncdrivers/text2reach/Makefile
+	src/ncdrivers/websms/Makefile
 	src/nxcproxy/Makefile
 	src/nxscript/Makefile
 	src/server/Makefile
@@ -4377,20 +4396,6 @@ AC_CONFIG_FILES([
 	src/server/tools/nxminfo/Makefile
 	src/server/tools/nxupload/Makefile
 	src/server/tools/scripts/Makefile
-	src/smsdrv/Makefile
-	src/smsdrv/anysms/Makefile
-	src/smsdrv/dbemu/Makefile
-	src/smsdrv/dummy/Makefile
-	src/smsdrv/generic/Makefile
-	src/smsdrv/kannel/Makefile
-	src/smsdrv/mymobile/Makefile
-	src/smsdrv/nexmo/Makefile
-	src/smsdrv/nxagent/Makefile
-	src/smsdrv/portech/Makefile
-	src/smsdrv/slack/Makefile
-	src/smsdrv/smseagle/Makefile
-	src/smsdrv/text2reach/Makefile
-	src/smsdrv/websms/Makefile
 	src/snmp/Makefile
 	src/snmp/libnxsnmp/Makefile
 	src/snmp/nxmibc/Makefile

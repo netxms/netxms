@@ -1,8 +1,8 @@
 lib_LTLIBRARIES = libnxsrv.la
-libnxsrv_la_SOURCES = messages.c agent.cpp apinfo.cpp arp.cpp console.cpp \
+libnxsrv_la_SOURCES = agent.cpp apinfo.cpp arp.cpp console.cpp \
                       entity_mib.cpp hdlink.cpp hostmib.cpp \
                       iflist.cpp isc.cpp main.cpp ndd.cpp snmpproxy.cpp vlan.cpp
-libnxsrv_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include -DLIBNXSRV_EXPORTS
+libnxsrv_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include -DLIBNXSRV_EXPORTS -I@top_srcdir@/build
 libnxsrv_la_LDFLAGS = -release $(NETXMS_LIBRARY_VERSION)
 libnxsrv_la_LIBADD = \
 	../../libnxsl/libnxsl.la \
@@ -15,15 +15,10 @@ else
 libnxsrv_la_LIBADD += -ljansson
 endif
 
-messages.c: messages.h
-
-messages.h: messages.mc
-	$(PERL) @top_builddir@/tools/mc.pl messages.mc
-
-CLEANFILES = messages.c messages.h
-
 EXTRA_DIST = \
-	libnxsrv.vcxproj libnxsrv.vcxproj.filters libnxsrv.rc \
-	messages.mc messages.c messages.h \
-	libnxsrv.h resource.h \
+	libnxsrv.vcxproj libnxsrv.vcxproj.filters \
+	libnxsrv.h \
+	libnxsrv.rc \
+	messages.mc \
+	resource.h \
 	Makefile.w32

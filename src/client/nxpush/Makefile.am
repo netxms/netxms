@@ -10,7 +10,7 @@
 
 bin_PROGRAMS = nxpush
 nxpush_SOURCES = nxpush.cpp
-nxpush_CPPFLAGS = -I@top_srcdir@/include
+nxpush_CPPFLAGS = -I@top_srcdir@/include -I@top_srcdir@/build
 nxpush_LDFLAGS = @EXEC_LDFLAGS@
 nxpush_LDADD = ../../libnetxms/libnetxms.la ../libnxclient/libnxclient.la @EXEC_LIBS@
 

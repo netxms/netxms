@@ -4,6 +4,22 @@
 #include <testtools.h>
 
 /**
+ * NULL-safe _tcscmp()
+ */
+inline int safe_tcscmp(const TCHAR *s1, const TCHAR *s2)
+{
+   return _tcscmp(CHECK_NULL_EX(s1), CHECK_NULL_EX(s2));
+}
+
+/**
+ * NULL-safe strcmp()
+ */
+inline int safe_strcmp(const char *s1, const char *s2)
+{
+   return strcmp(CHECK_NULL_EX_A(s1), CHECK_NULL_EX_A(s2));
+}
+
+/**
  * Test text
  */
 static TCHAR longText[] = _T("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.");
@@ -67,7 +83,25 @@ void TestMessageClass()
 
    msg.setField(1, _T("test text"));
    TCHAR buffer[64];
-   AssertTrue(!_tcscmp(msg.getFieldAsString(1, buffer, 64), _T("test text")));
+   char buffer2[64];
+   AssertTrue(!safe_tcscmp(msg.getFieldAsString(1, buffer, 64), _T("test text")));
+   AssertTrue(!safe_strcmp(msg.getFieldAsMBString(1, buffer2, 64), "test text"));
+   AssertTrue(!safe_strcmp(msg.getFieldAsUtf8String(1, buffer2, 64), "test text"));
+
+   msg.setFieldFromUtf8String(1, "test text 2");
+   AssertTrue(!safe_tcscmp(msg.getFieldAsString(1, buffer, 64), _T("test text 2")));
+   AssertTrue(!safe_strcmp(msg.getFieldAsMBString(1, buffer2, 64), "test text 2"));
+   AssertTrue(!safe_strcmp(msg.getFieldAsUtf8String(1, buffer2, 64), "test text 2"));
+
+   msg.setFieldFromMBString(12, "test text 3");
+   AssertTrue(!safe_tcscmp(msg.getFieldAsString(12, buffer, 64), _T("test text 3")));
+   AssertTrue(!safe_strcmp(msg.getFieldAsMBString(12, buffer2, 64), "test text 3"));
+   AssertTrue(!safe_strcmp(msg.getFieldAsUtf8String(12, buffer2, 64), "test text 3"));
+
+   // Test UTF8-STRING to STRING conversion on protocol version change
+   msg.setProtocolVersion(4);
+   AssertTrue(!safe_tcscmp(msg.getFieldAsString(1, buffer, 64), _T("test text 2")));
+   AssertTrue(!safe_tcscmp(msg.getFieldAsString(12, buffer, 64), _T("test text 3")));
 
    EndTest();
 

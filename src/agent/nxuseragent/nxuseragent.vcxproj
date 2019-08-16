@@ -164,16 +164,6 @@
     <Image Include="resources\app.ico" />
   </ItemGroup>
   <ItemGroup>
-    <Message_compiler Include="messages.mc">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
-      <FileType>Document</FileType>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
-    </Message_compiler>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="MSG00001.bin" />
     <None Include="resources\default1.bin" />
   </ItemGroup>
   <ItemGroup>

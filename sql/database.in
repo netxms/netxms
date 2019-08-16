@@ -11,7 +11,6 @@
 #define DB_SYNTAX       'MSSQL'
 #define SQL_TEXT        text
 #define SQL_TEXT_TEXT   'text'
-#define SQL_TEXT4K      varchar(4000)
 #define SQL_INT64       bigint
 #define SQL_INT64_TEXT  'bigint'
 #define TABLE_TYPE
@@ -23,7 +22,6 @@
 #define DB_SYNTAX       'PGSQL'
 #define SQL_TEXT        text
 #define SQL_TEXT_TEXT   'text'
-#define SQL_TEXT4K      varchar(4000)
 #define SQL_INT64       bigint
 #define SQL_INT64_TEXT  'bigint'
 #define TABLE_TYPE
@@ -35,7 +33,6 @@
 #define DB_SYNTAX       'ORACLE'
 #define SQL_TEXT        clob
 #define SQL_TEXT_TEXT   'clob'
-#define SQL_TEXT4K      varchar(4000)
 #define SQL_INT64       number(20)
 #define SQL_INT64_TEXT  'number(20)'
 #define TABLE_TYPE
@@ -47,7 +44,6 @@
 #define DB_SYNTAX       'SQLITE'
 #define SQL_TEXT        varchar
 #define SQL_TEXT_TEXT   'varchar'
-#define SQL_TEXT4K      varchar(4000)
 #define SQL_INT64       number(20)
 #define SQL_INT64_TEXT  'number(20)'
 #define TABLE_TYPE
@@ -59,7 +55,6 @@
 #define DB_SYNTAX       'MYSQL'
 #define SQL_TEXT        longtext
 #define SQL_TEXT_TEXT   'longtext'
-#define SQL_TEXT4K      text
 #define SQL_INT64       bigint
 #define SQL_INT64_TEXT  'bigint'
 #define TABLE_TYPE
@@ -71,7 +66,6 @@
 #define DB_SYNTAX       'DB2'
 #define SQL_TEXT        LONG VARCHAR
 #define SQL_TEXT_TEXT   'LONG VARCHAR'
-#define SQL_TEXT4K      varchar(4000)
 #define SQL_INT64       BIGINT
 #define SQL_INT64_TEXT  'BIGINT'
 #define TABLE_TYPE
@@ -83,7 +77,6 @@
 #define DB_SYNTAX       'TSDB'
 #define SQL_TEXT        text
 #define SQL_TEXT_TEXT   'text'
-#define SQL_TEXT4K      varchar(4000)
 #define SQL_INT64       bigint
 #define SQL_INT64_TEXT  'bigint'
 #define TABLE_TYPE

@@ -259,12 +259,12 @@ _T("      nxapush @file\n")
 /**
  * Debug writer
  */
-static void DebugWriter(const TCHAR *tag, const TCHAR *text)
+static void DebugWriter(const TCHAR *tag, const TCHAR *format, va_list args)
 {
-   if (tag == NULL)      
-      _tprintf(_T("%s\n"), text);
-   else
-      _tprintf(_T("<%s> %s\n"), tag, text);
+   if (tag != NULL)
+      _tprintf(_T("<%s> "), tag);
+   _vtprintf(format, args);
+   _fputtc(_T('\n'), stdout);
 }
 
 /**

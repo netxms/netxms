@@ -23,12 +23,6 @@
 #include "libnxdb.h"
 
 /**
- * Log message codes
- */
-UINT32 g_logMsgCode = 0;
-UINT32 g_sqlErrorMsgCode = 0;
-
-/**
  * Long-running query threshold
  */
 UINT32 g_sqlQueryExecTimeThreshold = 0xFFFFFFFF;
@@ -40,12 +34,6 @@ static DB_DRIVER s_drivers[MAX_DB_DRIVERS];
 static MUTEX s_driverListLock;
 
 /**
- * Options
- */
-static bool s_writeLog = false;
-static bool s_logSqlErrors = false;
-
-/**
  * Get symbol address and log errors
  */
 static void *DLGetSymbolAddrEx(HMODULE hModule, const char *pszSymbol, bool mandatory = true)
@@ -54,24 +42,18 @@ static void *DLGetSymbolAddrEx(HMODULE hModule, const char *pszSymbol, bool mand
    TCHAR szErrorText[256];
 
    pFunc = DLGetSymbolAddr(hModule, pszSymbol, szErrorText);
-   if ((pFunc == NULL) && mandatory && s_writeLog)
-      __DBWriteLog(EVENTLOG_WARNING_TYPE, _T("Unable to resolve symbol \"%hs\": %s"), pszSymbol, szErrorText);
+   if ((pFunc == NULL) && mandatory)
+      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_DRIVER, _T("Unable to resolve symbol \"%hs\": %s"), pszSymbol, szErrorText);
    return pFunc;
 }
 
 /**
  * Init DB library
  */
-bool LIBNXDB_EXPORTABLE DBInit(DWORD logMsgCode, DWORD sqlErrorMsgCode)
+bool LIBNXDB_EXPORTABLE DBInit()
 {
 	memset(s_drivers, 0, sizeof(s_drivers));
 	s_driverListLock = MutexCreate();
-
-	g_logMsgCode = logMsgCode;
-   s_writeLog = (logMsgCode > 0);
-	g_sqlErrorMsgCode = sqlErrorMsgCode;
-   s_logSqlErrors = (sqlErrorMsgCode > 0) && s_writeLog;
-
 	return true;
 }
 
@@ -101,7 +83,6 @@ DB_DRIVER LIBNXDB_EXPORTABLE DBLoadDriver(const TCHAR *module, const TCHAR *init
 	driver = (DB_DRIVER)malloc(sizeof(db_driver_t));
 	memset(driver, 0, sizeof(db_driver_t));
 
-	driver->m_logSqlErrors = s_logSqlErrors;
    driver->m_dumpSql = dumpSQL;
    driver->m_fpEventHandler = fpEventHandler;
 	driver->m_userArg = userArg;
@@ -131,8 +112,7 @@ DB_DRIVER LIBNXDB_EXPORTABLE DBLoadDriver(const TCHAR *module, const TCHAR *init
 #endif
    if (driver->m_handle == NULL)
    {
-      if (s_writeLog)
-         __DBWriteLog(EVENTLOG_ERROR_TYPE, _T("Unable to load database driver module \"%s\": %s"), module, szErrorText);
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_DRIVER, _T("Unable to load database driver module \"%s\": %s"), module, szErrorText);
 		goto failure;
    }
 
@@ -142,9 +122,8 @@ DB_DRIVER LIBNXDB_EXPORTABLE DBLoadDriver(const TCHAR *module, const TCHAR *init
       pdwAPIVersion = &dwVersionZero;
    if (*pdwAPIVersion != DBDRV_API_VERSION)
    {
-      if (s_writeLog)
-         __DBWriteLog(EVENTLOG_ERROR_TYPE, _T("Database driver \"%s\" cannot be loaded because of API version mismatch (server: %d; driver: %d)"),
-                  module, (int)(DBDRV_API_VERSION), (int)(*pdwAPIVersion));
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_DRIVER, _T("Database driver \"%s\" cannot be loaded because of API version mismatch (server: %d; driver: %d)"),
+               module, (int)(DBDRV_API_VERSION), (int)(*pdwAPIVersion));
 		goto failure;
    }
 
@@ -152,8 +131,7 @@ DB_DRIVER LIBNXDB_EXPORTABLE DBLoadDriver(const TCHAR *module, const TCHAR *init
 	driverName = *((const char **)DLGetSymbolAddr(driver->m_handle, "drvName", NULL));
 	if (driverName == NULL)
 	{
-		if (s_writeLog)
-			__DBWriteLog(EVENTLOG_ERROR_TYPE, _T("Unable to find all required entry points in database driver \"%s\""), module);
+	   nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_DRIVER, _T("Unable to find all required entry points in database driver \"%s\""), module);
 		goto failure;
 	}
 
@@ -171,15 +149,13 @@ DB_DRIVER LIBNXDB_EXPORTABLE DBLoadDriver(const TCHAR *module, const TCHAR *init
 
 	if (alreadyLoaded)
 	{
-      if (s_writeLog)
-			__DBWriteLog(EVENTLOG_INFORMATION_TYPE, _T("Reusing already loaded database driver \"%hs\""), s_drivers[position]->m_name);
+	   nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_DRIVER, _T("Reusing already loaded database driver \"%hs\""), s_drivers[position]->m_name);
 		goto reuse_driver;
 	}
 
 	if (position == -1)
 	{
-      if (s_writeLog)
-			__DBWriteLog(EVENTLOG_ERROR_TYPE, _T("Unable to load database driver \"%s\": too many drivers already loaded"), module);
+	   nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_DRIVER, _T("Unable to load database driver \"%s\": too many drivers already loaded"), module);
 		goto failure;
 	}
 
@@ -233,9 +209,8 @@ DB_DRIVER LIBNXDB_EXPORTABLE DBLoadDriver(const TCHAR *module, const TCHAR *init
        (driver->m_fpDrvGetFieldLength == NULL) || (driver->m_fpDrvGetFieldLengthUnbuffered == NULL) ||
 		 (driver->m_fpDrvPrepareStringA == NULL) || (driver->m_fpDrvPrepareStringW == NULL) || (driver->m_fpDrvIsTableExist == NULL))
    {
-      if (s_writeLog)
-         __DBWriteLog(EVENTLOG_ERROR_TYPE, _T("Unable to find all required entry points in database driver \"%s\""), module);
-		goto failure;
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_DRIVER, _T("Unable to find all required entry points in database driver \"%s\""), module);
+      goto failure;
    }
 
    // Initialize driver
@@ -255,8 +230,7 @@ DB_DRIVER LIBNXDB_EXPORTABLE DBLoadDriver(const TCHAR *module, const TCHAR *init
    if (!fpDrvInit(CHECK_NULL_EX(initParameters)))
 #endif
    {
-      if (s_writeLog)
-         __DBWriteLog(EVENTLOG_ERROR_TYPE, _T("Database driver \"%s\" initialization failed"), module);
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_DRIVER, _T("Database driver \"%s\" initialization failed"), module);
 		goto failure;
    }
 
@@ -266,8 +240,7 @@ DB_DRIVER LIBNXDB_EXPORTABLE DBLoadDriver(const TCHAR *module, const TCHAR *init
 	driver->m_refCount = 1;
    driver->m_defaultPrefetchLimit = 10;
 	s_drivers[position] = driver;
-   if (s_writeLog)
-      __DBWriteLog(EVENTLOG_INFORMATION_TYPE, _T("Database driver \"%s\" loaded and initialized successfully"), module);
+	nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_DRIVER, _T("Database driver \"%s\" loaded and initialized successfully"), module);
 	MutexUnlock(s_driverListLock);
    return driver;
 

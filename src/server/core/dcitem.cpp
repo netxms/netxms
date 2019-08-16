@@ -33,11 +33,6 @@ static const TCHAR *s_paramNamesReach[] = { _T("dciName"), _T("dciDescription"),
 static const TCHAR *s_paramNamesRearm[] = { _T("dciName"), _T("dciDescription"), _T("dciId"), _T("instance"), _T("thresholdValue"), _T("currentValue"), _T("dciValue") };
 
 /**
- * DCI cache loader queue
- */
-extern Queue g_dciCacheLoaderQueue;
-
-/**
  * Default constructor for DCItem
  */
 DCItem::DCItem() : DCObject()
@@ -70,7 +65,7 @@ DCItem::DCItem(const DCItem *src, bool shadowCopy) : DCObject(src, shadowCopy)
    m_requiredCacheSize = shadowCopy ? src->m_requiredCacheSize : 0;
    if (m_cacheSize > 0)
    {
-      m_ppValueCache = (ItemValue **)calloc(m_cacheSize, sizeof(ItemValue*));
+      m_ppValueCache = MemAllocArray<ItemValue*>(m_cacheSize);
       for(UINT32 i = 0; i < m_cacheSize; i++)
          m_ppValueCache[i] = new ItemValue(src->m_ppValueCache[i]);
    }
@@ -82,7 +77,7 @@ DCItem::DCItem(const DCItem *src, bool shadowCopy) : DCObject(src, shadowCopy)
    m_bCacheLoaded = shadowCopy ? src->m_bCacheLoaded : false;
 	m_nBaseUnits = src->m_nBaseUnits;
 	m_nMultiplier = src->m_nMultiplier;
-	m_customUnitName = (src->m_customUnitName != NULL) ? _tcsdup(src->m_customUnitName) : NULL;
+	m_customUnitName = MemCopyString(src->m_customUnitName);
 	m_snmpRawValueType = src->m_snmpRawValueType;
    _tcscpy(m_predictionEngine, src->m_predictionEngine);
 
@@ -280,7 +275,7 @@ void DCItem::clearCache()
 {
    for(UINT32 i = 0; i < m_cacheSize; i++)
       delete m_ppValueCache[i];
-   free(m_ppValueCache);
+   MemFree(m_ppValueCache);
    m_ppValueCache = NULL;
    m_cacheSize = 0;
 }
@@ -566,16 +561,16 @@ void DCItem::updateFromMessage(NXCPMessage *pMsg, UINT32 *pdwNumMaps, UINT32 **p
 	m_sampleCount = (int)pMsg->getFieldAsUInt16(VID_SAMPLE_COUNT);
 	m_nBaseUnits = pMsg->getFieldAsUInt16(VID_BASE_UNITS);
 	m_nMultiplier = (int)pMsg->getFieldAsUInt32(VID_MULTIPLIER);
-	free(m_customUnitName);
+	MemFree(m_customUnitName);
 	m_customUnitName = pMsg->getFieldAsString(VID_CUSTOM_UNITS_NAME);
 	m_snmpRawValueType = pMsg->getFieldAsUInt16(VID_SNMP_RAW_VALUE_TYPE);
    pMsg->getFieldAsString(VID_NPE_NAME, m_predictionEngine, MAX_NPE_NAME_LEN);
 
    // Update thresholds
    UINT32 dwNum = pMsg->getFieldAsUInt32(VID_NUM_THRESHOLDS);
-   UINT32 *newThresholds = (UINT32 *)malloc(sizeof(UINT32) * dwNum);
-   *ppdwMapIndex = (UINT32 *)malloc(dwNum * sizeof(UINT32));
-   *ppdwMapId = (UINT32 *)malloc(dwNum * sizeof(UINT32));
+   UINT32 *newThresholds = MemAllocArray<UINT32>(dwNum);
+   *ppdwMapIndex = MemAllocArray<UINT32>(dwNum);
+   *ppdwMapId = MemAllocArray<UINT32>(dwNum);
    *pdwNumMaps = 0;
 
    // Read all new threshold ids from message
@@ -585,8 +580,7 @@ void DCItem::updateFromMessage(NXCPMessage *pMsg, UINT32 *pdwNumMaps, UINT32 **p
    }
 
    // Check if some thresholds was deleted, and reposition others if needed
-   Threshold **ppNewList = (Threshold **)malloc(sizeof(Threshold *) * dwNum);
-   memset(ppNewList, 0, sizeof(Threshold *) * dwNum);
+   Threshold **ppNewList = MemAllocArray<Threshold*>(dwNum);
    for(int i = 0; i < getThresholdCount(); i++)
    {
 		UINT32 j;
@@ -650,8 +644,8 @@ void DCItem::updateFromMessage(NXCPMessage *pMsg, UINT32 *pdwNumMaps, UINT32 **p
    for(int i = 0; i < getThresholdCount(); i++)
       m_thresholds->get(i)->setDataType(m_dataType);
 
-	free(ppNewList);
-   free(newThresholds);
+	MemFree(ppNewList);
+   MemFree(newThresholds);
    updateCacheSizeInternal(true);
    unlock();
 }
@@ -764,6 +758,22 @@ bool DCItem::processNewValue(time_t tmTimeStamp, const void *originalValue, bool
       delete m_ppValueCache[m_cacheSize - 1];
       memmove(&m_ppValueCache[1], m_ppValueCache, sizeof(ItemValue *) * (m_cacheSize - 1));
       m_ppValueCache[0] = pValue;
+   }
+   else if (!m_bCacheLoaded && (m_requiredCacheSize == 1))
+   {
+      // If required cache size is 1 and we got value before cache loader
+      // loads DCI cache then update it directly
+      for(int i = 0; i < m_cacheSize; i++)
+         delete m_ppValueCache[i];
+
+      if (m_cacheSize != m_requiredCacheSize)
+      {
+         m_ppValueCache = MemReallocArray(m_ppValueCache, m_requiredCacheSize);
+         m_cacheSize = m_requiredCacheSize;
+      }
+
+      m_ppValueCache[0] = pValue;
+      m_bCacheLoaded = true;
    }
    else
    {
@@ -883,14 +893,15 @@ void DCItem::generateEventsBasedOnThrDiff()
          {
             PostDciEventWithNames(t->getEventCode(), m_owner->getId(), m_id, "ssssisds",
                               s_paramNamesReach, m_name, m_description, t->getStringValue(),
-                              (const TCHAR *)t->getLastCheckValue(), m_id, m_instance, 0,
-                              (const TCHAR *)(*m_ppValueCache[0]));
+                              t->getLastCheckValue().getString(), m_id, m_instance, 0,
+                              (m_bCacheLoaded && (m_cacheSize > 0)) ? m_ppValueCache[0]->getString() : _T(""));
          }
          else
          {
             PostDciEventWithNames(t->getRearmEventCode(), m_owner->getId(), m_id, "ssissss",
                               s_paramNamesRearm, m_name, m_description, m_id, m_instance, t->getStringValue(),
-                              (const TCHAR *)t->getLastCheckValue(), (const TCHAR *)(*m_ppValueCache[0]));
+                              t->getLastCheckValue().getString(),
+                              (m_bCacheLoaded && (m_cacheSize > 0)) ? m_ppValueCache[0]->getString() : _T(""));
          }
       }
    }
@@ -1044,8 +1055,8 @@ bool DCItem::transform(ItemValue &value, time_t nElapsedTime)
                TCHAR buffer[1024];
                _sntprintf(buffer, 1024, _T("DCI::%s::%d::TransformationScript"), getOwnerName(), m_id);
                PostDciEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, m_id, "ssd", buffer, vm->getErrorText(), m_id);
-               nxlog_write(MSG_TRANSFORMATION_SCRIPT_EXECUTION_ERROR, NXLOG_WARNING, "dsdss",
-                           getOwnerId(), getOwnerName(), m_id, m_name, vm->getErrorText());
+               nxlog_write(NXLOG_WARNING, _T("Failed to execute transformation script for object %s [%u] DCI %s [%u] (%s)"),
+                        getOwnerName(), getOwnerId(), m_name, m_id, vm->getErrorText());
                m_lastScriptErrorReport = now;
             }
          }
@@ -1059,8 +1070,8 @@ bool DCItem::transform(ItemValue &value, time_t nElapsedTime)
             TCHAR buffer[1024];
             _sntprintf(buffer, 1024, _T("DCI::%s::%d::TransformationScript"), getOwnerName(), m_id);
             PostDciEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, m_id, "ssd", buffer, _T("Script load failed"), m_id);
-            nxlog_write(MSG_TRANSFORMATION_SCRIPT_EXECUTION_ERROR, NXLOG_WARNING, "dsdss",
-                        getOwnerId(), getOwnerName(), m_id, m_name, _T("Script load failed"));
+            nxlog_write(NXLOG_WARNING, _T("Failed to load transformation script for object %s [%u] DCI %s [%u]"),
+                     getOwnerName(), getOwnerId(), m_name, m_id);
             m_lastScriptErrorReport = now;
          }
          success = false;
@@ -1159,11 +1170,11 @@ void DCItem::updateCacheSizeInternal(bool allowLoad, UINT32 conditionId)
       m_cacheSize = m_requiredCacheSize;
       if (m_cacheSize > 0)
       {
-         m_ppValueCache = (ItemValue **)realloc(m_ppValueCache, sizeof(ItemValue *) * m_cacheSize);
+         m_ppValueCache = MemReallocArray(m_ppValueCache, m_cacheSize);
       }
       else
       {
-         free(m_ppValueCache);
+         MemFree(m_ppValueCache);
          m_ppValueCache = NULL;
       }
    }
@@ -1180,7 +1191,7 @@ void DCItem::updateCacheSizeInternal(bool allowLoad, UINT32 conditionId)
       else
       {
          // will not read data from database, fill cache with empty values
-         m_ppValueCache = (ItemValue **)realloc(m_ppValueCache, sizeof(ItemValue *) * m_requiredCacheSize);
+         m_ppValueCache = MemReallocArray(m_ppValueCache, m_requiredCacheSize);
          for(UINT32 i = m_cacheSize; i < m_requiredCacheSize; i++)
             m_ppValueCache[i] = new ItemValue(_T(""), 1);
          DbgPrintf(7, _T("Cache load skipped for parameter %s [%d]"), m_name, (int)m_id);
@@ -1193,10 +1204,17 @@ void DCItem::updateCacheSizeInternal(bool allowLoad, UINT32 conditionId)
 /**
  * Reload cache from database
  */
-void DCItem::reloadCache()
+void DCItem::reloadCache(bool forceReload)
 {
-   TCHAR szBuffer[MAX_DB_STRING];
+   lock();
+   if (!forceReload && m_bCacheLoaded && (m_cacheSize == m_requiredCacheSize))
+   {
+      unlock();
+      return;  // Cache already fully populated
+   }
+   unlock();
 
+   TCHAR szBuffer[MAX_DB_STRING];
    switch(g_dbSyntax)
    {
       case DB_SYNTAX_MSSQL:
@@ -1276,56 +1294,59 @@ void DCItem::reloadCache()
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    DB_UNBUFFERED_RESULT hResult = DBSelectUnbuffered(hdb, szBuffer);
 
+   // While reload request was in queue DCI cache may have been already filled
    lock();
-
-	UINT32 i;
-   for(i = 0; i < m_cacheSize; i++)
-      delete m_ppValueCache[i];
-
-   if (m_cacheSize != m_requiredCacheSize)
+   if (forceReload || !m_bCacheLoaded || (m_cacheSize != m_requiredCacheSize))
    {
-      m_ppValueCache = (ItemValue **)realloc(m_ppValueCache, sizeof(ItemValue *) * m_requiredCacheSize);
-   }
+      UINT32 i;
+      for(i = 0; i < m_cacheSize; i++)
+         delete m_ppValueCache[i];
 
-   nxlog_debug_tag(_T("obj.dc.cache"), 8, _T("DCItem::reloadCache(dci=\"%s\", node=%s [%d]): requiredSize=%d cacheSize=%d"),
-            m_name, m_owner->getName(), m_owner->getId(), m_requiredCacheSize, m_cacheSize);
-   if (hResult != NULL)
-   {
-      // Create cache entries
-      bool moreData = true;
-      for(i = 0; (i < m_requiredCacheSize) && moreData; i++)
+      if (m_cacheSize != m_requiredCacheSize)
       {
-         moreData = DBFetch(hResult);
-         if (moreData)
-         {
-            DBGetField(hResult, 0, szBuffer, MAX_DB_STRING);
-            m_ppValueCache[i] = new ItemValue(szBuffer, DBGetFieldULong(hResult, 1));
-         }
-         else
-         {
-            m_ppValueCache[i] = new ItemValue(_T(""), 1);   // Empty value
-         }
+         m_ppValueCache = MemReallocArray(m_ppValueCache, m_requiredCacheSize);
       }
 
-      // Fill up cache with empty values if we don't have enough values in database
-      if (i < m_requiredCacheSize)
+      nxlog_debug_tag(_T("obj.dc.cache"), 8, _T("DCItem::reloadCache(dci=\"%s\", node=%s [%d]): requiredSize=%d cacheSize=%d"),
+               m_name, m_owner->getName(), m_owner->getId(), m_requiredCacheSize, m_cacheSize);
+      if (hResult != NULL)
       {
-         nxlog_debug_tag(_T("obj.dc.cache"), 8, _T("DCItem::reloadCache(dci=\"%s\", node=%s [%d]): %d values missing in DB"),
-                  m_name, m_owner->getName(), m_owner->getId(), m_requiredCacheSize - i);
-         for(; i < m_requiredCacheSize; i++)
+         // Create cache entries
+         bool moreData = true;
+         for(i = 0; (i < m_requiredCacheSize) && moreData; i++)
+         {
+            moreData = DBFetch(hResult);
+            if (moreData)
+            {
+               DBGetField(hResult, 0, szBuffer, MAX_DB_STRING);
+               m_ppValueCache[i] = new ItemValue(szBuffer, DBGetFieldULong(hResult, 1));
+            }
+            else
+            {
+               m_ppValueCache[i] = new ItemValue(_T(""), 1);   // Empty value
+            }
+         }
+
+         // Fill up cache with empty values if we don't have enough values in database
+         if (i < m_requiredCacheSize)
+         {
+            nxlog_debug_tag(_T("obj.dc.cache"), 8, _T("DCItem::reloadCache(dci=\"%s\", node=%s [%d]): %d values missing in DB"),
+                     m_name, m_owner->getName(), m_owner->getId(), m_requiredCacheSize - i);
+            for(; i < m_requiredCacheSize; i++)
+               m_ppValueCache[i] = new ItemValue(_T(""), 1);
+         }
+         DBFreeResult(hResult);
+      }
+      else
+      {
+         // Error reading data from database, fill cache with empty values
+         for(i = 0; i < m_requiredCacheSize; i++)
             m_ppValueCache[i] = new ItemValue(_T(""), 1);
       }
-      DBFreeResult(hResult);
-   }
-   else
-   {
-      // Error reading data from database, fill cache with empty values
-      for(i = 0; i < m_requiredCacheSize; i++)
-         m_ppValueCache[i] = new ItemValue(_T(""), 1);
-   }
 
-   m_cacheSize = m_requiredCacheSize;
-   m_bCacheLoaded = true;
+      m_cacheSize = m_requiredCacheSize;
+      m_bCacheLoaded = true;
+   }
    unlock();
 
    DBConnectionPoolReleaseConnection(hdb);
@@ -1631,7 +1652,7 @@ bool DCItem::deleteEntry(time_t timestamp)
       {
          delete m_ppValueCache[i];
          memmove(&m_ppValueCache[i], &m_ppValueCache[i + 1], sizeof(ItemValue *) * (m_cacheSize - (i + 1)));
-         m_cacheSize -= 1;
+         m_cacheSize--;
          updateCacheSizeInternal(true);
          break;
       }

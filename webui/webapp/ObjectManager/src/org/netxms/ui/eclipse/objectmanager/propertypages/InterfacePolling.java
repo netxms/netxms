@@ -45,10 +45,12 @@ public class InterfacePolling extends PropertyPage
 	private Spinner pollCount;
 	private Combo expectedState;
 	private Button checkExcludeFromTopology;
+   private Button checkIncludeInIcmpPoll;
 	private Interface object;
 	private int currentPollCount;
 	private int currentExpectedState;
 	private boolean currentExcludeFlag;
+   private boolean currentIncludeFlag;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -65,6 +67,7 @@ public class InterfacePolling extends PropertyPage
 		currentPollCount = object.getRequiredPollCount();
 		currentExpectedState = object.getExpectedState();
 		currentExcludeFlag = object.isExcludedFromTopology();
+		currentIncludeFlag = object.isIncludedInIcmpPoll();
 		
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
@@ -87,6 +90,11 @@ public class InterfacePolling extends PropertyPage
       checkExcludeFromTopology.setSelection(object.isExcludedFromTopology());
       checkExcludeFromTopology.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 2, 1));
       
+      checkIncludeInIcmpPoll = new Button(dialogArea, SWT.CHECK);
+      checkIncludeInIcmpPoll.setText("Include this interface in node ICMP polls");
+      checkIncludeInIcmpPoll.setSelection(object.isIncludedInIcmpPoll());
+      checkIncludeInIcmpPoll.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 2, 1));
+      
 		return dialogArea;
 	}
 	
@@ -99,7 +107,8 @@ public class InterfacePolling extends PropertyPage
 	{
 		if ((expectedState.getSelectionIndex() == currentExpectedState) && 
 			 (pollCount.getSelection() == currentPollCount) &&
-			 (checkExcludeFromTopology.getSelection() == currentExcludeFlag))
+			 (checkExcludeFromTopology.getSelection() == currentExcludeFlag) &&
+			 (checkIncludeInIcmpPoll.getSelection() == currentIncludeFlag))
 			return;	// nothing to change 
 		
 		if (isApply)
@@ -109,7 +118,10 @@ public class InterfacePolling extends PropertyPage
 		final NXCObjectModificationData data = new NXCObjectModificationData(object.getObjectId());
 		data.setExpectedState(expectedState.getSelectionIndex());
 		data.setRequiredPolls(pollCount.getSelection());
-		data.setObjectFlags(checkExcludeFromTopology.getSelection() ? Interface.IF_EXCLUDE_FROM_TOPOLOGY : 0, Interface.IF_EXCLUDE_FROM_TOPOLOGY);
+		data.setObjectFlags(
+		      (checkExcludeFromTopology.getSelection() ? Interface.IF_EXCLUDE_FROM_TOPOLOGY : 0) |
+		      (checkIncludeInIcmpPoll.getSelection() ? Interface.IF_INCLUDE_IN_ICMP_POLL : 0),
+		      Interface.IF_EXCLUDE_FROM_TOPOLOGY | Interface.IF_INCLUDE_IN_ICMP_POLL);
 		new ConsoleJob(Messages.get().InterfacePolling_JobName, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception

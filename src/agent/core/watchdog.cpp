@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -40,9 +40,6 @@ static pid_t m_pidWatchdogProcess = -1;
  */
 void StartWatchdog()
 {
-#ifdef _NETWARE
-   return;	// Not implemented on NetWare
-#else
    TCHAR szCmdLine[4096], szPlatformSuffixOption[MAX_PSUFFIX_LENGTH + 16];
 #ifdef _WIN32
    TCHAR szExecName[MAX_PATH];
@@ -95,14 +92,16 @@ void StartWatchdog()
                       (g_dwFlags & AF_DAEMON) ? (CREATE_NO_WINDOW | DETACHED_PROCESS) : (CREATE_NEW_CONSOLE),
                       NULL, NULL, &si, &pi))
    {
-      nxlog_write(MSG_CREATE_PROCESS_FAILED, EVENTLOG_ERROR_TYPE, "se", szCmdLine, GetLastError());
+      TCHAR buffer[1024];
+      nxlog_write(NXLOG_ERROR, _T("Unable to create process \"%s\" (%s)"),
+            szCmdLine, GetSystemErrorText(GetLastError(), buffer, 1024));
    }
    else
    {
       // Close main thread handle
       CloseHandle(pi.hThread);
       m_hWatchdogProcess = pi.hProcess;
-      nxlog_write(MSG_WATCHDOG_STARTED, EVENTLOG_INFORMATION_TYPE, NULL);
+      nxlog_write(NXLOG_INFO, _T("Watchdog process started"));
    }
 #else
    _sntprintf(szCmdLine, 4096, _T("\"%s\" -c \"%s\" %s%s%s%s%s-D %d %s-W %lu"), szExecName,
@@ -115,14 +114,13 @@ void StartWatchdog()
               (unsigned long)getpid());
    if (ExecuteCommand(szCmdLine, NULL, &m_pidWatchdogProcess) == ERR_SUCCESS)
 	{
-	   nxlog_write(MSG_WATCHDOG_STARTED, EVENTLOG_INFORMATION_TYPE, NULL);
+	   nxlog_write(NXLOG_INFO, _T("Watchdog process started"));
 	}
 	else
 	{
-      nxlog_write(MSG_CREATE_PROCESS_FAILED, EVENTLOG_ERROR_TYPE, "ss", szCmdLine, "fork() or exec() error");
+      nxlog_write(NXLOG_ERROR, _T("Unable to create process \"%s\""), szCmdLine);
 	}
 #endif
-#endif  /* _NETWARE */
 }
 
 /**
@@ -136,7 +134,7 @@ void StopWatchdog()
 #else
 	kill(m_pidWatchdogProcess, SIGKILL);
 #endif
-   nxlog_write(MSG_WATCHDOG_STOPPED, EVENTLOG_INFORMATION_TYPE, NULL);
+   nxlog_write(NXLOG_INFO, _T("Watchdog process stopped"));
 }
 
 /**

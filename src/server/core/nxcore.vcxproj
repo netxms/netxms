@@ -258,6 +258,7 @@
     <ClCompile Include="hk.cpp" />
     <ClCompile Include="hwcomponent.cpp" />
     <ClCompile Include="icmpscan.cpp" />
+    <ClCompile Include="icmpstat.cpp" />
     <ClCompile Include="id.cpp" />
     <ClCompile Include="import.cpp" />
     <ClCompile Include="inaddr_index.cpp" />
@@ -295,6 +296,7 @@
     <ClCompile Include="netsrv.cpp" />
     <ClCompile Include="node.cpp" />
     <ClCompile Include="nodelink.cpp" />
+    <ClCompile Include="notification_channel.cpp" />
     <ClCompile Include="np.cpp" />
     <ClCompile Include="npe.cpp" />
     <ClCompile Include="nxslext.cpp" />
@@ -316,7 +318,6 @@
     <ClCompile Include="session.cpp" />
     <ClCompile Include="slmcheck.cpp" />
     <ClCompile Include="smclp.cpp" />
-    <ClCompile Include="sms.cpp" />
     <ClCompile Include="snmp.cpp" />
     <ClCompile Include="snmptrap.cpp" />
     <ClCompile Include="stp.cpp" />

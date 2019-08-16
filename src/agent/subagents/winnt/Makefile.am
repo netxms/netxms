@@ -13,6 +13,7 @@ EXTRA_DIST = \
 	disk.cpp \
 	fs.cpp \
 	hypervisor.cpp \
+	iostat.cpp \
 	main.cpp \
 	net.cpp \
 	procinfo.cpp \

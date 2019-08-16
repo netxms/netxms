@@ -2700,7 +2700,7 @@ String NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, const E
                   output.append(_T('%'));
                   break;
                case 'a':   // IP address of event source
-                  output.append(GetObjectIpAddress(this).toString(buffer));
+                  output.append(getPrimaryIpAddress().toString(buffer));
                   break;
                case 'A':   // Associated alarm message
                   if (alarm != NULL)

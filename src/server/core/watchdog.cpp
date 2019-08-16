@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -74,7 +74,7 @@ void WatchdogNotify(UINT32 id)
    {
       if (s_threadInfo[id].state == WATCHDOG_NOT_RESPONDING)
       {
-         nxlog_write(MSG_THREAD_RUNNING, NXLOG_INFO, "s", s_threadInfo[id].name);
+         nxlog_write(NXLOG_INFO, _T("Thread \"%s\" returned to running state"), s_threadInfo[id].name);
          PostEvent(EVENT_THREAD_RUNNING, g_dwMgmtNode, "s", s_threadInfo[id].name);
       }
       s_threadInfo[id].lastReport = time(NULL);
@@ -96,7 +96,7 @@ void WatchdogStartSleep(UINT32 id)
    {
       if (s_threadInfo[id].state == WATCHDOG_NOT_RESPONDING)
       {
-         nxlog_write(MSG_THREAD_RUNNING, NXLOG_INFO, "s", s_threadInfo[id].name);
+         nxlog_write(NXLOG_INFO, _T("Thread \"%s\" returned to running state"), s_threadInfo[id].name);
          PostEvent(EVENT_THREAD_RUNNING, g_dwMgmtNode, "s", s_threadInfo[id].name);
       }
       s_threadInfo[id].lastReport = time(NULL);
@@ -167,7 +167,7 @@ THREAD_RESULT THREAD_CALL WatchdogThread(void *arg)
              (s_threadInfo[i].state == WATCHDOG_RUNNING))
          {
             PostEvent(EVENT_THREAD_HANGS, g_dwMgmtNode, "s", s_threadInfo[i].name);
-            nxlog_write(MSG_THREAD_NOT_RESPONDING, NXLOG_ERROR, "s", s_threadInfo[i].name);
+            nxlog_write(NXLOG_ERROR, _T("Thread \"%s\" does not respond to watchdog thread"), s_threadInfo[i].name);
             s_threadInfo[i].state = WATCHDOG_NOT_RESPONDING;
          }
       MutexUnlock(s_watchdogLock);

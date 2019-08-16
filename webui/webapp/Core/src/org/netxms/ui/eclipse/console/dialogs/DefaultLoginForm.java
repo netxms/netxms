@@ -46,8 +46,7 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.forms.events.HyperlinkAdapter;
 import org.eclipse.ui.forms.events.HyperlinkEvent;
 import org.eclipse.ui.forms.widgets.ImageHyperlink;
-import org.netxms.base.BuildNumber;
-import org.netxms.base.NXCommon;
+import org.netxms.base.VersionInfo;
 import org.netxms.ui.eclipse.console.Activator;
 import org.netxms.ui.eclipse.console.BrandingManager;
 import org.netxms.ui.eclipse.console.Messages;
@@ -239,7 +238,7 @@ public class DefaultLoginForm extends Window implements LoginForm
 		fillerBottom.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		
 		Label version = new Label(parent, SWT.NONE);
-		version.setText(String.format(Messages.get().LoginForm_Version, NXCommon.VERSION + " (" + BuildNumber.TEXT + ")"));
+		version.setText(String.format(Messages.get().LoginForm_Version, VersionInfo.version()));
 		version.setBackground(parent.getBackground());
 		version.setForeground(colors.create(VERSION_FOREGROUND));
 		gd = new GridData();

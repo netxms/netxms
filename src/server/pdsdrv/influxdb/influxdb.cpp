@@ -228,14 +228,14 @@ bool InfluxDBStorageDriver::init(Config *config)
    InetAddress addr = InetAddress::resolveHostName(m_hostname);
    if (!addr.isValidUnicast())
    {
-      nxlog_write_generic(NXLOG_ERROR, _T("InfluxDB: invalid hostname %s"), m_hostname);
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("InfluxDB: invalid hostname %s"), m_hostname);
       return false;
    }
 
    m_socket = ConnectToHostUDP(addr, m_port);
    if (m_socket == INVALID_SOCKET)
    {
-      nxlog_write_generic(NXLOG_ERROR, _T("InfluxDB: cannot create UDP socket"));
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("InfluxDB: cannot create UDP socket"));
       return false;
    }
 

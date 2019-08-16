@@ -2,7 +2,7 @@ DRIVER = dlink
 
 pkglib_LTLIBRARIES = dlink.la
 dlink_la_SOURCES = dlink.cpp
-dlink_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include
+dlink_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build
 dlink_la_LDFLAGS = -module -avoid-version
 dlink_la_LIBADD = ../../../libnetxms/libnetxms.la \
 		  ../../../snmp/libnxsnmp/libnxsnmp.la \

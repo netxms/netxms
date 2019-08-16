@@ -7,8 +7,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import org.netxms.base.NXCPMessage;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
@@ -21,8 +19,6 @@ import com.radensolutions.reporting.service.Connector;
 @Service
 public class TcpConnector implements Connector {
     public static final int PORT = 4710;
-
-    private static final Logger logger = LoggerFactory.getLogger(TcpConnector.class);
 
     private final List<SessionWorker> workers = new ArrayList<SessionWorker>();
     private ServerSocket serverSocket;

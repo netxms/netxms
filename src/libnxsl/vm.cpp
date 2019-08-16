@@ -245,7 +245,7 @@ bool NXSL_VM::load(const NXSL_Program *program)
    // Set constants
    m_constants->clear();
    program->m_constants->forEach(createConstantsCallback, this);
-   m_constants->create("NXSL::build", createValue(NETXMS_VERSION_BUILD_STRING));
+   m_constants->create("NXSL::build", createValue(NETXMS_BUILD_TAG));
    m_constants->create("NXSL::version", createValue(NETXMS_VERSION_STRING));
 
    // Load modules

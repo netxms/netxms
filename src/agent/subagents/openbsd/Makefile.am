@@ -14,7 +14,7 @@ SUBAGENT = openbsd
 
 pkglib_LTLIBRARIES = openbsd.la
 openbsd_la_SOURCES = disk.cpp net.cpp openbsd.cpp system.cpp
-openbsd_la_CPPFLAGS=-I@top_srcdir@/include
+openbsd_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/build
 openbsd_la_LDFLAGS = -module -avoid-version -export-symbols ../platform-subagent.sym
 openbsd_la_LIBADD = ../../libnxagent/libnxagent.la ../../../libnetxms/libnetxms.la -lkvm
 

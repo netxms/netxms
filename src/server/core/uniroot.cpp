@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -61,7 +61,8 @@ void UniversalRoot::linkObjects()
          if (pObject != NULL)
             linkObject(pObject);
          else
-            nxlog_write(MSG_ROOT_INVALID_CHILD_ID, EVENTLOG_WARNING_TYPE, "ds", dwObjectId, getObjectClassName());
+            nxlog_write(NXLOG_ERROR, _T("Inconsistent database: %s object %s [%u] has reference to non-existent child object [%u]"),
+                     getObjectClassName(), m_name, m_id, dwObjectId);
       }
       DBFreeResult(hResult);
    }

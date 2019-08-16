@@ -42,11 +42,9 @@ target
 .idea
 .vs
 
-/build/netxms-build-tag.iss
 /build/netxms-build-tag.h
-/netxms-build-tag.h
-/include/netxms-build-tag.h
-/include/netxms-build-tag.iss
+/build/netxms-build-tag.iss
+/build/netxms-build-tag.properties
 
 /netxms-*.tar.gz
 /*.apkg
@@ -155,9 +153,6 @@ target
 /src/agent/tools/nxappget/nxappget
 /src/agent/tools/nxapush/nxapush
 /src/client/install/Output
-/src/client/java/netxms-base/.classpath
-/src/client/java/netxms-base/.project
-/src/client/java/netxms-base/.settings
 /src/client/java/netxms-client/.classpath
 /src/client/java/netxms-client/.project
 /src/client/java/netxms-client/.settings
@@ -167,6 +162,7 @@ target
 /src/client/nxapisrv/java/.settings
 /src/client/nxapisrv/java/local
 /src/client/nxevent/nxevent
+/src/client/nxnotify/nxnotify
 /src/client/nxpush/nxpush
 /src/client/nxshell/nxshell
 /src/client/nxshell/java/.classpath
@@ -175,7 +171,6 @@ target
 /src/client/nxtcpproxy/.classpath
 /src/client/nxtcpproxy/.project
 /src/client/nxtcpproxy/.settings
-/src/client/nxsms/nxsms
 /src/flow_analyzer/nxflowd/MSG00001.bin
 /src/flow_analyzer/nxflowd/messages.h
 /src/install/files
@@ -186,9 +181,6 @@ target
 /src/java/build/macosx.*
 /src/java/build/solaris.*
 /src/java/build/win32.*
-/src/java/client/mobile-agent/.classpath
-/src/java/client/mobile-agent/.project
-/src/java/client/mobile-agent/.settings
 /src/java/nebula/org.netxms.nebula.widgets.gallery.tests/.settings
 /src/java/nebula/org.netxms.nebula.widgets.gallery.tests/bin
 /src/java/nebula/org.netxms.nebula.widgets.gallery/.settings
@@ -198,11 +190,12 @@ target
 /src/java/nxreporting/.settings
 /src/java/nxreporting/netxms-reporting-server-*
 /src/java/nxreporting/src/main/resources/nxreporting.xml
+/src/java-common/netxms-base/.classpath
+/src/java-common/netxms-base/.project
+/src/java-common/netxms-base/.settings
+/src/java-common/netxms-base/src/main/resources/netxms-build-tag.properties
 /src/libexpat/libexpat/x64
 /src/libnetxms/x64
-/src/libnxjava/java/base/netxms-base/.classpath
-/src/libnxjava/java/base/netxms-base/.project
-/src/libnxjava/java/base/netxms-base/.settings
 /src/libnxjava/java/bridge/.classpath
 /src/libnxjava/java/bridge/.project
 /src/libnxjava/java/bridge/.settings
@@ -212,6 +205,9 @@ target
 /src/libnxsl/parser.tab.cpp
 /src/libnxsl/parser.tab.hpp
 /src/libtre/x64
+/src/mobile-agent/java/.classpath
+/src/mobile-agent/java/.project
+/src/mobile-agent/java/.settings
 /src/nxcproxy/messages.c
 /src/nxcproxy/messages.h
 /src/nxcproxy/MSG00001.bin

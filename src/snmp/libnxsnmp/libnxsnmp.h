@@ -33,6 +33,8 @@
 #include <netdb.h>
 #endif
 
+#define LIBNXSNMP_DEBUG_TAG   _T("snmp.lib")
+
 /**
  * Buffer structure for BER_DecodeContent for ASN_OBJECT_ID type
  */

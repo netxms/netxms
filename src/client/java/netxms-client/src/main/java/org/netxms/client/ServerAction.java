@@ -30,7 +30,7 @@ public class ServerAction
 	public static final int EXEC_LOCAL = 0;
 	public static final int EXEC_REMOTE = 1;
 	public static final int SEND_EMAIL = 2;
-	public static final int SEND_SMS = 3;
+	public static final int SEND_NOTIFICATION = 3;
 	public static final int FORWARD_EVENT = 4;
 	public static final int EXEC_NXSL_SCRIPT = 5;
    public static final int XMPP_MESSAGE = 6;
@@ -42,6 +42,7 @@ public class ServerAction
 	private String recipientAddress;
 	private String emailSubject;
 	private boolean disabled;
+	private String channelName;
 
 	/**
 	 * Create server action object with given ID
@@ -55,6 +56,7 @@ public class ServerAction
 		name = "New action";
 		data = "";
 		disabled = false;
+		channelName = "";
 	}
 	
 	/**
@@ -71,6 +73,7 @@ public class ServerAction
 		recipientAddress = msg.getFieldAsString(NXCPCodes.VID_RCPT_ADDR);
 		emailSubject = msg.getFieldAsString(NXCPCodes.VID_EMAIL_SUBJECT);
 		disabled = msg.getFieldAsBoolean(NXCPCodes.VID_IS_DISABLED);
+      channelName = msg.getFieldAsString(NXCPCodes.VID_CHANNEL_NAME);
 	}
 	
 	/**
@@ -86,6 +89,7 @@ public class ServerAction
 		msg.setField(NXCPCodes.VID_RCPT_ADDR, recipientAddress);
 		msg.setField(NXCPCodes.VID_EMAIL_SUBJECT, emailSubject);
 		msg.setFieldInt16(NXCPCodes.VID_IS_DISABLED, disabled ? 1 : 0);
+      msg.setField(NXCPCodes.VID_CHANNEL_NAME, channelName);
 	}
 
 	/**
@@ -199,4 +203,20 @@ public class ServerAction
 	{
 		this.id = id;
 	}
+
+   /**
+    * @return the channelName
+    */
+   public String getChannelName()
+   {
+      return channelName;
+   }
+
+   /**
+    * @param channelName the channelName to set
+    */
+   public void setChannelName(String channelName)
+   {
+      this.channelName = channelName;
+   }
 }

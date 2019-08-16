@@ -109,7 +109,7 @@ bool Cluster::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 				}
 				else
 				{
-               nxlog_write(MSG_INVALID_CLUSTER_MEMBER, EVENTLOG_ERROR_TYPE, "dd", m_id, dwNodeId);
+               nxlog_write(NXLOG_ERROR, _T("Inconsistent database: cluster object %s [%u] has reference to non-existent node object [%u]"), m_name, m_id, dwNodeId);
 					break;
 				}
 			}
@@ -511,12 +511,12 @@ void Cluster::configurationPoll(PollerInfo *poller, ClientSession *pSession, UIN
    if (m_isDeleteInitiated || IsShutdownInProgress())
    {
       if (dwRqId == 0)
-         m_runtimeFlags &= ~DCDF_QUEUED_FOR_CONFIGURATION_POLL;
+         m_runtimeFlags &= ~ODF_QUEUED_FOR_CONFIGURATION_POLL;
       unlockProperties();
       return;
    }
    // Poller can be called directly - in that case poll flag will not be set
-   m_runtimeFlags |= DCDF_QUEUED_FOR_CONFIGURATION_POLL;
+   m_runtimeFlags |= ODF_QUEUED_FOR_CONFIGURATION_POLL;
    unlockProperties();
 
    poller->setStatus(_T("wait for lock"));
@@ -550,9 +550,9 @@ void Cluster::configurationPoll(PollerInfo *poller, ClientSession *pSession, UIN
    lockProperties();
    m_lastConfigurationPoll = time(NULL);
    if (dwRqId == 0)
-      m_runtimeFlags &= ~DCDF_QUEUED_FOR_CONFIGURATION_POLL;
-   m_runtimeFlags &= ~DCDF_CONFIGURATION_POLL_PENDING;
-   m_runtimeFlags |= DCDF_CONFIGURATION_POLL_PASSED;
+      m_runtimeFlags &= ~ODF_QUEUED_FOR_CONFIGURATION_POLL;
+   m_runtimeFlags &= ~ODF_CONFIGURATION_POLL_PENDING;
+   m_runtimeFlags |= ODF_CONFIGURATION_POLL_PASSED;
    unlockProperties();
 
    pollerUnlock();
@@ -567,12 +567,12 @@ void Cluster::statusPoll(PollerInfo *poller, ClientSession *pSession, UINT32 dwR
    if (m_isDeleteInitiated || IsShutdownInProgress())
    {
       if (dwRqId == 0)
-         m_runtimeFlags &= ~DCDF_QUEUED_FOR_STATUS_POLL;
+         m_runtimeFlags &= ~ODF_QUEUED_FOR_STATUS_POLL;
       unlockProperties();
       return;
    }
    // Poller can be called directly - in that case poll flag will not be set
-   m_runtimeFlags |= DCDF_QUEUED_FOR_STATUS_POLL;
+   m_runtimeFlags |= ODF_QUEUED_FOR_STATUS_POLL;
    unlockProperties();
 
    poller->setStatus(_T("wait for lock"));
@@ -742,7 +742,7 @@ void Cluster::statusPoll(PollerInfo *poller, ClientSession *pSession, UINT32 dwR
 	if (modified != 0)
 		setModified(modified);
 	m_lastStatusPoll = time(NULL);
-	m_runtimeFlags &= ~DCDF_QUEUED_FOR_STATUS_POLL;
+	m_runtimeFlags &= ~ODF_QUEUED_FOR_STATUS_POLL;
 	unlockProperties();
 
    sendPollerMsg(dwRqId, _T("CLUSTER STATUS POLL [%s]: Finished\r\n"), m_name);

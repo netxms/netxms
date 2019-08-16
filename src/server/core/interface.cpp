@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -53,8 +53,6 @@ Interface::Interface() : super(), m_macAddr(MacAddress::ZERO)
    m_operStatePollCount = 0;
 	m_requiredPollCount = 0;	// Use system default
 	m_zoneUIN = 0;
-	m_pingTime = PING_TIME_TIMEOUT;
-   m_pingLastTimeStamp = 0;
    m_ifTableSuffixLen = 0;
    m_ifTableSuffix = NULL;
    m_vlans = NULL;
@@ -97,8 +95,6 @@ Interface::Interface(const InetAddressList& addrList, UINT32 zoneUIN, bool bSynt
 	m_requiredPollCount = 0;	// Use system default
 	m_zoneUIN = zoneUIN;
    m_isHidden = true;
-	m_pingTime = PING_TIME_TIMEOUT;
-	m_pingLastTimeStamp = 0;
    m_ifTableSuffixLen = 0;
    m_ifTableSuffix = NULL;
    m_vlans = NULL;
@@ -143,8 +139,6 @@ Interface::Interface(const TCHAR *name, const TCHAR *descr, UINT32 index, const 
 	m_requiredPollCount = 0;	// Use system default
 	m_zoneUIN = zoneUIN;
    m_isHidden = true;
-	m_pingTime = PING_TIME_TIMEOUT;
-	m_pingLastTimeStamp = 0;
    m_ifTableSuffixLen = 0;
    m_ifTableSuffix = NULL;
    m_vlans = NULL;
@@ -160,24 +154,11 @@ Interface::~Interface()
 }
 
 /**
- * Returns last ping time
- */
-UINT32 Interface::getPingTime()
-{
-   if ((time(NULL) - m_pingLastTimeStamp) > g_dwStatusPollingInterval)
-   {
-      updatePingData();
-      nxlog_debug(7, _T("Interface::getPingTime: update ping time is required! Last ping time %d."), m_pingLastTimeStamp);
-   }
-   return m_pingTime;
-}
-
-/**
  * Create object from database record
  */
 bool Interface::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 {
-   bool bResult = false;
+   bool success = false;
 
    m_id = dwId;
 
@@ -240,28 +221,25 @@ bool Interface::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
          }
       }
 
-      m_pingTime = PING_TIME_TIMEOUT;
-      m_pingLastTimeStamp = 0;
-
       // Link interface to node
       if (!m_isDeleted)
       {
          NetObj *object = FindObjectById(nodeId, OBJECT_NODE);
          if (object == NULL)
          {
-            nxlog_write(MSG_INVALID_NODE_ID, EVENTLOG_ERROR_TYPE, "dd", dwId, nodeId);
+            nxlog_write(NXLOG_ERROR, _T("Inconsistent database: interface %s [%u] linked to non-existent node [%u]"), m_name, m_id, nodeId);
          }
          else
          {
             object->addChild(this);
             addParent(object);
 				m_zoneUIN = static_cast<Node*>(object)->getZoneUIN();
-            bResult = true;
+            success = true;
          }
       }
       else
       {
-         bResult = true;
+         success = true;
       }
    }
 
@@ -334,7 +312,7 @@ bool Interface::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
          m_flags &= ~IF_LOOPBACK;
    }
 
-   return bResult;
+   return success;
 }
 
 /**
@@ -739,101 +717,6 @@ void Interface::statusPoll(ClientSession *session, UINT32 rqId, ObjectQueue<Even
 }
 
 /**
- * Updates last ping time and ping time
- */
-void Interface::updatePingData()
-{
-   Node *pNode = getParentNode();
-   if (pNode == NULL)
-   {
-      nxlog_debug(7, _T("Interface::updatePingData: Can't find parent node"));
-      return;
-   }
-   UINT32 icmpProxy = pNode->getIcmpProxy();
-
-   if (IsZoningEnabled() && (m_zoneUIN != 0) && (icmpProxy == 0))
-   {
-      Zone *zone = FindZoneByUIN(m_zoneUIN);
-      if (zone != NULL)
-      {
-         icmpProxy = zone->getProxyNodeId(getParentNode());
-      }
-   }
-
-   if (icmpProxy != 0)
-   {
-      nxlog_debug(7, _T("Interface::updatePingData: ping via proxy [%u]"), icmpProxy);
-      Node *proxyNode = (Node *)g_idxNodeById.get(icmpProxy);
-      if ((proxyNode != NULL) && proxyNode->isNativeAgent() && !proxyNode->isDown())
-      {
-         nxlog_debug(7, _T("Interface::updatePingData: proxy node found: %s"), proxyNode->getName());
-         AgentConnection *conn = proxyNode->createAgentConnection();
-         if (conn != NULL)
-         {
-            TCHAR parameter[128], buffer[64];
-            const ObjectArray<InetAddress> *list = m_ipAddressList.getList();
-            long value = -1;
-            for(int i = 0; (i < list->size()) && ((value == 10000) || (value == -1)); i++)
-            {
-               const InetAddress *a = list->get(i);
-				   _sntprintf(parameter, 128, _T("Icmp.Ping(%s)"), a->toString(buffer));
-				   if (conn->getParameter(parameter, 64, buffer) == ERR_SUCCESS)
-				   {
-				      nxlog_debug(7, _T("Interface::updatePingData: proxy response: \"%s\""), buffer);
-					   TCHAR *eptr;
-					   value = _tcstol(buffer, &eptr, 10);
-                  if (*eptr != 0)
-                  {
-                     value = -1;
-                  }
-               }
-            }
-
-				if (value >= 0)
-				{
-               m_pingTime = value;
-				}
-            else
-            {
-               m_pingTime = PING_TIME_TIMEOUT;
-               nxlog_debug(7, _T("Interface::updatePingData: incorrect value or error while parsing"));
-            }
-            m_pingLastTimeStamp = time(NULL);
-            conn->decRefCount();
-         }
-         else
-         {
-            nxlog_debug(7, _T("Interface::updatePingData: cannot connect to agent on proxy node [%u]"), icmpProxy);
-            m_pingTime = PING_TIME_TIMEOUT;
-         }
-      }
-      else
-      {
-         nxlog_debug(7, _T("Interface::updatePingData: proxy node not available [%u]"), icmpProxy);
-         m_pingTime = PING_TIME_TIMEOUT;
-      }
-   }
-   else	// not using ICMP proxy
-   {
-      const ObjectArray<InetAddress> *list = m_ipAddressList.getList();
-      UINT32 dwPingStatus = ICMP_TIMEOUT;
-      for(int i = 0; (i < list->size()) && (dwPingStatus != ICMP_SUCCESS); i++)
-      {
-         const InetAddress *a = list->get(i);
-         nxlog_debug(7, _T("Interface::StatusPoll(%d,%s): calling IcmpPing(%s,3,%d,%d,%d)"),
-            m_id, m_name, (const TCHAR *)a->toString(), g_icmpPingTimeout, m_pingTime, g_icmpPingSize);
-		   dwPingStatus = IcmpPing(*a, 3, g_icmpPingTimeout, &m_pingTime, g_icmpPingSize, false);
-      }
-      if (dwPingStatus != ICMP_SUCCESS)
-      {
-         nxlog_debug(7, _T("Interface::updatePingData: error: %d"), dwPingStatus);
-         m_pingTime = PING_TIME_TIMEOUT;
-      }
-      m_pingLastTimeStamp = time(NULL);
-   }
-}
-
-/**
  * Do ICMP part of status poll
  */
 void Interface::icmpStatusPoll(UINT32 rqId, UINT32 nodeIcmpProxy, Cluster *cluster, InterfaceAdminState *adminState, InterfaceOperState *operState)
@@ -886,7 +769,6 @@ void Interface::icmpStatusPoll(UINT32 rqId, UINT32 nodeIcmpProxy, Cluster *clust
             DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): response time %d"), m_id, m_name, (int)value);
 				if (value >= 0)
 				{
-               m_pingTime = (UINT32)value;
 					if (value < 10000)
 					{
 						*adminState = IF_ADMIN_STATE_UP;
@@ -898,7 +780,6 @@ void Interface::icmpStatusPoll(UINT32 rqId, UINT32 nodeIcmpProxy, Cluster *clust
 						*operState = IF_OPER_STATE_DOWN;
 					}
 				}
-            m_pingLastTimeStamp = time(NULL);
 				conn->decRefCount();
 			}
 			else
@@ -923,12 +804,11 @@ void Interface::icmpStatusPoll(UINT32 rqId, UINT32 nodeIcmpProxy, Cluster *clust
          const InetAddress *a = list->get(i);
          if (a->isValidUnicast() && ((cluster == NULL) || !cluster->isSyncAddr(*a)))
          {
-		      DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): calling IcmpPing(%s,3,%d,%d,%d)"),
-               m_id, m_name, (const TCHAR *)a->toString(), g_icmpPingTimeout, m_pingTime, g_icmpPingSize);
-		      dwPingStatus = IcmpPing(*a, 3, g_icmpPingTimeout, &m_pingTime, g_icmpPingSize, false);
+		      DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): calling IcmpPing(%s,3,%d,%d)"),
+               m_id, m_name, (const TCHAR *)a->toString(), g_icmpPingTimeout, g_icmpPingSize);
+		      dwPingStatus = IcmpPing(*a, 3, g_icmpPingTimeout, NULL, g_icmpPingSize, false);
          }
       }
-      m_pingLastTimeStamp = time(NULL);
 		if (dwPingStatus == ICMP_SUCCESS)
 		{
 			*adminState = IF_ADMIN_STATE_UP;
@@ -936,7 +816,6 @@ void Interface::icmpStatusPoll(UINT32 rqId, UINT32 nodeIcmpProxy, Cluster *clust
 		}
 		else
 		{
-         m_pingTime = PING_TIME_TIMEOUT;
 			*adminState = IF_ADMIN_STATE_UNKNOWN;
 			*operState = IF_OPER_STATE_DOWN;
 		}
@@ -1248,10 +1127,10 @@ void Interface::setPeer(Node *node, Interface *iface, LinkLayerProtocol protocol
             _T("localIfIP"), _T("localIfMAC"), _T("remoteNodeId"), _T("remoteNodeName"),
             _T("remoteIfId"), _T("remoteIfIndex"), _T("remoteIfName"), _T("remoteIfIP"),
             _T("remoteIfMAC"), _T("protocol") };
-         PostEventWithNames(EVENT_IF_PEER_CHANGED, getParentNodeId(), "ddsAhdsddsAhd", names,
-            m_id, m_index, m_name, &m_ipAddressList.getFirstUnicastAddress(), m_macAddr,
+         PostEventWithNames(EVENT_IF_PEER_CHANGED, getParentNodeId(), "ddsAHdsddsAHd", names,
+            m_id, m_index, m_name, &m_ipAddressList.getFirstUnicastAddress(), &m_macAddr,
             node->getId(), node->getName(), iface->getId(), iface->getIfIndex(), iface->getName(),
-            &iface->getIpAddressList()->getFirstUnicastAddress(), iface->getMacAddr(), protocol);
+            &iface->getIpAddressList()->getFirstUnicastAddress(), &iface->getMacAddr(), protocol);
       }
    }
 
@@ -1292,10 +1171,13 @@ void Interface::setIpAddress(const InetAddress& addr)
 /**
  * Get first usable IP address
  */
-const InetAddress& Interface::getFirstIpAddress() const
+InetAddress Interface::getFirstIpAddress() const
 {
-   const InetAddress& a = m_ipAddressList.getFirstUnicastAddress();
-   return a.isValid() ? a : m_ipAddressList.get(0);
+   lockProperties();
+   const InetAddress& t = m_ipAddressList.getFirstUnicastAddress();
+   InetAddress a = t.isValid() ? t : m_ipAddressList.get(0);
+   unlockProperties();
+   return a;
 }
 
 /**
@@ -1447,8 +1329,6 @@ json_t *Interface::toJson()
    json_object_set_new(root, "operStatePollCount", json_integer(m_operStatePollCount));
    json_object_set_new(root, "requiredPollCount", json_integer(m_requiredPollCount));
    json_object_set_new(root, "zoneUIN", json_integer(m_zoneUIN));
-   json_object_set_new(root, "pingTime", json_integer(m_pingTime));
-   json_object_set_new(root, "pingLastTimeStamp", json_integer(m_pingLastTimeStamp));
    json_object_set_new(root, "ifTableSuffixLen", json_integer(m_ifTableSuffixLen));
    json_object_set_new(root, "ifTableSuffix", json_integer_array(m_ifTableSuffix, m_ifTableSuffixLen));
    return root;

@@ -198,7 +198,8 @@ static bool SnmpCheckV3CommSettings(SNMP_Transport *pTransport, SNMP_SecurityCon
  * On success, returns new security context object (dynamically created).
  * On failure, returns NULL
  */
-SNMP_Transport *SnmpCheckCommSettings(UINT32 snmpProxy, const InetAddress& ipAddr, INT16 *version, UINT16 originalPort, SNMP_SecurityContext *originalContext, StringList *testOids, UINT32 zoneUIN)
+SNMP_Transport *SnmpCheckCommSettings(UINT32 snmpProxy, const InetAddress& ipAddr, INT16 *version, UINT16 originalPort,
+         SNMP_SecurityContext *originalContext, StringList *testOids, UINT32 zoneUIN)
 {
    TCHAR ipAddrText[64];
    nxlog_debug_tag(DEBUG_TAG_SNMP_DISCOVERY, 5, _T("SnmpCheckCommSettings(%s): starting check (proxy=%d, originalPort=%d)"), ipAddr.toString(ipAddrText), snmpProxy, (int)originalPort);

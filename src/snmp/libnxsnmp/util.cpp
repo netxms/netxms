@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -33,23 +33,6 @@ static VolatileCounter s_requestId = 0;
 UINT32 LIBNXSNMP_EXPORTABLE SnmpNewRequestId()
 {
    return (UINT32)InterlockedIncrement(&s_requestId) & 0x7FFFFFFF;
-}
-
-/**
- * Message codes
- */
-static DWORD s_msgParseError = 0;
-static DWORD s_msgTypeError = 0;
-static DWORD s_msgGetError = 0;
-
-/**
- * Configure SNMP utility function logging
- */
-void LIBNXSNMP_EXPORTABLE SnmpSetMessageIds(DWORD msgParseError, DWORD msgTypeError, DWORD msgGetError)
-{
-   s_msgParseError = msgParseError;
-   s_msgTypeError = msgTypeError;
-   s_msgGetError = msgGetError;
 }
 
 /**
@@ -124,7 +107,11 @@ UINT32 LIBNXSNMP_EXPORTABLE SnmpGetEx(SNMP_Transport *pTransport,
       {
          InetAddress a = pTransport->getPeerIpAddress();
          if (dwFlags & SG_VERBOSE)
-            nxlog_write(s_msgParseError, NXLOG_WARNING, "ssA", szOidStr, _T("SnmpGet"), &a);
+         {
+            TCHAR temp[64];
+            nxlog_debug_tag(LIBNXSNMP_DEBUG_TAG, 5,
+                     _T("Error parsing SNMP OID \"%s\" in SnmpGetEx (destination IP address %s)"), szOidStr, a.toString(temp));
+         }
          dwResult = SNMP_ERR_BAD_OID;
       }
    }
@@ -209,7 +196,7 @@ UINT32 LIBNXSNMP_EXPORTABLE SnmpGetEx(SNMP_Transport *pTransport,
                         dwResult = SNMP_ERR_NO_OBJECT;
                         break;
                      default:
-                        nxlog_write(s_msgTypeError, NXLOG_WARNING, "x", pVar->getType());
+                        nxlog_write_tag(NXLOG_WARNING, LIBNXSNMP_DEBUG_TAG, _T("Unknown SNMP varbind type %u in GET response PDU"), pVar->getType());
                         dwResult = SNMP_ERR_BAD_TYPE;
                         break;
                   }
@@ -232,7 +219,7 @@ UINT32 LIBNXSNMP_EXPORTABLE SnmpGetEx(SNMP_Transport *pTransport,
       else
       {
          if (dwFlags & SG_VERBOSE)
-            nxlog_write(s_msgGetError, EVENTLOG_ERROR_TYPE, "d", dwResult);
+            nxlog_debug_tag(LIBNXSNMP_DEBUG_TAG, 7, _T("Error %u processing SNMP GET request"), dwResult);
       }
    }
 
@@ -257,7 +244,9 @@ UINT32 LIBNXSNMP_EXPORTABLE SnmpWalk(SNMP_Transport *transport, const TCHAR *roo
       if (logErrors)
       {
          InetAddress a = transport->getPeerIpAddress();
-         nxlog_write(s_msgParseError, NXLOG_WARNING, "ssA", rootOid, _T("SnmpWalk"), &a);
+         TCHAR temp[64];
+         nxlog_debug_tag(LIBNXSNMP_DEBUG_TAG, 5,
+                  _T("Error parsing SNMP OID \"%s\" in SnmpWalk (destination IP address %s)"), rootOid, a.toString(temp));
       }
       return SNMP_ERR_BAD_OID;
    }
@@ -354,8 +343,7 @@ UINT32 LIBNXSNMP_EXPORTABLE SnmpWalk(SNMP_Transport *transport, const UINT32 *ro
       }
       else
       {
-         if (logErrors)
-            nxlog_write(s_msgGetError, EVENTLOG_ERROR_TYPE, "d", dwResult);
+         nxlog_debug_tag(LIBNXSNMP_DEBUG_TAG, 7, _T("Error %u processing SNMP GET request"), dwResult);
          bRunning = FALSE;
       }
       delete pRqPDU;
