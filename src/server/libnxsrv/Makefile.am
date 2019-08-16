@@ -20,5 +20,5 @@ EXTRA_DIST = \
 	libnxsrv.h \
 	libnxsrv.rc \
 	messages.mc \
-	resource .h \
+	resource.h \
 	Makefile.w32
