@@ -808,9 +808,8 @@ bool ImportAction(ConfigEntry *config, bool overwrite)
       return false;
    }
 
-
    const uuid guid = config->getSubEntryValueAsUUID(_T("guid"));
-   shared_ptr<Action> action = !guid.isNull() ? s_actions.findElement(ActionGUIDComparator, &guid) : NULL;
+   shared_ptr<Action> action = !guid.isNull() ? s_actions.findElement(ActionGUIDComparator, &guid) : shared_ptr<Action>();
    if (action == NULL)
    {
       // Check for duplicate name
