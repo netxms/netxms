@@ -189,6 +189,7 @@ int main(int argc, char *argv[])
 	   text = argv[optind + 4];
    
    }
+   else
    {
 	   text = argv[optind + 3];
    }

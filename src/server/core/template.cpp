@@ -566,6 +566,7 @@ uuid Template::updatePolicyFromMessage(NXCPMessage *request)
    else
    {
       GenericAgentPolicy *curr = CreatePolicy(request->getFieldAsString(VID_NAME, name, MAX_DB_STRING), request->getFieldAsString(VID_POLICY_TYPE, policyType, 32), m_id);
+      curr->modifyFromMessage(request);
       m_policyList->set(curr->getGuid(), curr);
       curr->fillUpdateMessage(&msg);
       guid = curr->getGuid();
@@ -691,8 +692,8 @@ void Template::applyPolicyChanges(DataCollectionTarget *object)
             checkPolicyBind((Node *)object, ap, NULL, NULL);
             delete ap;
          }
+         conn->decRefCount();
       }
-      conn->decRefCount();
    }
    unlockChildList();
 }
