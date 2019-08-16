@@ -24,7 +24,7 @@
 #include "nxcore.h"
 #include <ncdrv.h>
 
-#define DEBUG_TAG _T("notification.channel")
+#define DEBUG_TAG _T("nc")
 #define NC_THREAD_KEY _T("NotificationChannel")
 
 /**
@@ -533,23 +533,24 @@ static void LoadDriver(const TCHAR *file)
             _tcslcpy(ncDriverDescriptor->name, *name, MAX_OBJECT_NAME);
 #endif
             s_driverList.set(ncDriverDescriptor->name, ncDriverDescriptor);
+            nxlog_debug_tag(DEBUG_TAG, 4, _T("Notification channel driver %s loaded successfully"), ncDriverDescriptor->name);
          }
          else
          {
-            nxlog_write(NXLOG_ERROR, _T("Notification channel driver \"%s\" cannot be loaded because of API version mismatch (driver: %d; server: %d)"),
+            nxlog_debug_tag(DEBUG_TAG, 1, _T("Notification channel driver \"%s\" cannot be loaded because of API version mismatch (driver: %d; server: %d)"),
                      file, *apiVersion, NCDRV_API_VERSION);
             DLClose(hModule);
          }
       }
       else
       {
-         nxlog_write(NXLOG_ERROR, _T("Unable to find entry point in notification channel driver \"%s\""), file);
+         nxlog_debug_tag(DEBUG_TAG, 1, _T("Unable to find entry point in notification channel driver \"%s\""), file);
          DLClose(hModule);
       }
    }
    else
    {
-      nxlog_write(NXLOG_ERROR, _T("Unable to load module \"%s\" (%s)"), file, errorText);
+      nxlog_debug_tag(DEBUG_TAG, 1, _T("Unable to load module \"%s\" (%s)"), file, errorText);
    }
 }
 
@@ -562,7 +563,7 @@ void LoadNotificationChannelDrivers()
    _tcscpy(path, g_netxmsdLibDir);
    _tcscat(path, LDIR_NCD);
 
-   DbgPrintf(1, _T("Loading channel notification drivers from %s"), path);
+   nxlog_debug_tag(DEBUG_TAG, 1, _T("Loading channel notification drivers from %s"), path);
 #ifdef _WIN32
    SetDllDirectory(path);
 #endif
@@ -586,7 +587,7 @@ void LoadNotificationChannelDrivers()
 #ifdef _WIN32
    SetDllDirectory(NULL);
 #endif
-   DbgPrintf(1, _T("%d channel notification drivers loaded"), s_driverList.size());
+   nxlog_debug_tag(DEBUG_TAG, 1, _T("%d channel notification drivers loaded"), s_driverList.size());
 }
 
 /**
@@ -614,7 +615,7 @@ void LoadNCConfiguration()
          s_channelList.set(name, nc);
          MutexUnlock(s_channelListLock);
          numberOfAddedDrivers++;
-         nxlog_debug_tag(DEBUG_TAG, 8, _T("%s driver of %s driver descriptor added with configuration: %hs "), name, driverName, configuration);
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("Notification channel %s loaded successfully"), name);
       }
       DBFreeResult(result);
    }

@@ -295,6 +295,20 @@ static bool H_UpgradeFromV91()
       }
       else if (!g_ignoreErrors)
         return false;
+
+      hStmt = DBPrepare(g_dbHandle, _T("UPDATE actions SET channel_name=? WHERE action_type=3"));
+      if (hStmt != NULL)
+      {
+        DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, static_cast<const TCHAR *>(newDriverName), DB_BIND_STATIC);
+        if (!SQLExecute(hStmt) && !g_ignoreErrors)
+        {
+           DBFreeStatement(hStmt);
+           return false;
+        }
+        DBFreeStatement(hStmt);
+      }
+      else if (!g_ignoreErrors)
+        return false;
    }
 
    static const TCHAR *batch =
