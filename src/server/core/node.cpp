@@ -780,6 +780,7 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
          {
             bResult = false;
          }
+         DBFreeStatement(hStmt);
       }
       else
       {
