@@ -40,16 +40,19 @@ public class CreatePolicyDialog extends Dialog
    private String policyType;
 	private Text textName;
 	private Combo typeSelector;
+	private AgentPolicy policy;
 
 	/**
 	 * Constructor
 	 * 
 	 * @param parentShell Parent shell
+	 * @param policy 
 	 * @param objectClassName Object class - this string will be added to dialog's title
 	 */
-	public CreatePolicyDialog(Shell parentShell)
+	public CreatePolicyDialog(Shell parentShell, AgentPolicy policy)
 	{
 		super(parentShell);
+		this.policy = policy;
 	}
 
 	/* (non-Javadoc)
@@ -81,12 +84,19 @@ public class CreatePolicyDialog extends Dialog
       textName.setTextLimit(63);
       textName.setFocus();
       
-      typeSelector = WidgetHelper.createLabeledCombo(dialogArea, SWT.BORDER | SWT.READ_ONLY, "Policy type",
-            WidgetHelper.DEFAULT_LAYOUT_DATA);
-      typeSelector.add(AgentPolicy.agent);
-      typeSelector.add(AgentPolicy.logParser);
-      typeSelector.add(AgentPolicy.supportApplication);
-      typeSelector.select(0);
+      if(policy != null)
+      {
+         textName.setText(policy.getName());
+      }
+      else
+      {         
+         typeSelector = WidgetHelper.createLabeledCombo(dialogArea, SWT.BORDER | SWT.READ_ONLY, "Policy type",
+               WidgetHelper.DEFAULT_LAYOUT_DATA);
+         typeSelector.add(AgentPolicy.agent);
+         typeSelector.add(AgentPolicy.logParser);
+         typeSelector.add(AgentPolicy.supportApplication);
+         typeSelector.select(0);
+      }
       
 		return dialogArea;
 	}
@@ -98,7 +108,10 @@ public class CreatePolicyDialog extends Dialog
 	protected void okPressed()
 	{
 		policyName = textName.getText().trim();
-      policyType = typeSelector.getText();
+      if(policy == null)
+      {
+         policyType = typeSelector.getText();
+      }
 		if (policyName.isEmpty())
 		{
 			MessageDialogHelper.openWarning(getShell(), "Warning", "Policy name can not be empty");
@@ -109,6 +122,10 @@ public class CreatePolicyDialog extends Dialog
 
    public AgentPolicy getPolicy()
    {
-      return new AgentPolicy(policyName, policyType);
+      if(policy == null)
+         return new AgentPolicy(policyName, policyType);
+      
+      policy.setName(policyName);
+      return policy;
    }
 }

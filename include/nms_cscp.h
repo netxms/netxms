@@ -616,7 +616,7 @@ typedef struct
 #define CMD_GET_GRAPH                     0x0175
 #define CMD_UPDATE_AGENT_POLICY           0x0176
 #define CMD_DELETE_AGENT_POLICY           0x0177
-#define CMD_GET_AGENT_POLICY              0x0178
+#define CMD_GET_AGENT_POLICY_LIST         0x0178
 #define CMD_POLICY_EDITOR_CLOSED          0x0179
 #define CMD_POLICY_FORCE_APPLY            0x017A
 #define CMD_GET_NODE_HARDWARE             0x017B
@@ -631,6 +631,7 @@ typedef struct
 #define CMD_DELETE_NOTIFICATION_CHANNEL   0x0184
 #define CMD_GET_NOTIFICATION_DRIVERS      0x0185
 #define CMD_RENAME_NOTIFICATION_CHANNEL   0x0186
+#define CMD_GET_AGENT_POLICY              0x0187
 
 #define CMD_RS_LIST_REPORTS            0x1100
 #define CMD_RS_GET_REPORT              0x1101

@@ -11055,6 +11055,19 @@ public class NXCSession
          tcpProxies.remove(channelId);
       }
    }
+   
+
+
+   public AgentPolicy getAgentPolicy(long templateId, UUID policyGUID) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_AGENT_POLICY);
+      msg.setFieldInt32(NXCPCodes.VID_TEMPLATE_ID, (int)templateId);
+      msg.setField(NXCPCodes.VID_GUID, policyGUID);
+      sendMessage(msg);
+      final NXCPMessage response = waitForRCC(msg.getMessageId());
+      AgentPolicy policy = new AgentPolicy(response, NXCPCodes.VID_AGENT_POLICY_BASE);
+      return policy;
+   }
 
    /**
     * Returns agent policy list
@@ -11064,8 +11077,7 @@ public class NXCSession
     */
    public HashMap<UUID, AgentPolicy> getAgentPolicyList(long templateId) throws IOException, NXCException
    {
-
-      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_AGENT_POLICY);
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_AGENT_POLICY_LIST);
       msg.setFieldInt32(NXCPCodes.VID_TEMPLATE_ID, (int)templateId);
       sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());

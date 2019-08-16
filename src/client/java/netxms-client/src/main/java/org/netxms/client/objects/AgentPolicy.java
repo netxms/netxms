@@ -64,6 +64,14 @@ public class AgentPolicy
       content = msg.getFieldAsString(base+3);    
    }
 
+   public AgentPolicy(AgentPolicy policy)
+   {
+      guid = null;
+      name = policy.name;
+      policyType = policy.policyType;
+      content = policy.content;
+   }
+
    public void fillMessage(NXCPMessage msg)
    {
       if(guid != null)

@@ -390,7 +390,7 @@ public class NXCPCodes
    public static final int CMD_GET_GRAPH = 0x0175;
    public static final int CMD_UPDATE_AGENT_POLICY = 0x0176;
    public static final int CMD_DELETE_AGENT_POLICY = 0x0177;
-   public static final int CMD_GET_AGENT_POLICY = 0x0178;
+   public static final int CMD_GET_AGENT_POLICY_LIST = 0x0178;
    public static final int CMD_POLICY_EDITOR_CLOSED = 0x0179;
    public static final int CMD_POLICY_FORCE_APPLY = 0x017A;
    public static final int CMD_GET_NODE_HARDWARE = 0x017B;
@@ -405,6 +405,7 @@ public class NXCPCodes
    public static final int CMD_DELETE_NOTIFICATION_CHANNEL = 0x0184; 
    public static final int CMD_GET_NOTIFICATION_DRIVERS = 0x0185;
    public static final int CMD_RENAME_NOTIFICATION_CHANNEL = 0x0186;
+   public static final int CMD_GET_AGENT_POLICY = 0x0187;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;

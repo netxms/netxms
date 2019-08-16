@@ -1322,8 +1322,11 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_SETUP_TCP_PROXY:
          setupTcpProxy(request);
          break;
-      case CMD_GET_AGENT_POLICY:
+      case CMD_GET_AGENT_POLICY_LIST:
          getPolicyList(request);
+         break;
+      case CMD_GET_AGENT_POLICY:
+         getPolicy(request);
          break;
       case CMD_UPDATE_AGENT_POLICY:
          updatePolicy(request);
@@ -14566,6 +14569,38 @@ void ClientSession::getPolicyList(NXCPMessage *request)
       {
          templateObject->fillPolicyMessage(&msg);
          msg.setField(VID_RCC, RCC_SUCCESS);
+      }
+      else
+         msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+   }
+   else
+      msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+
+   sendMessage(&msg);
+}
+
+/**
+ * Get policy list for template
+ */
+void ClientSession::getPolicy(NXCPMessage *request)
+{
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
+
+   Template *templateObject = (Template *)FindObjectById(request->getFieldAsUInt32(VID_TEMPLATE_ID), OBJECT_TEMPLATE);
+   if(templateObject != NULL)
+   {
+      if (templateObject->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
+      {
+         uuid guid = request->getFieldAsGUID(VID_GUID);
+         GenericAgentPolicy *ap = templateObject->getAgentPolicyCopy(guid);
+         if(ap != NULL)
+         {
+            ap->fillMessage(&msg, VID_AGENT_POLICY_BASE);
+            msg.setField(VID_RCC, RCC_SUCCESS);
+            delete ap;
+         }
+         else
+            msg.setField(VID_RCC, RCC_INVALID_POLICY_ID);
       }
       else
          msg.setField(VID_RCC, RCC_ACCESS_DENIED);

@@ -28,7 +28,7 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Template;
-import org.netxms.ui.eclipse.datacollection.views.PolicyEditorView;
+import org.netxms.ui.eclipse.datacollection.views.PolicyListView;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
@@ -58,9 +58,7 @@ public class EditPolicy implements IObjectActionDelegate
 	   {
 	      try
 	      {
-	         PolicyEditorView view = (PolicyEditorView)window.getActivePage().showView(PolicyEditorView.ID, Long.toString(currentSelection.getObjectId()), IWorkbenchPage.VIEW_ACTIVATE);
-	         if (view != null)
-   	         view.setPolicy((Template)currentSelection);
+	         window.getActivePage().showView(PolicyListView.ID, Long.toString(currentSelection.getObjectId()), IWorkbenchPage.VIEW_ACTIVATE);
 	      }
 	      catch(PartInitException e)
 	      {

@@ -778,6 +778,7 @@ private:
    void updatePolicy(NXCPMessage *request);
    void deletePolicy(NXCPMessage *request);
    void getPolicyList(NXCPMessage *request);
+   void getPolicy(NXCPMessage *request);
    void onPolicyEditorClose(NXCPMessage *request);
    void forceApplyPolicy(NXCPMessage *pRequest);
    void getMatchingDCI(NXCPMessage *request);
