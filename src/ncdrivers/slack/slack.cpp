@@ -80,7 +80,7 @@ SlackDriver::SlackDriver(Config *config)
    nxlog_debug_tag(DEBUG_TAG, 3, _T("cURL supported protocols: %hs"), protocols);
 #endif
 
-   static NX_CFG_TEMPLATE configTemplate[] = 
+   NX_CFG_TEMPLATE configTemplate[] = 
 	{
 		{ _T("url"), CT_MB_STRING, 0, 0, sizeof(s_url), 0, s_url },	
 		{ _T("username"), CT_MB_STRING, 0, 0, sizeof(s_username), 0, s_username },	

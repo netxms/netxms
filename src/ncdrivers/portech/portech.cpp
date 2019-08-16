@@ -40,10 +40,10 @@ enum Mode
 class PortechDriver : public NCDriver
 {
 private:
-	TCHAR m_primaryHostName[MAX_PATH] = _T("10.0.0.1");
-	TCHAR m_secondaryHostName[MAX_PATH] = _T("");
-	char m_login[MAX_PATH] = "admin";
-	char m_password[MAX_PATH] = "admin";
+	TCHAR m_primaryHostName[MAX_PATH];
+	TCHAR m_secondaryHostName[MAX_PATH];
+	char m_login[MAX_PATH];
+	char m_password[MAX_PATH];
 	Mode s_mode;
 
    bool DoLogin(SocketConnection *conn);
@@ -69,7 +69,7 @@ PortechDriver::PortechDriver(Config *config)
 	nxlog_debug_tag(DEBUG_TAG, 8, _T("Loading Portech MV-72x SMS Driver (configuration: %s)"), (const TCHAR *)config->createXml());
 
 	TCHAR mode[8] = _T("");
-   static NX_CFG_TEMPLATE configTemplate[] = 
+    NX_CFG_TEMPLATE configTemplate[] = 
       {
          { _T("host"), CT_STRING, 0, 0, MAX_PATH, 0, m_primaryHostName },	
          { _T("secondaryHost"), CT_STRING, 0, 0, MAX_PATH, 0, m_secondaryHostName },	

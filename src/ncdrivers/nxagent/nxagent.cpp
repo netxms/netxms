@@ -50,7 +50,7 @@ NXAgentDriver::NXAgentDriver(Config *config)
    m_port = 4700;
    m_timeout = 30;	
 
-   static NX_CFG_TEMPLATE configTemplate[] = 
+   NX_CFG_TEMPLATE configTemplate[] = 
 	{
 		{ _T("hostname"), CT_STRING, 0, 0, sizeof(m_hostName), 0, m_hostName },	
 		{ _T("port"), CT_LONG, 0, 0, 0, 0, &m_port },	

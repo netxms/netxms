@@ -82,7 +82,7 @@ NexmoDriver::NexmoDriver(Config *config)
    nxlog_debug_tag(DEBUG_TAG, 3, _T("cURL supported protocols: %hs"), protocols);
 #endif
 
-   static NX_CFG_TEMPLATE configTemplate[] = 
+   NX_CFG_TEMPLATE configTemplate[] = 
 	{
 		{ _T("apiKey"), CT_MB_STRING, 0, 0, sizeof(m_apiKey), 0, m_apiKey },	
 		{ _T("apiSecret"), CT_MB_STRING, 0, 0, sizeof(m_apiSecret), 0, m_apiSecret },	

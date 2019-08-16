@@ -31,25 +31,41 @@
 class DBTableDriver : public NCDriver
 {
 private:
-	TCHAR m_dbDriver[MAX_PATH] = _T("sqlite.ddr");
-	TCHAR m_dbName[MAX_DB_NAME] = _T("netxms");
-	TCHAR m_dbUsername[MAX_DB_LOGIN] = _T("netxms");
-	TCHAR m_dbPassword[MAX_DB_PASSWORD] = _T("");
-	TCHAR m_dbServer[MAX_PATH] = _T("localhost");
-	TCHAR m_dbSchema[MAX_DB_NAME] = _T("");
-	TCHAR m_sqlTemplate[1024] = _T("");
-	UINT32 m_maxNumberLength = 32;
-	UINT32 m_maxMessageLength = 255;
-	DB_DRIVER m_driver = NULL;
-	DB_HANDLE m_dbh = NULL;
+	TCHAR m_dbDriver[MAX_PATH];
+	TCHAR m_dbName[MAX_DB_NAME];
+	TCHAR m_dbUsername[MAX_DB_LOGIN];
+	TCHAR m_dbPassword[MAX_DB_PASSWORD];
+	TCHAR m_dbServer[MAX_PATH];
+	TCHAR m_dbSchema[MAX_DB_NAME];
+	TCHAR m_sqlTemplate[1024];
+	UINT32 m_maxNumberLength;
+	UINT32 m_maxMessageLength;
+	DB_DRIVER m_driver;
+	DB_HANDLE m_dbh;
 
-	DBTableDriver() {}
+	DBTableDriver();
 
 public:
    static DBTableDriver *createFromConfig(Config *config);
    virtual ~DBTableDriver();
    virtual bool send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body) override;
 };
+
+
+DBTableDriver::DBTableDriver()
+{
+	_tcscpy(m_dbDriver, _T("sqlite.ddr"));
+	_tcscpy(m_dbName, _T("netxms"));
+	_tcscpy(m_dbUsername, _T("netxms"));
+	_tcscpy(m_dbPassword, _T(""));
+	_tcscpy(m_dbServer, _T("localhost"));
+	_tcscpy(m_dbSchema, _T(""));
+	_tcscpy(m_sqlTemplate, _T(""));
+	m_maxNumberLength = 32;
+	m_maxMessageLength = 255;
+	m_driver = NULL;
+	m_dbh = NULL;
+}
 
 /**
  * Create driver from config
@@ -58,7 +74,7 @@ DBTableDriver *DBTableDriver::createFromConfig(Config *config)
 {
 	DBTableDriver *d= new DBTableDriver();
 	bool bRet = false;
-	static NX_CFG_TEMPLATE configTemplate[] = 
+	NX_CFG_TEMPLATE configTemplate[] = 
 	{
 		{ _T("DBDriver"), CT_STRING, 0, 0, sizeof(d->m_dbDriver) / sizeof(TCHAR), 0, d->m_dbDriver },	
 		{ _T("DBName"), CT_STRING, 0, 0, sizeof(d->m_dbName) / sizeof(TCHAR), 0, d->m_dbName },	

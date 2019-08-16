@@ -89,7 +89,7 @@ SMSEagleDriver::SMSEagleDriver(Config *config)
 #endif
 
    int flag;
-   static NX_CFG_TEMPLATE configTemplate[] = 
+   NX_CFG_TEMPLATE configTemplate[] = 
 	{
 		{ _T("host"), CT_MB_STRING, 0, 0, sizeof(m_hostname), 0, m_hostname },	
 		{ _T("port"), CT_LONG, 0, 0, 0, 0, &m_port },	

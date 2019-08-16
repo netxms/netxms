@@ -80,7 +80,7 @@ MyMobileDriver::MyMobileDriver(Config *config)
    nxlog_debug_tag(DEBUG_TAG, 3, _T("cURL supported protocols: %hs"), protocols);
 #endif
 
-   static NX_CFG_TEMPLATE configTemplate[] = 
+   NX_CFG_TEMPLATE configTemplate[] = 
 	{
 		{ _T("username"), CT_MB_STRING, 0, 0, sizeof(m_username), 0, m_username },	
 		{ _T("password"), CT_MB_STRING, 0, 0, sizeof(m_password), 0, m_password },	

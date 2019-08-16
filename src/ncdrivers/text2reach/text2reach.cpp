@@ -85,7 +85,7 @@ Text2ReachDriver::Text2ReachDriver(Config *config)
 #endif
 
    int flags = 1; //default values m_unicode = true, m_blacklist = false
-   static NX_CFG_TEMPLATE configTemplate[] = 
+   NX_CFG_TEMPLATE configTemplate[] = 
 	{
 		{ _T("apikey"), CT_MB_STRING, 0, 0, sizeof(m_apikey), 0, m_apikey },	
 		{ _T("from"), CT_MB_STRING, 0, 0, sizeof(m_from), 0, m_from },	

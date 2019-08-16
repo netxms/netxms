@@ -139,7 +139,7 @@ GenericDriver::GenericDriver(Config *config)
    int blockSize = 8;
    int writeDelay = 100;
 
-   static NX_CFG_TEMPLATE configTemplate[] = 
+   NX_CFG_TEMPLATE configTemplate[] = 
    {
       { _T("portname"), CT_STRING, 0, 0, sizeof(portName) / sizeof(TCHAR), 0, portName },	
       { _T("speed"), CT_LONG, 0, 0, 0, 0, &portSpeed },	
