@@ -1242,7 +1242,7 @@ bool Config::loadIniConfigFromMemory(const char *content, size_t length, const T
       next = strchr(curr, '\n');
       size_t llen = (next != NULL) ? next - curr : length - (curr - content);
 #ifdef UNICODE
-      llen = MultiByteToWideChar(CP_UTF8, 0, curr, llen, buffer, 4095);
+      llen = MultiByteToWideChar(CP_UTF8, 0, curr, (int)llen, buffer, 4095);
 #else
       llen = MIN(llen, 4095);
       memcpy(buffer, curr, llen);

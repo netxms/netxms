@@ -59,12 +59,12 @@ inline UCS4CHAR CodePointFromUTF8(const BYTE*& s, size_t& len)
 /**
  * Convert UTF-8 to UCS-4
  */
-int LIBNETXMS_EXPORTABLE utf8_to_ucs4(const char *src, int srcLen, UCS4CHAR *dst, int dstLen)
+size_t LIBNETXMS_EXPORTABLE utf8_to_ucs4(const char *src, ssize_t srcLen, UCS4CHAR *dst, size_t dstLen)
 {
    size_t len = (srcLen == -1) ? strlen(src) : srcLen;
    const BYTE *s = reinterpret_cast<const BYTE*>(src);
    UCS4CHAR *d = dst;
-   int dcount = 0;
+   size_t dcount = 0;
    while((len > 0) && (dcount < dstLen))
    {
       *d++ = CodePointFromUTF8(s, len);
@@ -82,11 +82,11 @@ int LIBNETXMS_EXPORTABLE utf8_to_ucs4(const char *src, int srcLen, UCS4CHAR *dst
 /**
  * Calculate length of given UTF-8 string in UCS-4 characters (including terminator)
  */
-int LIBNETXMS_EXPORTABLE utf8_ucs4len(const char *src, int srcLen)
+size_t LIBNETXMS_EXPORTABLE utf8_ucs4len(const char *src, ssize_t srcLen)
 {
    size_t len = (srcLen == -1) ? strlen(src) : srcLen;
    const BYTE *s = reinterpret_cast<const BYTE*>(src);
-   int dcount = 1;
+   size_t dcount = 1;
    while(len > 0)
    {
       CodePointFromUTF8(s, len);
@@ -98,12 +98,12 @@ int LIBNETXMS_EXPORTABLE utf8_ucs4len(const char *src, int srcLen)
 /**
  * Convert UTF-8 to UCS-2
  */
-int LIBNETXMS_EXPORTABLE utf8_to_ucs2(const char *src, int srcLen, UCS2CHAR *dst, int dstLen)
+size_t LIBNETXMS_EXPORTABLE utf8_to_ucs2(const char *src, ssize_t srcLen, UCS2CHAR *dst, size_t dstLen)
 {
    size_t len = (srcLen == -1) ? strlen(src) : srcLen;
    const BYTE *s = reinterpret_cast<const BYTE*>(src);
    UCS2CHAR *d = dst;
-   int dcount = 0;
+   size_t dcount = 0;
    while((len > 0) && (dcount < dstLen))
    {
       UCS4CHAR ch = CodePointFromUTF8(s, len);
@@ -134,11 +134,11 @@ int LIBNETXMS_EXPORTABLE utf8_to_ucs2(const char *src, int srcLen, UCS2CHAR *dst
 /**
  * Calculate length of given UTF-8 string in UCS-2 characters (including terminator)
  */
-int LIBNETXMS_EXPORTABLE utf8_ucs2len(const char *src, int srcLen)
+size_t LIBNETXMS_EXPORTABLE utf8_ucs2len(const char *src, ssize_t srcLen)
 {
    size_t len = (srcLen == -1) ? strlen(src) : srcLen;
    const BYTE *s = reinterpret_cast<const BYTE*>(src);
-   int dcount = 1;
+   size_t dcount = 1;
    while(len > 0)
    {
       UCS4CHAR ch = CodePointFromUTF8(s, len);
@@ -154,12 +154,12 @@ int LIBNETXMS_EXPORTABLE utf8_ucs2len(const char *src, int srcLen)
 /**
  * Convert UTF-8 to multibyte
  */
-int LIBNETXMS_EXPORTABLE utf8_to_mb(const char *src, int srcLen, char *dst, int dstLen)
+size_t LIBNETXMS_EXPORTABLE utf8_to_mb(const char *src, ssize_t srcLen, char *dst, size_t dstLen)
 {
-   int len = (int)strlen(src) + 1;
+   size_t len = strlen(src) + 1;
    WCHAR *buffer = (len <= 32768) ? (WCHAR *)alloca(len * sizeof(WCHAR)) : (WCHAR *)MemAlloc(len * sizeof(WCHAR));
-   MultiByteToWideChar(CP_UTF8, 0, src, -1, buffer, len);
-   int ret = WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, buffer, -1, dst, dstLen, NULL, NULL);
+   MultiByteToWideChar(CP_UTF8, 0, src, -1, buffer, (int)len);
+   int ret = WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, buffer, -1, dst, (int)dstLen, NULL, NULL);
    if (len > 32768)
       MemFree(buffer);
    return ret;
@@ -170,7 +170,7 @@ int LIBNETXMS_EXPORTABLE utf8_to_mb(const char *src, int srcLen, char *dst, int 
 /**
  * Convert UTF-8 to multibyte
  */
-int LIBNETXMS_EXPORTABLE utf8_to_mb(const char *src, int srcLen, char *dst, int dstLen)
+size_t LIBNETXMS_EXPORTABLE utf8_to_mb(const char *src, ssize_t srcLen, char *dst, size_t dstLen)
 {
    if (g_defaultCodePageType == CodePageType::ASCII)
       return utf8_to_ASCII(src, srcLen, dst, dstLen);
@@ -216,7 +216,7 @@ int LIBNETXMS_EXPORTABLE utf8_to_mb(const char *src, int srcLen, char *dst, int 
       *((char *)outbuf) = 0;
    }
 
-   return (int)count;
+   return count;
 #else
    return utf8_to_ASCII(src, srcLen, dst, dstLen);
 #endif
@@ -227,12 +227,12 @@ int LIBNETXMS_EXPORTABLE utf8_to_mb(const char *src, int srcLen, char *dst, int 
 /**
  * Convert UTF-8 to ASCII (also used as fallback if iconv_open fails)
  */
-int LIBNETXMS_EXPORTABLE utf8_to_ASCII(const char *src, int srcLen, char *dst, int dstLen)
+size_t LIBNETXMS_EXPORTABLE utf8_to_ASCII(const char *src, ssize_t srcLen, char *dst, size_t dstLen)
 {
    size_t len = (srcLen == -1) ? strlen(src) : srcLen;
    const BYTE *s = reinterpret_cast<const BYTE*>(src);
    char *d = dst;
-   int dcount = 0;
+   size_t dcount = 0;
    while((len > 0) && (dcount < dstLen))
    {
       UCS4CHAR ch = CodePointFromUTF8(s, len);
@@ -251,12 +251,12 @@ int LIBNETXMS_EXPORTABLE utf8_to_ASCII(const char *src, int srcLen, char *dst, i
 /**
  * Convert UTF-8 to ISO8859-1
  */
-int LIBNETXMS_EXPORTABLE utf8_to_ISO8859_1(const char *src, int srcLen, char *dst, int dstLen)
+size_t LIBNETXMS_EXPORTABLE utf8_to_ISO8859_1(const char *src, ssize_t srcLen, char *dst, size_t dstLen)
 {
    size_t len = (srcLen == -1) ? strlen(src) : srcLen;
    const BYTE *s = reinterpret_cast<const BYTE*>(src);
    BYTE *d = reinterpret_cast<BYTE*>(dst);
-   int dcount = 0;
+   size_t dcount = 0;
    while((len > 0) && (dcount < dstLen))
    {
       UCS4CHAR ch = CodePointFromUTF8(s, len);

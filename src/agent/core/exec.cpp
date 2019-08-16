@@ -202,7 +202,9 @@ UINT32 ExecuteCommand(TCHAR *pszCommand, const StringList *args, pid_t *pid)
    if (!CreateProcess(NULL, pszCmdLine, NULL, NULL, FALSE,
                       CREATE_NO_WINDOW, NULL, NULL, &si, &pi))
    {
-      nxlog_write(MSG_CREATE_PROCESS_FAILED, EVENTLOG_ERROR_TYPE, "se", pszCmdLine, GetLastError());
+      TCHAR buffer[1024];
+      nxlog_write(NXLOG_ERROR, _T("Unable to create process \"%s\" (%s)"),
+         pszCmdLine, GetSystemErrorText(GetLastError(), buffer, 1024));
       dwRetCode = ERR_EXEC_FAILED;
    }
    else
@@ -470,7 +472,7 @@ LONG RunExternal(const TCHAR *pszCmd, const TCHAR *pszArg, StringList *value)
 				{
 					// Timeout waiting for external process to complete, kill it
 					TerminateProcess(pi.hProcess, 127);
-					nxlog_write(MSG_PROCESS_KILLED, EVENTLOG_WARNING_TYPE, "s", pszCmdLine);
+					nxlog_write(NXLOG_WARNING, _T("Process \"%s\" killed because of execution timeout"), pszCmdLine);
 					iStatus = SYSINFO_RC_ERROR;
 				}
 
@@ -479,7 +481,9 @@ LONG RunExternal(const TCHAR *pszCmd, const TCHAR *pszArg, StringList *value)
 			}
 			else
 			{
-				nxlog_write(MSG_CREATE_PROCESS_FAILED, EVENTLOG_ERROR_TYPE, "se", pszCmdLine, GetLastError());
+            TCHAR buffer[1024];
+				nxlog_write(NXLOG_ERROR, _T("Unable to create process \"%s\" (%s)"),
+                  pszCmdLine, GetSystemErrorText(GetLastError(), buffer, 1024));
 				iStatus = SYSINFO_RC_ERROR;
 			}
 
@@ -489,7 +493,9 @@ LONG RunExternal(const TCHAR *pszCmd, const TCHAR *pszArg, StringList *value)
 		}
 		else
 		{
-			nxlog_write(MSG_CREATE_TMP_FILE_FAILED, EVENTLOG_ERROR_TYPE, "e", GetLastError());
+         TCHAR buffer[1024];
+			nxlog_write(NXLOG_ERROR, _T("Unable to create temporary file to hold process output (%s)"),
+               GetSystemErrorText(GetLastError(), buffer, 1024));
 			iStatus = SYSINFO_RC_ERROR;
 		}
 	}

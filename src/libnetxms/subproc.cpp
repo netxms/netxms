@@ -355,7 +355,7 @@ bool SubProcessExecutor::sendRequest(UINT16 command, const void *data, size_t da
    {
       if (rmsg->isBinary())
       {
-         *response = nx_memdup(rmsg->getBinaryData(), rmsg->getBinaryDataSize());
+         *response = MemCopyBlock(rmsg->getBinaryData(), rmsg->getBinaryDataSize());
          *rspSize = rmsg->getBinaryDataSize();
       }
       else

@@ -92,14 +92,16 @@ void StartWatchdog()
                       (g_dwFlags & AF_DAEMON) ? (CREATE_NO_WINDOW | DETACHED_PROCESS) : (CREATE_NEW_CONSOLE),
                       NULL, NULL, &si, &pi))
    {
-      nxlog_write(MSG_CREATE_PROCESS_FAILED, EVENTLOG_ERROR_TYPE, "se", szCmdLine, GetLastError());
+      TCHAR buffer[1024];
+      nxlog_write(NXLOG_ERROR, _T("Unable to create process \"%s\" (%s)"),
+            szCmdLine, GetSystemErrorText(GetLastError(), buffer, 1024));
    }
    else
    {
       // Close main thread handle
       CloseHandle(pi.hThread);
       m_hWatchdogProcess = pi.hProcess;
-      nxlog_write(MSG_WATCHDOG_STARTED, EVENTLOG_INFORMATION_TYPE, NULL);
+      nxlog_write(NXLOG_INFO, _T("Watchdog process started"));
    }
 #else
    _sntprintf(szCmdLine, 4096, _T("\"%s\" -c \"%s\" %s%s%s%s%s-D %d %s-W %lu"), szExecName,

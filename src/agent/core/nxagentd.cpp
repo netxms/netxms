@@ -494,7 +494,7 @@ static FARPROC GetProcAddressAndLog(HMODULE hModule, LPCSTR procName)
 
    ptr = GetProcAddress(hModule, procName);
    if ((ptr == NULL) && (g_dwFlags & AF_LOG_UNRESOLVED_SYMBOLS))
-      nxlog_write(MSG_NO_FUNCTION, EVENTLOG_WARNING_TYPE, "s", procName);
+      nxlog_write(NXLOG_WARNING, _T("Unable to resolve symbol \"%s\""), procName);
    return ptr;
 }
 
@@ -641,7 +641,9 @@ LONG RestartAgent()
                       (g_dwFlags & AF_DAEMON) ? (CREATE_NO_WINDOW | DETACHED_PROCESS) : (CREATE_NEW_CONSOLE),
                       NULL, NULL, &si, &pi))
    {
-      nxlog_write(MSG_CREATE_PROCESS_FAILED, EVENTLOG_ERROR_TYPE, "se", command.getBuffer(), GetLastError());
+      TCHAR buffer[1024];
+      nxlog_write(NXLOG_ERROR, _T("Unable to create process \"%s\" (%s)"),
+            command.getBuffer(), GetSystemErrorText(GetLastError(), buffer, 1024));
       dwResult = ERR_EXEC_FAILED;
    }
    else
@@ -1325,7 +1327,7 @@ void Shutdown()
 
    UnloadAllSubAgents();
    CloseLocalDatabase();
-   nxlog_write(NXLOG_INFO, _T("NetXMS Agent stopped"));
+   nxlog_report_event(2, NXLOG_INFO, 0, _T("NetXMS Agent stopped"));
    nxlog_close();
 
    // Notify main thread about shutdown
@@ -1344,7 +1346,7 @@ void Shutdown()
  */
 void Main()
 {
-   nxlog_write(NXLOG_INFO, _T("NetXMS Agent started"));
+   nxlog_report_event(1, NXLOG_INFO, 0, _T("NetXMS Agent started"));
 
    if (g_dwFlags & AF_DAEMON)
    {
@@ -1975,7 +1977,7 @@ int main(int argc, char *argv[])
 #ifdef _WIN32
 					if (g_dwFlags & AF_CATCH_EXCEPTIONS)
 						SetExceptionHandler(SEHServiceExceptionHandler, SEHServiceExceptionDataWriter, s_dumpDir,
-												  _T("nxagentd"), MSG_EXCEPTION, g_dwFlags & AF_WRITE_FULL_DUMP, !(g_dwFlags & AF_DAEMON));
+												  _T("nxagentd"), g_dwFlags & AF_WRITE_FULL_DUMP, !(g_dwFlags & AF_DAEMON));
 					__try {
 #endif
 					if ((!_tcsicmp(g_szLogFile, _T("{syslog}"))) ||

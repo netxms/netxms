@@ -715,7 +715,8 @@ BOOL NXCORE_EXPORTABLE Initialize()
 	int wrc = WSAStartup(MAKEWORD(2, 2), &wsaData);
 	if (wrc != 0)
 	{
-		nxlog_write(MSG_WSASTARTUP_FAILED, EVENTLOG_ERROR_TYPE, "e", wrc);
+      TCHAR buffer[1024];
+      nxlog_write(NXLOG_ERROR, _T("Call to WSAStartup() failed (%s)"), GetSystemErrorText(wrc, buffer, 1024));
 		return FALSE;
 	}
 #endif

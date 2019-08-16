@@ -33,7 +33,7 @@ static UCS2CHAR ucs2TextShort[] = { 'L', 'o', 'r', 'e', 'm', ' ', 'i', 'p', 's',
 static UCS2CHAR ucs2TextSurrogates[] = { 'L', 'o', 'r', 'e', 'm', 0xD801, 0xDFFF, 'i', 'p', 's', 'u', 'm', 0x1CD, '.', 0 };
 static UCS4CHAR ucs4TextSurrogatesTest[] = { 'L', 'o', 'r', 'e', 'm', 0x0107FF, 'i', 'p', 's', 'u', 'm', 0x1CD, '.', 0 };
 static char utf8TextSurrogatesTest[] = { 'L', 'o', 'r', 'e', 'm', (char)0xF0, (char)0x90, (char)0x9F, (char)0xBF, 'i', 'p', 's', 'u', 'm', (char)0xC7, (char)0x8D, '.', 0 };
-#ifdef __HP_aCC
+#if defined(_WIN32) || defined(__HP_aCC)
 static WCHAR wcTextISO8859_1[] = L"Lorem ipsum dolor sit amet, \xA3 10, \xA2 20, \xA5 50, b\xF8nne";
 #else
 static WCHAR wcTextISO8859_1[] = L"Lorem ipsum dolor sit amet, £ 10, ¢ 20, ¥ 50, bønne";
@@ -99,7 +99,7 @@ static void TestStringConversion()
 
    StartTest(_T("UCS-2 to UCS-4 conversion"));
    UCS4CHAR ucs4buffer[1024];
-   int len = ucs2_to_ucs4(ucs2TextSurrogates, -1, ucs4buffer, 128);
+   size_t len = ucs2_to_ucs4(ucs2TextSurrogates, -1, ucs4buffer, 128);
    AssertEquals(len, 13);
    AssertTrue(!memcmp(ucs4buffer, ucs4TextSurrogatesTest, 13 * sizeof(UCS4CHAR)));
    EndTest();

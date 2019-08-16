@@ -472,7 +472,7 @@ static DWORD __stdcall WorkerThread(void *pArg)
    if (bResult)
    {
       PostMessage(m_hStatusWnd, WM_START_STAGE, 0, (LPARAM)_T("Loading database driver"));
-      bResult = DBInit(0, 0);
+      bResult = DBInit();
 		if (bResult)
 		{
 			pc->m_dbDriver = DBLoadDriver(pc->m_szDBDriver, _T(""), false, NULL, NULL);

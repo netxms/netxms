@@ -460,9 +460,9 @@ void *NXCPMessage::set(UINT32 fieldId, BYTE type, const void *value, bool isSign
                length = size;
 #ifdef UNICODE
 #ifdef UNICODE_UCS4
-            bufferLength = ucs4_utf8len(static_cast<const TCHAR*>(value), (int)length);
+            bufferLength = ucs4_utf8len(static_cast<const TCHAR*>(value), length);
 #else
-            bufferLength = ucs2_utf8len(static_cast<const TCHAR*>(value), (int)length);
+            bufferLength = ucs2_utf8len(static_cast<const TCHAR*>(value), length);
 #endif
 #else    /* not UNICODE */
             bufferLength = length * 3;
@@ -470,9 +470,9 @@ void *NXCPMessage::set(UINT32 fieldId, BYTE type, const void *value, bool isSign
             entry = CreateMessageField(m_pool, 12 + bufferLength);
 #ifdef UNICODE
 #ifdef UNICODE_UCS4
-            entry->data.df_utf8string.length = (UINT32)ucs4_to_utf8(static_cast<const TCHAR*>(value), length, entry->data.df_utf8string.value, (int)bufferLength);
+            entry->data.df_utf8string.length = (UINT32)ucs4_to_utf8(static_cast<const TCHAR*>(value), length, entry->data.df_utf8string.value, bufferLength);
 #else
-            entry->data.df_utf8string.length = (UINT32)ucs2_to_utf8(static_cast<const TCHAR*>(value), length, entry->data.df_utf8string.value, (int)bufferLength);
+            entry->data.df_utf8string.length = (UINT32)ucs2_to_utf8(static_cast<const TCHAR*>(value), length, entry->data.df_utf8string.value, bufferLength);
 #endif
 #else    /* not UNICODE */
             entry->data.df_utf8string.length = (UINT32)mb_to_utf8(static_cast<const TCHAR*>(value), length, entry->data.df_utf8string.value, (int)bufferLength);
@@ -759,26 +759,26 @@ TCHAR *NXCPMessage::getFieldAsString(UINT32 fieldId, MemoryPool *pool, TCHAR *bu
 #ifdef UNICODE
       if (buffer != NULL)
       {
-         int outlen = MultiByteToWideChar(CP_UTF8, 0, static_cast<char*>(value) + 4, length, buffer, bufferSize - 1);
+         size_t outlen = utf8_to_wchar(static_cast<char*>(value) + 4, length, buffer, bufferSize - 1);
          buffer[outlen] = 0;
       }
       else
       {
-         int outlen = MultiByteToWideChar(CP_UTF8, 0, static_cast<char*>(value) + 4, length, NULL, 0);
+         size_t outlen = utf8_wcharlen(static_cast<char*>(value) + 4, length);
          str = MemAllocStringW(outlen + 1);
-         outlen = MultiByteToWideChar(CP_UTF8, 0, static_cast<char*>(value) + 4, length, str, outlen);
+         outlen = utf8_to_wchar(static_cast<char*>(value) + 4, length, str, outlen);
          str[outlen] = 0;
       }
 #else
       if (buffer != NULL)
       {
-         int outlen = utf8_to_mb(static_cast<char*>(value) + 4, length, buffer, bufferSize - 1);
+         size_t outlen = utf8_to_mb(static_cast<char*>(value) + 4, length, buffer, bufferSize - 1);
          buffer[outlen] = 0;
       }
       else
       {
          str = MemAllocStringA(length + 1);
-         int outlen = utf8_to_mb(static_cast<char*>(value) + 4, length, str, length);
+         size_t outlen = utf8_to_mb(static_cast<char*>(value) + 4, length, str, length);
          str[outlen] = 0;
       }
 #endif
@@ -879,7 +879,7 @@ char *NXCPMessage::getFieldAsUtf8String(UINT32 fieldId, char *buffer, size_t buf
          UCS2CHAR *in = reinterpret_cast<UCS2CHAR*>(static_cast<BYTE*>(value) + 4);
          int inSize = *static_cast<UINT32*>(value) / 2;
 
-         int outSize;
+         size_t outSize;
          if (buffer == NULL)
          {
             outSize = ucs2_utf8len(in, inSize);
@@ -887,11 +887,11 @@ char *NXCPMessage::getFieldAsUtf8String(UINT32 fieldId, char *buffer, size_t buf
          }
          else
          {
-            outSize = (int)bufferSize;
+            outSize = bufferSize;
             str = buffer;
          }
 
-         int cc = ucs2_to_utf8(in, inSize, str, outSize - 1);
+         size_t cc = ucs2_to_utf8(in, inSize, str, outSize - 1);
          str[cc] = 0;
       }
       else if (type == NXCP_DT_UTF8_STRING)
@@ -1298,15 +1298,15 @@ static TCHAR *GetStringFromFieldUTF8(void *df)
    size_t utf8len = *static_cast<UINT32*>(df);
    const char *utf8str = static_cast<char*>(df) + 4;
 #if defined(UNICODE) && defined(UNICODE_UCS4)
-   int dlen = utf8_ucs4len(utf8str, utf8len) + 1;
+   size_t dlen = utf8_ucs4len(utf8str, utf8len) + 1;
 #elif defined(UNICODE) && defined(UNICODE_UCS2)
-   int dlen = utf8_ucs2len(utf8str, utf8len) + 1;
+   size_t dlen = utf8_ucs2len(utf8str, utf8len) + 1;
 #else
-   int dlen = utf8len + 1;
+   size_t dlen = utf8len + 1;
 #endif
    TCHAR *str = MemAllocString(dlen);
 #ifdef UNICODE
-   dlen = MultiByteToWideChar(CP_UTF8, 0, utf8str, utf8len, str, dlen);
+   dlen = utf8_to_wchar(utf8str, utf8len, str, dlen);
 #else
    dlen = utf8_to_mb(utf8str, utf8len, str, dlen);
 #endif

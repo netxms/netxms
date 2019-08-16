@@ -33,7 +33,11 @@ static_subagents.cpp: @top_srcdir@/config.h Makefile
 EXTRA_DIST = \
     Makefile.w32 \
     localdb.h \
+    messages.mc \
     nxagentd.vcxproj nxagentd.vcxproj.filters \
     nxagentd.h \
+    nxagentd.manifest \
+    nxagentd.rc \
     hddinfo.cpp \
+    resource.h \
     service.cpp

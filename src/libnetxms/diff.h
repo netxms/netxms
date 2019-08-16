@@ -440,7 +440,7 @@ public:
    * @return Substring.
    */
  private:
-  static inline String safeMid(const String &str, size_t pos, int len)
+  static inline String safeMid(const String &str, size_t pos, ssize_t len)
   {
     return str.substring(pos, len);
   }

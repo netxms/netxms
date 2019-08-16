@@ -122,7 +122,7 @@ static ArpCache *SysGetLocalArpCache()
    MIB_IPNETTABLE *sysArpCache;
    DWORD i, dwError, dwSize;
 
-   sysArpCache = (MIB_IPNETTABLE *)malloc(SIZEOF_IPNETTABLE(4096));
+   sysArpCache = (MIB_IPNETTABLE *)MemAlloc(SIZEOF_IPNETTABLE(4096));
    if (sysArpCache == NULL)
       return NULL;
 
@@ -130,8 +130,9 @@ static ArpCache *SysGetLocalArpCache()
    dwError = GetIpNetTable(sysArpCache, &dwSize, FALSE);
    if (dwError != NO_ERROR)
    {
-      nxlog_write(MSG_GETIPNETTABLE_FAILED, EVENTLOG_ERROR_TYPE, "e", NULL);
-      free(sysArpCache);
+      TCHAR buffer[1024];
+      nxlog_write(NXLOG_ERROR, _T("Call to GetIpNetTable() failed (%s)"), GetSystemErrorText(GetLastError(), buffer, 1024));
+      MemFree(sysArpCache);
       return NULL;
    }
 

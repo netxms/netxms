@@ -142,7 +142,6 @@ bool AccessPoint::saveToDatabase(DB_HANDLE hdb)
          hStmt = DBPrepare(hdb, _T("INSERT INTO access_points (mac_address,vendor,model,serial_number,node_id,ap_state,ap_index,id) VALUES (?,?,?,?,?,?,?,?)"));
       if (hStmt != NULL)
       {
-         TCHAR macStr[16];
          DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_macAddr);
          DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_vendor, DB_BIND_STATIC);
          DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_model, DB_BIND_STATIC);

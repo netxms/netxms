@@ -448,7 +448,7 @@ int main(int argc, char* argv[])
 #ifdef _WIN32
 	if (g_flags & AF_CATCH_EXCEPTIONS)
 		SetExceptionHandler(SEHServiceExceptionHandler, SEHServiceExceptionDataWriter,
-                          g_szDumpDir, _T("netxmsd"), MSG_EXCEPTION, (g_flags & AF_WRITE_FULL_DUMP) ? true : false, IsStandalone());
+                          g_szDumpDir, _T("netxmsd"), (g_flags & AF_WRITE_FULL_DUMP) ? true : false, IsStandalone());
 	__try {
 #endif
 

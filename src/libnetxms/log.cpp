@@ -57,7 +57,6 @@ struct DebugTagManager
  */
 #ifdef _WIN32
 static HANDLE s_eventLogHandle = NULL;
-static HMODULE s_msgModuleHandle = NULL;
 #else
 static char s_syslogName[64];
 #endif
@@ -495,10 +494,6 @@ bool LIBNETXMS_EXPORTABLE nxlog_open(const TCHAR *logName, UINT32 flags)
       s_mutexLogAccess = MutexCreate();
 
 	s_flags = flags & 0x7FFFFFFF;
-#ifdef _WIN32
-	s_msgModuleHandle = GetModuleHandle(msgModule);
-#endif
-
    if (s_flags & NXLOG_USE_SYSLOG)
    {
 #ifdef _WIN32
@@ -845,7 +840,14 @@ static void WriteLog(INT16 severity, const TCHAR *tag, const TCHAR *format, va_l
 
    if (s_flags & NXLOG_USE_SYSLOG)
    {
+      TCHAR message[16384];
+      _vsntprintf(message, 16384, format, args);
+
 #ifdef _WIN32
+      const TCHAR *strings = message;
+      ReportEvent(s_eventLogHandle,
+         (severity == NXLOG_DEBUG) ? EVENTLOG_INFORMATION_TYPE : severity,
+         0, 1000, NULL, 1, 0, &strings, NULL);
 #else /* _WIN32 */
       int level;
       switch(severity)
@@ -866,9 +868,6 @@ static void WriteLog(INT16 severity, const TCHAR *tag, const TCHAR *format, va_l
             level = LOG_INFO;
             break;
       }
-
-      TCHAR message[16384];
-      _vsntprintf(message, 16384, format, args);
 
 #ifdef UNICODE
       char *mbmsg = MBStringFromWideString(message);
@@ -1055,4 +1054,40 @@ void LIBNETXMS_EXPORTABLE nxlog_debug_tag_object2(const TCHAR *tag, UINT32 objec
       return;
 
    WriteLog(NXLOG_DEBUG, fullTag, format, args);
+}
+
+/**
+ * Call ReportEvent if writing to Windows Event Log, otherwise write normal message using provided alternative text
+ */
+void LIBNETXMS_EXPORTABLE nxlog_report_event(DWORD msg, int level, int stringCount, const TCHAR *altMessage, ...)
+{
+   va_list args;
+   va_start(args, altMessage);
+#ifdef _WIN32
+   if (s_flags & NXLOG_USE_SYSLOG)
+   {
+      const TCHAR **strings = (stringCount > 0) ? (const TCHAR **)alloca(sizeof(TCHAR*) * stringCount) : NULL;
+      for (int i = 0; i < stringCount; i++)
+         strings[i] = va_arg(args, TCHAR*);
+      ReportEvent(s_eventLogHandle, level, 0, msg, NULL, stringCount, 0, strings, NULL);
+
+      if (s_flags & NXLOG_PRINT_TO_STDOUT)
+      {
+         TCHAR message[16384];
+         _vstprintf(message, 16384, altMessage, args);
+
+         MutexLock(s_mutexLogAccess);
+         TCHAR timestamp[64];
+         WriteLogToConsole(level, FormatLogTimestamp(timestamp), NULL, message);
+         MutexUnlock(s_mutexLogAccess);
+      }
+   }
+   else
+   {
+      WriteLog(level, NULL, altMessage, args);
+   }
+#else
+   WriteLog(level, NULL, altMessage, args);
+#endif
+   va_end(args);
 }

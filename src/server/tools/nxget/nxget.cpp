@@ -272,7 +272,7 @@ int main(int argc, char *argv[])
 
    InitNetXMSProcess(true);
 #ifdef _WIN32
-	SetExceptionHandler(SEHDefaultConsoleHandler, NULL, NULL, _T("nxget"), 0, FALSE, FALSE);
+	SetExceptionHandler(SEHDefaultConsoleHandler, NULL, NULL, _T("nxget"), FALSE, FALSE);
 #endif
 	nxlog_set_debug_writer(DebugWriter);
 

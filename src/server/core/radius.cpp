@@ -394,7 +394,6 @@ static void encrypt_attr_style_1(char *secret, char *vector, VALUE_PAIR *vp)
 	}
 }
 
-
 /**
  * void encrypt_attr(char *secret, char *vector, VALUE_PAIR *vp);
  *
@@ -420,8 +419,8 @@ static void encrypt_attr(char *secret, char *vector, VALUE_PAIR *vp)
 			/* Unknown style - don't send the cleartext! */
 			vp->length = 19;
 			memcpy(vp->strvalue, "UNKNOWN_ENCR_METHOD", vp->length);
-			nxlog_write(MSG_RADIUS_UNKNOWN_ENCR_METHOD, EVENTLOG_ERROR_TYPE,
-					"dd", vp->flags.encrypt, vp->attribute);
+			nxlog_write(NXLOG_ERROR, _T("RADIUS client error: encryption style %d is not implemented (attribute %d)"),
+					vp->flags.encrypt, vp->attribute);
 	}
 }
 

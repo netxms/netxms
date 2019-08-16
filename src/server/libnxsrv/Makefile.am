@@ -18,4 +18,7 @@ endif
 EXTRA_DIST = \
 	libnxsrv.vcxproj libnxsrv.vcxproj.filters \
 	libnxsrv.h \
+	libnxsrv.rc \
+	messages.mc \
+	resource .h \
 	Makefile.w32

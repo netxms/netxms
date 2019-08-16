@@ -3,8 +3,12 @@ TYPE = dll
 COMPONENT = server
 SOURCES = agent.cpp apinfo.cpp arp.cpp console.cpp entity_mib.cpp hdlink.cpp \
           hostmib.cpp iflist.cpp isc.cpp main.cpp ndd.cpp snmpproxy.cpp vlan.cpp
+RESOURCES = libnxsrv.rc
+GENERATED = messages.h MSG00001.bin
 
 CPPFLAGS = /DLIBNXSRV_EXPORTS
 LIBS = libnxsl.lib libnxsnmp.lib libnetxms.lib jansson.lib ws2_32.lib
 	  
 include ..\..\..\Makefile.inc.w32
+
+libnxsrv.rc: MSG00001.bin

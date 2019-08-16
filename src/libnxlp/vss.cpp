@@ -186,7 +186,7 @@ bool InitVSSWrapper()
    if (lib == NULL)
    {
       TCHAR buffer[1024];
-      nxlog_write_generic(NXLOG_ERROR, _T("Cannot load vssapi.dll (%s)"), GetSystemErrorText(GetLastError(), buffer, 1024));
+      nxlog_write(NXLOG_ERROR, _T("Cannot load vssapi.dll (%s)"), GetSystemErrorText(GetLastError(), buffer, 1024));
       return false;
    }
 
@@ -195,7 +195,7 @@ bool InitVSSWrapper()
 	if (!GetVersionEx((OSVERSIONINFO *)&ver))
    {
       TCHAR buffer[1024];
-      nxlog_write_generic(NXLOG_ERROR, _T("Cannot get Windows version (%s)"), GetSystemErrorText(GetLastError(), buffer, 1024));
+      nxlog_write(NXLOG_ERROR, _T("Cannot get Windows version (%s)"), GetSystemErrorText(GetLastError(), buffer, 1024));
 		return false;
    }
 
@@ -227,7 +227,7 @@ bool InitVSSWrapper()
 
    if (__CreateVssBackupComponents == NULL)
    {
-      nxlog_write_generic(NXLOG_ERROR, _T("Cannot find entry point for vssapi.dll"));
+      nxlog_write(NXLOG_ERROR, _T("Cannot find entry point for vssapi.dll"));
 		return false;
    }
    return true;

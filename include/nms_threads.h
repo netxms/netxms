@@ -80,7 +80,7 @@ int LIBNETXMS_EXPORTABLE ___ExceptionHandler(EXCEPTION_POINTERS *pInfo);
 
 void LIBNETXMS_EXPORTABLE SetExceptionHandler(BOOL (*pfHandler)(EXCEPTION_POINTERS *),
 															 void (*pfWriter)(const TCHAR *), const TCHAR *pszDumpDir,
-															 const TCHAR *pszBaseProcessName, DWORD dwLogMsgCode,
+															 const TCHAR *pszBaseProcessName,
 															 BOOL writeFullDump, BOOL printToScreen);
 BOOL LIBNETXMS_EXPORTABLE SEHDefaultConsoleHandler(EXCEPTION_POINTERS *pInfo);
 TCHAR LIBNETXMS_EXPORTABLE *SEHExceptionName(DWORD code);

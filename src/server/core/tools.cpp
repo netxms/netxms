@@ -117,7 +117,9 @@ BOOL ExecCommand(TCHAR *pszCommand)
    // Create new process
    if (!CreateProcess(NULL, pszCommand, NULL, NULL, FALSE, CREATE_NO_WINDOW | DETACHED_PROCESS, NULL, NULL, &si, &pi))
    {
-      nxlog_write(MSG_CREATE_PROCESS_FAILED, EVENTLOG_ERROR_TYPE, "se", pszCommand, GetLastError());
+      TCHAR buffer[1024];
+      nxlog_write(NXLOG_ERROR, _T("Unable to create process \"%s\" (%s)"),
+            pszCommand, GetSystemErrorText(GetLastError(), buffer, 1024));
       bSuccess = FALSE;
    }
    else

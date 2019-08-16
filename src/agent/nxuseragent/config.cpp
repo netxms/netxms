@@ -180,7 +180,7 @@ void LoadConfig()
    }
    else
    {
-      nxlog_write(MSG_CONFIG_LOAD_FAILED, NXLOG_ERROR, NULL);
+      nxlog_write(NXLOG_ERROR, _T("Error loading user agent configuration"));
    }
 }
 
