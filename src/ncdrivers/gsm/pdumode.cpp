@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Generic SMS driver
+** Notification channel driver - GSM modem
 ** Copyright (C) 2003-2019 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
@@ -21,7 +21,7 @@
 **
 **/
 
-#include "generic_smsdrv.h"
+#include "gsm.h"
 
 /**
  * Pack 7-bit characters into 8-bit characters

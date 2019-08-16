@@ -15,7 +15,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="generic.cpp">
+    <ClCompile Include="gsm.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="pdumode.cpp">
@@ -23,7 +23,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="generic_smsdrv.h">
+    <ClInclude Include="gsm.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\netxms-version.h">

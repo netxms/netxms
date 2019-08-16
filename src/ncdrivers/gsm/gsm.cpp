@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Generic SMS driver
+** Notification channel driver - GSM modem
 ** Copyright (C) 2003-2019 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
@@ -17,11 +17,11 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** File: generic.cpp
+** File: gsm.cpp
 **
 **/
 
-#include "generic_smsdrv.h"
+#include "gsm.h"
 
 bool SMSCreatePDUString(const char* phoneNumber, const char* message, char* pduBuffer);
 
@@ -395,7 +395,7 @@ DECLARE_NCD_ENTRY_POINT(Generic, NULL)
  */
 BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
-	if (dwReason == DLL_PROCESm_ATTACH)
+	if (dwReason == DLL_PROCESS_ATTACH)
 		DisableThreadLibraryCalls(hInstance);
 	return TRUE;
 }

@@ -82,8 +82,8 @@ Source: "..\..\..\x64\Release\sqlite.pdb"; DestDir: "{app}\bin"; Flags: ignoreve
 ; NC drivers
 Source: "..\..\..\x64\Release\dbtable.ncd"; DestDir: "{app}\lib\ncd"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\x64\Release\dbtable.pdb"; DestDir: "{app}\lib\ncd"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\generic.ncd"; DestDir: "{app}\lib\ncd"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\generic.pdb"; DestDir: "{app}\lib\ncd"; Flags: ignoreversion; Components: server and pdb
+Source: "..\..\..\x64\Release\gsm.ncd"; DestDir: "{app}\lib\ncd"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\x64\Release\gsm.pdb"; DestDir: "{app}\lib\ncd"; Flags: ignoreversion; Components: server and pdb
 Source: "..\..\..\x64\Release\kannel.ncd"; DestDir: "{app}\lib\ncd"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\x64\Release\kannel.pdb"; DestDir: "{app}\lib\ncd"; Flags: ignoreversion; Components: server and pdb
 Source: "..\..\..\x64\Release\nexmo.ncd"; DestDir: "{app}\lib\ncd"; Flags: ignoreversion signonce; Components: server
