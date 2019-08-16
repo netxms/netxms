@@ -235,6 +235,7 @@
 #define _ftprintf fprintf
 #define _sntprintf snprintf
 #define _vtprintf vprintf
+#define _vftprintf vfprintf
 #define _vstprintf vsprintf
 #define _vsntprintf vsnprintf
 #define _tscanf   scanf
