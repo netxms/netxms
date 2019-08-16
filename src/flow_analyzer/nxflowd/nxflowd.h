@@ -51,9 +51,6 @@ void Main();
 bool StartCollector();
 void WaitForCollectorThread();
 
-void DbgPrintf(int level, const TCHAR *format, ...);
-void DbgPrintf2(int level, const TCHAR *format, va_list args);
-
 #ifdef _WIN32
 void InitService();
 void InstallFlowCollectorService(const TCHAR *pszExecName);

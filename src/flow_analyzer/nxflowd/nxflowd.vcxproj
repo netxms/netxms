@@ -169,7 +169,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="collector.cpp" />
-    <ClCompile Include="debug.cpp" />
     <ClCompile Include="nxflowd.cpp" />
     <ClCompile Include="winsrv.cpp" />
   </ItemGroup>

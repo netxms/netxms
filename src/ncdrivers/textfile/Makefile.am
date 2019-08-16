@@ -1,7 +1,7 @@
 DRIVER = textfile
 
 pkglib_LTLIBRARIES = textfile.la
-textfile_la_SOURCES = text_file.cpp 
+textfile_la_SOURCES = textfile.cpp 
 textfile_la_CPPFLAGS=-I@top_srcdir@/include  -I@top_srcdir@/build
 textfile_la_LDFLAGS = -module -avoid-version
 textfile_la_LIBADD = ../../libnetxms/libnetxms.la

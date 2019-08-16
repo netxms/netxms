@@ -21,9 +21,6 @@
     <ClCompile Include="collector.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="debug.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="nxflowd.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

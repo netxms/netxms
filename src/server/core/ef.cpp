@@ -47,7 +47,6 @@ BOOL EF_ProcessMessage(ISCSession *session, NXCPMessage *request, NXCPMessage *r
 	TCHAR *argList[32], *name;
    char format[] = "ssssssssssssssssssssssssssssssss";
 	NetObj *object;
-	BOOL tagExist;
 
 	if (request->getCode() == CMD_FORWARD_EVENT)
 	{

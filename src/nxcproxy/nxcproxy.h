@@ -27,7 +27,6 @@
 #include <nms_common.h>
 #include <nms_util.h>
 #include <nxcpapi.h>
-#include "messages.h"
 
 /**
  * Win32 service and syslog constants
@@ -95,8 +94,6 @@ void Main();
 void Shutdown();
 
 void ConsolePrintf(const TCHAR *pszFormat, ...);
-void DebugPrintf(int level, const TCHAR *pszFormat, ...);
-void DebugPrintf2(int level, const TCHAR *pszFormat, va_list args);
 
 #ifdef _WIN32
 

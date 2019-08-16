@@ -320,9 +320,6 @@ bool Interface::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
  */
 bool Interface::saveToDatabase(DB_HANDLE hdb)
 {
-   TCHAR szMacStr[16];
-   UINT32 dwNodeId;
-
    lockProperties();
 
    if (!saveCommonProperties(hdb))
@@ -336,10 +333,7 @@ bool Interface::saveToDatabase(DB_HANDLE hdb)
    if (m_modified & MODIFY_INTERFACE_PROPERTIES)
    {
       Node *pNode = getParentNode();
-      if (pNode != NULL)
-         dwNodeId = pNode->getId();
-      else
-         dwNodeId = 0;
+      UINT32 nodeId = (pNode != NULL) ? pNode->getId() : 0;
 
       static const TCHAR *columns[] = {
          _T("node_id"), _T("if_type"), _T("if_index"), _T("mac_addr"), _T("required_polls"), _T("bridge_port"),
@@ -356,7 +350,7 @@ bool Interface::saveToDatabase(DB_HANDLE hdb)
          return false;
       }
 
-      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, dwNodeId);
+      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, nodeId);
       DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_type);
       DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_index);
       DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, m_macAddr);

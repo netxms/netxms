@@ -190,33 +190,29 @@ static void CloseCollectors()
 		ipfix_col_close(s_udpSockets[i]);
 }
 
-
-//
-// Collector thread
-//
-
+/**
+ * Collector thread
+ */
 static THREAD_RESULT THREAD_CALL CollectorThread(void *arg)
 {
-   nxlog_write(MSG_COLLECTOR_STARTED, EVENTLOG_INFORMATION_TYPE, NULL);
+   nxlog_write(NXLOG_INFO, _T("Collector thread started"));
 
 	while(!(g_flags & AF_SHUTDOWN))
 	{
 		if (mpoll_loop(2) < 0)
 		{
-		   nxlog_write(MSG_POLLING_ERROR, EVENTLOG_ERROR_TYPE, NULL);
+		   nxlog_write(NXLOG_ERROR, _T("IPFIX polling error"));
 			break;
 		}
 	}
 
-   nxlog_write(MSG_COLLECTOR_STOPPED, EVENTLOG_INFORMATION_TYPE, NULL);
-	return THREAD_OK;
+   nxlog_write(NXLOG_INFO, _T("Collector thread stopped"));
+   return THREAD_OK;
 }
 
-
-//
-// Start collector
-//
-
+/**
+ * Start collector
+ */
 bool StartCollector()
 {
 	// Initialize flow ID
@@ -238,20 +234,20 @@ bool StartCollector()
 
 	if (ipfix_col_register_export(s_collectorInfo) < 0)
 	{
-      nxlog_write(MSG_IPFIX_REGISTER_FAILED, EVENTLOG_ERROR_TYPE, NULL);
+      nxlog_write(NXLOG_ERROR, _T("IPFIX collector registration failed"));
 		goto failure;
 	}
 
 	if (ipfix_col_listen(&s_numTcpSockets, &s_tcpSockets, IPFIX_PROTO_TCP, (int)g_tcpPort, AF_INET, 5) < 0)
 	{
-      nxlog_write(MSG_IPFIX_LISTEN_FAILED, EVENTLOG_ERROR_TYPE, "s", "TCP");
+      nxlog_write(NXLOG_ERROR, _T("Unable to start IPFIX listener for TCP protocol"));
 		goto failure;
 	}
 
 	if (ipfix_col_listen(&s_numUdpSockets, &s_udpSockets, IPFIX_PROTO_UDP, (int)g_udpPort, AF_INET, 0) < 0)
 	{
-      nxlog_write(MSG_IPFIX_LISTEN_FAILED, EVENTLOG_ERROR_TYPE, "s", "UDP");
-		goto failure;
+      nxlog_write(NXLOG_ERROR, _T("Unable to start IPFIX listener for UDP protocol"));
+      goto failure;
 	}
 
 	s_collectorThread = ThreadCreateEx(CollectorThread, 0, NULL);

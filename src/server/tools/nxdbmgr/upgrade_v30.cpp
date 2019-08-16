@@ -207,7 +207,7 @@ static bool H_UpgradeFromV91()
          driverName = tmp+1;
       else
          driverName = driver;
-      int len = _tcslen(driverName);
+      size_t len = _tcslen(driverName);
       tmp = _tcsrchr(driver, _T('.'));
       if(tmp != NULL)
       {
@@ -222,7 +222,7 @@ static bool H_UpgradeFromV91()
          }
       }
 
-      if(!_tcscmp(driverName, _T("anysms")))
+      if (!_tcscmp(driverName, _T("anysms")))
       {
          newConfiguration = createDefaultConfig(oldConfiguration);
          newDriverName = _T("AnySMS");
@@ -308,7 +308,9 @@ static bool H_UpgradeFromV91()
         DBFreeStatement(hStmt);
       }
       else if (!g_ignoreErrors)
-        return false;
+      {
+         return false;
+      }
    }
 
    static const TCHAR *batch =

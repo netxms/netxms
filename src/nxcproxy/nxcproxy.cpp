@@ -220,7 +220,8 @@ bool Initialize()
 	int wrc = WSAStartup(MAKEWORD(2, 2), &wsaData);
    if (wrc != 0)
    {
-      nxlog_write(MSG_WSASTARTUP_FAILED, NXLOG_ERROR, "e", wrc);
+      TCHAR buffer[1024];
+      nxlog_write(NXLOG_ERROR, _T("WSAStartup() call failed (%s)"), GetSystemErrorText(wrc, buffer, 1024));
       return false;
    }
 #endif
@@ -228,7 +229,7 @@ bool Initialize()
    // Initialize cryptografy
    if (!InitCryptoLib(0xFFFF))
    {
-      nxlog_write(MSG_INIT_CRYPTO_FAILED, EVENTLOG_ERROR_TYPE, "e", WSAGetLastError());
+      nxlog_write(NXLOG_ERROR, _T("Failed to initialize cryptografy module"));
       return false;
    }
 
@@ -242,11 +243,11 @@ bool Initialize()
  */
 void Shutdown()
 {
-	DebugPrintf(2, _T("Shutdown() called"));
+	nxlog_debug(2, _T("Shutdown() called"));
    g_flags |= AF_SHUTDOWN;
 
 	ThreadJoin(m_listenerThread);
-   nxlog_write(MSG_PROXY_STOPPED, EVENTLOG_INFORMATION_TYPE, NULL);
+   nxlog_report_event(1, NXLOG_INFO, 0, _T("NetXMS Client Proxy stopped"));
    nxlog_close();
 
    // Notify main thread about shutdown
@@ -265,7 +266,7 @@ void Shutdown()
  */
 void Main()
 {
-   nxlog_write(MSG_PROXY_STARTED, NXLOG_INFO, NULL);
+   nxlog_report_event(1, NXLOG_INFO, 0, _T("NetXMS Client Proxy started"));
 
    if (g_flags & AF_DAEMON)
    {
@@ -438,7 +439,7 @@ int main(int argc, char *argv[])
 #ifdef _WIN32
 					if (g_flags & AF_CATCH_EXCEPTIONS)
 						SetExceptionHandler(SEHServiceExceptionHandler, SEHServiceExceptionDataWriter, s_dumpDir,
-												  _T("nxcproxy"), MSG_EXCEPTION, g_flags & AF_WRITE_FULL_DUMP, !(g_flags & AF_DAEMON));
+												  _T("nxcproxy"), g_flags & AF_WRITE_FULL_DUMP, !(g_flags & AF_DAEMON));
 					__try {
 #endif
 					if ((!_tcsicmp(g_logFile, _T("{syslog}"))) || 

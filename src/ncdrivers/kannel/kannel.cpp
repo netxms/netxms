@@ -222,7 +222,7 @@ DECLARE_NCD_ENTRY_POINT(Kannel, NULL)
  */
 BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
-	if (dwReason == DLL_PROCESm_ATTACH)
+	if (dwReason == DLL_PROCESS_ATTACH)
 		DisableThreadLibraryCalls(hInstance);
 	return TRUE;
 }

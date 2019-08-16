@@ -38,7 +38,8 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
    // Create socket
    if ((hSocket = socket(AF_INET, SOCK_STREAM, 0)) == INVALID_SOCKET)
    {
-      nxlog_write(MSG_SOCKET_ERROR, EVENTLOG_ERROR_TYPE, "e", WSAGetLastError());
+      TCHAR buffer[1024];
+      nxlog_write(NXLOG_ERROR, _T("Cannot create socket for listener (%s)"), GetSystemErrorText(WSAGetLastError(), buffer, 1024));
       exit(1);
    }
 
@@ -61,16 +62,17 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
    servAddr.sin_port = htons(g_listenPort);
 
    // Bind socket
-	DebugPrintf(1, _T("Trying to bind on %s:%d"), IpToStr(ntohl(servAddr.sin_addr.s_addr), szBuffer), ntohs(servAddr.sin_port));
+	nxlog_debug(1, _T("Trying to bind on %s:%d"), IpToStr(ntohl(servAddr.sin_addr.s_addr), szBuffer), ntohs(servAddr.sin_port));
    if (bind(hSocket, (struct sockaddr *)&servAddr, sizeof(struct sockaddr_in)) != 0)
    {
-      nxlog_write(MSG_BIND_ERROR, EVENTLOG_ERROR_TYPE, "e", WSAGetLastError());
+      TCHAR buffer[1024];
+      nxlog_write(NXLOG_ERROR, _T("Cannot bind socket for listener (%s)"), GetSystemErrorText(WSAGetLastError(), buffer, 1024));
       exit(1);
    }
 
    // Set up queue
    listen(hSocket, SOMAXCONN);
-	nxlog_write(MSG_LISTENING, EVENTLOG_INFORMATION_TYPE, "ad", ntohl(servAddr.sin_addr.s_addr), g_listenPort);
+   nxlog_write(NXLOG_INFO, _T("Listening on socket %s:%d"), (const TCHAR *)InetAddress(ntohl(servAddr.sin_addr.s_addr)).toString(), g_listenPort);
 
    // Wait for connection requests
    while(!(g_flags & AF_SHUTDOWN))
@@ -88,11 +90,13 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
             int error = WSAGetLastError();
 
             if (error != WSAEINTR)
-               nxlog_write(MSG_ACCEPT_ERROR, EVENTLOG_ERROR_TYPE, "e", error);
+            {
+               nxlog_debug(1, _T("accept() error %d"), error);
+            }
             iNumErrors++;
             if (iNumErrors > 1000)
             {
-               nxlog_write(MSG_TOO_MANY_ERRORS, EVENTLOG_WARNING_TYPE, NULL);
+               nxlog_debug(1, _T("Too many consecutive errors in accept() call"));
                iNumErrors = 0;
             }
             ThreadSleepMs(500);
@@ -100,7 +104,7 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
          }
 
          iNumErrors = 0;     // Reset consecutive errors counter
-         DebugPrintf(5, _T("Incoming connection from %s"), IpToStr(ntohl(servAddr.sin_addr.s_addr), szBuffer));
+         nxlog_debug(5, _T("Incoming connection from %s"), IpToStr(ntohl(servAddr.sin_addr.s_addr), szBuffer));
 
          SetSocketNonBlocking(hClientSocket);
 
@@ -118,13 +122,13 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
          if ((error != EINTR) && (error != ENOENT))
 #endif
          {
-            nxlog_write(MSG_SELECT_ERROR, EVENTLOG_ERROR_TYPE, "e", error);
+            nxlog_debug(1, _T("select() error %d"), error);
             ThreadSleepMs(100);
          }
       }
    }
 
    closesocket(hSocket);
-   DebugPrintf(1, _T("Listener thread terminated"));
+   nxlog_debug(1, _T("Listener thread terminated"));
    return THREAD_OK;
 }

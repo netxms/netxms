@@ -36,34 +36,3 @@ void ConsolePrintf(const TCHAR *pszFormat, ...)
       va_end(args);
    }
 }
-
-/**
- * Print debug messages
- */
-void DebugPrintf(int level, const TCHAR *pszFormat, ...)
-{
-   if (level <= (int)g_debugLevel)
-   {
-      va_list args;
-      TCHAR szBuffer[4096];
-
-      va_start(args, pszFormat);
-      _vsntprintf(szBuffer, 4096, pszFormat, args);
-      va_end(args);
-      
-      nxlog_write(MSG_DEBUG, EVENTLOG_DEBUG_TYPE, "s", szBuffer);
-   }
-}
-
-/**
- * Print debug messages
- */
-void DebugPrintf2(int level, const TCHAR *pszFormat, va_list args)
-{
-   if (level <= (int)g_debugLevel)
-   {
-      TCHAR szBuffer[4096];
-      _vsntprintf(szBuffer, 4096, pszFormat, args);
-      nxlog_write(MSG_DEBUG, EVENTLOG_DEBUG_TYPE, "s", szBuffer);
-   }
-}

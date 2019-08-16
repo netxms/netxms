@@ -71,7 +71,7 @@ THREAD_RESULT THREAD_CALL ProxySession::serverThreadStarter(void *arg)
  */
 void ProxySession::clientThread()
 {
-   DebugPrintf(7, _T("Client thread started, connecting to server"));
+   nxlog_debug(7, _T("Client thread started, connecting to server"));
    InetAddress addr = InetAddress::resolveHostName(g_serverAddress);
    if (addr.isValidUnicast())
    {
@@ -82,7 +82,7 @@ void ProxySession::clientThread()
          addr.fillSockAddr(&sa, g_serverPort);
          if (ConnectEx(m_server, (struct sockaddr *)&sa, SA_LEN((struct sockaddr *)&sa), 5000) != -1)
          {
-            DebugPrintf(7, _T("Connected to server %s:%d"), g_serverAddress, (int)g_serverPort);
+            nxlog_debug(7, _T("Connected to server %s:%d"), g_serverAddress, (int)g_serverPort);
             THREAD serverThread = ThreadCreateEx(ProxySession::serverThreadStarter, 0, this);
             forward(m_client, m_server);
             ThreadJoin(serverThread);
@@ -91,17 +91,17 @@ void ProxySession::clientThread()
       }
       else
       {
-         DebugPrintf(5, _T("Cannot create socket for server connection"));
+         nxlog_debug(5, _T("Cannot create socket for server connection"));
       }
    }
    else
    {
-      DebugPrintf(4, _T("Cannot resolve server address %s"), g_serverAddress);
+      nxlog_debug(4, _T("Cannot resolve server address %s"), g_serverAddress);
    }
 
    shutdown(m_client, SHUT_RDWR);
    closesocket(m_client);
-   DebugPrintf(7, _T("Client thread stopped"));
+   nxlog_debug(7, _T("Client thread stopped"));
 }
 
 /**
@@ -109,10 +109,10 @@ void ProxySession::clientThread()
  */
 void ProxySession::serverThread()
 {
-   DebugPrintf(7, _T("Server thread started"));
+   nxlog_debug(7, _T("Server thread started"));
    SetSocketNonBlocking(m_server);
    forward(m_server, m_client);
-   DebugPrintf(7, _T("Server thread stopped"));
+   nxlog_debug(7, _T("Server thread stopped"));
 }
 
 /**

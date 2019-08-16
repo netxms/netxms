@@ -29,6 +29,7 @@ extern const TCHAR *g_szMessages[];
 // Global variables
 //
 
+int g_debugLevel = 0;
 DWORD g_flags = AF_LOG_SQL_ERRORS;
 TCHAR g_listenAddress[MAX_PATH] = _T("0.0.0.0");
 DWORD g_tcpPort = IPFIX_DEFAULT_PORT;
@@ -155,10 +156,10 @@ bool Initialize()
 	}
 	if (g_dbConnection == NULL)
 	{
-		nxlog_write(MSG_DB_CONNFAIL, EVENTLOG_ERROR_TYPE, "s", errorText);
+		nxlog_write(NXLOG_ERROR, _T("Cannot establish connection with database (%s)"), errorText);
 		return FALSE;
 	}
-	DbgPrintf(1, _T("Successfully connected to database %s@%s"), s_dbName, s_dbServer);
+	nxlog_debug(1, _T("Successfully connected to database %s@%s"), s_dbName, s_dbServer);
 
 	if (!StartCollector())
 		return false;
@@ -190,14 +191,12 @@ void Shutdown()
 #endif
 }
 
-
-//
-// Main loop
-//
-
+/**
+ * Main loop
+ */
 void Main()
 {
-   nxlog_write(MSG_NXFLOWD_STARTED, EVENTLOG_INFORMATION_TYPE, NULL);
+   nxlog_report_event(1, NXLOG_INFO, 0, _T("NetXMS NetFlow/IPFIX Collector started"));
 
    if (g_flags & AF_DAEMON)
    {
