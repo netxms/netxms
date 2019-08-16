@@ -1346,7 +1346,7 @@ public:
 	void set(const TCHAR *key, UINT32 value);
    void set(const TCHAR *key, INT64 value);
    void set(const TCHAR *key, UINT64 value);
-   TCHAR *unlink(const TCHAR *key) { return (TCHAR *)unlink(key); }
+   TCHAR *unlink(const TCHAR *key) { return (TCHAR *)StringMapBase::unlink(key); }
 
    void addAll(const StringMap *src, bool (*filter)(const TCHAR *, const TCHAR *, void *) = NULL, void *context = NULL);
 
