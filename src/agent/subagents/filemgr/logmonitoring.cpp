@@ -175,7 +175,7 @@ THREAD_RESULT THREAD_CALL SendFileUpdatesOverNXCP(void *args)
       if (flData->getOffset() < newOffset)
       {
          size_t readSize = newOffset - flData->getOffset();
-         for(size_t i = readSize; i > 0; i = i - readSize)
+         for(size_t i = readSize; i > 0; i -= readSize)
          {
             if (readSize > 65536)
             {
