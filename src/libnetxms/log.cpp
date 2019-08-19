@@ -832,12 +832,20 @@ static inline void WriteLogToFile(INT16 severity, const TCHAR *tag, const TCHAR 
  */
 static inline TCHAR *FormatString(msg_buffer_t localBuffer, const TCHAR *format, va_list args)
 {
+   va_list args2;
+   va_copy(args2, args);   // Save arguments for stage 2 if it will be needed
+
    int ch = _vsntprintf(localBuffer, LOCAL_MSG_BUFFER_SIZE, format, args);
    if ((ch != -1) && (ch < LOCAL_MSG_BUFFER_SIZE))
+   {
+      va_end(args2);
       return localBuffer;
+   }
+
    size_t bufferSize = (ch != -1) ? (ch + 1) : 65536;
    TCHAR *buffer = MemAllocString(bufferSize);
-   _vsntprintf(buffer, bufferSize, format, args);
+   _vsntprintf(buffer, bufferSize, format, args2);
+   va_end(args2);
    return buffer;
 }
 
@@ -857,9 +865,12 @@ static void WriteLog(INT16 severity, const TCHAR *tag, const TCHAR *format, va_l
 {
    if ((severity == NXLOG_DEBUG) && (s_debugWriter != NULL))
    {
+      va_list args2;
+      va_copy(args2, args);
       MutexLock(s_mutexLogAccess);
-      s_debugWriter(tag, format, args);
+      s_debugWriter(tag, format, args2);
       MutexUnlock(s_mutexLogAccess);
+      va_end(args2);
    }
 
    if (!(s_flags & NXLOG_IS_OPEN))
@@ -1095,15 +1106,13 @@ void LIBNETXMS_EXPORTABLE nxlog_report_event(DWORD msg, int level, int stringCou
 #ifdef _WIN32
    if (s_flags & NXLOG_USE_SYSLOG)
    {
-      const TCHAR **strings = (stringCount > 0) ? (const TCHAR **)alloca(sizeof(TCHAR*) * stringCount) : NULL;
-      for (int i = 0; i < stringCount; i++)
-         strings[i] = va_arg(args, TCHAR*);
-      ReportEvent(s_eventLogHandle, level, 0, msg, NULL, stringCount, 0, strings, NULL);
-
       if (s_flags & NXLOG_PRINT_TO_STDOUT)
       {
+         va_args args2;
+         va_copy(args2, args);
          msg_buffer_t localBuffer;
-         TCHAR *message = FormatString(localBuffer, altMessage, args);
+         TCHAR *message = FormatString(localBuffer, altMessage, args2);
+         va_end(args2);
 
          MutexLock(s_mutexLogAccess);
          TCHAR timestamp[64];
@@ -1111,6 +1120,11 @@ void LIBNETXMS_EXPORTABLE nxlog_report_event(DWORD msg, int level, int stringCou
          MutexUnlock(s_mutexLogAccess);
          FreeFormattedString(message, localBuffer);
       }
+
+      const TCHAR **strings = (stringCount > 0) ? (const TCHAR **)alloca(sizeof(TCHAR*) * stringCount) : NULL;
+      for (int i = 0; i < stringCount; i++)
+         strings[i] = va_arg(args, TCHAR*);
+      ReportEvent(s_eventLogHandle, level, 0, msg, NULL, stringCount, 0, strings, NULL);
    }
    else
    {
