@@ -79,7 +79,7 @@ public class TextEditor extends Composite implements IFindReplaceTarget
    public void replaceSelection(String text)
    {      
       String content = editor.getText();
-      Point s = getSelection();
+      Point s = editor.getSelection();
       String start = content.substring(0, s.x);
       String tail = content.substring(s.y);
       editor.setText(start + text + tail);
