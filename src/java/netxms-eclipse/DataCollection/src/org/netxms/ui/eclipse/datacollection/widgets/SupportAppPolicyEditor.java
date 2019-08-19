@@ -44,6 +44,7 @@ import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.graphics.ImageLoader;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -615,5 +616,40 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
    public boolean isFindReplaceRequired()
    {
       return false;
+   }
+
+   @Override
+   public boolean canPerformFind()
+   {
+      return false;
+   }
+
+   @Override
+   public int findAndSelect(int widgetOffset, String findString, boolean searchForward, boolean caseSensitive, boolean wholeWord)
+   {
+      return 0;
+   }
+
+   @Override
+   public Point getSelection()
+   {
+      return null;
+   }
+
+   @Override
+   public String getSelectionText()
+   {
+      return null;
+   }
+
+   @Override
+   public boolean isEditable()
+   {
+      return false;
+   }
+
+   @Override
+   public void replaceSelection(String text)
+   {      
    }
 }

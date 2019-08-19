@@ -21,6 +21,7 @@ package org.netxms.ui.eclipse.datacollection.widgets;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.objects.AgentPolicy;
@@ -78,6 +79,42 @@ public class AgentConfigPolicyEditor extends AbstractPolicyEditor
    public boolean setFocus()
    {
       return editor.setFocus();      
+   }
+
+   @Override
+   public boolean canPerformFind()
+   {
+      return editor.getFindReplaceTarget().canPerformFind();
+   }
+
+   @Override
+   public int findAndSelect(int widgetOffset, String findString, boolean searchForward, boolean caseSensitive, boolean wholeWord)
+   {
+      return editor.getFindReplaceTarget().findAndSelect(widgetOffset, findString, searchForward, caseSensitive, wholeWord);
+   }
+
+   @Override
+   public Point getSelection()
+   {
+      return editor.getFindReplaceTarget().getSelection();
+   }
+
+   @Override
+   public String getSelectionText()
+   {
+      return editor.getFindReplaceTarget().getSelectionText();
+   }
+
+   @Override
+   public boolean isEditable()
+   {
+      return true;
+   }
+
+   @Override
+   public void replaceSelection(String text)
+   {
+      editor.getFindReplaceTarget().replaceSelection(text);
    }
 
    @Override

@@ -6,7 +6,9 @@ import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.text.IFindReplaceTarget;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
@@ -36,7 +38,7 @@ import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.NXFindAndReplaceAction;
 import org.netxms.ui.eclipse.widgets.CompositeWithMessageBar;
 
-public class PolicyEditorView extends ViewPart implements ISaveablePart2, SessionListener
+public class PolicyEditorView extends ViewPart implements ISaveablePart2, SessionListener, IFindReplaceTarget
 {
    public static final String ID = "org.netxms.ui.eclipse.datacollection.views.policy_editor"; //$NON-NLS-1$
    
@@ -244,6 +246,7 @@ public class PolicyEditorView extends ViewPart implements ISaveablePart2, Sessio
 
       editor.setFindAndReplaceAction(actionFindReplace);
       actionFindReplace.setEnabled(editor.isFindReplaceRequired());
+      actionFindReplace.update();
       content.layout(true, true);
       editor.setFocus();
    }
@@ -270,6 +273,7 @@ public class PolicyEditorView extends ViewPart implements ISaveablePart2, Sessio
       }
       catch(Exception e)
       {
+         Activator.logError("Exception during policy save", e);
          saveException = e;
          if (!throwExceptionOnSave)
          {
@@ -376,17 +380,13 @@ public class PolicyEditorView extends ViewPart implements ISaveablePart2, Sessio
       int rc = dlg.open();
       if (rc == SavePolicyDialog.SAVE_ID)
       {
-
-         if(modifiedBuOtherUser && modified)
+         if (modifiedBuOtherUser && modified)
          {
             if (!MessageDialogHelper.openConfirm(getSite().getShell(), "Refresh policy",
                                            "Do you really want to save the policy?\n You will overwrite other user changes."))
                return CANCEL;
-            contentWrapper.hideMessage();       
          }      
-         modifiedBuOtherUser = false; 
-         
-         modified = false;
+         policy = editor.getUpdatedPolicy();
          return YES;
       }
       if (rc == SavePolicyDialog.CANCEL)
@@ -406,10 +406,11 @@ public class PolicyEditorView extends ViewPart implements ISaveablePart2, Sessio
                return;
 
             display.asyncExec(new Runnable() {
-
                @Override
                public void run()
-               {     
+               {
+                  if (content.isDisposed())
+                     return;
                   if (!modified)
                   {
                      policy = (AgentPolicy)n.getObject();
@@ -436,5 +437,42 @@ public class PolicyEditorView extends ViewPart implements ISaveablePart2, Sessio
             });
             break;
       }
+   }
+
+   @Override
+   public boolean canPerformFind()
+   {
+      return editor != null ? editor.canPerformFind() : false;
+   }
+
+   @Override
+   public int findAndSelect(int widgetOffset, String findString, boolean searchForward, boolean caseSensitive, boolean wholeWord)
+   {
+      return editor != null ? editor.findAndSelect(widgetOffset, findString, searchForward, caseSensitive, wholeWord) : 0;
+   }
+
+   @Override
+   public Point getSelection()
+   {
+      return editor != null ?  editor.getSelection() : null;
+   }
+
+   @Override
+   public String getSelectionText()
+   {
+      return editor != null ? editor.getSelectionText() : null;
+   }
+
+   @Override
+   public boolean isEditable()
+   {
+      return editor != null ? editor.isEditable() : false;
+   }
+
+   @Override
+   public void replaceSelection(String text)
+   {
+      if(editor != null)
+         editor.replaceSelection(text);
    }
 }

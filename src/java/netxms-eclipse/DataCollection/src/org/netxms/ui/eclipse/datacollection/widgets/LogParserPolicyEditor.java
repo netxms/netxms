@@ -19,6 +19,7 @@
 package org.netxms.ui.eclipse.datacollection.widgets;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.texteditor.FindReplaceAction;
@@ -80,11 +81,47 @@ public class LogParserPolicyEditor extends AbstractPolicyEditor
    @Override
    public boolean isFindReplaceRequired()
    {
-      return false; //todo think about text XML editing
+      return editor.isEditorTabSelected(); 
    }
 
    public void setFindAndReplaceAction(FindReplaceAction actionFindReplace)
    {
       editor.setFindAndReplaceAction(actionFindReplace);
+   }
+
+   @Override
+   public boolean canPerformFind()
+   {
+      return editor.isEditorTabSelected();
+   }
+
+   @Override
+   public int findAndSelect(int widgetOffset, String findString, boolean searchForward, boolean caseSensitive, boolean wholeWord)
+   {
+      return editor.findAndSelect(widgetOffset, findString, searchForward, caseSensitive, wholeWord);
+   }
+
+   @Override
+   public Point getSelection()
+   {
+      return editor.getSelection();
+   }
+
+   @Override
+   public String getSelectionText()
+   {
+      return editor.getSelectionText();
+   }
+
+   @Override
+   public boolean isEditable()
+   {
+      return editor.isEditable();
+   }
+
+   @Override
+   public void replaceSelection(String text)
+   {
+      editor.replaceSelection(text);
    }
 }

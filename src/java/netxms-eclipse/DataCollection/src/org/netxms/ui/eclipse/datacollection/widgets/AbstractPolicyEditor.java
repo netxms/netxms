@@ -2,12 +2,13 @@ package org.netxms.ui.eclipse.datacollection.widgets;
 
 import java.util.HashSet;
 import java.util.Set;
+import org.eclipse.jface.text.IFindReplaceTarget;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.texteditor.FindReplaceAction;
 import org.netxms.client.objects.AgentPolicy;
 import org.netxms.ui.eclipse.datacollection.widgets.helpers.PolicyModifyListener;
 
-public abstract class AbstractPolicyEditor extends Composite
+public abstract class AbstractPolicyEditor extends Composite implements IFindReplaceTarget
 {
    Set<PolicyModifyListener> listeners = new HashSet<PolicyModifyListener>();
    AgentPolicy policy = null;  

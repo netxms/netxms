@@ -22,17 +22,18 @@ import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Text;
 import org.netxms.client.objects.AgentPolicy;
+import org.netxms.ui.eclipse.widgets.TextEditor;
 
 /**
  * Generic policy editor widget
  */
 public class GenericPolicyEditor extends AbstractPolicyEditor
 {
-   Text editor;   
+   TextEditor editor;   
 
    /**
     * Constructor
@@ -47,7 +48,7 @@ public class GenericPolicyEditor extends AbstractPolicyEditor
       
       setLayout(new FillLayout());
       
-      editor = new Text(this, SWT.BORDER | SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
+      editor = new TextEditor(this, SWT.NONE, SWT.BORDER | SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
       editor.setFont(JFaceResources.getTextFont());
       
       editor.addModifyListener(new ModifyListener() {
@@ -77,6 +78,42 @@ public class GenericPolicyEditor extends AbstractPolicyEditor
    @Override
    public boolean isFindReplaceRequired()
    {
+      return false;
+   }
+
+   @Override
+   public boolean canPerformFind()
+   {
       return true;
+   }
+
+   @Override
+   public int findAndSelect(int widgetOffset, String findString, boolean searchForward, boolean caseSensitive, boolean wholeWord)
+   {
+      return editor.findAndSelect(widgetOffset, findString, searchForward, caseSensitive, wholeWord);
+   }
+
+   @Override
+   public Point getSelection()
+   {
+      return editor.getSelection();
+   }
+
+   @Override
+   public String getSelectionText()
+   {
+      return editor.getSelectionText();
+   }
+
+   @Override
+   public boolean isEditable()
+   {
+      return true;
+   }
+
+   @Override
+   public void replaceSelection(String text)
+   {
+      editor.replaceSelection(text);
    }
 }

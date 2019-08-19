@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import org.eclipse.jface.resource.JFaceResources;
+import org.eclipse.jface.text.IFindReplaceTarget;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.Viewer;
@@ -37,6 +38,7 @@ import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -45,7 +47,6 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.swt.widgets.Table;
-import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.forms.events.HyperlinkAdapter;
 import org.eclipse.ui.forms.events.HyperlinkEvent;
 import org.eclipse.ui.forms.widgets.FormToolkit;
@@ -70,11 +71,12 @@ import org.netxms.ui.eclipse.tools.WidgetFactory;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
+import org.netxms.ui.eclipse.widgets.TextEditor;
 
 /**
  * Log parser editor
  */
-public class LogParserEditor extends Composite
+public class LogParserEditor extends Composite implements IFindReplaceTarget
 {
 	private static final int TAB_NONE = 0;
 	private static final int TAB_BUILDER = 1;
@@ -82,7 +84,7 @@ public class LogParserEditor extends Composite
 	
 	private CTabFolder tabFolder;
 	private int currentTab = TAB_NONE;
-	private Text xmlEditor;
+	private TextEditor xmlEditor;
 	private FormToolkit toolkit;
 	private ScrolledForm form;
 	private Set<LogParserModifyListener> listeners = new HashSet<LogParserModifyListener>();
@@ -353,8 +355,8 @@ public class LogParserEditor extends Composite
 	 */
 	private void createTextEditor()
 	{
-		xmlEditor = new Text(tabFolder, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
-		xmlEditor.setFont(JFaceResources.getTextFont());
+		xmlEditor = new TextEditor(tabFolder, SWT.NONE, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
+		xmlEditor.getTextControl().setFont(JFaceResources.getTextFont());
 
 		final CTabItem tabItem = new CTabItem(tabFolder, SWT.NONE);
 		tabItem.setText(Messages.get().LogParserEditor_XML);
@@ -814,5 +816,52 @@ public class LogParserEditor extends Composite
    public void setFindAndReplaceAction(FindReplaceAction actionFindReplace)
    {
       this.actionFindReplace = actionFindReplace;
+   }
+
+   public boolean isEditorTabSelected()
+   {
+      return currentTab == TAB_XML;
+   }
+
+   @Override
+   public boolean canPerformFind()
+   {
+      return isEditorTabSelected();
+   }
+
+   @Override
+   public int findAndSelect(int widgetOffset, String findString, boolean searchForward, boolean caseSensitive, boolean wholeWord)
+   {
+      if (!isEditorTabSelected())
+         return -1;
+
+      return xmlEditor.findAndSelect(widgetOffset, findString, searchForward, caseSensitive, wholeWord);
+   }   
+
+   @Override
+   public Point getSelection()
+   {
+      return xmlEditor.getSelection();
+   }
+
+   @Override
+   public String getSelectionText()
+   {
+      return xmlEditor.getSelectionText();
+   }
+
+   @Override
+   public boolean isEditable()
+   {
+      return isEditorTabSelected();
+   }
+
+   @Override
+   public void replaceSelection(String text)
+   {
+      if (!isEditorTabSelected())
+         return;
+      
+      xmlEditor.replaceSelection(text);
    }
 }

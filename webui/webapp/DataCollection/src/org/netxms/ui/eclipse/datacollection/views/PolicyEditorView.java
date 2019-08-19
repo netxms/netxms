@@ -268,6 +268,7 @@ public class PolicyEditorView extends ViewPart implements ISaveablePart2, Sessio
       }
       catch(Exception e)
       {
+         Activator.logError("Exception during policy save", e);
          saveException = e;
          if (!throwExceptionOnSave)
          {
@@ -374,17 +375,13 @@ public class PolicyEditorView extends ViewPart implements ISaveablePart2, Sessio
       int rc = dlg.open();
       if (rc == SavePolicyDialog.SAVE_ID)
       {
-
-         if(modifiedBuOtherUser && modified)
+         if (modifiedBuOtherUser && modified)
          {
             if (!MessageDialogHelper.openConfirm(getSite().getShell(), "Refresh policy",
                                            "Do you really want to save the policy?\n You will overwrite other user changes."))
                return CANCEL;
-            contentWrapper.hideMessage();       
          }      
-         modifiedBuOtherUser = false; 
-         
-         modified = false;
+         policy = editor.getUpdatedPolicy();
          return YES;
       }
       if (rc == SavePolicyDialog.CANCEL)
@@ -404,10 +401,11 @@ public class PolicyEditorView extends ViewPart implements ISaveablePart2, Sessio
                return;
 
             display.asyncExec(new Runnable() {
-
                @Override
                public void run()
-               {     
+               {
+                  if (content.isDisposed())
+                     return;
                   if (!modified)
                   {
                      policy = (AgentPolicy)n.getObject();
