@@ -14,8 +14,4 @@ test_libnxdb_CPPFLAGS = -I@top_srcdir@/include -I../include -I@top_srcdir@/build
 test_libnxdb_LDFLAGS = @EXEC_LDFLAGS@
 test_libnxdb_LDADD = @top_srcdir@/src/libnetxms/libnetxms.la @top_srcdir@/src/db/libnxdb/libnxdb.la @EXEC_LIBS@
 
-if USE_INTERNAL_LIBTRE
-test_libnxdb_LDADD += @top_srcdir@/src/libtre/libnxtre.la
-endif
-
 EXTRA_DIST = test-libnxdb.vcxproj test-libnxdb.vcxproj.filters

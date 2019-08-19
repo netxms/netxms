@@ -70,7 +70,6 @@ static LONG H_CheckService(const TCHAR *parameters, const TCHAR *arg, TCHAR *val
 
    char url[2048] = "";
    TCHAR pattern[4096] = _T("");
-   regex_t compiledPattern;
 
    AgentGetParameterArgA(parameters, 1, url, 2048);
    AgentGetParameterArg(parameters, 2, pattern, 256);
@@ -85,7 +84,10 @@ static LONG H_CheckService(const TCHAR *parameters, const TCHAR *arg, TCHAR *val
 
       AgentWriteDebugLog(5, _T("Check service: url=%hs, pattern=%s"), url, pattern);
 
-      if (_tregcomp(&compiledPattern, pattern, REG_EXTENDED | REG_ICASE | REG_NOSUB) == 0)
+      const char *eptr;
+      int eoffset;
+      PCRE *compiledPattern = _pcre_compile_t(reinterpret_cast<const PCRE_TCHAR*>(pattern), PCRE_COMMON_FLAGS | PCRE_CASELESS, &eptr, &eoffset, NULL);
+      if (compiledPattern != NULL)
       {
          CURL *curl = curl_easy_init();
          if (curl != NULL)
@@ -124,11 +126,13 @@ static LONG H_CheckService(const TCHAR *parameters, const TCHAR *arg, TCHAR *val
                   {
                      data.write('\0');
                      size_t size;
+                     int pmatch[30];
 #ifdef UNICODE
                      WCHAR *wtext = WideStringFromUTF8String((char *)data.buffer(&size));
-                     if (tre_regwexec(&compiledPattern, wtext, 0, NULL, 0) == 0)
+                     if (_pcre_exec_t(compiledPattern, NULL, reinterpret_cast<const PCRE_TCHAR*>(wtext), wcslen(wtext), 0, 0, pmatch, 30) >= 0)
 #else
-                     if (tre_regexec(&compiledPattern, (char *)data.buffer(&size), 0, NULL, 0) == 0)
+                     char *text = (char *)data.buffer(&size);
+                     if (pcre_exec(compiledPattern, NULL, text, size, 0, 0, pmatch, 30) >= 0)
 #endif
                      {
                         AgentWriteDebugLog(5, _T("Check service: matched"));
@@ -140,7 +144,7 @@ static LONG H_CheckService(const TCHAR *parameters, const TCHAR *arg, TCHAR *val
                         retCode = PC_ERR_NOMATCH;
                      }
 #ifdef UNICODE
-                     free(wtext);
+                     MemFree(wtext);
 #endif
                   }
                   else
@@ -160,7 +164,7 @@ static LONG H_CheckService(const TCHAR *parameters, const TCHAR *arg, TCHAR *val
          {
             AgentWriteLog(3, _T("Check service: curl_init failed"));
          }
-         tre_regfree(&compiledPattern);
+         _pcre_free_t(compiledPattern);
       }
       else
       {

@@ -145,9 +145,6 @@ CONTRIB_MODULES=""
 CLIENT_COMPONENTS=""
 BUILD_UNICODE="yes"
 FORCE_INTERNAL_EXPAT="no"
-FORCE_INTERNAL_LIBTRE="yes"
-USE_INTERNAL_LIBTRE="no"
-FORCE_INTERNAL_LIBTRE="no"
 FORCE_INTERNAL_JANSSON="no"
 FORCE_INTERNAL_ZLIB="no"
 FORCE_INTERNAL_SQLITE="no"
@@ -209,7 +206,7 @@ JEMALLOC_REQUIRED="no"
 # Common compilation flags
 #--------------------------------------------------------------------
 
-CPPFLAGS="$CPPFLAGS -D_THREAD_SAFE -DTRE_WCHAR=1"
+CPPFLAGS="$CPPFLAGS -D_THREAD_SAFE"
 
 
 #--------------------------------------------------------------------
@@ -271,7 +268,6 @@ AC_ARG_WITH(static-agent,
 	COMPONENTS="$COMPONENTS sqlite snmp static-agent sqlite_drv"
 	FORCE_INTERNAL_EXPAT="yes"
 	FORCE_INTERNAL_JANSSON="yes"
-	FORCE_INTERNAL_LIBTRE="yes"
 	FORCE_INTERNAL_SQLITE="yes"
 	FORCE_INTERNAL_ZLIB="yes"
 ])
@@ -328,12 +324,6 @@ AC_ARG_WITH(internal-libexpat,
 [AS_HELP_STRING(--with-internal-libexpat,force use of bundled libexpat)],
 [
 	FORCE_INTERNAL_EXPAT="yes"
-])
-
-AC_ARG_WITH(internal-libtre,
-[AS_HELP_STRING(--with-internal-libtre,force use of bundled libtre)],
-[
-	FORCE_INTERNAL_LIBTRE="yes"
 ])
 
 AC_ARG_WITH(internal-libjansson,
@@ -772,7 +762,6 @@ AC_ARG_ENABLE(unicode,
 [
 	if test "x$enableval" = "xno"; then
 		BUILD_UNICODE="no"
-		FORCE_INTERNAL_LIBTRE="no"
 		DISABLE_READLINE="no"
 	fi
 ])
@@ -804,7 +793,7 @@ AC_ARG_ENABLE(64bit,
 AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
 	DB_DRIVERS="mysql mariadb pgsql odbc mssql sqlite oracle db2 informix"
-	MODULES="appagent jansson java-common libexpat libstrophe libtre zlib libnetxms libnxjava install sqlite snmp libnxsl libnxmb libnxlp libnxpython libnxcc db server ncdrivers agent client nxscript nxcproxy"
+	MODULES="appagent jansson java-common libexpat libstrophe zlib libnetxms libnxjava install sqlite snmp libnxsl libnxmb libnxlp libnxpython libnxcc db server ncdrivers agent client nxscript nxcproxy"
 	TOOLS="nxlptest"
 	SUBAGENT_DIRS="linux ds18x20 freebsd openbsd minix mqtt mysql netbsd sunos aix ipso hpux odbcquery informix oracle lmsensors darwin rpi java jmx bind9 ubntlw netsvc db2 tuxedo mongodb ssh vmgr xen lorawan asterisk python"
 	AGENT_DIRS="libnxtux"
@@ -2305,31 +2294,6 @@ if test "x$HAVE_LIBEXPAT" = "xno"; then
 	MODULES="libexpat $MODULES"
 fi
 
-if test "x$FORCE_INTERNAL_LIBTRE" = "xyes"; then
-	HAVE_LIBTRE=no
-else
-	HAVE_LIBTRE=yes
-	AC_CHECK_HEADER(tre/regex.h,,HAVE_LIBTRE=no)
-	AC_CHECK_LIB(tre, tre_compile, [], [ HAVE_LIBTRE=no ])
-fi
-if test "x$HAVE_LIBTRE" = "xno"; then
-	MODULES="libtre $MODULES"
-	AC_DEFINE(USE_BUNDLED_LIBTRE,1,Define to 1 if bundled libtre is used)
-
-	tre_version_1='0'
-	tre_version_2='8'
-	tre_version_3='0'
-	tre_version=$tre_version_1.$tre_version_2.$tre_version_3
-	AC_DEFINE_UNQUOTED(TRE_VERSION,  "$tre_version",  [ TRE version string.  ])
-	AC_DEFINE_UNQUOTED(TRE_VERSION_1, $tre_version_1, [ TRE version level 1. ])
-	AC_DEFINE_UNQUOTED(TRE_VERSION_2, $tre_version_2, [ TRE version level 2. ])
-	AC_DEFINE_UNQUOTED(TRE_VERSION_3, $tre_version_3, [ TRE version level 3. ])
-	AC_SUBST(TRE_VERSION, $tre_version)
-
-	AC_DEFINE(TRE_REGEX_T_FIELD,value,[Define to a field in the regex_t struct where TRE should store a pointer to the internal tre_tnfa_t structure])
-	AC_DEFINE(TRE_APPROX, 1, [ Define if you want to enable approximate matching functionality. ])
-fi
-
 if test "x$FORCE_INTERNAL_JANSSON" = "xyes"; then
 	HAVE_JANSSON=no
 else
@@ -3368,13 +3332,36 @@ if test "x$ac_cv_type_wchar_t" = "xyes"; then
 	if test $ac_cv_sizeof_wchar_t -eq 4; then
 		AC_DEFINE(UNICODE_UCS4, 1, Define to 1 if you have 4-byte wchar_t)
 	fi
-
-	if test "x$USE_INTERNAL_LIBTRE" = "xyes"; then
-		AC_DEFINE(TRE_WCHAR, 1,    [ Define to enable wide character support in libtre.])
-	fi
 else
 	if test "x$BUILD_UNICODE" = "xyes"; then
 		AC_MSG_ERROR(wchar_t is required for UNICODE build)
+	fi
+fi
+
+
+#--------------------------------------------------------------------
+# PCRE
+#--------------------------------------------------------------------
+
+if test "x$DIST_BUILD" != "xyes"; then
+	AC_CHECK_HEADER(pcre.h,
+		[
+			AC_DEFINE(HAVE_PCRE_H, 1, [Define to 1 if you have the <pcre.h> header file.])
+		],
+		[
+			AC_CHECK_HEADER(pcre/pcre.h,
+				[
+					AC_DEFINE(HAVE_PCRE_PCRE_H, 1, [Define to 1 if you have the <pcre/pcre.h> header file.])
+				],
+				[
+					AC_MSG_ERROR([Cannot find pcre.h - check your PCRE installation])
+				])
+		])
+	AC_CHECK_LIB(pcre, pcre_compile,, [AC_MSG_ERROR(libpcre is requred)])
+	if test $ac_cv_sizeof_wchar_t -eq 2; then
+		AC_CHECK_LIB(pcre16, pcre16_compile,, [AC_MSG_ERROR(libpcre16 is requred)])
+	else
+		AC_CHECK_LIB(pcre32, pcre32_compile,, [AC_MSG_ERROR(libpcre32 is requred)])
 	fi
 fi
 
@@ -4064,7 +4051,6 @@ if test "x$ENABLE_DEBUG" = "xno"; then
 fi
 
 AM_CONDITIONAL([USE_INTERNAL_EXPAT], [test "x$HAVE_LIBEXPAT" = "xno"])
-AM_CONDITIONAL([USE_INTERNAL_LIBTRE], [test "x$HAVE_LIBTRE" = "xno"])
 AM_CONDITIONAL([USE_INTERNAL_JANSSON], [test "x$HAVE_JANSSON" = "xno"])
 AM_CONDITIONAL([USE_INTERNAL_SQLITE], [test "x$HAVE_SQLITE" = "xno"])
 AM_CONDITIONAL([USE_INTERNAL_ZLIB], [test "$HAVE_ZLIB" = "no"])
@@ -4332,8 +4318,6 @@ AC_CONFIG_FILES([
 	src/libnxpython/Makefile
 	src/libnxsl/Makefile
 	src/libstrophe/Makefile
-	src/libtre/Makefile
-	src/libtre/win32/Makefile
 	src/ncdrivers/Makefile
 	src/ncdrivers/textfile/Makefile
 	src/ncdrivers/anysms/Makefile
@@ -4562,11 +4546,6 @@ if test "x${HAVE_LIBEXPAT}" = "xno"; then
 	echo "Use internal libexpat   : YES"
 else
 	echo "Use internal libexpat   : NO"
-fi
-if test "x${HAVE_LIBTRE}" = "xno"; then
-	echo "Use internal libtre     : YES"
-else
-	echo "Use internal libtre     : NO"
 fi
 if test "x${HAVE_JANSSON}" = "xno"; then
 	echo "Use internal libjansson : YES"

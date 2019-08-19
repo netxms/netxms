@@ -2437,48 +2437,75 @@ cleanup:
 }
 
 /**
+ * Max number of capture groups in regular expression
+ */
+#define MAX_REGEXP_CGROUPS    64
+
+/**
  * Match regular expression
  */
 NXSL_Value *NXSL_VM::matchRegexp(NXSL_Value *pValue, NXSL_Value *pRegexp, BOOL bIgnoreCase)
 {
-   regex_t preg;
-   regmatch_t fields[256];
-   NXSL_Value *pResult;
-   NXSL_Variable *pVar;
-   const TCHAR *regExp, *value;
-	char varName[16];
-	UINT32 regExpLen, valueLen;
-   int i;
+   NXSL_Value *result;
 
-	regExp = pRegexp->getValueAsString(&regExpLen);
-   if (_tregncomp(&preg, regExp, regExpLen, bIgnoreCase ? REG_EXTENDED | REG_ICASE : REG_EXTENDED) == 0)
+   const TCHAR *re = pRegexp->getValueAsCString();
+   const char *eptr;
+   int eoffset;
+	PCRE *preg = _pcre_compile_t(reinterpret_cast<const PCRE_TCHAR*>(re), bIgnoreCase ? PCRE_COMMON_FLAGS | PCRE_CASELESS : PCRE_COMMON_FLAGS, &eptr, &eoffset, NULL);
+   if (preg != NULL)
    {
-		value = pValue->getValueAsString(&valueLen);
-      if (_tregnexec(&preg, value, valueLen, 256, fields, 0) == 0)
+      int pmatch[MAX_REGEXP_CGROUPS * 3];
+      UINT32 valueLen;
+		const TCHAR *value = pValue->getValueAsString(&valueLen);
+		int cgcount = _pcre_exec_t(preg, NULL, reinterpret_cast<const PCRE_TCHAR*>(value), valueLen, 0, 0, pmatch, MAX_REGEXP_CGROUPS * 3);
+      if (cgcount >= 0)
       {
-         pResult = createValue((LONG)1);
-         for(i = 1; (i < 256) && (fields[i].rm_so != -1); i++)
+         if (cgcount == 0)
+            cgcount = MAX_REGEXP_CGROUPS;
+
+         result = createValue((LONG)1);
+         int i;
+         for(i = 1; i < cgcount; i++)
          {
+            char varName[16];
             snprintf(varName, 16, "$%d", i);
-            pVar = m_localVariables->find(varName);
-            if (pVar == NULL)
-               m_localVariables->create(varName, createValue(pValue->getValueAsCString() + fields[i].rm_so, fields[i].rm_eo - fields[i].rm_so));
-            else
-               pVar->setValue(createValue(pValue->getValueAsCString() + fields[i].rm_so, fields[i].rm_eo - fields[i].rm_so));
+            NXSL_Variable *var = m_localVariables->find(varName);
+
+            int start = pmatch[i * 2];
+            if (start != -1)
+            {
+               int end = pmatch[i * 2 + 1];
+               if (var == NULL)
+                  m_localVariables->create(varName, createValue(pValue->getValueAsCString() + start, end - start));
+               else
+                  var->setValue(createValue(pValue->getValueAsCString() + start, end - start));
+            }
+            else if (var != NULL)
+            {
+               var->setValue(createValue());
+            }
+         }
+         for(; i < MAX_REGEXP_CGROUPS; i++)
+         {
+            char varName[16];
+            snprintf(varName, 16, "$%d", i);
+            NXSL_Variable *var = m_localVariables->find(varName);
+            if (var != NULL)
+               var->setValue(createValue());
          }
       }
       else
       {
-         pResult = createValue((LONG)0);
+         result = createValue((LONG)0);
       }
-      regfree(&preg);
+      _pcre_free_t(preg);
    }
    else
    {
       error(NXSL_ERR_REGEXP_ERROR);
-      pResult = NULL;
+      result = NULL;
    }
-   return pResult;
+   return result;
 }
 
 /**

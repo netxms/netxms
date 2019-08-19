@@ -1059,25 +1059,18 @@ NetObj NXCORE_EXPORTABLE *FindObjectById(UINT32 dwId, int objClass)
 }
 
 /**
- * Object name regex and class matching data
- */
-struct OBJECT_NAME_REGEX_CLASS_DATA
-{
-   int objClass;
-   regex_t *nameRegex;
-};
-
-/**
  * Filter for matching object name by regex and its class
  *
  * @param object
  * @param userData
  * @return
  */
-static bool ObjectNameRegexAndClassFilter(NetObj *object, void *userData)
+static bool ObjectNameRegexAndClassFilter(NetObj *object, std::pair<int, PCRE*> *context)
 {
-   OBJECT_NAME_REGEX_CLASS_DATA *data = static_cast<OBJECT_NAME_REGEX_CLASS_DATA *>(userData);
-   return !object->isDeleted() && (object->getObjectClass() == data->objClass) && (_tregexec(data->nameRegex, object->getName(), 0, NULL, 0) == 0);
+   int ovector[30];
+   return !object->isDeleted() &&
+          (object->getObjectClass() == context->first) &&
+          (_pcre_exec_t(context->second, NULL, reinterpret_cast<const PCRE_TCHAR*>(object->getName()), _tcslen(object->getName()), 0, 0, ovector, 30) >= 0);
 }
 
 /**
@@ -1090,8 +1083,10 @@ static bool ObjectNameRegexAndClassFilter(NetObj *object, void *userData)
  */
 ObjectArray<NetObj> NXCORE_EXPORTABLE *FindObjectsByRegex(const TCHAR *regex, int objClass)
 {
-   regex_t preg;
-   if (_tregcomp(&preg, regex, REG_EXTENDED | REG_NOSUB) != 0)
+   const char *eptr;
+   int eoffset;
+   PCRE *preg = _pcre_compile_t(reinterpret_cast<const PCRE_TCHAR*>(regex), PCRE_COMMON_FLAGS | PCRE_CASELESS, &eptr, &eoffset, NULL);
+   if (preg == NULL)
       return NULL;
 
    ObjectIndex *index;
@@ -1120,12 +1115,9 @@ ObjectArray<NetObj> NXCORE_EXPORTABLE *FindObjectsByRegex(const TCHAR *regex, in
          break;
    }
 
-   OBJECT_NAME_REGEX_CLASS_DATA data;
-   data.nameRegex = &preg;
-   data.objClass = objClass;
-
-   ObjectArray<NetObj> *result = index->getObjects(true, ObjectNameRegexAndClassFilter, &data);
-   regfree(&preg);
+   std::pair<int, PCRE*> context(objClass, preg);
+   ObjectArray<NetObj> *result = index->getObjects(true, ObjectNameRegexAndClassFilter, &context);
+   _pcre_free_t(preg);
    return result;
 }
 

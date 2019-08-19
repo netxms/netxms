@@ -121,12 +121,11 @@ class LIBNXLP_EXPORTABLE LogParserRule
 private:
 	LogParser *m_parser;
 	TCHAR *m_name;
-	regex_t m_preg;
+	PCRE *m_preg;
 	UINT32 m_eventCode;
 	TCHAR *m_eventName;
 	TCHAR *m_eventTag;
-	bool m_isValid;
-	regmatch_t *m_pmatch;
+	int *m_pmatch;
 	TCHAR *m_regexp;
 	TCHAR *m_source;
 	UINT32 m_level;
@@ -165,7 +164,7 @@ public:
 	~LogParserRule();
 
 	const TCHAR *getName() const { return m_name; }
-	bool isValid() const { return m_isValid; }
+	bool isValid() const { return m_preg != NULL; }
 
 	bool match(const TCHAR *line, UINT32 objectId, LogParserCallback cb, void *userArg);
 	bool matchEx(const TCHAR *source, UINT32 eventId, UINT32 level, const TCHAR *line, StringList *variables, 

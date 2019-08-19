@@ -2504,13 +2504,10 @@ StringMap *NetObj::getCustomAttributes(bool (*filter)(const TCHAR *, const TCHAR
 /**
  * Callback filter for matching attribute name by regular expression
  */
-static bool RegExpAttrFilter(const TCHAR *name, const TCHAR *value, void *context)
+static bool RegExpAttrFilter(const TCHAR *name, const TCHAR *value, PCRE *preg)
 {
-#ifdef UNICODE
-   return tre_regwexec(static_cast<regex_t*>(context), name, 0, NULL, 0) == 0;
-#else
-   return tre_regexec(static_cast<regex_t*>(context), name, 0, NULL, 0) == 0;
-#endif
+   int ovector[30];
+   return _pcre_exec_t(preg, NULL, reinterpret_cast<const PCRE_TCHAR*>(name), _tcslen(name), 0, 0, ovector, 30) >= 0;
 }
 
 /**
@@ -2522,20 +2519,17 @@ StringMap *NetObj::getCustomAttributes(const TCHAR *regexp) const
    if (regexp == NULL)
       return getCustomAttributes(NULL, NULL);
 
-   regex_t preg;
-#ifdef UNICODE
-   if (tre_regwcomp(&preg, regexp, REG_EXTENDED | REG_NOSUB) != 0)
+   const char *eptr;
+   int eoffset;
+   PCRE *preg = _pcre_compile_t(reinterpret_cast<const PCRE_TCHAR*>(regexp), PCRE_COMMON_FLAGS, &eptr, &eoffset, NULL);
+   if (preg == NULL)
       return new StringMap();
-#else
-   if (tre_regcomp(&preg, regexp, REG_EXTENDED | REG_NOSUB) != 0)
-      return new StringMap();
-#endif
 
    StringMap *attributes = new StringMap();
    lockProperties();
-   attributes->addAll(&m_customAttributes, RegExpAttrFilter, &preg);
+   attributes->addAll(&m_customAttributes, RegExpAttrFilter, preg);
    unlockProperties();
-   regfree(&preg);
+   _pcre_free_t(preg);
    return attributes;
 }
 

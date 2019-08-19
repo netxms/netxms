@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Log Parsing Library
-** Copyright (C) 2003-2018 Raden Solutions
+** Copyright (C) 2003-2019 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -38,11 +38,10 @@ LogParserRule::LogParserRule(LogParser *parser, const TCHAR *name, const TCHAR *
 	m_name = MemCopyString(CHECK_NULL_EX(name));
 	expandMacros(regexp, expandedRegexp);
 	m_regexp = MemCopyString(expandedRegexp);
-	m_isValid = (_tregcomp(&m_preg, expandedRegexp, REG_EXTENDED | REG_ICASE) == 0);
 	m_eventCode = eventCode;
 	m_eventName = MemCopyString(eventName);
    m_eventTag = MemCopyString(eventTag);
-	m_pmatch = MemAllocArray<regmatch_t>(MAX_PARAM_COUNT);
+	m_pmatch = MemAllocArray<int>(MAX_PARAM_COUNT * 3);
 	m_source = MemCopyString(source);
 	m_level = level;
 	m_idStart = idStart;
@@ -62,6 +61,14 @@ LogParserRule::LogParserRule(LogParser *parser, const TCHAR *name, const TCHAR *
 	m_agentAction = NULL;
 	m_agentActionArgs = new StringList();
    m_objectCounters = new HashMap<UINT32, ObjectRuleStats>(true);
+
+   const char *eptr;
+   int eoffset;
+   m_preg = _pcre_compile_t(reinterpret_cast<const PCRE_TCHAR*>(m_regexp), PCRE_COMMON_FLAGS | PCRE_CASELESS, &eptr, &eoffset, NULL);
+   if (m_preg == NULL)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 3, _T("Regexp \"%s\" compilation error: %hs at offset %d"), m_regexp, eptr, eoffset);
+   }
 }
 
 /**
@@ -72,11 +79,10 @@ LogParserRule::LogParserRule(LogParserRule *src, LogParser *parser)
 	m_parser = parser;
 	m_name = MemCopyString(src->m_name);
 	m_regexp = MemCopyString(src->m_regexp);
-	m_isValid = (_tregcomp(&m_preg, m_regexp, REG_EXTENDED | REG_ICASE) == 0);
-	m_eventCode = src->m_eventCode;
+   m_eventCode = src->m_eventCode;
 	m_eventName = MemCopyString(src->m_eventName);
    m_eventTag = MemCopyString(src->m_eventTag);
-   m_pmatch = MemAllocArray<regmatch_t>(MAX_PARAM_COUNT);
+   m_pmatch = MemAllocArray<int>(MAX_PARAM_COUNT * 3);
    m_source = MemCopyString(src->m_source);
 	m_level = src->m_level;
 	m_idStart = src->m_idStart;
@@ -104,6 +110,14 @@ LogParserRule::LogParserRule(LogParserRule *src, LogParser *parser)
    m_agentActionArgs = new StringList(src->m_agentActionArgs);
    m_objectCounters = new HashMap<UINT32, ObjectRuleStats>(true);
    restoreCounters(src);
+
+   const char *eptr;
+   int eoffset;
+   m_preg = _pcre_compile_t(reinterpret_cast<const PCRE_TCHAR*>(m_regexp), PCRE_COMMON_FLAGS | PCRE_CASELESS, &eptr, &eoffset, NULL);
+   if (m_preg == NULL)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 3, _T("Regexp \"%s\" compilation error: %hs at offset %d"), m_regexp, eptr, eoffset);
+   }
 }
 
 /**
@@ -112,8 +126,8 @@ LogParserRule::LogParserRule(LogParserRule *src, LogParser *parser)
 LogParserRule::~LogParserRule()
 {
    MemFree(m_name);
-	if (m_isValid)
-		regfree(&m_preg);
+	if (m_preg != NULL)
+		_pcre_free_t(m_preg);
 	MemFree(m_pmatch);
 	MemFree(m_description);
 	MemFree(m_source);
@@ -160,7 +174,7 @@ bool LogParserRule::matchInternal(bool extMode, const TCHAR *source, UINT32 even
 	   }
    }
 
-	if (!m_isValid)
+	if (!isValid())
 	{
 		m_parser->trace(6, _T("  regexp is invalid: %s"), m_regexp);
 		return false;
@@ -169,7 +183,7 @@ bool LogParserRule::matchInternal(bool extMode, const TCHAR *source, UINT32 even
 	if (m_isInverted)
 	{
 		m_parser->trace(6, _T("  negated matching against regexp %s"), m_regexp);
-		if ((_tregexec(&m_preg, line, 0, NULL, 0) != 0) && matchRepeatCount())
+		if ((_pcre_exec_t(m_preg, NULL, reinterpret_cast<const PCRE_TCHAR*>(line), _tcslen(line), 0, 0, m_pmatch, MAX_PARAM_COUNT * 3) < 0) && matchRepeatCount())
 		{
 			m_parser->trace(6, _T("  matched"));
 			if ((cb != NULL) && ((m_eventCode != 0) || (m_eventName != NULL)))
@@ -182,20 +196,24 @@ bool LogParserRule::matchInternal(bool extMode, const TCHAR *source, UINT32 even
 	else
 	{
 		m_parser->trace(6, _T("  matching against regexp %s"), m_regexp);
-		if ((_tregexec(&m_preg, line, MAX_PARAM_COUNT, m_pmatch, 0) == 0) && matchRepeatCount())
+		int cgcount = _pcre_exec_t(m_preg, NULL, reinterpret_cast<const PCRE_TCHAR*>(line), _tcslen(line), 0, 0, m_pmatch, MAX_PARAM_COUNT * 3);
+      m_parser->trace(7, _T("  pcre_exec returns %d"), cgcount);
+		if ((cgcount >= 0) && matchRepeatCount())
 		{
 			m_parser->trace(6, _T("  matched"));
 			if ((cb != NULL) && ((m_eventCode != 0) || (m_eventName != NULL)))
 			{
+			   if (cgcount == 0)
+			      cgcount = MAX_PARAM_COUNT;
             StringList captureGroups;
-				for(int i = 1; i < MAX_PARAM_COUNT; i++)
+				for(int i = 1; i < cgcount; i++)
 				{
-               if (m_pmatch[i].rm_so == -1)
+               if (m_pmatch[i * 2] == -1)
                   continue;
 
-					int len = m_pmatch[i].rm_eo - m_pmatch[i].rm_so;
-					TCHAR *s = (TCHAR *)MemAlloc((len + 1) * sizeof(TCHAR));
-					memcpy(s, &line[m_pmatch[i].rm_so], len * sizeof(TCHAR));
+					int len = m_pmatch[i * 2 + 1] - m_pmatch[i * 2];
+					TCHAR *s = MemAllocString(len + 1);
+					memcpy(s, &line[m_pmatch[i * 2]], len * sizeof(TCHAR));
 					s[len] = 0;
                captureGroups.addPreallocated(s);
 				}

@@ -5,9 +5,6 @@ postgresql_la_SOURCES = main.cpp
 postgresql_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/build
 postgresql_la_LDFLAGS = -module -avoid-version -export-symbols ../subagent.sym
 postgresql_la_LIBADD = ../../libnxagent/libnxagent.la ../../../libnetxms/libnetxms.la ../../../db/libnxdb/libnxdb.la
-if USE_INTERNAL_LIBTRE
-postgresql_la_LIBADD += ../../../libtre/libnxtre.la
-endif
 
 EXTRA_DIST = postgresql.vcxproj postgresql.vcxproj.filters postgresql_subagent.h
 

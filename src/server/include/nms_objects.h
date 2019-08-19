@@ -360,7 +360,13 @@ class NXCORE_EXPORTABLE ObjectIndex : public AbstractIndex<NetObj>
 public:
    ObjectIndex() : AbstractIndex<NetObj>(false) { }
 
-   ObjectArray<NetObj> *getObjects(bool updateRefCount, bool (*filter)(NetObj *, void *) = NULL, void *userData = NULL);
+   ObjectArray<NetObj> *getObjects(bool updateRefCount, bool (*filter)(NetObj *, void *) = NULL, void *context = NULL);
+
+   template<typename C>
+   ObjectArray<NetObj> *getObjects(bool updateRefCount, bool (*filter)(NetObj *, C *), C *context)
+   {
+      return getObjects(updateRefCount, reinterpret_cast<bool (*)(NetObj*, void*)>(filter), context);
+   }
 };
 
 struct InetAddressIndexEntry;

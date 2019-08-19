@@ -1350,6 +1350,11 @@ public:
    TCHAR *unlink(const TCHAR *key) { return (TCHAR *)StringMapBase::unlink(key); }
 
    void addAll(const StringMap *src, bool (*filter)(const TCHAR *, const TCHAR *, void *) = NULL, void *context = NULL);
+   template<typename C>
+   void addAll(const StringMap *src, bool (*filter)(const TCHAR *, const TCHAR *, C *), C *context)
+   {
+      addAll(src, reinterpret_cast<bool (*)(const TCHAR *, const TCHAR *, void *)>(filter), context);
+   }
 
 	const TCHAR *get(const TCHAR *key) const { return (const TCHAR *)getObject(key); }
    const TCHAR *get(const TCHAR *key, size_t len) const { return (const TCHAR *)getObject(key, len); }
@@ -1361,6 +1366,13 @@ public:
 	bool getBoolean(const TCHAR *key, bool defaultValue) const;
 
    Iterator<const TCHAR> *iterator() { return new Iterator<const TCHAR>(new StringMapIterator(this)); }
+
+   using StringMapBase::forEach;
+   template <typename C>
+   EnumerationCallbackResult forEach(EnumerationCallbackResult (*cb)(const TCHAR *, const TCHAR *, C *), C *context) const
+   {
+      return StringMapBase::forEach(reinterpret_cast<EnumerationCallbackResult (*)(const TCHAR*, const void*, void*)>(cb), context);
+   }
 
    void fillMessage(NXCPMessage *msg, UINT32 sizeFieldId, UINT32 baseFieldId) const;
    void loadMessage(const NXCPMessage *msg, UINT32 sizeFieldId, UINT32 baseFieldId);

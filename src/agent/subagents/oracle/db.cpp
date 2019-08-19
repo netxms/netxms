@@ -1,7 +1,7 @@
 /*
  ** NetXMS - Network Management System
  ** Subagent for Oracle monitoring
- ** Copyright (C) 2009-2016 Raden Solutions
+ ** Copyright (C) 2009-2019 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU Lesser General Public License as published
@@ -269,26 +269,23 @@ bool DatabaseInstance::getData(const TCHAR *tag, TCHAR *value)
  */
 struct TagListCallbackData
 {
-   regex_t preg;
+   PCRE *preg;
    StringList *list;
 };
 
 /**
  * Tag list callback
  */
-static EnumerationCallbackResult TagListCallback(const TCHAR *key, const void *value, void *data)
+static EnumerationCallbackResult TagListCallback(const TCHAR *key, const TCHAR *value, TagListCallbackData *data)
 {
-   regmatch_t pmatch[16];
-   if (_tregexec(&(((TagListCallbackData *)data)->preg), key, 16, pmatch, 0) == 0) // MATCH
+   int pmatch[9];
+   if (_pcre_exec_t(data->preg, NULL, reinterpret_cast<const PCRE_TCHAR*>(key), _tcslen(key), 0, 0, pmatch, 9) >= 2) // MATCH
    {
-      if (pmatch[1].rm_so != -1)
-      {
-         size_t slen = pmatch[1].rm_eo - pmatch[1].rm_so;
-         TCHAR *s = (TCHAR *)malloc((slen + 1) * sizeof(TCHAR));
-         memcpy(s, &key[pmatch[1].rm_so], slen * sizeof(TCHAR));
-         s[slen] = 0;
-         ((TagListCallbackData *)data)->list->addPreallocated(s);
-      }
+      size_t slen = pmatch[3] - pmatch[2];
+      TCHAR *s = MemAllocString(slen + 1);
+      memcpy(s, &key[pmatch[2]], slen * sizeof(TCHAR));
+      s[slen] = 0;
+      data->list->addPreallocated(s);
    }
    return _CONTINUE;
 }
@@ -299,16 +296,18 @@ static EnumerationCallbackResult TagListCallback(const TCHAR *key, const void *v
 bool DatabaseInstance::getTagList(const TCHAR *pattern, StringList *value)
 {
    bool success = false;
-
    MutexLock(m_dataLock);
    if (m_data != NULL)
    {
+      const char *eptr;
+      int eoffset;
       TagListCallbackData data;
       data.list = value;
-	   if (_tregcomp(&data.preg, pattern, REG_EXTENDED | REG_ICASE) == 0)
+      data.preg = _pcre_compile_t(reinterpret_cast<const PCRE_TCHAR*>(pattern), PCRE_COMMON_FLAGS | PCRE_CASELESS, &eptr, &eoffset, NULL);
+	   if (data.preg != NULL)
 	   {
          m_data->forEach(TagListCallback, &data);
-         regfree(&data.preg);
+         _pcre_free_t(data.preg);
          success = true;
 	   }
    }

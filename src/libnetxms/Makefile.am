@@ -35,9 +35,6 @@ libnetxms_la_LIBADD =
 if USE_INTERNAL_EXPAT
 libnetxms_la_LIBADD += ../libexpat/libexpat/libnxexpat.la
 endif
-if USE_INTERNAL_LIBTRE
-libnetxms_la_LIBADD += ../libtre/libnxtre.la
-endif
 if USE_INTERNAL_ZLIB
 libnetxms_la_LIBADD += ../zlib/libnxzlib.la
 endif

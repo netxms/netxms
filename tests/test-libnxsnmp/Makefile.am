@@ -14,8 +14,4 @@ test_libnxsnmp_CPPFLAGS = -I@top_srcdir@/include -I../include -I@top_srcdir@/bui
 test_libnxsnmp_LDFLAGS = @EXEC_LDFLAGS@
 test_libnxsnmp_LDADD = @top_srcdir@/src/libnetxms/libnetxms.la @top_srcdir@/src/snmp/libnxsnmp/libnxsnmp.la @EXEC_LIBS@
 
-if USE_INTERNAL_LIBTRE
-test_libnxsnmp_LDADD += @top_srcdir@/src/libtre/libnxtre.la
-endif
-
 EXTRA_DIST = test-libnxsnmp.vcxproj test-libnxsnmp.vcxproj.filters

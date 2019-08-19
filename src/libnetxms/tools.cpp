@@ -1672,16 +1672,17 @@ int LIBNETXMS_EXPORTABLE NumCharsA(const char *str, char ch)
  */
 bool LIBNETXMS_EXPORTABLE RegexpMatchW(const WCHAR *str, const WCHAR *expr, bool matchCase)
 {
-   regex_t preg;
    bool result = false;
-
-	if (tre_regwcomp(&preg, expr, matchCase ? REG_EXTENDED | REG_NOSUB : REG_EXTENDED | REG_NOSUB | REG_ICASE) == 0)
-	{
-		if (tre_regwexec(&preg, str, 0, NULL, 0) == 0) // MATCH
-			result = true;
-		regfree(&preg);
-	}
-
+   const char *errptr;
+   int erroffset;
+   PCREW *preg = _pcre_compile_w(reinterpret_cast<const PCRE_WCHAR*>(expr), matchCase ? PCRE_COMMON_FLAGS_W : PCRE_COMMON_FLAGS_W | PCRE_CASELESS, &errptr, &erroffset, NULL);
+   if (preg != NULL)
+   {
+      int ovector[60];
+      if (_pcre_exec_w(preg, NULL, reinterpret_cast<const PCRE_WCHAR*>(str), wcslen(str), 0, 0, ovector, 60) >= 0) // MATCH
+         result = true;
+      _pcre_free_w(preg);
+   }
    return result;
 }
 
@@ -1690,16 +1691,17 @@ bool LIBNETXMS_EXPORTABLE RegexpMatchW(const WCHAR *str, const WCHAR *expr, bool
  */
 bool LIBNETXMS_EXPORTABLE RegexpMatchA(const char *str, const char *expr, bool matchCase)
 {
-   regex_t preg;
    bool result = false;
-
-	if (tre_regcomp(&preg, expr, matchCase ? REG_EXTENDED | REG_NOSUB : REG_EXTENDED | REG_NOSUB | REG_ICASE) == 0)
-	{
-		if (tre_regexec(&preg, str, 0, NULL, 0) == 0) // MATCH
-			result = true;
-		regfree(&preg);
-	}
-
+   const char *errptr;
+   int erroffset;
+   pcre *preg = pcre_compile(expr, matchCase ? PCRE_COMMON_FLAGS_A : PCRE_COMMON_FLAGS_A | PCRE_CASELESS, &errptr, &erroffset, NULL);
+   if (preg != NULL)
+   {
+      int ovector[60];
+      if (pcre_exec(preg, NULL, str, strlen(str), 0, 0, ovector, 60) >= 0) // MATCH
+         result = true;
+      pcre_free(preg);
+   }
    return result;
 }
 

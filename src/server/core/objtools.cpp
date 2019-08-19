@@ -196,7 +196,7 @@ static void GetAgentTable(void *pArg)
             int numCols = DBGetNumRows(hResult);
             if (numCols > 0)
             {
-               int *pnSubstrPos = (int *)malloc(sizeof(int) * numCols);
+               int *pnSubstrPos = MemAllocArray<int>(numCols);
                for(int i = 0; i < numCols; i++)
                {
                   DBGetField(hResult, i, 0, buffer, 256);
@@ -204,8 +204,10 @@ static void GetAgentTable(void *pArg)
                   pnSubstrPos[i] = DBGetFieldLong(hResult, i, 2);
                }
 
-               regex_t preg;
-               if (_tregcomp(&preg, pszRegEx, REG_EXTENDED | REG_ICASE) == 0)
+               const char *eptr;
+               int eoffset;
+               PCRE *preg = _pcre_compile_t(reinterpret_cast<const PCRE_TCHAR*>(pszRegEx), PCRE_COMMON_FLAGS | PCRE_CASELESS, &eptr, &eoffset, NULL);
+               if (preg != NULL)
                {
                   AgentConnection *pConn = ((TOOL_STARTUP_INFO *)pArg)->pNode->createAgentConnection();
                   if (pConn != NULL)
@@ -214,11 +216,11 @@ static void GetAgentTable(void *pArg)
                      UINT32 dwResult = pConn->getList(pszEnum, &values);
                      if (dwResult == ERR_SUCCESS)
                      {
-                        regmatch_t *pMatchList = (regmatch_t *)malloc(sizeof(regmatch_t) * (numCols + 1));
+                        int *pMatchList = MemAllocArray<int>((numCols + 1) * 3);
                         for(int i = 0; i < values->size(); i++)
                         {
                            const TCHAR *line = values->get(i);
-                           if (_tregexec(&preg, line, numCols + 1, pMatchList, 0) == 0)
+                           if (_pcre_exec_t(preg, NULL, reinterpret_cast<const PCRE_TCHAR*>(line), _tcslen(line), 0, 0, pMatchList, (numCols + 1) * 3) >= 0)
                            {
                               table.addRow();
 
@@ -226,14 +228,21 @@ static void GetAgentTable(void *pArg)
                               for(int j = 0; j < numCols; j++)
                               {
                                  int pos = pnSubstrPos[j];
-                                 size_t len = pMatchList[pos].rm_eo - pMatchList[pos].rm_so;
-                                 memcpy(buffer, &line[pMatchList[pos].rm_so], len * sizeof(TCHAR));
-                                 buffer[len] = 0;
+                                 if (pMatchList[pos * 2] != -1)
+                                 {
+                                    size_t len = pMatchList[pos * 2 + 1] - pMatchList[pos * 2];
+                                    memcpy(buffer, &line[pMatchList[pos * 2]], len * sizeof(TCHAR));
+                                    buffer[len] = 0;
+                                 }
+                                 else
+                                 {
+                                    buffer[0] = 0;
+                                 }
                                  table.set(j, buffer);
                               }
                            }
                         }
-                        free(pMatchList);
+                        MemFree(pMatchList);
                         delete values;
 
                         msg.setField(VID_RCC, RCC_SUCCESS);
@@ -249,13 +258,13 @@ static void GetAgentTable(void *pArg)
                   {
                      msg.setField(VID_RCC, RCC_COMM_FAILURE);
                   }
-                  regfree(&preg);
+                  _pcre_free_t(preg);
                }
                else     // Regexp compilation failed
                {
                   msg.setField(VID_RCC, RCC_BAD_REGEXP);
                }
-               free(pnSubstrPos);
+               MemFree(pnSubstrPos);
             }
             else  // No columns defined
             {

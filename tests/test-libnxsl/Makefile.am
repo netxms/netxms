@@ -16,6 +16,7 @@ nxsltest_DATA = \
 	control.nxsl \
 	globals.nxsl \
 	math.nxsl \
+	regexp.nxsl \
 	strings.nxsl \
 	try-catch.nxsl \
 	types.nxsl \
@@ -26,9 +27,5 @@ test_libnxsl_SOURCES = test-libnxsl.cpp
 test_libnxsl_CPPFLAGS = -I@top_srcdir@/include -I../include -I@top_srcdir@/build
 test_libnxsl_LDFLAGS = @EXEC_LDFLAGS@
 test_libnxsl_LDADD = @top_srcdir@/src/libnxsl/libnxsl.la @top_srcdir@/src/libnetxms/libnetxms.la @EXEC_LIBS@
-
-if USE_INTERNAL_LIBTRE
-test_libnxsl_LDADD += @top_srcdir@/src/libtre/libnxtre.la
-endif
 
 EXTRA_DIST = test-libnxsl.vcxproj test-libnxsl.vcxproj.filters

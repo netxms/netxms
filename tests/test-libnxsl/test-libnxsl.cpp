@@ -87,6 +87,7 @@ int main(int argc, char *argv[])
    RunTestScript(_T("control.nxsl"));
    RunTestScript(_T("globals.nxsl"));
    RunTestScript(_T("math.nxsl"));
+   RunTestScript(_T("regexp.nxsl"));
    RunTestScript(_T("strings.nxsl"));
    RunTestScript(_T("try-catch.nxsl"));
    RunTestScript(_T("types.nxsl"));

@@ -166,7 +166,6 @@ MacAddress MacAddress::parse(const char *str)
    if (str == NULL || strlen(str) > 23)
       return MacAddress(MacAddress::ZERO);
 
-   regex_t compRegex;
    char exp1[254] = { "^([0-9a-fA-F]{2})[ :-]?"
                       "([0-9a-fA-F]{2})[ .:-]?"
                       "([0-9a-fA-F]{2})[ :-]?"
@@ -182,28 +181,32 @@ MacAddress MacAddress::parse(const char *str)
                        "([0-9a-fA-F]{3})$" };
 
    String mac;
-   if (tre_regcomp(&compRegex, exp1, REG_EXTENDED) == 0)
+   const char *errptr;
+   int erroffset;
+   pcre *compRegex = pcre_compile(exp1, PCRE_EXTENDED, &errptr, &erroffset, NULL);
+   if (compRegex != NULL)
    {
-      regmatch_t match[9];
-      if (tre_regexec(&compRegex, str, 9, match, 0) == 0)
+      int ovector[30];
+      if (pcre_exec(compRegex, NULL, str, strlen(str), 0, 0, ovector, 30) == 9)
       {
-         for(int i = 1; i < 9; i++)
-            mac.appendMBString(str+match[i].rm_so, (match[i].rm_eo - match[i].rm_so), CP_ACP);
+         for(int i = 1; i <= 8; i++)
+            mac.appendMBString(str + ovector[i * 2], (ovector[i * 2 + 1] - ovector[i * 2]), CP_ACP);
+         pcre_free(compRegex);
       }
       else
       {
-         regfree(&compRegex);
-         if (tre_regcomp(&compRegex, exp2, REG_EXTENDED) == 0)
+         pcre_free(compRegex);
+         pcre *compRegex = pcre_compile(exp2, PCRE_EXTENDED, &errptr, &erroffset, NULL);
+         if (compRegex != NULL)
          {
-            regmatch_t match[5];
-            if (tre_regexec(&compRegex, str, 5, match, 0) == 0)
+            if (pcre_exec(compRegex, NULL, str, strlen(str), 0, 0, ovector, 30) == 5)
             {
-               for(int i = 1; i < 5; i++)
-                  mac.appendMBString(str+match[i].rm_so, (match[i].rm_eo - match[i].rm_so), CP_ACP);
+               for(int i = 1; i <= 4; i++)
+                  mac.appendMBString(str + ovector[i * 2], (ovector[i * 2 + 1] - ovector[i * 2]), CP_ACP);
             }
+            pcre_free(compRegex);
          }
       }
-      regfree(&compRegex);
    }
 
    if (mac.length() > 0)

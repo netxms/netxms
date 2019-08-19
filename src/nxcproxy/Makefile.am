@@ -16,9 +16,6 @@ nxcproxy_LDADD = ../libnetxms/libnetxms.la
 if USE_INTERNAL_EXPAT
 nxcproxy_LDADD += ../libexpat/libexpat/libnxexpat.la
 endif
-if USE_INTERNAL_LIBTRE
-nxcproxy_LDADD += ../libtre/libnxtre.la
-endif
 
 CLEANFILES = messages.c messages.h
 

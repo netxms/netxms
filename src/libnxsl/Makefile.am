@@ -8,9 +8,6 @@ libnxsl_la_SOURCES = lex.parser.cpp parser.tab.cpp \
 libnxsl_la_CPPFLAGS=-I@top_srcdir@/include -DLIBNXSL_EXPORTS -I@top_srcdir@/build
 libnxsl_la_LDFLAGS = -release $(NETXMS_LIBRARY_VERSION)
 libnxsl_la_LIBADD = ../libnetxms/libnetxms.la
-if USE_INTERNAL_LIBTRE
-libnxsl_la_LIBADD += ../libtre/libnxtre.la
-endif
 
 EXTRA_DIST = Makefile.w32 libnxsl.vcxproj libnxsl.vcxproj.filters libnxsl.h parser.l parser.y parser.tab.hpp
 

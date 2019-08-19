@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -23,38 +23,45 @@
 #ifndef _netxms_regex_h
 #define _netxms_regex_h
 
-#ifdef USE_BUNDLED_LIBTRE
-#include "../src/libtre/tre.h"
-
-#ifdef UNICODE
-#define _tregcomp  tre_regwcomp
-#define _tregexec  tre_regwexec
-#define _tregncomp tre_regwncomp
-#define _tregnexec tre_regwnexec
-#else
-#define _tregcomp  tre_regcomp
-#define _tregexec  tre_regexec
-#define _tregncomp tre_regncomp
-#define _tregnexec tre_regnexec
+#if HAVE_PCRE_H
+#include <pcre.h>
+#elif HAVE_PCRE_PCRE_H
+#include <pcre/pcre.h>
 #endif
 
-#define regfree tre_regfree
-
+#ifdef UNICODE_UCS2
+#define PCRE_WCHAR              PCRE_UCHAR16
+#define PCREW                   pcre16
+#define PCRE_UNICODE_FLAGS      PCRE_UTF16
+#define _pcre_compile_w         pcre16_compile
+#define _pcre_exec_w            pcre16_exec
+#define _pcre_free_w            pcre16_free
 #else
-#include <tre/regex.h>
-
-#ifdef UNICODE
-#define _tregcomp  tre_regwcomp
-#define _tregexec  tre_regwexec
-#define _tregncomp tre_regwncomp
-#define _tregnexec tre_regwnexec
-#else
-#define _tregcomp  tre_regcomp
-#define _tregexec  tre_regexec
-#define _tregncomp tre_regncomp
-#define _tregnexec tre_regnexec
+#define PCRE_WCHAR              PCRE_UCHAR32
+#define PCREW                   pcre32
+#define PCRE_UNICODE_FLAGS      PCRE_UTF32
+#define _pcre_compile_w         pcre32_compile
+#define _pcre_exec_w            pcre32_exec
+#define _pcre_free_w            pcre32_free
 #endif
 
-#endif	/* USE_BUNDLED_LIBTRE */
+#ifdef UNICODE
+#define PCRE_TCHAR              PCRE_WCHAR
+#define PCRE                    PCREW
+#define PCRE_COMMON_FLAGS       PCRE_UNICODE_FLAGS
+#define _pcre_compile_t         _pcre_compile_w
+#define _pcre_exec_t            _pcre_exec_w
+#define _pcre_free_t            _pcre_free_w
+#else   /* UNICODE */
+#define PCRE_TCHAR              char
+#define PCRE                    pcre
+#define PCRE_COMMON_FLAGS       0
+#define _pcre_compile_t         pcre_compile
+#define _pcre_exec_t            pcre_exec
+#define _pcre_free_t            pcre_free
+#endif
+
+#define PCRE_COMMON_FLAGS_W     PCRE_UNICODE_FLAGS
+#define PCRE_COMMON_FLAGS_A     0
 
 #endif	/* _netxms_regex_h */

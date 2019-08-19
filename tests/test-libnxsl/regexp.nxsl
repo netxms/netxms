@@ -1,0 +1,58 @@
+/* Test regulat expressions */
+
+regexp = "^Error: ([0-9]+) (.*)";
+
+s = "Error: 18 (test error)";
+if (s ~= regexp)
+{
+	assert($1 == "18");
+	assert($2 == "(test error)");
+	assert($3 == null);
+}
+else
+{
+	assert(false);
+}
+
+s = upper(s);
+assert(!(s ~= regexp));
+assert(!(s match regexp));
+assert(s imatch regexp);
+
+s = "hello, world!";
+assert(!(s imatch regexp));
+
+regexp = "(Msg:(([0-9]+)(A|B)|(S[0-9]+)) (.*))";
+s = "MSG:42B message text";
+if (s imatch regexp)
+{
+	assert($1 == s);
+	assert($2 == "42B");
+	assert($3 == "42");
+	assert($4 == "B");
+	assert($5 == null);
+	assert($6 == "message text");
+	assert($7 == null);
+}
+else
+{
+	assert(false);
+}
+
+s = "MSG:S512 message text";
+if (s imatch regexp)
+{
+	assert($1 == s);
+	assert($2 == "S512");
+	assert($3 == null);
+	assert($4 == null);
+	assert($5 == "S512");
+	assert($6 == "message text");
+	assert($7 == null);
+}
+else
+{
+	assert(false);
+}
+
+return 0;

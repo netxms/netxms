@@ -55,9 +55,6 @@ endif
 if USE_INTERNAL_EXPAT
 libnxcore_la_LIBADD += @top_srcdir@/src/libexpat/libexpat/libnxexpat.la
 endif
-if USE_INTERNAL_LIBTRE
-libnxcore_la_LIBADD += @top_srcdir@/src/libtre/libnxtre.la
-endif
 if USE_INTERNAL_JANSSON
 libnxcore_la_LIBADD += @top_srcdir@/src/jansson/libnxjansson.la
 else

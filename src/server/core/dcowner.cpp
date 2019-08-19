@@ -1143,8 +1143,10 @@ bool DataCollectionOwner::isDataCollectionSource(UINT32 nodeId)
  */
 SharedObjectArray<DCObject> *DataCollectionOwner::getDCObjectsByRegex(const TCHAR *regex, bool searchName, UINT32 userId)
 {
-   regex_t preg;
-   if (_tregcomp(&preg, regex, REG_EXTENDED | REG_NOSUB) != 0)
+   const char *eptr;
+   int eoffset;
+   PCRE *preg = _pcre_compile_t(reinterpret_cast<const PCRE_TCHAR*>(regex), PCRE_COMMON_FLAGS | PCRE_CASELESS, &eptr, &eoffset, NULL);
+   if (preg == NULL)
       return NULL;
 
    lockDciAccess(false);
@@ -1154,9 +1156,12 @@ SharedObjectArray<DCObject> *DataCollectionOwner::getDCObjectsByRegex(const TCHA
    for(int i = 0; i < m_dcObjects->size(); i++)
    {
       DCObject *o = m_dcObjects->get(i);
-      if (o->hasAccess(userId) &&
-         ((!searchName && (_tregexec(&preg, o->getDescription(), 0, NULL, 0) == 0)) ||
-          (searchName && (_tregexec(&preg, o->getName(), 0, NULL, 0) == 0))))
+      if (!o->hasAccess(userId))
+         continue;
+
+      const TCHAR *subj = searchName ? o->getName() : o->getDescription();
+      int ovector[30];
+      if (_pcre_exec_t(preg, NULL, reinterpret_cast<const PCRE_TCHAR*>(subj), _tcslen(subj), 0, 0, ovector, 30) >= 0)
       {
          result->add(m_dcObjects->getShared(i));
       }
@@ -1164,6 +1169,6 @@ SharedObjectArray<DCObject> *DataCollectionOwner::getDCObjectsByRegex(const TCHA
 
    unlockDciAccess();
 
-   regfree(&preg);
+   _pcre_free_t(preg);
    return result;
 }

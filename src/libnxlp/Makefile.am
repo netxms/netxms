@@ -12,10 +12,6 @@ libnxlp_la_CPPFLAGS+=-I@top_srcdir@/src/libexpat/libexpat
 libnxlp_la_LIBADD += @top_srcdir@/src/libexpat/libexpat/libnxexpat.la
 endif
 
-if USE_INTERNAL_LIBTRE
-libnxlp_la_LIBADD += @top_srcdir@/src/libtre/libnxtre.la
-endif
-
 EXTRA_DIST = \
 	Makefile.w32 \
 	eventlog.cpp vss.cpp wevt.cpp \

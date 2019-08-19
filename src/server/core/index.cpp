@@ -452,13 +452,13 @@ void AbstractIndexBase::forEach(void (*callback)(void *, void *), void *data)
  *
  * @param updateRefCount if set to true, reference count for each object will be increased
  */
-ObjectArray<NetObj> *ObjectIndex::getObjects(bool updateRefCount, bool (*filter)(NetObj *, void *), void *userData)
+ObjectArray<NetObj> *ObjectIndex::getObjects(bool updateRefCount, bool (*filter)(NetObj *, void *), void *context)
 {
    INDEX_HEAD *index = acquireIndex();
    ObjectArray<NetObj> *result = new ObjectArray<NetObj>(index->size);
    for(size_t i = 0; i < index->size; i++)
    {
-      if ((filter == NULL) || filter(static_cast<NetObj*>(index->elements[i].object), userData))
+      if ((filter == NULL) || filter(static_cast<NetObj*>(index->elements[i].object), context))
       {
          if (updateRefCount)
             static_cast<NetObj*>(index->elements[i].object)->incRefCount();

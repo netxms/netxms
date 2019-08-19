@@ -94,14 +94,16 @@ int CheckHTTP(char *szAddr, const InetAddress& addr, short nPort, char *szURI, c
 {
 	int nBytes, nRet = 0;
 	SOCKET nSd;
-	regex_t preg;
 
 	if (szMatch[0] == 0)
 	{
 		strcpy(szMatch, "^HTTP/1.[01] 200 .*");
 	}
 
-	if (tre_regcomp(&preg, szMatch, REG_EXTENDED | REG_ICASE | REG_NOSUB) != 0)
+   const char *errptr;
+   int erroffset;
+	pcre *preg = pcre_compile(szMatch, PCRE_EXTENDED | PCRE_CASELESS, &errptr, &erroffset, NULL);
+	if (preg == NULL)
 	{
 		return PC_ERR_BAD_PARAMS;
 	}
@@ -160,7 +162,8 @@ int CheckHTTP(char *szAddr, const InetAddress& addr, short nPort, char *szURI, c
          {
 				buff[offset] = 0;
 
-				if (tre_regexec(&preg, buff, 0, NULL, 0) == 0)
+				int ovector[30];
+            if (pcre_exec(preg, NULL, buff, strlen(buff), 0, 0, ovector, 30) >= 0)
 				{
 					nRet = PC_ERR_NONE;
 				}
@@ -179,7 +182,7 @@ int CheckHTTP(char *szAddr, const InetAddress& addr, short nPort, char *szURI, c
 		nRet = PC_ERR_CONNECT;
 	}
 
-	regfree(&preg);
+	pcre_free(preg);
 	return nRet;
 }
 
@@ -194,8 +197,10 @@ int CheckHTTPS(char *szAddr, const InetAddress& addr, short nPort, char *szURI, 
       strcpy(szMatch, "^HTTP/1.[01] 200 .*");
    }
 
-   regex_t preg;
-   if (tre_regcomp(&preg, szMatch, REG_EXTENDED | REG_ICASE | REG_NOSUB) != 0)
+   const char *errptr;
+   int erroffset;
+   pcre *preg = pcre_compile(szMatch, PCRE_EXTENDED | PCRE_CASELESS, &errptr, &erroffset, NULL);
+   if (preg == NULL)
    {
       return PC_ERR_BAD_PARAMS;
    }
@@ -310,7 +315,8 @@ int CheckHTTPS(char *szAddr, const InetAddress& addr, short nPort, char *szURI, 
                      }
                      if (buffer[0] != 0) 
                      {
-                        if (tre_regexec(&preg, buffer, 0, NULL, 0) == 0)
+                        int ovector[30];
+                        if (pcre_exec(preg, NULL, buffer, strlen(buffer), 0, 0, ovector, 30) >= 0)
                         {
                            ret = PC_ERR_NONE;
                         }
@@ -343,7 +349,7 @@ int CheckHTTPS(char *szAddr, const InetAddress& addr, short nPort, char *szURI, 
       AgentWriteDebugLog(7, _T("PortCheck: SSL_CTX_new failed"));
    }
 
-   regfree(&preg);
+   pcre_free(preg);
    return ret;
 
 #else

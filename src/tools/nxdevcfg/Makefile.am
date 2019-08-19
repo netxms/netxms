@@ -13,7 +13,3 @@ nxdevcfg_SOURCES = flags.cpp nxdevcfg.cpp
 nxdevcfg_CPPFLAGS = -I@top_srcdir@/include -I@top_srcdir@/build
 nxdevcfg_LDFLAGS = -I@top_srcdir@/include @EXEC_LDFLAGS@
 nxdevcfg_LDADD = ../../libnetxms/libnetxms.la @EXEC_LIBS@
-
-if USE_INTERNAL_LIBTRE
-nxdevcfg_LDADD += ../../libtre/libnxtre.la
-endif
