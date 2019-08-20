@@ -305,7 +305,7 @@ static void LoadGlobalConfig()
 
    g_conditionPollingInterval = ConfigReadInt(_T("ConditionPollingInterval"), 60);
    g_configurationPollingInterval = ConfigReadInt(_T("ConfigurationPollingInterval"), 3600);
-	g_discoveryPollingInterval = ConfigReadInt(_T("NetworkDiscovery.PasiveDiscovery.Interval"), 900);
+	g_discoveryPollingInterval = ConfigReadInt(_T("NetworkDiscovery.PassiveDiscovery.Interval"), 900);
    g_icmpPollingInterval = ConfigReadInt(_T("ICMP.PollingInterval"), 60);
 	g_instancePollingInterval = ConfigReadInt(_T("InstancePollingInterval"), 600);
 	g_routingTableUpdateInterval = ConfigReadInt(_T("RoutingTableUpdateInterval"), 300);
