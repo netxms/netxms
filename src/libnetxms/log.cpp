@@ -1114,7 +1114,7 @@ void LIBNETXMS_EXPORTABLE nxlog_report_event(DWORD msg, int level, int stringCou
    {
       if (s_flags & NXLOG_PRINT_TO_STDOUT)
       {
-         va_args args2;
+         va_list args2;
          va_copy(args2, args);
          msg_buffer_t localBuffer;
          TCHAR *message = FormatString(localBuffer, altMessage, args2);
