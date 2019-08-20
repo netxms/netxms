@@ -1232,7 +1232,7 @@ int DataCollectionTarget::getMostCriticalDCIStatus()
  */
 void DataCollectionTarget::calculateCompoundStatus(BOOL bForcedRecalc)
 {
-   NetObj::calculateCompoundStatus(bForcedRecalc);
+   super::calculateCompoundStatus(bForcedRecalc);
 }
 
 /**

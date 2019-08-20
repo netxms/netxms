@@ -183,25 +183,27 @@ MacAddress MacAddress::parse(const char *str)
    String mac;
    const char *errptr;
    int erroffset;
-   pcre *compRegex = pcre_compile(exp1, PCRE_EXTENDED, &errptr, &erroffset, NULL);
+   pcre *compRegex = pcre_compile(exp1, PCRE_COMMON_FLAGS_A, &errptr, &erroffset, NULL);
    if (compRegex != NULL)
    {
       int ovector[30];
-      if (pcre_exec(compRegex, NULL, str, strlen(str), 0, 0, ovector, 30) == 9)
+      int cgcount = pcre_exec(compRegex, NULL, str, strlen(str), 0, 0, ovector, 30);
+      if (cgcount >= 7) // at least 6 elements
       {
-         for(int i = 1; i <= 8; i++)
+         for(int i = 1; i < cgcount; i++)
             mac.appendMBString(str + ovector[i * 2], (ovector[i * 2 + 1] - ovector[i * 2]), CP_ACP);
          pcre_free(compRegex);
       }
       else
       {
          pcre_free(compRegex);
-         pcre *compRegex = pcre_compile(exp2, PCRE_EXTENDED, &errptr, &erroffset, NULL);
+         pcre *compRegex = pcre_compile(exp2, PCRE_COMMON_FLAGS_A, &errptr, &erroffset, NULL);
          if (compRegex != NULL)
          {
-            if (pcre_exec(compRegex, NULL, str, strlen(str), 0, 0, ovector, 30) == 5)
+            cgcount = pcre_exec(compRegex, NULL, str, strlen(str), 0, 0, ovector, 30);
+            if (cgcount == 5)
             {
-               for(int i = 1; i <= 4; i++)
+               for(int i = 1; i < cgcount; i++)
                   mac.appendMBString(str + ovector[i * 2], (ovector[i * 2 + 1] - ovector[i * 2]), CP_ACP);
             }
             pcre_free(compRegex);
