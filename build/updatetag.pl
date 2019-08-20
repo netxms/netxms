@@ -8,6 +8,11 @@ my $property_file = shift || $file_prefix . "-build-tag.properties";
 
 my $tag = `git describe --always`;
 chomp $tag;
+if ($tag == "")
+{
+	print "Cannot read git tag\n";
+	exit 0;
+}
 if ($tag =~ /^Release-(.*)/)
 {
 	$tag = $1;
