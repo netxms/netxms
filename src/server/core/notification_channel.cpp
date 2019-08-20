@@ -417,7 +417,7 @@ static void RenameNotificaiotnChannelDB(std::pair<TCHAR *, TCHAR *> *names)
 }
 
 /**
- * Rename notificaiotn channel
+ * Rename notification channel
  */
 void RenameNotificationChannel(TCHAR *name, TCHAR *newName)
 {
@@ -563,7 +563,7 @@ void LoadNotificationChannelDrivers()
    _tcscpy(path, g_netxmsdLibDir);
    _tcscat(path, LDIR_NCD);
 
-   nxlog_debug_tag(DEBUG_TAG, 1, _T("Loading channel notification drivers from %s"), path);
+   nxlog_debug_tag(DEBUG_TAG, 1, _T("Loading notification channel drivers from %s"), path);
 #ifdef _WIN32
    SetDllDirectory(path);
 #endif
@@ -587,7 +587,7 @@ void LoadNotificationChannelDrivers()
 #ifdef _WIN32
    SetDllDirectory(NULL);
 #endif
-   nxlog_debug_tag(DEBUG_TAG, 1, _T("%d channel notification drivers loaded"), s_driverList.size());
+   nxlog_debug_tag(DEBUG_TAG, 1, _T("%d notification channel drivers loaded"), s_driverList.size());
 }
 
 /**
@@ -615,7 +615,7 @@ void LoadNCConfiguration()
          s_channelList.set(name, nc);
          MutexUnlock(s_channelListLock);
          numberOfAddedDrivers++;
-         nxlog_debug_tag(DEBUG_TAG, 4, _T("Notification channel %s loaded successfully"), name);
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("Notification channel %s successfully created"), name);
       }
       DBFreeResult(result);
    }
@@ -623,4 +623,3 @@ void LoadNCConfiguration()
 
    DBConnectionPoolReleaseConnection(hdb);
 }
-

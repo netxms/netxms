@@ -47,7 +47,7 @@
 #define DEFAULT_LOG_FILE      _T("C:\\netxmsd.log")
 #define DEFAULT_DUMP_DIR      _T("C:\\")
 
-#define LDIR_NCD              _T("\\ncd")
+#define LDIR_NCD              _T("\\ncdrv")
 #define LDIR_NDD              _T("\\ndd")
 #define LDIR_PDSDRV           _T("\\pdsdrv")
 
@@ -83,7 +83,7 @@
 #define DEFAULT_LOG_FILE      _T("/var/log/netxmsd.log")
 #define DEFAULT_DUMP_DIR      _T("/var/tmp")
 
-#define LDIR_NCD              _T("/ncd")
+#define LDIR_NCD              _T("/ncdrv")
 #define LDIR_NDD              _T("/ndd")
 #define LDIR_PDSDRV           _T("/pdsdrv")
 
