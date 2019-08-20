@@ -654,6 +654,20 @@ static void GetDatabasePassword()
 }
 
 /**
+ * Get log destination flags
+ */
+static inline UINT32 GetLogDestinationFlag()
+{
+   if (g_flags & AF_USE_SYSLOG)
+      return NXLOG_USE_SYSLOG;
+   if (g_flags & AF_USE_SYSTEMD_JOURNAL)
+      return NXLOG_USE_SYSTEMD;
+   if (g_flags & AF_LOG_TO_STDOUT)
+      return NXLOG_USE_STDOUT;
+   return 0;
+}
+
+/**
  * Server initialization
  */
 BOOL NXCORE_EXPORTABLE Initialize()
@@ -670,8 +684,7 @@ BOOL NXCORE_EXPORTABLE Initialize()
 				_tprintf(_T("WARNING: cannot set log rotation policy; using default values\n"));
 	}
    if (!nxlog_open((g_flags & AF_USE_SYSLOG) ? NETXMSD_SYSLOG_NAME : g_szLogFile,
-	                ((g_flags & AF_USE_SYSLOG) ? NXLOG_USE_SYSLOG : 0) |
-	                ((g_flags & AF_USE_SYSTEMD_JOURNAL) ? NXLOG_USE_SYSTEMD : 0) |
+                   GetLogDestinationFlag() |
 	                ((g_flags & AF_BACKGROUND_LOG_WRITER) ? NXLOG_BACKGROUND_WRITER : 0) |
                    ((g_flags & AF_DAEMON) ? 0 : NXLOG_PRINT_TO_STDOUT) |
                    ((g_flags & AF_LOG_IN_JSON_FORMAT) ? NXLOG_JSON_FORMAT : 0)))

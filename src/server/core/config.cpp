@@ -171,16 +171,21 @@ stop_search:
           (!_tcsicmp(g_szLogFile, _T("{syslog}"))))
       {
          g_flags |= AF_USE_SYSLOG;
-         g_flags &= ~AF_USE_SYSTEMD_JOURNAL;
+         g_flags &= ~(AF_USE_SYSTEMD_JOURNAL | AF_LOG_TO_STDOUT);
       }
       else if (!_tcsicmp(g_szLogFile, _T("{systemd}")))
       {
          g_flags |= AF_USE_SYSTEMD_JOURNAL;
-         g_flags &= ~AF_USE_SYSLOG;
+         g_flags &= ~(AF_USE_SYSLOG | AF_LOG_TO_STDOUT);
+      }
+      else if (!_tcsicmp(g_szLogFile, _T("{stdout}")))
+      {
+         g_flags |= AF_LOG_TO_STDOUT;
+         g_flags &= ~(AF_USE_SYSLOG | AF_USE_SYSTEMD_JOURNAL);
       }
       else
       {
-         g_flags &= ~(AF_USE_SYSLOG | AF_USE_SYSTEMD_JOURNAL);
+         g_flags &= ~(AF_USE_SYSLOG | AF_USE_SYSTEMD_JOURNAL | AF_LOG_TO_STDOUT);
       }
       bSuccess = true;
    }

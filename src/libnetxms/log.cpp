@@ -519,6 +519,12 @@ bool LIBNETXMS_EXPORTABLE nxlog_open(const TCHAR *logName, UINT32 flags)
    {
       s_flags |= NXLOG_IS_OPEN;
    }
+   else if (s_flags & NXLOG_USE_STDOUT)
+   {
+      s_flags |= NXLOG_IS_OPEN;
+      s_flags &= ~NXLOG_PRINT_TO_STDOUT;
+      s_logFileHandle = stdout;
+   }
    else
    {
       TCHAR buffer[32];
@@ -577,7 +583,7 @@ void LIBNETXMS_EXPORTABLE nxlog_close()
          closelog();
 #endif
       }
-      else if (s_flags & NXLOG_USE_SYSTEMD)
+      else if (s_flags & (NXLOG_USE_SYSTEMD | NXLOG_USE_STDOUT))
       {
          // Do nothing
       }
@@ -813,7 +819,7 @@ static void WriteLogToFileAsJSON(INT16 severity, const TCHAR *tag, const TCHAR *
       WriteLogToConsole(severity, timestamp, tag, message);
 
    MutexUnlock(s_mutexLogAccess);
-   free(text);
+   free(text); // Intentionally use free() instead if MemFree() - memory is allocated by libjansson
 }
 
 /**

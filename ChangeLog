@@ -23,6 +23,7 @@
 - Duplicate IP address detection during network discovery
 - Improved I/O performance parameters in Windows agent
 - Optional JSON format for log files
+- Option to use stdout as log output device
 - Fixed issues:
 	NX-183 (Implemented responsible users for objects)
 	NX-725 (Add alarm comments from NXSL)

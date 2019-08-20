@@ -151,6 +151,7 @@
 #define AF_USE_SYSTEMD_JOURNAL                 _ULL(0x0000400000000000)
 #define AF_COLLECT_ICMP_STATISTICS             _ULL(0x0000800000000000)
 #define AF_LOG_IN_JSON_FORMAT                  _ULL(0x0001000000000000)
+#define AF_LOG_TO_STDOUT                       _ULL(0x0002000000000000)
 #define AF_SERVER_INITIALIZED                  _ULL(0x4000000000000000)
 #define AF_SHUTDOWN                            _ULL(0x8000000000000000)
 

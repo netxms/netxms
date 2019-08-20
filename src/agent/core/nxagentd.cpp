@@ -809,6 +809,20 @@ static void ParseServerList(TCHAR *serverList, bool isControl, bool isMaster)
 }
 
 /**
+ * Get log destination flags
+ */
+static inline UINT32 GetLogDestinationFlag()
+{
+   if (g_dwFlags & AF_USE_SYSLOG)
+      return NXLOG_USE_SYSLOG;
+   if (g_dwFlags & AF_USE_SYSTEMD_JOURNAL)
+      return NXLOG_USE_SYSTEMD;
+   if (g_dwFlags & AF_LOG_TO_STDOUT)
+      return NXLOG_USE_STDOUT;
+   return 0;
+}
+
+/**
  * Agent initialization
  */
 BOOL Initialize()
@@ -820,7 +834,7 @@ BOOL Initialize()
 
    // Open log file
    if (!nxlog_open((g_dwFlags & AF_USE_SYSLOG) ? NXAGENTD_SYSLOG_NAME : g_szLogFile,
-	                ((g_dwFlags & AF_USE_SYSLOG) ? NXLOG_USE_SYSLOG : ((g_dwFlags & AF_USE_SYSTEMD_JOURNAL) ? NXLOG_USE_SYSTEMD : 0)) |
+                   GetLogDestinationFlag() |
 	                ((g_dwFlags & AF_BACKGROUND_LOG_WRITER) ? NXLOG_BACKGROUND_WRITER : 0) |
                    ((g_dwFlags & AF_DAEMON) ? 0 : NXLOG_PRINT_TO_STDOUT) |
                    ((g_dwFlags & AF_JSON_LOG) ? NXLOG_JSON_FORMAT : 0)))
@@ -1984,11 +1998,22 @@ int main(int argc, char *argv[])
 						 (!_tcsicmp(g_szLogFile, _T("{eventlog}"))))
 					{
 						g_dwFlags |= AF_USE_SYSLOG;
+                  g_dwFlags &= ~(AF_USE_SYSTEMD_JOURNAL | AF_LOG_TO_STDOUT);
 					}
 					else if (!_tcsicmp(g_szLogFile, _T("{systemd}")))
 					{
                   g_dwFlags |= AF_USE_SYSTEMD_JOURNAL;
+                  g_dwFlags &= ~(AF_USE_SYSLOG | AF_LOG_TO_STDOUT);
 					}
+               else if (!_tcsicmp(g_szLogFile, _T("{stdout}")))
+               {
+                  g_dwFlags |= AF_LOG_TO_STDOUT;
+                  g_dwFlags &= ~(AF_USE_SYSLOG | AF_USE_SYSTEMD_JOURNAL);
+               }
+               else
+               {
+                  g_dwFlags &= ~(AF_USE_SYSLOG | AF_USE_SYSTEMD_JOURNAL | AF_LOG_TO_STDOUT);
+               }
 #ifdef _WIN32
 					if (g_dwFlags & AF_DAEMON)
 					{

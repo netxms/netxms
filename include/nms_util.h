@@ -229,13 +229,14 @@ inline WCHAR towupper(WCHAR c)
 /**
  * nxlog_open() flags
  */
-#define NXLOG_USE_SYSLOG		  ((UINT32)0x00000001)
-#define NXLOG_PRINT_TO_STDOUT	  ((UINT32)0x00000002)
-#define NXLOG_BACKGROUND_WRITER ((UINT32)0x00000004)
-#define NXLOG_DEBUG_MODE        ((UINT32)0x00000008)
-#define NXLOG_USE_SYSTEMD       ((UINT32)0x00000010)
-#define NXLOG_JSON_FORMAT       ((UINT32)0x00000020)
-#define NXLOG_IS_OPEN           ((UINT32)0x80000000)
+#define NXLOG_USE_SYSLOG		  ((UINT32)0x00000001)  /* use syslog (Event Log on Windows) as log device */
+#define NXLOG_PRINT_TO_STDOUT	  ((UINT32)0x00000002)  /* print log copy to stdout */
+#define NXLOG_BACKGROUND_WRITER ((UINT32)0x00000004)  /* enable background log writer */
+#define NXLOG_DEBUG_MODE        ((UINT32)0x00000008)  /* log debug mode - pront additional debug infor about logger itself */
+#define NXLOG_USE_SYSTEMD       ((UINT32)0x00000010)  /* use stderr as log device and systemd output format */
+#define NXLOG_JSON_FORMAT       ((UINT32)0x00000020)  /* write log in JSON format */
+#define NXLOG_USE_STDOUT        ((UINT32)0x00000040)  /* use stdout as log device */
+#define NXLOG_IS_OPEN           ((UINT32)0x80000000)  /* internal flag, should not be set by caller */
 
 /**
  * nxlog rotation policy
