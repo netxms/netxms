@@ -39,34 +39,34 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
    if ((hSocket = socket(AF_INET, SOCK_STREAM, 0)) == INVALID_SOCKET)
    {
       TCHAR buffer[1024];
-      nxlog_write(NXLOG_ERROR, _T("Cannot create socket for listener (%s)"), GetSystemErrorText(WSAGetLastError(), buffer, 1024));
+      nxlog_write(NXLOG_ERROR, _T("Cannot create socket for listener (%s)"), GetLastSocketErrorText(buffer, 1024));
       exit(1);
    }
 
-	SetSocketExclusiveAddrUse(hSocket);
-	SetSocketReuseFlag(hSocket);
+   SetSocketExclusiveAddrUse(hSocket);
+   SetSocketReuseFlag(hSocket);
 
    // Fill in local address structure
    memset(&servAddr, 0, sizeof(struct sockaddr_in));
    servAddr.sin_family = AF_INET;
-	if (!_tcscmp(g_listenAddress, _T("*")))
-	{
-		servAddr.sin_addr.s_addr = htonl(INADDR_ANY);
-	}
-	else
-	{
+   if (!_tcscmp(g_listenAddress, _T("*")))
+   {
+      servAddr.sin_addr.s_addr = htonl(INADDR_ANY);
+   }
+   else
+   {
       servAddr.sin_addr.s_addr = InetAddress::resolveHostName(g_listenAddress, AF_INET).getAddressV4();
-		if (servAddr.sin_addr.s_addr == htonl(INADDR_NONE))
-			servAddr.sin_addr.s_addr = htonl(INADDR_ANY);
-	}
+      if (servAddr.sin_addr.s_addr == htonl(INADDR_NONE))
+         servAddr.sin_addr.s_addr = htonl(INADDR_ANY);
+   }
    servAddr.sin_port = htons(g_listenPort);
 
    // Bind socket
-	nxlog_debug(1, _T("Trying to bind on %s:%d"), IpToStr(ntohl(servAddr.sin_addr.s_addr), szBuffer), ntohs(servAddr.sin_port));
+   nxlog_debug(1, _T("Trying to bind on %s:%d"), IpToStr(ntohl(servAddr.sin_addr.s_addr), szBuffer), ntohs(servAddr.sin_port));
    if (bind(hSocket, (struct sockaddr *)&servAddr, sizeof(struct sockaddr_in)) != 0)
    {
       TCHAR buffer[1024];
-      nxlog_write(NXLOG_ERROR, _T("Cannot bind socket for listener (%s)"), GetSystemErrorText(WSAGetLastError(), buffer, 1024));
+      nxlog_write(NXLOG_ERROR, _T("Cannot bind socket for listener (%s)"), GetLastSocketErrorText(buffer, 1024));
       exit(1);
    }
 
@@ -122,7 +122,8 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
          if ((error != EINTR) && (error != ENOENT))
 #endif
          {
-            nxlog_debug(1, _T("select() error %d"), error);
+            TCHAR buffer[1024];
+            nxlog_debug(1, _T("select() error (%s)"), GetLastSocketErrorText(buffer, 1024));
             ThreadSleepMs(100);
          }
       }
