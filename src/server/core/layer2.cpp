@@ -64,7 +64,7 @@ void BuildL2Topology(NetworkMapObjectList &topology, Node *root, int nDepth, boo
  */
 NetObj *FindInterfaceConnectionPoint(const MacAddress& macAddr, int *type)
 {
-	TCHAR macAddrText[32];
+	TCHAR macAddrText[64];
 	nxlog_debug(6, _T("Called FindInterfaceConnectionPoint(%s)"), macAddr.toString(macAddrText));
 
    *type = CP_TYPE_INDIRECT;

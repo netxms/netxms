@@ -4420,7 +4420,7 @@ bool Node::updateInterfaceConfiguration(UINT32 rqid, int maskBits)
                   if (memcmp(ifInfo->macAddr, "\x00\x00\x00\x00\x00\x00", MAC_ADDR_LENGTH) &&
                       !pInterface->getMacAddr().equals(ifInfo->macAddr, MAC_ADDR_LENGTH))
                   {
-                     TCHAR szOldMac[16], szNewMac[16];
+                     TCHAR szOldMac[64], szNewMac[64];
                      pInterface->getMacAddr().toString(szOldMac);
                      MACToStr(ifInfo->macAddr, szNewMac);
                      PostEvent(EVENT_MAC_ADDR_CHANGED, m_id, "idsss",

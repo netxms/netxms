@@ -71,7 +71,7 @@ void NXCORE_EXPORTABLE MacDbAddObject(const MacAddress& macAddr, NetObj *object)
    {
       if (entry->object->getId() != object->getId())
       {
-         TCHAR macAddrStr[32];
+         TCHAR macAddrStr[64];
          nxlog_debug(5, _T("MacDbAddObject: MAC address %s already known (%s [%d] -> %s [%d])"),
                      macAddr.toString(macAddrStr), entry->object->getName(), entry->object->getId(),
                      object->getName(), object->getId());

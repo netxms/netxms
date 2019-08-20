@@ -168,7 +168,7 @@ int ForwardingDatabase::getMacCountOnPort(UINT32 ifIndex)
  */
 void ForwardingDatabase::print(CONSOLE_CTX ctx, Node *owner)
 {
-   TCHAR macAddrStr[24];
+   TCHAR macAddrStr[64];
 
    ConsolePrintf(ctx, _T("\x1b[1mMAC address\x1b[0m       | \x1b[1mIfIndex\x1b[0m | \x1b[1mInterface\x1b[0m            | \x1b[1mPort\x1b[0m | \x1b[1mType\x1b[0m    | \x1b[1mNode\x1b[0m  | \x1b[1mNode name\x1b[0m\n"));
    ConsolePrintf(ctx, _T("------------------+---------+----------------------+------+-------+-----------------------------\n"));

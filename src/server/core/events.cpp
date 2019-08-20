@@ -439,12 +439,12 @@ Event::Event(const EventTemplate *eventTemplate, UINT32 sourceId, UINT32 dciId, 
 					m_parameters.add(buffer);
                break;
             case 'h':
-               buffer = MemAllocString(32);
+               buffer = MemAllocString(64);
                MACToStr(va_arg(args, BYTE *), buffer);
 					m_parameters.add(buffer);
                break;
             case 'H':
-               buffer = MemAllocString(32);
+               buffer = MemAllocString(64);
                (va_arg(args, MacAddress *))->toString(buffer);
                m_parameters.add(buffer);
                break;

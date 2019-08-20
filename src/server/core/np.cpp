@@ -230,7 +230,7 @@ static Interface *GetOldNodeWithNewIP(const InetAddress& ipAddr, UINT32 zoneUIN,
 {
 	Subnet *subnet;
 	BYTE nodeMacAddr[MAC_ADDR_LENGTH];
-	TCHAR szIpAddr[64], szMacAddr[20];
+	TCHAR szIpAddr[64], szMacAddr[64];
 
    ipAddr.toString(szIpAddr);
 	MACToStr(bMacAddr, szMacAddr);
