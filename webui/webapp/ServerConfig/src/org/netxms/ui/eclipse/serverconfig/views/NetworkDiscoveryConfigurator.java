@@ -38,6 +38,8 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IMemento;
 import org.eclipse.ui.ISaveablePart;
@@ -66,6 +68,8 @@ import org.netxms.ui.eclipse.serverconfig.views.helpers.AddressListLabelProvider
 import org.netxms.ui.eclipse.serverconfig.views.helpers.DiscoveryConfig;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
+import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.ui.eclipse.widgets.LabeledText;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
@@ -87,9 +91,15 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
    private Button radioDiscoveryOff;
    private Button radioDiscoveryPassive;
    private Button radioDiscoveryActive;
-   private Button radioDiscoveryActiveAndPasive;
+   private Button radioDiscoveryActiveAndPassive;
    private Button checkUseSnmpTraps;
    private Button checkUseSyslog;
+   private Spinner passiveDiscoveryInterval;
+   private Label activeDiscoveryScheduleLabel;
+   private Button radioActiveDiscoveryInterval;
+   private Button radioActiveDiscoverySchedule;
+   private Spinner activeDiscoveryInterval;
+   private LabeledText activeDiscoverySchedule;
    private Button radioFilterOff;
    private Button radioFilterCustom;
    private Button radioFilterAuto;
@@ -126,12 +136,14 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
 
       TableWrapLayout layout = new TableWrapLayout();
       layout.numColumns = 2;
+      layout.makeColumnsEqualWidth = true;
       form.getBody().setLayout(layout);
 
       createGeneralSection();
       createFilterSection();
-      createActiveDiscoverySection();
+      createScheduleSection();
       createSubnetFilterSection();
+      createActiveDiscoverySection();
 
       createActions();
       contributeToActionBars();
@@ -229,18 +241,26 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
             if (radioDiscoveryOff.getSelection())
             {
                config.setDiscoveryType(DiscoveryConfig.DISCOVERY_TYPE_NONE);
+               enableActive(false);
+               enablePassive(false);
             }
             else if (radioDiscoveryPassive.getSelection())
             {
-               config.setDiscoveryType(DiscoveryConfig.DISCOVERY_TYPE_PASIVE);
+               config.setDiscoveryType(DiscoveryConfig.DISCOVERY_TYPE_PASSIVE);
+               enableActive(false);
+               enablePassive(true);
             }
             else if (radioDiscoveryActive.getSelection())
             {
                config.setDiscoveryType(DiscoveryConfig.DISCOVERY_TYPE_ACTIVE);
+               enableActive(true);
+               enablePassive(false);
             }
-            else if (radioDiscoveryActiveAndPasive.getSelection())
+            else if (radioDiscoveryActiveAndPassive.getSelection())
             {
-               config.setDiscoveryType(DiscoveryConfig.DISCOVERY_TYPE_ACTIVE_PASIVE);
+               config.setDiscoveryType(DiscoveryConfig.DISCOVERY_TYPE_ACTIVE_PASSIVE);
+               enableActive(true);
+               enablePassive(true);
             }
          }
 
@@ -258,9 +278,9 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
       radioDiscoveryPassive.addSelectionListener(listener);
       radioDiscoveryActive = toolkit.createButton(clientArea, "Active only", SWT.RADIO);
       radioDiscoveryActive.addSelectionListener(listener);
-      radioDiscoveryActiveAndPasive = toolkit.createButton(clientArea, Messages.get().NetworkDiscoveryConfigurator_ActiveDiscovery,
+      radioDiscoveryActiveAndPassive = toolkit.createButton(clientArea, Messages.get().NetworkDiscoveryConfigurator_ActiveDiscovery,
             SWT.RADIO);
-      radioDiscoveryActiveAndPasive.addSelectionListener(listener);
+      radioDiscoveryActiveAndPassive.addSelectionListener(listener);      
 
       checkUseSnmpTraps = toolkit.createButton(clientArea, Messages.get().NetworkDiscoveryConfigurator_UseSNMPTrapsForDiscovery, SWT.CHECK);
       checkUseSnmpTraps.addSelectionListener(new SelectionAdapter() {
@@ -284,6 +304,136 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
             setModified();
          }
       });
+   }
+   
+   private void enablePassive(boolean enabled)
+   {
+      passiveDiscoveryInterval.setEnabled(enabled);
+   }
+   
+   private void enableActive(boolean enabled)
+   {
+      if(radioActiveDiscoveryInterval.getSelection())
+      {
+         activeDiscoverySchedule.setEnabled(false);
+      }
+      else
+      {
+         activeDiscoveryInterval.setEnabled(false);
+      }
+      radioActiveDiscoveryInterval.setEnabled(enabled);
+      radioActiveDiscoverySchedule.setEnabled(enabled);
+   }
+   
+   /**
+    * Create "Schedule" section
+    */
+   private void createScheduleSection()
+   {
+      Section section = toolkit.createSection(form.getBody(), Section.DESCRIPTION | Section.TITLE_BAR);
+      section.setText("Schedule");
+      section.setDescription("Network discovery schedules");
+      TableWrapData td = new TableWrapData();
+      td.align = TableWrapData.FILL;
+      td.grabHorizontal = true;
+      section.setLayoutData(td);
+
+      Composite clientArea = toolkit.createComposite(section);
+      GridLayout layout = new GridLayout();
+      layout.numColumns = 2;
+      clientArea.setLayout(layout);
+      section.setClient(clientArea);
+
+      GridData gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      passiveDiscoveryInterval = WidgetHelper.createLabeledSpinner(clientArea, SWT.BORDER, "Passive discovery interval", 0,
+            0xffffff, gd);
+      passiveDiscoveryInterval.addModifyListener(new ModifyListener() {
+         @Override
+         public void modifyText(ModifyEvent e)
+         {
+            config.setPassiveDiscoveryPollInterval(Integer.parseInt(passiveDiscoveryInterval.getText()));
+            setModified();
+         }
+      });
+      toolkit.adapt(passiveDiscoveryInterval, true, true);
+      
+      activeDiscoveryScheduleLabel = toolkit.createLabel(clientArea, "Active discovery schedule configuration");
+      gd = new GridData();
+      gd.horizontalSpan = 2;
+      activeDiscoveryScheduleLabel.setLayoutData(gd);
+      
+      final SelectionListener listener = new SelectionListener() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            setModified();
+            if(radioActiveDiscoveryInterval.getSelection())
+            {
+               config.setActiveDiscoveryPollInterval(Integer.parseInt(activeDiscoveryInterval.getText()));  
+               activeDiscoveryInterval.setSelection(config.getActiveDiscoveryPollInterval() == 0 ? DiscoveryConfig.DEFAULT_ACTIVE_INTERVAL : config.getActiveDiscoveryPollInterval());
+               activeDiscoverySchedule.setEnabled(false);
+               activeDiscoveryInterval.setEnabled(true);         
+            }
+            else
+            {
+               config.setActiveDiscoveryPollInterval(0);
+               activeDiscoverySchedule.setText(config.getActiveDiscoveryPollSchedule());
+               activeDiscoverySchedule.setEnabled(true);
+               activeDiscoveryInterval.setEnabled(false); 
+            }
+         }
+
+         @Override
+         public void widgetDefaultSelected(SelectionEvent e)
+         {
+            widgetSelected(e);
+         }
+      };      
+
+      radioActiveDiscoveryInterval = toolkit.createButton(clientArea, "Interval", SWT.RADIO);
+      radioActiveDiscoveryInterval.addSelectionListener(listener);
+      gd = new GridData();
+      radioActiveDiscoveryInterval.setLayoutData(gd);
+      
+      radioActiveDiscoverySchedule = toolkit.createButton(clientArea, "Schedule", SWT.RADIO);
+      radioActiveDiscoverySchedule.addSelectionListener(listener);
+      gd = new GridData();
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalAlignment = SWT.LEFT;
+      radioActiveDiscoverySchedule.setLayoutData(gd);
+      
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      activeDiscoveryInterval = WidgetHelper.createLabeledSpinner(clientArea, SWT.BORDER, "Active discovery interval", 0,
+            0xffffff, gd);      
+      activeDiscoveryInterval.addModifyListener(new ModifyListener() {
+         
+         @Override
+         public void modifyText(ModifyEvent e)
+         {
+            config.setActiveDiscoveryPollInterval(Integer.parseInt(activeDiscoveryInterval.getText()));
+            setModified();
+         }
+      });
+      toolkit.adapt(activeDiscoveryInterval, true, true);  
+      
+      activeDiscoverySchedule = new LabeledText(clientArea, SWT.NONE, SWT.SINGLE | SWT.BORDER, toolkit);
+      activeDiscoverySchedule.setLabel("Active discovery schedule");   
+      activeDiscoverySchedule.getTextControl().addModifyListener(new ModifyListener() {
+         
+         @Override
+         public void modifyText(ModifyEvent e)
+         {
+            config.setActiveDiscoveryPollInterval(0);
+            config.setActiveDiscoveryPollSchedule(activeDiscoverySchedule.getText());
+            setModified();
+         }
+      });  
+      gd = new GridData();
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalAlignment = SWT.LEFT;
+      activeDiscoverySchedule.setLayoutData(gd);  
    }
 
    /**
@@ -593,11 +743,25 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
       this.config = config;
 
       radioDiscoveryOff.setSelection(config.getDiscoveryType() == DiscoveryConfig.DISCOVERY_TYPE_NONE);
-      radioDiscoveryPassive.setSelection(config.getDiscoveryType() == DiscoveryConfig.DISCOVERY_TYPE_PASIVE);
+      radioDiscoveryPassive.setSelection(config.getDiscoveryType() == DiscoveryConfig.DISCOVERY_TYPE_PASSIVE);
       radioDiscoveryActive.setSelection(config.getDiscoveryType() == DiscoveryConfig.DISCOVERY_TYPE_ACTIVE);
-      radioDiscoveryActiveAndPasive.setSelection(config.getDiscoveryType() == DiscoveryConfig.DISCOVERY_TYPE_ACTIVE_PASIVE);
+      radioDiscoveryActiveAndPassive.setSelection(config.getDiscoveryType() == DiscoveryConfig.DISCOVERY_TYPE_ACTIVE_PASSIVE);
       checkUseSnmpTraps.setSelection(config.isUseSnmpTraps());
       checkUseSyslog.setSelection(config.isUseSyslog());
+      
+      passiveDiscoveryInterval.setSelection(config.getPassiveDiscoveryPollInterval());
+      if(config.getActiveDiscoveryPollInterval() != 0)
+      {
+         radioActiveDiscoveryInterval.setSelection(true);
+      }
+      else
+      {
+         radioActiveDiscoverySchedule.setSelection(true);
+      }
+      activeDiscoveryInterval.setSelection(config.getActiveDiscoveryPollInterval());
+      activeDiscoverySchedule.setText(config.getActiveDiscoveryPollSchedule());
+      enableActive(config.getDiscoveryType() == DiscoveryConfig.DISCOVERY_TYPE_ACTIVE || config.getDiscoveryType() == DiscoveryConfig.DISCOVERY_TYPE_ACTIVE_PASSIVE);
+      enablePassive(config.getDiscoveryType() == DiscoveryConfig.DISCOVERY_TYPE_PASSIVE || config.getDiscoveryType() == DiscoveryConfig.DISCOVERY_TYPE_ACTIVE_PASSIVE);
 
       if (config.getFilter().equalsIgnoreCase(NetworkDiscovery.FILTER_NONE) || config.getFilter().isEmpty())
       {

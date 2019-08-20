@@ -36,6 +36,7 @@ extern TCHAR g_serverCertificateKeyPath[];
 extern char g_serverCertificatePassword[];
 
 void UpdateAlarmExpirationTimes();
+void WakeupActiveDiscoveryThread();
 
 /**
  * Database connection parameters
@@ -483,6 +484,11 @@ static void OnConfigVariableChange(bool isCLOB, const TCHAR *name, const TCHAR *
       UINT32 i = _tcstoul(value, &eptr, 0);
       g_icmpPollingInterval = (i > 0) && (*eptr == 0) ? i : 60;
    }
+   else if (!_tcscmp(name, _T("NetworkDiscovery.ActiveDiscovery.Interval")) ||
+            !_tcscmp(name, _T("NetworkDiscovery.ActiveDiscovery.Schedule")))
+   {
+      WakeupActiveDiscoveryThread();
+   }
    else if (!_tcscmp(name, _T("NetworkDiscovery.EnableParallelProcessing")))
    {
       if (_tcstol(value, NULL, 0))
@@ -496,6 +502,10 @@ static void OnConfigVariableChange(bool isCLOB, const TCHAR *name, const TCHAR *
          g_flags |= AF_MERGE_DUPLICATE_NODES;
       else
          g_flags &= ~AF_MERGE_DUPLICATE_NODES;
+   }
+   else if (!_tcscmp(name, _T("NetworkDiscovery.PassiveDiscovery.Interval")))
+   {
+      g_discoveryPollingInterval = ConfigReadInt(_T("NetworkDiscovery.PassiveDiscovery.Interval"), 900);
    }
    else if (!_tcscmp(name, _T("StrictAlarmStatusFlow")))
    {

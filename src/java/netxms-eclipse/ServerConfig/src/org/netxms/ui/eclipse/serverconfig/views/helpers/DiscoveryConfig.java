@@ -33,9 +33,11 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 public class DiscoveryConfig
 {
    public final static int DISCOVERY_TYPE_NONE = 0;
-   public final static int DISCOVERY_TYPE_PASIVE = 1;
+   public final static int DISCOVERY_TYPE_PASSIVE = 1;
    public final static int DISCOVERY_TYPE_ACTIVE = 2;
-   public final static int DISCOVERY_TYPE_ACTIVE_PASIVE = 3;
+   public final static int DISCOVERY_TYPE_ACTIVE_PASSIVE = 3;
+   
+   public final static int DEFAULT_ACTIVE_INTERVAL = 7200;
    
    
 	private int discoveryType;
@@ -43,6 +45,9 @@ public class DiscoveryConfig
 	private boolean useSyslog;
 	private int filterFlags;
 	private String filter;
+   private int passiveDiscoveryPollInterval;
+   private int activeDiscoveryPollInterval;
+   private String activeDiscoveryPollSchedule;
 	private List<InetAddressListElement> targets;
 	private List<InetAddressListElement> addressFilter;
 	
@@ -73,6 +78,9 @@ public class DiscoveryConfig
       config.useSyslog = getBoolean(variables, "UseSyslogForDiscovery", false); //$NON-NLS-1$
 		config.filterFlags = getInteger(variables, "DiscoveryFilterFlags", 0); //$NON-NLS-1$
 		config.filter = getString(variables, "DiscoveryFilter", "none"); //$NON-NLS-1$ //$NON-NLS-2$
+      config.passiveDiscoveryPollInterval = getInteger(variables, "NetworkDiscovery.PassiveDiscovery.Interval", 900); //$NON-NLS-1$ //$NON-NLS-2$
+      config.activeDiscoveryPollInterval = getInteger(variables, "NetworkDiscovery.ActiveDiscovery.Interval", DEFAULT_ACTIVE_INTERVAL); //$NON-NLS-1$ //$NON-NLS-2$
+	   config.activeDiscoveryPollSchedule = getString(variables, "NetworkDiscovery.ActiveDiscovery.Schedule", ""); //$NON-NLS-1$ //$NON-NLS-2$
 		
 		config.addressFilter = session.getAddressList(NXCSession.ADDRESS_LIST_DISCOVERY_FILTER);
 		config.targets = session.getAddressList(NXCSession.ADDRESS_LIST_DISCOVERY_TARGETS);
@@ -153,11 +161,14 @@ public class DiscoveryConfig
 	{
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		
-		session.setServerVariable("NetworkDiscovery.Type", Integer.toString(discoveryType)); //$NON-NLS-1$ 		
+		session.setServerVariable("NetworkDiscovery.Type", Integer.toString(discoveryType)); //$NON-NLS-1$ 	
       session.setServerVariable("UseSNMPTrapsForDiscovery", useSnmpTraps ? "1" : "0"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
       session.setServerVariable("UseSyslogForDiscovery", useSyslog ? "1" : "0"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		session.setServerVariable("DiscoveryFilterFlags", Integer.toString(filterFlags)); //$NON-NLS-1$
 		session.setServerVariable("DiscoveryFilter", filter); //$NON-NLS-1$
+      session.setServerVariable("NetworkDiscovery.PassiveDiscovery.Interval", Integer.toString(passiveDiscoveryPollInterval)); //$NON-NLS-1$
+      session.setServerVariable("NetworkDiscovery.ActiveDiscovery.Interval", Integer.toString(activeDiscoveryPollInterval)); //$NON-NLS-1$
+      session.setServerVariable("NetworkDiscovery.ActiveDiscovery.Schedule", activeDiscoveryPollSchedule); //$NON-NLS-1$
 		
 		session.setAddressList(NXCSession.ADDRESS_LIST_DISCOVERY_FILTER, addressFilter);
 		session.setAddressList(NXCSession.ADDRESS_LIST_DISCOVERY_TARGETS, targets);
@@ -275,5 +286,53 @@ public class DiscoveryConfig
    public void setDiscoveryType(int discoveryType)
    {
       this.discoveryType = discoveryType;
+   }
+
+   /**
+    * @return the activeDiscoveryPollInterval
+    */
+   public int getActiveDiscoveryPollInterval()
+   {
+      return activeDiscoveryPollInterval;
+   }
+
+   /**
+    * @param activeDiscoveryPollInterval the activeDiscoveryPollInterval to set
+    */
+   public void setActiveDiscoveryPollInterval(int activeDiscoveryPollInterval)
+   {
+      this.activeDiscoveryPollInterval = activeDiscoveryPollInterval;
+   }
+
+   /**
+    * @return the activeDiscoveryPollSchedule
+    */
+   public String getActiveDiscoveryPollSchedule()
+   {
+      return activeDiscoveryPollSchedule;
+   }
+
+   /**
+    * @param activeDiscoveryPollSchedule the activeDiscoveryPollSchedule to set
+    */
+   public void setActiveDiscoveryPollSchedule(String activeDiscoveryPollSchedule)
+   {
+      this.activeDiscoveryPollSchedule = activeDiscoveryPollSchedule;
+   }
+
+   /**
+    * @return the passiveDiscoveryPollInterval
+    */
+   public int getPassiveDiscoveryPollInterval()
+   {
+      return passiveDiscoveryPollInterval;
+   }
+
+   /**
+    * @param passiveDiscoveryPollInterval the passiveDiscoveryPollInterval to set
+    */
+   public void setPassiveDiscoveryPollInterval(int passiveDiscoveryPollInterval)
+   {
+      this.passiveDiscoveryPollInterval = passiveDiscoveryPollInterval;
    }
 }

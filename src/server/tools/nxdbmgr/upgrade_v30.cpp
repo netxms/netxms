@@ -24,6 +24,21 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 30.92 to 30.93
+ */
+static bool H_UpgradeFromV92()
+{
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET need_server_restart=0,var_name='NetworkDiscovery.ActiveDiscovery.Interval' WHERE var_name='ActiveDiscoveryInterval'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET need_server_restart=0,var_name='NetworkDiscovery.PassiveDiscovery.Interval' WHERE var_name='DiscoveryPollingInterval'")));
+
+   CHK_EXEC(CreateConfigParam(_T("NetworkDiscovery.ActiveDiscovery.Schedule"), _T(""),
+            _T("Schedule used to start active network discovery poll in cron format."),
+            NULL, 'S', true, false, false, false));
+   CHK_EXEC(SetMinorSchemaVersion(93));
+   return true;
+}
+
+/**
  * Generate GSM modem notification channel configuration from SMSDrvConfig
  *
  * pszInitArgs format: portname,speed,databits,parity,stopbits,mode,blocksize,writedelay
@@ -3345,6 +3360,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 92, 30, 93, H_UpgradeFromV92 },
    { 91, 30, 92, H_UpgradeFromV91 },
    { 90, 30, 91, H_UpgradeFromV90 },
    { 89, 30, 90, H_UpgradeFromV89 },

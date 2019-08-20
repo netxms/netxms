@@ -602,21 +602,72 @@ static void CheckRange(const InetAddressListElement& range)
 }
 
 /**
+ * Active discovery thread wakeup condition
+ */
+static CONDITION s_activeDiscoveryWakeup = ConditionCreate(false);
+
+/**
  * Active discovery poller thread
  */
 static THREAD_RESULT THREAD_CALL ActiveDiscoveryPoller(void *arg)
 {
    ThreadSetName("ActiveDiscovery");
-   int nInterval = ConfigReadInt(_T("ActiveDiscoveryInterval"), 7200);
+
+   nxlog_debug_tag(DEBUG_TAG_POLL_MANAGER, 2, _T("Active discovery thread started"));
+
+   time_t lastRun = 0;
+   UINT32 sleepTime = 60000;
 
    // Main loop
    while(!IsShutdownInProgress())
    {
-      if (SleepAndCheckForShutdown(nInterval))
+      ConditionWait(s_activeDiscoveryWakeup, sleepTime);
+      if (IsShutdownInProgress())
          break;
 
       if (!(g_flags & AF_ACTIVE_NETWORK_DISCOVERY))
+      {
+         sleepTime = INFINITE;
          continue;
+      }
+
+      time_t now = time(NULL);
+
+      int interval = ConfigReadInt(_T("NetworkDiscovery.ActiveDiscovery.Interval"), 7200);
+      if (interval != 0)
+      {
+         if (now - lastRun < interval)
+         {
+            sleepTime = (interval - (lastRun - now)) * 1000;
+            continue;
+         }
+      }
+      else
+      {
+         TCHAR schedule[256];
+         ConfigReadStr(_T("NetworkDiscovery.ActiveDiscovery.Schedule"), schedule, 256, _T(""));
+         if (schedule[0] != 0)
+         {
+#if HAVE_LOCALTIME_R
+            struct tm tmbuffer;
+            localtime_r(&now, &tmbuffer);
+            struct tm *ltm = &tmbuffer;
+#else
+            struct tm *ltm = localtime(&now);
+#endif
+            if (!MatchSchedule(schedule, ltm, now))
+            {
+               sleepTime = 60000;
+               continue;
+            }
+         }
+         else
+         {
+            nxlog_debug_tag(DEBUG_TAG_POLL_MANAGER, 4, _T("Empty active discovery schedule"));
+            sleepTime = INFINITE;
+            continue;
+         }
+      }
 
       ObjectArray<InetAddressListElement> *addressList = LoadServerAddressList(1);
       if (addressList != NULL)
@@ -627,7 +678,12 @@ static THREAD_RESULT THREAD_CALL ActiveDiscoveryPoller(void *arg)
          }
          delete addressList;
       }
+
+      interval = ConfigReadInt(_T("NetworkDiscovery.ActiveDiscovery.Interval"), 7200);
+      sleepTime = (interval > 0) ? interval * 1000 : 60000;
    }
+
+   nxlog_debug_tag(DEBUG_TAG_POLL_MANAGER, 2, _T("Active discovery thread terminated"));
    return THREAD_OK;
 }
 
@@ -736,7 +792,7 @@ THREAD_RESULT THREAD_CALL PollManager(void *arg)
          256 * 1024);
 
    // Start active discovery poller
-   ThreadCreate(ActiveDiscoveryPoller, 0, NULL);
+   THREAD activeDiscoveryPollerThread = ThreadCreateEx(ActiveDiscoveryPoller, 0, NULL);
 
    UINT32 watchdogId = WatchdogAddThread(_T("Poll Manager"), 5);
    int counter = 0;
@@ -762,6 +818,9 @@ THREAD_RESULT THREAD_CALL PollManager(void *arg)
 	   WatchdogStartSleep(watchdogId);
    }
 
+   ConditionSet(s_activeDiscoveryWakeup);
+   ThreadJoin(activeDiscoveryPollerThread);
+
    // Clear node poller queue
    DiscoveredAddress *nodeInfo;
    while((nodeInfo = g_nodePollerQueue.get()) != NULL)
@@ -773,6 +832,10 @@ THREAD_RESULT THREAD_CALL PollManager(void *arg)
 
    nxlog_debug_tag(DEBUG_TAG_POLL_MANAGER, 2, _T("Waiting for outstanding poll requests"));
    ThreadPoolDestroy(g_pollerThreadPool);
+
+   ConditionDestroy(s_activeDiscoveryWakeup);
+   s_activeDiscoveryWakeup = INVALID_CONDITION_HANDLE;
+
    nxlog_debug_tag(DEBUG_TAG_POLL_MANAGER, 1, _T("Poll manager main thread terminated"));
    return THREAD_OK;
 }
@@ -791,7 +854,7 @@ void ResetDiscoveryPoller()
    }
 
    // Reload discovery parameters
-   g_discoveryPollingInterval = ConfigReadInt(_T("DiscoveryPollingInterval"), 900);
+   g_discoveryPollingInterval = ConfigReadInt(_T("NetworkDiscovery.PassiveDiscovery.Interval"), 900);
 
    switch(ConfigReadInt(_T("NetworkDiscovery.Type"), 0))
    {
@@ -822,4 +885,14 @@ void ResetDiscoveryPoller()
       g_flags |= AF_SYSLOG_DISCOVERY;
    else
       g_flags &= ~AF_SYSLOG_DISCOVERY;
+
+   ConditionSet(s_activeDiscoveryWakeup);
+}
+
+/**
+ * Wakeup active discovery thread
+ */
+void WakeupActiveDiscoveryThread()
+{
+   ConditionSet(s_activeDiscoveryWakeup);
 }
