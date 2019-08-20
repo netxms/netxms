@@ -8,7 +8,7 @@ my $property_file = shift || $file_prefix . "-build-tag.properties";
 
 my $tag = `git describe --always`;
 chomp $tag;
-if ($tag == "")
+if ($tag eq "")
 {
 	print "Cannot read git tag\n";
 	exit 0;
