@@ -221,15 +221,15 @@ ClientSession::~ClientSession()
    MutexDestroy(m_subscriptionLock);
    MutexDestroy(m_openDCIListLock);
    delete m_subscriptions;
-   free(m_pOpenDCIList);
+   MemFree(m_pOpenDCIList);
    if (m_ppEPPRuleList != NULL)
    {
-      UINT32 i;
-
       if (m_dwFlags & CSF_EPP_UPLOAD)  // Aborted in the middle of EPP transfer
-         for(i = 0; i < m_dwRecordsUploaded; i++)
+      {
+         for(UINT32 i = 0; i < m_dwRecordsUploaded; i++)
             delete m_ppEPPRuleList[i];
-      free(m_ppEPPRuleList);
+      }
+      MemFree(m_ppEPPRuleList);
    }
 	if (m_pCtx != NULL)
 		m_pCtx->decRefCount();
@@ -524,12 +524,26 @@ void ClientSession::readThread()
 				respondToKeepalive(msg->getId());
 				delete msg;
 			}
-         else if(msg->getCode() == CMD_EPP_RECORD)
+         else if ((msg->getCode() == CMD_EPP_RECORD) || (msg->getCode() == CMD_OPEN_EPP) || (msg->getCode() == CMD_SAVE_EPP) || (msg->getCode() == CMD_CLOSE_EPP))
          {
             incRefCount();
             TCHAR key[64];
             _sntprintf(key, 64, _T("EPP_%d"), m_id);
-            ThreadPoolExecuteSerialized(g_clientThreadPool, key, this, &ClientSession::processEPPRecord, msg);
+            switch(msg->getCode())
+            {
+               case CMD_EPP_RECORD:
+                  ThreadPoolExecuteSerialized(g_clientThreadPool, key, this, &ClientSession::processEventProcessingPolicyRecord, msg);
+                  break;
+               case CMD_OPEN_EPP:
+                  ThreadPoolExecuteSerialized(g_clientThreadPool, key, this, &ClientSession::openEventProcessingPolicy, msg);
+                  break;
+               case CMD_SAVE_EPP:
+                  ThreadPoolExecuteSerialized(g_clientThreadPool, key, this, &ClientSession::saveEventProcessingPolicy, msg);
+                  break;
+               case CMD_CLOSE_EPP:
+                  ThreadPoolExecuteSerialized(g_clientThreadPool, key, this, &ClientSession::closeEventProcessingPolicy, msg);
+                  break;
+            }
          }
 			else
          {
@@ -736,15 +750,6 @@ void ClientSession::processRequest(NXCPMessage *request)
          break;
       case CMD_RECALCULATE_DCI_VALUES:
          recalculateDCIValues(request);
-         break;
-      case CMD_OPEN_EPP:
-         openEPP(request);
-         break;
-      case CMD_CLOSE_EPP:
-         closeEPP(request->getId());
-         break;
-      case CMD_SAVE_EPP:
-         saveEPP(request);
          break;
       case CMD_GET_MIB_TIMESTAMP:
          sendMIBTimestamp(request->getId());
@@ -4856,7 +4861,7 @@ void ClientSession::getActiveThresholds(NXCPMessage *pRequest)
 /**
  * Open event processing policy
  */
-void ClientSession::openEPP(NXCPMessage *request)
+void ClientSession::openEventProcessingPolicy(NXCPMessage *request)
 {
    NXCPMessage msg;
    bool success = false;
@@ -4905,20 +4910,24 @@ void ClientSession::openEPP(NXCPMessage *request)
 /**
  * Close event processing policy
  */
-void ClientSession::closeEPP(UINT32 dwRqId)
+void ClientSession::closeEventProcessingPolicy(NXCPMessage *request)
 {
-   NXCPMessage msg;
-
-   // Prepare response message
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(dwRqId);
-
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
    if (m_dwSystemAccess & SYSTEM_ACCESS_EPP)
    {
       if (m_dwFlags & CSF_EPP_LOCKED)
       {
+         if (m_ppEPPRuleList != NULL)
+         {
+            if (m_dwFlags & CSF_EPP_UPLOAD)  // Aborted in the middle of EPP transfer
+            {
+               for(UINT32 i = 0; i < m_dwRecordsUploaded; i++)
+                  delete m_ppEPPRuleList[i];
+            }
+            MemFreeAndNull(m_ppEPPRuleList);
+         }
+         m_dwFlags &= ~(CSF_EPP_LOCKED | CSF_EPP_UPLOAD);
          UnlockComponent(CID_EPP);
-         m_dwFlags &= ~CSF_EPP_LOCKED;
       }
       msg.setField(VID_RCC, RCC_SUCCESS);
    }
@@ -4935,20 +4944,20 @@ void ClientSession::closeEPP(UINT32 dwRqId)
 /**
  * Save event processing policy
  */
-void ClientSession::saveEPP(NXCPMessage *pRequest)
+void ClientSession::saveEventProcessingPolicy(NXCPMessage *request)
 {
    NXCPMessage msg;
 
    // Prepare response message
    msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(pRequest->getId());
+   msg.setId(request->getId());
 
    if (m_dwSystemAccess & SYSTEM_ACCESS_EPP)
    {
       if (m_dwFlags & CSF_EPP_LOCKED)
       {
          msg.setField(VID_RCC, RCC_SUCCESS);
-         m_dwNumRecordsToUpload = pRequest->getFieldAsUInt32(VID_NUM_RULES);
+         m_dwNumRecordsToUpload = request->getFieldAsUInt32(VID_NUM_RULES);
          m_dwRecordsUploaded = 0;
          if (m_dwNumRecordsToUpload == 0)
          {
@@ -4988,9 +4997,9 @@ void ClientSession::saveEPP(NXCPMessage *pRequest)
 /**
  * Process EPP rule received from client
  */
-void ClientSession::processEPPRecord(NXCPMessage *request)
+void ClientSession::processEventProcessingPolicyRecord(NXCPMessage *request)
 {
-   if (!(m_dwFlags & CSF_EPP_LOCKED))
+   if (!(m_dwFlags & CSF_EPP_LOCKED) || !(m_dwFlags & CSF_EPP_UPLOAD))
    {
       NXCPMessage msg(CMD_REQUEST_COMPLETED, request->getId());
       msg.setField(VID_RCC, RCC_OUT_OF_STATE_REQUEST);

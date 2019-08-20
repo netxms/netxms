@@ -585,10 +585,10 @@ private:
    void getTableLastValues(NXCPMessage *pRequest);
    void getActiveThresholds(NXCPMessage *pRequest);
 	void getThresholdSummary(NXCPMessage *request);
-   void openEPP(NXCPMessage *request);
-   void closeEPP(UINT32 dwRqId);
-   void saveEPP(NXCPMessage *pRequest);
-   void processEPPRecord(NXCPMessage *pRequest);
+   void openEventProcessingPolicy(NXCPMessage *request);
+   void closeEventProcessingPolicy(NXCPMessage *request);
+   void saveEventProcessingPolicy(NXCPMessage *request);
+   void processEventProcessingPolicyRecord(NXCPMessage *request);
    void sendMIBTimestamp(UINT32 dwRqId);
    void sendMib(NXCPMessage *request);
    void createObject(NXCPMessage *request);
