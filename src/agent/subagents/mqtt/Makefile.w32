@@ -2,6 +2,6 @@ TARGET = mqtt.nsm
 TYPE = nsm
 SOURCES = broker.cpp main.cpp topic.cpp
 
-LIBS = libnxagent.lib libnetxms.lib libtre.lib libmosquitto.lib
+LIBS = libnxagent.lib libnetxms.lib libmosquitto.lib
 	  
 include ..\..\..\..\Makefile.inc.w32

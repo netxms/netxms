@@ -72,7 +72,7 @@ KILLALL -15 nxagentd >>$log 2>&1
 sleep 15 && KILLALL -9 nxagentd >>$log 2>&1
 
 # do configure
-./configure --prefix=$prefix --with-agent --with-internal-libtre $configureAdd >>$log 2>&1
+./configure --prefix=$prefix --with-agent $configureAdd >>$log 2>&1
 	if [ $? != 0 ]; then
 	echo configure failed, restarting old agent  >>$log
 	# Try to restart existing agent

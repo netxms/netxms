@@ -99,7 +99,6 @@ Source: "..\..\release\libnxsl.lib"; DestDir: "{app}\lib\x86"; Flags: ignorevers
 Source: "..\..\release\libnxsnmp.lib"; DestDir: "{app}\lib\x86"; Flags: ignoreversion;
 Source: "..\..\release\libnxsrv.lib"; DestDir: "{app}\lib\x86"; Flags: ignoreversion;
 Source: "..\..\release\libstrophe.lib"; DestDir: "{app}\lib\x86"; Flags: ignoreversion;
-Source: "..\..\release\libtre.lib"; DestDir: "{app}\lib\x86"; Flags: ignoreversion;
 Source: "..\..\release\nxcore.lib"; DestDir: "{app}\lib\x86"; Flags: ignoreversion;
 Source: "..\..\release\nxsqlite.lib"; DestDir: "{app}\lib\x86"; Flags: ignoreversion;
 Source: "..\..\release\nxzlib.lib"; DestDir: "{app}\lib\x86"; Flags: ignoreversion;
@@ -118,7 +117,6 @@ Source: "..\..\x64\release\libnxsl.lib"; DestDir: "{app}\lib\x64"; Flags: ignore
 Source: "..\..\x64\release\libnxsnmp.lib"; DestDir: "{app}\lib\x64"; Flags: ignoreversion;
 Source: "..\..\x64\release\libnxsrv.lib"; DestDir: "{app}\lib\x64"; Flags: ignoreversion;
 Source: "..\..\x64\release\libstrophe.lib"; DestDir: "{app}\lib\x64"; Flags: ignoreversion;
-Source: "..\..\x64\release\libtre.lib"; DestDir: "{app}\lib\x64"; Flags: ignoreversion;
 Source: "..\..\x64\release\nxcore.lib"; DestDir: "{app}\lib\x64"; Flags: ignoreversion;
 Source: "..\..\x64\release\nxsqlite.lib"; DestDir: "{app}\lib\x64"; Flags: ignoreversion;
 Source: "..\..\x64\release\nxzlib.lib"; DestDir: "{app}\lib\x64"; Flags: ignoreversion;

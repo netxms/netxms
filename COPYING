@@ -43,7 +43,6 @@ Third party components bundled with NetXMS:
 
 libexpat        BSD-like
 libipfix        LGPL
-libtre          BSD-like
 scilexer        BSD-like
 sqlite          BSD-like
 zlib            BSD-like
