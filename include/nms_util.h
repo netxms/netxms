@@ -1884,7 +1884,7 @@ public:
       std::pair<EnumerationCallbackResult (*)(const K*, const V*, C*), C*> internalContext(cb, context);
       MutexLock(m_mutex);
       EnumerationCallbackResult result = m_data.forEach(
-            reinterpret_cast<EnumerationCallbackResult (*)(const void*, const void*, void*)>(SynchronizedSharedHashMap<K, V>::forEachCallbackWrapper<C>),
+            reinterpret_cast<EnumerationCallbackResult (*)(const void*, const void*, void*)>(&SynchronizedSharedHashMap<K, V>::forEachCallbackWrapper<C>),
             &internalContext);
       MutexUnlock(m_mutex);
       return result;
@@ -1896,7 +1896,7 @@ public:
       std::pair<bool (*)(const K*, const V*, C*), C*> internalContext(cb, context);
       MutexLock(m_mutex);
       auto result = reinterpret_cast<const shared_ptr<V>*>(m_data.findElement(
-            reinterpret_cast<bool (*)(const void*, const void*, void*)>(SynchronizedSharedHashMap<K, V>::findCallbackWrapper<C>),
+            reinterpret_cast<bool (*)(const void*, const void*, void*)>(&SynchronizedSharedHashMap<K, V>::findCallbackWrapper<C>),
             &internalContext));
       MutexUnlock(m_mutex);
       return (result != NULL) ? *result : m_null;
