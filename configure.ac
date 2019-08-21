@@ -657,6 +657,18 @@ AC_ARG_WITH(openssl,
 	fi
 ])
 
+AC_ARG_WITH(pcre,
+[AS_HELP_STRING(--with-pcre,specify PCRE location)],
+[
+	if test "x$withval" != "xno" ; then
+		if test "x$withval" != "x" && test "x$withval" != "xyes" ; then
+			LD_RUN_PATH="${withval}/lib${LD_RUN_PATH:+:}${LD_RUN_PATH}"   
+			LDFLAGS="$LDFLAGS -L${withval}/lib"
+			CPPFLAGS="$CPPFLAGS -I${withval}/include"
+		fi
+	fi
+])
+
 AC_ARG_ENABLE(commoncrypto,
 [AS_HELP_STRING(--disable-commoncrypto,disable CommonCrypto usage on Mac OS X)],
 [
