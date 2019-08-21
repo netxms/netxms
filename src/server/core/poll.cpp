@@ -495,20 +495,29 @@ void DiscoveryPoller(PollerInfo *poller)
 /**
  * Callback for address range scan
  */
-static void RangeScanCallback(const InetAddress& addr, UINT32 rtt, void *context)
+void RangeScanCallback(const InetAddress& addr, UINT32 zoneUIN, Node *proxy, UINT32 rtt, ServerConsole *console, void *context)
 {
-   nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 5, _T("Active discovery - node %s responded to ICMP ping"), (const TCHAR *)addr.toString());
-   CheckPotentialNode(addr, 0, DA_SRC_ACTIVE_DISCOVERY, 0);
+   if (proxy != NULL)
+   {
+      ConsoleDebugPrintf(console, DEBUG_TAG_DISCOVERY, 5, _T("Active discovery - node %s responded to ICMP ping via proxy %s [%u]"),
+            (const TCHAR *)addr.toString(), proxy->getName(), proxy->getId());
+      CheckPotentialNode(addr, zoneUIN, DA_SRC_ACTIVE_DISCOVERY, proxy->getId());
+   }
+   else
+   {
+      ConsoleDebugPrintf(console, DEBUG_TAG_DISCOVERY, 5, _T("Active discovery - node %s responded to ICMP ping"), (const TCHAR *)addr.toString());
+      CheckPotentialNode(addr, zoneUIN, DA_SRC_ACTIVE_DISCOVERY, 0);
+   }
 }
 
 /**
  * Check given address range with ICMP ping for new nodes
  */
-static void CheckRange(const InetAddressListElement& range)
+void CheckRange(const InetAddressListElement& range, void (*callback)(const InetAddress&, UINT32, Node *, UINT32, ServerConsole *, void *), ServerConsole *console, void *context)
 {
    if (range.getBaseAddress().getFamily() != AF_INET)
    {
-      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("Active discovery on range %s skipped - only IPv4 ranges supported"), (const TCHAR *)range.toString());
+      ConsoleDebugPrintf(console, DEBUG_TAG_DISCOVERY, 4, _T("Active discovery on range %s skipped - only IPv4 ranges supported"), (const TCHAR *)range.toString());
       return;
    }
 
@@ -526,7 +535,7 @@ static void CheckRange(const InetAddressListElement& range)
 
    if (from >= to)
    {
-      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("Invalid address range %s"), (const TCHAR *)range.toString());
+      ConsoleDebugPrintf(console, DEBUG_TAG_DISCOVERY, 4, _T("Invalid address range %s"), (const TCHAR *)range.toString());
       return;
    }
 
@@ -542,7 +551,7 @@ static void CheckRange(const InetAddressListElement& range)
          Zone *zone = FindZoneByUIN(range.getZoneUIN());
          if (zone == NULL)
          {
-            nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("Invalid zone UIN for address range %s"), (const TCHAR *)range.toString());
+            ConsoleDebugPrintf(console, DEBUG_TAG_DISCOVERY, 4, _T("Invalid zone UIN for address range %s"), (const TCHAR *)range.toString());
             return;
          }
          proxyId = zone->getProxyNodeId(NULL);
@@ -551,20 +560,20 @@ static void CheckRange(const InetAddressListElement& range)
       Node *proxy = static_cast<Node*>(FindObjectById(proxyId, OBJECT_NODE));
       if (proxy == NULL)
       {
-         nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("Cannot find zone proxy node for address range %s"), (const TCHAR *)range.toString());
+         ConsoleDebugPrintf(console, DEBUG_TAG_DISCOVERY, 4, _T("Cannot find zone proxy node for address range %s"), (const TCHAR *)range.toString());
          return;
       }
 
       AgentConnectionEx *conn = proxy->createAgentConnection();
       if (conn == NULL)
       {
-         nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("Cannot connect to proxy agent for address range %s"), (const TCHAR *)range.toString());
+         ConsoleDebugPrintf(console, DEBUG_TAG_DISCOVERY, 4, _T("Cannot connect to proxy agent for address range %s"), (const TCHAR *)range.toString());
          return;
       }
       conn->setCommandTimeout(10000);
 
       TCHAR ipAddr1[16], ipAddr2[16];
-      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("Starting active discovery check on range %s - %s via proxy %s [%u]"),
+      ConsoleDebugPrintf(console, DEBUG_TAG_DISCOVERY, 4, _T("Starting active discovery check on range %s - %s via proxy %s [%u]"),
                IpToStr(from, ipAddr1), IpToStr(to, ipAddr2), proxy->getName(), proxy->getId());
       while((from < to) && !IsShutdownInProgress())
       {
@@ -575,15 +584,15 @@ static void CheckRange(const InetAddressListElement& range)
          {
             for(int i = 0; i < list->size(); i++)
             {
-               nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 5, _T("Active discovery - node %s responded to ICMP ping via proxy %s [%u]"),
+               ConsoleDebugPrintf(console, DEBUG_TAG_DISCOVERY, 5, _T("Active discovery - node %s responded to ICMP ping via proxy %s [%u]"),
                         list->get(i), proxy->getName(), proxy->getId());
-               CheckPotentialNode(InetAddress::parse(list->get(i)), range.getZoneUIN(), DA_SRC_ACTIVE_DISCOVERY, proxy->getId());
+               callback(InetAddress::parse(list->get(i)), range.getZoneUIN(), proxy, 0, console, NULL);
             }
             delete list;
          }
          from += 256;
       }
-      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("Finished active discovery check on range %s - %s via proxy %s [%u]"),
+      ConsoleDebugPrintf(console, DEBUG_TAG_DISCOVERY, 4, _T("Finished active discovery check on range %s - %s via proxy %s [%u]"),
                IpToStr(from, ipAddr1), IpToStr(to, ipAddr2), proxy->getName(), proxy->getId());
 
       conn->decRefCount();
@@ -591,13 +600,13 @@ static void CheckRange(const InetAddressListElement& range)
    else
    {
       TCHAR ipAddr1[16], ipAddr2[16];
-      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("Starting active discovery check on range %s - %s"), IpToStr(from, ipAddr1), IpToStr(to, ipAddr2));
+      ConsoleDebugPrintf(console, DEBUG_TAG_DISCOVERY, 4, _T("Starting active discovery check on range %s - %s"), IpToStr(from, ipAddr1), IpToStr(to, ipAddr2));
       while((from < to) && !IsShutdownInProgress())
       {
-         ScanAddressRange(from, std::min(to, from + 1023), RangeScanCallback, NULL);
+         ScanAddressRange(from, std::min(to, from + 1023), callback, console, NULL);
          from += 1024;
       }
-      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("Finished active discovery check on range %s - %s"), ipAddr1, ipAddr2);
+      ConsoleDebugPrintf(console, DEBUG_TAG_DISCOVERY, 4, _T("Finished active discovery check on range %s - %s"), ipAddr1, ipAddr2);
    }
 }
 
@@ -674,7 +683,7 @@ static THREAD_RESULT THREAD_CALL ActiveDiscoveryPoller(void *arg)
       {
          for(int i = 0; (i < addressList->size()) && !IsShutdownInProgress(); i++)
          {
-            CheckRange(*addressList->get(i));
+            CheckRange(*addressList->get(i), RangeScanCallback, NULL, NULL);
          }
          delete addressList;
       }

@@ -121,4 +121,10 @@ inline void ConsoleWrite(CONSOLE_CTX console, const TCHAR *text)
    console->print(text);
 }
 
+/**
+ * Print debug message to console and log it using nxlog_debug_tag
+ * If console is NULL only do logging
+ */
+void LIBNXSRV_EXPORTABLE ConsoleDebugPrintf(ServerConsole *console, const TCHAR *tag, int level, const TCHAR *text, ...);
+
 #endif   /* _nxcore_console_h_ */

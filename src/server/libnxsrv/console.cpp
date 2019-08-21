@@ -155,3 +155,23 @@ void SocketConsole::write(const TCHAR *text)
    SendEx(m_socket, rawMsg, ntohl(rawMsg->size), 0, m_mutex);
    MemFree(rawMsg);
 }
+
+/**
+ * Print debug message to console and log it using nxlog_debug_tag
+ * If console is NULL only do logging
+ */
+void LIBNXSRV_EXPORTABLE ConsoleDebugPrintf(ServerConsole *console, const TCHAR *tag, int level, const TCHAR *text, ...)
+{
+   va_list args;
+   va_start(args, text);
+   if (console != NULL)
+   {
+      va_list cargs;
+      va_copy(cargs, args);
+      console->vprintf(text, cargs);
+      console->print(_T("\n"));
+      va_end(cargs);
+   }
+   nxlog_debug_tag2(tag, level, text, args);
+   va_end(args);
+}

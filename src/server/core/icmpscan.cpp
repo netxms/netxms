@@ -161,7 +161,7 @@ static void ProcessResponse(SOCKET sock, UINT32 baseAddr, UINT32 lastAddr, ScanS
 /**
 * Scan range of IPv4 addresses
 */
-void ScanAddressRange(const InetAddress& from, const InetAddress& to, void(*callback)(const InetAddress&, UINT32, void *), void *context)
+void ScanAddressRange(const InetAddress& from, const InetAddress& to, void (*callback)(const InetAddress&, UINT32, Node *, UINT32, ServerConsole *, void *), ServerConsole *console, void *context)
 {
    SOCKET sock = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
    if (sock == INVALID_SOCKET)
@@ -218,7 +218,7 @@ void ScanAddressRange(const InetAddress& from, const InetAddress& to, void(*call
    for(UINT32 a = baseAddr, i = 0; a <= to.getAddressV4(); a++, i++)
    {
       if (status[i].success)
-         callback(a, status[i].rtt, context);
+         callback(a, 0, NULL, status[i].rtt, console, context);
    }
    MemFree(status);
 }

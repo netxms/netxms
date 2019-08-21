@@ -303,6 +303,7 @@ public:
    InetAddressListElement(NXCPMessage *msg, UINT32 baseId);
    InetAddressListElement(const InetAddress& baseAddr, const InetAddress& endAddr);
    InetAddressListElement(const InetAddress& baseAddr, int maskBits);
+   InetAddressListElement(const InetAddress& baseAddr, const InetAddress& endAddr, UINT32 zoneUIN, UINT32 proxyId);
    InetAddressListElement(DB_RESULT hResult, int row);
 
    void fillMessage(NXCPMessage *msg, UINT32 baseId) const;
@@ -1282,7 +1283,7 @@ UINT32 DeleteScript(const NXCPMessage *request);
 /**
  * ICMP scan
  */
-void ScanAddressRange(const InetAddress& from, const InetAddress& to, void(*callback)(const InetAddress&, UINT32, void *), void *context);
+void ScanAddressRange(const InetAddress& from, const InetAddress& to, void(*callback)(const InetAddress&, UINT32, Node *, UINT32, ServerConsole *, void *), ServerConsole *console, void *context);
 
 /**
  * Prepare MERGE statement if possible, otherwise INSERT or UPDATE depending on record existence

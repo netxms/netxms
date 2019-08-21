@@ -42,6 +42,8 @@ UINT32 BindAgentTunnel(UINT32 tunnelId, UINT32 nodeId, UINT32 userId);
 UINT32 UnbindAgentTunnel(UINT32 nodeId, UINT32 userId);
 INT64 GetEventLogWriterQueueSize();
 void DiscoveryPoller(PollerInfo *poller);
+void RangeScanCallback(const InetAddress& addr, UINT32 zoneUIN, Node *proxy, UINT32 rtt, ServerConsole *console, void *context);
+void CheckRange(const InetAddressListElement& range, void(*callback)(const InetAddress&, UINT32, Node *, UINT32, ServerConsole *, void *), ServerConsole *console, void *context);
 
 /**
  * Format string to show value of global flag
@@ -145,10 +147,20 @@ static int CompareDebugTags(const DebugTagInfo **t1, const DebugTagInfo **t2)
 /**
  * Callback for address scan
  */
-static void ScanCallback(const InetAddress& addr, UINT32 rtt, void *arg)
+static void PrintScanCallback(const InetAddress& addr, UINT32 zoneUIN, Node *proxy, UINT32 rtt, ServerConsole *console, void *context)
 {
    TCHAR buffer[64];
-   ConsolePrintf(static_cast<CONSOLE_CTX>(arg), _T("   Reply from %s in %dms\n"), addr.toString(buffer), rtt);
+
+   if(proxy != NULL)
+   {
+      ConsolePrintf(console, _T("   Reply from %s to ICMP ping via proxy %s [%u]\n"),
+            (const TCHAR *)addr.toString(), proxy->getName(), proxy->getId());
+   }
+   else
+   {
+      ConsolePrintf(console, _T("   Reply from %s in %dms\n"), addr.toString(buffer), rtt);
+   }
+
 }
 
 /**
@@ -544,20 +556,66 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
       if (szBuffer[0] != 0)
       {
          TCHAR addr2[256];
-         ExtractWord(pArg, addr2);
+         pArg = ExtractWord(pArg, addr2);
          if (addr2[0] != 0)
          {
             InetAddress start = InetAddress::parse(szBuffer);
             InetAddress end = InetAddress::parse(addr2);
-            if (start.isValid() && end.isValid())
+            pArg = ExtractWord(pArg, szBuffer);
+            UINT32 zoneUIN;
+            UINT32 proxyId;
+            bool isDiscovery = false;
+            bool invalidParameter = false;
+            if (szBuffer[0] != 0)
             {
-               ConsolePrintf(pCtx, _T("Scanning address range %s - %s\n"), start.toString(szBuffer), end.toString(addr2));
-               ScanAddressRange(start, end, ScanCallback, pCtx);
-               ConsolePrintf(pCtx, _T("Address range %s - %s scan completed\n"), start.toString(szBuffer), end.toString(addr2));
+               if(IsCommand(_T("ZONE"), szBuffer, 4))
+               {
+                  pArg = ExtractWord(pArg, szBuffer);
+                  proxyId = _tcstoul(szBuffer, NULL, 0);
+                  pArg = ExtractWord(pArg, szBuffer); //Extract next word if it is discovery
+               }
+               else if(IsCommand(_T("PROXY"), szBuffer, 4))
+               {
+                  pArg = ExtractWord(pArg, szBuffer);
+                  zoneUIN = _tcstoul(szBuffer, NULL, 0);
+                  pArg = ExtractWord(pArg, szBuffer);  //Extract next word if it is discovery
+               }
+               else if(IsCommand(_T("DISCOVERY"), szBuffer, 4))
+               {
+                  isDiscovery = true;
+               }
+               else
+                  invalidParameter = true;
+
+
+               if (!isDiscovery && szBuffer[0] != 0)
+               {
+                  if(IsCommand(_T("DISCOVERY"), szBuffer, 4)) //if discovery is after proxy/zone
+                  {
+                     isDiscovery = true;
+                  }
+                  else
+                     invalidParameter = true;
+               }
+
+            }
+            if(!invalidParameter)
+            {
+               if (start.isValid() && end.isValid())
+               {
+                  InetAddressListElement range(start, end, proxyId, zoneUIN);
+                  ConsolePrintf(pCtx, _T("Scanning address range %s - %s\n"), start.toString(szBuffer), end.toString(addr2));
+                  CheckRange(range, isDiscovery ? RangeScanCallback : PrintScanCallback , pCtx, NULL);
+                  ConsolePrintf(pCtx, _T("Address range %s - %s scan completed\n"), start.toString(szBuffer), end.toString(addr2));
+               }
+               else
+               {
+                  ConsolePrintf(pCtx, _T("Invalid address\n"));
+               }
             }
             else
             {
-               ConsolePrintf(pCtx, _T("Invalid address\n"));
+               ConsolePrintf(pCtx, _T("Invalid parameter\n"));
             }
          }
          else
@@ -1507,6 +1565,8 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
             _T("   ping <address>                    - Send ICMP echo request to given IP address\n")
             _T("   poll <type> <node>                - Initiate node poll\n")
             _T("   raise <exception>                 - Raise exception\n")
+            _T("   scan rangeStart rangeEnd [proxy <id>|zone <uin>] [discovery] \n")
+            _T("                                     - Manual active discovery scan for given range. Without 'discovery' parameter prints results only\n")
             _T("   set <variable> <value>            - Set value of server configuration variable\n")
             _T("   show arp <node>                   - Show ARP cache for node\n")
             _T("   show components <node>            - Show physical components of given node\n")

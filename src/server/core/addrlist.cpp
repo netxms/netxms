@@ -69,6 +69,19 @@ InetAddressListElement::InetAddressListElement(const InetAddress& baseAddr, int 
 }
 
 /**
+ * Create new "range" type address list element with zone and proxy id
+ */
+InetAddressListElement::InetAddressListElement(const InetAddress& baseAddr, const InetAddress& endAddr, UINT32 zoneUIN, UINT32 proxyId)
+{
+   m_type = InetAddressListElement_RANGE;
+   m_baseAddress = baseAddr;
+   m_endAddress = endAddr;
+   m_zoneUIN = zoneUIN;
+   m_proxyId = proxyId;
+   m_comments[0] = 0;
+}
+
+/**
  * Create address list element from DB record
  * Expected field order: addr_type,addr1,addr2,zone_uin,proxy_id,comment
  */
