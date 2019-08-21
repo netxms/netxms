@@ -129,10 +129,10 @@ static LONG H_CheckService(const TCHAR *parameters, const TCHAR *arg, TCHAR *val
                      int pmatch[30];
 #ifdef UNICODE
                      WCHAR *wtext = WideStringFromUTF8String((char *)data.buffer(&size));
-                     if (_pcre_exec_t(compiledPattern, NULL, reinterpret_cast<const PCRE_TCHAR*>(wtext), wcslen(wtext), 0, 0, pmatch, 30) >= 0)
+                     if (_pcre_exec_t(compiledPattern, NULL, reinterpret_cast<const PCRE_TCHAR*>(wtext), static_cast<int>(wcslen(wtext)), 0, 0, pmatch, 30) >= 0)
 #else
                      char *text = (char *)data.buffer(&size);
-                     if (pcre_exec(compiledPattern, NULL, text, size, 0, 0, pmatch, 30) >= 0)
+                     if (pcre_exec(compiledPattern, NULL, text, static_cast<int>(size), 0, 0, pmatch, 30) >= 0)
 #endif
                      {
                         AgentWriteDebugLog(5, _T("Check service: matched"));

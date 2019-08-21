@@ -183,7 +183,7 @@ bool LogParserRule::matchInternal(bool extMode, const TCHAR *source, UINT32 even
 	if (m_isInverted)
 	{
 		m_parser->trace(6, _T("  negated matching against regexp %s"), m_regexp);
-		if ((_pcre_exec_t(m_preg, NULL, reinterpret_cast<const PCRE_TCHAR*>(line), _tcslen(line), 0, 0, m_pmatch, MAX_PARAM_COUNT * 3) < 0) && matchRepeatCount())
+		if ((_pcre_exec_t(m_preg, NULL, reinterpret_cast<const PCRE_TCHAR*>(line), static_cast<int>(_tcslen(line)), 0, 0, m_pmatch, MAX_PARAM_COUNT * 3) < 0) && matchRepeatCount())
 		{
 			m_parser->trace(6, _T("  matched"));
 			if ((cb != NULL) && ((m_eventCode != 0) || (m_eventName != NULL)))
@@ -196,7 +196,7 @@ bool LogParserRule::matchInternal(bool extMode, const TCHAR *source, UINT32 even
 	else
 	{
 		m_parser->trace(6, _T("  matching against regexp %s"), m_regexp);
-		int cgcount = _pcre_exec_t(m_preg, NULL, reinterpret_cast<const PCRE_TCHAR*>(line), _tcslen(line), 0, 0, m_pmatch, MAX_PARAM_COUNT * 3);
+		int cgcount = _pcre_exec_t(m_preg, NULL, reinterpret_cast<const PCRE_TCHAR*>(line), static_cast<int>(_tcslen(line)), 0, 0, m_pmatch, MAX_PARAM_COUNT * 3);
       m_parser->trace(7, _T("  pcre_exec returns %d"), cgcount);
 		if ((cgcount >= 0) && matchRepeatCount())
 		{

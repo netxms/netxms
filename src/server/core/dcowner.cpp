@@ -1161,7 +1161,7 @@ SharedObjectArray<DCObject> *DataCollectionOwner::getDCObjectsByRegex(const TCHA
 
       const TCHAR *subj = searchName ? o->getName() : o->getDescription();
       int ovector[30];
-      if (_pcre_exec_t(preg, NULL, reinterpret_cast<const PCRE_TCHAR*>(subj), _tcslen(subj), 0, 0, ovector, 30) >= 0)
+      if (_pcre_exec_t(preg, NULL, reinterpret_cast<const PCRE_TCHAR*>(subj), static_cast<int>(_tcslen(subj)), 0, 0, ovector, 30) >= 0)
       {
          result->add(m_dcObjects->getShared(i));
       }

@@ -163,7 +163,7 @@ int CheckHTTP(char *szAddr, const InetAddress& addr, short nPort, char *szURI, c
 				buff[offset] = 0;
 
 				int ovector[30];
-            if (pcre_exec(preg, NULL, buff, strlen(buff), 0, 0, ovector, 30) >= 0)
+            if (pcre_exec(preg, NULL, buff, static_cast<int>(strlen(buff)), 0, 0, ovector, 30) >= 0)
 				{
 					nRet = PC_ERR_NONE;
 				}
@@ -316,7 +316,7 @@ int CheckHTTPS(char *szAddr, const InetAddress& addr, short nPort, char *szURI, 
                      if (buffer[0] != 0) 
                      {
                         int ovector[30];
-                        if (pcre_exec(preg, NULL, buffer, strlen(buffer), 0, 0, ovector, 30) >= 0)
+                        if (pcre_exec(preg, NULL, buffer, static_cast<int>(strlen(buffer)), 0, 0, ovector, 30) >= 0)
                         {
                            ret = PC_ERR_NONE;
                         }

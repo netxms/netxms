@@ -588,7 +588,7 @@ bool NXCORE_EXPORTABLE ConfigReadStrA(const WCHAR *variable, char *buffer, size_
    bool rc = ConfigReadStr(variable, wcBuffer, MAX_DB_STRING, NULL);
 	if (rc)
 	{
-		WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, wcBuffer, -1, buffer, size, NULL, NULL);
+		WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, wcBuffer, -1, buffer, static_cast<int>(size), NULL, NULL);
 	}
 	else
 	{

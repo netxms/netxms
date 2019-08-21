@@ -49,7 +49,6 @@ Source: "..\..\..\Release\sqlite.ddr"; DestDir: "{app}\bin"; Flags: ignoreversio
 Source: "..\..\..\contrib\nxagentd.conf-dist"; DestDir: "{app}\etc"; Flags: ignoreversion
 Source: "..\..\..\Release\libexpat.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\Release\libpng.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
-Source: "..\..\..\Release\libtre.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\Release\nxsqlite.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\Release\nxzlib.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\Release\jansson.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
@@ -58,6 +57,8 @@ Source: "..\..\install\files\windows\x86\libcurl.dll"; DestDir: "{app}\bin"; Fla
 Source: "..\..\install\files\windows\x86\libmosquitto.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\install\files\windows\x86\libssh.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\install\files\windows\x86\libssl.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\..\install\files\windows\x86\pcre.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\..\install\files\windows\x86\pcre16.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\install\files\windows\x86\CRT\*"; DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "..\..\libnxjava\java\base\netxms-base\target\netxms-base.jar"; DestDir: "{app}\lib"; Flags: ignoreversion
 Source: "..\..\libnxjava\java\bridge\target\netxms-java-bridge.jar"; DestDir: "{app}\lib"; Flags: ignoreversion

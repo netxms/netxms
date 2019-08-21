@@ -23,7 +23,7 @@
 #ifndef _netxms_regex_h
 #define _netxms_regex_h
 
-#if HAVE_PCRE_H
+#if HAVE_PCRE_H || defined(_WIN32)
 #include <pcre.h>
 #elif HAVE_PCRE_PCRE_H
 #include <pcre/pcre.h>

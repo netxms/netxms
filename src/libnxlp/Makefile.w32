@@ -3,6 +3,6 @@ TYPE = dll
 SOURCES = eventlog.cpp file.cpp main.cpp parser.cpp rule.cpp vss.cpp vss_srv2003.cpp vss_xp.cpp wevt.cpp
 
 CPPFLAGS = /I$(NETXMS_BASE)\src\libexpat\libexpat /DLIBNXLP_EXPORTS
-LIBS = libnetxms.lib libexpat.lib libtre.lib vssapi.lib
+LIBS = libnetxms.lib libexpat.lib pcre.lib pcre16.lib vssapi.lib
 	  
 include ..\..\Makefile.inc.w32

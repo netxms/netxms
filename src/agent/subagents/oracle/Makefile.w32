@@ -2,6 +2,6 @@ TARGET = oracle.nsm
 TYPE = nsm
 SOURCES = db.cpp main.cpp
 
-LIBS = libnxagent.lib libnxdb.lib libnetxms.lib libtre.lib
+LIBS = libnxagent.lib libnxdb.lib libnetxms.lib pcre.lib pcre16.lib
 	  
 include ..\..\..\..\Makefile.inc.w32

@@ -2,6 +2,6 @@ TARGET = netsvc.nsm
 TYPE = nsm
 SOURCES = main.cpp
 
-LIBS = libnxagent.lib libnetxms.lib libtre.lib libcurl.lib
+LIBS = libnxagent.lib libnetxms.lib libcurl.lib pcre.lib pcre16.lib
 	  
 include ..\..\..\..\Makefile.inc.w32

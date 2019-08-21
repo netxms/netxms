@@ -767,7 +767,7 @@ bool DCItem::processNewValue(time_t tmTimeStamp, const void *originalValue, bool
    {
       // If required cache size is 1 and we got value before cache loader
       // loads DCI cache then update it directly
-      for(int i = 0; i < m_cacheSize; i++)
+      for(UINT32 i = 0; i < m_cacheSize; i++)
          delete m_ppValueCache[i];
 
       if (m_cacheSize != m_requiredCacheSize)

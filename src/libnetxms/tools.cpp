@@ -1679,7 +1679,7 @@ bool LIBNETXMS_EXPORTABLE RegexpMatchW(const WCHAR *str, const WCHAR *expr, bool
    if (preg != NULL)
    {
       int ovector[60];
-      if (_pcre_exec_w(preg, NULL, reinterpret_cast<const PCRE_WCHAR*>(str), wcslen(str), 0, 0, ovector, 60) >= 0) // MATCH
+      if (_pcre_exec_w(preg, NULL, reinterpret_cast<const PCRE_WCHAR*>(str), static_cast<int>(wcslen(str)), 0, 0, ovector, 60) >= 0) // MATCH
          result = true;
       _pcre_free_w(preg);
    }
@@ -1698,7 +1698,7 @@ bool LIBNETXMS_EXPORTABLE RegexpMatchA(const char *str, const char *expr, bool m
    if (preg != NULL)
    {
       int ovector[60];
-      if (pcre_exec(preg, NULL, str, strlen(str), 0, 0, ovector, 60) >= 0) // MATCH
+      if (pcre_exec(preg, NULL, str, static_cast<int>(strlen(str)), 0, 0, ovector, 60) >= 0) // MATCH
          result = true;
       pcre_free(preg);
    }

@@ -35,7 +35,7 @@ SOURCES = abind_target.cpp accesspoint.cpp acl.cpp actions.cpp addrlist.cpp \
 
 CPPFLAGS = /DNXCORE_EXPORTS
 LIBS = libnxsrv.lib libnxsnmp.lib libnxlp.lib libnxsl.lib libnxjava.lib \
-   libnxdb.lib libnxagent.lib libnetxms.lib libstrophe.lib libtre.lib \
-   jansson.lib ws2_32.lib iphlpapi.lib psapi.lib wldap32.lib
+   libnxdb.lib libnxagent.lib libnetxms.lib libstrophe.lib jansson.lib \
+   ws2_32.lib iphlpapi.lib psapi.lib wldap32.lib pcre.lib pcre16.lib
 	  
 include ..\..\..\Makefile.inc.w32
