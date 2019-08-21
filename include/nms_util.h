@@ -630,6 +630,30 @@ public:
    }
 
    /**
+    * Allocate string
+    */
+   TCHAR *allocateString(size_t size)
+   {
+      return static_cast<TCHAR*>(allocate(sizeof(TCHAR) * size));
+   }
+
+   /**
+    * Allocate string
+    */
+   WCHAR *allocateStringW(size_t size)
+   {
+      return static_cast<WCHAR*>(allocate(sizeof(WCHAR) * size));
+   }
+
+   /**
+    * Allocate string
+    */
+   char *allocateStringA(size_t size)
+   {
+      return static_cast<char*>(allocate(size));
+   }
+
+   /**
     * Create copy of given C string within pool
     */
    TCHAR *copyString(const TCHAR *s);
