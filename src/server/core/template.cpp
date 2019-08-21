@@ -110,6 +110,14 @@ Template::~Template()
 }
 
 /**
+ * Redefined status calculation for template
+ */
+void Template::calculateCompoundStatus(BOOL bForcedRecalc)
+{
+   m_status = STATUS_NORMAL;
+}
+
+/**
  * Save template object to database
  */
 bool Template::saveToDatabase(DB_HANDLE hdb)

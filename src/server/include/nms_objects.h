@@ -1160,8 +1160,6 @@ public:
 
    virtual void updateFromImport(ConfigEntry *config);
 
-   virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE) override;
-
    virtual json_t *toJson() override;
 
    int getItemCount() { return m_dcObjects->size(); }
@@ -1262,6 +1260,8 @@ public:
    virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
    virtual void applyDCIChanges() override;
    virtual BOOL applyToTarget(DataCollectionTarget *pNode) override;
+
+   virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE) override;
 
    virtual void updateFromImport(ConfigEntry *config) override;
    virtual json_t *toJson() override;

@@ -807,14 +807,6 @@ NXSL_Value *DataCollectionOwner::getAllDCObjectsForNXSL(NXSL_VM *vm, const TCHAR
 }
 
 /**
- * Redefined status calculation for template
- */
-void DataCollectionOwner::calculateCompoundStatus(BOOL bForcedRecalc)
-{
-   m_status = STATUS_NORMAL;
-}
-
-/**
  * Create NXCP message with object's data
  */
 void DataCollectionOwner::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
