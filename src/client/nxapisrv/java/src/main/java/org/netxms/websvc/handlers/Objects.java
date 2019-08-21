@@ -27,7 +27,13 @@ import java.util.Map.Entry;
 import org.netxms.base.Glob;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.RCC;
+import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.AccessPoint;
+import org.netxms.client.objects.Interface;
+import org.netxms.client.objects.NetworkService;
+import org.netxms.client.objects.Subnet;
+import org.netxms.client.objects.VPNConnector;
 import org.netxms.websvc.WebSvcException;
 import org.netxms.websvc.json.ResponseContainer;
 import org.slf4j.Logger;
@@ -57,6 +63,7 @@ public class Objects extends AbstractObjectHandler
       String classFilter = query.get("class");
       String nameFilter = query.get("name");
       String parentFilter = query.get("parent");
+      String zoneFilter = query.get("zone");
       
       Map<String, String> customAttributes = null;
       for(String k : query.keySet())
@@ -69,7 +76,8 @@ public class Objects extends AbstractObjectHandler
          customAttributes.put(k.substring(1), query.get(k));
       }
       
-      if ((areaFilter != null) || (classFilter != null) || (customAttributes != null) || (nameFilter != null) || (parentFilter != null))
+      if ((areaFilter != null) || (classFilter != null) || (customAttributes != null) || (nameFilter != null) 
+            || (parentFilter != null) || (zoneFilter != null))
       {
          double[] area = null;
          if (areaFilter != null)
@@ -116,10 +124,46 @@ public class Objects extends AbstractObjectHandler
          {
             parentId = 0;
          }
+
+         long[] zones = null;
+         if (zoneFilter != null)
+         {
+            String[] parts = zoneFilter.split(",");
+            try
+            {
+               zones = new long[parts.length];
+               for(int i = 0; i < parts.length; i++)
+                  zones[i] = Long.parseLong(parts[i]);
+            }
+            catch(NumberFormatException e)
+            {
+               log.warn("Invalid zone filter " + zoneFilter);
+            }
+         }
          
          List<AbstractObject> filteredObjects = new ArrayList<AbstractObject>();
          for(AbstractObject o : objects)
          {
+            // Filter by zone
+            if (zones != null)
+            {
+               long zoneUin = getZoneUin(o);
+               if(zoneUin == -1)
+                  continue;
+                  
+               boolean match = false;
+               for(long z : zones)
+               {
+                  if (zoneUin == z)
+                  {
+                     match = true;
+                     break;
+                  }
+               }
+               if (!match)
+                  continue;
+            }
+            
             // Filter by name
             if ((nameFilter != null) && !nameFilter.isEmpty() && !Glob.matchIgnoreCase(nameFilter, o.getObjectName()))
                continue;
@@ -175,6 +219,40 @@ public class Objects extends AbstractObjectHandler
       }
       
       return new ResponseContainer("objects", objects);
+   }
+   
+   /**
+    * Get zoneUIN depending on object class
+    * @param obj
+    * @return
+    */
+   private static long getZoneUin(AbstractObject obj)
+   {
+      if (obj instanceof AbstractNode)
+      {
+         return ((AbstractNode)obj).getZoneId();
+      }
+      if (obj instanceof Subnet)
+      {
+         return ((Subnet)obj).getZoneId();
+      }
+      if (obj instanceof Interface)
+      {
+         return ((Interface)obj).getZoneId();
+      }
+      if (obj instanceof NetworkService)
+      {
+         return ((NetworkService)obj).getParentNode().getZoneId();
+      }
+      if (obj instanceof VPNConnector)
+      {
+         return ((VPNConnector)obj).getParentNode().getZoneId();
+      }
+      if (obj instanceof AccessPoint)
+      {
+         return ((AccessPoint)obj).getParentNode().getZoneId();
+      }
+      return -1;
    }
 
    /* (non-Javadoc)
