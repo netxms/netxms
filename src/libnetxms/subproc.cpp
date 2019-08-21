@@ -115,7 +115,7 @@ int LIBNETXMS_EXPORTABLE SubProcessMain(int argc, char *argv[], SubProcessReques
  * Sub-process registry
  */
 ObjectArray<SubProcessExecutor> LIBNETXMS_EXPORTABLE *SubProcessExecutor::m_registry = NULL;
-Mutex LIBNETXMS_EXPORTABLE SubProcessExecutor::m_registryLock;
+MUTEX LIBNETXMS_EXPORTABLE SubProcessExecutor::m_registryLock = MutexCreate();
 
 /**
  * Sub-process manager thread handle
@@ -135,7 +135,7 @@ THREAD_RESULT THREAD_CALL SubProcessExecutor::monitorThread(void *arg)
    nxlog_debug_tag(DEBUG_TAG, 1, _T("Sub-process monitor started"));
    while(!ConditionWait(m_stopCondition, 5000))
    {
-      m_registryLock.lock();
+      MutexLock(m_registryLock);
       for(int i = 0; i < m_registry->size(); i++)
       {
          SubProcessExecutor *p = m_registry->get(i);
@@ -146,7 +146,7 @@ THREAD_RESULT THREAD_CALL SubProcessExecutor::monitorThread(void *arg)
             p->execute();
          }
       }
-      m_registryLock.unlock();
+      MutexUnlock(m_registryLock);
    }
    ConditionDestroy(m_stopCondition);
    nxlog_debug_tag(DEBUG_TAG, 1, _T("Sub-process monitor stopped"));
@@ -171,7 +171,7 @@ void SubProcessExecutor::shutdown()
    ThreadJoin(m_monitorThread);
    m_monitorThread = INVALID_THREAD_HANDLE;
 
-   m_registryLock.lock();
+   MutexLock(m_registryLock);
    if (m_registry != NULL)
    {
       for(int i = 0; i < m_registry->size(); i++)
@@ -185,7 +185,8 @@ void SubProcessExecutor::shutdown()
       }
       delete_and_null(m_registry);
    }
-   m_registryLock.unlock();
+   MutexUnlock(m_registryLock);
+   MutexDestroy(m_registryLock);
 }
 
 /**
@@ -200,7 +201,7 @@ SubProcessExecutor::SubProcessExecutor(const TCHAR *name, const TCHAR *command) 
    m_messageQueue = new MsgWaitQueue();
    m_receiverThread = INVALID_THREAD_HANDLE;
 
-   m_registryLock.lock();
+   MutexLock(m_registryLock);
    if (m_registry == NULL)
       m_registry = new ObjectArray<SubProcessExecutor>(16, 16, false);
    if (m_stopCondition == INVALID_CONDITION_HANDLE)
@@ -208,7 +209,7 @@ SubProcessExecutor::SubProcessExecutor(const TCHAR *name, const TCHAR *command) 
    if (m_monitorThread == INVALID_THREAD_HANDLE)
       m_monitorThread = ThreadCreateEx(SubProcessExecutor::monitorThread, 0, NULL);
    m_registry->add(this);
-   m_registryLock.unlock();
+   MutexUnlock(m_registryLock);
 }
 
 /**
@@ -216,9 +217,9 @@ SubProcessExecutor::SubProcessExecutor(const TCHAR *name, const TCHAR *command) 
  */
 SubProcessExecutor::~SubProcessExecutor()
 {
-   m_registryLock.lock();
+   MutexLock(m_registryLock);
    m_registry->remove(this);
-   m_registryLock.unlock();
+   MutexUnlock(m_registryLock);
 
    delete m_messageQueue;
    delete m_pipe;

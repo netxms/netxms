@@ -173,7 +173,7 @@ private:
    void receiverThread();
 
    static ObjectArray<SubProcessExecutor> *m_registry;
-   static Mutex m_registryLock;
+   static MUTEX m_registryLock;
    static THREAD m_monitorThread;
    static CONDITION m_stopCondition;
 
