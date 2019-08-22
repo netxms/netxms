@@ -245,7 +245,13 @@ IcmpStatCollector *IcmpStatCollector::loadFromDatabase(DB_HANDLE hdb, UINT32 obj
       TCHAR *data = DBGetField(hResult, 0, 5, NULL, 0);
       if ((data != NULL) && (_tcslen(data) == sampleCount * 3))
       {
-         for(int i = 0, pos = 0; i < sampleCount; i++, pos += 3)
+         int pos = 0;
+         if (sampleCount > period)
+         {
+            pos += (sampleCount - period) * 3;
+            sampleCount = period;
+         }
+         for(int i = 0; i < sampleCount; i++, pos += 3)
          {
             TCHAR value[4];
             memcpy(value, &data[pos], 3 * sizeof(TCHAR));

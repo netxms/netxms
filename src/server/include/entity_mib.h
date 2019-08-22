@@ -68,6 +68,12 @@ public:
    INT32 getPosition() const { return m_position; }
    const ObjectArray<Component> *getChildren() const { return m_children; }
 
+   template<typename C> void forEach(void (*callback)(const Component*, C*), C *context) const
+   {
+      for(int i = 0; i < m_children->size(); i++)
+         callback(m_children->get(i), context);
+   }
+
    UINT32 getClass() const { return m_class; }
    const TCHAR *getDescription() const { return m_description; }
    UINT32 getIfIndex() const { return m_ifIndex; }
