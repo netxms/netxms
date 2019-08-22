@@ -15111,7 +15111,7 @@ void ClientSession::getNotificationDriverNames(UINT32 requestId)
 }
 
 /**
- * Set address list
+ * Start active discovery with provided range
  */
 void ClientSession::startActiveDiscovery(NXCPMessage *request)
 {
@@ -15125,7 +15125,7 @@ void ClientSession::startActiveDiscovery(NXCPMessage *request)
       if (count > 0)
       {
          UINT32 fieldId = VID_ADDR_LIST_BASE;
-         ObjectArray<InetAddressListElement> *addressList = new ObjectArray<InetAddressListElement>(true);
+         ObjectArray<InetAddressListElement> *addressList = new ObjectArray<InetAddressListElement>(0, 16, true);
          String ranges;
          for (int i = 0; i < count; i++, fieldId += 10)
          {
