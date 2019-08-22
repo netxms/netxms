@@ -222,6 +222,12 @@ inline MUTEX MutexCreate()
    return mutex;
 }
 
+inline MUTEX MutexCreateFast()
+{
+   // Under Windows we always use mutex with spin
+   return MutexCreate();
+}
+
 inline MUTEX MutexCreateRecursive()
 {
    return MutexCreate();
@@ -419,9 +425,7 @@ inline void ThreadDetach(THREAD hThread)
 
 inline MUTEX MutexCreate(void)
 {
-   MUTEX mutex;
-
-   mutex = (MUTEX)MemAlloc(sizeof(pth_mutex_t));
+   MUTEX mutex = (MUTEX)MemAlloc(sizeof(pth_mutex_t));
    if (mutex != NULL)
    {
       pth_mutex_init(mutex);
@@ -429,18 +433,16 @@ inline MUTEX MutexCreate(void)
    return mutex;
 }
 
+inline MUTEX MutexCreateFast(void)
+{
+   return MutexCreate();
+}
+
 inline MUTEX MutexCreateRecursive()
 {
-   MUTEX mutex;
-
    // In libpth, recursive locking is explicitly supported,
    // so we just create mutex
-   mutex = (MUTEX)MemAlloc(sizeof(pth_mutex_t));
-   if (mutex != NULL)
-   {
-      pth_mutex_init(mutex);
-   }
-   return mutex;
+   return MutexCreate();
 }
 
 inline void MutexDestroy(MUTEX mutex)
@@ -790,11 +792,12 @@ inline void ThreadDetach(THREAD hThread)
       pthread_detach(hThread);
 }
 
+/**
+ * Create normal mutex
+ */
 inline MUTEX MutexCreate()
 {
-   MUTEX mutex;
-
-   mutex = (MUTEX)MemAlloc(sizeof(netxms_mutex_t));
+   MUTEX mutex = (MUTEX)MemAlloc(sizeof(netxms_mutex_t));
    if (mutex != NULL)
    {
       pthread_mutex_init(&mutex->mutex, NULL);
@@ -805,16 +808,40 @@ inline MUTEX MutexCreate()
    return mutex;
 }
 
+/**
+ * Create fast mutex if supported, otherwise normal mutex
+ * Such mutex should not be used in MutexTimedLock
+ */
+inline MUTEX MutexCreateFast()
+{
+   MUTEX mutex = (MUTEX)MemAlloc(sizeof(netxms_mutex_t));
+   if (mutex != NULL)
+   {
+      pthread_mutex_init(&mutex->mutex, NULL);
+#ifndef HAVE_RECURSIVE_MUTEXES
+      mutex->isRecursive = FALSE;
+#endif
+#ifdef HAVE_DECL_PTHREAD_MUTEX_ADAPTIVE_NP
+      pthread_mutexattr_t a;
+      pthread_mutexattr_init(&a);
+      MUTEXATTR_SETTYPE(&a, PTHREAD_MUTEX_ADAPTIVE_NP);
+      pthread_mutex_init(&mutex->mutex, &a);
+      pthread_mutexattr_destroy(&a);
+#endif
+   }
+   return mutex;
+}
+
+/**
+ * Create recursive mutex
+ */
 inline MUTEX MutexCreateRecursive()
 {
-   MUTEX mutex;
-
-   mutex = (MUTEX)MemAlloc(sizeof(netxms_mutex_t));
+   MUTEX mutex = (MUTEX)MemAlloc(sizeof(netxms_mutex_t));
    if (mutex != NULL)
    {
 #ifdef HAVE_RECURSIVE_MUTEXES
       pthread_mutexattr_t a;
-
       pthread_mutexattr_init(&a);
       MUTEXATTR_SETTYPE(&a, MUTEX_RECURSIVE_FLAG);
       pthread_mutex_init(&mutex->mutex, &a);
