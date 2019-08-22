@@ -777,7 +777,7 @@ TCHAR *NXCPMessage::getFieldAsString(UINT32 fieldId, MemoryPool *pool, TCHAR *bu
       }
       else
       {
-         str = (pool != NULL) ? pool->allocateStringA(outlen + 1) : MemAllocStringA(length + 1);
+         str = (pool != NULL) ? pool->allocateStringA(length + 1) : MemAllocStringA(length + 1);
          size_t outlen = utf8_to_mb(static_cast<char*>(value) + 4, length, str, length);
          str[outlen] = 0;
       }
