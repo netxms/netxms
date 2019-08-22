@@ -382,14 +382,14 @@ void NetObjInsert(NetObj *pObject, bool newObject, bool importedObject)
             }
             break;
          case OBJECT_INTERFACE:
-            if (!((Interface *)pObject)->isExcludedFromTopology())
+            if (!static_cast<Interface*>(pObject)->isExcludedFromTopology())
             {
 					if (IsZoningEnabled())
 					{
 						Zone *zone = (Zone *)g_idxZoneByUIN.get(((Interface *)pObject)->getZoneUIN());
 						if (zone != NULL)
 						{
-							zone->addToIndex((Interface *)pObject);
+							zone->addToIndex(static_cast<Interface*>(pObject));
 						}
 						else
 						{
@@ -2446,22 +2446,47 @@ void UpdateInterfaceIndex(const InetAddress& oldIpAddr, const InetAddress& newIp
 {
 	if (IsZoningEnabled())
 	{
-		Zone *zone = (Zone *)g_idxZoneByUIN.get(iface->getZoneUIN());
+		Zone *zone = static_cast<Zone*>(g_idxZoneByUIN.get(iface->getZoneUIN()));
 		if (zone != NULL)
 		{
 			zone->updateInterfaceIndex(oldIpAddr, newIpAddr, iface);
 		}
 		else
 		{
-			DbgPrintf(1, _T("UpdateInterfaceIndex: Cannot find zone object for interface %s [%d] (zone id %d)"),
-			          iface->getName(), (int)iface->getId(), (int)iface->getZoneUIN());
+			nxlog_debug(1, _T("UpdateInterfaceIndex: Cannot find zone object for interface %s [%u] (zone UIN %u)"),
+			         iface->getName(), iface->getId(), iface->getZoneUIN());
 		}
 	}
 	else
 	{
-		g_idxInterfaceByAddr.remove(oldIpAddr);
-		g_idxInterfaceByAddr.put(newIpAddr, iface);
+      g_idxInterfaceByAddr.remove(oldIpAddr);
+      g_idxInterfaceByAddr.put(newIpAddr, iface);
 	}
+}
+
+/**
+ * Update node index when IP address changes
+ */
+void UpdateNodeIndex(const InetAddress& oldIpAddr, const InetAddress& newIpAddr, Node *node)
+{
+   if (IsZoningEnabled())
+   {
+      Zone *zone = static_cast<Zone*>(g_idxZoneByUIN.get(node->getZoneUIN()));
+      if (zone != NULL)
+      {
+         zone->updateNodeIndex(oldIpAddr, newIpAddr, node);
+      }
+      else
+      {
+         nxlog_debug(1, _T("UpdateNodeIndex: Cannot find zone object for node %s [%u] (zone UIN %u)"),
+                  node->getName(), node->getId(), node->getZoneUIN());
+      }
+   }
+   else
+   {
+      g_idxNodeByAddr.remove(oldIpAddr);
+      g_idxNodeByAddr.put(newIpAddr, node);
+   }
 }
 
 /**

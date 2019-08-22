@@ -3145,6 +3145,7 @@ public:
    void removeFromInterfaceIndex(const InetAddress& addr) { m_idxInterfaceByAddr->remove(addr); }
 	void removeFromIndex(Node *node) { m_idxNodeByAddr->remove(node->getIpAddress()); }
 	void updateInterfaceIndex(const InetAddress& oldIp, const InetAddress& newIp, Interface *iface);
+   void updateNodeIndex(const InetAddress& oldIp, const InetAddress& newIp, Node *node);
 	Subnet *getSubnetByAddr(const InetAddress& ipAddr) { return (Subnet *)m_idxSubnetByAddr->get(ipAddr); }
 	Interface *getInterfaceByAddr(const InetAddress& ipAddr) { return (Interface *)m_idxInterfaceByAddr->get(ipAddr); }
 	Node *getNodeByAddr(const InetAddress& ipAddr) { return (Node *)m_idxNodeByAddr->get(ipAddr); }
@@ -3730,6 +3731,7 @@ void NetObjDeleteFromIndexes(NetObj *object);
 void NetObjDelete(NetObj *object);
 
 void UpdateInterfaceIndex(const InetAddress& oldIpAddr, const InetAddress& newIpAddr, Interface *iface);
+void UpdateNodeIndex(const InetAddress& oldIpAddr, const InetAddress& newIpAddr, Node *node);
 
 void NXCORE_EXPORTABLE MacDbAddAccessPoint(AccessPoint *ap);
 void NXCORE_EXPORTABLE MacDbAddInterface(Interface *iface);

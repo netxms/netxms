@@ -2774,7 +2774,7 @@ void Node::updatePrimaryIpAddr()
       return;
 
    InetAddress ipAddr = ResolveHostName(m_zoneUIN, m_primaryName);
-   if (!ipAddr.equals(m_ipAddress) && (ipAddr.isValidUnicast() || !_tcscmp(m_primaryName, _T("0.0.0.0"))))
+   if (!ipAddr.equals(getIpAddress()) && (ipAddr.isValidUnicast() || !_tcscmp(m_primaryName, _T("0.0.0.0"))))
    {
       TCHAR buffer1[64], buffer2[64];
 
@@ -2782,17 +2782,19 @@ void Node::updatePrimaryIpAddr()
          m_name, (int)m_id, m_ipAddress.toString(buffer1), ipAddr.toString(buffer2));
       PostEvent(EVENT_IP_ADDRESS_CHANGED, m_id, "AA", &ipAddr, &m_ipAddress);
 
+      lockProperties();
+
       if (m_flags & NF_REMOTE_AGENT)
       {
-         lockProperties();
          m_ipAddress = ipAddr;
          setModified(MODIFY_NODE_PROPERTIES);
-         unlockProperties();
       }
       else
       {
          setPrimaryIPAddress(ipAddr);
       }
+
+      unlockProperties();
 
       agentLock();
       deleteAgentConnection();
@@ -6867,28 +6869,11 @@ void Node::setPrimaryIPAddress(const InetAddress& addr)
    if (addr.equals(m_ipAddress) || (m_flags & NF_REMOTE_AGENT))
       return;
 
-   if (IsZoningEnabled())
-   {
-      Zone *zone = FindZoneByUIN(m_zoneUIN);
-      if (zone == NULL)
-      {
-         DbgPrintf(1, _T("Internal error: zone is NULL in Node::setPrimaryIPAddress (zone ID = %d)"), (int)m_zoneUIN);
-         return;
-      }
-      if (m_ipAddress.isValid())
-         zone->removeFromIndex(this);
-      m_ipAddress = addr;
-      if (m_ipAddress.isValid())
-         zone->addToIndex(this);
-   }
-   else
-   {
-      if (m_ipAddress.isValid())
-         g_idxNodeByAddr.remove(m_ipAddress);
-      m_ipAddress = addr;
-      if (m_ipAddress.isValid())
-         g_idxNodeByAddr.put(m_ipAddress, this);
-   }
+   InetAddress oldIpAddr = m_ipAddress;
+   m_ipAddress = addr;
+   UpdateNodeIndex(oldIpAddr, addr, this);
+
+   setModified(MODIFY_NODE_PROPERTIES);
 }
 
 /**
@@ -6922,9 +6907,9 @@ void Node::changeIPAddress(const InetAddress& ipAddr)
          object->resetStatus();
          if (object->getObjectClass() == OBJECT_INTERFACE)
          {
-            if (((Interface *)object)->isFake())
+            if (static_cast<Interface*>(object)->isFake())
             {
-               ((Interface *)object)->setIpAddress(ipAddr);
+               static_cast<Interface*>(object)->setIpAddress(ipAddr);
             }
          }
       }

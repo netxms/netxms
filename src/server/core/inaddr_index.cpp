@@ -66,7 +66,7 @@ InetAddressIndex::~InetAddressIndex()
  */
 bool InetAddressIndex::put(const InetAddress& addr, NetObj *object)
 {
-   if (!addr.isValid())
+   if (!addr.isValidUnicast())
       return false;
 
    bool replace = true;
@@ -115,7 +115,7 @@ bool InetAddressIndex::put(const InetAddressList *addrList, NetObj *object)
  */
 void InetAddressIndex::remove(const InetAddress& addr)
 {
-   if (!addr.isValid())
+   if (!addr.isValidUnicast())
       return;
 
    BYTE key[18];

@@ -323,8 +323,17 @@ void Zone::addProxy(Node *node)
  */
 void Zone::updateInterfaceIndex(const InetAddress& oldIp, const InetAddress& newIp, Interface *iface)
 {
-	m_idxInterfaceByAddr->remove(oldIp);
-	m_idxInterfaceByAddr->put(newIp, iface);
+   m_idxInterfaceByAddr->remove(oldIp);
+   m_idxInterfaceByAddr->put(newIp, iface);
+}
+
+/**
+ * Update node index
+ */
+void Zone::updateNodeIndex(const InetAddress& oldIp, const InetAddress& newIp, Node *node)
+{
+   m_idxNodeByAddr->remove(oldIp);
+   m_idxNodeByAddr->put(newIp, node);
 }
 
 /**
