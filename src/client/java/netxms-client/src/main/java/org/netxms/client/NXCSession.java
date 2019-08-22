@@ -11278,4 +11278,18 @@ public class NXCSession
       List<String> list = response.getStringListFromFields(NXCPCodes.VID_NOTIFICATION_DRIVER_BASE, NXCPCodes.VID_DRIVER_COUNT);
       return list;
    }
+
+   public void startManualActiveDiscovery(List<InetAddressListElement> list) throws NXCException, IOException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_START_ACTIVE_DISCOVERY);
+      msg.setFieldInt32(NXCPCodes.VID_NUM_RECORDS, list.size());
+      long fieldId = NXCPCodes.VID_ADDR_LIST_BASE;
+      for(InetAddressListElement e : list)
+      {
+         e.fillMessage(msg, fieldId);
+         fieldId += 10;
+      }
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
 }

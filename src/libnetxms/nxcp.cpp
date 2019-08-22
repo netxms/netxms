@@ -433,11 +433,12 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD code, TCHAR *pszBuffer)
       _T("CMD_DELETE_NOTIFICATION_CHANNEL"),
       _T("CMD_GET_NOTIFICATION_DRIVERS"),
       _T("CMD_RENAME_NOTIFICATION_CHANNEL"),
-      _T("CMD_GET_AGENT_POLICY")
+      _T("CMD_GET_AGENT_POLICY"),
+      _T("CMD_START_ACTIVE_DISCOVERY")
 
    };
 
-   if ((code >= CMD_LOGIN) && (code <= CMD_GET_AGENT_POLICY))
+   if ((code >= CMD_LOGIN) && (code <= CMD_START_ACTIVE_DISCOVERY))
    {
       _tcscpy(pszBuffer, pszMsgNames[code - CMD_LOGIN]);
    }

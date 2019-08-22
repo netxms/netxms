@@ -632,6 +632,7 @@ typedef struct
 #define CMD_GET_NOTIFICATION_DRIVERS      0x0185
 #define CMD_RENAME_NOTIFICATION_CHANNEL   0x0186
 #define CMD_GET_AGENT_POLICY              0x0187
+#define CMD_START_ACTIVE_DISCOVERY        0x0188
 
 #define CMD_RS_LIST_REPORTS            0x1100
 #define CMD_RS_GET_REPORT              0x1101

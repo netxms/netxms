@@ -18,6 +18,7 @@
  */
 package org.netxms.ui.eclipse.serverconfig.views;
 
+import java.util.ArrayList;
 import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
@@ -55,6 +56,7 @@ import org.eclipse.ui.forms.widgets.TableWrapData;
 import org.eclipse.ui.forms.widgets.TableWrapLayout;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.InetAddressListElement;
+import org.netxms.client.NXCSession;
 import org.netxms.client.constants.NetworkDiscovery;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -65,6 +67,7 @@ import org.netxms.ui.eclipse.serverconfig.dialogs.AddAddressListElementDialog;
 import org.netxms.ui.eclipse.serverconfig.views.helpers.AddressListElementComparator;
 import org.netxms.ui.eclipse.serverconfig.views.helpers.AddressListLabelProvider;
 import org.netxms.ui.eclipse.serverconfig.views.helpers.DiscoveryConfig;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
@@ -574,7 +577,7 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
       gd.grabExcessHorizontalSpace = true;
       gd.verticalAlignment = SWT.FILL;
       gd.grabExcessVerticalSpace = true;
-      gd.verticalSpan = 3;
+      gd.verticalSpan = 4;
       gd.heightHint = 100;
       activeDiscoveryAddressList.getTable().setLayoutData(gd);
       activeDiscoveryAddressList.getTable().setSortDirection(SWT.UP);
@@ -629,6 +632,20 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
          public void linkActivated(HyperlinkEvent e)
          {
             removeTargetAddressListElements();
+         }
+      });
+
+      final ImageHyperlink runActiveDiscovery = toolkit.createImageHyperlink(clientArea, SWT.NONE);
+      runActiveDiscovery.setText("Scan");
+      runActiveDiscovery.setToolTipText("Runs active discovery on selected ranges");
+      gd = new GridData();
+      gd.verticalAlignment = SWT.TOP;
+      runActiveDiscovery.setLayoutData(gd);
+      runActiveDiscovery.addHyperlinkListener(new HyperlinkAdapter() {
+         @Override
+         public void linkActivated(HyperlinkEvent e)
+         {
+            runManualActiveDiscovery();
          }
       });
    }
@@ -970,6 +987,53 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
          activeDiscoveryAddressList.setInput(list.toArray());
          setModified();
       }
+   }
+   
+   private void runManualActiveDiscovery()
+   {
+      if(!MessageDialogHelper.openConfirm(getSite().getShell(), "Active discovery", "Are you sure you want to start manual scan for selected ranges?"))
+         return;
+      
+      final IStructuredSelection selection = (IStructuredSelection)activeDiscoveryAddressList.getSelection();
+      if (selection.size() == 0)
+         return;
+
+      final List<InetAddressListElement> list = new ArrayList<InetAddressListElement>();
+      for(Object o : selection.toList())
+      {
+         list.add((InetAddressListElement)o);
+      }
+      
+      final NXCSession session = ConsoleSharedData.getSession();
+      new ConsoleJob("Run active discovery poll", this, Activator.PLUGIN_ID, null) {
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            session.startManualActiveDiscovery(list);
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  StringBuilder sb = new StringBuilder("Active discovery started for ranges:\n");
+                  for (int i = 0; i < list.size(); i++)
+                  {
+                     InetAddressListElement e = list.get(i);
+                     sb.append((e.getType() == InetAddressListElement.SUBNET) ? e.getBaseAddress().getHostAddress() + "/" + e.getMaskBits() : e.getBaseAddress().getHostAddress() + " - " + e.getEndAddress().getHostAddress());
+                     if ((i+1) != list.size())
+                        sb.append("\n");
+                  }
+                  
+                  MessageDialogHelper.openInformation(getSite().getShell(), "Active discovery started", sb.toString());
+               }
+            });
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return "Error startin active discovery";
+         }
+      }.start();
    }
 
    /**

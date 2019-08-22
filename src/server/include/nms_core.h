@@ -793,6 +793,7 @@ private:
    void removeNotificationChannel(NXCPMessage *request);
    void renameNotificationChannel(NXCPMessage *request);
    void getNotificationDriverNames(UINT32 requestId);
+   void startActiveDiscovery(NXCPMessage *request);
 #ifdef WITH_ZMQ
    void zmqManageSubscription(NXCPMessage *request, zmq::SubscriptionType type, bool subscribe);
    void zmqListSubscriptions(NXCPMessage *request, zmq::SubscriptionType type);

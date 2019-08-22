@@ -905,3 +905,15 @@ void WakeupActiveDiscoveryThread()
 {
    ConditionSet(s_activeDiscoveryWakeup);
 }
+
+/**
+ * Manual active discovery starter
+ */
+void StartManualActiveDiscovery(ObjectArray<InetAddressListElement> *addressList)
+{
+   for(int i = 0; (i < addressList->size()) && !IsShutdownInProgress(); i++)
+   {
+      CheckRange(*addressList->get(i), RangeScanCallback, NULL, NULL);
+   }
+   delete addressList;
+}

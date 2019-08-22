@@ -79,6 +79,8 @@ void GetAgentTunnels(NXCPMessage *msg);
 UINT32 BindAgentTunnel(UINT32 tunnelId, UINT32 nodeId, UINT32 userId);
 UINT32 UnbindAgentTunnel(UINT32 nodeId, UINT32 userId);
 
+void StartManualActiveDiscovery(ObjectArray<InetAddressListElement> *addressList);
+
 /**
  * Client session console constructor
  */
@@ -1377,6 +1379,9 @@ void ClientSession::processRequest(NXCPMessage *request)
          break;
       case CMD_GET_NOTIFICATION_DRIVERS:
          getNotificationDriverNames(request->getId());
+         break;
+      case CMD_START_ACTIVE_DISCOVERY:
+         startActiveDiscovery(request);
          break;
 #ifdef WITH_ZMQ
       case CMD_ZMQ_SUBSCRIBE_EVENT:
@@ -15102,6 +15107,45 @@ void ClientSession::getNotificationDriverNames(UINT32 requestId)
       writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on notification driver list"));
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
+   sendMessage(&msg);
+}
+
+/**
+ * Set address list
+ */
+void ClientSession::startActiveDiscovery(NXCPMessage *request)
+{
+   NXCPMessage msg;
+   msg.setCode(CMD_REQUEST_COMPLETED);
+   msg.setId(request->getId());
+
+   if (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG)
+   {
+      int count = request->getFieldAsInt32(VID_NUM_RECORDS);
+      if (count > 0)
+      {
+         UINT32 fieldId = VID_ADDR_LIST_BASE;
+         ObjectArray<InetAddressListElement> *addressList = new ObjectArray<InetAddressListElement>(true);
+         String ranges;
+         for (int i = 0; i < count; i++, fieldId += 10)
+         {
+            InetAddressListElement *el = new InetAddressListElement(request, fieldId);
+            addressList->add(el);
+            ranges.append(el->toString());
+            if ((i+1) != count)
+               ranges.append(_T(", "));
+         }
+
+         ThreadPoolExecute(g_clientThreadPool, StartManualActiveDiscovery, addressList);
+         WriteAuditLog(AUDIT_SYSCFG, true, m_dwUserId, m_workstation, m_id, 0, _T("Manual active discovery started for ranges: %s"), (const TCHAR *)ranges);
+      }
+   }
+   else
+   {
+      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      WriteAuditLog(AUDIT_SYSCFG, false, m_dwUserId, m_workstation, m_id, 0, _T("Access denied on modify address list %d"));
+   }
+
    sendMessage(&msg);
 }
 

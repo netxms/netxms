@@ -406,7 +406,8 @@ public class NXCPCodes
    public static final int CMD_GET_NOTIFICATION_DRIVERS = 0x0185;
    public static final int CMD_RENAME_NOTIFICATION_CHANNEL = 0x0186;
    public static final int CMD_GET_AGENT_POLICY = 0x0187;
-
+   public static final int CMD_START_ACTIVE_DISCOVERY = 0x0188;
+   
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;
 	public static final int CMD_RS_GET_REPORT_DEFINITION = 0x1101;
