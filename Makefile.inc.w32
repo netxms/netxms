@@ -113,8 +113,14 @@ CPPFLAGS = $(CPPFLAGS) /D_USRDLL
 LDFLAGS = $(LDFLAGS) /DLL
 !endif
 
+!if "$(CRT_TYPE)" == "static"
+CPPFLAGS = $(CPPFLAGS) /MT
+!else
+CPPFLAGS = $(CPPFLAGS) /MD
+!endif
+
 # Common C/C++ compiler flags
-CPPFLAGS = $(CPPFLAGS) /MD /O2 /Gd /EHs- /GR- \
+CPPFLAGS = $(CPPFLAGS) /O2 /Gd /EHs- /GR- \
 	/I "$(NETXMS_BASE)\include" \
 	/I "$(NETXMS_BASE)\include\msvc" \
 	/I "$(NETXMS_BASE)\build" \
