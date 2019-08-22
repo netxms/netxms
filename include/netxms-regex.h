@@ -48,20 +48,24 @@
 #ifdef UNICODE
 #define PCRE_TCHAR              PCRE_WCHAR
 #define PCRE                    PCREW
-#define PCRE_COMMON_FLAGS       PCRE_UNICODE_FLAGS
 #define _pcre_compile_t         _pcre_compile_w
 #define _pcre_exec_t            _pcre_exec_w
 #define _pcre_free_t            _pcre_free_w
 #else   /* UNICODE */
 #define PCRE_TCHAR              char
 #define PCRE                    pcre
-#define PCRE_COMMON_FLAGS       0
 #define _pcre_compile_t         pcre_compile
 #define _pcre_exec_t            pcre_exec
 #define _pcre_free_t            pcre_free
 #endif
 
-#define PCRE_COMMON_FLAGS_W     PCRE_UNICODE_FLAGS
-#define PCRE_COMMON_FLAGS_A     0
+#define PCRE_COMMON_FLAGS_W     (PCRE_UNICODE_FLAGS | PCRE_DOTALL | PCRE_BSR_UNICODE | PCRE_NEWLINE_ANY)
+#define PCRE_COMMON_FLAGS_A     (PCRE_DOTALL | PCRE_BSR_ANYCRLF | PCRE_NEWLINE_ANYCRLF)
+
+#ifdef UNICODE
+#define PCRE_COMMON_FLAGS       PCRE_COMMON_FLAGS_W
+#else
+#define PCRE_COMMON_FLAGS       PCRE_COMMON_FLAGS_A
+#endif
 
 #endif	/* _netxms_regex_h */
