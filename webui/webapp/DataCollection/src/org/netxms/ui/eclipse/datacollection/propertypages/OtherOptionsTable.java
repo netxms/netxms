@@ -21,12 +21,10 @@ package org.netxms.ui.eclipse.datacollection.propertypages;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.netxms.client.datacollection.DataCollectionItem;
+import org.netxms.client.datacollection.DataCollectionTable;
 import org.netxms.client.objects.GenericObject;
-import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.propertypages.helpers.DCIPropertyPageDialog;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -35,13 +33,9 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  * @author Victor
  *
  */
-public class OtherOptions extends DCIPropertyPageDialog
+public class OtherOptionsTable extends DCIPropertyPageDialog
 {
-	private DataCollectionItem dci;
-	private Button checkShowOnTooltip;
-	private Button checkShowInOverview;
-   private Button checkCalculateStatus;
-   private Button checkHideOnLastValues;
+	private DataCollectionTable dci;
    private ObjectSelector relatedObject;
 
 	/* (non-Javadoc)
@@ -51,30 +45,14 @@ public class OtherOptions extends DCIPropertyPageDialog
 	protected Control createContents(Composite parent)
 	{
 	   Composite dialogArea = (Composite)super.createContents(parent);
-		dci = editor.getObjectAsItem();
+		dci = editor.getObjectAsTable();
 		
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
 		layout.marginWidth = 0;
 		layout.marginHeight = 0;
       dialogArea.setLayout(layout);
-
-      checkShowOnTooltip = new Button(dialogArea, SWT.CHECK);
-      checkShowOnTooltip.setText(Messages.get().NetworkMaps_ShowInTooltips);
-      checkShowOnTooltip.setSelection(dci.isShowOnObjectTooltip());
-
-      checkShowInOverview = new Button(dialogArea, SWT.CHECK);
-      checkShowInOverview.setText(Messages.get().OtherOptions_ShowlastValueInObjectOverview);
-      checkShowInOverview.setSelection(dci.isShowInObjectOverview());
-
-      checkCalculateStatus = new Button(dialogArea, SWT.CHECK);
-      checkCalculateStatus.setText(Messages.get().OtherOptions_UseForStatusCalculation);
-      checkCalculateStatus.setSelection(dci.isUsedForNodeStatusCalculation());
-
-      checkHideOnLastValues = new Button(dialogArea, SWT.CHECK);
-      checkHideOnLastValues.setText("Hide valie on \"Last Values\" page");
-      checkHideOnLastValues.setSelection(dci.isHideOnLastValuesView());      
-
+      
       relatedObject = new ObjectSelector(dialogArea, SWT.NONE, true);
       relatedObject.setLabel("Related object");
       relatedObject.setObjectClass(GenericObject.class);
@@ -94,10 +72,6 @@ public class OtherOptions extends DCIPropertyPageDialog
 	 */
 	protected void applyChanges(final boolean isApply)
 	{
-		dci.setShowOnObjectTooltip(checkShowOnTooltip.getSelection());
-		dci.setShowInObjectOverview(checkShowInOverview.getSelection());
-      dci.setUsedForNodeStatusCalculation(checkCalculateStatus.getSelection());
-      dci.setHideOnLastValuesView(checkHideOnLastValues.getSelection());
       dci.setRelatedObject(relatedObject.getObjectId());
 		editor.modify();
 	}
@@ -128,10 +102,6 @@ public class OtherOptions extends DCIPropertyPageDialog
 	protected void performDefaults()
 	{
 		super.performDefaults();
-		checkShowOnTooltip.setSelection(false);
-		checkShowInOverview.setSelection(false);
-		checkCalculateStatus.setSelection(false);
-		checkHideOnLastValues.setSelection(false);
 		relatedObject.setObjectId(0);
 	}
 }

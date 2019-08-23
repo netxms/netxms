@@ -73,6 +73,7 @@ public class DciComparator extends ViewerComparator
 			case DataCollectionEditor.COLUMN_DATATYPE:
 			case DataCollectionEditor.COLUMN_STATUS:
 			case DataCollectionEditor.COLUMN_TEMPLATE:
+         case DataCollectionEditor.COLUMN_RELATEDOBJ:
 				final String text1 = labelProvider.getColumnText(e1, column);
 				final String text2 = labelProvider.getColumnText(e2, column);
 				if (text1 != null && text2 != null)

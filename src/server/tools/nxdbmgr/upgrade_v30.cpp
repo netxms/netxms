@@ -24,6 +24,17 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 30.93 to 30.94
+ */
+static bool H_UpgradeFromV93()
+{
+   CHK_EXEC(SQLQuery(_T("ALTER TABLE items ADD related_object integer")));
+   CHK_EXEC(SQLQuery(_T("ALTER TABLE dc_tables ADD related_object integer")));
+   CHK_EXEC(SetMinorSchemaVersion(94));
+   return true;
+}
+
+/**
  * Upgrade from 30.92 to 30.93
  */
 static bool H_UpgradeFromV92()
@@ -3360,6 +3371,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 93, 30, 94, H_UpgradeFromV93 },
    { 92, 30, 93, H_UpgradeFromV92 },
    { 91, 30, 92, H_UpgradeFromV91 },
    { 90, 30, 91, H_UpgradeFromV90 },

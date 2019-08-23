@@ -39,6 +39,14 @@
       </view>
       <view
             allowMultiple="true"
+            class="org.netxms.ui.eclipse.datacollection.views.PolicyListView"
+            icon="icons/policy.gif"
+            id="org.netxms.ui.eclipse.datacollection.views.policy_list"
+            name="Policy list"
+            restorable="true">
+      </view>
+      <view
+            allowMultiple="true"
             class="org.netxms.ui.eclipse.datacollection.views.PolicyEditorView"
             icon="icons/policy.gif"
             id="org.netxms.ui.eclipse.datacollection.views.policy_editor"
@@ -400,6 +408,16 @@
            <enabledWhen>
               <instanceof
                     value="org.netxms.client.datacollection.DataCollectionObject">
+              </instanceof>
+           </enabledWhen>
+        </page>
+        <page
+              class="org.netxms.ui.eclipse.datacollection.propertypages.OtherOptionsTable"
+              id="org.netxms.ui.eclipse.datacollection.propertypages.OtherOptionTable#200"
+              name="%page.name.OtherOptions">
+           <enabledWhen>
+              <instanceof
+                    value="org.netxms.client.datacollection.DataCollectionTable">
               </instanceof>
            </enabledWhen>
         </page>

@@ -1076,6 +1076,7 @@ public class NXCPCodes
    public static final long VID_CHANNEL_COUNT = 655;
    public static final long VID_DRIVER_COUNT = 656;
    public static final long VID_NEW_NAME = 657;
+   public static final long VID_RELATED_OBJECT = 658;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;

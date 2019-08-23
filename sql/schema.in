@@ -736,6 +736,7 @@ CREATE TABLE items
   comments SQL_TEXT null,
   instance_retention_time integer not null,
   grace_period_start integer not null,
+  related_object integer,
   PRIMARY KEY(item_id)
 ) TABLE_TYPE;
 
@@ -800,6 +801,7 @@ CREATE TABLE dc_tables
   instd_filter SQL_TEXT null,
   instance_retention_time integer not null,
   grace_period_start integer not null,
+  related_object integer,
   PRIMARY KEY(item_id)
 ) TABLE_TYPE;
 

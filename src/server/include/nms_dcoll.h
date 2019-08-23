@@ -236,6 +236,7 @@ protected:
    time_t m_instanceGracePeriodStart;  // Start of grace period for missing instance
    INT32 m_instanceRetentionTime;      // Retention time if instance is not found
    time_t m_startTime;                 // Time to start data collection
+   UINT32 m_relatedObject;
 
    void lock() { MutexLock(m_hMutex); }
    bool tryLock() { return MutexTryLock(m_hMutex); }
@@ -311,6 +312,7 @@ public:
    INT16 getAgentCacheMode();
    bool hasValue();
    bool hasAccess(UINT32 userId);
+   UINT32 getRelatedObject() { return m_relatedObject; }
 
 	bool matchClusterResource();
    bool isReadyForPolling(time_t currTime);
@@ -360,6 +362,7 @@ public:
    void expandInstance();
    time_t getInstanceGracePeriodStart() const { return m_instanceGracePeriodStart; }
    void setInstanceGracePeriodStart(time_t t) { m_instanceGracePeriodStart = t; }
+   void setRelatedObject(UINT32 relatedObject) { m_relatedObject = relatedObject; }
 
 	static int m_defaultRetentionTime;
 	static int m_defaultPollingInterval;
@@ -748,6 +751,7 @@ private:
    time_t m_lastPollTime;
    bool m_hasActiveThreshold;
    int m_thresholdSeverity;
+   UINT32 m_relatedObject;
 
 public:
    DCObjectInfo(DCObject *object);
@@ -773,6 +777,7 @@ public:
    UINT32 getOwnerId() const { return m_ownerId; }
    bool hasActiveThreshold() const { return m_hasActiveThreshold; }
    int getThresholdSeverity() const { return m_thresholdSeverity; }
+   UINT32 getRelatedObject() const { return m_relatedObject; }
 };
 
 /**

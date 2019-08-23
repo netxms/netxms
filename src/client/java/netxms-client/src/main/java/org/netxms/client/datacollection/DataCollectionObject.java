@@ -96,6 +96,7 @@ public abstract class DataCollectionObject
    private String instanceDiscoveryFilter;
    private List<Long> accessList;
    private int instanceRetentionTime;
+   private long relatedObject;
 
 	/**
 	 * Create data collection object from NXCP message
@@ -136,6 +137,7 @@ public abstract class DataCollectionObject
       instanceDiscoveryMethod = msg.getFieldAsInt32(NXCPCodes.VID_INSTD_METHOD);
       instanceDiscoveryData = msg.getFieldAsString(NXCPCodes.VID_INSTD_DATA);
       instanceDiscoveryFilter = msg.getFieldAsString(NXCPCodes.VID_INSTD_FILTER);      
+      relatedObject = msg.getFieldAsInt64(NXCPCodes.VID_RELATED_OBJECT);      
 
       Long arr[] = msg.getFieldAsUInt32ArrayEx(NXCPCodes.VID_ACL);
       if(arr == null)
@@ -173,6 +175,7 @@ public abstract class DataCollectionObject
       instance = "";
       accessList = new ArrayList<Long>(0);
       instanceRetentionTime = -1;
+      relatedObject = 0;
 	}
 	
 	/**
@@ -208,6 +211,7 @@ public abstract class DataCollectionObject
 	   instanceDiscoveryFilter = dco.instanceDiscoveryFilter;
 	   accessList = new ArrayList<Long>(dco.accessList);
 	   instanceRetentionTime = dco.instanceRetentionTime;
+	   relatedObject = dco.relatedObject;
    }
 
    /**
@@ -248,6 +252,7 @@ public abstract class DataCollectionObject
          msg.setField(NXCPCodes.VID_INSTD_DATA, instanceDiscoveryData);
       if (instanceDiscoveryFilter != null)
          msg.setField(NXCPCodes.VID_INSTD_FILTER, instanceDiscoveryFilter);
+      msg.setFieldInt32(NXCPCodes.VID_RELATED_OBJECT, (int)relatedObject);
       
       msg.setField(NXCPCodes.VID_ACL, accessList.toArray(new Long[accessList.size()]));
 	}
@@ -808,5 +813,21 @@ public abstract class DataCollectionObject
          flags |= DCF_HIDE_ON_LAST_VALUES_PAGE;
       else
          flags &= ~DCF_HIDE_ON_LAST_VALUES_PAGE;
+   }
+
+   /**
+    * @return the relatedObject
+    */
+   public long getRelatedObject()
+   {
+      return relatedObject;
+   }
+
+   /**
+    * @param relatedObject the relatedObject to set
+    */
+   public void setRelatedObject(long relatedObject)
+   {
+      this.relatedObject = relatedObject;
    }
 }

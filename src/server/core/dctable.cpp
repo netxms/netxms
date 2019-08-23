@@ -161,7 +161,8 @@ DCTable::DCTable(UINT32 id, const TCHAR *name, int source, int pollingInterval, 
  *    description,flags,source,snmp_port,polling_interval,retention_time,
  *    status,system_tag,resource_id,proxy_node,perftab_settings,
  *    transformation_script,comments,guid,instd_method,instd_data,
- *    instd_filter,instance,instance_retention_time,grace_period_start
+ *    instd_filter,instance,instance_retention_time,grace_period_start,
+ *    related_object
  */
 DCTable::DCTable(DB_HANDLE hdb, DB_RESULT hResult, int iRow, DataCollectionOwner *pNode, bool useStartupDelay) : DCObject()
 {
@@ -196,6 +197,7 @@ DCTable::DCTable(DB_HANDLE hdb, DB_RESULT hResult, int iRow, DataCollectionOwner
    m_instance = DBGetField(hResult, iRow, 21, NULL, 0);
    m_instanceRetentionTime = DBGetFieldLong(hResult, iRow, 22);
    m_instanceGracePeriodStart = DBGetFieldLong(hResult, iRow, 23);
+   m_relatedObject = DBGetFieldLong(hResult, iRow, 24);
 
    int effectivePollingInterval = getEffectivePollingInterval();
    m_startTime = (useStartupDelay && (effectivePollingInterval > 0)) ? time(NULL) + rand() % (effectivePollingInterval / 2) : 0;
@@ -577,7 +579,7 @@ bool DCTable::saveToDatabase(DB_HANDLE hdb)
       _T("snmp_port"), _T("polling_interval"), _T("retention_time"), _T("status"), _T("system_tag"), _T("resource_id"),
       _T("proxy_node"), _T("perftab_settings"), _T("transformation_script"), _T("comments"), _T("guid"),
       _T("instd_method"), _T("instd_data"), _T("instd_filter"), _T("instance"), _T("instance_retention_time"),
-      _T("grace_period_start"),
+      _T("grace_period_start"), _T("related_object"),
       NULL
    };
 
@@ -611,7 +613,8 @@ bool DCTable::saveToDatabase(DB_HANDLE hdb)
    DBBind(hStmt, 22, DB_SQLTYPE_VARCHAR, m_instance, DB_BIND_STATIC);
    DBBind(hStmt, 23, DB_SQLTYPE_INTEGER, m_instanceRetentionTime);
    DBBind(hStmt, 24, DB_SQLTYPE_INTEGER, (INT32)m_instanceGracePeriodStart);
-   DBBind(hStmt, 25, DB_SQLTYPE_INTEGER, m_id);
+   DBBind(hStmt, 25, DB_SQLTYPE_INTEGER, m_relatedObject);
+   DBBind(hStmt, 26, DB_SQLTYPE_INTEGER, m_id);
 
 	bool result = DBExecute(hStmt);
 	DBFreeStatement(hStmt);

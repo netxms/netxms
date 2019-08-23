@@ -186,6 +186,7 @@ public class CreateInterfraceDci implements IObjectActionDelegate
 		dci.setStatus(DataCollectionItem.ACTIVE);
 		dci.setDescription(updateDescription ? dciInfo.description.replaceAll("@@ifName@@", iface.getObjectName()) : dciInfo.description); //$NON-NLS-1$
 		dci.setDeltaCalculation(dciInfo.delta ? DataCollectionItem.DELTA_AVERAGE_PER_SECOND : DataCollectionItem.DELTA_NONE);
+		dci.setRelatedObject(iface.getObjectId());
 		
 		if (dci.getOrigin() == DataCollectionItem.AGENT)
 		{

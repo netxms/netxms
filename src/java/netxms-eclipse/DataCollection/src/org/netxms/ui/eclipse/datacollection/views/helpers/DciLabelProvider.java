@@ -174,6 +174,13 @@ public class DciLabelProvider implements ITableLabelProvider, IColorProvider
 				}
 				sb.append(object.getObjectName());
 				return sb.toString();
+			case DataCollectionEditor.COLUMN_RELATEDOBJ:
+            if (dci.getRelatedObject() == 0)
+               return null;
+            AbstractObject obj = session.findObjectById(dci.getRelatedObject());
+            if (obj == null)
+               return "[" + dci.getRelatedObject() + "]";
+            return obj.getObjectName();
 		}
 		return null;
 	}

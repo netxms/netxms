@@ -337,7 +337,8 @@ void DataCollectionOwner::loadItemsFromDB(DB_HANDLE hdb)
               _T("proxy_node,base_units,unit_multiplier,custom_units_name,")
 	           _T("perftab_settings,system_tag,snmp_port,snmp_raw_value_type,")
 				  _T("instd_method,instd_data,instd_filter,samples,comments,guid,npe_name, ")
-				  _T("instance_retention_time,grace_period_start FROM items WHERE node_id=?"));
+				  _T("instance_retention_time,grace_period_start,related_object ")
+				  _T("FROM items WHERE node_id=?"));
 	if (hStmt != NULL)
 	{
 		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -357,8 +358,8 @@ void DataCollectionOwner::loadItemsFromDB(DB_HANDLE hdb)
 				  _T("description,flags,source,snmp_port,polling_interval,retention_time,")
               _T("status,system_tag,resource_id,proxy_node,perftab_settings,")
               _T("transformation_script,comments,guid,instd_method,instd_data,")
-              _T("instd_filter,instance,instance_retention_time,grace_period_start ")
-              _T("FROM dc_tables WHERE node_id=?"));
+              _T("instd_filter,instance,instance_retention_time,grace_period_start,")
+              _T("related_object FROM dc_tables WHERE node_id=?"));
 	if (hStmt != NULL)
 	{
 		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);

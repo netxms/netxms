@@ -19,13 +19,16 @@
 package org.netxms.ui.eclipse.datacollection.propertypages;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.netxms.client.datacollection.DataCollectionItem;
+import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.propertypages.helpers.DCIPropertyPageDialog;
+import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
@@ -39,6 +42,7 @@ public class OtherOptions extends DCIPropertyPageDialog
 	private Button checkShowInOverview;
    private Button checkCalculateStatus;
    private Button checkHideOnLastValues;
+   private ObjectSelector relatedObject;
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -69,7 +73,16 @@ public class OtherOptions extends DCIPropertyPageDialog
 
       checkHideOnLastValues = new Button(dialogArea, SWT.CHECK);
       checkHideOnLastValues.setText("Hide valie on \"Last Values\" page");
-      checkHideOnLastValues.setSelection(dci.isHideOnLastValuesView());
+      checkHideOnLastValues.setSelection(dci.isHideOnLastValuesView());      
+
+      relatedObject = new ObjectSelector(dialogArea, SWT.NONE, true);
+      relatedObject.setLabel("Related object");
+      relatedObject.setObjectClass(GenericObject.class);
+      relatedObject.setObjectId(dci.getRelatedObject());
+      GridData gd = new GridData();
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalAlignment = SWT.FILL;
+      relatedObject.setLayoutData(gd);
       
 		return dialogArea;
 	}
@@ -85,6 +98,7 @@ public class OtherOptions extends DCIPropertyPageDialog
 		dci.setShowInObjectOverview(checkShowInOverview.getSelection());
       dci.setUsedForNodeStatusCalculation(checkCalculateStatus.getSelection());
       dci.setHideOnLastValuesView(checkHideOnLastValues.getSelection());
+      dci.setRelatedObject(relatedObject.getObjectId());
 		editor.modify();
 	}
 
@@ -118,5 +132,6 @@ public class OtherOptions extends DCIPropertyPageDialog
 		checkShowInOverview.setSelection(false);
 		checkCalculateStatus.setSelection(false);
 		checkHideOnLastValues.setSelection(false);
+		relatedObject.setObjectId(0);
 	}
 }

@@ -102,6 +102,7 @@ DCObject::DCObject()
    m_instanceRetentionTime = -1;
    m_instanceGracePeriodStart = 0;
    m_startTime = 0;
+   m_relatedObject = 0;
 }
 
 /**
@@ -152,6 +153,7 @@ DCObject::DCObject(const DCObject *src, bool shadowCopy)
    m_instanceRetentionTime = src->m_instanceRetentionTime;
    m_instanceGracePeriodStart = src->m_instanceGracePeriodStart;
    m_startTime = src->m_startTime;
+   m_relatedObject = src->m_relatedObject;
 }
 
 /**
@@ -202,6 +204,7 @@ DCObject::DCObject(UINT32 dwId, const TCHAR *szName, int iSource,
    m_instanceRetentionTime = -1;
    m_instanceGracePeriodStart = 0;
    m_startTime = 0;
+   m_relatedObject = 0;
 }
 
 /**
@@ -271,6 +274,7 @@ DCObject::DCObject(ConfigEntry *config, DataCollectionOwner *owner)
    m_instanceRetentionTime = config->getSubEntryValueAsInt(_T("instanceRetentionTime"), 0, -1);
    m_instanceGracePeriodStart = 0;
    m_startTime = 0;
+   m_relatedObject = 0;
 }
 
 /**
@@ -781,6 +785,7 @@ void DCObject::createMessage(NXCPMessage *pMsg)
    pMsg->setField(VID_INSTANCE, CHECK_NULL_EX(m_instance));
    pMsg->setFieldFromInt32Array(VID_ACL, m_accessList);
    pMsg->setField(VID_INSTANCE_RETENTION, m_instanceRetentionTime);
+   pMsg->setField(VID_RELATED_OBJECT, m_relatedObject);
    unlock();
 }
 
@@ -853,6 +858,7 @@ void DCObject::updateFromMessage(NXCPMessage *pMsg)
    pMsg->getFieldAsInt32Array(VID_ACL, m_accessList);
 
    m_instanceRetentionTime = pMsg->getFieldAsInt32(VID_INSTANCE_RETENTION);
+   m_relatedObject = pMsg->getFieldAsUInt32(VID_RELATED_OBJECT);
 
 	unlock();
 }
@@ -1518,6 +1524,7 @@ DCObjectInfo::DCObjectInfo(DCObject *object)
       m_hasActiveThreshold = false;
       m_thresholdSeverity = SEVERITY_NORMAL;
    }
+   m_relatedObject = object->getRelatedObject();
 }
 
 /**
@@ -1544,6 +1551,7 @@ DCObjectInfo::DCObjectInfo(const NXCPMessage *msg, DCObject *object)
    m_lastPollTime = (object != NULL) ? object->getLastPollTime() : 0;
    m_hasActiveThreshold = false;
    m_thresholdSeverity = SEVERITY_NORMAL;
+   m_relatedObject = (object != NULL) ? object->getRelatedObject() : 0;
 }
 
 /**

@@ -411,6 +411,16 @@
               </instanceof>
            </enabledWhen>
         </page>
+        <page
+              class="org.netxms.ui.eclipse.datacollection.propertypages.OtherOptionsTable"
+              id="org.netxms.ui.eclipse.datacollection.propertypages.OtherOptionTable#200"
+              name="%page.name.OtherOptions">
+           <enabledWhen>
+              <instanceof
+                    value="org.netxms.client.datacollection.DataCollectionTable">
+              </instanceof>
+           </enabledWhen>
+        </page>
    </extension>
 
   <extension

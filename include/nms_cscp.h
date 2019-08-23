@@ -1305,6 +1305,7 @@ typedef struct
 #define VID_CHANNEL_COUNT           ((UINT32)655)
 #define VID_DRIVER_COUNT            ((UINT32)656)
 #define VID_NEW_NAME                ((UINT32)657)
+#define VID_RELATED_OBJECT          ((UINT32)658)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)
