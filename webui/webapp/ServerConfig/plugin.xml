@@ -245,7 +245,7 @@
            class="org.netxms.ui.eclipse.serverconfig.actions.OpenNotificationChannelList"
            definitionId="org.netxms.ui.eclipse.serverconfig.commands.open_notification_channels"
            id="org.netxms.ui.eclipse.serverconfig.actions.open_notification_channels"
-           label="Notification channles"
+           label="Notification channels"
            menubarPath="config/additions"
            style="push"
            tooltip="Persistent storage">

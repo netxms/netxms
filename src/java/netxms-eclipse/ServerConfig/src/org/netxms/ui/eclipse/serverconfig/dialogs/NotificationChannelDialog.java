@@ -72,7 +72,7 @@ public class NotificationChannelDialog extends Dialog
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
-      comboDriverName = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, "Sriver name", gd);
+      comboDriverName = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, "Driver name", gd);
       
       textConfiguraiton = new LabeledText(dialogArea, SWT.NONE, SWT.MULTI | SWT.BORDER);
       textConfiguraiton.setLabel("Driver Configuration");
