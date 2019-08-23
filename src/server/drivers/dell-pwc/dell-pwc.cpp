@@ -99,8 +99,8 @@ InterfaceList *PowerConnectDriver::getInterfaces(SNMP_Transport *snmp, StringMap
 		if (iface->type == IFTYPE_ETHERNET_CSMACD)
 		{
 			iface->isPhysicalPort = true;
-			iface->slot = (iface->index / slotSize) + 1;
-			iface->port = iface->index % slotSize;
+			iface->location.module = (iface->index / slotSize) + 1;
+			iface->location.port = iface->index % slotSize;
 		}
 	}
 

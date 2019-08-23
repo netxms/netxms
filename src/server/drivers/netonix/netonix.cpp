@@ -95,8 +95,8 @@ InterfaceList *NetonixDriver::getInterfaces(SNMP_Transport *snmp, StringMap *att
 	{
 		InterfaceInfo *iface = ifList->get(i);
       iface->isPhysicalPort = true;
-      iface->slot = 1;
-      iface->port = iface->index;
+      iface->location.module = 1;
+      iface->location.port = iface->index;
 	}
 
 	return ifList;

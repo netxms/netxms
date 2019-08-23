@@ -1363,17 +1363,17 @@ Interface *Node::findInterfaceByName(const TCHAR *name)
 }
 
 /**
- * Find interface by slot/port pair
+ * Find interface by physical location
  * Returns pointer to interface object or NULL if appropriate interface couldn't be found
  */
-Interface *Node::findInterfaceBySlotAndPort(UINT32 slot, UINT32 port)
+Interface *Node::findInterfaceByLocation(const InterfacePhysicalLocation& location)
 {
    lockChildList(false);
    for(int i = 0; i < m_childList->size(); i++)
       if (m_childList->get(i)->getObjectClass() == OBJECT_INTERFACE)
       {
          Interface *pInterface = (Interface *)m_childList->get(i);
-         if (pInterface->isPhysicalPort() && (pInterface->getSlotNumber() == slot) && (pInterface->getPortNumber() == port))
+         if (pInterface->isPhysicalPort() && pInterface->getPhysicalLocation().equals(location))
          {
             unlockChildList();
             return pInterface;
@@ -1583,8 +1583,7 @@ Interface *Node::createInterfaceObject(InterfaceInfo *info, bool manuallyCreated
    }
    iface->setMacAddr(MacAddress(info->macAddr, MAC_ADDR_LENGTH), false);
    iface->setBridgePortNumber(info->bridgePort);
-   iface->setSlotNumber(info->slot);
-   iface->setPortNumber(info->port);
+   iface->setPhysicalLocation(info->location);
    iface->setPhysicalPortFlag(info->isPhysicalPort);
    iface->setManualCreationFlag(manuallyCreated);
    iface->setSystemFlag(info->isSystem);
@@ -1659,12 +1658,13 @@ Interface *Node::createNewInterface(InterfaceInfo *info, bool manuallyCreated, b
    bool bSyntheticMask = false;
    TCHAR buffer[64];
 
-   DbgPrintf(5, _T("Node::createNewInterface(\"%s\", %d, %d, bp=%d, slot=%d, port=%d) called for node %s [%d]"),
-      info->name, info->index, info->type, info->bridgePort, info->slot, info->port, m_name, m_id);
+   nxlog_debug(5, _T("Node::createNewInterface(\"%s\", %d, %d, bp=%d, chassis=%u, module=%u, pic=%u, port=%u) called for node %s [%d]"),
+         info->name, info->index, info->type, info->bridgePort, info->location.chassis, info->location.module,
+         info->location.pic, info->location.port, m_name, m_id);
    for(int i = 0; i < info->ipAddrList.size(); i++)
    {
       const InetAddress& addr = info->ipAddrList.get(i);
-      DbgPrintf(5, _T("Node::createNewInterface(%s): IP address %s/%d"), info->name, addr.toString(buffer), addr.getMaskBits());
+      nxlog_debug(5, _T("Node::createNewInterface(%s): IP address %s/%d"), info->name, addr.toString(buffer), addr.getMaskBits());
    }
 
    ObjectArray<Subnet> bindList(16, 16, false);
@@ -1678,7 +1678,7 @@ Interface *Node::createNewInterface(InterfaceInfo *info, bool manuallyCreated, b
       {
          InetAddress addr = info->ipAddrList.get(i);
          bool addToSubnet = addr.isValidUnicast() && ((pCluster == NULL) || !pCluster->isSyncAddr(addr));
-         DbgPrintf(5, _T("Node::createNewInterface: node=%s [%d] ip=%s/%d cluster=%s [%d] add=%s"),
+         nxlog_debug(5, _T("Node::createNewInterface: node=%s [%d] ip=%s/%d cluster=%s [%d] add=%s"),
                    m_name, m_id, addr.toString(buffer), addr.getMaskBits(),
                    (pCluster != NULL) ? pCluster->getName() : _T("(null)"),
                    (pCluster != NULL) ? pCluster->getId() : 0, addToSubnet ? _T("yes") : _T("no"));
@@ -4451,14 +4451,9 @@ bool Node::updateInterfaceConfiguration(UINT32 rqid, int maskBits)
                      pInterface->setBridgePortNumber(ifInfo->bridgePort);
                      interfaceUpdated = true;
                   }
-                  if (ifInfo->slot != pInterface->getSlotNumber())
+                  if (!ifInfo->location.equals(pInterface->getPhysicalLocation()))
                   {
-                     pInterface->setSlotNumber(ifInfo->slot);
-                     interfaceUpdated = true;
-                  }
-                  if (ifInfo->port != pInterface->getPortNumber())
-                  {
-                     pInterface->setPortNumber(ifInfo->port);
+                     pInterface->setPhysicalLocation(ifInfo->location);
                      interfaceUpdated = true;
                   }
                   if (ifInfo->isPhysicalPort != pInterface->isPhysicalPort())
@@ -8179,26 +8174,25 @@ void Node::resolveVlanPorts(VlanList *vlanList)
    for(int i = 0; i < vlanList->size(); i++)
    {
       VlanInfo *vlan = vlanList->get(i);
-      vlan->prepareForResolve();
       for(int j = 0; j < vlan->getNumPorts(); j++)
       {
-         UINT32 portId = vlan->getPorts()[j];
+         VlanPortInfo *port = &(vlan->getPorts()[j]);
          Interface *iface = NULL;
          switch(vlan->getPortReferenceMode())
          {
             case VLAN_PRM_IFINDEX:  // interface index
-               iface = findInterfaceByIndex(portId);
+               iface = findInterfaceByIndex(port->portId);
                break;
             case VLAN_PRM_BPORT:    // bridge port number
-               iface = findBridgePort(portId);
+               iface = findBridgePort(port->portId);
                break;
-            case VLAN_PRM_SLOTPORT: // slot/port pair
-               iface = findInterfaceBySlotAndPort(portId >> 16, portId & 0xFFFF);
+            case VLAN_PRM_PHYLOC:   // physical location
+               iface = findInterfaceByLocation(vlan->getPorts()[j].location);
                break;
          }
          if (iface != NULL)
          {
-            vlan->resolvePort(j, (iface->getSlotNumber() << 16) | iface->getPortNumber(), iface->getIfIndex(), iface->getId());
+            vlan->resolvePort(j, iface->getPhysicalLocation(), iface->getIfIndex(), iface->getId());
             iface->addVlan(vlan->getVlanId());
          }
       }

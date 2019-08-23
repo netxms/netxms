@@ -176,8 +176,8 @@ InterfaceList *CiscoSbDriver::getInterfaces(SNMP_Transport *snmp, StringMap *att
                   if (module->interfaces[n] == iface->index)
                   {
                      iface->isPhysicalPort = true;
-                     iface->slot = module->index;
-                     iface->port = (n / SB_MAX_INTERFACES_PER_ROW) * module->columns + n % SB_MAX_INTERFACES_PER_ROW + 1;
+                     iface->location.module = module->index;
+                     iface->location.port = (n / SB_MAX_INTERFACES_PER_ROW) * module->columns + n % SB_MAX_INTERFACES_PER_ROW + 1;
                      break;
                   }
                }
@@ -206,10 +206,10 @@ InterfaceList *CiscoSbDriver::getInterfaces(SNMP_Transport *snmp, StringMap *att
          if (iface->index < 1000)
          {
             iface->isPhysicalPort = true;
-            iface->slot = (iface->index - 1) / 110 + 1;
-            iface->port = (iface->index - 1) % 110 + 1;
+            iface->location.module = (iface->index - 1) / 110 + 1;
+            iface->location.port = (iface->index - 1) % 110 + 1;
             if (highBase)
-               iface->port -= 48;
+               iface->location.port -= 48;
          }
       }
 	}

@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Driver for Huawei Optix devices
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -81,13 +81,14 @@ static UINT32 HandlerIpAddrList(SNMP_Variable *var, SNMP_Transport *snmp, void *
    InterfaceList *ifList = static_cast<InterfaceList*>(arg);
 
    SNMP_ObjectId oid = var->getName();
-   UINT32 slot = oid.getElement(oid.length() - 3);
+   UINT32 module = oid.getElement(oid.length() - 3);
+   UINT32 pic = oid.getElement(oid.length() - 2);
    UINT32 port = oid.getElement(oid.length() - 1);
 
-   InterfaceInfo *iface = ifList->findByPhyPosition(slot, port);
+   InterfaceInfo *iface = ifList->findByPhysicalLocation(0, module, pic, port);
    if (iface == NULL)
    {
-      nxlog_debug_tag(DEBUG_TAG, 7, _T("HandlerIpAddrList: Cannot find interface object for %d/%d"), slot, port);
+      nxlog_debug_tag(DEBUG_TAG, 7, _T("HandlerIpAddrList: Cannot find interface object for %u/%u/%u"), module, pic, port);
       return SNMP_ERR_SUCCESS;
    }
 
@@ -103,7 +104,8 @@ static UINT32 HandlerIpAddrList(SNMP_Variable *var, SNMP_Transport *snmp, void *
          TCHAR ipAddrStr[64], ipNetMaskStr[64];
          InetAddress addr = InetAddress::parse(var->getValueAsString(ipAddrStr, 64));
          InetAddress mask = InetAddress::parse(response->getVariable(0)->getValueAsString(ipNetMaskStr, 64));
-         nxlog_debug_tag(DEBUG_TAG, 7, _T("HandlerIpAddrList: got IP address/mask %s/%s for interface %d/%d"), addr.toString(ipAddrStr), mask.toString(ipNetMaskStr), slot, port);
+         nxlog_debug_tag(DEBUG_TAG, 7, _T("HandlerIpAddrList: got IP address/mask %s/%s for interface %u/%u/%u"),
+                  addr.toString(ipAddrStr), mask.toString(ipNetMaskStr), module, pic, port);
          if (addr.isValid() && mask.isValid())
          {
             addr.setMaskBits(BitsInMask(mask.getAddressV4()));
@@ -128,14 +130,15 @@ static UINT32 HandlerEthPortList(SNMP_Variable *var, SNMP_Transport *snmp, void 
    iface->type = IFTYPE_ETHERNET_CSMACD;
 
    SNMP_ObjectId oid = var->getName();
-   iface->slot = oid.getElement(oid.length() - 3);
-   iface->port = oid.getElement(oid.length() - 1);
-   iface->index = (iface->slot << 8) | iface->port;
+   iface->location.module = oid.getElement(oid.length() - 3);
+   iface->location.pic = oid.getElement(oid.length() - 1);
+   iface->location.port = oid.getElement(oid.length() - 1);
+   iface->index = (iface->location.chassis << 24) | (iface->location.module << 16) | (iface->location.pic << 8) | iface->location.port;
 
    iface->ifTableSuffixLength = 3;
    memcpy(iface->ifTableSuffix, oid.value() + oid.length() - 3, 3 * sizeof(UINT32));
 
-   _sntprintf(iface->name, MAX_DB_STRING, _T("%d/%d"), iface->slot, iface->port);
+   _sntprintf(iface->name, MAX_DB_STRING, _T("%d/%d/%d"), iface->location.module, iface->location.pic, iface->location.port);
    _tcscpy(iface->description, iface->name);
 
    TCHAR macAddrText[64];

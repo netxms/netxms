@@ -1228,8 +1228,10 @@ DCObject *DCTable::clone() const
 json_t *DCTable::toJson()
 {
    json_t *root = DCObject::toJson();
+   lock();
    json_object_set_new(root, "columns", json_object_array(m_columns));
    json_object_set_new(root, "thresholds", json_object_array(m_thresholds));
+   unlock();
    return root;
 }
 

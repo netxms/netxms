@@ -382,11 +382,13 @@ void DataCollectionOwner::loadItemsFromDB(DB_HANDLE hdb)
  */
 bool DataCollectionOwner::addDCObject(DCObject *object, bool alreadyLocked, bool notify)
 {
-   int i;
    bool success = false;
+
    if (!alreadyLocked)
       lockDciAccess(true); // write lock
+
    // Check if that object exists
+   int i;
    for(i = 0; i < m_dcObjects->size(); i++)
       if (m_dcObjects->get(i)->getId() == object->getId())
          break;   // Object with specified id already exist
@@ -409,7 +411,7 @@ bool DataCollectionOwner::addDCObject(DCObject *object, bool alreadyLocked, bool
 		lockProperties();
       setModified(MODIFY_DATA_COLLECTION);
 		unlockProperties();
-		if(notify)
+		if (notify)
 		   NotifyClientsOnDCIUpdate(this, object);
 	}
    return success;
@@ -843,6 +845,7 @@ BOOL DataCollectionOwner::applyToTarget(DataCollectionTarget *target)
                    m_dcObjects->size(), m_name, target->getName());
 
    // Copy items
+   lockDciAccess(false);
    for(int i = 0; i < m_dcObjects->size(); i++)
    {
 		DCObject *object = m_dcObjects->get(i);
@@ -852,6 +855,7 @@ BOOL DataCollectionOwner::applyToTarget(DataCollectionTarget *target)
          bErrors = TRUE;
       }
    }
+   unlockDciAccess();
 
    // Clean items deleted from template
    target->cleanDeletedTemplateItems(m_id, m_dcObjects->size(), pdwItemList);
@@ -972,14 +976,14 @@ StringSet *DataCollectionOwner::getDCIScriptList()
 /**
  * Enumerate all DCIs
  */
-bool DataCollectionOwner::enumDCObjects(bool (* pfCallback)(DCObject *, UINT32, void *), void *pArg)
+bool DataCollectionOwner::enumDCObjects(bool (*callback)(shared_ptr<DCObject>, UINT32, void *), void *context)
 {
 	bool success = true;
 
 	lockDciAccess(false);
 	for(int i = 0; i < m_dcObjects->size(); i++)
 	{
-		if (!pfCallback(m_dcObjects->get(i), i, pArg))
+		if (!callback(m_dcObjects->getShared(i), i, context))
 		{
 			success = false;
 			break;

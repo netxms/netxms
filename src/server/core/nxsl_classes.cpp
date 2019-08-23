@@ -959,7 +959,7 @@ NXSL_METHOD_DEFINITION(Interface, setExcludeFromTopology)
    if (!argv[0]->isInteger())
       return NXSL_ERR_NOT_INTEGER;
 
-   Interface *iface = (Interface *)object->getData();
+   Interface *iface = static_cast<Interface*>(object->getData());
    iface->setExcludeFromTopology(argv[0]->getValueAsInt32() != 0);
    *result = vm->createValue();
    return 0;
@@ -989,8 +989,22 @@ NXSL_METHOD_DEFINITION(Interface, setExpectedState)
    }
 
    if ((state >= 0) && (state <= 2))
-      ((Interface *)object->getData())->setExpectedState(state);
+      static_cast<Interface*>(object->getData())->setExpectedState(state);
 
+   *result = vm->createValue();
+   return 0;
+}
+
+/**
+ * Interface::setIncludeInIcmpPoll(enabled) method
+ */
+NXSL_METHOD_DEFINITION(Interface, setIncludeInIcmpPoll)
+{
+   if (!argv[0]->isInteger())
+      return NXSL_ERR_NOT_INTEGER;
+
+   Interface *iface = static_cast<Interface*>(object->getData());
+   iface->setIncludeInIcmpPoll(argv[0]->getValueAsInt32() != 0);
    *result = vm->createValue();
    return 0;
 }
@@ -1004,6 +1018,7 @@ NXSL_InterfaceClass::NXSL_InterfaceClass() : NXSL_NetObjClass()
 
    NXSL_REGISTER_METHOD(Interface, setExcludeFromTopology, 1);
    NXSL_REGISTER_METHOD(Interface, setExpectedState, 1);
+   NXSL_REGISTER_METHOD(Interface, setIncludeInIcmpPoll, 1);
 }
 
 /**
@@ -1028,6 +1043,10 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *object, const char *attr)
    else if (!strcmp(attr, "bridgePortNumber"))
    {
 		value = vm->createValue(iface->getBridgePortNumber());
+   }
+   else if (!strcmp(attr, "chassis"))
+   {
+      value = vm->createValue(iface->getChassis());
    }
    else if (!strcmp(attr, "description"))
    {
@@ -1111,6 +1130,10 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *object, const char *attr)
    {
 		TCHAR buffer[256];
 		value = vm->createValue(iface->getMacAddr().toString(buffer));
+   }
+   else if (!strcmp(attr, "module"))
+   {
+      value = vm->createValue(iface->getModule());
    }
    else if (!strcmp(attr, "mtu"))
    {
@@ -1201,13 +1224,13 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *object, const char *attr)
 			value = vm->createValue();
 		}
    }
+   else if (!strcmp(attr, "pic"))
+   {
+      value = vm->createValue(iface->getPIC());
+   }
    else if (!strcmp(attr, "port"))
    {
-      value = vm->createValue(iface->getPortNumber());
-   }
-   else if (!strcmp(attr, "slot"))
-   {
-      value = vm->createValue(iface->getSlotNumber());
+      value = vm->createValue(iface->getPort());
    }
    else if (!strcmp(attr, "speed"))
    {

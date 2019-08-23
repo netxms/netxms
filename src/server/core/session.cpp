@@ -5233,8 +5233,10 @@ void ClientSession::createObject(NXCPMessage *request)
                                  ifInfo.ipAddrList.add(addr);
                               ifInfo.type = request->getFieldAsUInt32(VID_IF_TYPE);
                               request->getFieldAsBinary(VID_MAC_ADDR, ifInfo.macAddr, MAC_ADDR_LENGTH);
-                              ifInfo.slot = request->getFieldAsUInt32(VID_IF_SLOT);
-                              ifInfo.port = request->getFieldAsUInt32(VID_IF_PORT);
+                              ifInfo.location.chassis = request->getFieldAsUInt32(VID_PHY_CHASSIS);
+                              ifInfo.location.module = request->getFieldAsUInt32(VID_PHY_MODULE);
+                              ifInfo.location.pic = request->getFieldAsUInt32(VID_PHY_PIC);
+                              ifInfo.location.port = request->getFieldAsUInt32(VID_PHY_PORT);
                               ifInfo.isPhysicalPort = request->getFieldAsBoolean(VID_IS_PHYS_PORT);
                               object = static_cast<Node*>(parent)->createNewInterface(&ifInfo, true, false);
                            }
@@ -14796,7 +14798,9 @@ void ClientSession::getMatchingDCI(NXCPMessage *request)
       delete dcoList;
    }
    else
+   {
       msg.setField(VID_RCC, RCC_INVALID_ARGUMENT);
+   }
 
    sendMessage(&msg);
 }

@@ -131,9 +131,9 @@ DCObject::DCObject(const DCObject *src, bool shadowCopy)
 	m_flags = src->m_flags;
 	m_dwResourceId = src->m_dwResourceId;
 	m_sourceNode = src->m_sourceNode;
-	m_pszPerfTabSettings = (src->m_pszPerfTabSettings != NULL) ? _tcsdup(src->m_pszPerfTabSettings) : NULL;
+	m_pszPerfTabSettings = MemCopyString(src->m_pszPerfTabSettings);
 	m_snmpPort = src->m_snmpPort;
-	m_comments = (src->m_comments != NULL) ? _tcsdup(src->m_comments) : NULL;
+	m_comments = MemCopyString(src->m_comments);
 	m_pollingSession = src->m_pollingSession;
 
    m_transformationScriptSource = NULL;
@@ -236,7 +236,7 @@ DCObject::DCObject(ConfigEntry *config, DataCollectionOwner *owner)
 	m_dwResourceId = 0;
 	m_sourceNode = 0;
    const TCHAR *perfTabSettings = config->getSubEntryValue(_T("perfTabSettings"));
-   m_pszPerfTabSettings = (perfTabSettings != NULL) ? _tcsdup(perfTabSettings) : NULL;
+   m_pszPerfTabSettings = MemCopyString(perfTabSettings);
 	m_snmpPort = (WORD)config->getSubEntryValueAsInt(_T("snmpPort"));
    m_schedules = NULL;
 
@@ -808,10 +808,10 @@ void DCObject::updateFromMessage(NXCPMessage *pMsg)
 	m_sourceNode = pMsg->getFieldAsUInt32(VID_AGENT_PROXY);
    m_snmpPort = pMsg->getFieldAsUInt16(VID_SNMP_PORT);
 
-	free(m_pszPerfTabSettings);
+	MemFree(m_pszPerfTabSettings);
 	m_pszPerfTabSettings = pMsg->getFieldAsString(VID_PERFTAB_SETTINGS);
 
-	free(m_comments);
+	MemFree(m_comments);
    m_comments = pMsg->getFieldAsString(VID_COMMENTS);
 
    TCHAR *pszStr = pMsg->getFieldAsString(VID_TRANSFORMATION_SCRIPT);
@@ -1156,9 +1156,10 @@ INT16 DCObject::getAgentCacheMode()
 void DCObject::updateFromImport(ConfigEntry *config)
 {
    lock();
-   nx_strncpy(m_name, config->getSubEntryValue(_T("name"), 0, _T("unnamed")), MAX_ITEM_NAME);
-   nx_strncpy(m_description, config->getSubEntryValue(_T("description"), 0, m_name), MAX_DB_STRING);
-   nx_strncpy(m_systemTag, config->getSubEntryValue(_T("systemTag"), 0, _T("")), MAX_DB_STRING);
+
+   _tcslcpy(m_name, config->getSubEntryValue(_T("name"), 0, _T("unnamed")), MAX_ITEM_NAME);
+   _tcslcpy(m_description, config->getSubEntryValue(_T("description"), 0, m_name), MAX_DB_STRING);
+   _tcslcpy(m_systemTag, config->getSubEntryValue(_T("systemTag"), 0, _T("")), MAX_DB_STRING);
    m_source = (BYTE)config->getSubEntryValueAsInt(_T("origin"));
    m_iPollingInterval = config->getSubEntryValueAsInt(_T("interval"));
    m_iRetentionTime = config->getSubEntryValueAsInt(_T("retention"));
@@ -1459,6 +1460,7 @@ bool DCObject::hasAccess(UINT32 userId)
 json_t *DCObject::toJson()
 {
    json_t *root = json_object();
+   lock();
    json_object_set_new(root, "id", json_integer(m_id));
    json_object_set_new(root, "guid", m_guid.toJson());
    json_object_set_new(root, "name", json_string_t(m_name));
@@ -1489,6 +1491,7 @@ json_t *DCObject::toJson()
    json_object_set_new(root, "instance", json_string_t(m_instance));
    json_object_set_new(root, "accessList", m_accessList->toJson());
    json_object_set_new(root, "instanceRetentionTime", json_integer(m_instanceRetentionTime));
+   unlock();
    return root;
 }
 

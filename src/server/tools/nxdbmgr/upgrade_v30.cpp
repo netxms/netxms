@@ -24,12 +24,37 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 30.94 to 30.95
+ */
+static bool H_UpgradeFromV94()
+{
+   static const TCHAR *batch =
+            _T("ALTER TABLE interfaces ADD phy_chassis integer\n")
+            _T("ALTER TABLE interfaces ADD phy_pic integer\n")
+            _T("UPDATE interfaces SET phy_chassis=0,phy_pic=0\n")
+            _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(DBRenameColumn(g_dbHandle, _T("interfaces"), _T("phy_slot"), _T("phy_module")));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("interfaces"), _T("phy_chassis")));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("interfaces"), _T("phy_pic")));
+   CHK_EXEC(SetMinorSchemaVersion(95));
+   return true;
+}
+
+/**
  * Upgrade from 30.93 to 30.94
  */
 static bool H_UpgradeFromV93()
 {
-   CHK_EXEC(SQLQuery(_T("ALTER TABLE items ADD related_object integer")));
-   CHK_EXEC(SQLQuery(_T("ALTER TABLE dc_tables ADD related_object integer")));
+   static const TCHAR *batch =
+            _T("ALTER TABLE items ADD related_object integer\n")
+            _T("UPDATE items SET related_object=0\n")
+            _T("ALTER TABLE dc_tables ADD related_object integer\n")
+            _T("UPDATE dc_tables SET related_object=0\n")
+            _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("items"), _T("related_object")));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("dc_tables"), _T("related_object")));
    CHK_EXEC(SetMinorSchemaVersion(94));
    return true;
 }
@@ -3371,6 +3396,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 94, 30, 95, H_UpgradeFromV94 },
    { 93, 30, 94, H_UpgradeFromV93 },
    { 92, 30, 93, H_UpgradeFromV92 },
    { 91, 30, 92, H_UpgradeFromV91 },

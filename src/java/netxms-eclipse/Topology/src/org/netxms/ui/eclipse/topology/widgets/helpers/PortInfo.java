@@ -27,8 +27,10 @@ import org.netxms.client.objects.Interface;
 public class PortInfo
 {
 	private long interfaceObjectId;
-	private int slot;
-	private int port;
+   private int chassis;
+	private int module;
+	private int pic;
+   private int port;
 	private ObjectStatus status;
 	private int adminState;
 	private int operState;
@@ -42,7 +44,9 @@ public class PortInfo
 	public PortInfo(Interface iface)
 	{
 		interfaceObjectId = iface.getObjectId();
-		slot = iface.getSlot();
+		chassis = iface.getChassis();
+		module = iface.getModule();
+		pic = iface.getPIC();
 		port = iface.getPort();
 		status = iface.getStatus();
 		adminState = iface.getAdminState();
@@ -74,14 +78,30 @@ public class PortInfo
 	}
 
 	/**
+    * @return the chassis
+    */
+   public int getChassis()
+   {
+      return chassis;
+   }
+
+   /**
 	 * @return the slot
 	 */
-	public int getSlot()
+	public int getModule()
 	{
-		return slot;
+		return module;
 	}
 
 	/**
+    * @return the pic
+    */
+   public int getPIC()
+   {
+      return pic;
+   }
+
+   /**
 	 * @return the port
 	 */
 	public int getPort()

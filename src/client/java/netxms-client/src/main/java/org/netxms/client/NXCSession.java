@@ -4944,8 +4944,10 @@ public class NXCSession
             msg.setField(NXCPCodes.VID_IP_ADDRESS, data.getIpAddress());
             msg.setFieldInt32(NXCPCodes.VID_IF_TYPE, data.getIfType());
             msg.setFieldInt32(NXCPCodes.VID_IF_INDEX, data.getIfIndex());
-            msg.setFieldInt32(NXCPCodes.VID_IF_SLOT, data.getSlot());
-            msg.setFieldInt32(NXCPCodes.VID_IF_PORT, data.getPort());
+            msg.setFieldInt32(NXCPCodes.VID_PHY_CHASSIS, data.getChassis());
+            msg.setFieldInt32(NXCPCodes.VID_PHY_MODULE, data.getModule());
+            msg.setFieldInt32(NXCPCodes.VID_PHY_PIC, data.getPIC());
+            msg.setFieldInt32(NXCPCodes.VID_PHY_PORT, data.getPort());
             msg.setFieldInt16(NXCPCodes.VID_IS_PHYS_PORT, data.isPhysicalPort() ? 1 : 0);
             break;
          case AbstractObject.OBJECT_MOBILEDEVICE:
@@ -9358,11 +9360,12 @@ public class NXCSession
       final NXCPMessage response = waitForRCC(msg.getMessageId());
       int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_VLANS);
       List<VlanInfo> vlans = new ArrayList<VlanInfo>(count);
-      long varId = NXCPCodes.VID_VLAN_LIST_BASE;
+      long fieldId = NXCPCodes.VID_VLAN_LIST_BASE;
       for(int i = 0; i < count; i++)
       {
-         vlans.add(new VlanInfo(response, varId));
-         varId += 10;
+         VlanInfo v = new VlanInfo(response, fieldId);
+         vlans.add(v);
+         fieldId = v.getNextFieldId();
       }
       return vlans;
    }

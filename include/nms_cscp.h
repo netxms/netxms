@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -1014,8 +1014,8 @@ typedef struct
 #define VID_LOCAL_NODE_ID           ((UINT32)364)
 #define VID_SYS_NAME                ((UINT32)365)
 #define VID_LLDP_NODE_ID            ((UINT32)366)
-#define VID_IF_SLOT                 ((UINT32)367)
-#define VID_IF_PORT                 ((UINT32)368)
+#define VID_PHY_MODULE              ((UINT32)367)
+#define VID_PHY_PORT                ((UINT32)368)
 #define VID_IMAGE_DATA              ((UINT32)369)
 #define VID_IMAGE_PROTECTED         ((UINT32)370)
 #define VID_NUM_IMAGES              ((UINT32)371)
@@ -1306,6 +1306,8 @@ typedef struct
 #define VID_DRIVER_COUNT            ((UINT32)656)
 #define VID_NEW_NAME                ((UINT32)657)
 #define VID_RELATED_OBJECT          ((UINT32)658)
+#define VID_PHY_CHASSIS             ((UINT32)659)
+#define VID_PHY_PIC                 ((UINT32)660)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

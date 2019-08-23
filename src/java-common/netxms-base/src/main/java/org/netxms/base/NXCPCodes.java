@@ -787,8 +787,8 @@ public class NXCPCodes
 	public static final long VID_LOCAL_NODE_ID = 364;
 	public static final long VID_SYS_NAME = 365;
 	public static final long VID_LLDP_NODE_ID = 366;
-	public static final long VID_IF_SLOT = 367;
-	public static final long VID_IF_PORT = 368;
+	public static final long VID_PHY_MODULE = 367;
+	public static final long VID_PHY_PORT = 368;
 	public static final long VID_IMAGE_DATA = 369;
 	public static final long VID_IMAGE_PROTECTED = 370;
 	public static final long VID_NUM_IMAGES = 371;
@@ -1077,6 +1077,8 @@ public class NXCPCodes
    public static final long VID_DRIVER_COUNT = 656;
    public static final long VID_NEW_NAME = 657;
    public static final long VID_RELATED_OBJECT = 658;
+   public static final long VID_PHY_CHASSIS = 659;
+   public static final long VID_PHY_PIC = 660;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;

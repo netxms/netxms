@@ -67,7 +67,9 @@ public class NXCObjectCreationData
 	private MacAddress macAddress;
 	private int ifIndex;
 	private int ifType;
-	private int slot;
+   private int chassis;
+	private int module;
+	private int pic;
 	private int port;
 	private boolean physicalPort;
 	private boolean createStatusDci;
@@ -134,7 +136,9 @@ public class NXCObjectCreationData
 		macAddress = new MacAddress();
 		ifIndex = 0;
 		ifType = 1;
-		slot = 0;
+		chassis = 0;
+		module = 0;
+		pic = 0;
 		port = 0;
 		physicalPort = false;
 		createStatusDci = false;
@@ -545,22 +549,54 @@ public class NXCObjectCreationData
 	}
 
 	/**
-	 * @return the slot
+	 * @return interface module number
 	 */
-	public int getSlot()
+	public int getModule()
 	{
-		return slot;
+		return module;
 	}
 
 	/**
-	 * @param slot the slot to set
+	 * @param module interface module number
 	 */
-	public void setSlot(int slot)
+	public void setModule(int module)
 	{
-		this.slot = slot;
+		this.module = module;
 	}
 
 	/**
+    * @return the chassis
+    */
+   public int getChassis()
+   {
+      return chassis;
+   }
+
+   /**
+    * @param chassis the chassis to set
+    */
+   public void setChassis(int chassis)
+   {
+      this.chassis = chassis;
+   }
+
+   /**
+    * @return the pic
+    */
+   public int getPIC()
+   {
+      return pic;
+   }
+
+   /**
+    * @param pic the pic to set
+    */
+   public void setPIC(int pic)
+   {
+      this.pic = pic;
+   }
+
+   /**
 	 * @return the port
 	 */
 	public int getPort()

@@ -99,8 +99,8 @@ InterfaceList *DLinkDriver::getInterfaces(SNMP_Transport *snmp, StringMap *attri
 		if (iface->index < 1024)
 		{
 			iface->isPhysicalPort = true;
-			iface->slot = (iface->index / slotSize) + 1;
-			iface->port = iface->index % slotSize;
+			iface->location.module = (iface->index / slotSize) + 1;
+			iface->location.port = iface->index % slotSize;
 		}
 	}
 

@@ -71,8 +71,8 @@ static UINT32 HandlerPortList(SNMP_Variable *var, SNMP_Transport *transport, voi
 		if (SnmpGetEx(transport, NULL, oid, 14, &slot, sizeof(UINT32), 0, NULL) != SNMP_ERR_SUCCESS)
 			slot = moduleIndex;	// Assume slot # equal to module index if it cannot be read
 
-		iface->slot = slot;
-		iface->port = var->getName().getElement(nameLen - 1);
+		iface->location.module = slot;
+		iface->location.port = var->getName().getElement(nameLen - 1);
 		iface->isPhysicalPort = true;
 	}
 	return SNMP_ERR_SUCCESS;

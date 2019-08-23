@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Driver for HP ProCurve switches
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -108,20 +108,20 @@ InterfaceList *ProCurveDriver::getInterfaces(SNMP_Transport *snmp, StringMap *at
 			   int p = iface->index % slotSize;
 			   if (p != 0)
 			   {
-               iface->slot = (iface->index / slotSize) + 1;
-               iface->port = p;
+               iface->location.module = (iface->index / slotSize) + 1;
+               iface->location.port = p;
 			   }
 			   else
 			   {
 			      // Last port in slot
-               iface->slot = iface->index / slotSize;
-               iface->port = slotSize;
+               iface->location.module = iface->index / slotSize;
+               iface->location.port = slotSize;
 			   }
 			}
 			else
 			{
-				iface->slot = 1;
-				iface->port = iface->index;
+				iface->location.module = 1;
+				iface->location.port = iface->index;
 			}
 		}
 	}

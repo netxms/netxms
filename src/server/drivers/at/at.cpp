@@ -119,8 +119,7 @@ InterfaceList *AlliedTelesisDriver::getInterfaces(SNMP_Transport *snmp, StringMa
                if (cp == 1)   // 1 == true
                {
                   iface->isPhysicalPort = true;
-                  iface->slot = 0;
-                  iface->port = iface->index;
+                  iface->location.port = iface->index;
                }
             }
          }
@@ -145,8 +144,8 @@ InterfaceList *AlliedTelesisDriver::getInterfaces(SNMP_Transport *snmp, StringMa
                    (response->getVariable(1)->getType() != ASN_NO_SUCH_OBJECT) &&
                    (response->getVariable(1)->getType() != ASN_NO_SUCH_INSTANCE))
                {
-                  iface->slot = response->getVariable(0)->getValueAsInt();
-                  iface->port = response->getVariable(1)->getValueAsInt();
+                  iface->location.module = response->getVariable(0)->getValueAsInt();
+                  iface->location.port = response->getVariable(1)->getValueAsInt();
                   iface->isPhysicalPort = true;
                }
                delete response;
@@ -164,11 +163,11 @@ static UINT32 HandlerVlanList(SNMP_Variable *var, SNMP_Transport *snmp, void *ar
 {
    VlanList *vlanList = (VlanList *)arg;
 
-	VlanInfo *vlan = new VlanInfo(var->getName().getElement(var->getName().length() - 1), VLAN_PRM_SLOTPORT);
+   VlanInfo *vlan = new VlanInfo(var->getName().getElement(var->getName().length() - 1), VLAN_PRM_PHYLOC);
 
-	TCHAR buffer[256];
-	vlan->setName(var->getValueAsString(buffer, 256));
-	vlanList->add(vlan);
+   TCHAR buffer[256];
+   vlan->setName(var->getValueAsString(buffer, 256));
+   vlanList->add(vlan);
 
    return SNMP_ERR_SUCCESS;
 }
@@ -177,7 +176,7 @@ static UINT32 HandlerVlanList(SNMP_Variable *var, SNMP_Transport *snmp, void *ar
  * Parse port list
  * Format of the input string would be like '1,2,5,7,12..15,18-22,26'
  */
-static void ParsePortList(TCHAR *ports, VlanInfo *vlan, UINT32 slot)
+static void ParsePortList(TCHAR *ports, VlanInfo *vlan, UINT32 module)
 {
    TCHAR *curr = ports, *next;
 
@@ -199,12 +198,12 @@ static void ParsePortList(TCHAR *ports, VlanInfo *vlan, UINT32 slot)
          UINT32 start = _tcstoul(curr, NULL, 10);
          UINT32 end = _tcstoul(ptr, NULL, 10);
          for(UINT32 p = start; p <= end; p++)
-            vlan->add(slot, p);
+            vlan->add(0, module, 0, p);
       }
       else
       {
          UINT32 port = _tcstoul(curr, NULL, 10);
-         vlan->add(slot, port);
+         vlan->add(0, module, 0, port);
       }
 
       curr = next + 1;

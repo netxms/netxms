@@ -95,7 +95,7 @@ public class InterfaceListLabelProvider extends LabelProvider implements ITableL
 				return null;
 			case InterfacesTab.COLUMN_SLOT:
 				if (iface.isPhysicalPort())
-					return Integer.toString(iface.getSlot());
+					return Integer.toString(iface.getModule());
 				return null;
 			case InterfacesTab.COLUMN_STATUS:
 				return StatusDisplayInfo.getStatusText(iface.getStatus());

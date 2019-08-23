@@ -74,7 +74,7 @@ public class CreateInterface implements IObjectActionDelegate
 				cd.setMacAddress(dlg.getMacAddress());
 				cd.setIpAddress(dlg.getIpAddress());
 				cd.setPhysicalPort(dlg.isPhysicalPort());
-				cd.setSlot(dlg.getSlot());
+				cd.setModule(dlg.getSlot());
 				cd.setPort(dlg.getPort());
 				session.createObject(cd);
 			}

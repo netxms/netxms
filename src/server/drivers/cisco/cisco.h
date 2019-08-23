@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Drivers Cisco devices
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -128,6 +128,19 @@ public:
    virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid) override;
    virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, int useAliases, bool useIfXTable) override;
    virtual void getModuleLayout(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, int module, NDD_MODULE_LAYOUT *layout) override;
+};
+
+/**
+ * Cisco Nexus driver
+ */
+class CiscoNexusDriver : public NetworkDeviceDriver
+{
+public:
+   virtual const TCHAR *getName() override;
+
+   virtual int isPotentialDevice(const TCHAR *oid) override;
+   virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid) override;
+   virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, int useAliases, bool useIfXTable) override;
 };
 
 #endif

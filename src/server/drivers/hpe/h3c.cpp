@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Driver for H3C (now HPE A-series) switches
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -81,8 +81,10 @@ static UINT32 PortWalkHandler(SNMP_Variable *var, SNMP_Transport *snmp, void *ar
    if (iface != NULL)
    {
       iface->isPhysicalPort = true;
-      iface->slot = var->getName().getElement(18);
-      iface->port = var->getName().getElement(20);
+      iface->location.chassis = var->getName().getElement(17);
+      iface->location.module = var->getName().getElement(18);
+      iface->location.pic = var->getName().getElement(19);
+      iface->location.port = var->getName().getElement(20);
    }
    return SNMP_ERR_SUCCESS;
 }

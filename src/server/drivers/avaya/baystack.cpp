@@ -152,8 +152,8 @@ InterfaceList *BayStackDriver::getInterfaces(SNMP_Transport *snmp, StringMap *at
 		UINT32 slot = ifList->get(i)->index / slotSize + 1;
 		if ((slot > 0) && (slot <= 8))
 		{
-			ifList->get(i)->slot = slot;
-			ifList->get(i)->port = ifList->get(i)->index % slotSize;
+			ifList->get(i)->location.module = slot;
+			ifList->get(i)->location.port = ifList->get(i)->index % slotSize;
 			ifList->get(i)->isPhysicalPort = true;
 		}
 	}
@@ -193,12 +193,12 @@ InterfaceList *BayStackDriver::getInterfaces(SNMP_Transport *snmp, StringMap *at
 		for(int i = 0; i < ifList->size(); i++)
 		{
 			InterfaceInfo *curr = ifList->get(i);
-			if ((curr->slot != 0) &&
+			if ((curr->location.module != 0) &&
 				 (!memcmp(curr->macAddr, "\x00\x00\x00\x00\x00\x00", MAC_ADDR_LENGTH) ||
 			     !memcmp(curr->macAddr, baseMacAddr, MAC_ADDR_LENGTH)))
 			{
 				memcpy(curr->macAddr, baseMacAddr, MAC_ADDR_LENGTH);
-				curr->macAddr[5] += (BYTE)curr->port;
+				curr->macAddr[5] += (BYTE)curr->location.port;
 			}
 		}
 	}

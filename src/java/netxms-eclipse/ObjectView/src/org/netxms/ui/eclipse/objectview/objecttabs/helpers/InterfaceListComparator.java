@@ -82,7 +82,7 @@ public class InterfaceListComparator extends ViewerComparator
 				result = iface1.getPort() - iface2.getPort();
 				break;
 			case InterfacesTab.COLUMN_SLOT:
-				result = iface1.getSlot() - iface2.getSlot();
+				result = iface1.getModule() - iface2.getModule();
 				break;
          case InterfacesTab.COLUMN_SPEED:
             result = Long.signum(iface1.getSpeed() - iface2.getSpeed());

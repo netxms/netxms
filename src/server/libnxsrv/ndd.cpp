@@ -61,10 +61,10 @@ AccessPointInfo::AccessPointInfo(UINT32 index, const BYTE *macAddr, const InetAd
  */
 AccessPointInfo::~AccessPointInfo()
 {
-   free(m_name);
-   free(m_vendor);
-	free(m_model);
-	free(m_serial);
+   MemFree(m_name);
+   MemFree(m_vendor);
+   MemFree(m_model);
+   MemFree(m_serial);
 	delete m_radioInterfaces;
 }
 

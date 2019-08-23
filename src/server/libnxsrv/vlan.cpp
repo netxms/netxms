@@ -72,6 +72,21 @@ void VlanList::addMemberPort(int vlanId, UINT32 portId)
 }
 
 /**
+ * Add member port to VLAN
+ *
+ * @param vlanId VLAN ID
+ * @param location port's location
+ */
+void VlanList::addMemberPort(int vlanId, const InterfacePhysicalLocation& location)
+{
+   VlanInfo *vlan = findById(vlanId);
+   if (vlan != NULL)
+   {
+      vlan->add(location);
+   }
+}
+
+/**
  * Find VLAN by ID
  *
  * @param id VLAN ID
@@ -98,21 +113,27 @@ VlanInfo *VlanList::findByName(const TCHAR *name)
 }
 
 /**
- * Fill NXCP  message with vlans data
+ * Fill NXCP  message with VLANs data
  */
 void VlanList::fillMessage(NXCPMessage *msg)
 {
 	msg->setField(VID_NUM_VLANS, (UINT32)m_size);
-	UINT32 varId = VID_VLAN_LIST_BASE;
+	UINT32 fieldId = VID_VLAN_LIST_BASE;
 	for(int i = 0; i < m_size; i++)
 	{
-		msg->setField(varId++, (UINT16)m_vlans[i]->getVlanId());
-		msg->setField(varId++, m_vlans[i]->getName());
-		msg->setField(varId++, (UINT32)m_vlans[i]->getNumPorts());
-		msg->setFieldFromInt32Array(varId++, (UINT32)m_vlans[i]->getNumPorts(), m_vlans[i]->getPorts());
-		msg->setFieldFromInt32Array(varId++, (UINT32)m_vlans[i]->getNumPorts(), m_vlans[i]->getIfIndexes());
-		msg->setFieldFromInt32Array(varId++, (UINT32)m_vlans[i]->getNumPorts(), m_vlans[i]->getIfIds());
-		varId += 4;
+		msg->setField(fieldId++, (UINT16)m_vlans[i]->getVlanId());
+		msg->setField(fieldId++, m_vlans[i]->getName());
+		msg->setField(fieldId++, (UINT32)m_vlans[i]->getNumPorts());
+		for(int j = 0; j < m_vlans[i]->getNumPorts(); j++)
+		{
+		   VlanPortInfo *p = &(m_vlans[i]->getPorts()[j]);
+	      msg->setField(fieldId++, p->ifIndex);
+         msg->setField(fieldId++, p->objectId);
+         msg->setField(fieldId++, p->location.chassis);
+         msg->setField(fieldId++, p->location.module);
+         msg->setField(fieldId++, p->location.pic);
+         msg->setField(fieldId++, p->location.port);
+		}
 	}
 }
 
@@ -126,9 +147,7 @@ VlanInfo::VlanInfo(int vlanId, int prm)
 	m_name = NULL;
 	m_allocated = 64;
 	m_numPorts = 0;
-	m_ports = (UINT32 *)malloc(m_allocated * sizeof(UINT32));
-	m_indexes = NULL;
-	m_ids = NULL;
+	m_ports = MemAllocArray<VlanPortInfo>(m_allocated);
 }
 
 /**
@@ -138,8 +157,6 @@ VlanInfo::~VlanInfo()
 {
 	MemFree(m_ports);
 	MemFree(m_name);
-	MemFree(m_indexes);
-	MemFree(m_ids);
 }
 
 /**
@@ -150,17 +167,24 @@ void VlanInfo::add(UINT32 ifIndex)
 	if (m_numPorts == m_allocated)
 	{
 		m_allocated += 64;
-		m_ports = (UINT32 *)realloc(m_ports, sizeof(UINT32) * m_allocated);
+		m_ports = MemReallocArray(m_ports, m_allocated);
 	}
-	m_ports[m_numPorts++] = ifIndex;
+	memset(&m_ports[m_numPorts], 0, sizeof(VlanPortInfo));
+	m_ports[m_numPorts].ifIndex = ifIndex;
 }
 
 /**
- * Add port identified by slot/port pair
+ * Add port identified by location
  */
-void VlanInfo::add(UINT32 slot, UINT32 port)
+void VlanInfo::add(const InterfacePhysicalLocation& location)
 {
-	add((slot << 16) | port);
+   if (m_numPorts == m_allocated)
+   {
+      m_allocated += 64;
+      m_ports = MemReallocArray(m_ports, m_allocated);
+   }
+   memset(&m_ports[m_numPorts], 0, sizeof(VlanPortInfo));
+   m_ports[m_numPorts].location = location;
 }
 
 /**
@@ -171,41 +195,24 @@ void VlanInfo::add(UINT32 slot, UINT32 port)
 void VlanInfo::setName(const TCHAR *name)
 {
 	MemFree(m_name);
-	m_name = _tcsdup(name);
+	m_name = MemCopyString(name);
 }
 
 /**
- * Prepare for port resolving. Add operation is not permitted after this call.
- */
-void VlanInfo::prepareForResolve()
-{
-	if (m_indexes == NULL)
-	{
-		m_indexes = (UINT32 *)malloc(sizeof(UINT32) * m_numPorts);
-		memset(m_indexes, 0, sizeof(UINT32) * m_numPorts);
-	}
-	if (m_ids == NULL)
-	{
-		m_ids = (UINT32 *)malloc(sizeof(UINT32) * m_numPorts);
-		memset(m_ids, 0, sizeof(UINT32) * m_numPorts);
-	}
-}
-
-/**
- * Set full port's information: slot/port, ifIndex, object ID.
+ * Set full port's information: location, ifIndex, object ID.
  * Must be called after call to prepareForResolve.
  *
  * @param index port's index
- * @param sp slot/port pair
+ * @param loctaion port location
  * @param ifIndex interface index
  * @param id interface object ID
  */
-void VlanInfo::resolvePort(int index, UINT32 sp, UINT32 ifIndex, UINT32 id)
+void VlanInfo::resolvePort(int index, const InterfacePhysicalLocation& location, UINT32 ifIndex, UINT32 id)
 {
 	if ((index >= 0) && (index < m_numPorts))
 	{
-		m_ports[index] = sp;
-		m_indexes[index] = ifIndex;
-		m_ids[index] = id;
+		m_ports[index].location = location;
+		m_ports[index].ifIndex = ifIndex;
+		m_ports[index].objectId = id;
 	}
 }

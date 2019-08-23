@@ -41,21 +41,19 @@ import org.netxms.client.objects.Node;
 import org.netxms.client.topology.Port;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.FontTools;
-import org.netxms.ui.eclipse.topology.Messages;
 import org.netxms.ui.eclipse.topology.widgets.helpers.PortInfo;
 import org.netxms.ui.eclipse.topology.widgets.helpers.PortSelectionListener;
 import org.netxms.ui.eclipse.widgets.DashboardComposite;
 
 /**
  * View of switch/router ports
- *
  */
 public class DeviceView extends DashboardComposite
 {
 	private long nodeId;
 	private NXCSession session;
 	private Map<Long, PortInfo> ports = new HashMap<Long, PortInfo>();
-	private Map<Integer, SlotView> slots = new HashMap<Integer, SlotView>();
+	private Map<Long, SlotView> slots = new HashMap<Long, SlotView>();
 	private Label header = null;
 	private Font headerFont = null;
 	private boolean portStatusVisible = true;
@@ -145,21 +143,21 @@ public class DeviceView extends DashboardComposite
 			@Override
 			public int compare(Interface arg0, Interface arg1)
 			{
-				if (arg0.getSlot() == arg1.getSlot())
+				if (arg0.getModule() == arg1.getModule())
 					return arg0.getPort() - arg1.getPort();
-				return arg0.getSlot() - arg1.getSlot();
+				return arg0.getModule() - arg1.getModule();
 			}
 		});
 		
 		for(Interface iface : interfaces)
 		{
-			int slot = iface.getSlot();
-			SlotView sv = slots.get(slot);
+			long hash = ((long)iface.getChassis() << 32) | (long)iface.getModule();
+			SlotView sv = slots.get(hash);
 			if (sv == null)
 			{
-				sv = new SlotView(this, SWT.NONE, String.format(Messages.get().DeviceView_SlotName, slot), ((Node)object).getPortRowCount(), ((Node)object).getPortNumberingScheme());
+				sv = new SlotView(this, SWT.NONE, String.format("%d/%d", iface.getChassis(), iface.getModule()), ((Node)object).getPortRowCount(), ((Node)object).getPortNumberingScheme());
 				sv.setPortStatusVisible(portStatusVisible);
-				slots.put(slot, sv);
+				slots.put(hash, sv);
 			}
 
 			PortInfo p = new PortInfo(iface);
@@ -239,7 +237,7 @@ public class DeviceView extends DashboardComposite
 		   // Some devices has slots and ports numbering started at 0, so
 		   // port 0/0 could be valid - in that case check interface object
 		   // for physical port flag
-		   if ((p.getSlot() == 0) && (p.getPort() == 0))
+		   if ((p.getModule() == 0) && (p.getPort() == 0))
 		   {
 		      Interface iface = session.findObjectById(p.getObjectId(), Interface.class);
 		      if (iface == null)
@@ -249,10 +247,10 @@ public class DeviceView extends DashboardComposite
                Interface parent = iface.getParentInterface();
                if ((parent == null) || !parent.isPhysicalPort())  
                   continue;
-               p = new Port(parent.getObjectId(), parent.getIfIndex(), parent.getSlot(), parent.getPort());
+               p = new Port(parent.getObjectId(), parent.getIfIndex(), parent.getChassis(), parent.getModule(), parent.getPIC(), parent.getPort());
             }
 		   }
-			SlotView sv = slots.get(p.getSlot());
+			SlotView sv = slots.get(((long)p.getChassis() << 32) | (long)p.getModule());
 			if (sv != null)
 			{
 				sv.addHighlight(p);

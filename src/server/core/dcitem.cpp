@@ -2047,6 +2047,7 @@ DCObject *DCItem::clone() const
 json_t *DCItem::toJson()
 {
    json_t *root = DCObject::toJson();
+   lock();
    json_object_set_new(root, "deltaCalculation", json_integer(m_deltaCalculation));
    json_object_set_new(root, "dataType", json_integer(m_dataType));
    json_object_set_new(root, "sampleCount", json_integer(m_sampleCount));
@@ -2058,6 +2059,7 @@ json_t *DCItem::toJson()
    json_object_set_new(root, "customUnitName", json_string_t(m_customUnitName));
    json_object_set_new(root, "snmpRawValueType", json_integer(m_snmpRawValueType));
    json_object_set_new(root, "predictionEngine", json_string_t(m_predictionEngine));
+   unlock();
    return root;
 }
 

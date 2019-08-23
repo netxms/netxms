@@ -242,6 +242,44 @@ public:
 };
 
 /**
+ * Interface physical location
+ */
+struct InterfacePhysicalLocation
+{
+   UINT32 chassis;
+   UINT32 module;
+   UINT32 pic;
+   UINT32 port;
+
+   InterfacePhysicalLocation()
+   {
+      chassis = 0;
+      module = 0;
+      pic = 0;
+      port = 0;
+   }
+
+   InterfacePhysicalLocation(UINT32 _chassis, UINT32 _module, UINT32 _pic, UINT32 _port)
+   {
+      chassis = _chassis;
+      module = _module;
+      pic = _pic;
+      port = _port;
+   }
+
+   bool equals(const InterfacePhysicalLocation& l)
+   {
+      return (port == l.port) && (pic == l.pic) && (module == l.module) && (chassis == l.chassis);
+   }
+
+   TCHAR *toString(TCHAR *buffer, size_t size)
+   {
+      _sntprintf(buffer, size, _T("%d/%d/d/%d"), chassis, module, pic, port);
+      return buffer;
+   }
+};
+
+/**
  * Interface information structure used by discovery functions and AgentConnection class
  */
 class InterfaceInfo
@@ -256,8 +294,6 @@ private:
       mtu = 0;
       speed = 0;
       bridgePort = 0;
-      slot = 0;
-      port = 0;
       memset(macAddr, 0, sizeof(macAddr));
       isPhysicalPort = false;
       isSystem = false;
@@ -273,8 +309,7 @@ public:
    UINT32 mtu;
    UINT64 speed;  // interface speed in bits/sec
 	UINT32 bridgePort;
-	UINT32 slot;
-	UINT32 port;
+	InterfacePhysicalLocation location;
    InetAddressList ipAddrList;
    BYTE macAddr[MAC_ADDR_LENGTH];
 	bool isPhysicalPort;
@@ -321,7 +356,8 @@ public:
 	int size() { return m_interfaces->size(); }
 	InterfaceInfo *get(int index) { return m_interfaces->get(index); }
 	InterfaceInfo *findByIfIndex(UINT32 ifIndex);
-   InterfaceInfo *findByPhyPosition(int slot, int port);
+   InterfaceInfo *findByPhysicalLocation(const InterfacePhysicalLocation &loc);
+   InterfaceInfo *findByPhysicalLocation(int chassis, int module, int pic, int port) { return findByPhysicalLocation(InterfacePhysicalLocation(chassis, module, pic, port)); }
 
 	void setData(void *data) { m_data = data; }
 	void *getData() { return m_data; }
@@ -330,24 +366,33 @@ public:
    void setPrefixWalkNeeded() { m_needPrefixWalk = true; }
 };
 
+#define VLAN_PRM_IFINDEX   0
+#define VLAN_PRM_PHYLOC    1
+#define VLAN_PRM_BPORT     2
+
+/**
+ * VLAN port reference
+ */
+struct VlanPortInfo
+{
+   UINT32 portId;    // device or driver specific port ID
+   UINT32 objectId;
+   UINT32 ifIndex;
+   InterfacePhysicalLocation location;
+};
+
 /**
  * Vlan information
  */
-#define VLAN_PRM_IFINDEX   0
-#define VLAN_PRM_SLOTPORT  1
-#define VLAN_PRM_BPORT     2
-
 class LIBNXSRV_EXPORTABLE VlanInfo
 {
 private:
 	int m_vlanId;
 	TCHAR *m_name;
-	int m_portRefMode;	// Port reference mode - by ifIndex or by slot/port
+	int m_portRefMode;	// Port reference mode - (by ifIndex, physical location, or bridge port number)
 	int m_allocated;
 	int m_numPorts;	// Number of ports in VLAN
-	UINT32 *m_ports;	// member ports (slot/port pairs or ifIndex)
-	UINT32 *m_indexes;	// ifIndexes for ports
-	UINT32 *m_ids;		// Interface object IDs for ports
+	VlanPortInfo *m_ports;	// member ports (slot/port pairs or ifIndex)
 
 public:
 	VlanInfo(int vlanId, int prm);
@@ -357,16 +402,14 @@ public:
 	int getPortReferenceMode() { return m_portRefMode; }
 	const TCHAR *getName() { return CHECK_NULL_EX(m_name); }
 	int getNumPorts() { return m_numPorts; }
-	UINT32 *getPorts() { return m_ports; }
-	UINT32 *getIfIndexes() { return m_indexes; }
-	UINT32 *getIfIds() { return m_ids; }
+	VlanPortInfo *getPorts() { return m_ports; }
 
-	void add(UINT32 slot, UINT32 port);
-	void add(UINT32 ifIndex);
+	void add(const InterfacePhysicalLocation& location);
+	void add(UINT32 chassis, UINT32 module, UINT32 pic, UINT32 port) { add(InterfacePhysicalLocation(chassis, module, pic, port)); }
+	void add(UINT32 portId);
 	void setName(const TCHAR *name);
 
-	void prepareForResolve();
-	void resolvePort(int index, UINT32 sp, UINT32 ifIndex, UINT32 id);
+	void resolvePort(int index, const InterfacePhysicalLocation& location, UINT32 ifIndex, UINT32 id);
 };
 
 /**
@@ -386,6 +429,7 @@ public:
 
 	void add(VlanInfo *vlan);
 	void addMemberPort(int vlanId, UINT32 portId);
+   void addMemberPort(int vlanId, const InterfacePhysicalLocation& location);
 
 	int size() { return m_size; }
 	VlanInfo *get(int index) { return ((index >= 0) && (index < m_size)) ? m_vlans[index] : NULL; }

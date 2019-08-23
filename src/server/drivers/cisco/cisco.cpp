@@ -236,6 +236,7 @@ NDD_BEGIN_DRIVER_LIST
 NDD_DRIVER(CatalystDriver)
 NDD_DRIVER(Cat2900Driver)
 NDD_DRIVER(CiscoEswDriver)
+NDD_DRIVER(CiscoNexusDriver)
 NDD_DRIVER(CiscoSbDriver)
 NDD_DRIVER(GenericCiscoDriver)
 NDD_END_DRIVER_LIST

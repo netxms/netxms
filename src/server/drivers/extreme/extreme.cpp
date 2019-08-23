@@ -107,8 +107,8 @@ InterfaceList *ExtremeDriver::getInterfaces(SNMP_Transport *snmp, StringMap *att
          continue;
 
       iface->isPhysicalPort = true;
-      iface->slot = slot;
-      iface->port = port;
+      iface->location.module = slot;
+      iface->location.port = port;
    }
 	return ifList;
 }

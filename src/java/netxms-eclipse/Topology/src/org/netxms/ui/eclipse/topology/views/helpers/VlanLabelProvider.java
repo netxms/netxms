@@ -115,7 +115,7 @@ public class VlanLabelProvider extends LabelProvider implements ITableLabelProvi
 				   Interface parent = iface.getParentInterface();
 				   if ((parent != null) && parent.isPhysicalPort())
 				   {
-				      physicalPorts.add(new Port(parent.getObjectId(), parent.getIfIndex(), parent.getSlot(), parent.getPort()));
+				      physicalPorts.add(new Port(parent.getObjectId(), parent.getIfIndex(), parent.getChassis(), parent.getModule(), parent.getPIC(), parent.getPort()));
 				   }
 				   else
 				   {
@@ -143,11 +143,11 @@ public class VlanLabelProvider extends LabelProvider implements ITableLabelProvi
          @Override
          public int compare(Port p1, Port p2)
          {
-            return (p1.getSlot() == p2.getSlot()) ? p1.getPort() - p2.getPort() : p1.getSlot() - p2.getSlot();
+            return (p1.getModule() == p2.getModule()) ? p1.getPort() - p2.getPort() : p1.getModule() - p2.getModule();
          }
       });
 		
-		int slot = physicalPorts.get(0).getSlot();
+		int slot = physicalPorts.get(0).getModule();
 		int lastPort = ports.get(0).getPort();
 		int firstPort = lastPort;
 
@@ -160,7 +160,7 @@ public class VlanLabelProvider extends LabelProvider implements ITableLabelProvi
 		int i;
 		for(i = 1; i < physicalPorts.size(); i++)
 		{
-			if ((physicalPorts.get(i).getSlot() == slot) && (physicalPorts.get(i).getPort() == lastPort + 1))
+			if ((physicalPorts.get(i).getModule() == slot) && (physicalPorts.get(i).getPort() == lastPort + 1))
 			{
 				lastPort++;
 				continue;
@@ -178,7 +178,7 @@ public class VlanLabelProvider extends LabelProvider implements ITableLabelProvi
 				sb.append(lastPort);
 			}
 			
-			slot = physicalPorts.get(i).getSlot();
+			slot = physicalPorts.get(i).getModule();
 			lastPort = physicalPorts.get(i).getPort();
 			firstPort = lastPort;
 			
@@ -229,6 +229,6 @@ public class VlanLabelProvider extends LabelProvider implements ITableLabelProvi
    @Override
    public Color getBackground(Object element)
    {
-      return (selectedPort != null) && ((VlanInfo)element).containsPort(selectedPort.getSlot(), selectedPort.getPort()) ? HIGHLIGHT : null;
+      return (selectedPort != null) && ((VlanInfo)element).containsPort(selectedPort.getChassis(), selectedPort.getModule(), selectedPort.getPIC(), selectedPort.getPort()) ? HIGHLIGHT : null;
    }
 }

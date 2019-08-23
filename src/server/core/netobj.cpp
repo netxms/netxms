@@ -49,8 +49,8 @@ NetObj::NetObj()
 {
    m_id = 0;
    m_dwRefCount = 0;
-   m_mutexProperties = MutexCreate();
-   m_mutexRefCount = MutexCreate();
+   m_mutexProperties = MutexCreateFast();
+   m_mutexRefCount = MutexCreateFast();
    m_mutexACL = MutexCreate();
    m_rwlockParentList = RWLockCreate();
    m_rwlockChildList = RWLockCreate();

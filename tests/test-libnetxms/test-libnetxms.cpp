@@ -1524,7 +1524,12 @@ static void TestSharedObjectArray()
    StartTest(_T("SharedObjectArray: get shared"));
    shared_ptr<String> s = array->getShared(0);
    AssertEquals(s.use_count(), 2);
+   SharedObjectArray<String> *array2 = new SharedObjectArray<String>(16, 16);
+   array2->add(array->getShared(0));
+   AssertEquals(s.use_count(), 3);
    delete array;
+   AssertEquals(s.use_count(), 2);
+   delete array2;
    AssertEquals(s.use_count(), 1);
    AssertTrue(!_tcscmp(s->getBuffer(), _T("value 2")));
    EndTest();

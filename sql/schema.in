@@ -494,7 +494,9 @@ CREATE TABLE interfaces
   mtu integer not null,
   speed SQL_INT64 not null,
   bridge_port integer not null,
-  phy_slot integer not null,
+  phy_chassis integer not null,
+  phy_module integer not null,
+  phy_pic integer not null, /* Physical Interface Card */
   phy_port integer not null,
   peer_node_id integer not null,
   peer_if_id integer not null,
@@ -736,7 +738,7 @@ CREATE TABLE items
   comments SQL_TEXT null,
   instance_retention_time integer not null,
   grace_period_start integer not null,
-  related_object integer,
+  related_object integer not null,
   PRIMARY KEY(item_id)
 ) TABLE_TYPE;
 
@@ -801,7 +803,7 @@ CREATE TABLE dc_tables
   instd_filter SQL_TEXT null,
   instance_retention_time integer not null,
   grace_period_start integer not null,
-  related_object integer,
+  related_object integer not null,
   PRIMARY KEY(item_id)
 ) TABLE_TYPE;
 

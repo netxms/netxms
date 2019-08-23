@@ -450,6 +450,10 @@ NXSL_Value *NXSL_DiscoveredInterfaceClass::getAttr(NXSL_Object *object, const ch
    {
       value = vm->createValue(iface->alias);
    }
+   else if (!strcmp(attr, "chassis"))
+   {
+      value = vm->createValue(iface->location.chassis);
+   }
    else if (!strcmp(attr, "description"))
    {
       value = vm->createValue(iface->description);
@@ -476,6 +480,10 @@ NXSL_Value *NXSL_DiscoveredInterfaceClass::getAttr(NXSL_Object *object, const ch
       TCHAR buffer[64];
       value = vm->createValue(MACToStr(iface->macAddr, buffer));
    }
+   else if (!strcmp(attr, "module"))
+   {
+      value = vm->createValue(iface->location.module);
+   }
    else if (!strcmp(attr, "mtu"))
    {
       value = vm->createValue(iface->mtu);
@@ -484,13 +492,13 @@ NXSL_Value *NXSL_DiscoveredInterfaceClass::getAttr(NXSL_Object *object, const ch
    {
       value = vm->createValue(iface->name);
    }
+   else if (!strcmp(attr, "pic"))
+   {
+      value = vm->createValue(iface->location.pic);
+   }
    else if (!strcmp(attr, "port"))
    {
-      value = vm->createValue(iface->port);
-   }
-   else if (!strcmp(attr, "slot"))
-   {
-      value = vm->createValue(iface->slot);
+      value = vm->createValue(iface->location.port);
    }
    else if (!strcmp(attr, "speed"))
    {

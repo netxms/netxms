@@ -25,33 +25,55 @@ public class Port
 {
 	private long objectId;
 	private long ifIndex;
-	private int slot;
+   private int chassis;
+	private int module;
+   private int pic;
 	private int port;
 
 	/**
 	 *
 	 * @param objectId object id
 	 * @param ifIndex interface index
-	 * @param slot slot
+	 * @param chassis chassis
+	 * @param module module
+	 * @param pic physical interface card
 	 * @param port port
 	 */
-	public Port(long objectId, long ifIndex, int slot, int port)
+	public Port(long objectId, long ifIndex, int chassis, int module, int pic, int port)
 	{
 		this.objectId = objectId;
 		this.ifIndex = ifIndex;
-		this.slot = slot;
+		this.chassis = chassis;
+		this.module = module;
+		this.pic = pic;
 		this.port = port;
 	}
 	
 	/**
-	 * @return the slot
+    * @return the chassis
+    */
+   public int getChassis()
+   {
+      return chassis;
+   }
+
+   /**
+	 * @return module number
 	 */
-	public int getSlot()
+	public int getModule()
 	{
-		return slot;
+		return module;
 	}
 	
 	/**
+    * @return the pic
+    */
+   public int getPIC()
+   {
+      return pic;
+   }
+
+   /**
 	 * @return the port
 	 */
 	public int getPort()

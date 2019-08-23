@@ -54,12 +54,12 @@ InterfaceInfo *InterfaceList::findByIfIndex(UINT32 ifIndex)
 /**
  * Find interface entry by physical position
  */
-InterfaceInfo *InterfaceList::findByPhyPosition(int slot, int port)
+InterfaceInfo *InterfaceList::findByPhysicalLocation(const InterfacePhysicalLocation& location)
 {
    for(int i = 0; i < m_interfaces->size(); i++)
    {
       InterfaceInfo *iface = m_interfaces->get(i);
-      if (iface->isPhysicalPort && (iface->slot == slot) && (iface->port == port))
+      if (iface->isPhysicalPort && iface->location.equals(location))
          return iface;
    }
    return NULL;

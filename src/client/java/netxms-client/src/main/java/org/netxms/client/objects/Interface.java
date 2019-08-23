@@ -406,7 +406,9 @@ public class Interface extends GenericObject implements ZoneMember
 	private int ifType;
 	private int mtu;
 	private long speed;
-	private int slot;
+   private int chassis;
+	private int module;
+   private int pic;
 	private int port;
 	private MacAddress macAddress;
 	private List<InetAddressEx> ipAddressList;
@@ -437,8 +439,10 @@ public class Interface extends GenericObject implements ZoneMember
 		ifType = msg.getFieldAsInt32(NXCPCodes.VID_IF_TYPE);
       mtu = msg.getFieldAsInt32(NXCPCodes.VID_MTU);
       speed = msg.getFieldAsInt64(NXCPCodes.VID_SPEED);
-		slot = msg.getFieldAsInt32(NXCPCodes.VID_IF_SLOT);
-		port = msg.getFieldAsInt32(NXCPCodes.VID_IF_PORT);
+      chassis = msg.getFieldAsInt32(NXCPCodes.VID_PHY_CHASSIS);
+		module = msg.getFieldAsInt32(NXCPCodes.VID_PHY_MODULE);
+      pic = msg.getFieldAsInt32(NXCPCodes.VID_PHY_PIC);
+		port = msg.getFieldAsInt32(NXCPCodes.VID_PHY_PORT);
 		macAddress = new MacAddress(msg.getFieldAsBinary(NXCPCodes.VID_MAC_ADDR));
 		requiredPollCount = msg.getFieldAsInt32(NXCPCodes.VID_REQUIRED_POLLS);
 		peerNodeId = msg.getFieldAsInt64(NXCPCodes.VID_PEER_NODE_ID);
@@ -552,11 +556,27 @@ public class Interface extends GenericObject implements ZoneMember
    }
 
    /**
+    * @return the chassis
+    */
+   public int getChassis()
+   {
+      return chassis;
+   }
+
+   /**
+    * @return the pic
+    */
+   public int getPIC()
+   {
+      return pic;
+   }
+
+   /**
 	 * @return the slot
 	 */
-	public int getSlot()
+	public int getModule()
 	{
-		return slot;
+		return module;
 	}
 
 	/**
@@ -565,6 +585,16 @@ public class Interface extends GenericObject implements ZoneMember
 	public int getPort()
 	{
 		return port;
+	}
+	
+	/**
+	 * Get string describing interface physical location in form chassis/module/pic/port
+	 * 
+	 * @return string describing interface physical location in form chassis/module/pic/port or emoty string if interface is not physical port
+	 */
+	public String getPhysicalLocation()
+	{
+	   return isPhysicalPort() ? (chassis + "/" + module + "/" + pic + "/" + port) : "";
 	}
 
 	/**

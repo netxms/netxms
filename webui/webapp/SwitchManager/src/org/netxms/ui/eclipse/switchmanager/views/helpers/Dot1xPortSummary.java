@@ -57,7 +57,7 @@ public class Dot1xPortSummary
 	public String getPortName()
 	{
 		if ((iface.getFlags() & Interface.IF_PHYSICAL_PORT) != 0)
-			return Integer.toString(iface.getSlot()) + "/" + Integer.toString(iface.getPort()); //$NON-NLS-1$
+			return Integer.toString(iface.getModule()) + "/" + Integer.toString(iface.getPort()); //$NON-NLS-1$
 		return iface.getObjectName();
 	}
 	
@@ -76,7 +76,7 @@ public class Dot1xPortSummary
 	 */
 	public int getSlot()
 	{
-		return iface.getSlot();
+		return iface.getModule();
 	}
 	
 	/**

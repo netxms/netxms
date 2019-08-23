@@ -88,8 +88,8 @@ InterfaceList *MikrotikDriver::getInterfaces(SNMP_Transport *snmp, StringMap *at
       if (iface->type == IFTYPE_ETHERNET_CSMACD)
       {
          iface->isPhysicalPort = true;
-         iface->slot = 1;
-         iface->port = iface->index;
+         iface->location.module = 1;
+         iface->location.port = iface->index;
          iface->bridgePort = iface->index;
       }
    }

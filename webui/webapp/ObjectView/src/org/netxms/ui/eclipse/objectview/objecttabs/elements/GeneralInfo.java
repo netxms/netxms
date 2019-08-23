@@ -115,9 +115,9 @@ public class GeneralInfo extends TableElement
             if (iface.getSpeed() > 0)
                addPair(Messages.get().GeneralInfo_Speed, InterfaceListLabelProvider.ifSpeedTotext(iface.getSpeed()));
             addPair(Messages.get().GeneralInfo_MACAddr, iface.getMacAddress().toString());
-				if ((iface.getFlags() & Interface.IF_PHYSICAL_PORT) != 0)
+				if (iface.isPhysicalPort())
 				{
-					addPair(Messages.get().GeneralInfo_SlotPort, Integer.toString(iface.getSlot()) + "/" + Integer.toString(iface.getPort())); //$NON-NLS-1$
+					addPair(Messages.get().GeneralInfo_SlotPort, iface.getPhysicalLocation());
 					AbstractNode node = iface.getParentNode();
 					if ((node != null) && node.is8021xSupported())
 					{

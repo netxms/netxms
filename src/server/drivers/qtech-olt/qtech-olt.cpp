@@ -84,8 +84,8 @@ static UINT32 HandlerIndex(SNMP_Variable *pVar, SNMP_Transport *pTransport, void
 {
     UINT32 slot = pVar->getName().getElement(14);
     InterfaceInfo *info = new InterfaceInfo(pVar->getValueAsUInt() + slot * 1000);
-    info->slot = slot;
-    info->port = info->index - info->slot * 1000;
+    info->location.module = slot;
+    info->location.port = info->index - slot * 1000;
     info->isPhysicalPort = true;
     ((InterfaceList *)pArg)->add(info);
     return SNMP_ERR_SUCCESS;
@@ -111,8 +111,8 @@ InterfaceList *QtechOLTDriver::getInterfaces(SNMP_Transport *snmp, StringMap *at
          {
             SNMPParseOID(_T(".1.3.6.1.4.1.27514.1.11.4.1.1.0.0.0.0"), oid, MAX_OID_LEN);
             oid[12] = 22;
-            oid[14] = iface->slot;
-            oid[15] = iface->index - iface->slot * 1000;
+            oid[14] = iface->location.module;
+            oid[15] = iface->index - iface->location.module * 1000;
             iface->type = IFTYPE_GPON;
             if (SnmpGetEx(snmp, NULL, oid, 16, iface->alias, MAX_DB_STRING * sizeof(TCHAR), 0, NULL) != SNMP_ERR_SUCCESS)
             {

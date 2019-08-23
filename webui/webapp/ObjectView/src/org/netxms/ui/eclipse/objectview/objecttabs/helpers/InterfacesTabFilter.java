@@ -142,7 +142,7 @@ public class InterfacesTabFilter extends NodeComponentTabFilter
     */
    private boolean matchSlot(Interface interf)
    {
-      if (Integer.toString(interf.getSlot()).toLowerCase().contains(filterString))
+      if (Integer.toString(interf.getModule()).toLowerCase().contains(filterString))
          return true;
       return false;
    }

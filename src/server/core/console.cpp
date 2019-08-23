@@ -1255,7 +1255,10 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
                         VlanInfo *vlan = vlans->get(i);
                         ConsolePrintf(pCtx, _T("%4d | %-16s |"), vlan->getVlanId(), vlan->getName());
                         for(int j = 0; j < vlan->getNumPorts(); j++)
-                           ConsolePrintf(pCtx, _T(" %d.%d"), (int)(vlan->getPorts()[j] >> 16), (int)(vlan->getPorts()[j] & 0xFFFF));
+                        {
+                           TCHAR buffer[128];
+                           ConsolePrintf(pCtx, _T(" %s"), vlan->getPorts()[j].location.toString(buffer, 128));
+                        }
                         ConsolePrintf(pCtx, _T("\n"));
                      }
                      ConsolePrintf(pCtx, _T("\n"));

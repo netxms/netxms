@@ -28,6 +28,7 @@ public class VlanInfo
 	private int vlanId;
 	private String name;
 	private Port[] ports;
+	private long nextFieldId;
 	
 	/**
 	 * Create VLAN information object from NXCP message
@@ -42,14 +43,30 @@ public class VlanInfo
 		
 		int count = msg.getFieldAsInt32(baseId + 2);
 		ports = new Port[count];
-		long[] sps = msg.getFieldAsUInt32Array(baseId + 3);
-		long[] indexes = msg.getFieldAsUInt32Array(baseId + 4);
-		long[] ids = msg.getFieldAsUInt32Array(baseId + 5);
-		for(int i = 0; i < count; i++)
-			ports[i] = new Port(ids[i], indexes[i], (int)(sps[i] >> 16), (int)(sps[i] & 0xFFFF));
+		
+		long fieldId = baseId + 3;
+      for(int i = 0; i < count; i++)
+		{
+         int ifIndex = msg.getFieldAsInt32(fieldId++);
+         long objectId = msg.getFieldAsInt64(fieldId++);
+         int chassis = msg.getFieldAsInt32(fieldId++);
+         int module = msg.getFieldAsInt32(fieldId++);
+         int pic = msg.getFieldAsInt32(fieldId++);
+         int port = msg.getFieldAsInt32(fieldId++);
+			ports[i] = new Port(ifIndex, objectId, chassis, module, pic, port);
+		}
+      nextFieldId = fieldId;
 	}
 
 	/**
+    * @return the nextFieldId
+    */
+   public long getNextFieldId()
+   {
+      return nextFieldId;
+   }
+
+   /**
 	 * @return the vlanId
 	 */
 	public int getVlanId()
@@ -80,11 +97,11 @@ public class VlanInfo
     * @param port port
     * @return if given port is within VLAN
     */
-   public boolean containsPort(int slot, int port)
+   public boolean containsPort(int chassis, int module, int pic, int port)
    {
       for(Port p : ports)
       {
-         if (p.getSlot() == slot && p.getPort() == port)
+         if ((p.getChassis() == chassis) && (p.getModule() == module) && (p.getPIC() == pic) && (p.getPort() == port))
             return true;
       }
       return false;

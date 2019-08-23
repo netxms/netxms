@@ -1185,7 +1185,7 @@ public:
    void queueUpdate();
    void queueRemoveFromTarget(UINT32 targetId, bool removeDCI);
 
-	bool enumDCObjects(bool (* pfCallback)(DCObject *, UINT32, void *), void *pArg);
+	bool enumDCObjects(bool (*callback)(shared_ptr<DCObject>, UINT32, void *), void *context);
 	void associateItems();
 };
 
@@ -1299,8 +1299,7 @@ protected:
    UINT32 m_mtu;
    UINT64 m_speed;
 	UINT32 m_bridgePortNumber;		 // 802.1D port number
-	UINT32 m_slotNumber;				 // Vendor/device specific slot number
-	UINT32 m_portNumber;				 // Vendor/device specific port number
+	InterfacePhysicalLocation m_physicalLocation;
 	UINT32 m_peerNodeId;				 // ID of peer node object, or 0 if unknown
 	UINT32 m_peerInterfaceId;		 // ID of peer interface object, or 0 if unknown
    LinkLayerProtocol m_peerDiscoveryProtocol;  // Protocol used to discover peer node
@@ -1360,8 +1359,11 @@ public:
    UINT32 getMTU() const { return m_mtu; }
    UINT64 getSpeed() const { return m_speed; }
 	UINT32 getBridgePortNumber() const { return m_bridgePortNumber; }
-	UINT32 getSlotNumber() const { return m_slotNumber; }
-	UINT32 getPortNumber() const { return m_portNumber; }
+   UINT32 getChassis() const { return m_physicalLocation.chassis; }
+	UINT32 getModule() const { return m_physicalLocation.module; }
+   UINT32 getPIC() const { return m_physicalLocation.pic; }
+	UINT32 getPort() const { return m_physicalLocation.port; }
+	InterfacePhysicalLocation getPhysicalLocation() const { lockProperties(); auto l = m_physicalLocation; unlockProperties(); return l; }
 	UINT32 getPeerNodeId() const { return m_peerNodeId; }
 	UINT32 getPeerInterfaceId() const { return m_peerInterfaceId; }
    LinkLayerProtocol getPeerDiscoveryProtocol() const { return m_peerDiscoveryProtocol; }
@@ -1394,8 +1396,7 @@ public:
    void setMacAddr(const MacAddress& macAddr, bool updateMacDB);
    void setIpAddress(const InetAddress& addr);
    void setBridgePortNumber(UINT32 bpn) { lockProperties(); m_bridgePortNumber = bpn; setModified(MODIFY_INTERFACE_PROPERTIES); unlockProperties(); }
-   void setSlotNumber(UINT32 slot) { lockProperties(); m_slotNumber = slot; setModified(MODIFY_INTERFACE_PROPERTIES); unlockProperties(); }
-   void setPortNumber(UINT32 port) { lockProperties(); m_portNumber = port; setModified(MODIFY_INTERFACE_PROPERTIES); unlockProperties(); }
+   void setPhysicalLocation(const InterfacePhysicalLocation& location);
 	void setPhysicalPortFlag(bool isPhysical) { lockProperties(); if (isPhysical) m_flags |= IF_PHYSICAL_PORT; else m_flags &= ~IF_PHYSICAL_PORT; setModified(MODIFY_INTERFACE_PROPERTIES); unlockProperties(); }
 	void setManualCreationFlag(bool isManual) { lockProperties(); if (isManual) m_flags |= IF_CREATED_MANUALLY; else m_flags &= ~IF_CREATED_MANUALLY; setModified(MODIFY_INTERFACE_PROPERTIES); unlockProperties(); }
 	void setPeer(Node *node, Interface *iface, LinkLayerProtocol protocol, bool reflection);
@@ -1419,6 +1420,7 @@ public:
    UINT32 wakeUp();
 	void setExpectedState(int state) { lockProperties(); setExpectedStateInternal(state); unlockProperties(); }
    void setExcludeFromTopology(bool excluded);
+   void setIncludeInIcmpPoll(bool included);
 };
 
 /**
@@ -2548,7 +2550,7 @@ public:
    Interface *findInterfaceByName(const TCHAR *name);
 	Interface *findInterfaceByMAC(const MacAddress& macAddr);
 	Interface *findInterfaceByIP(const InetAddress& addr);
-	Interface *findInterfaceBySlotAndPort(UINT32 slot, UINT32 port);
+	Interface *findInterfaceByLocation(const InterfacePhysicalLocation& location);
 	Interface *findBridgePort(UINT32 bridgePortNumber);
    AccessPoint *findAccessPointByMAC(const MacAddress& macAddr);
    AccessPoint *findAccessPointByBSSID(const BYTE *bssid);

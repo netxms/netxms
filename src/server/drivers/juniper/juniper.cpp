@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Driver for Juniper Networks switches
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -98,12 +98,13 @@ InterfaceList *JuniperDriver::getInterfaces(SNMP_Transport *snmp, StringMap *att
          oid.changeElement(oid.length() - 2, 3);
          int port = chassisTable->getAsInt32(oid);
 
-         if ((slot == 0) || (pic != 1) || (port == 0))   // FIXME: support for multiple PICs in one slot
+         if ((slot == 0) || (pic == 0) || (port == 0))
             continue;
 
          iface->isPhysicalPort = true;
-         iface->slot = slot - 1;  // Juniper numbers slots from 0 but reports in SNMP as n + 1
-         iface->port = port - 1;  // Juniper numbers ports from 0 but reports in SNMP as n + 1
+         iface->location.module = slot - 1;  // Juniper numbers slots from 0 but reports in SNMP as n + 1
+         iface->location.pic = pic - 1;  // Juniper numbers PICs from 0 but reports in SNMP as n + 1
+         iface->location.port = port - 1;  // Juniper numbers ports from 0 but reports in SNMP as n + 1
       }
 
       // Attach logical interfaces to physical
@@ -123,10 +124,10 @@ InterfaceList *JuniperDriver::getInterfaces(SNMP_Transport *snmp, StringMap *att
          oid.changeElement(oid.length() - 2, 3);
          int port = chassisTable->getAsInt32(oid);
 
-         if ((slot == 0) || (pic != 1) || (port == 0))   // FIXME: support for multiple PICs in one slot
+         if ((slot == 0) || (pic == 0) || (port == 0))
             continue;
 
-         InterfaceInfo *parent = ifList->findByPhyPosition(slot - 1, port - 1);
+         InterfaceInfo *parent = ifList->findByPhysicalLocation(0, slot - 1, pic - 1, port - 1);
          if (parent != NULL)
             iface->parentIndex = parent->index;
       }

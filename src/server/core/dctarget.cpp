@@ -1685,11 +1685,11 @@ void DataCollectionTarget::doInstanceDiscovery(UINT32 requestId)
    sendPollerMsg(requestId, _T("Running DCI instance discovery\r\n"));
 
    // collect instance discovery DCIs
-   ObjectArray<DCObject> rootObjects;
+   SharedObjectArray<DCObject> rootObjects;
    lockDciAccess(false);
    for(int i = 0; i < m_dcObjects->size(); i++)
    {
-      DCObject *object = m_dcObjects->get(i);
+      shared_ptr<DCObject> object = m_dcObjects->getShared(i);
       if (object->getInstanceDiscoveryMethod() != IDM_NONE)
       {
          object->setBusyFlag();
