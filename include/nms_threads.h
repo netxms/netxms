@@ -817,16 +817,17 @@ inline MUTEX MutexCreateFast()
    MUTEX mutex = (MUTEX)MemAlloc(sizeof(netxms_mutex_t));
    if (mutex != NULL)
    {
-      pthread_mutex_init(&mutex->mutex, NULL);
 #ifndef HAVE_RECURSIVE_MUTEXES
       mutex->isRecursive = FALSE;
 #endif
-#ifdef HAVE_DECL_PTHREAD_MUTEX_ADAPTIVE_NP
+#if HAVE_DECL_PTHREAD_MUTEX_ADAPTIVE_NP
       pthread_mutexattr_t a;
       pthread_mutexattr_init(&a);
       MUTEXATTR_SETTYPE(&a, PTHREAD_MUTEX_ADAPTIVE_NP);
       pthread_mutex_init(&mutex->mutex, &a);
       pthread_mutexattr_destroy(&a);
+#else
+      pthread_mutex_init(&mutex->mutex, NULL);
 #endif
    }
    return mutex;
