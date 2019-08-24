@@ -899,7 +899,7 @@ char *NXCPMessage::getFieldAsUtf8String(UINT32 fieldId, char *buffer, size_t buf
          size_t srcLen = *static_cast<UINT32*>(value);
          if (buffer == NULL)
          {
-            str = MemAllocArrayNoInit<char>(srcLen + 1);
+            str = MemAllocStringA(srcLen + 1);
             memcpy(str, static_cast<BYTE*>(value) + 4, srcLen);
             str[srcLen] = 0;
          }

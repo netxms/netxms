@@ -41,6 +41,19 @@
 
 
 *
+* 2.2.17
+*
+
+- Fixed multiple MQTT broker connection support
+- Java 12 supported by reporting server
+- Fixed bug in agent file download to UI
+- Implemented per-device I/O counters on Windows
+- Fixed bugs in TCP proxy
+- Added object filtering by zone in REST API
+- Fixed server crash when using "SSH" or "device driver" DCI source
+
+
+*
 * 2.2.16
 *
 

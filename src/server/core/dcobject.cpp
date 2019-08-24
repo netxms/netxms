@@ -512,17 +512,23 @@ void DCObject::changeBinding(UINT32 dwNewId, DataCollectionOwner *newOwner, BOOL
  */
 void DCObject::setStatus(int status, bool generateEvent)
 {
-	if ((m_owner != NULL) && (m_status != (BYTE)status))
-	{
+   if ((m_owner != NULL) && (m_status != (BYTE)status))
+   {
       NotifyClientsOnDCIStatusChange(getOwner(), getId(), status);
-      if(generateEvent && IsEventSource(m_owner->getObjectClass()))
+      if (generateEvent && IsEventSource(m_owner->getObjectClass()))
       {
          static UINT32 eventCode[3] = { EVENT_DCI_ACTIVE, EVENT_DCI_DISABLED, EVENT_DCI_UNSUPPORTED };
-         static const TCHAR *originName[8] = { _T("Internal"), _T("NetXMS Agent"), _T("SNMP"), _T("CheckPoint SNMP"), _T("Push"), _T("WinPerf"), _T("iLO"), _T("Script") };
+         static const TCHAR *originName[11] =
+            {
+               _T("Internal"), _T("NetXMS Agent"), _T("SNMP"),
+               _T("CheckPoint SNMP"), _T("Push"), _T("WinPerf"),
+               _T("iLO"), _T("Script"), _T("SSH"), _T("MQTT"),
+               _T("Device Driver")
+            };
          PostEvent(eventCode[status], m_owner->getId(), "dssds", m_id, m_name, m_description, m_source, originName[m_source]);
       }
-	}
-	m_status = (BYTE)status;
+   }
+   m_status = (BYTE)status;
 }
 
 /**
