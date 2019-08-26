@@ -1,8 +1,8 @@
 AppName=NetXMS Agent
-AppVerName=NetXMS Agent 2.2.16
-AppVersion=2.2.16
-VersionInfoVersion=2.2.16
-VersionInfoTextVersion=2.2.16
+AppVerName=NetXMS Agent 2.2.17
+AppVersion=2.2.17
+VersionInfoVersion=2.2.17
+VersionInfoTextVersion=2.2.17
 AppPublisher=Raden Solutions
 AppPublisherURL=http://www.radensolutions.com
 AppCopyright=© 2003-2018 Raden Solutions
