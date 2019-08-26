@@ -78,11 +78,29 @@ public class InterfaceListComparator extends ViewerComparator
 			case InterfacesTab.COLUMN_OPER_STATE:
 				result = iface1.getOperState() - iface2.getOperState();
 				break;
-			case InterfacesTab.COLUMN_PORT:
-				result = iface1.getPort() - iface2.getPort();
-				break;
-			case InterfacesTab.COLUMN_SLOT:
-				result = iface1.getModule() - iface2.getModule();
+			case InterfacesTab.COLUMN_PHYSICAL_LOCATION:
+			   if (iface1.isPhysicalPort() && iface2.isPhysicalPort())
+			   {
+	            result = iface1.getChassis() - iface2.getChassis();
+	            if (result == 0)
+	               result = iface1.getModule() - iface2.getModule();
+	            if (result == 0)
+	               result = iface1.getPIC() - iface2.getPIC();
+	            if (result == 0)
+	               result = iface1.getPort() - iface2.getPort();
+			   }
+			   else if (iface1.isPhysicalPort())
+			   {
+			      result = 1;
+			   }
+            else if (iface2.isPhysicalPort())
+            {
+               result = -1;
+            }
+            else
+            {
+               result = 0;
+            }
 				break;
          case InterfacesTab.COLUMN_SPEED:
             result = Long.signum(iface1.getSpeed() - iface2.getSpeed());
