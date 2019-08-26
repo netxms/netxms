@@ -1712,10 +1712,11 @@ void DataCollectionTarget::doInstanceDiscovery(UINT32 requestId)
       if (instances != NULL)
       {
          DbgPrintf(5, _T("DataCollectionTarget::doInstanceDiscovery(%s [%u]): read %d values"), m_name, m_id, instances->size());
-         object->filterInstanceList(instances);
+         StringObjectMap<InstanceObject> *filteredInstances = object->filterInstanceList(instances);
          INSTANCE_DISCOVERY_CANCELLATION_CHECKPOINT;
-         if (updateInstances(object, instances, requestId))
+         if (updateInstances(object, filteredInstances, requestId))
             changed = true;
+         delete filteredInstances;
          delete instances;
       }
       else
@@ -1770,11 +1771,12 @@ static EnumerationCallbackResult CreateInstanceDCI(const TCHAR *key, const void 
    DCObject *dco = root->clone();
 
    dco->setTemplateId(object->getId(), root->getId());
-   dco->setInstance((const TCHAR *)value);
+   dco->setInstance(((InstanceObject *)value)->getInstance());
    dco->setInstanceDiscoveryMethod(IDM_NONE);
    dco->setInstanceDiscoveryData(key);
    dco->setInstanceFilter(NULL);
    dco->expandInstance();
+   dco->setRelatedObject(((InstanceObject *)value)->getRelatedObject());
    dco->changeBinding(CreateUniqueId(IDG_ITEM), object, FALSE);
    object->addDCObject(dco, true);
    return _CONTINUE;
@@ -1783,7 +1785,7 @@ static EnumerationCallbackResult CreateInstanceDCI(const TCHAR *key, const void 
 /**
  * Update instance DCIs created from instance discovery DCI
  */
-bool DataCollectionTarget::updateInstances(DCObject *root, StringMap *instances, UINT32 requestId)
+bool DataCollectionTarget::updateInstances(DCObject *root, StringObjectMap<InstanceObject> *instances, UINT32 requestId)
 {
    bool changed = false;
 
@@ -1803,19 +1805,30 @@ bool DataCollectionTarget::updateInstances(DCObject *root, StringMap *instances,
          // found, remove value from instances
          nxlog_debug(5, _T("DataCollectionTarget::updateInstances(%s [%u], %s [%u]): instance \"%s\" found"),
                    m_name, m_id, root->getName(), root->getId(), dcoInstance);
-         const TCHAR *name = instances->get(dcoInstance);
+         InstanceObject *instanceObject = instances->get(dcoInstance);
+         const TCHAR *name = instanceObject->getInstance();
+         bool notify = false;
          if (_tcscmp(name, object->getInstance()))
          {
             object->setInstance(name);
             object->updateFromTemplate(root);
             changed = true;
+            notify = true;
          }
          if (object->getInstanceGracePeriodStart() > 0)
          {
             object->setInstanceGracePeriodStart(0);
             object->setStatus(ITEM_STATUS_ACTIVE, false);
          }
+         if(instanceObject->getRelatedObject() != object->getRelatedObject())
+         {
+            object->setRelatedObject(instanceObject->getRelatedObject());
+            changed = true;
+            notify = true;
+         }
          instances->remove(dcoInstance);
+         if(notify)
+            NotifyClientsOnDCIUpdate(this, object);
       }
       else
       {

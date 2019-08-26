@@ -1275,7 +1275,7 @@ void DCObject::requestForcePoll(ClientSession *session)
  */
 struct FilterCallbackData
 {
-   StringMap *filteredInstances;
+   StringObjectMap<InstanceObject> *filteredInstances;
    DCObject *dco;
    NXSL_VM *instanceFilter;
 };
@@ -1309,6 +1309,7 @@ static EnumerationCallbackResult FilterCallback(const TCHAR *key, const void *va
       bool accepted;
       const TCHAR *instance = key;
       const TCHAR *name = (const TCHAR *)value;
+      UINT32 relatedObject = 0;
       NXSL_Value *result = instanceFilter->getResult();
       if (result != NULL)
       {
@@ -1328,18 +1329,23 @@ static EnumerationCallbackResult FilterCallback(const TCHAR *key, const void *va
                               dco->getName(), dco->getId(), instance, newValue);
                      instance = newValue;
                   }
-
-                  if (array->size() > 2)
+               }
+               if (array->size() > 2)
+               {
+                  // instance name
+                  const TCHAR *newName = array->get(2)->getValueAsCString();
+                  if ((newName != NULL) && (*newName != 0))
                   {
-                     // instance name
-                     const TCHAR *newName = array->get(2)->getValueAsCString();
-                     if ((newName != NULL) && (*newName != 0))
-                     {
-                        DbgPrintf(5, _T("DCObject::filterInstanceList(%s [%d]): instance \"%s\" name set to \"%s\""),
-                                 dco->getName(), dco->getId(), instance, newName);
-                        name = newName;
-                     }
+                     DbgPrintf(5, _T("DCObject::filterInstanceList(%s [%d]): instance \"%s\" name set to \"%s\""),
+                              dco->getName(), dco->getId(), instance, newName);
+                     name = newName;
                   }
+
+
+               }
+               if (array->size() > 3 && array->get(3)->isObject(_T("NetObj")))
+               {
+                  relatedObject = ((NetObj *)array->get(3)->getValueAsObject()->getData())->getId();
                }
             }
             else
@@ -1358,7 +1364,7 @@ static EnumerationCallbackResult FilterCallback(const TCHAR *key, const void *va
       }
       if (accepted)
       {
-         ((FilterCallbackData *)data)->filteredInstances->set(instance, name);
+         ((FilterCallbackData *)data)->filteredInstances->set(instance, new InstanceObject(name, relatedObject));
       }
       else
       {
@@ -1371,21 +1377,30 @@ static EnumerationCallbackResult FilterCallback(const TCHAR *key, const void *va
       TCHAR szBuffer[1024];
       _sntprintf(szBuffer, 1024, _T("DCI::%s::%d::InstanceFilter"), dco->getOwnerName(), dco->getId());
       PostDciEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, dco->getId(), "ssd", szBuffer, instanceFilter->getErrorText(), dco->getId());
-      static_cast<FilterCallbackData*>(data)->filteredInstances->set(key, (const TCHAR *)value);
+      static_cast<FilterCallbackData*>(data)->filteredInstances->set(key, new InstanceObject((const TCHAR *)value, 0));
    }
+   return _CONTINUE;
+}
+
+static EnumerationCallbackResult CopyElements(const TCHAR *key, const TCHAR *value, StringObjectMap<InstanceObject> *map)
+{
+   map->set(key, new InstanceObject(value, 0));
    return _CONTINUE;
 }
 
 /**
  * Filter instance list
  */
-void DCObject::filterInstanceList(StringMap *instances)
+StringObjectMap<InstanceObject> *DCObject::filterInstanceList(StringMap *instances)
 {
+   StringObjectMap<InstanceObject> *filteredInstances = new StringObjectMap<InstanceObject>(true);
+
    lock();
    if (m_instanceFilter == NULL)
    {
       unlock();
-      return;
+      instances->forEach(CopyElements, filteredInstances);
+      return filteredInstances;
    }
 
    FilterCallbackData data;
@@ -1398,13 +1413,11 @@ void DCObject::filterInstanceList(StringMap *instances)
    }
    unlock();
 
-   StringMap filteredInstances;
-   data.filteredInstances = &filteredInstances;
+   data.filteredInstances = filteredInstances;
    data.dco = this;
    instances->forEach(FilterCallback, &data);
-   instances->clear();
-   instances->addAll(&filteredInstances);
    delete data.instanceFilter;
+   return filteredInstances;
 }
 
 /**

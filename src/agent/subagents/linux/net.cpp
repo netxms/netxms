@@ -723,7 +723,7 @@ LONG H_NetIfInfoFromProc(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue
    else
    {
       // Name passed as argument
-      strncpy(szName, szBuffer, IFNAMSIZ);
+      strlcpy(szName, szBuffer, IFNAMSIZ);
    }
 
    // Get interface information

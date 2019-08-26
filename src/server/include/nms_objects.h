@@ -1577,7 +1577,7 @@ protected:
 
    virtual StringMap *getInstanceList(DCObject *dco);
    void doInstanceDiscovery(UINT32 requestId);
-   bool updateInstances(DCObject *root, StringMap *instances, UINT32 requestId);
+   bool updateInstances(DCObject *root, StringObjectMap<InstanceObject> *instances, UINT32 requestId);
 
    void _pollerLock() { MutexLock(m_hPollerMutex); }
    void _pollerUnlock() { MutexUnlock(m_hPollerMutex); }

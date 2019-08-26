@@ -1354,6 +1354,20 @@ public:
  */
 class NXCPMessage;
 
+
+
+class InstanceObject
+{
+private:
+   TCHAR *m_instance;
+   UINT32 m_relatedObjectId;
+public:
+   InstanceObject(const TCHAR *instance, UINT32 relatedObject) { m_instance = MemCopyString(instance); m_relatedObjectId = relatedObject; }
+   ~InstanceObject() { MemFree(m_instance); }
+   const TCHAR *getInstance() const { return m_instance; }
+   UINT32 getRelatedObject() const { return m_relatedObjectId; }
+};
+
 /**
  * String map class
  */

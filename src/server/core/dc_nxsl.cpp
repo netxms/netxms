@@ -264,6 +264,46 @@ static int F_FindAllDCIs(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXS
 	return 0;
 }
 
+static int F_Instance(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+{
+   if ((argc < 1) || (argc > 4))
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
+   NXSL_Object *object = NULL;
+   const TCHAR *name = NULL;
+   const TCHAR *displayName = NULL;
+
+   for(int i = 0; i < argc; i++)
+   {
+      if(!strcasecmp(argv[i]->getName(), "name"))
+      {
+         if(!argv[i]->isString())
+            return NXSL_ERR_NOT_STRING;
+         name = argv[i]->getValueAsCString();
+      }
+      if(!strcasecmp(argv[i]->getName(), "displayName"))
+      {
+         if(!argv[i]->isString())
+            return NXSL_ERR_NOT_STRING;
+         displayName = argv[i]->getValueAsCString();
+      }
+      if(!strcasecmp(argv[i]->getName(), "object"))
+      {
+         if(!argv[i]->isObject(_T("NetObj")))
+            return NXSL_ERR_NOT_OBJECT;
+         object = argv[i]->getValueAsObject();
+      }
+   }
+
+   NXSL_Array *list = new NXSL_Array(vm);
+   list->set(list->size(), vm->createValue(true));
+   list->set(list->size(), name != NULL ? vm->createValue(name) : vm->createValue());
+   list->set(list->size(), displayName != NULL ? vm->createValue(displayName) : vm->createValue());
+   list->set(list->size(), object != NULL ? vm->createValue(new NXSL_Object(object)) : vm->createValue());
+   *ppResult = vm->createValue(list);
+   return 0;
+}
+
 /**
  * Get min, max or average of DCI values for a period
  */
@@ -528,6 +568,7 @@ static NXSL_ExtFunction m_nxslDCIFunctions[] =
 	{ "GetMaxDCIValue", F_GetMaxDCIValue, 4 },
 	{ "GetMinDCIValue", F_GetMinDCIValue, 4 },
 	{ "GetSumDCIValue", F_GetSumDCIValue, 4 },
+   { "Instance", F_Instance, -1 },
    { "PushDCIData", F_PushDCIData, 3 }
 };
 

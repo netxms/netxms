@@ -349,7 +349,7 @@ public:
 	WORD getInstanceDiscoveryMethod() const { return m_instanceDiscoveryMethod; }
    const TCHAR *getInstanceDiscoveryData() const { return m_instanceDiscoveryData; }
    INT32 getInstanceRetentionTime() const { return m_instanceRetentionTime; }
-   void filterInstanceList(StringMap *instances);
+   StringObjectMap<InstanceObject> *filterInstanceList(StringMap *instances);
    void setInstanceDiscoveryMethod(WORD method) { m_instanceDiscoveryMethod = method; }
    void setInstanceDiscoveryData(const TCHAR *data) { lock(); MemFree(m_instanceDiscoveryData); m_instanceDiscoveryData = MemCopyString(data); unlock(); }
    void setInstanceFilter(const TCHAR *pszScript);
