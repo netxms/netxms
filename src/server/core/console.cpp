@@ -562,50 +562,53 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
             InetAddress start = InetAddress::parse(szBuffer);
             InetAddress end = InetAddress::parse(addr2);
             pArg = ExtractWord(pArg, szBuffer);
-            UINT32 zoneUIN;
-            UINT32 proxyId;
-            bool isDiscovery = false;
-            bool invalidParameter = false;
+            UINT32 zoneUIN = 0;
+            UINT32 proxyId = 0;
+            bool doDiscovery = false;
+            bool syntaxError = false;
             if (szBuffer[0] != 0)
             {
-               if(IsCommand(_T("ZONE"), szBuffer, 4))
+               if (IsCommand(_T("ZONE"), szBuffer, 1))
                {
                   pArg = ExtractWord(pArg, szBuffer);
                   proxyId = _tcstoul(szBuffer, NULL, 0);
-                  pArg = ExtractWord(pArg, szBuffer); //Extract next word if it is discovery
+                  ExtractWord(pArg, szBuffer); // Extract next word if it is discovery
                }
-               else if(IsCommand(_T("PROXY"), szBuffer, 4))
+               else if (IsCommand(_T("PROXY"), szBuffer, 1))
                {
                   pArg = ExtractWord(pArg, szBuffer);
                   zoneUIN = _tcstoul(szBuffer, NULL, 0);
-                  pArg = ExtractWord(pArg, szBuffer);  //Extract next word if it is discovery
+                  ExtractWord(pArg, szBuffer);  // Extract next word if it is discovery
                }
-               else if(IsCommand(_T("DISCOVERY"), szBuffer, 4))
+               else if (IsCommand(_T("DISCOVERY"), szBuffer, 1))
                {
-                  isDiscovery = true;
+                  doDiscovery = true;
                }
                else
-                  invalidParameter = true;
-
-
-               if (!isDiscovery && szBuffer[0] != 0)
                {
-                  if(IsCommand(_T("DISCOVERY"), szBuffer, 4)) //if discovery is after proxy/zone
+                  syntaxError = true;
+               }
+
+               if (!doDiscovery && (szBuffer[0] != 0))
+               {
+                  if (IsCommand(_T("DISCOVERY"), szBuffer, 4)) // if "discovery" is after proxy/zone
                   {
-                     isDiscovery = true;
+                     doDiscovery = true;
                   }
                   else
-                     invalidParameter = true;
+                  {
+                     syntaxError = true;
+                  }
                }
 
             }
-            if(!invalidParameter)
+            if (!syntaxError)
             {
                if (start.isValid() && end.isValid())
                {
                   InetAddressListElement range(start, end, proxyId, zoneUIN);
                   ConsolePrintf(pCtx, _T("Scanning address range %s - %s\n"), start.toString(szBuffer), end.toString(addr2));
-                  CheckRange(range, isDiscovery ? RangeScanCallback : PrintScanCallback , pCtx, NULL);
+                  CheckRange(range, doDiscovery ? RangeScanCallback : PrintScanCallback, pCtx, NULL);
                   ConsolePrintf(pCtx, _T("Address range %s - %s scan completed\n"), start.toString(szBuffer), end.toString(addr2));
                }
                else
