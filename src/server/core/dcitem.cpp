@@ -33,27 +33,6 @@ static const TCHAR *s_paramNamesReach[] = { _T("dciName"), _T("dciDescription"),
 static const TCHAR *s_paramNamesRearm[] = { _T("dciName"), _T("dciDescription"), _T("dciId"), _T("instance"), _T("thresholdValue"), _T("currentValue"), _T("dciValue") };
 
 /**
- * Default constructor for DCItem
- */
-DCItem::DCItem() : DCObject()
-{
-   m_thresholds = NULL;
-   m_dataType = DCI_DT_INT;
-   m_deltaCalculation = DCM_ORIGINAL_VALUE;
-	m_sampleCount = 0;
-   m_cacheSize = 0;
-   m_requiredCacheSize = 0;
-   m_ppValueCache = NULL;
-   m_tPrevValueTimeStamp = 0;
-   m_bCacheLoaded = false;
-	m_nBaseUnits = DCI_BASEUNITS_OTHER;
-	m_nMultiplier = 1;
-	m_customUnitName = NULL;
-	m_snmpRawValueType = SNMP_RAWTYPE_NONE;
-	m_predictionEngine[0] = 0;
-}
-
-/**
  * Create DCItem from another DCItem
  */
 DCItem::DCItem(const DCItem *src, bool shadowCopy) : DCObject(src, shadowCopy)
@@ -111,7 +90,7 @@ DCItem::DCItem(DB_HANDLE hdb, DB_RESULT hResult, int iRow, DataCollectionOwner *
 {
    m_owner = pNode;
    m_id = DBGetFieldULong(hResult, iRow, 0);
-   DBGetField(hResult, iRow, 1, m_name, MAX_ITEM_NAME);
+   m_name = DBGetField(hResult, iRow, 1, NULL, 0);
    m_source = (BYTE)DBGetFieldLong(hResult, iRow, 2);
    m_dataType = (BYTE)DBGetFieldLong(hResult, iRow, 3);
    m_iPollingInterval = DBGetFieldLong(hResult, iRow, 4);
@@ -122,7 +101,7 @@ DCItem::DCItem(DB_HANDLE hdb, DB_RESULT hResult, int iRow, DataCollectionOwner *
    setTransformationScript(pszTmp);
    MemFree(pszTmp);
    m_dwTemplateId = DBGetFieldULong(hResult, iRow, 9);
-   DBGetField(hResult, iRow, 10, m_description, MAX_DB_STRING);
+   m_description = DBGetField(hResult, iRow, 10, NULL, 0);
    m_instance = DBGetField(hResult, iRow, 11, NULL, 0);
    m_dwTemplateItemId = DBGetFieldULong(hResult, iRow, 12);
    m_thresholds = NULL;
@@ -138,7 +117,7 @@ DCItem::DCItem(DB_HANDLE hdb, DB_RESULT hResult, int iRow, DataCollectionOwner *
 	m_nMultiplier = DBGetFieldLong(hResult, iRow, 17);
 	m_customUnitName = DBGetField(hResult, iRow, 18, NULL, 0);
 	m_pszPerfTabSettings = DBGetField(hResult, iRow, 19, NULL, 0);
-	DBGetField(hResult, iRow, 20, m_systemTag, MAX_DB_STRING);
+	m_systemTag = DBGetField(hResult, iRow, 20, NULL, 0);
 	m_snmpPort = (WORD)DBGetFieldLong(hResult, iRow, 21);
 	m_snmpRawValueType = (WORD)DBGetFieldLong(hResult, iRow, 22);
 	m_instanceDiscoveryMethod = (WORD)DBGetFieldLong(hResult, iRow, 23);
@@ -339,7 +318,7 @@ bool DCItem::saveToDatabase(DB_HANDLE hdb)
 
 	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (m_owner == NULL) ? 0 : m_owner->getId());
 	DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_dwTemplateId);
-	DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_name, DB_BIND_STATIC);
+	DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_name, DB_BIND_STATIC, MAX_ITEM_NAME);
 	DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (INT32)m_source);
 	DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, (INT32)m_dataType);
 	DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, (INT32)m_iPollingInterval);
@@ -347,7 +326,7 @@ bool DCItem::saveToDatabase(DB_HANDLE hdb)
 	DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, (INT32)m_status);
 	DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, (INT32)m_deltaCalculation);
 	DBBind(hStmt, 10, DB_SQLTYPE_TEXT, m_transformationScriptSource, DB_BIND_STATIC);
-	DBBind(hStmt, 11, DB_SQLTYPE_VARCHAR, m_description, DB_BIND_STATIC);
+	DBBind(hStmt, 11, DB_SQLTYPE_VARCHAR, m_description, DB_BIND_STATIC, MAX_DB_STRING);
 	DBBind(hStmt, 12, DB_SQLTYPE_VARCHAR, m_instance, DB_BIND_STATIC);
 	DBBind(hStmt, 13, DB_SQLTYPE_INTEGER, m_dwTemplateItemId);
 	DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, (UINT32)m_flags);
@@ -357,7 +336,7 @@ bool DCItem::saveToDatabase(DB_HANDLE hdb)
 	DBBind(hStmt, 18, DB_SQLTYPE_INTEGER, (INT32)m_nMultiplier);
 	DBBind(hStmt, 19, DB_SQLTYPE_VARCHAR, m_customUnitName, DB_BIND_STATIC);
 	DBBind(hStmt, 20, DB_SQLTYPE_VARCHAR, m_pszPerfTabSettings, DB_BIND_STATIC);
-	DBBind(hStmt, 21, DB_SQLTYPE_VARCHAR, m_systemTag, DB_BIND_STATIC);
+	DBBind(hStmt, 21, DB_SQLTYPE_VARCHAR, m_systemTag, DB_BIND_STATIC, MAX_DB_STRING);
 	DBBind(hStmt, 22, DB_SQLTYPE_INTEGER, (INT32)m_snmpPort);
 	DBBind(hStmt, 23, DB_SQLTYPE_INTEGER, (INT32)m_snmpRawValueType);
 	DBBind(hStmt, 24, DB_SQLTYPE_INTEGER, (INT32)m_instanceDiscoveryMethod);
@@ -1196,7 +1175,7 @@ void DCItem::updateCacheSizeInternal(bool allowLoad, UINT32 conditionId)
          m_ppValueCache = MemReallocArray(m_ppValueCache, m_requiredCacheSize);
          for(UINT32 i = m_cacheSize; i < m_requiredCacheSize; i++)
             m_ppValueCache[i] = new ItemValue(_T(""), 1);
-         DbgPrintf(7, _T("Cache load skipped for parameter %s [%d]"), m_name, (int)m_id);
+         DbgPrintf(7, _T("Cache load skipped for parameter %s [%u]"), m_name, m_id);
          m_cacheSize = m_requiredCacheSize;
          m_bCacheLoaded = true;
       }

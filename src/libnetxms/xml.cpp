@@ -28,7 +28,7 @@
 TCHAR LIBNETXMS_EXPORTABLE *EscapeStringForXML(const TCHAR *str, int length)
 {
    if (str == NULL)
-      return _tcsdup(_T(""));
+      return MemCopyString(_T(""));
 
 	TCHAR *out;
 	const TCHAR *in;

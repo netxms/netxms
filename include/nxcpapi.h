@@ -152,6 +152,7 @@ public:
    const BYTE *getBinaryFieldPtr(UINT32 fieldId, size_t *size) const;
    TCHAR *getFieldAsString(UINT32 fieldId, MemoryPool *pool) const { return getFieldAsString(fieldId, pool, NULL, 0); }
    TCHAR *getFieldAsString(UINT32 fieldId, TCHAR *buffer = NULL, size_t bufferSize = 0) const { return getFieldAsString(fieldId, NULL, buffer, bufferSize); }
+   TCHAR *getFieldAsString(UINT32 fieldId, TCHAR **buffer) const { MemFree(*buffer); *buffer = getFieldAsString(fieldId, NULL, NULL, 0); return *buffer; }
 	char *getFieldAsMBString(UINT32 fieldId, char *buffer = NULL, size_t bufferSize = 0) const;
 	char *getFieldAsUtf8String(UINT32 fieldId, char *buffer = NULL, size_t bufferSize = 0) const;
    size_t getFieldAsBinary(UINT32 fieldId, BYTE *buffer, size_t bufferSize) const;

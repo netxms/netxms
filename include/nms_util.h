@@ -857,6 +857,7 @@ public:
    ~String();
 
 	TCHAR *getBuffer() { return m_buffer; }
+	TCHAR *takeBuffer() { TCHAR *b = m_buffer; m_buffer = NULL; m_allocated = 0; m_length = 0; return b; }
    void setBuffer(TCHAR *buffer);
 
    size_t getAllocationStep() { return m_allocationStep; }

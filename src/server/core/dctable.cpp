@@ -119,16 +119,6 @@ INT32 DCTable::columnIdFromName(const TCHAR *name)
 }
 
 /**
- * Default constructor
- */
-DCTable::DCTable() : DCObject()
-{
-	m_columns = new ObjectArray<DCTableColumn>(8, 8, true);
-   m_thresholds = new ObjectArray<DCTableThreshold>(0, 4, true);
-	m_lastValue = NULL;
-}
-
-/**
  * Copy constructor
  */
 DCTable::DCTable(const DCTable *src, bool shadowCopy) : DCObject(src, shadowCopy)
@@ -170,15 +160,15 @@ DCTable::DCTable(DB_HANDLE hdb, DB_RESULT hResult, int iRow, DataCollectionOwner
    m_id = DBGetFieldULong(hResult, iRow, 0);
    m_dwTemplateId = DBGetFieldULong(hResult, iRow, 1);
    m_dwTemplateItemId = DBGetFieldULong(hResult, iRow, 2);
-	DBGetField(hResult, iRow, 3, m_name, MAX_ITEM_NAME);
-   DBGetField(hResult, iRow, 4, m_description, MAX_DB_STRING);
+	m_name = DBGetField(hResult, iRow, 3, NULL, 0);
+   m_description = DBGetField(hResult, iRow, 4, NULL, 0);
    m_flags = (WORD)DBGetFieldLong(hResult, iRow, 5);
    m_source = (BYTE)DBGetFieldLong(hResult, iRow, 6);
 	m_snmpPort = (WORD)DBGetFieldLong(hResult, iRow, 7);
    m_iPollingInterval = DBGetFieldLong(hResult, iRow, 8);
    m_iRetentionTime = DBGetFieldLong(hResult, iRow, 9);
    m_status = (BYTE)DBGetFieldLong(hResult, iRow, 10);
-	DBGetField(hResult, iRow, 11, m_systemTag, MAX_DB_STRING);
+	m_systemTag = DBGetField(hResult, iRow, 11, NULL, 0);
 	m_dwResourceId = DBGetFieldULong(hResult, iRow, 12);
 	m_sourceNode = DBGetFieldULong(hResult, iRow, 13);
 	m_pszPerfTabSettings = DBGetField(hResult, iRow, 14, NULL, 0);
@@ -592,15 +582,15 @@ bool DCTable::saveToDatabase(DB_HANDLE hdb)
 	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (m_owner == NULL) ? (UINT32)0 : m_owner->getId());
 	DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_dwTemplateId);
 	DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_dwTemplateItemId);
-	DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, m_name, DB_BIND_STATIC);
-	DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, m_description, DB_BIND_STATIC);
+	DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, m_name, DB_BIND_STATIC, MAX_ITEM_NAME);
+	DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, m_description, DB_BIND_STATIC, MAX_DB_STRING);
 	DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, (UINT32)m_flags);
 	DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, (INT32)m_source);
 	DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, (UINT32)m_snmpPort);
 	DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, (INT32)m_iPollingInterval);
 	DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, (INT32)m_iRetentionTime);
 	DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, (INT32)m_status);
-	DBBind(hStmt, 12, DB_SQLTYPE_VARCHAR, m_systemTag, DB_BIND_STATIC);
+	DBBind(hStmt, 12, DB_SQLTYPE_VARCHAR, m_systemTag, DB_BIND_STATIC, MAX_DB_STRING);
 	DBBind(hStmt, 13, DB_SQLTYPE_INTEGER, m_dwResourceId);
 	DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, m_sourceNode);
 	DBBind(hStmt, 15, DB_SQLTYPE_TEXT, m_pszPerfTabSettings, DB_BIND_STATIC);

@@ -200,9 +200,9 @@ class NXCORE_EXPORTABLE DCObject
 protected:
    UINT32 m_id;
    uuid m_guid;
-   TCHAR m_name[MAX_ITEM_NAME];
-   TCHAR m_description[MAX_DB_STRING];
-	TCHAR m_systemTag[MAX_DB_STRING];
+   TCHAR *m_name;
+   TCHAR *m_description;
+	TCHAR *m_systemTag;
    time_t m_tLastPoll;           // Last poll time
    int m_iPollingInterval;       // Polling interval in seconds
    int m_iRetentionTime;         // Retention time in days
@@ -247,6 +247,10 @@ protected:
    bool matchSchedule(const TCHAR *schedule, bool *withSeconds, struct tm *currLocalTime, time_t currTimestamp);
 
 	void expandMacros(const TCHAR *src, TCHAR *dst, size_t dstLen);
+	void expandMacrosAndReplace(TCHAR **str, size_t maxLen);
+   void expandMacrosAndReplace(const TCHAR *src, TCHAR **dst, size_t maxLen);
+
+   void setTransformationScript(const TCHAR *source);
 
 	virtual bool isCacheLoaded();
 
@@ -284,7 +288,7 @@ public:
    int getStatus() const { return m_status; }
    const TCHAR *getName() const { return m_name; }
    const TCHAR *getDescription() const { return m_description; }
-	const TCHAR *getSystemTag() const { return m_systemTag; }
+	const TCHAR *getSystemTag() const { return CHECK_NULL_EX(m_systemTag); }
 	const TCHAR *getPerfTabSettings() const { return m_pszPerfTabSettings; }
    int getPollingInterval() const { return m_iPollingInterval; }
    int getEffectivePollingInterval() const { return (m_iPollingInterval > 0) ? m_iPollingInterval : m_defaultPollingInterval; }
@@ -337,14 +341,6 @@ public:
 
    NXSL_Value *createNXSLObject(NXSL_VM *vm);
 
-	void setName(const TCHAR *name) { _tcslcpy(m_name, name, MAX_ITEM_NAME); }
-	void setDescription(const TCHAR *description) { _tcslcpy(m_description, description, MAX_DB_STRING); }
-	void setOrigin(int origin) { m_source = origin; }
-	void setRetentionTime(int nTime) { m_iRetentionTime = nTime; }
-	void setInterval(int nInt) { m_iPollingInterval = nInt; }
-	void setAdvScheduleFlag(BOOL bFlag) { if (bFlag) m_flags |= DCF_ADVANCED_SCHEDULE; else m_flags &= ~DCF_ADVANCED_SCHEDULE; }
-	void addSchedule(const TCHAR *pszSchedule);
-   void setTransformationScript(const TCHAR *source);
    ClientSession *processForcePoll();
    void requestForcePoll(ClientSession *session);
    ClientSession *getPollingSession() { return m_pollingSession; }
@@ -355,9 +351,9 @@ public:
    INT32 getInstanceRetentionTime() const { return m_instanceRetentionTime; }
    void filterInstanceList(StringMap *instances);
    void setInstanceDiscoveryMethod(WORD method) { m_instanceDiscoveryMethod = method; }
-   void setInstanceDiscoveryData(const TCHAR *data) { MemFree(m_instanceDiscoveryData); m_instanceDiscoveryData = MemCopyString(data); }
+   void setInstanceDiscoveryData(const TCHAR *data) { lock(); MemFree(m_instanceDiscoveryData); m_instanceDiscoveryData = MemCopyString(data); unlock(); }
    void setInstanceFilter(const TCHAR *pszScript);
-   void setInstance(const TCHAR *instance) { MemFree(m_instance); m_instance = MemCopyString(instance); }
+   void setInstance(const TCHAR *instance) { lock(); MemFree(m_instance); m_instance = MemCopyString(instance); unlock(); }
    const TCHAR *getInstance() const { return CHECK_NULL_EX(m_instance); }
    void expandInstance();
    time_t getInstanceGracePeriodStart() const { return m_instanceGracePeriodStart; }
@@ -406,7 +402,6 @@ protected:
    using DCObject::updateFromMessage;
 
 public:
-   DCItem();
    DCItem(const DCItem *src, bool shadowCopy);
    DCItem(DB_HANDLE hdb, DB_RESULT hResult, int iRow, DataCollectionOwner *pNode, bool useStartupDelay);
    DCItem(UINT32 dwId, const TCHAR *szName, int iSource, int iDataType,
@@ -668,7 +663,6 @@ protected:
    bool saveThresholds(DB_HANDLE hdb);
 
 public:
-	DCTable();
    DCTable(const DCTable *src, bool shadowCopy);
    DCTable(UINT32 id, const TCHAR *name, int source, int pollingInterval, int retentionTime,
          DataCollectionOwner *node, const TCHAR *description = NULL, const TCHAR *systemTag = NULL);
