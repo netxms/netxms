@@ -311,10 +311,7 @@ public class EditActionDlg extends Dialog
 		else if (typeEMail.getSelection())
 			action.setType(ServerAction.SEND_EMAIL);
 		else if (typeNotification.getSelection())
-		{
 			action.setType(ServerAction.SEND_NOTIFICATION);
-	      action.setChannelName(ncList.get(channelName.getSelectionIndex()).getName());
-		}
       else if (typeXMPP.getSelection())
          action.setType(ServerAction.XMPP_MESSAGE);
 		else if (typeForward.getSelection())
@@ -325,6 +322,10 @@ public class EditActionDlg extends Dialog
 		action.setEmailSubject(subject.getText());
 		action.setData(data.getText());
 		action.setDisabled(markDisabled.getSelection());
+		if(typeNotification.getSelection())
+         action.setChannelName(ncList.get(channelName.getSelectionIndex()).getName());
+		else
+		   action.setChannelName("");
 		
 		super.okPressed();
 	}
