@@ -28,9 +28,9 @@
 /**
  * Default element destructor
  */
-static void ObjectDestructor(void *element)
+static void DefaultObjectDestructor(void *element)
 {
-	MemFree(element);
+   MemFree(element);
 }
 
 /**
@@ -42,13 +42,13 @@ static void ObjectDestructor(void *element)
  */
 Array::Array(int initial, int grow, bool owner)
 {
-	m_size = 0;
-	m_grow = (grow > 0) ? grow : 16;
-	m_allocated = (initial >= 0) ? initial : 16;
+   m_size = 0;
+   m_grow = (grow > 0) ? grow : 16;
+   m_allocated = (initial >= 0) ? initial : 16;
    m_elementSize = sizeof(void *);
-	m_data = (m_allocated > 0) ? (void **)MemAlloc(m_elementSize * m_allocated) : NULL;
-	m_objectOwner = owner;
-	m_objectDestructor = ObjectDestructor;
+   m_data = (m_allocated > 0) ? (void **)MemAlloc(m_elementSize * m_allocated) : NULL;
+   m_objectOwner = owner;
+   m_objectDestructor = DefaultObjectDestructor;
    m_storePointers = true;
 }
 
@@ -58,16 +58,23 @@ Array::Array(int initial, int grow, bool owner)
 Array::Array(void *data, int initial, int grow, size_t elementSize)
 {
    m_size = (data != NULL) ? initial : 0;
-	m_grow = (grow > 0) ? grow : 16;
-	m_allocated = (initial >= 0) ? initial : 16;
+   m_grow = (grow > 0) ? grow : 16;
+   m_allocated = (initial >= 0) ? initial : 16;
    m_elementSize = elementSize;
-	m_data = (void **)MemAlloc(m_elementSize * m_allocated);
-   if (data != NULL)
+   if (m_allocated > 0)
    {
-      memcpy(m_data, data, initial * m_elementSize);
+      m_data = (void **)MemAlloc(m_elementSize * m_allocated);
+      if (data != NULL)
+      {
+         memcpy(m_data, data, initial * m_elementSize);
+      }
    }
-	m_objectOwner = false;
-	m_objectDestructor = ObjectDestructor;
+   else
+   {
+      m_data = NULL;
+   }
+   m_objectOwner = false;
+   m_objectDestructor = DefaultObjectDestructor;
    m_storePointers = false;
 }
 
@@ -76,13 +83,13 @@ Array::Array(void *data, int initial, int grow, size_t elementSize)
  */
 Array::Array(const Array *src)
 {
-	m_size = src->m_size;
-	m_grow = src->m_grow;
-	m_allocated = src->m_allocated;
+   m_size = src->m_size;
+   m_grow = src->m_grow;
+   m_allocated = src->m_allocated;
    m_elementSize = src->m_elementSize;
-	m_data = (src->m_data != NULL) ? (void **)nx_memdup(src->m_data, m_elementSize * m_allocated) : NULL;
-	m_objectOwner = src->m_objectOwner;
-	m_objectDestructor = src->m_objectDestructor;
+   m_data = (src->m_data != NULL) ? (void **)MemCopyBlock(src->m_data, m_elementSize * m_allocated) : NULL;
+   m_objectOwner = src->m_objectOwner;
+   m_objectDestructor = src->m_objectDestructor;
    m_storePointers = src->m_storePointers;
 }
 
