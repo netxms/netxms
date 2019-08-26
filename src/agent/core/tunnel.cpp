@@ -894,7 +894,10 @@ void Tunnel::processBindRequest(NXCPMessage *request)
 
    EVP_PKEY *key = NULL;
    X509_REQ *req = createCertificateRequest(country, org, cn, &key);
-   free(cn);
+
+   MemFree(country);
+   MemFree(org);
+   MemFree(cn);
 
    if (req != NULL)
    {
