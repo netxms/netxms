@@ -348,7 +348,7 @@ NXSL_Value::NXSL_Value(const TCHAR *value)
 #endif
    m_stringIsValid = TRUE;
    updateNumber();
-	m_name = NULL;
+   m_name = NULL;
 }
 
 #ifdef UNICODE
@@ -379,7 +379,7 @@ NXSL_Value::NXSL_Value(const char *value)
 	m_mbString = NULL;
    m_stringIsValid = TRUE;
    updateNumber();
-	m_name = NULL;
+   m_name = NULL;
 }
 
 #endif
@@ -422,7 +422,7 @@ NXSL_Value::NXSL_Value(const TCHAR *value, UINT32 dwLen)
 #endif
    m_stringIsValid = TRUE;
    updateNumber();
-	m_name = NULL;
+   m_name = NULL;
 }
 
 /**
@@ -478,6 +478,7 @@ void NXSL_Value::set(INT32 nValue)
 void NXSL_Value::updateNumber()
 {
    const TCHAR *s = (m_length < NXSL_SHORT_STRING_LENGTH) ? m_stringValue : m_stringPtr;
+   assert(s != NULL);   // For clang static analyzer
    if (s[0] == 0)
       return;
 
