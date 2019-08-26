@@ -192,6 +192,7 @@ retry_wait:
                      else if (rc == SNMP_ERR_TIME_WINDOW)
                      {
                         // Update cached authoritative engine with new boots and time
+                        assert(m_authoritativeEngine != NULL);
                         if ((timeSyncRetries > 0) &&
                             (((*response)->getAuthoritativeEngine().getBoots() != m_authoritativeEngine->getBoots()) ||
                              ((*response)->getAuthoritativeEngine().getTime() != m_authoritativeEngine->getTime())))

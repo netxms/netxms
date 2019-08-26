@@ -315,7 +315,7 @@ NXSL_Value::NXSL_Value(const TCHAR *value)
 #endif
    m_bStringIsValid = TRUE;
    updateNumber();
-	m_name = NULL;
+   m_name = NULL;
 }
 
 #ifdef UNICODE
@@ -339,7 +339,7 @@ NXSL_Value::NXSL_Value(const char *value)
 	m_valueMBStr = NULL;
    m_bStringIsValid = TRUE;
    updateNumber();
-	m_name = NULL;
+   m_name = NULL;
 }
 
 #endif
@@ -366,7 +366,7 @@ NXSL_Value::NXSL_Value(const TCHAR *value, UINT32 dwLen)
 #endif
    m_bStringIsValid = TRUE;
    updateNumber();
-	m_name = NULL;
+   m_name = NULL;
 }
 
 /**
@@ -421,6 +421,7 @@ void NXSL_Value::set(INT32 nValue)
  */
 void NXSL_Value::updateNumber()
 {
+   assert(m_pszValStr != NULL);
    if (m_pszValStr[0] == 0)
       return;
 
