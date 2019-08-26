@@ -4909,7 +4909,15 @@ void ClientSession::openEventProcessingPolicy(NXCPMessage *request)
 
    // Send policy to client
    if (success)
+   {
       g_pEventPolicy->sendToClient(this, request->getId());
+   }
+
+   // This handler is called directly, not through processRequest,
+   // so session reference count should be decremented here and
+   // request message deleted
+   delete request;
+   decRefCount();
 }
 
 /**
@@ -4944,6 +4952,12 @@ void ClientSession::closeEventProcessingPolicy(NXCPMessage *request)
 
    // Send response
    sendMessage(&msg);
+
+   // This handler is called directly, not through processRequest,
+   // so session reference count should be decremented here and
+   // request message deleted
+   delete request;
+   decRefCount();
 }
 
 /**
@@ -4997,6 +5011,12 @@ void ClientSession::saveEventProcessingPolicy(NXCPMessage *request)
 
    // Send response
    sendMessage(&msg);
+
+   // This handler is called directly, not through processRequest,
+   // so session reference count should be decremented here and
+   // request message deleted
+   delete request;
+   decRefCount();
 }
 
 /**
