@@ -274,7 +274,7 @@ struct InterfacePhysicalLocation
 
    TCHAR *toString(TCHAR *buffer, size_t size)
    {
-      _sntprintf(buffer, size, _T("%d/%d/d/%d"), chassis, module, pic, port);
+      _sntprintf(buffer, size, _T("%u/%u/%u/%u"), chassis, module, pic, port);
       return buffer;
    }
 };
