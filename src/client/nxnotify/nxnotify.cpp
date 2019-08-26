@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** nxnotify - send notification via NetXMS server
-** Copyright (C) 2003-2015 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -44,10 +44,10 @@ static void DebugCallback(const TCHAR *pMsg)
  */
 int main(int argc, char *argv[])
 {
-	TCHAR login[MAX_DB_STRING] = _T("guest"), password[MAX_DB_STRING] = _T("");
-	BOOL isDebug = FALSE, isEncrypt = FALSE;
-	DWORD rcc, timeout = 3;
-	int ch;
+   TCHAR login[MAX_DB_STRING] = _T("guest"), password[MAX_DB_STRING] = _T("");
+   BOOL isDebug = FALSE, isEncrypt = FALSE;
+   DWORD rcc, timeout = 3;
+   int ch;
 
    InitNetXMSProcess(true);
 
@@ -85,18 +85,18 @@ int main(int argc, char *argv[])
             break;
          case 'u':
 #ifdef UNICODE
-				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, login, MAX_DB_STRING);
-				login[MAX_DB_STRING - 1] = 0;
+            MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, login, MAX_DB_STRING);
+            login[MAX_DB_STRING - 1] = 0;
 #else
-            nx_strncpy(login, optarg, MAX_DB_STRING);
+            strlcpy(login, optarg, MAX_DB_STRING);
 #endif
             break;
          case 'P':
 #ifdef UNICODE
-				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, password, MAX_DB_STRING);
-				password[MAX_DB_STRING - 1] = 0;
+            MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, password, MAX_DB_STRING);
+            password[MAX_DB_STRING - 1] = 0;
 #else
-            nx_strncpy(password, optarg, MAX_DB_STRING);
+            strlcpy(password, optarg, MAX_DB_STRING);
 #endif
             break;
          case 'w':
@@ -114,14 +114,14 @@ int main(int argc, char *argv[])
             return 1;
          default:
             break;
-		}
-	}
+      }
+   }
 
    if (argc - optind < 3)
    {
       _tprintf(_T("Required arguments missing. Use nxnotify -h for help.\n"));
-		return 1;
-	}
+      return 1;
+   }
 
 #ifdef _WIN32
    WSADATA wsaData;
@@ -136,73 +136,75 @@ int main(int argc, char *argv[])
    if (!NXCInitialize())
    {
       _tprintf(_T("Failed to initialize NetXMS client library\n"));
-		return 2;
+      return 2;
    }
 
    if (isDebug)
       NXCSetDebugCallback(DebugCallback);
 
 #ifdef UNICODE
-	WCHAR whost[256];
-	MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, argv[optind], -1, whost, 256);
-	whost[255] = 0;
+   WCHAR whost[256];
+   MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, argv[optind], -1, whost, 256);
+   whost[255] = 0;
 #define _HOST whost
 #else
 #define _HOST argv[optind]
 #endif
 
    NXCSession *session = new NXCSession();
-	rcc = session->connect(_HOST, login, password, isEncrypt ? NXCF_ENCRYPT : 0, _T("nxnotify/") NETXMS_VERSION_STRING);
-	if (rcc != RCC_SUCCESS)
-	{
-		_tprintf(_T("Unable to connect to server: %s\n"), NXCGetErrorText(rcc));
+   rcc = session->connect(_HOST, login, password, isEncrypt ? NXCF_ENCRYPT : 0, _T("nxnotify/") NETXMS_VERSION_STRING);
+   if (rcc != RCC_SUCCESS)
+   {
+      _tprintf(_T("Unable to connect to server: %s\n"), NXCGetErrorText(rcc));
       delete session;
       NXCShutdown();
-		return 2;
-	}
+      return 2;
+   }
 
-	session->setCommandTimeout(timeout * 1000);
+   session->setCommandTimeout(timeout * 1000);
 
    TCHAR *subject = NULL;
    TCHAR *text = NULL;
 #ifdef UNICODE
-	WCHAR *channel = WideStringFromMBStringSysLocale(argv[optind + 1]);
-	WCHAR *rcpt = WideStringFromMBStringSysLocale(argv[optind + 2]);
-   if((argc - optind) > 3)
+   WCHAR *channel = WideStringFromMBStringSysLocale(argv[optind + 1]);
+   WCHAR *rcpt = WideStringFromMBStringSysLocale(argv[optind + 2]);
+   if ((argc - optind) > 3)
    {
-	   subject = WideStringFromMBStringSysLocale(argv[optind + 3]);
-	   text = WideStringFromMBStringSysLocale(argv[optind + 4]);
-   
-   }
-   {
-	   text = WideStringFromMBStringSysLocale(argv[optind + 3]);
-   }
-	rcc = ((ServerController *)session->getController(CONTROLLER_SERVER))->sendNotification(channel, rcpt, subject, text);
-	free(channel);
-	free(rcpt);
-	free(subject);
-	free(text);
-#else
-   if((argc - optind) > 3)
-   {
-	   subject = argv[optind + 3];
-	   text = argv[optind + 4];
-   
+      subject = WideStringFromMBStringSysLocale(argv[optind + 3]);
+      text = WideStringFromMBStringSysLocale(argv[optind + 4]);
    }
    else
    {
-	   text = argv[optind + 3];
+      text = WideStringFromMBStringSysLocale(argv[optind + 3]);
    }
-	rcc = ((ServerController *)session->getController(CONTROLLER_SERVER))->sendNotification(argv[optind + 1], argv[optind + 2], subject, text);
+#else
+   char *channel = argv[optind + 1];
+   char *rcpt = argv[optind + 2];
+   if ((argc - optind) > 3)
+   {
+      subject = argv[optind + 3];
+      text = argv[optind + 4];
+   }
+   else
+   {
+      text = argv[optind + 3];
+   }
 #endif
-	if (rcc != RCC_SUCCESS)
-	{
-		_tprintf(_T("Unable to send notification: %s\n"), NXCGetErrorText(rcc));
-	}
 
+   rcc = ((ServerController *)session->getController(CONTROLLER_SERVER))->sendNotification(channel, rcpt, subject, text);
+   if (rcc != RCC_SUCCESS)
+   {
+      _tprintf(_T("Unable to send notification: %s\n"), NXCGetErrorText(rcc));
+   }
 
+#ifdef UNICODE
+   MemFree(channel);
+   MemFree(rcpt);
+   MemFree(subject);
+   MemFree(text);
+#endif
 
    delete session;
    NXCShutdown();
-	return (rcc == RCC_SUCCESS) ? 0 : 5;
+   return (rcc == RCC_SUCCESS) ? 0 : 5;
 }
