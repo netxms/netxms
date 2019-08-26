@@ -42,7 +42,7 @@ public class ScheduleTableEntryLabelProvider extends LabelProvider implements IT
       statusImages = new Image[3];
       statusImages[EXECUTED] = Activator.getImageDescriptor("icons/active.gif").createImage(); //$NON-NLS-1$
       statusImages[PENDING] = Activator.getImageDescriptor("icons/pending.gif").createImage(); //$NON-NLS-1$
-      statusImages[DISBALED] = Activator.getImageDescriptor("icons/disabled.gif").createImage(); //$NON-NLS-1$
+      statusImages[DISBALED] = Activator.getImageDescriptor("icons/inactive.gif").createImage(); //$NON-NLS-1$
    }
 
    /* (non-Javadoc)
