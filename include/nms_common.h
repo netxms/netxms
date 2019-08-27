@@ -1250,6 +1250,17 @@ LIBNETXMS_EXPORTABLE void *MemCopyBlock(const void *data, size_t size);
 
 #ifdef __cplusplus
 }
+
+template<typename T> T *MemCopyBlock(const T *data, size_t size)
+{
+   return static_cast<T*>(MemCopyBlock(static_cast<const void*>(data), size));
+}
+
+template<typename T> T *MemCopyArray(const T *data, size_t count)
+{
+   return static_cast<T*>(MemCopyBlock(static_cast<const void*>(data), count * sizeof(T)));
+}
+
 #endif
 
 #define nx_memdup MemCopyBlock

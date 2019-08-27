@@ -2240,6 +2240,14 @@ static void DumpObject(ServerConsole *console, NetObj *object, TCHAR *buffer)
             const InetAddress& a = static_cast<Interface*>(object)->getIpAddressList()->get(n);
             ConsolePrintf(console, _T("   IP address..........: %s/%d\n"), a.toString(buffer), a.getMaskBits());
          }
+         ConsolePrintf(console, _T("   Interface index.....: %u\n"), static_cast<Interface*>(object)->getIfIndex());
+         ConsolePrintf(console, _T("   Physical port.......: %s\n"),
+                  static_cast<Interface*>(object)->isPhysicalPort() ? _T("yes") : _T("no"));
+         if (static_cast<Interface*>(object)->isPhysicalPort())
+         {
+            ConsolePrintf(console, _T("   Physical location...: %s\n"),
+                     static_cast<Interface*>(object)->getPhysicalLocation().toString(buffer, 256));
+         }
          PrintObjectIcmpStatistic(console, static_cast<Interface*>(object));
          break;
       case OBJECT_TEMPLATE:

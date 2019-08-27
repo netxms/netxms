@@ -999,7 +999,7 @@ void Interface::setExcludeFromTopology(bool excluded)
 }
 
 /**
- * Set "exclude from topology" flag
+ * Set "include in ICMP poll" flag
  */
 void Interface::setIncludeInIcmpPoll(bool included)
 {

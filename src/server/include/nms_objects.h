@@ -1363,7 +1363,13 @@ public:
 	UINT32 getModule() const { return m_physicalLocation.module; }
    UINT32 getPIC() const { return m_physicalLocation.pic; }
 	UINT32 getPort() const { return m_physicalLocation.port; }
-	InterfacePhysicalLocation getPhysicalLocation() const { lockProperties(); auto l = m_physicalLocation; unlockProperties(); return l; }
+	InterfacePhysicalLocation getPhysicalLocation() const
+	{
+	   lockProperties();
+	   auto l = m_physicalLocation;
+	   unlockProperties();
+	   return l;
+	}
 	UINT32 getPeerNodeId() const { return m_peerNodeId; }
 	UINT32 getPeerInterfaceId() const { return m_peerInterfaceId; }
    LinkLayerProtocol getPeerDiscoveryProtocol() const { return m_peerDiscoveryProtocol; }
@@ -1383,9 +1389,12 @@ public:
 	bool isLoopback() const { return (m_flags & IF_LOOPBACK) ? true : false; }
 	bool isManuallyCreated() const { return (m_flags & IF_CREATED_MANUALLY) ? true : false; }
 	bool isExcludedFromTopology() const { return (m_flags & (IF_EXCLUDE_FROM_TOPOLOGY | IF_LOOPBACK)) ? true : false; }
-   bool isFake() const { return (m_index == 1) &&
-                                (m_type == IFTYPE_OTHER) &&
-                                !_tcscmp(m_name, _T("unknown")); }
+   bool isFake() const
+   {
+      return (m_index == 1) &&
+             (m_type == IFTYPE_OTHER) &&
+             !_tcscmp(m_name, _T("unknown"));
+   }
    bool isSubInterface() const { return m_parentInterfaceId != 0; }
    bool isIncludedInIcmpPoll() const { return (m_flags & IF_INCLUDE_IN_ICMP_POLL) ? true : false; }
    NXSL_Value *getVlanListForNXSL(NXSL_VM *vm);
@@ -1395,23 +1404,100 @@ public:
 
    void setMacAddr(const MacAddress& macAddr, bool updateMacDB);
    void setIpAddress(const InetAddress& addr);
-   void setBridgePortNumber(UINT32 bpn) { lockProperties(); m_bridgePortNumber = bpn; setModified(MODIFY_INTERFACE_PROPERTIES); unlockProperties(); }
+   void setBridgePortNumber(UINT32 bpn)
+   {
+      lockProperties();
+      m_bridgePortNumber = bpn;
+      setModified(MODIFY_INTERFACE_PROPERTIES);
+      unlockProperties();
+   }
    void setPhysicalLocation(const InterfacePhysicalLocation& location);
-	void setPhysicalPortFlag(bool isPhysical) { lockProperties(); if (isPhysical) m_flags |= IF_PHYSICAL_PORT; else m_flags &= ~IF_PHYSICAL_PORT; setModified(MODIFY_INTERFACE_PROPERTIES); unlockProperties(); }
-	void setManualCreationFlag(bool isManual) { lockProperties(); if (isManual) m_flags |= IF_CREATED_MANUALLY; else m_flags &= ~IF_CREATED_MANUALLY; setModified(MODIFY_INTERFACE_PROPERTIES); unlockProperties(); }
+	void setPhysicalPortFlag(bool isPhysical)
+	{
+	   lockProperties();
+	   if (isPhysical)
+	      m_flags |= IF_PHYSICAL_PORT;
+	   else
+	      m_flags &= ~IF_PHYSICAL_PORT;
+	   setModified(MODIFY_COMMON_PROPERTIES);
+	   unlockProperties();
+	}
+	void setManualCreationFlag(bool isManual)
+	{
+	   lockProperties();
+	   if (isManual)
+	      m_flags |= IF_CREATED_MANUALLY;
+	   else
+	      m_flags &= ~IF_CREATED_MANUALLY;
+	   setModified(MODIFY_COMMON_PROPERTIES);
+	   unlockProperties();
+	}
 	void setPeer(Node *node, Interface *iface, LinkLayerProtocol protocol, bool reflection);
-   void clearPeer() { lockProperties(); m_peerNodeId = 0; m_peerInterfaceId = 0; m_peerDiscoveryProtocol = LL_PROTO_UNKNOWN; setModified(MODIFY_INTERFACE_PROPERTIES); unlockProperties(); }
-   void setDescription(const TCHAR *descr) { lockProperties(); _tcslcpy(m_description, descr, MAX_DB_STRING); setModified(MODIFY_INTERFACE_PROPERTIES); unlockProperties(); }
-   void setAlias(const TCHAR *alias) { lockProperties(); _tcslcpy(m_alias, alias, MAX_DB_STRING); setModified(MODIFY_INTERFACE_PROPERTIES); unlockProperties(); }
+   void clearPeer()
+   {
+      lockProperties();
+      m_peerNodeId = 0;
+      m_peerInterfaceId = 0;
+      m_peerDiscoveryProtocol = LL_PROTO_UNKNOWN;
+      m_flags &= ~IF_PEER_REFLECTION;
+      setModified(MODIFY_INTERFACE_PROPERTIES | MODIFY_COMMON_PROPERTIES);
+      unlockProperties();
+   }
+   void setDescription(const TCHAR *descr)
+   {
+      lockProperties();
+      _tcslcpy(m_description, descr, MAX_DB_STRING);
+      setModified(MODIFY_INTERFACE_PROPERTIES);
+      unlockProperties();
+   }
+   void setAlias(const TCHAR *alias)
+   {
+      lockProperties();
+      _tcslcpy(m_alias, alias, MAX_DB_STRING);
+      setModified(MODIFY_INTERFACE_PROPERTIES);
+      unlockProperties();
+   }
    void addIpAddress(const InetAddress& addr);
    void deleteIpAddress(InetAddress addr);
    void setNetMask(const InetAddress& addr);
-	void setMTU(int mtu) { lockProperties(); m_mtu = mtu; setModified(MODIFY_INTERFACE_PROPERTIES); unlockProperties(); }
-	void setSpeed(UINT64 speed) { lockProperties(); m_speed = speed; setModified(MODIFY_INTERFACE_PROPERTIES); unlockProperties(); }
-   void setIfTableSuffix(int len, const UINT32 *suffix) { lockProperties(); MemFree(m_ifTableSuffix); m_ifTableSuffixLen = len; m_ifTableSuffix = (len > 0) ? (UINT32 *)nx_memdup(suffix, len * sizeof(UINT32)) : NULL; setModified(MODIFY_INTERFACE_PROPERTIES); unlockProperties(); }
-   void setParentInterface(UINT32 parentInterfaceId) { lockProperties(); m_parentInterfaceId = parentInterfaceId; setModified(MODIFY_INTERFACE_PROPERTIES); unlockProperties(); }
+	void setMTU(int mtu)
+	{
+	   lockProperties();
+	   m_mtu = mtu;
+	   setModified(MODIFY_INTERFACE_PROPERTIES);
+	   unlockProperties();
+	}
+	void setSpeed(UINT64 speed)
+	{
+	   lockProperties();
+	   m_speed = speed;
+	   setModified(MODIFY_INTERFACE_PROPERTIES);
+	   unlockProperties();
+	}
+   void setIfTableSuffix(int len, const UINT32 *suffix)
+   {
+      lockProperties();
+      MemFree(m_ifTableSuffix);
+      m_ifTableSuffixLen = len;
+      m_ifTableSuffix = (len > 0) ? MemCopyArray(suffix, len) : NULL;
+      setModified(MODIFY_INTERFACE_PROPERTIES);
+      unlockProperties();
+   }
+   void setParentInterface(UINT32 parentInterfaceId)
+   {
+      lockProperties();
+      m_parentInterfaceId = parentInterfaceId;
+      setModified(MODIFY_INTERFACE_PROPERTIES);
+      unlockProperties();
+   }
    void addVlan(UINT32 id);
-   void clearVlanList() { lockProperties(); if (m_vlans != NULL) m_vlans->clear(); unlockProperties(); }
+   void clearVlanList()
+   {
+      lockProperties();
+      if (m_vlans != NULL)
+         m_vlans->clear();
+      unlockProperties();
+   }
 
 	void updateZoneUIN();
 
