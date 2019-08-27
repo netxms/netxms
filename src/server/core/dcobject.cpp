@@ -378,7 +378,7 @@ void DCObject::expandMacrosAndReplace(TCHAR **str, size_t maxLen)
 {
    if (*str == NULL)
       return;
-   TCHAR *buffer = static_cast<TCHAR*>(alloca(maxLen * sizeof(TCHAR)));
+   TCHAR *buffer = reinterpret_cast<TCHAR*>(alloca(maxLen * sizeof(TCHAR)));
    expandMacros(*str, buffer, maxLen);
    MemFree(*str);
    *str = MemCopyString(buffer);
@@ -392,7 +392,7 @@ void DCObject::expandMacrosAndReplace(const TCHAR *src, TCHAR **dst, size_t maxL
    MemFree(*dst);
    if (src != NULL)
    {
-      TCHAR *buffer = static_cast<TCHAR*>(alloca(maxLen * sizeof(TCHAR)));
+      TCHAR *buffer = reinterpret_cast<TCHAR*>(alloca(maxLen * sizeof(TCHAR)));
       expandMacros(src, buffer, maxLen);
       *dst = MemCopyString(buffer);
    }
