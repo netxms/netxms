@@ -67,12 +67,25 @@ void ShowServerStats(CONSOLE_CTX console)
 {
 	int dciCount = 0;
 	g_idxObjectById.forEach(DciCountCallback, &dciCount);
-   ConsolePrintf(console, _T("Objects............ %d\n")
-                          _T("Monitored nodes.... %d\n")
-                          _T("Collectible DCIs... %d\n")
-                          _T("Active alarms...... %d\n")
+
+	UINT32 s = static_cast<UINT32>(time(NULL) - g_serverStartTime);
+   UINT32 d = s / 86400;
+   s -= d * 86400;
+   UINT32 h = s / 3600;
+   s -= h * 3600;
+   UINT32 m = s / 60;
+   s -= m * 60;
+
+   TCHAR uptime[128];
+   _sntprintf(uptime, 128, _T("%u days, %2u:%02u:%02u"), d, h, m, s);
+
+   ConsolePrintf(console, _T("Objects............: %d\n")
+                          _T("Monitored nodes....: %d\n")
+                          _T("Collectible DCIs...: %d\n")
+                          _T("Active alarms......: %d\n")
+                          _T("Uptime.............: %s\n")
                           _T("\n"),
-	              g_idxObjectById.size(), g_idxNodeById.size(), dciCount, GetAlarmCount());
+	              g_idxObjectById.size(), g_idxNodeById.size(), dciCount, GetAlarmCount(), uptime);
 }
 
 /**
