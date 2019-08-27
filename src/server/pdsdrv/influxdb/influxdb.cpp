@@ -34,7 +34,7 @@
 
 #include <string>
 
-// debug pdsdrv.influxdb 1-5
+// debug pdsdrv.influxdb 1-8
 #define DEBUG_TAG _T("pdsdrv.influxdb")
 
 /**
@@ -260,9 +260,9 @@ void InfluxDBStorageDriver::shutdown()
 bool InfluxDBStorageDriver::saveDCItemValue(DCItem *dci, time_t timestamp, const TCHAR *value)
 {
    nxlog_debug_tag(DEBUG_TAG, 8,
-            _T("Raw metric: OwnerName:%s SystemTag:%s DataSource:%i Type:%i Name:%s Description: %s Instance:%s DataType:%i DeltaType:%i Value:%s timestamp:") INT64_FMT,
+            _T("Raw metric: OwnerName:%s SystemTag:%s DataSource:%i Type:%i Name:%s Description: %s Instance:%s DataType:%i DeltaCalculationMethod:%i RelatedObject:%i Value:%s timestamp:") INT64_FMT,
             dci->getOwner()->getName(), dci->getSystemTag(), dci->getDataSource(), dci->getType(), dci->getName(),
-            dci->getDescription(), dci->getInstance(), dci->getDataType(), dci->getDeltaCalculationMethod(), value, static_cast<INT64>(timestamp));
+            dci->getDescription(), dci->getInstance(), dci->getDataType(), dci->getDeltaCalculationMethod(), dci->getRelatedObject(), value, static_cast<INT64>(timestamp));
 
    // Dont't try to send empty values
    if (*value == 0)
@@ -487,6 +487,54 @@ bool InfluxDBStorageDriver::saveDCItemValue(DCItem *dci, time_t timestamp, const
       delete ca_key;
    }
    delete ca;
+
+   // Get RelatedObject (Interface) CA's
+   NetObj *relatedObject_iface = FindObjectById(dci->getRelatedObject(), OBJECT_INTERFACE);
+   if (relatedObject_iface != NULL)
+   {
+      StringMap *ca = relatedObject_iface->getCustomAttributes();
+      if (ca != NULL)
+      {
+         StringList *ca_key = ca->keys();
+         nxlog_debug_tag(DEBUG_TAG, 7, _T("Host: %hs - RelatedObject %s [%u] - CMA: #%d"), host.c_str(), relatedObject_iface->getName(), relatedObject_iface->getId(), ca->size());
+
+         for (int i = 0; i < ca_key->size(); i++)
+         {
+            std::string ca_key_name = getString(ca_key->get(i));
+            std::string ca_value = getString(ca->get(ca_key->get(i)));
+            ca_value = normalizeString(ca_value);
+
+            if (!ca_value.empty() && !strnicmp("ignore_influxdb", ca_key_name.c_str(), 15))
+            {
+               ignoreMetric = true;
+            }
+
+            // Only include CA's with the prefix tag_
+            if (!ca_value.empty() && !strnicmp("tag_", ca_key_name.c_str(), 4))
+            {
+               ca_key_name = normalizeString(ca_key_name.substr(4));
+               nxlog_debug_tag(DEBUG_TAG, 7, _T("Host: %hs - RelatedObject %s [%u] - CA: K:%hs = V:%hs"),
+                     host.c_str(), relatedObject_iface->getName(), relatedObject_iface->getId(), ca_key_name.c_str(), ca_value.c_str());
+
+               if (m_tags.empty())
+               {
+                  m_tags = ca_key_name + '=' + ca_value;
+               }
+               else
+               {
+                  m_tags = m_tags + ',' + ca_key_name + '=' + ca_value;
+               }
+
+            }
+            else
+            {
+               nxlog_debug_tag(DEBUG_TAG, 7, _T("Host: %hs - RelatedObject %s [%u] - CA: K:%hs (Ignored)"), host.c_str(), relatedObject_iface->getName(), relatedObject_iface->getId(), ca_key_name.c_str());
+            }
+         }
+         delete ca_key;
+      }
+      delete ca;
+   }
 
    if (ignoreMetric)
    {
