@@ -934,7 +934,7 @@ private:
    SNMP_ObjectId *m_objectId;           // Trap OID
    UINT32 m_position;                   // Trap position
    UINT32 m_flags;
-   TCHAR m_description[MAX_DB_STRING];
+   TCHAR *m_description;
 
 public:
    SNMPTrapParameterMapping();
@@ -965,9 +965,13 @@ private:
    UINT32 m_id;                   // Entry ID
    SNMP_ObjectId m_objectId;      // Trap OID
    UINT32 m_eventCode;            // Event code
+   TCHAR *m_eventTag;
+   TCHAR *m_description;
+   TCHAR *m_scriptSource;
+   NXSL_Program *m_script;
    ObjectArray<SNMPTrapParameterMapping> m_mappings;
-   TCHAR m_description[MAX_DB_STRING];
-   TCHAR m_userTag[MAX_USERTAG_LENGTH];
+
+   void compileScript();
 
 public:
    SNMPTrapConfiguration();
@@ -987,8 +991,9 @@ public:
    const SNMPTrapParameterMapping *getParameterMapping(int index) const { return m_mappings.get(index); }
    int getParameterMappingCount() const { return m_mappings.size(); }
    UINT32 getEventCode() const { return m_eventCode; }
+   const TCHAR *getEventTag() const { return m_eventTag; }
    const TCHAR *getDescription() const { return m_description; }
-   const TCHAR *getUserTag() const { return m_userTag; }
+   const TCHAR *getScriptSource() const { return m_scriptSource; }
 };
 
 /**

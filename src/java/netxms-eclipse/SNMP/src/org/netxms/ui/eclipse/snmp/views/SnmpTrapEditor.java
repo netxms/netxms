@@ -29,6 +29,9 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.preference.PreferenceDialog;
+import org.eclipse.jface.preference.PreferenceManager;
+import org.eclipse.jface.preference.PreferenceNode;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
@@ -42,6 +45,7 @@ import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.part.ViewPart;
@@ -54,7 +58,9 @@ import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.snmp.Activator;
 import org.netxms.ui.eclipse.snmp.Messages;
-import org.netxms.ui.eclipse.snmp.dialogs.TrapConfigurationDialog;
+import org.netxms.ui.eclipse.snmp.dialogs.pages.SnmpTrapGeneral;
+import org.netxms.ui.eclipse.snmp.dialogs.pages.SnmpTrapParameters;
+import org.netxms.ui.eclipse.snmp.dialogs.pages.SnmpTrapTransformation;
 import org.netxms.ui.eclipse.snmp.views.helpers.SnmpTrapComparator;
 import org.netxms.ui.eclipse.snmp.views.helpers.SnmpTrapLabelProvider;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -396,8 +402,7 @@ public class SnmpTrapEditor extends ViewPart implements SessionListener
 			return;
 		
 		final SnmpTrap trap = (SnmpTrap)selection.getFirstElement();
-		TrapConfigurationDialog dlg = new TrapConfigurationDialog(getViewSite().getShell(), trap);
-		if (dlg.open() == Window.OK)
+      if (showTrapConfigurationDialog(trap))
 		{
 			new ConsoleJob(Messages.get().SnmpTrapEditor_ModifyJob_Title, this, Activator.PLUGIN_ID, null) {
 				@Override
@@ -422,8 +427,8 @@ public class SnmpTrapEditor extends ViewPart implements SessionListener
 	{
 		final SnmpTrap trap = new SnmpTrap();
 		trap.setEventCode(500);		// SYS_UNMATCHED_SNMP_TRAP
-		TrapConfigurationDialog dlg = new TrapConfigurationDialog(getViewSite().getShell(), trap);
-		if (dlg.open() == Window.OK)
+		
+		if (showTrapConfigurationDialog(trap))
 		{
 			new ConsoleJob(Messages.get().SnmpTrapEditor_CreateJob_Title, this, Activator.PLUGIN_ID, null) {
 				@Override
@@ -440,5 +445,30 @@ public class SnmpTrapEditor extends ViewPart implements SessionListener
 				}
 			}.start();
 		}
+	}
+	
+	/**
+	 * Show SNMP trap configuration dialog
+	 * 
+	 * @param trap SNMP trap configuration object
+	 * @return true if OK was pressed
+	 */
+	private boolean showTrapConfigurationDialog(SnmpTrap trap)
+	{
+	   PreferenceManager pm = new PreferenceManager();
+	   pm.addToRoot(new PreferenceNode("general", new SnmpTrapGeneral(trap)));
+      pm.addToRoot(new PreferenceNode("parameters", new SnmpTrapParameters(trap)));
+      pm.addToRoot(new PreferenceNode("transformation", new SnmpTrapTransformation(trap)));
+	   
+	   PreferenceDialog dlg = new PreferenceDialog(getViewSite().getShell(), pm) {
+         @Override
+         protected void configureShell(Shell newShell)
+         {
+            super.configureShell(newShell);
+            newShell.setText(Messages.get().TrapConfigurationDialog_Title);
+         }
+	   };
+	   dlg.setBlockOnOpen(true);
+	   return dlg.open() == Window.OK;
 	}
 }

@@ -34,7 +34,8 @@ public class SnmpTrap
 	private String description;
 	private SnmpObjectId objectId;
 	private int eventCode;
-	private String userTag;
+	private String eventTag;
+	private String transformationScript;
 	private List<SnmpTrapParameterMapping> parameterMapping;
 	
 	/**
@@ -56,7 +57,8 @@ public class SnmpTrap
 		description = msg.getFieldAsString(NXCPCodes.VID_DESCRIPTION);
 		objectId = new SnmpObjectId(msg.getFieldAsUInt32Array(NXCPCodes.VID_TRAP_OID));
 		eventCode = msg.getFieldAsInt32(NXCPCodes.VID_EVENT_CODE);
-		userTag = msg.getFieldAsString(NXCPCodes.VID_USER_TAG);
+		eventTag = msg.getFieldAsString(NXCPCodes.VID_USER_TAG);
+		transformationScript = msg.getFieldAsString(NXCPCodes.VID_TRANSFORMATION_SCRIPT);
 		
 		int count = msg.getFieldAsInt32(NXCPCodes.VID_TRAP_NUM_MAPS);
 		parameterMapping = new ArrayList<SnmpTrapParameterMapping>(count);
@@ -91,9 +93,10 @@ public class SnmpTrap
 		msg.setFieldInt32(NXCPCodes.VID_TRAP_ID, (int)id);
 		msg.setFieldInt32(NXCPCodes.VID_EVENT_CODE, eventCode);
 		msg.setField(NXCPCodes.VID_DESCRIPTION, description);
-		msg.setField(NXCPCodes.VID_USER_TAG, userTag);
+		msg.setField(NXCPCodes.VID_USER_TAG, eventTag);
 		msg.setFieldInt32(NXCPCodes.VID_TRAP_OID_LEN, objectId.getLength());
 		objectId.setNXCPVariable(msg, NXCPCodes.VID_TRAP_OID);
+		msg.setField(NXCPCodes.VID_TRANSFORMATION_SCRIPT, transformationScript);
 		msg.setFieldInt32(NXCPCodes.VID_TRAP_NUM_MAPS, parameterMapping.size());
 		long base = NXCPCodes.VID_TRAP_PBASE;
 		for(int i = 0; i < parameterMapping.size(); i++, base += 10)
@@ -167,22 +170,46 @@ public class SnmpTrap
 	}
 
 	/**
-	 * @return the userTag
+	 * Get event tag to be added when generating NetXMS event.
+	 * 
+	 * @return event tag to be added when generating NetXMS event.
 	 */
-	public String getUserTag()
+	public String getEventTag()
 	{
-		return userTag;
+		return eventTag;
 	}
 
 	/**
-	 * @param userTag the userTag to set
+	 * Set event tag to be added when generating NetXMS event.
+	 * 
+	 * @param eventTag event tag to be added when generating NetXMS event
 	 */
-	public void setUserTag(String userTag)
+	public void setEventTag(String eventTag)
 	{
-		this.userTag = userTag;
+		this.eventTag = eventTag;
 	}
 
 	/**
+	 * Get trap transformation script.
+	 * 
+    * @return trap transformation script
+    */
+   public String getTransformationScript()
+   {
+      return transformationScript;
+   }
+
+   /**
+    * Set trap transformation script.
+    * 
+    * @param transformationScript trap transformation script
+    */
+   public void setTransformationScript(String transformationScript)
+   {
+      this.transformationScript = transformationScript;
+   }
+
+   /**
 	 * @return the parameterMapping
 	 */
 	public List<SnmpTrapParameterMapping> getParameterMapping()

@@ -85,13 +85,12 @@ void AutoBindTarget::setAutoBindMode(bool doBind, bool doUnbind)
 void AutoBindTarget::setAutoBindFilter(const TCHAR *filter)
 {
    internalLock();
-   free(m_bindFilterSource);
+   MemFree(m_bindFilterSource);
    delete m_bindFilter;
    if (filter != NULL)
    {
       TCHAR error[256];
-
-      m_bindFilterSource = _tcsdup(filter);
+      m_bindFilterSource = MemCopyString(filter);
       m_bindFilter = NXSLCompile(m_bindFilterSource, error, 256, NULL);
       if (m_bindFilter == NULL)
       {

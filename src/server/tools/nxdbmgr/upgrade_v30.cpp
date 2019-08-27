@@ -24,6 +24,16 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 30.95 to 30.96
+ */
+static bool H_UpgradeFromV95()
+{
+   CHK_EXEC(SQLQuery(_T("ALTER TABLE snmp_trap_cfg ADD transformation_script $SQL:TEXT")));
+   CHK_EXEC(SetMinorSchemaVersion(96));
+   return true;
+}
+
+/**
  * Upgrade from 30.94 to 30.95
  */
 static bool H_UpgradeFromV94()
@@ -3396,6 +3406,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 95, 30, 96, H_UpgradeFromV95 },
    { 94, 30, 95, H_UpgradeFromV94 },
    { 93, 30, 94, H_UpgradeFromV93 },
    { 92, 30, 93, H_UpgradeFromV92 },

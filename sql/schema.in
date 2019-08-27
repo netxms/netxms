@@ -1336,9 +1336,9 @@ CREATE TABLE alarm_categories
   PRIMARY KEY(id)
 ) TABLE_TYPE;
 
-/*
-** Alarm category access control list
-*/
+/**
+ * Alarm category access control list
+ */
 CREATE TABLE alarm_category_acl
 (
   category_id integer not null,
@@ -1346,9 +1346,9 @@ CREATE TABLE alarm_category_acl
   PRIMARY KEY(category_id,user_id)
 ) TABLE_TYPE;
 
-/*
-** Alarm-category map
-*/
+/**
+ * Alarm-category map
+ */
 CREATE TABLE alarm_category_map
 (
   alarm_id integer not null,
@@ -1356,10 +1356,9 @@ CREATE TABLE alarm_category_map
   PRIMARY KEY(alarm_id,category_id)
 ) TABLE_TYPE;
 
-/*
-** SNMP trap configuration
-*/
-
+/**
+ * SNMP trap configuration
+ */
 CREATE TABLE snmp_trap_cfg
 (
   guid varchar(36) not null,
@@ -1368,12 +1367,13 @@ CREATE TABLE snmp_trap_cfg
   event_code integer not null,
   user_tag varchar(63),
   description varchar(255),
+  transformation_script SQL_TEXT null,
   PRIMARY KEY(trap_id)
 ) TABLE_TYPE;
 
-/*
-** SNMP trap parameters mapping
-*/
+/**
+ * SNMP trap parameters mapping
+ */
 CREATE TABLE snmp_trap_pmap
 (
   trap_id integer not null,
@@ -1384,9 +1384,9 @@ CREATE TABLE snmp_trap_pmap
   PRIMARY KEY(trap_id,parameter)
 ) TABLE_TYPE;
 
-/*
-** Agent packages
-*/
+/**
+ * Agent packages
+ */
 CREATE TABLE agent_pkg
 (
   pkg_id integer not null,

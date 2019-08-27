@@ -349,8 +349,8 @@ static UINT32 ImportTrap(ConfigEntry *trap, bool overwrite) // TODO transactions
 
 	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 	DB_STATEMENT hStmt = (id == 0) ?
-	   DBPrepare(hdb, _T("INSERT INTO snmp_trap_cfg (snmp_oid,event_code,description,user_tag,trap_id,guid) VALUES (?,?,?,?,?,?)")) :
-	   DBPrepare(hdb, _T("UPDATE snmp_trap_cfg SET snmp_oid=?,event_code=?,description=?,user_tag=? WHERE trap_id=?"));
+	   DBPrepare(hdb, _T("INSERT INTO snmp_trap_cfg (snmp_oid,event_code,description,user_tag,transformation_script,trap_id,guid) VALUES (?,?,?,?,?,?,?)")) :
+	   DBPrepare(hdb, _T("UPDATE snmp_trap_cfg SET snmp_oid=?,event_code=?,description=?,user_tag=?,transformation_script=? WHERE trap_id=?"));
 
 	if (hStmt != NULL)
 	{
@@ -359,14 +359,15 @@ static UINT32 ImportTrap(ConfigEntry *trap, bool overwrite) // TODO transactions
 	   DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, oid, DB_BIND_STATIC);
 	   DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, trapCfg->getEventCode());
 	   DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, trapCfg->getDescription(), DB_BIND_STATIC);
-      DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, trapCfg->getUserTag(), DB_BIND_STATIC);
-      DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, trapCfg->getId());
+      DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, trapCfg->getEventTag(), DB_BIND_STATIC);
+      DBBind(hStmt, 5, DB_SQLTYPE_TEXT, trapCfg->getScriptSource(), DB_BIND_STATIC);
+      DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, trapCfg->getId());
       if (id == 0)
-         DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, trapCfg->getGuid());
+         DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, trapCfg->getGuid());
 
       if (DBBegin(hdb))
       {
-         if(DBExecute(hStmt) && trapCfg->saveParameterMapping(hdb))
+         if (DBExecute(hStmt) && trapCfg->saveParameterMapping(hdb))
          {
             AddTrapCfgToList(trapCfg);
             trapCfg->notifyOnTrapCfgChange(NX_NOTIFY_TRAPCFG_CREATED);
@@ -380,11 +381,15 @@ static UINT32 ImportTrap(ConfigEntry *trap, bool overwrite) // TODO transactions
          }
       }
       else
+      {
          rcc = RCC_DB_FAILURE;
+      }
       DBFreeStatement(hStmt);
 	}
 	else
+	{
 	   rcc = RCC_DB_FAILURE;
+	}
 
 	if (rcc != RCC_SUCCESS)
 	   delete trapCfg;
