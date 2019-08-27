@@ -41,13 +41,14 @@ int CiscoNexusDriver::isPotentialDevice(const TCHAR *oid)
 {
    static int supportedDevices[] =
    {
-      612, 719, 720, 777, 798, 820, 840, 903, 907, 913, 914, 930, 932, 1003, 1004, 1005, 1006, 1008, 1038, 1046, 1058,
-      1059, 1060, 1061, 1084, 1105, 1106, 1107, 1147, 1163, 1175, 1190, 1205, 1210, 1211, 1237, 1238, 1239, 1288, 1289,
-      1290, 1291, 1292, 1294, 1308, 1339, 1340, 1352, 1353, 1354, 1388, 1389, 1390, 1391, 1409, 1410, 1417, 1467, 1489,
-      1506, 1507, 1508, 1509, 1510, 1539, 1540, 1541, 1571, 1609, 1619, 1620, 1621, 1625, 1626, 1627, 1648, 1652, 1666,
-      1675, 1684, 1690, 1691, 1692, 1693, 1694, 1695, 1696, 1697, 1706, 1712, 1713, 1726, 1727, 1728, 1738, 1743, 1744,
-      1745, 1746, 1758, 1759, 1777, 1778, 1779, 1780, 1781, 1782, 1783, 1784, 1812, 1827, 1839, 1843, 1850, 1893, 1912,
-      1951, 1954, 1955, 2010, 2039, 2076, 2077, 2115, 2117, 2183, 2191, 2227, 2228, 2236, -1
+      612, 719, 720, 777, 798, 820, 840, 903, 907, 913, 914, 930, 932, 1003, 1004, 1005, 1006, 1008, 1038, 1046,
+      1058, 1059, 1060, 1061, 1084, 1105, 1106, 1107, 1147, 1163, 1175, 1190, 1205, 1210, 1211, 1237, 1238, 1239,
+      1288, 1289, 1290, 1291, 1292, 1294, 1308, 1339, 1340, 1352, 1353, 1354, 1388, 1389, 1390, 1391, 1409, 1410,
+      1417, 1467, 1489, 1506, 1507, 1508, 1509, 1510, 1539, 1540, 1541, 1570, 1571, 1609, 1619, 1620, 1621, 1625,
+      1626, 1627, 1648, 1652, 1666, 1675, 1684, 1690, 1691, 1692, 1693, 1694, 1695, 1696, 1697, 1706, 1712, 1713,
+      1726, 1727, 1728, 1738, 1743, 1744, 1745, 1746, 1758, 1759, 1777, 1778, 1779, 1780, 1781, 1782, 1783, 1784,
+      1812, 1824, 1827, 1839, 1843, 1850, 1893, 1912, 1921, 1951, 1954, 1955, 2010, 2039, 2076, 2077, 2115, 2117,
+      2183, 2191, 2207, 2227, 2228, 2236, 2239, 2272, -1
    };
 
    if (_tcsncmp(oid, _T(".1.3.6.1.4.1.9.12.3.1.3."), 24))
@@ -100,13 +101,13 @@ InterfaceList *CiscoNexusDriver::getInterfaces(SNMP_Transport *snmp, StringMap *
 
    const char *eptr;
    int eoffset;
-   PCRE *reBase = _pcre_compile_t(reinterpret_cast<const PCRE_TCHAR*>(_T("^Ethernet([0-9]+)/([0-9]+)$")), PCRE_COMMON_FLAGS | PCRE_CASELESS, &eptr, &eoffset, NULL);
+   PCRE *reBase = _pcre_compile_t(reinterpret_cast<const PCRE_TCHAR*>(_T("^(Ethernet|fc)([0-9]+)/([0-9]+)$")), PCRE_COMMON_FLAGS | PCRE_CASELESS, &eptr, &eoffset, NULL);
    if (reBase == NULL)
    {
       nxlog_debug_tag(DEBUG_TAG_CISCO, 5, _T("CiscoNexusDriver::getInterfaces: cannot compile base regexp: %hs at offset %d"), eptr, eoffset);
       return ifList;
    }
-   PCRE *reFex = _pcre_compile_t(reinterpret_cast<const PCRE_TCHAR*>(_T("^Ethernet([0-9]+)/([0-9]+)/([0-9]+)$")), PCRE_COMMON_FLAGS | PCRE_CASELESS, &eptr, &eoffset, NULL);
+   PCRE *reFex = _pcre_compile_t(reinterpret_cast<const PCRE_TCHAR*>(_T("^(Ethernet|fc)([0-9]+)/([0-9]+)/([0-9]+)$")), PCRE_COMMON_FLAGS | PCRE_CASELESS, &eptr, &eoffset, NULL);
    if (reFex == NULL)
    {
       nxlog_debug_tag(DEBUG_TAG_CISCO, 5, _T("CiscoNexusDriver::getInterfaces: cannot compile FEX regexp: %hs at offset %d"), eptr, eoffset);
@@ -118,19 +119,19 @@ InterfaceList *CiscoNexusDriver::getInterfaces(SNMP_Transport *snmp, StringMap *
    for(int i = 0; i < ifList->size(); i++)
    {
       InterfaceInfo *iface = ifList->get(i);
-      if (_pcre_exec_t(reBase, NULL, reinterpret_cast<PCRE_TCHAR*>(iface->name), static_cast<int>(_tcslen(iface->name)), 0, 0, pmatch, 30) == 3)
+      if (_pcre_exec_t(reBase, NULL, reinterpret_cast<PCRE_TCHAR*>(iface->name), static_cast<int>(_tcslen(iface->name)), 0, 0, pmatch, 30) == 4)
       {
          iface->isPhysicalPort = true;
          iface->location.chassis = 1;
-         iface->location.module = IntegerFromCGroup(iface->name, pmatch, 1);
-         iface->location.port = IntegerFromCGroup(iface->name, pmatch, 2);
-      }
-      else if (_pcre_exec_t(reFex, NULL, reinterpret_cast<PCRE_TCHAR*>(iface->name), static_cast<int>(_tcslen(iface->name)), 0, 0, pmatch, 30) == 4)
-      {
-         iface->isPhysicalPort = true;
-         iface->location.chassis = IntegerFromCGroup(iface->name, pmatch, 1);
          iface->location.module = IntegerFromCGroup(iface->name, pmatch, 2);
          iface->location.port = IntegerFromCGroup(iface->name, pmatch, 3);
+      }
+      else if (_pcre_exec_t(reFex, NULL, reinterpret_cast<PCRE_TCHAR*>(iface->name), static_cast<int>(_tcslen(iface->name)), 0, 0, pmatch, 30) == 5)
+      {
+         iface->isPhysicalPort = true;
+         iface->location.chassis = IntegerFromCGroup(iface->name, pmatch, 2);
+         iface->location.module = IntegerFromCGroup(iface->name, pmatch, 3);
+         iface->location.port = IntegerFromCGroup(iface->name, pmatch, 4);
       }
    }
 
