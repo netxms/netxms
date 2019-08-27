@@ -489,17 +489,18 @@ bool InfluxDBStorageDriver::saveDCItemValue(DCItem *dci, time_t timestamp, const
    delete ca;
 
    // Get RelatedObject (Interface) CA's
-   std::string m_relatedObject_type = "none";
+   const char *relatedObject_type = "none";
 
    NetObj *relatedObject_iface = FindObjectById(dci->getRelatedObject(), OBJECT_INTERFACE);
    if (relatedObject_iface != NULL)
    {
-      m_relatedObject_type = getString(relatedObject_iface->getObjectClassName());
+      relatedObject_type = relatedObject_iface->getObjectClassNameA();
       StringMap *ca = relatedObject_iface->getCustomAttributes();
       if (ca != NULL)
       {
          StringList *ca_key = ca->keys();
-         nxlog_debug_tag(DEBUG_TAG, 7, _T("Host: %hs - RelatedObject: %s [%u] - RelatedObjectType: %s - CMA: #%d"), host.c_str(), relatedObject_iface->getName(), relatedObject_iface->getId(), relatedObject_iface->getObjectClassName(), ca->size());
+         nxlog_debug_tag(DEBUG_TAG, 7, _T("Host: %hs - RelatedObject: %s [%u] - RelatedObjectType: %s - CMA: #%d"),
+                  host.c_str(), relatedObject_iface->getName(), relatedObject_iface->getId(), relatedObject_iface->getObjectClassName(), ca->size());
 
          for (int i = 0; i < ca_key->size(); i++)
          {
@@ -565,12 +566,12 @@ bool InfluxDBStorageDriver::saveDCItemValue(DCItem *dci, time_t timestamp, const
    if (m_tags.empty())
    {
       data = name + ",host=" + host + ",instance=" + instance + ",datasource=" + ds + ",dataclass=" + dc + ",datatype="
-               + dt + ",deltatype=" + dct + ",relatedobjecttype=" + m_relatedObject_type + " value=" + fvalue + " " + ts;
+               + dt + ",deltatype=" + dct + ",relatedobjecttype=" + relatedObject_type + " value=" + fvalue + " " + ts;
    }
    else
    {
       data = name + ",host=" + host + ",instance=" + instance + ",datasource=" + ds + ",dataclass=" + dc + ",datatype="
-               + dt + ",deltatype=" + dct + ",relatedobjecttype=" + m_relatedObject_type + "," + m_tags + " value=" + fvalue + " " + ts;
+               + dt + ",deltatype=" + dct + ",relatedobjecttype=" + relatedObject_type + "," + m_tags + " value=" + fvalue + " " + ts;
    }
 
    nxlog_debug_tag(DEBUG_TAG, 7, _T("Processing metric: %hs"), data.c_str());

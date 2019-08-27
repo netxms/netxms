@@ -829,7 +829,14 @@ public:
    virtual ~NetObj();
 
    virtual int getObjectClass() const { return OBJECT_GENERIC; }
-   virtual const TCHAR *getObjectClassName() const;
+   virtual const WCHAR *getObjectClassNameW() const;
+   virtual const char *getObjectClassNameA() const;
+#ifdef UNICODE
+   const WCHAR *getObjectClassName() const { return getObjectClassNameW(); }
+#else
+   const char *getObjectClassName() const { return getObjectClassNameA(); }
+#endif
+
    virtual InetAddress getPrimaryIpAddress() const { return InetAddress::INVALID; }
 
    UINT32 getId() const { return m_id; }
@@ -964,16 +971,23 @@ public:
 
    void sendPollerMsg(UINT32 dwRqId, const TCHAR *pszFormat, ...);
 
+   String expandText(const TCHAR *textTemplate, const Alarm *alarm, const Event *event, const TCHAR *userName, const StringMap *inputFields);
+
+   IntegerArray<UINT32> *getAllResponsibleUsers();
+
    virtual json_t *toJson();
 
    // Debug methods
    const TCHAR *dbgGetParentList(TCHAR *szBuffer);
    const TCHAR *dbgGetChildList(TCHAR *szBuffer);
 
-   static const TCHAR *getObjectClassName(int objectClass);
-   String expandText(const TCHAR *textTemplate, const Alarm *alarm, const Event *event, const TCHAR *userName, const StringMap *inputFields);
-
-   IntegerArray<UINT32> *getAllResponsibleUsers();
+   static const WCHAR *getObjectClassNameW(int objectClass);
+   static const char *getObjectClassNameA(int objectClass);
+#ifdef UNICODE
+   static const WCHAR *getObjectClassName(int objectClass) { return getObjectClassNameW(objectClass); }
+#else
+   static const char *getObjectClassName(int objectClass) { return getObjectClassNameA(objectClass); }
+#endif
 };
 
 /**

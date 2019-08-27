@@ -26,20 +26,35 @@
 /**
  * Class names
  */
-static const TCHAR *s_className[]=
+static const WCHAR *s_classNameW[]=
    {
-      _T("Generic"), _T("Subnet"), _T("Node"), _T("Interface"),
-      _T("Network"), _T("Container"), _T("Zone"), _T("ServiceRoot"),
-      _T("Template"), _T("TemplateGroup"), _T("TemplateRoot"),
-      _T("NetworkService"), _T("VPNConnector"), _T("Condition"),
-      _T("Cluster"), _T("PolicyGroup"), _T("PolicyRoot"),
-      _T("AgentPolicy"), _T("AgentPolicyConfig"), _T("NetworkMapRoot"),
-      _T("NetworkMapGroup"), _T("NetworkMap"), _T("DashboardRoot"),
-      _T("Dashboard"), _T("ReportRoot"), _T("ReportGroup"), _T("Report"),
-      _T("BusinessServiceRoot"), _T("BusinessService"), _T("NodeLink"),
-      _T("ServiceCheck"), _T("MobileDevice"), _T("Rack"), _T("AccessPoint"),
-      _T("AgentPolicyLogParser"), _T("Chassis"), _T("DashboardGroup"),
-      _T("Sensor")
+      L"Generic", L"Subnet", L"Node", L"Interface",
+      L"Network", L"Container", L"Zone", L"ServiceRoot",
+      L"Template", L"TemplateGroup", L"TemplateRoot",
+      L"NetworkService", L"VPNConnector", L"Condition",
+      L"Cluster", L"PolicyGroup", L"PolicyRoot",
+      L"AgentPolicy", L"AgentPolicyConfig", L"NetworkMapRoot",
+      L"NetworkMapGroup", L"NetworkMap", L"DashboardRoot",
+      L"Dashboard", L"ReportRoot", L"ReportGroup", L"Report",
+      L"BusinessServiceRoot", L"BusinessService", L"NodeLink",
+      L"ServiceCheck", L"MobileDevice", L"Rack", L"AccessPoint",
+      L"AgentPolicyLogParser", L"Chassis", L"DashboardGroup",
+      L"Sensor"
+   };
+static const char *s_classNameA[]=
+   {
+      "Generic", "Subnet", "Node", "Interface",
+      "Network", "Container", "Zone", "ServiceRoot",
+      "Template", "TemplateGroup", "TemplateRoot",
+      "NetworkService", "VPNConnector", "Condition",
+      "Cluster", "PolicyGroup", "PolicyRoot",
+      "AgentPolicy", "AgentPolicyConfig", "NetworkMapRoot",
+      "NetworkMapGroup", "NetworkMap", "DashboardRoot",
+      "Dashboard", "ReportRoot", "ReportGroup", "Report",
+      "BusinessServiceRoot", "BusinessService", "NodeLink",
+      "ServiceCheck", "MobileDevice", "Rack", "AccessPoint",
+      "AgentPolicyLogParser", "Chassis", "DashboardGroup",
+      "Sensor"
    };
 
 /**
@@ -122,17 +137,33 @@ NetObj::~NetObj()
 /**
  * Get class name for this object
  */
-const TCHAR *NetObj::getObjectClassName() const
+const WCHAR *NetObj::getObjectClassNameW() const
 {
-   return getObjectClassName(getObjectClass());
+   return getObjectClassNameW(getObjectClass());
+}
+
+/**
+ * Get class name for this object
+ */
+const char *NetObj::getObjectClassNameA() const
+{
+   return getObjectClassNameA(getObjectClass());
 }
 
 /**
  * Get class name for given class ID
  */
-const TCHAR *NetObj::getObjectClassName(int objectClass)
+const WCHAR *NetObj::getObjectClassNameW(int objectClass)
 {
-   return ((objectClass >= 0) && (objectClass < static_cast<int>(sizeof(s_className) / sizeof(const TCHAR *)))) ? s_className[objectClass] : _T("Custom");
+   return ((objectClass >= 0) && (objectClass < static_cast<int>(sizeof(s_classNameW) / sizeof(const WCHAR *)))) ? s_classNameW[objectClass] : L"Custom";
+}
+
+/**
+ * Get class name for given class ID
+ */
+const char *NetObj::getObjectClassNameA(int objectClass)
+{
+   return ((objectClass >= 0) && (objectClass < static_cast<int>(sizeof(s_classNameA) / sizeof(const char *)))) ? s_classNameA[objectClass] : "Custom";
 }
 
 /**
