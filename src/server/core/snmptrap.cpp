@@ -412,16 +412,12 @@ void InitTraps()
 /**
  * Generate event for matched trap
  */
-static void GenerateTrapEvent(UINT32 dwObjectId, UINT32 dwIndex, SNMP_PDU *pdu, int sourcePort)
+static void GenerateTrapEvent(Node *node, UINT32 dwIndex, SNMP_PDU *pdu, int sourcePort)
 {
    SNMPTrapConfiguration *trapCfg = m_trapCfgList.get(dwIndex);
 
-   TCHAR *argList[32];
-   memset(argList, 0, sizeof(argList));
-
-   TCHAR *names[33];
-   memset(names, 0, sizeof(names));
-   names[0] = (TCHAR *)_T("oid");
+   StringMap parameters;
+   parameters.set(_T("oid"), pdu->getTrapId()->toString());
 
 	// Extract varbinds from trap and add them as event's parameters
    int numMaps = trapCfg->getParameterMappingCount();
@@ -439,12 +435,12 @@ static void GenerateTrapEvent(UINT32 dwObjectId, UINT32 dwIndex, SNMP_PDU *pdu, 
          if (varbind != NULL)
          {
 				bool convertToHex = true;
-            TCHAR buffer[3072];
-				argList[i] = MemCopyString(
+            TCHAR name[64], buffer[3072];
+            _sntprintf(name, 64, _T("%d"), pm->getPosition());
+				parameters.set(name,
                (s_allowVarbindConversion && !(pm->getFlags() & TRAP_VARBIND_FORCE_TEXT)) ?
                   varbind->getValueAsPrintableString(buffer, 3072, &convertToHex) :
                   varbind->getValueAsString(buffer, 3072));
-				names[i + 1] = MemCopyString(varbind->getName().toString());
          }
       }
       else
@@ -458,41 +454,37 @@ static void GenerateTrapEvent(UINT32 dwObjectId, UINT32 dwIndex, SNMP_PDU *pdu, 
             {
 					bool convertToHex = true;
 					TCHAR buffer[3072];
-					argList[i] = MemCopyString(
+					parameters.set(varbind->getName().toString(),
                   (s_allowVarbindConversion && !(pm->getFlags() & TRAP_VARBIND_FORCE_TEXT)) ?
                      varbind->getValueAsPrintableString(buffer, 3072, &convertToHex) :
                      varbind->getValueAsString(buffer, 3072));
-	            names[i + 1] = MemCopyString(varbind->getName().toString());
                break;
             }
          }
       }
    }
 
-   argList[numMaps] = MemAllocString(16);
-   _sntprintf(argList[numMaps], 16, _T("%d"), sourcePort);
-   names[numMaps + 1] = const_cast<TCHAR*>(_T("sourcePort"));
-   char format[] = "sssssssssssssssssssssssssssssssss";
-   format[numMaps + 2] = 0;
-   PostEventWithTagAndNames(
-            trapCfg->getEventCode(), dwObjectId,
-            trapCfg->getEventTag(), format, (const TCHAR **)names,
-            (const TCHAR *)pdu->getTrapId()->toString(),
-            argList[0], argList[1], argList[2], argList[3],
-            argList[4], argList[5], argList[6], argList[7],
-            argList[8], argList[9], argList[10], argList[11],
-            argList[12], argList[13], argList[14], argList[15],
-            argList[16], argList[17], argList[18], argList[19],
-            argList[20], argList[21], argList[22], argList[23],
-            argList[24], argList[25], argList[26], argList[27],
-            argList[28], argList[29], argList[30], argList[31]);
+   parameters.set(_T("sourcePort"), sourcePort);
 
-   for(int i = 0; i < numMaps; i++)
+   NXSL_VM *vm;
+   if (trapCfg->getScript() != NULL)
    {
-      MemFree(argList[i]);
-      MemFree(names[i + 1]);
+      vm = CreateServerScriptVM(trapCfg->getScript(), node);
+      if (vm != NULL)
+      {
+         vm->setGlobalVariable("$trap", vm->createValue()); // TODO: actual trap class
+      }
+      else
+      {
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("GenerateTrapEvent: cannot load transformation script for trap mapping [%u]"), trapCfg->getId());
+      }
    }
-   MemFree(argList[numMaps]);
+   else
+   {
+      vm = NULL;
+   }
+   TransformAndPostEvent(trapCfg->getEventCode(), node->getId(), trapCfg->getEventTag(), &parameters, vm);
+   delete vm;
 }
 
 /**
@@ -659,7 +651,7 @@ void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, UINT32 zoneUIN, int 
 
          if (matchLen > 0)
          {
-            GenerateTrapEvent(node->getId(), matchIndex, pdu, srcPort);
+            GenerateTrapEvent(node, matchIndex, pdu, srcPort);
          }
          else     // Process unmatched traps
          {

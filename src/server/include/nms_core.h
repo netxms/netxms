@@ -994,6 +994,7 @@ public:
    const TCHAR *getEventTag() const { return m_eventTag; }
    const TCHAR *getDescription() const { return m_description; }
    const TCHAR *getScriptSource() const { return m_scriptSource; }
+   const NXSL_Program *getScript() const { return m_script; }
 };
 
 /**

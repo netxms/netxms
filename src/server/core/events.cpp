@@ -819,9 +819,11 @@ void ReloadEvents()
  *        i - Object ID
  * @param names names for parameters (NULL if parameters are unnamed)
  * @param args event parameters
+ * @param vm NXSL VM for transformation script
  */
 static bool RealPostEvent(ObjectQueue<Event> *queue, UINT64 *eventId, UINT32 eventCode, UINT32 sourceId, UINT32 dciId,
-                          const TCHAR *eventTag, StringMap *namedArgs, const char *format, const TCHAR **names, va_list args)
+                          const TCHAR *eventTag, StringMap *namedArgs, const char *format, const TCHAR **names, va_list args,
+                          NXSL_VM *vm)
 {
    RWLockReadLock(s_eventTemplatesLock, INFINITE);
    EventTemplate *eventTemplate = s_eventTemplates.get(eventCode);
@@ -836,6 +838,17 @@ static bool RealPostEvent(ObjectQueue<Event> *queue, UINT64 *eventId, UINT32 eve
                new Event(eventTemplate, sourceId, dciId, eventTag, format, names, args);
       if (eventId != NULL)
          *eventId = evt->getId();
+
+      // Using transformation within PostEvent may cause deadlock if called from within locked object or DCI
+      // Caller of PostEvent should make sure that it does not held object, object index, or DCI locks
+      if (vm != NULL)
+      {
+         vm->setGlobalVariable("$event", vm->createValue(new NXSL_Object(vm, &g_nxslEventClass, evt)));
+         if (!vm->run())
+         {
+            nxlog_debug(6, _T("RealPostEvent: Script execution error (%s)"), vm->getErrorText());
+         }
+      }
 
       // Add new event to queue
       queue->put(evt);
@@ -876,7 +889,7 @@ bool NXCORE_EXPORTABLE PostEvent(UINT32 eventCode, UINT32 sourceId, const char *
 {
    va_list args;
    va_start(args, format);
-   bool success = RealPostEvent(&g_eventQueue, NULL, eventCode, sourceId, 0, NULL, NULL, format, NULL, args);
+   bool success = RealPostEvent(&g_eventQueue, NULL, eventCode, sourceId, 0, NULL, NULL, format, NULL, args, NULL);
    va_end(args);
    return success;
 }
@@ -907,7 +920,7 @@ bool NXCORE_EXPORTABLE PostDciEvent(UINT32 eventCode, UINT32 sourceId, UINT32 dc
 {
    va_list args;
    va_start(args, format);
-   bool success = RealPostEvent(&g_eventQueue, NULL, eventCode, sourceId, dciId, NULL, NULL, format, NULL, args);
+   bool success = RealPostEvent(&g_eventQueue, NULL, eventCode, sourceId, dciId, NULL, NULL, format, NULL, args, NULL);
    va_end(args);
    return success;
 }
@@ -938,7 +951,7 @@ UINT64 NXCORE_EXPORTABLE PostEvent2(UINT32 eventCode, UINT32 sourceId, const cha
    va_list args;
    UINT64 eventId;
    va_start(args, format);
-   bool success = RealPostEvent(&g_eventQueue, &eventId, eventCode, sourceId, 0, NULL, NULL, format, NULL, args);
+   bool success = RealPostEvent(&g_eventQueue, &eventId, eventCode, sourceId, 0, NULL, NULL, format, NULL, args, NULL);
    va_end(args);
    return success ? eventId : 0;
 }
@@ -968,7 +981,7 @@ bool NXCORE_EXPORTABLE PostEventWithNames(UINT32 eventCode, UINT32 sourceId, con
 {
    va_list args;
    va_start(args, names);
-   bool success = RealPostEvent(&g_eventQueue, NULL, eventCode, sourceId, 0, NULL, NULL, format, names, args);
+   bool success = RealPostEvent(&g_eventQueue, NULL, eventCode, sourceId, 0, NULL, NULL, format, names, args, NULL);
    va_end(args);
    return success;
 }
@@ -999,7 +1012,7 @@ bool NXCORE_EXPORTABLE PostDciEventWithNames(UINT32 eventCode, UINT32 sourceId, 
 {
    va_list args;
    va_start(args, names);
-   bool success = RealPostEvent(&g_eventQueue, NULL, eventCode, sourceId, dciId, NULL, NULL, format, names, args);
+   bool success = RealPostEvent(&g_eventQueue, NULL, eventCode, sourceId, dciId, NULL, NULL, format, names, args, NULL);
    va_end(args);
    return success;
 }
@@ -1029,7 +1042,7 @@ bool NXCORE_EXPORTABLE PostEventWithTagAndNames(UINT32 eventCode, UINT32 sourceI
 {
    va_list args;
    va_start(args, names);
-   bool success = RealPostEvent(&g_eventQueue, NULL, eventCode, sourceId, 0, userTag, NULL, format, names, args);
+   bool success = RealPostEvent(&g_eventQueue, NULL, eventCode, sourceId, 0, userTag, NULL, format, names, args, NULL);
    va_end(args);
    return success;
 }
@@ -1044,7 +1057,7 @@ bool NXCORE_EXPORTABLE PostEventWithTagAndNames(UINT32 eventCode, UINT32 sourceI
  */
 bool NXCORE_EXPORTABLE PostEventWithTagAndNames(UINT32 eventCode, UINT32 sourceId, const TCHAR *tag, StringMap *parameters)
 {
-   return RealPostEvent(&g_eventQueue, NULL, eventCode, sourceId, 0, tag, parameters, NULL, NULL, NULL);
+   return RealPostEvent(&g_eventQueue, NULL, eventCode, sourceId, 0, tag, parameters, NULL, NULL, NULL, NULL);
 }
 
 /**
@@ -1056,7 +1069,7 @@ bool NXCORE_EXPORTABLE PostEventWithTagAndNames(UINT32 eventCode, UINT32 sourceI
  */
 bool NXCORE_EXPORTABLE PostEventWithNames(UINT32 eventCode, UINT32 sourceId, StringMap *parameters)
 {
-   return RealPostEvent(&g_eventQueue, NULL, eventCode, sourceId, 0, NULL, parameters, NULL, NULL, NULL);
+   return RealPostEvent(&g_eventQueue, NULL, eventCode, sourceId, 0, NULL, parameters, NULL, NULL, NULL, NULL);
 }
 
 /**
@@ -1069,7 +1082,7 @@ bool NXCORE_EXPORTABLE PostEventWithNames(UINT32 eventCode, UINT32 sourceId, Str
  */
 bool NXCORE_EXPORTABLE PostDciEventWithNames(UINT32 eventCode, UINT32 sourceId, UINT32 dciId, StringMap *parameters)
 {
-   return RealPostEvent(&g_eventQueue, NULL, eventCode, sourceId, dciId, NULL, parameters, NULL, NULL, NULL);
+   return RealPostEvent(&g_eventQueue, NULL, eventCode, sourceId, dciId, NULL, parameters, NULL, NULL, NULL, NULL);
 }
 
 /**
@@ -1099,7 +1112,7 @@ bool NXCORE_EXPORTABLE PostEventWithTag(UINT32 eventCode, UINT32 sourceId, const
 {
    va_list args;
    va_start(args, format);
-   bool success = RealPostEvent(&g_eventQueue, NULL, eventCode, sourceId, 0, userTag, NULL, format, NULL, args);
+   bool success = RealPostEvent(&g_eventQueue, NULL, eventCode, sourceId, 0, userTag, NULL, format, NULL, args, NULL);
    va_end(args);
    return success;
 }
@@ -1129,9 +1142,22 @@ bool NXCORE_EXPORTABLE PostEventEx(ObjectQueue<Event> *queue, UINT32 eventCode, 
 {
    va_list args;
    va_start(args, format);
-   bool success = RealPostEvent(queue, NULL, eventCode, sourceId, 0, NULL, NULL, format, NULL, args);
+   bool success = RealPostEvent(queue, NULL, eventCode, sourceId, 0, NULL, NULL, format, NULL, args, NULL);
    va_end(args);
    return success;
+}
+
+/**
+ * Create event, run transformation script, and post to system event queue.
+ *
+ * @param eventCode Event code
+ * @param sourceId Event source object ID
+ * @param tag Event tag
+ * @param parameters Named event parameters
+ */
+bool NXCORE_EXPORTABLE TransformAndPostEvent(UINT32 eventCode, UINT32 sourceId, const TCHAR *tag, StringMap *parameters, NXSL_VM *vm)
+{
+   return RealPostEvent(&g_eventQueue, NULL, eventCode, sourceId, 0, tag, parameters, NULL, NULL, NULL, vm);
 }
 
 /**
