@@ -165,6 +165,7 @@ public:
    NXSL_EventClass();
 
    virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr) override;
+   virtual bool setAttr(NXSL_Object *object, const char *attr, NXSL_Value *value) override;
 };
 
 /**

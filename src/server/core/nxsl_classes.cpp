@@ -1630,6 +1630,26 @@ NXSL_METHOD_DEFINITION(Event, setSeverity)
 }
 
 /**
+ * Event::addParameter() method
+ */
+NXSL_METHOD_DEFINITION(Event, addParameter)
+{
+   if ((argc < 1) || (argc > 2))
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
+   if (!argv[0]->isString() || ((argc == 2) && !argv[1]->isString()))
+      return NXSL_ERR_NOT_STRING;
+
+   Event *event = static_cast<Event*>(object->getData());
+   if (argc == 1)
+      event->addParameter(_T(""), argv[0]->getValueAsCString());
+   else
+      event->addParameter(argv[0]->getValueAsCString(), argv[1]->getValueAsCString());
+   *result = vm->createValue();
+   return 0;
+}
+
+/**
  * Event::addTag() method
  */
 NXSL_METHOD_DEFINITION(Event, addTag)
@@ -1691,6 +1711,7 @@ NXSL_EventClass::NXSL_EventClass() : NXSL_Class()
 {
    setName(_T("Event"));
 
+   NXSL_REGISTER_METHOD(Event, addParameter, -1);
    NXSL_REGISTER_METHOD(Event, addTag, 1);
    NXSL_REGISTER_METHOD(Event, hasTag, 1);
    NXSL_REGISTER_METHOD(Event, removeTag, 1);
@@ -1804,6 +1825,68 @@ NXSL_Value *NXSL_EventClass::getAttr(NXSL_Object *pObject, const char *attr)
       }
    }
    return value;
+}
+
+/**
+ * NXSL class Event: set attribute
+ */
+bool NXSL_EventClass::setAttr(NXSL_Object *object, const char *attr, NXSL_Value *value)
+{
+   Event *event = static_cast<Event*>(object->getData());
+   if (!strcmp(attr, "customMessage"))
+   {
+      if (value->isString())
+      {
+         event->setCustomMessage(value->getValueAsCString());
+      }
+      else
+      {
+         event->setCustomMessage(NULL);
+      }
+   }
+   else if (!strcmp(attr, "message"))
+   {
+      if (value->isString())
+      {
+         event->setMessage(value->getValueAsCString());
+      }
+   }
+   else if (!strcmp(attr, "severity"))
+   {
+      int s = value->getValueAsInt32();
+      if ((s >= SEVERITY_NORMAL) && (s <= SEVERITY_CRITICAL))
+      {
+         event->setSeverity(s);
+      }
+   }
+   else
+   {
+      bool success = false;
+      if (attr[0] == _T('$'))
+      {
+         // Try to find parameter with given index
+         char *eptr;
+         int index = strtol(&attr[1], &eptr, 10);
+         if ((index > 0) && (*eptr == 0))
+         {
+            const TCHAR *name = event->getParameterName(index - 1);
+            event->setParameter(index - 1, CHECK_NULL_EX(name), value->getValueAsCString());
+            success = true;
+         }
+      }
+      if (!success)
+      {
+#ifdef UNICODE
+         WCHAR wattr[MAX_IDENTIFIER_LENGTH];
+         MultiByteToWideChar(CP_UTF8, 0, attr, -1, wattr, MAX_IDENTIFIER_LENGTH);
+         wattr[MAX_IDENTIFIER_LENGTH - 1] = 0;
+         event->setNamedParameter(wattr, value->getValueAsCString());
+#else
+         event->setNamedParameter(attr, value->getValueAsCString());
+#endif
+      }
+   }
+   return true;
 }
 
 /**

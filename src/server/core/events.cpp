@@ -543,11 +543,13 @@ void Event::addParameter(const TCHAR *name, const TCHAR *value)
  */
 void Event::setNamedParameter(const TCHAR *name, const TCHAR *value)
 {
+   if ((name == NULL) || (name[0] == 0))
+      return;
+
 	int index = m_parameterNames.indexOfIgnoreCase(name);
 	if (index != -1)
 	{
 		m_parameters.replace(index, MemCopyString(value));
-		m_parameterNames.replace(index, name);
 	}
 	else
 	{

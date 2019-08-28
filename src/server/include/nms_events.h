@@ -137,14 +137,26 @@ public:
    void removeTag(const TCHAR *tag) { m_tags.remove(tag); }
 
    int getParametersCount() const { return m_parameters.size(); }
-   const TCHAR *getParameter(int index) const { return static_cast<TCHAR*>(m_parameters.get(index)); }
+   const TCHAR *getParameter(int index, const TCHAR *defaultValue = NULL) const
+   {
+      const TCHAR *v = static_cast<TCHAR*>(m_parameters.get(index));
+      return (v != NULL) ? v : defaultValue;
+   }
    const TCHAR *getParameterName(int index) const { return m_parameterNames.get(index); }
-   UINT32 getParameterAsULong(int index) const { const TCHAR *v = static_cast<TCHAR*>(m_parameters.get(index)); return (v != NULL) ? _tcstoul(v, NULL, 0) : 0; }
-   UINT64 getParameterAsUInt64(int index) const { const TCHAR *v = static_cast<TCHAR*>(m_parameters.get(index)); return (v != NULL) ? _tcstoull(v, NULL, 0) : 0; }
+   UINT32 getParameterAsULong(int index, UINT32 defaultValue = 0) const
+   {
+      const TCHAR *v = static_cast<TCHAR*>(m_parameters.get(index));
+      return (v != NULL) ? _tcstoul(v, NULL, 0) : defaultValue;
+   }
+   UINT64 getParameterAsUInt64(int index, UINT64 defaultValue = 0) const
+   {
+      const TCHAR *v = static_cast<TCHAR*>(m_parameters.get(index));
+      return (v != NULL) ? _tcstoull(v, NULL, 0) : defaultValue;
+   }
 
-	const TCHAR *getNamedParameter(const TCHAR *name) const { return getParameter(m_parameterNames.indexOfIgnoreCase(name)); }
-   UINT32 getNamedParameterAsULong(const TCHAR *name) const { return getParameterAsULong(m_parameterNames.indexOfIgnoreCase(name)); }
-   UINT64 getNamedParameterAsUInt64(const TCHAR *name) const { return getParameterAsUInt64(m_parameterNames.indexOfIgnoreCase(name)); }
+	const TCHAR *getNamedParameter(const TCHAR *name, const TCHAR *defaultValue = NULL) const { return getParameter(m_parameterNames.indexOfIgnoreCase(name), defaultValue); }
+   UINT32 getNamedParameterAsULong(const TCHAR *name, UINT32 defaultValue = 0) const { return getParameterAsULong(m_parameterNames.indexOfIgnoreCase(name), defaultValue); }
+   UINT64 getNamedParameterAsUInt64(const TCHAR *name, UINT64 defaultValue = 0) const { return getParameterAsUInt64(m_parameterNames.indexOfIgnoreCase(name), defaultValue); }
 
 	void addParameter(const TCHAR *name, const TCHAR *value);
 	void setNamedParameter(const TCHAR *name, const TCHAR *value);

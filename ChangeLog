@@ -25,6 +25,8 @@
 - Optional JSON format for log files
 - Option to use stdout as log output device
 - Switched to pcre (from libtre) as regular expression matching engine
+- Event parameters exposed as writable "Event" class attributes in NXSL
+- New method "addParameter" in NXSL class "Event"
 - Fixed issues:
 	NX-183 (Implemented responsible users for objects)
 	NX-725 (Add alarm comments from NXSL)
@@ -34,6 +36,7 @@
 	NX-1219 (Add 'created' and 'last login' columns to User Manager)
 	NX-1271 (Implement internal server topology map)
 	NX-1386 (Implement units for server variables)
+	NX-1426 (Transformation scripts for SNMP traps)
 	NX-1479 (DCI poll spread after NetXMS server/service restart)
 	NX-1562 (Add "tunnel only" option to node's agent communication configuration)
 	NX-1601 (Log Policy editor can't parse xml with unknown event code)

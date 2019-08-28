@@ -287,7 +287,7 @@ void CorrelateEvent(Event *pEvent)
          m_networkLostEventId = pEvent->getId();
          break;
       case EVENT_ROUTING_LOOP_DETECTED:
-         node->setRoutingLoopEvent(InetAddress::parse(pEvent->getNamedParameter(_T("destAddress"))), pEvent->getNamedParameterAsULong(_T("destNodeId")), pEvent->getId());
+         node->setRoutingLoopEvent(InetAddress::parse(pEvent->getNamedParameter(_T("destAddress"), _T(""))), pEvent->getNamedParameterAsULong(_T("destNodeId")), pEvent->getId());
          break;
       default:
          break;

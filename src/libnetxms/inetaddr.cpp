@@ -497,6 +497,9 @@ InetAddress InetAddress::resolveHostName(const char *hostname, int af)
  */
 InetAddress InetAddress::parse(const WCHAR *str)
 {
+   if ((str == NULL) || (*str == 0))
+      return InetAddress();
+
    char mb[256];
    WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, str, -1, mb, 256, NULL, NULL);
    return parse(mb);
@@ -507,6 +510,9 @@ InetAddress InetAddress::parse(const WCHAR *str)
  */
 InetAddress InetAddress::parse(const char *str)
 {
+   if ((str == NULL) || (*str == 0))
+      return InetAddress();
+
    // Check for IPv4 address
 #ifdef _WIN32
    char strCopy[256];

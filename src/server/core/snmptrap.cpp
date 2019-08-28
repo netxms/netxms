@@ -100,6 +100,8 @@ SNMPTrapConfiguration::SNMPTrapConfiguration(DB_RESULT trapResult, DB_HANDLE hdb
       }
       DBFreeResult(mapResult);
    }
+
+   compileScript();
 }
 
 /**
@@ -136,6 +138,8 @@ SNMPTrapConfiguration::SNMPTrapConfiguration(ConfigEntry *entry, const uuid& gui
       }
       delete parameters;
    }
+
+   compileScript();
 }
 
 /**
@@ -161,6 +165,8 @@ SNMPTrapConfiguration::SNMPTrapConfiguration(NXCPMessage *msg) : m_mappings(8, 8
    {
       m_mappings.add(new SNMPTrapParameterMapping(msg, base));
    }
+
+   compileScript();
 }
 
 /**
@@ -189,7 +195,7 @@ void SNMPTrapConfiguration::compileScript()
          TCHAR buffer[1024];
          _sntprintf(buffer, 1024, _T("SNMPTrap::%d"), m_id);
          PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, errorMessage, m_id);
-         nxlog_write(NXLOG_WARNING, _T("Failed to compile SNMP trap transformation script for trap mapping [%u] (%s)"), m_id, errorMessage);
+         nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Failed to compile SNMP trap transformation script for trap mapping [%u] (%s)"), m_id, errorMessage);
       }
    }
    else
@@ -472,7 +478,13 @@ static void GenerateTrapEvent(Node *node, UINT32 dwIndex, SNMP_PDU *pdu, int sou
       vm = CreateServerScriptVM(trapCfg->getScript(), node);
       if (vm != NULL)
       {
-         vm->setGlobalVariable("$trap", vm->createValue()); // TODO: actual trap class
+         vm->setGlobalVariable("$trap", vm->createValue(pdu->getTrapId()->toString()));
+         NXSL_Array *varbinds = new NXSL_Array(vm);
+         for(int i = (pdu->getVersion() == SNMP_VERSION_1) ? 0 : 2; i < pdu->getNumVariables(); i++)
+         {
+            varbinds->append(vm->createValue(new NXSL_Object(vm, &g_nxslSnmpVarBindClass, new SNMP_Variable(pdu->getVariable(i)))));
+         }
+         vm->setGlobalVariable("$varbinds", vm->createValue(varbinds));
       }
       else
       {
