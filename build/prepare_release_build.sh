@@ -3,7 +3,7 @@
 # Must be run from root of source tree
 
 ### Configuration
-POM_FILES="src/java-common/netxms-base/pom.xml src/libnxjava/java/pom.xml src/client/java/netxms-client/pom.xml src/client/nxapisrv/java/pom.xml src/client/nxshell/java/pom.xml src/client/nxtcpproxy/pom.xml src/agent/subagents/bind9/pom.xml src/agent/subagents/java/java/pom.xml src/agent/subagents/jmx/pom.xml src/agent/subagents/ubntlw/pom.xml src/java/netxms-jira-connector/pom.xml"
+POM_FILES="src/java-common/netxms-base/pom.xml src/libnxjava/java/pom.xml src/client/java/netxms-client/pom.xml src/client/nxapisrv/java/pom.xml src/client/nxshell/java/pom.xml src/client/nxtcpproxy/pom.xml src/agent/subagents/bind9/pom.xml src/agent/subagents/java/java/pom.xml src/agent/subagents/jmx/pom.xml src/agent/subagents/ubntlw/pom.xml"
 
 ### Code
 cd build
@@ -16,6 +16,7 @@ VERSION=`cat build/netxms-build-tag.properties | grep NETXMS_VERSION | cut -d = 
 for pom in $POM_FILES; do
 	mvn -f $pom versions:set -DnewVersion=$VERSION
 done
+atlas-mvn -f src/java/netxms-jira-connector/pom.xml versions:set -DnewVersion=$VERSION
 
 ./tools/update_plugin_versions.py . $VERSION
 
