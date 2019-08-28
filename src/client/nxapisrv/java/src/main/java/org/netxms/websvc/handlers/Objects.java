@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.regex.Pattern;
 import org.netxms.base.Glob;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.RCC;
@@ -58,6 +59,8 @@ public class Objects extends AbstractObjectHandler
       
       boolean topLevelOnly = (query.get("topLevelOnly") != null) ? Boolean.parseBoolean(query.get("topLevelOnly")) : false;
       List<AbstractObject> objects = topLevelOnly ? Arrays.asList(session.getTopLevelObjects()) : session.getAllObjects();
+
+      boolean useRegex = (query.get("regex") != null) ? Boolean.parseBoolean(query.get("regex")) : false;
       
       String areaFilter = query.get("area");
       String classFilter = query.get("class");
@@ -65,15 +68,22 @@ public class Objects extends AbstractObjectHandler
       String parentFilter = query.get("parent");
       String zoneFilter = query.get("zone");
       
-      Map<String, String> customAttributes = null;
+      Pattern nameFilterRegex = null;
+      if ((nameFilter != null) && !nameFilter.isEmpty())
+         nameFilterRegex = Pattern.compile(nameFilter, Pattern.CASE_INSENSITIVE);
+
+      Map<String, Object> customAttributes = null;
       for(String k : query.keySet())
       {
          if (!k.startsWith("@"))
             continue;
          
          if (customAttributes == null)
-            customAttributes = new HashMap<String, String>();
-         customAttributes.put(k.substring(1), query.get(k));
+            customAttributes = new HashMap<String, Object>();
+         if (useRegex)
+            customAttributes.put(k.substring(1), Pattern.compile(query.get(k), Pattern.CASE_INSENSITIVE));
+         else
+            customAttributes.put(k.substring(1), query.get(k));
       }
       
       if ((areaFilter != null) || (classFilter != null) || (customAttributes != null) || (nameFilter != null) 
@@ -140,7 +150,7 @@ public class Objects extends AbstractObjectHandler
                log.warn("Invalid zone filter " + zoneFilter);
             }
          }
-         
+
          List<AbstractObject> filteredObjects = new ArrayList<AbstractObject>();
          for(AbstractObject o : objects)
          {
@@ -165,8 +175,16 @@ public class Objects extends AbstractObjectHandler
             }
             
             // Filter by name
-            if ((nameFilter != null) && !nameFilter.isEmpty() && !Glob.matchIgnoreCase(nameFilter, o.getObjectName()))
-               continue;
+            if (useRegex)
+            {
+               if ((nameFilterRegex != null) && !nameFilterRegex.matcher(o.getObjectName()).matches())
+                  continue;
+            }
+            else
+            {
+               if ((nameFilter != null) && !nameFilter.isEmpty() && !Glob.matchIgnoreCase(nameFilter, o.getObjectName()))
+                  continue;
+            }
             
             // Filter by class
             if (classes != null)
@@ -201,13 +219,28 @@ public class Objects extends AbstractObjectHandler
                if (o.getCustomAttributes().isEmpty())
                   continue;
                boolean match = true;
-               for(Entry<String, String> e : customAttributes.entrySet())
+               if (useRegex)
                {
-                  String value = o.getCustomAttributes().get(e.getKey());
-                  if ((value == null) || !Glob.matchIgnoreCase(e.getValue(), value))
+                  for(Entry<String, Object> e : customAttributes.entrySet())
                   {
-                     match = false;
-                     break;
+                     String value = o.getCustomAttributes().get(e.getKey());
+                     if ((value == null) || !((Pattern)e.getValue()).matcher(value).matches())
+                     {
+                        match = false;
+                        break;
+                     }
+                  }
+               }
+               else
+               {
+                  for(Entry<String, Object> e : customAttributes.entrySet())
+                  {
+                     String value = o.getCustomAttributes().get(e.getKey());
+                     if ((value == null) || !Glob.matchIgnoreCase((String)e.getValue(), value))
+                     {
+                        match = false;
+                        break;
+                     }
                   }
                }
                if (!match)
