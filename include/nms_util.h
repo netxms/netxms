@@ -1295,6 +1295,7 @@ private:
    StringMapBase *m_map;
    StringMapEntry *m_curr;
    StringMapEntry *m_next;
+   std::pair<const TCHAR*, const TCHAR*> m_element;
 
 public:
    StringMapIterator(StringMapBase *map);
@@ -1354,22 +1355,8 @@ public:
  */
 class NXCPMessage;
 
-
-
-class InstanceObject
-{
-private:
-   TCHAR *m_instance;
-   UINT32 m_relatedObjectId;
-public:
-   InstanceObject(const TCHAR *instance, UINT32 relatedObject) { m_instance = MemCopyString(instance); m_relatedObjectId = relatedObject; }
-   ~InstanceObject() { MemFree(m_instance); }
-   const TCHAR *getInstance() const { return m_instance; }
-   UINT32 getRelatedObject() const { return m_relatedObjectId; }
-};
-
 /**
- * String map class
+ * String map class. Preserves insertion order.
  */
 class LIBNETXMS_EXPORTABLE StringMap : public StringMapBase
 {
@@ -1404,7 +1391,7 @@ public:
    double getDouble(const TCHAR *key, double defaultValue) const;
 	bool getBoolean(const TCHAR *key, bool defaultValue) const;
 
-   Iterator<const TCHAR> *iterator() { return new Iterator<const TCHAR>(new StringMapIterator(this)); }
+   Iterator<std::pair<const TCHAR*, const TCHAR*>> *iterator() { return new Iterator<std::pair<const TCHAR*, const TCHAR*>>(new StringMapIterator(this)); }
 
    using StringMapBase::forEach;
    template <typename C>

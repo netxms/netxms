@@ -405,7 +405,9 @@ void *StringMapIterator::next()
       m_curr = m_next;
    }
    m_next = static_cast<StringMapEntry*>(m_curr->hh.next);
-   return m_curr->value;
+   m_element.first = (m_map->m_ignoreCase ? m_curr->originalKey : m_curr->key);
+   m_element.second = static_cast<TCHAR*>(m_curr->value);
+   return &m_element;
 }
 
 /**

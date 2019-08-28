@@ -322,64 +322,20 @@ Event *Event::createFromJson(json_t *json)
 /**
  * Construct event from template
  */
-Event::Event(const EventTemplate *eventTemplate, UINT32 sourceId, UINT32 dciId, const TCHAR *userTag, const char *szFormat, const TCHAR **names, va_list args)
+Event::Event(const EventTemplate *eventTemplate, UINT32 sourceId, UINT32 dciId, const TCHAR *tag,
+         const char *format, const TCHAR **names, va_list args)
 {
-	_tcscpy(m_name, eventTemplate->getName());
-   m_timeStamp = time(NULL);
-   m_id = CreateUniqueEventId();
-   m_rootId = 0;
-   m_code = eventTemplate->getCode();
-   m_severity = eventTemplate->getSeverity();
-   m_flags = eventTemplate->getFlags();
-   m_sourceId = sourceId;
-   m_dciId = dciId;
-   m_messageText = NULL;
-
-   if ((eventTemplate->getTags() != NULL) && (eventTemplate->getTags()[0] != 0))
-      m_tags.splitAndAdd(eventTemplate->getTags(), _T(","));
-   if (userTag != NULL)
-      m_tags.add(userTag);
-
-   m_customMessage = NULL;
-	m_parameters.setOwner(true);
-
-	// Zone UIN
-	NetObj *source = FindObjectById(sourceId);
-	if (source != NULL)
-	{
-	   switch(source->getObjectClass())
-	   {
-	      case OBJECT_NODE:
-	         m_zoneUIN = static_cast<Node*>(source)->getZoneUIN();
-	         break;
-         case OBJECT_CLUSTER:
-            m_zoneUIN = static_cast<Cluster*>(source)->getZoneUIN();
-            break;
-         case OBJECT_INTERFACE:
-            m_zoneUIN = static_cast<Interface*>(source)->getZoneUIN();
-            break;
-         case OBJECT_SUBNET:
-            m_zoneUIN = static_cast<Subnet*>(source)->getZoneUIN();
-            break;
-         default:
-            m_zoneUIN = 0;
-            break;
-	   }
-	}
-	else
-	{
-	   m_zoneUIN = 0;
-	}
+   init(eventTemplate, sourceId, dciId, tag);
 
    // Create parameters
-   if (szFormat != NULL)
+   if (format != NULL)
    {
-		int count = (int)strlen(szFormat);
+		int count = (int)strlen(format);
 		TCHAR *buffer;
 
       for(int i = 0; i < count; i++)
       {
-         switch(szFormat[i])
+         switch(format[i])
          {
             case 's':
                {
@@ -455,15 +411,83 @@ Event::Event(const EventTemplate *eventTemplate, UINT32 sourceId, UINT32 dciId, 
                break;
             default:
                buffer = MemAllocString(64);
-               _sntprintf(buffer, 64, _T("BAD FORMAT \"%c\" [value = 0x%08X]"), szFormat[i], va_arg(args, UINT32));
+               _sntprintf(buffer, 64, _T("BAD FORMAT \"%c\" [value = 0x%08X]"), format[i], va_arg(args, UINT32));
 					m_parameters.add(buffer);
                break;
          }
 			m_parameterNames.add(((names != NULL) && (names[i] != NULL)) ? names[i] : _T(""));
       }
    }
+}
 
+/**
+ * Create event from template
+ */
+Event::Event(const EventTemplate *eventTemplate, UINT32 sourceId, UINT32 dciId, const TCHAR *tag, StringMap *args)
+{
+   init(eventTemplate, sourceId, dciId, tag);
+   Iterator<std::pair<const TCHAR*, const TCHAR*>> *it = args->iterator();
+   while(it->hasNext())
+   {
+      auto p = it->next();
+      m_parameterNames.add(p->first);
+      m_parameters.add(MemCopyString(p->second));
+   }
+   delete it;
+}
+
+/**
+ * Common initialization code
+ */
+void Event::init(const EventTemplate *eventTemplate, UINT32 sourceId, UINT32 dciId, const TCHAR *tag)
+{
+   _tcscpy(m_name, eventTemplate->getName());
+   m_timeStamp = time(NULL);
+   m_id = CreateUniqueEventId();
+   m_rootId = 0;
+   m_code = eventTemplate->getCode();
+   m_severity = eventTemplate->getSeverity();
+   m_flags = eventTemplate->getFlags();
+   m_sourceId = sourceId;
+   m_dciId = dciId;
+   m_messageText = NULL;
    m_messageTemplate = MemCopyString(eventTemplate->getMessageTemplate());
+
+   if ((eventTemplate->getTags() != NULL) && (eventTemplate->getTags()[0] != 0))
+      m_tags.splitAndAdd(eventTemplate->getTags(), _T(","));
+   if (tag != NULL)
+      m_tags.add(tag);
+
+   m_customMessage = NULL;
+   m_parameters.setOwner(true);
+
+   // Zone UIN
+   NetObj *source = FindObjectById(sourceId);
+   if (source != NULL)
+   {
+      switch(source->getObjectClass())
+      {
+         case OBJECT_NODE:
+            m_zoneUIN = static_cast<Node*>(source)->getZoneUIN();
+            break;
+         case OBJECT_CLUSTER:
+            m_zoneUIN = static_cast<Cluster*>(source)->getZoneUIN();
+            break;
+         case OBJECT_INTERFACE:
+            m_zoneUIN = static_cast<Interface*>(source)->getZoneUIN();
+            break;
+         case OBJECT_SUBNET:
+            m_zoneUIN = static_cast<Subnet*>(source)->getZoneUIN();
+            break;
+         default:
+            m_zoneUIN = 0;
+            break;
+      }
+   }
+   else
+   {
+      m_zoneUIN = 0;
+   }
 }
 
 /**
@@ -777,7 +801,8 @@ void ReloadEvents()
  * @param queue event queue to post events to
  * @param eventCode Event code
  * @param sourceId Event source object ID
- * @param userTag event's user tag
+ * @param eventTag event's tag
+ * @param namedArgs named arguments for event - if not NULL format and args will be ignored
  * @param format Parameter format string, each parameter represented by one character.
  *    The following format characters can be used:
  *        s - String
@@ -796,7 +821,7 @@ void ReloadEvents()
  * @param args event parameters
  */
 static bool RealPostEvent(ObjectQueue<Event> *queue, UINT64 *eventId, UINT32 eventCode, UINT32 sourceId, UINT32 dciId,
-                          const TCHAR *userTag, const char *format, const TCHAR **names, va_list args)
+                          const TCHAR *eventTag, StringMap *namedArgs, const char *format, const TCHAR **names, va_list args)
 {
    RWLockReadLock(s_eventTemplatesLock, INFINITE);
    EventTemplate *eventTemplate = s_eventTemplates.get(eventCode);
@@ -806,7 +831,9 @@ static bool RealPostEvent(ObjectQueue<Event> *queue, UINT64 *eventId, UINT32 eve
    if (eventTemplate != NULL)
    {
       // Template found, create new event
-      Event *evt = new Event(eventTemplate, sourceId, dciId, userTag, format, names, args);
+      Event *evt = (namedArgs != NULL) ?
+               new Event(eventTemplate, sourceId, dciId, eventTag, namedArgs) :
+               new Event(eventTemplate, sourceId, dciId, eventTag, format, names, args);
       if (eventId != NULL)
          *eventId = evt->getId();
 
@@ -849,7 +876,7 @@ bool NXCORE_EXPORTABLE PostEvent(UINT32 eventCode, UINT32 sourceId, const char *
 {
    va_list args;
    va_start(args, format);
-   bool success = RealPostEvent(&g_eventQueue, NULL, eventCode, sourceId, 0, NULL, format, NULL, args);
+   bool success = RealPostEvent(&g_eventQueue, NULL, eventCode, sourceId, 0, NULL, NULL, format, NULL, args);
    va_end(args);
    return success;
 }
@@ -880,7 +907,7 @@ bool NXCORE_EXPORTABLE PostDciEvent(UINT32 eventCode, UINT32 sourceId, UINT32 dc
 {
    va_list args;
    va_start(args, format);
-   bool success = RealPostEvent(&g_eventQueue, NULL, eventCode, sourceId, dciId, NULL, format, NULL, args);
+   bool success = RealPostEvent(&g_eventQueue, NULL, eventCode, sourceId, dciId, NULL, NULL, format, NULL, args);
    va_end(args);
    return success;
 }
@@ -911,7 +938,7 @@ UINT64 NXCORE_EXPORTABLE PostEvent2(UINT32 eventCode, UINT32 sourceId, const cha
    va_list args;
    UINT64 eventId;
    va_start(args, format);
-   bool success = RealPostEvent(&g_eventQueue, &eventId, eventCode, sourceId, 0, NULL, format, NULL, args);
+   bool success = RealPostEvent(&g_eventQueue, &eventId, eventCode, sourceId, 0, NULL, NULL, format, NULL, args);
    va_end(args);
    return success ? eventId : 0;
 }
@@ -941,7 +968,7 @@ bool NXCORE_EXPORTABLE PostEventWithNames(UINT32 eventCode, UINT32 sourceId, con
 {
    va_list args;
    va_start(args, names);
-   bool success = RealPostEvent(&g_eventQueue, NULL, eventCode, sourceId, 0, NULL, format, names, args);
+   bool success = RealPostEvent(&g_eventQueue, NULL, eventCode, sourceId, 0, NULL, NULL, format, names, args);
    va_end(args);
    return success;
 }
@@ -972,7 +999,7 @@ bool NXCORE_EXPORTABLE PostDciEventWithNames(UINT32 eventCode, UINT32 sourceId, 
 {
    va_list args;
    va_start(args, names);
-   bool success = RealPostEvent(&g_eventQueue, NULL, eventCode, sourceId, dciId, NULL, format, names, args);
+   bool success = RealPostEvent(&g_eventQueue, NULL, eventCode, sourceId, dciId, NULL, NULL, format, names, args);
    va_end(args);
    return success;
 }
@@ -1002,9 +1029,22 @@ bool NXCORE_EXPORTABLE PostEventWithTagAndNames(UINT32 eventCode, UINT32 sourceI
 {
    va_list args;
    va_start(args, names);
-   bool success = RealPostEvent(&g_eventQueue, NULL, eventCode, sourceId, 0, userTag, format, names, args);
+   bool success = RealPostEvent(&g_eventQueue, NULL, eventCode, sourceId, 0, userTag, NULL, format, names, args);
    va_end(args);
    return success;
+}
+
+/**
+ * Post event to system event queue.
+ *
+ * @param eventCode Event code
+ * @param sourceId Event source object ID
+ * @param tag Event tag
+ * @param parameters Named event parameters
+ */
+bool NXCORE_EXPORTABLE PostEventWithTagAndNames(UINT32 eventCode, UINT32 sourceId, const TCHAR *tag, StringMap *parameters)
+{
+   return RealPostEvent(&g_eventQueue, NULL, eventCode, sourceId, 0, tag, parameters, NULL, NULL, NULL);
 }
 
 /**
@@ -1016,26 +1056,7 @@ bool NXCORE_EXPORTABLE PostEventWithTagAndNames(UINT32 eventCode, UINT32 sourceI
  */
 bool NXCORE_EXPORTABLE PostEventWithNames(UINT32 eventCode, UINT32 sourceId, StringMap *parameters)
 {
-   /*
-   int count = parameters->size();
-   if (count > 1023)
-      count = 1023;
-
-   char format[1024];
-   memset(format, 's', count);
-   format[count] = 0;
-
-   const TCHAR *names[1024];
-   const TCHAR *args[1024];
-   for(int i = 0; i < count; i++)
-   {
-      names[i] = parameters->getKeyByIndex(i);
-      args[i] = parameters->getValueByIndex(i);
-   }
-
-   return RealPostEvent(g_pEventQueue, eventCode, sourceId, NULL, format, names, args);
-   */
-   return false;
+   return RealPostEvent(&g_eventQueue, NULL, eventCode, sourceId, 0, NULL, parameters, NULL, NULL, NULL);
 }
 
 /**
@@ -1048,26 +1069,7 @@ bool NXCORE_EXPORTABLE PostEventWithNames(UINT32 eventCode, UINT32 sourceId, Str
  */
 bool NXCORE_EXPORTABLE PostDciEventWithNames(UINT32 eventCode, UINT32 sourceId, UINT32 dciId, StringMap *parameters)
 {
-   /*
-   int count = parameters->size();
-   if (count > 1023)
-      count = 1023;
-
-   char format[1024];
-   memset(format, 's', count);
-   format[count] = 0;
-
-   const TCHAR *names[1024];
-   const TCHAR *args[1024];
-   for(int i = 0; i < count; i++)
-   {
-      names[i] = parameters->getKeyByIndex(i);
-      args[i] = parameters->getValueByIndex(i);
-   }
-
-   return RealPostEvent(g_pEventQueue, eventCode, sourceId, NULL, format, names, args);
-   */
-   return false;
+   return RealPostEvent(&g_eventQueue, NULL, eventCode, sourceId, dciId, NULL, parameters, NULL, NULL, NULL);
 }
 
 /**
@@ -1097,7 +1099,7 @@ bool NXCORE_EXPORTABLE PostEventWithTag(UINT32 eventCode, UINT32 sourceId, const
 {
    va_list args;
    va_start(args, format);
-   bool success = RealPostEvent(&g_eventQueue, NULL, eventCode, sourceId, 0, userTag, format, NULL, args);
+   bool success = RealPostEvent(&g_eventQueue, NULL, eventCode, sourceId, 0, userTag, NULL, format, NULL, args);
    va_end(args);
    return success;
 }
@@ -1127,7 +1129,7 @@ bool NXCORE_EXPORTABLE PostEventEx(ObjectQueue<Event> *queue, UINT32 eventCode, 
 {
    va_list args;
    va_start(args, format);
-   bool success = RealPostEvent(queue, NULL, eventCode, sourceId, 0, NULL, format, NULL, args);
+   bool success = RealPostEvent(queue, NULL, eventCode, sourceId, 0, NULL, NULL, format, NULL, args);
    va_end(args);
    return success;
 }

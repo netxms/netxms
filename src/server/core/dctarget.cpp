@@ -1712,7 +1712,7 @@ void DataCollectionTarget::doInstanceDiscovery(UINT32 requestId)
       if (instances != NULL)
       {
          DbgPrintf(5, _T("DataCollectionTarget::doInstanceDiscovery(%s [%u]): read %d values"), m_name, m_id, instances->size());
-         StringObjectMap<InstanceObject> *filteredInstances = object->filterInstanceList(instances);
+         StringObjectMap<InstanceDiscoveryData> *filteredInstances = object->filterInstanceList(instances);
          INSTANCE_DISCOVERY_CANCELLATION_CHECKPOINT;
          if (updateInstances(object, filteredInstances, requestId))
             changed = true;
@@ -1759,24 +1759,24 @@ struct CreateInstanceDCOData
 /**
  * Callback for creating instance DCIs
  */
-static EnumerationCallbackResult CreateInstanceDCI(const TCHAR *key, const void *value, void *data)
+static EnumerationCallbackResult CreateInstanceDCI(const TCHAR *key, const InstanceDiscoveryData *value, CreateInstanceDCOData *data)
 {
-   DataCollectionTarget *object = ((CreateInstanceDCOData *)data)->object;
-   DCObject *root = ((CreateInstanceDCOData *)data)->root;
+   DataCollectionTarget *object = data->object;
+   DCObject *root = data->root;
 
    DbgPrintf(5, _T("DataCollectionTarget::updateInstances(%s [%u], %s [%u]): creating new DCO for instance \"%s\""),
              object->getName(), object->getId(), root->getName(), root->getId(), key);
-   object->sendPollerMsg(((CreateInstanceDCOData *)data)->requestId, _T("      Creating new DCO for instance \"%s\"\r\n"), key);
+   object->sendPollerMsg(data->requestId, _T("      Creating new DCO for instance \"%s\"\r\n"), key);
 
    DCObject *dco = root->clone();
 
    dco->setTemplateId(object->getId(), root->getId());
-   dco->setInstance(((InstanceObject *)value)->getInstance());
+   dco->setInstance(value->getInstance());
    dco->setInstanceDiscoveryMethod(IDM_NONE);
    dco->setInstanceDiscoveryData(key);
    dco->setInstanceFilter(NULL);
    dco->expandInstance();
-   dco->setRelatedObject(((InstanceObject *)value)->getRelatedObject());
+   dco->setRelatedObject(value->getRelatedObject());
    dco->changeBinding(CreateUniqueId(IDG_ITEM), object, FALSE);
    object->addDCObject(dco, true);
    return _CONTINUE;
@@ -1785,7 +1785,7 @@ static EnumerationCallbackResult CreateInstanceDCI(const TCHAR *key, const void 
 /**
  * Update instance DCIs created from instance discovery DCI
  */
-bool DataCollectionTarget::updateInstances(DCObject *root, StringObjectMap<InstanceObject> *instances, UINT32 requestId)
+bool DataCollectionTarget::updateInstances(DCObject *root, StringObjectMap<InstanceDiscoveryData> *instances, UINT32 requestId)
 {
    bool changed = false;
 
@@ -1805,7 +1805,7 @@ bool DataCollectionTarget::updateInstances(DCObject *root, StringObjectMap<Insta
          // found, remove value from instances
          nxlog_debug(5, _T("DataCollectionTarget::updateInstances(%s [%u], %s [%u]): instance \"%s\" found"),
                    m_name, m_id, root->getName(), root->getId(), dcoInstance);
-         InstanceObject *instanceObject = instances->get(dcoInstance);
+         InstanceDiscoveryData *instanceObject = instances->get(dcoInstance);
          const TCHAR *name = instanceObject->getInstance();
          bool notify = false;
          if (_tcscmp(name, object->getInstance()))

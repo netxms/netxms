@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,6 +22,30 @@
 
 #ifndef _nms_dcoll_h_
 #define _nms_dcoll_h_
+
+/**
+ * Instance discovery data
+ */
+class InstanceDiscoveryData
+{
+private:
+   TCHAR *m_instance;
+   UINT32 m_relatedObjectId;
+
+public:
+   InstanceDiscoveryData(const TCHAR *instance, UINT32 relatedObject)
+   {
+      m_instance = MemCopyString(instance);
+      m_relatedObjectId = relatedObject;
+   }
+   ~InstanceDiscoveryData()
+   {
+      MemFree(m_instance);
+   }
+
+   const TCHAR *getInstance() const { return m_instance; }
+   UINT32 getRelatedObject() const { return m_relatedObjectId; }
+};
 
 /**
  * Threshold check results
@@ -349,7 +373,7 @@ public:
 	WORD getInstanceDiscoveryMethod() const { return m_instanceDiscoveryMethod; }
    const TCHAR *getInstanceDiscoveryData() const { return m_instanceDiscoveryData; }
    INT32 getInstanceRetentionTime() const { return m_instanceRetentionTime; }
-   StringObjectMap<InstanceObject> *filterInstanceList(StringMap *instances);
+   StringObjectMap<InstanceDiscoveryData> *filterInstanceList(StringMap *instances);
    void setInstanceDiscoveryMethod(WORD method) { m_instanceDiscoveryMethod = method; }
    void setInstanceDiscoveryData(const TCHAR *data) { lock(); MemFree(m_instanceDiscoveryData); m_instanceDiscoveryData = MemCopyString(data); unlock(); }
    void setInstanceFilter(const TCHAR *pszScript);

@@ -1275,7 +1275,7 @@ void DCObject::requestForcePoll(ClientSession *session)
  */
 struct FilterCallbackData
 {
-   StringObjectMap<InstanceObject> *filteredInstances;
+   StringObjectMap<InstanceDiscoveryData> *filteredInstances;
    DCObject *dco;
    NXSL_VM *instanceFilter;
 };
@@ -1364,7 +1364,7 @@ static EnumerationCallbackResult FilterCallback(const TCHAR *key, const void *va
       }
       if (accepted)
       {
-         ((FilterCallbackData *)data)->filteredInstances->set(instance, new InstanceObject(name, relatedObject));
+         ((FilterCallbackData *)data)->filteredInstances->set(instance, new InstanceDiscoveryData(name, relatedObject));
       }
       else
       {
@@ -1377,23 +1377,23 @@ static EnumerationCallbackResult FilterCallback(const TCHAR *key, const void *va
       TCHAR szBuffer[1024];
       _sntprintf(szBuffer, 1024, _T("DCI::%s::%d::InstanceFilter"), dco->getOwnerName(), dco->getId());
       PostDciEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, dco->getId(), "ssd", szBuffer, instanceFilter->getErrorText(), dco->getId());
-      static_cast<FilterCallbackData*>(data)->filteredInstances->set(key, new InstanceObject((const TCHAR *)value, 0));
+      static_cast<FilterCallbackData*>(data)->filteredInstances->set(key, new InstanceDiscoveryData((const TCHAR *)value, 0));
    }
    return _CONTINUE;
 }
 
-static EnumerationCallbackResult CopyElements(const TCHAR *key, const TCHAR *value, StringObjectMap<InstanceObject> *map)
+static EnumerationCallbackResult CopyElements(const TCHAR *key, const TCHAR *value, StringObjectMap<InstanceDiscoveryData> *map)
 {
-   map->set(key, new InstanceObject(value, 0));
+   map->set(key, new InstanceDiscoveryData(value, 0));
    return _CONTINUE;
 }
 
 /**
  * Filter instance list
  */
-StringObjectMap<InstanceObject> *DCObject::filterInstanceList(StringMap *instances)
+StringObjectMap<InstanceDiscoveryData> *DCObject::filterInstanceList(StringMap *instances)
 {
-   StringObjectMap<InstanceObject> *filteredInstances = new StringObjectMap<InstanceObject>(true);
+   auto filteredInstances = new StringObjectMap<InstanceDiscoveryData>(true);
 
    lock();
    if (m_instanceFilter == NULL)
