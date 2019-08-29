@@ -103,6 +103,25 @@ AC_DEFUN([AC_CXX_CHECK_OPTION],[
 	AC_LANG_POP([C++])
 ])
 
+AC_DEFUN([AC_LD_CHECK_OPTION],[
+	AC_MSG_CHECKING(whether linker accepts $1)
+	OLD_LDFLAGS="$LDFLAGS"
+	if test "x$ac_compiler_gnu" = "xyes" ; then
+		LDFLAGS="$LDFLAGS -Werror $1"
+	else
+		LDFLAGS="$LDFLAGS $1"
+	fi
+	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
+		[
+			LDFLAGS="$OLD_LDFLAGS $1"
+			AC_MSG_RESULT(yes)
+		],
+		[
+			LDFLAGS="$OLD_LDFLAGS"
+			AC_MSG_RESULT(no)
+		])
+])
+
 
 #--------------------------------------------------------------------
 # Initialize variables
@@ -1527,7 +1546,8 @@ if test "x$ac_compiler_gnu" = "xyes" ; then
 	fi
 
 	if test "x$ENABLE_DEBUG" = "xyes"; then
-		CPPFLAGS="$CPPFLAGS -ggdb3"
+		AC_CPP_CHECK_OPTION(-ggdb3)
+		AC_CPP_CHECK_OPTION(-fno-omit-frame-pointer)
 	fi
 fi
 
@@ -4026,6 +4046,10 @@ if test "x$ENABLE_SANITIZER" = "xyes"; then
 	AC_CPP_CHECK_OPTION(-fsanitize=leak)
 	AC_CPP_CHECK_OPTION(-fsanitize=undefined)
 	AC_CPP_CHECK_OPTION(-fstack-protector)
+	AC_CPP_CHECK_OPTION(-fno-omit-frame-pointer)
+	AC_LD_CHECK_OPTION(-fsanitize=address)
+	AC_LD_CHECK_OPTION(-fsanitize=leak)
+	AC_LD_CHECK_OPTION(-fsanitize=undefined)
 fi
 
 
