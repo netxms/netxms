@@ -1328,6 +1328,10 @@ void DCItem::reloadCache(bool forceReload)
       m_cacheSize = m_requiredCacheSize;
       m_bCacheLoaded = true;
    }
+   else if (hResult != NULL)
+   {
+      DBFreeResult(hResult);
+   }
    unlock();
 
    DBConnectionPoolReleaseConnection(hdb);
