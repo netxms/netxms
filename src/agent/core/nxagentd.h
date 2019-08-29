@@ -567,7 +567,7 @@ public:
 /**
  * SNMP target
  */
-class SNMPTarget : public RefCountObject
+class SNMPTarget
 {
 private:
    uuid m_guid;
@@ -585,12 +585,12 @@ private:
 public:
    SNMPTarget(UINT64 serverId, NXCPMessage *msg, UINT32 baseId);
    SNMPTarget(DB_RESULT hResult, int row);
-   virtual ~SNMPTarget();
+   ~SNMPTarget();
 
    const uuid& getGuid() const { return m_guid; }
    SNMP_Transport *getTransport(UINT16 port);
 
-   bool saveToDatabase();
+   bool saveToDatabase(DB_HANDLE hdb);
 };
 
 /**

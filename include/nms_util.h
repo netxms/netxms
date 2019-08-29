@@ -1780,8 +1780,7 @@ private:
    }
 
 public:
-   SharedHashMap(bool objectOwner = false, int grow = 16) :
-      m_pool(std::max(grow, 64)), m_data(true, SharedHashMap<K, V>::destructor) { m_data.setContext(this); }
+   SharedHashMap() : m_pool(64), m_data(true, SharedHashMap<K, V>::destructor) { m_data.setContext(this); }
    virtual ~SharedHashMap() { }
 
    void set(const K& key, shared_ptr<V> element) { m_data.set(key, new(m_pool.allocate()) shared_ptr<V>(element)); }
@@ -1811,7 +1810,6 @@ public:
 };
 
 template <class K, class V> shared_ptr<V> SharedHashMap<K, V>::m_null = shared_ptr<V>();
-
 
 /**
  * Synchronized shared hash map

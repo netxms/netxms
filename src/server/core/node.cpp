@@ -3943,7 +3943,10 @@ bool Node::confPollSnmp(UINT32 rqId)
    checkBridgeMib(pTransport);
 
    // Check for ENTITY-MIB support
-   if (SnmpGet(m_snmpVersion, pTransport, _T(".1.3.6.1.2.1.47.1.4.1.0"), NULL, 0, szBuffer, sizeof(szBuffer), SG_RAW_RESULT) == SNMP_ERR_SUCCESS)
+   // Some Cisco devices do not support entLastChangeTime but do support necessary tables
+   // Such devices can be checked with GET NEXT on entPhysicalClass
+   if ((SnmpGet(m_snmpVersion, pTransport, _T(".1.3.6.1.2.1.47.1.4.1.0"), NULL, 0, szBuffer, sizeof(szBuffer), SG_RAW_RESULT) == SNMP_ERR_SUCCESS) ||
+       (SnmpGet(m_snmpVersion, pTransport, _T(".1.3.6.1.2.1.47.1.1.1.1.5"), NULL, 0, szBuffer, sizeof(szBuffer), SG_GET_NEXT_REQUEST | SG_RAW_RESULT) == SNMP_ERR_SUCCESS))
    {
       lockProperties();
       m_capabilities |= NC_HAS_ENTITY_MIB;

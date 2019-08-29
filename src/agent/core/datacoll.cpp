@@ -32,7 +32,7 @@
 /**
  * Externals
  */
-void UpdateSnmpTarget(SNMPTarget *target);
+void UpdateSnmpTarget(shared_ptr<SNMPTarget> target);
 UINT32 GetSnmpValue(const uuid& target, UINT16 port, const TCHAR *oid, TCHAR *value, int interpretRawValue);
 
 void LoadProxyConfiguration();
@@ -1068,8 +1068,9 @@ void ConfigureDataCollection(UINT64 serverId, NXCPMessage *msg)
       UINT32 fieldId = VID_NODE_INFO_LIST_BASE;
       for(int i = 0; i < count; i++)
       {
-         SNMPTarget *target = new SNMPTarget(serverId, msg, fieldId);
+         shared_ptr<SNMPTarget> target = make_shared<SNMPTarget>(serverId, msg, fieldId);
          UpdateSnmpTarget(target);
+         target->saveToDatabase(hdb);
          fieldId += 50;
       }
       DBCommit(hdb);
@@ -1218,8 +1219,7 @@ static void LoadState()
       int count = DBGetNumRows(hResult);
       for(int i = 0; i < count; i++)
       {
-         SNMPTarget *t = new SNMPTarget(hResult, i);
-         UpdateSnmpTarget(t);
+         UpdateSnmpTarget(make_shared<SNMPTarget>(hResult, i));
       }
       DBFreeResult(hResult);
    }

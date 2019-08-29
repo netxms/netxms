@@ -25,13 +25,13 @@
 /**
  * SNMP targets
  */
-static HashMap<uuid_t, SNMPTarget> s_snmpTargets(false);
+static SharedHashMap<uuid_t, SNMPTarget> s_snmpTargets;
 static Mutex s_snmpTargetsLock;
 
 /**
  * Create SNMP target from NXCP message
  */
-SNMPTarget::SNMPTarget(UINT64 serverId, NXCPMessage *msg, UINT32 baseId) : RefCountObject()
+SNMPTarget::SNMPTarget(UINT64 serverId, NXCPMessage *msg, UINT32 baseId)
 {
    m_guid = msg->getFieldAsGUID(baseId);
    m_serverId = serverId;
@@ -51,7 +51,7 @@ SNMPTarget::SNMPTarget(UINT64 serverId, NXCPMessage *msg, UINT32 baseId) : RefCo
  * Expected field order:
  *   guid,server_id,ip_address,snmp_version,port,auth_type,enc_type,auth_name,auth_pass,enc_pass
  */
-SNMPTarget::SNMPTarget(DB_RESULT hResult, int row) : RefCountObject()
+SNMPTarget::SNMPTarget(DB_RESULT hResult, int row)
 {
    m_guid = DBGetFieldGUID(hResult, row, 0);
    m_serverId = DBGetFieldUInt64(hResult, row, 1);
@@ -80,10 +80,8 @@ SNMPTarget::~SNMPTarget()
 /**
  * Save SNMP target object to database
  */
-bool SNMPTarget::saveToDatabase()
+bool SNMPTarget::saveToDatabase(DB_HANDLE hdb)
 {
-   DB_HANDLE hdb = GetLocalDatabaseHandle();
-
    DB_STATEMENT hStmt;
    if (IsDatabaseRecordExist(hdb, _T("dc_snmp_targets"), _T("guid"), m_guid))
       hStmt = DBPrepare(hdb, _T("UPDATE dc_snmp_targets SET server_id=?,ip_address=?,snmp_version=?,port=?,auth_type=?,enc_type=?,auth_name=?,auth_pass=?,enc_pass=? WHERE guid=?"));
@@ -123,7 +121,7 @@ SNMP_Transport *SNMPTarget::getTransport(UINT16 port)
       return m_transport;
 
    m_transport = new SNMP_UDPTransport;
-	((SNMP_UDPTransport *)m_transport)->createUDPTransport(m_ipAddress, (port != 0) ? port : m_port);
+	static_cast<SNMP_UDPTransport*>(m_transport)->createUDPTransport(m_ipAddress, (port != 0) ? port : m_port);
    m_transport->setSnmpVersion(m_snmpVersion);
    SNMP_SecurityContext *ctx = new SNMP_SecurityContext(m_authName, m_authPassword, m_encPassword, m_authType, m_encType);
 	ctx->setSecurityModel((m_snmpVersion == SNMP_VERSION_3) ? SNMP_SECURITY_MODEL_USM : SNMP_SECURITY_MODEL_V2C);
@@ -132,19 +130,12 @@ SNMP_Transport *SNMPTarget::getTransport(UINT16 port)
 }
 
 /**
- * Update SNMP target information
+ * Add (or replace) SNMP target information
  */
-void UpdateSnmpTarget(SNMPTarget *target)
+void UpdateSnmpTarget(shared_ptr<SNMPTarget> target)
 {
    s_snmpTargetsLock.lock();
-   SNMPTarget *oldTarget = s_snmpTargets.get(target->getGuid().getValue());
-   if (oldTarget != NULL)
-   {
-      oldTarget->decRefCount();
-      /* TODO: update existing target if possible */
-   }
    s_snmpTargets.set(target->getGuid().getValue(), target);
-   target->saveToDatabase();
    s_snmpTargetsLock.unlock();
 }
 
@@ -154,7 +145,7 @@ void UpdateSnmpTarget(SNMPTarget *target)
 UINT32 GetSnmpValue(const uuid& target, UINT16 port, const TCHAR *oid, TCHAR *value, int interpretRawValue)
 {
    s_snmpTargetsLock.lock();
-   SNMPTarget *t = s_snmpTargets.get(target.getValue());
+   shared_ptr<SNMPTarget> t = s_snmpTargets.getShared(target.getValue());
    if (t == NULL)
    {
       s_snmpTargetsLock.unlock();
@@ -163,8 +154,6 @@ UINT32 GetSnmpValue(const uuid& target, UINT16 port, const TCHAR *oid, TCHAR *va
       DebugPrintf(6, _T("SNMP target with guid %s not found"), target.toString(buffer));
       return ERR_INTERNAL_ERROR;
    }
-
-   t->incRefCount();
    s_snmpTargetsLock.unlock();
 
    SNMP_Transport *snmp = t->getTransport(port);
@@ -211,7 +200,6 @@ UINT32 GetSnmpValue(const uuid& target, UINT16 port, const TCHAR *oid, TCHAR *va
 		}
    }
 
-   t->decRefCount();
    return (rcc == SNMP_ERR_SUCCESS) ? ERR_SUCCESS :
       ((rcc == SNMP_ERR_NO_OBJECT) ? ERR_UNKNOWN_PARAMETER : ERR_INTERNAL_ERROR);
 }

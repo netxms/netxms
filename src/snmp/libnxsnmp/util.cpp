@@ -99,7 +99,7 @@ UINT32 LIBNXSNMP_EXPORTABLE SnmpGetEx(SNMP_Transport *pTransport,
 		return SNMP_ERR_COMM;
 
    // Create PDU and send request
-   pRqPDU = new SNMP_PDU(SNMP_GET_REQUEST, (UINT32)InterlockedIncrement(&s_requestId) & 0x7FFFFFFF, pTransport->getSnmpVersion());
+   pRqPDU = new SNMP_PDU((dwFlags & SG_GET_NEXT_REQUEST) ? SNMP_GET_NEXT_REQUEST : SNMP_GET_REQUEST, (UINT32)InterlockedIncrement(&s_requestId) & 0x7FFFFFFF, pTransport->getSnmpVersion());
    if (szOidStr != NULL)
    {
       nameLength = SNMPParseOID(szOidStr, pdwVarName, MAX_OID_LEN);

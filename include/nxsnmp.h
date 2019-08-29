@@ -283,11 +283,12 @@
 /**
  * Flags for SnmpGet
  */
-#define SG_VERBOSE        0x0001
-#define SG_STRING_RESULT  0x0002
-#define SG_RAW_RESULT     0x0004
-#define SG_HSTRING_RESULT 0x0008
-#define SG_PSTRING_RESULT 0x0010
+#define SG_VERBOSE            0x0001
+#define SG_STRING_RESULT      0x0002
+#define SG_RAW_RESULT         0x0004
+#define SG_HSTRING_RESULT     0x0008
+#define SG_PSTRING_RESULT     0x0010
+#define SG_GET_NEXT_REQUEST   0x0020
 
 #endif      /* NXSNMP_WITH_NET_SNMP */
 

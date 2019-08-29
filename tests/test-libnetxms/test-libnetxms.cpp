@@ -1199,7 +1199,7 @@ static void TestHashMap()
 static void TestSharedHashMap()
 {
    StartTest(_T("SharedHashMap: create"));
-   SharedHashMap<HASH_KEY, String> *sharedHashMap = new SharedHashMap<HASH_KEY, String>(true);
+   auto sharedHashMap = new SharedHashMap<HASH_KEY, String>();
    AssertEquals(sharedHashMap->size(), 0);
    EndTest();
 
