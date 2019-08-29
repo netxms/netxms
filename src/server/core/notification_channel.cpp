@@ -441,11 +441,11 @@ void GetNotificationChannels(NXCPMessage *msg)
 {
    MutexLock(s_channelListLock);
    UINT32 base = VID_NOTIFICATION_CHANNEL_BASE;
-   Iterator<NotificationChannel> *it = s_channelList.iterator();
+   Iterator<std::pair<const TCHAR*, NotificationChannel*>> *it = s_channelList.iterator();
    msg->setField(VID_CHANNEL_COUNT, s_channelList.size());
    while(it->hasNext())
    {
-      NotificationChannel *nc = it->next();
+      NotificationChannel *nc = it->next()->second;
       nc->fillMessage(msg, base);
       base += 20;
    }

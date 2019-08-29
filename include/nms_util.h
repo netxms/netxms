@@ -1430,7 +1430,7 @@ public:
    ObjectArray<T> *values() const { ObjectArray<T> *v = new ObjectArray<T>(size()); fillValues(v); return v; }
    T *unlink(const TCHAR *key) { return (T*)StringMapBase::unlink(key); }
 
-   Iterator<T> *iterator() { return new Iterator<T>(new StringMapIterator(this)); }
+   Iterator<std::pair<const TCHAR*, T*>> *iterator() { return new Iterator<std::pair<const TCHAR*, T*>>(new StringMapIterator(this)); }
 
    using StringMapBase::forEach;
    template <typename C>

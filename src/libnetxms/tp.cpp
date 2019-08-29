@@ -580,9 +580,9 @@ void LIBNETXMS_EXPORTABLE ThreadPoolGetInfo(ThreadPool *p, ThreadPoolInfo *info)
 
    info->serializedRequests = 0;
    MutexLock(p->serializationLock);
-   Iterator<SerializationQueue> *it = p->serializationQueues->iterator();
+   Iterator<std::pair<const TCHAR*, SerializationQueue*>> *it = p->serializationQueues->iterator();
    while(it->hasNext())
-      info->serializedRequests += static_cast<int>(it->next()->size());
+      info->serializedRequests += static_cast<int>(it->next()->second->size());
    delete it;
    MutexUnlock(p->serializationLock);
 }
