@@ -95,8 +95,15 @@ void AbstractIndexBase::setStartupMode(bool startupMode)
    m_startupMode = startupMode;
    if (!startupMode)
    {
-      qsort(m_primary->elements, m_primary->size, sizeof(INDEX_ELEMENT), IndexCompare);
-      m_primary->maxKey = (m_primary->size > 0) ? m_primary->elements[m_primary->size - 1].key : 0;
+      if (m_primary->size > 0)
+      {
+         qsort(m_primary->elements, m_primary->size, sizeof(INDEX_ELEMENT), IndexCompare);
+         m_primary->maxKey = m_primary->elements[m_primary->size - 1].key;
+      }
+      else
+      {
+         m_primary->maxKey = 0;
+      }
 
       m_secondary->maxKey = m_primary->maxKey;
       m_secondary->allocated = m_primary->allocated;

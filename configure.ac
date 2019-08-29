@@ -116,6 +116,7 @@ DISABLE_ENCRYPTION="no"
 DISABLE_LMSENSORS="no"
 DISABLE_SSH="no"
 ENABLE_DEBUG="no"
+ENABLE_SANITIZER="no"
 ENABLE_WERROR="no"
 STATIC_BUILD="no"
 ALL_STATIC="no"
@@ -783,6 +784,14 @@ AC_ARG_ENABLE(debug,
 [
 	if test "x$enableval" = "xyes"; then
 		ENABLE_DEBUG="yes"
+	fi
+])
+
+AC_ARG_ENABLE(sanitizer,
+[AS_HELP_STRING(--enable-sanitizer,turn on GCC sanitizer functionality)],
+[
+	if test "x$enableval" = "xyes"; then
+		ENABLE_SANITIZER="yes"
 	fi
 ])
 
@@ -3972,6 +3981,9 @@ fi
 #--------------------------------------------------------------------
 
 if test "x$JEMALLOC_REQUIRED" = "xyes"; then
+	if test "x$ENABLE_SANITIZER" = "xyes"; then
+		AC_MSG_ERROR(Sanitizer and jemalloc are mutually exclusive)
+	fi
 	AC_CHECK_HEADERS([jemalloc/jemalloc.h],
 		[
 			rootdir=`pwd`
@@ -4002,6 +4014,18 @@ if test "x$JEMALLOC_REQUIRED" = "xyes"; then
 		[
 			AC_MSG_ERROR(jemalloc.h not found)
 		])
+fi
+
+
+#--------------------------------------------------------------------
+# Sanitizer
+#--------------------------------------------------------------------
+
+if test "x$ENABLE_SANITIZER" = "xyes"; then
+	AC_CPP_CHECK_OPTION(-fsanitize=address)
+	AC_CPP_CHECK_OPTION(-fsanitize=leak)
+	AC_CPP_CHECK_OPTION(-fsanitize=undefined)
+	AC_CPP_CHECK_OPTION(-fstack-protector)
 fi
 
 
