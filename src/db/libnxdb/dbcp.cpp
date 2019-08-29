@@ -464,12 +464,17 @@ int LIBNXDB_EXPORTABLE DBConnectionPoolGetAcquiredCount()
 ObjectArray<PoolConnectionInfo> LIBNXDB_EXPORTABLE *DBConnectionPoolGetConnectionList()
 {
    ObjectArray<PoolConnectionInfo> *list = new ObjectArray<PoolConnectionInfo>(32, 32, true);
-	MutexLock(m_poolAccessMutex);
+   MutexLock(m_poolAccessMutex);
    for(int i = 0; i < m_connections.size(); i++)
-      if (m_connections.get(i)->inUse)
+   {
+      PoolConnectionInfo *curr = m_connections.get(i);
+      if (curr->inUse)
       {
-         list->add((PoolConnectionInfo *)nx_memdup(m_connections.get(i), sizeof(PoolConnectionInfo)));
+         PoolConnectionInfo *ci = new PoolConnectionInfo;
+         memcpy(ci, curr, sizeof(PoolConnectionInfo));
+         list->add(ci);
       }
-	MutexUnlock(m_poolAccessMutex);
+   }
+   MutexUnlock(m_poolAccessMutex);
    return list;
 }
