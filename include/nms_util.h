@@ -1284,6 +1284,10 @@ struct KeyValuePair
 
 class StringMapBase;
 
+#ifdef _WIN32
+template struct LIBNETXMS_EXPORTABLE std::pair<const TCHAR*, const TCHAR*>;
+#endif
+
 /**
  * String map iterator
  */

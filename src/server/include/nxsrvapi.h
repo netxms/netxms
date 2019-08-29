@@ -244,7 +244,7 @@ public:
 /**
  * Interface physical location
  */
-struct InterfacePhysicalLocation
+struct LIBNXSRV_EXPORTABLE InterfacePhysicalLocation
 {
    UINT32 chassis;
    UINT32 module;
