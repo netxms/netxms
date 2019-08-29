@@ -581,17 +581,17 @@ static void DBEventHandler(DWORD dwEvent, const WCHAR *pszArg1, const WCHAR *psz
 	switch(dwEvent)
 	{
 		case DBEVENT_CONNECTION_LOST:
-			PostEvent(EVENT_DB_CONNECTION_LOST, g_dwMgmtNode, NULL);
+			PostSystemEvent(EVENT_DB_CONNECTION_LOST, g_dwMgmtNode, NULL);
 			g_flags |= AF_DB_CONNECTION_LOST;
 			NotifyClientSessions(NX_NOTIFY_DBCONN_STATUS, FALSE);
 			break;
 		case DBEVENT_CONNECTION_RESTORED:
-			PostEvent(EVENT_DB_CONNECTION_RESTORED, g_dwMgmtNode, NULL);
+			PostSystemEvent(EVENT_DB_CONNECTION_RESTORED, g_dwMgmtNode, NULL);
 			g_flags &= ~AF_DB_CONNECTION_LOST;
 			NotifyClientSessions(NX_NOTIFY_DBCONN_STATUS, TRUE);
 			break;
 		case DBEVENT_QUERY_FAILED:
-			PostEvent(EVENT_DB_QUERY_FAILED, g_dwMgmtNode, "uud", pszArg1, pszArg2, connLost ? 1 : 0);
+			PostSystemEvent(EVENT_DB_QUERY_FAILED, g_dwMgmtNode, "uud", pszArg1, pszArg2, connLost ? 1 : 0);
 			break;
 		default:
 			break;
@@ -1167,7 +1167,7 @@ retry_db_lock:
    s_statCollectorThread = ThreadCreateEx(ServerStatCollector, 0, NULL);
 
 	g_flags |= AF_SERVER_INITIALIZED;
-	PostEvent(EVENT_SERVER_STARTED, g_dwMgmtNode, NULL);
+	PostSystemEvent(EVENT_SERVER_STARTED, g_dwMgmtNode, NULL);
 	nxlog_debug(1, _T("Server initialization completed in %d milliseconds"), static_cast<int>(GetCurrentTimeMs() - initStartTime));
 	return TRUE;
 }

@@ -211,7 +211,7 @@ Node NXCORE_EXPORTABLE *PollNewNode(NewNodeData *newNodeData)
    }
 
    node->unhide();
-   PostEvent(EVENT_NODE_ADDED, node->getId(), "d", static_cast<int>(newNodeData->origin));
+   PostSystemEvent(EVENT_NODE_ADDED, node->getId(), "d", static_cast<int>(newNodeData->origin));
 
    return node;
 }
@@ -952,7 +952,7 @@ static bool AcceptNewNode(NewNodeData *newNodeData, BYTE *macAddr)
          {
             nxlog_debug_tag(DEBUG_TAG, 4, _T("AcceptNewNode(%s): Filter script execution error: %s"),
                       szIpAddr, vm->getErrorText());
-            PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", szFilter, vm->getErrorText(), 0);
+            PostSystemEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", szFilter, vm->getErrorText(), 0);
          }
          delete vm;
       }

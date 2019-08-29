@@ -24,6 +24,23 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 30.96 to 30.97
+ */
+static bool H_UpgradeFromV96()
+{
+   static const TCHAR *batch =
+            _T("ALTER TABLE event_log ADD origin integer\n")
+            _T("ALTER TABLE event_log ADD origin_timestamp integer\n")
+            _T("UPDATE event_log SET origin=0,origin_timestamp=event_timestamp\n")
+            _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("event_log"), _T("origin")));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("event_log"), _T("origin_timestamp")));
+   CHK_EXEC(SetMinorSchemaVersion(97));
+   return true;
+}
+
+/**
  * Upgrade from 30.95 to 30.96
  */
 static bool H_UpgradeFromV95()
@@ -3406,6 +3423,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 96, 30, 97, H_UpgradeFromV96 },
    { 95, 30, 96, H_UpgradeFromV95 },
    { 94, 30, 95, H_UpgradeFromV94 },
    { 93, 30, 94, H_UpgradeFromV93 },

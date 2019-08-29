@@ -187,13 +187,15 @@ Event::Event()
    m_rootId = 0;
    m_code = 0;
    m_severity = SEVERITY_NORMAL;
+   m_origin = EventOrigin::SYSTEM;
    m_sourceId = 0;
    m_zoneUIN = 0;
    m_dciId = 0;
    m_flags = 0;
    m_messageText = NULL;
    m_messageTemplate = NULL;
-   m_timeStamp = 0;
+   m_timestamp = 0;
+   m_originTimestamp = 0;
 	m_customMessage = NULL;
 	m_parameters.setOwner(true);
 }
@@ -208,13 +210,15 @@ Event::Event(const Event *src)
    m_rootId = src->m_rootId;
    m_code = src->m_code;
    m_severity = src->m_severity;
+   m_origin = src->m_origin;
    m_sourceId = src->m_sourceId;
    m_zoneUIN = src->m_zoneUIN;
    m_dciId = src->m_dciId;
    m_flags = src->m_flags;
    m_messageText = MemCopyString(src->m_messageText);
    m_messageTemplate = MemCopyString(src->m_messageTemplate);
-   m_timeStamp = src->m_timeStamp;
+   m_timestamp = src->m_timestamp;
+   m_originTimestamp = src->m_originTimestamp;
    m_tags.addAll(src->m_tags);
 	m_customMessage = MemCopyString(src->m_customMessage);
 	m_parameters.setOwner(true);
@@ -232,22 +236,33 @@ Event *Event::createFromJson(json_t *json)
 {
    Event *event = new Event();
 
-   json_int_t id, rootId, timestamp;
+   json_int_t id, rootId, timestamp, originTimestamp;
+   int origin;
    const char *name = NULL, *message = NULL;
    json_t *tags = NULL;
-   if (json_unpack(json, "{s:I, s:I, s:i, s:s, s:I, s:i, s:i, s:i, s:i, s:s, s:o}",
+   if (json_unpack(json, "{s:I, s:I, s:i, s:s, s:I, s:I, s:i, s:i, s:i, s:i, s:i, s:s, s:o}",
             "id", &id, "rootId", &rootId, "code", &event->m_code, "name", &name, "timestamp", &timestamp,
-            "source", &event->m_sourceId, "zone", &event->m_zoneUIN, "dci", &event->m_dciId,
-            "severity", &event->m_severity, "message", &message,
+            "originTimestamp", &originTimestamp, "origin", &origin, "source", &event->m_sourceId,
+            "zone", &event->m_zoneUIN, "dci", &event->m_dciId, "severity", &event->m_severity, "message", &message,
             (json_object_get(json, "tags") != NULL) ? "tags" : "tag", &tags) == -1)
    {
-      delete event;
-      return NULL;   // Unpack failure
+      if (json_unpack(json, "{s:I, s:I, s:i, s:s, s:I, s:i, s:i, s:i, s:i, s:s, s:o}",
+               "id", &id, "rootId", &rootId, "code", &event->m_code, "name", &name, "timestamp", &timestamp,
+               "source", &event->m_sourceId, "zone", &event->m_zoneUIN, "dci", &event->m_dciId,
+               "severity", &event->m_severity, "message", &message,
+               (json_object_get(json, "tags") != NULL) ? "tags" : "tag", &tags) == -1)
+      {
+         delete event;
+         return NULL;   // Unpack failure
+      }
+      originTimestamp = timestamp;
    }
 
    event->m_id = id;
    event->m_rootId = rootId;
-   event->m_timeStamp = timestamp;
+   event->m_origin = static_cast<EventOrigin>(origin);
+   event->m_timestamp = timestamp;
+   event->m_originTimestamp = originTimestamp;
    if (name != NULL)
    {
 #ifdef UNICODE
@@ -322,10 +337,10 @@ Event *Event::createFromJson(json_t *json)
 /**
  * Construct event from template
  */
-Event::Event(const EventTemplate *eventTemplate, UINT32 sourceId, UINT32 dciId, const TCHAR *tag,
-         const char *format, const TCHAR **names, va_list args)
+Event::Event(const EventTemplate *eventTemplate, EventOrigin origin, time_t originTimestamp, UINT32 sourceId,
+         UINT32 dciId, const TCHAR *tag, const char *format, const TCHAR **names, va_list args)
 {
-   init(eventTemplate, sourceId, dciId, tag);
+   init(eventTemplate, origin, originTimestamp, sourceId, dciId, tag);
 
    // Create parameters
    if (format != NULL)
@@ -423,9 +438,10 @@ Event::Event(const EventTemplate *eventTemplate, UINT32 sourceId, UINT32 dciId, 
 /**
  * Create event from template
  */
-Event::Event(const EventTemplate *eventTemplate, UINT32 sourceId, UINT32 dciId, const TCHAR *tag, StringMap *args)
+Event::Event(const EventTemplate *eventTemplate, EventOrigin origin, time_t originTimestamp, UINT32 sourceId,
+         UINT32 dciId, const TCHAR *tag, StringMap *args)
 {
-   init(eventTemplate, sourceId, dciId, tag);
+   init(eventTemplate, origin, originTimestamp, sourceId, dciId, tag);
    Iterator<std::pair<const TCHAR*, const TCHAR*>> *it = args->iterator();
    while(it->hasNext())
    {
@@ -439,10 +455,12 @@ Event::Event(const EventTemplate *eventTemplate, UINT32 sourceId, UINT32 dciId, 
 /**
  * Common initialization code
  */
-void Event::init(const EventTemplate *eventTemplate, UINT32 sourceId, UINT32 dciId, const TCHAR *tag)
+void Event::init(const EventTemplate *eventTemplate, EventOrigin origin, time_t originTimestamp, UINT32 sourceId, UINT32 dciId, const TCHAR *tag)
 {
+   m_origin = origin;
    _tcscpy(m_name, eventTemplate->getName());
-   m_timeStamp = time(NULL);
+   m_timestamp = time(NULL);
+   m_originTimestamp = (originTimestamp != 0) ? originTimestamp : m_timestamp;
    m_id = CreateUniqueEventId();
    m_rootId = 0;
    m_code = eventTemplate->getCode();
@@ -599,7 +617,7 @@ void Event::prepareMessage(NXCPMessage *msg) const
 	UINT32 id = VID_EVENTLOG_MSG_BASE;
 	msg->setField(id++, m_id);
 	msg->setField(id++, m_code);
-	msg->setField(id++, (UINT32)m_timeStamp);
+	msg->setField(id++, (UINT32)m_timestamp);
 	msg->setField(id++, m_sourceId);
 	msg->setField(id++, (WORD)m_severity);
 	msg->setField(id++, CHECK_NULL_EX(m_messageText));
@@ -640,7 +658,9 @@ json_t *Event::toJson()
    json_object_set_new(root, "rootId", json_integer(m_rootId));
    json_object_set_new(root, "code", json_integer(m_code));
    json_object_set_new(root, "name", json_string_t(m_name));
-   json_object_set_new(root, "timestamp", json_integer(m_timeStamp));
+   json_object_set_new(root, "timestamp", json_integer(m_timestamp));
+   json_object_set_new(root, "originTimestamp", json_integer(m_originTimestamp));
+   json_object_set_new(root, "origin", json_integer(static_cast<int>(m_origin)));
    json_object_set_new(root, "source", json_integer(m_sourceId));
    json_object_set_new(root, "zone", json_integer(m_zoneUIN));
    json_object_set_new(root, "dci", json_integer(m_dciId));
@@ -823,9 +843,9 @@ void ReloadEvents()
  * @param args event parameters
  * @param vm NXSL VM for transformation script
  */
-static bool RealPostEvent(ObjectQueue<Event> *queue, UINT64 *eventId, UINT32 eventCode, UINT32 sourceId, UINT32 dciId,
-                          const TCHAR *eventTag, StringMap *namedArgs, const char *format, const TCHAR **names, va_list args,
-                          NXSL_VM *vm)
+static bool RealPostEvent(ObjectQueue<Event> *queue, UINT64 *eventId, UINT32 eventCode, EventOrigin origin,
+         time_t originTimestamp, UINT32 sourceId, UINT32 dciId, const TCHAR *eventTag, StringMap *namedArgs,
+         const char *format, const TCHAR **names, va_list args, NXSL_VM *vm)
 {
    RWLockReadLock(s_eventTemplatesLock, INFINITE);
    EventTemplate *eventTemplate = s_eventTemplates.get(eventCode);
@@ -836,8 +856,8 @@ static bool RealPostEvent(ObjectQueue<Event> *queue, UINT64 *eventId, UINT32 eve
    {
       // Template found, create new event
       Event *evt = (namedArgs != NULL) ?
-               new Event(eventTemplate, sourceId, dciId, eventTag, namedArgs) :
-               new Event(eventTemplate, sourceId, dciId, eventTag, format, names, args);
+               new Event(eventTemplate, origin, originTimestamp, sourceId, dciId, eventTag, namedArgs) :
+               new Event(eventTemplate, origin, originTimestamp, sourceId, dciId, eventTag, format, names, args);
       if (eventId != NULL)
          *eventId = evt->getId();
 
@@ -870,6 +890,8 @@ static bool RealPostEvent(ObjectQueue<Event> *queue, UINT64 *eventId, UINT32 eve
  * Post event to system event queue.
  *
  * @param eventCode Event code
+ * @param origin event origin
+ * @param originTimestamp event origin's timestamp
  * @param sourceId Event source object ID
  * @param format Parameter format string, each parameter represented by one character.
  *    The following format characters can be used:
@@ -887,11 +909,76 @@ static bool RealPostEvent(ObjectQueue<Event> *queue, UINT64 *eventId, UINT32 eve
  *        i - Object ID
  *        t - timestamp (time_t) as raw value (seconds since epoch)
  */
-bool NXCORE_EXPORTABLE PostEvent(UINT32 eventCode, UINT32 sourceId, const char *format, ...)
+bool NXCORE_EXPORTABLE PostEvent(UINT32 eventCode, EventOrigin origin, time_t originTimestamp, UINT32 sourceId, const char *format, ...)
 {
    va_list args;
    va_start(args, format);
-   bool success = RealPostEvent(&g_eventQueue, NULL, eventCode, sourceId, 0, NULL, NULL, format, NULL, args, NULL);
+   bool success = RealPostEvent(&g_eventQueue, NULL, eventCode, origin, originTimestamp, sourceId, 0, NULL, NULL, format, NULL, args, NULL);
+   va_end(args);
+   return success;
+}
+
+/**
+ * Post event to system event queue.
+ *
+ * @param eventCode Event code
+ * @param origin event origin
+ * @param originTimestamp event origin's timestamp
+ * @param sourceId Event source object ID
+ * @param format Parameter format string, each parameter represented by one character.
+ *    The following format characters can be used:
+ *        s - String
+ *        m - Multibyte string
+ *        u - UNICODE string
+ *        d - Decimal integer
+ *        D - 64-bit decimal integer
+ *        x - Hex integer
+ *        a - IPv4 address
+ *        A - InetAddress object
+ *        h - MAC (hardware) address as byte array
+ *        H - MAC (hardware) address as MacAddress object
+ *        G - uuid object (GUID)
+ *        i - Object ID
+ *        t - timestamp (time_t) as raw value (seconds since epoch)
+ */
+bool NXCORE_EXPORTABLE PostEvent(UINT32 eventCode, EventOrigin origin, time_t originTimestamp, UINT32 sourceId, const StringList& parameters)
+{
+   StringMap pmap;
+   for(int i = 0; i < parameters.size(); i++)
+   {
+      TCHAR name[64];
+      _sntprintf(name, 64, _T("Parameter%d"), i + 1);
+      pmap.set(name, parameters.get(i));
+   }
+   return RealPostEvent(&g_eventQueue, NULL, eventCode, origin, originTimestamp, sourceId, 0, NULL, &pmap, NULL, NULL, NULL, NULL);
+}
+
+/**
+ * Post event to system event queue with origin SYSTEM.
+ *
+ * @param eventCode Event code
+ * @param sourceId Event source object ID
+ * @param format Parameter format string, each parameter represented by one character.
+ *    The following format characters can be used:
+ *        s - String
+ *        m - Multibyte string
+ *        u - UNICODE string
+ *        d - Decimal integer
+ *        D - 64-bit decimal integer
+ *        x - Hex integer
+ *        a - IPv4 address
+ *        A - InetAddress object
+ *        h - MAC (hardware) address as byte array
+ *        H - MAC (hardware) address as MacAddress object
+ *        G - uuid object (GUID)
+ *        i - Object ID
+ *        t - timestamp (time_t) as raw value (seconds since epoch)
+ */
+bool NXCORE_EXPORTABLE PostSystemEvent(UINT32 eventCode, UINT32 sourceId, const char *format, ...)
+{
+   va_list args;
+   va_start(args, format);
+   bool success = RealPostEvent(&g_eventQueue, NULL, eventCode, EventOrigin::SYSTEM, 0, sourceId, 0, NULL, NULL, format, NULL, args, NULL);
    va_end(args);
    return success;
 }
@@ -922,13 +1009,46 @@ bool NXCORE_EXPORTABLE PostDciEvent(UINT32 eventCode, UINT32 sourceId, UINT32 dc
 {
    va_list args;
    va_start(args, format);
-   bool success = RealPostEvent(&g_eventQueue, NULL, eventCode, sourceId, dciId, NULL, NULL, format, NULL, args, NULL);
+   bool success = RealPostEvent(&g_eventQueue, NULL, eventCode, EventOrigin::SYSTEM, 0, sourceId, dciId, NULL, NULL, format, NULL, args, NULL);
    va_end(args);
    return success;
 }
 
 /**
  * Post event to system event queue and return ID of new event (0 in case of failure).
+ *
+ * @param eventCode Event code
+ * @param origin event origin
+ * @param originTimestamp event origin's timestamp
+ * @param sourceId Event source object ID
+ * @param format Parameter format string, each parameter represented by one character.
+ *    The following format characters can be used:
+ *        s - String
+ *        m - Multibyte string
+ *        u - UNICODE string
+ *        d - Decimal integer
+ *        D - 64-bit decimal integer
+ *        x - Hex integer
+ *        a - IPv4 address
+ *        A - InetAddress object
+ *        h - MAC (hardware) address as byte array
+ *        H - MAC (hardware) address as MacAddress object
+ *        G - uuid object (GUID)
+ *        i - Object ID
+ *        t - timestamp (time_t) as raw value (seconds since epoch)
+ */
+UINT64 NXCORE_EXPORTABLE PostEvent2(UINT32 eventCode, EventOrigin origin, time_t originTimestamp, UINT32 sourceId, const char *format, ...)
+{
+   va_list args;
+   UINT64 eventId;
+   va_start(args, format);
+   bool success = RealPostEvent(&g_eventQueue, &eventId, eventCode, origin, originTimestamp, sourceId, 0, NULL, NULL, format, NULL, args, NULL);
+   va_end(args);
+   return success ? eventId : 0;
+}
+
+/**
+ * Post event with origin SYSTEM to system event queue and return ID of new event (0 in case of failure).
  *
  * @param eventCode Event code
  * @param sourceId Event source object ID
@@ -948,18 +1068,65 @@ bool NXCORE_EXPORTABLE PostDciEvent(UINT32 eventCode, UINT32 sourceId, UINT32 dc
  *        i - Object ID
  *        t - timestamp (time_t) as raw value (seconds since epoch)
  */
-UINT64 NXCORE_EXPORTABLE PostEvent2(UINT32 eventCode, UINT32 sourceId, const char *format, ...)
+UINT64 NXCORE_EXPORTABLE PostSystemEvent2(UINT32 eventCode, UINT32 sourceId, const char *format, ...)
 {
    va_list args;
    UINT64 eventId;
    va_start(args, format);
-   bool success = RealPostEvent(&g_eventQueue, &eventId, eventCode, sourceId, 0, NULL, NULL, format, NULL, args, NULL);
+   bool success = RealPostEvent(&g_eventQueue, &eventId, eventCode, EventOrigin::SYSTEM, 0, sourceId, 0, NULL, NULL, format, NULL, args, NULL);
    va_end(args);
    return success ? eventId : 0;
 }
 
 /**
  * Post event to system event queue.
+ *
+ * @param eventCode Event code
+ * @param origin event origin
+ * @param originTimestamp event origin's timestamp
+ * @param sourceId Event source object ID
+ * @param format Parameter format string, each parameter represented by one character.
+ *    The following format characters can be used:
+ *        s - String
+ *        m - Multibyte string
+ *        u - UNICODE string
+ *        d - Decimal integer
+ *        D - 64-bit decimal integer
+ *        x - Hex integer
+ *        a - IPv4 address
+ *        A - InetAddress object
+ *        h - MAC (hardware) address as byte array
+ *        H - MAC (hardware) address as MacAddress object
+ *        G - uuid object (GUID)
+ *        i - Object ID
+ * @param names names for parameters (NULL if parameters are unnamed)
+ */
+bool NXCORE_EXPORTABLE PostEventWithNames(UINT32 eventCode, EventOrigin origin, time_t originTimestamp,
+         UINT32 sourceId, const char *format, const TCHAR **names, ...)
+{
+   va_list args;
+   va_start(args, names);
+   bool success = RealPostEvent(&g_eventQueue, NULL, eventCode, origin, originTimestamp, sourceId, 0, NULL, NULL, format, names, args, NULL);
+   va_end(args);
+   return success;
+}
+
+/**
+ * Post event to system event queue.
+ *
+ * @param eventCode Event code
+ * @param origin event origin
+ * @param originTimestamp event origin's timestamp
+ * @param sourceId Event source object ID
+ * @param parameters event parameters list
+ */
+bool NXCORE_EXPORTABLE PostEventWithNames(UINT32 eventCode, EventOrigin origin, time_t originTimestamp, UINT32 sourceId, StringMap *parameters)
+{
+   return RealPostEvent(&g_eventQueue, NULL, eventCode, origin, originTimestamp, sourceId, 0, NULL, parameters, NULL, NULL, NULL, NULL);
+}
+
+/**
+ * Post event with SYSTEM origin to system event queue.
  *
  * @param eventCode Event code
  * @param sourceId Event source object ID
@@ -979,13 +1146,25 @@ UINT64 NXCORE_EXPORTABLE PostEvent2(UINT32 eventCode, UINT32 sourceId, const cha
  *        i - Object ID
  * @param names names for parameters (NULL if parameters are unnamed)
  */
-bool NXCORE_EXPORTABLE PostEventWithNames(UINT32 eventCode, UINT32 sourceId, const char *format, const TCHAR **names, ...)
+bool NXCORE_EXPORTABLE PostSystemEventWithNames(UINT32 eventCode, UINT32 sourceId, const char *format, const TCHAR **names, ...)
 {
    va_list args;
    va_start(args, names);
-   bool success = RealPostEvent(&g_eventQueue, NULL, eventCode, sourceId, 0, NULL, NULL, format, names, args, NULL);
+   bool success = RealPostEvent(&g_eventQueue, NULL, eventCode, EventOrigin::SYSTEM, 0, sourceId, 0, NULL, NULL, format, names, args, NULL);
    va_end(args);
    return success;
+}
+
+/**
+ * Post event with SYSTEM origin to system event queue.
+ *
+ * @param eventCode Event code
+ * @param sourceId Event source object ID
+ * @param parameters event parameters list
+ */
+bool NXCORE_EXPORTABLE PostSystemEventWithNames(UINT32 eventCode, UINT32 sourceId, StringMap *parameters)
+{
+   return RealPostEvent(&g_eventQueue, NULL, eventCode, EventOrigin::SYSTEM, 0, sourceId, 0, NULL, parameters, NULL, NULL, NULL, NULL);
 }
 
 /**
@@ -1014,15 +1193,30 @@ bool NXCORE_EXPORTABLE PostDciEventWithNames(UINT32 eventCode, UINT32 sourceId, 
 {
    va_list args;
    va_start(args, names);
-   bool success = RealPostEvent(&g_eventQueue, NULL, eventCode, sourceId, dciId, NULL, NULL, format, names, args, NULL);
+   bool success = RealPostEvent(&g_eventQueue, NULL, eventCode, EventOrigin::SYSTEM, 0, sourceId, dciId, NULL, NULL, format, names, args, NULL);
    va_end(args);
    return success;
+}
+
+/**
+ * Post DCI-related event to system event queue.
+ *
+ * @param eventCode Event code
+ * @param sourceId Event source object ID
+ * @param dciId DCI ID
+ * @param parameters event parameters list
+ */
+bool NXCORE_EXPORTABLE PostDciEventWithNames(UINT32 eventCode, UINT32 sourceId, UINT32 dciId, StringMap *parameters)
+{
+   return RealPostEvent(&g_eventQueue, NULL, eventCode, EventOrigin::SYSTEM, 0, sourceId, dciId, NULL, parameters, NULL, NULL, NULL, NULL);
 }
 
 /**
  * Post event to system event queue.
  *
  * @param eventCode Event code
+ * @param origin event origin
+ * @param originTimestamp event origin's timestamp
  * @param sourceId Event source object ID
  * @param format Parameter format string, each parameter represented by one character.
  *    The following format characters can be used:
@@ -1040,11 +1234,12 @@ bool NXCORE_EXPORTABLE PostDciEventWithNames(UINT32 eventCode, UINT32 sourceId, 
  *        i - Object ID
  * @param names names for parameters (NULL if parameters are unnamed)
  */
-bool NXCORE_EXPORTABLE PostEventWithTagAndNames(UINT32 eventCode, UINT32 sourceId, const TCHAR *userTag, const char *format, const TCHAR **names, ...)
+bool NXCORE_EXPORTABLE PostEventWithTagAndNames(UINT32 eventCode, EventOrigin origin, time_t originTimestamp,
+         UINT32 sourceId, const TCHAR *userTag, const char *format, const TCHAR **names, ...)
 {
    va_list args;
    va_start(args, names);
-   bool success = RealPostEvent(&g_eventQueue, NULL, eventCode, sourceId, 0, userTag, NULL, format, names, args, NULL);
+   bool success = RealPostEvent(&g_eventQueue, NULL, eventCode, origin, originTimestamp, sourceId, 0, userTag, NULL, format, names, args, NULL);
    va_end(args);
    return success;
 }
@@ -1053,44 +1248,24 @@ bool NXCORE_EXPORTABLE PostEventWithTagAndNames(UINT32 eventCode, UINT32 sourceI
  * Post event to system event queue.
  *
  * @param eventCode Event code
+ * @param origin event origin
+ * @param originTimestamp event origin's timestamp
  * @param sourceId Event source object ID
  * @param tag Event tag
  * @param parameters Named event parameters
  */
-bool NXCORE_EXPORTABLE PostEventWithTagAndNames(UINT32 eventCode, UINT32 sourceId, const TCHAR *tag, StringMap *parameters)
+bool NXCORE_EXPORTABLE PostEventWithTagAndNames(UINT32 eventCode, EventOrigin origin, time_t originTimestamp,
+         UINT32 sourceId, const TCHAR *tag, StringMap *parameters)
 {
-   return RealPostEvent(&g_eventQueue, NULL, eventCode, sourceId, 0, tag, parameters, NULL, NULL, NULL, NULL);
+   return RealPostEvent(&g_eventQueue, NULL, eventCode, origin, originTimestamp, sourceId, 0, tag, parameters, NULL, NULL, NULL, NULL);
 }
 
 /**
  * Post event to system event queue.
  *
  * @param eventCode Event code
- * @param sourceId Event source object ID
- * @param parameters event parameters list
- */
-bool NXCORE_EXPORTABLE PostEventWithNames(UINT32 eventCode, UINT32 sourceId, StringMap *parameters)
-{
-   return RealPostEvent(&g_eventQueue, NULL, eventCode, sourceId, 0, NULL, parameters, NULL, NULL, NULL, NULL);
-}
-
-/**
- * Post DCI-related event to system event queue.
- *
- * @param eventCode Event code
- * @param sourceId Event source object ID
- * @param dciId DCI ID
- * @param parameters event parameters list
- */
-bool NXCORE_EXPORTABLE PostDciEventWithNames(UINT32 eventCode, UINT32 sourceId, UINT32 dciId, StringMap *parameters)
-{
-   return RealPostEvent(&g_eventQueue, NULL, eventCode, sourceId, dciId, NULL, parameters, NULL, NULL, NULL, NULL);
-}
-
-/**
- * Post event to system event queue.
- *
- * @param eventCode Event code
+ * @param origin event origin
+ * @param originTimestamp event origin's timestamp
  * @param sourceId Event source object ID
  * @param userTag event's user tag
  * @param format Parameter format string, each parameter represented by one character.
@@ -1107,20 +1282,75 @@ bool NXCORE_EXPORTABLE PostDciEventWithNames(UINT32 eventCode, UINT32 sourceId, 
  *        H - MAC (hardware) address as MacAddress object
  *        G - uuid object (GUID)
  *        i - Object ID
- * @param names names for parameters (NULL if parameters are unnamed)
- * @param args event parameters
  */
-bool NXCORE_EXPORTABLE PostEventWithTag(UINT32 eventCode, UINT32 sourceId, const TCHAR *userTag, const char *format, ...)
+bool NXCORE_EXPORTABLE PostEventWithTag(UINT32 eventCode, EventOrigin origin, time_t originTimestamp,
+         UINT32 sourceId, const TCHAR *userTag, const char *format, ...)
 {
    va_list args;
    va_start(args, format);
-   bool success = RealPostEvent(&g_eventQueue, NULL, eventCode, sourceId, 0, userTag, NULL, format, NULL, args, NULL);
+   bool success = RealPostEvent(&g_eventQueue, NULL, eventCode, origin, originTimestamp, sourceId, 0, userTag, NULL, format, NULL, args, NULL);
    va_end(args);
    return success;
 }
 
 /**
+ * Post event to system event queue.
+ *
+ * @param eventCode Event code
+ * @param origin event origin
+ * @param originTimestamp event origin's timestamp
+ * @param sourceId Event source object ID
+ * @param userTag event's user tag
+ * @param parameters event parameters
+ */
+bool NXCORE_EXPORTABLE PostEventWithTag(UINT32 eventCode, EventOrigin origin, time_t originTimestamp,
+         UINT32 sourceId, const TCHAR *userTag, const StringList& parameters)
+{
+   StringMap pmap;
+   for(int i = 0; i < parameters.size(); i++)
+   {
+      TCHAR name[64];
+      _sntprintf(name, 64, _T("Parameter%d"), i + 1);
+      pmap.set(name, parameters.get(i));
+   }
+   return RealPostEvent(&g_eventQueue, NULL, eventCode, origin, originTimestamp, sourceId, 0, userTag, &pmap, NULL, NULL, NULL, NULL);
+}
+
+/**
  * Post event to given event queue.
+ *
+ * @param queue event queue to post events to
+ * @param eventCode Event code
+ * @param origin event origin
+ * @param originTimestamp event origin's timestamp
+ * @param sourceId Event source object ID
+ * @param format Parameter format string, each parameter represented by one character.
+ *    The following format characters can be used:
+ *        s - String
+ *        m - Multibyte string
+ *        u - UNICODE string
+ *        d - Decimal integer
+ *        D - 64-bit decimal integer
+ *        x - Hex integer
+ *        a - IPv4 address
+ *        A - InetAddress object
+ *        h - MAC (hardware) address as byte array
+ *        H - MAC (hardware) address as MacAddress object
+ *        G - uuid object (GUID)
+ *        i - Object ID
+ */
+bool NXCORE_EXPORTABLE PostEventEx(ObjectQueue<Event> *queue, UINT32 eventCode, EventOrigin origin,
+         time_t originTimestamp, UINT32 sourceId, const char *format, ...)
+{
+   va_list args;
+   va_start(args, format);
+   bool success = RealPostEvent(queue, NULL, eventCode, origin, originTimestamp, sourceId, 0, NULL, NULL, format, NULL, args, NULL);
+   va_end(args);
+   return success;
+}
+
+/**
+ * Post event with SYSTEM origin to given event queue.
  *
  * @param queue event queue to post events to
  * @param eventCode Event code
@@ -1140,11 +1370,11 @@ bool NXCORE_EXPORTABLE PostEventWithTag(UINT32 eventCode, UINT32 sourceId, const
  *        G - uuid object (GUID)
  *        i - Object ID
  */
-bool NXCORE_EXPORTABLE PostEventEx(ObjectQueue<Event> *queue, UINT32 eventCode, UINT32 sourceId, const char *format, ...)
+bool NXCORE_EXPORTABLE PostSystemEventEx(ObjectQueue<Event> *queue, UINT32 eventCode, UINT32 sourceId, const char *format, ...)
 {
    va_list args;
    va_start(args, format);
-   bool success = RealPostEvent(queue, NULL, eventCode, sourceId, 0, NULL, NULL, format, NULL, args, NULL);
+   bool success = RealPostEvent(queue, NULL, eventCode, EventOrigin::SYSTEM, 0, sourceId, 0, NULL, NULL, format, NULL, args, NULL);
    va_end(args);
    return success;
 }
@@ -1153,13 +1383,29 @@ bool NXCORE_EXPORTABLE PostEventEx(ObjectQueue<Event> *queue, UINT32 eventCode, 
  * Create event, run transformation script, and post to system event queue.
  *
  * @param eventCode Event code
+ * @param origin event origin
+ * @param originTimestamp event origin's timestamp
  * @param sourceId Event source object ID
  * @param tag Event tag
  * @param parameters Named event parameters
  */
-bool NXCORE_EXPORTABLE TransformAndPostEvent(UINT32 eventCode, UINT32 sourceId, const TCHAR *tag, StringMap *parameters, NXSL_VM *vm)
+bool NXCORE_EXPORTABLE TransformAndPostEvent(UINT32 eventCode, EventOrigin origin, time_t originTimestamp,
+         UINT32 sourceId, const TCHAR *tag, StringMap *parameters, NXSL_VM *vm)
 {
-   return RealPostEvent(&g_eventQueue, NULL, eventCode, sourceId, 0, tag, parameters, NULL, NULL, NULL, vm);
+   return RealPostEvent(&g_eventQueue, NULL, eventCode, origin, originTimestamp, sourceId, 0, tag, parameters, NULL, NULL, NULL, vm);
+}
+
+/**
+ * Create event with SYSTEM origin, run transformation script, and post to system event queue.
+ *
+ * @param eventCode Event code
+ * @param sourceId Event source object ID
+ * @param tag Event tag
+ * @param parameters Named event parameters
+ */
+bool NXCORE_EXPORTABLE TransformAndPostSystemEvent(UINT32 eventCode, UINT32 sourceId, const TCHAR *tag, StringMap *parameters, NXSL_VM *vm)
+{
+   return RealPostEvent(&g_eventQueue, NULL, eventCode, EventOrigin::SYSTEM, 0, sourceId, 0, tag, parameters, NULL, NULL, NULL, vm);
 }
 
 /**

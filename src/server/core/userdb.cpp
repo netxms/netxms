@@ -859,7 +859,7 @@ void UpdateLDAPUser(const TCHAR *dn, Entry *obj)
    {
       _sntprintf(description, MAX_USER_DESCR, _T("Got user with DN=%s but found existing group %s with same DN"), dn, object->getName());
       object->getGuidAsText(guid);
-      PostEvent(EVENT_LDAP_SYNC_ERROR ,g_dwMgmtNode, "issss", object->getId(), guid, object->getDn(), object->getName(), description);
+      PostSystemEvent(EVENT_LDAP_SYNC_ERROR ,g_dwMgmtNode, "issss", object->getId(), guid, object->getDn(), object->getName(), description);
       DbgPrintf(4,  _T("UpdateLDAPUser(): %s"), description);
       conflict = true;
    }
@@ -878,7 +878,7 @@ void UpdateLDAPUser(const TCHAR *dn, Entry *obj)
                user->setName(userName);
                _sntprintf(description, 1024, _T("User with name \"%s\" already exists. Unique user name have been generated: \"%s\""), obj->m_loginName, userName);
                object->getGuidAsText(guid);
-               PostEvent(EVENT_LDAP_SYNC_ERROR ,g_dwMgmtNode, "issss", object->getId(), guid, object->getDn(), object->getName(), description);
+               PostSystemEvent(EVENT_LDAP_SYNC_ERROR ,g_dwMgmtNode, "issss", object->getId(), guid, object->getDn(), object->getName(), description);
                DbgPrintf(4,  _T("UpdateLDAPUser(): %s"), description);
             }
             user->setFullName(obj->m_fullName);
@@ -943,7 +943,7 @@ void UpdateLDAPUser(const TCHAR *dn, Entry *obj)
          AddDatabaseObject(user);
          SendUserDBUpdate(USER_DB_CREATE, user->getId(), user);
          user->getGuidAsText(guid);
-         PostEvent(EVENT_LDAP_SYNC_ERROR ,g_dwMgmtNode, "issss", user->getId(), guid, user->getDn(), user->getName(), description);
+         PostSystemEvent(EVENT_LDAP_SYNC_ERROR ,g_dwMgmtNode, "issss", user->getId(), guid, user->getDn(), user->getName(), description);
          DbgPrintf(4, _T("UpdateLDAPUser(): User added: ID: %s DN: %s, login name: %s, full name: %s, description: %s"), CHECK_NULL(obj->m_id), dn, userName, CHECK_NULL(obj->m_fullName), CHECK_NULL(obj->m_description));
          MemFree(userName);
       }
@@ -1088,7 +1088,7 @@ void UpdateLDAPGroup(const TCHAR *dn, Entry *obj) //no full name, add users insi
    {
       _sntprintf(description, MAX_USER_DESCR, _T("Got group with DN=%s but found existing user %s with same DN"), dn, object->getName());
       object->getGuidAsText(guid);
-      PostEvent(EVENT_LDAP_SYNC_ERROR ,g_dwMgmtNode, "issss", object->getId(), guid, object->getDn(), object->getName(), description);
+      PostSystemEvent(EVENT_LDAP_SYNC_ERROR ,g_dwMgmtNode, "issss", object->getId(), guid, object->getDn(), object->getName(), description);
       DbgPrintf(4,  _T("UpdateLDAPGroup(): %s"), description);
       conflict = true;
    }
@@ -1107,7 +1107,7 @@ void UpdateLDAPGroup(const TCHAR *dn, Entry *obj) //no full name, add users insi
                group->setName(groupName);
                _sntprintf(description, MAX_USER_DESCR, _T("Group with name \"%s\" already exists. Unique group name have been generated: \"%s\""), obj->m_loginName, groupName);
                object->getGuidAsText(guid);
-               PostEvent(EVENT_LDAP_SYNC_ERROR ,g_dwMgmtNode, "issss", object->getId(), guid, object->getDn(), object->getName(), description);
+               PostSystemEvent(EVENT_LDAP_SYNC_ERROR ,g_dwMgmtNode, "issss", object->getId(), guid, object->getDn(), object->getName(), description);
                DbgPrintf(4,  _T("UpdateLDAPGroup(): %s"),description);
             }
             group->setDescription(obj->m_description);
@@ -1168,7 +1168,7 @@ void UpdateLDAPGroup(const TCHAR *dn, Entry *obj) //no full name, add users insi
          SendUserDBUpdate(USER_DB_CREATE, group->getId(), group);
          AddDatabaseObject(group);
          group->getGuidAsText(guid);
-         PostEvent(EVENT_LDAP_SYNC_ERROR ,g_dwMgmtNode, "issss", group->getId(), guid, group->getDn(), group->getName(), description);
+         PostSystemEvent(EVENT_LDAP_SYNC_ERROR ,g_dwMgmtNode, "issss", group->getId(), guid, group->getDn(), group->getName(), description);
          DbgPrintf(4, _T("UpdateLDAPGroup(): Group added: ID: %s DN: %s, login name: %s, description: %s"), CHECK_NULL(obj->m_id), dn, obj->m_loginName, CHECK_NULL(obj->m_description));
          MemFree(groupName);
       }

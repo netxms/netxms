@@ -110,11 +110,8 @@ void AgentConnectionEx::onTrap(NXCPMessage *pMsg)
    if (IsShutdownInProgress())
       return;
 
-   UINT32 dwEventCode;
-   int i, iNumArgs;
    Node *pNode = NULL;
-   TCHAR *pszArgList[32], szBuffer[32];
-   char szFormat[] = "ssssssssssssssssssssssssssssssss";
+   TCHAR szBuffer[64];
 
    debugPrintf(3, _T("AgentConnectionEx::onTrap(): Received trap message from agent at %s, node ID %d"), getIpAddr().toString(szBuffer), m_nodeId);
 	if (m_nodeId != 0)
@@ -144,34 +141,17 @@ void AgentConnectionEx::onTrap(NXCPMessage *pMsg)
 
 		   if (acceptTrap)
 		   {
-			   dwEventCode = pMsg->getFieldAsUInt32(VID_EVENT_CODE);
+			   UINT32 dwEventCode = pMsg->getFieldAsUInt32(VID_EVENT_CODE);
 			   if ((dwEventCode == 0) && pMsg->isFieldExist(VID_EVENT_NAME))
 			   {
 				   TCHAR eventName[256];
 				   pMsg->getFieldAsString(VID_EVENT_NAME, eventName, 256);
 				   dwEventCode = EventCodeFromName(eventName, 0);
 			   }
-			   iNumArgs = (int)pMsg->getFieldAsUInt16(VID_NUM_ARGS);
-			   if (iNumArgs > 32)
-				   iNumArgs = 32;
-			   for(i = 0; i < iNumArgs; i++)
-				   pszArgList[i] = pMsg->getFieldAsString(VID_EVENT_ARG_BASE + i);
-			   DbgPrintf(3, _T("Event from trap: %d"), dwEventCode);
+			   debugPrintf(3, _T("Event from trap: %d"), dwEventCode);
 
-			   szFormat[iNumArgs] = 0;
-			   PostEvent(dwEventCode, pNode->getId(), (iNumArgs > 0) ? szFormat : NULL,
-						    pszArgList[0], pszArgList[1], pszArgList[2], pszArgList[3],
-						    pszArgList[4], pszArgList[5], pszArgList[6], pszArgList[7],
-						    pszArgList[8], pszArgList[9], pszArgList[10], pszArgList[11],
-						    pszArgList[12], pszArgList[13], pszArgList[14], pszArgList[15],
-						    pszArgList[16], pszArgList[17], pszArgList[18], pszArgList[19],
-						    pszArgList[20], pszArgList[21], pszArgList[22], pszArgList[23],
-						    pszArgList[24], pszArgList[25], pszArgList[26], pszArgList[27],
-						    pszArgList[28], pszArgList[29], pszArgList[30], pszArgList[31]);
-
-			   // Cleanup
-			   for(i = 0; i < iNumArgs; i++)
-				   free(pszArgList[i]);
+			   StringList parameters(pMsg, VID_EVENT_ARG_BASE, VID_NUM_ARGS);
+			   PostEvent(dwEventCode, EventOrigin::AGENT, 0, pNode->getId(), parameters);
 		   }
       }
       else

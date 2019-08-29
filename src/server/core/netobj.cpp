@@ -1658,7 +1658,7 @@ void NetObj::setMgmtStatus(BOOL bIsManaged)
 
    // Generate event if current object is a node
    if (getObjectClass() == OBJECT_NODE)
-      PostEvent(bIsManaged ? EVENT_NODE_UNKNOWN : EVENT_NODE_UNMANAGED, m_id, "d", oldStatus);
+      PostSystemEvent(bIsManaged ? EVENT_NODE_UNKNOWN : EVENT_NODE_UNMANAGED, m_id, "d", oldStatus);
 
    // Change status for child objects also
    lockChildList(false);
@@ -2785,7 +2785,7 @@ String NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, const E
                   }
                   break;
                case 't':   // Event's timestamp
-                  t = (event != NULL) ? event->getTimeStamp() : time(NULL);
+                  t = (event != NULL) ? event->getTimestamp() : time(NULL);
 #if HAVE_LOCALTIME_R
                   lt = localtime_r(&t, &tmbuffer);
 #else
@@ -2795,7 +2795,7 @@ String NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, const E
                   output.append(buffer);
                   break;
                case 'T':   // Event's timestamp as number of seconds since epoch
-                  output.append(static_cast<INT64>((event != NULL) ? event->getTimeStamp() : time(NULL)));
+                  output.append(static_cast<INT64>((event != NULL) ? event->getTimestamp() : time(NULL)));
                   break;
                case 'U':   // User name
                   output.append(userName);
@@ -2909,7 +2909,7 @@ String NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, const E
                         {
                            DbgPrintf(4, _T("NetObj::ExpandText(%d, \"%s\"): Script %s execution error: %s"),
                                      (int)((event != NULL) ? event->getCode() : 0), textTemplate, buffer, vm->getErrorText());
-                           PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, vm->getErrorText(), 0);
+                           PostSystemEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, vm->getErrorText(), 0);
                         }
                         delete vm;
                      }

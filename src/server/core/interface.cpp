@@ -683,7 +683,7 @@ void Interface::statusPoll(ClientSession *session, UINT32 rqId, ObjectQueue<Even
       {
 		   sendPollerMsg(rqId, _T("      Interface status changed to %s\r\n"), GetStatusAsText(m_status, true));
          const InetAddress& addr = m_ipAddressList.getFirstUnicastAddress();
-		   PostEventEx(eventQueue,
+		   PostSystemEventEx(eventQueue,
 		               (expectedState == IF_EXPECTED_STATE_DOWN) ? statusToEventInverted[m_status] : statusToEvent[m_status],
                      pNode->getId(), "dsAdd", m_id, m_name, &addr, addr.getMaskBits(), m_index);
       }
@@ -867,12 +867,12 @@ void Interface::paeStatusPoll(UINT32 rqId, SNMP_Transport *pTransport, Node *nod
 		modified = true;
       if (!m_isSystem)
       {
-		   PostEvent(EVENT_8021X_PAE_STATE_CHANGED, node->getId(), "dsdsds", paeState, PAE_STATE_TEXT(paeState),
+		   PostSystemEvent(EVENT_8021X_PAE_STATE_CHANGED, node->getId(), "dsdsds", paeState, PAE_STATE_TEXT(paeState),
 		             (UINT32)m_dot1xPaeAuthState, PAE_STATE_TEXT(m_dot1xPaeAuthState), m_id, m_name);
 
 		   if (paeState == PAE_STATE_FORCE_UNAUTH)
 		   {
-			   PostEvent(EVENT_8021X_PAE_FORCE_UNAUTH, node->getId(), "ds", m_id, m_name);
+			   PostSystemEvent(EVENT_8021X_PAE_FORCE_UNAUTH, node->getId(), "ds", m_id, m_name);
 		   }
       }
 	}
@@ -883,16 +883,16 @@ void Interface::paeStatusPoll(UINT32 rqId, SNMP_Transport *pTransport, Node *nod
 		modified = true;
       if (!m_isSystem)
       {
-		   PostEvent(EVENT_8021X_BACKEND_STATE_CHANGED, node->getId(), "dsdsds", backendState, BACKEND_STATE_TEXT(backendState),
+		   PostSystemEvent(EVENT_8021X_BACKEND_STATE_CHANGED, node->getId(), "dsdsds", backendState, BACKEND_STATE_TEXT(backendState),
 		             (UINT32)m_dot1xBackendAuthState, BACKEND_STATE_TEXT(m_dot1xBackendAuthState), m_id, m_name);
 
 		   if (backendState == BACKEND_STATE_FAIL)
 		   {
-			   PostEvent(EVENT_8021X_AUTH_FAILED, node->getId(), "ds", m_id, m_name);
+			   PostSystemEvent(EVENT_8021X_AUTH_FAILED, node->getId(), "ds", m_id, m_name);
 		   }
 		   else if (backendState == BACKEND_STATE_TIMEOUT)
 		   {
-			   PostEvent(EVENT_8021X_AUTH_TIMEOUT, node->getId(), "ds", m_id, m_name);
+			   PostSystemEvent(EVENT_8021X_AUTH_TIMEOUT, node->getId(), "ds", m_id, m_name);
 		   }
       }
 	}
@@ -980,7 +980,7 @@ void Interface::setExpectedStateInternal(int state)
       m_flags |= (UINT32)state << 28;
       setModified(MODIFY_COMMON_PROPERTIES);
       if (state != IF_EXPECTED_STATE_AUTO)
-         PostEvent(eventCode[state], getParentNodeId(), "ds", m_index, m_name);
+         PostSystemEvent(eventCode[state], getParentNodeId(), "ds", m_index, m_name);
 	}
 }
 
@@ -1135,7 +1135,7 @@ void Interface::setPeer(Node *node, Interface *iface, LinkLayerProtocol protocol
             _T("localIfIP"), _T("localIfMAC"), _T("remoteNodeId"), _T("remoteNodeName"),
             _T("remoteIfId"), _T("remoteIfIndex"), _T("remoteIfName"), _T("remoteIfIP"),
             _T("remoteIfMAC"), _T("protocol") };
-         PostEventWithNames(EVENT_IF_PEER_CHANGED, getParentNodeId(), "ddsAHdsddsAHd", names,
+         PostSystemEventWithNames(EVENT_IF_PEER_CHANGED, getParentNodeId(), "ddsAHdsddsAHd", names,
             m_id, m_index, m_name, &m_ipAddressList.getFirstUnicastAddress(), &m_macAddr,
             node->getId(), node->getName(), iface->getId(), iface->getIfIndex(), iface->getName(),
             &iface->getIpAddressList()->getFirstUnicastAddress(), &iface->getMacAddr(), protocol);

@@ -71,6 +71,8 @@ static NXCORE_LOG s_logs[] =
 		{
          { _T("event_id"), _T("ID"), LC_INTEGER },
 			{ _T("event_timestamp"), _T("Time"), LC_TIMESTAMP },
+         { _T("origin_timestamp"), _T("Origin time"), LC_TIMESTAMP },
+         { _T("origin"), _T("Origin"), LC_EVENT_ORIGIN },
 			{ _T("event_source"), _T("Source"), LC_OBJECT_ID },
          { _T("zone_uin"), _T("Zone"), LC_ZONE_UIN },
          { _T("dci_id"), _T("DCI"), LC_INTEGER },

@@ -368,7 +368,7 @@ void SlmCheck::execute()
 					TCHAR buffer[1024];
 
 					_sntprintf(buffer, 1024, _T("ServiceCheck::%s::%d"), m_name, m_id);
-					PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, m_pCompiledScript->getErrorText(), m_id);
+					PostSystemEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, m_pCompiledScript->getErrorText(), m_id);
 			      nxlog_write(NXLOG_WARNING, _T("Failed to execute script for service check object %s [%u] (%s)"), m_name, m_id, m_pCompiledScript->getErrorText());
 					m_status = STATUS_UNKNOWN;
 				}

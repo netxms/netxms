@@ -862,7 +862,7 @@ NXSL_VM *DataCollectionTarget::runDataCollectionScript(const TCHAR *param, DataC
          time_t lastReport = static_cast<time_t>(m_scriptErrorReports->getInt64(param, 0));
          if (lastReport + ConfigReadInt(_T("DataCollection.ScriptErrorReportInterval"), 86400) < now)
          {
-            PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", name, vm->getErrorText(), m_id);
+            PostSystemEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", name, vm->getErrorText(), m_id);
             m_scriptErrorReports->set(param, static_cast<UINT64>(now));
          }
          delete_and_null(vm);
@@ -1036,7 +1036,7 @@ UINT32 DataCollectionTarget::getStringMapFromScript(const TCHAR *param, StringMa
       else
       {
          DbgPrintf(4, _T("DataCollectionTarget(%s)->getListFromScript(%s): Script execution error: %s"), m_name, param, vm->getErrorText());
-         PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", name, vm->getErrorText(), m_id);
+         PostSystemEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", name, vm->getErrorText(), m_id);
          rc = DCE_COLLECTION_ERROR;
       }
       delete vm;
@@ -1241,7 +1241,7 @@ void DataCollectionTarget::calculateCompoundStatus(BOOL bForcedRecalc)
 void DataCollectionTarget::enterMaintenanceMode(const TCHAR *comments)
 {
    DbgPrintf(4, _T("Entering maintenance mode for %s [%d]"), m_name, m_id);
-   UINT64 eventId = PostEvent2(EVENT_MAINTENANCE_MODE_ENTERED, m_id, "s", CHECK_NULL_EX(comments));
+   UINT64 eventId = PostSystemEvent2(EVENT_MAINTENANCE_MODE_ENTERED, m_id, "s", CHECK_NULL_EX(comments));
 
    lockDciAccess(false);
    for(int i = 0; i < m_dcObjects->size(); i++)
@@ -1267,7 +1267,7 @@ void DataCollectionTarget::enterMaintenanceMode(const TCHAR *comments)
 void DataCollectionTarget::leaveMaintenanceMode()
 {
    DbgPrintf(4, _T("Leaving maintenance mode for %s [%d]"), m_name, m_id);
-   PostEvent(EVENT_MAINTENANCE_MODE_LEFT, m_id, NULL);
+   PostSystemEvent(EVENT_MAINTENANCE_MODE_LEFT, m_id, NULL);
 
    lockDciAccess(false);
    for(int i = 0; i < m_dcObjects->size(); i++)
@@ -1438,7 +1438,7 @@ void DataCollectionTarget::applyUserTemplates()
             DbgPrintf(4, _T("DataCollectionTarget::applyUserTemplates(): applying template %d \"%s\" to object %d \"%s\""),
                       pTemplate->getId(), pTemplate->getName(), m_id, m_name);
             pTemplate->applyToTarget(this);
-            PostEvent(EVENT_TEMPLATE_AUTOAPPLY, g_dwMgmtNode, "isis", m_id, m_name, pTemplate->getId(), pTemplate->getName());
+            PostSystemEvent(EVENT_TEMPLATE_AUTOAPPLY, g_dwMgmtNode, "isis", m_id, m_name, pTemplate->getId(), pTemplate->getName());
          }
       }
       else if (decision == AutoBindDecision_Unbind)
@@ -1450,7 +1450,7 @@ void DataCollectionTarget::applyUserTemplates()
             pTemplate->deleteChild(this);
             deleteParent(pTemplate);
             pTemplate->queueRemoveFromTarget(m_id, true);
-            PostEvent(EVENT_TEMPLATE_AUTOREMOVE, g_dwMgmtNode, "isis", m_id, m_name, pTemplate->getId(), pTemplate->getName());
+            PostSystemEvent(EVENT_TEMPLATE_AUTOREMOVE, g_dwMgmtNode, "isis", m_id, m_name, pTemplate->getId(), pTemplate->getName());
          }
       }
       pTemplate->decRefCount();
@@ -1487,7 +1487,7 @@ void DataCollectionTarget::updateContainerMembership()
                       m_id, m_name, pContainer->getId(), pContainer->getName());
             pContainer->addChild(this);
             addParent(pContainer);
-            PostEvent(EVENT_CONTAINER_AUTOBIND, g_dwMgmtNode, "isis", m_id, m_name, pContainer->getId(), pContainer->getName());
+            PostSystemEvent(EVENT_CONTAINER_AUTOBIND, g_dwMgmtNode, "isis", m_id, m_name, pContainer->getId(), pContainer->getName());
             pContainer->calculateCompoundStatus();
          }
       }
@@ -1499,7 +1499,7 @@ void DataCollectionTarget::updateContainerMembership()
                       m_id, m_name, pContainer->getId(), pContainer->getName());
             pContainer->deleteChild(this);
             deleteParent(pContainer);
-            PostEvent(EVENT_CONTAINER_AUTOUNBIND, g_dwMgmtNode, "isis", m_id, m_name, pContainer->getId(), pContainer->getName());
+            PostSystemEvent(EVENT_CONTAINER_AUTOUNBIND, g_dwMgmtNode, "isis", m_id, m_name, pContainer->getId(), pContainer->getName());
             pContainer->calculateCompoundStatus();
          }
       }

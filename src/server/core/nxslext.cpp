@@ -549,7 +549,7 @@ static int F_PostEvent(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_
 		for(int i = 3; (i < argc) && (eargc < 32); i++)
 			plist[eargc++] = argv[i]->getValueAsCString();
 		format[eargc] = 0;
-		success = PostEventWithTag(eventCode, node->getId(), userTag, format,
+		success = PostEventWithTag(eventCode, EventOrigin::NXSL, 0, node->getId(), userTag, format,
 		                           plist[0], plist[1], plist[2], plist[3],
 		                           plist[4], plist[5], plist[6], plist[7],
 		                           plist[8], plist[9], plist[10], plist[11],

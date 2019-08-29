@@ -82,12 +82,12 @@ THREAD_RESULT THREAD_CALL BeaconPoller(void *arg)
 		{
 			// All beacons are lost, consider NetXMS server network conectivity loss
 			g_flags |= AF_NO_NETWORK_CONNECTIVITY;
-         PostEvent(EVENT_NETWORK_CONNECTION_LOST, g_dwMgmtNode, "d", hostList.size());
+         PostSystemEvent(EVENT_NETWORK_CONNECTION_LOST, g_dwMgmtNode, "d", hostList.size());
 		}
       else if ((i < hostList.size()) && (g_flags & AF_NO_NETWORK_CONNECTIVITY))
 		{
 			g_flags &= ~AF_NO_NETWORK_CONNECTIVITY;
-			PostEvent(EVENT_NETWORK_CONNECTION_RESTORED, g_dwMgmtNode, "d", hostList.size());
+			PostSystemEvent(EVENT_NETWORK_CONNECTION_RESTORED, g_dwMgmtNode, "d", hostList.size());
 		}
 		ThreadSleepMs(interval);
 	}

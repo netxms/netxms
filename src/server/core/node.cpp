@@ -1736,7 +1736,7 @@ Interface *Node::createNewInterface(InterfaceInfo *info, bool manuallyCreated, b
    if (!iface->isSystem())
    {
       const InetAddress& addr = iface->getFirstIpAddress();
-      PostEvent(EVENT_INTERFACE_ADDED, m_id, "dsAdd", iface->getId(),
+      PostSystemEvent(EVENT_INTERFACE_ADDED, m_id, "dsAdd", iface->getId(),
                 iface->getName(), &addr, addr.getMaskBits(), iface->getIfIndex());
    }
 
@@ -1812,7 +1812,7 @@ void Node::calculateCompoundStatus(BOOL bForcedRecalc)
 
    super::calculateCompoundStatus(bForcedRecalc);
    if (m_status != iOldStatus)
-      PostEvent(dwEventCodes[m_status], m_id, "d", iOldStatus);
+      PostSystemEvent(dwEventCodes[m_status], m_id, "d", iOldStatus);
 }
 
 /**
@@ -1889,7 +1889,7 @@ restart_agent_check:
                if (m_pollCountSNMP >= requiredPolls)
                {
                   m_state &= ~NSF_SNMP_UNREACHABLE;
-                  PostEventEx(eventQueue, EVENT_SNMP_OK, m_id, NULL);
+                  PostSystemEventEx(eventQueue, EVENT_SNMP_OK, m_id, NULL);
                   sendPollerMsg(rqId, POLLER_INFO _T("Connectivity with SNMP agent restored\r\n"));
                   m_pollCountSNMP = 0;
                }
@@ -1953,7 +1953,7 @@ restart_agent_check:
                if (m_pollCountSNMP >= requiredPolls)
                {
                   m_state |= NSF_SNMP_UNREACHABLE;
-                  PostEventEx(eventQueue, EVENT_SNMP_FAIL, m_id, NULL);
+                  PostSystemEventEx(eventQueue, EVENT_SNMP_FAIL, m_id, NULL);
                   m_failTimeSNMP = tNow;
                   m_pollCountSNMP = 0;
                }
@@ -1989,7 +1989,7 @@ restart_agent_check:
             if (m_pollCountAgent >= requiredPolls)
             {
                m_state &= ~NSF_AGENT_UNREACHABLE;
-               PostEventEx(eventQueue, EVENT_AGENT_OK, m_id, NULL);
+               PostSystemEventEx(eventQueue, EVENT_AGENT_OK, m_id, NULL);
                sendPollerMsg(rqId, POLLER_INFO _T("Connectivity with NetXMS agent restored\r\n"));
                m_pollCountAgent = 0;
 
@@ -2029,7 +2029,7 @@ restart_agent_check:
             if (m_pollCountAgent >= requiredPolls)
             {
                m_state |= NSF_AGENT_UNREACHABLE;
-               PostEventEx(eventQueue, EVENT_AGENT_FAIL, m_id, NULL);
+               PostSystemEventEx(eventQueue, EVENT_AGENT_FAIL, m_id, NULL);
                m_failTimeAgent = tNow;
                //cancel file monitoring locally(on agent it is canceled if agent have fallen)
                g_monitoringList.removeDisconnectedNode(m_id);
@@ -2206,11 +2206,11 @@ restart_agent_check:
                // Clear delayed event queue
                delete_and_null(eventQueue);
 
-               PostEvent(EVENT_NODE_UNREACHABLE, m_id, NULL);
+               PostSystemEvent(EVENT_NODE_UNREACHABLE, m_id, NULL);
             }
             else
             {
-               PostEvent(EVENT_NODE_DOWN, m_id, NULL);
+               PostSystemEvent(EVENT_NODE_DOWN, m_id, NULL);
             }
             g_monitoringList.removeDisconnectedNode(m_id);
             sendPollerMsg(rqId, POLLER_ERROR _T("Node is unreachable\r\n"));
@@ -2219,7 +2219,7 @@ restart_agent_check:
          {
             if((m_state & DCSF_NETWORK_PATH_PROBLEM) && !checkNetworkPath(rqId))
             {
-               PostEvent(EVENT_NODE_DOWN, m_id, NULL);
+               PostSystemEvent(EVENT_NODE_DOWN, m_id, NULL);
                m_state &= ~DCSF_NETWORK_PATH_PROBLEM;
             }
             sendPollerMsg(rqId, POLLER_WARNING _T("Node is still unreachable\r\n"));
@@ -2232,7 +2232,7 @@ restart_agent_check:
          {
             int reason = (m_state & DCSF_NETWORK_PATH_PROBLEM) ? 1 : 0;
             m_state &= ~(DCSF_UNREACHABLE | DCSF_NETWORK_PATH_PROBLEM);
-            PostEvent(EVENT_NODE_UP, m_id, "d", reason);
+            PostSystemEvent(EVENT_NODE_UP, m_id, "d", reason);
             sendPollerMsg(rqId, POLLER_INFO _T("Node recovered from unreachable state\r\n"));
             goto restart_agent_check;
          }
@@ -2322,7 +2322,7 @@ restart_agent_check:
       {
          UINT32 status = _tcstol(buffer, NULL, 0);
          if (status != 0)
-            PostEvent(EVENT_AGENT_LOG_PROBLEM, m_id, "ds", status, _T("could not open"));
+            PostSystemEvent(EVENT_AGENT_LOG_PROBLEM, m_id, "ds", status, _T("could not open"));
       }
       else
       {
@@ -2338,7 +2338,7 @@ restart_agent_check:
                                        _T("could not update database"),
                                        };
          if (status != 0)
-            PostEvent(EVENT_AGENT_LOCAL_DATABASE_PROBLEM, m_id, "ds", status, statusDescription[status]);
+            PostSystemEvent(EVENT_AGENT_LOCAL_DATABASE_PROBLEM, m_id, "ds", status, statusDescription[status]);
       }
       else
       {
@@ -2390,7 +2390,7 @@ restart_agent_check:
    poller->setStatus(_T("cleanup"));
 
    if (oldCapabilities != m_capabilities)
-      PostEvent(EVENT_NODE_CAPABILITIES_CHANGED, m_id, "xx", oldCapabilities, m_capabilities);
+      PostSystemEvent(EVENT_NODE_CAPABILITIES_CHANGED, m_id, "xx", oldCapabilities, m_capabilities);
 
    if (oldState != m_state || oldCapabilities != m_capabilities)
    {
@@ -2623,7 +2623,7 @@ bool Node::checkNetworkPathLayer3(UINT32 requestId, bool secondPass)
                           _T("sourceNodeId"), _T("sourceAddress"), _T("prefix"),
                           _T("prefixLength"), _T("nextHopNodeId"), _T("nextHopAddress")
                         };
-               PostEventWithNames(EVENT_ROUTING_LOOP_DETECTED, prevHop->object->getId(), "siAiAAdiA", names,
+               PostSystemEventWithNames(EVENT_ROUTING_LOOP_DETECTED, prevHop->object->getId(), "siAiAAdiA", names,
                      (trace->getSourceAddress().getFamily() == AF_INET6) ? _T("IPv6") : _T("IPv4"),
                      m_id, &m_ipAddress, g_dwMgmtNode, &(trace->getSourceAddress()),
                      &prevHop->route, prevHop->route.getMaskBits(), hop->object->getId(), &prevHop->nextHop);
@@ -2780,7 +2780,7 @@ void Node::updatePrimaryIpAddr()
 
       DbgPrintf(4, _T("IP address for node %s [%d] changed from %s to %s"),
          m_name, (int)m_id, m_ipAddress.toString(buffer1), ipAddr.toString(buffer2));
-      PostEvent(EVENT_IP_ADDRESS_CHANGED, m_id, "AA", &ipAddr, &m_ipAddress);
+      PostSystemEvent(EVENT_IP_ADDRESS_CHANGED, m_id, "AA", &ipAddr, &m_ipAddress);
 
       lockProperties();
 
@@ -2876,6 +2876,9 @@ static int ReadHardwareInformation(Node *node, ObjectArray<HardwareComponent> *c
  */
 bool Node::updateHardwareComponents(PollerInfo *poller, UINT32 requestId)
 {
+   if (!(m_capabilities & NC_IS_NATIVE_AGENT))
+      return false;
+
    poller->setStatus(_T("hardware check"));
    sendPollerMsg(requestId, _T("Reading list of installed hardware components\r\n"));
 
@@ -2918,7 +2921,7 @@ bool Node::updateHardwareComponents(PollerInfo *poller, UINT32 requestId)
                         m_name, categoryNames[c->getCategory()], c->getModel(), c->getType(), c->getSerialNumber());
                sendPollerMsg(requestId, _T("   %s %s (%s) added, serial number %s\r\n"),
                         categoryNames[c->getCategory()], c->getModel(), c->getType(), c->getSerialNumber());
-               PostEventWithNames(EVENT_HARDWARE_COMPONENT_ADDED, m_id, "sssssssDs", eventParamNames, categoryNames[c->getCategory()],
+               PostSystemEventWithNames(EVENT_HARDWARE_COMPONENT_ADDED, m_id, "sssssssDs", eventParamNames, categoryNames[c->getCategory()],
                         c->getType(), c->getVendor(), c->getModel(), c->getLocation(), c->getPartNumber(),
                         c->getSerialNumber(), c->getCapacity(), c->getDescription());
                break;
@@ -2927,7 +2930,7 @@ bool Node::updateHardwareComponents(PollerInfo *poller, UINT32 requestId)
                         m_name, categoryNames[c->getCategory()], c->getModel(), c->getType(), c->getSerialNumber());
                sendPollerMsg(requestId, _T("   %s %s (%s) removed, serial number %s\r\n"),
                         categoryNames[c->getCategory()], c->getModel(), c->getType(), c->getSerialNumber());
-               PostEventWithNames(EVENT_HARDWARE_COMPONENT_REMOVED, m_id, "sssssssDs", eventParamNames, categoryNames[c->getCategory()],
+               PostSystemEventWithNames(EVENT_HARDWARE_COMPONENT_REMOVED, m_id, "sssssssDs", eventParamNames, categoryNames[c->getCategory()],
                         c->getType(), c->getVendor(), c->getModel(), c->getLocation(), c->getPartNumber(),
                         c->getSerialNumber(), c->getCapacity(), c->getDescription());
                break;
@@ -2990,18 +2993,18 @@ bool Node::updateSoftwarePackages(PollerInfo *poller, UINT32 requestId)
             case CHANGE_ADDED:
                nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): new package %s version %s"), m_name, p->getName(), p->getVersion());
                sendPollerMsg(requestId, _T("   New package %s version %s\r\n"), p->getName(), p->getVersion());
-               PostEventWithNames(EVENT_PACKAGE_INSTALLED, m_id, "ss", eventParamNames, p->getName(), p->getVersion());
+               PostSystemEventWithNames(EVENT_PACKAGE_INSTALLED, m_id, "ss", eventParamNames, p->getName(), p->getVersion());
                break;
             case CHANGE_REMOVED:
                nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): package %s version %s removed"), m_name, p->getName(), p->getVersion());
                sendPollerMsg(requestId, _T("   Package %s version %s removed\r\n"), p->getName(), p->getVersion());
-               PostEventWithNames(EVENT_PACKAGE_REMOVED, m_id, "ss", eventParamNames, p->getName(), p->getVersion());
+               PostSystemEventWithNames(EVENT_PACKAGE_REMOVED, m_id, "ss", eventParamNames, p->getName(), p->getVersion());
                break;
             case CHANGE_UPDATED:
                SoftwarePackage *prev = changes->get(++i);   // next entry contains previous package version
                nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): package %s updated (%s -> %s)"), m_name, p->getName(), prev->getVersion(), p->getVersion());
                sendPollerMsg(requestId, _T("   Package %s updated (%s -> %s)\r\n"), p->getName(), prev->getVersion(), p->getVersion());
-               PostEventWithNames(EVENT_PACKAGE_UPDATED, m_id, "sss", eventParamNames, p->getName(), p->getVersion(), prev->getVersion());
+               PostSystemEventWithNames(EVENT_PACKAGE_UPDATED, m_id, "sss", eventParamNames, p->getName(), p->getVersion(), prev->getVersion());
                break;
          }
       }
@@ -3039,7 +3042,7 @@ struct DeleteDuplicateNodeData
  */
 static void DeleteDuplicateNode(DeleteDuplicateNodeData *data)
 {
-   PostEvent(EVENT_DUPLICATE_NODE_DELETED, g_dwMgmtNode, "dssdsss",
+   PostSystemEvent(EVENT_DUPLICATE_NODE_DELETED, g_dwMgmtNode, "dssdsss",
             data->originalNode->getId(), data->originalNode->getName(), data->originalNode->getPrimaryName(),
             data->duplicateNode->getId(), data->duplicateNode->getName(), data->duplicateNode->getPrimaryName(),
             data->reason);
@@ -3144,7 +3147,7 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
       // Generate event if node flags has been changed
       if (oldCapabilities != m_capabilities)
       {
-         PostEvent(EVENT_NODE_CAPABILITIES_CHANGED, m_id, "xx", oldCapabilities, m_capabilities);
+         PostSystemEvent(EVENT_NODE_CAPABILITIES_CHANGED, m_id, "xx", oldCapabilities, m_capabilities);
          modified |= MODIFY_NODE_PROPERTIES;
       }
 
@@ -3612,7 +3615,7 @@ bool Node::confPollAgent(UINT32 rqId)
       if (m_state & NSF_AGENT_UNREACHABLE)
       {
          m_state &= ~NSF_AGENT_UNREACHABLE;
-         PostEvent(EVENT_AGENT_OK, m_id, NULL);
+         PostSystemEvent(EVENT_AGENT_OK, m_id, NULL);
          sendPollerMsg(rqId, POLLER_INFO _T("   Connectivity with NetXMS agent restored\r\n"));
       }
       else
@@ -3640,7 +3643,7 @@ bool Node::confPollAgent(UINT32 rqId)
          lockProperties();
          if (!m_agentId.equals(agentId))
          {
-            PostEvent(EVENT_AGENT_ID_CHANGED, m_id, "GG", &m_agentId, &agentId);
+            PostSystemEvent(EVENT_AGENT_ID_CHANGED, m_id, "GG", &m_agentId, &agentId);
             m_agentId = agentId;
             hasChanges = true;
             sendPollerMsg(rqId, _T("   NetXMS agent ID changed to %s\r\n"), m_agentId.toString(buffer));
@@ -3837,7 +3840,7 @@ bool Node::confPollSnmp(UINT32 rqId)
    if (m_state & NSF_SNMP_UNREACHABLE)
    {
       m_state &= ~NSF_SNMP_UNREACHABLE;
-      PostEvent(EVENT_SNMP_OK, m_id, NULL);
+      PostSystemEvent(EVENT_SNMP_OK, m_id, NULL);
       sendPollerMsg(rqId, POLLER_INFO _T("   Connectivity with SNMP agent restored\r\n"));
    }
    unlockProperties();
@@ -4399,7 +4402,7 @@ bool Node::updateInterfaceConfiguration(UINT32 rqid, int maskBits)
             Interface *iface = deleteList.get(j);
             sendPollerMsg(rqid, POLLER_WARNING _T("   Interface \"%s\" is no longer exist\r\n"), iface->getName());
             const InetAddress& addr = iface->getFirstIpAddress();
-            PostEvent(EVENT_INTERFACE_DELETED, m_id, "dsAd", iface->getIfIndex(), iface->getName(), &addr, addr.getMaskBits());
+            PostSystemEvent(EVENT_INTERFACE_DELETED, m_id, "dsAd", iface->getIfIndex(), iface->getName(), &addr, addr.getMaskBits());
             deleteInterface(iface);
          }
          hasChanges = true;
@@ -4428,7 +4431,7 @@ bool Node::updateInterfaceConfiguration(UINT32 rqid, int maskBits)
                      TCHAR szOldMac[64], szNewMac[64];
                      pInterface->getMacAddr().toString(szOldMac);
                      MACToStr(ifInfo->macAddr, szNewMac);
-                     PostEvent(EVENT_MAC_ADDR_CHANGED, m_id, "idsss",
+                     PostSystemEvent(EVENT_MAC_ADDR_CHANGED, m_id, "idsss",
                                pInterface->getId(), pInterface->getIfIndex(),
                                pInterface->getName(), szOldMac, szNewMac);
                      pInterface->setMacAddr(MacAddress(ifInfo->macAddr, MAC_ADDR_LENGTH), true);
@@ -4492,7 +4495,7 @@ bool Node::updateInterfaceConfiguration(UINT32 rqid, int maskBits)
                      {
                         if (addr.getMaskBits() != ifAddr.getMaskBits())
                         {
-                           PostEvent(EVENT_IF_MASK_CHANGED, m_id, "dsAddd", pInterface->getId(), pInterface->getName(),
+                           PostSystemEvent(EVENT_IF_MASK_CHANGED, m_id, "dsAddd", pInterface->getId(), pInterface->getName(),
                                      &addr, addr.getMaskBits(), pInterface->getIfIndex(), ifAddr.getMaskBits());
                            pInterface->setNetMask(addr);
                            sendPollerMsg(rqid, POLLER_INFO _T("   IP network mask changed to /%d on interface \"%s\" address %s\r\n"),
@@ -4504,7 +4507,7 @@ bool Node::updateInterfaceConfiguration(UINT32 rqid, int maskBits)
                      {
                         sendPollerMsg(rqid, POLLER_WARNING _T("   IP address %s removed from interface \"%s\"\r\n"),
                            (const TCHAR *)ifAddr.toString(), pInterface->getName());
-                        PostEvent(EVENT_IF_IPADDR_DELETED, m_id, "dsAdd", pInterface->getId(), pInterface->getName(),
+                        PostSystemEvent(EVENT_IF_IPADDR_DELETED, m_id, "dsAdd", pInterface->getId(), pInterface->getName(),
                                   &ifAddr, ifAddr.getMaskBits(), pInterface->getIfIndex());
                         pInterface->deleteIpAddress(ifAddr);
                         interfaceUpdated = true;
@@ -4518,7 +4521,7 @@ bool Node::updateInterfaceConfiguration(UINT32 rqid, int maskBits)
                      if (!ifList->hasAddress(addr))
                      {
                         pInterface->addIpAddress(addr);
-                        PostEvent(EVENT_IF_IPADDR_ADDED, m_id, "dsAdd", pInterface->getId(), pInterface->getName(),
+                        PostSystemEvent(EVENT_IF_IPADDR_ADDED, m_id, "dsAdd", pInterface->getId(), pInterface->getName(),
                                   &addr, addr.getMaskBits(), pInterface->getIfIndex());
                         sendPollerMsg(rqid, POLLER_INFO _T("   IP address %s added to interface \"%s\"\r\n"),
                            (const TCHAR *)addr.toString(), pInterface->getName());
@@ -4607,7 +4610,7 @@ bool Node::updateInterfaceConfiguration(UINT32 rqid, int maskBits)
             sendPollerMsg(rqid, POLLER_WARNING _T("   Interface \"%s\" is no longer exist\r\n"),
                           ppDeleteList[j]->getName());
             const InetAddress& addr = ppDeleteList[j]->getIpAddressList()->getFirstUnicastAddress();
-            PostEvent(EVENT_INTERFACE_DELETED, m_id, "dsAd", ppDeleteList[j]->getIfIndex(),
+            PostSystemEvent(EVENT_INTERFACE_DELETED, m_id, "dsAd", ppDeleteList[j]->getIfIndex(),
                       ppDeleteList[j]->getName(), &addr, addr.getMaskBits());
             deleteInterface(ppDeleteList[j]);
          }
@@ -4655,7 +4658,7 @@ bool Node::updateInterfaceConfiguration(UINT32 rqid, int maskBits)
                   macAddr.toString(szNewMac);
                   nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("Node::updateInterfaceConfiguration(%s [%u]): MAC change for unknown interface: %s to %s"),
                             m_name, m_id, szOldMac, szNewMac);
-                  PostEvent(EVENT_MAC_ADDR_CHANGED, m_id, "idsss",
+                  PostSystemEvent(EVENT_MAC_ADDR_CHANGED, m_id, "idsss",
                             pInterface->getId(), pInterface->getIfIndex(),
                             pInterface->getName(), szOldMac, szNewMac);
                   pInterface->setMacAddr(macAddr, true);
@@ -8384,7 +8387,7 @@ void Node::checkSubnetBinding()
       if ((pSubnet != NULL) && (pSubnet->getIpAddress().getMaskBits() != addr.getMaskBits()) && (addr.getHostBits() > 0))
       {
          Interface *iface = findInterfaceByIP(addr);
-         PostEvent(EVENT_INCORRECT_NETMASK, m_id, "idsdd", iface->getId(),
+         PostSystemEvent(EVENT_INCORRECT_NETMASK, m_id, "idsdd", iface->getId(),
                    iface->getIfIndex(), iface->getName(),
                    addr.getMaskBits(), pSubnet->getIpAddress().getMaskBits());
       }

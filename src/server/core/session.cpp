@@ -6569,20 +6569,14 @@ void ClientSession::pollerThread(DataCollectionTarget *pTarget, int iPollType, U
  */
 void ClientSession::onTrap(NXCPMessage *pRequest)
 {
-   NXCPMessage msg;
-   UINT32 dwObjectId, dwEventCode;
-   int i, iNumArgs;
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, pRequest->getId());
+
    NetObj *object;
-   TCHAR *pszArgList[32], szUserTag[MAX_USERTAG_LENGTH] = _T("");
-   char szFormat[] = "ssssssssssssssssssssssssssssssss";
+   TCHAR szUserTag[MAX_USERTAG_LENGTH] = _T("");
    BOOL bSuccess;
 
-   // Prepare response message
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(pRequest->getId());
-
    // Find event's source object
-   dwObjectId = pRequest->getFieldAsUInt32(VID_OBJECT_ID);
+   UINT32 dwObjectId = pRequest->getFieldAsUInt32(VID_OBJECT_ID);
    if (dwObjectId != 0)
 	{
       object = FindObjectById(dwObjectId);  // Object is specified explicitely
@@ -6603,7 +6597,7 @@ void ClientSession::onTrap(NXCPMessage *pRequest)
       // User should have SEND_EVENTS access right to object
       if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_SEND_EVENTS))
       {
-         dwEventCode = pRequest->getFieldAsUInt32(VID_EVENT_CODE);
+         UINT32 dwEventCode = pRequest->getFieldAsUInt32(VID_EVENT_CODE);
 			if ((dwEventCode == 0) && pRequest->isFieldExist(VID_EVENT_NAME))
 			{
 				TCHAR eventName[256];
@@ -6611,27 +6605,8 @@ void ClientSession::onTrap(NXCPMessage *pRequest)
 				dwEventCode = EventCodeFromName(eventName, 0);
 			}
 			pRequest->getFieldAsString(VID_USER_TAG, szUserTag, MAX_USERTAG_LENGTH);
-         iNumArgs = pRequest->getFieldAsUInt16(VID_NUM_ARGS);
-         if (iNumArgs > 32)
-            iNumArgs = 32;
-         for(i = 0; i < iNumArgs; i++)
-            pszArgList[i] = pRequest->getFieldAsString(VID_EVENT_ARG_BASE + i);
-
-         szFormat[iNumArgs] = 0;
-         bSuccess = PostEventWithTag(dwEventCode, object->getId(), szUserTag, (iNumArgs > 0) ? szFormat : NULL,
-                                     pszArgList[0], pszArgList[1], pszArgList[2], pszArgList[3],
-                                     pszArgList[4], pszArgList[5], pszArgList[6], pszArgList[7],
-                                     pszArgList[8], pszArgList[9], pszArgList[10], pszArgList[11],
-                                     pszArgList[12], pszArgList[13], pszArgList[14], pszArgList[15],
-                                     pszArgList[16], pszArgList[17], pszArgList[18], pszArgList[19],
-                                     pszArgList[20], pszArgList[21], pszArgList[22], pszArgList[23],
-                                     pszArgList[24], pszArgList[25], pszArgList[26], pszArgList[27],
-                                     pszArgList[28], pszArgList[29], pszArgList[30], pszArgList[31]);
-
-         // Cleanup
-         for(i = 0; i < iNumArgs; i++)
-            MemFree(pszArgList[i]);
-
+			StringList parameters(pRequest, VID_EVENT_ARG_BASE, VID_NUM_ARGS);
+         bSuccess = PostEventWithTag(dwEventCode, EventOrigin::CLIENT, 0, object->getId(), szUserTag, parameters);
          msg.setField(VID_RCC, bSuccess ? RCC_SUCCESS : RCC_INVALID_EVENT_CODE);
       }
       else
@@ -9267,14 +9242,14 @@ void ClientSession::sendConfigForAgent(NXCPMessage *pRequest)
             else
             {
                _sntprintf(szError, 256, _T("AgentCfg::%d"), dwCfgId);
-               PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", szError, vm->getErrorText(), 0);
+               PostSystemEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", szError, vm->getErrorText(), 0);
             }
             delete vm;
          }
          else
          {
             _sntprintf(szBuffer, 256, _T("AgentCfg::%d"), dwCfgId);
-            PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", szBuffer, szError, 0);
+            PostSystemEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", szBuffer, szError, 0);
          }
       }
       DBFreeResult(hResult);

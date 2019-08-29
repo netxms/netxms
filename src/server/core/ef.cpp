@@ -91,7 +91,7 @@ BOOL EF_ProcessMessage(ISCSession *session, NXCPMessage *request, NXCPMessage *r
 				argList[i] = request->getFieldAsString(VID_EVENT_ARG_BASE + i);
 
 			format[numArgs] = 0;
-			if (PostEventWithTag(code, object->getId(), request->getFieldAsString(VID_TAGS),
+			if (PostEventWithTag(code, EventOrigin::REMOTE_SERVER, 0, object->getId(), request->getFieldAsString(VID_TAGS),
 			                     (numArgs > 0) ? format : NULL,
 			                     argList[0], argList[1], argList[2], argList[3],
 										argList[4], argList[5], argList[6], argList[7],

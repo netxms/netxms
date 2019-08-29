@@ -194,7 +194,7 @@ void SNMPTrapConfiguration::compileScript()
       {
          TCHAR buffer[1024];
          _sntprintf(buffer, 1024, _T("SNMPTrap::%d"), m_id);
-         PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, errorMessage, m_id);
+         PostSystemEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, errorMessage, m_id);
          nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Failed to compile SNMP trap transformation script for trap mapping [%u] (%s)"), m_id, errorMessage);
       }
    }
@@ -495,7 +495,7 @@ static void GenerateTrapEvent(Node *node, UINT32 dwIndex, SNMP_PDU *pdu, int sou
    {
       vm = NULL;
    }
-   TransformAndPostEvent(trapCfg->getEventCode(), node->getId(), trapCfg->getEventTag(), &parameters, vm);
+   TransformAndPostEvent(trapCfg->getEventCode(), EventOrigin::SNMP, 0, node->getId(), trapCfg->getEventTag(), &parameters, vm);
    delete vm;
 }
 
@@ -673,7 +673,7 @@ void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, UINT32 zoneUIN, int 
                // Generate default event for unmatched traps
                const TCHAR *names[3] = { _T("oid"), NULL, _T("sourcePort") };
                TCHAR oidText[1024];
-               PostEventWithNames(EVENT_SNMP_UNMATCHED_TRAP, node->getId(), "ssd", names,
+               PostEventWithNames(EVENT_SNMP_UNMATCHED_TRAP, EventOrigin::SNMP, 0, node->getId(), "ssd", names,
                   pdu->getTrapId()->toString(oidText, 1024), (const TCHAR *)varbinds, srcPort);
             }
          }

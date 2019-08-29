@@ -543,34 +543,18 @@ static void SyslogParserCallback(UINT32 eventCode, const TCHAR *eventName, const
          const StringList *variables, UINT64 recordId, UINT32 objectId, int repeatCount, void *userArg,
          const TCHAR *agentAction, const StringList *agentActionArgs)
 {
-	char format[] = "ssssssssssssssssssssssssssssssssss";
-	const TCHAR *plist[34];
-
 	nxlog_debug_tag(DEBUG_TAG, 7, _T("Syslog message matched, capture group count = %d, repeat count = %d"), captureGroups->size(), repeatCount);
 
-	int count = std::min(captureGroups->size(), 32);
-	int i;
-	for(i = 0; i < count; i++)
-		plist[i] = captureGroups->get(i);
-	if (eventTag != NULL)
-	   plist[i++] = eventTag;
+	StringMap pmap;
+	for(int i = 0; i < captureGroups->size(); i++)
+	{
+	   TCHAR name[32];
+	   _sntprintf(name, 32, _T("cg%d"), i + 1);
+		pmap.set(name, captureGroups->get(i));
+	}
+   pmap.set(_T("repeatCount"), repeatCount);
 
-	TCHAR repeatCountText[16];
-   _sntprintf(repeatCountText, 16, _T("%d"), repeatCount);
-   plist[i++] = repeatCountText;
-
-   format[i] = 0;
-
-   PostEvent(eventCode, objectId, format,
-	          plist[0], plist[1], plist[2], plist[3],
-	          plist[4], plist[5], plist[6], plist[7],
-	          plist[8], plist[9], plist[10], plist[11],
-	          plist[12], plist[13], plist[14], plist[15],
-	          plist[16], plist[17], plist[18], plist[19],
-	          plist[20], plist[21], plist[22], plist[23],
-	          plist[24], plist[25], plist[26], plist[27],
-	          plist[28], plist[29], plist[30], plist[31],
-	          plist[32], plist[33]);
+   PostEventWithTagAndNames(eventCode, EventOrigin::SYSLOG, 0, objectId, eventTag, &pmap);
 }
 
 /**

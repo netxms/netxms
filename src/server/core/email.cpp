@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -411,17 +411,17 @@ static THREAD_RESULT THREAD_CALL MailerThread(void *pArg)
 			}
 			else
 			{
-				PostEvent(EVENT_SMTP_FAILURE, g_dwMgmtNode, "dsmm", dwResult, 
+				PostSystemEvent(EVENT_SMTP_FAILURE, g_dwMgmtNode, "dsmm", dwResult,
 							 m_szErrorText[dwResult], pEnvelope->rcptAddr, pEnvelope->subject);
-				free(pEnvelope->text);
-				free(pEnvelope);
+				MemFree(pEnvelope->text);
+				MemFree(pEnvelope);
 			}
 		}
 		else
 		{
 			DbgPrintf(6, _T("SMTP(%p): mail sent successfully"), pEnvelope);
-			free(pEnvelope->text);
-			free(pEnvelope);
+			MemFree(pEnvelope->text);
+			MemFree(pEnvelope);
 		}
    }
    return THREAD_OK;

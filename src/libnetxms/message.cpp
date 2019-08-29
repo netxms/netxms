@@ -585,8 +585,22 @@ int NXCPMessage::getFieldType(UINT32 fieldId) const
  */
 INT32 NXCPMessage::getFieldAsInt32(UINT32 fieldId) const
 {
-   char *value = (char *)get(fieldId, NXCP_DT_INT32);
-   return (value != NULL) ? *((INT32 *)value) : 0;
+   BYTE type;
+   void *value = get(fieldId, 0xFF, &type);
+   if (value == NULL)
+      return 0;
+
+   switch(type)
+   {
+      case NXCP_DT_INT16:
+         return *static_cast<INT16*>(value);
+      case NXCP_DT_INT32:
+         return *static_cast<INT32*>(value);
+      case NXCP_DT_INT64:
+         return static_cast<INT32>(*static_cast<INT64*>(value));
+      default:
+         return 0;
+   }
 }
 
 /**
@@ -594,8 +608,22 @@ INT32 NXCPMessage::getFieldAsInt32(UINT32 fieldId) const
  */
 UINT32 NXCPMessage::getFieldAsUInt32(UINT32 fieldId) const
 {
-   void *value = get(fieldId, NXCP_DT_INT32);
-   return (value != NULL) ? *((UINT32 *)value) : 0;
+   BYTE type;
+   void *value = get(fieldId, 0xFF, &type);
+   if (value == NULL)
+      return 0;
+
+   switch(type)
+   {
+      case NXCP_DT_INT16:
+         return *static_cast<UINT16*>(value);
+      case NXCP_DT_INT32:
+         return *static_cast<UINT32*>(value);
+      case NXCP_DT_INT64:
+         return static_cast<UINT32>(*static_cast<UINT64*>(value));
+      default:
+         return 0;
+   }
 }
 
 /**
@@ -603,8 +631,22 @@ UINT32 NXCPMessage::getFieldAsUInt32(UINT32 fieldId) const
  */
 INT16 NXCPMessage::getFieldAsInt16(UINT32 fieldId) const
 {
-   void *value = get(fieldId, NXCP_DT_INT16);
-   return (value != NULL) ? *((INT16 *)value) : 0;
+   BYTE type;
+   void *value = get(fieldId, 0xFF, &type);
+   if (value == NULL)
+      return 0;
+
+   switch(type)
+   {
+      case NXCP_DT_INT16:
+         return *static_cast<INT16*>(value);
+      case NXCP_DT_INT32:
+         return static_cast<INT16>(*static_cast<INT32*>(value));
+      case NXCP_DT_INT64:
+         return static_cast<INT16>(*static_cast<INT64*>(value));
+      default:
+         return 0;
+   }
 }
 
 /**
@@ -612,8 +654,22 @@ INT16 NXCPMessage::getFieldAsInt16(UINT32 fieldId) const
  */
 UINT16 NXCPMessage::getFieldAsUInt16(UINT32 fieldId) const
 {
-   void *value = get(fieldId, NXCP_DT_INT16);
-   return value ? *((WORD *)value) : 0;
+   BYTE type;
+   void *value = get(fieldId, 0xFF, &type);
+   if (value == NULL)
+      return 0;
+
+   switch(type)
+   {
+      case NXCP_DT_INT16:
+         return *static_cast<UINT16*>(value);
+      case NXCP_DT_INT32:
+         return static_cast<UINT16>(*static_cast<UINT32*>(value));
+      case NXCP_DT_INT64:
+         return static_cast<UINT16>(*static_cast<UINT64*>(value));
+      default:
+         return 0;
+   }
 }
 
 /**
@@ -621,8 +677,22 @@ UINT16 NXCPMessage::getFieldAsUInt16(UINT32 fieldId) const
  */
 INT64 NXCPMessage::getFieldAsInt64(UINT32 fieldId) const
 {
-   void *value = get(fieldId, NXCP_DT_INT64);
-   return (value != NULL) ? *((INT64 *)value) : 0;
+   BYTE type;
+   void *value = get(fieldId, 0xFF, &type);
+   if (value == NULL)
+      return 0;
+
+   switch(type)
+   {
+      case NXCP_DT_INT16:
+         return *static_cast<INT16*>(value);
+      case NXCP_DT_INT32:
+         return *static_cast<INT32*>(value);
+      case NXCP_DT_INT64:
+         return *static_cast<INT64*>(value);
+      default:
+         return 0;
+   }
 }
 
 /**
@@ -630,8 +700,22 @@ INT64 NXCPMessage::getFieldAsInt64(UINT32 fieldId) const
  */
 UINT64 NXCPMessage::getFieldAsUInt64(UINT32 fieldId) const
 {
-   void *value = get(fieldId, NXCP_DT_INT64);
-   return value ? *((UINT64 *)value) : 0;
+   BYTE type;
+   void *value = get(fieldId, 0xFF, &type);
+   if (value == NULL)
+      return 0;
+
+   switch(type)
+   {
+      case NXCP_DT_INT16:
+         return *static_cast<UINT16*>(value);
+      case NXCP_DT_INT32:
+         return *static_cast<UINT32*>(value);
+      case NXCP_DT_INT64:
+         return *static_cast<UINT64*>(value);
+      default:
+         return 0;
+   }
 }
 
 /**

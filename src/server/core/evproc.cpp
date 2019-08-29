@@ -82,7 +82,7 @@ static THREAD_RESULT THREAD_CALL EventStormDetector(void *arg)
 			{
 				g_flags |= AF_EVENT_STORM_DETECTED;
 				nxlog_debug_tag(DEBUG_TAG, 2, _T("Event storm detected: threshold=") INT64_FMT _T(" eventsPerSecond=") INT64_FMT, eventsPerSecond, numEvents);
-				PostEvent(EVENT_EVENT_STORM_DETECTED, g_dwMgmtNode, "DdD", numEvents, duration, eventsPerSecond);
+				PostSystemEvent(EVENT_EVENT_STORM_DETECTED, g_dwMgmtNode, "DdD", numEvents, duration, eventsPerSecond);
 			}
 		}
 		else if ((numEvents < eventsPerSecond) && (g_flags & AF_EVENT_STORM_DETECTED))
@@ -90,7 +90,7 @@ static THREAD_RESULT THREAD_CALL EventStormDetector(void *arg)
 			actualDuration = 0;
 			g_flags &= ~AF_EVENT_STORM_DETECTED;
 		   nxlog_debug_tag(DEBUG_TAG, 2, _T("Event storm condition cleared"));
-			PostEvent(EVENT_EVENT_STORM_ENDED, g_dwMgmtNode, "DdD", numEvents, duration, eventsPerSecond);
+		   PostSystemEvent(EVENT_EVENT_STORM_ENDED, g_dwMgmtNode, "DdD", numEvents, duration, eventsPerSecond);
 		}
 	}
    nxlog_debug_tag(DEBUG_TAG, 1, _T("Event storm detector thread stopped"));
@@ -114,17 +114,21 @@ static THREAD_RESULT THREAD_CALL EventLogger(void *arg)
 		int syntaxId = DBGetSyntax(hdb);
 		if (syntaxId == DB_SYNTAX_SQLITE)
 		{ 
-			String query = _T("INSERT INTO event_log (event_id,event_code,event_timestamp,event_source,zone_uin,")
-			               _T("dci_id,event_severity,event_message,root_event_id,event_tags,raw_data) VALUES (");
+			String query = _T("INSERT INTO event_log (event_id,event_code,event_timestamp,event_source,zone_uin,origin,")
+			               _T("origin_timestamp,dci_id,event_severity,event_message,root_event_id,event_tags,raw_data) VALUES (");
 			query.append(pEvent->getId());
          query.append(_T(','));
 			query.append(pEvent->getCode());
          query.append(_T(','));
-         query.append((UINT32)pEvent->getTimeStamp());
+         query.append((UINT32)pEvent->getTimestamp());
          query.append(_T(','));
          query.append(pEvent->getSourceId());
          query.append(_T(','));
          query.append(pEvent->getZoneUIN());
+         query.append(_T(','));
+         query.append(static_cast<INT32>(pEvent->getOrigin()));
+         query.append(_T(','));
+         query.append(static_cast<UINT32>(pEvent->getOriginTimestamp()));
          query.append(_T(','));
          query.append(pEvent->getDciId());
          query.append(_T(','));
@@ -149,24 +153,26 @@ static THREAD_RESULT THREAD_CALL EventLogger(void *arg)
 		}
 		else
 		{
-			DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO event_log (event_id,event_code,event_timestamp,")
-				_T("event_source,zone_uin,dci_id,event_severity,event_message,root_event_id,event_tags,raw_data) ")
-				_T("VALUES (?,?,?,?,?,?,?,?,?,?,?)"), true);
+			DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO event_log (event_id,event_code,event_timestamp,origin,")
+				_T("origin_timestamp,event_source,zone_uin,dci_id,event_severity,event_message,root_event_id,event_tags,raw_data) ")
+				_T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)"), true);
 			if (hStmt != NULL)
 			{
 				do
 				{
 					DBBind(hStmt, 1, DB_SQLTYPE_BIGINT, pEvent->getId());
 					DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, pEvent->getCode());
-					DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (UINT32)pEvent->getTimeStamp());
-					DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, pEvent->getSourceId());
-               DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, pEvent->getZoneUIN());
-               DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, pEvent->getDciId());
-					DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, pEvent->getSeverity());
-               DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, pEvent->getMessage(), DB_BIND_STATIC, MAX_EVENT_MSG_LENGTH);
-					DBBind(hStmt, 9, DB_SQLTYPE_BIGINT, pEvent->getRootId());
-               DBBind(hStmt, 10, DB_SQLTYPE_VARCHAR, pEvent->getTagsAsList(), DB_BIND_TRANSIENT, 2000);
-               DBBind(hStmt, 11, DB_SQLTYPE_TEXT, pEvent->toJson(), DB_BIND_DYNAMIC);
+					DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, static_cast<UINT32>(pEvent->getTimestamp()));
+               DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, static_cast<INT32>(pEvent->getOrigin()));
+               DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, static_cast<UINT32>(pEvent->getOriginTimestamp()));
+					DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, pEvent->getSourceId());
+               DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, pEvent->getZoneUIN());
+               DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, pEvent->getDciId());
+					DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, pEvent->getSeverity());
+               DBBind(hStmt, 10, DB_SQLTYPE_VARCHAR, pEvent->getMessage(), DB_BIND_STATIC, MAX_EVENT_MSG_LENGTH);
+					DBBind(hStmt, 11, DB_SQLTYPE_BIGINT, pEvent->getRootId());
+               DBBind(hStmt, 12, DB_SQLTYPE_VARCHAR, pEvent->getTagsAsList(), DB_BIND_TRANSIENT, 2000);
+               DBBind(hStmt, 13, DB_SQLTYPE_TEXT, pEvent->toJson(), DB_BIND_DYNAMIC);
 					DBExecute(hStmt);
 					nxlog_debug_tag(DEBUG_TAG, 8, _T("EventLogger: DBExecute: id=%d,code=%d"), (int)pEvent->getId(), (int)pEvent->getCode());
 					delete pEvent;

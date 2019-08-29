@@ -377,7 +377,7 @@ void NetObjInsert(NetObj *pObject, bool newObject, bool importedObject)
                if (newObject)
                {
                   InetAddress addr = static_cast<Subnet*>(pObject)->getIpAddress();
-                  PostEvent(EVENT_SUBNET_ADDED, g_dwMgmtNode, "isAd", pObject->getId(), pObject->getName(), &addr, addr.getMaskBits());
+                  PostSystemEvent(EVENT_SUBNET_ADDED, g_dwMgmtNode, "isAd", pObject->getId(), pObject->getName(), &addr, addr.getMaskBits());
                }
             }
             break;

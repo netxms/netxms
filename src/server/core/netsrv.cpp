@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2016 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -399,7 +399,7 @@ void NetworkService::statusPoll(ClientSession *session, UINT32 rqId, Node *polle
 			m_status = newStatus;
 			m_pendingStatus = -1;	// Invalidate pending status
 			sendPollerMsg(rqId, _T("      Service status changed to %s\r\n"), GetStatusAsText(m_status, true));
-			PostEventEx(eventQueue, m_status == STATUS_NORMAL ? EVENT_SERVICE_UP :
+			PostSystemEventEx(eventQueue, m_status == STATUS_NORMAL ? EVENT_SERVICE_UP :
 							(m_status == STATUS_CRITICAL ? EVENT_SERVICE_DOWN : EVENT_SERVICE_UNKNOWN),
 							m_hostNode->getId(), "sdd", m_name, m_id, m_serviceType);
 			lockProperties();

@@ -84,7 +84,7 @@ static void UnregisterTunnel(AgentTunnel *tunnel)
    s_tunnelListLock.lock();
    if (tunnel->isBound())
    {
-      PostEventWithNames(EVENT_TUNNEL_CLOSED, tunnel->getNodeId(), "dAsssssG", s_eventParamNames,
+      PostSystemEventWithNames(EVENT_TUNNEL_CLOSED, tunnel->getNodeId(), "dAsssssG", s_eventParamNames,
                tunnel->getId(), &tunnel->getAddress(), tunnel->getSystemName(), tunnel->getHostname(),
                tunnel->getPlatformName(), tunnel->getSystemInfo(), tunnel->getAgentVersion(),
                &tunnel->getAgentId());
@@ -524,7 +524,7 @@ void AgentTunnel::setup(const NXCPMessage *request)
 
       if (m_state == AGENT_TUNNEL_BOUND)
       {
-         PostEventWithNames(EVENT_TUNNEL_OPEN, m_nodeId, "dAsssssG", s_eventParamNames,
+         PostSystemEventWithNames(EVENT_TUNNEL_OPEN, m_nodeId, "dAsssssG", s_eventParamNames,
                   m_id, &m_address, m_systemName, m_hostname, m_platformName, m_systemInfo,
                   m_agentVersion, &m_agentId);
       }
@@ -553,7 +553,7 @@ UINT32 AgentTunnel::bind(UINT32 nodeId, UINT32 userId)
    {
       debugPrintf(3, _T("Node agent ID (%s) do not match tunnel agent ID (%s) on bind"),
                (const TCHAR *)node->getAgentId().toString(), (const TCHAR *)m_agentId.toString());
-      PostEventWithNames(EVENT_TUNNEL_AGENT_ID_MISMATCH, nodeId, "dAsssssGG", s_eventParamNamesAgentIdMismatch,
+      PostSystemEventWithNames(EVENT_TUNNEL_AGENT_ID_MISMATCH, nodeId, "dAsssssGG", s_eventParamNamesAgentIdMismatch,
                m_id, &m_address, m_systemName, m_hostname, m_platformName, m_systemInfo,
                m_agentVersion, &node->getAgentId(), &m_agentId);
    }
@@ -1406,7 +1406,7 @@ void ProcessUnboundTunnels(const ScheduledTaskParameters *p)
             t->shutdown();
             break;
          case GENERATE_EVENT:
-            PostEventWithNames(EVENT_UNBOUND_TUNNEL, g_dwMgmtNode, "dAsssssGd", s_eventParamNames,
+            PostSystemEventWithNames(EVENT_UNBOUND_TUNNEL, g_dwMgmtNode, "dAsssssGd", s_eventParamNames,
                      t->getId(), &t->getAddress(), t->getSystemName(), t->getHostname(), t->getPlatformName(),
                      t->getSystemInfo(), t->getAgentVersion(), &t->getAgentId(), timeout);
             t->resetStartTime();

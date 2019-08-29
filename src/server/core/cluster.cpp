@@ -622,7 +622,7 @@ void Cluster::statusPoll(PollerInfo *poller, ClientSession *pSession, UINT32 dwR
 		if (!(m_state & CLSF_DOWN))
 		{
 		   m_state |= CLSF_DOWN;
-			PostEvent(EVENT_CLUSTER_DOWN, m_id, NULL);
+			PostSystemEvent(EVENT_CLUSTER_DOWN, m_id, NULL);
 		}
 	}
 	else
@@ -630,7 +630,7 @@ void Cluster::statusPoll(PollerInfo *poller, ClientSession *pSession, UINT32 dwR
 		if (m_state & CLSF_DOWN)
 		{
 		   m_state &= ~CLSF_DOWN;
-			PostEvent(EVENT_CLUSTER_UP, m_id, NULL);
+			PostSystemEvent(EVENT_CLUSTER_UP, m_id, NULL);
 		}
 	}
 
@@ -672,7 +672,7 @@ void Cluster::statusPoll(PollerInfo *poller, ClientSession *pSession, UINT32 dwR
 								if (m_pResourceList[k].dwCurrOwner == 0)
 								{
 									// Resource up
-									PostEvent(EVENT_CLUSTER_RESOURCE_UP, m_id, "dsds",
+									PostSystemEvent(EVENT_CLUSTER_RESOURCE_UP, m_id, "dsds",
 												 m_pResourceList[k].dwId, m_pResourceList[k].szName,
 												 node->getId(), node->getName());
 								}
@@ -680,7 +680,7 @@ void Cluster::statusPoll(PollerInfo *poller, ClientSession *pSession, UINT32 dwR
 								{
 									// Moved
 									NetObj *pObject = FindObjectById(m_pResourceList[k].dwCurrOwner);
-									PostEvent(EVENT_CLUSTER_RESOURCE_MOVED, m_id, "dsdsds",
+									PostSystemEvent(EVENT_CLUSTER_RESOURCE_MOVED, m_id, "dsdsds",
 												 m_pResourceList[k].dwId, m_pResourceList[k].szName,
 												 m_pResourceList[k].dwCurrOwner,
 												 (pObject != NULL) ? pObject->getName() : _T("<unknown>"),
@@ -711,7 +711,7 @@ void Cluster::statusPoll(PollerInfo *poller, ClientSession *pSession, UINT32 dwR
 			if ((!resourceFound[i]) && (m_pResourceList[i].dwCurrOwner != 0))
 			{
 				NetObj *pObject = FindObjectById(m_pResourceList[i].dwCurrOwner);
-				PostEvent(EVENT_CLUSTER_RESOURCE_DOWN, m_id, "dsds",
+				PostSystemEvent(EVENT_CLUSTER_RESOURCE_DOWN, m_id, "dsds",
 							 m_pResourceList[i].dwId, m_pResourceList[i].szName,
 							 m_pResourceList[i].dwCurrOwner,
 							 (pObject != NULL) ? pObject->getName() : _T("<unknown>"));

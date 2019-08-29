@@ -424,7 +424,7 @@ void ConditionObject::check()
             setModified(MODIFY_RUNTIME);
             unlockProperties();
 
-            PostEvent(m_deactivationEventCode,
+            PostSystemEvent(m_deactivationEventCode,
                       (m_sourceObject == 0) ? g_dwMgmtNode : m_sourceObject,
                       "dsdd", m_id, m_name, iOldStatus, m_status);
 
@@ -455,7 +455,7 @@ void ConditionObject::check()
             setModified(MODIFY_RUNTIME);
             unlockProperties();
 
-            PostEvent(m_activationEventCode,
+            PostSystemEvent(m_activationEventCode,
                       (m_sourceObject == 0) ? g_dwMgmtNode : m_sourceObject,
                       "dsdd", m_id, m_name, iOldStatus, m_status);
 

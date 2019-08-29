@@ -531,7 +531,7 @@ bool EPRule::matchScript(Event *pEvent)
    {
       TCHAR buffer[1024];
       _sntprintf(buffer, 1024, _T("EPP::%d"), m_id + 1);
-      PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, m_script->getErrorText(), 0);
+      PostSystemEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, m_script->getErrorText(), 0);
       nxlog_write(NXLOG_ERROR, _T("Failed to execute evaluation script for event processing policy rule #%u (%s)"), m_id + 1, m_script->getErrorText());
    }
    free(ppValueList);

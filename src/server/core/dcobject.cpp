@@ -471,7 +471,7 @@ void DCObject::expandMacros(const TCHAR *src, TCHAR *dst, size_t dstLen)
 				{
 		         DbgPrintf(4, _T("DCObject::expandMacros(%d,\"%s\"): Script %s execution error: %s"),
 					          m_id, src, &macro[7], vm->getErrorText());
-					PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", &macro[7], vm->getErrorText(), m_id);
+					PostSystemEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", &macro[7], vm->getErrorText(), m_id);
 				}
             delete vm;
 			}
@@ -542,7 +542,7 @@ void DCObject::setStatus(int status, bool generateEvent)
                _T("iLO"), _T("Script"), _T("SSH"), _T("MQTT"),
                _T("Device Driver")
             };
-         PostEvent(eventCode[status], m_owner->getId(), "dssds", m_id, m_name, m_description, m_source, originName[m_source]);
+         PostSystemEvent(eventCode[status], m_owner->getId(), "dssds", m_id, m_name, m_description, m_source, originName[m_source]);
       }
    }
    m_status = (BYTE)status;

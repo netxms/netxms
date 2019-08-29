@@ -374,7 +374,7 @@ static bool ExecuteActionScript(const TCHAR *scriptName, const Event *event)
 		else
 		{
 			nxlog_debug_tag(DEBUG_TAG, 4, _T("ExecuteActionScript: Script %s execution error: %s"), scriptName, vm->getErrorText());
-			PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", scriptName, vm->getErrorText(), 0);
+			PostSystemEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", scriptName, vm->getErrorText(), 0);
 		}
 	   free(ppValueList);
       delete vm;

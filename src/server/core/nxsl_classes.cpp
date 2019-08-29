@@ -1749,6 +1749,14 @@ NXSL_Value *NXSL_EventClass::getAttr(NXSL_Object *pObject, const char *attr)
    {
 		value = vm->createValue(event->getName());
    }
+   else if (!strcmp(attr, "origin"))
+   {
+      value = vm->createValue(static_cast<INT32>(event->getOrigin()));
+   }
+   else if (!strcmp(attr, "originTimestamp"))
+   {
+      value = vm->createValue(static_cast<INT64>(event->getOriginTimestamp()));
+   }
    else if (!strcmp(attr, "parameters"))
    {
       NXSL_Array *array = new NXSL_Array(vm);
@@ -1788,7 +1796,7 @@ NXSL_Value *NXSL_EventClass::getAttr(NXSL_Object *pObject, const char *attr)
    }
    else if (!strcmp(attr, "timestamp"))
    {
-      value = vm->createValue((INT64)event->getTimeStamp());
+      value = vm->createValue(static_cast<INT64>(event->getTimestamp()));
    }
    else
    {

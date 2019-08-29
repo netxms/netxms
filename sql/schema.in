@@ -1114,6 +1114,8 @@ CREATE TABLE event_log
   event_id SQL_INT64 not null,
   event_code integer not null,
   event_timestamp integer not null,
+  origin integer not null,
+  origin_timestamp integer not null,
   event_source integer not null,    /* Source object ID */
   zone_uin integer not null,
   dci_id integer not null,                /* ID of related DCI or 0 */

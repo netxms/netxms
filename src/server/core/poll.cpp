@@ -138,7 +138,7 @@ static void CreateManagementNode(const InetAddress& addr)
 
    node->unhide();
    g_dwMgmtNode = node->getId();   // Set local management node ID
-   PostEvent(EVENT_NODE_ADDED, node->getId(), NULL);
+   PostSystemEvent(EVENT_NODE_ADDED, node->getId(), NULL);
 
 	// Bind to the root of service tree
 	g_pServiceRoot->addChild(node);
@@ -345,7 +345,7 @@ static void CheckPotentialNode(Node *node, const InetAddress& ipAddr, UINT32 ifI
       if ((iface != NULL) && macAddr.isValid() && !iface->getMacAddr().equals(macAddr))
       {
          MacAddress knownMAC = iface->getMacAddr();
-         PostEvent(EVENT_DUPLICATE_IP_ADDRESS, g_dwMgmtNode, "AdssHHdss",
+         PostSystemEvent(EVENT_DUPLICATE_IP_ADDRESS, g_dwMgmtNode, "AdssHHdss",
                   &ipAddr, curr->getId(), curr->getName(), iface->getName(),
                   &knownMAC, &macAddr, node->getId(), node->getName(),
                   g_discoveredAddrSourceTypeAsText[sourceType]);

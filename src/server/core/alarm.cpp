@@ -686,7 +686,7 @@ UINT32 NXCORE_EXPORTABLE CreateNewAlarm(const uuid& rule, TCHAR *message, TCHAR 
       _sntprintf(valEventCode, 16, _T("%d"), (int)event->getCode());
       _sntprintf(valSeverity, 16, _T("%d"), (int)event->getSeverity());
       _sntprintf(valSource, 16, _T("%d"), event->getSourceId());
-      _sntprintf(valTimestamp, 16, _T("%u"), (UINT32)event->getTimeStamp());
+      _sntprintf(valTimestamp, 16, _T("%u"), (UINT32)event->getTimestamp());
       static int sqlTypes[8] = { DB_SQLTYPE_INTEGER, DB_SQLTYPE_BIGINT, DB_SQLTYPE_INTEGER, DB_SQLTYPE_VARCHAR, DB_SQLTYPE_INTEGER, DB_SQLTYPE_INTEGER, DB_SQLTYPE_INTEGER, DB_SQLTYPE_VARCHAR };
       QueueSQLRequest(_T("INSERT INTO alarm_events (alarm_id,event_id,event_code,event_name,severity,source_object_id,event_timestamp,message) VALUES (?,?,?,?,?,?,?,?)"),
                       8, sqlTypes, values);
@@ -802,7 +802,7 @@ void Alarm::resolve(UINT32 userId, Event *event, bool terminate, bool notify)
       _sntprintf(valEventCode, 16, _T("%d"), (int)event->getCode());
       _sntprintf(valSeverity, 16, _T("%d"), (int)event->getSeverity());
       _sntprintf(valSource, 16, _T("%d"), event->getSourceId());
-      _sntprintf(valTimestamp, 16, _T("%u"), (UINT32)event->getTimeStamp());
+      _sntprintf(valTimestamp, 16, _T("%u"), (UINT32)event->getTimestamp());
       static int sqlTypes[8] = { DB_SQLTYPE_INTEGER, DB_SQLTYPE_BIGINT, DB_SQLTYPE_INTEGER, DB_SQLTYPE_VARCHAR, DB_SQLTYPE_INTEGER, DB_SQLTYPE_INTEGER, DB_SQLTYPE_INTEGER, DB_SQLTYPE_VARCHAR };
       QueueSQLRequest(_T("INSERT INTO alarm_events (alarm_id,event_id,event_code,event_name,severity,source_object_id,event_timestamp,message) VALUES (?,?,?,?,?,?,?,?)"),
                       8, sqlTypes, values);
@@ -1552,7 +1552,7 @@ static THREAD_RESULT THREAD_CALL WatchdogThread(void *arg)
 				{
 				   _sntprintf(eventName, MAX_EVENT_NAME, _T("[%u]"), alarm->getSourceEventCode());
 				}
-				PostEvent(alarm->getTimeoutEvent(), alarm->getSourceObject(), "dssds",
+				PostSystemEvent(alarm->getTimeoutEvent(), alarm->getSourceObject(), "dssds",
 				          alarm->getAlarmId(), alarm->getMessage(), alarm->getKey(), alarm->getSourceEventCode(), eventName);
 				alarm->clearTimeout();	// Disable repeated timeout events
 				alarm->updateInDatabase();
@@ -1565,7 +1565,7 @@ static THREAD_RESULT THREAD_CALL WatchdogThread(void *arg)
 			   nxlog_debug_tag(DEBUG_TAG, 5, _T("Acknowledgment timeout: alarm_id=%u, timeout=%u, now=%u"),
 			            alarm->getAlarmId(), alarm->getAckTimeout(), (UINT32)now);
 
-				PostEvent(alarm->getTimeoutEvent(), alarm->getSourceObject(), "dssd",
+				PostSystemEvent(alarm->getTimeoutEvent(), alarm->getSourceObject(), "dssd",
 				         alarm->getAlarmId(), alarm->getMessage(), alarm->getKey(), alarm->getSourceEventCode());
 				alarm->onAckTimeoutExpiration();
 				alarm->updateInDatabase();
