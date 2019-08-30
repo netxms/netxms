@@ -23,6 +23,7 @@ import java.lang.reflect.Constructor;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -121,11 +122,32 @@ public class SubAgent
     */
    public static native String getParameterArg(String param, int index);
 
-   public static native void sendTrap(int event, String name, String[] args);
+   /**
+    * Post event for delivery to NetXMS server.
+    * 
+    * @param eventCode event code (can be 0 if name is provided)
+    * @param eventName event name (can be null if code is provided)
+    * @param timestamp event timestamp as number of seconds since epoch (can be 0 to indicate current time)
+    * @param parameters event parameters (can be null)
+    */
+   public static native void postEvent(int eventCode, String eventName, long timestamp, String[] parameters);
 
    protected static native boolean pushParameterData(String name, String value);
 
    /*===== end of native methods exposed by agent =====*/
+   
+   /**
+    * Post event for delivery to NetXMS server.
+    * 
+    * @param eventCode event code (can be 0 if name is provided)
+    * @param eventName event name (can be null if code is provided)
+    * @param timestamp event timestamp (can be null to indicate current time)
+    * @param parameters event parameters (can be null)
+    */
+   public static void postEvent(int eventCode, String eventName, Date timestamp, String[] parameters)
+   {
+      postEvent(eventCode, eventName, (timestamp != null) ? timestamp.getTime() / 1000 : System.currentTimeMillis() / 1000, parameters);
+   }
 
    /**
     * Initialize (to be called from native subagent)

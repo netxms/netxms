@@ -34,7 +34,7 @@
 LONG H_ActionList(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
 LONG H_ActiveConnections(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_AgentProxyStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
-LONG H_AgentTraps(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_AgentEventSender(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_AgentUptime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_CRC32(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_DataCollectorQueueSize(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
@@ -385,8 +385,10 @@ static NETXMS_SUBAGENT_PARAM m_stdParams[] =
    { _T("Agent.AuthenticationFailures"), H_UIntPtr, (TCHAR *)&m_dwAuthenticationFailures, DCI_DT_COUNTER32, DCIDESC_AGENT_AUTHENTICATIONFAILURES },
    { _T("Agent.ConfigurationServer"), H_StringConstant, g_szConfigServer, DCI_DT_STRING, DCIDESC_AGENT_CONFIG_SERVER },
    { _T("Agent.DataCollectorQueueSize"), H_DataCollectorQueueSize, NULL, DCI_DT_UINT, DCIDESC_AGENT_DATACOLLQUEUESIZE },
+   { _T("Agent.Events.Generated"), H_AgentEventSender, _T("G"), DCI_DT_COUNTER64, DCIDESC_AGENT_EVENTS_GENERATED },
+   { _T("Agent.Events.LastTimestamp"), H_AgentEventSender, _T("T"), DCI_DT_UINT64, DCIDESC_AGENT_EVENTS_LAST_TIMESTAMP },
+   { _T("Agent.Events.Sent"), H_AgentEventSender, _T("S"), DCI_DT_COUNTER64, DCIDESC_AGENT_EVENTS_SENT },
    { _T("Agent.FailedRequests"), H_UIntPtr, (TCHAR *)&m_dwFailedRequests, DCI_DT_COUNTER32, DCIDESC_AGENT_FAILEDREQUESTS },
-   { _T("Agent.GeneratedTraps"), H_AgentTraps, _T("G"), DCI_DT_COUNTER64, DCIDESC_AGENT_GENERATED_TRAPS },
    { _T("Agent.Heap.Active"), H_AgentHeapActive, NULL, DCI_DT_UINT64, DCIDESC_AGENT_HEAP_ACTIVE },
    { _T("Agent.Heap.Allocated"), H_AgentHeapAllocated, NULL, DCI_DT_UINT64, DCIDESC_AGENT_HEAP_ALLOCATED },
    { _T("Agent.Heap.Mapped"), H_AgentHeapMapped, NULL, DCI_DT_UINT64, DCIDESC_AGENT_HEAP_MAPPED },
@@ -394,7 +396,6 @@ static NETXMS_SUBAGENT_PARAM m_stdParams[] =
    { _T("Agent.IsExternalSubagentConnected(*)"), H_IsExtSubagentConnected, NULL, DCI_DT_INT, DCIDESC_AGENT_IS_EXT_SUBAGENT_CONNECTED },
    { _T("Agent.IsSubagentLoaded(*)"), H_IsSubagentLoaded, NULL, DCI_DT_INT, DCIDESC_AGENT_IS_SUBAGENT_LOADED },
    { _T("Agent.IsUserAgentInstalled"), H_IsUserAgentInstalled, NULL, DCI_DT_INT, DCIDESC_AGENT_IS_USERAGENT_INSTALLED },
-   { _T("Agent.LastTrapTime"), H_AgentTraps, _T("T"), DCI_DT_UINT64, DCIDESC_AGENT_LAST_TRAP_TIME },
    { _T("Agent.LocalDatabase.FailedQueries"), H_LocalDatabaseCounters, _T("F"), DCI_DT_COUNTER64, DCIDESC_AGENT_LOCALDB_FAILED_QUERIES },
    { _T("Agent.LocalDatabase.LongRunningQueries"), H_LocalDatabaseCounters, _T("L"), DCI_DT_COUNTER64, DCIDESC_AGENT_LOCALDB_SLOW_QUERIES },
    { _T("Agent.LocalDatabase.Status"), H_ComponentStatus, _T("D"), DCI_DT_UINT, DCIDESC_AGENT_LOCALDB_STATUS },
@@ -407,7 +408,6 @@ static NETXMS_SUBAGENT_PARAM m_stdParams[] =
    { _T("Agent.PushValue(*)"), H_PushValue, NULL, DCI_DT_STRING, DCIDESC_AGENT_PUSH_VALUE },
    { _T("Agent.Registrar"), H_StringConstant, g_szRegistrar, DCI_DT_STRING, DCIDESC_AGENT_REGISTRAR },
    { _T("Agent.RejectedConnections"), H_UIntPtr, (TCHAR *)&g_rejectedConnections, DCI_DT_COUNTER32, DCIDESC_AGENT_REJECTEDCONNECTIONS },
-   { _T("Agent.SentTraps"), H_AgentTraps, _T("S"), DCI_DT_COUNTER64, DCIDESC_AGENT_SENT_TRAPS },
    { _T("Agent.SessionAgentCount"), H_SessionAgentCount, NULL, DCI_DT_UINT, DCIDESC_AGENT_SESSION_AGENTS_COUNT },
    { _T("Agent.SNMP.IsProxyEnabled"), H_FlagValue, CAST_TO_POINTER(AF_ENABLE_SNMP_PROXY, TCHAR *), DCI_DT_UINT, DCIDESC_AGENT_SNMP_ISPROXYENABLED },
    { _T("Agent.SNMP.IsTrapProxyEnabled"), H_FlagValue, CAST_TO_POINTER(AF_ENABLE_SNMP_TRAP_PROXY, TCHAR *), DCI_DT_UINT, DCIDESC_AGENT_SNMP_ISPROXYENABLED },
@@ -448,7 +448,12 @@ static NETXMS_SUBAGENT_PARAM m_stdParams[] =
    { _T("System.CurrentTime"), H_SystemTime, NULL, DCI_DT_INT64, DCIDESC_SYSTEM_CURRENTTIME },
    { _T("System.FQDN"), H_HostName, _T("FQDN"), DCI_DT_STRING, DCIDESC_SYSTEM_FQDN },
    { _T("System.Hostname"), H_HostName, NULL, DCI_DT_STRING, DCIDESC_SYSTEM_HOSTNAME },
-   { _T("System.PlatformName"), H_PlatformName, NULL, DCI_DT_STRING, DCIDESC_SYSTEM_PLATFORMNAME }
+   { _T("System.PlatformName"), H_PlatformName, NULL, DCI_DT_STRING, DCIDESC_SYSTEM_PLATFORMNAME },
+
+   // Deprecated parameters
+   { _T("Agent.GeneratedTraps"), H_AgentEventSender, _T("G"), DCI_DT_COUNTER64, DCIDESC_DEPRECATED },
+   { _T("Agent.LastTrapTime"), H_AgentEventSender, _T("T"), DCI_DT_UINT64, DCIDESC_DEPRECATED },
+   { _T("Agent.SentTraps"), H_AgentEventSender, _T("S"), DCI_DT_COUNTER64, DCIDESC_DEPRECATED }
 };
 
 /**

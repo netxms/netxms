@@ -1,6 +1,6 @@
 /*
  ** MQTT subagent
- ** Copyright (C) 2017 Raden Solutions
+ ** Copyright (C) 2017-2019 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -57,7 +57,7 @@ void Topic::processMessage(const char *topic, const char *msg)
 
    if (m_event != NULL)
    {
-      AgentSendTrap(0, m_event, "mm", topic, msg);
+      AgentPostEvent(0, m_event, 0, "mm", topic, msg);
    }
    else
    {

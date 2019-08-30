@@ -26,8 +26,8 @@
  * Static data
  */
 static void (* s_fpWriteLog)(int, int, const TCHAR *) = NULL;
-static void (* s_fpSendTrap1)(UINT32, const TCHAR *, const char *, va_list) = NULL;
-static void (* s_fpSendTrap2)(UINT32, const TCHAR *, int, const TCHAR **) = NULL;
+static void (* s_fpPostEvent1)(UINT32, const TCHAR *, time_t, const char *, va_list) = NULL;
+static void (* s_fpPostEvent2)(UINT32, const TCHAR *, time_t, int, const TCHAR **) = NULL;
 static AbstractCommSession *(* s_fpFindServerSession)(UINT64) = NULL;
 static bool (* s_fpEnumerateSessions)(EnumerationCallbackResult (*)(AbstractCommSession *, void *), void *) = NULL;
 static bool (* s_fpSendFile)(void *, UINT32, const TCHAR *, long, bool, VolatileCounter *) = NULL;
@@ -40,8 +40,8 @@ static void (* s_fpExecuteAction)(const TCHAR *, const StringList *);
  * Initialize subagent API
  */
 void LIBNXAGENT_EXPORTABLE InitSubAgentAPI(void (* writeLog)(int, int, const TCHAR *),
-                                           void (* sendTrap1)(UINT32, const TCHAR *, const char *, va_list),
-                                           void (* sendTrap2)(UINT32, const TCHAR *, int, const TCHAR **),
+                                           void (* postEvent1)(UINT32, const TCHAR *, time_t, const char *, va_list),
+                                           void (* postEvent2)(UINT32, const TCHAR *, time_t, int, const TCHAR **),
                                            bool (* enumerateSessions)(EnumerationCallbackResult (*)(AbstractCommSession *, void *), void*),
                                            AbstractCommSession *(* findServerSession)(UINT64),
                                            bool (* sendFile)(void *, UINT32, const TCHAR *, long, bool, VolatileCounter *),
@@ -50,8 +50,8 @@ void LIBNXAGENT_EXPORTABLE InitSubAgentAPI(void (* writeLog)(int, int, const TCH
                                            const TCHAR *dataDirectory, void (* executeAction)(const TCHAR *, const StringList *))
 {
    s_fpWriteLog = writeLog;
-	s_fpSendTrap1 = sendTrap1;
-	s_fpSendTrap2 = sendTrap2;
+	s_fpPostEvent1 = postEvent1;
+	s_fpPostEvent2 = postEvent2;
 	s_fpEnumerateSessions = enumerateSessions;
    s_fpFindServerSession = findServerSession;
 	s_fpSendFile = sendFile;
@@ -130,14 +130,13 @@ void LIBNXAGENT_EXPORTABLE AgentWriteDebugLog2(int level, const TCHAR *format, v
 /**
  * Send trap from agent to server
  */
-void LIBNXAGENT_EXPORTABLE AgentSendTrap(UINT32 dwEvent, const TCHAR *eventName, const char *pszFormat, ...)
+void LIBNXAGENT_EXPORTABLE AgentPostEvent(UINT32 event, const TCHAR *eventName, time_t timestamp, const char *format, ...)
 {
-   va_list args;
-
-   if (s_fpSendTrap1 != NULL)
+   if (s_fpPostEvent1 != NULL)
    {
-      va_start(args, pszFormat);
-      s_fpSendTrap1(dwEvent, eventName, pszFormat, args);
+      va_list args;
+      va_start(args, format);
+      s_fpPostEvent1(event, eventName, timestamp, format, args);
       va_end(args);
    }
 }
@@ -145,10 +144,10 @@ void LIBNXAGENT_EXPORTABLE AgentSendTrap(UINT32 dwEvent, const TCHAR *eventName,
 /**
  * Send trap from agent to server
  */
-void LIBNXAGENT_EXPORTABLE AgentSendTrap2(UINT32 dwEvent, const TCHAR *eventName, int nCount, const TCHAR **ppszArgList)
+void LIBNXAGENT_EXPORTABLE AgentSendTrap2(UINT32 event, const TCHAR *eventName, time_t timestamp, int count, const TCHAR **args)
 {
-   if (s_fpSendTrap2 != NULL)
-      s_fpSendTrap2(dwEvent, eventName, nCount, ppszArgList);
+   if (s_fpPostEvent2 != NULL)
+      s_fpPostEvent2(event, eventName, timestamp, count, args);
 }
 
 /**

@@ -772,10 +772,10 @@ bool WaitForProcess(const TCHAR *name);
 
 UINT32 UpgradeAgent(TCHAR *pszPkgFile);
 
-void SendTrap(UINT32 dwEventCode, const TCHAR *eventName, int iNumArgs, const TCHAR **ppArgList);
-void SendTrap(UINT32 dwEventCode, const TCHAR *eventName, const char *pszFormat, ...);
-void SendTrap(UINT32 dwEventCode, const TCHAR *eventName, const char *pszFormat, va_list args);
-void ForwardTrap(NXCPMessage *msg);
+void PostEvent(UINT32 eventCode, const TCHAR *eventName, time_t timestamp, int iNumArgs, const TCHAR **ppArgList);
+void PostEvent(UINT32 eventCode, const TCHAR *eventName, time_t timestamp, const char *pszFormat, ...);
+void PostEvent(UINT32 eventCode, const TCHAR *eventName, time_t timestamp, const char *pszFormat, va_list args);
+void ForwardEvent(NXCPMessage *msg);
 
 void StartPushConnector();
 bool PushData(const TCHAR *parameter, const TCHAR *value, UINT32 objectId, time_t timestamp);

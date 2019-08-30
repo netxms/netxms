@@ -84,27 +84,26 @@ static jstring JNICALL J_getParameterArg(JNIEnv *jenv, jclass jcls, jstring jpar
 /**
  * Class:     org.netxms.agent.SubAgent
  * Method:    sendTrap
- * Signature: (ILjava/lang/String;[Ljava/lang/String;)V
+ * Signature: (ILjava/lang/String;J[Ljava/lang/String;)V
  */
-static void JNICALL J_sendTrap(JNIEnv *jenv, jclass jcls, jint event, jstring jname, jobjectArray jargs)
+static void JNICALL J_postEvent(JNIEnv *jenv, jclass jcls, jint event, jstring jname, jlong timestamp, jobjectArray jargs)
 {
    if ((jname != NULL) && (jargs != NULL))
    {
       TCHAR *name = CStringFromJavaString(jenv, jname);
-      int numArgs = jenv->GetArrayLength(jargs);
+      int numArgs = (jargs != NULL) ? jenv->GetArrayLength(jargs) : 0;
 
-      TCHAR **arrayOfString = (TCHAR **)malloc(sizeof(TCHAR *) * numArgs);
+      TCHAR **arrayOfString = (numArgs > 0) ? (TCHAR **)alloca(sizeof(TCHAR *) * numArgs) : NULL;
       for(jsize i = 0; i < numArgs; i++)
       {
          jstring resString = reinterpret_cast<jstring>(jenv->GetObjectArrayElement(jargs, i));
          arrayOfString[i] = CStringFromJavaString(jenv, resString);
          jenv->DeleteLocalRef(resString);
       }
-      AgentSendTrap2((UINT32)event, name, numArgs, const_cast<const TCHAR**>(arrayOfString));
-      free(name);
+      AgentPostEvent2(static_cast<UINT32>(event), name, static_cast<time_t>(timestamp), numArgs, const_cast<const TCHAR**>(arrayOfString));
+      MemFree(name);
       for(jsize i = 0; i < numArgs; i++)
-         free(arrayOfString[i]);
-      free(arrayOfString);
+         MemFree(arrayOfString[i]);
    }
 }
 
@@ -133,8 +132,8 @@ static jboolean JNICALL J_pushParameterData(JNIEnv *jenv, jclass jcls, jstring j
 static JNINativeMethod s_jniNativeMethods[] =
 {
    { (char *)"getParameterArg", (char *)"(Ljava/lang/String;I)Ljava/lang/String;", (void *)J_getParameterArg },
-   { (char *)"pushParameterData", (char *)"(Ljava/lang/String;Ljava/lang/String;)Z", (void *)J_pushParameterData },
-   { (char *)"sendTrap", (char *)"(ILjava/lang/String;[Ljava/lang/String;)V", (void *)J_sendTrap }
+   { (char *)"postEvent", (char *)"(ILjava/lang/String;J[Ljava/lang/String;)V", (void *)J_postEvent },
+   { (char *)"pushParameterData", (char *)"(Ljava/lang/String;Ljava/lang/String;)Z", (void *)J_pushParameterData }
 };
 
 /**

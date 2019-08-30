@@ -65,7 +65,7 @@ NETXMS_EXECUTABLE_HEADER(nxagentd)
  */
 THREAD_RESULT THREAD_CALL ListenerThread(void *);
 THREAD_RESULT THREAD_CALL SessionWatchdog(void *);
-THREAD_RESULT THREAD_CALL TrapSender(void *);
+THREAD_RESULT THREAD_CALL EventSender(void *);
 THREAD_RESULT THREAD_CALL MasterAgentListener(void *arg);
 THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *);
 THREAD_RESULT THREAD_CALL SNMPTrapSender(void *);
@@ -73,7 +73,7 @@ THREAD_RESULT THREAD_CALL SyslogReceiver(void *);
 THREAD_RESULT THREAD_CALL SyslogSender(void *);
 THREAD_RESULT THREAD_CALL TunnelManager(void *);
 
-void ShutdownTrapSender();
+void ShutdownEventSender();
 void ShutdownSNMPTrapSender();
 
 void ShutdownSyslogSender();
@@ -106,8 +106,8 @@ extern TCHAR g_windowsServiceDisplayName[];
 #endif
 
 void LIBNXAGENT_EXPORTABLE InitSubAgentAPI(void (* writeLog)(int, int, const TCHAR *),
-                                           void (* sendTrap1)(UINT32, const TCHAR *, const char *, va_list),
-                                           void (* sendTrap2)(UINT32, const TCHAR *, int, const TCHAR **),
+                                           void (* postEvent1)(UINT32, const TCHAR *, time_t, const char *, va_list),
+                                           void (* postEvent2)(UINT32, const TCHAR *, time_t, int, const TCHAR **),
                                            bool (* enumerateSessions)(EnumerationCallbackResult (*)(AbstractCommSession *, void *), void*),
                                            AbstractCommSession *(* findServerSession)(UINT64),
                                            bool (* sendFile)(void *, UINT32, const TCHAR *, long, bool, VolatileCounter *),
@@ -921,7 +921,7 @@ BOOL Initialize()
 #endif
 
    // Initialize API for subagents
-   InitSubAgentAPI(WriteSubAgentMsg, SendTrap, SendTrap, EnumerateSessions, FindServerSessionByServerId,
+   InitSubAgentAPI(WriteSubAgentMsg, PostEvent, PostEvent, EnumerateSessions, FindServerSessionByServerId,
       SendFileToServer, PushData, GetLocalDatabaseHandle, g_szDataDirectory, ExecuteAction);
    nxlog_debug(1, _T("Subagent API initialized"));
 
@@ -1215,7 +1215,7 @@ BOOL Initialize()
    // Agent start time
    g_tmAgentStartTime = time(NULL);
 
-	s_eventSenderThread = ThreadCreateEx(TrapSender, 0, NULL);
+	s_eventSenderThread = ThreadCreateEx(EventSender, 0, NULL);
 
 	if (g_dwFlags & AF_ENABLE_SNMP_TRAP_PROXY)
 	{
@@ -1300,7 +1300,7 @@ void Shutdown()
    g_dwFlags |= AF_SHUTDOWN;
    InitiateProcessShutdown();
 
-   ShutdownTrapSender();
+   ShutdownEventSender();
 	if (g_dwFlags & AF_SUBAGENT_LOADER)
 	{
 		ThreadJoin(s_masterAgentListenerThread);

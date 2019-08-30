@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -26,30 +26,30 @@
 /**
  * Static data
  */
-static Queue s_trapQueue;
-static UINT64 s_genTrapCount = 0;	// Number of generated traps
-static UINT64 s_sentTrapCount = 0;	// Number of sent traps
-static UINT64 s_trapIdBase = static_cast<UINT64>(time(NULL)) << 32;
-static VolatileCounter s_trapIdCounter = 0;
-static time_t s_lastTrapTime = 0;
+static Queue s_eventQueue;
+static UINT64 s_generatedEventsCount = 0;
+static UINT64 s_sentEventsCount = 0;
+static UINT64 s_eventIdBase = static_cast<UINT64>(time(NULL)) << 32;
+static VolatileCounter s_eventIdCounter = 0;
+static time_t s_lastEventTimestamp = 0;
 
 /**
  * Trap sender
  */
-THREAD_RESULT THREAD_CALL TrapSender(void *pArg)
+THREAD_RESULT THREAD_CALL EventSender(void *pArg)
 {
-   nxlog_debug(1, _T("Trap sender thread started"));
+   nxlog_debug(1, _T("Event sender thread started"));
    while(true)
    {
-      NXCP_MESSAGE *pMsg = (NXCP_MESSAGE *)s_trapQueue.getOrBlock();
+      NXCP_MESSAGE *pMsg = (NXCP_MESSAGE *)s_eventQueue.getOrBlock();
       if (pMsg == INVALID_POINTER_VALUE)
          break;
 
-      bool trapSent = false;
+      bool sent = false;
 
       if (g_dwFlags & AF_SUBAGENT_LOADER)
       {
-         trapSent = SendRawMessageToMasterAgent(pMsg);
+         sent = SendRawMessageToMasterAgent(pMsg);
       }
       else
       {
@@ -58,73 +58,74 @@ THREAD_RESULT THREAD_CALL TrapSender(void *pArg)
             if ((g_pSessionList[i] != NULL) && g_pSessionList[i]->canAcceptTraps())
             {
                g_pSessionList[i]->sendRawMessage(pMsg);
-               trapSent = true;
+               sent = true;
             }
          MutexUnlock(g_hSessionListAccess);
       }
 
-      if (trapSent)
+      if (sent)
 		{
-	      free(pMsg);
-			s_sentTrapCount++;
+	      MemFree(pMsg);
+			s_sentEventsCount++;
 		}
 		else
 		{
-         s_trapQueue.insert(pMsg);	// Re-queue trap
+         s_eventQueue.insert(pMsg);	// Re-queue trap
 			ThreadSleep(1);
 		}
    }
-	nxlog_debug(1, _T("Trap sender thread terminated"));
+	nxlog_debug(1, _T("Event sender thread terminated"));
    return THREAD_OK;
 }
 
 /**
  * Shutdown trap sender
  */
-void ShutdownTrapSender()
+void ShutdownEventSender()
 {
-	s_trapQueue.setShutdownMode();
+	s_eventQueue.setShutdownMode();
 }
 
 /**
  * Send trap to server
  */
-void SendTrap(UINT32 dwEventCode, const TCHAR *eventName, int iNumArgs, const TCHAR **ppArgList)
+void PostEvent(UINT32 eventCode, const TCHAR *eventName, time_t timestamp, int pcount, const TCHAR **parameters)
 {
    if (nxlog_get_debug_level() >= 5)
    {
       String argsText;
-      for(int i = 0; i < iNumArgs; i++)
+      for(int i = 0; i < pcount; i++)
       {
          argsText.append(_T(", arg["));
          argsText.append(i);
          argsText.append(_T("]=\""));
-         argsText.append(CHECK_NULL(ppArgList[i]));
+         argsText.append(CHECK_NULL(parameters[i]));
          argsText.append(_T('"'));
       }
-      nxlog_debug(5, _T("SendTrap(): event_code=%d, event_name=%s, num_args=%d%s"),
-                  dwEventCode, CHECK_NULL(eventName), iNumArgs, (const TCHAR *)argsText);
+      nxlog_debug(5, _T("PostEvent(): event_code=%d, event_name=%s, timestamp=") INT64_FMT _T(", num_args=%d%s"),
+                  eventCode, CHECK_NULL(eventName), static_cast<INT64>(timestamp), pcount, (const TCHAR *)argsText);
    }
 
    NXCPMessage msg(CMD_TRAP, 0, 4); // Use version 4
-	msg.setField(VID_TRAP_ID, s_trapIdBase | (UINT64)InterlockedIncrement(&s_trapIdCounter));
-   msg.setField(VID_EVENT_CODE, dwEventCode);
+	msg.setField(VID_TRAP_ID, s_eventIdBase | static_cast<UINT64>(InterlockedIncrement(&s_eventIdCounter)));
+   msg.setField(VID_EVENT_CODE, eventCode);
 	if (eventName != NULL)
 		msg.setField(VID_EVENT_NAME, eventName);
-   msg.setField(VID_NUM_ARGS, (WORD)iNumArgs);
-   for(int i = 0; i < iNumArgs; i++)
-      msg.setField(VID_EVENT_ARG_BASE + i, ppArgList[i]);
-	s_genTrapCount++;
-	s_lastTrapTime = time(NULL);
-   s_trapQueue.put(msg.serialize());
+	msg.setField(VID_TIMESTAMP, static_cast<INT64>((timestamp != 0) ? timestamp : time(NULL)));
+   msg.setField(VID_NUM_ARGS, (WORD)pcount);
+   for(int i = 0; i < pcount; i++)
+      msg.setField(VID_EVENT_ARG_BASE + i, parameters[i]);
+	s_generatedEventsCount++;
+	s_lastEventTimestamp = time(NULL);
+   s_eventQueue.put(msg.serialize());
 }
 
 /**
- * Send trap - variant 2
+ * Send event - variant 2
  * Arguments:
- * dwEventCode - Event code
+ * eventCode - Event code
  * eventName   - event name; to send event by name, eventCode must be set to 0
- * pszFormat   - Parameter format string, each parameter represented by one character.
+ * format   - Parameter format string, each parameter represented by one character.
  *    The following format characters can be used:
  *        s - String
  *        m - Multibyte (non-UNICODE) string
@@ -135,16 +136,16 @@ void SendTrap(UINT32 dwEventCode, const TCHAR *eventName, int iNumArgs, const TC
  *        D - 64-bit decimal integer
  *        X - 64-bit hex integer
  */
-void SendTrap(UINT32 dwEventCode, const TCHAR *eventName, const char *pszFormat, va_list args)
+void PostEvent(UINT32 eventCode, const TCHAR *eventName, time_t timestamp, const char *format, va_list args)
 {
    int i, iNumArgs;
    TCHAR *ppArgList[64];
    static TCHAR badFormat[] = _T("BAD FORMAT");
 
-   iNumArgs = (pszFormat == NULL) ? 0 : (int)strlen(pszFormat);
+   iNumArgs = (format == NULL) ? 0 : (int)strlen(format);
    for(i = 0; i < iNumArgs; i++)
    {
-      switch(pszFormat[i])
+      switch(format[i])
       {
          case 's':
             ppArgList[i] = va_arg(args, TCHAR *);
@@ -161,13 +162,13 @@ void SendTrap(UINT32 dwEventCode, const TCHAR *eventName, const char *pszFormat,
             _sntprintf(ppArgList[i], 16, _T("%d"), va_arg(args, LONG)); //
             break;
          case 'D':
-            ppArgList[i] = (TCHAR *)malloc(32 * sizeof(TCHAR)); //
-            _sntprintf(ppArgList[i], 32, INT64_FMT, va_arg(args, INT64)); //
+            ppArgList[i] = (TCHAR *)malloc(32 * sizeof(TCHAR));
+            _sntprintf(ppArgList[i], 32, INT64_FMT, va_arg(args, INT64));
             break;
          case 'x':
          case 'i':
-            ppArgList[i] = (TCHAR *)malloc(16 * sizeof(TCHAR));  //
-            _sntprintf(ppArgList[i], 16, _T("0x%08X"), va_arg(args, UINT32));  //
+            ppArgList[i] = (TCHAR *)malloc(16 * sizeof(TCHAR));
+            _sntprintf(ppArgList[i], 16, _T("0x%08X"), va_arg(args, UINT32));
             break;
          case 'X':
             ppArgList[i] = (TCHAR *)malloc(32 * sizeof(TCHAR));
@@ -183,14 +184,14 @@ void SendTrap(UINT32 dwEventCode, const TCHAR *eventName, const char *pszFormat,
       }
    }
 
-   SendTrap(dwEventCode, eventName, iNumArgs, const_cast<const TCHAR**>(ppArgList));
+   PostEvent(eventCode, eventName, timestamp, iNumArgs, const_cast<const TCHAR**>(ppArgList));
 
    for(i = 0; i < iNumArgs; i++)
-      if ((pszFormat[i] == 'd') || (pszFormat[i] == 'x') ||
-         (pszFormat[i] == 'D') || (pszFormat[i] == 'X') ||
-         (pszFormat[i] == 'i') || (pszFormat[i] == 'a')
+      if ((format[i] == 'd') || (format[i] == 'x') ||
+         (format[i] == 'D') || (format[i] == 'X') ||
+         (format[i] == 'i') || (format[i] == 'a')
 #ifdef UNICODE
-         || (pszFormat[i] == 'm')
+         || (format[i] == 'm')
 #endif
          )
       {
@@ -199,45 +200,43 @@ void SendTrap(UINT32 dwEventCode, const TCHAR *eventName, const char *pszFormat,
 }
 
 /**
- * Send trap - variant 3
+ * Send event - variant 3
  * Same as variant 2, but uses argument list instead of va_list
  */
-void SendTrap(UINT32 dwEventCode, const TCHAR *eventName, const char *pszFormat, ...)
+void PostEvent(UINT32 eventCode, const TCHAR *eventName, time_t timestamp, const char *format, ...)
 {
    va_list args;
-
-   va_start(args, pszFormat);
-   SendTrap(dwEventCode, eventName, pszFormat, args);
+   va_start(args, format);
+   PostEvent(eventCode, eventName, timestamp, format, args);
    va_end(args);
-
 }
 
 /**
- * Forward trap from external subagent to server
+ * Forward event from external subagent to server
  */
-void ForwardTrap(NXCPMessage *msg)
+void ForwardEvent(NXCPMessage *msg)
 {
-	msg->setField(VID_TRAP_ID, s_trapIdBase | (UINT64)InterlockedIncrement(&s_trapIdCounter));
-	s_genTrapCount++;
-	s_lastTrapTime = time(NULL);
-   s_trapQueue.put(msg->serialize());
+	msg->setField(VID_TRAP_ID, s_eventIdBase | (UINT64)InterlockedIncrement(&s_eventIdCounter));
+	s_generatedEventsCount++;
+	s_lastEventTimestamp = time(NULL);
+   s_eventQueue.put(msg->serialize());
 }
 
 /**
- * Handler for trap statistic DCIs
+ * Handler for event statistic DCIs
  */
-LONG H_AgentTraps(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+LONG H_AgentEventSender(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
 	switch(arg[0])
 	{
 		case 'G':
-			ret_uint64(value, s_genTrapCount);
+			ret_uint64(value, s_generatedEventsCount);
 			break;
 		case 'S':
-			ret_uint64(value, s_sentTrapCount);
+			ret_uint64(value, s_sentEventsCount);
 			break;
 		case 'T':
-			ret_uint64(value, (QWORD)s_lastTrapTime);
+			ret_uint64(value, static_cast<UINT64>(s_lastEventTimestamp));
 			break;
 		default:
 			return SYSINFO_RC_UNSUPPORTED;

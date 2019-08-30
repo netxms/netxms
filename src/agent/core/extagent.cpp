@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -152,7 +152,7 @@ void ExternalSubagent::connect(NamedPipe *pipe)
             delete msg;
             break;
          case CMD_TRAP:
-            ForwardTrap(msg);
+            ForwardEvent(msg);
             delete msg;
             break;
          case CMD_PROXY_MESSAGE:
