@@ -361,14 +361,6 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 static NETXMS_SUBAGENT_LIST s_lists[] =
 {
 #ifdef NDRX_VERSION
-   { _T("Tuxedo.Clients"), H_ClientsList, NULL },
-   { _T("Tuxedo.Machines"), H_MachinesList, NULL },
-   { _T("Tuxedo.Queues"), H_QueuesList, NULL },
-   { _T("Tuxedo.ServerInstances"), H_ServerInstancesList, NULL },
-   { _T("Tuxedo.Servers"), H_ServersList, NULL },
-   { _T("Tuxedo.ServiceGroups"), H_ServiceGroupsList, NULL },
-   { _T("Tuxedo.Services"), H_ServicesList, NULL }
-#else
    { _T("EnduroX.Clients"), H_ClientsList, NULL },
    { _T("EnduroX.Machines"), H_MachinesList, NULL },
    { _T("EnduroX.Queues"), H_QueuesList, NULL },
@@ -376,6 +368,14 @@ static NETXMS_SUBAGENT_LIST s_lists[] =
    { _T("EnduroX.Servers"), H_ServersList, NULL },
    { _T("EnduroX.ServiceGroups"), H_ServiceGroupsList, NULL },
    { _T("EnduroX.Services"), H_ServicesList, NULL }
+#else
+   { _T("Tuxedo.Clients"), H_ClientsList, NULL },
+   { _T("Tuxedo.Machines"), H_MachinesList, NULL },
+   { _T("Tuxedo.Queues"), H_QueuesList, NULL },
+   { _T("Tuxedo.ServerInstances"), H_ServerInstancesList, NULL },
+   { _T("Tuxedo.Servers"), H_ServersList, NULL },
+   { _T("Tuxedo.ServiceGroups"), H_ServiceGroupsList, NULL },
+   { _T("Tuxedo.Services"), H_ServicesList, NULL }
 #endif
 };
 
@@ -385,14 +385,6 @@ static NETXMS_SUBAGENT_LIST s_lists[] =
 static NETXMS_SUBAGENT_TABLE s_tables[] =
 {
 #ifdef NDRX_VERSION
-   { _T("Tuxedo.Clients"), H_ClientsTable, NULL, _T("ID"), _T("Tuxedo clients") },
-   { _T("Tuxedo.Machines"), H_MachinesTable, NULL, _T("ID"), _T("Tuxedo machines") },
-   { _T("Tuxedo.Queues"), H_QueuesTable, NULL, _T("NAME"), _T("Tuxedo queues") },
-   { _T("Tuxedo.ServerInstances"), H_ServerInstancesTable, NULL, _T("ID"), _T("Tuxedo server instances") },
-   { _T("Tuxedo.Servers"), H_ServersTable, NULL, _T("BASE_ID"), _T("Tuxedo servers") },
-   { _T("Tuxedo.ServiceGroups"), H_ServiceGroupsTable, NULL, _T("SVCNAME,SRVGROUP"), _T("Tuxedo service groups") },
-   { _T("Tuxedo.Services"), H_ServicesTable, NULL, _T("NAME"), _T("Tuxedo services") }
-#else
    { _T("EnduroX.Clients"), H_ClientsTable, NULL, _T("ID"), _T("Enduro/X clients") },
    { _T("EnduroX.Machines"), H_MachinesTable, NULL, _T("ID"), _T("Enduro/X machines") },
    { _T("EnduroX.Queues"), H_QueuesTable, NULL, _T("NAME"), _T("Enduro/X queues") },
@@ -400,6 +392,14 @@ static NETXMS_SUBAGENT_TABLE s_tables[] =
    { _T("EnduroX.Servers"), H_ServersTable, NULL, _T("BASE_ID"), _T("Enduro/X servers") },
    { _T("EnduroX.ServiceGroups"), H_ServiceGroupsTable, NULL, _T("SVCNAME,SRVGROUP"), _T("Enduro/X service groups") },
    { _T("EnduroX.Services"), H_ServicesTable, NULL, _T("NAME"), _T("Enduro/X services") }
+#else
+   { _T("Tuxedo.Clients"), H_ClientsTable, NULL, _T("ID"), _T("Tuxedo clients") },
+   { _T("Tuxedo.Machines"), H_MachinesTable, NULL, _T("ID"), _T("Tuxedo machines") },
+   { _T("Tuxedo.Queues"), H_QueuesTable, NULL, _T("NAME"), _T("Tuxedo queues") },
+   { _T("Tuxedo.ServerInstances"), H_ServerInstancesTable, NULL, _T("ID"), _T("Tuxedo server instances") },
+   { _T("Tuxedo.Servers"), H_ServersTable, NULL, _T("BASE_ID"), _T("Tuxedo servers") },
+   { _T("Tuxedo.ServiceGroups"), H_ServiceGroupsTable, NULL, _T("SVCNAME,SRVGROUP"), _T("Tuxedo service groups") },
+   { _T("Tuxedo.Services"), H_ServicesTable, NULL, _T("NAME"), _T("Tuxedo services") }
 #endif
 };
 
