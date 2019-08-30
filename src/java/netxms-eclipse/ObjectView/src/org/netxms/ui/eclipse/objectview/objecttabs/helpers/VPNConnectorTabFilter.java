@@ -22,11 +22,18 @@ import org.eclipse.jface.viewers.Viewer;
 import org.netxms.client.objects.VPNConnector;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 
+/**
+ * Filter for VPN connector view
+ */
 public class VPNConnectorTabFilter extends NodeComponentTabFilter
 {
-   private String filterString = null;
    private VPNConnectorListLabelProvider lp;
    
+   /**
+    * Create filter
+    * 
+    * @param lp label provider for the view
+    */
    public VPNConnectorTabFilter(VPNConnectorListLabelProvider lp)
    {
       this.lp = lp;

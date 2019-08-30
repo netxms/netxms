@@ -161,6 +161,11 @@ public abstract class NodeComponentTab extends ObjectTab
       ConsoleSharedData.getSession().addListener(sessionListener);
    }
 	
+	/**
+	 * Create filter control
+	 * 
+	 * @return filter control
+	 */
 	protected FilterText createFilterText()
 	{
 	   return new FilterText(mainArea, SWT.NONE);
@@ -244,6 +249,9 @@ public abstract class NodeComponentTab extends ObjectTab
     */
    public void onFilterModify()
    {
+      if (filter == null)
+         return;
+
       final String text = filterText.getText();
       filter.setFilterString(text);
       viewer.refresh(false);

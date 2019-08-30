@@ -139,6 +139,9 @@ public class InterfacesTab extends NodeComponentTab
       viewer.refresh();
    }
 
+   /**
+    * @see org.netxms.ui.eclipse.objectview.objecttabs.helpers.NodeComponentTab#createViewer()
+    */
    @Override
    protected void createViewer()
    {
@@ -206,12 +209,18 @@ public class InterfacesTab extends NodeComponentTab
      refresh();
   }
 
+   /**
+    * @see org.netxms.ui.eclipse.objectview.objecttabs.helpers.NodeComponentTab#getFilterSettingName()
+    */
    @Override
    public String getFilterSettingName()
    {
       return "InterfacesTab.showFilter";
    }
 
+   /**
+    * @see org.netxms.ui.eclipse.objectview.objecttabs.helpers.NodeComponentTab#needRefreshOnObjectChange(org.netxms.client.objects.AbstractObject)
+    */
    @Override
    public boolean needRefreshOnObjectChange(AbstractObject object)
    {

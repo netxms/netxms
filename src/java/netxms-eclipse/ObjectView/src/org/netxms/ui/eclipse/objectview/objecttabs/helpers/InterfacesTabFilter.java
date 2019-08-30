@@ -29,7 +29,6 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 public class InterfacesTabFilter extends NodeComponentTabFilter
 {
    private NXCSession session = ConsoleSharedData.getSession();
-   private String filterString = null;
    private boolean hideSubInterfaces = false;
 
    /* (non-Javadoc)

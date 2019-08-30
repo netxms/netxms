@@ -22,9 +22,11 @@ import org.eclipse.jface.viewers.Viewer;
 import org.netxms.client.objects.NetworkService;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 
+/**
+ * Filter for network service view
+ */
 public class NetworkServiceTabFilter extends NodeComponentTabFilter
 {
-   private String filterString = null;
    private NetworkServiceListLabelProvider lp;
    
    public NetworkServiceTabFilter(NetworkServiceListLabelProvider lp)

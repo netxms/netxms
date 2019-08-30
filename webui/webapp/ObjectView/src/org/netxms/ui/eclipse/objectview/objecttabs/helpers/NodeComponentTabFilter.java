@@ -20,9 +20,12 @@ package org.netxms.ui.eclipse.objectview.objecttabs.helpers;
 
 import org.eclipse.jface.viewers.ViewerFilter;
 
+/**
+ * Abstract filter class for node component views
+ */
 public abstract class NodeComponentTabFilter extends ViewerFilter
 {
-   private String filterString = null;
+   protected String filterString = null;
    
    /**
     * Get filter string
@@ -41,5 +44,4 @@ public abstract class NodeComponentTabFilter extends ViewerFilter
    {
       this.filterString = filterString.toLowerCase();
    }
-
 }
