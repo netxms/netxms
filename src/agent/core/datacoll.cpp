@@ -973,11 +973,11 @@ static UINT32 DataCollectionSchedulerRun()
    UINT32 sleepTime = 60;
 
    s_itemLock.lock();
+   time_t now = time(NULL);
    Iterator<DataCollectionItem> *it = s_items.iterator();
    while(it->hasNext())
    {
       DataCollectionItem *dci = it->next();
-      time_t now = time(NULL);
       UINT32 timeToPoll = dci->getTimeToNextPoll(now);
       if (timeToPoll == 0)
       {
@@ -1014,9 +1014,9 @@ static UINT32 DataCollectionSchedulerRun()
                DebugPrintf(7, _T("DataCollector: unsupported origin %d"), dci->getOrigin());
                dci->setLastPollTime(time(NULL));
             }
-
-            timeToPoll = dci->getPollingInterval();
          }
+
+         timeToPoll = dci->getPollingInterval();
       }
       if (sleepTime > timeToPoll)
          sleepTime = timeToPoll;
