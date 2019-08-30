@@ -138,7 +138,7 @@ static void SubagentShutdown()
 static void LogParserMatch(UINT32 eventCode, const TCHAR *eventName, const TCHAR *eventTag,
          const TCHAR *text, const TCHAR *source, UINT32 eventId, UINT32 severity, const StringList *cgs,
          const StringList *variables, UINT64 recordId, UINT32 objectId, int repeatCount,
-         void *userArg, const TCHAR *agentAction, const StringList *agentActionArgs)
+         time_t timestamp, const TCHAR *agentAction, const StringList *agentActionArgs, void *context)
 {
    int count = cgs->size() + ((eventTag != NULL) ? 1 : 0) + 1 + ((variables != NULL) ? variables->size() : 0);
    TCHAR eventIdText[16], severityText[16], repeatCountText[16], recordIdText[32];

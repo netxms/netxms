@@ -111,7 +111,7 @@ void PostEvent(UINT32 eventCode, const TCHAR *eventName, time_t timestamp, int p
    msg.setField(VID_EVENT_CODE, eventCode);
 	if (eventName != NULL)
 		msg.setField(VID_EVENT_NAME, eventName);
-	msg.setField(VID_TIMESTAMP, static_cast<INT64>((timestamp != 0) ? timestamp : time(NULL)));
+	msg.setFieldFromTime(VID_TIMESTAMP, (timestamp != 0) ? timestamp : time(NULL));
    msg.setField(VID_NUM_ARGS, (WORD)pcount);
    for(int i = 0; i < pcount; i++)
       msg.setField(VID_EVENT_ARG_BASE + i, parameters[i]);

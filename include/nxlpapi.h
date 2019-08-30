@@ -81,11 +81,12 @@ enum LogParserFileEncoding
  * Parameters:
  *    NetXMS event code, NetXMS event name, event tag, original text, source,
  *    original event ID (facility), original severity,
- *    capture groups, variables, record id, object id, repeat count, user arg, agent action
+ *    capture groups, variables, record id, object id, repeat count,
+ *    log record timestamp, agent action, agent action arguments, context
  */
 typedef void (* LogParserCallback)(UINT32, const TCHAR *, const TCHAR *, const TCHAR *,
          const TCHAR *, UINT32, UINT32, const StringList *, const StringList *, UINT64, UINT32,
-         int, void *, const TCHAR *, const StringList *);
+         int, time_t, const TCHAR *, const StringList *, void *);
 
 class LIBNXLP_EXPORTABLE LogParser;
 
@@ -147,8 +148,9 @@ private:
 	StringList *m_agentActionArgs;
 	HashMap<UINT32, ObjectRuleStats> *m_objectCounters;
 
-	bool matchInternal(bool extMode, const TCHAR *source, UINT32 eventId, UINT32 level, const TCHAR *line, 
-                      StringList *variables, UINT64 recordId, UINT32 objectId, LogParserCallback cb, void *userArg);
+	bool matchInternal(bool extMode, const TCHAR *source, UINT32 eventId, UINT32 level, const TCHAR *line,
+	         StringList *variables, UINT64 recordId, UINT32 objectId, time_t timestamp,
+	         LogParserCallback cb, void *context);
 	bool matchRepeatCount();
    void expandMacros(const TCHAR *regexp, String &out);
    void incCheckCount(UINT32 objectId);
@@ -166,9 +168,9 @@ public:
 	const TCHAR *getName() const { return m_name; }
 	bool isValid() const { return m_preg != NULL; }
 
-	bool match(const TCHAR *line, UINT32 objectId, LogParserCallback cb, void *userArg);
+	bool match(const TCHAR *line, UINT32 objectId, LogParserCallback cb, void *context);
 	bool matchEx(const TCHAR *source, UINT32 eventId, UINT32 level, const TCHAR *line, StringList *variables, 
-                UINT64 recordId, UINT32 objectId, LogParserCallback cb, void *userArg);
+                UINT64 recordId, UINT32 objectId, time_t timestamp, LogParserCallback cb, void *context);
 
 	void setAgentAction(const TCHAR *agentAction) { MemFree(m_agentAction); m_agentAction = MemCopyString(agentAction); }
 	void setAgentActionArgs(StringList *args) { delete(m_agentActionArgs); m_agentActionArgs = args; }
@@ -253,7 +255,8 @@ private:
    uuid m_guid;
 
 	const TCHAR *checkContext(LogParserRule *rule);
-	bool matchLogRecord(bool hasAttributes, const TCHAR *source, UINT32 eventId, UINT32 level, const TCHAR *line, StringList *variables, UINT64 recordId, UINT32 objectId);
+	bool matchLogRecord(bool hasAttributes, const TCHAR *source, UINT32 eventId, UINT32 level, const TCHAR *line,
+	         StringList *variables, UINT64 recordId, UINT32 objectId, time_t timestamp);
 
 	bool isExclusionPeriod();
 
@@ -326,7 +329,8 @@ public:
 	const TCHAR *getMacro(const TCHAR *name);
 
 	bool matchLine(const TCHAR *line, UINT32 objectId = 0);
-	bool matchEvent(const TCHAR *source, UINT32 eventId, UINT32 level, const TCHAR *line, StringList *variables, UINT64 recordId, UINT32 objectId = 0);
+	bool matchEvent(const TCHAR *source, UINT32 eventId, UINT32 level, const TCHAR *line, StringList *variables,
+	         UINT64 recordId, UINT32 objectId = 0, time_t timestamp = 0);
 
 	int getProcessedRecordsCount() const { return m_recordsProcessed; }
 	int getMatchedRecordsCount() const { return m_recordsMatched; }

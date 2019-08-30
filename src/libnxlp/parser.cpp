@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Log Parsing Library
-** Copyright (C) 2003-2018 Raden Solutions
+** Copyright (C) 2003-2019 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -270,8 +270,7 @@ const TCHAR *LogParser::checkContext(LogParserRule *rule)
  * Match log record
  */
 bool LogParser::matchLogRecord(bool hasAttributes, const TCHAR *source, UINT32 eventId,
-										 UINT32 level, const TCHAR *line, StringList *variables, 
-                               UINT64 recordId, UINT32 objectId)
+         UINT32 level, const TCHAR *line, StringList *variables, UINT64 recordId, UINT32 objectId, time_t timestamp)
 {
 	const TCHAR *state;
 	bool matched = false;
@@ -290,7 +289,7 @@ bool LogParser::matchLogRecord(bool hasAttributes, const TCHAR *source, UINT32 e
 		if ((state = checkContext(rule)) != NULL)
 		{
 			bool ruleMatched = hasAttributes ?
-			   rule->matchEx(source, eventId, level, line, variables, recordId, objectId, m_cb, m_userArg) :
+			   rule->matchEx(source, eventId, level, line, variables, recordId, objectId, timestamp, m_cb, m_userArg) :
 				rule->match(line, objectId, m_cb, m_userArg);
 			if (ruleMatched)
 			{
@@ -332,15 +331,16 @@ bool LogParser::matchLogRecord(bool hasAttributes, const TCHAR *source, UINT32 e
  */
 bool LogParser::matchLine(const TCHAR *line, UINT32 objectId)
 {
-	return matchLogRecord(false, NULL, 0, 0, line, NULL, 0, objectId);
+	return matchLogRecord(false, NULL, 0, 0, line, NULL, 0, objectId, 0);
 }
 
 /**
  * Match log event (text with additional attributes - source, severity, event id)
  */
-bool LogParser::matchEvent(const TCHAR *source, UINT32 eventId, UINT32 level, const TCHAR *line, StringList *variables, UINT64 recordId, UINT32 objectId)
+bool LogParser::matchEvent(const TCHAR *source, UINT32 eventId, UINT32 level, const TCHAR *line, StringList *variables,
+         UINT64 recordId, UINT32 objectId, time_t timestamp)
 {
-	return matchLogRecord(true, source, eventId, level, line, variables, recordId, objectId);
+	return matchLogRecord(true, source, eventId, level, line, variables, recordId, objectId, timestamp);
 }
 
 /**
@@ -395,7 +395,7 @@ const TCHAR *LogParser::getMacro(const TCHAR *name)
  */
 static void StartElement(void *userData, const char *name, const char **attrs)
 {
-	LogParser_XmlParserState *ps = (LogParser_XmlParserState *)userData;
+	LogParser_XmlParserState *ps = static_cast<LogParser_XmlParserState*>(userData);
 
 	if (!strcmp(name, "parser"))
 	{
