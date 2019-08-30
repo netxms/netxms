@@ -139,12 +139,12 @@
 
   <reporting>
     <plugins>
-
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
-        <version>2.10.4</version>
+        <version>3.1.0</version>
          <configuration>
+           <source>8</source>
            <includeDependencySources>true</includeDependencySources>
            <!--<sourcepath>../../../java/client/mobile-agent:./:../../../libnxjava/java/base/netxms-base/src/main/java</sourcepath>-->
            <dependencySourceExcludes>
@@ -153,6 +153,16 @@
              <dependencySourceExclude>org.junit:*</dependencySourceExclude>
            </dependencySourceExcludes>
          </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-site-plugin</artifactId>
+        <version>3.3</version>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-project-info-reports-plugin</artifactId>
+        <version>2.7</version>
       </plugin>
     </plugins>
   </reporting>
