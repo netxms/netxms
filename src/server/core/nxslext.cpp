@@ -711,35 +711,34 @@ static int F_DeleteObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
  */
 static int F_BindObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
-	if (!argv[0]->isObject() || !argv[1]->isObject())
-		return NXSL_ERR_NOT_OBJECT;
+   if (!argv[0]->isObject() || !argv[1]->isObject())
+      return NXSL_ERR_NOT_OBJECT;
 
-	NXSL_Object *obj = argv[0]->getValueAsObject();
-   if (!obj->getClass()->instanceOf(g_nxslNetObjClass.getName()))
-		return NXSL_ERR_BAD_CLASS;
+   NXSL_Object *nxslParent = argv[0]->getValueAsObject();
+   if (!nxslParent->getClass()->instanceOf(g_nxslNetObjClass.getName()))
+      return NXSL_ERR_BAD_CLASS;
 
-	NetObj *netobj = (NetObj*)obj->getData();
-	if (netobj->getObjectClass() != OBJECT_CONTAINER)
-		return NXSL_ERR_BAD_CLASS;
+   NetObj *parent = static_cast<NetObj*>(nxslParent->getData());
+   if ((parent->getObjectClass() != OBJECT_CONTAINER) && (parent->getObjectClass() != OBJECT_SERVICEROOT))
+      return NXSL_ERR_BAD_CLASS;
 
-	NXSL_Object *obj2 = argv[1]->getValueAsObject();
-   if (!obj2->getClass()->instanceOf(g_nxslNetObjClass.getName()))
-		return NXSL_ERR_BAD_CLASS;
+   NXSL_Object *nxslChild = argv[1]->getValueAsObject();
+   if (!nxslChild->getClass()->instanceOf(g_nxslNetObjClass.getName()))
+      return NXSL_ERR_BAD_CLASS;
 
-	NetObj *child = (NetObj*)obj2->getData();
-	if (child->getObjectClass() != OBJECT_CONTAINER && child->getObjectClass() != OBJECT_SUBNET && child->getObjectClass() != OBJECT_NODE)
-		return NXSL_ERR_BAD_CLASS;
+   NetObj *child = static_cast<NetObj*>(nxslChild->getData());
+   if (!IsValidParentClass(child->getObjectClass(), parent->getObjectClass()))
+      return NXSL_ERR_BAD_CLASS;
 
-	if (child->isChild(netobj->getId())) // prevent loops
-		return NXSL_ERR_INVALID_OBJECT_OPERATION;
+   if (child->isChild(parent->getId())) // prevent loops
+      return NXSL_ERR_INVALID_OBJECT_OPERATION;
 
-	netobj->addChild(child);
-	child->addParent(netobj);
-	netobj->calculateCompoundStatus();
+   parent->addChild(child);
+   child->addParent(parent);
+   parent->calculateCompoundStatus();
 
-	*ppResult = vm->createValue();
-
-	return 0;
+   *ppResult = vm->createValue();
+   return 0;
 }
 
 /**
@@ -754,31 +753,27 @@ static int F_BindObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL
  */
 static int F_UnbindObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
-	if (!argv[0]->isObject() || !argv[1]->isObject())
-		return NXSL_ERR_NOT_OBJECT;
+   if (!argv[0]->isObject() || !argv[1]->isObject())
+      return NXSL_ERR_NOT_OBJECT;
 
-	NXSL_Object *obj = argv[0]->getValueAsObject();
-   if (!obj->getClass()->instanceOf(g_nxslNetObjClass.getName()))
-		return NXSL_ERR_BAD_CLASS;
+   NXSL_Object *nxslParent = argv[0]->getValueAsObject();
+   if (!nxslParent->getClass()->instanceOf(g_nxslNetObjClass.getName()))
+      return NXSL_ERR_BAD_CLASS;
 
-	NetObj *netobj = (NetObj*)obj->getData();
-	if (netobj->getObjectClass() != OBJECT_CONTAINER)
-		return NXSL_ERR_BAD_CLASS;
+   NetObj *parent = static_cast<NetObj*>(nxslParent->getData());
+   if ((parent->getObjectClass() != OBJECT_CONTAINER) && (parent->getObjectClass() != OBJECT_SERVICEROOT))
+      return NXSL_ERR_BAD_CLASS;
 
-	NXSL_Object *obj2 = argv[1]->getValueAsObject();
-   if (!obj2->getClass()->instanceOf(g_nxslNetObjClass.getName()))
-		return NXSL_ERR_BAD_CLASS;
+   NXSL_Object *nxslChild = argv[1]->getValueAsObject();
+   if (!nxslChild->getClass()->instanceOf(g_nxslNetObjClass.getName()))
+      return NXSL_ERR_BAD_CLASS;
 
-	NetObj *child = (NetObj*)obj2->getData();
-	if (child->getObjectClass() != OBJECT_CONTAINER && child->getObjectClass() != OBJECT_SUBNET && child->getObjectClass() != OBJECT_NODE)
-		return NXSL_ERR_BAD_CLASS;
+   NetObj *child = static_cast<NetObj*>(nxslChild->getData());
+   parent->deleteChild(child);
+   child->deleteParent(parent);
 
-	netobj->deleteChild(child);
-	child->deleteParent(netobj);
-
-	*ppResult = vm->createValue();
-
-	return 0;
+   *ppResult = vm->createValue();
+   return 0;
 }
 
 /**
@@ -793,20 +788,20 @@ static int F_UnbindObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
  */
 static int F_RenameObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
-	if (!argv[0]->isObject())
-		return NXSL_ERR_NOT_OBJECT;
+   if (!argv[0]->isObject())
+      return NXSL_ERR_NOT_OBJECT;
 
-	if (!argv[1]->isString())
-		return NXSL_ERR_NOT_STRING;
+   if (!argv[1]->isString())
+      return NXSL_ERR_NOT_STRING;
 
-	NXSL_Object *object = argv[0]->getValueAsObject();
+   NXSL_Object *object = argv[0]->getValueAsObject();
    if (!object->getClass()->instanceOf(g_nxslNetObjClass.getName()))
-		return NXSL_ERR_BAD_CLASS;
+      return NXSL_ERR_BAD_CLASS;
 
-	((NetObj *)object->getData())->setName(argv[1]->getValueAsCString());
+   static_cast<NetObj*>(object->getData())->setName(argv[1]->getValueAsCString());
 
-	*ppResult = vm->createValue();
-	return 0;
+   *ppResult = vm->createValue();
+   return 0;
 }
 
 /**
