@@ -92,8 +92,9 @@ public class VlanInfo
 
    /**
     * Check if given port is within VLAN
-    *
-	* @param slot slot
+    * @param chassis chassis
+    * @param module module
+    * @param pic pic
     * @param port port
     * @return if given port is within VLAN
     */

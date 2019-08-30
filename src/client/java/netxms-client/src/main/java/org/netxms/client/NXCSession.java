@@ -9651,9 +9651,10 @@ public class NXCSession
    /**
     * Send Notification via server. User should have appropriate rights to execute this command.
     *
+    * @param channelName channel name
     * @param phoneNumber target phone number
+    * @param subject     message subject
     * @param message     message text
-    * @param string 
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
