@@ -334,9 +334,6 @@ static bool RotateLog(bool needLock)
 	int i;
 	TCHAR oldName[MAX_PATH], newName[MAX_PATH];
 
-	if (s_flags & NXLOG_USE_SYSLOG)
-		return FALSE;	// Cannot rotate system logs
-
 	if (needLock)
 		MutexLock(s_mutexLogAccess);
 
@@ -414,7 +411,7 @@ static bool RotateLog(bool needLock)
  */
 bool LIBNETXMS_EXPORTABLE nxlog_rotate()
 {
-	return RotateLog(true);
+   return (s_logFileHandle != NULL) ? RotateLog(true) : false;
 }
 
 /**
@@ -429,9 +426,9 @@ static THREAD_RESULT THREAD_CALL BackgroundWriterThread(void *arg)
 
 	   // Check for new day start
       time_t t = time(NULL);
-	   if ((s_rotationMode == NXLOG_ROTATION_DAILY) && (t >= s_currentDayStart + 86400))
+	   if ((s_logFileHandle != NULL) && (s_rotationMode == NXLOG_ROTATION_DAILY) && (t >= s_currentDayStart + 86400))
 	   {
-		   RotateLog(FALSE);
+		   RotateLog(false);
 	   }
 
       MutexLock(s_mutexLogAccess);
@@ -478,7 +475,7 @@ static THREAD_RESULT THREAD_CALL BackgroundWriterThread(void *arg)
 	         NX_STAT_STRUCT st;
 		      NX_FSTAT(_fileno(s_logFileHandle), &st);
 		      if ((UINT64)st.st_size >= s_maxLogSize)
-			      RotateLog(FALSE);
+			      RotateLog(false);
 	      }
       }
       else
@@ -518,12 +515,12 @@ bool LIBNETXMS_EXPORTABLE nxlog_open(const TCHAR *logName, UINT32 flags)
    else if (s_flags & NXLOG_USE_SYSTEMD)
    {
       s_flags |= NXLOG_IS_OPEN;
+      s_flags &= ~NXLOG_PRINT_TO_STDOUT;
    }
    else if (s_flags & NXLOG_USE_STDOUT)
    {
       s_flags |= NXLOG_IS_OPEN;
       s_flags &= ~NXLOG_PRINT_TO_STDOUT;
-      s_logFileHandle = stdout;
    }
    else
    {
@@ -597,7 +594,10 @@ void LIBNETXMS_EXPORTABLE nxlog_close()
          }
 
          if (s_logFileHandle != NULL)
+         {
             fclose(s_logFileHandle);
+            s_logFileHandle = NULL;
+         }
       }
 	   s_flags &= ~NXLOG_IS_OPEN;
    }
@@ -701,28 +701,30 @@ static void WriteLogToFileAsText(INT16 severity, const TCHAR *tag, const TCHAR *
       s_logBuffer.append(message);
       s_logBuffer.append(_T("\n"));
    }
-   else
+   else if (s_flags & NXLOG_USE_STDOUT)
+   {
+      _tprintf(_T("%s %s%s] %s\n"), timestamp, loglevel, tagf, message);
+      fflush(stdout);
+   }
+   else if (s_logFileHandle != NULL)
    {
 	   // Check for new day start
       time_t t = time(NULL);
 	   if ((s_rotationMode == NXLOG_ROTATION_DAILY) && (t >= s_currentDayStart + 86400))
 	   {
-		   RotateLog(FALSE);
+		   RotateLog(false);
 	   }
 
-      if (s_logFileHandle != NULL)
-	   {
-         _ftprintf(s_logFileHandle, _T("%s %s%s] %s\n"), timestamp, loglevel, tagf, message);
-		   fflush(s_logFileHandle);
-	   }
+      _ftprintf(s_logFileHandle, _T("%s %s%s] %s\n"), timestamp, loglevel, tagf, message);
+      fflush(s_logFileHandle);
 
       // Check log size
-	   if ((s_logFileHandle != NULL) && (s_rotationMode == NXLOG_ROTATION_BY_SIZE) && (s_maxLogSize != 0))
+	   if ((s_rotationMode == NXLOG_ROTATION_BY_SIZE) && (s_maxLogSize != 0))
 	   {
 	      NX_STAT_STRUCT st;
 		   NX_FSTAT(_fileno(s_logFileHandle), &st);
 		   if ((UINT64)st.st_size >= s_maxLogSize)
-			   RotateLog(FALSE);
+			   RotateLog(false);
 	   }
    }
 
@@ -733,85 +735,167 @@ static void WriteLogToFileAsText(INT16 severity, const TCHAR *tag, const TCHAR *
 }
 
 /**
+ * Allocate string buffer on heap if requested size is bigger than local buffer size
+ */
+static inline TCHAR *AllocateStringBuffer(size_t size, TCHAR *localBuffer)
+{
+   return (size > LOCAL_MSG_BUFFER_SIZE) ? MemAllocString(size) : localBuffer;
+}
+
+/**
+ * Free string buffer if it was allocated on heap
+ */
+static inline void FreeStringBuffer(TCHAR *buffer, TCHAR *localBuffer)
+{
+   if (buffer != localBuffer)
+      MemFree(buffer);
+}
+
+/**
+ * Escape string for JSON. Use local buffer if possible and allocate large buffer on heap if string is too long.
+ */
+static TCHAR *EscapeForJSON(const TCHAR *text, TCHAR *localBuffer, size_t *len)
+{
+   const TCHAR *ch = text;
+   TCHAR *buffer = localBuffer;
+   TCHAR *out = localBuffer;
+   size_t count = 0;
+   while(*ch != 0)
+   {
+      switch(*ch)
+      {
+         case _T('"'):
+         case _T('\\'):
+            *(out++) = _T('\\');
+            *(out++) = *ch;
+            count += 2;
+            break;
+         case 0x08:
+            *(out++) = _T('\\');
+            *(out++) = _T('b');
+            count += 2;
+            break;
+         case 0x09:
+            *(out++) = _T('\\');
+            *(out++) = _T('t');
+            count += 2;
+            break;
+         case 0x0A:
+            *(out++) = _T('\\');
+            *(out++) = _T('n');
+            count += 2;
+            break;
+         case 0x0C:
+            *(out++) = _T('\\');
+            *(out++) = _T('f');
+            count += 2;
+            break;
+         case 0x0D:
+            *(out++) = _T('\\');
+            *(out++) = _T('r');
+            count += 2;
+            break;
+         default:
+            if (*ch < 0x20)
+            {
+               TCHAR chcode[8];
+               _sntprintf(chcode, 8, _T("\\u%04X"), *ch);
+               memcpy(out, chcode, 6 * sizeof(TCHAR));
+               out += 6;
+               count += 6;
+            }
+            else
+            {
+               *(out++) = *ch;
+               count++;
+            }
+            break;
+      }
+      if ((count > LOCAL_MSG_BUFFER_SIZE - 8) && (buffer == localBuffer))
+      {
+         buffer = MemAllocString(_tcslen(text) * 6 + 1);
+         memcpy(buffer, localBuffer, count * sizeof(TCHAR));
+         out = buffer + count;
+      }
+      ch++;
+   }
+   *out = 0;
+   *len = count;
+   return buffer;
+}
+
+/**
  * Write record to log file (JSON format)
  */
 static void WriteLogToFileAsJSON(INT16 severity, const TCHAR *tag, const TCHAR *message)
 {
-   const char *loglevel;
+   const TCHAR *loglevel;
    switch(severity)
    {
       case NXLOG_ERROR:
-         loglevel = "error";
+         loglevel = _T("error");
          break;
       case NXLOG_WARNING:
-         loglevel = "warning";
+         loglevel = _T("warning");
          break;
       case NXLOG_INFO:
-         loglevel = "info";
+         loglevel = _T("info");
          break;
       case NXLOG_DEBUG:
-         loglevel = "debug";
+         loglevel = _T("debug");
          break;
       default:
-         loglevel = "info";
+         loglevel = _T("info");
          break;
    }
 
-   json_t *json = json_object();
-   TCHAR timestamp[64];
-   json_object_set_new(json, "timestamp", json_string_t(FormatLogTimestamp(timestamp)));
-   json_object_set_new(json, "severity", json_string(loglevel));
-   json_object_set_new(json, "tag", json_string_t(CHECK_NULL_EX(tag)));
-   json_object_set_new(json, "message", json_string_t(message));
-   char *text = json_dumps(json, JSON_PRESERVE_ORDER | JSON_COMPACT);
-   json_decref(json);
+   TCHAR escapedTagBuffer[LOCAL_MSG_BUFFER_SIZE], escapedMessageBuffer[LOCAL_MSG_BUFFER_SIZE];
+   size_t tagLen, messageLen;
+   TCHAR *escapedTag = EscapeForJSON(CHECK_NULL_EX(tag), escapedTagBuffer, &tagLen);
+   TCHAR *escapedMessage = EscapeForJSON(message, escapedMessageBuffer, &messageLen);
+
+   TCHAR jsonBuffer[LOCAL_MSG_BUFFER_SIZE], timestamp[64];
+   TCHAR *json = AllocateStringBuffer(tagLen + messageLen + 128, jsonBuffer);
+   _tcscpy(json, _T("{\"timestamp\":\""));
+   _tcscat(json, FormatLogTimestamp(timestamp));
+   _tcscat(json, _T("\",\"severity\":\""));
+   _tcscat(json, loglevel);
+   _tcscat(json, _T("\",\"tag\":\""));
+   _tcscat(json, escapedTag);
+   _tcscat(json, _T("\",\"message\":\""));
+   _tcscat(json, escapedMessage);
+   _tcscat(json, _T("\"}\n"));
 
    MutexLock(s_mutexLogAccess);
 
    if (s_flags & NXLOG_BACKGROUND_WRITER)
    {
-      s_logBuffer.appendMBString(text, strlen(text), CP_UTF8);
-      s_logBuffer.append(_T("\n"));
+      s_logBuffer.append(json);
    }
-   else
+   else if (s_flags & NXLOG_USE_STDOUT)
+   {
+      _fputts(json, stdout);
+      fflush(stdout);
+   }
+   else if (s_logFileHandle != NULL)
    {
       // Check for new day start
       time_t t = time(NULL);
       if ((s_rotationMode == NXLOG_ROTATION_DAILY) && (t >= s_currentDayStart + 86400))
       {
-         RotateLog(FALSE);
+         RotateLog(false);
       }
 
-      if (s_logFileHandle != NULL)
-      {
-#ifdef _WIN32
-         fwrite(text, 1, strlen(text), s_logFileHandle);
-         _fputtc(_T('\n'), s_logFileHandle);
-#else
-         // write is used here because on linux fwrite is not working
-         // after calling fwprintf on a stream
-         size_t size = strlen(text);
-         size_t offset = 0;
-         do
-         {
-            int bw = write(fileno(s_logFileHandle), &text[offset], size);
-            if (bw < 0)
-               break;
-            size -= bw;
-            offset += bw;
-         } while(size > 0);
-         write(fileno(s_logFileHandle), "\n", 1);
-#endif
-         fflush(s_logFileHandle);
-      }
+      _fputts(json, s_logFileHandle);
+      fflush(s_logFileHandle);
 
       // Check log size
-      if ((s_logFileHandle != NULL) && (s_rotationMode == NXLOG_ROTATION_BY_SIZE) && (s_maxLogSize != 0))
+      if ((s_rotationMode == NXLOG_ROTATION_BY_SIZE) && (s_maxLogSize != 0))
       {
          NX_STAT_STRUCT st;
          NX_FSTAT(_fileno(s_logFileHandle), &st);
          if ((UINT64)st.st_size >= s_maxLogSize)
-            RotateLog(FALSE);
+            RotateLog(false);
       }
    }
 
@@ -819,7 +903,10 @@ static void WriteLogToFileAsJSON(INT16 severity, const TCHAR *tag, const TCHAR *
       WriteLogToConsole(severity, timestamp, tag, message);
 
    MutexUnlock(s_mutexLogAccess);
-   free(text); // Intentionally use free() instead if MemFree() - memory is allocated by libjansson
+
+   FreeStringBuffer(json, jsonBuffer);
+   FreeStringBuffer(escapedMessage, escapedMessageBuffer);
+   FreeStringBuffer(escapedTag, escapedTagBuffer);
 }
 
 /**
