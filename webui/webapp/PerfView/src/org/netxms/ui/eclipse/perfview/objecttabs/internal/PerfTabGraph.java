@@ -27,6 +27,11 @@ import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.IMenuListener;
+import org.eclipse.jface.action.IMenuManager;
+import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.action.Separator;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
@@ -34,6 +39,8 @@ import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Widget;
 import org.eclipse.ui.IViewPart;
 import org.eclipse.ui.IWorkbenchPage;
@@ -47,6 +54,7 @@ import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.datacollection.GraphItemStyle;
 import org.netxms.client.datacollection.PerfTabDci;
+import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.charts.api.ChartFactory;
 import org.netxms.ui.eclipse.charts.api.HistoricalDataChart;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -54,6 +62,7 @@ import org.netxms.ui.eclipse.perfview.Activator;
 import org.netxms.ui.eclipse.perfview.Messages;
 import org.netxms.ui.eclipse.perfview.PerfTabGraphSettings;
 import org.netxms.ui.eclipse.perfview.views.HistoricalGraphView;
+import org.netxms.ui.eclipse.perfview.views.HistoricalGraphView.ActionType;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.ViewRefreshController;
@@ -72,9 +81,14 @@ public class PerfTabGraph extends DashboardComposite
 	private ViewRefreshController refreshController = null;
 	private boolean updateInProgress = false;
 	private NXCSession session;
-	private long timeInterval;
 	private IViewPart viewPart;
 	private VisibilityValidator validator;
+   private Action actionRefresh;
+   private Action actionAdjustX;
+   private Action actionAdjustY;
+   private Action actionAdjustBoth;
+   private Action[] presetActions;
+   private PerfTabGraphSettings settings;
 	
 	/**
 	 * @param parent
@@ -86,6 +100,7 @@ public class PerfTabGraph extends DashboardComposite
 		this.nodeId = nodeId;
 		this.viewPart = viewPart;
 		this.validator = validator;
+		this.settings = settings;
 		items.add(dci);
 		session = (NXCSession)ConsoleSharedData.getSession();
 		
@@ -100,7 +115,6 @@ public class PerfTabGraph extends DashboardComposite
 		chart.setLogScaleEnabled(settings.isLogScaleEnabled());
 		chart.setStacked(settings.isStacked());
       
-		timeInterval = settings.getTimeRangeMillis();
       final Date from = new Date(System.currentTimeMillis() - settings.getTimeRangeMillis());
       final Date to = new Date(System.currentTimeMillis());
       chart.setTimeRange(from, to);
@@ -175,7 +189,82 @@ public class PerfTabGraph extends DashboardComposite
             openHistoryGraph();
          }
       });
+		
+		createActions();
+		createChartContextMenu();
 	}
+
+   /**
+    * Create actions
+    */
+   private void createActions()
+   {
+      actionRefresh = new RefreshAction() {
+         @Override
+         public void run()
+         {
+            refreshData();
+         }
+      };
+
+      actionAdjustX = HistoricalGraphView.createAction(ActionType.ADJUST_X, chart);
+      actionAdjustY = HistoricalGraphView.createAction(ActionType.ADJUST_Y, chart);
+      actionAdjustBoth = HistoricalGraphView.createAction(ActionType.ADJUST_BOTH, chart);
+
+      presetActions = HistoricalGraphView.createPresetActions(new HistoricalGraphView.PresetHandler() {
+         @Override
+         public void onPresetSelected(int units, int range)
+         {
+            settings.setTimeUnits(units);
+            settings.setTimeRange(range);
+            refreshData();
+         }
+      });
+   }
+   
+
+
+   /**
+    * Create chart's context menu
+    */
+   private void createChartContextMenu()
+   {
+      final MenuManager manager = new MenuManager();
+      manager.setRemoveAllWhenShown(true);
+      manager.addMenuListener(new IMenuListener() {
+         public void menuAboutToShow(IMenuManager mgr)
+         {
+            fillContextMenu(manager);
+         }
+      });
+      
+      Menu menu = manager.createContextMenu((Control)chart);
+      ((Control)chart).setMenu(menu);
+      for(Control ch : ((Composite)chart).getChildren())
+      {
+         ch.setMenu(menu);
+      }
+   }
+   
+   /**
+    * Fill context menu
+    * 
+    * @param manager
+    */
+   private void fillContextMenu(IMenuManager manager)
+   {
+      MenuManager presets = new MenuManager("&Presets");
+      for(int i = 0; i < presetActions.length; i++)
+         presets.add(presetActions[i]);
+      
+      manager.add(presets);
+      manager.add(new Separator());
+      manager.add(actionAdjustBoth);
+      manager.add(actionAdjustX);
+      manager.add(actionAdjustY);
+      manager.add(new Separator());
+      manager.add(actionRefresh);
+   }
 	
 	/**
 	 * Add another item to graph
@@ -238,7 +327,7 @@ public class PerfTabGraph extends DashboardComposite
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				final Date from = new Date(System.currentTimeMillis() - timeInterval);
+				final Date from = new Date(System.currentTimeMillis() - settings.getTimeRangeMillis());
 				final Date to = new Date(System.currentTimeMillis());
 				synchronized(items)
 				{
