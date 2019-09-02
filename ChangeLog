@@ -27,10 +27,12 @@
 - Switched to pcre (from libtre) as regular expression matching engine
 - Event parameters exposed as writable "Event" class attributes in NXSL
 - New method "addParameter" in NXSL class "Event"
+- "Origin timestamp" for events
 - Fixed issues:
 	NX-183 (Implemented responsible users for objects)
 	NX-725 (Add alarm comments from NXSL)
 	NX-900 (Server started during nxdbmgr check forced repair)
+	NX-1021 (Add event SYS_SERVER_STARTED)
 	NX-1102 (Implement event groups)
 	NX-1199 (SNMP credentials per-zone)
 	NX-1219 (Add 'created' and 'last login' columns to User Manager)
