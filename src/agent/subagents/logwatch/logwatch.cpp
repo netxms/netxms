@@ -176,7 +176,7 @@ static void LogParserMatch(UINT32 eventCode, const TCHAR *eventName, const TCHAR
    if (agentAction != NULL)
       AgentExecuteAction(agentAction, agentActionArgs);
 
-   AgentPostEvent2(eventCode, eventName, 0, count, list);
+   AgentPostEvent2(eventCode, eventName, timestamp, count, list);
    MemFree(list);
 }
 

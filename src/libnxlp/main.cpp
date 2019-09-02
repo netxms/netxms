@@ -83,8 +83,9 @@ bool LogParser::monitorEventLog(const TCHAR *markerPrefix)
    if (markerPrefix != NULL)
    {
       size_t len = _tcslen(markerPrefix) + _tcslen(m_fileName) + 2;
-      m_marker = (TCHAR *)MemAlloc(len * sizeof(TCHAR));
+      m_marker = MemAllocString(len);
       _sntprintf(m_marker, len, _T("%s.%s"), markerPrefix, &m_fileName[1]);
+      nxlog_debug_tag(DEBUG_TAG, 3, _T("Created marker %s"), m_marker);
    }
    return s_eventLogV6 ? monitorEventLogV6() : monitorEventLogV4();
 }
@@ -104,6 +105,12 @@ void LogParser::saveLastProcessedRecordTimestamp(time_t timestamp)
       DWORD t = (DWORD)timestamp;
       RegSetValueEx(hKey, m_marker, 0, REG_DWORD, (BYTE *)&t, sizeof(DWORD));
       RegCloseKey(hKey);
+   }
+   else
+   {
+      TCHAR buffer[1024];
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("LogParser::saveLastProcessedRecordTimestamp: cannot create registry key (%s)"),
+         GetSystemErrorText(GetLastError(), buffer, 1024));
    }
 }
 

@@ -237,7 +237,7 @@ AutoBindDecision AutoBindTarget::isApplicable(DataCollectionTarget *target)
    {
       NXSL_Value *value = filter->getResult();
       if (!value->isNull())
-         result = ((value != NULL) && (value->getValueAsInt32() != 0)) ? AutoBindDecision_Bind : AutoBindDecision_Unbind;
+         result = (value->getValueAsInt32() != 0) ? AutoBindDecision_Bind : AutoBindDecision_Unbind;
    }
    else
    {

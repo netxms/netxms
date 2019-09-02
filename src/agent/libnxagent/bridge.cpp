@@ -128,7 +128,7 @@ void LIBNXAGENT_EXPORTABLE AgentWriteDebugLog2(int level, const TCHAR *format, v
 }
 
 /**
- * Send trap from agent to server
+ * Send event from agent to server
  */
 void LIBNXAGENT_EXPORTABLE AgentPostEvent(UINT32 event, const TCHAR *eventName, time_t timestamp, const char *format, ...)
 {
@@ -142,9 +142,9 @@ void LIBNXAGENT_EXPORTABLE AgentPostEvent(UINT32 event, const TCHAR *eventName, 
 }
 
 /**
- * Send trap from agent to server
+ * Send event from agent to server
  */
-void LIBNXAGENT_EXPORTABLE AgentSendTrap2(UINT32 event, const TCHAR *eventName, time_t timestamp, int count, const TCHAR **args)
+void LIBNXAGENT_EXPORTABLE AgentPostEvent2(UINT32 event, const TCHAR *eventName, time_t timestamp, int count, const TCHAR **args)
 {
    if (s_fpPostEvent2 != NULL)
       s_fpPostEvent2(event, eventName, timestamp, count, args);

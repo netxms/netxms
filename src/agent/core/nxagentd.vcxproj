@@ -193,6 +193,7 @@
     <ClCompile Include="dbupgrade.cpp" />
     <ClCompile Include="dcsnmp.cpp" />
     <ClCompile Include="epp.cpp" />
+    <ClCompile Include="event.cpp" />
     <ClCompile Include="exec.cpp" />
     <ClCompile Include="extagent.cpp" />
     <ClCompile Include="getparam.cpp" />
@@ -214,7 +215,6 @@
     <ClCompile Include="syslog.cpp" />
     <ClCompile Include="tcpproxy.cpp" />
     <ClCompile Include="tools.cpp" />
-    <ClCompile Include="trap.cpp" />
     <ClCompile Include="tunnel.cpp" />
     <ClCompile Include="upgrade.cpp" />
     <ClCompile Include="watchdog.cpp" />

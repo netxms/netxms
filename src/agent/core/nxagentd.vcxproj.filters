@@ -103,9 +103,6 @@
     <ClCompile Include="tools.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="trap.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="tunnel.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -119,6 +116,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="proxy.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="event.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

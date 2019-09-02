@@ -166,8 +166,16 @@ static DWORD WINAPI SubscribeCallback(EVT_SUBSCRIBE_NOTIFY_ACTION action, PVOID 
 
 	// Create render context for event values - we need provider name,
 	// event id, and severity level
-	static PCWSTR eventProperties[] = { L"Event/System/Provider/@Name", L"Event/System/EventID", L"Event/System/Level", L"Event/System/Keywords", L"Event/System/EventRecordID" };
-	EVT_HANDLE renderContext = _EvtCreateRenderContext(5, eventProperties, EvtRenderContextValues);
+	static PCWSTR eventProperties[] =
+   {
+      L"Event/System/Provider/@Name",
+      L"Event/System/EventID",
+      L"Event/System/Level",
+      L"Event/System/Keywords",
+      L"Event/System/EventRecordID",
+      L"Event/System/TimeCreated/@SystemTime"
+   };
+	EVT_HANDLE renderContext = _EvtCreateRenderContext(6, eventProperties, EvtRenderContextValues);
 	if (renderContext == NULL)
 	{
 		nxlog_debug_tag(DEBUG_TAG, 5, _T("Call to EvtCreateRenderContext failed: %s"),
@@ -188,7 +196,7 @@ static DWORD WINAPI SubscribeCallback(EVT_SUBSCRIBE_NOTIFY_ACTION action, PVOID 
 	if ((values[0].Type == EvtVarTypeString) && (values[0].StringVal != NULL))
 	{
 #ifdef UNICODE
-		nx_strncpy(publisherName, values[0].StringVal, MAX_PATH);
+		wcslcpy(publisherName, values[0].StringVal, MAX_PATH);
 #else
 		WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, values[0].StringVal, -1, publisherName, MAX_PATH, NULL, NULL);
 #endif
@@ -242,6 +250,28 @@ static DWORD WINAPI SubscribeCallback(EVT_SUBSCRIBE_NOTIFY_ACTION action, PVOID 
    else if ((values[4].Type == EvtVarTypeUInt32) || (values[4].Type == EvtVarTypeInt32))
       recordId = values[4].UInt32Val;
 
+   // Time created
+   time_t timestamp;
+   if (values[5].Type == EvtVarTypeFileTime)
+   {
+      timestamp = static_cast<time_t>((values[5].FileTimeVal - EPOCHFILETIME) / 10000000);
+   }
+   else if (values[5].Type == EvtVarTypeSysTime)
+   {
+      FILETIME ft;
+      SystemTimeToFileTime(values[5].SysTimeVal, &ft);
+
+      LARGE_INTEGER li;
+      li.LowPart = ft.dwLowDateTime;
+      li.HighPart = ft.dwHighDateTime;
+      timestamp = static_cast<time_t>((li.QuadPart - EPOCHFILETIME) / 10000000);
+   }
+   else
+   {
+      timestamp = time(NULL);
+      static_cast<LogParser*>(userContext)->trace(7, _T("Cannot get timestamp from event (values[5].Type == %d)"), values[5].Type);
+   }
+
 	// Open publisher metadata
 	pubMetadata = _EvtOpenPublisherMetadata(NULL, values[0].StringVal, NULL, MAKELCID(MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL), SORT_DEFAULT), 0);
 	if (pubMetadata == NULL)
@@ -265,7 +295,7 @@ static DWORD WINAPI SubscribeCallback(EVT_SUBSCRIBE_NOTIFY_ACTION action, PVOID 
 		}
       if (error == ERROR_INSUFFICIENT_BUFFER)
       {
-		   msg = (WCHAR *)malloc(sizeof(WCHAR) * reqSize);
+		   msg = MemAllocStringW(reqSize);
 		   success = _EvtFormatMessage(pubMetadata, event, 0, 0, NULL, EvtFormatMessageEvent, reqSize, msg, &reqSize);
 		   if (!success)
 		   {
@@ -284,22 +314,22 @@ static DWORD WINAPI SubscribeCallback(EVT_SUBSCRIBE_NOTIFY_ACTION action, PVOID 
 
    StringList *variables = ExtractVariables(event);
 #ifdef UNICODE
-   static_cast<LogParser*>(userContext)->matchEvent(publisherName, eventId, level, msg, variables, recordId);
+   static_cast<LogParser*>(userContext)->matchEvent(publisherName, eventId, level, msg, variables, recordId, 0, timestamp);
 #else
 	char *mbmsg = MBStringFromWideString(msg);
-   static_cast<LogParser*>(userContext)->matchEvent(publisherName, eventId, level, mbmsg, variables, recordId);
-	free(mbmsg);
+   static_cast<LogParser*>(userContext)->matchEvent(publisherName, eventId, level, mbmsg, variables, recordId, 0, timestamp);
+	MemFree(mbmsg);
 #endif
    delete variables;
 
-   static_cast<LogParser*>(userContext)->saveLastProcessedRecordTimestamp(time(NULL));
+   static_cast<LogParser*>(userContext)->saveLastProcessedRecordTimestamp(timestamp);
 
 cleanup:
 	if (pubMetadata != NULL)
 		_EvtClose(pubMetadata);
 	_EvtClose(renderContext);
 	if (msg != buffer)
-		free(msg);
+		MemFree(msg);
 	return 0;
 }
 
