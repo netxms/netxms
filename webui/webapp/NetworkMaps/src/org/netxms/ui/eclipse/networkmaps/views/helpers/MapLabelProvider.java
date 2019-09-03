@@ -53,7 +53,6 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.constants.Severity;
 import org.netxms.client.datacollection.DciValue;
-import org.netxms.client.datacollection.Threshold;
 import org.netxms.client.maps.MapObjectDisplayMode;
 import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.configs.LinkConfig;
@@ -526,10 +525,10 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
             Severity severity = Severity.UNKNOWN;
             try
             {
-               List<Threshold> thresholds = session.getActiveThresholds(link.getDciAsList());
-               for(Threshold t : thresholds)
+               List<DciValue> values = dciValueProvider.getDciData(link.getDciAsList());
+               for(DciValue v : values)
                {
-                  Severity s = t.getCurrentSeverity();
+                  Severity s = v.getMostCriticalSeverity();
                   if ((s.compareTo(Severity.UNKNOWN) < 0) && ((severity.compareTo(s) < 0) || (severity == Severity.UNKNOWN)))
                   {
                      severity = s;

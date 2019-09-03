@@ -4740,6 +4740,7 @@ void ClientSession::getLastValuesByDciId(NXCPMessage *pRequest)
                   continue;
 
                INT16 type;
+               UINT32 mostCriticalSeverity;
                if (dcoObj->getType() == DCO_TYPE_TABLE)
                {
                   TCHAR *column = pRequest->getFieldAsString(incomingIndex + 2);
@@ -4756,6 +4757,7 @@ void ClientSession::getLastValuesByDciId(NXCPMessage *pRequest)
                   int rowIndex = t->findRowByInstance(instance);
                   type = t->getColumnDataType(columnIndex);
                   value = MemCopyString(t->getAsString(rowIndex, columnIndex));
+                  mostCriticalSeverity = SEVERITY_NORMAL;
                   t->decRefCount();
 
                   MemFree(column);
@@ -4763,8 +4765,10 @@ void ClientSession::getLastValuesByDciId(NXCPMessage *pRequest)
                }
                else if (dcoObj->getType() == DCO_TYPE_ITEM)
                {
-                  type = static_cast<DCItem*>(dcoObj.get())->getDataType();
-                  value = MemCopyString(static_cast<DCItem*>(dcoObj.get())->getLastValue());
+                  DCItem* item = static_cast<DCItem*>(dcoObj.get());
+                  type = item->getDataType();
+                  value = MemCopyString(item->getLastValue());
+                  mostCriticalSeverity = item->getThresholdSeverity();
                }
                else
                {
@@ -4779,6 +4783,7 @@ void ClientSession::getLastValuesByDciId(NXCPMessage *pRequest)
                msg.setField(outgoingIndex + 6, static_cast<INT16>(dcoObj->getDataSource()));
                msg.setField(outgoingIndex + 7, dcoObj->getName());
                msg.setField(outgoingIndex + 8, dcoObj->getDescription());
+               msg.setField(outgoingIndex + 9, mostCriticalSeverity);
                MemFree(value);
                outgoingIndex += 10;
             }

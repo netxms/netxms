@@ -20,6 +20,7 @@ package org.netxms.client.datacollection;
 
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.constants.DataType;
+import org.netxms.client.constants.Severity;
 
 /**
  * DCI value for simple (single-valued) DCI
@@ -55,5 +56,6 @@ public class SimpleDciValue extends DciValue
       this.source = msg.getFieldAsInt32(base + 6);
       this.name = msg.getFieldAsString(base + 7);
       this.description = msg.getFieldAsString(base + 8);
+      this.mostCriticalSeverity = Severity.getByValue(msg.getFieldAsInt32(base + 9));
    }
 }

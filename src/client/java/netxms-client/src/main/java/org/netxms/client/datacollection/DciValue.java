@@ -37,6 +37,7 @@ public abstract class DciValue
 	protected int source;				// data source (agent, SNMP, etc.)
 	protected DataType dataType;
 	protected int status;				// status (active, disabled, etc.)
+   protected Severity mostCriticalSeverity; //used only in simple dci
 	private int errorCount;
 	private int dcObjectType;		// Data collection object type (item, table, etc.)
 	private Date timestamp;
@@ -234,5 +235,21 @@ public abstract class DciValue
    public int getFlags()
    {
       return flags;
+   }
+
+   /**
+    * @return the mostCriticalSeverity
+    */
+   public Severity getMostCriticalSeverity()
+   {
+      return mostCriticalSeverity;
+   }
+
+   /**
+    * @param mostCriticalSeverity the mostCriticalSeverity to set
+    */
+   public void setMostCriticalSeverity(Severity mostCriticalSeverity)
+   {
+      this.mostCriticalSeverity = mostCriticalSeverity;
    }
 }

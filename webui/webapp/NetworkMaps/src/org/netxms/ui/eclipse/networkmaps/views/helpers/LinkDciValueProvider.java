@@ -254,7 +254,7 @@ public class LinkDciValueProvider
       SingleDciConfig[] dciList =  link.getDciList();
       for(int i = 0; i < dciList.length;)
       {
-         DciValue v = getDciLastValue(dciList[i].dciId); 
+         DciValue v = getDciLastValue(dciList[i].dciId);
          if (v != null)
          {
             String formatString = dciList[i].getFormatString();
@@ -283,6 +283,20 @@ public class LinkDciValueProvider
          }
          if(++i != DCIList.size())
             result += "\n"; //$NON-NLS-1$
+      }
+      return result;
+   }
+   
+   /**
+    * @param DCIList
+    * @return
+    */
+   public List<DciValue> getDciData(List<SingleDciConfig> DCIList)
+   {
+      List<DciValue> result = new ArrayList<DciValue>();
+      for(int i = 0; i < DCIList.size();i++)
+      {
+         result.add(getDciLastValue(DCIList.get(i).dciId)); 
       }
       return result;
    }

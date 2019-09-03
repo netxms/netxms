@@ -273,6 +273,20 @@ public class LinkDciValueProvider
       return result;
    }
    
+   /**
+    * @param DCIList
+    * @return
+    */
+   public List<DciValue> getDciData(List<SingleDciConfig> DCIList)
+   {
+      List<DciValue> result = new ArrayList<DciValue>();
+      for(int i = 0; i < DCIList.size();i++)
+      {
+         result.add(getDciLastValue(DCIList.get(i).dciId)); 
+      }
+      return result;
+   }
+   
    public DciValue getLastDciData(SingleDciConfig dci)
    {
       return getDciLastValue(dci.dciId); 
