@@ -276,7 +276,7 @@ static char *EventToJson(const Event *event, const NetObj *object)
    json_object_set_new(root, "arguments", args);
 
    json_object_set_new(root, "id", json_integer(event->getId()));
-   json_object_set_new(root, "time", json_integer(event->getTimeStamp()));
+   json_object_set_new(root, "time", json_integer(event->getTimestamp()));
    json_object_set_new(root, "code", json_integer(event->getCode()));
    json_object_set_new(root, "severity", json_integer(event->getSeverity()));
    json_object_set_new(root, "message", json_string_t(event->getMessage()));

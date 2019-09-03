@@ -2117,8 +2117,11 @@ restart_agent_check:
             static_cast<NetworkService*>(curr)->statusPoll(pSession, rqId, pollerNode, eventQueue);
             break;
          case OBJECT_ACCESSPOINT:
-            DbgPrintf(7, _T("StatusPoll(%s): polling access point %d [%s]"), m_name, curr->getId(), curr->getName());
-            static_cast<AccessPoint*>(curr)->statusPollFromController(pSession, rqId, eventQueue, this, snmp);
+            if (snmp != NULL)
+            {
+               DbgPrintf(7, _T("StatusPoll(%s): polling access point %d [%s]"), m_name, curr->getId(), curr->getName());
+               static_cast<AccessPoint*>(curr)->statusPollFromController(pSession, rqId, eventQueue, this, snmp);
+            }
             break;
          default:
             DbgPrintf(7, _T("StatusPoll(%s): skipping object %d [%s] class %d"), m_name, curr->getId(), curr->getName(), curr->getObjectClass());
