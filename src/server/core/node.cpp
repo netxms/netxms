@@ -7384,9 +7384,9 @@ UINT32 Node::getEffectiveSnmpProxy(bool backup)
    {
       // Use zone default proxy if set
       Zone *zone = FindZoneByUIN(m_zoneUIN);
-      if ((zone != NULL) && !zone->isProxyNode(m_id))
+      if (zone != NULL)
       {
-         snmpProxy = zone->getProxyNodeId(this, backup);
+         snmpProxy = zone->isProxyNode(m_id) ? m_id : zone->getProxyNodeId(this, backup);
       }
    }
    return snmpProxy;
@@ -7402,9 +7402,9 @@ UINT32 Node::getEffectiveSshProxy()
    {
       // Use zone default proxy if set
       Zone *zone = FindZoneByUIN(m_zoneUIN);
-      if ((zone != NULL) && !zone->isProxyNode(m_id))
+      if (zone != NULL)
       {
-         sshProxy = zone->getProxyNodeId(this);
+         sshProxy = zone->isProxyNode(m_id) ? m_id : zone->getProxyNodeId(this);
       }
    }
    return (sshProxy != 0) ? sshProxy : g_dwMgmtNode;
@@ -7459,11 +7459,11 @@ SNMP_Transport *Node::createSnmpTransport(WORD port, const TCHAR *context)
    if (snmpProxy == 0)
    {
       pTransport = new SNMP_UDPTransport;
-      ((SNMP_UDPTransport *)pTransport)->createUDPTransport(m_ipAddress, (port != 0) ? port : m_snmpPort);
+      static_cast<SNMP_UDPTransport*>(pTransport)->createUDPTransport(m_ipAddress, (port != 0) ? port : m_snmpPort);
    }
    else
    {
-      Node *proxyNode = (snmpProxy == m_id) ? this : (Node *)g_idxNodeById.get(snmpProxy);
+      Node *proxyNode = (snmpProxy == m_id) ? this : static_cast<Node*>(g_idxNodeById.get(snmpProxy));
       if (proxyNode != NULL)
       {
          AgentConnection *conn = proxyNode->acquireProxyConnection(SNMP_PROXY);
