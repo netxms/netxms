@@ -39,6 +39,11 @@ void DataCollector(shared_ptr<DCObject> dcObject);
 bool ThrottleHousekeeper();
 
 /**
+ * Poller thread pool
+ */
+extern ThreadPool *g_pollerThreadPool;
+
+/**
  * Default constructor
  */
 DataCollectionTarget::DataCollectionTarget() : super()
@@ -1290,7 +1295,11 @@ void DataCollectionTarget::leaveMaintenanceMode()
    unlockProperties();
 
    if(forcePoll)
-      statusPollWorkerEntry(RegisterPoller(PollerType::STATUS, this), NULL, 0);
+   {
+      TCHAR threadKey[32];
+      _sntprintf(threadKey, 32, _T("POLL_%u"), getId());
+      ThreadPoolExecuteSerialized(g_pollerThreadPool, threadKey, this, &DataCollectionTarget::statusPollWorkerEntry, RegisterPoller(PollerType::STATUS, this));
+   }
 }
 
 /**
