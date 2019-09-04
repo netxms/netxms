@@ -5991,7 +5991,7 @@ UINT32 Node::modifyFromMessageInternal(NXCPMessage *pRequest)
    if (pRequest->isFieldExist(VID_RACK_ID))
    {
       m_rackId = pRequest->getFieldAsUInt32(VID_RACK_ID);
-      updatePhysicalContainerBinding(OBJECT_RACK, m_rackId);
+      ThreadPoolExecute(g_mainThreadPool, this, &Node::updatePhysicalContainerBinding, OBJECT_RACK, m_rackId);
    }
    if (pRequest->isFieldExist(VID_RACK_IMAGE_FRONT))
       m_rackImageFront = pRequest->getFieldAsGUID(VID_RACK_IMAGE_FRONT);
@@ -6005,8 +6005,8 @@ UINT32 Node::modifyFromMessageInternal(NXCPMessage *pRequest)
    // Chassis
    if (pRequest->isFieldExist(VID_CHASSIS_ID))
    {
-      m_rackId = pRequest->getFieldAsUInt32(VID_CHASSIS_ID);
-      updatePhysicalContainerBinding(OBJECT_CHASSIS, m_chassisId);
+      m_chassisId = pRequest->getFieldAsUInt32(VID_CHASSIS_ID);
+      ThreadPoolExecute(g_mainThreadPool, this, &Node::updatePhysicalContainerBinding, OBJECT_CHASSIS, m_chassisId);
    }
 
    if (pRequest->isFieldExist(VID_SSH_PROXY))
