@@ -29,6 +29,7 @@
 - New method "addParameter" in NXSL class "Event"
 - "Origin timestamp" for events
 - Object management functions in NXSL implemented as object methods
+- SNMP functions in NXSL implemented as transport methods
 - Fixed issues:
 	NX-183 (Implemented responsible users for objects)
 	NX-725 (Add alarm comments from NXSL)

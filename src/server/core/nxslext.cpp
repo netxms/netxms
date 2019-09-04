@@ -1008,7 +1008,6 @@ static int F_CreateSNMPTransport(int argc, NXSL_Value **argv, NXSL_Value **ppRes
 static int F_SNMPGet(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
 	UINT32 len;
-	static UINT32 requestId = 1;
 	UINT32 varName[MAX_OID_LEN], result = SNMP_ERR_SUCCESS;
 
 	if (!argv[0]->isObject())
@@ -1027,7 +1026,7 @@ static int F_SNMPGet(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM
    if (nameLen == 0)
 		return NXSL_ERR_BAD_CONDITION;
 
-   SNMP_PDU *pdu = new SNMP_PDU(SNMP_GET_REQUEST, requestId++, trans->getSnmpVersion());
+   SNMP_PDU *pdu = new SNMP_PDU(SNMP_GET_REQUEST, SnmpNewRequestId(), trans->getSnmpVersion());
 	pdu->bindVariable(new SNMP_Variable(varName, nameLen));
 
 	SNMP_PDU *rspPDU;
@@ -1104,79 +1103,73 @@ static int F_SNMPGetValue(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
  * Return value:
  *     value for the given oid
  */
-static int F_SNMPSet(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+static int F_SNMPSet(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
-	SNMP_PDU *request = NULL, *response;
-	UINT32 len;
-	LONG ret = FALSE;
+   if (argc < 2 || argc > 3)
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+   if (!argv[0]->isObject() || !argv[1]->isString() || !argv[2]->isString() || ((argc == 4) && !argv[3]->isString()))
+      return NXSL_ERR_NOT_STRING;
 
-	if (argc < 3 || argc > 4)
-		return NXSL_ERR_INVALID_ARGUMENT_COUNT;
-	if (!argv[0]->isObject())
-		return NXSL_ERR_NOT_OBJECT;
-	if (!argv[1]->isString() || !argv[2]->isString() || (argc == 4 && !argv[3]->isString()))
-		return NXSL_ERR_NOT_STRING;
+   NXSL_Object *object = argv[0]->getValueAsObject();
+   if (!object->getClass()->instanceOf(g_nxslSnmpTransportClass.getName()))
+      return NXSL_ERR_BAD_CLASS;
+   SNMP_Transport *transport = static_cast<SNMP_Transport*>(object->getData());
 
-	NXSL_Object *obj = argv[0]->getValueAsObject();
-	if (!obj->getClass()->instanceOf(g_nxslSnmpTransportClass.getName()))
-		return NXSL_ERR_BAD_CLASS;
+   SNMP_PDU *request = new SNMP_PDU(SNMP_SET_REQUEST, SnmpNewRequestId(), transport->getSnmpVersion());
+   SNMP_PDU *response = NULL;
+   bool success = false;
 
-	SNMP_Transport *trans = (SNMP_Transport*)obj->getData();
+   if (SNMPIsCorrectOID(argv[1]->getValueAsCString()))
+   {
+      SNMP_Variable *var = new SNMP_Variable(argv[1]->getValueAsCString());
+      if (argc == 3)
+      {
+         var->setValueFromString(ASN_OCTET_STRING, argv[2]->getValueAsCString());
+      }
+      else
+      {
+         UINT32 dataType = SNMPResolveDataType(argv[3]->getValueAsCString());
+         if (dataType == ASN_NULL)
+         {
+            nxlog_debug_tag(_T("snmp.nxsl"), 6, _T("SNMPSet: failed to resolve data type '%s', assume string"),
+               argv[3]->getValueAsCString());
+            dataType = ASN_OCTET_STRING;
+         }
+         var->setValueFromString(dataType, argv[2]->getValueAsCString());
+      }
+      request->bindVariable(var);
+   }
+   else
+   {
+      nxlog_debug_tag(_T("snmp.nxsl"), 6, _T("SNMPSet: Invalid OID: %s"), argv[1]->getValueAsCString());
+      goto finish;
+   }
 
-	// Create request
-   request = new SNMP_PDU(SNMP_SET_REQUEST, GetCurrentProcessId(), trans->getSnmpVersion());
-
-	if (SNMPIsCorrectOID(argv[1]->getValueAsString(&len)))
-	{
-		SNMP_Variable *var = new SNMP_Variable(argv[1]->getValueAsString(&len));
-		if (argc == 3)
-		{
-			var->setValueFromString(ASN_OCTET_STRING, argv[2]->getValueAsString(&len));
-		}
-		else
-		{
-			UINT32 dataType = SNMPResolveDataType(argv[3]->getValueAsString(&len));
-			if (dataType == ASN_NULL)
-			{
-				DbgPrintf(6, _T("SNMPSet: failed to resolve data type '%s', assume string"),
-					argv[3]->getValueAsString(&len));
-				dataType = ASN_OCTET_STRING;
-			}
-			var->setValueFromString(dataType, argv[2]->getValueAsString(&len));
-		}
-		request->bindVariable(var);
-	}
-	else
-	{
-		DbgPrintf(6, _T("SNMPSet: Invalid OID: %s"), argv[1]->getValueAsString(&len));
-		goto finish;
-	}
-
-	// Send request and process response
-	UINT32 snmpResult;
-	if ((snmpResult = trans->doRequest(request, &response, SnmpGetDefaultTimeout(), 3)) == SNMP_ERR_SUCCESS)
-	{
-		if (response->getErrorCode() != 0)
-		{
-			DbgPrintf(6, _T("SNMPSet: operation failed (error code %d)"), response->getErrorCode());
-			goto finish;
-		}
-		else
-		{
-			DbgPrintf(6, _T("SNMPSet: success"));
-			ret = TRUE;
-		}
-		delete response;
-	}
-	else
-	{
-		DbgPrintf(6, _T("SNMPSet: %s"), SNMPGetErrorText(snmpResult));
-	}
+   // Send request and process response
+   UINT32 snmpResult;
+   if ((snmpResult = transport->doRequest(request, &response, SnmpGetDefaultTimeout(), 3)) == SNMP_ERR_SUCCESS)
+   {
+      if (response->getErrorCode() != 0)
+      {
+         nxlog_debug_tag(_T("snmp.nxsl"), 6, _T("SNMPSet: operation failed (error code %d)"), response->getErrorCode());
+         goto finish;
+      }
+      else
+      {
+         nxlog_debug_tag(_T("snmp.nxsl"), 6, _T("SNMPSet: success"));
+         success = true;
+      }
+      delete response;
+   }
+   else
+   {
+      nxlog_debug_tag(_T("snmp.nxsl"), 6, _T("SNMPSet: %s"), SNMPGetErrorText(snmpResult));
+   }
 
 finish:
    delete request;
-	*ppResult = vm->createValue(ret);
-	return 0;
+   *result = vm->createValue(success);
+   return 0;
 }
 
 /**
@@ -1199,30 +1192,29 @@ static UINT32 WalkCallback(SNMP_Variable *var, SNMP_Transport *transport, void *
  * Return value:
  *     an array of VarBind objects
  */
-static int F_SNMPWalk(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+static int F_SNMPWalk(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
 	if (!argv[0]->isObject())
 		return NXSL_ERR_NOT_OBJECT;
 	if (!argv[1]->isString())
 		return NXSL_ERR_NOT_STRING;
 
-	NXSL_Object *obj = argv[0]->getValueAsObject();
-	if (!obj->getClass()->instanceOf(g_nxslSnmpTransportClass.getName()))
-		return NXSL_ERR_BAD_CLASS;
+   NXSL_Object *object = argv[0]->getValueAsObject();
+   if (!object->getClass()->instanceOf(g_nxslSnmpTransportClass.getName()))
+      return NXSL_ERR_BAD_CLASS;
+   SNMP_Transport *transport = static_cast<SNMP_Transport*>(object->getData());
 
-   NXSL_Array *varList = new NXSL_Array(vm);
-	SNMP_Transport *transport = (SNMP_Transport *)obj->getData();
-	UINT32 result = SnmpWalk(transport, argv[1]->getValueAsCString(), WalkCallback, varList);
-	if (result == SNMP_ERR_SUCCESS)
+   NXSL_Array *varbinds = new NXSL_Array(vm);
+   if (SnmpWalk(transport, argv[1]->getValueAsCString(), WalkCallback, varbinds) == SNMP_ERR_SUCCESS)
    {
-      *ppResult = vm->createValue(varList);
+      *result = vm->createValue(varbinds);
    }
-	else
+   else
    {
-      *ppResult = vm->createValue();
-      delete varList;
+      *result = vm->createValue();
+      delete varbinds;
    }
-	return 0;
+   return 0;
 }
 
 /**
