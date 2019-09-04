@@ -1365,7 +1365,7 @@ void DCItem::fillLastValueMessage(NXCPMessage *pMsg, UINT32 dwId)
 	pMsg->setField(dwId++, m_dwErrorCount);
 	pMsg->setField(dwId++, m_dwTemplateItemId);
 
-	int mostCritical;
+	int mostCritical = getThresholdCount();
 	int severity = STATUS_NORMAL;
    for(int i = 0; i < getThresholdCount(); i++)
    {
