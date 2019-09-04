@@ -342,7 +342,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 				{
 					doubleClickHandlers.handleDoubleClick((AbstractObject)currentSelection.getFirstElement());
 				}
-				else if (((NetworkMapLink)currentSelection.getFirstElement()).isLocked() && selectionType == SELECTION_LINKS)
+				else if (selectionType == SELECTION_LINKS && ((NetworkMapLink)currentSelection.getFirstElement()).isLocked())
 				{
 				   openLinkDci();
 				}

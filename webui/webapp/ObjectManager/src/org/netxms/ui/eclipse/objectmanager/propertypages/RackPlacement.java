@@ -186,7 +186,7 @@ public class RackPlacement extends PropertyPage
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.get().Comments_JobError;
+				return "Filed to update rack placement";
 			}
 
 			@Override
