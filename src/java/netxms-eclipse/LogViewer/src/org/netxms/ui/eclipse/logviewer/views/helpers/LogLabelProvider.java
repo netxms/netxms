@@ -46,6 +46,7 @@ public class LogLabelProvider implements ITableLabelProvider
 {
 	public static final String[] ALARM_STATE_TEXTS = { Messages.get().LogLabelProvider_Outstanding, Messages.get().LogLabelProvider_Acknowledged, Messages.get().LogLabelProvider_Resolved, Messages.get().LogLabelProvider_Terminated };
 	public static final String[] ALARM_HD_STATE_TEXTS = { Messages.get().LogLabelProvider_Ignored, Messages.get().LogLabelProvider_Open, Messages.get().LogLabelProvider_Closed };
+   public static final String[] EVENT_ORIGIN_TEXTS = { "System", "Agent", "Client", "Syslog", "SNMP", "Script", "Remote Server" };
 	
 	private LogColumn[] columns;
 	private NXCSession session;
@@ -79,32 +80,32 @@ public class LogLabelProvider implements ITableLabelProvider
 		final String value = ((TableRow)element).get(columnIndex).getValue();
 		switch(columns[columnIndex].getType())
 		{
+         case LogColumn.LC_ALARM_STATE:
+            try
+            {
+               int state = Integer.parseInt(value);
+               return alarmStateImages[state & Alarm.STATE_MASK];
+            }
+            catch(NumberFormatException e)
+            {
+               return null;
+            }
+         case LogColumn.LC_OBJECT_ID:
+            try
+            {
+               long id = Long.parseLong(value);
+               AbstractObject object = session.findObjectById(id);
+               return (object != null) ? wbLabelProvider.getImage(object) : null;
+            }
+            catch(NumberFormatException e)
+            {
+               return null;
+            }
 			case LogColumn.LC_SEVERITY:
 				try
 				{
 					int severity = Integer.parseInt(value);
 					return StatusDisplayInfo.getStatusImage(severity);
-				}
-				catch(NumberFormatException e)
-				{
-					return null;
-				}
-			case LogColumn.LC_ALARM_STATE:
-				try
-				{
-					int state = Integer.parseInt(value);
-					return alarmStateImages[state & Alarm.STATE_MASK];
-				}
-				catch(NumberFormatException e)
-				{
-					return null;
-				}
-			case LogColumn.LC_OBJECT_ID:
-				try
-				{
-					long id = Long.parseLong(value);
-					AbstractObject object = session.findObjectById(id);
-					return (object != null) ? wbLabelProvider.getImage(object) : null;
 				}
 				catch(NumberFormatException e)
 				{
@@ -135,17 +136,47 @@ public class LogLabelProvider implements ITableLabelProvider
 		final String value = ((TableRow)element).get(columnIndex).getValue();
 		switch(columns[columnIndex].getType())
 		{
-			case LogColumn.LC_TIMESTAMP:
-				try
-				{
-					long timestamp = Long.parseLong(value);
-					Date date = new Date(timestamp * 1000);
-					return RegionalSettings.getDateTimeFormat().format(date);
-				}
-				catch(NumberFormatException e)
-				{
-					return Messages.get().LogLabelProvider_Error;
-				}
+         case LogColumn.LC_ALARM_HD_STATE:
+            try
+            {
+               int state = Integer.parseInt(value);
+               return ALARM_HD_STATE_TEXTS[state];
+            }
+            catch(Exception e)
+            {
+               return Messages.get().LogLabelProvider_Error;
+            }
+         case LogColumn.LC_ALARM_STATE:
+            try
+            {
+               int state = Integer.parseInt(value);
+               return ALARM_STATE_TEXTS[state & Alarm.STATE_MASK];
+            }
+            catch(Exception e)
+            {
+               return Messages.get().LogLabelProvider_Error;
+            }
+         case LogColumn.LC_EVENT_CODE:
+            try
+            {
+               long code = Long.parseLong(value);
+               EventTemplate evt = session.findEventTemplateByCode(code);
+               return (evt != null) ? evt.getName() : ("[" + code + "]"); //$NON-NLS-1$ //$NON-NLS-2$
+            }
+            catch(NumberFormatException e)
+            {
+               return null;
+            }
+         case LogColumn.LC_EVENT_ORIGIN:
+            try
+            {
+               int origin = Integer.parseInt(value);
+               return EVENT_ORIGIN_TEXTS[origin];
+            }
+            catch(Exception e)
+            {
+               return value;
+            }
 			case LogColumn.LC_OBJECT_ID:
 				try
 				{
@@ -169,6 +200,17 @@ public class LogLabelProvider implements ITableLabelProvider
 				{
 					return Messages.get().LogLabelProvider_Error;
 				}
+         case LogColumn.LC_TIMESTAMP:
+            try
+            {
+               long timestamp = Long.parseLong(value);
+               Date date = new Date(timestamp * 1000);
+               return RegionalSettings.getDateTimeFormat().format(date);
+            }
+            catch(NumberFormatException e)
+            {
+               return Messages.get().LogLabelProvider_Error;
+            }
 			case LogColumn.LC_USER_ID:
 				try
 				{
@@ -179,37 +221,6 @@ public class LogLabelProvider implements ITableLabelProvider
 				catch(NumberFormatException e)
 				{
 					return null;
-				}
-			case LogColumn.LC_EVENT_CODE:
-				try
-				{
-					long code = Long.parseLong(value);
-					EventTemplate evt = session.findEventTemplateByCode(code);
-					return (evt != null) ? evt.getName() : ("[" + code + "]"); //$NON-NLS-1$ //$NON-NLS-2$
-				}
-				catch(NumberFormatException e)
-				{
-					return null;
-				}
-			case LogColumn.LC_ALARM_STATE:
-				try
-				{
-					int state = Integer.parseInt(value);
-					return ALARM_STATE_TEXTS[state & Alarm.STATE_MASK];
-				}
-				catch(Exception e)
-				{
-					return Messages.get().LogLabelProvider_Error;
-				}
-			case LogColumn.LC_ALARM_HD_STATE:
-				try
-				{
-					int state = Integer.parseInt(value);
-					return ALARM_HD_STATE_TEXTS[state];
-				}
-				catch(Exception e)
-				{
-					return Messages.get().LogLabelProvider_Error;
 				}
          case LogColumn.LC_ZONE_UIN:
             try

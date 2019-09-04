@@ -210,6 +210,9 @@ public class ColumnFilterEditor extends DashboardComposite
 			case LogColumn.LC_EVENT_CODE:
 			   editor = new EventConditionEditor(this, toolkit);
             break;
+         case LogColumn.LC_EVENT_ORIGIN:
+            editor = new EventOriginConditionEditor(this, toolkit);
+            break;
 			case LogColumn.LC_INTEGER:
 			   editor = new IntegerConditionEditor(this, toolkit);
             break;
