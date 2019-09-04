@@ -48,7 +48,9 @@ import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.ui.IActionBars;
+import org.eclipse.ui.IPartListener;
 import org.eclipse.ui.IViewSite;
+import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.contexts.IContextService;
 import org.eclipse.ui.handlers.IHandlerService;
@@ -67,7 +69,7 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
 /**
  * Screenshot view
  */
-public class ScreenshotView extends ViewPart
+public class ScreenshotView extends ViewPart implements IPartListener
 {
    public static final String ID = "org.netxms.ui.eclipse.agentmanager.views.ScreenshotView"; //$NON-NLS-1$
 
@@ -82,8 +84,11 @@ public class ScreenshotView extends ViewPart
    private Canvas canvas;
    private byte[] byteImage;
    private Action actionRefresh;
+   private Action actionAutoRefresh;
    private Action actionSave;
    private Action actionCopyToClipboard;
+   private boolean autoRefresh;
+   private long lastRequestTime;
 
    /*
     * (non-Javadoc)
@@ -108,6 +113,7 @@ public class ScreenshotView extends ViewPart
       }
 
       setPartName(String.format(Messages.get().ScreenshotView_PartTitle, session.getObjectName(nodeId)));
+      autoRefresh = false;
    }
 
    /*
@@ -152,6 +158,7 @@ public class ScreenshotView extends ViewPart
             updateScrollerSize();
          }
       });
+      getSite().getPage().addPartListener(this);
       
       activateContext();
       createActions();
@@ -255,6 +262,7 @@ public class ScreenshotView extends ViewPart
                   return;
                }
                
+               lastRequestTime = System.currentTimeMillis();
                byteImage = session.takeScreenshot(nodeId, userSession);
                final ImageData data = new ImageData(new ByteArrayInputStream(byteImage));
                runInUIThread(new Runnable() {
@@ -298,6 +306,23 @@ public class ScreenshotView extends ViewPart
                   }
                });
             }
+            if(autoRefresh)
+            {
+               long diff = System.currentTimeMillis() - lastRequestTime;
+               if(diff < 250)
+                  Thread.sleep(250 - diff);               
+               runInUIThread(new Runnable() {
+                  
+                  @Override
+                  public void run()
+                  {                     
+                     if(autoRefresh && !canvas.isDisposed() && getSite().getPage().isPartVisible(ScreenshotView.this))
+                     {
+                        refresh();
+                     }
+                  }
+               });
+            }
          }
 
          @Override
@@ -325,6 +350,19 @@ public class ScreenshotView extends ViewPart
          }
       };
       
+      actionAutoRefresh = new Action("Auto refresh", Action.AS_CHECK_BOX) {
+         @Override
+         public void run()
+         {
+            autoRefresh = actionAutoRefresh.isChecked();
+            if(autoRefresh)
+            {
+               refresh();
+            }
+         }
+      };
+      actionAutoRefresh.setChecked(autoRefresh);
+      
       actionCopyToClipboard = new Action(Messages.get().ScreenshotView_CopyToClipboard, SharedIcons.COPY) {
          @Override
          public void run()
@@ -351,7 +389,7 @@ public class ScreenshotView extends ViewPart
       handlerService.activateHandler(actionSave.getActionDefinitionId(), new ActionHandler(actionSave));
       actionSave.setEnabled(false);
    }
-   
+
    /**
     * Save image to file
     */
@@ -426,6 +464,7 @@ public class ScreenshotView extends ViewPart
       manager.add(actionCopyToClipboard);      
       manager.add(new Separator());
       manager.add(actionRefresh);
+      manager.add(actionAutoRefresh);
    }
 
    /**
@@ -451,5 +490,35 @@ public class ScreenshotView extends ViewPart
       if (image != null)
          image.dispose();
       super.dispose();
+   }
+
+   @Override
+   public void partActivated(IWorkbenchPart part)
+   {
+      if(autoRefresh && getSite().getPage().isPartVisible(ScreenshotView.this))
+      {
+         refresh();
+      }
+   }
+
+   @Override
+   public void partBroughtToTop(IWorkbenchPart part)
+   {
+   }
+
+   @Override
+   public void partClosed(IWorkbenchPart part)
+   {
+      dispose();
+   }
+
+   @Override
+   public void partDeactivated(IWorkbenchPart part)
+   {      
+   }
+
+   @Override
+   public void partOpened(IWorkbenchPart part)
+   {
    }
 }

@@ -61,7 +61,7 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
 /**
  * Screenshot view
  */
-public class ScreenshotView extends ViewPart
+public class ScreenshotView extends ViewPart implements IPartListener
 {
    public static final String ID = "org.netxms.ui.eclipse.agentmanager.views.ScreenshotView"; //$NON-NLS-1$
 
@@ -76,7 +76,10 @@ public class ScreenshotView extends ViewPart
    private Canvas canvas;
    private byte[] byteImage;
    private Action actionRefresh;
+   private Action actionAutoRefresh;
    private Action actionSave;
+   private boolean autoRefresh;
+   private long lastRequestTime;
 
    /*
     * (non-Javadoc)
@@ -101,6 +104,7 @@ public class ScreenshotView extends ViewPart
       }
 
       setPartName(String.format(Messages.get().ScreenshotView_PartTitle, session.getObjectName(nodeId)));
+      autoRefresh = false;
    }
 
    /*
@@ -143,6 +147,7 @@ public class ScreenshotView extends ViewPart
             updateScrollerSize();
          }
       });
+      getSite().getPage().addPartListener(this);
       
       activateContext();
       createActions();
@@ -198,15 +203,15 @@ public class ScreenshotView extends ViewPart
             {
                if (userSession == null)
                {
-                  Table sessions = session.queryAgentTable(nodeId, "Agent.SessionAgents");
+                  Table sessions = session.queryAgentTable(nodeId, "Agent.SessionAgents"); //$NON-NLS-1$
                   if ((sessions != null) && (sessions.getRowCount() > 0))
                   {
-                     int colIndexName = sessions.getColumnIndex("SESSION_NAME");
-                     int colIndexUser = sessions.getColumnIndex("USER_NAME");
+                     int colIndexName = sessions.getColumnIndex("SESSION_NAME"); //$NON-NLS-1$
+                     int colIndexUser = sessions.getColumnIndex("USER_NAME"); //$NON-NLS-1$
                      for(int i = 0; i < sessions.getRowCount(); i++)
                      {
                         String n = sessions.getCellValue(i, colIndexName);
-                        if ("Console".equalsIgnoreCase(n))
+                        if ("Console".equalsIgnoreCase(n)) //$NON-NLS-1$
                         {
                            userSession = n;
                            userName = sessions.getCellValue(i, colIndexUser);
@@ -245,6 +250,7 @@ public class ScreenshotView extends ViewPart
                   return;
                }
                
+               lastRequestTime = System.currentTimeMillis();
                byteImage = session.takeScreenshot(nodeId, userSession);
                final ImageData data = new ImageData(new ByteArrayInputStream(byteImage));
                runInUIThread(new Runnable() {
@@ -255,7 +261,7 @@ public class ScreenshotView extends ViewPart
                         image.dispose();
                      
                      image = new Image(getDisplay(), data);
-                     imageInfo = userName + "@" + userSession;
+                     imageInfo = userName + "@" + userSession; //$NON-NLS-1$
                      errorMessage = null;
                      canvas.redraw();
 
@@ -286,6 +292,23 @@ public class ScreenshotView extends ViewPart
                   }
                });
             }
+            if(autoRefresh)
+            {
+               long diff = System.currentTimeMillis() - lastRequestTime;
+               if(diff < 250)
+                  Thread.sleep(250 - diff);               
+               runInUIThread(new Runnable() {
+                  
+                  @Override
+                  public void run()
+                  {                     
+                     if(autoRefresh && !canvas.isDisposed() && getSite().getPage().isPartVisible(ScreenshotView.this))
+                     {
+                        refresh();
+                     }
+                  }
+               });
+            }
          }
 
          @Override
@@ -313,6 +336,19 @@ public class ScreenshotView extends ViewPart
          }
       };
       
+      actionAutoRefresh = new Action("Auto refresh", Action.AS_CHECK_BOX) {
+         @Override
+         public void run()
+         {
+            autoRefresh = actionAutoRefresh.isChecked();
+            if(autoRefresh)
+            {
+               refresh();
+            }
+         }
+      };
+      actionAutoRefresh.setChecked(autoRefresh);
+      
       actionSave = new Action(Messages.get().ScreenshotView_Save, SharedIcons.SAVE) {
          @Override
          public void run()
@@ -324,7 +360,7 @@ public class ScreenshotView extends ViewPart
       handlerService.activateHandler(actionSave.getActionDefinitionId(), new ActionHandler(actionSave));
       actionSave.setEnabled(false);
    }
-   
+
    /**
     * Save image to file
     */
@@ -383,6 +419,7 @@ public class ScreenshotView extends ViewPart
       manager.add(actionSave);
       manager.add(new Separator());
       manager.add(actionRefresh);
+      manager.add(actionAutoRefresh);
    }
 
    /**
@@ -407,5 +444,35 @@ public class ScreenshotView extends ViewPart
       if (image != null)
          image.dispose();
       super.dispose();
+   }
+
+   @Override
+   public void partActivated(IWorkbenchPart part)
+   {
+      if(autoRefresh && getSite().getPage().isPartVisible(ScreenshotView.this))
+      {
+         refresh();
+      }
+   }
+
+   @Override
+   public void partBroughtToTop(IWorkbenchPart part)
+   {
+   }
+
+   @Override
+   public void partClosed(IWorkbenchPart part)
+   {
+      dispose();
+   }
+
+   @Override
+   public void partDeactivated(IWorkbenchPart part)
+   {      
+   }
+
+   @Override
+   public void partOpened(IWorkbenchPart part)
+   {
    }
 }
