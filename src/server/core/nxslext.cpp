@@ -78,7 +78,7 @@ static int F_SetCustomAttribute(int argc, NXSL_Value **argv, NXSL_Value **ppResu
 	if (!object->getClass()->instanceOf(g_nxslNetObjClass.getName()))
 		return NXSL_ERR_BAD_CLASS;
 
-	NetObj *netxmsObject = (NetObj *)object->getData();
+	NetObj *netxmsObject = static_cast<NetObj*>(object->getData());
    NXSL_Value *value = netxmsObject->getCustomAttributeForNXSL(vm, argv[1]->getValueAsCString());
    *ppResult = (value != NULL) ? value : vm->createValue(); // Return NULL if attribute not found
 	netxmsObject->setCustomAttribute(argv[1]->getValueAsCString(), argv[2]->getValueAsCString());
@@ -972,7 +972,7 @@ static int F_CreateSNMPTransport(int argc, NXSL_Value **argv, NXSL_Value **ppRes
 	if ((argc > 1) && !argv[1]->isInteger())
       return NXSL_ERR_NOT_INTEGER;
 
-   if ((argc > 2) && !argv[1]->isString())
+   if ((argc > 2) && !argv[2]->isString())
       return NXSL_ERR_NOT_STRING;
 
 	NXSL_Object *obj = argv[0]->getValueAsObject();
@@ -1276,7 +1276,7 @@ static int F_AgentExecuteAction(int argc, NXSL_Value **argv, NXSL_Value **ppResu
 static void ActionOutputHandler(ActionCallbackEvent event, const TCHAR *text, void *userData)
 {
    if (event == ACE_DATA)
-      ((String *)userData)->append(text);
+      static_cast<String*>(userData)->append(text);
 }
 
 /**
@@ -1335,7 +1335,7 @@ static int F_AgentExecuteActionWithOutput(int argc, NXSL_Value **argv, NXSL_Valu
  * Return value:
  *     paramater's value on success and null on failure
  */
-static int F_AgentReadParameter(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+static int F_AgentReadParameter(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
 	if (!argv[0]->isObject())
 		return NXSL_ERR_NOT_OBJECT;
@@ -1349,10 +1349,7 @@ static int F_AgentReadParameter(int argc, NXSL_Value **argv, NXSL_Value **ppResu
 
 	TCHAR buffer[MAX_RESULT_LENGTH];
 	UINT32 rcc = static_cast<Node*>(object->getData())->getItemFromAgent(argv[1]->getValueAsCString(), MAX_RESULT_LENGTH, buffer);
-	if (rcc == DCE_SUCCESS)
-		*ppResult = vm->createValue(buffer);
-	else
-		*ppResult = vm->createValue();
+	*result = (rcc == DCE_SUCCESS) ? vm->createValue(buffer) : vm->createValue();
 	return 0;
 }
 
@@ -1366,7 +1363,7 @@ static int F_AgentReadParameter(int argc, NXSL_Value **argv, NXSL_Value **ppResu
  * Return value:
  *     table value on success and null on failure
  */
-static int F_AgentReadTable(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+static int F_AgentReadTable(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
 	if (!argv[0]->isObject())
 		return NXSL_ERR_NOT_OBJECT;
@@ -1380,10 +1377,7 @@ static int F_AgentReadTable(int argc, NXSL_Value **argv, NXSL_Value **ppResult, 
 
 	Table *table;
    UINT32 rcc = static_cast<Node*>(object->getData())->getTableFromAgent(argv[1]->getValueAsCString(), &table);
-	if (rcc == DCE_SUCCESS)
-      *ppResult = vm->createValue(new NXSL_Object(vm, &g_nxslTableClass, table));
-	else
-		*ppResult = vm->createValue();
+   *result = (rcc == DCE_SUCCESS) ? vm->createValue(new NXSL_Object(vm, &g_nxslTableClass, table)) : vm->createValue();
 	return 0;
 }
 
@@ -1397,7 +1391,7 @@ static int F_AgentReadTable(int argc, NXSL_Value **argv, NXSL_Value **ppResult, 
  * Return value:
  *     list values (as an array) on success and null on failure
  */
-static int F_AgentReadList(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+static int F_AgentReadList(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
 	if (!argv[0]->isObject())
 		return NXSL_ERR_NOT_OBJECT;
@@ -1411,10 +1405,7 @@ static int F_AgentReadList(int argc, NXSL_Value **argv, NXSL_Value **ppResult, N
 
 	StringList *list;
    UINT32 rcc = static_cast<Node*>(object->getData())->getListFromAgent(argv[1]->getValueAsCString(), &list);
-	if (rcc == DCE_SUCCESS)
-      *ppResult = vm->createValue(new NXSL_Array(vm, list));
-	else
-		*ppResult = vm->createValue();
+   *result = (rcc == DCE_SUCCESS) ? vm->createValue(new NXSL_Array(vm, list)) : vm->createValue();
    delete list;
 	return 0;
 }
@@ -1429,7 +1420,7 @@ static int F_AgentReadList(int argc, NXSL_Value **argv, NXSL_Value **ppResult, N
  * Return value:
  *     paramater's value on success and null on failure
  */
-static int F_DriverReadParameter(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+static int F_DriverReadParameter(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
    if (!argv[0]->isObject())
       return NXSL_ERR_NOT_OBJECT;
@@ -1443,10 +1434,7 @@ static int F_DriverReadParameter(int argc, NXSL_Value **argv, NXSL_Value **ppRes
 
    TCHAR buffer[MAX_RESULT_LENGTH];
    UINT32 rcc = static_cast<Node*>(object->getData())->getItemFromDeviceDriver(argv[1]->getValueAsCString(), buffer, MAX_RESULT_LENGTH);
-   if (rcc == DCE_SUCCESS)
-      *ppResult = vm->createValue(buffer);
-   else
-      *ppResult = vm->createValue();
+   *result = (rcc == DCE_SUCCESS) ? vm->createValue(buffer) : vm->createValue();
    return 0;
 }
 

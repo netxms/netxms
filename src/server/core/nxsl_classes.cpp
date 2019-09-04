@@ -51,11 +51,157 @@ template <class O> static NXSL_Value *GetObjectIcmpStatistic(O *object, IcmpStat
 }
 
 /**
- * clearGeoLocation()
+ * NetObj::bind(object)
+ */
+NXSL_METHOD_DEFINITION(NetObj, bind)
+{
+   NetObj *thisObject = static_cast<NetObj*>(object->getData());
+   if ((thisObject->getObjectClass() != OBJECT_CONTAINER) && (thisObject->getObjectClass() != OBJECT_SERVICEROOT))
+      return NXSL_ERR_BAD_CLASS;
+
+   NXSL_Object *nxslChild = argv[0]->getValueAsObject();
+   if (!nxslChild->getClass()->instanceOf(g_nxslNetObjClass.getName()))
+      return NXSL_ERR_BAD_CLASS;
+
+   NetObj *child = static_cast<NetObj*>(nxslChild->getData());
+   if (!IsValidParentClass(child->getObjectClass(), thisObject->getObjectClass()))
+      return NXSL_ERR_BAD_CLASS;
+
+   if (child->isChild(thisObject->getId())) // prevent loops
+      return NXSL_ERR_INVALID_OBJECT_OPERATION;
+
+   thisObject->addChild(child);
+   child->addParent(thisObject);
+   thisObject->calculateCompoundStatus();
+
+   *result = vm->createValue();
+   return 0;
+}
+
+/**
+ * NetObj::bindTo(object)
+ */
+NXSL_METHOD_DEFINITION(NetObj, bindTo)
+{
+   NetObj *thisObject = static_cast<NetObj*>(object->getData());
+
+   NXSL_Object *nxslParent = argv[0]->getValueAsObject();
+   if (!nxslParent->getClass()->instanceOf(g_nxslNetObjClass.getName()))
+      return NXSL_ERR_BAD_CLASS;
+
+   NetObj *parent = static_cast<NetObj*>(nxslParent->getData());
+   if ((parent->getObjectClass() != OBJECT_CONTAINER) && (parent->getObjectClass() != OBJECT_SERVICEROOT))
+      return NXSL_ERR_BAD_CLASS;
+
+   if (!IsValidParentClass(thisObject->getObjectClass(), parent->getObjectClass()))
+      return NXSL_ERR_BAD_CLASS;
+
+   if (thisObject->isChild(parent->getId())) // prevent loops
+      return NXSL_ERR_INVALID_OBJECT_OPERATION;
+
+   parent->addChild(thisObject);
+   thisObject->addParent(parent);
+   parent->calculateCompoundStatus();
+
+   *result = vm->createValue();
+   return 0;
+}
+
+/**
+ * NetObj::clearGeoLocation()
  */
 NXSL_METHOD_DEFINITION(NetObj, clearGeoLocation)
 {
    static_cast<NetObj*>(object->getData())->setGeoLocation(GeoLocation());
+   *result = vm->createValue();
+   return 0;
+}
+
+/**
+ * NetObj::delete()
+ */
+NXSL_METHOD_DEFINITION(NetObj, delete)
+{
+   static_cast<NetObj*>(object->getData())->deleteObject();
+   *result = vm->createValue();
+   return 0;
+}
+
+/**
+ * NetObj::deleteCustomAttribute(name)
+ * Returns last attribute value
+ */
+NXSL_METHOD_DEFINITION(NetObj, deleteCustomAttribute)
+{
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   NetObj *netobj = static_cast<NetObj*>(object->getData());
+   const TCHAR *name = argv[0]->getValueAsCString();
+   NXSL_Value *value = netobj->getCustomAttributeForNXSL(vm, name);
+   *result = (value != NULL) ? value : vm->createValue();
+   netobj->deleteCustomAttribute(name);
+   return 0;
+}
+
+/**
+ * NetObj::enterMaintenance(comment)
+ */
+NXSL_METHOD_DEFINITION(NetObj, enterMaintenance)
+{
+   if (argc > 1)
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
+   if ((argc != 0) && !argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   static_cast<NetObj*>(object->getData())->enterMaintenanceMode((argc != 0) ? argv[0]->getValueAsCString() : NULL);
+   *result = vm->createValue();
+   return 0;
+}
+
+/**
+ * NetObj::getCustomAttribute(name)
+ */
+NXSL_METHOD_DEFINITION(NetObj, getCustomAttribute)
+{
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   NXSL_Value *value = static_cast<NetObj*>(object->getData())->getCustomAttributeForNXSL(vm, argv[0]->getValueAsCString());
+   *result = (value != NULL) ? value : vm->createValue();
+   return 0;
+}
+
+/**
+ * NetObj::leaveMaintenance()
+ */
+NXSL_METHOD_DEFINITION(NetObj, leaveMaintenance)
+{
+   static_cast<NetObj*>(object->getData())->leaveMaintenanceMode();
+   *result = vm->createValue();
+   return 0;
+}
+
+/**
+ * NetObj::manage()
+ */
+NXSL_METHOD_DEFINITION(NetObj, manage)
+{
+   static_cast<NetObj*>(object->getData())->setMgmtStatus(true);
+   *result = vm->createValue();
+   return 0;
+}
+
+/**
+ * NetObj::rename(name)
+ */
+NXSL_METHOD_DEFINITION(NetObj, rename)
+{
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   static_cast<NetObj*>(object->getData())->setName(argv[0]->getValueAsCString());
    *result = vm->createValue();
    return 0;
 }
@@ -70,6 +216,22 @@ NXSL_METHOD_DEFINITION(NetObj, setComments)
 
    static_cast<NetObj*>(object->getData())->setComments(MemCopyString(argv[0]->getValueAsCString()));
    *result = vm->createValue();
+   return 0;
+}
+
+/**
+ * NetObj::setCustomAttribute(name, value)
+ */
+NXSL_METHOD_DEFINITION(NetObj, setCustomAttribute)
+{
+   if (!argv[0]->isString() || !argv[1]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   NetObj *netxmsObject = static_cast<NetObj*>(object->getData());
+   const TCHAR *name = argv[0]->getValueAsCString();
+   NXSL_Value *value = netxmsObject->getCustomAttributeForNXSL(vm, name);
+   *result = (value != NULL) ? value : vm->createValue(); // Return NULL if attribute not found
+   netxmsObject->setCustomAttribute(name, argv[1]->getValueAsCString());
    return 0;
 }
 
@@ -124,7 +286,7 @@ NXSL_METHOD_DEFINITION(NetObj, setMapImage)
 }
 
 /**
- * setStatusCalculation(type, ...)
+ * NetObj::setStatusCalculation(type, ...)
  */
 NXSL_METHOD_DEFINITION(NetObj, setStatusCalculation)
 {
@@ -169,7 +331,7 @@ NXSL_METHOD_DEFINITION(NetObj, setStatusCalculation)
 }
 
 /**
- * setStatusPropagation(type, ...)
+ * NetObj::setStatusPropagation(type, ...)
  */
 NXSL_METHOD_DEFINITION(NetObj, setStatusPropagation)
 {
@@ -215,18 +377,84 @@ NXSL_METHOD_DEFINITION(NetObj, setStatusPropagation)
 }
 
 /**
+ * NetObj::unbind(object)
+ */
+NXSL_METHOD_DEFINITION(NetObj, unbind)
+{
+   NetObj *thisObject = static_cast<NetObj*>(object->getData());
+   if ((thisObject->getObjectClass() != OBJECT_CONTAINER) && (thisObject->getObjectClass() != OBJECT_SERVICEROOT))
+      return NXSL_ERR_BAD_CLASS;
+
+   NXSL_Object *nxslChild = argv[0]->getValueAsObject();
+   if (!nxslChild->getClass()->instanceOf(g_nxslNetObjClass.getName()))
+      return NXSL_ERR_BAD_CLASS;
+
+   NetObj *child = static_cast<NetObj*>(nxslChild->getData());
+   thisObject->deleteChild(child);
+   child->deleteParent(thisObject);
+
+   *result = vm->createValue();
+   return 0;
+}
+
+/**
+ * NetObj::unbindFrom(object)
+ */
+NXSL_METHOD_DEFINITION(NetObj, unbindFrom)
+{
+   NetObj *thisObject = static_cast<NetObj*>(object->getData());
+
+   NXSL_Object *nxslParent = argv[0]->getValueAsObject();
+   if (!nxslParent->getClass()->instanceOf(g_nxslNetObjClass.getName()))
+      return NXSL_ERR_BAD_CLASS;
+
+   NetObj *parent = static_cast<NetObj*>(nxslParent->getData());
+   if ((parent->getObjectClass() != OBJECT_CONTAINER) && (parent->getObjectClass() != OBJECT_SERVICEROOT))
+      return NXSL_ERR_BAD_CLASS;
+
+   parent->deleteChild(thisObject);
+   thisObject->deleteParent(parent);
+
+   *result = vm->createValue();
+   return 0;
+}
+
+/**
+ * NetObj::unmanage()
+ */
+NXSL_METHOD_DEFINITION(NetObj, unmanage)
+{
+   static_cast<NetObj*>(object->getData())->setMgmtStatus(false);
+   *result = vm->createValue();
+   return 0;
+}
+
+/**
  * NXSL class NetObj: constructor
  */
 NXSL_NetObjClass::NXSL_NetObjClass() : NXSL_Class()
 {
    setName(_T("NetObj"));
 
+   NXSL_REGISTER_METHOD(NetObj, bind, 1);
+   NXSL_REGISTER_METHOD(NetObj, bindTo, 1);
    NXSL_REGISTER_METHOD(NetObj, clearGeoLocation, 0);
+   NXSL_REGISTER_METHOD(NetObj, delete, 0);
+   NXSL_REGISTER_METHOD(NetObj, deleteCustomAttribute, 1);
+   NXSL_REGISTER_METHOD(NetObj, enterMaintenance, -1);
+   NXSL_REGISTER_METHOD(NetObj, getCustomAttribute, 1);
+   NXSL_REGISTER_METHOD(NetObj, leaveMaintenance, 0);
+   NXSL_REGISTER_METHOD(NetObj, manage, 0);
+   NXSL_REGISTER_METHOD(NetObj, rename, 1);
    NXSL_REGISTER_METHOD(NetObj, setComments, 1);
+   NXSL_REGISTER_METHOD(NetObj, setCustomAttribute, 2);
    NXSL_REGISTER_METHOD(NetObj, setGeoLocation, 1);
    NXSL_REGISTER_METHOD(NetObj, setMapImage, 1);
    NXSL_REGISTER_METHOD(NetObj, setStatusCalculation, -1);
    NXSL_REGISTER_METHOD(NetObj, setStatusPropagation, -1);
+   NXSL_REGISTER_METHOD(NetObj, unbind, 1);
+   NXSL_REGISTER_METHOD(NetObj, unbindFrom, 1);
+   NXSL_REGISTER_METHOD(NetObj, unmanage, 0);
 }
 
 /**
@@ -280,6 +508,10 @@ NXSL_Value *NXSL_NetObjClass::getAttr(NXSL_Object *_object, const char *attr)
    {
       value = vm->createValue(object->getAssignedZoneProxyId(true));
    }
+   else if (!strcmp(attr, "children"))
+   {
+      value = vm->createValue(object->getChildrenForNXSL(vm));
+   }
    else if (!strcmp(attr, "city"))
    {
       value = vm->createValue(object->getPostalAddress()->getCity());
@@ -323,6 +555,10 @@ NXSL_Value *NXSL_NetObjClass::getAttr(NXSL_Object *_object, const char *attr)
    else if (!strcmp(attr, "name"))
    {
       value = vm->createValue(object->getName());
+   }
+   else if (!strcmp(attr, "parents"))
+   {
+      value = vm->createValue(object->getParentsForNXSL(vm));
    }
    else if (!strcmp(attr, "postcode"))
    {
@@ -537,6 +773,27 @@ static int ChangeFlagMethod(NXSL_Object *object, NXSL_Value *arg, NXSL_Value **r
 }
 
 /**
+ * Node::createSNMPTransport(port, context) method
+ */
+NXSL_METHOD_DEFINITION(Node, createSNMPTransport)
+{
+   if (argc > 2)
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
+   if ((argc > 0) && !argv[0]->isInteger())
+      return NXSL_ERR_NOT_INTEGER;
+
+   if ((argc > 1) && !argv[1]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   UINT16 port = (argc > 0) ? static_cast<UINT16>(argv[0]->getValueAsInt32()) : 0;
+   const TCHAR *context = (argc > 1) ? argv[1]->getValueAsCString() : NULL;
+   SNMP_Transport *t = static_cast<Node*>(object->getData())->createSnmpTransport(port, context);
+   *result = (t != NULL) ? vm->createValue(new NXSL_Object(vm, &g_nxslSnmpTransportClass, t)) : vm->createValue();
+   return 0;
+}
+
+/**
  * enableAgent(enabled) method
  */
 NXSL_METHOD_DEFINITION(Node, enableAgent)
@@ -601,12 +858,70 @@ NXSL_METHOD_DEFINITION(Node, enableTopologyPolling)
 }
 
 /**
+ * Node::readAgentParameter(name) method
+ */
+NXSL_METHOD_DEFINITION(Node, readAgentParameter)
+{
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   TCHAR buffer[MAX_RESULT_LENGTH];
+   UINT32 rcc = static_cast<Node*>(object->getData())->getItemFromAgent(argv[0]->getValueAsCString(), MAX_RESULT_LENGTH, buffer);
+   *result = (rcc == DCE_SUCCESS) ? vm->createValue(buffer) : vm->createValue();
+   return 0;
+}
+
+/**
+ * Node::readAgentList(name) method
+ */
+NXSL_METHOD_DEFINITION(Node, readAgentList)
+{
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   StringList *list;
+   UINT32 rcc = static_cast<Node*>(object->getData())->getListFromAgent(argv[1]->getValueAsCString(), &list);
+   *result = (rcc == DCE_SUCCESS) ? vm->createValue(new NXSL_Array(vm, list)) : vm->createValue();
+   delete list;
+   return 0;
+}
+
+/**
+ * Node::readDriverParameter(name) method
+ */
+NXSL_METHOD_DEFINITION(Node, readDriverParameter)
+{
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   TCHAR buffer[MAX_RESULT_LENGTH];
+   UINT32 rcc = static_cast<Node*>(object->getData())->getItemFromDeviceDriver(argv[0]->getValueAsCString(), buffer, MAX_RESULT_LENGTH);
+   *result = (rcc == DCE_SUCCESS) ? vm->createValue(buffer) : vm->createValue();
+   return 0;
+}
+
+/**
+ * Node::readAgentTable(name) method
+ */
+NXSL_METHOD_DEFINITION(Node, readAgentTable)
+{
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   Table *table;
+   UINT32 rcc = static_cast<Node*>(object->getData())->getTableFromAgent(argv[1]->getValueAsCString(), &table);
+   *result = (rcc == DCE_SUCCESS) ? vm->createValue(new NXSL_Object(vm, &g_nxslTableClass, table)) : vm->createValue();
+   return 0;
+}
+
+/**
  * NXSL class Node: constructor
  */
 NXSL_NodeClass::NXSL_NodeClass() : NXSL_DCTargetClass()
 {
    setName(_T("Node"));
 
+   NXSL_REGISTER_METHOD(Node, createSNMPTransport, -1);
    NXSL_REGISTER_METHOD(Node, enableAgent, 1);
    NXSL_REGISTER_METHOD(Node, enableConfigurationPolling, 1);
    NXSL_REGISTER_METHOD(Node, enableDiscoveryPolling, 1);
@@ -615,6 +930,10 @@ NXSL_NodeClass::NXSL_NodeClass() : NXSL_DCTargetClass()
    NXSL_REGISTER_METHOD(Node, enableSnmp, 1);
    NXSL_REGISTER_METHOD(Node, enableStatusPolling, 1);
    NXSL_REGISTER_METHOD(Node, enableTopologyPolling, 1);
+   NXSL_REGISTER_METHOD(Node, readAgentList, 1);
+   NXSL_REGISTER_METHOD(Node, readAgentParameter, 1);
+   NXSL_REGISTER_METHOD(Node, readAgentTable, 1);
+   NXSL_REGISTER_METHOD(Node, readDriverParameter, 1);
 }
 
 /**
@@ -754,6 +1073,10 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const char *attr)
    else if (!strcmp(attr, "icmpPacketLoss"))
    {
       value = GetNodeIcmpStatistic(node, IcmpStatFunction::LOSS, vm);
+   }
+   else if (!strcmp(attr, "interfaces"))
+   {
+      value = vm->createValue(node->getInterfacesForNXSL(vm));
    }
    else if (!strcmp(attr, "isAgent"))
    {
