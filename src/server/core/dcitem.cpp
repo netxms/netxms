@@ -1365,34 +1365,39 @@ void DCItem::fillLastValueMessage(NXCPMessage *pMsg, UINT32 dwId)
 	pMsg->setField(dwId++, m_dwErrorCount);
 	pMsg->setField(dwId++, m_dwTemplateItemId);
 
-	int mostCritical = getThresholdCount();
-	int severity = STATUS_NORMAL;
-   for(int i = 0; i < getThresholdCount(); i++)
-   {
-		if (m_thresholds->get(i)->isReached())
-		{
-		   if(!(m_flags & DCF_ALL_THRESHOLDS))
-		   {
-            mostCritical = i;
-            break;
-		   }
-		   else
-		   {
-		      int currSeverity = m_thresholds->get(i)->getCurrentSeverity();
-		      if(currSeverity > severity)
-		      {
-		         severity = currSeverity;
-	            mostCritical = i;
-	            if(severity == STATUS_CRITICAL)
-	               break;
-		      }
-		   }
-		}
-   }
-	if (mostCritical < getThresholdCount())
+	if (m_thresholds != NULL)
 	{
-      pMsg->setField(dwId++, (WORD)1);
-		m_thresholds->get(mostCritical)->createMessage(pMsg, dwId);
+      int mostCritical = -1;
+      int severity = STATUS_NORMAL;
+      for(int i = 0; i < m_thresholds->size(); i++)
+      {
+         if (m_thresholds->get(i)->isReached())
+         {
+            if (!(m_flags & DCF_ALL_THRESHOLDS))
+            {
+               mostCritical = i;
+               break;
+            }
+
+            int currSeverity = m_thresholds->get(i)->getCurrentSeverity();
+            if (currSeverity > severity)
+            {
+               severity = currSeverity;
+               mostCritical = i;
+               if (severity == STATUS_CRITICAL)
+                  break;
+            }
+         }
+      }
+      if (mostCritical != -1)
+      {
+         pMsg->setField(dwId++, (WORD)1);
+         m_thresholds->get(mostCritical)->createMessage(pMsg, dwId);
+      }
+      else
+      {
+         pMsg->setField(dwId++, (WORD)0);
+      }
 	}
 	else
 	{
