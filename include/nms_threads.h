@@ -685,23 +685,16 @@ inline void InitThreadLibrary()
 
 inline void ThreadSleep(int nSeconds)
 {
-#ifdef _NETWARE
-	sleep(nSeconds);
-#else
 	struct timeval tv;
-
 	tv.tv_sec = nSeconds;
 	tv.tv_usec = 0;
-
 	select(1, NULL, NULL, NULL, &tv);
-#endif
 }
 
 inline void ThreadSleepMs(UINT32 dwMilliseconds)
 {
 #if HAVE_NANOSLEEP && HAVE_DECL_NANOSLEEP
 	struct timespec interval, remainder;
-
 	interval.tv_sec = dwMilliseconds / 1000;
 	interval.tv_nsec = (dwMilliseconds % 1000) * 1000000; // milli -> nano
 	nanosleep(&interval, &remainder);

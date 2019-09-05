@@ -36,40 +36,16 @@ SOCKET NetConnectTCP(const char *hostname, const InetAddress& addr, unsigned sho
 
 bool NetCanRead(SOCKET nSocket, int nTimeout /* ms */)
 {
-	bool ret = false;
-	struct timeval timeout;
-	fd_set readFdSet;
-
-	FD_ZERO(&readFdSet);
-	FD_SET(nSocket, &readFdSet);
-	timeout.tv_sec = nTimeout / 1000;
-	timeout.tv_usec = (nTimeout % 1000) * 1000;
-
-	if (select(SELECT_NFDS(nSocket + 1), &readFdSet, NULL, NULL, &timeout) > 0)
-	{
-		ret = true;
-	}
-
-	return ret;
+   SocketPoller sp;
+   sp.add(nSocket);
+   return sp.poll(nTimeout) > 0;
 }
 
 bool NetCanWrite(SOCKET nSocket, int nTimeout /* ms */)
 {
-	bool ret = false;
-	struct timeval timeout;
-	fd_set writeFdSet;
-
-	FD_ZERO(&writeFdSet);
-	FD_SET(nSocket, &writeFdSet);
-	timeout.tv_sec = nTimeout / 1000;
-	timeout.tv_usec = (nTimeout % 1000) * 1000;
-
-	if (select(SELECT_NFDS(nSocket + 1), NULL, &writeFdSet, NULL, &timeout) > 0)
-	{
-		ret = true;
-	}
-
-	return ret;
+   SocketPoller sp(true);
+   sp.add(nSocket);
+   return sp.poll(nTimeout) > 0;
 }
 
 int NetRead(SOCKET nSocket, char *pBuff, int nSize)
