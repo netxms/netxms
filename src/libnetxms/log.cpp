@@ -519,7 +519,7 @@ static THREAD_RESULT THREAD_CALL BackgroundWriterThreadStdOut(void *arg)
 bool LIBNETXMS_EXPORTABLE nxlog_open(const TCHAR *logName, UINT32 flags)
 {
    if (s_mutexLogAccess == INVALID_MUTEX_HANDLE)
-      s_mutexLogAccess = MutexCreate();
+      s_mutexLogAccess = MutexCreateFast();
 
 	s_flags = flags & 0x7FFFFFFF;
    if (s_flags & NXLOG_USE_SYSLOG)
