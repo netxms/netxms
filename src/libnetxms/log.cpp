@@ -392,7 +392,23 @@ static bool RotateLog(bool needLock)
    {
       s_flags |= NXLOG_IS_OPEN;
       TCHAR buffer[32];
-      _ftprintf(s_logFileHandle, _T("%s Log file truncated.\n"), FormatLogTimestamp(buffer));
+      if (s_flags & NXLOG_BACKGROUND_WRITER)
+      {
+#ifdef UNICODE
+         TCHAR wtext[128];
+         _sntprintf(wtext, 128, L"%s Log file truncated.\n", FormatLogTimestamp(buffer));
+
+         char text[128];
+         wchar_to_utf8(wtext, -1, text, 128);
+         fputs(text, s_logFileHandle);
+#else
+         fprintf(s_logFileHandle, "%s Log file truncated.\n", FormatLogTimestamp(buffer));
+#endif
+      }
+      else
+      {
+         _ftprintf(s_logFileHandle, _T("%s Log file truncated.\n"), FormatLogTimestamp(buffer));
+      }
       fflush(s_logFileHandle);
 #ifndef _WIN32
       int fd = fileno(s_logFileHandle);
@@ -415,7 +431,7 @@ bool LIBNETXMS_EXPORTABLE nxlog_rotate()
 }
 
 /**
- * Background writer thread
+ * Background writer thread - file
  */
 static THREAD_RESULT THREAD_CALL BackgroundWriterThread(void *arg)
 {
@@ -439,44 +455,55 @@ static THREAD_RESULT THREAD_CALL BackgroundWriterThread(void *arg)
          s_logBuffer.clear();
          MutexUnlock(s_mutexLogAccess);
 
-         if (s_flags & NXLOG_DEBUG_MODE)
+         if (s_logFileHandle != NULL)
          {
-            char marker[64];
-            sprintf(marker, "##(" INT64_FMTA ")" INT64_FMTA " @" INT64_FMTA "\n",
-                    (INT64)buflen, (INT64)strlen(data), GetCurrentTimeMs());
-#ifdef _WIN32
-            fwrite(marker, 1, strlen(marker), s_logFileHandle);
-#else
-            write(fileno(s_logFileHandle), marker, strlen(marker));
-#endif
+            if (s_flags & NXLOG_DEBUG_MODE)
+            {
+               fprintf(s_logFileHandle, "##(" INT64_FMTA ")" INT64_FMTA " @" INT64_FMTA "\n",
+                       (INT64)buflen, (INT64)strlen(data), GetCurrentTimeMs());
+            }
+
+            fputs(data, s_logFileHandle);
+
+            // Check log size
+            if ((s_rotationMode == NXLOG_ROTATION_BY_SIZE) && (s_maxLogSize != 0))
+            {
+               NX_STAT_STRUCT st;
+               NX_FSTAT(_fileno(s_logFileHandle), &st);
+               if ((UINT64)st.st_size >= s_maxLogSize)
+                  RotateLog(false);
+            }
          }
 
-#ifdef _WIN32
-			fwrite(data, 1, strlen(data), s_logFileHandle);
-#else
-         // write is used here because on linux fwrite is not working
-         // after calling fwprintf on a stream
-			size_t size = strlen(data);
-			size_t offset = 0;
-			do
-			{
-			   int bw = write(fileno(s_logFileHandle), &data[offset], size);
-			   if (bw < 0)
-			      break;
-			   size -= bw;
-			   offset += bw;
-			} while(size > 0);
-#endif
-         MemFree(data);
+	      MemFree(data);
+      }
+      else
+      {
+         MutexUnlock(s_mutexLogAccess);
+      }
+   }
+   return THREAD_OK;
+}
 
-	      // Check log size
-	      if ((s_logFileHandle != NULL) && (s_rotationMode == NXLOG_ROTATION_BY_SIZE) && (s_maxLogSize != 0))
-	      {
-	         NX_STAT_STRUCT st;
-		      NX_FSTAT(_fileno(s_logFileHandle), &st);
-		      if ((UINT64)st.st_size >= s_maxLogSize)
-			      RotateLog(false);
-	      }
+/**
+ * Background writer thread - stdout
+ */
+static THREAD_RESULT THREAD_CALL BackgroundWriterThreadStdOut(void *arg)
+{
+   bool stop = false;
+   while(!stop)
+   {
+      stop = ConditionWait(s_writerStopCondition, 1000);
+
+      MutexLock(s_mutexLogAccess);
+      if (!s_logBuffer.isEmpty())
+      {
+         char *data = s_logBuffer.getUTF8String();
+         s_logBuffer.clear();
+         MutexUnlock(s_mutexLogAccess);
+
+         fputs(data, stdout);
+         MemFree(data);
       }
       else
       {
@@ -521,6 +548,12 @@ bool LIBNETXMS_EXPORTABLE nxlog_open(const TCHAR *logName, UINT32 flags)
    {
       s_flags |= NXLOG_IS_OPEN;
       s_flags &= ~NXLOG_PRINT_TO_STDOUT;
+      if (s_flags & NXLOG_BACKGROUND_WRITER)
+      {
+         s_logBuffer.setAllocationStep(8192);
+         s_writerStopCondition = ConditionCreate(TRUE);
+         s_writerThread = ThreadCreateEx(BackgroundWriterThreadStdOut, 0, NULL);
+      }
    }
    else
    {
@@ -580,9 +613,20 @@ void LIBNETXMS_EXPORTABLE nxlog_close()
          closelog();
 #endif
       }
-      else if (s_flags & (NXLOG_USE_SYSTEMD | NXLOG_USE_STDOUT))
+      else if (s_flags & NXLOG_USE_SYSTEMD)
       {
          // Do nothing
+      }
+      else if (s_flags & NXLOG_USE_STDOUT)
+      {
+         if (s_flags & NXLOG_BACKGROUND_WRITER)
+         {
+            ConditionSet(s_writerStopCondition);
+            ThreadJoin(s_writerThread);
+            ConditionDestroy(s_writerStopCondition);
+            s_writerThread = INVALID_THREAD_HANDLE;
+            s_writerStopCondition = INVALID_CONDITION_HANDLE;
+         }
       }
       else
       {
@@ -591,6 +635,8 @@ void LIBNETXMS_EXPORTABLE nxlog_close()
             ConditionSet(s_writerStopCondition);
             ThreadJoin(s_writerThread);
             ConditionDestroy(s_writerStopCondition);
+            s_writerThread = INVALID_THREAD_HANDLE;
+            s_writerStopCondition = INVALID_CONDITION_HANDLE;
          }
 
          if (s_logFileHandle != NULL)
