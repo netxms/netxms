@@ -876,6 +876,32 @@ NXSL_METHOD_DEFINITION(Node, enableTopologyPolling)
 }
 
 /**
+ * Node::getInterface(ifIndex) method
+ */
+NXSL_METHOD_DEFINITION(Node, getInterface)
+{
+   if (!argv[0]->isInteger())
+      return NXSL_ERR_NOT_INTEGER;
+
+   Interface *iface = static_cast<Node*>(object->getData())->findInterfaceByIndex(argv[0]->getValueAsUInt32());
+   *result = (iface != NULL) ? iface->createNXSLObject(vm) : vm->createValue();
+   return 0;
+}
+
+/**
+ * Node::getInterfaceName(ifIndex) method
+ */
+NXSL_METHOD_DEFINITION(Node, getInterfaceName)
+{
+   if (!argv[0]->isInteger())
+      return NXSL_ERR_NOT_INTEGER;
+
+   Interface *iface = static_cast<Node*>(object->getData())->findInterfaceByIndex(argv[0]->getValueAsUInt32());
+   *result = (iface != NULL) ? vm->createValue(iface->getName()) : vm->createValue();
+   return 0;
+}
+
+/**
  * Node::readAgentParameter(name) method
  */
 NXSL_METHOD_DEFINITION(Node, readAgentParameter)
@@ -948,6 +974,8 @@ NXSL_NodeClass::NXSL_NodeClass() : NXSL_DCTargetClass()
    NXSL_REGISTER_METHOD(Node, enableSnmp, 1);
    NXSL_REGISTER_METHOD(Node, enableStatusPolling, 1);
    NXSL_REGISTER_METHOD(Node, enableTopologyPolling, 1);
+   NXSL_REGISTER_METHOD(Node, getInterface, 1);
+   NXSL_REGISTER_METHOD(Node, getInterfaceName, 1);
    NXSL_REGISTER_METHOD(Node, readAgentList, 1);
    NXSL_REGISTER_METHOD(Node, readAgentParameter, 1);
    NXSL_REGISTER_METHOD(Node, readAgentTable, 1);

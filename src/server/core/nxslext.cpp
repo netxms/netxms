@@ -113,7 +113,7 @@ static int F_DeleteCustomAttribute(int argc, NXSL_Value **argv, NXSL_Value **ppR
  * Get interface name by index
  * Parameters: node object and interface index
  */
-static int F_GetInterfaceName(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+static int F_GetInterfaceName(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
 	if (!argv[0]->isObject())
 		return NXSL_ERR_NOT_OBJECT;
@@ -125,17 +125,8 @@ static int F_GetInterfaceName(int argc, NXSL_Value **argv, NXSL_Value **ppResult
 	if (!object->getClass()->instanceOf(g_nxslNodeClass.getName()))
 		return NXSL_ERR_BAD_CLASS;
 
-	Node *node = (Node *)object->getData();
-	Interface *ifc = node->findInterfaceByIndex(argv[1]->getValueAsUInt32());
-	if (ifc != NULL)
-	{
-		*ppResult = vm->createValue(ifc->getName());
-	}
-	else
-	{
-		*ppResult = vm->createValue();	// Return NULL if interface not found
-	}
-
+	Interface *iface = static_cast<Node*>(object->getData())->findInterfaceByIndex(argv[1]->getValueAsUInt32());
+	*result = (iface != NULL) ? vm->createValue(iface->getName()) : vm->createValue();
 	return 0;
 }
 
@@ -143,7 +134,7 @@ static int F_GetInterfaceName(int argc, NXSL_Value **argv, NXSL_Value **ppResult
  * Get interface object by index
  * Parameters: node object and interface index
  */
-static int F_GetInterfaceObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+static int F_GetInterfaceObject(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
 	if (!argv[0]->isObject())
 		return NXSL_ERR_NOT_OBJECT;
@@ -155,17 +146,8 @@ static int F_GetInterfaceObject(int argc, NXSL_Value **argv, NXSL_Value **ppResu
 	if (!object->getClass()->instanceOf(g_nxslNodeClass.getName()))
 		return NXSL_ERR_BAD_CLASS;
 
-	Node *node = (Node *)object->getData();
-	Interface *ifc = node->findInterfaceByIndex(argv[1]->getValueAsUInt32());
-	if (ifc != NULL)
-	{
-		*ppResult = ifc->createNXSLObject(vm);
-	}
-	else
-	{
-		*ppResult = vm->createValue();	// Return NULL if interface not found
-	}
-
+	Interface *iface = static_cast<Node*>(object->getData())->findInterfaceByIndex(argv[1]->getValueAsUInt32());
+	*result = (iface != NULL) ? iface->createNXSLObject(vm) : vm->createValue();
 	return 0;
 }
 
