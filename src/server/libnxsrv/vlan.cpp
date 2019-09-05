@@ -162,7 +162,7 @@ VlanInfo::~VlanInfo()
 /**
  * Add port identified by single 32bit ID (usually ifIndex)
  */
-void VlanInfo::add(UINT32 ifIndex)
+void VlanInfo::add(UINT32 portId)
 {
 	if (m_numPorts == m_allocated)
 	{
@@ -170,7 +170,8 @@ void VlanInfo::add(UINT32 ifIndex)
 		m_ports = MemReallocArray(m_ports, m_allocated);
 	}
 	memset(&m_ports[m_numPorts], 0, sizeof(VlanPortInfo));
-	m_ports[m_numPorts].ifIndex = ifIndex;
+	m_ports[m_numPorts].portId = portId;
+	m_numPorts++;
 }
 
 /**
@@ -185,6 +186,7 @@ void VlanInfo::add(const InterfacePhysicalLocation& location)
    }
    memset(&m_ports[m_numPorts], 0, sizeof(VlanPortInfo));
    m_ports[m_numPorts].location = location;
+   m_numPorts++;
 }
 
 /**

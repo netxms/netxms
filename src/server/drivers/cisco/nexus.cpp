@@ -139,3 +139,131 @@ InterfaceList *CiscoNexusDriver::getInterfaces(SNMP_Transport *snmp, StringMap *
    _pcre_free_t(reFex);
    return ifList;
 }
+
+/**
+ * Handler for VLAN enumeration
+ */
+static UINT32 HandlerVlanList(SNMP_Variable *var, SNMP_Transport *transport, void *arg)
+{
+   VlanList *vlanList = static_cast<VlanList*>(arg);
+
+   VlanInfo *vlan = new VlanInfo(var->getName().getLastElement(), VLAN_PRM_IFINDEX);
+
+   TCHAR buffer[256];
+   vlan->setName(var->getValueAsString(buffer, 256));
+
+   vlanList->add(vlan);
+   return SNMP_ERR_SUCCESS;
+}
+
+/**
+ * Add trunk port to VLANs
+ */
+static void AddPortToVLANs(SNMP_Variable *v, int baseId, VlanList *vlanList)
+{
+   // Each octet within the value of this object specifies a
+   // set of eight VLANs, with the first octet specifying
+   // VLAN id 1 through 8, the second octet specifying VLAN
+   // ids 9 through 16, etc.   Within each octet, the most
+   // significant bit represents the lowest numbered
+   // VLAN id, and the least significant bit represents the
+   // highest numbered VLAN id.  Thus, each VLAN of the
+   // port is represented by a single bit within the
+   // value of this object.  If that bit has a value of
+   // '1' then that VLAN is included in the set of
+   // VLANs; the VLAN is not included if its bit has a
+   // value of '0'.
+
+   BYTE vlanMask[128];
+   memset(vlanMask, 0, 128);
+   v->getRawValue(vlanMask, 128);
+   for(int i = 0; i < 128; i++)
+   {
+      BYTE mask = 0x80;
+      for(int b = 0; b < 8; b++, mask >>= 1)
+      {
+         if (vlanMask[i] & mask)
+         {
+            vlanList->addMemberPort(baseId + i * 8 + b, v->getName().getLastElement());
+         }
+      }
+   }
+}
+
+/**
+ * Handler for VLAN ports enumeration
+ */
+static UINT32 HandlerVlanPorts(SNMP_Variable *var, SNMP_Transport *transport, void *arg)
+{
+   VlanList *vlanList = static_cast<VlanList*>(arg);
+
+   SNMP_ObjectId oid = var->getName();
+   UINT32 ifIndex = oid.getLastElement();
+
+   SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), transport->getSnmpVersion());
+   if (var->getValueAsInt() == 3)
+   {
+      for(int i = 4; i <= 7; i++)
+      {
+         oid.changeElement(oid.length() - 2, i);
+         request.bindVariable(new SNMP_Variable(oid));
+      }
+   }
+   else
+   {
+      oid.changeElement(oid.length() - 2, 2);
+      request.bindVariable(new SNMP_Variable(oid));
+   }
+
+   SNMP_PDU *response = NULL;
+   if (transport->doRequest(&request, &response, SnmpGetDefaultTimeout(), 3) == SNMP_ERR_SUCCESS)
+   {
+      if (var->getValueAsInt() == 3)
+      {
+         for(int i = 0; i < 4; i++)
+         {
+            SNMP_Variable *v = response->getVariable(i);
+            if ((v != NULL) && (v->getType() == ASN_OCTET_STRING))
+               AddPortToVLANs(v, i * 1024, vlanList);
+         }
+      }
+      else
+      {
+         SNMP_Variable *v = response->getVariable(0);
+         if ((v != NULL) && (v->getType() == ASN_INTEGER))
+         {
+            vlanList->addMemberPort(v->getValueAsInt(), ifIndex);
+         }
+      }
+      delete response;
+   }
+
+   return SNMP_ERR_SUCCESS;
+}
+
+/**
+ * Get list of VLANs on given node
+ *
+ * @param snmp SNMP transport
+ * @param attributes Node's custom attributes
+ * @param driverData driver-specific data previously created in analyzeDevice
+ * @return VLAN list or NULL
+ */
+VlanList *CiscoNexusDriver::getVlans(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData)
+{
+   VlanList *list = new VlanList();
+
+   // vtpVlanName
+   if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.9.9.46.1.3.1.1.4"), HandlerVlanList, list) != SNMP_ERR_SUCCESS)
+      goto failure;
+
+   // vmVlanType
+   if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.9.9.68.1.2.2.1.1"), HandlerVlanPorts, list) != SNMP_ERR_SUCCESS)
+      goto failure;
+
+   return list;
+
+failure:
+   delete list;
+   return NULL;
+}

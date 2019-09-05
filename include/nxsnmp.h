@@ -379,6 +379,7 @@ public:
    bool isValid() const { return (m_length > 0) && (m_value != NULL); }
    bool isZeroDotZero() const { return (m_length == 2) && (m_value[0] == 0) && (m_value[1] == 0); }
    UINT32 getElement(size_t index) const { return (index < m_length) ? m_value[index] : 0; }
+   UINT32 getLastElement() const { return (m_length > 0) ? m_value[m_length - 1] : 0; }
 
    int compare(const TCHAR *oid) const;
    int compare(const UINT32 *oid, size_t length) const;

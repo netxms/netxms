@@ -38,7 +38,7 @@ static UINT32 HandlerVlanList(SNMP_Variable *var, SNMP_Transport *transport, voi
 {
    VlanList *vlanList = (VlanList *)arg;
 
-	VlanInfo *vlan = new VlanInfo(var->getName().getElement(var->getName().length() - 1), VLAN_PRM_IFINDEX);
+	VlanInfo *vlan = new VlanInfo(var->getName().getLastElement(), VLAN_PRM_IFINDEX);
 
 	TCHAR buffer[256];
 	vlan->setName(var->getValueAsString(buffer, 256));

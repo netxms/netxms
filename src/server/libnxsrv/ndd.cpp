@@ -645,7 +645,7 @@ static UINT32 HandlerVlanList(SNMP_Variable *var, SNMP_Transport *transport, voi
 {
    VlanList *vlanList = (VlanList *)arg;
 
-	VlanInfo *vlan = new VlanInfo(var->getName().value()[var->getName().length() - 1], VLAN_PRM_BPORT);
+	VlanInfo *vlan = new VlanInfo(var->getName().getLastElement(), VLAN_PRM_BPORT);
 
 	TCHAR buffer[256];
 	vlan->setName(var->getValueAsString(buffer, 256));
@@ -696,7 +696,7 @@ static void ParseVlanPorts(VlanList *vlanList, VlanInfo *vlan, BYTE map, int off
 static UINT32 HandlerVlanEgressPorts(SNMP_Variable *var, SNMP_Transport *transport, void *arg)
 {
    VlanList *vlanList = (VlanList *)arg;
-	UINT32 vlanId = var->getName().value()[var->getName().length() - 1];
+	UINT32 vlanId = var->getName().getLastElement();
 	VlanInfo *vlan = vlanList->findById(vlanId);
 	if (vlan != NULL)
 	{
@@ -739,11 +739,11 @@ VlanList *NetworkDeviceDriver::getVlans(SNMP_Transport *snmp, StringMap *attribu
 		   goto failure;
    }
 
-	return list;
+   return list;
 
 failure:
-	delete list;
-	return NULL;
+   delete list;
+   return NULL;
 }
 
 /** 
