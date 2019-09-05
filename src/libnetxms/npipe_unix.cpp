@@ -148,19 +148,14 @@ static bool GetPeerUID(SOCKET s, unsigned int *uid)
  */
 void NamedPipeListener::serverThread()
 {
-   fd_set rfds;
-   struct timeval tv;
-
    SetSocketNonBlocking(m_handle);
    nxlog_debug(2, _T("NamedPipeListener(%s): waiting for connection"), m_name);
+   SocketPoller sp;
    while(!m_stop)
    {
-      tv.tv_sec = 2;
-      tv.tv_usec = 0;
-
-      FD_ZERO(&rfds);
-      FD_SET(m_handle, &rfds);
-      if (select(m_handle + 1, &rfds, NULL, NULL, &tv) <= 0)
+      sp.reset();
+      sp.add(m_handle);
+      if (sp.poll(2000) <= 0)
          continue;
 
       struct sockaddr_un addrRemote;

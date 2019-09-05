@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2005-2014 Raden Solutions
+** Copyright (C) 2005-2019 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -381,19 +381,13 @@ int Serial::read(char *pBuff, int nSize)
 	}
 	
 #else // UNIX
-	fd_set rdfs;
-	struct timeval tv;
-	
-	FD_ZERO(&rdfs);
-	FD_SET(m_hPort, &rdfs);
-	tv.tv_sec = m_nTimeout / 1000;  // Timeout is in milliseconds
-	tv.tv_usec = 0;
-	nRet = select(m_hPort + 1, &rdfs, NULL, NULL, &tv);
-	if (nRet > 0)
+	SocketPoller sp;
+	sp.add(m_hPort);
+	if (sp.poll(m_nTimeout) > 0)
 	{
 	   do
 	   {
-	      nRet = ::read(m_hPort, pBuff, nSize);
+	      nRet = _read(m_hPort, pBuff, nSize);
 	   }
 	   while((nRet == -1) && (errno == EAGAIN));
 	}
@@ -426,22 +420,16 @@ int Serial::readAll(char *pBuff, int nSize)
 		nRet = (int)dwBytes;
 	}
 #else // UNIX
-	fd_set rdfs;
-	struct timeval tv;
-	int got, offset;
-
-	offset = 0;
-
+	SocketPoller sp;
+	int offset = 0;
 	while(offset < nSize)
 	{
-		FD_ZERO(&rdfs);
-		FD_SET(m_hPort, &rdfs);
-		tv.tv_sec = m_nTimeout / 1000;  // timeout is in milliseconds
-		tv.tv_usec = 0;
-		nRet = select(m_hPort + 1, &rdfs, NULL, NULL, &tv);
+	   sp.reset();
+		sp.add(m_hPort);
+		nRet = sp.poll(m_nTimeout);
 		if (nRet > 0)
 		{
-			got = ::read(m_hPort, pBuff + offset, nSize - offset);
+			int got = _read(m_hPort, pBuff + offset, nSize - offset);
 			if (got >= 0)
 			{
 				offset += got;
@@ -464,8 +452,7 @@ int Serial::readAll(char *pBuff, int nSize)
 	}
 	
 #endif // _WIN32
-	
-	return nRet;
+   return nRet;
 }
 
 /**
