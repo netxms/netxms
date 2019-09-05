@@ -65,8 +65,8 @@ public class EventOriginConditionEditor extends ConditionEditor
 	{
 		state = new Combo(this, SWT.READ_ONLY | SWT.BORDER);
 		toolkit.adapt(state);
-		for(int i = 0; i < LogLabelProvider.EVENT_ORIGIN_TEXTS.length; i++)
-			state.add(LogLabelProvider.EVENT_ORIGIN_TEXTS[i]);
+      for(String origin : LogLabelProvider.getEmptyInstance().EVENT_ORIGIN_TEXTS)
+         state.add(origin);
 		state.select(0);
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;

@@ -501,22 +501,34 @@ public class ScreenshotView extends ViewPart implements IPartListener
       }
    }
 
+   /**
+    * @see org.eclipse.ui.IPartListener#partBroughtToTop(org.eclipse.ui.IWorkbenchPart)
+    */
    @Override
    public void partBroughtToTop(IWorkbenchPart part)
    {
    }
 
+   /**
+    * @see org.eclipse.ui.IPartListener#partClosed(org.eclipse.ui.IWorkbenchPart)
+    */
    @Override
    public void partClosed(IWorkbenchPart part)
    {
       dispose();
    }
 
+   /**
+    * @see org.eclipse.ui.IPartListener#partDeactivated(org.eclipse.ui.IWorkbenchPart)
+    */
    @Override
    public void partDeactivated(IWorkbenchPart part)
    {      
    }
 
+   /**
+    * @see org.eclipse.ui.IPartListener#partOpened(org.eclipse.ui.IWorkbenchPart)
+    */
    @Override
    public void partOpened(IWorkbenchPart part)
    {

@@ -42,7 +42,9 @@ import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IActionBars;
+import org.eclipse.ui.IPartListener;
 import org.eclipse.ui.IViewSite;
+import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.contexts.IContextService;
 import org.eclipse.ui.handlers.IHandlerService;
@@ -239,7 +241,7 @@ public class ScreenshotView extends ViewPart implements IPartListener
                            image.dispose();
                         
                         image = null;
-                        errorMessage = "ERROR (No active sessions or session agent is not running)";
+                        errorMessage = Messages.get().ScreenshotView_ErrorNoActiveSessions;
                         canvas.redraw();
                         
                         actionSave.setEnabled(false);
@@ -283,7 +285,7 @@ public class ScreenshotView extends ViewPart implements IPartListener
                         image.dispose();
                      
                      image = null;
-                     errorMessage = (emsg != null) ? String.format("ERROR (%s)", emsg) : "ERROR";
+                     errorMessage = (emsg != null) ? String.format(Messages.get().ScreenshotView_ErrorWithMsg, emsg) : Messages.get().ScreenshotView_ErrorWithoutMsg;
                      canvas.redraw();
                      
                      actionSave.setEnabled(false);
@@ -455,22 +457,34 @@ public class ScreenshotView extends ViewPart implements IPartListener
       }
    }
 
+   /**
+    * @see org.eclipse.ui.IPartListener#partBroughtToTop(org.eclipse.ui.IWorkbenchPart)
+    */
    @Override
    public void partBroughtToTop(IWorkbenchPart part)
    {
    }
 
+   /**
+    * @see org.eclipse.ui.IPartListener#partClosed(org.eclipse.ui.IWorkbenchPart)
+    */
    @Override
    public void partClosed(IWorkbenchPart part)
    {
       dispose();
    }
 
+   /**
+    * @see org.eclipse.ui.IPartListener#partDeactivated(org.eclipse.ui.IWorkbenchPart)
+    */
    @Override
    public void partDeactivated(IWorkbenchPart part)
    {      
    }
 
+   /**
+    * @see org.eclipse.ui.IPartListener#partOpened(org.eclipse.ui.IWorkbenchPart)
+    */
    @Override
    public void partOpened(IWorkbenchPart part)
    {
