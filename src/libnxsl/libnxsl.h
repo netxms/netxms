@@ -137,6 +137,7 @@ typedef void *yyscan_t;
 #define OPCODE_SET_EXPRVAR    92
 #define OPCODE_UPDATE_EXPRVAR 93
 #define OPCODE_CLEAR_EXPRVARS 94
+#define OPCODE_GET_RANGE      95
 
 class NXSL_Compiler;
 

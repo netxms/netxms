@@ -55,7 +55,7 @@ static const char *s_nxslCommandMnemonic[] =
    "SINC", "SINCP", "SDEC", "SDECP", "EPEEK",
    "PUSH", "SET", "CALL", "INC", "DEC",
    "INCP", "DECP", "IN", "PUSH", "SET",
-   "UPDATE", "CLREXPR"
+   "UPDATE", "CLREXPR", "RANGE"
 };
 
 /**

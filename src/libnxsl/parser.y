@@ -479,6 +479,10 @@ Expression:
 {
 	pScript->addInstruction(new NXSL_Instruction(pScript, pLexer->getCurrLine(), OPCODE_GET_ELEMENT));
 }
+|	Expression '[' ExpressionOrNone ':' ExpressionOrNone ']'
+{
+	pScript->addInstruction(new NXSL_Instruction(pScript, pLexer->getCurrLine(), OPCODE_GET_RANGE));
+}
 |	StorageItem '=' Expression
 {
 	pScript->addInstruction(new NXSL_Instruction(pScript, pLexer->getCurrLine(), OPCODE_STORAGE_WRITE));
@@ -679,6 +683,14 @@ Expression:
 	pScript->resolveLastJump(OPCODE_JMP);
 }
 |	Operand
+;
+
+ExpressionOrNone:
+	Expression
+|
+{
+	pScript->addInstruction(new NXSL_Instruction(pScript, pLexer->getCurrLine(), OPCODE_PUSH_CONSTANT, pScript->createValue()));
+}
 ;
 
 Operand:

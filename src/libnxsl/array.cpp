@@ -138,9 +138,8 @@ StringList *NXSL_Array::toStringList() const
 void NXSL_Array::set(int index, NXSL_Value *value)
 {
 	NXSL_ArrayElement *element, key;
-
 	key.index = index;
-	element = (NXSL_ArrayElement *)bsearch(&key, m_data, m_size, sizeof(NXSL_ArrayElement), CompareElements);
+	element = (m_size > 0) ? (NXSL_ArrayElement *)bsearch(&key, m_data, m_size, sizeof(NXSL_ArrayElement), CompareElements) : NULL;
 	if (element != NULL)
 	{
 		m_vm->destroyValue(element->value);

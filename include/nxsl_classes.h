@@ -116,15 +116,30 @@ private:
 
 public:
    NXSL_Stack();
-   ~NXSL_Stack();
+   virtual ~NXSL_Stack();
 
-   void push(void *pData);
+   void push(void *data);
    void *pop();
    void *peek();
    void *peekAt(int offset);
-   void **peekList(int nLevel) { return &m_ppData[m_nStackPos - nLevel]; }
+   void **peekList(int level) { return &m_ppData[m_nStackPos - level]; }
 
    int getSize() { return m_nStackPos; }
+};
+
+/**
+ * NXSL object stack class
+ */
+template <typename T> class NXSL_ObjectStack : public NXSL_Stack
+{
+public:
+   NXSL_ObjectStack() : NXSL_Stack() { }
+   virtual ~NXSL_ObjectStack() { }
+
+   void push(T *data) { NXSL_Stack::push(data); }
+   T *pop() { return (T*)NXSL_Stack::pop(); }
+   T *peek() { return (T*)NXSL_Stack::peek(); }
+   T *peekAt(int offset) { return (T*)NXSL_Stack::peekAt(offset); }
 };
 
 class NXSL_Value;
@@ -1033,7 +1048,7 @@ protected:
    UINT32 m_cp;
 
    UINT32 m_dwSubLevel;
-   NXSL_Stack *m_dataStack;
+   NXSL_ObjectStack<NXSL_Value> *m_dataStack;
    NXSL_Stack *m_codeStack;
    NXSL_Stack *m_catchStack;
    int m_nBindPos;
