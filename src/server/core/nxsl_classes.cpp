@@ -705,6 +705,24 @@ NXSL_DCTargetClass::NXSL_DCTargetClass() : NXSL_NetObjClass()
 }
 
 /**
+ * NXSL class Zone: get attribute
+ */
+NXSL_Value *NXSL_DCTargetClass::getAttr(NXSL_Object *object, const char *attr)
+{
+   NXSL_Value *value = NXSL_NetObjClass::getAttr(object, attr);
+   if (value != NULL)
+      return value;
+
+   NXSL_VM *vm = object->vm();
+   DataCollectionTarget *dcTarget = static_cast<DataCollectionTarget*>(object->getData());
+   if (!strcmp(attr, "templates"))
+   {
+      value = vm->createValue(dcTarget->getTemplatesForNXSL(vm));
+   }
+   return value;
+}
+
+/**
  * NXSL class Zone: constructor
  */
 NXSL_ZoneClass::NXSL_ZoneClass() : NXSL_NetObjClass()

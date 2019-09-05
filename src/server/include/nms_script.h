@@ -55,6 +55,8 @@ class NXSL_DCTargetClass : public NXSL_NetObjClass
 {
 public:
    NXSL_DCTargetClass();
+
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr) override;
 };
 
 /**

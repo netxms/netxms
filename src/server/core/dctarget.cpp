@@ -1973,3 +1973,25 @@ void DataCollectionTarget::resetPollTimers()
    m_instancePollTimer->reset();
    unlockProperties();
 }
+
+/**
+ * Get list of template type parent objects for NXSL script
+ */
+NXSL_Array *DataCollectionTarget::getTemplatesForNXSL(NXSL_VM *vm)
+{
+   NXSL_Array *parents = new NXSL_Array(vm);
+   int index = 0;
+
+   lockParentList(false);
+   for(int i = 0; i < m_parentList->size(); i++)
+   {
+      NetObj *object = m_parentList->get(i);
+      if ((object->getObjectClass() == OBJECT_TEMPLATE) && object->isTrustedNode(m_id))
+      {
+         parents->set(index++, object->createNXSLObject(vm));
+      }
+   }
+   unlockParentList();
+
+   return parents;
+}

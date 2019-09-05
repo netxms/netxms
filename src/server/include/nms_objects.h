@@ -1720,6 +1720,8 @@ public:
 
    virtual json_t *toJson() override;
 
+   NXSL_Array *getTemplatesForNXSL(NXSL_VM *vm);
+
    UINT32 getListFromScript(const TCHAR *param, StringList **list, DataCollectionTarget *targetObject);
    UINT32 getStringMapFromScript(const TCHAR *param, StringMap **map, DataCollectionTarget *targetObject);
 
@@ -2717,7 +2719,6 @@ public:
    UINT32 getTableForClient(const TCHAR *name, Table **table);
 
 	virtual NXSL_Array *getParentsForNXSL(NXSL_VM *vm) override;
-	virtual NXSL_Array *getTemplatesForNXSL(NXSL_VM *vm);
 	NXSL_Array *getInterfacesForNXSL(NXSL_VM *vm);
 
    ObjectArray<AgentParameterDefinition> *openParamList(int origin);

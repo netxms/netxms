@@ -592,9 +592,9 @@ LONG H_ExternalTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractC
                   break;
                }
             value->addColumn(columns[n], DCI_DT_INT, columns[n], instanceColumn);
-            free(columns[n]);
+            MemFree(columns[n]);
          }
-         free(columns);
+         MemFree(columns);
 
          for(int i = 1; i < output.size(); i++)
          {
@@ -606,9 +606,9 @@ LONG H_ExternalTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractC
                if (n < numColumns)
                   value->setPreallocated(n, data[n]);
                else
-                  free(data[n]);
+                  MemFree(data[n]);
             }
-            free(data);
+            MemFree(data);
          }
       }
       else
