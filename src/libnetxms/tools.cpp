@@ -1260,8 +1260,7 @@ int LIBNETXMS_EXPORTABLE RecvEx(SOCKET hSocket, void *data, size_t len, int flag
    {
       SocketPoller sp;
       sp.add(hSocket);
-      if (controlSocket != INVALID_SOCKET)
-         sp.add(controlSocket);
+      sp.add(controlSocket);
       rc = sp.poll(timeout);
       if (rc > 0)
       {

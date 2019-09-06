@@ -201,7 +201,7 @@ SocketMessageReceiver::~SocketMessageReceiver()
 #ifndef _WIN32
    if (m_controlPipe[0] != -1)
       _close(m_controlPipe[0]);
-   if (m_controlPipe[0] != -1)
+   if (m_controlPipe[1] != -1)
       _close(m_controlPipe[1]);
 #endif
 }
@@ -293,7 +293,7 @@ TlsMessageReceiver::~TlsMessageReceiver()
 #ifndef _WIN32
    if (m_controlPipe[0] != -1)
       _close(m_controlPipe[0]);
-   if (m_controlPipe[0] != -1)
+   if (m_controlPipe[1] != -1)
       _close(m_controlPipe[1]);
 #endif
 }
@@ -400,7 +400,7 @@ PipeMessageReceiver::~PipeMessageReceiver()
 #else
    if (m_controlPipe[0] != -1)
       _close(m_controlPipe[0]);
-   if (m_controlPipe[0] != -1)
+   if (m_controlPipe[1] != -1)
       _close(m_controlPipe[1]);
 #endif
 }
