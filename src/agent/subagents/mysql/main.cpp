@@ -80,6 +80,16 @@ static LONG H_DatabaseConnectionStatus(const TCHAR *param, const TCHAR *arg, TCH
 }
 
 /**
+ * Handler for MySQL.Databases list
+ */
+static LONG H_DatabaseList(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session)
+{
+   for(int i = 0; i < s_instances->size(); i++)
+      value->add(s_instances->get(i)->getId());
+   return SYSINFO_RC_SUCCESS;
+}
+
+/**
  * Config template
  */
 static DatabaseInfo s_dbInfo;
@@ -269,18 +279,26 @@ static NETXMS_SUBAGENT_PARAM s_parameters[] =
 };
 
 /**
+ * Supported lists
+ */
+static NETXMS_SUBAGENT_LIST s_lists[] =
+{
+   { _T("MySQL.Databases"), H_DatabaseList, NULL, _T("MySQL: databases being monitored") }
+};
+
+/**
  * Subagent information
  */
 static NETXMS_SUBAGENT_INFO s_info =
 {
-	NETXMS_SUBAGENT_INFO_MAGIC,
-	_T("MYSQL"), NETXMS_BUILD_TAG,
-	SubAgentInit, SubAgentShutdown, NULL, NULL,
-	sizeof(s_parameters) / sizeof(NETXMS_SUBAGENT_PARAM), s_parameters,
-	0, NULL,    // lists
-	0, NULL,    // tables
-	0,	NULL,    // actions
-	0,	NULL     // push parameters
+   NETXMS_SUBAGENT_INFO_MAGIC,
+   _T("MYSQL"), NETXMS_BUILD_TAG,
+   SubAgentInit, SubAgentShutdown, NULL, NULL,
+   sizeof(s_parameters) / sizeof(NETXMS_SUBAGENT_PARAM), s_parameters,
+   sizeof(s_lists) / sizeof(NETXMS_SUBAGENT_LIST), s_lists,
+   0, NULL,    // tables
+   0, NULL,    // actions
+   0, NULL     // push parameters
 };
 
 /**
