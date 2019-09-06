@@ -1,0 +1,759 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+	<formatVersion>4</formatVersion>
+	<description></description>
+	<events>
+	</events>
+	<templates>
+		<template id="788">
+			<guid>f0a113a6-eff2-4f6d-8636-baf8eebceebc</guid>
+			<name>DELL iDRAC</name>
+			<flags>1</flags>
+			<path>
+				<element id="1">SNMP</element>
+				<element id="2">Remote Management Interfaces</element>
+			</path>
+			<dataCollection>
+				<dci id="1177">
+					<guid>785d9bbd-6349-4bf7-b6ee-ea260e2c3a3c</guid>
+					<name>.1.3.6.1.4.1.674.10892.5.5.1.20.140.1.1.31.{instance}</name>
+					<description>DELL iDRAC - Storage - Disk - Logical - {instance-name} - Task Progress (%)</description>
+					<dataType>0</dataType>
+					<samples>0</samples>
+					<origin>2</origin>
+					<interval>300</interval>
+					<retention>0</retention>
+					<instance></instance>
+					<systemTag></systemTag>
+					<delta>0</delta>
+					<flags>0</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<instanceDiscoveryMethod>4</instanceDiscoveryMethod>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<transformation></transformation>
+					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instanceDiscoveryData>.1.3.6.1.4.1.674.10892.5.5.1.20.140.1.1.1</instanceDiscoveryData>
+					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;logicalDiskLabel = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.674.10892.5.5.1.20.140.1.1.2.&quot; . $1);&#x0D;&#x0A;&#x0D;&#x0A;return %(true, $1, logicalDiskLabel);</instanceFilter>
+				</dci>
+				<dci id="1178">
+					<guid>660086f2-4ecd-491e-9dc8-54f5847869f9</guid>
+					<name>.1.3.6.1.4.1.674.10892.5.5.1.20.140.1.1.20.{instance}</name>
+					<description>DELL iDRAC - Storage - Disk - Logical - {instance-name} - Status</description>
+					<dataType>4</dataType>
+					<samples>0</samples>
+					<origin>2</origin>
+					<interval>300</interval>
+					<retention>0</retention>
+					<instance></instance>
+					<systemTag></systemTag>
+					<delta>0</delta>
+					<flags>0</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<instanceDiscoveryMethod>4</instanceDiscoveryMethod>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<transformation>switch ( $1 )&#x0D;&#x0A;{&#x0D;&#x0A;&#x09;case &quot;1&quot;: return &quot;Other&quot;;&#x0D;&#x0A;&#x09;case &quot;2&quot;: return &quot;Unknown&quot;;&#x0D;&#x0A;&#x09;case &quot;3&quot;: return &quot;Healthy&quot;;&#x0D;&#x0A;&#x09;case &quot;4&quot;: return &quot;Warning&quot;;&#x0D;&#x0A;&#x09;case &quot;5&quot;: return &quot;Error&quot;;&#x0D;&#x0A;&#x09;case &quot;6&quot;: return &quot;Critical&quot;;&#x0D;&#x0A;&#x09;default: return &quot;INVALID DATA&quot;;&#x0D;&#x0A;}</transformation>
+					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instanceDiscoveryData>.1.3.6.1.4.1.674.10892.5.5.1.20.140.1.1.1</instanceDiscoveryData>
+					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;logicalDiskLabel = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.674.10892.5.5.1.20.140.1.1.2.&quot; . $1);&#x0D;&#x0A;&#x0D;&#x0A;return %(true, $1, logicalDiskLabel);</instanceFilter>
+				</dci>
+				<dci id="1179">
+					<guid>d4bc67db-38b8-40ce-a68c-4bba2e447e19</guid>
+					<name>.1.3.6.1.4.1.674.10892.5.5.1.20.140.1.1.4.{instance}</name>
+					<description>DELL iDRAC - Storage - Disk - Logical - {instance-name} - State</description>
+					<dataType>4</dataType>
+					<samples>0</samples>
+					<origin>2</origin>
+					<interval>300</interval>
+					<retention>0</retention>
+					<instance></instance>
+					<systemTag></systemTag>
+					<delta>0</delta>
+					<flags>0</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<instanceDiscoveryMethod>4</instanceDiscoveryMethod>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<transformation>switch ( $1 )&#x0D;&#x0A;{&#x0D;&#x0A;&#x09;case &quot;1&quot;: return &quot;Unknown&quot;;&#x0D;&#x0A;&#x09;case &quot;2&quot;: return &quot;Healthy&quot;;&#x0D;&#x0A;&#x09;case &quot;3&quot;: return &quot;Failed&quot;;&#x0D;&#x0A;&#x09;case &quot;4&quot;: return &quot;Degraded&quot;;&#x0D;&#x0A;&#x09;default: return &quot;INVALID DATA&quot;;&#x0D;&#x0A;}</transformation>
+					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instanceDiscoveryData>.1.3.6.1.4.1.674.10892.5.5.1.20.140.1.1.1</instanceDiscoveryData>
+					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;logicalDiskLabel = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.674.10892.5.5.1.20.140.1.1.2.&quot; . $1);&#x0D;&#x0A;&#x0D;&#x0A;return %(true, $1, logicalDiskLabel);</instanceFilter>
+				</dci>
+				<dci id="1180">
+					<guid>6913465c-d22e-4e41-9184-f7df17bceb71</guid>
+					<name>.1.3.6.1.4.1.674.10892.5.5.1.20.140.1.1.6.{instance}</name>
+					<description>DELL iDRAC - Storage - Disk - Logical - {instance-name} - Capacity (Bytes)</description>
+					<dataType>3</dataType>
+					<samples>0</samples>
+					<origin>2</origin>
+					<interval>3600</interval>
+					<retention>0</retention>
+					<instance></instance>
+					<systemTag></systemTag>
+					<delta>0</delta>
+					<flags>0</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<instanceDiscoveryMethod>4</instanceDiscoveryMethod>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<transformation>// Convert MB to B&#x0D;&#x0A;return $1 * 1024 * 1024;</transformation>
+					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instanceDiscoveryData>.1.3.6.1.4.1.674.10892.5.5.1.20.140.1.1.1</instanceDiscoveryData>
+					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;logicalDiskLabel = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.674.10892.5.5.1.20.140.1.1.2.&quot; . $1);&#x0D;&#x0A;&#x0D;&#x0A;return %(true, $1, logicalDiskLabel);</instanceFilter>
+				</dci>
+				<dci id="1181">
+					<guid>c8b8d251-1a33-44fa-bf24-609ada61133b</guid>
+					<name>.1.3.6.1.4.1.674.10892.5.5.1.20.140.1.1.34.{instance}</name>
+					<description>DELL iDRAC - Storage - Disk - Logical - {instance-name} - Remaining Redundancy (# of redundant Disks)</description>
+					<dataType>0</dataType>
+					<samples>0</samples>
+					<origin>2</origin>
+					<interval>300</interval>
+					<retention>0</retention>
+					<instance></instance>
+					<systemTag></systemTag>
+					<delta>0</delta>
+					<flags>0</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<instanceDiscoveryMethod>4</instanceDiscoveryMethod>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<transformation></transformation>
+					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instanceDiscoveryData>.1.3.6.1.4.1.674.10892.5.5.1.20.140.1.1.1</instanceDiscoveryData>
+					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;logicalDiskLabel = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.674.10892.5.5.1.20.140.1.1.2.&quot; . $1);&#x0D;&#x0A;&#x0D;&#x0A;return %(true, $1, logicalDiskLabel);</instanceFilter>
+				</dci>
+				<dci id="1182">
+					<guid>1273cdba-c158-4b61-8605-a57559232ad3</guid>
+					<name>.1.3.6.1.4.1.674.10892.5.5.1.20.140.1.1.13.{instance}</name>
+					<description>DELL iDRAC - Storage - Disk - Logical - {instance-name} - RAID Level</description>
+					<dataType>4</dataType>
+					<samples>0</samples>
+					<origin>2</origin>
+					<interval>3600</interval>
+					<retention>0</retention>
+					<instance></instance>
+					<systemTag></systemTag>
+					<delta>0</delta>
+					<flags>0</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<instanceDiscoveryMethod>4</instanceDiscoveryMethod>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<transformation>switch ( $1 )&#x0D;&#x0A;{&#x0D;&#x0A;&#x09;case &quot;1&quot;: return &quot;Other&quot;;&#x0D;&#x0A;&#x09;case &quot;2&quot;: return &quot;RAID 0&quot;;&#x0D;&#x0A;&#x09;case &quot;3&quot;: return &quot;RAID 1&quot;;&#x0D;&#x0A;&#x09;case &quot;4&quot;: return &quot;RAID 5&quot;;&#x0D;&#x0A;&#x09;case &quot;5&quot;: return &quot;RAID 6&quot;;&#x0D;&#x0A;&#x09;case &quot;6&quot;: return &quot;RAID 10&quot;;&#x0D;&#x0A;&#x09;case &quot;7&quot;: return &quot;RAID 50&quot;;&#x0D;&#x0A;&#x09;case &quot;8&quot;: return &quot;RAID 60&quot;;&#x0D;&#x0A;&#x09;case &quot;9&quot;: return &quot;Concatenated RAID 1&quot;;&#x0D;&#x0A;&#x09;case &quot;10&quot;: return &quot;Concatenated RAID 5&quot;;&#x0D;&#x0A;&#x09;default: return &quot;INVALID DATA&quot;;&#x0D;&#x0A;}</transformation>
+					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instanceDiscoveryData>.1.3.6.1.4.1.674.10892.5.5.1.20.140.1.1.1</instanceDiscoveryData>
+					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;logicalDiskLabel = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.674.10892.5.5.1.20.140.1.1.2.&quot; . $1);&#x0D;&#x0A;&#x0D;&#x0A;return %(true, $1, logicalDiskLabel);</instanceFilter>
+				</dci>
+				<dci id="1183">
+					<guid>24141919-080f-4c6d-b62e-3cfc36fbb33f</guid>
+					<name>.1.3.6.1.4.1.674.10892.5.5.1.20.140.1.1.30.{instance}</name>
+					<description>DELL iDRAC - Storage - Disk - Logical - {instance-name} - Operational State</description>
+					<dataType>4</dataType>
+					<samples>0</samples>
+					<origin>2</origin>
+					<interval>300</interval>
+					<retention>0</retention>
+					<instance></instance>
+					<systemTag></systemTag>
+					<delta>0</delta>
+					<flags>0</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<instanceDiscoveryMethod>4</instanceDiscoveryMethod>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<transformation>switch ( $1 )&#x0D;&#x0A;{&#x0D;&#x0A;&#x09;case &quot;1&quot;: return &quot;No Active Operation&quot;;&#x0D;&#x0A;&#x09;case &quot;2&quot;: return &quot;Applying Configuration Change&quot;;&#x0D;&#x0A;&#x09;case &quot;3&quot;: return &quot;Running Consistency Check&quot;;&#x0D;&#x0A;&#x09;case &quot;4&quot;: return &quot;Initialising Virtual Disk&quot;;&#x0D;&#x0A;&#x09;case &quot;5&quot;: return &quot;Background Initialisating Virtual Disk&quot;;&#x0D;&#x0A;&#x09;default: return &quot;INVALID DATA&quot;;&#x0D;&#x0A;}</transformation>
+					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instanceDiscoveryData>.1.3.6.1.4.1.674.10892.5.5.1.20.140.1.1.1</instanceDiscoveryData>
+					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;logicalDiskLabel = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.674.10892.5.5.1.20.140.1.1.2.&quot; . $1);&#x0D;&#x0A;&#x0D;&#x0A;return %(true, $1, logicalDiskLabel);</instanceFilter>
+				</dci>
+				<dci id="1184">
+					<guid>026c735d-b503-443c-93a1-e9b172b9381d</guid>
+					<name>.1.3.6.1.4.1.674.10892.5.5.1.20.140.1.1.23.{instance}</name>
+					<description>DELL iDRAC - Storage - Disk - Logical - {instance-name} - Bad Blocks Detected</description>
+					<dataType>4</dataType>
+					<samples>0</samples>
+					<origin>2</origin>
+					<interval>300</interval>
+					<retention>0</retention>
+					<instance></instance>
+					<systemTag></systemTag>
+					<delta>0</delta>
+					<flags>0</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<instanceDiscoveryMethod>4</instanceDiscoveryMethod>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<transformation></transformation>
+					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instanceDiscoveryData>.1.3.6.1.4.1.674.10892.5.5.1.20.140.1.1.1</instanceDiscoveryData>
+					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;logicalDiskLabel = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.674.10892.5.5.1.20.140.1.1.2.&quot; . $1);&#x0D;&#x0A;&#x0D;&#x0A;return %(true, $1, logicalDiskLabel);</instanceFilter>
+				</dci>
+				<dci id="1185">
+					<guid>f5633703-6f9c-438c-93ee-8198abe02402</guid>
+					<name>.1.3.6.1.4.1.674.10892.5.5.1.20.130.4.1.4.{instance}</name>
+					<description>DELL iDRAC - Storage - Disk - Physical - {instance-name} - State</description>
+					<dataType>4</dataType>
+					<samples>0</samples>
+					<origin>2</origin>
+					<interval>300</interval>
+					<retention>0</retention>
+					<instance></instance>
+					<systemTag></systemTag>
+					<delta>0</delta>
+					<flags>0</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<instanceDiscoveryMethod>4</instanceDiscoveryMethod>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<transformation>switch ( $1 )&#x0D;&#x0A;{&#x0D;&#x0A;&#x09;case &quot;1&quot;: return &quot;Unknown&quot;;&#x0D;&#x0A;&#x09;case &quot;2&quot;: return &quot;Available&quot;;&#x0D;&#x0A;&#x09;case &quot;3&quot;: return &quot;In RAID&quot;;&#x0D;&#x0A;&#x09;case &quot;4&quot;: return &quot;Foreign Disk&quot;;&#x0D;&#x0A;&#x09;case &quot;5&quot;: return &quot;Not Available&quot;;&#x0D;&#x0A;&#x09;case &quot;6&quot;: return &quot;Blocked by Controller&quot;;&#x0D;&#x0A;&#x09;case &quot;7&quot;: return &quot;Not Operational&quot;;&#x0D;&#x0A;&#x09;case &quot;8&quot;: return &quot;Not RAID Capable&quot;;&#x0D;&#x0A;&#x09;case &quot;9&quot;: return &quot;Removed&quot;;&#x0D;&#x0A;&#x09;default: return &quot;INVALID DATA&quot;;&#x0D;&#x0A;}</transformation>
+					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instanceDiscoveryData>.1.3.6.1.4.1.674.10892.5.5.1.20.130.4.1.1</instanceDiscoveryData>
+					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;logicalDiskLabel = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.674.10892.5.5.1.20.130.4.1.2.&quot; . $1);&#x0D;&#x0A;&#x0D;&#x0A;return %(true, $1, logicalDiskLabel);</instanceFilter>
+				</dci>
+				<dci id="1186">
+					<guid>fef82fe8-417b-4bb1-a11e-ee0d552ecc89</guid>
+					<name>.1.3.6.1.4.1.674.10892.5.5.1.20.130.4.1.31.{instance}</name>
+					<description>DELL iDRAC - Storage - Disk - Physical - {instance-name} - Predictive Failure</description>
+					<dataType>4</dataType>
+					<samples>0</samples>
+					<origin>2</origin>
+					<interval>300</interval>
+					<retention>0</retention>
+					<instance></instance>
+					<systemTag></systemTag>
+					<delta>0</delta>
+					<flags>0</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<instanceDiscoveryMethod>4</instanceDiscoveryMethod>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<transformation>switch ( $1 )&#x0D;&#x0A;{&#x0D;&#x0A;&#x09;case &quot;0&quot;: return &quot;Healthy&quot;;&#x0D;&#x0A;&#x09;case &quot;1&quot;: return &quot;Predictive Failure&quot;;&#x0D;&#x0A;&#x09;default: return &quot;INVALID DATA&quot;;&#x0D;&#x0A;}</transformation>
+					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instanceDiscoveryData>.1.3.6.1.4.1.674.10892.5.5.1.20.130.4.1.1</instanceDiscoveryData>
+					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;logicalDiskLabel = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.674.10892.5.5.1.20.130.4.1.2.&quot; . $1);&#x0D;&#x0A;&#x0D;&#x0A;return %(true, $1, logicalDiskLabel);</instanceFilter>
+				</dci>
+				<dci id="1187">
+					<guid>a2ad6a97-b86b-4e86-9643-ce25dd5bac32</guid>
+					<name>.1.3.6.1.4.1.674.10892.5.5.1.20.130.4.1.6.{instance}</name>
+					<description>DELL iDRAC - Storage - Disk - Physical - {instance-name} - Part Number</description>
+					<dataType>4</dataType>
+					<samples>0</samples>
+					<origin>2</origin>
+					<interval>3600</interval>
+					<retention>0</retention>
+					<instance></instance>
+					<systemTag></systemTag>
+					<delta>0</delta>
+					<flags>0</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<instanceDiscoveryMethod>4</instanceDiscoveryMethod>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<transformation></transformation>
+					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instanceDiscoveryData>.1.3.6.1.4.1.674.10892.5.5.1.20.130.4.1.1</instanceDiscoveryData>
+					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;logicalDiskLabel = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.674.10892.5.5.1.20.130.4.1.2.&quot; . $1);&#x0D;&#x0A;&#x0D;&#x0A;return %(true, $1, logicalDiskLabel);</instanceFilter>
+				</dci>
+				<dci id="1188">
+					<guid>7a57b4b3-34c5-46fc-8c70-a565770ce977</guid>
+					<name>.1.3.6.1.4.1.674.10892.5.5.1.20.130.4.1.50.{instance}</name>
+					<description>DELL iDRAC - Storage - Disk - Physical - {instance-name} - Operational State</description>
+					<dataType>4</dataType>
+					<samples>0</samples>
+					<origin>2</origin>
+					<interval>300</interval>
+					<retention>0</retention>
+					<instance></instance>
+					<systemTag></systemTag>
+					<delta>0</delta>
+					<flags>0</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<instanceDiscoveryMethod>4</instanceDiscoveryMethod>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<transformation>switch ( $1 )&#x0D;&#x0A;{&#x0D;&#x0A;&#x09;case &quot;1&quot;: return &quot;No Active Operation&quot;;&#x0D;&#x0A;&#x09;case &quot;2&quot;: return &quot;Rebuilding&quot;;&#x0D;&#x0A;&#x09;case &quot;3&quot;: return &quot;Erasing&quot;;&#x0D;&#x0A;&#x09;case &quot;4&quot;: return &quot;Copy from/to Hot Spare&quot;;&#x0D;&#x0A;&#x09;default: return &quot;INVALID DATA&quot;;&#x0D;&#x0A;}</transformation>
+					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instanceDiscoveryData>.1.3.6.1.4.1.674.10892.5.5.1.20.130.4.1.1</instanceDiscoveryData>
+					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;logicalDiskLabel = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.674.10892.5.5.1.20.130.4.1.2.&quot; . $1);&#x0D;&#x0A;&#x0D;&#x0A;return %(true, $1, logicalDiskLabel);</instanceFilter>
+				</dci>
+				<dci id="1189">
+					<guid>e95b264c-6ddc-4c3a-815d-94037c9e6d8f</guid>
+					<name>.1.3.6.1.4.1.674.10892.5.5.1.20.130.4.1.51.{instance}</name>
+					<description>DELL iDRAC - Storage - Disk - Physical - {instance-name} - Operation Progress</description>
+					<dataType>1</dataType>
+					<samples>0</samples>
+					<origin>2</origin>
+					<interval>300</interval>
+					<retention>0</retention>
+					<instance></instance>
+					<systemTag></systemTag>
+					<delta>0</delta>
+					<flags>0</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<instanceDiscoveryMethod>4</instanceDiscoveryMethod>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<transformation></transformation>
+					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instanceDiscoveryData>.1.3.6.1.4.1.674.10892.5.5.1.20.130.4.1.1</instanceDiscoveryData>
+					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;logicalDiskLabel = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.674.10892.5.5.1.20.130.4.1.2.&quot; . $1);&#x0D;&#x0A;&#x0D;&#x0A;return %(true, $1, logicalDiskLabel);</instanceFilter>
+				</dci>
+				<dci id="1190">
+					<guid>f72a1c00-d48c-4a60-92c8-30c2063c44ea</guid>
+					<name>.1.3.6.1.4.1.674.10892.5.5.1.20.130.4.1.35.{instance}</name>
+					<description>DELL iDRAC - Storage - Disk - Logical - {instance-name} - Media Type</description>
+					<dataType>4</dataType>
+					<samples>0</samples>
+					<origin>2</origin>
+					<interval>3600</interval>
+					<retention>0</retention>
+					<instance></instance>
+					<systemTag></systemTag>
+					<delta>0</delta>
+					<flags>0</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<instanceDiscoveryMethod>4</instanceDiscoveryMethod>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<transformation>switch ( $1 ) {&#x0D;&#x0A;&#x09;case &quot;1&quot;: return &quot;Unknown&quot;;&#x0D;&#x0A;&#x09;case &quot;2&quot;: return &quot;HDD&quot;;&#x0D;&#x0A;&#x09;case &quot;3&quot;: return &quot;SSD&quot;;&#x0D;&#x0A;&#x09;default: return &quot;INVALID DATA&quot;;&#x0D;&#x0A;}</transformation>
+					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instanceDiscoveryData>.1.3.6.1.4.1.674.10892.5.5.1.20.130.4.1.1</instanceDiscoveryData>
+					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;logicalDiskLabel = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.674.10892.5.5.1.20.130.4.1.2.&quot; . $1);&#x0D;&#x0A;&#x0D;&#x0A;return %(true, $1, logicalDiskLabel);</instanceFilter>
+				</dci>
+				<dci id="1191">
+					<guid>72da0bea-c91b-4590-a07f-11f10cbec405</guid>
+					<name>.1.3.6.1.4.1.674.10892.5.5.1.20.130.1.1.38.{instance}</name>
+					<description>DELL iDRAC - Storage - Controller - {instance-name} - Status</description>
+					<dataType>4</dataType>
+					<samples>0</samples>
+					<origin>2</origin>
+					<interval>300</interval>
+					<retention>0</retention>
+					<instance></instance>
+					<systemTag></systemTag>
+					<delta>0</delta>
+					<flags>0</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<instanceDiscoveryMethod>4</instanceDiscoveryMethod>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<transformation>switch ( $1 )&#x0D;&#x0A;{&#x0D;&#x0A;&#x09;case &quot;1&quot;: return &quot;Other&quot;;&#x0D;&#x0A;&#x09;case &quot;2&quot;: return &quot;Unknown&quot;;&#x0D;&#x0A;&#x09;case &quot;3&quot;: return &quot;OK&quot;;&#x0D;&#x0A;&#x09;case &quot;4&quot;: return &quot;Warning&quot;;&#x0D;&#x0A;&#x09;case &quot;5&quot;: return &quot;Error&quot;;&#x0D;&#x0A;&#x09;case &quot;6&quot;: return &quot;Critical&quot;;&#x0D;&#x0A;&#x09;default: return &quot;INVALID DATA&quot;;&#x0D;&#x0A;}</transformation>
+					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;minYScaleValue&gt;1&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instanceDiscoveryData>.1.3.6.1.4.1.674.10892.5.5.1.20.130.1.1.1</instanceDiscoveryData>
+					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;controllerLabel = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.674.10892.5.5.1.20.130.1.1.2.&quot; . $1);&#x0D;&#x0A;&#x0D;&#x0A;return %(true, $1, controllerLabel);</instanceFilter>
+				</dci>
+				<dci id="1192">
+					<guid>08e14555-b357-402b-875f-be2631e8e57d</guid>
+					<name>.1.3.6.1.4.1.674.10892.5.5.1.20.130.15.1.4.{instance}</name>
+					<description>DELL iDRAC - Storage - Battery - {instance-name} - Status</description>
+					<dataType>4</dataType>
+					<samples>0</samples>
+					<origin>2</origin>
+					<interval>300</interval>
+					<retention>0</retention>
+					<instance></instance>
+					<systemTag></systemTag>
+					<delta>0</delta>
+					<flags>0</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<instanceDiscoveryMethod>4</instanceDiscoveryMethod>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<transformation>switch ( $1 )&#x0D;&#x0A;{&#x0D;&#x0A;&#x09;case &quot;1&quot;: return &quot;Unknown&quot;;&#x0D;&#x0A;&#x09;case &quot;2&quot;: return &quot;Healthy&quot;;&#x0D;&#x0A;&#x09;case &quot;3&quot;: return &quot;Failed&quot;;&#x0D;&#x0A;&#x09;case &quot;4&quot;: return &quot;On Battery / High Temperature&quot;;&#x0D;&#x0A;&#x09;case &quot;5&quot;: return &quot;Missing / Not Detected&quot;;&#x0D;&#x0A;&#x09;case &quot;6&quot;: return &quot;Recharging&quot;;&#x0D;&#x0A;&#x09;case &quot;7&quot;: return &quot;Low Voltage&quot;;&#x0D;&#x0A;&#x09;case &quot;8&quot;: return &quot;Not RAID Capable&quot;;&#x0D;&#x0A;&#x09;case &quot;9&quot;: return &quot;Removed&quot;;&#x0D;&#x0A;&#x09;default: return &quot;INVALID DATA&quot;;&#x0D;&#x0A;}</transformation>
+					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;minYScaleValue&gt;1&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instanceDiscoveryData>.1.3.6.1.4.1.674.10892.5.5.1.20.130.15.1.1</instanceDiscoveryData>
+					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;batteryLabel = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.674.10892.5.5.1.20.130.15.1.21.&quot; . $1);&#x0D;&#x0A;&#x0D;&#x0A;return %(true, $1, batteryLabel);</instanceFilter>
+				</dci>
+				<dci id="1193">
+					<guid>f4e4a2f1-123e-43e8-80b4-a1f6911559c9</guid>
+					<name>.1.3.6.1.4.1.674.10892.5.5.1.20.130.4.1.7.{instance}</name>
+					<description>DELL iDRAC - Storage - Disk - Physical - {instance-name} - Serial Number</description>
+					<dataType>4</dataType>
+					<samples>0</samples>
+					<origin>2</origin>
+					<interval>3600</interval>
+					<retention>0</retention>
+					<instance></instance>
+					<systemTag></systemTag>
+					<delta>0</delta>
+					<flags>0</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<instanceDiscoveryMethod>4</instanceDiscoveryMethod>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<transformation></transformation>
+					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instanceDiscoveryData>.1.3.6.1.4.1.674.10892.5.5.1.20.130.4.1.1</instanceDiscoveryData>
+					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;logicalDiskLabel = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.674.10892.5.5.1.20.130.4.1.2.&quot; . $1);&#x0D;&#x0A;&#x0D;&#x0A;return %(true, $1, logicalDiskLabel);</instanceFilter>
+				</dci>
+				<dci id="1194">
+					<guid>ffb0b2c4-c6b3-4e6c-9871-0e348a88e398</guid>
+					<name>.1.3.6.1.4.1.674.10892.5.4.700.20.1.5.{instance}</name>
+					<description>DELL iDRAC - Temperature - {instance-name} - Status</description>
+					<dataType>4</dataType>
+					<samples>0</samples>
+					<origin>2</origin>
+					<interval>300</interval>
+					<retention>0</retention>
+					<instance></instance>
+					<systemTag></systemTag>
+					<delta>0</delta>
+					<flags>0</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<instanceDiscoveryMethod>4</instanceDiscoveryMethod>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<transformation>switch ( $1 )&#x0D;&#x0A;{&#x0D;&#x0A;&#x09;case &quot;1&quot;: return &quot;Other&quot;;&#x0D;&#x0A;&#x09;case &quot;2&quot;: return &quot;Unknown&quot;;&#x0D;&#x0A;&#x09;case &quot;3&quot;: return &quot;Healthy&quot;;&#x0D;&#x0A;&#x09;case &quot;4&quot;: return &quot;Warning&quot;;&#x0D;&#x0A;&#x09;case &quot;5&quot;: return &quot;Error&quot;;&#x0D;&#x0A;&#x09;case &quot;6&quot;: return &quot;Critical&quot;;&#x0D;&#x0A;&#x09;default: return &quot;INVALID DATA&quot;;&#x0D;&#x0A;}</transformation>
+					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instanceDiscoveryData>.1.3.6.1.4.1.674.10892.5.4.700.20.1.2</instanceDiscoveryData>
+					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;sensorLabel = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.674.10892.5.4.700.20.1.8.&quot; . $1);&#x0D;&#x0A;&#x0D;&#x0A;return %(true, $1, sensorLabel);</instanceFilter>
+				</dci>
+				<dci id="1195">
+					<guid>af74e30b-94d3-402f-a7b7-8831ddaa27f6</guid>
+					<name>.1.3.6.1.4.1.674.10892.5.4.700.20.1.6.{instance}</name>
+					<description>DELL iDRAC - Temperature - {instance-name} - Temperature</description>
+					<dataType>5</dataType>
+					<samples>0</samples>
+					<origin>2</origin>
+					<interval>300</interval>
+					<retention>0</retention>
+					<instance></instance>
+					<systemTag></systemTag>
+					<delta>0</delta>
+					<flags>0</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<instanceDiscoveryMethod>4</instanceDiscoveryMethod>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<transformation>return $1/10;</transformation>
+					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instanceDiscoveryData>.1.3.6.1.4.1.674.10892.5.4.700.20.1.2</instanceDiscoveryData>
+					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;sensorLabel = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.674.10892.5.4.700.20.1.8.&quot; . $1);&#x0D;&#x0A;&#x0D;&#x0A;return %(true, $1, sensorLabel);</instanceFilter>
+				</dci>
+				<dci id="1196">
+					<guid>a4eb7188-1f64-44a1-96be-3f54e365235e</guid>
+					<name>.1.3.6.1.4.1.674.10892.5.4.600.12.1.5.{instance}</name>
+					<description>DELL iDRAC - PSU - {instance-name} - Status</description>
+					<dataType>4</dataType>
+					<samples>0</samples>
+					<origin>2</origin>
+					<interval>300</interval>
+					<retention>0</retention>
+					<instance></instance>
+					<systemTag></systemTag>
+					<delta>0</delta>
+					<flags>0</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<instanceDiscoveryMethod>4</instanceDiscoveryMethod>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<transformation>switch ( $1 )&#x0D;&#x0A;{&#x0D;&#x0A;&#x09;case &quot;1&quot;: return &quot;Other&quot;;&#x0D;&#x0A;&#x09;case &quot;2&quot;: return &quot;Unknown&quot;;&#x0D;&#x0A;&#x09;case &quot;3&quot;: return &quot;Healthy&quot;;&#x0D;&#x0A;&#x09;case &quot;4&quot;: return &quot;Warning&quot;;&#x0D;&#x0A;&#x09;case &quot;5&quot;: return &quot;Error&quot;;&#x0D;&#x0A;&#x09;case &quot;6&quot;: return &quot;Critical&quot;;&#x0D;&#x0A;&#x09;default: return &quot;INVALID DATA&quot;;&#x0D;&#x0A;}</transformation>
+					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instanceDiscoveryData>.1.3.6.1.4.1.674.10892.5.4.600.12.1.2</instanceDiscoveryData>
+					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;psuLabel = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.674.10892.5.4.600.12.1.8.&quot; . $1);&#x0D;&#x0A;&#x0D;&#x0A;return %(true, $1, psuLabel);</instanceFilter>
+				</dci>
+				<dci id="1197">
+					<guid>6aa15473-e300-45ef-935b-8ccb4b23dd10</guid>
+					<name>.1.3.6.1.4.1.674.10892.5.4.1100.50.1.5.{instance}</name>
+					<description>DELL iDRAC - Memory - {instance-name} - Status</description>
+					<dataType>4</dataType>
+					<samples>0</samples>
+					<origin>2</origin>
+					<interval>300</interval>
+					<retention>0</retention>
+					<instance></instance>
+					<systemTag></systemTag>
+					<delta>0</delta>
+					<flags>0</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<instanceDiscoveryMethod>4</instanceDiscoveryMethod>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<transformation>switch ( $1 )&#x0D;&#x0A;{&#x0D;&#x0A;&#x09;case &quot;1&quot;: return &quot;Other&quot;;&#x0D;&#x0A;&#x09;case &quot;2&quot;: return &quot;Unknown&quot;;&#x0D;&#x0A;&#x09;case &quot;3&quot;: return &quot;Healthy&quot;;&#x0D;&#x0A;&#x09;case &quot;4&quot;: return &quot;Warning&quot;;&#x0D;&#x0A;&#x09;case &quot;5&quot;: return &quot;Error&quot;;&#x0D;&#x0A;&#x09;case &quot;6&quot;: return &quot;Critical&quot;;&#x0D;&#x0A;&#x09;default: return &quot;INVALID DATA&quot;;&#x0D;&#x0A;}</transformation>
+					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instanceDiscoveryData>.1.3.6.1.4.1.674.10892.5.4.1100.50.1.2</instanceDiscoveryData>
+					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;memoryLabel = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.674.10892.5.4.1100.50.1.8.&quot; . $1);&#x0D;&#x0A;&#x0D;&#x0A;return %(true, $1, memoryLabel);</instanceFilter>
+				</dci>
+				<dci id="1198">
+					<guid>a4d16afc-cd95-4a92-9e8e-d487b695a178</guid>
+					<name>.1.3.6.1.4.1.674.10892.5.4.1100.50.1.23.{instance}</name>
+					<description>DELL iDRAC - Memory - {instance-name} - Serial Number</description>
+					<dataType>4</dataType>
+					<samples>0</samples>
+					<origin>2</origin>
+					<interval>3600</interval>
+					<retention>0</retention>
+					<instance></instance>
+					<systemTag></systemTag>
+					<delta>0</delta>
+					<flags>0</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<instanceDiscoveryMethod>4</instanceDiscoveryMethod>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<transformation></transformation>
+					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instanceDiscoveryData>.1.3.6.1.4.1.674.10892.5.4.1100.50.1.2</instanceDiscoveryData>
+					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;memoryLabel = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.674.10892.5.4.1100.50.1.8.&quot; . $1);&#x0D;&#x0A;&#x0D;&#x0A;return %(true, $1, memoryLabel);</instanceFilter>
+				</dci>
+				<dci id="1199">
+					<guid>6efbbf58-88d2-4940-8f9e-d5a672329efe</guid>
+					<name>.1.3.6.1.4.1.674.10892.5.4.1100.50.1.22.{instance}</name>
+					<description>DELL iDRAC - Memory - {instance-name} - Part Number</description>
+					<dataType>4</dataType>
+					<samples>0</samples>
+					<origin>2</origin>
+					<interval>3600</interval>
+					<retention>0</retention>
+					<instance></instance>
+					<systemTag></systemTag>
+					<delta>0</delta>
+					<flags>0</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<instanceDiscoveryMethod>4</instanceDiscoveryMethod>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<transformation></transformation>
+					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instanceDiscoveryData>.1.3.6.1.4.1.674.10892.5.4.1100.50.1.2</instanceDiscoveryData>
+					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;memoryLabel = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.674.10892.5.4.1100.50.1.8.&quot; . $1);&#x0D;&#x0A;&#x0D;&#x0A;return %(true, $1, memoryLabel);</instanceFilter>
+				</dci>
+				<dci id="1200">
+					<guid>0a1c201d-64ef-4424-a31b-d118f07b6804</guid>
+					<name>.1.3.6.1.4.1.674.10892.5.4.300.10.1.11.{instance}</name>
+					<description>DELL iDRAC - Chassis - {instance-name} - Service Tag</description>
+					<dataType>4</dataType>
+					<samples>0</samples>
+					<origin>2</origin>
+					<interval>86400</interval>
+					<retention>0</retention>
+					<instance></instance>
+					<systemTag></systemTag>
+					<delta>0</delta>
+					<flags>0</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<instanceDiscoveryMethod>4</instanceDiscoveryMethod>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<transformation></transformation>
+					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instanceDiscoveryData>.1.3.6.1.4.1.674.10892.5.4.300.10.1.1</instanceDiscoveryData>
+					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;chassisLabel = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.674.10892.5.4.300.10.1.7.&quot; . $1);&#x0D;&#x0A;&#x0D;&#x0A;return %(true, $1, chassisLabel);</instanceFilter>
+				</dci>
+				<dci id="1201">
+					<guid>5ec70af4-ec67-4e90-9d62-e3958b738bba</guid>
+					<name>.1.3.6.1.4.1.674.10892.5.4.300.10.1.9.{instance}</name>
+					<description>DELL iDRAC - Chassis - {instance-name} - Model</description>
+					<dataType>4</dataType>
+					<samples>0</samples>
+					<origin>2</origin>
+					<interval>86400</interval>
+					<retention>0</retention>
+					<instance></instance>
+					<systemTag></systemTag>
+					<delta>0</delta>
+					<flags>0</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<instanceDiscoveryMethod>4</instanceDiscoveryMethod>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<transformation></transformation>
+					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instanceDiscoveryData>.1.3.6.1.4.1.674.10892.5.4.300.10.1.1</instanceDiscoveryData>
+					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;chassisLabel = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.674.10892.5.4.300.10.1.7.&quot; . $1);&#x0D;&#x0A;&#x0D;&#x0A;return %(true, $1, chassisLabel);</instanceFilter>
+				</dci>
+				<dci id="1202">
+					<guid>0f54141b-e3bf-401f-8807-4e7263a15a32</guid>
+					<name>.1.3.6.1.4.1.674.10892.5.4.300.10.1.49.{instance}</name>
+					<description>DELL iDRAC - Chassis - {instance-name} - Express Service Code</description>
+					<dataType>4</dataType>
+					<samples>0</samples>
+					<origin>2</origin>
+					<interval>86400</interval>
+					<retention>0</retention>
+					<instance></instance>
+					<systemTag></systemTag>
+					<delta>0</delta>
+					<flags>0</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<instanceDiscoveryMethod>4</instanceDiscoveryMethod>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<transformation></transformation>
+					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instanceDiscoveryData>.1.3.6.1.4.1.674.10892.5.4.300.10.1.1</instanceDiscoveryData>
+					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;chassisLabel = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.674.10892.5.4.300.10.1.7.&quot; . $1);&#x0D;&#x0A;&#x0D;&#x0A;return %(true, $1, chassisLabel);</instanceFilter>
+				</dci>
+				<dci id="1203">
+					<guid>758b3393-e5c0-44e4-bfa0-266c6c1aa51b</guid>
+					<name>.1.3.6.1.4.1.674.10892.5.4.700.12.1.5.{instance}</name>
+					<description>DELL iDRAC - Cooling Device - {instance-name} - Status</description>
+					<dataType>4</dataType>
+					<samples>0</samples>
+					<origin>2</origin>
+					<interval>300</interval>
+					<retention>0</retention>
+					<instance></instance>
+					<systemTag></systemTag>
+					<delta>0</delta>
+					<flags>0</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<instanceDiscoveryMethod>4</instanceDiscoveryMethod>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<transformation>switch ( $1 )&#x0D;&#x0A;{&#x0D;&#x0A;&#x09;case &quot;1&quot;: return &quot;Other&quot;;&#x0D;&#x0A;&#x09;case &quot;2&quot;: return &quot;Unknown&quot;;&#x0D;&#x0A;&#x09;case &quot;3&quot;: return &quot;Healthy&quot;;&#x0D;&#x0A;&#x09;case &quot;4&quot;: return &quot;Warning&quot;;&#x0D;&#x0A;&#x09;case &quot;5&quot;: return &quot;Error&quot;;&#x0D;&#x0A;&#x09;case &quot;6&quot;: return &quot;Critical&quot;;&#x0D;&#x0A;&#x09;default: return &quot;INVALID DATA&quot;;&#x0D;&#x0A;}</transformation>
+					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instanceDiscoveryData>.1.3.6.1.4.1.674.10892.5.4.700.12.1.2</instanceDiscoveryData>
+					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;fanLabel = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.674.10892.5.4.700.12.1.8.&quot; . $1);&#x0D;&#x0A;&#x0D;&#x0A;return %(true, $1, fanLabel);</instanceFilter>
+				</dci>
+				<dci id="1204">
+					<guid>acf6e95c-6b2f-4c62-8e2a-ab0d775545ec</guid>
+					<name>.1.3.6.1.4.1.674.10892.5.4.700.12.1.6.{instance}</name>
+					<description>DELL iDRAC - Cooling Device - {instance-name} - Speed (rpm)</description>
+					<dataType>1</dataType>
+					<samples>0</samples>
+					<origin>2</origin>
+					<interval>300</interval>
+					<retention>0</retention>
+					<instance></instance>
+					<systemTag></systemTag>
+					<delta>0</delta>
+					<flags>0</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<instanceDiscoveryMethod>4</instanceDiscoveryMethod>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<transformation></transformation>
+					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instanceDiscoveryData>.1.3.6.1.4.1.674.10892.5.4.700.12.1.2</instanceDiscoveryData>
+					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;fanLabel = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.674.10892.5.4.700.12.1.8.&quot; . $1);&#x0D;&#x0A;&#x0D;&#x0A;return %(true, $1, fanLabel);</instanceFilter>
+				</dci>
+				<dci id="1205">
+					<guid>a545c903-5ba9-4d4b-81cc-8e06e465e3e7</guid>
+					<name>.1.3.6.1.4.1.674.10892.5.4.1100.30.1.5.{instance}</name>
+					<description>DELL iDRAC - CPU - {instance-name} ({instance}) - Status</description>
+					<dataType>4</dataType>
+					<samples>0</samples>
+					<origin>2</origin>
+					<interval>300</interval>
+					<retention>0</retention>
+					<instance></instance>
+					<systemTag></systemTag>
+					<delta>0</delta>
+					<flags>0</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<instanceDiscoveryMethod>4</instanceDiscoveryMethod>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<transformation>switch ( $1 )&#x0D;&#x0A;{&#x0D;&#x0A;&#x09;case &quot;1&quot;: return &quot;Other&quot;;&#x0D;&#x0A;&#x09;case &quot;2&quot;: return &quot;Unknown&quot;;&#x0D;&#x0A;&#x09;case &quot;3&quot;: return &quot;Healthy&quot;;&#x0D;&#x0A;&#x09;case &quot;4&quot;: return &quot;Warning&quot;;&#x0D;&#x0A;&#x09;case &quot;5&quot;: return &quot;Error&quot;;&#x0D;&#x0A;&#x09;case &quot;6&quot;: return &quot;Critical&quot;;&#x0D;&#x0A;&#x09;default: return &quot;INVALID DATA&quot;;&#x0D;&#x0A;}</transformation>
+					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instanceDiscoveryData>.1.3.6.1.4.1.674.10892.5.4.1100.30.1.2</instanceDiscoveryData>
+					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;cpuLabel = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.674.10892.5.4.1100.30.1.23.&quot; . $1);&#x0D;&#x0A;&#x0D;&#x0A;return %(true, $1, cpuLabel);</instanceFilter>
+				</dci>
+				<dci id="1206">
+					<guid>73dec90d-d613-4550-a51c-e37ff841f280</guid>
+					<name>.1.3.6.1.4.1.674.10892.5.4.300.10.1.4.{instance}</name>
+					<description>DELL iDRAC - Chassis - {instance-name} - Status</description>
+					<dataType>4</dataType>
+					<samples>0</samples>
+					<origin>2</origin>
+					<interval>300</interval>
+					<retention>0</retention>
+					<instance></instance>
+					<systemTag></systemTag>
+					<delta>0</delta>
+					<flags>0</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<instanceDiscoveryMethod>4</instanceDiscoveryMethod>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<transformation>switch ( $1 )&#x0D;&#x0A;{&#x0D;&#x0A;&#x09;case &quot;1&quot;: return &quot;Other&quot;;&#x0D;&#x0A;&#x09;case &quot;2&quot;: return &quot;Unknown&quot;;&#x0D;&#x0A;&#x09;case &quot;3&quot;: return &quot;Healthy&quot;;&#x0D;&#x0A;&#x09;case &quot;4&quot;: return &quot;Warning&quot;;&#x0D;&#x0A;&#x09;case &quot;5&quot;: return &quot;Error&quot;;&#x0D;&#x0A;&#x09;case &quot;6&quot;: return &quot;Critical&quot;;&#x0D;&#x0A;&#x09;default: return &quot;INVALID DATA&quot;;&#x0D;&#x0A;}</transformation>
+					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instanceDiscoveryData>.1.3.6.1.4.1.674.10892.5.4.300.10.1.1</instanceDiscoveryData>
+					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;chassisLabel = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.674.10892.5.4.300.10.1.7.&quot; . $1);&#x0D;&#x0A;&#x0D;&#x0A;return %(true, $1, chassisLabel);</instanceFilter>
+				</dci>
+				<dci id="1207">
+					<guid>87d19df3-8a82-4f56-a577-ac47381baf94</guid>
+					<name>.1.3.6.1.4.1.674.10892.5.4.600.12.1.9.{instance}</name>
+					<description>DELL iDRAC - PSU - {instance-name} - Voltage (V)</description>
+					<dataType>1</dataType>
+					<samples>0</samples>
+					<origin>2</origin>
+					<interval>300</interval>
+					<retention>0</retention>
+					<instance></instance>
+					<systemTag></systemTag>
+					<delta>0</delta>
+					<flags>0</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<instanceDiscoveryMethod>4</instanceDiscoveryMethod>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<transformation></transformation>
+					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instanceDiscoveryData>.1.3.6.1.4.1.674.10892.5.4.600.12.1.2</instanceDiscoveryData>
+					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;psuLabel = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.674.10892.5.4.600.12.1.8.&quot; . $1);&#x0D;&#x0A;&#x0D;&#x0A;return %(true, $1, psuLabel);</instanceFilter>
+				</dci>
+				<dci id="1208">
+					<guid>1fa7dbca-1e3c-424b-a19a-6b0500c20983</guid>
+					<name>.1.3.6.1.4.1.674.10892.5.4.600.50.1.5.{instance}</name>
+					<description>DELL iDRAC - System Battery - {instance-name} - Status</description>
+					<dataType>4</dataType>
+					<samples>0</samples>
+					<origin>2</origin>
+					<interval>300</interval>
+					<retention>0</retention>
+					<instance></instance>
+					<systemTag></systemTag>
+					<delta>0</delta>
+					<flags>0</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<instanceDiscoveryMethod>4</instanceDiscoveryMethod>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<transformation>switch ( $1 )&#x0D;&#x0A;{&#x0D;&#x0A;&#x09;case &quot;1&quot;: return &quot;Other&quot;;&#x0D;&#x0A;&#x09;case &quot;2&quot;: return &quot;Unknown&quot;;&#x0D;&#x0A;&#x09;case &quot;3&quot;: return &quot;Healthy&quot;;&#x0D;&#x0A;&#x09;case &quot;4&quot;: return &quot;Warning&quot;;&#x0D;&#x0A;&#x09;case &quot;5&quot;: return &quot;Error&quot;;&#x0D;&#x0A;&#x09;case &quot;6&quot;: return &quot;Critical&quot;;&#x0D;&#x0A;&#x09;default: return &quot;INVALID DATA&quot;;&#x0D;&#x0A;}</transformation>
+					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instanceDiscoveryData>.1.3.6.1.4.1.674.10892.5.4.600.50.1.2</instanceDiscoveryData>
+					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;batteryName = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.674.10892.5.4.600.50.1.7.&quot; . $1);&#x0D;&#x0A;&#x0D;&#x0A;return %(true, $1, batteryName);</instanceFilter>
+				</dci>
+				<dci id="1209">
+					<guid>bfe2e001-14bf-43df-b890-1dce4f4bea9f</guid>
+					<name>.1.3.6.1.4.1.674.10892.5.4.600.20.1.5.{instance}</name>
+					<description>DELL iDRAC - Voltage - {instance-name} - Status</description>
+					<dataType>4</dataType>
+					<samples>0</samples>
+					<origin>2</origin>
+					<interval>300</interval>
+					<retention>0</retention>
+					<instance></instance>
+					<systemTag></systemTag>
+					<delta>0</delta>
+					<flags>0</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<instanceDiscoveryMethod>4</instanceDiscoveryMethod>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<transformation>switch ( $1 )&#x0D;&#x0A;{&#x0D;&#x0A;&#x09;case &quot;1&quot;: return &quot;Other&quot;;&#x0D;&#x0A;&#x09;case &quot;2&quot;: return &quot;Unknown&quot;;&#x0D;&#x0A;&#x09;case &quot;3&quot;: return &quot;Healthy&quot;;&#x0D;&#x0A;&#x09;case &quot;4&quot;: return &quot;Warning&quot;;&#x0D;&#x0A;&#x09;case &quot;5&quot;: return &quot;Error&quot;;&#x0D;&#x0A;&#x09;case &quot;6&quot;: return &quot;Critical&quot;;&#x0D;&#x0A;&#x09;default: return &quot;INVALID DATA&quot;;&#x0D;&#x0A;}</transformation>
+					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instanceDiscoveryData>.1.3.6.1.4.1.674.10892.5.4.600.20.1.2</instanceDiscoveryData>
+					<instanceFilter>transport = CreateSNMPTransport($node);&#x0D;&#x0A;if (transport == null) return null;&#x0D;&#x0A;voltageLabel = SNMPGetValue(transport,&quot;.1.3.6.1.4.1.674.10892.5.4.600.20.1.8.&quot; . $1);&#x0D;&#x0A;&#x0D;&#x0A;return %(true, $1, voltageLabel);</instanceFilter>
+				</dci>
+			</dataCollection>
+			<filter>if (!$node-&gt;isSNMP)&#x0D;&#x0A;&#x09;return false;&#x0D;&#x0A;if ($node-&gt;snmpOID == &quot;.1.3.6.1.4.1.674.10892.5&quot;) { return true; }&#x0D;&#x0A;return false;</filter>
+		</template>
+	</templates>
+	<traps>
+	</traps>
+	<rules>
+	</rules>
+	<scripts>
+	</scripts>
+	<objectTools>
+	</objectTools>
+	<dciSummaryTables>
+	</dciSummaryTables>
+	<actions>
+	</actions>
+</configuration>

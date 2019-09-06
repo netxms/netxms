@@ -12,11 +12,34 @@ templatesdir=$(pkgdatadir)/templates
 
 templates_DATA = \
 	aix.xml \
+	apc.xml \
+	brocade_icx.xml \
+	cisco_gsm.xml \
+	cyberpower.xml \
+	dell_hw.xml \
+	dell_idrac.xml \
+	eaton_ups.xml \
 	generic_unix.xml \
+	hp_ilo.xml \
 	hpux.xml \
+	intel_baseboard.xml \
+	lenovo_xcc.xml \
 	linux.xml \
+	lsi_megaraid.xml \
+	netgear_nas.xml \
 	netxms_agent.xml \
 	netxms_server.xml \
-	windows.xml
+	qnap.xml \
+	ruckus_zonedirector.xml \
+	sonicwall.xml \
+	sophos.xml \
+	synology.xml \
+	tplink.xml \
+	ubiquity.xml \
+	unifi.xml \
+	watchguard.xml \
+	wd_mycloud.xml \
+	windows.xml \
+	xirrus.xml
 
 EXTRA_DIST = $(templates_DATA)
