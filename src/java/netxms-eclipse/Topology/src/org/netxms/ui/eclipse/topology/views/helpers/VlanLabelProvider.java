@@ -19,10 +19,8 @@
 package org.netxms.ui.eclipse.topology.views.helpers;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Iterator;
 import java.util.List;
 import org.eclipse.jface.viewers.IColorProvider;
 import org.eclipse.jface.viewers.ITableLabelProvider;
@@ -81,12 +79,14 @@ public class VlanLabelProvider extends LabelProvider implements ITableLabelProvi
 				return vlan.getName();
 			case VlanView.COLUMN_PORTS:
 				return buildPortList(vlan);
+         case VlanView.COLUMN_INTERFACES:
+            return buildInterfaceList(vlan);
 			default:
 				break;
 		}
 		return null;
 	}
-	
+
 	/**
 	 * Build list of ports in VLAN
 	 * 
@@ -95,19 +95,10 @@ public class VlanLabelProvider extends LabelProvider implements ITableLabelProvi
 	 */
 	private String buildPortList(VlanInfo vlan)
 	{
-		List<Port> ports = new ArrayList<Port>(Arrays.asList(vlan.getPorts()));
-		if (ports.size() == 0)
-			return ""; //$NON-NLS-1$
-		
-		StringBuilder sb = new StringBuilder();
-
-		// Add non-physical ports first
 		List<Port> physicalPorts = new ArrayList<Port>();
-		Iterator<Port> it = ports.iterator();
-		while(it.hasNext())
+		for(Port p : vlan.getPorts())
 		{
-			Port p = it.next();
-			Interface iface = (Interface)session.findObjectById(p.getObjectId(), Interface.class);
+			Interface iface = session.findObjectById(p.getObjectId(), Interface.class);
 			if (iface != null)
 			{
 				if (!iface.isPhysicalPort())
@@ -116,13 +107,6 @@ public class VlanLabelProvider extends LabelProvider implements ITableLabelProvi
 				   if ((parent != null) && parent.isPhysicalPort())
 				   {
 				      physicalPorts.add(new Port(parent.getObjectId(), parent.getIfIndex(), parent.getChassis(), parent.getModule(), parent.getPIC(), parent.getPort()));
-				   }
-				   else
-				   {
-   					if (sb.length() > 0)
-   						sb.append(',');
-   					sb.append(iface.getObjectName());
-   					it.remove();
 				   }
 				}
 				else
@@ -136,31 +120,47 @@ public class VlanLabelProvider extends LabelProvider implements ITableLabelProvi
 			}
 		}
 		
-		if (physicalPorts.size() == 0)
-			return sb.toString();
+		if (physicalPorts.isEmpty())
+			return "";
 		
 		Collections.sort(physicalPorts, new Comparator<Port>() {
          @Override
          public int compare(Port p1, Port p2)
          {
-            return (p1.getModule() == p2.getModule()) ? p1.getPort() - p2.getPort() : p1.getModule() - p2.getModule();
+            int diff = p1.getChassis() - p2.getChassis();
+            if (diff == 0)
+               diff = p1.getModule() - p2.getModule();
+            if (diff == 0)
+               diff = p1.getPIC() - p2.getPIC();
+            if (diff == 0)
+               diff = p1.getPort() - p2.getPort();
+            return diff;
          }
       });
 		
-		int slot = physicalPorts.get(0).getModule();
-		int lastPort = ports.get(0).getPort();
+      int chassis = physicalPorts.get(0).getChassis();
+		int module = physicalPorts.get(0).getModule();
+      int pic = physicalPorts.get(0).getPIC();
+		int lastPort = physicalPorts.get(0).getPort();
 		int firstPort = lastPort;
 
-		if (sb.length() > 0)
-			sb.append(',');
-		sb.append(slot);
+      StringBuilder sb = new StringBuilder();
+
+		sb.append(chassis);
 		sb.append('/');
+      sb.append(module);
+      sb.append('/');
+      sb.append(pic);
+      sb.append('/');
 		sb.append(firstPort);
 		
 		int i;
 		for(i = 1; i < physicalPorts.size(); i++)
 		{
-			if ((physicalPorts.get(i).getModule() == slot) && (physicalPorts.get(i).getPort() == lastPort + 1))
+			if ((physicalPorts.get(i).getChassis() == chassis) &&
+			    (physicalPorts.get(i).getModule() == module) &&
+			    (physicalPorts.get(i).getPIC() == pic) &&
+			    (physicalPorts.get(i).getPort() == lastPort + 1))
 			{
 				lastPort++;
 				continue;
@@ -170,20 +170,30 @@ public class VlanLabelProvider extends LabelProvider implements ITableLabelProvi
 			if (physicalPorts.get(i - 1).getPort() != firstPort)
 			{
 				if (lastPort - firstPort > 1)
-					sb.append('-');
+					sb.append(" - ");
 				else
-					sb.append(',');
-				sb.append(slot);
+				   sb.append(", ");
+		      sb.append(chassis);
+		      sb.append('/');
+		      sb.append(module);
+		      sb.append('/');
+		      sb.append(pic);
 				sb.append('/');
 				sb.append(lastPort);
 			}
 			
-			slot = physicalPorts.get(i).getModule();
+         chassis = physicalPorts.get(i).getChassis();
+         module = physicalPorts.get(i).getModule();
+			pic = physicalPorts.get(i).getPIC();
 			lastPort = physicalPorts.get(i).getPort();
 			firstPort = lastPort;
 			
-			sb.append(',');
-			sb.append(slot);
+			sb.append(", ");
+	      sb.append(chassis);
+	      sb.append('/');
+	      sb.append(module);
+	      sb.append('/');
+	      sb.append(pic);
 			sb.append('/');
 			sb.append(lastPort);
 		}
@@ -192,16 +202,42 @@ public class VlanLabelProvider extends LabelProvider implements ITableLabelProvi
 		if (physicalPorts.get(i - 1).getPort() != firstPort)
 		{
 			if (lastPort - firstPort > 1)
-				sb.append('-');
+				sb.append(" - ");
 			else
-				sb.append(',');
-			sb.append(slot);
+			   sb.append(", ");
+	      sb.append(chassis);
+	      sb.append('/');
+	      sb.append(module);
+	      sb.append('/');
+	      sb.append(pic);
 			sb.append('/');
 			sb.append(lastPort);
 		}
 		
 		return sb.toString();
 	}
+
+   /**
+    * Build list of interfaces in VLAN
+    *
+    * @param vlan VLAN object
+    * @return port list
+    */
+   private String buildInterfaceList(VlanInfo vlan)
+   {
+      StringBuilder sb = new StringBuilder();
+      for(Port p : vlan.getPorts())
+      {
+         Interface iface = session.findObjectById(p.getObjectId(), Interface.class);
+         if (iface != null)
+         {
+            if (sb.length() > 0)
+               sb.append(", ");
+            sb.append(iface.getObjectName());
+         }
+      }
+      return sb.toString();
+   }
 
    /**
     * @param selectedPort the selectedPort to set

@@ -53,7 +53,7 @@ public class VlanInfo
          int module = msg.getFieldAsInt32(fieldId++);
          int pic = msg.getFieldAsInt32(fieldId++);
          int port = msg.getFieldAsInt32(fieldId++);
-			ports[i] = new Port(ifIndex, objectId, chassis, module, pic, port);
+			ports[i] = new Port(objectId, ifIndex, chassis, module, pic, port);
 		}
       nextFieldId = fieldId;
 	}

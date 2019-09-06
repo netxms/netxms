@@ -96,4 +96,14 @@ public class Port
 	{
 		return ifIndex;
 	}
+
+   /**
+    * @see java.lang.Object#toString()
+    */
+   @Override
+   public String toString()
+   {
+      return "Port [objectId=" + objectId + ", ifIndex=" + ifIndex + ", chassis=" + chassis + ", module=" + module + ", pic=" + pic
+            + ", port=" + port + "]";
+   }
 }

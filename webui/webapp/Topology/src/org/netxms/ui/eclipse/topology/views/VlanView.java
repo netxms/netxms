@@ -36,6 +36,8 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -56,6 +58,7 @@ import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
+import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.topology.Activator;
 import org.netxms.ui.eclipse.topology.Messages;
 import org.netxms.ui.eclipse.topology.views.helpers.VlanLabelProvider;
@@ -74,6 +77,7 @@ public class VlanView extends ViewPart
 	public static final int COLUMN_VLAN_ID = 0;
 	public static final int COLUMN_NAME = 1;
 	public static final int COLUMN_PORTS = 2;
+   public static final int COLUMN_INTERFACES = 3;
 	
 	private long nodeId;
 	private List<VlanInfo> vlans = new ArrayList<VlanInfo>(0);
@@ -123,8 +127,8 @@ public class VlanView extends ViewPart
 		layout.marginWidth = 0;
 		parent.setLayout(layout);
 		
-		final String[] names = { Messages.get().VlanView_ColumnID, Messages.get().VlanView_ColumnName, Messages.get().VlanView_ColumnPorts };
-		final int[] widths = { 80, 180, 400 };
+		final String[] names = { Messages.get().VlanView_ColumnID, Messages.get().VlanView_ColumnName, Messages.get().VlanView_ColumnPorts, "Interfaces" };
+		final int[] widths = { 80, 180, 400, 400 };
 		vlanList = new SortableTableViewer(parent, names, widths, 0, SWT.DOWN, SWT.FULL_SELECTION | SWT.MULTI);
 		vlanList.setContentProvider(new ArrayContentProvider());
 		final VlanLabelProvider labelProvider = new VlanLabelProvider();
@@ -161,6 +165,15 @@ public class VlanView extends ViewPart
 		   }
 		});
 		
+		WidgetHelper.restoreTableViewerSettings(vlanList, Activator.getDefault().getDialogSettings(), "VlanList");
+		vlanList.getTable().addDisposeListener(new DisposeListener() {
+         @Override
+         public void widgetDisposed(DisposeEvent e)
+         {
+            WidgetHelper.saveTableViewerSettings(vlanList, Activator.getDefault().getDialogSettings(), "VlanList");
+         }
+      });
+
 		Composite deviceViewArea = new Composite(parent, SWT.NONE);
 		deviceViewArea.setLayout(new FillLayout());
 		gd = new GridData();
