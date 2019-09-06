@@ -1256,6 +1256,23 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const char *attr)
    {
       value = vm->createValue(node->getSysDescription());
    }
+   else if (!strcmp(attr, "vlans"))
+   {
+      shared_ptr<VlanList> vlans = node->getVlans();
+      if (vlans != NULL)
+      {
+         NXSL_Array *a = new NXSL_Array(vm);
+         for(int i = 0; i < vlans->size(); i++)
+         {
+            a->append(vm->createValue(new NXSL_Object(vm, &g_nxslVlanClass, new VlanInfo(vlans->get(i), node->getId()))));
+         }
+         value = vm->createValue(a);
+      }
+      else
+      {
+         value = vm->createValue();
+      }
+   }
    else if (!strcmp(attr, "zone"))
 	{
       if (IsZoningEnabled())
@@ -3179,6 +3196,60 @@ void NXSL_NodeDependencyClass::onObjectDelete(NXSL_Object *object)
 }
 
 /**
+ * NXSL "VLAN" class
+ */
+NXSL_VlanClass::NXSL_VlanClass()
+{
+   setName(_T("VLAN"));
+}
+
+/**
+ * NXSL "VLAN" class: get attribute
+ */
+NXSL_Value *NXSL_VlanClass::getAttr(NXSL_Object *object, const char *attr)
+{
+   NXSL_VM *vm = object->vm();
+   NXSL_Value *value = NULL;
+   VlanInfo *vlan = static_cast<VlanInfo*>(object->getData());
+
+   if (!strcmp(attr, "id"))
+   {
+      value = vm->createValue(vlan->getVlanId());
+   }
+   else if (!strcmp(attr, "interfaces"))
+   {
+      NXSL_Array *a = new NXSL_Array(vm);
+      Node *node = static_cast<Node*>(FindObjectById(vlan->getNodeId(), OBJECT_NODE));
+      if (node != NULL)
+      {
+         VlanPortInfo *ports = vlan->getPorts();
+         for(int i = 0; i < vlan->getNumPorts(); i++)
+         {
+            Interface *iface = node->findInterfaceByIndex(ports[i].ifIndex);
+            if (iface != NULL)
+            {
+               a->append(iface->createNXSLObject(vm));
+            }
+         }
+      }
+      value = vm->createValue(a);
+   }
+   else if (!strcmp(attr, "name"))
+   {
+      value = vm->createValue(vlan->getName());
+   }
+   return value;
+}
+
+/**
+ * NXSL "VLAN" class: on object delete
+ */
+void NXSL_VlanClass::onObjectDelete(NXSL_Object *object)
+{
+   delete static_cast<VlanInfo*>(object->getData());
+}
+
+/**
  * Class objects
  */
 NXSL_AccessPointClass g_nxslAccessPointClass;
@@ -3201,4 +3272,5 @@ NXSL_SubnetClass g_nxslSubnetClass;
 NXSL_UserDBObjectClass g_nxslUserDBObjectClass;
 NXSL_UserClass g_nxslUserClass;
 NXSL_UserGroupClass g_nxslUserGroupClass;
+NXSL_VlanClass g_nxslVlanClass;
 NXSL_ZoneClass g_nxslZoneClass;

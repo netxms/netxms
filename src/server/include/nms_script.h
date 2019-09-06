@@ -312,6 +312,18 @@ public:
    virtual void onObjectDelete(NXSL_Object *object) override;
 };
 
+/**
+ * NXSL "VLAN" class
+ */
+class NXSL_VlanClass : public NXSL_Class
+{
+public:
+   NXSL_VlanClass();
+
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr) override;
+   virtual void onObjectDelete(NXSL_Object *object) override;
+};
+
 class ScheduleParameters;
 
 /**
@@ -369,6 +381,7 @@ extern NXSL_SubnetClass g_nxslSubnetClass;
 extern NXSL_UserDBObjectClass g_nxslUserDBObjectClass;
 extern NXSL_UserClass g_nxslUserClass;
 extern NXSL_UserGroupClass g_nxslUserGroupClass;
+extern NXSL_VlanClass g_nxslVlanClass;
 extern NXSL_ZoneClass g_nxslZoneClass;
 
 #endif

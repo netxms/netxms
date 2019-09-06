@@ -393,16 +393,19 @@ private:
 	int m_allocated;
 	int m_numPorts;	// Number of ports in VLAN
 	VlanPortInfo *m_ports;	// member ports (slot/port pairs or ifIndex)
+	UINT32 m_nodeId;
 
 public:
 	VlanInfo(int vlanId, int prm);
+	VlanInfo(const VlanInfo *src, UINT32 nodeId);
 	~VlanInfo();
 
-	int getVlanId() { return m_vlanId; }
-	int getPortReferenceMode() { return m_portRefMode; }
-	const TCHAR *getName() { return CHECK_NULL_EX(m_name); }
-	int getNumPorts() { return m_numPorts; }
+	int getVlanId() const { return m_vlanId; }
+	int getPortReferenceMode() const { return m_portRefMode; }
+	const TCHAR *getName() const { return CHECK_NULL_EX(m_name); }
+	int getNumPorts() const { return m_numPorts; }
 	VlanPortInfo *getPorts() { return m_ports; }
+	UINT32 getNodeId() const { return m_nodeId; }
 
 	void add(const InterfacePhysicalLocation& location);
 	void add(UINT32 chassis, UINT32 module, UINT32 pic, UINT32 port) { add(InterfacePhysicalLocation(chassis, module, pic, port)); }
@@ -415,7 +418,7 @@ public:
 /**
  * Vlan list
  */
-class LIBNXSRV_EXPORTABLE VlanList : public RefCountObject
+class LIBNXSRV_EXPORTABLE VlanList
 {
 private:
    int m_size;          // Number of valid entries
@@ -425,7 +428,7 @@ private:
 
 public:
 	VlanList(int initialAlloc = 8);
-	virtual ~VlanList();
+	~VlanList();
 
 	void add(VlanInfo *vlan);
 	void addMemberPort(int vlanId, UINT32 portId);

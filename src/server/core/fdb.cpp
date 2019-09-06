@@ -359,7 +359,7 @@ ForwardingDatabase *GetSwitchForwardingDatabase(Node *node)
 	FDB_CHECK_FAILURE(node->callSnmpEnumerate(_T(".1.3.6.1.2.1.17.1.4.1.2"), Dot1dPortTableHandler, fdb, NULL, true));
    if (node->isPerVlanFdbSupported())
    {
-      VlanList *vlans = node->getVlans();
+      shared_ptr<VlanList> vlans = node->getVlans();
       if (vlans != NULL)
       {
          for(int i = 0; i < vlans->size(); i++)
@@ -368,12 +368,10 @@ ForwardingDatabase *GetSwitchForwardingDatabase(Node *node)
             _sntprintf(context, 16, _T("%s%d"), (node->getSNMPVersion() < SNMP_VERSION_3) ? _T("") : _T("vlan-"), vlans->get(i)->getVlanId());
             if (node->callSnmpEnumerate(_T(".1.3.6.1.2.1.17.1.4.1.2"), Dot1dPortTableHandler, fdb, context, true))
             {
-               vlans->decRefCount();
                delete fdb;
                return NULL;
             }
          }
-         vlans->decRefCount();
       }
    }
 
@@ -388,7 +386,7 @@ ForwardingDatabase *GetSwitchForwardingDatabase(Node *node)
 
 	if (node->isPerVlanFdbSupported())
 	{
-		VlanList *vlans = node->getVlans();
+		shared_ptr<VlanList> vlans = node->getVlans();
 		if (vlans != NULL)
 		{
 			for(int i = 0; i < vlans->size(); i++)
@@ -398,14 +396,12 @@ ForwardingDatabase *GetSwitchForwardingDatabase(Node *node)
             fdb->setCurrentVlanId((UINT16)vlans->get(i)->getVlanId());
 				if (node->callSnmpEnumerate(_T(".1.3.6.1.2.1.17.4.3.1.1"), FDBHandler, fdb, context) != SNMP_ERR_SUCCESS)
 				{
-		         vlans->decRefCount();
 				   delete fdb;
 				   return NULL;
 				}
 				DbgPrintf(5, _T("FDB: %d entries read from dot1dTpFdbTable in context %s"), fdb->getSize() - size, context);
 				size = fdb->getSize();
 			}
-			vlans->decRefCount();
 		}
 	}
 

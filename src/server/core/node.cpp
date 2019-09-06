@@ -331,8 +331,6 @@ Node::~Node()
    delete m_snmpSecurity;
    if (m_fdb != NULL)
       m_fdb->decRefCount();
-   if (m_vlans != NULL)
-      m_vlans->decRefCount();
    delete m_wirelessStations;
    if (m_components != NULL)
       m_components->decRefCount();
@@ -7838,17 +7836,13 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, UINT32 rqId
             resolveVlanPorts(vlanList);
             sendPollerMsg(rqId, POLLER_INFO _T("VLAN list successfully retrieved from node\r\n"));
             DbgPrintf(4, _T("VLAN list retrieved from node %s [%d]"), m_name, m_id);
-            if (m_vlans != NULL)
-               m_vlans->decRefCount();
-            m_vlans = vlanList;
+            m_vlans = shared_ptr<VlanList>(vlanList);
          }
          else
          {
             sendPollerMsg(rqId, POLLER_WARNING _T("Cannot get VLAN list\r\n"));
             DbgPrintf(4, _T("Cannot retrieve VLAN list from node %s [%d]"), m_name, m_id);
-            if (m_vlans != NULL)
-               m_vlans->decRefCount();
-            m_vlans = NULL;
+            m_vlans.reset();
          }
          MutexUnlock(m_mutexTopoAccess);
 
@@ -8614,12 +8608,10 @@ LinkLayerNeighbors *Node::getLinkLayerNeighbors()
 /**
  * Get VLANs
  */
-VlanList *Node::getVlans()
+shared_ptr<VlanList> Node::getVlans()
 {
    MutexLock(m_mutexTopoAccess);
-   if (m_vlans != NULL)
-      m_vlans->incRefCount();
-   VlanList *vlans = m_vlans;
+   shared_ptr<VlanList> vlans(m_vlans);
    MutexUnlock(m_mutexTopoAccess);
    return vlans;
 }

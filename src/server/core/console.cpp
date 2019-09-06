@@ -1248,7 +1248,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
             {
                if (pObject->getObjectClass() == OBJECT_NODE)
                {
-                  VlanList *vlans = ((Node *)pObject)->getVlans();
+                  shared_ptr<VlanList> vlans = static_cast<Node*>(pObject)->getVlans();
                   if (vlans != NULL)
                   {
                      ConsoleWrite(pCtx, _T("\x1b[1mVLAN\x1b[0m | \x1b[1mName\x1b[0m             | \x1b[1mPorts\x1b[0m\n")
@@ -1265,7 +1265,6 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
                         ConsolePrintf(pCtx, _T("\n"));
                      }
                      ConsolePrintf(pCtx, _T("\n"));
-                     vlans->decRefCount();
                   }
                   else
                   {

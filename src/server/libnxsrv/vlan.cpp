@@ -25,12 +25,12 @@
 /**
  * VlanList constructor
  */
-VlanList::VlanList(int initialAlloc) : RefCountObject()
+VlanList::VlanList(int initialAlloc)
 {
 	m_allocated = initialAlloc;
 	m_size = 0;
 	m_data = NULL;
-	m_vlans = (VlanInfo **)malloc(sizeof(VlanInfo *) * m_allocated);
+	m_vlans = MemAllocArray<VlanInfo*>(m_allocated);
 }
 
 /**
@@ -51,7 +51,7 @@ void VlanList::add(VlanInfo *vlan)
 	if (m_size == m_allocated)
 	{
 		m_allocated += 32;
-		m_vlans = (VlanInfo **)realloc(m_vlans, sizeof(VlanInfo *) * m_allocated);
+		m_vlans = MemReallocArray(m_vlans, m_allocated);
 	}
 	m_vlans[m_size++] = vlan;
 }
@@ -148,6 +148,21 @@ VlanInfo::VlanInfo(int vlanId, int prm)
 	m_allocated = 64;
 	m_numPorts = 0;
 	m_ports = MemAllocArray<VlanPortInfo>(m_allocated);
+	m_nodeId = 0;
+}
+
+/**
+ * VlanInfo constructor for creating independent object
+ */
+VlanInfo::VlanInfo(const VlanInfo *src, UINT32 nodeId)
+{
+   m_vlanId = src->m_vlanId;
+   m_portRefMode = src->m_portRefMode;
+   m_name = MemCopyString(src->m_name);
+   m_allocated = src->m_numPorts;
+   m_numPorts = src->m_numPorts;
+   m_ports = MemCopyArray(src->m_ports, m_numPorts);
+   m_nodeId = nodeId;
 }
 
 /**

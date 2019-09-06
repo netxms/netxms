@@ -12688,11 +12688,10 @@ void ClientSession::getVlans(NXCPMessage *request)
 		{
 			if (object->getObjectClass() == OBJECT_NODE)
 			{
-				VlanList *vlans = ((Node *)object)->getVlans();
+				shared_ptr<VlanList> vlans = static_cast<Node*>(object)->getVlans();
 				if (vlans != NULL)
 				{
 					vlans->fillMessage(&msg);
-					vlans->decRefCount();
 					msg.setField(VID_RCC, RCC_SUCCESS);
 		         writeAuditLog(AUDIT_OBJECTS, true, object->getId(), _T("VLAN information read"));
 				}

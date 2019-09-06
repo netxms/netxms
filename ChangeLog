@@ -31,6 +31,7 @@
 - Object management functions in NXSL implemented as object methods
 - SNMP functions in NXSL implemented as transport methods
 - Range access for strings and arrays in NXSL via [:] operator
+- Access to VLAN information from NXSL
 - Fixed issues:
 	NX-183 (Implemented responsible users for objects)
 	NX-725 (Add alarm comments from NXSL)

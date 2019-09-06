@@ -2422,7 +2422,7 @@ protected:
 	ForwardingDatabase *m_fdb;
 	ArpCache *m_arpCache;
 	LinkLayerNeighbors *m_linkLayerNeighbors;
-	VlanList *m_vlans;
+	shared_ptr<VlanList> m_vlans;
 	VrrpInfo *m_vrrpInfo;
 	ObjectArray<WirelessStationInfo> *m_wirelessStations;
 	int m_adoptedApCount;
@@ -2664,7 +2664,7 @@ public:
    ROUTING_TABLE *getRoutingTable();
    ROUTING_TABLE *getCachedRoutingTable() { return m_pRoutingTable; }
 	LinkLayerNeighbors *getLinkLayerNeighbors();
-	VlanList *getVlans();
+	shared_ptr<VlanList> getVlans();
    bool getNextHop(const InetAddress& srcAddr, const InetAddress& destAddr, InetAddress *nextHop, InetAddress *route, UINT32 *ifIndex, bool *isVpn, TCHAR *name);
    bool getOutwardInterface(const InetAddress& destAddr, InetAddress *srcAddr, UINT32 *srcIfIndex);
 	ComponentTree *getComponents();
