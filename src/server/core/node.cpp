@@ -145,7 +145,6 @@ Node::Node() : super()
    m_nUseIfXTable = IFXTABLE_DEFAULT;  // Use system default
    m_jobQueue = new ServerJobQueue();
    m_fdb = NULL;
-   m_vlans = NULL;
    m_wirelessStations = NULL;
    m_adoptedApCount = 0;
    m_totalApCount = 0;
@@ -267,7 +266,6 @@ Node::Node(const NewNodeData *newNodeData, UINT32 flags)  : super()
    m_nUseIfXTable = IFXTABLE_DEFAULT;  // Use system default
    m_jobQueue = new ServerJobQueue();
    m_fdb = NULL;
-   m_vlans = NULL;
    m_wirelessStations = NULL;
    m_adoptedApCount = 0;
    m_totalApCount = 0;
