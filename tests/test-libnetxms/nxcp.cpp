@@ -117,9 +117,18 @@ void TestMessageClass()
    TCHAR *longTextOut = dmsg->getFieldAsString(100);
    AssertNotNull(longTextOut);
    AssertTrue(!_tcscmp(longTextOut, longText));
-   free(longTextOut);
+   MemFree(longTextOut);
    delete dmsg;
-   free(binMsg);
+   MemFree(binMsg);
 
    EndTest();
+
+   StartTest(_T("NXCP message compression performance"));
+   INT64 start = GetCurrentTimeMs();
+   for(int i = 0; i < 10000; i++)
+   {
+      NXCP_MESSAGE *binMsg = msg.serialize(true);
+      MemFree(binMsg);
+   }
+   EndTest(GetCurrentTimeMs() - start);
 }
