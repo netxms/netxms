@@ -34,6 +34,6 @@
 #include <wtsapi32.h>
 
 void TakeScreenshot(NXCPMessage *response);
-bool SaveBitmapToPng(HBITMAP hBitmap, const TCHAR *fileName);
+ByteStream *SaveBitmapToPng(HBITMAP hBitmap);
 
 #endif

@@ -240,6 +240,7 @@ typedef struct
 #define MF_CONTROL            0x0020   /* control message indicator */
 #define MF_COMPRESSED         0x0040   /* compressed message indicator */
 #define MF_STREAM             0x0080   /* indicates that this message is part of data stream */
+#define MF_DONT_COMPRESS      0x0100   /* prevent message compression */
 #define MF_NXCP_VERSION(v)    (((v) & 0x0F) << 12) /* protocol version encoded in highest 4 bits */
 
 /**

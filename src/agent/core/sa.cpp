@@ -292,7 +292,10 @@ void SessionAgentConnector::takeScreenshot(NXCPMessage *masterResponse)
       size_t imageSize;
       const BYTE *image = response->getBinaryFieldPtr(VID_FILE_DATA, &imageSize);
       if (image != NULL)
+      {
+         masterResponse->disableCompression();  // image is already compressed
          masterResponse->setField(VID_FILE_DATA, image, imageSize);
+      }
    }
    else
    {
