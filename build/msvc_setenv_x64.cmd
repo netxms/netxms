@@ -1,6 +1,6 @@
 @echo off
 set ARCH=x64
-SET MSVC_VERSION=14.14.26428
+SET MSVC_VERSION=14.16.27023
 
 rem *** Windows 7 SDK with Visual Studio 2010 Compiler
 rem set PATH=C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\amd64;C:\SDK\Windows 7 SDK\Bin\x64;C:\SDK\Windows 7 SDK\Bin;%PATH%

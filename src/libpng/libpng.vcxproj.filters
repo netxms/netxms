@@ -60,6 +60,12 @@
     <ClCompile Include="pngwutil.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="intel\filter_sse2_intrinsics.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="intel\intel_init.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="png.h">
