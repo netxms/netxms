@@ -752,11 +752,16 @@ UINT32 UpdateUserAgentNotifications(UINT64 serverId, NXCPMessage *request)
 }
 
 /**
- * LOad user agent notifications from local database
+ * Load user agent notifications from local database
  */
 void LoadUserAgentNotifications()
 {
    DB_HANDLE db = GetLocalDatabaseHandle();
+   if (db == NULL)
+   {
+      nxlog_write(NXLOG_WARNING, _T("Cannot load user agent notifications (local database is unavailable)"));
+      return;
+   }
 
    TCHAR query[1024];
    _sntprintf(query, 1024, _T("SELECT server_id,notification_id,message,start_time,end_time FROM user_agent_notifications"));
