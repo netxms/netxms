@@ -24,18 +24,33 @@
 #include <png.h>
 
 /**
- * Save given bitmap as PNG file
+ * Write PNG data
  */
-bool SaveBitmapToPng(HBITMAP hBitmap, const TCHAR *fileName)
+static void WriteData(png_structp png_ptr, png_bytep data, png_size_t length)
+{
+   static_cast<ByteStream*>(png_get_io_ptr(png_ptr))->write(data, length);
+}
+
+/**
+ * Flush write buffer
+ */
+static void FlushBuffer(png_structp png_ptr)
+{
+}
+
+/**
+ * Save given bitmap as PNG
+ */
+ByteStream *SaveBitmapToPng(HBITMAP hBitmap)
 {
    BITMAP bitmap;
    GetObject(hBitmap, sizeof(bitmap), (LPSTR)&bitmap);
    
    DWORD scanlineSize = ((bitmap.bmWidth * 4) + (4 - 1)) & ~(4 - 1);
    DWORD bufferSize = scanlineSize * bitmap.bmHeight;
-   BYTE *buffer = (BYTE *)malloc(bufferSize);
+   BYTE *buffer = (BYTE *)MemAlloc(bufferSize);
    if (buffer == NULL)
-      return false;
+      return NULL;
 
    HDC hDC = GetDC(NULL);
 
@@ -52,8 +67,8 @@ bool SaveBitmapToPng(HBITMAP hBitmap, const TCHAR *fileName)
    if (!GetDIBits(hDC, hBitmap, 0, bitmap.bmHeight, buffer, &bitmapInfo, DIB_RGB_COLORS))
    {
       ReleaseDC(NULL, hDC);
-      free(buffer);
-      return false;
+      MemFree(buffer);
+      return NULL;
    }
 
    const int width = bitmap.bmWidth;
@@ -63,12 +78,7 @@ bool SaveBitmapToPng(HBITMAP hBitmap, const TCHAR *fileName)
 
    png_structp png_ptr = NULL;
    png_infop info_ptr = NULL;
-   png_byte **row_pointers = NULL;
-   bool success = false;
-
-   FILE *fp = _tfopen(fileName, _T("wb"));
-   if (fp == NULL)
-      goto fopen_failed;
+   ByteStream *pngData = NULL;
 
    png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
    if (png_ptr == NULL)
@@ -90,7 +100,7 @@ bool SaveBitmapToPng(HBITMAP hBitmap, const TCHAR *fileName)
       PNG_INTERLACE_NONE,
       PNG_COMPRESSION_TYPE_DEFAULT,
       PNG_FILTER_TYPE_DEFAULT);
-   row_pointers = (png_byte **)png_malloc(png_ptr, height * sizeof (png_byte *));
+   png_byte **row_pointers = (png_byte **)alloca(height * sizeof (png_byte *));
    for(int y = 0; y < height; ++y)
    {
       png_byte *row = (png_byte *)&buffer[y * bitmap.bmWidth * 4];
@@ -107,20 +117,18 @@ bool SaveBitmapToPng(HBITMAP hBitmap, const TCHAR *fileName)
          row[j++] = r;
       }
    }
-   png_init_io(png_ptr, fp);
+
+   pngData = new ByteStream(bufferSize + 4096); // Use uncompresed bitmap size + 4K as buffer size
+   pngData->setAllocationStep(65536);
+   png_set_write_fn(png_ptr, pngData, WriteData, FlushBuffer);
    png_set_rows(png_ptr, info_ptr, row_pointers);
    png_write_png(png_ptr, info_ptr, PNG_TRANSFORM_IDENTITY, NULL);
 
-   success = true;
-
-   png_free(png_ptr, row_pointers);
 png_failure:
 png_create_info_struct_failed:
    png_destroy_write_struct (&png_ptr, &info_ptr);
 png_create_write_struct_failed:
-   fclose (fp);
-fopen_failed:
-   free(buffer);
    ReleaseDC(NULL, hDC);
-   return success;
+   MemFree(buffer);
+   return pngData;
 }

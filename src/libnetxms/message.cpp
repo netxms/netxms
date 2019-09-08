@@ -940,7 +940,7 @@ NXCP_MESSAGE *NXCPMessage::serialize(bool allowCompression) const
    }
 
    // Compress message payload if requested. Compression supported starting with NXCP version 4.
-   if ((m_version >= 4) && allowCompression && (size > 128) && !(m_flags & MF_STREAM))
+   if ((m_version >= 4) && allowCompression && (size > 128) && !(m_flags & (MF_STREAM | MF_DONT_COMPRESS)))
    {
       z_stream stream;
       stream.zalloc = Z_NULL;

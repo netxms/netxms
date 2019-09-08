@@ -225,14 +225,15 @@ typedef struct
 /**
  * Message flags
  */
-#define MF_BINARY             0x0001
-#define MF_END_OF_FILE        0x0002
-#define MF_DONT_ENCRYPT       0x0004
-#define MF_END_OF_SEQUENCE    0x0008
-#define MF_REVERSE_ORDER      0x0010
-#define MF_CONTROL            0x0020
-#define MF_COMPRESSED         0x0040
-#define MF_STREAM             0x0080
+#define MF_BINARY             0x0001   /* binary message indicator */
+#define MF_END_OF_FILE        0x0002   /* end of file indicator */
+#define MF_DONT_ENCRYPT       0x0004   /* prevent message encryption */
+#define MF_END_OF_SEQUENCE    0x0008   /* end of message sequence indicator */
+#define MF_REVERSE_ORDER      0x0010   /* indicator of reversed order of messages in a sequence */
+#define MF_CONTROL            0x0020   /* control message indicator */
+#define MF_COMPRESSED         0x0040   /* compressed message indicator */
+#define MF_STREAM             0x0080   /* indicates that this message is part of data stream */
+#define MF_DONT_COMPRESS      0x0100   /* prevent message compression */
 
 /**
  * Message (command) codes
