@@ -149,6 +149,7 @@ public:
    void deleteAllFields();
 
    void disableEncryption() { m_flags |= MF_DONT_ENCRYPT; }
+   void disableCompression() { m_flags |= MF_DONT_COMPRESS; }
    void setEndOfSequence() { m_flags |= MF_END_OF_SEQUENCE; }
    void setReverseOrderFlag() { m_flags |= MF_REVERSE_ORDER; }
 

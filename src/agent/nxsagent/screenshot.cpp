@@ -49,18 +49,14 @@ void TakeScreenshot(NXCPMessage *response)
 
          DeleteDC(memdc);
 
-         TCHAR tempPath[MAX_PATH];
-         GetTempPath(MAX_PATH, tempPath);
-
-         TCHAR tempFile[MAX_PATH];
-         GetTempFileName(tempPath, _T("nx"), 0, tempFile);
-         if (SaveBitmapToPng(bitmap, tempFile))
+         ByteStream *png = SaveBitmapToPng(bitmap);
+         if (png != NULL)
          {
             rcc = ERR_SUCCESS;
-            response->setFieldFromFile(VID_FILE_DATA, tempFile);
+            response->setField(VID_FILE_DATA, png->buffer(), png->size());
+            delete png;
          }
          DeleteObject(bitmap);
-         DeleteFile(tempFile);
       }
       DeleteDC(dc);
    }
