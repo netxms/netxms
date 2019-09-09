@@ -1,6 +1,6 @@
 /*
 ** NetXMS subagent for AIX
-** Copyright (C) 2004-2011 Victor Kirhenshtein
+** Copyright (C) 2004-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -229,31 +229,33 @@ LONG H_ProcessInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abst
 
 	AgentGetParameterArgA(pszParam, 1, szBuffer, sizeof(szBuffer));
 	pList = GetProcessList(&nProcCount);
-	if (pList != NULL)
-	{
-		for(i = 0, qwValue = 0, nCount = 0; i < nProcCount; i++)
-		{
-			if (!strcmp(pList[i].pi_comm, szBuffer))
-			{
-				switch(CAST_FROM_POINTER(pArg, int))
-				{
-					case PROCINFO_CPUTIME:
-						qwCurrVal = pList[i].pi_ru.ru_stime.tv_sec * 1000 + 
-						            pList[i].pi_ru.ru_stime.tv_usec / 1000 +
-						            pList[i].pi_ru.ru_utime.tv_sec * 1000 +
-						            pList[i].pi_ru.ru_utime.tv_usec / 1000;
-						break;
-//					case PROCINFO_IO_READ_B:
-					case PROCINFO_IO_READ_OP:
-						qwCurrVal = pList[i].pi_ru.ru_inblock;
-						break;
-//					case PROCINFO_IO_WRITE_B:
-					case PROCINFO_IO_WRITE_OP:
-						qwCurrVal = pList[i].pi_ru.ru_oublock;
-						break;
-					case PROCINFO_KTIME:
-						qwCurrVal = pList[i].pi_ru.ru_stime.tv_sec * 1000 + pList[i].pi_ru.ru_stime.tv_usec / 1000;
-						break;
+   if (pList != NULL)
+   {
+      for(i = 0, qwValue = 0, nCount = 0; i < nProcCount; i++)
+      {
+         if (!strcmp(pList[i].pi_comm, szBuffer))
+         {
+            switch(CAST_FROM_POINTER(pArg, int))
+            {
+               case PROCINFO_CPUTIME:
+                  // tv_usec contains nanoseconds, not microseconds
+                  qwCurrVal = pList[i].pi_ru.ru_stime.tv_sec * 1000 + 
+                             pList[i].pi_ru.ru_stime.tv_usec / 1000000 +
+                             pList[i].pi_ru.ru_utime.tv_sec * 1000 +
+                             pList[i].pi_ru.ru_utime.tv_usec / 1000000;
+                  break;
+//             case PROCINFO_IO_READ_B:
+               case PROCINFO_IO_READ_OP:
+                  qwCurrVal = pList[i].pi_ru.ru_inblock;
+                  break;
+//             case PROCINFO_IO_WRITE_B:
+               case PROCINFO_IO_WRITE_OP:
+                  qwCurrVal = pList[i].pi_ru.ru_oublock;
+                  break;
+               case PROCINFO_KTIME:
+                  // tv_usec contains nanoseconds, not microseconds
+                  qwCurrVal = pList[i].pi_ru.ru_stime.tv_sec * 1000 + pList[i].pi_ru.ru_stime.tv_usec / 1000000;
+                  break;
 					case PROCINFO_PF:
 						qwCurrVal = pList[i].pi_majflt + pList[i].pi_minflt;
 						break;
@@ -261,7 +263,8 @@ LONG H_ProcessInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abst
 						qwCurrVal = pList[i].pi_thcount;
 						break;
 					case PROCINFO_UTIME:
-						qwCurrVal = pList[i].pi_ru.ru_utime.tv_sec * 1000 + pList[i].pi_ru.ru_utime.tv_usec / 1000;
+                  // tv_usec contains nanoseconds, not microseconds
+						qwCurrVal = pList[i].pi_ru.ru_utime.tv_sec * 1000 + pList[i].pi_ru.ru_utime.tv_usec / 1000000;
 						break;
 					case PROCINFO_VMSIZE:
 						qwCurrVal = pList[i].pi_size * getpagesize();
@@ -307,5 +310,5 @@ LONG H_ProcessInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abst
 		nRet = SYSINFO_RC_ERROR;
 	}	
 
-	return nRet;
+   return nRet;
 }
