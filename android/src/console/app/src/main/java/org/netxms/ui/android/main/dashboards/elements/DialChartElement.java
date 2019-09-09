@@ -4,6 +4,9 @@
 package org.netxms.ui.android.main.dashboards.elements;
 
 import java.util.concurrent.ScheduledExecutorService;
+
+import org.netxms.client.constants.DataType;
+import org.netxms.client.constants.HistoricalDataType;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.ui.android.main.activities.helpers.ChartDciConfig;
@@ -56,7 +59,7 @@ public class DialChartElement extends AbstractDashboardElement
 			item.nodeId = dci.nodeId;
 			item.dciId = dci.dciId;
 			item.name = dci.name;
-			item.dataType = DataCollectionItem.DT_INT;
+			item.dataType = DataType.INT32.getValue();
 			item.value = 0;
 			chart.addParameter(item);
 		}
@@ -88,7 +91,7 @@ public class DialChartElement extends AbstractDashboardElement
 		{
 			final DciData[] dciData = new DciData[items.length];
 			for (int i = 0; i < dciData.length; i++)
-				dciData[i] = service.getSession().getCollectedData(items[i].nodeId, items[i].dciId, null, null, 1);
+				dciData[i] = service.getSession().getCollectedData(items[i].nodeId, items[i].dciId, null, null, 1, HistoricalDataType.PROCESSED);
 			
 			post(new Runnable() {
 				@Override
@@ -97,7 +100,7 @@ public class DialChartElement extends AbstractDashboardElement
 					for (int i = 0; i < dciData.length; i++)
 					{
 						if (dciData[i] != null && dciData[i].getLastValue() != null)
-							chart.updateParameter(i, dciData[i].getDataType(), dciData[i].getLastValue().getValueAsDouble());
+							chart.updateParameter(i, dciData[i].getDataType().getValue(), dciData[i].getLastValue().getValueAsDouble());
 						
 					}
 					chart.invalidate();

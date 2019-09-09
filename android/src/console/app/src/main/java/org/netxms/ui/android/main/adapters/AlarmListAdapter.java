@@ -113,10 +113,13 @@ public class AlarmListAdapter extends BaseAdapter
 				alarms.addAll(Arrays.asList(values));
 			else
 			{ // Filter on specific node
-				for (int i = 0; i < values.length; i++)
-					for (int j = 0; j < nodeIdList.size(); j++)
-						if (values[i].getSourceObjectId() == nodeIdList.get(j))
-							alarms.add(values[i]);
+				for (Alarm value : values) {
+					for (int j = 0; j < nodeIdList.size(); j++) {
+						if (value.getSourceObjectId() == nodeIdList.get(j)) {
+							alarms.add(value);
+						}
+					}
+				}
 			}
 			sort();
 		}
@@ -380,13 +383,10 @@ public class AlarmListAdapter extends BaseAdapter
 		@Override
 		protected void onPreExecute()
 		{
-			if (dialog != null)
-			{
-				dialog.setMessage(r.getString(R.string.progress_processing_data));
-				dialog.setIndeterminate(true);
-				dialog.setCancelable(false);
-				dialog.show();
-			}
+			dialog.setMessage(r.getString(R.string.progress_processing_data));
+			dialog.setIndeterminate(true);
+			dialog.setCancelable(false);
+			dialog.show();
 		}
 
 		@Override
@@ -419,8 +419,7 @@ public class AlarmListAdapter extends BaseAdapter
 				setValues(service.getAlarms());
 				notifyDataSetChanged();
 			}
-			if (dialog != null)
-				dialog.cancel();
+			dialog.cancel();
 		}
 	}
 }

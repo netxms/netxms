@@ -10,6 +10,7 @@ import org.achartengine.GraphicalView;
 import org.achartengine.model.CategorySeries;
 import org.achartengine.renderer.DefaultRenderer;
 import org.achartengine.renderer.XYSeriesRenderer;
+import org.netxms.client.constants.HistoricalDataType;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.ui.android.helpers.Colors;
 import org.netxms.ui.android.main.activities.helpers.ChartDciConfig;
@@ -130,7 +131,7 @@ public class PieChartElement extends AbstractDashboardElement
 			for (int i = 0; i < dciData.length; i++)
 			{
 				dciData[i] = new DciData(0, 0);
-				dciData[i] = service.getSession().getCollectedData(items[i].nodeId, items[i].dciId, null, null, 1);
+				dciData[i] = service.getSession().getCollectedData(items[i].nodeId, items[i].dciId, null, null, 1, HistoricalDataType.PROCESSED);
 			}
 
 			post(new Runnable()

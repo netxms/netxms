@@ -1,11 +1,13 @@
 /**
- * 
+ *
  */
 package org.netxms.ui.android.main.views;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
+
+import org.netxms.client.constants.DataType;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.ui.android.main.views.helpers.ChartItem;
 import android.content.Context;
@@ -30,7 +32,7 @@ public class DialChart extends View
 	private static final int NEEDLE_PIN_RADIUS = 8;
 	private static final int SCALE_OFFSET = 30;	// In percents
 	private static final int SCALE_WIDTH = 10;	// In percents
-	
+
 	private static final int GREEN_ZONE_COLOR = 0xFF00E000;
 	private static final int YELLOW_ZONE_COLOR = 0xFFFFF200;
 	private static final int RED_ZONE_COLOR = 0xFFE00000;
@@ -42,7 +44,7 @@ public class DialChart extends View
 	private int needleColor = 0xFF334E71;
 	private int needlePinColor = 0xFFEFE4B0;
 	private int valueColor = 0xFFFFFFFF;
-	
+
 	private boolean titleVisible = true;
 	private String title = "";
 	private double minValue = 0.0;
@@ -55,7 +57,7 @@ public class DialChart extends View
 	private boolean legendInside = true;
 	private boolean gridVisible = true;
 	private List<ChartItem> parameters = new ArrayList<ChartItem>();
-	
+
 	/**
 	 * @param context
 	 */
@@ -63,10 +65,10 @@ public class DialChart extends View
 	{
 		super(context);
 	}
-	
+
 	/**
 	 * Add new parameter
-	 * 
+	 *
 	 * @param item
 	 * @return
 	 */
@@ -75,10 +77,10 @@ public class DialChart extends View
 		parameters.add(item);
 		return parameters.size() - 1;
 	}
-	
+
 	/**
 	 * Update parameter's value
-	 * 
+	 *
 	 * @param index
 	 * @param value
 	 */
@@ -103,7 +105,7 @@ public class DialChart extends View
 		paint.setAntiAlias(true);
 
 		int top = OUTER_MARGIN_HEIGHT;
-		
+
 		// Draw title
 		if (titleVisible && (title != null))
 		{
@@ -114,10 +116,10 @@ public class DialChart extends View
 			canvas.drawText(title, x, top + ext.height(), paint);
 			top += ext.height() + INNER_MARGIN_HEIGHT;
 		}
-		
+
 		if ((parameters.size() == 0) || (canvas.getWidth() < OUTER_MARGIN_WIDTH * 2) || (canvas.getHeight() < OUTER_MARGIN_HEIGHT * 2))
 			return;
-		
+
 		int w = (getWidth() - OUTER_MARGIN_WIDTH * 2) / parameters.size();
 		int h = getHeight() - OUTER_MARGIN_HEIGHT - top;
 		if ((w > 40 * parameters.size()) && (h > 40))
@@ -155,7 +157,7 @@ public class DialChart extends View
 			rect.left += delta;
 			rect.right -= delta;
 		}
-		
+
 		double angleValue = (maxValue - minValue) / 270;
 		int outerRadius = (rect.width() + 1) / 2;
 		int scaleOuterOffset = ((rect.width() / 2) * SCALE_OFFSET / 100);
@@ -163,7 +165,7 @@ public class DialChart extends View
 
 		paint.setColor(plotAreaColor);
 		canvas.drawArc(new RectF(rect), 0, 360, false, paint);
-		
+
 		// Draw zones
 		int startAngle = 135;
 		startAngle = drawZone(canvas, paint, rect, startAngle, minValue, leftRedZone, angleValue, RED_ZONE_COLOR);
@@ -171,7 +173,7 @@ public class DialChart extends View
 		startAngle = drawZone(canvas, paint, rect, startAngle, leftYellowZone, rightYellowZone, angleValue, GREEN_ZONE_COLOR);
 		startAngle = drawZone(canvas, paint, rect, startAngle, rightYellowZone, rightRedZone, angleValue, YELLOW_ZONE_COLOR);
 		startAngle = drawZone(canvas, paint, rect, startAngle, rightRedZone, maxValue, angleValue, RED_ZONE_COLOR);
-		
+
 		// Draw center part and border
 		paint.setColor(plotAreaColor);
 		RectF centerRect = new RectF(rect);
@@ -181,14 +183,14 @@ public class DialChart extends View
 		paint.setStyle(Style.STROKE);
 		paint.setStrokeWidth(2);
 		canvas.drawArc(new RectF(rect), 0, 360, false, paint);
-		
+
 		// Draw scale
 		paint.setColor(scaleColor);
 		paint.setStrokeWidth(1);
 		int textOffset = ((rect.width() / 2) * SCALE_OFFSET / 200);
 		double arcLength = (outerRadius - scaleOuterOffset) * 4.7123889803846898576939650749193;	// r * (270 degrees angle in radians)
 		int step = (arcLength >= 200) ? 27 : 54;
-		double valueStep = Math.abs((maxValue - minValue) / ((arcLength >= 200) ? 10 : 20)); 
+		double valueStep = Math.abs((maxValue - minValue) / ((arcLength >= 200) ? 10 : 20));
 		int textWidth = (int)(Math.sqrt((outerRadius - scaleOuterOffset) * (outerRadius - scaleOuterOffset) / 2) * 0.7);
 		setBestFittingFont(paint, "900MM", textWidth, outerRadius - scaleOuterOffset);
 		final int cx = rect.centerX();
@@ -210,15 +212,15 @@ public class DialChart extends View
 			canvas.drawText(value, t.x - ext.width() / 2, t.y + ext.width() / 2, paint);
 			paint.setStyle(Style.STROKE);
 		}
-		
+
 		centerRect = new RectF(rect);
 		centerRect.inset(scaleOuterOffset, scaleOuterOffset);
 		canvas.drawArc(centerRect, 135, 270, false, paint);
-		
+
 		centerRect = new RectF(rect);
 		centerRect.inset(scaleInnerOffset, scaleInnerOffset);
 		canvas.drawArc(centerRect, 135, 270, false, paint);
-		
+
 		// Draw needle
 		double dciValue = dci.value;
 		if (dciValue < minValue)
@@ -239,7 +241,7 @@ public class DialChart extends View
 		canvas.drawArc(new RectF(cx - NEEDLE_PIN_RADIUS, cy - NEEDLE_PIN_RADIUS, cx + NEEDLE_PIN_RADIUS, cy + NEEDLE_PIN_RADIUS), 0, 360, false, paint);
 		paint.setColor(needlePinColor);
 		canvas.drawArc(new RectF(cx - NEEDLE_PIN_RADIUS / 2, cy - NEEDLE_PIN_RADIUS / 2, cx + NEEDLE_PIN_RADIUS / 2, cy + NEEDLE_PIN_RADIUS / 2), 0, 360, false, paint);
-		
+
 		// Draw current value
 		String value = getValueAsDisplayString(dci);
 		paint.getTextBounds(value, 0, value.length(), ext);
@@ -248,7 +250,7 @@ public class DialChart extends View
 		canvas.drawRoundRect(new RectF(cx - boxW / 2, cy + rect.height() / 4, cx + boxW / 2, cy + rect.height() / 4 + ext.height() + 8), 3, 3, paint);
 		paint.setColor(valueColor);
 		canvas.drawText(value, cx - ext.width() / 2, cy + rect.height() / 4 + 4 + ext.height(), paint);
-		
+
 		// Draw legend, ignore legend position
 		if (legendVisible)
 		{
@@ -268,7 +270,7 @@ public class DialChart extends View
 
 	/**
 	 * Draw colored zone.
-	 * 
+	 *
 	 * @param gc
 	 * @param rect
 	 * @param startAngle
@@ -282,24 +284,24 @@ public class DialChart extends View
 	{
 		if (minValue >= maxValue)
 			return startAngle;	// Ignore incorrect zone settings
-		
+
 		int angle = (int)((maxValue - minValue) / angleValue);
 		if (angle <= 0)
 			return startAngle;
-		
+
 		RectF rect = new RectF(outerRect);
 		int offset = ((outerRect.width() / 2) * SCALE_OFFSET / 100);
 		rect.inset(offset, offset);
-		
+
 		paint.setColor(color);
 		canvas.drawArc(new RectF(rect), startAngle, angle, true, paint);
 		return startAngle + angle;
 	}
 
 	/**
-	 * Find point coordinates on arc by given angle and radius. Angles are 
+	 * Find point coordinates on arc by given angle and radius. Angles are
 	 * interpreted such that 0 degrees is at the 3 o'clock position.
-	 * 
+	 *
 	 * @param cx center point X coordinate
 	 * @param cy center point Y coordinate
 	 * @param radius radius
@@ -313,7 +315,7 @@ public class DialChart extends View
 
 	/**
 	 * Get rounded value for scale mark
-	 * 
+	 *
 	 * @param angle
 	 * @param angleValue
 	 * @return
@@ -374,19 +376,20 @@ public class DialChart extends View
 	 */
 	private String getValueAsDisplayString(ChartItem dci)
 	{
-		switch(dci.dataType)
+        DataType dataType = DataType.getByValue(dci.dataType);
+        switch(dataType)
 		{
-			case DataCollectionItem.DT_INT:
+            case INT32:
 				return Integer.toString((int)dci.value);
-			case DataCollectionItem.DT_UINT:
-			case DataCollectionItem.DT_INT64:
-			case DataCollectionItem.DT_UINT64:
+            case UINT32:
+            case INT64:
+            case UINT64:
 				return Long.toString((long)dci.value);
 			default:
 				return Double.toString(dci.value);
 		}
 	}
-	
+
 	/**
 	 * Set best fitting font for given string and bounding rectangle.
 	 *
@@ -417,7 +420,7 @@ public class DialChart extends View
 			}
 		}
 	}
-	
+
 	/**
 	 * @return the backgroundColor
 	 */

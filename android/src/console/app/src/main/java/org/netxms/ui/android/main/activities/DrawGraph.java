@@ -6,6 +6,7 @@ package org.netxms.ui.android.main.activities;
 import java.util.ArrayList;
 import java.util.Date;
 
+import org.netxms.client.constants.HistoricalDataType;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.DciDataRow;
 import org.netxms.client.datacollection.GraphItem;
@@ -176,7 +177,7 @@ public class DrawGraph extends AbstractClientActivity
 					for (int i = 0; i < numGraphs; i++)
 					{
 						dciData[i] = new DciData(0, 0);
-						dciData[i] = service.getSession().getCollectedData(items[i].getNodeId(), items[i].getDciId(), new Date(timeFrom), new Date(timeTo), 0);
+						dciData[i] = service.getSession().getCollectedData(items[i].getNodeId(), items[i].getDciId(), new Date(timeFrom), new Date(timeTo), 0, HistoricalDataType.PROCESSED);
 					}
 				}
 			}

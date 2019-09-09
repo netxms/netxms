@@ -7,6 +7,7 @@ import org.netxms.agent.android.helpers.SharedPrefs;
 import org.netxms.agent.android.helpers.TimeHelper;
 import org.netxms.agent.android.service.AgentConnectorService;
 import org.netxms.base.NXCommon;
+import org.netxms.base.VersionInfo;
 
 import android.Manifest;
 import android.content.ComponentName;
@@ -76,7 +77,7 @@ public class HomeScreen extends AbstractClientActivity
 		lastConnText = (TextView)findViewById(R.id.LastConnection);
 		nextConnText = (TextView)findViewById(R.id.NextConnection);
 		TextView buildName = (TextView)findViewById(R.id.MainScreenVersion);
-		buildName.setText(getString(R.string.version) + " " + NXCommon.VERSION + " (" + getString(R.string.build_number) + ")");
+		buildName.setText(String.format("%s %s (%s)", getString(R.string.version), VersionInfo.version(), getString(R.string.build_number)));
 
 		// Check for permissions and request as necessary
 		if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED ||

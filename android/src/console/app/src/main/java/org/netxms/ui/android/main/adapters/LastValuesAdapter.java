@@ -245,20 +245,22 @@ public class LastValuesAdapter extends BaseAdapter
 		double value = 0;
 		switch (dciValue.getDataType())
 		{
-			case DataCollectionObject.DT_INT:
-			case DataCollectionObject.DT_UINT:
+			case INT32:
+			case UINT32:
+			case COUNTER32:
 				value = SafeParser.parseInt(dciValue.getValue(), 0);
 				break;
-			case DataCollectionObject.DT_INT64:
-			case DataCollectionObject.DT_UINT64:
+			case INT64:
+			case UINT64:
+			case COUNTER64:
 				value = SafeParser.parseLong(dciValue.getValue(), 0);
 				break;
-			case DataCollectionObject.DT_FLOAT:
+			case FLOAT:
 				value = SafeParser.parseDouble(dciValue.getValue(), 0);
 				floating = true;
 				break;
-			case DataCollectionObject.DT_STRING:
-			case DataCollectionObject.DT_NULL:
+			case STRING:
+			case NULL:
 			default:
 				return dciValue.getValue();
 		}

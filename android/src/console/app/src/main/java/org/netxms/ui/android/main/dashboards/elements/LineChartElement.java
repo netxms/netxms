@@ -1,11 +1,13 @@
 /**
- * 
+ *
  */
 package org.netxms.ui.android.main.dashboards.elements;
 
 import java.util.Date;
 import java.util.concurrent.ScheduledExecutorService;
 
+import org.netxms.client.NXCSession;
+import org.netxms.client.constants.HistoricalDataType;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.DciDataRow;
 import org.netxms.ui.android.helpers.Colors;
@@ -96,7 +98,9 @@ public class LineChartElement extends AbstractDashboardElement
 			final DciData[] dciData = new DciData[items.length];
 			for (int i = 0; i < dciData.length; i++)
 			{
-				dciData[i] = service.getSession().getCollectedData(items[i].nodeId, items[i].dciId, new Date(startTime), new Date(endTime), 0);
+                final NXCSession session = service.getSession();
+                final ChartDciConfig item = items[i];
+                dciData[i] = session.getCollectedData(item.nodeId, item.dciId, new Date(startTime), new Date(endTime), 0, HistoricalDataType.PROCESSED);
 			}
 			Log.v(TAG, "refresh(): data retrieved from server");
 

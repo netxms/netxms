@@ -3,6 +3,7 @@ package org.netxms.ui.android.main.activities;
 import java.util.ArrayList;
 
 import org.achartengine.GraphicalView;
+import org.netxms.client.constants.HistoricalDataType;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.DciDataRow;
 import org.netxms.client.datacollection.GraphItem;
@@ -149,7 +150,7 @@ public abstract class AbstractComparisonChart extends AbstractClientActivity
 					for (int i = 0; i < dciData.length; i++)
 					{
 						dciData[i] = new DciData(0, 0);
-						dciData[i] = service.getSession().getCollectedData(items[i].getNodeId(), items[i].getDciId(), null, null, 1);
+						dciData[i] = service.getSession().getCollectedData(items[i].getNodeId(), items[i].getDciId(), null, null, 1, HistoricalDataType.PROCESSED);
 					}
 				}
 			}

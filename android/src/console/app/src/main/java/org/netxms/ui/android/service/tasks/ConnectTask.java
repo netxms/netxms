@@ -4,6 +4,7 @@
 package org.netxms.ui.android.service.tasks;
 
 import org.netxms.base.NXCommon;
+import org.netxms.base.VersionInfo;
 import org.netxms.client.NXCSession;
 import org.netxms.client.ProtocolVersion;
 import org.netxms.ui.android.R;
@@ -102,7 +103,7 @@ public class ConnectTask extends Thread
 					wm.getDefaultDisplay().getMetrics(metrics);
 
 					session = new NXCSession(server, port, encrypt);
-					session.setClientInfo("nxmc-android/" + NXCommon.VERSION + "." + service.getString(R.string.build_number));
+					session.setClientInfo(String.format("nxmc-android/%s.%s", VersionInfo.version(), service.getString(R.string.build_number)));
 					session.setClientType((metrics.densityDpi >= DisplayMetrics.DENSITY_HIGH) ? NXCSession.TABLET_CLIENT : NXCSession.MOBILE_CLIENT);
 					try
 					{

@@ -97,26 +97,26 @@ public class OverviewAdapter extends BaseExpandableListAdapter
 					addPair(general.info, r.getString(R.string.overview_platform_name), ((Node)obj).getPlatformName(), false);
 					addPair(general.info, r.getString(R.string.overview_snmp_sysname), ((Node)obj).getSnmpSysName(), false);
 					addPair(general.info, r.getString(R.string.overview_snmp_oid), ((Node)obj).getSnmpOID(), false);
-					if ((((Node)obj).getFlags() & Node.NF_IS_BRIDGE) != 0)
+					if ((((Node)obj).getFlags() & Node.NC_IS_BRIDGE) != 0)
 						addPair(general.info, r.getString(R.string.overview_bridge_base_address), toString(((Node)obj).getBridgeBaseAddress()));
 					addPair(general.info, r.getString(R.string.overview_driver), ((Node)obj).getDriverName(), false);
 					addPair(general.info, r.getString(R.string.overview_boot_time), toString(((Node)obj).getBootTime()), false);
 					// Gather "Capabilities" info
-					addPair(capabilities.info, r.getString(R.string.overview_is_native_agent), getYesNo((((Node)obj).getFlags() & AbstractNode.NF_IS_NATIVE_AGENT) != 0));
-					addPair(capabilities.info, r.getString(R.string.overview_is_bridge), getYesNo((((Node)obj).getFlags() & AbstractNode.NF_IS_BRIDGE) != 0));
-					addPair(capabilities.info, r.getString(R.string.overview_is_cdp), getYesNo((((Node)obj).getFlags() & AbstractNode.NF_IS_CDP) != 0));
-					addPair(capabilities.info, r.getString(R.string.overview_is8021x), getYesNo((((Node)obj).getFlags() & AbstractNode.NF_IS_8021X) != 0));
-					addPair(capabilities.info, r.getString(R.string.overview_is_lldp), getYesNo((((Node)obj).getFlags() & AbstractNode.NF_IS_LLDP) != 0));
-					addPair(capabilities.info, r.getString(R.string.overview_is_sonmp), getYesNo((((Node)obj).getFlags() & AbstractNode.NF_IS_SONMP) != 0));
-					addPair(capabilities.info, r.getString(R.string.overview_is_printer), getYesNo((((Node)obj).getFlags() & AbstractNode.NF_IS_PRINTER) != 0));
-					addPair(capabilities.info, r.getString(R.string.overview_is_router), getYesNo((((Node)obj).getFlags() & AbstractNode.NF_IS_ROUTER) != 0));
-					addPair(capabilities.info, r.getString(R.string.overview_is_smclp), getYesNo((((Node)obj).getFlags() & AbstractNode.NF_IS_SMCLP) != 0));
-					addPair(capabilities.info, r.getString(R.string.overview_is_snmp), getYesNo((((Node)obj).getFlags() & AbstractNode.NF_IS_SNMP) != 0));
-					addPair(capabilities.info, r.getString(R.string.overview_is_stp), getYesNo((((Node)obj).getFlags() & AbstractNode.NF_IS_STP) != 0));
-					addPair(capabilities.info, r.getString(R.string.overview_is_vrrp), getYesNo((((Node)obj).getFlags() & AbstractNode.NF_IS_VRRP) != 0));
-					addPair(capabilities.info, r.getString(R.string.overview_has_entity_mib), getYesNo((((Node)obj).getFlags() & AbstractNode.NF_HAS_ENTITY_MIB) != 0));
-					addPair(capabilities.info, r.getString(R.string.overview_has_ifxtable), getYesNo((((Node)obj).getFlags() & AbstractNode.NF_HAS_IFXTABLE) != 0));
-					if ((((Node)obj).getFlags() & AbstractNode.NF_IS_SNMP) != 0)
+					addPair(capabilities.info, r.getString(R.string.overview_is_native_agent), getYesNo((((Node)obj).getFlags() & AbstractNode.NC_IS_NATIVE_AGENT) != 0));
+					addPair(capabilities.info, r.getString(R.string.overview_is_bridge), getYesNo((((Node)obj).getFlags() & AbstractNode.NC_IS_BRIDGE) != 0));
+					addPair(capabilities.info, r.getString(R.string.overview_is_cdp), getYesNo((((Node)obj).getFlags() & AbstractNode.NC_IS_CDP) != 0));
+					addPair(capabilities.info, r.getString(R.string.overview_is8021x), getYesNo((((Node)obj).getFlags() & AbstractNode.NC_IS_8021X) != 0));
+					addPair(capabilities.info, r.getString(R.string.overview_is_lldp), getYesNo((((Node)obj).getFlags() & AbstractNode.NC_IS_LLDP) != 0));
+					addPair(capabilities.info, r.getString(R.string.overview_is_sonmp), getYesNo((((Node)obj).getFlags() & AbstractNode.NC_IS_NDP) != 0));
+					addPair(capabilities.info, r.getString(R.string.overview_is_printer), getYesNo((((Node)obj).getFlags() & AbstractNode.NC_IS_PRINTER) != 0));
+					addPair(capabilities.info, r.getString(R.string.overview_is_router), getYesNo((((Node)obj).getFlags() & AbstractNode.NC_IS_ROUTER) != 0));
+					addPair(capabilities.info, r.getString(R.string.overview_is_smclp), getYesNo((((Node)obj).getFlags() & AbstractNode.NC_IS_SMCLP) != 0));
+					addPair(capabilities.info, r.getString(R.string.overview_is_snmp), getYesNo((((Node)obj).getFlags() & AbstractNode.NC_IS_SNMP) != 0));
+					addPair(capabilities.info, r.getString(R.string.overview_is_stp), getYesNo((((Node)obj).getFlags() & AbstractNode.NC_IS_STP) != 0));
+					addPair(capabilities.info, r.getString(R.string.overview_is_vrrp), getYesNo((((Node)obj).getFlags() & AbstractNode.NC_IS_VRRP) != 0));
+					addPair(capabilities.info, r.getString(R.string.overview_has_entity_mib), getYesNo((((Node)obj).getFlags() & AbstractNode.NC_HAS_ENTITY_MIB) != 0));
+					addPair(capabilities.info, r.getString(R.string.overview_has_ifxtable), getYesNo((((Node)obj).getFlags() & AbstractNode.NC_HAS_IFXTABLE) != 0));
+					if ((((Node)obj).getFlags() & AbstractNode.NC_IS_SNMP) != 0)
 					{
 						addPair(capabilities.info, r.getString(R.string.overview_snmp_port), Integer.toString(((Node)obj).getSnmpPort()));
 						addPair(capabilities.info, r.getString(R.string.overview_snmp_version), getSnmpVersionName(((Node)obj).getSnmpVersion()));

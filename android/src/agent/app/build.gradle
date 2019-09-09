@@ -1,13 +1,12 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 27
-    buildToolsVersion '26.0.2'
+    compileSdkVersion 28
 
     defaultConfig {
         applicationId "org.netxms.agent.android"
         minSdkVersion 14
-        targetSdkVersion 27
+        targetSdkVersion 28
     }
 
     signingConfigs {
@@ -29,7 +28,7 @@ android {
 }
 
 dependencies {
-    implementation 'com.android.support:support-v4:27.1.0'
+    implementation 'com.android.support:support-v4:28.0.0'
     implementation('org.netxms:netxms-client:3.0-SNAPSHOT') {
         exclude module: 'stax'
         exclude module: 'stax-api'

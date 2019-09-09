@@ -3,6 +3,7 @@ package org.netxms.ui.android.main.activities;
 import java.util.ArrayList;
 
 import org.netxms.base.NXCommon;
+import org.netxms.base.VersionInfo;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.android.R;
@@ -73,7 +74,7 @@ public class HomeScreen extends AbstractClientActivity implements OnItemClickLis
 		statusText = (TextView)findViewById(R.id.ScreenTitleSecondary);
 
 		TextView buildName = (TextView)findViewById(R.id.MainScreenVersion);
-		buildName.setText(getString(R.string.version) + " " + NXCommon.VERSION + " (" + getString(R.string.build_number) + ")");
+		buildName.setText(String.format("%s %s (%s)", getString(R.string.version), VersionInfo.version(), getString(R.string.build_number)));
 	}
 
 	/*
