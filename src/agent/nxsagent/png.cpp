@@ -89,7 +89,10 @@ ByteStream *SaveBitmapToPng(HBITMAP hBitmap)
       goto png_create_info_struct_failed;
 
    if (setjmp(png_jmpbuf(png_ptr)))
+   {
+      delete_and_null(pngData);
       goto png_failure;
+   }
 
    png_set_IHDR(png_ptr,
       info_ptr,
