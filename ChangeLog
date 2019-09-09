@@ -16,10 +16,12 @@
 - New hook script UpdateInterface
 - Node creation option "create as zone proxy"
 - JSON support in NXSL
+- Improved NXSL performance
 - Cleanup of collected DCI data by housekeeper can be disabled
 - Service group support in Tuxedo subagent
 - Improved Enduro/X compatibility
 - Improved Cisco Aironet (former Airespace) driver
+- Added driver for Cisco Nexus switches
 - Duplicate IP address detection during network discovery
 - Improved I/O performance parameters in Windows agent
 - Optional JSON format for log files
