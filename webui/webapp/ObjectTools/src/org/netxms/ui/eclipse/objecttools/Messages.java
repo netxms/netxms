@@ -160,13 +160,14 @@ public class Messages extends NLS
    public String ObjectToolsEditor_New;
    public String ObjectToolsEditor_ObjectTool;
    public String ObjectToolsLabelProvider_TypeAgentCmd;
+   public String ObjectToolsLabelProvider_TypeAgentList;
    public String ObjectToolsLabelProvider_TypeAgentTable;
    public String ObjectToolsLabelProvider_TypeDownloadFile;
    public String ObjectToolsLabelProvider_TypeInternal;
    public String ObjectToolsLabelProvider_TypeLocalCmd;
    public String ObjectToolsLabelProvider_TypeServerCmd;
    public String ObjectToolsLabelProvider_TypeServerScript;
-   public String ObjectToolsLabelProvider_TypeSNMPList;
+   public String ObjectToolsLabelProvider_TypeSNMPTable;
    public String ObjectToolsLabelProvider_TypeURL;
    public String OpenObjectToolsEditor_Error;
    public String OpenObjectToolsEditor_ErrorOpenView;

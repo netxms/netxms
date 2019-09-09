@@ -35,8 +35,8 @@ public class ObjectToolsPopertyTester extends PropertyTester
       ObjectTool objectTool = (ObjectTool)receiver;
       switch(objectTool.getToolType())
       {
-         case ObjectTool.TYPE_TABLE_AGENT:
-         case ObjectTool.TYPE_TABLE_SNMP:
+         case ObjectTool.TYPE_AGENT_LIST:
+         case ObjectTool.TYPE_SNMP_TABLE:
             return true;
          default:
             return false;

@@ -32,6 +32,7 @@
 - SNMP functions in NXSL implemented as transport methods
 - Range access for strings and arrays in NXSL via [:] operator
 - Access to VLAN information from NXSL
+- Object tool type "Agent Table" now used to read agent tables and "Agent List" to read agent lists
 - Fixed issues:
 	NX-183 (Implemented responsible users for objects)
 	NX-725 (Add alarm comments from NXSL)

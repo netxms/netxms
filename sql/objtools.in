@@ -22,7 +22,7 @@ INSERT INTO object_tools (tool_id,guid,tool_name,tool_type,tool_data,flags,tool_
            'NetXMS agent on host %n (%a) will be restarted. Are you sure?');
 
 INSERT INTO object_tools (tool_id,guid,tool_name,tool_type,tool_data,flags,tool_filter,description,confirmation_text)
-	VALUES (5,'adc5168f-7e0b-f449-a876-cc4720d1a29a','&Info->&Switch forwarding database (FDB)',TOOL_TYPE_TABLE_SNMP,'Forwarding database',0,'<objectMenuFilter><flags>1</flags></objectMenuFilter>','Show switch forwarding database','');
+	VALUES (5,'adc5168f-7e0b-f449-a876-cc4720d1a29a','&Info->&Switch forwarding database (FDB)',TOOL_TYPE_SNMP_TABLE,'Forwarding database',0,'<objectMenuFilter><flags>1</flags></objectMenuFilter>','Show switch forwarding database','');
 INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
 	VALUES (5,0,'MAC Address','.1.3.6.1.2.1.17.4.3.1.1',CFMT_MAC_ADDR,0);
 INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
@@ -34,28 +34,20 @@ INSERT INTO object_tools (tool_id,guid,tool_name,tool_type,tool_data,flags,tool_
 	VALUES (7,'a4d9c827-916b-2640-b6e2-d5bf512c39d7','&Connect->Open &web browser (HTTPS)',TOOL_TYPE_URL,'https://%a',0,'','Open embedded web browser to node using HTTPS','');
 
 INSERT INTO object_tools (tool_id,guid,tool_name,tool_type,tool_data,flags,tool_filter,description,confirmation_text)
-	VALUES (8,'ded1f018-9659-c548-8adb-4af5c759c7ba','&Info->&Agent->&Subagent list',TOOL_TYPE_TABLE_AGENT,'Subagent ListAgent.SubAgentList^(.*) (.*) (.*) (.*)',0,'<objectMenuFilter><flags>2</flags></objectMenuFilter>','Show list of loaded subagents','');
-INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
-	VALUES (8,0,'Name','',CFMT_STRING,1);
-INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
-	VALUES (8,1,'Version','',CFMT_STRING,2);
-INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
-	VALUES (8,2,'File','',CFMT_STRING,4);
-INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
-	VALUES (8,3,'Module handle','',CFMT_STRING,3);
+	VALUES (8,'ded1f018-9659-c548-8adb-4af5c759c7ba','&Info->&Agent->&Subagent list',TOOL_TYPE_AGENT_TABLE,'Subagent ListAgent.SubAgents',0,'<objectMenuFilter><flags>2</flags></objectMenuFilter>','Show list of loaded subagents','');
 
 INSERT INTO object_tools (tool_id,guid,tool_name,tool_type,tool_data,flags,tool_filter,description,confirmation_text)
-	VALUES (9,'cf606f35-ea88-2446-bdf5-366799e615c9','&Info->&Agent->Supported &parameters',TOOL_TYPE_TABLE_AGENT,'Supported parametersAgent.SupportedParameters^(.*)',0,'<objectMenuFilter><flags>2</flags></objectMenuFilter>','Show list of parameters supported by agent','');
+	VALUES (9,'cf606f35-ea88-2446-bdf5-366799e615c9','&Info->&Agent->Supported &parameters',TOOL_TYPE_AGENT_LIST,'Supported parametersAgent.SupportedParameters^(.*)',0,'<objectMenuFilter><flags>2</flags></objectMenuFilter>','Show list of parameters supported by agent','');
 INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
 	VALUES (9,0,'Parameter','',CFMT_STRING,1);
 
 INSERT INTO object_tools (tool_id,guid,tool_name,tool_type,tool_data,flags,tool_filter,description,confirmation_text)
-	VALUES (10,'84c8b119-fda0-5d4f-b480-75229315ce20','&Info->&Agent->Supported &lists',TOOL_TYPE_TABLE_AGENT,'Supported listsAgent.SupportedLists^(.*)',0,'<objectMenuFilter><flags>2</flags></objectMenuFilter>','Show list of lists supported by agent','');
+	VALUES (10,'84c8b119-fda0-5d4f-b480-75229315ce20','&Info->&Agent->Supported &lists',TOOL_TYPE_AGENT_LIST,'Supported listsAgent.SupportedLists^(.*)',0,'<objectMenuFilter><flags>2</flags></objectMenuFilter>','Show list of lists supported by agent','');
 INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
 	VALUES (10,0,'Parameter','',CFMT_STRING,1);
 
 INSERT INTO object_tools (tool_id,guid,tool_name,tool_type,tool_data,flags,tool_filter,description,confirmation_text)
-	VALUES (11,'d6ea7dcf-c342-b04e-a91b-566beda73c4d','&Info->&Agent->Supported &actions',TOOL_TYPE_TABLE_AGENT,'Supported actionsAgent.ActionList^(.*) (.*) "(.*)".*',0,'<objectMenuFilter><flags>2</flags></objectMenuFilter>','Show list of actions supported by agent','');
+	VALUES (11,'d6ea7dcf-c342-b04e-a91b-566beda73c4d','&Info->&Agent->Supported &actions',TOOL_TYPE_AGENT_LIST,'Supported actionsAgent.ActionList^(.*) (.*) "(.*)".*',0,'<objectMenuFilter><flags>2</flags></objectMenuFilter>','Show list of actions supported by agent','');
 INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
 	VALUES (11,0,'Name','',CFMT_STRING,1);
 INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
@@ -64,28 +56,14 @@ INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_
 	VALUES (11,2,'Data','',CFMT_STRING,3);
 
 INSERT INTO object_tools (tool_id,guid,tool_name,tool_type,tool_data,flags,tool_filter,description,confirmation_text)
-	VALUES (12,'780a1b84-e600-a748-89af-c5e02e5b8cfc','&Info->&Agent->Configured &ICMP targets',TOOL_TYPE_TABLE_AGENT,'Configured ICMP targetsICMP.TargetList^(.*) (.*) (.*) (.*) (.*)',0,'<objectMenuFilter><flags>2</flags></objectMenuFilter>','Show list of actions supported by agent','');
-INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
-	VALUES (12,0,'IP Address','',CFMT_STRING,1);
-INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
-	VALUES (12,1,'Name','',CFMT_STRING,5);
-INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
-	VALUES (12,2,'Packet size','',CFMT_STRING,4);
-INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
-	VALUES (12,3,'Last RTT','',CFMT_STRING,2);
-INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
-	VALUES (12,4,'Average RTT','',CFMT_STRING,3);
+	VALUES (12,'780a1b84-e600-a748-89af-c5e02e5b8cfc','&Info->&Agent->Configured &ICMP targets',TOOL_TYPE_AGENT_TABLE,'Configured ICMP targetsICMP.Targets',0,'<objectMenuFilter><flags>2</flags></objectMenuFilter>','Show list of ICMP targets configured on this agent','');
 
 INSERT INTO object_tools (tool_id,guid,tool_name,tool_type,tool_data,flags,tool_filter,description,confirmation_text)
-	VALUES (13,'7afea6f9-ccd2-1d45-9e8c-3aafe14cb565','&Info->&Process list',TOOL_TYPE_TABLE_AGENT,
-           'Process ListSystem.ProcessList^([0-9]+) (.*)',0,'<objectMenuFilter><flags>2</flags></objectMenuFilter>','Show list of currently running processes','');
-INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
-	VALUES (13,0,'PID','',CFMT_STRING,1);
-INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
-	VALUES (13,1,'Name','',CFMT_STRING,2);
+	VALUES (13,'7afea6f9-ccd2-1d45-9e8c-3aafe14cb565','&Info->&Process list',TOOL_TYPE_AGENT_TABLE,
+           'Process ListSystem.Processes',0,'<objectMenuFilter><flags>2</flags></objectMenuFilter>','Show list of currently running processes','');
 
 INSERT INTO object_tools (tool_id,guid,tool_name,tool_type,tool_data,flags,tool_filter,description,confirmation_text)
-	VALUES (14,'80f3c244-87b1-954e-99e1-3c94062a2cc7','&Info->Topology table (Nortel)',TOOL_TYPE_TABLE_SNMP,'Topology table',0,'<objectMenuFilter><flags>1</flags></objectMenuFilter>','Show topology table (Nortel protocol)','');
+	VALUES (14,'80f3c244-87b1-954e-99e1-3c94062a2cc7','&Info->Topology table (Nortel)',TOOL_TYPE_SNMP_TABLE,'Topology table',0,'<objectMenuFilter><flags>1</flags></objectMenuFilter>','Show topology table (Nortel protocol)','');
 INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
 	VALUES (14,0,'Peer IP','.1.3.6.1.4.1.45.1.6.13.2.1.1.3',CFMT_IP_ADDR,0);
 INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
@@ -96,7 +74,7 @@ INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_
 	VALUES (14,3,'Port','.1.3.6.1.4.1.45.1.6.13.2.1.1.2',CFMT_INTEGER,0);
 
 INSERT INTO object_tools (tool_id,guid,tool_name,tool_type,tool_data,flags,tool_filter,description,confirmation_text)
-	VALUES (15,'e7f69f34-7956-674b-aa5f-aa6d07e3bba3','&Info->Topology table (CDP)',TOOL_TYPE_TABLE_SNMP,'Topology table',0,'<objectMenuFilter><flags>1</flags></objectMenuFilter>','Show topology table (CDP)','');
+	VALUES (15,'e7f69f34-7956-674b-aa5f-aa6d07e3bba3','&Info->Topology table (CDP)',TOOL_TYPE_SNMP_TABLE,'Topology table',0,'<objectMenuFilter><flags>1</flags></objectMenuFilter>','Show topology table (CDP)','');
 INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
 	VALUES (15,0,'Device ID','.1.3.6.1.4.1.9.9.23.1.2.1.1.6',CFMT_STRING,0);
 INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
@@ -109,7 +87,7 @@ INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_
 	VALUES (15,4,'Port','.1.3.6.1.4.1.9.9.23.1.2.1.1.7',CFMT_STRING,0);
 
 INSERT INTO object_tools (tool_id,guid,tool_name,tool_type,tool_data,flags,tool_filter,description,confirmation_text)
-	VALUES (16,'87370de4-e760-904a-9f9d-dfdf15f4dd9e','&Info->Active &user sessions',TOOL_TYPE_TABLE_AGENT,
+	VALUES (16,'87370de4-e760-904a-9f9d-dfdf15f4dd9e','&Info->Active &user sessions',TOOL_TYPE_AGENT_LIST,
            'Active User SessionsSystem.ActiveUserSessions^"(.*)" "(.*)" "(.*)"',0,'<objectMenuFilter><flags>2</flags></objectMenuFilter>','Show list of active user sessions','');
 INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
 	VALUES (16,0,'User','',CFMT_STRING,1);
@@ -119,7 +97,7 @@ INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_
 	VALUES (16,2,'From','',CFMT_STRING,3);
 
 INSERT INTO object_tools (tool_id,guid,tool_name,tool_type,tool_data,flags,tool_filter,description,confirmation_text)
-	VALUES (17,'81a0f545-3dbf-6c47-acfc-43ae88465360','&Info->AR&P cache (SNMP)',TOOL_TYPE_TABLE_SNMP,'ARP Cache',0,'<objectMenuFilter><flags>1</flags></objectMenuFilter>','Show ARP cache','');
+	VALUES (17,'81a0f545-3dbf-6c47-acfc-43ae88465360','&Info->AR&P cache (SNMP)',TOOL_TYPE_SNMP_TABLE,'ARP Cache',0,'<objectMenuFilter><flags>1</flags></objectMenuFilter>','Show ARP cache','');
 INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
 	VALUES (17,0,'IP Address','.1.3.6.1.2.1.4.22.1.3',CFMT_IP_ADDR,0);
 INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
@@ -128,7 +106,7 @@ INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_
 	VALUES (17,2,'Interface','.1.3.6.1.2.1.4.22.1.1',CFMT_IFINDEX,0);
 
 INSERT INTO object_tools (tool_id,guid,tool_name,tool_type,tool_data,flags,tool_filter,description,confirmation_text)
-	VALUES (18,'86b9772e-b939-1849-bc5b-d2c1a170ec96','&Info->AR&P cache (Agent)',TOOL_TYPE_TABLE_AGENT,
+	VALUES (18,'86b9772e-b939-1849-bc5b-d2c1a170ec96','&Info->AR&P cache (Agent)',TOOL_TYPE_AGENT_LIST,
            'ARP CacheNet.ArpCache(.*) (.*) (.*)',0,'<objectMenuFilter><flags>1</flags></objectMenuFilter>','Show ARP cache','');
 INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
 	VALUES (18,0,'IP Address','.1.3.6.1.2.1.4.22.1.3',CFMT_STRING,2);
@@ -138,7 +116,7 @@ INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_
 	VALUES (18,2,'Interface','.1.3.6.1.2.1.4.22.1.1',CFMT_IFINDEX,3);
 
 INSERT INTO object_tools (tool_id,guid,tool_name,tool_type,tool_data,flags,tool_filter,description,confirmation_text)
-	VALUES (19,'565bb6e4-cee3-4741-82d6-0f379c742c55','&Info->&Routing table (SNMP)',TOOL_TYPE_TABLE_SNMP,'Routing Table',0,'<objectMenuFilter><flags>1</flags></objectMenuFilter>','Show IP routing table','');
+	VALUES (19,'565bb6e4-cee3-4741-82d6-0f379c742c55','&Info->&Routing table (SNMP)',TOOL_TYPE_SNMP_TABLE,'Routing Table',0,'<objectMenuFilter><flags>1</flags></objectMenuFilter>','Show IP routing table','');
 INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
 	VALUES (19,0,'Destination','.1.3.6.1.2.1.4.21.1.1',CFMT_IP_ADDR,0);
 INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
@@ -151,7 +129,7 @@ INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_
 	VALUES (19,4,'Interface','.1.3.6.1.2.1.4.21.1.2',CFMT_IFINDEX,0);
 
 INSERT INTO object_tools (tool_id,guid,tool_name,tool_type,tool_data,flags,tool_filter,description,confirmation_text)
-	VALUES (20,'83eeea21-dd61-f84e-811d-3861ccee08ed','&Info->Topology table (LLDP)',TOOL_TYPE_TABLE_SNMP,'Topology Table',0,'<objectMenuFilter><flags>1</flags></objectMenuFilter>','Show topology table (LLDP)','');
+	VALUES (20,'83eeea21-dd61-f84e-811d-3861ccee08ed','&Info->Topology table (LLDP)',TOOL_TYPE_SNMP_TABLE,'Topology Table',0,'<objectMenuFilter><flags>1</flags></objectMenuFilter>','Show topology table (LLDP)','');
 INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
 	VALUES (20,0,'Chassis ID','.1.0.8802.1.1.2.1.4.1.1.5',CFMT_STRING,0);
 INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)

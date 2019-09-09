@@ -32,19 +32,20 @@ import org.netxms.ui.eclipse.objecttools.views.ObjectToolsEditor;
  */
 public class ObjectToolsLabelProvider extends LabelProvider implements ITableLabelProvider
 {
-	private final String[] toolTypes = { 
-		Messages.get().ObjectToolsLabelProvider_TypeInternal, 
-		Messages.get().ObjectToolsLabelProvider_TypeAgentCmd, 
-		Messages.get().ObjectToolsLabelProvider_TypeSNMPList, 
-		Messages.get().ObjectToolsLabelProvider_TypeAgentTable, 
+	private final String[] TOOL_TYPES = { 
+		Messages.get().ObjectToolsLabelProvider_TypeInternal,
+		Messages.get().ObjectToolsLabelProvider_TypeAgentCmd,
+		Messages.get().ObjectToolsLabelProvider_TypeSNMPTable,
+		Messages.get().ObjectToolsLabelProvider_TypeAgentList,
 		Messages.get().ObjectToolsLabelProvider_TypeURL,
 		Messages.get().ObjectToolsLabelProvider_TypeLocalCmd,
 		Messages.get().ObjectToolsLabelProvider_TypeServerCmd,
 		Messages.get().ObjectToolsLabelProvider_TypeDownloadFile,
-      Messages.get().ObjectToolsLabelProvider_TypeServerScript
+      Messages.get().ObjectToolsLabelProvider_TypeServerScript,
+      Messages.get().ObjectToolsLabelProvider_TypeAgentTable
 	};
 	
-	private Image[] toolTypeImages = new Image[toolTypes.length + 1];
+	private Image[] toolTypeImages = new Image[TOOL_TYPES.length + 1];
 	
 	/**
 	 * The constructor
@@ -60,7 +61,8 @@ public class ObjectToolsLabelProvider extends LabelProvider implements ITableLab
 		toolTypeImages[6] = Activator.getImageDescriptor("icons/console.png").createImage(); //$NON-NLS-1$
 		toolTypeImages[7] = Activator.getImageDescriptor("icons/file_download.png").createImage(); //$NON-NLS-1$
       toolTypeImages[8] = Activator.getImageDescriptor("icons/script.png").createImage(); //$NON-NLS-1$
-		toolTypeImages[9] = Activator.getImageDescriptor("icons/stop.png").createImage(); //$NON-NLS-1$
+      toolTypeImages[9] = Activator.getImageDescriptor("icons/table.gif").createImage(); //$NON-NLS-1$
+		toolTypeImages[10] = Activator.getImageDescriptor("icons/stop.png").createImage(); //$NON-NLS-1$
 	}
 	
 	/* (non-Javadoc)
@@ -105,7 +107,7 @@ public class ObjectToolsLabelProvider extends LabelProvider implements ITableLab
 			case ObjectToolsEditor.COLUMN_TYPE:
 				try
 				{
-					return toolTypes[tool.getToolType()];
+					return TOOL_TYPES[tool.getToolType()];
 				}
 				catch(ArrayIndexOutOfBoundsException e)
 				{
@@ -137,7 +139,7 @@ public class ObjectToolsLabelProvider extends LabelProvider implements ITableLab
 	{
 		try
 		{
-			return toolTypes[tool.getToolType()];
+			return TOOL_TYPES[tool.getToolType()];
 		}
 		catch(ArrayIndexOutOfBoundsException e)
 		{
@@ -151,6 +153,6 @@ public class ObjectToolsLabelProvider extends LabelProvider implements ITableLab
 	 */
 	public String[] getAllToolTypes()
 	{
-		return toolTypes;
+		return TOOL_TYPES;
 	}
 }

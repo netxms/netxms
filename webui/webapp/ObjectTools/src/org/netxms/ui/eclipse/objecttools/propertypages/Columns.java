@@ -100,7 +100,7 @@ public class Columns extends PropertyPage
 		gd.grabExcessVerticalSpace = true;
 		viewer.getTable().setLayoutData(gd);
 		viewer.setContentProvider(new ArrayContentProvider());
-		viewer.setLabelProvider(new ToolColumnLabelProvider(objectTool.getToolType() == ObjectTool.TYPE_TABLE_SNMP));
+		viewer.setLabelProvider(new ToolColumnLabelProvider(objectTool.getToolType() == ObjectTool.TYPE_SNMP_TABLE));
 		setupTableColumns();
 		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
 			@Override
@@ -205,7 +205,7 @@ public class Columns extends PropertyPage
 		column.setWidth(90);
 		
 		column = new TableColumn(viewer.getTable(), SWT.LEFT);
-		column.setText(objectTool.getToolType() == ObjectTool.TYPE_TABLE_SNMP ? Messages.get().Columns_OID : Messages.get().Columns_Index);
+		column.setText(objectTool.getToolType() == ObjectTool.TYPE_SNMP_TABLE ? Messages.get().Columns_OID : Messages.get().Columns_Index);
 		column.setWidth(200);
 		
 		viewer.getTable().setHeaderVisible(true);
@@ -219,7 +219,7 @@ public class Columns extends PropertyPage
 	private void addColumn()
 	{
 		ObjectToolTableColumn tc = new ObjectToolTableColumn(Messages.get().Columns_DefName + Integer.toString(columns.size() + 1));
-		EditColumnDialog dlg = new EditColumnDialog(getShell(), true, objectTool.getToolType() == ObjectTool.TYPE_TABLE_SNMP, tc);
+		EditColumnDialog dlg = new EditColumnDialog(getShell(), true, objectTool.getToolType() == ObjectTool.TYPE_SNMP_TABLE, tc);
 		if (dlg.open() == Window.OK)
 		{
 			columns.add(tc);
@@ -238,7 +238,7 @@ public class Columns extends PropertyPage
 			return;
 		
 		EditColumnDialog dlg = new EditColumnDialog(getShell(), false,
-				objectTool.getToolType() == ObjectTool.TYPE_TABLE_SNMP, (ObjectToolTableColumn)selection.getFirstElement());
+				objectTool.getToolType() == ObjectTool.TYPE_SNMP_TABLE, (ObjectToolTableColumn)selection.getFirstElement());
 		dlg.open();
 		viewer.update(selection.getFirstElement(), null);
 	}

@@ -192,7 +192,7 @@ public class General extends PropertyPage
 				   checkFollow.setSelection( parameters[2].equals("true") ? true : false);  //$NON-NLS-1$
 				}	
 				break;
-			case ObjectTool.TYPE_TABLE_SNMP:
+			case ObjectTool.TYPE_SNMP_TABLE:
 				textData.setLabel(Messages.get().General_Title);
 				
 				Group snmpOptGroup = new Group(dialogArea, SWT.NONE);
@@ -216,11 +216,11 @@ public class General extends PropertyPage
 				radioIndexValue.setSelection(!radioIndexOID.getSelection());
 
 				break;
-			case ObjectTool.TYPE_TABLE_AGENT:
+			case ObjectTool.TYPE_AGENT_LIST:
 				textData.setLabel(Messages.get().General_Title);
 				
-				String[] parts = objectTool.getData().split("\u007F"); //$NON-NLS-1$
-				textData.setText((parts.length > 0) ? parts[0] : ""); //$NON-NLS-1$
+				String[] listParts = objectTool.getData().split("\u007F"); //$NON-NLS-1$
+				textData.setText((listParts.length > 0) ? listParts[0] : ""); //$NON-NLS-1$
 
 				textParameter = new LabeledText(dialogArea, SWT.NONE);
 				textParameter.setLabel(Messages.get().General_Parameter);
@@ -229,7 +229,7 @@ public class General extends PropertyPage
 				gd.grabExcessHorizontalSpace = true;
 				gd.horizontalSpan = 2;
 				textParameter.setLayoutData(gd);
-				textParameter.setText((parts.length > 1) ? parts[1] : ""); //$NON-NLS-1$
+				textParameter.setText((listParts.length > 1) ? listParts[1] : ""); //$NON-NLS-1$
 
 				textRegexp = new LabeledText(dialogArea, SWT.NONE);
 				textRegexp.setLabel(Messages.get().General_RegExp);
@@ -238,8 +238,23 @@ public class General extends PropertyPage
 				gd.grabExcessHorizontalSpace = true;
             gd.horizontalSpan = 2;
 				textRegexp.setLayoutData(gd);
-				textRegexp.setText((parts.length > 2) ? parts[2] : ""); //$NON-NLS-1$
+				textRegexp.setText((listParts.length > 2) ? listParts[2] : ""); //$NON-NLS-1$
 				break;
+         case ObjectTool.TYPE_AGENT_TABLE:
+            textData.setLabel(Messages.get().General_Title);
+            
+            String[] tableParts = objectTool.getData().split("\u007F"); //$NON-NLS-1$
+            textData.setText((tableParts.length > 0) ? tableParts[0] : ""); //$NON-NLS-1$
+
+            textParameter = new LabeledText(dialogArea, SWT.NONE);
+            textParameter.setLabel(Messages.get().General_Parameter);
+            gd = new GridData();
+            gd.horizontalAlignment = SWT.FILL;
+            gd.grabExcessHorizontalSpace = true;
+            gd.horizontalSpan = 2;
+            textParameter.setLayoutData(gd);
+            textParameter.setText((tableParts.length > 1) ? tableParts[1] : ""); //$NON-NLS-1$
+            break;
 		}
 		
 		Group confirmationGroup = new Group(dialogArea, SWT.NONE);
@@ -479,20 +494,22 @@ public class General extends PropertyPage
 	{
 		objectTool.setName(textName.getText());
 		objectTool.setDescription(textDescription.getText());
-		if (objectTool.getToolType() == ObjectTool.TYPE_TABLE_AGENT)
+
+		// Tool data
+		switch(objectTool.getToolType())
 		{
-			objectTool.setData(textData.getText() + "\u007F" + textParameter.getText() + "\u007F" + textRegexp.getText()); //$NON-NLS-1$ //$NON-NLS-2$
-		}
-		else
-		{
-		   if(objectTool.getToolType() == ObjectTool.TYPE_FILE_DOWNLOAD)
-   		{
-		      objectTool.setData(textData.getText() + "\u007F" + maxFileSize.getSelection() + "\u007F" + checkFollow.getSelection()); //$NON-NLS-1$ //$NON-NLS-2$
-   		}
-		   else
-		   {
-		      objectTool.setData(textData.getText());
-		   }
+		   case ObjectTool.TYPE_AGENT_LIST:
+	         objectTool.setData(textData.getText() + "\u007F" + textParameter.getText() + "\u007F" + textRegexp.getText()); //$NON-NLS-1$ //$NON-NLS-2$
+	         break;
+         case ObjectTool.TYPE_AGENT_TABLE:
+            objectTool.setData(textData.getText() + "\u007F" + textParameter.getText()); //$NON-NLS-1$
+            break;
+		   case ObjectTool.TYPE_FILE_DOWNLOAD:
+            objectTool.setData(textData.getText() + "\u007F" + maxFileSize.getSelection() + "\u007F" + checkFollow.getSelection()); //$NON-NLS-1$ //$NON-NLS-2$
+		      break;
+		   default:
+            objectTool.setData(textData.getText());
+            break;
 		}
 		
 		if (checkConfirmation.getSelection())
@@ -525,7 +542,7 @@ public class General extends PropertyPage
          objectTool.setFlags(objectTool.getFlags() & ~ObjectTool.DISABLED);
       }
 		
-		if (objectTool.getToolType() == ObjectTool.TYPE_TABLE_SNMP)
+		if (objectTool.getToolType() == ObjectTool.TYPE_SNMP_TABLE)
 		{
 			if (radioIndexValue.getSelection())
 			{

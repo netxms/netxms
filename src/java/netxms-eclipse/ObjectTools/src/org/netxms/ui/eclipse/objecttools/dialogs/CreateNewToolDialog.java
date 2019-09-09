@@ -59,13 +59,13 @@ public class CreateNewToolDialog extends Dialog
 	protected Control createDialogArea(Composite parent)
 	{
 		Composite dialogArea = (Composite)super.createDialogArea(parent);
-		
+
 		GridLayout layout = new GridLayout();
 		layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
 		layout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
 		layout.verticalSpacing = WidgetHelper.DIALOG_SPACING;
 		dialogArea.setLayout(layout);
-		
+
 		textName = new LabeledText(dialogArea, SWT.NONE);
 		textName.setLabel(Messages.get().CreateNewToolDialog_Name);
 		GridData gd = new GridData();
@@ -73,12 +73,12 @@ public class CreateNewToolDialog extends Dialog
 		gd.grabExcessHorizontalSpace = true;
 		gd.widthHint = 300;
 		textName.setLayoutData(gd);
-		
+
 		comboType = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, Messages.get().CreateNewToolDialog_ToolType, WidgetHelper.DEFAULT_LAYOUT_DATA);
 		for(String s : ObjectToolsLabelProvider.getAllToolTypes())
 			comboType.add(s);
 		comboType.select(0);
-		
+
 		return dialogArea;
 	}
 

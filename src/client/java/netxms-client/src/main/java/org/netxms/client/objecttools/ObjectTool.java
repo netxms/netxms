@@ -35,13 +35,14 @@ public class ObjectTool implements ObjectAction
 {
 	public static final int TYPE_INTERNAL       = 0;
 	public static final int TYPE_ACTION         = 1;
-	public static final int TYPE_TABLE_SNMP     = 2;
-	public static final int TYPE_TABLE_AGENT    = 3;
+	public static final int TYPE_SNMP_TABLE     = 2;
+	public static final int TYPE_AGENT_LIST     = 3;
 	public static final int TYPE_URL            = 4;
 	public static final int TYPE_LOCAL_COMMAND  = 5;
 	public static final int TYPE_SERVER_COMMAND = 6;
 	public static final int TYPE_FILE_DOWNLOAD  = 7;
    public static final int TYPE_SERVER_SCRIPT  = 8;
+   public static final int TYPE_AGENT_TABLE    = 9;
 
    public static final int ASK_CONFIRMATION          = 0x00000001;
    public static final int GENERATES_OUTPUT          = 0x00000002;

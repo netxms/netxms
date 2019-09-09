@@ -21,22 +21,14 @@ package org.netxms.ui.eclipse.objecttools.views.helpers;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.netxms.client.objecttools.ObjectTool;
-import org.netxms.ui.eclipse.objecttools.Messages;
 
 public class ObjectToolsFilter extends ViewerFilter
 {
    private String filterString = null;
-   private static final String[] toolTypes = { 
-      Messages.get().ObjectToolsLabelProvider_TypeInternal, 
-      Messages.get().ObjectToolsLabelProvider_TypeAgentCmd, 
-      Messages.get().ObjectToolsLabelProvider_TypeSNMPList, 
-      Messages.get().ObjectToolsLabelProvider_TypeAgentTable, 
-      Messages.get().ObjectToolsLabelProvider_TypeURL,
-      Messages.get().ObjectToolsLabelProvider_TypeLocalCmd,
-      Messages.get().ObjectToolsLabelProvider_TypeServerCmd,
-      Messages.get().ObjectToolsLabelProvider_TypeDownloadFile
-   };
 
+   /**
+    * @see org.eclipse.jface.viewers.ViewerFilter#select(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
+    */
    @Override
    public boolean select(Viewer viewer, Object parentElement, Object element)
    {
@@ -53,6 +45,10 @@ public class ObjectToolsFilter extends ViewerFilter
       return false;
    }
    
+   /**
+    * @param element
+    * @return
+    */
    public boolean containsId(Object element)
    {
       if (Long.toString(((ObjectTool)element).getId()).toLowerCase().contains(filterString))
@@ -60,6 +56,10 @@ public class ObjectToolsFilter extends ViewerFilter
       return false;
    }
    
+   /**
+    * @param element
+    * @return
+    */
    public boolean containsName(Object element)
    {
       if (((ObjectTool)element).getName().toLowerCase().contains(filterString))
@@ -67,13 +67,21 @@ public class ObjectToolsFilter extends ViewerFilter
       return false;
    }
    
+   /**
+    * @param element
+    * @return
+    */
    public boolean containsType(Object element)
    {
-      if (toolTypes[((ObjectTool)element).getToolType()].toLowerCase().contains(filterString))
+      if (ObjectToolsLabelProvider.getAllToolTypes()[((ObjectTool)element).getToolType()].toLowerCase().contains(filterString))
          return true;
       return false;
    }
    
+   /**
+    * @param element
+    * @return
+    */
    public boolean containsDescription(Object element)
    {
       if (((ObjectTool)element).getDescription().toLowerCase().contains(filterString))

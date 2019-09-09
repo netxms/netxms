@@ -315,8 +315,9 @@ public final class ObjectToolExecutor
          case ObjectTool.TYPE_SERVER_SCRIPT:
             executeServerScript(node, tool, inputValues);
             break;
-         case ObjectTool.TYPE_TABLE_AGENT:
-         case ObjectTool.TYPE_TABLE_SNMP:
+         case ObjectTool.TYPE_AGENT_LIST:
+         case ObjectTool.TYPE_AGENT_TABLE:
+         case ObjectTool.TYPE_SNMP_TABLE:
             executeTableTool(node, tool);
             break;
          case ObjectTool.TYPE_URL:

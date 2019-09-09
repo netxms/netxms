@@ -95,7 +95,7 @@ BOOL IsTableTool(UINT32 toolId)
       if (DBGetNumRows(hResult) > 0)
       {
          nType = DBGetFieldLong(hResult, 0, 0);
-         bResult = ((nType == TOOL_TYPE_TABLE_SNMP) || (nType == TOOL_TYPE_TABLE_AGENT));
+         bResult = ((nType == TOOL_TYPE_SNMP_TABLE) || (nType == TOOL_TYPE_AGENT_TABLE) || (nType == TOOL_TYPE_AGENT_LIST));
       }
       DBFreeResult(hResult);
    }
@@ -157,9 +157,78 @@ BOOL CheckObjectToolAccess(UINT32 toolId, UINT32 userId)
 /**
  * Agent table tool execution thread
  */
-static void GetAgentTable(void *pArg)
+static void GetAgentTable(TOOL_STARTUP_INFO *toolData)
 {
-   NXCPMessage msg(CMD_TABLE_DATA, ((TOOL_STARTUP_INFO *)pArg)->dwRqId);
+   NXCPMessage msg(CMD_TABLE_DATA, toolData->dwRqId);
+
+   TCHAR *tableName = _tcschr(toolData->pszToolData, _T('\x7F'));
+   if (tableName != NULL)
+   {
+      *tableName = 0;
+      tableName++;
+      AgentConnection *pConn = toolData->pNode->createAgentConnection();
+      if (pConn != NULL)
+      {
+         Table *table;
+         UINT32 err = pConn->getTable(tableName, &table);
+         if (err == ERR_SUCCESS)
+         {
+            // Convert data types returned by agent into table tool codes
+            for(int i = 0; i < table->getNumColumns(); i++)
+            {
+               switch(table->getColumnDefinition(i)->getDataType())
+               {
+                  case DCI_DT_INT:
+                  case DCI_DT_UINT:
+                  case DCI_DT_INT64:
+                  case DCI_DT_UINT64:
+                  case DCI_DT_COUNTER32:
+                  case DCI_DT_COUNTER64:
+                     table->setColumnDataType(i, CFMT_INTEGER);
+                     break;
+                  case DCI_DT_FLOAT:
+                     table->setColumnDataType(i, CFMT_FLOAT);
+                     break;
+                  default:
+                     table->setColumnDataType(i, CFMT_STRING);
+                     break;
+               }
+            }
+
+            msg.setField(VID_RCC, RCC_SUCCESS);
+            table->setTitle(toolData->pszToolData);
+            table->fillMessage(msg, 0, -1);
+            delete table;
+         }
+         else
+         {
+            msg.setField(VID_RCC, AgentErrorToRCC(err));
+         }
+         pConn->decRefCount();
+      }
+      else
+      {
+         msg.setField(VID_RCC, RCC_COMM_FAILURE);
+      }
+   }
+   else
+   {
+      msg.setField(VID_RCC, RCC_INVALID_ARGUMENT);
+   }
+
+   // Send response to client
+   toolData->pSession->sendMessage(&msg);
+   toolData->pSession->decRefCount();
+   MemFree(toolData->pszToolData);
+   MemFree(toolData);
+}
+
+/**
+ * Agent list tool execution thread
+ */
+static void GetAgentList(TOOL_STARTUP_INFO *toolData)
+{
+   NXCPMessage msg(CMD_TABLE_DATA, toolData->dwRqId);
 
    TCHAR *pszRegEx, buffer[256];
 	Table table;
@@ -167,7 +236,7 @@ static void GetAgentTable(void *pArg)
    // Parse tool data. For agent table, it should have the following format:
    // table_title<separator>enum<separator>matching_regexp
    // where <separator> is a character with code 0x7F
-   TCHAR *pszEnum = _tcschr(((TOOL_STARTUP_INFO *)pArg)->pszToolData, _T('\x7F'));
+   TCHAR *pszEnum = _tcschr(toolData->pszToolData, _T('\x7F'));
    if (pszEnum != NULL)
    {
       *pszEnum = 0;
@@ -179,7 +248,7 @@ static void GetAgentTable(void *pArg)
          pszRegEx++;
       }
    }
-	table.setTitle(((TOOL_STARTUP_INFO *)pArg)->pszToolData);
+	table.setTitle(toolData->pszToolData);
 
    if ((pszEnum != NULL) && (pszRegEx != NULL))
    {
@@ -188,7 +257,7 @@ static void GetAgentTable(void *pArg)
       DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT col_name,col_format,col_substr FROM object_tools_table_columns WHERE tool_id=? ORDER BY col_number"));
       if (hStmt != NULL)
       {
-         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, ((TOOL_STARTUP_INFO *)pArg)->toolId);
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, toolData->toolId);
 
          DB_RESULT hResult = DBSelectPrepared(hStmt);
          if (hResult != NULL)
@@ -209,7 +278,7 @@ static void GetAgentTable(void *pArg)
                PCRE *preg = _pcre_compile_t(reinterpret_cast<const PCRE_TCHAR*>(pszRegEx), PCRE_COMMON_FLAGS | PCRE_CASELESS, &eptr, &eoffset, NULL);
                if (preg != NULL)
                {
-                  AgentConnection *pConn = ((TOOL_STARTUP_INFO *)pArg)->pNode->createAgentConnection();
+                  AgentConnection *pConn = toolData->pNode->createAgentConnection();
                   if (pConn != NULL)
                   {
                      StringList *values;
@@ -250,7 +319,7 @@ static void GetAgentTable(void *pArg)
                      }
                      else
                      {
-                        msg.setField(VID_RCC, (dwResult == ERR_UNKNOWN_PARAMETER) ? RCC_UNKNOWN_PARAMETER : RCC_COMM_FAILURE);
+                        msg.setField(VID_RCC, AgentErrorToRCC(dwResult));
                      }
                      pConn->decRefCount();
                   }
@@ -286,14 +355,14 @@ static void GetAgentTable(void *pArg)
   }
    else
    {
-      msg.setField(VID_RCC, RCC_INTERNAL_ERROR);
+      msg.setField(VID_RCC, RCC_INVALID_ARGUMENT);
    }
 
    // Send response to client
-   ((TOOL_STARTUP_INFO *)pArg)->pSession->sendMessage(&msg);
-   ((TOOL_STARTUP_INFO *)pArg)->pSession->decRefCount();
-   free(((TOOL_STARTUP_INFO *)pArg)->pszToolData);
-   free(pArg);
+   toolData->pSession->sendMessage(&msg);
+   toolData->pSession->decRefCount();
+   MemFree(toolData->pszToolData);
+   MemFree(toolData);
 }
 
 /**
@@ -421,7 +490,7 @@ static UINT32 TableHandler(SNMP_Variable *pVar, SNMP_Transport *pTransport, void
 /**
  * SNMP table tool execution thread
  */
-static void GetSNMPTable(void *pArg)
+static void GetSNMPTable(TOOL_STARTUP_INFO *toolData)
 {
    NXCPMessage msg;
    UINT32 i, dwNumCols;
@@ -433,12 +502,12 @@ static void GetSNMPTable(void *pArg)
 
    // Prepare data message
    msg.setCode(CMD_TABLE_DATA);
-   msg.setId(((TOOL_STARTUP_INFO *)pArg)->dwRqId);
+   msg.setId(toolData->dwRqId);
 
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT col_name,col_oid,col_format FROM object_tools_table_columns WHERE tool_id=? ORDER BY col_number"));
    if (hStmt != NULL)
    {
-      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, ((TOOL_STARTUP_INFO *)pArg)->toolId);
+      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, toolData->toolId);
 
       DB_RESULT hResult = DBSelectPrepared(hStmt);
       if (hResult != NULL)
@@ -449,8 +518,8 @@ static void GetSNMPTable(void *pArg)
             args.dwNumCols = dwNumCols;
             args.ppszOidList = (TCHAR **)malloc(sizeof(TCHAR *) * dwNumCols);
             args.pnFormatList = (LONG *)malloc(sizeof(LONG) * dwNumCols);
-            args.dwFlags = ((TOOL_STARTUP_INFO *)pArg)->dwFlags;
-            args.pNode = ((TOOL_STARTUP_INFO *)pArg)->pNode;
+            args.dwFlags = toolData->dwFlags;
+            args.pNode = toolData->pNode;
             args.table = &table;
             for(i = 0; i < dwNumCols; i++)
             {
@@ -461,11 +530,11 @@ static void GetSNMPTable(void *pArg)
             }
 
             // Enumerate
-            if (((TOOL_STARTUP_INFO *)pArg)->pNode->callSnmpEnumerate(args.ppszOidList[0], TableHandler, &args) == SNMP_ERR_SUCCESS)
+            if (toolData->pNode->callSnmpEnumerate(args.ppszOidList[0], TableHandler, &args) == SNMP_ERR_SUCCESS)
             {
                // Fill in message with results
                msg.setField(VID_RCC, RCC_SUCCESS);
-               table.setTitle(((TOOL_STARTUP_INFO *)pArg)->pszToolData);
+               table.setTitle(toolData->pszToolData);
                table.fillMessage(msg, 0, -1);
             }
             else
@@ -498,10 +567,10 @@ static void GetSNMPTable(void *pArg)
    DBConnectionPoolReleaseConnection(hdb);
 
    // Send response to client
-   ((TOOL_STARTUP_INFO *)pArg)->pSession->sendMessage(&msg);
-   ((TOOL_STARTUP_INFO *)pArg)->pSession->decRefCount();
-   MemFree(((TOOL_STARTUP_INFO *)pArg)->pszToolData);
-   free(pArg);
+   toolData->pSession->sendMessage(&msg);
+   toolData->pSession->decRefCount();
+   MemFree(toolData->pszToolData);
+   MemFree(toolData);
 }
 
 /**
@@ -529,17 +598,17 @@ UINT32 ExecuteTableTool(UINT32 toolId, Node *pNode, UINT32 dwRqId, ClientSession
       if (DBGetNumRows(hResult) > 0)
       {
          nType = DBGetFieldLong(hResult, 0, 0);
-         if ((nType == TOOL_TYPE_TABLE_SNMP) || (nType == TOOL_TYPE_TABLE_AGENT))
+         if ((nType == TOOL_TYPE_SNMP_TABLE) || (nType == TOOL_TYPE_AGENT_TABLE) || (nType == TOOL_TYPE_AGENT_LIST))
          {
             pSession->incRefCount();
-            pStartup = (TOOL_STARTUP_INFO *)malloc(sizeof(TOOL_STARTUP_INFO));
+            pStartup = MemAllocStruct<TOOL_STARTUP_INFO>();
             pStartup->toolId = toolId;
             pStartup->dwRqId = dwRqId;
             pStartup->pszToolData = DBGetField(hResult, 0, 1, NULL, 0);
             pStartup->dwFlags = DBGetFieldULong(hResult, 0, 2);
             pStartup->pNode = pNode;
             pStartup->pSession = pSession;
-            ThreadPoolExecute(g_mainThreadPool, (nType == TOOL_TYPE_TABLE_SNMP) ? GetSNMPTable : GetAgentTable, pStartup);
+            ThreadPoolExecute(g_mainThreadPool, (nType == TOOL_TYPE_SNMP_TABLE) ? GetSNMPTable : ((nType == TOOL_TYPE_AGENT_LIST) ? GetAgentList : GetAgentTable), pStartup);
          }
          else
          {
@@ -784,7 +853,7 @@ UINT32 UpdateObjectToolFromMessage(NXCPMessage *pMsg)
       return ReturnDBFailure(hdb, hStmt);
    DBFreeStatement(hStmt);
 
-   if ((nType == TOOL_TYPE_TABLE_SNMP) || (nType == TOOL_TYPE_TABLE_AGENT))
+   if ((nType == TOOL_TYPE_SNMP_TABLE) || (nType == TOOL_TYPE_AGENT_LIST))
    {
       UINT32 dwId, dwNumColumns;
 
@@ -1002,7 +1071,7 @@ bool ImportObjectTool(ConfigEntry *config, bool overwrite)
    DBFreeStatement(hStmt);
 
    int toolType = config->getSubEntryValueAsInt(_T("type"));
-   if ((toolType == TOOL_TYPE_TABLE_SNMP) || (toolType == TOOL_TYPE_TABLE_AGENT))
+   if ((toolType == TOOL_TYPE_SNMP_TABLE) || (toolType == TOOL_TYPE_AGENT_LIST))
    {
    	ConfigEntry *root = config->findEntry(_T("columns"));
 	   if (root != NULL)
@@ -1471,7 +1540,7 @@ UINT32 GetObjectToolDetailsIntoMessage(UINT32 toolId, NXCPMessage *msg)
    hResult = NULL;
 
    // Column information for table tools
-   if ((toolType == TOOL_TYPE_TABLE_SNMP) || (toolType == TOOL_TYPE_TABLE_AGENT))
+   if ((toolType == TOOL_TYPE_SNMP_TABLE) || (toolType == TOOL_TYPE_AGENT_LIST))
    {
       DBFreeStatement(hStmt);
       hStmt = DBPrepare(hdb, _T("SELECT col_name,col_oid,col_format,col_substr ")

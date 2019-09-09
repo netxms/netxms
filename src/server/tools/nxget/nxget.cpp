@@ -220,7 +220,7 @@ static int GetScreenshot(AgentConnection *pConn, const char *sessionName, const 
 #ifdef UNICODE
    WCHAR *wname = WideStringFromMBString(sessionName);
    UINT32 dwError = pConn->takeScreenshot(wname, &data, &size);
-   free(wname);
+   MemFree(wname);
 #else
    UINT32 dwError = pConn->takeScreenshot(sessionName, &data, &size);
 #endif
@@ -303,9 +303,9 @@ int main(int argc, char *argv[])
                      _T("                    3 = Force encrypted connection;\n")
                      _T("                  Default value is 1.\n")
 #endif
-                     _T("   -E file      : Take screenshot. First parameter is file name, second (optional) is session name.\n")
+                     _T("   -E           : Take screenshot. First parameter is file name, second (optional) is session name.\n")
                      _T("   -h           : Display help and exit.\n")
-                     _T("   -i seconds   : Get specified parameter(s) continously with given interval.\n")
+                     _T("   -i seconds   : Get specified parameter(s) continuously with given interval.\n")
                      _T("   -I           : Get list of supported parameters.\n")
 #ifdef _WITH_ENCRYPTION
                      _T("   -K file      : Specify server's key file\n")

@@ -28,14 +28,14 @@
  */
 #define TOOL_TYPE_INTERNAL          0
 #define TOOL_TYPE_ACTION            1
-#define TOOL_TYPE_TABLE_SNMP        2
-#define TOOL_TYPE_TABLE_AGENT       3
+#define TOOL_TYPE_SNMP_TABLE        2
+#define TOOL_TYPE_AGENT_LIST        3
 #define TOOL_TYPE_URL               4
 #define TOOL_TYPE_COMMAND           5
 #define TOOL_TYPE_SERVER_COMMAND    6
 #define TOOL_TYPE_FILE_DOWNLOAD     7
 #define TOOL_TYPE_SERVER_SCRIPT     8
-
+#define TOOL_TYPE_AGENT_TABLE       9
 
 /**
  * Object tool flags
@@ -46,7 +46,6 @@
 #define TF_SHOW_IN_COMMANDS         ((UINT32)0x00000008)
 #define TF_SNMP_INDEXED_BY_VALUE    ((UINT32)0x00000010)
 
-
 /**
  * Column formats
  */
@@ -56,6 +55,5 @@
 #define CFMT_IP_ADDR    3
 #define CFMT_MAC_ADDR   4
 #define CFMT_IFINDEX    5
-
 
 #endif
