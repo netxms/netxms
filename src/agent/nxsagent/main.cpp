@@ -426,6 +426,12 @@ int main(int argc, char *argv[])
       return 1;
    }
 
+   BOOL (*__SetProcessDPIAware)() = reinterpret_cast<BOOL(*)()>(GetProcAddress(GetModuleHandle(_T("user32.dll")), "SetProcessDPIAware"));
+   if (__SetProcessDPIAware != NULL)
+      __SetProcessDPIAware();
+   else
+      _tprintf(_T("SetProcessDPIAware not available\n"));
+
    ThreadCreate(EventHandler, 0, NULL);
 
    if (s_hideConsole)
