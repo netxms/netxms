@@ -4272,8 +4272,6 @@ AC_CONFIG_FILES([
 	contrib/templates/Makefile
 	doc/Makefile
 	doc/internal/Makefile
-	doc/manuals/Makefile
-	doc/misc/Makefile
 	images/Makefile
 	include/Makefile
 	include/msvc/Makefile
