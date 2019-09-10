@@ -186,32 +186,6 @@ typedef int bool;
 #endif
 
 
-/***** Common C++ includes *****/
-
-#ifdef __cplusplus
-
-#include <memory>
-
-#if defined(__IBMCPP_TR1__)
-using std::tr1::shared_ptr;
-
-// xlC++ implementation C++11 TR1 does not have make_shared
-template<typename T, typename... Args>
-inline shared_ptr<T> make_shared(Args&&... args)
-{
-   return shared_ptr<T>(new T(args...));
-}
-#elif defined(__HP_aCC)
-// HP aC++ does not have shared_ptr implementation, use bundled one
-#include "nx_shared_ptr.h"
-#else
-using std::shared_ptr;
-using std::make_shared;
-#endif
-
-#endif	/* __cplusplus */
-
-
 /***** Platform dependent includes and defines *****/
 
 #if defined(_WIN32) || defined(UNDER_CE)
@@ -1196,6 +1170,44 @@ typedef struct tagICMPHDR
 #define CHECK_NULL_EX(x)   ((x) == NULL ? _T("") : (x))
 #define CHECK_NULL_EX_A(x) ((x) == NULL ? "" : (x))
 #define CHECK_NULL_EX_W(x) ((x) == NULL ? L"" : (x))
+
+
+/***** Common C++ includes *****/
+
+#ifdef __cplusplus
+
+#if defined(__IBMCPP_TR1__)
+
+#include <memory>
+using std::tr1::shared_ptr;
+
+// xlC++ implementation C++11 TR1 does not have make_shared
+template<typename T, typename... Args>
+inline shared_ptr<T> make_shared(Args&&... args)
+{
+   return shared_ptr<T>(new T(args...));
+}
+
+#elif defined(__HP_aCC)
+
+// HP aC++ does not have shared_ptr implementation, use bundled one
+#include "nx_shared_ptr.h"
+
+#elif defined(__GNUC__) && (__GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 8))
+
+// GCC implementation before 4.8 does not work with RTTI disabled, use bundled one
+#include "nx_shared_ptr.h"
+
+#else
+
+#include <memory>
+using std::shared_ptr;
+using std::make_shared;
+
+#endif
+
+#endif	/* __cplusplus */
+
 
 /**
  * Heap functions
