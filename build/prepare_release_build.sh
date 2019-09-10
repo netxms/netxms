@@ -32,9 +32,9 @@ mv ./plugin.xml src/java/netxms-eclipse/Core/plugin.xml
 cat src/java/netxms-eclipse/Product/nxmc.product | sed -E "s,^Version [0-9.]+\$,Version $VERSION," > nxmc.product
 mv ./nxmc.product src/java/netxms-eclipse/Product/nxmc.product
 
-sed -i '' "s,org.netxms:netxms-client:3.0-SNAPSHOT,org.netxms:netxms-client:$VERSION,g" android/agent/app/build.gradle
-sed -i '' "s,org.netxms:netxms-mobile-agent:3.0-SNAPSHOT,org.netxms:netxms-mobile-agent:$VERSION,g" android/agent/app/build.gradle
-sed -i '' "s,org.netxms:netxms-client:3.0-SNAPSHOT,org.netxms:netxms-client:$VERSION,g" android/console/app/build.gradle
-sed -i '' "s,org.netxms:netxms-base:3.0-SNAPSHOT,org.netxms:netxms-base:$VERSION,g" android/console/app/build.gradle
+sed -i -e "s,org.netxms:netxms-client:3.0-SNAPSHOT,org.netxms:netxms-client:$VERSION,g" android/agent/app/build.gradle
+sed -i -e "s,org.netxms:netxms-mobile-agent:3.0-SNAPSHOT,org.netxms:netxms-mobile-agent:$VERSION,g" android/agent/app/build.gradle
+sed -i -e "s,org.netxms:netxms-client:3.0-SNAPSHOT,org.netxms:netxms-client:$VERSION,g" android/console/app/build.gradle
+sed -i -e "s,org.netxms:netxms-base:3.0-SNAPSHOT,org.netxms:netxms-base:$VERSION,g" android/console/app/build.gradle
 
 ./reconf
