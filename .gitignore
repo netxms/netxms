@@ -52,14 +52,14 @@ target
 /runtime-nxmc.*
 
 /aclocal.m4
-/android/src/agent/local.properties
-/android/src/agent/.gradle
-/android/src/agent/build
-/android/src/agent/app/build
-/android/src/console/local.properties
-/android/src/console/.gradle
-/android/src/console/build
-/android/src/console/app/build
+/android/agent/local.properties
+/android/agent/.gradle
+/android/agent/build
+/android/agent/app/build
+/android/console/local.properties
+/android/console/.gradle
+/android/console/build
+/android/console/app/build
 /autom4te.cache
 /bin64
 /config
@@ -294,3 +294,6 @@ src/libnxjava/java/base/netxms-base/.settings/
 .autoenv.zsh
 CMakeLists.txt
 cmake-build-debug/
+
+# re-enable gradle wrapper
+!gradle-wrapper.jar
