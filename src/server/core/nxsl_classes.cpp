@@ -876,6 +876,44 @@ NXSL_METHOD_DEFINITION(Node, enableTopologyPolling)
 }
 
 /**
+ * Node::executeSSHCommand(command) method
+ */
+NXSL_METHOD_DEFINITION(Node, executeSSHCommand)
+{
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   Node *node = static_cast<Node*>(object->getData());
+   UINT32 proxyId = node->getEffectiveSshProxy();
+   if (proxyId != 0)
+   {
+      Node *proxyNode = static_cast<Node*>(FindObjectById(proxyId, OBJECT_NODE));
+      if (proxyNode != NULL)
+      {
+         TCHAR command[MAX_PARAM_NAME], ipAddr[64];
+         _sntprintf(command, MAX_PARAM_NAME, _T("SSH.Command(%s,\"%s\",\"%s\",\"%s\")"),
+                    node->getIpAddress().toString(ipAddr),
+                    (const TCHAR *)EscapeStringForAgent(node->getSshLogin()),
+                    (const TCHAR *)EscapeStringForAgent(node->getSshPassword()),
+                    (const TCHAR *)EscapeStringForAgent(argv[0]->getValueAsCString()));
+         StringList *list;
+         UINT32 rcc = proxyNode->getListFromAgent(command, &list);
+         *result = (rcc == DCE_SUCCESS) ? vm->createValue(new NXSL_Array(vm, list)) : vm->createValue();
+         delete list;
+      }
+      else
+      {
+         *result = vm->createValue();
+      }
+   }
+   else
+   {
+      *result = vm->createValue();
+   }
+   return 0;
+}
+
+/**
  * Node::getInterface(ifIndex) method
  */
 NXSL_METHOD_DEFINITION(Node, getInterface)
@@ -974,6 +1012,7 @@ NXSL_NodeClass::NXSL_NodeClass() : NXSL_DCTargetClass()
    NXSL_REGISTER_METHOD(Node, enableSnmp, 1);
    NXSL_REGISTER_METHOD(Node, enableStatusPolling, 1);
    NXSL_REGISTER_METHOD(Node, enableTopologyPolling, 1);
+   NXSL_REGISTER_METHOD(Node, executeSSHCommand, 1);
    NXSL_REGISTER_METHOD(Node, getInterface, 1);
    NXSL_REGISTER_METHOD(Node, getInterfaceName, 1);
    NXSL_REGISTER_METHOD(Node, readAgentList, 1);

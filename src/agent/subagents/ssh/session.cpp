@@ -112,12 +112,12 @@ bool SSHSession::connect(const TCHAR *user, const TCHAR *password)
       }
       else
       {
-         nxlog_debug(6, _T("SSH: login as %s on %s:%d failed"), user, (const TCHAR *)m_addr.toString(), m_port);
+         nxlog_debug(6, _T("SSH: login as %s on %s:%d failed (%hs)"), user, (const TCHAR *)m_addr.toString(), m_port, ssh_get_error(m_session));
       }
    }
    else
    {
-      nxlog_debug(6, _T("SSH: connect to %s:%d failed"), (const TCHAR *)m_addr.toString(), m_port);
+      nxlog_debug(6, _T("SSH: connect to %s:%d failed (%hs)"), (const TCHAR *)m_addr.toString(), m_port, ssh_get_error(m_session));
    }
 
    if (success)
@@ -218,6 +218,9 @@ StringList *SSHSession::execute(const TCHAR *command)
          nxlog_debug(6, _T("SSH: command \"%s\" execution on %s:%d failed"), command, (const TCHAR *)m_addr.toString(), m_port);
       }
       ssh_channel_close(channel);
+#ifdef UNICODE
+      MemFree(mbcmd);
+#endif
    }
    else
    {
