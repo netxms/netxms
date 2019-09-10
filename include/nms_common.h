@@ -808,8 +808,8 @@ typedef struct hostent HOSTENT;
 #define CAST_FROM_POINTER(p, t) ((t)((UINT64)(p)))
 #define CAST_TO_POINTER(v, t) ((t)((UINT64)(v)))
 #else
-#define CAST_FROM_POINTER(p, t) ((t)(p))
-#define CAST_TO_POINTER(v, t) ((t)(v))
+#define CAST_FROM_POINTER(p, t) ((t)((UINT32)(p)))
+#define CAST_TO_POINTER(v, t) ((t)((UINT32)(v)))
 #endif
 
 /**
