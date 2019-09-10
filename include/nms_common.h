@@ -1193,7 +1193,7 @@ inline shared_ptr<T> make_shared(Args&&... args)
 // HP aC++ does not have shared_ptr implementation, use bundled one
 #include "nx_shared_ptr.h"
 
-#elif defined(__GNUC__) && (__GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 8))
+#elif !defined(__clang__) && defined(__GNUC__) && (__GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 8))
 
 // GCC implementation before 4.8 does not work with RTTI disabled, use bundled one
 #include "nx_shared_ptr.h"
