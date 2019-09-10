@@ -72,12 +72,13 @@ product
       file              libnxsqlite.so.2
       file              libnxsqlite.so.2.0
       file		libnxssl.so.1.1
-      file              libnxtre.so
-      file              libnxtre.so.5
-      file              libnxtre.so.5.0
       file              libnxzlib.so
       file              libnxzlib.so.1
       file              libnxzlib.so.1.0
+      file		libpcre.so.3
+      file		libpcre.so.3.11
+      file		libpcre32.so.0
+      file		libpcre32.so.0.11
       directory         build/lib/netxms=/opt/netxms/lib/netxms
       file              dbquery.nsm
       file              ecs.nsm
