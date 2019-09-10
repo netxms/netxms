@@ -62,7 +62,8 @@ import org.netxms.ui.eclipse.perfview.Activator;
 import org.netxms.ui.eclipse.perfview.Messages;
 import org.netxms.ui.eclipse.perfview.PerfTabGraphSettings;
 import org.netxms.ui.eclipse.perfview.views.HistoricalGraphView;
-import org.netxms.ui.eclipse.perfview.views.HistoricalGraphView.ActionType;
+import org.netxms.ui.eclipse.perfview.views.HistoricalGraphView.ChartActionType;
+import org.netxms.ui.eclipse.perfview.views.HistoricalGraphView.HistoricalChartOwner;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.ViewRefreshController;
@@ -73,7 +74,7 @@ import org.netxms.ui.eclipse.widgets.DashboardComposite;
  * Performance tab graph
  *
  */
-public class PerfTabGraph extends DashboardComposite
+public class PerfTabGraph extends DashboardComposite implements HistoricalChartOwner
 {
 	private long nodeId;
 	private List<PerfTabDci> items = new ArrayList<PerfTabDci>(4);
@@ -207,9 +208,9 @@ public class PerfTabGraph extends DashboardComposite
          }
       };
 
-      actionAdjustX = HistoricalGraphView.createAction(ActionType.ADJUST_X, chart);
-      actionAdjustY = HistoricalGraphView.createAction(ActionType.ADJUST_Y, chart);
-      actionAdjustBoth = HistoricalGraphView.createAction(ActionType.ADJUST_BOTH, chart);
+      actionAdjustX = HistoricalGraphView.createAction(ChartActionType.ADJUST_X, this);
+      actionAdjustY = HistoricalGraphView.createAction(ChartActionType.ADJUST_Y, this);
+      actionAdjustBoth = HistoricalGraphView.createAction(ChartActionType.ADJUST_BOTH, this);
 
       presetActions = HistoricalGraphView.createPresetActions(new HistoricalGraphView.PresetHandler() {
          @Override
@@ -432,4 +433,13 @@ public class PerfTabGraph extends DashboardComposite
 	            "Could not open history graph view " + e.getLocalizedMessage());
 	   }
 	}
+
+   /**
+    * @see org.netxms.ui.eclipse.perfview.views.HistoricalGraphView.HistoricalChartOwner#getChart()
+    */
+   @Override
+   public HistoricalDataChart getChart()
+   {
+      return chart;
+   }
 }

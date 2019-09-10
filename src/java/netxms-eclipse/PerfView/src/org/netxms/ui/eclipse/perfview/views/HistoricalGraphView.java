@@ -638,9 +638,16 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
       };
       actionZoomOut.setImageDescriptor(SharedIcons.ZOOM_OUT);
 
-      actionAdjustX = createAction(ActionType.ADJUST_X, chart);
-      actionAdjustY = createAction(ActionType.ADJUST_Y, chart);
-      actionAdjustBoth = createAction(ActionType.ADJUST_BOTH, chart);
+      final HistoricalChartOwner chartOwner = new HistoricalChartOwner() {
+         @Override
+         public HistoricalDataChart getChart()
+         {
+            return HistoricalGraphView.this.chart;
+         }
+      };
+      actionAdjustX = createAction(ChartActionType.ADJUST_X, chartOwner);
+      actionAdjustY = createAction(ChartActionType.ADJUST_Y, chartOwner);
+      actionAdjustBoth = createAction(ChartActionType.ADJUST_BOTH, chartOwner);
 
       actionShowLegend = new Action(Messages.get().HistoricalGraphView_ShowLegend) {
          @Override
@@ -1162,10 +1169,10 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
     * Create action for chart
     * 
     * @param type
-    * @param chart
+    * @param chartOwner
     * @return
     */
-   public static Action createAction(ActionType type, final HistoricalDataChart chart)
+   public static Action createAction(ChartActionType type, final HistoricalChartOwner chartOwner)
    {
       Action action = null;
       switch(type)
@@ -1175,8 +1182,8 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
                @Override
                public void run()
                {
-                  chart.adjustXAxis(false);
-                  chart.adjustYAxis(true);
+                  chartOwner.getChart().adjustXAxis(false);
+                  chartOwner.getChart().adjustYAxis(true);
                }
             };
             action.setText(Messages.get().HistoricalGraphView_Adjust);
@@ -1187,7 +1194,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
                @Override
                public void run()
                {
-                  chart.adjustXAxis(true);
+                  chartOwner.getChart().adjustXAxis(true);
                }
             };
             action.setText(Messages.get().HistoricalGraphView_AdjustX);
@@ -1198,7 +1205,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
                @Override
                public void run()
                {
-                  chart.adjustYAxis(true);
+                  chartOwner.getChart().adjustYAxis(true);
                }
             };
             action.setText(Messages.get().HistoricalGraphView_AdjustY);
@@ -1211,7 +1218,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
    /**
     * Action types
     */
-   public enum ActionType
+   public enum ChartActionType
    {
       ADJUST_X, ADJUST_Y, ADJUST_BOTH
    }
@@ -1228,5 +1235,18 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
        * @param range
        */
       public void onPresetSelected(int units, int range);
+   }
+   
+   /**
+    * Chart owner
+    */
+   public interface HistoricalChartOwner
+   {
+      /**
+       * Get current chart object
+       * 
+       * @return current chart object
+       */
+      public HistoricalDataChart getChart();
    }
 }

@@ -316,6 +316,8 @@ public class LineChart extends Chart implements HistoricalDataChart
 					setRange(range, axis);
 				}
 			}
+			zoomedToSelectionX = true;
+			zoomedToSelectionY = true;
 		}
       
 		selection.dispose();

@@ -106,6 +106,10 @@ public class LineChart extends Chart implements HistoricalDataChart
 	private Set<String> errors = new HashSet<String>(0);
 	private Image errorImage = null;
 	private boolean tooltipShown = false;
+	private boolean zoomedToSelectionX = false;
+   private boolean zoomedToSelectionY = false;
+   private Date delayedRangeFrom;
+   private Date delayedRangeTo;
 	
 	/**
 	 * @param parent
@@ -331,6 +335,8 @@ public class LineChart extends Chart implements HistoricalDataChart
 					setRange(range, axis);
 				}
 			}
+			zoomedToSelectionX = true;
+			zoomedToSelectionY = true;
 		}
       
 		selection.dispose();
@@ -441,6 +447,16 @@ public class LineChart extends Chart implements HistoricalDataChart
 	@Override
 	public void setTimeRange(final Date from, final Date to)
 	{
+	   if (zoomedToSelectionX)
+	   {
+	      delayedRangeFrom = from;
+	      delayedRangeTo = to;
+	      return;
+	   }
+
+      delayedRangeFrom = null;
+      delayedRangeTo = null;
+	   
 		timeFrom = from.getTime();
 		timeTo = to.getTime();
 		getAxisSet().getXAxis(0).setRange(new Range(timeFrom, timeTo));
@@ -671,7 +687,7 @@ public class LineChart extends Chart implements HistoricalDataChart
 	{
 	   updateLayout();
 	   updateStackAndRiserData();
-	   if (adjustYAxis)
+	   if (adjustYAxis && !zoomedToSelectionY)
 	      adjustYAxis(true);
 	   else
 	      redraw();
@@ -683,6 +699,8 @@ public class LineChart extends Chart implements HistoricalDataChart
 	@Override
 	public void rebuild()
 	{
+	   zoomedToSelectionX = false;
+	   zoomedToSelectionY = false;
       updateStackAndRiserData();
       if (adjustYAxis)
          adjustYAxis(true);
@@ -735,7 +753,7 @@ public class LineChart extends Chart implements HistoricalDataChart
 		
 		if (updateChart)
 		{
-		   if (adjustYAxis)
+		   if (adjustYAxis && !zoomedToSelectionY)
    		{
    			adjustYAxis(true);
    		}
@@ -858,10 +876,18 @@ public class LineChart extends Chart implements HistoricalDataChart
 	@Override
 	public void adjustXAxis(boolean repaint)
 	{
-		for(final IAxis axis : getAxisSet().getXAxes())
-		{
-			axis.adjustRange();
-		}
+      zoomedToSelectionX = false;
+      if (delayedRangeFrom != null)
+      {
+         setTimeRange(delayedRangeFrom, delayedRangeTo);
+      }
+      else
+      {
+   		for(final IAxis axis : getAxisSet().getXAxes())
+   		{
+   			axis.adjustRange();
+   		}
+      }
 		if (repaint)
 			redraw();
 	}
@@ -872,6 +898,7 @@ public class LineChart extends Chart implements HistoricalDataChart
 	@Override
 	public void adjustYAxis(boolean repaint)
 	{
+      zoomedToSelectionY = false;
 	   adjustYAxis = true;
 		final IAxis yAxis = getAxisSet().getYAxis(0);
 		yAxis.adjustRange();
@@ -882,7 +909,6 @@ public class LineChart extends Chart implements HistoricalDataChart
          range.lower = - adjustRange(Math.abs(range.lower));
       range.upper = adjustRange(range.upper);
 		yAxis.setRange(range);
-
 		if (repaint)
 			redraw();
 	}

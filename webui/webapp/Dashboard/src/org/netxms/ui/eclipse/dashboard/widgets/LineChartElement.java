@@ -56,14 +56,15 @@ import org.netxms.ui.eclipse.dashboard.Messages;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.LineChartConfig;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.perfview.views.HistoricalGraphView;
-import org.netxms.ui.eclipse.perfview.views.HistoricalGraphView.ActionType;
+import org.netxms.ui.eclipse.perfview.views.HistoricalGraphView.ChartActionType;
+import org.netxms.ui.eclipse.perfview.views.HistoricalGraphView.HistoricalChartOwner;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.ViewRefreshController;
 
 /**
  * Line chart element
  */
-public class LineChartElement extends ElementWidget
+public class LineChartElement extends ElementWidget implements HistoricalChartOwner
 {
 	private HistoricalDataChart chart;
 	private LineChartConfig config;
@@ -168,9 +169,9 @@ public class LineChartElement extends ElementWidget
          }
       };
 
-      actionAdjustX = HistoricalGraphView.createAction(ActionType.ADJUST_X, chart);
-      actionAdjustY = HistoricalGraphView.createAction(ActionType.ADJUST_Y, chart);
-      actionAdjustBoth = HistoricalGraphView.createAction(ActionType.ADJUST_BOTH, chart);
+      actionAdjustX = HistoricalGraphView.createAction(ChartActionType.ADJUST_X, this);
+      actionAdjustY = HistoricalGraphView.createAction(ChartActionType.ADJUST_Y, this);
+      actionAdjustBoth = HistoricalGraphView.createAction(ChartActionType.ADJUST_BOTH, this);
 
       presetActions = HistoricalGraphView.createPresetActions(new HistoricalGraphView.PresetHandler() {
          @Override
@@ -358,4 +359,13 @@ public class LineChartElement extends ElementWidget
 	      this.data = data;
 	   }
 	}
+
+   /**
+    * @see org.netxms.ui.eclipse.perfview.views.HistoricalGraphView.HistoricalChartOwner#getChart()
+    */
+   @Override
+   public HistoricalDataChart getChart()
+   {
+      return chart;
+   }
 }
