@@ -46,37 +46,27 @@ extern ThreadPool *g_pollerThreadPool;
 /**
  * Default constructor
  */
-DataCollectionTarget::DataCollectionTarget() : super()
+DataCollectionTarget::DataCollectionTarget() : super(), m_statusPollState(_T("status")),
+         m_configurationPollState(_T("configuration")), m_instancePollState(_T("instance"))
 {
    m_deletedItems = new IntegerArray<UINT32>(32, 32);
    m_deletedTables = new IntegerArray<UINT32>(32, 32);
    m_scriptErrorReports = new StringMap();
-   m_lastConfigurationPoll = 0;
-   m_lastStatusPoll = 0;
-   m_lastInstancePoll = 0;
    m_hPollerMutex = MutexCreate();
    m_proxyLoadFactor = 0;
-   m_statusPollTimer = new ManualGauge64(_T("status"), 1, 1000);
-   m_configurationPollTimer = new ManualGauge64(_T("configuration"), 1, 1000);
-   m_instancePollTimer = new ManualGauge64(_T("instance"), 1, 1000);
 }
 
 /**
  * Constructor for creating new data collection capable objects
  */
-DataCollectionTarget::DataCollectionTarget(const TCHAR *name) : super(name)
+DataCollectionTarget::DataCollectionTarget(const TCHAR *name) : super(name), m_statusPollState(_T("status")),
+         m_configurationPollState(_T("configuration")), m_instancePollState(_T("instance"))
 {
    m_deletedItems = new IntegerArray<UINT32>(32, 32);
    m_deletedTables = new IntegerArray<UINT32>(32, 32);
    m_scriptErrorReports = new StringMap();
-   m_lastConfigurationPoll = 0;
-   m_lastStatusPoll = 0;
-   m_lastInstancePoll = 0;
    m_hPollerMutex = MutexCreate();
    m_proxyLoadFactor = 0;
-   m_statusPollTimer = new ManualGauge64(_T("status"), 1, 1000);
-   m_configurationPollTimer = new ManualGauge64(_T("configuration"), 1, 1000);
-   m_instancePollTimer = new ManualGauge64(_T("instance"), 1, 1000);
 }
 
 /**
@@ -87,9 +77,6 @@ DataCollectionTarget::~DataCollectionTarget()
    delete m_deletedItems;
    delete m_deletedTables;
    delete m_scriptErrorReports;
-   delete m_statusPollTimer;
-   delete m_configurationPollTimer;
-   delete m_instancePollTimer;
    MutexDestroy(m_hPollerMutex);
 }
 
@@ -690,75 +677,51 @@ DataCollectionError DataCollectionTarget::getInternalItem(const TCHAR *param, si
 
    if (!_tcsicmp(param, _T("PollTime.Configuration.Average")))
    {
-      lockProperties();
-      _sntprintf(buffer, bufSize, INT64_FMT, static_cast<INT64>(m_configurationPollTimer->getAverage()));
-      unlockProperties();
+      _sntprintf(buffer, bufSize, INT64_FMT, m_configurationPollState.getTimerAverage());
    }
    else if (!_tcsicmp(param, _T("PollTime.Configuration.Last")))
    {
-      lockProperties();
-      _sntprintf(buffer, bufSize, INT64_FMT, m_configurationPollTimer->getCurrent());
-      unlockProperties();
+      _sntprintf(buffer, bufSize, INT64_FMT, m_configurationPollState.getTimerLast());
    }
    else if (!_tcsicmp(param, _T("PollTime.Configuration.Max")))
    {
-      lockProperties();
-      _sntprintf(buffer, bufSize, INT64_FMT, m_configurationPollTimer->getMax());
-      unlockProperties();
+      _sntprintf(buffer, bufSize, INT64_FMT, m_configurationPollState.getTimerMax());
    }
    else if (!_tcsicmp(param, _T("PollTime.Configuration.Min")))
    {
-      lockProperties();
-      _sntprintf(buffer, bufSize, INT64_FMT, m_configurationPollTimer->getMin());
-      unlockProperties();
+      _sntprintf(buffer, bufSize, INT64_FMT, m_configurationPollState.getTimerMin());
    }
    else if (!_tcsicmp(param, _T("PollTime.Instance.Average")))
    {
-      lockProperties();
-      _sntprintf(buffer, bufSize, INT64_FMT, static_cast<INT64>(m_instancePollTimer->getAverage()));
-      unlockProperties();
+      _sntprintf(buffer, bufSize, INT64_FMT, m_instancePollState.getTimerAverage());
    }
    else if (!_tcsicmp(param, _T("PollTime.Instance.Last")))
    {
-      lockProperties();
-      _sntprintf(buffer, bufSize, INT64_FMT, m_instancePollTimer->getCurrent());
-      unlockProperties();
+      _sntprintf(buffer, bufSize, INT64_FMT, m_instancePollState.getTimerLast());
    }
    else if (!_tcsicmp(param, _T("PollTime.Instance.Max")))
    {
-      lockProperties();
-      _sntprintf(buffer, bufSize, INT64_FMT, m_instancePollTimer->getMax());
-      unlockProperties();
+      _sntprintf(buffer, bufSize, INT64_FMT, m_instancePollState.getTimerMax());
    }
    else if (!_tcsicmp(param, _T("PollTime.Instance.Min")))
    {
-      lockProperties();
-      _sntprintf(buffer, bufSize, INT64_FMT, m_instancePollTimer->getMin());
-      unlockProperties();
+      _sntprintf(buffer, bufSize, INT64_FMT, m_instancePollState.getTimerMin());
    }
    else if (!_tcsicmp(param, _T("PollTime.Status.Average")))
    {
-      lockProperties();
-      _sntprintf(buffer, bufSize, INT64_FMT, static_cast<INT64>(m_statusPollTimer->getAverage()));
-      unlockProperties();
+      _sntprintf(buffer, bufSize, INT64_FMT, m_statusPollState.getTimerAverage());
    }
    else if (!_tcsicmp(param, _T("PollTime.Status.Last")))
    {
-      lockProperties();
-      _sntprintf(buffer, bufSize, INT64_FMT, m_statusPollTimer->getCurrent());
-      unlockProperties();
+      _sntprintf(buffer, bufSize, INT64_FMT, m_statusPollState.getTimerLast());
    }
    else if (!_tcsicmp(param, _T("PollTime.Status.Max")))
    {
-      lockProperties();
-      _sntprintf(buffer, bufSize, INT64_FMT, m_statusPollTimer->getMax());
-      unlockProperties();
+      _sntprintf(buffer, bufSize, INT64_FMT, m_statusPollState.getTimerMax());
    }
    else if (!_tcsicmp(param, _T("PollTime.Status.Min")))
    {
-      lockProperties();
-      _sntprintf(buffer, bufSize, INT64_FMT, m_statusPollTimer->getMin());
-      unlockProperties();
+      _sntprintf(buffer, bufSize, INT64_FMT, m_statusPollState.getTimerMin());
    }
    else if (!_tcsicmp(param, _T("Status")))
    {
@@ -1294,8 +1257,9 @@ void DataCollectionTarget::leaveMaintenanceMode()
    setModified(MODIFY_COMMON_PROPERTIES);
    unlockProperties();
 
-   if(forcePoll)
+   if (forcePoll)
    {
+      startForcedStatusPoll();
       TCHAR threadKey[32];
       _sntprintf(threadKey, 32, _T("POLL_%u"), getId());
       ThreadPoolExecuteSerialized(g_pollerThreadPool, threadKey, this, &DataCollectionTarget::statusPollWorkerEntry, RegisterPoller(PollerType::STATUS, this));
@@ -1614,13 +1578,10 @@ void DataCollectionTarget::instanceDiscoveryPoll(PollerInfo *poller, ClientSessi
    lockProperties();
    if (m_isDeleteInitiated || IsShutdownInProgress())
    {
-      if (requestId == 0)
-         m_runtimeFlags &= ~ODF_QUEUED_FOR_INSTANCE_POLL;
+      m_instancePollState.complete(0);
       unlockProperties();
       return;
    }
-   // Poller can be called directly - in that case poll flag will not be set
-   m_runtimeFlags |= ODF_QUEUED_FOR_INSTANCE_POLL;
    unlockProperties();
 
    poller->setStatus(_T("wait for lock"));
@@ -1628,8 +1589,6 @@ void DataCollectionTarget::instanceDiscoveryPoll(PollerInfo *poller, ClientSessi
 
    if (IsShutdownInProgress())
    {
-      if (requestId == 0)
-         unlockForInstancePoll();
       pollerUnlock();
       return;
    }
@@ -1654,12 +1613,8 @@ void DataCollectionTarget::instanceDiscoveryPoll(PollerInfo *poller, ClientSessi
       DbgPrintf(4, _T("%s is marked as unreachable, instance discovery poll aborted"), getObjectClassName());
    }
 
-   m_lastInstancePoll = time(NULL);
-
    // Finish instance discovery poll
    poller->setStatus(_T("cleanup"));
-   if (requestId == 0)
-      unlockForInstancePoll();
    pollerUnlock();
    DbgPrintf(4, _T("Finished instance discovery poll for %s %s (ID: %d)"), getObjectClassName(), m_name, m_id);
 }
@@ -1967,11 +1922,9 @@ void DataCollectionTarget::calculateProxyLoad()
  */
 void DataCollectionTarget::resetPollTimers()
 {
-   lockProperties();
-   m_statusPollTimer->reset();
-   m_configurationPollTimer->reset();
-   m_instancePollTimer->reset();
-   unlockProperties();
+   m_statusPollState.resetTimer();
+   m_configurationPollState.resetTimer();
+   m_instancePollState.resetTimer();
 }
 
 /**

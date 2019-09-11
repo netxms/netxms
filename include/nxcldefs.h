@@ -208,7 +208,7 @@
 /**
  * Flag separator
  */
-#define DCF_COLLECTION_FLAGS 0x0000FFFF
+#define DCF_COLLECTION_FLAGS      0x0000FFFF
 
 /**
  * Node flags
@@ -234,23 +234,16 @@
 /**
  * Common object runtime flags (can be used by all NetObj derived classes)
  */
-#define ODF_QUEUED_FOR_STATUS_POLL         0x0001
-#define ODF_QUEUED_FOR_CONFIGURATION_POLL  0x0002
-#define ODF_QUEUED_FOR_INSTANCE_POLL       0x0004
-#define ODF_FORCE_STATUS_POLL              0x0008
-#define ODF_FORCE_CONFIGURATION_POLL       0x0010
-#define ODF_CONFIGURATION_POLL_PASSED      0x0020
-#define ODF_CONFIGURATION_POLL_PENDING     0x0040
+#define ODF_FORCE_STATUS_POLL              0x0001
+#define ODF_FORCE_CONFIGURATION_POLL       0x0002
+#define ODF_CONFIGURATION_POLL_PASSED      0x0004
+#define ODF_CONFIGURATION_POLL_PENDING     0x0008
 
 /**
  * Node runtime (dynamic) flags
  */
-#define NDF_QUEUED_FOR_TOPOLOGY_POLL   0x00010000
-#define NDF_QUEUED_FOR_DISCOVERY_POLL  0x00020000
-#define NDF_QUEUED_FOR_ROUTE_POLL      0x00040000
-#define NDF_RECHECK_CAPABILITIES       0x00080000
-#define NDF_NEW_TUNNEL_BIND            0x00100000
-#define NDF_QUEUED_FOR_ICMP_POLL       0x00200000
+#define NDF_RECHECK_CAPABILITIES       0x00010000
+#define NDF_NEW_TUNNEL_BIND            0x00020000
 
 /**
  * Data collection object state flags

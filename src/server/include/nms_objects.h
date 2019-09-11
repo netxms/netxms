@@ -157,13 +157,14 @@ enum class PollerType
  */
 class NXCORE_EXPORTABLE PollerInfo
 {
+   friend PollerInfo *RegisterPoller(PollerType, NetObj*, bool);
+
 private:
    PollerType m_type;
    NetObj *m_object;
    bool m_objectCreation;
    TCHAR m_status[128];
 
-public:
    PollerInfo(PollerType type, NetObj *object, bool objectCreation)
    {
       m_type = type;
@@ -171,6 +172,8 @@ public:
       m_objectCreation = objectCreation;
       _tcscpy(m_status, _T("awaiting execution"));
    }
+
+public:
    ~PollerInfo();
 
    PollerType getType() const { return m_type; }
@@ -1621,12 +1624,10 @@ void ResetObjectPollTimers(const ScheduledTaskParameters *params);
 #define pollerLock(name) \
    _pollerLock(); \
    UINT64 __pollStartTime = GetCurrentTimeMs(); \
-   ManualGauge64 *__pollTimer = m_ ##name##PollTimer; \
+   PollState *__pollState = &m_ ##name##PollState; \
 
 #define pollerUnlock() \
-   lockProperties(); \
-   __pollTimer->update(GetCurrentTimeMs() - __pollStartTime); \
-   unlockProperties(); \
+   __pollState->complete(GetCurrentTimeMs() - __pollStartTime); \
    _pollerUnlock();
 
 /**
@@ -1643,6 +1644,141 @@ struct ProxyInfo
 };
 
 /**
+ * Poll state information
+ */
+class NXCORE_EXPORTABLE PollState
+{
+private:
+   VolatileCounter m_pollerCount;
+   time_t m_lastCompleted;
+   ManualGauge64 *m_timer;
+   MUTEX m_lock;
+
+public:
+   PollState(const TCHAR *name)
+   {
+      m_pollerCount = 0;
+      m_lastCompleted = NEVER;
+      m_timer = new ManualGauge64(name, 1, 1000);
+      m_lock = MutexCreateFast();
+   }
+
+   ~PollState()
+   {
+      delete m_timer;
+      MutexDestroy(m_lock);
+   }
+
+   /**
+    * Check if poll is pending
+    */
+   bool isPending()
+   {
+      bool pending = (InterlockedIncrement(&m_pollerCount) > 1);
+      InterlockedDecrement(&m_pollerCount);
+      return pending;
+   }
+
+   /**
+    * Schedule execution if there are no active/queued pollers
+    */
+   bool schedule()
+   {
+      if (InterlockedIncrement(&m_pollerCount) > 1)
+      {
+         InterlockedDecrement(&m_pollerCount);
+         return false;
+      }
+      return true;
+   }
+
+   /**
+    * Notify about manual poller start
+    */
+   void manualStart()
+   {
+      InterlockedIncrement(&m_pollerCount);
+   }
+
+   /**
+    * Notify about poller completion
+    */
+   void complete(INT64 elapsed)
+   {
+      MutexLock(m_lock);
+      m_lastCompleted = time(NULL);
+      m_timer->update(elapsed);
+      InterlockedDecrement(&m_pollerCount);
+      MutexUnlock(m_lock);
+   }
+
+   /**
+    * Reset poll timer
+    */
+   void resetTimer()
+   {
+      MutexLock(m_lock);
+      m_timer->reset();
+      MutexUnlock(m_lock);
+   }
+
+   /**
+    * Get timestamp of last completed poll
+    */
+   time_t getLastCompleted()
+   {
+      MutexLock(m_lock);
+      time_t t = m_lastCompleted;
+      MutexUnlock(m_lock);
+      return t;
+   }
+
+   /**
+    * Get timer average value
+    */
+   INT64 getTimerAverage()
+   {
+      MutexLock(m_lock);
+      INT64 v = static_cast<INT64>(m_timer->getAverage());
+      MutexUnlock(m_lock);
+      return v;
+   }
+
+   /**
+    * Get timer minimum value
+    */
+   INT64 getTimerMin()
+   {
+      MutexLock(m_lock);
+      INT64 v = m_timer->getMin();
+      MutexUnlock(m_lock);
+      return v;
+   }
+
+   /**
+    * Get timer maximum value
+    */
+   INT64 getTimerMax()
+   {
+      MutexLock(m_lock);
+      INT64 v = m_timer->getMax();
+      MutexUnlock(m_lock);
+      return v;
+   }
+
+   /**
+    * Get last timer value
+    */
+   INT64 getTimerLast()
+   {
+      MutexLock(m_lock);
+      INT64 v = m_timer->getCurrent();
+      MutexUnlock(m_lock);
+      return v;
+   }
+};
+
+/**
  * Common base class for all objects capable of collecting data
  */
 class NXCORE_EXPORTABLE DataCollectionTarget : public DataCollectionOwner
@@ -1654,14 +1790,11 @@ protected:
    IntegerArray<UINT32> *m_deletedItems;
    IntegerArray<UINT32> *m_deletedTables;
    StringMap *m_scriptErrorReports;
-   time_t m_lastConfigurationPoll;
-   time_t m_lastStatusPoll;
-   time_t m_lastInstancePoll;
+   PollState m_statusPollState;
+   PollState m_configurationPollState;
+   PollState m_instancePollState;
    MUTEX m_hPollerMutex;
    double m_proxyLoadFactor;
-   ManualGauge64 *m_statusPollTimer;
-   ManualGauge64 *m_configurationPollTimer;
-   ManualGauge64 *m_instancePollTimer;
 
 	virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId) override;
 	virtual void fillMessageInternalStage2(NXCPMessage *pMsg, UINT32 userId) override;
@@ -1755,17 +1888,17 @@ public:
    void statusPollWorkerEntry(PollerInfo *poller, ClientSession *session, UINT32 rqId);
    void statusPollPollerEntry(PollerInfo *poller, ClientSession *session, UINT32 rqId);
    virtual bool lockForStatusPoll();
-   void unlockForStatusPoll();
+   void startForcedStatusPoll() { m_statusPollState.manualStart(); }
 
    void configurationPollWorkerEntry(PollerInfo *poller);
    void configurationPollWorkerEntry(PollerInfo *poller, ClientSession *session, UINT32 rqId);
    virtual bool lockForConfigurationPoll();
-   void unlockForConfigurationPoll();
+   void startForcedConfigurationPoll() { m_configurationPollState.manualStart(); }
 
    void instanceDiscoveryPollWorkerEntry(PollerInfo *poller);
    void instanceDiscoveryPollWorkerEntry(PollerInfo *poller, ClientSession *session, UINT32 rqId);
    virtual bool lockForInstancePoll();
-   void unlockForInstancePoll();
+   void startForcedInstancePoll() { m_instancePollState.manualStart(); }
 
    virtual void resetPollTimers();
 };
@@ -1780,25 +1913,13 @@ inline bool DataCollectionTarget::lockForInstancePoll()
    if (!m_isDeleted && !m_isDeleteInitiated &&
        (m_status != STATUS_UNMANAGED) &&
 	    (!(m_flags & DCF_DISABLE_CONF_POLL)) &&
-       (!(m_runtimeFlags & ODF_QUEUED_FOR_INSTANCE_POLL)) &&
        (m_runtimeFlags & ODF_CONFIGURATION_POLL_PASSED) &&
-       (static_cast<UINT32>(time(NULL) - m_lastInstancePoll) > g_instancePollingInterval))
+       (static_cast<UINT32>(time(NULL) - m_instancePollState.getLastCompleted()) > g_instancePollingInterval))
    {
-      m_runtimeFlags |= ODF_QUEUED_FOR_INSTANCE_POLL;
-      success = true;
+      success = m_instancePollState.schedule();
    }
    unlockProperties();
    return success;
-}
-
-/**
- * Unlock from instance discovery poll
- */
-inline void DataCollectionTarget::unlockForInstancePoll()
-{
-   lockProperties();
-   m_runtimeFlags &= ~ODF_QUEUED_FOR_INSTANCE_POLL;
-   unlockProperties();
 }
 
 /**
@@ -1812,28 +1933,19 @@ inline bool DataCollectionTarget::lockForConfigurationPoll()
 	{
       if (m_runtimeFlags & ODF_FORCE_CONFIGURATION_POLL)
       {
-         m_runtimeFlags &= ~ODF_FORCE_CONFIGURATION_POLL;
-         m_runtimeFlags |= ODF_QUEUED_FOR_CONFIGURATION_POLL;
-         success = true;
+         success = m_configurationPollState.schedule();
+         if (success)
+            m_runtimeFlags &= ~ODF_FORCE_CONFIGURATION_POLL;
       }
       else if ((m_status != STATUS_UNMANAGED) &&
                (!(m_flags & DCF_DISABLE_CONF_POLL)) &&
-               (!(m_runtimeFlags & ODF_QUEUED_FOR_CONFIGURATION_POLL)) &&
-               (static_cast<UINT32>(time(NULL) - m_lastConfigurationPoll) > g_configurationPollingInterval))
+               (static_cast<UINT32>(time(NULL) - m_configurationPollState.getLastCompleted()) > g_configurationPollingInterval))
       {
-         m_runtimeFlags |= ODF_QUEUED_FOR_CONFIGURATION_POLL;
-         success = true;
+         success = m_configurationPollState.schedule();
       }
 	}
    unlockProperties();
    return success;
-}
-
-inline void DataCollectionTarget::unlockForConfigurationPoll()
-{
-   lockProperties();
-   m_runtimeFlags &= ~ODF_QUEUED_FOR_CONFIGURATION_POLL;
-   unlockProperties();
 }
 
 inline bool DataCollectionTarget::lockForStatusPoll()
@@ -1844,29 +1956,20 @@ inline bool DataCollectionTarget::lockForStatusPoll()
    {
       if (m_runtimeFlags & ODF_FORCE_STATUS_POLL)
       {
-         m_runtimeFlags &= ~ODF_FORCE_STATUS_POLL;
-         m_runtimeFlags |= ODF_QUEUED_FOR_STATUS_POLL;
-         success = true;
+         success = m_statusPollState.schedule();
+         if (success)
+            m_runtimeFlags &= ~ODF_FORCE_STATUS_POLL;
       }
       else if ((m_status != STATUS_UNMANAGED) &&
                (!(m_flags & DCF_DISABLE_STATUS_POLL)) &&
-               (!(m_runtimeFlags & ODF_QUEUED_FOR_STATUS_POLL)) &&
                (!(m_runtimeFlags & ODF_CONFIGURATION_POLL_PENDING)) &&
-               ((UINT32)(time(NULL) - m_lastStatusPoll) > g_statusPollingInterval))
+               ((UINT32)(time(NULL) - m_statusPollState.getLastCompleted()) > g_statusPollingInterval))
       {
-         m_runtimeFlags |= ODF_QUEUED_FOR_STATUS_POLL;
-         success = true;
+         success = m_statusPollState.schedule();
       }
    }
    unlockProperties();
    return success;
-}
-
-inline void DataCollectionTarget::unlockForStatusPoll()
-{
-   lockProperties();
-   m_runtimeFlags &= ~ODF_QUEUED_FOR_STATUS_POLL;
-   unlockProperties();
 }
 
 /**
@@ -2394,10 +2497,10 @@ protected:
    ObjectArray<AgentParameterDefinition> *m_agentParameters; // List of metrics supported by agent
    ObjectArray<AgentTableDefinition> *m_agentTables; // List of supported tables
    ObjectArray<AgentParameterDefinition> *m_driverParameters; // List of metrics supported by driver
-	time_t m_lastDiscoveryPoll;
-	time_t m_lastTopologyPoll;
-   time_t m_lastRTUpdate;
-   time_t m_lastIcmpPoll;
+   PollState m_discoveryPollState;
+   PollState m_topologyPollState;
+   PollState m_routingPollState;
+   PollState m_icmpPollState;
    time_t m_failTimeSNMP;
    time_t m_failTimeAgent;
 	time_t m_downSince;
@@ -2455,8 +2558,6 @@ protected:
 	UINT32 m_portNumberingScheme;
 	UINT32 m_portRowCount;
 	RackOrientation m_rackOrientation;
-	ManualGauge64 *m_topologyPollTimer;
-	ManualGauge64 *m_routingTablePollTimer;
    IcmpStatCollectionMode m_icmpStatCollectionMode;
    StringObjectMap<IcmpStatCollector> *m_icmpStatCollectors;
    InetAddressList m_icmpTargets;
@@ -2556,6 +2657,11 @@ public:
    bool lockForRoutePoll();
    bool lockForTopologyPoll();
    bool lockForIcmpPoll();
+   void startForcedDiscoveryPoll() { m_discoveryPollState.manualStart(); }
+   void startForcedRoutePoll() { m_routingPollState.manualStart(); }
+   void startForcedTopologyPoll() { m_topologyPollState.manualStart(); }
+
+   void completeDiscoveryPoll(INT64 elapsedTime) { m_discoveryPollState.complete(elapsedTime); }
 
    virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
 
@@ -2676,8 +2782,7 @@ public:
    bool getLldpLocalPortInfo(UINT32 idType, BYTE *id, size_t idLen, LLDP_LOCAL_PORT_INFO *port);
    void showLLDPInfo(CONSOLE_CTX console);
 
-	void setRecheckCapsFlag() { m_runtimeFlags |= NDF_RECHECK_CAPABILITIES; }
-   void setDiscoveryPollTimeStamp();
+	void setRecheckCapsFlag() { lockProperties(); m_runtimeFlags |= NDF_RECHECK_CAPABILITIES; unlockProperties(); }
 	void topologyPollWorkerEntry(PollerInfo *poller);
 	void topologyPollWorkerEntry(PollerInfo *poller, ClientSession *session, UINT32 rqId);
 	void resolveVlanPorts(VlanList *vlanList);
@@ -2790,15 +2895,6 @@ public:
 	NetworkMapObjectList *buildInternalCommunicationTopology();
 };
 
-/**
- * Set timestamp of last discovery poll to current time
- */
-inline void Node::setDiscoveryPollTimeStamp()
-{
-   m_lastDiscoveryPoll = time(NULL);
-   m_runtimeFlags &= ~NDF_QUEUED_FOR_DISCOVERY_POLL;
-}
-
 inline bool Node::lockForStatusPoll()
 {
    bool success = false;
@@ -2807,19 +2903,17 @@ inline bool Node::lockForStatusPoll()
    {
       if (m_runtimeFlags & ODF_FORCE_STATUS_POLL)
       {
-         m_runtimeFlags &= ~ODF_FORCE_STATUS_POLL;
-         m_runtimeFlags |= ODF_QUEUED_FOR_STATUS_POLL;
-         success = true;
+         success = m_statusPollState.schedule();
+         if (success)
+            m_runtimeFlags &= ~ODF_FORCE_STATUS_POLL;
       }
       else if ((m_status != STATUS_UNMANAGED) &&
                (!(m_flags & DCF_DISABLE_STATUS_POLL)) &&
-               (!(m_runtimeFlags & ODF_QUEUED_FOR_STATUS_POLL)) &&
                (getMyCluster() == NULL) &&
                (!(m_runtimeFlags & ODF_CONFIGURATION_POLL_PENDING)) &&
-               (static_cast<UINT32>(time(NULL) - m_lastStatusPoll) > g_statusPollingInterval))
+               (static_cast<UINT32>(time(NULL) - m_statusPollState.getLastCompleted()) > g_statusPollingInterval))
       {
-         m_runtimeFlags |= ODF_QUEUED_FOR_STATUS_POLL;
-         success = true;
+         success = m_statusPollState.schedule();
       }
    }
    unlockProperties();
@@ -2834,12 +2928,10 @@ inline bool Node::lockForDiscoveryPoll()
        (g_flags & AF_PASSIVE_NETWORK_DISCOVERY) &&
        (m_status != STATUS_UNMANAGED) &&
 		 (!(m_flags & NF_DISABLE_DISCOVERY_POLL)) &&
-       (!(m_runtimeFlags & NDF_QUEUED_FOR_DISCOVERY_POLL)) &&
        (m_runtimeFlags & ODF_CONFIGURATION_POLL_PASSED) &&
-       (static_cast<UINT32>(time(NULL) - m_lastDiscoveryPoll) > g_discoveryPollingInterval))
+       (static_cast<UINT32>(time(NULL) - m_discoveryPollState.getLastCompleted()) > g_discoveryPollingInterval))
    {
-      m_runtimeFlags |= NDF_QUEUED_FOR_DISCOVERY_POLL;
-      success = true;
+      success = m_discoveryPollState.schedule();
    }
    unlockProperties();
    return success;
@@ -2852,12 +2944,10 @@ inline bool Node::lockForRoutePoll()
    if (!m_isDeleted && !m_isDeleteInitiated &&
        (m_status != STATUS_UNMANAGED) &&
 	    (!(m_flags & NF_DISABLE_ROUTE_POLL)) &&
-       (!(m_runtimeFlags & NDF_QUEUED_FOR_ROUTE_POLL)) &&
        (m_runtimeFlags & ODF_CONFIGURATION_POLL_PASSED) &&
-       (static_cast<UINT32>(time(NULL) - m_lastRTUpdate) > g_routingTableUpdateInterval))
+       (static_cast<UINT32>(time(NULL) - m_routingPollState.getLastCompleted()) > g_routingTableUpdateInterval))
    {
-      m_runtimeFlags |= NDF_QUEUED_FOR_ROUTE_POLL;
-      success = true;
+      success = m_routingPollState.schedule();
    }
    unlockProperties();
    return success;
@@ -2870,12 +2960,10 @@ inline bool Node::lockForTopologyPoll()
    if (!m_isDeleted && !m_isDeleteInitiated &&
        (m_status != STATUS_UNMANAGED) &&
 	    (!(m_flags & NF_DISABLE_TOPOLOGY_POLL)) &&
-       (!(m_runtimeFlags & NDF_QUEUED_FOR_TOPOLOGY_POLL)) &&
        (m_runtimeFlags & ODF_CONFIGURATION_POLL_PASSED) &&
-       (static_cast<UINT32>(time(NULL) - m_lastTopologyPoll) > g_topologyPollingInterval))
+       (static_cast<UINT32>(time(NULL) - m_topologyPollState.getLastCompleted()) > g_topologyPollingInterval))
    {
-      m_runtimeFlags |= NDF_QUEUED_FOR_TOPOLOGY_POLL;
-      success = true;
+      success = m_topologyPollState.schedule();
    }
    unlockProperties();
    return success;
@@ -2888,12 +2976,10 @@ inline bool Node::lockForIcmpPoll()
    if (!m_isDeleted && !m_isDeleteInitiated &&
        (m_status != STATUS_UNMANAGED) &&
        isIcmpStatCollectionEnabled() &&
-       (!(m_runtimeFlags & NDF_QUEUED_FOR_ICMP_POLL)) &&
        (!(m_runtimeFlags & ODF_CONFIGURATION_POLL_PENDING)) &&
-       ((UINT32)(time(NULL) - m_lastIcmpPoll) > g_icmpPollingInterval))
+       ((UINT32)(time(NULL) - m_icmpPollState.getLastCompleted()) > g_icmpPollingInterval))
    {
-      m_runtimeFlags |= NDF_QUEUED_FOR_ICMP_POLL;
-      success = true;
+      success = m_icmpPollState.schedule();
    }
    unlockProperties();
    return success;

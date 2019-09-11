@@ -101,6 +101,7 @@ protected:
    TCHAR *m_platformName;
    TCHAR *m_systemInfo;
    TCHAR *m_agentVersion;
+   TCHAR *m_agentBuildTag;
    uuid m_agentId;
    UINT32 m_bindRequestId;
    uuid m_bindGuid;
@@ -145,6 +146,7 @@ public:
    const TCHAR *getSystemInfo() const { return m_systemInfo; }
    const TCHAR *getPlatformName() const { return m_platformName; }
    const TCHAR *getAgentVersion() const { return m_agentVersion; }
+   const TCHAR *getAgentBuildTag() const { return m_agentBuildTag; }
    const uuid& getAgentId() const { return m_agentId; }
    UINT32 getZoneUIN() const { return m_zoneUIN; }
    bool isBound() const { return m_nodeId != 0; }

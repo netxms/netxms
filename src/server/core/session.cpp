@@ -5498,9 +5498,9 @@ void ClientSession::addClusterNode(NXCPMessage *request)
 				if (cluster->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY) &&
 					 node->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
 				{
-					((Cluster *)cluster)->applyToTarget((Node *)node);
-					((Node *)node)->setRecheckCapsFlag();
-					((Node *)node)->forceConfigurationPoll();
+					static_cast<Cluster*>(cluster)->applyToTarget((Node *)node);
+					static_cast<Node*>(node)->setRecheckCapsFlag();
+					static_cast<Node*>(node)->forceConfigurationPoll();
 
 					msg.setField(VID_RCC, RCC_SUCCESS);
 					WriteAuditLog(AUDIT_OBJECTS, TRUE, m_dwUserId, m_workstation, m_id, cluster->getId(),
@@ -5597,9 +5597,9 @@ void ClientSession::changeObjectBinding(NXCPMessage *pRequest, BOOL bBind)
                }
                else if ((pParent->getObjectClass() == OBJECT_CLUSTER) && (pChild->getObjectClass() == OBJECT_NODE))
                {
-                  ((Cluster *)pParent)->queueRemoveFromTarget(pChild->getId(), TRUE);
-						((Node *)pChild)->setRecheckCapsFlag();
-						((Node *)pChild)->forceConfigurationPoll();
+                  static_cast<Cluster*>(pParent)->queueRemoveFromTarget(pChild->getId(), TRUE);
+                  static_cast<Node*>(pChild)->setRecheckCapsFlag();
+                  static_cast<Node*>(pChild)->forceConfigurationPoll();
                }
 					else if ((pParent->getObjectClass() == OBJECT_BUSINESSSERVICEROOT) || (pParent->getObjectClass() == OBJECT_BUSINESSSERVICE))
 					{
@@ -6533,21 +6533,25 @@ void ClientSession::pollerThread(DataCollectionTarget *pTarget, int iPollType, U
    switch(iPollType)
    {
       case POLL_STATUS:
+         pTarget->startForcedStatusPoll();
          pTarget->statusPollWorkerEntry(RegisterPoller(PollerType::STATUS, pTarget), this, dwRqId);
          break;
       case POLL_CONFIGURATION_FULL:
          if(pTarget->getObjectClass() == OBJECT_NODE)
-            ((Node *)pTarget)->setRecheckCapsFlag();
+            static_cast<Node*>(pTarget)->setRecheckCapsFlag();
          // intentionally no break here
       case POLL_CONFIGURATION_NORMAL:
+         pTarget->startForcedConfigurationPoll();
          pTarget->configurationPollWorkerEntry(RegisterPoller(PollerType::CONFIGURATION, pTarget), this, dwRqId);
          break;
       case POLL_INSTANCE_DISCOVERY:
+         pTarget->startForcedInstancePoll();
          pTarget->instanceDiscoveryPollWorkerEntry(RegisterPoller(PollerType::INSTANCE_DISCOVERY, pTarget), this, dwRqId);
          break;
       case POLL_TOPOLOGY:
          if(pTarget->getObjectClass() == OBJECT_NODE)
          {
+            static_cast<Node*>(pTarget)->startForcedTopologyPoll();
             static_cast<Node*>(pTarget)->topologyPollWorkerEntry(RegisterPoller(PollerType::TOPOLOGY, pTarget), this, dwRqId);
          }
          break;

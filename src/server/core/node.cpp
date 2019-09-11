@@ -42,6 +42,11 @@ extern UINT32 g_averageDCIQueuingTime;
 extern ThreadPool *g_pollerThreadPool;
 
 /**
+ * Unbind agent tunnel from node
+ */
+UINT32 UnbindAgentTunnel(UINT32 nodeId, UINT32 userId);
+
+/**
  * Software package management functions
  */
 int PackageNameVersionComparator(const SoftwarePackage **p1, const SoftwarePackage **p2);
@@ -56,19 +61,20 @@ ObjectArray<HardwareComponent> *CalculateHardwareChanges(ObjectArray<HardwareCom
 /**
  * Poll cancellation checkpoint
  */
-#define POLL_CANCELLATION_CHECKPOINT(flag) \
-         do { if (g_flags & AF_SHUTDOWN) { lockProperties(); m_runtimeFlags &= ~(flag); unlockProperties(); pollerUnlock(); return; } } while(0)
+#define POLL_CANCELLATION_CHECKPOINT() \
+         do { if (g_flags & AF_SHUTDOWN) { pollerUnlock(); return; } } while(0)
 
 /**
  * Poll cancellation checkpoint with additional hook
  */
-#define POLL_CANCELLATION_CHECKPOINT_EX(flag, hook) \
-         do { if (g_flags & AF_SHUTDOWN) { hook; lockProperties(); m_runtimeFlags &= ~(flag); unlockProperties(); pollerUnlock(); return; } } while(0)
+#define POLL_CANCELLATION_CHECKPOINT_EX(hook) \
+         do { if (g_flags & AF_SHUTDOWN) { hook; pollerUnlock(); return; } } while(0)
 
 /**
  * Node class default constructor
  */
-Node::Node() : super()
+Node::Node() : super(), m_topologyPollState(_T("topology")),
+         m_discoveryPollState(_T("discovery")), m_routingPollState(_T("routing")), m_icmpPollState(_T("icmp)"))
 {
    m_primaryName[0] = 0;
    m_status = STATUS_UNKNOWN;
@@ -87,13 +93,6 @@ Node::Node() : super()
    m_snmpPort = SNMP_DEFAULT_PORT;
    m_snmpSecurity = new SNMP_SecurityContext("public");
    m_snmpObjectId[0] = 0;
-   m_lastDiscoveryPoll = 0;
-   m_lastStatusPoll = 0;
-   m_lastConfigurationPoll = 0;
-   m_lastInstancePoll = 0;
-   m_lastTopologyPoll = 0;
-   m_lastRTUpdate = 0;
-   m_lastIcmpPoll = 0;
    m_downSince = 0;
    m_bootTime = 0;
    m_agentUpTime = 0;
@@ -169,8 +168,6 @@ Node::Node() : super()
    m_portRowCount = 0;
    m_agentCompressionMode = NODE_AGENT_COMPRESSION_DEFAULT;
    m_rackOrientation = FILL;
-   m_topologyPollTimer = new ManualGauge64(_T("topology"), 1, 1000);
-   m_routingTablePollTimer = new ManualGauge64(_T("routingTable"), 1, 1000);
    m_icmpStatCollectionMode = IcmpStatCollectionMode::DEFAULT;
    m_icmpStatCollectors = NULL;
 }
@@ -178,7 +175,8 @@ Node::Node() : super()
 /**
  * Create new node from new node data
  */
-Node::Node(const NewNodeData *newNodeData, UINT32 flags)  : super()
+Node::Node(const NewNodeData *newNodeData, UINT32 flags)  : super(), m_topologyPollState(_T("topology")),
+         m_discoveryPollState(_T("discovery")), m_routingPollState(_T("routing")), m_icmpPollState(_T("icmp)"))
 {
    m_runtimeFlags |= ODF_CONFIGURATION_POLL_PENDING;
    newNodeData->ipAddr.toString(m_primaryName);
@@ -207,13 +205,6 @@ Node::Node(const NewNodeData *newNodeData, UINT32 flags)  : super()
    else
       newNodeData->ipAddr.toString(m_name);    // Make default name from IP address
    m_snmpObjectId[0] = 0;
-   m_lastDiscoveryPoll = 0;
-   m_lastStatusPoll = 0;
-   m_lastConfigurationPoll = 0;
-   m_lastInstancePoll = 0;
-   m_lastTopologyPoll = 0;
-   m_lastRTUpdate = 0;
-   m_lastIcmpPoll = 0;
    m_downSince = 0;
    m_bootTime = 0;
    m_agentUpTime = 0;
@@ -291,8 +282,6 @@ Node::Node(const NewNodeData *newNodeData, UINT32 flags)  : super()
    m_agentCompressionMode = NODE_AGENT_COMPRESSION_DEFAULT;
    m_rackOrientation = FILL;
    m_agentId = newNodeData->agentId;
-   m_topologyPollTimer = new ManualGauge64(_T("topology"), 1, 1000);
-   m_routingTablePollTimer = new ManualGauge64(_T("routingTable"), 1, 1000);
    m_icmpStatCollectionMode = IcmpStatCollectionMode::DEFAULT;
    m_icmpStatCollectors = NULL;
 }
@@ -343,8 +332,6 @@ Node::~Node()
    delete m_routingLoopEvents;
    MemFree(m_agentCertSubject);
    MemFree(m_hypervisorInfo);
-   delete m_topologyPollTimer;
-   delete m_routingTablePollTimer;
    delete m_icmpStatCollectors;
 }
 
@@ -1819,13 +1806,11 @@ void Node::statusPoll(PollerInfo *poller, ClientSession *pSession, UINT32 rqId)
    lockProperties();
    if (m_isDeleteInitiated || IsShutdownInProgress())
    {
-      if (rqId == 0)
-         m_runtimeFlags &= ~ODF_QUEUED_FOR_STATUS_POLL;
+      m_statusPollState.complete(0);
       unlockProperties();
       return;
    }
    // Poller can be called directly - in that case poll flag will not be set
-   m_runtimeFlags |= ODF_QUEUED_FOR_STATUS_POLL;
    unlockProperties();
 
    UINT32 oldCapabilities = m_capabilities;
@@ -1835,7 +1820,7 @@ void Node::statusPoll(PollerInfo *poller, ClientSession *pSession, UINT32 rqId)
    poller->setStatus(_T("wait for lock"));
    pollerLock(status);
 
-   POLL_CANCELLATION_CHECKPOINT_EX(ODF_QUEUED_FOR_STATUS_POLL, delete eventQueue);
+   POLL_CANCELLATION_CHECKPOINT_EX(delete eventQueue);
 
    poller->setStatus(_T("preparing"));
    m_pollRequestor = pSession;
@@ -1964,7 +1949,7 @@ restart_agent_check:
       nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): SNMP check finished"), m_name);
    }
 
-   POLL_CANCELLATION_CHECKPOINT_EX(ODF_QUEUED_FOR_STATUS_POLL, delete eventQueue);
+   POLL_CANCELLATION_CHECKPOINT_EX(delete eventQueue);
 
    // Check native agent connectivity
    if ((m_capabilities & NC_IS_NATIVE_AGENT) && (!(m_flags & NF_DISABLE_NXCP)))
@@ -2052,7 +2037,7 @@ restart_agent_check:
 
    poller->setStatus(_T("prepare polling list"));
 
-   POLL_CANCELLATION_CHECKPOINT_EX(ODF_QUEUED_FOR_STATUS_POLL, delete eventQueue);
+   POLL_CANCELLATION_CHECKPOINT_EX(delete eventQueue);
 
    // Find service poller node object
    Node *pollerNode = NULL;
@@ -2125,7 +2110,7 @@ restart_agent_check:
       }
       curr->decRefCount();
 
-      POLL_CANCELLATION_CHECKPOINT_EX(ODF_QUEUED_FOR_STATUS_POLL, { for(i++; i < pollList.size(); i++) pollList.get(i)->decRefCount(); delete eventQueue; delete snmp; });
+      POLL_CANCELLATION_CHECKPOINT_EX({ for(i++; i < pollList.size(); i++) pollList.get(i)->decRefCount(); delete eventQueue; delete snmp; });
    }
    delete snmp;
    if (pollerNode != NULL)
@@ -2242,7 +2227,7 @@ restart_agent_check:
       }
    }
 
-   POLL_CANCELLATION_CHECKPOINT_EX(ODF_QUEUED_FOR_STATUS_POLL, delete eventQueue);
+   POLL_CANCELLATION_CHECKPOINT_EX(delete eventQueue);
 
    // Get uptime and update boot time
    if (!(m_state & DCSF_UNREACHABLE))
@@ -2370,7 +2355,7 @@ restart_agent_check:
       delete eventQueue;
    }
 
-   POLL_CANCELLATION_CHECKPOINT(ODF_QUEUED_FOR_STATUS_POLL);
+   POLL_CANCELLATION_CHECKPOINT();
 
    // Call hooks in loaded modules
    for(UINT32 i = 0; i < g_dwNumModules; i++)
@@ -2407,12 +2392,13 @@ restart_agent_check:
       }
    }
 
-   m_lastStatusPoll = time(NULL);
    sendPollerMsg(rqId, _T("Finished status poll for node %s\r\n"), m_name);
    sendPollerMsg(rqId, _T("Node status after poll is %s\r\n"), GetStatusAsText(m_status, true));
+
+   lockProperties();
    m_pollRequestor = NULL;
-   if (rqId == 0)
-      m_runtimeFlags &= ~ODF_QUEUED_FOR_STATUS_POLL;
+   unlockProperties();
+
    pollerUnlock();
    DbgPrintf(5, _T("Finished status poll for node %s (ID: %d)"), m_name, m_id);
 
@@ -2439,10 +2425,11 @@ bool Node::checkNetworkPathElement(UINT32 nodeId, const TCHAR *nodeType, bool is
 
    nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("Node::checkNetworkPathElement(%s [%d]): found %s: %s [%d]"), m_name, m_id, nodeType, node->getName(), node->getId());
 
-   if (secondPass && (node->m_lastStatusPoll < time(NULL) - 1))
+   if (secondPass && (node->m_statusPollState.getLastCompleted() < time(NULL) - 1))
    {
       DbgPrintf(6, _T("Node::checkNetworkPathElement(%s [%d]): forced status poll on node %s [%d]"),
                 m_name, m_id, node->getName(), node->getId());
+      node->startForcedStatusPoll();
       PollerInfo *poller = RegisterPoller(PollerType::STATUS, node);
       poller->startExecution();
       node->statusPoll(poller, NULL, 0);
@@ -2523,10 +2510,11 @@ bool Node::checkNetworkPathLayer2(UINT32 requestId, bool secondPass)
             if (secondPass)
             {
                Node *node = (cp->getObjectClass() == OBJECT_INTERFACE) ? ((Interface *)cp)->getParentNode() : ((AccessPoint *)cp)->getParentNode();
-               if ((node != NULL) && !node->isDown() && (node->m_lastStatusPoll < now - 1))
+               if ((node != NULL) && !node->isDown() && (node->m_statusPollState.getLastCompleted() < now - 1))
                {
                   nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("Node::checkNetworkPath(%s [%d]): forced status poll on node %s [%d]"),
                               m_name, m_id, node->getName(), node->getId());
+                  node->startForcedStatusPoll();
                   node->statusPollWorkerEntry(RegisterPoller(PollerType::STATUS, node), NULL, 0);
                }
             }
@@ -3060,13 +3048,10 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
    lockProperties();
    if (m_isDeleteInitiated || IsShutdownInProgress())
    {
-      if (rqId == 0)
-         m_runtimeFlags &= ~ODF_QUEUED_FOR_CONFIGURATION_POLL;
+      m_configurationPollState.complete(0);
       unlockProperties();
       return;
    }
-   // Poller can be called directly - in that case poll flag will not be set
-   m_runtimeFlags |= ODF_QUEUED_FOR_CONFIGURATION_POLL;
    unlockProperties();
 
    UINT32 oldCapabilities = m_capabilities;
@@ -3076,7 +3061,7 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
    poller->setStatus(_T("wait for lock"));
    pollerLock(configuration);
 
-   POLL_CANCELLATION_CHECKPOINT(ODF_QUEUED_FOR_CONFIGURATION_POLL);
+   POLL_CANCELLATION_CHECKPOINT();
 
    m_pollRequestor = session;
    sendPollerMsg(rqId, _T("Starting configuration poll for node %s\r\n"), m_name);
@@ -3103,7 +3088,6 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
    {
       sendPollerMsg(rqId, POLLER_WARNING _T("Node is marked as unreachable, configuration poll aborted\r\n"));
       DbgPrintf(4, _T("Node is marked as unreachable, configuration poll aborted"));
-      m_lastConfigurationPoll = time(NULL);
    }
    else
    {
@@ -3115,12 +3099,12 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
       if (confPollAgent(rqId))
          modified |= MODIFY_NODE_PROPERTIES;
 
-      POLL_CANCELLATION_CHECKPOINT(ODF_QUEUED_FOR_CONFIGURATION_POLL);
+      POLL_CANCELLATION_CHECKPOINT();
 
       if (confPollSnmp(rqId))
          modified |= MODIFY_NODE_PROPERTIES;
 
-      POLL_CANCELLATION_CHECKPOINT(ODF_QUEUED_FOR_CONFIGURATION_POLL);
+      POLL_CANCELLATION_CHECKPOINT();
 
       // Check for CheckPoint SNMP agent on port 260
       if (ConfigReadBoolean(_T("EnableCheckPointSNMP"), false))
@@ -3157,7 +3141,7 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
       if (updateInterfaceConfiguration(rqId, 0)) // maskBits
          modified |= MODIFY_NODE_PROPERTIES;
 
-      POLL_CANCELLATION_CHECKPOINT(ODF_QUEUED_FOR_CONFIGURATION_POLL);
+      POLL_CANCELLATION_CHECKPOINT();
 
       if (g_flags & AF_MERGE_DUPLICATE_NODES)
       {
@@ -3169,10 +3153,9 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
             nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 3, _T("Removing node %s [%u] as duplicate"), m_name, m_id);
 
             poller->setStatus(_T("cleanup"));
-            m_runtimeFlags &= ~ODF_CONFIGURATION_POLL_PENDING;
-            if (rqId == 0)
-               m_runtimeFlags &= ~ODF_QUEUED_FOR_CONFIGURATION_POLL;
-            m_runtimeFlags &= ~NDF_RECHECK_CAPABILITIES;
+            lockProperties();
+            m_runtimeFlags &= ~(ODF_CONFIGURATION_POLL_PENDING | NDF_RECHECK_CAPABILITIES);
+            unlockProperties();
             pollerUnlock();
 
             duplicateNode->reconcileWithDuplicateNode(this);
@@ -3235,17 +3218,17 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
          }
       }
 
-      POLL_CANCELLATION_CHECKPOINT(ODF_QUEUED_FOR_CONFIGURATION_POLL);
+      POLL_CANCELLATION_CHECKPOINT();
 
       updateSoftwarePackages(poller, rqId);
       updateHardwareComponents(poller, rqId);
 
-      POLL_CANCELLATION_CHECKPOINT(ODF_QUEUED_FOR_CONFIGURATION_POLL);
+      POLL_CANCELLATION_CHECKPOINT();
 
       applyUserTemplates();
       updateContainerMembership();
 
-      POLL_CANCELLATION_CHECKPOINT(ODF_QUEUED_FOR_CONFIGURATION_POLL);
+      POLL_CANCELLATION_CHECKPOINT();
 
       // Call hooks in loaded modules
       for(UINT32 i = 0; i < g_dwNumModules; i++)
@@ -3258,7 +3241,7 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
          }
       }
 
-      POLL_CANCELLATION_CHECKPOINT(ODF_QUEUED_FOR_CONFIGURATION_POLL);
+      POLL_CANCELLATION_CHECKPOINT();
 
       // Setup permanent connection to agent if not present (needed for proper configuration re-sync)
       if (m_capabilities & NC_IS_NATIVE_AGENT)
@@ -3296,13 +3279,11 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
       }
       unlockProperties();
 
-      POLL_CANCELLATION_CHECKPOINT(ODF_QUEUED_FOR_CONFIGURATION_POLL);
+      POLL_CANCELLATION_CHECKPOINT();
 
       // Execute hook script
       poller->setStatus(_T("hook"));
       executeHookScript(_T("ConfigurationPoll"));
-
-      m_lastConfigurationPoll = time(NULL);
 
       sendPollerMsg(rqId, _T("Finished configuration poll for node %s\r\n"), m_name);
       sendPollerMsg(rqId, _T("Node configuration was%schanged after poll\r\n"), (modified != 0) ? _T(" ") : _T(" not "));
@@ -3314,8 +3295,6 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, UINT32 
    // Finish configuration poll
    poller->setStatus(_T("cleanup"));
    lockProperties();
-   if (rqId == 0)
-      m_runtimeFlags &= ~ODF_QUEUED_FOR_CONFIGURATION_POLL;
    m_runtimeFlags &= ~NDF_RECHECK_CAPABILITIES;
    unlockProperties();
    pollerUnlock();
@@ -5640,49 +5619,49 @@ DataCollectionError Node::getInternalItem(const TCHAR *param, size_t bufSize, TC
    else if (!_tcsicmp(param, _T("PollTime.RoutingTable.Average")))
    {
       lockProperties();
-      _sntprintf(buffer, bufSize, INT64_FMT, static_cast<INT64>(m_routingTablePollTimer->getAverage()));
+      _sntprintf(buffer, bufSize, INT64_FMT, m_routingPollState.getTimerAverage());
       unlockProperties();
    }
    else if (!_tcsicmp(param, _T("PollTime.RoutingTable.Last")))
    {
       lockProperties();
-      _sntprintf(buffer, bufSize, INT64_FMT, m_routingTablePollTimer->getCurrent());
+      _sntprintf(buffer, bufSize, INT64_FMT, m_routingPollState.getTimerLast());
       unlockProperties();
    }
    else if (!_tcsicmp(param, _T("PollTime.RoutingTable.Max")))
    {
       lockProperties();
-      _sntprintf(buffer, bufSize, INT64_FMT, m_routingTablePollTimer->getMax());
+      _sntprintf(buffer, bufSize, INT64_FMT, m_routingPollState.getTimerMax());
       unlockProperties();
    }
    else if (!_tcsicmp(param, _T("PollTime.RoutingTable.Min")))
    {
       lockProperties();
-      _sntprintf(buffer, bufSize, INT64_FMT, m_routingTablePollTimer->getMin());
+      _sntprintf(buffer, bufSize, INT64_FMT, m_routingPollState.getTimerMin());
       unlockProperties();
    }
    else if (!_tcsicmp(param, _T("PollTime.Topology.Average")))
    {
       lockProperties();
-      _sntprintf(buffer, bufSize, INT64_FMT, static_cast<INT64>(m_topologyPollTimer->getAverage()));
+      _sntprintf(buffer, bufSize, INT64_FMT, m_topologyPollState.getTimerAverage());
       unlockProperties();
    }
    else if (!_tcsicmp(param, _T("PollTime.Topology.Last")))
    {
       lockProperties();
-      _sntprintf(buffer, bufSize, INT64_FMT, m_topologyPollTimer->getCurrent());
+      _sntprintf(buffer, bufSize, INT64_FMT, m_topologyPollState.getTimerLast());
       unlockProperties();
    }
    else if (!_tcsicmp(param, _T("PollTime.Topology.Max")))
    {
       lockProperties();
-      _sntprintf(buffer, bufSize, INT64_FMT, m_topologyPollTimer->getMax());
+      _sntprintf(buffer, bufSize, INT64_FMT, m_topologyPollState.getTimerMax());
       unlockProperties();
    }
    else if (!_tcsicmp(param, _T("PollTime.Topology.Min")))
    {
       lockProperties();
-      _sntprintf(buffer, bufSize, INT64_FMT, m_topologyPollTimer->getMin());
+      _sntprintf(buffer, bufSize, INT64_FMT, m_topologyPollState.getTimerMin());
       unlockProperties();
    }
    else if (!_tcsicmp(param, _T("ReceivedSNMPTraps")))
@@ -6938,7 +6917,6 @@ void Node::changeZone(UINT32 newZone)
    lockProperties();
    m_zoneUIN = newZone;
    m_runtimeFlags |= ODF_FORCE_CONFIGURATION_POLL | NDF_RECHECK_CAPABILITIES;
-   m_lastConfigurationPoll = 0;
    unlockProperties();
 
    // Remove from subnets
@@ -7201,16 +7179,13 @@ void Node::routingTablePoll(PollerInfo *poller, ClientSession *session, UINT32 r
    lockProperties();
    if (m_isDeleteInitiated || IsShutdownInProgress())
    {
-      if (rqId == 0)
-         m_runtimeFlags &= ~NDF_QUEUED_FOR_ROUTE_POLL;
+      m_routingPollState.complete(0);
       unlockProperties();
       return;
    }
-   // Poller can be called directly - in that case poll flag will not be set
-   m_runtimeFlags |= NDF_QUEUED_FOR_ROUTE_POLL;
    unlockProperties();
 
-   pollerLock(routingTable);
+   pollerLock(routing);
    ROUTING_TABLE *pRT = getRoutingTable();
    if (pRT != NULL)
    {
@@ -7221,11 +7196,6 @@ void Node::routingTablePoll(PollerInfo *poller, ClientSession *session, UINT32 r
       DbgPrintf(5, _T("Routing table updated for node %s [%d]"), m_name, m_id);
    }
    pollerUnlock();
-
-   lockProperties();
-   m_lastRTUpdate = time(NULL);
-   m_runtimeFlags &= ~NDF_QUEUED_FOR_ROUTE_POLL;
-   unlockProperties();
 }
 
 /**
@@ -7239,10 +7209,8 @@ UINT32 Node::callSnmpEnumerate(const TCHAR *pszRootOid,
        (!(m_state & NSF_SNMP_UNREACHABLE)) &&
        (!(m_state & DCSF_UNREACHABLE)))
    {
-      SNMP_Transport *pTransport;
       UINT32 dwResult;
-
-      pTransport = createSnmpTransport(0, context);
+      SNMP_Transport *pTransport = createSnmpTransport(0, context);
       if (pTransport != NULL)
       {
          dwResult = SnmpWalk(pTransport, pszRootOid, pHandler, pArg, false, failOnShutdown);
@@ -7305,23 +7273,18 @@ bool Node::setAgentProxy(AgentConnectionEx *conn)
 void Node::prepareForDeletion()
 {
    // Wait for all pending polls
-   DbgPrintf(4, _T("Node::PrepareForDeletion(%s [%d]): waiting for outstanding polls to finish"), m_name, (int)m_id);
-   while (true)
+   nxlog_debug(4, _T("Node::PrepareForDeletion(%s [%u]): waiting for outstanding polls to finish"), m_name, m_id);
+   while (m_statusPollState.isPending() || m_configurationPollState.isPending() ||
+          m_discoveryPollState.isPending() || m_routingPollState.isPending() ||
+          m_topologyPollState.isPending() || m_instancePollState.isPending() ||
+          m_icmpPollState.isPending())
    {
-      lockProperties();
-      if ((m_runtimeFlags &
-            (ODF_QUEUED_FOR_STATUS_POLL | ODF_QUEUED_FOR_CONFIGURATION_POLL |
-             NDF_QUEUED_FOR_DISCOVERY_POLL | NDF_QUEUED_FOR_ROUTE_POLL |
-             NDF_QUEUED_FOR_TOPOLOGY_POLL | ODF_QUEUED_FOR_INSTANCE_POLL |
-             NDF_QUEUED_FOR_ICMP_POLL)) == 0)
-      {
-         unlockProperties();
-         break;
-      }
-      unlockProperties();
       ThreadSleepMs(100);
    }
-   DbgPrintf(4, _T("Node::PrepareForDeletion(%s [%d]): no outstanding polls left"), m_name, (int)m_id);
+   nxlog_debug(4, _T("Node::PrepareForDeletion(%s [%u]): no outstanding polls left"), m_name, m_id);
+
+   UnbindAgentTunnel(m_id, 0);
+
    super::prepareForDeletion();
 }
 
@@ -7787,19 +7750,16 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, UINT32 rqId
    lockProperties();
    if (m_isDeleteInitiated || IsShutdownInProgress())
    {
-      if (rqId == 0)
-         m_runtimeFlags &= ~NDF_QUEUED_FOR_TOPOLOGY_POLL;
+      m_topologyPollState.complete(0);
       unlockProperties();
       return;
    }
-   // Poller can be called directly - in that case poll flag will not be set
-   m_runtimeFlags |= NDF_QUEUED_FOR_TOPOLOGY_POLL;
    unlockProperties();
 
    poller->setStatus(_T("wait for lock"));
    pollerLock(topology);
 
-   POLL_CANCELLATION_CHECKPOINT(NDF_QUEUED_FOR_TOPOLOGY_POLL);
+   POLL_CANCELLATION_CHECKPOINT();
 
    m_pollRequestor = pSession;
    sendPollerMsg(rqId, _T("Starting topology poll for node %s\r\n"), m_name);
@@ -7856,7 +7816,7 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, UINT32 rqId
       }
    }
 
-   POLL_CANCELLATION_CHECKPOINT(NDF_QUEUED_FOR_TOPOLOGY_POLL);
+   POLL_CANCELLATION_CHECKPOINT();
 
    poller->setStatus(_T("reading FDB"));
    ForwardingDatabase *fdb = GetSwitchForwardingDatabase(this);
@@ -7876,7 +7836,7 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, UINT32 rqId
       sendPollerMsg(rqId, POLLER_WARNING _T("Failed to get switch forwarding database\r\n"));
    }
 
-   POLL_CANCELLATION_CHECKPOINT(NDF_QUEUED_FOR_TOPOLOGY_POLL);
+   POLL_CANCELLATION_CHECKPOINT();
 
    poller->setStatus(_T("building neighbor list"));
    LinkLayerNeighbors *nbs = BuildLinkLayerNeighborList(this);
@@ -8001,7 +7961,7 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, UINT32 rqId
       sendPollerMsg(rqId, POLLER_ERROR _T("Cannot get link layer topology\r\n"));
    }
 
-   POLL_CANCELLATION_CHECKPOINT(NDF_QUEUED_FOR_TOPOLOGY_POLL);
+   POLL_CANCELLATION_CHECKPOINT();
 
    // Read list of associated wireless stations
    if ((m_driver != NULL) && (m_capabilities & NC_IS_WIFI_CONTROLLER))
@@ -8053,7 +8013,7 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, UINT32 rqId
       }
    }
 
-   POLL_CANCELLATION_CHECKPOINT(NDF_QUEUED_FOR_TOPOLOGY_POLL);
+   POLL_CANCELLATION_CHECKPOINT();
 
    // Call hooks in loaded modules
    poller->setStatus(_T("calling modules"));
@@ -8066,19 +8026,13 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, UINT32 rqId
       }
    }
 
-   POLL_CANCELLATION_CHECKPOINT(NDF_QUEUED_FOR_TOPOLOGY_POLL);
+   POLL_CANCELLATION_CHECKPOINT();
 
    // Execute hook script
    poller->setStatus(_T("hook"));
    executeHookScript(_T("TopologyPoll"));
 
    sendPollerMsg(rqId, _T("Finished topology poll for node %s\r\n"), m_name);
-
-   lockProperties();
-   m_lastTopologyPoll = time(NULL);
-   if (rqId == 0)
-      m_runtimeFlags &= ~NDF_QUEUED_FOR_TOPOLOGY_POLL;
-   unlockProperties();
 
    pollerUnlock();
 
@@ -8136,7 +8090,7 @@ void Node::addHostConnections(LinkLayerNeighbors *nbs)
 }
 
 /**
- * Add existing connections to link layer neighbours table
+ * Add existing connections to link layer neighbors table
  */
 void Node::addExistingConnections(LinkLayerNeighbors *nbs)
 {
@@ -9437,10 +9391,10 @@ void Node::resetPollTimers()
 {
    super::resetPollTimers();
 
-   lockProperties();
-   m_topologyPollTimer->reset();
-   m_routingTablePollTimer->reset();
-   unlockProperties();
+   m_topologyPollState.resetTimer();
+   m_discoveryPollState.resetTimer();
+   m_routingPollState.resetTimer();
+   m_icmpPollState.resetTimer();
 }
 
 /**
@@ -9488,6 +9442,8 @@ struct IcmpPollTarget
  */
 void Node::icmpPoll(PollerInfo *poller)
 {
+   INT64 startTime = GetCurrentTimeMs();
+
    // Prepare poll list
    StructArray<IcmpPollTarget> targets;
 
@@ -9550,10 +9506,7 @@ end_poll:
    if (proxyNode != NULL)
       proxyNode->decRefCount();
 
-   lockProperties();
-   m_lastIcmpPoll = time(NULL);
-   m_runtimeFlags &= ~NDF_QUEUED_FOR_ICMP_POLL;
-   unlockProperties();
+   m_icmpPollState.complete(GetCurrentTimeMs() - startTime);
 }
 
 /**

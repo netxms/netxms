@@ -134,6 +134,7 @@ static void CreateManagementNode(const InetAddress& addr)
    NetObjInsert(node, true, false);
 	node->setName(GetLocalHostName(buffer, 256, false));
 
+	node->startForcedConfigurationPoll();
 	node->configurationPollWorkerEntry(RegisterPoller(PollerType::CONFIGURATION, node));
 
    node->unhide();
@@ -433,13 +434,14 @@ static void CheckHostRoute(Node *node, ROUTE *route)
 void DiscoveryPoller(PollerInfo *poller)
 {
    poller->startExecution();
+   INT64 startTime = GetCurrentTimeMs();
 
    Node *node = static_cast<Node*>(poller->getObject());
 	if (node->isDeleteInitiated() || IsShutdownInProgress())
 	{
 	   nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Discovery poll for node %s (%s) in zone %d aborted"),
 	             node->getName(), (const TCHAR *)node->getIpAddress().toString(), (int)node->getZoneUIN());
-      node->setDiscoveryPollTimeStamp();
+      node->completeDiscoveryPoll(GetCurrentTimeMs() - startTime);
       delete poller;
       return;
 	}
@@ -464,7 +466,7 @@ void DiscoveryPoller(PollerInfo *poller)
    {
       nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Discovery poll for node %s (%s) in zone %d aborted"),
                 node->getName(), (const TCHAR *)node->getIpAddress().toString(), (int)node->getZoneUIN());
-      node->setDiscoveryPollTimeStamp();
+      node->completeDiscoveryPoll(GetCurrentTimeMs() - startTime);
       delete poller;
       return;
    }
@@ -488,7 +490,7 @@ void DiscoveryPoller(PollerInfo *poller)
 
    nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("Finished discovery poll for node %s (%s)"),
              node->getName(), (const TCHAR *)node->getIpAddress().toString());
-   node->setDiscoveryPollTimeStamp();
+   node->completeDiscoveryPoll(GetCurrentTimeMs() - startTime);
    delete poller;
 }
 

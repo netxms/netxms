@@ -510,13 +510,10 @@ void Cluster::configurationPoll(PollerInfo *poller, ClientSession *pSession, UIN
    lockProperties();
    if (m_isDeleteInitiated || IsShutdownInProgress())
    {
-      if (dwRqId == 0)
-         m_runtimeFlags &= ~ODF_QUEUED_FOR_CONFIGURATION_POLL;
+      m_configurationPollState.complete(0);
       unlockProperties();
       return;
    }
-   // Poller can be called directly - in that case poll flag will not be set
-   m_runtimeFlags |= ODF_QUEUED_FOR_CONFIGURATION_POLL;
    unlockProperties();
 
    poller->setStatus(_T("wait for lock"));
@@ -524,8 +521,6 @@ void Cluster::configurationPoll(PollerInfo *poller, ClientSession *pSession, UIN
 
    if (IsShutdownInProgress())
    {
-      if (dwRqId == 0)
-         unlockForConfigurationPoll();
       pollerUnlock();
       return;
    }
@@ -548,9 +543,6 @@ void Cluster::configurationPoll(PollerInfo *poller, ClientSession *pSession, UIN
    DbgPrintf(6, _T("CLUSTER CONFIGURATION POLL [%s]: Finished"), m_name);
 
    lockProperties();
-   m_lastConfigurationPoll = time(NULL);
-   if (dwRqId == 0)
-      m_runtimeFlags &= ~ODF_QUEUED_FOR_CONFIGURATION_POLL;
    m_runtimeFlags &= ~ODF_CONFIGURATION_POLL_PENDING;
    m_runtimeFlags |= ODF_CONFIGURATION_POLL_PASSED;
    unlockProperties();
@@ -566,13 +558,10 @@ void Cluster::statusPoll(PollerInfo *poller, ClientSession *pSession, UINT32 dwR
    lockProperties();
    if (m_isDeleteInitiated || IsShutdownInProgress())
    {
-      if (dwRqId == 0)
-         m_runtimeFlags &= ~ODF_QUEUED_FOR_STATUS_POLL;
+      m_statusPollState.complete(0);
       unlockProperties();
       return;
    }
-   // Poller can be called directly - in that case poll flag will not be set
-   m_runtimeFlags |= ODF_QUEUED_FOR_STATUS_POLL;
    unlockProperties();
 
    poller->setStatus(_T("wait for lock"));
@@ -580,8 +569,6 @@ void Cluster::statusPoll(PollerInfo *poller, ClientSession *pSession, UINT32 dwR
 
    if (IsShutdownInProgress())
    {
-      if (dwRqId == 0)
-         unlockForStatusPoll();
       pollerUnlock();
       return;
    }
@@ -741,8 +728,6 @@ void Cluster::statusPoll(PollerInfo *poller, ClientSession *pSession, UINT32 dwR
 	lockProperties();
 	if (modified != 0)
 		setModified(modified);
-	m_lastStatusPoll = time(NULL);
-	m_runtimeFlags &= ~ODF_QUEUED_FOR_STATUS_POLL;
 	unlockProperties();
 
    sendPollerMsg(dwRqId, _T("CLUSTER STATUS POLL [%s]: Finished\r\n"), m_name);
@@ -959,8 +944,6 @@ json_t *Cluster::toJson()
    json_t *root = super::toJson();
    json_object_set_new(root, "clusterType", json_integer(m_dwClusterType));
    json_object_set_new(root, "syncNetworks", json_object_array(m_syncNetworks));
-   json_object_set_new(root, "lastStatusPoll", json_integer(m_lastStatusPoll));
-   json_object_set_new(root, "lastConfigurationPoll", json_integer(m_lastConfigurationPoll));
    json_object_set_new(root, "zoneUIN", json_integer(m_zoneUIN));
 
    json_t *resources = json_array();

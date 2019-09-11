@@ -215,26 +215,28 @@ void ShowAgentTunnels(CONSOLE_CTX console)
 
    ConsolePrintf(console,
             _T("\n\x1b[1mBOUND TUNNELS\x1b[0m\n")
-            _T("ID   | Node ID | Peer IP Address          | System Name              | Hostname                 | Platform Name    | Agent Version\n")
-            _T("-----+---------+--------------------------+--------------------------+--------------------------+------------------+------------------------\n"));
+            _T("ID   | Node ID | Peer IP Address          | System Name              | Hostname                 | Platform Name    | Agent Version | Agent Build Tag\n")
+            _T("-----+---------+--------------------------+--------------------------+--------------------------+------------------+---------------+--------------------------\n"));
    Iterator<AgentTunnel> *it = s_boundTunnels.iterator();
    while(it->hasNext())
    {
       AgentTunnel *t = it->next();
       TCHAR ipAddrBuffer[64];
-      ConsolePrintf(console, _T("%4d | %7u | %-24s | %-24s | %-24s | %-16s | %s\n"), t->getId(), t->getNodeId(), t->getAddress().toString(ipAddrBuffer), t->getSystemName(), t->getHostname(), t->getPlatformName(), t->getAgentVersion());
+      ConsolePrintf(console, _T("%4d | %7u | %-24s | %-24s | %-24s | %-16s | %-13s | %s\n"), t->getId(), t->getNodeId(),
+               t->getAddress().toString(ipAddrBuffer), t->getSystemName(), t->getHostname(), t->getPlatformName(), t->getAgentVersion(), t->getAgentBuildTag());
    }
    delete it;
 
    ConsolePrintf(console,
             _T("\n\x1b[1mUNBOUND TUNNELS\x1b[0m\n")
-            _T("ID   | Peer IP Address          | System Name              | Hostname                 | Platform Name    | Agent Version\n")
-            _T("-----+--------------------------+--------------------------+--------------------------+------------------+------------------------\n"));
+            _T("ID   | Peer IP Address          | System Name              | Hostname                 | Platform Name    | Agent Version | Agent Build Tag\n")
+            _T("-----+--------------------------+--------------------------+--------------------------+------------------+---------------+------------------------------------\n"));
    for(int i = 0; i < s_unboundTunnels.size(); i++)
    {
       const AgentTunnel *t = s_unboundTunnels.get(i);
       TCHAR ipAddrBuffer[64];
-      ConsolePrintf(console, _T("%4d | %-24s | %-24s | %-24s | %-16s | %s\n"), t->getId(), t->getAddress().toString(ipAddrBuffer), t->getSystemName(), t->getHostname(), t->getPlatformName(), t->getAgentVersion());
+      ConsolePrintf(console, _T("%4d | %-24s | %-24s | %-24s | %-16s | %-13s | %s\n"), t->getId(), t->getAddress().toString(ipAddrBuffer),
+               t->getSystemName(), t->getHostname(), t->getPlatformName(), t->getAgentVersion(), t->getAgentBuildTag());
    }
 
    s_tunnelListLock.unlock();
@@ -265,6 +267,7 @@ AgentTunnel::AgentTunnel(SSL_CTX *context, SSL *ssl, SOCKET sock, const InetAddr
    m_platformName = NULL;
    m_systemInfo = NULL;
    m_agentVersion = NULL;
+   m_agentBuildTag = NULL;
    m_bindRequestId = 0;
    m_bindUserId = 0;
    m_channelLock = MutexCreate();
@@ -288,10 +291,11 @@ AgentTunnel::~AgentTunnel()
    MutexDestroy(m_sslLock);
    MutexDestroy(m_writeLock);
    closesocket(m_socket);
-   free(m_systemName);
-   free(m_platformName);
-   free(m_systemInfo);
-   free(m_agentVersion);
+   MemFree(m_systemName);
+   MemFree(m_platformName);
+   MemFree(m_systemInfo);
+   MemFree(m_agentVersion);
+   MemFree(m_agentBuildTag);
    MutexDestroy(m_channelLock);
    debugPrintf(4, _T("Tunnel destroyed"));
 }
@@ -494,12 +498,21 @@ void AgentTunnel::setup(const NXCPMessage *request)
       m_systemInfo = request->getFieldAsString(VID_SYS_DESCRIPTION);
       m_platformName = request->getFieldAsString(VID_PLATFORM_NAME);
       m_agentId = request->getFieldAsGUID(VID_AGENT_ID);
-      m_agentVersion = request->getFieldAsString(VID_AGENT_VERSION);
       m_userAgentInstalled = request->getFieldAsBoolean(VID_USERAGENT_INSTALLED);
       m_agentProxy = request->getFieldAsBoolean(VID_AGENT_PROXY);
       m_snmpProxy = request->getFieldAsBoolean(VID_SNMP_PROXY);
       m_snmpTrapProxy = request->getFieldAsBoolean(VID_SNMP_TRAP_PROXY);
       request->getFieldAsString(VID_HOSTNAME, m_hostname, MAX_DNS_NAME);
+      m_agentVersion = request->getFieldAsString(VID_AGENT_VERSION);
+      m_agentBuildTag = request->getFieldAsString(VID_AGENT_BUILD_TAG);
+      if (m_agentBuildTag == NULL)
+      {
+         // Agents before 3.0 release return tag as version
+         m_agentBuildTag = MemCopyString(m_agentVersion);
+         TCHAR *p = _tcsrchr(m_agentVersion, _T('-'));
+         if (p != NULL)
+            *p = 0;  // Remove git commit hash from version string
+      }
 
       m_state = (m_nodeId != 0) ? AGENT_TUNNEL_BOUND : AGENT_TUNNEL_UNBOUND;
       response.setField(VID_RCC, ERR_SUCCESS);

@@ -1309,6 +1309,7 @@ typedef struct
 #define VID_RELATED_OBJECT          ((UINT32)658)
 #define VID_PHY_CHASSIS             ((UINT32)659)
 #define VID_PHY_PIC                 ((UINT32)660)
+#define VID_AGENT_BUILD_TAG         ((UINT32)661)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

@@ -207,6 +207,7 @@ Node NXCORE_EXPORTABLE *PollNewNode(NewNodeData *newNodeData)
 
 	if (newNodeData->doConfPoll)
    {
+	   node->startForcedConfigurationPoll();
 	   node->configurationPollWorkerEntry(RegisterPoller(PollerType::CONFIGURATION, node, true));
    }
 

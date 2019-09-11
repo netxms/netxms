@@ -42,8 +42,6 @@ Sensor::Sensor() : super()
    m_signalStrenght = 1; //+1 when no information(cannot be +)
    m_signalNoise = MAX_INT32; //*10 from origin number
    m_frequency = 0; //*10 from origin number
-   m_lastStatusPoll = 0;
-   m_lastConfigurationPoll = 0;
    m_status = STATUS_UNKNOWN;
 }
 
@@ -72,8 +70,6 @@ Sensor::Sensor(TCHAR *name, UINT32 flags, MacAddress macAddress, UINT32 deviceCl
    m_signalStrenght = 1; //+1 when no information(cannot be +)
    m_signalNoise = MAX_INT32; //*10 from origin number
    m_frequency = 0; //*10 from origin number
-   m_lastStatusPoll = 0;
-   m_lastConfigurationPoll = 0;
    m_status = STATUS_UNKNOWN;
 }
 
@@ -533,13 +529,10 @@ void Sensor::configurationPoll(PollerInfo *poller, ClientSession *session, UINT3
    lockProperties();
    if (m_isDeleteInitiated || IsShutdownInProgress())
    {
-      if (rqId == 0)
-         m_runtimeFlags &= ~ODF_QUEUED_FOR_CONFIGURATION_POLL;
+      m_configurationPollState.complete(0);
       unlockProperties();
       return;
    }
-   // Poller can be called directly - in that case poll flag will not be set
-   m_runtimeFlags |= ODF_QUEUED_FOR_CONFIGURATION_POLL;
    unlockProperties();
 
    poller->setStatus(_T("wait for lock"));
@@ -547,8 +540,6 @@ void Sensor::configurationPoll(PollerInfo *poller, ClientSession *session, UINT3
 
    if (IsShutdownInProgress())
    {
-      if (rqId == 0)
-         unlockForConfigurationPoll();
       pollerUnlock();
       return;
    }
@@ -590,9 +581,6 @@ void Sensor::configurationPoll(PollerInfo *poller, ClientSession *session, UINT3
    sendPollerMsg(rqId, _T("Sensor configuration was%schanged after poll\r\n"), hasChanges ? _T(" ") : _T(" not "));
 
    lockProperties();
-   m_lastConfigurationPoll = time(NULL);
-   if (rqId == 0)
-      m_runtimeFlags &= ~ODF_QUEUED_FOR_CONFIGURATION_POLL;
    m_runtimeFlags &= ~ODF_CONFIGURATION_POLL_PENDING;
    m_runtimeFlags |= ODF_CONFIGURATION_POLL_PASSED;
    unlockProperties();
@@ -613,7 +601,7 @@ void Sensor::configurationPoll(PollerInfo *poller, ClientSession *session, UINT3
  */
 void Sensor::checkDlmsConverterAccessibility()
 {
-   //Create conectivity test DCI and try to get it's result
+   //Create connectivity test DCI and try to get it's result
 }
 
 /**
@@ -624,13 +612,10 @@ void Sensor::statusPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId)
    lockProperties();
    if (m_isDeleteInitiated || IsShutdownInProgress())
    {
-      if (rqId == 0)
-         m_runtimeFlags &= ~ODF_QUEUED_FOR_STATUS_POLL;
+      m_statusPollState.complete(0);
       unlockProperties();
       return;
    }
-   // Poller can be called directly - in that case poll flag will not be set
-   m_runtimeFlags |= ODF_QUEUED_FOR_STATUS_POLL;
    unlockProperties();
 
    poller->setStatus(_T("wait for lock"));
@@ -638,8 +623,6 @@ void Sensor::statusPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId)
 
    if (IsShutdownInProgress())
    {
-      if (rqId == 0)
-         unlockForStatusPoll();
       pollerUnlock();
       return;
    }
@@ -737,9 +720,6 @@ void Sensor::statusPoll(PollerInfo *poller, ClientSession *session, UINT32 rqId)
    executeHookScript(_T("StatusPoll"));
 
    lockProperties();
-   m_lastStatusPoll = time(NULL);
-   if (rqId == 0)
-      m_runtimeFlags &= ~ODF_QUEUED_FOR_STATUS_POLL;
    if (prevState != m_state)
       setModified(MODIFY_SENSOR_PROPERTIES);
    unlockProperties();
@@ -980,20 +960,10 @@ DataCollectionError Sensor::getListFromAgent(const TCHAR *name, StringList **lis
 void Sensor::prepareForDeletion()
 {
    // Wait for all pending polls
-   nxlog_debug(4, _T("Sensor::PrepareForDeletion(%s [%d]): waiting for outstanding polls to finish"), m_name, m_id);
-   while(1)
-   {
-      lockProperties();
-      if ((m_runtimeFlags &
-            (ODF_QUEUED_FOR_STATUS_POLL | ODF_QUEUED_FOR_CONFIGURATION_POLL)) == 0)
-      {
-         unlockProperties();
-         break;
-      }
-      unlockProperties();
+   nxlog_debug(4, _T("Sensor::PrepareForDeletion(%s [%u]): waiting for outstanding polls to finish"), m_name, m_id);
+   while (m_statusPollState.isPending() || m_configurationPollState.isPending())
       ThreadSleepMs(100);
-   }
-   nxlog_debug(4, _T("Sensor::PrepareForDeletion(%s [%d]): no outstanding polls left"), m_name, m_id);
+   nxlog_debug(4, _T("Sensor::PrepareForDeletion(%s [%u]): no outstanding polls left"), m_name, m_id);
 
    AgentConnectionEx *conn = getAgentConnection();
    if ((m_commProtocol == COMM_LORAWAN) && (conn != NULL))
@@ -1005,9 +975,8 @@ void Sensor::prepareForDeletion()
       NXCPMessage *response = conn->customRequest(&msg);
       if (response != NULL)
       {
-         if(response->getFieldAsUInt32(VID_RCC) == RCC_SUCCESS)
-            nxlog_debug(4, _T("Sensor::PrepareForDeletion(%s [%d]): successfully unregistered from LoRaWAN server"), m_name, m_id);
-
+         if (response->getFieldAsUInt32(VID_RCC) == RCC_SUCCESS)
+            nxlog_debug(4, _T("Sensor::PrepareForDeletion(%s [%u]): successfully unregistered from LoRaWAN server"), m_name, m_id);
          delete response;
       }
    }

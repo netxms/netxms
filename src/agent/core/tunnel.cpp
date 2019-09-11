@@ -623,7 +623,8 @@ bool Tunnel::connectToServer()
 
    // Do handshake
    NXCPMessage msg(CMD_SETUP_AGENT_TUNNEL, InterlockedIncrement(&m_requestId), 4);  // Use version 4 during setup
-   msg.setField(VID_AGENT_VERSION, NETXMS_BUILD_TAG);
+   msg.setField(VID_AGENT_VERSION, NETXMS_VERSION_STRING);
+   msg.setField(VID_AGENT_BUILD_TAG, NETXMS_BUILD_TAG);
    msg.setField(VID_AGENT_ID, g_agentId);
    msg.setField(VID_SYS_NAME, g_systemName);
    msg.setField(VID_ZONE_UIN, g_zoneUIN);
