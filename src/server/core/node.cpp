@@ -1564,6 +1564,7 @@ Interface *Node::createInterfaceObject(InterfaceInfo *info, bool manuallyCreated
    {
       iface = new Interface(info->ipAddrList, m_zoneUIN, syntheticMask);
    }
+   iface->setAlias(info->alias);
    iface->setMacAddr(MacAddress(info->macAddr, MAC_ADDR_LENGTH), false);
    iface->setBridgePortNumber(info->bridgePort);
    iface->setPhysicalLocation(info->location);
