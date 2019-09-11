@@ -828,7 +828,7 @@ UINT32 UpdateObjectToolFromMessage(NXCPMessage *pMsg)
    aclSize = pMsg->getFieldAsUInt32(VID_ACL_SIZE);
    if (aclSize > 0)
    {
-      pdwAcl = (UINT32 *)malloc(sizeof(UINT32) * aclSize);
+      pdwAcl = MemAllocArray<UINT32>(aclSize);
       pMsg->getFieldAsInt32Array(VID_ACL, aclSize, pdwAcl);
       hStmt = DBPrepare(hdb, _T("INSERT INTO object_tools_acl (tool_id,user_id) VALUES (?,?)"), aclSize > 1);
       if (hStmt == NULL)
@@ -841,6 +841,7 @@ UINT32 UpdateObjectToolFromMessage(NXCPMessage *pMsg)
             return ReturnDBFailure(hdb, hStmt);
       }
       DBFreeStatement(hStmt);
+      MemFree(pdwAcl);
    }
 
    // Update columns configuration
