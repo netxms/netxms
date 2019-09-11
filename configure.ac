@@ -2687,33 +2687,38 @@ AC_CHECK_DECLS([va_copy, __va_copy],,,[
 
 #--------------------------------------------------------------------
 # GCC __sync and __atomic builtins
+# Exclude Oracle Developer Studio C++ because it can have those
+# built-ins but they are incompatible with -xatomic=studio and
+# breaks build of bundled libjansson
 #--------------------------------------------------------------------
 
-AC_MSG_CHECKING([for gcc __sync builtins])
-AC_LINK_IFELSE([AC_LANG_PROGRAM([[]],
-	[[unsigned long val; __sync_bool_compare_and_swap(&val, 0, 1);]])],
-	[have_sync_builtins=yes],
-	[have_sync_builtins=no])
-if test "x$have_sync_builtins" = "xyes"; then
-	AC_DEFINE([HAVE_SYNC_BUILTINS], [1], [Define to 1 if gcc __sync builtins are available])
-fi
-AC_MSG_RESULT([$have_sync_builtins])
+if test "$CXX" != "CC"; then
+	AC_MSG_CHECKING([for gcc __sync builtins])
+	AC_LINK_IFELSE([AC_LANG_PROGRAM([[]],
+		[[unsigned long val; __sync_bool_compare_and_swap(&val, 0, 1);]])],
+		[have_sync_builtins=yes],
+		[have_sync_builtins=no])
+	if test "x$have_sync_builtins" = "xyes"; then
+		AC_DEFINE([HAVE_SYNC_BUILTINS], [1], [Define to 1 if gcc __sync builtins are available])
+	fi
+	AC_MSG_RESULT([$have_sync_builtins])
 
-AC_MSG_CHECKING([for gcc __atomic builtins])
-AC_LINK_IFELSE([AC_LANG_PROGRAM([[]],
-	[[
-		char l; 
-		unsigned long v; 
-		__atomic_test_and_set(&l, __ATOMIC_RELAXED); 
-		__atomic_store_n(&v, 1, __ATOMIC_RELEASE); 
-		__atomic_load_n(&v, __ATOMIC_ACQUIRE);
-	]])],
-	[have_atomic_builtins=yes],
-	[have_atomic_builtins=no])
-if test "x$have_atomic_builtins" = "xyes"; then
-	AC_DEFINE([HAVE_ATOMIC_BUILTINS], [1], [Define to 1 if gcc __atomic builtins are available])
+	AC_MSG_CHECKING([for gcc __atomic builtins])
+	AC_LINK_IFELSE([AC_LANG_PROGRAM([[]],
+		[[
+			char l;
+			unsigned long v;
+			__atomic_test_and_set(&l, __ATOMIC_RELAXED);
+			__atomic_store_n(&v, 1, __ATOMIC_RELEASE);
+			__atomic_load_n(&v, __ATOMIC_ACQUIRE);
+		]])],
+		[have_atomic_builtins=yes],
+		[have_atomic_builtins=no])
+	if test "x$have_atomic_builtins" = "xyes"; then
+		AC_DEFINE([HAVE_ATOMIC_BUILTINS], [1], [Define to 1 if gcc __atomic builtins are available])
+	fi
+	AC_MSG_RESULT([$have_atomic_builtins])
 fi
-AC_MSG_RESULT([$have_atomic_builtins])
 
 
 #--------------------------------------------------------------------
