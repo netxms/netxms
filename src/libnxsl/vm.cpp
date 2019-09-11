@@ -1132,7 +1132,7 @@ void NXSL_VM::execute()
          pValue = m_dataStack->pop();
          if (pValue != NULL)
          {
-            if (pValue->isNumeric())
+            if (pValue->isBoolean())
             {
                if (cp->m_opCode == OPCODE_JZ ? pValue->isZero() : pValue->isNonZero())
                   dwNext = cp->m_operand.m_addr;
@@ -1156,6 +1156,16 @@ void NXSL_VM::execute()
             if (pValue->isNumeric())
             {
 					if (cp->m_opCode == OPCODE_JZ_PEEK ? pValue->isZero() : pValue->isNonZero())
+                  dwNext = cp->m_operand.m_addr;
+            }
+            else if (pValue->isNull())
+            {
+               // If on top of the stack is NULL convert it into integer
+               pValue = m_dataStack->pop();
+               destroyValue(pValue);
+               m_dataStack->push(createValue(0));
+               bool result = (cp->m_opCode == OPCODE_JZ_PEEK);
+               if (result)
                   dwNext = cp->m_operand.m_addr;
             }
             else
@@ -1967,7 +1977,9 @@ void NXSL_VM::doBinaryOperation(int nOpCode)
    {
       if ((!pVal1->isNull() && !pVal2->isNull()) ||
           (!pVal2->isNull() && (nOpCode == OPCODE_IN)) ||
-          (nOpCode == OPCODE_EQ) || (nOpCode == OPCODE_NE) || (nOpCode == OPCODE_CASE) || (nOpCode == OPCODE_CASE_CONST) || (nOpCode == OPCODE_CONCAT))
+          (nOpCode == OPCODE_EQ) || (nOpCode == OPCODE_NE) || (nOpCode == OPCODE_CASE) ||
+          (nOpCode == OPCODE_CASE_CONST) || (nOpCode == OPCODE_CONCAT) ||
+          (nOpCode == OPCODE_AND) || (nOpCode == OPCODE_OR))
       {
          if (pVal1->isNumeric() && pVal2->isNumeric() &&
              (nOpCode != OPCODE_CONCAT) && (nOpCode != OPCODE_IN) &&
@@ -2078,6 +2090,11 @@ void NXSL_VM::doBinaryOperation(int nOpCode)
             {
                error(NXSL_ERR_REAL_VALUE);
             }
+         }
+         else if (((nOpCode == OPCODE_AND) || (nOpCode == OPCODE_OR)) && pVal1->isBoolean() && pVal2->isBoolean())
+         {
+            bool result = (nOpCode == OPCODE_AND) ? (pVal1->isNonZero() && pVal2->isNonZero()) : (pVal1->isNonZero() || pVal2->isNonZero());
+            pRes = createValue(result ? 1 : 0);
          }
          else
          {
@@ -2238,6 +2255,10 @@ void NXSL_VM::doUnaryOperation(int nOpCode)
                error(NXSL_ERR_INTERNAL);
                break;
          }
+      }
+      else if (pVal->isNull() && (nOpCode == OPCODE_NOT))
+      {
+         pVal->set(1);
       }
       else
       {

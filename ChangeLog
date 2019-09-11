@@ -17,6 +17,7 @@
 - Node creation option "create as zone proxy"
 - JSON support in NXSL
 - Improved NXSL performance
+- Null values interpreted as "false" in NXSL logical expressions
 - Added method executeSSHCommand in NXSL class "Node"
 - Cleanup of collected DCI data by housekeeper can be disabled
 - Service group support in Tuxedo subagent

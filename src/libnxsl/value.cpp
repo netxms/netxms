@@ -954,6 +954,9 @@ bool NXSL_Value::isZero() const
       case NXSL_DT_REAL:
          bVal = (m_value.real == 0);
          break;
+      case NXSL_DT_NULL:
+         bVal = true;
+         break;
       default:
          break;
    }
@@ -983,6 +986,9 @@ bool NXSL_Value::isNonZero() const
          break;
       case NXSL_DT_REAL:
          bVal = (m_value.real != 0);
+         break;
+      case NXSL_DT_NULL:
+         bVal = false;
          break;
       default:
          break;
