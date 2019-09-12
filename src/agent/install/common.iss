@@ -318,7 +318,7 @@ End;
 Function GetExtraConfigValues(Param: String): String;
 Begin
   If extraConfigValues <> '' Then
-    Result := '-z ' + extraConfigValues
+    Result := '-z "' + extraConfigValues + '"'
   Else
     Result := ''
 End;
