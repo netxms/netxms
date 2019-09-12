@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -56,10 +56,10 @@ int F_classof(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
  */
 int F_assert(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
-   if (!argv[0]->isInteger())
-      return NXSL_ERR_NOT_INTEGER;
+   if (!argv[0]->isBoolean())
+      return NXSL_ERR_NOT_BOOLEAN;
 
-   if (!argv[0]->getValueAsInt32())
+   if (argv[0]->isFalse())
       return NXSL_ERR_ASSERTION_FAILED;
 
    *result = vm->createValue();
@@ -667,7 +667,7 @@ bool NXSL_TimeClass::setAttr(NXSL_Object *object, const char *attr, NXSL_Value *
  */
 void NXSL_TimeClass::onObjectDelete(NXSL_Object *object)
 {
-	free(object->getData());
+	MemFree(object->getData());
 }
 
 /**
@@ -704,7 +704,7 @@ int F_localtime(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 #else
    struct tm *p = localtime(&t);
 #endif
-   *ppResult = vm->createValue(new NXSL_Object(vm, &s_nxslTimeClass, nx_memdup(p, sizeof(struct tm))));
+   *ppResult = vm->createValue(new NXSL_Object(vm, &s_nxslTimeClass, MemCopyBlock(p, sizeof(struct tm))));
 	return 0;
 }
 
@@ -737,7 +737,7 @@ int F_gmtime(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 #else
    struct tm *p = gmtime(&t);
 #endif
-	*ppResult = vm->createValue(new NXSL_Object(vm, &s_nxslTimeClass, nx_memdup(p, sizeof(struct tm))));
+	*ppResult = vm->createValue(new NXSL_Object(vm, &s_nxslTimeClass, MemCopyBlock(p, sizeof(struct tm))));
 	return 0;
 }
 

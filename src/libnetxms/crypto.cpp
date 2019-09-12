@@ -783,7 +783,7 @@ NXCPEncryptionContext *NXCPEncryptionContext::create(UINT32 ciphers)
 NXCP_ENCRYPTED_MESSAGE *NXCPEncryptionContext::encryptMessage(NXCP_MESSAGE *msg)
 {
    if (msg->flags & s_noEncryptionFlag)
-      return (NXCP_ENCRYPTED_MESSAGE *)nx_memdup(msg, ntohl(msg->size));
+      return (NXCP_ENCRYPTED_MESSAGE *)MemCopyBlock(msg, ntohl(msg->size));
 
 #ifdef _WITH_ENCRYPTION
    MutexLock(m_encryptorLock);
