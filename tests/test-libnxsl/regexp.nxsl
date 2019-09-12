@@ -24,8 +24,9 @@ assert(!(s imatch regexp));
 
 regexp = "(Msg:(([0-9]+)(A|B)|(S[0-9]+)) (.*))";
 s = "MSG:42B message text";
-if (s imatch regexp)
+if (MATCHES = (s imatch regexp))
 {
+	assert($0 == s);
 	assert($1 == s);
 	assert($2 == "42B");
 	assert($3 == "42");
@@ -33,6 +34,14 @@ if (s imatch regexp)
 	assert($5 == null);
 	assert($6 == "message text");
 	assert($7 == null);
+	assert(MATCHES->size == 7);
+	assert(MATCHES[0] == s);
+	assert(MATCHES[1] == s);
+	assert(MATCHES[2] == "42B");
+	assert(MATCHES[3] == "42");
+	assert(MATCHES[4] == "B");
+	assert(MATCHES[5] == null);
+	assert(MATCHES[6] == "message text");
 }
 else
 {
@@ -40,8 +49,9 @@ else
 }
 
 s = "MSG:S512 message text";
-if (s imatch regexp)
+if (MATCHES = (s imatch regexp))
 {
+	assert($0 == s);
 	assert($1 == s);
 	assert($2 == "S512");
 	assert($3 == null);
@@ -49,10 +59,20 @@ if (s imatch regexp)
 	assert($5 == "S512");
 	assert($6 == "message text");
 	assert($7 == null);
+	assert(MATCHES->size == 7);
+	assert(MATCHES[0] == s);
+	assert(MATCHES[1] == s);
+	assert(MATCHES[2] == "S512");
+	assert(MATCHES[3] == null);
+	assert(MATCHES[4] == null);
+	assert(MATCHES[5] == "S512");
+	assert(MATCHES[6] == "message text");
 }
 else
 {
 	assert(false);
 }
+
+assert((s imatch regexp)[2] == "S512");
 
 return 0;

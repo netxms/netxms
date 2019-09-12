@@ -508,9 +508,9 @@ public:
    bool isReal() const { return (m_dataType == NXSL_DT_REAL); }
    bool isInteger() const { return (m_dataType > NXSL_DT_REAL); }
    bool isUnsigned() const { return (m_dataType >= NXSL_DT_UINT32); }
-   bool isBoolean() const { return isNumeric() || isNull(); }
-   bool isZero() const;
-   bool isNonZero() const;
+   bool isBoolean() const { return isNumeric() || isNull() || isArray() || isObject(); }
+   bool isFalse() const;
+   bool isTrue() const;
 
    const TCHAR *getValueAsString(UINT32 *len);
    const TCHAR *getValueAsCString();

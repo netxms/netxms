@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -151,14 +151,14 @@ NXSL_Value::NXSL_Value(const NXSL_Value *value)
          }
          else
          {
-            m_stringPtr = (TCHAR *)nx_memdup(value->m_stringPtr, (m_length + 1) * sizeof(TCHAR));
+            m_stringPtr = (TCHAR *)MemCopyBlock(value->m_stringPtr, (m_length + 1) * sizeof(TCHAR));
          }
       }
       else
       {
          m_stringPtr = NULL;
       }
-		m_name = (value->m_name != NULL) ? strdup(value->m_name) : NULL;
+		m_name = MemCopyStringA(value->m_name);
    }
    else
    {
@@ -931,69 +931,73 @@ void NXSL_Value::bitNot()
 }
 
 /**
- * Check if value is zero
+ * Check if value is false
  */
-bool NXSL_Value::isZero() const
+bool NXSL_Value::isFalse() const
 {
-   bool bVal = false;
-
+   bool result;
    switch(m_dataType)
    {
       case NXSL_DT_INT32:
-         bVal = (m_value.int32 == 0);
+         result = (m_value.int32 == 0);
          break;
       case NXSL_DT_UINT32:
-         bVal = (m_value.uint32 == 0);
+         result = (m_value.uint32 == 0);
          break;
       case NXSL_DT_INT64:
-         bVal = (m_value.int64 == 0);
+         result = (m_value.int64 == 0);
          break;
       case NXSL_DT_UINT64:
-         bVal = (m_value.uint64 == 0);
+         result = (m_value.uint64 == 0);
          break;
       case NXSL_DT_REAL:
-         bVal = (m_value.real == 0);
+         result = (m_value.real == 0);
          break;
       case NXSL_DT_NULL:
-         bVal = true;
+         result = true;
          break;
       default:
+         result = false;
          break;
    }
-   return bVal;
+   return result;
 }
 
 /**
- * Check if value is not a zero
+ * Check if value is true
  */
-bool NXSL_Value::isNonZero() const
+bool NXSL_Value::isTrue() const
 {
-   bool bVal = false;
-
+   bool result;
    switch(m_dataType)
    {
       case NXSL_DT_INT32:
-         bVal = (m_value.int32 != 0);
+         result = (m_value.int32 != 0);
          break;
       case NXSL_DT_UINT32:
-         bVal = (m_value.uint32 != 0);
+         result = (m_value.uint32 != 0);
          break;
       case NXSL_DT_INT64:
-         bVal = (m_value.int64 != 0);
+         result = (m_value.int64 != 0);
          break;
       case NXSL_DT_UINT64:
-         bVal = (m_value.uint64 != 0);
+         result = (m_value.uint64 != 0);
          break;
       case NXSL_DT_REAL:
-         bVal = (m_value.real != 0);
+         result = (m_value.real != 0);
          break;
       case NXSL_DT_NULL:
-         bVal = false;
+         result = false;
+         break;
+      case NXSL_DT_ARRAY:
+      case NXSL_DT_OBJECT:
+         result = true;
          break;
       default:
+         result = false;
          break;
    }
-   return bVal;
+   return result;
 }
 
 /**

@@ -26,7 +26,7 @@
 /**
  * Constants
  */
-#define MAX_ERROR_NUMBER         39
+#define MAX_ERROR_NUMBER         40
 #define CONTROL_STACK_LIMIT      32768
 
 /**
@@ -72,7 +72,8 @@ static const TCHAR *s_runtimeErrorMessage[MAX_ERROR_NUMBER] =
    _T("Selector not found"),
    _T("Object constructor not found"),
    _T("Invalid number of object constructor's arguments"),
-   _T("Assertion failed")
+   _T("Assertion failed"),
+   _T("Function or operation argument cannot be interpreted as boolean value")
 };
 
 /**
@@ -1134,7 +1135,7 @@ void NXSL_VM::execute()
          {
             if (pValue->isBoolean())
             {
-               if (cp->m_opCode == OPCODE_JZ ? pValue->isZero() : pValue->isNonZero())
+               if (cp->m_opCode == OPCODE_JZ ? pValue->isFalse() : pValue->isTrue())
                   dwNext = cp->m_operand.m_addr;
             }
             else
@@ -1155,7 +1156,7 @@ void NXSL_VM::execute()
          {
             if (pValue->isNumeric())
             {
-					if (cp->m_opCode == OPCODE_JZ_PEEK ? pValue->isZero() : pValue->isNonZero())
+					if (cp->m_opCode == OPCODE_JZ_PEEK ? pValue->isFalse() : pValue->isTrue())
                   dwNext = cp->m_operand.m_addr;
             }
             else if (pValue->isNull())
@@ -2065,11 +2066,11 @@ void NXSL_VM::doBinaryOperation(int nOpCode)
                         pVal1 = NULL;
                         break;
                      case OPCODE_AND:
-                        nResult = (pVal1->isNonZero() && pVal2->isNonZero());
+                        nResult = (pVal1->isTrue() && pVal2->isTrue());
                         pRes = createValue(nResult);
                         break;
                      case OPCODE_OR:
-                        nResult = (pVal1->isNonZero() || pVal2->isNonZero());
+                        nResult = (pVal1->isTrue() || pVal2->isTrue());
                         pRes = createValue(nResult);
                         break;
                      case OPCODE_CASE:
@@ -2093,7 +2094,7 @@ void NXSL_VM::doBinaryOperation(int nOpCode)
          }
          else if (((nOpCode == OPCODE_AND) || (nOpCode == OPCODE_OR)) && pVal1->isBoolean() && pVal2->isBoolean())
          {
-            bool result = (nOpCode == OPCODE_AND) ? (pVal1->isNonZero() && pVal2->isNonZero()) : (pVal1->isNonZero() || pVal2->isNonZero());
+            bool result = (nOpCode == OPCODE_AND) ? (pVal1->isTrue() && pVal2->isTrue()) : (pVal1->isTrue() || pVal2->isTrue());
             pRes = createValue(result ? 1 : 0);
          }
          else
@@ -2219,46 +2220,37 @@ void NXSL_VM::doBinaryOperation(int nOpCode)
  */
 void NXSL_VM::doUnaryOperation(int nOpCode)
 {
-   NXSL_Value *pVal;
-
-   pVal = m_dataStack->peek();
-   if (pVal != NULL)
+   NXSL_Value *value = m_dataStack->peek();
+   if (value != NULL)
    {
-      if (pVal->isNumeric())
+      if ((nOpCode == OPCODE_NOT) && value->isBoolean())
+      {
+         value->set(value->isFalse() ? 1 : 0);
+      }
+      else if (value->isNumeric())
       {
          switch(nOpCode)
          {
+            case OPCODE_BIT_NOT:
+               if (!value->isReal())
+               {
+                  value->bitNot();
+               }
+               else
+               {
+                  error(NXSL_ERR_REAL_VALUE);
+               }
+               break;
             case OPCODE_NEG:
-               pVal->negate();
+               value->negate();
                break;
             case OPCODE_NOT:
-               if (!pVal->isReal())
-               {
-                  pVal->set((LONG)pVal->isZero());
-               }
-               else
-               {
-                  error(NXSL_ERR_REAL_VALUE);
-               }
-               break;
-            case OPCODE_BIT_NOT:
-               if (!pVal->isReal())
-               {
-                  pVal->bitNot();
-               }
-               else
-               {
-                  error(NXSL_ERR_REAL_VALUE);
-               }
+               value->set(value->isFalse() ? 1 : 0);
                break;
             default:
                error(NXSL_ERR_INTERNAL);
                break;
          }
-      }
-      else if (pVal->isNull() && (nOpCode == OPCODE_NOT))
-      {
-         pVal->set(1);
       }
       else
       {
@@ -2552,9 +2544,9 @@ NXSL_Value *NXSL_VM::matchRegexp(NXSL_Value *pValue, NXSL_Value *pRegexp, BOOL b
          if (cgcount == 0)
             cgcount = MAX_REGEXP_CGROUPS;
 
-         result = createValue((LONG)1);
+         NXSL_Array *cgroups = new NXSL_Array(this);
          int i;
-         for(i = 1; i < cgcount; i++)
+         for(i = 0; i < cgcount; i++)
          {
             char varName[16];
             snprintf(varName, 16, "$%d", i);
@@ -2568,24 +2560,21 @@ NXSL_Value *NXSL_VM::matchRegexp(NXSL_Value *pValue, NXSL_Value *pRegexp, BOOL b
                   m_localVariables->create(varName, createValue(pValue->getValueAsCString() + start, end - start));
                else
                   var->setValue(createValue(pValue->getValueAsCString() + start, end - start));
+               cgroups->append(createValue(pValue->getValueAsCString() + start, end - start));
             }
-            else if (var != NULL)
+            else
             {
-               var->setValue(createValue());
+               if (var != NULL)
+                  var->setValue(createValue());
+               cgroups->append(createValue());
             }
          }
-         for(; i < MAX_REGEXP_CGROUPS; i++)
-         {
-            char varName[16];
-            snprintf(varName, 16, "$%d", i);
-            NXSL_Variable *var = m_localVariables->find(varName);
-            if (var != NULL)
-               var->setValue(createValue());
-         }
+
+         result = createValue(cgroups);
       }
       else
       {
-         result = createValue((LONG)0);
+         result = createValue();
       }
       _pcre_free_t(preg);
    }
