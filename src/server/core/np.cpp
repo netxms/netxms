@@ -695,7 +695,7 @@ static bool AcceptNewNode(NewNodeData *newNodeData, BYTE *macAddr)
       if (hook->run())
       {
          NXSL_Value *result = hook->getResult();
-         if (result->isZero())
+         if (result->isFalse())
          {
             stop = true;
             nxlog_debug_tag(DEBUG_TAG, 4, _T("AcceptNewNode(%s): rejected by hook script"), szIpAddr);
