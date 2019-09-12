@@ -34,7 +34,7 @@ INSERT INTO object_tools (tool_id,guid,tool_name,tool_type,tool_data,flags,tool_
 	VALUES (7,'a4d9c827-916b-2640-b6e2-d5bf512c39d7','&Connect->Open &web browser (HTTPS)',TOOL_TYPE_URL,'https://%a',0,'','Open embedded web browser to node using HTTPS','');
 
 INSERT INTO object_tools (tool_id,guid,tool_name,tool_type,tool_data,flags,tool_filter,description,confirmation_text)
-	VALUES (8,'ded1f018-9659-c548-8adb-4af5c759c7ba','&Info->&Agent->&Subagent list',TOOL_TYPE_AGENT_TABLE,'Subagent ListAgent.SubAgents',0,'<objectMenuFilter><flags>2</flags></objectMenuFilter>','Show list of loaded subagents','');
+	VALUES (8,'ded1f018-9659-c548-8adb-4af5c759c7ba','&Info->&Agent->&Loaded subagents',TOOL_TYPE_AGENT_TABLE,'Loaded subagentsAgent.SubAgents',0,'<objectMenuFilter><flags>2</flags></objectMenuFilter>','Show information about loaded subagents','');
 
 INSERT INTO object_tools (tool_id,guid,tool_name,tool_type,tool_data,flags,tool_filter,description,confirmation_text)
 	VALUES (9,'cf606f35-ea88-2446-bdf5-366799e615c9','&Info->&Agent->Supported &parameters',TOOL_TYPE_AGENT_LIST,'Supported parametersAgent.SupportedParameters^(.*)',0,'<objectMenuFilter><flags>2</flags></objectMenuFilter>','Show list of parameters supported by agent','');
@@ -47,7 +47,7 @@ INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_
 	VALUES (10,0,'Parameter','',CFMT_STRING,1);
 
 INSERT INTO object_tools (tool_id,guid,tool_name,tool_type,tool_data,flags,tool_filter,description,confirmation_text)
-	VALUES (11,'d6ea7dcf-c342-b04e-a91b-566beda73c4d','&Info->&Agent->Supported &actions',TOOL_TYPE_AGENT_LIST,'Supported actionsAgent.ActionList^(.*) (.*) "(.*)".*',0,'<objectMenuFilter><flags>2</flags></objectMenuFilter>','Show list of actions supported by agent','');
+	VALUES (11,'d6ea7dcf-c342-b04e-a91b-566beda73c4d','&Info->&Agent->Supported &actions',TOOL_TYPE_AGENT_LIST,'Supported actionsAgent.ActionList^(.*) (.*) "(.*)".*',0,'<objectMenuFilter><flags>2</flags></objectMenuFilter>','Show information about actions supported by agent','');
 INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
 	VALUES (11,0,'Name','',CFMT_STRING,1);
 INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
@@ -56,11 +56,11 @@ INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_
 	VALUES (11,2,'Data','',CFMT_STRING,3);
 
 INSERT INTO object_tools (tool_id,guid,tool_name,tool_type,tool_data,flags,tool_filter,description,confirmation_text)
-	VALUES (12,'780a1b84-e600-a748-89af-c5e02e5b8cfc','&Info->&Agent->Configured &ICMP targets',TOOL_TYPE_AGENT_TABLE,'Configured ICMP targetsICMP.Targets',0,'<objectMenuFilter><flags>2</flags></objectMenuFilter>','Show list of ICMP targets configured on this agent','');
+	VALUES (12,'780a1b84-e600-a748-89af-c5e02e5b8cfc','&Info->&Agent->Configured &ICMP targets',TOOL_TYPE_AGENT_TABLE,'Configured ICMP targetsICMP.Targets',0,'<objectMenuFilter><flags>2</flags></objectMenuFilter>','Show information about ICMP targets configured on this agent','');
 
 INSERT INTO object_tools (tool_id,guid,tool_name,tool_type,tool_data,flags,tool_filter,description,confirmation_text)
-	VALUES (13,'7afea6f9-ccd2-1d45-9e8c-3aafe14cb565','&Info->&Process list',TOOL_TYPE_AGENT_TABLE,
-           'Process ListSystem.Processes',0,'<objectMenuFilter><flags>2</flags></objectMenuFilter>','Show list of currently running processes','');
+	VALUES (13,'7afea6f9-ccd2-1d45-9e8c-3aafe14cb565','&Info->&Current processes',TOOL_TYPE_AGENT_TABLE,
+           'Current processesSystem.Processes',0,'<objectMenuFilter><flags>2</flags></objectMenuFilter>','Show information about currently running processes','');
 
 INSERT INTO object_tools (tool_id,guid,tool_name,tool_type,tool_data,flags,tool_filter,description,confirmation_text)
 	VALUES (14,'80f3c244-87b1-954e-99e1-3c94062a2cc7','&Info->Topology table (Nortel)',TOOL_TYPE_SNMP_TABLE,'Topology table',0,'<objectMenuFilter><flags>1</flags></objectMenuFilter>','Show topology table (Nortel protocol)','');
@@ -88,7 +88,7 @@ INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_
 
 INSERT INTO object_tools (tool_id,guid,tool_name,tool_type,tool_data,flags,tool_filter,description,confirmation_text)
 	VALUES (16,'87370de4-e760-904a-9f9d-dfdf15f4dd9e','&Info->Active &user sessions',TOOL_TYPE_AGENT_LIST,
-           'Active User SessionsSystem.ActiveUserSessions^"(.*)" "(.*)" "(.*)"',0,'<objectMenuFilter><flags>2</flags></objectMenuFilter>','Show list of active user sessions','');
+           'Active User SessionsSystem.ActiveUserSessions^"(.*)" "(.*)" "(.*)"',0,'<objectMenuFilter><flags>2</flags></objectMenuFilter>','Show information about active user sessions','');
 INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
 	VALUES (16,0,'User','',CFMT_STRING,1);
 INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
@@ -107,7 +107,7 @@ INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_
 
 INSERT INTO object_tools (tool_id,guid,tool_name,tool_type,tool_data,flags,tool_filter,description,confirmation_text)
 	VALUES (18,'86b9772e-b939-1849-bc5b-d2c1a170ec96','&Info->AR&P cache (Agent)',TOOL_TYPE_AGENT_LIST,
-           'ARP CacheNet.ArpCache(.*) (.*) (.*)',0,'<objectMenuFilter><flags>1</flags></objectMenuFilter>','Show ARP cache','');
+           'ARP CacheNet.ArpCache(.*) (.*) (.*)',0,'<objectMenuFilter><flags>2</flags></objectMenuFilter>','Show ARP cache','');
 INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
 	VALUES (18,0,'IP Address','.1.3.6.1.2.1.4.22.1.3',CFMT_STRING,2);
 INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
@@ -181,6 +181,11 @@ INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_
 INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
  VALUES (22,6,'ManufacturedDate','.1.3.6.1.4.1.27514.1.11.3.1.1.17.0',0,1);
 
+INSERT INTO object_tools (tool_id,guid,tool_name,tool_type,tool_data,flags,tool_filter,description,confirmation_text)
+ VALUES (23,'281e3601-1cc6-4969-93f2-dfb86f9380b9','&Info->&Agent->Supported &tables',TOOL_TYPE_AGENT_LIST,'Supported tablesAgent.SupportedTables^(.*)',0,'<objectMenuFilter><flags>2</flags></objectMenuFilter>','Show list of tables supported by agent','');
+INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
+ VALUES (23,0,'Parameter','',CFMT_STRING,1);
+
 INSERT INTO object_tools_acl (tool_id,user_id) VALUES (1,-2147483648);
 INSERT INTO object_tools_acl (tool_id,user_id) VALUES (2,-2147483648);
 INSERT INTO object_tools_acl (tool_id,user_id) VALUES (3,-2147483648);
@@ -203,3 +208,4 @@ INSERT INTO object_tools_acl (tool_id,user_id) VALUES (19,-2147483648);
 INSERT INTO object_tools_acl (tool_id,user_id) VALUES (20,-2147483648);
 INSERT INTO object_tools_acl (tool_id,user_id) VALUES (21,-2147483648);
 INSERT INTO object_tools_acl (tool_id,user_id) VALUES (22,-2147483648);
+INSERT INTO object_tools_acl (tool_id,user_id) VALUES (23,-2147483648);
