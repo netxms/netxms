@@ -78,26 +78,26 @@ Source: "..\..\..\x64\Release\pgsql.pdb"; DestDir: "{app}\bin"; Flags: ignorever
 Source: "..\..\..\x64\Release\sqlite.ddr"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\x64\Release\sqlite.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
 ; NC drivers
-Source: "..\..\..\x64\Release\dbtable.ncd"; DestDir: "{app}\lib\ncd"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\dbtable.pdb"; DestDir: "{app}\lib\ncd"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\gsm.ncd"; DestDir: "{app}\lib\ncd"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\gsm.pdb"; DestDir: "{app}\lib\ncd"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\kannel.ncd"; DestDir: "{app}\lib\ncd"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\kannel.pdb"; DestDir: "{app}\lib\ncd"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\nexmo.ncd"; DestDir: "{app}\lib\ncd"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\nexmo.pdb"; DestDir: "{app}\lib\ncd"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\nxagent.ncd"; DestDir: "{app}\lib\ncd"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\nxagent.pdb"; DestDir: "{app}\lib\ncd"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\portech.ncd"; DestDir: "{app}\lib\ncd"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\portech.pdb"; DestDir: "{app}\lib\ncd"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\slack.ncd"; DestDir: "{app}\lib\ncd"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\slack.pdb"; DestDir: "{app}\lib\ncd"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\smseagle.ncd"; DestDir: "{app}\lib\ncd"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\smseagle.pdb"; DestDir: "{app}\lib\ncd"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\text2reach.ncd"; DestDir: "{app}\lib\ncd"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\text2reach.pdb"; DestDir: "{app}\lib\ncd"; Flags: ignoreversion; Components: server and pdb
-Source: "..\..\..\x64\Release\websms.ncd"; DestDir: "{app}\lib\ncd"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\x64\Release\websms.pdb"; DestDir: "{app}\lib\ncd"; Flags: ignoreversion; Components: server and pdb
+Source: "..\..\..\x64\Release\dbtable.ncd"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\x64\Release\dbtable.pdb"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion; Components: server and pdb
+Source: "..\..\..\x64\Release\gsm.ncd"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\x64\Release\gsm.pdb"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion; Components: server and pdb
+Source: "..\..\..\x64\Release\kannel.ncd"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\x64\Release\kannel.pdb"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion; Components: server and pdb
+Source: "..\..\..\x64\Release\nexmo.ncd"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\x64\Release\nexmo.pdb"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion; Components: server and pdb
+Source: "..\..\..\x64\Release\nxagent.ncd"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\x64\Release\nxagent.pdb"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion; Components: server and pdb
+Source: "..\..\..\x64\Release\portech.ncd"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\x64\Release\portech.pdb"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion; Components: server and pdb
+Source: "..\..\..\x64\Release\slack.ncd"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\x64\Release\slack.pdb"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion; Components: server and pdb
+Source: "..\..\..\x64\Release\smseagle.ncd"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\x64\Release\smseagle.pdb"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion; Components: server and pdb
+Source: "..\..\..\x64\Release\text2reach.ncd"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\x64\Release\text2reach.pdb"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion; Components: server and pdb
+Source: "..\..\..\x64\Release\websms.ncd"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\x64\Release\websms.pdb"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion; Components: server and pdb
 ; Tools
 Source: "..\..\..\x64\Release\libnxdbmgr.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\x64\Release\nxaction.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
