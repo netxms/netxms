@@ -28,6 +28,9 @@ public class TileSet
 	public int yOffset;
 	public int zoom;
 	public int missingTiles;
+	public long lastProgressUpdate;
+	public int workers;
+	public boolean cancelled; 
 	
 	/**
 	 * @param tiles
