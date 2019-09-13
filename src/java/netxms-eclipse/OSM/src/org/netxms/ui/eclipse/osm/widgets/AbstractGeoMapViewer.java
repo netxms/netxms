@@ -269,6 +269,7 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 						if (tiles != null)
 						{
 							drawTiles(tiles);
+                     AbstractGeoMapViewer.this.redraw();
 							if (tiles.missingTiles > 0)
 							{
 								currentTileSet = tiles;
@@ -322,7 +323,12 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 							drawTiles(tiles);
 							AbstractGeoMapViewer.this.redraw();
 						}
-						tiles.dispose();
+						else
+						{
+						   tiles.cancelled = true; // Inform loader tasks that this tile set is no longer needed
+						}
+						if (tiles.missingTiles == 0)
+						   tiles.dispose();
 					}
 				});
 			}

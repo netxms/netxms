@@ -347,6 +347,12 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 						{
 							AbstractGeoMapViewer.this.redraw();
 						}
+						else
+						{
+						   tiles.cancelled = true; // Inform loader tasks that this tile set is no longer needed
+						}
+						if (tiles.missingTiles == 0)
+						   tiles.dispose();
 					}
 				});
 			}

@@ -26,6 +26,8 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.osgi.service.datalocation.Location;
 import org.eclipse.swt.SWT;
@@ -55,6 +57,7 @@ public class MapLoader
 
 	private Display display;
 	private NXCSession session;
+	private ExecutorService workers;
 	private Image missingTile = null; 
 	private Image loadingTile = null; 
 	private Image borderTile = null;
@@ -68,6 +71,7 @@ public class MapLoader
 	{
 		this.display = display;
 		session = (NXCSession)ConsoleSharedData.getSession();
+		workers = Executors.newFixedThreadPool(16);
 	}
 	
 	/**
@@ -141,6 +145,8 @@ public class MapLoader
 	}
 	
 	/**
+	 * Load tile from tile server. Expected to be executed on background thread.
+	 * 
 	 * @param zoom
 	 * @param x
 	 * @param y
@@ -353,25 +359,76 @@ public class MapLoader
 	 * 
 	 * @param tiles
 	 */
-	public void loadMissingTiles(TileSet tiles, Runnable completionHandler)
+	public void loadMissingTiles(final TileSet tiles, Runnable progressHandler)
 	{
-		for(int i = 0; i < tiles.tiles.length; i++)
-			for(int j = 0; j < tiles.tiles[i].length; j++)
-			{
-				Tile tile = tiles.tiles[i][j];
-				if (!tile.isLoaded())
-				{
-					tile = getTile(tiles.zoom, tile.getX(), tile.getY(), false);
-					if (tile != null)
-					{
-						tiles.tiles[i][j] = tile;
-						tiles.missingTiles--;
-					}
-				}
-			}
-		display.asyncExec(completionHandler);
+	   synchronized(tiles)
+	   {
+   	   tiles.lastProgressUpdate = System.currentTimeMillis();
+   		for(int i = 0; i < tiles.tiles.length; i++)
+   		{
+   			for(int j = 0; j < tiles.tiles[i].length; j++)
+   			{
+   				final Tile tile = tiles.tiles[i][j];
+   				if (!tile.isLoaded())
+   				{
+   				   tiles.workers++;
+   				   final int row = i;
+                  final int col = j;
+   				   workers.execute(new Runnable() {
+                     @Override
+                     public void run()
+                     {
+                        synchronized(tiles)
+                        {
+                           if (tiles.cancelled)
+                           {
+                              Activator.log("Tile set loading cancelled");
+                              tiles.workers--;
+                              return;
+                           }
+                        }
+                        Tile loadedTile = getTile(tiles.zoom, tile.getX(), tile.getY(), false);
+                        if (loadedTile != null)
+                        {
+                           synchronized(tiles)
+                           {
+                              tiles.tiles[row][col] = loadedTile;
+                              tiles.missingTiles--;
+                              if (tiles.missingTiles > 0)
+                              {
+                                 long now = System.currentTimeMillis();
+                                 if (now - tiles.lastProgressUpdate >= 1000)
+                                 {
+                                    display.asyncExec(progressHandler);
+                                    tiles.lastProgressUpdate = now;
+                                 }
+                              }
+                              tiles.workers--;
+                              if (tiles.workers == 0)
+                              {
+                                 tiles.notifyAll();
+                              }
+                           }
+                        }
+                     }
+                  });
+   				}
+   			}
+   		}
+   		while(tiles.workers > 0)
+   		{
+            try
+            {
+               tiles.wait();
+            }
+            catch(InterruptedException e)
+            {
+            }
+   		}
+	   }
+		display.asyncExec(progressHandler);
 	}
-	
+
 	/**
 	 * Returns true if given image is internally generated (not downloaded)
 	 * 
@@ -388,6 +445,7 @@ public class MapLoader
 	 */
 	public void dispose()
 	{
+      workers.shutdown();
 		if (loadingTile != null)
 			loadingTile.dispose();
 		if (missingTile != null)
