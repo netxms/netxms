@@ -1166,6 +1166,20 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
          ConsoleWrite(pCtx, _T("\n\x1b[1mMOBILE DEVICE SESSIONS\x1b[0m\n============================================================\n"));
          DumpMobileDeviceSessions(pCtx);
       }
+      else if (IsCommand(_T("SIZEOF"), szBuffer, 4))
+      {
+         pCtx->printf(_T("NetObj .............: %d\n"), static_cast<int>(sizeof(NetObj)));
+         pCtx->printf(_T("   AccessPoint .....: %d\n"), static_cast<int>(sizeof(AccessPoint)));
+         pCtx->printf(_T("   Cluster .........: %d\n"), static_cast<int>(sizeof(Cluster)));
+         pCtx->printf(_T("   Container .......: %d\n"), static_cast<int>(sizeof(Container)));
+         pCtx->printf(_T("   Interface .......: %d\n"), static_cast<int>(sizeof(Interface)));
+         pCtx->printf(_T("   Node ............: %d\n"), static_cast<int>(sizeof(Node)));
+         pCtx->printf(_T("   Sensor ..........: %d\n"), static_cast<int>(sizeof(Sensor)));
+         pCtx->printf(_T("HardwareComponent . : %d\n"), static_cast<int>(sizeof(HardwareComponent)));
+         pCtx->printf(_T("SoftwarePackage ... : %d\n"), static_cast<int>(sizeof(SoftwarePackage)));
+         pCtx->printf(_T("WinPerfObject ..... : %d\n"), static_cast<int>(sizeof(WinPerfObject)));
+         pCtx->printf(_T("WirelessStationInfo : %d\n"), static_cast<int>(sizeof(WirelessStationInfo)));
+      }
       else if (IsCommand(_T("STATS"), szBuffer, 2))
       {
          ShowServerStats(pCtx);
