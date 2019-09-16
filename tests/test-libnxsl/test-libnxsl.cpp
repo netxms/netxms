@@ -86,6 +86,7 @@ int main(int argc, char *argv[])
    RunTestScript(_T("base64.nxsl"));
    RunTestScript(_T("control.nxsl"));
    RunTestScript(_T("globals.nxsl"));
+   RunTestScript(_T("like.nxsl"));
    RunTestScript(_T("math.nxsl"));
    RunTestScript(_T("regexp.nxsl"));
    RunTestScript(_T("strings.nxsl"));
