@@ -15,6 +15,7 @@ nxsltest_DATA = \
 	base64.nxsl \
 	control.nxsl \
 	globals.nxsl \
+	like.nxsl \
 	math.nxsl \
 	regexp.nxsl \
 	strings.nxsl \

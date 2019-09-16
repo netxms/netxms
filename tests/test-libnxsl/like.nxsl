@@ -1,0 +1,15 @@
+/* String pattern match testing */
+
+assert("abcd" like "a?cd");
+assert("abcd" like "a?*");
+assert("abcd" like "*d");
+assert("abcd" like "*d*");
+assert("abcd" like "*abcd*");
+assert("abcd" like "*abcd");
+assert("abcd" like "*????");
+assert("abcd" like "a*d");
+assert(not ("abcd" like "A*d"));
+assert("abcd" ilike "A*d");
+assert("abcd" ilike "***A*******?d**");
+
+return 0;
