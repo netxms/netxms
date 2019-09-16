@@ -714,6 +714,129 @@ static void CheckCollectedData(bool isTable)
 }
 
 /**
+ * Check collected data - single table version
+ */
+static void CheckCollectedDataSingleTable(bool isTable)
+{
+   StartStage(isTable ? _T("Table DCI history records") : _T("DCI history records"), 2);
+
+   time_t now = time(NULL);
+   TCHAR query[1024];
+   _sntprintf(query, 1024, _T("SELECT count(*) FROM %s WHERE %s_timestamp>") TIME_T_FMT,
+            isTable ? _T("tdata") : _T("idata"), isTable ? _T("tdata") : _T("idata"), TIME_T_FCAST(now));
+   DB_RESULT hResult = SQLSelect(query);
+   if (hResult != NULL)
+   {
+      if (DBGetFieldLong(hResult, 0, 0) > 0)
+      {
+         g_dbCheckErrors++;
+         if (GetYesNoEx(_T("Found collected data with timestamp in the future. Delete invalid records?")))
+         {
+            _sntprintf(query, 1024, _T("DELETE FROM %s WHERE %s_timestamp>") TIME_T_FMT,
+                     isTable ? _T("tdata") : _T("idata"), isTable ? _T("tdata") : _T("idata"), TIME_T_FCAST(now));
+            if (SQLQuery(query))
+               g_dbCheckFixes++;
+         }
+      }
+      DBFreeResult(hResult);
+   }
+
+   UpdateStageProgress(1);
+   ResetBulkYesNo();
+
+   _sntprintf(query, 1024, _T("SELECT distinct(item_id) FROM %s"), isTable ? _T("tdata") : _T("idata"));
+   hResult = SQLSelect(query);
+   if (hResult != NULL)
+   {
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
+      {
+         UINT32 id = DBGetFieldLong(hResult, i, 0);
+         if (!IsDciExists(id, 0, isTable))
+         {
+            g_dbCheckErrors++;
+            if (GetYesNoEx(_T("Found collected data for non-existing DCI [%d]. Delete invalid records?"), id))
+            {
+               _sntprintf(query, 1024, _T("DELETE FROM %s WHERE item_id=%d"), isTable ? _T("tdata") : _T("idata"), id);
+               if (SQLQuery(query))
+                  g_dbCheckFixes++;
+            }
+         }
+      }
+      DBFreeResult(hResult);
+   }
+
+   EndStage();
+}
+
+/**
+ * Check collected data - single table TSDB version
+ */
+static void CheckCollectedDataSingleTable_TSDB(bool isTable)
+{
+   static const TCHAR *sclasses[] = { _T("default"), _T("7"), _T("30"), _T("90"), _T("180"), _T("other") };
+
+   StartStage(isTable ? _T("Table DCI history records") : _T("DCI history records"), 12);
+   time_t now = time(NULL);
+
+   for(int sc = 0; sc < 6; sc++)
+   {
+      TCHAR query[1024];
+      _sntprintf(query, 1024, _T("SELECT count(*) FROM %s_sc_%s WHERE %s_timestamp>") TIME_T_FMT,
+               isTable ? _T("tdata") : _T("idata"), sclasses[sc], isTable ? _T("tdata") : _T("idata"), TIME_T_FCAST(now));
+      DB_RESULT hResult = SQLSelect(query);
+      if (hResult != NULL)
+      {
+         if (DBGetFieldLong(hResult, 0, 0) > 0)
+         {
+            g_dbCheckErrors++;
+            if (GetYesNoEx(_T("Found collected data with timestamp in the future. Delete invalid records?")))
+            {
+               _sntprintf(query, 1024, _T("DELETE FROM %s_sc_%s WHERE %s_timestamp>") TIME_T_FMT,
+                        isTable ? _T("tdata") : _T("idata"), sclasses[sc], isTable ? _T("tdata") : _T("idata"), TIME_T_FCAST(now));
+               if (SQLQuery(query))
+                  g_dbCheckFixes++;
+            }
+         }
+         DBFreeResult(hResult);
+      }
+
+      UpdateStageProgress(1);
+   }
+
+   ResetBulkYesNo();
+
+   for(int sc = 0; sc < 6; sc++)
+   {
+      TCHAR query[1024];
+      _sntprintf(query, 1024, _T("SELECT distinct(item_id) FROM %s_sc_%s"), isTable ? _T("tdata") : _T("idata"), sclasses[sc]);
+      DB_RESULT hResult = SQLSelect(query);
+      if (hResult != NULL)
+      {
+         int count = DBGetNumRows(hResult);
+         for(int i = 0; i < count; i++)
+         {
+            UINT32 id = DBGetFieldLong(hResult, i, 0);
+            if (!IsDciExists(id, 0, isTable))
+            {
+               g_dbCheckErrors++;
+               if (GetYesNoEx(_T("Found collected data for non-existing DCI [%d]. Delete invalid records?"), id))
+               {
+                  _sntprintf(query, 1024, _T("DELETE FROM %s_sc_%s WHERE item_id=%d"), isTable ? _T("tdata") : _T("idata"), sclasses[sc], id);
+                  if (SQLQuery(query))
+                     g_dbCheckFixes++;
+               }
+            }
+         }
+         DBFreeResult(hResult);
+      }
+
+      UpdateStageProgress(1);
+   }
+   EndStage();
+}
+
+/**
  * Check raw DCI values
  */
 static void CheckRawDciValues()
@@ -1142,8 +1265,24 @@ void CheckDatabase()
          CheckTableThresholds();
          if (g_checkData)
          {
-            CheckCollectedData(false);
-            CheckCollectedData(true);
+            if (DBMgrMetaDataReadInt32(_T("SingeTablePerfData"), 0))
+            {
+               if (g_dbSyntax == DB_SYNTAX_TSDB)
+               {
+                  CheckCollectedDataSingleTable_TSDB(false);
+                  CheckCollectedDataSingleTable_TSDB(true);
+               }
+               else
+               {
+                  CheckCollectedDataSingleTable(false);
+                  CheckCollectedDataSingleTable(true);
+               }
+            }
+            else
+            {
+               CheckCollectedData(false);
+               CheckCollectedData(true);
+            }
          }
          CheckModuleSchemas();
       }

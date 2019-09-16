@@ -308,8 +308,8 @@ void ExportDatabase(char *file, bool skipAudit, bool skipAlarms, bool skipEvent,
           (skipSysLog && !_tcscmp(table, _T("syslog"))) ||
           ((g_skipDataMigration || g_skipDataSchemaMigration) &&
            (!_tcscmp(table, _T("raw_dci_values")) ||
-            !_tcscmp(table, _T("idata")) ||
-            !_tcscmp(table, _T("tdata")))) ||
+            !_tcsncmp(table, _T("idata"), 5) ||
+            !_tcsncmp(table, _T("tdata"), 5))) ||
           excludedTables.contains(table))
 	   {
 	      _tprintf(_T("Skipping table %s\n"), table);
