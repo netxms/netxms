@@ -11847,7 +11847,7 @@ void ClientSession::findMacAddress(NXCPMessage *request)
 void ClientSession::findIpAddress(NXCPMessage *request)
 {
    NXCPMessage msg;
-	TCHAR ipAddrText[16];
+	TCHAR ipAddrText[64];
 
 	msg.setId(request->getId());
 	msg.setCode(CMD_REQUEST_COMPLETED);
@@ -11857,18 +11857,18 @@ void ClientSession::findIpAddress(NXCPMessage *request)
 	bool found = false;
 
 	UINT32 zoneUIN = request->getFieldAsUInt32(VID_ZONE_UIN);
-	UINT32 ipAddr = request->getFieldAsUInt32(VID_IP_ADDRESS);
+	InetAddress ipAddr = request->getFieldAsInetAddress(VID_IP_ADDRESS);
 	Interface *iface = FindInterfaceByIP(zoneUIN, ipAddr);
 	if ((iface != NULL) && iface->getMacAddr().isValid())
 	{
 		macAddr = iface->getMacAddr();
 		found = true;
-		debugPrintf(5, _T("findIpAddress(%s): endpoint iface=%s"), IpToStr(ipAddr, ipAddrText), iface->getName());
+		debugPrintf(5, _T("findIpAddress(%s): endpoint iface=%s"), ipAddr.toString(ipAddrText), iface->getName());
 	}
 	else
 	{
 		// no interface object with this IP or MAC address not known, try to find it in ARP caches
-		debugPrintf(5, _T("findIpAddress(%s): interface not found, looking in ARP cache"), IpToStr(ipAddr, ipAddrText));
+		debugPrintf(5, _T("findIpAddress(%s): interface not found, looking in ARP cache"), ipAddr.toString(ipAddrText));
 		Subnet *subnet = FindSubnetForNode(zoneUIN, ipAddr);
 		if (subnet != NULL)
 		{
@@ -11917,9 +11917,9 @@ void ClientSession::findIpAddress(NXCPMessage *request)
 			   msg.setField(VID_IP_ADDRESS, ipAddr);
 			   msg.setField(VID_CONNECTION_TYPE, (UINT16)type);
             if (cp->getObjectClass() == OBJECT_INTERFACE)
-               debugPrintf(5, _T("findIpAddress(%s): nodeId=%d ifId=%d ifName=%s ifIndex=%d"), IpToStr(ipAddr, ipAddrText), node->getId(), cp->getId(), cp->getName(), ((Interface *)cp)->getIfIndex());
+               debugPrintf(5, _T("findIpAddress(%s): nodeId=%d ifId=%d ifName=%s ifIndex=%d"), ipAddr.toString(ipAddrText), node->getId(), cp->getId(), cp->getName(), ((Interface *)cp)->getIfIndex());
             else
-               debugPrintf(5, _T("findIpAddress(%s): nodeId=%d apId=%d apName=%s"), IpToStr(ipAddr, ipAddrText), node->getId(), cp->getId(), cp->getName());
+               debugPrintf(5, _T("findIpAddress(%s): nodeId=%d apId=%d apName=%s"), ipAddr.toString(ipAddrText), node->getId(), cp->getId(), cp->getName());
          }
 		}
 		else if (iface != NULL)
@@ -11944,6 +11944,9 @@ void ClientSession::findIpAddress(NXCPMessage *request)
 	sendMessage(&msg);
 }
 
+/**
+ * Find nodes by hostname
+ */
 void ClientSession::findHostname(NXCPMessage *request)
 {
    NXCPMessage msg;
