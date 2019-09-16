@@ -582,6 +582,13 @@ bool AgentConnection::connect(RSA *pServerKey, UINT32 *pdwError, UINT32 *pdwSock
    incInternalRefCount();
    m_channel->incRefCount();  // for receiver thread
    m_hReceiverThread = ThreadCreateEx(receiverThreadStarter, 0, this);
+   if (m_hReceiverThread == INVALID_THREAD_HANDLE)
+   {
+      debugPrintf(3, _T("Cannot start receiver thread"));
+      dwError = ERR_INTERNAL_ERROR;
+      m_channel->decRefCount();
+      goto connect_cleanup;
+   }
 
    // Setup encryption
 setup_encryption:
