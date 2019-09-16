@@ -1,6 +1,6 @@
 /* 
 ** Oracle Database Driver
-** Copyright (C) 2007-2018 Victor Kirhenshtein
+** Copyright (C) 2007-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -51,6 +51,61 @@ inline void FreeConvertedString(UCS2CHAR *str, UCS2CHAR *localBuffer)
 }
 
 #endif   /* UNICODE_UCS4 */
+
+/**
+ * Get error text from error handle
+ */
+static void GetErrorFromHandle(OCIError *handle, sb4 *errorCode, WCHAR *errorText)
+{
+#if UNICODE_UCS2
+   OCIErrorGet(handle, 1, NULL, errorCode, (text *)errorText, DBDRV_MAX_ERROR_TEXT, OCI_HTYPE_ERROR);
+   errorText[DBDRV_MAX_ERROR_TEXT - 1] = 0;
+#else
+   UCS2CHAR buffer[DBDRV_MAX_ERROR_TEXT];
+
+   OCIErrorGet(handle, 1, NULL, errorCode, (text *)buffer, DBDRV_MAX_ERROR_TEXT, OCI_HTYPE_ERROR);
+   buffer[DBDRV_MAX_ERROR_TEXT - 1] = 0;
+   ucs2_to_ucs4(buffer, ucs2_strlen(buffer) + 1, errorText, DBDRV_MAX_ERROR_TEXT);
+   errorText[DBDRV_MAX_ERROR_TEXT - 1] = 0;
+#endif
+   RemoveTrailingCRLFW(errorText);
+}
+
+/**
+ * Set last error text
+ */
+static void SetLastError(ORACLE_CONN *pConn)
+{
+   GetErrorFromHandle(pConn->handleError, &pConn->lastErrorCode, pConn->lastErrorText);
+}
+
+/**
+ * Check if last error was caused by lost connection to server
+ */
+static DWORD IsConnectionError(ORACLE_CONN *conn)
+{
+   ub4 nStatus = 0;
+   OCIAttrGet(conn->handleServer, OCI_HTYPE_SERVER, &nStatus, NULL, OCI_ATTR_SERVER_STATUS, conn->handleError);
+   return (nStatus == OCI_SERVER_NOT_CONNECTED) ? DBERR_CONNECTION_LOST : DBERR_OTHER_ERROR;
+}
+
+/**
+ * Check for successful completion
+ */
+static inline bool IsSuccess(sword code, ORACLE_CONN *conn = NULL, const TCHAR *logMessage = NULL)
+{
+   if (code == OCI_SUCCESS)
+      return true;
+   if (code != OCI_SUCCESS_WITH_INFO)
+      return false;
+   if (logMessage != NULL)
+   {
+      WCHAR errorText[DBDRV_MAX_ERROR_TEXT];
+      GetErrorFromHandle(conn->handleError, &conn->lastErrorCode, errorText);
+      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, logMessage, errorText);
+   }
+   return true;
+}
 
 /**
  * Global environment handle
@@ -164,43 +219,6 @@ extern "C" void __EXPORT DrvUnload()
 }
 
 /**
- * Get error text from error handle
- */
-static void GetErrorFromHandle(OCIError *handle, sb4 *errorCode, WCHAR *errorText)
-{
-#if UNICODE_UCS2
-	OCIErrorGet(handle, 1, NULL, errorCode, (text *)errorText, DBDRV_MAX_ERROR_TEXT, OCI_HTYPE_ERROR);
-	errorText[DBDRV_MAX_ERROR_TEXT - 1] = 0;
-#else
-	UCS2CHAR buffer[DBDRV_MAX_ERROR_TEXT];
-
-	OCIErrorGet(handle, 1, NULL, errorCode, (text *)buffer, DBDRV_MAX_ERROR_TEXT, OCI_HTYPE_ERROR);
-	buffer[DBDRV_MAX_ERROR_TEXT - 1] = 0;
-	ucs2_to_ucs4(buffer, ucs2_strlen(buffer) + 1, errorText, DBDRV_MAX_ERROR_TEXT);
-	errorText[DBDRV_MAX_ERROR_TEXT - 1] = 0;
-#endif
-	RemoveTrailingCRLFW(errorText);
-}
-
-/**
- * Set last error text
- */
-static void SetLastError(ORACLE_CONN *pConn)
-{
-	GetErrorFromHandle(pConn->handleError, &pConn->lastErrorCode, pConn->lastErrorText);
-}
-
-/**
- * Check if last error was caused by lost connection to server
- */
-static DWORD IsConnectionError(ORACLE_CONN *conn)
-{
-	ub4 nStatus = 0;
-	OCIAttrGet(conn->handleServer, OCI_HTYPE_SERVER, &nStatus, NULL, OCI_ATTR_SERVER_STATUS, conn->handleError);
-	return (nStatus == OCI_SERVER_NOT_CONNECTED) ? DBERR_CONNECTION_LOST : DBERR_OTHER_ERROR;
-}
-
-/**
  * Destroy query result
  */
 static void DestroyQueryResult(ORACLE_RESULT *pResult)
@@ -225,19 +243,16 @@ static void DestroyQueryResult(ORACLE_RESULT *pResult)
 extern "C" DBDRV_CONNECTION __EXPORT DrvConnect(const char *host, const char *login, const char *password, 
                                               const char *database, const char *schema, WCHAR *errorText)
 {
-	ORACLE_CONN *pConn;
-	UCS2CHAR *pwszStr;
-
-	pConn = (ORACLE_CONN *)calloc(1, sizeof(ORACLE_CONN));
+	ORACLE_CONN *pConn = MemAllocStruct<ORACLE_CONN>();
 	if (pConn != NULL)
 	{
       OCIHandleAlloc(s_handleEnv, (void **)&pConn->handleError, OCI_HTYPE_ERROR, 0, NULL);
 		OCIHandleAlloc(s_handleEnv, (void **)&pConn->handleServer, OCI_HTYPE_SERVER, 0, NULL);
-		pwszStr = UCS2StringFromMBString(host);
-		if (OCIServerAttach(pConn->handleServer, pConn->handleError,
-		                    (text *)pwszStr, (sb4)ucs2_strlen(pwszStr) * sizeof(UCS2CHAR), OCI_DEFAULT) == OCI_SUCCESS)
+		UCS2CHAR *pwszStr = UCS2StringFromMBString(host);
+		if (IsSuccess(OCIServerAttach(pConn->handleServer, pConn->handleError,
+		                    (text *)pwszStr, (sb4)ucs2_strlen(pwszStr) * sizeof(UCS2CHAR), OCI_DEFAULT)))
 		{
-			free(pwszStr);
+			MemFree(pwszStr);
 
 			// Initialize service handle
 			OCIHandleAlloc(s_handleEnv, (void **)&pConn->handleService, OCI_HTYPE_SVCCTX, 0, NULL);
@@ -248,14 +263,14 @@ extern "C" DBDRV_CONNECTION __EXPORT DrvConnect(const char *host, const char *lo
 			pwszStr = UCS2StringFromMBString(login);
 			OCIAttrSet(pConn->handleSession, OCI_HTYPE_SESSION, pwszStr,
 			           (ub4)ucs2_strlen(pwszStr) * sizeof(UCS2CHAR), OCI_ATTR_USERNAME, pConn->handleError);
-			free(pwszStr);
+			MemFree(pwszStr);
 			pwszStr = UCS2StringFromMBString(password);
 			OCIAttrSet(pConn->handleSession, OCI_HTYPE_SESSION, pwszStr,
 			           (ub4)ucs2_strlen(pwszStr) * sizeof(UCS2CHAR), OCI_ATTR_PASSWORD, pConn->handleError);
 
 			// Authenticate
-			if (OCISessionBegin(pConn->handleService, pConn->handleError,
-			                    pConn->handleSession, OCI_CRED_RDBMS, OCI_STMT_CACHE) == OCI_SUCCESS)
+			if (IsSuccess(OCISessionBegin(pConn->handleService, pConn->handleError,
+			                    pConn->handleSession, OCI_CRED_RDBMS, OCI_STMT_CACHE), pConn, _T("Connected to database with warning (%s)")))
 			{
 				OCIAttrSet(pConn->handleService, OCI_HTYPE_SVCCTX, pConn->handleSession, 0, OCI_ATTR_SESSION, pConn->handleError);
 				pConn->mutexQueryLock = MutexCreate();
@@ -280,20 +295,20 @@ extern "C" DBDRV_CONNECTION __EXPORT DrvConnect(const char *host, const char *lo
             DrvQueryInternal(pConn, L"ALTER SESSION SET NLS_LANGUAGE='AMERICAN' NLS_NUMERIC_CHARACTERS='.,'", NULL);
 
             UCS2CHAR version[1024];
-            if (OCIServerVersion(pConn->handleService, pConn->handleError, (OraText *)version, sizeof(version), OCI_HTYPE_SVCCTX) == OCI_SUCCESS)
+            if (IsSuccess(OCIServerVersion(pConn->handleService, pConn->handleError, (OraText *)version, sizeof(version), OCI_HTYPE_SVCCTX)))
             {
 #ifdef UNICODE
 #if UNICODE_UCS4
                WCHAR *wver = UCS4StringFromUCS2String(version);
                nxlog_debug_tag(DEBUG_TAG, 5, _T("Connected to %s"), wver);
-               free(wver);
+               MemFree(wver);
 #else
                nxlog_debug_tag(DEBUG_TAG, 5, _T("Connected to %s"), version);
 #endif
 #else
                char *mbver = MBStringFromUCS2String(version);
                nxlog_debug_tag(DEBUG_TAG, 5, _T("Connected to %s"), mbver);
-               free(mbver);
+               MemFree(mbver);
 #endif
             }
          }
@@ -304,8 +319,7 @@ extern "C" DBDRV_CONNECTION __EXPORT DrvConnect(const char *host, const char *lo
 			   OCIHandleFree(pConn->handleService, OCI_HTYPE_SVCCTX);
 				OCIHandleFree(pConn->handleServer, OCI_HTYPE_SERVER);
 			   OCIHandleFree(pConn->handleError, OCI_HTYPE_ERROR);
-				free(pConn);
-				pConn = NULL;
+			   MemFreeAndNull(pConn);
 			}
 		}
 		else
@@ -313,10 +327,9 @@ extern "C" DBDRV_CONNECTION __EXPORT DrvConnect(const char *host, const char *lo
 			GetErrorFromHandle(pConn->handleError, &pConn->lastErrorCode, errorText);
 			OCIHandleFree(pConn->handleServer, OCI_HTYPE_SERVER);
 			OCIHandleFree(pConn->handleError, OCI_HTYPE_ERROR);
-			free(pConn);
-			pConn = NULL;
+         MemFreeAndNull(pConn);
 		}
-		free(pwszStr);
+		MemFree(pwszStr);
 	}
 	else
 	{
@@ -341,7 +354,7 @@ extern "C" void __EXPORT DrvDisconnect(ORACLE_CONN *pConn)
    OCIHandleFree(pConn->handleServer, OCI_HTYPE_SERVER);
    OCIHandleFree(pConn->handleError, OCI_HTYPE_ERROR);
    MutexDestroy(pConn->mutexQueryLock);
-   free(pConn);
+   MemFree(pConn);
 }
 
 /**
@@ -443,8 +456,8 @@ extern "C" ORACLE_STATEMENT __EXPORT *DrvPrepare(ORACLE_CONN *pConn, WCHAR *pwsz
 
 	MutexLock(pConn->mutexQueryLock);
    OCIStmt *handleStmt;
-	if (OCIStmtPrepare2(pConn->handleService, &handleStmt, pConn->handleError, (text *)ucs2Query,
-	                    (ub4)ucs2_strlen(ucs2Query) * sizeof(UCS2CHAR), NULL, 0, OCI_NTV_SYNTAX, OCI_DEFAULT) == OCI_SUCCESS)
+	if (IsSuccess(OCIStmtPrepare2(pConn->handleService, &handleStmt, pConn->handleError, (text *)ucs2Query,
+	                    (ub4)ucs2_strlen(ucs2Query) * sizeof(UCS2CHAR), NULL, 0, OCI_NTV_SYNTAX, OCI_DEFAULT)))
 	{
 		stmt = (ORACLE_STATEMENT *)malloc(sizeof(ORACLE_STATEMENT));
 		stmt->connection = pConn;
@@ -857,9 +870,9 @@ extern "C" DWORD __EXPORT DrvExecute(ORACLE_CONN *pConn, ORACLE_STATEMENT *stmt,
    }
 
 	MutexLock(pConn->mutexQueryLock);
-   if (OCIStmtExecute(pConn->handleService, stmt->handleStmt, pConn->handleError, 
+   if (IsSuccess(OCIStmtExecute(pConn->handleService, stmt->handleStmt, pConn->handleError,
                       stmt->batchMode ? stmt->batchSize : 1, 0, NULL, NULL,
-	                   (pConn->nTransLevel == 0) ? OCI_COMMIT_ON_SUCCESS : OCI_DEFAULT) == OCI_SUCCESS)
+	                   (pConn->nTransLevel == 0) ? OCI_COMMIT_ON_SUCCESS : OCI_DEFAULT)))
 	{
 		dwResult = DBERR_SUCCESS;
 	}
@@ -919,11 +932,11 @@ static DWORD DrvQueryInternal(ORACLE_CONN *pConn, const WCHAR *pwszQuery, WCHAR 
 #endif
 
 	MutexLock(pConn->mutexQueryLock);
-	if (OCIStmtPrepare2(pConn->handleService, &handleStmt, pConn->handleError, (text *)ucs2Query,
-	                    (ub4)ucs2_strlen(ucs2Query) * sizeof(UCS2CHAR), NULL, 0, OCI_NTV_SYNTAX, OCI_DEFAULT) == OCI_SUCCESS)
+	if (IsSuccess(OCIStmtPrepare2(pConn->handleService, &handleStmt, pConn->handleError, (text *)ucs2Query,
+	                    (ub4)ucs2_strlen(ucs2Query) * sizeof(UCS2CHAR), NULL, 0, OCI_NTV_SYNTAX, OCI_DEFAULT)))
 	{
-		if (OCIStmtExecute(pConn->handleService, handleStmt, pConn->handleError, 1, 0, NULL, NULL,
-		                   (pConn->nTransLevel == 0) ? OCI_COMMIT_ON_SUCCESS : OCI_DEFAULT) == OCI_SUCCESS)
+		if (IsSuccess(OCIStmtExecute(pConn->handleService, handleStmt, pConn->handleError, 1, 0, NULL, NULL,
+		                   (pConn->nTransLevel == 0) ? OCI_COMMIT_ON_SUCCESS : OCI_DEFAULT)))
 		{
 			dwResult = DBERR_SUCCESS;
 		}
@@ -1163,12 +1176,12 @@ extern "C" DBDRV_RESULT __EXPORT DrvSelect(ORACLE_CONN *pConn, WCHAR *pwszQuery,
 #endif
 
 	MutexLock(pConn->mutexQueryLock);
-	if (OCIStmtPrepare2(pConn->handleService, &handleStmt, pConn->handleError, (text *)ucs2Query,
-	                    (ub4)ucs2_strlen(ucs2Query) * sizeof(UCS2CHAR), NULL, 0, OCI_NTV_SYNTAX, OCI_DEFAULT) == OCI_SUCCESS)
+	if (IsSuccess(OCIStmtPrepare2(pConn->handleService, &handleStmt, pConn->handleError, (text *)ucs2Query,
+	                    (ub4)ucs2_strlen(ucs2Query) * sizeof(UCS2CHAR), NULL, 0, OCI_NTV_SYNTAX, OCI_DEFAULT)))
 	{
       OCIAttrSet(handleStmt, OCI_HTYPE_STMT, &pConn->prefetchLimit, 0, OCI_ATTR_PREFETCH_ROWS, pConn->handleError);
-		if (OCIStmtExecute(pConn->handleService, handleStmt, pConn->handleError,
-		                   0, 0, NULL, NULL, (pConn->nTransLevel == 0) ? OCI_COMMIT_ON_SUCCESS : OCI_DEFAULT) == OCI_SUCCESS)
+		if (IsSuccess(OCIStmtExecute(pConn->handleService, handleStmt, pConn->handleError,
+		                   0, 0, NULL, NULL, (pConn->nTransLevel == 0) ? OCI_COMMIT_ON_SUCCESS : OCI_DEFAULT)))
 		{
 			pResult = ProcessQueryResults(pConn, handleStmt, pdwError);
 		}
@@ -1205,8 +1218,8 @@ extern "C" DBDRV_RESULT __EXPORT DrvSelectPrepared(ORACLE_CONN *pConn, ORACLE_ST
 
 	MutexLock(pConn->mutexQueryLock);
    OCIAttrSet(stmt->handleStmt, OCI_HTYPE_STMT, &pConn->prefetchLimit, 0, OCI_ATTR_PREFETCH_ROWS, pConn->handleError);
-	if (OCIStmtExecute(pConn->handleService, stmt->handleStmt, pConn->handleError,
-	                   0, 0, NULL, NULL, (pConn->nTransLevel == 0) ? OCI_COMMIT_ON_SUCCESS : OCI_DEFAULT) == OCI_SUCCESS)
+	if (IsSuccess(OCIStmtExecute(pConn->handleService, stmt->handleStmt, pConn->handleError,
+	                   0, 0, NULL, NULL, (pConn->nTransLevel == 0) ? OCI_COMMIT_ON_SUCCESS : OCI_DEFAULT)))
 	{
 		pResult = ProcessQueryResults(pConn, stmt->handleStmt, pdwError);
 	}
@@ -1423,12 +1436,12 @@ extern "C" DBDRV_UNBUFFERED_RESULT __EXPORT DrvSelectUnbuffered(ORACLE_CONN *pCo
 	MutexLock(pConn->mutexQueryLock);
 
 	OCIStmt *handleStmt;
-	if (OCIStmtPrepare2(pConn->handleService, &handleStmt, pConn->handleError, (text *)ucs2Query,
-	                    (ub4)ucs2_strlen(ucs2Query) * sizeof(UCS2CHAR), NULL, 0, OCI_NTV_SYNTAX, OCI_DEFAULT) == OCI_SUCCESS)
+	if (IsSuccess(OCIStmtPrepare2(pConn->handleService, &handleStmt, pConn->handleError, (text *)ucs2Query,
+	                    (ub4)ucs2_strlen(ucs2Query) * sizeof(UCS2CHAR), NULL, 0, OCI_NTV_SYNTAX, OCI_DEFAULT)))
 	{
       OCIAttrSet(handleStmt, OCI_HTYPE_STMT, &pConn->prefetchLimit, 0, OCI_ATTR_PREFETCH_ROWS, pConn->handleError);
-		if (OCIStmtExecute(pConn->handleService, handleStmt, pConn->handleError,
-		                   0, 0, NULL, NULL, (pConn->nTransLevel == 0) ? OCI_COMMIT_ON_SUCCESS : OCI_DEFAULT) == OCI_SUCCESS)
+		if (IsSuccess(OCIStmtExecute(pConn->handleService, handleStmt, pConn->handleError,
+		                   0, 0, NULL, NULL, (pConn->nTransLevel == 0) ? OCI_COMMIT_ON_SUCCESS : OCI_DEFAULT)))
 		{
 		   result = ProcessUnbufferedQueryResults(pConn, handleStmt, pdwError);
 		}
@@ -1471,8 +1484,8 @@ extern "C" DBDRV_UNBUFFERED_RESULT __EXPORT DrvSelectPreparedUnbuffered(ORACLE_C
    MutexLock(pConn->mutexQueryLock);
 
    OCIAttrSet(stmt->handleStmt, OCI_HTYPE_STMT, &pConn->prefetchLimit, 0, OCI_ATTR_PREFETCH_ROWS, pConn->handleError);
-   if (OCIStmtExecute(pConn->handleService, stmt->handleStmt, pConn->handleError,
-                      0, 0, NULL, NULL, (pConn->nTransLevel == 0) ? OCI_COMMIT_ON_SUCCESS : OCI_DEFAULT) == OCI_SUCCESS)
+   if (IsSuccess(OCIStmtExecute(pConn->handleService, stmt->handleStmt, pConn->handleError,
+                      0, 0, NULL, NULL, (pConn->nTransLevel == 0) ? OCI_COMMIT_ON_SUCCESS : OCI_DEFAULT)))
    {
       result = ProcessUnbufferedQueryResults(pConn, stmt->handleStmt, pdwError);
    }
@@ -1647,7 +1660,7 @@ extern "C" DWORD __EXPORT DrvCommit(ORACLE_CONN *pConn)
 	MutexLock(pConn->mutexQueryLock);
 	if (pConn->nTransLevel > 0)
 	{
-		if (OCITransCommit(pConn->handleService, pConn->handleError, OCI_DEFAULT) == OCI_SUCCESS)
+		if (IsSuccess(OCITransCommit(pConn->handleService, pConn->handleError, OCI_DEFAULT)))
 		{
 			dwResult = DBERR_SUCCESS;
 			pConn->nTransLevel = 0;
@@ -1679,7 +1692,7 @@ extern "C" DWORD __EXPORT DrvRollback(ORACLE_CONN *pConn)
 	MutexLock(pConn->mutexQueryLock);
 	if (pConn->nTransLevel > 0)
 	{
-		if (OCITransRollback(pConn->handleService, pConn->handleError, OCI_DEFAULT) == OCI_SUCCESS)
+		if (IsSuccess(OCITransRollback(pConn->handleService, pConn->handleError, OCI_DEFAULT)))
 		{
 			dwResult = DBERR_SUCCESS;
 			pConn->nTransLevel = 0;
