@@ -27,7 +27,7 @@ import org.netxms.client.maps.NetworkMapLink;
 public class MultiConnectionAnchor extends ChopboxAnchor
 {
    private static final int MAX_LINK_COUNT = 5;
-   private static final int[] MULTIPLIERS = { 0, 1, -1, 2, -2, 3, -3, 4, -4 };
+   private static final int[] MULTIPLIERS = { 0, 1, -1, 2, -2, 3, -3, 4, -4, 5, -5, 6, -6 };
    
    private NetworkMapLink link;
 
@@ -79,13 +79,13 @@ public class MultiConnectionAnchor extends ChopboxAnchor
       if ((centerX < reference.preciseX() && centerY < reference.preciseY()) ||
           (centerX > reference.preciseX() && centerY > reference.preciseY()))
       {
-         xOffset = (centerX + (0.5f * Math.min(r.height, r.width) / MAX_LINK_COUNT) * MULTIPLIERS[link.getPosition()] * Math.sin(-theta));
-         yOffset = (centerY + (0.5f * Math.min(r.height, r.width) / MAX_LINK_COUNT) * MULTIPLIERS[link.getPosition()] * Math.cos(-theta));
+         xOffset = (centerX + (0.5f * Math.min(r.height, r.width) / MAX_LINK_COUNT) * MULTIPLIERS[link.getPosition() % MULTIPLIERS.length] * Math.sin(-theta));
+         yOffset = (centerY + (0.5f * Math.min(r.height, r.width) / MAX_LINK_COUNT) * MULTIPLIERS[link.getPosition() % MULTIPLIERS.length] * Math.cos(-theta));
       }
       else
       {
-         xOffset = (centerX + (0.5f * Math.min(r.height, r.width) / MAX_LINK_COUNT) * MULTIPLIERS[link.getPosition()] * Math.sin(theta));
-         yOffset = (centerY + (0.5f * Math.min(r.height, r.width) / MAX_LINK_COUNT) * MULTIPLIERS[link.getPosition()] * Math.cos(theta));
+         xOffset = (centerX + (0.5f * Math.min(r.height, r.width) / MAX_LINK_COUNT) * MULTIPLIERS[link.getPosition() % MULTIPLIERS.length] * Math.sin(theta));
+         yOffset = (centerY + (0.5f * Math.min(r.height, r.width) / MAX_LINK_COUNT) * MULTIPLIERS[link.getPosition() % MULTIPLIERS.length] * Math.cos(theta));
       }
       
       centerX = dx + xOffset;
