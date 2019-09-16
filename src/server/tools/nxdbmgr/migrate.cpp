@@ -167,6 +167,7 @@ static bool MigrateTable(const TCHAR *table)
 			      char cname[256];
 			      DBGetColumnNameA(hResult, i, cname, 256);
                DBBind(hStmt, i + 1, DB_SQLTYPE_VARCHAR, IsColumnFixNeeded(table, cname) ? _T("0") : _T(""), DB_BIND_STATIC);
+               MemFree(value);
 			   }
 			   else
 			   {
@@ -267,6 +268,54 @@ static bool MigrateDataTables()
 }
 
 /**
+ * DCI storage classes
+ */
+static HashMap<UINT32, int> s_dciStorageClasses(false);
+static int s_storageClassNumbers[6] = { 0, 1, 2, 3, 4, 5 };
+
+/**
+ * Load DCI storage classes
+ */
+static bool LoadDCIStorageClasses(const TCHAR *table)
+{
+   TCHAR query[256];
+   _sntprintf(query, 256, _T("SELECT item_id,retention_time FROM %s"), table);
+
+   DB_RESULT hResult = DBSelect(s_hdbSource, query);
+   if (hResult == NULL)
+      return false;
+
+   int count = DBGetNumRows(hResult);
+   for(int i = 0; i < count; i++)
+   {
+      UINT32 id = DBGetFieldULong(hResult, i, 0);
+      int days = DBGetFieldLong(hResult, i, 1);
+      if (days == 0)
+         s_dciStorageClasses.set(id, &s_storageClassNumbers[0]);
+      else if (days <= 7)
+         s_dciStorageClasses.set(id, &s_storageClassNumbers[1]);
+      else if (days <= 30)
+         s_dciStorageClasses.set(id, &s_storageClassNumbers[2]);
+      else if (days <= 90)
+         s_dciStorageClasses.set(id, &s_storageClassNumbers[3]);
+      else if (days <= 180)
+         s_dciStorageClasses.set(id, &s_storageClassNumbers[4]);
+      else
+         s_dciStorageClasses.set(id, &s_storageClassNumbers[5]);
+   }
+   DBFreeResult(hResult);
+   return true;
+}
+
+/**
+ * Load DCI storage classes
+ */
+static bool LoadDCIStorageClasses()
+{
+   return LoadDCIStorageClasses(_T("items")) && LoadDCIStorageClasses(_T("dc_tables"));
+}
+
+/**
  * Migrate collected data from multi-table to single table configuration
  */
 static bool MigrateDataToSingleTable(UINT32 nodeId, bool tdata)
@@ -294,26 +343,25 @@ static bool MigrateDataToSingleTable(UINT32 nodeId, bool tdata)
 
    DB_STATEMENT hStmt = DBPrepareEx(g_dbHandle,
             tdata ?
-               _T("INSERT INTO tdata (node_id,item_id,tdata_timestamp,tdata_value) VALUES (?,?,?,?)")
-               : _T("INSERT INTO idata (node_id,item_id,idata_timestamp,idata_value,raw_value) VALUES (?,?,?,?,?)"),
+               _T("INSERT INTO tdata (item_id,tdata_timestamp,tdata_value) VALUES (?,?,?)")
+               : _T("INSERT INTO idata (item_id,idata_timestamp,idata_value,raw_value) VALUES (?,?,?,?)"),
             true, errorText);
    if (hStmt != NULL)
    {
       success = true;
       int rows = 0, totalRows = 0;
-      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, nodeId);
       while(DBFetch(hResult))
       {
-         DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, DBGetFieldULong(hResult, 0));
-         DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, DBGetFieldULong(hResult, 1));
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, DBGetFieldULong(hResult, 0));
+         DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, DBGetFieldULong(hResult, 1));
          if (tdata)
          {
-            DBBind(hStmt, 4, DB_SQLTYPE_TEXT, DBGetField(hResult, 2, NULL, 0), DB_BIND_DYNAMIC);
+            DBBind(hStmt, 3, DB_SQLTYPE_TEXT, DBGetField(hResult, 2, NULL, 0), DB_BIND_DYNAMIC);
          }
          else
          {
-            DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, DBGetField(hResult, 2, NULL, 0), DB_BIND_DYNAMIC);
-            DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, DBGetField(hResult, 3, NULL, 0), DB_BIND_DYNAMIC);
+            DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, DBGetField(hResult, 2, NULL, 0), DB_BIND_DYNAMIC);
+            DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, DBGetField(hResult, 3, NULL, 0), DB_BIND_DYNAMIC);
          }
          if (!SQLExecute(hStmt))
          {
@@ -362,6 +410,252 @@ static bool MigrateDataToSingleTable(UINT32 nodeId, bool tdata)
 }
 
 /**
+ * Build data insert query for TSDB
+ */
+static inline String BuildDataInsertQuery(bool tdata, const TCHAR *sclass)
+{
+   String query = _T("INSERT INTO ");
+   query.append(tdata ? _T("tdata") : _T("idata"));
+   query.append(_T("_sc_"));
+   query.append(sclass);
+   if (tdata)
+      query.append(_T(" (item_id,tdata_timestamp,tdata_value) VALUES"));
+   else
+      query.append(_T(" (item_id,idata_timestamp,idata_value,raw_value) VALUES"));
+   return query;
+}
+
+/**
+ * Migrate collected data from multi-table to single table configuration (TSDB version)
+ */
+static bool MigrateDataToSingleTable_TSDB(UINT32 nodeId, bool tdata)
+{
+   const TCHAR *prefix = tdata ? _T("tdata") : _T("idata");
+   WriteToTerminalEx(_T("Migrating table \x1b[1m%s_%u\x1b[0m to \x1b[1m%s\x1b[0m\n"), prefix, nodeId, prefix);
+
+   bool success = false;
+   TCHAR buffer[256], errorText[DBDRV_MAX_ERROR_TEXT];
+   _sntprintf(buffer, 256, _T("SELECT item_id,%s_timestamp,%s_value%s FROM %s_%u"),
+            prefix, prefix, tdata ? _T("") : _T(",raw_value"), prefix, nodeId);
+   DB_UNBUFFERED_RESULT hResult = DBSelectUnbufferedEx(s_hdbSource, buffer, errorText);
+   if (hResult == NULL)
+   {
+      _tprintf(_T("ERROR: unable to read data from source table (%s)\n"), errorText);
+      return false;
+   }
+
+   String queries[6];
+   queries[0] = BuildDataInsertQuery(tdata, _T("default"));
+   queries[1] = BuildDataInsertQuery(tdata, _T("7"));
+   queries[2] = BuildDataInsertQuery(tdata, _T("30"));
+   queries[3] = BuildDataInsertQuery(tdata, _T("90"));
+   queries[4] = BuildDataInsertQuery(tdata, _T("180"));
+   queries[5] = BuildDataInsertQuery(tdata, _T("other"));
+
+   bool hasContent[6];
+   memset(hasContent, 0, sizeof(hasContent));
+
+   success = true;
+   int rows = 0, totalRows = 0;
+   while(DBFetch(hResult))
+   {
+      UINT32 dciId = DBGetFieldULong(hResult, 0);
+      int *sclass = s_dciStorageClasses.get(dciId);
+
+      String& query = queries[(sclass != NULL) ? *sclass : 0];
+      query.append(rows == 0 ? _T(" (") : _T(",("));
+      query.append(dciId);
+      query.append(_T(','));
+      query.append(DBGetFieldULong(hResult, 1));
+      query.append(_T(','));
+      TCHAR *value = DBGetField(hResult, 2, NULL, 0);
+      query.append(DBPrepareString(g_dbHandle, value));
+      MemFree(value);
+      if (!tdata)
+      {
+         query.append(_T(','));
+         TCHAR *value = DBGetField(hResult, 3, NULL, 0);
+         query.append(DBPrepareString(g_dbHandle, value));
+         MemFree(value);
+      }
+      query.append(_T(')'));
+
+      hasContent[(sclass != NULL) ? *sclass : 0] = true;
+
+      rows++;
+      if (rows >= g_migrationTxnSize)
+      {
+         DBBegin(g_dbHandle);
+         for(int i = 0; i < 6; i++)
+         {
+            if (!hasContent[i])
+               continue;
+            if (!DBQueryEx(g_dbHandle, queries[i], errorText))
+            {
+               _tprintf(_T("ERROR: unable to insert data to destination table (%s)\n"), errorText);
+               DBRollback(g_dbHandle);
+               success = false;
+               break;
+            }
+         }
+         DBCommit(g_dbHandle);
+
+         rows = 0;
+         queries[0] = BuildDataInsertQuery(tdata, _T("default"));
+         queries[1] = BuildDataInsertQuery(tdata, _T("7"));
+         queries[2] = BuildDataInsertQuery(tdata, _T("30"));
+         queries[3] = BuildDataInsertQuery(tdata, _T("90"));
+         queries[4] = BuildDataInsertQuery(tdata, _T("180"));
+         queries[5] = BuildDataInsertQuery(tdata, _T("other"));
+         memset(hasContent, 0, sizeof(hasContent));
+      }
+
+      totalRows++;
+      if ((totalRows & 0xFF) == 0)
+      {
+         _tprintf(_T("%8d\r"), totalRows);
+         fflush(stdout);
+      }
+   }
+
+   if (rows > 0)
+   {
+      DBBegin(g_dbHandle);
+      for(int i = 0; i < 6; i++)
+      {
+         if (!hasContent[i])
+            continue;
+         if (!DBQueryEx(g_dbHandle, queries[i], errorText))
+         {
+            _tprintf(_T("ERROR: unable to insert data to destination table (%s)\n"), errorText);
+            DBRollback(g_dbHandle);
+            success = false;
+            break;
+         }
+      }
+      DBCommit(g_dbHandle);
+   }
+
+   DBFreeResult(hResult);
+   return success;
+}
+
+/**
+ * Migrate collected data from single table to single table configuration (TSDB version)
+ */
+static bool MigrateSingleDataTableToTSDB(bool tdata)
+{
+   const TCHAR *prefix = tdata ? _T("tdata") : _T("idata");
+   WriteToTerminalEx(_T("Migrating table \x1b[1m%s\x1b[0m\n"), prefix);
+
+   bool success = false;
+   TCHAR buffer[256], errorText[DBDRV_MAX_ERROR_TEXT];
+   _sntprintf(buffer, 256, _T("SELECT item_id,%s_timestamp,%s_value%s FROM %s"),
+            prefix, prefix, tdata ? _T("") : _T(",raw_value"), prefix);
+   DB_UNBUFFERED_RESULT hResult = DBSelectUnbufferedEx(s_hdbSource, buffer, errorText);
+   if (hResult == NULL)
+   {
+      _tprintf(_T("ERROR: unable to read data from source table (%s)\n"), errorText);
+      return false;
+   }
+
+   String queries[6];
+   queries[0] = BuildDataInsertQuery(tdata, _T("default"));
+   queries[1] = BuildDataInsertQuery(tdata, _T("7"));
+   queries[2] = BuildDataInsertQuery(tdata, _T("30"));
+   queries[3] = BuildDataInsertQuery(tdata, _T("90"));
+   queries[4] = BuildDataInsertQuery(tdata, _T("180"));
+   queries[5] = BuildDataInsertQuery(tdata, _T("other"));
+
+   bool hasContent[6];
+   memset(hasContent, 0, sizeof(hasContent));
+
+   success = true;
+   int rows = 0, totalRows = 0;
+   while(DBFetch(hResult))
+   {
+      UINT32 dciId = DBGetFieldULong(hResult, 0);
+      int *sclass = s_dciStorageClasses.get(dciId);
+
+      String& query = queries[(sclass != NULL) ? *sclass : 0];
+      query.append(rows == 0 ? _T(" (") : _T(",("));
+      query.append(dciId);
+      query.append(_T(','));
+      query.append(DBGetFieldULong(hResult, 1));
+      query.append(_T(','));
+      TCHAR *value = DBGetField(hResult, 2, NULL, 0);
+      query.append(DBPrepareString(g_dbHandle, value));
+      MemFree(value);
+      if (!tdata)
+      {
+         query.append(_T(','));
+         TCHAR *value = DBGetField(hResult, 3, NULL, 0);
+         query.append(DBPrepareString(g_dbHandle, value));
+         MemFree(value);
+      }
+      query.append(_T(')'));
+
+      hasContent[(sclass != NULL) ? *sclass : 0] = true;
+
+      rows++;
+      if (rows >= g_migrationTxnSize)
+      {
+         DBBegin(g_dbHandle);
+         for(int i = 0; i < 6; i++)
+         {
+            if (!hasContent[i])
+               continue;
+            if (!DBQueryEx(g_dbHandle, queries[i], errorText))
+            {
+               _tprintf(_T("ERROR: unable to insert data to destination table (%s)\n"), errorText);
+               DBRollback(g_dbHandle);
+               success = false;
+               break;
+            }
+         }
+         DBCommit(g_dbHandle);
+
+         rows = 0;
+         queries[0] = BuildDataInsertQuery(tdata, _T("default"));
+         queries[1] = BuildDataInsertQuery(tdata, _T("7"));
+         queries[2] = BuildDataInsertQuery(tdata, _T("30"));
+         queries[3] = BuildDataInsertQuery(tdata, _T("90"));
+         queries[4] = BuildDataInsertQuery(tdata, _T("180"));
+         queries[5] = BuildDataInsertQuery(tdata, _T("other"));
+         memset(hasContent, 0, sizeof(hasContent));
+      }
+
+      totalRows++;
+      if ((totalRows & 0xFF) == 0)
+      {
+         _tprintf(_T("%8d\r"), totalRows);
+         fflush(stdout);
+      }
+   }
+
+   if (rows > 0)
+   {
+      DBBegin(g_dbHandle);
+      for(int i = 0; i < 6; i++)
+      {
+         if (!hasContent[i])
+            continue;
+         if (!DBQueryEx(g_dbHandle, queries[i], errorText))
+         {
+            _tprintf(_T("ERROR: unable to insert data to destination table (%s)\n"), errorText);
+            DBRollback(g_dbHandle);
+            success = false;
+            break;
+         }
+      }
+      DBCommit(g_dbHandle);
+   }
+
+   DBFreeResult(hResult);
+   return success;
+}
+
+/**
  * Migrate data tables to single table
  */
 static bool MigrateDataTablesToSingleTable()
@@ -376,10 +670,20 @@ static bool MigrateDataTablesToSingleTable()
    for(i = 0; i < count; i++)
    {
       UINT32 id = targets->get(i);
-      if (!MigrateDataToSingleTable(id, false))
-         break;
-      if (!MigrateDataToSingleTable(id, true))
-         break;
+      if (g_dbSyntax == DB_SYNTAX_TSDB)
+      {
+         if (!MigrateDataToSingleTable_TSDB(id, false))
+            break;
+         if (!MigrateDataToSingleTable_TSDB(id, true))
+            break;
+      }
+      else
+      {
+         if (!MigrateDataToSingleTable(id, false))
+            break;
+         if (!MigrateDataToSingleTable(id, true))
+            break;
+      }
    }
 
    delete targets;
@@ -599,8 +903,8 @@ void MigrateDatabase(const TCHAR *sourceConfig, TCHAR *destConfFields, bool skip
 	   // Migrate tables
 	   for(int i = 0; g_tables[i] != NULL; i++)
 	   {
-	      if (!_tcscmp(g_tables[i], _T("idata")) ||
-             !_tcscmp(g_tables[i], _T("tdata")))
+	      if (!_tcsncmp(g_tables[i], _T("idata"), 5) ||
+             !_tcsncmp(g_tables[i], _T("tdata"), 5))
 	         continue;  // idata and tdata migrated separately
 
 	      if ((skipAudit && !_tcscmp(g_tables[i], _T("audit_log"))) ||
@@ -633,10 +937,52 @@ void MigrateDatabase(const TCHAR *sourceConfig, TCHAR *destConfFields, bool skip
 
       if (singleTableSource && singleTableDestination && !g_skipDataMigration)
       {
-         if (!MigrateTable(_T("idata")))
-            goto cleanup;
-         if (!MigrateTable(_T("tdata")))
-            goto cleanup;
+         if (g_dbSyntax == DB_SYNTAX_TSDB)
+         {
+            if (s_sourceSyntax == DB_SYNTAX_TSDB)
+            {
+               if (!MigrateTable(_T("idata_sc_default")))
+                  goto cleanup;
+               if (!MigrateTable(_T("idata_sc_7")))
+                  goto cleanup;
+               if (!MigrateTable(_T("idata_sc_30")))
+                  goto cleanup;
+               if (!MigrateTable(_T("idata_sc_90")))
+                  goto cleanup;
+               if (!MigrateTable(_T("idata_sc_180")))
+                  goto cleanup;
+               if (!MigrateTable(_T("idata_sc_other")))
+                  goto cleanup;
+               if (!MigrateTable(_T("tdata_sc_default")))
+                  goto cleanup;
+               if (!MigrateTable(_T("tdata_sc_7")))
+                  goto cleanup;
+               if (!MigrateTable(_T("tdata_sc_30")))
+                  goto cleanup;
+               if (!MigrateTable(_T("tdata_sc_90")))
+                  goto cleanup;
+               if (!MigrateTable(_T("tdata_sc_180")))
+                  goto cleanup;
+               if (!MigrateTable(_T("tdata_sc_other")))
+                  goto cleanup;
+            }
+            else
+            {
+               if (!LoadDCIStorageClasses())
+                  goto cleanup;
+               if (!MigrateSingleDataTableToTSDB(false))
+                  goto cleanup;
+               if (!MigrateSingleDataTableToTSDB(true))
+                  goto cleanup;
+            }
+         }
+         else
+         {
+            if (!MigrateTable(_T("idata")))
+               goto cleanup;
+            if (!MigrateTable(_T("tdata")))
+               goto cleanup;
+         }
       }
       else if (singleTableSource && !singleTableDestination)
       {
@@ -645,6 +991,11 @@ void MigrateDatabase(const TCHAR *sourceConfig, TCHAR *destConfFields, bool skip
       }
       else if (!singleTableSource && singleTableDestination && !g_skipDataMigration)
       {
+         if (g_dbSyntax == DB_SYNTAX_TSDB)
+         {
+            if (!LoadDCIStorageClasses())
+               goto cleanup;
+         }
          if (!MigrateDataTablesToSingleTable())
             goto cleanup;
       }

@@ -1,6 +1,6 @@
 /*
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004-2018 Victor Kirhenshtein
+** Copyright (C) 2004-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -85,6 +85,10 @@ static bool ClearTables()
 {
 	for(int i = 0; g_tables[i] != NULL; i++)
 	{
+	   if ((g_dbSyntax == DB_SYNTAX_TSDB) && (!_tcsicmp(g_tables[i], _T("idata")) || !_tcsicmp(g_tables[i], _T("tdata"))))
+	      continue;   // idata and tdata are views in TSDB schema
+      if ((g_dbSyntax != DB_SYNTAX_TSDB) && (!_tcsnicmp(g_tables[i], _T("idata_sc_"), 9) || !_tcsnicmp(g_tables[i], _T("tdata_sc_"), 9)))
+         continue;   // tables named idata_sc_* and tdata_sc_* exist only in TSDB schema
 	   CHK_EXEC(ClearTable(g_tables[i], NULL));
 	}
 	return EnumerateModuleTables(ClearTable, NULL);
