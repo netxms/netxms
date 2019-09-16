@@ -39,6 +39,7 @@
 - Object tool type "Agent Table" now used to read agent tables and "Agent List" to read agent lists
 - Fixed issues:
 	NX-183 (Implemented responsible users for objects)
+	NX-415 (Oracle db driver drops connection on "password will expire" warning)
 	NX-725 (Add alarm comments from NXSL)
 	NX-900 (Server started during nxdbmgr check forced repair)
 	NX-1021 (Add event SYS_SERVER_STARTED)
