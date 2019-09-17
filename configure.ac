@@ -2898,6 +2898,7 @@ AC_CHECK_TYPES([struct kinfo_proc2],,,[
 #--------------------------------------------------------------------
 
 if test "x$PLATFORM" = "xFreeBSD"; then
+	AC_CHECK_HEADERS([net/iso88025.h])
 	AC_CHECK_DECLS([RTF_WASCLONED],[],[],[
 #if HAVE_SYS_TYPES_H
 #include <sys/types.h>
