@@ -359,49 +359,50 @@ LONG H_NetIfAdminStatus(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue,
  */
 LONG H_NetInterfaceStats(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
-   kstat_ctl_t *kc;
-   kstat_t *kp;
-   kstat_named_t *kn;
-   char *ptr, *eptr, szIfName[IF_NAMESIZE], szDevice[IF_NAMESIZE];
-   int nInstance, nIndex;
    LONG nRet = SYSINFO_RC_ERROR;
 
-   AgentGetParameterArgA(pszParam, 1, szIfName, IF_NAMESIZE);
-   if (szIfName[0] != 0)
+   char ifName[IF_NAMESIZE];
+   AgentGetParameterArgA(pszParam, 1, ifName, IF_NAMESIZE);
+   if (ifName[0] != 0)
    {
       // Determine if parameter is index or name
-      nIndex = strtol(szIfName, &eptr, 10);
+      char *eptr;
+      int ifIndex = strtol(ifName, &eptr, 10);
       if (*eptr == 0)
       {
          // It's an index, determine name
-         if (!IfIndexToName(nIndex, szIfName))
+         if (!IfIndexToName(ifIndex, ifName))
          {
-            szIfName[0] = 0;
+            ifName[0] = 0;
          }
       }
    }
 
-   if (szIfName[0] != 0)
+   if (ifName[0] != 0)
    {
       // Parse interface name and create device name and instance number
-      for(ptr = szIfName; (*ptr != 0) && (!isdigit(*ptr)); ptr++);
-      memcpy(szDevice, szIfName, ptr - szIfName);
-      szDevice[(int)(ptr - szIfName)] = 0;
-      for(eptr = ptr; (*eptr != 0) && isdigit(*eptr); eptr++);
-      *eptr = 0;
-      nInstance = atoi(ptr);
+      char *ptr, *nptr, deviceName[IF_NAMESIZE];
+      for(ptr = ifName; (*ptr != 0) && (!isdigit(*ptr)); ptr++);
+      memcpy(deviceName, ifName, ptr - ifName);
+      deviceName[(int)(ptr - ifName)] = 0;
+      for(nptr = ptr; (*nptr != 0) && isdigit(*nptr); nptr++);
+      *nptr = 0;
+      int deviceNumber = atoi(ptr);
 
       // Open kstat
       kstat_lock();
-      kc = kstat_open();
+      kstat_ctl_t *kc = kstat_open();
       if (kc != NULL)
       {
-         kp = kstat_lookup(kc, (g_flags & SF_SOLARIS_11) > 0 ? "link" : szDevice, nInstance, szIfName);
+         static char link[] = "link";
+         char *module = ((g_flags & SF_SOLARIS_11) && strcmp(deviceName, "lo")) ? link : deviceName;
+         int instance = (g_flags & SF_SOLARIS_11) ? 0 : deviceNumber;
+         kstat_t *kp = kstat_lookup(kc, module, instance, ifName);
          if (kp != NULL)
          {
-            if(kstat_read(kc, kp, 0) != -1)
+            if (kstat_read(kc, kp, 0) != -1)
             {
-               kn = (kstat_named_t *)kstat_data_lookup(kp, (char *)pArg);
+               kstat_named_t *kn = (kstat_named_t *)kstat_data_lookup(kp, (char *)pArg);
                if (kn != NULL)
                {
                   switch(kn->data_type)
@@ -445,7 +446,8 @@ LONG H_NetInterfaceStats(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue
          }
          else
          {
-            AgentWriteDebugLog(7, _T("SunOS: H_NetInterfaceStats: call to kstat_lookup(%hs, %d, %hs) failed (%s)"), (g_flags & SF_SOLARIS_11) > 0 ? "link" : szDevice, nInstance, szIfName, _tcserror(errno));
+            AgentWriteDebugLog(7, _T("SunOS: H_NetInterfaceStats: call to kstat_lookup(%hs, %d, %hs) failed (%s)"),
+                  module, instance, ifName, _tcserror(errno));
          }
          kstat_close(kc);
       }
