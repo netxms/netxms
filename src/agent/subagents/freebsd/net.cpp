@@ -35,7 +35,6 @@
 #include <net/if_types.h>
 #include <net/if_var.h>
 #include <net/route.h>
-#include <net/iso88025.h>
 #include <netinet/if_ether.h>
 #include <netinet/in.h>
 #include <ifaddrs.h>
@@ -43,6 +42,10 @@
 #include <net/ethernet.h>
 #include <kvm.h>
 #include <nlist.h>
+
+#if HAVE_NET_ISO88025_H
+#include <net/iso88025.h>
+#endif
 
 #include "freebsd_subagent.h"
 
@@ -686,7 +689,11 @@ LONG H_NetIfInfoFromKVM(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abst
 		s_kvmLock.unlock();
 		return SYSINFO_RC_ERROR;
 	}
+#if __FreeBSD__ >= 12
+	curr = (u_long)STAILQ_FIRST(&head);
+#else
 	curr = (u_long)TAILQ_FIRST(&head);
+#endif
 	while(curr != 0)
 	{
 		struct ifnet ifnet;
@@ -696,7 +703,11 @@ LONG H_NetIfInfoFromKVM(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abst
 			rc = SYSINFO_RC_ERROR;
 			break;
 		}
+#if __FreeBSD__ >= 12
+		curr = (u_long)STAILQ_NEXT(&ifnet, if_link);
+#else
 		curr = (u_long)TAILQ_NEXT(&ifnet, if_link);
+#endif
 
 #if __FreeBSD__ >= 5
 		const char *currName = ifnet.if_xname;
