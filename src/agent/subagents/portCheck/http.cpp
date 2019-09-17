@@ -97,7 +97,7 @@ int CheckHTTP(char *szAddr, const InetAddress& addr, short nPort, char *szURI, c
 
 	if (szMatch[0] == 0)
 	{
-		strcpy(szMatch, "^HTTP/1.[01] 200 .*");
+		strcpy(szMatch, "^HTTP/(1\\.[01]|2) 200 .*");
 	}
 
    const char *errptr;

@@ -79,7 +79,7 @@ static LONG H_CheckService(const TCHAR *parameters, const TCHAR *arg, TCHAR *val
    {
       if (pattern[0] == 0)
       {
-         _tcscpy(pattern, _T("^HTTP/1.[01] 200 .*"));
+         _tcscpy(pattern, _T("^HTTP/(1\\.[01]|2) 200 .*"));
       }
 
       AgentWriteDebugLog(5, _T("Check service: url=%hs, pattern=%s"), url, pattern);
