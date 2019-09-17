@@ -24,6 +24,20 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 30.97 to 30.98
+ */
+static bool H_UpgradeFromV97()
+{
+   static const TCHAR *batch =
+            _T("UPDATE config SET default_value='https://tile.netxms.org/osm/' WHERE var_name='TileServerURL'\n")
+            _T("UPDATE config SET var_value='https://tile.netxms.org/osm/' WHERE var_name='TileServerURL' AND (var_value='http://tile.openstreetmap.org/' OR var_value='https://maps.wikimedia.org/osm-intl/')\n")
+            _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(SetMinorSchemaVersion(98));
+   return true;
+}
+
+/**
  * Upgrade from 30.96 to 30.97
  */
 static bool H_UpgradeFromV96()
@@ -3423,6 +3437,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 97, 30, 98, H_UpgradeFromV97 },
    { 96, 30, 97, H_UpgradeFromV96 },
    { 95, 30, 96, H_UpgradeFromV95 },
    { 94, 30, 95, H_UpgradeFromV94 },
