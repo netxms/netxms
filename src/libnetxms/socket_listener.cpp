@@ -66,9 +66,9 @@ GenericSocketListener::~GenericSocketListener()
 bool GenericSocketListener::initialize()
 {
    // Create socket(s)
-   m_socketV4 = m_allowV4 ? socket(AF_INET, m_type, 0) : INVALID_SOCKET;
+   m_socketV4 = m_allowV4 ? CreateSocket(AF_INET, m_type, 0) : INVALID_SOCKET;
 #ifdef WITH_IPV6
-   m_socketV6 = m_allowV6 ? socket(AF_INET6, m_type, 0) : INVALID_SOCKET;
+   m_socketV6 = m_allowV6 ? CreateSocket(AF_INET6, m_type, 0) : INVALID_SOCKET;
 #endif
    if (((m_socketV4 == INVALID_SOCKET) && m_allowV4)
 #ifdef WITH_IPV6

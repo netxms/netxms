@@ -824,7 +824,7 @@ static void ParseOEMStrings(TableHeader *t)
    for (int i = 1; i <= count; i++)
    {
       const char *s = GetStringByIndex(t, i, NULL, 0);
-      s_oemStrings[i - 1] = strdup(CHECK_NULL_EX_A(s));
+      s_oemStrings[i - 1] = MemCopyStringA(CHECK_NULL_EX_A(s));
    }
 }
 

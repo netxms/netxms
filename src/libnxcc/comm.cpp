@@ -747,7 +747,7 @@ bool LIBNXCC_EXPORTABLE ClusterJoin()
    if (!g_nxccInitialized)
       return false;
 
-   SOCKET s = socket(AF_INET, SOCK_STREAM, 0);
+   SOCKET s = CreateSocket(AF_INET, SOCK_STREAM, 0);
    if (s == INVALID_SOCKET)
    {
       ClusterDebug(1, _T("ClusterJoin: cannot create socket"));

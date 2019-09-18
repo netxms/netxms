@@ -165,7 +165,7 @@ static void ProcessResponse(SOCKET sock, UINT32 baseAddr, UINT32 lastAddr, ScanS
 */
 void ScanAddressRange(const InetAddress& from, const InetAddress& to, void (*callback)(const InetAddress&, UINT32, Node *, UINT32, ServerConsole *, void *), ServerConsole *console, void *context)
 {
-   SOCKET sock = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
+   SOCKET sock = CreateSocket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
    if (sock == INVALID_SOCKET)
       return;
 

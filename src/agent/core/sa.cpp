@@ -402,7 +402,7 @@ static THREAD_RESULT THREAD_CALL SessionAgentListener(void *arg)
    UINT32 id = 1;
 
    // Create socket
-   if ((hSocket = socket(AF_INET, SOCK_STREAM, 0)) == INVALID_SOCKET)
+   if ((hSocket = CreateSocket(AF_INET, SOCK_STREAM, 0)) == INVALID_SOCKET)
    {
       TCHAR buffer[1024];
       nxlog_write(NXLOG_ERROR, _T("Unable to open socket (%s)"), GetLastSocketErrorText(buffer, 1024));

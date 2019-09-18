@@ -237,7 +237,7 @@ bool SendMagicPacket(const InetAddress& ipAddr, const MacAddress& macAddr, int c
       memcpy(curr, macAddr.value(), 6);
 
    // Create socket
-   SOCKET hSocket = socket(AF_INET, SOCK_DGRAM, 0);
+   SOCKET hSocket = CreateSocket(AF_INET, SOCK_DGRAM, 0);
    if (hSocket == INVALID_SOCKET)
    {
       DbgPrintf(5, _T("SendMagicPacket: ERROR creating socket: %s."), _tcserror(errno));

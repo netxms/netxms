@@ -31,7 +31,7 @@ static NXCP_BUFFER s_msgBuffer;
 static bool ConnectToMasterAgent()
 {
    nxlog_debug(7, _T("Connecting to master agent"));
-   s_socket = socket(AF_INET, SOCK_STREAM, 0);
+   s_socket = CreateSocket(AF_INET, SOCK_STREAM, 0);
    if (s_socket == INVALID_SOCKET)
    {
       nxlog_debug(5, _T("Call to socket() failed\n"));

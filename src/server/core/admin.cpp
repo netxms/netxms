@@ -114,7 +114,7 @@ THREAD_RESULT THREAD_CALL LocalAdminListener(void *pArg)
    socklen_t iSize;
 
    // Create socket
-   if ((sock = socket(AF_INET, SOCK_STREAM, 0)) == INVALID_SOCKET)
+   if ((sock = CreateSocket(AF_INET, SOCK_STREAM, 0)) == INVALID_SOCKET)
    {
       TCHAR buffer[1024];
       nxlog_write(NXLOG_ERROR, _T("Unable to create socket for local admin interface (%s)"), GetLastSocketErrorText(buffer, 1024));

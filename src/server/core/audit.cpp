@@ -64,7 +64,7 @@ static void SendSyslogRecord(const TCHAR *text)
 #endif
 	message[1024] = 0;
 
-   SOCKET hSocket = socket(m_auditServerAddr.getFamily(), SOCK_DGRAM, 0);
+   SOCKET hSocket = CreateSocket(m_auditServerAddr.getFamily(), SOCK_DGRAM, 0);
    if (hSocket != INVALID_SOCKET)
 	{
 		SockAddrBuffer addr;

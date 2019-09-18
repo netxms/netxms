@@ -39,12 +39,12 @@ public:
    {
       addr = a;
       timestamp = time(NULL);
-      message = strdup(m);
+      message = MemCopyStringA(m);
       messageLength = len;
    }
    ~SyslogRecord()
    {
-      free(message);
+      MemFree(message);
    }
 };
 
@@ -152,9 +152,9 @@ THREAD_RESULT THREAD_CALL SyslogSender(void *)
  */
 THREAD_RESULT THREAD_CALL SyslogReceiver(void *)
 {
-   SOCKET hSocket = (g_dwFlags & AF_DISABLE_IPV4) ? INVALID_SOCKET : socket(AF_INET, SOCK_DGRAM, 0);
+   SOCKET hSocket = (g_dwFlags & AF_DISABLE_IPV4) ? INVALID_SOCKET : CreateSocket(AF_INET, SOCK_DGRAM, 0);
 #ifdef WITH_IPV6
-   SOCKET hSocket6 = (g_dwFlags & AF_DISABLE_IPV6) ? INVALID_SOCKET : socket(AF_INET6, SOCK_DGRAM, 0);
+   SOCKET hSocket6 = (g_dwFlags & AF_DISABLE_IPV6) ? INVALID_SOCKET : CreateSocket(AF_INET6, SOCK_DGRAM, 0);
 #endif
 
 #ifdef WITH_IPV6

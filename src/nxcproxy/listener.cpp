@@ -36,7 +36,7 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
    fd_set rdfs;
 
    // Create socket
-   if ((hSocket = socket(AF_INET, SOCK_STREAM, 0)) == INVALID_SOCKET)
+   if ((hSocket = CreateSocket(AF_INET, SOCK_STREAM, 0)) == INVALID_SOCKET)
    {
       TCHAR buffer[1024];
       nxlog_write(NXLOG_ERROR, _T("Cannot create socket for listener (%s)"), GetLastSocketErrorText(buffer, 1024));

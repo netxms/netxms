@@ -1440,7 +1440,7 @@ int LIBNETXMS_EXPORTABLE ConnectEx(SOCKET s, struct sockaddr *addr, int len, UIN
  */
 SOCKET LIBNETXMS_EXPORTABLE ConnectToHost(const InetAddress& addr, UINT16 port, UINT32 timeout)
 {
-   SOCKET s = socket(addr.getFamily(), SOCK_STREAM, 0);
+   SOCKET s = CreateSocket(addr.getFamily(), SOCK_STREAM, 0);
    if (s == INVALID_SOCKET)
       return INVALID_SOCKET;
 
@@ -1461,7 +1461,7 @@ SOCKET LIBNETXMS_EXPORTABLE ConnectToHost(const InetAddress& addr, UINT16 port, 
  */
 SOCKET LIBNETXMS_EXPORTABLE ConnectToHostUDP(const InetAddress& addr, UINT16 port)
 {
-   SOCKET s = socket(addr.getFamily(), SOCK_DGRAM, 0);
+   SOCKET s = CreateSocket(addr.getFamily(), SOCK_DGRAM, 0);
    if (s == INVALID_SOCKET)
       return INVALID_SOCKET;
 
@@ -3680,7 +3680,7 @@ bool LIBNETXMS_EXPORTABLE VerifyFileSignature(const TCHAR *file)
  */
 TcpPingResult LIBNETXMS_EXPORTABLE TcpPing(const InetAddress& addr, UINT16 port, UINT32 timeout)
 {
-   SOCKET s = socket(addr.getFamily(), SOCK_STREAM, 0);
+   SOCKET s = CreateSocket(addr.getFamily(), SOCK_STREAM, 0);
    if (s == INVALID_SOCKET)
       return TCP_PING_SOCKET_ERROR;
 

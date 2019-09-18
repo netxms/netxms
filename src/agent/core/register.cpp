@@ -52,7 +52,7 @@ BOOL RegisterOnServer(const TCHAR *pszServer, UINT32 zoneUIN)
       return FALSE;
    }
 
-   hSocket = socket(addr.getFamily(), SOCK_STREAM, 0);
+   hSocket = CreateSocket(addr.getFamily(), SOCK_STREAM, 0);
    if (hSocket != INVALID_SOCKET)
    {
       SockAddrBuffer sa;

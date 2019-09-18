@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -365,76 +365,10 @@ typedef unsigned __int64 uint64_t;
 
 #endif
 
-// Socket compatibility
-#define SHUT_RD      0
-#define SHUT_WR      1
-#define SHUT_RDWR    2
-
-#define SetSocketReuseFlag(s) { \
-	BOOL val = TRUE; \
-	setsockopt(s, SOL_SOCKET, SO_REUSEADDR, (char *)&val, sizeof(BOOL)); \
-}
-#define SetSocketExclusiveAddrUse(s) { \
-	BOOL val = TRUE; \
-	setsockopt(s, SOL_SOCKET, SO_EXCLUSIVEADDRUSE, (char *)&val, sizeof(BOOL)); \
-}
-#define SELECT_NFDS(x)  ((int)(x))
-#define SetSocketNonBlocking(s) { \
-	u_long one = 1; \
-	ioctlsocket(s, FIONBIO, &one); \
-}
-#define SetSocketBlocking(s) { \
-	u_long zero = 0; \
-	ioctlsocket(s, FIONBIO, &zero); \
-}
-#define SetSocketNoDelay(s) { \
-	BOOL val = TRUE; \
-	setsockopt(s,  IPPROTO_TCP, TCP_NODELAY, (char *)&val, sizeof(BOOL)); \
-}
-#define SetSocketBroadcast(s) { \
-	BOOL val = TRUE; \
-	setsockopt(s, SOL_SOCKET, SO_BROADCAST, (char *)&val, sizeof(BOOL)); \
-}
-
-#ifdef UNDER_CE
-#define O_RDONLY     0x0004
-#define O_WRONLY     0x0001
-#define O_RDWR       0x0002
-#define O_CREAT      0x0100
-#define O_EXCL       0x0200
-#define O_TRUNC      0x0800
-#endif
-
-#if !defined(UNDER_CE)
 #define HAVE_LIBEXPAT  1
-#endif
-
 #define XMPP_SUPPORTED 1
-
 #define HAVE_LOCALE_H  1
 #define HAVE_SETLOCALE 1
-
-// Use Win32 API instead of msvcrt for memory allocation
-#ifdef USE_WIN32_HEAP
-
-#define malloc(n)       HeapAlloc(GetProcessHeap(), 0, n)
-#define realloc(p, n)   (((p) == NULL) ? HeapAlloc(GetProcessHeap(), 0, n) : HeapReAlloc(GetProcessHeap(), 0, p, n))
-#define free(p)         HeapFree(GetProcessHeap(), 0, p)
-#define wcsdup(s)       MemCopyStringW(s)
-
-#undef _tcsdup
-#ifdef UNICODE
-#define _tcsdup         MemCopyStringW
-#else
-#define _tcsdup         MemCopyStringA
-#endif
-
-#else
-
-#define strdup       _strdup
-#define wcsdup       _wcsdup
-
-#endif
 
 #else    /* not _WIN32 */
 
@@ -727,51 +661,6 @@ inline ssize_t _write(int fd, const void *buf, size_t count) { return ::write(fd
 #define _unlink(f)         unlink(f)
 #define _write(f, b, l)    write((f), (b), (l))
 
-#endif
-
-// Socket compatibility
-typedef int SOCKET;
-
-#define closesocket(x) _close(x)
-#define WSAGetLastError() (errno)
-
-#define WSAEINTR        EINTR
-#define WSAEWOULDBLOCK  EWOULDBLOCK
-#define WSAEINPROGRESS  EINPROGRESS
-#define WSAESHUTDOWN    ESHUTDOWN
-#define INVALID_SOCKET  (-1)
-
-#define SetSocketReuseFlag(sd) { \
-	int nVal = 1; \
-	setsockopt(sd, SOL_SOCKET, SO_REUSEADDR, (const void *)&nVal,  \
-			(socklen_t)sizeof(nVal)); \
-}
-
-#define SetSocketExclusiveAddrUse(s)
-
-#define SetSocketNonBlocking(s) { \
-   int f = fcntl(s, F_GETFL); \
-   if (f != -1) fcntl(s, F_SETFL, f | O_NONBLOCK); \
-}
-
-#define SetSocketNoDelay(s) { \
-	int val = 1; \
-	setsockopt(s,  IPPROTO_TCP, TCP_NODELAY, (const void *)&val, sizeof(int)); \
-}
-
-#define SetSocketBroadcast(s) { \
-	int val = 1; \
-	setsockopt(s, SOL_SOCKET, SO_BROADCAST, (const void *)&val, sizeof(int)); \
-}
-
-#define SELECT_NFDS(x)  (x)
-
-#if !(HAVE_SOCKLEN_T) && !defined(_USE_GNU_PTH)
-typedef unsigned int socklen_t;
-#endif
-
-#ifndef SUN_LEN
-#define SUN_LEN(su) (sizeof(*(su)) - sizeof((su)->sun_path) + strlen((su)->sun_path))
 #endif
 
 // Shared library suffix
@@ -1391,6 +1280,8 @@ inline WCHAR *MemCopyStringW(const WCHAR *src)
 #define HPIPE int
 #define INVALID_PIPE_HANDLE (-1)
 #endif
+
+#include <nxsocket.h>
 
 #ifdef __cplusplus
 

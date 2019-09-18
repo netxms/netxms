@@ -57,7 +57,7 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
       return THREAD_OK;
    }
 
-   SOCKET hSocket = socket(AF_INET, SOCK_DGRAM, 0);
+   SOCKET hSocket = CreateSocket(AF_INET, SOCK_DGRAM, 0);
    if (hSocket == INVALID_SOCKET)
    {
       TCHAR buffer[1024];
