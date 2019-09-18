@@ -491,7 +491,7 @@ protected:
 public:
    void set(INT32 value);
 
-	void setName(const char *name) { MemFree(m_name); m_name = (name != NULL) ? strdup(name) : NULL; }
+	void setName(const char *name) { MemFree(m_name); m_name = MemCopyStringA(name); }
 	const char *getName() const { return m_name; }
 
    bool convert(int nDataType);
