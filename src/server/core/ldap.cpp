@@ -403,6 +403,12 @@ void LDAPConnection::syncUsers()
       compareUserLists();
       compareGroupList();
    }
+   else
+   {
+      TCHAR* error = getErrorString(rc);
+      DbgPrintf(1, _T("LDAPConnection::syncUsers(): LDAP will not sync users. Error code: %s"), error);
+      MemFree(error);
+   }
 
    delete userDnEntryList;
    delete userIdEntryList;
