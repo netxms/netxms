@@ -135,7 +135,7 @@ SNMP_PDU::SNMP_PDU(SNMP_PDU *src) : m_authoritativeEngine(&src->m_authoritativeE
    memcpy(m_contextEngineId, src->m_contextEngineId, SNMP_MAX_ENGINEID_LEN); 
 	strcpy(m_contextName, src->m_contextName);
 	m_msgMaxSize = src->m_msgMaxSize;
-   m_authObject = (src->m_authObject != NULL) ? strdup(src->m_authObject) : NULL;
+   m_authObject = MemCopyStringA(src->m_authObject);
 	m_reportable = src->m_reportable;
    m_securityModel = src->m_securityModel;
    m_dwAgentAddr = 0;

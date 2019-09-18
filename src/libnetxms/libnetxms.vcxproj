@@ -278,6 +278,7 @@
     <ClInclude Include="..\..\include\nxcpapi.h" />
     <ClInclude Include="..\..\include\nxlog.h" />
     <ClInclude Include="..\..\include\nxqueue.h" />
+    <ClInclude Include="..\..\include\nxsocket.h" />
     <ClInclude Include="..\..\include\nxstat.h" />
     <ClInclude Include="..\..\include\rwlock.h" />
     <ClInclude Include="..\..\include\unicode.h" />

@@ -89,7 +89,7 @@ void CommSession::proxySnmpRequest(NXCPMessage *request)
    if ((pduIn != NULL) && (sizeIn > 0))
    {
       InetAddress addr = request->getFieldAsInetAddress(VID_IP_ADDRESS);
-      SOCKET hSocket = socket(addr.getFamily(), SOCK_DGRAM, 0);
+      SOCKET hSocket = CreateSocket(addr.getFamily(), SOCK_DGRAM, 0);
       if (hSocket != INVALID_SOCKET)
       {
          SockAddrBuffer sa;

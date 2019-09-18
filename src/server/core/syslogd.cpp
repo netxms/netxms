@@ -626,9 +626,9 @@ static THREAD_RESULT THREAD_CALL SyslogReceiver(void *pArg)
 {
    ThreadSetName("SyslogReceiver");
 
-   SOCKET hSocket = socket(AF_INET, SOCK_DGRAM, 0);
+   SOCKET hSocket = CreateSocket(AF_INET, SOCK_DGRAM, 0);
 #ifdef WITH_IPV6
-   SOCKET hSocket6 = socket(AF_INET6, SOCK_DGRAM, 0);
+   SOCKET hSocket6 = CreateSocket(AF_INET6, SOCK_DGRAM, 0);
 #endif
 
 #ifdef WITH_IPV6

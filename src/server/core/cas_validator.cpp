@@ -166,7 +166,7 @@ static int cas_validate(const char *ticket, const char *service, char *outbuf, i
    {
       SET_RET_AND_GOTO_END(CAS_SSL_ERROR_CTX);
    }
-   if ((s = socket(AF_INET, SOCK_STREAM, 0)) == INVALID_SOCKET)
+   if ((s = CreateSocket(AF_INET, SOCK_STREAM, 0)) == INVALID_SOCKET)
    {
       SET_RET_AND_GOTO_END(CAS_ERROR_CONN);
    }

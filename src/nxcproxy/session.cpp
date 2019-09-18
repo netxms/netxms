@@ -75,7 +75,7 @@ void ProxySession::clientThread()
    InetAddress addr = InetAddress::resolveHostName(g_serverAddress);
    if (addr.isValidUnicast())
    {
-      m_server = socket(addr.getFamily(), SOCK_STREAM, 0);
+      m_server = CreateSocket(addr.getFamily(), SOCK_STREAM, 0);
       if (m_server != INVALID_SOCKET)
       {
          SockAddrBuffer sa;

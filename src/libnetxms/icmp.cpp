@@ -276,7 +276,7 @@ static UINT32 IcmpPing4(UINT32 addr, int retries, UINT32 timeout, UINT32 *rtt, U
       packetSize = MAX_PING_SIZE;
 
    // Create raw socket
-   SOCKET sock = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
+   SOCKET sock = CreateSocket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
    if (sock == INVALID_SOCKET)
    {
       return ICMP_RAW_SOCK_FAILED;

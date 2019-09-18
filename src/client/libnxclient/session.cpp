@@ -200,7 +200,7 @@ UINT32 NXCSession::connect(const TCHAR *host, const TCHAR *login, const TCHAR *p
 #endif
    }
 
-   m_hSocket = socket(addr.getFamily(), SOCK_STREAM, 0);
+   m_hSocket = CreateSocket(addr.getFamily(), SOCK_STREAM, 0);
    if (m_hSocket == INVALID_SOCKET)
       return RCC_COMM_FAILURE;
 

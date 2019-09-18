@@ -213,7 +213,7 @@ THREAD_RESULT THREAD_CALL ISCListener(void *pArg)
 	TCHAR buffer[32];
 
    // Create socket
-   if ((sock = socket(AF_INET, SOCK_STREAM, 0)) == INVALID_SOCKET)
+   if ((sock = CreateSocket(AF_INET, SOCK_STREAM, 0)) == INVALID_SOCKET)
    {
       TCHAR buffer[1024];
       nxlog_write(NXLOG_ERROR, _T("Unable to create socket for ISC listener (%s)"), GetLastSocketErrorText(buffer, 1024));

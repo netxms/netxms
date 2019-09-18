@@ -51,6 +51,7 @@ include_HEADERS = \
 	nxsl_classes.h \
 	nxsl.h \
 	nxsnmp.h \
+	nxsocket.h \
 	nxstat.h \
 	nxtools.h \
 	nxtux.h \

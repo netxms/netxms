@@ -816,7 +816,7 @@ static int DoRadiusAuth(const char *login, const char *passwd, bool useSecondary
 	}
 
 	// Open a socket.
-	sockfd = socket(serverAddr.getFamily(), SOCK_DGRAM, 0);
+	sockfd = CreateSocket(serverAddr.getFamily(), SOCK_DGRAM, 0);
 	if (sockfd == INVALID_SOCKET)
 	{
 		nxlog_debug(3, _T("RADIUS: Cannot create socket"));

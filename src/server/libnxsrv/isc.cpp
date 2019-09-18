@@ -296,7 +296,7 @@ UINT32 ISC::connect(UINT32 service, RSA *pServerKey, BOOL requireEncryption)
    struct sockaddr *sa;
 
    // Create socket
-   m_socket = socket(m_addr.getFamily(), SOCK_STREAM, 0);
+   m_socket = CreateSocket(m_addr.getFamily(), SOCK_STREAM, 0);
    if (m_socket == INVALID_SOCKET)
    {
 		rcc = ISC_ERR_SOCKET_ERROR;

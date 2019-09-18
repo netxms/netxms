@@ -224,9 +224,9 @@ AbstractCommSession *FindServerSession(bool (*comparator)(AbstractCommSession *,
 THREAD_RESULT THREAD_CALL ListenerThread(void *)
 {
    // Create socket(s)
-   SOCKET hSocket = (g_dwFlags & AF_DISABLE_IPV4) ? INVALID_SOCKET : socket(AF_INET, SOCK_STREAM, 0);
+   SOCKET hSocket = (g_dwFlags & AF_DISABLE_IPV4) ? INVALID_SOCKET : CreateSocket(AF_INET, SOCK_STREAM, 0);
 #ifdef WITH_IPV6
-   SOCKET hSocket6 = (g_dwFlags & AF_DISABLE_IPV6) ? INVALID_SOCKET : socket(AF_INET6, SOCK_STREAM, 0);
+   SOCKET hSocket6 = (g_dwFlags & AF_DISABLE_IPV6) ? INVALID_SOCKET : CreateSocket(AF_INET6, SOCK_STREAM, 0);
 #endif
    if (((hSocket == INVALID_SOCKET) && !(g_dwFlags & AF_DISABLE_IPV4))
 #ifdef WITH_IPV6

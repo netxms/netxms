@@ -83,7 +83,7 @@ BOOL DownloadConfig(TCHAR *pszServer)
       return FALSE;
    }
 
-   SOCKET hSocket = socket(addr.getFamily(), SOCK_STREAM, 0);
+   SOCKET hSocket = CreateSocket(addr.getFamily(), SOCK_STREAM, 0);
    if (hSocket != INVALID_SOCKET)
    {
       SockAddrBuffer sa;
@@ -198,7 +198,7 @@ int CreateConfig(bool forceCreate, const char *pszServer, const char *pszLogFile
 
       if (extraValues != NULL)
       {
-         char *temp = strdup(extraValues);
+         char *temp = MemCopyStringA(extraValues);
          char *curr = temp;
          while (*curr == '~')
             curr++;

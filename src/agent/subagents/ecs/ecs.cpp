@@ -34,7 +34,7 @@ static unsigned char *GetHttpUrl(char *url, int *size)
 {
 	char *ret = NULL;
 
-	char *host = strdup(url);
+	char *host = MemCopyStringA(url);
 
 	char *uri = strchr(host, '/');
 	if (uri == NULL)
@@ -144,7 +144,7 @@ static unsigned char *GetHttpUrl(char *url, int *size)
 		}
 	}
 
-   free(host);
+   MemFree(host);
 	return (unsigned char *)ret;
 }
 

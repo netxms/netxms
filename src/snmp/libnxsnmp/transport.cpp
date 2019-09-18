@@ -303,7 +303,7 @@ UINT32 SNMP_UDPTransport::createUDPTransport(const InetAddress& hostAddr, UINT16
    UINT32 dwResult;
 
    // Create and connect socket
-   m_hSocket = socket(hostAddr.getFamily(), SOCK_DGRAM, 0);
+   m_hSocket = CreateSocket(hostAddr.getFamily(), SOCK_DGRAM, 0);
    if (m_hSocket != INVALID_SOCKET)
    {
       SockAddrBuffer localAddr;

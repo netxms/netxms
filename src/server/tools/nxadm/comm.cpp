@@ -47,7 +47,7 @@ BOOL Connect()
    struct sockaddr_in sa;
 
    // Create socket
-   g_hSocket = socket(AF_INET, SOCK_STREAM, 0);
+   g_hSocket = CreateSocket(AF_INET, SOCK_STREAM, 0);
    if (g_hSocket == INVALID_SOCKET)
    {
       printf("Error creating socket\n");
