@@ -21,6 +21,7 @@ package org.netxms.ui.eclipse.topology.dialogs;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import org.eclipse.jface.dialogs.Dialog;
+import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -31,6 +32,7 @@ import org.netxms.ui.eclipse.objectbrowser.widgets.ZoneSelector;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.ui.eclipse.topology.Activator;
 import org.netxms.ui.eclipse.topology.Messages;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
@@ -96,6 +98,18 @@ public class EnterIpAddressDlg extends Dialog
 	      gd.grabExcessHorizontalSpace = true;
 	      gd.widthHint = 300;
 	      zoneSelector.setLayoutData(gd);
+	      
+	      IDialogSettings settings = Activator.getDefault().getDialogSettings();
+	      try
+	      {
+   	      long uin = settings.getLong("IPAddressSelection.ZoneUIN");
+   	      if (ConsoleSharedData.getSession().findZone(uin) != null)
+   	         zoneSelector.setZoneUIN(uin);
+	      }
+	      catch(Exception e)
+	      {
+	         zoneSelector.setZoneUIN(0);
+	      }
       }
       
 		return dialogArea;
@@ -117,7 +131,16 @@ public class EnterIpAddressDlg extends Dialog
 			return;
 		}
 		
-		zoneUIN = zoningEnabled ? zoneSelector.getZoneUIN() : 0;
+		if (zoningEnabled)
+		{
+	      zoneUIN = zoneSelector.getZoneUIN();
+         IDialogSettings settings = Activator.getDefault().getDialogSettings();
+         settings.put("IPAddressSelection.ZoneUIN", zoneUIN);
+		}
+		else
+		{
+	      zoneUIN = 0;
+		}
 		super.okPressed();
 	}
 
