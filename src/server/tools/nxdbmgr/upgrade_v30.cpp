@@ -24,6 +24,34 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 30.98 to 30.99
+ */
+static bool H_UpgradeFromV98()
+{
+   static const TCHAR *batch =
+            _T("UPDATE object_tools SET tool_name='&Info->&Agent->&Loaded subagents',tool_type=9,tool_data='Loaded subagents#7FAgent.SubAgents',description='Show information about loaded subagents' WHERE tool_id=8\n")
+            _T("DELETE FROM object_tools_table_columns WHERE tool_id=8\n")
+            _T("UPDATE object_tools SET description='Show information about actions supported by agent' WHERE tool_id=11\n")
+            _T("UPDATE object_tools SET tool_type=9,description='Show information about ICMP targets configured on this agent' WHERE tool_id=12\n")
+            _T("DELETE FROM object_tools_table_columns WHERE tool_id=12\n")
+            _T("UPDATE object_tools SET tool_name='&Info->&Current processes',tool_type=9,tool_data='Current processes#7FSystem.Processes',description='Show information about currently running processes' WHERE tool_id=13\n")
+            _T("DELETE FROM object_tools_table_columns WHERE tool_id=13\n")
+            _T("UPDATE object_tools SET description='Show information about active user sessions' WHERE tool_id=16\n")
+            _T("UPDATE object_tools SET tool_filter='<objectMenuFilter><flags>2</flags></objectMenuFilter>' WHERE tool_id=18\n")
+            _T("INSERT INTO object_tools (tool_id,guid,tool_name,tool_type,tool_data,flags,tool_filter,description,confirmation_text) ")
+               _T("VALUES (23,'281e3601-1cc6-4969-93f2-dfb86f9380b9','&Info->&Agent->Supported &tables',3,")
+               _T("'Supported tables#7FAgent.SupportedTables#7F^(.*)',0,'<objectMenuFilter><flags>2</flags></objectMenuFilter>',")
+               _T("'Show list of tables supported by agent','')\n")
+            _T("INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)")
+               _T("VALUES (23,0,'Parameter','',0,1)\n")
+            _T("INSERT INTO object_tools_acl (tool_id,user_id) VALUES (23,-2147483648)\n")
+            _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(SetMinorSchemaVersion(99));
+   return true;
+}
+
+/**
  * Upgrade from 30.97 to 30.98
  */
 static bool H_UpgradeFromV97()
@@ -3437,6 +3465,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 98, 30, 99, H_UpgradeFromV98 },
    { 97, 30, 98, H_UpgradeFromV97 },
    { 96, 30, 97, H_UpgradeFromV96 },
    { 95, 30, 96, H_UpgradeFromV95 },
