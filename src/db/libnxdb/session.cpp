@@ -47,6 +47,7 @@ static void (*s_sessionInitCb)(DB_HANDLE session) = NULL;
  */
 static void InvalidatePreparedStatements(DB_HANDLE hConn)
 {
+   MutexLock(hConn->m_preparedStatementsLock);
    for(int i = 0; i < hConn->m_preparedStatements->size(); i++)
    {
       db_statement_t *stmt = hConn->m_preparedStatements->get(i);
@@ -55,6 +56,7 @@ static void InvalidatePreparedStatements(DB_HANDLE hConn)
       stmt->m_connection = NULL;
    }
    hConn->m_preparedStatements->clear();
+   MutexUnlock(hConn->m_preparedStatementsLock);
 }
 
 /**
@@ -93,6 +95,7 @@ DB_HANDLE LIBNXDB_EXPORTABLE DBConnect(DB_DRIVER driver, const TCHAR *server, co
          hConn->m_mutexTransLock = MutexCreateRecursive();
          hConn->m_transactionLevel = 0;
          hConn->m_preparedStatements = new ObjectArray<db_statement_t>(4, 4, false);
+         hConn->m_preparedStatementsLock = MutexCreateFast();
 #ifdef UNICODE
          hConn->m_dbName = mbDatabase;
          hConn->m_login = mbLogin;
@@ -100,11 +103,11 @@ DB_HANDLE LIBNXDB_EXPORTABLE DBConnect(DB_DRIVER driver, const TCHAR *server, co
          hConn->m_server = mbServer;
          hConn->m_schema = mbSchema;
 #else
-         hConn->m_dbName = (dbName == NULL) ? NULL : _tcsdup(dbName);
-         hConn->m_login = (login == NULL) ? NULL : _tcsdup(login);
-         hConn->m_password = (password == NULL) ? NULL : _tcsdup(password);
-         hConn->m_server = (server == NULL) ? NULL : _tcsdup(server);
-         hConn->m_schema = (schema == NULL) ? NULL : _tcsdup(schema);
+         hConn->m_dbName = MemCopyStringA(dbName);
+         hConn->m_login = MemCopyStringA(login);
+         hConn->m_password = MemCopyStringA(password);
+         hConn->m_server = MemCopyStringA(server);
+         hConn->m_schema = MemCopyStringA(schema);
 #endif
          if (driver->m_fpDrvSetPrefetchLimit != NULL)
             driver->m_fpDrvSetPrefetchLimit(hDrvConn, driver->m_defaultPrefetchLimit);
@@ -150,6 +153,7 @@ void LIBNXDB_EXPORTABLE DBDisconnect(DB_HANDLE hConn)
    MemFree(hConn->m_server);
    MemFree(hConn->m_schema);
    delete hConn->m_preparedStatements;
+   MutexDestroy(hConn->m_preparedStatementsLock);
    MemFree(hConn);
 }
 
@@ -1201,7 +1205,9 @@ DB_STATEMENT LIBNXDB_EXPORTABLE DBPrepareEx(DB_HANDLE hConn, const TCHAR *query,
 
    if (result != NULL)
    {
+      MutexLock(hConn->m_preparedStatementsLock);
       hConn->m_preparedStatements->add(result);
+      MutexUnlock(hConn->m_preparedStatementsLock);
    }
 
 	return result;
@@ -1228,7 +1234,9 @@ void LIBNXDB_EXPORTABLE DBFreeStatement(DB_STATEMENT hStmt)
 
    if (hStmt->m_connection != NULL)
    {
+      MutexLock(hStmt->m_connection->m_preparedStatementsLock);
       hStmt->m_connection->m_preparedStatements->remove(hStmt);
+      MutexUnlock(hStmt->m_connection->m_preparedStatementsLock);
    }
    hStmt->m_driver->m_fpDrvFreeStatement(hStmt->m_statement);
    MemFree(hStmt->m_query);

@@ -116,6 +116,7 @@ struct db_handle_t
    char *m_dbName;
    char *m_schema;
    ObjectArray<db_statement_t> *m_preparedStatements;
+   MUTEX m_preparedStatementsLock;
 };
 
 /**
