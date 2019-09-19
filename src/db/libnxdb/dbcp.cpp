@@ -224,11 +224,11 @@ bool LIBNXDB_EXPORTABLE DBConnectionPoolStartup(DB_DRIVER driver, const TCHAR *s
       return true;   // already initialized
 
 	m_driver = driver;
-	nx_strncpy(m_server, CHECK_NULL_EX(server), 256);
-	nx_strncpy(m_dbName, CHECK_NULL_EX(dbName), 256);
-	nx_strncpy(m_login, CHECK_NULL_EX(login), 256);
-	nx_strncpy(m_password, CHECK_NULL_EX(password), 256);
-	nx_strncpy(m_schema, CHECK_NULL_EX(schema), 256);
+	_tcslcpy(m_server, CHECK_NULL_EX(server), 256);
+	_tcslcpy(m_dbName, CHECK_NULL_EX(dbName), 256);
+	_tcslcpy(m_login, CHECK_NULL_EX(login), 256);
+	_tcslcpy(m_password, CHECK_NULL_EX(password), 256);
+	_tcslcpy(m_schema, CHECK_NULL_EX(schema), 256);
 
 	m_basePoolSize = basePoolSize;
 	m_maxPoolSize = maxPoolSize;

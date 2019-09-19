@@ -292,9 +292,9 @@ UINT32 DeleteAlarmCategory(UINT32 id)
             hStmt = DBPrepare(hdb, _T("DELETE FROM alarm_category_acl WHERE category_id=?"));
             if (hStmt != NULL)
             {
-                  DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, id);
-                  success = DBExecute(hStmt);
-                  DBFreeStatement(hStmt);
+               DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, id);
+               success = DBExecute(hStmt);
+               DBFreeStatement(hStmt);
             }
             else
             {
@@ -323,6 +323,7 @@ UINT32 DeleteAlarmCategory(UINT32 id)
             DBRollback(hdb);
          }
       }
+      DBConnectionPoolReleaseConnection(hdb);
       rcc = success ? RCC_SUCCESS : RCC_DB_FAILURE;
    }
    else

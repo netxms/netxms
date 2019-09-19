@@ -1196,7 +1196,7 @@ DB_STATEMENT LIBNXDB_EXPORTABLE DBPrepareEx(DB_HANDLE hConn, const TCHAR *query,
 	}
 
 #ifndef UNICODE
-	free(pwszQuery);
+	MemFree(pwszQuery);
 #endif
 
    if (result != NULL)
