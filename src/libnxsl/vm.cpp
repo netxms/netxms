@@ -1154,7 +1154,7 @@ void NXSL_VM::execute()
 			pValue = m_dataStack->peek();
          if (pValue != NULL)
          {
-            if (pValue->isNumeric())
+            if (pValue->isBoolean())
             {
 					if (cp->m_opCode == OPCODE_JZ_PEEK ? pValue->isFalse() : pValue->isTrue())
                   dwNext = cp->m_operand.m_addr;
