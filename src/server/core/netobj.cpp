@@ -2216,6 +2216,7 @@ void NetObj::addLocationToHistory()
       if (!createLocationHistoryTable(hdb))
       {
          DbgPrintf(4, _T("NetObj::addLocationToHistory: Error creating geolocation history table for object %s [%d]"), m_name, m_id);
+         DBConnectionPoolReleaseConnection(hdb);
          return;
       }
    }
@@ -2290,7 +2291,7 @@ void NetObj::addLocationToHistory()
       DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, (UINT32)m_geoLocation.getTimestamp());
 	}
 
-   if(!DBExecute(hStmt))
+   if (!DBExecute(hStmt))
    {
       DbgPrintf(1, _T("NetObj::addLocationToHistory: Failed to add location to history. New: lat %f, lon %f, ac %d, t %d. Old: lat %f, lon %f, ac %d, t %d."),
                 m_geoLocation.getLatitude(), m_geoLocation.getLongitude(), m_geoLocation.getAccuracy(), (UINT32)m_geoLocation.getTimestamp(),
@@ -2301,7 +2302,7 @@ void NetObj::addLocationToHistory()
    return;
 
 onFail:
-   if(hStmt != NULL)
+   if (hStmt != NULL)
       DBFreeStatement(hStmt);
    DbgPrintf(4, _T("NetObj::addLocationToHistory(%s [%d]): Failed to add location to history"), m_name, m_id);
    DBConnectionPoolReleaseConnection(hdb);

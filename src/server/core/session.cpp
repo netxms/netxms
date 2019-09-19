@@ -2470,6 +2470,8 @@ void ClientSession::getPublicConfigurationVariable(NXCPMessage *request)
       msg.setField(VID_RCC, RCC_DB_FAILURE);
    }
 
+   DBConnectionPoolReleaseConnection(hdb);
+
    sendMessage(&msg);
 }
 

@@ -273,7 +273,7 @@ static THREAD_RESULT THREAD_CALL DBWriteThread(void *arg)
 				DBFreeStatement(hStmt);
 			}
 		}
-      free(rq);
+      MemFree(rq);
 
       DBConnectionPoolReleaseConnection(hdb);
    }
@@ -348,7 +348,7 @@ static THREAD_RESULT THREAD_CALL IDataWriteThread(void *arg)
 		}
 		else
 		{
-			free(rq);
+			MemFree(rq);
 		}
 		DBConnectionPoolReleaseConnection(hdb);
       if (rq == INVALID_POINTER_VALUE)   // End-of-job indicator
@@ -629,7 +629,7 @@ static void SaveRawData(int maxRecords)
    HASH_ITER(hh, batch, rq, tmp)
    {
       HASH_DEL(batch, rq);
-      free(rq);
+      MemFree(rq);
    }
    s_batchSize = 0;
 }

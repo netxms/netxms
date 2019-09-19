@@ -398,10 +398,12 @@ static void RenameNotificaiotnChannelDB(std::pair<TCHAR *, TCHAR *> *names)
          DBFreeStatement(hStmt);
       }
       else
+      {
          success = false;
+      }
    }
 
-   if(success)
+   if (success)
    {
       DBCommit(hdb);
    }

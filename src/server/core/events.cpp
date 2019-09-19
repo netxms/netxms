@@ -1647,7 +1647,10 @@ UINT32 DeleteEventTemplate(UINT32 eventCode)
                DBFreeStatement(hStmt);
             }
             else
+            {
                success = false;
+            }
+
             if (success)
             {
                hStmt = DBPrepare(hdb, _T("DELETE FROM event_group_members WHERE group_id=?"));
@@ -1658,7 +1661,9 @@ UINT32 DeleteEventTemplate(UINT32 eventCode)
                   DBFreeStatement(hStmt);
                }
                else
+               {
                   success = false;
+               }
             }
             if (success)
                success = DBCommit(hdb);
@@ -1679,7 +1684,9 @@ UINT32 DeleteEventTemplate(UINT32 eventCode)
       }
    }
    else
+   {
       rcc = RCC_INVALID_EVENT_CODE;
+   }
 
    if (rcc == RCC_SUCCESS)
    {

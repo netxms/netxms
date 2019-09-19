@@ -2033,7 +2033,10 @@ bool InitAlarmManager()
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    DB_RESULT hResult = DBSelect(hdb, _T("SELECT ") ALARM_LOAD_COLUMN_LIST _T(" FROM alarms WHERE alarm_state<>3"));
    if (hResult == NULL)
+   {
+      DBConnectionPoolReleaseConnection(hdb);
       return false;
+   }
 
    DB_HANDLE cachedb = (g_flags & AF_CACHE_DB_ON_STARTUP) ? DBOpenInMemoryDatabase() : NULL;
    if (cachedb != NULL)

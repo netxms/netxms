@@ -312,11 +312,14 @@ UINT32 RenameScript(const NXCPMessage *request)
          DBConnectionPoolReleaseConnection(hdb);
       }
       else
+      {
          rcc = RCC_INVALID_SCRIPT_NAME;
+      }
    }
    else
+   {
       rcc = RCC_INVALID_SCRIPT_ID;
-
+   }
    return rcc;
 }
 
