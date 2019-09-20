@@ -128,7 +128,7 @@ static bool InitModem(Serial *serial)
  */
 GenericDriver::GenericDriver(Config *config)
 {
-	TCHAR portName[128];
+	TCHAR portName[128] = _T("");
 	const TCHAR *parityAsText;
 	int portSpeed = 9600;
 	int dataBits = 8;
@@ -142,6 +142,7 @@ GenericDriver::GenericDriver(Config *config)
    NX_CFG_TEMPLATE configTemplate[] = 
    {
       { _T("portname"), CT_STRING, 0, 0, sizeof(portName) / sizeof(TCHAR), 0, portName },	
+      { _T("port"), CT_STRING, 0, 0, sizeof(portName) / sizeof(TCHAR), 0, portName },	
       { _T("speed"), CT_LONG, 0, 0, 0, 0, &portSpeed },	
       { _T("databits"), CT_LONG, 0, 0, 0, 0,	&dataBits },	
       { _T("parity"), CT_MB_STRING, 0, 0, 2, 0,	patryCr },
@@ -224,7 +225,7 @@ GenericDriver::GenericDriver(Config *config)
 		
       if (!m_serial.set(portSpeed, dataBits, parity, stopBits))
       {
-         nxlog_debug_tag(DEBUG_TAG, 0, _T("Cannot configure serial port %s"), (const TCHAR *)config->createXml());
+         nxlog_debug_tag(DEBUG_TAG, 0, _T("Cannot configure serial port. Current configuration: %s"), (const TCHAR *)config->createXml());
          goto cleanup;
       }
 		
@@ -248,7 +249,7 @@ GenericDriver::GenericDriver(Config *config)
 	}
 	else
 	{
-      nxlog_debug_tag(DEBUG_TAG, 0, _T("Cannot open serial port %s"), (const TCHAR *)config->createXml());
+      nxlog_debug_tag(DEBUG_TAG, 0, _T("Cannot open serial port. Current configuration: %s"), (const TCHAR *)config->createXml());
 	}
 
 cleanup:

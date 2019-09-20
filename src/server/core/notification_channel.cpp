@@ -296,7 +296,7 @@ bool DeleteNotificationChannel(TCHAR *name)
    MutexUnlock(s_channelListLock);
    if(contains)
    {
-      ThreadPoolExecuteSerialized(g_clientThreadPool, NC_THREAD_KEY, DeleteNotificationChannelInternal, name);
+      ThreadPoolExecuteSerialized(g_clientThreadPool, NC_THREAD_KEY, DeleteNotificationChannelInternal, MemCopyString(name));
    }
    return contains;
 }
