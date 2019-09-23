@@ -460,10 +460,11 @@ static bool MigrateDataToSingleTable_TSDB(UINT32 nodeId, bool tdata)
    while(DBFetch(hResult))
    {
       UINT32 dciId = DBGetFieldULong(hResult, 0);
-      int *sclass = s_dciStorageClasses.get(dciId);
+      int *sclassPtr = s_dciStorageClasses.get(dciId);
+      int sclass = (sclassPtr != NULL) ? *sclassPtr : 0;
 
-      String& query = queries[(sclass != NULL) ? *sclass : 0];
-      query.append(rows == 0 ? _T(" (") : _T(",("));
+      String& query = queries[sclass];
+      query.append(hasContent[sclass] ? _T(",(") : _T(" ("));
       query.append(dciId);
       query.append(_T(','));
       query.append(DBGetFieldULong(hResult, 1));
@@ -480,7 +481,7 @@ static bool MigrateDataToSingleTable_TSDB(UINT32 nodeId, bool tdata)
       }
       query.append(_T(')'));
 
-      hasContent[(sclass != NULL) ? *sclass : 0] = true;
+      hasContent[sclass] = true;
 
       rows++;
       if (rows >= g_migrationTxnSize)
@@ -575,10 +576,11 @@ static bool MigrateSingleDataTableToTSDB(bool tdata)
    while(DBFetch(hResult))
    {
       UINT32 dciId = DBGetFieldULong(hResult, 0);
-      int *sclass = s_dciStorageClasses.get(dciId);
+      int *sclassPtr = s_dciStorageClasses.get(dciId);
+      int sclass = (sclassPtr != NULL) ? *sclassPtr : 0;
 
-      String& query = queries[(sclass != NULL) ? *sclass : 0];
-      query.append(rows == 0 ? _T(" (") : _T(",("));
+      String& query = queries[sclass];
+      query.append(hasContent[sclass] ? _T(",(") : _T(" ("));
       query.append(dciId);
       query.append(_T(','));
       query.append(DBGetFieldULong(hResult, 1));
@@ -595,7 +597,7 @@ static bool MigrateSingleDataTableToTSDB(bool tdata)
       }
       query.append(_T(')'));
 
-      hasContent[(sclass != NULL) ? *sclass : 0] = true;
+      hasContent[sclass] = true;
 
       rows++;
       if (rows >= g_migrationTxnSize)
