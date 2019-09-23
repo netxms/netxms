@@ -30,9 +30,10 @@
 /**
  * SNMP proxy stats
  */
-static UINT64 s_serverRequests = 0;
-static UINT64 s_snmpRequests = 0;
-static UINT64 s_snmpResponses = 0;
+static VolatileCounter64 s_serverRequests = 0;
+static VolatileCounter64 s_snmpRequests = 0;
+static VolatileCounter64 s_snmpResponses = 0;
+extern UINT64 g_snmpTraps;
 
 /**
  * Handler for SNMP proxy information parameters
@@ -49,6 +50,9 @@ LONG H_SNMPProxyStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, Abstract
          break;
       case 'S':   // server requests
          ret_uint64(value, s_serverRequests);
+         break;
+      case 'T':   // SNMP traps
+         ret_uint64(value, g_snmpTraps);
          break;
       default:
          return SYSINFO_RC_UNSUPPORTED;
@@ -83,7 +87,7 @@ void CommSession::proxySnmpRequest(NXCPMessage *request)
    UINT32 requestId = request->getId();
    NXCPMessage response(CMD_REQUEST_COMPLETED, requestId, m_protocolVersion);
 
-   s_serverRequests++;
+   InterlockedIncrement64(&s_serverRequests);
    size_t sizeIn;
    const BYTE *pduIn = request->getBinaryFieldPtr(VID_PDU, &sizeIn);
    if ((pduIn != NULL) && (sizeIn > 0))
@@ -107,11 +111,11 @@ void CommSession::proxySnmpRequest(NXCPMessage *request)
                {
                   if (send(hSocket, (char *)pduIn, (int)sizeIn, 0) == (int)sizeIn)
                   {
-                     s_snmpRequests++;
+                     InterlockedIncrement64(&s_snmpRequests);
                      UINT32 dwSizeOut;
                      if (ReadPDU(hSocket, pduOut, &dwSizeOut, timeout))
                      {
-                        s_snmpResponses++;
+                        InterlockedIncrement64(&s_snmpResponses);
                         response.setField(VID_PDU_SIZE, dwSizeOut);
                         response.setField(VID_PDU, pduOut, dwSizeOut);
                         break;

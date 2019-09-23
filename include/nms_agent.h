@@ -205,6 +205,7 @@ struct PolicyChangeNotification
 #define DCIDESC_AGENT_SNMP_REQUESTS                  _T("Number of SNMP requests sent")
 #define DCIDESC_AGENT_SNMP_RESPONSES                 _T("Number of SNMP responses received")
 #define DCIDESC_AGENT_SNMP_SERVERREQUESTS            _T("Number of SNMP proxy requests received from server")
+#define DCIDESC_AGENT_SNMP_TRAPS                     _T("Number of SNMP traps received")
 #define DCIDESC_AGENT_SOURCEPACKAGESUPPORT           _T("Check if source packages are supported")
 #define DCIDESC_AGENT_SUPPORTEDCIPHERS               _T("List of ciphers supported by agent")
 #define DCIDESC_AGENT_SYSLOGPROXY_ISENABLED          _T("Check if syslog proxy is enabled")
