@@ -37,6 +37,7 @@
 - Range access for strings and arrays in NXSL via [:] operator
 - Access to VLAN information from NXSL
 - Object tool type "Agent Table" now used to read agent tables and "Agent List" to read agent lists
+- New agent parameter Agent.SNMP.Traps
 - Fixed issues:
 	NX-183 (Implemented responsible users for objects)
 	NX-415 (Oracle db driver drops connection on "password will expire" warning)

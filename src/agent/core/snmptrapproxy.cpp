@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2014-2017 Raden Solutions
+** Copyright (C) 2014-2019 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,21 +22,39 @@
 
 #include "nxagentd.h"
 
-class UdpMessage
-{
-public:
-   UINT32 ipAddr;
-   UINT16 port;
-   BYTE *rawMessage;
-   int lenght;
+/**
+ * Counter for received SNMP traps
+ */
+UINT64 g_snmpTraps = 0;
 
-   ~UdpMessage() { free(rawMessage); }
+/**
+ * Raw SNMP packet received from network
+ */
+struct SNMPPacket
+{
+   InetAddress addr;  // Source address
+   UINT16 port;       // Receiver port
+   BYTE *data;        // Raw packet data
+   size_t lenght;     // Data length
+
+   SNMPPacket(const InetAddress& _addr, UINT16 _port, BYTE *_data, size_t _length)
+   {
+      addr = _addr;
+      port = _port;
+      data = _data;
+      lenght = _length;
+   }
+
+   ~SNMPPacket()
+   {
+      MemFree(data);
+   }
 };
 
 /**
  * Sender queue
  */
-static Queue s_snmpTrapQueue;
+static ObjectQueue<SNMPPacket> s_snmpTrapQueue(true);
 
 /**
  * Shutdown trap sender
@@ -110,17 +128,14 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
    // Wait for packets
    while(!(g_dwFlags & AF_SHUTDOWN))
    {
-      BYTE *rawMessage = NULL;
+      BYTE *packet = NULL;
       socklen_t nAddrLen = sizeof(struct sockaddr_in);
-      int iBytes = pTransport->readRawMessage(&rawMessage, 2000, (struct sockaddr *)&sa, &nAddrLen);
-      if ((iBytes > 0) && (rawMessage != NULL))
+      int bytes = pTransport->readRawMessage(&packet, 2000, (struct sockaddr *)&sa, &nAddrLen);
+      if ((bytes > 0) && (packet != NULL))
       {
-         UdpMessage *message = new UdpMessage();
-         message->ipAddr = ntohl(sa.sin_addr.s_addr);
-         message->port = g_snmpTrapPort;
-         message->lenght = iBytes;
-         message->rawMessage = rawMessage;
-         DebugPrintf(6, _T("SNMPTrapReceiver: packet received from %s"), IpToStr(message->ipAddr, ipAddrStr));
+         SNMPPacket *message = new SNMPPacket(InetAddress::createFromSockaddr(reinterpret_cast<struct sockaddr*>(&sa)), g_snmpTrapPort, packet, bytes);
+         nxlog_debug(6, _T("SNMPTrapReceiver: packet received from %s"), message->addr.toString(ipAddrStr));
+         g_snmpTraps++;
          s_snmpTrapQueue.put(message);
       }
       else
@@ -144,7 +159,7 @@ THREAD_RESULT THREAD_CALL SNMPTrapSender(void *pArg)
    while(1)
    {
       DebugPrintf(8, _T("SNMPTrapSender: waiting for message"));
-      UdpMessage *pdu = (UdpMessage *)s_snmpTrapQueue.getOrBlock();
+      SNMPPacket *pdu = s_snmpTrapQueue.getOrBlock();
       if (pdu == INVALID_POINTER_VALUE)
          break;
 
@@ -152,10 +167,10 @@ THREAD_RESULT THREAD_CALL SNMPTrapSender(void *pArg)
       bool sent = false;
 
       NXCPMessage *msg = new NXCPMessage(CMD_SNMP_TRAP, GenerateMessageId(), 4); // Use version 4
-      msg->setField(VID_IP_ADDRESS, pdu->ipAddr);
+      msg->setField(VID_IP_ADDRESS, pdu->addr);
       msg->setField(VID_PORT, pdu->port);
-      msg->setField(VID_PDU_SIZE, pdu->lenght);
-      msg->setField(VID_PDU, pdu->rawMessage, pdu->lenght);
+      msg->setField(VID_PDU_SIZE, static_cast<UINT32>(pdu->lenght));
+      msg->setField(VID_PDU, pdu->data, pdu->lenght);
       msg->setField(VID_ZONE_UIN, g_zoneUIN);
 
       if (g_dwFlags & AF_SUBAGENT_LOADER)
@@ -182,17 +197,17 @@ THREAD_RESULT THREAD_CALL SNMPTrapSender(void *pArg)
       delete msg;
       if (!sent)
       {
-         DebugPrintf(6, _T("Cannot forward trap to server"));
+         DebugPrintf(6, _T("Cannot forward SNMP trap to server"));
          s_snmpTrapQueue.insert(pdu);
 			ThreadSleep(1);
       }
       else
       {
-         DebugPrintf(6, _T("Trap successfully forwarded to server"));
+         DebugPrintf(6, _T("SNMP trap successfully forwarded to server"));
          delete pdu;
       }
    }
-	DebugPrintf(1, _T("SNMP Trap sender thread terminated"));
+	DebugPrintf(1, _T("SNMP trap sender thread terminated"));
    return THREAD_OK;
 }
 
@@ -251,7 +266,7 @@ int SNMP_TrapProxyTransport::readRawMessage(BYTE **rawData, UINT32 dwTimeout, st
       m_dwBytesInBuffer += bytes;
    }
 
-   *rawData = (BYTE*)malloc(pduLength);
+   *rawData = (BYTE*)MemAlloc(pduLength);
    memcpy(*rawData, &m_pBuffer[m_dwBufferPos], pduLength);
 
    m_dwBytesInBuffer -= pduLength;
