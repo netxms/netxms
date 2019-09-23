@@ -1087,9 +1087,11 @@ static int F_SNMPGetValue(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
  */
 static int F_SNMPSet(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
-   if (argc < 2 || argc > 3)
+   if (argc < 3 || argc > 4)
       return NXSL_ERR_INVALID_ARGUMENT_COUNT;
-   if (!argv[0]->isObject() || !argv[1]->isString() || !argv[2]->isString() || ((argc == 4) && !argv[3]->isString()))
+   if (!argv[0]->isObject())
+      return NXSL_ERR_NOT_OBJECT;
+   if (!argv[1]->isString() || !argv[2]->isString() || ((argc == 4) && !argv[3]->isString()))
       return NXSL_ERR_NOT_STRING;
 
    NXSL_Object *object = argv[0]->getValueAsObject();
