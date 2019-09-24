@@ -51,6 +51,12 @@ public class NotificationChannelListComparator extends ViewerComparator
 			case NotificationChannelView.COLUMN_DESCRIPTION:
 				result = nc1.getDescription().compareToIgnoreCase(nc2.getDescription());
 				break;
+         case NotificationChannelView.COLUMN_LAST_STATUS:
+            result = nc1.getLastStatusAsString().compareToIgnoreCase(nc2.getLastStatusAsString());
+            break;
+         case NotificationChannelView.COLUMN_ERROR_MESSAGE:
+            result = nc1.getErrorMessage().compareToIgnoreCase(nc2.getErrorMessage());
+            break;
 			default:
 				result = 0;
 				break;

@@ -70,6 +70,8 @@ public class NotificationChannelView extends ViewPart
 	public static final int COLUMN_NAME = 0;
 	public static final int COLUMN_DESCRIPTION = 1;
 	public static final int COLUMN_DRIVER_NAME = 2;
+	public static final int COLUMN_LAST_STATUS = 3;
+	public static final int COLUMN_ERROR_MESSAGE = 4;
 	
 	private NXCSession session;
 	private SessionListener listener;
@@ -87,8 +89,8 @@ public class NotificationChannelView extends ViewPart
 	@Override
 	public void createPartControl(Composite parent)
 	{
-		final int[] widths = { 80, 200, 80 };
-		final String[] names = { "Name", "Description", "DriverName" };
+		final int[] widths = { 80, 200, 80, 80, 400 };
+		final String[] names = { "Name", "Description", "Driver name", "Status", "Error message" };
 		viewer = new SortableTableViewer(parent, names, widths, COLUMN_NAME, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setLabelProvider(new NotificationChannelLabelProvider());

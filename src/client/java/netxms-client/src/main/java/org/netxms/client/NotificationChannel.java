@@ -33,6 +33,8 @@ public class NotificationChannel
 	private String configuration;
 	private boolean isActive;
 	private NCConfigurationTemplate configurationTemplate;
+	private String errorMessage;
+	private int lastStatus;
 	
 	/**
 	 * Create server action object from NXCP message
@@ -47,6 +49,8 @@ public class NotificationChannel
 		configuration = msg.getFieldAsString(base+3);
 		isActive = msg.getFieldAsBoolean(base+4);
 		configurationTemplate = new NCConfigurationTemplate(msg, base+5);
+		errorMessage = msg.getFieldAsString(base+7);
+		lastStatus = msg.getFieldAsInt32(base+8);
 	}
 	
 	public NotificationChannel()
@@ -149,5 +153,29 @@ public class NotificationChannel
    public boolean isActive()
    {
       return isActive;
+   }
+
+   /**
+    * @return the errorMessage
+    */
+   public String getErrorMessage()
+   {
+      return errorMessage;
+   }
+
+   /**
+    * @return the lastStatus
+    */
+   public int getLastStatus()
+   {
+      return lastStatus;
+   }
+
+   /**
+    * @return the lastStatus
+    */
+   public String getLastStatusAsString()
+   {
+      return lastStatus == 0 ? "Unknown" : lastStatus == 1 ? "Success" : "Error";
    }
 }

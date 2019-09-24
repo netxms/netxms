@@ -45,6 +45,7 @@ public:
    const TCHAR *getBody() const { return m_body; }
 };
 
+
 /**
  * Configured notification channel
  */
@@ -60,11 +61,13 @@ private:
    TCHAR m_driverName[MAX_OBJECT_NAME];
    char *m_configuration;
    const NCConfigurationTemplate *m_confTemplate;
+   TCHAR *m_errorMessage;
+   enum NCLastKnownStatus { NC_UNKNOWN = 0, NC_SUCCESS = 1, NC_FAILED = 2 } m_lastStatus;
 
    static THREAD_RESULT THREAD_CALL sendNotificationThread(void *arg);
 
 public:
-   NotificationChannel(NCDriver *driver, const TCHAR *name, const TCHAR *description, const TCHAR *driverName, char *config, const NCConfigurationTemplate *confTemplate);
+   NotificationChannel(NCDriver *driver, const TCHAR *name, const TCHAR *description, const TCHAR *driverName, char *config, const NCConfigurationTemplate *confTemplate, const TCHAR *errorMessage);
    ~NotificationChannel();
 
    void send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body);
@@ -114,7 +117,7 @@ NotificationMessage::~NotificationMessage()
 /**
  * Notification channel constructor
  */
-NotificationChannel::NotificationChannel(NCDriver *driver, const TCHAR *name, const TCHAR *description, const TCHAR *driverName, char *config, const NCConfigurationTemplate *confTemplate) : m_notificationQueue(true)
+NotificationChannel::NotificationChannel(NCDriver *driver, const TCHAR *name, const TCHAR *description, const TCHAR *driverName, char *config, const NCConfigurationTemplate *confTemplate, const TCHAR *errorMessage) : m_notificationQueue(true)
 {
    m_driver = driver;
    m_confTemplate = confTemplate;
@@ -124,6 +127,8 @@ NotificationChannel::NotificationChannel(NCDriver *driver, const TCHAR *name, co
    m_configuration = config;
    m_senderThread = ThreadCreateEx(NotificationChannel::sendNotificationThread, 0, this);
    m_driverLock = MutexCreate();
+   m_errorMessage = MemCopyString(errorMessage);
+   m_lastStatus = NC_UNKNOWN;
 }
 
 /**
@@ -136,6 +141,7 @@ NotificationChannel::~NotificationChannel()
    MutexDestroy(m_driverLock);
    delete m_driver;
    MemFree(m_configuration);
+   MemFree(m_errorMessage);
 }
 
 
@@ -154,11 +160,20 @@ THREAD_RESULT THREAD_CALL NotificationChannel::sendNotificationThread(void *arg)
       MutexLock(nc->m_driverLock);
       if(nc->m_driver != NULL)
       {
-         nc->m_driver->send(notification->getRecipient(), notification->getSubject(), notification->getBody());
+         if (nc->m_driver->send(notification->getRecipient(), notification->getSubject(), notification->getBody()))
+         {
+            nc->m_lastStatus = NC_SUCCESS;
+         }
+         else
+         {
+            nc->m_errorMessage = MemCopyString(_T("Error on sending message"));
+            nc->m_lastStatus = NC_FAILED;
+         }
       }
       else
       {
          nxlog_debug_tag(DEBUG_TAG, 2, _T("No driver for channel %s, message dropped."), nc->m_name);
+         nc->m_lastStatus = NC_FAILED;
       }
       MutexUnlock(nc->m_driverLock);
       delete notification;
@@ -194,6 +209,8 @@ void NotificationChannel::fillMessage(NXCPMessage *msg, UINT32 base)
       msg->setField(base+5, false);
       msg->setField(base+6, true);
    }
+   msg->setField(base+7, m_errorMessage);
+   msg->setField(base+8, m_lastStatus);
 }
 
 /**
@@ -317,6 +334,7 @@ static NotificationChannel *CreateNotificationChannel(const TCHAR *name, const T
    NCDriverDescriptor *dd = s_driverList.get(driverName);
    NCDriver *driver = NULL;
    const NCConfigurationTemplate *confTemplate = NULL;
+   String errorMessage;
    if(dd != NULL)
    {
 
@@ -326,6 +344,7 @@ static NotificationChannel *CreateNotificationChannel(const TCHAR *name, const T
          driver = dd->instanceFactory(&config);
          if(driver == NULL)
          {
+            errorMessage.appendFormattedString(_T("Unable to create instance of %s driver"), driverName);
             nxlog_debug_tag(DEBUG_TAG, 1, _T("Unable to create instance of %s driver with configuration: %hs"), driverName, configuration);
          }
          else
@@ -333,15 +352,17 @@ static NotificationChannel *CreateNotificationChannel(const TCHAR *name, const T
       }
       else
       {
-         nxlog_debug_tag(DEBUG_TAG, 1, _T("Can not parse %s driver configuration: %hs"), name, configuration);
+         errorMessage.appendFormattedString(_T("Can not parse %s channel configuration"), name);
+         nxlog_debug_tag(DEBUG_TAG, 1, _T("Can not parse %s channel configuration: %hs"), name, configuration);
       }
    }
    else
    {
+      errorMessage.appendFormattedString(_T("Can not find driver with name: %s"), driverName);
       nxlog_debug_tag(DEBUG_TAG, 1, _T("Can not find driver with name: %s"), driverName);
    }
 
-   return new NotificationChannel(driver, name, description, driverName, configuration, confTemplate);
+   return new NotificationChannel(driver, name, description, driverName, configuration, confTemplate, errorMessage);
 }
 
 /**
