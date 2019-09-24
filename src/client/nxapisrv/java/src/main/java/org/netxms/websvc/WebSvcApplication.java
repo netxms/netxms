@@ -83,6 +83,7 @@ public class WebSvcApplication extends Application
       router.attach("/info", InfoHandler.class);
       router.attach("/notifications", NotificationHandler.class);
       router.attach("/objects", Objects.class);
+      router.attach("/objects/{object-id}", Objects.class);
       router.attach("/objects/{object-id}/lastvalues", LastValues.class);
       router.attach("/objects/{object-id}/datacollection/{id}/values", HistoricalData.class);
       router.attach("/objects/{object-id}/objecttools", ObjectTools.class);
