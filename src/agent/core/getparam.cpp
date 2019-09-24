@@ -414,7 +414,7 @@ static NETXMS_SUBAGENT_PARAM m_stdParams[] =
    { _T("Agent.SNMP.Requests"), H_SNMPProxyStats, _T("R"), DCI_DT_COUNTER64, DCIDESC_AGENT_SNMP_REQUESTS },
    { _T("Agent.SNMP.Responses"), H_SNMPProxyStats, _T("r"), DCI_DT_COUNTER64, DCIDESC_AGENT_SNMP_RESPONSES },
    { _T("Agent.SNMP.ServerRequests"), H_SNMPProxyStats, _T("S"), DCI_DT_COUNTER64, DCIDESC_AGENT_SNMP_SERVERREQUESTS },
-   { _T("Agent.SNMP.TRaps"), H_SNMPProxyStats, _T("T"), DCI_DT_COUNTER64, DCIDESC_AGENT_SNMP_TRAPS },
+   { _T("Agent.SNMP.Traps"), H_SNMPProxyStats, _T("T"), DCI_DT_COUNTER64, DCIDESC_AGENT_SNMP_TRAPS },
    { _T("Agent.SourcePackageSupport"), H_StringConstant, _T("0"), DCI_DT_INT, DCIDESC_AGENT_SOURCEPACKAGESUPPORT },
    { _T("Agent.SupportedCiphers"), H_SupportedCiphers, NULL, DCI_DT_STRING, DCIDESC_AGENT_SUPPORTEDCIPHERS },
    { _T("Agent.SyslogProxy.IsEnabled"), H_FlagValue, CAST_TO_POINTER(AF_ENABLE_SYSLOG_PROXY, TCHAR *), DCI_DT_UINT, DCIDESC_AGENT_SYSLOGPROXY_ISENABLED },
