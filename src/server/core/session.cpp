@@ -10513,7 +10513,7 @@ void ClientSession::sendNotification(NXCPMessage *pRequest)
 
 	if ((m_dwSystemAccess & SYSTEM_ACCESS_SEND_NOTIFICATION) && ConfigReadBoolean(_T("AllowDirectNotifications"), false))
 	{
-	   pRequest->getFieldAsString(VID_CHANNEL_NAME, channelName);
+	   pRequest->getFieldAsString(VID_CHANNEL_NAME, channelName, MAX_OBJECT_NAME);
 	   if(CheckNotificationChannelExist(channelName))
 	   {
 	      phone = pRequest->getFieldAsString(VID_RCPT_ADDR);
