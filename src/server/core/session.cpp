@@ -10514,7 +10514,7 @@ void ClientSession::sendNotification(NXCPMessage *pRequest)
 	if ((m_dwSystemAccess & SYSTEM_ACCESS_SEND_NOTIFICATION) && ConfigReadBoolean(_T("AllowDirectNotifications"), false))
 	{
 	   pRequest->getFieldAsString(VID_CHANNEL_NAME, channelName, MAX_OBJECT_NAME);
-	   if(CheckNotificationChannelExist(channelName))
+	   if (IsNotificationChannelExists(channelName))
 	   {
 	      phone = pRequest->getFieldAsString(VID_RCPT_ADDR);
 	      subject = pRequest->getFieldAsString(VID_EMAIL_SUBJECT);
@@ -14961,7 +14961,7 @@ void ClientSession::getNotificationChannels(UINT32 requestId)
    }
    else
    {
-      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on notification channel list"));
+      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on reading notification channel list"));
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
    sendMessage(&msg);
@@ -14975,11 +14975,11 @@ void ClientSession::addNotificationChannel(NXCPMessage *request)
    NXCPMessage msg;
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(request->getId());
-   if(m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG)
+   if (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG)
    {
       TCHAR name[MAX_OBJECT_NAME];
       request->getFieldAsString(VID_NAME, name, MAX_OBJECT_NAME);
-      if(!CheckNotificationChannelExist(name))
+      if (!IsNotificationChannelExists(name))
       {
          TCHAR driverName[MAX_OBJECT_NAME];
          TCHAR description[MAX_NC_DESCRIPTION];
@@ -14989,13 +14989,16 @@ void ClientSession::addNotificationChannel(NXCPMessage *request)
          CreateNotificationChannelAndSave(name, description, driverName, configuration);
          msg.setField(VID_RCC, RCC_SUCCESS);
          NotifyClientSessions(NX_NOTIFICATION_CHANNEL_CHANGED, 0);
+         writeAuditLog(AUDIT_SYSCFG, true, 0, _T("Created new notification channel %s"), name);
       }
       else
+      {
          msg.setField(VID_RCC, RCC_CHANNEL_ALREADY_EXIST);
+      }
    }
    else
    {
-      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on new notification channel add"));
+      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on new notification channel creation"));
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
    sendMessage(&msg);
@@ -15009,11 +15012,11 @@ void ClientSession::updateNotificationChannel(NXCPMessage *request)
    NXCPMessage msg;
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(request->getId());
-   if(m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG)
+   if (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG)
    {
       TCHAR name[MAX_OBJECT_NAME];
       request->getFieldAsString(VID_NAME, name, MAX_OBJECT_NAME);
-      if(CheckNotificationChannelExist(name))
+      if (IsNotificationChannelExists(name))
       {
          TCHAR driverName[MAX_OBJECT_NAME];
          TCHAR description[MAX_NC_DESCRIPTION];
@@ -15024,13 +15027,16 @@ void ClientSession::updateNotificationChannel(NXCPMessage *request)
          msg.setField(VID_RCC, RCC_SUCCESS);
          NotifyClientSessions(NX_NOTIFICATION_CHANNEL_CHANGED, 0);
          MemFree(configuration);
+         writeAuditLog(AUDIT_SYSCFG, true, 0, _T("Updated configuration of notification channel %s"), name);
       }
       else
+      {
          msg.setField(VID_RCC, RCC_NO_CHANNEL_NAME);
+      }
    }
    else
    {
-      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on new notification channel add"));
+      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on notification channel update"));
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
    sendMessage(&msg);
@@ -15045,26 +15051,31 @@ void ClientSession::removeNotificationChannel(NXCPMessage *request)
    NXCPMessage msg;
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(request->getId());
-   if(m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG)
+   if (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG)
    {
       TCHAR name[MAX_OBJECT_NAME];
       request->getFieldAsString(VID_NAME, name, MAX_OBJECT_NAME);
-      if(!CheckChannelIsUsedInAction(name))
+      if (!CheckChannelIsUsedInAction(name))
       {
-         if(DeleteNotificationChannel(name))
+         if (DeleteNotificationChannel(name))
          {
             NotifyClientSessions(NX_NOTIFICATION_CHANNEL_CHANGED, 0);
             msg.setField(VID_RCC, RCC_SUCCESS);
+            writeAuditLog(AUDIT_SYSCFG, true, 0, _T("Notification channel %s deleted"), name);
          }
          else
+         {
             msg.setField(VID_RCC, RCC_NO_CHANNEL_NAME);
+         }
       }
       else
+      {
          msg.setField(VID_RCC, RCC_CHANNEL_IN_USE);
+      }
    }
    else
    {
-      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on new notification channel add"));
+      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on notification channel deletion"));
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
    sendMessage(&msg);
@@ -15078,24 +15089,25 @@ void ClientSession::renameNotificationChannel(NXCPMessage *request)
    NXCPMessage msg;
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(request->getId());
-   if(m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG)
+   if (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG)
    {
       TCHAR *name = request->getFieldAsString(VID_NAME);
-      if(CheckNotificationChannelExist(name))
+      if (IsNotificationChannelExists(name))
       {
          TCHAR *newName = request->getFieldAsString(VID_NEW_NAME);
+         writeAuditLog(AUDIT_SYSCFG, true, 0, _T("Notification channel %s renamed to %s"), name, newName);
          RenameNotificationChannel(name, newName); //will release names
          msg.setField(VID_RCC, RCC_SUCCESS);
       }
       else
       {
-         msg.setField(VID_RCC, RCC_NO_CHANNEL_NAME);
          MemFree(name);
+         msg.setField(VID_RCC, RCC_NO_CHANNEL_NAME);
       }
    }
    else
    {
-      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on new notification channel add"));
+      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on notification channel rename"));
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
    sendMessage(&msg);
@@ -15109,14 +15121,14 @@ void ClientSession::getNotificationDriverNames(UINT32 requestId)
    NXCPMessage msg;
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(requestId);
-   if(m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG)
+   if (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG)
    {
       GetNotificationDrivers(&msg);
       msg.setField(VID_RCC, RCC_SUCCESS);
    }
    else
    {
-      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on notification driver list"));
+      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on reading notification driver list"));
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
    sendMessage(&msg);

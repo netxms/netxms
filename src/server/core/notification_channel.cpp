@@ -285,9 +285,8 @@ void NotificationChannel::saveToDatabase()
 /**
  * Delete method called in separate thread
  */
-static void DeleteNotificationChannelInternal(void *arg)
+static void DeleteNotificationChannelInternal(TCHAR *name)
 {
-   TCHAR *name = static_cast<TCHAR *>(arg);
    MutexLock(s_channelListLock);
    NotificationChannel *nc = s_channelList.unlink(name);
    MutexUnlock(s_channelListLock);
@@ -306,19 +305,25 @@ static void DeleteNotificationChannelInternal(void *arg)
    MemFree(name);
 }
 
-bool DeleteNotificationChannel(TCHAR *name)
+/**
+ * Delete notification channel
+ */
+bool DeleteNotificationChannel(const TCHAR *name)
 {
    MutexLock(s_channelListLock);
    bool contains = s_channelList.contains(name);
    MutexUnlock(s_channelListLock);
-   if(contains)
+   if (contains)
    {
       ThreadPoolExecuteSerialized(g_clientThreadPool, NC_THREAD_KEY, DeleteNotificationChannelInternal, MemCopyString(name));
    }
    return contains;
 }
 
-bool CheckNotificationChannelExist(const TCHAR *name)
+/**
+ * Check if notification channel with given name exists
+ */
+bool IsNotificationChannelExists(const TCHAR *name)
 {
    MutexLock(s_channelListLock);
    bool exist = s_channelList.contains(name);
@@ -335,38 +340,39 @@ static NotificationChannel *CreateNotificationChannel(const TCHAR *name, const T
    NCDriver *driver = NULL;
    const NCConfigurationTemplate *confTemplate = NULL;
    String errorMessage;
-   if(dd != NULL)
+   if (dd != NULL)
    {
-
       Config config;
       if (config.loadConfigFromMemory(configuration, (int)strlen(configuration), driverName, NULL, true, false))
       {
          driver = dd->instanceFactory(&config);
-         if(driver == NULL)
+         if (driver != NULL)
+         {
+            confTemplate = dd->confTemplate;
+         }
+         else
          {
             errorMessage.appendFormattedString(_T("Unable to create instance of %s driver"), driverName);
             nxlog_debug_tag(DEBUG_TAG, 1, _T("Unable to create instance of %s driver with configuration: %hs"), driverName, configuration);
          }
-         else
-            confTemplate = dd->confTemplate;
       }
       else
       {
-         errorMessage.appendFormattedString(_T("Can not parse %s channel configuration"), name);
-         nxlog_debug_tag(DEBUG_TAG, 1, _T("Can not parse %s channel configuration: %hs"), name, configuration);
+         errorMessage.appendFormattedString(_T("Cannot parse %s channel configuration"), name);
+         nxlog_debug_tag(DEBUG_TAG, 1, _T("Cannot parse %s channel configuration: %hs"), name, configuration);
       }
    }
    else
    {
-      errorMessage.appendFormattedString(_T("Can not find driver with name: %s"), driverName);
-      nxlog_debug_tag(DEBUG_TAG, 1, _T("Can not find driver with name: %s"), driverName);
+      errorMessage.appendFormattedString(_T("Cannot find driver with name: %s"), driverName);
+      nxlog_debug_tag(DEBUG_TAG, 1, _T("Cannot find driver with name: %s"), driverName);
    }
 
    return new NotificationChannel(driver, name, description, driverName, configuration, confTemplate, errorMessage);
 }
 
 /**
- * Create notificaiotn channel and save
+ * Create notification channel and save
  */
 void CreateNotificationChannelAndSave(const TCHAR *name, const TCHAR *description, const TCHAR *driverName, char *configuration)
 {
@@ -376,6 +382,7 @@ void CreateNotificationChannelAndSave(const TCHAR *name, const TCHAR *descriptio
    nc->saveToDatabase();
    MutexUnlock(s_channelListLock);
 }
+
 /**
  * Update new notification channel
  */
@@ -446,13 +453,18 @@ void RenameNotificationChannel(TCHAR *name, TCHAR *newName)
 {
    MutexLock(s_channelListLock);
    NotificationChannel *nc = s_channelList.unlink(name);
-   if(nc != NULL)
+   if (nc != NULL)
    {
       nc->updateName(newName);
       s_channelList.set(newName, nc);
       auto pair = new std::pair<TCHAR *, TCHAR *>(name, newName);
       UpdateChannelNameInActions(pair);
       ThreadPoolExecuteSerialized(g_clientThreadPool, NC_THREAD_KEY, RenameNotificaiotnChannelDB, pair);
+   }
+   else
+   {
+      MemFree(name);
+      MemFree(newName);
    }
    MutexUnlock(s_channelListLock);
 }
