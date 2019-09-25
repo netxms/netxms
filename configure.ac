@@ -837,7 +837,7 @@ AC_ARG_WITH(dist,
 	TOOLS="nxlptest"
 	SUBAGENT_DIRS="linux ds18x20 freebsd openbsd minix mqtt mysql netbsd sunos aix ipso hpux odbcquery informix oracle lmsensors darwin rpi java jmx bind9 ubntlw netsvc db2 tuxedo mongodb ssh vmgr xen lorawan asterisk python"
 	AGENT_DIRS="libnxtux"
-	NCDRV_DIRS="anysms kannel mymobile nexmo nxagent slack smseagle text2reach websms"
+	NCDRV_DIRS="anysms kannel mymobile nexmo nxagent slack smseagle telegram text2reach websms"
    HDLINK_DIRS="jira redmine"
    PDSDRV_DIRS="influxdb rrdtool"
 	NXCONFIG="nxconfig"
@@ -2374,7 +2374,7 @@ if test "x$DISABLE_CURL" = "xno" -a "x$DIST_BUILD" != "xyes"; then
 	fi
 
 	SUBAGENT_DIRS="$SUBAGENT_DIRS netsvc"
-	NCDRV_DIRS="$NCDRV_DIRS anysms kannel mymobile nexmo slack smseagle text2reach websms"
+	NCDRV_DIRS="$NCDRV_DIRS anysms kannel mymobile nexmo slack smseagle telegram text2reach websms"
 	HDLINK_DIRS="$HDLINK_DIRS jira redmine"
 	AC_DEFINE(HAVE_LIBCURL, 1, Define to 1 if libcurl is available)
 fi
@@ -4383,7 +4383,6 @@ AC_CONFIG_FILES([
 	src/libnxsl/Makefile
 	src/libstrophe/Makefile
 	src/ncdrivers/Makefile
-	src/ncdrivers/textfile/Makefile
 	src/ncdrivers/anysms/Makefile
 	src/ncdrivers/dbtable/Makefile
 	src/ncdrivers/dummy/Makefile
@@ -4395,7 +4394,9 @@ AC_CONFIG_FILES([
 	src/ncdrivers/portech/Makefile
 	src/ncdrivers/slack/Makefile
 	src/ncdrivers/smseagle/Makefile
+	src/ncdrivers/telegram/Makefile
 	src/ncdrivers/text2reach/Makefile
+	src/ncdrivers/textfile/Makefile
 	src/ncdrivers/websms/Makefile
 	src/nxcproxy/Makefile
 	src/nxscript/Makefile

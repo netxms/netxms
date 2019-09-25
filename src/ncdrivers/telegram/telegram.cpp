@@ -44,18 +44,82 @@ struct ResponseData
 };
 
 /**
+ * Chat information
+ */
+struct Chat
+{
+   INT64 id;
+   TCHAR *userName;
+   TCHAR *firstName;
+   TCHAR *lastName;
+
+   Chat(json_t *json)
+   {
+      id = json_object_get_integer(json, "id", -1);
+      firstName = json_object_get_string_t(json, "first_name", _T(""));
+      lastName = json_object_get_string_t(json, "last_name", _T(""));
+      userName = json_object_get_string_t(json, "username", _T(""));
+   }
+
+   ~Chat()
+   {
+      MemFree(userName);
+      MemFree(firstName);
+      MemFree(lastName);
+   }
+};
+
+/**
  * Telegram driver class
  */
 class TelegramDriver : public NCDriver
 {
 private:
+   THREAD m_updateHandlerThread;
    char m_authToken[64];
+   TCHAR *m_botName;
+   StringObjectMap<Chat> m_chats;
+   MUTEX m_chatsLock;
+   CONDITION m_shutdownCondition;
+   bool m_shutdownFlag;
+   INT64 m_nextUpdateId;
+
+   TelegramDriver() : m_chats(true)
+   {
+      m_updateHandlerThread = INVALID_THREAD_HANDLE;
+      memset(m_authToken, 0, sizeof(m_authToken));
+      m_botName = NULL;
+      m_chatsLock = MutexCreateFast();
+      m_shutdownCondition = ConditionCreate(true);
+      m_shutdownFlag = false;
+      m_nextUpdateId = 0;
+   }
+
+   static THREAD_RESULT THREAD_CALL updateHandler(void *arg);
 
 public:
-   TelegramDriver(Config *config);
+   virtual ~TelegramDriver();
 
    virtual bool send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body) override;
+
+   bool isShutdown() const { return m_shutdownFlag; }
+   void processUpdate(json_t *data);
+
+   static TelegramDriver *createInstance(Config *config);
 };
+
+/**
+ * Driver destructor
+ */
+TelegramDriver::~TelegramDriver()
+{
+   m_shutdownFlag = true;
+   nxlog_debug_tag(DEBUG_TAG, 4, _T("Waiting for update handler thread completion for bot %s"), m_botName);
+   ThreadJoin(m_updateHandlerThread);
+   MemFree(m_botName);
+   ConditionDestroy(m_shutdownCondition);
+   MutexDestroy(m_chatsLock);
+}
 
 /**
  * Callback for processing data received from cURL
@@ -100,15 +164,19 @@ static json_t *SendTelegramRequest(const char *token, const char *method, json_t
    curl_easy_setopt(curl, CURLOPT_TIMEOUT, 10);
    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &OnCurlDataReceived);
    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0);
+   curl_easy_setopt(curl, CURLOPT_USERAGENT, "NetXMS Telegram Driver/" NETXMS_VERSION_STRING_A);
 
    ResponseData *responseData = MemAllocStruct<ResponseData>();
    curl_easy_setopt(curl, CURLOPT_WRITEDATA, responseData);
 
+   struct curl_slist *headers = NULL;
    char *json;
    if (data != NULL)
    {
       char *json = json_dumps(data, 0);
       curl_easy_setopt(curl, CURLOPT_POSTFIELDS, json);
+      headers = curl_slist_append(headers, "Content-Type: application/json");
+      curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
    }
    else
    {
@@ -146,69 +214,245 @@ static json_t *SendTelegramRequest(const char *token, const char *method, json_t
    }
    MemFree(responseData->data);
    MemFree(responseData);
+   curl_slist_free_all(headers);
    curl_easy_cleanup(curl);
    return response;
 }
 
 /**
- * Init driver
+ * Create driver instance
  */
-TelegramDriver::TelegramDriver(Config *config)
+TelegramDriver *TelegramDriver::createInstance(Config *config)
 {
-   m_authToken[0] = 0;
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("Creating new driver instance"));
 
-   nxlog_debug_tag(DEBUG_TAG, 1, _T("Driver loaded"));
-   nxlog_debug_tag(DEBUG_TAG, 3, _T("cURL version: %hs"), curl_version());
-#if defined(_WIN32) || HAVE_DECL_CURL_VERSION_INFO
-   curl_version_info_data *version = curl_version_info(CURLVERSION_NOW);
-   char protocols[1024] = {0};
-   const char * const *p = version->protocols;
-   while (*p != NULL)
-   {
-      strncat(protocols, *p, strlen(protocols) - 1);
-      strncat(protocols, " ", strlen(protocols) - 1);
-      p++;
-   }
-   nxlog_debug_tag(DEBUG_TAG, 3, _T("cURL supported protocols: %hs"), protocols);
-#endif
-
+   char authToken[64];
    NX_CFG_TEMPLATE configTemplate[] = 
 	{
-		{ _T("AuthToken"), CT_MB_STRING, 0, 0, sizeof(m_authToken), 0, m_authToken },
+		{ _T("AuthToken"), CT_MB_STRING, 0, 0, sizeof(authToken), 0, authToken },
 		{ _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
 	};
 
-	config->parseTemplate(_T("Telegram"), configTemplate);
+	if (!config->parseTemplate(_T("Telegram"), configTemplate))
+	{
+	   nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Error parsing driver configuration"));
+	   return NULL;
+	}
 
-	json_t *info = SendTelegramRequest(m_authToken, "getMe", NULL);
+   TelegramDriver *driver = NULL;
+	json_t *info = SendTelegramRequest(authToken, "getMe", NULL);
 	if (info != NULL)
 	{
 	   json_t *ok = json_object_get(info, "ok");
 	   if (json_is_true(ok))
 	   {
-	      nxlog_debug_tag(DEBUG_TAG, 1, _T("Received valid API response"));
+	      nxlog_debug_tag(DEBUG_TAG, 2, _T("Received valid API response"));
 	      json_t *result = json_object_get(info, "result");
 	      if (json_is_object(result))
 	      {
 	         json_t *name = json_object_get(result, "first_name");
 	         if (json_is_string(name))
 	         {
-	            nxlog_debug_tag(DEBUG_TAG, 1, _T("Bot name: %hs"), json_string_value(name));
+	            driver = new TelegramDriver();
+	            strcpy(driver->m_authToken, authToken);
+#ifdef UNICODE
+	            driver->m_botName = WideStringFromUTF8String(json_string_value(name));
+#else
+               driver->m_botName = MBStringFromUTF8String(json_string_value(name));
+#endif
+               nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Telegram driver instantiated for bot %s"), driver->m_botName);
+
+               driver->m_updateHandlerThread = ThreadCreateEx(TelegramDriver::updateHandler, 0, driver);
 	         }
+	         else
+	         {
+	            nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Malformed response from Telegram API"));
+	         }
+	      }
+	      else
+	      {
+	         nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Malformed response from Telegram API"));
 	      }
 	   }
 	   else
 	   {
 	      json_t *d = json_object_get(info, "description");
-	      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Telegram API call failed (%hs), driver configuration could be incorrect"),
+	      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Telegram API call failed (%hs), driver configuration could be incorrect"),
 	               json_is_string(d) ? json_string_value(d) : "Unknown reason");
 	   }
 	   json_decref(info);
 	}
 	else
 	{
-	   nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Telegram API call failed, driver configuration could be incorrect"));
+	   nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Telegram API call failed, driver configuration could be incorrect"));
 	}
+	return driver;
+}
+
+/**
+ * cURL progress callback
+ */
+static int ProgressCallback(void *context, curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow)
+{
+   return static_cast<TelegramDriver*>(context)->isShutdown();
+}
+
+#if LIBCURL_VERSION_NUM < 0x072000
+
+/**
+ * cURL progress callback - wrapper for cURL older than 7.32
+ */
+static int ProgressCallbackPreV_7_32(void *context, double dltotal, double dlnow, double ultotal, double ulnow)
+{
+   return ProgressCallback(context, (curl_off_t)dltotal, (curl_off_t)dlnow, (curl_off_t)ultotal, (curl_off_t)ulnow);
+}
+
+#endif
+
+/**
+ * Handler for incoming updates
+ */
+THREAD_RESULT THREAD_CALL TelegramDriver::updateHandler(void *arg)
+{
+   TelegramDriver *driver = static_cast<TelegramDriver*>(arg);
+
+   // Main loop
+   while(!driver->m_shutdownFlag)
+   {
+      CURL *curl = curl_easy_init();
+      if (curl == NULL)
+      {
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("UpdateHandler(%s): Call to curl_easy_init() failed"), driver->m_botName);
+         if (ConditionWait(driver->m_shutdownCondition, 60000))
+            break;
+         continue;
+      }
+
+#if HAVE_DECL_CURLOPT_NOSIGNAL
+      curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1L);
+#endif
+
+      curl_easy_setopt(curl, CURLOPT_HEADER, 0L); // do not include header in data
+      curl_easy_setopt(curl, CURLOPT_TIMEOUT, 300L);
+      curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &OnCurlDataReceived);
+      curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
+      curl_easy_setopt(curl, CURLOPT_USERAGENT, "NetXMS Telegram Driver/" NETXMS_VERSION_STRING_A);
+
+      ResponseData *responseData = MemAllocStruct<ResponseData>();
+      curl_easy_setopt(curl, CURLOPT_WRITEDATA, responseData);
+
+      curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0L);
+#if LIBCURL_VERSION_NUM < 0x072000
+      curl_easy_setopt(curl, CURLOPT_PROGRESSFUNCTION, ProgressCallbackPreV_7_32);
+      curl_easy_setopt(curl, CURLOPT_PROGRESSDATA, driver);
+#else
+      curl_easy_setopt(curl, CURLOPT_XFERINFOFUNCTION, ProgressCallback);
+      curl_easy_setopt(curl, CURLOPT_XFERINFODATA, driver);
+#endif
+
+      // Inner loop while connection is active
+      while(!driver->m_shutdownFlag)
+      {
+         char url[256];
+         snprintf(url, 256, "https://api.telegram.org/bot%s/getUpdates?timeout=270&offset=" INT64_FMTA, driver->m_authToken, driver->m_nextUpdateId);
+         if (curl_easy_setopt(curl, CURLOPT_URL, url) == CURLE_OK)
+         {
+            if (curl_easy_perform(curl) == CURLE_OK)
+            {
+               nxlog_debug_tag(DEBUG_TAG, 6, _T("UpdateHandler(%s): got %d bytes"), driver->m_botName, responseData->size);
+               if (responseData->allocated > 0)
+               {
+                  responseData->data[responseData->size] = 0;
+                  json_error_t error;
+                  json_t *data = json_loads(responseData->data, 0, &error);
+                  if (data != NULL)
+                  {
+                     nxlog_debug_tag(DEBUG_TAG, 6, _T("UpdateHandler(%s): valid JSON document received"), driver->m_botName);
+                     driver->processUpdate(data);
+                     json_decref(data);
+                  }
+                  else
+                  {
+                     nxlog_debug_tag(DEBUG_TAG, 4, _T("UpdateHandler(%s): Cannot parse API response (%hs)"), driver->m_botName, error.text);
+                  }
+               }
+            }
+            else
+            {
+               nxlog_debug_tag(DEBUG_TAG, 4, _T("UpdateHandler(%s): Call to curl_easy_perform() failed"), driver->m_botName);
+               break;
+            }
+         }
+         else
+         {
+            nxlog_debug_tag(DEBUG_TAG, 4, _T("UpdateHandler(%s): Call to curl_easy_setopt(CURLOPT_URL) failed"), driver->m_botName);
+            break;
+         }
+         responseData->size = 0;
+      }
+
+      curl_easy_cleanup(curl);
+      MemFree(responseData->data);
+      MemFree(responseData);
+   }
+
+   nxlog_debug_tag(DEBUG_TAG, 1, _T("Update handler thread for Telegram bot %s stopped"), driver->m_botName);
+   return THREAD_OK;
+}
+
+/**
+ * Process update message from Telegram server
+ */
+void TelegramDriver::processUpdate(json_t *data)
+{
+   json_t *ok = json_object_get(data, "ok");
+   if (!json_is_true(ok))
+      return;
+
+   json_t *result = json_object_get(data, "result");
+   if (!json_is_array(result))
+      return;
+
+   size_t count = json_array_size(result);
+   for(int i = 0; i < count; i++)
+   {
+      json_t *update = json_array_get(result, i);
+      if (!json_is_object(update))
+         continue;
+
+      INT64 id = json_object_get_integer(update, "update_id", -1);
+      if (id >= m_nextUpdateId)
+         m_nextUpdateId = id + 1;
+
+      json_t *message = json_object_get(update, "message");
+      if (!json_is_object(message))
+         continue;
+
+      json_t *chat = json_object_get(message, "chat");
+      if (!json_is_object(chat))
+         continue;
+
+      const char *type = json_object_get_string_utf8(chat, "type", "unknown");
+      TCHAR *username = json_object_get_string_t(chat, !strcmp(type, "group") ? "title" : "username", NULL);
+      if (username == NULL)
+         continue;
+
+      // Check and create chat object
+      MutexLock(m_chatsLock);
+      Chat *chatObject = m_chats.get(username);
+      if (chatObject == NULL)
+      {
+         chatObject = new Chat(chat);
+         m_chats.set(username, chatObject);
+      }
+      MutexUnlock(m_chatsLock);
+
+      TCHAR *text = json_object_get_string_t(message, "text", _T(""));
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("%hs message from %s: %s"), type, username, text);
+      MemFree(text);
+
+      MemFree(username);
+   }
 }
 
 /**
@@ -220,18 +464,44 @@ bool TelegramDriver::send(const TCHAR *recipient, const TCHAR *subject, const TC
 
    nxlog_debug_tag(DEBUG_TAG, 4, _T("recipient=\"%s\", text=\"%s\""), recipient, body);
 
-   json_t *request = json_object();
-   json_object_set_new(request, "chat_id", json_string_t(recipient));
-   json_object_set_new(request, "text", json_string_t(body));
+   MutexLock(m_chatsLock);
+   Chat *chatObject = m_chats.get(recipient);
+   INT64 chatId = (chatObject != NULL) ? chatObject->id : 0;
+   MutexUnlock(m_chatsLock);
 
-   json_t *response = SendTelegramRequest(m_authToken, "sendMessage", request);
-   json_decref(request);
-
-   if (json_is_object(response))
+   if (chatId != 0)
    {
+      json_t *request = json_object();
+      json_object_set_new(request, "chat_id", json_integer(chatId));
+      json_object_set_new(request, "text", json_string_t(body));
 
+      json_t *response = SendTelegramRequest(m_authToken, "sendMessage", request);
+      json_decref(request);
+
+      if (json_is_object(response))
+      {
+         if (json_is_true(json_object_get(response, "ok")))
+         {
+            nxlog_debug_tag(DEBUG_TAG, 6, _T("Message from bot %s to recipient %s successfully sent"), m_botName, recipient);
+            success = true;
+         }
+         else
+         {
+            nxlog_debug_tag(DEBUG_TAG, 4, _T("Cannot send message from bot %s to recipient %s: API error (%hs)"),
+                     m_botName, recipient, json_object_get_string_utf8(response, "description", "Unknown reason"));
+         }
+      }
+      else
+      {
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("Cannot send message from bot %s to recipient %s: invalid API response"), m_botName, recipient);
+      }
+      if (response != NULL)
+         json_decref(response);
    }
-
+   else
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Cannot find chat ID for recipient %s and bot %s"), recipient, m_botName);
+   }
    return success;
 }
 
@@ -245,7 +515,7 @@ DECLARE_NCD_ENTRY_POINT(Telegram, NULL)
       nxlog_debug_tag(DEBUG_TAG, 1, _T("cURL initialization failed"));
       return NULL;
    }
-   return new TelegramDriver(config);
+   return TelegramDriver::createInstance(config);
 }
 
 #ifdef _WIN32

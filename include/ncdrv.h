@@ -52,11 +52,12 @@ struct NCConfigurationTemplate
 class NCDriver
 {
 protected:
-   NCDriver() {}; //init should be done while construction
+   NCDriver() { } //init should be done while construction
 
 public:
-   virtual bool send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body) = 0;
    virtual ~NCDriver() { } // Shutdown should be done while destruction
+
+   virtual bool send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body) = 0;
 };
 
 /**
