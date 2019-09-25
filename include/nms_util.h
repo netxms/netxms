@@ -2357,6 +2357,48 @@ template<typename T> json_t *json_object_array(const SharedObjectArray<T> *a)
 }
 
 /**
+ * Get string value from object
+ */
+inline WCHAR *json_object_get_string_w(json_t *object, const char *tag, const WCHAR *defval)
+{
+   json_t *value = json_object_get(object, tag);
+   return json_is_string(value) ? WideStringFromUTF8String(json_string_value(value)) : MemCopyStringW(defval);
+}
+
+/**
+ * Get string value from object
+ */
+inline char *json_object_get_string_a(json_t *object, const char *tag, const char *defval)
+{
+   json_t *value = json_object_get(object, tag);
+   return json_is_string(value) ? MBStringFromUTF8String(json_string_value(value)) : MemCopyStringA(defval);
+}
+
+#ifdef UNICODE
+#define json_object_get_string_t json_object_get_string_w
+#else
+#define json_object_get_string_t json_object_get_string_a
+#endif
+
+/**
+ * Get string value from object
+ */
+inline const char *json_object_get_string_utf8(json_t *object, const char *tag, const char *defval)
+{
+   json_t *value = json_object_get(object, tag);
+   return json_is_string(value) ? json_string_value(value) : defval;
+}
+
+/**
+ * Get integer value from object
+ */
+inline INT64 json_object_get_integer(json_t *object, const char *tag, INT64 defval)
+{
+   json_t *value = json_object_get(object, tag);
+   return json_is_integer(value) ? json_integer_value(value) : defval;
+}
+
+/**
  * sockaddr buffer
  */
 union SockAddrBuffer
