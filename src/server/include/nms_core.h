@@ -1089,11 +1089,11 @@ void LoadNCConfiguration();
 void SendNotification(const TCHAR *name, TCHAR *expandedRcpt, const TCHAR *expandedSubject, const TCHAR *expandedData);
 void GetNotificationChannels(NXCPMessage *msg);
 void GetNotificationDrivers(NXCPMessage *msg);
-bool CheckNotificationChannelExist(const TCHAR *name);
+bool IsNotificationChannelExists(const TCHAR *name);
 void CreateNotificationChannelAndSave(const TCHAR *name, const TCHAR *description, const TCHAR *driverName, char *configuration);
 void UpdateNotificationChannel(const TCHAR *name, const TCHAR *description, const TCHAR *driverName, char *configuration);
 void RenameNotificationChannel(TCHAR *name, TCHAR *newName);
-bool DeleteNotificationChannel(TCHAR *name);
+bool DeleteNotificationChannel(const TCHAR *name);
 
 bool LookupDevicePortLayout(const SNMP_ObjectId& objectId, NDD_MODULE_LAYOUT *layout);
 

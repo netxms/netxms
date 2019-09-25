@@ -637,13 +637,12 @@ UINT32 ModifyActionFromMessage(NXCPMessage *pMsg)
  */
 static EnumerationCallbackResult RenameChannel(const UINT32 *id, const Action *action, std::pair<TCHAR *, TCHAR *> *names)
 {
-   if(!_tcsncmp(action->channelName, names->first, MAX_OBJECT_NAME))
+   if (!_tcsncmp(action->channelName, names->first, MAX_OBJECT_NAME))
    {
       _tcsncpy(const_cast<TCHAR *>(action->channelName), names->second, MAX_OBJECT_NAME);
       m_dwUpdateCode = NX_NOTIFY_ACTION_MODIFIED;
       EnumerateClientSessions(SendActionDBUpdate, const_cast<Action *>(action));
    }
-
    return _CONTINUE;
 }
 

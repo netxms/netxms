@@ -66,6 +66,20 @@ retry:
 
    s_curlVersion = curl_version();
    nxlog_debug_tag(_T("init.curl"), 3, _T("cURL initialized (version: %hs)"), s_curlVersion);
+
+#if defined(_WIN32) || HAVE_DECL_CURL_VERSION_INFO
+   curl_version_info_data *version = curl_version_info(CURLVERSION_NOW);
+   char protocols[1024] = {0};
+   const char * const *p = version->protocols;
+   while (*p != NULL)
+   {
+      strncat(protocols, *p, strlen(protocols) - 1);
+      strncat(protocols, " ", strlen(protocols) - 1);
+      p++;
+   }
+   nxlog_debug_tag(_T("init.curl"), 3, _T("cURL supported protocols: %hs"), protocols);
+#endif
+
    s_curlInitialized = 1;
    return true;
 #else
