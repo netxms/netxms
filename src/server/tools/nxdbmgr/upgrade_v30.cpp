@@ -25,6 +25,16 @@
 
 
 /**
+ * Upgrade from 30.100 to 30.101
+ */
+static bool H_UpgradeFromV100()
+{
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET var_name='AllowDirectNotifications' WHERE var_name='AllowDirectNotification'")));
+   CHK_EXEC(SetMinorSchemaVersion(101));
+   return true;
+}
+
+/**
  * Upgrade from 30.99 to 30.100
  */
 static bool H_UpgradeFromV99()
@@ -3481,6 +3491,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 100, 30, 101, H_UpgradeFromV100 },
    { 99, 30, 100, H_UpgradeFromV99 },
    { 98, 30, 99, H_UpgradeFromV98 },
    { 97, 30, 98, H_UpgradeFromV97 },
