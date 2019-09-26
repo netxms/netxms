@@ -433,7 +433,19 @@ void TelegramDriver::processUpdate(json_t *data)
          continue;
 
       const char *type = json_object_get_string_utf8(chat, "type", "unknown");
-      TCHAR *username = json_object_get_string_t(chat, !strcmp(type, "group") ? "title" : "username", NULL);
+      TCHAR *username;
+      if (!strcmp(type, "group"))
+      {
+         username = json_object_get_string_t(chat, "title", NULL);
+      }
+      else
+      {
+         TCHAR *tmp = json_object_get_string_t(chat, "username", NULL);
+         username = MemAllocString(_tcslen(tmp) + 2);
+         username[0] = _T('@');
+         _tcscpy(&username[1], tmp);
+         MemFree(tmp);
+      }
       if (username == NULL)
          continue;
 
@@ -462,7 +474,7 @@ bool TelegramDriver::send(const TCHAR *recipient, const TCHAR *subject, const TC
 {
    bool success = false;
 
-   nxlog_debug_tag(DEBUG_TAG, 4, _T("recipient=\"%s\", text=\"%s\""), recipient, body);
+   nxlog_debug_tag(DEBUG_TAG, 4, _T("Sending to %s: \"%s\""), recipient, body);
 
    MutexLock(m_chatsLock);
    Chat *chatObject = m_chats.get(recipient);
