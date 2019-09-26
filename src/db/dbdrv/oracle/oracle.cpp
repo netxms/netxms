@@ -563,7 +563,7 @@ static void BindNormal(ORACLE_STATEMENT *stmt, int pos, int sqlType, int cType, 
 			}
 #endif
 		   OCIBindByPos(stmt->handleStmt, &handleBind, stmt->handleError, pos, sqlBuffer,
-						    ((sb4)ucs2_strlen((UCS2CHAR *)sqlBuffer) + 1) * sizeof(UCS2CHAR), 
+						    ((sb4)ucs2_strlen((UCS2CHAR *)sqlBuffer) + ((sqlType == DB_SQLTYPE_TEXT) ? 0 : 1)) * sizeof(UCS2CHAR),
 						    (sqlType == DB_SQLTYPE_TEXT) ? SQLT_LNG : SQLT_STR,
 						    NULL, NULL, NULL, 0, NULL, OCI_DEFAULT);
 			break;
