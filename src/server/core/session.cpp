@@ -7366,7 +7366,7 @@ void ClientSession::setUserVariable(NXCPMessage *pRequest)
          if (hStmt != NULL)
          {
             DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, dwUserId);
-            DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, szVarName, DB_BIND_STATIC, MAX_USERVAR_NAME_LENGTH);
+            DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, szVarName, DB_BIND_STATIC, MAX_USERVAR_NAME_LENGTH - 1);
             hResult = DBSelectPrepared(hStmt);
             if (hResult != NULL)
             {
@@ -7388,7 +7388,7 @@ void ClientSession::setUserVariable(NXCPMessage *pRequest)
          if (hStmt != NULL)
          {
             DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, dwUserId);
-            DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, szVarName, DB_BIND_STATIC, MAX_USERVAR_NAME_LENGTH);
+            DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, szVarName, DB_BIND_STATIC, MAX_USERVAR_NAME_LENGTH - 1);
             DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, pRequest->getFieldAsString(VID_VALUE), DB_BIND_DYNAMIC);
 
             if (DBExecute(hStmt))
@@ -7489,7 +7489,7 @@ void ClientSession::deleteUserVariable(NXCPMessage *pRequest)
       if (hStmt != NULL)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, dwUserId);
-         DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, szVarName, DB_BIND_STATIC, MAX_USERVAR_NAME_LENGTH);
+         DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, szVarName, DB_BIND_STATIC, MAX_USERVAR_NAME_LENGTH - 1);
 
          if (DBExecute(hStmt))
             msg.setField(VID_RCC, RCC_SUCCESS);
@@ -7538,7 +7538,7 @@ void ClientSession::copyUserVariable(NXCPMessage *pRequest)
       if (hStmt != NULL)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, dwSrcUserId);
-         DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, szVarName, DB_BIND_STATIC, MAX_USERVAR_NAME_LENGTH);
+         DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, szVarName, DB_BIND_STATIC, MAX_USERVAR_NAME_LENGTH - 1);
 
          hResult = DBSelectPrepared(hStmt);
          DBFreeStatement(hStmt);
@@ -7554,7 +7554,7 @@ void ClientSession::copyUserVariable(NXCPMessage *pRequest)
                if (hStmt != NULL)
                {
                   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, dwDstUserId);
-                  DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, szCurrVar, DB_BIND_STATIC, MAX_USERVAR_NAME_LENGTH);
+                  DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, szCurrVar, DB_BIND_STATIC, MAX_USERVAR_NAME_LENGTH - 1);
 
                   hResult2 = DBSelectPrepared(hStmt);
                   if (hResult2 != NULL)
@@ -7583,7 +7583,7 @@ void ClientSession::copyUserVariable(NXCPMessage *pRequest)
                {
                   DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, DBGetField(hResult, i, 1, NULL, 0), DB_BIND_DYNAMIC);
                   DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, dwDstUserId);
-                  DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, szCurrVar, DB_BIND_STATIC, MAX_USERVAR_NAME_LENGTH);
+                  DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, szCurrVar, DB_BIND_STATIC, MAX_USERVAR_NAME_LENGTH - 1);
 
                   DBExecute(hStmt);
                   DBFreeStatement(hStmt);
@@ -7600,7 +7600,7 @@ void ClientSession::copyUserVariable(NXCPMessage *pRequest)
                   if (hStmt != NULL)
                   {
                      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, dwSrcUserId);
-                     DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, szCurrVar, DB_BIND_STATIC, MAX_USERVAR_NAME_LENGTH);
+                     DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, szCurrVar, DB_BIND_STATIC, MAX_USERVAR_NAME_LENGTH - 1);
 
                      DBExecute(hStmt);
                      DBFreeStatement(hStmt);
