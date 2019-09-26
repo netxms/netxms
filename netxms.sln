@@ -336,6 +336,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "textfile", "src\ncdrivers\t
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gsm", "src\ncdrivers\gsm\gsm.vcxproj", "{5333A856-26E5-4062-A0E7-122E85284CBF}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "telegram", "src\ncdrivers\telegram\telegram.vcxproj", "{AE2488DF-13C5-1143-A767-32782818EC7D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -1400,6 +1402,14 @@ Global
 		{5333A856-26E5-4062-A0E7-122E85284CBF}.Release|Win32.Build.0 = Release|Win32
 		{5333A856-26E5-4062-A0E7-122E85284CBF}.Release|x64.ActiveCfg = Release|x64
 		{5333A856-26E5-4062-A0E7-122E85284CBF}.Release|x64.Build.0 = Release|x64
+		{AE2488DF-13C5-1143-A767-32782818EC7D}.Debug|Win32.ActiveCfg = Debug|Win32
+		{AE2488DF-13C5-1143-A767-32782818EC7D}.Debug|Win32.Build.0 = Debug|Win32
+		{AE2488DF-13C5-1143-A767-32782818EC7D}.Debug|x64.ActiveCfg = Debug|x64
+		{AE2488DF-13C5-1143-A767-32782818EC7D}.Debug|x64.Build.0 = Debug|x64
+		{AE2488DF-13C5-1143-A767-32782818EC7D}.Release|Win32.ActiveCfg = Release|Win32
+		{AE2488DF-13C5-1143-A767-32782818EC7D}.Release|Win32.Build.0 = Release|Win32
+		{AE2488DF-13C5-1143-A767-32782818EC7D}.Release|x64.ActiveCfg = Release|x64
+		{AE2488DF-13C5-1143-A767-32782818EC7D}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -1545,6 +1555,7 @@ Global
 		{54812342-F9CE-4CE1-9DBB-2EA421942D8F} = {90D897D2-079F-43BE-BB47-6BBAF2DAAC5D}
 		{2B1219CB-C1DA-4F43-1B16-98B88AC85678} = {90D897D2-079F-43BE-BB47-6BBAF2DAAC5D}
 		{5333A856-26E5-4062-A0E7-122E85284CBF} = {90D897D2-079F-43BE-BB47-6BBAF2DAAC5D}
+		{AE2488DF-13C5-1143-A767-32782818EC7D} = {90D897D2-079F-43BE-BB47-6BBAF2DAAC5D}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E4F6B1F2-1076-4A45-8750-AF6CA13917B3}

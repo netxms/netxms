@@ -414,7 +414,7 @@ void TelegramDriver::processUpdate(json_t *data)
       return;
 
    size_t count = json_array_size(result);
-   for(int i = 0; i < count; i++)
+   for(size_t i = 0; i < count; i++)
    {
       json_t *update = json_array_get(result, i);
       if (!json_is_object(update))
