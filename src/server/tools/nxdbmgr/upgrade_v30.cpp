@@ -40,9 +40,9 @@ static bool H_UpgradeFromV100()
 static bool H_UpgradeFromV99()
 {
    static const TCHAR *batch =
-            _T("UPDATE object_tools SET tool_data='Loaded subagentsAgent.SubAgents' WHERE tool_data='Loaded subagents#7FAgent.SubAgents'\n")
-            _T("UPDATE object_tools SET tool_data='Current processesSystem.Processes' WHERE tool_data='Current processes#7FSystem.Processes'\n")
-            _T("UPDATE object_tools SET tool_data='Supported tablesAgent.SupportedTables^(.*)' WHERE tool_data='Supported tables#7FAgent.SupportedTables#7F^(.*)'\n")
+            _T("UPDATE object_tools SET tool_data='Loaded subagentsAgent.SubAgents' WHERE tool_id=8\n")
+            _T("UPDATE object_tools SET tool_data='Current processesSystem.Processes' WHERE tool_id=13\n")
+            _T("UPDATE object_tools SET tool_data='Supported tablesAgent.SupportedTables^(.*)' WHERE tool_id=23\n")
             _T("<END>");
    CHK_EXEC(SQLBatch(batch));
    CHK_EXEC(SetMinorSchemaVersion(100));
