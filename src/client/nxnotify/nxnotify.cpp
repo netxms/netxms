@@ -168,7 +168,7 @@ int main(int argc, char *argv[])
 #ifdef UNICODE
    WCHAR *channel = WideStringFromMBStringSysLocale(argv[optind + 1]);
    WCHAR *rcpt = WideStringFromMBStringSysLocale(argv[optind + 2]);
-   if ((argc - optind) > 3)
+   if ((argc - optind) > 4)
    {
       subject = WideStringFromMBStringSysLocale(argv[optind + 3]);
       text = WideStringFromMBStringSysLocale(argv[optind + 4]);
