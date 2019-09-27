@@ -547,16 +547,13 @@ void SNMP_Variable::setValueFromString(UINT32 type, const TCHAR *value)
          }
          break;
       case ASN_OCTET_STRING:
-         m_valueLength = (UINT32)_tcslen(value);
-#ifdef UNICODE
-         m_value = (BYTE *)realloc(m_value, m_valueLength);
-         WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR,
-                             value, (int)m_valueLength, (char *)m_value,
-                             (int)m_valueLength, NULL, NULL);
-#else
          MemFree(m_value);
-         m_value = (BYTE *)nx_memdup(value, m_valueLength);
+#ifdef UNICODE
+         m_value = reinterpret_cast<BYTE*>(MBStringFromWideString(value));
+#else
+         m_value = reinterpret_cast<BYTE*>(MemCopyString(value));
 #endif
+         m_valueLength = (UINT32)strlen(reinterpret_cast<char*>(m_value));
          break;
       default:
          break;
