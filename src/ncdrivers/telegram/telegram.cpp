@@ -433,19 +433,7 @@ void TelegramDriver::processUpdate(json_t *data)
          continue;
 
       const char *type = json_object_get_string_utf8(chat, "type", "unknown");
-      TCHAR *username;
-      if (!strcmp(type, "group"))
-      {
-         username = json_object_get_string_t(chat, "title", NULL);
-      }
-      else
-      {
-         TCHAR *tmp = json_object_get_string_t(chat, "username", NULL);
-         username = MemAllocString(_tcslen(tmp) + 2);
-         username[0] = _T('@');
-         _tcscpy(&username[1], tmp);
-         MemFree(tmp);
-      }
+      TCHAR *username = json_object_get_string_t(chat, !strcmp(type, "group") ? "title" : "username", NULL);
       if (username == NULL)
          continue;
 
@@ -476,15 +464,24 @@ bool TelegramDriver::send(const TCHAR *recipient, const TCHAR *subject, const TC
 
    nxlog_debug_tag(DEBUG_TAG, 4, _T("Sending to %s: \"%s\""), recipient, body);
 
-   MutexLock(m_chatsLock);
-   Chat *chatObject = m_chats.get(recipient);
-   INT64 chatId = (chatObject != NULL) ? chatObject->id : 0;
-   MutexUnlock(m_chatsLock);
-
-   if (chatId != 0)
+   // Recipient name started with @ indicates public channel
+   // In that case use channel name instead of chat ID
+   INT64 chatId;
+   if (recipient[0] != _T('@'))
+   {
+      MutexLock(m_chatsLock);
+      Chat *chatObject = m_chats.get(recipient);
+      chatId = (chatObject != NULL) ? chatObject->id : 0;
+      MutexUnlock(m_chatsLock);
+   }
+   else
+   {
+      chatId = 0;
+   }
+   if ((chatId != 0) || (recipient[0] == _T('@')))
    {
       json_t *request = json_object();
-      json_object_set_new(request, "chat_id", json_integer(chatId));
+      json_object_set_new(request, "chat_id", (recipient[0] == _T('@')) ? json_string_t(recipient) : json_integer(chatId));
       json_object_set_new(request, "text", json_string_t(body));
 
       json_t *response = SendTelegramRequest(m_authToken, "sendMessage", request);
