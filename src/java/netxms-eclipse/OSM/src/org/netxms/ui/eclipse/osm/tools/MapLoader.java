@@ -272,7 +272,7 @@ public class MapLoader
 		}
 		catch(Exception e)
 		{
-			e.printStackTrace(); /* FIXME: for debug purposes only */
+		   Activator.log("Exception in loadTileFromCache", e);
 			return null;
 		}
 	}

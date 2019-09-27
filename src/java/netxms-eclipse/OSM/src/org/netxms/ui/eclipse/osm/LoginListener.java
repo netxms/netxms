@@ -18,6 +18,14 @@
  */
 package org.netxms.ui.eclipse.osm;
 
+import java.io.File;
+import java.net.URISyntaxException;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Platform;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.osgi.service.datalocation.Location;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.console.api.ConsoleLoginListener;
@@ -34,5 +42,53 @@ public class LoginListener implements ConsoleLoginListener
 	public void afterLogin(NXCSession session, Display display)
 	{
 		GeoLocationCache.getInstance().initialize(session);
+		Job housekeeper = new Job("Tile housekeeper") {
+         @Override
+         protected IStatus run(IProgressMonitor monitor)
+         {
+            Location loc = Platform.getInstanceLocation();
+            File targetDir;
+            try
+            {
+               targetDir = new File(loc.getURL().toURI());
+            }
+            catch(URISyntaxException e)
+            {
+               targetDir = new File(loc.getURL().getPath());
+            }
+            File base = new File(targetDir, "OSM");
+            if (base.isDirectory())
+            {
+               cleanTileFiles(base.listFiles());
+            }
+            schedule(3600000L);
+            return Status.OK_STATUS;
+         }
+      };
+      housekeeper.setUser(false);
+      housekeeper.setSystem(true);
+      housekeeper.schedule();
+	}
+	
+	/**
+	 * Clean expired tile files
+	 * 
+	 * @param files files and directories on current level
+	 */
+	private static void cleanTileFiles(File[] files)
+	{
+	   long now = System.currentTimeMillis();
+	   for(File f : files)
+	   {
+	      if (f.isDirectory())
+	      {
+	         cleanTileFiles(f.listFiles());
+	      }
+	      else if (now - f.lastModified() > 7 * 86400 * 1000)
+	      {
+	         Activator.log("Deleting expired tile file " + f.getAbsolutePath());
+	         f.delete();
+	      }
+	   }
 	}
 }
