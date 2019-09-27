@@ -83,8 +83,9 @@ private:
    CONDITION m_shutdownCondition;
    bool m_shutdownFlag;
    INT64 m_nextUpdateId;
+   NCDriverStorageManager *m_storageManager;
 
-   TelegramDriver() : m_chats(true)
+   TelegramDriver(NCDriverStorageManager *storageManager) : NCDriver(), m_chats(true)
    {
       m_updateHandlerThread = INVALID_THREAD_HANDLE;
       memset(m_authToken, 0, sizeof(m_authToken));
@@ -93,6 +94,7 @@ private:
       m_shutdownCondition = ConditionCreate(true);
       m_shutdownFlag = false;
       m_nextUpdateId = 0;
+      m_storageManager = storageManager;
    }
 
    static THREAD_RESULT THREAD_CALL updateHandler(void *arg);
@@ -105,7 +107,7 @@ public:
    bool isShutdown() const { return m_shutdownFlag; }
    void processUpdate(json_t *data);
 
-   static TelegramDriver *createInstance(Config *config);
+   static TelegramDriver *createInstance(Config *config, NCDriverStorageManager *storageManager);
 };
 
 /**
@@ -222,7 +224,7 @@ static json_t *SendTelegramRequest(const char *token, const char *method, json_t
 /**
  * Create driver instance
  */
-TelegramDriver *TelegramDriver::createInstance(Config *config)
+TelegramDriver *TelegramDriver::createInstance(Config *config, NCDriverStorageManager *storageManager)
 {
    nxlog_debug_tag(DEBUG_TAG, 5, _T("Creating new driver instance"));
 
@@ -253,7 +255,7 @@ TelegramDriver *TelegramDriver::createInstance(Config *config)
 	         json_t *name = json_object_get(result, "first_name");
 	         if (json_is_string(name))
 	         {
-	            driver = new TelegramDriver();
+	            driver = new TelegramDriver(storageManager);
 	            strcpy(driver->m_authToken, authToken);
 #ifdef UNICODE
 	            driver->m_botName = WideStringFromUTF8String(json_string_value(name));
@@ -524,7 +526,7 @@ DECLARE_NCD_ENTRY_POINT(Telegram, NULL)
       nxlog_debug_tag(DEBUG_TAG, 1, _T("cURL initialization failed"));
       return NULL;
    }
-   return TelegramDriver::createInstance(config);
+   return TelegramDriver::createInstance(config, storageManager);
 }
 
 #ifdef _WIN32

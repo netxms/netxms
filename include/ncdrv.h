@@ -16,7 +16,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** File: nddrv.h
+** File: ncdrv.h
 **
 **/
 
@@ -29,7 +29,7 @@
 /**
  * API version
  */
-#define NCDRV_API_VERSION           1
+#define NCDRV_API_VERSION           2
 
 /**
  * Notification channel configuration template
@@ -47,15 +47,31 @@ struct NCConfigurationTemplate
 };
 
 /**
+ * Storage interface for notification channel drivers
+ */
+class NCDriverStorageManager
+{
+protected:
+   NCDriverStorageManager() { }
+   virtual ~NCDriverStorageManager() { }
+
+public:
+   virtual TCHAR *get(const TCHAR *key) = 0;
+   virtual StringList *getAll() = 0;
+   virtual void set(const TCHAR *key, const TCHAR *value) = 0;
+   virtual void clear(const TCHAR *key) = 0;
+};
+
+/**
  * Notification Channel Driver base class
  */
 class NCDriver
 {
 protected:
-   NCDriver() { } //init should be done while construction
+   NCDriver() { }
 
 public:
-   virtual ~NCDriver() { } // Shutdown should be done while destruction
+   virtual ~NCDriver() { }
 
    virtual bool send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body) = 0;
 };
@@ -69,7 +85,6 @@ __EXPORT_VAR(int NcdAPIVersion) = NCDRV_API_VERSION; \
 extern "C" __EXPORT_VAR(const char *NcdName); \
 __EXPORT_VAR(const char *NcdName) = #name; \
 extern "C" __EXPORT const NCConfigurationTemplate *NcdGetConfigurationTemplate() { return (configTemplate); } \
-extern "C" __EXPORT NCDriver *NcdCreateInstance(Config *config)
-
+extern "C" __EXPORT NCDriver *NcdCreateInstance(Config *config, NCDriverStorageManager *storageManager)
 
 #endif   /* _ncdrv_h_ */

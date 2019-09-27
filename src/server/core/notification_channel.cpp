@@ -45,6 +45,23 @@ public:
    const TCHAR *getBody() const { return m_body; }
 };
 
+/**
+ * Storage manager for driver
+ */
+class NCDriverServerStorageManager : public NCDriverStorageManager
+{
+private:
+   TCHAR m_channelName[MAX_OBJECT_NAME];
+
+public:
+   NCDriverServerStorageManager(const TCHAR *channelName) : NCDriverStorageManager() { _tcslcpy(m_channelName, channelName, MAX_OBJECT_NAME); }
+   virtual ~NCDriverServerStorageManager() { }
+
+   virtual TCHAR *get(const TCHAR *key) override { return NULL; }
+   virtual StringList *getAll() override { return new StringList(); }
+   virtual void set(const TCHAR *key, const TCHAR *value) override { }
+   virtual void clear(const TCHAR *key) override { }
+};
 
 /**
  * Configured notification channel
@@ -62,12 +79,14 @@ private:
    char *m_configuration;
    const NCConfigurationTemplate *m_confTemplate;
    TCHAR *m_errorMessage;
+   NCDriverServerStorageManager *m_storageManager;
    enum NCLastKnownStatus { NC_UNKNOWN = 0, NC_SUCCESS = 1, NC_FAILED = 2 } m_lastStatus;
 
    static THREAD_RESULT THREAD_CALL sendNotificationThread(void *arg);
 
 public:
-   NotificationChannel(NCDriver *driver, const TCHAR *name, const TCHAR *description, const TCHAR *driverName, char *config, const NCConfigurationTemplate *confTemplate, const TCHAR *errorMessage);
+   NotificationChannel(NCDriver *driver, NCDriverServerStorageManager *storageManager, const TCHAR *name,
+            const TCHAR *description, const TCHAR *driverName, char *config, const NCConfigurationTemplate *confTemplate, const TCHAR *errorMessage);
    ~NotificationChannel();
 
    void send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body);
@@ -84,7 +103,7 @@ public:
  */
 struct NCDriverDescriptor
 {
-   NCDriver *(*instanceFactory)(Config *);
+   NCDriver *(*instanceFactory)(Config *, NCDriverStorageManager *);
    const NCConfigurationTemplate *confTemplate;
    TCHAR name[MAX_OBJECT_NAME];
 };
@@ -103,7 +122,6 @@ NotificationMessage::NotificationMessage(const TCHAR *recipient, const TCHAR *su
    m_body = MemCopyString(body);
 }
 
-
 /**
  * Notification message destructor
  */
@@ -117,9 +135,11 @@ NotificationMessage::~NotificationMessage()
 /**
  * Notification channel constructor
  */
-NotificationChannel::NotificationChannel(NCDriver *driver, const TCHAR *name, const TCHAR *description, const TCHAR *driverName, char *config, const NCConfigurationTemplate *confTemplate, const TCHAR *errorMessage) : m_notificationQueue(true)
+NotificationChannel::NotificationChannel(NCDriver *driver, NCDriverServerStorageManager *storageManager, const TCHAR *name,
+         const TCHAR *description, const TCHAR *driverName, char *config, const NCConfigurationTemplate *confTemplate, const TCHAR *errorMessage) : m_notificationQueue(true)
 {
    m_driver = driver;
+   m_storageManager = storageManager;
    m_confTemplate = confTemplate;
    _tcslcpy(m_name, name, MAX_OBJECT_NAME);
    _tcslcpy(m_description, description, MAX_NC_DESCRIPTION);
@@ -144,9 +164,8 @@ NotificationChannel::~NotificationChannel()
    MemFree(m_errorMessage);
 }
 
-
 /**
- * Named pipe server thread starter
+ * Notification sending thread
  */
 THREAD_RESULT THREAD_CALL NotificationChannel::sendNotificationThread(void *arg)
 {
@@ -158,7 +177,7 @@ THREAD_RESULT THREAD_CALL NotificationChannel::sendNotificationThread(void *arg)
          break;
 
       MutexLock(nc->m_driverLock);
-      if(nc->m_driver != NULL)
+      if (nc->m_driver != NULL)
       {
          if (nc->m_driver->send(notification->getRecipient(), notification->getSubject(), notification->getBody()))
          {
@@ -220,23 +239,25 @@ void NotificationChannel::update(const TCHAR *description, const TCHAR *driverNa
 {
    _tcslcpy(m_description, description, MAX_NC_DESCRIPTION);
 
-   if(_tcscmp(m_driverName, driverName) || strcmp(m_configuration, config))
+   if (_tcscmp(m_driverName, driverName) || strcmp(m_configuration, config))
    {
       NCDriverDescriptor *dd = s_driverList.get(driverName);
       NCDriver *driver = NULL;
       const NCConfigurationTemplate *confTemplate = NULL;
-      if(dd != NULL)
+      if (dd != NULL)
       {
          Config cfg;
          if (cfg.loadConfigFromMemory(config, (int)strlen(config), driverName, NULL, true, false))
          {
-            driver = dd->instanceFactory(&cfg);
-            if(driver == NULL)
+            driver = dd->instanceFactory(&cfg, m_storageManager);
+            if (driver != NULL)
+            {
+               confTemplate = dd->confTemplate;
+            }
+            else
             {
                nxlog_debug_tag(DEBUG_TAG, 1, _T("Cannot parse driver %s configuration: %hs"), m_name, config);
             }
-            else
-               confTemplate = dd->confTemplate;
          }
          else
          {
@@ -255,6 +276,9 @@ void NotificationChannel::update(const TCHAR *description, const TCHAR *driverNa
    saveToDatabase();
 }
 
+/**
+ * Save channel configuration to database
+ */
 void NotificationChannel::saveToDatabase()
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
@@ -338,6 +362,7 @@ static NotificationChannel *CreateNotificationChannel(const TCHAR *name, const T
 {
    NCDriverDescriptor *dd = s_driverList.get(driverName);
    NCDriver *driver = NULL;
+   NCDriverServerStorageManager *storageManager = new NCDriverServerStorageManager(name);
    const NCConfigurationTemplate *confTemplate = NULL;
    String errorMessage;
    if (dd != NULL)
@@ -345,7 +370,7 @@ static NotificationChannel *CreateNotificationChannel(const TCHAR *name, const T
       Config config;
       if (config.loadConfigFromMemory(configuration, (int)strlen(configuration), driverName, NULL, true, false))
       {
-         driver = dd->instanceFactory(&config);
+         driver = dd->instanceFactory(&config, storageManager);
          if (driver != NULL)
          {
             confTemplate = dd->confTemplate;
@@ -368,7 +393,7 @@ static NotificationChannel *CreateNotificationChannel(const TCHAR *name, const T
       nxlog_debug_tag(DEBUG_TAG, 1, _T("Cannot find driver with name: %s"), driverName);
    }
 
-   return new NotificationChannel(driver, name, description, driverName, configuration, confTemplate, errorMessage);
+   return new NotificationChannel(driver, storageManager, name, description, driverName, configuration, confTemplate, errorMessage);
 }
 
 /**
@@ -550,7 +575,7 @@ static void LoadDriver(const TCHAR *file)
    {
       int *apiVersion = reinterpret_cast<int *>(DLGetSymbolAddr(hModule, "NcdAPIVersion", errorText));
       const char **name = reinterpret_cast<const char **>(DLGetSymbolAddr(hModule, "NcdName", errorText));
-      NCDriver *(*InstanceFactory)(Config *) = reinterpret_cast<NCDriver * (*)(Config *)>(DLGetSymbolAddr(hModule, "NcdCreateInstance", errorText));
+      NCDriver *(*InstanceFactory)(Config *, NCDriverStorageManager *) = reinterpret_cast<NCDriver *(*)(Config *, NCDriverStorageManager *)>(DLGetSymbolAddr(hModule, "NcdCreateInstance", errorText));
       NCConfigurationTemplate *(*GetConfigTemplate)() = reinterpret_cast<NCConfigurationTemplate *(*)()>(DLGetSymbolAddr(hModule, "NcdGetConfigurationTemplate", errorText));
 
       if ((apiVersion != NULL) && (InstanceFactory != NULL) && (name != NULL) && (GetConfigTemplate != NULL))
