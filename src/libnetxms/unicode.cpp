@@ -820,9 +820,7 @@ int LIBNETXMS_EXPORTABLE wsystem(const WCHAR *_cmd)
 int LIBNETXMS_EXPORTABLE waccess(const WCHAR *_path, int mode)
 {
    char path[MAX_PATH];
-
-   WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR,
-      _path, -1, path, MAX_PATH, NULL, NULL);
+   WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, _path, -1, path, MAX_PATH, NULL, NULL);
    return access(path, mode);
 }
 
@@ -833,9 +831,7 @@ int LIBNETXMS_EXPORTABLE waccess(const WCHAR *_path, int mode)
 int LIBNETXMS_EXPORTABLE wmkdir(const WCHAR *_path, int mode)
 {
    char path[MAX_PATH];
-
-   WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR,
-      _path, -1, path, MAX_PATH, NULL, NULL);
+   WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, _path, -1, path, MAX_PATH, NULL, NULL);
    return mkdir(path, mode);
 }
 
@@ -846,9 +842,7 @@ int LIBNETXMS_EXPORTABLE wmkdir(const WCHAR *_path, int mode)
 int LIBNETXMS_EXPORTABLE wutime(const WCHAR *_path, utimbuf *buf)
 {
    char path[MAX_PATH];
-
-   WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR,
-      _path, -1, path, MAX_PATH, NULL, NULL);
+   WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, _path, -1, path, MAX_PATH, NULL, NULL);
    return utime(path, buf);
 }
 
