@@ -220,6 +220,7 @@ EXEC_LIBS=""
 DIST_BUILD="no"
 FORCE_NULL_SAFE_FREE="no"
 JEMALLOC_REQUIRED="no"
+MARIADB_MYSQL_CONFLICT="no"
 
 
 #--------------------------------------------------------------------
@@ -562,24 +563,39 @@ AC_ARG_WITH(mariadb,
 [AS_HELP_STRING(--with-mariadb,build MariaDB database driver)],
 [ if test "x$withval" != "xno" ; then
 	if test "x$withval" != "x" && test "x$withval" != "xyes" ; then
-		if find_existing_dir "${withval}/lib" "${withval}/lib/mariadb" "${withval}/mariadb/lib" "${withval}/lib/mysql"; then
+		if find_existing_dir "${withval}/lib" "${withval}/lib/mariadb" "${withval}/mariadb/lib"; then
 			MARIADB_LD_RUN_PATH="$__dir$"    
 			MARIADB_LDFLAGS="-L$__dir"
 		fi
-		if find_existing_dir "${withval}/include" "${withval}/include/mariadb" "${withval}/mariadb/include" "${withval}/include/mysql"; then
+		if find_existing_dir "${withval}/include" "${withval}/include/mariadb" "${withval}/mariadb/include"; then
 			MARIADB_CPPFLAGS="-I$__dir"
 		fi
 	else
-		if find_existing_dir "/usr/local/mariadb/lib" "/usr/local/lib/mysql"; then
+		if find_existing_dir "/usr/local/mariadb/lib"; then
 			MARIADB_LD_RUN_PATH="$__dir$"    
 			MARIADB_LDFLAGS="-L$__dir"
 		fi
-		if find_existing_dir "/usr/local/mariadb/include" "/usr/include/mariadb" "/usr/local/include/mariadb" "/usr/local/include/mysql"; then
+		if find_existing_dir "/usr/local/mariadb/include" "/usr/include/mariadb" "/usr/local/include/mariadb"; then
 			MARIADB_CPPFLAGS="-I$__dir"
 		fi
 	fi
 	COMPONENTS="$COMPONENTS mariadb"
 	DBDRIVER_SELECTED="yes"
+fi ])
+
+AC_ARG_WITH(mariadb-compat-headers,
+[AS_HELP_STRING(--with-mariadb-compat-headers,MariaDB client library installed as MySQL client replacement)],
+[ if test "x$withval" != "xno" ; then
+	if test "x$withval" != "x" && test "x$withval" != "xyes" ; then
+		if find_existing_dir "${withval}/include" "${withval}/include/mysql" "${withval}/mysql/include"; then
+			MARIADB_CPPFLAGS="-I$__dir"
+		fi
+	else
+		if find_existing_dir "/usr/include/mysql" "/usr/local/include/mysql" "/usr/local/mysql/include/mysql"; then
+			MARIADB_CPPFLAGS="-I$__dir"
+		fi
+	fi
+	MARIADB_MYSQL_CONFLICT="yes"
 fi ])
 
 AC_ARG_WITH(pgsql,
@@ -1109,6 +1125,9 @@ fi
 
 check_substr "$COMPONENTS" "mysql"
 if test $? = 0; then
+	if test "x$MARIADB_MYSQL_CONFLICT" = "xyes"; then
+		AC_MSG_ERROR(Selected configuration options prevent building of both MariaDB and MySQL drivers)
+	fi
 	DB_DRIVERS="$DB_DRIVERS mysql"
 	SUBAGENT_DIRS="$SUBAGENT_DIRS mysql"
 fi
