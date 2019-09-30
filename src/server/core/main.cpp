@@ -997,9 +997,9 @@ retry_db_lock:
 	if (!InitAlarmManager())
 		return FALSE;
 
-	//Initialize notification channels
+	// Initialize notification channels
 	LoadNotificationChannelDrivers();
-	LoadNCConfiguration();
+   LoadNotificationChannels();
 
 	// Initialize objects infrastructure and load objects from database
 	LoadNetworkDeviceDrivers();
@@ -1260,6 +1260,7 @@ void NXCORE_EXPORTABLE Shutdown()
    CleanupActions();
    ShutdownEventSubsystem();
    ShutdownAlarmManager();
+   ShutdownNotificationChannels();
    nxlog_debug(1, _T("Event processing stopped"));
 
    ThreadPoolDestroy(g_clientThreadPool);

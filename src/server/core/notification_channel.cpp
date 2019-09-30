@@ -64,6 +64,16 @@ public:
 };
 
 /**
+ * Last known status for message sending
+ */
+enum class NCSendStatus
+{
+   UNKNOWN = 0,
+   SUCCESS = 1,
+   FAILED = 2
+};
+
+/**
  * Configured notification channel
  */
 class NotificationChannel
@@ -80,7 +90,14 @@ private:
    const NCConfigurationTemplate *m_confTemplate;
    TCHAR *m_errorMessage;
    NCDriverServerStorageManager *m_storageManager;
-   enum NCLastKnownStatus { NC_UNKNOWN = 0, NC_SUCCESS = 1, NC_FAILED = 2 } m_lastStatus;
+   NCSendStatus m_lastStatus;
+
+   void setError(const TCHAR *message)
+   {
+      m_lastStatus = NCSendStatus::FAILED;
+      MemFree(m_errorMessage);
+      m_errorMessage = MemCopyString(message);
+   }
 
    static THREAD_RESULT THREAD_CALL sendNotificationThread(void *arg);
 
@@ -108,9 +125,9 @@ struct NCDriverDescriptor
    TCHAR name[MAX_OBJECT_NAME];
 };
 
-StringObjectMap<NCDriverDescriptor> s_driverList(true);
-StringObjectMap<NotificationChannel> s_channelList(true);
-static MUTEX s_channelListLock = MutexCreate();
+static StringObjectMap<NCDriverDescriptor> s_driverList(true);
+static StringObjectMap<NotificationChannel> s_channelList(true);
+static Mutex s_channelListLock;
 
 /**
  * Notification message constructor
@@ -148,7 +165,7 @@ NotificationChannel::NotificationChannel(NCDriver *driver, NCDriverServerStorage
    m_senderThread = ThreadCreateEx(NotificationChannel::sendNotificationThread, 0, this);
    m_driverLock = MutexCreate();
    m_errorMessage = MemCopyString(errorMessage);
-   m_lastStatus = NC_UNKNOWN;
+   m_lastStatus = NCSendStatus::UNKNOWN;
 }
 
 /**
@@ -160,6 +177,7 @@ NotificationChannel::~NotificationChannel()
    ThreadJoin(m_senderThread);
    MutexDestroy(m_driverLock);
    delete m_driver;
+   delete m_storageManager;
    MemFree(m_configuration);
    MemFree(m_errorMessage);
 }
@@ -181,18 +199,18 @@ THREAD_RESULT THREAD_CALL NotificationChannel::sendNotificationThread(void *arg)
       {
          if (nc->m_driver->send(notification->getRecipient(), notification->getSubject(), notification->getBody()))
          {
-            nc->m_lastStatus = NC_SUCCESS;
+            nc->m_lastStatus = NCSendStatus::SUCCESS;
          }
          else
          {
-            nc->m_errorMessage = MemCopyString(_T("Error on sending message"));
-            nc->m_lastStatus = NC_FAILED;
+            nxlog_debug_tag(DEBUG_TAG, 4, _T("Driver error for channel %s, message dropped"), nc->m_name);
+            nc->setError(_T("Driver error"));
          }
       }
       else
       {
-         nxlog_debug_tag(DEBUG_TAG, 2, _T("No driver for channel %s, message dropped."), nc->m_name);
-         nc->m_lastStatus = NC_FAILED;
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("No driver for channel %s, message dropped"), nc->m_name);
+         nc->setError(_T("Driver not initialized"));
       }
       MutexUnlock(nc->m_driverLock);
       delete notification;
@@ -214,22 +232,22 @@ void NotificationChannel::send(const TCHAR *recipient, const TCHAR *subject, con
 void NotificationChannel::fillMessage(NXCPMessage *msg, UINT32 base)
 {
    msg->setField(base, m_name);
-   msg->setField(base+1, m_description);
-   msg->setField(base+2, m_driverName);
+   msg->setField(base + 1, m_description);
+   msg->setField(base + 2, m_driverName);
    msg->setFieldFromMBString(base + 3, m_configuration);
-   msg->setField(base+4, m_driver != NULL);
-   if(m_confTemplate != NULL)
+   msg->setField(base + 4, m_driver != NULL);
+   if (m_confTemplate != NULL)
    {
-      msg->setField(base+5, m_confTemplate->needSubject);
-      msg->setField(base+6, m_confTemplate->needRecipient);
+      msg->setField(base + 5, m_confTemplate->needSubject);
+      msg->setField(base + 6, m_confTemplate->needRecipient);
    }
    else
    {
-      msg->setField(base+5, false);
-      msg->setField(base+6, true);
+      msg->setField(base + 5, false);
+      msg->setField(base + 6, true);
    }
-   msg->setField(base+7, m_errorMessage);
-   msg->setField(base+8, m_lastStatus);
+   msg->setField(base + 7, m_errorMessage);
+   msg->setField(base + 8, static_cast<INT16>(m_lastStatus));
 }
 
 /**
@@ -311,9 +329,9 @@ void NotificationChannel::saveToDatabase()
  */
 static void DeleteNotificationChannelInternal(TCHAR *name)
 {
-   MutexLock(s_channelListLock);
+   s_channelListLock.lock();
    NotificationChannel *nc = s_channelList.unlink(name);
-   MutexUnlock(s_channelListLock);
+   s_channelListLock.unlock();
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("DELETE FROM notification_channels WHERE name=?"));
@@ -334,9 +352,9 @@ static void DeleteNotificationChannelInternal(TCHAR *name)
  */
 bool DeleteNotificationChannel(const TCHAR *name)
 {
-   MutexLock(s_channelListLock);
+   s_channelListLock.lock();
    bool contains = s_channelList.contains(name);
-   MutexUnlock(s_channelListLock);
+   s_channelListLock.unlock();
    if (contains)
    {
       ThreadPoolExecuteSerialized(g_clientThreadPool, NC_THREAD_KEY, DeleteNotificationChannelInternal, MemCopyString(name));
@@ -349,9 +367,9 @@ bool DeleteNotificationChannel(const TCHAR *name)
  */
 bool IsNotificationChannelExists(const TCHAR *name)
 {
-   MutexLock(s_channelListLock);
+   s_channelListLock.lock();
    bool exist = s_channelList.contains(name);
-   MutexUnlock(s_channelListLock);
+   s_channelListLock.unlock();
    return exist;
 }
 
@@ -402,10 +420,10 @@ static NotificationChannel *CreateNotificationChannel(const TCHAR *name, const T
 void CreateNotificationChannelAndSave(const TCHAR *name, const TCHAR *description, const TCHAR *driverName, char *configuration)
 {
    NotificationChannel *nc = CreateNotificationChannel(name, description, driverName, configuration);
-   MutexLock(s_channelListLock);
+   s_channelListLock.lock();
    s_channelList.set(name, nc);
    nc->saveToDatabase();
-   MutexUnlock(s_channelListLock);
+   s_channelListLock.unlock();
 }
 
 /**
@@ -413,11 +431,11 @@ void CreateNotificationChannelAndSave(const TCHAR *name, const TCHAR *descriptio
  */
 void UpdateNotificationChannel(const TCHAR *name, const TCHAR *description, const TCHAR *driverName, char *configuration)
 {
-   MutexLock(s_channelListLock);
+   s_channelListLock.lock();
    NotificationChannel *nc = s_channelList.get(name);
    if(nc != NULL)
       nc->update(description, driverName, configuration);
-   MutexUnlock(s_channelListLock);
+   s_channelListLock.unlock();
 }
 
 /**
@@ -425,7 +443,7 @@ void UpdateNotificationChannel(const TCHAR *name, const TCHAR *description, cons
  * first - old name
  * second - new name
  */
-static void RenameNotificaiotnChannelDB(std::pair<TCHAR *, TCHAR *> *names)
+static void RenameNotificationChannelInDB(std::pair<TCHAR *, TCHAR *> *names)
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    bool success = false;
@@ -476,7 +494,7 @@ static void RenameNotificaiotnChannelDB(std::pair<TCHAR *, TCHAR *> *names)
  */
 void RenameNotificationChannel(TCHAR *name, TCHAR *newName)
 {
-   MutexLock(s_channelListLock);
+   s_channelListLock.lock();
    NotificationChannel *nc = s_channelList.unlink(name);
    if (nc != NULL)
    {
@@ -484,14 +502,14 @@ void RenameNotificationChannel(TCHAR *name, TCHAR *newName)
       s_channelList.set(newName, nc);
       auto pair = new std::pair<TCHAR *, TCHAR *>(name, newName);
       UpdateChannelNameInActions(pair);
-      ThreadPoolExecuteSerialized(g_clientThreadPool, NC_THREAD_KEY, RenameNotificaiotnChannelDB, pair);
+      ThreadPoolExecuteSerialized(g_clientThreadPool, NC_THREAD_KEY, RenameNotificationChannelInDB, pair);
    }
    else
    {
       MemFree(name);
       MemFree(newName);
    }
-   MutexUnlock(s_channelListLock);
+   s_channelListLock.unlock();
 }
 
 /**
@@ -499,7 +517,7 @@ void RenameNotificationChannel(TCHAR *name, TCHAR *newName)
  */
 void GetNotificationChannels(NXCPMessage *msg)
 {
-   MutexLock(s_channelListLock);
+   s_channelListLock.lock();
    UINT32 base = VID_NOTIFICATION_CHANNEL_BASE;
    Iterator<std::pair<const TCHAR*, NotificationChannel*>> *it = s_channelList.iterator();
    msg->setField(VID_CHANNEL_COUNT, s_channelList.size());
@@ -510,7 +528,7 @@ void GetNotificationChannels(NXCPMessage *msg)
       base += 20;
    }
    delete it;
-   MutexUnlock(s_channelListLock);
+   s_channelListLock.unlock();
 }
 
 /**
@@ -534,7 +552,7 @@ void GetNotificationDrivers(NXCPMessage *msg)
  */
 void SendNotification(const TCHAR *name, TCHAR *expandedRcpt, const TCHAR *expandedSubject, const TCHAR *expandedData)
 {
-   MutexLock(s_channelListLock);
+   s_channelListLock.lock();
    NotificationChannel *nc = s_channelList.get(name);
    if(nc != NULL)
    {
@@ -557,8 +575,10 @@ void SendNotification(const TCHAR *name, TCHAR *expandedRcpt, const TCHAR *expan
       }
    }
    else
+   {
       nxlog_debug_tag(DEBUG_TAG, 1, _T("Notification channel \"%s\" not found"), name);
-   MutexUnlock(s_channelListLock);
+   }
+   s_channelListLock.unlock();
 }
 
 /**
@@ -653,7 +673,7 @@ void LoadNotificationChannelDrivers()
 /**
  * Load notification channel configuration form database
  */
-void LoadNCConfiguration()
+void LoadNotificationChannels()
 {
    int numberOfAddedDrivers = 0;
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
@@ -671,9 +691,9 @@ void LoadNCConfiguration()
          DBGetField(result, i, 2, description, MAX_NC_DESCRIPTION);
          char *configuration = DBGetFieldA(result, i, 3, NULL, 0);
          NotificationChannel *nc = CreateNotificationChannel(name, description, driverName, configuration);
-         MutexLock(s_channelListLock);
+         s_channelListLock.lock();
          s_channelList.set(name, nc);
-         MutexUnlock(s_channelListLock);
+         s_channelListLock.unlock();
          numberOfAddedDrivers++;
          nxlog_debug_tag(DEBUG_TAG, 4, _T("Notification channel %s successfully created"), name);
       }
@@ -682,4 +702,14 @@ void LoadNCConfiguration()
    nxlog_debug_tag(DEBUG_TAG, 1, _T("%d notification channels added"), numberOfAddedDrivers);
 
    DBConnectionPoolReleaseConnection(hdb);
+}
+
+/**
+ * Shitdown all notification channels
+ */
+void ShutdownNotificationChannels()
+{
+   s_channelListLock.lock();
+   s_channelList.clear();  // This will delete all channels and destructors will handle correct shutdown
+   s_channelListLock.unlock();
 }

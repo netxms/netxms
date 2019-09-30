@@ -1085,7 +1085,8 @@ NetworkDeviceDriver *FindDriverByName(const TCHAR *name);
 void AddDriverSpecificOids(StringList *list);
 
 void LoadNotificationChannelDrivers();
-void LoadNCConfiguration();
+void LoadNotificationChannels();
+void ShutdownNotificationChannels();
 void SendNotification(const TCHAR *name, TCHAR *expandedRcpt, const TCHAR *expandedSubject, const TCHAR *expandedData);
 void GetNotificationChannels(NXCPMessage *msg);
 void GetNotificationDrivers(NXCPMessage *msg);
