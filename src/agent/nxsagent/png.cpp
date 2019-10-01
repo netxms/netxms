@@ -48,7 +48,7 @@ ByteStream *SaveBitmapToPng(HBITMAP hBitmap)
    
    DWORD scanlineSize = ((bitmap.bmWidth * 4) + (4 - 1)) & ~(4 - 1);
    DWORD bufferSize = scanlineSize * bitmap.bmHeight;
-   BYTE *buffer = (BYTE *)MemAlloc(bufferSize);
+   BYTE *buffer = (BYTE *)malloc(bufferSize);
    if (buffer == NULL)
       return NULL;
 
@@ -67,7 +67,7 @@ ByteStream *SaveBitmapToPng(HBITMAP hBitmap)
    if (!GetDIBits(hDC, hBitmap, 0, bitmap.bmHeight, buffer, &bitmapInfo, DIB_RGB_COLORS))
    {
       ReleaseDC(NULL, hDC);
-      MemFree(buffer);
+      free(buffer);
       return NULL;
    }
 
@@ -132,6 +132,6 @@ png_create_info_struct_failed:
    png_destroy_write_struct (&png_ptr, &info_ptr);
 png_create_write_struct_failed:
    ReleaseDC(NULL, hDC);
-   MemFree(buffer);
+   free(buffer);
    return pngData;
 }

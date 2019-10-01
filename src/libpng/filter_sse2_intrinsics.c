@@ -17,7 +17,11 @@
 
 #if PNG_INTEL_SSE_IMPLEMENTATION > 0
 
+#if _MSC_VER < 1500
+#include <intrin.h>
+#else
 #include <immintrin.h>
+#endif
 
 /* Functions in this file look at most 3 pixels (a,b,c) to predict the 4th (d).
  * They're positioned like this:
