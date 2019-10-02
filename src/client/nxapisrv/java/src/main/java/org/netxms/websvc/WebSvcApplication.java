@@ -88,8 +88,7 @@ public class WebSvcApplication extends Application
       router.attach("/objects/{object-id}/datacollection/{id}/values", HistoricalData.class);
       router.attach("/objects/{object-id}/objecttools", ObjectTools.class);
       router.attach("/objects/{object-id}/objecttools/output/{id}", ObjectToolOutputHandler.class);
-      router.attach("/objects/lastvalues", LastValues.class);
-      router.attach("/objects/datacollection/values", HistoricalData.class);
+      router.attach("/objects/datacollection/values", HistoricalData.class);  /* FIXME: wrong base URL? */
       router.attach("/predefinedgraphs", PredefinedGraphs.class);
       router.attach("/sessions", Sessions.class);
       router.attach("/sessions/{id}", Sessions.class);
