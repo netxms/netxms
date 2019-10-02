@@ -552,7 +552,7 @@ static void BindNormal(ORACLE_STATEMENT *stmt, int pos, int sqlType, int cType, 
 #else
          if (allocType == DB_BIND_TRANSIENT)
 			{
-				sqlBuffer = wcsdup((WCHAR *)buffer);
+				sqlBuffer = MemCopyStringW((WCHAR *)buffer);
    		   stmt->buffers->set(pos - 1, sqlBuffer);
 			}
 			else
@@ -777,7 +777,7 @@ static void BindBatch(ORACLE_STATEMENT *stmt, int pos, int sqlType, int cType, v
          }
          else
 			{
-				sqlBuffer = wcsdup((WCHAR *)buffer);
+				sqlBuffer = MemCopyStringW((WCHAR *)buffer);
 			}
 #endif
          bind->set(sqlBuffer);
@@ -1004,7 +1004,7 @@ static char *GetColumnName(OCIParam *handleParam, OCIError *handleError)
    }
    else
    {
-      return strdup("");
+      return MemCopyStringA("");
    }
 }
 
