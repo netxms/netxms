@@ -1,6 +1,6 @@
 /*
 ** NetXMS UPS management subagent
-** Copyright (C) 2006-2014 Victor Kirhenshtein
+** Copyright (C) 2006-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -27,13 +27,12 @@
  */
 UPSInterface::UPSInterface(const TCHAR *device)
 {
-   int i;
-
+   m_nIndex = 0;
    m_pszName = NULL;
    m_device = _tcsdup(device);
    m_bIsConnected = FALSE;
    memset(m_paramList, 0, sizeof(UPS_PARAMETER) * UPS_PARAM_COUNT);
-   for(i = 0; i < UPS_PARAM_COUNT; i++)
+   for(int i = 0; i < UPS_PARAM_COUNT; i++)
       m_paramList[i].dwFlags |= UPF_NULL_VALUE;
    m_mutex = MutexCreate();
    m_condStop = ConditionCreate(TRUE);
@@ -284,7 +283,7 @@ void UPSInterface::commThread()
    // Try to open device immediatelly after start
    if (open())
    {
-      AgentWriteLog(EVENTLOG_INFORMATION_TYPE, _T("UPS: Established communication with device #%d \"%s\""), m_nIndex, m_pszName);
+      nxlog_write_tag(NXLOG_INFO, UPS_DEBUG_TAG, _T("Established communication with device #%d \"%s\""), m_nIndex, m_pszName);
 
       // Open successfully, query all parameters
       MutexLock(m_mutex);
@@ -292,11 +291,11 @@ void UPSInterface::commThread()
       queryDynamicData();
       MutexUnlock(m_mutex);
 
-      AgentWriteDebugLog(5, _T("UPS: initial poll finished for device #%d \"%s\""), m_nIndex, m_pszName);
+      nxlog_debug_tag(UPS_DEBUG_TAG, 5, _T("Initial poll finished for device #%d \"%s\""), m_nIndex, m_pszName);
    }
    else
    {
-      AgentWriteLog(EVENTLOG_WARNING_TYPE, _T("UPS: Cannot establish communication with device #%d \"%s\""), m_nIndex, m_pszName);
+      nxlog_write_tag(NXLOG_WARNING, UPS_DEBUG_TAG, _T("Cannot establish communication with device #%d \"%s\""), m_nIndex, m_pszName);
    }
 
    for(nIteration = 0; ; nIteration++)
@@ -344,7 +343,7 @@ void UPSInterface::commThread()
          queryDynamicData();
          
          MutexUnlock(m_mutex);
-         AgentWriteDebugLog(9, _T("UPS: poll finished for device #%d \"%s\""), m_nIndex, m_pszName);
+         nxlog_debug_tag(UPS_DEBUG_TAG, 9, _T("Poll finished for device #%d \"%s\""), m_nIndex, m_pszName);
       }
    }
 }
