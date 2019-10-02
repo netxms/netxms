@@ -1,6 +1,6 @@
 /*
 ** NetXMS UPS management subagent
-** Copyright (C) 2006-2015 Victor Kirhenshtein
+** Copyright (C) 2006-2019 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -54,6 +54,8 @@ BOOL MegatecInterface::open()
    bool success = readLineFromSerial(buffer, 256, '\r');
    if (success && (buffer[0] == '#'))
    {
+      nxlog_debug_tag(UPS_DEBUG_TAG, 7, _T("MEGATEC: received nominal values response \"%hs\""), buffer);
+
       setConnected();
 		
       buffer[16] = 0;
@@ -73,6 +75,8 @@ BOOL MegatecInterface::open()
    }
    else
    {
+      if (success)
+         nxlog_debug_tag(UPS_DEBUG_TAG, 7, _T("MEGATEC: invalid nominal values response \"%hs\""), buffer);
       success = false;
    }
 
@@ -95,7 +99,7 @@ void MegatecInterface::calculatePacks(double nominalVoltage, double actualVoltag
       m_packs = packs[i];
       break;
    }
-   AgentWriteDebugLog(4, _T("UPS: MEGATEC interface init: packs=%0.1f"), m_packs);
+   nxlog_debug_tag(UPS_DEBUG_TAG, 4, _T("MEGATEC interface initialization: packs=%0.1f"), m_packs);
 }
 
 /**
@@ -106,6 +110,8 @@ BOOL MegatecInterface::validateConnection()
    m_serial.write("F\r", 2);
    char buffer[256];
    bool success = readLineFromSerial(buffer, 256, '\r');
+   if (success)
+      nxlog_debug_tag(UPS_DEBUG_TAG, 7, _T("MEGATEC: received nominal values response \"%hs\""), buffer);
    return success && (buffer[0] == '#');
 }
 
@@ -119,14 +125,15 @@ void MegatecInterface::queryStaticData()
    char buffer[256];
    if (readLineFromSerial(buffer, 256, '\r'))
    {
+      nxlog_debug_tag(UPS_DEBUG_TAG, 7, _T("MEGATEC: received info response \"%hs\""), buffer);
       if (buffer[0] == '#')
       {
          buffer[27] = 0;
          StrStripA(&buffer[17]);
-         strcpy(m_paramList[UPS_PARAM_MODEL].szValue, buffer);
+         strcpy(m_paramList[UPS_PARAM_MODEL].szValue, &buffer[17]);
 
          StrStripA(&buffer[28]);
-         strcpy(m_paramList[UPS_PARAM_FIRMWARE].szValue, buffer);
+         strcpy(m_paramList[UPS_PARAM_FIRMWARE].szValue, &buffer[28]);
 
          m_paramList[UPS_PARAM_MODEL].dwFlags &= ~(UPF_NOT_SUPPORTED | UPF_NULL_VALUE);
          m_paramList[UPS_PARAM_FIRMWARE].dwFlags &= ~(UPF_NOT_SUPPORTED | UPF_NULL_VALUE);
@@ -155,6 +162,7 @@ void MegatecInterface::queryDynamicData()
    char buffer[256];
    if (readLineFromSerial(buffer, 256, '\r'))
    {
+      nxlog_debug_tag(UPS_DEBUG_TAG, 7, _T("MEGATEC: received status response \"%hs\""), buffer);
       if (buffer[0] == '(')
       {
          const char *curr = &buffer[1];
@@ -176,8 +184,11 @@ void MegatecInterface::queryDynamicData()
          }
          
          // curr should point to bit flags now
+         while(isspace(*curr))
+            curr++;
          strcpy(m_paramList[UPS_PARAM_ONLINE_STATUS].szValue, curr[0] == '1' ? (curr[1] == '1' ? "2" : "1") : "0");
          m_paramList[UPS_PARAM_ONLINE_STATUS].dwFlags &= ~UPF_NULL_VALUE;
+         nxlog_debug_tag(UPS_DEBUG_TAG, 7, _T("MEGATEC: status bits = %hs, online = %hs"), curr, m_paramList[UPS_PARAM_ONLINE_STATUS].szValue);
 
          // recalculate battery voltage for online devices
          if ((curr[4] == '0') && (m_packs > 0))
