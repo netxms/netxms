@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2018 Raden Solutions
+ * Copyright (C) 2003-2019 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,9 +21,7 @@ package org.netxms.websvc.handlers;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
-import org.netxms.client.constants.RCC;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.DataCollectionTarget;
@@ -41,24 +39,21 @@ public class LastValues extends AbstractObjectHandler
    protected Object getCollection(Map<String, String> query) throws Exception
    {
       NXCSession session = getSession();
-      AbstractObject obj = getObject();
+      AbstractObject object = getObject();
       List<DciValue[]> values = new ArrayList<DciValue[]>();
-      if (!(obj instanceof DataCollectionTarget) || obj.getObjectClass() == AbstractObject.OBJECT_CONTAINER)
+      if (object instanceof DataCollectionTarget)
       {
-         AbstractObject[] children = obj.getChildrenAsArray();
+         values.add(session.getLastValues(object.getObjectId()));
+      }
+      else
+      {
+         AbstractObject[] children = object.getChildrenAsArray();
          for(AbstractObject child : children)
          {
             if (child instanceof DataCollectionTarget)
                values.add(session.getLastValues(child.getObjectId()));
          }
       }
-      else if (obj instanceof DataCollectionTarget)
-      {
-         values.add(session.getLastValues(obj.getObjectId()));
-      }
-      else
-         throw new NXCException(RCC.INVALID_OBJECT_ID);
-      
       return new ResponseContainer("lastValues", values.toArray());
    }
 }
