@@ -60,7 +60,8 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR cmdLine
    icc.dwICC = ICC_LINK_CLASS;
 
    if ((wrc != 0) || !InitCommonControlsEx(&icc) || !InitMenu() || !SetupTrayIcon() ||
-       !PrepareApplicationWindow() || !PrepareMessageWindow() || !SetupSessionEventHandler())
+       !PrepareApplicationWindow() || !PrepareMessageWindow() || !SetupSessionEventHandler() ||
+       !InitButtons())
    {
       nxlog_write(NXLOG_ERROR, _T("NetXMS User Agent initialization failed"));
       MessageBox(NULL, _T("NetXMS User Agent initialization failed"), _T("NetXMS User Agent"), MB_OK | MB_ICONSTOP);

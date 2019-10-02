@@ -141,6 +141,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="appwnd.cpp" />
+    <ClCompile Include="button.cpp" />
     <ClCompile Include="comm.cpp" />
     <ClCompile Include="config.cpp" />
     <ClCompile Include="main.cpp" />

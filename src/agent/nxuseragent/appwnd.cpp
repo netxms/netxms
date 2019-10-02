@@ -21,12 +21,18 @@ bool g_reloadConfig = true;
 static HWND s_hWnd = NULL;
 
 /**
+ * Close button
+ */
+static Button *s_closeButton = NULL;
+
+/**
  * Saved element sizes and positions
  */
 static POINT s_menuStartPos;
 static POINT s_sessionInfoPosLeft;
 static POINT s_sessionInfoPosRight;
 static POINT s_footerStartPos;
+static POINT s_closeButtonSize;
 static int s_infoLineHeight = 0;
 
 /**
@@ -144,7 +150,7 @@ static void PaintWindow(HWND hWnd, HDC hdc)
    textRect.top = s_footerStartPos.y + 1;
    textRect.right = clientArea.right;
    textRect.bottom = textRect.top + FOOTER_HEIGHT - 1;
-   DrawText(hdc, NETXMS_BUILD_TAG, (int)_tcslen(NETXMS_BUILD_TAG), &textRect, DT_RIGHT | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX);
+   DrawText(hdc, NETXMS_VERSION_STRING, (int)_tcslen(NETXMS_VERSION_STRING), &textRect, DT_RIGHT | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX);
 }
 
 /**
@@ -201,7 +207,7 @@ static LRESULT CALLBACK AppWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM l
          {
             SetFocus(hWnd);
          }
-         else
+         else if (g_closeOnDeactivate)
          {
             DestroyWindow(hWnd);
             s_hWnd = NULL;
@@ -209,6 +215,10 @@ static LRESULT CALLBACK AppWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM l
          break;
       case WM_KEYDOWN:
          ProcessKeyPress(hWnd, wParam);
+         break;
+      case WM_DESTROY:
+         delete_and_null(s_closeButton);
+         s_hWnd = NULL;
          break;
       default:
          return DefWindowProc(hWnd, uMsg, wParam, lParam);
@@ -282,10 +292,16 @@ static POINT CalculateRequiredSize()
    HDC hdc = GetDC(NULL);
    if (hdc != NULL)
    {
-      HGDIOBJ oldFont = SelectObject(hdc, g_messageFont);
+      HGDIOBJ oldFont = SelectObject(hdc, g_symbolFont);
+
+      s_closeButtonSize = GetTextExtent(hdc, _T("\x2716"));
+      s_closeButtonSize.x += BUTTON_MARGIN_WIDTH * 2;
+      s_closeButtonSize.y += BUTTON_MARGIN_HEIGHT * 2;
+
+      SelectObject(hdc, g_messageFont);
       POINT pt = GetTextExtent(hdc, GetWelcomeMessage());
 
-      pt.x += APP_ICON_SIZE + APP_ICON_SPACING; // icon size
+      pt.x += APP_ICON_SIZE + APP_ICON_SPACING * 2 + s_closeButtonSize.x; // icon size and close button size
       nxlog_debug(6, _T("Calculated welcome message box: w=%d, h=%d"), pt.x, pt.y);
       if (pt.x > size.x)
          size.x = pt.x;
@@ -378,6 +394,15 @@ void OpenApplicationWindow(POINT pt, bool hotkeyOpen)
       _T("NetXMS User Agent"),
       WS_POPUP,
       hpos, vpos, size.x, size.y, NULL, NULL, g_hInstance, NULL);
+
+   // Create close button. It will be destroyed by WM_DESTROY handler of main window
+   RECT rect;
+   rect.left = size.x - BORDER_WIDTH - 3 - s_closeButtonSize.x;
+   rect.right = rect.left + s_closeButtonSize.x + 1;
+   rect.top = BORDER_WIDTH + 1;
+   rect.bottom = rect.top + s_closeButtonSize.y + 1;
+   s_closeButton = new Button(s_hWnd, rect, _T("\x2716"), true, CloseApplicationWindow);
+
    ActivateMenuItem(s_hWnd, NULL);
    if (!AnimateWindow(s_hWnd, 160, hotkeyOpen ? AW_CENTER : ((hpos >= pt.x) ? AW_VER_NEGATIVE | AW_HOR_POSITIVE : AW_VER_NEGATIVE)))
    {

@@ -31,11 +31,15 @@
 #define INDICATOR_HEIGHT         8
 #define APP_ICON_SIZE            64
 #define APP_ICON_SPACING         12
+#define BUTTON_MARGIN_WIDTH      3
+#define BUTTON_MARGIN_HEIGHT     3
 
 #define FONT_SIZE_MESSAGE        12
 #define FONT_SIZE_MENU           13
 #define FONT_SIZE_SYMBOLS        12
 #define FONT_SIZE_FOOTER         8
+
+#define MENU_ITEM_CLASS_NAME  _T("NetXMS_UA_MenuItem")
 
 /**
  * Color identifiers
@@ -72,7 +76,7 @@ class MenuItem
 {
    DISABLE_COPY_CTOR(MenuItem);
 
-private:
+protected:
    TCHAR *m_name;
    TCHAR *m_displayName;
    TCHAR *m_path;
@@ -82,6 +86,8 @@ private:
    HWND m_hWnd;
    bool m_highlighted;
    bool m_selected;
+   bool m_standalone;
+   bool m_symbol;
 
    void loadSubItems(ConfigEntry *config);
    void draw(HDC hdc) const;
@@ -89,9 +95,10 @@ private:
 
 public:
    MenuItem();
+   MenuItem(const TCHAR *text, bool symbol);
    MenuItem(MenuItem *parent);
    MenuItem(MenuItem *parent, ConfigEntry *config, const TCHAR *rootPath);
-   ~MenuItem();
+   virtual ~MenuItem();
 
    void loadRootMenu(ConfigEntry *config) { if (*m_path == 0) { m_subItems->clear(); loadSubItems(config); } }
    void setWindowHandle(HWND hWnd) { m_hWnd = hWnd; }
@@ -108,13 +115,41 @@ public:
    int getItemPos(MenuItem *item) { return (m_subItems != NULL) ? m_subItems->indexOf(item) : 0; }
    
    POINT calculateSize(HDC hdc) const;
-
-   void activate(HWND hParentWnd);
-   void deactivate();
-   void execute();
    void setSelected(bool selected);
 
-   LRESULT processMessage(UINT msg, WPARAM wParam, LPARAM lParam);
+   virtual void activate(HWND hParentWnd);
+   virtual void deactivate();
+   virtual void execute();
+   
+   virtual LRESULT processMessage(UINT msg, WPARAM wParam, LPARAM lParam);
+};
+
+/**
+ * User menu item
+ */
+class Button
+{
+   DISABLE_COPY_CTOR(Button);
+
+protected:
+   TCHAR *m_text;
+   HWND m_hWnd;
+   bool m_highlighted;
+   bool m_selected;
+   bool m_symbol;
+   void (*m_handler)();
+
+   void draw(HDC hdc) const;
+   void trackMouseEvent();
+
+public:
+   Button(HWND parent, RECT pos, const TCHAR *text, bool symbol, void (*handler)() = NULL);
+   virtual ~Button();
+
+   void setSelected(bool selected);
+
+   virtual void execute();
+   virtual LRESULT processMessage(UINT msg, WPARAM wParam, LPARAM lParam);
 };
 
 /*** Functions ***/
@@ -158,6 +193,7 @@ ObjectArray<UserAgentNotification> *GetNotificationsForDisplay();
 void ShowTrayNotification(const TCHAR *text);
 bool PrepareMessageWindow();
 void OpenMessageWindow();
+bool InitButtons();
 
 /*** Global variables ***/
 extern HINSTANCE g_hInstance;
@@ -167,5 +203,6 @@ extern HFONT g_messageFont;
 extern HFONT g_symbolFont;
 extern bool g_reloadConfig;
 extern bool g_connectedToAgent;
+extern bool g_closeOnDeactivate;
 
 #endif

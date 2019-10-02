@@ -1,7 +1,5 @@
 #include "nxuseragent.h"
 
-#define MENU_ITEM_CLASS_NAME  _T("NetXMS_UA_MenuItem")
-
 /**
  * Top level menu items
  */
@@ -31,6 +29,26 @@ MenuItem::MenuItem()
    m_hWnd = NULL;
    m_selected = false;
    m_highlighted = false;
+   m_standalone = false;
+   m_symbol = false;
+}
+
+/**
+ * Menu item constructor for standalone items (buttons)
+ */
+MenuItem::MenuItem(const TCHAR *text, bool symbol)
+{
+   m_name = _tcsdup(text);
+   m_displayName = _tcsdup(m_name);
+   m_path = _tcsdup(_T(""));
+   m_command = NULL;
+   m_parent = NULL;
+   m_subItems = NULL;
+   m_hWnd = NULL;
+   m_selected = false;
+   m_highlighted = false;
+   m_standalone = true;
+   m_symbol = symbol;
 }
 
 /**
@@ -47,6 +65,8 @@ MenuItem::MenuItem(MenuItem *parent)
    m_hWnd = NULL;
    m_selected = false;
    m_highlighted = false;
+   m_standalone = false;
+   m_symbol = false;
 }
 
 /**
@@ -80,6 +100,8 @@ MenuItem::MenuItem(MenuItem *parent, ConfigEntry *config, const TCHAR *rootPath)
    m_hWnd = NULL;
    m_selected = false;
    m_highlighted = false;
+   m_standalone = false;
+   m_symbol = false;
 }
 
 /**
@@ -95,8 +117,8 @@ MenuItem::~MenuItem()
 }
 
 /**
-* Load sub-items
-*/
+ * Load sub-items
+ */
 void MenuItem::loadSubItems(ConfigEntry *config)
 {
    if (*m_path != 0)
@@ -201,12 +223,14 @@ void MenuItem::draw(HDC hdc) const
    DeleteObject(brush);
 
    InflateRect(&rect, -(MARGIN_WIDTH - MENU_HIGHLIGHT_MARGIN), -MENU_VERTICAL_SPACING / 2);
-   DrawText(hdc, m_displayName, (int)_tcslen(m_displayName), &rect, DT_NOPREFIX | DT_LEFT | DT_VCENTER);
+   if (m_symbol)
+      SelectObject(hdc, g_symbolFont);
+   DrawText(hdc, m_displayName, (int)_tcslen(m_displayName), &rect, DT_NOPREFIX | DT_LEFT | DT_VCENTER | DT_SINGLELINE);
 
    if (isSubMenu())
    {
       SelectObject(hdc, g_symbolFont);
-      DrawText(hdc, _T("\xE017"), 1, &rect, DT_NOPREFIX | DT_RIGHT | DT_VCENTER);
+      DrawText(hdc, _T("\xE017"), 1, &rect, DT_NOPREFIX | DT_RIGHT | DT_VCENTER | DT_SINGLELINE);
    }
 }
 
@@ -351,7 +375,7 @@ LRESULT MenuItem::processMessage(UINT msg, WPARAM wParam, LPARAM lParam)
 static LRESULT CALLBACK MenuItemWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
    MenuItem *item = (MenuItem*)GetWindowLongPtr(hWnd, 0);
-   return (item != NULL) ? item->processMessage(uMsg, wParam, lParam) : DefWindowProc(hWnd, uMsg, wParam, lParam);;
+   return (item != NULL) ? item->processMessage(uMsg, wParam, lParam) : DefWindowProc(hWnd, uMsg, wParam, lParam);
 }
 
 /**

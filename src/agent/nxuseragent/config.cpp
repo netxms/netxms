@@ -1,6 +1,11 @@
 #include "nxuseragent.h"
 
 /**
+ * "Close on deactivate" flag
+ */
+bool g_closeOnDeactivate = false;
+
+/**
  * Default application colors
  */
 static COLORREF s_defaultColors[8] = {
@@ -175,6 +180,8 @@ void LoadConfig()
          }
          ResetTrayIcon();
       }
+
+      g_closeOnDeactivate = config.getValueAsBoolean(_T("/closeOnDeactivate"), false);
 
       LoadMenuItems(&config);
    }
