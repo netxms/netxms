@@ -564,7 +564,7 @@ static NETXMS_WCHAR *GetFieldData(SQLHSTMT sqlStatement, short column)
    SQLRETURN rc = SQLGetData(sqlStatement, column, SQL_C_WCHAR, buffer, sizeof(buffer), &dataSize);
    if (((rc == SQL_SUCCESS) || ((rc == SQL_SUCCESS_WITH_INFO) && (dataSize >= 0) && (dataSize <= (SQLLEN)(sizeof(buffer) - sizeof(WCHAR))))) && (dataSize != SQL_NULL_DATA))
    {
-      result = wcsdup(buffer);
+      result = MemCopyStringW(buffer);
    }
    else if ((rc == SQL_SUCCESS_WITH_INFO) && (dataSize != SQL_NULL_DATA))
    {
@@ -662,7 +662,7 @@ static NETXMS_WCHAR *GetFieldData(SQLHSTMT sqlStatement, short column)
       }
    }
 #endif
-   return (result != NULL) ? result : wcsdup(L"");
+   return (result != NULL) ? result : MemCopyStringW(L"");
 }
 
 /**
@@ -693,7 +693,7 @@ static DB2DRV_QUERY_RESULT *ProcessSelectResults(SQLHSTMT statement)
 		}
 		else
 		{
-			pResult->columnNames[i] = strdup("");
+			pResult->columnNames[i] = MemCopyStringA("");
 		}
 	}
 
@@ -918,7 +918,7 @@ extern "C" DBDRV_UNBUFFERED_RESULT __EXPORT DrvSelectUnbuffered(DB2DRV_CONN *pCo
 				}
 				else
 				{
-					pResult->columnNames[i] = strdup("");
+					pResult->columnNames[i] = MemCopyStringA("");
 				}
 			}
 
@@ -980,7 +980,7 @@ extern "C" DBDRV_UNBUFFERED_RESULT __EXPORT DrvSelectPreparedUnbuffered(DB2DRV_C
 			}
 			else
 			{
-				pResult->columnNames[i] = strdup("");
+				pResult->columnNames[i] = MemCopyStringA("");
 			}
 		}
 

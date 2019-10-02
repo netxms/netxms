@@ -368,7 +368,7 @@ static int SelectCallback(void *arg, int nCols, char **ppszData, char **ppszName
 	{
 		static_cast<SQLITE_RESULT*>(arg)->ppszNames = (char **)malloc(sizeof(char *) * nCols);
 		for(i = 0; i < nCols; i++)
-			static_cast<SQLITE_RESULT*>(arg)->ppszNames[i] = strdup(ppszNames[i]);
+			static_cast<SQLITE_RESULT*>(arg)->ppszNames[i] = MemCopyStringA(ppszNames[i]);
 	}
 
    nPos = static_cast<SQLITE_RESULT*>(arg)->nRows * static_cast<SQLITE_RESULT*>(arg)->nCols;
@@ -377,9 +377,9 @@ static int SelectCallback(void *arg, int nCols, char **ppszData, char **ppszName
          sizeof(char *) * static_cast<SQLITE_RESULT*>(arg)->nCols * static_cast<SQLITE_RESULT*>(arg)->nRows);
 
    for(i = 0; i < nMaxCol; i++, nPos++)
-      static_cast<SQLITE_RESULT*>(arg)->ppszData[nPos] = strdup(CHECK_NULL_EX_A(ppszData[i]));
+      static_cast<SQLITE_RESULT*>(arg)->ppszData[nPos] = MemCopyStringA(CHECK_NULL_EX_A(ppszData[i]));
    for(; i < static_cast<SQLITE_RESULT*>(arg)->nCols; i++, nPos++)
-      static_cast<SQLITE_RESULT*>(arg)->ppszData[nPos] = strdup("");
+      static_cast<SQLITE_RESULT*>(arg)->ppszData[nPos] = MemCopyStringA("");
    return 0;
 }
 

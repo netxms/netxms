@@ -522,11 +522,11 @@ static INFORMIX_QUERY_RESULT *ProcessSelectResults(SQLHSTMT statement)
 			(iResult == SQL_SUCCESS_WITH_INFO))
 		{
 			name[len] = 0;
-			pResult->columnNames[i] = strdup(name);
+			pResult->columnNames[i] = MemCopyStringA(name);
 		}
 		else
 		{
-			pResult->columnNames[i] = strdup("");
+			pResult->columnNames[i] = MemCopyStringA("");
 		}
 	}
 
@@ -545,11 +545,11 @@ static INFORMIX_QUERY_RESULT *ProcessSelectResults(SQLHSTMT statement)
 			iResult = SQLGetData(statement, (short)i, SQL_C_WCHAR, pDataBuffer, DATA_BUFFER_SIZE, &iDataSize);
 			if (iDataSize != SQL_NULL_DATA)
 			{
-				pResult->values[iCurrValue++] = wcsdup((const WCHAR *)pDataBuffer);
+				pResult->values[iCurrValue++] = MemCopyStringW((const WCHAR *)pDataBuffer);
 			}
 			else
 			{
-				pResult->values[iCurrValue++] = wcsdup(L"");
+				pResult->values[iCurrValue++] = MemCopyStringW(L"");
 			}
 		}
 	}
@@ -763,7 +763,7 @@ extern "C" DBDRV_UNBUFFERED_RESULT __EXPORT DrvSelectUnbuffered(INFORMIX_CONN *p
 				}
 				else
 				{
-					pResult->columnNames[i] = strdup("");
+					pResult->columnNames[i] = MemCopyStringA("");
 				}
 			}
 
@@ -825,7 +825,7 @@ extern "C" DBDRV_UNBUFFERED_RESULT __EXPORT DrvSelectPreparedUnbuffered(INFORMIX
 			}
 			else
 			{
-				pResult->columnNames[i] = strdup("");
+				pResult->columnNames[i] = MemCopyStringA("");
 			}
 		}
 
