@@ -100,10 +100,10 @@ public class DataFormatter
                   sb.append(String.format(f, v.value));
                   sb.append(v.suffix);
                }
-               catch(IllegalFormatException e)
+               catch(IndexOutOfBoundsException | IllegalFormatException e) // out of bound may occur if there is no letter after % sign. Like: %*3
                {
                   sb.append("<INVALID FORMAT> (");
-                  sb.append(f);
+                  sb.append(f.trim()); //trim required in case of out of bound
                   sb.append(")");
                }
             }
