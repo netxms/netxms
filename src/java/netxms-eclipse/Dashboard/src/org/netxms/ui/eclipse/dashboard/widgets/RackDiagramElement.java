@@ -45,7 +45,6 @@ import org.eclipse.ui.IViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.RackOrientation;
 import org.netxms.client.dashboards.DashboardElement;
-import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Rack;
 import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.dashboard.propertypages.helpers.RackView;
@@ -193,7 +192,7 @@ public class RackDiagramElement extends ElementWidget implements ISelectionProvi
       
       RackSelectionListener listener = new RackSelectionListener() {
          @Override
-         public void objectSelected(AbstractObject object)
+         public void objectSelected(Object object)
          {
             selection = (object != null) ? new StructuredSelection(object) : new StructuredSelection();
             for(ISelectionChangedListener listener : selectionListeners)

@@ -183,7 +183,7 @@ public class RackTab extends ObjectTab implements ISelectionProvider
 	   {
          RackSelectionListener listener = new RackSelectionListener() {
             @Override
-            public void objectSelected(AbstractObject object)
+            public void objectSelected(Object object)
             {
                selection = (object != null) ? new StructuredSelection(object) : new StructuredSelection();
                for(ISelectionChangedListener listener : selectionListeners)

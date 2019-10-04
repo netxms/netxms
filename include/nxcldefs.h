@@ -486,6 +486,7 @@ enum SessionState
 #define NX_NOTIFY_POLICY_DELETED             40
 #define NX_NOTIFY_USER_AGENT_MESSAGE_CHANGED 41
 #define NX_NOTIFICATION_CHANNEL_CHANGED      42
+#define NX_NOTIFY_PHYSICAL_LINK_UPDATE       43
 
 /**
  * Request completion codes

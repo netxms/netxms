@@ -1270,6 +1270,56 @@ template <typename T, typename B> inline void ThreadPoolScheduleRelative(ThreadP
 }
 
 /**
+ * Wrapper data for ThreadPoolExecute (no arguments) using smart pointer to object
+ */
+template <typename T> class __ThreadPoolExecute_SharedPtr_WrapperData_0
+{
+public:
+   shared_ptr<T> m_object;
+   void (T::*m_func)();
+
+   __ThreadPoolExecute_SharedPtr_WrapperData_0(shared_ptr<T> object, void (T::*func)())
+   {
+      m_object = object;
+      m_func = func;
+   }
+};
+
+/**
+ * Wrapper for ThreadPoolExecute (no arguments) using smart pointer to object
+ */
+template <typename T> void __ThreadPoolExecute_SharedPtr_Wrapper_0(void *arg)
+{
+   auto wd = static_cast<__ThreadPoolExecute_SharedPtr_WrapperData_0<T> *>(arg);
+   ((*wd->m_object.get()).*(wd->m_func))();
+   delete wd;
+}
+
+/**
+ * Execute task as soon as possible (use class member without arguments) using smart pointer to object
+ */
+template <typename T, typename B> inline void ThreadPoolExecute(ThreadPool *p, shared_ptr<T> object, void (B::*f)())
+{
+   ThreadPoolExecute(p, __ThreadPoolExecute_SharedPtr_Wrapper_0<B>, new __ThreadPoolExecute_SharedPtr_WrapperData_0<B>(object, f));
+}
+
+/**
+ * Execute serialized task as soon as possible (use class member without arguments) using smart pointer to object
+ */
+template <typename T, typename B> inline void ThreadPoolExecuteSerialized(ThreadPool *p, const TCHAR *key, shared_ptr<T> object, void (B::*f)())
+{
+   ThreadPoolExecuteSerialized(p, key, __ThreadPoolExecute_SharedPtr_Wrapper_0<B>, new __ThreadPoolExecute_SharedPtr_WrapperData_0<B>(object, f));
+}
+
+/**
+ * Execute task with delay (use class member without arguments) using smart pointer to object
+ */
+template <typename T, typename B> inline void ThreadPoolScheduleRelative(ThreadPool *p, UINT32 delay, shared_ptr<T> object, void (B::*f)())
+{
+   ThreadPoolScheduleRelative(p, delay, __ThreadPoolExecute_SharedPtr_Wrapper_0<B>, new __ThreadPoolExecute_SharedPtr_WrapperData_0<B>(object, f));
+}
+
+/**
  * Wrapper data for ThreadPoolExecute (one argument)
  */
 template <typename T, typename R> class __ThreadPoolExecute_WrapperData_1

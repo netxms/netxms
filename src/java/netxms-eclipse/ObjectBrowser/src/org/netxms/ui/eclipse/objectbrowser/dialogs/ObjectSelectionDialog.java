@@ -408,13 +408,26 @@ public class ObjectSelectionDialog extends Dialog
 		return session.findMultipleObjects(selectedObjects, false);
 	}
 
+   /**
+    * Get selected objects of given type
+    * 
+    * @param classFilter 
+    * @return
+    */
+   public AbstractObject[] getSelectedObjects(Class<? extends AbstractObject> classFilter)
+   {
+      Set<Class<? extends AbstractObject>> classFilterSet = new HashSet<Class<? extends AbstractObject>>();
+      classFilterSet.add(classFilter);
+      return getSelectedObjects(classFilterSet);
+   }
+
 	/**
 	 * Get selected objects of given type
 	 * 
 	 * @param classFilter 
 	 * @return
 	 */
-	public AbstractObject[] getSelectedObjects(Class<? extends AbstractObject> classFilter)
+	public AbstractObject[] getSelectedObjects(Set<Class<? extends AbstractObject>> classFilterSet)
 	{
 		if (selectedObjects == null)
 			return new AbstractObject[0];
@@ -423,8 +436,9 @@ public class ObjectSelectionDialog extends Dialog
 		for(int i = 0; i < selectedObjects.length; i++)
 		{
 			AbstractObject object = session.findObjectById(selectedObjects[i]);
-			if (classFilter.isInstance(object))
-				resultSet.add(object);
+			for(Class<? extends AbstractObject> cl : classFilterSet)
+   			if (cl.isInstance(object))
+   				resultSet.add(object);
 		}
 		return resultSet.toArray(new AbstractObject[resultSet.size()]);
 	}

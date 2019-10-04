@@ -39,7 +39,6 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.RackOrientation;
-import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Rack;
 import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.objectbrowser.api.ObjectContextMenu;
@@ -115,7 +114,7 @@ public class RackView extends ViewPart implements ISelectionProvider
 
       RackSelectionListener listener = new RackSelectionListener() {
          @Override
-         public void objectSelected(AbstractObject object)
+         public void objectSelected(Object object)
          {
             selection = (object != null) ? new StructuredSelection(object) : new StructuredSelection();
             for(ISelectionChangedListener listener : selectionListeners)

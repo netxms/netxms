@@ -18,8 +18,6 @@
  */
 package org.netxms.ui.eclipse.objectview.widgets.helpers;
 
-import org.netxms.client.objects.AbstractObject;
-
 /**
  * Rack selection listener interface
  */
@@ -30,5 +28,5 @@ public interface RackSelectionListener
     * 
     * @param object
     */
-   public void objectSelected(AbstractObject object);
+   public void objectSelected(Object object);
 }

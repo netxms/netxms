@@ -23,6 +23,16 @@
 #include "nxdbmgr.h"
 #include <nxevent.h>
 
+
+/**
+ * Upgrade from 30.101 to 31.0
+ */
+static bool H_UpgradeFromV102()
+{
+   CHK_EXEC(SetMajorSchemaVersion(31, 0));
+   return true;
+}
+
 /**
  * Generate GSM modem notification channel configuration from SMSDrvConfig
  *
@@ -3593,6 +3603,7 @@ static struct
    bool (* upgradeProc)();
 } s_dbUpgradeMap[] =
 {
+   { 102, 31, 0, H_UpgradeFromV102 },
    { 101, 30, 102, H_UpgradeFromV101 },
    { 100, 30, 101, H_UpgradeFromV100 },
    { 99, 30, 100, H_UpgradeFromV99 },
@@ -3707,7 +3718,7 @@ bool MajorSchemaUpgrade_V30()
    if (!DBGetSchemaVersion(g_dbHandle, &major, &minor))
       return false;
 
-   while((major == 30) && (minor < DB_SCHEMA_VERSION_V30_MINOR))
+   while(major == 30)
    {
       // Find upgrade procedure
       int i;

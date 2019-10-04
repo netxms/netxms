@@ -18,6 +18,7 @@
  */
 package org.netxms.ui.eclipse.objectbrowser.widgets;
 
+import java.util.HashSet;
 import java.util.Set;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Composite;
@@ -35,7 +36,8 @@ import org.netxms.ui.eclipse.widgets.AbstractSelector;
 public class ObjectSelector extends AbstractSelector
 {
 	private long objectId = 0;
-	private Class<? extends AbstractObject> objectClass = Node.class;
+	private AbstractObject object = null;
+	private Set<Class<? extends AbstractObject>> objectClassSet = new HashSet<Class<? extends AbstractObject>>();
 	private Set<Integer> classFilter = null;
 	private String emptySelectionName = Messages.get().ObjectSelector_None;
 	
@@ -47,6 +49,7 @@ public class ObjectSelector extends AbstractSelector
 	{
 		super(parent, style, showClearButton ? SHOW_CLEAR_BUTTON : 0);
 		setText(emptySelectionName);
+		objectClassSet.add(Node.class);
 	}
 
 	/* (non-Javadoc)
@@ -59,15 +62,17 @@ public class ObjectSelector extends AbstractSelector
 		dlg.enableMultiSelection(false);
 		if (dlg.open() == Window.OK)
 		{
-			AbstractObject[] objects = dlg.getSelectedObjects(objectClass);
+			AbstractObject[] objects = dlg.getSelectedObjects(objectClassSet);
 			if (objects.length > 0)
 			{
 				objectId = objects[0].getObjectId();
+				object = objects[0];
 				setText(objects[0].getObjectName());
 			}
 			else
 			{
 				objectId = 0;
+				object = null;
 				setText(emptySelectionName);
 			}
 			fireModifyListeners();
@@ -81,6 +86,7 @@ public class ObjectSelector extends AbstractSelector
 	protected void clearButtonHandler()
 	{
 		objectId = 0;
+      object = null;
 		setText(emptySelectionName);
 		fireModifyListeners();
 	}
@@ -91,6 +97,11 @@ public class ObjectSelector extends AbstractSelector
 	public long getObjectId()
 	{
 		return objectId;
+	}
+	
+	public AbstractObject getObject()
+	{
+	   return object;
 	}
 
 	/**
@@ -113,7 +124,7 @@ public class ObjectSelector extends AbstractSelector
 		}
 		else
 		{
-			final AbstractObject object = ((NXCSession)ConsoleSharedData.getSession()).findObjectById(objectId);
+			object = ((NXCSession)ConsoleSharedData.getSession()).findObjectById(objectId);
 			setText((object != null) ? object.getObjectName() : ("<" + Long.toString(objectId) + ">")); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 	}
@@ -123,7 +134,7 @@ public class ObjectSelector extends AbstractSelector
 	 */
 	public Class<? extends AbstractObject> getObjectClass()
 	{
-		return objectClass;
+		return objectClassSet.iterator().next();
 	}
 
 	/**
@@ -131,9 +142,19 @@ public class ObjectSelector extends AbstractSelector
 	 */
 	public void setObjectClass(Class<? extends AbstractObject> objectClass)
 	{
-		this.objectClass = objectClass;
+	   objectClassSet.clear();
+		objectClassSet.add(objectClass);
 	}
 
+	/**
+	 * Set object Class set
+	 * 
+	 * @param filterSet object class set
+	 */
+   public void setObjectClass(Set<Class<? extends AbstractObject>> filterSet)
+   {
+      objectClassSet = filterSet;
+   }
 	/**
 	 * @return the emptySelectionName
 	 */

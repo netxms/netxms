@@ -78,6 +78,7 @@ void ExecuteStartupScripts();
 void CloseAgentTunnels();
 void StopDataCollection();
 void StopObjectMaintenanceThreads();
+void LoadPhysicalLinks();
 
 void ExecuteScheduledAction(const ScheduledTaskParameters *parameters);
 void ExecuteScheduledScript(const ScheduledTaskParameters *parameters);
@@ -1029,6 +1030,9 @@ retry_db_lock:
 
 	//Initialize user agent messages
 	InitUserAgentNotifications();
+
+	//Load physical links
+	LoadPhysicalLinks();
 
    InitClientListeners();
    int importMode = ConfigReadInt(_T("ImportConfigurationOnStartup"), 1);

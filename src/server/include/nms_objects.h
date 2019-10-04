@@ -1341,6 +1341,7 @@ protected:
 
 protected:
    virtual void onObjectDelete(UINT32 objectId) override;
+   virtual void prepareForDeletion() override;
 
 	virtual void fillMessageInternal(NXCPMessage *msg, UINT32 userId) override;
    virtual UINT32 modifyFromMessageInternal(NXCPMessage *request) override;
@@ -3168,6 +3169,38 @@ public:
    virtual bool showThresholdSummary() override;
 };
 
+enum RackElementType
+{
+   PATCH_PANEL = 0,
+   FILLER_PANEL = 1,
+   ORGANISER = 2
+};
+
+class NXCORE_EXPORTABLE RackPassiveElement
+{
+private:
+   UINT32 m_id;
+   TCHAR *m_name;
+   RackElementType m_type;
+   UINT32 m_position;
+   RackOrientation m_orientation;
+   UINT32 m_portCount;
+
+public:
+   RackPassiveElement(DB_RESULT hResult, int row);
+   RackPassiveElement();
+   RackPassiveElement(NXCPMessage *pRequest, UINT32 base);
+   ~RackPassiveElement() { MemFree(m_name); }
+
+   json_t *toJson();
+   bool saveToDatabase(DB_HANDLE hdb, UINT32 parentId);
+   bool deleteChildren(DB_HANDLE hdb, UINT32 parentId);
+   void fillMessage(NXCPMessage *pMsg, UINT32 base);
+
+   RackElementType getType() const { return m_type; }
+   UINT32 getId() const { return m_id; }
+};
+
 /**
  * Rack object
  */
@@ -3179,10 +3212,12 @@ protected:
 protected:
 	int m_height;	// Rack height in units
 	bool m_topBottomNumbering;
-	TCHAR *m_passiveElements;
+	ObjectArray<RackPassiveElement> *m_passiveElements;
 
    virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId) override;
    virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest) override;
+
+   virtual void prepareForDeletion() override;
 
 public:
    Rack();
@@ -3989,6 +4024,9 @@ void InitUserAgentNotifications();
 void DeleteExpiredUserAgentNotifications(DB_HANDLE hdb,UINT32 retentionTime);
 void FillUserAgentNotificationsAll(NXCPMessage *msg, Node *node);
 UserAgentNotificationItem *CreateNewUserAgentNotification(const TCHAR *message, const IntegerArray<UINT32> *objects, time_t startTime, time_t endTime);
+
+void DeleteObjectFromPhysicalLinks(UINT32 id);
+void DeletePatchPanelFromPhysicalLinks(UINT32 rackId, UINT32 patchPannelId);
 
 /**
  * Global variables

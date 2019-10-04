@@ -25,7 +25,7 @@ import java.util.List;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.configs.PassiveRackElementGroup;
+import org.netxms.client.objects.configs.PassiveRackElement;
 
 /**
  * Rack object
@@ -34,7 +34,7 @@ public class Rack extends GenericObject
 {
 	private int height;
 	private boolean topBottomNumbering;
-	private PassiveRackElementGroup passiveElements;
+   private List<PassiveRackElement> passiveElements;
 	
 	/**
 	 * @param msg
@@ -45,14 +45,14 @@ public class Rack extends GenericObject
 		super(msg, session);
 		height = msg.getFieldAsInt32(NXCPCodes.VID_HEIGHT);
 		topBottomNumbering = msg.getFieldAsBoolean(NXCPCodes.VID_TOP_BOTTOM);
-		try
-      {
-		   passiveElements = PassiveRackElementGroup.createFromXml(msg.getFieldAsString(NXCPCodes.VID_PASSIVE_ELEMENTS));
-      }
-      catch(Exception e)
-      {
-         passiveElements = new PassiveRackElementGroup();
-      }
+		passiveElements = new ArrayList<PassiveRackElement>();
+		int count = msg.getFieldAsInt32(NXCPCodes.VID_NUM_ELEMENTS);
+		long base = NXCPCodes.VID_ELEMENT_LIST_BASE;
+		for (int i = 0; i < count; i++)
+		{
+		   passiveElements.add(new PassiveRackElement(msg, base));
+		   base+=10;
+		}
 	}
 	
 	/* (non-Javadoc)
@@ -99,11 +99,11 @@ public class Rack extends GenericObject
    }
    
    /**
-    * Get rack passive elements
+    * Get rack attribute config entry list
     * 
-    * @return passive elements configuration
+    * @return entryList
     */
-   public PassiveRackElementGroup getPassiveElements()
+   public List<PassiveRackElement> getPassiveElements()
    {
       return passiveElements;
    }
@@ -130,4 +130,18 @@ public class Rack extends GenericObject
       });
 	   return units;
 	}
+	
+	/**
+	 * Get passive element by id	 
+	 */
+	public PassiveRackElement getPassiveElement(long id)
+	{
+	   PassiveRackElement element = null;
+	   for(PassiveRackElement el : passiveElements)
+	      if (el.getId() == id)
+	         element = el;
+	   
+	   return element;
+	}
+	
 }

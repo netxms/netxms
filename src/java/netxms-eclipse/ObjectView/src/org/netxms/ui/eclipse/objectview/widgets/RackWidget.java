@@ -38,9 +38,11 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.ui.IWorkbenchPage;
+import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.PlatformUI;
 import org.netxms.base.NXCommon;
 import org.netxms.client.constants.RackOrientation;
-import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Rack;
 import org.netxms.client.objects.RackElement;
 import org.netxms.client.objects.configs.PassiveRackElement;
@@ -49,8 +51,10 @@ import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.imagelibrary.shared.ImageProvider;
 import org.netxms.ui.eclipse.imagelibrary.shared.ImageUpdateListener;
 import org.netxms.ui.eclipse.objectview.Activator;
+import org.netxms.ui.eclipse.objectview.views.PhysicalLinkView;
 import org.netxms.ui.eclipse.objectview.widgets.helpers.RackSelectionListener;
 import org.netxms.ui.eclipse.tools.FontTools;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
@@ -80,9 +84,9 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
    private Image imageFillerPanel;
    private Image imageOrganiserPanel;
    private List<ObjectImage> objects = new ArrayList<ObjectImage>();
-   private AbstractObject selectedObject = null;
+   private Object selectedObject = null;
    private Set<RackSelectionListener> selectionListeners = new HashSet<RackSelectionListener>(0);
-   private AbstractObject tooltipObject = null;
+   private Object tooltipObject = null;
    private ObjectPopupDialog tooltipDialog = null;
    private RackOrientation view;
    
@@ -119,7 +123,7 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
    /**
     * @return the currentObject
     */
-   public AbstractObject getCurrentObject()
+   public Object getCurrentObject()
    {
       return selectedObject;
    }
@@ -202,7 +206,8 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
          unitBaselines[rack.getHeight()] = (int)dy;
       
       // Draw attributes
-      List<PassiveRackElement> attributes = rack.getPassiveElements().getElements();
+      objects.clear();
+      List<PassiveRackElement> attributes = rack.getPassiveElements();
       for(PassiveRackElement c : attributes)
       {
          if ((c.getPosition() < 1) || (c.getPosition() > rack.getHeight()) ||
@@ -224,7 +229,8 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
 
          if ((unitRect.width <= 0) || (unitRect.height <= 0))
             break;
-         
+
+         objects.add(new ObjectImage(c, unitRect));
          Image image;
          switch(c.getType())
          {
@@ -246,7 +252,6 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
       }
       
       // Draw units
-      objects.clear();
       List<RackElement> units = rack.getUnits();
       for(RackElement n : units)
       {
@@ -423,12 +428,12 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
     * @param p
     * @return
     */
-   private AbstractObject getObjectAtPoint(Point p)
+   private Object getObjectAtPoint(Point p)
    {
       for(ObjectImage i : objects)
          if (i.contains(p))
          {
-            return (AbstractObject)i.getObject();
+            return i.getObject();
          }
       return null;
    }
@@ -439,6 +444,17 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
    @Override
    public void mouseDoubleClick(MouseEvent e)
    {
+      if (selectedObject instanceof PassiveRackElement)
+      {
+         try 
+         {
+            PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().showView(PhysicalLinkView.ID, String.valueOf(rack.getObjectId()) + "&" + String.valueOf(((PassiveRackElement)selectedObject).getId()), IWorkbenchPage.VIEW_ACTIVATE);            
+         } 
+         catch (PartInitException ex) 
+         {
+            MessageDialogHelper.openError(getShell(), "Error openning Physical link view", String.format("Cannot open Physical link view: %s", ex.getLocalizedMessage()));
+         }
+      }
    }
 
    /* (non-Javadoc)
@@ -492,7 +508,7 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
    @Override
    public void mouseHover(MouseEvent e)
    {
-      AbstractObject object = getObjectAtPoint(new Point(e.x, e.y));
+      Object object = getObjectAtPoint(new Point(e.x, e.y));
       if ((object != null) && ((object != tooltipObject) || (tooltipDialog == null) || (tooltipDialog.getShell() == null) || tooltipDialog.getShell().isDisposed()))
       {
          if ((tooltipDialog != null) && (tooltipDialog.getShell() != null) && !tooltipDialog.getShell().isDisposed())
@@ -534,7 +550,7 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
     * 
     * @param o
     */
-   private void setCurrentObject(AbstractObject o)
+   private void setCurrentObject(Object o)
    {
       selectedObject = o;
       for(RackSelectionListener l : selectionListeners)
@@ -546,10 +562,10 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
     */
    private class ObjectImage
    {
-      private RackElement object;
+      private Object object;
       private Rectangle rect;
 
-      public ObjectImage(RackElement object, Rectangle rect)
+      public ObjectImage(Object object, Rectangle rect)
       {
          this.object = object;
          this.rect = new Rectangle(rect.x, rect.y, rect.width, rect.height);
@@ -560,7 +576,7 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
          return rect.contains(p);
       }
       
-      public RackElement getObject()
+      public Object getObject()
       {
          return object;
       }

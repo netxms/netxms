@@ -356,7 +356,7 @@ EnumerationCallbackResult FillVMData(const TCHAR *key, const void *obj, void *us
    value->set(0, virDomainGetID(*vm));
    value->set(1, key);
    value->set(2, conf.getValue(_T("/uuid"), _T("")));
-   String os(conf.getValue(_T("/os/type"), _T("Unkonown")));
+   StringBuffer os(conf.getValue(_T("/os/type"), _T("Unkonown")));
    ConfigEntry *entry = conf.getEntry(_T("/os/type"));
    if(entry != NULL)
    {
@@ -743,7 +743,7 @@ EnumerationCallbackResult FillNetworkData(const TCHAR *key, const void *obj, voi
    value->set(1, conf.getValue(_T("/uuid"), _T("")));
 
    //concat all interfaces
-   String ifaces;
+   StringBuffer ifaces;
    ObjectArray<ConfigEntry> *ifaceList = conf.getSubEntries(_T("/forward"), _T("interface"));
    for(int i = 0; i < ifaceList->size(); i++)
    {
@@ -756,7 +756,7 @@ EnumerationCallbackResult FillNetworkData(const TCHAR *key, const void *obj, voi
    delete ifaceList;
 
    //concat all portgroups
-   String portgroup;
+   StringBuffer portgroup;
    ObjectArray<ConfigEntry> *portgroupList = conf.getSubEntries(_T("/"), _T("portgroup"));
    for(int i = 0; i < portgroupList->size(); i++)
    {

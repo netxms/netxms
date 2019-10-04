@@ -44,6 +44,13 @@
             name="Hardware Inventory"
             restorable="true">
       </view>
+      <view
+            allowMultiple="true"
+            class="org.netxms.ui.eclipse.objectview.views.PhysicalLinkView"
+            id="org.netxms.ui.eclipse.objectview.views.PhysicalLinkView"
+            name="Physical links"
+            restorable="true">
+      </view>
    </extension>
 
    <extension
@@ -86,6 +93,28 @@
             </parameter>
          </defaultHandler>
       </command>
+      <command
+            categoryId="org.netxms.ui.eclipse.console.category.views"
+            description="Open physical link list"
+            id="org.netxms.ui.eclipse.objectview.commands.open_physical_links"
+            name="Physical links">
+      </command>
+      <command
+            description="Toggle physical link filter"
+            id="org.netxms.ui.eclipse.objectview.commands.show_physical_link_filter"
+            name="Toggle filter">
+         <defaultHandler
+               class="org.netxms.ui.eclipse.objectview.actions.TogglePhysicalLinkFilterHandler">
+            <parameter
+                  name="default"
+                  value="default">
+            </parameter>
+         </defaultHandler>
+         <state
+               class="org.eclipse.jface.commands.ToggleState"
+               id="org.netxms.ui.eclipse.objectview.commands.show_physical_link_filter.state">
+         </state>
+      </command>
    </extension>
    
    <extension point = "org.eclipse.ui.actionSets">
@@ -101,6 +130,20 @@
 			   definitionId="org.netxms.ui.eclipse.objectview.commands.open_tabbed_object_view">
 		   </action>
 	   </actionSet>
+    <actionSet
+          id="org.netxms.ui.eclipse.action_set.object_managment"
+          label="Object Managment"
+          visible="true">
+       <action
+             class="org.netxms.ui.eclipse.objectview.actions.ShowPhysicalLink"
+             definitionId="org.netxms.ui.eclipse.objectview.commands.open_physical_links"
+             id="org.netxms.ui.eclipse.objectmanager.commands.open_physical_links"
+             label="Physical Links"
+             menubarPath="config/additions"
+             style="push"
+             tooltip="Physical links">
+       </action>
+    </actionSet>
    </extension>
 
    <extension
@@ -156,6 +199,13 @@
             id="org.netxms.ui.eclipse.objectview.objecttabs.NetworkServiceTab"
             name="Network Services"
             order="60">
+      </tab>
+      <tab
+            class="org.netxms.ui.eclipse.objectview.objecttabs.PhysicalLinkTab"
+            contextId="org.netxms.ui.eclipse.objectview.context.PhysicalLinks"
+            id="org.netxms.ui.eclipse.objectview.objecttabs.PhysicalLinkTab"
+            name="Physical links"
+            order="30">
       </tab>
    </extension>
    <extension
@@ -246,6 +296,12 @@
             schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
             sequence="M1+F2">
       </key>
+      <key
+            commandId="org.netxms.ui.eclipse.objectview.commands.show_physical_link_filter"
+            contextId="org.netxms.ui.eclipse.objectview.context.PhysicalLinks"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="M1+F2">
+      </key>
    </extension>
    <extension
          point="org.eclipse.ui.contexts">
@@ -262,6 +318,16 @@
       <context
             id="org.netxms.ui.eclipse.objectview.context.VPNTab"
             name="VPN Connectors Tab"
+            parentId="org.eclipse.ui.contexts.window">
+      </context>
+      <context
+            id="org.netxms.ui.eclipse.objectview.context.PhysicalLinks"
+            name="Physical links patch panel"
+            parentId="org.eclipse.ui.contexts.window">
+      </context>
+      <context
+            id="org.netxms.ui.eclipse.objectview.context.PhysicalLinkView"
+            name="Physical links"
             parentId="org.eclipse.ui.contexts.window">
       </context>
    </extension>
@@ -304,6 +370,21 @@
                      variable="org.netxms.ui.eclipse.objectview.ActiveTab">
                   <instanceof
                         value="org.netxms.ui.eclipse.objectview.objecttabs.InterfacesTab">
+                  </instanceof>
+               </with>
+            </visibleWhen>
+         </command>
+         <command
+               commandId="org.netxms.ui.eclipse.objectview.commands.show_physical_link_filter"
+               label="Show &amp;filter"
+               style="toggle"
+               tooltip="Show Filter">
+            <visibleWhen
+                  checkEnabled="false">
+               <with
+                     variable="org.netxms.ui.eclipse.objectview.ActiveTab">
+                  <instanceof
+                        value="org.netxms.ui.eclipse.objectview.objecttabs.PhysicalLinkTab">
                   </instanceof>
                </with>
             </visibleWhen>

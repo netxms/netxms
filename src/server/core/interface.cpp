@@ -1104,6 +1104,14 @@ void Interface::onObjectDelete(UINT32 dwObjectId)
 }
 
 /**
+ * Prepare object for deletion
+ */
+void Interface::prepareForDeletion()
+{
+   DeleteObjectFromPhysicalLinks(m_id);
+}
+
+/**
  * Set peer information
  */
 void Interface::setPeer(Node *node, Interface *iface, LinkLayerProtocol protocol, bool reflection)

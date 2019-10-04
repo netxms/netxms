@@ -19,6 +19,7 @@ Require-Bundle: org.eclipse.ui;bundle-version="3.8.2",
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ActivationPolicy: lazy
 Export-Package: org.netxms.ui.eclipse.objectview.api,
+ org.netxms.ui.eclipse.objectview.dialogs,
  org.netxms.ui.eclipse.objectview.objecttabs,
  org.netxms.ui.eclipse.objectview.views,
  org.netxms.ui.eclipse.objectview.widgets,

@@ -46,6 +46,7 @@ import org.netxms.client.maps.MapObjectDisplayMode;
 import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.elements.NetworkMapElement;
 import org.netxms.client.objects.ClusterResource;
+import org.netxms.client.objects.configs.PassiveRackElement;
 
 /**
  * This class is used to hold data for NXCSession.modifyObject()
@@ -240,7 +241,7 @@ public class NXCObjectModificationData
    private long sensorProxy;
    private String xmlConfig;
    private List<String> snmpPorts;
-   private String passiveElements;
+   private List<PassiveRackElement> passiveElements;
    private List<Long> responsibleUsers;
    private boolean isAutoBindEnabled;
    private boolean isAutoUnbindEnabled;
@@ -1980,7 +1981,7 @@ public class NXCObjectModificationData
    /**
     * @return the passiveElementsConfig
     */
-   public String getPassiveElements()
+   public List<PassiveRackElement> getPassiveElements()
    {
       return passiveElements;
    }
@@ -1990,7 +1991,7 @@ public class NXCObjectModificationData
     *
     * @param passiveElements XMS configuration of passive rack elements
     */
-   public void setPassiveElements(String passiveElements)
+   public void setPassiveElements(List<PassiveRackElement> passiveElements)
    {
       this.passiveElements = passiveElements;
       fieldSet.add(PASSIVE_ELEMENTS);

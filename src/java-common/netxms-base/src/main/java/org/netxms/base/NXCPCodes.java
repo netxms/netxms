@@ -407,6 +407,9 @@ public class NXCPCodes
    public static final int CMD_RENAME_NOTIFICATION_CHANNEL = 0x0186;
    public static final int CMD_GET_AGENT_POLICY = 0x0187;
    public static final int CMD_START_ACTIVE_DISCOVERY = 0x0188;
+   public static final int CMD_GET_PHYSICAL_LINKS = 0x0189;
+   public static final int CMD_UPDATE_PHYSICAL_LINK = 0x018A;
+   public static final int CMD_DELETE_PHYSICAL_LINK = 0x018B;
    
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;
@@ -1079,6 +1082,10 @@ public class NXCPCodes
    public static final long VID_RELATED_OBJECT = 658;
    public static final long VID_PHY_CHASSIS = 659;
    public static final long VID_PHY_PIC = 660;
+   public static final long VID_AGENT_BUILD_TAG = 661;
+   public static final long VID_LINK_COUNT = 663;
+   public static final long VID_PATCH_PANEL_ID = 662;
+   public static final long VID_PHYSICAL_LINK_ID = 665;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;

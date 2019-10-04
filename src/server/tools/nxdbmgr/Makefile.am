@@ -3,7 +3,7 @@ nxdbmgr_SOURCES = nxdbmgr.cpp check.cpp clear.cpp datacoll.cpp export.cpp import
                   init.cpp migrate.cpp mm.cpp modules.cpp reindex.cpp \
 		  resetadmin.cpp tables.cpp tdata_convert.cpp unlock.cpp \
 		  upgrade.cpp upgrade_online.cpp upgrade_v0.cpp upgrade_v21.cpp \
-                  upgrade_v22.cpp upgrade_v30.cpp
+                  upgrade_v22.cpp upgrade_v30.cpp upgrade_v31.cpp
 nxdbmgr_CPPFLAGS = -I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build
 nxdbmgr_LDFLAGS = @EXEC_LDFLAGS@
 nxdbmgr_LDADD = \

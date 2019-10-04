@@ -18,71 +18,80 @@
  */
 package org.netxms.client.objects.configs;
 
-import java.io.StringWriter;
-import java.io.Writer;
+import org.netxms.base.NXCPMessage;
 import org.netxms.client.constants.RackElementType;
 import org.netxms.client.constants.RackOrientation;
-import org.simpleframework.xml.Element;
-import org.simpleframework.xml.Root;
-import org.simpleframework.xml.Serializer;
-import org.simpleframework.xml.core.Persister;
 
 /**
  * Rack element configuration entry
  */
-@Root(name="element")
 public class PassiveRackElement
 {
-   @Element(required=false)
+   public long id;
    public String name;
-
-   @Element(required=true)
    public RackElementType type;
-   
-   @Element(required=true)
    public int position;
-
-   @Element(required=true)
    public RackOrientation orientation;
+   public int portCount;
 
    /**
     * Create empty rack attribute entry
     */
    public PassiveRackElement()
    {
+      id = 0;
       name = "";
-      type = RackElementType.FILLER_PANEL;
+      type = RackElementType.PATCH_PANEL;
       position = 0;
-      orientation = RackOrientation.FRONT;
+      orientation = RackOrientation.FILL;
+      portCount = 0;
    }
-   
+
    /**
-    * Create rack attribute from config entry
+    * Rack passive element constructor 
     * 
-    * @param xml config
-    * @return attribute
-    * @throws Exception
+    * @param msg message from server
+    * @param base base id for creation
     */
-   public static PassiveRackElement createFromXml(final String xml) throws Exception
+   public PassiveRackElement(NXCPMessage msg, long base)
    {
-      Serializer serializer = new Persister();
-      return serializer.read(PassiveRackElement.class, xml);
+      id = msg.getFieldAsInt32(base++);
+      name = msg.getFieldAsString(base++);
+      type = RackElementType.getByValue(msg.getFieldAsInt32(base++));
+      position = msg.getFieldAsInt32(base++);
+      orientation = RackOrientation.getByValue(msg.getFieldAsInt32(base++));
+      portCount = msg.getFieldAsInt32(base++);
    }
-   
+
+
    /**
-    * Create XML from configuration entry
-    * 
-    * @return XML document
-    * @throws Exception if the schema for the object is not valid
+    * Rack passive element copy constructor 
+    * @param element element to copy
     */
-   public String createXml() throws Exception
+   public PassiveRackElement(PassiveRackElement element)
    {
-      Serializer serializer = new Persister();
-      Writer writer = new StringWriter();
-      serializer.write(this, writer);
-      return writer.toString();
+      id = element.id;
+      name = element.name;
+      type = element.type;
+      position = element.position;
+      orientation = element.orientation;
    }
-   
+
+   /**
+    * Fill message with passive rack element data 
+    * 
+    * @param msg message to fill
+    * @param base base id to start from
+    */
+   public void fillMessage(NXCPMessage msg, long base)
+   {
+      msg.setFieldInt32(base++, (int)id);
+      msg.setField(base++, name);
+      msg.setFieldInt32(base++, type.getValue());
+      msg.setFieldInt32(base++, position);
+      msg.setFieldInt32(base++, orientation.getValue());
+   }
+
    /**
     * Set element type
     * 
@@ -92,7 +101,7 @@ public class PassiveRackElement
    {
       this.type = type;
    }
-   
+
    /**
     * Get element type
     * 
@@ -102,7 +111,7 @@ public class PassiveRackElement
    {
       return type;
    }
-   
+
    /**
     * Set attribute position
     * 
@@ -112,7 +121,7 @@ public class PassiveRackElement
    {
       this.position = position;
    }
-   
+
    /**
     * Get attribute position in rack
     * 
@@ -122,7 +131,7 @@ public class PassiveRackElement
    {
       return position;
    }
-   
+
    /**
     * Set attribute orientation
     * 
@@ -132,7 +141,7 @@ public class PassiveRackElement
    {
       this.orientation = orientation;
    }
-   
+
    /**
     * Get orientation
     * 
@@ -142,7 +151,7 @@ public class PassiveRackElement
    {
       return orientation;
    }
-   
+
    /**
     * Get element name
     * 
@@ -161,5 +170,45 @@ public class PassiveRackElement
    public void setName(String name)
    {
       this.name = name;
+   }
+
+   /**
+    * @return the id
+    */
+   public long getId()
+   {
+      return id;
+   }
+
+   /**
+    * @param id the id to set
+    */
+   public void setId(long id)
+   {
+      this.id = id;
+   }
+
+   /**
+    * @return the portCount
+    */
+   public int getPortCount()
+   {
+      return portCount;
+   }
+
+   /**
+    * @param portCount the portCount to set
+    */
+   public void setPortCount(int portCount)
+   {
+      this.portCount = portCount;
+   }
+
+   /**
+    * To string method for object
+    */
+   public String toString()
+   {
+      return orientation.toString() + " " + position + " (" + name + ")";
    }
 }

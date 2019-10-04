@@ -147,6 +147,8 @@
 #define IDG_SCHEDULED_TASK    21
 #define IDG_ALARM_CATEGORY    22
 #define IDG_UA_MESSAGE        23
+#define IDG_RACK_ELEMENT      24
+#define IDG_PHYSICAL_LINK     25
 
 /**
  * Exit codes for console commands
@@ -794,6 +796,9 @@ private:
    void renameNotificationChannel(NXCPMessage *request);
    void getNotificationDriverNames(UINT32 requestId);
    void startActiveDiscovery(NXCPMessage *request);
+   void getPhysicalLinks(NXCPMessage *request);
+   void updatePhysicalLink(NXCPMessage *request);
+   void deletePhysicalLink(NXCPMessage *request);
 #ifdef WITH_ZMQ
    void zmqManageSubscription(NXCPMessage *request, zmq::SubscriptionType type, bool subscribe);
    void zmqListSubscriptions(NXCPMessage *request, zmq::SubscriptionType type);

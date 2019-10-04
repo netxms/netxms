@@ -268,7 +268,39 @@ CREATE TABLE racks
   id integer not null,
   height integer not null,
   top_bottom_num char(1) not null,
-  passive_elements SQL_TEXT null,
+  PRIMARY KEY(id)
+) TABLE_TYPE;
+
+/*
+** Rack pasive elements
+*/
+CREATE TABLE rack_passive_elements
+(
+  id integer not null,
+  rack_id integer not null,
+  name varchar(255) not null,
+  type integer not null,
+  position integer not null,
+  orientation integer not null,
+  port_count integer not null, //only for patch pannel
+  PRIMARY KEY(id)
+) TABLE_TYPE;
+
+/*
+** Rack pasive element's patch pannel ports inventory
+*/
+CREATE TABLE physical_links
+(
+  id integer not null,
+  description varchar(255) not null,
+  left_object_id integer not null,
+  left_patch_pannel_id integer not null,
+  left_port_number integer not null,
+  left_front char(1) not null,
+  right_object_id integer not null,
+  right_patch_pannel_id integer not null,
+  right_port_number integer not null,
+  right_front char(1) not null,  
   PRIMARY KEY(id)
 ) TABLE_TYPE;
 

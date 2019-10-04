@@ -64,7 +64,7 @@ public class GenericPolicyEditor extends AbstractPolicyEditor
    
    protected void updateControlsFromPolicy()
    {
-      editor.setText(policy.getContent());
+      editor.setText(policyObject.getContent());
    }
 
    public AgentPolicy getUpdatedPolicy()

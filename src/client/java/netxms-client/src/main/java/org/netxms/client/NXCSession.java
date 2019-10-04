@@ -160,6 +160,7 @@ import org.netxms.client.objects.TemplateRoot;
 import org.netxms.client.objects.UnknownObject;
 import org.netxms.client.objects.VPNConnector;
 import org.netxms.client.objects.Zone;
+import org.netxms.client.objects.configs.PassiveRackElement;
 import org.netxms.client.objecttools.ObjectContextBase;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.client.objecttools.ObjectToolDetails;
@@ -5634,7 +5635,14 @@ public class NXCSession
 
       if (data.isFieldSet(NXCObjectModificationData.PASSIVE_ELEMENTS))
       {
-         msg.setField(NXCPCodes.VID_PASSIVE_ELEMENTS, data.getPassiveElements());
+         List<PassiveRackElement> elements = data.getPassiveElements();
+         msg.setFieldInt32(NXCPCodes.VID_NUM_ELEMENTS, elements.size());
+         long base = NXCPCodes.VID_ELEMENT_LIST_BASE;
+         for(int i = 0; i < elements.size(); i++)
+         {
+            elements.get(i).fillMessage(msg, base);
+            base += 10;
+         }
       }
 
       if (data.isFieldSet(NXCObjectModificationData.RESPONSIBLE_USERS))
@@ -11060,8 +11068,15 @@ public class NXCSession
       }
    }
    
-
-
+   /**
+    * Get agent policy by template id and GUID
+    * 
+    * @param templateId template id policy is in
+    * @param policyGUID policy GUID
+    * @return agent policy
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
    public AgentPolicy getAgentPolicy(long templateId, UUID policyGUID) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_AGENT_POLICY);
@@ -11078,6 +11093,8 @@ public class NXCSession
     * 
     * @param templateId id of the template where policy are defined
     * @return hash map of policy UUID to policy
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public HashMap<UUID, AgentPolicy> getAgentPolicyList(long templateId) throws IOException, NXCException
    {
@@ -11102,6 +11119,8 @@ public class NXCSession
     * @param templateId id of template where policy is defined
     * @param currentlySelectedElement policy data to be updated or created. For new policy GUID should be null
     * @return UUID of saved policy
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public UUID savePolicy(long templateId, AgentPolicy currentlySelectedElement) throws NXCException, IOException
    {
@@ -11117,6 +11136,8 @@ public class NXCSession
     * 
     * @param templateId id of template where policy is defined
     * @param guid guid of the policy that should be deleted
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public void deletePolicy(long templateId, UUID guid) throws NXCException, IOException
    {
@@ -11131,8 +11152,8 @@ public class NXCSession
     * Command sent on policyEditor close to send updates to all applied nodes
     * 
     * @param templateId id of the closed template
-    * @throws NXCException
-    * @throws IOException
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public void onPolicyEditorClose(long templateId) throws NXCException, IOException
    {
@@ -11146,6 +11167,8 @@ public class NXCSession
     * Force policy installation on all nodes where template is applied 
     * 
     * @param templateId template id
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public void forcePolicyInstallation(long templateId) throws NXCException, IOException
    {
@@ -11159,6 +11182,8 @@ public class NXCSession
     * Get user agent notifications list
     * 
     * @return list of user agent notifications
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public List<UserAgentNotification> getUserAgentNotifications() throws NXCException, IOException
    {
@@ -11178,6 +11203,8 @@ public class NXCSession
     * Recall user agent notification
     * 
     * @param id recall id
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public void recallUserAgentNotification(long id) throws NXCException, IOException
    {
@@ -11194,6 +11221,8 @@ public class NXCSession
     * @param objects objects to show notifications
     * @param startTime notification's activation time
     * @param endTime notificaiton's display end time
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public void createUserAgentNotification(String message, long[] objects, Date startTime, Date endTime) throws NXCException, IOException
    {
@@ -11227,6 +11256,8 @@ public class NXCSession
     * Get server notification channels
     * 
     * @return list of server notifications channels
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public List<NotificationChannel> getNotificationChannels() throws NXCException, IOException
    {
@@ -11241,6 +11272,13 @@ public class NXCSession
       return ncList;
    }
    
+   /**
+    * Create notification channel 
+    * 
+    * @param nc new notification channel
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
    public void createNotificationChannel(NotificationChannel nc) throws NXCException, IOException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_ADD_NOTIFICATION_CHANNEL);
@@ -11249,7 +11287,13 @@ public class NXCSession
       waitForRCC(msg.getMessageId());    
    }
    
-   
+   /**
+    * Update notification channel 
+    * 
+    * @param nc update notification channel
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
    public void updateNotificationChannel(NotificationChannel nc) throws NXCException, IOException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_UPDATE_NOTIFICATION_CHANNEL);
@@ -11262,6 +11306,8 @@ public class NXCSession
     * Delete notification channel
     * 
     * @param name name of notification channel to be deleted
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public void deleteNotificationChannel(String name) throws NXCException, IOException
    {
@@ -11276,6 +11322,8 @@ public class NXCSession
     * 
     * @param name old notification channel name
     * @param newName new notification channel name
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public void renameNotificaiotnChannel(String name, String newName) throws NXCException, IOException
    {
@@ -11289,6 +11337,8 @@ public class NXCSession
    /**
     * Get driver name list
     * 
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
     * @return driver name list
     */
    public List<String> getDriverNames() throws NXCException, IOException
@@ -11300,6 +11350,13 @@ public class NXCSession
       return list;
    }
 
+   /**
+    * Start active discovery for provided list manually
+    * 
+    * @param list list of ranges
+    * @throws NXCException
+    * @throws IOException
+    */
    public void startManualActiveDiscovery(List<InetAddressListElement> list) throws NXCException, IOException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_START_ACTIVE_DISCOVERY);
@@ -11312,5 +11369,64 @@ public class NXCSession
       }
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
+   }
+
+   /**
+    * Get list of physical links filtered by provided options
+    * 
+    * @param objectId node id or rack id to filter out physical links
+    * @param patchPanelId patch panel id to filter out it's physical links (first parameter should be rack id)
+    * @return list of physical links
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public List<PhysicalLink> getPhysicalLinks(long objectId, long patchPanelId) throws NXCException, IOException
+   {
+      List<PhysicalLink> links = new ArrayList<PhysicalLink>();
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_PHYSICAL_LINKS);
+      if (objectId > 0)
+         msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)objectId);
+      if (patchPanelId > 0)
+         msg.setFieldInt32(NXCPCodes.VID_PATCH_PANEL_ID, (int)patchPanelId);      
+      sendMessage(msg);
+      final NXCPMessage response = waitForRCC(msg.getMessageId());
+      int count = response.getFieldAsInt32(NXCPCodes.VID_LINK_COUNT);
+      long base = NXCPCodes.VID_LINK_LIST_BASE;
+      for(int i = 0; i < count; i ++)
+      {
+         links.add(new PhysicalLink(response, base));
+         base += 20;
+      }      
+      return links;
+   }
+   
+   /**
+    * Create new or update existing physical link
+    * 
+    * @param link link to be created with id 0 or link to be updated with correct id
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void updatePhysicalLink(PhysicalLink link) throws NXCException, IOException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_UPDATE_PHYSICAL_LINK);
+      link.fillMessage(msg, NXCPCodes.VID_LINK_LIST_BASE);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
+   
+   /**
+    * Delete physical link
+    * 
+    * @param linkId
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void deletePhysicalLink(long linkId) throws NXCException, IOException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_PHYSICAL_LINK);
+      msg.setFieldInt32(NXCPCodes.VID_PHYSICAL_LINK_ID, (int)linkId);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());      
    }
 }

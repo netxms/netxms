@@ -634,6 +634,9 @@ typedef struct
 #define CMD_RENAME_NOTIFICATION_CHANNEL   0x0186
 #define CMD_GET_AGENT_POLICY              0x0187
 #define CMD_START_ACTIVE_DISCOVERY        0x0188
+#define CMD_GET_PHYSICAL_LINKS            0x0189
+#define CMD_UPDATE_PHYSICAL_LINK          0x018A
+#define CMD_DELETE_PHYSICAL_LINK          0x018B
 
 #define CMD_RS_LIST_REPORTS            0x1100
 #define CMD_RS_GET_REPORT              0x1101
@@ -1311,6 +1314,9 @@ typedef struct
 #define VID_PHY_PIC                 ((UINT32)660)
 #define VID_AGENT_BUILD_TAG         ((UINT32)661)
 #define VID_FILE_STORE              ((UINT32)662)
+#define VID_LINK_COUNT              ((UINT32)663)
+#define VID_PATCH_PANNEL_ID         ((UINT32)664)
+#define VID_PHYSICAL_LINK_ID        ((UINT32)665)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

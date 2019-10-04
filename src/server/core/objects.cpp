@@ -1373,6 +1373,8 @@ BOOL LoadObjects()
                DBCacheTable(cachedb, mainDB, _T("subnets"), _T("id"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("nsmap"), _T("subnet_id,node_id"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("racks"), _T("id"), _T("*")) &&
+               DBCacheTable(cachedb, mainDB, _T("rack_passive_elements"), _T("id"), _T("*")) &&
+               DBCacheTable(cachedb, mainDB, _T("physical_links"), _T("id"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("chassis"), _T("id"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("mobile_devices"), _T("id"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("sensors"), _T("id"), _T("*")) &&

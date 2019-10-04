@@ -18,6 +18,7 @@ Require-Bundle: org.netxms.ui.eclipse.charts;bundle-version="3.1.0",
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy
 Export-Package: org.netxms.ui.eclipse.objectview.api,
+ org.netxms.ui.eclipse.objectview.dialogs,
  org.netxms.ui.eclipse.objectview.objecttabs,
  org.netxms.ui.eclipse.objectview.views,
  org.netxms.ui.eclipse.objectview.widgets,

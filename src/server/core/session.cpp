@@ -81,6 +81,10 @@ UINT32 UnbindAgentTunnel(UINT32 nodeId, UINT32 userId);
 
 void StartManualActiveDiscovery(ObjectArray<InetAddressListElement> *addressList);
 
+void GetObjectPhysicalLinks(NetObj *obj, UINT32 userId, UINT32 patchPannelId, NXCPMessage *msg);
+bool AddLink(NXCPMessage *msg, UINT32 userId);
+bool DeleteLink(UINT32 id, UINT32 userId);
+
 /**
  * Client session console constructor
  */
@@ -1382,6 +1386,15 @@ void ClientSession::processRequest(NXCPMessage *request)
          break;
       case CMD_START_ACTIVE_DISCOVERY:
          startActiveDiscovery(request);
+         break;
+      case CMD_GET_PHYSICAL_LINKS:
+         getPhysicalLinks(request);
+         break;
+      case CMD_UPDATE_PHYSICAL_LINK:
+         updatePhysicalLink(request);
+         break;
+      case CMD_DELETE_PHYSICAL_LINK:
+         deletePhysicalLink(request);
          break;
 #ifdef WITH_ZMQ
       case CMD_ZMQ_SUBSCRIBE_EVENT:
@@ -15208,7 +15221,88 @@ void ClientSession::startActiveDiscovery(NXCPMessage *request)
    else
    {
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
-      WriteAuditLog(AUDIT_SYSCFG, false, m_dwUserId, m_workstation, m_id, 0, _T("Access denied on modify address list %d"));
+      WriteAuditLog(AUDIT_SYSCFG, false, m_dwUserId, m_workstation, m_id, 0, _T("Access denied on manual active discovery"));
+   }
+
+   sendMessage(&msg);
+}
+
+/**
+ * Get physical links
+ */
+void ClientSession::getPhysicalLinks(NXCPMessage *request)
+{
+   NXCPMessage msg;
+   msg.setCode(CMD_REQUEST_COMPLETED);
+   msg.setId(request->getId());
+   bool success = true;
+   NetObj *obj = NULL;
+   if(request->isFieldExist(VID_OBJECT_ID))
+   {
+      obj = FindObjectById(request->getFieldAsInt32(VID_OBJECT_ID));
+      if(obj == NULL)
+      {
+         msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+         success = false;
+      }
+      else if(!obj->checkAccessRights(getUserId(), OBJECT_ACCESS_READ))
+      {
+         WriteAuditLog(AUDIT_SYSCFG, false, m_dwUserId, m_workstation, m_id, obj->getId(), _T("Access denied on object read"));
+         msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+         success = false;
+      }
+   }
+
+   if (success)
+   {
+      GetObjectPhysicalLinks(obj, getUserId(), request->getFieldAsInt32(VID_PATCH_PANNEL_ID), &msg);
+      msg.setField(VID_RCC, RCC_SUCCESS);
+   }
+
+   sendMessage(&msg);
+}
+
+/**
+ * Create or modify physical link
+ */
+void ClientSession::updatePhysicalLink(NXCPMessage *request)
+{
+   NXCPMessage msg;
+   msg.setCode(CMD_REQUEST_COMPLETED);
+   msg.setId(request->getId());
+
+   if (AddLink(request, getUserId()))
+   {
+      msg.setField(VID_RCC, RCC_SUCCESS);
+      WriteAuditLog(AUDIT_SYSCFG, true, m_dwUserId, m_workstation, m_id, 0, _T("%d physical link updated"), request->getFieldAsUInt32(VID_OBJECT_LINKS_BASE));
+   }
+   else
+   {
+      WriteAuditLog(AUDIT_SYSCFG, false, m_dwUserId, m_workstation, m_id, 0, _T("Access denied on %d physical link update"), request->getFieldAsUInt32(VID_OBJECT_LINKS_BASE));
+      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+   }
+
+   sendMessage(&msg);
+}
+
+/**
+ * Delete physical link
+ */
+void ClientSession::deletePhysicalLink(NXCPMessage *request)
+{
+   NXCPMessage msg;
+   msg.setCode(CMD_REQUEST_COMPLETED);
+   msg.setId(request->getId());
+
+   if(DeleteLink(request->getFieldAsUInt32(VID_PHYSICAL_LINK_ID), getUserId()))
+   {
+      WriteAuditLog(AUDIT_SYSCFG, true, m_dwUserId, m_workstation, m_id, 0, _T("%d physical link deleted"), request->getFieldAsUInt32(VID_PHYSICAL_LINK_ID));
+      msg.setField(VID_RCC, RCC_SUCCESS);
+   }
+   else
+   {
+      WriteAuditLog(AUDIT_SYSCFG, false, m_dwUserId, m_workstation, m_id, 0, _T("Access denied on %d physical link dalete"), request->getFieldAsUInt32(VID_PHYSICAL_LINK_ID));
+      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
 
    sendMessage(&msg);

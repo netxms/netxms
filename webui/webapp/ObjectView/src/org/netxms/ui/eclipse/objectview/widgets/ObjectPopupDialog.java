@@ -41,6 +41,8 @@ import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.DataCollectionTarget;
 import org.netxms.client.objects.Interface;
+import org.netxms.client.objects.RackElement;
+import org.netxms.client.objects.configs.PassiveRackElement;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 
 /**
@@ -48,7 +50,7 @@ import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
  */
 public class ObjectPopupDialog extends PopupDialog
 {
-   private AbstractObject object;
+   private Object object;
    private Point location;
    private CLabel statusLabel = null;
    private Font boldFont = null;
@@ -59,9 +61,9 @@ public class ObjectPopupDialog extends PopupDialog
     * @param object object to show information from
     * @param location dialog location (in display coordinates)
     */
-   public ObjectPopupDialog(Shell parent, AbstractObject object, Point location)
+   public ObjectPopupDialog(Shell parent, Object object, Point location)
    {
-      super(parent, HOVER_SHELLSTYLE, true, false, false, false, false, object.getObjectName(), null);
+      super(parent, HOVER_SHELLSTYLE, true, false, false, false, false, object instanceof RackElement ? ((AbstractObject)object).getObjectName() : ((PassiveRackElement)object).getType().toString(), null);
       this.object = object;
       this.location = (location != null) ? location : Display.getCurrent().getCursorLocation();
       labelProvider = new WorkbenchLabelProvider();
@@ -104,7 +106,7 @@ public class ObjectPopupDialog extends PopupDialog
       CLabel title = new CLabel(parent, SWT.NONE);
       GridDataFactory.fillDefaults().align(SWT.FILL, SWT.CENTER).grab(true, false).span(2, 1).applyTo(title);
       title.setImage(labelProvider.getImage(object));
-      title.setText(object.getObjectName());
+      title.setText(object instanceof RackElement ? ((AbstractObject)object).getObjectName() : ((PassiveRackElement)object).getType().toString());
       
       FontData fd = title.getFont().getFontData()[0];
       fd.setStyle(SWT.BOLD);
@@ -122,78 +124,90 @@ public class ObjectPopupDialog extends PopupDialog
    {
       Composite dialogArea = (Composite)super.createDialogArea(parent);
 
-      statusLabel = new CLabel(dialogArea, SWT.NONE);
-      statusLabel.setText(StatusDisplayInfo.getStatusText(object.getStatus()).toUpperCase());
-      statusLabel.setForeground(StatusDisplayInfo.getStatusColor(object.getStatus()));
-      statusLabel.setFont(boldFont);
-      
-      StringBuilder sb = new StringBuilder();
-      if (object instanceof AbstractNode)
+      if (object instanceof RackElement)
       {
-         appendText(sb, ((AbstractNode)object).getPrimaryIP().getHostAddress());
-         appendText(sb, ((AbstractNode)object).getPlatformName());
-         String sd = ((AbstractNode)object).getSystemDescription();
-         if (sd.length() > 127)
-            sd = sd.substring(0, 127) + "..."; //$NON-NLS-1$
-         appendText(sb, sd);
-         appendText(sb, ((AbstractNode)object).getSnmpSysName());
-         appendText(sb, ((AbstractNode)object).getSnmpSysContact());
-      }
-      else if (object instanceof Interface)
-      {
-         appendText(sb, ((Interface)object).getDescription());
-         appendText(sb, ((Interface)object).getAlias());
-         if (!((Interface)object).getMacAddress().isNull())
-            appendText(sb, ((Interface)object).getMacAddress().toString());
-         appendText(sb, ((Interface)object).getAdminStateAsText() + " / " + ((Interface)object).getOperStateAsText());
-      }
-
-      if (sb.length() > 0)
-      {
-         createSeparator(dialogArea);
+         AbstractObject abstractObject = (AbstractObject)object;
+         statusLabel = new CLabel(dialogArea, SWT.NONE);
+         statusLabel.setText(StatusDisplayInfo.getStatusText(abstractObject.getStatus()).toUpperCase());
+         statusLabel.setForeground(StatusDisplayInfo.getStatusColor(abstractObject.getStatus()));
+         statusLabel.setFont(boldFont);
          
-         if (sb.charAt(sb.length() - 1) == '\n')
-            sb.deleteCharAt(sb.length() - 1);
-         CLabel infoText = new CLabel(dialogArea, SWT.MULTI);
-         infoText.setText(sb.toString());
-      }
-      
-      if (object instanceof DataCollectionTarget)
-      {
-         List<DciValue> values = ((DataCollectionTarget)object).getTooltipDciData();
-         if (!values.isEmpty())
+         StringBuilder sb = new StringBuilder();
+         if (object instanceof AbstractNode)
+         {
+            appendText(sb, ((AbstractNode)object).getPrimaryIP().getHostAddress());
+            appendText(sb, ((AbstractNode)object).getPlatformName());
+            String sd = ((AbstractNode)object).getSystemDescription();
+            if (sd.length() > 127)
+               sd = sd.substring(0, 127) + "..."; //$NON-NLS-1$
+            appendText(sb, sd);
+            appendText(sb, ((AbstractNode)object).getSnmpSysName());
+            appendText(sb, ((AbstractNode)object).getSnmpSysContact());
+         }
+         else if (object instanceof Interface)
+         {
+            appendText(sb, ((Interface)object).getDescription());
+            appendText(sb, ((Interface)object).getAlias());
+            if (!((Interface)object).getMacAddress().isNull())
+               appendText(sb, ((Interface)object).getMacAddress().toString());
+            appendText(sb, ((Interface)object).getAdminStateAsText() + " / " + ((Interface)object).getOperStateAsText());
+         }
+   
+         if (sb.length() > 0)
          {
             createSeparator(dialogArea);
             
-            Composite group = new Composite(dialogArea, SWT.NONE);
-            GridLayout layout = new GridLayout();
-            layout.marginHeight = 0;
-            layout.marginWidth = 0;
-            layout.numColumns = 2;
-            group.setLayout(layout);
-
-            StringBuilder leftColumn = new StringBuilder();
-            StringBuilder rightColumn = new StringBuilder();
-            for(DciValue v : values)
+            if (sb.charAt(sb.length() - 1) == '\n')
+               sb.deleteCharAt(sb.length() - 1);
+            CLabel infoText = new CLabel(dialogArea, SWT.MULTI);
+            infoText.setText(sb.toString());
+         }
+         
+         if (object instanceof DataCollectionTarget)
+         {
+            List<DciValue> values = ((DataCollectionTarget)object).getTooltipDciData();
+            if (!values.isEmpty())
             {
-               if (leftColumn.length() > 0)
+               createSeparator(dialogArea);
+               
+               Composite group = new Composite(dialogArea, SWT.NONE);
+               GridLayout layout = new GridLayout();
+               layout.marginHeight = 0;
+               layout.marginWidth = 0;
+               layout.numColumns = 2;
+               group.setLayout(layout);
+   
+               StringBuilder leftColumn = new StringBuilder();
+               StringBuilder rightColumn = new StringBuilder();
+               for(DciValue v : values)
                {
-                  leftColumn.append('\n');
-                  rightColumn.append('\n');
+                  if (leftColumn.length() > 0)
+                  {
+                     leftColumn.append('\n');
+                     rightColumn.append('\n');
+                  }
+                  leftColumn.append(v.getDescription());
+                  rightColumn.append(v.getValue());
                }
-               leftColumn.append(v.getDescription());
-               rightColumn.append(v.getValue());
+               
+               new CLabel(group, SWT.MULTI).setText(leftColumn.toString());
+               new CLabel(group, SWT.MULTI).setText(rightColumn.toString());
             }
-            
-            new CLabel(group, SWT.MULTI).setText(leftColumn.toString());
-            new CLabel(group, SWT.MULTI).setText(rightColumn.toString());
+         }
+         
+         if (!abstractObject.getComments().isEmpty())
+         {
+            createSeparator(dialogArea);
+            new CLabel(dialogArea, SWT.MULTI).setText(abstractObject.getComments());
          }
       }
-      
-      if (!object.getComments().isEmpty())
+      else
       {
-         createSeparator(dialogArea);
-         new CLabel(dialogArea, SWT.MULTI).setText(object.getComments());
+         StringBuilder sb = new StringBuilder();
+         PassiveRackElement el = (PassiveRackElement)object;
+         sb.append(el.toString());
+         CLabel infoText = new CLabel(dialogArea, SWT.MULTI);
+         infoText.setText(sb.toString());
       }
       
       return dialogArea;
