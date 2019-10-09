@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2019 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,9 +23,11 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.server.ServerJobIdUpdater;
 import org.netxms.ui.eclipse.console.Activator;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.widgets.MessageBar;
 
 /**
- * Tailored Job class for NetXMS console. Callers must call start() instead of schedule() for correct execution.
+ * Console job that executes server side job and waits for its completion.
+ * Callers must call start() instead of schedule() for correct execution.
  */
 public abstract class ConsoleJobCallingServerJob extends ConsoleJob implements ServerJobIdUpdater
 {
@@ -33,9 +35,29 @@ public abstract class ConsoleJobCallingServerJob extends ConsoleJob implements S
    private int serverJobId = 0;
    private boolean jobCanceled = false;
 
-   public ConsoleJobCallingServerJob(String name, IWorkbenchPart wbPart, String pluginId, Object jobFamily)
+   /**
+    * Create new job.
+    * 
+    * @param name Job name
+    * @param wbPart Workbench part or null
+    * @param pluginId Plugin ID or null
+    */
+   public ConsoleJobCallingServerJob(String name, IWorkbenchPart wbPart, String pluginId)
    {
-      super(name, wbPart, pluginId, jobFamily);
+      this(name, wbPart, pluginId, null);
+   }
+
+   /**
+    * Create new job.
+    * 
+    * @param name Job name
+    * @param wbPart Workbench part or null
+    * @param pluginId Plugin ID or null
+    * @param messageBar Message bar or null
+    */
+   public ConsoleJobCallingServerJob(String name, IWorkbenchPart wbPart, String pluginId, MessageBar messageBar)
+   {
+      super(name, wbPart, pluginId, messageBar);
       session = (NXCSession)ConsoleSharedData.getSession();
    }
 

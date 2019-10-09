@@ -1388,7 +1388,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 	   final NetworkMapLink link = (NetworkMapLink)currentSelection.getFirstElement();	   
 	   if (!link.hasDciData())
 	      return;
-	   new ConsoleJob("Open link dci job", this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {         
+	   new ConsoleJob("Open link dci job", this, Activator.PLUGIN_ID) {         
          /* (non-Javadoc)
           * @see org.netxms.ui.eclipse.jobs.ConsoleJob#runInternal(org.eclipse.core.runtime.IProgressMonitor)
           */

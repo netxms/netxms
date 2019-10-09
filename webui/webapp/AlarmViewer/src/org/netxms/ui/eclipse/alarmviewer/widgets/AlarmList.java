@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2016 Victor Kirhenshtein
+ * Copyright (C) 2003-2019 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -94,6 +94,7 @@ import org.netxms.ui.eclipse.tools.VisibilityValidator;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.CompositeWithMessageBar;
 import org.netxms.ui.eclipse.widgets.FilterText;
+import org.netxms.ui.eclipse.widgets.MessageBar;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
@@ -101,8 +102,6 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
  */
 public class AlarmList extends CompositeWithMessageBar
 {
-   public static final String JOB_FAMILY = "AlarmViewJob"; //$NON-NLS-1$
-
    // Columns
    public static final int COLUMN_SEVERITY = 0;
    public static final int COLUMN_STATE = 1;
@@ -817,7 +816,7 @@ public class AlarmList extends CompositeWithMessageBar
                alarmViewer.setInput(filteredAlarmList);
                if ((session.getAlarmListDisplayLimit() > 0) && (filteredAlarmList.size() >= session.getAlarmListDisplayLimit()))
                {
-                  showMessage(INFORMATION, String.format(Messages.get().AlarmList_CountLimitWarning, filteredAlarmList.size()));
+                  showMessage(MessageBar.INFORMATION, String.format(Messages.get().AlarmList_CountLimitWarning, filteredAlarmList.size()));
                }
                else
                {
@@ -845,10 +844,10 @@ public class AlarmList extends CompositeWithMessageBar
    {
       if ((visibilityValidator != null) && !visibilityValidator.isVisible())
 	      return;
-      new ConsoleJob(Messages.get().AlarmList_SyncJobName, viewPart, Activator.PLUGIN_ID, JOB_FAMILY) {
-         @Override
-         protected void runInternal(IProgressMonitor monitor) throws Exception
-         {
+		new ConsoleJob(Messages.get().AlarmList_SyncJobName, viewPart, Activator.PLUGIN_ID, this) {
+			@Override
+			protected void runInternal(IProgressMonitor monitor) throws Exception
+			{
 			   HashMap<Long, Alarm> alarms = session.getAlarms();
             synchronized(alarmList)
             {
@@ -916,7 +915,7 @@ public class AlarmList extends CompositeWithMessageBar
 			return;
 		
 		final Object[] alarms = selection.toArray();
-		new ConsoleJob(Messages.get().AcknowledgeAlarm_JobName, viewPart, Activator.PLUGIN_ID, AlarmList.JOB_FAMILY) {
+		new ConsoleJob(Messages.get().AcknowledgeAlarm_JobName, viewPart, Activator.PLUGIN_ID) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -952,11 +951,11 @@ public class AlarmList extends CompositeWithMessageBar
       final List<Long> alarmIds = new ArrayList<Long>(selection.size());
       for(Object o : selection.toList())
          alarmIds.add(((Alarm)o).getId());
-      new ConsoleJob(Messages.get().AlarmList_Resolving, viewPart, Activator.PLUGIN_ID, AlarmList.JOB_FAMILY) {
-         @Override
-         protected void runInternal(IProgressMonitor monitor) throws Exception
-         {
-            final Map<Long, Integer> resolveFails = session.bulkResolveAlarms(alarmIds);
+		new ConsoleJob(Messages.get().AlarmList_Resolving, viewPart, Activator.PLUGIN_ID) {
+			@Override
+			protected void runInternal(IProgressMonitor monitor) throws Exception
+			{
+			   final Map<Long, Integer> resolveFails = session.bulkResolveAlarms(alarmIds);
             if (!resolveFails.isEmpty())
             {
                runInUIThread(new Runnable() {
@@ -990,17 +989,17 @@ public class AlarmList extends CompositeWithMessageBar
       if (selection.isEmpty())
          return;     
 
-      final List<Long> alarmIds = new ArrayList<Long>(selection.size());
-      for(Object o : selection.toList())
-         alarmIds.add(((Alarm)o).getId());
-      new ConsoleJob(Messages.get().TerminateAlarm_JobTitle, viewPart, Activator.PLUGIN_ID, AlarmList.JOB_FAMILY) {
-         @Override
-         protected void runInternal(IProgressMonitor monitor) throws Exception
-         {           
-            final Map<Long, Integer> terminationFails = session.bulkTerminateAlarms(alarmIds);
-            if (!terminationFails.isEmpty())
-            {
-               runInUIThread(new Runnable() {
+		final List<Long> alarmIds = new ArrayList<Long>(selection.size());
+		for(Object o : selection.toList())
+		   alarmIds.add(((Alarm)o).getId());
+		new ConsoleJob(Messages.get().TerminateAlarm_JobTitle, viewPart, Activator.PLUGIN_ID) {
+			@Override
+			protected void runInternal(IProgressMonitor monitor) throws Exception
+			{		      
+		      final Map<Long, Integer> terminationFails = session.bulkTerminateAlarms(alarmIds);
+				if (!terminationFails.isEmpty())
+				{
+				   runInUIThread(new Runnable() {
                   @Override
                   public void run()
                   {
@@ -1032,7 +1031,7 @@ public class AlarmList extends CompositeWithMessageBar
          return;
       
       final long id = ((Alarm)selection.getFirstElement()).getId();
-      new ConsoleJob(Messages.get().AlarmList_JobTitle_CreateTicket, viewPart, Activator.PLUGIN_ID, AlarmList.JOB_FAMILY) {
+      new ConsoleJob(Messages.get().AlarmList_JobTitle_CreateTicket, viewPart, Activator.PLUGIN_ID) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
@@ -1057,7 +1056,7 @@ public class AlarmList extends CompositeWithMessageBar
          return;
       
       final long id = ((Alarm)selection.getFirstElement()).getId();
-      new ConsoleJob(Messages.get().AlarmList_JobTitle_ShowTicket, viewPart, Activator.PLUGIN_ID, AlarmList.JOB_FAMILY) {
+      new ConsoleJob(Messages.get().AlarmList_JobTitle_ShowTicket, viewPart, Activator.PLUGIN_ID) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
@@ -1090,7 +1089,7 @@ public class AlarmList extends CompositeWithMessageBar
          return;
 
       final long id = ((Alarm)selection.getFirstElement()).getId();
-      new ConsoleJob(Messages.get().AlarmList_JobTitle_UnlinkTicket, viewPart, Activator.PLUGIN_ID, AlarmList.JOB_FAMILY) {
+      new ConsoleJob(Messages.get().AlarmList_JobTitle_UnlinkTicket, viewPart, Activator.PLUGIN_ID) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {

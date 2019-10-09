@@ -429,7 +429,7 @@ public class ServerFileManager extends ViewPart implements SessionListener
          return;
 
       final Object[] objects = selection.toArray();
-      new ConsoleJob(Messages.get().ViewServerFile_DeletFileFromServerJob, this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
+      new ConsoleJob(Messages.get().ViewServerFile_DeletFileFromServerJob, this, Activator.PLUGIN_ID) {
          @Override
          protected String getErrorMessage()
          {

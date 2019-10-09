@@ -83,7 +83,6 @@ import org.netxms.ui.eclipse.widgets.FilterText;
 public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePart
 {
    public static final String ID = "org.netxms.ui.eclipse.epp.view.policy_editor"; //$NON-NLS-1$
-   public static final String JOB_FAMILY = "PolicyEditorJob"; //$NON-NLS-1$
 
    private static final Color BACKGROUND_COLOR = new Color(Display.getCurrent(), 255, 255, 255);
 
@@ -196,17 +195,17 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
       dataArea.setLayout(layout);
       dataArea.setBackground(BACKGROUND_COLOR);
 
-		scroller.setContent(dataArea);
-		scroller.setExpandVertical(true);
-		scroller.setExpandHorizontal(true);
-		scroller.addControlListener(new ControlAdapter() {
-			public void controlResized(ControlEvent e)
-			{
-				Rectangle r = scroller.getClientArea();
-				scroller.setMinSize(dataArea.computeSize(r.width, SWT.DEFAULT));
-			}
-		});
-		
+      scroller.setContent(dataArea);
+      scroller.setExpandVertical(true);
+      scroller.setExpandHorizontal(true);
+      scroller.addControlListener(new ControlAdapter() {
+         public void controlResized(ControlEvent e)
+         {
+            Rectangle r = scroller.getClientArea();
+            scroller.setMinSize(dataArea.computeSize(r.width, SWT.DEFAULT));
+         }
+      });
+
       // Setup layout
       FormData fd = new FormData();
       fd.left = new FormAttachment(0, 0);
@@ -468,42 +467,41 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
       manager.add(actionDelete);
    }
 
-	/**
-	 * Open event processing policy
-	 */
-	private void openEventProcessingPolicy()
-	{
-		ConsoleJob job = new ConsoleJob(Messages.get().EventProcessingPolicyEditor_OpenJob_Title, this, Activator.PLUGIN_ID, JOB_FAMILY) {
-			@Override
-			protected String getErrorMessage()
-			{
-				return Messages.get().EventProcessingPolicyEditor_OpenJob_Error;
-			}
+   /**
+    * Open event processing policy
+    */
+   private void openEventProcessingPolicy()
+   {
+      ConsoleJob job = new ConsoleJob(Messages.get().EventProcessingPolicyEditor_OpenJob_Title, this, Activator.PLUGIN_ID) {
+         @Override
+         protected String getErrorMessage()
+         {
+            return Messages.get().EventProcessingPolicyEditor_OpenJob_Error;
+         }
 
-			@Override
-			protected void runInternal(IProgressMonitor monitor) throws Exception
-			{
-				List<ServerAction> actions = session.getActions();
-				synchronized(EventProcessingPolicyEditor.this.actions)
-				{
-					for(ServerAction a : actions)
-					{
-						EventProcessingPolicyEditor.this.actions.put(a.getId(), a);
-					}
-				}
-
-				policy = session.openEventProcessingPolicy();
-				policyLocked = true;
-				runInUIThread(new Runnable() {
-					@Override
-					public void run()
-					{
-						initPolicyEditor();
-						if (filterEnabled)
-						   filterControl.setFocus();
-					}
-				});
-			}
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            List<ServerAction> actions = session.getActions();
+            synchronized(EventProcessingPolicyEditor.this.actions)
+            {
+               for(ServerAction a : actions)
+               {
+                  EventProcessingPolicyEditor.this.actions.put(a.getId(), a);
+               }
+            }
+            policy = session.openEventProcessingPolicy();
+            policyLocked = true;
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  initPolicyEditor();
+                  if (filterEnabled)
+                     filterControl.setFocus();
+               }
+            });
+         }
 
          @Override
          protected void jobFailureHandler()
@@ -612,29 +610,26 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
       dataArea.setFocus();
    }
 
-	/**
-	 * Save policy to server
-	 */
-	private void savePolicy()
-	{
-		actionSave.setEnabled(false);
-		new ConsoleJob(Messages.get().EventProcessingPolicyEditor_SaveJob_Title, this, Activator.PLUGIN_ID, JOB_FAMILY) {
-			@Override
-			protected void runInternal(IProgressMonitor monitor) throws Exception
-			{
-            EventProcessingPolicy newPolicy = new EventProcessingPolicy(ruleEditors.size());
-            for(RuleEditor editor: ruleEditors)
-               newPolicy.addRule(editor.getRule());
-				session.saveEventProcessingPolicy(policy);
-				runInUIThread(new Runnable() {
-					@Override
-					public void run()
-					{
-						modified = false;
-						firePropertyChange(PROP_DIRTY);
-					}
-				});
-			}
+   /**
+    * Save policy to server
+    */
+   private void savePolicy()
+   {
+      actionSave.setEnabled(false);
+      new ConsoleJob(Messages.get().EventProcessingPolicyEditor_SaveJob_Title, this, Activator.PLUGIN_ID) {
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            session.saveEventProcessingPolicy(policy);
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  modified = false;
+                  firePropertyChange(PROP_DIRTY);
+               }
+            });
+         }
 
          @Override
          protected void jobFinalize()
@@ -672,7 +667,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 
       if (policyLocked)
       {
-         new ConsoleJob(Messages.get().EventProcessingPolicyEditor_CloseJob_Title, null, Activator.PLUGIN_ID, JOB_FAMILY) {
+         new ConsoleJob(Messages.get().EventProcessingPolicyEditor_CloseJob_Title, null, Activator.PLUGIN_ID) {
             @Override
             protected void runInternal(IProgressMonitor monitor) throws Exception
             {
@@ -739,16 +734,16 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
       return resultSet;
    }
 
-	/**
-	 * Return complete actions list
-	 * 
-	 * @return actions list
-	 */
-	public Collection<ServerAction> getActions()
-	{
-		return actions.values();
-	}
-	
+   /**
+    * Return complete actions list
+    * 
+    * @return actions list
+    */
+   public Collection<ServerAction> getActions()
+   {
+      return actions.values();
+   }
+
    /**
     * @return AlarmCategory
     */
@@ -757,23 +752,22 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
       NXCSession session = (NXCSession)ConsoleSharedData.getSession();
       
       return session.findAlarmCategoryById(id);
-   }	
-	
-	/**
-	 * @return the normalFont
-	 */
-	public Font getNormalFont()
-	{
-		return normalFont;
-	}
+   }
+   /**
+    * @return the normalFont
+    */
+   public Font getNormalFont()
+   {
+      return normalFont;
+   }
 
-	/**
-	 * @return the boldFont
-	 */
-	public Font getBoldFont()
-	{
-		return boldFont;
-	}
+   /**
+    * @return the boldFont
+    */
+   public Font getBoldFont()
+   {
+      return boldFont;
+   }
 
    /**
     * @return the imageAlarm

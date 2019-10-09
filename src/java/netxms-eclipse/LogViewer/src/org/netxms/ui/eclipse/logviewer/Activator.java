@@ -20,10 +20,7 @@ package org.netxms.ui.eclipse.logviewer;
 
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.resource.ImageDescriptor;
-import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
-import org.eclipse.ui.progress.IProgressService;
-import org.netxms.ui.eclipse.logviewer.views.LogViewer;
 import org.osgi.framework.BundleContext;
 
 /**
@@ -55,10 +52,6 @@ public class Activator extends AbstractUIPlugin
 	{
 		super.start(context);
 		plugin = this;
-		
-		// Register icon for our jobs
-		IProgressService service = PlatformUI.getWorkbench().getProgressService();
-	   service.registerIconForFamily(getImageDescriptor("icons/log_viewer_job.png"), LogViewer.JOB_FAMILY); //$NON-NLS-1$
 	}
 
 	/*

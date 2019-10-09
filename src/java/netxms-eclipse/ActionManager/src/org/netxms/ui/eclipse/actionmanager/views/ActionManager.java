@@ -165,7 +165,7 @@ public class ActionManager extends ViewPart implements SessionListener
 	 */
 	private void refreshActionList()
 	{
-		new ConsoleJob(Messages.get().ActionManager_LoadJobName, this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
+		new ConsoleJob(Messages.get().ActionManager_LoadJobName, this, Activator.PLUGIN_ID) {
 			@Override
 			protected String getErrorMessage()
 			{
@@ -334,7 +334,7 @@ public class ActionManager extends ViewPart implements SessionListener
 		final EditActionDlg dlg = new EditActionDlg(getSite().getShell(), action, true);
 		if (dlg.open() == Window.OK)
 		{
-			new ConsoleJob(Messages.get().ActionManager_CreateJobName, this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
+			new ConsoleJob(Messages.get().ActionManager_CreateJobName, this, Activator.PLUGIN_ID) {
 				@Override
 				protected String getErrorMessage()
 				{
@@ -365,7 +365,7 @@ public class ActionManager extends ViewPart implements SessionListener
 		final EditActionDlg dlg = new EditActionDlg(getSite().getShell(), action, false);
 		if (dlg.open() == Window.OK)
 		{
-			new ConsoleJob(Messages.get().ActionManager_UpdateJobName, this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
+			new ConsoleJob(Messages.get().ActionManager_UpdateJobName, this, Activator.PLUGIN_ID) {
 				@Override
 				protected String getErrorMessage()
 				{
@@ -394,7 +394,7 @@ public class ActionManager extends ViewPart implements SessionListener
 			return;
 		
 		final Object[] objects = selection.toArray();
-		new ConsoleJob(Messages.get().ActionManager_DeleteJobName, this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
+		new ConsoleJob(Messages.get().ActionManager_DeleteJobName, this, Activator.PLUGIN_ID) {
 			@Override
 			protected String getErrorMessage()
 			{

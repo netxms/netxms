@@ -111,7 +111,7 @@ public abstract class TableComparisonChartElement extends ElementWidget
 		
 		updateInProgress = true;
 		
-		ConsoleJob job = new ConsoleJob(Messages.get().TableComparisonChartElement_JobTitle, viewPart, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
+		ConsoleJob job = new ConsoleJob(Messages.get().TableComparisonChartElement_JobTitle, viewPart, Activator.PLUGIN_ID) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{

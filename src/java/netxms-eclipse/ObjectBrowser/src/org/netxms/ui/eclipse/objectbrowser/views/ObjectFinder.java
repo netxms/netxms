@@ -94,6 +94,7 @@ import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.CompositeWithMessageBar;
 import org.netxms.ui.eclipse.widgets.LabeledText;
+import org.netxms.ui.eclipse.widgets.MessageBar;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
@@ -732,7 +733,7 @@ public class ObjectFinder extends ViewPart
                      @Override
                      public void run()
                      {
-                        queryEditorMessage.showMessage(CompositeWithMessageBar.WARNING, errorMessage);
+                        queryEditorMessage.showMessage(MessageBar.WARNING, errorMessage);
                      }
                   });
                }

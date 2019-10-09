@@ -83,7 +83,6 @@ import org.netxms.ui.eclipse.widgets.FilterText;
 public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePart
 {
    public static final String ID = "org.netxms.ui.eclipse.epp.view.policy_editor"; //$NON-NLS-1$
-   public static final String JOB_FAMILY = "PolicyEditorJob"; //$NON-NLS-1$
 
    private static final Color BACKGROUND_COLOR = new Color(Display.getCurrent(), 255, 255, 255);
 
@@ -482,8 +481,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
     */
    private void openEventProcessingPolicy()
    {
-      ConsoleJob job = new ConsoleJob(Messages.get().EventProcessingPolicyEditor_OpenJob_Title, this, Activator.PLUGIN_ID,
-            JOB_FAMILY) {
+      ConsoleJob job = new ConsoleJob(Messages.get().EventProcessingPolicyEditor_OpenJob_Title, this, Activator.PLUGIN_ID) {
          @Override
          protected String getErrorMessage()
          {
@@ -628,7 +626,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
    private void savePolicy()
    {
       actionSave.setEnabled(false);
-      new ConsoleJob(Messages.get().EventProcessingPolicyEditor_SaveJob_Title, this, Activator.PLUGIN_ID, JOB_FAMILY) {
+      new ConsoleJob(Messages.get().EventProcessingPolicyEditor_SaveJob_Title, this, Activator.PLUGIN_ID) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
@@ -679,7 +677,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 
       if (policyLocked)
       {
-         new ConsoleJob(Messages.get().EventProcessingPolicyEditor_CloseJob_Title, null, Activator.PLUGIN_ID, JOB_FAMILY) {
+         new ConsoleJob(Messages.get().EventProcessingPolicyEditor_CloseJob_Title, null, Activator.PLUGIN_ID) {
             @Override
             protected void runInternal(IProgressMonitor monitor) throws Exception
             {
@@ -762,6 +760,9 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
       return actions.values();
    }
 
+   /**
+    * @return AlarmCategory
+    */
    public AlarmCategory findAlarmCategoryById(Long id)
    {
       NXCSession session = (NXCSession)ConsoleSharedData.getSession();

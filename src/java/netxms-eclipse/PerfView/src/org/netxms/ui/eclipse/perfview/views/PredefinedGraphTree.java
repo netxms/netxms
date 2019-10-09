@@ -405,7 +405,7 @@ public class PredefinedGraphTree extends ViewPart implements SessionListener
 	 */
 	private void reloadGraphList()
 	{
-		new ConsoleJob(Messages.get().PredefinedGraphTree_LoadJobName, this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
+		new ConsoleJob(Messages.get().PredefinedGraphTree_LoadJobName, this, Activator.PLUGIN_ID) {
 			@Override
 			protected String getErrorMessage()
 			{

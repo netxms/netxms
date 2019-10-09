@@ -471,7 +471,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
       }
       
       // Request data from server
-      ConsoleJob job = new ConsoleJob(Messages.get().HistoricalGraphView_JobName, this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
+      ConsoleJob job = new ConsoleJob(Messages.get().HistoricalGraphView_JobName, this, Activator.PLUGIN_ID) {
          private ChartDciConfig currentItem;
 
          @Override

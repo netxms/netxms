@@ -87,7 +87,7 @@ public class AlarmLogViewer extends LogViewer
    {
       super.fillContextMenu(mgr);
       IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-      if (true)//selection.size() == 0 && session.isHelpdeskLinkActive())
+      if (selection.size() == 0 && session.isHelpdeskLinkActive())
       {
          try
          {
@@ -118,7 +118,7 @@ public class AlarmLogViewer extends LogViewer
          return;
       
       final long id = Long.parseLong(((TableRow)selection.getFirstElement()).get(0).getValue());
-      new ConsoleJob("Create helpdesk ticket", this, Activator.PLUGIN_ID, JOB_FAMILY) {
+      new ConsoleJob("Create helpdesk ticket", this, Activator.PLUGIN_ID) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
@@ -143,7 +143,7 @@ public class AlarmLogViewer extends LogViewer
          return;
       
       final long id = Long.parseLong(((TableRow)selection.getFirstElement()).get(0).getValue());
-      new ConsoleJob("Show helpdesk ticket", this, Activator.PLUGIN_ID, JOB_FAMILY) {
+      new ConsoleJob("Show helpdesk ticket", this, Activator.PLUGIN_ID) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
@@ -184,7 +184,7 @@ public class AlarmLogViewer extends LogViewer
          return;
 
       final long id = Long.parseLong(((TableRow)selection.getFirstElement()).get(0).getValue());
-      new ConsoleJob("Unlink alarm from helpdesk ticket", this, Activator.PLUGIN_ID, JOB_FAMILY) {
+      new ConsoleJob("Unlink alarm from helpdesk ticket", this, Activator.PLUGIN_ID) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {

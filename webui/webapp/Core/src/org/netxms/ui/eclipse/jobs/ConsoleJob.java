@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2019 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,38 +33,51 @@ import org.eclipse.ui.progress.IWorkbenchSiteProgressService;
 import org.netxms.client.NXCException;
 import org.netxms.ui.eclipse.console.Activator;
 import org.netxms.ui.eclipse.console.Messages;
+import org.netxms.ui.eclipse.widgets.MessageBar;
 
 /**
  * Tailored Job class for NetXMS console. Callers must call start() instead of schedule() for correct execution.
  */
 public abstract class ConsoleJob extends Job
 {
-	private IWorkbenchSiteProgressService siteService;
-	private String pluginId;
-	private Object jobFamily;
-	private boolean passException = true;
-	private Display display;
-	
-	/**
-	 * Constructor for console job object
-	 * 
-	 * @param name Job's name
-	 * @param viewPart Related view part or null
-	 * @param pluginId Related plugin ID
-	 * @param jobFamily Job's family or null
-	 */
-	public ConsoleJob(String name, IWorkbenchPart wbPart, String pluginId, Object jobFamily)
-	{
-		super(name);
-		this.pluginId = (pluginId != null) ? pluginId : Activator.PLUGIN_ID;
-		this.jobFamily = jobFamily;
-		siteService = (wbPart != null) ? 
-					(IWorkbenchSiteProgressService)wbPart.getSite().getService(IWorkbenchSiteProgressService.class) : null;
-		setUser(true);
-		display = Display.getCurrent();
-		if (display == null)
-			throw new IllegalThreadStateException("ConsoleJob constructor called from non-UI thread");
-	}
+   private IWorkbenchSiteProgressService siteService;
+   private String pluginId;
+   private MessageBar messageBar;
+   private boolean passException = true;
+   private Display display;
+
+   /**
+    * Constructor for console job object
+    * 
+    * @param name Job's name
+    * @param viewPart Related view part or null
+    * @param pluginId Related plugin ID
+    */
+   public ConsoleJob(String name, IWorkbenchPart wbPart, String pluginId)
+   {
+      this(name, wbPart, pluginId, null);
+   }
+
+   /**
+    * Constructor for console job object
+    * 
+    * @param name Job's name
+    * @param viewPart Related view part or null
+    * @param pluginId Related plugin ID
+    * @param messageBar Message bar for displaying error or null
+    */
+   public ConsoleJob(String name, IWorkbenchPart wbPart, String pluginId, MessageBar messageBar)
+   {
+      super(name);
+      this.pluginId = (pluginId != null) ? pluginId : Activator.PLUGIN_ID;
+      this.messageBar = messageBar;
+      siteService = (wbPart != null) ? 
+         (IWorkbenchSiteProgressService)wbPart.getSite().getService(IWorkbenchSiteProgressService.class) : null;
+      setUser(true);
+      display = Display.getCurrent();
+      if (display == null)
+         throw new IllegalThreadStateException("ConsoleJob constructor called from non-UI thread");
+   }
 
 	/**
 	 * Constructor for console job object
@@ -74,50 +87,66 @@ public abstract class ConsoleJob extends Job
 	 * @param pluginId Related plugin ID
 	 * @param jobFamily Job's family or null
 	 */
-	public ConsoleJob(String name, IWorkbenchPart wbPart, String pluginId, Object jobFamily, Display display)
+	public ConsoleJob(String name, IWorkbenchPart wbPart, String pluginId, MessageBar messageBar, Display display)
 	{
 		super(name);
 		this.pluginId = (pluginId != null) ? pluginId : Activator.PLUGIN_ID;
-		this.jobFamily = jobFamily;
+		this.messageBar = messageBar;
 		siteService = (wbPart != null) ? 
 					(IWorkbenchSiteProgressService)wbPart.getSite().getService(IWorkbenchSiteProgressService.class) : null;
 		setUser(true);
 		this.display = display;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.core.runtime.jobs.Job#run(org.eclipse.core.runtime.IProgressMonitor)
-	 */
-	@Override
-	protected IStatus run(IProgressMonitor monitor)
-	{
-		IStatus status;
-		try
-		{
-			runInternal(monitor);
-			status = Status.OK_STATUS;
-		}
-		catch(Exception e)
-		{
-			jobFailureHandler();
-			status = createFailureStatus(e);
-		}
-		finally
-		{
-			jobFinalize();
-		}
-		return status;
-	}
+   /* (non-Javadoc)
+    * @see org.eclipse.core.runtime.jobs.Job#run(org.eclipse.core.runtime.IProgressMonitor)
+    */
+   @Override
+   protected IStatus run(IProgressMonitor monitor)
+   {
+      IStatus status;
+      try
+      {
+         runInternal(monitor);
+         status = Status.OK_STATUS;
+         if (messageBar != null)
+         {
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  messageBar.hideMessage();
+               }
+            });
+         }
+      }
+      catch(Exception e)
+      {
+         Activator.logError("Exception in ConsoleJob", e); //$NON-NLS-1$
+         jobFailureHandler();
+         if (messageBar != null)
+         {
+            status = Status.OK_STATUS;
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  messageBar.showMessage(MessageBar.ERROR, getErrorMessage() + ": " + e.getMessage());
+               }
+            });
+         }
+         else
+         {
+            status = createFailureStatus(e);
+         }
+      }
+      finally
+      {
+         jobFinalize();
+      }
+      return status;
+   }
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.core.runtime.jobs.Job#belongsTo(java.lang.Object)
-	 */
-	@Override
-	public boolean belongsTo(Object family)
-	{
-		return family == jobFamily;
-	}
-	
 	/**
 	 * Start job.
 	 */
@@ -135,22 +164,21 @@ public abstract class ConsoleJob extends Job
 		});
 	}
 	
-	/**
-	 * Executes job. Called from within Job.run(). If job fails, this method should throw appropriate exception.
-	 * 
-	 * @param monitor the monitor to be used for reporting progress and responding to cancellation. The monitor is never null.
-	 * @throws Exception in case of any failure.
-	 */
-	protected abstract void runInternal(IProgressMonitor monitor) throws Exception;
-	
-	/**
-	 * Should return error message which will be shown in case of job failure.
-	 * Result of exception's getMessage() will be appended to this message.
-	 * 
-	 * @return Error message
-	 */
-	protected abstract String getErrorMessage();
-	
+   /**
+    * Executes job. Called from within Job.run(). If job fails, this method should throw appropriate exception.
+    * 
+    * @param monitor the monitor to be used for reporting progress and responding to cancellation. The monitor is never null.
+    * @throws Exception in case of any failure.
+    */
+   protected abstract void runInternal(IProgressMonitor monitor) throws Exception;
+
+   /**
+    * Should return error message which will be shown in case of job failure.
+    * Result of exception's getMessage() will be appended to this message.
+    * 
+    * @return Error message
+    */
+   protected abstract String getErrorMessage();
 
 	/**
 	 * Helper class to call from non-UI thread
@@ -186,19 +214,19 @@ public abstract class ConsoleJob extends Job
             ch.message + ": " + e.getLocalizedMessage(), passException ? e : null); //$NON-NLS-1$
 	}
 
-	/**
-	 * Called from within Job.run() if job has failed. Default implementation does nothing.
-	 */
-	protected void jobFailureHandler()
-	{		
-	}
-	
-	/**
-	 * Called from within Job.run() if job completes, either successfully or not. Default implementation does nothing.
-	 */
-	protected void jobFinalize()
-	{
-	}
+   /**
+    * Called from within Job.run() if job has failed. Default implementation does nothing.
+    */
+   protected void jobFailureHandler()
+   {
+   }
+
+   /**
+    * Called from within Job.run() if job completes, either successfully or not. Default implementation does nothing.
+    */
+   protected void jobFinalize()
+   {
+   }
 
 	/**
 	 * Run job in foreground using IProgressService.busyCursorWhile

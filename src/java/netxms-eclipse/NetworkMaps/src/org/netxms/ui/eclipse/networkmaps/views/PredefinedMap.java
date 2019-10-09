@@ -809,7 +809,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
          flags &= ~NetworkMap.MF_SHOW_LINK_DIRECTION;
 		md.setObjectFlags(flags);
 
-		new ConsoleJob(String.format(Messages.get().PredefinedMap_SaveJobTitle, rootObject.getObjectName()), this, Activator.PLUGIN_ID, Activator.PLUGIN_ID)
+		new ConsoleJob(String.format(Messages.get().PredefinedMap_SaveJobTitle, rootObject.getObjectName()), this, Activator.PLUGIN_ID)
 		{
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
