@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2019 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -79,7 +79,6 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 public class ServerConfigurationEditor extends ViewPart
 {
 	public static final String ID = "org.netxms.ui.eclipse.serverconfig.view.server_config"; //$NON-NLS-1$
-	public static final String JOB_FAMILY = "ServerConfigJob"; //$NON-NLS-1$
 		
 	private SortableTableViewer viewer;
 	private NXCSession session;
@@ -215,7 +214,7 @@ public class ServerConfigurationEditor extends ViewPart
 	 */
 	public void refresh()
 	{
-		new ConsoleJob(Messages.get().ServerConfigurationEditor_LoadJobName, this, Activator.PLUGIN_ID, JOB_FAMILY) {
+		new ConsoleJob(Messages.get().ServerConfigurationEditor_LoadJobName, this, Activator.PLUGIN_ID) {
 			@Override
 			protected String getErrorMessage()
 			{
@@ -451,7 +450,7 @@ public class ServerConfigurationEditor extends ViewPart
 		            new ServerVariable(null, "", false, ServerVariableDataType.STRING, "", ""));
 		if (dlg.open() == Window.OK)
 		{
-			new ConsoleJob(Messages.get().ServerConfigurationEditor_CreateJobName, this, Activator.PLUGIN_ID, JOB_FAMILY) {
+			new ConsoleJob(Messages.get().ServerConfigurationEditor_CreateJobName, this, Activator.PLUGIN_ID) {
 				@Override
 				protected String getErrorMessage()
 				{
@@ -488,7 +487,7 @@ public class ServerConfigurationEditor extends ViewPart
 		final VariableEditDialog dlg = new VariableEditDialog(getSite().getShell(), var);
 		if (dlg.open() == Window.OK)
 		{
-			new ConsoleJob(Messages.get().ServerConfigurationEditor_ModifyJobName, this, Activator.PLUGIN_ID, JOB_FAMILY) {
+			new ConsoleJob(Messages.get().ServerConfigurationEditor_ModifyJobName, this, Activator.PLUGIN_ID) {
 				@Override
 				protected String getErrorMessage()
 				{
@@ -529,7 +528,7 @@ public class ServerConfigurationEditor extends ViewPart
 			if (o instanceof ServerVariable)
 				names.add(((ServerVariable)o).getName());
 		}
-		new ConsoleJob(Messages.get().ServerConfigurationEditor_DeleteJobName, this, Activator.PLUGIN_ID, ServerConfigurationEditor.JOB_FAMILY) {
+		new ConsoleJob(Messages.get().ServerConfigurationEditor_DeleteJobName, this, Activator.PLUGIN_ID) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -563,7 +562,7 @@ public class ServerConfigurationEditor extends ViewPart
 	   IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
 	   final List<ServerVariable> list = selection.toList();
 	   
-	   new ConsoleJob("Set default server config values", this, Activator.PLUGIN_ID, ServerConfigurationEditor.JOB_FAMILY) {         
+	   new ConsoleJob("Set default server config values", this, Activator.PLUGIN_ID) {         
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {

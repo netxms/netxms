@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2019 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,6 +33,7 @@ import org.netxms.client.NXCException;
 import org.netxms.ui.eclipse.console.Activator;
 import org.netxms.ui.eclipse.console.Messages;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
+import org.netxms.ui.eclipse.widgets.MessageBar;
 
 /**
  * Tailored Job class for NetXMS console. Callers must call start() instead of schedule() for correct execution.
@@ -41,7 +42,7 @@ public abstract class ConsoleJob extends Job
 {
    private IWorkbenchSiteProgressService siteService;
    private String pluginId;
-   private Object jobFamily;
+   private MessageBar messageBar;
    private boolean passException = false;
 
    /**
@@ -50,13 +51,25 @@ public abstract class ConsoleJob extends Job
     * @param name Job's name
     * @param viewPart Related view part or null
     * @param pluginId Related plugin ID
-    * @param jobFamily Job's family or null
     */
-   public ConsoleJob(String name, IWorkbenchPart wbPart, String pluginId, Object jobFamily)
+   public ConsoleJob(String name, IWorkbenchPart wbPart, String pluginId)
+   {
+      this(name, wbPart, pluginId, null);
+   }
+
+   /**
+    * Constructor for console job object
+    * 
+    * @param name Job's name
+    * @param viewPart Related view part or null
+    * @param pluginId Related plugin ID
+    * @param messageBar Message bar for displaying error or null
+    */
+   public ConsoleJob(String name, IWorkbenchPart wbPart, String pluginId, MessageBar messageBar)
    {
       super(name);
       this.pluginId = (pluginId != null) ? pluginId : Activator.PLUGIN_ID;
-      this.jobFamily = jobFamily;
+      this.messageBar = messageBar;
       try
       {
          IWorkbenchPart part = (wbPart != null) ? wbPart : PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage()
@@ -84,29 +97,42 @@ public abstract class ConsoleJob extends Job
       {
          runInternal(monitor);
          status = Status.OK_STATUS;
+         if (messageBar != null)
+         {
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  messageBar.hideMessage();
+               }
+            });
+         }
       }
       catch(Exception e)
       {
          Activator.logError("Exception in ConsoleJob", e); //$NON-NLS-1$
          jobFailureHandler();
-         status = createFailureStatus(e);
+         if (messageBar != null)
+         {
+            status = Status.OK_STATUS;
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  messageBar.showMessage(MessageBar.ERROR, getErrorMessage() + ": " + e.getMessage());
+               }
+            });
+         }
+         else
+         {
+            status = createFailureStatus(e);
+         }
       }
       finally
       {
          jobFinalize();
       }
       return status;
-   }
-
-   /*
-    * (non-Javadoc)
-    * 
-    * @see org.eclipse.core.runtime.jobs.Job#belongsTo(java.lang.Object)
-    */
-   @Override
-   public boolean belongsTo(Object family)
-   {
-      return family == jobFamily;
    }
 
    /**

@@ -56,6 +56,7 @@ import org.netxms.ui.eclipse.serverjobmanager.views.helpers.ServerJobComparator;
 import org.netxms.ui.eclipse.serverjobmanager.views.helpers.ServerJobLabelProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.ui.eclipse.widgets.CompositeWithMessageBar;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
@@ -64,7 +65,6 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 public class ServerJobManager extends ViewPart
 {
 	public static final String ID = "org.netxms.ui.eclipse.serverjobmanager.views.ServerJobManager"; //$NON-NLS-1$
-	public static final String JOB_FAMILY = "ServerJobManagerJob"; //$NON-NLS-1$
 		
 	// Columns
 	public static final int COLUMN_STATUS = 0;
@@ -80,6 +80,7 @@ public class ServerJobManager extends ViewPart
 	private static final int HOLD_JOB = 1;
 	private static final int UNHOLD_JOB = 2;
 	
+	private CompositeWithMessageBar content;
 	private SortableTableViewer viewer;
 	private NXCSession session = null;
 	private SessionListener clientListener = null;
@@ -96,9 +97,11 @@ public class ServerJobManager extends ViewPart
 	@Override
 	public void createPartControl(Composite parent)
 	{
+	   content = new CompositeWithMessageBar(parent, SWT.NONE);
+	   
 		final String[] names = { Messages.get().ServerJobManager_ColStatus, Messages.get().ServerJobManager_ColInitiator, Messages.get().ServerJobManager_ColNode, Messages.get().ServerJobManager_ColDescription, Messages.get().ServerJobManager_ColProgress, Messages.get().ServerJobManager_ColMessage };
 		final int[] widths = { 80, 100, 150, 250, 100, 300 };
-		viewer = new SortableTableViewer(parent, names, widths, 0, SWT.DOWN, SortableTableViewer.DEFAULT_STYLE);
+		viewer = new SortableTableViewer(content.getContent(), names, widths, 0, SWT.DOWN, SortableTableViewer.DEFAULT_STYLE);
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setLabelProvider(new ServerJobLabelProvider());
 		viewer.setComparator(new ServerJobComparator());
@@ -298,7 +301,7 @@ public class ServerJobManager extends ViewPart
 	 */
 	private void refreshJobList(boolean userInitiated)
 	{
-		ConsoleJob job = new ConsoleJob(Messages.get().ServerJobManager_RefreshJobName, this, Activator.PLUGIN_ID, JOB_FAMILY) {
+		ConsoleJob job = new ConsoleJob(Messages.get().ServerJobManager_RefreshJobName, this, Activator.PLUGIN_ID, content) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -375,7 +378,7 @@ public class ServerJobManager extends ViewPart
 	private void doJobAction(final String actionName, final String actionErrorName, final int actionId)
 	{
 		final IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-		new ConsoleJob(String.format(Messages.get().ServerJobManager_ActionJobName, actionName), this, Activator.PLUGIN_ID, JOB_FAMILY) {
+		new ConsoleJob(String.format(Messages.get().ServerJobManager_ActionJobName, actionName), this, Activator.PLUGIN_ID, null) {
 			@SuppressWarnings("rawtypes")
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception

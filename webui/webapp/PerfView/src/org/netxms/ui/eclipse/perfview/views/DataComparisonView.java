@@ -627,7 +627,7 @@ public class DataComparisonView extends ViewPart
 			return;
 		
 		updateInProgress = true;
-		ConsoleJob job = new ConsoleJob(Messages.get().DataComparisonView_JobName, this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
+		ConsoleJob job = new ConsoleJob(Messages.get().DataComparisonView_JobName, this, Activator.PLUGIN_ID) {
 			@Override
 			protected String getErrorMessage()
 			{

@@ -67,8 +67,6 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
  */
 public class UserSessionsTab extends ObjectTab
 {
-   public static final String JOB_FAMILY = "SesionsObjectTabJob"; //$NON-NLS-1$
-   
    public static final String[] COLUMNS = { "SESSION_ID", "SESSION_NAME", "USER_NAME", "CLIENT_NAME", "STATE", "AGENT_TYPE" };
    public static final int COLUMN_ID = 0;
    public static final int COLUMN_SESSION = 1;
@@ -355,7 +353,7 @@ public class UserSessionsTab extends ObjectTab
    @Override
    public void refresh()
    {
-      new ConsoleJob("Get list of agent sessions", getViewPart(), Activator.PLUGIN_ID, JOB_FAMILY) {
+      new ConsoleJob("Get list of agent sessions", getViewPart(), Activator.PLUGIN_ID) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {

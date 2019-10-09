@@ -145,7 +145,6 @@ public class AgentFileManager extends ViewPart
    private Action actionCopyFilePath;
    private Action actionCopyFileName;
    private long objectId = 0;
-
    /*
     * (non-Javadoc)
     * 
@@ -234,6 +233,7 @@ public class AgentFileManager extends ViewPart
             WidgetHelper.saveTreeViewerSettings(viewer, Activator.getDefault().getDialogSettings(), TABLE_CONFIG_PREFIX);
          }
       });
+      
       enableDragSupport();
       enableDropSupport();
       enableInPlaceRename();
@@ -381,7 +381,7 @@ public class AgentFileManager extends ViewPart
     */
    private void doRename(final AgentFile agentFile, final String newName)
    {
-      new ConsoleJob("Rename file", this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
+      new ConsoleJob("Rename file", this, Activator.PLUGIN_ID) {
          @Override
          protected String getErrorMessage()
          {
@@ -863,7 +863,7 @@ public class AgentFileManager extends ViewPart
          return;
 
       final Object[] objects = selection.toArray();
-      new ConsoleJob(Messages.get().ViewServerFile_DeletFileFromServerJob, this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
+      new ConsoleJob(Messages.get().ViewServerFile_DeletFileFromServerJob, this, Activator.PLUGIN_ID) {
          @Override
          protected String getErrorMessage()
          {
@@ -1136,7 +1136,7 @@ public class AgentFileManager extends ViewPart
     */
    private void moveFile(final AgentFile target, final AgentFile object)
    {
-      new ConsoleJob(Messages.get().AgentFileManager_MoveFile, this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
+      new ConsoleJob(Messages.get().AgentFileManager_MoveFile, this, Activator.PLUGIN_ID) {
          @Override
          protected String getErrorMessage()
          {
@@ -1189,7 +1189,7 @@ public class AgentFileManager extends ViewPart
     */
    private void copyFile(final AgentFile target, final AgentFile object)
    {
-      new ConsoleJob("Copying file", this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
+      new ConsoleJob("Copying file", this, Activator.PLUGIN_ID) {
          @Override
          protected String getErrorMessage()
          {
@@ -1253,7 +1253,7 @@ public class AgentFileManager extends ViewPart
       
       final String newFolder = dlg.getNewName();
       
-      new ConsoleJob(Messages.get().AgentFileManager_CreatingFolder, this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
+      new ConsoleJob(Messages.get().AgentFileManager_CreatingFolder, this, Activator.PLUGIN_ID) {
          @Override
          protected String getErrorMessage()
          {

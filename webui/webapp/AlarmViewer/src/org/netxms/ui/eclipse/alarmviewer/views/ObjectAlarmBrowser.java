@@ -39,6 +39,7 @@ import org.netxms.ui.eclipse.alarmviewer.Messages;
 import org.netxms.ui.eclipse.alarmviewer.widgets.AlarmList;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.widgets.CompositeWithMessageBar;
+import org.netxms.ui.eclipse.widgets.MessageBar;
 
 /**
  * Alarm browser view - alarms for specific objects. List of object IDs is passed as a '&' separated secondaryId
@@ -81,7 +82,6 @@ public class ObjectAlarmBrowser extends ViewPart
 	{
 		parent.setLayout(new FillLayout());		
 		content = new CompositeWithMessageBar(parent, SWT.NONE);
-		
       alarmView = new AlarmList(this, content.getContent(), SWT.NONE, "ObjectAlarmBrowser", null); //$NON-NLS-1$
 		alarmView.setRootObjects(objects);
 
@@ -116,7 +116,7 @@ public class ObjectAlarmBrowser extends ViewPart
             sb.append(", "); //$NON-NLS-1$
          sb.append(session.getObjectName(id));
       }
-      content.showMessage(CompositeWithMessageBar.INFORMATION, String.format(Messages.get().ObjectAlarmBrowser_SelectedObjects, sb.toString()));
+      content.showMessage(MessageBar.INFORMATION, String.format(Messages.get().ObjectAlarmBrowser_SelectedObjects, sb.toString()));
    }
 
    /**

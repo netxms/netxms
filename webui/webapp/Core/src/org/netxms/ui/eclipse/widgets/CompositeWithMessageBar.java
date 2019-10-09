@@ -41,12 +41,8 @@ import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
  * Can be either subclassed (then createContent method should be overriden)
  * or used directly (then getContent method should be used to obtain parent for containing widgets).
  */
-public class CompositeWithMessageBar extends Composite
+public class CompositeWithMessageBar extends Composite implements MessageBar
 {
-   public static final int INFORMATION = 0;
-   public static final int WARNING = 1;
-   public static final int ERROR = 2;
-   
    private Composite messageBar;
    private CLabel messageBarLabel;
    private Label closeButton;
@@ -167,19 +163,19 @@ public class CompositeWithMessageBar extends Composite
    }
    
    /**
-    * Show message in message bar
-    * 
-    * @param severity
-    * @param text
+    * @see org.netxms.ui.eclipse.widgets.MessageBar#showMessage(int, java.lang.String)
     */
+   @Override
    public void showMessage(int severity, String text)
    {
+      if (isDisposed())
+         return;
       switch(severity)
       {
-         case WARNING:
+         case MessageBar.WARNING:
             messageBarLabel.setImage(StatusDisplayInfo.getStatusImage(Severity.WARNING));
             break;
-         case ERROR:
+         case MessageBar.ERROR:
             messageBarLabel.setImage(StatusDisplayInfo.getStatusImage(Severity.CRITICAL));
             break;
          default:
@@ -193,10 +189,13 @@ public class CompositeWithMessageBar extends Composite
    }
    
    /**
-    * Hide message bar
+    * @see org.netxms.ui.eclipse.widgets.MessageBar#hideMessage()
     */
+   @Override
    public void hideMessage()
    {
+      if (isDisposed())
+         return;
       messageBar.setVisible(false);
       ((FormData)content.getLayoutData()).top = new FormAttachment(0, 0);
       layout(true, true);

@@ -66,6 +66,7 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.NXFindAndReplaceAction;
 import org.netxms.ui.eclipse.widgets.CompositeWithMessageBar;
+import org.netxms.ui.eclipse.widgets.MessageBar;
 
 /**
  * Script editor view
@@ -495,11 +496,11 @@ public class ScriptEditorView extends ViewPart implements ISaveablePart
                   s.setLineBackground(0, s.getLineCount(), null);
                   if (result.success)
                   {
-                     editorMessageBar.showMessage(CompositeWithMessageBar.INFORMATION, Messages.get().ScriptEditorView_ScriptCompiledSuccessfully);
+                     editorMessageBar.showMessage(MessageBar.INFORMATION, Messages.get().ScriptEditorView_ScriptCompiledSuccessfully);
                   }
                   else
                   {
-                     editorMessageBar.showMessage(CompositeWithMessageBar.WARNING, result.errorMessage);
+                     editorMessageBar.showMessage(MessageBar.WARNING, result.errorMessage);
                      s.setLineBackground(result.errorLine - 1, 1, ERROR_COLOR);
                   }
                   editor.getTextWidget().setEditable(true);
@@ -548,7 +549,7 @@ public class ScriptEditorView extends ViewPart implements ISaveablePart
                      if (MessageDialogHelper.openQuestion(getSite().getShell(), Messages.get().ScriptEditorView_CompilationErrors, 
                            String.format(Messages.get().ScriptEditorView_ScriptCompilationFailed, result.errorMessage)))
                         result.success = true;
-                     editorMessageBar.showMessage(CompositeWithMessageBar.WARNING, result.errorMessage);
+                     editorMessageBar.showMessage(MessageBar.WARNING, result.errorMessage);
                      StyledText s = editor.getTextWidget();
                      s.setLineBackground(0, s.getLineCount(), null);
                      s.setLineBackground(result.errorLine - 1, 1, ERROR_COLOR);

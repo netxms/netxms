@@ -78,8 +78,6 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
  */
 public class LastValuesWidget extends CompositeWithMessageBar
 {
-	public static final String JOB_FAMILY = "LastValuesViewJob"; //$NON-NLS-1$
-	
 	// Columns
 	public static final int COLUMN_ID = 0;
 	public static final int COLUMN_DESCRIPTION = 1;
@@ -386,50 +384,35 @@ public class LastValuesWidget extends CompositeWithMessageBar
 			return;
 		}
 
-		ConsoleJob job = new ConsoleJob(Messages.get(getDisplay()).LastValuesWidget_JobTitle + dcTarget.getObjectName(), viewPart, Activator.PLUGIN_ID, LastValuesWidget.JOB_FAMILY, getDisplay()) {
+		final DataCollectionTarget jobTarget = dcTarget;
+		ConsoleJob job = new ConsoleJob(Messages.get().LastValuesWidget_JobTitle + jobTarget.getObjectName(), viewPart, Activator.PLUGIN_ID, this) {
 			@Override
 			protected String getErrorMessage()
 			{
-				return String.format(Messages.get().LastValuesWidget_JobError, (dcTarget != null) ? dcTarget.getObjectName() : null);
+				return String.format(Messages.get().LastValuesWidget_JobError, jobTarget.getObjectName());
 			}
 
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-			   try
-			   {
-   				final DciValue[] data = session.getLastValues(dcTarget.getObjectId());
-   				runInUIThread(new Runnable() {
-   					@Override
-   					public void run()
-   					{
-   						if (!isDisposed())
-   						{
-   							dataViewer.setInput(data);
-   							hideMessage();
-   						}
-   					}
-   				});
-			   }
-			   catch(final Exception e)
-			   {
-               runInUIThread(new Runnable() {
-                  @Override
-                  public void run()
-                  {
-                     if (!isDisposed())
-                     {
-                        showMessage(ERROR, String.format("Cannot read data from server: %s", e.getLocalizedMessage()));
-                     }
-                  }
-               });
-			   }
+				final DciValue[] data = session.getLastValues(jobTarget.getObjectId());
+				runInUIThread(new Runnable() {
+					@Override
+					public void run()
+					{
+						if (!isDisposed() && (dcTarget != null) && (dcTarget.getObjectId() == jobTarget.getObjectId()))
+						{
+							dataViewer.setInput(data);
+							hideMessage();
+						}
+					}
+				});
 			}
 		};
 		job.setUser(false);
 		job.start();
 	}
-	
+
 	/**
 	 * Change data collection target object
 	 * 

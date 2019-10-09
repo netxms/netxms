@@ -254,7 +254,7 @@ public class LineChartElement extends ElementWidget implements HistoricalChartOw
 		
 		updateInProgress = true;
 		
-		ConsoleJob job = new ConsoleJob(Messages.get().LineChartElement_JobTitle, viewPart, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
+		ConsoleJob job = new ConsoleJob(Messages.get().LineChartElement_JobTitle, viewPart, Activator.PLUGIN_ID) {
 			private ChartDciConfig currentDci;
 			
 			@Override

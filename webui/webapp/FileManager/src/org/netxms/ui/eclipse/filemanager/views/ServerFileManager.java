@@ -140,7 +140,7 @@ public class ServerFileManager extends ViewPart implements SessionListener
             onFilterModify();
          }
       });
-
+     
       final String[] columnNames = { Messages.get().ViewServerFile_FileName, Messages.get().ViewServerFile_FileType,
             Messages.get().ViewServerFile_FileSize, Messages.get().ViewServerFile_ModificationDate };
       final int[] columnWidths = { 300, 150, 300, 300 };
@@ -219,6 +219,7 @@ public class ServerFileManager extends ViewPart implements SessionListener
    private void createActions()
    {
       final IHandlerService handlerService = (IHandlerService)getSite().getService(IHandlerService.class);
+      
       actionRefresh = new RefreshAction(this) {
          @Override
          public void run()
@@ -430,7 +431,7 @@ public class ServerFileManager extends ViewPart implements SessionListener
          return;
 
       final Object[] objects = selection.toArray();
-      new ConsoleJob(Messages.get().ViewServerFile_DeletFileFromServerJob, this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
+      new ConsoleJob(Messages.get().ViewServerFile_DeletFileFromServerJob, this, Activator.PLUGIN_ID) {
          @Override
          protected String getErrorMessage()
          {

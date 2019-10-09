@@ -87,7 +87,7 @@ public class IPRouteMap extends AbstractNetworkMapView
 			mapPage = new NetworkMapPage(ID+rootObject.getObjectName()+targetObject.getObjectName());
 		
 		new ConsoleJob(String.format(Messages.get().IPRouteMap_JobTitle, rootObject.getObjectName(), targetObject.getObjectName()),
-				this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
+				this, Activator.PLUGIN_ID) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{

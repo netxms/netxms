@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2019 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,7 +28,6 @@ import org.eclipse.jface.action.MenuManager;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
-import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IViewPart;
@@ -47,12 +46,13 @@ import org.netxms.ui.eclipse.datacollection.widgets.internal.ThresholdTreeLabelP
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.VisibilityValidator;
+import org.netxms.ui.eclipse.widgets.CompositeWithMessageBar;
 import org.netxms.ui.eclipse.widgets.SortableTreeViewer;
 
 /**
  * Widget to show threshold violation summary
  */
-public class ThresholdSummaryWidget extends Composite
+public class ThresholdSummaryWidget extends CompositeWithMessageBar
 {
 	public static final int COLUMN_NODE = 0;
 	public static final int COLUMN_STATUS = 1;
@@ -77,11 +77,10 @@ public class ThresholdSummaryWidget extends Composite
 		super(parent, style);
 		this.viewPart = viewPart;
 		this.visibilityValidator = visibilityValidator;
-		setLayout(new FillLayout());
 
 		final String[] names = { Messages.get().ThresholdSummaryWidget_Node,  Messages.get().ThresholdSummaryWidget_Status, Messages.get().ThresholdSummaryWidget_Parameter, Messages.get().ThresholdSummaryWidget_Value, Messages.get().ThresholdSummaryWidget_Condition, Messages.get().ThresholdSummaryWidget_Since };
 		final int[] widths = { 200, 100, 250, 100, 100, 140 };
-		viewer = new SortableTreeViewer(this, names, widths, COLUMN_NODE, SWT.UP, SWT.FULL_SELECTION);
+		viewer = new SortableTreeViewer(getContent(), names, widths, COLUMN_NODE, SWT.UP, SWT.FULL_SELECTION);
 		viewer.setContentProvider(new ThresholdTreeContentProvider());
 		viewer.setLabelProvider(new ThresholdTreeLabelProvider());		
 		viewer.setComparator(new ThresholdTreeComparator());
@@ -96,7 +95,7 @@ public class ThresholdSummaryWidget extends Composite
                return;
             
             final NXCSession session = ConsoleSharedData.getSession();
-            ConsoleJob job = new ConsoleJob("Unsubscribe from threshold notifications", null, Activator.PLUGIN_ID, null) {
+            ConsoleJob job = new ConsoleJob("Unsubscribe from threshold notifications", null, Activator.PLUGIN_ID) {
                @Override
                protected void runInternal(IProgressMonitor monitor) throws Exception
                {
@@ -205,7 +204,7 @@ public class ThresholdSummaryWidget extends Composite
 		
 		final NXCSession session = ConsoleSharedData.getSession();
 		final long rootId = object.getObjectId();
-		ConsoleJob job = new ConsoleJob(Messages.get().ThresholdSummaryWidget_JobTitle, viewPart, Activator.PLUGIN_ID, null) {
+		ConsoleJob job = new ConsoleJob(Messages.get().ThresholdSummaryWidget_JobTitle, viewPart, Activator.PLUGIN_ID, this) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{

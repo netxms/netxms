@@ -310,7 +310,7 @@ public class CertificateView extends ViewPart implements SessionListener
 		final CreateNewCertificateDialog dlg = new CreateNewCertificateDialog(getSite().getShell());
 		if (dlg.open() == Window.OK)
 		{
-			new ConsoleJob(Messages.get().CertificateView_CreateNewCertif, this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
+			new ConsoleJob(Messages.get().CertificateView_CreateNewCertif, this, Activator.PLUGIN_ID) {
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
@@ -348,7 +348,7 @@ public class CertificateView extends ViewPart implements SessionListener
 			return;
 		
 		final Object[] objects = selection.toArray();
-		new ConsoleJob(Messages.get().CertificateView_DeleteCertif, this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
+		new ConsoleJob(Messages.get().CertificateView_DeleteCertif, this, Activator.PLUGIN_ID) {
 			@Override
 			protected String getErrorMessage()
 			{
@@ -376,7 +376,7 @@ public class CertificateView extends ViewPart implements SessionListener
 	   final EditCertificateDialog dlg = new EditCertificateDialog(getSite().getShell(), cert);
 	   if (dlg.open() == Window.OK)
       {
-   		new ConsoleJob(Messages.get().CertificateView_SaveCertif, this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
+   		new ConsoleJob(Messages.get().CertificateView_SaveCertif, this, Activator.PLUGIN_ID) {
    
    			@Override
    			protected void runInternal(IProgressMonitor monitor) throws Exception

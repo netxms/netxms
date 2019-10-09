@@ -322,7 +322,7 @@ public class PerfTabGraph extends DashboardComposite implements HistoricalChartO
 		updateInProgress = true;
 		chart.clearErrors();
 		
-		ConsoleJob job = new ConsoleJob(Messages.get().PerfTabGraph_JobTitle, null, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
+		ConsoleJob job = new ConsoleJob(Messages.get().PerfTabGraph_JobTitle, null, Activator.PLUGIN_ID) {
 			private PerfTabDci currentDci;
 			
 			@Override

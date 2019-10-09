@@ -74,7 +74,6 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
 public class LogViewer extends ViewPart
 {
 	public static final String ID = "org.netxms.ui.eclipse.logviewer.view.log_viewer"; //$NON-NLS-1$
-	public static final String JOB_FAMILY = "LogViewerJob"; //$NON-NLS-1$
 	
 	private static final int PAGE_SIZE = 400;
 		
@@ -85,7 +84,7 @@ public class LogViewer extends ViewPart
 	private Log logHandle;
 	private LogFilter filter;
    private LogFilter delayedQueryFilter = null;
-	private Image titleImage = null;
+   private Image titleImage = null;
 	private Table resultSet;
 	private boolean noData = false;
    private Action actionRefresh;
@@ -103,7 +102,6 @@ public class LogViewer extends ViewPart
 	public void init(IViewSite site) throws PartInitException
 	{
 		super.init(site);
-		
 		session = (NXCSession)ConsoleSharedData.getSession();
 		logName = site.getSecondaryId();
 		setPartName(Messages.getString("LogViewer_" + logName)); //$NON-NLS-1$
@@ -173,7 +171,7 @@ public class LogViewer extends ViewPart
 		contributeToActionBars();
 		createPopupMenu();
 		
-		new ConsoleJob(String.format(Messages.get().LogViewer_OpenLogJobName, logName), this, Activator.PLUGIN_ID, JOB_FAMILY) {
+		new ConsoleJob(String.format(Messages.get().LogViewer_OpenLogJobName, logName), this, Activator.PLUGIN_ID) {
 			@Override
 			protected String getErrorMessage()
 			{
@@ -450,7 +448,7 @@ public class LogViewer extends ViewPart
 		actionRefresh.setEnabled(false);
 		actionGetMoreData.setEnabled(false);
 		filter = filterBuilder.createFilter();
-		new ConsoleJob(Messages.get().LogViewer_QueryJob, this, Activator.PLUGIN_ID, JOB_FAMILY) {
+		new ConsoleJob(Messages.get().LogViewer_QueryJob, this, Activator.PLUGIN_ID) {
 			@Override
 			protected String getErrorMessage()
 			{
@@ -485,7 +483,7 @@ public class LogViewer extends ViewPart
 		if (noData)
 			return;	// we already know that there will be no more data
 		
-		new ConsoleJob(Messages.get().LogViewer_GetDataJob, this, Activator.PLUGIN_ID, JOB_FAMILY) {
+		new ConsoleJob(Messages.get().LogViewer_GetDataJob, this, Activator.PLUGIN_ID) {
 			@Override
 			protected String getErrorMessage()
 			{
@@ -515,7 +513,7 @@ public class LogViewer extends ViewPart
 	 */
 	private void refreshData()
 	{
-		new ConsoleJob(Messages.get().LogViewer_RefreshJob, this, Activator.PLUGIN_ID, JOB_FAMILY) {
+		new ConsoleJob(Messages.get().LogViewer_RefreshJob, this, Activator.PLUGIN_ID) {
 			@Override
 			protected String getErrorMessage()
 			{

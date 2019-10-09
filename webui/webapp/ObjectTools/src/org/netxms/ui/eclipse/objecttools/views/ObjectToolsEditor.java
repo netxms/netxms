@@ -509,7 +509,7 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 	 */
 	private void refreshToolList()
 	{
-		new ConsoleJob(Messages.get(viewer.getControl().getDisplay()).ObjectToolsEditor_JobGetConfig, this, Activator.PLUGIN_ID, Activator.PLUGIN_ID, viewer.getControl().getDisplay()) {
+		new ConsoleJob(Messages.get().ObjectToolsEditor_JobGetConfig, this, Activator.PLUGIN_ID) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -542,7 +542,7 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 		final CreateNewToolDialog dlg = new CreateNewToolDialog(getSite().getShell());
 		if (dlg.open() == Window.OK)
 		{
-			new ConsoleJob(Messages.get().ObjectToolsEditor_JobNewId, this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
+			new ConsoleJob(Messages.get().ObjectToolsEditor_JobNewId, this, Activator.PLUGIN_ID) {
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
@@ -583,7 +583,7 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 			return;
 		
 		final Object[] objects = selection.toArray();
-		new ConsoleJob(Messages.get().ObjectToolsEditor_JobDelete, this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
+		new ConsoleJob(Messages.get().ObjectToolsEditor_JobDelete, this, Activator.PLUGIN_ID) {
 			@Override
 			protected String getErrorMessage()
 			{
@@ -608,7 +608,7 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 	 */
 	private void saveObjectTool(final ObjectToolDetails details)
 	{
-		new ConsoleJob(Messages.get().ObjectToolsEditor_JobSave, this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
+		new ConsoleJob(Messages.get().ObjectToolsEditor_JobSave, this, Activator.PLUGIN_ID) {
 
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
@@ -647,7 +647,7 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
           return;
        
        final Object[] objects = selection.toArray();
-       new ConsoleJob(Messages.get(viewer.getControl().getDisplay()).ObjectToolsEditor_DisableObjTool, this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
+       new ConsoleJob(Messages.get().ObjectToolsEditor_DisableObjTool, this, Activator.PLUGIN_ID) {
           @Override
           protected String getErrorMessage()
           {
@@ -676,7 +676,7 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 	         return;
 	      
 	      final Object[] objects = selection.toArray();
-	      new ConsoleJob(Messages.get(viewer.getControl().getDisplay()).ObjectToolsEditor_EnableObjTool, this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
+	      new ConsoleJob(Messages.get().ObjectToolsEditor_EnableObjTool, this, Activator.PLUGIN_ID) {
 	         @Override
 	         protected String getErrorMessage()
 	         {
@@ -707,7 +707,7 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
        final CreateObjectDialog dlg = new CreateObjectDialog(getSite().getShell(), "Object tool");
        if (dlg.open() == Window.OK)
        {
-          new ConsoleJob("Clone object tool", this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
+          new ConsoleJob(Messages.get().ObjectToolsEditor_CloneObjectTool, this, Activator.PLUGIN_ID) {
              @Override
              protected void runInternal(IProgressMonitor monitor) throws Exception
              {
@@ -722,7 +722,7 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
              @Override
              protected String getErrorMessage()
              {
-                return "Cannot clone object tool";
+                return Messages.get(getDisplay()).ObjectToolsEditor_CloneError;
              }
           }.start();
        }
