@@ -66,7 +66,7 @@ public class NotificationChannelLabelProvider extends LabelProvider implements I
 				return ((NotificationChannel)element).getName();
 			case NotificationChannelView.COLUMN_DESCRIPTION:
 				return ((NotificationChannel)element).getDescription();
-			case NotificationChannelView.COLUMN_DRIVER_NAME:
+			case NotificationChannelView.COLUMN_DRIVER:
 				return ((NotificationChannel)element).getDriverName();
          case NotificationChannelView.COLUMN_LAST_STATUS:
             return ((NotificationChannel)element).getLastStatusAsString();

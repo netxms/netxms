@@ -45,7 +45,7 @@ public class NotificationChannelListComparator extends ViewerComparator
 			case NotificationChannelView.COLUMN_NAME:
 				result = nc1.getName().compareToIgnoreCase(nc2.getName());
 				break;
-         case NotificationChannelView.COLUMN_DRIVER_NAME:
+         case NotificationChannelView.COLUMN_DRIVER:
             result = nc1.getDriverName().compareToIgnoreCase(nc2.getDriverName());
             break;
 			case NotificationChannelView.COLUMN_DESCRIPTION:
