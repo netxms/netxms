@@ -56,9 +56,23 @@ ServerJobResult DCIRecalculationJob::run()
 
    TCHAR query[256];
    if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
-      _sntprintf(query, 256, _T("SELECT idata_timestamp,raw_value FROM idata WHERE node_id=%d AND item_id=%d ORDER BY idata_timestamp"), m_object->getId(), m_dci->getId());
+   {
+      if (g_dbSyntax == DB_SYNTAX_TSDB)
+      {
+         _sntprintf(query, 256, _T("SELECT idata_timestamp,raw_value FROM idata_sc_%s WHERE node_id=%d AND item_id=%d ORDER BY idata_timestamp"),
+                  DCObject::getStorageClassName(m_dci->getStorageClass()), m_object->getId(), m_dci->getId());
+      }
+      else
+      {
+         _sntprintf(query, 256, _T("SELECT idata_timestamp,raw_value FROM idata WHERE node_id=%d AND item_id=%d ORDER BY idata_timestamp"),
+                  m_object->getId(), m_dci->getId());
+      }
+   }
    else
-      _sntprintf(query, 256, _T("SELECT idata_timestamp,raw_value FROM idata_%d WHERE item_id=%d ORDER BY idata_timestamp"), m_object->getId(), m_dci->getId());
+   {
+      _sntprintf(query, 256, _T("SELECT idata_timestamp,raw_value FROM idata_%d WHERE item_id=%d ORDER BY idata_timestamp"),
+               m_object->getId(), m_dci->getId());
+   }
    DB_RESULT hResult = DBSelect(hdb, query);
    if (hResult == NULL)
    {
@@ -73,7 +87,17 @@ ServerJobResult DCIRecalculationJob::run()
       DB_STATEMENT hStmt;
       if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
       {
-         hStmt = DBPrepare(hdb, _T("UPDATE idata SET idata_value=? WHERE node_id=? AND item_id=? AND idata_timestamp=?"));
+         if (g_dbSyntax == DB_SYNTAX_TSDB)
+         {
+            TCHAR query[256];
+            _sntprintf(query, 256, _T("UPDATE idata_sc_%s SET idata_value=? WHERE node_id=? AND item_id=? AND idata_timestamp=?"),
+                     DCObject::getStorageClassName(m_dci->getStorageClass()));
+            hStmt = DBPrepare(hdb, query);
+         }
+         else
+         {
+            hStmt = DBPrepare(hdb, _T("UPDATE idata SET idata_value=? WHERE node_id=? AND item_id=? AND idata_timestamp=?"));
+         }
       }
       else
       {

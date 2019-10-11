@@ -1229,12 +1229,25 @@ void DCItem::reloadCache(bool forceReload)
       case DB_SYNTAX_MYSQL:
       case DB_SYNTAX_PGSQL:
       case DB_SYNTAX_SQLITE:
-      case DB_SYNTAX_TSDB:
          if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
          {
             _sntprintf(szBuffer, MAX_DB_STRING, _T("SELECT idata_value,idata_timestamp FROM idata ")
                               _T("WHERE item_id=%d ORDER BY idata_timestamp DESC LIMIT %d"),
                     m_id, m_requiredCacheSize);
+         }
+         else
+         {
+            _sntprintf(szBuffer, MAX_DB_STRING, _T("SELECT idata_value,idata_timestamp FROM idata_%d ")
+                              _T("WHERE item_id=%d ORDER BY idata_timestamp DESC LIMIT %d"),
+                    m_owner->getId(), m_id, m_requiredCacheSize);
+         }
+         break;
+      case DB_SYNTAX_TSDB:
+         if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
+         {
+            _sntprintf(szBuffer, MAX_DB_STRING, _T("SELECT idata_value,idata_timestamp FROM idata_sc_%s ")
+                              _T("WHERE item_id=%d ORDER BY idata_timestamp DESC LIMIT %d"),
+                    getStorageClassName(getStorageClass()), m_id, m_requiredCacheSize);
          }
          else
          {
@@ -1528,11 +1541,17 @@ TCHAR *DCItem::getAggregateValue(AggregationFunction func, time_t periodStart, t
             _T("WHERE item_id=? AND (idata_timestamp BETWEEN ? AND ?) AND isnumeric(idata_value)=1"),
             functions[func]);
       }
-      else if ((g_dbSyntax == DB_SYNTAX_PGSQL) || (g_dbSyntax == DB_SYNTAX_TSDB))
+      else if (g_dbSyntax == DB_SYNTAX_PGSQL)
       {
          _sntprintf(query, 1024, _T("SELECT %s(idata_value::double precision) FROM idata ")
             _T("WHERE item_id=? AND idata_timestamp BETWEEN ? AND ? AND idata_value~E'^\\\\d+(\\\\.\\\\d+)*$'"),
             functions[func]);
+      }
+      else if (g_dbSyntax == DB_SYNTAX_TSDB)
+      {
+         _sntprintf(query, 1024, _T("SELECT %s(idata_value::double precision) FROM idata_sc_%s ")
+            _T("WHERE item_id=? AND idata_timestamp BETWEEN ? AND ? AND idata_value~E'^\\\\d+(\\\\.\\\\d+)*$'"),
+            functions[func], getStorageClassName(getStorageClass()));
       }
       else
       {
