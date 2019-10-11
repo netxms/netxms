@@ -392,7 +392,17 @@ bool DCTable::processNewValue(time_t timestamp, const void *value, bool *updateS
 	   DB_STATEMENT hStmt;
 	   if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
 	   {
-	      hStmt = DBPrepare(hdb, _T("INSERT INTO tdata (item_id,tdata_timestamp,tdata_value) VALUES (?,?,?)"));
+	      if (g_dbSyntax == DB_SYNTAX_TSDB)
+	      {
+	         TCHAR query[256];
+	         _sntprintf(query, 256, _T("INSERT INTO tdata_sc_%s (item_id,tdata_timestamp,tdata_value) VALUES (?,?,?)"),
+	                  getStorageClassName(getStorageClass()));
+            hStmt = DBPrepare(hdb, query);
+	      }
+	      else
+	      {
+	         hStmt = DBPrepare(hdb, _T("INSERT INTO tdata (item_id,tdata_timestamp,tdata_value) VALUES (?,?,?)"));
+	      }
 	   }
 	   else
 	   {

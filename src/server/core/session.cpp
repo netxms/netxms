@@ -4090,7 +4090,8 @@ void ClientSession::sendDCIThresholds(NXCPMessage *request)
 /**
  * Prepare statement for reading data from idata/tdata table
  */
-static DB_STATEMENT PrepareDataSelect(DB_HANDLE hdb, UINT32 nodeId, int dciType, UINT32 maxRows, HistoricalDataType historicalDataType, const TCHAR *condition)
+static DB_STATEMENT PrepareDataSelect(DB_HANDLE hdb, UINT32 nodeId, int dciType, DCObjectStorageClass storageClass,
+         UINT32 maxRows, HistoricalDataType historicalDataType, const TCHAR *condition)
 {
    const TCHAR *tablePrefix = (dciType == DCO_TYPE_ITEM) ? _T("idata") : _T("tdata");
 	TCHAR query[512];
@@ -4111,10 +4112,14 @@ static DB_STATEMENT PrepareDataSelect(DB_HANDLE hdb, UINT32 nodeId, int dciType,
          case DB_SYNTAX_MYSQL:
          case DB_SYNTAX_PGSQL:
          case DB_SYNTAX_SQLITE:
-         case DB_SYNTAX_TSDB:
             _sntprintf(query, 512, _T("SELECT %s_timestamp,%s%s FROM %s WHERE item_id=?%s ORDER BY %s_timestamp DESC LIMIT %d"),
                      tablePrefix, SELECTION_COLUMNS,
                      tablePrefix, condition, tablePrefix, (int)maxRows);
+            break;
+         case DB_SYNTAX_TSDB:
+            _sntprintf(query, 512, _T("SELECT %s_timestamp,%s%s FROM %s_sc_%s WHERE item_id=?%s ORDER BY %s_timestamp DESC LIMIT %d"),
+                     tablePrefix, SELECTION_COLUMNS,
+                     tablePrefix, DCObject::getStorageClassName(storageClass), condition, tablePrefix, (int)maxRows);
             break;
          case DB_SYNTAX_DB2:
             _sntprintf(query, 512, _T("SELECT %s_timestamp,%s%s FROM %s WHERE item_id=?%s ORDER BY %s_timestamp DESC FETCH FIRST %d ROWS ONLY"),
@@ -4348,7 +4353,7 @@ read_from_db:
 
 	bool success = false;
 	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-	DB_STATEMENT hStmt = PrepareDataSelect(hdb, dcTarget->getId(), dciType, maxRows, historicalDataType, condition);
+	DB_STATEMENT hStmt = PrepareDataSelect(hdb, dcTarget->getId(), dciType, dci->getStorageClass(), maxRows, historicalDataType, condition);
 	if (hStmt != NULL)
 	{
 		TCHAR dataColumn[MAX_COLUMN_NAME] = _T("");

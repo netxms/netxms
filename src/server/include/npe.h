@@ -42,13 +42,15 @@ struct DciValue
    double value;
 };
 
+enum class DCObjectStorageClass;
+
 /**
  * Prediction engine interface
  */
 class NXCORE_EXPORTABLE PredictionEngine
 {
 protected:
-   StructArray<DciValue> *getDciValues(UINT32 nodeId, UINT32 dciId, int maxRows);
+   StructArray<DciValue> *getDciValues(UINT32 nodeId, UINT32 dciId, DCObjectStorageClass storageClass, int maxRows);
 
 public:
    PredictionEngine();

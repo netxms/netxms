@@ -93,7 +93,7 @@ bool PredictionEngine::getPredictedSeries(UINT32 nodeId, UINT32 dciId, int count
 /**
  * Helper method to read last N values of given DCI
  */
-StructArray<DciValue> *PredictionEngine::getDciValues(UINT32 nodeId, UINT32 dciId, int maxRows)
+StructArray<DciValue> *PredictionEngine::getDciValues(UINT32 nodeId, UINT32 dciId, DCObjectStorageClass storageClass, int maxRows)
 {
    TCHAR query[1024];
    switch(g_dbSyntax)
@@ -113,9 +113,15 @@ StructArray<DciValue> *PredictionEngine::getDciValues(UINT32 nodeId, UINT32 dciI
       case DB_SYNTAX_MYSQL:
       case DB_SYNTAX_PGSQL:
       case DB_SYNTAX_SQLITE:
-      case DB_SYNTAX_TSDB:
          if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
             _sntprintf(query, 1024, _T("SELECT idata_timestamp,idata_value FROM idata WHERE node_id=%u AND item_id=%u ORDER BY idata_timestamp DESC ETCH FIRST %d ROWS ONLY"), nodeId, dciId, maxRows);
+         else
+            _sntprintf(query, 1024, _T("SELECT idata_timestamp,idata_value FROM idata_%u WHERE item_id=%u ORDER BY idata_timestamp DESC LIMIT %d"), nodeId, dciId, maxRows);
+         break;
+      case DB_SYNTAX_TSDB:
+         if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
+            _sntprintf(query, 1024, _T("SELECT idata_timestamp,idata_value FROM idata_sc_%s WHERE node_id=%u AND item_id=%u ORDER BY idata_timestamp DESC ETCH FIRST %d ROWS ONLY"),
+                     DCObject::getStorageClassName(storageClass), nodeId, dciId, maxRows);
          else
             _sntprintf(query, 1024, _T("SELECT idata_timestamp,idata_value FROM idata_%u WHERE item_id=%u ORDER BY idata_timestamp DESC LIMIT %d"), nodeId, dciId, maxRows);
          break;
