@@ -25,7 +25,6 @@
 
 bool SMSCreatePDUString(const char* phoneNumber, const char* message, char* pduBuffer);
 
-
 static const char *s_eosMarks[] = { "OK", "ERROR", NULL };
 static const char *s_eosMarksSend[] = { ">", "ERROR", NULL };
 
@@ -36,9 +35,9 @@ enum OperationMode
 };
 
 /**
- * Text driver class
+ * GSM driver class
  */
-class GenericDriver : public NCDriver
+class GSMDriver : public NCDriver
 {
 private:
 	Serial m_serial;
@@ -46,7 +45,8 @@ private:
 	bool m_cmgsUseQuotes;
 
 public:
-   GenericDriver(Config *config);
+	GSMDriver(Config *config);
+
    virtual bool send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body) override;
 };
 
@@ -123,10 +123,8 @@ static bool InitModem(Serial *serial)
 
 /**
  * Initialize driver
- *
- * pszInitArgs format: portname,speed,databits,parity,stopbits,mode(text),mode(quotes),blocksize,writedelay
  */
-GenericDriver::GenericDriver(Config *config)
+GSMDriver::GSMDriver(Config *config)
 {
 	TCHAR portName[128] = _T("");
 	const TCHAR *parityAsText;
@@ -141,22 +139,22 @@ GenericDriver::GenericDriver(Config *config)
 
    NX_CFG_TEMPLATE configTemplate[] = 
    {
-      { _T("portname"), CT_STRING, 0, 0, sizeof(portName) / sizeof(TCHAR), 0, portName },	
-      { _T("port"), CT_STRING, 0, 0, sizeof(portName) / sizeof(TCHAR), 0, portName },	
-      { _T("speed"), CT_LONG, 0, 0, 0, 0, &portSpeed },	
-      { _T("databits"), CT_LONG, 0, 0, 0, 0,	&dataBits },	
-      { _T("parity"), CT_MB_STRING, 0, 0, 2, 0,	patryCr },
-      { _T("stopbits"), CT_LONG, 0, 0, 0, 0, &stopBits },	
-      { _T("textMode"), CT_BOOLEAN, 0, 0, 1, 0, &mode },	
-      { _T("useQuotes"), CT_BOOLEAN, 0, 0, 2, 0, &mode },	
-      { _T("blocksize"), CT_LONG, 0, 0, 0, 0, &blockSize },	
-      { _T("writedelay"), CT_LONG, 0, 0, 0, 0, &writeDelay },	
+      { _T("BlockSize"), CT_LONG, 0, 0, 0, 0, &blockSize },
+      { _T("DataBits"), CT_LONG, 0, 0, 0, 0, &dataBits },
+      { _T("Parity"), CT_MB_STRING, 0, 0, 2, 0, patryCr },
+      { _T("Port"), CT_STRING, 0, 0, sizeof(portName) / sizeof(TCHAR), 0, portName },
+      { _T("PortName"), CT_STRING, 0, 0, sizeof(portName) / sizeof(TCHAR), 0, portName },
+      { _T("Speed"), CT_LONG, 0, 0, 0, 0, &portSpeed },
+      { _T("StopBits"), CT_LONG, 0, 0, 0, 0, &stopBits },
+      { _T("TextMode"), CT_BOOLEAN, 0, 0, 1, 0, &mode },
+      { _T("UseQuotes"), CT_BOOLEAN, 0, 0, 2, 0, &mode },
+      { _T("WriteDelay"), CT_LONG, 0, 0, 0, 0, &writeDelay },
       { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
    };
-	
+
 	nxlog_debug_tag(DEBUG_TAG, 1, _T("Loading Generic SMS Driver"));
 
-	if (config->parseTemplate(_T("Generic"), configTemplate))
+	if (config->parseTemplate(_T("GSM"), configTemplate))
    {
       switch (tolower(patryCr[0]))
       {
@@ -259,7 +257,7 @@ cleanup:
 /**
  * Send SMS
  */
-bool GenericDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body)
+bool GSMDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body)
 {
 	if ((recipient == NULL) || (body == NULL))
       return false;
@@ -384,9 +382,9 @@ cleanup:
 /**
  * Driver entry point
  */
-DECLARE_NCD_ENTRY_POINT(Generic, NULL)
+DECLARE_NCD_ENTRY_POINT(GSM, NULL)
 {
-   return new GenericDriver(config);
+   return new GSMDriver(config);
 }
 
 #ifdef _WIN32
