@@ -318,7 +318,7 @@ void DataCollectionTarget::queuePredictionEngineTraining()
             PredictionEngine *e = FindPredictionEngine(dci->getPredictionEngine());
             if ((e != NULL) && e->requiresTraining())
             {
-               QueuePredictionEngineTraining(e, dci->getOwner()->getId(), dci->getId());
+               QueuePredictionEngineTraining(e, dci);
             }
          }
       }

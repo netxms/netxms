@@ -88,22 +88,22 @@ public:
    /**
     * Get engine name (must not be longer than 15 characters)
     */
-   virtual const TCHAR *getName() const;
+   virtual const TCHAR *getName() const override;
 
    /**
     * Get engine description
     */
-   virtual const TCHAR *getDescription() const;
+   virtual const TCHAR *getDescription() const override;
 
    /**
     * Get engine version
     */
-   virtual const TCHAR *getVersion() const;
+   virtual const TCHAR *getVersion() const override;
 
    /**
     * Get engine vendor
     */
-   virtual const TCHAR *getVendor() const;
+   virtual const TCHAR *getVendor() const override;
 
    /**
     * Initialize engine
@@ -111,50 +111,54 @@ public:
     * @param errorMessage buffer for error message in case of failure
     * @return true on success
     */
-   virtual bool initialize(TCHAR *errorMessage);
+   virtual bool initialize(TCHAR *errorMessage) override;
 
    /**
     * Check if engine requires training
     *
     * @return true if engine requires training
     */
-   virtual bool requiresTraining();
+   virtual bool requiresTraining() override;
 
    /**
     * Train engine using existing data for given DCI
     *
     * @param nodeId Node object ID
     * @param dciId DCI ID
+    * @param storageClass DCI storage class
     */
-   virtual void train(UINT32 nodeId, UINT32 dciId);
+   virtual void train(UINT32 nodeId, UINT32 dciId, DCObjectStorageClass storageClass) override;
 
    /**
     * Update internal model for given DCI
     *
     * @param nodeId Node object ID
     * @param dciId DCI ID
+    * @param storageClass DCI storage class
     * @param timestamp timestamp of new value
     * @param value new value
     */
-   virtual void update(UINT32 nodeId, UINT32 dciId, time_t timestamp, double value);
+   virtual void update(UINT32 nodeId, UINT32 dciId, DCObjectStorageClass storageClass, time_t timestamp, double value) override;
 
    /**
     * Reset internal model for given DCI
     *
     * @param nodeId Node object ID
     * @param dciId DCI ID
+    * @param storageClass DCI storage class
     */
-   virtual void reset(UINT32 nodeId, UINT32 dciId);
+   virtual void reset(UINT32 nodeId, UINT32 dciId, DCObjectStorageClass storageClass) override;
 
    /**
     * Get predicted value for given DCI and time
     *
     * @param nodeId Node object ID
     * @param dciId DCI ID
+    * @param storageClass DCI storage class
     * @param timestamp timestamp of interest
     * @return predicted value
     */
-   virtual double getPredictedValue(UINT32 nodeId, UINT32 dciId, time_t timestamp);
+   virtual double getPredictedValue(UINT32 nodeId, UINT32 dciId, DCObjectStorageClass storageClass, time_t timestamp) override;
 
    /**
     * Get series of predicted values starting with current time. Default implementation
@@ -162,16 +166,17 @@ public:
     *
     * @param nodeId Node object ID
     * @param dciId DCI ID
+    * @param storageClass DCI storage class
     * @param count number of values to retrieve
     * @param series buffer for values
     * @return true on success
     */
-   virtual bool getPredictedSeries(UINT32 nodeId, UINT32 dciId, int count, double *series);
+   virtual bool getPredictedSeries(UINT32 nodeId, UINT32 dciId, DCObjectStorageClass storageClass, int count, double *series) override;
 
    /**
     * Get DCi cache size required by this engine
     */
-   virtual int getRequiredCacheSize() const;
+   virtual int getRequiredCacheSize() const override;
 };
 
 #endif

@@ -100,11 +100,12 @@ bool TimeSeriesRegressionEngine::requiresTraining()
  *
  * @param nodeId Node object ID
  * @param dciId DCI ID
+ * @param storageClass DCI storage class
  */
-void TimeSeriesRegressionEngine::train(UINT32 nodeId, UINT32 dciId)
+void TimeSeriesRegressionEngine::train(UINT32 nodeId, UINT32 dciId, DCObjectStorageClass storageClass)
 {
    nxlog_debug_tag(DEBUG_TAG, 5, _T("Starting training for DCI %u/%u"), nodeId, dciId);
-   StructArray<DciValue> *values = getDciValues(nodeId, dciId, 10000);
+   StructArray<DciValue> *values = getDciValues(nodeId, dciId, storageClass, 10000);
    if ((values != NULL) && (values->size() > INPUT_LAYER_SIZE))
    {
       double *series = new double[values->size()];
@@ -124,10 +125,11 @@ void TimeSeriesRegressionEngine::train(UINT32 nodeId, UINT32 dciId)
  *
  * @param nodeId Node object ID
  * @param dciId DCI ID
+ * @param storageClass DCI storage class
  * @param timestamp timestamp of new value
  * @param value new value
  */
-void TimeSeriesRegressionEngine::update(UINT32 nodeId, UINT32 dciId, time_t timestamp, double value)
+void TimeSeriesRegressionEngine::update(UINT32 nodeId, UINT32 dciId, DCObjectStorageClass storageClass, time_t timestamp, double value)
 {
 }
 
@@ -136,8 +138,9 @@ void TimeSeriesRegressionEngine::update(UINT32 nodeId, UINT32 dciId, time_t time
  *
  * @param nodeId Node object ID
  * @param dciId DCI ID
+ * @param storageClass DCI storage class
  */
-void TimeSeriesRegressionEngine::reset(UINT32 nodeId, UINT32 dciId)
+void TimeSeriesRegressionEngine::reset(UINT32 nodeId, UINT32 dciId, DCObjectStorageClass storageClass)
 {
    TCHAR nid[64];
    _sntprintf(nid, 64, _T("%u/%u"), nodeId, dciId);
@@ -152,12 +155,13 @@ void TimeSeriesRegressionEngine::reset(UINT32 nodeId, UINT32 dciId)
  *
  * @param nodeId Node object ID
  * @param dciId DCI ID
+ * @param storageClass DCI storage class
  * @param timestamp timestamp of interest
  * @return predicted value
  */
-double TimeSeriesRegressionEngine::getPredictedValue(UINT32 nodeId, UINT32 dciId, time_t timestamp)
+double TimeSeriesRegressionEngine::getPredictedValue(UINT32 nodeId, UINT32 dciId, DCObjectStorageClass storageClass, time_t timestamp)
 {
-   StructArray<DciValue> *values = getDciValues(nodeId, dciId, INPUT_LAYER_SIZE);
+   StructArray<DciValue> *values = getDciValues(nodeId, dciId, storageClass, INPUT_LAYER_SIZE);
    if (values == NULL)
    {
       nxlog_debug_tag(DEBUG_TAG, 5, _T("TimeSeriesRegressionEngine::getPredictedValue: cannot read data for DCI %u/%u"), nodeId, dciId);
@@ -181,18 +185,19 @@ double TimeSeriesRegressionEngine::getPredictedValue(UINT32 nodeId, UINT32 dciId
 }
 
 /**
-    * Get series of predicted values starting with current time. Default implementation
-    * calls getPredictedValue with incrementing timestamp
-    *
-    * @param nodeId Node object ID
-    * @param dciId DCI ID
-    * @param count number of values to retrieve
-    * @param series buffer for values
-    * @return true on success
-    */
-bool TimeSeriesRegressionEngine::getPredictedSeries(UINT32 nodeId, UINT32 dciId, int count, double *series)
+ * Get series of predicted values starting with current time. Default implementation
+ * calls getPredictedValue with incrementing timestamp
+ *
+ * @param nodeId Node object ID
+ * @param dciId DCI ID
+ * @param storageClass DCI storage class
+ * @param count number of values to retrieve
+ * @param series buffer for values
+ * @return true on success
+ */
+bool TimeSeriesRegressionEngine::getPredictedSeries(UINT32 nodeId, UINT32 dciId, DCObjectStorageClass storageClass, int count, double *series)
 {
-   StructArray<DciValue> *values = getDciValues(nodeId, dciId, INPUT_LAYER_SIZE);
+   StructArray<DciValue> *values = getDciValues(nodeId, dciId, storageClass, INPUT_LAYER_SIZE);
    if (values == NULL)
    {
       nxlog_debug_tag(DEBUG_TAG, 5, _T("TimeSeriesRegressionEngine::getPredictedValue: cannot read data for DCI %u/%u"), nodeId, dciId);

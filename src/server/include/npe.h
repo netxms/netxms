@@ -43,6 +43,7 @@ struct DciValue
 };
 
 enum class DCObjectStorageClass;
+class DCItem;
 
 /**
  * Prediction engine interface
@@ -96,36 +97,40 @@ public:
     *
     * @param nodeId Node object ID
     * @param dciId DCI ID
+    * @param storageClass DCI storage class
     */
-   virtual void train(UINT32 nodeId, UINT32 dciId);
+   virtual void train(UINT32 nodeId, UINT32 dciId, DCObjectStorageClass storageClass);
 
    /**
     * Update internal model for given DCI
     *
     * @param nodeId Node object ID
     * @param dciId DCI ID
+    * @param storageClass DCI storage class
     * @param timestamp timestamp of new value
     * @param value new value
     */
-   virtual void update(UINT32 nodeId, UINT32 dciId, time_t timestamp, double value) = 0;
+   virtual void update(UINT32 nodeId, UINT32 dciId, DCObjectStorageClass storageClass, time_t timestamp, double value) = 0;
 
    /**
     * Reset internal model for given DCI
     *
     * @param nodeId Node object ID
     * @param dciId DCI ID
+    * @param storageClass DCI storage class
     */
-   virtual void reset(UINT32 nodeId, UINT32 dciId) = 0;
+   virtual void reset(UINT32 nodeId, UINT32 dciId, DCObjectStorageClass storageClass) = 0;
 
    /**
     * Get predicted value for given DCI and time
     *
     * @param nodeId Node object ID
     * @param dciId DCI ID
+    * @param storageClass DCI storage class
     * @param timestamp timestamp of interest
     * @return predicted value
     */
-   virtual double getPredictedValue(UINT32 nodeId, UINT32 dciId, time_t timestamp) = 0;
+   virtual double getPredictedValue(UINT32 nodeId, UINT32 dciId, DCObjectStorageClass storageClass, time_t timestamp) = 0;
 
    /**
     * Get series of predicted values starting with current time. Default implementation
@@ -133,11 +138,12 @@ public:
     *
     * @param nodeId Node object ID
     * @param dciId DCI ID
+    * @param storageClass DCI storage class
     * @param count number of values to retrieve
     * @param series buffer for values
     * @return true on success
     */
-   virtual bool getPredictedSeries(UINT32 nodeId, UINT32 dciId, int count, double *series);
+   virtual bool getPredictedSeries(UINT32 nodeId, UINT32 dciId, DCObjectStorageClass storageClass, int count, double *series);
 
    /**
     * Get DCi cache size required by this engine
@@ -149,6 +155,6 @@ public:
  * API
  */
 PredictionEngine NXCORE_EXPORTABLE *FindPredictionEngine(const TCHAR *name);
-void NXCORE_EXPORTABLE QueuePredictionEngineTraining(PredictionEngine *engine, UINT32 nodeId, UINT32 dciId);
+void NXCORE_EXPORTABLE QueuePredictionEngineTraining(PredictionEngine *engine, DCItem *dci);
 
 #endif

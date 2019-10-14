@@ -56,7 +56,7 @@ bool PredictionEngine::requiresTraining()
 /**
  * Default trainig method - do nothing
  */
-void PredictionEngine::train(UINT32 nodeId, UINT32 dciId)
+void PredictionEngine::train(UINT32 nodeId, UINT32 dciId, DCObjectStorageClass storageClass)
 {
 }
 
@@ -66,11 +66,12 @@ void PredictionEngine::train(UINT32 nodeId, UINT32 dciId)
  *
  * @param nodeId Node object ID
  * @param dciId DCI ID
+ * @param storageClass DCI storage class
  * @param count number of values to retrieve
  * @param series buffer for values
  * @return true on success
  */
-bool PredictionEngine::getPredictedSeries(UINT32 nodeId, UINT32 dciId, int count, double *series)
+bool PredictionEngine::getPredictedSeries(UINT32 nodeId, UINT32 dciId, DCObjectStorageClass storageClass, int count, double *series)
 {
    NetObj *object = FindObjectById(nodeId);
    if ((object == NULL) || !object->isDataCollectionTarget())
@@ -84,7 +85,7 @@ bool PredictionEngine::getPredictedSeries(UINT32 nodeId, UINT32 dciId, int count
    time_t t = time(NULL);
    for(int i = 0; i < count; i++)
    {
-      series[i] = getPredictedValue(nodeId, dciId, t);
+      series[i] = getPredictedValue(nodeId, dciId, storageClass, t);
       t += interval;
    }
    return true;
@@ -400,7 +401,7 @@ bool GetPredictedData(ClientSession *session, const NXCPMessage *request, NXCPMe
    double *series = MemAllocArray<double>(count);
    if (timestamp >= timeFrom)
    {
-      engine->getPredictedSeries(dci->getOwner()->getId(), dci->getId(), count, series);
+      engine->getPredictedSeries(dci->getOwner()->getId(), dci->getId(), dci->getStorageClass(), count, series);
 
       DCI_DATA_ROW *pCurr = (DCI_DATA_ROW *)(((char *)pData) + sizeof(DCI_DATA_HEADER));
       for(int i = 0; i < count; i++)
@@ -452,7 +453,7 @@ bool GetPredictedData(ClientSession *session, const NXCPMessage *request, NXCPMe
 /**
  * Queue training run for prediction engine
  */
-void QueuePredictionEngineTraining(PredictionEngine *engine, UINT32 nodeId, UINT32 dciId)
+void QueuePredictionEngineTraining(PredictionEngine *engine, DCItem *dci)
 {
-   ThreadPoolExecute(g_npeThreadPool, engine, &PredictionEngine::train, nodeId, dciId);
+   ThreadPoolExecute(g_npeThreadPool, engine, &PredictionEngine::train, dci->getOwner()->getId(), dci->getId(), dci->getStorageClass());
 }
