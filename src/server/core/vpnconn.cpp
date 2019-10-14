@@ -324,8 +324,13 @@ InetAddress VPNConnector::getPeerGatewayAddr()
 json_t *VPNConnector::toJson()
 {
    json_t *root = super::toJson();
+
+   lockProperties();
+
    json_object_set_new(root, "peerGateway", json_integer(m_dwPeerGateway));
    json_object_set_new(root, "localNetworks", json_object_array(m_localNetworks));
    json_object_set_new(root, "remoteNetworks", json_object_array(m_remoteNetworks));
+
+   unlockProperties();
    return root;
 }

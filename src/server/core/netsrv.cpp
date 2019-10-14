@@ -434,6 +434,9 @@ void NetworkService::onObjectDelete(UINT32 objectId)
 json_t *NetworkService::toJson()
 {
    json_t *root = super::toJson();
+
+   lockProperties();
+
    json_object_set_new(root, "serviceType", json_integer(m_serviceType));
    json_object_set_new(root, "pollerNode", json_integer(m_pollerNode));
    json_object_set_new(root, "proto", json_integer(m_proto));
@@ -445,5 +448,7 @@ json_t *NetworkService::toJson()
    json_object_set_new(root, "pollCount", json_integer(m_pollCount));
    json_object_set_new(root, "requiredPollCount", json_integer(m_requiredPollCount));
    json_object_set_new(root, "responseTime", json_integer(m_responseTime));
+
+   unlockProperties();
    return root;
 }

@@ -1073,6 +1073,9 @@ void NetworkMap::onObjectDelete(UINT32 dwObjectId)
 json_t *NetworkMap::toJson()
 {
    json_t *root = super::toJson();
+
+   lockProperties();
+
    json_object_set_new(root, "mapType", json_integer(m_mapType));
    json_object_set_new(root, "seedObjects", m_seedObjects->toJson());
    json_object_set_new(root, "discoveryRadius", json_integer(m_discoveryRadius));
@@ -1089,5 +1092,7 @@ json_t *NetworkMap::toJson()
    json_object_set_new(root, "elements", json_object_array(m_elements));
    json_object_set_new(root, "links", json_object_array(m_links));
    json_object_set_new(root, "filter", json_string_t(m_filterSource));
+
+   unlockProperties();
    return root;
 }

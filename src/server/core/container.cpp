@@ -119,7 +119,9 @@ UINT32 AbstractContainer::modifyFromMessageInternal(NXCPMessage *request)
 json_t *AbstractContainer::toJson()
 {
    json_t *root = super::toJson();
+   lockProperties();
    json_object_set_new(root, "flags", json_integer(m_flags));
+   unlockProperties();
    return root;
 }
 
