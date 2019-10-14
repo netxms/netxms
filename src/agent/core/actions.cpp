@@ -139,10 +139,10 @@ UINT32 AgentActionExecutor::findAgentAction()
 void AgentActionExecutor::stopAction(AgentActionExecutor *executor)
 {
    if (executor->isRunning())
+   {
       executor->stop();
-
-   DebugPrintf(6, _T("Agent action: %s timed out"), executor->getCommand());
-
+      DebugPrintf(6, _T("Agent action: %s timed out"), executor->getCommand());
+   }
    delete(executor);
 }
 
