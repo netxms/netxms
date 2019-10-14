@@ -539,6 +539,9 @@ int ConditionObject::getCacheSizeForDCI(UINT32 itemId, bool noLock)
 json_t *ConditionObject::toJson()
 {
    json_t *root = super::toJson();
+
+   lockProperties();
+
    json_t *inputs = json_array();
    for(int i = 0; i < m_dciCount; i++)
    {
@@ -558,5 +561,7 @@ json_t *ConditionObject::toJson()
    json_object_set_new(root, "inactiveStatus", json_integer(m_inactiveStatus));
    json_object_set_new(root, "isActive", json_boolean(m_isActive));
    json_object_set_new(root, "lastPoll", json_integer(m_lastPoll));
+
+   unlockProperties();
    return root;
 }

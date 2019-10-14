@@ -2638,6 +2638,7 @@ void NetObj::executeHookScript(const TCHAR *hookName)
 json_t *NetObj::toJson()
 {
    json_t *root = json_object();
+   lockProperties();
    json_object_set_new(root, "id", json_integer(m_id));
    json_object_set_new(root, "guid", m_guid.toJson());
    json_object_set_new(root, "timestamp", json_integer(m_timestamp));
@@ -2663,6 +2664,7 @@ json_t *NetObj::toJson()
    json_object_set_new(root, "inheritAccessRights", json_boolean(m_inheritAccessRights));
    json_object_set_new(root, "trustedNodes", (m_trustedNodes != NULL) ? m_trustedNodes->toJson() : json_array());
    json_object_set_new(root, "customAttributes", m_customAttributes.toJson());
+   unlockProperties();
 
    json_t *children = json_array();
    lockChildList(false);

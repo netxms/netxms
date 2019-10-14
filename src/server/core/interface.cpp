@@ -1320,6 +1320,9 @@ NXSL_Value *Interface::getVlanListForNXSL(NXSL_VM *vm)
 json_t *Interface::toJson()
 {
    json_t *root = super::toJson();
+
+   lockProperties();
+
    json_object_set_new(root, "index", json_integer(m_index));
    TCHAR macAddrText[64];
    json_object_set_new(root, "macAddr", json_string_t(m_macAddr.toString(macAddrText)));
@@ -1354,5 +1357,7 @@ json_t *Interface::toJson()
    json_object_set_new(loc, "pic", json_integer(m_physicalLocation.pic));
    json_object_set_new(loc, "port", json_integer(m_physicalLocation.port));
    json_object_set_new(root, "physicalLocation", loc);
+
+   unlockProperties();
    return root;
 }

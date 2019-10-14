@@ -870,7 +870,12 @@ void Zone::dumpState(ServerConsole *console)
 json_t *Zone::toJson()
 {
    json_t *root = super::toJson();
+
+   lockProperties();
+
    json_object_set_new(root, "uin", json_integer(m_uin));
    json_object_set_new(root, "proxyNodeId", json_object_array(m_proxyNodes));
+
+   unlockProperties();
    return root;
 }

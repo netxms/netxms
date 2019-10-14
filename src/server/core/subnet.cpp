@@ -336,9 +336,14 @@ void Subnet::prepareForDeletion()
 json_t *Subnet::toJson()
 {
    json_t *root = super::toJson();
+
+   lockProperties();
+
    json_object_set_new(root, "ipAddress", m_ipAddress.toJson());
    json_object_set_new(root, "zoneUIN", json_integer(m_zoneUIN));
    json_object_set_new(root, "syntheticMask", json_boolean(m_bSyntheticMask));
+
+   unlockProperties();
    return root;
 }
 
