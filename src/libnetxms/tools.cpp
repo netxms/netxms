@@ -120,6 +120,10 @@ void LIBNETXMS_EXPORTABLE InitNetXMSProcess(bool commandLineTool)
 #ifdef _WIN32
    SetErrorMode(SEM_FAILCRITICALERRORS | SEM_NOGPFAULTERRORBOX | SEM_NOOPENFILEERRORBOX);
    imp_SetThreadDescription = reinterpret_cast<HRESULT (WINAPI *)(HANDLE, PCWSTR)>(GetProcAddress(LoadLibrary(_T("kernel32.dll")), "SetThreadDescription"));
+#ifdef UNICODE
+   // Switch stdout to UNICODE
+   _setmode(_fileno(stdout), _O_U16TEXT);
+#endif
 #endif
 
 #if defined(__sun) || defined(_AIX) || defined(__hpux)
