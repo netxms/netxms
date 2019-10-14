@@ -30,6 +30,6 @@
 #include <ncdrv.h>
 
 #define PDU_BUFFER_SIZE    512
-#define DEBUG_TAG _T("ncd.generic")
+#define DEBUG_TAG _T("ncd.gsm")
 
 #endif // __GENERIC_SMSDRV_H__
