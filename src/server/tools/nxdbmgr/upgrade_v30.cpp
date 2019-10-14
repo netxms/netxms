@@ -23,7 +23,6 @@
 #include "nxdbmgr.h"
 #include <nxevent.h>
 
-
 /**
  * Generate GSM modem notification channel configuration from SMSDrvConfig
  *
@@ -265,8 +264,15 @@ static bool H_UpgradeFromV101()
 {
    CHK_EXEC(SQLQuery(_T("UPDATE notification_channels SET driver_name='GSM' WHERE driver_name='Generic'"))); //Rename for Generic griver
 
-   //fix when driver name is used in action instead of notification name
-   CHK_EXEC(SQLQuery(_T("UPDATE actions INNER JOIN notification_channels ON actions.channel_name = notification_channels.driver_name SET channel_name=notification_channels.name")));
+   // Fix driver name used in action instead of notification channel name
+   if (g_dbSyntax == DB_SYNTAX_SQLITE)
+   {
+      CHK_EXEC(SQLQuery(_T("UPDATE actions SET channel_name=(SELECT name FROM notification_channels WHERE driver_name=actions.channel_name) WHERE channel_name IN (SELECT driver_name FROM notification_channels)")));
+   }
+   else
+   {
+      CHK_EXEC(SQLQuery(_T("UPDATE actions INNER JOIN notification_channels ON actions.channel_name=notification_channels.driver_name SET channel_name=notification_channels.name")));
+   }
 
    TCHAR driver[64];
    TCHAR name[64];
