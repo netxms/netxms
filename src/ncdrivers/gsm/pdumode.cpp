@@ -66,33 +66,39 @@ static bool SMSPack7BitChars(const char* input, char* output, int* outputLength,
 /**
  * Create SMS PDU from phone number and message text
  */
-bool SMSCreatePDUString(const char* phoneNumber, const char* message, char* pduBuffer)
+bool SMSCreatePDUString(const char *phoneNumber, const char *message, char *pduBuffer)
 {
 	const int bufferSize = 512;
 	char phoneNumberFormatted[32];
 	char payload[bufferSize];
-	char payloadHex[bufferSize*2 + 1];
+	char payloadHex[bufferSize * 2 + 1];
 	int payloadSize = 0;
 	int phoneLength = (int)strlen(phoneNumber);
 	int numberFormat = 0x91; // International format
 	int i;
 
 	if (phoneNumber[0] == '+')
-		strncpy(phoneNumberFormatted, &phoneNumber[1], 32);
+	{
+		strlcpy(phoneNumberFormatted, &phoneNumber[1], 32);
+		phoneLength--;
+	}
 	else if (!strncmp(phoneNumber, "00", 2))
-		strncpy(phoneNumberFormatted, &phoneNumber[2], 32);
+	{
+		strlcpy(phoneNumberFormatted, &phoneNumber[2], 32);
+		phoneLength -= 2;
+	}
 	else
 	{
-		strncpy(phoneNumberFormatted, phoneNumber, 32);
+		strlcpy(phoneNumberFormatted, phoneNumber, 32);
 		numberFormat = 0x81;	// Unknown number format
 	}
-	strcat(phoneNumberFormatted, "F");
+	strlcat(phoneNumberFormatted, "F", 32);
 
 	nxlog_debug_tag(DEBUG_TAG, 7, _T("Formatted phone before: %hs,%d"), phoneNumberFormatted, phoneLength);
 	for (i = 0; i <= phoneLength; i += 2)
 	{
-		char tmp = phoneNumberFormatted[i+1];
-		phoneNumberFormatted[i+1] = phoneNumberFormatted[i];
+		char tmp = phoneNumberFormatted[i + 1];
+		phoneNumberFormatted[i + 1] = phoneNumberFormatted[i];
 		phoneNumberFormatted[i] = tmp;
 	}
 	phoneNumberFormatted[phoneLength + (phoneLength % 2)] = '\0';
