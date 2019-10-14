@@ -1360,6 +1360,46 @@ template <typename T, typename B, typename R1, typename R2> inline void ThreadPo
 }
 
 /**
+ * Wrapper data for ThreadPoolExecute (three arguments)
+ */
+template <typename T, typename R1, typename R2, typename R3> class __ThreadPoolExecute_WrapperData_3
+{
+public:
+   T *m_object;
+   void (T::*m_func)(R1, R2, R3);
+   R1 m_arg1;
+   R2 m_arg2;
+   R3 m_arg3;
+
+   __ThreadPoolExecute_WrapperData_3(T *object, void (T::*func)(R1, R2, R3), R1 arg1, R2 arg2, R3 arg3)
+   {
+      m_object = object;
+      m_func = func;
+      m_arg1 = arg1;
+      m_arg2 = arg2;
+      m_arg3 = arg3;
+   }
+};
+
+/**
+ * Wrapper for ThreadPoolExecute (three arguments)
+ */
+template <typename T, typename R1, typename R2, typename R3> void __ThreadPoolExecute_Wrapper_3(void *arg)
+{
+   __ThreadPoolExecute_WrapperData_3<T, R1, R2, R3> *wd = static_cast<__ThreadPoolExecute_WrapperData_3<T, R1, R2, R3> *>(arg);
+   ((*wd->m_object).*(wd->m_func))(wd->m_arg1, wd->m_arg2, wd->m_arg3);
+   delete wd;
+}
+
+/**
+ * Execute task as soon as possible (use class member with three arguments)
+ */
+template <typename T, typename B, typename R1, typename R2, typename R3> inline void ThreadPoolExecute(ThreadPool *p, T *object, void (B::*f)(R1, R2, R3), R1 arg1, R2 arg2, R3 arg3)
+{
+   ThreadPoolExecute(p, __ThreadPoolExecute_Wrapper_3<B, R1, R2, R3>, new __ThreadPoolExecute_WrapperData_3<B, R1, R2, R3>(object, f, arg1, arg2, arg3));
+}
+
+/**
  * Get value of given attribute protected by given mutex
  */
 template<typename T> inline T GetAttributeWithLock(T* attr, MUTEX mutex)
